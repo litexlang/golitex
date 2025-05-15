@@ -104,7 +104,6 @@ func AddUniPrefixToUniFact(asUniFact *UniFactStmt) (*UniFactStmt, error) {
 		uniMap[param] = NewFcAtom(glob.EmptyPkg, newParams[i], nil)
 	}
 
-	newParamsSets := asUniFact.ParamSets
 	newDomFacts := []FactStmt{}
 	newThenFacts := []FactStmt{}
 	newIffFacts := EmptyIffFacts
@@ -125,9 +124,16 @@ func AddUniPrefixToUniFact(asUniFact *UniFactStmt) (*UniFactStmt, error) {
 		newThenFacts = append(newThenFacts, newFact)
 	}
 
-	newParamInSetsFacts := ParamsParamSetsToInFacts(asUniFact.Params, asUniFact.ParamSets)
+	newParamInSetsFacts := []FactStmt{}
+	for _, inSetFact := range asUniFact.ParamInSetsFacts {
+		newFact, err := inSetFact.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newParamInSetsFacts = append(newParamInSetsFacts, newFact)
+	}
 
-	newUniFact := newUniFactStmt(newParams, newParamsSets, newDomFacts, newThenFacts, newIffFacts, newParamInSetsFacts)
+	newUniFact := newUniFactStmt(newParams, newDomFacts, newThenFacts, newIffFacts, newParamInSetsFacts)
 
 	return newUniFact, nil
 }

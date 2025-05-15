@@ -50,11 +50,11 @@ func NewEnv(parent *Env) *Env {
 		Parent: parent,
 		Msgs:   []string{},
 
-		ObjDefMem:       *NewObjMemory(),
-		PropDefMem:      *NewPropMemory(),
-		FnDefMem:        *NewFnMemory(),
-		ExistPropDefMem: *NewExistPropMemory(),
-		SetDefMem:       *NewSetMemory(),
+		ObjDefMem:       *newObjMemory(),
+		PropDefMem:      *newPropMemory(),
+		FnDefMem:        *newFnMemory(),
+		ExistPropDefMem: *newExistPropMemory(),
+		SetDefMem:       *newSetMemory(),
 
 		SpecFactMem:                       *newSpecFactMem(),
 		SpecFactInLogicExprMem:            *newSpecFactInLogicExprMem(),

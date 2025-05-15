@@ -18,16 +18,16 @@ type TopStmt struct {
 }
 
 type DefObjStmt struct {
-	Objs             []string
-	ObjSets          []Fc
+	Objs []string
+	// ObjSets          []Fc
 	Facts            []FactStmt
 	ParamInSetsFacts []FactStmt
 }
 
 type DefHeader struct {
-	Name             string
-	Params           []string
-	SetParams        []Fc
+	Name   string
+	Params []string
+	// SetParams        []Fc
 	ParamInSetsFacts []FactStmt
 }
 
@@ -46,23 +46,23 @@ type DefExistPropStmtBody struct {
 }
 
 type DefExistPropStmt struct {
-	DefBody          DefExistPropStmtBody
-	ExistParams      []string
-	ExistParamSets   []Fc
+	DefBody     DefExistPropStmtBody
+	ExistParams []string
+	// ExistParamSets   []Fc
 	ExistInSetsFacts []FactStmt
 }
 
 type DefFnStmt struct {
-	DefHeader      DefHeader
-	RetSet         Fc
-	DomFacts       []FactStmt
-	ThenFacts      []FactStmt
-	RetInSetsFacts FactStmt
+	DefHeader DefHeader
+	// RetSet         Fc
+	DomFacts      []FactStmt
+	ThenFacts     []FactStmt
+	RetInSetsFact FactStmt
 }
 
 type UniFactStmt struct {
-	Params           []string
-	ParamSets        []Fc
+	Params []string
+	// ParamSets        []Fc
 	DomFacts         []FactStmt
 	ThenFacts        []FactStmt
 	IffFacts         []FactStmt // TODO: 需要注意到，我存储的所有事实，这一项都是空。未来为了节约空间，可以考虑用新的结构体来存储
