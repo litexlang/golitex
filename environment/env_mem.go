@@ -12,31 +12,34 @@
 
 package litex_env
 
-import ast "golitex/ast"
+import (
+	ast "golitex/ast"
+	glob "golitex/glob"
+)
 
 type PropMemItem struct{ Def *ast.DefPropStmt }
 type PropDefMem struct {
-	Dict map[string]map[string]PropMemItem
+	Dict glob.Map2D[PropMemItem]
 }
 
 type ExistPropMemItem struct{ Def *ast.DefExistPropStmt }
 type ExistPropDefMem struct {
-	Dict map[string]map[string]ExistPropMemItem
+	Dict glob.Map2D[ExistPropMemItem]
 }
 
 type ObjMemItem struct{ Def *ast.DefObjStmt }
 type ObjDefMem struct {
-	Dict map[string]map[string]ObjMemItem
+	Dict glob.Map2D[ObjMemItem]
 }
 
 type FnMemItem struct{ Def *ast.DefFnStmt }
 type FnDefMem struct {
-	Dict map[string]map[string]FnMemItem
+	Dict glob.Map2D[FnMemItem]
 }
 
 type SetMemItem struct{ Def *ast.SetDefSetBuilderStmt }
 type SetDefMem struct {
-	Dict map[string]map[string]SetMemItem
+	Dict glob.Map2D[SetMemItem]
 }
 
 type KnownSpecFact struct {
@@ -44,16 +47,14 @@ type KnownSpecFact struct {
 }
 
 type EmitWhenSpecFactIsTrueMem struct {
-	Dict map[string]map[string][]ast.UniFactStmt // 实际上根本不必要是 UniFact，只要保留 params (为了制作 uniMap), thenFacts (自由事实，为了未来制作 instantiated then facts) 就行
+	Dict glob.Map2D[[]ast.UniFactStmt] // 实际上根本不必要是 UniFact，只要保留 params (为了制作 uniMap), thenFacts (自由事实，为了未来制作 instantiated then facts) 就行
 }
 
 type SpecFactMem struct {
-	PureFacts         map[string]map[string][]KnownSpecFact
-	NotPureFacts      map[string]map[string][]KnownSpecFact
-	ExistFacts        map[string]map[string][]KnownSpecFact
-	NotExistFacts     map[string]map[string][]KnownSpecFact
-	Exist_St_Facts    map[string]map[string][]KnownSpecFact
-	NotExist_St_Facts map[string]map[string][]KnownSpecFact
+	PureFacts         glob.Map2D[[]KnownSpecFact]
+	NotPureFacts      glob.Map2D[[]KnownSpecFact]
+	Exist_St_Facts    glob.Map2D[[]KnownSpecFact]
+	NotExist_St_Facts glob.Map2D[[]KnownSpecFact]
 }
 
 type KnownSpecFact_InLogicExpr struct {
@@ -63,12 +64,10 @@ type KnownSpecFact_InLogicExpr struct {
 }
 
 type SpecFactInLogicExprMem struct {
-	PureFacts         map[string]map[string][]KnownSpecFact_InLogicExpr
-	NotPureFacts      map[string]map[string][]KnownSpecFact_InLogicExpr
-	ExistFacts        map[string]map[string][]KnownSpecFact_InLogicExpr
-	NotExistFacts     map[string]map[string][]KnownSpecFact_InLogicExpr
-	Exist_St_Facts    map[string]map[string][]KnownSpecFact_InLogicExpr
-	NotExist_St_Facts map[string]map[string][]KnownSpecFact_InLogicExpr
+	PureFacts         glob.Map2D[[]KnownSpecFact_InLogicExpr]
+	NotPureFacts      glob.Map2D[[]KnownSpecFact_InLogicExpr]
+	Exist_St_Facts    glob.Map2D[[]KnownSpecFact_InLogicExpr]
+	NotExist_St_Facts glob.Map2D[[]KnownSpecFact_InLogicExpr]
 }
 
 type KnownSpecFact_InUniSpecFact struct {
@@ -77,12 +76,10 @@ type KnownSpecFact_InUniSpecFact struct {
 }
 
 type SpecFactInUniFactMem struct {
-	PureFacts         map[string]map[string][]KnownSpecFact_InUniSpecFact
-	NotPureFacts      map[string]map[string][]KnownSpecFact_InUniSpecFact
-	ExistFacts        map[string]map[string][]KnownSpecFact_InUniSpecFact
-	NotExistFacts     map[string]map[string][]KnownSpecFact_InUniSpecFact
-	Exist_St_Facts    map[string]map[string][]KnownSpecFact_InUniSpecFact
-	NotExist_St_Facts map[string]map[string][]KnownSpecFact_InUniSpecFact
+	PureFacts         glob.Map2D[[]KnownSpecFact_InUniSpecFact]
+	NotPureFacts      glob.Map2D[[]KnownSpecFact_InUniSpecFact]
+	Exist_St_Facts    glob.Map2D[[]KnownSpecFact_InUniSpecFact]
+	NotExist_St_Facts glob.Map2D[[]KnownSpecFact_InUniSpecFact]
 }
 
 type SpecFact_InLogicExpr_InUniFact struct {
@@ -93,10 +90,8 @@ type SpecFact_InLogicExpr_InUniFact struct {
 }
 
 type SpecFact_InLogicExpr_InUniFactMem struct {
-	PureFacts         map[string]map[string][]SpecFact_InLogicExpr_InUniFact
-	NotPureFacts      map[string]map[string][]SpecFact_InLogicExpr_InUniFact
-	ExistFacts        map[string]map[string][]SpecFact_InLogicExpr_InUniFact
-	NotExistFacts     map[string]map[string][]SpecFact_InLogicExpr_InUniFact
-	Exist_St_Facts    map[string]map[string][]SpecFact_InLogicExpr_InUniFact
-	NotExist_St_Facts map[string]map[string][]SpecFact_InLogicExpr_InUniFact
+	PureFacts         glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]
+	NotPureFacts      glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]
+	Exist_St_Facts    glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]
+	NotExist_St_Facts glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]
 }

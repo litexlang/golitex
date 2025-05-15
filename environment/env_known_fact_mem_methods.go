@@ -16,62 +16,51 @@ import (
 	"errors"
 	"fmt"
 	ast "golitex/ast"
+	glob "golitex/glob"
 )
 
 func newSpecFactMem() *SpecFactMem {
 	return &SpecFactMem{
-		PureFacts:    map[string]map[string][]KnownSpecFact{},
-		NotPureFacts: map[string]map[string][]KnownSpecFact{},
-		// ExistFacts:        map[string]map[string][]KnownSpecFact{},
-		// NotExistFacts:     map[string]map[string][]KnownSpecFact{},
-		Exist_St_Facts:    map[string]map[string][]KnownSpecFact{},
-		NotExist_St_Facts: map[string]map[string][]KnownSpecFact{},
+		PureFacts:         make(glob.Map2D[[]KnownSpecFact]),
+		NotPureFacts:      make(glob.Map2D[[]KnownSpecFact]),
+		Exist_St_Facts:    make(glob.Map2D[[]KnownSpecFact]),
+		NotExist_St_Facts: make(glob.Map2D[[]KnownSpecFact]),
 	}
 }
 
-func NewSpecFactInLogicExprMem() *SpecFactInLogicExprMem {
+func newSpecFactInLogicExprMem() *SpecFactInLogicExprMem {
 	return &SpecFactInLogicExprMem{
-		PureFacts:    map[string]map[string][]KnownSpecFact_InLogicExpr{},
-		NotPureFacts: map[string]map[string][]KnownSpecFact_InLogicExpr{},
-		// ExistFacts:        map[string]map[string][]KnownSpecFact_InLogicExpr{},
-		// NotExistFacts:     map[string]map[string][]KnownSpecFact_InLogicExpr{},
-		Exist_St_Facts:    map[string]map[string][]KnownSpecFact_InLogicExpr{},
-		NotExist_St_Facts: map[string]map[string][]KnownSpecFact_InLogicExpr{},
+		PureFacts:         make(glob.Map2D[[]KnownSpecFact_InLogicExpr]),
+		NotPureFacts:      make(glob.Map2D[[]KnownSpecFact_InLogicExpr]),
+		Exist_St_Facts:    make(glob.Map2D[[]KnownSpecFact_InLogicExpr]),
+		NotExist_St_Facts: make(glob.Map2D[[]KnownSpecFact_InLogicExpr]),
 	}
 }
 
-func NewSpecFactInUniFact() *SpecFactInUniFactMem {
+func newSpecFactInUniFact() *SpecFactInUniFactMem {
 	return &SpecFactInUniFactMem{
-		PureFacts:    map[string]map[string][]KnownSpecFact_InUniSpecFact{},
-		NotPureFacts: map[string]map[string][]KnownSpecFact_InUniSpecFact{},
-		// ExistFacts:        map[string]map[string][]KnownSpecFact_InUniSpecFact{},
-		// NotExistFacts:     map[string]map[string][]KnownSpecFact_InUniSpecFact{},
-		Exist_St_Facts:    map[string]map[string][]KnownSpecFact_InUniSpecFact{},
-		NotExist_St_Facts: map[string]map[string][]KnownSpecFact_InUniSpecFact{},
+		PureFacts:         make(glob.Map2D[[]KnownSpecFact_InUniSpecFact]),
+		NotPureFacts:      make(glob.Map2D[[]KnownSpecFact_InUniSpecFact]),
+		Exist_St_Facts:    make(glob.Map2D[[]KnownSpecFact_InUniSpecFact]),
+		NotExist_St_Facts: make(glob.Map2D[[]KnownSpecFact_InUniSpecFact]),
 	}
 }
 
 func NewKnownSpecFact_InLogicExpr_InUniFactMem() *SpecFact_InLogicExpr_InUniFactMem {
 	return &SpecFact_InLogicExpr_InUniFactMem{
-		PureFacts:    map[string]map[string][]SpecFact_InLogicExpr_InUniFact{},
-		NotPureFacts: map[string]map[string][]SpecFact_InLogicExpr_InUniFact{},
-		// ExistFacts:        map[string]map[string][]SpecFact_InLogicExpr_InUniFact{},
-		// NotExistFacts:     map[string]map[string][]SpecFact_InLogicExpr_InUniFact{},
-		Exist_St_Facts:    map[string]map[string][]SpecFact_InLogicExpr_InUniFact{},
-		NotExist_St_Facts: map[string]map[string][]SpecFact_InLogicExpr_InUniFact{},
+		PureFacts:         make(glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]),
+		NotPureFacts:      make(glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]),
+		Exist_St_Facts:    make(glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]),
+		NotExist_St_Facts: make(glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]),
 	}
 }
 
-func (s SpecFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string]map[string][]KnownSpecFact, error) {
+func (s SpecFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (glob.Map2D[[]KnownSpecFact], error) {
 	switch stmt.TypeEnum {
 	case ast.TruePure:
 		return s.PureFacts, nil
 	case ast.FalsePure:
 		return s.NotPureFacts, nil
-	// case ast.TrueExist:
-	// 	return s.ExistFacts, nil
-	// case ast.FalseExist:
-	// 	return s.NotExistFacts, nil
 	case ast.TrueExist_St:
 		return s.Exist_St_Facts, nil
 	case ast.FalseExist_St:
@@ -118,16 +107,12 @@ func (s SpecFactMem) NewFact(stmt *ast.SpecFactStmt) error {
 	return nil
 }
 
-func (s SpecFactInLogicExprMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string]map[string][]KnownSpecFact_InLogicExpr, error) {
+func (s SpecFactInLogicExprMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (glob.Map2D[[]KnownSpecFact_InLogicExpr], error) {
 	switch stmt.TypeEnum {
 	case ast.TruePure:
 		return s.PureFacts, nil
 	case ast.FalsePure:
 		return s.NotPureFacts, nil
-	// case ast.TrueExist:
-	// 	return s.ExistFacts, nil
-	// case ast.FalseExist:
-	// 	return s.NotExistFacts, nil
 	case ast.TrueExist_St:
 		return s.Exist_St_Facts, nil
 	case ast.FalseExist_St:
@@ -181,16 +166,12 @@ func (s SpecFactInLogicExprMem) NewFact(logicExpr *ast.LogicExprStmt) error {
 	return nil
 }
 
-func (s SpecFactInUniFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string]map[string][]KnownSpecFact_InUniSpecFact, error) {
+func (s SpecFactInUniFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (glob.Map2D[[]KnownSpecFact_InUniSpecFact], error) {
 	switch stmt.TypeEnum {
 	case ast.TruePure:
 		return s.PureFacts, nil
 	case ast.FalsePure:
 		return s.NotPureFacts, nil
-	// case ast.TrueExist:
-	// 	return s.ExistFacts, nil
-	// case ast.FalseExist:
-	// 	return s.NotExistFacts, nil
 	case ast.TrueExist_St:
 		return s.Exist_St_Facts, nil
 	case ast.FalseExist_St:
@@ -274,16 +255,12 @@ func (s SpecFactInUniFactMem) insertSpecFact(stmtAsSpecFact *ast.SpecFactStmt, u
 	return nil
 }
 
-func (s SpecFact_InLogicExpr_InUniFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string]map[string][]SpecFact_InLogicExpr_InUniFact, error) {
+func (s SpecFact_InLogicExpr_InUniFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (glob.Map2D[[]SpecFact_InLogicExpr_InUniFact], error) {
 	switch stmt.TypeEnum {
 	case ast.TruePure:
 		return s.PureFacts, nil
 	case ast.FalsePure:
 		return s.NotPureFacts, nil
-	// case ast.TrueExist:
-	// 	return s.ExistFacts, nil
-	// case ast.FalseExist:
-	// 	return s.NotExistFacts, nil
 	case ast.TrueExist_St:
 		return s.Exist_St_Facts, nil
 	case ast.FalseExist_St:
@@ -337,13 +314,17 @@ func (s SpecFact_InLogicExpr_InUniFactMem) NewFact(uniStmt *ast.UniFactStmt, log
 	return nil
 }
 
-func NewSpecFact_InLogicExpr_InUniFactMem() *SpecFact_InLogicExpr_InUniFactMem {
+func newSpecFact_InLogicExpr_InUniFactMem() *SpecFact_InLogicExpr_InUniFactMem {
 	return &SpecFact_InLogicExpr_InUniFactMem{
-		PureFacts:         map[string]map[string][]SpecFact_InLogicExpr_InUniFact{},
-		NotPureFacts:      map[string]map[string][]SpecFact_InLogicExpr_InUniFact{},
-		ExistFacts:        map[string]map[string][]SpecFact_InLogicExpr_InUniFact{},
-		NotExistFacts:     map[string]map[string][]SpecFact_InLogicExpr_InUniFact{},
-		Exist_St_Facts:    map[string]map[string][]SpecFact_InLogicExpr_InUniFact{},
-		NotExist_St_Facts: map[string]map[string][]SpecFact_InLogicExpr_InUniFact{},
+		PureFacts:         make(glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]),
+		NotPureFacts:      make(glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]),
+		Exist_St_Facts:    make(glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]),
+		NotExist_St_Facts: make(glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]),
+	}
+}
+
+func newEmitWhenSpecFactIsTrueMem() *EmitWhenSpecFactIsTrueMem {
+	return &EmitWhenSpecFactIsTrueMem{
+		Dict: make(glob.Map2D[[]ast.UniFactStmt]),
 	}
 }
