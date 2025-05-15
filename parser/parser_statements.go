@@ -94,9 +94,7 @@ func (tb *tokenBlock) factStmt(nameDepthMap ast.NameDepthMap, curAllowUniFactEnu
 		return tb.uniFactStmt(nameDepthMap, curAllowUniFactEnum)
 	} else if tb.header.is(glob.KeywordAnd) || tb.header.is(glob.KeywordOr) {
 		return tb.logicExprStmt(nameDepthMap)
-	} // else if tb.header.is(glob.KeywordWhen) {
-	// 	return tb.condFactStmt(nameDepthMap, curAllowUniFactEnum)
-	// }
+	}
 
 	return tb.specFactStmt(nameDepthMap)
 }
@@ -192,12 +190,10 @@ func (tb *tokenBlock) uniFactStmt(nameDepthMap ast.NameDepthMap, curAllowUniFact
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	paramsWithoutUniParamPrefix, paramInSetsFacts, err := tb.paramSliceInDeclHeadAndSkipEndWithoutUniPrefix(glob.KeySymbolColon)
+	paramsWithUniPrefix, newUniParams, paramInSetsFacts, err := tb.param_paramInSetFactsWithUniPrefix(glob.KeySymbolColon, nameDepthMap)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
-
-	paramsWithUniPrefix, newUniParams := ast.GetStrParamsWithUniPrefixAndNewDepthMap(paramsWithoutUniParamPrefix, nameDepthMap)
 
 	keywords := map[string]struct{}{
 		glob.KeywordDom:  {},
@@ -213,18 +209,6 @@ func (tb *tokenBlock) uniFactStmt(nameDepthMap ast.NameDepthMap, curAllowUniFact
 	if len(iffFacts) == 0 {
 		iffFacts = ast.EmptyIffFacts
 	}
-
-	// uniMap := map[string]ast.Fc{}
-	// for i, param := range paramsWithoutUniParamPrefix {
-	// 	uniMap[param] = ast.NewFcAtomWithName(paramsWithUniPrefix[i])
-	// }
-
-	// for i, fact := range paramInSetsFacts {
-	// 	paramInSetsFacts[i], err = fact.Instantiate(uniMap)
-	// 	if err != nil {
-	// 		return nil, &tokenBlockErr{err, *tb}
-	// 	}
-	// }
 
 	return ast.NewUniFactStmtWithSetReqInDom(paramsWithUniPrefix, domainFacts, thenFacts, iffFacts, paramInSetsFacts), nil
 }
@@ -545,60 +529,7 @@ func (tb *tokenBlock) defHeader() (*ast.DefHeader, ast.NameDepthMap, error) {
 		return nil, nil, err
 	}
 
-	params := []string{}
-	nameDepthMap := ast.NameDepthMap{}
-	paramInSetsFacts := []ast.FactStmt{}
-
-	if !tb.header.is(glob.KeySymbolRightBrace) {
-		for {
-			param, err := tb.header.next()
-			if err != nil {
-				return nil, nil, err
-			}
-
-			_, declared := nameDepthMap[param]
-			if declared {
-				return nil, nil, fmt.Errorf("duplicate parameter %s", param)
-			}
-			nameDepthMap[param] = 1
-
-			param = fmt.Sprintf("%s%s", glob.UniParamPrefix, param)
-
-			params = append(params, param)
-
-			if tb.header.is(glob.KeySymbolComma) {
-				tb.header.skip(glob.KeySymbolComma)
-				continue
-			} else if tb.header.is(glob.KeySymbolRightBrace) {
-				break
-			} else {
-				setParam, err := tb.header.rawFc()
-				if err != nil {
-					return nil, nil, err
-				}
-
-				setParam, err = ast.AddUniPrefixToFc(setParam, nameDepthMap)
-				if err != nil {
-					return nil, nil, &tokenBlockErr{err, *tb}
-				}
-
-				paramInSetsFacts = append(paramInSetsFacts, ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtom(glob.EmptyPkg, param, nil), setParam}))
-
-				if tb.header.is(glob.KeySymbolComma) {
-					tb.header.skip(glob.KeySymbolComma)
-					continue
-				}
-
-				if tb.header.is(glob.KeySymbolRightBrace) {
-					break
-				}
-			}
-
-			return nil, nil, fmt.Errorf("expected ',' or '%s' but got '%s'", glob.KeySymbolRightBrace, tb.header.strAtCurIndexPlus(0))
-		}
-	}
-
-	err = tb.header.skip(glob.KeySymbolRightBrace)
+	params, nameDepthMap, paramInSetsFacts, err := tb.param_paramInSetFactsWithUniPrefix(glob.KeySymbolRightBrace, ast.NameDepthMap{})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -957,21 +888,21 @@ func (tb *tokenBlock) setDefStmt() (*ast.SetDefSetBuilderStmt, error) {
 
 func (tb *tokenBlock) claimToCheckFact() (ast.FactStmt, error) {
 	if tb.header.is(glob.KeywordForall) {
-		return tb.uniFactStmtWithoutUniPrefix()
+		return tb.uniFactStmt_WithoutUniPrefix_InClaimStmt()
 	} else {
 		return tb.specFactStmt(ast.NameDepthMap{})
 	}
 }
 
 // claim 因为实在太难instantiate了(要让所有的stmt都添加instantiate这个方法，太难了)，所以不能让用户随便命名forall里的参数了，用户只能用不存在的参数名
-func (tb *tokenBlock) uniFactStmtWithoutUniPrefix() (*ast.UniFactStmt, error) {
+func (tb *tokenBlock) uniFactStmt_WithoutUniPrefix_InClaimStmt() (*ast.UniFactStmt, error) {
 	// 不能直接用 uniFact  parse 因为我不能让 body 的 fact 里的 涉及forall param list的时候，我不加 prefix，我只有在 runtime 来加
 	err := tb.header.skip(glob.KeywordForall)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	params, paramInSetsFacts, err := tb.paramSliceInDeclHeadAndSkipEndWithoutUniPrefix(glob.KeySymbolColon)
+	params, paramInSetsFacts, err := tb.uniFactHeadWithouUniPrefix(glob.KeySymbolColon)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -1294,7 +1225,7 @@ func (tb *tokenBlock) knowExistPropStmt() (*ast.KnowExistPropStmt, error) {
 	return ast.NewKnowExistPropStmt(*existProp), nil
 }
 
-func (tb *tokenBlock) paramSliceInDeclHeadAndSkipEndWithoutUniPrefix(endWith string) ([]string, []ast.FactStmt, error) {
+func (tb *tokenBlock) uniFactHeadWithouUniPrefix(endWith string) ([]string, []ast.FactStmt, error) {
 	paramName := []string{}
 	paramInSetsFacts := []ast.FactStmt{}
 
@@ -1329,37 +1260,68 @@ func (tb *tokenBlock) paramSliceInDeclHeadAndSkipEndWithoutUniPrefix(endWith str
 	}
 }
 
-func (tb *tokenBlock) paramSliceInDeclHeadAndSkipEndWithUniPrefix(endWith string) ([]string, []ast.FactStmt, error) {
-	paramName := []string{}
+func (tb *tokenBlock) param_paramInSetFactsWithUniPrefix(endWith string, nameDepthMapFromAbove ast.NameDepthMap) ([]string, ast.NameDepthMap, []ast.FactStmt, error) {
+	params := []string{}
 	paramInSetsFacts := []ast.FactStmt{}
 
-	for !tb.header.is(endWith) {
-		objName, err := tb.header.next()
-		if err != nil {
-			return nil, nil, err
-		}
+	nameDepthMap := ast.NameDepthMap{}
+	for k, v := range nameDepthMapFromAbove {
+		nameDepthMap[k] = v
+	}
 
-		if tb.header.is(glob.KeySymbolComma) {
-			tb.header.skip(glob.KeySymbolComma)
-			continue
-		} else if tb.header.is(endWith) {
-			break
-		} else {
-			tp, err := tb.header.rawFc()
+	if !tb.header.is(endWith) {
+		for {
+			param, err := tb.header.next()
 			if err != nil {
-				return nil, nil, err
+				return nil, nil, nil, err
 			}
 
-			paramName = append(paramName, objName)
-			paramInSetsFacts = append(paramInSetsFacts, ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(objName), tp}))
+			_, declared := nameDepthMap[param]
+			if declared {
+				return nil, nil, nil, fmt.Errorf("duplicate parameter %s", param)
+			}
+			nameDepthMap[param] = 1
 
-			tb.header.skipIfIs(glob.KeySymbolComma)
+			param = fmt.Sprintf("%s%s", glob.UniParamPrefix, param)
+
+			params = append(params, param)
+
+			if tb.header.is(glob.KeySymbolComma) {
+				tb.header.skip(glob.KeySymbolComma)
+				continue
+			} else if tb.header.is(endWith) {
+				break
+			} else {
+				setParam, err := tb.header.rawFc()
+				if err != nil {
+					return nil, nil, nil, err
+				}
+
+				setParam, err = ast.AddUniPrefixToFc(setParam, nameDepthMap)
+				if err != nil {
+					return nil, nil, nil, err
+				}
+
+				paramInSetsFacts = append(paramInSetsFacts, ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtom(glob.EmptyPkg, param, nil), setParam}))
+
+				if tb.header.is(glob.KeySymbolComma) {
+					tb.header.skip(glob.KeySymbolComma)
+					continue
+				}
+
+				if tb.header.is(endWith) {
+					break
+				}
+			}
+
+			return nil, nil, nil, fmt.Errorf("expected ',' or '%s' but got '%s'", endWith, tb.header.strAtCurIndexPlus(0))
 		}
 	}
 
-	if tb.header.isAndSkip(endWith) {
-		return paramName, paramInSetsFacts, nil
-	} else {
-		return nil, nil, fmt.Errorf("expected '%s' but got '%s'", endWith, tb.header.strAtCurIndexPlus(0))
+	err := tb.header.skip(endWith)
+	if err != nil {
+		return nil, nil, nil, err
 	}
+
+	return params, nameDepthMap, paramInSetsFacts, nil
 }
