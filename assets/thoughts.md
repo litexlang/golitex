@@ -1887,6 +1887,7 @@ fn setName_id(x setName):
 Definition. A proposition is a statement (communication) that is either true or false.
 
 这里可以看到，压根没有什么集合出来，只要是个能输出true或false的表达式，都是proposition。
+在最底层的地方，数学是如此的不严格。不要说什么集合论是严格的，类型论是严格的，他们的基石proposition是如此不严格：不涉及集合，甚至不涉及“读入参数”，只是一个“Statement”就是一句话。
 
 另外无类型其实是用起来很舒服的，比如py js 都是无类型的
 
@@ -1912,3 +1913,20 @@ ir = itermediate representation
 litex1 => ir = sql
 ir => litex2
 
+x,y,z 就规定成id
+
+一个严重的问题是，数学里，符号太灵活了，灵活度和严格性是矛盾的
+
+比如求积分
+求积分 int(a,b,函数) 那要验证函数是不是在[a,b]上可积分，甚至是不是在上面有定义。然后求积分可能是高维空间里的求，可能是可测集合上的求积分，可能是连续的线段上面的求积分，总之就是很多变，不知道具体是什么情况，非常难搞
+
+而且日常数学里的符号太灵活了，比如求积分符号可能的domain很多很多，比如是连续函数，可测函数，分段连续函数，等等。太乱了，不知道怎么办。
+
+或者用setting？
+
+<<integral 表示 R 上的 integral_real; x 表示 real 上的 id 函数; >>: 有了这样的setting之后，后面的符号很灵活也不要紧
+然后<<>>里面可以送给用户很多东西，但用户不需要care里面是什么
+
+如果完全无类型的，那直接 int(x) = 1/2*x^2 + c 这种形式
+
+即分析里的 “默认” 太多了，不像代数里面，默认很少，符号里包含了所有的信息。
