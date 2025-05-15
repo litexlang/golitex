@@ -224,7 +224,10 @@ func (tb *tokenBlock) uniFactStmt(nameDepthMap ast.NameDepthMap, curAllowUniFact
 		iffFacts = ast.EmptyIffFacts
 	}
 
-	paramInSetsFacts := ast.ParamsParamSetsToInFacts(paramsWithUniPrefix, paramSetsWithPrefix)
+	paramInSetsFacts := make([]ast.FactStmt, len(paramSetsWithPrefix))
+	for i, paramSet := range paramSetsWithPrefix {
+		paramInSetsFacts[i] = ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{paramSet})
+	}
 
 	return ast.NewUniFactStmtWithSetReqInDom(paramsWithUniPrefix, domainFacts, thenFacts, iffFacts, paramInSetsFacts), nil
 }
@@ -361,7 +364,10 @@ func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 		return nil, fmt.Errorf("expect ':' or end of block")
 	}
 
-	paramInSetsFacts := ast.ParamsParamSetsToInFacts(objNames, objSets)
+	paramInSetsFacts := make([]ast.FactStmt, len(objSets))
+	for i, objSet := range objSets {
+		paramInSetsFacts[i] = ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{objSet})
+	}
 
 	return ast.NewDefObjStmt(objNames, facts, paramInSetsFacts), nil
 }
@@ -596,7 +602,10 @@ func (tb *tokenBlock) defHeader() (*ast.DefHeader, ast.NameDepthMap, error) {
 		return nil, nil, err
 	}
 
-	paramInSetsFacts := ast.ParamsParamSetsToInFacts(params, setParams)
+	paramInSetsFacts := make([]ast.FactStmt, len(setParams))
+	for i, setParam := range setParams {
+		paramInSetsFacts[i] = ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{setParam})
+	}
 
 	return ast.NewDefHeader(name, params, paramInSetsFacts), nameDepthMap, nil
 }
@@ -655,7 +664,10 @@ func (tb *tokenBlock) defExistPropStmt() (*ast.DefExistPropStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	existParamInSetsFacts := ast.ParamsParamSetsToInFacts(existParams, existParamSets)
+	existParamInSetsFacts := make([]ast.FactStmt, len(existParamSets))
+	for i, existParamSet := range existParamSets {
+		existParamInSetsFacts[i] = ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{existParamSet})
+	}
 
 	return ast.NewDefExistPropStmt(def, existParams, existParamInSetsFacts), nil
 }
@@ -980,7 +992,10 @@ func (tb *tokenBlock) uniFactStmtWithoutUniPrefix() (*ast.UniFactStmt, error) {
 		return nil, fmt.Errorf("universal fact in claim statement should not have iff facts")
 	}
 
-	paramInSetsFacts := ast.ParamsParamSetsToInFacts(params, paramTypes)
+	paramInSetsFacts := make([]ast.FactStmt, len(paramTypes))
+	for i, paramType := range paramTypes {
+		paramInSetsFacts[i] = ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{paramType})
+	}
 
 	return ast.NewUniFactStmtWithSetReqInDom(params, domainFacts, thenFacts, iffFacts, paramInSetsFacts), nil
 }
