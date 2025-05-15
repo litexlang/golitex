@@ -169,3 +169,9 @@ prove:
                     not $point_on_plane(b, p)
                     not $point_on_plane(c, p)
                     not $point_on_plane(d, p)
+
+prove:
+    prop finite_line_equal(l1 finite_line, l2 finite_line)
+
+    prop 
+    
