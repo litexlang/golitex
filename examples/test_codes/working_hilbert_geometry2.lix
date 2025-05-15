@@ -25,7 +25,52 @@ prove:
     l = line_of(a, b)
 
     # line_of is commutative
-    $point_on_line(a, line_of(b, a))
-    $point_on_line(b, line_of(b, a))
-    line_of(a, b) = line_of(b, a)
-    $commutative_fn(line_of)
+    forall a point, b point:
+        a != b
+        then:
+            $point_on_line(a, line_of(a, b))
+            $point_on_line(b, line_of(a, b))
+            $point_on_line(a, line_of(b, a))
+            $point_on_line(b, line_of(b, a))
+            line_of(a, b) = line_of(b, a)
+
+exist_prop c point st a_line_has_more_than_two_points(l line, a point, b point):
+    $point_on_line(a, l)
+    $point_on_line(b, l)
+    a != b
+    iff:
+        $point_on_line(c, l)
+        c != a
+        c != b
+
+know forall l line, a point, b point:
+    $point_on_line(a, l)
+    $point_on_line(b, l)
+    a != b
+    then:
+        $a_line_has_more_than_two_points(l, a, b)
+
+exist_prop b point st exist_at_least_two_points_on_line(a point, l line):
+    a != b
+    $point_on_line(a, l)
+    iff:
+        $point_on_line(b, l)
+        b != a
+
+know forall a point, l line:
+    a != b
+    $point_on_line(a, l)
+    then:
+        $exist_at_least_two_points_on_line(a, l)
+
+prove:
+    obj a point, l line:
+        a != b
+        $point_on_line(a, l)
+        $point_on_line(b, l)
+
+    $exist_at_least_two_points_on_line(a, l)
+
+    have b st $exist_at_least_two_points_on_line(a, l)
+
+    $point_on_line(b, l)
