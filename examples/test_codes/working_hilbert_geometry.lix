@@ -28,6 +28,8 @@ prop line_on_plane(l line, p plane)
 
 # 1. For every two points A and B there exists a line a that contains them both. We write AB = a or BA = a. Instead of "contains", we may also employ other forms of expression; for example, we may say "A lies upon a", "A is a point of a", "a goes through A and through B", "a joins A to B", etc. If A lies upon a and at the same time upon another line b, we make use also of the expression: "The lines a and b have the point A in common", etc.
 
+# 2. For every two points there exists no more than one line that contains them both; consequently, if AB = a and AC = a, where B ≠ C, then also BC = a.
+
 fn line_of(a point, b point) line:
     a != b
     then:
@@ -40,55 +42,51 @@ fn line_of(a point, b point) line:
                 l = line_of(a, b)
 
 prove:
+    # a line is determined by two points
     obj a point, b point, l line:
         a != b
         $point_on_line(a, l)
         $point_on_line(b, l)
     l = line_of(a, b)
 
+    # line_of is commutative
+    forall a point, b point:
+        a != b
+        then:
+            $point_on_line(a, line_of(a, b))
+            $point_on_line(b, line_of(a, b))
+            $point_on_line(a, line_of(b, a))
+            $point_on_line(b, line_of(b, a))
+            line_of(a, b) = line_of(b, a)
 
-# Tips: prove 表示开一个局部环境，下面的所有内容不会对大环境有影响，用途是让用户做一些小测试
+# Tip: here prove mean "open a local environment and the following content will not affect the outside". It is a good way of doing small tests.
 
-# 2. 给定任意两点 A、B，最多只存在一条直线同时包含其二者。这也是说，若对于相异两点 B、C，同时有 AB=a 与 AC=a，那么有 BC=a。
-# 2. For every two points there exists no more than one line that contains them both; consequently, if AB = a and AC = a, where B ≠ C, then also BC = a.
+# 3.1. There exist at least two points on a line. 
 
-know forall l line, a point, b point:
+exist_prop b point st exist_at_least_two_points_on_line(a point, l line):
     a != b
     $point_on_line(a, l)
-    $point_on_line(b, l)
-    then:
-        $a_line_has_more_than_two_points(l, a, b)
-
-# 3.1 There exist at least two points on a line. 
-# 3.1 A line contains at least two points.
-
-exist_prop c point st a_line_has_more_than_two_points(l line, a point, b point):
-    a != b
-    $point_on_line(a, l)
-    $point_on_line(b, l)
     iff:
-        $point_on_line(c, l)
-        c != a
-        c != b
+        $point_on_line(b, l)
+        b != a
 
-know forall l line, a point, b point:
+know forall a point, l line:
     a != b
     $point_on_line(a, l)
-    $point_on_line(b, l)
     then:
-        $a_line_has_more_than_two_points(l, a, b)
+        $exist_at_least_two_points_on_line(a, l)
 
 prove:
-    obj a point, b point, l line:
+    obj a point, l line:
         a != b
         $point_on_line(a, l)
         $point_on_line(b, l)
 
-    $a_line_has_more_than_two_points(l,a,b)
+    $exist_at_least_two_points_on_line(a, l)
 
-    have c st $a_line_has_more_than_two_points(l,a,b)
+    have b st $exist_at_least_two_points_on_line(a, l)
 
-    $point_on_line(c,l)
+    $point_on_line(b, l)
 
 # 3.2 至少存在不共线的三个点
 # 3.2 There exist at least three points that do not lie on the same line.

@@ -183,7 +183,7 @@ func (env *Env) newTrueSpecFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) erro
 
 		err = env.NewFact(instantiated)
 
-		env.NewMsg(fmt.Sprintf("know by prop definition:\n %s", instantiated.String()))
+		env.NewMsg(fmt.Sprintf("%s\nknow by prop definition:\n%s", instantiated.String(), propDef.String()))
 
 		if err != nil {
 			return err

@@ -188,7 +188,7 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
 
 	err = exec.env.NewFact(propToIff)
 
-	exec.appendMsg(fmt.Sprintf("know by prop definition:\n%s\n", propToIff.String()))
+	exec.appendMsg(fmt.Sprintf("%s\nknow by prop definition:\n%s", propToIff.String(), stmt.String()))
 
 	if err != nil {
 		return err
@@ -199,7 +199,7 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
 		return err
 	}
 
-	exec.appendMsg(fmt.Sprintf("know by prop definition:\n%s\n", iffToProp.String()))
+	exec.appendMsg(fmt.Sprintf("%s\nknow by prop definition:\n%s", iffToProp.String(), stmt.String()))
 
 	if len(stmt.IffFacts) == 0 {
 		return nil
@@ -339,7 +339,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
-		exec.appendMsg(fmt.Sprintf("know by %s %s definition:\n%s\n", glob.KeywordExistProp, &stmt.Fact.PropName, domFact.String()))
+		exec.appendMsg(fmt.Sprintf("%s\nknow by %s definition:\n%s", domFact.String(), glob.KeywordExistProp, stmt.String()))
 	}
 
 	// iff of def exist prop is true
@@ -348,7 +348,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
-		exec.appendMsg(fmt.Sprintf("know by %s %s definition:\n%s\n", glob.KeywordExistProp, &stmt.Fact.PropName, iffFact.String()))
+		exec.appendMsg(fmt.Sprintf("%s\nknow by %s definition:\n%s", iffFact.String(), glob.KeywordExistProp, stmt.String()))
 	}
 
 	// 相关的 exist st 事实也成立
@@ -362,7 +362,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 	if err != nil {
 		return glob.ExecState_True, nil
 	}
-	exec.appendMsg(fmt.Sprintf("know by %s %s definition:\n%s\n", glob.KeywordExistProp, &stmt.Fact.PropName, newExistStFact.String()))
+	exec.appendMsg(fmt.Sprintf("%s\nknow by %s definition:\n%s", newExistStFact.String(), glob.KeywordExistProp, stmt.String()))
 
 	return glob.ExecState_True, nil
 }
@@ -659,7 +659,7 @@ func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) (glob.ExecS
 		return glob.ExecState_Error, err
 	}
 
-	exec.appendMsg(fmt.Sprintf("know by %s definition:\n%s\n", stmt.ExistProp.DefBody.DefHeader.Name, knownUniFact.String()))
+	exec.appendMsg(fmt.Sprintf("%s\nknow by %s definition:\n%s", knownUniFact.String(), stmt.ExistProp.DefBody.DefHeader.Name, stmt.String()))
 
 	return glob.ExecState_True, nil
 }
