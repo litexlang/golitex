@@ -9,7 +9,7 @@ prove:
 
 prove:
     know:
-        forall x nat:
+        forall x N:
             $p(x)
             then:
                 $p(x + 1)
@@ -39,7 +39,7 @@ prove:
 
 prove:
     know:
-        forall x nat:
+        forall x N:
             $p(x)
             then:
                 $p(x + 1)
@@ -54,7 +54,7 @@ prove:
 
 prove:
     know:
-        forall x nat:
+        forall x N:
             $p(x)
             then:
                 $p(x + 1)
@@ -68,20 +68,20 @@ prove:
             $p(2)
 
 prove:
-    exist_prop y nat st larger_than_x(x nat):
+    exist_prop y N st larger_than_x(x N):
         y > x
 
     know:
-        forall x nat, y nat:
+        forall x N, y N:
             y > 0
             then:
                 x + y > x
 
     claim:
-        forall x nat:
+        forall x N:
             exist $larger_than_x(x)
         prove:
-            obj a nat
+            obj a N
             know:
                a = x + 1
             x + 1 > x

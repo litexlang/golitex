@@ -1,16 +1,16 @@
 prove:
     know:
-        forall x nat:
-            forall y nat:
+        forall x N:
+            forall y N:
                 $p(x,y)
             iff:
-                forall y nat:
+                forall y N:
                     $q(x,y)
             
-        forall x nat, y nat:
+        forall x N, y N:
             $p(x,y)
 
-    forall x nat, y nat:
+    forall x N, y N:
         $q(x,y)
 
 prove:
@@ -29,13 +29,13 @@ prove:
 
 prove:
     know:
-        forall x nat:
+        forall x N:
             $p(x)
 
     $p(1)
 
 prove:
-    prop p(x nat):
+    prop p(x N):
         or:
             $q(x)
             $r(x)
@@ -45,12 +45,12 @@ prove:
     $r(1)
 
 prove:
-    fn f(x nat) nat:
+    fn f(x N) N:
         $p(x)
 
     $in(f, fn)
 
-    prop p(x nat):
+    prop p(x N):
         $q(x)
 
     $in(p, prop)

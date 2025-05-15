@@ -195,13 +195,7 @@ func (tb *tokenBlock) uniFactStmt(nameDepthMap ast.NameDepthMap, curAllowUniFact
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	keywords := map[string]struct{}{
-		glob.KeywordDom:  {},
-		glob.KeywordThen: {},
-		glob.KeywordIff:  {},
-	}
-
-	domainFacts, thenFacts, iffFacts, err := tb.uniFactBodyFacts(keywords, newUniParams, curAllowUniFactEnum.addDepth(), glob.KeywordThen)
+	domainFacts, thenFacts, iffFacts, err := tb.uniFactBodyFacts(newUniParams, curAllowUniFactEnum.addDepth(), glob.KeywordThen)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -246,12 +240,7 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	keywords := map[string]struct{}{
-		glob.KeywordDom: {},
-		glob.KeywordIff: {},
-	}
-
-	domFacts, _, iffFacts, err := tb.uniFactBodyFacts(keywords, nameDepthMap, UniFactDepth1, glob.KeywordIff)
+	domFacts, _, iffFacts, err := tb.uniFactBodyFacts(nameDepthMap, UniFactDepth1, glob.KeywordIff)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -283,13 +272,8 @@ func (tb *tokenBlock) defFnStmt() (*ast.DefFnStmt, error) {
 	thenFacts := []ast.FactStmt{}
 
 	if tb.header.is(glob.KeySymbolColon) {
-		keywords := map[string]struct{}{
-			glob.KeywordDom:  {},
-			glob.KeywordThen: {},
-		}
-
 		tb.header.skip("")
-		domFacts, thenFacts, _, err = tb.uniFactBodyFacts(keywords, nameDepthMap, UniFactDepth1, glob.KeywordThen)
+		domFacts, thenFacts, _, err = tb.uniFactBodyFacts(nameDepthMap, UniFactDepth1, glob.KeywordThen)
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
 		}
@@ -817,15 +801,10 @@ func (tb *tokenBlock) defExistPropStmtBody(existParamDepthMap ast.NameDepthMap) 
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	keywords := map[string]struct{}{
-		glob.KeywordDom: {},
-		glob.KeywordIff: {},
-	}
-
 	var domFacts []ast.FactStmt
 	var iffFactsAsFactStmts []ast.FactStmt
 
-	domFacts, _, iffFactsAsFactStmts, err = tb.uniFactBodyFacts(keywords, nameDepthMap, UniFactDepth1, glob.KeywordIff)
+	domFacts, _, iffFactsAsFactStmts, err = tb.uniFactBodyFacts(nameDepthMap, UniFactDepth1, glob.KeywordIff)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -907,12 +886,7 @@ func (tb *tokenBlock) uniFactStmt_WithoutUniPrefix_InClaimStmt() (*ast.UniFactSt
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	keywords := map[string]struct{}{
-		glob.KeywordDom:  {},
-		glob.KeywordThen: {},
-	}
-
-	domainFacts, thenFacts, iffFacts, err := tb.uniFactBodyFacts(keywords, ast.NameDepthMap{}, UniFactDepth0, glob.KeywordThen)
+	domainFacts, thenFacts, iffFacts, err := tb.uniFactBodyFacts(ast.NameDepthMap{}, UniFactDepth0, glob.KeywordThen)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -926,7 +900,7 @@ func (tb *tokenBlock) uniFactStmt_WithoutUniPrefix_InClaimStmt() (*ast.UniFactSt
 	return ast.NewUniFactStmtWithSetReqInDom(params, domainFacts, thenFacts, iffFacts, paramInSetsFacts), nil
 }
 
-func (tb *tokenBlock) uniFactBodyFacts(keywords map[string]struct{}, nameDepthMap ast.NameDepthMap, curAllowUniFactEnum AllowUniFactEnum, defaultSectionName string) ([]ast.FactStmt, []ast.FactStmt, []ast.FactStmt, error) {
+func (tb *tokenBlock) uniFactBodyFacts(nameDepthMap ast.NameDepthMap, curAllowUniFactEnum AllowUniFactEnum, defaultSectionName string) ([]ast.FactStmt, []ast.FactStmt, []ast.FactStmt, error) {
 	domFacts := []ast.FactStmt{}
 	thenFacts := []ast.FactStmt{}
 	iffFacts := []ast.FactStmt{}
@@ -941,17 +915,16 @@ func (tb *tokenBlock) uniFactBodyFacts(keywords map[string]struct{}, nameDepthMa
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	_, eachSectionStartWithKw = keywords[curToken]
+
+	if curToken == glob.KeywordDom || curToken == glob.KeywordThen || curToken == glob.KeywordIff {
+		eachSectionStartWithKw = true
+	}
 
 	if eachSectionStartWithKw {
 		for _, stmt := range tb.body {
 			kw, err := stmt.header.skipAndSkipColonAndAchieveEnd()
 			if err != nil {
 				return nil, nil, nil, err
-			}
-			_, ok := keywords[kw]
-			if !ok {
-				return nil, nil, nil, fmt.Errorf("expect keyword in uni fact body, but got: %s", kw)
 			}
 			facts, err := stmt.bodyBlockFacts(nameDepthMap, curAllowUniFactEnum, len(stmt.body))
 			if err != nil {
@@ -969,10 +942,6 @@ func (tb *tokenBlock) uniFactBodyFacts(keywords map[string]struct{}, nameDepthMa
 			}
 		}
 	} else if tb.body[len(tb.body)-1].header.is(glob.KeywordThen) {
-		if _, ok := keywords[glob.KeywordThen]; !ok {
-			return nil, nil, nil, fmt.Errorf("%s is not expected here", glob.KeywordThen)
-		}
-
 		domFacts, err = tb.bodyBlockFacts(nameDepthMap, curAllowUniFactEnum, len(tb.body)-1)
 		if err != nil {
 			return nil, nil, nil, err
@@ -987,10 +956,6 @@ func (tb *tokenBlock) uniFactBodyFacts(keywords map[string]struct{}, nameDepthMa
 			return nil, nil, nil, err
 		}
 	} else if tb.body[len(tb.body)-1].header.is(glob.KeywordIff) {
-		if _, ok := keywords[glob.KeywordIff]; !ok {
-			return nil, nil, nil, fmt.Errorf("%s is not expected here", glob.KeywordIff)
-		}
-
 		thenFacts, err = tb.bodyBlockFacts(nameDepthMap, curAllowUniFactEnum, len(tb.body)-1)
 		if err != nil {
 			return nil, nil, nil, err
@@ -1006,19 +971,11 @@ func (tb *tokenBlock) uniFactBodyFacts(keywords map[string]struct{}, nameDepthMa
 		}
 	} else {
 		if defaultSectionName == glob.KeywordThen {
-			if _, ok := keywords[glob.KeywordThen]; !ok {
-				return nil, nil, nil, fmt.Errorf("%s is not expected here", glob.KeywordThen)
-			}
-
 			thenFacts, err = tb.bodyBlockFacts(nameDepthMap, curAllowUniFactEnum, len(tb.body))
 			if err != nil {
 				return nil, nil, nil, err
 			}
 		} else if defaultSectionName == glob.KeywordIff {
-			if _, ok := keywords[glob.KeywordIff]; !ok {
-				return nil, nil, nil, fmt.Errorf("%s is not expected here", glob.KeywordIff)
-			}
-
 			iffFacts, err = tb.bodyBlockFacts(nameDepthMap, curAllowUniFactEnum, len(tb.body))
 			if err != nil {
 				return nil, nil, nil, err

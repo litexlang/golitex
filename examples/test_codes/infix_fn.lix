@@ -1,5 +1,5 @@
 prove:
-    fn add(a int, b int)int:
+    fn add(a I, b I)int:
         add(a,b) = a + b
 
     1 \add 2 = 1 + 2 # equivalent to add(1,2) = 1 + 2

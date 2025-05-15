@@ -18,7 +18,7 @@ prove:
             $q(x)
             
 prove:
-    know exist_prop x nat st p(y nat):
+    know exist_prop x N st p(y N):
         iff:
             $t(x,y)
 

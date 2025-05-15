@@ -1,8 +1,8 @@
 prove:
     $commutative_prop(=)
-    prop p(x nat, y nat):
+    prop p(x N, y N):
         x = y
-    forall x nat, y nat:
+    forall x N, y N:
         $p(x,y)
         then:
             x = y
@@ -11,7 +11,7 @@ prove:
     $commutative_prop(p)
 
 prove:
-    prop p(x nat, y nat):
+    prop p(x N, y N):
         $q(x,y)
 
     know:

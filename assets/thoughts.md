@@ -210,7 +210,7 @@ Search 时，需要处理同名的情况
 2. 函数可以定义在集合上
 3. 有个关键词叫type，type作用在某个集合上，然后里面放一些东西，放完东西之后说明这个type impl 哪些 struct
 如
-type real impl GroupRingStructOnRealNumbers: // 定义新类型GroupRingStructOnRealNumbers
+type R impl GroupRingStructOnRealNumbers: // 定义新类型GroupRingStructOnRealNumbers
     0 impl Group::Id
     + impl Group::Mul
     0 impl Ring::Id
@@ -410,7 +410,7 @@ litex 采用 ts 的做法
 set S {1,2,3}
 
 // 定义法2
-set S1 real:
+set S1 R:
     ret > 0
 
 set S2 nat:
@@ -656,7 +656,7 @@ Set 的几大功能
       1. 我可能先送给用户数归法这个prop generator。但是让用户自己定义prop generator我可能暂时不想这么干.
 1. 内置集合（类型）
    1. nat
-      1. real, int 都是从nat来的。这些可以由用户自定义
+      1. R, int 都是从nat来的。这些可以由用户自定义
    2. rational
       1. rational也能由nat诱导而来，所以也只要用户自定义就行。但是像1.2这种数是内置在系统里的，所以rational只能由系统送给用户
    3. nat rational
@@ -1222,7 +1222,7 @@ not have a,b $p(x,y) # dom(a,b,x,y) 并且 not IFF(a,b,x,y)
 2. 数列收敛的定义
 forall a sequence, e > 0, exist N, forall n, m > N, |at(a, n) - at(a, m)| < e
 
-exist_prop (N nat) Cauchy(seq sequence, epsilon real):
+exist_prop (N nat) Cauchy(seq sequence, epsilon R):
     epsilon > 0
     iff:
         forall n nat, m nat:
@@ -1232,12 +1232,12 @@ exist_prop (N nat) Cauchy(seq sequence, epsilon real):
                 |at(seq, n) - at(seq, m)| < epsilon
 
 know:
-    forall epsilon real:
+    forall epsilon R:
         epsilon > 0
         then:
             have epsilon*2 $Cauchy(seq, epsilon)
 
-forall epsilon real:
+forall epsilon R:
     epsilon > 0
     then:
         have epsilon*2 $Cauchy(seq, epsilon)
@@ -1864,7 +1864,7 @@ fn setName_id(x setName):
 
 4. 可能本质上 = 表示的是 符号的相等。这种相等是最最基本的相等
 
-5. 需要区分：正常情况下，一个函数的返回值 f(...) 中，f(...) 的类型完全由 f 的返回值类型决定。但litex有语法糖： 比如 real_id * 2 这种形状，相当于 是个函数，但这里的函数是 * 理论上应该是 对数的处理，而不是返回值是 函数的东西。那怎么办呢？用特殊符号表示！ 如果 想让 opt 作用在 返回值类型是X 的函数上，而不是X的元素上，那我需要用特殊符号表示: @opt，这样我就把 fn opt X => ret 变成了 fn opt (fn any => X) => ret
+5. 需要区分：正常情况下，一个函数的返回值 f(...) 中，f(...) 的类型完全由 f 的返回值类型决定。但litex有语法糖： 比如 R_id * 2 这种形状，相当于 是个函数，但这里的函数是 * 理论上应该是 对数的处理，而不是返回值是 函数的东西。那怎么办呢？用特殊符号表示！ 如果 想让 opt 作用在 返回值类型是X 的函数上，而不是X的元素上，那我需要用特殊符号表示: @opt，这样我就把 fn opt X => ret 变成了 fn opt (fn any => X) => ret
 具体什么符号我没想好
 
 @(...) 表示 函数的参数列表是，里面最底层的函数，得到后看看是否所有涉及到的函数都是同一个定义域和值域，如果确实一样，那就ok了。就理解成 ret 值类型是最外层函数的，里面的函数的参数列表是定义域的函数。

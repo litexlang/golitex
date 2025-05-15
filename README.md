@@ -120,17 +120,17 @@ In Litex, expressions are divided into two types: factual and constructive. Fact
 ```
 obj Alice Human # Declaring a object without giving values to its members is valid.
 
-fn add(a Real, b Real) Real: # self defined a + b
+fn add(a R, b R) R: # self defined a + b
     add(a, b) = add(b, a)   # properties(facts) about function add
     add(a, b) = a + b # establish relationship between self-defined function add and built-in function +
 
-prop less_than(a Real, b Real): # self defined a < b
+prop less_than(a R, b R): # self defined a < b
     less_than(a, b) = a < b # establish relationship between self-defined proposition less_than and built-in operator <
 ```
 
 Every fact in Litex must be tied to a concrete entity: object (`obj`), function (`fn`), proposition (`prop`). Users must declare objects before use. Any object must belong to a set.
 
-Functions in Litex are not executed. In the realm of mathematics, a function is essentially an entity that is eligible to precede a set of parentheses (). It shares similarities with what we refer to as a object, with the distinctive feature being its ability to be positioned before the ().
+Functions in Litex are not executed. In the Rm of mathematics, a function is essentially an entity that is eligible to precede a set of parentheses (). It shares similarities with what we refer to as a object, with the distinctive feature being its ability to be positioned before the ().
 
 Another good way of understanding difference between function in Litex or math and function in programming language is that in programming language, even if two functions are of the same logic, they are not equal and it is weird to compare two functions (or function pointers). Only functions with the same name are equal. However, in Litex, two functions can be equal as long as their dom are equal as sets, their value domain are equal as sets, and their value are the same on every element of their dom.
 
@@ -219,16 +219,16 @@ interface Group G:
 
 {Real, __add__, 0, __neg__} impl Group # you can also write it as {Real, __add__, 0, __neg__} impl Group
 
-type RealAsGroup {Real, __add__, 0, __neg__} impl Group: # Real = the set of all real numbers. Name RealAsGroup says how Real implements Group.
+type RAsGroup {Real, __add__, 0, __neg__} impl Group: # R = the set of all R numbers. Name RAsGroup says how R implements Group.
 
 prop Group_is_abelian<G Group>(): # you call it by using $Group_is_abelian(setName)
     forall x G, y G:
         x * y = y * x # when given G, * is referred to as Group::__mul__
 
-$Group_is_abelian(Real) # true. * is Real::_add__
+$Group_is_abelian(Real) # true. * is R::_add__
 ```
 
-In Litex, a interface = set + structure(functions, objects, propositions bound to the set). You can think of a interface as a set of sets that share the same structure. For example, the set of all groups is an interface. A set might have different ways to implement an interface (e.g. the set of integers, with normal addition, or with modular addition, all implement the interface of Group), that is why we need to name it. (e.g. RealAsGroup)
+In Litex, a interface = set + structure(functions, objects, propositions bound to the set). You can think of a interface as a set of sets that share the same structure. For example, the set of all groups is an interface. A set might have different ways to implement an interface (e.g. the set of integers, with normal addition, or with modular addition, all implement the interface of Group), that is why we need to name it. (e.g. RAsGroup)
 
 (This Design draws inspiration from 2 concepts: 1. Niklaus Wirth's "Algorithms + Data Structure = Programs" and "type = set + structure". 2. The  `interface` + `type` + `struct` type system in GoLang.)
 
@@ -350,7 +350,7 @@ Fundamentally, Litex is a regex-based(without recursion) finder with customizabl
 <!-- 可以考虑新开一个Section，专门对比lean和litex -->
 <!-- 下面这是lean做勾股定理的代码，非常复杂，非常多的 hierarchy，不能直接像初中生一样不需要任何前置知识就可以理解 -->
 <!-- theorem InnerProductGeometry.norm_sub_sq_eq_norm_sq_add_norm_sq_sub_two_mul_norm_mul_norm_mul_cos_angle{V : Type u_1} [NormedAddCommGroup V] [InnerProductSpace ℝ V] (x y : V) : -->
-<!-- ‖x - y‖ * ‖x - y‖ = ‖x‖ * ‖x‖ + ‖y‖ * ‖y‖ - 2 * ‖x‖ * ‖y‖ * Real.cos (angle x y) -->
+<!-- ‖x - y‖ * ‖x - y‖ = ‖x‖ * ‖x‖ + ‖y‖ * ‖y‖ - 2 * ‖x‖ * ‖y‖ * R.cos (angle x y) -->
 
 ## What makes Litex innovative or novel?
 
@@ -405,7 +405,7 @@ Inheritance (C++/Java-style) is a poor fit for Litex:
 
 Inflexible – Inheritance hierarchies are rigid, making extension and evolution difficult, which is common in other proof assistants.
 
-Layer freedom – Users should begin at any abstraction level, not forced from low-level math, which is more aligned with mathematical discovery in real life.
+Layer freedom – Users should begin at any abstraction level, not forced from low-level math, which is more aligned with mathematical discovery in R life.
 
 Not Intuitive – Inheritance is not intuitive. An object can for sure belong to multiple sets, but in inheritance, an object can only belong to one type (or belong to a fixed part of inheritance hierarchy).
 
@@ -413,7 +413,7 @@ Not Intuitive – Inheritance is not intuitive. An object can for sure belong to
 
 Beyond Go, Litex draws inspiration from other programming languages. For instance, Python's scoping rules have shaped Litex's approach to object and function scope. 
 
-The C programming language's syntax and semantics significantly influenced Litex's design. Operator overloading behavior is inspired by C++. The inventor of Litex holds a deep appreciation for Lisp's "everything is a list" philosophy, which contributes to the language's conceptual integrity. Also, since C uses postfix like L to make number as type the user want to overloade type of a numbner literal(e.g. 1L represents a long integer), Litex uses postfix to do type inference(e.g. 1r represents 1 as real number). No user defined type overloading is allowed.
+The C programming language's syntax and semantics significantly influenced Litex's design. Operator overloading behavior is inspired by C++. The inventor of Litex holds a deep appreciation for Lisp's "everything is a list" philosophy, which contributes to the language's conceptual integrity. Also, since C uses postfix like L to make number as type the user want to overloade type of a numbner literal(e.g. 1L represents a long integer), Litex uses postfix to do type inference(e.g. 1r represents 1 as R number). No user defined type overloading is allowed.
 
 Furthermore, Tex's clear distinction between "math expressions" and "plain words" inspired Litex's separation of "factual expressions" from ordinary symbols. Litex also aspires to achieve the same level of ubiquity and utility as Tex, aiming to become a widely adopted daily tool. This ambition is encapsulated in its name: Litex = Lisp + Tex, symbolizing the fusion of Lisp's expressive elegance and Tex's practicality.
 
@@ -435,11 +435,11 @@ A key advantage of a read-only Turing machine is that mathematical expressions, 
 C does not allow operator overloading. The only instances of operator overloading occur with built-in integer and floating-point arithmetic operations (addition, subtraction, multiplication, and division). Since these cases are limited, the compiler handles them by context. C++ and Python are often criticized because, although they allow operator overloading—which appears to increase functionality—it leads to a "readability disaster": readers cannot easily determine which specific operation a symbol like `+` refers to. This becomes particularly problematic in large-scale projects.  
 
     1. In C++, even the `=` operator can be overloaded.  
-    2. Following the principle of simplicity, Litex aligns with C's design: operator overloading is prohibited. The only exceptions are for basic numeric types (integers, decimals, real numbers, and natural numbers). In all other cases, overloading is forbidden. Additionally, overloading `=` is also disallowed.  
+    2. Following the principle of simplicity, Litex aligns with C's design: operator overloading is prohibited. The only exceptions are for basic numeric types (integers, decimals, R numbers, and natural numbers). In all other cases, overloading is forbidden. Additionally, overloading `=` is also disallowed.  
         1. Without operator overloading, the concept of `extend` or `impl` or `inherit` may also become unnecessary, as its primary purpose is to enable operator overloading.  
         2. Any language that allows operator overloading has a OOP system. There is no "OOP" in math, so Litex does not have OOP.
 
-Since C has builtin int, float, complex, Litex has nat, rat, real, complex as builtin sets and no others.
+Since C has builtin int, float, complex, Litex has nat, rat, R, complex as builtin sets and no others.
 
 In you want to build equivalence between two propositions/functions from different packages, you can use `prop_equavalent` or `fn_equal` to do so, this is handy because two groups might indenpendently derive the same proposition/function, but they all maintain their own package.
 
@@ -480,7 +480,7 @@ I, Jiachen Shen, a hacker and a math enthusiast. I majored in math and self-taug
 
 A good art is enjoyable to its author happy and be useful to others. This process of inventing Litex makes me happy, and I hope Litex can be useful for both math community and AI community, or even anyone from any field. As Knuth said in his Turing Award lecture: science is logical, systematic, calm; art is aesthetic, creative, anxious. Both math and programming live at this intersection, rigorous yet deeply human.
 
-Moreover, I have strong belief that there is only a small gap between programming and mathematical reasoning. I also believe it does not take "that many" syntax and semantics to formalize ALL math. The more I program this project, the firmer my belief becomes. The real obstacle dragging me back is not the weakness of my ideas, but the loneliness of this long journey. That is why I am so grateful for any kind of support.
+Moreover, I have strong belief that there is only a small gap between programming and mathematical reasoning. I also believe it does not take "that many" syntax and semantics to formalize ALL math. The more I program this project, the firmer my belief becomes. The R obstacle dragging me back is not the weakness of my ideas, but the loneliness of this long journey. That is why I am so grateful for any kind of support.
 
 Also, intuitiveness of Litex is a double-edged sword. It's great because so when whenever I encounter something hard or impossible to expressive using current version of Litex, it takes usually a few hours to a few days to figure out a solution. That is why implementing Litex successfully is just a matter of time and I have the confidence to implement Litex successfully.
 

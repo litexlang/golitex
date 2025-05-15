@@ -61,10 +61,10 @@ prove:
     $P(q)
 
 prove:
-    prop p(x nat, y nat):
+    prop p(x N, y N):
         $p(x,y)
         iff:
-            forall x nat, y nat:
+            forall x N, y N:
                 then:
                     $p(y,x)
                     

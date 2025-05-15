@@ -1,4 +1,4 @@
 prove:
     know:
-        1 $in nat
-    1 $in nat
+        1 $in N
+    1 $in N

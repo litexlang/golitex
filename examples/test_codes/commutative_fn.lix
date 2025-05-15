@@ -1,5 +1,5 @@
 prove:
-    fn add(a int, b int) int
+    fn add(a I, b I) I
     know:
         $commutative_fn(add)
         add(1,2) = 3
@@ -19,7 +19,7 @@ prove:
     b + a = x
 
 prove:    
-    fn add(a int, b int) int
+    fn add(a I, b I) I
     know:
         $commutative_fn(add)
         add(1,2) = 3

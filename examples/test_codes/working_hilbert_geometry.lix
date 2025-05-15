@@ -624,12 +624,12 @@ prove:
 
 # 1. Axiom of Archimedes: If AB and CD are any segments then there exists a number n such that n segments CD constructed contiguously from A, along the ray from A through B, will pass beyond the point B.
 
-fn finite_line_of_direction_and_length(a point, b point, n real) finite_line:
+fn finite_line_of_direction_and_length(a point, b point, n R) finite_line:
     dom:
         a != b
         n > 0
 
-fn length_of_finite_line(l finite_line) real
+fn length_of_finite_line(l finite_line) R
 
 prop in_the_same_direction(a point, b point, c point):
     dom:
@@ -658,7 +658,7 @@ know forall a point, b point, c point:
     then:
         $point_right_to_point_on_one_line(a, c, line_of(a, b))
     
-know exist_prop n real, c point st exist_finite_line_of_direction_and_length(a point, b point, l finite_line):
+know exist_prop n R, c point st exist_finite_line_of_direction_and_length(a point, b point, l finite_line):
     n > 0
     $point_on_line(c, line_of(a, b))
     line_of(a, c) = n * length_of_finite_line(l)
@@ -669,7 +669,7 @@ know exist_prop n real, c point st exist_finite_line_of_direction_and_length(a p
 prop on_finite_line(a point, l finite_line)
 
 know:
-    forall a point, b point, n real:
+    forall a point, b point, n R:
         a != b
         n > 0
         then:
