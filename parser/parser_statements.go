@@ -257,7 +257,6 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 	}
 
 	if !tb.header.is(glob.KeySymbolColon) {
-		// REMARK: When IFFFacts is empty, we think that there is no iff to verify prop (i.e. you can not use prop def to prove prop), not that prop is true by default
 		return ast.NewDefPropStmt(*declHeader, nil, nil), nil
 	}
 
@@ -271,10 +270,7 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 		glob.KeywordIff: {},
 	}
 
-	var domFacts []ast.FactStmt
-	var iffFacts []ast.FactStmt
-
-	domFacts, _, iffFacts, err = tb.uniFactBodyFacts(keywords, nameDepthMap, UniFactDepth1, glob.KeywordIff)
+	domFacts, _, iffFacts, err := tb.uniFactBodyFacts(keywords, nameDepthMap, UniFactDepth1, glob.KeywordIff)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -553,8 +549,8 @@ func (tb *tokenBlock) defHeader() (*ast.DefHeader, ast.NameDepthMap, error) {
 	}
 
 	params := []string{}
-	setParams := []ast.Fc{}
 	nameDepthMap := ast.NameDepthMap{}
+	paramInSetsFacts := []ast.FactStmt{}
 
 	if !tb.header.is(glob.KeySymbolRightBrace) {
 		for {
@@ -573,24 +569,32 @@ func (tb *tokenBlock) defHeader() (*ast.DefHeader, ast.NameDepthMap, error) {
 
 			params = append(params, param)
 
-			setParam, err := tb.header.rawFc()
-			if err != nil {
-				return nil, nil, err
-			}
-
-			setParam, err = ast.AddUniPrefixToFc(setParam, nameDepthMap)
-			if err != nil {
-				return nil, nil, &tokenBlockErr{err, *tb}
-			}
-			setParams = append(setParams, setParam)
-
 			if tb.header.is(glob.KeySymbolComma) {
 				tb.header.skip(glob.KeySymbolComma)
 				continue
-			}
-
-			if tb.header.is(glob.KeySymbolRightBrace) {
+			} else if tb.header.is(glob.KeySymbolRightBrace) {
 				break
+			} else {
+				setParam, err := tb.header.rawFc()
+				if err != nil {
+					return nil, nil, err
+				}
+
+				setParam, err = ast.AddUniPrefixToFc(setParam, nameDepthMap)
+				if err != nil {
+					return nil, nil, &tokenBlockErr{err, *tb}
+				}
+
+				paramInSetsFacts = append(paramInSetsFacts, ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtom(glob.EmptyPkg, param, nil), setParam}))
+
+				if tb.header.is(glob.KeySymbolComma) {
+					tb.header.skip(glob.KeySymbolComma)
+					continue
+				}
+
+				if tb.header.is(glob.KeySymbolRightBrace) {
+					break
+				}
 			}
 
 			return nil, nil, fmt.Errorf("expected ',' or '%s' but got '%s'", glob.KeySymbolRightBrace, tb.header.strAtCurIndexPlus(0))
@@ -602,9 +606,8 @@ func (tb *tokenBlock) defHeader() (*ast.DefHeader, ast.NameDepthMap, error) {
 		return nil, nil, err
 	}
 
-	paramInSetsFacts := make([]ast.FactStmt, len(setParams))
-	for i, setParam := range setParams {
-		paramInSetsFacts[i] = ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{setParam})
+	if len(paramInSetsFacts) != len(params) {
+		tb.addMessage(glob.WarningMsg("there are %d params, but only %d of them are given with requirements in sets", len(params), len(paramInSetsFacts)))
 	}
 
 	return ast.NewDefHeader(name, params, paramInSetsFacts), nameDepthMap, nil
