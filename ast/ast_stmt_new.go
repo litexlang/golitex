@@ -20,24 +20,24 @@ func NewTopStmt(stmt Stmt, isPub bool) *TopStmt {
 	return &TopStmt{stmt, isPub}
 }
 
-func NewDefObjStmt(objs []string, objSets []Fc, facts []FactStmt, objInSetsFacts []FactStmt) *DefObjStmt {
-	return &DefObjStmt{objs, objSets, facts, objInSetsFacts}
+func NewDefObjStmt(objs []string, facts []FactStmt, objInSetsFacts []FactStmt) *DefObjStmt {
+	return &DefObjStmt{objs, facts, objInSetsFacts}
 }
 
 func NewDefPropStmt(defHeader DefHeader, domFacts []FactStmt, iffFacts []FactStmt) *DefPropStmt {
 	return &DefPropStmt{defHeader, domFacts, iffFacts}
 }
 
-func NewDefExistPropStmt(def *DefExistPropStmtBody, existParams []string, existParamSets []Fc, existInSetsFacts []FactStmt) *DefExistPropStmt {
-	return &DefExistPropStmt{*def, existParams, existParamSets, existInSetsFacts}
+func NewDefExistPropStmt(def *DefExistPropStmtBody, existParams []string, existInSetsFacts []FactStmt) *DefExistPropStmt {
+	return &DefExistPropStmt{*def, existParams, existInSetsFacts}
 }
 
-func NewDefFnStmt(defHeader DefHeader, retType Fc, domFacts []FactStmt, thenFacts []FactStmt, retInSetsFacts FactStmt) *DefFnStmt {
-	return &DefFnStmt{defHeader, retType, domFacts, thenFacts, retInSetsFacts}
+func NewDefFnStmt(defHeader DefHeader, domFacts []FactStmt, thenFacts []FactStmt, retInSetsFacts FactStmt) *DefFnStmt {
+	return &DefFnStmt{defHeader, domFacts, thenFacts, retInSetsFacts}
 }
 
-func newUniFactStmt(params []string, paramTypes []Fc, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt, paramInSetsFacts []FactStmt) *UniFactStmt {
-	return &UniFactStmt{params, paramTypes, domFacts, thenFacts, iffFacts, paramInSetsFacts}
+func newUniFactStmt(params []string, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt, paramInSetsFacts []FactStmt) *UniFactStmt {
+	return &UniFactStmt{params, domFacts, thenFacts, iffFacts, paramInSetsFacts}
 }
 
 func NewSpecFactStmt(typeEnum SpecFactEnum, propName FcAtom, params []Fc) *SpecFactStmt {
@@ -56,8 +56,8 @@ func NewFcFnDecl(name string, params []string) *FcFnDecl {
 	return &FcFnDecl{name, params}
 }
 
-func NewDefHeader(name string, params []string, typeParams []Fc, paramInSetsFacts []FactStmt) *DefHeader {
-	return &DefHeader{name, params, typeParams, paramInSetsFacts}
+func NewDefHeader(name string, params []string, paramInSetsFacts []FactStmt) *DefHeader {
+	return &DefHeader{name, params, paramInSetsFacts}
 }
 
 func NewOrAndFact(isOr bool, facts []Reversable_LogicOrSpec_Stmt) *LogicExprStmt {
@@ -84,20 +84,8 @@ func NewMatcherEnvStmt(matcherName *FcAtom, params []Fc, body []Stmt) *MatcherEn
 	return &MatcherEnvStmt{*matcherName, params, body}
 }
 
-func NewUniFactStmtWithSetReqInDom(params []string, paramTypes []Fc, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt, paramInSetsFacts []FactStmt) *UniFactStmt {
-	// if glob.VerifyFcSatisfySpecFactParaReq {
-	// 	newDomFacts := []FactStmt{}
-	// 	for i, param := range params {
-	// 		atom := NewFcAtom(glob.EmptyPkg, param, nil)
-	// 		var inFc = NewFcAtom(glob.EmptyPkg, glob.KeywordIn, nil)
-	// 		specFact := NewSpecFactStmt(TruePure, *inFc, []Fc{atom, paramTypes[i]})
-	// 		newDomFacts = append(newDomFacts, specFact)
-	// 	}
-	// 	newDomFacts = append(newDomFacts, domFacts...)
-	// 	newUniFact := newUniFactStmt(params, paramTypes, newDomFacts, thenFacts, iffFacts, paramInSetsFacts)
-	// 	return newUniFact
-	// }
-	return newUniFactStmt(params, paramTypes, domFacts, thenFacts, iffFacts, paramInSetsFacts)
+func NewUniFactStmtWithSetReqInDom(params []string, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt, paramInSetsFacts []FactStmt) *UniFactStmt {
+	return newUniFactStmt(params, domFacts, thenFacts, iffFacts, paramInSetsFacts)
 }
 
 func NewSetDefSetBuilderStmt(setName string, parentSet Fc, facts []FactStmt) *SetDefSetBuilderStmt {

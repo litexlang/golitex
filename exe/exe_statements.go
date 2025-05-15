@@ -246,18 +246,14 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 		fcParamsAsFcSlice = append(fcParamsAsFcSlice, ast.NewFcAtomWithName(fc))
 	}
 
-	fcFn := ast.FcFn{FnHead: ast.NewFcAtomWithName(stmt.DefHeader.Name), ParamSegs: [][]ast.Fc{fcParamsAsFcSlice}}
-
-	retFact := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{&fcFn, stmt.RetSet})
-
-	uniFactThen := []ast.FactStmt{retFact}
+	uniFactThen := []ast.FactStmt{stmt.RetInSetsFact}
 	uniFactThen = append(uniFactThen, stmt.ThenFacts...)
 
 	thenFacts := []ast.FactStmt{}
 	thenFacts = append(thenFacts, uniFactThen...)
 
-	uniFact := ast.UniFactStmt{Params: stmt.DefHeader.Params, ParamSets: stmt.DefHeader.SetParams, DomFacts: stmt.DomFacts, ThenFacts: thenFacts}
-	err = exec.env.NewFact(&uniFact)
+	uniFact := ast.NewUniFactStmtWithSetReqInDom(stmt.DefHeader.Params, stmt.DomFacts, thenFacts, ast.EmptyIffFacts, []ast.FactStmt{})
+	err = exec.env.NewFact(uniFact)
 
 	if err != nil {
 		return err
@@ -306,7 +302,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 
 	// TODO 暂时认为都是obj
 	for _, objName := range stmt.ObjNames {
-		err := exec.env.NewDefObj(&ast.DefObjStmt{Objs: []string{objName}, ObjSets: []ast.Fc{}, Facts: []ast.FactStmt{}})
+		err := exec.env.NewDefObj(ast.NewDefObjStmt([]string{objName}, []ast.FactStmt{}, []ast.FactStmt{}))
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
@@ -407,8 +403,11 @@ func (exec *Executor) matcherEnvStmt(stmt *ast.MatcherEnvStmt) error {
 }
 
 func (exec *Executor) GetUniFactSettings(asUnivFact *ast.UniFactStmt) error {
-	for i, param := range asUnivFact.Params {
-		exec.defStmt(&ast.DefObjStmt{Objs: []string{param}, ObjSets: []ast.Fc{asUnivFact.ParamSets[i]}, Facts: []ast.FactStmt{}})
+	for _, param := range asUnivFact.Params {
+		err := exec.defStmt(ast.NewDefObjStmt([]string{param}, []ast.FactStmt{}, []ast.FactStmt{}))
+		if err != nil {
+			return err
+		}
 	}
 	for _, fact := range asUnivFact.DomFacts {
 		err := exec.env.NewFact(fact)
@@ -653,7 +652,7 @@ func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) (glob.ExecS
 	}
 
 	thenFacts := []ast.FactStmt{stmt.ExistProp.ToSpecFact()}
-	knownUniFact := ast.NewUniFactStmtWithSetReqInDom(stmt.ExistProp.DefBody.DefHeader.Params, stmt.ExistProp.DefBody.DefHeader.SetParams, stmt.ExistProp.DefBody.DomFacts, thenFacts, ast.EmptyIffFacts, stmt.ExistProp.DefBody.DefHeader.ParamInSetsFacts)
+	knownUniFact := ast.NewUniFactStmtWithSetReqInDom(stmt.ExistProp.DefBody.DefHeader.Params, stmt.ExistProp.DefBody.DomFacts, thenFacts, ast.EmptyIffFacts, stmt.ExistProp.DefBody.DefHeader.ParamInSetsFacts)
 
 	err = exec.env.NewFact(knownUniFact)
 	if err != nil {
@@ -674,7 +673,7 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
 	}
 
 	thenFacts := []ast.FactStmt{stmt.Prop.ToSpecFact()}
-	knownUniFact := ast.NewUniFactStmtWithSetReqInDom(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.SetParams, stmt.Prop.DomFacts, thenFacts, ast.EmptyIffFacts, stmt.Prop.DefHeader.ParamInSetsFacts)
+	knownUniFact := ast.NewUniFactStmtWithSetReqInDom(stmt.Prop.DefHeader.Params, stmt.Prop.DomFacts, thenFacts, ast.EmptyIffFacts, stmt.Prop.DefHeader.ParamInSetsFacts)
 
 	err = exec.env.NewFact(knownUniFact)
 	if err != nil {

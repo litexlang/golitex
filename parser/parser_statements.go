@@ -226,7 +226,7 @@ func (tb *tokenBlock) uniFactStmt(nameDepthMap ast.NameDepthMap, curAllowUniFact
 
 	paramInSetsFacts := ast.ParamsParamSetsToInFacts(paramsWithUniPrefix, paramSetsWithPrefix)
 
-	return ast.NewUniFactStmtWithSetReqInDom(paramsWithUniPrefix, paramSetsWithPrefix, domainFacts, thenFacts, iffFacts, paramInSetsFacts), nil
+	return ast.NewUniFactStmtWithSetReqInDom(paramsWithUniPrefix, domainFacts, thenFacts, iffFacts, paramInSetsFacts), nil
 }
 
 func (tb *tokenBlock) bodyFacts(nameDepthMap ast.NameDepthMap, curAllowUniFactEnum AllowUniFactEnum) ([]ast.FactStmt, error) {
@@ -317,7 +317,7 @@ func (tb *tokenBlock) defFnStmt() (*ast.DefFnStmt, error) {
 
 	retInSetsFacts := ast.ParamParamSetToInFact(decl.Name, retType)
 
-	return ast.NewDefFnStmt(*decl, retType, domFacts, thenFacts, retInSetsFacts), nil
+	return ast.NewDefFnStmt(*decl, domFacts, thenFacts, retInSetsFacts), nil
 }
 
 func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
@@ -363,7 +363,7 @@ func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 
 	paramInSetsFacts := ast.ParamsParamSetsToInFacts(objNames, objSets)
 
-	return ast.NewDefObjStmt(objNames, objSets, facts, paramInSetsFacts), nil
+	return ast.NewDefObjStmt(objNames, facts, paramInSetsFacts), nil
 }
 
 func (tb *tokenBlock) claimStmt() (*ast.ClaimStmt, error) {
@@ -598,7 +598,7 @@ func (tb *tokenBlock) defHeader() (*ast.DefHeader, ast.NameDepthMap, error) {
 
 	paramInSetsFacts := ast.ParamsParamSetsToInFacts(params, setParams)
 
-	return ast.NewDefHeader(name, params, setParams, paramInSetsFacts), nameDepthMap, nil
+	return ast.NewDefHeader(name, params, paramInSetsFacts), nameDepthMap, nil
 }
 
 func (tb *tokenBlock) defExistPropStmt() (*ast.DefExistPropStmt, error) {
@@ -657,7 +657,7 @@ func (tb *tokenBlock) defExistPropStmt() (*ast.DefExistPropStmt, error) {
 
 	existParamInSetsFacts := ast.ParamsParamSetsToInFacts(existParams, existParamSets)
 
-	return ast.NewDefExistPropStmt(def, existParams, existParamSets, existParamInSetsFacts), nil
+	return ast.NewDefExistPropStmt(def, existParams, existParamInSetsFacts), nil
 }
 
 // 本质上这个设计是有问题的。exist把 sep 这个奇怪的东西混进param 来了
@@ -982,7 +982,7 @@ func (tb *tokenBlock) uniFactStmtWithoutUniPrefix() (*ast.UniFactStmt, error) {
 
 	paramInSetsFacts := ast.ParamsParamSetsToInFacts(params, paramTypes)
 
-	return ast.NewUniFactStmtWithSetReqInDom(params, paramTypes, domainFacts, thenFacts, iffFacts, paramInSetsFacts), nil
+	return ast.NewUniFactStmtWithSetReqInDom(params, domainFacts, thenFacts, iffFacts, paramInSetsFacts), nil
 }
 
 func (tb *tokenBlock) uniFactBodyFacts(keywords map[string]struct{}, nameDepthMap ast.NameDepthMap, curAllowUniFactEnum AllowUniFactEnum, defaultSectionName string) ([]ast.FactStmt, []ast.FactStmt, []ast.FactStmt, error) {

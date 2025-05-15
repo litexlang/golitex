@@ -648,25 +648,29 @@ func (ver *Verifier) mathInductionSpecFact(stmt *ast.SpecFactStmt, state VerStat
 	propNameZeroFact := ast.NewSpecFactStmt(ast.TruePure, *propNameAsAtom, []ast.Fc{ast.NewFcAtomWithName("0")})
 
 	// propName(n) => propName(n+1)
-	nToNAddOneFact := ast.UniFactStmt{
-		Params:    []string{fmt.Sprintf("%sn", glob.UniParamPrefix)},
-		ParamSets: []ast.Fc{ast.NewFcAtomWithName(glob.KeywordNatural)},
-		DomFacts: []ast.FactStmt{
-			&ast.SpecFactStmt{
-				TypeEnum: ast.TruePure,
-				PropName: *propNameAsAtom,
-				Params:   []ast.Fc{ast.NewFcAtomWithName(fmt.Sprintf("%sn", glob.UniParamPrefix))},
-			},
-		},
-		ThenFacts: []ast.FactStmt{
-			&ast.SpecFactStmt{
-				TypeEnum: ast.TruePure,
-				PropName: *propNameAsAtom,
-				Params:   []ast.Fc{&ast.FcFn{FnHead: ast.NewFcAtomWithName(glob.KeySymbolPlus), ParamSegs: [][]ast.Fc{{ast.NewFcAtomWithName(fmt.Sprintf("%sn", glob.UniParamPrefix)), ast.NewFcAtomWithName("1")}}}},
-			},
-		},
-		IffFacts: ast.EmptyIffFacts,
-	}
+	params := []string{fmt.Sprintf("%sn", glob.UniParamPrefix)}
+	paramSets := []ast.Fc{ast.NewFcAtomWithName(glob.KeywordNatural)}
+	domFacts := make([]ast.FactStmt, 1)
+	domFacts[0] = ast.NewSpecFactStmt(
+		ast.TruePure,
+		*propNameAsAtom,
+		[]ast.Fc{ast.NewFcAtomWithName(fmt.Sprintf("%sn", glob.UniParamPrefix))},
+	)
+	thenFacts := make([]ast.FactStmt, 1)
+	thenFacts[0] = ast.NewSpecFactStmt(
+		ast.TruePure,
+		*propNameAsAtom,
+		[]ast.Fc{ast.NewFcFn(ast.NewFcAtomWithName(glob.KeySymbolPlus), [][]ast.Fc{{ast.NewFcAtomWithName(fmt.Sprintf("%sn", glob.UniParamPrefix)), ast.NewFcAtomWithName("1")}}, nil)},
+	)
+	paramInSetsFacts := ast.ParamsParamSetsToInFacts(params, paramSets)
+
+	nToNAddOneFact := ast.NewUniFactStmtWithSetReqInDom(
+		params,
+		domFacts,
+		thenFacts,
+		ast.EmptyIffFacts,
+		paramInSetsFacts,
+	)
 
 	ok, err := ver.FactStmt(propNameZeroFact, state)
 	if err != nil {
@@ -676,7 +680,7 @@ func (ver *Verifier) mathInductionSpecFact(stmt *ast.SpecFactStmt, state VerStat
 		return false, nil
 	}
 
-	ok, err = ver.FactStmt(&nToNAddOneFact, state)
+	ok, err = ver.FactStmt(nToNAddOneFact, state)
 	if err != nil {
 		return false, err
 	}
@@ -733,16 +737,16 @@ func (ver *Verifier) isSetEqualFact_Check(stmt *ast.SpecFactStmt, state VerState
 		return false, nil
 	}
 
-	// forall x leftSet: x in rightSet
-	uniFactItemsInLeftSetInRightSet := ast.UniFactStmt{
-		Params:    []string{fmt.Sprintf("%sx", glob.UniParamPrefix)},
-		ParamSets: []ast.Fc{leftSet},
-		DomFacts:  []ast.FactStmt{},
-		ThenFacts: []ast.FactStmt{&ast.SpecFactStmt{TypeEnum: ast.TruePure, PropName: *ast.NewFcAtomWithName(glob.KeywordIn), Params: []ast.Fc{ast.NewFcAtomWithName(fmt.Sprintf("%sx", glob.UniParamPrefix)), rightSet}}},
-		IffFacts:  ast.EmptyIffFacts,
-	}
+	// use newfunction
+	uniFactItemsInLeftSetInRightSet := ast.NewUniFactStmtWithSetReqInDom(
+		[]string{fmt.Sprintf("%sx", glob.UniParamPrefix)},
+		[]ast.FactStmt{},
+		[]ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(fmt.Sprintf("%sx", glob.UniParamPrefix)), rightSet})},
+		ast.EmptyIffFacts,
+		ast.ParamsParamSetsToInFacts([]string{fmt.Sprintf("%sx", glob.UniParamPrefix)}, []ast.Fc{leftSet}),
+	)
 
-	ok, err := ver.FactStmt(&uniFactItemsInLeftSetInRightSet, state)
+	ok, err := ver.FactStmt(uniFactItemsInLeftSetInRightSet, state)
 	if err != nil {
 		return false, err
 	}
@@ -751,15 +755,15 @@ func (ver *Verifier) isSetEqualFact_Check(stmt *ast.SpecFactStmt, state VerState
 	}
 
 	// forall x rightSet: x in leftSet
-	uniFactItemsInRightSetInLeftSet := ast.UniFactStmt{
-		Params:    []string{fmt.Sprintf("%sx", glob.UniParamPrefix)},
-		ParamSets: []ast.Fc{rightSet},
-		DomFacts:  []ast.FactStmt{},
-		ThenFacts: []ast.FactStmt{&ast.SpecFactStmt{TypeEnum: ast.TruePure, PropName: *ast.NewFcAtomWithName(glob.KeywordIn), Params: []ast.Fc{ast.NewFcAtomWithName(fmt.Sprintf("%sx", glob.UniParamPrefix)), leftSet}}},
-		IffFacts:  ast.EmptyIffFacts,
-	}
+	uniFactItemsInRightSetInLeftSet := ast.NewUniFactStmtWithSetReqInDom(
+		[]string{fmt.Sprintf("%sx", glob.UniParamPrefix)},
+		[]ast.FactStmt{},
+		[]ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(fmt.Sprintf("%sx", glob.UniParamPrefix)), leftSet})},
+		ast.EmptyIffFacts,
+		ast.ParamsParamSetsToInFacts([]string{fmt.Sprintf("%sx", glob.UniParamPrefix)}, []ast.Fc{rightSet}),
+	)
 
-	ok, err = ver.FactStmt(&uniFactItemsInRightSetInLeftSet, state)
+	ok, err = ver.FactStmt(uniFactItemsInRightSetInLeftSet, state)
 	if err != nil {
 		return false, err
 	}
@@ -871,26 +875,16 @@ func (ver *Verifier) leftFnAlwaysEqualToRight(leftFnDef *ast.DefFnStmt, rightFnD
 	}
 
 	// 返回值类型一样
-	leftRetSet := leftFnDef.RetSet
-	rightRetSet := rightFnDef.RetSet
-	ok, err := ver.fcEqualSpec(leftRetSet, rightRetSet, state)
-	if err != nil {
-		return false, err
-	}
-	if !ok {
-		return false, nil
-	}
 
 	leftToRight := ast.NewUniFactStmtWithSetReqInDom(
 		leftFnDef.DefHeader.Params,
-		leftFnDef.DefHeader.SetParams,
 		leftToRightDom,
 		leftToRightThenFacts,
 		ast.EmptyIffFacts,
 		leftFnDef.DefHeader.ParamInSetsFacts,
 	)
 
-	ok, err = ver.FactStmt(leftToRight, state)
+	ok, err := ver.FactStmt(leftToRight, state)
 	if err != nil {
 		return false, err
 	}
@@ -915,7 +909,6 @@ func (ver *Verifier) leftFnAlwaysEqualToRight(leftFnDef *ast.DefFnStmt, rightFnD
 
 	leftFnAlwaysEqualRightFn := ast.NewUniFactStmtWithSetReqInDom(
 		leftFnDef.DefHeader.Params,
-		leftFnDef.DefHeader.SetParams,
 		leftToRightDom,
 		[]ast.FactStmt{leftEqualRight},
 		ast.EmptyIffFacts,

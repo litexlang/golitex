@@ -313,10 +313,6 @@ func (env *Env) NewDefExistProp(stmt *ast.DefExistPropStmt) error {
 }
 
 func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, error) {
-	// if fact.TypeEnum != ast.FalseExist {
-	// 	return nil, fmt.Errorf("exist fact must have one parameter")
-	// }
-
 	existPropDef, ok := env.ExistPropDefMem.Get(fact.PropName)
 	if !ok {
 		return nil, fmt.Errorf("exist fact %s has no definition", fact.String())
@@ -351,7 +347,7 @@ func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, erro
 		thenFacts = append(thenFacts, specThenFact)
 	}
 
-	return ast.NewUniFactStmtWithSetReqInDom(existPropDef.ExistParams, existPropDef.ExistParamSets, domFacts, thenFacts, ast.EmptyIffFacts, existPropDef.ExistInSetsFacts), nil
+	return ast.NewUniFactStmtWithSetReqInDom(existPropDef.ExistParams, domFacts, thenFacts, ast.EmptyIffFacts, existPropDef.ExistInSetsFacts), nil
 }
 
 func (env *Env) IsEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
@@ -425,21 +421,20 @@ func (env *Env) IsMathInductionPropName_StoreIt(fact *ast.SpecFactStmt) (bool, e
 		return false, fmt.Errorf("math induction fact %s should have a prop name that is defined, got: %s", fact.String(), propNameAsAtom)
 	}
 
-	knownUniFact := ast.UniFactStmt{
-		Params:    []string{fmt.Sprintf("%sn", glob.UniParamPrefix)},
-		ParamSets: []ast.Fc{ast.NewFcAtomWithName(glob.KeywordNatural)},
-		DomFacts:  []ast.FactStmt{},
-		ThenFacts: []ast.FactStmt{
-			&ast.SpecFactStmt{
-				TypeEnum: ast.TruePure,
-				PropName: *propNameAsAtom,
-				Params:   []ast.Fc{ast.NewFcAtomWithName(fmt.Sprintf("%sn", glob.UniParamPrefix))},
-			},
-		},
-		IffFacts: ast.EmptyIffFacts,
+	knownUniFactParams := []string{fmt.Sprintf("%sn", glob.UniParamPrefix)}
+	knownUniFactDomFacts := []ast.FactStmt{}
+	knownUniFactThenFacts := []ast.FactStmt{
+		ast.NewSpecFactStmt(
+			ast.TruePure,
+			*propNameAsAtom,
+			[]ast.Fc{ast.NewFcAtomWithName(fmt.Sprintf("%sn", glob.UniParamPrefix))},
+		),
 	}
+	knownUniFactParamInSetsFacts := []ast.FactStmt{}
 
-	err := env.NewFact(&knownUniFact)
+	knownUniFact := ast.NewUniFactStmtWithSetReqInDom(knownUniFactParams, knownUniFactDomFacts, knownUniFactThenFacts, ast.EmptyIffFacts, knownUniFactParamInSetsFacts)
+
+	err := env.NewFact(knownUniFact)
 	if err != nil {
 		return false, err
 	}

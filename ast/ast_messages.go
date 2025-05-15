@@ -121,13 +121,9 @@ func (stmt *DefObjStmt) String() string {
 	if len(stmt.Objs) > 0 {
 		for i := range len(stmt.Objs) - 1 {
 			builder.WriteString(stmt.Objs[i])
-			builder.WriteString(" ")
-			builder.WriteString(stmt.ObjSets[i].String())
 			builder.WriteString(", ")
 		}
 		builder.WriteString(stmt.Objs[len(stmt.Objs)-1])
-		builder.WriteString(" ")
-		builder.WriteString(stmt.ObjSets[len(stmt.Objs)-1].String())
 	}
 
 	if len(stmt.Facts) > 0 {
@@ -270,13 +266,9 @@ func (s *DefExistPropStmt) String() string {
 	if len(s.ExistParams) > 0 {
 		for i := 0; i < len(s.ExistParams)-1; i++ {
 			builder.WriteString(s.ExistParams[i])
-			builder.WriteString(" ")
-			builder.WriteString(s.ExistParamSets[i].String())
 			builder.WriteString(", ")
 		}
 		builder.WriteString(s.ExistParams[len(s.ExistParams)-1])
-		builder.WriteString(" ")
-		builder.WriteString(s.ExistParamSets[len(s.ExistParams)-1].String())
 	}
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeywordSt)
@@ -301,13 +293,13 @@ func uniFactString(prefix string, l *UniFactStmt) string {
 	if len(l.Params) > 0 {
 		for i := range len(l.Params) - 1 {
 			builder.WriteString(l.Params[i])
-			builder.WriteString(" ")
-			builder.WriteString(l.ParamSets[i].String())
+			// builder.WriteString(" ")
+			// builder.WriteString(l.ParamSets[i].String())
 			builder.WriteString(", ")
 		}
 		builder.WriteString(l.Params[len(l.Params)-1])
-		builder.WriteString(" ")
-		builder.WriteString(l.ParamSets[len(l.Params)-1].String())
+		// builder.WriteString(" ")
+		// builder.WriteString(l.ParamSets[len(l.Params)-1].String())
 	}
 	builder.WriteString(":\n")
 	for _, condFact := range l.DomFacts {
@@ -349,13 +341,13 @@ func (head DefHeader) String() string {
 	if len(head.Params) > 0 {
 		for i := 0; i < len(head.Params)-1; i++ {
 			builder.WriteString(head.Params[i])
-			builder.WriteString(" ")
-			builder.WriteString(head.SetParams[i].String())
+			// builder.WriteString(" ")
+			// builder.WriteString(head.SetParams[i].String())
 			builder.WriteString(",")
 		}
 		builder.WriteString(head.Params[len(head.Params)-1])
-		builder.WriteString(" ")
-		builder.WriteString(head.SetParams[len(head.Params)-1].String())
+		// builder.WriteString(" ")
+		// builder.WriteString(head.SetParams[len(head.Params)-1].String())
 	}
 
 	builder.WriteString("):")

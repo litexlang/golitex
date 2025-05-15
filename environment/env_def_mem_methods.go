@@ -17,22 +17,22 @@ import (
 	glob "golitex/glob"
 )
 
-func NewPropMemory() *PropDefMem {
+func newPropMemory() *PropDefMem {
 	return &PropDefMem{make(glob.Map2D[PropMemItem])}
 }
-func NewFnMemory() *FnDefMem {
+func newFnMemory() *FnDefMem {
 	return &FnDefMem{make(glob.Map2D[FnMemItem])}
 }
 
-func NewObjMemory() *ObjDefMem {
+func newObjMemory() *ObjDefMem {
 	return &ObjDefMem{make(glob.Map2D[ObjMemItem])}
 }
 
-func NewExistPropMemory() *ExistPropDefMem {
+func newExistPropMemory() *ExistPropDefMem {
 	return &ExistPropDefMem{make(glob.Map2D[ExistPropMemItem])}
 }
 
-func NewSetMemory() *SetDefMem {
+func newSetMemory() *SetDefMem {
 	return &SetDefMem{make(glob.Map2D[SetMemItem])}
 }
 
