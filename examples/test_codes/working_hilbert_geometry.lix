@@ -64,21 +64,18 @@ prove:
 # 3.1. There exist at least two points on a line. 
 
 exist_prop b point st exist_at_least_two_points_on_line(a point, l line):
-    a != b
     $point_on_line(a, l)
     iff:
         $point_on_line(b, l)
         b != a
 
 know forall a point, l line:
-    a != b
     $point_on_line(a, l)
     then:
         $exist_at_least_two_points_on_line(a, l)
 
 prove:
     obj a point, l line:
-        a != b
         $point_on_line(a, l)
         $point_on_line(b, l)
 
@@ -113,6 +110,7 @@ fn plain_of(a point, b point, c point) plane:
     a != b
     a != c
     b != c
+    not $point_on_line(a, line_of(b, c))
     then:
         $point_on_plane(a, plain_of(a, b, c))
         $point_on_plane(b, plain_of(a, b, c))
@@ -346,6 +344,22 @@ prop point_left_to_point_on_one_line(a point, b point, l line):
         $point_on_line(a, l)
         $point_on_line(b, l)
 
+prop point_right_to_point_on_one_line(a point, b point, l line):
+    dom:
+        a != b
+        $point_on_line(a, l)
+        $point_on_line(b, l)
+
+know:
+    forall a point, b point, l line:
+        a != b
+        $point_on_line(a, l)
+        $point_on_line(b, l)
+        then:
+            or:
+                $point_right_to_point_on_one_line(a, b, l)
+                $point_left_to_point_on_one_line(a, b, l)
+
 prop point_left_point_on_one_line(a point, b point, l line):
     dom:
         a != b
@@ -393,6 +407,7 @@ prove:
 
 # TODO: The user can add relationships between $between, $point_left_to_point_on_one_line, $point_left_point_on_one_line, by himself. 
 
+# Tip: There are 2 builtin keywords for commutative properties: $commutative_prop and $commutative_fn. The verifier will automatically prove a given commutatively if commutative property is true.
 
 # 2. If a segment AB is congruent to the segment A′B′ and also to the segment A″B″, then the segment A′B′ is congruent to the segment A″B″; that is, if AB ≅ A′B′ and AB ≅ A″B″, then A′B′ ≅ A″B″.
 
@@ -608,33 +623,31 @@ prove:
     $point_on_line(a, l2)
     $parallel(l, l2)
 
-# 5. 连续型公理
 # 5. Continuity
 
-# 1. 令 AB、CD 为任意两条线段，总存在一数 n，使得从 A 出发沿射线 AB 连续构造的 n 条与 CD 等同的线段会经过 B。（阿基米德公理）
-# 2. Axiom of Archimedes: If AB and CD are any segments then there exists a number n such that n segments CD constructed contiguously from A, along the ray from A through B, will pass beyond the point B.
+# 1. Axiom of Archimedes: If AB and CD are any segments then there exists a number n such that n segments CD constructed contiguously from A, along the ray from A through B, will pass beyond the point B.
 
-set direction
-
-fn direction_of_two_points(a point, b point) direction:
+fn finite_line_of_direction_and_length(a point, b point, n real) finite_line:
     dom:
         a != b
-
-fn finite_line_of_direction_and_length(a point, d direction, n real) finite_line:
-    dom:
         n > 0
 
-know exist_prop n real st exist_finite_line_of_direction_and_length(a point, d direction, l finite_line):
-    $finite_line_equal(finite_line_of_direction_and_length(a, d, n), l)
+fn length_of_finite_line(l finite_line) real
 
-prove:
-    obj a point, d direction, l finite_line
+know exist_prop n real, c point st exist_finite_line_of_direction_and_length(a point, b point, l finite_line):
+    n > 0
+    $point_on_line(c, line_of(a, b))
+    line_of(a, c) = n * length_of_finite_line(l)
+    forall:
+        $point_left_to_point_on_one_line(a, b, line_of(a, b))
+        then:
+            $point_left_to_point_on_one_line(a, c, line_of(a, b))
+    forall:
+        $point_right_to_point_on_one_line(a, b, line_of(a, b))
+        then:
+            $point_right_to_point_on_one_line(a, c, line_of(a, b))
 
-    $exist_finite_line_of_direction_and_length(a, d, l)
-    have n st $exist_finite_line_of_direction_and_length(a, d, l)
-    $finite_line_equal(finite_line_of_direction_and_length(a, d, n), l)
 
-# 2. 欲从既有直线上的点构造新的直线，使得其仍然满足原先元素之间的关系且符合公理一到三以及四-1，这样的尝试是不可能的。（直线完备性公理）
 # 2. Axiom of line completeness: An extension (An extended line from a line that already exists, usually used in geometry) of a set of points on a line with its order and congruence relations that would preserve the relations existing among the original elements as well as the fundamental properties of line order and congruence that follows from Axioms I-III and from V-1 is impossible.
 
 # TODO: 即使是自然语言理解，我也不知道这个定理在做什么。形式化我更不会了。

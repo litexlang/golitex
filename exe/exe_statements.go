@@ -241,10 +241,10 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 		return err
 	}
 
-	fcParamsAsFcSlice := []ast.Fc{}
-	for _, fc := range stmt.DefHeader.Params {
-		fcParamsAsFcSlice = append(fcParamsAsFcSlice, ast.NewFcAtomWithName(fc))
-	}
+	// fcParamsAsFcSlice := []ast.Fc{}
+	// for _, fc := range stmt.DefHeader.Params {
+	// 	fcParamsAsFcSlice = append(fcParamsAsFcSlice, ast.NewFcAtomWithName(fc))
+	// }
 
 	uniFactThen := []ast.FactStmt{stmt.RetInSetsFact}
 	uniFactThen = append(uniFactThen, stmt.ThenFacts...)
