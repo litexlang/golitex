@@ -1,21 +1,14 @@
-# Litex 代码示例：希尔伯特几何公理系统
+# Litex Code Example: Hilbert's Axioms of Geometry
 
 # Below is the Hilbert axioms written in Litex code, along with a one-to-one correspondence with the definitions from Wikipedia.
 
 # Read more about Hilbert's geometry axioms: https://en.wikipedia.org/wiki/Hilbert%27s_axioms .
 
-# 希尔伯特的公理系统由六种基本符号组成。其中，有三种基本对象：点、直线（简称“线”）、平面（简称“面”）；以及三种基本关系：
-
-# 夹（betweenness）：一种联系点的三元关系；
-# 落（lies on）/含（containment）：一组三种二元关系，分别联系点与直线、点与平面，以及平面与直线；
-# 同（congruence）：一组两种二元关系，分别联系两条线段或两个角，均以中缀符号 ≅ 表示。
-# 上面提到的线段、角，以及更多诸如三角形之类的概念，均可在点线面的基本对象上，运用夹与含这两种基本关系加以定义。下面所列出的公理中，除非特别声明，所有提及的对象都是互异的。
-
-# Hilbert's axiom system is constructed with six primitive notions: three primitive terms:[5]
+# Hilbert's axiom system is constructed with six primitive notions: three primitive terms:
 # point;
 # line;
 # plane;
-# and three primitive relations:[6]
+# and three primitive relations:
 # Betweenness, a ternary relation linking points;
 
 # Betweenness, a ternary relation linking points;
@@ -31,17 +24,15 @@ prop point_on_line(p point, l line)
 prop point_on_plane(q point, p plane)
 prop line_on_plane(l line, p plane)
 
-# 1. 所在型定理
 # 1. Incidence
 
-# 1. 给定任意两点 A、B，存在一条直线 a 同时包含其二者。这记作 AB=a 或 BA=a。 除了“a 包含 A 与 B”，也可以用其他方式表述，例如：“A 是 a 上的点”“a 穿过了 A 与 B”“a 连接了 A 与 B”。 若点 A 同时落于两条直线 a 与 b 上，也可以说“直线 a 与 b 有公共点 A”。
 # 1. For every two points A and B there exists a line a that contains them both. We write AB = a or BA = a. Instead of "contains", we may also employ other forms of expression; for example, we may say "A lies upon a", "A is a point of a", "a goes through A and through B", "a joins A to B", etc. If A lies upon a and at the same time upon another line b, we make use also of the expression: "The lines a and b have the point A in common", etc.
 
 fn line_of(a point, b point) line:
     a != b
     then:
-        $point_on_line(line_of(a, b), a)
-        $point_on_line(line_of(a, b), b)
+        $point_on_line(a, line_of(a, b))
+        $point_on_line(b, line_of(a, b))
         forall l line:
             $point_on_line(a, l)
             $point_on_line(b, l)

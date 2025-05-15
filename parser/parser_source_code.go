@@ -18,6 +18,7 @@ import (
 	"strings"
 )
 
+// * TODO: 在parse时，把pkgName改成当前项目里定义的 pkgName，而不是继续沿用原来的
 func ParseSourceCode(code string) ([]ast.TopStmt, error) {
 	// code, err := preprocessSourceCode(code)
 	preprocessedCodeLines, err := preprocessSourceCode(code)
