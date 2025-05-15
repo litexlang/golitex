@@ -49,7 +49,6 @@ const (
 	KeywordInduction            = "induction"
 	KeywordFrac                 = "frac"
 	KeywordAs                   = "as"
-	KeywordProveInductively     = "prove_inductively"
 	KeywordProveOr              = "prove_or"
 	KeywordId                   = "id"
 	// 用户用不到的keyword，但litex内部会用
@@ -95,7 +94,6 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordInduction:            {},
 	KeywordFrac:                 {},
 	KeywordAs:                   {},
-	KeywordProveInductively:     {},
 	KeywordProveOr:              {},
 	KeywordId:                   {},
 }
@@ -141,8 +139,8 @@ const (
 	KeySymbolLessEqual              = "<="
 	KeySymbolEquivalent             = "<=>"
 	// IT's possible fpor me to overload the meaning of "=" to mean "set equal", but I don't want to do that(I do not want to overload the meaning of "=" too much, which can be very tiring for future maintainance and make confusions), so I use a new keyword
-	KeySymbolEqualEqual      = "=="  // check fn equal
-	KeySymbolEqualEqualEqual = "===" // check set equal
+	KeySymbolEqualEqual      = "=="  // check fn equal. TODO: 要调整语义
+	KeySymbolEqualEqualEqual = "===" // check set equal. TODO: 要调整语义
 	KeySymbolGreaterGreater  = ">>"
 	KeySymbolLessLess        = "<<"
 	KeySymbolPercent         = "%" // prove: 2 % 2 = 0 的时候打印有问题，不知道为什么

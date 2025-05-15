@@ -1897,3 +1897,18 @@ Definition. A proposition is a statement (communication) that is either true or 
 本质上，像 = 这种符号，它就是在关于 符号 在做 等号，它没有作用在具体的东西上，或者说它作用的对象本质是无意义的。任何东西都能被 = 。相当于这就是个无类型的东西
 
 = 相当于是符号的相等，是最最底层的相等.
+
+[id](id * 2)
+(f(g)*2)(x) = f(g(x)) * 2 = f(g)(x) * 2
+[f(g)](f(g)*2) = f(g)(x) * 2
+1 * 2
+
+<Group(id, mul, G)>:
+    forall x G:
+        x \mul y = y \mul x
+
+ir = itermediate representation
+
+litex1 => ir = sql
+ir => litex2
+

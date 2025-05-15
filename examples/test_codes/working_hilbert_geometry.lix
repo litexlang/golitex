@@ -668,13 +668,12 @@ know exist_prop n R, c point st exist_finite_line_of_direction_and_length(a poin
 
 prop on_finite_line(a point, l finite_line)
 
-know:
-    forall a point, b point, n R:
+know prop axiom_of_line_completeness(a point, b point, n R):
+    dom:
         a != b
         n > 0
-        then:
-            forall c point:
-                $on_finite_line(c, finite_line_of_direction_and_length(a, b, n))
-                then:
-                    $on_finite_line(c, line_of(a, b))
-
+    then:
+        forall c point:
+            $on_finite_line(c, finite_line_of_direction_and_length(a, b, n))
+            then:
+                $on_finite_line(c, line_of(a, b))
