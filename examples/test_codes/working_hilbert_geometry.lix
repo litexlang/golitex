@@ -338,6 +338,7 @@ prove:
 
 prop finite_line_equal(l1 finite_line, l2 finite_line)
 
+# TODO: I am not sure if this formalization is exactly what the axiom means. May $point_on_line(b, l) be removed?
 prop point_left_to_point_on_one_line(a point, b point, l line):
     dom:
         a != b
@@ -468,27 +469,34 @@ prove:
 
 # 4. Let an angle ∠ (h,k) be given in the plane α and let a line a′ be given in a plane α′. Suppose also that, in the plane α′, a definite side of the straight line a′ be assigned. Denote by h′ a ray of the straight line a′ emanating from a point O′ of this line. Then in the plane α′ there is one and only one ray k′ such that the angle ∠ (h, k), or ∠ (k, h), is congruent to the angle ∠ (h′, k′) and at the same time all interior points of the angle ∠ (h′, k′) lie upon the given side of a′. We express this relation by means of the notation ∠ (h, k) ≅ ∠ (h′, k′).
 
+# TODO: It seems to me that the proposition itself is not that clear. I formalize it in my own understanding.
+
 set ray
 set half_plane
 set angle
 
 prop point_on_ray(a point, r ray)
 
-fn ray_with_end_point_and_direction(a point, r ray) ray:
+fn ray_with_end_point_and_direction(a point, b point) ray:
     dom:
-        $point_on_ray(a, r)
+        a != b
 
 prop half_plane_left_to_ray(a point, r ray, p half_plane):
     dom:
         $point_on_ray(a, r)
 
-prop half_plane_to_ray(a point, r ray, p half_plane):
+prop half_plane_right_to_ray(a point, r ray, p half_plane):
     dom:
         $point_on_ray(a, r)
 
-fn angle_of_two_rays(a point, r1 ray, r2 ray) angle:
+fn angle_of_two_rays_with_the_same_start_point(a point, r1 ray, r2 ray) angle:
     $point_on_ray(a, r1)
     $point_on_ray(a, r2)
+    forall x point:
+        $point_on_ray(x, r1)
+        $point_on_ray(x, r2)
+        then:
+            x = a
 
 prop angle_equal(ang1 angle, ang2 angle)
 
@@ -497,18 +505,10 @@ know exist_prop r2 ray st exist_a_ray_with_the_same_angel_with_given_ray_and_hal
         $point_on_ray(a, r1)
         $half_plane_to_ray(a, r1, p)
     iff:    
-        $angle_equal(angle_of_two_rays(a, r1, r2), ang)
+        $angle_equal(angle_of_two_rays_with_the_same_start_point(a, r1, r2), ang)
 
-prove:
-    obj a point, r1 ray, p half_plane, ang angle:
-        $point_on_ray(a, r1)
-        $half_plane_to_ray(a, r1, p)
+# TODO: Write some tests for this.
 
-    $exist_a_ray_with_the_same_angel_with_given_ray_and_half_plane(a, r1, p, ang)
-    have r2  st $exist_a_ray_with_the_same_angel_with_given_ray_and_half_plane(a, r1, p, ang)
-    $angle_equal(angle_of_two_rays(a, r1, r2), ang)
-
-# 5. 若角 ∠(h,k) 等同于角 ∠(h',k')，且 ∠(h',k') 等同于角 ∠(h'',k'')，那么 ∠(h,k) 等同于 ∠(h'',k'')。（传递性）
 # 5. If the angle ∠ (h, k) is congruent to the angle ∠ (h′, k′) and to the angle ∠ (h″, k″), then the angle ∠ (h′, k′) is congruent to the angle ∠ (h″, k″); that is to say, if ∠ (h, k) ≅ ∠ (h′, k′) and ∠ (h, k) ≅ ∠ (h″, k″), then ∠ (h′, k′) ≅ ∠ (h″, k″).
 
 know prop angle_equal_transitive(ang1 angle, ang2 angle, ang3 angle):
@@ -528,7 +528,6 @@ prove:
     $angle_equal_transitive(ang1, ang2, ang3)
     $angle_equal(ang1, ang3)
 
-# 6. 若在三角形 ABC 与 A'B'C' 中有 AB ≅ A'B'、AC ≅ A'C'、∠BAC ≅ ∠B'A'C'，那么可以得到 ∠ABC ≅ ∠A'B'C'（替换字母即可知 ∠ACB ≅ ∠A'C'B' 亦成立）。
 # 6. If, in the two triangles ABC and A′B′C′ the congruences AB ≅ A′B′, AC ≅ A′C′, ∠BAC ≅ ∠B′A′C′ hold, then the congruence ∠ABC ≅ ∠A′B′C′ holds (and, by a change of notation, it follows that ∠ACB ≅ ∠A′C′B′ also holds).
 
 set triangle
@@ -587,11 +586,9 @@ prove:
     $triangle_equal_by_two_sides_and_included_angle_equal(a, b, c, a2, b2, c2)
     $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(a2, b2, c2))
 
-# 4. 平行型定理
 # 4. Parallel
 
-# 1. 对于直线 a 与其外一点 A，其二者所确定的平面内至多有一条直线经过 A 而不与 a 相交。（欧几里得公理）
-# 1. Playfair's axiom:[9] Let a be any line and A a point not on it. Then there is at most one line in the plane, determined by a and A, that passes through A and does not intersect a.
+# 1. Playfair's axiom: Let a be any line and A a point not on it. Then there is at most one line in the plane, determined by a and A, that passes through A and does not intersect a.
 
 prop parallel(l1 line, l2 line):
     forall x point:
@@ -669,4 +666,15 @@ know exist_prop n real, c point st exist_finite_line_of_direction_and_length(a p
 
 # 2. Axiom of line completeness: An extension (An extended line from a line that already exists, usually used in geometry) of a set of points on a line with its order and congruence relations that would preserve the relations existing among the original elements as well as the fundamental properties of line order and congruence that follows from Axioms I-III and from V-1 is impossible.
 
-# TODO: 即使是自然语言理解，我也不知道这个定理在做什么。形式化我更不会了。
+prop on_finite_line(a point, l finite_line)
+
+know:
+    forall a point, b point, n real:
+        a != b
+        n > 0
+        then:
+            forall c point:
+                $on_finite_line(c, finite_line_of_direction_and_length(a, b, n))
+                then:
+                    $on_finite_line(c, line_of(a, b))
+
