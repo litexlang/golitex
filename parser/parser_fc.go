@@ -277,34 +277,6 @@ func (cursor *strSliceCursor) bracedFcSlice() ([]ast.Fc, error) {
 	return params, nil
 }
 
-func (cursor *strSliceCursor) paramSliceInDeclHeadAndSkipEnd(endWith string) ([]string, []ast.Fc, error) {
-	paramName := []string{}
-	paramTypes := []ast.Fc{}
-
-	for !cursor.is(endWith) {
-		objName, err := cursor.next()
-		if err != nil {
-			return nil, nil, &strSliceErr{err, cursor}
-		}
-
-		tp, err := cursor.rawFc()
-		if err != nil {
-			return nil, nil, &strSliceErr{err, cursor}
-		}
-
-		paramName = append(paramName, objName)
-		paramTypes = append(paramTypes, tp)
-
-		cursor.skipIfIs(glob.KeySymbolComma)
-	}
-
-	if cursor.isAndSkip(endWith) {
-		return paramName, paramTypes, nil
-	} else {
-		return nil, nil, &strSliceErr{fmt.Errorf("expected '%s' but got '%s'", endWith, cursor.strAtCurIndexPlus(0)), cursor}
-	}
-}
-
 func (cursor *strSliceCursor) isExpr(left ast.Fc) (*ast.SpecFactStmt, error) {
 	err := cursor.skip(glob.KeywordIs)
 	if err != nil {

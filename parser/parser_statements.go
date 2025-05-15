@@ -192,22 +192,12 @@ func (tb *tokenBlock) uniFactStmt(nameDepthMap ast.NameDepthMap, curAllowUniFact
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	paramsWithoutUniParamPrefix, paramSetsWithoutPrefix, err := tb.header.paramSliceInDeclHeadAndSkipEnd(glob.KeySymbolColon)
+	paramsWithoutUniParamPrefix, paramInSetsFacts, err := tb.paramSliceInDeclHeadAndSkipEndWithoutUniPrefix(glob.KeySymbolColon)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	paramsWithUniPrefix, newUniParams := ast.GetStrParamsWithUniPrefixAndNewDepthMap(paramsWithoutUniParamPrefix, nameDepthMap)
-
-	// 让 paramSet 也包含 uniPrefix
-	paramSetsWithPrefix := []ast.Fc{}
-	for _, paramSetWithoutPrefix := range paramSetsWithoutPrefix {
-		paramSetWithPrefix, err := ast.AddUniPrefixToFc(paramSetWithoutPrefix, nameDepthMap)
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
-		}
-		paramSetsWithPrefix = append(paramSetsWithPrefix, paramSetWithPrefix)
-	}
 
 	keywords := map[string]struct{}{
 		glob.KeywordDom:  {},
@@ -224,10 +214,17 @@ func (tb *tokenBlock) uniFactStmt(nameDepthMap ast.NameDepthMap, curAllowUniFact
 		iffFacts = ast.EmptyIffFacts
 	}
 
-	paramInSetsFacts := make([]ast.FactStmt, len(paramSetsWithPrefix))
-	for i, paramSet := range paramSetsWithPrefix {
-		paramInSetsFacts[i] = ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{paramSet})
-	}
+	// uniMap := map[string]ast.Fc{}
+	// for i, param := range paramsWithoutUniParamPrefix {
+	// 	uniMap[param] = ast.NewFcAtomWithName(paramsWithUniPrefix[i])
+	// }
+
+	// for i, fact := range paramInSetsFacts {
+	// 	paramInSetsFacts[i], err = fact.Instantiate(uniMap)
+	// 	if err != nil {
+	// 		return nil, &tokenBlockErr{err, *tb}
+	// 	}
+	// }
 
 	return ast.NewUniFactStmtWithSetReqInDom(paramsWithUniPrefix, domainFacts, thenFacts, iffFacts, paramInSetsFacts), nil
 }
@@ -974,7 +971,7 @@ func (tb *tokenBlock) uniFactStmtWithoutUniPrefix() (*ast.UniFactStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	params, paramTypes, err := tb.header.paramSliceInDeclHeadAndSkipEnd(glob.KeySymbolColon)
+	params, paramInSetsFacts, err := tb.paramSliceInDeclHeadAndSkipEndWithoutUniPrefix(glob.KeySymbolColon)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -993,11 +990,6 @@ func (tb *tokenBlock) uniFactStmtWithoutUniPrefix() (*ast.UniFactStmt, error) {
 		iffFacts = ast.EmptyIffFacts
 	} else {
 		return nil, fmt.Errorf("universal fact in claim statement should not have iff facts")
-	}
-
-	paramInSetsFacts := make([]ast.FactStmt, len(paramTypes))
-	for i, paramType := range paramTypes {
-		paramInSetsFacts[i] = ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{paramType})
 	}
 
 	return ast.NewUniFactStmtWithSetReqInDom(params, domainFacts, thenFacts, iffFacts, paramInSetsFacts), nil
@@ -1300,4 +1292,74 @@ func (tb *tokenBlock) knowExistPropStmt() (*ast.KnowExistPropStmt, error) {
 	}
 
 	return ast.NewKnowExistPropStmt(*existProp), nil
+}
+
+func (tb *tokenBlock) paramSliceInDeclHeadAndSkipEndWithoutUniPrefix(endWith string) ([]string, []ast.FactStmt, error) {
+	paramName := []string{}
+	paramInSetsFacts := []ast.FactStmt{}
+
+	for !tb.header.is(endWith) {
+		objName, err := tb.header.next()
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+			continue
+		} else if tb.header.is(endWith) {
+			break
+		} else {
+			tp, err := tb.header.rawFc()
+			if err != nil {
+				return nil, nil, err
+			}
+
+			paramName = append(paramName, objName)
+			paramInSetsFacts = append(paramInSetsFacts, ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(objName), tp}))
+
+			tb.header.skipIfIs(glob.KeySymbolComma)
+		}
+	}
+
+	if tb.header.isAndSkip(endWith) {
+		return paramName, paramInSetsFacts, nil
+	} else {
+		return nil, nil, fmt.Errorf("expected '%s' but got '%s'", endWith, tb.header.strAtCurIndexPlus(0))
+	}
+}
+
+func (tb *tokenBlock) paramSliceInDeclHeadAndSkipEndWithUniPrefix(endWith string) ([]string, []ast.FactStmt, error) {
+	paramName := []string{}
+	paramInSetsFacts := []ast.FactStmt{}
+
+	for !tb.header.is(endWith) {
+		objName, err := tb.header.next()
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+			continue
+		} else if tb.header.is(endWith) {
+			break
+		} else {
+			tp, err := tb.header.rawFc()
+			if err != nil {
+				return nil, nil, err
+			}
+
+			paramName = append(paramName, objName)
+			paramInSetsFacts = append(paramInSetsFacts, ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(objName), tp}))
+
+			tb.header.skipIfIs(glob.KeySymbolComma)
+		}
+	}
+
+	if tb.header.isAndSkip(endWith) {
+		return paramName, paramInSetsFacts, nil
+	} else {
+		return nil, nil, fmt.Errorf("expected '%s' but got '%s'", endWith, tb.header.strAtCurIndexPlus(0))
+	}
 }
