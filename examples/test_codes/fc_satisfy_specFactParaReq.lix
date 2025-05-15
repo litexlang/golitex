@@ -1,9 +1,9 @@
 prove:
-    prop p(x nat)
-    prop q(x nat)
+    prop p(x N)
+    prop q(x N)
 
     know:
-        forall x nat:
+        forall x N:
             $p(x)
             then:
                 $q(x)

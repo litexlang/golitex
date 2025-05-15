@@ -40,10 +40,10 @@ const (
 	KeywordCommutativeProp      = "commutative_prop"
 	KeywordCommutativeFn        = "commutative_fn" // must-have: 否则 a+b=b+a不能验证
 	KeywordAssociativeFn        = "associative_fn" // must-have: 否则 a+1+1=a+2不能验证
-	KeywordNatural              = "nat"            // e.g. 0
-	KeywordInt                  = "int"            // e.g. -1
-	KeywordRational             = "rat"            // e.g. -1.1
-	KeywordReal                 = "real"           // e.g. pi
+	KeywordNatural              = "N"              // e.g. 0
+	KeywordInt                  = "I"              // e.g. -1
+	KeywordRational             = "F"              // e.g. -1.1
+	KeywordReal                 = "R"              // e.g. pi
 	KeywordIs                   = "is"
 	KeywordIn                   = "in"
 	KeywordInduction            = "induction"

@@ -5,7 +5,7 @@ prove:
 
 
 prove:
-    prop q(x nat, y nat)
+    prop q(x N, y N)
 
     know $commutative_prop(q)
     know:

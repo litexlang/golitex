@@ -12,10 +12,10 @@
 
 know:
     set $in set
-    nat $in set
-    int $in set
-    rat $in set
-    real $in set
+    N $in set
+    N $in set
+    F $in set
+    R $in set
     
     forall x set, y set:
         then:
@@ -25,5 +25,3 @@ know:
                 z $in y
             forall z y:
                 z $in x
-                
-                

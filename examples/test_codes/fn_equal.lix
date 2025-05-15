@@ -3,10 +3,10 @@ prove:
         f == g
 
 prove:
-    fn f(a int) int
-    fn g(a int) int
+    fn f(a I) I
+    fn g(a I) I
     know:
-        forall x int:
+        forall x I:
             f(x) = g(x)
     f == g
     f == g

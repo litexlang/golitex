@@ -181,7 +181,7 @@ In programming, such information is typically encapsulated within an instance of
 `type` has the following functionalities:
 
 - **As as Set**:
-The statement obj x type_name means that x has the type type_name. Mathematically, this means x belongs to the set called type_name. For example, `obj n Real` means n is a real number, i.e., n is in the set of all real numbers. As in most programming languages, every object has a type. However, the object might not have a specific "value" because, in many cases, it is the type of the object (not its value) that determines its relationships with other objects. For example, no matter what a positive number equals to, it is larger than 0. Since a object can belong to multiple sets (e.g. 1 is both a real number and a natural number), a object can have multiple types.
+The statement obj x type_name means that x has the type type_name. Mathematically, this means x belongs to the set called type_name. For example, `obj n R` means n is a R number, i.e., n is in the set of all R numbers. As in most programming languages, every object has a type. However, the object might not have a specific "value" because, in many cases, it is the type of the object (not its value) that determines its relationships with other objects. For example, no matter what a positive number equals to, it is larger than 0. Since a object can belong to multiple sets (e.g. 1 is both a R number and a natural number), a object can have multiple types.
 
 - **Determine Meaning of Operations**:
 Objects of different types support different operations and propositions. For example, when a and b are positive natural numbers, expressions like a^b (multiplying a by itself b times) and a < b are well-defined and meaningful. However, when a and b are matrices, operations like a^b and a < b are not standard notations and may not make sense. Importantly, an object should never be passed to a proposition or function if the parameter types do not match the type of that object. This ensures that operations and functions are applied only in contexts where they are well-defined.
@@ -217,8 +217,8 @@ Notice the object you introduce to current environment might not exist. For exam
 ```plaintext
 // declare a function
 
-// input 2 objects with type Real, output object with type Real
-fn add(a Real, b Real) Real:
+// input 2 objects with type R, output object with type R
+fn add(a R, b R) R:
     then:
         add(a, b) = add(b, a)   // facts about function add
 
@@ -227,7 +227,7 @@ add(1 ,2) = add(2, 1)
 1 + 2 = 2 + 1
 ```
 
-Functions in Litex are not executed. In the realm of mathematics, a function is essentially an entity that is eligible to precede a set of parentheses (). It shares similarities with what we refer to as a object, with the distinctive feature being its ability to be positioned before the ().
+Functions in Litex are not executed. In the Rm of mathematics, a function is essentially an entity that is eligible to precede a set of parentheses (). It shares similarities with what we refer to as a object, with the distinctive feature being its ability to be positioned before the ().
 
 Function parameter list can receive first-class citizens. Function type list can receive type struct pair. You can bind conditions to parameters that appear in function parameters list. The result of the function output have some properties, which appear in then block.
 
@@ -255,9 +255,9 @@ The difference between a proposition (prop) and a factual expression is that a p
 struct Euclid_Space S:   // suppose S is a Rn
     type_member:
         obj dim Nat // dim is positive natural number
-        fn __add__(v1 S, v2 S) Real
+        fn __add__(v1 S, v2 S) R
     member:
-        fn __at__(n Nat) Real: // define @, which means the nth index of the 
+        fn __at__(n Nat) R: // define @, which means the nth index of the 
             cond:
                 n < S.dim
     cond:
@@ -306,7 +306,7 @@ prop [G Group] element_wise_commutative(g G, g2 G) G:
 
 In Litex, how do we describe the situation where certain sets can "implement" the struct (like group), meaning they can be endowed with a group structure? What does it mean when we say R1, R2 and R3 are Euclidean Space?
 
-If you view a type as a set, then a struct is a "type of type" or a "set of sets". For example, the struct of a group can be thought of as the set of all sets that can be groups. Real is a type because there's only one set named Real, while there are multiple groups that implement the Group struct. R1, R2 and R3 are Euclidean Space actually means R1, R2 and R3 implements all features of Euclid Space. (Mathematically, it means certain sets being able to implement a category.)
+If you view a type as a set, then a struct is a "type of type" or a "set of sets". For example, the struct of a group can be thought of as the set of all sets that can be groups. R is a type because there's only one set named R, while there are multiple groups that implement the Group struct. R1, R2 and R3 are Euclidean Space actually means R1, R2 and R3 implements all features of Euclid Space. (Mathematically, it means certain sets being able to implement a category.)
 
 Such ideas already exist in mainstream programming world for practical purposes. Types in Go (the Go programming language) implements interface. Implement means types have required members. Types in Litex implements struct. Implement also means types have required members.
 
@@ -314,9 +314,9 @@ In Go, interfaces can be directly passed as parameter types. In Litex, a struct 
 
 Type inference is possible. When calling f[G Group, G2 Group](g G, g2 G2), you can just write f(g, g2) instead of f[G, G2](g, g2) since G and G2 can be inferred.
 
-Another question is, how do we describe the situation where one set "extends" another set (like complex number extend real number)?
+Another question is, how do we describe the situation where one set "extends" another set (like complex number extend R number)?
 
-In mathematics, to extend a structure (like the real numbers) means to create a larger structure (like the complex numbers) that includes the original structure as a subset while preserving its properties and adding new features (In category theory it is called embedding).
+In mathematics, to extend a structure (like the R numbers) means to create a larger structure (like the complex numbers) that includes the original structure as a subset while preserving its properties and adding new features (In category theory it is called embedding).
 
 That is what "type implement another type" means in Litex. What does this extend mean? It means there is an injection from all objects from one type to another, members of original type implements the extended type and maintain its original features.
 

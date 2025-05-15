@@ -1,5 +1,5 @@
 prove:
-    exist_prop x nat st p(y nat):
+    exist_prop x N st p(y N):
         dom:
             $p(y)
         iff:

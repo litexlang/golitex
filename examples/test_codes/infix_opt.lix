@@ -1,6 +1,6 @@
 prove:
     know:
-        forall x nat, y nat:
+        forall x N, y N:
             x \mul y = x * y
 
     1 \mul 2 = 1 * 2

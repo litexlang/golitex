@@ -1,14 +1,14 @@
 prove:
-    prop p(x nat)
+    prop p(x N)
 
     know:
         $p(0)
-        forall x nat:
+        forall x N:
             $p(x)
             then:
                 $p(x+1)
 
     $induction(p)
 
-    forall n nat:
+    forall n N:
         $p(n)

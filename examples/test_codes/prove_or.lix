@@ -1,5 +1,5 @@
 prove:
-    prop p(x int)
+    prop p(x I)
     know:
         forall:
             not $p(1)
