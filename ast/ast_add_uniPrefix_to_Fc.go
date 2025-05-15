@@ -37,6 +37,10 @@ func AddUniPrefixToFcAtom(atom *FcAtom, uniParams NameDepthMap) (*FcAtom, error)
 }
 
 func AddUniPrefixToFc(fc Fc, uniParams NameDepthMap) (Fc, error) {
+	if fc == nil {
+		return nil, nil
+	}
+
 	fcAsAtom, ok := fc.(*FcAtom)
 	if ok {
 		return AddUniPrefixToFcAtom(fcAsAtom, uniParams)
