@@ -794,7 +794,8 @@ func (tb *tokenBlock) defHaveStmt() (*ast.HaveStmt, error) {
 
 	objNames := []string{}
 
-	for !tb.header.is(glob.KeywordSt) {
+	// there is at least one object name
+	for {
 		objName, err := tb.header.next()
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
@@ -802,7 +803,12 @@ func (tb *tokenBlock) defHaveStmt() (*ast.HaveStmt, error) {
 		objNames = append(objNames, objName)
 		if tb.header.is(glob.KeySymbolComma) {
 			tb.header.skip(glob.KeySymbolComma)
+			continue
 		}
+		if tb.header.is(glob.KeywordSt) {
+			break
+		}
+		return nil, fmt.Errorf("expect '%s' or '%s' but got '%s'", glob.KeywordSt, glob.KeySymbolComma, tb.header.strAtCurIndexPlus(0))
 	}
 
 	err = tb.header.skip(glob.KeywordSt)
@@ -1206,7 +1212,7 @@ func (tb *tokenBlock) proveOrStmt() (*ast.ProveOrStmt, error) {
 	}
 
 	indexes := map[int]struct{}{}
-	for !tb.header.is(glob.KeySymbolColon) {
+	for {
 		curToken, err := tb.header.getAndSkip("")
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
@@ -1217,10 +1223,14 @@ func (tb *tokenBlock) proveOrStmt() (*ast.ProveOrStmt, error) {
 			return nil, &tokenBlockErr{err, *tb}
 		}
 		indexes[curIndex] = struct{}{}
-	}
-
-	if len(indexes) == 0 {
-		return nil, &tokenBlockErr{fmt.Errorf("prove or: expect indexes, but got empty"), *tb}
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+			continue
+		}
+		if tb.header.is(glob.KeySymbolColon) {
+			break
+		}
+		return nil, fmt.Errorf("expect '%s' or '%s' but got '%s'", glob.KeySymbolColon, glob.KeySymbolComma, tb.header.strAtCurIndexPlus(0))
 	}
 
 	err = tb.header.skip(glob.KeySymbolColon)
