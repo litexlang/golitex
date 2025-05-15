@@ -74,3 +74,22 @@ prove:
     have b st $exist_at_least_two_points_on_line(a, l)
 
     $point_on_line(b, l)
+
+know prop two_points_on_line_then_line_on_plane(a point, b point, l line, p plane):
+        a != b
+        $point_on_line(a, l)
+        $point_on_line(b, l)
+        $point_on_plane(a, p)
+        $point_on_plane(b, p)
+        then:
+            $line_on_plane(l, p)
+
+prove:
+    obj a point, b point, l line, p plane:
+        a != b
+        $point_on_plane(a, p)
+        $point_on_plane(b, p)
+        $point_on_line(a, l)
+        $point_on_line(b, l)
+    $two_points_on_line_then_line_on_plane(a, b, l, p)
+    $line_on_plane(l, p)
