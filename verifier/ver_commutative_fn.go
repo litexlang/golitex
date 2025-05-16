@@ -32,22 +32,25 @@ func (ver *Verifier) commutativeFnByDef(stmt *ast.SpecFactStmt, state VerState) 
 	uniFactParamInSetsFacts := defOfFn.DefHeader.ParamInSetsFacts
 	uniFactDomFacts := defOfFn.DomFacts
 
-	leftParams := ast.NewFcAtomWithName(uniFactParams[0])
-	rightParams := ast.NewFcAtomWithName(uniFactParams[1])
+	leftParam := ast.NewFcAtomWithName(uniFactParams[0])
+	rightParam := ast.NewFcAtomWithName(uniFactParams[1])
 
-	uniFactThenFacts := []ast.FactStmt{
-		ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeySymbolEqual), []ast.Fc{leftParams, rightParams}),
-	}
+	fnName := ast.NewFcAtomWithName(defOfFn.DefHeader.Name)
+
+	leftFnParamOfEqualFact := ast.NewFcFn(fnName, []ast.Fc{leftParam, rightParam}, nil)
+	rightFnParamOfEqualFact := ast.NewFcFn(fnName, []ast.Fc{rightParam, leftParam}, nil)
+
+	equalFact := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeySymbolEqual), []ast.Fc{leftFnParamOfEqualFact, rightFnParamOfEqualFact})
 
 	uniFact := ast.NewUniFactStmtWithSetReqInDom(
 		uniFactParams,
 		uniFactDomFacts,
-		uniFactThenFacts,
+		[]ast.FactStmt{equalFact},
 		ast.EmptyIffFacts,
 		uniFactParamInSetsFacts,
 	)
 
-	ok, err := ver.FactStmt(uniFact, state)
+	ok, err := ver.FactStmt(uniFact, state.addRound())
 	if err != nil {
 		return false, err
 	}

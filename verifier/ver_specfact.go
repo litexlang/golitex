@@ -145,6 +145,10 @@ func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state 
 					continue
 				}
 
+				if knownFact.Fact.TypeEnum != stmt.TypeEnum {
+					continue
+				}
+
 				for i, knownParam := range knownFact.Fact.Params {
 					ok, err := ver.fcEqual_Commutative_Associative_CmpRule(knownParam, stmt.Params[i], state)
 					if err != nil {
@@ -442,6 +446,10 @@ func (ver *Verifier) verifyLogicExprSteps(knownFact *env.KnownSpecFact_InLogicEx
 
 func (ver *Verifier) specFactProveByDefinition(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	nextState := state.addRound()
+
+	if !stmt.IsTrue() {
+		return false, nil
+	}
 
 	defStmt, ok := ver.env.GetPropDef(stmt.PropName)
 	if !ok {
