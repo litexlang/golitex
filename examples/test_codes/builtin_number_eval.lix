@@ -14,3 +14,6 @@ prove:
     1 $in N
     1 $in I
     1 $in F
+
+prove:
+    1 + 1 = 2

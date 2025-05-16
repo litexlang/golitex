@@ -106,7 +106,7 @@ func cmpFcFnLit(left, right *ast.FcFn) (int, error) {
 	}
 
 	for i := 0; i < len(left.ParamSegs); i++ {
-		if comp, err := cmpFcFnSegLit(left.ParamSegs[i], right.ParamSegs[i]); comp != 0 || err != nil {
+		if comp, err := cmpFcLit(left.ParamSegs[i], right.ParamSegs[i]); comp != 0 || err != nil {
 			return comp, err
 		}
 	}

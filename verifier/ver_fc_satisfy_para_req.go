@@ -123,14 +123,12 @@ func (ver *Verifier) fcFnDefined(fc *ast.FcFn) (bool, error) {
 
 	// params
 	for _, seg := range fc.ParamSegs {
-		for _, param := range seg {
-			ok, err = ver.FcDefined(param)
-			if err != nil {
-				return false, err
-			}
-			if !ok {
-				return false, nil
-			}
+		ok, err = ver.FcDefined(seg)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
 		}
 	}
 

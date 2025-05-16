@@ -61,5 +61,10 @@ func IsValidName(name string) error {
 		return fmt.Errorf("identifier name cannot end with '%s'", KeywordId)
 	}
 
+	if strings.HasPrefix(name, "-") {
+		// 以后可能要让 -1 是 fcAtom with value -1，而不是 fcFn with function name -
+		return fmt.Errorf("identifier name cannot begin with '-'")
+	}
+
 	return nil
 }

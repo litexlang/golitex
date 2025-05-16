@@ -31,7 +31,15 @@ func (cursor *strSliceCursor) rawFc() (ast.Fc, error) {
 		if err != nil {
 			return nil, err
 		}
-		return ast.NewFcFn(expr, nil, as), nil
+		if exprAsFn, ok := expr.(*ast.FcFn); ok {
+			exprAsFn.As = as
+			return exprAsFn, nil
+		} else if exprAsAtom, ok := expr.(*ast.FcAtom); ok {
+			exprAsAtom.As = as
+			return exprAsAtom, nil
+		} else {
+			return nil, fmt.Errorf("expected function or atom, got %s", expr)
+		}
 	}
 	return expr, nil
 }
@@ -65,14 +73,19 @@ func (cursor *strSliceCursor) fcAtomAndFcFnRetAndBracedFc() (ast.Fc, error) {
 	}
 }
 
-func (cursor *strSliceCursor) rawFcFn(optName ast.Fc) (*ast.FcFn, error) {
+func (cursor *strSliceCursor) rawFcFn(optName *ast.FcAtom) (ast.Fc, error) {
 	typeParamsObjParamsPairs, err := cursor.fcFnSegs()
 
 	if err != nil {
 		return nil, err
 	}
 
-	return ast.NewFcFn(optName, typeParamsObjParamsPairs, nil), nil
+	var curHead ast.Fc = optName
+	for _, seg := range typeParamsObjParamsPairs {
+		curHead = ast.NewFcFn(curHead, seg, nil)
+	}
+
+	return curHead, nil
 }
 
 func (cursor *strSliceCursor) fcFnSegs() ([][]ast.Fc, error) {
@@ -139,7 +152,7 @@ func (cursor *strSliceCursor) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence)
 				return nil, err
 			}
 
-			left = ast.NewFcFn(fn, [][]ast.Fc{{left, right}}, nil)
+			left = ast.NewFcFn(fn, []ast.Fc{left, right}, nil)
 			break
 		}
 
@@ -163,7 +176,7 @@ func (cursor *strSliceCursor) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence)
 		leftHead := ast.NewFcAtomWithName(curToken)
 		left = ast.NewFcFn(
 			leftHead,
-			[][]ast.Fc{{left, right}},
+			[]ast.Fc{left, right},
 			nil,
 		)
 	}
@@ -197,7 +210,7 @@ func (cursor *strSliceCursor) unaryOptFc() (ast.Fc, error) {
 		leftHead := ast.NewFcAtomWithName(unaryOp)
 		return ast.NewFcFn(
 			leftHead,
-			[][]ast.Fc{{right}},
+			[]ast.Fc{right},
 			nil,
 		), nil
 	}
@@ -326,5 +339,10 @@ func (cursor *strSliceCursor) bracedExpr() (ast.Fc, error) {
 		segs = append(segs, seg)
 	}
 
-	return ast.NewFcFn(head, segs, nil), nil
+	var curHead ast.Fc = head
+	for _, seg := range segs {
+		curHead = ast.NewFcFn(curHead, seg, nil)
+	}
+
+	return curHead, nil
 }

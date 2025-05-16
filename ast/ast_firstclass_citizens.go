@@ -39,7 +39,7 @@ type FcAtom struct {
 
 type FcFn struct {
 	FnHead    Fc // 必须是 fc, 而不是 fcAtom，因为函数头可能是另一个函数的返回值
-	ParamSegs [][]Fc
+	ParamSegs []Fc
 	As        Fc
 }
 
@@ -47,7 +47,7 @@ func NewFcAtom(pkgName string, value string, as Fc) *FcAtom {
 	return &FcAtom{pkgName, value, as}
 }
 
-func NewFcFn(fnHead Fc, callPipe [][]Fc, as Fc) *FcFn {
+func NewFcFn(fnHead Fc, callPipe []Fc, as Fc) *FcFn {
 	return &FcFn{fnHead, callPipe, as}
 }
 
@@ -70,11 +70,11 @@ func hasBuiltinOptAndToString(f *FcFn) (bool, string) {
 	}
 
 	if ptr.PkgName == glob.EmptyPkg && ptr.Name == glob.KeySymbolMinus {
-		if len(f.ParamSegs[0]) == 1 {
-			return true, fmt.Sprintf("(%s %s)", ptr.Name, f.ParamSegs[0][0])
+		if len(f.ParamSegs) == 1 {
+			return true, fmt.Sprintf("(%s %s)", ptr.Name, f.ParamSegs[0])
 		}
 
-		return true, fmt.Sprintf("(%s %s %s)", f.ParamSegs[0][0], ptr.Name, f.ParamSegs[0][1])
+		return true, fmt.Sprintf("(%s %s %s)", f.ParamSegs[0], ptr.Name, f.ParamSegs[1])
 	}
 
 	if ptr.PkgName != glob.EmptyPkg {
@@ -85,7 +85,7 @@ func hasBuiltinOptAndToString(f *FcFn) (bool, string) {
 
 	outPut := string(ptr.Name)
 	if glob.IsKeySymbolRelaFn(outPut) {
-		return true, fmt.Sprintf("(%s %s %s)", f.ParamSegs[0][0], outPut, f.ParamSegs[0][1])
+		return true, fmt.Sprintf("(%s %s %s)", f.ParamSegs[0], outPut, f.ParamSegs[1])
 	}
 
 	return false, ""
@@ -109,7 +109,7 @@ func IsFcBuiltinInfixOpt(f FcFn) bool {
 		return false
 	}
 
-	return ptrHeadAsAtom.IsBuiltinRelaFn() && len(f.ParamSegs) == 1 && len(f.ParamSegs[0]) == 2
+	return ptrHeadAsAtom.IsBuiltinRelaFn() && len(f.ParamSegs) == 2
 }
 
 func IsFcBuiltinUnaryFn(fc FcFn) bool {
@@ -118,7 +118,7 @@ func IsFcBuiltinUnaryFn(fc FcFn) bool {
 		return false
 	}
 
-	return fcAsFnHead.IsBuiltinUnaryOpt() && len(fc.ParamSegs) == 1 && len(fc.ParamSegs[0]) == 1
+	return fcAsFnHead.IsBuiltinUnaryOpt() && len(fc.ParamSegs) == 1
 }
 
 func (f *FcAtom) IsBuiltinUnaryOpt() bool {
@@ -179,23 +179,15 @@ func IsFcAtom_HasGivenName_EmptyPkgName(fc Fc, kw string) bool {
 }
 
 func (f *FcFn) HasTwoParamsAndSwitchOrder() (*FcFn, bool) {
-	if len(f.ParamSegs) != 1 {
+	if len(f.ParamSegs) != 2 {
 		return nil, false
 	}
 
-	if len(f.ParamSegs[0]) != 2 {
-		return nil, false
-	}
-
-	return NewFcFn(f.FnHead, [][]Fc{{f.ParamSegs[0][1], f.ParamSegs[0][0]}}, f.As), true
+	return NewFcFn(f.FnHead, []Fc{f.ParamSegs[0], f.ParamSegs[1]}, f.As), true
 }
 
 func (f *FcFn) HasTwoParams_FirstParamHasTheSameNameAsItself() (*FcFn, bool) {
-	if len(f.ParamSegs) != 1 {
-		return nil, false
-	}
-
-	if len(f.ParamSegs[0]) != 2 {
+	if len(f.ParamSegs) != 2 {
 		return nil, false
 	}
 
@@ -206,20 +198,16 @@ func (f *FcFn) HasTwoParams_FirstParamHasTheSameNameAsItself() (*FcFn, bool) {
 		return nil, false
 	}
 
-	if f_firstParam_as_fn, ok := f.ParamSegs[0][0].(*FcFn); ok {
+	if f_firstParam_as_fn, ok := f.ParamSegs[0].(*FcFn); ok {
 		if f_firstParam_headAsAtom, ok := f_firstParam_as_fn.FnHead.(*FcAtom); ok {
 			if f_firstParam_headAsAtom.Name == fHeadAsAtom.Name && f_firstParam_headAsAtom.PkgName == fHeadAsAtom.PkgName {
-				if len(f_firstParam_as_fn.ParamSegs) != 1 {
+				if len(f_firstParam_as_fn.ParamSegs) != 2 {
 					return nil, false
 				}
 
-				if len(f_firstParam_as_fn.ParamSegs[0]) != 2 {
-					return nil, false
-				}
+				newRight := NewFcFn(f.FnHead, []Fc{f_firstParam_as_fn.ParamSegs[0], f.ParamSegs[1]}, f.As)
 
-				newRight := NewFcFn(f.FnHead, [][]Fc{{f_firstParam_as_fn.ParamSegs[0][1], f.ParamSegs[0][1]}}, f.As)
-
-				return NewFcFn(f.FnHead, [][]Fc{{f_firstParam_as_fn.ParamSegs[0][0], newRight}}, f.As), true
+				return NewFcFn(f.FnHead, []Fc{f_firstParam_as_fn.ParamSegs[0], newRight}, f.As), true
 			}
 		}
 	}
