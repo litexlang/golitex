@@ -120,6 +120,10 @@ func (cursor *strSliceCursor) rawFcAtom() (ast.FcAtom, error) {
 
 	pkgNameStr := pkgName.String()
 
+	if realPkgName, ok := cursor.pkgNameMap[pkgNameStr]; ok {
+		pkgNameStr = realPkgName
+	}
+
 	if glob.IsKwThatCanNeverBeFcName(value) {
 		return *ast.NewFcAtom(pkgNameStr, value, nil), fmt.Errorf("invalid first citizen: %s", value)
 	} else {
