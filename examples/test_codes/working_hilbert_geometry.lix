@@ -391,20 +391,20 @@ know:
     $commutative_fn(line_of)
     $commutative_fn(finite_line_of)
 
-prove:
-    obj middle point, l finite_line
-
-    $exist_point_right_to_point_with_finite_line_equal_to_given_finite_line(middle, l)
-    have right  st $exist_point_right_to_point_with_finite_line_equal_to_given_finite_line(middle, l)
-    $point_left_point_on_one_line(right, middle)
-    $finite_line_equal(finite_line_of(middle, right), l)
-
-    $exist_point_left_to_point_with_finite_line_equal_to_given_finite_line(middle, l)
-    have left  st $exist_point_left_to_point_with_finite_line_equal_to_given_finite_line(middle, l)
-    $point_left_to_point_on_one_line(left, middle)
-    $finite_line_equal(finite_line_of(left, middle), l)
-
-    $finite_line_equal(finite_line_of(left, middle), l)
+# prove:
+#     obj middle point, l finite_line
+# 
+#     $exist_point_right_to_point_with_finite_line_equal_to_given_finite_line(middle, l)
+#     have right  st $exist_point_right_to_point_with_finite_line_equal_to_given_finite_line(middle, l)
+#     $point_left_point_on_one_line(right, middle)
+#     $finite_line_equal(finite_line_of(middle, right), l)
+# 
+#     $exist_point_left_to_point_with_finite_line_equal_to_given_finite_line(middle, l)
+#     have left  st $exist_point_left_to_point_with_finite_line_equal_to_given_finite_line(middle, l)
+#     $point_left_to_point_on_one_line(left, middle)
+#     $finite_line_equal(finite_line_of(left, middle), l)
+# 
+#     $finite_line_equal(finite_line_of(left, middle), l)
 
 # TODO: The user can add relationships between $between, $point_left_to_point_on_one_line, $point_left_point_on_one_line, by himself. 
 
