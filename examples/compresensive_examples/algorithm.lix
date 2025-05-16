@@ -16,13 +16,15 @@ integer for which x_k is in S, and in this case it is said to produce the output
 fn computational_sequence(Q set, f fn(Q)Q) fn(Q, N)Q:
     forall x Q:
         computational_sequence(Q, f)(x,n) = f(computational_sequence(Q, f)(x, n-1))
-
 exist_prop n nat exist_end_of_computational_sequence(Q set, x Q, f fn(Q,N)Q):
     f(x, n) = f(x, n+1)
-
 prop is_algorithm(Q set, I set, f fn(Q)Q):
-    dom:
-        I $subset_of Q
+    I $subset_of Q
     iff:
         forall x I:
             $exist_end_of_computational_sequence(Q, x, computational_sequence(Q, f))
+
+"""
+Comments:
+It only takes only 10 lines to formalize the definition of algorithm, which is marvelous.
+"""
