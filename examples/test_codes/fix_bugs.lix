@@ -1,43 +1,38 @@
-prove:
-    set point
-    set line
-    set plane
 
-    prop point_on_line(p point, l line)
-    prop point_on_plane(q point, p plane)
-    prop line_on_plane(l line, p plane)
+set point
+set line
+set plane
 
-    fn line_of(a point, b point) line:
-        a != b
-        then:
-            $point_on_line(a, line_of(a, b))
-            $point_on_line(b, line_of(a, b))
-            forall l line:
-                $point_on_line(a, l)
-                $point_on_line(b, l)
-                then:
-                    l = line_of(a, b)
+prop point_on_line(p point, l line)
+prop point_on_plane(q point, p plane)
+prop line_on_plane(l line, p plane)
 
-    prove:
-        # a line is determined by two points
-        obj a point, b point, l line:
-            a != b
+fn line_of(a point, b point) line:
+    a != b
+    then:
+        $point_on_line(a, line_of(a, b))
+        $point_on_line(b, line_of(a, b))
+        forall l line:
             $point_on_line(a, l)
             $point_on_line(b, l)
-        l = line_of(a, b)
-
-        # line_of is commutative
-        forall a point, b point:
-            a != b
             then:
-                $point_on_line(a, line_of(a, b))
-                $point_on_line(b, line_of(a, b))
-                $point_on_line(a, line_of(b, a))
-                $point_on_line(b, line_of(b, a))
-                # line_of(a, b) = line_of(b, a)
+                l = line_of(a, b)
 
-    $commutative_fn(line_of)
+# a line is determined by two points
+obj a point, b point, l line:
+    a != b
+    $point_on_line(a, l)
+    $point_on_line(b, l)
+l = line_of(a, b)
 
-prove:
-    know  a != b
-    a = b
+# line_of is commutative
+forall a point, b point:
+    a != b
+    then:
+        $point_on_line(a, line_of(a, b))
+        $point_on_line(b, line_of(a, b))
+        $point_on_line(a, line_of(b, a))
+        $point_on_line(b, line_of(b, a))
+        line_of(a, b) = line_of(b, a)
+
+$commutative_fn(line_of)
