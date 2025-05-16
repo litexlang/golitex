@@ -359,9 +359,16 @@ func (env *Env) IsEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 		return true, fmt.Errorf("'=' fact expect 2 parameters, get %d in %s", len(fact.Params), fact.String())
 	}
 
-	err := storeCommutativeTransitiveFact(env.EqualMem, fact)
-	if err != nil {
-		return false, err
+	if fact.IsTrue() {
+		err := storeCommutativeTransitiveFact(env.EqualMem, fact)
+		if err != nil {
+			return false, err
+		}
+	} else {
+		err := storeCommutativeTransitiveFact(env.NotEqualMem, fact)
+		if err != nil {
+			return false, err
+		}
 	}
 
 	return true, nil
@@ -370,6 +377,12 @@ func (env *Env) IsEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 func (env *Env) GetEqualFcs(fc ast.Fc) (*[]ast.Fc, bool) {
 	fcAsStr := fc.String()
 	facts, ok := env.EqualMem[fcAsStr]
+	return facts, ok
+}
+
+func (env *Env) GetNotEqualFcs(fc ast.Fc) (*[]ast.Fc, bool) {
+	fcAsStr := fc.String()
+	facts, ok := env.NotEqualMem[fcAsStr]
 	return facts, ok
 }
 
@@ -489,9 +502,16 @@ func (env *Env) IsEqualFnName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 		return false, fmt.Errorf("equal fn is supposed to have two parameters, but %s has %d parameters", fact.PropName, len(fact.Params))
 	}
 
-	err := storeCommutativeTransitiveFact(env.EqualMem, fact)
-	if err != nil {
-		return false, err
+	if fact.IsTrue() {
+		err := storeCommutativeTransitiveFact(env.EqualMem, fact)
+		if err != nil {
+			return false, err
+		}
+	} else {
+		err := storeCommutativeTransitiveFact(env.NotEqualMem, fact)
+		if err != nil {
+			return false, err
+		}
 	}
 
 	return true, nil
@@ -506,9 +526,16 @@ func (env *Env) IsEqualSetName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 		return false, fmt.Errorf("equal set is supposed to have two parameters, but %s has %d parameters", fact.PropName, len(fact.Params))
 	}
 
-	err := storeCommutativeTransitiveFact(env.EqualMem, fact)
-	if err != nil {
-		return false, err
+	if fact.IsTrue() {
+		err := storeCommutativeTransitiveFact(env.EqualMem, fact)
+		if err != nil {
+			return false, err
+		}
+	} else {
+		err := storeCommutativeTransitiveFact(env.NotEqualMem, fact)
+		if err != nil {
+			return false, err
+		}
 	}
 
 	return true, nil

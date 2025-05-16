@@ -42,7 +42,8 @@ type Env struct {
 	AssociativeFn glob.Map2D[struct{}]
 
 	// 考虑多个系统的时候，再引入 map[string]string
-	EqualMem map[string]*[]ast.Fc
+	EqualMem    map[string]*[]ast.Fc
+	NotEqualMem map[string]*[]ast.Fc
 }
 
 func NewEnv(parent *Env) *Env {
@@ -67,7 +68,8 @@ func NewEnv(parent *Env) *Env {
 		CommutativeFn:   make(glob.Map2D[struct{}]),
 		AssociativeFn:   make(glob.Map2D[struct{}]),
 
-		EqualMem: make(map[string]*[]ast.Fc),
+		EqualMem:    make(map[string]*[]ast.Fc),
+		NotEqualMem: make(map[string]*[]ast.Fc),
 	}
 	return env
 }

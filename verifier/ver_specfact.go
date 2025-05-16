@@ -673,6 +673,7 @@ func (ver *Verifier) isSetEqualFact_Check(stmt *ast.SpecFactStmt, state VerState
 	}
 
 	equalFact := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeySymbolEqual), stmt.Params)
+
 	if ok, err := ver.isEqualFact_Check(equalFact, state); err != nil {
 		return false, err
 	} else if ok {
