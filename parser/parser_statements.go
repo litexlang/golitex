@@ -279,7 +279,7 @@ func (tb *tokenBlock) defFnStmt() (*ast.DefFnStmt, error) {
 		}
 	}
 
-	retInSetsFacts := ast.ParamParamSetToInFact(decl.Name, retType)
+	retInSetsFacts := ast.Param_ParamSet_ToInFact(decl.Name, retType)
 
 	return ast.NewDefFnStmt(*decl, domFacts, thenFacts, retInSetsFacts), nil
 }
@@ -327,7 +327,7 @@ func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 
 	paramInSetsFacts := make([]ast.FactStmt, len(objSets))
 	for i, objSet := range objSets {
-		paramInSetsFacts[i] = ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{objSet})
+		paramInSetsFacts[i] = ast.Param_ParamSet_ToInFact(objNames[i], objSet)
 	}
 
 	return ast.NewDefObjStmt(objNames, facts, paramInSetsFacts), nil
@@ -581,7 +581,7 @@ func (tb *tokenBlock) defExistPropStmt() (*ast.DefExistPropStmt, error) {
 
 	existParamInSetsFacts := make([]ast.FactStmt, len(existParamSets))
 	for i, existParamSet := range existParamSets {
-		existParamInSetsFacts[i] = ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{existParamSet})
+		existParamInSetsFacts[i] = ast.Param_ParamSet_ToInFact(existParams[i], existParamSet)
 	}
 
 	return ast.NewDefExistPropStmt(def, existParams, existParamInSetsFacts), nil
@@ -1220,7 +1220,7 @@ func (tb *tokenBlock) uniFactHeadWithouUniPrefix(endWith string) ([]string, []as
 			}
 
 			paramName = append(paramName, objName)
-			paramInSetsFacts = append(paramInSetsFacts, ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(objName), tp}))
+			paramInSetsFacts = append(paramInSetsFacts, ast.Param_ParamSet_ToInFact(objName, tp))
 
 			tb.header.skipIfIs(glob.KeySymbolComma)
 		}
@@ -1275,7 +1275,7 @@ func (tb *tokenBlock) param_paramInSetFactsWithUniPrefix(endWith string, nameDep
 					return nil, nil, nil, err
 				}
 
-				paramInSetsFacts = append(paramInSetsFacts, ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtom(glob.EmptyPkg, param, nil), setParam}))
+				paramInSetsFacts = append(paramInSetsFacts, ast.Param_ParamSet_ToInFact(param, setParam))
 
 				if tb.header.is(glob.KeySymbolComma) {
 					tb.header.skip(glob.KeySymbolComma)

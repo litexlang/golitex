@@ -168,6 +168,6 @@ func (stmt *SpecFactStmt) IsMathInductionFact() bool {
 // 	return facts
 // }
 
-func ParamParamSetToInFact(param string, paramSet Fc) FactStmt {
+func Param_ParamSet_ToInFact(param string, paramSet Fc) FactStmt {
 	return NewSpecFactStmt(TruePure, FcAtom{glob.EmptyPkg, glob.KeywordIn, nil}, []Fc{NewFcAtom(glob.EmptyPkg, param, nil), paramSet})
 }

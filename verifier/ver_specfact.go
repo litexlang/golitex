@@ -621,7 +621,7 @@ func (ver *Verifier) mathInductionSpecFact(stmt *ast.SpecFactStmt, state VerStat
 	)
 
 	paramInSetsFacts := make([]ast.FactStmt, 1)
-	paramInSetsFacts[0] = ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(fmt.Sprintf("%sn", glob.UniParamPrefix))})
+	paramInSetsFacts[0] = ast.Param_ParamSet_ToInFact(fmt.Sprintf("%sn", glob.UniParamPrefix), ast.NewFcAtomWithName(glob.KeywordNatural))
 
 	nToNAddOneFact := ast.NewUniFactStmtWithSetReqInDom(
 		params,
@@ -650,6 +650,7 @@ func (ver *Verifier) mathInductionSpecFact(stmt *ast.SpecFactStmt, state VerStat
 	return true, nil
 }
 
+// TODO: 没有测试过
 func (ver *Verifier) isSetEqualFact_Check(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if !stmt.PropNameIsGiven_PkgNameEmpty(stmt.PropName, glob.KeySymbolEqualEqualEqual) {
 		return false, nil
@@ -697,13 +698,13 @@ func (ver *Verifier) isSetEqualFact_Check(stmt *ast.SpecFactStmt, state VerState
 	}
 
 	paramInSetsFacts := make([]ast.FactStmt, 1)
-	paramInSetsFacts[0] = ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(fmt.Sprintf("%sx", glob.UniParamPrefix))})
+	paramInSetsFacts[0] = ast.Param_ParamSet_ToInFact(fmt.Sprintf("%sx", glob.UniParamPrefix), rightSet)
 
 	// use newfunction
 	uniFactItemsInLeftSetInRightSet := ast.NewUniFactStmtWithSetReqInDom(
 		[]string{fmt.Sprintf("%sx", glob.UniParamPrefix)},
 		[]ast.FactStmt{},
-		[]ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(fmt.Sprintf("%sx", glob.UniParamPrefix)), rightSet})},
+		[]ast.FactStmt{ast.Param_ParamSet_ToInFact(fmt.Sprintf("%sx", glob.UniParamPrefix), rightSet)},
 		ast.EmptyIffFacts,
 		paramInSetsFacts,
 	)
@@ -716,13 +717,12 @@ func (ver *Verifier) isSetEqualFact_Check(stmt *ast.SpecFactStmt, state VerState
 		return false, nil
 	}
 
-	paramInSetsFacts[0] = ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(fmt.Sprintf("%sx", glob.UniParamPrefix))})
-
+	paramInSetsFacts[0] = ast.Param_ParamSet_ToInFact(fmt.Sprintf("%sx", glob.UniParamPrefix), leftSet)
 	// forall x rightSet: x in leftSet
 	uniFactItemsInRightSetInLeftSet := ast.NewUniFactStmtWithSetReqInDom(
 		[]string{fmt.Sprintf("%sx", glob.UniParamPrefix)},
 		[]ast.FactStmt{},
-		[]ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(fmt.Sprintf("%sx", glob.UniParamPrefix)), leftSet})},
+		[]ast.FactStmt{ast.Param_ParamSet_ToInFact(fmt.Sprintf("%sx", glob.UniParamPrefix), leftSet)},
 		ast.EmptyIffFacts,
 		paramInSetsFacts,
 	)
