@@ -26,6 +26,14 @@ func (tb *tokenBlock) TopStmt() (*ast.TopStmt, error) {
 		pub = true
 	}
 
+	if tb.header.is(glob.KeywordImport) {
+		_, err := tb.importStmt()
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	}
+
 	ret, err := tb.Stmt()
 	if err != nil {
 		return nil, err
@@ -1297,4 +1305,8 @@ func (tb *tokenBlock) param_paramInSetFactsWithUniPrefix(endWith string, nameDep
 	}
 
 	return params, nameDepthMap, paramInSetsFacts, nil
+}
+
+func (tb *tokenBlock) importStmt() (ast.Stmt, error) {
+	return nil, nil
 }

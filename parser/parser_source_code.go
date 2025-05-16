@@ -37,7 +37,9 @@ func ParseSourceCode(code string) ([]ast.TopStmt, error) {
 		if err != nil {
 			return nil, err
 		}
-		ret = append(ret, *cur)
+		if cur != nil { // cur 可能是nil，比如非执行型语句import返回就是nil，因为压根没有要执行的东西
+			ret = append(ret, *cur)
+		}
 	}
 
 	return ret, nil
