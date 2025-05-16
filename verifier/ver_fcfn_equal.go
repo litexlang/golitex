@@ -34,6 +34,14 @@ func (ver *Verifier) fcFnEq(left, right *ast.FcFn, state VerState) (bool, error)
 				return false, nil
 			}
 		}
+
+		if ok, err := ver.FactStmt(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeySymbolEqual), []ast.Fc{left.FnHead, right.FnHead}), state); err != nil {
+			return false, err
+		} else if ok {
+			return true, nil
+		} else {
+			return false, nil
+		}
 	} else if ok {
 		return true, nil
 	}

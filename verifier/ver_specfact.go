@@ -92,43 +92,6 @@ func (ver *Verifier) specFactWithoutUsingPropCommutative(stmt *ast.SpecFactStmt,
 	return false, fmt.Errorf("invalid type of stmt")
 }
 
-func (ver *Verifier) pureSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	ok, err := ver.specFactSpec(stmt, state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
-	}
-
-	if state.isSpec() {
-		return false, nil
-	}
-
-	ok, err = ver.specFactProveByDefinition(stmt, state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		if state.requireMsg() {
-			ver.successWithMsg(stmt.String(), "definition")
-		} else {
-			ver.successNoMsg()
-		}
-		return true, nil
-	}
-
-	ok, err = ver.SpecFactUni(stmt, state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
-	}
-
-	return false, nil
-}
-
 func (ver *Verifier) specFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if ok, err := ver.isEqualFact_Check(stmt, state); err != nil {
 		return false, err
