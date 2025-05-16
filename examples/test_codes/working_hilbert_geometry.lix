@@ -377,13 +377,14 @@ know forall a point, b point, l line:
             $point_left_point_on_one_line(a, b, l)
 
 know exist_prop a point st exist_point_left_to_point_with_finite_line_equal_to_given_finite_line(b point, l finite_line):
+    iff:
         a != b
         $point_left_to_point_on_one_line(a, b, l)
         $finite_line_equal(finite_line_of(a, b), l)
 
 know exist_prop a point st exist_point_right_to_point_with_finite_line_equal_to_given_finite_line(b point, l finite_line):
         a != b
-        $point_left_point_on_one_line(a, b, l)
+        $point_left_to_point_on_one_line(b, a, l)
         $finite_line_equal(finite_line_of(a, b), l)
 
 know:
@@ -391,20 +392,13 @@ know:
     $commutative_fn(line_of)
     $commutative_fn(finite_line_of)
 
-# prove:
-#     obj middle point, l finite_line
-# 
-#     $exist_point_right_to_point_with_finite_line_equal_to_given_finite_line(middle, l)
-#     have right  st $exist_point_right_to_point_with_finite_line_equal_to_given_finite_line(middle, l)
-#     $point_left_point_on_one_line(right, middle)
-#     $finite_line_equal(finite_line_of(middle, right), l)
-# 
-#     $exist_point_left_to_point_with_finite_line_equal_to_given_finite_line(middle, l)
-#     have left  st $exist_point_left_to_point_with_finite_line_equal_to_given_finite_line(middle, l)
-#     $point_left_to_point_on_one_line(left, middle)
-#     $finite_line_equal(finite_line_of(left, middle), l)
-# 
-#     $finite_line_equal(finite_line_of(left, middle), l)
+prove:
+    obj middle point, l finite_line
+    $exist_point_left_to_point_with_finite_line_equal_to_given_finite_line(middle, l)
+    have left  st $exist_point_left_to_point_with_finite_line_equal_to_given_finite_line(middle, l)
+    $point_left_to_point_on_one_line(left, middle, l)
+    $finite_line_equal(finite_line_of(left, middle), l)
+
 
 # TODO: The user can add relationships between $between, $point_left_to_point_on_one_line, $point_left_point_on_one_line, by himself. 
 
