@@ -438,19 +438,15 @@ func (f *FcFn) String() string {
 
 	var builder strings.Builder
 	builder.WriteString(f.FnHead.String())
-	for _, seg := range f.ParamSegs {
-		if len(seg) > 0 {
-			builder.WriteString("(")
-			for i := range len(seg) - 1 {
-				builder.WriteString(seg[i].String())
-				builder.WriteString(", ")
-			}
-			builder.WriteString(seg[len(seg)-1].String())
-			builder.WriteString(")")
-		} else {
-			builder.WriteString("()")
+	builder.WriteString("(")
+	if len(f.ParamSegs) > 0 {
+		for i := range len(f.ParamSegs) - 1 {
+			builder.WriteString(f.ParamSegs[i].String())
+			builder.WriteString(", ")
 		}
+		builder.WriteString(f.ParamSegs[len(f.ParamSegs)-1].String())
 	}
+	builder.WriteString(")")
 
 	return builder.String()
 }

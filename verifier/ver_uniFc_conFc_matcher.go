@@ -123,21 +123,15 @@ func (ver *Verifier) match_FcFnInFactUnderUniFact_ConFc(fcFnUnFactUnderUniFact *
 	}
 
 	for i, uniPipe := range fcFnUnFactUnderUniFact.ParamSegs {
-		if len(uniPipe) != len(conParamAsFcFn.ParamSegs[i]) {
+		// matchMap, ok, err := ver.match_FcInFactUnderUniFact_WithConFc(param, conParamAsFcFn.ParamSegs[i][j], uniParams)
+		matchMap, ok, err := ver.match_FcInFactUnderUniFact_WithConFc(uniPipe, conParamAsFcFn.ParamSegs[i])
+		if err != nil {
+			return nil, false, err
+		}
+		if !ok {
 			return nil, false, nil
 		}
-
-		for j, param := range uniPipe {
-			// matchMap, ok, err := ver.match_FcInFactUnderUniFact_WithConFc(param, conParamAsFcFn.ParamSegs[i][j], uniParams)
-			matchMap, ok, err := ver.match_FcInFactUnderUniFact_WithConFc(param, conParamAsFcFn.ParamSegs[i][j])
-			if err != nil {
-				return nil, false, err
-			}
-			if !ok {
-				return nil, false, nil
-			}
-			mergeMatchMaps(matchMap, retMap)
-		}
+		mergeMatchMaps(matchMap, retMap)
 	}
 
 	return retMap, true, nil

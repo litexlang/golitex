@@ -568,12 +568,7 @@ func (ver *Verifier) leftIsCommutativeAndUseCommutedLeftToCheckEqualRight(left a
 	if leftAsFn, ok := left.(*ast.FcFn); ok {
 		if leftHeadAsAtom, ok := leftAsFn.FnHead.(*ast.FcAtom); ok {
 			if ver.env.IsCommutativeFn(*leftHeadAsAtom) { // 暂时认为只能是 atom 形式的opt name 才能判断
-				// 判断 ParamSegs 确实长成下面这个样子
-				if len(leftAsFn.ParamSegs) != 1 {
-					return false, nil
-				}
-
-				if len(leftAsFn.ParamSegs[0]) != 2 {
+				if len(leftAsFn.ParamSegs) != 2 {
 					return false, nil
 				}
 
@@ -659,7 +654,7 @@ func (ver *Verifier) mathInductionSpecFact(stmt *ast.SpecFactStmt, state VerStat
 	thenFacts[0] = ast.NewSpecFactStmt(
 		ast.TruePure,
 		*propNameAsAtom,
-		[]ast.Fc{ast.NewFcFn(ast.NewFcAtomWithName(glob.KeySymbolPlus), [][]ast.Fc{{ast.NewFcAtomWithName(fmt.Sprintf("%sn", glob.UniParamPrefix)), ast.NewFcAtomWithName("1")}}, nil)},
+		[]ast.Fc{ast.NewFcFn(ast.NewFcAtomWithName(glob.KeySymbolPlus), []ast.Fc{ast.NewFcAtomWithName(fmt.Sprintf("%sn", glob.UniParamPrefix)), ast.NewFcAtomWithName("1")}, nil)},
 	)
 
 	paramInSetsFacts := make([]ast.FactStmt, 1)
@@ -849,6 +844,7 @@ func (ver *Verifier) isFnEqualFact_Check(stmt *ast.SpecFactStmt, state VerState)
 	return true, nil
 }
 
+// TODO: 估计有点问题
 func (ver *Verifier) leftFnAlwaysEqualToRight(leftFnDef *ast.DefFnStmt, rightFnDef *ast.DefFnStmt, state VerState) (bool, error) {
 	// 函数相等，意味着定义域相等，每个元素上的返回值相等
 	// 定义域相等
@@ -901,13 +897,13 @@ func (ver *Verifier) leftFnAlwaysEqualToRight(leftFnDef *ast.DefFnStmt, rightFnD
 	// 返回值时刻相等
 	leftFnNameAsSpecFact := ast.NewFcFn(
 		ast.NewFcAtomWithName(leftFnDef.DefHeader.Name),
-		[][]ast.Fc{leftParamAsFcs},
+		leftParamAsFcs,
 		nil,
 	)
 
 	rightFnNameAsSpecFact := ast.NewFcFn(
 		ast.NewFcAtomWithName(rightFnDef.DefHeader.Name),
-		[][]ast.Fc{rightParamAsFcs},
+		rightParamAsFcs,
 		nil,
 	)
 

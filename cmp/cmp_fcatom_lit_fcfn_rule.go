@@ -54,7 +54,7 @@ func cmpFcFnRule(left, right *ast.FcFn) (bool, error) {
 	}
 
 	for i := 0; i < len(left.ParamSegs); i++ {
-		ok, err := cmpFcFnSegRule(left.ParamSegs[i], right.ParamSegs[i])
+		ok, err := CmpFcRule(left.ParamSegs[i], right.ParamSegs[i])
 		if err != nil {
 			return false, err
 		}

@@ -138,11 +138,11 @@ func randFcAtom() *ast.FcAtom {
 func randFcFnRetValue() *ast.FcFn {
 	fnName := randFcAtom()
 	round := rand.Intn(3) + 1
-	params := [][]ast.Fc{}
+	params := []ast.Fc{}
 	for i := 0; i < round; i++ {
-		params = append(params, randObjParams())
+		params = append(params, randFcAtom())
 	}
-	return &ast.FcFn{FnHead: fnName, ParamSegs: params}
+	return ast.NewFcFn(fnName, params, nil)
 }
 
 func randObjParams() []ast.Fc {
@@ -612,7 +612,7 @@ func TestAllFactCode(t *testing.T) {
 	fmt.Printf("read file takes %v\nparsing takes %v\nexecution takes %v\n", readFileTime, parseTime, executionTime)
 }
 
-var code = readFile("../examples/test_codes/working_hilbert_geometry.lix")
+var code = readFile("../examples/test_codes/builtin_number_eval.lix")
 
 func TestLastFactCode(t *testing.T) {
 	start := time.Now()
