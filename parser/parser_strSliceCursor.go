@@ -20,9 +20,8 @@ import (
 
 // strSliceCursor 表示字符串切片的游标
 type strSliceCursor struct {
-	index      int
-	slice      []string
-	pkgNameMap map[string]string
+	index int
+	slice []string
 }
 
 func (cursor *strSliceCursor) String() string {

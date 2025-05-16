@@ -120,7 +120,7 @@ func (cursor *strSliceCursor) rawFcAtom() (ast.FcAtom, error) {
 
 	pkgNameStr := pkgName.String()
 
-	if realPkgName, ok := cursor.pkgNameMap[pkgNameStr]; ok {
+	if realPkgName, ok := PkgManagementMap[pkgNameStr]; ok {
 		pkgNameStr = realPkgName
 	}
 

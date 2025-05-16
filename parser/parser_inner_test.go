@@ -57,7 +57,9 @@ func TestLexTimeParseTime(t *testing.T) {
 		if err != nil {
 			log.Fatalln(err)
 		}
-		ret = append(ret, *cur)
+		if cur != nil {
+			ret = append(ret, *cur)
+		}
 	}
 	parseTime := time.Since(start)
 
