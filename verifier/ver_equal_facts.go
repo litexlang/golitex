@@ -13,6 +13,7 @@
 package litex_verifier
 
 import (
+	"fmt"
 	ast "golitex/ast"
 )
 
@@ -81,6 +82,9 @@ func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state VerState) (boo
 
 		if gotLeftEqualFcs && gotRightEqualFcs {
 			if equalToLeftFcs == equalTorightFcs {
+				if state.requireMsg() {
+					ver.successMsgEnd(fmt.Sprintf("known %s = %s", left.String(), right.String()), "")
+				}
 				return true, nil
 			}
 		}
@@ -95,6 +99,9 @@ func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state VerState) (boo
 				if ok, err := ver.cmpFc(equalToLeftFc, right, state); err != nil {
 					return false, err
 				} else if ok {
+					if state.requireMsg() {
+						ver.successMsgEnd(fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToLeftFc.String(), right.String(), equalToLeftFc.String(), left.String()), "")
+					}
 					return true, nil
 				}
 			}
@@ -110,6 +117,9 @@ func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state VerState) (boo
 				if ok, err := ver.cmpFc(equalToRightFc, left, state); err != nil {
 					return false, err
 				} else if ok {
+					if state.requireMsg() {
+						ver.successMsgEnd(fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToRightFc.String(), left.String(), equalToRightFc.String(), right.String()), "")
+					}
 					return true, nil
 				}
 			}
