@@ -1,0 +1,22 @@
+"""
+In this folder, we compare Litex with Lean4 on various examples. I hope users can learn Litex, better appreciate its simplicity.
+
+FILE: number.lix
+
+Number related examples
+
+natural number, integer, rational number, real number, basic arithmetic operations, etc.
+
+The following examples are organized in this way: first is the statement in Litex, then is the Lean4 code, then the comment is the explanation of the example.
+"""
+
+# Example 1:
+
+2500000 * 2500000 = 6250000000000
+
+"""
+Lean4 code:
+example : 2500000 * 2500000 = 6250000000000 := by
+  norm_num
+"""
+
