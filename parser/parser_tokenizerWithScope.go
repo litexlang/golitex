@@ -94,7 +94,7 @@ func (t *tokenizerWithScope) tokenizeLine(line string) ([]string, error) {
 	return tokens, nil
 }
 
-func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]tokenBlock, error) {
+func (t *tokenizerWithScope) parseBlocks(currentIndent int, parserEnv *ParserEnv) ([]tokenBlock, error) {
 	blocks := []tokenBlock{}
 
 	for t.currentLine < len(t.lines) {
@@ -125,7 +125,7 @@ func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]tokenBlock, error
 		}
 
 		block := tokenBlock{
-			header: strSliceCursor{0, tokens},
+			header: strSliceCursor{0, tokens, parserEnv},
 			body:   nil,
 		}
 
@@ -155,7 +155,7 @@ func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]tokenBlock, error
 				}
 
 				// 有子 block
-				subBlocks, err := t.parseBlocks(nextIndent)
+				subBlocks, err := t.parseBlocks(nextIndent, parserEnv)
 				if err != nil {
 					return nil, err
 				}

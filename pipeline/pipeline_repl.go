@@ -24,6 +24,7 @@ import (
 	"strings"
 )
 
+// TODO: REPL对parserEnv的管理有严重问题
 type REPL struct {
 	env           *env.Env
 	executor      *exe.Executor
@@ -102,7 +103,7 @@ func (r *REPL) executeCode(code string) error {
 	}
 
 	// Parse and execute the code
-	topStmtSlice, err := parser.ParseSourceCode(code)
+	topStmtSlice, err := parser.ParseSourceCode(code, parser.NewParserEnv())
 	if err != nil {
 		return fmt.Errorf("parse error: %w", err)
 	}

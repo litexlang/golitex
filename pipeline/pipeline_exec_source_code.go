@@ -31,7 +31,7 @@ func ExecuteCodeAndReturnMessage(code string) (string, glob.SysSignal, error) {
 }
 
 func executeCodeAndReturnMessageSlice(code string) ([]string, glob.SysSignal, error) {
-	topStmtSlice, err := parser.ParseSourceCode(code)
+	topStmtSlice, err := parser.ParseSourceCode(code, parser.NewParserEnv())
 	if err != nil {
 		return nil, glob.SysSignalParseError, err
 	}

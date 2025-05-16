@@ -16,6 +16,8 @@ import (
 	"fmt"
 	"testing"
 	"time"
+
+	parser "golitex/parser"
 )
 
 func TestWholeFile(t *testing.T) {
@@ -23,7 +25,7 @@ func TestWholeFile(t *testing.T) {
 	var code = readFile("../examples/test_codes/working_hilbert_geometry.lix")
 	readFileTime := time.Since(start)
 	start = time.Now()
-	topStmtSlice := setupAndParseStmtTest(code)
+	topStmtSlice := setupAndParseStmtTest(code, &parser.ParserEnv{})
 	parseTime := time.Since(start)
 	start = time.Now()
 	messages := execStmtTest(topStmtSlice)
