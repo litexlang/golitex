@@ -17,17 +17,17 @@ import (
 )
 
 func (ver *Verifier) isEqualFact_Check(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	if !stmt.IsTrue() {
+		return false, nil
+	}
+
 	if ok, err := stmt.IsValidEqualFact(); err != nil {
 		return false, err
 	} else if !ok {
 		return false, nil
 	}
 
-	if stmt.IsTrue() {
-		return ver.fcEqualSpec(stmt.Params[0], stmt.Params[1], state)
-	} else {
-		return ver.fcNotEqualSpec(stmt.Params[0], stmt.Params[1], state)
-	}
+	return ver.fcEqualSpec(stmt.Params[0], stmt.Params[1], state)
 }
 
 func (ver *Verifier) cmpFc(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
@@ -78,60 +78,6 @@ func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state VerState) (boo
 
 		equalToLeftFcs, gotLeftEqualFcs = curEnv.GetEqualFcs(left)
 		equalTorightFcs, gotRightEqualFcs = curEnv.GetEqualFcs(right)
-
-		if gotLeftEqualFcs && gotRightEqualFcs {
-			if equalToLeftFcs == equalTorightFcs {
-				return true, nil
-			}
-		}
-
-		if gotLeftEqualFcs {
-			rightAsStr := right.String()
-			for _, equalToLeftFc := range *equalToLeftFcs {
-				if equalToLeftFc.String() == rightAsStr { // 最一开头已经比较过，这里不需要再比较了
-					continue
-				}
-
-				if ok, err := ver.cmpFc(equalToLeftFc, right, state); err != nil {
-					return false, err
-				} else if ok {
-					return true, nil
-				}
-			}
-		}
-
-		if gotRightEqualFcs {
-			leftAsStr := left.String()
-			for _, equalToRightFc := range *equalTorightFcs {
-				if equalToRightFc.String() == leftAsStr { // 最一开头已经比较过，这里不需要再比较了
-					continue
-				}
-
-				if ok, err := ver.cmpFc(equalToRightFc, left, state); err != nil {
-					return false, err
-				} else if ok {
-					return true, nil
-				}
-			}
-		}
-	}
-
-	return false, nil
-}
-
-func (ver *Verifier) fcNotEqualSpec(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
-	if ok, err := ver.cmpFc(left, right, state); err != nil {
-		return false, err
-	} else if ok {
-		return true, nil
-	}
-
-	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
-		var equalToLeftFcs, equalTorightFcs *[]ast.Fc
-		var gotLeftEqualFcs, gotRightEqualFcs bool
-
-		equalToLeftFcs, gotLeftEqualFcs = curEnv.GetNotEqualFcs(left)
-		equalTorightFcs, gotRightEqualFcs = curEnv.GetNotEqualFcs(right)
 
 		if gotLeftEqualFcs && gotRightEqualFcs {
 			if equalToLeftFcs == equalTorightFcs {
