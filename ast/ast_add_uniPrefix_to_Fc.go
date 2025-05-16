@@ -41,6 +41,7 @@ func AddUniPrefixToFcAtom(atom *FcAtom, uniParams NameDepthMap) (*FcAtom, error)
 }
 
 func AddUniPrefixToFc(fc Fc, uniParams NameDepthMap) (Fc, error) {
+
 	if fc == nil {
 		return nil, nil
 	}
@@ -54,21 +55,21 @@ func AddUniPrefixToFc(fc Fc, uniParams NameDepthMap) (Fc, error) {
 	if !ok {
 		return nil, fmt.Errorf("invalid fc %s", fc.String())
 	}
+	var newFc FcFn
 
-	newFcFn := FcFn{&FcAtom{}, []Fc{}, nil}
 	var err error = nil
 
-	newFcFn.FnHead, err = AddUniPrefixToFc(fcAsFcFn.FnHead, uniParams)
+	newFc.FnHead, err = AddUniPrefixToFc(fcAsFcFn.FnHead, uniParams)
 	if err != nil {
 		return nil, err
 	}
 
-	for i, seg := range fcAsFcFn.ParamSegs {
-		newFc, err := AddUniPrefixToFc(seg, uniParams)
+	for _, seg := range fcAsFcFn.ParamSegs {
+		newSeg, err := AddUniPrefixToFc(seg, uniParams)
 		if err != nil {
 			return nil, err
 		}
-		newFcFn.ParamSegs[i] = newFc
+		newFc.ParamSegs = append(newFc.ParamSegs, newSeg)
 	}
 
 	if fcAsFcFn.As != nil {
@@ -76,10 +77,10 @@ func AddUniPrefixToFc(fc Fc, uniParams NameDepthMap) (Fc, error) {
 		if err != nil {
 			return nil, err
 		}
-		newFcFn.As = newAs
+		newFc.As = newAs
 	}
 
-	return &newFcFn, nil
+	return &newFc, nil
 }
 
 func fcAtomInUniParams(atom *FcAtom, uniParams NameDepthMap) (int, bool) {

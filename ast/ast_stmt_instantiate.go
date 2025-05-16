@@ -31,7 +31,7 @@ func (fc *FcAtom) Instantiate(uniMap map[string]Fc) (Fc, error) {
 }
 
 func InstantiateFcFn(fc *FcFn, uniMap map[string]Fc) (Fc, error) {
-	newFc := FcFn{&FcAtom{}, []Fc{}, nil}
+	var newFc FcFn
 
 	newHead, err := fc.FnHead.Instantiate(uniMap)
 	if err != nil {
@@ -49,13 +49,15 @@ func InstantiateFcFn(fc *FcFn, uniMap map[string]Fc) (Fc, error) {
 		newFc.ParamSegs = append(newFc.ParamSegs, newHeadAsFcFn.ParamSegs...)
 	}
 
+	newParamSegs := make([]Fc, len(fc.ParamSegs))
 	for i, seg := range fc.ParamSegs {
 		newSeg, err := seg.Instantiate(uniMap)
 		if err != nil {
 			return nil, err
 		}
-		newFc.ParamSegs[i] = newSeg
+		newParamSegs[i] = newSeg
 	}
+	newFc.ParamSegs = newParamSegs
 
 	if fc.As != nil {
 		newAs, err := fc.As.Instantiate(uniMap)
