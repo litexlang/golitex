@@ -21,7 +21,6 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
-	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -48,6 +47,11 @@ func execStmtTest(topStmt []ast.TopStmt, t *testing.T) []string {
 	executor := *NewExecutor(env)
 
 	messages := []string{}
+	var notTrueMessageBuilder strings.Builder
+	notTrueMessageBuilder.WriteString("execution is not true at:\n\n")
+
+	isNotTrue := false
+
 	for _, topStmt := range topStmt {
 		execState, err := executor.TopLevelStmt(&topStmt)
 		if err != nil {
@@ -55,7 +59,9 @@ func execStmtTest(topStmt []ast.TopStmt, t *testing.T) []string {
 		}
 
 		if execState != glob.ExecState_True && !glob.ContinueExecutionWhenExecUnknown {
-			fmt.Printf("\nexecution not true:\n%s\n", topStmt.String())
+			isNotTrue = true
+			notTrueMessageBuilder.WriteString(topStmt.String())
+			notTrueMessageBuilder.WriteString("\n\n")
 			break
 		}
 
@@ -74,14 +80,18 @@ func execStmtTest(topStmt []ast.TopStmt, t *testing.T) []string {
 		messages = append(messages, strings.Join(executor.env.Msgs, "\n"))
 	}
 
-	slices.Reverse(messages)
+	if isNotTrue {
+		messages = append(messages, notTrueMessageBuilder.String())
+	} else {
+		messages = append(messages, "\nexecution success :)\n")
+	}
+
 	return messages
 }
 
 func printExecMsg(messageSlice []string) {
-	for i := len(messageSlice) - 1; i >= 0; i-- {
-		fmt.Println(messageSlice[i])
-		// fmt.Println()
+	for _, msg := range messageSlice {
+		fmt.Println(msg)
 	}
 }
 
