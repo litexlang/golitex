@@ -44,7 +44,7 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
 		return err
 	}
 
-	if isCommutativeProp, err := env.IsCommutativePropName_StoreIt(fact); isCommutativeProp {
+	if isCommutativeProp, err := env.IsTrueCommutativeProp_StoreIt(fact); isCommutativeProp {
 		return err
 	}
 
@@ -56,11 +56,11 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
 		return err
 	}
 
-	if isEqualFn, err := env.IsEqualFnName_StoreIt(fact); isEqualFn {
+	if isEqualFn, err := env.IsTrueFnEqual_StoreIt(fact); isEqualFn {
 		return err
 	}
 
-	if isEqualSet, err := env.IsEqualSetName_StoreIt(fact); isEqualSet {
+	if isEqualSet, err := env.IsTrueSetEqual_StoreIt(fact); isEqualSet {
 		return err
 	}
 
@@ -377,7 +377,11 @@ func (env *Env) GetEqualFcs(fc ast.Fc) (*[]ast.Fc, bool) {
 	return facts, ok
 }
 
-func (env *Env) IsCommutativePropName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
+func (env *Env) IsTrueCommutativeProp_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
+	if !fact.IsTrue() {
+		return false, nil
+	}
+
 	if !ast.IsFcAtom_HasGivenName_EmptyPkgName(&fact.PropName, glob.KeywordCommutativeProp) {
 		return false, nil
 	}
@@ -407,6 +411,10 @@ func (env *Env) IsCommutativePropName_StoreIt(fact *ast.SpecFactStmt) (bool, err
 }
 
 func (env *Env) IsMathInductionPropName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
+	if !fact.IsTrue() {
+		return false, nil
+	}
+
 	if !ast.IsFcAtom_HasGivenName_EmptyPkgName(&fact.PropName, glob.KeywordInduction) {
 		return false, nil
 	}
@@ -447,6 +455,10 @@ func (env *Env) IsMathInductionPropName_StoreIt(fact *ast.SpecFactStmt) (bool, e
 }
 
 func (env *Env) IsCommutativeFnName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
+	if !fact.IsTrue() {
+		return false, nil
+	}
+
 	if !ast.IsFcAtom_HasGivenName_EmptyPkgName(&fact.PropName, glob.KeywordCommutativeFn) {
 		return false, nil
 	}
@@ -466,6 +478,10 @@ func (env *Env) IsCommutativeFnName_StoreIt(fact *ast.SpecFactStmt) (bool, error
 }
 
 func (env *Env) IsAssociativeFnName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
+	if !fact.IsTrue() {
+		return false, nil
+	}
+
 	if !ast.IsFcAtom_HasGivenName_EmptyPkgName(&fact.PropName, glob.KeywordAssociativeFn) {
 		return false, nil
 	}
@@ -484,7 +500,7 @@ func (env *Env) IsAssociativeFnName_StoreIt(fact *ast.SpecFactStmt) (bool, error
 	return true, nil
 }
 
-func (env *Env) IsEqualFnName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
+func (env *Env) IsTrueFnEqual_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 	if !fact.IsTrue() {
 		return false, nil
 	}
@@ -505,8 +521,9 @@ func (env *Env) IsEqualFnName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 	return true, nil
 }
 
-func (env *Env) IsEqualSetName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
+func (env *Env) IsTrueSetEqual_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 	if !fact.IsTrue() {
+		// not = 的存储和其他普通的prop一样，因为 != 没有传递性，不能像 = 一样存储
 		return false, nil
 	}
 
