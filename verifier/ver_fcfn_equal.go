@@ -14,39 +14,36 @@ package litex_verifier
 
 import (
 	ast "golitex/ast"
-	glob "golitex/glob"
 )
 
 func (ver *Verifier) fcFnEq(left, right *ast.FcFn, state VerState) (bool, error) {
+	var ok bool
+	var err error
 	state = state.addRound()
 
-	if ok, err := ver.FactStmt(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeySymbolEqual), []ast.Fc{left, right}), state); err != nil {
-		if len(left.ParamSegs) != len(right.ParamSegs) {
-			return false, nil
-		}
-
-		for i := range left.ParamSegs {
-			ok, err := ver.FactStmt(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeySymbolEqual), []ast.Fc{left.ParamSegs[i], right.ParamSegs[i]}), state)
-			if err != nil {
-				return false, err
-			}
-			if !ok {
-				return false, nil
-			}
-		}
-
-		if ok, err := ver.FactStmt(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeySymbolEqual), []ast.Fc{left.FnHead, right.FnHead}), state); err != nil {
-			return false, err
-		} else if ok {
-			return true, nil
-		} else {
-			return false, nil
-		}
-	} else if ok {
-		return true, nil
+	if len(left.ParamSegs) != len(right.ParamSegs) {
+		return false, nil
 	}
 
-	return false, nil
+	for i := range left.ParamSegs {
+		ok, err := ver.fcEqualSpec(left.ParamSegs[i], right.ParamSegs[i], state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+	}
+
+	ok, err = ver.fcEqualSpec(left.FnHead, right.FnHead, state)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
+
+	return true, nil
 }
 
 // func (ver *Verifier) fcFnHeadTailEq(left, right *ast.FcFn, state VerState, leftTailLen int) (bool, error) {
