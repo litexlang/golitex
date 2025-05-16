@@ -19,9 +19,7 @@ import (
 	glob "golitex/glob"
 	parser "golitex/parser"
 	"math/rand"
-	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 	"time"
 )
@@ -33,67 +31,6 @@ const (
 	TenThousandRound = 10000
 	TenMillionRound  = 10000000
 )
-
-func setupAndParseStmtTest(code string, t *testing.T) []ast.TopStmt {
-	topStatements, err := parser.ParseSourceCode(code)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return topStatements
-}
-
-func execStmtTest(topStmt []ast.TopStmt, t *testing.T) []string {
-	env := env.NewEnv(nil)
-	executor := *NewExecutor(env)
-
-	messages := []string{}
-	var notTrueMessageBuilder strings.Builder
-	notTrueMessageBuilder.WriteString("execution is not true at:\n\n")
-
-	isNotTrue := false
-
-	for _, topStmt := range topStmt {
-		execState, err := executor.TopLevelStmt(&topStmt)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		if execState != glob.ExecState_True && !glob.ContinueExecutionWhenExecUnknown {
-			isNotTrue = true
-			notTrueMessageBuilder.WriteString(topStmt.String())
-			notTrueMessageBuilder.WriteString("\n\n")
-			break
-		}
-
-		// 如果连续两个 \n 则删除一个
-		var newMsgs []string
-		for i := 0; i < len(executor.env.Msgs); i++ {
-			if i < len(executor.env.Msgs)-1 && executor.env.Msgs[i] == "\n" && executor.env.Msgs[i+1] == "\n" {
-				newMsgs = append(newMsgs, executor.env.Msgs[i])
-				i++ // Skip the next newline
-			} else {
-				newMsgs = append(newMsgs, executor.env.Msgs[i])
-			}
-		}
-		executor.env.Msgs = newMsgs
-
-		messages = append(messages, strings.Join(executor.env.Msgs, "\n"))
-	}
-
-	if isNotTrue {
-		messages = append(messages, notTrueMessageBuilder.String())
-	} else {
-		messages = append(messages, "\nexecution success :)\n")
-	}
-
-	return messages
-}
-
-func printExecMsg(messageSlice []string) {
-	for _, msg := range messageSlice {
-		fmt.Println(msg)
-	}
-}
 
 func TestKnow(t *testing.T) {
 	code := `know p(a)`
@@ -153,15 +90,6 @@ func randFcFnRetValue() *ast.FcFn {
 		params = append(params, randFcAtom())
 	}
 	return ast.NewFcFn(fnName, params, nil)
-}
-
-func randObjParams() []ast.Fc {
-	round := rand.Intn(3) + 1
-	objParams := []ast.Fc{}
-	for i := 0; i < round; i++ {
-		objParams = append(objParams, randFcAtom())
-	}
-	return objParams
 }
 
 func TestKnowVerifySpecFactSpeed(t *testing.T) {
@@ -393,8 +321,8 @@ q(x)
 p(x)
 p(y)
 `
-	topStmtSlice := setupAndParseStmtTest(code, t)
-	messages := execStmtTest(topStmtSlice, t)
+	topStmtSlice := setupAndParseStmtTest(code)
+	messages := execStmtTest(topStmtSlice)
 	printExecMsg(messages)
 }
 
@@ -415,8 +343,8 @@ p(z)
 p(y)
 p(x)
 `
-	topStmtSlice := setupAndParseStmtTest(code, t)
-	messages := execStmtTest(topStmtSlice, t)
+	topStmtSlice := setupAndParseStmtTest(code)
+	messages := execStmtTest(topStmtSlice)
 	printExecMsg(messages)
 }
 
@@ -429,8 +357,8 @@ know:
 
 a < y
 `
-	topStmtSlice := setupAndParseStmtTest(code, t)
-	messages := execStmtTest(topStmtSlice, t)
+	topStmtSlice := setupAndParseStmtTest(code)
+	messages := execStmtTest(topStmtSlice)
 	printExecMsg(messages)
 }
 
@@ -446,8 +374,8 @@ know:
 
 x < y
 `
-	topStmtSlice := setupAndParseStmtTest(code, t)
-	messages := execStmtTest(topStmtSlice, t)
+	topStmtSlice := setupAndParseStmtTest(code)
+	messages := execStmtTest(topStmtSlice)
 	printExecMsg(messages)
 }
 
@@ -469,8 +397,8 @@ forall x A:
 
 p(x)
 `
-	topStmtSlice := setupAndParseStmtTest(code, t)
-	messages := execStmtTest(topStmtSlice, t)
+	topStmtSlice := setupAndParseStmtTest(code)
+	messages := execStmtTest(topStmtSlice)
 	printExecMsg(messages)
 }
 
@@ -495,8 +423,8 @@ know:
 p(ha)
 p(g(x, 100))
 `
-	topStmtSlice := setupAndParseStmtTest(code, t)
-	messages := execStmtTest(topStmtSlice, t)
+	topStmtSlice := setupAndParseStmtTest(code)
+	messages := execStmtTest(topStmtSlice)
 	printExecMsg(messages)
 }
 
@@ -507,8 +435,8 @@ know:
 	p(t(x))
 p(g(x))
 `
-	topStmtSlice := setupAndParseStmtTest(code, t)
-	messages := execStmtTest(topStmtSlice, t)
+	topStmtSlice := setupAndParseStmtTest(code)
+	messages := execStmtTest(topStmtSlice)
 	printExecMsg(messages)
 }
 
@@ -524,8 +452,8 @@ prove:
     know p(x)
     p(f(x))
 `
-	topStmtSlice := setupAndParseStmtTest(code, t)
-	messages := execStmtTest(topStmtSlice, t)
+	topStmtSlice := setupAndParseStmtTest(code)
+	messages := execStmtTest(topStmtSlice)
 	printExecMsg(messages)
 }
 
@@ -535,17 +463,9 @@ func TestFacts(t *testing.T) {
 know p(x)
 p(x)
 `
-	topStmtSlice := setupAndParseStmtTest(code, t)
-	messages := execStmtTest(topStmtSlice, t)
+	topStmtSlice := setupAndParseStmtTest(code)
+	messages := execStmtTest(topStmtSlice)
 	printExecMsg(messages)
-}
-
-func readFile(filePath string) string {
-	content, err := os.ReadFile(filePath)
-	if err != nil {
-		panic(err)
-	}
-	return string(content)
 }
 
 func TestPropDef(t *testing.T) {
@@ -568,25 +488,25 @@ know:
 
 q(2)
 `
-	topStmtSlice := setupAndParseStmtTest(code, t)
-	messages := execStmtTest(topStmtSlice, t)
+	topStmtSlice := setupAndParseStmtTest(code)
+	messages := execStmtTest(topStmtSlice)
 	printExecMsg(messages)
 }
 
 func TestPropDef2(t *testing.T) {
 	code := "prove:\n\tknow:\n\t\tp(x);p(y)\n\tp(y)"
-	topStmtSlice := setupAndParseStmtTest(code, t)
-	messages := execStmtTest(topStmtSlice, t)
+	topStmtSlice := setupAndParseStmtTest(code)
+	messages := execStmtTest(topStmtSlice)
 	printExecMsg(messages)
 }
 
 func TestAllFactCodeSeveralRounds(t *testing.T) {
 	code := readFile("../litex_code_examples/litex_as_regex_matcher.lix")
 	rounds := 1
-	topStmtSlice := setupAndParseStmtTest(code, t)
+	topStmtSlice := setupAndParseStmtTest(code)
 	start := time.Now()
 	for range rounds {
-		execStmtTest(topStmtSlice, t)
+		execStmtTest(topStmtSlice)
 		// printExecMsg(messages)
 	}
 	fmt.Printf("execution takes %v\n", time.Since(start))
@@ -600,25 +520,21 @@ func TestFilesInFolder(t *testing.T) {
 	for _, file := range files {
 		fmt.Println(file)
 		code := readFile(file)
-		topStmtSlice := setupAndParseStmtTest(code, t)
-		_ = execStmtTest(topStmtSlice, t)
+		topStmtSlice := setupAndParseStmtTest(code)
+		_ = execStmtTest(topStmtSlice)
 	}
 }
-
-var printMsg = true
 
 func TestAllFactCode(t *testing.T) {
 	start := time.Now()
 	readFileTime := time.Since(start)
 	start = time.Now()
-	topStmtSlice := setupAndParseStmtTest(code, t)
+	topStmtSlice := setupAndParseStmtTest(code)
 	parseTime := time.Since(start)
 	start = time.Now()
-	messages := execStmtTest(topStmtSlice, t)
+	messages := execStmtTest(topStmtSlice)
 	executionTime := time.Since(start)
-	if printMsg {
-		printExecMsg(messages)
-	}
+	printExecMsg(messages)
 	fmt.Printf("read file takes %v\nparsing takes %v\nexecution takes %v\n", readFileTime, parseTime, executionTime)
 }
 
@@ -628,13 +544,11 @@ func TestLastFactCode(t *testing.T) {
 	start := time.Now()
 	readFileTime := time.Since(start)
 	start = time.Now()
-	topStmtSlice := setupAndParseStmtTest(code, t)
+	topStmtSlice := setupAndParseStmtTest(code)
 	parseTime := time.Since(start)
 	start = time.Now()
-	messages := execStmtTest(topStmtSlice[len(topStmtSlice)-1:], t)
+	messages := execStmtTest(topStmtSlice[len(topStmtSlice)-1:])
 	executionTime := time.Since(start)
-	if printMsg {
-		printExecMsg(messages)
-	}
+	printExecMsg(messages)
 	fmt.Printf("read file takes %v\nparsing takes %v\nexecution takes %v\n", readFileTime, parseTime, executionTime)
 }
