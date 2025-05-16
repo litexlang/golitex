@@ -125,7 +125,7 @@ func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]tokenBlock, error
 		}
 
 		block := tokenBlock{
-			header: strSliceCursor{0, tokens},
+			header: strSliceCursor{0, tokens, map[string]string{}},
 			body:   nil,
 		}
 
