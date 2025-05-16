@@ -42,7 +42,7 @@ func TestLexTimeParseTime(t *testing.T) {
 	}
 	preprocessTime := time.Since(start)
 
-	blocks, err := makeTokenBlocks(preprocessedCodeLines)
+	blocks, err := makeTokenBlocks(preprocessedCodeLines, &ParserEnv{make(map[string]string)})
 
 	if err != nil {
 		panic(err)

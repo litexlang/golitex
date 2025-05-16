@@ -19,9 +19,10 @@ import (
 )
 
 type tokenBlock struct {
-	header   strSliceCursor
-	body     []tokenBlock
-	messages []string
+	header    strSliceCursor
+	body      []tokenBlock
+	messages  []string
+	parserEnv *ParserEnv // 传指针的好处是，可以对里面的东西进行修改，比如import后里面的东西确实改了
 }
 
 func (b *tokenBlock) String() string {
@@ -43,9 +44,9 @@ func (b *tokenBlock) stringWithIndent(indentLevel int) string {
 }
 
 // makeTokenBlocks 合并 tokenization 和 scope 解析的入口函数
-func makeTokenBlocks(lines []string) ([]tokenBlock, error) {
+func makeTokenBlocks(lines []string, parserEnv *ParserEnv) ([]tokenBlock, error) {
 	t := newTokenizerWithScope(lines)
-	return t.parseBlocks(0)
+	return t.parseBlocks(0, parserEnv)
 }
 
 func (tb *tokenBlock) CurrentTokenIs(kw string) bool {

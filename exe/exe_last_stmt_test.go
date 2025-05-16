@@ -14,6 +14,7 @@ package litex_executor
 
 import (
 	"fmt"
+	parser "golitex/parser"
 	"strings"
 	"testing"
 	"time"
@@ -25,13 +26,14 @@ func TestLastStmt(t *testing.T) {
 	code = extractFromLastProveLine(code)
 	readFileTime := time.Since(start)
 	start = time.Now()
-	topStmtSlice := setupAndParseStmtTest(code)
+	parserEnv := parser.NewParserEnv()
+	topStmtSlice := setupAndParseStmtTest(code, parserEnv)
 	parseTime := time.Since(start)
 	start = time.Now()
 	messages := execStmtTest(topStmtSlice[len(topStmtSlice)-1:])
 	executionTime := time.Since(start)
 	printExecMsg(messages)
-	fmt.Printf("read file takes %v\nparsing takes %v\nexecution takes %v\n", readFileTime, parseTime, executionTime)
+	fmt.Printf("get last top stmt takes %v\nparsing takes %v\nexecution takes %v\n", readFileTime, parseTime, executionTime)
 }
 
 func extractFromLastProveLine(content string) string {
