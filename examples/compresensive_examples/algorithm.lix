@@ -1,0 +1,28 @@
+"""
+algorithm.lix
+
+Goal:
+Formalize mathmetical defintion of algorithm from the book "The Art of Computer Programming" chapter 1.
+
+Here is the definition of algorithm from the book:
+
+So far our discussion of algorithms has been rather imprecise, and a mathe- matically oriented reader is justified in thinking that the preceding commentary makes a very shaky foundation on which to erect any theory about algorithms.
+We therefore close this section with a brief indication of one method by which the concept of algorithm can be firmly grounded in terms of mathematical set theory. Let us formally define a computational method to be a quadruple (Q, I, S, f), in which Q is a set containing subsets I and S, and f is a function from Q into itself. Furthermore f should leave & pointwise fixed; that is, f(g) should equal a for al elements q of S. The four quantities Q, I, S, f are intended to represent respectively the states of the computation, the input, the output, and the computational rule. Each input x in the set I defines a computational sequence, x0, x1, x2,..., as follows:
+x0 = x and x_{k+1} = f(x_k) for k≥0.
+The computational sequence is said to terminate in k steps if k is the smallest
+integer for which x_k is in S, and in this case it is said to produce the output x_k from x. (Note that if x_k is in S, so x_{k+1}, because x_{k+1} = x_k in such a case.) Some computational sequences may never terminate; an algorithm is a computational method that terminates in finitely many steps for all x in I.
+"""
+
+fn computational_sequence(Q set, f fn(Q)Q) fn(Q, N)Q:
+    forall x Q:
+        computational_sequence(Q, f)(x,n) = f(computational_sequence(Q, f)(x, n-1))
+
+exist_prop n nat exist_end_of_computational_sequence(Q set, x Q, f fn(Q,N)Q):
+    f(x, n) = f(x, n+1)
+
+prop is_algorithm(Q set, I set, f fn(Q)Q):
+    dom:
+        I $subset_of Q
+    iff:
+        forall x I:
+            $exist_end_of_computational_sequence(Q, x, computational_sequence(Q, f))
