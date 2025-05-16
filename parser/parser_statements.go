@@ -502,7 +502,7 @@ func (tb *tokenBlock) relaFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 	}
 
 	// 这里加入语法糖：!= 等价于 not =，好处是我 = 有 commutative的性质，我不用额外处理 != 了
-	if ret.PropNameIsGiven_PkgNameEmpty(ret.PropName, glob.KeySymbolNotEqual) {
+	if ret.NameIs(glob.KeySymbolNotEqual) {
 		ret.TypeEnum = ast.FalsePure
 		ret.PropName = *ast.NewFcAtom(glob.EmptyPkg, glob.KeySymbolEqual, nil)
 	}

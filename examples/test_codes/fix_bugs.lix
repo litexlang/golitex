@@ -1,20 +1,38 @@
-prop point_left_to_point_on_one_line(a, b, l)
-prop finite_line_equal(l1, l2)
+set point
+set line
+set plane
 
-know exist_prop a point st exist_point_left_to_point_with_finite_line_equal_to_given_finite_line(b point, l finite_line):
-    iff:
-        a != b
-        $point_left_to_point_on_one_line(a, b, l)
-        $finite_line_equal(finite_line_of(a, b), l)
+prop point_on_line(p point, l line)
+prop point_on_plane(q point, p plane)
+prop line_on_plane(l line, p plane)
 
-know exist_prop a point st exist_point_right_to_point_with_finite_line_equal_to_given_finite_line(b point, l finite_line):
-        a != b
-        $point_left_to_point_on_one_line(b, a, l)
-        $finite_line_equal(finite_line_of(a, b), l)
+fn line_of(a point, b point) line:
+    a != b
+    then:
+        $point_on_line(a, line_of(a, b))
+        $point_on_line(b, line_of(a, b))
+        forall l line:
+            $point_on_line(a, l)
+            $point_on_line(b, l)
+            then:
+                l = line_of(a, b)
 
 prove:
-    obj middle point, l finite_line
-    $exist_point_left_to_point_with_finite_line_equal_to_given_finite_line(middle, l)
-    have left  st $exist_point_left_to_point_with_finite_line_equal_to_given_finite_line(middle, l)
-    $point_left_to_point_on_one_line(left, middle, l)
-    $finite_line_equal(finite_line_of(left, middle), l)
+    # a line is determined by two points
+    obj a point, b point, l line:
+        a != b
+        $point_on_line(a, l)
+        $point_on_line(b, l)
+    l = line_of(a, b)
+
+    # line_of is commutative
+    forall a point, b point:
+        a != b
+        then:
+            $point_on_line(a, line_of(a, b))
+            $point_on_line(b, line_of(a, b))
+            $point_on_line(a, line_of(b, a))
+            $point_on_line(b, line_of(b, a))
+            line_of(a, b) = line_of(b, a)
+
+$commutative_fn(line_of)

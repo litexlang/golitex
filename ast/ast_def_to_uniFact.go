@@ -10,12 +10,4 @@
 // Contact the development team: <litexlang@outlook.com>
 // Visit litexlang.org and https://github.com/litexlang/golitex for more info.
 
-package litex_parser
-
-type ParserEnv struct {
-	PkgManagementMap map[string]string
-}
-
-func NewParserEnv() *ParserEnv {
-	return &ParserEnv{PkgManagementMap: make(map[string]string)}
-}
+package litex_ast
