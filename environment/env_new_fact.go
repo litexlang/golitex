@@ -36,7 +36,7 @@ func (env *Env) newLogicExprStmt(fact *ast.LogicExprStmt) error {
 }
 
 func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
-	if isEqualFact, err := env.IsEqualFact_StoreIt(fact); isEqualFact {
+	if isEqualFact, err := env.IsTrueEqualFact_StoreIt(fact); isEqualFact {
 		return err
 	}
 
@@ -350,7 +350,11 @@ func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, erro
 	return ast.NewUniFactStmtWithSetReqInDom(existPropDef.ExistParams, domFacts, thenFacts, ast.EmptyIffFacts, existPropDef.ExistInSetsFacts), nil
 }
 
-func (env *Env) IsEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
+func (env *Env) IsTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
+	if !fact.IsTrue() {
+		return false, nil
+	}
+
 	if !ast.IsFcAtom_HasGivenName_EmptyPkgName(&fact.PropName, glob.KeySymbolEqual) {
 		return false, nil
 	}
@@ -359,16 +363,9 @@ func (env *Env) IsEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 		return true, fmt.Errorf("'=' fact expect 2 parameters, get %d in %s", len(fact.Params), fact.String())
 	}
 
-	if fact.IsTrue() {
-		err := storeCommutativeTransitiveFact(env.EqualMem, fact)
-		if err != nil {
-			return false, err
-		}
-	} else {
-		err := storeCommutativeTransitiveFact(env.NotEqualMem, fact)
-		if err != nil {
-			return false, err
-		}
+	err := storeCommutativeTransitiveFact(env.EqualMem, fact)
+	if err != nil {
+		return false, err
 	}
 
 	return true, nil
@@ -377,12 +374,6 @@ func (env *Env) IsEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 func (env *Env) GetEqualFcs(fc ast.Fc) (*[]ast.Fc, bool) {
 	fcAsStr := fc.String()
 	facts, ok := env.EqualMem[fcAsStr]
-	return facts, ok
-}
-
-func (env *Env) GetNotEqualFcs(fc ast.Fc) (*[]ast.Fc, bool) {
-	fcAsStr := fc.String()
-	facts, ok := env.NotEqualMem[fcAsStr]
 	return facts, ok
 }
 
@@ -494,6 +485,10 @@ func (env *Env) IsAssociativeFnName_StoreIt(fact *ast.SpecFactStmt) (bool, error
 }
 
 func (env *Env) IsEqualFnName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
+	if !fact.IsTrue() {
+		return false, nil
+	}
+
 	if !ast.IsFcAtom_HasGivenName_EmptyPkgName(&fact.PropName, glob.KeySymbolEqualEqual) {
 		return false, nil
 	}
@@ -502,22 +497,19 @@ func (env *Env) IsEqualFnName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 		return false, fmt.Errorf("equal fn is supposed to have two parameters, but %s has %d parameters", fact.PropName, len(fact.Params))
 	}
 
-	if fact.IsTrue() {
-		err := storeCommutativeTransitiveFact(env.EqualMem, fact)
-		if err != nil {
-			return false, err
-		}
-	} else {
-		err := storeCommutativeTransitiveFact(env.NotEqualMem, fact)
-		if err != nil {
-			return false, err
-		}
+	err := storeCommutativeTransitiveFact(env.EqualMem, fact)
+	if err != nil {
+		return false, err
 	}
 
 	return true, nil
 }
 
 func (env *Env) IsEqualSetName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
+	if !fact.IsTrue() {
+		return false, nil
+	}
+
 	if !ast.IsFcAtom_HasGivenName_EmptyPkgName(&fact.PropName, glob.KeySymbolEqualEqualEqual) {
 		return false, nil
 	}
@@ -526,16 +518,9 @@ func (env *Env) IsEqualSetName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 		return false, fmt.Errorf("equal set is supposed to have two parameters, but %s has %d parameters", fact.PropName, len(fact.Params))
 	}
 
-	if fact.IsTrue() {
-		err := storeCommutativeTransitiveFact(env.EqualMem, fact)
-		if err != nil {
-			return false, err
-		}
-	} else {
-		err := storeCommutativeTransitiveFact(env.NotEqualMem, fact)
-		if err != nil {
-			return false, err
-		}
+	err := storeCommutativeTransitiveFact(env.EqualMem, fact)
+	if err != nil {
+		return false, err
 	}
 
 	return true, nil
