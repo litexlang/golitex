@@ -73,6 +73,6 @@ func (f *SpecFactStmt) Exist_St_SeparatorIndex() int {
 	return -1
 }
 
-func (f *SpecFactStmt) PropNameIsGiven_PkgNameEmpty(name FcAtom, givenName string) bool {
-	return name.PkgName == glob.EmptyPkg && name.Name == givenName
+func (f *SpecFactStmt) NameIs(givenName string) bool {
+	return f.PropName.PkgName == glob.EmptyPkg && f.PropName.Name == givenName
 }

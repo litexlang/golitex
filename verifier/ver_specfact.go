@@ -74,7 +74,11 @@ func (ver *Verifier) specFactWithoutUsingPropCommutative(stmt *ast.SpecFactStmt,
 	}
 
 	if stmt.IsMathInductionFact() {
-		return ver.mathInductionSpecFact(stmt, state)
+		return ver.mathInductionFact(stmt, state)
+	}
+
+	if stmt.NameIs(glob.KeywordCommutativeFn) {
+		return ver.commutativeFnByDef(stmt, state)
 	}
 
 	if stmt.IsPureFact() {
@@ -587,7 +591,7 @@ func (ver *Verifier) leftIsAssociative_UseAssociationToCheckEqual(left ast.Fc, r
 	return false, nil
 }
 
-func (ver *Verifier) mathInductionSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) mathInductionFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if len(stmt.Params) != 1 {
 		return false, fmt.Errorf("math induction fact %s should have exactly one parameter, got: %d", stmt.String(), len(stmt.Params))
 	}
@@ -652,7 +656,7 @@ func (ver *Verifier) mathInductionSpecFact(stmt *ast.SpecFactStmt, state VerStat
 
 // TODO: 没有测试过
 func (ver *Verifier) isSetEqualFact_Check(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if !stmt.PropNameIsGiven_PkgNameEmpty(stmt.PropName, glob.KeySymbolEqualEqualEqual) {
+	if !stmt.NameIs(glob.KeySymbolEqualEqualEqual) {
 		return false, nil
 	}
 
@@ -745,7 +749,7 @@ func (ver *Verifier) isSetEqualFact_Check(stmt *ast.SpecFactStmt, state VerState
 }
 
 func (ver *Verifier) isFnEqualFact_Check(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if !stmt.PropNameIsGiven_PkgNameEmpty(stmt.PropName, glob.KeySymbolEqualEqual) {
+	if !stmt.NameIs(glob.KeySymbolEqualEqual) {
 		return false, nil
 	}
 

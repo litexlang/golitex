@@ -141,7 +141,7 @@ func (stmt *SpecFactStmt) ReverseParameterOrder() (*SpecFactStmt, error) {
 }
 
 func (stmt *SpecFactStmt) IsValidEqualFact() (bool, error) {
-	if stmt.PropNameIsGiven_PkgNameEmpty(stmt.PropName, glob.KeySymbolEqual) {
+	if stmt.NameIs(glob.KeySymbolEqual) {
 		if len(stmt.Params) == 2 {
 			return true, nil
 		} else {
@@ -153,7 +153,7 @@ func (stmt *SpecFactStmt) IsValidEqualFact() (bool, error) {
 }
 
 func (stmt *SpecFactStmt) IsBuiltinProp_ExceptEqual() bool {
-	return stmt.PropName.PkgName == glob.EmptyPkg && glob.IsBuiltinInfixRelaPropSymbol(stmt.PropName.Name) && !stmt.PropNameIsGiven_PkgNameEmpty(stmt.PropName, glob.KeySymbolEqual)
+	return stmt.PropName.PkgName == glob.EmptyPkg && glob.IsBuiltinInfixRelaPropSymbol(stmt.PropName.Name) && !stmt.NameIs(glob.KeySymbolEqual)
 }
 
 func (stmt *SpecFactStmt) IsMathInductionFact() bool {
