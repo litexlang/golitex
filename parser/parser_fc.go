@@ -56,7 +56,7 @@ func (cursor *strSliceCursor) fcAtomAndfcFn() (ast.Fc, error) {
 		if err != nil {
 			return nil, &strSliceErr{err, cursor}
 		}
-		return cursor.consumeBracedFc(&fcStr)
+		return cursor.consumeBracedFc(fcStr)
 	}
 }
 
@@ -90,10 +90,10 @@ func (cursor *strSliceCursor) fcAtomAndfcFn() (ast.Fc, error) {
 // 	return params, nil
 // }
 
-func (cursor *strSliceCursor) rawFcAtom() (ast.FcAtom, error) {
+func (cursor *strSliceCursor) rawFcAtom() (*ast.FcAtom, error) {
 	value, err := cursor.next()
 	if err != nil {
-		return *ast.NewFcAtomWithName(""), err
+		return nil, err
 	}
 
 	var pkgName strings.Builder
@@ -101,7 +101,7 @@ func (cursor *strSliceCursor) rawFcAtom() (ast.FcAtom, error) {
 		pkgName.WriteString(value)
 		value, err = cursor.next()
 		if err != nil {
-			return *ast.NewFcAtomWithName(""), err
+			return nil, err
 		}
 	}
 
@@ -112,9 +112,9 @@ func (cursor *strSliceCursor) rawFcAtom() (ast.FcAtom, error) {
 	}
 
 	if glob.IsKwThatCanNeverBeFcName(value) {
-		return *ast.NewFcAtom(pkgNameStr, value), fmt.Errorf("invalid first citizen: %s", value)
+		return ast.NewFcAtom(pkgNameStr, value), fmt.Errorf("invalid first citizen: %s", value)
 	} else {
-		return *ast.NewFcAtom(pkgNameStr, value), nil
+		return ast.NewFcAtom(pkgNameStr, value), nil
 	}
 }
 
@@ -291,8 +291,7 @@ func (cursor *strSliceCursor) isExpr(left ast.Fc) (*ast.SpecFactStmt, error) {
 		return nil, &strSliceErr{err, cursor}
 	}
 
-	return ast.NewSpecFactStmt(ast.TruePure, opt, []ast.Fc{left}), nil
-	// return &ast.SpecFactStmt{true, opt, []ast.Fc{left}}, nil
+	return ast.NewSpecFactStmt(ast.TruePure, *opt, []ast.Fc{left}), nil
 }
 
 func (cursor *strSliceCursor) bracedExpr() (ast.Fc, error) {
