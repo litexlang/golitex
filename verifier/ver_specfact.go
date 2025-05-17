@@ -81,8 +81,12 @@ func (ver *Verifier) specFact_no_commutative(stmt *ast.SpecFactStmt, state VerSt
 		return ver.commutativeFnByDef(stmt, state)
 	}
 
+	if stmt.NameIs(glob.KeywordIn) {
+		return ver.inFact(stmt, state)
+	}
+
 	if stmt.IsPureFact() {
-		return ver.pureSpecFact(stmt, state)
+		return ver.pureFact(stmt, state)
 	}
 
 	// if stmt.IsExistFact() {
@@ -96,7 +100,7 @@ func (ver *Verifier) specFact_no_commutative(stmt *ast.SpecFactStmt, state VerSt
 	return false, fmt.Errorf("invalid type of stmt")
 }
 
-func (ver *Verifier) specFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) pureFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if ok, err := ver.isEqualFact_Check(stmt, state); err != nil {
 		return false, err
 	} else if ok {

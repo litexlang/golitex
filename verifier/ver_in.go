@@ -12,39 +12,24 @@
 
 package litex_verifier
 
-import ast "golitex/ast"
+import (
+	"fmt"
+	ast "golitex/ast"
+	glob "golitex/glob"
+)
 
-func (ver *Verifier) pureFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	ok, err := ver.pureFactSpec(stmt, state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
-	}
-
-	if state.isSpec() {
-		return false, nil
+func (ver *Verifier) inFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	if len(stmt.Params) != 2 {
+		return false, fmt.Errorf("invalid number of parameters for in fact")
 	}
 
-	ok, err = ver.specFactProveByDefinition(stmt, state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
+	if ok := ast.IsFnSet(stmt.Params[0]) && ast.IsFcAtomWithName(stmt.Params[1], glob.KeywordSet); ok {
 		if state.requireMsg() {
-			ver.successWithMsg(stmt.String(), "definition")
+			ver.successWithMsg(stmt.String(), "by definition")
 		} else {
 			ver.successNoMsg()
 		}
-		return true, nil
-	}
 
-	ok, err = ver.SpecFactUni(stmt, state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
 		return true, nil
 	}
 

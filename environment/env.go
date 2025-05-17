@@ -82,7 +82,7 @@ func (e *Env) InsertCommutativeProp(propName ast.FcAtom) {
 }
 
 func (e *Env) IsCommutativeProp(propName ast.FcAtom) bool {
-	if ast.IsFcAtom_HasGivenName_EmptyPkgName(&propName, glob.KeySymbolEqual) {
+	if ast.IsFcAtomWithName(&propName, glob.KeySymbolEqual) {
 		return true
 	}
 
@@ -102,11 +102,11 @@ func (e *Env) InsertCommutativeFn(fnName ast.FcAtom) {
 }
 
 func (e *Env) IsCommutativeFn(fnName ast.FcAtom) bool {
-	if ast.IsFcAtom_HasGivenName_EmptyPkgName(&fnName, glob.KeySymbolPlus) {
+	if ast.IsFcAtomWithName(&fnName, glob.KeySymbolPlus) {
 		return true
 	}
 
-	if ast.IsFcAtom_HasGivenName_EmptyPkgName(&fnName, glob.KeySymbolStar) {
+	if ast.IsFcAtomWithName(&fnName, glob.KeySymbolStar) {
 		return true
 	}
 
@@ -126,11 +126,11 @@ func (e *Env) InsertAssociativeFn(fnName ast.FcAtom) {
 }
 
 func (e *Env) IsAssociativeFn(fnName ast.FcAtom) bool {
-	if ast.IsFcAtom_HasGivenName_EmptyPkgName(&fnName, glob.KeySymbolPlus) {
+	if ast.IsFcAtomWithName(&fnName, glob.KeySymbolPlus) {
 		return true
 	}
 
-	if ast.IsFcAtom_HasGivenName_EmptyPkgName(&fnName, glob.KeySymbolStar) {
+	if ast.IsFcAtomWithName(&fnName, glob.KeySymbolStar) {
 		return true
 	}
 
@@ -206,7 +206,7 @@ func (e *Env) getFcAtomDefAtCurEnv(fcAtomName *ast.FcAtom) (ast.DefStmt, bool) {
 
 func (e *Env) IsSpecFactPropCommutative(fact *ast.SpecFactStmt) bool {
 	// 如果是等号那自动成立
-	if ast.IsFcAtom_HasGivenName_EmptyPkgName(&fact.PropName, glob.KeySymbolEqual) {
+	if ast.IsFcAtomWithName(&fact.PropName, glob.KeySymbolEqual) {
 		return true
 	}
 
