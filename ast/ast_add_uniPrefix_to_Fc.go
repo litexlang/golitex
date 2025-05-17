@@ -29,14 +29,6 @@ func AddUniPrefixToFcAtom(atom *FcAtom, uniParams NameDepthMap) (*FcAtom, error)
 		atom.Name = strings.Repeat(glob.UniParamPrefix, prefixNum) + atom.Name
 	}
 
-	if atom.As != nil {
-		newAs, err := AddUniPrefixToFc(atom.As, uniParams)
-		if err != nil {
-			return nil, err
-		}
-		atom.As = newAs
-	}
-
 	return atom, nil
 }
 
@@ -72,14 +64,6 @@ func AddUniPrefixToFc(fc Fc, uniParams NameDepthMap) (Fc, error) {
 		newFc.ParamSegs = append(newFc.ParamSegs, newSeg)
 	}
 
-	if fcAsFcFn.As != nil {
-		newAs, err := AddUniPrefixToFc(fcAsFcFn.As, uniParams)
-		if err != nil {
-			return nil, err
-		}
-		newFc.As = newAs
-	}
-
 	return &newFc, nil
 }
 
@@ -98,7 +82,7 @@ func AddUniPrefixToUniFact(asUniFact *UniFactStmt) (*UniFactStmt, error) {
 
 	for i, param := range asUniFact.Params {
 		newParams[i] = fmt.Sprintf("%s%s", glob.UniParamPrefix, param)
-		uniMap[param] = NewFcAtom(glob.EmptyPkg, newParams[i], nil)
+		uniMap[param] = NewFcAtom(glob.EmptyPkg, newParams[i])
 	}
 
 	newDomFacts := []FactStmt{}

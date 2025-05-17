@@ -1,6 +1,19 @@
-know (f*2)(2) = 4
-(f*2)(2) = 4
-know f(a)(b) = 2
-know f(g(a))(b)(3) = 2
-f(g(a))(b)(3) = 2
-4 - 2 = f(g(a))(b)(3)
+prove:
+    know (f*2)(2) = 4
+    (f*2)(2) = 4
+    know f(a)(b) = 2
+    know f(g(a))(b)(3) = 2
+    f(g(a))(b)(3) = 2
+    4 - 2 = f(g(a))(b)(3)
+    prop p(x)
+    know $p((f*2)(2))
+    $p((f*2)(2))
+    2 = f(a)(b)
+    (f*2)(2) = (f*2)(f(a)(b))
+
+prove:
+    prop p(x)
+    know:
+        $p(2)
+        f(a)(b) = 2
+    $p(f(a)(b))

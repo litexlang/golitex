@@ -150,7 +150,8 @@ func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state 
 				}
 
 				for i, knownParam := range knownFact.Fact.Params {
-					ok, err := ver.fcEqual_Commutative_Associative_CmpRule(knownParam, stmt.Params[i], state)
+					// ok, err := ver.fcEqual_Commutative_Associative_CmpRule(knownParam, stmt.Params[i], state)
+					ok, err := ver.fcEqualSpec(knownParam, stmt.Params[i], state)
 					if err != nil {
 						return false, err
 					}
@@ -629,7 +630,7 @@ func (ver *Verifier) mathInductionFact(stmt *ast.SpecFactStmt, state VerState) (
 	thenFacts[0] = ast.NewSpecFactStmt(
 		ast.TruePure,
 		*propNameAsAtom,
-		[]ast.Fc{ast.NewFcFn(ast.NewFcAtomWithName(glob.KeySymbolPlus), []ast.Fc{ast.NewFcAtomWithName(fmt.Sprintf("%sn", glob.UniParamPrefix)), ast.NewFcAtomWithName("1")}, nil)},
+		[]ast.Fc{ast.NewFcFn(ast.NewFcAtomWithName(glob.KeySymbolPlus), []ast.Fc{ast.NewFcAtomWithName(fmt.Sprintf("%sn", glob.UniParamPrefix)), ast.NewFcAtomWithName("1")})},
 	)
 
 	paramInSetsFacts := make([]ast.FactStmt, 1)
@@ -874,13 +875,11 @@ func (ver *Verifier) leftFnAlwaysEqualToRight(leftFnDef *ast.DefFnStmt, rightFnD
 	leftFnNameAsSpecFact := ast.NewFcFn(
 		ast.NewFcAtomWithName(leftFnDef.DefHeader.Name),
 		leftParamAsFcs,
-		nil,
 	)
 
 	rightFnNameAsSpecFact := ast.NewFcFn(
 		ast.NewFcAtomWithName(rightFnDef.DefHeader.Name),
 		rightParamAsFcs,
-		nil,
 	)
 
 	leftEqualRight := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeySymbolEqual), []ast.Fc{leftFnNameAsSpecFact, rightFnNameAsSpecFact})
