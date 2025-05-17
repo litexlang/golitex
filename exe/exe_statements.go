@@ -254,6 +254,26 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 		return err
 	}
 
+	// 现在只处理dom里没额外的东西的情况
+	if len(stmt.DomFacts) == 0 {
+		setParams, err := ast.GetParamsSetFromInStmts(stmt.DefHeader.ParamInSetsFacts)
+		if err != nil {
+			return err
+		}
+		fnInFnSet, err := ast.GetParamSetFromInStmt(stmt.RetInSetsFact)
+		if err != nil {
+			return err
+		}
+		fnSet := ast.NewFcFn(ast.NewFcFn(ast.NewFcAtomWithName(glob.KeywordFn), setParams), []ast.Fc{fnInFnSet})
+
+		newFact := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(stmt.DefHeader.Name), fnSet})
+
+		err = exec.env.NewFact(newFact)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
