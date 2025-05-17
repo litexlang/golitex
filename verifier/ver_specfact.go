@@ -156,13 +156,7 @@ func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state 
 						return false, err
 					}
 					if !ok {
-						// ok, err := ver.fcEqualSpec(knownParam, stmt.Params[i], state)
-						// if err != nil {
-						// 	return false, err
-						// }
-						// if !ok {
 						continue LoopOverFacts
-						// }
 					}
 				}
 

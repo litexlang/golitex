@@ -432,6 +432,10 @@ func (f *FcAtom) String() string {
 }
 
 func (f *FcFn) String() string {
+	if IsFnSet(f) {
+		return fnSetString(f)
+	}
+
 	if ok, str := hasBuiltinOptAndToString(f); ok {
 		return str
 	}
@@ -557,5 +561,13 @@ func (stmt *KnowExistPropStmt) String() string {
 	builder.WriteString(glob.KeywordKnow)
 	builder.WriteString(" ")
 	builder.WriteString(stmt.ExistProp.String())
+	return builder.String()
+}
+
+func fnSetString(f *FcFn) string {
+	var builder strings.Builder
+	builder.WriteString(f.FnHead.String())
+	builder.WriteString(" ")
+	builder.WriteString(f.ParamSegs[0].String())
 	return builder.String()
 }

@@ -29,25 +29,28 @@ func (cursor *strSliceCursor) rawFc() (ast.Fc, error) {
 }
 
 // “数学”优先级越高，越是底层。所以把括号表达式放在这里处理
-func (cursor *strSliceCursor) fcAtomAndFcFnRetAndBracedFc() (ast.Fc, error) {
+func (cursor *strSliceCursor) fcAtomAndfcFn() (ast.Fc, error) {
 	var expr ast.Fc
 	var err error
 
-	// 处理括号表达式
-	if cursor.is(glob.KeySymbolLeftBrace) {
+	if cursor.is(glob.KeywordFn) {
+		return cursor.fnSet()
+	} else if cursor.is(glob.KeySymbolLeftBrace) {
 		expr, err = cursor.bracedExpr()
 		if err != nil {
 			return nil, err
 		}
-
 		return cursor.consumeBracedFc(expr)
 	} else if cursor.curTokenBeginWithNumber() {
 		expr, err = cursor.numberStr()
 		if err != nil {
 			return nil, err
 		}
-
-		return cursor.consumeBracedFc(expr)
+		if cursor.is(glob.KeySymbolLeftBrace) {
+			return nil, fmt.Errorf("unexpected left brace after number")
+		} else {
+			return expr, nil
+		}
 	} else {
 		fcStr, err := cursor.rawFcAtom()
 		if err != nil {
@@ -185,7 +188,7 @@ func (cursor *strSliceCursor) unaryOptFc() (ast.Fc, error) {
 		return nil, err
 	}
 	if !glob.IsBuiltinUnaryOpt(unaryOp) {
-		return cursor.fcAtomAndFcFnRetAndBracedFc()
+		return cursor.fcAtomAndfcFn()
 	} else {
 		cursor.skip(unaryOp)
 
@@ -346,4 +349,37 @@ func (cursor *strSliceCursor) consumeBracedFc(head ast.Fc) (ast.Fc, error) {
 	}
 
 	return head, nil
+}
+
+func (cursor *strSliceCursor) fnSet() (ast.Fc, error) {
+	cursor.skip(glob.KeywordFn)
+	cursor.skip(glob.KeySymbolLeftBrace)
+
+	fnSets := []ast.Fc{}
+	var retSet ast.Fc
+	for !cursor.ExceedEnd() && !(cursor.is(glob.KeySymbolRightBrace)) {
+		fnSet, err := cursor.rawFc()
+		if err != nil {
+			return nil, &strSliceErr{err, cursor}
+		}
+		fnSets = append(fnSets, fnSet)
+		if cursor.is(glob.KeySymbolComma) {
+			cursor.skip(glob.KeySymbolComma)
+			continue
+		}
+	}
+
+	err := cursor.skip(glob.KeySymbolRightBrace)
+	if err != nil {
+		return nil, &strSliceErr{err, cursor}
+	}
+
+	retSet, err = cursor.rawFc()
+	if err != nil {
+		return nil, &strSliceErr{err, cursor}
+	}
+
+	ret := ast.NewFcFn(ast.NewFcFn(ast.NewFcAtomWithName(glob.KeywordFn), fnSets), []ast.Fc{retSet})
+
+	return ret, nil
 }

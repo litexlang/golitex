@@ -171,3 +171,26 @@ func (stmt *SpecFactStmt) IsMathInductionFact() bool {
 func Param_ParamSet_ToInFact(param string, paramSet Fc) FactStmt {
 	return NewSpecFactStmt(TruePure, FcAtom{glob.EmptyPkg, glob.KeywordIn}, []Fc{NewFcAtom(glob.EmptyPkg, param), paramSet})
 }
+
+func IsFnSet(fc Fc) bool {
+	fcAsFcFn, ok := fc.(*FcFn)
+	if !ok {
+		return false
+	}
+
+	fcHeadAsFcFn, ok := fcAsFcFn.FnHead.(*FcFn)
+	if !ok {
+		return false
+	}
+
+	return IsFcAtomWithName(fcHeadAsFcFn.FnHead, glob.KeywordFn)
+}
+
+func IsFcAtomWithName(fc Fc, name string) bool {
+	fcAsFcAtom, ok := fc.(*FcAtom)
+	if !ok {
+		return false
+	}
+
+	return fcAsFcAtom.Name == name && fcAsFcAtom.PkgName == glob.EmptyPkg
+}
