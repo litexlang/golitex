@@ -18,7 +18,7 @@ import (
 )
 
 func main() {
-	msg, signal, err := sys.RunFile("./examples/compresensive_examples/syllogism.lix")
+	msg, signal, err := sys.RunFile("./examples/comprehensive_examples/syllogism(三段论).lix")
 	if err != nil {
 		fmt.Println(err.Error())
 	}

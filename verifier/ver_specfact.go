@@ -95,10 +95,6 @@ func (ver *Verifier) specFact_no_commutative(stmt *ast.SpecFactStmt, state VerSt
 		return ver.pureFact(stmt, state)
 	}
 
-	// if stmt.IsExistFact() {
-	// 	return ver.existFact(stmt, state)
-	// }
-
 	if stmt.IsExist_St_Fact() {
 		return ver.exist_st_Fact(stmt, state)
 	}
