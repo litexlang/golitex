@@ -3,7 +3,7 @@ prop is_self_aware(x human)
 
 know:
     forall x human:
-        x is self_aware
+        x is is_self_aware
 
 obj Alice human
-Alice is self_aware
+Alice is is_self_aware
