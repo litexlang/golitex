@@ -198,17 +198,27 @@ func isFcAtomWithName(fc Fc, name string) bool {
 func GetParamsSetFromInStmts(inStmts []FactStmt) ([]Fc, error) {
 	paramsSets := []Fc{}
 	for _, inStmt := range inStmts {
-		inStmtAsSpecFact, ok := inStmt.(*SpecFactStmt)
-		if !ok {
-			return nil, fmt.Errorf("GetParamsSetFromInStmts: expected SpecFactStmt, but got %T", inStmt)
+		paramSet, err := GetParamSetFromInStmt(inStmt)
+		if err != nil {
+			return nil, err
 		}
-		if inStmtAsSpecFact.NameIs(glob.KeywordIn) {
-			if len(inStmtAsSpecFact.Params) != 2 {
-				return nil, fmt.Errorf("GetParamsSetFromInStmts: expected 2 params, but got %d", len(inStmtAsSpecFact.Params))
-			}
-			paramsSets = append(paramsSets, inStmtAsSpecFact.Params[1])
-		}
+		paramsSets = append(paramsSets, paramSet)
 	}
 
 	return paramsSets, nil
+}
+
+func GetParamSetFromInStmt(inStmt FactStmt) (Fc, error) {
+	inStmtAsSpecFact, ok := inStmt.(*SpecFactStmt)
+	if !ok {
+		return nil, fmt.Errorf("GetParamsSetFromInStmts: expected SpecFactStmt, but got %T", inStmt)
+	}
+	if inStmtAsSpecFact.NameIs(glob.KeywordIn) {
+		if len(inStmtAsSpecFact.Params) != 2 {
+			return nil, fmt.Errorf("GetParamsSetFromInStmts: expected 2 params, but got %d", len(inStmtAsSpecFact.Params))
+		}
+		return inStmtAsSpecFact.Params[1], nil
+	}
+
+	return nil, fmt.Errorf("GetParamsSetFromInStmts: expected In fact, but got %s", inStmtAsSpecFact.String())
 }

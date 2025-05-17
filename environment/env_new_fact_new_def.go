@@ -300,7 +300,12 @@ func (env *Env) NewDefFn(stmt *ast.DefFnStmt) error {
 		return err
 	}
 
-	return env.FnDefMem.Insert(stmt, glob.EmptyPkg)
+	err = env.FnDefMem.Insert(stmt, glob.EmptyPkg)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (env *Env) NewDefExistProp(stmt *ast.DefExistPropStmt) error {

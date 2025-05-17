@@ -82,7 +82,13 @@ func (ver *Verifier) specFact_no_commutative(stmt *ast.SpecFactStmt, state VerSt
 	}
 
 	if stmt.NameIs(glob.KeywordIn) {
-		return ver.inFact(stmt, state)
+		ok, err := ver.inFact(stmt, state)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			return true, nil
+		}
 	}
 
 	if stmt.IsPureFact() {
