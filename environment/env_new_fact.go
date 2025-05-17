@@ -355,7 +355,7 @@ func (env *Env) IsTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 		return false, nil
 	}
 
-	if !ast.IsFcAtom_HasGivenName_EmptyPkgName(&fact.PropName, glob.KeySymbolEqual) {
+	if !ast.IsFcAtomWithName(&fact.PropName, glob.KeySymbolEqual) {
 		return false, nil
 	}
 
@@ -382,7 +382,7 @@ func (env *Env) IsTrueCommutativeProp_StoreIt(fact *ast.SpecFactStmt) (bool, err
 		return false, nil
 	}
 
-	if !ast.IsFcAtom_HasGivenName_EmptyPkgName(&fact.PropName, glob.KeywordCommutativeProp) {
+	if !ast.IsFcAtomWithName(&fact.PropName, glob.KeywordCommutativeProp) {
 		return false, nil
 	}
 
@@ -415,7 +415,7 @@ func (env *Env) IsMathInductionPropName_StoreIt(fact *ast.SpecFactStmt) (bool, e
 		return false, nil
 	}
 
-	if !ast.IsFcAtom_HasGivenName_EmptyPkgName(&fact.PropName, glob.KeywordInduction) {
+	if !ast.IsFcAtomWithName(&fact.PropName, glob.KeywordInduction) {
 		return false, nil
 	}
 
@@ -459,7 +459,7 @@ func (env *Env) IsCommutativeFnName_StoreIt(fact *ast.SpecFactStmt) (bool, error
 		return false, nil
 	}
 
-	if !ast.IsFcAtom_HasGivenName_EmptyPkgName(&fact.PropName, glob.KeywordCommutativeFn) {
+	if !ast.IsFcAtomWithName(&fact.PropName, glob.KeywordCommutativeFn) {
 		return false, nil
 	}
 
@@ -482,7 +482,7 @@ func (env *Env) IsAssociativeFnName_StoreIt(fact *ast.SpecFactStmt) (bool, error
 		return false, nil
 	}
 
-	if !ast.IsFcAtom_HasGivenName_EmptyPkgName(&fact.PropName, glob.KeywordAssociativeFn) {
+	if !ast.IsFcAtomWithName(&fact.PropName, glob.KeywordAssociativeFn) {
 		return false, nil
 	}
 
@@ -505,7 +505,7 @@ func (env *Env) IsTrueFnEqual_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 		return false, nil
 	}
 
-	if !ast.IsFcAtom_HasGivenName_EmptyPkgName(&fact.PropName, glob.KeySymbolEqualEqual) {
+	if !ast.IsFcAtomWithName(&fact.PropName, glob.KeySymbolEqualEqual) {
 		return false, nil
 	}
 
@@ -527,7 +527,7 @@ func (env *Env) IsTrueSetEqual_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 		return false, nil
 	}
 
-	if !ast.IsFcAtom_HasGivenName_EmptyPkgName(&fact.PropName, glob.KeySymbolEqualEqualEqual) {
+	if !ast.IsFcAtomWithName(&fact.PropName, glob.KeySymbolEqualEqualEqual) {
 		return false, nil
 	}
 

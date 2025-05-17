@@ -183,10 +183,10 @@ func IsFnSet(fc Fc) bool {
 		return false
 	}
 
-	return IsFcAtomWithName(fcHeadAsFcFn.FnHead, glob.KeywordFn)
+	return isFcAtomWithName(fcHeadAsFcFn.FnHead, glob.KeywordFn)
 }
 
-func IsFcAtomWithName(fc Fc, name string) bool {
+func isFcAtomWithName(fc Fc, name string) bool {
 	fcAsFcAtom, ok := fc.(*FcAtom)
 	if !ok {
 		return false

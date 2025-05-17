@@ -33,7 +33,7 @@ func (ver *Verifier) btPropExceptEqual_Rule_MemSpec(stmt *ast.SpecFactStmt, stat
 		return true, nil
 	}
 
-	if ast.IsFcAtom_HasGivenName_EmptyPkgName(&stmt.PropName, glob.KeywordCommutativeProp) {
+	if ast.IsFcAtomWithName(&stmt.PropName, glob.KeywordCommutativeProp) {
 		if ok, err := ver.btCommutativeRule(stmt, state); err != nil {
 			return false, err
 		} else if ok {
@@ -118,7 +118,7 @@ func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state VerS
 }
 
 func (ver *Verifier) btCommutativeRule(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if !ast.IsFcAtom_HasGivenName_EmptyPkgName(&stmt.PropName, glob.KeywordCommutativeProp) {
+	if !ast.IsFcAtomWithName(&stmt.PropName, glob.KeywordCommutativeProp) {
 		return false, nil
 	}
 
@@ -127,7 +127,7 @@ func (ver *Verifier) btCommutativeRule(stmt *ast.SpecFactStmt, state VerState) (
 		return false, nil
 	}
 
-	if ast.IsFcAtom_HasGivenName_EmptyPkgName(propNameAsAtom, glob.KeySymbolEqual) {
+	if ast.IsFcAtomWithName(propNameAsAtom, glob.KeySymbolEqual) {
 		return true, nil
 	}
 
@@ -229,27 +229,27 @@ func (ver *Verifier) btLitNumInNatOrIntOrRatOrReal(stmt *ast.SpecFactStmt, state
 		return false, err
 	}
 	if ok {
-		if ast.IsFcAtom_HasGivenName_EmptyPkgName(stmt.Params[1], glob.KeywordNatural) {
+		if ast.IsFcAtomWithName(stmt.Params[1], glob.KeywordNatural) {
 			isSuccess = glob.IsNatNumLitExpr(leftFc)
 			return isSuccess, nil
 		}
 
-		if ast.IsFcAtom_HasGivenName_EmptyPkgName(stmt.Params[1], glob.KeywordInt) {
+		if ast.IsFcAtomWithName(stmt.Params[1], glob.KeywordInt) {
 			isSuccess = glob.IsIntegerNumLitExpr(leftFc)
 			return isSuccess, nil
 		}
 
-		if ast.IsFcAtom_HasGivenName_EmptyPkgName(stmt.Params[1], glob.KeywordRational) {
+		if ast.IsFcAtomWithName(stmt.Params[1], glob.KeywordRational) {
 			isSuccess = glob.IsRationalNumLitExpr(leftFc)
 			return isSuccess, nil
 		}
 
-		if ast.IsFcAtom_HasGivenName_EmptyPkgName(stmt.Params[1], glob.KeywordReal) {
+		if ast.IsFcAtomWithName(stmt.Params[1], glob.KeywordReal) {
 			isSuccess = glob.IsRealNumLitExpr(leftFc)
 			return isSuccess, nil
 		}
 
-		if ast.IsFcAtom_HasGivenName_EmptyPkgName(stmt.Params[1], glob.KeywordReal) {
+		if ast.IsFcAtomWithName(stmt.Params[1], glob.KeywordReal) {
 			isSuccess = glob.IsRealNumLitExpr(leftFc)
 			return isSuccess, nil
 		}
