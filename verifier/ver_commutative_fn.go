@@ -37,8 +37,8 @@ func (ver *Verifier) commutativeFnByDef(stmt *ast.SpecFactStmt, state VerState) 
 
 	fnName := ast.NewFcAtomWithName(defOfFn.DefHeader.Name)
 
-	leftFnParamOfEqualFact := ast.NewFcFn(fnName, []ast.Fc{leftParam, rightParam}, nil)
-	rightFnParamOfEqualFact := ast.NewFcFn(fnName, []ast.Fc{rightParam, leftParam}, nil)
+	leftFnParamOfEqualFact := ast.NewFcFn(fnName, []ast.Fc{leftParam, rightParam})
+	rightFnParamOfEqualFact := ast.NewFcFn(fnName, []ast.Fc{rightParam, leftParam})
 
 	equalFact := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeySymbolEqual), []ast.Fc{leftFnParamOfEqualFact, rightFnParamOfEqualFact})
 
