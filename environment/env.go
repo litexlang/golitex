@@ -17,6 +17,8 @@ import (
 	glob "golitex/glob"
 )
 
+type shared_ptr_to_slice_of_fc = *[]ast.Fc
+
 type Env struct {
 	Parent *Env
 	Msgs   []string
@@ -42,7 +44,7 @@ type Env struct {
 	AssociativeFn glob.Map2D[struct{}]
 
 	// 考虑多个系统的时候，再引入 map[string]string
-	EqualMem map[string]*[]ast.Fc
+	EqualMem map[string]shared_ptr_to_slice_of_fc
 }
 
 func NewEnv(parent *Env) *Env {
@@ -67,7 +69,7 @@ func NewEnv(parent *Env) *Env {
 		CommutativeFn:   make(glob.Map2D[struct{}]),
 		AssociativeFn:   make(glob.Map2D[struct{}]),
 
-		EqualMem: make(map[string]*[]ast.Fc),
+		EqualMem: make(map[string]shared_ptr_to_slice_of_fc),
 	}
 	return env
 }

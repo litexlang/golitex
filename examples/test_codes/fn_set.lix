@@ -1,1 +1,6 @@
 $in(fn(N,N)N, set)
+
+fn f(x N, y N) N:
+    f(x,y) = t
+
+$in(f, fn(N,N)N)

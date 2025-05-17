@@ -452,7 +452,7 @@ func (tb *tokenBlock) relaFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
 		}
-		var propNamePtr ast.Fc = &propName
+		var propNamePtr ast.Fc = propName
 
 		propNamePtr, err = ast.AddUniPrefixToFc(propNamePtr, nameDepthMap)
 		if err != nil {
@@ -462,7 +462,7 @@ func (tb *tokenBlock) relaFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 		if !ok {
 			return nil, fmt.Errorf("expect prop name")
 		}
-		propName = *propNameAsAtomPtr
+		propName = propNameAsAtomPtr
 
 		fc2, err := tb.header.rawFc()
 		if err != nil {
@@ -476,7 +476,7 @@ func (tb *tokenBlock) relaFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 
 		params := []ast.Fc{fc, fc2}
 
-		ret = ast.NewSpecFactStmt(ast.TruePure, propName, params)
+		ret = ast.NewSpecFactStmt(ast.TruePure, *propName, params)
 	} else if !glob.IsBuiltinInfixRelaPropSymbol(opt) {
 		return nil, fmt.Errorf("expect relation prop")
 	} else {
@@ -671,11 +671,11 @@ func (tb *tokenBlock) pureFuncSpecFact(nameDepthMap ast.NameDepthMap) (*ast.Spec
 	}
 
 	// propName = *ast.AddUniPrefixToFcAtom(&propName, nameDepthMap)
-	prefixedPropName, err := ast.AddUniPrefixToFcAtom(&propName, nameDepthMap)
+	prefixedPropName, err := ast.AddUniPrefixToFcAtom(propName, nameDepthMap)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
-	propName = *prefixedPropName
+	propName = prefixedPropName
 
 	params := []ast.Fc{}
 	err = tb.header.skip(glob.KeySymbolLeftBrace)
@@ -716,7 +716,7 @@ func (tb *tokenBlock) pureFuncSpecFact(nameDepthMap ast.NameDepthMap) (*ast.Spec
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	ret := ast.NewSpecFactStmt(ast.TruePure, propName, params)
+	ret := ast.NewSpecFactStmt(ast.TruePure, *propName, params)
 
 	return ret, nil
 }
@@ -1055,7 +1055,7 @@ func (tb *tokenBlock) matcherEnvStmt() (*ast.MatcherEnvStmt, error) {
 		body = append(body, bodyStmt)
 	}
 
-	return ast.NewMatcherEnvStmt(&matcherName, params, body), nil
+	return ast.NewMatcherEnvStmt(matcherName, params, body), nil
 }
 
 func (tb *tokenBlock) knowPropStmt() (*ast.KnowPropStmt, error) {

@@ -194,3 +194,21 @@ func isFcAtomWithName(fc Fc, name string) bool {
 
 	return fcAsFcAtom.Name == name && fcAsFcAtom.PkgName == glob.EmptyPkg
 }
+
+func GetParamsSetFromInStmts(inStmts []FactStmt) ([]Fc, error) {
+	paramsSets := []Fc{}
+	for _, inStmt := range inStmts {
+		inStmtAsSpecFact, ok := inStmt.(*SpecFactStmt)
+		if !ok {
+			return nil, fmt.Errorf("GetParamsSetFromInStmts: expected SpecFactStmt, but got %T", inStmt)
+		}
+		if inStmtAsSpecFact.NameIs(glob.KeywordIn) {
+			if len(inStmtAsSpecFact.Params) != 2 {
+				return nil, fmt.Errorf("GetParamsSetFromInStmts: expected 2 params, but got %d", len(inStmtAsSpecFact.Params))
+			}
+			paramsSets = append(paramsSets, inStmtAsSpecFact.Params[1])
+		}
+	}
+
+	return paramsSets, nil
+}
