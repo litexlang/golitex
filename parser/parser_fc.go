@@ -25,6 +25,7 @@ func (cursor *strSliceCursor) rawFc() (ast.Fc, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	if cursor.is(glob.KeywordAs) {
 		cursor.skip(glob.KeywordAs)
 		as, err := cursor.rawFc()
@@ -46,34 +47,56 @@ func (cursor *strSliceCursor) rawFc() (ast.Fc, error) {
 
 // “数学”优先级越高，越是底层。所以把括号表达式放在这里处理
 func (cursor *strSliceCursor) fcAtomAndFcFnRetAndBracedFc() (ast.Fc, error) {
+	var expr ast.Fc
+	var err error
+
 	// 处理括号表达式
 	if cursor.is(glob.KeySymbolLeftBrace) {
-		return cursor.bracedExpr()
-	}
+		expr, err = cursor.bracedExpr()
+		if err != nil {
+			return nil, err
+		}
 
-	if cursor.curTokenBeginWithNumber() {
-		return cursor.numberStr()
-	}
+		for !cursor.ExceedEnd() && (cursor.is(glob.KeySymbolLeftBrace)) {
+			objParamsPtr, err := cursor.bracedFcSlice()
+			if err != nil {
+				return nil, &strSliceErr{err, cursor}
+			}
+			expr = ast.NewFcFn(expr, objParamsPtr, nil)
+		}
+		return expr, nil
+	} else if cursor.curTokenBeginWithNumber() {
+		expr, err = cursor.numberStr()
+		if err != nil {
+			return nil, err
+		}
 
-	// if cursor.strAtCurIndexPlus(0) == glob.KeywordFn {
-	// 	return cursor.parseFnSet()
-	// }
-
-	fcStr, err := cursor.rawFcAtom()
-	if err != nil {
-		return nil, &strSliceErr{err, cursor}
-	}
-
-	strAtSecondPosition := cursor.strAtCurIndexPlus(0)
-
-	if strAtSecondPosition != glob.KeySymbolLeftBrace {
-		return &fcStr, nil
+		for !cursor.ExceedEnd() && (cursor.is(glob.KeySymbolLeftBrace)) {
+			objParamsPtr, err := cursor.bracedFcSlice()
+			if err != nil {
+				return nil, &strSliceErr{err, cursor}
+			}
+			expr = ast.NewFcFn(expr, objParamsPtr, nil)
+		}
+		return expr, nil
 	} else {
-		return cursor.rawFcFn(&fcStr)
+		fcStr, err := cursor.rawFcAtom()
+		if err != nil {
+			return nil, &strSliceErr{err, cursor}
+		}
+		expr = &fcStr
+		for !cursor.ExceedEnd() && (cursor.is(glob.KeySymbolLeftBrace)) {
+			objParamsPtr, err := cursor.bracedFcSlice()
+			if err != nil {
+				return nil, &strSliceErr{err, cursor}
+			}
+			expr = ast.NewFcFn(expr, objParamsPtr, nil)
+		}
+		return expr, nil
 	}
 }
 
-func (cursor *strSliceCursor) rawFcFn(optName *ast.FcAtom) (ast.Fc, error) {
+func (cursor *strSliceCursor) rawFcFn(optName ast.Fc) (ast.Fc, error) {
 	typeParamsObjParamsPairs, err := cursor.fcFnSegs()
 
 	if err != nil {
@@ -316,7 +339,8 @@ func (cursor *strSliceCursor) bracedExpr() (ast.Fc, error) {
 		return nil, fmt.Errorf("unexpected end of input after '('")
 	}
 
-	head, err := cursor.fcInfixExpr(glob.PrecLowest)
+	// head, err := cursor.fcInfixExpr(glob.PrecLowest)
+	head, err := cursor.rawFc()
 	if err != nil {
 		return nil, err
 	}
@@ -333,20 +357,22 @@ func (cursor *strSliceCursor) bracedExpr() (ast.Fc, error) {
 		return head, nil
 	}
 
-	segs := [][]ast.Fc{}
+	return head, nil
 
-	for !cursor.ExceedEnd() {
-		seg, err := cursor.bracedFcSlice()
-		if err != nil {
-			return nil, &strSliceErr{err, cursor}
-		}
-		segs = append(segs, seg)
-	}
+	// segs := [][]ast.Fc{}
 
-	var curHead ast.Fc = head
-	for _, seg := range segs {
-		curHead = ast.NewFcFn(curHead, seg, nil)
-	}
+	// for !cursor.ExceedEnd() {
+	// 	seg, err := cursor.bracedFcSlice()
+	// 	if err != nil {
+	// 		return nil, &strSliceErr{err, cursor}
+	// 	}
+	// 	segs = append(segs, seg)
+	// }
 
-	return curHead, nil
+	// var curHead ast.Fc = head
+	// for _, seg := range segs {
+	// 	curHead = ast.NewFcFn(curHead, seg, nil)
+	// }
+
+	// return curHead, nil
 }
