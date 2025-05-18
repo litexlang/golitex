@@ -1,6 +1,20 @@
+// Copyright 2024 Jiachen Shen.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Original Author: Jiachen Shen <malloc_realloc_free@outlook.com>
+// Contact the development team: <litexlang@outlook.com>
+// Visit litexlang.org and https://github.com/litexlang/golitex for more info.
+
 package litex_comparator
 
 import "fmt"
+
+// TODO: 实现合并同类项
 
 type exprNode struct {
 	Opt   string
@@ -28,7 +42,7 @@ func (e *exprNode) Simplify() interface{} {
 	return e
 }
 
-// 尝试合并同类项
+// 合并同类项：tryCombineTerms 函数统计每个变量的出现次数，将相同变量合并为系数*变量的形式。
 func tryCombineTerms(e *exprNode) interface{} {
 	terms := flattenAddition(e)
 	termMap := make(map[string]int)
@@ -122,7 +136,7 @@ func tryCombineTerms(e *exprNode) interface{} {
 	return result
 }
 
-// 将加法表达式展平为项列表
+// 展平加法：flattenAddition 函数将嵌套的加法表达式展平为一个项列表，便于处理。
 func flattenAddition(e *exprNode) []interface{} {
 	var terms []interface{}
 
@@ -148,3 +162,43 @@ func flattenAddition(e *exprNode) []interface{} {
 
 	return terms
 }
+
+// func main() {
+// 	// 示例1: x + y + x
+// 	expr1 := &ExprNode{
+// 		Opt: "+",
+// 		Left: &ExprNode{
+// 			Opt:   "+",
+// 			Left:  "x",
+// 			Right: "y",
+// 		},
+// 		Right: "x",
+// 	}
+
+// 	fmt.Println("原始表达式1:", expr1)
+// 	simplified1 := expr1.Simplify()
+// 	fmt.Println("化简后表达式1:", exprToString(simplified1))
+
+// 	// 示例2: 2*x + 3 + x + 5
+// 	expr2 := &ExprNode{
+// 		Opt: "+",
+// 		Left: &ExprNode{
+// 			Opt: "+",
+// 			Left: &ExprNode{
+// 				Opt:   "*",
+// 				Left:  2,
+// 				Right: "x",
+// 			},
+// 			Right: 3,
+// 		},
+// 		Right: &ExprNode{
+// 			Opt:   "+",
+// 			Left:  "x",
+// 			Right: 5,
+// 		},
+// 	}
+
+// 	fmt.Println("\n原始表达式2:", expr2)
+// 	simplified2 := expr2.Simplify()
+// 	fmt.Println("化简后表达式2:", exprToString(simplified2))
+// }
