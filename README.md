@@ -130,7 +130,9 @@ prop less_than(a R, b R): # self defined a < b
 
 Every fact in Litex must be tied to a concrete entity: object (`obj`), function (`fn`), proposition (`prop`). Users must declare objects before use. Any object must belong to a set.
 
-Functions in Litex are not executed. In the Rm of mathematics, a function is essentially an entity that is eligible to precede a set of parentheses (). It shares similarities with what we refer to as a object, with the distinctive feature being its ability to be positioned before the ().
+Functions in Litex are not executed. In the Realm of mathematics, a function is essentially an entity that is eligible to precede a set of parentheses (). It shares similarities with what we refer to as a object, with the distinctive feature being its ability to be positioned before the ().
+
+Remember, Litex is not a Turing-complete language, so nothing is executed in Litex should not surprise you. `=` in Litex means equality of symbols, not "given a value a name" like in programming languages. `forall` in Litex does not actually loops behind the scene like  `for` in programming languages. The reason why Litex is designed in such way is that that is exactly how mathematics works: machenical verification has many key differences from machenical computation(execution).
 
 Another good way of understanding difference between function in Litex or math and function in programming language is that in programming language, even if two functions are of the same logic, they are not equal and it is weird to compare two functions (or function pointers). Only functions with the same name are equal. However, in Litex, two functions can be equal as long as their dom are equal as sets, their value domain are equal as sets, and their value are the same on every element of their dom.
 
@@ -384,7 +386,7 @@ Litex is a minimalist proof assistant, designed to be simple and intuitive. It d
 
 Litex is an attempt to scale reasoning with the ever-expanding power of modern computing resources, and to introduce a new way of thinking (the way of thinking that is more like programming) about math.
 
-Technically, Litex is a regex-based(without recursion) finder with customizable matching rules and math-friendly syntax sugar. Litex has a lower abstraction level below any existing mathematical axioms, including ZFC. Any existing mathematical axioms can be expressed in Litex. 
+Technically, Litex is a regex-based(without recursion) finder with customizable matching rules and math-friendly syntax sugar. Litex has a lower abstraction level below any existing mathematical axioms, including ZFC. Any existing mathematical axioms can be expressed in Litex. You can think of Litex as the axioms(reasoning rules) that makes axioms(mathematical axioms like ZFC) axioms. (Interestingly, how Litex functions can also be formalized in Litex, which shows the universality of recursion in computer science.)
 
 Also remember, Litex is not Turing Complete, because verification does not require execution or loops (goto statements), which further enhances its expressiveness. In short, the user will enjoy freedom and expressiveness that no other proof assistant can offer. 
 
