@@ -10,7 +10,7 @@ _That language is an instrument of Human reason, and not merely a medium for the
 
 _–- George Boole_
 
-**Litex is a minimalist proof assistant (formal language). With a predicted "de Bruijn factor" (the ratio of formal to informal proof difficulty) of 0.5–1.5, Litex will transform the mathematical landscape and help build better reasoning AI models.**
+**Litex is a minimalist proof assistant (formal language). With a predicted "de Bruijn factor" (the ratio of formal to informal proof difficulty) of 0.5–1.5 instead of nearly 20 of the traditional proof assistants, Litex will transform the mathematical landscape and help build better reasoning AI models.**
 
 **Litex stands out from other proof assistants because of its simplicity.** If even children can reason naturally, a formal language that combines rigor and intuition must be possible -- it simply hasn’t been invented yet. Litex is designed to create precisely such a language.
 
@@ -70,6 +70,8 @@ This synergy heralds a new era where mathematical rigor meets computational powe
 
 
 ## Getting Started
+
+<!-- TODO： 需要说明我的forall => specific 本原理就是 substituion and unification 这能让用户非常容易理解我在做什么 -->
 
 _Mathematics is nothing more than a game played according to certain simple rules with meaningless marks on a paper._
 
@@ -386,7 +388,7 @@ Litex is a minimalist proof assistant, designed to be simple and intuitive. It d
 
 Litex is an attempt to scale reasoning with the ever-expanding power of modern computing resources, and to introduce a new way of thinking (the way of thinking that is more like programming) about math.
 
-Technically, Litex is a regex-based(without recursion) finder with customizable matching rules and math-friendly syntax sugar. Litex has a lower abstraction level below any existing mathematical axioms, including ZFC. Any existing mathematical axioms can be expressed in Litex. You can think of Litex as the axioms(reasoning rules) that makes axioms(mathematical axioms like ZFC) axioms. (Interestingly, how Litex functions can also be formalized in Litex, which shows the universality of recursion in computer science.)
+Technically, Litex is a regex-based(without recursion) finder with customizable matching rules and math-friendly syntax sugar. Litex has a lower abstraction level below any existing mathematical axioms, including ZFC. Any existing mathematical axioms can be expressed in Litex. You can think of Litex as the axioms(reasoning rules) that makes axioms(mathematical axioms like ZFC) axioms. (Interestingly, how Litex functions can also be formalized in Litex, which shows the strength and strangeness of recursion in computer science.)
 
 Also remember, Litex is not Turing Complete, because verification does not require execution or loops (goto statements), which further enhances its expressiveness. In short, the user will enjoy freedom and expressiveness that no other proof assistant can offer. 
 
@@ -416,6 +418,8 @@ Not Intuitive – Inheritance is not intuitive. An object can for sure belong to
 Beyond Go, Litex draws inspiration from other programming languages. For instance, Python's scoping rules have shaped Litex's approach to object and function scope. 
 
 The C programming language's syntax and semantics significantly influenced Litex's design. Operator overloading behavior is inspired by C++. The inventor of Litex holds a deep appreciation for Lisp's "everything is a list" philosophy, which contributes to the language's conceptual integrity. Also, since C uses postfix like L to make number as type the user want to overloade type of a numbner literal(e.g. 1L represents a long integer), Litex uses postfix to do type inference(e.g. 1r represents 1 as R number). No user defined type overloading is allowed.
+
+(Syntactically, Litex learn from python and go. Semantically, Litex learn from Lisp and C. As a daily tool, Litex learn from Tex and ipynb.)
 
 Furthermore, Tex's clear distinction between "math expressions" and "plain words" inspired Litex's separation of "factual expressions" from ordinary symbols. Litex also aspires to achieve the same level of ubiquity and utility as Tex, aiming to become a widely adopted daily tool. This ambition is encapsulated in its name: Litex = Lisp + Tex, symbolizing the fusion of Lisp's expressive elegance and Tex's practicality.
 
@@ -482,7 +486,9 @@ I, Jiachen Shen, a hacker and a math enthusiast. I majored in math and self-taug
 
 A good art is enjoyable to its author happy and be useful to others. This process of inventing Litex makes me happy, and I hope Litex can be useful for both math community and AI community, or even anyone from any field. As Knuth said in his Turing Award lecture: science is logical, systematic, calm; art is aesthetic, creative, anxious. Both math and programming live at this intersection, rigorous yet deeply human.
 
-Moreover, I have strong belief that there is only a small gap between programming and mathematical reasoning. I also believe it does not take "that many" syntax and semantics to formalize ALL math. The more I program this project, the firmer my belief becomes. The R obstacle dragging me back is not the weakness of my ideas, but the loneliness of this long journey. That is why I am so grateful for any kind of support.
+Moreover, I have strong belief that there is only a small gap between programming and mathematical reasoning. I also believe it does not take "that many" syntax and semantics to formalize ALL math. The more I program this project, the firmer my belief becomes. It only takes deep insight and open-minded creativity to invent such a good set of language features.
+
+The only obstacle dragging me back is not the weakness of my ideas, but the loneliness of this long journey. That is why I am so grateful for any kind of support.
 
 Also, intuitiveness of Litex is a double-edged sword. It's great because so when whenever I encounter something hard or impossible to expressive using current version of Litex, it takes usually a few hours to a few days to figure out a solution. That is why implementing Litex successfully is just a matter of time and I have the confidence to implement Litex successfully.
 
@@ -491,6 +497,8 @@ At the same time, there are so many "Too trivial to be noticed" things I have to
 On my(I am Jiachen Shen, the inventor of Litex) journey of inventing Litex, its intuitiveness is a double-edged sword. It's great because I do not need to rely on any textbook or paper to design Litex. It's bad because if I do get stuck, I do not have any textbook or paper to refer to. Creativity is a definitely required skill if you want to contribute to Litex.
 
 If you want to contribute to Litex, you must be able to appreciate its simplicity. Litex is a very small language. After all, as the only contributor to Litex (at least the first 2000 git commits are all pushed by me), I have no time to implement a complicated one. Keeping it simple yet powerful is the key to its growth and success.
+
+As Terry Davis said, An idiot admires complexity, while a genius admires simplicity. Make sure you truly appreciate this language design principle by heart before you contribute to Litex.
 
 There is no doubt that both the AI community and the math community will benefit from Litex. Litex is a highly interdisciplinary projects: programming languages, mathematics, and the AI community. Litex will never succeed without an active community. Feel free to issue your suggestions and ideas to help me improve this open-source project. Your feedback is invaluable.
 
