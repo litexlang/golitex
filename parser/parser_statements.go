@@ -76,7 +76,7 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		}
 	case glob.KeywordSet:
 		ret, err = tb.setDefStmt()
-	case glob.KeySymbolLess:
+	case glob.KeySymbolAt:
 		ret, err = tb.matcherEnvStmt()
 	case glob.KeywordProveInEachCase:
 		ret, err = tb.proveInEachCaseStmt()
@@ -170,7 +170,7 @@ func (tb *tokenBlock) specFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 	}
 
 	if tb.header.is(glob.FuncFactPrefix) {
-		ret, err := tb.pureFuncSpecFact(nameDepthMap)
+		ret, err := tb.pureFuncSpecFact(nameDepthMap, true)
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
 		}
@@ -641,7 +641,7 @@ func (tb *tokenBlock) existFactStmt(nameDepthMap ast.NameDepthMap, isTrue bool) 
 		}
 	}
 
-	pureSpecFact, err := tb.pureFuncSpecFact(nameDepthMap)
+	pureSpecFact, err := tb.pureFuncSpecFact(nameDepthMap, true)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -659,10 +659,12 @@ func (tb *tokenBlock) existFactStmt(nameDepthMap ast.NameDepthMap, isTrue bool) 
 	// }
 }
 
-func (tb *tokenBlock) pureFuncSpecFact(nameDepthMap ast.NameDepthMap) (*ast.SpecFactStmt, error) {
-	ok := tb.header.isAndSkip(glob.FuncFactPrefix)
-	if !ok {
-		return nil, fmt.Errorf("specific fact in functional form must start with %s", glob.FuncFactPrefix)
+func (tb *tokenBlock) pureFuncSpecFact(nameDepthMap ast.NameDepthMap, skipFuncFactPrefix bool) (*ast.SpecFactStmt, error) {
+	if skipFuncFactPrefix {
+		ok := tb.header.isAndSkip(glob.FuncFactPrefix)
+		if !ok {
+			return nil, fmt.Errorf("specific fact in functional form must start with %s", glob.FuncFactPrefix)
+		}
 	}
 
 	propName, err := tb.header.rawFcAtom()
@@ -997,12 +999,12 @@ func (tb *tokenBlock) uniFactBodyFacts(nameDepthMap ast.NameDepthMap, curAllowUn
 }
 
 func (tb *tokenBlock) matcherEnvStmt() (*ast.MatcherEnvStmt, error) {
-	err := tb.header.skip(glob.KeySymbolLess)
+	err := tb.header.skip(glob.KeySymbolAt)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	fact, err := tb.specFactStmt(ast.NameDepthMap{})
+	fact, err := tb.pureFuncSpecFact(ast.NameDepthMap{}, false)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -1016,16 +1018,6 @@ func (tb *tokenBlock) matcherEnvStmt() (*ast.MatcherEnvStmt, error) {
 		if asAtom.PkgName != glob.EmptyPkg {
 			return nil, &tokenBlockErr{fmt.Errorf("spec fact parameter must be atom, but got: %s", param.String()), *tb}
 		}
-	}
-
-	err = tb.header.skip(glob.KeySymbolRightBrace)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
-
-	err = tb.header.skip(glob.KeySymbolGreater)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	err = tb.header.skip(glob.KeySymbolColon)
