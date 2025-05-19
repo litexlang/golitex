@@ -473,9 +473,8 @@ func (stmt *SetDefSetBuilderStmt) String() string {
 
 func (stmt *MatcherEnvStmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeySymbolLess)
+	builder.WriteString(glob.KeySymbolAt)
 	builder.WriteString(stmt.Fact.String())
-	builder.WriteString(glob.KeySymbolGreater)
 	builder.WriteString(":\n")
 	if len(stmt.Body) > 0 {
 		for i := range len(stmt.Body) - 1 {

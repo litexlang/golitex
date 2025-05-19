@@ -42,7 +42,7 @@ func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 	case *ast.DefFnStmt:
 		err = exec.defFnStmt(stmt)
 	case *ast.MatcherEnvStmt:
-		err = exec.matcherEnvStmt(stmt)
+		execState, err = exec.matcherEnvStmt(stmt)
 	case *ast.KnowPropStmt:
 		err = exec.knowPropStmt(stmt)
 	case *ast.KnowExistPropStmt:
@@ -400,7 +400,7 @@ func (exec *Executor) defStmt(stmt ast.DefStmt) error {
 	}
 }
 
-func (exec *Executor) matcherEnvStmt(stmt *ast.MatcherEnvStmt) error {
+func (exec *Executor) matcherEnvStmt(stmt *ast.MatcherEnvStmt) (glob.ExecState, error) {
 	defer exec.appendMsg("\n")
 	defer exec.appendMsg(stmt.String())
 
@@ -409,24 +409,24 @@ func (exec *Executor) matcherEnvStmt(stmt *ast.MatcherEnvStmt) error {
 
 	factSpecDef, ok := exec.env.GetPropDef(stmt.Fact.PropName)
 	if !ok {
-		return fmt.Errorf("spec fact parameter must be atom, but got: %s", stmt.Fact.PropName.String())
+		return glob.ExecState_Error, fmt.Errorf("spec fact parameter must be atom, but got: %s", stmt.Fact.PropName.String())
 	}
 
 	if len(factSpecDef.DefHeader.Params) != len(stmt.Fact.Params) {
-		return fmt.Errorf("spec fact parameter number not equal to prop def params number. expect %d, but got %d", len(factSpecDef.DefHeader.Params), len(stmt.Fact.Params))
+		return glob.ExecState_Error, fmt.Errorf("spec fact parameter number not equal to prop def params number. expect %d, but got %d", len(factSpecDef.DefHeader.Params), len(stmt.Fact.Params))
 	}
 
 	for _, param := range stmt.Fact.Params {
 		asAtom, ok := param.(*ast.FcAtom)
 		if !ok {
-			return fmt.Errorf("spec fact parameter must be atom, but got: %s", param.String())
+			return glob.ExecState_Error, fmt.Errorf("spec fact parameter must be atom, but got: %s", param.String())
 		}
 		if asAtom.PkgName != glob.EmptyPkg {
-			return fmt.Errorf("spec fact parameter must be atom, but got: %s", param.String())
+			return glob.ExecState_Error, fmt.Errorf("spec fact parameter must be atom, but got: %s", param.String())
 		}
 		err := exec.defStmt(ast.NewDefObjStmt([]string{asAtom.Name}, []ast.FactStmt{}, []ast.FactStmt{}))
 		if err != nil {
-			return err
+			return glob.ExecState_Error, err
 		}
 	}
 
@@ -437,20 +437,20 @@ func (exec *Executor) matcherEnvStmt(stmt *ast.MatcherEnvStmt) error {
 
 	instantiatedFactSpecDef, err := factSpecDef.Instantiate(uniMap)
 	if err != nil {
-		return err
+		return glob.ExecState_Error, err
 	}
 
 	// itself is true
 	err = exec.env.NewFact(&stmt.Fact)
 	if err != nil {
-		return err
+		return glob.ExecState_Error, err
 	}
 
 	// in facts are true
 	for _, inFact := range instantiatedFactSpecDef.DefHeader.ParamInSetsFacts {
 		err = exec.env.NewFact(inFact)
 		if err != nil {
-			return err
+			return glob.ExecState_Error, err
 		}
 	}
 
@@ -458,7 +458,7 @@ func (exec *Executor) matcherEnvStmt(stmt *ast.MatcherEnvStmt) error {
 	for _, domFact := range instantiatedFactSpecDef.DomFacts {
 		err = exec.env.NewFact(domFact)
 		if err != nil {
-			return err
+			return glob.ExecState_Error, err
 		}
 	}
 
@@ -466,11 +466,27 @@ func (exec *Executor) matcherEnvStmt(stmt *ast.MatcherEnvStmt) error {
 	for _, iffFact := range instantiatedFactSpecDef.IffFacts {
 		err = exec.env.NewFact(iffFact)
 		if err != nil {
-			return err
+			return glob.ExecState_Error, err
 		}
 	}
 
-	return nil
+	// run stmt body
+	for _, bodyFact := range stmt.Body {
+		execState, err := exec.stmt(bodyFact)
+		if err != nil {
+			return glob.ExecState_Error, err
+		}
+		if execState != glob.ExecState_True {
+			if execState == glob.ExecState_Unknown && glob.ContinueExecutionWhenExecUnknown {
+				exec.appendWarningMsg("unknown fact: %s", bodyFact.String())
+				return glob.ExecState_Unknown, nil
+			} else {
+				return glob.ExecState_Error, fmt.Errorf("matcher env stmt body is not true")
+			}
+		}
+	}
+
+	return glob.ExecState_True, nil
 }
 
 func (exec *Executor) GetUniFactSettings(asUnivFact *ast.UniFactStmt) error {
