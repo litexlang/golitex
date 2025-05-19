@@ -21,9 +21,9 @@ import (
 type Fc interface {
 	fc()
 	String() string
-	// GetPkgName() string
 	Instantiate(map[string]Fc) (Fc, error)
 	IsAtom() bool
+	orderAddition() []Fc
 }
 
 func (f *FcAtom) fc()          {}
