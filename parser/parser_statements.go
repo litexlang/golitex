@@ -1002,33 +1002,9 @@ func (tb *tokenBlock) matcherEnvStmt() (*ast.MatcherEnvStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	matcherName, err := tb.header.rawFcAtom()
+	fact, err := tb.specFactStmt(ast.NameDepthMap{})
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
-	}
-
-	params := []ast.Fc{}
-	err = tb.header.skip(glob.KeySymbolLeftBrace)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
-
-	if !tb.header.is(glob.KeySymbolRightBrace) {
-		for {
-			fc, err := tb.header.rawFc()
-			if err != nil {
-				return nil, &tokenBlockErr{err, *tb}
-			}
-			params = append(params, fc)
-			if tb.header.is(glob.KeySymbolRightBrace) {
-				break
-			}
-			if tb.header.is(glob.KeySymbolComma) {
-				tb.header.skip(glob.KeySymbolComma)
-				continue
-			}
-			return nil, &tokenBlockErr{fmt.Errorf("expect comma or right brace, but got: %s", tb.header.strAtCurIndexPlus(0)), *tb}
-		}
 	}
 
 	err = tb.header.skip(glob.KeySymbolRightBrace)
@@ -1055,7 +1031,7 @@ func (tb *tokenBlock) matcherEnvStmt() (*ast.MatcherEnvStmt, error) {
 		body = append(body, bodyStmt)
 	}
 
-	return ast.NewMatcherEnvStmt(matcherName, params, body), nil
+	return ast.NewMatcherEnvStmt(*fact, body), nil
 }
 
 func (tb *tokenBlock) knowPropStmt() (*ast.KnowPropStmt, error) {

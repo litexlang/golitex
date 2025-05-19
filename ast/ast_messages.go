@@ -474,16 +474,7 @@ func (stmt *SetDefSetBuilderStmt) String() string {
 func (stmt *MatcherEnvStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeySymbolLess)
-	builder.WriteString(stmt.MatcherName.String())
-	builder.WriteString("(")
-	if len(stmt.Params) > 0 {
-		for i := range len(stmt.Params) - 1 {
-			builder.WriteString(stmt.Params[i].String())
-			builder.WriteString(", ")
-		}
-		builder.WriteString(stmt.Params[len(stmt.Params)-1].String())
-	}
-	builder.WriteString(")")
+	builder.WriteString(stmt.Fact.String())
 	builder.WriteString(glob.KeySymbolGreater)
 	builder.WriteString(":\n")
 	if len(stmt.Body) > 0 {

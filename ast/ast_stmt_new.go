@@ -80,8 +80,8 @@ func NewExistPropDef(declHeader DefHeader, domFacts []FactStmt, iffFacts []Rever
 // 	return &SetDefSetBuilderStmt{setName, parentSet, facts}
 // }
 
-func NewMatcherEnvStmt(matcherName *FcAtom, params []Fc, body []Stmt) *MatcherEnvStmt {
-	return &MatcherEnvStmt{*matcherName, params, body}
+func NewMatcherEnvStmt(fact SpecFactStmt, body []Stmt) *MatcherEnvStmt {
+	return &MatcherEnvStmt{fact, body}
 }
 
 func NewUniFactStmtWithSetReqInDom(params []string, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt, paramInSetsFacts []FactStmt) *UniFactStmt {
