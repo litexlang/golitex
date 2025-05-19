@@ -406,7 +406,7 @@ func (exec *Executor) whenPropMatchStmt(stmt *ast.WhenPropMatchStmt) (glob.ExecS
 	defer exec.appendMsg("\n")
 	defer exec.appendMsg(stmt.String())
 
-	return glob.ExecState_True, nil
+	// return glob.ExecState_True, nil
 
 	exec.newEnv()
 	defer exec.deleteEnvAndRetainMsg()
@@ -428,7 +428,7 @@ func (exec *Executor) whenPropMatchStmt(stmt *ast.WhenPropMatchStmt) (glob.ExecS
 		if asAtom.PkgName != glob.EmptyPkg {
 			return glob.ExecState_Error, fmt.Errorf("spec fact parameter must be atom, but got: %s", param.String())
 		}
-		err := exec.defStmt(ast.NewDefObjStmt([]string{asAtom.Name}, []ast.FactStmt{}, []ast.FactStmt{}))
+		err := exec.env.ObjDefMem.Insert(ast.NewDefObjStmt([]string{asAtom.Name}, []ast.FactStmt{}, []ast.FactStmt{}), glob.EmptyPkg)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}

@@ -9,12 +9,12 @@ prove:
         forall a G, b G, c G:
             op(a, op(b, c)) = op(op(a, b), c)
 
-    when $is_group(G, op, e, inv):
-        forall a G:
-            op(a, inv(a)) = e
-            op(inv(a), a) = e
-            op(a, e) = a
-            op(e, a) = a
+    when $is_group(G2, op2, e2, inv2):
+        forall a2 G2:
+            op2(a2, inv2(a2)) = e2
+            op2(inv2(a2), a2) = e2
+            op2(a2, e2) = a2
+            op2(e2, a2) = a2
 
-        forall a G, b G, c G:
-            op(a, op(b, c)) = op(op(a, b), c)
+        forall a2 G2, b2 G2, c2 G2:
+            op2(a2, op2(b2, c2)) = op2(op2(a2, b2), c2)
