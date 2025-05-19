@@ -76,8 +76,10 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		}
 	case glob.KeywordSet:
 		ret, err = tb.setDefStmt()
-	case glob.KeySymbolAt:
-		ret, err = tb.matcherEnvStmt()
+	case glob.KeywordWhen:
+		ret, err = tb.whenPropMatchStmt()
+	case glob.KeywordWith:
+		ret, err = tb.withPropMatchStmt()
 	case glob.KeywordProveInEachCase:
 		ret, err = tb.proveInEachCaseStmt()
 	case glob.KeywordProveOr:
@@ -170,7 +172,7 @@ func (tb *tokenBlock) specFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 	}
 
 	if tb.header.is(glob.FuncFactPrefix) {
-		ret, err := tb.pureFuncSpecFact(nameDepthMap, true)
+		ret, err := tb.pureFuncSpecFact(nameDepthMap)
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
 		}
@@ -641,7 +643,7 @@ func (tb *tokenBlock) existFactStmt(nameDepthMap ast.NameDepthMap, isTrue bool) 
 		}
 	}
 
-	pureSpecFact, err := tb.pureFuncSpecFact(nameDepthMap, true)
+	pureSpecFact, err := tb.pureFuncSpecFact(nameDepthMap)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -659,12 +661,9 @@ func (tb *tokenBlock) existFactStmt(nameDepthMap ast.NameDepthMap, isTrue bool) 
 	// }
 }
 
-func (tb *tokenBlock) pureFuncSpecFact(nameDepthMap ast.NameDepthMap, skipFuncFactPrefix bool) (*ast.SpecFactStmt, error) {
-	if skipFuncFactPrefix {
-		ok := tb.header.isAndSkip(glob.FuncFactPrefix)
-		if !ok {
-			return nil, fmt.Errorf("specific fact in functional form must start with %s", glob.FuncFactPrefix)
-		}
+func (tb *tokenBlock) pureFuncSpecFact(nameDepthMap ast.NameDepthMap) (*ast.SpecFactStmt, error) {
+	if tb.header.is(glob.FuncFactPrefix) {
+		tb.header.skip(glob.FuncFactPrefix)
 	}
 
 	propName, err := tb.header.rawFcAtom()
@@ -998,43 +997,66 @@ func (tb *tokenBlock) uniFactBodyFacts(nameDepthMap ast.NameDepthMap, curAllowUn
 	return domFacts, thenFacts, iffFacts, nil
 }
 
-func (tb *tokenBlock) matcherEnvStmt() (*ast.MatcherEnvStmt, error) {
-	err := tb.header.skip(glob.KeySymbolAt)
+func (tb *tokenBlock) propMatchStmt() (*ast.SpecFactStmt, []ast.Stmt, error) {
+	fact, err := tb.pureFuncSpecFact(ast.NameDepthMap{})
 	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
-
-	fact, err := tb.pureFuncSpecFact(ast.NameDepthMap{}, false)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
+		return nil, nil, err
 	}
 
 	// specFact parameter 必须是atom
 	for _, param := range fact.Params {
 		asAtom, ok := param.(*ast.FcAtom)
 		if !ok {
-			return nil, &tokenBlockErr{fmt.Errorf("spec fact parameter must be atom, but got: %s", param.String()), *tb}
+			return nil, nil, fmt.Errorf("spec fact parameter must be atom, but got: %s", param.String())
 		}
 		if asAtom.PkgName != glob.EmptyPkg {
-			return nil, &tokenBlockErr{fmt.Errorf("spec fact parameter must be atom, but got: %s", param.String()), *tb}
+			return nil, nil, fmt.Errorf("spec fact parameter must be atom, but got: %s", param.String())
 		}
 	}
 
 	err = tb.header.skip(glob.KeySymbolColon)
 	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
+		return nil, nil, err
 	}
 
 	body := []ast.Stmt{}
 	for _, stmt := range tb.body {
 		bodyStmt, err := stmt.Stmt()
 		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
+			return nil, nil, err
 		}
 		body = append(body, bodyStmt)
 	}
 
-	return ast.NewMatcherEnvStmt(*fact, body), nil
+	return fact, body, nil
+}
+
+func (tb *tokenBlock) whenPropMatchStmt() (*ast.WhenPropMatchStmt, error) {
+	err := tb.header.skip(glob.KeywordWhen)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	fact, body, err := tb.propMatchStmt()
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	return ast.NewWhenPropMatchStmt(*fact, body), nil
+}
+
+func (tb *tokenBlock) withPropMatchStmt() (*ast.WithPropMatchStmt, error) {
+	err := tb.header.skip(glob.KeywordWith)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	fact, body, err := tb.propMatchStmt()
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	return ast.NewWithPropMatchStmt(*fact, body), nil
 }
 
 func (tb *tokenBlock) knowPropStmt() (*ast.KnowPropStmt, error) {

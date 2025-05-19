@@ -80,10 +80,6 @@ func NewExistPropDef(declHeader DefHeader, domFacts []FactStmt, iffFacts []Rever
 // 	return &SetDefSetBuilderStmt{setName, parentSet, facts}
 // }
 
-func NewMatcherEnvStmt(fact SpecFactStmt, body []Stmt) *MatcherEnvStmt {
-	return &MatcherEnvStmt{fact, body}
-}
-
 func NewUniFactStmtWithSetReqInDom(params []string, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt, paramInSetsFacts []FactStmt) *UniFactStmt {
 	return newUniFactStmt(params, domFacts, thenFacts, iffFacts, paramInSetsFacts)
 }
@@ -114,4 +110,12 @@ func NewProveOrStmt(indexes map[int]struct{}, orFact LogicExprStmt, proofs []Stm
 
 func NewKnowExistPropStmt(existProp DefExistPropStmt) *KnowExistPropStmt {
 	return &KnowExistPropStmt{existProp}
+}
+
+func NewWhenPropMatchStmt(fact SpecFactStmt, body []Stmt) *WhenPropMatchStmt {
+	return &WhenPropMatchStmt{fact, body}
+}
+
+func NewWithPropMatchStmt(fact SpecFactStmt, body []Stmt) *WithPropMatchStmt {
+	return &WithPropMatchStmt{fact, body}
 }

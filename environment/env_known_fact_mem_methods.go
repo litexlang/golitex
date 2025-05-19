@@ -322,9 +322,3 @@ func newSpecFact_InLogicExpr_InUniFactMem() *SpecFact_InLogicExpr_InUniFactMem {
 		NotExist_St_Facts: make(glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]),
 	}
 }
-
-func newEmitWhenSpecFactIsTrueMem() *EmitWhenSpecFactIsTrueMem {
-	return &EmitWhenSpecFactIsTrueMem{
-		Dict: make(glob.Map2D[[]ast.UniFactStmt]),
-	}
-}

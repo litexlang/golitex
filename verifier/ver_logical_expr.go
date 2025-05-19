@@ -58,7 +58,7 @@ func (ver *Verifier) logicalExprFact(stmt *ast.LogicExprStmt, state VerState) (b
 						}
 					}
 
-					ok, err := ver.WhenFactsNotTrueThenOtherPartOfLogicalExprIsTrue(indexes, stmt, state)
+					ok, err := ver.IfFactsNotTrueThenOtherPartOfLogicalExprIsTrue(indexes, stmt, state)
 					if err != nil {
 						return false, err
 					}
@@ -72,7 +72,7 @@ func (ver *Verifier) logicalExprFact(stmt *ast.LogicExprStmt, state VerState) (b
 	}
 }
 
-func (ver *Verifier) WhenFactsNotTrueThenOtherPartOfLogicalExprIsTrue(notTrueFactIndexes map[int]struct{}, stmt *ast.LogicExprStmt, state VerState) (bool, error) {
+func (ver *Verifier) IfFactsNotTrueThenOtherPartOfLogicalExprIsTrue(notTrueFactIndexes map[int]struct{}, stmt *ast.LogicExprStmt, state VerState) (bool, error) {
 	ver.newEnv()
 	defer ver.deleteEnvAndRetainMsg()
 

@@ -41,7 +41,7 @@ func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		err = exec.defExistPropStmt(stmt)
 	case *ast.DefFnStmt:
 		err = exec.defFnStmt(stmt)
-	case *ast.MatcherEnvStmt:
+	case *ast.WhenPropMatchStmt:
 		execState, err = exec.matcherEnvStmt(stmt)
 	case *ast.KnowPropStmt:
 		err = exec.knowPropStmt(stmt)
@@ -400,7 +400,7 @@ func (exec *Executor) defStmt(stmt ast.DefStmt) error {
 	}
 }
 
-func (exec *Executor) matcherEnvStmt(stmt *ast.MatcherEnvStmt) (glob.ExecState, error) {
+func (exec *Executor) matcherEnvStmt(stmt *ast.WhenPropMatchStmt) (glob.ExecState, error) {
 	defer exec.appendMsg("\n")
 	defer exec.appendMsg(stmt.String())
 
@@ -477,7 +477,7 @@ func (exec *Executor) matcherEnvStmt(stmt *ast.MatcherEnvStmt) (glob.ExecState, 
 			return glob.ExecState_Error, err
 		}
 		if execState != glob.ExecState_True {
-			if execState == glob.ExecState_Unknown && glob.ContinueExecutionWhenExecUnknown {
+			if execState == glob.ExecState_Unknown && glob.ContinueExecutionIfExecUnknown {
 				exec.appendWarningMsg("unknown fact: %s", bodyFact.String())
 				return glob.ExecState_Unknown, nil
 			} else {
@@ -513,7 +513,7 @@ func (exec *Executor) execProofBlock(proof []ast.Stmt) (glob.ExecState, error) {
 			return glob.ExecState_Error, err
 		}
 		if execState != glob.ExecState_True {
-			if execState == glob.ExecState_Unknown && glob.ContinueExecutionWhenExecUnknown {
+			if execState == glob.ExecState_Unknown && glob.ContinueExecutionIfExecUnknown {
 				exec.appendWarningMsg("unknown fact: %s", curStmt.String())
 				continue
 			} else {
@@ -783,7 +783,7 @@ func (exec *Executor) proveOrStmt(stmt *ast.ProveOrStmt) (glob.ExecState, error)
 	}()
 
 	ver := verifier.NewVerifier(exec.env)
-	ok, err := ver.WhenFactsNotTrueThenOtherPartOfLogicalExprIsTrue(stmt.Indexes, &stmt.OrFact, verifier.Round0Msg)
+	ok, err := ver.IfFactsNotTrueThenOtherPartOfLogicalExprIsTrue(stmt.Indexes, &stmt.OrFact, verifier.Round0Msg)
 	if err != nil {
 		return glob.ExecState_Error, err
 	}

@@ -7,7 +7,7 @@ prove:
             op(e, a) = a
             op(a, op(b, c)) = op(op(a, b), c)
 
-    @is_group(G, op, e, inv):
+    when $is_group(G, op, e, inv):
         forall a G:
             op(a, inv(a)) = e
             op(inv(a), a) = e

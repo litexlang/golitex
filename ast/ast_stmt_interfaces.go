@@ -37,7 +37,8 @@ func (s *HaveStmt) stmt()             {}
 func (s *SetDefSetBuilderStmt) stmt() {}
 
 // func (s *SetDefEnumtmt) stmt()        {}
-func (s *MatcherEnvStmt) stmt() {}
+func (s *WhenPropMatchStmt) stmt() {}
+func (s *WithPropMatchStmt) stmt() {}
 
 func (s *ProveInEachCaseStmt) stmt() {}
 
