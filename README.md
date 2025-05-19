@@ -18,6 +18,29 @@ Simplicity doesn’t mean weakness —- it means mastery. Mathematics is the sci
 
 Litex represents a paradigm shift from traditional proof assistants by giving up Turing-completeness in favor of a domain-specific approach tailored for mathematical verification, eliminating the complexities of general-purpose systems while offering Python-like accessibility and LaTeX-style elegance; this intentional design removes all artificial barriers between mathematician and proof, providing unconstrained mathematical expression without conceptual overhead.
 
+Fields medalist Terence Tao shows great interest in the combination of formal languages and AI. When asked about formalizing everything in formal language, he said: "So I think the smarter thing to do in many cases is just to wait until it’s easier. Instead of taking 10 times as long to formalize it, it takes two times as long as the conventional way."[[AI will become mathematicians' co-pilot](https://www.scientificamerican.com/article/ai-will-become-mathematicians-co-pilot/)] Litex is my answer to this challenge. I hope you and many others can join the Litex community to make this happen.
+
+## Potential Impacts of Litex:
+
+1. **Enabling Proof Verification (Including LLM-Generated Outputs)**  
+   - Reduces user errors and enhances proof robustness through automated verification.  
+
+2. **Revolutionizing Proof Writing and Review**  
+   - Cuts paper review times from months or years to seconds, accelerating mathematical progress.  
+
+3. **Facilitating Large-Scale Collaborations**  
+   - By formalizing math in code, Litex enables GitHub-like platforms for collaborative theorem proving.  
+
+4. **Transforming Math Education**  
+   - Designed to be as intuitive as Python and LaTeX, Litex makes formal reasoning accessible.  
+   - Its step-by-step approach fosters deeper understanding, paving the way for interactive textbooks.  
+
+5. **Generating High-Quality LLM Training Data**  
+   - Simplifies conversion of existing papers and textbooks into a standardized, machine-readable format.  
+
+6. **Advancing LLM Reasoning Capabilities**  
+   - Models like AlphaProof and DeepSeek-R1 demonstrate that self-generated problem-solving improves reasoning.  
+   - Litex removes the bottleneck of complex verification, allowing such systems to tackle more sophisticated problems.
 
 
 Think this way: When you verify a piece of proof in your brain, what you are doing is nothing more than **matching** known facts with the facts you are now writing. Litex is a computer tool to automate this process and verify your reasoning for you. And in this way Litex helps you build new facts on top of the existing facts with 100% correctness.
