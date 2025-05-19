@@ -9,7 +9,7 @@ prove:
         forall a G, b G, c G:
             op(a, op(b, c)) = op(op(a, b), c)
 
-    when $is_group(G2, op2, e2, inv2):
+    suppose $is_group(G2, op2, e2, inv2):
         forall a2 G2:
             op2(a2, inv2(a2)) = e2
             op2(inv2(a2), a2) = e2

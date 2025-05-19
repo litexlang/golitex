@@ -76,8 +76,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		}
 	case glob.KeywordSet:
 		ret, err = tb.setDefStmt()
-	case glob.KeywordWhen:
-		ret, err = tb.whenPropMatchStmt()
+	case glob.KeywordSuppose:
+		ret, err = tb.supposePropMatchStmt()
 	case glob.KeywordWith:
 		ret, err = tb.withPropMatchStmt()
 	case glob.KeywordProveInEachCase:
@@ -1043,8 +1043,8 @@ func (tb *tokenBlock) propMatchStmt(isWhen bool) (*ast.SpecFactStmt, []ast.FactS
 	return fact, body, nil
 }
 
-func (tb *tokenBlock) whenPropMatchStmt() (*ast.WhenPropMatchStmt, error) {
-	err := tb.header.skip(glob.KeywordWhen)
+func (tb *tokenBlock) supposePropMatchStmt() (*ast.WhenPropMatchStmt, error) {
+	err := tb.header.skip(glob.KeywordSuppose)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}

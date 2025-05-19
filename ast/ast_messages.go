@@ -473,7 +473,7 @@ func (stmt *SetDefSetBuilderStmt) String() string {
 
 func (stmt *WhenPropMatchStmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordWhen)
+	builder.WriteString(glob.KeywordSuppose)
 	builder.WriteString(" ")
 	builder.WriteString(stmt.Fact.String())
 	builder.WriteString(":\n")

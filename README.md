@@ -70,6 +70,8 @@ This synergy heralds a new era where mathematical rigor meets computational powe
 
 <!-- 提一些希尔伯特的 entscheidungsproblem 的例子，说明litex的历史意义（或者说litex+ai的历史意义） -->
 
+<!-- 说明一下我如何能促进数学新发现：类似ailab如何介绍科学家大模型. 另外至少说一下我是唯一的。-->
+
 ## Getting Started
 
 <!-- TODO： 需要说明我的forall => specific 本原理就是 substituion and unification 这能让用户非常容易理解我在做什么 -->

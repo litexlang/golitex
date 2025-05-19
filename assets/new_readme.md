@@ -1,4 +1,4 @@
-# About
+# A Tour of Litex: The Tutorial
 
 Litex is a simple, yet powerful proof assistant that bridges the gap between programming and mathematics. It is easy to learn, to understand, and to use. 
 
@@ -10,4 +10,15 @@ No matter you are an AI researcher wanting to improve reasoning capablity of you
 
 In such cases, Litex is just the language for you. Being a language designed for and only for reasoning, Litex does not include any unnessary functionalities like execution, loops, which programming languages like Lean and Coq have. No extra complexity is introduced over the complexity of the proof itself. The "de Bruijn factor" of Litex is predicted to be 0.5–1.5, which is much lower than the 20 of the traditional proof assistants.
 
-<!-- line 488 -->
+Now that you are excited about Litex, you'll want to try it in more details. Since the best way to learn anything is to use it, you are invited to do so. The rest of the tutorial introduces various features of Litex through examples, beginning with simple statements, through short reasoning examples, and finally touching upon real-world mathematical proofs.
+
+# Section 1 Using the Litex interpreter, online playground, jupyter notebook
+
+<!-- 547 -->
+
+<!-- TODO: 怎么让用户在本地使用 Litex -->
+
+<!-- When a user types a statement and press  in interactive mode, the interpreter prints a message. -->
+
+# Section 2 An Informal Introduction to Python
+<!-- 752 -->
