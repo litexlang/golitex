@@ -23,7 +23,7 @@ type Fc interface {
 	String() string
 	Instantiate(map[string]Fc) (Fc, error)
 	IsAtom() bool
-	orderAddition() []Fc
+	orderNumberExpr() ([]Fc, error)
 }
 
 func (f *FcAtom) fc()          {}
