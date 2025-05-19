@@ -471,9 +471,26 @@ func (stmt *SetDefSetBuilderStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *MatcherEnvStmt) String() string {
+func (stmt *WhenPropMatchStmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeySymbolAt)
+	builder.WriteString(glob.KeywordWhen)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.Fact.String())
+	builder.WriteString(":\n")
+	if len(stmt.Body) > 0 {
+		for i := range len(stmt.Body) - 1 {
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Body[i].String(), 1))
+			builder.WriteByte('\n')
+		}
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Body[len(stmt.Body)-1].String(), 1))
+	}
+	return builder.String()
+}
+
+func (stmt *WithPropMatchStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordWith)
+	builder.WriteString(" ")
 	builder.WriteString(stmt.Fact.String())
 	builder.WriteString(":\n")
 	if len(stmt.Body) > 0 {

@@ -41,13 +41,13 @@ const RelaFnPrefix string = "\\"
 // const VerifyFcSatisfySpecFactParaReq bool = true
 const VerifyFcSatisfySpecFactParaReq bool = false
 
-const ProofContinuesWhenUnknown bool = true
+const ProofContinuesIfUnknown bool = true
 
 const OverloadOptPrefix string = "__"
 
 const KnowSpecFactByDef = true
 
-const ContinueExecutionWhenExecUnknown bool = false
+const ContinueExecutionIfExecUnknown bool = false
 
 const MaxLogicExprFactsNum int = 8
 

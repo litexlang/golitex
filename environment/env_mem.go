@@ -47,7 +47,7 @@ type KnownSpecFact struct {
 	EnvFact *ast.SpecFactStmt
 }
 
-type EmitWhenSpecFactIsTrueMem struct {
+type EmitIfSpecFactIsTrueMem struct {
 	Dict glob.Map2D[[]ast.UniFactStmt] // 实际上根本不必要是 UniFact，只要保留 params (为了制作 uniMap), thenFacts (自由事实，为了未来制作 instantiated then facts) 就行
 }
 

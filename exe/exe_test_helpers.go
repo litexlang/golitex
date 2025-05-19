@@ -46,7 +46,7 @@ func execStmtTest(topStmt []ast.TopStmt) []string {
 			panic(err)
 		}
 
-		if execState != glob.ExecState_True && !glob.ContinueExecutionWhenExecUnknown {
+		if execState != glob.ExecState_True && !glob.ContinueExecutionIfExecUnknown {
 			isNotTrue = true
 			notTrueMessageBuilder.WriteString(topStmt.String())
 			notTrueMessageBuilder.WriteString("\n\n")
