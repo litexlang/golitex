@@ -44,8 +44,17 @@ func CmpFcRule(left, right ast.Fc) (bool, error) {
 
 // 先确定left，right都是builtin fc，然后按builtin rule来验证他们相等
 func BuiltinFcEqualRule(left, right ast.Fc) (bool, error) {
+	// case 0: 比较 number expr
+	ok, err := todo_cmpOrderedNumberExprBuiltinFcEqualRule(left, right)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
 	// Case1: 二者都是 Number 上进行+-*/^
-	ok, err := cmpNumLitExpr(left, right)
+	ok, err = cmpNumLitExpr(left, right)
 	if err != nil {
 		return false, err
 	}
@@ -54,6 +63,22 @@ func BuiltinFcEqualRule(left, right ast.Fc) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func todo_cmpOrderedNumberExprBuiltinFcEqualRule(left, right ast.Fc) (bool, error) {
+	if orderedLeft, ok, err := ast.IsNumberExpr_OrderIt(left); err != nil {
+		return false, err
+	} else if !ok {
+		return false, nil
+	} else {
+		if orderedRight, ok, err := ast.IsNumberExpr_OrderIt(right); err != nil {
+			return false, err
+		} else if !ok {
+			return false, nil
+		} else {
+			return orderedLeft.String() == orderedRight.String(), nil
+		}
+	}
 }
 
 // 之所以叫 Expr，因为可能含有运算符+-*/这样的

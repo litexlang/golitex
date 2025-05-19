@@ -156,3 +156,7 @@ func (stmt *FcFn) orderDivFcFn() ([]Fc, error) {
 func (stmt *FcFn) orderMinusAsPrefixFcFn() ([]Fc, error) {
 	return []Fc{}, nil
 }
+
+func IsNumberExpr_OrderIt(fc Fc) (Fc, bool, error) {
+	return nil, false, nil
+}
