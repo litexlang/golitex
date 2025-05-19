@@ -20,6 +20,8 @@ Litex represents a paradigm shift from traditional proof assistants by giving up
 
 Fields medalist Terence Tao shows great interest in the combination of formal languages and AI. When asked about formalizing everything in formal language, he said: "So I think the smarter thing to do in many cases is just to wait until it’s easier. Instead of taking 10 times as long to formalize it, it takes two times as long as the conventional way."[[AI will become mathematicians' co-pilot](https://www.scientificamerican.com/article/ai-will-become-mathematicians-co-pilot/)] Litex is my answer to this challenge. I hope you and many others can join the Litex community to make this happen.
 
+Visit [Litex's official website](https://litexlang.org) for more information.
+
 ## Potential Impacts of Litex:
 
 1. **Enabling Proof Verification (Including LLM-Generated Outputs)**  
@@ -27,9 +29,11 @@ Fields medalist Terence Tao shows great interest in the combination of formal la
 
 2. **Revolutionizing Proof Writing and Review**  
    - Cuts paper review times from months or years to seconds, accelerating mathematical progress.  
+   - Litex code is easy to write, easy to manage, and easy to extend. It solves the fundamental problem of math, which is abstraction, pretty well. No redundant information, no confusion, no room for twisted interpretations.
 
 3. **Facilitating Large-Scale Collaborations**  
-   - By formalizing math in code, Litex enables GitHub-like platforms for collaborative theorem proving.  
+   - By formalizing math in code, Litex enables GitHub-like platforms for collaborative theorem proving.
+   - People with different native languages can collaborate on the same proof, just like how people with different native languages can collaborate on a software.
 
 4. **Transforming Math Education**  
    - Designed to be as intuitive as Python and LaTeX, Litex makes formal reasoning accessible.  
@@ -42,45 +46,10 @@ Fields medalist Terence Tao shows great interest in the combination of formal la
    - Models like AlphaProof and DeepSeek-R1 demonstrate that self-generated problem-solving improves reasoning.  
    - Litex removes the bottleneck of complex verification, allowing such systems to tackle more sophisticated problems.
 
+7. **Making New Mathematical Discoveries**
+   - Using machines to make math discoveries is not a new idea. Alan Turing was trying to formalize math and then make math discoveries mathenically, and on this journey, he invented the Turing machine and the word artifical intelligence. Litex will be part of this amazing human journey of intellectual exploration.
 
-Think this way: When you verify a piece of proof in your brain, what you are doing is nothing more than **matching** known facts with the facts you are now writing. Litex is a computer tool to automate this process and verify your reasoning for you. And in this way Litex helps you build new facts on top of the existing facts with 100% correctness.
-
-**Technically, first-order logic, with its 8 core keywords (and, or, not, forall, exist, equal, if, then), forms the foundation of all mainstream mathematics. Litex builds on this foundation as a thin layer, implementing a "regular expression interpreter with customizable matching rules and math-friendly syntax sugar". Its simplicity means you can learn it with just common sense.**
-
-Litex is unique in two ways. First, **Litex is a domain-specific language for mathematical verification. It is not designed to be Turing complete.** Whereas traditional proof assistants are general-purpose programming languages that introduce unrelated complexities. 
-
-Second, Litex is built around common sense rather than sophisticated mathematical theories to help a broader range of people to use formal language. **Designed to be as intuitive as Python and LaTeX, Litex offers a minimal learning curve.**
-
-(For computer scientists: Litex code a read-only Turing machine instead of a Turing machine. That is why it is different from mainstream programming langauges.)
-
-**The potential impacts of Litex include: enabling proof verification (including LLM-generated outputs), revolutionizing proof writing and review, facilitating large-scale collaborations, creating datasets for LLM training, and enhancing LLM reasoning capabilities.** With its inherently simple syntax, Litex is well-positioned to achieve these goals and attract a growing community of researchers to the world of formal languages.
-
-**Mathematics is the science of abstraction, while computer science is the discipline that masters it. Litex helps users easily divide and conquer mathematical problems, just like how it helps programmers to tackle software complexity since the beginning of information age. It’s a bold effort to scale mathematical reasoning with modern computing power and software engineering.**
-
-Core values of Litex:
-Simplicity over Complexity: Litex is simple for users to learn, use, cooperate, and extend. No more, no less in terms of features.
-
-Pragmatism over Rigor: Litex helps users to divide and conquer mathematical problems, with an elegant balance between expressiveness and strictness. It is all about getting things done.
-
-For everyone, not just specialists: Because mathematics is for everyone, Litex should too. May it open formal reasoning to all.
-
-(The official Litex website https:#litexlang.org is under development.)
-
-(You do not need to learn set thoery or first-order logic to use Litex. Just learn by using it! The inventor of Litex also only has a very basic knowledge of set thoery and first-order logic.)
-
-<!-- C is quirky, flawed, and an enormous success. -->
-
-<!-- 本段讲的像是商务人士放大几百倍吹嘘自己的项目一样 -->
-
-While Litex is young and may face criticism for its quirkiness and flaws, its true value lies in its vision. Traditional Turing-complete languages like C, Python, and JavaScript power our software-driven civilization. Yet, we know far less about languages designed for reasoning—like math, which doesn’t require Turing-completeness.  
-
-Mathematics underpins our civilization, and Litex could revolutionize how we formalize it. Intriguingly, early computing pioneers didn’t just use machines for calculation but also for proof. Litex carries forward that legacy, bridging computation and mathematical reasoning.
-
-<!-- Jeremy Avigard : Mathematics formal turn 里提到的，最早计算机先驱就是用计算机来证明数学定理的。 -->
-
-
-<!-- TODO: 参考下面这个网站以获得更多数学家的角度，里面有很多数学家对数学的讨论 https:#sugaku.net/content/understanding-the-cultural-divide-between-mathematics-and-ai/ -->
-<!-- On the foolishness of "natural language programming". 里面有很多关于形式化语言比自然语言好的观点：litex把数学从不准确，冗余的，不同国家的人互相看不懂，抽象层过多以至于难以追踪，模块化程度为0，的自然语言，变成了非常准则，无任何冗余，世界通用，抽象层靠常用编程工具变得很追踪，模块化很高以至于人们可以在数学的github上分享 的形式化语言 -->
+Both mathematics and softwares underpins our human civilization. Litex will make both of them more powerful and accessible.
 
 ## Litex: Bridging Mathematics and AI in the Computational Age
 
