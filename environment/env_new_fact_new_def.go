@@ -18,24 +18,33 @@ import (
 	glob "golitex/glob"
 )
 
-func (env *Env) NewFact(stmt ast.FactStmt) error {
+func (env *Env) NewFactWithOptionalEnvFact(stmt ast.FactStmt, envFact ...*ast.SpecFactStmt) error {
+	var curEnvFact *ast.SpecFactStmt
+	if envFact != nil {
+		if len(envFact) == 1 {
+			curEnvFact = envFact[0]
+		} else {
+			return fmt.Errorf("envFact should have at most one element, got %d", len(envFact))
+		}
+	}
+
 	switch f := stmt.(type) {
 	case *ast.SpecFactStmt:
-		return env.newSpecFact(f)
+		return env.newSpecFact(f, curEnvFact)
 	case *ast.LogicExprStmt:
-		return env.newLogicExprStmt(f)
+		return env.newLogicExprStmt(f, curEnvFact)
 	case *ast.UniFactStmt:
-		return env.newUniFact(f)
+		return env.newUniFact(f, curEnvFact)
 	default:
 		return fmt.Errorf("unknown fact type: %T", stmt)
 	}
 }
 
-func (env *Env) newLogicExprStmt(fact *ast.LogicExprStmt) error {
-	return env.SpecFactInLogicExprMem.NewFact(fact)
+func (env *Env) newLogicExprStmt(fact *ast.LogicExprStmt, envFact *ast.SpecFactStmt) error {
+	return env.SpecFactInLogicExprMem.NewFact(fact, envFact)
 }
 
-func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
+func (env *Env) newSpecFact(fact *ast.SpecFactStmt, envFact *ast.SpecFactStmt) error {
 	if isEqualFact, err := env.IsTrueEqualFact_StoreIt(fact); isEqualFact {
 		return err
 	}
@@ -64,21 +73,21 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
 		return err
 	}
 
-	err := env.SpecFactMem.NewFact(fact)
+	err := env.SpecFactMem.NewFact(fact, envFact)
 	if err != nil {
 		return err
 	}
 
 	// postprocess
 	if fact.IsExist_St_Fact() {
-		return env.newExist_St_FactPostProcess(fact)
+		return env.newExist_St_FactPostProcess(fact, envFact)
 	}
 
 	// if fact.IsExistFact() {
 	// 	return env.newExistFactPostProcess(fact)
 	// }
 
-	return env.newNotExistSt_SpecFactPostProcess(fact)
+	return env.newNotExistSt_SpecFactPostProcess(fact, envFact)
 }
 
 func storeCommutativeTransitiveFact(mem map[string]*[]ast.Fc, fact *ast.SpecFactStmt) error {
@@ -127,13 +136,13 @@ func storeCommutativeTransitiveFact(mem map[string]*[]ast.Fc, fact *ast.SpecFact
 	return nil
 }
 
-func (env *Env) newNotExistSt_SpecFactPostProcess(fact *ast.SpecFactStmt) error {
+func (env *Env) newNotExistSt_SpecFactPostProcess(fact *ast.SpecFactStmt, envFact *ast.SpecFactStmt) error {
 	_, ok := env.GetPropDef(fact.PropName)
 
 	if ok {
 		if fact.TypeEnum == ast.TruePure {
 			if glob.KnowSpecFactByDef {
-				return env.newTrueSpecFact_EmitFactsKnownByDef(fact)
+				return env.newTrueSpecFact_EmitFactsKnownByDef(fact, envFact)
 			} else {
 				return nil
 			}
@@ -147,7 +156,7 @@ func (env *Env) newNotExistSt_SpecFactPostProcess(fact *ast.SpecFactStmt) error 
 			return nil
 		} else {
 			if glob.KnowSpecFactByDef {
-				return env.newFalseExistFact_EmitEquivelentUniFact(fact)
+				return env.newFalseExistFact_EmitEquivelentUniFact(fact, envFact)
 			} else {
 				return nil
 			}
@@ -162,7 +171,7 @@ func (env *Env) newNotExistSt_SpecFactPostProcess(fact *ast.SpecFactStmt) error 
 
 }
 
-func (env *Env) newTrueSpecFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) error {
+func (env *Env) newTrueSpecFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt, envFact *ast.SpecFactStmt) error {
 	propDef, ok := env.GetPropDef(fact.PropName)
 	if !ok {
 		// TODO 这里需要考虑prop的定义是否在当前包中。当然这里有点复杂，因为如果是内置的prop，那么可能需要到builtin包中去找
@@ -181,7 +190,7 @@ func (env *Env) newTrueSpecFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) erro
 			return err
 		}
 
-		err = env.NewFact(instantiated)
+		err = env.NewFactWithOptionalEnvFact(instantiated, envFact)
 
 		env.NewMsg(fmt.Sprintf("%s\nis true prop definition:\n%s\n", instantiated.String(), propDef.String()))
 
@@ -201,22 +210,22 @@ func (env *Env) newTrueSpecFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) erro
 // 	}
 // }
 
-func (env *Env) newExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
+func (env *Env) newExist_St_FactPostProcess(fact *ast.SpecFactStmt, envFact *ast.SpecFactStmt) error {
 	if fact.TypeEnum == ast.TrueExist_St {
-		return env.newTrueExist_St_FactPostProcess(fact)
+		return env.newTrueExist_St_FactPostProcess(fact, envFact)
 	} else {
 		return nil
 	}
 }
 
 // not exist => forall not
-func (env *Env) newFalseExistFact_EmitEquivelentUniFact(fact *ast.SpecFactStmt) error {
+func (env *Env) newFalseExistFact_EmitEquivelentUniFact(fact *ast.SpecFactStmt, envFact *ast.SpecFactStmt) error {
 	uniFact, err := env.NotExistToForall(fact)
 	if err != nil {
 		return err
 	}
 
-	err = env.storeUniFact(uniFact)
+	err = env.storeUniFact(uniFact, envFact)
 	if err != nil {
 		return fmt.Errorf("exist fact %s has no definition", fact.String())
 	}
@@ -225,7 +234,7 @@ func (env *Env) newFalseExistFact_EmitEquivelentUniFact(fact *ast.SpecFactStmt) 
 }
 
 // have(exist ... st ...) => exist
-func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
+func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt, envFact *ast.SpecFactStmt) error {
 	sepIndex := fact.Exist_St_SeparatorIndex()
 	if sepIndex == -1 {
 		return fmt.Errorf("%s has no separator", fact.String())
@@ -233,7 +242,7 @@ func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 
 	existFact := ast.NewSpecFactStmt(ast.TruePure, fact.PropName, fact.Params[sepIndex+1:])
 
-	err := env.SpecFactMem.NewFact(existFact)
+	err := env.SpecFactMem.NewFact(existFact, envFact)
 	if err != nil {
 		return err
 	}
@@ -241,9 +250,9 @@ func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 	return nil
 }
 
-func (env *Env) newUniFact(fact *ast.UniFactStmt) error {
+func (env *Env) newUniFact(fact *ast.UniFactStmt, envFact *ast.SpecFactStmt) error {
 	// TODO: 现在只能记忆 specFact undef unifact, 理论上要让 logic_expr 也能记忆
-	err := env.storeUniFact(fact)
+	err := env.storeUniFact(fact, envFact)
 	if err != nil {
 		return err
 	}
@@ -451,7 +460,7 @@ func (env *Env) IsMathInductionPropName_StoreIt(fact *ast.SpecFactStmt) (bool, e
 
 	knownUniFact := ast.NewUniFactStmtWithSetReqInDom(knownUniFactParams, knownUniFactDomFacts, knownUniFactThenFacts, ast.EmptyIffFacts, knownUniFactParamInSetsFacts)
 
-	err := env.NewFact(knownUniFact)
+	err := env.NewFactWithOptionalEnvFact(knownUniFact)
 	if err != nil {
 		return false, err
 	}

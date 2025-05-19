@@ -77,7 +77,7 @@ func (ver *Verifier) WhenFactsNotTrueThenOtherPartOfLogicalExprIsTrue(notTrueFac
 	defer ver.deleteEnvAndRetainMsg()
 
 	for index := range notTrueFactIndexes {
-		err := ver.env.NewFact(stmt.Facts[index].ReverseIsTrue())
+		err := ver.env.NewFactWithOptionalEnvFact(stmt.Facts[index].ReverseIsTrue())
 		if err != nil {
 			return false, err
 		}

@@ -19,6 +19,13 @@ import (
 
 type shared_ptr_to_slice_of_fc = *[]ast.Fc
 
+type KnownFactsStruct struct {
+	SpecFactMem                       SpecFactMem
+	SpecFactInLogicExprMem            SpecFactInLogicExprMem
+	SpecFactInUniFactMem              SpecFactInUniFactMem
+	SpecFact_InLogicExpr_InUniFactMem SpecFact_InLogicExpr_InUniFactMem
+}
+
 type Env struct {
 	Parent *Env
 	Msgs   []string
@@ -33,7 +40,6 @@ type Env struct {
 	SpecFactInLogicExprMem            SpecFactInLogicExprMem
 	SpecFactInUniFactMem              SpecFactInUniFactMem
 	SpecFact_InLogicExpr_InUniFactMem SpecFact_InLogicExpr_InUniFactMem
-	EmitWhenSpecFactIsTrueMem         EmitWhenSpecFactIsTrueMem
 
 	CommutativeProp glob.Map2D[struct{}]
 
@@ -45,6 +51,8 @@ type Env struct {
 
 	// 考虑多个系统的时候，再引入 map[string]string
 	EqualMem map[string]shared_ptr_to_slice_of_fc
+
+	KnownFactInMatchEnv glob.Map2D[KnownFactsStruct]
 }
 
 func NewEnv(parent *Env) *Env {
@@ -63,13 +71,13 @@ func NewEnv(parent *Env) *Env {
 		SpecFactInUniFactMem:              *newSpecFactInUniFact(),
 		SpecFact_InLogicExpr_InUniFactMem: *newSpecFact_InLogicExpr_InUniFactMem(),
 
-		EmitWhenSpecFactIsTrueMem: *newEmitWhenSpecFactIsTrueMem(),
-
 		CommutativeProp: make(glob.Map2D[struct{}]),
 		CommutativeFn:   make(glob.Map2D[struct{}]),
 		AssociativeFn:   make(glob.Map2D[struct{}]),
 
 		EqualMem: make(map[string]shared_ptr_to_slice_of_fc),
+
+		KnownFactInMatchEnv: make(glob.Map2D[KnownFactsStruct]),
 	}
 	return env
 }
