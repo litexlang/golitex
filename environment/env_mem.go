@@ -43,7 +43,8 @@ type SetDefMem struct {
 }
 
 type KnownSpecFact struct {
-	Fact *ast.SpecFactStmt
+	Fact    *ast.SpecFactStmt
+	EnvFact *ast.SpecFactStmt
 }
 
 type EmitWhenSpecFactIsTrueMem struct {
@@ -61,6 +62,7 @@ type KnownSpecFact_InLogicExpr struct {
 	SpecFact  *ast.SpecFactStmt
 	Index     []uint8
 	LogicExpr *ast.LogicExprStmt
+	EnvFact   *ast.SpecFactStmt
 }
 
 type SpecFactInLogicExprMem struct {
@@ -73,6 +75,7 @@ type SpecFactInLogicExprMem struct {
 type KnownSpecFact_InUniSpecFact struct {
 	SpecFact *ast.SpecFactStmt
 	UniFact  *ast.UniFactStmt
+	EnvFact  *ast.SpecFactStmt
 }
 
 type SpecFactInUniFactMem struct {
@@ -87,6 +90,7 @@ type SpecFact_InLogicExpr_InUniFact struct {
 	UniFact   *ast.UniFactStmt
 	Index     []uint8
 	LogicExpr *ast.LogicExprStmt
+	EnvFact   *ast.SpecFactStmt
 }
 
 type SpecFact_InLogicExpr_InUniFactMem struct {
