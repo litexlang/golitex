@@ -175,3 +175,20 @@ prove:
 
     prop 
     
+prove:
+    know forall x R, n N:
+        n * x + x = (n+1) * x
+
+    know forall x R:
+        0 * x = 0
+        0 + x = x
+
+    0 * x + x = (0+1) * x
+    1 * x + x = (1+1) * x
+    0 * x = 0
+    0 + x = (0+1) * x
+    0 + x = 1 * x
+    0 + x = x
+    x = 1 * x
+    x + x = (1+1) * x
+    x + x = 2 * x
