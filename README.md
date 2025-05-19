@@ -51,25 +51,6 @@ Visit [Litex's official website](https://litexlang.org) for more information.
 
 Both mathematics and softwares underpins our human civilization. Litex will make both of them more powerful and accessible.
 
-## Litex: Bridging Mathematics and AI in the Computational Age
-
-The mathematics community is experiencing a revolution. After centuries of static methodology, systems like Litex are making the impossible possible:
-
-- Mathematically guaranteed correctness eliminating human error.
-- GitHub-scale collaboration for mathematical research.
-- AI-powered discovery solving thousands of problems simultaneously (as demonstrated by AlphaProof).
-
-Litex uniquely connects two worlds of mathematics and AI:
-- For mathematicians: It automates proof verification while enabling unprecedented collaborative research at scale.
-- For AI development: Its simplicity makes formal mathematics accessible, while providing structured training data and verifiable reward functions.
-- For both fields: It creates a virtuous cycle - AI generates formal mathematics while Litex ensures correctness and produces new training data.
-
-This synergy heralds a new era where mathematical rigor meets computational power, and human creativity combines with machine precision to push the boundaries of discovery.
-
-<!-- 提一些希尔伯特的 entscheidungsproblem 的例子，说明litex的历史意义（或者说litex+ai的历史意义） -->
-
-<!-- 说明一下我如何能促进数学新发现：类似ailab如何介绍科学家大模型. 另外至少说一下我是唯一的。-->
-
 ## Getting Started
 
 <!-- TODO： 需要说明我的forall => specific 本原理就是 substituion and unification 这能让用户非常容易理解我在做什么 -->
@@ -363,15 +344,16 @@ _Common sense is not so common._
 
 _--Voltaire_
 
-Steve Jobs once said, "If you define the problem correctly, you almost have the solution." Litex embodies this by exploring what a “minimalist formal proof assistant” truly means.
+Steve Jobs once said, "If you define the problem correctly, you almost have the solution." Litex embodies this by exploring what a simple and intuitive formal proof assistant truly means.
 
-Existing formal languages are complex, even for mathematicians, as they include unrelated functionalities like memory state alterations. Litex, however, focuses solely on verification, excluding general-purpose computation. Its syntax mirrors everyday math, ensuring clarity and simplicity. Litex identifies the few core logical rules governing math—intuitive even to a 5-year-old.
+Existing formal languages are complex, even for mathematicians, as they include so many features that are not related to math. It is reasonable for lean4 or coq to do so because they are using math technique to develop programming languages, and programming languages require more logical features. Litex, however, focuses solely on verification, excluding general-purpose computation. Its syntax mirrors everyday math, ensuring clarity and simplicity, making it intuitive even to a 5-year-old.
 
-To put it in another way, traditional proof assistant are implemented to prove some hardcore mathematical theories, while Litex is designed to solve practical problems for everyone. Within traditional proof assistants, there is a much smaller and cleaner language akin to Litex struggling to get out.
+Theoratically, Litex is a read-only Turing machine, while all other traditional proof assistants, being programming languages, are Turing complete. That is why Litex has the freedom and flexibility to be tailored for math. That is why within other proof assistants, users might feel there is a much smaller and cleaner language akin to Litex struggling to get out.
 
-Litex’s syntax uses just no more than 20 keywords: `obj`, `fn`, `prop`, `type`, `interface`, `forall`, `cond`, `when`, `then`, `exist`, `have`, `prove`, `prove_by_contradiction`,  `claim`, and `know`. Every expression yields one of 4 outputs: `true`, `false`, `unknown`, or `error`.This design ensures a smooth learning curve.
+By understanding the interplay between programming and math, Litex delivers a seamless, minimal, and complete experience tailored to mathematical verification. A much wider range of math problems can be solved with Litex than with other proof assistants. A much wider range of users can benefit from Litex than other proof assistants.
 
-By understanding the interplay between programming and math, Litex delivers a seamless, minimal, and complete experience tailored to mathematical verification.
+Litex’s syntax uses just no more than 20 main keywords: `obj`, `fn`, `prop`, `forall`, `dom`, `iff`, `then`, `exist`, `have`, `prove`, `with`, `suppose`, `or`, `and`, `not`, `prove`, `prove_by_contradiction`, `claim`, and `know`. Every expression yields one of 4 outputs: `true`, `false`, `unknown`, or `error`. The keywords have exact meaning in Litex as in daily life. This design ensures a smooth learning curve.
+
 
 <!-- 需要突出自然数的不一样之处：像1,2,3 这种变量，直接全部送给了用户；然后他们的字面量上的计算验证，比如 x +  x = 2 * x ，直接就验证了，这种验证方法，不是用户能在litex里定义出来的，是内置的（从litex这个只读图灵机到 真正的图灵机)。这里和克罗内克的 自然数是上帝的创造，其他都是推论很相关，都是突出自然数的不一样之处。 -->
 
