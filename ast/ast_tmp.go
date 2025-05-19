@@ -1,6 +1,21 @@
+// Copyright 2024 Jiachen Shen.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Original Author: Jiachen Shen <malloc_realloc_free@outlook.com>
+// Contact the development team: <litexlang@outlook.com>
+// Visit litexlang.org and https://github.com/litexlang/golitex for more info.
+
 package litex_ast
 
-import "fmt"
+import (
+	"fmt"
+	"sort"
+)
 
 func (stmt *FcFn) isAdd() (bool, error) {
 	asAtom, ok := stmt.FnHead.(*FcAtom)
@@ -130,15 +145,14 @@ func (stmt *FcFn) orderAddFcFn() ([]Fc, error) {
 		return nil, err
 	}
 
-	orderedFc := mergeOrderedAdditionNumberExpr(orderedLeft, orderedRight)
+	// order merged left, right
+	merged := append(orderedLeft, orderedRight...)
+	orderedFc, err := orderFc(merged)
+	if err != nil {
+		return nil, err
+	}
 
 	return orderedFc, nil
-}
-
-func mergeOrderedAdditionNumberExpr(orderedLeft []Fc, orderedRight []Fc) []Fc {
-	_ = orderedLeft
-	_ = orderedRight
-	return []Fc{}
 }
 
 func (stmt *FcFn) orderMulFcFn() ([]Fc, error) {
@@ -159,4 +173,34 @@ func (stmt *FcFn) orderMinusAsPrefixFcFn() ([]Fc, error) {
 
 func IsNumberExpr_OrderIt(fc Fc) (Fc, bool, error) {
 	return nil, false, nil
+}
+
+func orderFc(fcSlice []Fc) ([]Fc, error) {
+	// Create a slice of structs that pair the Fc with its string representation
+	type fcWithStr struct {
+		fc    Fc
+		fcStr string
+	}
+
+	// Create a temporary slice to hold the paired values
+	temp := make([]fcWithStr, len(fcSlice))
+	for i, fc := range fcSlice {
+		temp[i] = fcWithStr{
+			fc:    fc,
+			fcStr: fc.String(),
+		}
+	}
+
+	// Sort the temporary slice based on the string representation
+	sort.Slice(temp, func(i, j int) bool {
+		return temp[i].fcStr < temp[j].fcStr
+	})
+
+	// Extract the sorted Fc values
+	orderedFc := make([]Fc, len(fcSlice))
+	for i, item := range temp {
+		orderedFc[i] = item.fc
+	}
+
+	return orderedFc, nil
 }
