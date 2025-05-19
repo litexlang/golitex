@@ -10,9 +10,15 @@ _That language is an instrument of Human reason, and not merely a medium for the
 
 _–- George Boole_
 
-**Litex is a minimalist proof assistant (formal language). With a predicted "de Bruijn factor" (the ratio of formal to informal proof difficulty) of 0.5–1.5 instead of nearly 20 of the traditional proof assistants, Litex will transform the mathematical landscape and help build better reasoning AI models.**
+**Litex is a simple yet powerful proof assistant with a remarkably low de Bruijn factor (~1 vs. ~20 in traditional systems). By drastically reducing the gap between formal and informal proofs, Litex will accelerate mathematical discovery, reshape mathematical practice, and serve as key infrastructure for future AI models.**
 
-**Litex stands out from other proof assistants because of its simplicity.** If even children can reason naturally, a formal language that combines rigor and intuition must be possible -- it simply hasn’t been invented yet. Litex is designed to create precisely such a language.
+If even children can reason naturally, a formal language that combines rigor and intuition must be possible -- it simply hasn’t been invented yet. Litex is designed to create precisely such a language. It welcomes everyone, from children to experts, to use it to reason about math.
+
+Simplicity doesn’t mean weakness —- it means mastery. Mathematics is the science of abstraction, and computer science is science of abstraction. Litex bridges the two, scaling mathematical reasoning with software engineering principles. It lets users divide and conquer proofs — just as programmers manage software complexity — ushering math into the computational age.
+
+Litex represents a paradigm shift from traditional proof assistants by giving up Turing-completeness in favor of a domain-specific approach tailored for mathematical verification, eliminating the complexities of general-purpose systems while offering Python-like accessibility and LaTeX-style elegance; this intentional design removes all artificial barriers between mathematician and proof, providing unconstrained mathematical expression without conceptual overhead.
+
+
 
 Think this way: When you verify a piece of proof in your brain, what you are doing is nothing more than **matching** known facts with the facts you are now writing. Litex is a computer tool to automate this process and verify your reasoning for you. And in this way Litex helps you build new facts on top of the existing facts with 100% correctness.
 
