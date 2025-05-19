@@ -42,7 +42,9 @@ func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 	case *ast.DefFnStmt:
 		err = exec.defFnStmt(stmt)
 	case *ast.WhenPropMatchStmt:
-		execState, err = exec.matcherEnvStmt(stmt)
+		execState, err = exec.whenPropMatchStmt(stmt)
+	case *ast.WithPropMatchStmt:
+		execState, err = exec.withPropMatchStmt(stmt)
 	case *ast.KnowPropStmt:
 		err = exec.knowPropStmt(stmt)
 	case *ast.KnowExistPropStmt:
@@ -400,9 +402,11 @@ func (exec *Executor) defStmt(stmt ast.DefStmt) error {
 	}
 }
 
-func (exec *Executor) matcherEnvStmt(stmt *ast.WhenPropMatchStmt) (glob.ExecState, error) {
+func (exec *Executor) whenPropMatchStmt(stmt *ast.WhenPropMatchStmt) (glob.ExecState, error) {
 	defer exec.appendMsg("\n")
 	defer exec.appendMsg(stmt.String())
+
+	return glob.ExecState_True, nil
 
 	exec.newEnv()
 	defer exec.deleteEnvAndRetainMsg()
@@ -791,5 +795,10 @@ func (exec *Executor) proveOrStmt(stmt *ast.ProveOrStmt) (glob.ExecState, error)
 		return glob.ExecState_Unknown, nil
 	}
 
+	return glob.ExecState_True, nil
+}
+
+func (exec *Executor) withPropMatchStmt(stmt *ast.WithPropMatchStmt) (glob.ExecState, error) {
+	_ = stmt
 	return glob.ExecState_True, nil
 }
