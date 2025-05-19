@@ -404,13 +404,69 @@ func (exec *Executor) matcherEnvStmt(stmt *ast.MatcherEnvStmt) error {
 	defer exec.appendMsg("\n")
 	defer exec.appendMsg(stmt.String())
 
-	for _, curStmt := range stmt.Body {
-		execState, err := exec.stmt(curStmt)
+	exec.newEnv()
+	defer exec.deleteEnvAndRetainMsg()
+
+	factSpecDef, ok := exec.env.GetPropDef(stmt.Fact.PropName)
+	if !ok {
+		return fmt.Errorf("spec fact parameter must be atom, but got: %s", stmt.Fact.PropName.String())
+	}
+
+	if len(factSpecDef.DefHeader.Params) != len(stmt.Fact.Params) {
+		return fmt.Errorf("spec fact parameter number not equal to prop def params number. expect %d, but got %d", len(factSpecDef.DefHeader.Params), len(stmt.Fact.Params))
+	}
+
+	for _, param := range stmt.Fact.Params {
+		asAtom, ok := param.(*ast.FcAtom)
+		if !ok {
+			return fmt.Errorf("spec fact parameter must be atom, but got: %s", param.String())
+		}
+		if asAtom.PkgName != glob.EmptyPkg {
+			return fmt.Errorf("spec fact parameter must be atom, but got: %s", param.String())
+		}
+		err := exec.defStmt(ast.NewDefObjStmt([]string{asAtom.Name}, []ast.FactStmt{}, []ast.FactStmt{}))
 		if err != nil {
 			return err
 		}
-		if execState != glob.ExecState_True {
-			return fmt.Errorf("matcher env stmt is not true")
+	}
+
+	uniMap := map[string]ast.Fc{}
+	for i, param := range factSpecDef.DefHeader.Params {
+		uniMap[param] = stmt.Fact.Params[i]
+	}
+
+	instantiatedFactSpecDef, err := factSpecDef.Instantiate(uniMap)
+	if err != nil {
+		return err
+	}
+
+	// itself is true
+	err = exec.env.NewFact(&stmt.Fact)
+	if err != nil {
+		return err
+	}
+
+	// in facts are true
+	for _, inFact := range instantiatedFactSpecDef.DefHeader.ParamInSetsFacts {
+		err = exec.env.NewFact(inFact)
+		if err != nil {
+			return err
+		}
+	}
+
+	// dom is true
+	for _, domFact := range instantiatedFactSpecDef.DomFacts {
+		err = exec.env.NewFact(domFact)
+		if err != nil {
+			return err
+		}
+	}
+
+	// iff is true
+	for _, iffFact := range instantiatedFactSpecDef.IffFacts {
+		err = exec.env.NewFact(iffFact)
+		if err != nil {
+			return err
 		}
 	}
 

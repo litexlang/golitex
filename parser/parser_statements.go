@@ -1007,6 +1007,17 @@ func (tb *tokenBlock) matcherEnvStmt() (*ast.MatcherEnvStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
+	// specFact parameter 必须是atom
+	for _, param := range fact.Params {
+		asAtom, ok := param.(*ast.FcAtom)
+		if !ok {
+			return nil, &tokenBlockErr{fmt.Errorf("spec fact parameter must be atom, but got: %s", param.String()), *tb}
+		}
+		if asAtom.PkgName != glob.EmptyPkg {
+			return nil, &tokenBlockErr{fmt.Errorf("spec fact parameter must be atom, but got: %s", param.String()), *tb}
+		}
+	}
+
 	err = tb.header.skip(glob.KeySymbolRightBrace)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
