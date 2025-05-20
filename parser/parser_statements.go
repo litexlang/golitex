@@ -1043,7 +1043,7 @@ func (tb *tokenBlock) propMatchStmt(isWhen bool) (*ast.SpecFactStmt, []ast.FactS
 	return fact, body, nil
 }
 
-func (tb *tokenBlock) supposePropMatchStmt() (*ast.WhenPropMatchStmt, error) {
+func (tb *tokenBlock) supposePropMatchStmt() (*ast.SupposePropMatchStmt, error) {
 	err := tb.header.skip(glob.KeywordSuppose)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}

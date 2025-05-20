@@ -41,7 +41,7 @@ func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		err = exec.defExistPropStmt(stmt)
 	case *ast.DefFnStmt:
 		err = exec.defFnStmt(stmt)
-	case *ast.WhenPropMatchStmt:
+	case *ast.SupposePropMatchStmt:
 		execState, err = exec.whenPropMatchStmt(stmt)
 	case *ast.WithPropMatchStmt:
 		execState, err = exec.withPropMatchStmt(stmt)
@@ -402,7 +402,7 @@ func (exec *Executor) defStmt(stmt ast.DefStmt) error {
 	}
 }
 
-func (exec *Executor) whenPropMatchStmt(stmt *ast.WhenPropMatchStmt) (glob.ExecState, error) {
+func (exec *Executor) whenPropMatchStmt(stmt *ast.SupposePropMatchStmt) (glob.ExecState, error) {
 	defer exec.appendMsg("\n")
 	defer exec.appendMsg(stmt.String())
 

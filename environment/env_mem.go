@@ -99,3 +99,39 @@ type SpecFact_InLogicExpr_InUniFactMem struct {
 	Exist_St_Facts    glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]
 	NotExist_St_Facts glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]
 }
+
+func newSpecFactMem() *SpecFactMem {
+	return &SpecFactMem{
+		PureFacts:         make(glob.Map2D[[]KnownSpecFact]),
+		NotPureFacts:      make(glob.Map2D[[]KnownSpecFact]),
+		Exist_St_Facts:    make(glob.Map2D[[]KnownSpecFact]),
+		NotExist_St_Facts: make(glob.Map2D[[]KnownSpecFact]),
+	}
+}
+
+func newSpecFactInLogicExprMem() *SpecFactInLogicExprMem {
+	return &SpecFactInLogicExprMem{
+		PureFacts:         make(glob.Map2D[[]KnownSpecFact_InLogicExpr]),
+		NotPureFacts:      make(glob.Map2D[[]KnownSpecFact_InLogicExpr]),
+		Exist_St_Facts:    make(glob.Map2D[[]KnownSpecFact_InLogicExpr]),
+		NotExist_St_Facts: make(glob.Map2D[[]KnownSpecFact_InLogicExpr]),
+	}
+}
+
+func newSpecFactInUniFact() *SpecFactInUniFactMem {
+	return &SpecFactInUniFactMem{
+		PureFacts:         make(glob.Map2D[[]KnownSpecFact_InUniSpecFact]),
+		NotPureFacts:      make(glob.Map2D[[]KnownSpecFact_InUniSpecFact]),
+		Exist_St_Facts:    make(glob.Map2D[[]KnownSpecFact_InUniSpecFact]),
+		NotExist_St_Facts: make(glob.Map2D[[]KnownSpecFact_InUniSpecFact]),
+	}
+}
+
+func NewKnownSpecFact_InLogicExpr_InUniFactMem() *SpecFact_InLogicExpr_InUniFactMem {
+	return &SpecFact_InLogicExpr_InUniFactMem{
+		PureFacts:         make(glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]),
+		NotPureFacts:      make(glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]),
+		Exist_St_Facts:    make(glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]),
+		NotExist_St_Facts: make(glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]),
+	}
+}

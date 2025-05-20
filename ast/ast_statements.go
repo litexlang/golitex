@@ -111,7 +111,7 @@ type SetDefSetBuilderStmt struct {
 	Facts     []FactStmt
 }
 
-type WhenPropMatchStmt struct {
+type SupposePropMatchStmt struct {
 	Fact SpecFactStmt
 	Body []FactStmt
 }

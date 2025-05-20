@@ -19,42 +19,6 @@ import (
 	glob "golitex/glob"
 )
 
-func newSpecFactMem() *SpecFactMem {
-	return &SpecFactMem{
-		PureFacts:         make(glob.Map2D[[]KnownSpecFact]),
-		NotPureFacts:      make(glob.Map2D[[]KnownSpecFact]),
-		Exist_St_Facts:    make(glob.Map2D[[]KnownSpecFact]),
-		NotExist_St_Facts: make(glob.Map2D[[]KnownSpecFact]),
-	}
-}
-
-func newSpecFactInLogicExprMem() *SpecFactInLogicExprMem {
-	return &SpecFactInLogicExprMem{
-		PureFacts:         make(glob.Map2D[[]KnownSpecFact_InLogicExpr]),
-		NotPureFacts:      make(glob.Map2D[[]KnownSpecFact_InLogicExpr]),
-		Exist_St_Facts:    make(glob.Map2D[[]KnownSpecFact_InLogicExpr]),
-		NotExist_St_Facts: make(glob.Map2D[[]KnownSpecFact_InLogicExpr]),
-	}
-}
-
-func newSpecFactInUniFact() *SpecFactInUniFactMem {
-	return &SpecFactInUniFactMem{
-		PureFacts:         make(glob.Map2D[[]KnownSpecFact_InUniSpecFact]),
-		NotPureFacts:      make(glob.Map2D[[]KnownSpecFact_InUniSpecFact]),
-		Exist_St_Facts:    make(glob.Map2D[[]KnownSpecFact_InUniSpecFact]),
-		NotExist_St_Facts: make(glob.Map2D[[]KnownSpecFact_InUniSpecFact]),
-	}
-}
-
-func NewKnownSpecFact_InLogicExpr_InUniFactMem() *SpecFact_InLogicExpr_InUniFactMem {
-	return &SpecFact_InLogicExpr_InUniFactMem{
-		PureFacts:         make(glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]),
-		NotPureFacts:      make(glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]),
-		Exist_St_Facts:    make(glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]),
-		NotExist_St_Facts: make(glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]),
-	}
-}
-
 func (s SpecFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (glob.Map2D[[]KnownSpecFact], error) {
 	switch stmt.TypeEnum {
 	case ast.TruePure:
@@ -141,7 +105,7 @@ func (s SpecFactInLogicExprMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) 
 	return sameEnumPkgPropFacts, true
 }
 
-func (s SpecFactInLogicExprMem) NewFact(logicExpr *ast.LogicExprStmt, envFact *ast.SpecFactStmt) error {
+func (s SpecFactInLogicExprMem) NewFact(logicExpr *ast.LogicExprStmt) error {
 	pairs, err := logicExpr.SpecFactIndexPairs([]uint8{})
 	if err != nil {
 		return err
@@ -160,7 +124,7 @@ func (s SpecFactInLogicExprMem) NewFact(logicExpr *ast.LogicExprStmt, envFact *a
 			sameEnumFacts[pair.Stmt.PropName.PkgName][pair.Stmt.PropName.Name] = []KnownSpecFact_InLogicExpr{}
 		}
 
-		sameEnumFacts[pair.Stmt.PropName.PkgName][pair.Stmt.PropName.Name] = append(sameEnumFacts[pair.Stmt.PropName.PkgName][pair.Stmt.PropName.Name], KnownSpecFact_InLogicExpr{pair.Stmt, pair.Indexes, logicExpr, envFact})
+		sameEnumFacts[pair.Stmt.PropName.PkgName][pair.Stmt.PropName.Name] = append(sameEnumFacts[pair.Stmt.PropName.PkgName][pair.Stmt.PropName.Name], KnownSpecFact_InLogicExpr{pair.Stmt, pair.Indexes, logicExpr, nil})
 	}
 
 	return nil
