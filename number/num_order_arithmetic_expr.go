@@ -15,9 +15,10 @@ package litex_num
 import (
 	"fmt"
 	ast "golitex/ast"
+	"sort"
 )
 
-func orderArithmeticExpr_GetOrderedFcSlice(fc ast.Fc) ([]ast.Fc, error) {
+func OrderArithmeticExpr_GetOrderedFcSlice(fc ast.Fc) ([]ast.Fc, error) {
 	if asAtom, ok := fc.(*ast.FcAtom); ok {
 		return orderArithmeticExpr_GetOrderedSlice_FcAtom(asAtom)
 	} else if asFcFn, ok := fc.(*ast.FcFn); ok {
@@ -46,6 +47,10 @@ func orderArithmeticExpr_GetOrderedSlice_FcFn(fcFn *ast.FcFn) ([]ast.Fc, error) 
 		return []ast.Fc{fcFn}, nil
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	ret, err = orderFcSlice(ret)
 	if err != nil {
 		return nil, err
@@ -55,5 +60,31 @@ func orderArithmeticExpr_GetOrderedSlice_FcFn(fcFn *ast.FcFn) ([]ast.Fc, error) 
 }
 
 func orderFcSlice(fcSlice []ast.Fc) ([]ast.Fc, error) {
-	return fcSlice, nil
+	// Create a slice of structs that pair the Fc with its string representation
+	type fcWithStr struct {
+		fc    ast.Fc
+		fcStr string
+	}
+
+	// Create a temporary slice to hold the paired values
+	temp := make([]fcWithStr, len(fcSlice))
+	for i, fc := range fcSlice {
+		temp[i] = fcWithStr{
+			fc:    fc,
+			fcStr: fc.String(),
+		}
+	}
+
+	// Sort the temporary slice based on the string representation
+	sort.Slice(temp, func(i, j int) bool {
+		return temp[i].fcStr < temp[j].fcStr
+	})
+
+	// Extract the sorted Fc values
+	orderedFc := make([]ast.Fc, len(fcSlice))
+	for i, item := range temp {
+		orderedFc[i] = item.fc
+	}
+
+	return orderedFc, nil
 }
