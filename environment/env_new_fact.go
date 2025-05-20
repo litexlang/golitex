@@ -354,7 +354,7 @@ func (env *Env) isTrueCommutativeProp_StoreIt(fact *ast.SpecFactStmt) (bool, err
 		return true, fmt.Errorf("prop %s is supposed to be commutative, but has no %d parameters", fact.PropName, len(propDef.DefHeader.Params))
 	}
 
-	env.InsertCommutativeProp(*propNameAsAtom)
+	env.insertCommutativeProp(*propNameAsAtom)
 
 	return true, nil
 }
