@@ -53,7 +53,7 @@ func (s SpecFactMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([]KnownSpe
 	return sameEnumPkgPropFacts, true
 }
 
-func (s SpecFactMem) NewFact(stmt *ast.SpecFactStmt, supposedEnv *ast.SupposePropMatchStmt) error {
+func (s SpecFactMem) newFact(stmt *ast.SpecFactStmt, supposedEnv *ast.SupposePropMatchStmt) error {
 	// 要考虑pkgName和propName是否存在
 	sameEnumFacts, err := s.getSameEnumFacts(stmt)
 	if err != nil {
@@ -105,7 +105,7 @@ func (s SpecFactInLogicExprMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) 
 	return sameEnumPkgPropFacts, true
 }
 
-func (s SpecFactInLogicExprMem) NewFact(logicExpr *ast.LogicExprStmt) error {
+func (s SpecFactInLogicExprMem) newFact(logicExpr *ast.LogicExprStmt, supposedEnv *ast.SupposePropMatchStmt) error {
 	pairs, err := logicExpr.SpecFactIndexPairs([]uint8{})
 	if err != nil {
 		return err
@@ -124,7 +124,7 @@ func (s SpecFactInLogicExprMem) NewFact(logicExpr *ast.LogicExprStmt) error {
 			sameEnumFacts[pair.Stmt.PropName.PkgName][pair.Stmt.PropName.Name] = []KnownSpecFact_InLogicExpr{}
 		}
 
-		sameEnumFacts[pair.Stmt.PropName.PkgName][pair.Stmt.PropName.Name] = append(sameEnumFacts[pair.Stmt.PropName.PkgName][pair.Stmt.PropName.Name], KnownSpecFact_InLogicExpr{pair.Stmt, pair.Indexes, logicExpr, nil})
+		sameEnumFacts[pair.Stmt.PropName.PkgName][pair.Stmt.PropName.Name] = append(sameEnumFacts[pair.Stmt.PropName.PkgName][pair.Stmt.PropName.Name], KnownSpecFact_InLogicExpr{pair.Stmt, pair.Indexes, logicExpr, supposedEnv})
 	}
 
 	return nil

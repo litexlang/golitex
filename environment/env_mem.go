@@ -33,7 +33,7 @@ type KnownSpecFact_InLogicExpr struct {
 	SpecFact  *ast.SpecFactStmt
 	Index     []uint8
 	LogicExpr *ast.LogicExprStmt
-	EnvFact   *ast.SpecFactStmt
+	EnvFact   *ast.SupposePropMatchStmt
 }
 
 type SpecFactInLogicExprMem struct {
