@@ -44,3 +44,7 @@ func (fact *KnownSpecFact_InLogicExpr) String() string {
 func (fact *SpecFact_InLogicExpr_InUniFact) String() string {
 	return fact.UniFact.String()
 }
+
+func (e *Env) NewMsg(s string) {
+	e.Msgs = append(e.Msgs, s)
+}
