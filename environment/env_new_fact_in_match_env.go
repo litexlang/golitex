@@ -20,9 +20,9 @@ import (
 func (env *Env) NewFactInMatchEnv(stmt ast.FactStmt) error {
 	switch f := stmt.(type) {
 	case *ast.SpecFactStmt:
-		return env.newFactInMatchEnv_SpecFact(f)
+		return env.storeSpecFactInMem(f)
 	case *ast.LogicExprStmt:
-		return env.newFactInMatchEnv_LogicExpr(f)
+		return env.storeLogicFact(f)
 	case *ast.UniFactStmt:
 		return env.newFactInMatchEnv_UniFact(f)
 	default:
@@ -30,16 +30,22 @@ func (env *Env) NewFactInMatchEnv(stmt ast.FactStmt) error {
 	}
 }
 
-func (env *Env) newFactInMatchEnv_SpecFact(stmt *ast.SpecFactStmt) error {
-	envFact := &env.CurMatchEnv.Fact
+func (env *Env) storeSpecFactInMem(stmt *ast.SpecFactStmt) error {
+	var knownFactsStructPtr *KnownFactsStruct
+	var ok bool
 
-	knownFactsStructPtr, ok := env.GetFactsFromKnownFactInMatchEnv(envFact)
-	if !ok {
-		env.KnownFactInMatchEnv[envFact.PropName.PkgName] = make(map[string]KnownFactsStruct)
-		env.KnownFactInMatchEnv[envFact.PropName.PkgName][envFact.PropName.Name] = makeKnownFactsStruct()
+	if env.CurMatchEnv != nil {
+		envFact := &env.CurMatchEnv.Fact
+		knownFactsStructPtr, ok = env.GetFactsFromKnownFactInMatchEnv(envFact)
+		if !ok {
+			env.KnownFactInMatchEnv[envFact.PropName.PkgName] = make(map[string]KnownFactsStruct)
+			env.KnownFactInMatchEnv[envFact.PropName.PkgName][envFact.PropName.Name] = makeKnownFactsStruct()
+		}
+	} else {
+		knownFactsStructPtr = &env.KnownFacts
 	}
 
-	err := knownFactsStructPtr.SpecFactMem.NewFact(stmt, env.CurMatchEnv)
+	err := knownFactsStructPtr.SpecFactMem.newFact(stmt, env.CurMatchEnv)
 	if err != nil {
 		return err
 	}
@@ -47,16 +53,22 @@ func (env *Env) newFactInMatchEnv_SpecFact(stmt *ast.SpecFactStmt) error {
 	return nil
 }
 
-func (env *Env) newFactInMatchEnv_LogicExpr(stmt *ast.LogicExprStmt) error {
-	envFact := &env.CurMatchEnv.Fact
+func (env *Env) storeLogicFact(stmt *ast.LogicExprStmt) error {
+	var knownFactsStructPtr *KnownFactsStruct
+	var ok bool
 
-	knownFactsStructPtr, ok := env.GetFactsFromKnownFactInMatchEnv(envFact)
-	if !ok {
-		env.KnownFactInMatchEnv[envFact.PropName.PkgName] = make(map[string]KnownFactsStruct)
-		env.KnownFactInMatchEnv[envFact.PropName.PkgName][envFact.PropName.Name] = makeKnownFactsStruct()
+	if env.CurMatchEnv != nil {
+		envFact := &env.CurMatchEnv.Fact
+		knownFactsStructPtr, ok = env.GetFactsFromKnownFactInMatchEnv(envFact)
+		if !ok {
+			env.KnownFactInMatchEnv[envFact.PropName.PkgName] = make(map[string]KnownFactsStruct)
+			env.KnownFactInMatchEnv[envFact.PropName.PkgName][envFact.PropName.Name] = makeKnownFactsStruct()
+		}
+	} else {
+		knownFactsStructPtr = &env.KnownFacts
 	}
 
-	err := knownFactsStructPtr.SpecFactInLogicExprMem.NewFact(stmt)
+	err := knownFactsStructPtr.SpecFactInLogicExprMem.newFact(stmt, env.CurMatchEnv)
 	if err != nil {
 		return nil
 	}
