@@ -89,7 +89,7 @@ func (s SpecFactMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([]KnownSpe
 	return sameEnumPkgPropFacts, true
 }
 
-func (s SpecFactMem) NewFact(stmt *ast.SpecFactStmt, envFact *ast.SpecFactStmt) error {
+func (s SpecFactMem) NewFact(stmt *ast.SpecFactStmt) error {
 	// 要考虑pkgName和propName是否存在
 	sameEnumFacts, err := s.getSameEnumFacts(stmt)
 	if err != nil {
@@ -102,7 +102,7 @@ func (s SpecFactMem) NewFact(stmt *ast.SpecFactStmt, envFact *ast.SpecFactStmt) 
 	if _, ok := sameEnumFacts[stmt.PropName.PkgName][stmt.PropName.Name]; !ok {
 		sameEnumFacts[stmt.PropName.PkgName][stmt.PropName.Name] = []KnownSpecFact{}
 	}
-	sameEnumFacts[stmt.PropName.PkgName][stmt.PropName.Name] = append(sameEnumFacts[stmt.PropName.PkgName][stmt.PropName.Name], KnownSpecFact{stmt, envFact})
+	sameEnumFacts[stmt.PropName.PkgName][stmt.PropName.Name] = append(sameEnumFacts[stmt.PropName.PkgName][stmt.PropName.Name], KnownSpecFact{stmt, nil})
 
 	return nil
 }
@@ -141,7 +141,7 @@ func (s SpecFactInLogicExprMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) 
 	return sameEnumPkgPropFacts, true
 }
 
-func (s SpecFactInLogicExprMem) NewFact(logicExpr *ast.LogicExprStmt, envFact *ast.SpecFactStmt) error {
+func (s SpecFactInLogicExprMem) NewFact(logicExpr *ast.LogicExprStmt) error {
 	pairs, err := logicExpr.SpecFactIndexPairs([]uint8{})
 	if err != nil {
 		return err
@@ -160,7 +160,7 @@ func (s SpecFactInLogicExprMem) NewFact(logicExpr *ast.LogicExprStmt, envFact *a
 			sameEnumFacts[pair.Stmt.PropName.PkgName][pair.Stmt.PropName.Name] = []KnownSpecFact_InLogicExpr{}
 		}
 
-		sameEnumFacts[pair.Stmt.PropName.PkgName][pair.Stmt.PropName.Name] = append(sameEnumFacts[pair.Stmt.PropName.PkgName][pair.Stmt.PropName.Name], KnownSpecFact_InLogicExpr{pair.Stmt, pair.Indexes, logicExpr, envFact})
+		sameEnumFacts[pair.Stmt.PropName.PkgName][pair.Stmt.PropName.Name] = append(sameEnumFacts[pair.Stmt.PropName.PkgName][pair.Stmt.PropName.Name], KnownSpecFact_InLogicExpr{pair.Stmt, pair.Indexes, logicExpr, nil})
 	}
 
 	return nil

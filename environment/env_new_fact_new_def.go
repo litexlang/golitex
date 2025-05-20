@@ -18,33 +18,24 @@ import (
 	glob "golitex/glob"
 )
 
-func (env *Env) NewFactWithOptionalEnvFact(stmt ast.FactStmt, envFact ...*ast.SpecFactStmt) error {
-	var curEnvFact *ast.SpecFactStmt
-	if envFact != nil {
-		if len(envFact) == 1 {
-			curEnvFact = envFact[0]
-		} else {
-			return fmt.Errorf("envFact should have at most one element, got %d", len(envFact))
-		}
-	}
-
+func (env *Env) NewFactWithOptionalEnvFact(stmt ast.FactStmt) error {
 	switch f := stmt.(type) {
 	case *ast.SpecFactStmt:
-		return env.newSpecFact(f, curEnvFact)
+		return env.newSpecFact(f)
 	case *ast.LogicExprStmt:
-		return env.newLogicExprStmt(f, curEnvFact)
+		return env.newLogicExprStmt(f)
 	case *ast.UniFactStmt:
-		return env.newUniFact(f, curEnvFact)
+		return env.newUniFact(f)
 	default:
 		return fmt.Errorf("unknown fact type: %T", stmt)
 	}
 }
 
-func (env *Env) newLogicExprStmt(fact *ast.LogicExprStmt, envFact *ast.SpecFactStmt) error {
-	return env.SpecFactInLogicExprMem.NewFact(fact, envFact)
+func (env *Env) newLogicExprStmt(fact *ast.LogicExprStmt) error {
+	return env.SpecFactInLogicExprMem.NewFact(fact)
 }
 
-func (env *Env) newSpecFact(fact *ast.SpecFactStmt, envFact *ast.SpecFactStmt) error {
+func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
 	if isEqualFact, err := env.IsTrueEqualFact_StoreIt(fact); isEqualFact {
 		return err
 	}
@@ -73,21 +64,21 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt, envFact *ast.SpecFactStmt) e
 		return err
 	}
 
-	err := env.SpecFactMem.NewFact(fact, envFact)
+	err := env.SpecFactMem.NewFact(fact)
 	if err != nil {
 		return err
 	}
 
 	// postprocess
 	if fact.IsExist_St_Fact() {
-		return env.newExist_St_FactPostProcess(fact, envFact)
+		return env.newExist_St_FactPostProcess(fact)
 	}
 
 	// if fact.IsExistFact() {
 	// 	return env.newExistFactPostProcess(fact)
 	// }
 
-	return env.newNotExistSt_SpecFactPostProcess(fact, envFact)
+	return env.newNotExistSt_SpecFactPostProcess(fact)
 }
 
 func storeCommutativeTransitiveFact(mem map[string]*[]ast.Fc, fact *ast.SpecFactStmt) error {
@@ -136,13 +127,13 @@ func storeCommutativeTransitiveFact(mem map[string]*[]ast.Fc, fact *ast.SpecFact
 	return nil
 }
 
-func (env *Env) newNotExistSt_SpecFactPostProcess(fact *ast.SpecFactStmt, envFact *ast.SpecFactStmt) error {
+func (env *Env) newNotExistSt_SpecFactPostProcess(fact *ast.SpecFactStmt) error {
 	_, ok := env.GetPropDef(fact.PropName)
 
 	if ok {
 		if fact.TypeEnum == ast.TruePure {
 			if glob.KnowSpecFactByDef {
-				return env.newTrueSpecFact_EmitFactsKnownByDef(fact, envFact)
+				return env.newTrueSpecFact_EmitFactsKnownByDef(fact)
 			} else {
 				return nil
 			}
@@ -156,7 +147,7 @@ func (env *Env) newNotExistSt_SpecFactPostProcess(fact *ast.SpecFactStmt, envFac
 			return nil
 		} else {
 			if glob.KnowSpecFactByDef {
-				return env.newFalseExistFact_EmitEquivelentUniFact(fact, envFact)
+				return env.newFalseExistFact_EmitEquivelentUniFact(fact)
 			} else {
 				return nil
 			}
@@ -171,7 +162,7 @@ func (env *Env) newNotExistSt_SpecFactPostProcess(fact *ast.SpecFactStmt, envFac
 
 }
 
-func (env *Env) newTrueSpecFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt, envFact *ast.SpecFactStmt) error {
+func (env *Env) newTrueSpecFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) error {
 	propDef, ok := env.GetPropDef(fact.PropName)
 	if !ok {
 		// TODO 这里需要考虑prop的定义是否在当前包中。当然这里有点复杂，因为如果是内置的prop，那么可能需要到builtin包中去找
@@ -190,7 +181,7 @@ func (env *Env) newTrueSpecFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt, envF
 			return err
 		}
 
-		err = env.NewFactWithOptionalEnvFact(instantiated, envFact)
+		err = env.NewFactWithOptionalEnvFact(instantiated)
 
 		env.NewMsg(fmt.Sprintf("%s\nis true prop definition:\n%s\n", instantiated.String(), propDef.String()))
 
@@ -210,24 +201,22 @@ func (env *Env) newTrueSpecFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt, envF
 // 	}
 // }
 
-func (env *Env) newExist_St_FactPostProcess(fact *ast.SpecFactStmt, envFact *ast.SpecFactStmt) error {
+func (env *Env) newExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 	if fact.TypeEnum == ast.TrueExist_St {
-		return env.newTrueExist_St_FactPostProcess(fact, envFact)
+		return env.newTrueExist_St_FactPostProcess(fact)
 	} else {
 		return nil
 	}
 }
 
 // not exist => forall not
-func (env *Env) newFalseExistFact_EmitEquivelentUniFact(fact *ast.SpecFactStmt, envFact *ast.SpecFactStmt) error {
+func (env *Env) newFalseExistFact_EmitEquivelentUniFact(fact *ast.SpecFactStmt) error {
 	uniFact, err := env.NotExistToForall(fact)
 	if err != nil {
 		return err
 	}
 
-	if envFact == nil {
-		err = env.storeUniFact(uniFact)
-	}
+	err = env.storeUniFact(uniFact)
 
 	if err != nil {
 		return fmt.Errorf("exist fact %s has no definition", fact.String())
@@ -237,7 +226,7 @@ func (env *Env) newFalseExistFact_EmitEquivelentUniFact(fact *ast.SpecFactStmt, 
 }
 
 // have(exist ... st ...) => exist
-func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt, envFact *ast.SpecFactStmt) error {
+func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 	sepIndex := fact.Exist_St_SeparatorIndex()
 	if sepIndex == -1 {
 		return fmt.Errorf("%s has no separator", fact.String())
@@ -245,7 +234,7 @@ func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt, envFact 
 
 	existFact := ast.NewSpecFactStmt(ast.TruePure, fact.PropName, fact.Params[sepIndex+1:])
 
-	err := env.SpecFactMem.NewFact(existFact, envFact)
+	err := env.SpecFactMem.NewFact(existFact)
 	if err != nil {
 		return err
 	}
@@ -253,13 +242,12 @@ func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt, envFact 
 	return nil
 }
 
-func (env *Env) newUniFact(fact *ast.UniFactStmt, envFact *ast.SpecFactStmt) error {
-	if envFact == nil {
-		err := env.storeUniFact(fact)
-		if err != nil {
-			return err
-		}
+func (env *Env) newUniFact(fact *ast.UniFactStmt) error {
+	err := env.storeUniFact(fact)
+	if err != nil {
+		return err
 	}
+
 	return nil
 }
 
