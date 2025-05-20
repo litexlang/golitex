@@ -39,7 +39,7 @@ func (env *Env) newFactInMatchEnv_SpecFact(stmt *ast.SpecFactStmt) error {
 		env.KnownFactInMatchEnv[envFact.PropName.PkgName][envFact.PropName.Name] = makeKnownFactsStruct()
 	}
 
-	err := knownFactsStructPtr.SpecFactMem.NewFact(stmt)
+	err := knownFactsStructPtr.SpecFactMem.NewFact(stmt, env.CurMatchEnv)
 	if err != nil {
 		return err
 	}

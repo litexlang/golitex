@@ -23,7 +23,7 @@ func (env *Env) NewFact(stmt ast.FactStmt) error {
 	case *ast.SpecFactStmt:
 		return env.newSpecFact(f)
 	case *ast.LogicExprStmt:
-		return env.newLogicExprStmt(f)
+		return env.newLogicExprFact(f)
 	case *ast.UniFactStmt:
 		return env.newUniFact(f)
 	default:
@@ -31,7 +31,7 @@ func (env *Env) NewFact(stmt ast.FactStmt) error {
 	}
 }
 
-func (env *Env) newLogicExprStmt(fact *ast.LogicExprStmt) error {
+func (env *Env) newLogicExprFact(fact *ast.LogicExprStmt) error {
 	return env.KnownFacts.SpecFactInLogicExprMem.NewFact(fact)
 }
 
@@ -78,7 +78,7 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
 		return nil
 	}
 
-	err := env.KnownFacts.SpecFactMem.NewFact(fact)
+	err := env.KnownFacts.SpecFactMem.NewFact(fact, env.CurMatchEnv)
 	if err != nil {
 		return err
 	}
@@ -226,7 +226,7 @@ func (env *Env) newFalseExistFact_EmitEquivelentUniFact(fact *ast.SpecFactStmt) 
 		return err
 	}
 
-	err = env.storeUniFact(uniFact)
+	err = env.newUniFact(uniFact)
 
 	if err != nil {
 		return fmt.Errorf("exist fact %s has no definition", fact.String())
@@ -244,16 +244,7 @@ func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 
 	existFact := ast.NewSpecFactStmt(ast.TruePure, fact.PropName, fact.Params[sepIndex+1:])
 
-	err := env.KnownFacts.SpecFactMem.NewFact(existFact)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (env *Env) newUniFact(fact *ast.UniFactStmt) error {
-	err := env.storeUniFact(fact)
+	err := env.KnownFacts.SpecFactMem.NewFact(existFact, env.CurMatchEnv)
 	if err != nil {
 		return err
 	}

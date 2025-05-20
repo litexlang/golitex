@@ -15,7 +15,6 @@ package litex_ast
 import (
 	"fmt"
 	"sort"
-	"strings"
 )
 
 func (stmt *FcFn) isAdd() (bool, error) {
@@ -245,22 +244,22 @@ func orderFc(fcSlice []Fc) ([]Fc, error) {
 	return orderedFc, nil
 }
 
-func orderFc2(fcSlice []Fc) ([]Fc, error) {
-	temp := make([]Fc, len(fcSlice))
-	for i, fc := range fcSlice {
-		temp[i] = fc
-	}
+// func orderFc2(fcSlice []Fc) ([]Fc, error) {
+// 	temp := make([]Fc, len(fcSlice))
+// 	for i, fc := range fcSlice {
+// 		temp[i] = fc
+// 	}
 
-	// Sort the temporary slice based on the string representation
-	sort.Slice(temp, func(i, j int) bool {
-		return strings.Compare(temp[i].String(), temp[j].String()) < 0
-	})
+// 	// Sort the temporary slice based on the string representation
+// 	sort.Slice(temp, func(i, j int) bool {
+// 		return strings.Compare(temp[i].String(), temp[j].String()) < 0
+// 	})
 
-	// Extract the sorted Fc values
-	orderedFc := make([]Fc, len(fcSlice))
-	for i, item := range temp {
-		orderedFc[i] = item
-	}
+// 	// Extract the sorted Fc values
+// 	orderedFc := make([]Fc, len(fcSlice))
+// 	for i, item := range temp {
+// 		orderedFc[i] = item
+// 	}
 
-	return orderedFc, nil
-}
+// 	return orderedFc, nil
+// }
