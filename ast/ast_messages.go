@@ -471,7 +471,7 @@ func (stmt *SetDefSetBuilderStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *WhenPropMatchStmt) String() string {
+func (stmt *SupposePropMatchStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordSuppose)
 	builder.WriteString(" ")

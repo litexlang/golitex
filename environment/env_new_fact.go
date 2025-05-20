@@ -21,7 +21,7 @@ import (
 func (env *Env) NewFact(stmt ast.FactStmt) error {
 	switch f := stmt.(type) {
 	case *ast.SpecFactStmt:
-		return env.newSpecFact(f)
+		return env.newSpecFact(f, nil)
 	case *ast.LogicExprStmt:
 		return env.newLogicExprStmt(f)
 	case *ast.UniFactStmt:
@@ -32,10 +32,10 @@ func (env *Env) NewFact(stmt ast.FactStmt) error {
 }
 
 func (env *Env) newLogicExprStmt(fact *ast.LogicExprStmt) error {
-	return env.KnownFacts.SpecFactInLogicExprMem.NewFact(fact, nil)
+	return env.KnownFacts.SpecFactInLogicExprMem.NewFact(fact)
 }
 
-func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
+func (env *Env) newSpecFact(fact *ast.SpecFactStmt, envFact *ast.SpecFactStmt) error {
 	if isEqualFact, err := env.isTrueEqualFact_StoreIt(fact); err != nil {
 		return err
 	} else if isEqualFact {
@@ -78,7 +78,7 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
 		return nil
 	}
 
-	err := env.KnownFacts.SpecFactMem.NewFact(fact, nil)
+	err := env.KnownFacts.SpecFactMem.NewFact(fact, envFact)
 	if err != nil {
 		return err
 	}
@@ -259,73 +259,6 @@ func (env *Env) newUniFact(fact *ast.UniFactStmt) error {
 	}
 
 	return nil
-}
-
-func (env *Env) IsInvalidName(name string) error {
-	err := glob.IsValidName(name)
-	if err != nil {
-		return err
-	}
-
-	for curEnv := env; curEnv != nil; curEnv = curEnv.Parent {
-		_, ok := curEnv.ObjDefMem.Dict[glob.EmptyPkg][name]
-		if ok {
-			return duplicateDefMsg(glob.EmptyPkg, name, glob.KeywordObj)
-		}
-		_, ok = curEnv.FnDefMem.Dict[glob.EmptyPkg][name]
-		if ok {
-			return duplicateDefMsg(glob.EmptyPkg, name, glob.KeywordFn)
-		}
-		_, ok = curEnv.PropDefMem.Dict[glob.EmptyPkg][name]
-		if ok {
-			return duplicateDefMsg(glob.EmptyPkg, name, glob.KeywordProp)
-		}
-	}
-
-	return nil
-}
-
-func (env *Env) NewDefProp(stmt *ast.DefPropStmt) error {
-	err := env.IsInvalidName(stmt.DefHeader.Name)
-	if err != nil {
-		return err
-	}
-
-	return env.PropDefMem.Insert(stmt, glob.EmptyPkg)
-}
-
-func (env *Env) NewDefObj(stmt *ast.DefObjStmt) error {
-	for _, objName := range stmt.Objs {
-		err := env.IsInvalidName(objName)
-		if err != nil {
-			return err
-		}
-	}
-
-	return env.ObjDefMem.Insert(stmt, glob.EmptyPkg)
-}
-
-func (env *Env) NewDefFn(stmt *ast.DefFnStmt) error {
-	err := env.IsInvalidName(stmt.DefHeader.Name)
-	if err != nil {
-		return err
-	}
-
-	err = env.FnDefMem.Insert(stmt, glob.EmptyPkg)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (env *Env) NewDefExistProp(stmt *ast.DefExistPropStmt) error {
-	err := env.IsInvalidName(stmt.DefBody.DefHeader.Name)
-	if err != nil {
-		return err
-	}
-
-	return env.ExistPropDefMem.Insert(stmt, glob.EmptyPkg)
 }
 
 func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, error) {

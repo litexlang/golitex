@@ -48,6 +48,8 @@ type Env struct {
 	EqualMem map[string]shared_ptr_to_slice_of_fc
 
 	KnownFactInMatchEnv glob.Map2D[KnownFactsStruct]
+
+	CurMatchEnv *ast.SupposePropMatchStmt
 }
 
 func NewEnv(parent *Env) *Env {
@@ -75,6 +77,8 @@ func NewEnv(parent *Env) *Env {
 		EqualMem: make(map[string]shared_ptr_to_slice_of_fc),
 
 		KnownFactInMatchEnv: make(glob.Map2D[KnownFactsStruct]),
+
+		CurMatchEnv: nil,
 	}
 	return env
 }

@@ -52,7 +52,7 @@ func (env *Env) newFactInMatchEnv_LogicExpr(stmt *ast.LogicExprStmt, envFact *as
 		env.KnownFactInMatchEnv[envFact.PropName.PkgName][envFact.PropName.Name] = makeKnownFactsStruct()
 	}
 
-	err := knownFactsStructPtr.SpecFactInLogicExprMem.NewFact(stmt, envFact)
+	err := knownFactsStructPtr.SpecFactInLogicExprMem.NewFact(stmt)
 	if err != nil {
 		return nil
 	}
