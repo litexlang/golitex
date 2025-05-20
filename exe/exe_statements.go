@@ -82,7 +82,7 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
 	}
 
 	if ok {
-		err := exec.env.NewFactWithOptionalEnvFact(stmt)
+		err := exec.env.NewFact(stmt)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
@@ -116,7 +116,7 @@ func (exec *Executor) knowFactStmt(stmt *ast.KnowFactStmt) error {
 	defer exec.appendMsg("\n")
 
 	for _, fact := range stmt.Facts {
-		err := exec.env.NewFactWithOptionalEnvFact(fact)
+		err := exec.env.NewFact(fact)
 		if err != nil {
 			return err
 		}
@@ -147,7 +147,7 @@ func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) (glob.ExecState, error) {
 	}
 
 	if asSpecFact, ok := stmt.ToCheckFact.(*ast.SpecFactStmt); ok {
-		err = exec.env.Parent.NewFactWithOptionalEnvFact(asSpecFact)
+		err = exec.env.Parent.NewFact(asSpecFact)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
@@ -157,7 +157,7 @@ func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) (glob.ExecState, error) {
 			return glob.ExecState_Error, err
 		}
 
-		err = exec.env.Parent.NewFactWithOptionalEnvFact(newUniFact)
+		err = exec.env.Parent.NewFact(newUniFact)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
@@ -188,7 +188,7 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
 		return err
 	}
 
-	err = exec.env.NewFactWithOptionalEnvFact(propToIff)
+	err = exec.env.NewFact(propToIff)
 
 	exec.appendMsg(fmt.Sprintf("%s\nis true prop definition:\n%s\n", propToIff.String(), stmt.String()))
 
@@ -196,7 +196,7 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
 		return err
 	}
 
-	err = exec.env.NewFactWithOptionalEnvFact(iffToProp)
+	err = exec.env.NewFact(iffToProp)
 	if err != nil {
 		return err
 	}
@@ -218,14 +218,14 @@ func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt) error {
 	}
 
 	for i := range stmt.ParamInSetsFacts {
-		err := exec.env.NewFactWithOptionalEnvFact(stmt.ParamInSetsFacts[i])
+		err := exec.env.NewFact(stmt.ParamInSetsFacts[i])
 		if err != nil {
 			return err
 		}
 	}
 
 	for _, fact := range stmt.Facts {
-		err := exec.env.NewFactWithOptionalEnvFact(fact)
+		err := exec.env.NewFact(fact)
 		if err != nil {
 			return err
 		}
@@ -250,7 +250,7 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 	thenFacts = append(thenFacts, uniFactThen...)
 
 	uniFact := ast.NewUniFactStmtWithSetReqInDom(stmt.DefHeader.Params, stmt.DomFacts, thenFacts, ast.EmptyIffFacts, []ast.FactStmt{})
-	err = exec.env.NewFactWithOptionalEnvFact(uniFact)
+	err = exec.env.NewFact(uniFact)
 
 	if err != nil {
 		return err
@@ -270,7 +270,7 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 
 		newFact := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(stmt.DefHeader.Name), fnSet})
 
-		err = exec.env.NewFactWithOptionalEnvFact(newFact)
+		err = exec.env.NewFact(newFact)
 		if err != nil {
 			return err
 		}
@@ -344,7 +344,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 
 	// param in param sets is true
 	for _, paramInParamSet := range instantiatedExistPropDefStmt.ExistInSetsFacts {
-		err := exec.env.NewFactWithOptionalEnvFact(paramInParamSet)
+		err := exec.env.NewFact(paramInParamSet)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
@@ -352,7 +352,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 
 	// dom of def exist prop is true
 	for _, domFact := range instantiatedExistPropDefStmt.DefBody.DomFacts {
-		err := exec.env.NewFactWithOptionalEnvFact(domFact)
+		err := exec.env.NewFact(domFact)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
@@ -361,7 +361,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 
 	// iff of def exist prop is true
 	for _, iffFact := range instantiatedExistPropDefStmt.DefBody.IffFacts {
-		err := exec.env.NewFactWithOptionalEnvFact(iffFact)
+		err := exec.env.NewFact(iffFact)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
@@ -375,7 +375,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 	existStFactParams = append(existStFactParams, stmt.Fact.Params...)
 
 	newExistStFact := ast.NewSpecFactStmt(ast.TrueExist_St, *ast.NewFcAtomWithName(stmt.Fact.PropName.Name), existStFactParams)
-	err = exec.env.NewFactWithOptionalEnvFact(newExistStFact)
+	err = exec.env.NewFact(newExistStFact)
 	if err != nil {
 		return glob.ExecState_True, nil
 	}
@@ -445,14 +445,14 @@ func (exec *Executor) whenPropMatchStmt(stmt *ast.WhenPropMatchStmt) (glob.ExecS
 	}
 
 	// itself is true
-	err = exec.env.NewFactWithOptionalEnvFact(&stmt.Fact)
+	err = exec.env.NewFact(&stmt.Fact)
 	if err != nil {
 		return glob.ExecState_Error, err
 	}
 
 	// in facts are true
 	for _, inFact := range instantiatedFactSpecDef.DefHeader.ParamInSetsFacts {
-		err = exec.env.NewFactWithOptionalEnvFact(inFact)
+		err = exec.env.NewFact(inFact)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
@@ -460,7 +460,7 @@ func (exec *Executor) whenPropMatchStmt(stmt *ast.WhenPropMatchStmt) (glob.ExecS
 
 	// dom is true
 	for _, domFact := range instantiatedFactSpecDef.DomFacts {
-		err = exec.env.NewFactWithOptionalEnvFact(domFact)
+		err = exec.env.NewFact(domFact)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
@@ -468,7 +468,7 @@ func (exec *Executor) whenPropMatchStmt(stmt *ast.WhenPropMatchStmt) (glob.ExecS
 
 	// iff is true
 	for _, iffFact := range instantiatedFactSpecDef.IffFacts {
-		err = exec.env.NewFactWithOptionalEnvFact(iffFact)
+		err = exec.env.NewFact(iffFact)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
@@ -501,7 +501,7 @@ func (exec *Executor) GetUniFactSettings(asUnivFact *ast.UniFactStmt) error {
 		}
 	}
 	for _, fact := range asUnivFact.DomFacts {
-		err := exec.env.NewFactWithOptionalEnvFact(fact)
+		err := exec.env.NewFact(fact)
 		if err != nil {
 			return err
 		}
@@ -621,7 +621,7 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimStmt) (bool, 
 
 	newClaimFact := specFactStmt.ReverseIsTrue()
 
-	err := exec.env.NewFactWithOptionalEnvFact(newClaimFact)
+	err := exec.env.NewFact(newClaimFact)
 	if err != nil {
 		return false, err
 	}
@@ -705,7 +705,7 @@ func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEach
 
 	caseStmt := stmt.OrFact.Facts[index]
 
-	err := exec.env.NewFactWithOptionalEnvFact(caseStmt)
+	err := exec.env.NewFact(caseStmt)
 	if err != nil {
 		return glob.ExecState_Error, err
 	}
@@ -745,7 +745,7 @@ func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) (glob.ExecS
 	thenFacts := []ast.FactStmt{stmt.ExistProp.ToSpecFact()}
 	knownUniFact := ast.NewUniFactStmtWithSetReqInDom(stmt.ExistProp.DefBody.DefHeader.Params, stmt.ExistProp.DefBody.DomFacts, thenFacts, ast.EmptyIffFacts, stmt.ExistProp.DefBody.DefHeader.ParamInSetsFacts)
 
-	err = exec.env.NewFactWithOptionalEnvFact(knownUniFact)
+	err = exec.env.NewFact(knownUniFact)
 	if err != nil {
 		return glob.ExecState_Error, err
 	}
@@ -766,7 +766,7 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
 	thenFacts := []ast.FactStmt{stmt.Prop.ToSpecFact()}
 	knownUniFact := ast.NewUniFactStmtWithSetReqInDom(stmt.Prop.DefHeader.Params, stmt.Prop.DomFacts, thenFacts, ast.EmptyIffFacts, stmt.Prop.DefHeader.ParamInSetsFacts)
 
-	err = exec.env.NewFactWithOptionalEnvFact(knownUniFact)
+	err = exec.env.NewFact(knownUniFact)
 	if err != nil {
 		return err
 	}

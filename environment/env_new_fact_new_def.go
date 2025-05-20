@@ -18,7 +18,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (env *Env) NewFactWithOptionalEnvFact(stmt ast.FactStmt) error {
+func (env *Env) NewFact(stmt ast.FactStmt) error {
 	switch f := stmt.(type) {
 	case *ast.SpecFactStmt:
 		return env.newSpecFact(f)
@@ -36,32 +36,46 @@ func (env *Env) newLogicExprStmt(fact *ast.LogicExprStmt) error {
 }
 
 func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
-	if isEqualFact, err := env.IsTrueEqualFact_StoreIt(fact); isEqualFact {
+	if isEqualFact, err := env.isTrueEqualFact_StoreIt(fact); err != nil {
 		return err
+	} else if isEqualFact {
+		return nil
 	}
 
-	if isMathInductionProp, err := env.IsMathInductionPropName_StoreIt(fact); isMathInductionProp {
+	if isMathInductionProp, err := env.isMathInductionPropName_StoreIt(fact); err != nil {
 		return err
+	} else if isMathInductionProp {
+		return nil
 	}
 
-	if isCommutativeProp, err := env.IsTrueCommutativeProp_StoreIt(fact); isCommutativeProp {
+	if isCommutativeProp, err := env.isTrueCommutativeProp_StoreIt(fact); err != nil {
 		return err
+	} else if isCommutativeProp {
+		return nil
 	}
 
-	if isCommutativeFn, err := env.IsCommutativeFnName_StoreIt(fact); isCommutativeFn {
+	if isCommutativeFn, err := env.isCommutativeFnName_StoreIt(fact); err != nil {
 		return err
+	} else if isCommutativeFn {
+		return nil
 	}
 
-	if isAssociativeFn, err := env.IsAssociativeFnName_StoreIt(fact); isAssociativeFn {
+	if isAssociativeFn, err := env.isAssociativeFnName_StoreIt(fact); err != nil {
 		return err
+	} else if isAssociativeFn {
+		return nil
 	}
 
-	if isEqualFn, err := env.IsTrueFnEqual_StoreIt(fact); isEqualFn {
+	if isEqualFn, err := env.isTrueFnEqual_StoreIt(fact); err != nil {
 		return err
+	} else if isEqualFn {
+		return nil
 	}
 
-	if isEqualSet, err := env.IsTrueSetEqual_StoreIt(fact); isEqualSet {
+	if isEqualSet, err := env.isTrueSetEqual_StoreIt(fact); err != nil {
 		return err
+	} else if isEqualSet {
+		return nil
 	}
 
 	err := env.SpecFactMem.NewFact(fact)
@@ -181,7 +195,7 @@ func (env *Env) newTrueSpecFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) erro
 			return err
 		}
 
-		err = env.NewFactWithOptionalEnvFact(instantiated)
+		err = env.NewFact(instantiated)
 
 		env.NewMsg(fmt.Sprintf("%s\nis true prop definition:\n%s\n", instantiated.String(), propDef.String()))
 
@@ -356,7 +370,7 @@ func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, erro
 	return ast.NewUniFactStmtWithSetReqInDom(existPropDef.ExistParams, domFacts, thenFacts, ast.EmptyIffFacts, existPropDef.ExistInSetsFacts), nil
 }
 
-func (env *Env) IsTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
+func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 	if !fact.IsTrue() {
 		return false, nil
 	}
@@ -383,7 +397,7 @@ func (env *Env) GetEqualFcs(fc ast.Fc) (*[]ast.Fc, bool) {
 	return facts, ok
 }
 
-func (env *Env) IsTrueCommutativeProp_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
+func (env *Env) isTrueCommutativeProp_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 	if !fact.IsTrue() {
 		return false, nil
 	}
@@ -416,7 +430,7 @@ func (env *Env) IsTrueCommutativeProp_StoreIt(fact *ast.SpecFactStmt) (bool, err
 	return true, nil
 }
 
-func (env *Env) IsMathInductionPropName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
+func (env *Env) isMathInductionPropName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 	if !fact.IsTrue() {
 		return false, nil
 	}
@@ -452,7 +466,7 @@ func (env *Env) IsMathInductionPropName_StoreIt(fact *ast.SpecFactStmt) (bool, e
 
 	knownUniFact := ast.NewUniFactStmtWithSetReqInDom(knownUniFactParams, knownUniFactDomFacts, knownUniFactThenFacts, ast.EmptyIffFacts, knownUniFactParamInSetsFacts)
 
-	err := env.NewFactWithOptionalEnvFact(knownUniFact)
+	err := env.NewFact(knownUniFact)
 	if err != nil {
 		return false, err
 	}
@@ -460,7 +474,7 @@ func (env *Env) IsMathInductionPropName_StoreIt(fact *ast.SpecFactStmt) (bool, e
 	return true, nil
 }
 
-func (env *Env) IsCommutativeFnName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
+func (env *Env) isCommutativeFnName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 	if !fact.IsTrue() {
 		return false, nil
 	}
@@ -483,7 +497,7 @@ func (env *Env) IsCommutativeFnName_StoreIt(fact *ast.SpecFactStmt) (bool, error
 	return true, nil
 }
 
-func (env *Env) IsAssociativeFnName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
+func (env *Env) isAssociativeFnName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 	if !fact.IsTrue() {
 		return false, nil
 	}
@@ -506,7 +520,7 @@ func (env *Env) IsAssociativeFnName_StoreIt(fact *ast.SpecFactStmt) (bool, error
 	return true, nil
 }
 
-func (env *Env) IsTrueFnEqual_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
+func (env *Env) isTrueFnEqual_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 	if !fact.IsTrue() {
 		return false, nil
 	}
@@ -527,7 +541,7 @@ func (env *Env) IsTrueFnEqual_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 	return true, nil
 }
 
-func (env *Env) IsTrueSetEqual_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
+func (env *Env) isTrueSetEqual_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 	if !fact.IsTrue() {
 		// not = 的存储和其他普通的prop一样，因为 != 没有传递性，不能像 = 一样存储
 		return false, nil
