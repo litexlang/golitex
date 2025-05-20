@@ -203,3 +203,61 @@ func (e *Env) GetFcAtomDef(fcAtomName *ast.FcAtom) (ast.DefStmt, bool) {
 }
 
 // End of Get Def Recursively From environments
+
+func (e *Env) getFcAtomDefAtCurEnv(fcAtomName *ast.FcAtom) (ast.DefStmt, bool) {
+	// Case1: It is a prop
+	prop, ok := e.PropDefMem.Get(*fcAtomName)
+	if ok {
+		return prop, true
+	}
+
+	// Case2: It is a fn
+	fn, ok := e.FnDefMem.Get(*fcAtomName)
+	if ok {
+		return fn, true
+	}
+
+	// Case3: It is a exist prop
+	existProp, ok := e.ExistPropDefMem.Get(*fcAtomName)
+	if ok {
+		return existProp, true
+	}
+
+	// Case4: It is a obj
+	obj, ok := e.ObjDefMem.Get(*fcAtomName)
+	if ok {
+		return obj, true
+	}
+
+	return nil, false
+}
+
+func (e *Env) GetSetDef(set ast.Fc) (*ast.SetDefSetBuilderStmt, bool) {
+	setAsAtom, isSetAsAtom := set.(*ast.FcAtom)
+	if !isSetAsAtom {
+		return nil, false
+	}
+
+	for env := e; env != nil; env = env.Parent {
+		setDef, ok := env.SetDefMem.Get(setAsAtom.PkgName, setAsAtom.Name)
+		if ok {
+			return setDef, true
+		}
+	}
+	return nil, false
+}
+
+func (e *Env) GetFnDef(fn ast.Fc) (*ast.DefFnStmt, bool) {
+	fnAsAtom, isFnAsAtom := fn.(*ast.FcAtom)
+	if !isFnAsAtom {
+		return nil, false
+	}
+
+	for env := e; env != nil; env = env.Parent {
+		fnDef, ok := env.FnDefMem.Get(*fnAsAtom)
+		if ok {
+			return fnDef, true
+		}
+	}
+	return nil, false
+}

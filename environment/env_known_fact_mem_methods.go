@@ -287,3 +287,47 @@ func newSpecFact_InLogicExpr_InUniFactMem() *SpecFact_InLogicExpr_InUniFactMem {
 		NotExist_St_Facts: make(glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]),
 	}
 }
+
+func (e *Env) GetSpecFactMem(envFact *ast.SpecFactStmt) (*SpecFactMem, bool) {
+	if envFact != nil {
+		knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(envFact)
+		if !ok {
+			return nil, false
+		}
+		return &knownFacts.SpecFactMem, true
+	}
+	return &e.KnownFacts.SpecFactMem, true
+}
+
+func (e *Env) GetSpecFactInLogicExprMem(envFact *ast.SpecFactStmt) (*SpecFactInLogicExprMem, bool) {
+	if envFact != nil {
+		knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(envFact)
+		if !ok {
+			return nil, false
+		}
+		return &knownFacts.SpecFactInLogicExprMem, true
+	}
+	return &e.KnownFacts.SpecFactInLogicExprMem, true
+}
+
+func (e *Env) GetSpecFactInUniFactMem(envFact *ast.SpecFactStmt) (*SpecFactInUniFactMem, bool) {
+	if envFact != nil {
+		knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(envFact)
+		if !ok {
+			return nil, false
+		}
+		return &knownFacts.SpecFactInUniFactMem, true
+	}
+	return &e.KnownFacts.SpecFactInUniFactMem, true
+}
+
+func (e *Env) GetSpecFact_InLogicExpr_InUniFactMem(envFact *ast.SpecFactStmt) (*SpecFact_InLogicExpr_InUniFactMem, bool) {
+	if envFact != nil {
+		knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(envFact)
+		if !ok {
+			return nil, false
+		}
+		return &knownFacts.SpecFact_InLogicExpr_InUniFactMem, true
+	}
+	return &e.KnownFacts.SpecFact_InLogicExpr_InUniFactMem, true
+}

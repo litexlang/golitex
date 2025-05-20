@@ -87,38 +87,6 @@ func makeKnownFactsStruct() KnownFactsStruct {
 	}
 }
 
-func (e *Env) NewMsg(s string) {
-	e.Msgs = append(e.Msgs, s)
-}
-
-func (e *Env) getFcAtomDefAtCurEnv(fcAtomName *ast.FcAtom) (ast.DefStmt, bool) {
-	// Case1: It is a prop
-	prop, ok := e.PropDefMem.Get(*fcAtomName)
-	if ok {
-		return prop, true
-	}
-
-	// Case2: It is a fn
-	fn, ok := e.FnDefMem.Get(*fcAtomName)
-	if ok {
-		return fn, true
-	}
-
-	// Case3: It is a exist prop
-	existProp, ok := e.ExistPropDefMem.Get(*fcAtomName)
-	if ok {
-		return existProp, true
-	}
-
-	// Case4: It is a obj
-	obj, ok := e.ObjDefMem.Get(*fcAtomName)
-	if ok {
-		return obj, true
-	}
-
-	return nil, false
-}
-
 func (e *Env) IsSpecFactPropCommutative(fact *ast.SpecFactStmt) bool {
 	// 如果是等号那自动成立
 	if ast.IsFcAtomWithName(&fact.PropName, glob.KeySymbolEqual) {
@@ -131,78 +99,4 @@ func (e *Env) IsSpecFactPropCommutative(fact *ast.SpecFactStmt) bool {
 		}
 	}
 	return false
-}
-
-func (e *Env) GetSetDef(set ast.Fc) (*ast.SetDefSetBuilderStmt, bool) {
-	setAsAtom, isSetAsAtom := set.(*ast.FcAtom)
-	if !isSetAsAtom {
-		return nil, false
-	}
-
-	for env := e; env != nil; env = env.Parent {
-		setDef, ok := env.SetDefMem.Get(setAsAtom.PkgName, setAsAtom.Name)
-		if ok {
-			return setDef, true
-		}
-	}
-	return nil, false
-}
-
-func (e *Env) GetFnDef(fn ast.Fc) (*ast.DefFnStmt, bool) {
-	fnAsAtom, isFnAsAtom := fn.(*ast.FcAtom)
-	if !isFnAsAtom {
-		return nil, false
-	}
-
-	for env := e; env != nil; env = env.Parent {
-		fnDef, ok := env.FnDefMem.Get(*fnAsAtom)
-		if ok {
-			return fnDef, true
-		}
-	}
-	return nil, false
-}
-
-func (e *Env) GetSpecFactMem(envFact *ast.SpecFactStmt) (*SpecFactMem, bool) {
-	if envFact != nil {
-		knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(envFact)
-		if !ok {
-			return nil, false
-		}
-		return &knownFacts.SpecFactMem, true
-	}
-	return &e.KnownFacts.SpecFactMem, true
-}
-
-func (e *Env) GetSpecFactInLogicExprMem(envFact *ast.SpecFactStmt) (*SpecFactInLogicExprMem, bool) {
-	if envFact != nil {
-		knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(envFact)
-		if !ok {
-			return nil, false
-		}
-		return &knownFacts.SpecFactInLogicExprMem, true
-	}
-	return &e.KnownFacts.SpecFactInLogicExprMem, true
-}
-
-func (e *Env) GetSpecFactInUniFactMem(envFact *ast.SpecFactStmt) (*SpecFactInUniFactMem, bool) {
-	if envFact != nil {
-		knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(envFact)
-		if !ok {
-			return nil, false
-		}
-		return &knownFacts.SpecFactInUniFactMem, true
-	}
-	return &e.KnownFacts.SpecFactInUniFactMem, true
-}
-
-func (e *Env) GetSpecFact_InLogicExpr_InUniFactMem(envFact *ast.SpecFactStmt) (*SpecFact_InLogicExpr_InUniFactMem, bool) {
-	if envFact != nil {
-		knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(envFact)
-		if !ok {
-			return nil, false
-		}
-		return &knownFacts.SpecFact_InLogicExpr_InUniFactMem, true
-	}
-	return &e.KnownFacts.SpecFact_InLogicExpr_InUniFactMem, true
 }
