@@ -30,10 +30,6 @@ func (stmt *SpecFactStmt) ReverseSpecFact() *SpecFactStmt {
 		return NewSpecFactStmt(FalsePure, stmt.PropName, stmt.Params)
 	} else if stmt.TypeEnum == FalsePure {
 		return NewSpecFactStmt(TruePure, stmt.PropName, stmt.Params)
-		// } else if stmt.TypeEnum == TrueExist {
-		// 	return NewSpecFactStmt(FalseExist, stmt.PropName, stmt.Params)
-		// } else if stmt.TypeEnum == FalseExist {
-		// 	return NewSpecFactStmt(TrueExist, stmt.PropName, stmt.Params)
 	} else if stmt.TypeEnum == TrueExist_St {
 		return NewSpecFactStmt(FalseExist_St, stmt.PropName, stmt.Params)
 	} else if stmt.TypeEnum == FalseExist_St {
@@ -45,10 +41,6 @@ func (stmt *SpecFactStmt) ReverseSpecFact() *SpecFactStmt {
 func (f *SpecFactStmt) IsPropNameEqual() bool {
 	return f.PropName.Name == glob.KeySymbolEqual && f.PropName.PkgName == glob.EmptyPkg
 }
-
-// func (f *SpecFactStmt) IsExistFact() bool {
-// 	return f.TypeEnum == TrueExist || f.TypeEnum == FalseExist
-// }
 
 func (f *SpecFactStmt) IsPureFact() bool {
 	return f.TypeEnum == TruePure || f.TypeEnum == FalsePure

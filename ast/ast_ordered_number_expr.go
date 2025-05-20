@@ -91,13 +91,18 @@ func (stmt *FcAtom) orderNumberExpr() ([]Fc, error) {
 	return []Fc{stmt}, nil
 }
 
+func (stmt *FcFn) orderAddFcFn() (Fc, error) {
+	_, _ = stmt.orderAddFcFnToOrderedFcSlice()
+	return nil, nil
+}
+
 func (stmt *FcFn) orderNumberExpr() ([]Fc, error) {
 	isAdd, err := stmt.isAdd()
 	if err != nil {
 		return nil, err
 	}
 	if isAdd {
-		return stmt.orderAddFcFn()
+		return stmt.orderAddFcFnToOrderedFcSlice()
 	}
 
 	isMul, err := stmt.isMul()
@@ -135,7 +140,7 @@ func (stmt *FcFn) orderNumberExpr() ([]Fc, error) {
 	return nil, nil
 }
 
-func (stmt *FcFn) orderAddFcFn() ([]Fc, error) {
+func (stmt *FcFn) orderAddFcFnToOrderedFcSlice() ([]Fc, error) {
 	orderedLeft, err := stmt.ParamSegs[0].orderNumberExpr()
 	if err != nil {
 		return nil, err
@@ -172,7 +177,46 @@ func (stmt *FcFn) orderMinusAsPrefixFcFn() ([]Fc, error) {
 }
 
 func IsNumberExpr_OrderIt(fc Fc) (Fc, bool, error) {
-	return nil, false, nil
+	if _, ok := fc.(*FcAtom); ok {
+		return fc, true, nil
+	}
+	if asFcFn, ok := fc.(*FcFn); ok {
+		if isAdd, err := asFcFn.isAdd(); err != nil {
+			return nil, false, err
+		} else if isAdd {
+			fc, err := asFcFn.orderAddFcFn()
+			if err != nil {
+				return nil, false, err
+			}
+			return fc, true, nil
+		}
+
+		if isMul, err := asFcFn.isMul(); err != nil {
+			return nil, false, err
+		} else if isMul {
+			return nil, false, fmt.Errorf("mul is not supported yet")
+		}
+
+		if isMinusAsInfix, err := asFcFn.isMinusAsInfix(); err != nil {
+			return nil, false, err
+		} else if isMinusAsInfix {
+			return nil, false, fmt.Errorf("minus as infix is not supported yet")
+		}
+
+		if isMinusAsPrefix, err := asFcFn.isMinusAsPrefix(); err != nil {
+			return nil, false, err
+		} else if isMinusAsPrefix {
+			return nil, false, fmt.Errorf("minus as prefix is not supported yet")
+		}
+
+		if isDiv, err := asFcFn.isDiv(); err != nil {
+			return nil, false, err
+		} else if isDiv {
+			return nil, false, fmt.Errorf("div is not supported yet")
+		}
+		return nil, false, fmt.Errorf("not a number expr")
+	}
+	return nil, false, fmt.Errorf("not a number expr")
 }
 
 func orderFc(fcSlice []Fc) ([]Fc, error) {
