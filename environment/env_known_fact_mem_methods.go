@@ -171,7 +171,7 @@ func (env *Env) newUniFact(stmt *ast.UniFactStmt) error {
 				return fmt.Errorf("facts in the body of universal fact should not be a free fact, got %s", stmtAsSpecFact.String())
 			}
 
-			err := env.KnownFacts.SpecFactInUniFactMem.insertSpecFact(stmtAsSpecFact, stmt, env.CurMatchEnv)
+			err := env.storeUniFact(stmtAsSpecFact, stmt)
 			if err != nil {
 				return err
 			}
@@ -201,7 +201,7 @@ func (env *Env) newUniFact(stmt *ast.UniFactStmt) error {
 
 }
 
-func (s SpecFactInUniFactMem) insertSpecFact(stmtAsSpecFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt, supposedEnv *ast.SupposePropMatchStmt) error {
+func (s SpecFactInUniFactMem) newFact(stmtAsSpecFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt, supposedEnv *ast.SupposePropMatchStmt) error {
 	sameEnumFacts, err := s.getSameEnumFacts(stmtAsSpecFact)
 	if err != nil {
 		return err

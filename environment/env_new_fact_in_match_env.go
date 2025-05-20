@@ -13,22 +13,8 @@
 package litex_env
 
 import (
-	"fmt"
 	ast "golitex/ast"
 )
-
-func (env *Env) NewFactInMatchEnv(stmt ast.FactStmt) error {
-	switch f := stmt.(type) {
-	case *ast.SpecFactStmt:
-		return env.storeSpecFactInMem(f)
-	case *ast.LogicExprStmt:
-		return env.storeLogicFact(f)
-	case *ast.UniFactStmt:
-		return env.newFactInMatchEnv_UniFact(f)
-	default:
-		return fmt.Errorf("unknown fact type: %T", stmt)
-	}
-}
 
 func (env *Env) storeSpecFactInMem(stmt *ast.SpecFactStmt) error {
 	var knownFactsStructPtr *KnownFactsStruct
@@ -76,7 +62,25 @@ func (env *Env) storeLogicFact(stmt *ast.LogicExprStmt) error {
 	return nil
 }
 
-func (env *Env) newFactInMatchEnv_UniFact(stmt *ast.UniFactStmt) error {
-	_ = stmt
+func (env *Env) storeUniFact(specFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt) error {
+	var knownFactsStructPtr *KnownFactsStruct
+	var ok bool
+
+	if env.CurMatchEnv != nil {
+		envFact := &env.CurMatchEnv.Fact
+		knownFactsStructPtr, ok = env.GetFactsFromKnownFactInMatchEnv(envFact)
+		if !ok {
+			env.KnownFactInMatchEnv[envFact.PropName.PkgName] = make(map[string]KnownFactsStruct)
+			env.KnownFactInMatchEnv[envFact.PropName.PkgName][envFact.PropName.Name] = makeKnownFactsStruct()
+		}
+	} else {
+		knownFactsStructPtr = &env.KnownFacts
+	}
+
+	err := knownFactsStructPtr.SpecFactInUniFactMem.newFact(specFact, uniFact, env.CurMatchEnv)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
