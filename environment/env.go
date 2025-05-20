@@ -82,6 +82,23 @@ func NewEnv(parent *Env) *Env {
 	return env
 }
 
+func makeKnownFactsStruct() KnownFactsStruct {
+	return KnownFactsStruct{
+		SpecFactMem:                       *newSpecFactMem(),
+		SpecFactInLogicExprMem:            *newSpecFactInLogicExprMem(),
+		SpecFactInUniFactMem:              *newSpecFactInUniFact(),
+		SpecFact_InLogicExpr_InUniFactMem: *newSpecFact_InLogicExpr_InUniFactMem(),
+	}
+}
+
+func (e *Env) GetFactsFromKnownFactInMatchEnv(envFact *ast.SpecFactStmt) (*KnownFactsStruct, bool) {
+	knownFacts, ok := e.KnownFactInMatchEnv.Get(envFact.PropName.PkgName, envFact.PropName.Name)
+	if !ok {
+		return nil, false
+	}
+	return &knownFacts, true
+}
+
 func (e *Env) InsertCommutativeProp(propName ast.FcAtom) {
 	if _, ok := e.CommutativeProp[propName.PkgName]; !ok {
 		e.CommutativeProp[propName.PkgName] = make(map[string]struct{})
