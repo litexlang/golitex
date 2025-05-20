@@ -43,7 +43,11 @@ func TestOrder(t *testing.T) {
 	}
 
 	for _, fc := range fcSlice {
-		orderedFc, _, _ := ast.IsNumberExpr_OrderIt(fc)
+		orderedFc, ok, _ := ast.IsNumberExpr_OrderIt(fc)
+		if !ok {
+			t.Fatal("not a number expr")
+		}
+
 		if orderedFc == nil {
 			t.Fatal("not a number expr")
 		}
