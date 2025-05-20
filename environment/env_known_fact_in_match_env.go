@@ -17,27 +17,29 @@ import (
 	ast "golitex/ast"
 )
 
-func (env *Env) NewFactInMatchEnv(stmt ast.FactStmt, envFact *ast.SpecFactStmt) error {
+func (env *Env) NewFactInMatchEnv(stmt ast.FactStmt) error {
 	switch f := stmt.(type) {
 	case *ast.SpecFactStmt:
-		return env.newFactInMatchEnv_SpecFact(f, envFact)
+		return env.newFactInMatchEnv_SpecFact(f)
 	case *ast.LogicExprStmt:
-		return env.newFactInMatchEnv_LogicExpr(f, envFact)
+		return env.newFactInMatchEnv_LogicExpr(f)
 	case *ast.UniFactStmt:
-		return env.newFactInMatchEnv_UniFact(f, envFact)
+		return env.newFactInMatchEnv_UniFact(f)
 	default:
 		return fmt.Errorf("unknown fact type: %T", stmt)
 	}
 }
 
-func (env *Env) newFactInMatchEnv_SpecFact(stmt *ast.SpecFactStmt, envFact *ast.SpecFactStmt) error {
+func (env *Env) newFactInMatchEnv_SpecFact(stmt *ast.SpecFactStmt) error {
+	envFact := &env.CurMatchEnv.Fact
+
 	knownFactsStructPtr, ok := env.GetFactsFromKnownFactInMatchEnv(envFact)
 	if !ok {
 		env.KnownFactInMatchEnv[envFact.PropName.PkgName] = make(map[string]KnownFactsStruct)
 		env.KnownFactInMatchEnv[envFact.PropName.PkgName][envFact.PropName.Name] = makeKnownFactsStruct()
 	}
 
-	err := knownFactsStructPtr.SpecFactMem.NewFact(stmt, envFact)
+	err := knownFactsStructPtr.SpecFactMem.NewFact(stmt)
 	if err != nil {
 		return err
 	}
@@ -45,7 +47,9 @@ func (env *Env) newFactInMatchEnv_SpecFact(stmt *ast.SpecFactStmt, envFact *ast.
 	return nil
 }
 
-func (env *Env) newFactInMatchEnv_LogicExpr(stmt *ast.LogicExprStmt, envFact *ast.SpecFactStmt) error {
+func (env *Env) newFactInMatchEnv_LogicExpr(stmt *ast.LogicExprStmt) error {
+	envFact := &env.CurMatchEnv.Fact
+
 	knownFactsStructPtr, ok := env.GetFactsFromKnownFactInMatchEnv(envFact)
 	if !ok {
 		env.KnownFactInMatchEnv[envFact.PropName.PkgName] = make(map[string]KnownFactsStruct)
@@ -60,6 +64,7 @@ func (env *Env) newFactInMatchEnv_LogicExpr(stmt *ast.LogicExprStmt, envFact *as
 	return nil
 }
 
-func (env *Env) newFactInMatchEnv_UniFact(stmt *ast.UniFactStmt, envFact *ast.SpecFactStmt) error {
+func (env *Env) newFactInMatchEnv_UniFact(stmt *ast.UniFactStmt) error {
+	_ = stmt
 	return nil
 }
