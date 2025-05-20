@@ -17,17 +17,13 @@ import (
 	glob "golitex/glob"
 )
 
-func isArithmeticFn(stmt *ast.FcFn) bool {
-	return isAdd(stmt) || isMul(stmt) || isMinusAsInfix(stmt) || isMinusAsPrefix(stmt)
-}
-
 func isAdd(stmt *ast.FcFn) bool {
 	asAtom, ok := stmt.FnHead.(*ast.FcAtom)
 	if !ok {
 		return false
 	}
 	if asAtom.Name == glob.KeySymbolPlus {
-		return true
+		return len(stmt.ParamSegs) == 2
 	}
 	return false
 }
@@ -38,10 +34,7 @@ func isMul(stmt *ast.FcFn) bool {
 		return false
 	}
 	if asAtom.Name == glob.KeySymbolStar {
-		if len(stmt.ParamSegs) != 2 {
-			return false
-		}
-		return true
+		return len(stmt.ParamSegs) == 2
 	}
 	return false
 }
@@ -52,10 +45,7 @@ func isMinusAsInfix(stmt *ast.FcFn) bool {
 		return false
 	}
 	if asAtom.Name == glob.KeySymbolMinus {
-		if len(stmt.ParamSegs) == 2 {
-			return true
-		}
-		return false
+		return len(stmt.ParamSegs) == 2
 	}
 	return false
 }
@@ -66,10 +56,7 @@ func isMinusAsPrefix(stmt *ast.FcFn) bool {
 		return false
 	}
 	if asAtom.Name == glob.KeySymbolMinus {
-		if len(stmt.ParamSegs) == 1 {
-			return true
-		}
-		return false
+		return len(stmt.ParamSegs) == 1
 	}
 	return false
 }

@@ -15,6 +15,7 @@ package litex_parser
 import (
 	"fmt"
 	ast "golitex/ast"
+	num "golitex/number"
 	"testing"
 )
 
@@ -43,9 +44,9 @@ func TestOrder(t *testing.T) {
 	}
 
 	for _, fc := range fcSlice {
-		orderedFcSlice, ok, _ := ast.IsArithmeticExpr_OrderIt(fc)
-		if !ok {
-			t.Fatal("not a number expr")
+		orderedFcSlice, err := num.OrderArithmeticExpr_GetOrderedFcSlice(fc)
+		if err != nil {
+			t.Fatal(err)
 		}
 
 		if len(orderedFcSlice) == 0 {
