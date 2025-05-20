@@ -141,7 +141,7 @@ func (ver *Verifier) pureFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool,
 func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 	for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
-		knownSameEnumPkgPropFactsInSpecMem, got := curEnv.SpecFactMem.GetSameEnumPkgPropFacts(stmt)
+		knownSameEnumPkgPropFactsInSpecMem, got := curEnv.KnownFacts.SpecFactMem.GetSameEnumPkgPropFacts(stmt)
 
 		if got {
 		LoopOverFacts:
@@ -182,7 +182,7 @@ func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state 
 			}
 		}
 
-		KnownSameEnumPkgPropFactsInLogicExpr, got := curEnv.SpecFactInLogicExprMem.GetSameEnumPkgPropFacts(stmt)
+		KnownSameEnumPkgPropFactsInLogicExpr, got := curEnv.KnownFacts.SpecFactInLogicExprMem.GetSameEnumPkgPropFacts(stmt)
 		if got {
 			for _, knownFactUnderLogicExpr := range KnownSameEnumPkgPropFactsInLogicExpr {
 				ok, err := ver.SpecFactSpecUnderLogicalExpr(&knownFactUnderLogicExpr, stmt, state)
@@ -220,7 +220,7 @@ func (ver *Verifier) SpecFactUni(stmt *ast.SpecFactStmt, state VerState) (bool, 
 func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	nextState := state.addRound().toNoMsg()
 
-	searchedSpecFacts, got := curEnv.SpecFactInUniFactMem.GetSameEnumPkgPropFacts(stmt)
+	searchedSpecFacts, got := curEnv.KnownFacts.SpecFactInUniFactMem.GetSameEnumPkgPropFacts(stmt)
 	if got {
 		for _, knownFact := range searchedSpecFacts {
 			// TODO： 这里要确保搜到的事实的每一位freeObj和concreteObj能对上，然后要记录一下每一位freeObj是哪个concreteObj。还要保证涉及到的Known UniFact的param都被match上了
@@ -267,7 +267,7 @@ func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, s
 		}
 	}
 
-	searchedSpecFactsInLogicExpr, got := curEnv.SpecFact_InLogicExpr_InUniFactMem.GetSameEnumPkgPropFacts(stmt)
+	searchedSpecFactsInLogicExpr, got := curEnv.KnownFacts.SpecFact_InLogicExpr_InUniFactMem.GetSameEnumPkgPropFacts(stmt)
 	if got {
 		for _, knownFactUnderLogicExpr := range searchedSpecFactsInLogicExpr {
 			paramArrMap, ok, err := ver.matchStoredUniSpecWithSpec(env.KnownSpecFact_InUniSpecFact{SpecFact: knownFactUnderLogicExpr.SpecFact, UniFact: knownFactUnderLogicExpr.UniFact}, stmt)

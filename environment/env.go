@@ -36,15 +36,10 @@ type Env struct {
 	ExistPropDefMem ExistPropDefMem
 	SetDefMem       SetDefMem
 
-	SpecFactMem                       SpecFactMem
-	SpecFactInLogicExprMem            SpecFactInLogicExprMem
-	SpecFactInUniFactMem              SpecFactInUniFactMem
-	SpecFact_InLogicExpr_InUniFactMem SpecFact_InLogicExpr_InUniFactMem
+	KnownFacts KnownFactsStruct
 
 	CommutativeProp glob.Map2D[struct{}]
 
-	// 为了让我日子好过，我不允许用户用以 fcFn 形式为fn header的 fn 名来定义 commutative fn
-	// TODO 之后改了这条，因为我可以 map[string]struct{} 来表示 commutative fn，string是那个fn的header as string
 	// 本质上我可以让这些事实和 specfact 存储时混在一起，或许这么干也行
 	CommutativeFn glob.Map2D[struct{}]
 	AssociativeFn glob.Map2D[struct{}]
@@ -66,10 +61,12 @@ func NewEnv(parent *Env) *Env {
 		ExistPropDefMem: *newExistPropMemory(),
 		SetDefMem:       *newSetMemory(),
 
-		SpecFactMem:                       *newSpecFactMem(),
-		SpecFactInLogicExprMem:            *newSpecFactInLogicExprMem(),
-		SpecFactInUniFactMem:              *newSpecFactInUniFact(),
-		SpecFact_InLogicExpr_InUniFactMem: *newSpecFact_InLogicExpr_InUniFactMem(),
+		KnownFacts: makeKnownFactsStruct(),
+
+		// SpecFactMem:                       *newSpecFactMem(),
+		// SpecFactInLogicExprMem:            *newSpecFactInLogicExprMem(),
+		// SpecFactInUniFactMem:              *newSpecFactInUniFact(),
+		// SpecFact_InLogicExpr_InUniFactMem: *newSpecFact_InLogicExpr_InUniFactMem(),
 
 		CommutativeProp: make(glob.Map2D[struct{}]),
 		CommutativeFn:   make(glob.Map2D[struct{}]),
@@ -273,4 +270,48 @@ func (e *Env) GetFnDef(fn ast.Fc) (*ast.DefFnStmt, bool) {
 		}
 	}
 	return nil, false
+}
+
+func (e *Env) GetSpecFactMem(envFact *ast.SpecFactStmt) (*SpecFactMem, bool) {
+	if envFact != nil {
+		knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(envFact)
+		if !ok {
+			return nil, false
+		}
+		return &knownFacts.SpecFactMem, true
+	}
+	return &e.KnownFacts.SpecFactMem, true
+}
+
+func (e *Env) GetSpecFactInLogicExprMem(envFact *ast.SpecFactStmt) (*SpecFactInLogicExprMem, bool) {
+	if envFact != nil {
+		knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(envFact)
+		if !ok {
+			return nil, false
+		}
+		return &knownFacts.SpecFactInLogicExprMem, true
+	}
+	return &e.KnownFacts.SpecFactInLogicExprMem, true
+}
+
+func (e *Env) GetSpecFactInUniFactMem(envFact *ast.SpecFactStmt) (*SpecFactInUniFactMem, bool) {
+	if envFact != nil {
+		knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(envFact)
+		if !ok {
+			return nil, false
+		}
+		return &knownFacts.SpecFactInUniFactMem, true
+	}
+	return &e.KnownFacts.SpecFactInUniFactMem, true
+}
+
+func (e *Env) GetSpecFact_InLogicExpr_InUniFactMem(envFact *ast.SpecFactStmt) (*SpecFact_InLogicExpr_InUniFactMem, bool) {
+	if envFact != nil {
+		knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(envFact)
+		if !ok {
+			return nil, false
+		}
+		return &knownFacts.SpecFact_InLogicExpr_InUniFactMem, true
+	}
+	return &e.KnownFacts.SpecFact_InLogicExpr_InUniFactMem, true
 }

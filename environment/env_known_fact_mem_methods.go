@@ -207,7 +207,7 @@ func (env *Env) storeUniFact(stmt *ast.UniFactStmt) error {
 				return fmt.Errorf("facts in the body of universal fact should not be a free fact, got %s", stmtAsSpecFact.String())
 			}
 
-			err := env.SpecFactInUniFactMem.insertSpecFact(stmtAsSpecFact, stmt, nil)
+			err := env.KnownFacts.SpecFactInUniFactMem.insertSpecFact(stmtAsSpecFact, stmt, nil)
 			if err != nil {
 				return err
 			}
@@ -225,7 +225,7 @@ func (env *Env) storeUniFact(stmt *ast.UniFactStmt) error {
 				return fmt.Errorf("facts in the body of universal fact should not be a free fact, got %s", thenStmtAsLogicExpr.String())
 			}
 
-			err := env.SpecFact_InLogicExpr_InUniFactMem.NewFact(stmt, thenStmtAsLogicExpr, nil)
+			err := env.KnownFacts.SpecFact_InLogicExpr_InUniFactMem.NewFact(stmt, thenStmtAsLogicExpr, nil)
 			if err != nil {
 				return err
 			}
