@@ -20,27 +20,30 @@ import (
 func (env *Env) NewFactInMatchEnv(stmt ast.FactStmt, envFact *ast.SpecFactStmt) error {
 	switch f := stmt.(type) {
 	case *ast.SpecFactStmt:
-		return env.newSpecFact(f)
+		return env.newFactInMatchEnv_SpecFact(f, envFact)
 	case *ast.LogicExprStmt:
-		return env.newLogicExprStmt(f)
+		return env.newFactInMatchEnv_LogicExpr(f, envFact)
 	case *ast.UniFactStmt:
-		return env.newUniFact(f)
+		return env.newFactInMatchEnv_UniFact(f, envFact)
 	default:
 		return fmt.Errorf("unknown fact type: %T", stmt)
 	}
 }
 
-func (env *Env) NewFactInMatchEnv_SpecFact(stmt *ast.SpecFactStmt) error {
+func (env *Env) newFactInMatchEnv_SpecFact(stmt *ast.SpecFactStmt, envFact *ast.SpecFactStmt) error {
 	_ = stmt
+	_ = envFact
 	return nil
 }
 
-func (env *Env) NewFactInMatchEnv_LogicExpr(stmt *ast.LogicExprStmt) error {
+func (env *Env) newFactInMatchEnv_LogicExpr(stmt *ast.LogicExprStmt, envFact *ast.SpecFactStmt) error {
 	_ = stmt
+	_ = envFact
 	return nil
 }
 
-func (env *Env) NewFactInMatchEnv_UniFact(stmt *ast.UniFactStmt) error {
+func (env *Env) newFactInMatchEnv_UniFact(stmt *ast.UniFactStmt, envFact *ast.SpecFactStmt) error {
 	_ = stmt
+	_ = envFact
 	return nil
 }
