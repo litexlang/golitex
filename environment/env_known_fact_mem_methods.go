@@ -53,7 +53,7 @@ func (s SpecFactMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([]KnownSpe
 	return sameEnumPkgPropFacts, true
 }
 
-func (s SpecFactMem) NewFact(stmt *ast.SpecFactStmt) error {
+func (s SpecFactMem) NewFact(stmt *ast.SpecFactStmt, supposedEnv *ast.SupposePropMatchStmt) error {
 	// 要考虑pkgName和propName是否存在
 	sameEnumFacts, err := s.getSameEnumFacts(stmt)
 	if err != nil {
@@ -66,8 +66,7 @@ func (s SpecFactMem) NewFact(stmt *ast.SpecFactStmt) error {
 	if _, ok := sameEnumFacts[stmt.PropName.PkgName][stmt.PropName.Name]; !ok {
 		sameEnumFacts[stmt.PropName.PkgName][stmt.PropName.Name] = []KnownSpecFact{}
 	}
-	// TODO 这里的 nil 要改成 env.CurSupposeMatchEnv
-	sameEnumFacts[stmt.PropName.PkgName][stmt.PropName.Name] = append(sameEnumFacts[stmt.PropName.PkgName][stmt.PropName.Name], KnownSpecFact{stmt, nil})
+	sameEnumFacts[stmt.PropName.PkgName][stmt.PropName.Name] = append(sameEnumFacts[stmt.PropName.PkgName][stmt.PropName.Name], KnownSpecFact{stmt, supposedEnv})
 
 	return nil
 }
@@ -165,14 +164,14 @@ func (s SpecFactInUniFactMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([
 	return sameEnumPkgPropFacts, true
 }
 
-func (env *Env) storeUniFact(stmt *ast.UniFactStmt) error {
+func (env *Env) newUniFact(stmt *ast.UniFactStmt) error {
 	for _, thenStmt := range stmt.ThenFacts {
 		if stmtAsSpecFact, ok := thenStmt.(*ast.SpecFactStmt); ok {
 			if stmtAsSpecFact.IsSpecFactNameWithUniPrefix() {
 				return fmt.Errorf("facts in the body of universal fact should not be a free fact, got %s", stmtAsSpecFact.String())
 			}
 
-			err := env.KnownFacts.SpecFactInUniFactMem.insertSpecFact(stmtAsSpecFact, stmt, nil)
+			err := env.KnownFacts.SpecFactInUniFactMem.insertSpecFact(stmtAsSpecFact, stmt, env.CurMatchEnv)
 			if err != nil {
 				return err
 			}
@@ -180,7 +179,7 @@ func (env *Env) storeUniFact(stmt *ast.UniFactStmt) error {
 		} else if thenStmtAsUniFact, ok := thenStmt.(*ast.UniFactStmt); ok {
 			mergedUniFact := ast.MergeOuterInnerUniFacts(stmt, thenStmtAsUniFact)
 
-			err := env.storeUniFact(mergedUniFact)
+			err := env.newUniFact(mergedUniFact)
 			if err != nil {
 				return err
 			}
@@ -190,7 +189,7 @@ func (env *Env) storeUniFact(stmt *ast.UniFactStmt) error {
 				return fmt.Errorf("facts in the body of universal fact should not be a free fact, got %s", thenStmtAsLogicExpr.String())
 			}
 
-			err := env.KnownFacts.SpecFact_InLogicExpr_InUniFactMem.NewFact(stmt, thenStmtAsLogicExpr, nil)
+			err := env.KnownFacts.SpecFact_InLogicExpr_InUniFactMem.NewFact(stmt, thenStmtAsLogicExpr, env.CurMatchEnv)
 			if err != nil {
 				return err
 			}
@@ -202,7 +201,7 @@ func (env *Env) storeUniFact(stmt *ast.UniFactStmt) error {
 
 }
 
-func (s SpecFactInUniFactMem) insertSpecFact(stmtAsSpecFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt, envFact *ast.SpecFactStmt) error {
+func (s SpecFactInUniFactMem) insertSpecFact(stmtAsSpecFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt, supposedEnv *ast.SupposePropMatchStmt) error {
 	sameEnumFacts, err := s.getSameEnumFacts(stmtAsSpecFact)
 	if err != nil {
 		return err
@@ -215,7 +214,7 @@ func (s SpecFactInUniFactMem) insertSpecFact(stmtAsSpecFact *ast.SpecFactStmt, u
 		sameEnumFacts[stmtAsSpecFact.PropName.PkgName][stmtAsSpecFact.PropName.Name] = []KnownSpecFact_InUniSpecFact{}
 	}
 
-	sameEnumFacts[stmtAsSpecFact.PropName.PkgName][stmtAsSpecFact.PropName.Name] = append(sameEnumFacts[stmtAsSpecFact.PropName.PkgName][stmtAsSpecFact.PropName.Name], KnownSpecFact_InUniSpecFact{stmtAsSpecFact, uniFact, envFact})
+	sameEnumFacts[stmtAsSpecFact.PropName.PkgName][stmtAsSpecFact.PropName.Name] = append(sameEnumFacts[stmtAsSpecFact.PropName.PkgName][stmtAsSpecFact.PropName.Name], KnownSpecFact_InUniSpecFact{stmtAsSpecFact, uniFact, supposedEnv})
 
 	return nil
 }
@@ -254,7 +253,7 @@ func (s SpecFact_InLogicExpr_InUniFactMem) GetSameEnumPkgPropFacts(stmt *ast.Spe
 	return sameEnumPkgPropFacts, true
 }
 
-func (s SpecFact_InLogicExpr_InUniFactMem) NewFact(uniStmt *ast.UniFactStmt, logicExpr *ast.LogicExprStmt, envFact *ast.SpecFactStmt) error {
+func (s SpecFact_InLogicExpr_InUniFactMem) NewFact(uniStmt *ast.UniFactStmt, logicExpr *ast.LogicExprStmt, supposedEnv *ast.SupposePropMatchStmt) error {
 	pair, err := logicExpr.SpecFactIndexPairs([]uint8{})
 	if err != nil {
 		return err
@@ -273,7 +272,7 @@ func (s SpecFact_InLogicExpr_InUniFactMem) NewFact(uniStmt *ast.UniFactStmt, log
 			sameEnumFacts[pair.Stmt.PropName.PkgName][pair.Stmt.PropName.Name] = []SpecFact_InLogicExpr_InUniFact{}
 		}
 
-		sameEnumFacts[pair.Stmt.PropName.PkgName][pair.Stmt.PropName.Name] = append(sameEnumFacts[pair.Stmt.PropName.PkgName][pair.Stmt.PropName.Name], SpecFact_InLogicExpr_InUniFact{pair.Stmt, uniStmt, pair.Indexes, logicExpr, envFact})
+		sameEnumFacts[pair.Stmt.PropName.PkgName][pair.Stmt.PropName.Name] = append(sameEnumFacts[pair.Stmt.PropName.PkgName][pair.Stmt.PropName.Name], SpecFact_InLogicExpr_InUniFact{pair.Stmt, uniStmt, pair.Indexes, logicExpr, supposedEnv})
 	}
 
 	return nil
@@ -288,9 +287,9 @@ func newSpecFact_InLogicExpr_InUniFactMem() *SpecFact_InLogicExpr_InUniFactMem {
 	}
 }
 
-func (e *Env) GetSpecFactMem(envFact *ast.SpecFactStmt) (*SpecFactMem, bool) {
-	if envFact != nil {
-		knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(envFact)
+func (e *Env) GetSpecFactMem() (*SpecFactMem, bool) {
+	if e.CurMatchEnv != nil {
+		knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(&e.CurMatchEnv.Fact)
 		if !ok {
 			return nil, false
 		}
@@ -299,9 +298,9 @@ func (e *Env) GetSpecFactMem(envFact *ast.SpecFactStmt) (*SpecFactMem, bool) {
 	return &e.KnownFacts.SpecFactMem, true
 }
 
-func (e *Env) GetSpecFactInLogicExprMem(envFact *ast.SpecFactStmt) (*SpecFactInLogicExprMem, bool) {
-	if envFact != nil {
-		knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(envFact)
+func (e *Env) GetSpecFactInLogicExprMem() (*SpecFactInLogicExprMem, bool) {
+	if e.CurMatchEnv != nil {
+		knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(&e.CurMatchEnv.Fact)
 		if !ok {
 			return nil, false
 		}
@@ -310,9 +309,9 @@ func (e *Env) GetSpecFactInLogicExprMem(envFact *ast.SpecFactStmt) (*SpecFactInL
 	return &e.KnownFacts.SpecFactInLogicExprMem, true
 }
 
-func (e *Env) GetSpecFactInUniFactMem(envFact *ast.SpecFactStmt) (*SpecFactInUniFactMem, bool) {
-	if envFact != nil {
-		knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(envFact)
+func (e *Env) GetSpecFactInUniFactMem() (*SpecFactInUniFactMem, bool) {
+	if e.CurMatchEnv != nil {
+		knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(&e.CurMatchEnv.Fact)
 		if !ok {
 			return nil, false
 		}
@@ -321,9 +320,9 @@ func (e *Env) GetSpecFactInUniFactMem(envFact *ast.SpecFactStmt) (*SpecFactInUni
 	return &e.KnownFacts.SpecFactInUniFactMem, true
 }
 
-func (e *Env) GetSpecFact_InLogicExpr_InUniFactMem(envFact *ast.SpecFactStmt) (*SpecFact_InLogicExpr_InUniFactMem, bool) {
-	if envFact != nil {
-		knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(envFact)
+func (e *Env) GetSpecFact_InLogicExpr_InUniFactMem() (*SpecFact_InLogicExpr_InUniFactMem, bool) {
+	if e.CurMatchEnv != nil {
+		knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(&e.CurMatchEnv.Fact)
 		if !ok {
 			return nil, false
 		}

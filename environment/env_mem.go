@@ -46,7 +46,7 @@ type SpecFactInLogicExprMem struct {
 type KnownSpecFact_InUniSpecFact struct {
 	SpecFact *ast.SpecFactStmt
 	UniFact  *ast.UniFactStmt
-	EnvFact  *ast.SpecFactStmt
+	EnvFact  *ast.SupposePropMatchStmt
 }
 
 type SpecFactInUniFactMem struct {
@@ -61,7 +61,7 @@ type SpecFact_InLogicExpr_InUniFact struct {
 	UniFact   *ast.UniFactStmt
 	Index     []uint8
 	LogicExpr *ast.LogicExprStmt
-	EnvFact   *ast.SpecFactStmt
+	EnvFact   *ast.SupposePropMatchStmt
 }
 
 type SpecFact_InLogicExpr_InUniFactMem struct {
