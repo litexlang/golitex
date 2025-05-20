@@ -65,11 +65,6 @@ func NewEnv(parent *Env) *Env {
 
 		KnownFacts: makeKnownFactsStruct(),
 
-		// SpecFactMem:                       *newSpecFactMem(),
-		// SpecFactInLogicExprMem:            *newSpecFactInLogicExprMem(),
-		// SpecFactInUniFactMem:              *newSpecFactInUniFact(),
-		// SpecFact_InLogicExpr_InUniFactMem: *newSpecFact_InLogicExpr_InUniFactMem(),
-
 		CommutativeProp: make(glob.Map2D[struct{}]),
 		CommutativeFn:   make(glob.Map2D[struct{}]),
 		AssociativeFn:   make(glob.Map2D[struct{}]),
@@ -92,116 +87,8 @@ func makeKnownFactsStruct() KnownFactsStruct {
 	}
 }
 
-func (e *Env) GetFactsFromKnownFactInMatchEnv(envFact *ast.SpecFactStmt) (*KnownFactsStruct, bool) {
-	knownFacts, ok := e.KnownFactInMatchEnv.Get(envFact.PropName.PkgName, envFact.PropName.Name)
-	if !ok {
-		return nil, false
-	}
-	return &knownFacts, true
-}
-
-func (e *Env) InsertCommutativeProp(propName ast.FcAtom) {
-	if _, ok := e.CommutativeProp[propName.PkgName]; !ok {
-		e.CommutativeProp[propName.PkgName] = make(map[string]struct{})
-	}
-	if _, ok := e.CommutativeProp[propName.PkgName][propName.Name]; !ok {
-		e.CommutativeProp[propName.PkgName][propName.Name] = struct{}{}
-	}
-}
-
-func (e *Env) IsCommutativeProp(propName ast.FcAtom) bool {
-	if ast.IsFcAtomWithName(&propName, glob.KeySymbolEqual) {
-		return true
-	}
-
-	if _, ok := e.CommutativeProp[propName.PkgName][propName.Name]; ok {
-		return true
-	}
-	return false
-}
-
-func (e *Env) InsertCommutativeFn(fnName ast.FcAtom) {
-	if _, ok := e.CommutativeFn[fnName.PkgName]; !ok {
-		e.CommutativeFn[fnName.PkgName] = make(map[string]struct{})
-	}
-	if _, ok := e.CommutativeFn[fnName.PkgName][fnName.Name]; !ok {
-		e.CommutativeFn[fnName.PkgName][fnName.Name] = struct{}{}
-	}
-}
-
-func (e *Env) IsCommutativeFn(fnName ast.FcAtom) bool {
-	if ast.IsFcAtomWithName(&fnName, glob.KeySymbolPlus) {
-		return true
-	}
-
-	if ast.IsFcAtomWithName(&fnName, glob.KeySymbolStar) {
-		return true
-	}
-
-	if _, ok := e.CommutativeFn[fnName.PkgName][fnName.Name]; ok {
-		return true
-	}
-	return false
-}
-
-func (e *Env) InsertAssociativeFn(fnName ast.FcAtom) {
-	if _, ok := e.AssociativeFn[fnName.PkgName]; !ok {
-		e.AssociativeFn[fnName.PkgName] = make(map[string]struct{})
-	}
-	if _, ok := e.AssociativeFn[fnName.PkgName][fnName.Name]; !ok {
-		e.AssociativeFn[fnName.PkgName][fnName.Name] = struct{}{}
-	}
-}
-
-func (e *Env) IsAssociativeFn(fnName ast.FcAtom) bool {
-	if ast.IsFcAtomWithName(&fnName, glob.KeySymbolPlus) {
-		return true
-	}
-
-	if ast.IsFcAtomWithName(&fnName, glob.KeySymbolStar) {
-		return true
-	}
-
-	if _, ok := e.AssociativeFn[fnName.PkgName][fnName.Name]; ok {
-		return true
-	}
-	return false
-}
-
 func (e *Env) NewMsg(s string) {
 	e.Msgs = append(e.Msgs, s)
-}
-
-func (e *Env) GetExistPropDef(propName ast.FcAtom) (*ast.DefExistPropStmt, bool) {
-	// recursively search parent envs
-	for env := e; env != nil; env = env.Parent {
-		existProp, ok := env.ExistPropDefMem.Get(propName)
-		if ok {
-			return existProp, true
-		}
-	}
-	return nil, false
-}
-
-func (e *Env) GetPropDef(propName ast.FcAtom) (*ast.DefPropStmt, bool) {
-	// recursively search parent envs
-	for env := e; env != nil; env = env.Parent {
-		prop, ok := env.PropDefMem.Get(propName)
-		if ok {
-			return prop, true
-		}
-	}
-	return nil, false
-}
-
-func (e *Env) GetFcAtomDef(fcAtomName *ast.FcAtom) (ast.DefStmt, bool) {
-	for env := e; env != nil; env = env.Parent {
-		fcAtomDef, ok := env.getFcAtomDefAtCurEnv(fcAtomName)
-		if ok {
-			return fcAtomDef, true
-		}
-	}
-	return nil, false
 }
 
 func (e *Env) getFcAtomDefAtCurEnv(fcAtomName *ast.FcAtom) (ast.DefStmt, bool) {

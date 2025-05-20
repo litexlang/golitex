@@ -167,3 +167,39 @@ func (memory *SetDefMem) Get(pkgName string, setName string) (*ast.SetDefSetBuil
 	}
 	return node.Def, true
 }
+
+// Get Def Recursively From environments
+
+func (e *Env) GetExistPropDef(propName ast.FcAtom) (*ast.DefExistPropStmt, bool) {
+	// recursively search parent envs
+	for env := e; env != nil; env = env.Parent {
+		existProp, ok := env.ExistPropDefMem.Get(propName)
+		if ok {
+			return existProp, true
+		}
+	}
+	return nil, false
+}
+
+func (e *Env) GetPropDef(propName ast.FcAtom) (*ast.DefPropStmt, bool) {
+	// recursively search parent envs
+	for env := e; env != nil; env = env.Parent {
+		prop, ok := env.PropDefMem.Get(propName)
+		if ok {
+			return prop, true
+		}
+	}
+	return nil, false
+}
+
+func (e *Env) GetFcAtomDef(fcAtomName *ast.FcAtom) (ast.DefStmt, bool) {
+	for env := e; env != nil; env = env.Parent {
+		fcAtomDef, ok := env.getFcAtomDefAtCurEnv(fcAtomName)
+		if ok {
+			return fcAtomDef, true
+		}
+	}
+	return nil, false
+}
+
+// End of Get Def Recursively From environments
