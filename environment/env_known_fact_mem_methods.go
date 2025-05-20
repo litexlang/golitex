@@ -53,7 +53,7 @@ func (s SpecFactMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([]KnownSpe
 	return sameEnumPkgPropFacts, true
 }
 
-func (s SpecFactMem) NewFact(stmt *ast.SpecFactStmt, envFact *ast.SpecFactStmt) error {
+func (s SpecFactMem) NewFact(stmt *ast.SpecFactStmt) error {
 	// 要考虑pkgName和propName是否存在
 	sameEnumFacts, err := s.getSameEnumFacts(stmt)
 	if err != nil {
@@ -66,7 +66,8 @@ func (s SpecFactMem) NewFact(stmt *ast.SpecFactStmt, envFact *ast.SpecFactStmt) 
 	if _, ok := sameEnumFacts[stmt.PropName.PkgName][stmt.PropName.Name]; !ok {
 		sameEnumFacts[stmt.PropName.PkgName][stmt.PropName.Name] = []KnownSpecFact{}
 	}
-	sameEnumFacts[stmt.PropName.PkgName][stmt.PropName.Name] = append(sameEnumFacts[stmt.PropName.PkgName][stmt.PropName.Name], KnownSpecFact{stmt, envFact})
+	// TODO 这里的 nil 要改成 env.CurSupposeMatchEnv
+	sameEnumFacts[stmt.PropName.PkgName][stmt.PropName.Name] = append(sameEnumFacts[stmt.PropName.PkgName][stmt.PropName.Name], KnownSpecFact{stmt, nil})
 
 	return nil
 }

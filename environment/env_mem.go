@@ -17,38 +17,9 @@ import (
 	glob "golitex/glob"
 )
 
-type PropMemItem struct{ Def *ast.DefPropStmt }
-type PropDefMem struct {
-	Dict glob.Map2D[PropMemItem]
-}
-
-type ExistPropMemItem struct{ Def *ast.DefExistPropStmt }
-type ExistPropDefMem struct {
-	Dict glob.Map2D[ExistPropMemItem]
-}
-
-type ObjMemItem struct{ Def *ast.DefObjStmt }
-type ObjDefMem struct {
-	Dict glob.Map2D[ObjMemItem]
-}
-
-type FnMemItem struct{ Def *ast.DefFnStmt }
-type FnDefMem struct {
-	Dict glob.Map2D[FnMemItem]
-}
-
-type SetMemItem struct{ Def *ast.SetDefSetBuilderStmt }
-type SetDefMem struct {
-	Dict glob.Map2D[SetMemItem]
-}
-
 type KnownSpecFact struct {
 	Fact    *ast.SpecFactStmt
-	EnvFact *ast.SpecFactStmt
-}
-
-type EmitIfSpecFactIsTrueMem struct {
-	Dict glob.Map2D[[]ast.UniFactStmt] // 实际上根本不必要是 UniFact，只要保留 params (为了制作 uniMap), thenFacts (自由事实，为了未来制作 instantiated then facts) 就行
+	EnvFact *ast.SupposePropMatchStmt
 }
 
 type SpecFactMem struct {

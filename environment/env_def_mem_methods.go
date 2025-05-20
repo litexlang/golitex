@@ -17,25 +17,6 @@ import (
 	glob "golitex/glob"
 )
 
-func newPropMemory() *PropDefMem {
-	return &PropDefMem{make(glob.Map2D[PropMemItem])}
-}
-func newFnMemory() *FnDefMem {
-	return &FnDefMem{make(glob.Map2D[FnMemItem])}
-}
-
-func newObjMemory() *ObjDefMem {
-	return &ObjDefMem{make(glob.Map2D[ObjMemItem])}
-}
-
-func newExistPropMemory() *ExistPropDefMem {
-	return &ExistPropDefMem{make(glob.Map2D[ExistPropMemItem])}
-}
-
-func newSetMemory() *SetDefMem {
-	return &SetDefMem{make(glob.Map2D[SetMemItem])}
-}
-
 func (memory *PropDefMem) Insert(stmt *ast.DefPropStmt, pkgName string) error {
 	pkgMap, pkgExists := memory.Dict[pkgName]
 
@@ -158,33 +139,6 @@ func (memory *ObjDefMem) Get(fc ast.FcAtom) (*ast.DefObjStmt, bool) {
 		return nil, false
 	}
 	return node.Def, true
-}
-
-func (memory *EmitIfSpecFactIsTrueMem) Insert(pkgName string, propName string, emitIfSpecFactIsTrue *ast.UniFactStmt) error {
-	if _, ok := memory.Dict[pkgName]; !ok {
-		memory.Dict[pkgName] = make(map[string][]ast.UniFactStmt)
-	}
-
-	if _, ok := memory.Dict[pkgName][propName]; !ok {
-		memory.Dict[pkgName][propName] = []ast.UniFactStmt{}
-	}
-
-	memory.Dict[pkgName][propName] = append(memory.Dict[pkgName][propName], *emitIfSpecFactIsTrue)
-
-	return nil
-}
-
-func (memory *EmitIfSpecFactIsTrueMem) Get(pkgName string, propName string) ([]ast.UniFactStmt, bool) {
-	pkgMap, pkgExists := memory.Dict[pkgName]
-	if !pkgExists {
-		return nil, false
-	}
-
-	node, nodeExists := pkgMap[propName]
-	if !nodeExists {
-		return nil, false
-	}
-	return node, true
 }
 
 func (memory *SetDefMem) Insert(stmt *ast.SetDefSetBuilderStmt) error {

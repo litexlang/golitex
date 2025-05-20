@@ -21,7 +21,7 @@ import (
 func (env *Env) NewFact(stmt ast.FactStmt) error {
 	switch f := stmt.(type) {
 	case *ast.SpecFactStmt:
-		return env.newSpecFact(f, nil)
+		return env.newSpecFact(f)
 	case *ast.LogicExprStmt:
 		return env.newLogicExprStmt(f)
 	case *ast.UniFactStmt:
@@ -35,7 +35,7 @@ func (env *Env) newLogicExprStmt(fact *ast.LogicExprStmt) error {
 	return env.KnownFacts.SpecFactInLogicExprMem.NewFact(fact)
 }
 
-func (env *Env) newSpecFact(fact *ast.SpecFactStmt, envFact *ast.SpecFactStmt) error {
+func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
 	if isEqualFact, err := env.isTrueEqualFact_StoreIt(fact); err != nil {
 		return err
 	} else if isEqualFact {
@@ -78,7 +78,7 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt, envFact *ast.SpecFactStmt) e
 		return nil
 	}
 
-	err := env.KnownFacts.SpecFactMem.NewFact(fact, envFact)
+	err := env.KnownFacts.SpecFactMem.NewFact(fact)
 	if err != nil {
 		return err
 	}
@@ -244,7 +244,7 @@ func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 
 	existFact := ast.NewSpecFactStmt(ast.TruePure, fact.PropName, fact.Params[sepIndex+1:])
 
-	err := env.KnownFacts.SpecFactMem.NewFact(existFact, nil)
+	err := env.KnownFacts.SpecFactMem.NewFact(existFact)
 	if err != nil {
 		return err
 	}
