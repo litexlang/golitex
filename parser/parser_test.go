@@ -37,20 +37,23 @@ func sourceCodeToFc(sourceCode ...string) ([]ast.Fc, error) {
 }
 
 func TestOrder(t *testing.T) {
-	fcSlice, err := sourceCodeToFc("1+2 + f(x)-f(y)")
+	fcSlice, err := sourceCodeToFc("1+2 + f(x)+f(y) + 4")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	for _, fc := range fcSlice {
-		orderedFc, ok, _ := ast.IsNumberExpr_OrderIt(fc)
+		orderedFcSlice, ok, _ := ast.IsArithmeticExpr_OrderIt(fc)
 		if !ok {
 			t.Fatal("not a number expr")
 		}
 
-		if orderedFc == nil {
+		if len(orderedFcSlice) == 0 {
 			t.Fatal("not a number expr")
 		}
-		fmt.Println(orderedFc.String())
+
+		for _, fc := range orderedFcSlice {
+			fmt.Println(fc.String())
+		}
 	}
 }

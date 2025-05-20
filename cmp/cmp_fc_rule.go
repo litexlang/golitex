@@ -15,6 +15,7 @@ package litex_comparator
 import (
 	ast "golitex/ast"
 	glob "golitex/glob"
+	"strings"
 )
 
 func CmpFcAsStr(left, right ast.Fc) bool {
@@ -45,16 +46,13 @@ func CmpFcRule(left, right ast.Fc) (bool, error) {
 // 先确定left，right都是builtin fc，然后按builtin rule来验证他们相等
 func BuiltinFcEqualRule(left, right ast.Fc) (bool, error) {
 	// case 0: 比较 number expr
-	ok, err := todo_cmpOrderedNumberExprBuiltinFcEqualRule(left, right)
-	if err != nil {
-		return false, err
-	}
-	if ok {
+	cmp := cmpArithmeticExpr(left, right)
+	if cmp == 0 {
 		return true, nil
 	}
 
 	// Case1: 二者都是 Number 上进行+-*/^
-	ok, err = cmpNumLitExpr(left, right)
+	ok, err := cmpNumLitExpr(left, right)
 	if err != nil {
 		return false, err
 	}
@@ -65,18 +63,27 @@ func BuiltinFcEqualRule(left, right ast.Fc) (bool, error) {
 	return false, nil
 }
 
-func todo_cmpOrderedNumberExprBuiltinFcEqualRule(left, right ast.Fc) (bool, error) {
-	if orderedLeft, ok, err := ast.IsNumberExpr_OrderIt(left); err != nil {
-		return false, err
+func cmpArithmeticExpr(left, right ast.Fc) int {
+	if orderedLeft, ok, err := ast.IsArithmeticExpr_OrderIt(left); err != nil {
+		return -1
 	} else if !ok {
-		return false, nil
+		return -1
 	} else {
-		if orderedRight, ok, err := ast.IsNumberExpr_OrderIt(right); err != nil {
-			return false, err
+		if orderedRight, ok, err := ast.IsArithmeticExpr_OrderIt(right); err != nil {
+			return -1
 		} else if !ok {
-			return false, nil
+			return -1
 		} else {
-			return orderedLeft.String() == orderedRight.String(), nil
+			if len(orderedLeft) != len(orderedRight) {
+				return -1
+			}
+			for i := range orderedLeft {
+				cmp := strings.Compare(orderedLeft[i].String(), orderedRight[i].String())
+				if cmp != 0 {
+					return cmp
+				}
+			}
+			return 0
 		}
 	}
 }

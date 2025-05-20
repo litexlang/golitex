@@ -15,6 +15,7 @@ package litex_ast
 import (
 	"fmt"
 	"sort"
+	"strings"
 )
 
 func (stmt *FcFn) isAdd() (bool, error) {
@@ -91,11 +92,6 @@ func (stmt *FcAtom) orderNumberExpr() ([]Fc, error) {
 	return []Fc{stmt}, nil
 }
 
-func (stmt *FcFn) orderAddFcFn() (Fc, error) {
-	_, _ = stmt.orderAddFcFnToOrderedFcSlice()
-	return nil, nil
-}
-
 func (stmt *FcFn) orderNumberExpr() ([]Fc, error) {
 	isAdd, err := stmt.isAdd()
 	if err != nil {
@@ -137,7 +133,7 @@ func (stmt *FcFn) orderNumberExpr() ([]Fc, error) {
 		return stmt.orderDivFcFn()
 	}
 
-	return nil, nil
+	return []Fc{stmt}, nil
 }
 
 func (stmt *FcFn) orderAddFcFnToOrderedFcSlice() ([]Fc, error) {
@@ -176,19 +172,19 @@ func (stmt *FcFn) orderMinusAsPrefixFcFn() ([]Fc, error) {
 	return []Fc{}, nil
 }
 
-func IsNumberExpr_OrderIt(fc Fc) (Fc, bool, error) {
+func IsArithmeticExpr_OrderIt(fc Fc) ([]Fc, bool, error) {
 	if _, ok := fc.(*FcAtom); ok {
-		return fc, true, nil
+		return []Fc{fc}, true, nil
 	}
 	if asFcFn, ok := fc.(*FcFn); ok {
 		if isAdd, err := asFcFn.isAdd(); err != nil {
 			return nil, false, err
 		} else if isAdd {
-			fc, err := asFcFn.orderAddFcFn()
+			orderedFcSlice, err := asFcFn.orderAddFcFnToOrderedFcSlice()
 			if err != nil {
 				return nil, false, err
 			}
-			return fc, true, nil
+			return orderedFcSlice, true, nil
 		}
 
 		if isMul, err := asFcFn.isMul(); err != nil {
@@ -244,6 +240,26 @@ func orderFc(fcSlice []Fc) ([]Fc, error) {
 	orderedFc := make([]Fc, len(fcSlice))
 	for i, item := range temp {
 		orderedFc[i] = item.fc
+	}
+
+	return orderedFc, nil
+}
+
+func orderFc2(fcSlice []Fc) ([]Fc, error) {
+	temp := make([]Fc, len(fcSlice))
+	for i, fc := range fcSlice {
+		temp[i] = fc
+	}
+
+	// Sort the temporary slice based on the string representation
+	sort.Slice(temp, func(i, j int) bool {
+		return strings.Compare(temp[i].String(), temp[j].String()) < 0
+	})
+
+	// Extract the sorted Fc values
+	orderedFc := make([]Fc, len(fcSlice))
+	for i, item := range temp {
+		orderedFc[i] = item
 	}
 
 	return orderedFc, nil
