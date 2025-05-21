@@ -73,7 +73,7 @@ func (ver *Verifier) logicalExprFact(stmt *ast.LogicExprStmt, state VerState) (b
 }
 
 func (ver *Verifier) IfFactsNotTrueThenOtherPartOfLogicalExprIsTrue(notTrueFactIndexes map[int]struct{}, stmt *ast.LogicExprStmt, state VerState) (bool, error) {
-	ver.newEnv()
+	ver.newEnv(ver.env, ver.env.CurMatchEnv)
 	defer ver.deleteEnvAndRetainMsg()
 
 	for index := range notTrueFactIndexes {

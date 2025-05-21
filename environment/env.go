@@ -52,7 +52,7 @@ type Env struct {
 	CurMatchEnv *ast.SupposePropMatchStmt
 }
 
-func NewEnv(parent *Env) *Env {
+func NewEnv(parent *Env, curMatchEnv *ast.SupposePropMatchStmt) *Env {
 	env := &Env{
 		Parent: parent,
 		Msgs:   []string{},
@@ -73,7 +73,7 @@ func NewEnv(parent *Env) *Env {
 
 		KnownFactInMatchEnv: make(glob.Map2D[KnownFactsStruct]),
 
-		CurMatchEnv: nil,
+		CurMatchEnv: curMatchEnv,
 	}
 	return env
 }

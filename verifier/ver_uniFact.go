@@ -23,7 +23,7 @@ func (ver *Verifier) uniFact(stmt *ast.UniFactStmt, state VerState) (bool, error
 	}
 
 	// 在局部环境声明新变量
-	ver.newEnv()
+	ver.newEnv(ver.env, ver.env.CurMatchEnv)
 	defer ver.deleteEnvAndRetainMsg()
 
 	// TODO: 需要在这里know一下 涉及到的变量是 in 某个集合的
@@ -95,7 +95,7 @@ func (ver *Verifier) uniFactWithIff(stmt *ast.UniFactStmt, state VerState) (bool
 }
 
 func (ver *Verifier) uniFactWithIffThenToIff(stmt *ast.UniFactStmt, state VerState) (bool, error) {
-	ver.newEnv()
+	ver.newEnv(ver.env, ver.env.CurMatchEnv)
 	defer ver.deleteEnvAndRetainMsg()
 	for _, condFact := range stmt.ThenFacts {
 		err := ver.env.NewFact(condFact)
@@ -133,7 +133,7 @@ func (ver *Verifier) uniFactWithIffThenToIff(stmt *ast.UniFactStmt, state VerSta
 }
 
 func (ver *Verifier) uniFactWithIffToThen(stmt *ast.UniFactStmt, state VerState) (bool, error) {
-	ver.newEnv()
+	ver.newEnv(ver.env, ver.env.CurMatchEnv)
 	defer ver.deleteEnvAndRetainMsg()
 	for _, condFact := range stmt.IffFacts {
 		err := ver.env.NewFact(condFact)
