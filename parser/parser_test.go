@@ -16,6 +16,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	num "golitex/number"
+	"strings"
 	"testing"
 )
 
@@ -38,16 +39,20 @@ func sourceCodeToFc(sourceCode ...string) ([]ast.Fc, error) {
 }
 
 func TestOrder(t *testing.T) {
-	fcSlice, err := sourceCodeToFc("1+2*4+ 4")
+	fcSlice, err := sourceCodeToFc("1+2*(4+ t(x)(x)) + 9 + 4*F(t) + (x+y)*(a+b)")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	for _, fc := range fcSlice {
-		asStr := fc.String()
-		ploy := num.ParseAndExpand(asStr)
+		bracketedStr := num.FcString(fc)
+		fmt.Println(bracketedStr)
+		ploy := num.ParseAndExpand(bracketedStr)
+		var parts []string
 		for _, t := range ploy {
-			fmt.Println(t.String())
+			parts = append(parts, t.String())
 		}
+		fmt.Println("Expanded:", strings.Join(parts, " + "))
+
 	}
 }
