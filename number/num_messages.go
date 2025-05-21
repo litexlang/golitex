@@ -14,11 +14,35 @@ package litex_num
 
 import (
 	ast "golitex/ast"
-	"strings"
+	glob "golitex/glob"
 )
 
-func fcString(fc ast.Fc) string {
-	var builder strings.Builder
-	builder.WriteString(fc.String())
-	return builder.String()
+func FcString(fc ast.Fc) string {
+	if asAtom, ok := fc.(*ast.FcAtom); ok {
+		return fcAtomString(asAtom)
+	}
+	if asFn, ok := fc.(*ast.FcFn); ok {
+		return fcFnString(asFn)
+	}
+	return ""
+}
+
+func fcAtomString(fcAtom *ast.FcAtom) string {
+	if len(fcAtom.Name) != 0 && 0 <= fcAtom.Name[0] && fcAtom.Name[0] <= '9' {
+		return fcAtom.Name
+	}
+	return "[" + fcAtom.String() + "]"
+}
+
+func fcFnString(fcFn *ast.FcFn) string {
+	if ast.IsFcAtomWithName(fcFn.FnHead, glob.KeySymbolPlus) {
+		return "(" + FcString(fcFn.ParamSegs[0]) + " + " + FcString(fcFn.ParamSegs[1]) + ")"
+	}
+	if ast.IsFcAtomWithName(fcFn.FnHead, glob.KeySymbolStar) {
+		return "(" + FcString(fcFn.ParamSegs[0]) + " * " + FcString(fcFn.ParamSegs[1]) + ")"
+	}
+	if ast.IsFcAtomWithName(fcFn.FnHead, glob.KeySymbolMinus) {
+		return "(" + FcString(fcFn.ParamSegs[0]) + " - " + FcString(fcFn.ParamSegs[1]) + ")"
+	}
+	return "[" + fcFn.String() + "]"
 }
