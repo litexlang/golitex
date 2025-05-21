@@ -706,8 +706,3 @@ func (exec *Executor) proveOrStmt(stmt *ast.ProveOrStmt) (glob.ExecState, error)
 
 	return glob.ExecState_True, nil
 }
-
-func (exec *Executor) withPropMatchStmt(stmt *ast.WithPropMatchStmt) (glob.ExecState, error) {
-	_ = stmt
-	return glob.ExecState_True, nil
-}

@@ -19,6 +19,7 @@ import (
 	exe "golitex/exe"
 	glob "golitex/glob"
 	parser "golitex/parser"
+	"io"
 	"os"
 	"strings"
 )
@@ -78,19 +79,13 @@ func ExecuteCodeAndReturnMessageSliceGivenSettings(code string, parserEnv *parse
 	return msgOfTopStatements, glob.SysSignalTrue, nil
 }
 
-func RunREPL() {
-	parserEnv := parser.NewParserEnv()
-	executor := exe.NewExecutor(env.NewEnv(nil, nil))
-
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Println("REPL - Type your code or 'exit' to quit")
-
+// Listen processes input from a reader and writes output to a writer
+func Listen(reader *bufio.Reader, writer io.Writer, parserEnv *parser.ParserEnv, executor *exe.Executor) error {
 	for {
-		fmt.Print(">>> ")
+		fmt.Fprint(writer, ">>> ")
 		input, err := reader.ReadString('\n')
 		if err != nil {
-			fmt.Println("Error reading input:", err)
-			continue
+			return fmt.Errorf("error reading input: %v", err)
 		}
 
 		// Clean up input
@@ -99,26 +94,39 @@ func RunREPL() {
 			continue
 		}
 		if strings.ToLower(input) == "exit" {
-			break
+			return nil
 		}
 
 		// Execute the code
 		msg, signal, err := ExecuteCodeAndReturnMessageSliceGivenSettings(input, parserEnv, executor)
 		if err != nil {
-			fmt.Printf("[ERROR] %v\n", err)
+			fmt.Fprintf(writer, "[ERROR] %v\n", err)
 			continue
 		}
 
 		// Print results
 		if len(msg) > 0 {
 			for _, m := range msg {
-				fmt.Println(m)
+				fmt.Fprintln(writer, m)
 			}
 		}
 
 		if signal != glob.SysSignalTrue {
-			fmt.Printf("Warning: [%s] is not true\n", input)
+			fmt.Fprintf(writer, "Warning: [%s] is not true\n", input)
 		}
+	}
+}
+
+func RunREPL() {
+	parserEnv := parser.NewParserEnv()
+	executor := exe.NewExecutor(env.NewEnv(nil, nil))
+	reader := bufio.NewReader(os.Stdin)
+
+	fmt.Println("REPL - Type your code or 'exit' to quit")
+
+	err := Listen(reader, os.Stdout, parserEnv, executor)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
 	}
 
 	fmt.Println("Goodbye!")
