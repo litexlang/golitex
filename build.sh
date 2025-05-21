@@ -10,8 +10,20 @@
 # Contact the development team: <litexlang@outlook.com>
 # Visit litexlang.org and https://github.com/litexlang/golitex for more info.
 
-GOOS=windows GOARCH=amd64 go build -o ./binary/windows_litex.exe main.go
+# Create binary directory if it doesn't exist; 如果存在的话，把里面的东西清理了
+rm -rf ./binary
+mkdir -p ./binary
 
-GOOS=linux GOARCH=amd64 go build -o ./binary/linux_litex main.go
+# Here is version name
+VERSION_NAME="0.1.0_beta"
 
-GOOS=darwin GOARCH=amd64 go build -o ./binary/mac_litex main.go
+# Windows (64-bit only)
+GOOS=windows GOARCH=amd64 go build -o ./binary/windows_64_litex_${VERSION_NAME}.exe main.go
+
+# Linux (64-bit only)
+GOOS=linux GOARCH=amd64 go build -o ./binary/linux_64_litex_${VERSION_NAME} main.go
+
+# macOS (Intel + Apple Silicon)
+GOOS=darwin GOARCH=amd64 go build -o ./binary/macos_64_litex_${VERSION_NAME} main.go  # Intel Macs
+
+echo "Build completed. Binaries are in the ./binary directory."
