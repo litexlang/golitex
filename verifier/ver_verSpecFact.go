@@ -15,5 +15,7 @@ package litex_verifier
 import ast "golitex/ast"
 
 func (ver *Verifier) verSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	_ = stmt
+	_ = state
 	return true, nil
 }
