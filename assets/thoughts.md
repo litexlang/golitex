@@ -1986,3 +1986,6 @@ REMARK
 确定：让操作符不能重载，但是可以让同名obj属于不同的集合
 
 + 默认作用在R上，你要获得作用在int上的，请你自定义 fn add_on_int(x I, y I) I: add_on_int(x, y) = x + y
+
+5.21
+我的现在的 polynomial 的parseAndExpand的实现，非常有通用性。任何用户定义的符号，都可以被代入到这里，然后让我litex的解释器自己去重组一下，然后用重组后的特殊的str去比较。
