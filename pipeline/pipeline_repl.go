@@ -171,7 +171,7 @@ func (r *REPL) executeStatements(topStmtSlice []ast.TopStmt) ([]string, error) {
 	return msgOfTopStatements, nil
 }
 
-func RunREPL() {
-	repl := NewREPL()
-	repl.Run()
-}
+// func RunREPL() {
+// 	repl := NewREPL()
+// 	repl.Run()
+// }

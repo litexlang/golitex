@@ -78,7 +78,7 @@ func ExecuteCodeAndReturnMessageSliceGivenSettings(code string, parserEnv *parse
 	return msgOfTopStatements, glob.SysSignalTrue, nil
 }
 
-func main() {
+func RunREPL() {
 	parserEnv := parser.NewParserEnv()
 	executor := exe.NewExecutor(env.NewEnv(nil))
 
@@ -110,8 +110,10 @@ func main() {
 		}
 
 		// Print results
-		if msg != nil && len(msg) > 0 {
-			fmt.Println(msg)
+		if len(msg) > 0 {
+			for _, m := range msg {
+				fmt.Println(m)
+			}
 		}
 
 		if signal != glob.SysSignalTrue {

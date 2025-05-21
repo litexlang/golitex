@@ -23,7 +23,6 @@ func main() {
 	// Define flags
 	helpFlag := flag.Bool("help", false, "Show help message")
 	versionFlag := flag.Bool("version", false, "Show version information")
-	defaultFile := "./examples/comprehensive_examples/syllogism(三段论).lix"
 
 	flag.Parse()
 
@@ -32,7 +31,7 @@ func main() {
 		fmt.Println("Usage: program [options] [filename]")
 		fmt.Println("Options:")
 		flag.PrintDefaults()
-		fmt.Printf("\nIf no filename provided, defaults to: %s\n", defaultFile)
+		fmt.Printf("\nIf no filename provided, defaults to: REPL mode\n")
 		return
 	}
 
@@ -43,28 +42,26 @@ func main() {
 
 	// Get non-flag arguments
 	args := flag.Args()
-	var filePath string
 
 	if len(args) == 0 {
-		filePath = defaultFile
+		sys.RunREPL()
 	} else {
-		filePath = args[0]
-	}
+		filePath := args[0]
+		// Verify file exists
+		if _, err := os.Stat(filePath); os.IsNotExist(err) {
+			fmt.Printf("Error: File '%s' does not exist\n", filePath)
+			os.Exit(1)
+		}
 
-	// Verify file exists
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		fmt.Printf("Error: File '%s' does not exist\n", filePath)
-		os.Exit(1)
-	}
+		// Process file
+		msg, signal, err := sys.RunFile(filePath)
+		if err != nil {
+			fmt.Printf("Processing error: %v\n", err)
+			os.Exit(1)
+		}
 
-	// Process file
-	msg, signal, err := sys.RunFile(filePath)
-	if err != nil {
-		fmt.Printf("Processing error: %v\n", err)
-		os.Exit(1)
+		// Output results
+		fmt.Println("Output:", sys.BetterMsg(msg))
+		fmt.Println("Status:", signal)
 	}
-
-	// Output results
-	fmt.Println("Output:", sys.BetterMsg(msg))
-	fmt.Println("Status:", signal)
 }
