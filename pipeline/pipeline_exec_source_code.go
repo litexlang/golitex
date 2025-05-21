@@ -79,8 +79,8 @@ func ExecuteCodeAndReturnMessageSliceGivenSettings(code string, parserEnv *parse
 	return msgOfTopStatements, glob.SysSignalTrue, nil
 }
 
-// Listen processes input from a reader and writes output to a writer
-func Listen(reader *bufio.Reader, writer io.Writer, parserEnv *parser.ParserEnv, executor *exe.Executor) error {
+// listen processes input from a reader and writes output to a writer
+func listen(reader *bufio.Reader, writer io.Writer, parserEnv *parser.ParserEnv, executor *exe.Executor) error {
 	for {
 		fmt.Fprint(writer, ">>> ")
 		input, err := reader.ReadString('\n')
@@ -122,9 +122,9 @@ func RunREPL() {
 	executor := exe.NewExecutor(env.NewEnv(nil, nil))
 	reader := bufio.NewReader(os.Stdin)
 
-	fmt.Println("REPL - Type your code or 'exit' to quit")
+	fmt.Println("Litex experimental version 1 - Type your code or 'exit' to quit")
 
-	err := Listen(reader, os.Stdout, parserEnv, executor)
+	err := listen(reader, os.Stdout, parserEnv, executor)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 	}
