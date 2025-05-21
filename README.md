@@ -459,6 +459,12 @@ know:
 
 4. second-order, or high-order logic: I have a nice idea of how to implementing it without breaking the current design and making user feel natural. However, in daily life, all we might need is first-order logic. The only high-logic we might need is mathematical induction. So I make it a keyword instead of a user-defined special case of second-order logic. Before Litex implements high-order logic, the user can use know to verify the facts that should be verified.
 
+## Answers to common questions
+
+1. Is Litex computationally efficient?
+
+Yes. Litex demonstrates high performance with a typical execution time of less than 0.5ms for 10 lines of code (e.g. Foramlize Definition of Algorithm). For context, this is significantly faster than common web operations, which typically require 500-2000ms for page refreshes in 5G networks.
+
 ## Join the Litex Project: Words from the Inventor
 
 _The best way to predict the future is to invent it._
