@@ -39,9 +39,17 @@ func sourceCodeToFc(sourceCode ...string) ([]ast.Fc, error) {
 }
 
 func TestOrder(t *testing.T) {
-	fcSlice, err := sourceCodeToFc("1+2*(4+ t(x)(x)) + 9 + 4*F(t) + (x+y)*(a+b)")
-	if err != nil {
-		t.Fatal(err)
+	sourceCode := []string{
+		"1+2*(4+ t(x)(x)) + 9 + 4*F(t) + (x-y)*(a+b) ",
+		"x + x",
+	}
+	fcSlice := []ast.Fc{}
+	for _, code := range sourceCode {
+		fc, err := sourceCodeToFc(code)
+		if err != nil {
+			t.Fatal(err)
+		}
+		fcSlice = append(fcSlice, fc...)
 	}
 
 	for _, fc := range fcSlice {
