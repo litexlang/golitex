@@ -14,6 +14,7 @@ package litex_executor
 
 import (
 	"fmt"
+	ast "golitex/ast"
 	env "golitex/environment"
 	glob "golitex/glob"
 )
@@ -24,17 +25,16 @@ type Executor struct {
 	env *env.Env
 }
 
-// 如果你传入的是nil，那默认这个exec里的env的curPkg是""
 func NewExecutor(curEnv *env.Env) *Executor {
 	if curEnv == nil {
-		return &Executor{env: env.NewEnv(nil)}
+		return &Executor{env: env.NewEnv(nil, nil)}
 	} else {
 		return &Executor{env: curEnv}
 	}
 }
 
-func (e *Executor) newEnv() {
-	e.env = env.NewEnv(e.env)
+func (e *Executor) newEnv(parent *env.Env, curMatchEnv *ast.SupposePropMatchStmt) {
+	e.env = env.NewEnv(parent, curMatchEnv)
 }
 
 func (e *Executor) deleteEnvAndRetainMsg() {

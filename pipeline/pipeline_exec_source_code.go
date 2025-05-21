@@ -37,7 +37,7 @@ func executeCodeAndReturnMessageSlice(code string) ([]string, glob.SysSignal, er
 	if err != nil {
 		return nil, glob.SysSignalParseError, err
 	}
-	curEnv := env.NewEnv(nil)
+	curEnv := env.NewEnv(nil, nil)
 	executor := *exe.NewExecutor(curEnv)
 
 	msgOfTopStatements := []string{}
@@ -80,7 +80,7 @@ func ExecuteCodeAndReturnMessageSliceGivenSettings(code string, parserEnv *parse
 
 func RunREPL() {
 	parserEnv := parser.NewParserEnv()
-	executor := exe.NewExecutor(env.NewEnv(nil))
+	executor := exe.NewExecutor(env.NewEnv(nil, nil))
 
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("REPL - Type your code or 'exit' to quit")

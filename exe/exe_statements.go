@@ -41,10 +41,6 @@ func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		err = exec.defExistPropStmt(stmt)
 	case *ast.DefFnStmt:
 		err = exec.defFnStmt(stmt)
-	case *ast.SupposePropMatchStmt:
-		execState, err = exec.whenPropMatchStmt(stmt)
-	case *ast.WithPropMatchStmt:
-		execState, err = exec.withPropMatchStmt(stmt)
 	case *ast.KnowPropStmt:
 		err = exec.knowPropStmt(stmt)
 	case *ast.KnowExistPropStmt:
@@ -55,6 +51,10 @@ func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		execState, err = exec.proveInEachCaseStmt(stmt)
 	case *ast.ProveOrStmt:
 		execState, err = exec.proveOrStmt(stmt)
+	case *ast.SupposePropMatchStmt:
+		execState, err = exec.supposePropMatchStmt(stmt)
+	case *ast.WithPropMatchStmt:
+		execState, err = exec.withPropMatchStmt(stmt)
 
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
@@ -402,97 +402,6 @@ func (exec *Executor) defStmt(stmt ast.DefStmt) error {
 	}
 }
 
-func (exec *Executor) whenPropMatchStmt(stmt *ast.SupposePropMatchStmt) (glob.ExecState, error) {
-	defer exec.appendMsg("\n")
-	defer exec.appendMsg(stmt.String())
-
-	// return glob.ExecState_True, nil
-
-	exec.newEnv()
-	defer exec.deleteEnvAndRetainMsg()
-
-	factSpecDef, ok := exec.env.GetPropDef(stmt.Fact.PropName)
-	if !ok {
-		return glob.ExecState_Error, fmt.Errorf("spec fact parameter must be atom, but got: %s", stmt.Fact.PropName.String())
-	}
-
-	if len(factSpecDef.DefHeader.Params) != len(stmt.Fact.Params) {
-		return glob.ExecState_Error, fmt.Errorf("spec fact parameter number not equal to prop def params number. expect %d, but got %d", len(factSpecDef.DefHeader.Params), len(stmt.Fact.Params))
-	}
-
-	for _, param := range stmt.Fact.Params {
-		asAtom, ok := param.(*ast.FcAtom)
-		if !ok {
-			return glob.ExecState_Error, fmt.Errorf("spec fact parameter must be atom, but got: %s", param.String())
-		}
-		if asAtom.PkgName != glob.EmptyPkg {
-			return glob.ExecState_Error, fmt.Errorf("spec fact parameter must be atom, but got: %s", param.String())
-		}
-		err := exec.env.ObjDefMem.Insert(ast.NewDefObjStmt([]string{asAtom.Name}, []ast.FactStmt{}, []ast.FactStmt{}), glob.EmptyPkg)
-		if err != nil {
-			return glob.ExecState_Error, err
-		}
-	}
-
-	uniMap := map[string]ast.Fc{}
-	for i, param := range factSpecDef.DefHeader.Params {
-		uniMap[param] = stmt.Fact.Params[i]
-	}
-
-	instantiatedFactSpecDef, err := factSpecDef.Instantiate(uniMap)
-	if err != nil {
-		return glob.ExecState_Error, err
-	}
-
-	// itself is true
-	err = exec.env.NewFact(&stmt.Fact)
-	if err != nil {
-		return glob.ExecState_Error, err
-	}
-
-	// in facts are true
-	for _, inFact := range instantiatedFactSpecDef.DefHeader.ParamInSetsFacts {
-		err = exec.env.NewFact(inFact)
-		if err != nil {
-			return glob.ExecState_Error, err
-		}
-	}
-
-	// dom is true
-	for _, domFact := range instantiatedFactSpecDef.DomFacts {
-		err = exec.env.NewFact(domFact)
-		if err != nil {
-			return glob.ExecState_Error, err
-		}
-	}
-
-	// iff is true
-	for _, iffFact := range instantiatedFactSpecDef.IffFacts {
-		err = exec.env.NewFact(iffFact)
-		if err != nil {
-			return glob.ExecState_Error, err
-		}
-	}
-
-	// run stmt body
-	for _, bodyFact := range stmt.Body {
-		execState, err := exec.stmt(bodyFact)
-		if err != nil {
-			return glob.ExecState_Error, err
-		}
-		if execState != glob.ExecState_True {
-			if execState == glob.ExecState_Unknown && glob.ContinueExecutionIfExecUnknown {
-				exec.appendWarningMsg("unknown fact: %s", bodyFact.String())
-				return glob.ExecState_Unknown, nil
-			} else {
-				return glob.ExecState_Error, fmt.Errorf("matcher env stmt body is not true")
-			}
-		}
-	}
-
-	return glob.ExecState_True, nil
-}
-
 func (exec *Executor) GetUniFactSettings(asUnivFact *ast.UniFactStmt) error {
 	for _, param := range asUnivFact.Params {
 		err := exec.defStmt(ast.NewDefObjStmt([]string{param}, []ast.FactStmt{}, []ast.FactStmt{}))
@@ -529,7 +438,7 @@ func (exec *Executor) execProofBlock(proof []ast.Stmt) (glob.ExecState, error) {
 }
 
 func (exec *Executor) claimStmtProve(stmt *ast.ClaimStmt) (bool, error) {
-	exec.newEnv()
+	exec.newEnv(exec.env, exec.env.CurMatchEnv)
 	isSuccess := false
 
 	defer func() {
@@ -595,7 +504,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimStmt) (bool, error) {
 }
 
 func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimStmt) (bool, error) {
-	exec.newEnv()
+	exec.newEnv(exec.env, exec.env.CurMatchEnv)
 	isSuccess := false
 
 	defer func() {
@@ -700,7 +609,7 @@ func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) (glob.E
 }
 
 func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEachCaseStmt) (glob.ExecState, error) {
-	exec.newEnv()
+	exec.newEnv(exec.env, exec.env.CurMatchEnv)
 	defer exec.deleteEnvAndRetainMsg()
 
 	caseStmt := stmt.OrFact.Facts[index]

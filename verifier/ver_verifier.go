@@ -40,7 +40,7 @@ type Verifier struct {
 
 func NewVerifier(curEnv *env.Env) *Verifier {
 	if curEnv == nil {
-		return &Verifier{env: env.NewEnv(nil)}
+		return &Verifier{env: env.NewEnv(nil, nil)}
 	} else {
 		return &Verifier{env: curEnv}
 	}
@@ -53,8 +53,8 @@ func (ver *Verifier) successWithMsg(stmtString, storedStmtString string) {
 func (ver *Verifier) successNoMsg() {
 }
 
-func (ver *Verifier) newEnv() {
-	newEnv := env.NewEnv(ver.env)
+func (ver *Verifier) newEnv(parent *env.Env, curMatchEnv *ast.SupposePropMatchStmt) {
+	newEnv := env.NewEnv(parent, curMatchEnv)
 	ver.env = newEnv
 }
 
