@@ -13,6 +13,7 @@
 package litex_verifier
 
 import (
+	"fmt"
 	ast "golitex/ast"
 	env "golitex/environment"
 	glob "golitex/glob"
@@ -36,4 +37,11 @@ func isEqualFact(stmt ast.FactStmt) (*ast.SpecFactStmt, bool) {
 	}
 
 	return nil, false
+}
+
+func (ver *Verifier) eqaulTrueAddSuccessMsg(left ast.Fc, right ast.Fc, state VerState, msg string) (bool, error) {
+	if state.requireMsg() {
+		ver.successMsgEnd(fmt.Sprintf("%s = %s", left.String(), right.String()), msg)
+	}
+	return true, nil
 }

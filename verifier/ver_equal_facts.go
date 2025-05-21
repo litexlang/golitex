@@ -32,13 +32,6 @@ func (ver *Verifier) isEqualFact_Check(stmt *ast.SpecFactStmt, state VerState) (
 }
 
 func (ver *Verifier) cmpFc(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
-	// isSuccess := false
-	// defer func() {
-	// 	if state.requireMsg() && isSuccess {
-	// 		ver.successMsgEnd(fmt.Sprintf("%s = %s", left.String(), right.String()), "")
-	// 	}
-	// }()
-
 	ok, err := ver.fcEqual_Commutative_Associative_CmpRule(left, right, state)
 	if err != nil {
 		return false, err

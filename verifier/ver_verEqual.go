@@ -24,18 +24,14 @@ func (ver *Verifier) verEqual(stmt *ast.SpecFactStmt, state VerState) (bool, err
 		return false, fmt.Errorf("invalid equal fact: %v", stmt)
 	}
 
-	return ver.verEqual_FnIsCommutativeOrAssociative(stmt)
-}
-
-func (ver *Verifier) verEqual_FnIsCommutativeOrAssociative(stmt *ast.SpecFactStmt) (bool, error) {
-	return ver.verEqualCommutatively(stmt)
+	return ver.verEqualSwap(stmt, state)
 }
 
 func isValidEqualFact(stmt *ast.SpecFactStmt) bool {
 	return len(stmt.Params) == 2 && stmt.PropName.Name == glob.KeySymbolEqual
 }
 
-func (ver *Verifier) verEqualCommutatively(stmt *ast.SpecFactStmt) (bool, error) {
+func (ver *Verifier) verEqualSwap(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	stmtWithReversedParamOrder, err := stmt.ReverseSpecFactParamsOrder()
 	if err != nil {
 		return false, err
@@ -44,7 +40,7 @@ func (ver *Verifier) verEqualCommutatively(stmt *ast.SpecFactStmt) (bool, error)
 	statements := []*ast.SpecFactStmt{stmt, stmtWithReversedParamOrder}
 
 	for _, s := range statements {
-		ok, err := verEqualBuiltin(s)
+		ok, err := ver.verEqualLeftToRight(s.Params[0], s.Params[1], state)
 		if err != nil {
 			return false, err
 		}
@@ -56,9 +52,14 @@ func (ver *Verifier) verEqualCommutatively(stmt *ast.SpecFactStmt) (bool, error)
 	return false, nil
 }
 
-func (ver *Verifier) verEqualLeftToRight(stmt *ast.SpecFactStmt) (bool, error) {
-	// TODO: 在这里处理 stmt 的 fn 是 可交换，可结合的情况
-	if ok, err := verEqualBuiltin(stmt); err != nil {
+func (ver *Verifier) verEqualLeftToRight(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
+	if ok, err := verEqualBuiltin(left, right, state); err != nil {
+		return false, err
+	} else if ok {
+		return true, nil
+	}
+
+	if ok, err := ver.verEqualSpecMem(left, right, state); err != nil {
 		return false, err
 	} else if ok {
 		return true, nil
@@ -67,13 +68,50 @@ func (ver *Verifier) verEqualLeftToRight(stmt *ast.SpecFactStmt) (bool, error) {
 	return false, nil
 }
 
-func verEqualBuiltin(stmt *ast.SpecFactStmt) (bool, error) {
-	ok, err := cmp.CmpFcRule(stmt.Params[0], stmt.Params[1])
+func verEqualBuiltin(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
+	ok, err := cmp.CmpFcRule(left, right) // 完全一样
 	if err != nil {
 		return false, err
 	}
 	if ok {
 		return true, nil
+	}
+	return false, nil
+}
+
+func (ver *Verifier) verEqualSpecMem(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
+	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
+		var equalToLeftFcs, equalTorightFcs *[]ast.Fc
+		var gotLeftEqualFcs, gotRightEqualFcs bool
+
+		equalToLeftFcs, gotLeftEqualFcs = curEnv.GetEqualFcs(left)
+		equalTorightFcs, gotRightEqualFcs = curEnv.GetEqualFcs(right)
+
+		if gotLeftEqualFcs && gotRightEqualFcs {
+			if equalToLeftFcs == equalTorightFcs {
+				return ver.eqaulTrueAddSuccessMsg(left, right, state, "known")
+			}
+		}
+
+		if gotLeftEqualFcs {
+			for _, equalToLeftFc := range *equalToLeftFcs {
+				if ok, err := ver.cmpFc(equalToLeftFc, right, state); err != nil {
+					return false, err
+				} else if ok {
+					return ver.eqaulTrueAddSuccessMsg(left, right, state, "known")
+				}
+			}
+		}
+
+		if gotRightEqualFcs {
+			for _, equalToRightFc := range *equalTorightFcs {
+				if ok, err := ver.cmpFc(equalToRightFc, left, state); err != nil {
+					return false, err
+				} else if ok {
+					return ver.eqaulTrueAddSuccessMsg(left, right, state, "known")
+				}
+			}
+		}
 	}
 	return false, nil
 }
