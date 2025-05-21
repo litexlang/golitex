@@ -15,6 +15,7 @@ package litex_verifier
 import (
 	ast "golitex/ast"
 	env "golitex/environment"
+	glob "golitex/glob"
 )
 
 func theUpMostEnvWhereRelatedThingsAreDeclared(stmt *ast.SpecFactStmt) *env.Env {
@@ -22,4 +23,17 @@ func theUpMostEnvWhereRelatedThingsAreDeclared(stmt *ast.SpecFactStmt) *env.Env 
 	var ret *env.Env = nil
 	_ = stmt
 	return ret
+}
+
+func isEqualFact(stmt ast.FactStmt) (*ast.SpecFactStmt, bool) {
+	asSpecFact, ok := stmt.(*ast.SpecFactStmt)
+	if !ok {
+		return nil, false
+	}
+
+	if asSpecFact.PropName.Name == glob.KeySymbolEqual {
+		return asSpecFact, true
+	}
+
+	return nil, false
 }
