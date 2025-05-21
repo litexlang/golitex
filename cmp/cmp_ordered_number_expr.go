@@ -62,9 +62,9 @@ func tryCombineTerms(e *exprNode) interface{} {
 		case *exprNode:
 			if t.Opt == "*" {
 				// 处理系数*变量的情况
-				if coeff, ok := t.Left.(int); ok {
+				if coef, ok := t.Left.(int); ok {
 					if varName, ok := t.Right.(string); ok {
-						termMap[varName] += coeff
+						termMap[varName] += coef
 						continue
 					}
 				}

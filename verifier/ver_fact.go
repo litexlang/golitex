@@ -22,7 +22,7 @@ import (
 // factual chain: equal fact => specific fact => logical expr => uni fact
 func (ver *Verifier) VerFact(stmt ast.FactStmt, state VerState) (bool, error) {
 	if asSpecFact, ok := isEqualFact(stmt); ok {
-		return ver.verEqual(asSpecFact, state)
+		return ver.verEqualFact(asSpecFact, state)
 	}
 
 	if asSpecFact, ok := stmt.(*ast.SpecFactStmt); ok {

@@ -19,41 +19,20 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verEqual(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) verEqualFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if !isValidEqualFact(stmt) {
 		return false, fmt.Errorf("invalid equal fact: %v", stmt)
 	}
 
-	return ver.verEqualSwap(stmt, state)
+	return ver.verFcEqual(stmt.Params[0], stmt.Params[1], state)
 }
 
 func isValidEqualFact(stmt *ast.SpecFactStmt) bool {
 	return len(stmt.Params) == 2 && stmt.PropName.Name == glob.KeySymbolEqual
 }
 
-func (ver *Verifier) verEqualSwap(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	stmtWithReversedParamOrder, err := stmt.ReverseSpecFactParamsOrder()
-	if err != nil {
-		return false, err
-	}
-
-	statements := []*ast.SpecFactStmt{stmt, stmtWithReversedParamOrder}
-
-	for _, s := range statements {
-		ok, err := ver.verEqualLeftToRight(s.Params[0], s.Params[1], state)
-		if err != nil {
-			return false, err
-		}
-		if ok {
-			return true, nil
-		}
-	}
-
-	return false, nil
-}
-
-func (ver *Verifier) verEqualLeftToRight(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
-	if ok, err := verEqualBuiltin(left, right, state); err != nil {
+func (ver *Verifier) verFcEqual(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
+	if ok, err := ver.verEqualBuiltin(left, right, state); err != nil {
 		return false, err
 	} else if ok {
 		return true, nil
@@ -68,13 +47,13 @@ func (ver *Verifier) verEqualLeftToRight(left ast.Fc, right ast.Fc, state VerSta
 	return false, nil
 }
 
-func verEqualBuiltin(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
+func (ver *Verifier) verEqualBuiltin(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
 	ok, err := cmp.CmpFcRule(left, right) // 完全一样
 	if err != nil {
 		return false, err
 	}
 	if ok {
-		return true, nil
+		return ver.eqaulTrueAddSuccessMsg(left, right, state, "builtin rules")
 	}
 	return false, nil
 }
