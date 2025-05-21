@@ -15,6 +15,7 @@ package litex_verifier
 import (
 	"fmt"
 	ast "golitex/ast"
+	cmp "golitex/cmp"
 	glob "golitex/glob"
 )
 
@@ -23,40 +24,56 @@ func (ver *Verifier) verEqual(stmt *ast.SpecFactStmt, state VerState) (bool, err
 		return false, fmt.Errorf("invalid equal fact: %v", stmt)
 	}
 
-	return verEqualCommutatively(stmt)
+	return ver.verEqual_FnIsCommutativeOrAssociative(stmt)
+}
+
+func (ver *Verifier) verEqual_FnIsCommutativeOrAssociative(stmt *ast.SpecFactStmt) (bool, error) {
+	return ver.verEqualCommutatively(stmt)
 }
 
 func isValidEqualFact(stmt *ast.SpecFactStmt) bool {
 	return len(stmt.Params) == 2 && stmt.PropName.Name == glob.KeySymbolEqual
 }
 
-func verEqualCommutatively(stmt *ast.SpecFactStmt) (bool, error) {
-	if ok, err := verEqualLeftToRight(stmt); ok {
-		return true, nil
-	} else if err != nil {
+func (ver *Verifier) verEqualCommutatively(stmt *ast.SpecFactStmt) (bool, error) {
+	stmtWithReversedParamOrder, err := stmt.ReverseSpecFactParamsOrder()
+	if err != nil {
 		return false, err
 	}
 
-	newStmt := stmt.ReverseSpecFactParamsOrder()
-	if ok, err := verEqualLeftToRight(newStmt); ok {
-		return true, nil
-	} else if err != nil {
-		return false, err
+	statements := []*ast.SpecFactStmt{stmt, stmtWithReversedParamOrder}
+
+	for _, s := range statements {
+		ok, err := verEqualBuiltin(s)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			return true, nil
+		}
 	}
 
 	return false, nil
 }
 
-func verEqualLeftToRight(stmt *ast.SpecFactStmt) (bool, error) {
-	if ok, err := verEqualBuiltin(stmt); ok {
-		return true, nil
-	} else if err != nil {
+func (ver *Verifier) verEqualLeftToRight(stmt *ast.SpecFactStmt) (bool, error) {
+	// TODO: 在这里处理 stmt 的 fn 是 可交换，可结合的情况
+	if ok, err := verEqualBuiltin(stmt); err != nil {
 		return false, err
+	} else if ok {
+		return true, nil
 	}
 
-	return true, nil
+	return false, nil
 }
 
 func verEqualBuiltin(stmt *ast.SpecFactStmt) (bool, error) {
+	ok, err := cmp.CmpFcRule(stmt.Params[0], stmt.Params[1])
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
 	return false, nil
 }

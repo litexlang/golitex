@@ -17,7 +17,7 @@ import (
 	ast "golitex/ast"
 )
 
-// Each type of fact check takes the following steps: 1. check is valid 2. use built-in rules to check 3. use spec_mem to check 4. logic_mem to check 5. uni_mem to check
+// Each type of fact check takes the following steps: 1. check is valid (param len 够了吗，符合涉及到的dom了吗) 2. use built-in rules to check 3. use spec_mem to check 4. logic_mem to check 5. uni_mem to check
 
 // factual chain: equal fact => specific fact => logical expr => uni fact
 func (ver *Verifier) VerFact(stmt ast.FactStmt, state VerState) (bool, error) {

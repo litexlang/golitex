@@ -223,7 +223,11 @@ func GetParamSetFromInStmt(inStmt FactStmt) (Fc, error) {
 	return nil, fmt.Errorf("GetParamsSetFromInStmts: expected In fact, but got %s", inStmtAsSpecFact.String())
 }
 
-func (stmt *SpecFactStmt) ReverseSpecFactParamsOrder() *SpecFactStmt {
+func (stmt *SpecFactStmt) ReverseSpecFactParamsOrder() (*SpecFactStmt, error) {
+	if len(stmt.Params) != 2 {
+		return nil, fmt.Errorf("ReverseSpecFactParamsOrder: expected 2 params, but got %d", len(stmt.Params))
+	}
+
 	newParams := []Fc{stmt.Params[1], stmt.Params[0]}
-	return NewSpecFactStmt(stmt.TypeEnum, stmt.PropName, newParams)
+	return NewSpecFactStmt(stmt.TypeEnum, stmt.PropName, newParams), nil
 }
