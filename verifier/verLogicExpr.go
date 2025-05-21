@@ -15,5 +15,7 @@ package litex_verifier
 import ast "golitex/ast"
 
 func (ver *Verifier) verLogicExpr(stmt *ast.LogicExprStmt, state VerState) (bool, error) {
+	_ = stmt
+	_ = state
 	return true, nil
 }
