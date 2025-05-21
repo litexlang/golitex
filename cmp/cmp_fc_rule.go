@@ -62,31 +62,6 @@ func BuiltinFcEqualRule(left, right ast.Fc) (bool, error) {
 	return false, nil
 }
 
-// func cmpArithmeticExpr(left, right ast.Fc) int {
-// 	if orderedLeft, ok, err := ast.IsArithmeticExpr_OrderIt(left); err != nil {
-// 		return -1
-// 	} else if !ok {
-// 		return -1
-// 	} else {
-// 		if orderedRight, ok, err := ast.IsArithmeticExpr_OrderIt(right); err != nil {
-// 			return -1
-// 		} else if !ok {
-// 			return -1
-// 		} else {
-// 			if len(orderedLeft) != len(orderedRight) {
-// 				return -1
-// 			}
-// 			for i := range orderedLeft {
-// 				cmp := strings.Compare(orderedLeft[i].String(), orderedRight[i].String())
-// 				if cmp != 0 {
-// 					return cmp
-// 				}
-// 			}
-// 			return 0
-// 		}
-// 	}
-// }
-
 // 之所以叫 Expr，因为可能含有运算符+-*/这样的
 func cmpNumLitExpr(left, right ast.Fc) (bool, error) {
 	leftAsNumLitExpr, ok, err := ast.MakeFcIntoNumLitExpr(left)
