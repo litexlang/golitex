@@ -42,6 +42,7 @@ func TestOrder(t *testing.T) {
 	sourceCode := []string{
 		"1+2*(4+ t(x)(x)) + 9 + 4*F(t) + (x-y)*(a+b) ",
 		"x + x",
+		"2*x",
 	}
 	fcSlice := []ast.Fc{}
 	for _, code := range sourceCode {
@@ -53,14 +54,13 @@ func TestOrder(t *testing.T) {
 	}
 
 	for _, fc := range fcSlice {
-		bracketedStr := num.FcString(fc)
+		bracketedStr := num.FcStringForParseAndExpandPolynomial(fc)
 		fmt.Println(bracketedStr)
-		ploy := num.ParseAndExpand(bracketedStr)
+		ploy := num.ParseAndExpandPolynomial(bracketedStr)
 		var parts []string
 		for _, t := range ploy {
 			parts = append(parts, t.String())
 		}
 		fmt.Println("Expanded:", strings.Join(parts, " + "))
-
 	}
 }

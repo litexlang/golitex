@@ -44,11 +44,11 @@ func CmpFcRule(left, right ast.Fc) (bool, error) {
 
 // 先确定left，right都是builtin fc，然后按builtin rule来验证他们相等
 func BuiltinFcEqualRule(left, right ast.Fc) (bool, error) {
-	// case 0: 比较 number expr
-	// cmp := cmpArithmeticExpr(left, right)
-	// if cmp == 0 {
-	// 	return true, nil
-	// }
+	// case 0: 比较 polynomial
+	cmp := CmpPolynomial(left, right)
+	if cmp {
+		return true, nil
+	}
 
 	// Case1: 二者都是 Number 上进行+-*/^
 	ok, err := cmpNumLitExpr(left, right)
