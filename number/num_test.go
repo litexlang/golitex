@@ -22,7 +22,7 @@ func TestExpandExpression(t *testing.T) {
 	// expr := "3*[x] + [f(x)]*[y/2] + ([x] + [y]) * [z] + 5*[x]"
 	expr := "1 + 2 * 4 + [t(x)] + 9 + 4 * [F(t)]"
 	fmt.Println("Input:", expr)
-	poly := ParseAndExpand(expr)
+	poly := ParseAndExpandPolynomial(expr)
 
 	var parts []string
 	for _, t := range poly {

@@ -44,7 +44,7 @@ func (t Term) String() string {
 	return fmt.Sprintf("%g*%s", t.Coeff, key)
 }
 
-type Polynomial []Term
+type polynomial []Term
 
 // --- Tokenization ---
 
@@ -201,13 +201,13 @@ func (p *Parser) prev() Token {
 
 // --- Evaluation ---
 
-func eval(ast *AST) Polynomial {
+func eval(ast *AST) polynomial {
 	switch ast.Type {
 	case N_NUM:
 		n, _ := strconv.ParseFloat(ast.Value, 64)
-		return Polynomial{{Coeff: n}}
+		return polynomial{{Coeff: n}}
 	case N_VAR:
-		return Polynomial{{Coeff: 1.0, Vars: []string{ast.Value}}}
+		return polynomial{{Coeff: 1.0, Vars: []string{ast.Value}}}
 	case N_ADD:
 		left := eval(ast.Children[0])
 		right := eval(ast.Children[1])
@@ -215,7 +215,7 @@ func eval(ast *AST) Polynomial {
 	case N_MUL:
 		left := eval(ast.Children[0])
 		right := eval(ast.Children[1])
-		var result Polynomial
+		var result polynomial
 		for _, l := range left {
 			for _, r := range right {
 				combined := Term{
@@ -235,13 +235,13 @@ func eval(ast *AST) Polynomial {
 
 // --- Combine like terms ---
 
-func simplify(poly Polynomial) Polynomial {
+func simplify(poly polynomial) polynomial {
 	group := map[string]float64{}
 	for _, term := range poly {
 		key := term.Key()
 		group[key] += term.Coeff
 	}
-	var result Polynomial
+	var result polynomial
 	for key, coeff := range group {
 		if coeff == 0 {
 			continue
@@ -260,9 +260,18 @@ func simplify(poly Polynomial) Polynomial {
 
 // --- High-level entry point ---
 
-func ParseAndExpand(expr string) Polynomial {
+func ParseAndExpandPolynomial(expr string) polynomial {
 	tokens := tokenize(expr)
 	ast := parseExpr(tokens)
 	poly := eval(ast)
 	return simplify(poly)
+}
+
+func ExpandPolynomial_ReturnStr(expr string) string {
+	poly := ParseAndExpandPolynomial(expr)
+	var parts []string
+	for _, t := range poly {
+		parts = append(parts, t.String())
+	}
+	return strings.Join(parts, " + ")
 }
