@@ -33,12 +33,10 @@ func (t Term) String() string {
 	if len(t.Vars) == 0 {
 		return fmt.Sprintf("%g", t.Coeff)
 	}
-
 	var varParts []string
 	for _, v := range t.Vars {
 		varParts = append(varParts, fmt.Sprintf("[%s]", v))
 	}
-
 	key := strings.Join(varParts, "*")
 	if t.Coeff == 1 {
 		return key
@@ -56,6 +54,7 @@ const (
 	NUM TokenType = iota
 	VAR
 	PLUS
+	MINUS
 	MULT
 	LPAREN
 	RPAREN
@@ -75,6 +74,9 @@ func tokenize(s string) []Token {
 			i++
 		case s[i] == '+':
 			tokens = append(tokens, Token{PLUS, "+"})
+			i++
+		case s[i] == '-':
+			tokens = append(tokens, Token{MINUS, "-"})
 			i++
 		case s[i] == '*':
 			tokens = append(tokens, Token{MULT, "*"})
@@ -98,7 +100,7 @@ func tokenize(s string) []Token {
 			i = j + 1
 		case unicode.IsDigit(rune(s[i])):
 			j := i
-			for j < len(s) && unicode.IsDigit(rune(s[j])) {
+			for j < len(s) && (unicode.IsDigit(rune(s[j])) || s[j] == '.') {
 				j++
 			}
 			tokens = append(tokens, Token{NUM, s[i:j]})
@@ -141,9 +143,20 @@ func parseExpr(tokens []Token) *AST {
 
 func (p *Parser) parseExpr() *AST {
 	node := p.parseTerm()
-	for p.match(PLUS) {
-		right := p.parseTerm()
-		node = &AST{Type: N_ADD, Children: []*AST{node, right}}
+	for {
+		if p.match(PLUS) {
+			right := p.parseTerm()
+			node = &AST{Type: N_ADD, Children: []*AST{node, right}}
+		} else if p.match(MINUS) {
+			right := p.parseTerm()
+			neg := &AST{
+				Type:     N_MUL,
+				Children: []*AST{{Type: N_NUM, Value: "-1"}, right},
+			}
+			node = &AST{Type: N_ADD, Children: []*AST{node, neg}}
+		} else {
+			break
+		}
 	}
 	return node
 }
@@ -253,5 +266,3 @@ func ParseAndExpand(expr string) Polynomial {
 	poly := eval(ast)
 	return simplify(poly)
 }
-
-// --- Main ---
