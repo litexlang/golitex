@@ -1,106 +1,245 @@
-// Copyright 2024 Jiachen Shen.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Original Author: Jiachen Shen <malloc_realloc_free@outlook.com>
-// Contact the development team: <litexlang@outlook.com>
-// Visit litexlang.org and https://github.com/litexlang/golitex for more info.
-
 package litex_num
 
 import (
+	"fmt"
 	"sort"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
-// Term 表示一个项，包含系数和符号列表
 type Term struct {
-	Coefficient float64
-	Symbols     []string
+	Coeff float64
+	Vars  []string // sorted variables, e.g. [x][x][y] => ["x", "x", "y"]
 }
 
-// 展开表达式并返回排序后的多项式
-func expandExpression(expr string) ([]Term, error) {
-	// 分割表达式为各个部分
-	parts := strings.Split(expr, " * ")
+func (t Term) Key() string {
+	return strings.Join(t.Vars, "*")
+}
 
-	var terms []Term
-	terms = append(terms, Term{Coefficient: 1.0}) // 初始化为1.0
+func (t Term) String() string {
+	if len(t.Vars) == 0 {
+		return fmt.Sprintf("%g", t.Coeff)
+	}
 
-	for _, part := range parts {
-		if part[0] == '(' && part[len(part)-1] == ')' {
-			// 处理括号内的加法表达式
-			inner := part[1 : len(part)-1]
-			sumParts := strings.Split(inner, " + ")
+	var varParts []string
+	for _, v := range t.Vars {
+		varParts = append(varParts, fmt.Sprintf("[%s]", v))
+	}
 
-			var newTerms []Term
-			for _, t := range terms {
-				for _, s := range sumParts {
-					coef, err := strconv.ParseFloat(s, 64)
-					if err != nil {
-						// 如果不是数字，则作为符号处理
-						newTerm := Term{
-							Coefficient: t.Coefficient,
-							Symbols:     append(append([]string{}, t.Symbols...), s),
-						}
-						newTerms = append(newTerms, newTerm)
-					} else {
-						// 是数字，乘以系数
-						newTerm := Term{
-							Coefficient: t.Coefficient * coef,
-							Symbols:     append([]string{}, t.Symbols...),
-						}
-						newTerms = append(newTerms, newTerm)
-					}
-				}
+	key := strings.Join(varParts, "*")
+	if t.Coeff == 1 {
+		return key
+	}
+	return fmt.Sprintf("%g*%s", t.Coeff, key)
+}
+
+type Polynomial []Term
+
+// --- Tokenization ---
+
+type TokenType int
+
+const (
+	NUM TokenType = iota
+	VAR
+	PLUS
+	MULT
+	LPAREN
+	RPAREN
+)
+
+type Token struct {
+	Type  TokenType
+	Value string
+}
+
+func tokenize(s string) []Token {
+	var tokens []Token
+	i := 0
+	for i < len(s) {
+		switch {
+		case s[i] == ' ':
+			i++
+		case s[i] == '+':
+			tokens = append(tokens, Token{PLUS, "+"})
+			i++
+		case s[i] == '*':
+			tokens = append(tokens, Token{MULT, "*"})
+			i++
+		case s[i] == '(':
+			tokens = append(tokens, Token{LPAREN, "("})
+			i++
+		case s[i] == ')':
+			tokens = append(tokens, Token{RPAREN, ")"})
+			i++
+		case s[i] == '[':
+			j := i + 1
+			for j < len(s) && s[j] != ']' {
+				j++
 			}
-			terms = newTerms
-		} else {
-			// 处理乘法部分
-			num, err := strconv.ParseFloat(part, 64)
-			if err == nil {
-				// 是数字，乘以所有项的系数
-				for i := range terms {
-					terms[i].Coefficient *= num
-				}
-			} else {
-				// 是符号，添加到所有项的符号列表
-				for i := range terms {
-					terms[i].Symbols = append(terms[i].Symbols, part)
-				}
+			if j >= len(s) {
+				panic("missing closing ']' for variable")
 			}
+			varName := s[i+1 : j]
+			tokens = append(tokens, Token{VAR, varName})
+			i = j + 1
+		case unicode.IsDigit(rune(s[i])):
+			j := i
+			for j < len(s) && unicode.IsDigit(rune(s[j])) {
+				j++
+			}
+			tokens = append(tokens, Token{NUM, s[i:j]})
+			i = j
+		default:
+			panic("invalid character: " + string(s[i]))
 		}
 	}
+	return tokens
+}
 
-	// 合并同类项
-	termMap := make(map[string]Term)
-	for _, term := range terms {
-		// 对符号进行排序以确保相同的符号组合有相同的key
-		sort.Strings(term.Symbols)
-		key := strings.Join(term.Symbols, "*")
-		if existing, ok := termMap[key]; ok {
-			existing.Coefficient += term.Coefficient
-			termMap[key] = existing
-		} else {
-			termMap[key] = term
+// --- AST definitions ---
+
+type NodeType int
+
+const (
+	N_ADD NodeType = iota
+	N_MUL
+	N_NUM
+	N_VAR
+)
+
+type AST struct {
+	Type     NodeType
+	Value    string
+	Children []*AST
+}
+
+// --- Recursive descent parser ---
+
+type Parser struct {
+	tokens []Token
+	pos    int
+}
+
+func parseExpr(tokens []Token) *AST {
+	p := &Parser{tokens, 0}
+	return p.parseExpr()
+}
+
+func (p *Parser) parseExpr() *AST {
+	node := p.parseTerm()
+	for p.match(PLUS) {
+		right := p.parseTerm()
+		node = &AST{Type: N_ADD, Children: []*AST{node, right}}
+	}
+	return node
+}
+
+func (p *Parser) parseTerm() *AST {
+	node := p.parseFactor()
+	for p.match(MULT) {
+		right := p.parseFactor()
+		node = &AST{Type: N_MUL, Children: []*AST{node, right}}
+	}
+	return node
+}
+
+func (p *Parser) parseFactor() *AST {
+	if p.match(NUM) {
+		return &AST{Type: N_NUM, Value: p.prev().Value}
+	}
+	if p.match(VAR) {
+		return &AST{Type: N_VAR, Value: p.prev().Value}
+	}
+	if p.match(LPAREN) {
+		node := p.parseExpr()
+		if !p.match(RPAREN) {
+			panic("missing closing parenthesis")
 		}
+		return node
 	}
+	panic("unexpected token")
+}
 
-	// 转换为切片并排序
-	var result []Term
-	for _, term := range termMap {
-		result = append(result, term)
+func (p *Parser) match(t TokenType) bool {
+	if p.pos < len(p.tokens) && p.tokens[p.pos].Type == t {
+		p.pos++
+		return true
 	}
+	return false
+}
 
-	// 按字典序排序
+func (p *Parser) prev() Token {
+	return p.tokens[p.pos-1]
+}
+
+// --- Evaluation ---
+
+func eval(ast *AST) Polynomial {
+	switch ast.Type {
+	case N_NUM:
+		n, _ := strconv.ParseFloat(ast.Value, 64)
+		return Polynomial{{Coeff: n}}
+	case N_VAR:
+		return Polynomial{{Coeff: 1.0, Vars: []string{ast.Value}}}
+	case N_ADD:
+		left := eval(ast.Children[0])
+		right := eval(ast.Children[1])
+		return append(left, right...)
+	case N_MUL:
+		left := eval(ast.Children[0])
+		right := eval(ast.Children[1])
+		var result Polynomial
+		for _, l := range left {
+			for _, r := range right {
+				combined := Term{
+					Coeff: l.Coeff * r.Coeff,
+					Vars:  append([]string{}, l.Vars...),
+				}
+				combined.Vars = append(combined.Vars, r.Vars...)
+				sort.Strings(combined.Vars)
+				result = append(result, combined)
+			}
+		}
+		return result
+	default:
+		panic("invalid AST node")
+	}
+}
+
+// --- Combine like terms ---
+
+func simplify(poly Polynomial) Polynomial {
+	group := map[string]float64{}
+	for _, term := range poly {
+		key := term.Key()
+		group[key] += term.Coeff
+	}
+	var result Polynomial
+	for key, coeff := range group {
+		if coeff == 0 {
+			continue
+		}
+		vars := []string{}
+		if key != "" {
+			vars = strings.Split(key, "*")
+		}
+		result = append(result, Term{Coeff: coeff, Vars: vars})
+	}
 	sort.Slice(result, func(i, j int) bool {
-		return strings.Join(result[i].Symbols, "*") < strings.Join(result[j].Symbols, "*")
+		return result[i].Key() < result[j].Key()
 	})
-
-	return result, nil
+	return result
 }
+
+// --- High-level entry point ---
+
+func parseAndExpand(expr string) Polynomial {
+	tokens := tokenize(expr)
+	ast := parseExpr(tokens)
+	poly := eval(ast)
+	return simplify(poly)
+}
+
+// --- Main ---
