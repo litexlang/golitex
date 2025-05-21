@@ -44,3 +44,7 @@ func BetterMsg(msg string) string {
 	msg = strings.ReplaceAll(msg, "\n\n", "\n")
 	return msg
 }
+
+func RunREPL() {
+	pipeline.RunREPL()
+}
