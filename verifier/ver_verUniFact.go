@@ -17,7 +17,7 @@ import (
 	ast "golitex/ast"
 )
 
-func (ver *Verifier) uniFact(stmt *ast.UniFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) verUniFact(stmt *ast.UniFactStmt, state VerState) (bool, error) {
 	if state.isSpec() {
 		return false, nil
 	}
@@ -75,7 +75,7 @@ func (ver *Verifier) uniFactWithoutIff(stmt *ast.UniFactStmt, state VerState) (b
 }
 
 func (ver *Verifier) uniFactWithIff(stmt *ast.UniFactStmt, state VerState) (bool, error) {
-	ok, err := ver.uniFactWithIffThenToIff(stmt, state)
+	ok, err := ver.uniFactWithIff_CheckThenToIff(stmt, state)
 	if err != nil {
 		return false, err
 	}
@@ -83,7 +83,7 @@ func (ver *Verifier) uniFactWithIff(stmt *ast.UniFactStmt, state VerState) (bool
 		return false, nil
 	}
 
-	ok, err = ver.uniFactWithIffToThen(stmt, state)
+	ok, err = ver.uniFactWithIff_CheckIffToThen(stmt, state)
 	if err != nil {
 		return false, err
 	}
@@ -94,7 +94,7 @@ func (ver *Verifier) uniFactWithIff(stmt *ast.UniFactStmt, state VerState) (bool
 	return true, nil
 }
 
-func (ver *Verifier) uniFactWithIffThenToIff(stmt *ast.UniFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) uniFactWithIff_CheckThenToIff(stmt *ast.UniFactStmt, state VerState) (bool, error) {
 	ver.newEnv(ver.env, ver.env.CurMatchEnv)
 	defer ver.deleteEnvAndRetainMsg()
 	for _, condFact := range stmt.ThenFacts {
@@ -132,7 +132,7 @@ func (ver *Verifier) uniFactWithIffThenToIff(stmt *ast.UniFactStmt, state VerSta
 	return true, nil
 }
 
-func (ver *Verifier) uniFactWithIffToThen(stmt *ast.UniFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) uniFactWithIff_CheckIffToThen(stmt *ast.UniFactStmt, state VerState) (bool, error) {
 	ver.newEnv(ver.env, ver.env.CurMatchEnv)
 	defer ver.deleteEnvAndRetainMsg()
 	for _, condFact := range stmt.IffFacts {

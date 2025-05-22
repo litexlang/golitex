@@ -58,7 +58,7 @@ func (ver *Verifier) logicalExprFact(stmt *ast.LogicExprStmt, state VerState) (b
 						}
 					}
 
-					ok, err := ver.ifFactsNotTrueThenOtherPartOfLogicalExprIsTrue(indexes, stmt, state)
+					ok, err := ver.IfFactsNotTrueThenOtherPartOfLogicalExprIsTrue(indexes, stmt, state)
 					if err != nil {
 						return false, err
 					}
