@@ -50,7 +50,7 @@ func (ver *Verifier) btPropExceptEqual_Rule_MemSpec(stmt *ast.SpecFactStmt, stat
 		return true, nil
 	}
 
-	ok, err = ver.specFactUsingMemSpecifically(stmt, state)
+	ok, err = ver.verSpecFact_UseMem(stmt, state)
 	if err != nil {
 		return false, err
 	}
