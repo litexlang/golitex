@@ -17,7 +17,7 @@ import (
 	ast "golitex/ast"
 )
 
-func cmpFcAtomLitFcFnRule(left, right ast.Fc) (bool, error) {
+func cmpFcLiterally(left, right ast.Fc) (bool, error) {
 	typeComp, fcEnum, err := CmpFcType(left, right)
 	if typeComp != 0 || err != nil {
 		return false, err
