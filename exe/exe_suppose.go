@@ -31,35 +31,26 @@ func (exec *Executor) supposePropMatchStmt(stmt *ast.SupposePropMatchStmt) (glob
 	exec.newEnv(originalEnv, stmt)
 	defer exec.deleteEnvAndRetainMsg()
 
-	execState, err := exec.supposeStmt_DeclaredParams(stmt)
-	if err != nil {
-		return glob.ExecState_Error, err
-	}
-	if execState != glob.ExecState_True {
-		return execState, nil
+	execState, err := exec.supposeStmt_declaredParams(stmt)
+	if err != nil || execState != glob.ExecState_True {
+		return execState, err
 	}
 
 	// run stmt body
 	execState, insideFacts, err := exec.supposeStmt_runStmtBody(stmt)
-	if err != nil {
-		return glob.ExecState_Error, err
-	}
-	if execState != glob.ExecState_True {
-		return execState, nil
+	if err != nil || execState != glob.ExecState_True {
+		return execState, err
 	}
 
-	execState, err = exec.supposeStmt_storeFactsInOriginalEnv(insideFacts, stmt)
-	if err != nil {
-		return glob.ExecState_Error, err
-	}
-	if execState != glob.ExecState_True {
-		return execState, nil
+	execState, err = exec.supposeStmt_storeFactsInOriginalEnv_addPrefixToSupposeFactAndBodyFacts(insideFacts, stmt)
+	if err != nil || execState != glob.ExecState_True {
+		return execState, err
 	}
 
 	return glob.ExecState_True, nil
 }
 
-func (exec *Executor) supposeStmt_DeclaredParams(stmt *ast.SupposePropMatchStmt) (glob.ExecState, error) {
+func (exec *Executor) supposeStmt_declaredParams(stmt *ast.SupposePropMatchStmt) (glob.ExecState, error) {
 	// declare new params in suppose environment
 	factSpecDef, ok := exec.env.GetPropDef(stmt.Fact.PropName)
 	if !ok {
@@ -147,7 +138,7 @@ func (exec *Executor) supposeStmt_runStmtBody(stmt *ast.SupposePropMatchStmt) (g
 	return glob.ExecState_True, insideFacts, nil
 }
 
-func (exec *Executor) supposeStmt_storeFactsInOriginalEnv(insideFacts []ast.FactStmt, stmt *ast.SupposePropMatchStmt) (glob.ExecState, error) {
+func (exec *Executor) supposeStmt_storeFactsInOriginalEnv_addPrefixToSupposeFactAndBodyFacts(insideFacts []ast.FactStmt, stmt *ast.SupposePropMatchStmt) (glob.ExecState, error) {
 	// store facts in original env
 	uniMap := map[string]ast.Fc{}
 	for _, supposePropParam := range stmt.Fact.Params {
@@ -169,13 +160,23 @@ func (exec *Executor) supposeStmt_storeFactsInOriginalEnv(insideFacts []ast.Fact
 		factsWithPrefix = append(factsWithPrefix, factWithPrefix)
 	}
 
+	newStmtFactPtr, err := ast.InstantiateSpecFact(&stmt.Fact, uniMap)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+	stmt.Fact = *newStmtFactPtr
+
 	originalEnv := exec.env.Parent
+	messages := []string{}
 	for _, fact := range factsWithPrefix {
 		err := originalEnv.NewFact(fact)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
+		messages = append(messages, fact.String())
 	}
+
+	exec.appendMsg(ast.SupposeNewFactsMsg(stmt, messages))
 
 	return glob.ExecState_True, nil
 }

@@ -578,3 +578,14 @@ func fnSetString(f *FcFn) string {
 	builder.WriteString(f.ParamSegs[0].String())
 	return builder.String()
 }
+
+func SupposeNewFactsMsg(stmt *SupposePropMatchStmt, messages []string) string {
+	builder := strings.Builder{}
+	builder.WriteString("know from true suppose fact:\n")
+	builder.WriteString(fmt.Sprintf("suppose %s:\n", stmt.Fact.String()))
+	for _, message := range messages {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(message, 1))
+		builder.WriteByte('\n')
+	}
+	return builder.String()
+}
