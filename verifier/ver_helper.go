@@ -26,9 +26,13 @@ func theUpMostEnvWhereRelatedThingsAreDeclared(stmt *ast.SpecFactStmt) *env.Env 
 	return ret
 }
 
-func isEqualFact(stmt ast.FactStmt) (*ast.SpecFactStmt, bool) {
+func isTrueEqualFact(stmt ast.FactStmt) (*ast.SpecFactStmt, bool) {
 	asSpecFact, ok := stmt.(*ast.SpecFactStmt)
 	if !ok {
+		return nil, false
+	}
+
+	if asSpecFact.TypeEnum != ast.TruePure {
 		return nil, false
 	}
 
