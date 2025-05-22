@@ -51,7 +51,7 @@ func (ver *Verifier) verFcEqual(left ast.Fc, right ast.Fc, state VerState) (bool
 		return true, nil
 	}
 
-	if !state.isFinalState() {
+	if !state.isFinalRound() {
 		if ok, err := ver.verEqualUniMem(left, right, state); err != nil {
 			return false, err
 		} else if ok {

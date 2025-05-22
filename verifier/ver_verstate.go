@@ -33,7 +33,7 @@ func (e VerState) requireMsg() bool {
 	}
 }
 
-func (e VerState) isFinalState() bool {
+func (e VerState) isFinalRound() bool {
 	if e == FinalRoundMsg || e == FinalRoundNoMsg {
 		return true
 	} else {
@@ -69,7 +69,7 @@ func (e VerState) toNoMsg() VerState {
 	}
 }
 
-func (e VerState) toSpec() VerState {
+func (e VerState) toFnialRound() VerState {
 	if e.requireMsg() {
 		return FinalRoundMsg
 	} else {

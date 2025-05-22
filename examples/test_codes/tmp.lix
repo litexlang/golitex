@@ -1,3 +1,5 @@
+"""
+
 set point
 set line
 set plane
@@ -17,20 +19,26 @@ fn line_of(a point, b point) line:
             then:
                 l = line_of(a, b)
 
-# a line is determined by two points
-obj a point, b point, l line:
-    a != b
-    $point_on_line(a, l)
-    $point_on_line(b, l)
-l = line_of(a, b)
+prove:
+    # a line is determined by two points
+    obj a point, b point, l line:
+        a != b
+        $point_on_line(a, l)
+        $point_on_line(b, l)
+    l = line_of(a, b)
 
-# line_of is commutative
-forall a point, b point:
-    a != b
-    then:
-        b != a
-        $point_on_line(a, line_of(a, b))
-        $point_on_line(b, line_of(a, b))
-        $point_on_line(a, line_of(b, a))
-        $point_on_line(b, line_of(b, a))
-        #line_of(a, b) = line_of(b, a)
+    # line_of is commutative
+    forall a point, b point:
+        a != b
+        then:
+            b != a
+            #$point_on_line(a, line_of(a, b))
+            #$point_on_line(b, line_of(a, b))
+            #$point_on_line(a, line_of(b, a))
+            #$point_on_line(b, line_of(b, a))
+            line_of(a, b) = line_of(b, a)
+
+"""
+
+know a != b
+b != a

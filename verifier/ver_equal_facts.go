@@ -45,7 +45,7 @@ func (ver *Verifier) cmpFc(left ast.Fc, right ast.Fc, state VerState) (bool, err
 	if ok {
 		rightAsFn, ok := right.(*ast.FcFn)
 		if ok {
-			ok, err = ver.fcFnEq(leftAsFn, rightAsFn, state.toSpec())
+			ok, err = ver.fcFnEq(leftAsFn, rightAsFn, state.toFnialRound())
 			if err != nil {
 				return false, err
 			}
