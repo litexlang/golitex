@@ -21,86 +21,86 @@ import (
 	"strings"
 )
 
-func (ver *Verifier) specFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if ver.env.IsSpecFactPropCommutative(stmt) {
-		return ver.specFact_commutaive(stmt, state)
-	} else {
-		return ver.specFact_no_commutative(stmt, state)
-	}
-}
+// func (ver *Verifier) specFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+// 	if ver.env.IsSpecFactPropCommutative(stmt) {
+// 		return ver.specFact_commutaive(stmt, state)
+// 	} else {
+// 		return ver.specFact_no_commutative(stmt, state)
+// 	}
+// }
 
-func (ver *Verifier) specFact_commutaive(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	ok, err := ver.specFact_no_commutative(stmt, state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		if state.requireMsg() {
-			ver.successWithMsg(stmt.String(), "")
-		} else {
-			ver.successNoMsg()
-		}
-		return true, nil
-	}
+// func (ver *Verifier) specFact_commutaive(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+// 	ok, err := ver.specFact_no_commutative(stmt, state)
+// 	if err != nil {
+// 		return false, err
+// 	}
+// 	if ok {
+// 		if state.requireMsg() {
+// 			ver.successWithMsg(stmt.String(), "")
+// 		} else {
+// 			ver.successNoMsg()
+// 		}
+// 		return true, nil
+// 	}
 
-	reverseFact, err := stmt.ReverseParameterOrder()
-	if err != nil {
-		return false, err
-	}
+// 	reverseFact, err := stmt.ReverseParameterOrder()
+// 	if err != nil {
+// 		return false, err
+// 	}
 
-	ok, err = ver.specFact_no_commutative(reverseFact, state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		if state.requireMsg() {
-			ver.successWithMsg(stmt.String(), fmt.Sprintf("prop %s is commutative and %s is true", stmt.PropName.String(), reverseFact.String()))
-		} else {
-			ver.successNoMsg()
-		}
-		return true, nil
-	}
-	return false, nil
-}
+// 	ok, err = ver.specFact_no_commutative(reverseFact, state)
+// 	if err != nil {
+// 		return false, err
+// 	}
+// 	if ok {
+// 		if state.requireMsg() {
+// 			ver.successWithMsg(stmt.String(), fmt.Sprintf("prop %s is commutative and %s is true", stmt.PropName.String(), reverseFact.String()))
+// 		} else {
+// 			ver.successNoMsg()
+// 		}
+// 		return true, nil
+// 	}
+// 	return false, nil
+// }
 
-func (ver *Verifier) specFact_no_commutative(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	// if not satisfy para req(dom), return false
-	ok, err := ver.FcSatisfySpecFactParaReq(stmt)
-	if err != nil {
-		return false, err
-	}
-	if !ok {
-		return false, nil
-	}
+// func (ver *Verifier) specFact_no_commutative(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+// 	// if not satisfy para req(dom), return false
+// 	ok, err := ver.FcSatisfySpecFactParaReq(stmt)
+// 	if err != nil {
+// 		return false, err
+// 	}
+// 	if !ok {
+// 		return false, nil
+// 	}
 
-	if stmt.NameIs(glob.KeywordInduction) {
-		return ver.mathInductionFact(stmt, state)
-	}
+// 	if stmt.NameIs(glob.KeywordInduction) {
+// 		return ver.mathInductionFact(stmt, state)
+// 	}
 
-	if stmt.NameIs(glob.KeywordCommutativeFn) {
-		return ver.commutativeFnByDef(stmt, state)
-	}
+// 	if stmt.NameIs(glob.KeywordCommutativeFn) {
+// 		return ver.commutativeFnByDef(stmt, state)
+// 	}
 
-	if stmt.NameIs(glob.KeywordIn) {
-		ok, err := ver.inFact(stmt, state)
-		if err != nil {
-			return false, err
-		}
-		if ok {
-			return true, nil
-		}
-	}
+// 	if stmt.NameIs(glob.KeywordIn) {
+// 		ok, err := ver.inFact(stmt, state)
+// 		if err != nil {
+// 			return false, err
+// 		}
+// 		if ok {
+// 			return true, nil
+// 		}
+// 	}
 
-	if stmt.IsPureFact() {
-		return ver.pureFact(stmt, state)
-	}
+// 	if stmt.IsPureFact() {
+// 		return ver.pureFact(stmt, state)
+// 	}
 
-	if stmt.IsExist_St_Fact() {
-		return ver.exist_st_Fact(stmt, state)
-	}
+// 	if stmt.IsExist_St_Fact() {
+// 		return ver.exist_st_Fact(stmt, state)
+// 	}
 
-	return false, fmt.Errorf("invalid type of stmt")
-}
+// 	return false, fmt.Errorf("invalid type of stmt")
+// }
 
 func (ver *Verifier) pureFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if ok, err := ver.isEqualFact_Check(stmt, state); err != nil {
@@ -445,54 +445,54 @@ func (ver *Verifier) verifyLogicExprSteps(knownFact *env.KnownSpecFact_InLogicEx
 	return true, nil
 }
 
-func (ver *Verifier) specFactProveByDefinition(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	nextState := state.addRound()
+// func (ver *Verifier) specFactProveByDefinition(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+// 	nextState := state.addRound()
 
-	if !stmt.IsTrue() {
-		return false, nil
-	}
+// 	if !stmt.IsTrue() {
+// 		return false, nil
+// 	}
 
-	defStmt, ok := ver.env.GetPropDef(stmt.PropName)
-	if !ok {
-		// 这里可能是因为这个propName是exist prop，所以没有定义
-		return false, nil
-	}
+// 	defStmt, ok := ver.env.GetPropDef(stmt.PropName)
+// 	if !ok {
+// 		// 这里可能是因为这个propName是exist prop，所以没有定义
+// 		return false, nil
+// 	}
 
-	if len(defStmt.IffFacts) == 0 {
-		// REMARK: 如果IFFFacts不存在，那我们认为是 没有iff能验证prop，而不是prop自动成立
-		return false, nil
-	}
+// 	if len(defStmt.IffFacts) == 0 {
+// 		// REMARK: 如果IFFFacts不存在，那我们认为是 没有iff能验证prop，而不是prop自动成立
+// 		return false, nil
+// 	}
 
-	iffToProp := defStmt.IffToPropUniFact()
-	paramArrMap := map[string]ast.Fc{}
-	for i, param := range stmt.Params {
-		paramArrMap[defStmt.DefHeader.Params[i]] = param
-	}
+// 	iffToProp := defStmt.IffToPropUniFact()
+// 	paramArrMap := map[string]ast.Fc{}
+// 	for i, param := range stmt.Params {
+// 		paramArrMap[defStmt.DefHeader.Params[i]] = param
+// 	}
 
-	// 本质上不需要把所有的参数都instantiate，只需要instantiate在dom里的就行
-	instantiatedIffToProp, err := ast.InstantiateUniFact(iffToProp, paramArrMap)
-	if err != nil {
-		return false, err
-	}
-	// prove all domFacts are true
-	for _, domFact := range instantiatedIffToProp.DomFacts {
-		ok, err := ver.FactStmt(domFact, nextState)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, nil
-		}
-	}
+// 	// 本质上不需要把所有的参数都instantiate，只需要instantiate在dom里的就行
+// 	instantiatedIffToProp, err := ast.InstantiateUniFact(iffToProp, paramArrMap)
+// 	if err != nil {
+// 		return false, err
+// 	}
+// 	// prove all domFacts are true
+// 	for _, domFact := range instantiatedIffToProp.DomFacts {
+// 		ok, err := ver.FactStmt(domFact, nextState)
+// 		if err != nil {
+// 			return false, err
+// 		}
+// 		if !ok {
+// 			return false, nil
+// 		}
+// 	}
 
-	if state.requireMsg() {
-		ver.successWithMsg(stmt.String(), defStmt.String())
-	} else {
-		ver.successNoMsg()
-	}
+// 	if state.requireMsg() {
+// 		ver.successWithMsg(stmt.String(), defStmt.String())
+// 	} else {
+// 		ver.successNoMsg()
+// 	}
 
-	return true, nil
-}
+// 	return true, nil
+// }
 
 // 这里需要 recursive 地调用 这个，而不是只是 cmpFcRule. 之后再考虑recursive的情况
 func (ver *Verifier) fcEqual_Commutative_Associative_CmpRule(left ast.Fc, right ast.Fc, verState VerState) (bool, error) {

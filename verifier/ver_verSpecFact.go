@@ -13,6 +13,7 @@
 package litex_verifier
 
 import (
+	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
 )
@@ -119,6 +120,134 @@ func (ver *Verifier) verSpecFactUseDefinition(stmt *ast.SpecFactStmt, state VerS
 	}
 
 	return false, nil
+}
+
+func (ver *Verifier) specFactProveByDefinition(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	nextState := state.addRound()
+
+	if !stmt.IsTrue() {
+		return false, nil
+	}
+
+	defStmt, ok := ver.env.GetPropDef(stmt.PropName)
+	if !ok {
+		// 这里可能是因为这个propName是exist prop，所以没有定义
+		return false, nil
+	}
+
+	if len(defStmt.IffFacts) == 0 {
+		// REMARK: 如果IFFFacts不存在，那我们认为是 没有iff能验证prop，而不是prop自动成立
+		return false, nil
+	}
+
+	iffToProp := defStmt.IffToPropUniFact()
+	paramArrMap := map[string]ast.Fc{}
+	for i, param := range stmt.Params {
+		paramArrMap[defStmt.DefHeader.Params[i]] = param
+	}
+
+	// 本质上不需要把所有的参数都instantiate，只需要instantiate在dom里的就行
+	instantiatedIffToProp, err := ast.InstantiateUniFact(iffToProp, paramArrMap)
+	if err != nil {
+		return false, err
+	}
+	// prove all domFacts are true
+	for _, domFact := range instantiatedIffToProp.DomFacts {
+		ok, err := ver.FactStmt(domFact, nextState)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+	}
+
+	if state.requireMsg() {
+		ver.successWithMsg(stmt.String(), defStmt.String())
+	} else {
+		ver.successNoMsg()
+	}
+
+	return true, nil
+}
+
+func (ver *Verifier) useExistPropDefProveExist_St(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	sepIndex := stmt.Exist_St_SeparatorIndex()
+	if sepIndex == -1 {
+		return false, fmt.Errorf("%s has no separator", stmt.String())
+	}
+
+	propDef, ok := ver.env.GetExistPropDef(stmt.PropName)
+	if !ok {
+		// TODO: 如果没声明，应该报错
+		return false, fmt.Errorf("%s has no definition", stmt.String())
+	}
+
+	uniConMap := map[string]ast.Fc{}
+	for i := 0; i < sepIndex; i++ {
+		uniConMap[propDef.ExistParams[i]] = stmt.Params[i]
+	}
+
+	for i := sepIndex + 1; i < len(stmt.Params); i++ {
+		uniConMap[propDef.DefBody.DefHeader.Params[i-sepIndex-1]] = stmt.Params[i]
+	}
+
+	domFacts := []ast.FactStmt{}
+	for _, fact := range propDef.DefBody.DomFacts {
+		fixed, err := fact.Instantiate(uniConMap)
+		if err != nil {
+			return false, err
+		}
+		domFacts = append(domFacts, fixed)
+	}
+
+	thenFacts := []*ast.SpecFactStmt{}
+	for _, thenFact := range propDef.DefBody.IffFacts {
+		fixed, err := thenFact.Instantiate(uniConMap)
+		if err != nil {
+			return false, err
+		}
+		fixedAsSpecFact, ok := fixed.(*ast.SpecFactStmt)
+		if !ok {
+			return false, nil
+			// 还是有可能then里不是 specFact的，比如定义可惜收敛；这时候我不报错，我只是让你不能证明 not exist。通常这种时候用法也都是 exist，用不着考虑not exist。你非要考虑not exist,那就用 not exist 来表示 forall，即给forall取个名字
+			// return false, fmt.Errorf("instantiate spec fact stmt failed")
+		}
+		if !stmt.IsTrue() {
+			fixedAsSpecFact = fixedAsSpecFact.ReverseSpecFact()
+		}
+		thenFacts = append(thenFacts, fixedAsSpecFact)
+	}
+
+	for _, domFact := range domFacts {
+		ok, err := ver.FactStmt(domFact, state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			if state.requireMsg() {
+				msg := fmt.Sprintf("dom fact %s is unkown\n", domFact.String())
+				ver.unknownMsgEnd(msg)
+			}
+			return false, nil
+		}
+	}
+
+	for _, thenFact := range thenFacts {
+		ok, err := ver.FactStmt(thenFact, state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+	}
+
+	if state.requireMsg() {
+		ver.successMsgEnd(stmt.String(), "")
+	}
+
+	return true, nil
 }
 
 func (ver *Verifier) verSpecFactSpecMemAndLogicMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
