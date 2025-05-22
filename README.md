@@ -8,7 +8,7 @@
 
 **Litex: A Simple, Elegant, and Powerful Mathematical Proof Assistant**  
 
-Litex is a groundbreaking mathematical proof assistant that dramatically reduces the complexity of formal proofs (lowering the de Bruijn factor from 10-20 in traditional systems to ~1, simplifying proofs by 10 to 20 times). It makes mathematical proofs as elegant and intuitive as programming.  
+Litex is a groundbreaking mathematical proof assistant that dramatically reduces the complexity of formal proofs (lowering the de Bruijn factor from 10-20 in traditional systems to ~1, simplifying proofs by 10 to 20 times). It scales up reasoning by making the process of writing mathematical proofs as intuitive and large-scale as software engineering.
 
 Unlike traditional proof assistants, Litex sacrifices Turing completeness to focus exclusively on mathematical verification, adopting a Python-like syntax for ease of use and LaTeX-like elegance for mathematical expression (similar to how SQL sacrifices completeness to specialize in database logic). This makes Litex accessible not only to professional mathematicians but also to beginners. More importantly, Litex’s clean syntax and structured representation make it an ideal training dataset for AI reasoning, helping AI models develop more reliable mathematical reasoning capabilities.  
 
@@ -20,6 +20,7 @@ Unlike traditional proof assistants, Litex sacrifices Turing completeness to foc
 3. **Instant Paper Review** – Reduces peer-review time from months to seconds.  
 4. **Collaborative Proof Platform** – Enables large-scale collaboration, akin to GitHub for mathematical proofs.  
 5. **High-Quality AI Training Data** – Provides structured, machine-readable proofs to enhance AI reasoning.  
+6. **Mathematical Discovery** – Enables humans and AI to make frontier discoveries by reducing cognitive load of formalizing math.
 
 Litex has already garnered attention from leading institutions worldwide, including **CMU, Tsinghua, Peking University, Pujiang Lab, Shanghai Jiao Tong University, Fudan University**.  
 
@@ -37,7 +38,9 @@ _That language is an instrument of Human reason, and not merely a medium for the
 
 _–- George Boole_
 
-**Litex is a simple yet powerful proof assistant with a remarkably low de Bruijn factor (~1 vs. ~20 in traditional systems). By drastically reducing the gap between formal and informal proofs, Litex will accelerate mathematical discovery, reshape mathematical practice, and serve as key infrastructure for future AI models.**
+<!-- TODO: 说明 1. 数学是形式化的语言，可以机械地验证每一步的推理 2. 机械推理的好处：帮用户避免错误，让证明更模块化，模块化的事物更可复用、可协作、可扩展 3. 在 ai 世界，形式化的东西是ai训练的重要一环，不论是数据还是深度学习算法上都是如此。 -->
+
+<!-- TODO: 但现在的形式化语言门槛太高。从第一性原理来看，这些语言本质上是收到数学启发的编程语言。但现在人们呼吁应用编程到数学上来。数学推理需要的逻辑和编程涉及到的逻辑是不一样的。比如，验证数学的时候，我们不需要存临时变量，我们不用在脑海里针对某一行loop1000次来验证。过于复杂和和日常表达不一致的形式化语言：即使是数学家都难以理解的那种，是数学界和AI界的瓶颈。 -->
 
 If even children can reason naturally, a formal language that combines rigor and intuition must be possible -- it simply hasn’t been invented yet. Litex is designed to create precisely such a language. It welcomes everyone, from children to experts, to use it to reason about math.
 
