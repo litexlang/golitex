@@ -141,60 +141,15 @@ func (ver *Verifier) pureFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool,
 func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 	for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
-		knownSameEnumPkgPropFactsInSpecMem, got := curEnv.KnownFacts.SpecFactMem.GetSameEnumPkgPropFacts(stmt)
-
-		if got {
-		LoopOverFacts:
-			for _, knownFact := range knownSameEnumPkgPropFactsInSpecMem {
-				// TODO: 我确实没想好是否要禁止用户让一个prop下面的fact有变长的参数列表
-				if len(knownFact.Fact.Params) != len(stmt.Params) {
-					continue
-				}
-
-				if knownFact.Fact.TypeEnum != stmt.TypeEnum {
-					continue
-				}
-
-				for i, knownParam := range knownFact.Fact.Params {
-					// ok, err := ver.fcEqual_Commutative_Associative_CmpRule(knownParam, stmt.Params[i], state)
-					ok, err := ver.fcEqualSpec(knownParam, stmt.Params[i], state)
-					if err != nil {
-						return false, err
-					}
-					if !ok {
-						continue LoopOverFacts
-					}
-				}
-
-				if state.requireMsg() {
-					var verifiedBy strings.Builder
-					verifiedBy.WriteString(knownFact.String())
-					verifiedBy.WriteString("\n")
-					for i, knownParam := range knownFact.Fact.Params {
-						verifiedBy.WriteString(fmt.Sprintf("%s = %s\n", knownParam, stmt.Params[i]))
-					}
-					ver.successWithMsg(stmt.String(), verifiedBy.String())
-				} else {
-					ver.successNoMsg()
-				}
-
-				return true, nil
-			}
+		ok, err := ver.specFact_SpecMem(curEnv, stmt, state)
+		if err != nil || ok {
+			return ok, err
 		}
 
-		KnownSameEnumPkgPropFactsInLogicExpr, got := curEnv.KnownFacts.SpecFactInLogicExprMem.GetSameEnumPkgPropFacts(stmt)
-		if got {
-			for _, knownFactUnderLogicExpr := range KnownSameEnumPkgPropFactsInLogicExpr {
-				ok, err := ver.SpecFactSpecUnderLogicalExpr(&knownFactUnderLogicExpr, stmt, state)
-				if err != nil {
-					return false, err
-				}
-				if ok {
-					return true, nil
-				}
-			}
+		ok, err = ver.specFact_LogicMem(curEnv, stmt, state)
+		if err != nil || ok {
+			return ok, err
 		}
-
 	}
 	return false, nil
 }
@@ -901,4 +856,71 @@ func (ver *Verifier) leftFnAlwaysEqualToRight(leftFnDef *ast.DefFnStmt, rightFnD
 	}
 
 	return true, nil
+}
+
+func (ver *Verifier) specFact_SpecMem(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	knownFacts, got := curEnv.KnownFacts.SpecFactMem.GetSameEnumPkgPropFacts(stmt)
+
+	if !got {
+		return false, nil
+	}
+
+LoopOverFacts:
+	for _, knownFact := range knownFacts {
+		if len(knownFact.Fact.Params) != len(stmt.Params) || knownFact.Fact.TypeEnum != stmt.TypeEnum {
+			continue
+		}
+
+		for i, knownParam := range knownFact.Fact.Params {
+			ok, err := ver.fcEqualSpec(knownParam, stmt.Params[i], state)
+			if err != nil {
+				return false, err
+			}
+			if !ok {
+				continue LoopOverFacts
+			}
+		}
+
+		if state.requireMsg() {
+			ver.specFactSpecMemTrueMsg(stmt, knownFact)
+		} else {
+			ver.successNoMsg()
+		}
+
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (ver *Verifier) specFactSpecMemTrueMsg(stmt *ast.SpecFactStmt, knownFact env.KnownSpecFact) {
+	var verifiedBy strings.Builder
+	verifiedBy.WriteString(knownFact.String())
+	verifiedBy.WriteString("\n")
+	for i, knownParam := range knownFact.Fact.Params {
+		verifiedBy.WriteString(fmt.Sprintf("%s = %s\n", knownParam, stmt.Params[i]))
+	}
+	ver.successWithMsg(stmt.String(), verifiedBy.String())
+}
+
+func (ver *Verifier) specFact_LogicMem(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	knownFacts, got := curEnv.KnownFacts.SpecFactInLogicExprMem.GetSameEnumPkgPropFacts(stmt)
+
+	if !got {
+		return false, nil
+	}
+
+	if got {
+		for _, knownFactUnderLogicExpr := range knownFacts {
+			ok, err := ver.SpecFactSpecUnderLogicalExpr(&knownFactUnderLogicExpr, stmt, state)
+			if err != nil {
+				return false, err
+			}
+			if ok {
+				return true, nil
+			}
+		}
+	}
+
+	return false, nil
 }

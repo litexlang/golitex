@@ -581,8 +581,8 @@ func fnSetString(f *FcFn) string {
 
 func SupposeNewFactsMsg(stmt *SupposePropMatchStmt, messages []string) string {
 	builder := strings.Builder{}
-	builder.WriteString("know from true suppose fact:\n")
-	builder.WriteString(fmt.Sprintf("suppose %s:\n", stmt.Fact.String()))
+	builder.WriteString(fmt.Sprintf("know from true %s fact:\n", glob.KeywordSuppose))
+	builder.WriteString(fmt.Sprintf("%s %s:\n", glob.KeywordSuppose, stmt.Fact.String()))
 	for _, message := range messages {
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(message, 1))
 		builder.WriteByte('\n')
