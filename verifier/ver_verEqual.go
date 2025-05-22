@@ -112,10 +112,48 @@ func (ver *Verifier) verEqualSpecMem(left ast.Fc, right ast.Fc, state VerState) 
 
 func (ver *Verifier) verEqualSpecMemAndLogicMem(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
 	equalFact := ver.makeEqualFact(left, right)
-	return ver.verSpecFactSpecMemAndLogicMem(equalFact, state)
+	ok, err := ver.verSpecFactSpecMemAndLogicMem(equalFact, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
+	equalFactParamReversed, err := equalFact.ReverseSpecFactParamsOrder()
+	if err != nil {
+		return false, err
+	}
+	ok, err = ver.verSpecFactSpecMemAndLogicMem(equalFactParamReversed, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+	return false, nil
 }
 
 func (ver *Verifier) verEqualUniMem(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
 	equalFact := ver.makeEqualFact(left, right)
-	return ver.verSpecFactUniMem(equalFact, state)
+	ok, err := ver.verSpecFactUniMem(equalFact, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
+	equalFactParamReversed, err := equalFact.ReverseSpecFactParamsOrder()
+	if err != nil {
+		return false, err
+	}
+	ok, err = ver.verSpecFactUniMem(equalFactParamReversed, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+	return false, nil
 }
