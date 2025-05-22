@@ -30,7 +30,12 @@ func TestLastStmt(t *testing.T) {
 	topStmtSlice := setupAndParseStmtTest(code, parserEnv)
 	parseTime := time.Since(start)
 	start = time.Now()
-	messages := execStmtTest(topStmtSlice[len(topStmtSlice)-1:])
+	var messages []string
+	if len(topStmtSlice) == 0 {
+		fmt.Println("nothing is parsered")
+	} else {
+		messages = execStmtTest(topStmtSlice[len(topStmtSlice)-1:])
+	}
 	executionTime := time.Since(start)
 	printExecMsg(messages)
 	fmt.Printf("get last top stmt takes %v\nparsing takes %v\nexecution takes %v\n", readFileTime, parseTime, executionTime)
