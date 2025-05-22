@@ -25,13 +25,13 @@ func (ver *Verifier) specFactOrEqualFact_SpecMode(stmt *ast.SpecFactStmt, state 
 	return ver.FactStmt(stmt, state.toFnialRound())
 }
 
-func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) verSpecFact_UseMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
 	// 把这个判断放在 curEnv 的处理的外面（而不是每次迭代每次看），让整个程序快了30%
 	if ver.env.CurMatchEnv != nil {
 		for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
-			ok, err := ver.specFact_SpecMem(curEnv, stmt, state)
+			ok, err := ver.specFact_SpecMem_atEnv(curEnv, stmt, state)
 			if err != nil || ok {
 				return ok, err
 			}
@@ -48,7 +48,7 @@ func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state 
 		}
 	} else {
 		for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
-			ok, err := ver.specFact_SpecMem(curEnv, stmt, state)
+			ok, err := ver.specFact_SpecMem_atEnv(curEnv, stmt, state)
 			if err != nil || ok {
 				return ok, err
 			}
@@ -63,17 +63,90 @@ func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state 
 	return false, nil
 }
 
-func (ver *Verifier) SpecFactUni(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	nextState := state.addRound()
 
 	upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
 	for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
-		ok, err := ver.SpecFactUniAtEnv(curEnv, stmt, nextState)
+		ok, err := ver.specFact_UniMem_asEnv(curEnv, stmt, nextState)
+		if err != nil || ok {
+			return ok, err
+		}
+
+		ok, err = ver.specFact_inLogicExpr_inUniFactMem_atEnv(curEnv, stmt, nextState)
+		if err != nil || ok {
+			return ok, err
+		}
+
+		// ok, err := ver.SpecFactUniAtEnv(curEnv, stmt, nextState)
+		// if err != nil {
+		// 	return false, err
+		// }
+		// if ok {
+		// 	return true, nil
+		// }
+	}
+	return false, nil
+}
+
+func (ver *Verifier) specFact_inLogicExpr_inUniFactMem_atEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	searchedSpecFactsInLogicExpr, got := curEnv.KnownFacts.SpecFact_InLogicExpr_InUniFactMem.GetSameEnumPkgPropFacts(stmt)
+
+	if !got {
+		return false, nil
+	}
+
+	nextState := state.addRound().toNoMsg()
+
+	return ver.iterate_KnownSpecInLogic_InUni_applyMatch(stmt, searchedSpecFactsInLogicExpr, nextState)
+}
+
+func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch(stmt *ast.SpecFactStmt, knownFacts []env.SpecFact_InLogicExpr_InUniFact, state VerState) (bool, error) {
+	for _, knownFactUnderLogicExpr := range knownFacts {
+		paramArrMap, ok, err := ver.matchStoredUniSpecWithSpec(env.KnownSpecFact_InUniSpecFact{SpecFact: knownFactUnderLogicExpr.SpecFact, UniFact: knownFactUnderLogicExpr.UniFact}, stmt)
 		if err != nil {
 			return false, err
 		}
+		if !ok {
+			continue
+		}
+
+		// 防止 两个不相等的参数对应到了同一个自由变量
+		uniConMap, ok, err := ver.ValuesUnderKeyInMatchMapEqualSpec(paramArrMap, state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			continue
+		}
+
+		instaniatedLogicExpr, err := knownFactUnderLogicExpr.LogicExpr.Instantiate(uniConMap)
+		if err != nil {
+			return false, err
+		}
+		instaniatedLogicExprAsKnownSpecFact, ok := instaniatedLogicExpr.(*ast.LogicExprStmt)
+		if !ok {
+			return false, fmt.Errorf("instaniatedLogicExpr is not a KnownSpecFact_InLogicExpr")
+		}
+
+		knownSpecFact_InLogicExpr_InUniFact := env.KnownSpecFact_InLogicExpr{
+			SpecFact:  stmt,
+			Index:     knownFactUnderLogicExpr.Index,
+			LogicExpr: instaniatedLogicExprAsKnownSpecFact,
+		}
+
+		ok, err = ver.SpecFactSpecUnderLogicalExpr(&knownSpecFact_InLogicExpr_InUniFact, stmt, state)
+		if err != nil {
+			return false, err
+		}
+
 		if ok {
+			if state.requireMsg() {
+				ver.successWithMsg(stmt.String(), knownFactUnderLogicExpr.String())
+			} else {
+				ver.successNoMsg()
+			}
 			return true, nil
 		}
 	}
@@ -81,109 +154,164 @@ func (ver *Verifier) SpecFactUni(stmt *ast.SpecFactStmt, state VerState) (bool, 
 	return false, nil
 }
 
-func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	nextState := state.addRound().toNoMsg()
-
+func (ver *Verifier) specFact_UniMem_asEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	searchedSpecFacts, got := curEnv.KnownFacts.SpecFactInUniFactMem.GetSameEnumPkgPropFacts(stmt)
-	if got {
-		for _, knownFact := range searchedSpecFacts {
-			// TODO： 这里要确保搜到的事实的每一位freeObj和concreteObj能对上，然后要记录一下每一位freeObj是哪个concreteObj。还要保证涉及到的Known UniFact的param都被match上了
-			paramArrMap, ok, err := ver.matchStoredUniSpecWithSpec(knownFact, stmt)
-			if err != nil {
-				return false, err
-			}
-			if !ok {
-				continue
-			}
 
-			// 防止 两个不相等的参数对应到了同一个自由变量
-			uniConMap, ok, err := ver.ValuesUnderKeyInMatchMapEqualSpec(paramArrMap, state)
-			if err != nil {
-				return false, err
-			}
-			if !ok {
-				continue
-			}
-
-			insKnownUniFact, err := ast.InstantiateUniFact(knownFact.UniFact, uniConMap)
-			if err != nil {
-				return false, err
-			}
-
-			ok, err = ver.proveUniFactDomFacts(insKnownUniFact, state)
-			if err != nil {
-				return false, err
-			}
-
-			// ok, err = ver.specFactUni(&knownFact, uniConMap, nextState)
-			// if err != nil {
-			// 	return false, err
-			// }
-
-			if ok {
-				if state.requireMsg() {
-					ver.successWithMsg(stmt.String(), knownFact.String())
-				} else {
-					ver.successNoMsg()
-				}
-				return true, nil
-			}
-		}
+	if !got {
+		return false, nil
 	}
 
-	searchedSpecFactsInLogicExpr, got := curEnv.KnownFacts.SpecFact_InLogicExpr_InUniFactMem.GetSameEnumPkgPropFacts(stmt)
-	if got {
-		for _, knownFactUnderLogicExpr := range searchedSpecFactsInLogicExpr {
-			paramArrMap, ok, err := ver.matchStoredUniSpecWithSpec(env.KnownSpecFact_InUniSpecFact{SpecFact: knownFactUnderLogicExpr.SpecFact, UniFact: knownFactUnderLogicExpr.UniFact}, stmt)
-			if err != nil {
-				return false, err
-			}
-			if !ok {
-				continue
-			}
+	nextState := state.addRound().toNoMsg()
 
-			// 防止 两个不相等的参数对应到了同一个自由变量
-			uniConMap, ok, err := ver.ValuesUnderKeyInMatchMapEqualSpec(paramArrMap, state)
-			if err != nil {
-				return false, err
-			}
-			if !ok {
-				continue
-			}
+	return ver.iterate_KnownSpecInUniFacts_applyMatch(stmt, searchedSpecFacts, nextState)
+}
 
-			instaniatedLogicExpr, err := knownFactUnderLogicExpr.LogicExpr.Instantiate(uniConMap)
-			if err != nil {
-				return false, err
-			}
-			instaniatedLogicExprAsKnownSpecFact, ok := instaniatedLogicExpr.(*ast.LogicExprStmt)
-			if !ok {
-				return false, fmt.Errorf("instaniatedLogicExpr is not a KnownSpecFact_InLogicExpr")
-			}
+func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch(stmt *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InUniSpecFact, state VerState) (bool, error) {
+	for _, knownFact := range knownFacts {
+		// TODO： 这里要确保搜到的事实的每一位freeObj和concreteObj能对上，然后要记录一下每一位freeObj是哪个concreteObj。还要保证涉及到的Known UniFact的param都被match上了
+		paramArrMap, ok, err := ver.matchStoredUniSpecWithSpec(knownFact, stmt)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			continue
+		}
 
-			knownSpecFact_InLogicExpr_InUniFact := env.KnownSpecFact_InLogicExpr{
-				SpecFact:  stmt,
-				Index:     knownFactUnderLogicExpr.Index,
-				LogicExpr: instaniatedLogicExprAsKnownSpecFact,
-			}
+		// 防止 两个不相等的参数对应到了同一个自由变量
+		uniConMap, ok, err := ver.ValuesUnderKeyInMatchMapEqualSpec(paramArrMap, state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			continue
+		}
 
-			ok, err = ver.SpecFactSpecUnderLogicalExpr(&knownSpecFact_InLogicExpr_InUniFact, stmt, nextState)
-			if err != nil {
-				return false, err
-			}
+		insKnownUniFact, err := ast.InstantiateUniFact(knownFact.UniFact, uniConMap)
+		if err != nil {
+			return false, err
+		}
 
-			if ok {
-				if state.requireMsg() {
-					ver.successWithMsg(stmt.String(), knownFactUnderLogicExpr.String())
-				} else {
-					ver.successNoMsg()
-				}
-				return true, nil
+		ok, err = ver.proveUniFactDomFacts(insKnownUniFact, state)
+		if err != nil {
+			return false, err
+		}
+
+		if ok {
+			if state.requireMsg() {
+				ver.successWithMsg(stmt.String(), knownFact.String())
+			} else {
+				ver.successNoMsg()
 			}
+			return true, nil
 		}
 	}
 
 	return false, nil
 }
+
+// func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+// 	nextState := state.addRound().toNoMsg()
+
+// 	searchedSpecFacts, got := curEnv.KnownFacts.SpecFactInUniFactMem.GetSameEnumPkgPropFacts(stmt)
+// 	if got {
+// 		for _, knownFact := range searchedSpecFacts {
+// 			// TODO： 这里要确保搜到的事实的每一位freeObj和concreteObj能对上，然后要记录一下每一位freeObj是哪个concreteObj。还要保证涉及到的Known UniFact的param都被match上了
+// 			paramArrMap, ok, err := ver.matchStoredUniSpecWithSpec(knownFact, stmt)
+// 			if err != nil {
+// 				return false, err
+// 			}
+// 			if !ok {
+// 				continue
+// 			}
+
+// 			// 防止 两个不相等的参数对应到了同一个自由变量
+// 			uniConMap, ok, err := ver.ValuesUnderKeyInMatchMapEqualSpec(paramArrMap, state)
+// 			if err != nil {
+// 				return false, err
+// 			}
+// 			if !ok {
+// 				continue
+// 			}
+
+// 			insKnownUniFact, err := ast.InstantiateUniFact(knownFact.UniFact, uniConMap)
+// 			if err != nil {
+// 				return false, err
+// 			}
+
+// 			ok, err = ver.proveUniFactDomFacts(insKnownUniFact, state)
+// 			if err != nil {
+// 				return false, err
+// 			}
+
+// 			// ok, err = ver.specFactUni(&knownFact, uniConMap, nextState)
+// 			// if err != nil {
+// 			// 	return false, err
+// 			// }
+
+// 			if ok {
+// 				if state.requireMsg() {
+// 					ver.successWithMsg(stmt.String(), knownFact.String())
+// 				} else {
+// 					ver.successNoMsg()
+// 				}
+// 				return true, nil
+// 			}
+// 		}
+// 	}
+
+// 	searchedSpecFactsInLogicExpr, got := curEnv.KnownFacts.SpecFact_InLogicExpr_InUniFactMem.GetSameEnumPkgPropFacts(stmt)
+// 	if got {
+// 		for _, knownFactUnderLogicExpr := range searchedSpecFactsInLogicExpr {
+// 			paramArrMap, ok, err := ver.matchStoredUniSpecWithSpec(env.KnownSpecFact_InUniSpecFact{SpecFact: knownFactUnderLogicExpr.SpecFact, UniFact: knownFactUnderLogicExpr.UniFact}, stmt)
+// 			if err != nil {
+// 				return false, err
+// 			}
+// 			if !ok {
+// 				continue
+// 			}
+
+// 			// 防止 两个不相等的参数对应到了同一个自由变量
+// 			uniConMap, ok, err := ver.ValuesUnderKeyInMatchMapEqualSpec(paramArrMap, state)
+// 			if err != nil {
+// 				return false, err
+// 			}
+// 			if !ok {
+// 				continue
+// 			}
+
+// 			instaniatedLogicExpr, err := knownFactUnderLogicExpr.LogicExpr.Instantiate(uniConMap)
+// 			if err != nil {
+// 				return false, err
+// 			}
+// 			instaniatedLogicExprAsKnownSpecFact, ok := instaniatedLogicExpr.(*ast.LogicExprStmt)
+// 			if !ok {
+// 				return false, fmt.Errorf("instaniatedLogicExpr is not a KnownSpecFact_InLogicExpr")
+// 			}
+
+// 			knownSpecFact_InLogicExpr_InUniFact := env.KnownSpecFact_InLogicExpr{
+// 				SpecFact:  stmt,
+// 				Index:     knownFactUnderLogicExpr.Index,
+// 				LogicExpr: instaniatedLogicExprAsKnownSpecFact,
+// 			}
+
+// 			ok, err = ver.SpecFactSpecUnderLogicalExpr(&knownSpecFact_InLogicExpr_InUniFact, stmt, nextState)
+// 			if err != nil {
+// 				return false, err
+// 			}
+
+// 			if ok {
+// 				if state.requireMsg() {
+// 					ver.successWithMsg(stmt.String(), knownFactUnderLogicExpr.String())
+// 				} else {
+// 					ver.successNoMsg()
+// 				}
+// 				return true, nil
+// 			}
+// 		}
+// 	}
+
+// 	return false, nil
+// }
 
 func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]ast.Fc, state VerState) (map[string]ast.Fc, bool, error) {
 	newMap := map[string]ast.Fc{}
@@ -767,7 +895,7 @@ func (ver *Verifier) leftFnAlwaysEqualToRight(leftFnDef *ast.DefFnStmt, rightFnD
 	return true, nil
 }
 
-func (ver *Verifier) specFact_SpecMem(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) specFact_SpecMem_atEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	knownFacts, got := curEnv.KnownFacts.SpecFactMem.GetSameEnumPkgPropFacts(stmt)
 
 	if !got {
