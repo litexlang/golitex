@@ -12,10 +12,44 @@
 
 package litex_verifier
 
-import ast "golitex/ast"
+import (
+	ast "golitex/ast"
+)
 
 func (ver *Verifier) verSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	_ = stmt
-	_ = state
+	if ok, err := ver.isValidSpecFact(stmt); err != nil {
+		return false, err
+	} else if ok {
+		return true, nil
+	}
+
+	if ok, err := ver.isSpecFactCommutative(stmt); err != nil {
+		return false, err
+	} else if ok {
+		return ver.verSpecFactStepByStep(stmt, state)
+	} else {
+		if ok, err := ver.verSpecFactStepByStep(stmt, state); err != nil {
+			return false, err
+		} else if ok {
+			return true, nil
+		} else {
+			paramReversedStmt, err := stmt.ReverseSpecFactParamsOrder()
+			if err != nil {
+				return false, err
+			}
+			return ver.verSpecFactStepByStep(paramReversedStmt, state)
+		}
+	}
+}
+
+func (ver *Verifier) isValidSpecFact(stmt *ast.SpecFactStmt) (bool, error) {
 	return true, nil
+}
+
+func (ver *Verifier) isSpecFactCommutative(stmt *ast.SpecFactStmt) (bool, error) {
+	return false, nil
+}
+
+func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	return false, nil
 }

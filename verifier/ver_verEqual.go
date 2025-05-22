@@ -19,6 +19,7 @@ import (
 	glob "golitex/glob"
 )
 
+// 暂时先不考虑 fn_commutative, fn_associative 的情况
 func (ver *Verifier) verEqualFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if !isValidEqualFact(stmt) {
 		return false, fmt.Errorf("invalid equal fact: %v", stmt)
@@ -44,6 +45,18 @@ func (ver *Verifier) verFcEqual(left ast.Fc, right ast.Fc, state VerState) (bool
 		return true, nil
 	}
 
+	if ok, err := ver.verEqualLogicMem(left, right, state); err != nil {
+		return false, err
+	} else if ok {
+		return true, nil
+	}
+
+	if ok, err := ver.verEqualUniMem(left, right, state); err != nil {
+		return false, err
+	} else if ok {
+		return true, nil
+	}
+
 	return false, nil
 }
 
@@ -60,6 +73,8 @@ func (ver *Verifier) verEqualBuiltin(left ast.Fc, right ast.Fc, state VerState) 
 
 func (ver *Verifier) verEqualSpecMem(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
+		// TODO: 这里还要用 MatchEnv 实现一下
+
 		var equalToLeftFcs, equalTorightFcs *[]ast.Fc
 		var gotLeftEqualFcs, gotRightEqualFcs bool
 
@@ -92,5 +107,19 @@ func (ver *Verifier) verEqualSpecMem(left ast.Fc, right ast.Fc, state VerState) 
 			}
 		}
 	}
+	return false, nil
+}
+
+func (ver *Verifier) verEqualLogicMem(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
+	_ = left
+	_ = right
+	_ = state
+	return false, nil
+}
+
+func (ver *Verifier) verEqualUniMem(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
+	_ = left
+	_ = right
+	_ = state
 	return false, nil
 }
