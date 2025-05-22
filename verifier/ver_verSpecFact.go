@@ -44,10 +44,12 @@ func (ver *Verifier) verSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, 
 }
 
 func (ver *Verifier) isValidSpecFact(stmt *ast.SpecFactStmt) (bool, error) {
+	_ = stmt
 	return true, nil
 }
 
 func (ver *Verifier) isSpecFactCommutative(stmt *ast.SpecFactStmt) (bool, error) {
+	_ = stmt
 	return false, nil
 }
 
@@ -97,7 +99,7 @@ func (ver *Verifier) verSpecialSpecFact(stmt *ast.SpecFactStmt, state VerState) 
 	}
 
 	if stmt.NameIs(glob.KeySymbolEqualEqualEqual) {
-		return ver.isEqualFact_Check(stmt, state)
+		return ver.isSetEqualFact_Check(stmt, state)
 	}
 
 	return false, nil
