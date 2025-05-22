@@ -31,8 +31,36 @@ func (exec *Executor) supposePropMatchStmt(stmt *ast.SupposePropMatchStmt) (glob
 	exec.newEnv(originalEnv, stmt)
 	defer exec.deleteEnvAndRetainMsg()
 
-	// declare new params in suppose environment
+	execState, err := exec.supposeStmt_DeclaredParams(stmt)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+	if execState != glob.ExecState_True {
+		return execState, nil
+	}
 
+	// run stmt body
+	execState, insideFacts, err := exec.supposeStmt_runStmtBody(stmt)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+	if execState != glob.ExecState_True {
+		return execState, nil
+	}
+
+	execState, err = exec.supposeStmt_storeFactsInOriginalEnv(insideFacts, stmt)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+	if execState != glob.ExecState_True {
+		return execState, nil
+	}
+
+	return glob.ExecState_True, nil
+}
+
+func (exec *Executor) supposeStmt_DeclaredParams(stmt *ast.SupposePropMatchStmt) (glob.ExecState, error) {
+	// declare new params in suppose environment
 	factSpecDef, ok := exec.env.GetPropDef(stmt.Fact.PropName)
 	if !ok {
 		return glob.ExecState_Error, fmt.Errorf("spec fact parameter must be atom, but got: %s", stmt.Fact.PropName.String())
@@ -96,22 +124,56 @@ func (exec *Executor) supposePropMatchStmt(stmt *ast.SupposePropMatchStmt) (glob
 		}
 	}
 
-	// run stmt body
+	return glob.ExecState_True, nil
+}
+
+func (exec *Executor) supposeStmt_runStmtBody(stmt *ast.SupposePropMatchStmt) (glob.ExecState, []ast.FactStmt, error) {
+	insideFacts := []ast.FactStmt{}
 	for _, bodyFact := range stmt.Body {
 		execState, err := exec.stmt(bodyFact)
 		if err != nil {
-			return glob.ExecState_Error, err
+			return glob.ExecState_Error, nil, err
 		}
 		if execState != glob.ExecState_True {
-			return execState, nil
+			return execState, nil, nil
 		} else {
 			// store fact in original env
 			if asFact, ok := bodyFact.(ast.FactStmt); ok {
-				err = originalEnv.NewFact(asFact)
-				if err != nil {
-					return glob.ExecState_Error, err
-				}
+				insideFacts = append(insideFacts, asFact)
 			}
+		}
+	}
+
+	return glob.ExecState_True, insideFacts, nil
+}
+
+func (exec *Executor) supposeStmt_storeFactsInOriginalEnv(insideFacts []ast.FactStmt, stmt *ast.SupposePropMatchStmt) (glob.ExecState, error) {
+	// store facts in original env
+	uniMap := map[string]ast.Fc{}
+	for _, supposePropParam := range stmt.Fact.Params {
+		asAtom, ok := supposePropParam.(*ast.FcAtom)
+		if !ok {
+			return glob.ExecState_Error, fmt.Errorf("spec fact parameter must be atom, but got: %s", supposePropParam.String())
+		}
+		name := asAtom.Name
+		nameWithPrefix := fmt.Sprintf("%s%s", glob.UniParamPrefix, name)
+		uniMap[name] = ast.NewFcAtom(glob.EmptyPkg, nameWithPrefix)
+	}
+
+	factsWithPrefix := []ast.FactStmt{}
+	for _, fact := range insideFacts {
+		factWithPrefix, err := fact.Instantiate(uniMap)
+		if err != nil {
+			return glob.ExecState_Error, err
+		}
+		factsWithPrefix = append(factsWithPrefix, factWithPrefix)
+	}
+
+	originalEnv := exec.env.Parent
+	for _, fact := range factsWithPrefix {
+		err := originalEnv.NewFact(fact)
+		if err != nil {
+			return glob.ExecState_Error, err
 		}
 	}
 
