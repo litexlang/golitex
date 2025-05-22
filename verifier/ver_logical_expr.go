@@ -58,7 +58,7 @@ func (ver *Verifier) logicalExprFact(stmt *ast.LogicExprStmt, state VerState) (b
 						}
 					}
 
-					ok, err := ver.IfFactsNotTrueThenOtherPartOfLogicalExprIsTrue(indexes, stmt, state)
+					ok, err := ver.ifFactsNotTrueThenOtherPartOfLogicalExprIsTrue(indexes, stmt, state)
 					if err != nil {
 						return false, err
 					}
@@ -68,44 +68,6 @@ func (ver *Verifier) logicalExprFact(stmt *ast.LogicExprStmt, state VerState) (b
 				}
 			}
 		}
-		return false, nil
-	}
-}
-
-func (ver *Verifier) IfFactsNotTrueThenOtherPartOfLogicalExprIsTrue(notTrueFactIndexes map[int]struct{}, stmt *ast.LogicExprStmt, state VerState) (bool, error) {
-	ver.newEnv(ver.env, ver.env.CurMatchEnv)
-	defer ver.deleteEnvAndRetainMsg()
-
-	for index := range notTrueFactIndexes {
-		err := ver.env.NewFact(stmt.Facts[index].ReverseIsTrue())
-		if err != nil {
-			return false, err
-		}
-	}
-
-	newOrFacts := make([]ast.Reversable_LogicOrSpec_Stmt, 0, len(notTrueFactIndexes))
-	for index := range len(stmt.Facts) {
-		if _, ok := notTrueFactIndexes[index]; ok {
-			continue
-		}
-		newOrFacts = append(newOrFacts, stmt.Facts[index])
-	}
-
-	if len(newOrFacts) == 0 {
-		return false, nil
-	} else if len(newOrFacts) == 1 {
-		ok, err := ver.FactStmt(newOrFacts[0], state)
-		if err != nil {
-			return false, err
-		}
-		return ok, nil
-	} else if len(newOrFacts) > 1 {
-		ok, err := ver.logicalExprFact(ast.NewOrAndFact(true, newOrFacts), state)
-		if err != nil {
-			return false, err
-		}
-		return ok, nil
-	} else {
 		return false, nil
 	}
 }
