@@ -272,7 +272,22 @@ func (s *DefExistPropStmt) String() string {
 	}
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeywordSt)
-	// builder.WriteString(DefConPropStmtString("", &s.Def))
+	builder.WriteString(" ")
+	builder.WriteString(s.DefBody.DefHeader.String())
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeySymbolColon)
+	for _, domFact := range s.DefBody.DomFacts {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(domFact.String(), 1))
+		builder.WriteString("\n")
+	}
+
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents("iff:", 1))
+	builder.WriteString("\n")
+
+	for _, iffFact := range s.DefBody.IffFacts {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(iffFact.String(), 1))
+		builder.WriteString("\n")
+	}
 
 	return builder.String()
 }

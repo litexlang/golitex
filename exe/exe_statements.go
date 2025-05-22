@@ -190,7 +190,7 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
 
 	err = exec.env.NewFact(propToIff)
 
-	exec.appendMsg(fmt.Sprintf("%s\nis true by definition:\n%s\n", propToIff.String(), stmt.String()))
+	exec.appendMsg(fmt.Sprintf("%s\nis true by definition", propToIff.String()))
 
 	if err != nil {
 		return err
@@ -201,7 +201,7 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
 		return err
 	}
 
-	exec.appendMsg(fmt.Sprintf("%s\nis true by definition:\n%s\n", iffToProp.String(), stmt.String()))
+	exec.appendMsg(fmt.Sprintf("%s\nis true by definition", iffToProp.String()))
 
 	if len(stmt.IffFacts) == 0 {
 		return nil
@@ -356,7 +356,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
-		exec.appendMsg(fmt.Sprintf("%s\nis true %s by definition:\n%s\n", domFact.String(), glob.KeywordExistProp, existPropDef.DefBody.DefHeader.Name))
+		exec.appendMsg(fmt.Sprintf("%s\nis true by definition", domFact.String()))
 	}
 
 	// iff of def exist prop is true
@@ -365,7 +365,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
-		exec.appendMsg(fmt.Sprintf("%s\nis true %s by definition:\n%s\n", iffFact.String(), glob.KeywordExistProp, existPropDef.DefBody.DefHeader.Name))
+		exec.appendMsg(fmt.Sprintf("%s\nis true by definition", iffFact.String()))
 	}
 
 	// 相关的 exist st 事实也成立
@@ -379,7 +379,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 	if err != nil {
 		return glob.ExecState_True, nil
 	}
-	exec.appendMsg(fmt.Sprintf("%s\nis true %s by definition:\n%s\n", newExistStFact.String(), glob.KeywordExistProp, stmt.String()))
+	exec.appendMsg(fmt.Sprintf("%s\nis true by definition", newExistStFact.String()))
 
 	return glob.ExecState_True, nil
 }
@@ -659,7 +659,7 @@ func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) (glob.ExecS
 		return glob.ExecState_Error, err
 	}
 
-	exec.appendMsg(fmt.Sprintf("%s\nis true %s by definition:\n%s\n", knownUniFact.String(), stmt.ExistProp.DefBody.DefHeader.Name, stmt.String()))
+	exec.appendMsg(fmt.Sprintf("%s\nis true by definition", knownUniFact.String()))
 
 	return glob.ExecState_True, nil
 }
