@@ -36,7 +36,7 @@ func (exec *Executor) withPropMatchStmt(stmt *ast.WithPropMatchStmt) (glob.ExecS
 
 	// run stmt body
 	for _, bodyFact := range stmt.Body {
-		execState, err = exec.factStmt(bodyFact)
+		execState, err = exec.stmt(bodyFact)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}

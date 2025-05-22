@@ -98,7 +98,7 @@ func (exec *Executor) supposePropMatchStmt(stmt *ast.SupposePropMatchStmt) (glob
 
 	// run stmt body
 	for _, bodyFact := range stmt.Body {
-		execState, err := exec.factStmt(bodyFact)
+		execState, err := exec.stmt(bodyFact)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
@@ -106,9 +106,11 @@ func (exec *Executor) supposePropMatchStmt(stmt *ast.SupposePropMatchStmt) (glob
 			return execState, nil
 		} else {
 			// store fact in original env
-			err = originalEnv.NewFact(bodyFact)
-			if err != nil {
-				return glob.ExecState_Error, err
+			if asFact, ok := bodyFact.(ast.FactStmt); ok {
+				err = originalEnv.NewFact(asFact)
+				if err != nil {
+					return glob.ExecState_Error, err
+				}
 			}
 		}
 	}
