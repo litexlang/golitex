@@ -32,7 +32,23 @@ func (ver *Verifier) FactStmt(stmt ast.FactStmt, state VerState) (bool, error) {
 	// default:
 	// 	return false, fmt.Errorf("unexpected")
 	// }
-	return ver.VerFact(stmt, state)
+	if asSpecFact, ok := isTrueEqualFact(stmt); ok {
+		return ver.verEqualFact(asSpecFact, state)
+	}
+
+	if asSpecFact, ok := stmt.(*ast.SpecFactStmt); ok {
+		return ver.verSpecFact(asSpecFact, state)
+	}
+
+	if asLogicExpr, ok := stmt.(*ast.LogicExprStmt); ok {
+		return ver.verLogicExpr(asLogicExpr, state)
+	}
+
+	if asUniFact, ok := stmt.(*ast.UniFactStmt); ok {
+		return ver.verUniFact(asUniFact, state)
+	}
+
+	return false, fmt.Errorf("unexpected fact statement: %v", stmt)
 }
 
 type Verifier struct {

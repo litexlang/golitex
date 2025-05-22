@@ -32,7 +32,7 @@ func (ver *Verifier) verLogicExpr(stmt *ast.LogicExprStmt, state VerState) (bool
 
 func (ver *Verifier) isValidLogicalFact(stmt *ast.LogicExprStmt) (bool, error) {
 	if len(stmt.Facts) > glob.MaxLogicExprFactsNum {
-		return false, fmt.Errorf("logic expr has too many facts: %d, expect no more than %d. Please use prove_or to prove long or facts.", len(stmt.Facts), glob.MaxLogicExprFactsNum)
+		return false, fmt.Errorf("logic expr has too many facts: %d, expect no more than %d. Please use prove_or to prove long or facts", len(stmt.Facts), glob.MaxLogicExprFactsNum)
 	}
 
 	return true, nil
