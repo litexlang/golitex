@@ -25,11 +25,23 @@ func (ver *Verifier) specFactOrEqualFact_SpecMode(stmt *ast.SpecFactStmt, state 
 	return ver.FactStmt(stmt, state.toFnialRound())
 }
 
-func (ver *Verifier) verSpecFact_UseMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) verSpecFact_SpecMem_LogicMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
 	// 把这个判断放在 curEnv 的处理的外面（而不是每次迭代每次看），让整个程序快了30%
-	if ver.env.CurMatchEnv != nil {
+	if ver.env.CurMatchEnv == nil {
+		for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
+			ok, err := ver.specFact_SpecMem_atEnv(curEnv, stmt, state)
+			if err != nil || ok {
+				return ok, err
+			}
+
+			ok, err = ver.specFact_LogicMem(curEnv, stmt, state)
+			if err != nil || ok {
+				return ok, err
+			}
+		}
+	} else {
 		for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
 			ok, err := ver.specFact_SpecMem_atEnv(curEnv, stmt, state)
 			if err != nil || ok {
@@ -46,18 +58,6 @@ func (ver *Verifier) verSpecFact_UseMem(stmt *ast.SpecFactStmt, state VerState) 
 				return ok, err
 			}
 		}
-	} else {
-		for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
-			ok, err := ver.specFact_SpecMem_atEnv(curEnv, stmt, state)
-			if err != nil || ok {
-				return ok, err
-			}
-
-			ok, err = ver.specFact_LogicMem(curEnv, stmt, state)
-			if err != nil || ok {
-				return ok, err
-			}
-		}
 	}
 
 	return false, nil
@@ -68,25 +68,37 @@ func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecFactStmt, state VerState) 
 
 	upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
-	for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
-		ok, err := ver.specFact_UniMem_asEnv(curEnv, stmt, nextState)
-		if err != nil || ok {
-			return ok, err
-		}
+	if ver.env.CurMatchEnv == nil {
+		for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
+			ok, err := ver.specFact_UniMem_asEnv(curEnv, stmt, nextState)
+			if err != nil || ok {
+				return ok, err
+			}
 
-		ok, err = ver.specFact_inLogicExpr_inUniFactMem_atEnv(curEnv, stmt, nextState)
-		if err != nil || ok {
-			return ok, err
+			ok, err = ver.specFact_inLogicExpr_inUniFactMem_atEnv(curEnv, stmt, nextState)
+			if err != nil || ok {
+				return ok, err
+			}
 		}
+	} else {
+		for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
+			ok, err := ver.specFact_UniMem_asEnv(curEnv, stmt, nextState)
+			if err != nil || ok {
+				return ok, err
+			}
 
-		// ok, err := ver.SpecFactUniAtEnv(curEnv, stmt, nextState)
-		// if err != nil {
-		// 	return false, err
-		// }
-		// if ok {
-		// 	return true, nil
-		// }
+			ok, err = ver.specFact_inLogicExpr_inUniFactMem_atEnv(curEnv, stmt, nextState)
+			if err != nil || ok {
+				return ok, err
+			}
+
+			ok, err = ver.specFact_MatchEnv_UniMem(curEnv, stmt, state)
+			if err != nil || ok {
+				return ok, err
+			}
+		}
 	}
+
 	return false, nil
 }
 
@@ -1014,5 +1026,10 @@ LoopOverFacts:
 		return true, nil
 	}
 
+	return false, nil
+}
+
+// TODO
+func (ver *Verifier) specFact_MatchEnv_UniMem(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	return false, nil
 }

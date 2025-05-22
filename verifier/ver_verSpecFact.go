@@ -258,7 +258,7 @@ func (ver *Verifier) useExistPropDefProveExist_St(stmt *ast.SpecFactStmt, state 
 
 func (ver *Verifier) verSpecFactSpecMemAndLogicMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	// TOOD: 里面的函数需要更新
-	return ver.verSpecFact_UseMem(stmt, state)
+	return ver.verSpecFact_SpecMem_LogicMem(stmt, state)
 }
 
 func (ver *Verifier) verSpecFactUniMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
