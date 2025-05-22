@@ -73,7 +73,7 @@ func (ver *Verifier) specFact_no_commutative(stmt *ast.SpecFactStmt, state VerSt
 		return false, nil
 	}
 
-	if stmt.IsMathInductionFact() {
+	if stmt.NameIs(glob.KeywordInduction) {
 		return ver.mathInductionFact(stmt, state)
 	}
 
