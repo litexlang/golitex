@@ -45,7 +45,7 @@ func (ver *Verifier) verFcEqual(left ast.Fc, right ast.Fc, state VerState) (bool
 		return true, nil
 	}
 
-	if ok, err := ver.verEqualLogicMem(left, right, state); err != nil {
+	if ok, err := ver.verEqualSpecMemAndLogicMem(left, right, state); err != nil {
 		return false, err
 	} else if ok {
 		return true, nil
@@ -110,16 +110,12 @@ func (ver *Verifier) verEqualSpecMem(left ast.Fc, right ast.Fc, state VerState) 
 	return false, nil
 }
 
-func (ver *Verifier) verEqualLogicMem(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
-	_ = left
-	_ = right
-	_ = state
-	return false, nil
+func (ver *Verifier) verEqualSpecMemAndLogicMem(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
+	equalFact := ver.makeEqualFact(left, right)
+	return ver.verSpecFactSpecMemAndLogicMem(equalFact, state)
 }
 
 func (ver *Verifier) verEqualUniMem(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
-	_ = left
-	_ = right
-	_ = state
-	return false, nil
+	equalFact := ver.makeEqualFact(left, right)
+	return ver.verSpecFactUniMem(equalFact, state)
 }
