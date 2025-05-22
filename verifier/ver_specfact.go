@@ -150,6 +150,13 @@ func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state 
 		if err != nil || ok {
 			return ok, err
 		}
+
+		if ver.env.CurMatchEnv != nil {
+			ok, err = ver.specFact_MatchEnv(curEnv, stmt, state)
+			if err != nil || ok {
+				return ok, err
+			}
+		}
 	}
 	return false, nil
 }
@@ -865,6 +872,92 @@ func (ver *Verifier) specFact_SpecMem(curEnv *env.Env, stmt *ast.SpecFactStmt, s
 		return false, nil
 	}
 
+	return ver.iterateKnownSpecFacts_applyFcEqualSpec(stmt, knownFacts, state)
+}
+
+func (ver *Verifier) specFactSpecMemTrueMsg(stmt *ast.SpecFactStmt, knownFact env.KnownSpecFact) {
+	var verifiedBy strings.Builder
+	verifiedBy.WriteString(knownFact.String())
+	verifiedBy.WriteString("\n")
+	for i, knownParam := range knownFact.Fact.Params {
+		verifiedBy.WriteString(fmt.Sprintf("%s = %s\n", knownParam, stmt.Params[i]))
+	}
+	ver.successWithMsg(stmt.String(), verifiedBy.String())
+}
+
+func (ver *Verifier) specFact_LogicMem(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	knownFacts, got := curEnv.KnownFacts.SpecFactInLogicExprMem.GetSameEnumPkgPropFacts(stmt)
+
+	if !got {
+		return false, nil
+	}
+
+	if got {
+		return ver.iterateKnownLogicFacts_applyFcEqualSpec(stmt, knownFacts, state)
+	}
+
+	return false, nil
+}
+
+func (ver *Verifier) specFact_MatchEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	ok, err := ver.specFact_MatchEnv_SpecMem(curEnv, stmt, state)
+	if err != nil || ok {
+		return ok, err
+	}
+
+	ok, err = ver.specFact_MatchEnv_LogicMem(curEnv, stmt, state)
+	if err != nil || ok {
+		return ok, err
+	}
+
+	return false, nil
+}
+
+func (ver *Verifier) specFact_MatchEnv_SpecMem(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	knownStruct, got := curEnv.KnownFactInMatchEnv.Get(ver.env.CurMatchEnv.Fact.PropName.PkgName, ver.env.CurMatchEnv.Fact.PropName.Name)
+
+	if !got {
+		return false, nil
+	}
+
+	knownFacts, got := knownStruct.SpecFactMem.GetSameEnumPkgPropFacts(stmt)
+	if !got {
+		return false, nil
+	}
+
+	return ver.iterateKnownSpecFacts_applyFcEqualSpec(stmt, knownFacts, state)
+}
+
+func (ver *Verifier) specFact_MatchEnv_LogicMem(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	knownStruct, got := curEnv.KnownFactInMatchEnv.Get(ver.env.CurMatchEnv.Fact.PropName.PkgName, ver.env.CurMatchEnv.Fact.PropName.Name)
+
+	if !got {
+		return false, nil
+	}
+
+	knownFacts, got := knownStruct.SpecFactInLogicExprMem.GetSameEnumPkgPropFacts(stmt)
+	if !got {
+		return false, nil
+	}
+
+	return ver.iterateKnownLogicFacts_applyFcEqualSpec(stmt, knownFacts, state)
+}
+
+func (ver *Verifier) iterateKnownLogicFacts_applyFcEqualSpec(stmt *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InLogicExpr, state VerState) (bool, error) {
+	for _, knownFactUnderLogicExpr := range knownFacts {
+		ok, err := ver.SpecFactSpecUnderLogicalExpr(&knownFactUnderLogicExpr, stmt, state)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+func (ver *Verifier) iterateKnownSpecFacts_applyFcEqualSpec(stmt *ast.SpecFactStmt, knownFacts []env.KnownSpecFact, state VerState) (bool, error) {
 LoopOverFacts:
 	for _, knownFact := range knownFacts {
 		if len(knownFact.Fact.Params) != len(stmt.Params) || knownFact.Fact.TypeEnum != stmt.TypeEnum {
@@ -888,38 +981,6 @@ LoopOverFacts:
 		}
 
 		return true, nil
-	}
-
-	return false, nil
-}
-
-func (ver *Verifier) specFactSpecMemTrueMsg(stmt *ast.SpecFactStmt, knownFact env.KnownSpecFact) {
-	var verifiedBy strings.Builder
-	verifiedBy.WriteString(knownFact.String())
-	verifiedBy.WriteString("\n")
-	for i, knownParam := range knownFact.Fact.Params {
-		verifiedBy.WriteString(fmt.Sprintf("%s = %s\n", knownParam, stmt.Params[i]))
-	}
-	ver.successWithMsg(stmt.String(), verifiedBy.String())
-}
-
-func (ver *Verifier) specFact_LogicMem(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	knownFacts, got := curEnv.KnownFacts.SpecFactInLogicExprMem.GetSameEnumPkgPropFacts(stmt)
-
-	if !got {
-		return false, nil
-	}
-
-	if got {
-		for _, knownFactUnderLogicExpr := range knownFacts {
-			ok, err := ver.SpecFactSpecUnderLogicalExpr(&knownFactUnderLogicExpr, stmt, state)
-			if err != nil {
-				return false, err
-			}
-			if ok {
-				return true, nil
-			}
-		}
 	}
 
 	return false, nil
