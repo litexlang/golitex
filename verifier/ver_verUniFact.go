@@ -18,7 +18,7 @@ import (
 )
 
 func (ver *Verifier) verUniFact(stmt *ast.UniFactStmt, state VerState) (bool, error) {
-	if state.isSpec() {
+	if state.isFinalState() {
 		return false, nil
 	}
 

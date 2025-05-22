@@ -17,8 +17,8 @@ package litex_verifier
 type VerState uint8
 
 const (
-	SpecMsg VerState = iota
-	SpecNoMsg
+	FinalRoundMsg VerState = iota
+	FinalRoundNoMsg
 	Round0Msg
 	Round0NoMsg
 	Round1Msg
@@ -26,15 +26,15 @@ const (
 )
 
 func (e VerState) requireMsg() bool {
-	if e == SpecMsg || e == Round0Msg || e == Round1Msg {
+	if e == FinalRoundMsg || e == Round0Msg || e == Round1Msg {
 		return true
 	} else {
 		return false
 	}
 }
 
-func (e VerState) isSpec() bool {
-	if e == SpecMsg || e == SpecNoMsg {
+func (e VerState) isFinalState() bool {
+	if e == FinalRoundMsg || e == FinalRoundNoMsg {
 		return true
 	} else {
 		return false
@@ -48,9 +48,9 @@ func (e VerState) addRound() VerState {
 	case Round0NoMsg:
 		return Round1NoMsg
 	case Round1Msg:
-		return SpecMsg
+		return FinalRoundMsg
 	case Round1NoMsg:
-		return SpecNoMsg
+		return FinalRoundNoMsg
 	default:
 		return e
 	}
@@ -62,8 +62,8 @@ func (e VerState) toNoMsg() VerState {
 		return Round0NoMsg
 	case Round1Msg:
 		return Round1NoMsg
-	case SpecMsg:
-		return SpecNoMsg
+	case FinalRoundMsg:
+		return FinalRoundNoMsg
 	default:
 		return e
 	}
@@ -71,9 +71,9 @@ func (e VerState) toNoMsg() VerState {
 
 func (e VerState) toSpec() VerState {
 	if e.requireMsg() {
-		return SpecMsg
+		return FinalRoundMsg
 	} else {
-		return SpecNoMsg
+		return FinalRoundNoMsg
 	}
 }
 

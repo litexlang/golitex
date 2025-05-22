@@ -53,7 +53,7 @@ func (ver *Verifier) proveUniFactDomFacts(insUniFact *ast.UniFactStmt, state Ver
 		for _, fact := range insUniFact.DomFacts {
 			asSpecFact, ok := fact.(*ast.SpecFactStmt)
 			if ok {
-				ok, err := ver.pureFactSpec(asSpecFact, state)
+				ok, err := ver.specFactOrEqualFact_SpecMode(asSpecFact, state)
 				if err != nil {
 					return false, err
 				}
@@ -71,13 +71,13 @@ func (ver *Verifier) proveUniFactDomFacts(insUniFact *ast.UniFactStmt, state Ver
 			}
 		}
 		return true, nil
-	} else if state.isSpec() {
+	} else if state.isFinalState() {
 		for _, fact := range insUniFact.DomFacts {
 			asSpecFact, ok := fact.(*ast.SpecFactStmt)
 			if !ok {
 				return false, nil
 			}
-			ok, err := ver.pureFactSpec(asSpecFact, state)
+			ok, err := ver.specFactOrEqualFact_SpecMode(asSpecFact, state)
 			if err != nil {
 				return false, err
 			}

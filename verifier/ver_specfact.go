@@ -21,122 +21,45 @@ import (
 	"strings"
 )
 
-// func (ver *Verifier) specFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-// 	if ver.env.IsSpecFactPropCommutative(stmt) {
-// 		return ver.specFact_commutaive(stmt, state)
-// 	} else {
-// 		return ver.specFact_no_commutative(stmt, state)
-// 	}
-// }
+func (ver *Verifier) specFactOrEqualFact_SpecMode(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	return ver.FactStmt(stmt, state.toSpec())
+}
 
-// func (ver *Verifier) specFact_commutaive(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-// 	ok, err := ver.specFact_no_commutative(stmt, state)
+// func (ver *Verifier) pureFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+// 	if ok, err := ver.isEqualFact_Check(stmt, state); err != nil {
+// 		return false, err
+// 	} else if ok {
+// 		return true, nil
+// 	}
+
+// 	if ok, err := ver.isSetEqualFact_Check(stmt, state); err != nil {
+// 		return false, err
+// 	} else if ok {
+// 		return true, nil
+// 	}
+
+// 	if ok, err := ver.isFnEqualFact_Check(stmt, state); err != nil {
+// 		return false, err
+// 	} else if ok {
+// 		return true, nil
+// 	}
+
+// 	if ok, err := ver.btPropExceptEqual_Rule_MemSpec(stmt, state); err != nil {
+// 		return false, err
+// 	} else if ok {
+// 		return true, nil
+// 	}
+
+// 	ok, err := ver.specFactUsingMemSpecifically(stmt, state)
 // 	if err != nil {
 // 		return false, err
 // 	}
 // 	if ok {
-// 		if state.requireMsg() {
-// 			ver.successWithMsg(stmt.String(), "")
-// 		} else {
-// 			ver.successNoMsg()
-// 		}
 // 		return true, nil
 // 	}
 
-// 	reverseFact, err := stmt.ReverseParameterOrder()
-// 	if err != nil {
-// 		return false, err
-// 	}
-
-// 	ok, err = ver.specFact_no_commutative(reverseFact, state)
-// 	if err != nil {
-// 		return false, err
-// 	}
-// 	if ok {
-// 		if state.requireMsg() {
-// 			ver.successWithMsg(stmt.String(), fmt.Sprintf("prop %s is commutative and %s is true", stmt.PropName.String(), reverseFact.String()))
-// 		} else {
-// 			ver.successNoMsg()
-// 		}
-// 		return true, nil
-// 	}
 // 	return false, nil
 // }
-
-// func (ver *Verifier) specFact_no_commutative(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-// 	// if not satisfy para req(dom), return false
-// 	ok, err := ver.FcSatisfySpecFactParaReq(stmt)
-// 	if err != nil {
-// 		return false, err
-// 	}
-// 	if !ok {
-// 		return false, nil
-// 	}
-
-// 	if stmt.NameIs(glob.KeywordInduction) {
-// 		return ver.mathInductionFact(stmt, state)
-// 	}
-
-// 	if stmt.NameIs(glob.KeywordCommutativeFn) {
-// 		return ver.commutativeFnByDef(stmt, state)
-// 	}
-
-// 	if stmt.NameIs(glob.KeywordIn) {
-// 		ok, err := ver.inFact(stmt, state)
-// 		if err != nil {
-// 			return false, err
-// 		}
-// 		if ok {
-// 			return true, nil
-// 		}
-// 	}
-
-// 	if stmt.IsPureFact() {
-// 		return ver.pureFact(stmt, state)
-// 	}
-
-// 	if stmt.IsExist_St_Fact() {
-// 		return ver.exist_st_Fact(stmt, state)
-// 	}
-
-// 	return false, fmt.Errorf("invalid type of stmt")
-// }
-
-func (ver *Verifier) pureFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if ok, err := ver.isEqualFact_Check(stmt, state); err != nil {
-		return false, err
-	} else if ok {
-		return true, nil
-	}
-
-	if ok, err := ver.isSetEqualFact_Check(stmt, state); err != nil {
-		return false, err
-	} else if ok {
-		return true, nil
-	}
-
-	if ok, err := ver.isFnEqualFact_Check(stmt, state); err != nil {
-		return false, err
-	} else if ok {
-		return true, nil
-	}
-
-	if ok, err := ver.btPropExceptEqual_Rule_MemSpec(stmt, state); err != nil {
-		return false, err
-	} else if ok {
-		return true, nil
-	}
-
-	ok, err := ver.specFactUsingMemSpecifically(stmt, state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
-	}
-
-	return false, nil
-}
 
 func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
@@ -914,6 +837,7 @@ func (ver *Verifier) specFact_LogicMem(curEnv *env.Env, stmt *ast.SpecFactStmt, 
 	return false, nil
 }
 
+// TODO: 我不确定是不是用MatchEnv做cmp的时候，要不要修改compare的方式
 func (ver *Verifier) specFact_MatchEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	ok, err := ver.specFact_MatchEnv_SpecMem(curEnv, stmt, state)
 	if err != nil || ok {
