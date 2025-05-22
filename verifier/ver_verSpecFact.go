@@ -49,6 +49,10 @@ func (ver *Verifier) isValidSpecFact(stmt *ast.SpecFactStmt) (bool, error) {
 }
 
 func (ver *Verifier) isSpecFactCommutative(stmt *ast.SpecFactStmt) (bool, error) {
+	if stmt.NameIs(glob.KeySymbolEqual) {
+		return true, nil
+	}
+
 	_ = stmt
 	return false, nil
 }
