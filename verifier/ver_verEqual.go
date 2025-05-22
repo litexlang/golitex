@@ -48,7 +48,7 @@ func (ver *Verifier) verFcEqual(left ast.Fc, right ast.Fc, state VerState) (bool
 }
 
 func (ver *Verifier) verEqualBuiltin(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
-	ok, err := cmp.CmpFcRule(left, right) // 完全一样
+	ok, err := cmp.CmpUsingBuiltinRule(left, right) // 完全一样
 	if err != nil {
 		return false, err
 	}

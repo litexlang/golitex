@@ -31,7 +31,7 @@ func CmpFcRule(left, right ast.Fc) (bool, error) {
 		return true, nil
 	}
 
-	ok, err = cmpFcAtomLitFcFnRule(left, right)
+	ok, err = cmpFcLiterally(left, right)
 	if err != nil {
 		return false, err
 	}
