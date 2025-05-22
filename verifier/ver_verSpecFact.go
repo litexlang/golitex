@@ -77,10 +77,12 @@ func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state VerStat
 		return true, nil
 	}
 
-	if ok, err := ver.verSpecFactUniMem(stmt, state); err != nil {
-		return false, err
-	} else if ok {
-		return true, nil
+	if !state.isFinalState() {
+		if ok, err := ver.verSpecFactUniMem(stmt, state); err != nil {
+			return false, err
+		} else if ok {
+			return true, nil
+		}
 	}
 
 	return false, nil

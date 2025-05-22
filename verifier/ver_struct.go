@@ -22,16 +22,6 @@ import (
 
 // 所有verifier的方法里，只有它和switch里的三大函数可能读入anyState
 func (ver *Verifier) FactStmt(stmt ast.FactStmt, state VerState) (bool, error) {
-	// switch stmt := stmt.(type) {
-	// case *ast.SpecFactStmt:
-	// 	return ver.specFact(stmt, state)
-	// case *ast.LogicExprStmt:
-	// 	return ver.verLogicExpr(stmt, state)
-	// case *ast.UniFactStmt:
-	// 	return ver.verUniFact(stmt, state)
-	// default:
-	// 	return false, fmt.Errorf("unexpected")
-	// }
 	if asSpecFact, ok := isTrueEqualFact(stmt); ok {
 		return ver.verEqualFact(asSpecFact, state)
 	}

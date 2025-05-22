@@ -51,10 +51,12 @@ func (ver *Verifier) verFcEqual(left ast.Fc, right ast.Fc, state VerState) (bool
 		return true, nil
 	}
 
-	if ok, err := ver.verEqualUniMem(left, right, state); err != nil {
-		return false, err
-	} else if ok {
-		return true, nil
+	if !state.isFinalState() {
+		if ok, err := ver.verEqualUniMem(left, right, state); err != nil {
+			return false, err
+		} else if ok {
+			return true, nil
+		}
 	}
 
 	return false, nil
