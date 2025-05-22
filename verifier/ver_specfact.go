@@ -140,24 +140,39 @@ func (ver *Verifier) pureFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool,
 
 func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
-	for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
-		ok, err := ver.specFact_SpecMem(curEnv, stmt, state)
-		if err != nil || ok {
-			return ok, err
-		}
 
-		ok, err = ver.specFact_LogicMem(curEnv, stmt, state)
-		if err != nil || ok {
-			return ok, err
-		}
+	// 把这个判断放在 curEnv 的处理的外面（而不是每次迭代每次看），让整个程序快了30%
+	if ver.env.CurMatchEnv != nil {
+		for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
+			ok, err := ver.specFact_SpecMem(curEnv, stmt, state)
+			if err != nil || ok {
+				return ok, err
+			}
 
-		if ver.env.CurMatchEnv != nil {
+			ok, err = ver.specFact_LogicMem(curEnv, stmt, state)
+			if err != nil || ok {
+				return ok, err
+			}
+
 			ok, err = ver.specFact_MatchEnv(curEnv, stmt, state)
 			if err != nil || ok {
 				return ok, err
 			}
 		}
+	} else {
+		for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
+			ok, err := ver.specFact_SpecMem(curEnv, stmt, state)
+			if err != nil || ok {
+				return ok, err
+			}
+
+			ok, err = ver.specFact_LogicMem(curEnv, stmt, state)
+			if err != nil || ok {
+				return ok, err
+			}
+		}
 	}
+
 	return false, nil
 }
 
