@@ -26,6 +26,8 @@ func (env *Env) storeSpecFactInMem(stmt *ast.SpecFactStmt) error {
 		if !ok {
 			env.KnownFactInMatchEnv[envFact.PropName.PkgName] = make(map[string]KnownFactsStruct)
 			env.KnownFactInMatchEnv[envFact.PropName.PkgName][envFact.PropName.Name] = makeKnownFactsStruct()
+			knownFactsStruct := env.KnownFactInMatchEnv[envFact.PropName.PkgName][envFact.PropName.Name]
+			knownFactsStructPtr = &knownFactsStruct
 		}
 	} else {
 		knownFactsStructPtr = &env.KnownFacts
