@@ -14,6 +14,7 @@ package litex_verifier
 
 import (
 	ast "golitex/ast"
+	glob "golitex/glob"
 )
 
 func (ver *Verifier) verSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
@@ -51,5 +52,73 @@ func (ver *Verifier) isSpecFactCommutative(stmt *ast.SpecFactStmt) (bool, error)
 }
 
 func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	if ok, err := ver.verSpecialSpecFact(stmt, state); err != nil {
+		return false, err
+	} else if ok {
+		return true, nil
+	}
+
+	if ok, err := ver.verSpecFactUseDefinition(stmt, state); err != nil {
+		return false, err
+	} else if ok {
+		return true, nil
+	}
+
+	if ok, err := ver.verSpecFactSpecMemAndLogicMem(stmt, state); err != nil {
+		return false, err
+	} else if ok {
+		return true, nil
+	}
+
+	if ok, err := ver.verSpecFactUniMem(stmt, state); err != nil {
+		return false, err
+	} else if ok {
+		return true, nil
+	}
+
 	return false, nil
+}
+
+func (ver *Verifier) verSpecialSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	if stmt.NameIs(glob.KeywordInduction) {
+		return ver.mathInductionFact(stmt, state)
+	}
+
+	if stmt.NameIs(glob.KeywordCommutativeFn) {
+		return ver.commutativeFnByDef(stmt, state)
+	}
+
+	if stmt.NameIs(glob.KeywordIn) {
+		return ver.inFact(stmt, state)
+	}
+
+	if stmt.NameIs(glob.KeySymbolEqualEqual) {
+		return ver.isFnEqualFact_Check(stmt, state)
+	}
+
+	if stmt.NameIs(glob.KeySymbolEqualEqualEqual) {
+		return ver.isEqualFact_Check(stmt, state)
+	}
+
+	return false, nil
+}
+
+func (ver *Verifier) verSpecFactUseDefinition(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	if stmt.IsPureFact() {
+		return ver.specFactProveByDefinition(stmt, state)
+	}
+
+	if stmt.IsExist_St_Fact() {
+		return ver.useExistPropDefProveExist_St(stmt, state)
+	}
+
+	return false, nil
+}
+
+func (ver *Verifier) verSpecFactSpecMemAndLogicMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	return ver.specFactUsingMemSpecifically(stmt, state)
+}
+
+func (ver *Verifier) verSpecFactUniMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	return ver.SpecFactUni(stmt, state)
 }

@@ -19,6 +19,8 @@ import (
 
 // Each type of fact check takes the following steps: 1. check is valid (param len 够了吗，符合涉及到的dom了吗) 2. use built-in rules to check 3. use spec_mem to check 4. logic_mem to check 5. uni_mem to check
 
+// 注意到：不论是验证specfact，还是验证equal fact，都是非常递归的。递归可能出现在 流程中间，可能出现在流程头，可能是几个组件的组合。可能是从equal fact的证明跳到 spec fact，总之就是非常复杂。不能期望用很直线的方式一步到位.
+
 // factual chain: equal fact => specific fact => logical expr => uni fact
 func (ver *Verifier) VerFact(stmt ast.FactStmt, state VerState) (bool, error) {
 	if asSpecFact, ok := isEqualFact(stmt); ok {
