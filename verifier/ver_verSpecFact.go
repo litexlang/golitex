@@ -21,13 +21,13 @@ import (
 func (ver *Verifier) verSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if ok, err := ver.isValidSpecFact(stmt); err != nil {
 		return false, err
-	} else if ok {
-		return true, nil
+	} else if !ok {
+		return false, nil
 	}
 
 	if ok, err := ver.isSpecFactCommutative(stmt); err != nil {
 		return false, err
-	} else if ok {
+	} else if !ok {
 		return ver.verSpecFactStepByStep(stmt, state)
 	} else {
 		if ok, err := ver.verSpecFactStepByStep(stmt, state); err != nil {
@@ -39,7 +39,11 @@ func (ver *Verifier) verSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, 
 			if err != nil {
 				return false, err
 			}
-			return ver.verSpecFactStepByStep(paramReversedStmt, state)
+			ok, err := ver.verSpecFactStepByStep(paramReversedStmt, state)
+			if err == nil && ok {
+				ver.successWithMsg(stmt.String(), "the proposition is commutative")
+			}
+			return ok, err
 		}
 	}
 }
@@ -77,7 +81,7 @@ func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state VerStat
 		return true, nil
 	}
 
-	if !state.isFinalState() {
+	if !state.isFinalRound() {
 		if ok, err := ver.verSpecFactUniMem(stmt, state); err != nil {
 			return false, err
 		} else if ok {

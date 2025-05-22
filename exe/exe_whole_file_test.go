@@ -23,7 +23,7 @@ import (
 func TestWholeFile(t *testing.T) {
 	start := time.Now()
 	code := readFile("../examples/comprehensive_examples/working_hilbert_geometry.lix")
-	// code := readFile("../examples/test_codes/match_env.lix")
+	// code := readFile("../examples/test_codes/tmp.lix")
 	readFileTime := time.Since(start)
 	start = time.Now()
 	topStmtSlice := setupAndParseStmtTest(code, &parser.ParserEnv{})

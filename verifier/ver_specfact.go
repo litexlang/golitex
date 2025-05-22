@@ -22,44 +22,8 @@ import (
 )
 
 func (ver *Verifier) specFactOrEqualFact_SpecMode(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	return ver.FactStmt(stmt, state.toSpec())
+	return ver.FactStmt(stmt, state.toFnialRound())
 }
-
-// func (ver *Verifier) pureFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-// 	if ok, err := ver.isEqualFact_Check(stmt, state); err != nil {
-// 		return false, err
-// 	} else if ok {
-// 		return true, nil
-// 	}
-
-// 	if ok, err := ver.isSetEqualFact_Check(stmt, state); err != nil {
-// 		return false, err
-// 	} else if ok {
-// 		return true, nil
-// 	}
-
-// 	if ok, err := ver.isFnEqualFact_Check(stmt, state); err != nil {
-// 		return false, err
-// 	} else if ok {
-// 		return true, nil
-// 	}
-
-// 	if ok, err := ver.btPropExceptEqual_Rule_MemSpec(stmt, state); err != nil {
-// 		return false, err
-// 	} else if ok {
-// 		return true, nil
-// 	}
-
-// 	ok, err := ver.specFactUsingMemSpecifically(stmt, state)
-// 	if err != nil {
-// 		return false, err
-// 	}
-// 	if ok {
-// 		return true, nil
-// 	}
-
-// 	return false, nil
-// }
 
 func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
@@ -310,7 +274,7 @@ func (ver *Verifier) verifyLogicExprSteps(knownFact *env.KnownSpecFact_InLogicEx
 			}
 
 			// 需要reverse True
-			ok, err := ver.FactStmt(fact.ReverseIsTrue(), state.toSpec())
+			ok, err := ver.FactStmt(fact.ReverseIsTrue(), state.toFnialRound())
 			if err != nil {
 				return false, err
 			}

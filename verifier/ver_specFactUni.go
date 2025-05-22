@@ -71,7 +71,7 @@ func (ver *Verifier) proveUniFactDomFacts(insUniFact *ast.UniFactStmt, state Ver
 			}
 		}
 		return true, nil
-	} else if state.isFinalState() {
+	} else if state.isFinalRound() {
 		for _, fact := range insUniFact.DomFacts {
 			asSpecFact, ok := fact.(*ast.SpecFactStmt)
 			if !ok {

@@ -661,6 +661,7 @@ know exist_prop n R, c point st exist_finite_line_of_direction_and_length(a poin
 
 # 2. Axiom of line completeness: An extension (An extended line from a line that already exists, usually used in geometry) of a set of points on a line with its order and congruence relations that would preserve the relations existing among the original elements as well as the fundamental properties of line order and congruence that follows from Axioms I-III and from V-1 is impossible.
 
+"""
 prop on_finite_line(a point, l finite_line)
 
 know prop axiom_of_line_completeness(a point, b point, n R):
@@ -672,3 +673,4 @@ know prop axiom_of_line_completeness(a point, b point, n R):
             $on_finite_line(c, finite_line_of_direction_and_length(a, b, n))
             then:
                 $on_finite_line(c, line_of(a, b))
+"""
