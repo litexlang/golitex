@@ -38,15 +38,17 @@ _That language is an instrument of Human reason, and not merely a medium for the
 
 _–- George Boole_
 
-<!-- TODO: 说明 1. 数学是形式化的语言，可以机械地验证每一步的推理 2. 机械推理的好处：帮用户避免错误，让证明更模块化，模块化的事物更可复用、可协作、可扩展 3. 在 ai 世界，形式化的东西是ai训练的重要一环，不论是数据还是深度学习算法上都是如此。 -->
+Mathematics is a formal language where every step of reasoning can be mechanically verified. Benefits of mechanical reasoning include: helps users avoid errors, makes proofs more modular, and modular things are more reusable, collaborative, and extensible. In the AI world, formal systems are crucial for training, both in terms of data and deep learning algorithms.
 
-<!-- TODO: 但现在的形式化语言门槛太高。从第一性原理来看，这些语言本质上是收到数学启发的编程语言。但现在人们呼吁应用编程到数学上来。数学推理需要的逻辑和编程涉及到的逻辑是不一样的。比如，验证数学的时候，我们不需要存临时变量，我们不用在脑海里针对某一行loop1000次来验证。过于复杂和和日常表达不一致的形式化语言：即使是数学家都难以理解的那种，是数学界和AI界的瓶颈。 -->
+But current formal languages have too high a barrier to entry. From first principles, these languages are essentially programming languages inspired by mathematics. The logic needed for mathematical reasoning is different from programming logic. For example, when verifying mathematics, we don't need to store temporary variables, and we don't need to mentally loop 1000 times to verify a line. Overly complex formal languages that are inconsistent with everyday expression - even difficult for mathematicians to understand - are becoming a bottleneck in both mathematics and AI fields.
 
 If even children can reason naturally, a formal language that combines rigor and intuition must be possible -- it simply hasn’t been invented yet. Litex is designed to create precisely such a language. It welcomes everyone, from children to experts, to use it to reason about math.
 
-Simplicity doesn’t mean weakness —- it means mastery. Mathematics is the science of abstraction, and computer science is science of abstraction. Litex bridges the two, scaling mathematical reasoning with software engineering principles. It lets users divide and conquer proofs — just as programmers manage software complexity — ushering math into the computational age.
+Simplicity doesn’t mean weakness —- in the case of Litex, it means powerness and scalability. Just like how a small groups of axioms and reasoning rules can be used to prove a large number of theorems, Litex is built on top exactly the same set of axioms and reasoning rules. As the Unix philosophy says, "keep it simple, stupid". Litex is designed to be a tool that scales up reasoning, not anything else.
 
-Litex represents a paradigm shift from traditional proof assistants by giving up Turing-completeness in favor of a domain-specific approach tailored for mathematical verification, eliminating the complexities of general-purpose systems while offering Python-like accessibility and LaTeX-style elegance; this intentional design removes all artificial barriers between mathematician and proof, providing unconstrained mathematical expression without conceptual overhead.
+In the 21st century, the progress of math is hindered by the contunous abstraction of math and disconnection between different fields of math. Another huaman activity that has dealted with complexity is software engineering, and throughout the years, a lot of inventions have been made to make softwares more scalable and easier to use for everyone.
+
+As you can see, mathematics is the science of abstraction, and computer science is science of abstraction. Litex bridges the two, scaling mathematical reasoning with software engineering principles. It lets users divide and conquer proofs — just as programmers manage software complexity — ushering math into the computational age.
 
 Fields medalist Terence Tao shows great interest in the combination of formal languages and AI. When asked about formalizing everything in formal language, he said: "So I think the smarter thing to do in many cases is just to wait until it’s easier. Instead of taking 10 times as long to formalize it, it takes two times as long as the conventional way."[[AI will become mathematicians' co-pilot](https://www.scientificamerican.com/article/ai-will-become-mathematicians-co-pilot/)] Litex is my answer to this challenge. I hope you and many others can join the Litex community to make this happen.
 
