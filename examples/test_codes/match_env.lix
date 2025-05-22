@@ -2,3 +2,4 @@ prop p(x N)
 
 suppose $p(x):
     $p(x)
+    prop $q(x N)
