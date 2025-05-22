@@ -103,6 +103,8 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
 			} else {
 				exec.appendMsg(stmt.String() + "\nis unknown")
 			}
+		} else {
+			exec.appendMsg(stmt.String() + "\nis unknown")
 		}
 	} else {
 		exec.appendMsg(stmt.String() + "\nis unknown")

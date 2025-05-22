@@ -1,0 +1,13 @@
+prove:
+    prop p(x N)
+
+
+    know:
+        forall x N:
+            $p(x)
+
+    $p(1)
+
+    forall y N:
+        $p(y)
+        

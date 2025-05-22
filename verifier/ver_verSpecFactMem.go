@@ -173,7 +173,7 @@ func (ver *Verifier) specFact_UniMem_asEnv(curEnv *env.Env, stmt *ast.SpecFactSt
 		return false, nil
 	}
 
-	nextState := state.addRound().toNoMsg()
+	nextState := state.addRound()
 
 	return ver.iterate_KnownSpecInUniFacts_applyMatch(stmt, searchedSpecFacts, nextState)
 }
