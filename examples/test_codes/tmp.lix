@@ -32,10 +32,10 @@ prove:
         a != b
         then:
             b != a
-            #$point_on_line(a, line_of(a, b))
-            #$point_on_line(b, line_of(a, b))
-            #$point_on_line(a, line_of(b, a))
-            #$point_on_line(b, line_of(b, a))
+            $point_on_line(a, line_of(a, b))
+            $point_on_line(b, line_of(a, b))
+            $point_on_line(a, line_of(b, a))
+            $point_on_line(b, line_of(b, a))
             line_of(a, b) = line_of(b, a)
 
 """
