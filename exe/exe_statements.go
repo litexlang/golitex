@@ -55,6 +55,8 @@ func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		execState, err = exec.supposePropMatchStmt(stmt)
 	case *ast.WithPropMatchStmt:
 		execState, err = exec.withPropMatchStmt(stmt)
+	case *ast.KnowSupposeStmt:
+		execState, err = exec.knowSupposeStmt(stmt)
 
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
@@ -707,4 +709,20 @@ func (exec *Executor) proveOrStmt(stmt *ast.ProveOrStmt) (glob.ExecState, error)
 	}
 
 	return glob.ExecState_True, nil
+}
+
+func (exec *Executor) knowSupposeStmt(stmt *ast.KnowSupposeStmt) (glob.ExecState, error) {
+	exec.newEnv(exec.env, &stmt.SupposeStmt)
+	defer exec.deleteEnvAndRetainMsg()
+
+	knownFacts := []ast.FactStmt{}
+	for _, fact := range stmt.SupposeStmt.Body {
+		if specFact, ok := fact.(*ast.SpecFactStmt); ok {
+			knownFacts = append(knownFacts, specFact)
+		} else {
+			return glob.ExecState_Error, fmt.Errorf("know suppose stmt only support spec fact")
+		}
+	}
+
+	return exec.supposeStmt_storeFactsToParentEnv_addPrefixToSupposeFactAndBodyFacts(knownFacts, &stmt.SupposeStmt)
 }
