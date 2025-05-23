@@ -119,3 +119,7 @@ func NewWhenPropMatchStmt(fact SpecFactStmt, body []Stmt) *SupposePropMatchStmt 
 func NewWithPropMatchStmt(fact SpecFactStmt, body []Stmt) *WithPropMatchStmt {
 	return &WithPropMatchStmt{fact, body}
 }
+
+func NewKnowSupposeStmt(supposeStmt SupposePropMatchStmt) *KnowSupposeStmt {
+	return &KnowSupposeStmt{supposeStmt}
+}
