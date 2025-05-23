@@ -137,3 +137,7 @@ type ProveOrStmt struct {
 type KnowExistPropStmt struct {
 	ExistProp DefExistPropStmt
 }
+
+type KnowSupposeStmt struct {
+	SupposeStmt SupposePropMatchStmt
+}
