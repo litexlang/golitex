@@ -722,9 +722,18 @@ func (exec *Executor) knowSupposeStmt(stmt *ast.KnowSupposeStmt) (glob.ExecState
 		if specFact, ok := fact.(*ast.SpecFactStmt); ok {
 			knownFacts = append(knownFacts, specFact)
 		} else {
-			return glob.ExecState_Error, fmt.Errorf("know suppose stmt only support spec fact")
+			return glob.ExecState_Error, fmt.Errorf("Currently, know suppose stmt only support spec fact")
 		}
 	}
 
-	return exec.supposeStmt_storeFactsToParentEnv_addPrefixToSupposeFactAndBodyFacts(knownFacts, &stmt.SupposeStmt, exec.env)
+	execState, factsWithPrefix, err := exec.supposeStmt_storeFactsToParentEnv_addPrefixToSupposeFactAndBodyFacts(knownFacts, &stmt.SupposeStmt, exec.env)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+
+	for i, fact := range factsWithPrefix {
+		stmt.SupposeStmt.Body[i] = fact
+	}
+
+	return execState, nil
 }
