@@ -14,6 +14,8 @@ package litex_env
 
 import (
 	"fmt"
+	glob "golitex/glob"
+	"strings"
 )
 
 func duplicateDefMsg(pkgName string, name string, keyword string) error {
@@ -29,22 +31,66 @@ func (env *Env) String() string {
 	return ""
 }
 
-func (fact *KnownSpecFact) String() string {
-	return fact.Fact.String()
-}
-
-func (fact *KnownSpecFact_InUniSpecFact) String() string {
-	return fact.UniFact.String()
-}
-
-func (fact *KnownSpecFact_InLogicExpr) String() string {
-	return fact.LogicExpr.String()
-}
-
-func (fact *SpecFact_InLogicExpr_InUniFact) String() string {
-	return fact.UniFact.String()
-}
-
 func (e *Env) NewMsg(s string) {
 	e.Msgs = append(e.Msgs, s)
+}
+
+func (knownSpecFact *KnownSpecFact) String() string {
+	// return knownSpecFact.Fact.String()
+	var builder strings.Builder
+	if knownSpecFact.EnvFact == nil {
+		builder.WriteString(knownSpecFact.Fact.String())
+		return builder.String()
+	} else {
+		builder.WriteString(knownSpecFact.EnvFact.String())
+		return builder.String()
+	}
+}
+
+func (knownSpecFact *KnownSpecFact_InLogicExpr) String() string {
+	var builder strings.Builder
+	if knownSpecFact.EnvFact == nil {
+		builder.WriteString(knownSpecFact.LogicExpr.String())
+		return builder.String()
+	} else {
+		builder.WriteString(glob.KeywordSuppose)
+		builder.WriteString(" ")
+		builder.WriteString(knownSpecFact.EnvFact.String())
+		builder.WriteString(":")
+		builder.WriteString("\n")
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(knownSpecFact.LogicExpr.String(), 1))
+		return builder.String()
+	}
+}
+
+func (knownSpecFact *KnownSpecFact_InUniSpecFact) String() string {
+	var builder strings.Builder
+	if knownSpecFact.EnvFact == nil {
+		builder.WriteString(knownSpecFact.UniFact.String())
+		return builder.String()
+	} else {
+		builder.WriteString(glob.KeywordSuppose)
+		builder.WriteString(" ")
+		builder.WriteString(knownSpecFact.EnvFact.String())
+		builder.WriteString(":")
+		builder.WriteString("\n")
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(knownSpecFact.UniFact.String(), 1))
+		return builder.String()
+	}
+}
+
+func (knownSpecFact *SpecFact_InLogicExpr_InUniFact) String() string {
+	var builder strings.Builder
+	if knownSpecFact.EnvFact == nil {
+		builder.WriteString(knownSpecFact.UniFact.String())
+		return builder.String()
+	} else {
+		builder.WriteString(glob.KeywordSuppose)
+		builder.WriteString(" ")
+		builder.WriteString(knownSpecFact.EnvFact.String())
+		builder.WriteString(":")
+		builder.WriteString("\n")
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(knownSpecFact.UniFact.String(), 1))
+		return builder.String()
+	}
 }

@@ -1036,7 +1036,7 @@ func (ver *Verifier) specFact_MatchEnv_UniMem(curEnv *env.Env, stmt *ast.SpecFac
 
 func (ver *Verifier) iterateKnownSpecFacts_applyFcEqualSpec_InMatchEnv(stmt *ast.SpecFactStmt, knownFacts []env.KnownSpecFact, state VerState) (bool, error) {
 	var previousSuppose *ast.SupposePropMatchStmt = nil
-	uniMap := map[string]ast.Fc{}
+	previousUniMap := map[string]ast.Fc{}
 
 LoopOverFacts:
 	for _, knownFact := range knownFacts {
@@ -1050,13 +1050,13 @@ LoopOverFacts:
 				if !ok {
 					return false, fmt.Errorf("known param %s is not an atom", param.String())
 				}
-				uniMap[atom.Name] = stmt.Params[i]
+				previousUniMap[atom.Name] = stmt.Params[i]
 			}
 			previousSuppose = knownFact.EnvFact
 		}
 
 		for i, knownParam := range knownFact.Fact.Params {
-			knownParamInst, err := knownParam.Instantiate(uniMap)
+			knownParamInst, err := knownParam.Instantiate(previousUniMap)
 			if err != nil {
 				return false, err
 			}
