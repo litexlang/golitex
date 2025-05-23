@@ -23,6 +23,7 @@ func (ver *Verifier) inFact(stmt *ast.SpecFactStmt, state VerState) (bool, error
 		return false, fmt.Errorf("invalid number of parameters for in fact")
 	}
 
+	// fn in fn set
 	if ok := ast.IsFnSet(stmt.Params[0]) && ast.IsFcAtomWithName(stmt.Params[1], glob.KeywordSet); ok {
 		if state.requireMsg() {
 			ver.successWithMsg(stmt.String(), "by definition")
@@ -30,6 +31,22 @@ func (ver *Verifier) inFact(stmt *ast.SpecFactStmt, state VerState) (bool, error
 			ver.successNoMsg()
 		}
 
+		return true, nil
+	}
+
+	ok, err := ver.btLitNumInNatOrIntOrRatOrReal(stmt, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
+	ok, err = ver.btPropInPropSet(stmt, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
 		return true, nil
 	}
 

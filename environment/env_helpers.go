@@ -14,7 +14,6 @@ package litex_env
 
 import (
 	ast "golitex/ast"
-	glob "golitex/glob"
 )
 
 func (e *Env) GetFactsFromKnownFactInMatchEnv(envFact *ast.SpecFactStmt) (*KnownFactsStruct, bool) {
@@ -27,80 +26,80 @@ func (e *Env) GetFactsFromKnownFactInMatchEnv(envFact *ast.SpecFactStmt) (*Known
 
 // Commutative Prop
 
-func (e *Env) insertCommutativeProp(propName ast.FcAtom) {
-	if _, ok := e.CommutativeProp[propName.PkgName]; !ok {
-		e.CommutativeProp[propName.PkgName] = make(map[string]struct{})
-	}
-	if _, ok := e.CommutativeProp[propName.PkgName][propName.Name]; !ok {
-		e.CommutativeProp[propName.PkgName][propName.Name] = struct{}{}
-	}
-}
+// func (e *Env) insertCommutativeProp(propName ast.FcAtom) {
+// 	if _, ok := e.CommutativeProp[propName.PkgName]; !ok {
+// 		e.CommutativeProp[propName.PkgName] = make(map[string]struct{})
+// 	}
+// 	if _, ok := e.CommutativeProp[propName.PkgName][propName.Name]; !ok {
+// 		e.CommutativeProp[propName.PkgName][propName.Name] = struct{}{}
+// 	}
+// }
 
-func (e *Env) IsCommutativeProp(propName ast.FcAtom) bool {
-	if ast.IsFcAtomWithName(&propName, glob.KeySymbolEqual) {
-		return true
-	}
+// func (e *Env) IsCommutativeProp(propName ast.FcAtom) bool {
+// 	if ast.IsFcAtomWithName(&propName, glob.KeySymbolEqual) {
+// 		return true
+// 	}
 
-	if _, ok := e.CommutativeProp[propName.PkgName][propName.Name]; ok {
-		return true
-	}
-	return false
-}
+// 	if _, ok := e.CommutativeProp[propName.PkgName][propName.Name]; ok {
+// 		return true
+// 	}
+// 	return false
+// }
 
 // End of Commutative Prop
 
 // Commutative Fn
 
-func (e *Env) InsertCommutativeFn(fnName ast.FcAtom) {
-	if _, ok := e.CommutativeFn[fnName.PkgName]; !ok {
-		e.CommutativeFn[fnName.PkgName] = make(map[string]struct{})
-	}
-	if _, ok := e.CommutativeFn[fnName.PkgName][fnName.Name]; !ok {
-		e.CommutativeFn[fnName.PkgName][fnName.Name] = struct{}{}
-	}
-}
+// func (e *Env) InsertCommutativeFn(fnName ast.FcAtom) {
+// 	if _, ok := e.CommutativeFn[fnName.PkgName]; !ok {
+// 		e.CommutativeFn[fnName.PkgName] = make(map[string]struct{})
+// 	}
+// 	if _, ok := e.CommutativeFn[fnName.PkgName][fnName.Name]; !ok {
+// 		e.CommutativeFn[fnName.PkgName][fnName.Name] = struct{}{}
+// 	}
+// }
 
-func (e *Env) IsCommutativeFn(fnName ast.FcAtom) bool {
-	if ast.IsFcAtomWithName(&fnName, glob.KeySymbolPlus) {
-		return true
-	}
+// func (e *Env) IsCommutativeFn(fnName ast.FcAtom) bool {
+// 	if ast.IsFcAtomWithName(&fnName, glob.KeySymbolPlus) {
+// 		return true
+// 	}
 
-	if ast.IsFcAtomWithName(&fnName, glob.KeySymbolStar) {
-		return true
-	}
+// 	if ast.IsFcAtomWithName(&fnName, glob.KeySymbolStar) {
+// 		return true
+// 	}
 
-	if _, ok := e.CommutativeFn[fnName.PkgName][fnName.Name]; ok {
-		return true
-	}
-	return false
-}
+// 	if _, ok := e.CommutativeFn[fnName.PkgName][fnName.Name]; ok {
+// 		return true
+// 	}
+// 	return false
+// }
 
 // End of Commutative Fn
 
 // Associative Fn
 
-func (e *Env) InsertAssociativeFn(fnName ast.FcAtom) {
-	if _, ok := e.AssociativeFn[fnName.PkgName]; !ok {
-		e.AssociativeFn[fnName.PkgName] = make(map[string]struct{})
-	}
-	if _, ok := e.AssociativeFn[fnName.PkgName][fnName.Name]; !ok {
-		e.AssociativeFn[fnName.PkgName][fnName.Name] = struct{}{}
-	}
-}
+// func (e *Env) InsertAssociativeFn(fnName ast.FcAtom) {
+// 	if _, ok := e.AssociativeFn[fnName.PkgName]; !ok {
+// 		e.AssociativeFn[fnName.PkgName] = make(map[string]struct{})
+// 	}
+// 	if _, ok := e.AssociativeFn[fnName.PkgName][fnName.Name]; !ok {
+// 		e.AssociativeFn[fnName.PkgName][fnName.Name] = struct{}{}
+// 	}
+// }
 
-func (e *Env) IsAssociativeFn(fnName ast.FcAtom) bool {
-	if ast.IsFcAtomWithName(&fnName, glob.KeySymbolPlus) {
-		return true
-	}
+// func (e *Env) IsAssociativeFn(fnName ast.FcAtom) bool {
+// 	if ast.IsFcAtomWithName(&fnName, glob.KeySymbolPlus) {
+// 		return true
+// 	}
 
-	if ast.IsFcAtomWithName(&fnName, glob.KeySymbolStar) {
-		return true
-	}
+// 	if ast.IsFcAtomWithName(&fnName, glob.KeySymbolStar) {
+// 		return true
+// 	}
 
-	if _, ok := e.AssociativeFn[fnName.PkgName][fnName.Name]; ok {
-		return true
-	}
-	return false
-}
+// 	if _, ok := e.AssociativeFn[fnName.PkgName][fnName.Name]; ok {
+// 		return true
+// 	}
+// 	return false
+// }
 
 // End of Associative Fn

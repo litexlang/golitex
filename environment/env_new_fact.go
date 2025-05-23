@@ -347,7 +347,8 @@ func (env *Env) isTrueCommutativeProp_StoreIt(fact *ast.SpecFactStmt) (bool, err
 		return true, fmt.Errorf("prop %s is supposed to be commutative, but has no %d parameters", fact.PropName, len(propDef.DefHeader.Params))
 	}
 
-	env.insertCommutativeProp(*propNameAsAtom)
+	// env.insertCommutativeProp(*propNameAsAtom)
+	env.storeSpecFactInMem(fact)
 
 	return true, nil
 }
@@ -409,12 +410,13 @@ func (env *Env) isCommutativeFnName_StoreIt(fact *ast.SpecFactStmt) (bool, error
 		return false, fmt.Errorf("commutative fn is supposed to have one parameter, but %s has %d parameters", fact.PropName, len(fact.Params))
 	}
 
-	fnNameAsAtom, ok := fact.Params[0].(*ast.FcAtom)
-	if !ok {
-		return false, fmt.Errorf("commutative fn is supposed to have one atom parameter, but %s has %s", fact.PropName, fact.Params[0])
-	}
+	// fnNameAsAtom, ok := fact.Params[0].(*ast.FcAtom)
+	// if !ok {
+	// 	return false, fmt.Errorf("commutative fn is supposed to have one atom parameter, but %s has %s", fact.PropName, fact.Params[0])
+	// }
 
-	env.InsertCommutativeFn(*fnNameAsAtom)
+	// env.InsertCommutativeFn(*fnNameAsAtom)
+	env.storeSpecFactInMem(fact)
 
 	return true, nil
 }
@@ -432,12 +434,13 @@ func (env *Env) isAssociativeFnName_StoreIt(fact *ast.SpecFactStmt) (bool, error
 		return false, fmt.Errorf("associative fn is supposed to have one parameter, but %s has %d parameters", fact.PropName, len(fact.Params))
 	}
 
-	fnNameAsAtom, ok := fact.Params[0].(*ast.FcAtom)
-	if !ok {
-		return false, fmt.Errorf("associative fn is supposed to have one atom parameter, but %s has %s", fact.PropName, fact.Params[0])
-	}
+	// fnNameAsAtom, ok := fact.Params[0].(*ast.FcAtom)
+	// if !ok {
+	// 	return false, fmt.Errorf("associative fn is supposed to have one atom parameter, but %s has %s", fact.PropName, fact.Params[0])
+	// }
 
-	env.InsertAssociativeFn(*fnNameAsAtom)
+	// env.InsertAssociativeFn(*fnNameAsAtom)
+	env.storeSpecFactInMem(fact)
 
 	return true, nil
 }
