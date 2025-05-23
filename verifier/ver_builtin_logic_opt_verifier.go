@@ -27,11 +27,11 @@ func (ver *Verifier) btPropExceptEqual_Rule_MemSpec(stmt *ast.SpecFactStmt, stat
 		return false, fmt.Errorf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params))
 	}
 
-	if ok, err := ver.btInProp(stmt, state); err != nil {
-		return false, err
-	} else if ok {
-		return true, nil
-	}
+	// if ok, err := ver.btInProp(stmt, state); err != nil {
+	// 	return false, err
+	// } else if ok {
+	// 	return true, nil
+	// }
 
 	if ast.IsFcAtomWithName(&stmt.PropName, glob.KeywordCommutativeProp) {
 		if ok, err := ver.btCommutativeRule(stmt, state); err != nil {
@@ -140,7 +140,7 @@ func (ver *Verifier) btCommutativeRule(stmt *ast.SpecFactStmt, state VerState) (
 		return false, nil
 	}
 
-	if ver.env.IsCommutativeProp(stmt.PropName) {
+	if ver.isCommutativeProp(stmt) {
 		if state.requireMsg() {
 			ver.successWithMsg(stmt.String(), fmt.Sprintf("prop %s is commutative", stmt.PropName.String()))
 		} else {
@@ -175,34 +175,34 @@ func (ver *Verifier) btCommutativeRule(stmt *ast.SpecFactStmt, state VerState) (
 	return false, nil
 }
 
-func (ver *Verifier) btInProp(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	ok, err := ver.btLitNumInNatOrIntOrRatOrReal(stmt, state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
-	}
+// func (ver *Verifier) btInProp(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+// 	ok, err := ver.btLitNumInNatOrIntOrRatOrReal(stmt, state)
+// 	if err != nil {
+// 		return false, err
+// 	}
+// 	if ok {
+// 		return true, nil
+// 	}
 
-	// If something is a fn, then it's in fn
-	ok, err = ver.btFnInFnSet(stmt, state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
-	}
+// 	// If something is a fn, then it's in fn
+// 	ok, err = ver.btFnInFnSet(stmt, state)
+// 	if err != nil {
+// 		return false, err
+// 	}
+// 	if ok {
+// 		return true, nil
+// 	}
 
-	ok, err = ver.btPropInPropSet(stmt, state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
-	}
+// 	ok, err = ver.btPropInPropSet(stmt, state)
+// 	if err != nil {
+// 		return false, err
+// 	}
+// 	if ok {
+// 		return true, nil
+// 	}
 
-	return false, nil
-}
+// 	return false, nil
+// }
 
 func (ver *Verifier) btLitNumInNatOrIntOrRatOrReal(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	isSuccess := false

@@ -547,7 +547,7 @@ func (ver *Verifier) fcEqual_Commutative_Associative_CmpRule(left ast.Fc, right 
 func (ver *Verifier) leftIsCommutativeAndUseCommutedLeftToCheckEqualRight(left ast.Fc, right ast.Fc, verState VerState) (bool, error) {
 	if leftAsFn, ok := left.(*ast.FcFn); ok {
 		if leftHeadAsAtom, ok := leftAsFn.FnHead.(*ast.FcAtom); ok {
-			if ver.env.IsCommutativeFn(*leftHeadAsAtom) { // 暂时认为只能是 atom 形式的opt name 才能判断
+			if ver.isCommutativeFn(*leftHeadAsAtom) { // 暂时认为只能是 atom 形式的opt name 才能判断
 				if len(leftAsFn.ParamSegs) != 2 {
 					return false, nil
 				}
@@ -579,7 +579,7 @@ func (ver *Verifier) leftIsCommutativeAndUseCommutedLeftToCheckEqualRight(left a
 func (ver *Verifier) leftIsAssociative_UseAssociationToCheckEqual(left ast.Fc, right ast.Fc, verState VerState) (bool, error) {
 	if leftAsFn, ok := left.(*ast.FcFn); ok {
 		if leftHeadAsAtom, ok := leftAsFn.FnHead.(*ast.FcAtom); ok {
-			if ver.env.IsAssociativeFn(*leftHeadAsAtom) {
+			if ver.isAssociativeFn(*leftHeadAsAtom) {
 				leftAssociated, ok := leftAsFn.HasTwoParams_FirstParamHasTheSameNameAsItself()
 				if !ok {
 					return false, nil

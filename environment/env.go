@@ -38,11 +38,11 @@ type Env struct {
 
 	KnownFacts KnownFactsStruct
 
-	CommutativeProp glob.Map2D[struct{}]
+	// CommutativeProp glob.Map2D[struct{}]
 
 	// 本质上我可以让这些事实和 specfact 存储时混在一起，或许这么干也行
-	CommutativeFn glob.Map2D[struct{}]
-	AssociativeFn glob.Map2D[struct{}]
+	// CommutativeFn glob.Map2D[struct{}]
+	// AssociativeFn glob.Map2D[struct{}]
 
 	// 考虑多个系统的时候，再引入 map[string]string
 	EqualMem map[string]shared_ptr_to_slice_of_fc
@@ -65,9 +65,9 @@ func NewEnv(parent *Env, curMatchEnv *ast.SupposePropMatchStmt) *Env {
 
 		KnownFacts: makeKnownFactsStruct(),
 
-		CommutativeProp: make(glob.Map2D[struct{}]),
-		CommutativeFn:   make(glob.Map2D[struct{}]),
-		AssociativeFn:   make(glob.Map2D[struct{}]),
+		// CommutativeProp: make(glob.Map2D[struct{}]),
+		// CommutativeFn:   make(glob.Map2D[struct{}]),
+		// AssociativeFn:   make(glob.Map2D[struct{}]),
 
 		EqualMem: make(map[string]shared_ptr_to_slice_of_fc),
 
@@ -87,16 +87,16 @@ func makeKnownFactsStruct() KnownFactsStruct {
 	}
 }
 
-func (e *Env) IsSpecFactPropCommutative(fact *ast.SpecFactStmt) bool {
-	// 如果是等号那自动成立
-	if ast.IsFcAtomWithName(&fact.PropName, glob.KeySymbolEqual) {
-		return true
-	}
+// func (e *Env) IsSpecFactPropCommutative(fact *ast.SpecFactStmt) bool {
+// 	// 如果是等号那自动成立
+// 	if ast.IsFcAtomWithName(&fact.PropName, glob.KeySymbolEqual) {
+// 		return true
+// 	}
 
-	for env := e; env != nil; env = env.Parent {
-		if env.IsCommutativeProp(fact.PropName) {
-			return true
-		}
-	}
-	return false
-}
+// for env := e; env != nil; env = env.Parent {
+// 	if env.IsCommutativeProp(fact.PropName) {
+// 		return true
+// 	}
+// }
+// 	return false
+// }
