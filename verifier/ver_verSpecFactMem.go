@@ -968,7 +968,7 @@ func (ver *Verifier) specFact_MatchEnv_SpecMem(curEnv *env.Env, stmt *ast.SpecFa
 		return false, nil
 	}
 
-	return ver.iterateKnownSpecFacts_applyFcEqualSpec(stmt, knownFacts, state)
+	return ver.iterateKnownSpecFacts_applyFcEqualSpec_InMatchEnv(stmt, knownFacts, state)
 }
 
 func (ver *Verifier) specFact_MatchEnv_LogicMem(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
@@ -1031,5 +1031,52 @@ LoopOverFacts:
 
 // TODO
 func (ver *Verifier) specFact_MatchEnv_UniMem(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	return false, nil
+}
+
+func (ver *Verifier) iterateKnownSpecFacts_applyFcEqualSpec_InMatchEnv(stmt *ast.SpecFactStmt, knownFacts []env.KnownSpecFact, state VerState) (bool, error) {
+	var previousSuppose *ast.SupposePropMatchStmt = nil
+	uniMap := map[string]ast.Fc{}
+
+LoopOverFacts:
+	for _, knownFact := range knownFacts {
+		if len(knownFact.Fact.Params) != len(stmt.Params) || knownFact.Fact.TypeEnum != stmt.TypeEnum {
+			continue
+		}
+
+		if knownFact.EnvFact != previousSuppose {
+			for i, param := range knownFact.Fact.Params {
+				atom, ok := param.(*ast.FcAtom)
+				if !ok {
+					return false, fmt.Errorf("known param %s is not an atom", param.String())
+				}
+				uniMap[atom.Name] = stmt.Params[i]
+			}
+			previousSuppose = knownFact.EnvFact
+		}
+
+		for i, knownParam := range knownFact.Fact.Params {
+			knownParamInst, err := knownParam.Instantiate(uniMap)
+			if err != nil {
+				return false, err
+			}
+
+			ok, err := ver.fcEqualSpec(knownParamInst, stmt.Params[i], state)
+			if err != nil {
+				return false, err
+			}
+			if !ok {
+				continue LoopOverFacts
+			}
+		}
+
+		if state.requireMsg() {
+			ver.specFactSpecMemTrueMsg(stmt, knownFact)
+		} else {
+			ver.successNoMsg()
+		}
+
+		return true, nil
+	}
 	return false, nil
 }
