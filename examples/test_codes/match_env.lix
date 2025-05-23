@@ -1,5 +1,17 @@
 prop p(x N)
+prop q(x N, y N):
+    iff:
+        # 或者引入 know suppose 也行
+        $p(x)  # 这里如果不是iff呢？只能通过引入新关键词then释放了
 
-suppose $p(x):
+know:
+    forall x N:
+        $p(x)
+        then:
+            $q(x)
+
+suppose $q(x, y):
     $p(x)
-    prop $q(x N)
+
+
+

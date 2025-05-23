@@ -997,52 +997,6 @@ func (tb *tokenBlock) uniFactBodyFacts(nameDepthMap ast.NameDepthMap, curAllowUn
 	return domFacts, thenFacts, iffFacts, nil
 }
 
-// func (tb *tokenBlock) propMatchStmt(isWhen bool) (*ast.SpecFactStmt, []ast.Stmt, error) {
-// 	fact, err := tb.pureFuncSpecFact(ast.NameDepthMap{})
-// 	if err != nil {
-// 		return nil, nil, err
-// 	}
-
-// 	// specFact parameter 必须是atom
-// 	nameDepthMap := ast.NameDepthMap{}
-// 	for i, param := range fact.Params {
-// 		asAtom, ok := param.(*ast.FcAtom)
-// 		if !ok {
-// 			return nil, nil, fmt.Errorf("spec fact parameter must be atom, but got: %s", param.String())
-// 		}
-// 		if asAtom.PkgName != glob.EmptyPkg {
-// 			return nil, nil, fmt.Errorf("spec fact parameter must be atom, but got: %s", param.String())
-// 		}
-// 		if isWhen {
-// 			if _, ok := nameDepthMap[asAtom.Name]; !ok {
-// 				nameDepthMap[asAtom.Name] = 1
-// 			} else {
-// 				return nil, nil, fmt.Errorf("duplicate parameter: %s", asAtom.Name)
-// 			}
-// 		}
-// 		fact.Params[i], err = ast.AddUniPrefixToFc(asAtom, nameDepthMap)
-// 		if err != nil {
-// 			return nil, nil, err
-// 		}
-// 	}
-
-// 	err = tb.header.skip(glob.KeySymbolColon)
-// 	if err != nil {
-// 		return nil, nil, err
-// 	}
-
-// 	body := []ast.FactStmt{}
-// 	for _, stmt := range tb.body {
-// 		bodyStmt, err := stmt.factStmt(nameDepthMap, UniFactDepth0)
-// 		if err != nil {
-// 			return nil, nil, err
-// 		}
-// 		body = append(body, bodyStmt)
-// 	}
-
-// 	return fact, body, nil
-// }
-
 func (tb *tokenBlock) supposePropMatchStmt() (*ast.SupposePropMatchStmt, error) {
 	err := tb.header.skip(glob.KeywordSuppose)
 	if err != nil {
@@ -1065,6 +1019,12 @@ func (tb *tokenBlock) supposePropMatchStmt() (*ast.SupposePropMatchStmt, error) 
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
 		}
+
+		// TODO 暂时只能全是fact
+		if _, ok := curStmt.(ast.FactStmt); !ok {
+			return nil, &tokenBlockErr{fmt.Errorf("suppose prop match stmt: expect fact, but got: %s", curStmt.String()), *tb}
+		}
+
 		body = append(body, curStmt)
 	}
 
