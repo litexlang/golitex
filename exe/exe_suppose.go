@@ -43,7 +43,7 @@ func (exec *Executor) supposePropMatchStmt(stmt *ast.SupposePropMatchStmt) (glob
 		return execState, err
 	}
 
-	execState, err = exec.supposeStmt_storeFactsToParentEnv_addPrefixToSupposeFactAndBodyFacts(insideFacts, stmt, originalEnv)
+	execState, _, err = exec.supposeStmt_storeFactsToParentEnv_addPrefixToSupposeFactAndBodyFacts(insideFacts, stmt, originalEnv)
 	if err != nil || execState != glob.ExecState_True {
 		return execState, err
 	}
@@ -139,13 +139,13 @@ func (exec *Executor) supposeStmt_runStmtBody(stmt *ast.SupposePropMatchStmt) (g
 	return glob.ExecState_True, insideFacts, nil
 }
 
-func (exec *Executor) supposeStmt_storeFactsToParentEnv_addPrefixToSupposeFactAndBodyFacts(insideFacts []ast.FactStmt, stmt *ast.SupposePropMatchStmt, storeToEnv *env.Env) (glob.ExecState, error) {
+func (exec *Executor) supposeStmt_storeFactsToParentEnv_addPrefixToSupposeFactAndBodyFacts(insideFacts []ast.FactStmt, stmt *ast.SupposePropMatchStmt, storeToEnv *env.Env) (glob.ExecState, []ast.FactStmt, error) {
 	// store facts in original env
 	uniMap := map[string]ast.Fc{}
 	for _, supposePropParam := range stmt.Fact.Params {
 		asAtom, ok := supposePropParam.(*ast.FcAtom)
 		if !ok {
-			return glob.ExecState_Error, fmt.Errorf("spec fact parameter must be atom, but got: %s", supposePropParam.String())
+			return glob.ExecState_Error, nil, fmt.Errorf("spec fact parameter must be atom, but got: %s", supposePropParam.String())
 		}
 		name := asAtom.Name
 		nameWithPrefix := fmt.Sprintf("%s%s", glob.UniParamPrefix, name)
@@ -156,14 +156,14 @@ func (exec *Executor) supposeStmt_storeFactsToParentEnv_addPrefixToSupposeFactAn
 	for _, fact := range insideFacts {
 		factWithPrefix, err := fact.Instantiate(uniMap)
 		if err != nil {
-			return glob.ExecState_Error, err
+			return glob.ExecState_Error, nil, err
 		}
 		factsWithPrefix = append(factsWithPrefix, factWithPrefix)
 	}
 
 	newPropFactPtr, err := ast.InstantiateSpecFact(&stmt.Fact, uniMap)
 	if err != nil {
-		return glob.ExecState_Error, err
+		return glob.ExecState_Error, nil, err
 	}
 	stmt.Fact = *newPropFactPtr
 
@@ -171,12 +171,12 @@ func (exec *Executor) supposeStmt_storeFactsToParentEnv_addPrefixToSupposeFactAn
 	for _, fact := range factsWithPrefix {
 		err := storeToEnv.NewFact(fact)
 		if err != nil {
-			return glob.ExecState_Error, err
+			return glob.ExecState_Error, nil, err
 		}
 		messages = append(messages, fact.String())
 	}
 
 	exec.appendMsg(ast.SupposeNewFactsMsg(stmt, messages))
 
-	return glob.ExecState_True, nil
+	return glob.ExecState_True, factsWithPrefix, nil
 }
