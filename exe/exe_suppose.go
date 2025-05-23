@@ -15,6 +15,7 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
+	env "golitex/environment"
 	glob "golitex/glob"
 )
 
@@ -42,7 +43,7 @@ func (exec *Executor) supposePropMatchStmt(stmt *ast.SupposePropMatchStmt) (glob
 		return execState, err
 	}
 
-	execState, err = exec.supposeStmt_storeFactsToParentEnv_addPrefixToSupposeFactAndBodyFacts(insideFacts, stmt)
+	execState, err = exec.supposeStmt_storeFactsToParentEnv_addPrefixToSupposeFactAndBodyFacts(insideFacts, stmt, originalEnv)
 	if err != nil || execState != glob.ExecState_True {
 		return execState, err
 	}
@@ -138,7 +139,7 @@ func (exec *Executor) supposeStmt_runStmtBody(stmt *ast.SupposePropMatchStmt) (g
 	return glob.ExecState_True, insideFacts, nil
 }
 
-func (exec *Executor) supposeStmt_storeFactsToParentEnv_addPrefixToSupposeFactAndBodyFacts(insideFacts []ast.FactStmt, stmt *ast.SupposePropMatchStmt) (glob.ExecState, error) {
+func (exec *Executor) supposeStmt_storeFactsToParentEnv_addPrefixToSupposeFactAndBodyFacts(insideFacts []ast.FactStmt, stmt *ast.SupposePropMatchStmt, storeToEnv *env.Env) (glob.ExecState, error) {
 	// store facts in original env
 	uniMap := map[string]ast.Fc{}
 	for _, supposePropParam := range stmt.Fact.Params {
@@ -167,9 +168,8 @@ func (exec *Executor) supposeStmt_storeFactsToParentEnv_addPrefixToSupposeFactAn
 	stmt.Fact = *newPropFactPtr
 
 	messages := []string{}
-	parentEnv := exec.env.Parent
 	for _, fact := range factsWithPrefix {
-		err := parentEnv.NewFact(fact)
+		err := storeToEnv.NewFact(fact)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}

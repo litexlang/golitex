@@ -712,8 +712,10 @@ func (exec *Executor) proveOrStmt(stmt *ast.ProveOrStmt) (glob.ExecState, error)
 }
 
 func (exec *Executor) knowSupposeStmt(stmt *ast.KnowSupposeStmt) (glob.ExecState, error) {
-	exec.newEnv(exec.env, &stmt.SupposeStmt)
-	defer exec.deleteEnvAndRetainMsg()
+	exec.env.CurMatchEnv = &stmt.SupposeStmt
+	defer func() {
+		exec.env.CurMatchEnv = nil
+	}()
 
 	knownFacts := []ast.FactStmt{}
 	for _, fact := range stmt.SupposeStmt.Body {
@@ -724,5 +726,5 @@ func (exec *Executor) knowSupposeStmt(stmt *ast.KnowSupposeStmt) (glob.ExecState
 		}
 	}
 
-	return exec.supposeStmt_storeFactsToParentEnv_addPrefixToSupposeFactAndBodyFacts(knownFacts, &stmt.SupposeStmt)
+	return exec.supposeStmt_storeFactsToParentEnv_addPrefixToSupposeFactAndBodyFacts(knownFacts, &stmt.SupposeStmt, exec.env)
 }
