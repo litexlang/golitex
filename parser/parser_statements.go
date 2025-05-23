@@ -70,6 +70,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 				ret, err = tb.knowPropStmt()
 			} else if tb.TokenAtHeaderIndexIs(1, glob.KeywordExistProp) {
 				ret, err = tb.knowExistPropStmt()
+			} else if tb.TokenAtHeaderIndexIs(1, glob.KeywordSuppose) {
+				ret, err = tb.knowSupposeStmt()
 			} else {
 				ret, err = tb.knowFactStmt()
 			}
@@ -1311,4 +1313,18 @@ func (tb *tokenBlock) param_paramInSetFactsWithUniPrefix(endWith string, nameDep
 func (tb *tokenBlock) importStmt() (ast.Stmt, error) {
 	// import 是个很重的语句，本质上一旦import了，里面的所有的事实，所有的定理，所有引入的变量，都被放到当前环境里了。在load新的包的过程中，新的包的parser会收到现在的包的parserEnv的影响。
 	return nil, nil
+}
+
+func (tb *tokenBlock) knowSupposeStmt() (*ast.KnowSupposeStmt, error) {
+	err := tb.header.skip(glob.KeywordKnow)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	supposeStmt, err := tb.supposePropMatchStmt()
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	return ast.NewKnowSupposeStmt(*supposeStmt), nil
 }

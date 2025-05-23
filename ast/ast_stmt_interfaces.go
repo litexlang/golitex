@@ -45,6 +45,7 @@ func (s *ProveInEachCaseStmt) stmt() {}
 func (s *KnowPropStmt) stmt()      {}
 func (s *KnowExistPropStmt) stmt() {}
 func (s *ProveOrStmt) stmt()       {}
+func (s *KnowSupposeStmt) stmt()   {}
 
 type FactStmt interface {
 	factStmt()
