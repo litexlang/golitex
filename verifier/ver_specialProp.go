@@ -6,13 +6,10 @@ import (
 )
 
 func (ver *Verifier) isCommutativeProp(stmt *ast.SpecFactStmt) bool {
-	if ast.IsFcAtomWithName(&stmt.PropName, glob.KeySymbolEqual) {
-		return true
-	}
+	return ast.IsFcAtomWithName(&stmt.PropName, glob.KeySymbolEqual)
 
 	// TODO: 用mem来检查
 
-	return false
 }
 
 func (ver *Verifier) isCommutativeFn(fnName ast.FcAtom) bool {

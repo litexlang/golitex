@@ -30,7 +30,7 @@ func (env *Env) storeSpecFactInMem(stmt *ast.SpecFactStmt) error {
 			knownFactsStructPtr = &knownFactsStruct
 		}
 	} else {
-		knownFactsStructPtr = &env.KnownFacts
+		knownFactsStructPtr = &env.KnownFactsStruct
 	}
 
 	err := knownFactsStructPtr.SpecFactMem.newFact(stmt, env.CurMatchEnv)
@@ -53,7 +53,7 @@ func (env *Env) storeLogicFact(stmt *ast.LogicExprStmt) error {
 			env.KnownFactInMatchEnv[envFact.PropName.PkgName][envFact.PropName.Name] = makeKnownFactsStruct()
 		}
 	} else {
-		knownFactsStructPtr = &env.KnownFacts
+		knownFactsStructPtr = &env.KnownFactsStruct
 	}
 
 	err := knownFactsStructPtr.SpecFactInLogicExprMem.newFact(stmt, env.CurMatchEnv)
@@ -76,7 +76,7 @@ func (env *Env) storeUniFact(specFact *ast.SpecFactStmt, uniFact *ast.UniFactStm
 			env.KnownFactInMatchEnv[envFact.PropName.PkgName][envFact.PropName.Name] = makeKnownFactsStruct()
 		}
 	} else {
-		knownFactsStructPtr = &env.KnownFacts
+		knownFactsStructPtr = &env.KnownFactsStruct
 	}
 
 	err := knownFactsStructPtr.SpecFactInUniFactMem.newFact(specFact, uniFact, env.CurMatchEnv)

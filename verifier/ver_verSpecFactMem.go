@@ -103,7 +103,7 @@ func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecFactStmt, state VerState) 
 }
 
 func (ver *Verifier) specFact_inLogicExpr_inUniFactMem_atEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	searchedSpecFactsInLogicExpr, got := curEnv.KnownFacts.SpecFact_InLogicExpr_InUniFactMem.GetSameEnumPkgPropFacts(stmt)
+	searchedSpecFactsInLogicExpr, got := curEnv.KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem.GetSameEnumPkgPropFacts(stmt)
 
 	if !got {
 		return false, nil
@@ -167,7 +167,7 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch(stmt *ast.SpecFac
 }
 
 func (ver *Verifier) specFact_UniMem_asEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	searchedSpecFacts, got := curEnv.KnownFacts.SpecFactInUniFactMem.GetSameEnumPkgPropFacts(stmt)
+	searchedSpecFacts, got := curEnv.KnownFactsStruct.SpecFactInUniFactMem.GetSameEnumPkgPropFacts(stmt)
 
 	if !got {
 		return false, nil
@@ -908,7 +908,7 @@ func (ver *Verifier) leftFnAlwaysEqualToRight(leftFnDef *ast.DefFnStmt, rightFnD
 }
 
 func (ver *Verifier) specFact_SpecMem_atEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	knownFacts, got := curEnv.KnownFacts.SpecFactMem.GetSameEnumPkgPropFacts(stmt)
+	knownFacts, got := curEnv.KnownFactsStruct.SpecFactMem.GetSameEnumPkgPropFacts(stmt)
 
 	if !got {
 		return false, nil
@@ -928,7 +928,7 @@ func (ver *Verifier) specFactSpecMemTrueMsg(stmt *ast.SpecFactStmt, knownFact en
 }
 
 func (ver *Verifier) specFact_LogicMem(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	knownFacts, got := curEnv.KnownFacts.SpecFactInLogicExprMem.GetSameEnumPkgPropFacts(stmt)
+	knownFacts, got := curEnv.KnownFactsStruct.SpecFactInLogicExprMem.GetSameEnumPkgPropFacts(stmt)
 
 	if !got {
 		return false, nil
@@ -1031,6 +1031,9 @@ LoopOverFacts:
 
 // TODO
 func (ver *Verifier) specFact_MatchEnv_UniMem(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	_ = curEnv
+	_ = stmt
+	_ = state
 	return false, nil
 }
 
