@@ -42,6 +42,14 @@ func (ver *Verifier) inFact(stmt *ast.SpecFactStmt, state VerState) (bool, error
 		return true, nil
 	}
 
+	ok, err = ver.btFnInFnSet(stmt, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
 	ok, err = ver.btPropInPropSet(stmt, state)
 	if err != nil {
 		return false, err

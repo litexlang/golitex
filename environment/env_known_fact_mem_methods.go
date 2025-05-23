@@ -189,7 +189,7 @@ func (env *Env) newUniFact(stmt *ast.UniFactStmt) error {
 				return fmt.Errorf("facts in the body of universal fact should not be a free fact, got %s", thenStmtAsLogicExpr.String())
 			}
 
-			err := env.KnownFacts.SpecFact_InLogicExpr_InUniFactMem.NewFact(stmt, thenStmtAsLogicExpr, env.CurMatchEnv)
+			err := env.KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem.NewFact(stmt, thenStmtAsLogicExpr, env.CurMatchEnv)
 			if err != nil {
 				return err
 			}
@@ -295,7 +295,7 @@ func (e *Env) GetSpecFactMem() (*SpecFactMem, bool) {
 		}
 		return &knownFacts.SpecFactMem, true
 	}
-	return &e.KnownFacts.SpecFactMem, true
+	return &e.KnownFactsStruct.SpecFactMem, true
 }
 
 func (e *Env) GetSpecFactInLogicExprMem() (*SpecFactInLogicExprMem, bool) {
@@ -306,7 +306,7 @@ func (e *Env) GetSpecFactInLogicExprMem() (*SpecFactInLogicExprMem, bool) {
 		}
 		return &knownFacts.SpecFactInLogicExprMem, true
 	}
-	return &e.KnownFacts.SpecFactInLogicExprMem, true
+	return &e.KnownFactsStruct.SpecFactInLogicExprMem, true
 }
 
 func (e *Env) GetSpecFactInUniFactMem() (*SpecFactInUniFactMem, bool) {
@@ -317,7 +317,7 @@ func (e *Env) GetSpecFactInUniFactMem() (*SpecFactInUniFactMem, bool) {
 		}
 		return &knownFacts.SpecFactInUniFactMem, true
 	}
-	return &e.KnownFacts.SpecFactInUniFactMem, true
+	return &e.KnownFactsStruct.SpecFactInUniFactMem, true
 }
 
 func (e *Env) GetSpecFact_InLogicExpr_InUniFactMem() (*SpecFact_InLogicExpr_InUniFactMem, bool) {
@@ -328,5 +328,5 @@ func (e *Env) GetSpecFact_InLogicExpr_InUniFactMem() (*SpecFact_InLogicExpr_InUn
 		}
 		return &knownFacts.SpecFact_InLogicExpr_InUniFactMem, true
 	}
-	return &e.KnownFacts.SpecFact_InLogicExpr_InUniFactMem, true
+	return &e.KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem, true
 }

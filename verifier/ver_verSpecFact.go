@@ -101,6 +101,10 @@ func (ver *Verifier) verSpecialSpecFact(stmt *ast.SpecFactStmt, state VerState) 
 		return ver.commutativeFnByDef(stmt, state)
 	}
 
+	if stmt.NameIs(glob.KeywordCommutativeProp) {
+		return ver.btCommutativeRule(stmt, state)
+	}
+
 	if stmt.NameIs(glob.KeywordIn) {
 		return ver.inFact(stmt, state)
 	}
@@ -111,6 +115,12 @@ func (ver *Verifier) verSpecialSpecFact(stmt *ast.SpecFactStmt, state VerState) 
 
 	if stmt.NameIs(glob.KeySymbolEqualEqualEqual) {
 		return ver.isSetEqualFact_Check(stmt, state)
+	}
+
+	if ok, err := ver.btNumberLogicRelaOptBtRule(stmt, state); err != nil {
+		return false, err
+	} else if ok {
+		return true, nil
 	}
 
 	return false, nil

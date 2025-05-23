@@ -36,13 +36,7 @@ type Env struct {
 	ExistPropDefMem ExistPropDefMem
 	SetDefMem       SetDefMem
 
-	KnownFacts KnownFactsStruct
-
-	// CommutativeProp glob.Map2D[struct{}]
-
-	// 本质上我可以让这些事实和 specfact 存储时混在一起，或许这么干也行
-	// CommutativeFn glob.Map2D[struct{}]
-	// AssociativeFn glob.Map2D[struct{}]
+	KnownFactsStruct KnownFactsStruct
 
 	// 考虑多个系统的时候，再引入 map[string]string
 	EqualMem map[string]shared_ptr_to_slice_of_fc
@@ -63,11 +57,7 @@ func NewEnv(parent *Env, curMatchEnv *ast.SupposePropMatchStmt) *Env {
 		ExistPropDefMem: *newExistPropMemory(),
 		SetDefMem:       *newSetMemory(),
 
-		KnownFacts: makeKnownFactsStruct(),
-
-		// CommutativeProp: make(glob.Map2D[struct{}]),
-		// CommutativeFn:   make(glob.Map2D[struct{}]),
-		// AssociativeFn:   make(glob.Map2D[struct{}]),
+		KnownFactsStruct: makeKnownFactsStruct(),
 
 		EqualMem: make(map[string]shared_ptr_to_slice_of_fc),
 
