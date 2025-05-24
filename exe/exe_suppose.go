@@ -20,6 +20,7 @@ import (
 )
 
 func (exec *Executor) supposePropMatchStmt(stmt *ast.SupposePropMatchStmt) (glob.ExecState, error) {
+	defer exec.appendMsg(glob.InternalWarningMsg("Currently, locally declared obj might be emitted into global env. Be careful when you declare anything in suppose stmt.\n"))
 	defer exec.appendMsg("\n")
 	defer exec.appendMsg(stmt.String())
 
@@ -132,6 +133,12 @@ func (exec *Executor) supposeStmt_runStmtBody(stmt *ast.SupposePropMatchStmt) (g
 			// store fact in original env
 			if asFact, ok := bodyFact.(ast.FactStmt); ok {
 				insideFacts = append(insideFacts, asFact)
+			}
+			// store known fact in original env
+			if asFact, ok := bodyFact.(*ast.KnowFactStmt); ok {
+				for _, fact := range asFact.Facts {
+					insideFacts = append(insideFacts, fact)
+				}
 			}
 		}
 	}

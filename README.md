@@ -27,7 +27,7 @@ The Litex community believes **Litex will redefine mathematical practice and bec
 5. **High-Quality AI Training Data** – Provides structured, machine-readable proofs to enhance AI reasoning.  
 6. **Advanced AI algorithm** - Formals langauges are heart of value functions in reasoning models like DeepSeek, AlphaProof. Litex will be a critical infrastructure for the next generation of AI models.
 7. **Transforming Math Education** - Its step-by-step approach fosters deeper understanding, It fosters children's abilities in abstract thinking, rigorous reasoning, deductive logic, programming, and problem decomposition.
-8. **Unify Mathematical Language** - People use different languages to express math, like English, Chinese etc. Litex unifies them into a single language. It also elimiates ambiguity induced by divergent symbolic systems and representational frameworks.
+8. **Unify Mathematical Language** - People use different languages to express math, like English, Chinese etc. Litex unifies them into a single language. It also elimiates ambiguity induced by divergent symbolic systems and representational frameworks. Transforming math language into a formal language might be the most important of math language evolution since the invention of Arabic number, Leibniz's notation for calculus, the TeX formatting language.
 9. **Mathematical Discovery** – Enables humans and AI to make frontier discoveries by reducing cognitive load of formalizing math.
 
 

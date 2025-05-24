@@ -1023,10 +1023,6 @@ func (tb *tokenBlock) supposePropMatchStmt() (*ast.SupposePropMatchStmt, error) 
 		}
 
 		// TODO 暂时只能全是fact
-		if _, ok := curStmt.(ast.FactStmt); !ok {
-			return nil, &tokenBlockErr{fmt.Errorf("suppose prop match stmt: expect fact, but got: %s", curStmt.String()), *tb}
-		}
-
 		body = append(body, curStmt)
 	}
 
