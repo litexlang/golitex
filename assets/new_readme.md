@@ -20,5 +20,5 @@ Now that you are excited about Litex, you'll want to try it in more details. Sin
 
 <!-- When a user types a statement and press  in interactive mode, the interpreter prints a message. -->
 
-# Section 2 An Informal Introduction to Python
+# Section 2 An Informal Introduction to Litex
 <!-- 752 -->
