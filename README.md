@@ -10,7 +10,11 @@
 
 Litex is a groundbreaking mathematical proof assistant that dramatically reduces the complexity of formal proofs (lowering the de Bruijn factor from 10-20 in traditional systems to ~1, simplifying proofs by 10 to 20 times). It scales up reasoning by making the process of writing mathematical proofs as intuitive and large-scale as software engineering.
 
-Unlike traditional proof assistants, Litex sacrifices Turing completeness to focus exclusively on mathematical verification, adopting a Python-like syntax for ease of use and LaTeX-like elegance for mathematical expression (similar to how SQL sacrifices completeness to specialize in database logic). This makes Litex accessible not only to professional mathematicians but also to beginners. More importantly, Litex’s clean syntax and structured representation make it an ideal training dataset for AI reasoning, helping AI models develop more reliable mathematical reasoning capabilities.  
+If you familiar with traditional formal languages like Lean4, Coq, Isabelle, etc., you might agree that the fundamental reason why their influence is difficult to popularize is that it is too complex and too far removed from the expression habits of everyday mathematics. For example, these languages are all heavily dependent on type theory and functional programming. If Newton had to learn those theories before inventing calculus, he would never succeed, because those theories would be invented 3 centuries later. Give Litex a try and I am sure you will quickly appreciate its uniqueness of being so intuitive and down-to-earth.
+
+It seems that humans are somehow hardwired with a shared, innate understanding of mathematics — for example, everyone intuitively grasps the meaning of "for all, there exists" (or, more technically, people are born with an understanding of how first-order logic works, even if they don’t know that this knowledge has a formal name like "first-order logic"). Litex is built upon these intuitions.
+
+Unlike traditional proof assistants, Litex sacrifices Turing completeness to focus exclusively on mathematical verification, adopting a Python-like syntax for ease of use and LaTeX-like elegance for mathematical expression (similar to how SQL sacrifices completeness to specialize in database logic). This makes Litex accessible not only to professional mathematicians but also to beginners. More importantly, Litex’s clean syntax and structured representation make it an ideal training dataset for AI reasoning, helping AI models develop more reliable mathematical reasoning capabilities.
 
 Mathematicians including Fields medalist Terrence Tao, world-class AI companies including DeepMind and DeepSeek, are showing great interest in the combination of formal languages and AI. Litex is my answer to this challenge. Litex has already garnered attention from leading institutions worldwide, including **CMU, Tsinghua, Peking University, Pujiang Lab, Shanghai Jiao Tong University, Fudan University**.  
 
@@ -25,8 +29,6 @@ Litex Organization believes **it will redefine mathematical practice and become 
 - **GitHub:** [github.com/litexlang/golitex](https://github.com/litexlang/golitex)
 
 **Words For Formal Language Enthusiasts and Potential Contributors**
-
-If you familiar with traditional formal languages like Lean4, Coq, Isabelle, etc., you might agree that the fundamental reason why their influence is difficult to popularize is that it is too complex and too far removed from the expression habits of everyday mathematics. For example, these languages are all heavily dependent on type theory and functional programming. If you Newton had to learn those theory before inventing calculus, he would never succeed, because those theory would be invented 3 centuries later. Give Litex a try and I am sure you will quickly appreciate its uniqueness.
 
 --- 
 
