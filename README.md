@@ -14,9 +14,21 @@ Unlike traditional proof assistants, Litex sacrifices Turing completeness to foc
 
 Mathematicians including Fields medalist Terrence Tao, world-class AI companies including DeepMind and DeepSeek, are showing great interest in the combination of formal languages and AI. Litex is my answer to this challenge. Litex has already garnered attention from leading institutions worldwide, including **CMU, Tsinghua, Peking University, Pujiang Lab, Shanghai Jiao Tong University, Fudan University**.  
 
-The Litex community believes **Litex will redefine mathematical practice and become a critical infrastructure for the next generation of AI models and human society.**
+Litex Organization believes **it will redefine mathematical practice and become a critical infrastructure for the next generation of AI models and human society.**
 
 **NOTICE: Litex is still under active development. Contribution is welcome!**
+
+---  
+**Contact:**  
+- **Development Team:** `<litexlang@outlook.com>`  
+- **Website:** [litexlang.org](https://litexlang.org)  
+- **GitHub:** [github.com/litexlang/golitex](https://github.com/litexlang/golitex)
+
+**Words For Formal Language Enthusiasts and Potential Contributors**
+
+If you familiar with traditional formal languages like Lean4, Coq, Isabelle, etc., you might agree that the fundamental reason why their influence is difficult to popularize is that it is too complex and too far removed from the expression habits of everyday mathematics. For example, these languages are all heavily dependent on type theory and functional programming. If you Newton had to learn those theory before inventing calculus, he would never succeed, because those theory would be invented 3 centuries later. Give Litex a try and I am sure you will quickly appreciate its uniqueness.
+
+--- 
 
 ## Potential Impacts of Litex
 
@@ -29,13 +41,6 @@ The Litex community believes **Litex will redefine mathematical practice and bec
 7. **Transforming Math Education** - Its step-by-step approach fosters deeper understanding, It fosters children's abilities in abstract thinking, rigorous reasoning, deductive logic, programming, and problem decomposition.
 8. **Unify Mathematical Language** - People use different languages to express math, like English, Chinese etc. Litex unifies them into a single language. It also elimiates ambiguity induced by divergent symbolic systems and representational frameworks. Transforming math language into a formal language might be the most important of math language evolution since the invention of Arabic number, Leibniz's notation for calculus, the TeX formatting language.
 9. **Mathematical Discovery** – Enables humans and AI to make frontier discoveries by reducing cognitive load of formalizing math.
-
-
----  
-**Contact:**  
-- **Development Team:** `<litexlang@outlook.com>`  
-- **Website:** [litexlang.org](https://litexlang.org)  
-- **GitHub:** [github.com/litexlang/golitex](https://github.com/litexlang/golitex)
 
 ## About
 
