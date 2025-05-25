@@ -69,9 +69,11 @@ Modern mathematics is built upon set theory (Do not worry if you are not familia
 prop intelligent(x human)
 ```
 
-`prop` is a Litex keyword referring to "proposition" in math. A proposition is a statement (communication) that is either true or false. Here we define a new proposition called `intelligent`, which is a proposition about an object `x` that is a member of the set `human`. 
+`prop` is a Litex keyword referring to "proposition" in math. A proposition is a statement (communication) that is either true or false[^1]. Here we define a new proposition called `intelligent`, which is a proposition about an object `x` that is a member of the set `human`. 
 
 Besides `true` and `false`, a proposition can also output `unknown` and `error` in Litex. If an there is no sufficient information to determine the truth value of a proposition, it will output `unknown`. For example, if we do not know whether Alice is a human, the proposition `intelligent(Alice)` will output `unknown`. If the user disobeys the rules of the language, it will output `error`.
+
+In the following, we will use `factual statement` to refer to a statement that is either true or false, instead of `proposition`, to avoid confusion between proposition definition and proposition check.
 
 ```
 know:
@@ -79,9 +81,25 @@ know:
         $intelligent(x)
 ```
 
-Litex Keyword `know` means the following statements are believed to be true by the user. For example, you can use `know` to define a new axiom, make a new assumption, or make a new conclusion. However, be careful when using `know`. If you make a wrong assumption, the whole reasoning process will be invalid.
+Litex keyword `know` means the following statements are believed to be true by the user. For example, you can use `know` to define a new axiom, make a new assumption, or make a new conclusion. However, be careful when using `know`. If you make a wrong assumption, the whole reasoning process will be invalid. Factual statements in `know` statements will be stored in the `Litex knowledge base` of current context (in a more technical term, the current runtime environment).
 
+The body of the `know` statement is indented. Indentation is Litex's way of grouping statements. You have to type a tab or spaces for each indented line.
 
+Universal Quantification `forall` is a Litex keyword referring to "for all" in math. It means the following statement is true for all objects when parameters all satisfy given conditions. For example, `forall x human: $intelligent(x)` means the factual statement `intelligent(x)` is true for all objects `x` that are members of the set `human`. A factual statement is a statement that is either true or false, and must start with `$`.
+
+```
+obj Alice human
+```
+
+Litex keyword `obj` introduces a new object into current context. When you use `obj` to introduce a new object, you have to specify the set that the object belongs to. For example, `obj Alice human` means `Alice` is a member of the set `human`.
+
+```
+$intelligent(Alice)
+```
+
+`$intelligent(Alice)` is a factual statement about the object `Alice`. It tells the Litex interpreter to check whether `$intelligent(Alice)` is true. The Litex interpreter will check it using known facts in the `Litex knowledge base` based on builtin rules. Do not worry about how the builtin rules works. You will be surprised at how easy they are. They are just the rules of logic that you have so frequently used in your daily life every single day. This tutorial will explain them later.
+
+After running all the above code, the Litex interpreter will output the following result.
 
 ```
 set human 
@@ -105,4 +123,6 @@ forall `x:
 execution success! :)
 ```
 
+
+[^1]: [Mathematics for Computer Science](https://courses.csail.mit.edu/6.042/spring18/mcs.pdf)
 
