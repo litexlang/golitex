@@ -50,7 +50,6 @@ const (
 	KeywordFrac                 = "frac"
 	KeywordAs                   = "as"
 	KeywordProveOr              = "prove_or"
-	KeywordId                   = "id"
 	KeywordSuppose              = "suppose"
 	KeywordWith                 = "with"
 	// 用户用不到的keyword，但litex内部会用
@@ -97,7 +96,6 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordFrac:                 {},
 	KeywordAs:                   {},
 	KeywordProveOr:              {},
-	KeywordId:                   {},
 	KeywordSuppose:              {},
 	KeywordWith:                 {},
 }
