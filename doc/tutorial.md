@@ -38,7 +38,7 @@ Litex is the perfect language for you.
 
 ## First Example
 
-Let's try some simple Litex commands. Start by a classic example: Syllogism (三段论).
+Let's try some simple Litex commands. Perhaps the most classic and representative example of how reasoning works is Syllogism (三段论), which is proposed by Aristotle.
 
 ```
 set human
@@ -49,5 +49,34 @@ know:
         $is_self_aware(x)
 
 obj Alice human
-$is_self_aware(Alice)
+$is_self_aware(Alice) # check whether Alice is self aware
 ```
+
+What the above code means basically is:
+- All humans are self aware.
+- Alice is a human.
+- Therefore, Alice is self aware. (This is the conclusion)
+
+```
+set human 
+
+prop  is_self_aware(`x)
+
+know:
+    forall `x:
+        then:
+            $is_self_aware(`x)
+
+obj Alice
+
+$is_self_aware(Alice)
+is true. proved by
+forall `x:
+    then:
+        $is_self_aware(`x)
+
+---
+execution success! :)
+```
+
+
