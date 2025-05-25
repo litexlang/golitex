@@ -7,3 +7,5 @@ know:
 
 obj Alice human
 $intelligent(Alice)
+
+$intelligent(Alice)

@@ -131,10 +131,28 @@ The first few lines of outputs are very similar to the input. Messages of `set`,
 
 The most important part of the output is the last line. It means the `$intelligent(Alice)` is true, proved by the previously known fact `forall x human: $intelligent(x)`.
 
-Think about it, if it were you to check whether Alice is intelligent, what will you do? You will look up the knowledge base, and find the fact `forall x human: $intelligent(x)`. Then you will replace `x` with `Alice` in the fact, and see whether `Alice` satisfies all the conditions. In this case, the only condition is that `Alice` is a human. Since we have already known that `Alice` is a human by its deifnition, we can conclude that `$intelligent(Alice)` is true.
+Think about it, if it were you to check whether Alice is intelligent, what will you do? You will look up the knowledge base, and find the fact `forall x human: $intelligent(x)`. Then you will replace `x` with `Alice` in the fact, and see whether `Alice` satisfies all the conditions. In this case, the only condition is that `Alice` is a human. Since we have already known that `Alice` is a human by its deifnition, we can conclude that `$intelligent(Alice)` is true. Litex does exactly the same thing for you, and it is much faster and more accurate than any human.
 
-When a factual statement is proved, itself will be added to the `Litex knowledge base` for future use.
-When a factual statement is proved, itself will be added to the `Litex knowledge base` for future use.
+When a factual statement is proved, itself will be added to the `Litex knowledge base` for future use. For example, if you run the `$intelligent(Alice)` statement again, the Litex interpreter will output the following result.
+
+```
+$intelligent(Alice)
+is true. proved by
+$intelligent(Alice)
+Alice = Alice
+```
+
+Now it is verified by the new fact `$intelligent(Alice)` itself instead of the previously known fact `forall x human: $intelligent(x)`. In math, you can either prove a fact by a universal quantification using `forall` statement, or prove a fact by itself. Previously, we proved the fact `$intelligent(Alice)` by the a universal quantification. Now, we proved it by itself.
+
+Congratulations! You have just learned the most basic usage of Litex. See, it is not so difficult, right? That is the power of Litex. Litex wants to be a tool that can help you to reason stictly without adding any extra steps between you and your proof. Instead of learning a new language by reading a thick book, the best way to learn Litex is by your intuition and common sense. The more you see the similarity and difference between Litex and your daily reasoning, the better you will learn it.
+
+## The Builtin Rules of Litex
+
+
+
+
+
+
 
 [^1]: [Mathematics for Computer Science](https://courses.csail.mit.edu/6.042/spring18/mcs.pdf)
 
