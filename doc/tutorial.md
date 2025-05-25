@@ -167,9 +167,9 @@ OK! Let's move on to the detailed explanation of Litex. Let's start with the mos
 
 `forall` statement, also known as universal quantification, is the building block of the entire of math world. Without it, we cannot can not derive new facts from known facts. They are like using a single finite-length sentence to simultaneously describe countless facts.
 
-For example, if we know that `forall x human: $intelligent(x)`, we can conclude that `$intelligent(Alice)` is true. If Bob is also a human, we can also conclude that `$intelligent(Bob)` is true. No matter how many humans there are, we can always conclude that `$intelligent(x)` is true for any human `x`. This is very different from ordinary facts like `$intelligent(Alice)` or `$intelligent(Bob)`, which are only true for Alice and Bob respectively.
+For example, if we know that `forall x human: $intelligent(x)`, we can conclude that `$intelligent(Alice)` is true. If Bob is also a human, we can also conclude that `$intelligent(Bob)` is true. No matter how many humans there are, we can always conclude that `$intelligent(x)` is true for any human `x`. This is very different from `$intelligent(Alice)` or `$intelligent(Bob)`, which are only true for Alice and Bob respectively. Facts like `$intelligent(Alice)` are called `specific` facts.
 
-There are several ways to write `forall` statements in Litex. You can choose the one that is most handy for you.
+There are several ways to write `forall` statements in Litex. Different ways have different purposes.
 
 ```
 # Define some propositions
@@ -189,20 +189,28 @@ forall x human:
 
 # With extra condition, with iff
 forall x human:
-    dom:
+    dom:    # dom means domain mathematically
         $male(x)
     then:
         $man(x)
     iff:
         $masculine(x)
-
 ```
 
 ## `exist` statement
 
+`exist` statements, also known as existential quantification, is another collection of important factual facts in math in general. It works as the opposite of `forall` statements, since `not forall` means there exists at least one object that satisfies the condition of the `forall` statement but does not satisfy its conclusion.
 
 
 ## `or` statement
+
+## Factual statements
+
+Now you have learned the most basic and important statements in Litex: `forall`, `exist`, `or`, `specific` facts. I hope learning them did not make you lose too much brain cells. They have exactly the same meaning as what you have been using in your daily life. What you just learned is just how to express them in a more formal way in Litex.
+
+You might be wondering, what other factual expressions do I need to know? Are there infinitely many of them? The answer is NO. NO. There are exactly just four of them. YOU CAN BUILD THE ENTIRE WORLD OF MATH WITH JUST FOUR OF THEM. These four keywords are basis of first-order logic statements, and 99.99% of math that you are familiar with are built upon them.
+
+** warning: There is a mathematical field called higher-order logic and might be covered in future versions of Litex. It allows you to quantify over propositions, and even over sets. However, most of the math that you are familiar with are built upon first-order logic, with just one exception: the mathematical induction. Don't worry, it is a speical keyword of Litex. If you do not know what high-order logic is, don't worry. It is not the mainstream of math and does not affect your understanding of Litex. **
 
 ## `prove` statements
 
