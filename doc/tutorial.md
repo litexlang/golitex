@@ -38,18 +38,18 @@ Litex is the perfect language for you.
 
 ## First Example
 
-Let's try some simple Litex commands. Perhaps the most classic and representative example of how reasoning works is Syllogism (三段论), which is proposed by Aristotle.
+Let's try some simple Litex commands. Perhaps the most representative example of how reasoning works is Syllogism (三段论), proposed by Greek philosopher Aristotle.
 
 ```
 set human
-prop is_self_aware(x human)
+prop intelligent(x human)
 
 know:
     forall x human:
-        $is_self_aware(x)
+        $intelligent(x)
 
 obj Alice human
-$is_self_aware(Alice) # check whether Alice is self aware
+$intelligent(Alice) # check whether Alice is self aware
 ```
 
 What the above code means basically is:
@@ -57,23 +57,49 @@ What the above code means basically is:
 - Alice is a human.
 - Therefore, Alice is self aware. (This is the conclusion)
 
+Let's explain the above code statement by statement.
+
+```
+set human
+```
+
+Modern mathematics is built upon set theory (Do not worry if you are not familiar with set theory. You will get familiar with it in the future). In Litex, we use `set` to define a set of objects. Here, we define a set of objects called `human`.
+
+```
+prop intelligent(x human)
+```
+
+`prop` is a Litex keyword referring to "proposition" in math. A proposition is a statement (communication) that is either true or false. Here we define a new proposition called `intelligent`, which is a proposition about an object `x` that is a member of the set `human`. 
+
+Besides `true` and `false`, a proposition can also output `unknown` and `error` in Litex. If an there is no sufficient information to determine the truth value of a proposition, it will output `unknown`. For example, if we do not know whether Alice is a human, the proposition `intelligent(Alice)` will output `unknown`. If the user disobeys the rules of the language, it will output `error`.
+
+```
+know:
+    forall x human:
+        $intelligent(x)
+```
+
+Litex Keyword `know` means the following statements are believed to be true by the user. For example, you can use `know` to define a new axiom, make a new assumption, or make a new conclusion. However, be careful when using `know`. If you make a wrong assumption, the whole reasoning process will be invalid.
+
+
+
 ```
 set human 
 
-prop  is_self_aware(`x)
+prop  intelligent(`x)
 
 know:
     forall `x:
         then:
-            $is_self_aware(`x)
+            $intelligent(`x)
 
 obj Alice
 
-$is_self_aware(Alice)
+$intelligent(Alice)
 is true. proved by
 forall `x:
     then:
-        $is_self_aware(`x)
+        $intelligent(`x)
 
 ---
 execution success! :)
