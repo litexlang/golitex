@@ -222,11 +222,13 @@ Additionaly, `exist` statements are syntactically different from ordinary specif
 ```
 prove:
     obj James human
-    prop random_prop(x human)
+    prop P(x human)
     or:
-        $random_prop(James)
-        not $random_prop(James)
+        $P(James)
+        not $P(James)
 ```
+
+This generic prop name `P` was intentionally chosen to emphasize universality. However, when writing Litex code, avoid such naming conventions - always use descriptive names that convey meaning for better readability.
 
 The `not` statement is used to negate a factual statement. Since a factual statement is either true or false, the `or` statement must be true.
 
@@ -265,9 +267,49 @@ prove:
             not $P(n)
 ```
 
-`N` is a keyword in Litex, meaning the set of natural numbers. `P` is a proposition about a natural number `x`. This generic prop name `P` was intentionally chosen to emphasize universality. However, when writing Litex code, avoid such naming conventions - always use descriptive names that convey meaning for better readability.
+`N` is a keyword in Litex, meaning the set of natural numbers. `P` is a proposition about a natural number `x`.
 
 In natural language, the above example says all natural numbers `x` are such that if `Q(x)` is true, then `P(x)` is false. And we know that `P(n)` is true for some natural number `n`. Therefore, `Q(n)` must be false, and we prove it by contradiction: assume `$Q(n)` is true, then `$Q(n)` is true, then `not $P(n)` is true. The interpreter checks whether the opposite of the last statement of `prove_by_contradiction`, which is `$P(n)` is true. And in this case, it is true because it is known. Now `$P(n)` and `not $P(n)` are both true, which is a contradiction. Therefore, the assumption `Q(n)` must be false.
+
+```
+prove:
+    obj Joker human
+    prop P(x human)
+    prop Q(x human)
+    prop R(x human)
+
+    know:
+        or:
+            $P(Joker)
+            $Q(Joker)
+
+        forall x human:
+            $P(x)
+            then:
+                $R(x)
+
+        forall x human:
+            $Q(x)
+            then:
+                $R(x)
+
+    prove_in_each_case:
+        or:
+            $P(Joker)
+            $Q(Joker)
+        then:
+            $R(Joker)
+        prove:
+            $R(Joker)
+        prove:
+            $R(Joker)
+```
+
+`prove_in_each_case` works like this: first, we check the `or` statement. If the `or` statement is true, then we check the `then` statement at each case. For example, first we assume `$P(Joker)` is true, then we check the `then` statement in the first `prove` statement, which is `$R(Jokter)` here. This example is easy, and we get `$R(Joker)` immediately because `forall x human: $P(x) then $R(x)` is known. Then we check the second case, which is `$Q(Joker)` is true and see whether `$R(Joker)` is true. Since we know that `forall x human: $Q(x) then $R(x)`, we can conclude that `$R(Joker)` is true. Therefore, the `prove_in_each_case` statement as a whole is true.
+
+
+
+
 
 ## `suppose` and `with` Statements
 
