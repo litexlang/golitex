@@ -75,6 +75,8 @@ Besides `true` and `false`, a proposition can also output `unknown` and `error` 
 
 In the following, we will use `factual statement` to refer to a statement that is either true or false, instead of `proposition`, to avoid confusion between proposition definition and proposition check.
 
+In many Litex statements, you will find a parameter name followed by a set name. For example, `x human` means `x` is a parameter that can be replaced by any object in the set `human`. It works like how a type system works in programming languages like C or Go, but in a more flexible way. An object can be a member of multiple sets, which is not allowed in most programming languages.
+
 ```
 know:
     forall x human:
@@ -104,7 +106,7 @@ After running all the above code, the Litex interpreter will output the followin
 ```
 set human 
 
-prop  intelligent(`x)
+prop intelligent(`x)
 
 know:
     forall `x:
@@ -120,9 +122,19 @@ forall `x:
         $intelligent(`x)
 
 ---
-execution success! :)
+success! :)
 ```
 
+When you see the smile face :), it means the proof is successful, Congratulations! If not, it means the proof is failed, there must be something `false` or `unknown` or `error` in your code. Read the error message carefully and fix it.
+
+The first few lines of outputs are very similar to the input. Messages of `set`, `prop`, `know`, `obj` statements are just copy of the input. The only difference is that the output is there are some "\`" in the ouput. "\`" means that is a free variable, and the Litex interpreter will replace it with a concrete value when checking the factual statement. For example, x in `prop intelligent(x human)` is a free variable, and Alice in `$intelligent(Alice)` is a concrete value.
+
+The most important part of the output is the last line. It means the `$intelligent(Alice)` is true, proved by the previously known fact `forall x human: $intelligent(x)`.
+
+Think about it, if it were you to check whether Alice is intelligent, what will you do? You will look up the knowledge base, and find the fact `forall x human: $intelligent(x)`. Then you will replace `x` with `Alice` in the fact, and see whether `Alice` satisfies all the conditions. In this case, the only condition is that `Alice` is a human. Since we have already known that `Alice` is a human by its deifnition, we can conclude that `$intelligent(Alice)` is true.
+
+When a factual statement is proved, itself will be added to the `Litex knowledge base` for future use.
+When a factual statement is proved, itself will be added to the `Litex knowledge base` for future use.
 
 [^1]: [Mathematics for Computer Science](https://courses.csail.mit.edu/6.042/spring18/mcs.pdf)
 

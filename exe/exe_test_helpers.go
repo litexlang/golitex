@@ -71,7 +71,7 @@ func execStmtTest(topStmt []ast.TopStmt) []string {
 	if isNotTrue {
 		messages = append(messages, notTrueMessageBuilder.String())
 	} else {
-		messages = append(messages, "---\nexecution success! :)")
+		messages = append(messages, "---\nsuccess! :)")
 	}
 
 	return messages
