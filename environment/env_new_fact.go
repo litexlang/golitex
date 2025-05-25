@@ -358,7 +358,7 @@ func (env *Env) isMathInductionPropName_StoreIt(fact *ast.SpecFactStmt) (bool, e
 		return false, nil
 	}
 
-	if !ast.IsFcAtomWithName(&fact.PropName, glob.KeywordInduction) {
+	if !ast.IsFcAtomWithName(&fact.PropName, glob.KeywordProveByMathInduction) {
 		return false, nil
 	}
 

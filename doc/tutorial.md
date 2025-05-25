@@ -236,9 +236,17 @@ The `not` statement is used to negate a factual statement. Since a factual state
 
 Now you have learned the most basic and important statements in Litex: `forall`, `exist`, `or`, `specific` facts. I hope learning them did not make you lose too much brain cells. They have exactly the same meaning as what you have been using in your daily life. What you just learned is just how to express them in a more formal way in Litex.
 
-You might be wondering, what other factual expressions do I need to know? Are there infinitely many of them? The answer is NO. NO. There are exactly just four of them. YOU CAN BUILD THE ENTIRE WORLD OF MATH WITH JUST FOUR OF THEM. These four keywords are basis of first-order logic statements, and 99.99% of math that you are familiar with are built upon them.
+You might be wondering, what other factual expressions do I need to know? Are there infinitely many of them? The answer is NO. NO. There are exactly just four of them. YOU CAN BUILD THE ENTIRE WORLD OF MATH WITH JUST FOUR OF THEM. These four keywords are basis of the so called first-order logic statements, and 99.99% of math that you are familiar with are built upon them. Don't let the word "first-order logic" scare you. You have been using it every single day in your daily life, you just need to know the way you are reasoning has this technical name.
 
 **warning: There is a mathematical field called higher-order logic and might be covered in future versions of Litex. It allows you to quantify over propositions, and even over sets. However, most of the math that you are familiar with are built upon first-order logic, with just one exception: the mathematical induction. Don't worry, it is a speical keyword of Litex. If you do not know what high-order logic is, don't worry. It is not the mainstream of math and does not affect your understanding of Litex.**
+
+The core design philosophy of Litex is to make first-order logic accessible and easy to express. Our goal is to create a formal language that is friendly to everyone, not just experts. This is why Litex focuses exclusively on first-order logic - expressed through four key factual statements (forall, exist, or, specific). First-order logic is the most common and essential aspect of mathematical reasoning, and making it accessible to everyone is Litex's primary mission.
+
+Litex is built around first-order logic. After confiirming this as core functionality, the second thing is to add language features (technically, syntax sugar) around it. Litex provides you a rich set of syntax sugar to help them express their reasoning as naturally as possible.
+
+## Function
+
+## Set
 
 ## Proof Related Statements
 
@@ -334,7 +342,25 @@ prove:
 
 ## `suppose` and `with` Statements
 
-## Special keywords
+## Special Keywords
+
+There are many builtin keywords helping you make reasonings.
+
+`N`, `I`, `F`, `R` are special keywords in Litex. They are used to represent the set of natural numbers, integers, rational numbers (`F` for float), and real numbers respectively.
+
+`commutative_prop` and `commutative_fn` are special keywords in Litex. When a function is proved to be commutative, when it is being compared with another function, the order of the two functions does not matter. When a proposition is proved to be commutative, the order of the parameters does not matter.
+
+`prove_by_math_induction` is a special keyword in Litex. It is used to prove a statement by mathematical induction.
+
+`is` is used when a proposition only takes one parameter. For example, `x is red` is equivalent to `$red(x)`. This is an effort to make Litex more like natural language.
+
+`in` is used when checking whether an object is a member of a set. For example, `$in(x, human)` checks whether `x` is a member of the set `human`.
+
+If a proposition has exactly two parameters, you can put the proposition name infix. For example, `x $in human` is equivalent to `$in(x, human)`.
+
+If a function has exactly two parameters, you can put the function name infix. For example, `x \add y` is equivalent to `add(x, y)`.
+
+```
 
 ## Modules
 

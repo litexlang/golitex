@@ -93,7 +93,7 @@ func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state VerStat
 }
 
 func (ver *Verifier) verSpecialSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if stmt.NameIs(glob.KeywordInduction) {
+	if stmt.NameIs(glob.KeywordProveByMathInduction) {
 		return ver.mathInductionFact(stmt, state)
 	}
 
