@@ -48,14 +48,14 @@ know:
     forall x human:
         $intelligent(x)
 
-obj Alice human
-$intelligent(Alice) # check whether Alice is self aware
+obj Jordan human
+$intelligent(Jordan) # check whether Jordan is self aware
 ```
 
 What the above code means basically is:
 - All humans are self aware.
-- Alice is a human.
-- Therefore, Alice is self aware. (This is the conclusion)
+- Jordan is a human.
+- Therefore, Jordan is self aware. (This is the conclusion)
 
 Let's explain the above code statement by statement.
 
@@ -71,7 +71,7 @@ prop intelligent(x human)
 
 `prop` is a Litex keyword referring to "proposition" in math. A proposition is a statement that is either true or false, and  mathematical proof of a proposition is a chain of logical deductions leading to the proposition from a base set of axioms.[^1]. Here we define a new proposition called `intelligent`, which is a proposition about an object `x` that is a member of the set `human`. 
 
-Besides `true` and `false`, a proposition can also output `unknown` and `error` in Litex. If an there is no sufficient information to determine the truth value of a proposition, it will output `unknown`. For example, if we do not know whether Alice is a human, the proposition `intelligent(Alice)` will output `unknown`. If the user disobeys the rules of the language, it will output `error`.
+Besides `true` and `false`, a proposition can also output `unknown` and `error` in Litex. If an there is no sufficient information to determine the truth value of a proposition, it will output `unknown`. For example, if we do not know whether Jordan is a human, the proposition `intelligent(Jordan)` will output `unknown`. If the user disobeys the rules of the language, it will output `error`.
 
 In the following, we will use `factual statement` to refer to a statement that is either true or false, instead of `proposition`, to avoid confusion between proposition definition and proposition check.
 
@@ -90,21 +90,21 @@ The body of the `know` statement is indented. Indentation is Litex's way of grou
 Universal Quantification `forall` is a Litex keyword referring to "for all" in math. It means the following statement is true for all objects when parameters all satisfy given conditions. For example, `forall x human: $intelligent(x)` means the factual statement `intelligent(x)` is true for all objects `x` that are members of the set `human`. A factual statement is a statement that is either true or false, and must start with `$`.
 
 ```
-obj Alice human
+obj Jordan human
 ```
 
-Litex keyword `obj` introduces a new object into current context. When you use `obj` to introduce a new object, you have to specify the set that the object belongs to. For example, `obj Alice human` means `Alice` is a member of the set `human`.
+Litex keyword `obj` introduces a new object into current context. When you use `obj` to introduce a new object, you have to specify the set that the object belongs to. For example, `obj Jordan human` means `Jordan` is a member of the set `human`.
 
 ```
-$intelligent(Alice)
+$intelligent(Jordan)
 ```
 
-`$intelligent(Alice)` is a factual statement about the object `Alice`. It tells the Litex interpreter to check whether `$intelligent(Alice)` is true. The Litex interpreter will check it using known facts in the `Litex knowledge base` based on builtin rules. Do not worry about how the builtin rules works. You will be surprised at how easy they are. They are just the rules of logic that you have so frequently used in your daily life every single day. This tutorial will explain them later.
+`$intelligent(Jordan)` is a factual statement about the object `Jordan`. It tells the Litex interpreter to check whether `$intelligent(Jordan)` is true. The Litex interpreter will check it using known facts in the `Litex knowledge base` based on builtin rules. Do not worry about how the builtin rules works. You will be surprised at how easy they are. They are just the rules of logic that you have so frequently used in your daily life every single day. This tutorial will explain them later.
 
 After running all the above code, the Litex interpreter will output the following result.
 
 ```
-set human 
+set human
 
 prop intelligent(`x)
 
@@ -113,9 +113,9 @@ know:
         then:
             $intelligent(`x)
 
-obj Alice
+obj Jordan
 
-$intelligent(Alice)
+$intelligent(Jordan)
 is true. proved by
 forall `x:
     then:
@@ -127,22 +127,22 @@ success! :)
 
 When you see the smile face :), it means the proof is successful, Congratulations! If not, it means the proof is failed, there must be something `false` or `unknown` or `error` in your code. Read the error message carefully and fix it.
 
-The first few lines of outputs are very similar to the input. Messages of `set`, `prop`, `know`, `obj` statements are just copy of the input. The only difference is that the output is there are some "\`" in the ouput. "\`" means that is a free variable, and the Litex interpreter will replace it with a concrete value when checking the factual statement. For example, x in `prop intelligent(x human)` is a free variable, and Alice in `$intelligent(Alice)` is a concrete value.
+The first few lines of outputs are very similar to the input. Messages of `set`, `prop`, `know`, `obj` statements are just copy of the input. The only difference is that the output is there are some "\`" in the ouput. "\`" means that is a free variable, and the Litex interpreter will replace it with a concrete value when checking the factual statement. For example, x in `prop intelligent(x human)` is a free variable, and Jordan in `$intelligent(Jordan)` is a concrete value.
 
-The most important part of the output is the last line. It means the `$intelligent(Alice)` is true, proved by the previously known fact `forall x human: $intelligent(x)`.
+The most important part of the output is the last line. It means the `$intelligent(Jordan)` is true, proved by the previously known fact `forall x human: $intelligent(x)`.
 
-Think about it, if it were you to check whether Alice is intelligent, what will you do? You will look up the knowledge base, and find the fact `forall x human: $intelligent(x)` instead of `$intelligent(Alice)` (It is illegal to write `forall` statements in a single line in Litex. In this tutorial, we write them within a line for better readability.). Then you will replace `x` with `Alice` in the fact, and see whether `Alice` satisfies all the conditions. In this case, the only condition is that `Alice` is a human. Since we have already known that `Alice` is a human by its deifnition, we can conclude that `$intelligent(Alice)` is true. Litex does exactly the same thing for you, and it is much faster and more accurate than any human.
+Think about it, if it were you to check whether Jordan is intelligent, what will you do? You will look up the knowledge base, and find the fact `forall x human: $intelligent(x)` instead of `$intelligent(Jordan)` (It is illegal to write `forall` statements in a single line in Litex. In this tutorial, we write them within a line for better readability.). Then you will replace `x` with `Jordan` in the fact, and see whether `Jordan` satisfies all the conditions. In this case, the only condition is that `Jordan` is a human. Since we have already known that `Jordan` is a human by its deifnition, we can conclude that `$intelligent(Jordan)` is true. Litex does exactly the same thing for you, and it is much faster and more accurate than any human.
 
-When a factual statement is proved, itself will be added to the `Litex knowledge base` for future use. For example, if you run the `$intelligent(Alice)` statement again, the Litex interpreter will output the following result.
+When a factual statement is proved, itself will be added to the `Litex knowledge base` for future use. For example, if you run the `$intelligent(Jordan)` statement again, the Litex interpreter will output the following result.
 
 ```
-$intelligent(Alice)
+$intelligent(Jordan)
 is true. proved by
-$intelligent(Alice)
-Alice = Alice
+$intelligent(Jordan)
+Jordan = Jordan
 ```
 
-Now it is verified by the new fact `$intelligent(Alice)` itself instead of the previously known fact `forall x human: $intelligent(x)`. In math, you can either prove a fact by a universal quantification using `forall` statement, or prove a fact by itself. Previously, we proved the fact `$intelligent(Alice)` by the a universal quantification. Now, we proved it by itself.
+Now it is verified by the new fact `$intelligent(Jordan)` itself instead of the previously known fact `forall x human: $intelligent(x)`. In math, you can either prove a fact by a universal quantification using `forall` statement, or prove a fact by itself. Previously, we proved the fact `$intelligent(Jordan)` by the a universal quantification. Now, we proved it by itself.
 
 Congratulations! You have just learned the most basic usage of Litex through a simple example. See, it is not so difficult, right? That is the design choice of Litex. Litex is a tool that can help you to reason stictly and naturally at the same time. 
 
@@ -163,13 +163,13 @@ Comments are used to explain the code. They are ignored by the Litex interpreter
 
 ```
 prove:  # prove opens a new proof context.
-    obj Bob human
-    $intelligent(Bob)
+    obj Kobe human
+    $intelligent(Kobe)
 
-obj Bob human # This Bob is different from the Bob in the prove context.
+obj Kobe human # This Kobe is different from the Kobe in the prove context.
 ```
 
-`prove` statements opens a new and local proof context. It can see all previous facts in the main context, but it cannot affect it. In this example, the `Bob` object only exists in the `prove` context, and it is different from the `Bob` object in the `obj` statement. After leaving the `prove` context, the `Bob` object will be forgotten. `prove` is used to keep the main context clean and make small drafts.
+`prove` statements opens a new and local proof context. It can see all previous facts in the main context, but it cannot affect it. In this example, the `Kobe` object only exists in the `prove` context, and it is different from the `Kobe` object in the `obj` statement. After leaving the `prove` context, the `Kobe` object will be forgotten. `prove` is used to keep the main context clean and make small drafts.
 
 OK! Let's move on to the detailed explanation of Litex. Let's start with the most basic and interestring statement: `forall` statement.
 
@@ -177,7 +177,7 @@ OK! Let's move on to the detailed explanation of Litex. Let's start with the mos
 
 `forall` statement, also known as universal quantification, is the building block of the entire of math world. Without it, we cannot can not derive new facts from known facts. They are like using a single finite-length sentence to simultaneously describe countless facts.
 
-For example, if we know that `forall x human: $intelligent(x)`, we can conclude that `$intelligent(Alice)` is true. If Bob is also a human, we can also conclude that `$intelligent(Bob)` is true. No matter how many humans there are, we can always conclude that `$intelligent(x)` is true for any human `x`. This is very different from `$intelligent(Alice)` or `$intelligent(Bob)`, which are only true for Alice and Bob respectively. Facts like `$intelligent(Alice)` are called `specific` facts.
+For example, if we know that `forall x human: $intelligent(x)`, we can conclude that `$intelligent(Jordan)` is true. If Kobe is also a human, we can also conclude that `$intelligent(Kobe)` is true. No matter how many humans there are, we can always conclude that `$intelligent(x)` is true for any human `x`. This is very different from `$intelligent(Jordan)` or `$intelligent(Kobe)`, which are only true for Jordan and Kobe respectively. Facts like `$intelligent(Jordan)` are called `specific` facts.
 
 There are several ways to write `forall` statements in Litex. Different ways have different purposes.
 
@@ -211,7 +211,7 @@ forall x human:
 
 `exist` statements, also known as existential quantification, is another collection of important factual facts in math in general. It works as the opposite of `forall` statements, since `not forall` means there exists at least one object that satisfies the condition of the `forall` statement but does not satisfy its conclusion.
 
-Additionaly, `exist` statements are syntactically different from specific facts. 
+Additionaly, `exist` statements are syntactically different from ordinary specific facts. 
 
 ## `not` statement
 
@@ -242,7 +242,32 @@ You might be wondering, what other factual expressions do I need to know? Are th
 
 Previously, we have learned `prove` statement. They are used to open a new and local proof context. In this context, you can prove new facts without affecting the main context.
 
-There are several more statements related to proof. `prove_by_contradiction` is used to prove a statement by contradiction. `prove_in_each_case` is used to prove a statement by cases. `prove_or` is used to prove a `or` statement.
+There are several more statements related to proof. `prove_by_contradiction` is used to prove a statement by contradiction. `prove_in_each_case` is used to prove a statement by cases. `prove_or` is used to prove a `or` statement. `prove_by_or` is used to prove a specific fact using `or` statement.
+
+```
+prove:
+    prop P(x N)
+    prop Q(x N)
+    obj n N
+    
+    know:
+        forall x N:
+            $Q(x)
+            then:
+                not $P(x)
+        
+        $P(n)
+
+    prove_by_contradiction:
+        not $Q(n)
+        prove:
+            $Q(n)
+            not $P(n)
+```
+
+`N` is a keyword in Litex, meaning the set of natural numbers. `P` is a proposition about a natural number `x`. This generic prop name `P` was intentionally chosen to emphasize universality. However, when writing Litex code, avoid such naming conventions - always use descriptive names that convey meaning for better readability.
+
+In natural language, the above example says all natural numbers `x` are such that if `Q(x)` is true, then `P(x)` is false. And we know that `P(n)` is true for some natural number `n`. Therefore, `Q(n)` must be false, and we prove it by contradiction: assume `$Q(n)` is true, then `$Q(n)` is true, then `not $P(n)` is true. The interpreter checks whether the opposite of the last statement of `prove_by_contradiction`, which is `$P(n)` is true. And in this case, it is true because it is known. Now `$P(n)` and `not $P(n)` are both true, which is a contradiction. Therefore, the assumption `Q(n)` must be false.
 
 ## `suppose` and `with` Statements
 
