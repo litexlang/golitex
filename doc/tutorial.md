@@ -10,4 +10,14 @@ However, traditional formal languages like Lean4, Coq, Isabelle, etc. are too co
 
 If Newton had to learn those theories before inventing calculus, he would never succeed, because those theories would be invented 3 centuries later.
 
-Maybe you are a teenager who is interested in math, 
+Maybe you are a young teenager captivated by mathematics, eager to master the art of deductive reasoning and rigorous thinking, just like the ancient philosophers such as Plato or the brilliant detective Sherlock Holmes.
+
+Maybe you are an AI researcher striving to develop reasoning models that can match or surpass human cognitive abilities. Formal mathematical data could enhance your model's reasoning capabilities and perhaps inspire the next breakthrough in model architecture.
+
+Maybe you are a mathematics student seeking to streamline the paper review process, identify potential errors in your thesis, and collaborate with fellow mathematicians online - much like how programmers collaborate through platforms like GitHub.
+
+Maybe you are a rocket scientist who needs absolute certainty in every mathematical formula, ensuring your spacecraft's precise trajectory to the moon.
+
+Maybe you are simply an enthusiast who finds joy in appreciating the elegance of mathematics and discovering how individual concepts intertwine to create a magnificent tapestry of knowledge.
+
+Litex is the perfect language for you.
