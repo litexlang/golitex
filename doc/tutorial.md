@@ -2,7 +2,9 @@
 
 **version 0.0.1-beta**
 
-Everyone have started to reason since childhood. The ability to reason is what differentiates humans from animals. The reason why mathematical reasoning is strict, undeniable, and universal is that it follows a small set of rules so intuitive that it is kind of inherent in human nature. And miraculously, on top of those rules and another small set of axioms, we human beings are able to build the entire world of mathematics. All scientific, engineering, and economic theories are built upon mathematics.
+## Whetting Your Appetite
+
+Everyone have started to think and reason since childhood. The ability to reason is what differentiates humans from animals. The reason why mathematical reasoning is strict, undeniable, and universal is that it follows a small set of rules so intuitive that it is kind of inherent in human nature. And miraculously, on top of those rules and another small set of axioms, we human beings are able to build the entire world of mathematics. All scientific, engineering, and economic theories are built upon mathematics.
 
 If you are a software developer, or mathematician, or an AI researcher, you might have encountered formal languages. Formal languages are softwares where, people write down their reasoning without breaking the rules of the language, and the software will check if the reasoning are valid accordingly. It works like how a human checks whether a piece of math is correct, but in a more strict and automated way. Just like nobody can calculate faster than a calculator, nobody can check the validity of a piece of reasoning faster than a formal language. There is huge potential in using formal languages to check the validity of any piece of reasoning.
 
@@ -21,3 +23,31 @@ Maybe you are a rocket scientist who needs absolute certainty in every mathemati
 Maybe you are simply an enthusiast who finds joy in appreciating the elegance of mathematics and discovering how individual concepts intertwine to create a magnificent tapestry of knowledge.
 
 Litex is the perfect language for you.
+
+## Using The Litex Interpreter, Tools, and Resources
+
+<!-- Visit Official site [litexlang.org](https://litexlang.org), Github release [litexlang/golitex](https://github.com/litexlang/golitex) to download the Litex interpreter. -->
+
+<!-- Online Playground: [litexlang.org](https://litexlang.org) -->
+
+<!-- Both .lix and jupyter notebook are supported. -->
+
+<!-- You can read tutorial, reference, blueprint on [litexlang.org](https://litexlang.org). -->
+
+<!-- Follow us on Twitter, Discord, Github, and RedNote -->
+
+## First Example
+
+Let's try some simple Litex commands. Start by a classic example: Syllogism (三段论).
+
+```
+set human
+prop is_self_aware(x human)
+
+know:
+    forall x human:
+        $is_self_aware(x)
+
+obj Alice human
+$is_self_aware(Alice)
+```
