@@ -146,13 +146,23 @@ Now it is verified by the new fact `$intelligent(Alice)` itself instead of the p
 
 Congratulations! You have just learned the most basic usage of Litex. See, it is not so difficult, right? That is the power of Litex. Litex wants to be a tool that can help you to reason stictly without adding any extra steps between you and your proof. Instead of learning a new language by reading a thick book, the best way to learn Litex is by your intuition and common sense. The more you see the similarity and difference between Litex and your daily reasoning, the better you will learn it.
 
-## The Builtin Rules of Litex
+## `forall` statement
 
+## `exist` statement
 
+## `or` statement
 
+## `prove` statements
 
+## `suppose` and `with` statements
 
+## Special keywords
 
+## Modules
+
+## Words From The Inventor
+
+Hi, I am Jiachen Shen, the creator of Litex. I am a PhD student in mathematics, and but I am also a programming language geek. I have been working on Litex since 2024 and received many valuable feedbacks from Litex enthusiasts. I hope you enjoy using Litex, too. Feel free to contact me if you have any questions or suggestions via [github](https://github.com/litexlang/golitex) and [mail](litexlang@outlook.com). Obviously, Litex is far from perfect. It is still in the early stage of development. Any feedbacks are welcome.
 
 [^1]: [Mathematics for Computer Science](https://courses.csail.mit.edu/6.042/spring18/mcs.pdf)
 
