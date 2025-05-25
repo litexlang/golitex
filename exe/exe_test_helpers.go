@@ -86,7 +86,21 @@ func readFile(filePath string) string {
 }
 
 func printExecMsg(messageSlice []string) {
+	// 如果上一个msg是 \n ，或者上一行终止以 \n 结尾，则这一行是纯\n的话，则删除这一行
+	lastMsgIsNewline := false
 	for _, msg := range messageSlice {
+		if lastMsgIsNewline {
+			if strings.TrimSpace(msg) == "" {
+				continue
+			}
+		}
+
+		if strings.HasSuffix(msg, "\n\n") {
+			msg = strings.TrimSpace(msg)
+			msg = fmt.Sprintf("%s\n", msg)
+		}
+
+		lastMsgIsNewline = strings.HasSuffix(msg, "\n")
 		fmt.Println(msg)
 	}
 }

@@ -1,44 +1,9 @@
-"""
+set human
+prop is_self_aware(x human)
 
-set point
-set line
-set plane
+know:
+    forall x human:
+        $is_self_aware(x)
 
-prop point_on_line(p point, l line)
-prop point_on_plane(q point, p plane)
-prop line_on_plane(l line, p plane)
-
-fn line_of(a point, b point) line:
-    a != b
-    then:
-        $point_on_line(a, line_of(a, b))
-        $point_on_line(b, line_of(a, b))
-        forall l line:
-            $point_on_line(a, l)
-            $point_on_line(b, l)
-            then:
-                l = line_of(a, b)
-
-prove:
-    # a line is determined by two points
-    obj a point, b point, l line:
-        a != b
-        $point_on_line(a, l)
-        $point_on_line(b, l)
-    l = line_of(a, b)
-
-    # line_of is commutative
-    forall a point, b point:
-        a != b
-        then:
-            b != a
-            $point_on_line(a, line_of(a, b))
-            $point_on_line(b, line_of(a, b))
-            $point_on_line(a, line_of(b, a))
-            $point_on_line(b, line_of(b, a))
-            line_of(a, b) = line_of(b, a)
-
-"""
-
-know a != b
-b != a
+obj Alice human
+$is_self_aware(Alice)
