@@ -177,7 +177,7 @@ func DefPropStmtString(prefix string, fact *DefPropStmt) string {
 }
 
 func (fact *DefPropStmt) String() string {
-	return DefPropStmtString(fmt.Sprintf("%s ", glob.KeywordProp), fact)
+	return DefPropStmtString(glob.KeywordProp, fact)
 }
 
 func (f *DefFnStmt) String() string {
