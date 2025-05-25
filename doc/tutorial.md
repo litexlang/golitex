@@ -87,7 +87,7 @@ Litex keyword `know` means the following statements are believed to be true by t
 
 The body of the `know` statement is indented. Indentation is Litex's way of grouping statements. You have to type a tab or spaces for each indented line.
 
-Universal Quantification `forall` is a Litex keyword referring to "for all" in math. It means the following statement is true for all objects when parameters all satisfy given conditions. For example, `forall x human: $intelligent(x)` means the factual statement `intelligent(x)` is true for all objects `x` that are members of the set `human`. A factual statement is a statement that is either true or false, and must start with `$`.
+Universal Quantification `forall` is a Litex keyword referring to "for all" in math. It means the following statement is true for all objects when parameters all satisfy given conditions. For example, `forall x human: $intelligent(x)` means the factual statement `intelligent(x)` is true for all objects `x` that are members of the set `human`. A factual statement is a statement that is either true or false, and must start with `$`, to differentiate it from a function.
 
 ```
 obj Jordan human
@@ -348,6 +348,8 @@ There are many builtin keywords helping you make reasonings.
 
 `N`, `I`, `F`, `R` are special keywords in Litex. They are used to represent the set of natural numbers, integers, rational numbers (`F` for float), and real numbers respectively.
 
+`frac` is a builtin function that takes in two real numbers and returns a real number (the denominator is not zero). For example, `frac(1,2)` is equivalent to `1/2` in natural language.
+
 `commutative_prop` and `commutative_fn` are special keywords in Litex. When a function is proved to be commutative, when it is being compared with another function, the order of the two functions does not matter. When a proposition is proved to be commutative, the order of the parameters does not matter.
 
 `prove_by_math_induction` is a special keyword in Litex. It is used to prove a statement by mathematical induction.
@@ -356,9 +358,9 @@ There are many builtin keywords helping you make reasonings.
 
 `in` is used when checking whether an object is a member of a set. For example, `$in(x, human)` checks whether `x` is a member of the set `human`.
 
-If a proposition has exactly two parameters, you can put the proposition name infix. For example, `x $in human` is equivalent to `$in(x, human)`.
+If a proposition has exactly two parameters, you can put the proposition name infix, with prefix `$`. For example, `x $in human` is equivalent to `$in(x, human)`.
 
-If a function has exactly two parameters, you can put the function name infix. For example, `x \add y` is equivalent to `add(x, y)`.
+If a function has exactly two parameters, you can put the function name infix, with prefix `\`. For example, `x \add y` is equivalent to `add(x, y)`.
 
 ```
 
