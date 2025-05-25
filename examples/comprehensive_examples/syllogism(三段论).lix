@@ -1,9 +1,9 @@
 set human
-prop is_self_aware(x human)
+prop intelligent(x human)
 
 know:
     forall x human:
-        x is is_self_aware
+        x is intelligent
 
 obj Alice human
-Alice is is_self_aware
+Alice is intelligent

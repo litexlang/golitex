@@ -1,9 +1,9 @@
 set human
-prop is_self_aware(x human)
+prop intelligent(x human)
 
 know:
     forall x human:
-        $is_self_aware(x)
+        $intelligent(x)
 
 obj Alice human
-$is_self_aware(Alice)
+$intelligent(Alice)
