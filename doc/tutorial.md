@@ -69,7 +69,7 @@ Modern mathematics is built upon set theory (Do not worry if you are not familia
 prop intelligent(x human)
 ```
 
-`prop` is a Litex keyword referring to "proposition" in math. A proposition is a statement (communication) that is either true or false[^1]. Here we define a new proposition called `intelligent`, which is a proposition about an object `x` that is a member of the set `human`. 
+`prop` is a Litex keyword referring to "proposition" in math. A proposition is a statement that is either true or false, and  mathematical proof of a proposition is a chain of logical deductions leading to the proposition from a base set of axioms.[^1]. Here we define a new proposition called `intelligent`, which is a proposition about an object `x` that is a member of the set `human`. 
 
 Besides `true` and `false`, a proposition can also output `unknown` and `error` in Litex. If an there is no sufficient information to determine the truth value of a proposition, it will output `unknown`. For example, if we do not know whether Alice is a human, the proposition `intelligent(Alice)` will output `unknown`. If the user disobeys the rules of the language, it will output `error`.
 
@@ -131,7 +131,7 @@ The first few lines of outputs are very similar to the input. Messages of `set`,
 
 The most important part of the output is the last line. It means the `$intelligent(Alice)` is true, proved by the previously known fact `forall x human: $intelligent(x)`.
 
-Think about it, if it were you to check whether Alice is intelligent, what will you do? You will look up the knowledge base, and find the fact `forall x human: $intelligent(x)`. Then you will replace `x` with `Alice` in the fact, and see whether `Alice` satisfies all the conditions. In this case, the only condition is that `Alice` is a human. Since we have already known that `Alice` is a human by its deifnition, we can conclude that `$intelligent(Alice)` is true. Litex does exactly the same thing for you, and it is much faster and more accurate than any human.
+Think about it, if it were you to check whether Alice is intelligent, what will you do? You will look up the knowledge base, and find the fact `forall x human: $intelligent(x)` instead of `$intelligent(Alice)` (It is illegal to write `forall` statements in a single line in Litex. In this tutorial, we write them within a line for better readability.). Then you will replace `x` with `Alice` in the fact, and see whether `Alice` satisfies all the conditions. In this case, the only condition is that `Alice` is a human. Since we have already known that `Alice` is a human by its deifnition, we can conclude that `$intelligent(Alice)` is true. Litex does exactly the same thing for you, and it is much faster and more accurate than any human.
 
 When a factual statement is proved, itself will be added to the `Litex knowledge base` for future use. For example, if you run the `$intelligent(Alice)` statement again, the Litex interpreter will output the following result.
 
@@ -144,11 +144,63 @@ Alice = Alice
 
 Now it is verified by the new fact `$intelligent(Alice)` itself instead of the previously known fact `forall x human: $intelligent(x)`. In math, you can either prove a fact by a universal quantification using `forall` statement, or prove a fact by itself. Previously, we proved the fact `$intelligent(Alice)` by the a universal quantification. Now, we proved it by itself.
 
-Congratulations! You have just learned the most basic usage of Litex. See, it is not so difficult, right? That is the power of Litex. Litex wants to be a tool that can help you to reason stictly without adding any extra steps between you and your proof. Instead of learning a new language by reading a thick book, the best way to learn Litex is by your intuition and common sense. The more you see the similarity and difference between Litex and your daily reasoning, the better you will learn it.
+Congratulations! You have just learned the most basic usage of Litex through a simple example. See, it is not so difficult, right? That is the design choice of Litex. Litex is a tool that can help you to reason stictly and naturally at the same time. 
+
+Learning Litex is different from traditional formal languages. You don't need to read thick books that make your brain explode. Instead, focus on connecting Litex with your intuition and common sense. The more you understand how Litex relates to your daily reasoning, the better you'll learn it.
+
+There is one more thing you should know. Many of the examples in this tutorial include comments.
+
+```
+# This is a comment
+
+"""
+This is a multi-line comment
+This is a multi-line comment
+"""
+```
+
+Comments are used to explain the code. They are ignored by the Litex interpreter. You can use comments to help you understand the code better. There are two types of comments in Litex. The first one is the single-line comment, which is started with `#`. The second one is the multi-line comment, which is started with `"""` and ended with `"""`.
+
+OK! Let's move on to the detailed explanation of Litex. Let's start with the most basic and interestring statement: `forall` statement.
 
 ## `forall` statement
 
+`forall` statement, also known as universal quantification, is the building block of the entire of math world. Without it, we cannot can not derive new facts from known facts. They are like using a single finite-length sentence to simultaneously describe countless facts.
+
+For example, if we know that `forall x human: $intelligent(x)`, we can conclude that `$intelligent(Alice)` is true. If Bob is also a human, we can also conclude that `$intelligent(Bob)` is true. No matter how many humans there are, we can always conclude that `$intelligent(x)` is true for any human `x`. This is very different from ordinary facts like `$intelligent(Alice)` or `$intelligent(Bob)`, which are only true for Alice and Bob respectively.
+
+There are several ways to write `forall` statements in Litex. You can choose the one that is most handy for you.
+
+```
+# Define some propositions
+prop male(x human)
+prop man(x human)
+prop masculine(x human)
+
+# No extra condition, no iff
+forall x human:
+    $intelligent(x)
+
+# With extra condition, no iff
+forall x human:
+    $male(x)
+    then:
+        $man(x)
+
+# With extra condition, with iff
+forall x human:
+    dom:
+        $male(x)
+    then:
+        $man(x)
+    iff:
+        $masculine(x)
+
+```
+
 ## `exist` statement
+
+
 
 ## `or` statement
 
