@@ -244,7 +244,9 @@ You might be wondering, what other factual expressions do I need to know? Are th
 
 Previously, we have learned `prove` statement. They are used to open a new and local proof context. In this context, you can prove new facts without affecting the main context.
 
-There are several more statements related to proof. `prove_by_contradiction` is used to prove a statement by contradiction. `prove_in_each_case` is used to prove a statement by cases. `prove_or` is used to prove a `or` statement. `prove_by_or` is used to prove a specific fact using `or` statement.
+There are several more statements related to proof. `prove_by_contradiction` is used to prove a statement by contradiction. `prove_in_each_case` is used to prove a statement by cases. `prove_or` is used to prove a `or` statement. 
+
+<!-- `prove_by_or` is used to prove a specific fact using `or` statement. -->
 
 ```
 prove:
@@ -307,9 +309,28 @@ prove:
 
 `prove_in_each_case` works like this: first, we check the `or` statement. If the `or` statement is true, then we check the `then` statement at each case. For example, first we assume `$P(Joker)` is true, then we check the `then` statement in the first `prove` statement, which is `$R(Jokter)` here. This example is easy, and we get `$R(Joker)` immediately because `forall x human: $P(x) then $R(x)` is known. Then we check the second case, which is `$Q(Joker)` is true and see whether `$R(Joker)` is true. Since we know that `forall x human: $Q(x) then $R(x)`, we can conclude that `$R(Joker)` is true. Therefore, the `prove_in_each_case` statement as a whole is true.
 
+```
+prove:
+    prop p(x I)
+    know:
+        forall:
+            not $p(1)
+            not $p(2)
+            not $p(3)
+            then:
+                $p(4)
 
+    prove_or 0,1,2:
+        or:
+            $p(1)
+            $p(2)
+            $p(3)
+            $p(4)
+        prove:
+            $p(4)
+```
 
-
+`prove_or` is used to prove a `or` statement. The indexes following `prove_or` are the indexes of the `or` statement that we assume to be false and we want to prove one of the rest of cases in the `or` statement is true. In this example, we assume that `p(0)`, `p(1)`, and `p(2)` are false, and we want to prove that `p(4)` is true. Since we know that `forall: not $p(1) not $p(2) not $p(3) then $p(4)`, we can conclude that `p(4)` is true in this `prove_or` statement.
 
 ## `suppose` and `with` Statements
 
