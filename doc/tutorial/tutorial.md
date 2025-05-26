@@ -181,12 +181,14 @@ OK! Let's move on to the detailed explanation of Litex.
 
 ## Specific Facts
 
-The most fundamental statement in Litex is the `specific` fact. It usually has the following form: a `$` followed by a proposition name, and a list of parameters. For example, `$intelligent(Jordan)` is a specific fact. It tells the Litex interpreter to check whether `$intelligent(Jordan)` is true. The validation of a specific fact must satisfy two conditions:
+The most fundamental statement in Litex is the `specific` fact. It usually has the following form: a `$` followed by a proposition name, and a list of parameters. For example, `$intelligent(Jordan)` is a specific fact. It tells the Litex interpreter to check whether `$intelligent(Jordan)` is true. 
+
+The validation of a specific fact must satisfy two conditions:
 
 1. Its parameters satisfy the conditions of the proposition, which is written in the `prop` definition statement.
 2. There exists a fact in knowledge base that the proposition is true.
 
-For example, if we have already known "$intelligent(Jordan)" in the knowledge base, by `know` statement or is previously proved, then "$intelligent(Jordan)" is verified because 1. Jordan is a human, and 2. Jordan is known to be intelligent.
+For example, if we have already known "$intelligent(Jordan)" in the knowledge base, by `know` statement or is previously proved, then "$intelligent(Jordan)" is verified because 1. Jordan is a human, and 2. Jordan is known to be intelligent, either by a known specific fact or by a known `forall` statement.
 
 The reason why those facts are called `specific` is that they are specific to the parameters. For example, `$intelligent(Jordan)` is specific to the parameter `Jordan`, and `$intelligent(Kobe)` is specific to the parameter `Kobe`. Unlike `forall` statements, which are universal and can be used to generate different facts for different parameters, `specific` facts are specific to the parameters.
 
@@ -212,6 +214,10 @@ We can not go far with just specific facts. A specific fact that is true can not
 
 For example, if we know that `forall x human: $intelligent(x)`, we can conclude that `$intelligent(Jordan)` is true. If Kobe is also a human, we can also conclude that `$intelligent(Kobe)` is true. No matter how many humans there are, we can always conclude that `$intelligent(x)` is true for any human `x`. This is very different from `$intelligent(Jordan)` or `$intelligent(Kobe)`, which are only true for Jordan and Kobe respectively.
 
+### How to write `forall` statements
+
+The body of a `forall` statement is indented and consists of three optional components. Here is an example.
+
 ```
 # Define some propositions
 prop male(x human)
@@ -228,13 +234,21 @@ forall x human:
         $masculine(x)
 ```
 
-`forall` statements are one of the most commonly-used statements in math, and it requires your attention. The body of the `forall` statement is indented. There are three components in the body of the `forall` statement:
+Three components are:
 
-1. The domain condition, specified in the `dom` block. This defines the set of objects to which the statement applies.
-2. The conclusion, specified in the `then` block. This states what must be true for all objects in the domain.
-3. The equivalence condition, specified in the `iff` block. For statements with this component, it must be shown that the conclusion implies the equivalence condition and vice versa, within the specified domain.
+1. The domain condition (in the `dom` block): This specifies which objects the statement applies to.
+2. The conclusion (in the `then` block): This states what must be true for all objects in the domain.
+3. The equivalence condition (in the `iff` block): When present, this requires proving that the conclusion and the equivalence condition imply each other within the specified domain.
 
-There are several ways to write `forall` statements in Litex. Different ways have different purposes.
+All three components contain factual statements as body. You can use definition statements like `prop` in the body of a `forall` statement. Three factual statements are:
+
+1. `specific` facts, incluing `exist` statements.
+2. `or` statements.
+3. `not` statements.
+
+Keep in mind when you are writing `forall` statements inside a `forall` statement, there is an upper limit of the depth, which is 2. This is a guarantee of the interpreter not to go into an infinite loop when searching for related facts.
+
+There are several ways to write `forall` statements in Litex, each serving different purposes:
 
 ```
 # With extra condition, no iff
@@ -250,7 +264,7 @@ forall x human:
         $man(x)
 ```
 
-When there is no `then` block or `iff` block, you do not need to write them. In these cases, you can omit the `dom` keyword and the interpreter will interprete all statements excpet the last block to be the `dom`. In this case, `$male(x)` is automatically viewed as the domain of this `forall` statement.
+When you don't need a `then` or `iff` block, you can omit them. In such cases, you can also omit the `dom` keyword - the interpreter will automatically treat all statements except the last block as the domain condition. For example, in the above cases, `$male(x)` is automatically treated as the domain of the `forall` statement.
 
 ```
 forall x human:
@@ -266,7 +280,42 @@ forall x human:
     $intelligent(x)
 ```
 
-When there is no 
+When there is no domain condition, you can write the `then` or `iff` block directly. In fact, when writing a `then` block without a `dom` block, you can even omit the `then` keyword entirely.
+
+## How to validate a specific fact?
+
+Congratulations, you have learned the most basic and important statements in Litex: `forall`, `specific` facts. They are the central blocks of Litex. You are already able to do a lot things with them.
+
+Wait, you might be wondering, how does Litex verify a given fact exactly? Previous examples are pretty straightforward, but how about a more complex example? You might have this feeling that the examples above seem intuitively correct, but you can't quite articulate why they're right.
+
+If Litex has invented anything, it is a language that clearly formalizes the intuitive yet vaguely understood rules of reasoning, making them explicit and precise.
+
+There are and only are two basic ways of proving a specific fact:
+
+1. By a related known specific fact.
+2. By a related known `forall` statement.
+
+
+Another way of verifying a specific fact is by a known `forall` statement. For example, if we have already known `forall x human: $intelligent(x)`, then we can conclude that `$intelligent(Jordan)` is true because Jordan is a human. There are two, and only two, ways to verify a specific fact: either by a related known specific fact, or by a related known `forall` statement.
+
+<!-- 提到最多证明两格，而不是一个。 -->
+
+## How to validate a `forall` statement?
+
+```
+know:
+    forall x human:
+        $male(x)
+        then:
+            $man(x)
+
+forall x human:
+    $male(x)
+    then:
+        $man(x)
+```
+
+A `forall` statement is validated differently from a specific fact.
 
 ## `exist` statement
 
