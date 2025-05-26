@@ -485,6 +485,7 @@ prove:
         $q(Kevin, Durant)
 
     # true, because $p(Kevin, Durant) is true and $q(Kevin, Durant) is true
+    # At the same time, $P(Durant) is also stored in knowledge base
     exist Kevin st $P(Durant)
 
     # true, because exist Kevin st $P(Durant) is true
@@ -496,6 +497,10 @@ prove:
     # true, because Leonard satisfies $P(Durant) and $q(Leonard, Durant) is consequence of $P(Durant)
     $q(Leonard, Durant)
 ```
+
+`exist_prop` statement has the form `exist_prop`, a list of existential parameter-set pairs, `st` keyword, a proposition name, and a list of proposition parameters. Notice the existential parameters are not the same as the parameters of the proposition. In the body of the `exist_prop` statement, there are two sections: the domain section and the conclusion section. When the domain section and the conclusion section are both true, the `exist` statement is true. For example, when `$p(Kevin, Durant)` and `$q(Kevin, Durant)` are both true, so `exist Kevin st $P(Durant)` is ture. `exist` statement has the form `exist`, a list of paramters, `st` keyword, a specific fact. When a `exist` statement is true, the specific fact inside (in this case, `$P(Durant)`) is true automatically.
+
+The main use of `exist` statement is by using known `exist` statement to work with `have` statement. `have` statement is a way to introduce new objects into the current context. It has the form `have`, a list of parameters, `st` keyword, a specific fact. In this example, since `$P(Durant)` is true by `exist Kevin st $P(Durant)`, we can use `have` to introduce a new object `Leonard` that satisfies `$P(Durant)`. By definition, since `Leonard` satisfies `$P(Durant)`, so `$q(Leonard, Durant)` is true.
 
 ## `or` statement
 
