@@ -49,13 +49,13 @@ know:
         $intelligent(x)
 
 obj Jordan human
-$intelligent(Jordan) # check whether Jordan is self aware
+$intelligent(Jordan) # check whether Jordan is intelligent
 ```
 
 What the above code means basically is:
-- All humans are self aware.
+- All humans are intelligent.
 - Jordan is a human.
-- Therefore, Jordan is self aware. (This is the conclusion)
+- Therefore, Jordan is intelligent. (This is the conclusion)
 
 Let's explain the above code statement by statement.
 
@@ -163,17 +163,21 @@ Comments are used to explain the code. They are ignored by the Litex interpreter
 
 ```
 prove:  # prove opens a new proof context.
-    obj Kobe human
+    obj Kobe human # This object is defined in the prove context.
     $intelligent(Kobe)
 
-obj Kobe human # This Kobe is different from the Kobe in the prove context.
+obj Kobe human # This Kobe is different from the Kobe in the prove context, because it is defined in the main context.
 ```
 
 `prove` statements opens a new and local proof context. It can see all previous facts in the main context, but it cannot affect it. In this example, the `Kobe` object only exists in the `prove` context, and it is different from the `Kobe` object in the `obj` statement. After leaving the `prove` context, the `Kobe` object will be forgotten. `prove` is used to keep the main context clean and make small drafts.
 
-OK! Let's move on to the detailed explanation of Litex. Let's start with the most basic and interestring statement: `forall` statement.
+OK! Let's move on to the detailed explanation of Litex. 
 
-## `forall` statement
+## Specific Facts
+
+The most fundamental statement in Litex is the `specific` fact. It has the following form:
+
+## `forall` Statement
 
 `forall` statement, also known as universal quantification, is the building block of the entire of math world. Without it, we cannot can not derive new facts from known facts. They are like using a single finite-length sentence to simultaneously describe countless facts.
 
