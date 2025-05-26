@@ -175,7 +175,25 @@ OK! Let's move on to the detailed explanation of Litex.
 
 ## Specific Facts
 
-The most fundamental statement in Litex is the `specific` fact. It has the following form:
+The most fundamental statement in Litex is the `specific` fact. It usually has the following form: a `$` followed by a proposition name, and a list of parameters. For example, `$intelligent(Jordan)` is a specific fact. It tells the Litex interpreter to check whether `$intelligent(Jordan)` is true. The validation of a specific fact must satisfy two conditions:
+
+1. Its parameters satisfy the conditions of the proposition, which is written in the `prop` definition statement.
+2. There exists a fact in knowledge base that the proposition is true.
+
+For example, if we have already known "$intelligent(Jordan)" in the knowledge base, by `know` statement or is previously proved, then "$intelligent(Jordan)" is verified because 1. Jordan is a human, and 2. Jordan is known to be intelligent.
+
+Sometimes we want to formalize the opposite of a specific fact. In this case, we put the `not` keyword before the specific fact. For example, `not $intelligent(Jordan)` is the opposite of `$intelligent(Jordan)`.
+
+Not all specific facts are using prefix `$`. For familiarity, some builtin proposition names like `=`, `<`, `>`, `<=`, `>=`, `!=` are infix. For example, you do not write `$=(1+1,2)`, you just write `1+1=2`. Basic arithematic operations like `+`, `-`, `*`, `/`, `^`, `%` are also builtin, and their validation is provided by the Litex interpreter.
+
+Besides, there are also some special features of Litex, all designed to make Litex more like natural language and more aligned with your daily reasoning.
+
+`is` is used when a proposition only takes one parameter. For example, `x is red` is equivalent to `$red(x)`. This is an effort to make Litex more like natural language.
+
+`in` is used when checking whether an object is a member of a set. For example, `$in(x, human)` checks whether `x` is a member of the set `human`.
+
+If a proposition has exactly two parameters, you can put the proposition name infix, with prefix `$`. For example, `x $in human` is equivalent to `$in(x, human)`.
+
 
 ## `forall` Statement
 
@@ -358,11 +376,6 @@ There are many builtin keywords helping you make reasonings.
 
 `prove_by_math_induction` is a special keyword in Litex. It is used to prove a statement by mathematical induction.
 
-`is` is used when a proposition only takes one parameter. For example, `x is red` is equivalent to `$red(x)`. This is an effort to make Litex more like natural language.
-
-`in` is used when checking whether an object is a member of a set. For example, `$in(x, human)` checks whether `x` is a member of the set `human`.
-
-If a proposition has exactly two parameters, you can put the proposition name infix, with prefix `$`. For example, `x $in human` is equivalent to `$in(x, human)`.
 
 If a function has exactly two parameters, you can put the function name infix, with prefix `\`. For example, `x \add y` is equivalent to `add(x, y)`.
 
