@@ -101,7 +101,7 @@ know:
 
 Litex keyword `know` means the following statements are believed to be true by the user. For example, you can use `know` to define a new axiom, make a new assumption, or make a new conclusion. However, be careful when using `know`. If you make a wrong assumption, the whole reasoning process will be invalid. Factual statements in `know` statements will be stored in the `Litex knowledge base` of current context (in a more technical term, the current runtime environment).
 
-The body of the `know` statement is indented. Indentation is Litex's way of grouping statements. You have to type a tab or spaces for each indented line.
+The body of the `know` statement is indented. Indentation is Litex's way of grouping statements. You have to type a tab or spaces for each indented line. You can put as many factual statements as you want in a `know` statement.
 
 Universal Quantification `forall` is a Litex keyword referring to "for all" in math. It means the following statement is true for all objects when parameters all satisfy given conditions. For example, `forall x human: $intelligent(x)` means the factual statement `intelligent(x)` is true for all objects `x` that are members of the set `human`. A factual statement is a statement that is either true or false, and must start with `$`, to differentiate it from a function.
 
@@ -296,7 +296,7 @@ forall x human:
 
 When there is no domain condition, you can write the `then` or `iff` block directly. In fact, when writing a `then` block without a `dom` block, you can even omit the `then` keyword entirely.
 
-## How to validate a specific fact?
+## How to verify a factual statement?
 
 Congratulations, you have learned the most basic and important statements in Litex: `forall`, `specific` facts. They are the central blocks of Litex. You are already able to do a lot things with them.
 
@@ -388,7 +388,11 @@ forall `x:
         $strong(`x)
 ```
 
-Notice `$strong(Jordan)` is true because 1. Jordan is human 2. `$physical(Jordan)` is true 3. `forall x human: $physical(x) then $strong(x)` is known. It works because the then block `$string(x)` and `$strong(Jordan)` have the same proposition name and therefore can be matched. When matched, Jordan is substituted for x in the then block, and we check whether `$physical(Jordan)` and Jordan is in set human is true. `$physical(Jordan)` is true because it matches the known fact `$physical(Jordan)`, and Jordan is defined to be in set human when it is defined.
+Notice `$strong(Jordan)` is true because 1. Jordan is human 2. `$physical(Jordan)` is true 3. `forall x human: $physical(x) then $strong(x)` is known. It works because the then block `$string(x)` and `$strong(Jordan)` have the same proposition name and therefore can be matched. When matched, Jordan is substituted for x in the then block, and we check whether `$physical(Jordan)` and Jordan is in set human is true. `$physical(Jordan)` is true because it matches the known fact `$physical(Jordan)` and is proved by this specific fact, and Jordan is defined to be in set human when it is defined.
+
+Let's see why other known facts did not help to check `$strong(Jordan)`. `forall x cat: $miao(x)` is known, but it does not help because `miao` and `strong` are different propositions, and also `Jorand` is not known in the set `cat`. `forall x human: $intelligent(x)` does not help to check `$strong(Jordan)` because `intelligent` and `strong` are different propositions. `forall x human: $powerful(x) then $strong(x)` does not help to check `$strong(Jordan)` because `$powerful(Jordan)` is not known.
+
+I hope you have a better understanding of how `match and substitute` works. It is not that hard, right? Litex iterates over all known facts and check whether they can be matched with the given specific fact. If they can, the given specific fact is proved. This `match and substitute` happens thousands of times in a single proof, and it is the core of Litex.
 
 ## How to validate a `forall` statement?
 
