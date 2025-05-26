@@ -1,20 +1,23 @@
-prop p1(x human)
-prop p2(x human)
-prop p3(x human)
+prove:
+    obj Kevin human
+    obj Durant human
 
-know:
-    forall x human:
-       $p1(x) 
-       then:
-           $p2(x)
+    prop p(x human, y human)
+    prop q(x human, y human)
 
-    forall x human:
-        $p2(x)
-        then:
-            $p3(x)
+    exist_prop a Human st P(b Human):
+        $p(a,b)
+        iff:
+            $q(a,b)
 
-forall x human:
-    $p1(x)
-    then:
-        $p2(x)
-        $p3(x)
+    know:
+        $p(Kevin, Durant)
+        $q(Kevin, Durant)
+
+    exist Kevin st $P(Durant)
+
+    $P(Durant)
+
+    have Leonard st $P(Durant)
+
+    $q(Leonard, Durant)
