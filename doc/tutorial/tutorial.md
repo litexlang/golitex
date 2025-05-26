@@ -6,7 +6,7 @@
 
 **Jiachen Shen, malloc_realloc_free@outlook.com**
 
-Litex is an easy to learn, powerful formal language. Essentially, it is a tool that allows you to write reasoning according to the rules defined by Litex, and Litex will help verify whether your reasoning is correct. As a result, it can be widely used for validating mathematical proofs. This an attempt to scale and automate reasoning in the AI age.
+Litex is an easy to learn, powerful formal language. Essentially, it is a tool that allows you to write reasoning according to the rules defined by Litex, and Litex will help verify whether your reasoning is correct. As a result, it can be widely used for validating mathematical proofs. Litex is basically an attempt to scale and automate reasoning in the AI age.
 
 ## Whetting Your Appetite
 
@@ -202,29 +202,21 @@ Besides, there are also some special features of Litex, all designed to make Lit
 
 If a proposition has exactly two parameters, you can put the proposition name infix, with prefix `$`. For example, `x $in human` is equivalent to `$in(x, human)`.
 
+Another group of specific facts are existential facts. They are used to check whether there exists an object that satisfies the condition of the proposition. For example, `exists x st $P(y)` checks whether there exists an object `x` that satisfies the proposition `$P(y)`. We will explain them in later sections.
+
+We can not go far with just specific facts. A specific fact that is true can not tell us anything except itself is true. We need to use `forall` statements to derive new facts from known facts.
+
 ## `forall` Statement
 
-`forall` statement, also known as universal quantification, is the building block of the entire of math world. Without it, we cannot can not derive new facts from known facts. They are like using a single finite-length sentence to simultaneously describe countless facts.
+`forall` statement, also known as universal quantification, is the building block of the entire of math world. Without it, we cannot can not derive new facts from known facts. They are like using a single finite-length sentence to simultaneously describe countless facts at once.
 
-For example, if we know that `forall x human: $intelligent(x)`, we can conclude that `$intelligent(Jordan)` is true. If Kobe is also a human, we can also conclude that `$intelligent(Kobe)` is true. No matter how many humans there are, we can always conclude that `$intelligent(x)` is true for any human `x`. This is very different from `$intelligent(Jordan)` or `$intelligent(Kobe)`, which are only true for Jordan and Kobe respectively. Facts like `$intelligent(Jordan)` are called `specific` facts.
-
-There are several ways to write `forall` statements in Litex. Different ways have different purposes.
+For example, if we know that `forall x human: $intelligent(x)`, we can conclude that `$intelligent(Jordan)` is true. If Kobe is also a human, we can also conclude that `$intelligent(Kobe)` is true. No matter how many humans there are, we can always conclude that `$intelligent(x)` is true for any human `x`. This is very different from `$intelligent(Jordan)` or `$intelligent(Kobe)`, which are only true for Jordan and Kobe respectively.
 
 ```
 # Define some propositions
 prop male(x human)
 prop man(x human)
 prop masculine(x human)
-
-# No extra condition, no iff
-forall x human:
-    $intelligent(x)
-
-# With extra condition, no iff
-forall x human:
-    $male(x)
-    then:
-        $man(x)
 
 # With extra condition, with iff
 forall x human:
@@ -235,6 +227,46 @@ forall x human:
     iff:
         $masculine(x)
 ```
+
+`forall` statements are one of the most commonly-used statements in math, and it requires your attention. The body of the `forall` statement is indented. There are three components in the body of the `forall` statement:
+
+1. The domain condition, specified in the `dom` block. This defines the set of objects to which the statement applies.
+2. The conclusion, specified in the `then` block. This states what must be true for all objects in the domain.
+3. The equivalence condition, specified in the `iff` block. For statements with this component, it must be shown that the conclusion implies the equivalence condition and vice versa, within the specified domain.
+
+There are several ways to write `forall` statements in Litex. Different ways have different purposes.
+
+```
+# With extra condition, no iff
+forall x human:
+    $male(x)
+    then:
+        $man(x)
+
+# No then condition, just iff
+forall x human:
+    $male(x)
+    iff:
+        $man(x)
+```
+
+When there is no `then` block or `iff` block, you do not need to write them. In these cases, you can omit the `dom` keyword and the interpreter will interprete all statements excpet the last block to be the `dom`. In this case, `$male(x)` is automatically viewed as the domain of this `forall` statement.
+
+```
+forall x human:
+    then:
+        $intelligent(x)
+
+forall x human:
+    iff:
+        $intelligent(x)
+
+# No extra condition, no iff
+forall x human:
+    $intelligent(x)
+```
+
+When there is no 
 
 ## `exist` statement
 
