@@ -2,6 +2,12 @@
 
 **version 0.0.1-beta**
 
+**2025-05-25**
+
+**Jiachen Shen, malloc_realloc_free@outlook.com**
+
+Litex is an easy to learn, powerful formal language. Essentially, it is a tool that allows you to write reasoning according to the rules defined by Litex, and Litex will help verify whether your reasoning is correct. As a result, it can be widely used for validating mathematical proofs. This an attempt to scale and automate reasoning in the AI age.
+
 ## Whetting Your Appetite
 
 Everyone have started to think and reason since childhood. The ability to reason is what differentiates humans from animals. The reason why mathematical reasoning is strict, undeniable, and universal is that it follows a small set of rules so intuitive that it is kind of inherent in human nature. And miraculously, on top of those rules and another small set of axioms, we human beings are able to build the entire world of mathematics. All scientific, engineering, and economic theories are built upon mathematics.
