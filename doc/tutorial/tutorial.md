@@ -386,11 +386,12 @@ If a function has exactly two parameters, you can put the function name infix, w
 
 ## Words From The Inventor
 
-Hi, I am Jiachen Shen, the creator of Litex. I am a PhD student in mathematics, and but I am also a programming language geek. I have been working on Litex since 2024 and received many valuable feedbacks from Litex enthusiasts. I hope you enjoy using Litex, too. 
+Hi, I am Jiachen Shen, the creator of Litex. I am a PhD student in mathematics, and I am also a programming language geek. I have been working on Litex since 2024 and received many valuable feedbacks from Litex enthusiasts. I hope you enjoy using Litex, too. 
 
-As a language designer, I try very hard to make Litex simple, strict, and natural, which requires a lot of thinking, effort and good taste. The Unix philosophy "keep it simple, stupid" is the ultimate guideline of Litex design. Every day, I ask the question to myself "what does it mean to be a simple and expressive formal language?". This is a hard question because Litex is so different from other formal languages. I figured out the answer to this question all by myself. Litex indeed has many drawbacks. But I am still proud of it.
+As a language designer, I have tried very hard to make Litex simple, strict, and intuitive, which requires a lot of thinking, effort. The Unix philosophy "keep it simple, stupid" is the ultimate guideline of Litex design. Every day, I ask the question to myself "what does it mean to be a simple and expressive formal language?". This is a hard question because Litex is so different from other formal languages. I had to figure out the answer to this question all by myself, partly because there are so few people have a good taste in programming language and math at the same time. One can test, debug, and improve in bazaar style, but it would be very hard to originate a project in bazaar style.[^2] Litex indeed has many drawbacks. But I am still proud of it.
 
-Feel free to contact me if you have any questions or suggestions via [github](https://github.com/litexlang/golitex) and [mail](litexlang@outlook.com). Obviously, Litex is far from perfect. It is still in the early stage of development. Any feedbacks are welcome.
+In today's highly connected world, there is no project model better than open-source, especially for a fresh project. Now Litex is coming from the stage of originating an idea to the stage of being tested, debugged, and improved by real people. Feel free to contact me if you have any questions or suggestions via [github](https://github.com/litexlang/golitex) and [mail](litexlang@outlook.com). Obviously, Litex is is still in the early stage of development. Any feedbacks are welcome.
 
 [^1]: [Mathematics for Computer Science](https://courses.csail.mit.edu/6.042/spring18/mcs.pdf)
 
+[^2]: [The Cathedral and the Bazaar](https://www.catb.org/esr/writings/cathedral-bazaar/cathedral-bazaar/index.html)
