@@ -533,15 +533,35 @@ Litex is built around first-order logic. After confiirming this as core function
 
 ## Function
 
+Functions are very important in math. A function takes in some parameters and returns a value. In Litex, a function works differently from functions in programming languages. There is no execution of a function. Instead, a function works like a symbol which groups together a set of objects and forms a new object.
+
+```
+fn f(x R) R:
+    x > 0
+    then:
+        f(x) = x^2
+
+f(2) = 2^2
+f(2) = 4
+```
+
+In this example, `f` is a function that takes in a real number `x` and returns a real number `f(x)`. The function is defined to be `x^2` when `x` is greater than 0. When we write `f(2) = 2^2`, we are not executing the function `f` with the parameter `2`. Instead, we are saying that `2` is a member of the set `R` and `f(2)` is defined to be `2^2`.
+
+`match and substitute` also works in this example. `f(x) = x^2` is matched by `f(2) = ^2` and `x` is substituted by `2`.
+
+In Litex, basic arithmetic operations are built-in. You can use `+`, `-`, `*`, `/` to add, subtract, multiply, and divide real numbers. `2^2 = 4` is proved automatically without user intervention.
+
 ## Set
+
+A set is a collection of objects. In Litex, the parameter list must specify the sets of their parameters. For example, `prop p(x human, y human)` means `p` is a proposition about two human objects. This makes Litex strict and aligned with the set theory.
+
+Unlike types in programming languages, sets in Litex are not a type. An object can be a member of multiple sets. For example, `obj Jordan human` means `Jordan` is defined to be in set `human`. And `know $in(Jordan, basketball_player)` means `Jordan` is defined to be in set `basketball_player`.
 
 ## Proof Related Statements
 
 Previously, we have learned `prove` statement. They are used to open a new and local proof context. In this context, you can prove new facts without affecting the main context.
 
 There are several more statements related to proof. `prove_by_contradiction` is used to prove a statement by contradiction. `prove_in_each_case` is used to prove a statement by cases. `prove_or` is used to prove a `or` statement. 
-
-<!-- `prove_by_or` is used to prove a specific fact using `or` statement. -->
 
 ```
 prove:
