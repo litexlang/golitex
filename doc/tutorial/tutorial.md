@@ -182,6 +182,8 @@ The most fundamental statement in Litex is the `specific` fact. It usually has t
 
 For example, if we have already known "$intelligent(Jordan)" in the knowledge base, by `know` statement or is previously proved, then "$intelligent(Jordan)" is verified because 1. Jordan is a human, and 2. Jordan is known to be intelligent.
 
+The reason why those facts are called `specific` is that they are specific to the parameters. For example, `$intelligent(Jordan)` is specific to the parameter `Jordan`, and `$intelligent(Kobe)` is specific to the parameter `Kobe`. Unlike `forall` statements, which are universal and can be used to generate different facts for different parameters, `specific` facts are specific to the parameters.
+
 Sometimes we want to formalize the opposite of a specific fact. In this case, we put the `not` keyword before the specific fact. For example, `not $intelligent(Jordan)` is the opposite of `$intelligent(Jordan)`.
 
 Not all specific facts are using prefix `$`. For familiarity, some builtin proposition names like `=`, `<`, `>`, `<=`, `>=`, `!=` are infix. For example, you do not write `$=(1+1,2)`, you just write `1+1=2`. Basic arithematic operations like `+`, `-`, `*`, `/`, `^`, `%` are also builtin, and their validation is provided by the Litex interpreter.
@@ -193,7 +195,6 @@ Besides, there are also some special features of Litex, all designed to make Lit
 `in` is used when checking whether an object is a member of a set. For example, `$in(x, human)` checks whether `x` is a member of the set `human`.
 
 If a proposition has exactly two parameters, you can put the proposition name infix, with prefix `$`. For example, `x $in human` is equivalent to `$in(x, human)`.
-
 
 ## `forall` Statement
 
@@ -385,7 +386,11 @@ If a function has exactly two parameters, you can put the function name infix, w
 
 ## Words From The Inventor
 
-Hi, I am Jiachen Shen, the creator of Litex. I am a PhD student in mathematics, and but I am also a programming language geek. I have been working on Litex since 2024 and received many valuable feedbacks from Litex enthusiasts. I hope you enjoy using Litex, too. Feel free to contact me if you have any questions or suggestions via [github](https://github.com/litexlang/golitex) and [mail](litexlang@outlook.com). Obviously, Litex is far from perfect. It is still in the early stage of development. Any feedbacks are welcome.
+Hi, I am Jiachen Shen, the creator of Litex. I am a PhD student in mathematics, and but I am also a programming language geek. I have been working on Litex since 2024 and received many valuable feedbacks from Litex enthusiasts. I hope you enjoy using Litex, too. 
+
+As a language designer, I try very hard to make Litex simple, strict, and natural, which requires a lot of thinking, effort and good taste. The Unix philosophy "keep it simple, stupid" is the ultimate guideline of Litex design. Every day, I ask the question to myself "what does it mean to be a simple and expressive formal language?". This is a hard question because Litex is so different from other formal languages. I figured out the answer to this question all by myself. Litex indeed has many drawbacks. But I am still proud of it.
+
+Feel free to contact me if you have any questions or suggestions via [github](https://github.com/litexlang/golitex) and [mail](litexlang@outlook.com). Obviously, Litex is far from perfect. It is still in the early stage of development. Any feedbacks are welcome.
 
 [^1]: [Mathematics for Computer Science](https://courses.csail.mit.edu/6.042/spring18/mcs.pdf)
 
