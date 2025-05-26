@@ -193,6 +193,8 @@ OK! Let's move on to the detailed explanation of Litex.
 
 ## Specific Facts
 
+<!-- need to say how to define a prop -->
+
 The most fundamental statement in Litex is the `specific` fact. It usually has the following form: a `$` followed by a proposition name, and a list of parameters. For example, `$intelligent(Jordan)` is a specific fact. It tells the Litex interpreter to check whether `$intelligent(Jordan)` is true. 
 
 The validation of a specific fact must satisfy two conditions:
@@ -453,15 +455,47 @@ forall `x:
 
 The above example wants to prove that `forall x human: $p1(x) then $p2(x) and $p3(x)`. When proving a `forall` statement, Litex will open a new proof context for each object in the domain. In this context, it will put a new object x in the context, x is assumed to be in human set and `$p(x)` is true. Then the `then` block is proved statement by statement. `$p2(x)` is proved by the known fact `forall x human: $p1(x) then $p2(x)`. `$p3(x)` is proved by the known fact `forall x human: $p2(x) then $p3(x)`.
 
+You might be wondering what will happen if most of parameters of the `forall` statements are derived, but not all of them. For example, when using `know forall x human, y human: $p1(x)` to verify `$p1(Jordan)`, we only know `x` in this `forall` statement is subsituted to be `Jordan`. We do not know `y` in this `forall` statement. In this case, this `forall` statment does no help to prove `$p1(Jordan)`. Later, we will introduce `suppose` statement and `with` statement to help you solve this problem.
+
 OK! That is all how verification works in Litex. It is not that hard, right? That is exactly how `match and substitute` works at daily math proof. When a man is verifying a piece of proof, he does `match and substitute` thousands of times in his head, and that is exactly what Litex does. Litex iterates over all possibly related known facts and check whether they can be matched with the body of the given specific fact. If they can, the given specific fact is proved. Do not worry whether Litex is computationally expensive. Litex is very efficient and fast.
+
+Fundamentally, Litex, or math in general, is a fancy game of `match and substitute`. No matter how complicated the proof is, how abstract the problem is, it is just a bunch of `match and substitute` operations at different levels.
 
 ## `exist` statement
 
 `exist` statements, also known as existential quantification, is another collection of important factual facts in math in general. It works as the opposite of `forall` statements, since `not forall` means there exists at least one object that satisfies the condition of the `forall` statement but does not satisfy its conclusion.
 
-Additionaly, `exist` statements are syntactically different from ordinary specific facts. 
+Here is an example of how to define an existential proposition, verify it, and use it to prove a new fact. 
 
-## `not` statement
+```
+prove:
+    obj Kevin human
+    obj Durant human
+
+    prop p(x human, y human)
+    prop q(x human, y human)
+
+    exist_prop a Human st P(b Human):
+        $p(a,b)
+        iff:
+            $q(a,b)
+
+    know:
+        $p(Kevin, Durant)
+        $q(Kevin, Durant)
+
+    # true, because $p(Kevin, Durant) is true and $q(Kevin, Durant) is true
+    exist Kevin st $P(Durant)
+
+    # true, because exist Kevin st $P(Durant) is true
+    $P(Durant)
+
+    # use have to get a new object of the existential proposition
+    have Leonard st $P(Durant)
+
+    # true, because Leonard satisfies $P(Durant) and $q(Leonard, Durant) is consequence of $P(Durant)
+    $q(Leonard, Durant)
+```
 
 ## `or` statement
 
