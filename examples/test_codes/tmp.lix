@@ -1,23 +1,7 @@
-prove:
-    obj Kevin human
-    obj Durant human
+fn f(x R) R:
+    x > 0
+    then:
+        f(x) = x^2
 
-    prop p(x human, y human)
-    prop q(x human, y human)
-
-    exist_prop a Human st P(b Human):
-        $p(a,b)
-        iff:
-            $q(a,b)
-
-    know:
-        $p(Kevin, Durant)
-        $q(Kevin, Durant)
-
-    exist Kevin st $P(Durant)
-
-    $P(Durant)
-
-    have Leonard st $P(Durant)
-
-    $q(Leonard, Durant)
+f(2) = 2^2
+f(2) = 4
