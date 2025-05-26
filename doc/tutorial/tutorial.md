@@ -4,11 +4,11 @@
 
 **2025-05-25**
 
-**By Jiachen Shen**
+**Jiachen Shen**
 
 ## Before You Start
 
-Litex is an easy to learn, powerful formal language. Essentially, it is a tool that allows you to write reasoning according to the rules defined by Litex, and Litex will help verify whether your reasoning is correct. As a result, it can be widely used for validating mathematical proofs. Litex is basically an attempt to scale and automate reasoning in the AI age.
+Litex is an easy to learn, powerful formal language. Essentially, it is a tool that allows you to write reasoning according to the rules defined by Litex, and Litex will help verify whether your reasoning is correct. As a result, it can be widely used for validating mathematical proofs or any rule-based systems. Litex is basically an attempt to scale and automate reasoning in the AI age.
 
 ---  
 **Contact:**  
@@ -20,13 +20,13 @@ Litex is an easy to learn, powerful formal language. Essentially, it is a tool t
 
 ## Whetting Your Appetite
 
-Everyone have started to think and reason since childhood. The ability to reason is what differentiates humans from animals. The reason why mathematical reasoning is strict, undeniable, and universal is that it follows a small set of rules so intuitive that it is kind of inherent in human nature. And miraculously, on top of those rules and another small set of axioms, we human beings are able to build the entire world of mathematics. All scientific, engineering, and economic theories are built upon mathematics.
+Everyone have started to think and reason since childhood. The ability to reason is what differentiates humans from other animals. The reason why mathematical reasoning is strict and universal is that it follows a small set of rules so intuitive that it is kind of inherent in human nature. Miraculously, on top of those reasoning rules and another small while carefully selected set of axioms, we human beings are able to build the entire world of mathematics. Since all scientific, engineering, and economic theories are built upon mathematics, the unreasonable effectiveness of those reasoning rules should not be underestimated.
 
-If you are a software developer, or mathematician, or an AI researcher, you might have encountered formal languages. Formal languages are softwares where, people write down their reasoning without breaking the rules of the language, and the software will check if the reasoning are valid accordingly. It works like how a human checks whether a piece of math is correct, but in a more strict and automated way. Just like nobody can calculate faster than a calculator, nobody can check the validity of a piece of reasoning faster than a formal language. There is huge potential in using formal languages to check the validity of any piece of reasoning.
+If you are a software developer, or mathematician, or an AI researcher, you might have encountered formal languages. Formal languages are softwares where, people write down their reasoning without breaking the rules of the language, and the software will check if the reasoning are valid accordingly. It works like how a human checks whether a piece of math is correct, but in a more strict and automated way. Just like nobody can calculate faster than a calculator, it can be imagined that nobody can check the validity of reasoning faster than a formal language.
 
-However, traditional formal verification languages like Lean4, Coq, and Isabelle are too complex and too far removed from everyday mathematical notation. These languages heavily rely on type theory and functional programming concepts, which even mathematics PhD students need years to master. The fundamental reason for this complexity is that these languages attempt to serve two distinct purposes simultaneously: they want to be both programming languages and reasoning verifiers. This dual nature makes it technically challenging to create a simple and intuitive system.
+However, traditional formal verification languages like Lean4, Coq, and Isabelle are too complex and too far removed from everyday mathematical notation. These languages heavily rely on type theory and functional programming concepts, which even mathematics PhD students need years to master. If Newton had to learn those theories before inventing calculus, he would never succeed, because those theories would be invented 3 centuries later. The fundamental reason for this complexity is that these languages attempt to serve two distinct purposes simultaneously: they want to be both programming languages and reasoning verifiers. This dual nature makes it technically challenging to create a simple and intuitive system.
 
-If Newton had to learn those theories before inventing calculus, he would never succeed, because those theories would be invented 3 centuries later.
+Litex is also another formal language, a unique one. It is designed to be simple and intuitive. No brain-exploding theories, no complex syntax, no need to learn a new programming language. All you need to learn before using Litex is building a connection between your own intuition and Litex expressions. Believe me, that is pretty easy. Many mathematical expressions can be translated from natural language to Litex code almost directly.
 
 Maybe you are a young teenager captivated by mathematics, eager to master the art of deductive reasoning and rigorous thinking, just like the ancient philosophers such as Plato or the brilliant detective Sherlock Holmes.
 
@@ -38,7 +38,7 @@ Maybe you are a rocket scientist who needs absolute certainty in every mathemati
 
 Maybe you are simply an enthusiast who finds joy in appreciating the elegance of mathematics and discovering how individual concepts intertwine to create a magnificent tapestry of knowledge.
 
-Litex is the perfect language for you.
+Litex is the perfect language for you. I hope you will enjoy it.
 
 ## Using The Litex Interpreter, Tools, and Resources
 
@@ -519,6 +519,18 @@ This generic prop name `P` was intentionally chosen to emphasize universality. H
 
 The `not` statement is used to negate a factual statement. Since a factual statement is either true or false, the `or` statement must be true.
 
+## Special Keywords
+
+There are many builtin keywords helping you make reasonings.
+
+`N`, `I`, `F`, `R` are special keywords in Litex. They are used to represent the set of natural numbers, integers, rational numbers (`F` for float), and real numbers respectively.
+
+`frac` is a builtin function that takes in two real numbers and returns a real number (the denominator is not zero). For example, `frac(1,2)` is equivalent to `1/2` in natural language.
+
+`commutative_prop` and `commutative_fn` are special keywords in Litex. When a function is proved to be commutative, when it is being compared with another function, the order of the two functions does not matter. When a proposition is proved to be commutative, the order of the parameters does not matter.
+
+`prove_by_math_induction` is a special keyword in Litex. It is used to prove a statement by mathematical induction.
+
 ## Factual Statements
 
 Now you have learned the most basic and important statements in Litex: `forall`, `exist`, `or`, `specific` facts. I hope learning them did not make you lose too much brain cells. They have exactly the same meaning as what you have been using in your daily life. What you just learned is just how to express them in a more formal way in Litex.
@@ -550,6 +562,8 @@ In this example, `f` is a function that takes in a real number `x` and returns a
 `match and substitute` also works in this example. `f(x) = x^2` is matched by `f(2) = ^2` and `x` is substituted by `2`.
 
 In Litex, basic arithmetic operations are built-in. You can use `+`, `-`, `*`, `/` to add, subtract, multiply, and divide real numbers. `2^2 = 4` is proved automatically without user intervention.
+
+If a function has exactly two parameters, you can put the function name infix, with prefix `\`. For example, `x \add y` is equivalent to `add(x, y)`.
 
 ## Set
 
@@ -648,24 +662,6 @@ prove:
 `prove_or` is used to prove a `or` statement. The indexes following `prove_or` are the indexes of the `or` statement that we assume to be false and we want to prove one of the rest of cases in the `or` statement is true. In this example, we assume that `p(0)`, `p(1)`, and `p(2)` are false, and we want to prove that `p(4)` is true. Since we know that `forall: not $p(1) not $p(2) not $p(3) then $p(4)`, we can conclude that `p(4)` is true in this `prove_or` statement.
 
 ## `suppose` and `with` Statements
-
-## Special Keywords
-
-There are many builtin keywords helping you make reasonings.
-
-`N`, `I`, `F`, `R` are special keywords in Litex. They are used to represent the set of natural numbers, integers, rational numbers (`F` for float), and real numbers respectively.
-
-`frac` is a builtin function that takes in two real numbers and returns a real number (the denominator is not zero). For example, `frac(1,2)` is equivalent to `1/2` in natural language.
-
-`commutative_prop` and `commutative_fn` are special keywords in Litex. When a function is proved to be commutative, when it is being compared with another function, the order of the two functions does not matter. When a proposition is proved to be commutative, the order of the parameters does not matter.
-
-`prove_by_math_induction` is a special keyword in Litex. It is used to prove a statement by mathematical induction.
-
-
-If a function has exactly two parameters, you can put the function name infix, with prefix `\`. For example, `x \add y` is equivalent to `add(x, y)`.
-
-
-## Modules
 
 ## Words From The Inventor
 
