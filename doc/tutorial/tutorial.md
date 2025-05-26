@@ -1,12 +1,22 @@
 # The Litex Formal Language Tutorial
 
-**version 0.0.1-beta**
+**Release 0.0.1-beta**
 
 **2025-05-25**
 
-**Jiachen Shen, malloc_realloc_free@outlook.com**
+**By Jiachen Shen**
+
+## Before You Start
 
 Litex is an easy to learn, powerful formal language. Essentially, it is a tool that allows you to write reasoning according to the rules defined by Litex, and Litex will help verify whether your reasoning is correct. As a result, it can be widely used for validating mathematical proofs. Litex is basically an attempt to scale and automate reasoning in the AI age.
+
+---  
+**Contact:**  
+- **Website:** [litexlang.org](https://litexlang.org)  
+- **GitHub:** [github.com/litexlang/golitex](https://github.com/litexlang/golitex)
+- **Project Email:** litexlang@outlook.com
+- **Litex Creator:** Jiachen Shen
+- **Litex Creator's Email:** malloc_realloc_free@outlook.com
 
 ## Whetting Your Appetite
 
@@ -154,6 +164,8 @@ Congratulations! You have just learned the most basic usage of Litex through a s
 
 Learning Litex is different from traditional formal languages. You don't need to read thick books that make your brain explode. Instead, focus on connecting Litex with your intuition and common sense. The more you understand how Litex relates to your daily reasoning, the better you'll learn it.
 
+To make this tutorial clearer, we will reuse the same example in different contexts. Next time you see `human` or `Jordan` in the examples, you should know that they are the same objects as the ones in the first example.
+
 There is two more things you should know: comments and `prove` statements. Many of the examples in this tutorial include the two to be clearer and more readable.
 
 ```
@@ -195,6 +207,8 @@ The reason why those facts are called `specific` is that they are specific to th
 Sometimes we want to formalize the opposite of a specific fact. In this case, we put the `not` keyword before the specific fact. For example, `not $intelligent(Jordan)` is the opposite of `$intelligent(Jordan)`.
 
 Not all specific facts are using prefix `$`. For familiarity, some builtin proposition names like `=`, `<`, `>`, `<=`, `>=`, `!=` are infix. For example, you do not write `$=(1+1,2)`, you just write `1+1=2`. Basic arithematic operations like `+`, `-`, `*`, `/`, `^`, `%` are also builtin, and their validation is provided by the Litex interpreter.
+
+The `=` statement is behaves very differently from other specific facts. Objects from any sets can be used as parameter of an `=` statement. And if `x = y` is true, then the validation of  `$P(x)` can immediately lead to the validation of `$P(y)`, because `x = y`, since now x and y are considered to be the same.
 
 Besides, there are also some special features of Litex, all designed to make Litex more like natural language and more aligned with your daily reasoning.
 
@@ -288,17 +302,93 @@ Congratulations, you have learned the most basic and important statements in Lit
 
 Wait, you might be wondering, how does Litex verify a given fact exactly? Previous examples are pretty straightforward, but how about a more complex example? You might have this feeling that the examples above seem intuitively correct, but you can't quite articulate why they're right.
 
-If Litex has invented anything, it is a language that clearly formalizes the intuitive yet vaguely understood rules of reasoning, making them explicit and precise.
+If Litex has invented anything, it is a language that clearly formalizes the intuitive yet vaguely understood rules of reasoning, making them explicit and precise. The intuition here is that, when we do math, we are constanly using the technique `match and substitute` to derive new facts from known facts.
 
 There are and only are two basic ways of proving a specific fact:
 
 1. By a related known specific fact.
 2. By a related known `forall` statement.
 
+By a related known specific fact we mean a known specific fact has exactly the same name as the given specific fact, and their parameters are equal. 
+
+```
+prove:
+    obj Stephen human
+    obj Curry human
+    
+    know:
+        $male(Stephen)
+        Stephen = Curry
+
+    $male(Curry) # true, because Stephen = Curry and $male(Stephen) is known.
+```
+
+Related messgaes in the output says:
+
+```
+$male(Curry)
+is true. proved by
+$male(Stephen)
+Stephen = Curry
+
+---
+success! :)
+```
+
+As the example above shows, $male(Curry) is true because Stephen = Curry and $male(Stephen) is known. We say Stephen and Curry are matched, and Curry is substituted for Stephen in known fact $male(Stephen). That is why we can conclude that $male(Curry) is true.
 
 Another way of verifying a specific fact is by a known `forall` statement. For example, if we have already known `forall x human: $intelligent(x)`, then we can conclude that `$intelligent(Jordan)` is true because Jordan is a human. There are two, and only two, ways to verify a specific fact: either by a related known specific fact, or by a related known `forall` statement.
 
-<!-- 提到最多证明两格，而不是一个。 -->
+Here is a detailed example showing how we use `match and substitute` to verify a specific fact. We can see when `match and substitute` fails and when it is successful.
+
+```
+prove:
+    set cat
+    prop miao(x cat)
+    prop physical(x human)
+    prop strong(x human)
+    prop powerful(x human)
+
+    know：
+        forall x cat:
+            $miao(x)
+
+        forall x human:
+            $intelligent(x)
+
+        forall x human:
+            $powerful(x)
+            then:
+                $strong(x)
+
+        forall x human:
+            $physical(x)
+            then:
+                $strong(x)
+
+        $physical(Jordan)
+
+    # true, because Jordan is a human and $strong(Jordan) is known.
+    $strong(Jordan)
+```
+
+Related messages in output says:
+
+```
+$physical(Jordan)
+is true. proved by
+$physical(Jordan)
+Jordan = Jordan
+
+$strong(Jordan)
+is true. proved by
+forall `x:
+    $physical(`x)
+    then:
+        $strong(`x)
+```
+
+Notice `$strong(Jordan)` is true because 1. Jordan is human 2. `$physical(Jordan)` is true 3. `forall x human: $physical(x) then $strong(x)` is known. It works because the then block `$string(x)` and `$strong(Jordan)` have the same proposition name and therefore can be matched. When matched, Jordan is substituted for x in the then block, and we check whether `$physical(Jordan)` and Jordan is in set human is true. `$physical(Jordan)` is true because it matches the known fact `$physical(Jordan)`, and Jordan is defined to be in set human when it is defined.
 
 ## How to validate a `forall` statement?
 
@@ -467,7 +557,6 @@ There are many builtin keywords helping you make reasonings.
 
 If a function has exactly two parameters, you can put the function name infix, with prefix `\`. For example, `x \add y` is equivalent to `add(x, y)`.
 
-```
 
 ## Modules
 
@@ -478,6 +567,7 @@ Hi, I am Jiachen Shen, the creator of Litex. I am a PhD student in mathematics, 
 As a language designer, I have tried very hard to make Litex simple, strict, and intuitive, which requires a lot of thinking, effort. The Unix philosophy "keep it simple, stupid" is the ultimate guideline of Litex design. Every day, I ask the question to myself "what does it mean to be a simple and expressive formal language?". This is a hard question because Litex is so different from other formal languages. I had to figure out the answer to this question all by myself, partly because there are so few people have a good taste in programming language and math at the same time. One can test, debug, and improve in bazaar style, but it would be very hard to originate a project in bazaar style.[^2] Litex indeed has many drawbacks. But I am still proud of it.
 
 In today's highly connected world, there is no project model better than open-source, especially for a fresh project. Now Litex is coming from the stage of originating an idea to the stage of being tested, debugged, and improved by real people. Feel free to contact me if you have any questions or suggestions via [github](https://github.com/litexlang/golitex) and [mail](litexlang@outlook.com). Obviously, Litex is is still in the early stage of development. Any feedbacks are welcome.
+
 
 [^1]: [Mathematics for Computer Science](https://courses.csail.mit.edu/6.042/spring18/mcs.pdf)
 

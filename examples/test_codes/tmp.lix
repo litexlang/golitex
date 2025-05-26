@@ -1,11 +1,27 @@
-set human
-prop intelligent(x human)
+set cat
+prop miao(x cat)
+prop physical(x human)
+prop strong(x human)
+prop powerful(x human)
 
 know:
+    forall x cat:
+        $miao(x)
+
     forall x human:
         $intelligent(x)
 
-obj Alice human
-$intelligent(Alice)
+    forall x human:
+        $powerful(x)
+        then:
+            $strong(x)
 
-$intelligent(Alice)
+    forall x human:
+        $physical(x)
+        then:
+            $strong(x)
+
+    $physical(Jordan)
+
+# true, because Jordan is a human and $strong(Jordan) is known.
+$strong(Jordan)

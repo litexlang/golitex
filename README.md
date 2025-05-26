@@ -24,9 +24,11 @@ Litex Organization believes **it will redefine mathematical practice and become 
 
 ---  
 **Contact:**  
-- **Development Team:** `<litexlang@outlook.com>`  
 - **Website:** [litexlang.org](https://litexlang.org)  
 - **GitHub:** [github.com/litexlang/golitex](https://github.com/litexlang/golitex)
+- **Project Email:** litexlang@outlook.com
+- **Litex Creator:** Jiachen Shen
+- **Litex Creator's Email:** malloc_realloc_free@outlook.com
 
 **Words For Formal Language Enthusiasts and Potential Contributors**
 
