@@ -40,7 +40,7 @@ Maybe you are simply an enthusiast who finds joy in appreciating the elegance of
 
 Litex is the perfect language for you. I hope you will enjoy it.
 
-## Using The Litex Interpreter, Tools, and Resources
+<!-- ## Using The Litex Interpreter, Tools, and Resources -->
 
 <!-- Visit Official site [litexlang.org](https://litexlang.org), Github release [litexlang/golitex](https://github.com/litexlang/golitex) to download the Litex interpreter. -->
 
@@ -662,6 +662,35 @@ prove:
 `prove_or` is used to prove a `or` statement. The indexes following `prove_or` are the indexes of the `or` statement that we assume to be false and we want to prove one of the rest of cases in the `or` statement is true. In this example, we assume that `p(0)`, `p(1)`, and `p(2)` are false, and we want to prove that `p(4)` is true. Since we know that `forall: not $p(1) not $p(2) not $p(3) then $p(4)`, we can conclude that `p(4)` is true in this `prove_or` statement.
 
 ## `suppose` and `with` Statements
+
+`suppose` statement has the following form:
+
+```
+suppose $q(x, y):
+    $p(x)
+```
+
+It says: first we open a new context. We introduce two new parameters `x` and `y`. We assume `$q(x,y)` is true. In this context, we prove `$p(x)`.
+
+You might be wondering how is it different from `prove` statement. The main funcionality of a `suppose` statement is work together with `with` statement.
+
+```
+prove:
+    know suppose $q(x, y):
+        $p(x)
+
+    know:
+        $q(Jordan, Kobe)
+
+    $p(Jordan) # unknown
+
+    with $q(Jordan, Kobe):
+        $p(Jordan) # true
+``` 
+
+Assume `suppose $q(x, y): $p(x)` is true. (In this case we know it to be true). The `$p(Jordan)` is unknown because despite `suppose $q(x, y): $p(x)` is true in knowledge base, we do not know the `y` in suppose is mapped to be `Kobe`. But when we use `with $q(Jordan, Kobe): $p(Jordan)`, by the `Kobe` in `with $q(Jordan, Kobe)` , we know that `y` is mapped to be `Kobe`, so `$p(Jordan)` is true.
+
+`with` and `suppose` is necessary, because sometimes we do not how to match all the parameters in a forall statement parameter list. In this case, we can use `suppose` to open a new context, just like how a forall statement works and use `with` to match the parameters.
 
 ## Words From The Inventor
 
