@@ -392,24 +392,68 @@ Notice `$strong(Jordan)` is true because 1. Jordan is human 2. `$physical(Jordan
 
 Let's see why other known facts did not help to check `$strong(Jordan)`. `forall x cat: $miao(x)` is known, but it does not help because `miao` and `strong` are different propositions, and also `Jorand` is not known in the set `cat`. `forall x human: $intelligent(x)` does not help to check `$strong(Jordan)` because `intelligent` and `strong` are different propositions. `forall x human: $powerful(x) then $strong(x)` does not help to check `$strong(Jordan)` because `$powerful(Jordan)` is not known.
 
-I hope you have a better understanding of how `match and substitute` works. It is not that hard, right? Litex iterates over all known facts and check whether they can be matched with the given specific fact. If they can, the given specific fact is proved. This `match and substitute` happens thousands of times in a single proof, and it is the core of Litex.
-
-## How to validate a `forall` statement?
+A `forall` statement is verified slightly differently from a specific fact.
 
 ```
-know:
-    forall x human:
-        $male(x)
+prove:
+    prop p1(x human)
+    prop p2(x human)
+    prop p3(x human)
+
+    know:
+        forall x human:
+        $p1(x) 
         then:
-            $man(x)
+            $p2(x)
 
-forall x human:
-    $male(x)
-    then:
-        $man(x)
+        forall x human:
+            $p2(x)
+            then:
+                $p3(x)
+
+    forall x human:
+        $p1(x)
+        then:
+            $p2(x)
+            $p3(x)
 ```
 
-A `forall` statement is validated differently from a specific fact.
+Related messages in output says:
+
+```
+forall `x:
+    $p1(`x)
+    then:
+        $p2(`x)
+        $p3(`x)
+is true
+$p1(`x)
+is true. proved by
+$p1(`x)
+`x = `x
+
+$p2(`x)
+is true. proved by
+forall `x:
+    $p1(`x)
+    then:
+        $p2(`x)
+$p2(`x)
+is true. proved by
+$p2(`x)
+`x = `x
+
+$p3(`x)
+is true. proved by
+forall `x:
+    $p2(`x)
+    then:
+        $p3(`x)
+```
+
+The above example wants to prove that `forall x human: $p1(x) then $p2(x) and $p3(x)`. When proving a `forall` statement, Litex will open a new proof context for each object in the domain. In this context, it will put a new object x in the context, x is assumed to be in human set and `$p(x)` is true. Then the `then` block is proved statement by statement. `$p2(x)` is proved by the known fact `forall x human: $p1(x) then $p2(x)`. `$p3(x)` is proved by the known fact `forall x human: $p2(x) then $p3(x)`.
+
+OK! That is all how verification works in Litex. It is not that hard, right? That is exactly how `match and substitute` works at daily math proof. When a man is verifying a piece of proof, he does `match and substitute` thousands of times in his head, and that is exactly what Litex does. Litex iterates over all possibly related known facts and check whether they can be matched with the body of the given specific fact. If they can, the given specific fact is proved. Do not worry whether Litex is computationally expensive. Litex is very efficient and fast.
 
 ## `exist` statement
 

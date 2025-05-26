@@ -1,27 +1,20 @@
-set cat
-prop miao(x cat)
-prop physical(x human)
-prop strong(x human)
-prop powerful(x human)
+prop p1(x human)
+prop p2(x human)
+prop p3(x human)
 
 know:
-    forall x cat:
-        $miao(x)
+    forall x human:
+       $p1(x) 
+       then:
+           $p2(x)
 
     forall x human:
-        $intelligent(x)
-
-    forall x human:
-        $powerful(x)
+        $p2(x)
         then:
-            $strong(x)
+            $p3(x)
 
-    forall x human:
-        $physical(x)
-        then:
-            $strong(x)
-
-    $physical(Jordan)
-
-# true, because Jordan is a human and $strong(Jordan) is known.
-$strong(Jordan)
+forall x human:
+    $p1(x)
+    then:
+        $p2(x)
+        $p3(x)
