@@ -83,22 +83,39 @@ func ExecuteCodeAndReturnMessageSliceGivenSettings(code string, parserEnv *parse
 func listen(reader *bufio.Reader, writer io.Writer, parserEnv *parser.ParserEnv, executor *exe.Executor) error {
 	for {
 		fmt.Fprint(writer, ">>> ")
-		input, err := reader.ReadString('\n')
-		if err != nil {
-			return fmt.Errorf("error reading input: %v", err)
+		var input strings.Builder
+		currentScopeDepth := 0
+		for {
+			if currentScopeDepth > 0 {
+				fmt.Fprint(writer, strings.Repeat(" ", 4*currentScopeDepth))
+			}
+
+			currentLineStr, err := reader.ReadString('\n')
+			if err != nil {
+				return fmt.Errorf("error reading input: %v", err)
+			}
+			input.WriteString(currentLineStr)
+
+			// input 的非空白的最后一位 不是 :
+			trimmedLine := strings.TrimSpace(currentLineStr)
+			if trimmedLine == "" || !strings.HasSuffix(trimmedLine, ":") {
+				break
+			} else {
+				currentScopeDepth += 1
+			}
 		}
 
 		// Clean up input
-		input = strings.TrimSpace(input)
-		if input == "" {
+		inputStr := input.String()
+		if inputStr == "" {
 			continue
 		}
-		if strings.ToLower(input) == "exit" {
+		if strings.ToLower(inputStr) == "exit" {
 			return nil
 		}
 
 		// Execute the code
-		msg, signal, err := ExecuteCodeAndReturnMessageSliceGivenSettings(input, parserEnv, executor)
+		msg, signal, err := ExecuteCodeAndReturnMessageSliceGivenSettings(inputStr, parserEnv, executor)
 		if err != nil {
 			fmt.Fprintf(writer, "[ERROR] %v\n", err)
 			continue
@@ -117,12 +134,12 @@ func listen(reader *bufio.Reader, writer io.Writer, parserEnv *parser.ParserEnv,
 	}
 }
 
-func RunREPL() {
+func RunREPLInTerminal() {
 	parserEnv := parser.NewParserEnv()
 	executor := exe.NewExecutor(env.NewEnv(nil, nil))
 	reader := bufio.NewReader(os.Stdin)
 
-	fmt.Println("Litex experimental version 1 - Type your code or 'exit' to quit")
+	fmt.Println("Litex 0.0.1-beta - Type your code or 'exit' to quit")
 
 	err := listen(reader, os.Stdout, parserEnv, executor)
 	if err != nil {

@@ -45,6 +45,6 @@ func BetterMsg(msg string) string {
 	return msg
 }
 
-func RunREPL() {
-	pipeline.RunREPL()
+func RunREPLInTerminal() {
+	pipeline.RunREPLInTerminal()
 }

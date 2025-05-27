@@ -25,3 +25,7 @@ func TestRunFile(t *testing.T) {
 	fmt.Println(msg)
 	fmt.Println(signal)
 }
+
+func TestRunREPLInTerminal(t *testing.T) {
+	RunREPLInTerminal()
+}

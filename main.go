@@ -44,7 +44,7 @@ func main() {
 	args := flag.Args()
 
 	if len(args) == 0 {
-		sys.RunREPL()
+		sys.RunREPLInTerminal()
 	} else {
 		filePath := args[0]
 		// Verify file exists
