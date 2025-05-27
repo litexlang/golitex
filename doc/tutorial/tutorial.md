@@ -6,9 +6,9 @@
 
 **Jiachen Shen**
 
-## Before You Start
+## Litex: Scale Reasoning in AI Age
 
-Litex is an easy to learn, powerful formal language. Essentially, it is a tool that allows you to write reasoning according to the rules defined by Litex, and Litex will help verify whether your reasoning is correct. As a result, it can be widely used for validating mathematical proofs or any rule-based systems. Litex is basically an attempt to scale and automate reasoning in the AI age.
+Litex is an easy to learn, powerful formal language. Essentially, it is a tool that allows you to write reasoning according to the rules defined by Litex, and Litex will help verify whether your reasoning is correct. As a result, it can be widely used for validating mathematical proofs or any rule-based systems. The main advantage of Litex over other formal languages is its simplicity and user-friendliness. Litex is basically an attempt to scale reasoning in the AI age.
 
 ---  
 **Contact:**  
