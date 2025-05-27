@@ -146,6 +146,8 @@ func listen(reader *bufio.Reader, writer io.Writer, parserEnv *parser.ParserEnv,
 			// 如果有连续两行是空白的换行那不允许多个空行出现
 			isConsecutiveEmptyLine := true
 			for _, m := range msg {
+				// 让m的最后一位是换行符
+				m = strings.TrimRight(m, " \r\t\n")
 				if strings.TrimSpace(m) == "" {
 					if isConsecutiveEmptyLine {
 						continue
@@ -155,11 +157,12 @@ func listen(reader *bufio.Reader, writer io.Writer, parserEnv *parser.ParserEnv,
 					isConsecutiveEmptyLine = false
 					fmt.Fprintln(writer, m)
 				}
+				fmt.Fprintf(writer, "\n")
 			}
 		}
 
 		if signal != glob.SysSignalTrue {
-			fmt.Fprintf(writer, "Warning: [%s] is not true\n", input)
+			fmt.Fprintf(writer, "[Warning] %s is not true\n", inputStr)
 		}
 	}
 }
