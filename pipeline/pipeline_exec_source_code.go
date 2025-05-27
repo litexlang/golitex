@@ -85,26 +85,51 @@ func listen(reader *bufio.Reader, writer io.Writer, parserEnv *parser.ParserEnv,
 		fmt.Fprint(writer, ">>> ")
 		var input strings.Builder
 		currentScopeDepth := 0
+		isNotEmptyLine := true
+
 		for {
 			if currentScopeDepth > 0 {
-				fmt.Fprint(writer, strings.Repeat(" ", 4*currentScopeDepth))
-				input.WriteString(strings.Repeat(" ", 4*currentScopeDepth))
-			}
+				fmt.Fprint(writer, "... ") // 末尾的+4是未来和">>> "对齐
+				input.WriteString("    ")
 
-			currentLineStr, err := reader.ReadString('\n')
-			if err != nil {
-				return fmt.Errorf("error reading input: %v", err)
-			}
-			input.WriteString(currentLineStr)
+				currentLineStr, err := reader.ReadString('\n')
+				trimmedLine := strings.TrimRight(currentLineStr, " \t\n\r")
 
-			// input 的非空白的最后一位 不是 :
-			trimmedLine := strings.TrimRight(currentLineStr, " \t\n\r")
-			if trimmedLine == "" || !strings.HasSuffix(trimmedLine, ":") {
-				break
+				if trimmedLine == "" {
+					if !isNotEmptyLine {
+						goto ProcessStatement
+					}
+					isNotEmptyLine = false
+				} else {
+					isNotEmptyLine = true
+				}
+
+				if err != nil {
+					return fmt.Errorf("error reading input: %v", err)
+				}
+				input.WriteString(currentLineStr)
+
 			} else {
-				currentScopeDepth += 1
+				currentLineStr, err := reader.ReadString('\n')
+				if err != nil {
+					return fmt.Errorf("error reading input: %v", err)
+				}
+				input.WriteString(currentLineStr)
+
+				// input 的非空白的最后一位 不是 :
+				trimmedLine := strings.TrimRight(currentLineStr, " \t\n\r")
+				if trimmedLine == "" || !strings.HasSuffix(trimmedLine, ":") {
+					break
+				} else {
+					currentScopeDepth = 1
+
+				}
 			}
 		}
+
+	ProcessStatement:
+		currentScopeDepth = 0
+		isNotEmptyLine = true
 
 		// Clean up input
 		inputStr := input.String()
@@ -124,8 +149,19 @@ func listen(reader *bufio.Reader, writer io.Writer, parserEnv *parser.ParserEnv,
 
 		// Print results
 		if len(msg) > 0 {
+			fmt.Printf("\n")
+			// 如果有连续两行是空白的换行那不允许多个空行出现
+			isConsecutiveEmptyLine := true
 			for _, m := range msg {
-				fmt.Fprintln(writer, m)
+				if strings.TrimSpace(m) == "" {
+					if isConsecutiveEmptyLine {
+						continue
+					}
+					isConsecutiveEmptyLine = true
+				} else {
+					isConsecutiveEmptyLine = false
+					fmt.Fprintln(writer, m)
+				}
 			}
 		}
 
