@@ -88,6 +88,7 @@ func listen(reader *bufio.Reader, writer io.Writer, parserEnv *parser.ParserEnv,
 		for {
 			if currentScopeDepth > 0 {
 				fmt.Fprint(writer, strings.Repeat(" ", 4*currentScopeDepth))
+				input.WriteString(strings.Repeat(" ", 4*currentScopeDepth))
 			}
 
 			currentLineStr, err := reader.ReadString('\n')
@@ -97,7 +98,7 @@ func listen(reader *bufio.Reader, writer io.Writer, parserEnv *parser.ParserEnv,
 			input.WriteString(currentLineStr)
 
 			// input 的非空白的最后一位 不是 :
-			trimmedLine := strings.TrimSpace(currentLineStr)
+			trimmedLine := strings.TrimRight(currentLineStr, " \t\n\r")
 			if trimmedLine == "" || !strings.HasSuffix(trimmedLine, ":") {
 				break
 			} else {
