@@ -1,6 +1,6 @@
 # The Litex Formal Language Tutorial
 
-**Release 0.0.1-beta**
+**Release 0.1.1-beta**
 
 **2025-05-25**
 
