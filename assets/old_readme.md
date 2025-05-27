@@ -1,7 +1,5 @@
 ## About
 
-But current formal languages have too high a barrier to entry. From first principles, these languages are essentially programming languages inspired by mathematics. The logic needed for mathematical reasoning is different from programming logic. For example, when verifying mathematics, we don't need to store temporary variables, and we don't need to mentally loop 1000 times to verify a line. Overly complex formal languages that are inconsistent with everyday expression - even difficult for mathematicians to understand - are becoming a bottleneck in both mathematics and AI fields.
-
 If even children can reason naturally, a formal language that combines rigor and intuition must be possible -- it simply hasn’t been invented yet. Litex is designed to create precisely such a language. It welcomes everyone, from children to experts, to use it to reason about math.
 
 Simplicity doesn’t mean weakness —- in the case of Litex, it means powerness and scalability. Just like how a small groups of axioms and reasoning rules can be used to prove a large number of theorems, Litex is built on top exactly the same set of axioms and reasoning rules. As the Unix philosophy says, "keep it simple, stupid". Litex is designed to be a tool that scales up reasoning, not anything else.
