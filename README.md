@@ -62,6 +62,7 @@ In a nutshell, Litex is for EVERYONE, from children to experts. It scales up rea
 
 [Github](https://github.com/litexlang/golitex)
 
+[Applications of Formal Reasoning in AI and Many Other Fields](./doc/applications_of_formal_reasoning/applications_of_formal_reasoning.md)
 
 ## Words From The Inventor
 
