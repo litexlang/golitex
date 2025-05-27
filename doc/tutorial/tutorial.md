@@ -698,6 +698,8 @@ Hi, I am Jiachen Shen, the creator of Litex. I am a PhD student in mathematics, 
 
 As a language designer, I have tried very hard to make Litex simple, strict, and intuitive, which requires a lot of thinking, effort. The Unix philosophy "keep it simple, stupid" is the ultimate guideline of Litex design. Every day, I ask the question to myself "what does it mean to be a simple and expressive formal language?". This is a hard question because Litex is so different from other formal languages. I had to figure out the answer to this question all by myself, partly because there are so few people have a good taste in programming language and math at the same time. One can test, debug, and improve in bazaar style, but it would be very hard to originate a project in bazaar style.[^2] Litex indeed has many drawbacks. But I am still proud of it.
 
+With a predicted reduction of the de Bruijn factor from ~10 in traditional formal languages to ~1, simplifying reasoning by 10 times (Bruijn factor a measure of how much harder it is to write a formal proof instead of an informal one), Litex will become a critical infrastructure for the next generation of AI models and human society.
+
 In today's highly connected world, there is no project model better than open-source, especially for a fresh project. Now Litex is coming from the stage of originating an idea to the stage of being tested, debugged, and improved by real people. Feel free to contact me if you have any questions or suggestions via [github](https://github.com/litexlang/golitex) and [mail](litexlang@outlook.com). Obviously, Litex is is still in the early stage of development. Any feedbacks are welcome.
 
 
