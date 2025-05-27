@@ -1,16 +1,16 @@
-# The Litex Formal Language
-
 <div align="center">
 <img src="assets/logo.png" alt="The Litex Logo" width="300">
 </div>
 
-**Release 0.0.1-beta**
+<div align="center">
 
-**2025-05**
+# Litex: Scale Formal Reasoning in AI Age
 
-**Jiachen Shen**
+**Release v0.0.1-beta**  
+*May 2025*  
+*Created by Jiachen Shen*
 
-## Litex: Scale Reasoning in AI Age
+</div>
 
 Litex is a powerful yet easy-to-learn formal language. At its core, it is a tool that enables you to express reasoning following Litex's defined rules, while automatically verifying the correctness of your reasoning. This makes it particularly valuable for validating mathematical proofs and other rule-based systems. Unlike other formal languages that even experienced mathematicians find challenging to use, Litex recognizes that reasoning is an innate human capability - even a 5-year-old possesses basic reasoning instincts. Our mission is to make formal reasoning accessible to everyone. 
 
@@ -56,9 +56,12 @@ In a nutshell, Litex is for EVERYONE, from children to experts. It scales up rea
 
 [Formalization of Hilbert Geometry Axioms](./examples/comprehensive_examples/Hilbert_geometry_axioms_formalization.lix)
 
+[Compare Litex with Lean](./doc/comparison_with_lean/comparison_with_lean.md)
+
 [Website](https://litexlang.org)
 
 [Github](https://github.com/litexlang/golitex)
+
 
 ## Words From The Inventor
 
