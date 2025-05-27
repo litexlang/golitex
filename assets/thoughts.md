@@ -2016,4 +2016,4 @@ REMARK:
 
 甚至说，在用弱的验证方法时，dom里的 forall 也可以无数层，因为本质上就是 找到最底层的specfact，然后 再用一次 forall + spec mem 来验证它。之后不允许用 forall 来验证
 
-如果我确保 forall 里的 forall 最多一层 （dom里一层，then里一层），那我甚至可以这么干：我再把 forall fact 分成两组
+如果我确保 forall 里的 forall 最多一层 （dom里一层，then里一层），那我甚至可以这么干：我再把 forall fact 分成两组： dom全是spec，dom有forall。如果我是 round1的时候，我只访问 dom里全是spec的，我不访问 dom有forall的（因为这时进入round2，爆掉了）
