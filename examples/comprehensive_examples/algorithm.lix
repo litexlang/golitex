@@ -11,20 +11,46 @@ We therefore close this section with a brief indication of one method by which t
 x0 = x and x_{k+1} = f(x_k) for k≥0.
 The computational sequence is said to terminate in k steps if k is the smallest
 integer for which x_k is in S, and in this case it is said to produce the output x_k from x. (Note that ﬁif x_k is in S, so x_{k+1}, because x_{k+1} = x_k in such a case.) Some computational sequences may never terminate; an algorithm is a computational method that terminates in finitely many steps for all x in I.
-"""
 
+"""
 fn computational_sequence(Q set, f fn(Q)Q) fn(Q, N)Q:
     forall x Q:
         computational_sequence(Q, f)(x,n) = f(computational_sequence(Q, f)(x, n-1))
 exist_prop n N st exist_end_of_computational_sequence(Q set, x Q, f fn(Q,N)Q):
     f(x, n) = f(x, n+1)
 prop is_algorithm(Q set, I set, f fn(Q)Q):
-    I <= Q
+    I $subset_of Q
     iff:
         forall x I:
             $exist_end_of_computational_sequence(Q, x, computational_sequence(Q, f))
+"""
+
+Here is a comparison with Lean4 code.
 
 """
+structure ComputationalMethod where
+  Q : Type
+  I : Set Q
+  S : Set Q
+  f : Q → Q
+  f_fixed : ∀ q ∈ S, f q = q
+
+namespace ComputationalMethod
+
+def comp_sequence (cm : ComputationalMethod) (x : cm.Q) : ℕ → cm.Q
+  | 0 => x
+  | n + 1 => cm.f (comp_sequence x n)
+
+def TerminatesIn (cm : ComputationalMethod) (x : cm.Q) (k : ℕ) : Prop :=
+  comp_sequence cm x k ∈ cm.S ∧
+  ∀ i < k, comp_sequence cm x i ∉ cm.S
+
+def IsAlgorithm (cm : ComputationalMethod) : Prop :=
+  ∀ x ∈ cm.I, ∃ k, TerminatesIn cm x k
+
+end ComputationalMethod
+"""
+
 Comments:
 It only takes only 10 lines to formalize the definition of algorithm, which is marvelous.
 """
