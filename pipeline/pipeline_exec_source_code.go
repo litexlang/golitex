@@ -85,7 +85,6 @@ func listen(reader *bufio.Reader, writer io.Writer, parserEnv *parser.ParserEnv,
 		fmt.Fprint(writer, ">>> ")
 		var input strings.Builder
 		currentScopeDepth := 0
-		isNotEmptyLine := true
 
 		for {
 			if currentScopeDepth > 0 {
@@ -96,12 +95,7 @@ func listen(reader *bufio.Reader, writer io.Writer, parserEnv *parser.ParserEnv,
 				trimmedLine := strings.TrimRight(currentLineStr, " \t\n\r")
 
 				if trimmedLine == "" {
-					if !isNotEmptyLine {
-						goto ProcessStatement
-					}
-					isNotEmptyLine = false
-				} else {
-					isNotEmptyLine = true
+					goto ProcessStatement
 				}
 
 				if err != nil {
@@ -129,7 +123,6 @@ func listen(reader *bufio.Reader, writer io.Writer, parserEnv *parser.ParserEnv,
 
 	ProcessStatement:
 		currentScopeDepth = 0
-		isNotEmptyLine = true
 
 		// Clean up input
 		inputStr := input.String()
@@ -176,7 +169,7 @@ func RunREPLInTerminal() {
 	executor := exe.NewExecutor(env.NewEnv(nil, nil))
 	reader := bufio.NewReader(os.Stdin)
 
-	fmt.Println("Litex 0.0.1-beta - Type your code or 'exit' to quit")
+	fmt.Println("Litex 0.1.1-beta - Type your code or 'exit' to quit")
 
 	err := listen(reader, os.Stdout, parserEnv, executor)
 	if err != nil {

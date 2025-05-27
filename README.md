@@ -6,7 +6,7 @@
 
 # Litex: Scale Formal Reasoning in AI Age
 
-**Release v0.0.1-beta**  
+**Release v0.1.1-beta**  
 *May 2025*  
 *Created by Jiachen Shen*
 
