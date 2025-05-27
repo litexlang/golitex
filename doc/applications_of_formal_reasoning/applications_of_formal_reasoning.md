@@ -2,13 +2,13 @@
 
 ## AI
 
-1. [DeepSeek-R1](https://arxiv.org/abs/2501.12948): uses formal language as value function for Reinforcement Learning. There is believed to be paradigm shift in AI research from large-data-driven Learning to formal-language-driven Reinforcement Learning.
+1. [DeepSeek-R1](https://arxiv.org/abs/2501.12948): DeepSeek-R1 uses formal language as value function for Reinforcement Learning. There is believed to be paradigm shift in AI research from large-data-driven Learning to formal-language-driven Reinforcement Learning.
 
-2. [AlphaProof](https://deepmind.google/discover/blog/ai-solves-imo-problems-at-silver-medal-level/): uses formal language to formulate problems, solve them, and improve the model based on formal language interpreter output. It is a good example of how a model self iteratively improves itself. It achieves silver medal level in IMO, which is super-human level in math.
+2. [AlphaProof](https://deepmind.google/discover/blog/ai-solves-imo-problems-at-silver-medal-level/): AlphaProof uses formal language to formulate problems, solve them, and improve the model based on formal language interpreter output. It is a good example of how a model self iteratively improves itself. It achieves silver medal level in IMO, which is super-human level in math.
 
-3. [AlphaGeometry](https://deepmind.google/discover/blog/alphageometry-an-olympiad-level-ai-system-for-geometry/): Another example of how a model self iteratively improves itself. It achieves gold medal level in IMO geometry problems, which is super-human level in math.
+3. [AlphaGeometry](https://deepmind.google/discover/blog/alphageometry-an-olympiad-level-ai-system-for-geometry/): AlphaGeometry is another example of how a model self iteratively improves itself. It achieves gold medal level in IMO geometry problems, which is super-human level in math.
 
-4. [Safeguarded AI](https://www.aria.org.uk/opportunity-spaces/mathematics-for-safe-ai/safeguarded-ai/): The applications of formal reasoning in AI safety is drawing more and more attention.
+4. [Safeguarded AI](https://www.aria.org.uk/opportunity-spaces/mathematics-for-safe-ai/safeguarded-ai/): The applications of formal reasoning in AI safety is drawing more and more attention, and this is one of the first AI safety orgnizations to pay attention to formal reasoning.
 
 5. [Formal Mathematical Reasoning: A New Frontier in AI](https://arxiv.org/abs/2412.16075): This article argues AI-driven discovery in science, engineering, and beyond can be accelerated by the adoption of formal reasoning.
 
