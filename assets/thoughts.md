@@ -1995,3 +1995,25 @@ REMARK
 
 5.27
 像 fn f(x N, y N) 这种，其实可以写成 f(x R, y R): x $in N, y $in N 这种形式。
+
+REMARK:
+或许可以用 新的 用 forall 来验证 specific fact的办法
+假如现在我需要用 forall 来验证 specific fact，当我在遍历涉及到的所有forall事实的时候，有两种情况
+1. 当前已知的forall是 dom 里只有 specific fact的
+2. 当前的forall dom 里有 单层的 forall，且该单层forall里的dom和then全是specific
+
+如果是第一种情况，那有两种 强弱不同的验证方法
+1. 强：还能用 forall mem来验证 dom 里的specific fact
+2. 弱：只能用 specific mem来验证 dom 里的specific fact
+
+现在的做法是能用强。为了不死循环，我用 round 来规定在每轮验证时最多用2次 forall mem
+
+如果用弱的办法，那就压根不会死循环了。
+
+不用弱的方法的顾虑是，出现情况2时，会没辙了。但其实这是没必要的顾虑。因为我拿来情况2，我要验证dom里的这个forall是否对，然后我用 forall mem + spec mem 一起来验证 新的forall环境下面的then fact（这个forall只能是 spec fact）
+
+某种程度上，then 里 的 fact 可以有很多层。比如因为验证的时候，我不论你有几层，我都是只验证最后的 spec的。然后我存的时候，我都会把你展开。然后我拿存的东西来验证的时候，我也是拿展开式去验证的
+
+甚至说，在用弱的验证方法时，dom里的 forall 也可以无数层，因为本质上就是 找到最底层的specfact，然后 再用一次 forall + spec mem 来验证它。之后不允许用 forall 来验证
+
+如果我确保 forall 里的 forall 最多一层 （dom里一层，then里一层），那我甚至可以这么干：我再把 forall fact 分成两组
