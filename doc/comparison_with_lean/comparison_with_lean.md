@@ -55,7 +55,7 @@ The computation proceeds by repeatedly applying f to an input x in I, generating
       <code>exist_prop n N st exist_comp_seq_end(Q set, x Q, f fn(Q,N)Q):</code><br>
       <code>&nbsp;&nbsp;&nbsp;&nbsp;f(x, n) = f(x, n+1)</code><br><br>
       <code>prop is_algorithm(Q set, I set, f fn(Q)Q):</code><br>
-      <code>&nbsp;&nbsp;I $subset_of Q</code><br>
+      <code>&nbsp;&nbsp;$subset_of(I, Q)</code><br>
       <code>&nbsp;&nbsp;iff:</code><br>
       <code>&nbsp;&nbsp;&nbsp;&nbsp;forall x I:</code><br>
       <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$exist_comp_seq_end(Q, x, comp_seq(Q, f))</code>
@@ -81,4 +81,4 @@ The computation proceeds by repeatedly applying f to an input x in I, generating
   </tr>
 </table>
 
-Here we can see that Litex achieves remarkable conciseness in formalizing the definition of algorithm - requiring only 10 lines of code while maintaining mathematical clarity. Each statement is self-explanatory and closely mirrors natural mathematical notation. In contrast, Lean 4 requires approximately three times more code to express the same concept. The additional verbosity in Lean 4 stems from its need for explicit type definitions, structural elements, and auxiliary syntax that are not typically encountered in everyday mathematical expressions. This extra complexity creates a steeper learning curve and can distract users from focusing on the core mathematical concepts they're trying to formalize. Litex's approach, by staying closer to conventional mathematical notation, significantly lowers the barrier to entry while maintaining formal rigor.
+Here we can see that Litex achieves remarkable conciseness in formalizing the definition of algorithm - requiring only 10 lines of code while maintaining mathematical clarity. Each statement is self-explanatory and closely mirrors natural mathematical notation. In contrast, Lean 4 requires approximately three times more code to express the same concept. The additional complexity in Lean 4 stems from its need for explicit type definitions, structural elements, and unfamiliar syntax that are not typically encountered in everyday mathematical expressions. This extra complexity creates a steeper learning curve and can distract users from focusing on the core mathematical concepts they're trying to formalize. Litex's approach, by staying closer to conventional mathematical notation, significantly lowers the barrier to entry while maintaining formal strictness.

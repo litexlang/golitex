@@ -52,6 +52,8 @@ In a nutshell, Litex is for EVERYONE, from children to experts. It scales up rea
 
 ## Resources
 
+[Applications of Formal Reasoning in AI and Many Other Fields](./doc/applications_of_formal_reasoning/applications_of_formal_reasoning.md)
+
 [Tutorial](./doc/tutorial/tutorial.md)
 
 [Formalization of Hilbert Geometry Axioms](./examples/comprehensive_examples/Hilbert_geometry_axioms_formalization.lix)
@@ -62,15 +64,22 @@ In a nutshell, Litex is for EVERYONE, from children to experts. It scales up rea
 
 [Github](https://github.com/litexlang/golitex)
 
-[Applications of Formal Reasoning in AI and Many Other Fields](./doc/applications_of_formal_reasoning/applications_of_formal_reasoning.md)
 
-## Words From The Inventor
+## Contribute to Litex
 
 Hi, I am Jiachen Shen, the creator of Litex. I am a PhD student in mathematics, and I am also a programming language geek. I have been working on Litex since 2024 and received many valuable feedbacks from Litex enthusiasts. I hope you enjoy using Litex, too. 
 
 For the time being (2025-05), Litex is evovling from the stage of figuring out and implementing the idea of a simple formal language, to the stage of community-driven development and user-adoption. It will be long and interesting journey, feel free to contact us.
 
-**NOTICE: Litex is still under active development. Contribution and early adoption is welcome!**
+For the time being, the Litex interpreter itself is 90% complete. Most daily usage is covered. You can contribute to Litex by:
+
+1. Contributing to the Litex interpreter.
+2. Contributing by telling your friends about Litex.
+3. Contributing to standard library of Litex, which covers daily math.
+4. Contributing writing dataset of Litex for AI to learn.
+5. Contributing to the LitexDojo, similar to how LeanDojo is for Lean.
+
+Litex is still under active development. Contribution and early adoption is welcome!
 
 ---  
 **Contact:**  
