@@ -91,6 +91,7 @@ prove:
 know exist_prop c point st exist_one_point_not_on_the_same_line_with_two_points(a point, b point):
     a != b
     iff:
+    
         not $point_on_line(c, line_of(a, b))
 
 prove:
