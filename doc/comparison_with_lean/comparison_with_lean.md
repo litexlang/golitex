@@ -28,8 +28,57 @@ Mathematics is the art of deriving new facts from established ones. To illustrat
 
 Consider `Human` as the set of all humans. Using `know`, we establish the fact without the need to be verified by other facts: all humans are self-aware. Since Bob is in the set of `Human`, "Bob is self-aware" is inherently true.
 
-Notice how Litex requires much less typing than Lean4 even in this simple example. An obvious advantage of Litex is that it reduces typing by eliminating the need to name or recall individual facts. When writing done factual expressions for verification, Litex automatically searches for relevant facts, akin to a regular expression search in a large database. For instance, instead of naming an axiom like “axiom self_aware_all,” you simply write “know …”. This approach significantly reduces the cognitive load and enhances efficiency in handling complex logical structures.
+Notice how Litex requires much less typing than Lean4 even in this simple example. An obvious advantage of Litex is that it reduces typing by eliminating the need to name or recall individual facts. When writing done factual expressions for verification, Litex automatically searches for relevant facts, akin to a regular expression search in a large database. For instance, instead of naming an axiom like "axiom self_aware_all," you simply write "know ...". This approach significantly reduces the cognitive load and enhances efficiency in handling complex logical structures.
 
 Although this is a simple example, it has already taught us how ANY mathematical facts are derived from known facts. Just as Lego lets you assemble complex structures from simple pieces, Litex lets you build math from minimal (with just 8 main keywords: forall, exist, not, or, fn, prop, obj, set and several other auxiliary keywords), reusable parts -— no unnecessary complexity, just pure flexibility.
 
 Also notice Litex adopts a mixture of Python and GoLang's syntax, making it easy to pick up for users who has some programming experience.
+
+Another example is the definition of algorithm. In mathematics, an algorithm is a computational method that can be precisely defined as a quadruple (Q, I, S, f), where:
+- Q is a set representing all possible states of computation
+- I is a subset of Q representing valid inputs
+- S is a subset of Q representing valid outputs
+- f is a function from Q to Q that defines the computational rule
+
+The computation proceeds by repeatedly applying f to an input x in I, generating a sequence x₀, x₁, x₂, ... where x₀ = x and xₖ₊₁ = f(xₖ). An algorithm must terminate in finitely many steps for any valid input, producing an output in S. This formal definition ensures that algorithms are well-defined mathematical objects that can be rigorously analyzed and verified.
+
+<table style="border-collapse: collapse; width: 100%;">
+  <tr>
+    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 50%;">Litex</th>
+    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 50%;">Lean 4</th>
+  </tr>
+  <tr>
+    <td style="border: 3px solid black; padding: 8px;">
+      <code>fn comp_seq(Q set, f fn(Q)Q) fn(Q, N)Q:</code><br>
+      <code>&nbsp;&nbsp;forall x Q:</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;comp_seq(Q, f)(x,n) = f(comp_seq(Q, f)(x, n-1))</code><br><br>
+      <code>exist_prop n N st exist_comp_seq_end(Q set, x Q, f fn(Q,N)Q):</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;f(x, n) = f(x, n+1)</code><br><br>
+      <code>prop is_algorithm(Q set, I set, f fn(Q)Q):</code><br>
+      <code>&nbsp;&nbsp;I $subset_of Q</code><br>
+      <code>&nbsp;&nbsp;iff:</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;forall x I:</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$exist_comp_seq_end(Q, x, comp_seq(Q, f))</code>
+    </td>
+    <td style="border: 3px solid black; padding: 8px;">
+      <code>structure ComputationalMethod where</code><br>
+      <code>&nbsp;&nbsp;Q : Type</code><br>
+      <code>&nbsp;&nbsp;I : Set Q</code><br>
+      <code>&nbsp;&nbsp;S : Set Q</code><br>
+      <code>&nbsp;&nbsp;f : Q → Q</code><br>
+      <code>&nbsp;&nbsp;f_fixed : ∀ q ∈ S, f q = q</code><br><br>
+      <code>namespace ComputationalMethod</code><br><br>
+      <code>def comp_seq (cm : ComputationalMethod) (x : cm.Q) : ℕ → cm.Q</code><br>
+      <code>&nbsp;&nbsp;| 0 => x</code><br>
+      <code>&nbsp;&nbsp;| n + 1 => cm.f (comp_seq x n)</code><br><br>
+      <code>def TerminatesIn (cm : ComputationalMethod) (x : cm.Q) (k : ℕ) : Prop :=</code><br>
+      <code>&nbsp;&nbsp;comp_seq cm x k ∈ cm.S ∧</code><br>
+      <code>&nbsp;&nbsp;∀ i < k, comp_seq cm x i ∉ cm.S</code><br><br>
+      <code>def IsAlgorithm (cm : ComputationalMethod) : Prop :=</code><br>
+      <code>&nbsp;&nbsp;∀ x ∈ cm.I, ∃ k, TerminatesIn cm x k</code><br><br>
+      <code>end ComputationalMethod</code>
+    </td>
+  </tr>
+</table>
+
+Here we can see that Litex achieves remarkable conciseness in formalizing the definition of algorithm - requiring only 10 lines of code while maintaining mathematical clarity. Each statement is self-explanatory and closely mirrors natural mathematical notation. In contrast, Lean 4 requires approximately three times more code to express the same concept. The additional verbosity in Lean 4 stems from its need for explicit type definitions, structural elements, and auxiliary syntax that are not typically encountered in everyday mathematical expressions. This extra complexity creates a steeper learning curve and can distract users from focusing on the core mathematical concepts they're trying to formalize. Litex's approach, by staying closer to conventional mathematical notation, significantly lowers the barrier to entry while maintaining formal rigor.
