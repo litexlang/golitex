@@ -20,23 +20,13 @@ Litex is an easy to learn, powerful formal language. Essentially, it is a tool t
 
 ## Whetting Your Appetite
 
-Everyone have started to think and reason since childhood. The ability to reason is what differentiates humans from other animals. The reason why mathematical reasoning is strict and universal is that it follows a small set of rules so intuitive that it is kind of inherent in human nature. Miraculously, on top of those reasoning rules and another small while carefully selected set of axioms, we human beings are able to build the entire world of mathematics. Since all scientific, engineering, and economic theories are built upon mathematics, the unreasonable effectiveness of those reasoning rules should not be underestimated.
+<!-- 这个section可以移到其他地方，否则太拖沓 -->
 
-If you are a software developer, or mathematician, or an AI researcher, you might have encountered formal languages. Formal languages are softwares where, people write down their reasoning without breaking the rules of the language, and the software will check if the reasoning are valid accordingly. It works like how a human checks whether a piece of math is correct, but in a more strict and automated way. Just like nobody can calculate faster than a calculator, it can be imagined that nobody can check the validity of reasoning faster than a formal language.
+Everyone have started to think and reason since childhood. The ability to reason is what differentiates humans from other animals. The reason why mathematical reasoning is strict and universal is that it follows a small set of rules so intuitive that it is kind of inherent in human nature. Miraculously, on top of those reasoning rules and another small while carefully selected set of axioms, we human beings are able to build the entire world of mathematics.
 
-However, traditional formal verification languages like Lean4, Coq, and Isabelle are too complex and too far removed from everyday mathematical notation. These languages heavily rely on type theory and functional programming concepts, which even mathematics PhD students need years to master. If Newton had to learn those theories before inventing calculus, he would never succeed, because those theories would be invented 3 centuries later. The fundamental reason for this complexity is that these languages attempt to serve two distinct purposes simultaneously: they want to be both programming languages and reasoning verifiers. This dual nature makes it technically challenging to create a simple and intuitive system.
+In this AI age, formal languages are becoming increasingly crucial for both AI development and human reasoning. Traditional proof assistants, despite their theoretical elegance, have failed to meet modern demands due to their overwhelming complexity. Even mathematics PhDs find them challenging to use effectively. This complexity gap has created a critical need for a more accessible solution. Enter Litex - a revolutionary approach that reimagines formal verification from first principles, making it both powerful and intuitive.
 
-That is why Litex chooses not to be a programming language, making it in first principle different from other traditional formal lanuages. (Technically, Litex is a Read-Only Turing Machine, instead of a Turing Machine.) It is designed to be simple and intuitive. No brain-exploding theories, no complex syntax, no need to learn a new programming language. All you need to learn before using Litex is building a connection between your own intuition and Litex expressions. Believe me, that is pretty easy. You will find the process of mathematical verification is nothing more than "match and substitute". Many mathematical expressions can be translated from natural language to Litex code almost directly. 
-
-Maybe you are a young teenager captivated by mathematics, eager to master the art of deductive reasoning and rigorous thinking, just like the ancient philosophers such as Plato or the brilliant detective Sherlock Holmes.
-
-Maybe you are an AI researcher striving to develop reasoning models that can match or surpass human cognitive abilities. Formal mathematical data could enhance your model's reasoning capabilities and perhaps inspire the next breakthrough in model architecture.
-
-Maybe you are a mathematics student seeking to streamline the paper review process, identify potential errors in your thesis, and collaborate with fellow mathematicians online - much like how programmers collaborate through platforms like GitHub.
-
-Maybe you are a rocket scientist who needs absolute certainty in every mathematical formula, ensuring your spacecraft's precise trajectory to the moon.
-
-Maybe you are simply an enthusiast who finds joy in appreciating the elegance of mathematics and discovering how individual concepts intertwine to create a magnificent tapestry of knowledge.
+Whether you're an AI researcher developing reasoning models, a mathematics student reviewing papers, a rocket scientist ensuring precise calculations, or simply a math enthusiast, Litex is designed for you. We will explore how Litex's innovative design addresses these challenges throughout this tutorial.
 
 Litex is the perfect language for you. I hope you will enjoy it.
 
