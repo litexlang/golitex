@@ -24,6 +24,17 @@ In essence, Litex represents an ambitious attempt to scale reasoning capabilitie
 
 Mathematicians including Fields medalist Terrence Tao, world-class AI companies including DeepMind and DeepSeek, are showing great interest in the combination of formal languages and AI. Litex is my answer to this challenge. Litex has already garnered attention from leading institutions worldwide, including **CMU, Tsinghua, Peking University, Pujiang Lab, Shanghai Jiao Tong University, Fudan University**.  
 
+## Litex view of math
+
+Math is built on top of a small sets of reasoning rules and axioms. There are basicly two types of deriving a new fact from existing facts:
+
+1. derive from a specific fact: e.g. If I know x = 1, then x = 1
+2. derive from a general fact: e.g. If I know forall human, he is intelligent, and Jordan is a human, then Jordan is intelligent. Litex calls this way of deriving a new fact "match and substitute", because it is like matching a pattern and substituting the pattern with a specific value.
+
+Amazingly, with these two ways of deriving a new fact, and with a set of carefully chosen axioms, we can (nearly) build the entire world of mathematics. And you have ALREADY learned the basic mechanism of Litex in just one minute: match and substitute. Pretty simple, right?
+
+Now, let's see how Litex works.
+
 ## Uniqueness of Litex
 
 Everyone have started to think and reason since childhood. We reason thousands of time every day without even noticing it. Yet, traditional formal languages, like Lean4, Coq, and Isebelle are so complex that even the smartest mathematicians find it hard to use. Why is that?
@@ -76,8 +87,9 @@ For the time being, the Litex interpreter itself is 90% complete. Most daily usa
 1. Contributing to the Litex interpreter.
 2. Contributing by telling your friends about Litex.
 3. Contributing to standard library of Litex, which covers daily math.
-4. Contributing writing dataset of Litex for AI to learn.
+4. Contributing writing dataset of Litex for AI to learn. Just 1000 pairs of natural language and Litex code is also helpful.
 5. Contributing to the LitexDojo, similar to how LeanDojo is for Lean.
+6. Contributing to the Litex README, tutorial, reference, and other documentation. If you are confused about something, please let me know.
 
 Litex is still under active development. Contribution and early adoption is welcome!
 

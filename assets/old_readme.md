@@ -1,7 +1,5 @@
 ## About
 
-If even children can reason naturally, a formal language that combines rigor and intuition must be possible -- it simply hasn’t been invented yet. Litex is designed to create precisely such a language. It welcomes everyone, from children to experts, to use it to reason about math.
-
 Simplicity doesn’t mean weakness —- in the case of Litex, it means powerness and scalability. Just like how a small groups of axioms and reasoning rules can be used to prove a large number of theorems, Litex is built on top exactly the same set of axioms and reasoning rules. As the Unix philosophy says, "keep it simple, stupid". Litex is designed to be a tool that scales up reasoning, not anything else.
 
 In the 21st century, the progress of math is hindered by the contunous abstraction of math and disconnection between different fields of math. Another huaman activity that has dealted with complexity is software engineering, and throughout the years, a lot of inventions have been made to make softwares more scalable and easier to use for everyone.
