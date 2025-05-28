@@ -27,7 +27,12 @@ Math is built on top of a small sets of reasoning rules and axioms. There are ba
 1. derive from a specific fact: e.g. If I know x = 1, then x = 1
 2. derive from a general fact: e.g. If I know forall human, he is intelligent, and Jordan is a human, then Jordan is intelligent. Litex calls this way of deriving a new fact "match and substitute", because it is like matching a pattern and substituting the pattern with a specific value.
 
-OK, you have already known the basic idea of Litex. Now let's see how Litex works.
+OK, you have already known the basic idea of Litex.
+
+Another group of reasoning rules are about real numbers, like 1, 3.5 or 4.123456789. These objects are different from the user-defined objects, as 1. their literal represenation contains information 2. it is impossible for the user to declare them one by one and must be builtin. Verification of these objects is done by builtin rules and the users do not need to worry about them.
+
+
+
 
 ---  
 **Contact:**  

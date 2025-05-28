@@ -24,7 +24,7 @@ In essence, Litex represents an ambitious attempt to scale reasoning capabilitie
 
 Mathematicians including Fields medalist Terrence Tao, world-class AI companies including DeepMind and DeepSeek, are showing great interest in the combination of formal languages and AI. Litex is my answer to this challenge. Litex has already garnered attention from leading institutions worldwide, including **CMU, Tsinghua, Peking University, Pujiang Lab, Shanghai Jiao Tong University, Fudan University**.  
 
-## Litex view of math
+## The Basic Mechanism of Litex in One Minute
 
 Math is built on top of a small sets of reasoning rules and axioms. There are basicly two types of deriving a new fact from existing facts:
 
@@ -33,7 +33,12 @@ Math is built on top of a small sets of reasoning rules and axioms. There are ba
 
 Amazingly, with these two ways of deriving a new fact, and with a set of carefully chosen axioms, we can (nearly) build the entire world of mathematics. And you have ALREADY learned the basic mechanism of Litex in just one minute: match and substitute. Pretty simple, right?
 
-Now, let's see how Litex works.
+A major special case of match and substitute is about real numbers, like 1, 3.5 or 4.123456789. These objects are different from user-defined objects in two key ways:
+
+1. Their literal representation directly encodes their value - for example, "3.5" immediately tells us this is three and a half
+2. They are built-in primitive types that cannot be declared by users - you can't create new real numbers, only use the ones that exist
+
+Litex handles all the verification rules for real numbers automatically. This means you can use familiar properties of real numbers (like addition, multiplication, inequalities) without having to prove them yourself.
 
 ## Uniqueness of Litex
 
@@ -57,7 +62,7 @@ Litex sacrifices Turing completeness to focus exclusively on mathematical verifi
 
 With a small set of reasoning rules and axioms, we human beings are able to build the entire world of mathematics and apply them in everyday life. That is why in Litex, there are not that many keywords and language rules. Keeping Litex small and intuitive helps it keep  aligned with how reasoning actually works. The more you understand how Litex relates to your daily reasoning, the better you'll learn it.
 
-More importantly, Litex’s clean syntax and structured representation make it an ideal training dataset for AI reasoning, helping AI models develop more reliable mathematical reasoning capabilities.
+More importantly, Litex's clean syntax and structured representation make it an ideal training dataset for AI reasoning, helping AI models develop more reliable mathematical reasoning capabilities.
 
 In a nutshell, Litex is for EVERYONE, from children to experts. It scales up reasoning by making the process of writing formal reasoning as intuitive as writing in natural language.
 
