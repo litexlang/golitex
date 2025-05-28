@@ -22,11 +22,11 @@ Litex is an easy to learn, powerful formal language. Essentially, it is a tool t
 
 <!-- 这个section可以移到其他地方，否则太拖沓 -->
 
-Everyone have started to think and reason since childhood. The ability to reason is what differentiates humans from other animals. The reason why mathematical reasoning is strict and universal is that it follows a small set of rules so intuitive that it is kind of inherent in human nature. Miraculously, on top of those reasoning rules and another small while carefully selected set of axioms, we human beings are able to build the entire world of mathematics.
+Everyone have started to think and reason since childhood. The ability to reason is what differentiates humans from other animals. Mathematical reasoning is powerful because it follows a small set of intuitive rules. From these rules and carefully selected axioms, we build the entire world of mathematics.
 
-In this AI age, formal languages are becoming increasingly crucial for both AI development and human reasoning. Traditional proof assistants, despite their theoretical elegance, have failed to meet modern demands due to their overwhelming complexity. Even mathematics PhDs find them challenging to use effectively. This complexity gap has created a critical need for a more accessible solution. Enter Litex - a revolutionary approach that reimagines formal verification from first principles, making it both powerful and intuitive.
+In this AI age, formal languages are becoming increasingly crucial for both AI development and human reasoning. Traditional proof assistants like Lean4 require learning hundreds of unfamiliar keywords and complex type theories. Litex reimagines formal verification with just 8 intuitive keywords (forall, exist, not, or, fn, prop, obj, set) and familiar Python/Go-like syntax. No complex theories, just pure mathematical reasoning.
 
-Whether you're an AI researcher developing reasoning models, a mathematics student reviewing papers, a rocket scientist ensuring precise calculations, or simply a math enthusiast, Litex is designed for you. We will explore how Litex's innovative design addresses these challenges throughout this tutorial.
+Whether you're an AI researcher developing reasoning models, a mathematics student identifying potential errors in your thesis, a mathematician seeking large-scale collaboration on a proof, a rocket scientist ensuring precise calculations, or simply a math enthusiast, Litex is designed for you. We will explore how Litex's innovative design addresses these challenges throughout this tutorial.
 
 Litex is the perfect language for you. I hope you will enjoy it.
 
