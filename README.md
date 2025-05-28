@@ -12,7 +12,7 @@
 
 </div>
 
-Litex is a powerful yet easy-to-learn formal language. At its core, it is a tool that enables you to express reasoning following Litex's defined rules, while automatically verifying the correctness of your reasoning. This makes it particularly valuable for validating mathematical proofs and other rule-based systems. Unlike other formal languages that even experienced mathematicians find challenging to use, Litex recognizes that reasoning is an innate human capability - even a 5-year-old possesses basic reasoning instincts. Our mission is to make formal reasoning accessible to everyone. 
+Litex is a powerful yet easy-to-learn formal language. At its core, it is a tool that enables you to express reasoning following Litex's defined rules, while automatically verifying the correctness of your reasoning. This makes it particularly valuable for validating mathematical proofs and other rule-based systems. Unlike other formal languages that even experienced mathematicians find challenging to use, Litex recognizes that reasoning is an innate human capability - even a 5-year-old possesses basic reasoning instincts. The mission of Litex is to make formal reasoning accessible to everyone. 
 
 In essence, Litex represents an ambitious attempt to scale reasoning capabilities in the AI age:
 
@@ -24,7 +24,7 @@ In essence, Litex represents an ambitious attempt to scale reasoning capabilitie
 
 Mathematicians including Fields medalist Terrence Tao, world-class AI companies including DeepMind and DeepSeek, are showing great interest in the combination of formal languages and AI. Litex is my answer to this challenge. Litex has already garnered attention from leading institutions worldwide, including **CMU, Tsinghua, Peking University, Pujiang Lab, Shanghai Jiao Tong University, Fudan University**.  
 
-## The Basic Mechanism of Litex in One Minute
+## Learn Basics of Litex in One Minute
 
 Math is built on top of a small sets of reasoning rules and axioms. There are basicly two types of deriving a new fact from existing facts:
 
@@ -40,7 +40,9 @@ A major special case of match and substitute is about real numbers, like 1, 3.5 
 
 Litex handles all the verification rules for real numbers automatically. This means you can use familiar properties of real numbers (like addition, multiplication, inequalities) without having to prove them yourself.
 
-## Uniqueness of Litex
+<!-- PUT the example of comparison here -->
+
+## Idea Behind Litex: Why Is Litex Unique?
 
 Everyone have started to think and reason since childhood. We reason thousands of time every day without even noticing it. Yet, traditional formal languages, like Lean4, Coq, and Isebelle are so complex that even the smartest mathematicians find it hard to use. Why is that?
 
@@ -63,6 +65,8 @@ Litex sacrifices Turing completeness to focus exclusively on mathematical verifi
 With a small set of reasoning rules and axioms, we human beings are able to build the entire world of mathematics and apply them in everyday life. That is why in Litex, there are not that many keywords and language rules. Keeping Litex small and intuitive helps it keep  aligned with how reasoning actually works. The more you understand how Litex relates to your daily reasoning, the better you'll learn it.
 
 More importantly, Litex's clean syntax and structured representation make it an ideal training dataset for AI reasoning, helping AI models develop more reliable mathematical reasoning capabilities.
+
+For those who are curious about whether Litex can truly express all logic in math, the answer is: Yes, almost. All daily math is built around first-order-logic, naive set theory, and mathematical induction, and all of these are already implemented in Litex. And Litex will implement higher-order-logic in the future.
 
 In a nutshell, Litex is for EVERYONE, from children to experts. It scales up reasoning by making the process of writing formal reasoning as intuitive as writing in natural language.
 
