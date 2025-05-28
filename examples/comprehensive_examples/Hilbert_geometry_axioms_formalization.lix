@@ -7,7 +7,7 @@
 # Hilbert's axiom system is constructed with six primitive notions: three primitive terms:
 # point;
 # line;
-# plane;
+# plane+
 # and three primitive relations:
 # Betweenness, a ternary relation linking points;
 
