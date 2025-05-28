@@ -18,6 +18,24 @@ A good art is what makes its creator happy and makes its users find it useful.[^
 
 In the AI age, we are facing a paradigm shift from data-driven learning to formal-language-driven reinforcement learning. Traditional formal languages are too complex and too far removed from the expression habits of everyday mathematics. Litex is here to make formal language more accessible to everyone.
 
+If you are a software developer, or mathematician, or an AI researcher, you might have encountered formal languages. Formal languages are softwares where, people write down their reasoning without breaking the rules of the language, and the software will check if the reasoning are valid accordingly. It works like how a human checks whether a piece of math is correct, but in a more strict and automated way. Just like nobody can calculate faster than a calculator, it can be imagined that nobody can check the validity of reasoning faster than a formal language.
+
+However, traditional formal verification languages like Lean4, Coq, and Isabelle are too complex and too far removed from everyday mathematical notation. These languages heavily rely on type theory and functional programming concepts, which even mathematics PhD students need years to master. If Newton had to learn those theories before inventing calculus, he would never succeed, because those theories would be invented 3 centuries later. The fundamental reason for this complexity is that these languages attempt to serve two distinct purposes simultaneously: they want to be both programming languages and reasoning verifiers. This dual nature makes it technically challenging to create a simple and intuitive system.
+
+That is why Litex chooses not to be a programming language, making it in first principle different from other traditional formal lanuages. (Technically, Litex is a Read-Only Turing Machine, instead of a Turing Machine.) It is designed to be simple and intuitive. No brain-exploding theories, no complex syntax, no need to learn a new programming language. All you need to learn before using Litex is building a connection between your own intuition and Litex expressions. Believe me, that is pretty easy. You will find the process of mathematical verification is nothing more than "match and substitute". Many mathematical expressions can be translated from natural language to Litex code almost directly. 
+
+Maybe you are a young teenager captivated by mathematics, eager to master the art of deductive reasoning and rigorous thinking, just like the ancient philosophers such as Plato or the brilliant detective Sherlock Holmes.
+
+Maybe you are an AI researcher striving to develop reasoning models that can match or surpass human cognitive abilities. Formal mathematical data could enhance your model's reasoning capabilities and perhaps inspire the next breakthrough in model architecture.
+
+Maybe you are a mathematics student seeking to streamline the paper review process, identify potential errors in your thesis, and collaborate with fellow mathematicians online - much like how programmers collaborate through platforms like GitHub.
+
+Maybe you are a rocket scientist who needs absolute certainty in every mathematical formula, ensuring your spacecraft's precise trajectory to the moon.
+
+Maybe you are simply an enthusiast who finds joy in appreciating the elegance of mathematics and discovering how individual concepts intertwine to create a magnificent tapestry of knowledge.
+
+Litex is the perfect language for you. I hope you will enjoy it.
+
 **NOTICE: Litex is still under active development. Contribution and early adoption is welcome!**
 
 ## Litex view of math

@@ -12,7 +12,7 @@
 
 </div>
 
-Litex is a powerful yet easy-to-learn formal language. At its core, it is a tool that enables you to express reasoning following Litex's defined rules, while automatically verifying the correctness of your reasoning. This makes it particularly valuable for validating mathematical proofs and other rule-based systems. Unlike other formal languages that even experienced mathematicians find challenging to use, Litex recognizes that reasoning is an innate human capability - even a 5-year-old possesses basic reasoning instincts. The mission of Litex is to make formal reasoning accessible to everyone. 
+Litex is a powerful yet easy-to-learn formal language. At its core, it is a tool that enables you to express reasoning following Litex's defined rules, while automatically verifying the correctness of your reasoning. This makes it particularly valuable for validating mathematical proofs and other rule-based systems. Unlike other formal languages that even experienced mathematicians find challenging to use, Litex recognizes that reasoning is an innate human capability - even a 5-year-old possesses basic reasoning instincts. The mission of Litex is to make formal reasoning accessible to everyone. Tutorial is [here](./doc/tutorial/tutorial.md).
 
 In essence, Litex represents an ambitious attempt to scale reasoning capabilities in the AI age:
 
@@ -68,7 +68,7 @@ More importantly, Litex's clean syntax and structured representation make it an 
 
 For those who are curious about whether Litex can truly express all logic in math, the answer is: Yes, almost. All daily math is built around first-order-logic, naive set theory, and mathematical induction, and all of these are already implemented in Litex. And Litex will implement higher-order-logic in the future.
 
-In a nutshell, Litex is for EVERYONE, from children to experts. It scales up reasoning by making the process of writing formal reasoning as intuitive as writing in natural language.
+In a nutshell, Litex is for EVERYONE, from children to experts, to learn and use formal language at AI age. It scales up reasoning by making the process of writing formal reasoning as intuitive as writing in natural language.
 
 ## Resources
 
