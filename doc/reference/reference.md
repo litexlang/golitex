@@ -20,6 +20,15 @@ In the AI age, we are facing a paradigm shift from data-driven learning to forma
 
 **NOTICE: Litex is still under active development. Contribution and early adoption is welcome!**
 
+## Litex view of math
+
+Math is built on top of a small sets of reasoning rules and axioms. There are basicly two types of deriving a new fact from existing facts:
+
+1. derive from a specific fact: e.g. If I know x = 1, then x = 1
+2. derive from a general fact: e.g. If I know forall human, he is intelligent, and Jordan is a human, then Jordan is intelligent. Litex calls this way of deriving a new fact "match and substitute", because it is like matching a pattern and substituting the pattern with a specific value.
+
+OK, you have already known the basic idea of Litex. Now let's see how Litex works.
+
 ---  
 **Contact:**  
 - **Website:** [litexlang.org](https://litexlang.org)  
