@@ -42,6 +42,42 @@ Litex handles all the verification rules for real numbers automatically. This me
 
 <!-- PUT the example of comparison here -->
 
+## A Simple Example
+
+Mathematics is the art of deriving new facts from established ones. To illustrate, consider a classical syllogism proposed by Aristotle in his Prior Analytics, which formalizes deductive reasoning as follows:
+
+<table style="border-collapse: collapse; width: 100%;">
+  <tr>
+    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 40%;">Litex</th>
+    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 60%;">Lean 4</th>
+  </tr>
+  <tr>
+    <td style="border: 3px solid black; padding: 8px;">
+      <code>set Human</code> <br><br>
+      <code>prop self_aware(x Human)</code> <br><br>      <code>know forall x Human:</code> <br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;$self_aware(x)</code> <br> <br>
+      <code>obj Bob Human</code> <br> <br>
+      <code>$self_aware(Bob)</code>
+    </td>
+    <td style="border: 3px solid black; padding: 8px;">
+      <code>def Human := Type</code> <br><br>
+      <code>def self_aware (x : Human) : Prop := true</code> <br><br>
+      <code>axiom self_aware_all :</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;∀ (x : Human), self_aware x</code> <br><br>
+      <code>def Bob : Human := Human</code> <br><br>
+      <code>example : self_aware Bob := self_aware_all Bob</code>
+    </td>
+  </tr>
+</table>
+
+Consider `Human` as the set of all humans. Using `know`, we establish a simple fact: all humans are self-aware. Since Bob is in the set of `Human`, "Bob is self-aware" is true.
+
+Notice how Litex is much simpler than Lean4. Instead of writing complex axioms with special names, you just use familiar words like `know` and `forall`. Litex automatically finds the facts it needs, just like searching in a database.
+
+This simple example shows how Litex builds math from basic pieces, like building blocks. It uses just a few simple keywords that you already know from everyday language, making it easy to learn and use.
+
+Litex's syntax is similar to Python and Go, so if you've done any programming, you'll feel right at home. See more in [comparison with Lean](./doc/comparison_with_lean/comparison_with_lean.md).
+
 ## Idea Behind Litex: Why Is Litex Unique?
 
 Everyone have started to think and reason since childhood. We reason thousands of time every day without even noticing it. Yet, traditional formal languages, like Lean4, Coq, and Isebelle are so complex that even the smartest mathematicians find it hard to use. Why is that?
