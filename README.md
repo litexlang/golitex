@@ -16,7 +16,7 @@ _Simplicity is the ultimate sophistication._
 
 _-- Leonardo da Vinci_
 
-Litex is a simple yet powerful formal language (proof assistant) for mathematical reasoning. It uses `match and substitute` to automatically verify the correctness of your reasoning, making it perfect for validating mathematical proofs. Unlike complex formal languages that require years of training, Litex is designed to be intuitive - even a 5-year-old can understand its basics. Our mission is to make formal reasoning accessible to everyone. Tutorial is [here](./doc/tutorial/tutorial.md).
+Litex is a simple yet powerful formal language for mathematical reasoning. A formal language is a language that allows you to express your reasoning in structured way so that a computer can verify them. Unlike traditionally over-complicated formal languages, Litex is intuitive and accessible to everyone. Learn more in [tutorial](./doc/tutorial/tutorial.md).
 
 Litex aims to scale reasoning in three ways:
 
@@ -26,7 +26,7 @@ Litex aims to scale reasoning in three ways:
 
 **AI Integration:** Litex provides the perfect foundation for AI to learn and perform formal reasoning at scale.
 
-World-class researchers including Terrence Tao, Yoshua Bengio, and AI companies including DeepMind and DeepSeek, are showing great interest in the combination of formal languages and AI. Litex is my answer to this challenge. Litex has already garnered attention from leading institutions worldwide, including **CMU, Tsinghua, Peking University, Pujiang Lab, Shanghai Jiao Tong University, Fudan University**.  
+World-class researchers including Terrence Tao, Yoshua Bengio, and AI companies including DeepMind and DeepSeek, are showing great interest how formal languages can be used to scale reasoning AI, ensure AI safety, and many more tasks. Litex is the perfect tool to their challenge. Litex has already gained attention from leading institutions worldwide, including **CMU, Mila, Tsinghua, PKU, OpenMMLab, SJTU, Fudan**.  
 
 ## Learn Basics of Litex in One Minute
 
@@ -84,11 +84,11 @@ Consider `Human` as the set of all humans. Using `know`, we establish a simple f
 
 Notice how Litex is much simpler than Lean4. Instead of writing complex axioms with special names, you just use familiar words like `know` and `forall`. Litex automatically finds the facts it needs, just like searching in a database. Moreover, there are less unfamiliar keywords, less twisted syntax in Litex. Litex's syntax is similar to Python and Go, so if you've done any programming, you'll feel right at home. See more in [comparison with Lean](./doc/comparison_with_lean/comparison_with_lean.md), [tutoriao](./doc/tutorial/tutorial.md).
 
-## Why Is Litex Unique?
+## Unique Idea of Litex
 
 _Common sense is not so common._
 
-_--Voltaire_
+_-- Voltaire_
 
 Everyone knows how to reason, including 5-year-old. We reason thousands of time every day without even noticing it. Yet, traditional formal languages, like Lean4, Coq, and Isebelle are so complex that even the smartest mathematicians find it hard to use. Why is that?
 
@@ -96,7 +96,9 @@ It turns out that these languages attempt to serve two distinct purposes simulta
 
 These languages heavily rely on type theory and functional programming concepts, which even mathematics PhD students need years to master. If Newton had to learn those theories before inventing calculus, he would never succeed, because those theories would be invented 3 centuries later.
 
-Technically, Litex is a Read-Only Turing Machine, instead of a Turing Machine. Litex sacrifices Turing completeness to focus exclusively on mathematical verification, adopting a Python-like syntax for ease of use and LaTeX-like elegance for mathematical expression (similar to how SQL sacrifices completeness to specialize in database logic). That is why Litex is so simple and intuitive.
+Technically, Litex is a declarative formal language that operates as a Read-Only Turing Machine. By deliberately sacrificing Turing completeness, Litex focuses solely on mathematical verification. This design choice, similar to how SQL specializes in database operations, allows Litex to specialize in everyday math as much as possible. The language combines Python-like syntax for accessibility with LaTeX-like mathematical notation for precision. Unlike programming languages, Litex eliminates variables, control flow, and execution semantics - concepts that are foreign to pure mathematics. 
+
+Another important design choice is that the user does not need to give names to facts, because Litex can automatically find the matched facts it needs. Read [tutorial](./doc/tutorial/tutorial.md) for more details.
 
 All daily math is built around first-order-logic, naive set theory, natural numbers related axioms (mathematical induction, Peano axioms, extension to rational numbers and real numbers), and all of these are  implemented in Litex. 
 
