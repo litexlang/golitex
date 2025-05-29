@@ -80,13 +80,9 @@ Mathematics is the art of deriving new facts from established ones. To illustrat
   </tr>
 </table>
 
-Consider `Human` as the set of all humans. Using `know`, we establish a simple fact: all humans are self-aware. Since Bob is in the set of `Human`, "Bob is self-aware" is true.
+Consider `Human` as the set of all humans. Using `know`, we establish a simple fact: all humans are self-aware. Since Bob is in the set of `Human`, "Bob is self-aware" is true. This simple example shows how Litex builds math from basic pieces, like building blocks. By `match and substitute`, Litex verfies the correctness of the reasoning just like how you verify the correctness of your daily reasoning. Each statement in Litex has four potential outcomes: true, false, unknown, or error.
 
-Notice how Litex is much simpler than Lean4. Instead of writing complex axioms with special names, you just use familiar words like `know` and `forall`. Litex automatically finds the facts it needs, just like searching in a database. Moreover, there are less unfamiliar keywords, less twisted syntax in Litex.
-
-This simple example shows how Litex builds math from basic pieces, like building blocks. By `match and substitute`, Litex verfies the correctness of the reasoning just like how you verify the correctness of your daily reasoning.
-
-Litex's syntax is similar to Python and Go, so if you've done any programming, you'll feel right at home. See more in [comparison with Lean](./doc/comparison_with_lean/comparison_with_lean.md).
+Notice how Litex is much simpler than Lean4. Instead of writing complex axioms with special names, you just use familiar words like `know` and `forall`. Litex automatically finds the facts it needs, just like searching in a database. Moreover, there are less unfamiliar keywords, less twisted syntax in Litex. Litex's syntax is similar to Python and Go, so if you've done any programming, you'll feel right at home. See more in [comparison with Lean](./doc/comparison_with_lean/comparison_with_lean.md), [tutoriao](./doc/tutorial/tutorial.md).
 
 ## Why Is Litex Unique?
 
@@ -107,6 +103,10 @@ All daily math is built around first-order-logic, naive set theory, natural numb
 In a nutshell, Litex is for EVERYONE, from children to experts, to learn and use formal language at AI age. It scales up reasoning by making the process of writing formal reasoning as intuitive as writing in natural language.
 
 ## Resources
+
+_If I have seen further, it is by standing on the shoulders of giants._
+
+_-- Isaac Newton_
 
 [Applications of Formal Reasoning in AI and Many Other Fields](./doc/applications_of_formal_reasoning/applications_of_formal_reasoning.md)
 

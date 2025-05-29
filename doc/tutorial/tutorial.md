@@ -181,6 +181,17 @@ obj Kobe human # This Kobe is different from the Kobe in the prove context, beca
 
 OK! Let's move on to the detailed explanation of Litex. 
 
+## Statement Outputs
+
+Litex mimics how a human verifies a statement. When you write a statement, the Litex interpreter will output one of the following four outcomes:
+
+1. `true`: The statement is true, proved by a known fact.
+2. `false`: The statement is false, disproved by a known fact.
+3. `unknown`: The statement is unknown, because there is no sufficient information to determine the truth value of the statement.
+4. `error`: The statement is invalid, because the user disobeys the rules of the language.
+
+Here we can see a subtle difference between programming languages and Litex: in a programming language, a statement value type can be int, bool, string, etc. But in Litex and math, a statement output type is only true, false, unknown, or error, and the output can not be passed as a parameter to other statements.
+
 ## Specific Facts
 
 <!-- need to say how to define a prop -->
