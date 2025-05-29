@@ -83,6 +83,41 @@ _Keep it simple, stupid._
 
 _-- The Unix Philosophy_
 
+_Language design is a curious mixture of grand ideas and fiddly details._
+
+_-- Bjarne Stroustrup, inventor of C++_
+
+Litex is a minimalist proof assistant, designed to be simple and intuitive. It draws inspiration from various programming languages, particularly Go, Lisp, Tex, C, Python. Litex embrace simplicity, the only way to be flexible enough for the unknown future and to maintain conceptual integrity, as its core design principle.
+
+Inheritance (C++/Java-style) is a poor fit for Litex:
+
+Inflexible – Inheritance hierarchies are rigid, making extension and evolution difficult, which is common in other proof assistants.
+
+Layer freedom – Users should begin at any abstraction level, not forced from low-level math, which is more aligned with mathematical discovery in R life.
+
+Not Intuitive – Inheritance is not intuitive. An object can for sure belong to multiple sets, but in inheritance, an object can only belong to one type (or belong to a fixed part of inheritance hierarchy).
+
+(In fact, GoLang is so well-designed and Litex learns so much from it, that Litex chooses GoLang to implement itself.)
+
+Beyond Go, Litex draws inspiration from other programming languages. For instance, Python's scoping rules have shaped Litex's approach to object and function scope. 
+
+The C programming language's syntax and semantics significantly influenced Litex's design. Operator overloading behavior is inspired by C++. The inventor of Litex holds a deep appreciation for Lisp's "everything is a list" philosophy, which contributes to the language's conceptual integrity. Also, since C uses postfix like L to make number as type the user want to overloade type of a numbner literal(e.g. 1L represents a long integer), Litex uses postfix to do type inference(e.g. 1r represents 1 as R number). No user defined type overloading is allowed.
+
+(Syntactically, Litex learn from python and go. Semantically, Litex learn from Lisp, C and awk. As a daily tool, Litex learn from Tex and ipynb. Litex design principle is a mixture of all of them.)
+
+Furthermore, Tex's clear distinction between "math expressions" and "plain words" inspired Litex's separation of "factual expressions" from ordinary symbols. Litex also aspires to achieve the same level of ubiquity and utility as Tex, aiming to become a widely adopted daily tool. This ambition is encapsulated in its name: Litex = Lisp + Tex, symbolizing the fusion of Lisp's expressive elegance and Tex's practicality.
+
+The best to test Litex is by translating "real-world" into Litex. I use Professor Terrence Tao's Analysis I and II to test Litex. The set theory chapter of Analysis I helps a lot to remind me what functionalities are missing at each stage of implementing Litex.
+
+The user can divide the problem into indenpent tasks and store them in different packages to make execution faster.
+
+*The Litex interpreter basically takes the top-down approach to verify a fact, which means it basicly start from proposition and try to find a fact that can be used to prove the proposition, instead of coming from the bottom up, from related symbols to derive new facts and then use them to prove the proposition.*
+
+There are many "design balences" in Litex. Math is so common that anybody has some basic knowledge of it. On the other hand, some branch of math can be so hard that only experts can understand. So there is a very huge gap between two groups of Litex users: innocent non-professionals, AI researchers who know some math, and math experts. What they want Litex to be is different. Since Litex is a pragmatic language and I wish it could have as many users as possible, any time I encounter those "hard choices", I always put the innocent group of users' demand first.
+
+Litex is fundamentally a read-only Turing machine. Once any fact is stored, it can not be removed or changed. The amount of data stored in memory is in porpotion to the amount of code that the user write. Such design makes Litex align with everyday math.
+
+
 ## Conclusion
 
 _That language is an instrument of Human reason, and not merely a medium for the expression of thought, is a truth generally admitted._
@@ -94,6 +129,11 @@ _–- George Boole_
 _If you define the problem correctly, you almost have the solution._
 
 _-- Steve Jobs_
+
+As you can see, mathematics is the science of abstraction, and computer science is science of abstraction. Litex bridges the two, scaling mathematical reasoning with software engineering principles. It lets users divide and conquer proofs — just as programmers manage software complexity — ushering math into the computational age. No extra complexity is between you, your proof, and your thoughts.
+
+Fields medalist Terence Tao shows great interest in the combination of formal languages and AI. When asked about formalizing everything in formal language, he said: "So I think the smarter thing to do in many cases is just to wait until it’s easier. Instead of taking 10 times as long to formalize it, it takes two times as long as the conventional way."[[AI will become mathematicians' co-pilot](https://www.scientificamerican.com/article/ai-will-become-mathematicians-co-pilot/)] Litex is my answer to this challenge. I hope you and many others can join the Litex community to make this happen.
+
 
 
 [^1]: [Computer programming as an art](https://dl.acm.org/doi/10.1145/1283920.1283929)
