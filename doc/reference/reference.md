@@ -40,6 +40,10 @@ Litex is the perfect language for you. I hope you will enjoy it.
 
 ## Litex view of math
 
+_Mathematics is nothing more than a game played according to certain simple rules with meaningless marks on a paper._
+
+_-- David Hilbert_
+
 Math is built on top of a small sets of reasoning rules and axioms. There are basicly two types of deriving a new fact from existing facts:
 
 1. derive from a specific fact: e.g. If I know x = 1, then x = 1
@@ -75,8 +79,21 @@ Litex sacrifices Turing completeness to focus exclusively on mathematical verifi
 
 ## Design Principles of Litex
 
+_Keep it simple, stupid._
+
+_-- The Unix Philosophy_
+
+## Conclusion
+
 _That language is an instrument of Human reason, and not merely a medium for the expression of thought, is a truth generally admitted._
 
 _–- George Boole_
+
+## The Problem Litex Solves
+
+_If you define the problem correctly, you almost have the solution._
+
+_-- Steve Jobs_
+
 
 [^1]: [Computer programming as an art](https://dl.acm.org/doi/10.1145/1283920.1283929)

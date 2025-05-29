@@ -6,13 +6,17 @@
 
 # Litex: Scale Formal Reasoning in AI Age
 
-**Release v0.1.1-beta**  
+**Release v0.1.1-beta (incomplete, just for testing)**  
 *May 2025*  
 *Created by Jiachen Shen*
 
 </div>
 
-Litex is a simple yet powerful formal language (proof assistant) for mathematical reasoning. It uses `match and substitute` to automatically verify the correctness of your reasoning, making it perfect for validating mathematical proofs. Unlike complex formal languages that require years of training, Litex is designed to be intuitive - even a 5-year-old can understand its basic concepts. Our mission is to make formal reasoning accessible to everyone. Tutorial is [here](./doc/tutorial/tutorial.md).
+_Simplicity is the ultimate sophistication._
+
+_-- Leonardo da Vinci_
+
+Litex is a simple yet powerful formal language (proof assistant) for mathematical reasoning. It uses `match and substitute` to automatically verify the correctness of your reasoning, making it perfect for validating mathematical proofs. Unlike complex formal languages that require years of training, Litex is designed to be intuitive - even a 5-year-old can understand its basics. Our mission is to make formal reasoning accessible to everyone. Tutorial is [here](./doc/tutorial/tutorial.md).
 
 Litex aims to scale reasoning in three ways:
 
@@ -25,6 +29,10 @@ Litex aims to scale reasoning in three ways:
 World-class researchers including Terrence Tao, Yoshua Bengio, and AI companies including DeepMind and DeepSeek, are showing great interest in the combination of formal languages and AI. Litex is my answer to this challenge. Litex has already garnered attention from leading institutions worldwide, including **CMU, Tsinghua, Peking University, Pujiang Lab, Shanghai Jiao Tong University, Fudan University**.  
 
 ## Learn Basics of Litex in One Minute
+
+_Keep it simple, stupid._
+
+_-- The Unix Philosophy_
 
 Math is built on top of a small sets of reasoning rules and axioms. There are basicly two types of deriving a new fact from existing facts:
 
@@ -41,6 +49,10 @@ A major special case of match and substitute is about real numbers, like 1, 3.5 
 Litex handles all the verification rules for real numbers automatically. This means you can use familiar properties of real numbers (like addition, multiplication, inequalities) without having to prove them yourself.
 
 ## A Simple Example
+
+_If you define the problem correctly, you almost have the solution._
+
+_-- Steve Jobs_
 
 Mathematics is the art of deriving new facts from established ones. To illustrate, consider a classical syllogism proposed by Aristotle in his Prior Analytics, which formalizes deductive reasoning as follows:
 
@@ -76,7 +88,11 @@ This simple example shows how Litex builds math from basic pieces, like building
 
 Litex's syntax is similar to Python and Go, so if you've done any programming, you'll feel right at home. See more in [comparison with Lean](./doc/comparison_with_lean/comparison_with_lean.md).
 
-## Idea Behind Litex: Why Is Litex Unique?
+## Why Is Litex Unique?
+
+_Common sense is not so common._
+
+_--Voltaire_
 
 Everyone knows how to reason, including 5-year-old. We reason thousands of time every day without even noticing it. Yet, traditional formal languages, like Lean4, Coq, and Isebelle are so complex that even the smartest mathematicians find it hard to use. Why is that?
 
@@ -86,11 +102,7 @@ These languages heavily rely on type theory and functional programming concepts,
 
 Technically, Litex is a Read-Only Turing Machine, instead of a Turing Machine. Litex sacrifices Turing completeness to focus exclusively on mathematical verification, adopting a Python-like syntax for ease of use and LaTeX-like elegance for mathematical expression (similar to how SQL sacrifices completeness to specialize in database logic). That is why Litex is so simple and intuitive.
 
-With a small set of reasoning rules and axioms, we human beings are able to build the entire world of mathematics and apply them in everyday life. That is why in Litex, there are not that many keywords and language rules. Keeping Litex small and intuitive helps it keep  aligned with how reasoning actually works. The more you understand how Litex relates to your daily reasoning, the better you'll learn it.
-
-More importantly, Litex's clean syntax and structured representation make it an ideal training dataset for AI reasoning, helping AI models develop more reliable mathematical reasoning capabilities.
-
-For those who are curious about whether Litex can truly express all logic in math, the answer is: Yes, almost. All daily math is built around first-order-logic, naive set theory, and mathematical induction, and all of these are already implemented in Litex. And Litex will implement higher-order-logic in the future.
+All daily math is built around first-order-logic, naive set theory, natural numbers related axioms (mathematical induction, Peano axioms, extension to rational numbers and real numbers), and all of these are  implemented in Litex. 
 
 In a nutshell, Litex is for EVERYONE, from children to experts, to learn and use formal language at AI age. It scales up reasoning by making the process of writing formal reasoning as intuitive as writing in natural language.
 
@@ -111,20 +123,22 @@ In a nutshell, Litex is for EVERYONE, from children to experts, to learn and use
 
 ## Contribute to Litex
 
-Hi, I am Jiachen Shen, the creator of Litex. I am a PhD student in mathematics, and I am also a programming language geek. I have been working on Litex since 2024 and received many valuable feedbacks from Litex enthusiasts. I hope you enjoy using Litex, too. 
+_The best way to predict the future is to invent it._
 
-For the time being (2025-05), Litex is evovling from the stage of figuring out and implementing the idea of a simple formal language, to the stage of community-driven development and user-adoption. It will be long and interesting journey, feel free to contact us.
+_-- Alan Kay_
 
-For the time being, the Litex interpreter itself is 90% complete. Most daily usage is covered. You can contribute to Litex by:
+Hi, I am Jiachen Shen, the creator of Litex. I am a PhD student in mathematics and programming language enthusiast. Litex is evolving from implementation to community-driven development. The interpreter is 90% complete and covers most daily math.
 
-1. Contributing to the Litex interpreter.
-2. Contributing by telling your friends about Litex.
-3. Contributing to standard library of Litex, which covers daily math.
-4. Contributing writing dataset of Litex for AI to learn. Just 1000 pairs of natural language and Litex code is also helpful.
-5. Contributing to the LitexDojo, similar to how LeanDojo is for Lean.
-6. Contributing to the Litex README, tutorial, reference, and other documentation. If you are confused about something, please let me know.
+You can contribute by:
+1. Contributing to the interpreter or standard library
+2. Creating datasets for AI training
+3. Improving documentation
+4. Exploring Litex's mathematical capabilities
+5. Spreading the word about Litex
+6. Building standard library of Litex
+7. Creating the LitexDojo, similar to how LeanDojo is for Lean.
 
-Litex is still under active development. Contribution and early adoption is welcome!
+Feel free to contact us and join this exciting journey!
 
 ---  
 **Contact:**  
