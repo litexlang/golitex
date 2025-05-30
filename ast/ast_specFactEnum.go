@@ -35,7 +35,7 @@ func (stmt *SpecFactStmt) ReverseSpecFact() *SpecFactStmt {
 	} else if stmt.TypeEnum == FalseExist_St {
 		return NewSpecFactStmt(TrueExist_St, stmt.PropName, stmt.Params)
 	}
-	panic("unknown spec fact type")
+	return nil
 }
 
 func (f *SpecFactStmt) IsPropNameEqual() bool {

@@ -93,9 +93,9 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
 
 	if glob.CheckFalse {
 		if asSpecFact, ok := stmt.(*ast.SpecFactStmt); ok {
-			newStmt := asSpecFact.ReverseIsTrue()
+			reversedFacts := asSpecFact.ReverseIsTrue()
 			curVerifier := verifier.NewVerifier(exec.env)
-			ok, err := curVerifier.FactStmt(newStmt, verifier.Round0Msg)
+			ok, err := curVerifier.FactStmt(&reversedFacts[0], verifier.Round0Msg)
 			if err != nil {
 				return glob.ExecState_Error, err
 			}
@@ -532,9 +532,9 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimStmt) (bool, 
 		return false, fmt.Errorf("prove by contradiction only support spec fact")
 	}
 
-	newClaimFact := specFactStmt.ReverseIsTrue()
+	reversedFacts := specFactStmt.ReverseIsTrue()
 
-	err := exec.env.NewFact(newClaimFact)
+	err := exec.env.NewFact(&reversedFacts[0])
 	if err != nil {
 		return false, err
 	}
@@ -554,9 +554,9 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimStmt) (bool, 
 		return false, fmt.Errorf("prove by contradiction only support fact")
 	}
 
-	reverseLastFact := lastStmtAsFact.ReverseIsTrue()
+	reversedLastFact := lastStmtAsFact.ReverseIsTrue()
 
-	execState, err := exec.factStmt(reverseLastFact)
+	execState, err := exec.factStmt(&reversedLastFact[0])
 	if err != nil {
 		return false, err
 	}
