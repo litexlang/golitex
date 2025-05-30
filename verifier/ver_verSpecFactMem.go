@@ -1013,18 +1013,12 @@ func (ver *Verifier) iterateKnownLogicFacts_applyFcEqualSpec(stmt *ast.SpecFactS
 func (ver *Verifier) iterateKnownSpecFacts_applyFcEqualSpec(stmt *ast.SpecFactStmt, knownFacts []env.KnownSpecFact, state VerState) (bool, error) {
 LoopOverFacts:
 	for _, knownFact := range knownFacts {
-		if len(knownFact.Fact.Params) != len(stmt.Params) || knownFact.Fact.TypeEnum != stmt.TypeEnum {
-			continue
+		ok, err := ver.matchTwoSpecFacts(stmt, knownFact.Fact, state)
+		if err != nil {
+			return false, err
 		}
-
-		for i, knownParam := range knownFact.Fact.Params {
-			ok, err := ver.fcEqualSpec(knownParam, stmt.Params[i], state)
-			if err != nil {
-				return false, err
-			}
-			if !ok {
-				continue LoopOverFacts
-			}
+		if !ok {
+			continue LoopOverFacts
 		}
 
 		if state.requireMsg() {
@@ -1037,6 +1031,24 @@ LoopOverFacts:
 	}
 
 	return false, nil
+}
+
+func (ver *Verifier) matchTwoSpecFacts(stmt *ast.SpecFactStmt, knownFact *ast.SpecFactStmt, state VerState) (bool, error) {
+	if len(knownFact.Params) != len(stmt.Params) || knownFact.TypeEnum != stmt.TypeEnum {
+		return false, nil
+	}
+
+	for i, knownParam := range knownFact.Params {
+		ok, err := ver.fcEqualSpec(knownParam, stmt.Params[i], state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+	}
+
+	return true, nil
 }
 
 // TODO
@@ -1098,8 +1110,13 @@ func (ver *Verifier) useKnownOrFactToProveSpecFact(knownFact *env.KnownSpecFact_
 	ver.newEnv(ver.env, ver.env.CurMatchEnv)
 	defer ver.deleteEnvAndRetainMsg()
 
-	// TODO 要让 stmt 和 第index位的事实match上
-	_ = stmt
+	ok, err := ver.matchTwoSpecFacts(stmt, knownFact.SpecFact, state)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
 
 	for i, fact := range knownFact.LogicExpr.Facts {
 		if i == knownFact.Index {

@@ -23,7 +23,7 @@ func (ver *Verifier) verFactWhenOthersAreFalse(facts []ast.SpecFactStmt, i int, 
 		if j == int(i) {
 			continue
 		}
-		err := ver.env.NewFact(&facts[j])
+		err := ver.env.NewFact(&facts[j].ReverseIsTrue()[0])
 		if err != nil {
 			return false, err
 		}
