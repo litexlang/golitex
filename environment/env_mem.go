@@ -33,8 +33,13 @@ type KnownSpecFact_InLogicExpr struct {
 	SpecFact *ast.SpecFactStmt
 	// Index    []uint8
 	// LogicExpr *ast.LogicExprStmt
+	Index     int
 	LogicExpr *ast.OrStmt
 	EnvFact   *ast.SupposePropMatchStmt
+}
+
+func NewKnownSpecFact_InLogicExpr(specFact *ast.SpecFactStmt, index int, logicExpr *ast.OrStmt, envFact *ast.SupposePropMatchStmt) *KnownSpecFact_InLogicExpr {
+	return &KnownSpecFact_InLogicExpr{specFact, index, logicExpr, envFact}
 }
 
 type SpecFactInLogicExprMem struct {
