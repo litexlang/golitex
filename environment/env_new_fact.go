@@ -22,7 +22,7 @@ func (env *Env) NewFact(stmt ast.FactStmt) error {
 	switch f := stmt.(type) {
 	case *ast.SpecFactStmt:
 		return env.newSpecFact(f)
-	case *ast.LogicExprStmt:
+	case *ast.OrStmt:
 		return env.newLogicExprFact(f)
 	case *ast.UniFactStmt:
 		return env.newUniFact(f)
@@ -31,7 +31,7 @@ func (env *Env) NewFact(stmt ast.FactStmt) error {
 	}
 }
 
-func (env *Env) newLogicExprFact(fact *ast.LogicExprStmt) error {
+func (env *Env) newLogicExprFact(fact *ast.OrStmt) error {
 	return env.storeLogicFact(fact)
 }
 

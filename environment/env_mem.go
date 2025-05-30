@@ -30,9 +30,10 @@ type SpecFactMem struct {
 }
 
 type KnownSpecFact_InLogicExpr struct {
-	SpecFact  *ast.SpecFactStmt
-	Index     []uint8
-	LogicExpr *ast.LogicExprStmt
+	SpecFact *ast.SpecFactStmt
+	Index    []uint8
+	// LogicExpr *ast.LogicExprStmt
+	LogicExpr *ast.OrStmt
 	EnvFact   *ast.SupposePropMatchStmt
 }
 
@@ -57,10 +58,11 @@ type SpecFactInUniFactMem struct {
 }
 
 type SpecFact_InLogicExpr_InUniFact struct {
-	SpecFact  *ast.SpecFactStmt
-	UniFact   *ast.UniFactStmt
-	Index     []uint8
-	LogicExpr *ast.LogicExprStmt
+	SpecFact *ast.SpecFactStmt
+	UniFact  *ast.UniFactStmt
+	Index    []uint8
+	// LogicExpr *ast.LogicExprStmt
+	LogicExpr *ast.OrStmt
 	EnvFact   *ast.SupposePropMatchStmt
 }
 

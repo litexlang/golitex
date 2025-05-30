@@ -41,7 +41,7 @@ func (env *Env) storeSpecFactInMem(stmt *ast.SpecFactStmt) error {
 	return nil
 }
 
-func (env *Env) storeLogicFact(stmt *ast.LogicExprStmt) error {
+func (env *Env) storeLogicFact(stmt *ast.OrStmt) error {
 	var knownFactsStructPtr *KnownFactsStruct
 	var ok bool
 
