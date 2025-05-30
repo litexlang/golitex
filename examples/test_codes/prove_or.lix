@@ -1,10 +1,12 @@
 prove:
-    prop p(x I)
+    prop p(x N)
+    prop q(x N)
     know:
-        or:
-            $p(1)
-            $p(2)
+        forall x N:
+            or:
+                $p(x)
+                $q(x)
     
     or:
         $p(1)
-        $p(2)
+        $q(1)
