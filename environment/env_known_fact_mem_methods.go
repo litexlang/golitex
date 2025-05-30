@@ -105,29 +105,8 @@ func (s SpecFactInLogicExprMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) 
 	return sameEnumPkgPropFacts, true
 }
 
-func (s SpecFactInLogicExprMem) newFact(logicExpr *ast.LogicExprStmt, supposedEnv *ast.SupposePropMatchStmt) error {
-	pairs, err := logicExpr.SpecFactIndexPairs([]uint8{})
-	if err != nil {
-		return err
-	}
-
-	for _, pair := range pairs {
-		sameEnumFacts, err := s.getSameEnumFacts(pair.Stmt)
-		if err != nil {
-			return err
-		}
-
-		if _, ok := sameEnumFacts[pair.Stmt.PropName.PkgName]; !ok {
-			sameEnumFacts[pair.Stmt.PropName.PkgName] = make(map[string][]KnownSpecFact_InLogicExpr)
-		}
-		if _, ok := sameEnumFacts[pair.Stmt.PropName.PkgName][pair.Stmt.PropName.Name]; !ok {
-			sameEnumFacts[pair.Stmt.PropName.PkgName][pair.Stmt.PropName.Name] = []KnownSpecFact_InLogicExpr{}
-		}
-
-		sameEnumFacts[pair.Stmt.PropName.PkgName][pair.Stmt.PropName.Name] = append(sameEnumFacts[pair.Stmt.PropName.PkgName][pair.Stmt.PropName.Name], KnownSpecFact_InLogicExpr{pair.Stmt, pair.Indexes, logicExpr, supposedEnv})
-	}
-
-	return nil
+func (s SpecFactInLogicExprMem) newFact(logicExpr *ast.OrStmt, supposedEnv *ast.SupposePropMatchStmt) error {
+	panic("not implemented")
 }
 
 func (s SpecFactInUniFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (glob.Map2D[[]KnownSpecFact_InUniSpecFact], error) {
@@ -183,8 +162,7 @@ func (env *Env) newUniFact(stmt *ast.UniFactStmt) error {
 			if err != nil {
 				return err
 			}
-		} else if thenStmtAsLogicExpr, ok := thenStmt.(*ast.LogicExprStmt); ok {
-
+		} else if thenStmtAsLogicExpr, ok := thenStmt.(*ast.OrStmt); ok {
 			if thenStmtAsLogicExpr.IsSpecFactNameWithUniPrefix() {
 				return fmt.Errorf("facts in the body of universal fact should not be a free fact, got %s", thenStmtAsLogicExpr.String())
 			}
@@ -253,29 +231,8 @@ func (s SpecFact_InLogicExpr_InUniFactMem) GetSameEnumPkgPropFacts(stmt *ast.Spe
 	return sameEnumPkgPropFacts, true
 }
 
-func (s SpecFact_InLogicExpr_InUniFactMem) NewFact(uniStmt *ast.UniFactStmt, logicExpr *ast.LogicExprStmt, supposedEnv *ast.SupposePropMatchStmt) error {
-	pair, err := logicExpr.SpecFactIndexPairs([]uint8{})
-	if err != nil {
-		return err
-	}
-
-	for _, pair := range pair {
-		sameEnumFacts, err := s.getSameEnumFacts(pair.Stmt)
-		if err != nil {
-			return err
-		}
-
-		if _, ok := sameEnumFacts[pair.Stmt.PropName.PkgName]; !ok {
-			sameEnumFacts[pair.Stmt.PropName.PkgName] = make(map[string][]SpecFact_InLogicExpr_InUniFact)
-		}
-		if _, ok := sameEnumFacts[pair.Stmt.PropName.PkgName][pair.Stmt.PropName.Name]; !ok {
-			sameEnumFacts[pair.Stmt.PropName.PkgName][pair.Stmt.PropName.Name] = []SpecFact_InLogicExpr_InUniFact{}
-		}
-
-		sameEnumFacts[pair.Stmt.PropName.PkgName][pair.Stmt.PropName.Name] = append(sameEnumFacts[pair.Stmt.PropName.PkgName][pair.Stmt.PropName.Name], SpecFact_InLogicExpr_InUniFact{pair.Stmt, uniStmt, pair.Indexes, logicExpr, supposedEnv})
-	}
-
-	return nil
+func (s SpecFact_InLogicExpr_InUniFactMem) NewFact(uniStmt *ast.UniFactStmt, logicExpr *ast.OrStmt, supposedEnv *ast.SupposePropMatchStmt) error {
+	panic("not implemented")
 }
 
 func newSpecFact_InLogicExpr_InUniFactMem() *SpecFact_InLogicExpr_InUniFactMem {

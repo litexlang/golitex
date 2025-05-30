@@ -137,7 +137,7 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch(stmt *ast.SpecFac
 		if err != nil {
 			return false, err
 		}
-		instaniatedLogicExprAsKnownSpecFact, ok := instaniatedLogicExpr.(*ast.LogicExprStmt)
+		instaniatedLogicExprAsKnownSpecFact, ok := instaniatedLogicExpr.(*ast.OrStmt)
 		if !ok {
 			return false, fmt.Errorf("instaniatedLogicExpr is not a KnownSpecFact_InLogicExpr")
 		}
@@ -376,7 +376,7 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 	}
 
 	currentLayerFact := knownFact.LogicExpr
-	ok, err := ver.verifyLogicExprSteps(knownFact, currentLayerFact, state)
+	ok, err := ver.verOrStmt(currentLayerFact, state)
 	if err != nil {
 		return false, err
 	}
