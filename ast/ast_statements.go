@@ -94,10 +94,10 @@ type FcFnDecl struct {
 	Params []string
 }
 
-type LogicExprStmt struct {
-	IsOr  bool
-	Facts []Reversable_LogicOrSpec_Stmt
-}
+// type LogicExprStmt struct {
+// 	IsOr  bool
+// 	Facts []Reversable_LogicOrSpec_Stmt
+// }
 
 // have 是可能引入 fn 和 prop 的
 type HaveStmt struct {

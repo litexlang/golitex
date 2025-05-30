@@ -726,7 +726,7 @@ func (exec *Executor) knowSupposeStmt(stmt *ast.KnowSupposeStmt) (glob.ExecState
 		if specFact, ok := fact.(*ast.SpecFactStmt); ok {
 			knownFacts = append(knownFacts, specFact)
 		} else {
-			return glob.ExecState_Error, fmt.Errorf("Currently, know suppose stmt only support spec fact")
+			return glob.ExecState_Error, fmt.Errorf("currently, know suppose stmt only supports spec fact")
 		}
 	}
 

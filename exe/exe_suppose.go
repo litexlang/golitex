@@ -136,9 +136,7 @@ func (exec *Executor) supposeStmt_runStmtBody(stmt *ast.SupposePropMatchStmt) (g
 			}
 			// store known fact in original env
 			if asFact, ok := bodyFact.(*ast.KnowFactStmt); ok {
-				for _, fact := range asFact.Facts {
-					insideFacts = append(insideFacts, fact)
-				}
+				insideFacts = append(insideFacts, asFact.Facts...)
 			}
 		}
 	}

@@ -399,55 +399,55 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 	return true, nil
 }
 
-func (ver *Verifier) verifyLogicExprSteps(knownFact *env.KnownSpecFact_InLogicExpr, currentLayerFact *ast.LogicExprStmt, state VerState) (bool, error) {
-	for i := 0; i < len(knownFact.Index)-1; i++ {
-		factIndex := knownFact.Index[i]
-		// 如果保存的是and，那and一定是全对的，不用验证
-		if !currentLayerFact.IsOr {
-			continue
-		}
+// func (ver *Verifier) verifyLogicExprSteps(knownFact *env.KnownSpecFact_InLogicExpr, currentLayerFact *ast.LogicExprStmt, state VerState) (bool, error) {
+// 	for i := 0; i < len(knownFact.Index)-1; i++ {
+// 		factIndex := knownFact.Index[i]
+// 		// 如果保存的是and，那and一定是全对的，不用验证
+// 		if !currentLayerFact.IsOr {
+// 			continue
+// 		}
 
-		// 如果是or，那只有在其他fact都验证失败的情况下，这个fact才算验证成功
-		for i, fact := range currentLayerFact.Facts {
-			if i == int(factIndex) {
-				continue
-			}
+// 		// 如果是or，那只有在其他fact都验证失败的情况下，这个fact才算验证成功
+// 		for i, fact := range currentLayerFact.Facts {
+// 			if i == int(factIndex) {
+// 				continue
+// 			}
 
-			// 需要reverse True
-			ok, err := ver.FactStmt(fact.ReverseIsTrue(), state.toFnialRound())
-			if err != nil {
-				return false, err
-			}
-			if !ok {
-				return false, nil
-			}
-		}
+// 			// 需要reverse True
+// 			ok, err := ver.FactStmt(fact.ReverseIsTrue(), state.toFnialRound())
+// 			if err != nil {
+// 				return false, err
+// 			}
+// 			if !ok {
+// 				return false, nil
+// 			}
+// 		}
 
-		currentLayerFact = currentLayerFact.Facts[int(factIndex)].(*ast.LogicExprStmt)
-	}
+// 		currentLayerFact = currentLayerFact.Facts[int(factIndex)].(*ast.LogicExprStmt)
+// 	}
 
-	// 处理最后一步
-	factIndex := knownFact.Index[len(knownFact.Index)-1]
-	if !currentLayerFact.IsOr {
-		return true, nil
-	}
+// 	// 处理最后一步
+// 	factIndex := knownFact.Index[len(knownFact.Index)-1]
+// 	if !currentLayerFact.IsOr {
+// 		return true, nil
+// 	}
 
-	for i, fact := range currentLayerFact.Facts {
-		if i == int(factIndex) {
-			continue
-		}
+// 	for i, fact := range currentLayerFact.Facts {
+// 		if i == int(factIndex) {
+// 			continue
+// 		}
 
-		ok, err := ver.FactStmt(fact.ReverseIsTrue(), state.addRound().addRound())
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, nil
-		}
-	}
+// 		ok, err := ver.FactStmt(fact.ReverseIsTrue(), state.addRound().addRound())
+// 		if err != nil {
+// 			return false, err
+// 		}
+// 		if !ok {
+// 			return false, nil
+// 		}
+// 	}
 
-	return true, nil
-}
+// 	return true, nil
+// }
 
 // func (ver *Verifier) specFactProveByDefinition(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 // 	nextState := state.addRound()
