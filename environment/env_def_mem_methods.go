@@ -17,6 +17,8 @@ import (
 	glob "golitex/glob"
 )
 
+// Insert DefStmt into DefMem
+
 func (memory *PropDefMem) Insert(stmt *ast.DefPropStmt, pkgName string) error {
 	pkgMap, pkgExists := memory.Dict[pkgName]
 
@@ -88,6 +90,24 @@ func (memory *ExistPropDefMem) Insert(stmt *ast.DefExistPropStmt, pkgName string
 	return nil
 }
 
+func (memory *SetDefMem) Insert(stmt *ast.SetDefSetBuilderStmt) error {
+	if _, ok := memory.Dict[glob.EmptyPkg]; !ok {
+		memory.Dict[glob.EmptyPkg] = make(map[string]SetMemItem)
+	}
+
+	if _, ok := memory.Dict[glob.EmptyPkg][stmt.SetName]; !ok {
+		memory.Dict[glob.EmptyPkg][stmt.SetName] = SetMemItem{stmt}
+	}
+
+	memory.Dict[glob.EmptyPkg][stmt.SetName] = SetMemItem{stmt}
+
+	return nil
+}
+
+// End of Insert DefStmt into DefMem
+
+// Get DefStmt from DefMem
+
 func (memory *PropDefMem) Get(fc ast.FcAtom) (*ast.DefPropStmt, bool) {
 	pkgMap, pkgExists := memory.Dict[fc.PkgName]
 	if !pkgExists {
@@ -141,20 +161,6 @@ func (memory *ObjDefMem) Get(fc ast.FcAtom) (*ast.DefObjStmt, bool) {
 	return node.Def, true
 }
 
-func (memory *SetDefMem) Insert(stmt *ast.SetDefSetBuilderStmt) error {
-	if _, ok := memory.Dict[glob.EmptyPkg]; !ok {
-		memory.Dict[glob.EmptyPkg] = make(map[string]SetMemItem)
-	}
-
-	if _, ok := memory.Dict[glob.EmptyPkg][stmt.SetName]; !ok {
-		memory.Dict[glob.EmptyPkg][stmt.SetName] = SetMemItem{stmt}
-	}
-
-	memory.Dict[glob.EmptyPkg][stmt.SetName] = SetMemItem{stmt}
-
-	return nil
-}
-
 func (memory *SetDefMem) Get(pkgName string, setName string) (*ast.SetDefSetBuilderStmt, bool) {
 	pkgMap, pkgExists := memory.Dict[pkgName]
 	if !pkgExists {
@@ -171,7 +177,6 @@ func (memory *SetDefMem) Get(pkgName string, setName string) (*ast.SetDefSetBuil
 // Get Def Recursively From environments
 
 func (e *Env) GetExistPropDef(propName ast.FcAtom) (*ast.DefExistPropStmt, bool) {
-	// recursively search parent envs
 	for env := e; env != nil; env = env.Parent {
 		existProp, ok := env.ExistPropDefMem.Get(propName)
 		if ok {
@@ -182,7 +187,6 @@ func (e *Env) GetExistPropDef(propName ast.FcAtom) (*ast.DefExistPropStmt, bool)
 }
 
 func (e *Env) GetPropDef(propName ast.FcAtom) (*ast.DefPropStmt, bool) {
-	// recursively search parent envs
 	for env := e; env != nil; env = env.Parent {
 		prop, ok := env.PropDefMem.Get(propName)
 		if ok {
@@ -202,7 +206,39 @@ func (e *Env) GetFcAtomDef(fcAtomName *ast.FcAtom) (ast.DefStmt, bool) {
 	return nil, false
 }
 
+// func (e *Env) GetSetDef(set ast.Fc) (*ast.SetDefSetBuilderStmt, bool) {
+// 	setAsAtom, isSetAsAtom := set.(*ast.FcAtom)
+// 	if !isSetAsAtom {
+// 		return nil, false
+// 	}
+
+// 	for env := e; env != nil; env = env.Parent {
+// 		setDef, ok := env.SetDefMem.Get(setAsAtom.PkgName, setAsAtom.Name)
+// 		if ok {
+// 			return setDef, true
+// 		}
+// 	}
+// 	return nil, false
+// }
+
+func (e *Env) GetFnDef(fn ast.Fc) (*ast.DefFnStmt, bool) {
+	fnAsAtom, isFnAsAtom := fn.(*ast.FcAtom)
+	if !isFnAsAtom {
+		return nil, false
+	}
+
+	for env := e; env != nil; env = env.Parent {
+		fnDef, ok := env.FnDefMem.Get(*fnAsAtom)
+		if ok {
+			return fnDef, true
+		}
+	}
+	return nil, false
+}
+
 // End of Get Def Recursively From environments
+
+// Get DefStmt at current environment
 
 func (e *Env) getFcAtomDefAtCurEnv(fcAtomName *ast.FcAtom) (ast.DefStmt, bool) {
 	// Case1: It is a prop
@@ -232,32 +268,4 @@ func (e *Env) getFcAtomDefAtCurEnv(fcAtomName *ast.FcAtom) (ast.DefStmt, bool) {
 	return nil, false
 }
 
-func (e *Env) GetSetDef(set ast.Fc) (*ast.SetDefSetBuilderStmt, bool) {
-	setAsAtom, isSetAsAtom := set.(*ast.FcAtom)
-	if !isSetAsAtom {
-		return nil, false
-	}
-
-	for env := e; env != nil; env = env.Parent {
-		setDef, ok := env.SetDefMem.Get(setAsAtom.PkgName, setAsAtom.Name)
-		if ok {
-			return setDef, true
-		}
-	}
-	return nil, false
-}
-
-func (e *Env) GetFnDef(fn ast.Fc) (*ast.DefFnStmt, bool) {
-	fnAsAtom, isFnAsAtom := fn.(*ast.FcAtom)
-	if !isFnAsAtom {
-		return nil, false
-	}
-
-	for env := e; env != nil; env = env.Parent {
-		fnDef, ok := env.FnDefMem.Get(*fnAsAtom)
-		if ok {
-			return fnDef, true
-		}
-	}
-	return nil, false
-}
+// End of Get DefStmt at current environment
