@@ -846,7 +846,11 @@ func (ver *Verifier) isSetEqualFact_Check(stmt *ast.SpecFactStmt, state VerState
 	// they are both sets
 	// TODO: Currently can only check a fcAtom as set. If a set is a return value of a fn, current implementation will not work.
 	ver.appendInternalWarningMsg("Currently can only check a fcAtom as set. If a set is a return value of a fn, current implementation will not work.")
-	_, ok := ver.env.GetSetDef(leftSet)
+
+	// _, ok := ver.env.GetSetDef(leftSet)
+
+	panic("TODO: Implement GetSetDef")
+	ok := false
 	if !ok {
 		if state.requireMsg() {
 			ver.successWithMsg(stmt.String(), fmt.Sprintf("left set %s is not a declared set", leftSet.String()))
@@ -855,7 +859,8 @@ func (ver *Verifier) isSetEqualFact_Check(stmt *ast.SpecFactStmt, state VerState
 		}
 		return false, nil
 	}
-	_, ok = ver.env.GetSetDef(rightSet)
+
+	// _, ok = ver.env.GetSetDef(rightSet)
 	if !ok {
 		if state.requireMsg() {
 			ver.successWithMsg(stmt.String(), fmt.Sprintf("right set %s is not a declared set", rightSet.String()))

@@ -570,7 +570,11 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimStmt) (bool, 
 func (exec *Executor) setDefStmt(stmt *ast.SetDefSetBuilderStmt) error {
 	defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
 
-	err := exec.env.SetDefMem.Insert(stmt)
+	// err := exec.env.SetDefMem.Insert(stmt)
+
+	infact := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(stmt.SetName), ast.NewFcAtomWithName(glob.KeywordIn)})
+	err := exec.env.NewFact(infact)
+
 	if err != nil {
 		return err
 	}

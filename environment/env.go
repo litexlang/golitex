@@ -34,7 +34,7 @@ type Env struct {
 	PropDefMem      PropDefMem
 	FnDefMem        FnDefMem
 	ExistPropDefMem ExistPropDefMem
-	SetDefMem       SetDefMem
+	// SetDefMem       SetDefMem
 
 	KnownFactsStruct KnownFactsStruct
 
@@ -55,7 +55,7 @@ func NewEnv(parent *Env, curMatchEnv *ast.SupposePropMatchStmt) *Env {
 		PropDefMem:      *newPropMemory(),
 		FnDefMem:        *newFnMemory(),
 		ExistPropDefMem: *newExistPropMemory(),
-		SetDefMem:       *newSetMemory(),
+		// SetDefMem:       *newSetMemory(),
 
 		KnownFactsStruct: makeKnownFactsStruct(),
 

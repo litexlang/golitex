@@ -8,7 +8,7 @@
 
 ## Litex: Scale Reasoning in AI Age
 
-Litex is an easy to learn, powerful formal language. Essentially, it is a tool that allows you to write reasoning according to the rules defined by Litex, and Litex will help verify whether your reasoning is correct. As a result, it can be widely used for validating mathematical proofs or any rule-based systems. The main advantage of Litex over other formal languages is its simplicity and user-friendliness. Litex is basically an attempt to scale reasoning in the AI age.
+Litex is a powerful yet easy-to-learn formal language. Essentially, it is a tool that allows you to write reasoning according to the rules defined by Litex, and Litex will help verify whether your reasoning is correct. As a result, it can be widely used for validating mathematical proofs or any rule-based systems. The main advantage of Litex over other formal languages is its simplicity and user-friendliness. Litex is basically an attempt to scale reasoning in the AI age.
 
 ---  
 **Contact:**  
@@ -542,7 +542,7 @@ You might be wondering, what other factual expressions do I need to know? Are th
 
 The core design philosophy of Litex is to make first-order logic accessible and easy to express. Our goal is to create a formal language that is friendly to everyone, not just experts. This is why Litex focuses exclusively on first-order logic - expressed through four key factual statements (forall, exist, or, specific). First-order logic is the most common and essential aspect of mathematical reasoning, and making it accessible to everyone is Litex's primary mission.
 
-Litex is built around first-order logic. After confiirming this as core functionality, the second thing is to add language features (technically, syntax sugar) around it. Litex provides you a rich set of syntax sugar to help them express their reasoning as naturally as possible.
+Litex is built around first-order logic. After confirming this as core functionality, the second thing is to add language features (technically, syntax sugar) around it. Litex provides you a rich set of syntax sugar to help them express their reasoning as naturally as possible.
 
 ## Function
 
