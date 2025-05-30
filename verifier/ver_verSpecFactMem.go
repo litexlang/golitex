@@ -132,9 +132,8 @@ func (ver *Verifier) verSpecFact_LogicMem(stmt *ast.SpecFactStmt, state VerState
 // 	return false, nil
 // }
 
-func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) verSpecFact_InSpecFact_UniMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	nextState := state.addRound()
-
 	upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
 	if ver.env.CurMatchEnv == nil {
@@ -143,20 +142,10 @@ func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecFactStmt, state VerState) 
 			if err != nil || ok {
 				return ok, err
 			}
-
-			ok, err = ver.specFact_inLogicExpr_inUniFactMem_atEnv(curEnv, stmt, nextState)
-			if err != nil || ok {
-				return ok, err
-			}
 		}
 	} else {
 		for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
 			ok, err := ver.specFact_UniMem_asEnv(curEnv, stmt, nextState)
-			if err != nil || ok {
-				return ok, err
-			}
-
-			ok, err = ver.specFact_inLogicExpr_inUniFactMem_atEnv(curEnv, stmt, nextState)
 			if err != nil || ok {
 				return ok, err
 			}
@@ -169,6 +158,79 @@ func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecFactStmt, state VerState) 
 	}
 
 	return false, nil
+}
+
+func (ver *Verifier) verSpecFact_InLogicExpr_InUniFactMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	nextState := state.addRound()
+	upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
+
+	if ver.env.CurMatchEnv == nil {
+		for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
+			ok, err := ver.specFact_inLogicExpr_inUniFactMem_atEnv(curEnv, stmt, nextState)
+			if err != nil || ok {
+				return ok, err
+			}
+		}
+	} else {
+		for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
+			ok, err := ver.specFact_inLogicExpr_inUniFactMem_atEnv(curEnv, stmt, nextState)
+			if err != nil || ok {
+				return ok, err
+			}
+
+			ok, err = ver.specFact_MatchEnv_UniMem(curEnv, stmt, state)
+			if err != nil || ok {
+				return ok, err
+			}
+		}
+	}
+
+	return false, nil
+}
+
+func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	ok, err := ver.verSpecFact_InSpecFact_UniMem(stmt, state)
+	if err != nil || ok {
+		return ok, err
+	}
+
+	return ver.verSpecFact_InLogicExpr_InUniFactMem(stmt, state)
+
+	// nextState := state.addRound()
+	// upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
+
+	// if ver.env.CurMatchEnv == nil {
+	// 	for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
+	// 		ok, err := ver.specFact_UniMem_asEnv(curEnv, stmt, nextState)
+	// 		if err != nil || ok {
+	// 			return ok, err
+	// 		}
+
+	// 		ok, err = ver.specFact_inLogicExpr_inUniFactMem_atEnv(curEnv, stmt, nextState)
+	// 		if err != nil || ok {
+	// 			return ok, err
+	// 		}
+	// 	}
+	// } else {
+	// 	for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
+	// 		ok, err := ver.specFact_UniMem_asEnv(curEnv, stmt, nextState)
+	// 		if err != nil || ok {
+	// 			return ok, err
+	// 		}
+
+	// 		ok, err = ver.specFact_inLogicExpr_inUniFactMem_atEnv(curEnv, stmt, nextState)
+	// 		if err != nil || ok {
+	// 			return ok, err
+	// 		}
+
+	// 		ok, err = ver.specFact_MatchEnv_UniMem(curEnv, stmt, state)
+	// 		if err != nil || ok {
+	// 			return ok, err
+	// 		}
+	// 	}
+	// }
+
+	// return false, nil
 }
 
 func (ver *Verifier) specFact_inLogicExpr_inUniFactMem_atEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
@@ -211,16 +273,21 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch(stmt *ast.SpecFac
 			return false, fmt.Errorf("instaniatedLogicExpr is not a KnownSpecFact_InLogicExpr")
 		}
 
-		knownSpecFact_InLogicExpr_InUniFact := env.KnownSpecFact_InLogicExpr{
-			SpecFact: stmt,
-			// Index:     knownFactUnderLogicExpr.Index,
-			LogicExpr: instaniatedLogicExprAsKnownSpecFact,
-		}
-
-		ok, err = ver.SpecFactSpecUnderLogicalExpr(&knownSpecFact_InLogicExpr_InUniFact, stmt, state)
+		ok, err = ver.verify_specFact_when_given_orStmt_is_true(stmt, instaniatedLogicExprAsKnownSpecFact, knownFactUnderLogicExpr.Index, state)
 		if err != nil {
 			return false, err
 		}
+
+		// knownSpecFact_InLogicExpr_InUniFact := env.KnownSpecFact_InLogicExpr{
+		// 	SpecFact: stmt,
+		// 	// Index:     knownFactUnderLogicExpr.Index,
+		// 	LogicExpr: instaniatedLogicExprAsKnownSpecFact,
+		// }
+
+		// ok, err = ver.SpecFactSpecUnderLogicalExpr(&knownSpecFact_InLogicExpr_InUniFact, stmt, state)
+		// if err != nil {
+		// 	return false, err
+		// }
 
 		if ok {
 			if state.requireMsg() {

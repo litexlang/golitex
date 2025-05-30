@@ -19,7 +19,7 @@ func (ver *Verifier) verFactWhenOthersAreFalse(facts []ast.SpecFactStmt, i int, 
 	ver.newEnv(ver.env, ver.env.CurMatchEnv)
 	defer ver.deleteEnvAndRetainMsg()
 
-	nextState := state.toFnialRound()
+	nextState := state.addRound()
 	for j := range facts {
 		if j == int(i) {
 			continue

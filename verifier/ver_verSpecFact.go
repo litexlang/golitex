@@ -287,6 +287,37 @@ func (ver *Verifier) verSpecFactSpecMemAndLogicMem(stmt *ast.SpecFactStmt, state
 }
 
 func (ver *Verifier) verSpecFactUniMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	// TODO: 里面的函数需要更新
-	return ver.verSpecFact_UniMem(stmt, state)
+	ok, err := ver.verSpecFact_InSpecFact_UniMem(stmt, state)
+	if err != nil || ok {
+		return ok, err
+	}
+
+	return ver.verSpecFact_InLogicExpr_InUniFactMem(stmt, state)
+}
+
+func (ver *Verifier) verify_specFact_when_given_orStmt_is_true(stmt *ast.SpecFactStmt, orStmt *ast.OrStmt, index uint8, state VerState) (bool, error) {
+	ver.newEnv(ver.env, ver.env.CurMatchEnv)
+	defer ver.deleteEnvAndRetainMsg()
+
+	// 其他是否都错
+	for i := range orStmt.Facts {
+		if i == int(index) {
+			continue
+		}
+		ok, err := ver.FactStmt(&orStmt.Facts[i].ReverseIsTrue()[0], state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+	}
+
+	if state.requireMsg() {
+		ver.successWithMsg(stmt.String(), orStmt.String())
+	} else {
+		ver.successNoMsg()
+	}
+
+	return true, nil
 }
