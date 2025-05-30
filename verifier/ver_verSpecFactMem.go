@@ -178,10 +178,79 @@ func (ver *Verifier) verSpecFact_InLogicExpr_InUniFactMem(stmt *ast.SpecFactStmt
 				return ok, err
 			}
 
-			ok, err = ver.specFact_MatchEnv_UniMem(curEnv, stmt, state)
+			ok, err = ver.specFact_MatchEnv_InOrStmt_UniMem_atEnv(curEnv, stmt, state)
 			if err != nil || ok {
 				return ok, err
 			}
+		}
+	}
+
+	return false, nil
+}
+
+func (ver *Verifier) specFact_MatchEnv_InOrStmt_UniMem_atEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	searchedSpecFactsInLogicExpr, got := curEnv.KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem.GetSameEnumPkgPropFacts(stmt)
+
+	if !got {
+		return false, nil
+	}
+
+	nextState := state.addRound().toNoMsg()
+
+	return ver.iterate_KnownSpecInLogic_InUni_MatchEnv_applyMatch(stmt, searchedSpecFactsInLogicExpr, nextState)
+}
+
+func (ver *Verifier) iterate_KnownSpecInLogic_InUni_MatchEnv_applyMatch(stmt *ast.SpecFactStmt, knownFacts []env.SpecFact_InLogicExpr_InUniFact, state VerState) (bool, error) {
+	for _, knownFactUnderLogicExpr := range knownFacts {
+		paramArrMap, ok, err := ver.matchStoredUniSpecWithSpec_prevetnDifferentVarsMatchTheSameFreeVar(env.KnownSpecFact_InUniSpecFact{SpecFact: knownFactUnderLogicExpr.SpecFact, UniFact: knownFactUnderLogicExpr.UniFact}, stmt)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			continue
+		}
+
+		// 防止 两个不相等的参数对应到了同一个自由变量
+		uniConMap, ok, err := ver.ValuesUnderKeyInMatchMapEqualSpec(paramArrMap, state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			continue
+		}
+
+		instaniatedLogicExpr, err := knownFactUnderLogicExpr.LogicExpr.Instantiate(uniConMap)
+		if err != nil {
+			return false, err
+		}
+		instaniatedLogicExprAsKnownSpecFact, ok := instaniatedLogicExpr.(*ast.OrStmt)
+		if !ok {
+			return false, fmt.Errorf("instaniatedLogicExpr is not a KnownSpecFact_InLogicExpr")
+		}
+
+		ok, err = ver.verify_specFact_when_given_orStmt_is_true(stmt, instaniatedLogicExprAsKnownSpecFact, knownFactUnderLogicExpr.Index, state)
+		if err != nil {
+			return false, err
+		}
+
+		// knownSpecFact_InLogicExpr_InUniFact := env.KnownSpecFact_InLogicExpr{
+		// 	SpecFact: stmt,
+		// 	// Index:     knownFactUnderLogicExpr.Index,
+		// 	LogicExpr: instaniatedLogicExprAsKnownSpecFact,
+		// }
+
+		// ok, err = ver.SpecFactSpecUnderLogicalExpr(&knownSpecFact_InLogicExpr_InUniFact, stmt, state)
+		// if err != nil {
+		// 	return false, err
+		// }
+
+		if ok {
+			if state.requireMsg() {
+				ver.successWithMsg(stmt.String(), knownFactUnderLogicExpr.String())
+			} else {
+				ver.successNoMsg()
+			}
+			return true, nil
 		}
 	}
 
