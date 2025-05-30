@@ -186,64 +186,64 @@ func (ver *Verifier) btLitNumInNatOrIntOrRatOrReal(stmt *ast.SpecFactStmt, state
 	return false, nil
 }
 
-func (ver *Verifier) btFnInFnSet(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if !stmt.PropName.HasGivenNameAndEmptyPkgName(glob.KeywordIn) {
-		return false, nil
-	}
+// func (ver *Verifier) btFnInFnSet(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+// 	if !stmt.PropName.HasGivenNameAndEmptyPkgName(glob.KeywordIn) {
+// 		return false, nil
+// 	}
 
-	if len(stmt.Params) != 2 {
-		return false, fmt.Errorf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params))
-	}
+// 	if len(stmt.Params) != 2 {
+// 		return false, fmt.Errorf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params))
+// 	}
 
-	asAtom, ok := stmt.Params[0].(*ast.FcAtom)
-	if !ok {
-		return false, nil
-	}
+// 	asAtom, ok := stmt.Params[0].(*ast.FcAtom)
+// 	if !ok {
+// 		return false, nil
+// 	}
 
-	curEnv := ver.env
-	for curEnv != nil {
-		_, got := curEnv.FnDefMem.Get(*asAtom)
-		if got {
-			if state.requireMsg() {
-				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is a defined %s", asAtom.String(), glob.KeywordFn))
-			} else {
-				ver.successNoMsg()
-			}
-			return true, nil
-		}
-		curEnv = curEnv.Parent
-	}
+// 	curEnv := ver.env
+// 	for curEnv != nil {
+// 		_, got := curEnv.FnDefMem.Get(*asAtom)
+// 		if got {
+// 			if state.requireMsg() {
+// 				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is a defined %s", asAtom.String(), glob.KeywordFn))
+// 			} else {
+// 				ver.successNoMsg()
+// 			}
+// 			return true, nil
+// 		}
+// 		curEnv = curEnv.Parent
+// 	}
 
-	return false, nil
-}
+// 	return false, nil
+// }
 
-func (ver *Verifier) btPropInPropSet(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if !stmt.PropName.HasGivenNameAndEmptyPkgName(glob.KeywordIn) {
-		return false, nil
-	}
+// func (ver *Verifier) btPropInPropSet(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+// 	if !stmt.PropName.HasGivenNameAndEmptyPkgName(glob.KeywordIn) {
+// 		return false, nil
+// 	}
 
-	if len(stmt.Params) != 2 {
-		return false, fmt.Errorf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params))
-	}
+// 	if len(stmt.Params) != 2 {
+// 		return false, fmt.Errorf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params))
+// 	}
 
-	asAtom, ok := stmt.Params[0].(*ast.FcAtom)
-	if !ok {
-		return false, nil
-	}
+// 	asAtom, ok := stmt.Params[0].(*ast.FcAtom)
+// 	if !ok {
+// 		return false, nil
+// 	}
 
-	curEnv := ver.env
-	for curEnv != nil {
-		_, got := curEnv.PropDefMem.Get(*asAtom)
-		if got {
-			if state.requireMsg() {
-				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is a defined %s", asAtom.String(), glob.KeywordProp))
-			} else {
-				ver.successNoMsg()
-			}
-			return true, nil
-		}
-		curEnv = curEnv.Parent
-	}
+// 	curEnv := ver.env
+// 	for curEnv != nil {
+// 		_, got := curEnv.PropDefMem.Get(*asAtom)
+// 		if got {
+// 			if state.requireMsg() {
+// 				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is a defined %s", asAtom.String(), glob.KeywordProp))
+// 			} else {
+// 				ver.successNoMsg()
+// 			}
+// 			return true, nil
+// 		}
+// 		curEnv = curEnv.Parent
+// 	}
 
-	return false, nil
-}
+// 	return false, nil
+// }

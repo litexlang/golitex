@@ -61,4 +61,5 @@ prove:
 fn f(x N) N
 
 f $in fn(N)N
+
 # f $in fn(N)R
