@@ -935,7 +935,17 @@ func (ver *Verifier) specFact_LogicMem(curEnv *env.Env, stmt *ast.SpecFactStmt, 
 	}
 
 	if got {
-		return ver.iterateKnownLogicFacts_applyFcEqualSpec(stmt, knownFacts, state)
+		for _, knownFact := range knownFacts {
+			ok, err := ver.useKnownOrFactToProveSpecFact(&knownFact, stmt, state)
+			if err != nil {
+				return false, err
+			}
+			if ok {
+				return true, nil
+			}
+		}
+
+		// return ver.iterateKnownLogicFacts_applyFcEqualSpec(stmt, knownFacts, state)
 	}
 
 	return false, nil
@@ -1082,4 +1092,30 @@ LoopOverFacts:
 		return true, nil
 	}
 	return false, nil
+}
+
+func (ver *Verifier) useKnownOrFactToProveSpecFact(knownFact *env.KnownSpecFact_InLogicExpr, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	ver.newEnv(ver.env, ver.env.CurMatchEnv)
+	defer ver.deleteEnvAndRetainMsg()
+
+	// TODO 要让 stmt 和 第index位的事实match上
+	_ = stmt
+
+	for i, fact := range knownFact.LogicExpr.Facts {
+		if i == knownFact.Index {
+			continue
+		}
+		reversedFact := fact.ReverseSpecFact()
+		// panic("")
+		// TODO: WARNING: 这里有问题，可能无限循环
+		ok, err := ver.FactStmt(reversedFact, state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+	}
+
+	return true, nil
 }
