@@ -19,6 +19,7 @@ func (ver *Verifier) verFactWhenOthersAreFalse(facts []ast.SpecFactStmt, i int, 
 	ver.newEnv(ver.env, ver.env.CurMatchEnv)
 	defer ver.deleteEnvAndRetainMsg()
 
+	nextState := state.toFnialRound()
 	for j := range facts {
 		if j == int(i) {
 			continue
@@ -29,7 +30,7 @@ func (ver *Verifier) verFactWhenOthersAreFalse(facts []ast.SpecFactStmt, i int, 
 		}
 	}
 
-	ok, err := ver.FactStmt(&facts[i], state)
+	ok, err := ver.FactStmt(&facts[i], nextState)
 	if err != nil {
 		return false, err
 	}
