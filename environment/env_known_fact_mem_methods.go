@@ -106,7 +106,7 @@ func (s SpecFactInLogicExprMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) 
 }
 
 func (s SpecFactInLogicExprMem) newFact(logicExpr *ast.OrStmt, supposedEnv *ast.SupposePropMatchStmt) error {
-	for _, fact := range logicExpr.Facts {
+	for i, fact := range logicExpr.Facts {
 		sameEnumFacts, err := s.getSameEnumFacts(&fact)
 		if err != nil {
 			return err
@@ -118,7 +118,7 @@ func (s SpecFactInLogicExprMem) newFact(logicExpr *ast.OrStmt, supposedEnv *ast.
 		if _, ok := sameEnumFacts[fact.PropName.PkgName][fact.PropName.Name]; !ok {
 			sameEnumFacts[fact.PropName.PkgName][fact.PropName.Name] = []KnownSpecFact_InLogicExpr{}
 		}
-		sameEnumFacts[fact.PropName.PkgName][fact.PropName.Name] = append(sameEnumFacts[fact.PropName.PkgName][fact.PropName.Name], KnownSpecFact_InLogicExpr{&fact, logicExpr, supposedEnv})
+		sameEnumFacts[fact.PropName.PkgName][fact.PropName.Name] = append(sameEnumFacts[fact.PropName.PkgName][fact.PropName.Name], *NewKnownSpecFact_InLogicExpr(&fact, i, logicExpr, supposedEnv))
 	}
 
 	return nil

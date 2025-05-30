@@ -20,16 +20,16 @@ import (
 	"unicode"
 )
 
-type Term struct {
+type arithmeticTerm struct {
 	Coeff float64
 	Vars  []string // sorted variables, e.g. [x][x][y] => ["x", "x", "y"]
 }
 
-func (t Term) Key() string {
+func (t arithmeticTerm) Key() string {
 	return strings.Join(t.Vars, "*")
 }
 
-func (t Term) String() string {
+func (t arithmeticTerm) String() string {
 	if len(t.Vars) == 0 {
 		return fmt.Sprintf("%g", t.Coeff)
 	}
@@ -44,14 +44,14 @@ func (t Term) String() string {
 	return fmt.Sprintf("%g*%s", t.Coeff, key)
 }
 
-type polynomial []Term
+type polynomial []arithmeticTerm
 
 // --- Tokenization ---
 
-type TokenType int
+type arithematicTokenType int
 
 const (
-	NUM TokenType = iota
+	NUM arithematicTokenType = iota
 	VAR
 	PLUS
 	MINUS
@@ -60,32 +60,32 @@ const (
 	RPAREN
 )
 
-type Token struct {
-	Type  TokenType
+type arithematicToken struct {
+	Type  arithematicTokenType
 	Value string
 }
 
-func tokenize(s string) []Token {
-	var tokens []Token
+func tokenize(s string) []arithematicToken {
+	var tokens []arithematicToken
 	i := 0
 	for i < len(s) {
 		switch {
 		case s[i] == ' ':
 			i++
 		case s[i] == '+':
-			tokens = append(tokens, Token{PLUS, "+"})
+			tokens = append(tokens, arithematicToken{PLUS, "+"})
 			i++
 		case s[i] == '-':
-			tokens = append(tokens, Token{MINUS, "-"})
+			tokens = append(tokens, arithematicToken{MINUS, "-"})
 			i++
 		case s[i] == '*':
-			tokens = append(tokens, Token{MULT, "*"})
+			tokens = append(tokens, arithematicToken{MULT, "*"})
 			i++
 		case s[i] == '(':
-			tokens = append(tokens, Token{LPAREN, "("})
+			tokens = append(tokens, arithematicToken{LPAREN, "("})
 			i++
 		case s[i] == ')':
-			tokens = append(tokens, Token{RPAREN, ")"})
+			tokens = append(tokens, arithematicToken{RPAREN, ")"})
 			i++
 		case s[i] == '[':
 			j := i + 1
@@ -96,14 +96,14 @@ func tokenize(s string) []Token {
 				panic("missing closing ']' for variable")
 			}
 			varName := s[i+1 : j]
-			tokens = append(tokens, Token{VAR, varName})
+			tokens = append(tokens, arithematicToken{VAR, varName})
 			i = j + 1
 		case unicode.IsDigit(rune(s[i])):
 			j := i
 			for j < len(s) && (unicode.IsDigit(rune(s[j])) || s[j] == '.') {
 				j++
 			}
-			tokens = append(tokens, Token{NUM, s[i:j]})
+			tokens = append(tokens, arithematicToken{NUM, s[i:j]})
 			i = j
 		default:
 			panic("invalid character: " + string(s[i]))
@@ -114,46 +114,46 @@ func tokenize(s string) []Token {
 
 // --- AST definitions ---
 
-type NodeType int
+type arithemticNodeType int
 
 const (
-	N_ADD NodeType = iota
+	N_ADD arithemticNodeType = iota
 	N_MUL
 	N_NUM
 	N_VAR
 )
 
-type AST struct {
-	Type     NodeType
+type arithematicAST struct {
+	Type     arithemticNodeType
 	Value    string
-	Children []*AST
+	Children []*arithematicAST
 }
 
 // --- Recursive descent parser ---
 
-type Parser struct {
-	tokens []Token
+type arithmeicParser struct {
+	tokens []arithematicToken
 	pos    int
 }
 
-func parseExpr(tokens []Token) *AST {
-	p := &Parser{tokens, 0}
+func parseExpr(tokens []arithematicToken) *arithematicAST {
+	p := &arithmeicParser{tokens, 0}
 	return p.parseExpr()
 }
 
-func (p *Parser) parseExpr() *AST {
+func (p *arithmeicParser) parseExpr() *arithematicAST {
 	node := p.parseTerm()
 	for {
 		if p.match(PLUS) {
 			right := p.parseTerm()
-			node = &AST{Type: N_ADD, Children: []*AST{node, right}}
+			node = &arithematicAST{Type: N_ADD, Children: []*arithematicAST{node, right}}
 		} else if p.match(MINUS) {
 			right := p.parseTerm()
-			neg := &AST{
+			neg := &arithematicAST{
 				Type:     N_MUL,
-				Children: []*AST{{Type: N_NUM, Value: "-1"}, right},
+				Children: []*arithematicAST{{Type: N_NUM, Value: "-1"}, right},
 			}
-			node = &AST{Type: N_ADD, Children: []*AST{node, neg}}
+			node = &arithematicAST{Type: N_ADD, Children: []*arithematicAST{node, neg}}
 		} else {
 			break
 		}
@@ -161,21 +161,21 @@ func (p *Parser) parseExpr() *AST {
 	return node
 }
 
-func (p *Parser) parseTerm() *AST {
+func (p *arithmeicParser) parseTerm() *arithematicAST {
 	node := p.parseFactor()
 	for p.match(MULT) {
 		right := p.parseFactor()
-		node = &AST{Type: N_MUL, Children: []*AST{node, right}}
+		node = &arithematicAST{Type: N_MUL, Children: []*arithematicAST{node, right}}
 	}
 	return node
 }
 
-func (p *Parser) parseFactor() *AST {
+func (p *arithmeicParser) parseFactor() *arithematicAST {
 	if p.match(NUM) {
-		return &AST{Type: N_NUM, Value: p.prev().Value}
+		return &arithematicAST{Type: N_NUM, Value: p.prev().Value}
 	}
 	if p.match(VAR) {
-		return &AST{Type: N_VAR, Value: p.prev().Value}
+		return &arithematicAST{Type: N_VAR, Value: p.prev().Value}
 	}
 	if p.match(LPAREN) {
 		node := p.parseExpr()
@@ -187,7 +187,7 @@ func (p *Parser) parseFactor() *AST {
 	panic("unexpected token")
 }
 
-func (p *Parser) match(t TokenType) bool {
+func (p *arithmeicParser) match(t arithematicTokenType) bool {
 	if p.pos < len(p.tokens) && p.tokens[p.pos].Type == t {
 		p.pos++
 		return true
@@ -195,13 +195,13 @@ func (p *Parser) match(t TokenType) bool {
 	return false
 }
 
-func (p *Parser) prev() Token {
+func (p *arithmeicParser) prev() arithematicToken {
 	return p.tokens[p.pos-1]
 }
 
 // --- Evaluation ---
 
-func eval(ast *AST) polynomial {
+func eval(ast *arithematicAST) polynomial {
 	switch ast.Type {
 	case N_NUM:
 		n, _ := strconv.ParseFloat(ast.Value, 64)
@@ -218,7 +218,7 @@ func eval(ast *AST) polynomial {
 		var result polynomial
 		for _, l := range left {
 			for _, r := range right {
-				combined := Term{
+				combined := arithmeticTerm{
 					Coeff: l.Coeff * r.Coeff,
 					Vars:  append([]string{}, l.Vars...),
 				}
@@ -250,7 +250,7 @@ func simplify(poly polynomial) polynomial {
 		if key != "" {
 			vars = strings.Split(key, "*")
 		}
-		result = append(result, Term{Coeff: coeff, Vars: vars})
+		result = append(result, arithmeticTerm{Coeff: coeff, Vars: vars})
 	}
 	sort.Slice(result, func(i, j int) bool {
 		return result[i].Key() < result[j].Key()
