@@ -42,7 +42,7 @@ func (ver *Verifier) verSpecFact_SpecMem(stmt *ast.SpecFactStmt, state VerState)
 				return ok, err
 			}
 
-			ok, err = ver.specFact_MatchEnv(curEnv, stmt, state)
+			ok, err = ver.specFact_MatchEnv_SpecMem(curEnv, stmt, state)
 			if err != nil || ok {
 				return ok, err
 			}
@@ -69,7 +69,7 @@ func (ver *Verifier) verSpecFact_LogicMem(stmt *ast.SpecFactStmt, state VerState
 				return ok, err
 			}
 
-			ok, err = ver.specFact_MatchEnv(curEnv, stmt, state)
+			ok, err = ver.specFact_MatchEnv_LogicMem(curEnv, stmt, state)
 			if err != nil || ok {
 				return ok, err
 			}
@@ -188,50 +188,50 @@ func (ver *Verifier) verSpecFact_InLogicExpr_InUniFactMem(stmt *ast.SpecFactStmt
 	return false, nil
 }
 
-func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	ok, err := ver.verSpecFact_InSpecFact_UniMem(stmt, state)
-	if err != nil || ok {
-		return ok, err
-	}
+// func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+// 	ok, err := ver.verSpecFact_InSpecFact_UniMem(stmt, state)
+// 	if err != nil || ok {
+// 		return ok, err
+// 	}
 
-	return ver.verSpecFact_InLogicExpr_InUniFactMem(stmt, state)
+// 	return ver.verSpecFact_InLogicExpr_InUniFactMem(stmt, state)
 
-	// nextState := state.addRound()
-	// upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
+// nextState := state.addRound()
+// upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
-	// if ver.env.CurMatchEnv == nil {
-	// 	for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
-	// 		ok, err := ver.specFact_UniMem_asEnv(curEnv, stmt, nextState)
-	// 		if err != nil || ok {
-	// 			return ok, err
-	// 		}
+// if ver.env.CurMatchEnv == nil {
+// 	for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
+// 		ok, err := ver.specFact_UniMem_asEnv(curEnv, stmt, nextState)
+// 		if err != nil || ok {
+// 			return ok, err
+// 		}
 
-	// 		ok, err = ver.specFact_inLogicExpr_inUniFactMem_atEnv(curEnv, stmt, nextState)
-	// 		if err != nil || ok {
-	// 			return ok, err
-	// 		}
-	// 	}
-	// } else {
-	// 	for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
-	// 		ok, err := ver.specFact_UniMem_asEnv(curEnv, stmt, nextState)
-	// 		if err != nil || ok {
-	// 			return ok, err
-	// 		}
+// 		ok, err = ver.specFact_inLogicExpr_inUniFactMem_atEnv(curEnv, stmt, nextState)
+// 		if err != nil || ok {
+// 			return ok, err
+// 		}
+// 	}
+// } else {
+// 	for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
+// 		ok, err := ver.specFact_UniMem_asEnv(curEnv, stmt, nextState)
+// 		if err != nil || ok {
+// 			return ok, err
+// 		}
 
-	// 		ok, err = ver.specFact_inLogicExpr_inUniFactMem_atEnv(curEnv, stmt, nextState)
-	// 		if err != nil || ok {
-	// 			return ok, err
-	// 		}
+// 		ok, err = ver.specFact_inLogicExpr_inUniFactMem_atEnv(curEnv, stmt, nextState)
+// 		if err != nil || ok {
+// 			return ok, err
+// 		}
 
-	// 		ok, err = ver.specFact_MatchEnv_UniMem(curEnv, stmt, state)
-	// 		if err != nil || ok {
-	// 			return ok, err
-	// 		}
-	// 	}
-	// }
+// 		ok, err = ver.specFact_MatchEnv_UniMem(curEnv, stmt, state)
+// 		if err != nil || ok {
+// 			return ok, err
+// 		}
+// 	}
+// }
 
-	// return false, nil
-}
+// return false, nil
+// }
 
 func (ver *Verifier) specFact_inLogicExpr_inUniFactMem_atEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	searchedSpecFactsInLogicExpr, got := curEnv.KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem.GetSameEnumPkgPropFacts(stmt)
@@ -517,7 +517,7 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 		if i == int(knownFact.Index) {
 			continue
 		}
-		ok, err := ver.FactStmt(&fact.ReverseIsTrue()[0], state)
+		ok, err := ver.FactStmt(fact.ReverseTrue(), state)
 		if err != nil {
 			return false, err
 		}
@@ -1273,7 +1273,7 @@ func (ver *Verifier) useKnownOrFactToProveSpecFact(knownFact *env.KnownSpecFact_
 		if i == knownFact.Index {
 			continue
 		}
-		reversedFact := fact.ReverseSpecFact()
+		reversedFact := fact.ReverseTrue()
 		// panic("")
 		// TODO: WARNING: 这里有问题，可能无限循环
 		ok, err := ver.FactStmt(reversedFact, nextState)
@@ -1286,4 +1286,48 @@ func (ver *Verifier) useKnownOrFactToProveSpecFact(knownFact *env.KnownSpecFact_
 	}
 
 	return true, nil
+}
+
+func (ver *Verifier) proveUniFactDomFacts(insUniFact *ast.UniFactStmt, state VerState) (bool, error) {
+	if state.isRound1() {
+		for _, fact := range insUniFact.DomFacts {
+			asSpecFact, ok := fact.(*ast.SpecFactStmt)
+			if ok {
+				ok, err := ver.specFactOrEqualFact_SpecMode(asSpecFact, state)
+				if err != nil {
+					return false, err
+				}
+				if !ok {
+					return false, nil
+				}
+			} else {
+				ok, err := ver.FactStmt(fact, state)
+				if err != nil {
+					return false, err
+				}
+				if !ok {
+					return false, nil
+				}
+			}
+		}
+		return true, nil
+	} else if state.isFinalRound() {
+		for _, fact := range insUniFact.DomFacts {
+			asSpecFact, ok := fact.(*ast.SpecFactStmt)
+			if !ok {
+				return false, nil
+			}
+			ok, err := ver.specFactOrEqualFact_SpecMode(asSpecFact, state)
+			if err != nil {
+				return false, err
+			}
+			if !ok {
+				return false, nil
+			}
+		}
+		return true, nil
+	} else {
+		return false, fmt.Errorf("")
+	}
+
 }

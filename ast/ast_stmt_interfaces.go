@@ -109,13 +109,13 @@ func (s *OrStmt) IsSpecFactNameWithUniPrefix() bool {
 // }
 
 func (stmt *SpecFactStmt) ReverseIsTrue() []SpecFactStmt {
-	return []SpecFactStmt{*stmt.ReverseSpecFact()}
+	return []SpecFactStmt{*stmt.ReverseTrue()}
 }
 
 func (stmt *OrStmt) ReverseIsTrue() []SpecFactStmt {
 	reversedFacts := make([]SpecFactStmt, len(stmt.Facts))
 	for i, fact := range stmt.Facts {
-		reversedFacts[i] = *fact.ReverseSpecFact()
+		reversedFacts[i] = *fact.ReverseTrue()
 	}
 	return reversedFacts
 }

@@ -25,7 +25,7 @@ const (
 	FalseExist_St
 )
 
-func (stmt *SpecFactStmt) ReverseSpecFact() *SpecFactStmt {
+func (stmt *SpecFactStmt) ReverseTrue() *SpecFactStmt {
 	if stmt.TypeEnum == TruePure {
 		return NewSpecFactStmt(FalsePure, stmt.PropName, stmt.Params)
 	} else if stmt.TypeEnum == FalsePure {

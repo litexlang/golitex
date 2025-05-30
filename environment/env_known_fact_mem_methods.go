@@ -260,7 +260,7 @@ func (s SpecFact_InLogicExpr_InUniFactMem) NewFact(uniStmt *ast.UniFactStmt, log
 			sameEnumFacts[fact.PropName.PkgName][fact.PropName.Name] = []SpecFact_InLogicExpr_InUniFact{}
 		}
 
-		sameEnumFacts[fact.PropName.PkgName][fact.PropName.Name] = append(sameEnumFacts[fact.PropName.PkgName][fact.PropName.Name], *NewSpecFact_InLogicExpr_InUniFact(&fact, uniStmt, uint8(i), logicExpr, supposedEnv))
+		sameEnumFacts[fact.PropName.PkgName][fact.PropName.Name] = append(sameEnumFacts[fact.PropName.PkgName][fact.PropName.Name], *NewSpecFact_InLogicExpr_InUniFact(&fact, uniStmt, i, logicExpr, supposedEnv))
 	}
 
 	return nil
