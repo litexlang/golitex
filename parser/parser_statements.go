@@ -216,7 +216,7 @@ func (tb *tokenBlock) specFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 		if isTrue {
 			return ret, nil
 		} else {
-			return ret.ReverseSpecFact(), nil
+			return ret.ReverseTrue(), nil
 		}
 	} else {
 		ret, err := tb.relaFactStmt(nameDepthMap)
@@ -226,7 +226,7 @@ func (tb *tokenBlock) specFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 		if isTrue {
 			return ret, nil
 		} else {
-			return ret.ReverseSpecFact(), nil
+			return ret.ReverseTrue(), nil
 		}
 	}
 }

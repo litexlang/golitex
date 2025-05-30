@@ -236,7 +236,7 @@ func (ver *Verifier) useExistPropDefProveExist_St(stmt *ast.SpecFactStmt, state 
 			// return false, fmt.Errorf("instantiate spec fact stmt failed")
 		}
 		if !stmt.IsTrue() {
-			fixedAsSpecFact = fixedAsSpecFact.ReverseSpecFact()
+			fixedAsSpecFact = fixedAsSpecFact.ReverseTrue()
 		}
 		thenFacts = append(thenFacts, fixedAsSpecFact)
 	}
@@ -295,16 +295,16 @@ func (ver *Verifier) verSpecFactUniMem(stmt *ast.SpecFactStmt, state VerState) (
 	return ver.verSpecFact_InLogicExpr_InUniFactMem(stmt, state)
 }
 
-func (ver *Verifier) verify_specFact_when_given_orStmt_is_true(stmt *ast.SpecFactStmt, orStmt *ast.OrStmt, index uint8, state VerState) (bool, error) {
+func (ver *Verifier) verify_specFact_when_given_orStmt_is_true(stmt *ast.SpecFactStmt, orStmt *ast.OrStmt, index int, state VerState) (bool, error) {
 	ver.newEnv(ver.env, ver.env.CurMatchEnv)
 	defer ver.deleteEnvAndRetainMsg()
 
 	// 其他是否都错
 	for i := range orStmt.Facts {
-		if i == int(index) {
+		if i == index {
 			continue
 		}
-		ok, err := ver.FactStmt(&orStmt.Facts[i].ReverseIsTrue()[0], state)
+		ok, err := ver.FactStmt(orStmt.Facts[i].ReverseTrue(), state)
 		if err != nil {
 			return false, err
 		}

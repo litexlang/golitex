@@ -65,13 +65,13 @@ type SpecFactInUniFactMem struct {
 type SpecFact_InLogicExpr_InUniFact struct {
 	SpecFact *ast.SpecFactStmt
 	UniFact  *ast.UniFactStmt
-	Index    uint8
+	Index    int
 	// LogicExpr *ast.LogicExprStmt
 	LogicExpr *ast.OrStmt
 	EnvFact   *ast.SupposePropMatchStmt
 }
 
-func NewSpecFact_InLogicExpr_InUniFact(specFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt, index uint8, logicExpr *ast.OrStmt, envFact *ast.SupposePropMatchStmt) *SpecFact_InLogicExpr_InUniFact {
+func NewSpecFact_InLogicExpr_InUniFact(specFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt, index int, logicExpr *ast.OrStmt, envFact *ast.SupposePropMatchStmt) *SpecFact_InLogicExpr_InUniFact {
 	return &SpecFact_InLogicExpr_InUniFact{specFact, uniFact, index, logicExpr, envFact}
 }
 
