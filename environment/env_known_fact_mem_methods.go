@@ -106,7 +106,22 @@ func (s SpecFactInLogicExprMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) 
 }
 
 func (s SpecFactInLogicExprMem) newFact(logicExpr *ast.OrStmt, supposedEnv *ast.SupposePropMatchStmt) error {
-	panic("not implemented")
+	for _, fact := range logicExpr.Facts {
+		sameEnumFacts, err := s.getSameEnumFacts(&fact)
+		if err != nil {
+			return err
+		}
+
+		if _, ok := sameEnumFacts[fact.PropName.PkgName]; !ok {
+			sameEnumFacts[fact.PropName.PkgName] = make(map[string][]KnownSpecFact_InLogicExpr)
+		}
+		if _, ok := sameEnumFacts[fact.PropName.PkgName][fact.PropName.Name]; !ok {
+			sameEnumFacts[fact.PropName.PkgName][fact.PropName.Name] = []KnownSpecFact_InLogicExpr{}
+		}
+		sameEnumFacts[fact.PropName.PkgName][fact.PropName.Name] = append(sameEnumFacts[fact.PropName.PkgName][fact.PropName.Name], KnownSpecFact_InLogicExpr{&fact, logicExpr, supposedEnv})
+	}
+
+	return nil
 }
 
 func (s SpecFactInUniFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (glob.Map2D[[]KnownSpecFact_InUniSpecFact], error) {

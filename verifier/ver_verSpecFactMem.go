@@ -143,8 +143,8 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch(stmt *ast.SpecFac
 		}
 
 		knownSpecFact_InLogicExpr_InUniFact := env.KnownSpecFact_InLogicExpr{
-			SpecFact:  stmt,
-			Index:     knownFactUnderLogicExpr.Index,
+			SpecFact: stmt,
+			// Index:     knownFactUnderLogicExpr.Index,
 			LogicExpr: instaniatedLogicExprAsKnownSpecFact,
 		}
 

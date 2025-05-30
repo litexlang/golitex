@@ -90,20 +90,7 @@ func (ver *Verifier) newMsgAtParent(s string) error {
 	}
 }
 
-func (ver *Verifier) factDefer(stmt ast.FactStmt, state VerState, proved bool, err error, proveBy string) (bool, error) {
-	if err != nil {
-		return proved, err
-	}
-
-	if state.requireMsg() {
-		if proved {
-			ver.successWithMsg(stmt.String(), proveBy)
-		} else {
-			ver.unknownMsgEnd(stmt.String())
-		}
-	}
-	return proved, err
-}
+// func (ver *Verifier)
 
 func (ver *Verifier) appendInternalWarningMsg(s string, args ...any) {
 	ver.env.Msgs = append(ver.env.Msgs, glob.InternalWarningMsg(s, args...))

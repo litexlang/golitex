@@ -71,7 +71,7 @@ type Reversable_LogicOrSpec_Stmt interface {
 	stmt()
 	String() string
 	Instantiate(uniConMap map[string]Fc) (FactStmt, error)
-	ReverseIsTrue() Reversable_LogicOrSpec_Stmt
+	ReverseIsTrue() []SpecFactStmt
 	IsSpecFactNameWithUniPrefix() bool
 }
 
@@ -107,12 +107,16 @@ func (s *OrStmt) IsSpecFactNameWithUniPrefix() bool {
 // 	}
 // }
 
-func (stmt *SpecFactStmt) ReverseIsTrue() Reversable_LogicOrSpec_Stmt {
-	return stmt.ReverseSpecFact()
+func (stmt *SpecFactStmt) ReverseIsTrue() []SpecFactStmt {
+	return []SpecFactStmt{*stmt.ReverseSpecFact()}
 }
 
-func (stmt *OrStmt) ReverseIsTrue() Reversable_LogicOrSpec_Stmt {
-	panic("not implemented")
+func (stmt *OrStmt) ReverseIsTrue() []SpecFactStmt {
+	reversedFacts := make([]SpecFactStmt, len(stmt.Facts))
+	for i, fact := range stmt.Facts {
+		reversedFacts[i] = *fact.ReverseSpecFact()
+	}
+	return reversedFacts
 }
 
 // 用于处理 forall x Type. 这里的 Type 可以是 obj, fn, prop, existProp.

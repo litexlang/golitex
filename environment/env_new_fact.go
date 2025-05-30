@@ -276,12 +276,14 @@ func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, erro
 
 	specThenFacts := []*ast.SpecFactStmt{}
 	for _, thenFact := range existPropDef.DefBody.IffFacts {
-		reversed := thenFact.ReverseIsTrue()
-		instantiated, err := reversed.Instantiate(uniMap)
-		if err != nil {
-			return nil, err
+		reversedFacts := thenFact.ReverseIsTrue()
+		for _, reversedFact := range reversedFacts {
+			instantiated, err := reversedFact.Instantiate(uniMap)
+			if err != nil {
+				return nil, err
+			}
+			specThenFacts = append(specThenFacts, instantiated.(*ast.SpecFactStmt))
 		}
-		specThenFacts = append(specThenFacts, instantiated.(*ast.SpecFactStmt))
 	}
 
 	thenFacts := []ast.FactStmt{}
