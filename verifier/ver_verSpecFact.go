@@ -75,13 +75,19 @@ func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state VerStat
 		return true, nil
 	}
 
-	if ok, err := ver.verSpecFactSpecMemAndLogicMem(stmt, state); err != nil {
+	if ok, err := ver.verSpecFact_SpecMem(stmt, state); err != nil {
 		return false, err
 	} else if ok {
 		return true, nil
 	}
 
 	if !state.isFinalRound() {
+		if ok, err := ver.verSpecFact_LogicMem(stmt, state); err != nil {
+			return false, err
+		} else if ok {
+			return true, nil
+		}
+
 		if ok, err := ver.verSpecFactUniMem(stmt, state); err != nil {
 			return false, err
 		} else if ok {
@@ -267,8 +273,17 @@ func (ver *Verifier) useExistPropDefProveExist_St(stmt *ast.SpecFactStmt, state 
 }
 
 func (ver *Verifier) verSpecFactSpecMemAndLogicMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	// TOOD: 里面的函数需要更新
-	return ver.verSpecFact_SpecMem_LogicMem(stmt, state)
+	ok, err := ver.verSpecFact_SpecMem(stmt, state)
+	if err != nil || ok {
+		return ok, err
+	}
+
+	ok, err = ver.verSpecFact_LogicMem(stmt, state)
+	if err != nil || ok {
+		return ok, err
+	}
+
+	return false, nil
 }
 
 func (ver *Verifier) verSpecFactUniMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
