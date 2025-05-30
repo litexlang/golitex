@@ -1,6 +1,17 @@
+prop p(x N)
+prop q(x N)
+prop r(x N)
+
 prove:
-    prop p(x N)
-    prop q(x N)
+    know:
+        or:
+            $p(1)
+            $q(1)
+    or:
+        $p(1)
+        $q(1)
+
+prove:
     know:
         forall x N:
             or:
@@ -10,3 +21,15 @@ prove:
     or:
         $p(1)
         $q(1)
+
+"""
+prove:
+    know:
+        or:
+            $p(1)
+            $q(1)
+
+    or:
+        $p(32)
+        $q(1)
+"""

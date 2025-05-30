@@ -188,14 +188,12 @@ prove:
     have a , b , c , d  st $exist_four_points_not_on_any_plane()
     $not_on_any_plane(a, b, c, d)
 
-"""
     forall p plane:
             or:
                 not $point_on_plane(a, p)
                 not $point_on_plane(b, p)
                 not $point_on_plane(c, p)
                 not $point_on_plane(d, p)
-"""
 
 # 2. Order
 
