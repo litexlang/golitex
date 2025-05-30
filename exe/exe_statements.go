@@ -49,8 +49,8 @@ func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		err = exec.setDefStmt(stmt)
 	case *ast.ProveInEachCaseStmt:
 		execState, err = exec.proveInEachCaseStmt(stmt)
-	case *ast.ProveOrStmt:
-		execState, err = exec.proveOrStmt(stmt)
+	// case *ast.ProveOrStmt:
+	// execState, err = exec.proveOrStmt(stmt)
 	case *ast.SupposePropMatchStmt:
 		execState, err = exec.supposePropMatchStmt(stmt)
 	case *ast.WithPropMatchStmt:
@@ -616,37 +616,35 @@ func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEach
 	exec.newEnv(exec.env, exec.env.CurMatchEnv)
 	defer exec.deleteEnvAndRetainMsg()
 
-	panic("todo")
+	caseStmt := stmt.OrFact.Facts[index]
 
-	// caseStmt := stmt.OrFact.Facts[index]
+	err := exec.env.NewFact(&caseStmt)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
 
-	// err := exec.env.NewFact(caseStmt)
-	// if err != nil {
-	// 	return glob.ExecState_Error, err
-	// }
+	for _, proofStmt := range stmt.Proofs[index] {
+		execState, err := exec.stmt(proofStmt)
+		if err != nil {
+			return glob.ExecState_Error, err
+		}
+		if execState != glob.ExecState_True {
+			return execState, nil
+		}
+	}
 
-	// for _, proofStmt := range stmt.Proofs[index] {
-	// 	execState, err := exec.stmt(proofStmt)
-	// 	if err != nil {
-	// 		return glob.ExecState_Error, err
-	// 	}
-	// 	if execState != glob.ExecState_True {
-	// 		return execState, nil
-	// 	}
-	// }
+	// verify thenFacts are true
+	for _, thenFact := range stmt.ThenFacts {
+		execState, err := exec.factStmt(thenFact)
+		if err != nil {
+			return glob.ExecState_Error, err
+		}
+		if execState != glob.ExecState_True {
+			return execState, nil
+		}
+	}
 
-	// // verify thenFacts are true
-	// for _, thenFact := range stmt.ThenFacts {
-	// 	execState, err := exec.factStmt(thenFact)
-	// 	if err != nil {
-	// 		return glob.ExecState_Error, err
-	// 	}
-	// 	if execState != glob.ExecState_True {
-	// 		return execState, nil
-	// 	}
-	// }
-
-	// return glob.ExecState_True, nil
+	return glob.ExecState_True, nil
 }
 
 func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) (glob.ExecState, error) {
@@ -689,31 +687,29 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
 	return nil
 }
 
-func (exec *Executor) proveOrStmt(stmt *ast.ProveOrStmt) (glob.ExecState, error) {
-	isSuccess := false
-	defer func() {
-		exec.appendMsg("\n")
-		if isSuccess {
-			exec.appendNewMsgAtBegin("is true\n")
-		} else {
-			exec.appendNewMsgAtBegin("is unknown\n")
-		}
-		exec.appendNewMsgAtBegin(stmt.String())
-	}()
+// func (exec *Executor) proveOrStmt(stmt *ast.ProveOrStmt) (glob.ExecState, error) {
+// 	isSuccess := false
+// 	defer func() {
+// 		exec.appendMsg("\n")
+// 		if isSuccess {
+// 			exec.appendNewMsgAtBegin("is true\n")
+// 		} else {
+// 			exec.appendNewMsgAtBegin("is unknown\n")
+// 		}
+// 		exec.appendNewMsgAtBegin(stmt.String())
+// 	}()
 
-	panic("todo")
+// 	ver := verifier.NewVerifier(exec.env)
+// 	ok, err := ver.proveOrByEveryStatementExceptGivenIndexIsFalseThenTheFactWithGivenIndexIsTrue(stmt.Indexes, &stmt.OrFact, verifier.Round0Msg)
+// 	if err != nil {
+// 		return glob.ExecState_Error, err
+// 	}
+// 	if !ok {
+// 		return glob.ExecState_Unknown, nil
+// 	}
 
-	// ver := verifier.NewVerifier(exec.env)
-	// ok, err := ver.IfFactsNotTrueThenOtherPartOfLogicalExprIsTrue(stmt.Indexes, &stmt.OrFact, verifier.Round0Msg)
-	// if err != nil {
-	// 	return glob.ExecState_Error, err
-	// }
-	// if !ok {
-	// 	return glob.ExecState_Unknown, nil
-	// }
-
-	// return glob.ExecState_True, nil
-}
+// 	return glob.ExecState_True, nil
+// }
 
 func (exec *Executor) knowSupposeStmt(stmt *ast.KnowSupposeStmt) (glob.ExecState, error) {
 	exec.env.CurMatchEnv = &stmt.SupposeStmt

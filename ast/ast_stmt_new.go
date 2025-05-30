@@ -104,9 +104,9 @@ func NewFcAtomWithName(name string) *FcAtom {
 	return NewFcAtom(glob.EmptyPkg, name)
 }
 
-func NewProveOrStmt(indexes map[int]struct{}, orFact OrStmt, proofs []Stmt) *ProveOrStmt {
-	return &ProveOrStmt{indexes, orFact, proofs}
-}
+// func NewProveOrStmt(indexes map[int]struct{}, orFact OrStmt, proofs []Stmt) *ProveOrStmt {
+// 	return &ProveOrStmt{indexes, orFact, proofs}
+// }
 
 func NewKnowExistPropStmt(existProp DefExistPropStmt) *KnowExistPropStmt {
 	return &KnowExistPropStmt{existProp}
