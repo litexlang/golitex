@@ -105,19 +105,18 @@ func (tb *tokenBlock) factStmt(nameDepthMap ast.NameDepthMap, curAllowUniFactEnu
 	if tb.header.is(glob.KeywordForall) {
 		return tb.uniFactStmt(nameDepthMap, curAllowUniFactEnum)
 	} else if tb.header.is(glob.KeywordAnd) || tb.header.is(glob.KeywordOr) {
-		return tb.logicExprStmt(nameDepthMap)
+		return tb.orStmt(nameDepthMap)
+		// return tb.logicExprStmt(nameDepthMap)
 	}
 
 	return tb.specFactStmt(nameDepthMap)
 }
 
-func (tb *tokenBlock) logicExprStmt(nameDepthMap ast.NameDepthMap) (*ast.LogicExprStmt, error) {
+func (tb *tokenBlock) orStmt(nameDepthMap ast.NameDepthMap) (*ast.OrStmt, error) {
+	orFacts := []ast.SpecFactStmt{}
 	isOr := tb.header.isAndSkip(glob.KeywordOr)
 	if !isOr {
-		err := tb.header.skip(glob.KeywordAnd)
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
-		}
+		return nil, fmt.Errorf("expect 'or'")
 	}
 
 	err := tb.header.skip(glob.KeySymbolColon)
@@ -125,42 +124,79 @@ func (tb *tokenBlock) logicExprStmt(nameDepthMap ast.NameDepthMap) (*ast.LogicEx
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	facts := []ast.Reversable_LogicOrSpec_Stmt{}
 	for _, factToParse := range tb.body {
-		fact, err := factToParse.logicExprOrSpecFactStmt(nameDepthMap)
+		fact, err := factToParse.specFactStmt(nameDepthMap)
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
 		}
-		facts = append(facts, fact)
+		orFacts = append(orFacts, *fact)
 	}
 
-	// 用很呆的方式保证只能是 logical expression 或者 specFact
-	for _, fact := range facts {
-		if _, ok := fact.(*ast.SpecFactStmt); ok {
-			continue
-		}
-
-		if _, ok := fact.(*ast.LogicExprStmt); ok {
-			continue
-		}
-
-		return nil, fmt.Errorf("expect logical expression or specFact")
-	}
-
-	if len(facts) > glob.FactMaxNumInLogicExpr {
-		return nil, fmt.Errorf("logic expr has too many facts: %d, expect no more than %d", len(facts), glob.FactMaxNumInLogicExpr)
-	}
-
-	return ast.NewOrAndFact(isOr, facts), nil
+	return ast.NewOrStmt(orFacts), nil
 }
 
 func (tb *tokenBlock) logicExprOrSpecFactStmt(nameDepthMap ast.NameDepthMap) (ast.Reversable_LogicOrSpec_Stmt, error) {
-	if tb.header.is(glob.KeywordOr) || tb.header.is(glob.KeywordAnd) {
-		return tb.logicExprStmt(nameDepthMap)
+	if tb.header.is(glob.KeywordOr) {
+		orFacts, err := tb.orStmt(nameDepthMap)
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+		return orFacts, nil
 	}
 
 	return tb.specFactStmt(nameDepthMap)
 }
+
+// func (tb *tokenBlock) logicExprStmt(nameDepthMap ast.NameDepthMap) (*ast.LogicExprStmt, error) {
+// 	isOr := tb.header.isAndSkip(glob.KeywordOr)
+// 	if !isOr {
+// 		err := tb.header.skip(glob.KeywordAnd)
+// 		if err != nil {
+// 			return nil, &tokenBlockErr{err, *tb}
+// 		}
+// 	}
+
+// 	err := tb.header.skip(glob.KeySymbolColon)
+// 	if err != nil {
+// 		return nil, &tokenBlockErr{err, *tb}
+// 	}
+
+// 	facts := []ast.Reversable_LogicOrSpec_Stmt{}
+// 	for _, factToParse := range tb.body {
+// 		fact, err := factToParse.logicExprOrSpecFactStmt(nameDepthMap)
+// 		if err != nil {
+// 			return nil, &tokenBlockErr{err, *tb}
+// 		}
+// 		facts = append(facts, fact)
+// 	}
+
+// 	// 用很呆的方式保证只能是 logical expression 或者 specFact
+// 	for _, fact := range facts {
+// 		if _, ok := fact.(*ast.SpecFactStmt); ok {
+// 			continue
+// 		}
+
+// 		if _, ok := fact.(*ast.LogicExprStmt); ok {
+// 			continue
+// 		}
+
+// 		return nil, fmt.Errorf("expect logical expression or specFact")
+// 	}
+
+// 	if len(facts) > glob.FactMaxNumInLogicExpr {
+// 		return nil, fmt.Errorf("logic expr has too many facts: %d, expect no more than %d", len(facts), glob.FactMaxNumInLogicExpr)
+// 	}
+
+// 	return ast.NewOrAndFact(isOr, facts), nil
+// }
+
+// func (tb *tokenBlock) logicExprOrSpecFactStmt(nameDepthMap ast.NameDepthMap) (ast.Reversable_LogicOrSpec_Stmt, error) {
+// 	if tb.header.is(glob.KeywordOr) || tb.header.is(glob.KeywordAnd) {
+// 		return tb.logicExprStmt(nameDepthMap)
+// 	}
+
+// 	return tb.specFactStmt(nameDepthMap)
+// }
 
 func (tb *tokenBlock) specFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFactStmt, error) {
 	isTrue := true
@@ -1077,13 +1113,9 @@ func (tb *tokenBlock) proveInEachCaseStmt() (*ast.ProveInEachCaseStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	orFact, err := tb.body[0].logicExprStmt(ast.NameDepthMap{})
+	orFact, err := tb.body[0].orStmt(ast.NameDepthMap{})
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
-	}
-
-	if !orFact.IsOr {
-		return nil, &tokenBlockErr{fmt.Errorf("prove in each case: expect or fact, but got: %s", orFact.String()), *tb}
 	}
 
 	thenFacts := []ast.FactStmt{}
@@ -1159,14 +1191,15 @@ func (tb *tokenBlock) proveOrStmt() (*ast.ProveOrStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	orFact, err := tb.body[0].logicExprStmt(ast.NameDepthMap{})
+	// orFact, err := tb.body[0].logicExprStmt(ast.NameDepthMap{})
+	orFact, err := tb.body[0].orStmt(ast.NameDepthMap{})
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	if !orFact.IsOr {
-		return nil, &tokenBlockErr{fmt.Errorf("prove or: expect or fact, but got: %s", orFact.String()), *tb}
-	}
+	// if !orFact.IsOr {
+	// 	return nil, &tokenBlockErr{fmt.Errorf("prove or: expect or fact, but got: %s", orFact.String()), *tb}
+	// }
 
 	err = tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
 	if err != nil {

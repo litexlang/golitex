@@ -246,3 +246,17 @@ func (stmt *DefExistPropStmt) Instantiate(uniMap map[string]Fc) (*DefExistPropSt
 
 	return NewDefExistPropStmt(newDefExistPropBody, stmt.ExistParams, newExistParamInSetsFacts), nil
 }
+
+func (stmt *OrStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
+	newOrFacts := make([]SpecFactStmt, len(stmt.Facts))
+	for i, fact := range stmt.Facts {
+		newFact, err := fact.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newFactPtr := newFact.(*SpecFactStmt)
+		newOrFacts[i] = *newFactPtr
+	}
+
+	return NewOrStmt(newOrFacts), nil
+}

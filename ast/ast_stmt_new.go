@@ -88,7 +88,7 @@ func NewSetDefSetBuilderStmt(setName string, parentSet Fc, facts []FactStmt) *Se
 	return &SetDefSetBuilderStmt{setName, parentSet, facts}
 }
 
-func NewProveInEachCaseStmt(orFact LogicExprStmt, thenFacts []FactStmt, proofs [][]Stmt) *ProveInEachCaseStmt {
+func NewProveInEachCaseStmt(orFact OrStmt, thenFacts []FactStmt, proofs [][]Stmt) *ProveInEachCaseStmt {
 	return &ProveInEachCaseStmt{orFact, thenFacts, proofs}
 }
 
@@ -104,7 +104,7 @@ func NewFcAtomWithName(name string) *FcAtom {
 	return NewFcAtom(glob.EmptyPkg, name)
 }
 
-func NewProveOrStmt(indexes map[int]struct{}, orFact LogicExprStmt, proofs []Stmt) *ProveOrStmt {
+func NewProveOrStmt(indexes map[int]struct{}, orFact OrStmt, proofs []Stmt) *ProveOrStmt {
 	return &ProveOrStmt{indexes, orFact, proofs}
 }
 
@@ -122,4 +122,8 @@ func NewWithPropMatchStmt(fact SpecFactStmt, body []Stmt) *WithPropMatchStmt {
 
 func NewKnowSupposeStmt(supposeStmt SupposePropMatchStmt) *KnowSupposeStmt {
 	return &KnowSupposeStmt{supposeStmt}
+}
+
+func NewOrStmt(orFacts []SpecFactStmt) *OrStmt {
+	return &OrStmt{orFacts}
 }

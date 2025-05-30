@@ -86,7 +86,7 @@ func (s *LogicExprStmt) IsSpecFactNameWithUniPrefix() bool {
 }
 func (s *OrStmt) logicExprOrSpecFactStmt() {}
 func (s *OrStmt) IsSpecFactNameWithUniPrefix() bool {
-	for _, fact := range s.OrFacts {
+	for _, fact := range s.Facts {
 		if fact.IsSpecFactNameWithUniPrefix() {
 			return true
 		}
