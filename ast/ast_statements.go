@@ -123,15 +123,17 @@ type WithPropMatchStmt struct {
 
 // 之后可以考虑引入 不是 orfact 来证明，而是如果一个集合元素是有限的，那我也可以prove by case
 type ProveInEachCaseStmt struct {
-	OrFact    LogicExprStmt
+	// OrFact    LogicExprStmt
+	OrFact    OrStmt
 	ThenFacts []FactStmt
 	Proofs    [][]Stmt
 }
 
 type ProveOrStmt struct {
 	Indexes map[int]struct{}
-	OrFact  LogicExprStmt
-	Proofs  []Stmt
+	// OrFact  LogicExprStmt
+	OrFact OrStmt
+	Proofs []Stmt
 }
 
 type KnowExistPropStmt struct {
@@ -143,5 +145,5 @@ type KnowSupposeStmt struct {
 }
 
 type OrStmt struct {
-	OrFacts []OrStmt
+	Facts []SpecFactStmt
 }

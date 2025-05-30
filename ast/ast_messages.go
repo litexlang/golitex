@@ -612,3 +612,15 @@ func (stmt *KnowSupposeStmt) String() string {
 	builder.WriteString(stmt.SupposeStmt.String())
 	return builder.String()
 }
+
+func (stmt *OrStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordOr)
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+	for _, orFact := range stmt.Facts {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(orFact.String(), 1))
+		builder.WriteByte('\n')
+	}
+	return strings.TrimSuffix(builder.String(), "\n")
+}
