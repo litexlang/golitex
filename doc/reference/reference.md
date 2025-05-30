@@ -117,6 +117,7 @@ There are many "design balences" in Litex. Math is so common that anybody has so
 
 Litex is fundamentally a read-only Turing machine. Once any fact is stored, it can not be removed or changed. The amount of data stored in memory is in porpotion to the amount of code that the user write. Such design makes Litex align with everyday math.
 
+Litex gets its name from Lisp and Tex. Lisp is a programming language that is very close to math. Tex is a typesetting system that is very close to math. Both of them greatly inspired Litex, making Litex also a formal language that is very close to math.
 
 ## Conclusion
 

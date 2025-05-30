@@ -1,12 +1,12 @@
-set SetName ParentSet:
-    $p(self)
+set a
 
-set SetName {1,2}
+know:
+    forall x a:
+        or:
+            x = 1
+            x = 2
+            x = 3
 
-fn f(x DomSet) ImageSet
-
-exist_prop x DomSet st exist_inverse_image(y ImageSet):
-    f(x) = y
-
-set SetName2 ParentSet:
-    $exist_inverse_image(self)
+    1 $in a
+    2 $in a
+    3 $in a

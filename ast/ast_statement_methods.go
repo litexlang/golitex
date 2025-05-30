@@ -231,3 +231,7 @@ func (stmt *SpecFactStmt) ReverseSpecFactParamsOrder() (*SpecFactStmt, error) {
 	newParams := []Fc{stmt.Params[1], stmt.Params[0]}
 	return NewSpecFactStmt(stmt.TypeEnum, stmt.PropName, newParams), nil
 }
+
+func MakeFnSetFc(fnSets []Fc, retSet Fc) Fc {
+	return NewFcFn(NewFcFn(NewFcAtomWithName(glob.KeywordFn), fnSets), []Fc{retSet})
+}

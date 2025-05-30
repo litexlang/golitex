@@ -247,6 +247,29 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 		return err
 	}
 
+	// the function object is in fn
+	retSet, err := ast.GetParamSetFromInStmt(stmt.RetInSetsFact)
+	if err != nil {
+		return err
+	}
+
+	paramSets := []ast.Fc{}
+	for _, paramInSet := range stmt.DefHeader.ParamInSetsFacts {
+		paramSet, err := ast.GetParamSetFromInStmt(paramInSet)
+		if err != nil {
+			return err
+		}
+		paramSets = append(paramSets, paramSet)
+	}
+
+	fnSet := ast.MakeFnSetFc(paramSets, retSet)
+
+	infact := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(stmt.DefHeader.Name), fnSet})
+	err = exec.env.NewFact(infact)
+	if err != nil {
+		return err
+	}
+
 	uniFactThen := []ast.FactStmt{stmt.RetInSetsFact}
 	uniFactThen = append(uniFactThen, stmt.ThenFacts...)
 
@@ -572,12 +595,14 @@ func (exec *Executor) setDefStmt(stmt *ast.SetDefSetBuilderStmt) error {
 
 	// err := exec.env.SetDefMem.Insert(stmt)
 
-	infact := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(stmt.SetName), ast.NewFcAtomWithName(glob.KeywordIn)})
-	err := exec.env.NewFact(infact)
+	// insert as obj
+	infact := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(stmt.SetName), ast.NewFcAtomWithName(glob.KeywordSet)})
 
+	err := exec.defObjStmt(ast.NewDefObjStmt([]string{stmt.SetName}, []ast.FactStmt{}, []ast.FactStmt{infact}))
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 

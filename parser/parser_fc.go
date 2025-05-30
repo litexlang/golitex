@@ -378,7 +378,7 @@ func (cursor *strSliceCursor) fnSet() (ast.Fc, error) {
 		return nil, &strSliceErr{err, cursor}
 	}
 
-	ret := ast.NewFcFn(ast.NewFcFn(ast.NewFcAtomWithName(glob.KeywordFn), fnSets), []ast.Fc{retSet})
+	ret := ast.MakeFnSetFc(fnSets, retSet)
 
 	return ret, nil
 }

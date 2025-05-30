@@ -6,12 +6,13 @@
 
 # Litex: Scale Formal Reasoning in AI Age
 
-**Release v0.1.1-beta (incomplete, just for testing)**  
+**Release v0.1.1-beta (not yet ready for production use)**  
 *May 2025*  
 *Created by Jiachen Shen*
-*This project is a work in progress, and is not yet ready for production use.*
 
 </div>
+
+## About Litex
 
 _Simplicity is the ultimate sophistication._
 
@@ -83,7 +84,7 @@ Mathematics is the art of deriving new facts from established ones. To illustrat
 
 Consider `Human` as the set of all humans. Using `know`, we establish a simple fact: all humans are self-aware. Since Bob is in the set of `Human`, "Bob is self-aware" is true. This simple example shows how Litex builds math from basic pieces, like building blocks. By `match and substitute`, Litex verfies the correctness of the reasoning just like how you verify the correctness of your daily reasoning. Each statement in Litex has four potential outcomes: true, false, unknown, or error.
 
-Notice how Litex is much simpler than Lean4. Instead of writing complex axioms with special names, you just use familiar words like `know` and `forall`. Litex automatically finds the facts it needs, just like searching in a database. Moreover, there are less unfamiliar keywords, less twisted syntax in Litex. Litex's syntax is similar to Python and Go, so if you've done any programming, you'll feel right at home. See more in [comparison with Lean](./doc/comparison_with_lean/comparison_with_lean.md), [tutoriao](./doc/tutorial/tutorial.md).
+Notice how Litex is much simpler than Lean4. Instead of writing complex axioms with special names, you just use familiar words like `know` and `forall`. Litex automatically finds the facts it needs, just like searching in a database. Moreover, there are less unfamiliar keywords, less twisted syntax in Litex. Litex's syntax is similar to Python and Go, so if you've done any programming, you'll feel right at home. See more in [comparison with Lean](./doc/comparison_with_lean/comparison_with_lean.md), [tutorial](./doc/tutorial/tutorial.md).
 
 ## Unique Idea of Litex
 
@@ -101,7 +102,7 @@ Technically, Litex is a declarative formal language that operates as a Read-Only
 
 Another important design choice is that the user does not need to give names to facts, because Litex can automatically find the matched facts it needs. Read [tutorial](./doc/tutorial/tutorial.md) for more details.
 
-All daily math is built around first-order-logic, naive set theory, natural numbers related axioms (mathematical induction, Peano axioms, extension to rational numbers and real numbers), and all of these are  implemented in Litex. 
+All daily math is built around first-order-logic, naive set theory, natural numbers related axioms (mathematical induction, Peano axioms, extension to rational numbers and real numbers), and all of these are implemented in Litex. So it does not matter whether you are formalizing algebra or geometry or any other math, as long as you are clear about concepts and axioms of the math you are formalizing, you can use Litex to formalize it.
 
 In a nutshell, Litex is for EVERYONE, from children to experts, to learn and use formal language at AI age. It scales up reasoning by making the process of writing formal reasoning as intuitive as writing in natural language.
 
