@@ -512,13 +512,27 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 	}
 
 	currentLayerFact := knownFact.LogicExpr
-	ok, err := ver.verOrStmt(currentLayerFact, state)
-	if err != nil {
-		return false, err
+
+	for i, fact := range currentLayerFact.Facts {
+		if i == int(knownFact.Index) {
+			continue
+		}
+		ok, err := ver.FactStmt(&fact.ReverseIsTrue()[0], state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
 	}
-	if !ok {
-		return false, nil
-	}
+
+	// ok, err := ver.verOrStmt(currentLayerFact, state)
+	// if err != nil {
+	// 	return false, err
+	// }
+	// if !ok {
+	// 	return false, nil
+	// }
 
 	if state.requireMsg() {
 		var verifiedBy strings.Builder
@@ -1254,6 +1268,7 @@ func (ver *Verifier) useKnownOrFactToProveSpecFact(knownFact *env.KnownSpecFact_
 		return false, nil
 	}
 
+	nextState := state.addRound()
 	for i, fact := range knownFact.LogicExpr.Facts {
 		if i == knownFact.Index {
 			continue
@@ -1261,7 +1276,7 @@ func (ver *Verifier) useKnownOrFactToProveSpecFact(knownFact *env.KnownSpecFact_
 		reversedFact := fact.ReverseSpecFact()
 		// panic("")
 		// TODO: WARNING: 这里有问题，可能无限循环
-		ok, err := ver.FactStmt(reversedFact, state)
+		ok, err := ver.FactStmt(reversedFact, nextState)
 		if err != nil {
 			return false, err
 		}
