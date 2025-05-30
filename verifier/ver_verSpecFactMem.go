@@ -197,17 +197,41 @@ func (ver *Verifier) specFact_MatchEnv_InOrStmt_UniMem_atEnv(curEnv *env.Env, st
 
 	nextState := state.addRound().toNoMsg()
 
-	return ver.iterate_KnownSpecInLogic_InUni_MatchEnv_applyMatch(stmt, searchedSpecFactsInLogicExpr, nextState)
+	return ver.iterate_KnownSpec_InLogic_InUni_MatchEnv_applyMatch(stmt, searchedSpecFactsInLogicExpr, nextState)
 }
 
-func (ver *Verifier) iterate_KnownSpecInLogic_InUni_MatchEnv_applyMatch(stmt *ast.SpecFactStmt, knownFacts []env.SpecFact_InLogicExpr_InUniFact, state VerState) (bool, error) {
+func (ver *Verifier) iterate_KnownSpec_InLogic_InUni_MatchEnv_applyMatch(stmt *ast.SpecFactStmt, knownFacts []env.SpecFact_InLogicExpr_InUniFact, state VerState) (bool, error) {
+	var previousSuppose *ast.SupposePropMatchStmt = nil
+	uniMapForMatchEnv := map[string]ast.Fc{}
+
 	for _, knownFactUnderLogicExpr := range knownFacts {
+		if knownFactUnderLogicExpr.EnvFact != previousSuppose {
+			for i, param := range knownFactUnderLogicExpr.EnvFact.Fact.Params {
+				atom, ok := param.(*ast.FcAtom)
+				if !ok {
+					return false, fmt.Errorf("known param %s is not an atom", param.String())
+				}
+				uniMapForMatchEnv[atom.Name] = stmt.Params[i]
+			}
+			previousSuppose = knownFactUnderLogicExpr.EnvFact
+		}
+
 		paramArrMap, ok, err := ver.matchStoredUniSpecWithSpec_prevetnDifferentVarsMatchTheSameFreeVar(env.KnownSpecFact_InUniSpecFact{SpecFact: knownFactUnderLogicExpr.SpecFact, UniFact: knownFactUnderLogicExpr.UniFact}, stmt)
 		if err != nil {
 			return false, err
 		}
 		if !ok {
 			continue
+		}
+
+		// 把 uniMapForMatchEnv 放入 paramArrMap
+		for k, v := range uniMapForMatchEnv {
+			// 如果不存在，那就新建；已经存在，就append
+			if _, ok := paramArrMap[k]; !ok {
+				paramArrMap[k] = []ast.Fc{v}
+			} else {
+				paramArrMap[k] = append(paramArrMap[k], v)
+			}
 		}
 
 		// 防止 两个不相等的参数对应到了同一个自由变量
