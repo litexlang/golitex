@@ -16,7 +16,6 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
-	"strconv"
 )
 
 func (tb *tokenBlock) TopStmt() (*ast.TopStmt, error) {
@@ -84,8 +83,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.withPropMatchStmt()
 	case glob.KeywordProveInEachCase:
 		ret, err = tb.proveInEachCaseStmt()
-	case glob.KeywordProveOr:
-		ret, err = tb.proveOrStmt()
+	// case glob.KeywordProveOr:
+	// 	ret, err = tb.proveOrStmt()
 	default:
 		ret, err = tb.factStmt(ast.NameDepthMap{}, UniFactDepth0)
 	}
@@ -1158,71 +1157,71 @@ func (tb *tokenBlock) proveInEachCaseStmt() (*ast.ProveInEachCaseStmt, error) {
 	return ast.NewProveInEachCaseStmt(*orFact, thenFacts, proofs), nil
 }
 
-func (tb *tokenBlock) proveOrStmt() (*ast.ProveOrStmt, error) {
-	err := tb.header.skip(glob.KeywordProveOr)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
+// func (tb *tokenBlock) proveOrStmt() (*ast.ProveOrStmt, error) {
+// 	err := tb.header.skip(glob.KeywordProveOr)
+// 	if err != nil {
+// 		return nil, &tokenBlockErr{err, *tb}
+// 	}
 
-	indexes := map[int]struct{}{}
-	for {
-		curToken, err := tb.header.getAndSkip("")
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
-		}
-		// to int
-		curIndex, err := strconv.Atoi(curToken)
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
-		}
-		indexes[curIndex] = struct{}{}
-		if tb.header.is(glob.KeySymbolComma) {
-			tb.header.skip(glob.KeySymbolComma)
-			continue
-		}
-		if tb.header.is(glob.KeySymbolColon) {
-			break
-		}
-		return nil, fmt.Errorf("expect '%s' or '%s' but got '%s'", glob.KeySymbolColon, glob.KeySymbolComma, tb.header.strAtCurIndexPlus(0))
-	}
+// 	indexes := map[int]struct{}{}
+// 	for {
+// 		curToken, err := tb.header.getAndSkip("")
+// 		if err != nil {
+// 			return nil, &tokenBlockErr{err, *tb}
+// 		}
+// 		// to int
+// 		curIndex, err := strconv.Atoi(curToken)
+// 		if err != nil {
+// 			return nil, &tokenBlockErr{err, *tb}
+// 		}
+// 		indexes[curIndex] = struct{}{}
+// 		if tb.header.is(glob.KeySymbolComma) {
+// 			tb.header.skip(glob.KeySymbolComma)
+// 			continue
+// 		}
+// 		if tb.header.is(glob.KeySymbolColon) {
+// 			break
+// 		}
+// 		return nil, fmt.Errorf("expect '%s' or '%s' but got '%s'", glob.KeySymbolColon, glob.KeySymbolComma, tb.header.strAtCurIndexPlus(0))
+// 	}
 
-	err = tb.header.skip(glob.KeySymbolColon)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
+// 	err = tb.header.skip(glob.KeySymbolColon)
+// 	if err != nil {
+// 		return nil, &tokenBlockErr{err, *tb}
+// 	}
 
-	// orFact, err := tb.body[0].logicExprStmt(ast.NameDepthMap{})
-	orFact, err := tb.body[0].orStmt(ast.NameDepthMap{})
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
+// 	// orFact, err := tb.body[0].logicExprStmt(ast.NameDepthMap{})
+// 	orFact, err := tb.body[0].orStmt(ast.NameDepthMap{})
+// 	if err != nil {
+// 		return nil, &tokenBlockErr{err, *tb}
+// 	}
 
-	// if !orFact.IsOr {
-	// 	return nil, &tokenBlockErr{fmt.Errorf("prove or: expect or fact, but got: %s", orFact.String()), *tb}
-	// }
+// 	// if !orFact.IsOr {
+// 	// 	return nil, &tokenBlockErr{fmt.Errorf("prove or: expect or fact, but got: %s", orFact.String()), *tb}
+// 	// }
 
-	err = tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
+// 	err = tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
+// 	if err != nil {
+// 		return nil, &tokenBlockErr{err, *tb}
+// 	}
 
-	proofs := []ast.Stmt{}
-	for _, stmt := range tb.body[1].body {
-		curStmt, err := stmt.Stmt()
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
-		}
-		proofs = append(proofs, curStmt)
-	}
+// 	proofs := []ast.Stmt{}
+// 	for _, stmt := range tb.body[1].body {
+// 		curStmt, err := stmt.Stmt()
+// 		if err != nil {
+// 			return nil, &tokenBlockErr{err, *tb}
+// 		}
+// 		proofs = append(proofs, curStmt)
+// 	}
 
-	for index := range indexes {
-		if index < 0 || index >= len(orFact.Facts) {
-			return nil, &tokenBlockErr{fmt.Errorf("prove or: index out of range: %d", index), *tb}
-		}
-	}
+// 	for index := range indexes {
+// 		if index < 0 || index >= len(orFact.Facts) {
+// 			return nil, &tokenBlockErr{fmt.Errorf("prove or: index out of range: %d", index), *tb}
+// 		}
+// 	}
 
-	return ast.NewProveOrStmt(indexes, *orFact, proofs), nil
-}
+// 	return ast.NewProveOrStmt(indexes, *orFact, proofs), nil
+// }
 
 func (tb *tokenBlock) knowExistPropStmt() (*ast.KnowExistPropStmt, error) {
 	err := tb.header.skip(glob.KeywordKnow)

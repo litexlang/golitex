@@ -129,12 +129,12 @@ type ProveInEachCaseStmt struct {
 	Proofs    [][]Stmt
 }
 
-type ProveOrStmt struct {
-	Indexes map[int]struct{}
-	// OrFact  LogicExprStmt
-	OrFact OrStmt
-	Proofs []Stmt
-}
+// type ProveOrStmt struct {
+// 	Indexes map[int]struct{}
+// 	// OrFact  LogicExprStmt
+// 	OrFact OrStmt
+// 	Proofs []Stmt
+// }
 
 type KnowExistPropStmt struct {
 	ExistProp DefExistPropStmt

@@ -15,7 +15,6 @@ package litex_ast
 import (
 	"fmt"
 	glob "golitex/glob"
-	"strconv"
 	"strings"
 )
 
@@ -557,26 +556,26 @@ func (stmt *KnowPropStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *ProveOrStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordProveOr)
-	builder.WriteString(" ")
-	for index := range stmt.Indexes {
-		builder.WriteString(strconv.Itoa(index))
-		builder.WriteString(", ")
-	}
-	builder.WriteString(":\n")
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.OrFact.String(), 1))
-	builder.WriteByte('\n')
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve, 1))
-	builder.WriteByte(':')
-	builder.WriteByte('\n')
-	for i := range len(stmt.Proofs) - 1 {
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Proofs[i].String(), 2))
-		builder.WriteByte('\n')
-	}
-	return strings.TrimSuffix(builder.String(), "\n")
-}
+// func (stmt *ProveOrStmt) String() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(glob.KeywordProveOr)
+// 	builder.WriteString(" ")
+// 	for index := range stmt.Indexes {
+// 		builder.WriteString(strconv.Itoa(index))
+// 		builder.WriteString(", ")
+// 	}
+// 	builder.WriteString(":\n")
+// 	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.OrFact.String(), 1))
+// 	builder.WriteByte('\n')
+// 	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve, 1))
+// 	builder.WriteByte(':')
+// 	builder.WriteByte('\n')
+// 	for i := range len(stmt.Proofs) - 1 {
+// 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Proofs[i].String(), 2))
+// 		builder.WriteByte('\n')
+// 	}
+// 	return strings.TrimSuffix(builder.String(), "\n")
+// }
 
 func (stmt *KnowExistPropStmt) String() string {
 	var builder strings.Builder
