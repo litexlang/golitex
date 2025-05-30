@@ -15,7 +15,6 @@ package litex_verifier
 import (
 	"fmt"
 	ast "golitex/ast"
-	glob "golitex/glob"
 )
 
 func (ver *Verifier) inFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
@@ -24,15 +23,15 @@ func (ver *Verifier) inFact(stmt *ast.SpecFactStmt, state VerState) (bool, error
 	}
 
 	// fn in fn set
-	if ok := ast.IsFnSet(stmt.Params[0]) && ast.IsFcAtomWithName(stmt.Params[1], glob.KeywordSet); ok {
-		if state.requireMsg() {
-			ver.successWithMsg(stmt.String(), "by definition")
-		} else {
-			ver.successNoMsg()
-		}
+	// if ok := ast.IsFnSet(stmt.Params[0]) && ast.IsFcAtomWithName(stmt.Params[1], glob.KeywordSet); ok {
+	// 	if state.requireMsg() {
+	// 		ver.successWithMsg(stmt.String(), "by definition")
+	// 	} else {
+	// 		ver.successNoMsg()
+	// 	}
 
-		return true, nil
-	}
+	// 	return true, nil
+	// }
 
 	ok, err := ver.btLitNumInNatOrIntOrRatOrReal(stmt, state)
 	if err != nil {
@@ -42,21 +41,21 @@ func (ver *Verifier) inFact(stmt *ast.SpecFactStmt, state VerState) (bool, error
 		return true, nil
 	}
 
-	ok, err = ver.btFnInFnSet(stmt, state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
-	}
+	// ok, err = ver.btFnInFnSet(stmt, state)
+	// if err != nil {
+	// 	return false, err
+	// }
+	// if ok {
+	// 	return true, nil
+	// }
 
-	ok, err = ver.btPropInPropSet(stmt, state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
-	}
+	// ok, err = ver.btPropInPropSet(stmt, state)
+	// if err != nil {
+	// 	return false, err
+	// }
+	// if ok {
+	// 	return true, nil
+	// }
 
 	return false, nil
 }

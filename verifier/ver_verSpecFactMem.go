@@ -138,14 +138,14 @@ func (ver *Verifier) verSpecFact_InSpecFact_UniMem(stmt *ast.SpecFactStmt, state
 
 	if ver.env.CurMatchEnv == nil {
 		for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
-			ok, err := ver.specFact_UniMem_asEnv(curEnv, stmt, nextState)
+			ok, err := ver.specFact_UniMem_atCurEnv(curEnv, stmt, nextState)
 			if err != nil || ok {
 				return ok, err
 			}
 		}
 	} else {
 		for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
-			ok, err := ver.specFact_UniMem_asEnv(curEnv, stmt, nextState)
+			ok, err := ver.specFact_UniMem_atCurEnv(curEnv, stmt, nextState)
 			if err != nil || ok {
 				return ok, err
 			}
@@ -247,7 +247,7 @@ func (ver *Verifier) specFact_inLogicExpr_inUniFactMem_atEnv(curEnv *env.Env, st
 
 func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch(stmt *ast.SpecFactStmt, knownFacts []env.SpecFact_InLogicExpr_InUniFact, state VerState) (bool, error) {
 	for _, knownFactUnderLogicExpr := range knownFacts {
-		paramArrMap, ok, err := ver.matchStoredUniSpecWithSpec(env.KnownSpecFact_InUniSpecFact{SpecFact: knownFactUnderLogicExpr.SpecFact, UniFact: knownFactUnderLogicExpr.UniFact}, stmt)
+		paramArrMap, ok, err := ver.matchStoredUniSpecWithSpec_prevetnDifferentVarsMatchTheSameFreeVar(env.KnownSpecFact_InUniSpecFact{SpecFact: knownFactUnderLogicExpr.SpecFact, UniFact: knownFactUnderLogicExpr.UniFact}, stmt)
 		if err != nil {
 			return false, err
 		}
@@ -302,7 +302,7 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch(stmt *ast.SpecFac
 	return false, nil
 }
 
-func (ver *Verifier) specFact_UniMem_asEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) specFact_UniMem_atCurEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	searchedSpecFacts, got := curEnv.KnownFactsStruct.SpecFactInUniFactMem.GetSameEnumPkgPropFacts(stmt)
 
 	if !got {
@@ -316,8 +316,7 @@ func (ver *Verifier) specFact_UniMem_asEnv(curEnv *env.Env, stmt *ast.SpecFactSt
 
 func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch(stmt *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InUniSpecFact, state VerState) (bool, error) {
 	for _, knownFact := range knownFacts {
-		// TODO： 这里要确保搜到的事实的每一位freeObj和concreteObj能对上，然后要记录一下每一位freeObj是哪个concreteObj。还要保证涉及到的Known UniFact的param都被match上了
-		paramArrMap, ok, err := ver.matchStoredUniSpecWithSpec(knownFact, stmt)
+		paramArrMap, ok, err := ver.matchStoredUniSpecWithSpec_prevetnDifferentVarsMatchTheSameFreeVar(knownFact, stmt)
 		if err != nil {
 			return false, err
 		}
@@ -1226,10 +1225,18 @@ func (ver *Verifier) matchTwoSpecFacts(stmt *ast.SpecFactStmt, knownFact *ast.Sp
 
 // TODO
 func (ver *Verifier) specFact_MatchEnv_UniMem(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	_ = curEnv
-	_ = stmt
-	_ = state
-	return false, nil
+	knownStruct, got := curEnv.KnownFactInMatchEnv.Get(ver.env.CurMatchEnv.Fact.PropName.PkgName, ver.env.CurMatchEnv.Fact.PropName.Name)
+
+	if !got {
+		return false, nil
+	}
+
+	knownFacts, got := knownStruct.SpecFactInUniFactMem.GetSameEnumPkgPropFacts(stmt)
+	if !got {
+		return false, nil
+	}
+
+	return ver.iterate_KnownSpecInUniFacts_MatchEnv_applyMatch(stmt, knownFacts, state)
 }
 
 func (ver *Verifier) iterateKnownSpecFacts_applyFcEqualSpec_InMatchEnv(stmt *ast.SpecFactStmt, knownFacts []env.KnownSpecFact, state VerState) (bool, error) {
@@ -1243,7 +1250,7 @@ LoopOverFacts:
 		}
 
 		if knownFact.EnvFact != previousSuppose {
-			for i, param := range knownFact.Fact.Params {
+			for i, param := range knownFact.EnvFact.Fact.Params {
 				atom, ok := param.(*ast.FcAtom)
 				if !ok {
 					return false, fmt.Errorf("known param %s is not an atom", param.String())
@@ -1353,4 +1360,71 @@ func (ver *Verifier) proveUniFactDomFacts(insUniFact *ast.UniFactStmt, state Ver
 		return false, fmt.Errorf("")
 	}
 
+}
+
+func (ver *Verifier) iterate_KnownSpecInUniFacts_MatchEnv_applyMatch(stmt *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InUniSpecFact, state VerState) (bool, error) {
+	var previousSuppose *ast.SupposePropMatchStmt = nil
+	uniMapForMatchEnv := map[string]ast.Fc{}
+
+	for _, knownFact := range knownFacts {
+		if knownFact.EnvFact != previousSuppose {
+			for i, param := range knownFact.EnvFact.Fact.Params {
+				atom, ok := param.(*ast.FcAtom)
+				if !ok {
+					return false, fmt.Errorf("known param %s is not an atom", param.String())
+				}
+				uniMapForMatchEnv[atom.Name] = stmt.Params[i]
+			}
+			previousSuppose = knownFact.EnvFact
+		}
+
+		// TODO： 这里要确保搜到的事实的每一位freeObj和concreteObj能对上，然后要记录一下每一位freeObj是哪个concreteObj。还要保证涉及到的Known UniFact的param都被match上了
+		paramArrMap, ok, err := ver.matchStoredUniSpecWithSpec_prevetnDifferentVarsMatchTheSameFreeVar(knownFact, stmt)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			continue
+		}
+
+		// 把 uniMapForMatchEnv 放入 paramArrMap
+		for k, v := range uniMapForMatchEnv {
+			// 如果不存在，那就新建；已经存在，就append
+			if _, ok := paramArrMap[k]; !ok {
+				paramArrMap[k] = []ast.Fc{v}
+			} else {
+				paramArrMap[k] = append(paramArrMap[k], v)
+			}
+		}
+
+		// 防止 两个不相等的参数对应到了同一个自由变量
+		uniConMap, ok, err := ver.ValuesUnderKeyInMatchMapEqualSpec(paramArrMap, state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			continue
+		}
+
+		insKnownUniFact, err := ast.InstantiateUniFact(knownFact.UniFact, uniConMap)
+		if err != nil {
+			return false, err
+		}
+
+		ok, err = ver.proveUniFactDomFacts(insKnownUniFact, state)
+		if err != nil {
+			return false, err
+		}
+
+		if ok {
+			if state.requireMsg() {
+				ver.successWithMsg(stmt.String(), knownFact.String())
+			} else {
+				ver.successNoMsg()
+			}
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
