@@ -81,4 +81,28 @@ The computation proceeds by repeatedly applying f to an input x in I, generating
   </tr>
 </table>
 
+```
+fn comp_seq(Q set, f fn(Q)Q) fn(Q, N)Q:
+    forall x Q:
+        comp_seq(Q, f)(x,n) = f(comp_seq(Q, f)(x, n-1))
+```
+`comp_seq` defines a functionthat takes two arguments: a set `Q` and a function `f` from `Q` to `Q`. The function `comp_seq` returns a function from `Q` to `N` that takes two arguments: an element `x` of `Q` and a natural number `n`. The function `comp_seq` returns the `n`-th application of `f` to `x`.
+
+```
+exist_prop n N st exist_comp_seq_end(Q set, x Q, f fn(Q,N)Q):
+    f(x, n) = f(x, n+1)
+```
+
+`exist_prop n N st exist_comp_seq_end(Q set, x Q, f fn(Q,N)Q):` reads: there exists a natural number `n` such that `exist_comp_seq_end(Q, x, f)` is true, and `exist_comp_seq_end(Q, x, f)` is defined as `f(x, n) = f(x, n+1)`.
+
+```
+prop is_algorithm(Q set, I set, f fn(Q)Q):
+    subset_of(I, Q)
+    iff:
+        forall x I:
+            exist_comp_seq_end(Q, x, comp_seq(Q, f))
+```
+
+`is_algorithm` is a proposition that says: when `I` is a subset of `Q`, `$is_algorithm(Q, I, f)` is true if and only if for all `x` in `I`, there exists a natural number `n` such that `f(x, n) = f(x, n+1)`.
+
 Here we can see that Litex achieves remarkable conciseness in formalizing the definition of algorithm - requiring only 10 lines of code while maintaining mathematical clarity. Each statement is self-explanatory and closely mirrors natural mathematical notation. In contrast, Lean 4 requires approximately three times more code to express the same concept. The additional complexity in Lean 4 stems from its need for explicit type definitions, structural elements, and unfamiliar syntax that are not typically encountered in everyday mathematical expressions. This extra complexity creates a steeper learning curve and can distract users from focusing on the core mathematical concepts they're trying to formalize. Litex's approach, by staying closer to conventional mathematical notation, significantly lowers the barrier to entry while maintaining formal strictness.
