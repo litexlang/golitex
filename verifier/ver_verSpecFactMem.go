@@ -849,8 +849,18 @@ func (ver *Verifier) isSetEqualFact_Check(stmt *ast.SpecFactStmt, state VerState
 
 	// _, ok := ver.env.GetSetDef(leftSet)
 
-	panic("TODO: Implement GetSetDef")
-	ok := false
+	var ok bool = false
+
+	// 验证是否在set
+	nextState := state.toFnialRound()
+	ok, err := ver.FactStmt(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{leftSet, ast.NewFcAtomWithName(glob.KeywordIn)}), nextState)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
+
 	if !ok {
 		if state.requireMsg() {
 			ver.successWithMsg(stmt.String(), fmt.Sprintf("left set %s is not a declared set", leftSet.String()))
@@ -860,7 +870,15 @@ func (ver *Verifier) isSetEqualFact_Check(stmt *ast.SpecFactStmt, state VerState
 		return false, nil
 	}
 
-	// _, ok = ver.env.GetSetDef(rightSet)
+	// 验证是否在set
+	ok, err = ver.FactStmt(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{rightSet, ast.NewFcAtomWithName(glob.KeywordIn)}), nextState)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
+
 	if !ok {
 		if state.requireMsg() {
 			ver.successWithMsg(stmt.String(), fmt.Sprintf("right set %s is not a declared set", rightSet.String()))
@@ -882,7 +900,7 @@ func (ver *Verifier) isSetEqualFact_Check(stmt *ast.SpecFactStmt, state VerState
 		paramInSetsFacts,
 	)
 
-	ok, err := ver.FactStmt(uniFactItemsInLeftSetInRightSet, state)
+	ok, err = ver.FactStmt(uniFactItemsInLeftSetInRightSet, state)
 	if err != nil {
 		return false, err
 	}
@@ -1107,19 +1125,19 @@ func (ver *Verifier) specFact_LogicMem(curEnv *env.Env, stmt *ast.SpecFactStmt, 
 }
 
 // TODO: 我不确定是不是用MatchEnv做cmp的时候，要不要修改compare的方式
-func (ver *Verifier) specFact_MatchEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	ok, err := ver.specFact_MatchEnv_SpecMem(curEnv, stmt, state)
-	if err != nil || ok {
-		return ok, err
-	}
+// func (ver *Verifier) specFact_MatchEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+// 	ok, err := ver.specFact_MatchEnv_SpecMem(curEnv, stmt, state)
+// 	if err != nil || ok {
+// 		return ok, err
+// 	}
 
-	ok, err = ver.specFact_MatchEnv_LogicMem(curEnv, stmt, state)
-	if err != nil || ok {
-		return ok, err
-	}
+// 	ok, err = ver.specFact_MatchEnv_LogicMem(curEnv, stmt, state)
+// 	if err != nil || ok {
+// 		return ok, err
+// 	}
 
-	return false, nil
-}
+// 	return false, nil
+// }
 
 func (ver *Verifier) specFact_MatchEnv_SpecMem(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	knownStruct, got := curEnv.KnownFactInMatchEnv.Get(ver.env.CurMatchEnv.Fact.PropName.PkgName, ver.env.CurMatchEnv.Fact.PropName.Name)

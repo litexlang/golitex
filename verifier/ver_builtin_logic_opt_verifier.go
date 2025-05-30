@@ -18,49 +18,6 @@ import (
 	glob "golitex/glob"
 )
 
-// func (ver *Verifier) btPropExceptEqual_Rule_MemSpec(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-// 	if !stmt.IsBuiltinProp_ExceptEqual() {
-// 		return false, nil
-// 	}
-
-// 	if len(stmt.Params) != 2 {
-// 		return false, fmt.Errorf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params))
-// 	}
-
-// 	// if ok, err := ver.btInProp(stmt, state); err != nil {
-// 	// 	return false, err
-// 	// } else if ok {
-// 	// 	return true, nil
-// 	// }
-
-// 	if ast.IsFcAtomWithName(&stmt.PropName, glob.KeywordCommutativeProp) {
-// 		if ok, err := ver.btCommutativeRule(stmt, state); err != nil {
-// 			return false, err
-// 		} else if ok {
-// 			return true, nil
-// 		}
-// 	}
-
-// 	// TODO 处理其他的builtin logic infix opt
-// 	ok, err := ver.btNumberLogicRelaOptBtRule(stmt, state)
-// 	if err != nil {
-// 		return false, err
-// 	}
-// 	if ok {
-// 		return true, nil
-// 	}
-
-// 	ok, err = ver.verSpecFact_SpecMem_LogicMem(stmt, state)
-// 	if err != nil {
-// 		return false, err
-// 	}
-// 	if ok {
-// 		return true, nil
-// 	}
-
-// 	return false, nil
-// }
-
 func (ver *Verifier) btNumberLogicRelaOptBtRule(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if stmt.PropName.PkgName != "" {
 		return false, nil
@@ -174,35 +131,6 @@ func (ver *Verifier) btCommutativeRule(stmt *ast.SpecFactStmt, state VerState) (
 
 	return false, nil
 }
-
-// func (ver *Verifier) btInProp(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-// 	ok, err := ver.btLitNumInNatOrIntOrRatOrReal(stmt, state)
-// 	if err != nil {
-// 		return false, err
-// 	}
-// 	if ok {
-// 		return true, nil
-// 	}
-
-// 	// If something is a fn, then it's in fn
-// 	ok, err = ver.btFnInFnSet(stmt, state)
-// 	if err != nil {
-// 		return false, err
-// 	}
-// 	if ok {
-// 		return true, nil
-// 	}
-
-// 	ok, err = ver.btPropInPropSet(stmt, state)
-// 	if err != nil {
-// 		return false, err
-// 	}
-// 	if ok {
-// 		return true, nil
-// 	}
-
-// 	return false, nil
-// }
 
 func (ver *Verifier) btLitNumInNatOrIntOrRatOrReal(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	isSuccess := false
