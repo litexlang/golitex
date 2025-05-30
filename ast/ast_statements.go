@@ -141,3 +141,7 @@ type KnowExistPropStmt struct {
 type KnowSupposeStmt struct {
 	SupposeStmt SupposePropMatchStmt
 }
+
+type OrStmt struct {
+	OrFacts []OrStmt
+}

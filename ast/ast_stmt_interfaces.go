@@ -46,6 +46,7 @@ func (s *KnowPropStmt) stmt()      {}
 func (s *KnowExistPropStmt) stmt() {}
 func (s *ProveOrStmt) stmt()       {}
 func (s *KnowSupposeStmt) stmt()   {}
+func (s *OrStmt) stmt()            {}
 
 type FactStmt interface {
 	factStmt()
@@ -57,6 +58,7 @@ type FactStmt interface {
 func (p *SpecFactStmt) factStmt()  {}
 func (l *UniFactStmt) factStmt()   {}
 func (p *LogicExprStmt) factStmt() {}
+func (s *OrStmt) factStmt()        {}
 
 type SpecFactParams struct {
 	ObjParams []Fc
@@ -82,6 +84,15 @@ func (s *LogicExprStmt) IsSpecFactNameWithUniPrefix() bool {
 	}
 	return false
 }
+func (s *OrStmt) logicExprOrSpecFactStmt() {}
+func (s *OrStmt) IsSpecFactNameWithUniPrefix() bool {
+	for _, fact := range s.OrFacts {
+		if fact.IsSpecFactNameWithUniPrefix() {
+			return true
+		}
+	}
+	return false
+}
 
 func (s *LogicExprStmt) ReverseIsTrue() Reversable_LogicOrSpec_Stmt {
 	newFacts := make([]Reversable_LogicOrSpec_Stmt, len(s.Facts))
@@ -96,6 +107,10 @@ func (s *LogicExprStmt) ReverseIsTrue() Reversable_LogicOrSpec_Stmt {
 
 func (stmt *SpecFactStmt) ReverseIsTrue() Reversable_LogicOrSpec_Stmt {
 	return stmt.ReverseSpecFact()
+}
+
+func (stmt *OrStmt) ReverseIsTrue() Reversable_LogicOrSpec_Stmt {
+	panic("not implemented")
 }
 
 // 用于处理 forall x Type. 这里的 Type 可以是 obj, fn, prop, existProp.
