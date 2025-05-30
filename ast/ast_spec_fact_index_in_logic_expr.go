@@ -12,42 +12,42 @@
 
 package litex_ast
 
-import (
-	"fmt"
-	glob "golitex/glob"
-)
+// import (
+// 	"fmt"
+// 	glob "golitex/glob"
+// )
 
-type SpecFactIndexInLogicExprAndItself struct {
-	Stmt    *SpecFactStmt
-	Indexes []uint8
-}
+// type SpecFactIndexInLogicExprAndItself struct {
+// 	Stmt    *SpecFactStmt
+// 	Indexes []uint8
+// }
 
-func (stmt *LogicExprStmt) SpecFactIndexPairs(indexes []uint8) ([]SpecFactIndexInLogicExprAndItself, error) {
-	pairs := []SpecFactIndexInLogicExprAndItself{}
-	for i, fact := range stmt.Facts {
-		if specFact, ok := fact.(*SpecFactStmt); ok {
-			curIndexes := make([]uint8, len(indexes))
-			copy(curIndexes, indexes)
-			curIndexes = append(curIndexes, uint8(i))
-			pairs = append(pairs, SpecFactIndexInLogicExprAndItself{specFact, curIndexes})
-			continue
-		}
+// func (stmt *LogicExprStmt) SpecFactIndexPairs(indexes []uint8) ([]SpecFactIndexInLogicExprAndItself, error) {
+// 	pairs := []SpecFactIndexInLogicExprAndItself{}
+// 	for i, fact := range stmt.Facts {
+// 		if specFact, ok := fact.(*SpecFactStmt); ok {
+// 			curIndexes := make([]uint8, len(indexes))
+// 			copy(curIndexes, indexes)
+// 			curIndexes = append(curIndexes, uint8(i))
+// 			pairs = append(pairs, SpecFactIndexInLogicExprAndItself{specFact, curIndexes})
+// 			continue
+// 		}
 
-		if logicExpr, ok := fact.(*LogicExprStmt); ok {
-			curIndexes := make([]uint8, len(indexes))
-			copy(curIndexes, indexes)
-			currentPairs, err := logicExpr.SpecFactIndexPairs(curIndexes)
-			if err != nil {
-				return nil, err
-			}
-			pairs = append(pairs, currentPairs...)
-			continue
-		}
-	}
-	if len(pairs) > glob.MaxLogicExprStmtIndexesSize {
-		return nil, fmt.Errorf("logic expr stmt size too large")
-	}
-	return pairs, nil
-}
+// 		if logicExpr, ok := fact.(*LogicExprStmt); ok {
+// 			curIndexes := make([]uint8, len(indexes))
+// 			copy(curIndexes, indexes)
+// 			currentPairs, err := logicExpr.SpecFactIndexPairs(curIndexes)
+// 			if err != nil {
+// 				return nil, err
+// 			}
+// 			pairs = append(pairs, currentPairs...)
+// 			continue
+// 		}
+// 	}
+// 	if len(pairs) > glob.MaxLogicExprStmtIndexesSize {
+// 		return nil, fmt.Errorf("logic expr stmt size too large")
+// 	}
+// 	return pairs, nil
+// }
 
-var SpecFactUnderNoLogicalExprSig []uint8 = nil
+// var SpecFactUnderNoLogicalExprSig []uint8 = nil

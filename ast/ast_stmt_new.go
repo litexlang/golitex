@@ -60,9 +60,9 @@ func NewDefHeader(name string, params []string, paramInSetsFacts []FactStmt) *De
 	return &DefHeader{name, params, paramInSetsFacts}
 }
 
-func NewOrAndFact(isOr bool, facts []Reversable_LogicOrSpec_Stmt) *LogicExprStmt {
-	return &LogicExprStmt{IsOr: isOr, Facts: facts}
-}
+// func NewOrAndFact(isOr bool, facts []Reversable_LogicOrSpec_Stmt) *LogicExprStmt {
+// 	return &LogicExprStmt{IsOr: isOr, Facts: facts}
+// }
 
 func NewHaveStmt(objNames []string, fact SpecFactStmt) *HaveStmt {
 	return &HaveStmt{objNames, fact}

@@ -32,7 +32,7 @@ func (s *DefExistPropStmt) stmt() {}
 // func (s *ThmStmt) stmt()             {}
 
 // func (s *CondFactStmt) stmt()         {}
-func (p *LogicExprStmt) stmt()        {}
+// func (p *LogicExprStmt) stmt()        {}
 func (s *HaveStmt) stmt()             {}
 func (s *SetDefSetBuilderStmt) stmt() {}
 
@@ -55,10 +55,11 @@ type FactStmt interface {
 	Instantiate(map[string]Fc) (FactStmt, error)
 }
 
-func (p *SpecFactStmt) factStmt()  {}
-func (l *UniFactStmt) factStmt()   {}
-func (p *LogicExprStmt) factStmt() {}
-func (s *OrStmt) factStmt()        {}
+func (p *SpecFactStmt) factStmt() {}
+func (l *UniFactStmt) factStmt()  {}
+
+// func (p *LogicExprStmt) factStmt() {}
+func (s *OrStmt) factStmt() {}
 
 type SpecFactParams struct {
 	ObjParams []Fc
@@ -74,16 +75,17 @@ type Reversable_LogicOrSpec_Stmt interface {
 	IsSpecFactNameWithUniPrefix() bool
 }
 
-func (s *LogicExprStmt) logicExprOrSpecFactStmt() {}
-func (s *SpecFactStmt) logicExprOrSpecFactStmt()  {}
-func (s *LogicExprStmt) IsSpecFactNameWithUniPrefix() bool {
-	for _, fact := range s.Facts {
-		if fact.IsSpecFactNameWithUniPrefix() {
-			return true
-		}
-	}
-	return false
-}
+// func (s *LogicExprStmt) logicExprOrSpecFactStmt() {}
+func (s *SpecFactStmt) logicExprOrSpecFactStmt() {}
+
+//	func (s *LogicExprStmt) IsSpecFactNameWithUniPrefix() bool {
+//		for _, fact := range s.Facts {
+//			if fact.IsSpecFactNameWithUniPrefix() {
+//				return true
+//			}
+//		}
+//		return false
+//	}
 func (s *OrStmt) logicExprOrSpecFactStmt() {}
 func (s *OrStmt) IsSpecFactNameWithUniPrefix() bool {
 	for _, fact := range s.Facts {
@@ -94,16 +96,16 @@ func (s *OrStmt) IsSpecFactNameWithUniPrefix() bool {
 	return false
 }
 
-func (s *LogicExprStmt) ReverseIsTrue() Reversable_LogicOrSpec_Stmt {
-	newFacts := make([]Reversable_LogicOrSpec_Stmt, len(s.Facts))
-	for i, fact := range s.Facts {
-		newFacts[i] = fact.ReverseIsTrue()
-	}
-	return &LogicExprStmt{
-		IsOr:  !s.IsOr,
-		Facts: newFacts,
-	}
-}
+// func (s *LogicExprStmt) ReverseIsTrue() Reversable_LogicOrSpec_Stmt {
+// 	newFacts := make([]Reversable_LogicOrSpec_Stmt, len(s.Facts))
+// 	for i, fact := range s.Facts {
+// 		newFacts[i] = fact.ReverseIsTrue()
+// 	}
+// 	return &LogicExprStmt{
+// 		IsOr:  !s.IsOr,
+// 		Facts: newFacts,
+// 	}
+// }
 
 func (stmt *SpecFactStmt) ReverseIsTrue() Reversable_LogicOrSpec_Stmt {
 	return stmt.ReverseSpecFact()

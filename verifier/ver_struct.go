@@ -30,8 +30,12 @@ func (ver *Verifier) FactStmt(stmt ast.FactStmt, state VerState) (bool, error) {
 		return ver.verSpecFact(asSpecFact, state)
 	}
 
-	if asLogicExpr, ok := stmt.(*ast.LogicExprStmt); ok {
-		return ver.verLogicExpr(asLogicExpr, state)
+	// if asLogicExpr, ok := stmt.(*ast.LogicExprStmt); ok {
+	// 	return ver.verLogicExpr(asLogicExpr, state)
+	// }
+
+	if asOrStmt, ok := stmt.(*ast.OrStmt); ok {
+		return ver.verOrStmt(asOrStmt, state)
 	}
 
 	if asUniFact, ok := stmt.(*ast.UniFactStmt); ok {

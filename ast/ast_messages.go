@@ -393,31 +393,31 @@ func strOfNonEmptyFactStmtSlice[T Stringer](stmtSlice []T, indent uint32) string
 	return builder.String()
 }
 
-func (stmt *LogicExprStmt) String() string {
-	var prefix string
-	if stmt.IsOr {
-		prefix = glob.KeywordOr
-	} else {
-		prefix = glob.KeywordAnd
-	}
+// func (stmt *LogicExprStmt) String() string {
+// 	var prefix string
+// 	if stmt.IsOr {
+// 		prefix = glob.KeywordOr
+// 	} else {
+// 		prefix = glob.KeywordAnd
+// 	}
 
-	var builder strings.Builder
-	builder.WriteString(prefix)
-	builder.WriteString(glob.KeySymbolColon)
-	builder.WriteByte('\n')
+// 	var builder strings.Builder
+// 	builder.WriteString(prefix)
+// 	builder.WriteString(glob.KeySymbolColon)
+// 	builder.WriteByte('\n')
 
-	if len(stmt.Facts) > 0 {
-		for i := range len(stmt.Facts) - 1 {
-			builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Facts[i].String(), 1))
-			builder.WriteByte('\n')
-		}
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Facts[len(stmt.Facts)-1].String(), 1))
-	}
+// 	if len(stmt.Facts) > 0 {
+// 		for i := range len(stmt.Facts) - 1 {
+// 			builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Facts[i].String(), 1))
+// 			builder.WriteByte('\n')
+// 		}
+// 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Facts[len(stmt.Facts)-1].String(), 1))
+// 	}
 
-	ret := builder.String()
-	ret = strings.TrimSuffix(ret, "\n")
-	return ret
-}
+// 	ret := builder.String()
+// 	ret = strings.TrimSuffix(ret, "\n")
+// 	return ret
+// }
 
 func (stmt *HaveStmt) String() string {
 	var builder strings.Builder
