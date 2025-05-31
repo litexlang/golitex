@@ -192,6 +192,43 @@ Litex mimics how a human verifies a statement. When you write a statement, the L
 
 Here we can see a subtle difference between programming languages and Litex: in a programming language, a statement value type can be int, bool, string, etc. But in Litex and math, a statement output type is only true, false, unknown, or error, and the output can not be passed as a parameter to other statements.
 
+## Proposition Definition
+
+Proposition definition is the most basic statement in Litex. It is used to define a new proposition. For example, `prop intelligent(x human)` is a proposition definition that defines a new proposition called `intelligent`, which is a proposition about an object `x` that is a member of the set `human`. Only when a proposition is defined, it can be used inside factual statements later.
+
+```
+prop intelligent(x human)
+prop female(x human)
+
+prop intelligent_female(x human):
+    dom:
+        $female(x)
+
+prop natural_number_larger_than_zero(x N):
+    x > 0
+
+prop first_positive_number_larger_than_second_with_dom_block(x R, y R):
+    dom:
+        x > 0
+        y > 0
+    iff:
+        x > y
+
+prop first_positive_number_larger_than_second(x R, y R):
+    x > 0
+    y > 0
+    iff:
+        x > y
+```
+
+As the above example shows, there are three types of proposition definitions:
+
+1. with no `dom` block (`dom` means domain, which specifies the domain of the proposition), also no `iff` block. It is typically used in the case when properties of this proposition are defined else where later. 
+
+2. with `dom` block, no `iff` block. It is also typically used in the case when properties of this proposition are defined else where later.
+
+3. with `dom` block, `iff` block. It reads when the `dom` block is true, then the proposition is true if and only if the `iff` block is true. For example, when x and y are real and `dom` block `x > 0` and `y > 0` is true, then `first_positive_number_larger_than_second(x, y)` is true if and only if `x > y`. You can write `dom` block specifically to specify the domain of the proposition, or you can omit it and the interpreter will automatically treat all statements except the last block as the domain condition.
+
 ## Specific Facts
 
 <!-- need to say how to define a prop -->
