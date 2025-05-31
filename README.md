@@ -84,7 +84,7 @@ Mathematics is the art of deriving new facts from established ones. To illustrat
 
 Consider `Human` as the set of all humans. Using `know`, we establish a simple fact: all humans are self-aware. Since Bob is in the set of `Human`, "Bob is self-aware" is true. This simple example shows how Litex builds math from basic pieces, like building blocks. By `match and substitute`, Litex verfies the correctness of the reasoning just like how you verify the correctness of your daily reasoning. Each statement in Litex has four potential outcomes: true, false, unknown, or error.
 
-Notice how Litex is much simpler than Lean4. Instead of writing complex axioms with special names, you just use familiar words like `know` and `forall`. Litex automatically finds the facts it needs, just like searching in a database. Moreover, there are less unfamiliar keywords, less twisted syntax in Litex. Litex's syntax is similar to Python and Go, so if you've done any programming, you'll feel right at home. See more in [comparison with Lean](./doc/comparison_with_lean/comparison_with_lean.md), [tutorial](./doc/tutorial/tutorial.md).
+Notice how Litex is much simpler than Lean4. Instead of writing complex axioms with special names, you just use familiar words like `know` and `forall`. Litex automatically finds the facts it needs, just like searching in a database. Moreover, there are less unfamiliar keywords, less twisted syntax in Litex. People can understand Litex at first glance and say "oh, I already get this." instead of trying to figure out what this keyword or that syntax means. Litex's syntax is similar to Python and Go, so if you've done any programming, you'll feel right at home. See more in [comparison with Lean](./doc/comparison_with_lean/comparison_with_lean.md), [tutorial](./doc/tutorial/tutorial.md).
 
 ## Unique Idea of Litex
 
@@ -142,7 +142,7 @@ You can contribute by:
 6. Building standard library of Litex
 7. Creating the LitexDojo, similar to how LeanDojo is for Lean.
 
-Feel free to contact us and join this exciting journey!
+90% of the functionality delivered now is better than 100% of it delivered never. That is why despite Litex is not fully ready, I put it open-source to welcome everyone, including you, to learn, try, use, and contribute to Litex. Feel free to contact us and join this exciting journey!
 
 ---  
 **Contact:**  
