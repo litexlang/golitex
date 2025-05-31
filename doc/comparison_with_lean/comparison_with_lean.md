@@ -86,6 +86,7 @@ fn comp_seq(Q set, f fn(Q)Q) fn(Q, N)Q:
     forall x Q:
         comp_seq(Q, f)(x,n) = f(comp_seq(Q, f)(x, n-1))
 ```
+
 `comp_seq` defines a functionthat takes two arguments: a set `Q` and a function `f` from `Q` to `Q`. The function `comp_seq` returns a function from `Q` to `N` that takes two arguments: an element `x` of `Q` and a natural number `n`. The function `comp_seq` returns the `n`-th application of `f` to `x`.
 
 ```
