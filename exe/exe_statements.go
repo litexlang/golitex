@@ -264,8 +264,8 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 
 	fnSet := ast.MakeFnSetFc(paramSets, retSet)
 
-	infact := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(stmt.DefHeader.Name), fnSet})
-	err = exec.env.NewFact(infact)
+	inFact := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(stmt.DefHeader.Name), fnSet})
+	err = exec.env.NewFact(inFact)
 	if err != nil {
 		return err
 	}
@@ -285,7 +285,7 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 
 	// 现在只处理dom里没额外的东西的情况
 	if len(stmt.DomFacts) == 0 {
-		setParams, err := ast.GetParamsSetFromInStmts(stmt.DefHeader.ParamInSetsFacts)
+		setParams, err := ast.GetParamsSetFromInStatements(stmt.DefHeader.ParamInSetsFacts)
 		if err != nil {
 			return err
 		}
@@ -346,7 +346,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 
 	// TODO 暂时认为都是obj
 	for _, objName := range stmt.ObjNames {
-		err := exec.env.NewDefObj(ast.NewDefObjStmt([]string{objName}, []ast.FactStmt{}, []ast.FactStmt{}))
+		err := exec.env.NewDefObj(ast.NewDefObjStmt([]string{objName}, []ast.Fc{}, []ast.FactStmt{}, []ast.FactStmt{}))
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
@@ -431,7 +431,7 @@ func (exec *Executor) defStmt(stmt ast.DefStmt) error {
 
 func (exec *Executor) GetUniFactSettings(asUnivFact *ast.UniFactStmt) error {
 	for _, param := range asUnivFact.Params {
-		err := exec.defStmt(ast.NewDefObjStmt([]string{param}, []ast.FactStmt{}, []ast.FactStmt{}))
+		err := exec.defStmt(ast.NewDefObjStmt([]string{param}, []ast.Fc{}, []ast.FactStmt{}, []ast.FactStmt{}))
 		if err != nil {
 			return err
 		}
@@ -596,9 +596,9 @@ func (exec *Executor) setDefStmt(stmt *ast.SetDefSetBuilderStmt) error {
 	// err := exec.env.SetDefMem.Insert(stmt)
 
 	// insert as obj
-	infact := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(stmt.SetName), ast.NewFcAtomWithName(glob.KeywordSet)})
+	inFact := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(stmt.SetName), ast.NewFcAtomWithName(glob.KeywordSet)})
 
-	err := exec.defObjStmt(ast.NewDefObjStmt([]string{stmt.SetName}, []ast.FactStmt{}, []ast.FactStmt{infact}))
+	err := exec.defObjStmt(ast.NewDefObjStmt([]string{stmt.SetName}, []ast.Fc{ast.NewFcAtomWithName(glob.KeywordSet)}, []ast.FactStmt{}, []ast.FactStmt{inFact}))
 	if err != nil {
 		return err
 	}

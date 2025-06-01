@@ -146,57 +146,6 @@ func (tb *tokenBlock) logicExprOrSpecFactStmt(nameDepthMap ast.NameDepthMap) (as
 	return tb.specFactStmt(nameDepthMap)
 }
 
-// func (tb *tokenBlock) logicExprStmt(nameDepthMap ast.NameDepthMap) (*ast.LogicExprStmt, error) {
-// 	isOr := tb.header.isAndSkip(glob.KeywordOr)
-// 	if !isOr {
-// 		err := tb.header.skip(glob.KeywordAnd)
-// 		if err != nil {
-// 			return nil, &tokenBlockErr{err, *tb}
-// 		}
-// 	}
-
-// 	err := tb.header.skip(glob.KeySymbolColon)
-// 	if err != nil {
-// 		return nil, &tokenBlockErr{err, *tb}
-// 	}
-
-// 	facts := []ast.Reversable_LogicOrSpec_Stmt{}
-// 	for _, factToParse := range tb.body {
-// 		fact, err := factToParse.logicExprOrSpecFactStmt(nameDepthMap)
-// 		if err != nil {
-// 			return nil, &tokenBlockErr{err, *tb}
-// 		}
-// 		facts = append(facts, fact)
-// 	}
-
-// 	// 用很呆的方式保证只能是 logical expression 或者 specFact
-// 	for _, fact := range facts {
-// 		if _, ok := fact.(*ast.SpecFactStmt); ok {
-// 			continue
-// 		}
-
-// 		if _, ok := fact.(*ast.LogicExprStmt); ok {
-// 			continue
-// 		}
-
-// 		return nil, fmt.Errorf("expect logical expression or specFact")
-// 	}
-
-// 	if len(facts) > glob.FactMaxNumInLogicExpr {
-// 		return nil, fmt.Errorf("logic expr has too many facts: %d, expect no more than %d", len(facts), glob.FactMaxNumInLogicExpr)
-// 	}
-
-// 	return ast.NewOrAndFact(isOr, facts), nil
-// }
-
-// func (tb *tokenBlock) logicExprOrSpecFactStmt(nameDepthMap ast.NameDepthMap) (ast.Reversable_LogicOrSpec_Stmt, error) {
-// 	if tb.header.is(glob.KeywordOr) || tb.header.is(glob.KeywordAnd) {
-// 		return tb.logicExprStmt(nameDepthMap)
-// 	}
-
-// 	return tb.specFactStmt(nameDepthMap)
-// }
-
 func (tb *tokenBlock) specFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFactStmt, error) {
 	isTrue := true
 	if tb.header.is(glob.KeywordNot) {
@@ -377,7 +326,7 @@ func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 		paramInSetsFacts[i] = ast.Param_ParamSet_ToInFact(objNames[i], objSet)
 	}
 
-	return ast.NewDefObjStmt(objNames, facts, paramInSetsFacts), nil
+	return ast.NewDefObjStmt(objNames, objSets, facts, paramInSetsFacts), nil
 }
 
 func (tb *tokenBlock) claimStmt() (*ast.ClaimStmt, error) {
@@ -848,20 +797,20 @@ func (tb *tokenBlock) defExistPropStmtBody(existParamDepthMap ast.NameDepthMap) 
 	}
 
 	var domFacts []ast.FactStmt
-	var iffFactsAsFactStmts []ast.FactStmt
+	var iffFactsAsFactStatements []ast.FactStmt
 
-	domFacts, _, iffFactsAsFactStmts, err = tb.uniFactBodyFacts(nameDepthMap, UniFactDepth1, glob.KeywordIff)
+	domFacts, _, iffFactsAsFactStatements, err = tb.uniFactBodyFacts(nameDepthMap, UniFactDepth1, glob.KeywordIff)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	if len(iffFactsAsFactStmts) == 0 {
+	if len(iffFactsAsFactStatements) == 0 {
 		return nil, fmt.Errorf("expect 'iff' section in proposition definition has at least one fact")
 	}
 
-	iffFactsAsLogicExprOrSpecFacts := make([]ast.LogicOrSpec_Stmt, len(iffFactsAsFactStmts))
+	iffFactsAsLogicExprOrSpecFacts := make([]ast.LogicOrSpec_Stmt, len(iffFactsAsFactStatements))
 
-	for i, fact := range iffFactsAsFactStmts {
+	for i, fact := range iffFactsAsFactStatements {
 		if specFact, ok := fact.(*ast.SpecFactStmt); ok {
 			iffFactsAsLogicExprOrSpecFacts[i] = specFact
 		} else if logicExprOrSpecFact, ok := fact.(ast.LogicOrSpec_Stmt); ok {
@@ -927,7 +876,7 @@ func (tb *tokenBlock) uniFactStmt_WithoutUniPrefix_InClaimStmt() (*ast.UniFactSt
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	params, paramInSetsFacts, err := tb.uniFactHeadWithouUniPrefix(glob.KeySymbolColon)
+	params, paramInSetsFacts, err := tb.uniFactHeadWithoutUniPrefix(glob.KeySymbolColon)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -1237,7 +1186,7 @@ func (tb *tokenBlock) knowExistPropStmt() (*ast.KnowExistPropStmt, error) {
 	return ast.NewKnowExistPropStmt(*existProp), nil
 }
 
-func (tb *tokenBlock) uniFactHeadWithouUniPrefix(endWith string) ([]string, []ast.FactStmt, error) {
+func (tb *tokenBlock) uniFactHeadWithoutUniPrefix(endWith string) ([]string, []ast.FactStmt, error) {
 	paramName := []string{}
 	paramInSetsFacts := []ast.FactStmt{}
 
