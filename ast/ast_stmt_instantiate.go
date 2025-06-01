@@ -217,13 +217,13 @@ func (stmt *DefExistPropStmtBody) Instantiate(uniMap map[string]Fc) (*DefExistPr
 		newDomFacts = append(newDomFacts, newFact)
 	}
 
-	newIffFacts := []Reversable_LogicOrSpec_Stmt{}
+	newIffFacts := []LogicOrSpec_Stmt{}
 	for _, fact := range stmt.IffFacts {
 		newFact, err := fact.Instantiate(uniMap)
 		if err != nil {
 			return nil, err
 		}
-		newIffFacts = append(newIffFacts, newFact.(Reversable_LogicOrSpec_Stmt))
+		newIffFacts = append(newIffFacts, newFact.(LogicOrSpec_Stmt))
 	}
 
 	return NewDefExistPropBodyStmt(*newDefHeader, newDomFacts, newIffFacts), nil
