@@ -119,7 +119,7 @@ Litex is fundamentally a read-only Turing machine. Once any fact is stored, it c
 
 Litex gets its name from Lisp and Tex. Lisp is a programming language that is very close to math. Tex is a typesetting system that is very close to math. Both of them greatly inspired Litex, making Litex also a formal language that is very close to math.
 
-<!-- 需要说明litex故意只有很少的关键词和语法，不提供太多语法糖，这是因为要让用户形成一致的编程习惯，即同一个逻辑，只有一种表达方式；这让其他人阅读这段代码更容易，也不会让用户陷入选择恐惧症，不知道要从10种表达中选哪一种 。这段话在reamde里也可以加下-->
+Litex intentionally has few keywords and minimal syntax sugar to encourage consistent programming habits - there should be only one way to express a given logic. This makes code more readable and prevents users from getting overwhelmed by too many expression choices.
 
 ## Conclusion
 
@@ -135,7 +135,7 @@ _-- Steve Jobs_
 
 As you can see, mathematics is the science of abstraction, and computer science is science of abstraction. Litex bridges the two, scaling mathematical reasoning with software engineering principles. It lets users divide and conquer proofs — just as programmers manage software complexity — ushering math into the computational age. No extra complexity is between you, your proof, and your thoughts.
 
-Fields medalist Terence Tao shows great interest in the combination of formal languages and AI. When asked about formalizing everything in formal language, he said: "So I think the smarter thing to do in many cases is just to wait until it’s easier. Instead of taking 10 times as long to formalize it, it takes two times as long as the conventional way."[[AI will become mathematicians' co-pilot](https://www.scientificamerican.com/article/ai-will-become-mathematicians-co-pilot/)] Litex is my answer to this challenge. I hope you and many others can join the Litex community to make this happen.
+Fields medalist Terence Tao shows great interest in the combination of formal languages and AI. When asked about formalizing everything in formal language, he said: "So I think the smarter thing to do in many cases is just to wait until it's easier. Instead of taking 10 times as long to formalize it, it takes two times as long as the conventional way."[[AI will become mathematicians' co-pilot](https://www.scientificamerican.com/article/ai-will-become-mathematicians-co-pilot/)] Litex is my answer to this challenge. I hope you and many others can join the Litex community to make this happen.
 
 
 
