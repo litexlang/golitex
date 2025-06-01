@@ -22,7 +22,7 @@ If you are a software developer, or mathematician, or an AI researcher, you migh
 
 However, traditional formal verification languages like Lean4, Coq, and Isabelle are too complex and too far removed from everyday mathematical notation. These languages heavily rely on type theory and functional programming concepts, which even mathematics PhD students need years to master. If Newton had to learn those theories before inventing calculus, he would never succeed, because those theories would be invented 3 centuries later. The fundamental reason for this complexity is that these languages attempt to serve two distinct purposes simultaneously: they want to be both programming languages and reasoning verifiers. This dual nature makes it technically challenging to create a simple and intuitive system.
 
-That is why Litex chooses not to be a programming language, making it in first principle different from other traditional formal lanuages. (Technically, Litex is a Read-Only Turing Machine, instead of a Turing Machine.) It is designed to be simple and intuitive. No brain-exploding theories, no complex syntax, no need to learn a new programming language. All you need to learn before using Litex is building a connection between your own intuition and Litex expressions. Believe me, that is pretty easy. You will find the process of mathematical verification is nothing more than "match and substitute". Many mathematical expressions can be translated from natural language to Litex code almost directly. 
+That is why Litex chooses not to be a programming language, making it in first principle different from other traditional formal languages. (Technically, Litex is a Read-Only Turing Machine, instead of a Turing Machine.) It is designed to be simple and intuitive. No brain-exploding theories, no complex syntax, no need to learn a new programming language. All you need to learn before using Litex is building a connection between your own intuition and Litex expressions. Believe me, that is pretty easy. You will find the process of mathematical verification is nothing more than "match and substitute". Many mathematical expressions can be translated from natural language to Litex code almost directly. 
 
 Maybe you are a young teenager captivated by mathematics, eager to master the art of deductive reasoning and rigorous thinking, just like the ancient philosophers such as Plato or the brilliant detective Sherlock Holmes.
 
@@ -44,14 +44,14 @@ _Mathematics is nothing more than a game played according to certain simple rule
 
 _-- David Hilbert_
 
-Math is built on top of a small sets of reasoning rules and axioms. There are basicly two types of deriving a new fact from existing facts:
+Math is built on top of a small sets of reasoning rules and axioms. There are basically two types of deriving a new fact from existing facts:
 
 1. derive from a specific fact: e.g. If I know x = 1, then x = 1
 2. derive from a general fact: e.g. If I know forall human, he is intelligent, and Jordan is a human, then Jordan is intelligent. Litex calls this way of deriving a new fact "match and substitute", because it is like matching a pattern and substituting the pattern with a specific value.
 
 OK, you have already known the basic idea of Litex.
 
-Another group of reasoning rules are about real numbers, like 1, 3.5 or 4.123456789. These objects are different from the user-defined objects, as 1. their literal represenation contains information 2. it is impossible for the user to declare them one by one and must be builtin. Verification of these objects is done by builtin rules and the users do not need to worry about them.
+Another group of reasoning rules are about real numbers, like 1, 3.5 or 4.123456789. These objects are different from the user-defined objects, as 1. their literal representation contains information 2. it is impossible for the user to declare them one by one and must be builtin. Verification of these objects is done by builtin rules and the users do not need to worry about them.
 
 ## Difference Between A Programming Language and Math
 
@@ -65,7 +65,7 @@ There are several examples of major differences between a programming language a
 
 It turns out that traditional formal languages, like Lean4, Coq, and Isabelle, attempt to serve two distinct purposes simultaneously: they want to be both programming languages and reasoning verifiers. This dual nature makes it technically challenging to create a simple and intuitive system.
 
-The huge difference between math or reasoning in general and programming languages is why Litex is not designed to be a programming language, making it in first principle different from other traditional formal lanuages. Technically, Litex is a Read-Only Turing Machine, instead of a Turing Machine.
+The huge difference between math or reasoning in general and programming languages is why Litex is not designed to be a programming language, making it in first principle different from other traditional formal languages. Technically, Litex is a Read-Only Turing Machine, instead of a Turing Machine.
 
 Litex sacrifices Turing completeness to focus exclusively on mathematical verification, adopting a Python-like syntax for ease of use and LaTeX-like elegance for mathematical expression (similar to how SQL sacrifices completeness to specialize in database logic). This makes Litex accessible not only to professional mathematicians but also to beginners. 
 
@@ -101,21 +101,21 @@ Not Intuitive – Inheritance is not intuitive. An object can for sure belong to
 
 Beyond Go, Litex draws inspiration from other programming languages. For instance, Python's scoping rules have shaped Litex's approach to object and function scope. 
 
-The C programming language's syntax and semantics significantly influenced Litex's design. Operator overloading behavior is inspired by C++. The inventor of Litex holds a deep appreciation for Lisp's "everything is a list" philosophy, which contributes to the language's conceptual integrity. Also, since C uses postfix like L to make number as type the user want to overloade type of a numbner literal(e.g. 1L represents a long integer), Litex uses postfix to do type inference(e.g. 1r represents 1 as R number). No user defined type overloading is allowed.
+The C programming language's syntax and semantics significantly influenced Litex's design. Operator overloading behavior is inspired by C++. The inventor of Litex holds a deep appreciation for Lisp's "everything is a list" philosophy, which contributes to the language's conceptual integrity. Also, since C uses postfix like L to make number as type the user want to overloaded  type of a number literal(e.g. 1L represents a long integer), Litex uses postfix to do type inference(e.g. 1r represents 1 as R number). No user defined type overloading is allowed.
 
-(Syntactically, Litex learn from python and go. Semantically, Litex learn from Lisp, C and awk. As a daily tool, Litex learn from Tex and ipynb. Litex design principle is a mixture of all of them.)
+(Syntactically, Litex learn from python and go. Semantically, Litex learn from Lisp, C and awk. As a daily tool, Litex learn from Tex and python jupyter notebook. Litex design principle is a mixture of all of them.)
 
 Furthermore, Tex's clear distinction between "math expressions" and "plain words" inspired Litex's separation of "factual expressions" from ordinary symbols. Litex also aspires to achieve the same level of ubiquity and utility as Tex, aiming to become a widely adopted daily tool. This ambition is encapsulated in its name: Litex = Lisp + Tex, symbolizing the fusion of Lisp's expressive elegance and Tex's practicality.
 
 The best to test Litex is by translating "real-world" into Litex. I use Professor Terrence Tao's Analysis I and II to test Litex. The set theory chapter of Analysis I helps a lot to remind me what functionalities are missing at each stage of implementing Litex.
 
-The user can divide the problem into indenpent tasks and store them in different packages to make execution faster.
+The user can divide the problem into independent tasks and store them in different packages to make execution faster.
 
-*The Litex interpreter basically takes the top-down approach to verify a fact, which means it basicly start from proposition and try to find a fact that can be used to prove the proposition, instead of coming from the bottom up, from related symbols to derive new facts and then use them to prove the proposition.*
+*The Litex interpreter basically takes the top-down approach to verify a fact, which means it basically start from proposition and try to find a fact that can be used to prove the proposition, instead of coming from the bottom up, from related symbols to derive new facts and then use them to prove the proposition.*
 
-There are many "design balences" in Litex. Math is so common that anybody has some basic knowledge of it. On the other hand, some branch of math can be so hard that only experts can understand. So there is a very huge gap between two groups of Litex users: innocent non-professionals, AI researchers who know some math, and math experts. What they want Litex to be is different. Since Litex is a pragmatic language and I wish it could have as many users as possible, any time I encounter those "hard choices", I always put the innocent group of users' demand first.
+There are many "design balances" in Litex. Math is so common that anybody has some basic knowledge of it. On the other hand, some branch of math can be so hard that only experts can understand. So there is a very huge gap between two groups of Litex users: innocent non-professionals, AI researchers who know some math, and math experts. What they want Litex to be is different. Since Litex is a pragmatic language and I wish it could have as many users as possible, any time I encounter those "hard choices", I always put the innocent group of users' demand first.
 
-Litex is fundamentally a read-only Turing machine. Once any fact is stored, it can not be removed or changed. The amount of data stored in memory is in porpotion to the amount of code that the user write. Such design makes Litex align with everyday math.
+Litex is fundamentally a read-only Turing machine. Once any fact is stored, it can not be removed or changed. The amount of data stored in memory is in proportion to the amount of code that the user write. Such design makes Litex align with everyday math.
 
 Litex gets its name from Lisp and Tex. Lisp is a programming language that is very close to math. Tex is a typesetting system that is very close to math. Both of them greatly inspired Litex, making Litex also a formal language that is very close to math.
 
