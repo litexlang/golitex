@@ -60,25 +60,13 @@ func NewDefHeader(name string, params []string, paramInSetsFacts []FactStmt) *De
 	return &DefHeader{name, params, paramInSetsFacts}
 }
 
-// func NewOrAndFact(isOr bool, facts []Reversable_LogicOrSpec_Stmt) *LogicExprStmt {
-// 	return &LogicExprStmt{IsOr: isOr, Facts: facts}
-// }
-
 func NewHaveStmt(objNames []string, fact SpecFactStmt) *HaveStmt {
 	return &HaveStmt{objNames, fact}
 }
 
-func NewExistPropDef(declHeader DefHeader, domFacts []FactStmt, iffFacts []Reversable_LogicOrSpec_Stmt) *DefExistPropStmtBody {
+func NewExistPropDef(declHeader DefHeader, domFacts []FactStmt, iffFacts []LogicOrSpec_Stmt) *DefExistPropStmtBody {
 	return &DefExistPropStmtBody{declHeader, domFacts, iffFacts}
 }
-
-// func NewDefSetEnumtmt(setName string, elems []Fc) *SetDefEnumtmt {
-// 	return &SetDefEnumtmt{setName, elems}
-// }
-
-// func NewSetDefSetBuilderStmt(setName string, parentSet Fc, facts []FactStmt) *SetDefSetBuilderStmt {
-// 	return &SetDefSetBuilderStmt{setName, parentSet, facts}
-// }
 
 func NewUniFactStmtWithSetReqInDom(params []string, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt, paramInSetsFacts []FactStmt) *UniFactStmt {
 	return newUniFactStmt(params, domFacts, thenFacts, iffFacts, paramInSetsFacts)
@@ -96,17 +84,13 @@ func NewKnowPropStmt(prop DefPropStmt) *KnowPropStmt {
 	return &KnowPropStmt{prop}
 }
 
-func NewDefExistPropBodyStmt(defHeader DefHeader, domFacts []FactStmt, iffFacts []Reversable_LogicOrSpec_Stmt) *DefExistPropStmtBody {
+func NewDefExistPropBodyStmt(defHeader DefHeader, domFacts []FactStmt, iffFacts []LogicOrSpec_Stmt) *DefExistPropStmtBody {
 	return &DefExistPropStmtBody{defHeader, domFacts, iffFacts}
 }
 
 func NewFcAtomWithName(name string) *FcAtom {
 	return NewFcAtom(glob.EmptyPkg, name)
 }
-
-// func NewProveOrStmt(indexes map[int]struct{}, orFact OrStmt, proofs []Stmt) *ProveOrStmt {
-// 	return &ProveOrStmt{indexes, orFact, proofs}
-// }
 
 func NewKnowExistPropStmt(existProp DefExistPropStmt) *KnowExistPropStmt {
 	return &KnowExistPropStmt{existProp}

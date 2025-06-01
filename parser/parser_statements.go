@@ -134,7 +134,7 @@ func (tb *tokenBlock) orStmt(nameDepthMap ast.NameDepthMap) (*ast.OrStmt, error)
 	return ast.NewOrStmt(orFacts), nil
 }
 
-func (tb *tokenBlock) logicExprOrSpecFactStmt(nameDepthMap ast.NameDepthMap) (ast.Reversable_LogicOrSpec_Stmt, error) {
+func (tb *tokenBlock) logicExprOrSpecFactStmt(nameDepthMap ast.NameDepthMap) (ast.LogicOrSpec_Stmt, error) {
 	if tb.header.is(glob.KeywordOr) {
 		orFacts, err := tb.orStmt(nameDepthMap)
 		if err != nil {
@@ -839,7 +839,7 @@ func (tb *tokenBlock) defExistPropStmtBody(existParamDepthMap ast.NameDepthMap) 
 	}
 
 	if !tb.header.is(glob.KeySymbolColon) {
-		return ast.NewExistPropDef(*declHeader, []ast.FactStmt{}, []ast.Reversable_LogicOrSpec_Stmt{}), nil
+		return ast.NewExistPropDef(*declHeader, []ast.FactStmt{}, []ast.LogicOrSpec_Stmt{}), nil
 	}
 
 	err = tb.header.skip(glob.KeySymbolColon)
@@ -859,12 +859,12 @@ func (tb *tokenBlock) defExistPropStmtBody(existParamDepthMap ast.NameDepthMap) 
 		return nil, fmt.Errorf("expect 'iff' section in proposition definition has at least one fact")
 	}
 
-	iffFactsAsLogicExprOrSpecFacts := make([]ast.Reversable_LogicOrSpec_Stmt, len(iffFactsAsFactStmts))
+	iffFactsAsLogicExprOrSpecFacts := make([]ast.LogicOrSpec_Stmt, len(iffFactsAsFactStmts))
 
 	for i, fact := range iffFactsAsFactStmts {
 		if specFact, ok := fact.(*ast.SpecFactStmt); ok {
 			iffFactsAsLogicExprOrSpecFacts[i] = specFact
-		} else if logicExprOrSpecFact, ok := fact.(ast.Reversable_LogicOrSpec_Stmt); ok {
+		} else if logicExprOrSpecFact, ok := fact.(ast.LogicOrSpec_Stmt); ok {
 			iffFactsAsLogicExprOrSpecFacts[i] = logicExprOrSpecFact
 		} else {
 			return nil, fmt.Errorf("expect spec fact or logic expr or spec fact in iff section, but got: %v", fact)

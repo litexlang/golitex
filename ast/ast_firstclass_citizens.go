@@ -126,15 +126,6 @@ func (f *FcAtom) IsBuiltinRelaFn() bool {
 	return f.PkgName == glob.EmptyPkg && glob.IsKeySymbolRelaFn(f.Name)
 }
 
-// func (f *FcFn) IsBuiltinFcSet() bool {
-// 	ptrHeadAsAtom, ok := f.FnHead.(*FcAtom)
-// 	if !ok {
-// 		return false
-// 	}
-
-// 	return ptrHeadAsAtom.PkgName == glob.BuiltinEmptyPkgName && ptrHeadAsAtom.Name == glob.KeywordFn
-// }
-
 func (fcAtom *FcAtom) NameIsUniParam_PkgNameEmpty() (string, bool) {
 	if strings.HasPrefix(fcAtom.Name, glob.UniParamPrefix) && fcAtom.PkgName == glob.EmptyPkg {
 		return fcAtom.Name, true
