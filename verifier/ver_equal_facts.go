@@ -45,7 +45,7 @@ func (ver *Verifier) cmpFc(left ast.Fc, right ast.Fc, state VerState) (bool, err
 	if ok {
 		rightAsFn, ok := right.(*ast.FcFn)
 		if ok {
-			ok, err = ver.fcFnEq(leftAsFn, rightAsFn, state.toFnialRound())
+			ok, err = ver.fcFnEq(leftAsFn, rightAsFn, state.toFinalRound())
 			if err != nil {
 				return false, err
 			}
@@ -67,14 +67,14 @@ func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state VerState) (boo
 	}
 
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
-		var equalToLeftFcs, equalTorightFcs *[]ast.Fc
+		var equalToLeftFcs, equalToRightFcs *[]ast.Fc
 		var gotLeftEqualFcs, gotRightEqualFcs bool
 
 		equalToLeftFcs, gotLeftEqualFcs = curEnv.GetEqualFcs(left)
-		equalTorightFcs, gotRightEqualFcs = curEnv.GetEqualFcs(right)
+		equalToRightFcs, gotRightEqualFcs = curEnv.GetEqualFcs(right)
 
 		if gotLeftEqualFcs && gotRightEqualFcs {
-			if equalToLeftFcs == equalTorightFcs {
+			if equalToLeftFcs == equalToRightFcs {
 				if state.requireMsg() {
 					ver.successMsgEnd(fmt.Sprintf("known %s = %s", left.String(), right.String()), "")
 				}
@@ -102,7 +102,7 @@ func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state VerState) (boo
 
 		if gotRightEqualFcs {
 			leftAsStr := left.String()
-			for _, equalToRightFc := range *equalTorightFcs {
+			for _, equalToRightFc := range *equalToRightFcs {
 				if equalToRightFc.String() == leftAsStr { // 最一开头已经比较过，这里不需要再比较了
 					continue
 				}

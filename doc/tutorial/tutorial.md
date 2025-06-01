@@ -24,7 +24,7 @@ Litex is a powerful yet easy-to-learn formal language. Essentially, it is a tool
 
 Everyone have started to think and reason since childhood. The ability to reason is what differentiates humans from other animals. Mathematical reasoning is powerful because it follows a small set of intuitive rules. From these rules and carefully selected axioms, we build the entire world of mathematics.
 
-In this AI age, formal languages are becoming increasingly crucial for both AI development and human reasoning. Traditional proof assistants like Lean4 require learning hundreds of unfamiliar keywords and complex type theories. Litex reimagines formal verification with just 8 intuitive keywords (forall, exist, not, or, fn, prop, obj, set) and familiar Python/Go-like syntax. No complex theories, just pure mathematical reasoning.
+In this AI age, formal languages are becoming increasingly crucial for both AI development and human reasoning. Traditional proof assistants like Lean4 require learning hundreds of unfamiliar keywords and complex type theories. Litex enables formal verification with just 8 intuitive keywords (forall, exist, not, or, fn, prop, obj, set) and familiar Python/Go-like syntax. No complex theories, just pure mathematical reasoning.
 
 Whether you're an AI researcher developing reasoning models, a mathematics student identifying potential errors in your thesis, a mathematician seeking large-scale collaboration on a proof, a rocket scientist ensuring precise calculations, or simply a math enthusiast, Litex is designed for you. We will explore how Litex's innovative design addresses these challenges throughout this tutorial.
 
@@ -133,11 +133,11 @@ success! :)
 
 When you see the smile face :), it means the proof is successful, Congratulations! If not, it means the proof is failed, there must be something `false` or `unknown` or `error` in your code. Read the error message carefully and fix it.
 
-The first few lines of outputs are very similar to the input. Messages of `set`, `prop`, `know`, `obj` statements are just copy of the input. The only difference is that the output is there are some "\`" in the ouput. "\`" means that is a free variable, and the Litex interpreter will replace it with a concrete value when checking the factual statement. For example, x in `prop intelligent(x human)` is a free variable, and Jordan in `$intelligent(Jordan)` is a concrete value.
+The first few lines of outputs are very similar to the input. Messages of `set`, `prop`, `know`, `obj` statements are just copy of the input. The only difference is that the output is there are some "\`" in the output. "\`" means that is a free variable, and the Litex interpreter will replace it with a concrete value when checking the factual statement. For example, x in `prop intelligent(x human)` is a free variable, and Jordan in `$intelligent(Jordan)` is a concrete value.
 
 The most important part of the output is the last line. It means the `$intelligent(Jordan)` is true, proved by the previously known fact `forall x human: $intelligent(x)`.
 
-Think about it, if it were you to check whether Jordan is intelligent, what will you do? You will look up the knowledge base, and find the fact `forall x human: $intelligent(x)` instead of `$intelligent(Jordan)` (It is illegal to write `forall` statements in a single line in Litex. In this tutorial, we write them within a line for better readability.). Then you will replace `x` with `Jordan` in the fact, and see whether `Jordan` satisfies all the conditions. In this case, the only condition is that `Jordan` is a human. Since we have already known that `Jordan` is a human by its deifnition, we can conclude that `$intelligent(Jordan)` is true. Litex does exactly the same thing for you, and it is much faster and more accurate than any human.
+Think about it, if it were you to check whether Jordan is intelligent, what will you do? You will look up the knowledge base, and find the fact `forall x human: $intelligent(x)` instead of `$intelligent(Jordan)` (It is illegal to write `forall` statements in a single line in Litex. In this tutorial, we write them within a line for better readability.). Then you will replace `x` with `Jordan` in the fact, and see whether `Jordan` satisfies all the conditions. In this case, the only condition is that `Jordan` is a human. Since we have already known that `Jordan` is a human by its definition, we can conclude that `$intelligent(Jordan)` is true. Litex does exactly the same thing for you, and it is much faster and more accurate than any human.
 
 When a factual statement is proved, itself will be added to the `Litex knowledge base` for future use. For example, if you run the `$intelligent(Jordan)` statement again, the Litex interpreter will output the following result.
 
@@ -150,7 +150,7 @@ Jordan = Jordan
 
 Now it is verified by the new fact `$intelligent(Jordan)` itself instead of the previously known fact `forall x human: $intelligent(x)`. In math, you can either prove a fact by a universal quantification using `forall` statement, or prove a fact by itself. Previously, we proved the fact `$intelligent(Jordan)` by the a universal quantification. Now, we proved it by itself.
 
-Congratulations! You have just learned the most basic usage of Litex through a simple example. See, it is not so difficult, right? That is the design choice of Litex. Litex is a tool that can help you to reason stictly and naturally at the same time. 
+Congratulations! You have just learned the most basic usage of Litex through a simple example. See, it is not so difficult, right? That is the design choice of Litex. Litex is a tool that can help you to reason strictly and naturally at the same time. 
 
 Learning Litex is different from traditional formal languages. You don't need to read thick books that make your brain explode. Instead, focus on connecting Litex with your intuition and common sense. The more you understand how Litex relates to your daily reasoning, the better you'll learn it.
 
@@ -246,7 +246,7 @@ The reason why those facts are called `specific` is that they are specific to th
 
 Sometimes we want to formalize the opposite of a specific fact. In this case, we put the `not` keyword before the specific fact. For example, `not $intelligent(Jordan)` is the opposite of `$intelligent(Jordan)`.
 
-Not all specific facts are using prefix `$`. For familiarity, some builtin proposition names like `=`, `<`, `>`, `<=`, `>=`, `!=` are infix. For example, you do not write `$=(1+1,2)`, you just write `1+1=2`. Basic arithematic operations like `+`, `-`, `*`, `/`, `^`, `%` are also builtin, and their validation is provided by the Litex interpreter.
+Not all specific facts are using prefix `$`. For familiarity, some builtin proposition names like `=`, `<`, `>`, `<=`, `>=`, `!=` are infix. For example, you do not write `$=(1+1,2)`, you just write `1+1=2`. Basic arithmetic operations like `+`, `-`, `*`, `/`, `^`, `%` are also builtin, and their validation is provided by the Litex interpreter.
 
 The `=` statement is behaves very differently from other specific facts. Objects from any sets can be used as parameter of an `=` statement. And if `x = y` is true, then the validation of  `$P(x)` can immediately lead to the validation of `$P(y)`, because `x = y`, since now x and y are considered to be the same.
 
@@ -296,7 +296,7 @@ Three components are:
 
 All three components contain factual statements as body. You can use definition statements like `prop` in the body of a `forall` statement. Three factual statements are:
 
-1. `specific` facts, incluing `exist` statements.
+1. `specific` facts, including `exist` statements.
 2. `or` statements.
 3. `not` statements.
 
@@ -342,7 +342,7 @@ Congratulations, you have learned the most basic and important statements in Lit
 
 Wait, you might be wondering, how does Litex verify a given fact exactly? Previous examples are pretty straightforward, but how about a more complex example? You might have this feeling that the examples above seem intuitively correct, but you can't quite articulate why they're right.
 
-If Litex has invented anything, it is a language that clearly formalizes the intuitive yet vaguely understood rules of reasoning, making them explicit and precise. The intuition here is that, when we do math, we are constanly using the technique `match and substitute` to derive new facts from known facts.
+If Litex has invented anything, it is a language that clearly formalizes the intuitive yet vaguely understood rules of reasoning, making them explicit and precise. The intuition here is that, when we do math, we are constantly using the technique `match and substitute` to derive new facts from known facts.
 
 There are and only are two basic ways of proving a specific fact:
 
@@ -363,7 +363,7 @@ prove:
     $male(Curry) # true, because Stephen = Curry and $male(Stephen) is known.
 ```
 
-Related messgaes in the output says:
+Related messages in the output says:
 
 ```
 $male(Curry)
@@ -384,14 +384,14 @@ Here is a detailed example showing how we use `match and substitute` to verify a
 ```
 prove:
     set cat
-    prop miao(x cat)
+    prop is_cute(x cat)
     prop physical(x human)
     prop strong(x human)
     prop powerful(x human)
 
     know：
         forall x cat:
-            $miao(x)
+            $is_cute(x)
 
         forall x human:
             $intelligent(x)
@@ -430,7 +430,7 @@ forall `x:
 
 Notice `$strong(Jordan)` is true because 1. Jordan is human 2. `$physical(Jordan)` is true 3. `forall x human: $physical(x) then $strong(x)` is known. It works because the then block `$string(x)` and `$strong(Jordan)` have the same proposition name and therefore can be matched. When matched, Jordan is substituted for x in the then block, and we check whether `$physical(Jordan)` and Jordan is in set human is true. `$physical(Jordan)` is true because it matches the known fact `$physical(Jordan)` and is proved by this specific fact, and Jordan is defined to be in set human when it is defined.
 
-Let's see why other known facts did not help to check `$strong(Jordan)`. `forall x cat: $miao(x)` is known, but it does not help because `miao` and `strong` are different propositions, and also `Jorand` is not known in the set `cat`. `forall x human: $intelligent(x)` does not help to check `$strong(Jordan)` because `intelligent` and `strong` are different propositions. `forall x human: $powerful(x) then $strong(x)` does not help to check `$strong(Jordan)` because `$powerful(Jordan)` is not known.
+Let's see why other known facts did not help to check `$strong(Jordan)`. `forall x cat: $is_cute(x)` is known, but it does not help because `is_cute` and `strong` are different propositions, and also `Jordan` is not known in the set `cat`. `forall x human: $intelligent(x)` does not help to check `$strong(Jordan)` because `intelligent` and `strong` are different propositions. `forall x human: $powerful(x) then $strong(x)` does not help to check `$strong(Jordan)` because `$powerful(Jordan)` is not known.
 
 A `forall` statement is verified slightly differently from a specific fact.
 
@@ -493,7 +493,7 @@ forall `x:
 
 The above example wants to prove that `forall x human: $p1(x) then $p2(x) and $p3(x)`. When proving a `forall` statement, Litex will open a new proof context for each object in the domain. In this context, it will put a new object x in the context, x is assumed to be in human set and `$p(x)` is true. Then the `then` block is proved statement by statement. `$p2(x)` is proved by the known fact `forall x human: $p1(x) then $p2(x)`. `$p3(x)` is proved by the known fact `forall x human: $p2(x) then $p3(x)`.
 
-You might be wondering what will happen if most of parameters of the `forall` statements are derived, but not all of them. For example, when using `know forall x human, y human: $p1(x)` to verify `$p1(Jordan)`, we only know `x` in this `forall` statement is subsituted to be `Jordan`. We do not know `y` in this `forall` statement. In this case, this `forall` statment does no help to prove `$p1(Jordan)`. Later, we will introduce `suppose` statement and `with` statement to help you solve this problem.
+You might be wondering what will happen if most of parameters of the `forall` statements are derived, but not all of them. For example, when using `know forall x human, y human: $p1(x)` to verify `$p1(Jordan)`, we only know `x` in this `forall` statement is substituted to be `Jordan`. We do not know `y` in this `forall` statement. In this case, this `forall` statement does no help to prove `$p1(Jordan)`. Later, we will introduce `suppose` statement and `with` statement to help you solve this problem.
 
 OK! That is all how verification works in Litex. It is not that hard, right? That is exactly how `match and substitute` works at daily math proof. When a man is verifying a piece of proof, he does `match and substitute` thousands of times in his head, and that is exactly what Litex does. Litex iterates over all possibly related known facts and check whether they can be matched with the body of the given specific fact. If they can, the given specific fact is proved. Do not worry whether Litex is computationally expensive. Litex is very efficient and fast.
 
@@ -536,7 +536,7 @@ prove:
     $q(Leonard, Durant)
 ```
 
-`exist_prop` statement has the form `exist_prop`, a list of existential parameter-set pairs, `st` keyword, a proposition name, and a list of proposition parameters. It defines a new existential proposition. It reads "there exists a set of objects that satisfies the conditions in that existential proposition block. The whole proposition is caleld proposition name". Notice the existential parameters are not the same as the parameters of the proposition. In the body of the `exist_prop` statement, there are two sections: the domain section and the conclusion section. When the domain section and the conclusion section are both true, the `exist` statement is true. For example, when `$p(Kevin, Durant)` and `$q(Kevin, Durant)` are both true, so `exist Kevin st $P(Durant)` is ture. `exist` statement has the form `exist`, a list of paramters, `st` keyword, a specific fact. When a `exist` statement is true, the specific fact inside (in this case, `$P(Durant)`) is true automatically.
+`exist_prop` statement has the form `exist_prop`, a list of existential parameter-set pairs, `st` keyword, a proposition name, and a list of proposition parameters. It defines a new existential proposition. It reads "there exists a set of objects that satisfies the conditions in that existential proposition block. The whole proposition is called that proposition name". Notice the existential parameters are not the same as the parameters of the proposition. In the body of the `exist_prop` statement, there are two sections: the domain section and the conclusion section. When the domain section and the conclusion section are both true, the `exist` statement is true. For example, when `$p(Kevin, Durant)` and `$q(Kevin, Durant)` are both true, so `exist Kevin st $P(Durant)` is true. `exist` statement has the form `exist`, a list of parameters, `st` keyword, a specific fact. When a `exist` statement is true, the specific fact inside (in this case, `$P(Durant)`) is true automatically.
 
 The main use of `exist` statement is by using known `exist` statement to work with `have` statement. `have` statement is a way to introduce new objects into the current context. It has the form `have`, a list of parameters, `st` keyword, a specific fact. In this example, since `$P(Durant)` is true by `exist Kevin st $P(Durant)`, we can use `have` to introduce a new object `Leonard` that satisfies `$P(Durant)`. By definition, since `Leonard` satisfies `$P(Durant)`, so `$q(Leonard, Durant)` is true.
 
@@ -559,7 +559,7 @@ The `not` statement is used to negate a factual statement. Since a factual state
 
 ## Special Keywords
 
-There are many builtin keywords helping you make reasonings.
+There are many builtin keywords helping you make reasoning.
 
 `N`, `I`, `F`, `R` are special keywords in Litex. They are used to represent the set of natural numbers, integers, rational numbers (`F` for float), and real numbers respectively.
 
@@ -575,7 +575,7 @@ Now you have learned the most basic and important statements in Litex: `forall`,
 
 You might be wondering, what other factual expressions do I need to know? Are there infinitely many of them? The answer is NO. NO. There are exactly just four of them. YOU CAN BUILD THE ENTIRE WORLD OF MATH WITH JUST FOUR OF THEM. These four keywords are basis of the so called first-order logic statements, and all math that an ordinary person is familiar with are built upon them (ordinary here means you do not have math PhD). Don't let the word "first-order logic" scare you. You have been using it every single day in your daily life, you just need to know the way you are reasoning has this technical name. See [this](https://sites.pitt.edu/~woon/courses/ps2703_logic.pdf) and [this](https://en.wikipedia.org/wiki/First-order_logic) for more information.
 
-**warning: There is a mathematical field called higher-order logic and might be covered in future versions of Litex. It allows you to quantify over propositions, and even over sets. However, most of the math that you are familiar with are built upon first-order logic, with just one exception: the mathematical induction. Don't worry, it is a speical keyword of Litex. If you do not know what high-order logic is, don't worry. It is not the mainstream of math and does not affect your understanding of Litex.**
+**warning: There is a mathematical field called higher-order logic and might be covered in future versions of Litex. It allows you to quantify over propositions, and even over sets. However, most of the math that you are familiar with are built upon first-order logic, with just one exception: the mathematical induction. Don't worry, it is a special keyword of Litex. If you do not know what high-order logic is, don't worry. It is not the mainstream of math and does not affect your understanding of Litex.**
 
 The core design philosophy of Litex is to make first-order logic accessible and easy to express. Our goal is to create a formal language that is friendly to everyone, not just experts. This is why Litex focuses exclusively on first-order logic - expressed through four key factual statements (forall, exist, or, specific). First-order logic is the most common and essential aspect of mathematical reasoning, and making it accessible to everyone is Litex's primary mission.
 
@@ -674,7 +674,7 @@ prove:
             $R(Joker)
 ```
 
-`prove_in_each_case` works like this: first, we check the `or` statement. If the `or` statement is true, then we check the `then` statement at each case. For example, first we assume `$P(Joker)` is true, then we check the `then` statement in the first `prove` statement, which is `$R(Jokter)` here. This example is easy, and we get `$R(Joker)` immediately because `forall x human: $P(x) then $R(x)` is known. Then we check the second case, which is `$Q(Joker)` is true and see whether `$R(Joker)` is true. Since we know that `forall x human: $Q(x) then $R(x)`, we can conclude that `$R(Joker)` is true. Therefore, the `prove_in_each_case` statement as a whole is true.
+`prove_in_each_case` works like this: first, we check the `or` statement. If the `or` statement is true, then we check the `then` statement at each case. For example, first we assume `$P(Joker)` is true, then we check the `then` statement in the first `prove` statement, which is `$R(Joker)` here. This example is easy, and we get `$R(Joker)` immediately because `forall x human: $P(x) then $R(x)` is known. Then we check the second case, which is `$Q(Joker)` is true and see whether `$R(Joker)` is true. Since we know that `forall x human: $Q(x) then $R(x)`, we can conclude that `$R(Joker)` is true. Therefore, the `prove_in_each_case` statement as a whole is true.
 
 ```
 prove:
@@ -710,7 +710,7 @@ suppose $q(x, y):
 
 It says: first we open a new context. We introduce two new parameters `x` and `y`. We assume `$q(x,y)` is true. In this context, we prove `$p(x)`.
 
-You might be wondering how is it different from `prove` statement. The main funcionality of a `suppose` statement is work together with `with` statement.
+You might be wondering how is it different from `prove` statement. The main functionality of a `suppose` statement is work together with `with` statement.
 
 ```
 prove:

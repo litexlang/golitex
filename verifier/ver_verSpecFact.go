@@ -248,7 +248,7 @@ func (ver *Verifier) useExistPropDefProveExist_St(stmt *ast.SpecFactStmt, state 
 		}
 		if !ok {
 			if state.requireMsg() {
-				msg := fmt.Sprintf("dom fact %s is unkown\n", domFact.String())
+				msg := fmt.Sprintf("dom fact %s is unknown\n", domFact.String())
 				ver.newMsgEnd(msg)
 			}
 			return false, nil

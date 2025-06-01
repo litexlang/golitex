@@ -69,7 +69,7 @@ func (e VerState) toNoMsg() VerState {
 	}
 }
 
-func (e VerState) toFnialRound() VerState {
+func (e VerState) toFinalRound() VerState {
 	if e.requireMsg() {
 		return FinalRoundMsg
 	} else {

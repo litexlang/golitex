@@ -36,7 +36,7 @@ _Keep it simple, stupid._
 
 _-- The Unix Philosophy_
 
-Math is built on top of a small sets of reasoning rules and axioms. There are basicly two types of deriving a new fact from existing facts:
+Math is built on top of a small sets of reasoning rules and axioms. There are basically two types of deriving a new fact from existing facts:
 
 1. derive from a specific fact: e.g. If I know x = 1, then x = 1
 2. derive from a general fact: e.g. If I know forall human, he is intelligent, and Jordan is a human, then Jordan is intelligent. Litex calls this way of deriving a new fact "match and substitute", because it is like matching a pattern and substituting the pattern with a specific value.
@@ -82,9 +82,9 @@ Mathematics is the art of deriving new facts from established ones. To illustrat
   </tr>
 </table>
 
-Consider `Human` as the set of all humans. Using `know`, we establish a simple fact: all humans are self-aware. Since Bob is in the set of `Human`, "Bob is self-aware" is true. This simple example shows how Litex builds math from basic pieces, like building blocks. By `match and substitute`, Litex verfies the correctness of the reasoning just like how you verify the correctness of your daily reasoning. Each statement in Litex has four potential outcomes: true, false, unknown, or error.
+Consider `Human` as the set of all humans. Using `know`, we establish a simple fact: all humans are self-aware. Since Bob is in the set of `Human`, "Bob is self-aware" is true. This simple example shows how Litex builds math from basic pieces, like building blocks. By `match and substitute`, Litex verifies the correctness of the reasoning just like how you verify the correctness of your daily reasoning. Each statement in Litex has four potential outcomes: true, false, unknown, or error.
 
-Notice how Litex is much simpler than Lean4. Instead of writing complex axioms with special names, you just use familiar words like `know` and `forall`. Litex automatically finds the facts it needs, just like searching in a database. Moreover, there are less unfamiliar keywords, less twisted syntax in Litex. People can understand Litex at first glance and say "oh, I already get this." instead of trying to figure out what this keyword or that syntax means. Uers can focus more on math itself instead of the formal language they use. Litex's syntax is similar to Python and Go, so if you've done any programming, you'll feel right at home. See more in [comparison with Lean](./doc/comparison_with_lean/comparison_with_lean.md), [tutorial](./doc/tutorial/tutorial.md).
+Notice how Litex is much simpler than Lean4. Instead of writing complex axioms with special names, you just use familiar words like `know` and `forall`. Litex automatically finds the facts it needs, just like searching in a database. Moreover, there are less unfamiliar keywords, less twisted syntax in Litex. People can understand Litex at first glance and say "oh, I already get this." instead of trying to figure out what this keyword or that syntax means. Users can focus more on math itself instead of the formal language they use. Litex's syntax is similar to Python and Go, so if you've done any programming, you'll feel right at home. See more in [comparison with Lean](./doc/comparison_with_lean/comparison_with_lean.md), [tutorial](./doc/tutorial/tutorial.md).
 
 ## Unique Idea of Litex
 
