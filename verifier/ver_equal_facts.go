@@ -121,3 +121,33 @@ func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state VerState) (boo
 
 	return false, nil
 }
+
+func (ver *Verifier) fcFnEq(left, right *ast.FcFn, state VerState) (bool, error) {
+	var ok bool
+	var err error
+	state = state.addRound()
+
+	if len(left.ParamSegs) != len(right.ParamSegs) {
+		return false, nil
+	}
+
+	for i := range left.ParamSegs {
+		ok, err := ver.fcEqualSpec(left.ParamSegs[i], right.ParamSegs[i], state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+	}
+
+	ok, err = ver.fcEqualSpec(left.FnHead, right.FnHead, state)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
+
+	return true, nil
+}
