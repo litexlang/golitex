@@ -18,8 +18,8 @@ type TopStmt struct {
 }
 
 type DefObjStmt struct {
-	Objs []string
-	// ObjSets          []Fc
+	Objs             []string
+	ObjSets          []Fc
 	Facts            []FactStmt
 	ParamInSetsFacts []FactStmt
 }
@@ -41,7 +41,7 @@ type DefPropStmt struct {
 type DefExistPropStmtBody struct {
 	DefHeader DefHeader
 	DomFacts  []FactStmt
-	// 必须是 iff，因为 not exist XXX <=> forall not XXX，而 not XXX 要求 XXX 是 reversable_logic_or_spec_stmt
+	// 必须是 iff，因为 not exist XXX <=> forall not XXX，而 not XXX 要求 XXX 是 logic_or_spec_stmt
 	IffFacts []LogicOrSpec_Stmt
 }
 
@@ -94,11 +94,6 @@ type FcFnDecl struct {
 	Params []string
 }
 
-// type LogicExprStmt struct {
-// 	IsOr  bool
-// 	Facts []Reversable_LogicOrSpec_Stmt
-// }
-
 // have 是可能引入 fn 和 prop 的
 type HaveStmt struct {
 	ObjNames []string
@@ -121,20 +116,11 @@ type WithPropMatchStmt struct {
 	Body []Stmt
 }
 
-// 之后可以考虑引入 不是 orfact 来证明，而是如果一个集合元素是有限的，那我也可以prove by case
 type ProveInEachCaseStmt struct {
-	// OrFact    LogicExprStmt
 	OrFact    OrStmt
 	ThenFacts []FactStmt
 	Proofs    [][]Stmt
 }
-
-// type ProveOrStmt struct {
-// 	Indexes map[int]struct{}
-// 	// OrFact  LogicExprStmt
-// 	OrFact OrStmt
-// 	Proofs []Stmt
-// }
 
 type KnowExistPropStmt struct {
 	ExistProp DefExistPropStmt

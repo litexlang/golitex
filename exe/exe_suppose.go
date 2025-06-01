@@ -71,7 +71,7 @@ func (exec *Executor) supposeStmt_declaredParams(stmt *ast.SupposePropMatchStmt)
 		if asAtom.PkgName != glob.EmptyPkg {
 			return glob.ExecState_Error, fmt.Errorf("spec fact parameter must be atom, but got: %s", param.String())
 		}
-		err := exec.env.ObjDefMem.Insert(ast.NewDefObjStmt([]string{asAtom.Name}, []ast.FactStmt{}, []ast.FactStmt{}), glob.EmptyPkg)
+		err := exec.env.ObjDefMem.Insert(ast.NewDefObjStmt([]string{asAtom.Name}, []ast.Fc{}, []ast.FactStmt{}, []ast.FactStmt{}), glob.EmptyPkg)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}

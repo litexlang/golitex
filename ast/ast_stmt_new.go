@@ -20,8 +20,8 @@ func NewTopStmt(stmt Stmt, isPub bool) *TopStmt {
 	return &TopStmt{stmt, isPub}
 }
 
-func NewDefObjStmt(objs []string, facts []FactStmt, objInSetsFacts []FactStmt) *DefObjStmt {
-	return &DefObjStmt{objs, facts, objInSetsFacts}
+func NewDefObjStmt(objs []string, objSets []Fc, facts []FactStmt, objInSetsFacts []FactStmt) *DefObjStmt {
+	return &DefObjStmt{objs, objSets, facts, objInSetsFacts}
 }
 
 func NewDefPropStmt(defHeader DefHeader, domFacts []FactStmt, iffFacts []FactStmt) *DefPropStmt {
