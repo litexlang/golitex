@@ -137,24 +137,6 @@ func (ver *Verifier) match_FcFnInFactUnderUniFact_ConFc(fcFnUnFactUnderUniFact *
 	return retMap, true, nil
 }
 
-// 如果不考虑 claim forall, 如果默认所有的 uniFact 的param都是以`开头的，那这里根本不需要传入 uniParams，直接查看这个 fcAtom 的内容是否以`开头就行
-// func isUniParam(fcAtomInFactUnderUniFact *ast.FcAtom, uniParams []string) (string, bool) { // ret: matched possible uniParam string; isMatched?
-// 	for _, uniParam := range uniParams {
-// 		if uniParam == fcAtomInFactUnderUniFact.Name && fcAtomInFactUnderUniFact.PkgName == glob.BuiltinEmptyPkgName {
-// 			return uniParam, true
-// 		}
-// 	}
-// 	return "", false
-// }
-
-// 如果默认所有的 uniFact 的param都是以`开头的(以一个`开头，或以n个`开头)，而且里面的所有的事实都是以`开头，那这里根本不需要传入 uniParams，直接查看这个 fcAtom 的内容是否以`开头就行
-// func isUniParam(fcAtomInFactUnderUniFact *ast.FcAtom) (string, bool) {
-// 	if strings.HasPrefix(fcAtomInFactUnderUniFact.Name, glob.UniParamPrefix) && fcAtomInFactUnderUniFact.PkgName == glob.BuiltinEmptyPkgName {
-// 		return fcAtomInFactUnderUniFact.Name, true
-// 	}
-// 	return "", false
-// }
-
 func mergeMatchMaps(from map[string][]ast.Fc, to map[string][]ast.Fc) {
 	for key, value := range from {
 		if _, ok := (to)[key]; ok {

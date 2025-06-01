@@ -730,6 +730,20 @@ Assume `suppose $q(x, y): $p(x)` is true. (In this case we know it to be true). 
 
 `with` and `suppose` is necessary, because sometimes we do not how to match all the parameters in a forall statement parameter list. In this case, we can use `suppose` to open a new context, just like how a forall statement works and use `with` to match the parameters.
 
+## To Be A Great Litex Programmer
+
+That is it, you have learned the most important statements in Litex. You are now equipped with the most basic tools to reason in Litex and ready to start your Litex journey.
+
+Before you start your Litex journey, I want to share some tips to be a great Litex programmer.
+
+1. **Consistency**: Litex intentionally has few keywords and minimal syntax sugar to encourage consistent programming habits - there should be only one way to express a given logic. This makes code more readable and prevents users from getting overwhelmed by too many expression choices.
+
+2. **Readability**: When writing Litex code, always use descriptive names that convey meaning for better readability. Avoid using generic names like `P` or `Q` that do not convey any information.
+
+3. **Efficiency**: When writing Litex code, always use the most efficient way to express your thoughts. For example, when writing a `forall` statement, always use the most specific parameters that can be used to prove the statement.
+
+
+
 ## Words From The Inventor
 
 Hi, I am Jiachen Shen, the creator of Litex. I am a PhD student in mathematics, and I am also a programming language geek. I have been working on Litex since 2024 and received many valuable feedbacks from Litex enthusiasts. I hope you enjoy using Litex, too. 

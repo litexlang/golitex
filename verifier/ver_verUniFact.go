@@ -52,7 +52,7 @@ func (ver *Verifier) uniFactWithoutIff(stmt *ast.UniFactStmt, state VerState) (b
 		}
 		if !ok {
 			if state.requireMsg() {
-				ver.unknownMsgEnd("%s is unknown", thenFact.String())
+				ver.newMsgEnd("%s is unknown", thenFact.String())
 			}
 			return false, nil
 		}
@@ -111,7 +111,7 @@ func (ver *Verifier) uniFactWithIff_CheckThenToIff(stmt *ast.UniFactStmt, state 
 		}
 		if !ok {
 			if state.requireMsg() {
-				ver.unknownMsgEnd("%s is unknown", toCheckFact.String())
+				ver.newMsgEnd("%s is unknown", toCheckFact.String())
 			}
 			return false, nil
 		}
@@ -149,7 +149,7 @@ func (ver *Verifier) uniFactWithIff_CheckIffToThen(stmt *ast.UniFactStmt, state 
 		}
 		if !ok {
 			if state.requireMsg() {
-				ver.unknownMsgEnd("%s is unknown", toCheckFact.String())
+				ver.newMsgEnd("%s is unknown", toCheckFact.String())
 			}
 			return false, nil
 		}
