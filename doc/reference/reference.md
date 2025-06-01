@@ -119,6 +119,8 @@ Litex is fundamentally a read-only Turing machine. Once any fact is stored, it c
 
 Litex gets its name from Lisp and Tex. Lisp is a programming language that is very close to math. Tex is a typesetting system that is very close to math. Both of them greatly inspired Litex, making Litex also a formal language that is very close to math.
 
+<!-- 需要说明litex故意只有很少的关键词和语法，不提供太多语法糖，这是因为要让用户形成一致的编程习惯，即同一个逻辑，只有一种表达方式；这让其他人阅读这段代码更容易，也不会让用户陷入选择恐惧症，不知道要从10种表达中选哪一种 。这段话在reamde里也可以加下-->
+
 ## Conclusion
 
 _That language is an instrument of Human reason, and not merely a medium for the expression of thought, is a truth generally admitted._

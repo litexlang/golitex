@@ -321,3 +321,19 @@ func (ver *Verifier) verify_specFact_when_given_orStmt_is_true(stmt *ast.SpecFac
 
 	return true, nil
 }
+
+func (ver *Verifier) inFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	if len(stmt.Params) != 2 {
+		return false, fmt.Errorf("invalid number of parameters for in fact")
+	}
+
+	ok, err := ver.btLitNumInNatOrIntOrRatOrReal(stmt, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
+	return false, nil
+}
