@@ -186,7 +186,7 @@ func (tb *tokenBlock) uniFactStmt(nameDepthMap ast.NameDepthMap, curAllowUniFact
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	paramsWithUniPrefix, newUniParams, paramInSetsFacts, err := tb.param_paramInSetFactsWithUniPrefix(glob.KeySymbolColon, nameDepthMap)
+	paramsWithUniPrefix, newUniParams, setParams, paramInSetsFacts, err := tb.param_paramInSetFactsWithUniPrefix(glob.KeySymbolColon, nameDepthMap)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -200,7 +200,7 @@ func (tb *tokenBlock) uniFactStmt(nameDepthMap ast.NameDepthMap, curAllowUniFact
 		iffFacts = ast.EmptyIffFacts
 	}
 
-	return ast.NewUniFactStmtWithSetReqInDom(paramsWithUniPrefix, domainFacts, thenFacts, iffFacts, paramInSetsFacts), nil
+	return ast.NewUniFactStmtWithSetReqInDom(paramsWithUniPrefix, setParams, domainFacts, thenFacts, iffFacts, paramInSetsFacts), nil
 }
 
 func (tb *tokenBlock) bodyFacts(nameDepthMap ast.NameDepthMap, curAllowUniFactEnum AllowUniFactEnum) ([]ast.FactStmt, error) {
@@ -509,7 +509,7 @@ func (tb *tokenBlock) defHeader() (*ast.DefHeader, ast.NameDepthMap, error) {
 		return nil, nil, err
 	}
 
-	params, nameDepthMap, paramInSetsFacts, err := tb.param_paramInSetFactsWithUniPrefix(glob.KeySymbolRightBrace, ast.NameDepthMap{})
+	params, nameDepthMap, setParams, paramInSetsFacts, err := tb.param_paramInSetFactsWithUniPrefix(glob.KeySymbolRightBrace, ast.NameDepthMap{})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -518,7 +518,7 @@ func (tb *tokenBlock) defHeader() (*ast.DefHeader, ast.NameDepthMap, error) {
 		tb.addMessage(glob.WarningMsg("there are %d params, but only %d of them are given with requirements in sets", len(params), len(paramInSetsFacts)))
 	}
 
-	return ast.NewDefHeader(name, params, paramInSetsFacts), nameDepthMap, nil
+	return ast.NewDefHeader(name, params, setParams, paramInSetsFacts), nameDepthMap, nil
 }
 
 func (tb *tokenBlock) defExistPropStmt() (*ast.DefExistPropStmt, error) {
@@ -876,7 +876,7 @@ func (tb *tokenBlock) uniFactStmt_WithoutUniPrefix_InClaimStmt() (*ast.UniFactSt
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	params, paramInSetsFacts, err := tb.uniFactHeadWithoutUniPrefix(glob.KeySymbolColon)
+	params, setParams, paramInSetsFacts, err := tb.uniFactHeadWithoutUniPrefix(glob.KeySymbolColon)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -892,7 +892,7 @@ func (tb *tokenBlock) uniFactStmt_WithoutUniPrefix_InClaimStmt() (*ast.UniFactSt
 		return nil, fmt.Errorf("universal fact in claim statement should not have iff facts")
 	}
 
-	return ast.NewUniFactStmtWithSetReqInDom(params, domainFacts, thenFacts, iffFacts, paramInSetsFacts), nil
+	return ast.NewUniFactStmtWithSetReqInDom(params, setParams, domainFacts, thenFacts, iffFacts, paramInSetsFacts), nil
 }
 
 func (tb *tokenBlock) uniFactBodyFacts(nameDepthMap ast.NameDepthMap, curAllowUniFactEnum AllowUniFactEnum, defaultSectionName string) ([]ast.FactStmt, []ast.FactStmt, []ast.FactStmt, error) {
@@ -1186,14 +1186,15 @@ func (tb *tokenBlock) knowExistPropStmt() (*ast.KnowExistPropStmt, error) {
 	return ast.NewKnowExistPropStmt(*existProp), nil
 }
 
-func (tb *tokenBlock) uniFactHeadWithoutUniPrefix(endWith string) ([]string, []ast.FactStmt, error) {
+func (tb *tokenBlock) uniFactHeadWithoutUniPrefix(endWith string) ([]string, []ast.Fc, []ast.FactStmt, error) {
 	paramName := []string{}
 	paramInSetsFacts := []ast.FactStmt{}
+	setParams := []ast.Fc{}
 
 	for !tb.header.is(endWith) {
 		objName, err := tb.header.next()
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 
 		if tb.header.is(glob.KeySymbolComma) {
@@ -1204,26 +1205,28 @@ func (tb *tokenBlock) uniFactHeadWithoutUniPrefix(endWith string) ([]string, []a
 		} else {
 			tp, err := tb.header.rawFc()
 			if err != nil {
-				return nil, nil, err
+				return nil, nil, nil, err
 			}
 
 			paramName = append(paramName, objName)
 			paramInSetsFacts = append(paramInSetsFacts, ast.Param_ParamSet_ToInFact(objName, tp))
+			setParams = append(setParams, tp)
 
 			tb.header.skipIfIs(glob.KeySymbolComma)
 		}
 	}
 
 	if tb.header.isAndSkip(endWith) {
-		return paramName, paramInSetsFacts, nil
+		return paramName, setParams, paramInSetsFacts, nil
 	} else {
-		return nil, nil, fmt.Errorf("expected '%s' but got '%s'", endWith, tb.header.strAtCurIndexPlus(0))
+		return nil, nil, nil, fmt.Errorf("expected '%s' but got '%s'", endWith, tb.header.strAtCurIndexPlus(0))
 	}
 }
 
-func (tb *tokenBlock) param_paramInSetFactsWithUniPrefix(endWith string, nameDepthMapFromAbove ast.NameDepthMap) ([]string, ast.NameDepthMap, []ast.FactStmt, error) {
+func (tb *tokenBlock) param_paramInSetFactsWithUniPrefix(endWith string, nameDepthMapFromAbove ast.NameDepthMap) ([]string, ast.NameDepthMap, []ast.Fc, []ast.FactStmt, error) {
 	params := []string{}
 	paramInSetsFacts := []ast.FactStmt{}
+	setParams := []ast.Fc{}
 
 	nameDepthMap := ast.NameDepthMap{}
 	for k, v := range nameDepthMapFromAbove {
@@ -1234,12 +1237,12 @@ func (tb *tokenBlock) param_paramInSetFactsWithUniPrefix(endWith string, nameDep
 		for {
 			param, err := tb.header.next()
 			if err != nil {
-				return nil, nil, nil, err
+				return nil, nil, nil, nil, err
 			}
 
 			_, declared := nameDepthMap[param]
 			if declared {
-				return nil, nil, nil, fmt.Errorf("duplicate parameter %s", param)
+				return nil, nil, nil, nil, fmt.Errorf("duplicate parameter %s", param)
 			}
 			nameDepthMap[param] = 1
 
@@ -1255,14 +1258,15 @@ func (tb *tokenBlock) param_paramInSetFactsWithUniPrefix(endWith string, nameDep
 			} else {
 				setParam, err := tb.header.rawFc()
 				if err != nil {
-					return nil, nil, nil, err
+					return nil, nil, nil, nil, err
 				}
 
 				setParam, err = ast.AddUniPrefixToFc(setParam, nameDepthMap)
 				if err != nil {
-					return nil, nil, nil, err
+					return nil, nil, nil, nil, err
 				}
 
+				setParams = append(setParams, setParam)
 				paramInSetsFacts = append(paramInSetsFacts, ast.Param_ParamSet_ToInFact(param, setParam))
 
 				if tb.header.is(glob.KeySymbolComma) {
@@ -1275,16 +1279,16 @@ func (tb *tokenBlock) param_paramInSetFactsWithUniPrefix(endWith string, nameDep
 				}
 			}
 
-			return nil, nil, nil, fmt.Errorf("expected ',' or '%s' but got '%s'", endWith, tb.header.strAtCurIndexPlus(0))
+			return nil, nil, nil, nil, fmt.Errorf("expected ',' or '%s' but got '%s'", endWith, tb.header.strAtCurIndexPlus(0))
 		}
 	}
 
 	err := tb.header.skip(endWith)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 
-	return params, nameDepthMap, paramInSetsFacts, nil
+	return params, nameDepthMap, setParams, paramInSetsFacts, nil
 }
 
 func (tb *tokenBlock) importStmt() (ast.Stmt, error) {

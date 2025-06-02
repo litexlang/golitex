@@ -29,6 +29,7 @@ func (ver *Verifier) commutativeFnByDef(stmt *ast.SpecFactStmt, state VerState) 
 	}
 
 	uniFactParams := defOfFn.DefHeader.Params
+	uniSetParams := defOfFn.DefHeader.SetParams
 	uniFactParamInSetsFacts := defOfFn.DefHeader.ParamInSetsFacts
 	uniFactDomFacts := defOfFn.DomFacts
 
@@ -44,6 +45,7 @@ func (ver *Verifier) commutativeFnByDef(stmt *ast.SpecFactStmt, state VerState) 
 
 	uniFact := ast.NewUniFactStmtWithSetReqInDom(
 		uniFactParams,
+		uniSetParams,
 		uniFactDomFacts,
 		[]ast.FactStmt{equalFact},
 		ast.EmptyIffFacts,
