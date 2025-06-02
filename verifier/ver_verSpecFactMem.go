@@ -656,9 +656,12 @@ func (ver *Verifier) mathInductionFact(stmt *ast.SpecFactStmt, state VerState) (
 
 	paramInSetsFacts := make([]ast.FactStmt, 1)
 	paramInSetsFacts[0] = ast.Param_ParamSet_ToInFact(fmt.Sprintf("%sn", glob.UniParamPrefix), ast.NewFcAtomWithName(glob.KeywordNatural))
+	paramSets := make([]ast.Fc, 1)
+	paramSets[0] = ast.NewFcAtomWithName(glob.KeywordNatural)
 
 	nToNAddOneFact := ast.NewUniFactStmtWithSetReqInDom(
 		params,
+		paramSets,
 		domFacts,
 		thenFacts,
 		ast.EmptyIffFacts,
@@ -757,9 +760,12 @@ func (ver *Verifier) isSetEqualFact_Check(stmt *ast.SpecFactStmt, state VerState
 
 	paramInSetsFacts := make([]ast.FactStmt, 1)
 	paramInSetsFacts[0] = ast.Param_ParamSet_ToInFact(fmt.Sprintf("%sx", glob.UniParamPrefix), rightSet)
+	paramSets := make([]ast.Fc, 1)
+	paramSets[0] = rightSet
 
 	uniFactItemsInLeftSetInRightSet := ast.NewUniFactStmtWithSetReqInDom(
 		[]string{fmt.Sprintf("%sx", glob.UniParamPrefix)},
+		paramSets,
 		[]ast.FactStmt{},
 		[]ast.FactStmt{ast.Param_ParamSet_ToInFact(fmt.Sprintf("%sx", glob.UniParamPrefix), rightSet)},
 		ast.EmptyIffFacts,
@@ -775,9 +781,12 @@ func (ver *Verifier) isSetEqualFact_Check(stmt *ast.SpecFactStmt, state VerState
 	}
 
 	paramInSetsFacts[0] = ast.Param_ParamSet_ToInFact(fmt.Sprintf("%sx", glob.UniParamPrefix), leftSet)
+	paramSets[0] = leftSet
+
 	// forall x rightSet: x in leftSet
 	uniFactItemsInRightSetInLeftSet := ast.NewUniFactStmtWithSetReqInDom(
 		[]string{fmt.Sprintf("%sx", glob.UniParamPrefix)},
+		paramSets,
 		[]ast.FactStmt{},
 		[]ast.FactStmt{ast.Param_ParamSet_ToInFact(fmt.Sprintf("%sx", glob.UniParamPrefix), leftSet)},
 		ast.EmptyIffFacts,
@@ -900,6 +909,7 @@ func (ver *Verifier) leftFnAlwaysEqualToRight(leftFnDef *ast.DefFnStmt, rightFnD
 
 	leftToRight := ast.NewUniFactStmtWithSetReqInDom(
 		leftFnDef.DefHeader.Params,
+		leftFnDef.DefHeader.SetParams,
 		leftToRightDom,
 		leftToRightThenFacts,
 		ast.EmptyIffFacts,
@@ -929,6 +939,7 @@ func (ver *Verifier) leftFnAlwaysEqualToRight(leftFnDef *ast.DefFnStmt, rightFnD
 
 	leftFnAlwaysEqualRightFn := ast.NewUniFactStmtWithSetReqInDom(
 		leftFnDef.DefHeader.Params,
+		leftFnDef.DefHeader.SetParams,
 		leftToRightDom,
 		[]ast.FactStmt{leftEqualRight},
 		ast.EmptyIffFacts,

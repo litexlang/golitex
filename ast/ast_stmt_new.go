@@ -36,8 +36,8 @@ func NewDefFnStmt(defHeader DefHeader, domFacts []FactStmt, thenFacts []FactStmt
 	return &DefFnStmt{defHeader, domFacts, thenFacts, retInSetsFacts}
 }
 
-func newUniFactStmt(params []string, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt, paramInSetsFacts []FactStmt) *UniFactStmt {
-	return &UniFactStmt{params, domFacts, thenFacts, iffFacts, paramInSetsFacts}
+func newUniFactStmt(params []string, setParams []Fc, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt, paramInSetsFacts []FactStmt) *UniFactStmt {
+	return &UniFactStmt{params, setParams, domFacts, thenFacts, iffFacts, paramInSetsFacts}
 }
 
 func NewSpecFactStmt(typeEnum SpecFactEnum, propName FcAtom, params []Fc) *SpecFactStmt {
@@ -56,8 +56,8 @@ func NewFcFnDecl(name string, params []string) *FcFnDecl {
 	return &FcFnDecl{name, params}
 }
 
-func NewDefHeader(name string, params []string, paramInSetsFacts []FactStmt) *DefHeader {
-	return &DefHeader{name, params, paramInSetsFacts}
+func NewDefHeader(name string, params []string, setParams []Fc, paramInSetsFacts []FactStmt) *DefHeader {
+	return &DefHeader{name, params, setParams, paramInSetsFacts}
 }
 
 func NewHaveStmt(objNames []string, fact SpecFactStmt) *HaveStmt {
@@ -68,8 +68,8 @@ func NewExistPropDef(declHeader DefHeader, domFacts []FactStmt, iffFacts []Logic
 	return &DefExistPropStmtBody{declHeader, domFacts, iffFacts}
 }
 
-func NewUniFactStmtWithSetReqInDom(params []string, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt, paramInSetsFacts []FactStmt) *UniFactStmt {
-	return newUniFactStmt(params, domFacts, thenFacts, iffFacts, paramInSetsFacts)
+func NewUniFactStmtWithSetReqInDom(params []string, setParams []Fc, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt, paramInSetsFacts []FactStmt) *UniFactStmt {
+	return newUniFactStmt(params, setParams, domFacts, thenFacts, iffFacts, paramInSetsFacts)
 }
 
 func NewSetDefSetBuilderStmt(setName string, parentSet Fc, facts []FactStmt) *SetDefSetBuilderStmt {
