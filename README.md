@@ -130,6 +130,9 @@ Litex itself is a piece of art intellectually. However, it must target the right
 
 Litex is a simple language, really really simple. Even a child can learn it with ease. It is just the right tool tailored for formalizing math compared with other formal languages which takes an expert an enormous amount of time to learn.
 
+3. How to formalize uniform distribution over a (0,1) or anything like that?
+
+Suppose you have a 100 page book, and you want to formalize the last page in the book. You can do that only when you have already formalized the previous 99 pages. Concepts like uniform distribution, requires many prerequisites to be formalized. Only when you have already formalized the previous prerequisites, you can formalize what you want. Luckily, translating math from books written in natural language to Litex is pretty straightforward.
 
 ## Contribute to Litex
 

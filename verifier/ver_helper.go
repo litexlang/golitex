@@ -43,7 +43,7 @@ func isTrueEqualFact(stmt ast.FactStmt) (*ast.SpecFactStmt, bool) {
 	return nil, false
 }
 
-func (ver *Verifier) eqaulTrueAddSuccessMsg(left ast.Fc, right ast.Fc, state VerState, msg string) (bool, error) {
+func (ver *Verifier) equalTrueAddSuccessMsg(left ast.Fc, right ast.Fc, state VerState, msg string) (bool, error) {
 	if state.requireMsg() {
 		ver.successMsgEnd(fmt.Sprintf("%s = %s", left.String(), right.String()), msg)
 	}

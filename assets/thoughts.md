@@ -1249,7 +1249,7 @@ forall epsilon R:
 1. 字面量不只是自然数难处理，{1,2,3}这种也是字面量，理论上最好也能“在该出现的地方出现，能方便用户使用”
 2. set 本质上 和 = 一样，是和其他东西不一样的东西。应该给他们单独开出来一些 litex 的语义（或者说litex的内部变量），来专门处理
     1. 特别是某个set = {1,2,3} 这种
-        1. 这里有些继承关系，比如 a subsetof b, 但 b = {1,2,3}，那a    
+        1. 这里有些继承关系，比如 a subset of b, 但 b = {1,2,3}，那a    
     2. forall x S，如果S是{1,2,3}这种，那有另外的证明uniFact的方式：遍历整个集合
         1. 但因为litex还没智能到判断如果 a < b 而 b = {1,2,3}，那a < {1,2,3}，所以如果用户需要遍历a来证明一个事情的时候，我不帮你遍历
 3. claim 需要改一下语义
@@ -1261,8 +1261,8 @@ forall epsilon R:
         这是可能出现的：对于任何取余数的加法运算，在Int上面，都是Group
     2. 为了让这种 impl 事实 能被 forall export，那我就得让 impl 也做成一种 事实，而不是一个 type def 的一部分
 5. 我的 or, and 类型的事实，不包含 forall，否则整个项目太乱了
-    (not) specFact (pure, exist, impl) => or/and => unifact
-    如果 or下面也能有 forall，那上面这个链条就出问题了。我要存储 unifact 下面的 specFact的时候，我的存储方式也是 uniFact propName 做key，存 specFact 所在的 一层层的 or/and， 最后放在某 uniFact 下面
+    (not) specFact (pure, exist, impl) => or/and => uniFact
+    如果 or下面也能有 forall，那上面这个链条就出问题了。我要存储 uniFact 下面的 specFact的时候，我的存储方式也是 uniFact propName 做key，存 specFact 所在的 一层层的 or/and， 最后放在某 uniFact 下面
     另外，or 和 and 在证明的时候需要 取 not，那取 not 只能是 SpecFact了
 6. 存 forall 套 forall
     know forall x A:
@@ -1301,7 +1301,7 @@ fn(a A, b B) => Fc
 4. 之所以要在 forall, prop, fn 里放入dom，是因为，我会把它们看成一个接口。如果是为了这样一个接口，而让用户要定义一个set，让这个set是 interface 的要求（dom），我觉得不合适。
 	1. 但有时候我涉及到的变量的集合，是要写非fc的，比如要传入一个函数，这个函数的dom是xxx，而描述dom的方式是需要用 specFact的，这时候就不能使用常规的fc了
 	2. 方法2: 我传的时候，只是传fn这种，然后在 dom 里详细描述。如果用户没有描述清楚，那就报错
-    3. 方法3：我让用户用 inline 的 forall 这种写法来给 fn里面的参数提出要求，但是我实际存的方式是，我只是把fn存成 setfc，然后把对这个 fn的要求，存在dom里面，这样我不需要修改 runtime，我只要parse得好就行
+    3. 方法3：我让用户用 inline 的 forall 这种写法来给 fn里面的参数提出要求，但是我实际存的方式是，我只是把fn存成 setFc，然后把对这个 fn的要求，存在dom里面，这样我不需要修改 runtime，我只要parse得好就行
 
 
 5.1
@@ -1316,13 +1316,13 @@ know:
         __nat__pow__ extend __int__pow__
         __nat__eq__ extend __int__eq__
         __nat__ne__ extend __int__ne__
-之后如果遇到了 a * b， a 是 nat，b是 int，那就调用nat的__mul__，因为我要找 extention 等级最高的那个。如果全是 int，那我不会去找 nat 的__mul__ 。 因为 nat 的 __mul__ 的性质，int 都有。
+之后如果遇到了 a * b， a 是 nat，b是 int，那就调用nat的__mul__，因为我要找 extension 等级最高的那个。如果全是 int，那我不会去找 nat 的__mul__ 。 因为 nat 的 __mul__ 的性质，int 都有。
 3. 把 extend 做成 事实是有很多好处的，就类似把 impl 做成 事实一样。
     因为逻辑上，这确实是一种 ”判断“
     如果你想让这种 “判断” 被默认成立，用 know 就行
     impl, extend 这种，是有额外功能的fact，它们相当于语法糖
     当然，现在我不确定impl是否有意义，因为我直接一个个传东西应该也行
-    prop AbelianGroup(G set, id G, mul fn(G, G) G, inv fn(G) G):
+    prop AbelGroup(G set, id G, mul fn(G, G) G, inv fn(G) G):
         $Group(G, id, mul, inv)
         iff:
             forall a, b, c G:
@@ -1345,13 +1345,13 @@ prop IsGroup(G set, id G, mul fn(G, G) G, inv fn(G) G):
             mul(a, inv(a)) = id
             mul(inv(a), a) = id
 
-prop AbelianGroup(@Group(G, id, mul, inv)): # G, id, mul 必须出现，因为iff里面要用
+prop AbelGroup(@Group(G, id, mul, inv)): # G, id, mul 必须出现，因为iff里面要用
     iff:
         forall a, b, c G:
             a \mul b = b \mul a
 这里@会自动展开成 G set, id G, mul fn(G, G) G: $IsGroup(G, id, mul, inv)
 
-call 时，用 AbelianGroup(G, id, mul, inv)  就行
+call 时，用 AbelGroup(G, id, mul, inv)  就行
 
 相当于用户这么写，然后我编译的时候就把它展开了。
 
@@ -1387,7 +1387,7 @@ prove:
             forall x in G:
                 mul(x, inv(x)) = id
 
-    # 因为通常 G, id, mul, inv 不会同时出现在specfact里，所以普通的 match 的方式是不工作的；那为了让 G, id, mul, inv 同时能被解释器知道是哪个，需要额外的方式。比如像这里用特殊的forall，这种forall专门match claim <>
+    # 因为通常 G, id, mul, inv 不会同时出现在specFact里，所以普通的 match 的方式是不工作的；那为了让 G, id, mul, inv 同时能被解释器知道是哪个，需要额外的方式。比如像这里用特殊的forall，这种forall专门match claim <>
 
     know forall <Group(G, id, mul, inv)>, x G, y G: 
             mul(x, y) = mul(y, x)
@@ -1419,7 +1419,7 @@ structure Mathematical_Induction(P prop(n nat)):
 
 # 之后再这个环境下面的所有的东西，都会调用一下 包含 <Mathematical_Induction()> 相关的事实
 
-forll < Mathematical_Induction(P) >: # 打开这个环境,就让P绑定 structure里的条件，相当于 forall p prop 了
+forall < Mathematical_Induction(P) >: # 打开这个环境,就让P绑定 structure里的条件，相当于 forall p prop 了
     forall n nat:
         $P(n)
     
@@ -1460,12 +1460,12 @@ $everything_true_prop(q)
 2. 把extend做成fact的好处是，我可以 forall ... extend ... 。这样能做到 forall 的能力
 3. structure 也可以做成prop（本质上它就是一个prop），然后任何prop都能出现在 <> 里。它出现的意义无非是 能让我解释器match上
 
-REMARK: 我认为类似 ipynb 那样，做lixnb 也是合理的，因为litex是数学语言，可能会有很多伴随的注释。如何让注释和代码混在一起，是值得思考的。
+REMARK: 我认为类似 jupyter notebook 那样，做litex notebook 也是合理的，因为litex是数学语言，可能会有很多伴随的注释。如何让注释和代码混在一起，是值得思考的。
 
 5.7
-specific fact => logical expression => universal facct
+specific fact => logical expression => universal fact
 sun is red => or: sun is yellow, sun is red => forall x X: or: x is yellow, x is red
-为了让我能match，人为规定，or下面只能有specfact，不能有forall
+为了让我能match，人为规定，or下面只能有specFact，不能有forall
 因为我必须要让or里面的东西能not:否则很多东西证明不了了
 比如
 know or:
@@ -1650,7 +1650,7 @@ fn f A 相当于 直接声明了一个fn叫A，这个 f 的定义域是 X, 值�
 set A:
     cond
 
-obj x A  # 立刻获得 A 的 cond 的所有性质. TODO: 不确定是否要用户一旦声明了之后，A下面的事实直接 以 specfact的格式 emit 出来
+obj x A  # 立刻获得 A 的 cond 的所有性质. TODO: 不确定是否要用户一旦声明了之后，A下面的事实直接 以 specFact的格式 emit 出来
 
 
 在实现 fn_set 前，要让 fn(x)y 能作为 fc 出现在集合的位置上; 然后要能自动验证两个 set 是相等的，相当于 两个集合互为母集
@@ -1737,7 +1737,7 @@ REMARK:
 图灵机 ＝ 可以把0变1 1变0的纸带 加 判别器 加 指针。指针在纸带上 跳动，让图灵机完备了。但判别器本质上只要做比较(机械地做模式匹配，这里的模式可以是不内蕴递归的，所以不需要用循环;如果模式被允许内蕴递归，那就用另一个图灵机来做判断器。新的图灵机用的判别器，又是可能内蕴递归的，那就在分类讨论。总有一个时刻需要不是图灵机判断图灵机，这时候就是 不含循环的判别器来判别了。）就行，不需要做循环，所以可以不图灵完备。这就像通用编程语言和litex的区别:一个图灵完备(事实上大部分编程语言的实现都是内部实现了一个虚拟机，虚拟机就是一个图灵机) 一个不需要完备。
 
 5.12
-package managment system: 不能有包里套包。如果包a需要引用包b，包b引用包c，那需要让包显式地引用包c；即如果说整个包在一个folder里面，而folder下面有一个folder里全是reference pkg，那本质上这个 reference pkg 里的folder都和 当前这个包的folder的其他文件是平级的。这样用户调用其他包里的东西就更容易，同时我 xxx::yyy就够了，不需要xxx:yyy:zzz。
+package management system: 不能有包里套包。如果包a需要引用包b，包b引用包c，那需要让包显式地引用包c；即如果说整个包在一个folder里面，而folder下面有一个folder里全是reference pkg，那本质上这个 reference pkg 里的folder都和 当前这个包的folder的其他文件是平级的。这样用户调用其他包里的东西就更容易，同时我 xxx::yyy就够了，不需要xxx:yyy:zzz。
 litex是一个超级fancy的read-only turing machine。这里严重问题是， Read-only turing machine 是 context-free 的不能有*。那我必须要能“数数”，以让 x + x = 2 * x 成立（单纯的context-free的图灵机不能数数，所以需要一个context-sensitive的图灵机来数数）。那我就要人工引入 $is_string(setName) 来 判断是不是一个东西是环；如果是环，那我可以帮你计算 2 * x = x + x （验证方式：帮你按字典序排列，然后按string比较）
 字典序排列这个还是很本质的：可以考虑只要是实数（复数）加减乘除 如果涉及到纯 数字，那就直接计算出来，而不要一直是 2 + 2 这种形式到处乱飞，让它以4出现。某种程度上这就解决了“数数”的问题.
 
@@ -1908,7 +1908,7 @@ Definition. A proposition is a statement (communication) that is either true or 
     forall x G:
         x \mul y = y \mul x
 
-ir = itermediate representation
+ir = intermediate representation
 
 litex1 => ir = sql
 ir => litex2
@@ -1937,7 +1937,7 @@ REMARK:
 
 这里的处理，不是为了让语言更完备，而是为了让语言更好用。我需要找到一些语法糖，让语言更好用。特别是涉及到 recursive 的符号的组合的情况，比如 x + x + x 这种，比如 如果x满足性质p，则f(x) 满足性质p，则 f(f(x)) 满足性质p，则 f(f(f(x))) 满足性质p，等等。这种形式的东西，从上到下地一层层的用 “遍历所有的事实，match上了进入下一层” 的方式处理并不好。
 
-我会有 lixnb 格式的文件即像jupyter notebook这样。这是很有好处的。比一些语言配置环境都要配置大半天要便利。
+我会有 jupyter notebook 格式的文件即像jupyter notebook这样。这是很有好处的。比一些语言配置环境都要配置大半天要便利。
 
 5.16
 我的现在的想法是，让用户写go或者py的代码，或者我送给用户一些语法，让他用到图灵机的性质去做操作
@@ -2014,7 +2014,7 @@ REMARK:
 
 某种程度上，then 里 的 fact 可以有很多层。比如因为验证的时候，我不论你有几层，我都是只验证最后的 spec的。然后我存的时候，我都会把你展开。然后我拿存的东西来验证的时候，我也是拿展开式去验证的
 
-甚至说，在用弱的验证方法时，dom里的 forall 也可以无数层，因为本质上就是 找到最底层的specfact，然后 再用一次 forall + spec mem 来验证它。之后不允许用 forall 来验证
+甚至说，在用弱的验证方法时，dom里的 forall 也可以无数层，因为本质上就是 找到最底层的specFact，然后 再用一次 forall + spec mem 来验证它。之后不允许用 forall 来验证
 
 如果我确保 forall 里的 forall 最多一层 （dom里一层，then里一层），那我甚至可以这么干：我再把 forall fact 分成两组： dom全是spec，dom有forall。如果我是 round1的时候，我只访问 dom里全是spec的，我不访问 dom有forall的（因为这时进入round2，爆掉了）
 

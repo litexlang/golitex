@@ -68,7 +68,7 @@ func (ver *Verifier) verEqualBuiltin(left ast.Fc, right ast.Fc, state VerState) 
 		return false, err
 	}
 	if ok {
-		return ver.eqaulTrueAddSuccessMsg(left, right, state, "builtin rules")
+		return ver.equalTrueAddSuccessMsg(left, right, state, "builtin rules")
 	}
 	return false, nil
 }
@@ -77,15 +77,15 @@ func (ver *Verifier) verEqualSpecMem(left ast.Fc, right ast.Fc, state VerState) 
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
 		// TODO: 这里还要用 MatchEnv 实现一下
 
-		var equalToLeftFcs, equalTorightFcs *[]ast.Fc
+		var equalToLeftFcs, equalToRightFcs *[]ast.Fc
 		var gotLeftEqualFcs, gotRightEqualFcs bool
 
 		equalToLeftFcs, gotLeftEqualFcs = curEnv.GetEqualFcs(left)
-		equalTorightFcs, gotRightEqualFcs = curEnv.GetEqualFcs(right)
+		equalToRightFcs, gotRightEqualFcs = curEnv.GetEqualFcs(right)
 
 		if gotLeftEqualFcs && gotRightEqualFcs {
-			if equalToLeftFcs == equalTorightFcs {
-				return ver.eqaulTrueAddSuccessMsg(left, right, state, "known")
+			if equalToLeftFcs == equalToRightFcs {
+				return ver.equalTrueAddSuccessMsg(left, right, state, "known")
 			}
 		}
 
@@ -94,17 +94,17 @@ func (ver *Verifier) verEqualSpecMem(left ast.Fc, right ast.Fc, state VerState) 
 				if ok, err := ver.cmpFc(equalToLeftFc, right, state); err != nil {
 					return false, err
 				} else if ok {
-					return ver.eqaulTrueAddSuccessMsg(left, right, state, "known")
+					return ver.equalTrueAddSuccessMsg(left, right, state, "known")
 				}
 			}
 		}
 
 		if gotRightEqualFcs {
-			for _, equalToRightFc := range *equalTorightFcs {
+			for _, equalToRightFc := range *equalToRightFcs {
 				if ok, err := ver.cmpFc(equalToRightFc, left, state); err != nil {
 					return false, err
 				} else if ok {
-					return ver.eqaulTrueAddSuccessMsg(left, right, state, "known")
+					return ver.equalTrueAddSuccessMsg(left, right, state, "known")
 				}
 			}
 		}
