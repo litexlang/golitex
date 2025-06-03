@@ -40,12 +40,12 @@ func (s SpecFactMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([]KnownSpe
 		return nil, false
 	}
 
-	sameEnumPkgfacts, memExist := sameEnumFacts[stmt.PropName.PkgName]
+	sameEnumPkgFacts, memExist := sameEnumFacts[stmt.PropName.PkgName]
 	if !memExist {
 		return nil, false
 	}
 
-	sameEnumPkgPropFacts, memExist := sameEnumPkgfacts[stmt.PropName.Name]
+	sameEnumPkgPropFacts, memExist := sameEnumPkgFacts[stmt.PropName.Name]
 	if !memExist {
 		return nil, false
 	}
@@ -92,12 +92,12 @@ func (s SpecFactInLogicExprMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) 
 		return nil, false
 	}
 
-	sameEnumPkgfacts, memExist := sameEnumFacts[stmt.PropName.PkgName]
+	sameEnumPkgFacts, memExist := sameEnumFacts[stmt.PropName.PkgName]
 	if !memExist {
 		return nil, false
 	}
 
-	sameEnumPkgPropFacts, memExist := sameEnumPkgfacts[stmt.PropName.Name]
+	sameEnumPkgPropFacts, memExist := sameEnumPkgFacts[stmt.PropName.Name]
 	if !memExist {
 		return nil, false
 	}
@@ -145,12 +145,12 @@ func (s SpecFactInUniFactMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([
 		return nil, false
 	}
 
-	sameEnumPkgfacts, memExist := sameEnumFacts[stmt.PropName.PkgName]
+	sameEnumPkgFacts, memExist := sameEnumFacts[stmt.PropName.PkgName]
 	if !memExist {
 		return nil, false
 	}
 
-	sameEnumPkgPropFacts, memExist := sameEnumPkgfacts[stmt.PropName.Name]
+	sameEnumPkgPropFacts, memExist := sameEnumPkgFacts[stmt.PropName.Name]
 	if !memExist {
 		return nil, false
 	}
@@ -233,12 +233,12 @@ func (s SpecFact_InLogicExpr_InUniFactMem) GetSameEnumPkgPropFacts(stmt *ast.Spe
 		return nil, false
 	}
 
-	sameEnumPkgfacts, memExist := sameEnumFacts[stmt.PropName.PkgName]
+	sameEnumPkgFacts, memExist := sameEnumFacts[stmt.PropName.PkgName]
 	if !memExist {
 		return nil, false
 	}
 
-	sameEnumPkgPropFacts, memExist := sameEnumPkgfacts[stmt.PropName.Name]
+	sameEnumPkgPropFacts, memExist := sameEnumPkgFacts[stmt.PropName.Name]
 	if !memExist {
 		return nil, false
 	}

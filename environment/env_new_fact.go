@@ -158,7 +158,7 @@ func (env *Env) newNotExistSt_SpecFactPostProcess(fact *ast.SpecFactStmt) error 
 			return nil
 		} else {
 			if glob.KnowSpecFactByDef {
-				return env.newFalseExistFact_EmitEquivelentUniFact(fact)
+				return env.newFalseExistFact_EmitEquivalentUniFact(fact)
 			} else {
 				return nil
 			}
@@ -221,7 +221,7 @@ func (env *Env) newExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 }
 
 // not exist => forall not
-func (env *Env) newFalseExistFact_EmitEquivelentUniFact(fact *ast.SpecFactStmt) error {
+func (env *Env) newFalseExistFact_EmitEquivalentUniFact(fact *ast.SpecFactStmt) error {
 	uniFact, err := env.NotExistToForall(fact)
 	if err != nil {
 		return err
