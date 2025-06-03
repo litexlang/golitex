@@ -716,30 +716,6 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
 	return nil
 }
 
-// func (exec *Executor) proveOrStmt(stmt *ast.ProveOrStmt) (glob.ExecState, error) {
-// 	isSuccess := false
-// 	defer func() {
-// 		exec.appendMsg("\n")
-// 		if isSuccess {
-// 			exec.appendNewMsgAtBegin("is true\n")
-// 		} else {
-// 			exec.appendNewMsgAtBegin("is unknown\n")
-// 		}
-// 		exec.appendNewMsgAtBegin(stmt.String())
-// 	}()
-
-// 	ver := verifier.NewVerifier(exec.env)
-// 	ok, err := ver.proveOrByEveryStatementExceptGivenIndexIsFalseThenTheFactWithGivenIndexIsTrue(stmt.Indexes, &stmt.OrFact, verifier.Round0Msg)
-// 	if err != nil {
-// 		return glob.ExecState_Error, err
-// 	}
-// 	if !ok {
-// 		return glob.ExecState_Unknown, nil
-// 	}
-
-// 	return glob.ExecState_True, nil
-// }
-
 func (exec *Executor) knowSupposeStmt(stmt *ast.KnowSupposeStmt) (glob.ExecState, error) {
 	exec.env.CurMatchEnv = &stmt.SupposeStmt
 	defer func() {

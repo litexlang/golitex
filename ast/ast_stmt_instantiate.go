@@ -148,28 +148,6 @@ func (stmt *UniFactStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
 	return InstantiateUniFact(stmt, uniMap)
 }
 
-// func InstantiateLogicExprStmt(stmt *LogicExprStmt, uniMap map[string]Fc) (*LogicExprStmt, error) {
-// 	newOrAnd := NewOrAndFact(stmt.IsOr, []Reversable_LogicOrSpec_Stmt{})
-// 	for _, fact := range stmt.Facts {
-// 		newFact, err := fact.Instantiate(uniMap)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		// make newFact a LogicExprOrSpecFactStmt
-// 		newFactAsLogicExprOrSpecFactStmt, ok := newFact.(Reversable_LogicOrSpec_Stmt)
-// 		if !ok {
-// 			return nil, errors.New("newFact is not of type LogicExprOrSpecFactStmt")
-// 		}
-// 		newOrAnd.Facts = append(newOrAnd.Facts, newFactAsLogicExprOrSpecFactStmt)
-// 	}
-
-// 	return newOrAnd, nil
-// }
-
-// func (stmt *LogicExprStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
-// 	return InstantiateLogicExprStmt(stmt, uniMap)
-// }
-
 func (defHeader *DefHeader) Instantiate(uniMap map[string]Fc) (*DefHeader, error) {
 	newDefHeader := NewDefHeader(defHeader.Name, defHeader.Params, make([]Fc, len(defHeader.SetParams)), make([]FactStmt, len(defHeader.ParamInSetsFacts)))
 
