@@ -120,6 +120,17 @@ _-- Isaac Newton_
 [Github](https://github.com/litexlang/golitex)
 
 
+## Answers to Common Questions
+
+1. Why now could Litex be a big hit?
+
+Litex itself is a piece of art intellectually. However, it must target the right group of users so that it can be a big hit in real world. The ever-growing AI industry now is the right group of users, for safety, for better reasoning, for scientific discovery.
+
+2. Why Litex?
+
+Litex is a simple language, really really simple. Even a child can learn it with ease. It is just the right tool tailored for formalizing math compared with other formal languages which takes an expert an enormous amount of time to learn.
+
+
 ## Contribute to Litex
 
 _The best way to predict the future is to invent it._
