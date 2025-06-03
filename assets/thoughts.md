@@ -2017,3 +2017,10 @@ REMARK:
 甚至说，在用弱的验证方法时，dom里的 forall 也可以无数层，因为本质上就是 找到最底层的specfact，然后 再用一次 forall + spec mem 来验证它。之后不允许用 forall 来验证
 
 如果我确保 forall 里的 forall 最多一层 （dom里一层，then里一层），那我甚至可以这么干：我再把 forall fact 分成两组： dom全是spec，dom有forall。如果我是 round1的时候，我只访问 dom里全是spec的，我不访问 dom有forall的（因为这时进入round2，爆掉了）
+
+6.3
+1. litex立刻生成的then是很有效的，就是如果param满足prop，那就推导出后面的很多一坨。
+2. REMARK: 用algo来证明，本质上是在从结果反推可能的验证方式。之前的litex全是从前往后
+3. integral4个field
+4. 很多时候都是用户提出一些例子问我怎么形式化。这些东西往往是出现在书本第50页的东西，前49页一言两语说不清楚。这不是litex的问题。
+5. 
