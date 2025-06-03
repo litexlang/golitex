@@ -15,7 +15,12 @@ package litex_comparator
 import ast "golitex/ast"
 
 func CmpUsingBuiltinRule(left, right ast.Fc) (bool, error) {
-	// case 0: 用polynomial rule来比较
+	// case: 如果涉及到的是div运算
+	if isFnWithDivOpt(left) {
+		return cmpFcFnWithDivOptBuiltinRule(left, right)
+	}
+
+	// case: 用polynomial rule来比较
 	cmp := CmpPolynomial(left, right)
 	if cmp {
 		return true, nil
