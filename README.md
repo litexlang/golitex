@@ -22,11 +22,11 @@ Litex is a simple yet powerful formal language for mathematical reasoning. A for
 
 Litex aims to scale reasoning in three ways:
 
-**Engineering:** Like software engineering, Litex turns individual math work into mathematical engineering through clear abstraction and composition.
+**Engineering:** Like software engineering, Litex turns individual math work into **mathematical engineering** through clear abstraction and composition.
 
-**Accessibility:** Being much simpler than other formal languages, Litex enables more people to participate in formal reasoning, from children to experts.
+**Accessibility:** Being much simpler than other formal languages, Litex enables **more people** to participate in formal reasoning, from children to experts.
 
-**AI Integration:** Litex provides the perfect foundation for AI to learn and perform formal reasoning at scale.
+**AI Integration:** Litex provides the perfect **infrastructure for AI** to learn and perform formal reasoning at scale.
 
 World-class researchers including Terrence Tao, Yoshua Bengio, and AI companies including DeepMind and DeepSeek, are showing great interest how formal languages can be used to scale reasoning AI, ensure AI safety, and many more tasks. Litex is the perfect tool to their challenge. Litex has already gained attention from leading institutions worldwide, including **CMU, Mila, Tsinghua, PKU, OpenMMLab, SJTU, Fudan**.  
 
@@ -41,14 +41,9 @@ Math is built on top of a small sets of reasoning rules and axioms. There are ba
 1. derive from a specific fact: e.g. If I know x = 1, then x = 1
 2. derive from a general fact: e.g. If I know forall human, he is intelligent, and Jordan is a human, then Jordan is intelligent. Litex calls this way of deriving a new fact "match and substitute", because it is like matching a pattern and substituting the pattern with a specific value.
 
-Amazingly, with these two ways of deriving a new fact, and with a set of carefully chosen axioms, we can (nearly) build the entire world of mathematics. And you have ALREADY learned the basic mechanism of Litex in just one minute: match and substitute. Pretty simple, right?
+Amazingly, with these two ways of deriving a new fact, and with a set of carefully chosen axioms, we can (nearly) build the entire world of mathematics. And you have ALREADY learned the basic mechanism of Litex in just one minute: **match and substitute**. Pretty simple, right?
 
-A major special case of match and substitute is about real numbers, like 1, 3.5 or 4.123456789. These objects are different from user-defined objects in two key ways:
-
-1. Their literal representation directly encodes their value - for example, "3.5" immediately tells us this is three and a half
-2. They are built-in primitive types that cannot be declared by users - you can't create new real numbers, only use the ones that exist
-
-Litex handles all the verification rules for real numbers automatically. This means you can use familiar properties of real numbers (like addition, multiplication, inequalities) without having to prove them yourself.
+A major special case of match and substitute is about rational numbers, like 1, 3.5 or 4.123456789. These objects are different from user-defined objects because their literal representation directly encodes information. Rational numbers and their basic operations like addition, multiplication, inequalities are builtin in Litex, and Litex handles all the verification rules for them automatically.
 
 ## A Simple Example
 
@@ -56,7 +51,7 @@ _If you define the problem correctly, you almost have the solution._
 
 _-- Steve Jobs_
 
-Mathematics is the art of deriving new facts from established ones. To illustrate, consider a classical syllogism proposed by Aristotle in his Prior Analytics, which formalizes deductive reasoning as follows:
+Mathematics is the art of deriving new facts from established ones. To illustrate, consider a classical syllogism proposed by Aristotle, which formalizes deductive reasoning as follows:
 
 <table style="border-collapse: collapse; width: 100%;">
   <tr>
