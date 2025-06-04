@@ -1,21 +1,37 @@
 prop point_on_line(a point, l line)
-prop point_on_plane(a point, p plane)
-prop line_on_plane(l line, p plane)
 
-know prop two_points_on_line_then_line_on_plane(a point, b point, l line, p plane):
-        a != b
-        $point_on_line(a, l)
-        $point_on_line(b, l)
-        $point_on_plane(a, p)
-        $point_on_plane(b, p)
-        iff:
-            $line_on_plane(l, p)
-
-obj a point, b point, l line, p plane:
+fn line_of(a point, b point) line:
     a != b
-    $point_on_plane(a, p)
-    $point_on_plane(b, p)
+    then:
+        $point_on_line(a, line_of(a, b))
+        $point_on_line(b, line_of(a, b))
+        forall l line:
+            $point_on_line(a, l)
+            $point_on_line(b, l)
+            then:
+                l = line_of(a, b)
+
+know forall a point, b point:
+    a != b
+    then:
+        $point_on_line(a, line_of(a, b))
+
+# a line is determined by two points
+obj a point, b point, l line:
+    a != b
     $point_on_line(a, l)
     $point_on_line(b, l)
-$two_points_on_line_then_line_on_plane(a, b, l, p)
-#$line_on_plane(l, p)
+# l = line_of(a, b)
+
+# line_of is commutative
+forall a point, b point:
+    a != b
+    then:
+        b != a
+        $point_on_line(a, line_of(a, b))
+        """
+        $point_on_line(b, line_of(a, b))
+        $point_on_line(a, line_of(b, a))
+        $point_on_line(b, line_of(b, a))
+        line_of(a, b) = line_of(b, a)
+"""
