@@ -108,39 +108,91 @@ prop is_algorithm(Q set, I set, f fn(Q)Q):
 
 Here we can see that Litex achieves remarkable conciseness in formalizing the definition of algorithm - requiring only 10 lines of code while maintaining mathematical clarity. Each statement is self-explanatory and closely mirrors natural mathematical notation. In contrast, Lean 4 requires approximately three times more code to express the same concept. The additional complexity in Lean 4 stems from its need for explicit type definitions, structural elements, and unfamiliar syntax that are not typically encountered in everyday mathematical expressions. This extra complexity creates a steeper learning curve and can distract users from focusing on the core mathematical concepts they're trying to formalize. Litex's approach, by staying closer to conventional mathematical notation, significantly lowers the barrier to entry while maintaining formal strictness.
 
-```
-obj x R, y R: # define two real variables
-    2 * x + 3 * y = 10
-    4 * x + 5 * y = 14
+Next I want to show you how Litex can be used to solve a simple linear equation.
 
-2 * (2 * x + 3 * y) = 2 * 10
-4* x + 6 * y = 2 * 10
-(4*x + 6 * y) - (4*x + 5 * y) = 2 * 10 - 14
-(4*x + 6 * y) - (4*x + 5 * y) = y
-y  = 6
-```
+<table style="border-collapse: collapse; width: 100%;">
+  <tr>
+    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 50%;">Litex</th>
+    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 50%;">Lean 4</th>
+  </tr>
+  <tr>
+    <td style="border: 3px solid black; padding: 8px;">
+      <code>obj x R, y R:</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;2 * x + 3 * y = 10</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;4 * x + 5 * y = 14</code><br><br>
+      <code>2 * (2 * x + 3 * y) = 2 * 10</code><br>
+      <code>4* x + 6 * y = 2 * 10</code><br>
+      <code>(4*x + 6 * y) - (4*x + 5 * y) = 2 * 10 - 14</code><br>
+      <code>(4*x + 6 * y) - (4*x + 5 * y) = y</code><br>
+      <code>y  = 6</code><br>
+      <code>2 * x + 3 * 6 = 10</code><br>
+      <code>2 * x + 18 - 18 = 10 - 18</code><br>
+      <code>2 * x + 0 = 10 - 18</code><br>
+      <code>2 * x + 0 = -8</code><br>
+      <code>(2 * x) / 2 = (-8) / 2</code><br>
+      <code>(2 * x) / 2 = x</code><br>
+      <code>x = -4</code>
+    </td>
+    <td style="border: 3px solid black; padding: 8px;">
+      <code>import Mathlib.Tactic</code><br><br>
+      <code>example (x y : ℝ) (h₁ : 2 * x + 3 * y = 10) (h₂ : 4 * x + 5 * y = 14) : x = -4 ∧ y = 6 := by</code><br>
+      <code>&nbsp;&nbsp;have h₃ : 2 * (2 * x + 3 * y) = 2 * 10 := by rw [h₁]</code><br>
+      <code>&nbsp;&nbsp;have h₄ : 4 * x + 6 * y = 20 := by linear_combination 2 * h₁</code><br>
+      <code>&nbsp;&nbsp;have h₅ : (4 * x + 6 * y) - (4 * x + 5 * y) = 20 - 14 := by</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;rw [h₄, h₂]</code><br>
+      <code>&nbsp;&nbsp;have h₆ : (4 * x + 6 * y) - (4 * x + 5 * y) = y := by</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;ring</code><br>
+      <code>&nbsp;&nbsp;have h₇ : 20 - 14 = 6 := by norm_num</code><br>
+      <code>&nbsp;&nbsp;have h₈ : y = 6 := by</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;rw [←h₆, h₅, h₇]</code><br>
+      <code>&nbsp;&nbsp;have h₉ : 2 * x + 3 * 6 = 10 := by rw [h₈, h₁]</code><br>
+      <code>&nbsp;&nbsp;have h₁₀ : 2 * x + 18 = 10 := by</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;rw [mul_add] at h₉</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;simp at h₉</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;exact h₉</code><br>
+      <code>&nbsp;&nbsp;have h₁₁ : 2 * x = -8 := by</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;linear_combination h₁₀ - 18</code><br>
+      <code>&nbsp;&nbsp;have h₁₂ : x = -4 := by</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;linear_combination h₁₁ / 2</code><br>
+      <code>&nbsp;&nbsp;exact ⟨h₁₂, h₈⟩</code>
+    </td>
+  </tr>
+</table>
 
-```
-import Mathlib.Algebra.BigOperators.Basic
-import Mathlib.Tactic
+**Key Difference in Approach:**  
+While Lean 4 can use `linarith` to solve linear equations directly (and Litex will support similar functionality in the future), this example demonstrates how Litex solves equations using basic algebraic rules - just like how children learn math:
+- Associative property
+- Commutative property  
+- Distributive property
+- Simple substitution
 
-example (x y : ℝ) (h₁ : 2 * x + 3 * y = 10) (h₂ : 4 * x + 5 * y = 14) : x = -2 ∧ y = 6 := by
-  have h₃ := congr_arg (fun k => 2 * k) h₁
-  simp at h₃
+**Lean's Complexity vs. Litex's Simplicity:**  
+Lean requires memorizing numerous proof-specific commands:
+- `rw`, `simp`, `ring`, `linear_combination`, etc.
+- Mandatory hypothesis declarations
+- `example`/`exact` syntax requirements
+- Tactical imports just to prove basic statements
 
-  have h₄ := sub_eq_of_eq_sub (eq_sub_of_add_eq (h₃.trans (sub_eq_iff_eq_add.mpr h₂)))
-  
-  have h₅ : (4*x + 6*y) - (4*x + 5*y) = 20 - 14 := by
-    rw [sub_eq_sub_iff_add_eq_add, add_comm, ← sub_eq_iff_eq_add]
-    exact h₃
-    exact h₂
+Litex eliminates this complexity entirely. The solution reads exactly like standard mathematical working.
 
-  have h₆ : y = 6 := by
-    linear_combination h₅
+**Structural Advantage of Litex:**  
+Lean forces you to:
+1. Declare the conclusion BEFORE proving it
+2. Work backwards from the solution
 
-  have h₇ : x = -2 := by
-    rw [h₆] at h₁
-    linarith
+Litex works the natural way:
+1. Develop the proof step-by-step
+2. State the conclusion AFTER deriving it
 
-  exact ⟨h₇, h₆⟩
-```
+This matches human intuition and makes the process far better for both human thinkers and AI models.
+
+**About Lean's Tactics:**  
+While Lean provides tactics like `linarith` for simpler proofs:
+1. They fail on complex problems (where Litex's approach scales naturally) because not all problems can be solved by existing tactics.
+2. Writing custom tactics requires advanced Lean syntax knowledge
+3. The cognitive overhead remains even for elementary problems
+
+Litex maintains intuitive accessibility - even a 10-year-old could follow the solution process, with advanced features coming later to match tactics' power without their complexity.
+
+
+

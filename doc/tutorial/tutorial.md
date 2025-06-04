@@ -726,6 +726,8 @@ prove:
         $p(Jordan) # true
 ``` 
 
+<!-- 要举群论的例子，来说明suppose和forall的区别和相同，以及suppose的意义 -->
+
 Assume `suppose $q(x, y): $p(x)` is true. (In this case we know it to be true). The `$p(Jordan)` is unknown because despite `suppose $q(x, y): $p(x)` is true in knowledge base, we do not know the `y` in suppose is mapped to be `Kobe`. But when we use `with $q(Jordan, Kobe): $p(Jordan)`, by the `Kobe` in `with $q(Jordan, Kobe)` , we know that `y` is mapped to be `Kobe`, so `$p(Jordan)` is true.
 
 `with` and `suppose` is necessary, because sometimes we do not how to match all the parameters in a forall statement parameter list. In this case, we can use `suppose` to open a new context, just like how a forall statement works and use `with` to match the parameters.
