@@ -404,6 +404,11 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch(stmt *ast.SpecFactSt
 			continue
 		}
 
+		// 有一些 param 没有被实例化，则continue
+		if len(knownFact.UniFact.Params) > len(uniConMap) {
+			continue
+		}
+
 		insKnownUniFact, err := ast.InstantiateUniFact(knownFact.UniFact, uniConMap)
 		if err != nil {
 			return false, err
@@ -1281,6 +1286,11 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_MatchEnv_applyMatch(stmt *ast.S
 			return false, err
 		}
 		if !ok {
+			continue
+		}
+
+		// 有一些 param 没有被实例化，则continue
+		if len(knownFact.UniFact.Params) > len(uniConMap) {
 			continue
 		}
 
