@@ -17,7 +17,7 @@ import (
 	num "golitex/number"
 )
 
-func CmpPolynomial(left ast.Fc, right ast.Fc) bool {
+func cmpPolynomial(left ast.Fc, right ast.Fc) bool {
 	leftStr := num.FcStringForParseAndExpandPolynomial(left)
 	rightStr := num.FcStringForParseAndExpandPolynomial(right)
 
