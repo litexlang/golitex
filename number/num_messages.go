@@ -42,7 +42,13 @@ func fcFnString(fcFn *ast.FcFn) string {
 		return "(" + FcStringForParseAndExpandPolynomial(fcFn.ParamSegs[0]) + " * " + FcStringForParseAndExpandPolynomial(fcFn.ParamSegs[1]) + ")"
 	}
 	if ast.IsFcAtomWithName(fcFn.FnHead, glob.KeySymbolMinus) {
-		return "(" + FcStringForParseAndExpandPolynomial(fcFn.ParamSegs[0]) + " - " + FcStringForParseAndExpandPolynomial(fcFn.ParamSegs[1]) + ")"
+		if len(fcFn.ParamSegs) == 1 {
+			return "(" + "0" + " - " + FcStringForParseAndExpandPolynomial(fcFn.ParamSegs[0]) + ")"
+		} else if len(fcFn.ParamSegs) == 2 {
+			return "(" + FcStringForParseAndExpandPolynomial(fcFn.ParamSegs[0]) + " - " + FcStringForParseAndExpandPolynomial(fcFn.ParamSegs[1]) + ")"
+		} else {
+			panic("fcFnString: fcFn.ParamSegs has more than 2 elements")
+		}
 	}
 	return "[" + fcFn.String() + "]"
 }
