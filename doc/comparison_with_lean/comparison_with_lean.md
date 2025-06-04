@@ -118,18 +118,17 @@ Next I want to show you how Litex can be used to solve a simple linear equation.
   <tr>
     <td style="border: 3px solid black; padding: 8px;">
       <code>obj x R, y R:</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;2 * x + 3 * y = 10</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;4 * x + 5 * y = 14</code><br><br>
+      <code>&nbsp;&nbsp;2 * x + 3 * y = 10</code><br>
+      <code>&nbsp;&nbsp;4 * x + 5 * y = 14</code><br><br>
       <code>2 * (2 * x + 3 * y) = 2 * 10</code><br>
       <code>4* x + 6 * y = 2 * 10</code><br>
       <code>(4*x + 6 * y) - (4*x + 5 * y) = 2 * 10 - 14</code><br>
       <code>(4*x + 6 * y) - (4*x + 5 * y) = y</code><br>
-      <code>y  = 6</code><br>
+      <code>y = 6</code><br>
       <code>2 * x + 3 * 6 = 10</code><br>
       <code>2 * x + 18 - 18 = 10 - 18</code><br>
-      <code>2 * x + 0 = 10 - 18</code><br>
-      <code>2 * x + 0 = -8</code><br>
-      <code>(2 * x) / 2 = (-8) / 2</code><br>
+      <code>2 * x + 18 - 18 = -8</code><br>
+      <code>(2 * x) / 2 = -8 / 2</code><br>
       <code>(2 * x) / 2 = x</code><br>
       <code>x = -4</code>
     </td>
@@ -184,7 +183,7 @@ Litex works the natural way:
 1. Develop the proof step-by-step
 2. State the conclusion AFTER deriving it
 
-This matches human intuition and makes the process far better for both human thinkers and AI models.
+This matches human intuition and makes the process far better for both human thinkers and AI models. Lean forces you to write proofs in a very closed-ended way, which is believed to be a huge problem for AI models. Litex is by design open-ended, which could solve this challenge faced by AI models trying to use Lean to solve math problems.
 
 **About Lean's Tactics:**  
 While Lean provides tactics like `linarith` for simpler proofs:
@@ -193,6 +192,3 @@ While Lean provides tactics like `linarith` for simpler proofs:
 3. The cognitive overhead remains even for elementary problems
 
 Litex maintains intuitive accessibility - even a 10-year-old could follow the solution process, with advanced features coming later to match tactics' power without their complexity.
-
-
-

@@ -192,6 +192,8 @@ Litex mimics how a human verifies a statement. When you write a statement, the L
 
 Here we can see a subtle difference between programming languages and Litex: in a programming language, a statement value type can be int, bool, string, etc. But in Litex and math, a statement output type is only true, false, unknown, or error, and the output can not be passed as a parameter to other statements.
 
+<!-- 在这里插入一个 等号的例子，用那个多元一次方程的例子，说明一下 等号的传递性是怎么工作的 -->
+
 ## Proposition Definition
 
 Proposition definition is the most basic statement in Litex. It is used to define a new proposition. For example, `prop intelligent(x human)` is a proposition definition that defines a new proposition called `intelligent`, which is a proposition about an object `x` that is a member of the set `human`. Only when a proposition is defined, it can be used inside factual statements later.
