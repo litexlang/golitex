@@ -17,6 +17,8 @@ import (
 	ast "golitex/ast"
 	cmp "golitex/cmp"
 	env "golitex/environment"
+	glob "golitex/glob"
+	"strings"
 )
 
 // match 函数不需要传入state: 没有any, spec 之分，也不需要打印
@@ -44,29 +46,57 @@ func (ver *Verifier) matchStoredUniSpecWithSpec_preventDifferentVarsMatchTheSame
 
 // paramInFactUnderUniFact 可能是自由的，可能是固定的，反正它来自一个forall下面的某个specFact
 func (ver *Verifier) match_FcInFactUnderUniFact_WithConFc(fcInFactUnderUniFact ast.Fc, conFc ast.Fc) (map[string][]ast.Fc, bool, error) {
+	if leftAsAtom, ok := fcInFactUnderUniFact.(*ast.FcAtom); ok {
+		if strings.HasPrefix(leftAsAtom.Name, glob.UniParamPrefix) {
+			return map[string][]ast.Fc{leftAsAtom.Name: {conFc}}, true, nil
+		} else {
+			ok, err := cmp.BuiltinFcEqualRule(fcInFactUnderUniFact, conFc)
+			if err != nil {
+				return nil, false, err
+			}
+			if ok {
+				return make(map[string][]ast.Fc), true, nil
+			}
+
+			// Safe type switching
+			switch param := fcInFactUnderUniFact.(type) {
+			case *ast.FcAtom:
+				// return ver.match_FcAtomInFactUnderUniFact_ConFc(param, conFc, uniFactUniParams)
+				return ver.match_FcAtomInFactUnderUniFact_ConFc(param, conFc)
+			case *ast.FcFn:
+				// return ver.match_FcFnInFactUnderUniFact_ConFc(param, conFc, uniFactUniParams)
+				return ver.match_FcFnInFactUnderUniFact_ConFc(param, conFc)
+			default:
+				return nil, false, fmt.Errorf("unexpected type %T for parameter %v", param, fcInFactUnderUniFact.String())
+			}
+		}
+	} else {
+		return ver.match_FcFnInFactUnderUniFact_ConFc(fcInFactUnderUniFact.(*ast.FcFn), conFc)
+	}
+
 	// 注意到，如果传入的不是fn，而是atom，那大概率是不能match上的。只有一种例外:
 	// know forall x A: $p(x *(3-2)); $p(1*1) 这时候 3 -2 要能和1对上。而 uniFunc 的对应关系，只是让自由变量去对应，不包括builtinFc的match
 	// 同时，也不能直接去CmpFcRule，因为如果输入的变量的字面量刚好是存着的自由变量的字面量，那恰好相等了，这是不行的。只能是BuiltinFc 之间相等
 	// 为了处理这种情况，引入下面这段代码
-	ok, err := cmp.BuiltinFcEqualRule(fcInFactUnderUniFact, conFc)
-	if err != nil {
-		return nil, false, err
-	}
-	if ok {
-		return make(map[string][]ast.Fc), true, nil
-	}
+	// ok, err := cmp.BuiltinFcEqualRule(fcInFactUnderUniFact, conFc)
+	// if err != nil {
+	// 	return nil, false, err
+	// }
+	// if ok {
+	// 	return make(map[string][]ast.Fc), true, nil
+	// }
 
-	// Safe type switching
-	switch param := fcInFactUnderUniFact.(type) {
-	case *ast.FcAtom:
-		// return ver.match_FcAtomInFactUnderUniFact_ConFc(param, conFc, uniFactUniParams)
-		return ver.match_FcAtomInFactUnderUniFact_ConFc(param, conFc)
-	case *ast.FcFn:
-		// return ver.match_FcFnInFactUnderUniFact_ConFc(param, conFc, uniFactUniParams)
-		return ver.match_FcFnInFactUnderUniFact_ConFc(param, conFc)
-	default:
-		return nil, false, fmt.Errorf("unexpected type %T for parameter %v", param, fcInFactUnderUniFact.String())
-	}
+	// // Safe type switching
+	// switch param := fcInFactUnderUniFact.(type) {
+	// case *ast.FcAtom:
+	// 	// return ver.match_FcAtomInFactUnderUniFact_ConFc(param, conFc, uniFactUniParams)
+	// 	return ver.match_FcAtomInFactUnderUniFact_ConFc(param, conFc)
+	// case *ast.FcFn:
+	// 	// return ver.match_FcFnInFactUnderUniFact_ConFc(param, conFc, uniFactUniParams)
+	// 	return ver.match_FcFnInFactUnderUniFact_ConFc(param, conFc)
+	// default:
+	// 	return nil, false, fmt.Errorf("unexpected type %T for parameter %v", param, fcInFactUnderUniFact.String())
+	// }
 }
 
 // func (ver *Verifier) match_FcAtomInFactUnderUniFact_ConFc(fcAtomInFactUnderUniFact *ast.FcAtom, conFc ast.Fc, uniParams []string) (map[string][]ast.Fc, bool, error) {
