@@ -47,14 +47,11 @@ func cmpFcFnWithDivOptBuiltinRule(left, right ast.Fc) (bool, error) {
 	leftDivisor := asLeftFn.ParamSegs[1]
 
 	if !isFnWithDivOpt(right) {
-		return false, nil
+		leftDivisorMulRightDividend := ast.NewFcFn(ast.NewFcAtomWithName(glob.KeySymbolStar), []ast.Fc{leftDivisor, right})
+		return CmpUsingBuiltinRule(leftDividend, leftDivisorMulRightDividend)
 	}
 
-	asRightFn, ok := right.(*ast.FcFn)
-	if !ok {
-		leftDivisorMulRightDividend := ast.NewFcFn(ast.NewFcAtomWithName(glob.KeySymbolStar), []ast.Fc{leftDivisor, right})
-		return CmpUsingBuiltinRule(leftDivisorMulRightDividend, right)
-	}
+	asRightFn, _ := right.(*ast.FcFn)
 
 	rightDividend := asRightFn.ParamSegs[0]
 	rightDivisor := asRightFn.ParamSegs[1]
