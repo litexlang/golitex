@@ -13,13 +13,14 @@
 package litex_verifier
 
 import (
-	"fmt"
 	ast "golitex/ast"
 	cmp "golitex/cmp"
 	env "golitex/environment"
 	glob "golitex/glob"
 	"strings"
 )
+
+// REMARK: 2025.6.4 这个文件很本质，需要未来检查一下里面逻辑有没有问题
 
 // match 函数不需要传入state: 没有any, spec 之分，也不需要打印
 func (ver *Verifier) matchStoredUniSpecWithSpec_preventDifferentVarsMatchTheSameFreeVar(knownFact env.KnownSpecFact_InUniSpecFact, stmt *ast.SpecFactStmt) (map[string][]ast.Fc, bool, error) { // 之所以是map[string][]ast.Fc而不是 map[string]ast.Fc, 因为可能用户输入的是字面量相同，实际意义一样的obj
@@ -58,17 +59,7 @@ func (ver *Verifier) match_FcInFactUnderUniFact_WithConFc(fcInFactUnderUniFact a
 				return make(map[string][]ast.Fc), true, nil
 			}
 
-			// Safe type switching
-			switch param := fcInFactUnderUniFact.(type) {
-			case *ast.FcAtom:
-				// return ver.match_FcAtomInFactUnderUniFact_ConFc(param, conFc, uniFactUniParams)
-				return ver.match_FcAtomInFactUnderUniFact_ConFc(param, conFc)
-			case *ast.FcFn:
-				// return ver.match_FcFnInFactUnderUniFact_ConFc(param, conFc, uniFactUniParams)
-				return ver.match_FcFnInFactUnderUniFact_ConFc(param, conFc)
-			default:
-				return nil, false, fmt.Errorf("unexpected type %T for parameter %v", param, fcInFactUnderUniFact.String())
-			}
+			return ver.match_FcAtomInFactUnderUniFact_ConFc(leftAsAtom, conFc)
 		}
 	} else {
 		return ver.match_FcFnInFactUnderUniFact_ConFc(fcInFactUnderUniFact.(*ast.FcFn), conFc)
