@@ -226,6 +226,10 @@ func IsRealNumLitExpr(numLitExpr *NumLitExpr) bool {
 	return true
 }
 
+func IsComplexNumLitExpr(numLitExpr *NumLitExpr) bool {
+	return true
+}
+
 // simplifyMinusSigns 处理字符串中可能存在的多个负号，返回化简后的结果
 func simplifyMinusSigns(val string) string {
 	if !strings.HasPrefix(val, "-") {

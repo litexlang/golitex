@@ -323,32 +323,24 @@ func (ver *Verifier) verify_specFact_when_given_orStmt_is_true(stmt *ast.SpecFac
 }
 
 func (ver *Verifier) inFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	isTrue := false
-	defer func() {
-		if isTrue {
-			if state.requireMsg() {
-				ver.successWithMsg(stmt.String(), "builtin rules")
-			} else {
-				ver.successNoMsg()
-			}
-		}
-	}()
-
 	if len(stmt.Params) != 2 {
 		return false, fmt.Errorf("invalid number of parameters for in fact")
 	}
 
 	if ast.IsFcAtomWithName(stmt.Params[1], glob.KeywordObj) {
-		isTrue = true
+		if state.requireMsg() {
+			ver.successWithMsg(stmt.String(), "everything is in the obj set")
+		} else {
+			ver.successNoMsg()
+		}
 		return true, nil
 	}
 
-	ok, err := ver.btLitNumInNatOrIntOrRatOrReal(stmt, state)
+	ok, err := ver.btLitNumInNatOrIntOrRatOrRealOrComplex(stmt, state)
 	if err != nil {
 		return false, err
 	}
 	if ok {
-		isTrue = true
 		return true, nil
 	}
 
