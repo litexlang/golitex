@@ -132,7 +132,7 @@ func (ver *Verifier) btCommutativeRule(stmt *ast.SpecFactStmt, state VerState) (
 	return false, nil
 }
 
-func (ver *Verifier) btLitNumInNatOrIntOrRatOrReal(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	isSuccess := false
 	defer func() {
 		if isSuccess {
@@ -177,8 +177,8 @@ func (ver *Verifier) btLitNumInNatOrIntOrRatOrReal(stmt *ast.SpecFactStmt, state
 			return isSuccess, nil
 		}
 
-		if ast.IsFcAtomWithName(stmt.Params[1], glob.KeywordReal) {
-			isSuccess = glob.IsRealNumLitExpr(leftFc)
+		if ast.IsFcAtomWithName(stmt.Params[1], glob.KeywordComplex) {
+			isSuccess = glob.IsComplexNumLitExpr(leftFc)
 			return isSuccess, nil
 		}
 	}

@@ -41,9 +41,11 @@ const (
 	KeywordCommutativeFn        = "commutative_fn" // must-have: 否则 a+b=b+a不能验证
 	KeywordAssociativeFn        = "associative_fn" // must-have: 否则 a+1+1=a+2不能验证 // 我觉得暂时不考虑不较好，比较associative的自然数之类的都默认是对的了
 	KeywordNatural              = "N"              // e.g. 0
-	KeywordInt                  = "I"              // e.g. -1
-	KeywordRational             = "F"              // e.g. -1.1
+	KeywordInt                  = "Z"              // e.g. -1
+	KeywordRational             = "Q"              // e.g. -1.1
 	KeywordReal                 = "R"              // e.g. pi
+	KeywordComplex              = "C"              // e.g. 1+i
+	KeywordImaginary            = "i"              // e.g. i
 	KeywordIs                   = "is"
 	KeywordIn                   = "in"
 	KeywordProveByMathInduction = "prove_by_math_induction"
