@@ -61,8 +61,7 @@ func preprocessComments(lines []string) []string {
 			for i < len(lines) && !strings.HasPrefix(strings.TrimSpace(lines[i]), glob.MultiLinesCommentSig) {
 				i++
 			}
-			i++ // 跳过结束阶段的 """
-			continue
+			continue // 这时候跳到for的i++环节，i++把“”“跳过了
 		}
 
 		// 移除行内注释
