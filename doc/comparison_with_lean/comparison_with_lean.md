@@ -107,3 +107,40 @@ prop is_algorithm(Q set, I set, f fn(Q)Q):
 `is_algorithm` is a proposition that says: when `I` is a subset of `Q`, `$is_algorithm(Q, I, f)` is true if and only if for all `x` in `I`, there exists a natural number `n` such that `f(x, n) = f(x, n+1)`.
 
 Here we can see that Litex achieves remarkable conciseness in formalizing the definition of algorithm - requiring only 10 lines of code while maintaining mathematical clarity. Each statement is self-explanatory and closely mirrors natural mathematical notation. In contrast, Lean 4 requires approximately three times more code to express the same concept. The additional complexity in Lean 4 stems from its need for explicit type definitions, structural elements, and unfamiliar syntax that are not typically encountered in everyday mathematical expressions. This extra complexity creates a steeper learning curve and can distract users from focusing on the core mathematical concepts they're trying to formalize. Litex's approach, by staying closer to conventional mathematical notation, significantly lowers the barrier to entry while maintaining formal strictness.
+
+```
+obj x R, y R: # define two real variables
+    2 * x + 3 * y = 10
+    4 * x + 5 * y = 14
+
+2 * (2 * x + 3 * y) = 2 * 10
+4* x + 6 * y = 2 * 10
+(4*x + 6 * y) - (4*x + 5 * y) = 2 * 10 - 14
+(4*x + 6 * y) - (4*x + 5 * y) = y
+y  = 6
+```
+
+```
+import Mathlib.Algebra.BigOperators.Basic
+import Mathlib.Tactic
+
+example (x y : ℝ) (h₁ : 2 * x + 3 * y = 10) (h₂ : 4 * x + 5 * y = 14) : x = -2 ∧ y = 6 := by
+  have h₃ := congr_arg (fun k => 2 * k) h₁
+  simp at h₃
+
+  have h₄ := sub_eq_of_eq_sub (eq_sub_of_add_eq (h₃.trans (sub_eq_iff_eq_add.mpr h₂)))
+  
+  have h₅ : (4*x + 6*y) - (4*x + 5*y) = 20 - 14 := by
+    rw [sub_eq_sub_iff_add_eq_add, add_comm, ← sub_eq_iff_eq_add]
+    exact h₃
+    exact h₂
+
+  have h₆ : y = 6 := by
+    linear_combination h₅
+
+  have h₇ : x = -2 := by
+    rw [h₆] at h₁
+    linarith
+
+  exact ⟨h₇, h₆⟩
+```
