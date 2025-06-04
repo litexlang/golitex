@@ -25,7 +25,44 @@ func (ver *Verifier) verEqualFact(stmt *ast.SpecFactStmt, state VerState) (bool,
 		return false, fmt.Errorf("invalid equal fact: %v", stmt)
 	}
 
-	return ver.verFcEqual(stmt.Params[0], stmt.Params[1], state)
+	ok, err := ver.verFcEqual(stmt.Params[0], stmt.Params[1], state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
+	if leftAsFn, ok := stmt.Params[0].(*ast.FcFn); ok {
+		if rightAsFn, ok := stmt.Params[1].(*ast.FcFn); ok {
+			fnNameEqual, err := ver.verFcEqual(leftAsFn.FnHead, rightAsFn.FnHead, state)
+			if err != nil {
+				return false, err
+			}
+			if fnNameEqual {
+				if len(leftAsFn.ParamSegs) != len(rightAsFn.ParamSegs) {
+					return false, nil
+				}
+
+				for i := range leftAsFn.ParamSegs {
+					ok, err := ver.verFcEqual(leftAsFn.ParamSegs[i], rightAsFn.ParamSegs[i], state)
+					if err != nil {
+						return false, err
+					}
+					if !ok {
+						return false, nil
+					}
+				}
+				return true, nil
+			} else {
+				return false, nil
+			}
+		} else {
+			return false, nil
+		}
+	} else {
+		return false, nil
+	}
 }
 
 func isValidEqualFact(stmt *ast.SpecFactStmt) bool {

@@ -140,7 +140,7 @@ const (
 	KeySymbolLargerEqual            = ">="
 	KeySymbolLessEqual              = "<="
 	KeySymbolEquivalent             = "<=>"
-	// IT's possible fpor me to overload the meaning of "=" to mean "set equal", but I don't want to do that(I do not want to overload the meaning of "=" too much, which can be very tiring for future maintainance and make confusions), so I use a new keyword
+	// It's possible for me to overload the meaning of "=" to mean "set equal", but I don't want to do that(I do not want to overload the meaning of "=" too much, which can be very tiring for future maintainers and make confusions), so I use a new keyword
 	KeySymbolEqualEqual      = "=="  // check fn equal. TODO: 要调整语义
 	KeySymbolEqualEqualEqual = "===" // check set equal. TODO: 要调整语义
 	KeySymbolGreaterGreater  = ">>"

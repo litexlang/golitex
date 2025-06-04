@@ -28,7 +28,7 @@ func FcStringForParseAndExpandPolynomial(fc ast.Fc) string {
 }
 
 func fcAtomString(fcAtom *ast.FcAtom) string {
-	if len(fcAtom.Name) != 0 && 0 <= fcAtom.Name[0] && fcAtom.Name[0] <= '9' {
+	if len(fcAtom.Name) != 0 && '0' <= fcAtom.Name[0] && fcAtom.Name[0] <= '9' {
 		return fcAtom.Name
 	}
 	return "[" + fcAtom.String() + "]"
