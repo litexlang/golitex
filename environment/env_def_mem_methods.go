@@ -196,6 +196,26 @@ func (e *Env) GetPropDef(propName ast.FcAtom) (*ast.DefPropStmt, bool) {
 	return nil, false
 }
 
+func (e *Env) IsAtomDeclared(atom *ast.FcAtom) bool {
+	// 如果是内置的符号，那就声明了
+	if glob.IsKeySymbol(atom.Name) {
+		return true
+	}
+
+	// 是内置的keyword就声明了
+	if glob.IsKeyword(atom.Name) {
+		return true
+	}
+
+	// 如果是数字，那就声明了
+	if _, ok := ast.IsNumLitFcAtom(atom); ok {
+		return true
+	}
+
+	_, ok := e.GetFcAtomDef(atom)
+	return ok // 如果ok，则声明了
+}
+
 func (e *Env) GetFcAtomDef(fcAtomName *ast.FcAtom) (ast.DefStmt, bool) {
 	for env := e; env != nil; env = env.Parent {
 		fcAtomDef, ok := env.getFcAtomDefAtCurEnv(fcAtomName)
