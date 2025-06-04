@@ -202,3 +202,22 @@ func (f *FcFn) HasTwoParams_FirstParamHasTheSameNameAsItself() (*FcFn, bool) {
 
 	return nil, false
 }
+
+func GetAtomsInFc(fc Fc) []*FcAtom {
+	ret := []*FcAtom{}
+
+	if fcAtom, ok := fc.(*FcAtom); ok {
+		ret = append(ret, fcAtom)
+		return ret
+	}
+
+	if fcFn, ok := fc.(*FcFn); ok {
+		for _, param := range fcFn.ParamSegs {
+			atoms := GetAtomsInFc(param)
+			ret = append(ret, atoms...)
+		}
+		return ret
+	}
+
+	return nil
+}

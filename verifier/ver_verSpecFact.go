@@ -49,7 +49,19 @@ func (ver *Verifier) verSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, 
 }
 
 func (ver *Verifier) isValidSpecFact(stmt *ast.SpecFactStmt) (bool, error) {
-	_ = stmt
+	// stmt参数里所有的涉及到的atom都已经被声明了
+	for _, param := range stmt.Params {
+		atoms := ast.GetAtomsInFc(param)
+		for _, atom := range atoms {
+			if !ver.env.IsAtomDeclared(atom) {
+				return false, fmt.Errorf("%s is not declared", atom.String())
+			}
+		}
+	}
+
+	// 所有函数内部的参数，都要符合函数的要求
+
+	// 所有的传入的参数符号 prop 的要求 以及 stmt name 确实是个 prop
 	return true, nil
 }
 
