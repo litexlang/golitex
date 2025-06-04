@@ -21,6 +21,12 @@ import (
 
 // 暂时先不考虑 fn_commutative, fn_associative 的情况
 func (ver *Verifier) verEqualFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	if ok, err := ver.isValidSpecFact_EqualFact(stmt); err != nil {
+		return false, err
+	} else if !ok {
+		return false, nil
+	}
+
 	if !isValidEqualFact(stmt) {
 		return false, fmt.Errorf("invalid equal fact: %v", stmt)
 	}

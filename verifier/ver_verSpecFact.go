@@ -19,7 +19,7 @@ import (
 )
 
 func (ver *Verifier) verSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if ok, err := ver.isValidSpecFact(stmt); err != nil {
+	if ok, err := ver.isValidSpecFact_EqualFact(stmt); err != nil {
 		return false, err
 	} else if !ok {
 		return false, nil
@@ -48,7 +48,7 @@ func (ver *Verifier) verSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, 
 	}
 }
 
-func (ver *Verifier) isValidSpecFact(stmt *ast.SpecFactStmt) (bool, error) {
+func (ver *Verifier) isValidSpecFact_EqualFact(stmt *ast.SpecFactStmt) (bool, error) {
 	// stmt参数里所有的涉及到的atom都已经被声明了
 	for _, param := range stmt.Params {
 		atoms := ast.GetAtomsInFc(param)
