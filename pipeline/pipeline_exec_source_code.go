@@ -142,9 +142,11 @@ func listen(reader *bufio.Reader, writer io.Writer, parserEnv *parser.ParserEnv,
 
 		// Print results
 		if len(msg) > 0 {
-			fmt.Printf("\n")
+			// fmt.Printf("\n")
 			// 如果有连续两行是空白的换行那不允许多个空行出现
 			isConsecutiveEmptyLine := true
+			var builder strings.Builder
+
 			for _, m := range msg {
 				// 让m的最后一位是换行符
 				m = strings.TrimRight(m, " \r\t\n")
@@ -155,10 +157,11 @@ func listen(reader *bufio.Reader, writer io.Writer, parserEnv *parser.ParserEnv,
 					isConsecutiveEmptyLine = true
 				} else {
 					isConsecutiveEmptyLine = false
-					fmt.Fprintln(writer, m)
+					builder.WriteString(m)
 				}
-				fmt.Fprintf(writer, "\n")
+				builder.WriteString("\n")
 			}
+			fmt.Fprintln(writer, builder.String()[:len(builder.String())-1])
 		}
 
 		if signal != glob.SysSignalTrue {
@@ -172,7 +175,7 @@ func RunREPLInTerminal() {
 	executor := exe.NewExecutor(env.NewEnv(nil, nil))
 	reader := bufio.NewReader(os.Stdin)
 
-	fmt.Println("Litex 0.1.1-beta - Type your code or 'exit' to quit")
+	fmt.Println("Litex-beta - Type your code or 'exit' to quit\nWarning: not yet ready for production use.")
 
 	err := listen(reader, os.Stdout, parserEnv, executor)
 	if err != nil {
