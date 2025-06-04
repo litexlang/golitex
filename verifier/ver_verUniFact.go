@@ -15,6 +15,7 @@ package litex_verifier
 import (
 	"fmt"
 	ast "golitex/ast"
+	glob "golitex/glob"
 )
 
 func (ver *Verifier) verUniFact(stmt *ast.UniFactStmt, state VerState) (bool, error) {
@@ -26,7 +27,14 @@ func (ver *Verifier) verUniFact(stmt *ast.UniFactStmt, state VerState) (bool, er
 	ver.newEnv(ver.env, ver.env.CurMatchEnv)
 	defer ver.deleteEnvAndRetainMsg()
 
-	// TODO: 需要在这里know一下 涉及到的变量是 in 某个集合的
+	// 声明变量
+	for _, param := range stmt.Params {
+		paramAsAtom := ast.NewFcAtom(glob.EmptyPkg, param)
+		if ver.env.IsAtomDeclared(paramAsAtom) {
+			return false, fmt.Errorf("%s is declared", param)
+		}
+	}
+	ver.env.ObjDefMem.Insert(ast.NewDefObjStmt(stmt.Params, stmt.ParamSets, []ast.FactStmt{}, []ast.FactStmt{}), glob.EmptyPkg)
 
 	// know cond facts
 	for _, condFact := range stmt.DomFacts {

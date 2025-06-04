@@ -1,6 +1,4 @@
-1 $in R
-1 $in obj
-1 $in N
-1 $in Z
-1 $in Q
-1 $in C
+forall a N, b N:
+    a != b
+    then:
+        b != a
