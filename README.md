@@ -122,17 +122,17 @@ _-- Isaac Newton_
 
 ## Answers to Common Questions
 
-1. Why now could Litex be a big hit?
+1. Why is Litex poised for success now?
 
-Litex itself is a piece of art intellectually. However, it must target the right group of users so that it can be a big hit in real world. The ever-growing AI industry now is the right group of users, for safety, for better reasoning, for scientific discovery.
+Litex represents an intellectual breakthrough in formal language design. The rapidly expanding AI industry presents the perfect opportunity, as it needs tools for ensuring AI safety, enhancing reasoning, and accelerating scientific discovery.
 
-2. Why Litex?
+2. What makes Litex different from other formal languages?
 
-Litex is a simple language, really really simple. Even a child can learn it with ease. It is just the right tool tailored for formalizing math compared with other formal languages which takes an expert an enormous amount of time to learn.
+Litex's greatest strength is its remarkable simplicity. While other formal languages require years of expertise to master, Litex is intuitive enough for children to learn, striking the perfect balance between power and accessibility.
 
-3. How to formalize uniform distribution over a (0,1) or anything like that?
+3. How do I formalize concepts like uniform distribution over (0,1) or anything like that?
 
-Suppose you have a 100 page book, and you want to formalize the last page in the book. You can do that only when you have already formalized the previous 99 pages. Concepts like uniform distribution, requires many prerequisites to be formalized. Only when you have already formalized the previous prerequisites, you can formalize what you want. Luckily, translating math from books written in natural language to Litex is pretty straightforward.
+Think of formalization like reading a book - you need to understand the previous pages before the last one. Similarly, formalizing advanced concepts requires building up from fundamentals. For example, formalizing uniform distribution over (0,1) requires many prerequisites. The good news is that translating mathematical concepts to Litex is straightforward once you have the prerequisites in place.
 
 ## Contribute to Litex
 
