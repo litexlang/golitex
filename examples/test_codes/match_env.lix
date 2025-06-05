@@ -1,13 +1,4 @@
-prop is_group(G set, mul fn(G)G, inv fn(G)G, zero G):
-    iff:
-        forall a G:
-            mul(a, inv(a)) = zero
-            mul(inv(a), a) = zero
-            mul(a, zero) = a
-            mul(zero, a) = a
-
-        forall a G, b G, c G:
-            mul(mul(a, b), c) = mul(a, mul(b, c))
+prop is_group(G set, mul fn(G)G, inv fn(G)G, zero G)
 
 know suppose $is_group(G, mul, inv, zero):
      forall a G:

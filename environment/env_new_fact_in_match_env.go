@@ -74,6 +74,8 @@ func (env *Env) storeUniFact(specFact *ast.SpecFactStmt, uniFact *ast.UniFactStm
 		if !ok {
 			env.KnownFactInMatchEnv[envFact.PropName.PkgName] = make(map[string]KnownFactsStruct)
 			env.KnownFactInMatchEnv[envFact.PropName.PkgName][envFact.PropName.Name] = makeKnownFactsStruct()
+			knownFactsStruct := env.KnownFactInMatchEnv[envFact.PropName.PkgName][envFact.PropName.Name]
+			knownFactsStructPtr = &knownFactsStruct
 		}
 	} else {
 		knownFactsStructPtr = &env.KnownFactsStruct
