@@ -19,8 +19,13 @@ obj a G
 with $is_group(G, mul, inv, zero):
     mul(a, inv(a)) = zero
 
+fn f(a G, b G) G
+prop p(a G, b G)
+
 know suppose $is_group(G, mul, inv, zero):
-    mul(zero, zero) = zero
+    $p(a, zero)
+    #f(zero, zero) = zero
 
 with $is_group(G, mul, inv, zero):
-    mul(zero, zero) = zero
+    $p(a, zero)
+    #f(zero, zero) = zero
