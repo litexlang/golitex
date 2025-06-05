@@ -1134,12 +1134,13 @@ LoopOverFacts:
 		}
 
 		if knownFact.EnvFact != previousSuppose {
+			previousUniMap = map[string]ast.Fc{}
 			for i, param := range knownFact.EnvFact.Params {
 				atom, ok := param.(*ast.FcAtom)
 				if !ok {
 					return false, fmt.Errorf("known param %s is not an atom", param.String())
 				}
-				previousUniMap[atom.Name] = stmt.Params[i]
+				previousUniMap[atom.Name] = ver.env.CurMatchEnv.Params[i]
 			}
 			previousSuppose = knownFact.EnvFact
 		}
