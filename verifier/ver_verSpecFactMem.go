@@ -206,12 +206,13 @@ func (ver *Verifier) iterate_KnownSpec_InLogic_InUni_MatchEnv_applyMatch(stmt *a
 
 	for _, knownFactUnderLogicExpr := range knownFacts {
 		if knownFactUnderLogicExpr.EnvFact != previousSuppose {
+			uniMapForMatchEnv = map[string]ast.Fc{}
 			for i, param := range knownFactUnderLogicExpr.EnvFact.Params {
 				atom, ok := param.(*ast.FcAtom)
 				if !ok {
 					return false, fmt.Errorf("known param %s is not an atom", param.String())
 				}
-				uniMapForMatchEnv[atom.Name] = stmt.Params[i]
+				uniMapForMatchEnv[atom.Name] = ver.env.CurMatchEnv.Params[i]
 			}
 			previousSuppose = knownFactUnderLogicExpr.EnvFact
 		}
@@ -1202,7 +1203,7 @@ func (ver *Verifier) useKnownOrFactToProveSpecFact(knownFact *env.KnownSpecFact_
 }
 
 func (ver *Verifier) proveUniFactDomFacts(insUniFact *ast.UniFactStmt, state VerState) (bool, error) {
-	if state.isRound1() {
+	if !state.isFinalRound() {
 		for _, fact := range insUniFact.DomFacts {
 			asSpecFact, ok := fact.(*ast.SpecFactStmt)
 			if ok {
@@ -1224,7 +1225,7 @@ func (ver *Verifier) proveUniFactDomFacts(insUniFact *ast.UniFactStmt, state Ver
 			}
 		}
 		return true, nil
-	} else if state.isFinalRound() {
+	} else {
 		for _, fact := range insUniFact.DomFacts {
 			asSpecFact, ok := fact.(*ast.SpecFactStmt)
 			if !ok {
@@ -1239,10 +1240,7 @@ func (ver *Verifier) proveUniFactDomFacts(insUniFact *ast.UniFactStmt, state Ver
 			}
 		}
 		return true, nil
-	} else {
-		return false, fmt.Errorf("")
 	}
-
 }
 
 func (ver *Verifier) iterate_KnownSpecInUniFacts_MatchEnv_applyMatch(stmt *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InUniSpecFact, state VerState) (bool, error) {
@@ -1251,12 +1249,13 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_MatchEnv_applyMatch(stmt *ast.S
 
 	for _, knownFact := range knownFacts {
 		if knownFact.EnvFact != previousSuppose {
+			uniMapForMatchEnv = map[string]ast.Fc{}
 			for i, param := range knownFact.EnvFact.Params {
 				atom, ok := param.(*ast.FcAtom)
 				if !ok {
 					return false, fmt.Errorf("known param %s is not an atom", param.String())
 				}
-				uniMapForMatchEnv[atom.Name] = stmt.Params[i]
+				uniMapForMatchEnv[atom.Name] = ver.env.CurMatchEnv.Params[i]
 			}
 			previousSuppose = knownFact.EnvFact
 		}
