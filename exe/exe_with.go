@@ -21,6 +21,26 @@ func (exec *Executor) withPropMatchStmt(stmt *ast.WithPropMatchStmt) (glob.ExecS
 	defer exec.appendMsg("\n")
 	defer exec.appendMsg(stmt.String())
 
+	state, err := exec.withPropMatchStmt_checkFact(stmt)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+	if state != glob.ExecState_True {
+		return state, nil
+	}
+
+	state, err = exec.withPropMatchStmt_storeFactsToParentEnv(stmt)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+	if state != glob.ExecState_True {
+		return state, nil
+	}
+
+	return glob.ExecState_True, nil
+}
+
+func (exec *Executor) withPropMatchStmt_checkFact(stmt *ast.WithPropMatchStmt) (glob.ExecState, error) {
 	// exec.newEnv(exec.env, exec.env.CurMatchEnv)
 	exec.newEnv(exec.env, &stmt.Fact)
 	defer exec.deleteEnvAndRetainMsg()
@@ -46,8 +66,13 @@ func (exec *Executor) withPropMatchStmt(stmt *ast.WithPropMatchStmt) (glob.ExecS
 		}
 	}
 
+	return glob.ExecState_True, nil
+}
+
+// TODO 存
+func (exec *Executor) withPropMatchStmt_storeFactsToParentEnv(stmt *ast.WithPropMatchStmt) (glob.ExecState, error) {
 	knowSupposeStmt := ast.NewKnowSupposeStmt(*ast.NewSupposeStmt(stmt.Fact, stmt.Body))
-	execState, err = exec.knowSupposeStmt(knowSupposeStmt)
+	execState, err := exec.knowSupposeStmt(knowSupposeStmt)
 	if err != nil {
 		return glob.ExecState_Error, err
 	}
