@@ -39,7 +39,8 @@ type Env struct {
 	KnownFactsStruct KnownFactsStruct
 
 	// 考虑多个系统的时候，再引入 map[string]string
-	EqualMem map[string]shared_ptr_to_slice_of_fc
+	EqualMem           map[string]shared_ptr_to_slice_of_fc
+	EqualMemInMatchEnv glob.Map2D[map[string]shared_ptr_to_slice_of_fc]
 
 	KnownFactInMatchEnv glob.Map2D[KnownFactsStruct]
 
