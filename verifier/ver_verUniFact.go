@@ -36,6 +36,16 @@ func (ver *Verifier) verUniFact(stmt *ast.UniFactStmt, state VerState) (bool, er
 	}
 	ver.env.ObjDefMem.Insert(ast.NewDefObjStmt(stmt.Params, stmt.ParamSets, []ast.FactStmt{}, []ast.FactStmt{}), glob.EmptyPkg)
 
+	// 查看param set 是否已经声明
+	for _, paramSet := range stmt.ParamSets {
+		atoms := ast.GetAtomsInFc(paramSet)
+		for _, atom := range atoms {
+			if !ver.env.IsAtomDeclared(atom) {
+				return false, fmt.Errorf("%s is not declared", atom.String())
+			}
+		}
+	}
+
 	// know cond facts
 	for _, condFact := range stmt.DomFacts {
 		err := ver.env.NewFact(condFact)
