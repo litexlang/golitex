@@ -36,10 +36,12 @@ func (env *Env) newLogicExprFact(fact *ast.OrStmt) error {
 }
 
 func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
-	if isEqualFact, err := env.isTrueEqualFact_StoreIt(fact); err != nil {
-		return err
-	} else if isEqualFact {
-		return nil
+	if env.CurMatchEnv == nil {
+		if isEqualFact, err := env.isTrueEqualFact_StoreIt(fact); err != nil {
+			return err
+		} else if isEqualFact {
+			return nil
+		}
 	}
 
 	if isMathInductionProp, err := env.isMathInductionPropName_StoreIt(fact); err != nil {

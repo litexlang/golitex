@@ -24,8 +24,8 @@ prop p(a G, b G)
 
 know suppose $is_group(G, mul, inv, zero):
     $p(a, zero)
-    #f(zero, zero) = zero
+    f(zero, zero) = zero
 
 with $is_group(G, mul, inv, zero):
     $p(a, zero)
-    #f(zero, zero) = zero
+    f(zero, zero) = zero
