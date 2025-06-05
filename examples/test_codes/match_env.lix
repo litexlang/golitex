@@ -1,17 +1,20 @@
-prop p(x N)
-prop q(x N, y N):
+prop is_group(G set, mul fn(G)G, inv fn(G)G, zero G):
     iff:
-        # 或者引入 know suppose 也行
-        $p(x)  # 这里如果不是iff呢？只能通过引入新关键词then释放了
+        forall a G:
+            mul(a, inv(a)) = zero
+            mul(inv(a), a) = zero
+            mul(a, zero) = a
+            mul(zero, a) = a
 
-know:
-    forall x N:
-        $p(x)
-        then:
-            $q(x)
+        forall a G, b G, c G:
+            mul(mul(a, b), c) = mul(a, mul(b, c))
 
-suppose $q(x, y):
-    $p(x)
+"""
+suppose $is_group(G, mul, inv, zero):
+    know forall a G:
+        mul(a, inv(a)) = zero
+        mul(inv(a), a) = zero
+        mul(a, zero) = a
+        mul(zero, a) = a
 
-
-
+"""
