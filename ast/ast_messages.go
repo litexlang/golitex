@@ -485,7 +485,7 @@ func (stmt *SetDefSetBuilderStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *SupposePropMatchStmt) String() string {
+func (stmt *SupposeStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordSuppose)
 	builder.WriteString(" ")
@@ -593,7 +593,7 @@ func fnSetString(f *FcFn) string {
 	return builder.String()
 }
 
-func SupposeNewFactsMsg(stmt *SupposePropMatchStmt, messages []string) string {
+func SupposeNewFactsMsg(stmt *SupposeStmt, messages []string) string {
 	builder := strings.Builder{}
 	builder.WriteString(fmt.Sprintf("know from true %s fact:\n", glob.KeywordSuppose))
 	builder.WriteString(fmt.Sprintf("%s %s:\n", glob.KeywordSuppose, stmt.Fact.String()))

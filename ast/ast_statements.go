@@ -106,7 +106,7 @@ type SetDefSetBuilderStmt struct {
 	Facts     []FactStmt
 }
 
-type SupposePropMatchStmt struct {
+type SupposeStmt struct {
 	Fact SpecFactStmt
 	Body []Stmt
 }
@@ -127,7 +127,7 @@ type KnowExistPropStmt struct {
 }
 
 type KnowSupposeStmt struct {
-	SupposeStmt SupposePropMatchStmt
+	SupposeStmt SupposeStmt
 }
 
 type OrStmt struct {

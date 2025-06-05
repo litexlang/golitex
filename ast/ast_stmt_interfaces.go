@@ -27,7 +27,7 @@ func (f *KnowFactStmt) stmt()         {}
 func (s *DefExistPropStmt) stmt()     {}
 func (s *HaveStmt) stmt()             {}
 func (s *SetDefSetBuilderStmt) stmt() {}
-func (s *SupposePropMatchStmt) stmt() {}
+func (s *SupposeStmt) stmt()          {}
 func (s *WithPropMatchStmt) stmt()    {}
 func (s *ProveInEachCaseStmt) stmt()  {}
 func (s *KnowPropStmt) stmt()         {}

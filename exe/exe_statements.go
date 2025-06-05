@@ -49,7 +49,7 @@ func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		err = exec.setDefStmt(stmt)
 	case *ast.ProveInEachCaseStmt:
 		execState, err = exec.proveInEachCaseStmt(stmt)
-	case *ast.SupposePropMatchStmt:
+	case *ast.SupposeStmt:
 		execState, err = exec.supposePropMatchStmt(stmt)
 	case *ast.WithPropMatchStmt:
 		execState, err = exec.withPropMatchStmt(stmt)
