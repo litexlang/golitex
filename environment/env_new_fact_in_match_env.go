@@ -21,7 +21,7 @@ func (env *Env) storeSpecFactInMem(stmt *ast.SpecFactStmt) error {
 	var ok bool
 
 	if env.CurMatchEnv != nil {
-		envFact := &env.CurMatchEnv.Fact
+		envFact := env.CurMatchEnv
 		knownFactsStructPtr, ok = env.GetFactsFromKnownFactInMatchEnv(envFact)
 		if !ok {
 			env.KnownFactInMatchEnv[envFact.PropName.PkgName] = make(map[string]KnownFactsStruct)
@@ -46,7 +46,7 @@ func (env *Env) storeLogicFact(stmt *ast.OrStmt) error {
 	var ok bool
 
 	if env.CurMatchEnv != nil {
-		envFact := &env.CurMatchEnv.Fact
+		envFact := env.CurMatchEnv
 		knownFactsStructPtr, ok = env.GetFactsFromKnownFactInMatchEnv(envFact)
 		if !ok {
 			env.KnownFactInMatchEnv[envFact.PropName.PkgName] = make(map[string]KnownFactsStruct)
@@ -71,7 +71,7 @@ func (env *Env) storeUniFact(specFact *ast.SpecFactStmt, uniFact *ast.UniFactStm
 	var ok bool
 
 	if env.CurMatchEnv != nil {
-		envFact := &env.CurMatchEnv.Fact
+		envFact := env.CurMatchEnv
 		knownFactsStructPtr, ok = env.GetFactsFromKnownFactInMatchEnv(envFact)
 		if !ok {
 			env.KnownFactInMatchEnv[envFact.PropName.PkgName] = make(map[string]KnownFactsStruct)

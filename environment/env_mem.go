@@ -19,7 +19,7 @@ import (
 
 type KnownSpecFact struct {
 	Fact    *ast.SpecFactStmt
-	EnvFact *ast.SupposePropMatchStmt
+	EnvFact *ast.SpecFactStmt
 }
 
 type SpecFactMem struct {
@@ -35,10 +35,10 @@ type KnownSpecFact_InLogicExpr struct {
 	// LogicExpr *ast.LogicExprStmt
 	Index     int
 	LogicExpr *ast.OrStmt
-	EnvFact   *ast.SupposePropMatchStmt
+	EnvFact   *ast.SpecFactStmt
 }
 
-func NewKnownSpecFact_InLogicExpr(specFact *ast.SpecFactStmt, index int, logicExpr *ast.OrStmt, envFact *ast.SupposePropMatchStmt) *KnownSpecFact_InLogicExpr {
+func NewKnownSpecFact_InLogicExpr(specFact *ast.SpecFactStmt, index int, logicExpr *ast.OrStmt, envFact *ast.SpecFactStmt) *KnownSpecFact_InLogicExpr {
 	return &KnownSpecFact_InLogicExpr{specFact, index, logicExpr, envFact}
 }
 
@@ -52,7 +52,7 @@ type SpecFactInLogicExprMem struct {
 type KnownSpecFact_InUniSpecFact struct {
 	SpecFact *ast.SpecFactStmt
 	UniFact  *ast.UniFactStmt
-	EnvFact  *ast.SupposePropMatchStmt
+	EnvFact  *ast.SpecFactStmt
 }
 
 type SpecFactInUniFactMem struct {
@@ -68,10 +68,11 @@ type SpecFact_InLogicExpr_InUniFact struct {
 	Index    int
 	// LogicExpr *ast.LogicExprStmt
 	LogicExpr *ast.OrStmt
-	EnvFact   *ast.SupposePropMatchStmt
+	// EnvFact   *ast.SupposePropMatchStmt
+	EnvFact *ast.SpecFactStmt
 }
 
-func NewSpecFact_InLogicExpr_InUniFact(specFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt, index int, logicExpr *ast.OrStmt, envFact *ast.SupposePropMatchStmt) *SpecFact_InLogicExpr_InUniFact {
+func NewSpecFact_InLogicExpr_InUniFact(specFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt, index int, logicExpr *ast.OrStmt, envFact *ast.SpecFactStmt) *SpecFact_InLogicExpr_InUniFact {
 	return &SpecFact_InLogicExpr_InUniFact{specFact, uniFact, index, logicExpr, envFact}
 }
 
