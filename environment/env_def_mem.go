@@ -56,7 +56,3 @@ func newObjMemory() *ObjDefMem {
 func newExistPropMemory() *ExistPropDefMem {
 	return &ExistPropDefMem{make(glob.Map2D[ExistPropMemItem])}
 }
-
-// func newSetMemory() *SetDefMem {
-// 	return &SetDefMem{make(glob.Map2D[SetMemItem])}
-// }

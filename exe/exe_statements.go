@@ -463,7 +463,7 @@ func (exec *Executor) execProofBlock(proof []ast.Stmt) (glob.ExecState, error) {
 }
 
 func (exec *Executor) claimStmtProve(stmt *ast.ClaimStmt) (bool, error) {
-	exec.newEnv(exec.env, exec.env.CurMatchEnv)
+	exec.newEnv(exec.env, exec.env.CurMatchProp)
 	isSuccess := false
 
 	defer func() {
@@ -529,7 +529,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimStmt) (bool, error) {
 }
 
 func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimStmt) (bool, error) {
-	exec.newEnv(exec.env, exec.env.CurMatchEnv)
+	exec.newEnv(exec.env, exec.env.CurMatchProp)
 	isSuccess := false
 
 	defer func() {
@@ -640,7 +640,7 @@ func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) (glob.E
 }
 
 func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEachCaseStmt) (glob.ExecState, error) {
-	exec.newEnv(exec.env, exec.env.CurMatchEnv)
+	exec.newEnv(exec.env, exec.env.CurMatchProp)
 	defer exec.deleteEnvAndRetainMsg()
 
 	caseStmt := stmt.OrFact.Facts[index]
@@ -715,9 +715,9 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
 }
 
 func (exec *Executor) knowSupposeStmt(stmt *ast.KnowSupposeStmt) (glob.ExecState, error) {
-	exec.env.CurMatchEnv = &stmt.SupposeStmt.Fact
+	exec.env.CurMatchProp = &stmt.SupposeStmt.Fact
 	defer func() {
-		exec.env.CurMatchEnv = nil
+		exec.env.CurMatchProp = nil
 	}()
 
 	knownFacts := []ast.FactStmt{}

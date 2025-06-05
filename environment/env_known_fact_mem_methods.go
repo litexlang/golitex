@@ -182,7 +182,7 @@ func (env *Env) newUniFact(stmt *ast.UniFactStmt) error {
 				return fmt.Errorf("facts in the body of universal fact should not be a free fact, got %s", thenStmtAsLogicExpr.String())
 			}
 
-			err := env.KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem.NewFact(stmt, thenStmtAsLogicExpr, env.CurMatchEnv)
+			err := env.KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem.NewFact(stmt, thenStmtAsLogicExpr, env.CurMatchProp)
 			if err != nil {
 				return err
 			}
@@ -276,8 +276,8 @@ func newSpecFact_InLogicExpr_InUniFactMem() *SpecFact_InLogicExpr_InUniFactMem {
 }
 
 func (e *Env) GetSpecFactMem() (*SpecFactMem, bool) {
-	if e.CurMatchEnv != nil {
-		knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(e.CurMatchEnv)
+	if e.CurMatchProp != nil {
+		knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(e.CurMatchProp)
 		if !ok {
 			return nil, false
 		}
@@ -287,8 +287,8 @@ func (e *Env) GetSpecFactMem() (*SpecFactMem, bool) {
 }
 
 func (e *Env) GetSpecFactInLogicExprMem() (*SpecFactInLogicExprMem, bool) {
-	if e.CurMatchEnv != nil {
-		knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(e.CurMatchEnv)
+	if e.CurMatchProp != nil {
+		knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(e.CurMatchProp)
 		if !ok {
 			return nil, false
 		}
@@ -298,8 +298,8 @@ func (e *Env) GetSpecFactInLogicExprMem() (*SpecFactInLogicExprMem, bool) {
 }
 
 func (e *Env) GetSpecFactInUniFactMem() (*SpecFactInUniFactMem, bool) {
-	if e.CurMatchEnv != nil {
-		knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(e.CurMatchEnv)
+	if e.CurMatchProp != nil {
+		knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(e.CurMatchProp)
 		if !ok {
 			return nil, false
 		}
@@ -309,8 +309,8 @@ func (e *Env) GetSpecFactInUniFactMem() (*SpecFactInUniFactMem, bool) {
 }
 
 func (e *Env) GetSpecFact_InLogicExpr_InUniFactMem() (*SpecFact_InLogicExpr_InUniFactMem, bool) {
-	if e.CurMatchEnv != nil {
-		knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(e.CurMatchEnv)
+	if e.CurMatchProp != nil {
+		knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(e.CurMatchProp)
 		if !ok {
 			return nil, false
 		}
