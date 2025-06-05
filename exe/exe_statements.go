@@ -715,7 +715,7 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
 }
 
 func (exec *Executor) knowSupposeStmt(stmt *ast.KnowSupposeStmt) (glob.ExecState, error) {
-	exec.env.CurMatchEnv = &stmt.SupposeStmt
+	exec.env.CurMatchEnv = &stmt.SupposeStmt.Fact
 	defer func() {
 		exec.env.CurMatchEnv = nil
 	}()

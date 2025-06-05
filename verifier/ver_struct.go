@@ -64,7 +64,7 @@ func (ver *Verifier) successWithMsg(stmtString, storedStmtString string) {
 func (ver *Verifier) successNoMsg() {
 }
 
-func (ver *Verifier) newEnv(parent *env.Env, curMatchEnv *ast.SupposePropMatchStmt) {
+func (ver *Verifier) newEnv(parent *env.Env, curMatchEnv *ast.SpecFactStmt) {
 	newEnv := env.NewEnv(parent, curMatchEnv)
 	ver.env = newEnv
 }

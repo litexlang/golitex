@@ -21,7 +21,8 @@ func (exec *Executor) withPropMatchStmt(stmt *ast.WithPropMatchStmt) (glob.ExecS
 	defer exec.appendMsg("\n")
 	defer exec.appendMsg(stmt.String())
 
-	exec.newEnv(exec.env, exec.env.CurMatchEnv)
+	// exec.newEnv(exec.env, exec.env.CurMatchEnv)
+	exec.newEnv(exec.env, &stmt.Fact)
 	defer exec.deleteEnvAndRetainMsg()
 
 	// check fact

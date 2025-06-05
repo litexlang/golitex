@@ -25,12 +25,12 @@ func (exec *Executor) supposePropMatchStmt(stmt *ast.SupposePropMatchStmt) (glob
 	defer exec.appendMsg(stmt.String())
 
 	originalEnv := exec.env
-	originalEnv.CurMatchEnv = stmt // 之所以这么干，是因为要把stmt下面的事实存到originalEnv里，而且要存到 matchEnv 里
+	originalEnv.CurMatchEnv = &stmt.Fact // 之所以这么干，是因为要把stmt下面的事实存到originalEnv里，而且要存到 matchEnv 里
 	defer func() {
 		originalEnv.CurMatchEnv = nil
 	}()
 
-	exec.newEnv(originalEnv, stmt)
+	exec.newEnv(originalEnv, &stmt.Fact)
 	defer exec.deleteEnvAndRetainMsg()
 
 	execState, err := exec.supposeStmt_declaredParams(stmt)

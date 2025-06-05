@@ -44,10 +44,11 @@ type Env struct {
 
 	KnownFactInMatchEnv glob.Map2D[KnownFactsStruct]
 
-	CurMatchEnv *ast.SupposePropMatchStmt
+	// CurMatchEnv *ast.SupposePropMatchStmt
+	CurMatchEnv *ast.SpecFactStmt
 }
 
-func NewEnv(parent *Env, curMatchEnv *ast.SupposePropMatchStmt) *Env {
+func NewEnv(parent *Env, curMatchEnv *ast.SpecFactStmt) *Env {
 	env := &Env{
 		Parent: parent,
 		Msgs:   []string{},

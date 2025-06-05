@@ -33,7 +33,7 @@ func NewExecutor(curEnv *env.Env) *Executor {
 	}
 }
 
-func (e *Executor) newEnv(parent *env.Env, curMatchEnv *ast.SupposePropMatchStmt) {
+func (e *Executor) newEnv(parent *env.Env, curMatchEnv *ast.SpecFactStmt) {
 	e.env = env.NewEnv(parent, curMatchEnv)
 }
 
