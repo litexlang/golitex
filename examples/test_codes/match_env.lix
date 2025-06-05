@@ -18,3 +18,9 @@ know:
 obj a G
 with $is_group(G, mul, inv, zero):
     mul(a, inv(a)) = zero
+
+know suppose $is_group(G, mul, inv, zero):
+    mul(zero, zero) = zero
+
+with $is_group(G, mul, inv, zero):
+    mul(zero, zero) = zero
