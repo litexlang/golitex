@@ -46,5 +46,14 @@ func (exec *Executor) withPropMatchStmt(stmt *ast.WithPropMatchStmt) (glob.ExecS
 		}
 	}
 
+	knowSupposeStmt := ast.NewKnowSupposeStmt(*ast.NewSupposeStmt(stmt.Fact, stmt.Body))
+	execState, err = exec.knowSupposeStmt(knowSupposeStmt)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+	if execState != glob.ExecState_True {
+		return execState, nil
+	}
+
 	return glob.ExecState_True, nil
 }

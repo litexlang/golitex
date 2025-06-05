@@ -19,7 +19,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) supposePropMatchStmt(stmt *ast.SupposePropMatchStmt) (glob.ExecState, error) {
+func (exec *Executor) supposePropMatchStmt(stmt *ast.SupposeStmt) (glob.ExecState, error) {
 	defer exec.appendMsg(glob.InternalWarningMsg("Currently, locally declared obj might be emitted into global env. Be careful when you declare anything in suppose stmt.\n"))
 	defer exec.appendMsg("\n")
 	defer exec.appendMsg(stmt.String())
@@ -52,7 +52,7 @@ func (exec *Executor) supposePropMatchStmt(stmt *ast.SupposePropMatchStmt) (glob
 	return glob.ExecState_True, nil
 }
 
-func (exec *Executor) supposeStmt_declaredParams(stmt *ast.SupposePropMatchStmt) (glob.ExecState, error) {
+func (exec *Executor) supposeStmt_declaredParams(stmt *ast.SupposeStmt) (glob.ExecState, error) {
 	// declare new params in suppose environment
 	factSpecDef, ok := exec.env.GetPropDef(stmt.Fact.PropName)
 	if !ok {
@@ -120,7 +120,7 @@ func (exec *Executor) supposeStmt_declaredParams(stmt *ast.SupposePropMatchStmt)
 	return glob.ExecState_True, nil
 }
 
-func (exec *Executor) supposeStmt_runStmtBody(stmt *ast.SupposePropMatchStmt) (glob.ExecState, []ast.FactStmt, error) {
+func (exec *Executor) supposeStmt_runStmtBody(stmt *ast.SupposeStmt) (glob.ExecState, []ast.FactStmt, error) {
 	insideFacts := []ast.FactStmt{}
 	for _, bodyFact := range stmt.Body {
 		execState, err := exec.stmt(bodyFact)
@@ -144,7 +144,8 @@ func (exec *Executor) supposeStmt_runStmtBody(stmt *ast.SupposePropMatchStmt) (g
 	return glob.ExecState_True, insideFacts, nil
 }
 
-func (exec *Executor) supposeStmt_storeFactsToParentEnv_addPrefixToSupposeFactAndBodyFacts(insideFacts []ast.FactStmt, stmt *ast.SupposePropMatchStmt, storeToEnv *env.Env) (glob.ExecState, []ast.FactStmt, error) {
+// TODO：这里其实是有问题的，万一涉及到的变量没声明，那就出错了
+func (exec *Executor) supposeStmt_storeFactsToParentEnv_addPrefixToSupposeFactAndBodyFacts(insideFacts []ast.FactStmt, stmt *ast.SupposeStmt, storeToEnv *env.Env) (glob.ExecState, []ast.FactStmt, error) {
 	// store facts in original env
 	uniMap := map[string]ast.Fc{}
 	for _, supposePropParam := range stmt.Fact.Params {

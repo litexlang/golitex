@@ -96,18 +96,22 @@ func NewKnowExistPropStmt(existProp DefExistPropStmt) *KnowExistPropStmt {
 	return &KnowExistPropStmt{existProp}
 }
 
-func NewWhenPropMatchStmt(fact SpecFactStmt, body []Stmt) *SupposePropMatchStmt {
-	return &SupposePropMatchStmt{fact, body}
+func NewWhenPropMatchStmt(fact SpecFactStmt, body []Stmt) *SupposeStmt {
+	return &SupposeStmt{fact, body}
 }
 
 func NewWithPropMatchStmt(fact SpecFactStmt, body []Stmt) *WithPropMatchStmt {
 	return &WithPropMatchStmt{fact, body}
 }
 
-func NewKnowSupposeStmt(supposeStmt SupposePropMatchStmt) *KnowSupposeStmt {
+func NewKnowSupposeStmt(supposeStmt SupposeStmt) *KnowSupposeStmt {
 	return &KnowSupposeStmt{supposeStmt}
 }
 
 func NewOrStmt(orFacts []SpecFactStmt) *OrStmt {
 	return &OrStmt{orFacts}
+}
+
+func NewSupposeStmt(fact SpecFactStmt, body []Stmt) *SupposeStmt {
+	return &SupposeStmt{fact, body}
 }

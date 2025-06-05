@@ -983,7 +983,7 @@ func (tb *tokenBlock) uniFactBodyFacts(nameDepthMap ast.NameDepthMap, curAllowUn
 	return domFacts, thenFacts, iffFacts, nil
 }
 
-func (tb *tokenBlock) supposePropMatchStmt() (*ast.SupposePropMatchStmt, error) {
+func (tb *tokenBlock) supposePropMatchStmt() (*ast.SupposeStmt, error) {
 	err := tb.header.skip(glob.KeywordSuppose)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
