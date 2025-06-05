@@ -16,6 +16,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	cmp "golitex/cmp"
+	env "golitex/environment"
 	glob "golitex/glob"
 )
 
@@ -117,41 +118,75 @@ func (ver *Verifier) verEqualBuiltin(left ast.Fc, right ast.Fc, state VerState) 
 }
 
 func (ver *Verifier) verEqualSpecMem(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
-	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
-		// TODO: 这里还要用 MatchEnv 实现一下
-
-		var equalToLeftFcs, equalToRightFcs *[]ast.Fc
-		var gotLeftEqualFcs, gotRightEqualFcs bool
-
-		equalToLeftFcs, gotLeftEqualFcs = curEnv.GetEqualFcs(left)
-		equalToRightFcs, gotRightEqualFcs = curEnv.GetEqualFcs(right)
-
-		if gotLeftEqualFcs && gotRightEqualFcs {
-			if equalToLeftFcs == equalToRightFcs {
-				return ver.equalTrueAddSuccessMsg(left, right, state, "known")
+	if ver.env.CurMatchEnv == nil {
+		for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
+			ok, err := ver.equalFact_SpecMem_atEnv(curEnv, left, right, state)
+			if err != nil {
+				return false, err
+			}
+			if ok {
+				return true, nil
 			}
 		}
-
-		if gotLeftEqualFcs {
-			for _, equalToLeftFc := range *equalToLeftFcs {
-				if ok, err := ver.cmpFc(equalToLeftFc, right, state); err != nil {
-					return false, err
-				} else if ok {
-					return ver.equalTrueAddSuccessMsg(left, right, state, "known")
-				}
+	} else {
+		for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
+			ok, err := ver.equalFact_SpecMem_atEnv(curEnv, left, right, state)
+			if err != nil {
+				return false, err
 			}
-		}
+			if ok {
+				return true, nil
+			}
 
-		if gotRightEqualFcs {
-			for _, equalToRightFc := range *equalToRightFcs {
-				if ok, err := ver.cmpFc(equalToRightFc, left, state); err != nil {
-					return false, err
-				} else if ok {
-					return ver.equalTrueAddSuccessMsg(left, right, state, "known")
-				}
+			ok, err = ver.equalFact_MatchEnv_SpecMem_atEnv(curEnv, left, right, state)
+			if err != nil {
+				return false, err
+			}
+			if ok {
+				return true, nil
 			}
 		}
 	}
+	return false, nil
+}
+
+func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right ast.Fc, state VerState) (bool, error) {
+	var equalToLeftFcs, equalToRightFcs *[]ast.Fc
+	var gotLeftEqualFcs, gotRightEqualFcs bool
+
+	equalToLeftFcs, gotLeftEqualFcs = curEnv.GetEqualFcs(left)
+	equalToRightFcs, gotRightEqualFcs = curEnv.GetEqualFcs(right)
+
+	if gotLeftEqualFcs && gotRightEqualFcs {
+		if equalToLeftFcs == equalToRightFcs {
+			return ver.equalTrueAddSuccessMsg(left, right, state, "known")
+		}
+	}
+
+	if gotLeftEqualFcs {
+		for _, equalToLeftFc := range *equalToLeftFcs {
+			if ok, err := ver.cmpFc(equalToLeftFc, right, state); err != nil {
+				return false, err
+			} else if ok {
+				return ver.equalTrueAddSuccessMsg(left, right, state, "known")
+			}
+		}
+	}
+
+	if gotRightEqualFcs {
+		for _, equalToRightFc := range *equalToRightFcs {
+			if ok, err := ver.cmpFc(equalToRightFc, left, state); err != nil {
+				return false, err
+			} else if ok {
+				return ver.equalTrueAddSuccessMsg(left, right, state, "known")
+			}
+		}
+	}
+
+	return false, nil
+}
+
+func (ver *Verifier) equalFact_MatchEnv_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right ast.Fc, state VerState) (bool, error) {
 	return false, nil
 }
 
