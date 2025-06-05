@@ -19,6 +19,8 @@ import (
 
 type shared_ptr_to_slice_of_fc = *[]ast.Fc
 
+type MatchProp = ast.SpecFactStmt
+
 type KnownFactsStruct struct {
 	SpecFactMem                       SpecFactMem
 	SpecFactInLogicExprMem            SpecFactInLogicExprMem
@@ -27,45 +29,30 @@ type KnownFactsStruct struct {
 }
 
 type Env struct {
-	Parent *Env
-	Msgs   []string
-
-	ObjDefMem       ObjDefMem
-	PropDefMem      PropDefMem
-	FnDefMem        FnDefMem // 即使我会存 f in f(params set)retSet,这个项仍然必要，因为我在验证prop里的参数符合prop的要求时要用定义。而且即使后者也不必要，我放着总没错
-	ExistPropDefMem ExistPropDefMem
-	// SetDefMem       SetDefMem
-
-	KnownFactsStruct KnownFactsStruct
-
-	// 考虑多个系统的时候，再引入 map[string]string
-	EqualMem           map[string]shared_ptr_to_slice_of_fc
-	EqualMemInMatchEnv glob.Map2D[map[string]shared_ptr_to_slice_of_fc]
-
+	Parent              *Env
+	Msgs                []string
+	ObjDefMem           ObjDefMem
+	PropDefMem          PropDefMem
+	FnDefMem            FnDefMem // 即使我会存 f in f(params set)retSet,这个项仍然必要，因为我在验证prop里的参数符合prop的要求时要用定义。而且即使后者也不必要，我放着总没错
+	ExistPropDefMem     ExistPropDefMem
+	KnownFactsStruct    KnownFactsStruct
 	KnownFactInMatchEnv glob.Map2D[KnownFactsStruct]
-
-	// CurMatchEnv *ast.SupposePropMatchStmt
-	CurMatchEnv *ast.SpecFactStmt
+	EqualMem            map[string]shared_ptr_to_slice_of_fc
+	CurMatchProp        *MatchProp
 }
 
 func NewEnv(parent *Env, curMatchEnv *ast.SpecFactStmt) *Env {
 	env := &Env{
-		Parent: parent,
-		Msgs:   []string{},
-
-		ObjDefMem:       *newObjMemory(),
-		PropDefMem:      *newPropMemory(),
-		FnDefMem:        *newFnMemory(),
-		ExistPropDefMem: *newExistPropMemory(),
-		// SetDefMem:       *newSetMemory(),
-
-		KnownFactsStruct: makeKnownFactsStruct(),
-
-		EqualMem: make(map[string]shared_ptr_to_slice_of_fc),
-
+		Parent:              parent,
+		Msgs:                []string{},
+		ObjDefMem:           *newObjMemory(),
+		PropDefMem:          *newPropMemory(),
+		FnDefMem:            *newFnMemory(),
+		ExistPropDefMem:     *newExistPropMemory(),
+		KnownFactsStruct:    makeKnownFactsStruct(),
+		EqualMem:            make(map[string]shared_ptr_to_slice_of_fc),
 		KnownFactInMatchEnv: make(glob.Map2D[KnownFactsStruct]),
-
-		CurMatchEnv: curMatchEnv,
+		CurMatchProp:        curMatchEnv,
 	}
 	return env
 }
@@ -78,17 +65,3 @@ func makeKnownFactsStruct() KnownFactsStruct {
 		SpecFact_InLogicExpr_InUniFactMem: *newSpecFact_InLogicExpr_InUniFactMem(),
 	}
 }
-
-// func (e *Env) IsSpecFactPropCommutative(fact *ast.SpecFactStmt) bool {
-// 	// 如果是等号那自动成立
-// 	if ast.IsFcAtomWithName(&fact.PropName, glob.KeySymbolEqual) {
-// 		return true
-// 	}
-
-// for env := e; env != nil; env = env.Parent {
-// 	if env.IsCommutativeProp(fact.PropName) {
-// 		return true
-// 	}
-// }
-// 	return false
-// }

@@ -30,9 +30,7 @@ type SpecFactMem struct {
 }
 
 type KnownSpecFact_InLogicExpr struct {
-	SpecFact *ast.SpecFactStmt
-	// Index    []uint8
-	// LogicExpr *ast.LogicExprStmt
+	SpecFact  *ast.SpecFactStmt
 	Index     int
 	LogicExpr *ast.OrStmt
 	EnvFact   *ast.SpecFactStmt
@@ -63,13 +61,11 @@ type SpecFactInUniFactMem struct {
 }
 
 type SpecFact_InLogicExpr_InUniFact struct {
-	SpecFact *ast.SpecFactStmt
-	UniFact  *ast.UniFactStmt
-	Index    int
-	// LogicExpr *ast.LogicExprStmt
+	SpecFact  *ast.SpecFactStmt
+	UniFact   *ast.UniFactStmt
+	Index     int
 	LogicExpr *ast.OrStmt
-	// EnvFact   *ast.SupposePropMatchStmt
-	EnvFact *ast.SpecFactStmt
+	EnvFact   *ast.SpecFactStmt
 }
 
 func NewSpecFact_InLogicExpr_InUniFact(specFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt, index int, logicExpr *ast.OrStmt, envFact *ast.SpecFactStmt) *SpecFact_InLogicExpr_InUniFact {

@@ -28,7 +28,7 @@ func (ver *Verifier) specFactOrEqualFact_SpecMode(stmt *ast.SpecFactStmt, state 
 func (ver *Verifier) verSpecFact_SpecMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
-	if ver.env.CurMatchEnv == nil {
+	if ver.env.CurMatchProp == nil {
 		for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
 			ok, err := ver.specFact_SpecMem_atEnv(curEnv, stmt, state)
 			if err != nil || ok {
@@ -55,7 +55,7 @@ func (ver *Verifier) verSpecFact_SpecMem(stmt *ast.SpecFactStmt, state VerState)
 func (ver *Verifier) verSpecFact_LogicMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
-	if ver.env.CurMatchEnv == nil {
+	if ver.env.CurMatchProp == nil {
 		for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
 			ok, err := ver.specFact_LogicMem(curEnv, stmt, state)
 			if err != nil || ok {
@@ -136,7 +136,7 @@ func (ver *Verifier) verSpecFact_InSpecFact_UniMem(stmt *ast.SpecFactStmt, state
 	nextState := state.addRound()
 	upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
-	if ver.env.CurMatchEnv == nil {
+	if ver.env.CurMatchProp == nil {
 		for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
 			ok, err := ver.specFact_UniMem_atCurEnv(curEnv, stmt, nextState)
 			if err != nil || ok {
@@ -164,7 +164,7 @@ func (ver *Verifier) verSpecFact_InLogicExpr_InUniFactMem(stmt *ast.SpecFactStmt
 	nextState := state.addRound()
 	upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
-	if ver.env.CurMatchEnv == nil {
+	if ver.env.CurMatchProp == nil {
 		for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
 			ok, err := ver.specFact_inLogicExpr_inUniFactMem_atEnv(curEnv, stmt, nextState)
 			if err != nil || ok {
@@ -212,7 +212,7 @@ func (ver *Verifier) iterate_KnownSpec_InLogic_InUni_MatchEnv_applyMatch(stmt *a
 				if !ok {
 					return false, fmt.Errorf("known param %s is not an atom", param.String())
 				}
-				uniMapForMatchEnv[atom.Name] = ver.env.CurMatchEnv.Params[i]
+				uniMapForMatchEnv[atom.Name] = ver.env.CurMatchProp.Params[i]
 			}
 			previousSuppose = knownFactUnderLogicExpr.EnvFact
 		}
@@ -1023,7 +1023,7 @@ func (ver *Verifier) specFact_LogicMem(curEnv *env.Env, stmt *ast.SpecFactStmt, 
 // }
 
 func (ver *Verifier) specFact_MatchEnv_SpecMem(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	knownStruct, got := curEnv.KnownFactInMatchEnv.Get(ver.env.CurMatchEnv.PropName.PkgName, ver.env.CurMatchEnv.PropName.Name)
+	knownStruct, got := curEnv.KnownFactInMatchEnv.Get(ver.env.CurMatchProp.PropName.PkgName, ver.env.CurMatchProp.PropName.Name)
 
 	if !got {
 		return false, nil
@@ -1038,7 +1038,7 @@ func (ver *Verifier) specFact_MatchEnv_SpecMem(curEnv *env.Env, stmt *ast.SpecFa
 }
 
 func (ver *Verifier) specFact_MatchEnv_LogicMem(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	knownStruct, got := curEnv.KnownFactInMatchEnv.Get(ver.env.CurMatchEnv.PropName.PkgName, ver.env.CurMatchEnv.PropName.Name)
+	knownStruct, got := curEnv.KnownFactInMatchEnv.Get(ver.env.CurMatchProp.PropName.PkgName, ver.env.CurMatchProp.PropName.Name)
 
 	if !got {
 		return false, nil
@@ -1109,7 +1109,7 @@ func (ver *Verifier) matchTwoSpecFacts(stmt *ast.SpecFactStmt, knownFact *ast.Sp
 
 // TODO
 func (ver *Verifier) specFact_MatchEnv_UniMem(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	knownStruct, got := curEnv.KnownFactInMatchEnv.Get(ver.env.CurMatchEnv.PropName.PkgName, ver.env.CurMatchEnv.PropName.Name)
+	knownStruct, got := curEnv.KnownFactInMatchEnv.Get(ver.env.CurMatchProp.PropName.PkgName, ver.env.CurMatchProp.PropName.Name)
 
 	if !got {
 		return false, nil
@@ -1140,7 +1140,7 @@ LoopOverFacts:
 				if !ok {
 					return false, fmt.Errorf("known param %s is not an atom", param.String())
 				}
-				previousUniMap[atom.Name] = ver.env.CurMatchEnv.Params[i]
+				previousUniMap[atom.Name] = ver.env.CurMatchProp.Params[i]
 			}
 			previousSuppose = knownFact.EnvFact
 		}
@@ -1172,7 +1172,7 @@ LoopOverFacts:
 }
 
 func (ver *Verifier) useKnownOrFactToProveSpecFact(knownFact *env.KnownSpecFact_InLogicExpr, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	ver.newEnv(ver.env, ver.env.CurMatchEnv)
+	ver.newEnv(ver.env, ver.env.CurMatchProp)
 	defer ver.deleteEnvAndRetainMsg()
 
 	ok, err := ver.matchTwoSpecFacts(stmt, knownFact.SpecFact, state)
@@ -1256,7 +1256,7 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_MatchEnv_applyMatch(stmt *ast.S
 				if !ok {
 					return false, fmt.Errorf("known param %s is not an atom", param.String())
 				}
-				uniMapForMatchEnv[atom.Name] = ver.env.CurMatchEnv.Params[i]
+				uniMapForMatchEnv[atom.Name] = ver.env.CurMatchProp.Params[i]
 			}
 			previousSuppose = knownFact.EnvFact
 		}

@@ -308,7 +308,7 @@ func (ver *Verifier) verSpecFactUniMem(stmt *ast.SpecFactStmt, state VerState) (
 }
 
 func (ver *Verifier) verify_specFact_when_given_orStmt_is_true(stmt *ast.SpecFactStmt, orStmt *ast.OrStmt, index int, state VerState) (bool, error) {
-	ver.newEnv(ver.env, ver.env.CurMatchEnv)
+	ver.newEnv(ver.env, ver.env.CurMatchProp)
 	defer ver.deleteEnvAndRetainMsg()
 
 	// 其他是否都错

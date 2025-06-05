@@ -29,7 +29,7 @@ func (ver *Verifier) verOrStmt(stmt *ast.OrStmt, state VerState) (bool, error) {
 }
 
 func (ver *Verifier) verFactAtIndex_WhenOthersAreFalse(facts []ast.SpecFactStmt, i int, state VerState) (bool, error) {
-	ver.newEnv(ver.env, ver.env.CurMatchEnv)
+	ver.newEnv(ver.env, ver.env.CurMatchProp)
 	defer ver.deleteEnvAndRetainMsg()
 
 	for j := range facts {

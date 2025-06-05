@@ -24,7 +24,7 @@ func (ver *Verifier) verUniFact(stmt *ast.UniFactStmt, state VerState) (bool, er
 	}
 
 	// 在局部环境声明新变量
-	ver.newEnv(ver.env, ver.env.CurMatchEnv)
+	ver.newEnv(ver.env, ver.env.CurMatchProp)
 	defer ver.deleteEnvAndRetainMsg()
 
 	// 声明变量
@@ -113,7 +113,7 @@ func (ver *Verifier) uniFactWithIff(stmt *ast.UniFactStmt, state VerState) (bool
 }
 
 func (ver *Verifier) uniFactWithIff_CheckThenToIff(stmt *ast.UniFactStmt, state VerState) (bool, error) {
-	ver.newEnv(ver.env, ver.env.CurMatchEnv)
+	ver.newEnv(ver.env, ver.env.CurMatchProp)
 	defer ver.deleteEnvAndRetainMsg()
 	for _, condFact := range stmt.ThenFacts {
 		err := ver.env.NewFact(condFact)
@@ -151,7 +151,7 @@ func (ver *Verifier) uniFactWithIff_CheckThenToIff(stmt *ast.UniFactStmt, state 
 }
 
 func (ver *Verifier) uniFactWithIff_CheckIffToThen(stmt *ast.UniFactStmt, state VerState) (bool, error) {
-	ver.newEnv(ver.env, ver.env.CurMatchEnv)
+	ver.newEnv(ver.env, ver.env.CurMatchProp)
 	defer ver.deleteEnvAndRetainMsg()
 	for _, condFact := range stmt.IffFacts {
 		err := ver.env.NewFact(condFact)

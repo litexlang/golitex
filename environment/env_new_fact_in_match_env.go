@@ -20,8 +20,8 @@ func (env *Env) storeSpecFactInMem(stmt *ast.SpecFactStmt) error {
 	var knownFactsStructPtr *KnownFactsStruct
 	var ok bool
 
-	if env.CurMatchEnv != nil {
-		envFact := env.CurMatchEnv
+	if env.CurMatchProp != nil {
+		envFact := env.CurMatchProp
 		knownFactsStructPtr, ok = env.GetFactsFromKnownFactInMatchEnv(envFact)
 		if !ok {
 			env.KnownFactInMatchEnv[envFact.PropName.PkgName] = make(map[string]KnownFactsStruct)
@@ -33,7 +33,7 @@ func (env *Env) storeSpecFactInMem(stmt *ast.SpecFactStmt) error {
 		knownFactsStructPtr = &env.KnownFactsStruct
 	}
 
-	err := knownFactsStructPtr.SpecFactMem.newFact(stmt, env.CurMatchEnv)
+	err := knownFactsStructPtr.SpecFactMem.newFact(stmt, env.CurMatchProp)
 	if err != nil {
 		return err
 	}
@@ -45,8 +45,8 @@ func (env *Env) storeLogicFact(stmt *ast.OrStmt) error {
 	var knownFactsStructPtr *KnownFactsStruct
 	var ok bool
 
-	if env.CurMatchEnv != nil {
-		envFact := env.CurMatchEnv
+	if env.CurMatchProp != nil {
+		envFact := env.CurMatchProp
 		knownFactsStructPtr, ok = env.GetFactsFromKnownFactInMatchEnv(envFact)
 		if !ok {
 			env.KnownFactInMatchEnv[envFact.PropName.PkgName] = make(map[string]KnownFactsStruct)
@@ -58,7 +58,7 @@ func (env *Env) storeLogicFact(stmt *ast.OrStmt) error {
 		knownFactsStructPtr = &env.KnownFactsStruct
 	}
 
-	err := knownFactsStructPtr.SpecFactInLogicExprMem.newFact(stmt, env.CurMatchEnv)
+	err := knownFactsStructPtr.SpecFactInLogicExprMem.newFact(stmt, env.CurMatchProp)
 	if err != nil {
 		return nil
 	}
@@ -70,8 +70,8 @@ func (env *Env) storeUniFact(specFact *ast.SpecFactStmt, uniFact *ast.UniFactStm
 	var knownFactsStructPtr *KnownFactsStruct
 	var ok bool
 
-	if env.CurMatchEnv != nil {
-		envFact := env.CurMatchEnv
+	if env.CurMatchProp != nil {
+		envFact := env.CurMatchProp
 		knownFactsStructPtr, ok = env.GetFactsFromKnownFactInMatchEnv(envFact)
 		if !ok {
 			env.KnownFactInMatchEnv[envFact.PropName.PkgName] = make(map[string]KnownFactsStruct)
@@ -83,7 +83,7 @@ func (env *Env) storeUniFact(specFact *ast.SpecFactStmt, uniFact *ast.UniFactStm
 		knownFactsStructPtr = &env.KnownFactsStruct
 	}
 
-	err := knownFactsStructPtr.SpecFactInUniFactMem.newFact(specFact, uniFact, env.CurMatchEnv)
+	err := knownFactsStructPtr.SpecFactInUniFactMem.newFact(specFact, uniFact, env.CurMatchProp)
 	if err != nil {
 		return err
 	}
