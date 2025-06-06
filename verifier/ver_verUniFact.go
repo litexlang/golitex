@@ -19,7 +19,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verUniFact(stmt *ast.UniFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state VerState) (bool, error) {
 	if state.isFinalRound() {
 		return false, nil
 	}
@@ -29,15 +29,46 @@ func (ver *Verifier) verUniFact(stmt *ast.UniFactStmt, state VerState) (bool, er
 	defer ver.deleteEnvAndRetainMsg()
 
 	// 声明变量
-	paramMap := processUniFactParams(ver.env, stmt.Params)
+	paramMap, paramMapStrToStr := processUniFactParams(ver.env, oldStmt.Params)
+
+	var newStmt ast.UniFactStmt
 	if len(paramMap) == 0 {
-		ver.env.ObjDefMem.Insert(ast.NewDefObjStmt(stmt.Params, stmt.ParamSets, []ast.FactStmt{}, []ast.FactStmt{}), glob.EmptyPkg)
+		ver.env.ObjDefMem.Insert(ast.NewDefObjStmt(oldStmt.Params, oldStmt.ParamSets, []ast.FactStmt{}, []ast.FactStmt{}), glob.EmptyPkg)
+		newStmt = *oldStmt
 	} else {
-		panic("not implemented")
+		for i, setParam := range oldStmt.ParamSets {
+			newSetParam, err := setParam.Instantiate(paramMap)
+			if err != nil {
+				return false, err
+			}
+			newStmt.ParamSets[i] = newSetParam
+		}
+
+		for i, param := range oldStmt.Params {
+			if newParam, ok := paramMapStrToStr[param]; ok {
+				newStmt.Params[i] = newParam
+			}
+		}
+
+		for _, stmt := range oldStmt.DomFacts {
+			stmt.Instantiate(paramMap)
+		}
+
+		for _, stmt := range oldStmt.ThenFacts {
+			stmt.Instantiate(paramMap)
+		}
+
+		for _, stmt := range oldStmt.IffFacts {
+			stmt.Instantiate(paramMap)
+		}
+
+		for _, stmt := range oldStmt.ParamInSetsFacts {
+			stmt.Instantiate(paramMap)
+		}
 	}
 
 	// 查看param set 是否已经声明
-	for _, paramSet := range stmt.ParamSets {
+	for _, paramSet := range newStmt.ParamSets {
 		atoms := ast.GetAtomsInFc(paramSet)
 		for _, atom := range atoms {
 			if !ver.env.IsAtomDeclared(atom) {
@@ -47,17 +78,17 @@ func (ver *Verifier) verUniFact(stmt *ast.UniFactStmt, state VerState) (bool, er
 	}
 
 	// know cond facts
-	for _, condFact := range stmt.DomFacts {
+	for _, condFact := range newStmt.DomFacts {
 		err := ver.env.NewFact(condFact)
 		if err != nil {
 			return false, err
 		}
 	}
 
-	if stmt.IffFacts == nil {
-		return ver.uniFactWithoutIff(stmt, state)
+	if newStmt.IffFacts == nil {
+		return ver.uniFactWithoutIff(&newStmt, state)
 	} else {
-		return ver.uniFactWithIff(stmt, state)
+		return ver.uniFactWithIff(&newStmt, state)
 	}
 }
 
@@ -188,8 +219,9 @@ func (ver *Verifier) uniFactWithIff_CheckIffToThen(stmt *ast.UniFactStmt, state 
 	return true, nil
 }
 
-func processUniFactParams(env *env.Env, params []string) map[string]ast.Fc {
+func processUniFactParams(env *env.Env, params []string) (map[string]ast.Fc, map[string]string) {
 	paramMap := make(map[string]ast.Fc)
+	paramMapStrToStr := make(map[string]string)
 	for _, param := range params {
 		newParam := param
 		for env.IsAtomDeclared(ast.NewFcAtom(glob.EmptyPkg, newParam)) {
@@ -197,7 +229,8 @@ func processUniFactParams(env *env.Env, params []string) map[string]ast.Fc {
 		}
 		if param != newParam {
 			paramMap[param] = ast.NewFcAtom(glob.EmptyPkg, newParam)
+			paramMapStrToStr[param] = newParam
 		}
 	}
-	return paramMap
+	return paramMap, paramMapStrToStr
 }
