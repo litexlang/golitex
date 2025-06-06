@@ -63,7 +63,7 @@ func (knownSpecFact *KnownSpecFact_InLogicExpr) String() string {
 	}
 }
 
-func (knownSpecFact *KnownSpecFact_InUniSpecFact) String() string {
+func (knownSpecFact *KnownSpecFact_InUniFact) String() string {
 	var builder strings.Builder
 	if knownSpecFact.EnvFact == nil {
 		builder.WriteString(knownSpecFact.UniFact.String())

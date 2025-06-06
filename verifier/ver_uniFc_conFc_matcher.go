@@ -17,13 +17,12 @@ import (
 	cmp "golitex/cmp"
 	env "golitex/environment"
 	glob "golitex/glob"
-	"strings"
 )
 
 // REMARK: 2025.6.4 这个文件很本质，需要未来检查一下里面逻辑有没有问题
 
 // match 函数不需要传入state: 没有any, spec 之分，也不需要打印
-func (ver *Verifier) matchStoredUniSpecWithSpec_preventDifferentVarsMatchTheSameFreeVar(knownFact env.KnownSpecFact_InUniSpecFact, stmt *ast.SpecFactStmt) (map[string][]ast.Fc, bool, error) { // 之所以是map[string][]ast.Fc而不是 map[string]ast.Fc, 因为可能用户输入的是字面量相同，实际意义一样的obj
+func (ver *Verifier) matchStoredUniSpecWithSpec_preventDifferentVarsMatchTheSameFreeVar(knownFact env.KnownSpecFact_InUniFact, stmt *ast.SpecFactStmt) (map[string][]ast.Fc, bool, error) { // 之所以是map[string][]ast.Fc而不是 map[string]ast.Fc, 因为可能用户输入的是字面量相同，实际意义一样的obj
 	if len(stmt.Params) != len(knownFact.SpecFact.Params) {
 		return nil, false, nil
 	}
@@ -32,7 +31,7 @@ func (ver *Verifier) matchStoredUniSpecWithSpec_preventDifferentVarsMatchTheSame
 
 	for i, uniParam := range knownFact.SpecFact.Params {
 		// matchMap, matched, err := ver.match_FcInFactUnderUniFact_WithConFc(uniParam, stmt.Params[i], knownFact.UniFact.Params)
-		matchMap, matched, err := ver.match_FcInFactUnderUniFact_WithConFc(uniParam, stmt.Params[i])
+		matchMap, matched, err := ver.match_FcInFactUnderUniFact_WithConFc(uniParam, stmt.Params[i], knownFact)
 		if err != nil {
 			return nil, false, err
 		}
@@ -45,10 +44,19 @@ func (ver *Verifier) matchStoredUniSpecWithSpec_preventDifferentVarsMatchTheSame
 	return retMap, true, nil
 }
 
+func isFcAtomInForallParamSet(fcAtom *ast.FcAtom, knownFact env.KnownSpecFact_InUniFact) bool {
+	for _, param := range knownFact.UniFact.Params {
+		if fcAtom.PkgName == glob.EmptyPkg && param == fcAtom.Name {
+			return true
+		}
+	}
+	return false
+}
+
 // paramInFactUnderUniFact 可能是自由的，可能是固定的，反正它来自一个forall下面的某个specFact
-func (ver *Verifier) match_FcInFactUnderUniFact_WithConFc(fcInFactUnderUniFact ast.Fc, conFc ast.Fc) (map[string][]ast.Fc, bool, error) {
+func (ver *Verifier) match_FcInFactUnderUniFact_WithConFc(fcInFactUnderUniFact ast.Fc, conFc ast.Fc, knownFact env.KnownSpecFact_InUniFact) (map[string][]ast.Fc, bool, error) {
 	if leftAsAtom, ok := fcInFactUnderUniFact.(*ast.FcAtom); ok {
-		if strings.HasPrefix(leftAsAtom.Name, glob.UniParamPrefix) {
+		if isFcAtomInForallParamSet(leftAsAtom, knownFact) {
 			return map[string][]ast.Fc{leftAsAtom.Name: {conFc}}, true, nil
 		} else {
 			ok, err := cmp.BuiltinFcEqualRule(fcInFactUnderUniFact, conFc)
@@ -62,7 +70,7 @@ func (ver *Verifier) match_FcInFactUnderUniFact_WithConFc(fcInFactUnderUniFact a
 			return ver.match_FcAtomInFactUnderUniFact_ConFc(leftAsAtom, conFc)
 		}
 	} else {
-		return ver.match_FcFnInFactUnderUniFact_ConFc(fcInFactUnderUniFact.(*ast.FcFn), conFc)
+		return ver.match_FcFnInFactUnderUniFact_ConFc(fcInFactUnderUniFact.(*ast.FcFn), conFc, knownFact)
 	}
 
 	// 注意到，如果传入的不是fn，而是atom，那大概率是不能match上的。只有一种例外:
@@ -120,7 +128,7 @@ func (ver *Verifier) match_FcAtomInFactUnderUniFact_ConFc(fcAtomInFactUnderUniFa
 }
 
 // func (ver *Verifier) match_FcFnInFactUnderUniFact_ConFc(fcFnUnFactUnderUniFact *ast.FcFn, conFc ast.Fc, uniParams []string) (map[string][]ast.Fc, bool, error) {
-func (ver *Verifier) match_FcFnInFactUnderUniFact_ConFc(fcFnUnFactUnderUniFact *ast.FcFn, conFc ast.Fc) (map[string][]ast.Fc, bool, error) {
+func (ver *Verifier) match_FcFnInFactUnderUniFact_ConFc(fcFnUnFactUnderUniFact *ast.FcFn, conFc ast.Fc, knownFact env.KnownSpecFact_InUniFact) (map[string][]ast.Fc, bool, error) {
 	retMap := map[string][]ast.Fc{}
 
 	conParamAsFcFn, ok := conFc.(*ast.FcFn)
@@ -130,7 +138,7 @@ func (ver *Verifier) match_FcFnInFactUnderUniFact_ConFc(fcFnUnFactUnderUniFact *
 
 	// match head
 	// matchMap, ok, err := ver.match_FcInFactUnderUniFact_WithConFc(fcFnUnFactUnderUniFact.FnHead, conParamAsFcFn.FnHead, uniParams)
-	matchMap, ok, err := ver.match_FcInFactUnderUniFact_WithConFc(fcFnUnFactUnderUniFact.FnHead, conParamAsFcFn.FnHead)
+	matchMap, ok, err := ver.match_FcInFactUnderUniFact_WithConFc(fcFnUnFactUnderUniFact.FnHead, conParamAsFcFn.FnHead, knownFact)
 	if err != nil {
 		return nil, false, err
 	}
@@ -145,7 +153,7 @@ func (ver *Verifier) match_FcFnInFactUnderUniFact_ConFc(fcFnUnFactUnderUniFact *
 
 	for i, uniPipe := range fcFnUnFactUnderUniFact.ParamSegs {
 		// matchMap, ok, err := ver.match_FcInFactUnderUniFact_WithConFc(param, conParamAsFcFn.ParamSegs[i][j], uniParams)
-		matchMap, ok, err := ver.match_FcInFactUnderUniFact_WithConFc(uniPipe, conParamAsFcFn.ParamSegs[i])
+		matchMap, ok, err := ver.match_FcInFactUnderUniFact_WithConFc(uniPipe, conParamAsFcFn.ParamSegs[i], knownFact)
 		if err != nil {
 			return nil, false, err
 		}
