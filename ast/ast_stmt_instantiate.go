@@ -140,7 +140,7 @@ func (stmt *UniFactStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
 }
 
 func (defHeader *DefHeader) Instantiate(uniMap map[string]Fc) (*DefHeader, error) {
-	newDefHeader := NewDefHeader(defHeader.Name, defHeader.Params, make([]Fc, len(defHeader.SetParams)), make([]FactStmt, len(defHeader.ParamInSetsFacts)))
+	newDefHeader := NewDefHeader(defHeader.Name, defHeader.Params, make([]Fc, len(defHeader.SetParams)))
 
 	for i, setParam := range defHeader.SetParams {
 		newSetParam, err := setParam.Instantiate(uniMap)
@@ -148,14 +148,6 @@ func (defHeader *DefHeader) Instantiate(uniMap map[string]Fc) (*DefHeader, error
 			return nil, err
 		}
 		newDefHeader.SetParams[i] = newSetParam
-	}
-
-	for i, inSetFact := range defHeader.ParamInSetsFacts {
-		newSetParam, err := inSetFact.Instantiate(uniMap)
-		if err != nil {
-			return nil, err
-		}
-		newDefHeader.ParamInSetsFacts[i] = newSetParam
 	}
 
 	return newDefHeader, nil

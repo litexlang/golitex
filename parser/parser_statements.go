@@ -486,7 +486,7 @@ func (tb *tokenBlock) defHeader() (*ast.DefHeader, error) {
 		return nil, err
 	}
 
-	return ast.NewDefHeader(name, params, setParams, []ast.FactStmt{}), nil
+	return ast.NewDefHeader(name, params, setParams), nil
 }
 
 func (tb *tokenBlock) defExistPropStmt() (*ast.DefExistPropStmt, error) {

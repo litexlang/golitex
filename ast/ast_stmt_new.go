@@ -52,8 +52,8 @@ func NewFcFnDecl(name string, params []string) *FcFnDecl {
 	return &FcFnDecl{name, params}
 }
 
-func NewDefHeader(name string, params []string, setParams []Fc, paramInSetsFacts []FactStmt) *DefHeader {
-	return &DefHeader{name, params, setParams, paramInSetsFacts}
+func NewDefHeader(name string, params []string, setParams []Fc) *DefHeader {
+	return &DefHeader{name, params, setParams}
 }
 
 func NewHaveStmt(objNames []string, fact SpecFactStmt) *HaveStmt {
