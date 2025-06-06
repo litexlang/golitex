@@ -28,8 +28,8 @@ func NewDefPropStmt(defHeader DefHeader, domFacts []FactStmt, iffFacts []FactStm
 	return &DefPropStmt{defHeader, domFacts, iffFacts}
 }
 
-func NewDefExistPropStmt(def *DefExistPropStmtBody, existParams []string, existInSetsFacts []FactStmt) *DefExistPropStmt {
-	return &DefExistPropStmt{*def, existParams, existInSetsFacts}
+func NewDefExistPropStmt(def *DefExistPropStmtBody, existParams []string, existParamSets []Fc) *DefExistPropStmt {
+	return &DefExistPropStmt{*def, existParams, existParamSets}
 }
 
 func NewDefFnStmt(defHeader DefHeader, domFacts []FactStmt, thenFacts []FactStmt, retSet Fc) *DefFnStmt {
