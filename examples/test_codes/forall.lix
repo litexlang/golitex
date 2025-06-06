@@ -1,13 +1,10 @@
-prove:
-    prop p(x N)
+prop mortal(x human)
 
+know:
+    forall x human:
+        $mortal(x)
 
-    know:
-        forall x N:
-            $p(x)
+obj x human
 
-    $p(1)
-
-    forall y N:
-        $p(y)
-        
+with $mortal(x):
+    $mortal(x)

@@ -98,9 +98,9 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 	return ret, nil
 }
 
-func (tb *tokenBlock) factStmt(curAllowUniFactEnum AllowUniFactEnum) (ast.FactStmt, error) {
+func (tb *tokenBlock) factStmt(uniFactDepth uniFactEnum) (ast.FactStmt, error) {
 	if tb.header.is(glob.KeywordForall) {
-		return tb.uniFactStmt(curAllowUniFactEnum)
+		return tb.uniFactStmt(uniFactDepth)
 	} else if tb.header.is(glob.KeywordOr) {
 		return tb.orStmt()
 	} else {
@@ -173,7 +173,7 @@ func (tb *tokenBlock) specFactStmt() (*ast.SpecFactStmt, error) {
 	}
 }
 
-func (tb *tokenBlock) uniFactStmt(curAllowUniFactEnum AllowUniFactEnum) (*ast.UniFactStmt, error) {
+func (tb *tokenBlock) uniFactStmt(uniFactDepth uniFactEnum) (*ast.UniFactStmt, error) {
 	err := tb.header.skip(glob.KeywordForall)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
@@ -185,7 +185,7 @@ func (tb *tokenBlock) uniFactStmt(curAllowUniFactEnum AllowUniFactEnum) (*ast.Un
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	domainFacts, thenFacts, iffFacts, err := tb.uniFactBodyFacts(curAllowUniFactEnum.addDepth(), glob.KeywordThen)
+	domainFacts, thenFacts, iffFacts, err := tb.uniFactBodyFacts(uniFactDepth.addDepth(), glob.KeywordThen)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -197,10 +197,10 @@ func (tb *tokenBlock) uniFactStmt(curAllowUniFactEnum AllowUniFactEnum) (*ast.Un
 	return ast.NewUniFactStmtWithSetReqInDom(params, setParams, domainFacts, thenFacts, iffFacts, paramInSetsFacts), nil
 }
 
-func (tb *tokenBlock) bodyFacts(curAllowUniFactEnum AllowUniFactEnum) ([]ast.FactStmt, error) {
+func (tb *tokenBlock) bodyFacts(uniFactDepth uniFactEnum) ([]ast.FactStmt, error) {
 	facts := []ast.FactStmt{}
 	for _, f := range tb.body {
-		fact, err := f.factStmt(curAllowUniFactEnum)
+		fact, err := f.factStmt(uniFactDepth)
 		if err != nil {
 			return nil, err
 		}
@@ -740,13 +740,13 @@ func (tb *tokenBlock) defHaveStmt() (*ast.HaveStmt, error) {
 	return ast.NewHaveStmt(objNames, *fact), nil
 }
 
-func (tb *tokenBlock) bodyBlockFacts(curAllowUniFactEnum AllowUniFactEnum, parseBodyFactNum int) ([]ast.FactStmt, error) {
+func (tb *tokenBlock) bodyBlockFacts(uniFactDepth uniFactEnum, parseBodyFactNum int) ([]ast.FactStmt, error) {
 	facts := []ast.FactStmt{}
 
-	if curAllowUniFactEnum.allowMoreDepth() {
+	if uniFactDepth.allowMoreDepth() {
 		for i := range parseBodyFactNum {
 			stmt := tb.body[i]
-			fact, err := stmt.factStmt(curAllowUniFactEnum) // no longer allow further uniFact
+			fact, err := stmt.factStmt(uniFactDepth) // no longer allow further uniFact
 			if err != nil {
 				return nil, &tokenBlockErr{err, *tb}
 			}
@@ -889,7 +889,7 @@ func (tb *tokenBlock) uniFactStmt_WithoutUniPrefix_InClaimStmt() (*ast.UniFactSt
 	return ast.NewUniFactStmtWithSetReqInDom(params, setParams, domainFacts, thenFacts, iffFacts, paramInSetsFacts), nil
 }
 
-func (tb *tokenBlock) uniFactBodyFacts(curAllowUniFactEnum AllowUniFactEnum, defaultSectionName string) ([]ast.FactStmt, []ast.FactStmt, []ast.FactStmt, error) {
+func (tb *tokenBlock) uniFactBodyFacts(uniFactDepth uniFactEnum, defaultSectionName string) ([]ast.FactStmt, []ast.FactStmt, []ast.FactStmt, error) {
 	domFacts := []ast.FactStmt{}
 	thenFacts := []ast.FactStmt{}
 	iffFacts := []ast.FactStmt{}
@@ -915,7 +915,7 @@ func (tb *tokenBlock) uniFactBodyFacts(curAllowUniFactEnum AllowUniFactEnum, def
 			if err != nil {
 				return nil, nil, nil, err
 			}
-			facts, err := stmt.bodyBlockFacts(curAllowUniFactEnum, len(stmt.body))
+			facts, err := stmt.bodyBlockFacts(uniFactDepth, len(stmt.body))
 			if err != nil {
 				return nil, nil, nil, err
 			}
@@ -931,7 +931,7 @@ func (tb *tokenBlock) uniFactBodyFacts(curAllowUniFactEnum AllowUniFactEnum, def
 			}
 		}
 	} else if tb.body[len(tb.body)-1].header.is(glob.KeywordThen) {
-		domFacts, err = tb.bodyBlockFacts(curAllowUniFactEnum, len(tb.body)-1)
+		domFacts, err = tb.bodyBlockFacts(uniFactDepth, len(tb.body)-1)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -940,12 +940,12 @@ func (tb *tokenBlock) uniFactBodyFacts(curAllowUniFactEnum AllowUniFactEnum, def
 		if err != nil {
 			return nil, nil, nil, err
 		}
-		thenFacts, err = tb.body[len(tb.body)-1].bodyBlockFacts(curAllowUniFactEnum, len(tb.body[len(tb.body)-1].body))
+		thenFacts, err = tb.body[len(tb.body)-1].bodyBlockFacts(uniFactDepth, len(tb.body[len(tb.body)-1].body))
 		if err != nil {
 			return nil, nil, nil, err
 		}
 	} else if tb.body[len(tb.body)-1].header.is(glob.KeywordIff) {
-		thenFacts, err = tb.bodyBlockFacts(curAllowUniFactEnum, len(tb.body)-1)
+		thenFacts, err = tb.bodyBlockFacts(uniFactDepth, len(tb.body)-1)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -954,18 +954,18 @@ func (tb *tokenBlock) uniFactBodyFacts(curAllowUniFactEnum AllowUniFactEnum, def
 		if err != nil {
 			return nil, nil, nil, err
 		}
-		iffFacts, err = tb.body[len(tb.body)-1].bodyBlockFacts(curAllowUniFactEnum, len(tb.body[len(tb.body)-1].body))
+		iffFacts, err = tb.body[len(tb.body)-1].bodyBlockFacts(uniFactDepth, len(tb.body[len(tb.body)-1].body))
 		if err != nil {
 			return nil, nil, nil, err
 		}
 	} else {
 		if defaultSectionName == glob.KeywordThen {
-			thenFacts, err = tb.bodyBlockFacts(curAllowUniFactEnum, len(tb.body))
+			thenFacts, err = tb.bodyBlockFacts(uniFactDepth, len(tb.body))
 			if err != nil {
 				return nil, nil, nil, err
 			}
 		} else if defaultSectionName == glob.KeywordIff {
-			iffFacts, err = tb.bodyBlockFacts(curAllowUniFactEnum, len(tb.body))
+			iffFacts, err = tb.bodyBlockFacts(uniFactDepth, len(tb.body))
 			if err != nil {
 				return nil, nil, nil, err
 			}
