@@ -413,12 +413,6 @@ func (tb *tokenBlock) relaFactStmt() (*ast.SpecFactStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	// add prefix to fc
-	// fc, err = ast.AddUniPrefixToFc(fc)
-	// if err != nil {
-	// 	return nil, &tokenBlockErr{err, *tb}
-	// }
-
 	if tb.header.strAtCurIndexPlus(0) == glob.KeywordIs {
 		return tb.header.isExpr(fc)
 	}
@@ -435,10 +429,6 @@ func (tb *tokenBlock) relaFactStmt() (*ast.SpecFactStmt, error) {
 		}
 		var propNamePtr ast.Fc = propName
 
-		// propNamePtr, err = ast.AddUniPrefixToFc(propNamePtr)
-		// if err != nil {
-		// 	return nil, &tokenBlockErr{err, *tb}
-		// }
 		propNameAsAtomPtr, ok := propNamePtr.(*ast.FcAtom)
 		if !ok {
 			return nil, fmt.Errorf("expect prop name")
@@ -450,11 +440,6 @@ func (tb *tokenBlock) relaFactStmt() (*ast.SpecFactStmt, error) {
 			return nil, &tokenBlockErr{err, *tb}
 		}
 
-		// fc2, err = ast.AddUniPrefixToFc(fc2)
-		// if err != nil {
-		// 	return nil, &tokenBlockErr{err, *tb}
-		// }
-
 		params := []ast.Fc{fc, fc2}
 
 		ret = ast.NewSpecFactStmt(ast.TruePure, *propName, params)
@@ -465,12 +450,6 @@ func (tb *tokenBlock) relaFactStmt() (*ast.SpecFactStmt, error) {
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
 		}
-
-		// add prefix to fc2
-		// fc2, err = ast.AddUniPrefixToFc(fc2)
-		// if err != nil {
-		// 	return nil, &tokenBlockErr{err, *tb}
-		// }
 
 		// 必须到底了
 		if !tb.header.ExceedEnd() {
@@ -552,17 +531,7 @@ func (tb *tokenBlock) defExistPropStmt() (*ast.DefExistPropStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	// nameDepthMap := ast.NameDepthMap{}
-	// for _, existParam := range existParams {
-	// 	nameDepthMap[existParam] = 1
-	// }
-
 	def, err := tb.defExistPropStmtBody()
-
-	// add prefix to existParams
-	// for i := range existParams {
-	// 	existParams[i] = fmt.Sprintf("%s%s", glob.UniParamPrefix, existParams[i])
-	// }
 
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
@@ -583,18 +552,6 @@ func (tb *tokenBlock) existFactStmt(isTrue bool) (*ast.SpecFactStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	// if tb.header.is(glob.FuncFactPrefix) {
-	// 	pureSpecFact, err := tb.pureFuncSpecFact(nameDepthMap)
-	// 	if err != nil {
-	// 		return nil, &tokenBlockErr{err, *tb}
-	// 	}
-
-	// 	if isTrue {
-	// 		return ast.NewSpecFactStmt(ast.TrueExist, pureSpecFact.PropName, pureSpecFact.Params), nil
-	// 	} else {
-	// 		return ast.NewSpecFactStmt(ast.FalseExist, pureSpecFact.PropName, pureSpecFact.Params), nil
-	// 	}
-	// } else {
 	existParams := []ast.Fc{}
 
 	for !tb.header.is(glob.KeywordSt) {
@@ -614,14 +571,6 @@ func (tb *tokenBlock) existFactStmt(isTrue bool) (*ast.SpecFactStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	// add prefix to existParams
-	// for i := range existParams {
-	// 	existParams[i], err = ast.AddUniPrefixToFc(existParams[i])
-	// 	if err != nil {
-	// 		return nil, &tokenBlockErr{err, *tb}
-	// 	}
-	// }
-
 	pureSpecFact, err := tb.pureFuncSpecFact()
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
@@ -637,7 +586,6 @@ func (tb *tokenBlock) existFactStmt(isTrue bool) (*ast.SpecFactStmt, error) {
 	} else {
 		return ast.NewSpecFactStmt(ast.FalseExist_St, pureSpecFact.PropName, factParams), nil
 	}
-	// }
 }
 
 func (tb *tokenBlock) pureFuncSpecFact() (*ast.SpecFactStmt, error) {
@@ -649,13 +597,6 @@ func (tb *tokenBlock) pureFuncSpecFact() (*ast.SpecFactStmt, error) {
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
-
-	// propName = *ast.AddUniPrefixToFcAtom(&propName, nameDepthMap)
-	// prefixedPropName, err := ast.AddUniPrefixToFcAtom(propName)
-	// if err != nil {
-	// 	return nil, &tokenBlockErr{err, *tb}
-	// }
-	// propName = prefixedPropName
 
 	params := []ast.Fc{}
 	err = tb.header.skip(glob.KeySymbolLeftBrace)
@@ -669,12 +610,6 @@ func (tb *tokenBlock) pureFuncSpecFact() (*ast.SpecFactStmt, error) {
 			if err != nil {
 				return nil, &tokenBlockErr{err, *tb}
 			}
-
-			// add prefix to param
-			// param, err = ast.AddUniPrefixToFc(param)
-			// if err != nil {
-			// 	return nil, &tokenBlockErr{err, *tb}
-			// }
 
 			params = append(params, param)
 
@@ -855,21 +790,20 @@ func (tb *tokenBlock) setDefStmt() (*ast.SetDefSetBuilderStmt, error) {
 
 func (tb *tokenBlock) claimToCheckFact() (ast.FactStmt, error) {
 	if tb.header.is(glob.KeywordForall) {
-		return tb.uniFactStmt_WithoutUniPrefix_InClaimStmt()
+		return tb.uniFactStmt_InClaimStmt()
 	} else {
 		return tb.specFactStmt()
 	}
 }
 
 // claim 因为实在太难instantiate了(要让所有的stmt都添加instantiate这个方法，太难了)，所以不能让用户随便命名forall里的参数了，用户只能用不存在的参数名
-func (tb *tokenBlock) uniFactStmt_WithoutUniPrefix_InClaimStmt() (*ast.UniFactStmt, error) {
-	// 不能直接用 uniFact  parse 因为我不能让 body 的 fact 里的 涉及forall param list的时候，我不加 prefix，我只有在 runtime 来加
+func (tb *tokenBlock) uniFactStmt_InClaimStmt() (*ast.UniFactStmt, error) {
 	err := tb.header.skip(glob.KeywordForall)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	params, setParams, paramInSetsFacts, err := tb.uniFactHeadWithoutUniPrefix(glob.KeySymbolColon)
+	declHeader, err := tb.defHeader()
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -885,7 +819,7 @@ func (tb *tokenBlock) uniFactStmt_WithoutUniPrefix_InClaimStmt() (*ast.UniFactSt
 		return nil, fmt.Errorf("universal fact in claim statement should not have iff facts")
 	}
 
-	return ast.NewUniFactStmtWithSetReqInDom(params, setParams, domainFacts, thenFacts, iffFacts, paramInSetsFacts), nil
+	return ast.NewUniFactStmtWithSetReqInDom(declHeader.Params, declHeader.SetParams, domainFacts, thenFacts, iffFacts, declHeader.ParamInSetsFacts), nil
 }
 
 func (tb *tokenBlock) uniFactBodyFacts(uniFactDepth uniFactEnum, defaultSectionName string) ([]ast.FactStmt, []ast.FactStmt, []ast.FactStmt, error) {
@@ -1177,43 +1111,6 @@ func (tb *tokenBlock) knowExistPropStmt() (*ast.KnowExistPropStmt, error) {
 	}
 
 	return ast.NewKnowExistPropStmt(*existProp), nil
-}
-
-func (tb *tokenBlock) uniFactHeadWithoutUniPrefix(endWith string) ([]string, []ast.Fc, []ast.FactStmt, error) {
-	paramName := []string{}
-	paramInSetsFacts := []ast.FactStmt{}
-	setParams := []ast.Fc{}
-
-	for !tb.header.is(endWith) {
-		objName, err := tb.header.next()
-		if err != nil {
-			return nil, nil, nil, err
-		}
-
-		if tb.header.is(glob.KeySymbolComma) {
-			tb.header.skip(glob.KeySymbolComma)
-			continue
-		} else if tb.header.is(endWith) {
-			break
-		} else {
-			tp, err := tb.header.rawFc()
-			if err != nil {
-				return nil, nil, nil, err
-			}
-
-			paramName = append(paramName, objName)
-			paramInSetsFacts = append(paramInSetsFacts, ast.Param_ParamSet_ToInFact(objName, tp))
-			setParams = append(setParams, tp)
-
-			tb.header.skipIfIs(glob.KeySymbolComma)
-		}
-	}
-
-	if tb.header.isAndSkip(endWith) {
-		return paramName, setParams, paramInSetsFacts, nil
-	} else {
-		return nil, nil, nil, fmt.Errorf("expected '%s' but got '%s'", endWith, tb.header.strAtCurIndexPlus(0))
-	}
 }
 
 func (tb *tokenBlock) param_paramSet_paramInSetFacts(endWith string) ([]string, []ast.Fc, []ast.FactStmt, error) {
