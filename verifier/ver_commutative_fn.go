@@ -30,7 +30,6 @@ func (ver *Verifier) commutativeFnByDef(stmt *ast.SpecFactStmt, state VerState) 
 
 	uniFactParams := defOfFn.DefHeader.Params
 	uniSetParams := defOfFn.DefHeader.SetParams
-	uniFactParamInSetsFacts := defOfFn.DefHeader.ParamInSetsFacts
 	uniFactDomFacts := defOfFn.DomFacts
 
 	leftParam := ast.NewFcAtomWithName(uniFactParams[0])
@@ -49,7 +48,6 @@ func (ver *Verifier) commutativeFnByDef(stmt *ast.SpecFactStmt, state VerState) 
 		uniFactDomFacts,
 		[]ast.FactStmt{equalFact},
 		ast.EmptyIffFacts,
-		uniFactParamInSetsFacts,
 	)
 
 	ok, err := ver.FactStmt(uniFact, state.addRound())

@@ -19,9 +19,8 @@ import (
 )
 
 type tokenBlock struct {
-	header   strSliceCursor
-	body     []tokenBlock
-	messages []string
+	header strSliceCursor
+	body   []tokenBlock
 }
 
 func (b *tokenBlock) String() string {
@@ -57,11 +56,4 @@ func (tb *tokenBlock) TokenAtHeaderIndexIs(index int, kw string) bool {
 		return false
 	}
 	return tb.header.IsTokenAtIndexGivenWord(index, kw)
-}
-
-func (tb *tokenBlock) addMessage(msg string) {
-	if tb.messages == nil {
-		tb.messages = []string{}
-	}
-	tb.messages = append(tb.messages, msg)
 }
