@@ -43,7 +43,7 @@ func (ver *Verifier) commutativeFnByDef(stmt *ast.SpecFactStmt, state VerState) 
 
 	equalFact := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeySymbolEqual), []ast.Fc{leftFnParamOfEqualFact, rightFnParamOfEqualFact})
 
-	uniFact := ast.NewUniFactStmtWithSetReqInDom(
+	uniFact := ast.NewUniFact(
 		uniFactParams,
 		uniSetParams,
 		uniFactDomFacts,

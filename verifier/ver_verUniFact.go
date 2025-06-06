@@ -34,7 +34,7 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state VerState) (bool,
 	var newStmt *ast.UniFactStmt = oldStmt
 	var err error
 	if len(paramMap) == 0 {
-		ver.env.ObjDefMem.Insert(ast.NewDefObjStmt(oldStmt.Params, oldStmt.ParamSets, []ast.FactStmt{}, []ast.FactStmt{}), glob.EmptyPkg)
+		ver.env.ObjDefMem.Insert(ast.NewDefObjStmt(oldStmt.Params, oldStmt.ParamSets, []ast.FactStmt{}), glob.EmptyPkg)
 	} else {
 		for i, param := range oldStmt.Params {
 			if newParam, ok := paramMapStrToStr[param]; ok {

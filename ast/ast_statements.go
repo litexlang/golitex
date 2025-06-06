@@ -18,10 +18,10 @@ type TopStmt struct {
 }
 
 type DefObjStmt struct {
-	Objs             []string
-	ObjSets          []Fc
-	Facts            []FactStmt
-	ParamInSetsFacts []FactStmt
+	Objs    []string
+	ObjSets []Fc
+	Facts   []FactStmt
+	// ParamInSetsFacts []FactStmt
 }
 
 type DefHeader struct {

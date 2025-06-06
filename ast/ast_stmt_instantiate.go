@@ -141,7 +141,7 @@ func InstantiateUniFact(stmt *UniFactStmt, uniMap map[string]Fc) (*UniFactStmt, 
 		newParamInSetsFacts[i] = newFact
 	}
 
-	return newUniFactStmt(stmt.Params, newSetParams, newDomFacts, newThenFacts, newIffFacts, newParamInSetsFacts), nil
+	return NewUniFact(stmt.Params, newSetParams, newDomFacts, newThenFacts, newIffFacts, newParamInSetsFacts), nil
 }
 
 func (stmt *UniFactStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
