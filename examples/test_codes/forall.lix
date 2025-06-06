@@ -1,10 +1,14 @@
 prop mortal(x human)
+prop alive(x human)
 
 know:
     forall x human:
-        $mortal(x)
+        dom:
+            $alive(x)
+        then:
+            $mortal(x)
 
 obj x human
 
-with $mortal(x):
-    $mortal(x)
+know $alive(x)
+$mortal(x)

@@ -15,6 +15,7 @@ package litex_verifier
 import (
 	"fmt"
 	ast "golitex/ast"
+	env "golitex/environment"
 	glob "golitex/glob"
 )
 
@@ -28,13 +29,12 @@ func (ver *Verifier) verUniFact(stmt *ast.UniFactStmt, state VerState) (bool, er
 	defer ver.deleteEnvAndRetainMsg()
 
 	// 声明变量
-	for _, param := range stmt.Params {
-		paramAsAtom := ast.NewFcAtom(glob.EmptyPkg, param)
-		if ver.env.IsAtomDeclared(paramAsAtom) {
-			return false, fmt.Errorf("%s is declared", param)
-		}
+	paramMap := processUniFactParams(ver.env, stmt.Params)
+	if len(paramMap) == 0 {
+		ver.env.ObjDefMem.Insert(ast.NewDefObjStmt(stmt.Params, stmt.ParamSets, []ast.FactStmt{}, []ast.FactStmt{}), glob.EmptyPkg)
+	} else {
+		panic("not implemented")
 	}
-	ver.env.ObjDefMem.Insert(ast.NewDefObjStmt(stmt.Params, stmt.ParamSets, []ast.FactStmt{}, []ast.FactStmt{}), glob.EmptyPkg)
 
 	// 查看param set 是否已经声明
 	for _, paramSet := range stmt.ParamSets {
@@ -186,4 +186,18 @@ func (ver *Verifier) uniFactWithIff_CheckIffToThen(stmt *ast.UniFactStmt, state 
 	}
 
 	return true, nil
+}
+
+func processUniFactParams(env *env.Env, params []string) map[string]ast.Fc {
+	paramMap := make(map[string]ast.Fc)
+	for _, param := range params {
+		newParam := param
+		for env.IsAtomDeclared(ast.NewFcAtom(glob.EmptyPkg, newParam)) {
+			newParam = fmt.Sprintf("%s%s", glob.UniPrefix, newParam)
+		}
+		if param != newParam {
+			paramMap[param] = ast.NewFcAtom(glob.EmptyPkg, newParam)
+		}
+	}
+	return paramMap
 }
