@@ -27,6 +27,7 @@ const MaxNameLen int = 255
 // 综合来看，添加`好处多多，对用户（用户阅读起来更容易），对我开发（让我不需要那么严苛地考虑重名问题），对运行时甚至都有好处
 // const UniParamPrefix string = "`"
 const FuncFactPrefix string = "$"
+
 const UniPrefix string = "`"
 
 const BuiltinExist_St_FactExistParamPropParmSep string = ";"

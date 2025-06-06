@@ -307,13 +307,13 @@ func uniFactString(prefix string, l *UniFactStmt) string {
 	if len(l.Params) > 0 {
 		for i := range len(l.Params) - 1 {
 			builder.WriteString(l.Params[i])
-			// builder.WriteString(" ")
-			// builder.WriteString(l.ParamSets[i].String())
+			builder.WriteString(" ")
+			builder.WriteString(l.ParamSets[i].String())
 			builder.WriteString(", ")
 		}
 		builder.WriteString(l.Params[len(l.Params)-1])
-		// builder.WriteString(" ")
-		// builder.WriteString(l.ParamSets[len(l.Params)-1].String())
+		builder.WriteString(" ")
+		builder.WriteString(l.ParamSets[len(l.Params)-1].String())
 	}
 	builder.WriteString(":\n")
 	for _, condFact := range l.DomFacts {
