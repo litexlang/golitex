@@ -101,12 +101,11 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 func (tb *tokenBlock) factStmt(curAllowUniFactEnum AllowUniFactEnum) (ast.FactStmt, error) {
 	if tb.header.is(glob.KeywordForall) {
 		return tb.uniFactStmt(curAllowUniFactEnum)
-	} else if tb.header.is(glob.KeywordAnd) || tb.header.is(glob.KeywordOr) {
+	} else if tb.header.is(glob.KeywordOr) {
 		return tb.orStmt()
-		// return tb.logicExprStmt(nameDepthMap)
+	} else {
+		return tb.specFactStmt()
 	}
-
-	return tb.specFactStmt()
 }
 
 func (tb *tokenBlock) orStmt() (*ast.OrStmt, error) {
@@ -132,16 +131,12 @@ func (tb *tokenBlock) orStmt() (*ast.OrStmt, error) {
 	return ast.NewOrStmt(orFacts), nil
 }
 
-func (tb *tokenBlock) logicExprOrSpecFactStmt() (ast.LogicOrSpec_Stmt, error) {
+func (tb *tokenBlock) SpecFactOrOrStmt() (ast.LogicOrSpec_Stmt, error) {
 	if tb.header.is(glob.KeywordOr) {
-		orFacts, err := tb.orStmt()
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
-		}
-		return orFacts, nil
+		return tb.orStmt()
+	} else {
+		return tb.specFactStmt()
 	}
-
-	return tb.specFactStmt()
 }
 
 func (tb *tokenBlock) specFactStmt() (*ast.SpecFactStmt, error) {
@@ -184,8 +179,8 @@ func (tb *tokenBlock) uniFactStmt(curAllowUniFactEnum AllowUniFactEnum) (*ast.Un
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	// paramsWithUniPrefix, newUniParams, setParams, paramInSetsFacts, err := tb.param_paramInSetFactsWithUniPrefix(glob.KeySymbolColon)
-	paramsWithUniPrefix, setParams, paramInSetsFacts, err := tb.param_paramInSetFactsWithUniPrefix(glob.KeySymbolColon)
+	// params, newUniParams, setParams, paramInSetsFacts, err := tb.param_paramInSetFactsWithUniPrefix(glob.KeySymbolColon)
+	params, setParams, paramInSetsFacts, err := tb.param_paramSet_paramInSetFacts(glob.KeySymbolColon)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -199,7 +194,7 @@ func (tb *tokenBlock) uniFactStmt(curAllowUniFactEnum AllowUniFactEnum) (*ast.Un
 		iffFacts = ast.EmptyIffFacts
 	}
 
-	return ast.NewUniFactStmtWithSetReqInDom(paramsWithUniPrefix, setParams, domainFacts, thenFacts, iffFacts, paramInSetsFacts), nil
+	return ast.NewUniFactStmtWithSetReqInDom(params, setParams, domainFacts, thenFacts, iffFacts, paramInSetsFacts), nil
 }
 
 func (tb *tokenBlock) bodyFacts(curAllowUniFactEnum AllowUniFactEnum) ([]ast.FactStmt, error) {
@@ -420,10 +415,10 @@ func (tb *tokenBlock) relaFactStmt() (*ast.SpecFactStmt, error) {
 	}
 
 	// add prefix to fc
-	fc, err = ast.AddUniPrefixToFc(fc)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
+	// fc, err = ast.AddUniPrefixToFc(fc)
+	// if err != nil {
+	// 	return nil, &tokenBlockErr{err, *tb}
+	// }
 
 	if tb.header.strAtCurIndexPlus(0) == glob.KeywordIs {
 		return tb.header.isExpr(fc)
@@ -441,10 +436,10 @@ func (tb *tokenBlock) relaFactStmt() (*ast.SpecFactStmt, error) {
 		}
 		var propNamePtr ast.Fc = propName
 
-		propNamePtr, err = ast.AddUniPrefixToFc(propNamePtr)
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
-		}
+		// propNamePtr, err = ast.AddUniPrefixToFc(propNamePtr)
+		// if err != nil {
+		// 	return nil, &tokenBlockErr{err, *tb}
+		// }
 		propNameAsAtomPtr, ok := propNamePtr.(*ast.FcAtom)
 		if !ok {
 			return nil, fmt.Errorf("expect prop name")
@@ -456,10 +451,10 @@ func (tb *tokenBlock) relaFactStmt() (*ast.SpecFactStmt, error) {
 			return nil, &tokenBlockErr{err, *tb}
 		}
 
-		fc2, err = ast.AddUniPrefixToFc(fc2)
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
-		}
+		// fc2, err = ast.AddUniPrefixToFc(fc2)
+		// if err != nil {
+		// 	return nil, &tokenBlockErr{err, *tb}
+		// }
 
 		params := []ast.Fc{fc, fc2}
 
@@ -473,10 +468,10 @@ func (tb *tokenBlock) relaFactStmt() (*ast.SpecFactStmt, error) {
 		}
 
 		// add prefix to fc2
-		fc2, err = ast.AddUniPrefixToFc(fc2)
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
-		}
+		// fc2, err = ast.AddUniPrefixToFc(fc2)
+		// if err != nil {
+		// 	return nil, &tokenBlockErr{err, *tb}
+		// }
 
 		// 必须到底了
 		if !tb.header.ExceedEnd() {
@@ -508,7 +503,7 @@ func (tb *tokenBlock) defHeader() (*ast.DefHeader, error) {
 		return nil, err
 	}
 
-	params, setParams, paramInSetsFacts, err := tb.param_paramInSetFactsWithUniPrefix(glob.KeySymbolRightBrace)
+	params, setParams, paramInSetsFacts, err := tb.param_paramSet_paramInSetFacts(glob.KeySymbolRightBrace)
 	if err != nil {
 		return nil, err
 	}
@@ -621,12 +616,12 @@ func (tb *tokenBlock) existFactStmt(isTrue bool) (*ast.SpecFactStmt, error) {
 	}
 
 	// add prefix to existParams
-	for i := range existParams {
-		existParams[i], err = ast.AddUniPrefixToFc(existParams[i])
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
-		}
-	}
+	// for i := range existParams {
+	// 	existParams[i], err = ast.AddUniPrefixToFc(existParams[i])
+	// 	if err != nil {
+	// 		return nil, &tokenBlockErr{err, *tb}
+	// 	}
+	// }
 
 	pureSpecFact, err := tb.pureFuncSpecFact()
 	if err != nil {
@@ -657,11 +652,11 @@ func (tb *tokenBlock) pureFuncSpecFact() (*ast.SpecFactStmt, error) {
 	}
 
 	// propName = *ast.AddUniPrefixToFcAtom(&propName, nameDepthMap)
-	prefixedPropName, err := ast.AddUniPrefixToFcAtom(propName)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
-	propName = prefixedPropName
+	// prefixedPropName, err := ast.AddUniPrefixToFcAtom(propName)
+	// if err != nil {
+	// 	return nil, &tokenBlockErr{err, *tb}
+	// }
+	// propName = prefixedPropName
 
 	params := []ast.Fc{}
 	err = tb.header.skip(glob.KeySymbolLeftBrace)
@@ -677,10 +672,10 @@ func (tb *tokenBlock) pureFuncSpecFact() (*ast.SpecFactStmt, error) {
 			}
 
 			// add prefix to param
-			param, err = ast.AddUniPrefixToFc(param)
-			if err != nil {
-				return nil, &tokenBlockErr{err, *tb}
-			}
+			// param, err = ast.AddUniPrefixToFc(param)
+			// if err != nil {
+			// 	return nil, &tokenBlockErr{err, *tb}
+			// }
 
 			params = append(params, param)
 
@@ -760,7 +755,7 @@ func (tb *tokenBlock) bodyBlockFacts(curAllowUniFactEnum AllowUniFactEnum, parse
 	} else {
 		for i := range parseBodyFactNum {
 			stmt := tb.body[i]
-			fact, err := stmt.logicExprOrSpecFactStmt()
+			fact, err := stmt.SpecFactOrOrStmt()
 			if err != nil {
 				if tb.body[i].CurrentTokenIs(glob.KeywordForall) {
 					return nil, fmt.Errorf("expect specific fact: at most 2 layers of universal quantifier is allowed")
@@ -1222,7 +1217,7 @@ func (tb *tokenBlock) uniFactHeadWithoutUniPrefix(endWith string) ([]string, []a
 	}
 }
 
-func (tb *tokenBlock) param_paramInSetFactsWithUniPrefix(endWith string) ([]string, []ast.Fc, []ast.FactStmt, error) {
+func (tb *tokenBlock) param_paramSet_paramInSetFacts(endWith string) ([]string, []ast.Fc, []ast.FactStmt, error) {
 	params := []string{}
 	paramInSetsFacts := []ast.FactStmt{}
 	setParams := []ast.Fc{}
@@ -1234,37 +1229,23 @@ func (tb *tokenBlock) param_paramInSetFactsWithUniPrefix(endWith string) ([]stri
 				return nil, nil, nil, err
 			}
 
-			// param = fmt.Sprintf("%s%s", glob.UniParamPrefix, param)
-
 			params = append(params, param)
+
+			setParam, err := tb.header.rawFc()
+			if err != nil {
+				return nil, nil, nil, err
+			}
+
+			setParams = append(setParams, setParam)
+			paramInSetsFacts = append(paramInSetsFacts, ast.Param_ParamSet_ToInFact(param, setParam))
 
 			if tb.header.is(glob.KeySymbolComma) {
 				tb.header.skip(glob.KeySymbolComma)
 				continue
-			} else if tb.header.is(endWith) {
+			}
+
+			if tb.header.is(endWith) {
 				break
-			} else {
-				setParam, err := tb.header.rawFc()
-				if err != nil {
-					return nil, nil, nil, err
-				}
-
-				setParam, err = ast.AddUniPrefixToFc(setParam)
-				if err != nil {
-					return nil, nil, nil, err
-				}
-
-				setParams = append(setParams, setParam)
-				paramInSetsFacts = append(paramInSetsFacts, ast.Param_ParamSet_ToInFact(param, setParam))
-
-				if tb.header.is(glob.KeySymbolComma) {
-					tb.header.skip(glob.KeySymbolComma)
-					continue
-				}
-
-				if tb.header.is(endWith) {
-					break
-				}
 			}
 
 			return nil, nil, nil, fmt.Errorf("expected ',' or '%s' but got '%s'", endWith, tb.header.strAtCurIndexPlus(0))
