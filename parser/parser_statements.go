@@ -193,7 +193,7 @@ func (tb *tokenBlock) uniFactStmt(uniFactDepth uniFactEnum) (*ast.UniFactStmt, e
 		iffFacts = ast.EmptyIffFacts
 	}
 
-	return ast.NewUniFactStmtWithSetReqInDom(params, setParams, domainFacts, thenFacts, iffFacts, paramInSetsFacts), nil
+	return ast.NewUniFact(params, setParams, domainFacts, thenFacts, iffFacts, paramInSetsFacts), nil
 }
 
 func (tb *tokenBlock) bodyFacts(uniFactDepth uniFactEnum) ([]ast.FactStmt, error) {
@@ -268,7 +268,7 @@ func (tb *tokenBlock) defFnStmt() (*ast.DefFnStmt, error) {
 		}
 	}
 
-	retInSetsFacts := ast.Param_ParamSet_ToInFact(decl.Name, retType)
+	retInSetsFacts := ast.NewInFact(decl.Name, retType)
 
 	return ast.NewDefFnStmt(*decl, domFacts, thenFacts, retInSetsFacts), nil
 }
@@ -316,10 +316,10 @@ func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 
 	paramInSetsFacts := make([]ast.FactStmt, len(objSets))
 	for i, objSet := range objSets {
-		paramInSetsFacts[i] = ast.Param_ParamSet_ToInFact(objNames[i], objSet)
+		paramInSetsFacts[i] = ast.NewInFact(objNames[i], objSet)
 	}
 
-	return ast.NewDefObjStmt(objNames, objSets, facts, paramInSetsFacts), nil
+	return ast.NewDefObjStmt(objNames, objSets, facts), nil
 }
 
 func (tb *tokenBlock) claimStmt() (*ast.ClaimStmt, error) {
@@ -539,7 +539,7 @@ func (tb *tokenBlock) defExistPropStmt() (*ast.DefExistPropStmt, error) {
 
 	existParamInSetsFacts := make([]ast.FactStmt, len(existParamSets))
 	for i, existParamSet := range existParamSets {
-		existParamInSetsFacts[i] = ast.Param_ParamSet_ToInFact(existParams[i], existParamSet)
+		existParamInSetsFacts[i] = ast.NewInFact(existParams[i], existParamSet)
 	}
 
 	return ast.NewDefExistPropStmt(def, existParams, existParamInSetsFacts), nil
@@ -819,7 +819,7 @@ func (tb *tokenBlock) uniFactStmt_InClaimStmt() (*ast.UniFactStmt, error) {
 		return nil, fmt.Errorf("universal fact in claim statement should not have iff facts")
 	}
 
-	return ast.NewUniFactStmtWithSetReqInDom(declHeader.Params, declHeader.SetParams, domainFacts, thenFacts, iffFacts, declHeader.ParamInSetsFacts), nil
+	return ast.NewUniFact(declHeader.Params, declHeader.SetParams, domainFacts, thenFacts, iffFacts, declHeader.ParamInSetsFacts), nil
 }
 
 func (tb *tokenBlock) uniFactBodyFacts(uniFactDepth uniFactEnum, defaultSectionName string) ([]ast.FactStmt, []ast.FactStmt, []ast.FactStmt, error) {
@@ -1133,7 +1133,7 @@ func (tb *tokenBlock) param_paramSet_paramInSetFacts(endWith string) ([]string, 
 			}
 
 			setParams = append(setParams, setParam)
-			paramInSetsFacts = append(paramInSetsFacts, ast.Param_ParamSet_ToInFact(param, setParam))
+			paramInSetsFacts = append(paramInSetsFacts, ast.NewInFact(param, setParam))
 
 			if tb.header.is(glob.KeySymbolComma) {
 				tb.header.skip(glob.KeySymbolComma)

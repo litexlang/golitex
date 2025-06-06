@@ -215,8 +215,8 @@ func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt) error {
 		return err
 	}
 
-	for i := range stmt.ParamInSetsFacts {
-		err := exec.env.NewFact(stmt.ParamInSetsFacts[i])
+	for _, fact := range stmt.NewInFacts() {
+		err := exec.env.NewFact(fact)
 		if err != nil {
 			return err
 		}
@@ -270,7 +270,7 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 	thenFacts := []ast.FactStmt{}
 	thenFacts = append(thenFacts, uniFactThen...)
 
-	uniFact := ast.NewUniFactStmtWithSetReqInDom(stmt.DefHeader.Params, stmt.DefHeader.SetParams, stmt.DomFacts, thenFacts, ast.EmptyIffFacts, stmt.DefHeader.ParamInSetsFacts)
+	uniFact := ast.NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.SetParams, stmt.DomFacts, thenFacts, ast.EmptyIffFacts, stmt.DefHeader.ParamInSetsFacts)
 	err = exec.env.NewFact(uniFact)
 
 	if err != nil {
@@ -340,7 +340,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 
 	// TODO 暂时认为都是obj
 	for _, objName := range stmt.ObjNames {
-		err := exec.env.NewDefObj(ast.NewDefObjStmt([]string{objName}, []ast.Fc{}, []ast.FactStmt{}, []ast.FactStmt{}))
+		err := exec.env.NewDefObj(ast.NewDefObjStmt([]string{objName}, []ast.Fc{}, []ast.FactStmt{}))
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
@@ -425,7 +425,7 @@ func (exec *Executor) defStmt(stmt ast.DefStmt) error {
 
 func (exec *Executor) GetUniFactSettings(asUnivFact *ast.UniFactStmt) error {
 	for _, param := range asUnivFact.Params {
-		err := exec.defStmt(ast.NewDefObjStmt([]string{param}, []ast.Fc{}, []ast.FactStmt{}, []ast.FactStmt{}))
+		err := exec.defStmt(ast.NewDefObjStmt([]string{param}, []ast.Fc{}, []ast.FactStmt{}))
 		if err != nil {
 			return err
 		}
@@ -590,9 +590,7 @@ func (exec *Executor) setDefStmt(stmt *ast.SetDefSetBuilderStmt) error {
 	// err := exec.env.SetDefMem.Insert(stmt)
 
 	// insert as obj
-	inFact := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(stmt.SetName), ast.NewFcAtomWithName(glob.KeywordSet)})
-
-	err := exec.defObjStmt(ast.NewDefObjStmt([]string{stmt.SetName}, []ast.Fc{ast.NewFcAtomWithName(glob.KeywordSet)}, []ast.FactStmt{}, []ast.FactStmt{inFact}))
+	err := exec.defObjStmt(ast.NewDefObjStmt([]string{stmt.SetName}, []ast.Fc{ast.NewFcAtomWithName(glob.KeywordSet)}, []ast.FactStmt{}))
 	if err != nil {
 		return err
 	}
@@ -679,7 +677,7 @@ func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) (glob.ExecS
 	}
 
 	thenFacts := []ast.FactStmt{stmt.ExistProp.ToSpecFact()}
-	knownUniFact := ast.NewUniFactStmtWithSetReqInDom(stmt.ExistProp.DefBody.DefHeader.Params, stmt.ExistProp.DefBody.DefHeader.SetParams, stmt.ExistProp.DefBody.DomFacts, thenFacts, ast.EmptyIffFacts, stmt.ExistProp.DefBody.DefHeader.ParamInSetsFacts)
+	knownUniFact := ast.NewUniFact(stmt.ExistProp.DefBody.DefHeader.Params, stmt.ExistProp.DefBody.DefHeader.SetParams, stmt.ExistProp.DefBody.DomFacts, thenFacts, ast.EmptyIffFacts, stmt.ExistProp.DefBody.DefHeader.ParamInSetsFacts)
 
 	err = exec.env.NewFact(knownUniFact)
 	if err != nil {
@@ -700,7 +698,7 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
 	}
 
 	thenFacts := []ast.FactStmt{stmt.Prop.ToSpecFact()}
-	knownUniFact := ast.NewUniFactStmtWithSetReqInDom(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.SetParams, stmt.Prop.DomFacts, thenFacts, ast.EmptyIffFacts, stmt.Prop.DefHeader.ParamInSetsFacts)
+	knownUniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.SetParams, stmt.Prop.DomFacts, thenFacts, ast.EmptyIffFacts, stmt.Prop.DefHeader.ParamInSetsFacts)
 
 	err = exec.env.NewFact(knownUniFact)
 	if err != nil {

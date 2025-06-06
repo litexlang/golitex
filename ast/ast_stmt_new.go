@@ -20,8 +20,8 @@ func NewTopStmt(stmt Stmt, isPub bool) *TopStmt {
 	return &TopStmt{stmt, isPub}
 }
 
-func NewDefObjStmt(objs []string, objSets []Fc, facts []FactStmt, objInSetsFacts []FactStmt) *DefObjStmt {
-	return &DefObjStmt{objs, objSets, facts, objInSetsFacts}
+func NewDefObjStmt(objs []string, objSets []Fc, facts []FactStmt) *DefObjStmt {
+	return &DefObjStmt{objs, objSets, facts}
 }
 
 func NewDefPropStmt(defHeader DefHeader, domFacts []FactStmt, iffFacts []FactStmt) *DefPropStmt {
@@ -34,10 +34,6 @@ func NewDefExistPropStmt(def *DefExistPropStmtBody, existParams []string, existI
 
 func NewDefFnStmt(defHeader DefHeader, domFacts []FactStmt, thenFacts []FactStmt, retInSetsFacts FactStmt) *DefFnStmt {
 	return &DefFnStmt{defHeader, domFacts, thenFacts, retInSetsFacts}
-}
-
-func newUniFactStmt(params []string, setParams []Fc, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt, paramInSetsFacts []FactStmt) *UniFactStmt {
-	return &UniFactStmt{params, setParams, domFacts, thenFacts, iffFacts, paramInSetsFacts}
 }
 
 func NewSpecFactStmt(typeEnum SpecFactEnum, propName FcAtom, params []Fc) *SpecFactStmt {
@@ -68,8 +64,8 @@ func NewExistPropDef(declHeader DefHeader, domFacts []FactStmt, iffFacts []Logic
 	return &DefExistPropStmtBody{declHeader, domFacts, iffFacts}
 }
 
-func NewUniFactStmtWithSetReqInDom(params []string, setParams []Fc, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt, paramInSetsFacts []FactStmt) *UniFactStmt {
-	return newUniFactStmt(params, setParams, domFacts, thenFacts, iffFacts, paramInSetsFacts)
+func NewUniFact(params []string, setParams []Fc, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt, paramInSetsFacts []FactStmt) *UniFactStmt {
+	return &UniFactStmt{params, setParams, domFacts, thenFacts, iffFacts, paramInSetsFacts}
 }
 
 func NewSetDefSetBuilderStmt(setName string, parentSet Fc, facts []FactStmt) *SetDefSetBuilderStmt {
