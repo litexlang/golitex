@@ -301,9 +301,9 @@ func (s *DefExistPropStmt) String() string {
 // }
 
 func uniFactString(prefix string, l *UniFactStmt) string {
-	// if len(l.Params) != len(l.ParamSets) {
-	// 	return ""
-	// }
+	if len(l.Params) != len(l.ParamSets) {
+		return ""
+	}
 
 	var builder strings.Builder
 

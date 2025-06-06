@@ -277,7 +277,7 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 	thenFacts := []ast.FactStmt{}
 	thenFacts = append(thenFacts, uniFactThen...)
 
-	uniFact := ast.NewUniFactStmtWithSetReqInDom(stmt.DefHeader.Params, []ast.Fc{}, stmt.DomFacts, thenFacts, ast.EmptyIffFacts, []ast.FactStmt{})
+	uniFact := ast.NewUniFactStmtWithSetReqInDom(stmt.DefHeader.Params, stmt.DefHeader.SetParams, stmt.DomFacts, thenFacts, ast.EmptyIffFacts, stmt.DefHeader.ParamInSetsFacts)
 	err = exec.env.NewFact(uniFact)
 
 	if err != nil {
