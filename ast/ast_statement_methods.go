@@ -15,7 +15,6 @@ package litex_ast
 import (
 	"fmt"
 	glob "golitex/glob"
-	"strings"
 )
 
 func (stmt *SpecFactStmt) IsBuiltinInfixRelaProp() bool {
@@ -41,27 +40,27 @@ func MergeOuterInnerUniFacts(outer *UniFactStmt, inner *UniFactStmt) *UniFactStm
 	return newOuter
 }
 
-func GetStrParamsWithUniPrefixAndNewDepthMap(originalParams []string, originalNameDepthMap NameDepthMap) ([]string, NameDepthMap) {
-	newUniParams := NameDepthMap{}
-	for key := range originalNameDepthMap {
-		newUniParams[key] = originalNameDepthMap[key]
-	}
+// func GetStrParamsWithUniPrefixAndNewDepthMap(originalParams []string, originalNameDepthMap NameDepthMap) ([]string, NameDepthMap) {
+// 	newUniParams := NameDepthMap{}
+// 	for key := range originalNameDepthMap {
+// 		newUniParams[key] = originalNameDepthMap[key]
+// 	}
 
-	newParams := make([]string, len(originalParams))
+// 	newParams := make([]string, len(originalParams))
 
-	for i := range originalParams {
-		prefixNum, declared := originalNameDepthMap[originalParams[i]]
-		if !declared {
-			newUniParams[originalParams[i]] = 1
-			newParams[i] = fmt.Sprintf("%s%s", glob.UniParamPrefix, originalParams[i])
-		} else {
-			newUniParams[originalParams[i]] = prefixNum + 1
-			newParams[i] = fmt.Sprintf("%s%s", strings.Repeat(glob.UniParamPrefix, prefixNum+1), originalParams[i])
-		}
-	}
+// 	for i := range originalParams {
+// 		prefixNum, declared := originalNameDepthMap[originalParams[i]]
+// 		if !declared {
+// 			newUniParams[originalParams[i]] = 1
+// 			newParams[i] = fmt.Sprintf("%s%s", glob.UniParamPrefix, originalParams[i])
+// 		} else {
+// 			newUniParams[originalParams[i]] = prefixNum + 1
+// 			newParams[i] = fmt.Sprintf("%s%s", strings.Repeat(glob.UniParamPrefix, prefixNum+1), originalParams[i])
+// 		}
+// 	}
 
-	return newParams, newUniParams
-}
+// 	return newParams, newUniParams
+// }
 
 func (defStmt *DefPropStmt) Make_PropToIff_IffToProp() (*UniFactStmt, *UniFactStmt, error) {
 	propSpecFactParams := []Fc{}
@@ -104,9 +103,9 @@ func (defStmt *DefPropStmt) IffToPropUniFact() *UniFactStmt {
 	return IffToProp
 }
 
-func (fact *SpecFactStmt) IsSpecFactNameWithUniPrefix() bool {
-	return strings.HasPrefix(fact.PropName.Name, glob.UniParamPrefix)
-}
+// func (fact *SpecFactStmt) IsSpecFactNameWithUniPrefix() bool {
+// 	return strings.HasPrefix(fact.PropName.Name, glob.UniParamPrefix)
+// }
 
 func (defStmt *DefPropStmt) ToSpecFact() *SpecFactStmt {
 	propSpecFactParams := []Fc{}

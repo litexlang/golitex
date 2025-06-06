@@ -28,8 +28,8 @@ func IsValidName(name string) error {
 	}
 
 	// Check for universal parameter prefix
-	if len(name) >= 1 && string(name[0]) == UniParamPrefix {
-		return fmt.Errorf("identifier name cannot begin with universal parameter prefix '%s'", UniParamPrefix)
+	if len(name) >= 1 && strings.HasPrefix(name, UniPrefix) {
+		return fmt.Errorf("identifier name cannot begin with universal parameter prefix '%s'", UniPrefix)
 	}
 
 	// Check for leading symbols

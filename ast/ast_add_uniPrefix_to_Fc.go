@@ -26,7 +26,7 @@ func AddUniPrefixToFcAtom(atom *FcAtom, uniParams NameDepthMap) (*FcAtom, error)
 	}
 
 	if prefixNum, ok := fcAtomInUniParams(atom, uniParams); ok {
-		atom.Name = strings.Repeat(glob.UniParamPrefix, prefixNum) + atom.Name
+		atom.Name = strings.Repeat(glob.UniPrefix, prefixNum) + atom.Name
 	}
 
 	return atom, nil
@@ -81,7 +81,7 @@ func AddUniPrefixToUniFact(asUniFact *UniFactStmt) (*UniFactStmt, error) {
 	newParams := make([]string, len(asUniFact.Params))
 
 	for i, param := range asUniFact.Params {
-		newParams[i] = fmt.Sprintf("%s%s", glob.UniParamPrefix, param)
+		newParams[i] = fmt.Sprintf("%s%s", glob.UniPrefix, param)
 		uniMap[param] = NewFcAtom(glob.EmptyPkg, newParams[i])
 	}
 

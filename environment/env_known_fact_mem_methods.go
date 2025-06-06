@@ -161,9 +161,9 @@ func (s SpecFactInUniFactMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([
 func (env *Env) newUniFact(stmt *ast.UniFactStmt) error {
 	for _, thenStmt := range stmt.ThenFacts {
 		if stmtAsSpecFact, ok := thenStmt.(*ast.SpecFactStmt); ok {
-			if stmtAsSpecFact.IsSpecFactNameWithUniPrefix() {
-				return fmt.Errorf("facts in the body of universal fact should not be a free fact, got %s", stmtAsSpecFact.String())
-			}
+			// if stmtAsSpecFact.IsSpecFactNameWithUniPrefix() {
+			// 	return fmt.Errorf("facts in the body of universal fact should not be a free fact, got %s", stmtAsSpecFact.String())
+			// }
 
 			err := env.storeUniFact(stmtAsSpecFact, stmt)
 			if err != nil {
@@ -178,9 +178,9 @@ func (env *Env) newUniFact(stmt *ast.UniFactStmt) error {
 				return err
 			}
 		} else if thenStmtAsLogicExpr, ok := thenStmt.(*ast.OrStmt); ok {
-			if thenStmtAsLogicExpr.IsSpecFactNameWithUniPrefix() {
-				return fmt.Errorf("facts in the body of universal fact should not be a free fact, got %s", thenStmtAsLogicExpr.String())
-			}
+			// if thenStmtAsLogicExpr.IsSpecFactNameWithUniPrefix() {
+			// 	return fmt.Errorf("facts in the body of universal fact should not be a free fact, got %s", thenStmtAsLogicExpr.String())
+			// }
 
 			err := env.KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem.NewFact(stmt, thenStmtAsLogicExpr, env.CurMatchProp)
 			if err != nil {
