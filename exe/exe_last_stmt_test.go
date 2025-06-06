@@ -32,7 +32,7 @@ func TestLastStmt(t *testing.T) {
 	start = time.Now()
 	var messages []string
 	if len(topStmtSlice) == 0 {
-		fmt.Println("nothing is parsered")
+		fmt.Println("nothing to execute")
 	} else {
 		messages = execStmtTest(topStmtSlice[len(topStmtSlice)-1:])
 	}

@@ -19,7 +19,6 @@ import (
 	"strings"
 )
 
-// raw 的意思是，不包含 uniFactParamPrefix
 func (cursor *strSliceCursor) rawFc() (ast.Fc, error) {
 	expr, err := cursor.fcInfixExpr(glob.PrecLowest)
 	if err != nil {
@@ -29,7 +28,7 @@ func (cursor *strSliceCursor) rawFc() (ast.Fc, error) {
 }
 
 // “数学”优先级越高，越是底层。所以把括号表达式放在这里处理
-func (cursor *strSliceCursor) fcAtomAndfcFn() (ast.Fc, error) {
+func (cursor *strSliceCursor) fcAtomAndFcFn() (ast.Fc, error) {
 	var expr ast.Fc
 	var err error
 
@@ -188,7 +187,7 @@ func (cursor *strSliceCursor) unaryOptFc() (ast.Fc, error) {
 		return nil, err
 	}
 	if !glob.IsBuiltinUnaryOpt(unaryOp) {
-		return cursor.fcAtomAndfcFn()
+		return cursor.fcAtomAndFcFn()
 	} else {
 		cursor.skip(unaryOp)
 

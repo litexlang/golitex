@@ -42,11 +42,6 @@ func IsValidName(name string) error {
 		return fmt.Errorf("identifier name cannot be a reserved keyword: '%s'", name)
 	}
 
-	// Check for overload operator prefix
-	if strings.HasPrefix(name, OverloadOptPrefix) {
-		return fmt.Errorf("identifier name cannot begin with overload operator prefix '%s'", OverloadOptPrefix)
-	}
-
 	// Check maximum length constraint
 	if len(name) > MaxNameLen {
 		return fmt.Errorf("identifier name exceeds maximum length of %d characters", MaxNameLen)
@@ -55,11 +50,6 @@ func IsValidName(name string) error {
 	// Final check for keywords and symbols
 	if IsKeyword(name) || IsKeySymbol(name) {
 		return fmt.Errorf("identifier name cannot be a reserved keyword or symbol")
-	}
-
-	if strings.HasPrefix(name, "-") {
-		// 以后可能要让 -1 是 fcAtom with value -1，而不是 fcFn with function name -
-		return fmt.Errorf("identifier name cannot begin with '-'")
 	}
 
 	return nil
