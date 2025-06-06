@@ -35,8 +35,16 @@ func (stmt *UniFactStmt) NewUniFactWithIffToThen() *UniFactStmt {
 
 func MergeOuterInnerUniFacts(outer *UniFactStmt, inner *UniFactStmt) *UniFactStmt {
 	newOuter := newUniFactStmt(outer.Params, outer.ParamSets, outer.DomFacts, inner.ThenFacts, EmptyIffFacts, outer.ParamInSetsFacts)
+
 	newOuter.Params = append(newOuter.Params, inner.Params...)
+	newOuter.ParamSets = append(newOuter.ParamSets, inner.ParamSets...)
 	newOuter.DomFacts = append(newOuter.DomFacts, inner.DomFacts...)
+	newOuter.ParamInSetsFacts = append(newOuter.ParamInSetsFacts, inner.ParamInSetsFacts...)
+
+	if len(newOuter.Params) != len(newOuter.ParamSets) {
+		return nil
+	}
+
 	return newOuter
 }
 
