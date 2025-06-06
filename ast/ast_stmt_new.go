@@ -32,8 +32,8 @@ func NewDefExistPropStmt(def *DefExistPropStmtBody, existParams []string, existI
 	return &DefExistPropStmt{*def, existParams, existInSetsFacts}
 }
 
-func NewDefFnStmt(defHeader DefHeader, domFacts []FactStmt, thenFacts []FactStmt, retInSetsFacts FactStmt) *DefFnStmt {
-	return &DefFnStmt{defHeader, domFacts, thenFacts, retInSetsFacts}
+func NewDefFnStmt(defHeader DefHeader, domFacts []FactStmt, thenFacts []FactStmt, retSet Fc) *DefFnStmt {
+	return &DefFnStmt{defHeader, domFacts, thenFacts, retSet}
 }
 
 func NewSpecFactStmt(typeEnum SpecFactEnum, propName FcAtom, params []Fc) *SpecFactStmt {
