@@ -22,24 +22,23 @@ func (stmt *SpecFactStmt) IsBuiltinInfixRelaProp() bool {
 }
 
 func (stmt *UniFactStmt) NewUniFactWithThenToIff() *UniFactStmt {
-	newUniFact := NewUniFact(stmt.Params, stmt.ParamSets, stmt.DomFacts, stmt.IffFacts, EmptyIffFacts, stmt.ParamInSetsFacts)
+	newUniFact := NewUniFact(stmt.Params, stmt.ParamSets, stmt.DomFacts, stmt.IffFacts, EmptyIffFacts)
 	newUniFact.DomFacts = append(newUniFact.DomFacts, stmt.ThenFacts...)
 	return newUniFact
 }
 
 func (stmt *UniFactStmt) NewUniFactWithIffToThen() *UniFactStmt {
-	newUniFact := NewUniFact(stmt.Params, stmt.ParamSets, stmt.DomFacts, stmt.ThenFacts, EmptyIffFacts, stmt.ParamInSetsFacts)
+	newUniFact := NewUniFact(stmt.Params, stmt.ParamSets, stmt.DomFacts, stmt.ThenFacts, EmptyIffFacts)
 	newUniFact.DomFacts = append(newUniFact.DomFacts, stmt.IffFacts...)
 	return newUniFact
 }
 
 func MergeOuterInnerUniFacts(outer *UniFactStmt, inner *UniFactStmt) *UniFactStmt {
-	newOuter := NewUniFact(outer.Params, outer.ParamSets, outer.DomFacts, inner.ThenFacts, EmptyIffFacts, outer.ParamInSetsFacts)
+	newOuter := NewUniFact(outer.Params, outer.ParamSets, outer.DomFacts, inner.ThenFacts, EmptyIffFacts)
 
 	newOuter.Params = append(newOuter.Params, inner.Params...)
 	newOuter.ParamSets = append(newOuter.ParamSets, inner.ParamSets...)
 	newOuter.DomFacts = append(newOuter.DomFacts, inner.DomFacts...)
-	newOuter.ParamInSetsFacts = append(newOuter.ParamInSetsFacts, inner.ParamInSetsFacts...)
 
 	if len(newOuter.Params) != len(newOuter.ParamSets) {
 		return nil
@@ -60,14 +59,14 @@ func (defStmt *DefPropStmt) Make_PropToIff_IffToProp() (*UniFactStmt, *UniFactSt
 	propToIffDomFacts := []FactStmt{propSpecFact}
 	propToIffDomFacts = append(propToIffDomFacts, defStmt.DomFacts...)
 
-	propToIff := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.SetParams, propToIffDomFacts, defStmt.IffFacts, EmptyIffFacts, defStmt.DefHeader.ParamInSetsFacts)
+	propToIff := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.SetParams, propToIffDomFacts, defStmt.IffFacts, EmptyIffFacts)
 
 	// iff to prop
 	IffToPropDomFacts := []FactStmt{}
 	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.DomFacts...)
 	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.IffFacts...)
 
-	IffToProp := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.SetParams, IffToPropDomFacts, []FactStmt{propSpecFact}, EmptyIffFacts, defStmt.DefHeader.ParamInSetsFacts)
+	IffToProp := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.SetParams, IffToPropDomFacts, []FactStmt{propSpecFact}, EmptyIffFacts)
 
 	return propToIff, IffToProp, nil
 }
@@ -84,7 +83,7 @@ func (defStmt *DefPropStmt) IffToPropUniFact() *UniFactStmt {
 	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.DomFacts...)
 	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.IffFacts...)
 
-	IffToProp := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.SetParams, IffToPropDomFacts, []FactStmt{propSpecFact}, EmptyIffFacts, defStmt.DefHeader.ParamInSetsFacts)
+	IffToProp := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.SetParams, IffToPropDomFacts, []FactStmt{propSpecFact}, EmptyIffFacts)
 
 	return IffToProp
 }

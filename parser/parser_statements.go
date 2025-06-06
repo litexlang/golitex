@@ -179,7 +179,7 @@ func (tb *tokenBlock) uniFactStmt(uniFactDepth uniFactEnum) (*ast.UniFactStmt, e
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	params, setParams, paramInSetsFacts, err := tb.param_paramSet_paramInSetFacts(glob.KeySymbolColon)
+	params, setParams, err := tb.param_paramSet_paramInSetFacts(glob.KeySymbolColon)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -193,7 +193,7 @@ func (tb *tokenBlock) uniFactStmt(uniFactDepth uniFactEnum) (*ast.UniFactStmt, e
 		iffFacts = ast.EmptyIffFacts
 	}
 
-	return ast.NewUniFact(params, setParams, domainFacts, thenFacts, iffFacts, paramInSetsFacts), nil
+	return ast.NewUniFact(params, setParams, domainFacts, thenFacts, iffFacts), nil
 }
 
 func (tb *tokenBlock) bodyFacts(uniFactDepth uniFactEnum) ([]ast.FactStmt, error) {
@@ -481,16 +481,12 @@ func (tb *tokenBlock) defHeader() (*ast.DefHeader, error) {
 		return nil, err
 	}
 
-	params, setParams, paramInSetsFacts, err := tb.param_paramSet_paramInSetFacts(glob.KeySymbolRightBrace)
+	params, setParams, err := tb.param_paramSet_paramInSetFacts(glob.KeySymbolRightBrace)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(paramInSetsFacts) != len(params) {
-		tb.addMessage(glob.WarningMsg("there are %d params, but only %d of them are given with requirements in sets", len(params), len(paramInSetsFacts)))
-	}
-
-	return ast.NewDefHeader(name, params, setParams, paramInSetsFacts), nil
+	return ast.NewDefHeader(name, params, setParams, []ast.FactStmt{}), nil
 }
 
 func (tb *tokenBlock) defExistPropStmt() (*ast.DefExistPropStmt, error) {
@@ -819,7 +815,7 @@ func (tb *tokenBlock) uniFactStmt_InClaimStmt() (*ast.UniFactStmt, error) {
 		return nil, fmt.Errorf("universal fact in claim statement should not have iff facts")
 	}
 
-	return ast.NewUniFact(declHeader.Params, declHeader.SetParams, domainFacts, thenFacts, iffFacts, declHeader.ParamInSetsFacts), nil
+	return ast.NewUniFact(declHeader.Params, declHeader.SetParams, domainFacts, thenFacts, iffFacts), nil
 }
 
 func (tb *tokenBlock) uniFactBodyFacts(uniFactDepth uniFactEnum, defaultSectionName string) ([]ast.FactStmt, []ast.FactStmt, []ast.FactStmt, error) {
@@ -1113,27 +1109,25 @@ func (tb *tokenBlock) knowExistPropStmt() (*ast.KnowExistPropStmt, error) {
 	return ast.NewKnowExistPropStmt(*existProp), nil
 }
 
-func (tb *tokenBlock) param_paramSet_paramInSetFacts(endWith string) ([]string, []ast.Fc, []ast.FactStmt, error) {
+func (tb *tokenBlock) param_paramSet_paramInSetFacts(endWith string) ([]string, []ast.Fc, error) {
 	params := []string{}
-	paramInSetsFacts := []ast.FactStmt{}
 	setParams := []ast.Fc{}
 
 	if !tb.header.is(endWith) {
 		for {
 			param, err := tb.header.next()
 			if err != nil {
-				return nil, nil, nil, err
+				return nil, nil, err
 			}
 
 			params = append(params, param)
 
 			setParam, err := tb.header.rawFc()
 			if err != nil {
-				return nil, nil, nil, err
+				return nil, nil, err
 			}
 
 			setParams = append(setParams, setParam)
-			paramInSetsFacts = append(paramInSetsFacts, ast.NewInFact(param, setParam))
 
 			if tb.header.is(glob.KeySymbolComma) {
 				tb.header.skip(glob.KeySymbolComma)
@@ -1144,16 +1138,16 @@ func (tb *tokenBlock) param_paramSet_paramInSetFacts(endWith string) ([]string, 
 				break
 			}
 
-			return nil, nil, nil, fmt.Errorf("expected ',' or '%s' but got '%s'", endWith, tb.header.strAtCurIndexPlus(0))
+			return nil, nil, fmt.Errorf("expected ',' or '%s' but got '%s'", endWith, tb.header.strAtCurIndexPlus(0))
 		}
 	}
 
 	err := tb.header.skip(endWith)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 
-	return params, setParams, paramInSetsFacts, nil
+	return params, setParams, nil
 }
 
 func (tb *tokenBlock) importStmt() (ast.Stmt, error) {

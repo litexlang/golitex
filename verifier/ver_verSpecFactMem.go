@@ -672,7 +672,6 @@ func (ver *Verifier) mathInductionFact(stmt *ast.SpecFactStmt, state VerState) (
 		domFacts,
 		thenFacts,
 		ast.EmptyIffFacts,
-		paramInSetsFacts,
 	)
 
 	ok, err := ver.FactStmt(propNameZeroFact, state)
@@ -776,7 +775,6 @@ func (ver *Verifier) isSetEqualFact_Check(stmt *ast.SpecFactStmt, state VerState
 		[]ast.FactStmt{},
 		[]ast.FactStmt{ast.NewInFact("x", rightSet)},
 		ast.EmptyIffFacts,
-		paramInSetsFacts,
 	)
 
 	ok, err = ver.FactStmt(uniFactItemsInLeftSetInRightSet, state)
@@ -797,7 +795,6 @@ func (ver *Verifier) isSetEqualFact_Check(stmt *ast.SpecFactStmt, state VerState
 		[]ast.FactStmt{},
 		[]ast.FactStmt{ast.NewInFact("x", leftSet)},
 		ast.EmptyIffFacts,
-		paramInSetsFacts,
 	)
 
 	ok, err = ver.FactStmt(uniFactItemsInRightSetInLeftSet, state)
@@ -920,7 +917,6 @@ func (ver *Verifier) leftFnAlwaysEqualToRight(leftFnDef *ast.DefFnStmt, rightFnD
 		leftToRightDom,
 		leftToRightThenFacts,
 		ast.EmptyIffFacts,
-		leftFnDef.DefHeader.ParamInSetsFacts,
 	)
 
 	ok, err := ver.FactStmt(leftToRight, state)
@@ -950,7 +946,6 @@ func (ver *Verifier) leftFnAlwaysEqualToRight(leftFnDef *ast.DefFnStmt, rightFnD
 		leftToRightDom,
 		[]ast.FactStmt{leftEqualRight},
 		ast.EmptyIffFacts,
-		leftFnDef.DefHeader.ParamInSetsFacts,
 	)
 
 	ok, err = ver.FactStmt(leftFnAlwaysEqualRightFn, state)

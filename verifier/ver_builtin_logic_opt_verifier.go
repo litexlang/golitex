@@ -114,7 +114,7 @@ func (ver *Verifier) btCommutativeRule(stmt *ast.SpecFactStmt, state VerState) (
 		return false, err
 	}
 
-	uniFact := ast.NewUniFact(uniFactParams, propDef.DefHeader.SetParams, domFacts, []ast.FactStmt{ThenFact}, []ast.FactStmt{IffFact}, propDef.DefHeader.ParamInSetsFacts)
+	uniFact := ast.NewUniFact(uniFactParams, propDef.DefHeader.SetParams, domFacts, []ast.FactStmt{ThenFact}, []ast.FactStmt{IffFact})
 
 	ok, err = ver.FactStmt(uniFact, state.toNoMsg())
 	if err != nil {

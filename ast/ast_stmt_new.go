@@ -64,8 +64,8 @@ func NewExistPropDef(declHeader DefHeader, domFacts []FactStmt, iffFacts []Logic
 	return &DefExistPropStmtBody{declHeader, domFacts, iffFacts}
 }
 
-func NewUniFact(params []string, setParams []Fc, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt, paramInSetsFacts []FactStmt) *UniFactStmt {
-	return &UniFactStmt{params, setParams, domFacts, thenFacts, iffFacts, paramInSetsFacts}
+func NewUniFact(params []string, setParams []Fc, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt) *UniFactStmt {
+	return &UniFactStmt{params, setParams, domFacts, thenFacts, iffFacts}
 }
 
 func NewSetDefSetBuilderStmt(setName string, parentSet Fc, facts []FactStmt) *SetDefSetBuilderStmt {

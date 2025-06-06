@@ -132,16 +132,7 @@ func InstantiateUniFact(stmt *UniFactStmt, uniMap map[string]Fc) (*UniFactStmt, 
 	}
 
 	// newParamInSetsFacts := ParamsParamSetsToInFacts(stmt.Params, newParamTypes)
-	newParamInSetsFacts := make([]FactStmt, len(stmt.ParamInSetsFacts))
-	for i, fact := range stmt.ParamInSetsFacts {
-		newFact, err := fact.Instantiate(uniMap)
-		if err != nil {
-			return nil, err
-		}
-		newParamInSetsFacts[i] = newFact
-	}
-
-	return NewUniFact(stmt.Params, newSetParams, newDomFacts, newThenFacts, newIffFacts, newParamInSetsFacts), nil
+	return NewUniFact(stmt.Params, newSetParams, newDomFacts, newThenFacts, newIffFacts), nil
 }
 
 func (stmt *UniFactStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {

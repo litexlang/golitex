@@ -61,12 +61,12 @@ type DefFnStmt struct {
 }
 
 type UniFactStmt struct {
-	Params           []string
-	ParamSets        []Fc
-	DomFacts         []FactStmt
-	ThenFacts        []FactStmt
-	IffFacts         []FactStmt // TODO: 需要注意到，我存储的所有事实，这一项都是空。未来为了节约空间，可以考虑用新的结构体来存储
-	ParamInSetsFacts []FactStmt
+	Params    []string
+	ParamSets []Fc
+	DomFacts  []FactStmt
+	ThenFacts []FactStmt
+	IffFacts  []FactStmt // TODO: 需要注意到，我存储的所有事实，这一项都是空。未来为了节约空间，可以考虑用新的结构体来存储
+	// ParamInSetsFacts []FactStmt
 }
 
 type SpecFactStmt struct {

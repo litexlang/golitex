@@ -270,7 +270,7 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 	thenFacts := []ast.FactStmt{}
 	thenFacts = append(thenFacts, uniFactThen...)
 
-	uniFact := ast.NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.SetParams, stmt.DomFacts, thenFacts, ast.EmptyIffFacts, stmt.DefHeader.ParamInSetsFacts)
+	uniFact := ast.NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.SetParams, stmt.DomFacts, thenFacts, ast.EmptyIffFacts)
 	err = exec.env.NewFact(uniFact)
 
 	if err != nil {
@@ -677,7 +677,7 @@ func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) (glob.ExecS
 	}
 
 	thenFacts := []ast.FactStmt{stmt.ExistProp.ToSpecFact()}
-	knownUniFact := ast.NewUniFact(stmt.ExistProp.DefBody.DefHeader.Params, stmt.ExistProp.DefBody.DefHeader.SetParams, stmt.ExistProp.DefBody.DomFacts, thenFacts, ast.EmptyIffFacts, stmt.ExistProp.DefBody.DefHeader.ParamInSetsFacts)
+	knownUniFact := ast.NewUniFact(stmt.ExistProp.DefBody.DefHeader.Params, stmt.ExistProp.DefBody.DefHeader.SetParams, stmt.ExistProp.DefBody.DomFacts, thenFacts, ast.EmptyIffFacts)
 
 	err = exec.env.NewFact(knownUniFact)
 	if err != nil {
@@ -698,7 +698,7 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
 	}
 
 	thenFacts := []ast.FactStmt{stmt.Prop.ToSpecFact()}
-	knownUniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.SetParams, stmt.Prop.DomFacts, thenFacts, ast.EmptyIffFacts, stmt.Prop.DefHeader.ParamInSetsFacts)
+	knownUniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.SetParams, stmt.Prop.DomFacts, thenFacts, ast.EmptyIffFacts)
 
 	err = exec.env.NewFact(knownUniFact)
 	if err != nil {
