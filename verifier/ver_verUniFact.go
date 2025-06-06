@@ -31,38 +31,20 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state VerState) (bool,
 	// 声明变量
 	paramMap, paramMapStrToStr := processUniFactParams(ver.env, oldStmt.Params)
 
-	var newStmt ast.UniFactStmt = *oldStmt
+	var newStmt *ast.UniFactStmt = oldStmt
+	var err error
 	if len(paramMap) == 0 {
 		ver.env.ObjDefMem.Insert(ast.NewDefObjStmt(oldStmt.Params, oldStmt.ParamSets, []ast.FactStmt{}, []ast.FactStmt{}), glob.EmptyPkg)
 	} else {
-		for i, setParam := range oldStmt.ParamSets {
-			newSetParam, err := setParam.Instantiate(paramMap)
-			if err != nil {
-				return false, err
-			}
-			newStmt.ParamSets[i] = newSetParam
-		}
-
 		for i, param := range oldStmt.Params {
 			if newParam, ok := paramMapStrToStr[param]; ok {
 				newStmt.Params[i] = newParam
 			}
 		}
 
-		for _, stmt := range oldStmt.DomFacts {
-			stmt.Instantiate(paramMap)
-		}
-
-		for _, stmt := range oldStmt.ThenFacts {
-			stmt.Instantiate(paramMap)
-		}
-
-		for _, stmt := range oldStmt.IffFacts {
-			stmt.Instantiate(paramMap)
-		}
-
-		for _, stmt := range oldStmt.ParamInSetsFacts {
-			stmt.Instantiate(paramMap)
+		newStmt, err = ast.InstantiateUniFact(oldStmt, paramMap)
+		if err != nil {
+			return false, err
 		}
 	}
 
@@ -85,9 +67,9 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state VerState) (bool,
 	}
 
 	if newStmt.IffFacts == nil {
-		return ver.uniFactWithoutIff(&newStmt, state)
+		return ver.uniFactWithoutIff(newStmt, state)
 	} else {
-		return ver.uniFactWithIff(&newStmt, state)
+		return ver.uniFactWithIff(newStmt, state)
 	}
 }
 

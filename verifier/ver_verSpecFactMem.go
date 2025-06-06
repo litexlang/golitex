@@ -652,14 +652,12 @@ func (ver *Verifier) mathInductionFact(stmt *ast.SpecFactStmt, state VerState) (
 	domFacts[0] = ast.NewSpecFactStmt(
 		ast.TruePure,
 		*propNameAsAtom,
-		// []ast.Fc{ast.NewFcAtomWithName(fmt.Sprintf("%sn", glob.UniParamPrefix))},
 		[]ast.Fc{ast.NewFcAtomWithName("n")},
 	)
 	thenFacts := make([]ast.FactStmt, 1)
 	thenFacts[0] = ast.NewSpecFactStmt(
 		ast.TruePure,
 		*propNameAsAtom,
-		// []ast.Fc{ast.NewFcFn(ast.NewFcAtomWithName(glob.KeySymbolPlus), []ast.Fc{ast.NewFcAtomWithName(fmt.Sprintf("%sn", glob.UniParamPrefix)), ast.NewFcAtomWithName("1")})},
 		[]ast.Fc{ast.NewFcFn(ast.NewFcAtomWithName(glob.KeySymbolPlus), []ast.Fc{ast.NewFcAtomWithName("n"), ast.NewFcAtomWithName("1")})},
 	)
 
@@ -768,7 +766,6 @@ func (ver *Verifier) isSetEqualFact_Check(stmt *ast.SpecFactStmt, state VerState
 	}
 
 	paramInSetsFacts := make([]ast.FactStmt, 1)
-	// paramInSetsFacts[0] = ast.Param_ParamSet_ToInFact(fmt.Sprintf("%sx", glob.UniParamPrefix), rightSet)
 	paramInSetsFacts[0] = ast.Param_ParamSet_ToInFact("x", rightSet)
 	paramSets := make([]ast.Fc, 1)
 	paramSets[0] = rightSet
@@ -790,7 +787,6 @@ func (ver *Verifier) isSetEqualFact_Check(stmt *ast.SpecFactStmt, state VerState
 		return false, nil
 	}
 
-	// paramInSetsFacts[0] = ast.Param_ParamSet_ToInFact(fmt.Sprintf("%sx", glob.UniParamPrefix), leftSet)
 	paramInSetsFacts[0] = ast.Param_ParamSet_ToInFact("x", leftSet)
 	paramSets[0] = leftSet
 

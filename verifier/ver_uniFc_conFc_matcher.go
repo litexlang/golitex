@@ -102,18 +102,6 @@ func (ver *Verifier) match_FcInFactUnderUniFact_WithConFc(fcInFactUnderUniFact a
 func (ver *Verifier) match_FcAtomInFactUnderUniFact_ConFc(fcAtomInFactUnderUniFact *ast.FcAtom, conFc ast.Fc, knownFact env.KnownSpecFact_InUniFact) (map[string][]ast.Fc, bool, error) {
 	retMap := make(map[string][]ast.Fc)
 
-	// 不利用查prefix的方式来确定涉及到的param是不是 uni
-	// if matchStr, ok := isUniParam(fcAtomInFactUnderUniFact, uniParams); ok {
-	// 	retMap[matchStr] = []ast.Fc{conFc}
-	// 	return retMap, true, nil
-	// }
-
-	// 利用查prefix的方式来确定涉及到的param是不是 uni
-	// if uniParamStr, ok := fcAtomInFactUnderUniFact.NameIsUniParam_PkgNameEmpty(); ok {
-	// 	retMap[uniParamStr] = []ast.Fc{conFc}
-	// 	return retMap, true, nil
-	// }
-
 	if isFcAtomInForallParamSet(fcAtomInFactUnderUniFact, knownFact) {
 		retMap[fcAtomInFactUnderUniFact.Name] = []ast.Fc{conFc}
 		return retMap, true, nil
