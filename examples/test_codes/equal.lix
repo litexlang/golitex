@@ -35,3 +35,9 @@ prove:
 
 prove:
     -1 + 2 = 1
+
+prove:
+    know:
+        a = 2 - 1
+        $p(1)
+    $p(a)

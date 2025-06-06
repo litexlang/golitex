@@ -226,21 +226,6 @@ func (e *Env) GetFcAtomDef(fcAtomName *ast.FcAtom) (ast.DefStmt, bool) {
 	return nil, false
 }
 
-// func (e *Env) GetSetDef(set ast.Fc) (*ast.SetDefSetBuilderStmt, bool) {
-// 	setAsAtom, isSetAsAtom := set.(*ast.FcAtom)
-// 	if !isSetAsAtom {
-// 		return nil, false
-// 	}
-
-// 	for env := e; env != nil; env = env.Parent {
-// 		setDef, ok := env.SetDefMem.Get(setAsAtom.PkgName, setAsAtom.Name)
-// 		if ok {
-// 			return setDef, true
-// 		}
-// 	}
-// 	return nil, false
-// }
-
 func (e *Env) GetFnDef(fn ast.Fc) (*ast.DefFnStmt, bool) {
 	fnAsAtom, isFnAsAtom := fn.(*ast.FcAtom)
 	if !isFnAsAtom {

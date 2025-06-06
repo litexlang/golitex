@@ -1,2 +1,0 @@
-prove:
-    -a = 1 # - 是一个unary opt，即使a不是数，它也会parse成 (-a)
