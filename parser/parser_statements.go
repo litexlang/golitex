@@ -428,7 +428,7 @@ func (tb *tokenBlock) relaFactStmt() (*ast.SpecFactStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	if opt == glob.RelaPropNamePrefix {
+	if opt == glob.FuncFactPrefix {
 		propName, err := tb.header.rawFcAtom()
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}

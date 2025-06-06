@@ -1,3 +1,4 @@
 -8 = 10 - 18
 obj a R, b R, c R
 (a + b) + c = a + (b + c)
+- a = -1 * a
