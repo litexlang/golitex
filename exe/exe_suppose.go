@@ -44,7 +44,7 @@ func (exec *Executor) supposePropMatchStmt(stmt *ast.SupposeStmt) (glob.ExecStat
 		return execState, err
 	}
 
-	execState, _, err = exec.supposeStmt_storeFactsToParentEnv_addPrefixToSupposeFactAndBodyFacts(insideFacts, stmt, originalEnv)
+	execState, err = exec.supposeStmt_storeFactsToParentEnv(insideFacts, stmt, originalEnv)
 	if err != nil || execState != glob.ExecState_True {
 		return execState, err
 	}
@@ -145,44 +145,17 @@ func (exec *Executor) supposeStmt_runStmtBody(stmt *ast.SupposeStmt) (glob.ExecS
 }
 
 // TODO：这里其实是有问题的，万一涉及到的变量没声明，那就出错了
-func (exec *Executor) supposeStmt_storeFactsToParentEnv_addPrefixToSupposeFactAndBodyFacts(insideFacts []ast.FactStmt, stmt *ast.SupposeStmt, storeToEnv *env.Env) (glob.ExecState, []ast.FactStmt, error) {
-	// store facts in original env
-	uniMap := map[string]ast.Fc{}
-	for _, supposePropParam := range stmt.Fact.Params {
-		asAtom, ok := supposePropParam.(*ast.FcAtom)
-		if !ok {
-			return glob.ExecState_Error, nil, fmt.Errorf("spec fact parameter must be atom, but got: %s", supposePropParam.String())
-		}
-		name := asAtom.Name
-		// nameWithPrefix := fmt.Sprintf("%s%s", glob.UniParamPrefix, name)
-		uniMap[name] = ast.NewFcAtom(glob.EmptyPkg, name)
-	}
-
-	factsWithPrefix := []ast.FactStmt{}
-	for _, fact := range insideFacts {
-		factWithPrefix, err := fact.Instantiate(uniMap)
-		if err != nil {
-			return glob.ExecState_Error, nil, err
-		}
-		factsWithPrefix = append(factsWithPrefix, factWithPrefix)
-	}
-
-	newPropFactPtr, err := ast.InstantiateSpecFact(&stmt.Fact, uniMap)
-	if err != nil {
-		return glob.ExecState_Error, nil, err
-	}
-	stmt.Fact = *newPropFactPtr
-
+func (exec *Executor) supposeStmt_storeFactsToParentEnv(insideFacts []ast.FactStmt, stmt *ast.SupposeStmt, storeToEnv *env.Env) (glob.ExecState, error) {
 	messages := []string{}
-	for _, fact := range factsWithPrefix {
+	for _, fact := range insideFacts {
 		err := storeToEnv.NewFact(fact)
 		if err != nil {
-			return glob.ExecState_Error, nil, err
+			return glob.ExecState_Error, err
 		}
 		messages = append(messages, fact.String())
 	}
 
 	exec.appendMsg(ast.SupposeNewFactsMsg(stmt, messages))
 
-	return glob.ExecState_True, factsWithPrefix, nil
+	return glob.ExecState_True, nil
 }
