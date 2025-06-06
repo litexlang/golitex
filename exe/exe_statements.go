@@ -247,16 +247,7 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 		return err
 	}
 
-	paramSets := []ast.Fc{}
-	for _, paramInSet := range stmt.DefHeader.ParamInSetsFacts {
-		paramSet, err := ast.GetParamSetFromInStmt(paramInSet)
-		if err != nil {
-			return err
-		}
-		paramSets = append(paramSets, paramSet)
-	}
-
-	fnSet := ast.MakeFnSetFc(paramSets, retSet)
+	fnSet := ast.MakeFnSetFc(stmt.DefHeader.SetParams, retSet)
 
 	inFact := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(stmt.DefHeader.Name), fnSet})
 	err = exec.env.NewFact(inFact)
@@ -279,15 +270,11 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 
 	// 现在只处理dom里没额外的东西的情况
 	if len(stmt.DomFacts) == 0 {
-		setParams, err := ast.GetParamsSetFromInStatements(stmt.DefHeader.ParamInSetsFacts)
-		if err != nil {
-			return err
-		}
 		fnInFnSet, err := ast.GetParamSetFromInStmt(stmt.RetInSetsFact)
 		if err != nil {
 			return err
 		}
-		fnSet := ast.NewFcFn(ast.NewFcFn(ast.NewFcAtomWithName(glob.KeywordFn), setParams), []ast.Fc{fnInFnSet})
+		fnSet := ast.NewFcFn(ast.NewFcFn(ast.NewFcAtomWithName(glob.KeywordFn), stmt.DefHeader.SetParams), []ast.Fc{fnInFnSet})
 
 		newFact := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(stmt.DefHeader.Name), fnSet})
 

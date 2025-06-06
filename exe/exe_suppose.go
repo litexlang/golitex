@@ -94,7 +94,7 @@ func (exec *Executor) supposeStmt_declaredParams(stmt *ast.SupposeStmt) (glob.Ex
 	}
 
 	// in facts are true
-	for _, inFact := range instantiatedFactSpecDef.DefHeader.ParamInSetsFacts {
+	for _, inFact := range instantiatedFactSpecDef.DefHeader.NewInFacts() {
 		err = exec.env.NewFact(inFact)
 		if err != nil {
 			return glob.ExecState_Error, err

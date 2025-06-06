@@ -25,10 +25,10 @@ type DefObjStmt struct {
 }
 
 type DefHeader struct {
-	Name             string
-	Params           []string
-	SetParams        []Fc
-	ParamInSetsFacts []FactStmt
+	Name      string
+	Params    []string
+	SetParams []Fc
+	// ParamInSetsFacts []FactStmt
 }
 
 type DefPropStmt struct {
@@ -54,7 +54,7 @@ type DefExistPropStmt struct {
 
 type DefFnStmt struct {
 	DefHeader DefHeader
-	// RetSet         Fc
+	// RetSet        Fc
 	DomFacts      []FactStmt
 	ThenFacts     []FactStmt
 	RetInSetsFact FactStmt

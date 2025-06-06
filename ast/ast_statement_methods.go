@@ -217,3 +217,12 @@ func (stmt *DefObjStmt) NewInFacts() []*SpecFactStmt {
 
 	return facts
 }
+
+func (defHeader *DefHeader) NewInFacts() []*SpecFactStmt {
+	facts := []*SpecFactStmt{}
+	for i, param := range defHeader.Params {
+		facts = append(facts, NewInFact(param, defHeader.SetParams[i]))
+	}
+
+	return facts
+}
