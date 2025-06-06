@@ -17,3 +17,7 @@ prove:
         $p(2)
         f(a)(b) = 2
     $p(f(a)(b))
+
+prove:
+    forall a fn(A, B)C:
+        $p(a,b)
