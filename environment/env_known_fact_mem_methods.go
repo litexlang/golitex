@@ -124,7 +124,7 @@ func (s SpecFactInLogicExprMem) newFact(logicExpr *ast.OrStmt, supposedEnv *ast.
 	return nil
 }
 
-func (s SpecFactInUniFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (glob.Map2D[[]KnownSpecFact_InUniSpecFact], error) {
+func (s SpecFactInUniFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (glob.Map2D[[]KnownSpecFact_InUniFact], error) {
 	switch stmt.TypeEnum {
 	case ast.TruePure:
 		return s.PureFacts, nil
@@ -139,7 +139,7 @@ func (s SpecFactInUniFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (glob.Map
 	}
 }
 
-func (s SpecFactInUniFactMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([]KnownSpecFact_InUniSpecFact, bool) {
+func (s SpecFactInUniFactMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([]KnownSpecFact_InUniFact, bool) {
 	sameEnumFacts, err := s.getSameEnumFacts(stmt)
 	if err != nil {
 		return nil, false
@@ -201,13 +201,13 @@ func (s SpecFactInUniFactMem) newFact(stmtAsSpecFact *ast.SpecFactStmt, uniFact 
 	}
 
 	if _, ok := sameEnumFacts[stmtAsSpecFact.PropName.PkgName]; !ok {
-		sameEnumFacts[stmtAsSpecFact.PropName.PkgName] = make(map[string][]KnownSpecFact_InUniSpecFact)
+		sameEnumFacts[stmtAsSpecFact.PropName.PkgName] = make(map[string][]KnownSpecFact_InUniFact)
 	}
 	if _, ok := sameEnumFacts[stmtAsSpecFact.PropName.PkgName][stmtAsSpecFact.PropName.Name]; !ok {
-		sameEnumFacts[stmtAsSpecFact.PropName.PkgName][stmtAsSpecFact.PropName.Name] = []KnownSpecFact_InUniSpecFact{}
+		sameEnumFacts[stmtAsSpecFact.PropName.PkgName][stmtAsSpecFact.PropName.Name] = []KnownSpecFact_InUniFact{}
 	}
 
-	sameEnumFacts[stmtAsSpecFact.PropName.PkgName][stmtAsSpecFact.PropName.Name] = append(sameEnumFacts[stmtAsSpecFact.PropName.PkgName][stmtAsSpecFact.PropName.Name], KnownSpecFact_InUniSpecFact{stmtAsSpecFact, uniFact, supposedEnv})
+	sameEnumFacts[stmtAsSpecFact.PropName.PkgName][stmtAsSpecFact.PropName.Name] = append(sameEnumFacts[stmtAsSpecFact.PropName.PkgName][stmtAsSpecFact.PropName.Name], KnownSpecFact_InUniFact{stmtAsSpecFact, uniFact, supposedEnv})
 
 	return nil
 }

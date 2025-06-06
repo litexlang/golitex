@@ -217,7 +217,7 @@ func (ver *Verifier) iterate_KnownSpec_InLogic_InUni_MatchEnv_applyMatch(stmt *a
 			previousSuppose = knownFactUnderLogicExpr.EnvFact
 		}
 
-		paramArrMap, ok, err := ver.matchStoredUniSpecWithSpec_preventDifferentVarsMatchTheSameFreeVar(env.KnownSpecFact_InUniSpecFact{SpecFact: knownFactUnderLogicExpr.SpecFact, UniFact: knownFactUnderLogicExpr.UniFact}, stmt)
+		paramArrMap, ok, err := ver.matchStoredUniSpecWithSpec_preventDifferentVarsMatchTheSameFreeVar(env.KnownSpecFact_InUniFact{SpecFact: knownFactUnderLogicExpr.SpecFact, UniFact: knownFactUnderLogicExpr.UniFact}, stmt)
 		if err != nil {
 			return false, err
 		}
@@ -330,7 +330,7 @@ func (ver *Verifier) specFact_inLogicExpr_inUniFactMem_atEnv(curEnv *env.Env, st
 
 func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch(stmt *ast.SpecFactStmt, knownFacts []env.SpecFact_InLogicExpr_InUniFact, state VerState) (bool, error) {
 	for _, knownFactUnderLogicExpr := range knownFacts {
-		paramArrMap, ok, err := ver.matchStoredUniSpecWithSpec_preventDifferentVarsMatchTheSameFreeVar(env.KnownSpecFact_InUniSpecFact{SpecFact: knownFactUnderLogicExpr.SpecFact, UniFact: knownFactUnderLogicExpr.UniFact}, stmt)
+		paramArrMap, ok, err := ver.matchStoredUniSpecWithSpec_preventDifferentVarsMatchTheSameFreeVar(env.KnownSpecFact_InUniFact{SpecFact: knownFactUnderLogicExpr.SpecFact, UniFact: knownFactUnderLogicExpr.UniFact}, stmt)
 		if err != nil {
 			return false, err
 		}
@@ -386,7 +386,7 @@ func (ver *Verifier) specFact_UniMem_atCurEnv(curEnv *env.Env, stmt *ast.SpecFac
 	return ver.iterate_KnownSpecInUniFacts_applyMatch(stmt, searchedSpecFacts, nextState)
 }
 
-func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch(stmt *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InUniSpecFact, state VerState) (bool, error) {
+func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch(stmt *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InUniFact, state VerState) (bool, error) {
 	for _, knownFact := range knownFacts {
 		paramArrMap, ok, err := ver.matchStoredUniSpecWithSpec_preventDifferentVarsMatchTheSameFreeVar(knownFact, stmt)
 		if err != nil {
@@ -1244,7 +1244,7 @@ func (ver *Verifier) proveUniFactDomFacts(insUniFact *ast.UniFactStmt, state Ver
 	}
 }
 
-func (ver *Verifier) iterate_KnownSpecInUniFacts_MatchEnv_applyMatch(stmt *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InUniSpecFact, state VerState) (bool, error) {
+func (ver *Verifier) iterate_KnownSpecInUniFacts_MatchEnv_applyMatch(stmt *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InUniFact, state VerState) (bool, error) {
 	var previousSuppose *ast.SpecFactStmt = nil
 	uniMapForMatchEnv := map[string]ast.Fc{}
 
