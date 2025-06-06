@@ -134,10 +134,10 @@ func (stmt *DefObjStmt) String() string {
 	return builder.String()
 }
 
-func DefPropStmtString(prefix string, fact *DefPropStmt) string {
+func (fact *DefPropStmt) String() string {
 	var builder strings.Builder
 
-	builder.WriteString(prefix)
+	builder.WriteString(glob.KeywordProp)
 	builder.WriteByte(' ')
 	builder.WriteString(fact.DefHeader.String())
 
@@ -173,10 +173,6 @@ func DefPropStmtString(prefix string, fact *DefPropStmt) string {
 
 	return builder.String()
 
-}
-
-func (fact *DefPropStmt) String() string {
-	return DefPropStmtString(glob.KeywordProp, fact)
 }
 
 func (f *DefFnStmt) String() string {
@@ -291,23 +287,11 @@ func (s *DefExistPropStmt) String() string {
 	return builder.String()
 }
 
-// func (s *AxiomStmt) String() string {
-// 	var builder strings.Builder
-// 	builder.WriteString(glob.KeywordAxiom)
-// 	builder.WriteString(glob.KeySymbolColon)
-// 	builder.WriteByte('\n')
-// 	builder.WriteString(glob.SplitLinesAndAdd4NIndents(s.Fact.String(), 1))
-// 	return builder.String()
-// }
-
-func uniFactString(prefix string, l *UniFactStmt) string {
-	if len(l.Params) != len(l.ParamSets) {
-		return ""
-	}
-
+func (l *UniFactStmt) String() string {
 	var builder strings.Builder
 
-	builder.WriteString(prefix)
+	builder.WriteString(glob.KeywordForall)
+	builder.WriteString(" ")
 	if len(l.Params) > 0 {
 		for i := range len(l.Params) - 1 {
 			builder.WriteString(l.Params[i])
@@ -345,10 +329,6 @@ func uniFactString(prefix string, l *UniFactStmt) string {
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(l.IffFacts[len(l.IffFacts)-1].String(), 2))
 	}
 	return builder.String()
-}
-
-func (l *UniFactStmt) String() string {
-	return uniFactString(fmt.Sprintf("%s ", glob.KeywordForall), l)
 }
 
 func (head DefHeader) String() string {
@@ -395,32 +375,6 @@ func strOfNonEmptyFactStmtSlice[T Stringer](stmtSlice []T, indent uint32) string
 
 	return builder.String()
 }
-
-// func (stmt *LogicExprStmt) String() string {
-// 	var prefix string
-// 	if stmt.IsOr {
-// 		prefix = glob.KeywordOr
-// 	} else {
-// 		prefix = glob.KeywordAnd
-// 	}
-
-// 	var builder strings.Builder
-// 	builder.WriteString(prefix)
-// 	builder.WriteString(glob.KeySymbolColon)
-// 	builder.WriteByte('\n')
-
-// 	if len(stmt.Facts) > 0 {
-// 		for i := range len(stmt.Facts) - 1 {
-// 			builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Facts[i].String(), 1))
-// 			builder.WriteByte('\n')
-// 		}
-// 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Facts[len(stmt.Facts)-1].String(), 1))
-// 	}
-
-// 	ret := builder.String()
-// 	ret = strings.TrimSuffix(ret, "\n")
-// 	return ret
-// }
 
 func (stmt *HaveStmt) String() string {
 	var builder strings.Builder

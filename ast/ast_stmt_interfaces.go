@@ -58,20 +58,10 @@ type LogicOrSpec_Stmt interface {
 	String() string
 	Instantiate(uniConMap map[string]Fc) (FactStmt, error)
 	ReverseIsTrue() []SpecFactStmt
-	// IsSpecFactNameWithUniPrefix() bool
 }
 
 func (s *SpecFactStmt) logicExprOrSpecFactStmt() {}
 func (s *OrStmt) logicExprOrSpecFactStmt()       {}
-
-// func (s *OrStmt) IsSpecFactNameWithUniPrefix() bool {
-// 	for _, fact := range s.Facts {
-// 		if fact.IsSpecFactNameWithUniPrefix() {
-// 			return true
-// 		}
-// 	}
-// 	return false
-// }
 
 func (stmt *SpecFactStmt) ReverseIsTrue() []SpecFactStmt {
 	return []SpecFactStmt{*stmt.ReverseTrue()}
