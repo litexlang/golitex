@@ -77,10 +77,10 @@ func (e VerState) toFinalRound() VerState {
 	}
 }
 
-func (e VerState) isRound1() bool {
-	if e == Round1Msg || e == Round1NoMsg {
-		return true
-	} else {
-		return false
-	}
-}
+// func (e VerState) isRound1() bool {
+// 	if e == Round1Msg || e == Round1NoMsg {
+// 		return true
+// 	} else {
+// 		return false
+// 	}
+// }

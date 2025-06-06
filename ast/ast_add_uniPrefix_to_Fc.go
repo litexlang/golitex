@@ -15,32 +15,28 @@ package litex_ast
 import (
 	"fmt"
 	glob "golitex/glob"
-	"strings"
 )
 
-type NameDepthMap map[string]int
+// type NameDepthMap map[string]int
 
-func AddUniPrefixToFcAtom(atom *FcAtom, uniParams NameDepthMap) (*FcAtom, error) {
+func AddUniPrefixToFcAtom(atom *FcAtom) (*FcAtom, error) {
 	if atom == nil {
 		return nil, nil
 	}
 
-	if prefixNum, ok := fcAtomInUniParams(atom, uniParams); ok {
-		atom.Name = strings.Repeat(glob.UniPrefix, prefixNum) + atom.Name
-	}
+	atom.Name = glob.UniPrefix + atom.Name
 
 	return atom, nil
 }
 
-func AddUniPrefixToFc(fc Fc, uniParams NameDepthMap) (Fc, error) {
-
+func AddUniPrefixToFc(fc Fc) (Fc, error) {
 	if fc == nil {
 		return nil, nil
 	}
 
 	fcAsAtom, ok := fc.(*FcAtom)
 	if ok {
-		return AddUniPrefixToFcAtom(fcAsAtom, uniParams)
+		return AddUniPrefixToFcAtom(fcAsAtom)
 	}
 
 	fcAsFcFn, ok := fc.(*FcFn)
@@ -51,13 +47,13 @@ func AddUniPrefixToFc(fc Fc, uniParams NameDepthMap) (Fc, error) {
 
 	var err error = nil
 
-	newFc.FnHead, err = AddUniPrefixToFc(fcAsFcFn.FnHead, uniParams)
+	newFc.FnHead, err = AddUniPrefixToFc(fcAsFcFn.FnHead)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, seg := range fcAsFcFn.ParamSegs {
-		newSeg, err := AddUniPrefixToFc(seg, uniParams)
+		newSeg, err := AddUniPrefixToFc(seg)
 		if err != nil {
 			return nil, err
 		}
@@ -65,15 +61,6 @@ func AddUniPrefixToFc(fc Fc, uniParams NameDepthMap) (Fc, error) {
 	}
 
 	return &newFc, nil
-}
-
-func fcAtomInUniParams(atom *FcAtom, uniParams NameDepthMap) (int, bool) {
-	if atom.PkgName == glob.EmptyPkg {
-		if prefixNum, ok := uniParams[atom.Name]; ok {
-			return prefixNum, true
-		}
-	}
-	return 0, false
 }
 
 func AddUniPrefixToUniFact(asUniFact *UniFactStmt) (*UniFactStmt, error) {
