@@ -12,19 +12,19 @@
 
 package litex_parser
 
-type AllowUniFactEnum uint8
+type uniFactEnum uint8
 
 const (
-	UniFactDepth0 AllowUniFactEnum = iota
+	UniFactDepth0 uniFactEnum = iota
 	UniFactDepth1
 	UniFactDepth2
 )
 
-func (enum AllowUniFactEnum) allowMoreDepth() bool {
+func (enum uniFactEnum) allowMoreDepth() bool {
 	return enum == UniFactDepth0 || enum == UniFactDepth1
 }
 
-func (enum AllowUniFactEnum) addDepth() AllowUniFactEnum {
+func (enum uniFactEnum) addDepth() uniFactEnum {
 	switch enum {
 	case UniFactDepth0:
 		return UniFactDepth1
