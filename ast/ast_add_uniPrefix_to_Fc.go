@@ -12,105 +12,100 @@
 
 package litex_ast
 
-import (
-	"fmt"
-	glob "golitex/glob"
-)
-
 // type NameDepthMap map[string]int
 
-func AddUniPrefixToFcAtom(atom *FcAtom) (*FcAtom, error) {
-	if atom == nil {
-		return nil, nil
-	}
+// func AddUniPrefixToFcAtom(atom *FcAtom) (*FcAtom, error) {
+// 	if atom == nil {
+// 		return nil, nil
+// 	}
 
-	atom.Name = glob.UniPrefix + atom.Name
+// 	atom.Name = glob.UniPrefix + atom.Name
 
-	return atom, nil
-}
+// 	return atom, nil
+// }
 
-func AddUniPrefixToFc(fc Fc) (Fc, error) {
-	if fc == nil {
-		return nil, nil
-	}
+// func AddUniPrefixToFc(fc Fc) (Fc, error) {
+// 	if fc == nil {
+// 		return nil, nil
+// 	}
 
-	fcAsAtom, ok := fc.(*FcAtom)
-	if ok {
-		return AddUniPrefixToFcAtom(fcAsAtom)
-	}
+// 	fcAsAtom, ok := fc.(*FcAtom)
+// 	if ok {
+// 		return AddUniPrefixToFcAtom(fcAsAtom)
+// 	}
 
-	fcAsFcFn, ok := fc.(*FcFn)
-	if !ok {
-		return nil, fmt.Errorf("invalid fc %s", fc.String())
-	}
-	var newFc FcFn
+// 	fcAsFcFn, ok := fc.(*FcFn)
+// 	if !ok {
+// 		return nil, fmt.Errorf("invalid fc %s", fc.String())
+// 	}
+// 	var newFc FcFn
 
-	var err error = nil
+// 	var err error = nil
 
-	newFc.FnHead, err = AddUniPrefixToFc(fcAsFcFn.FnHead)
-	if err != nil {
-		return nil, err
-	}
+// 	newFc.FnHead, err = AddUniPrefixToFc(fcAsFcFn.FnHead)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	for _, seg := range fcAsFcFn.ParamSegs {
-		newSeg, err := AddUniPrefixToFc(seg)
-		if err != nil {
-			return nil, err
-		}
-		newFc.ParamSegs = append(newFc.ParamSegs, newSeg)
-	}
+// 	for _, seg := range fcAsFcFn.ParamSegs {
+// 		newSeg, err := AddUniPrefixToFc(seg)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		newFc.ParamSegs = append(newFc.ParamSegs, newSeg)
+// 	}
 
-	return &newFc, nil
-}
+// 	return &newFc, nil
+// }
 
-func AddUniPrefixToUniFact(asUniFact *UniFactStmt) (*UniFactStmt, error) {
-	uniMap := map[string]Fc{}
-	newParams := make([]string, len(asUniFact.Params))
+// func AddUniPrefixToUniFact(asUniFact *UniFactStmt) (*UniFactStmt, error) {
+// 	uniMap := map[string]Fc{}
+// 	newParams := make([]string, len(asUniFact.Params))
 
-	for i, param := range asUniFact.Params {
-		newParams[i] = fmt.Sprintf("%s%s", glob.UniPrefix, param)
-		uniMap[param] = NewFcAtom(glob.EmptyPkg, newParams[i])
-	}
+// 	for i, param := range asUniFact.Params {
+// 		newParams[i] = fmt.Sprintf("%s%s", glob.UniPrefix, param)
+// 		uniMap[param] = NewFcAtom(glob.EmptyPkg, newParams[i])
+// 	}
 
-	newDomFacts := []FactStmt{}
-	newThenFacts := []FactStmt{}
-	newIffFacts := EmptyIffFacts
+// 	newDomFacts := []FactStmt{}
+// 	newThenFacts := []FactStmt{}
+// 	newIffFacts := EmptyIffFacts
 
-	for _, fact := range asUniFact.DomFacts {
-		newFact, err := fact.Instantiate(uniMap)
-		if err != nil {
-			return nil, err
-		}
-		newDomFacts = append(newDomFacts, newFact)
-	}
+// 	for _, fact := range asUniFact.DomFacts {
+// 		newFact, err := fact.Instantiate(uniMap)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		newDomFacts = append(newDomFacts, newFact)
+// 	}
 
-	for _, fact := range asUniFact.ThenFacts {
-		newFact, err := fact.Instantiate(uniMap)
-		if err != nil {
-			return nil, err
-		}
-		newThenFacts = append(newThenFacts, newFact)
-	}
+// 	for _, fact := range asUniFact.ThenFacts {
+// 		newFact, err := fact.Instantiate(uniMap)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		newThenFacts = append(newThenFacts, newFact)
+// 	}
 
-	newSetParams := []Fc{}
-	for _, setParam := range asUniFact.ParamSets {
-		newSetParam, err := setParam.Instantiate(uniMap)
-		if err != nil {
-			return nil, err
-		}
-		newSetParams = append(newSetParams, newSetParam)
-	}
+// 	newSetParams := []Fc{}
+// 	for _, setParam := range asUniFact.ParamSets {
+// 		newSetParam, err := setParam.Instantiate(uniMap)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		newSetParams = append(newSetParams, newSetParam)
+// 	}
 
-	newParamInSetsFacts := []FactStmt{}
-	for _, inSetFact := range asUniFact.ParamInSetsFacts {
-		newFact, err := inSetFact.Instantiate(uniMap)
-		if err != nil {
-			return nil, err
-		}
-		newParamInSetsFacts = append(newParamInSetsFacts, newFact)
-	}
+// 	newParamInSetsFacts := []FactStmt{}
+// 	for _, inSetFact := range asUniFact.ParamInSetsFacts {
+// 		newFact, err := inSetFact.Instantiate(uniMap)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		newParamInSetsFacts = append(newParamInSetsFacts, newFact)
+// 	}
 
-	newUniFact := newUniFactStmt(newParams, newSetParams, newDomFacts, newThenFacts, newIffFacts, newParamInSetsFacts)
+// 	newUniFact := newUniFactStmt(newParams, newSetParams, newDomFacts, newThenFacts, newIffFacts, newParamInSetsFacts)
 
-	return newUniFact, nil
-}
+// 	return newUniFact, nil
+// }

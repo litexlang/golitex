@@ -154,10 +154,13 @@ func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) (glob.ExecState, error) {
 			return glob.ExecState_Error, err
 		}
 	} else if asUniFact, ok := stmt.ToCheckFact.(*ast.UniFactStmt); ok {
-		newUniFact, err := ast.AddUniPrefixToUniFact(asUniFact)
-		if err != nil {
-			return glob.ExecState_Error, err
-		}
+		// newUniFact, err := ast.AddUniPrefixToUniFact(asUniFact)
+
+		// if err != nil {
+		// 	return glob.ExecState_Error, err
+		// }
+
+		newUniFact := asUniFact
 
 		err = exec.env.Parent.NewFact(newUniFact)
 		if err != nil {
