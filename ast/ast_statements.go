@@ -46,10 +46,10 @@ type DefExistPropStmtBody struct {
 }
 
 type DefExistPropStmt struct {
-	DefBody     DefExistPropStmtBody
-	ExistParams []string
-	// ExistParamSets   []Fc
-	ExistInSetsFacts []FactStmt
+	DefBody        DefExistPropStmtBody
+	ExistParams    []string
+	ExistParamSets []Fc
+	// ExistInSetsFacts []FactStmt
 }
 
 type DefFnStmt struct {

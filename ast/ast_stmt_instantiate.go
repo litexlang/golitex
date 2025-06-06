@@ -213,16 +213,33 @@ func (stmt *DefExistPropStmt) Instantiate(uniMap map[string]Fc) (*DefExistPropSt
 		return nil, err
 	}
 
-	newExistParamInSetsFacts := make([]FactStmt, len(stmt.ExistInSetsFacts))
-	for i, fact := range stmt.ExistInSetsFacts {
-		newFact, err := fact.Instantiate(uniMap)
+	newExistParamSets := []Fc{}
+	for _, setParam := range stmt.ExistParamSets {
+		newSetParam, err := setParam.Instantiate(uniMap)
 		if err != nil {
 			return nil, err
 		}
-		newExistParamInSetsFacts[i] = newFact
+		newExistParamSets = append(newExistParamSets, newSetParam)
 	}
 
-	return NewDefExistPropStmt(newDefExistPropBody, stmt.ExistParams, newExistParamInSetsFacts), nil
+	// newExistParamInSetsFacts := make([]FactStmt, len(stmt.ExistInSetsFacts))
+	// for i, fact := range stmt.ExistInSetsFacts {
+	// 	newFact, err := fact.Instantiate(uniMap)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	newExistParamInSetsFacts[i] = newFact
+	// }
+
+	return NewDefExistPropStmt(newDefExistPropBody, stmt.ExistParams, newExistParamSets), nil
+}
+
+func (stmt *DefExistPropStmt) ExistParamInSetsFacts() []FactStmt {
+	facts := []FactStmt{}
+	for i, param := range stmt.ExistParams {
+		facts = append(facts, NewInFact(param, stmt.ExistParamSets[i]))
+	}
+	return facts
 }
 
 func (stmt *OrStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {

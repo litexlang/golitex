@@ -531,12 +531,7 @@ func (tb *tokenBlock) defExistPropStmt() (*ast.DefExistPropStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	existParamInSetsFacts := make([]ast.FactStmt, len(existParamSets))
-	for i, existParamSet := range existParamSets {
-		existParamInSetsFacts[i] = ast.NewInFact(existParams[i], existParamSet)
-	}
-
-	return ast.NewDefExistPropStmt(def, existParams, existParamInSetsFacts), nil
+	return ast.NewDefExistPropStmt(def, existParams, existParamSets), nil
 }
 
 // 本质上这个设计是有问题的。exist把 sep 这个奇怪的东西混进param 来了
