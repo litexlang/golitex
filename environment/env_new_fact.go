@@ -380,13 +380,15 @@ func (env *Env) isMathInductionPropName_StoreIt(fact *ast.SpecFactStmt) (bool, e
 		return false, fmt.Errorf("math induction fact %s should have a prop name that is defined, got: %s", fact.String(), propNameAsAtom)
 	}
 
-	knownUniFactParams := []string{fmt.Sprintf("%sn", glob.UniParamPrefix)}
+	// knownUniFactParams := []string{fmt.Sprintf("%sn", glob.UniParamPrefix)}
+	knownUniFactParams := []string{fmt.Sprintf("n")}
 	knownUniFactDomFacts := []ast.FactStmt{}
 	knownUniFactThenFacts := []ast.FactStmt{
 		ast.NewSpecFactStmt(
 			ast.TruePure,
 			*propNameAsAtom,
-			[]ast.Fc{ast.NewFcAtomWithName(fmt.Sprintf("%sn", glob.UniParamPrefix))},
+			// []ast.Fc{ast.NewFcAtomWithName(fmt.Sprintf("%sn", glob.UniParamPrefix))},
+			[]ast.Fc{ast.NewFcAtomWithName("n")},
 		),
 	}
 	knownUniFactParamInSetsFacts := []ast.FactStmt{}

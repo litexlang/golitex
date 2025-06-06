@@ -127,7 +127,7 @@ func (f *FcAtom) IsBuiltinRelaFn() bool {
 }
 
 func (fcAtom *FcAtom) NameIsUniParam_PkgNameEmpty() (string, bool) {
-	if strings.HasPrefix(fcAtom.Name, glob.UniParamPrefix) && fcAtom.PkgName == glob.EmptyPkg {
+	if strings.HasPrefix(fcAtom.Name, glob.UniPrefix) && fcAtom.PkgName == glob.EmptyPkg {
 		return fcAtom.Name, true
 	}
 	return "", false

@@ -154,8 +154,8 @@ func (exec *Executor) supposeStmt_storeFactsToParentEnv_addPrefixToSupposeFactAn
 			return glob.ExecState_Error, nil, fmt.Errorf("spec fact parameter must be atom, but got: %s", supposePropParam.String())
 		}
 		name := asAtom.Name
-		nameWithPrefix := fmt.Sprintf("%s%s", glob.UniParamPrefix, name)
-		uniMap[name] = ast.NewFcAtom(glob.EmptyPkg, nameWithPrefix)
+		// nameWithPrefix := fmt.Sprintf("%s%s", glob.UniParamPrefix, name)
+		uniMap[name] = ast.NewFcAtom(glob.EmptyPkg, name)
 	}
 
 	factsWithPrefix := []ast.FactStmt{}

@@ -567,9 +567,9 @@ func (tb *tokenBlock) defExistPropStmt() (*ast.DefExistPropStmt, error) {
 	def, err := tb.defExistPropStmtBody(nameDepthMap)
 
 	// add prefix to existParams
-	for i := range existParams {
-		existParams[i] = fmt.Sprintf("%s%s", glob.UniParamPrefix, existParams[i])
-	}
+	// for i := range existParams {
+	// 	existParams[i] = fmt.Sprintf("%s%s", glob.UniParamPrefix, existParams[i])
+	// }
 
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
@@ -1246,7 +1246,7 @@ func (tb *tokenBlock) param_paramInSetFactsWithUniPrefix(endWith string, nameDep
 			}
 			nameDepthMap[param] = 1
 
-			param = fmt.Sprintf("%s%s", glob.UniParamPrefix, param)
+			// param = fmt.Sprintf("%s%s", glob.UniParamPrefix, param)
 
 			params = append(params, param)
 
