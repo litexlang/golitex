@@ -67,7 +67,7 @@ func (ver *Verifier) match_FcInFactUnderUniFact_WithConFc(fcInFactUnderUniFact a
 				return make(map[string][]ast.Fc), true, nil
 			}
 
-			return ver.match_FcAtomInFactUnderUniFact_ConFc(leftAsAtom, conFc)
+			return ver.match_FcAtomInFactUnderUniFact_ConFc(leftAsAtom, conFc, knownFact)
 		}
 	} else {
 		return ver.match_FcFnInFactUnderUniFact_ConFc(fcInFactUnderUniFact.(*ast.FcFn), conFc, knownFact)
@@ -99,7 +99,7 @@ func (ver *Verifier) match_FcInFactUnderUniFact_WithConFc(fcInFactUnderUniFact a
 }
 
 // func (ver *Verifier) match_FcAtomInFactUnderUniFact_ConFc(fcAtomInFactUnderUniFact *ast.FcAtom, conFc ast.Fc, uniParams []string) (map[string][]ast.Fc, bool, error) {
-func (ver *Verifier) match_FcAtomInFactUnderUniFact_ConFc(fcAtomInFactUnderUniFact *ast.FcAtom, conFc ast.Fc) (map[string][]ast.Fc, bool, error) {
+func (ver *Verifier) match_FcAtomInFactUnderUniFact_ConFc(fcAtomInFactUnderUniFact *ast.FcAtom, conFc ast.Fc, knownFact env.KnownSpecFact_InUniFact) (map[string][]ast.Fc, bool, error) {
 	retMap := make(map[string][]ast.Fc)
 
 	// 不利用查prefix的方式来确定涉及到的param是不是 uni
@@ -109,8 +109,13 @@ func (ver *Verifier) match_FcAtomInFactUnderUniFact_ConFc(fcAtomInFactUnderUniFa
 	// }
 
 	// 利用查prefix的方式来确定涉及到的param是不是 uni
-	if uniParamStr, ok := fcAtomInFactUnderUniFact.NameIsUniParam_PkgNameEmpty(); ok {
-		retMap[uniParamStr] = []ast.Fc{conFc}
+	// if uniParamStr, ok := fcAtomInFactUnderUniFact.NameIsUniParam_PkgNameEmpty(); ok {
+	// 	retMap[uniParamStr] = []ast.Fc{conFc}
+	// 	return retMap, true, nil
+	// }
+
+	if isFcAtomInForallParamSet(fcAtomInFactUnderUniFact, knownFact) {
+		retMap[fcAtomInFactUnderUniFact.Name] = []ast.Fc{conFc}
 		return retMap, true, nil
 	}
 
