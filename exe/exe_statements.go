@@ -154,14 +154,7 @@ func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) (glob.ExecState, error) {
 			return glob.ExecState_Error, err
 		}
 	} else if asUniFact, ok := stmt.ToCheckFact.(*ast.UniFactStmt); ok {
-		// newUniFact, err := ast.AddUniPrefixToUniFact(asUniFact)
-
-		// if err != nil {
-		// 	return glob.ExecState_Error, err
-		// }
-
 		newUniFact := asUniFact
-
 		err = exec.env.Parent.NewFact(newUniFact)
 		if err != nil {
 			return glob.ExecState_Error, err
@@ -732,13 +725,9 @@ func (exec *Executor) knowSupposeStmt(stmt *ast.KnowSupposeStmt) (glob.ExecState
 		}
 	}
 
-	execState, factsWithPrefix, err := exec.supposeStmt_storeFactsToParentEnv_addPrefixToSupposeFactAndBodyFacts(knownFacts, &stmt.SupposeStmt, exec.env)
+	execState, err := exec.supposeStmt_storeFactsToParentEnv(knownFacts, &stmt.SupposeStmt, exec.env)
 	if err != nil {
 		return glob.ExecState_Error, err
-	}
-
-	for i, fact := range factsWithPrefix {
-		stmt.SupposeStmt.Body[i] = fact
 	}
 
 	return execState, nil

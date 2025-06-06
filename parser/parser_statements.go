@@ -179,7 +179,6 @@ func (tb *tokenBlock) uniFactStmt(uniFactDepth uniFactEnum) (*ast.UniFactStmt, e
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	// params, newUniParams, setParams, paramInSetsFacts, err := tb.param_paramInSetFactsWithUniPrefix(glob.KeySymbolColon)
 	params, setParams, paramInSetsFacts, err := tb.param_paramSet_paramInSetFacts(glob.KeySymbolColon)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
