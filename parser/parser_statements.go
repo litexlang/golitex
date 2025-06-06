@@ -268,9 +268,7 @@ func (tb *tokenBlock) defFnStmt() (*ast.DefFnStmt, error) {
 		}
 	}
 
-	retInSetsFacts := ast.NewInFact(decl.Name, retType)
-
-	return ast.NewDefFnStmt(*decl, domFacts, thenFacts, retInSetsFacts), nil
+	return ast.NewDefFnStmt(*decl, domFacts, thenFacts, retType), nil
 }
 
 func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {

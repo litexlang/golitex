@@ -54,10 +54,9 @@ type DefExistPropStmt struct {
 
 type DefFnStmt struct {
 	DefHeader DefHeader
-	// RetSet        Fc
-	DomFacts      []FactStmt
-	ThenFacts     []FactStmt
-	RetInSetsFact FactStmt
+	DomFacts  []FactStmt
+	ThenFacts []FactStmt
+	RetSet    Fc
 }
 
 type UniFactStmt struct {

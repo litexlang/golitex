@@ -242,12 +242,7 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 	}
 
 	// the function object is in fn
-	retSet, err := ast.GetParamSetFromInStmt(stmt.RetInSetsFact)
-	if err != nil {
-		return err
-	}
-
-	fnSet := ast.MakeFnSetFc(stmt.DefHeader.SetParams, retSet)
+	fnSet := ast.MakeFnSetFc(stmt.DefHeader.SetParams, stmt.RetSet)
 
 	inFact := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(stmt.DefHeader.Name), fnSet})
 	err = exec.env.NewFact(inFact)
@@ -255,11 +250,8 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 		return err
 	}
 
-	uniFactThen := []ast.FactStmt{stmt.RetInSetsFact}
-	uniFactThen = append(uniFactThen, stmt.ThenFacts...)
-
 	thenFacts := []ast.FactStmt{}
-	thenFacts = append(thenFacts, uniFactThen...)
+	thenFacts = append(thenFacts, stmt.ThenFacts...)
 
 	uniFact := ast.NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.SetParams, stmt.DomFacts, thenFacts, ast.EmptyIffFacts)
 	err = exec.env.NewFact(uniFact)
@@ -270,11 +262,7 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 
 	// 现在只处理dom里没额外的东西的情况
 	if len(stmt.DomFacts) == 0 {
-		fnInFnSet, err := ast.GetParamSetFromInStmt(stmt.RetInSetsFact)
-		if err != nil {
-			return err
-		}
-		fnSet := ast.NewFcFn(ast.NewFcFn(ast.NewFcAtomWithName(glob.KeywordFn), stmt.DefHeader.SetParams), []ast.Fc{fnInFnSet})
+		fnSet := ast.NewFcFn(ast.NewFcFn(ast.NewFcAtomWithName(glob.KeywordFn), stmt.DefHeader.SetParams), []ast.Fc{stmt.RetSet})
 
 		newFact := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(stmt.DefHeader.Name), fnSet})
 
