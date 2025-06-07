@@ -18,9 +18,9 @@ _Simplicity is the ultimate sophistication._
 
 _-- Leonardo da Vinci_
 
-Litex is a simple yet powerful formal language for mathematical reasoning. A formal language is a language that allows you to express your reasoning in structured way so that a computer can verify them. Unlike traditionally over-complicated formal languages, Litex is intuitive and accessible to everyone. Learn more in [tutorial](./doc/tutorial/tutorial.md).
+Litex is an ambitious project with a clear vision: to create a simple, intuitive, and powerful formal language for mathematics. While we're in the early stages of development, we've already established a solid foundation that demonstrates the potential of this approach. Like a promising startup, we're building something that could fundamentally change how we think about and work with mathematical formalization. Unlike traditionally over-complicated formal languages, Litex is intuitive and accessible to everyone. Learn more in [tutorial](./doc/tutorial/tutorial.md), [comparison with Lean](./doc/comparison_with_lean/comparison_with_lean.md).
 
-Litex aims to scale reasoning in three ways:
+Litex scales reasoning in three ways:
 
 **Engineering:** Like software engineering, Litex turns individual math work into **mathematical engineering** through clear abstraction and composition. Writing math in Litex can be as simple as writing code in Python.
 
@@ -28,7 +28,16 @@ Litex aims to scale reasoning in three ways:
 
 **AI Integration:** Litex provides the perfect **infrastructure for AI** to learn and perform formal reasoning at scale.
 
-World-class researchers including Terrence Tao, Yoshua Bengio, and AI companies including DeepMind and DeepSeek, are showing great interest how formal languages can be used to scale reasoning AI, ensure AI safety, and many more tasks. Litex is the perfect tool to their challenge. Litex has already gained attention from leading institutions worldwide, including **CMU, Mila, Tsinghua, PKU, OpenMMLab, SJTU, Fudan**.  
+World-class researchers including Terrence Tao, Yoshua Bengio, and AI companies including DeepMind and DeepSeek, are showing great interest how formal languages can be used to scale reasoning AI, ensure AI safety, and many more tasks. Litex is the perfect tool to their challenge. Litex has already gained attention from leading institutions worldwide, including **CMU, Mila, Tsinghua, PKU, OpenMMLab, SJTU, Fudan**. Contributors read [contribute to Litex](./doc/contribute_to_Litex/contribute_to_Litex.md) for more details.
+
+---  
+**Contact:**  
+- **Website:** [litexlang.org](https://litexlang.org)  
+- **GitHub:** [github.com/litexlang/golitex](https://github.com/litexlang/golitex)
+- **Project Email:** litexlang@outlook.com
+- **Litex Creator:** Jiachen Shen
+- **Litex Creator's Email:** malloc_realloc_free@outlook.com
+- **Discord:** [discord](https://discord.gg/uvrHM7eS)
 
 ## Learn Basics of Litex in One Minute
 
@@ -160,14 +169,5 @@ You can contribute by:
 See more in [contribute to Litex](./doc/contribute_to_Litex/contribute_to_Litex.md).
 
 Since 90% of the functionality delivered now is better than 100% of it delivered never[^1], the inventor of Litex put it open-source to welcome everyone, including you, to learn, try, use, and contribute to Litex, even though Litex is not fully ready. Feel free to contact us and join this exciting journey!
-
----  
-**Contact:**  
-- **Website:** [litexlang.org](https://litexlang.org)  
-- **GitHub:** [github.com/litexlang/golitex](https://github.com/litexlang/golitex)
-- **Project Email:** litexlang@outlook.com
-- **Litex Creator:** Jiachen Shen
-- **Litex Creator's Email:** malloc_realloc_free@outlook.com
-- **Discord:** [discord](https://discord.gg/uvrHM7eS)
 
 [^1]: Kernighan & Plauger, The Elements of Programming Style, 1978.
