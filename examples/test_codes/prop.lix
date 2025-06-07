@@ -1,3 +1,4 @@
+"""
 prove:
     prop p(x N, y N):
         $q(y,x)
@@ -7,6 +8,7 @@ prove:
     know:
         $p(1,2)
     $q(2,1)
+"""
 
 prove:
     prop p(x N, y N):

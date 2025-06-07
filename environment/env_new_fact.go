@@ -31,6 +31,43 @@ func (env *Env) NewFact(stmt ast.FactStmt) error {
 	}
 }
 
+func (env *Env) newSpecFactNoPostProcess(fact *ast.SpecFactStmt) error {
+	if env.CurMatchProp == nil {
+		if isEqualFact, err := env.isTrueEqualFact_StoreIt(fact); err != nil {
+			return err
+		} else if isEqualFact {
+			return nil
+		}
+	}
+
+	if isMathInductionProp, err := env.isMathInductionPropName_StoreIt(fact); err != nil {
+		return err
+	} else if isMathInductionProp {
+		return nil
+	}
+
+	// err := env.KnownFacts.SpecFactMem.NewFactInSpecFactMem(fact, env.CurMatchEnv)
+	err := env.storeSpecFactInMem(fact)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (env *Env) newFactNoPostProcess(stmt ast.FactStmt) error {
+	switch f := stmt.(type) {
+	case *ast.SpecFactStmt:
+		return env.newSpecFactNoPostProcess(f)
+	case *ast.OrStmt:
+		return env.newLogicExprFact(f)
+	case *ast.UniFactStmt:
+		return env.newUniFact(f)
+	default:
+		return fmt.Errorf("unknown fact type: %T", stmt)
+	}
+}
+
 func (env *Env) newLogicExprFact(fact *ast.OrStmt) error {
 	return env.storeLogicFact(fact)
 }
@@ -47,36 +84,6 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
 	if isMathInductionProp, err := env.isMathInductionPropName_StoreIt(fact); err != nil {
 		return err
 	} else if isMathInductionProp {
-		return nil
-	}
-
-	if isCommutativeProp, err := env.isTrueCommutativeProp_StoreIt(fact); err != nil {
-		return err
-	} else if isCommutativeProp {
-		return nil
-	}
-
-	if isCommutativeFn, err := env.isCommutativeFnName_StoreIt(fact); err != nil {
-		return err
-	} else if isCommutativeFn {
-		return nil
-	}
-
-	if isAssociativeFn, err := env.isAssociativeFnName_StoreIt(fact); err != nil {
-		return err
-	} else if isAssociativeFn {
-		return nil
-	}
-
-	if isEqualFn, err := env.isTrueFnEqual_StoreIt(fact); err != nil {
-		return err
-	} else if isEqualFn {
-		return nil
-	}
-
-	if isEqualSet, err := env.isTrueSetEqual_StoreIt(fact); err != nil {
-		return err
-	} else if isEqualSet {
 		return nil
 	}
 
@@ -194,7 +201,7 @@ func (env *Env) newTrueSpecFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) erro
 			return err
 		}
 
-		err = env.NewFact(instantiated)
+		err = env.newFactNoPostProcess(instantiated)
 
 		env.NewMsg(fmt.Sprintf("%s\nis true by definition", instantiated.String()))
 
@@ -229,7 +236,7 @@ func (env *Env) newFalseExistFact_EmitEquivalentUniFact(fact *ast.SpecFactStmt) 
 		return err
 	}
 
-	err = env.newUniFact(uniFact)
+	err = env.newFactNoPostProcess(uniFact)
 
 	if err != nil {
 		return fmt.Errorf("exist fact %s has no definition", fact.String())
