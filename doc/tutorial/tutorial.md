@@ -110,25 +110,25 @@ $intelligent(Jordan)
 
 `$intelligent(Jordan)` is a factual statement about the object `Jordan`. It tells the Litex interpreter to check whether `$intelligent(Jordan)` is true. The Litex interpreter will check it using known facts in the `Litex knowledge base` based on builtin rules. Do not worry about how the builtin rules works. You will be surprised at how easy they are. They are just the rules of logic that you have so frequently used in your daily life every single day. This tutorial will explain them later.
 
-After running all the above code, the Litex interpreter will output the following result.
+After running all the above code, the Litex interpreter will output the messages like this (the exact output might be different):
 
 ```
-set human
+set human 
 
-prop intelligent(`x)
+prop intelligent(x)
 
 know:
-    forall `x:
+    forall x human:
         then:
-            $intelligent(`x)
+            $intelligent(x)
 
-obj Jordan
+obj Alice
 
-$intelligent(Jordan)
+$intelligent(Alice)
 is true. proved by
-forall `x:
+forall x human:
     then:
-        $intelligent(`x)
+        $intelligent(x)
 
 ---
 success! :)
@@ -136,9 +136,7 @@ success! :)
 
 When you see the smile face :), it means the proof is successful, Congratulations! If not, it means the proof is failed, there must be something `false` or `unknown` or `error` in your code. Read the error message carefully and fix it.
 
-The first few lines of outputs are very similar to the input. Messages of `set`, `prop`, `know`, `obj` statements are just copy of the input. The only difference is that the output is there are some "\`" in the output. "\`" means that is a free variable, and the Litex interpreter will replace it with a concrete value when checking the factual statement. For example, x in `prop intelligent(x human)` is a free variable, and Jordan in `$intelligent(Jordan)` is a concrete value.
-
-The most important part of the output is the last line. It means the `$intelligent(Jordan)` is true, proved by the previously known fact `forall x human: $intelligent(x)`.
+The first few lines of outputs are very similar to the input. Messages of `set`, `prop`, `know`, `obj` statements are just copy of the input. They are messages telling the user what is happening. The most important part of the output is the last line. It means the `$intelligent(Jordan)` is true, proved by the previously known fact `forall x human: $intelligent(x)`.
 
 Think about it, if it were you to check whether Jordan is intelligent, what will you do? You will look up the knowledge base, and find the fact `forall x human: $intelligent(x)` instead of `$intelligent(Jordan)` (It is illegal to write `forall` statements in a single line in Litex. In this tutorial, we write them within a line for better readability.). Then you will replace `x` with `Jordan` in the fact, and see whether `Jordan` satisfies all the conditions. In this case, the only condition is that `Jordan` is a human. Since we have already known that `Jordan` is a human by its definition, we can conclude that `$intelligent(Jordan)` is true. Litex does exactly the same thing for you, and it is much faster and more accurate than any human.
 
@@ -394,7 +392,7 @@ prove:
     prop strong(x human)
     prop powerful(x human)
 
-    know：
+    know:
         forall x cat:
             $is_cute(x)
 
@@ -427,10 +425,10 @@ Jordan = Jordan
 
 $strong(Jordan)
 is true. proved by
-forall `x:
-    $physical(`x)
+forall x human:
+    $physical(x)
     then:
-        $strong(`x)
+        $strong(x)
 ```
 
 Notice `$strong(Jordan)` is true because 1. Jordan is human 2. `$physical(Jordan)` is true 3. `forall x human: $physical(x) then $strong(x)` is known. It works because the then block `$string(x)` and `$strong(Jordan)` have the same proposition name and therefore can be matched. When matched, Jordan is substituted for x in the then block, and we check whether `$physical(Jordan)` and Jordan is in set human is true. `$physical(Jordan)` is true because it matches the known fact `$physical(Jordan)` and is proved by this specific fact, and Jordan is defined to be in set human when it is defined.
@@ -447,9 +445,9 @@ prove:
 
     know:
         forall x human:
-        $p1(x) 
-        then:
-            $p2(x)
+            $p1(x) 
+            then:
+                $p2(x)
 
         forall x human:
             $p2(x)
@@ -463,37 +461,37 @@ prove:
             $p3(x)
 ```
 
-Related messages in output says:
+Related messages in output might look like this:
 
 ```
-forall `x:
-    $p1(`x)
+forall x human:
+    $p1(x)
     then:
-        $p2(`x)
-        $p3(`x)
+        $p2(x)
+        $p3(x)
 is true
-$p1(`x)
+$p1(x)
 is true. proved by
-$p1(`x)
-`x = `x
+$p1(x)
+x = x
 
-$p2(`x)
+$p2(x)
 is true. proved by
-forall `x:
-    $p1(`x)
+forall x human:
+    $p1(x)
     then:
-        $p2(`x)
-$p2(`x)
+        $p2(x)
+$p2(x)
 is true. proved by
-$p2(`x)
-`x = `x
+$p2(x)
+x = x
 
-$p3(`x)
+$p3(x)
 is true. proved by
-forall `x:
-    $p2(`x)
+forall x human:
+    $p2(x)
     then:
-        $p3(`x)
+        $p3(x)
 ```
 
 The above example wants to prove that `forall x human: $p1(x) then $p2(x) and $p3(x)`. When proving a `forall` statement, Litex will open a new proof context for each object in the domain. In this context, it will put a new object x in the context, x is assumed to be in human set and `$p(x)` is true. Then the `then` block is proved statement by statement. `$p2(x)` is proved by the known fact `forall x human: $p1(x) then $p2(x)`. `$p3(x)` is proved by the known fact `forall x human: $p2(x) then $p3(x)`.
