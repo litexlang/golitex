@@ -11,6 +11,7 @@ prove:
 """
 
 """
+# 这是不对的，因为我不允许你在定义prop时，dom或iff里出现和被定义的propName同名的specFact
 prove:
     prop p(x N, y N):
         $p(y,x)

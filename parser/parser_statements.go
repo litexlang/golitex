@@ -234,7 +234,7 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	// iff, dom 里不能出现和被定义的prop同名的prop
+	// iff, dom 里不能出现和被定义的prop同名的prop，否则用def做验证的时候会出问题
 	for _, fact := range iffFacts {
 		if factAsSpecFact, ok := fact.(*ast.SpecFactStmt); ok {
 			if factAsSpecFact.PropName.Name == declHeader.Name {

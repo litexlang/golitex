@@ -63,6 +63,9 @@ What the above code means basically is:
 - Jordan is a human.
 - Therefore, Jordan is intelligent. (This is the conclusion)
 
+There are two things in math: objects and factual statements. Objects are the things that we are talking about, and factual statements are the statements about objects. Sets, functions, numbers, etc. are all objects. And factual statements are statements like "Jordan is intelligent", "1 < 2", "x = 1", etc. In Litex, a factual statement has four potential outcomes: true, false, unknown(not enough information to determine the truth value), or error(the statement is not well-formed). A fact is a statement that is true.
+
+
 Let's explain the above code statement by statement.
 
 ```
