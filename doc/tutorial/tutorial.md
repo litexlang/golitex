@@ -17,6 +17,7 @@ Litex is a powerful yet easy-to-learn formal language. Essentially, it is a tool
 - **Project Email:** litexlang@outlook.com
 - **Litex Creator:** Jiachen Shen
 - **Litex Creator's Email:** malloc_realloc_free@outlook.com
+- **Discord:** [discord](https://discord.gg/uvrHM7eS)
 
 ## Whetting Your Appetite
 

@@ -7,8 +7,10 @@
 //     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Original Author: Jiachen Shen <malloc_realloc_free@outlook.com>
-// Contact the development team: <litexlang@outlook.com>
-// Visit litexlang.org and https://github.com/litexlang/golitex for more info.
+// Litex email: <litexlang@outlook.com>
+// Litex website: https://litexlang.org
+// Litex github repository: https://github.com/litexlang/golitex
+// Litex discord server: https://discord.gg/uvrHM7eS
 
 package litex_env
 

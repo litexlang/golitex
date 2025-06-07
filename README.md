@@ -157,6 +157,8 @@ You can contribute by:
 6. Building standard library of Litex
 7. Creating the LitexDojo, similar to how LeanDojo is for Lean.
 
+See more in [contribute to Litex](./doc/contribute_to_Litex/contribute_to_Litex.md).
+
 Since 90% of the functionality delivered now is better than 100% of it delivered never[^1], the inventor of Litex put it open-source to welcome everyone, including you, to learn, try, use, and contribute to Litex, even though Litex is not fully ready. Feel free to contact us and join this exciting journey!
 
 ---  
@@ -166,5 +168,6 @@ Since 90% of the functionality delivered now is better than 100% of it delivered
 - **Project Email:** litexlang@outlook.com
 - **Litex Creator:** Jiachen Shen
 - **Litex Creator's Email:** malloc_realloc_free@outlook.com
+- **Discord:** [discord](https://discord.gg/uvrHM7eS)
 
 [^1]: Kernighan & Plauger, The Elements of Programming Style, 1978.
