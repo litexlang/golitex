@@ -234,6 +234,23 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
+	// iff, dom 里不能出现和被定义的prop同名的prop
+	for _, fact := range iffFacts {
+		if factAsSpecFact, ok := fact.(*ast.SpecFactStmt); ok {
+			if factAsSpecFact.PropName.Name == declHeader.Name {
+				return nil, fmt.Errorf("iff or dom fact cannot be the same as the prop being defined")
+			}
+		}
+	}
+
+	for _, fact := range domFacts {
+		if factAsSpecFact, ok := fact.(*ast.SpecFactStmt); ok {
+			if factAsSpecFact.PropName.Name == declHeader.Name {
+				return nil, fmt.Errorf("iff or dom fact cannot be the same as the prop being defined")
+			}
+		}
+	}
+
 	if len(iffFacts) == 0 {
 		iffFacts = ast.EmptyIffFacts
 	}

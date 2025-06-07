@@ -55,6 +55,7 @@ func (env *Env) newSpecFactNoPostProcess(fact *ast.SpecFactStmt) error {
 	return nil
 }
 
+// 为了防止 p 的定义中推导出q，q的定义中推导出p，导致循环定义，所以需要这个函数
 func (env *Env) newFactNoPostProcess(stmt ast.FactStmt) error {
 	switch f := stmt.(type) {
 	case *ast.SpecFactStmt:
@@ -330,40 +331,6 @@ func (env *Env) GetEqualFcs(fc ast.Fc) (*[]ast.Fc, bool) {
 	return facts, ok
 }
 
-func (env *Env) isTrueCommutativeProp_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
-	if !fact.IsTrue() {
-		return false, nil
-	}
-
-	if !ast.IsFcAtomWithName(&fact.PropName, glob.KeywordCommutativeProp) {
-		return false, nil
-	}
-
-	// 验证它的def确实只有两个元素
-	if len(fact.Params) != 1 {
-		return true, fmt.Errorf("commutative prop is supposed to have one parameter, but %s has %d parameters", fact.PropName, len(fact.Params))
-	}
-
-	propNameAsAtom, ok := fact.Params[0].(*ast.FcAtom)
-	if !ok {
-		return true, fmt.Errorf("commutative prop is supposed to have one atom parameter, but %s has %s", fact.PropName, fact.Params[0])
-	}
-
-	propDef, ok := env.PropDefMem.Get(*propNameAsAtom)
-	if !ok {
-		return true, fmt.Errorf("prop %s has no definition", fact.PropName)
-	}
-
-	if len(propDef.DefHeader.Params) != 2 {
-		return true, fmt.Errorf("prop %s is supposed to be commutative, but has no %d parameters", fact.PropName, len(propDef.DefHeader.Params))
-	}
-
-	// env.insertCommutativeProp(*propNameAsAtom)
-	env.storeSpecFactInMem(fact)
-
-	return true, nil
-}
-
 func (env *Env) isMathInductionPropName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 	if !fact.IsTrue() {
 		return false, nil
@@ -400,97 +367,6 @@ func (env *Env) isMathInductionPropName_StoreIt(fact *ast.SpecFactStmt) (bool, e
 	knownUniFact := ast.NewUniFact(knownUniFactParams, []ast.Fc{}, knownUniFactDomFacts, knownUniFactThenFacts, ast.EmptyIffFacts)
 
 	err := env.NewFact(knownUniFact)
-	if err != nil {
-		return false, err
-	}
-
-	return true, nil
-}
-
-func (env *Env) isCommutativeFnName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
-	if !fact.IsTrue() {
-		return false, nil
-	}
-
-	if !ast.IsFcAtomWithName(&fact.PropName, glob.KeywordCommutativeFn) {
-		return false, nil
-	}
-
-	if len(fact.Params) != 1 {
-		return false, fmt.Errorf("commutative fn is supposed to have one parameter, but %s has %d parameters", fact.PropName, len(fact.Params))
-	}
-
-	// fnNameAsAtom, ok := fact.Params[0].(*ast.FcAtom)
-	// if !ok {
-	// 	return false, fmt.Errorf("commutative fn is supposed to have one atom parameter, but %s has %s", fact.PropName, fact.Params[0])
-	// }
-
-	// env.InsertCommutativeFn(*fnNameAsAtom)
-	env.storeSpecFactInMem(fact)
-
-	return true, nil
-}
-
-func (env *Env) isAssociativeFnName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
-	if !fact.IsTrue() {
-		return false, nil
-	}
-
-	if !ast.IsFcAtomWithName(&fact.PropName, glob.KeywordAssociativeFn) {
-		return false, nil
-	}
-
-	if len(fact.Params) != 1 {
-		return false, fmt.Errorf("associative fn is supposed to have one parameter, but %s has %d parameters", fact.PropName, len(fact.Params))
-	}
-
-	// fnNameAsAtom, ok := fact.Params[0].(*ast.FcAtom)
-	// if !ok {
-	// 	return false, fmt.Errorf("associative fn is supposed to have one atom parameter, but %s has %s", fact.PropName, fact.Params[0])
-	// }
-
-	// env.InsertAssociativeFn(*fnNameAsAtom)
-	env.storeSpecFactInMem(fact)
-
-	return true, nil
-}
-
-func (env *Env) isTrueFnEqual_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
-	if !fact.IsTrue() {
-		return false, nil
-	}
-
-	if !ast.IsFcAtomWithName(&fact.PropName, glob.KeySymbolEqualEqual) {
-		return false, nil
-	}
-
-	if len(fact.Params) != 2 {
-		return false, fmt.Errorf("equal fn is supposed to have two parameters, but %s has %d parameters", fact.PropName, len(fact.Params))
-	}
-
-	err := storeCommutativeTransitiveFact(env.EqualMem, fact)
-	if err != nil {
-		return false, err
-	}
-
-	return true, nil
-}
-
-func (env *Env) isTrueSetEqual_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
-	if !fact.IsTrue() {
-		// not = 的存储和其他普通的prop一样，因为 != 没有传递性，不能像 = 一样存储
-		return false, nil
-	}
-
-	if !ast.IsFcAtomWithName(&fact.PropName, glob.KeySymbolEqualEqualEqual) {
-		return false, nil
-	}
-
-	if len(fact.Params) != 2 {
-		return false, fmt.Errorf("equal set is supposed to have two parameters, but %s has %d parameters", fact.PropName, len(fact.Params))
-	}
-
-	err := storeCommutativeTransitiveFact(env.EqualMem, fact)
 	if err != nil {
 		return false, err
 	}
