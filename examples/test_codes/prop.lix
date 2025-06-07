@@ -1,75 +1,17 @@
-# prop 在引入的时候，自动向环境里添加Forall事实
 prove:
-    prop P(x set):
-        $in(x, Q)
-        iff:
-            $in(x, P2)
-
-    # true
-    forall:
-        $P(1)
-        $in(1, Q)
-        then:
-            $in(1, P2)
-
-    # true
-    forall:
-        $in(1, P2)
-        $in(1, Q)
-        then:
-            $P(1)
-
-# 不同的prop的格式
-prove:
-    prop P(x set):
-        $in(x, Q)
-        iff:
-            $in(x, P2)
-            
-    prop P2(x set):
-        dom:
-            $in(x, Q)
-        iff:
-            $in(x, P2)
-            
-            
-    prop P3(x set):
-        $in(x, Q)
-            
-    prop P4(x set)
-
+    prop p(x N, y N):
+        $q(y,x)
     
-prove:
-    prop P(x set):
-        iff:
-            $P2(x)
-    
+    prop q(x N, y N)
+                    
     know:
-        $P2(1)
-
-    $P(1)
-
-# VERY IMPORTANT: Use prop definition to prove prop prop
-prove:
-    prop P(q prop):
-        iff:
-            $q()
-            
-    know:
-        $q()
-
-    $P(q)
+        $p(1,2)
+    $q(2,1)
 
 prove:
     prop p(x N, y N):
-        $p(x,y)
-        iff:
-            forall x N, y N:
-                then:
-                    $p(y,x)
-                    
-                    
-prove:
-    prop between(left point, right point, middle point):
-        dom:
-            left != right
+        $p(y,x)
+
+    know $p(1,2)
+    $p(2,1)
+

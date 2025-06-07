@@ -222,15 +222,6 @@ func (stmt *DefExistPropStmt) Instantiate(uniMap map[string]Fc) (*DefExistPropSt
 		newExistParamSets = append(newExistParamSets, newSetParam)
 	}
 
-	// newExistParamInSetsFacts := make([]FactStmt, len(stmt.ExistInSetsFacts))
-	// for i, fact := range stmt.ExistInSetsFacts {
-	// 	newFact, err := fact.Instantiate(uniMap)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	newExistParamInSetsFacts[i] = newFact
-	// }
-
 	return NewDefExistPropStmt(newDefExistPropBody, stmt.ExistParams, newExistParamSets), nil
 }
 
