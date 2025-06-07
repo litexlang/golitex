@@ -34,7 +34,7 @@ func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 	case *ast.DefPropStmt:
 		err = exec.defPropStmt(stmt)
 	case *ast.DefObjStmt:
-		err = exec.defObjStmt(stmt)
+		err = exec.defObjStmt(stmt, true)
 	case *ast.HaveStmt:
 		execState, err = exec.haveStmt(stmt)
 	case *ast.DefExistPropStmt:
@@ -208,8 +208,10 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
 	return nil
 }
 
-func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt) error {
-	defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
+func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt, requireMsg bool) error {
+	if requireMsg {
+		defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
+	}
 	err := exec.env.NewDefObj(stmt)
 	if err != nil {
 		return err
@@ -386,7 +388,7 @@ func (exec *Executor) defStmt(stmt ast.DefStmt) error {
 
 	switch stmt := stmt.(type) {
 	case *ast.DefObjStmt:
-		return exec.defObjStmt(stmt)
+		return exec.defObjStmt(stmt, true)
 	case *ast.DefFnStmt:
 		return exec.defFnStmt(stmt)
 	case *ast.DefPropStmt:
@@ -565,7 +567,7 @@ func (exec *Executor) setDefStmt(stmt *ast.SetDefSetBuilderStmt) error {
 	// err := exec.env.SetDefMem.Insert(stmt)
 
 	// insert as obj
-	err := exec.defObjStmt(ast.NewDefObjStmt([]string{stmt.SetName}, []ast.Fc{ast.NewFcAtomWithName(glob.KeywordSet)}, []ast.FactStmt{}))
+	err := exec.defObjStmt(ast.NewDefObjStmt([]string{stmt.SetName}, []ast.Fc{ast.NewFcAtomWithName(glob.KeywordSet)}, []ast.FactStmt{}), false)
 	if err != nil {
 		return err
 	}
