@@ -10,10 +10,11 @@ prove:
     $q(2,1)
 """
 
+"""
 prove:
     prop p(x N, y N):
         $p(y,x)
 
     know $p(1,2)
     $p(2,1)
-
+"""
