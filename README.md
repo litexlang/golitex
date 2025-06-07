@@ -36,6 +36,8 @@ _Keep it simple, stupid._
 
 _-- The Unix Philosophy_
 
+There are two things in math: objects and factual statements. Objects are the things that we are talking about, and factual statements are the statements about objects. Sets, functions, numbers, etc. are all objects. And factual statements are statements like "Jordan is intelligent", "1 < 2", "x = 1", etc. In Litex, a factual statement has four potential outcomes: true, false, unknown(not enough information to determine the truth value), or error(the statement is not well-formed). A fact is a statement that is true.
+
 Math is built on top of a small sets of reasoning rules and axioms. There are basically two types of deriving a new fact from existing facts:
 
 1. derive from a specific fact: e.g. If I know x = 1, then x = 1
