@@ -22,7 +22,7 @@ Litex is a simple yet powerful formal language for mathematical reasoning. A for
 
 Litex aims to scale reasoning in three ways:
 
-**Engineering:** Like software engineering, Litex turns individual math work into **mathematical engineering** through clear abstraction and composition.
+**Engineering:** Like software engineering, Litex turns individual math work into **mathematical engineering** through clear abstraction and composition. Writing math in Litex can be as simple as writing code in Python.
 
 **Accessibility:** Being much simpler than other formal languages, Litex enables **more people** to participate in formal reasoning, from children to experts.
 

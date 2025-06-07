@@ -1,37 +1,23 @@
-prop point_on_line(a point, l line)
+set human
 
-fn line_of(a point, b point) line:
-    a != b
-    then:
-        $point_on_line(a, line_of(a, b))
-        $point_on_line(b, line_of(a, b))
-        forall l line:
-            $point_on_line(a, l)
-            $point_on_line(b, l)
+prove:
+    prop p1(x human)
+    prop p2(x human)
+    prop p3(x human)
+
+    know:
+        forall x human:
+            $p1(x) 
             then:
-                l = line_of(a, b)
+                $p2(x)
 
-know forall a point, b point:
-    a != b
-    then:
-        $point_on_line(a, line_of(a, b))
+        forall x human:
+            $p2(x)
+            then:
+                $p3(x)
 
-# a line is determined by two points
-obj a point, b point, l line:
-    a != b
-    $point_on_line(a, l)
-    $point_on_line(b, l)
-# l = line_of(a, b)
-
-# line_of is commutative
-forall a point, b point:
-    a != b
-    then:
-  #      b != a
-        $point_on_line(a, line_of(a, b))
-        """
-        $point_on_line(b, line_of(a, b))
-        $point_on_line(a, line_of(b, a))
-        $point_on_line(b, line_of(b, a))
-        line_of(a, b) = line_of(b, a)
-"""
+    forall x human:
+        $p1(x)
+        then:
+            $p2(x)
+            $p3(x)
