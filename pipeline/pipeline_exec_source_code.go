@@ -137,38 +137,40 @@ func listen(reader *bufio.Reader, writer io.Writer, parserEnv *parser.ParserEnv,
 
 		// Execute the code
 		msg, signal, err := ExecuteCodeAndReturnMessageSliceGivenSettings(inputStr, parserEnv, executor)
-		if err != nil {
-			fmt.Fprintf(writer, "[ERROR] %v\n", err)
+		if err != nil || signal != glob.SysSignalTrue {
+			printMessagesToWriter(writer, msg)
+			fmt.Fprintf(writer, "---\n[Warning] failed\n")
 			continue
 		}
 
 		// Print results
-		if len(msg) > 0 {
-			// fmt.Printf("\n")
-			// 如果有连续两行是空白的换行那不允许多个空行出现
-			isConsecutiveEmptyLine := true
-			var builder strings.Builder
+		printMessagesToWriter(writer, msg)
+		fmt.Fprintln(writer, "---\nsuccess! :)")
+	}
+}
 
-			for _, m := range msg {
-				// 让m的最后一位是换行符
-				m = strings.TrimRight(m, " \r\t\n")
-				if strings.TrimSpace(m) == "" {
-					if isConsecutiveEmptyLine {
-						continue
-					}
-					isConsecutiveEmptyLine = true
-				} else {
-					isConsecutiveEmptyLine = false
-					builder.WriteString(m)
+func printMessagesToWriter(writer io.Writer, msg []string) {
+	if len(msg) > 0 {
+		// fmt.Printf("\n")
+		// 如果有连续两行是空白的换行那不允许多个空行出现
+		isConsecutiveEmptyLine := true
+		var builder strings.Builder
+
+		for _, m := range msg {
+			// 让m的最后一位是换行符
+			m = strings.TrimRight(m, " \r\t\n")
+			if strings.TrimSpace(m) == "" {
+				if isConsecutiveEmptyLine {
+					continue
 				}
-				builder.WriteString("\n")
+				isConsecutiveEmptyLine = true
+			} else {
+				isConsecutiveEmptyLine = false
+				builder.WriteString(m)
 			}
-			fmt.Fprintln(writer, builder.String()[:len(builder.String())-1])
+			builder.WriteString("\n")
 		}
-
-		if signal != glob.SysSignalTrue {
-			fmt.Fprintf(writer, "[Warning] %s is not true\n", inputStr)
-		}
+		fmt.Fprintln(writer, builder.String()[:len(builder.String())-1])
 	}
 }
 
