@@ -10,6 +10,8 @@
 
 Litex is a powerful yet easy-to-learn formal language. Essentially, it is a tool that allows you to write reasoning according to the rules defined by Litex, and Litex will help verify whether your reasoning is correct. As a result, it can be widely used for validating mathematical proofs or any rule-based systems. The main advantage of Litex over other formal languages is its simplicity and user-friendliness. Litex is basically an attempt to scale reasoning in the AI age.
 
+Try and download Litex now at [litexlang.org](https://litexlang.org).
+
 ---  
 **Contact:**  
 - **Website:** [litexlang.org](https://litexlang.org)  

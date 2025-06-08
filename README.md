@@ -20,6 +20,8 @@ _-- Leonardo da Vinci_
 
 Litex is an ambitious project with a clear vision: to create a simple, intuitive, and powerful formal language for mathematics. While we're in the early stages of development, we've already established a solid foundation that demonstrates the potential of this approach. Like a promising startup, we're building something that could fundamentally change how we think about and work with mathematical formalization. Unlike traditionally over-complicated formal languages, Litex is intuitive and accessible to everyone. Learn more in [tutorial](./doc/tutorial/tutorial.md), [comparison with Lean](./doc/comparison_with_lean/comparison_with_lean.md).
 
+Try and download Litex now at [litexlang.org](https://litexlang.org).
+
 Litex scales reasoning in three ways:
 
 **Engineering:** Like software engineering, Litex turns individual math work into **mathematical engineering** through clear abstraction and composition. Writing math in Litex can be as simple as writing code in Python.
@@ -28,7 +30,7 @@ Litex scales reasoning in three ways:
 
 **AI Integration:** Litex provides the perfect **infrastructure for AI** to learn and perform formal reasoning at scale.
 
-World-class researchers including Terrence Tao, Yoshua Bengio, and AI companies including DeepMind and DeepSeek, are showing great interest how formal languages can be used to scale reasoning AI, ensure AI safety, and many more tasks. Litex is the perfect tool to their challenge. Litex has already gained attention from leading institutions worldwide, including **CMU, Mila, Tsinghua, PKU, OpenMMLab, SJTU, Fudan**. Contributors read [contribute to Litex](./doc/contribute_to_Litex/contribute_to_Litex.md) for more details.
+World-class researchers including Terrence Tao, Yoshua Bengio, and AI companies including DeepMind and DeepSeek, are showing great interest how formal languages can be used to scale reasoning AI, ensure AI safety, and many more tasks. Litex is the perfect tool to their challenge. Litex has already gained attention from leading institutions worldwide, including **CMU, Mila, Tsinghua, PKU, ByteDance, OpenMMLab, SJTU, Fudan**. Contributors read [contribute to Litex](./doc/contribute_to_Litex/contribute_to_Litex.md) for more details.
 
 ---  
 **Contact:**  
