@@ -12,7 +12,7 @@
 
 </div>
 
-## About Litex
+## About The Adventure of Litex
 
 _Simplicity is the ultimate sophistication._
 
@@ -30,15 +30,7 @@ Litex scales reasoning in three ways:
 
 World-class researchers including Terrence Tao, Yoshua Bengio, and AI companies including DeepMind and DeepSeek, are showing great interest how formal languages can be used to scale reasoning AI, ensure AI safety, and many more tasks. Litex is the perfect tool to their challenge. Litex has already gained attention from leading institutions worldwide, including **CMU, Mila, Tsinghua, PKU, OpenMMLab, SJTU, Fudan**. Contributors read [contribute to Litex](./doc/contribute_to_Litex/contribute_to_Litex.md) for more details.
 
----  
-**Contact:**  
-- **Website:** [litexlang.org](https://litexlang.org)  
-- **GitHub:** [github.com/litexlang/golitex](https://github.com/litexlang/golitex)
-- **Project Email:** litexlang@outlook.com
-- **Litex Creator:** Jiachen Shen
-- **Litex Creator's Email:** malloc_realloc_free@outlook.com
-- **Discord:** [discord](https://discord.gg/uvrHM7eS)
-
+˛
 ## Learn Basics of Litex in One Minute
 
 _Keep it simple, stupid._
@@ -155,7 +147,9 @@ _The best way to predict the future is to invent it._
 
 _-- Alan Kay_
 
-Hi, I am Jiachen Shen, the creator of Litex. I am a PhD student in mathematics and programming language enthusiast (a programming language geek, if you are one too, you are welcome to contact me). In 2023, I shockingly found that math is somehow equivalent to programming, after reading Professor Terence Tao's [blog](https://terrytao.wordpress.com/2023/11/18/formalizing-the-proof-of-pfr-in-lean4-using-blueprint-a-short-tour/). This is the most amazing idea that I have ever seen in my life. In 2024, after thinking about it for a year, I started to implement Litex. After more than 2500 git commits, what it means to be a "formal language that is intuitive and as aligned with daily math expression as possible" is finally to make sense to me and my kernel sort of works now (in a very clumsy way, I am sorry I am too single-handed to do this big project all by myself). Litex is evolving from implementation to community-driven development. The interpreter is 90% complete and covers most daily math.
+Hi, I am Jiachen Shen, the creator of Litex. I am a PhD student in mathematics and programming language enthusiast (a programming language geek, if you are one too, you are welcome to contact me). In 2023, I shockingly found that math is somehow equivalent to programming, after reading Professor Terence Tao's [blog](https://terrytao.wordpress.com/2023/11/18/formalizing-the-proof-of-pfr-in-lean4-using-blueprint-a-short-tour/). This is the most amazing idea that I have ever seen in my life. In 2024, after thinking about it for a year, I started to implement Litex. After more than 2500 git commits, what it means to be a "formal language that is intuitive and as aligned with daily math expression as possible" is finally to make sense to me and my kernel sort of works now.
+
+Litex is evolving from implementation to community-driven development. The interpreter is 90% complete and covers most daily math. However, it is still not ready for production use. Now, I face a big challenge: the conflict between an individual's limited capacity and the extensive demands of an open-source project. See more in [contribute to Litex](./doc/contribute_to_Litex/contribute_to_Litex.md) to help me grow the project.
 
 You can contribute by:
 1. Contributing to the interpreter or standard library
@@ -165,8 +159,6 @@ You can contribute by:
 5. Spreading the word about Litex
 6. Building standard library of Litex
 7. Creating the LitexDojo, similar to how LeanDojo is for Lean.
-
-See more in [contribute to Litex](./doc/contribute_to_Litex/contribute_to_Litex.md).
 
 Since 90% of the functionality delivered now is better than 100% of it delivered never[^1], the inventor of Litex put it open-source to welcome everyone, including you, to learn, try, use, and contribute to Litex, even though Litex is not fully ready. Feel free to contact us and join this exciting journey!
 
