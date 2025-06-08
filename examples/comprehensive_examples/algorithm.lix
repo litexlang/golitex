@@ -2,7 +2,7 @@
 algorithm.lix
 
 Goal:
-Formalize mathmetical defintion of algorithm from the book "The Art of Computer Programming" chapter 1.
+Formalize mathematical definition of algorithm from the book "The Art of Computer Programming" chapter 1.
 
 Here is the definition of algorithm from the book:
 
@@ -13,6 +13,7 @@ The computational sequence is said to terminate in k steps if k is the smallest
 integer for which x_k is in S, and in this case it is said to produce the output x_k from x. (Note that ﬁif x_k is in S, so x_{k+1}, because x_{k+1} = x_k in such a case.) Some computational sequences may never terminate; an algorithm is a computational method that terminates in finitely many steps for all x in I.
 
 """
+
 fn computational_sequence(Q set, f fn(Q)Q) fn(Q, N)Q:
     forall x Q:
         computational_sequence(Q, f)(x,n) = f(computational_sequence(Q, f)(x, n-1))
@@ -23,9 +24,10 @@ prop is_algorithm(Q set, I set, f fn(Q)Q):
     iff:
         forall x I:
             $exist_end_of_computational_sequence(Q, x, computational_sequence(Q, f))
-"""
 
+"""
 Here is a comparison with Lean4 code.
+"""
 
 """
 structure ComputationalMethod where
@@ -51,6 +53,7 @@ def IsAlgorithm (cm : ComputationalMethod) : Prop :=
 end ComputationalMethod
 """
 
+"""
 Comments:
 It only takes only 10 lines to formalize the definition of algorithm, which is marvelous.
 """
