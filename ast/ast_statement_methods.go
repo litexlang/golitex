@@ -147,6 +147,10 @@ func NewInFact(param string, paramSet Fc) *SpecFactStmt {
 	return NewSpecFactStmt(TruePure, FcAtom{glob.EmptyPkg, glob.KeywordIn}, []Fc{NewFcAtom(glob.EmptyPkg, param), paramSet})
 }
 
+func NewInFactWithFc(param Fc, paramSet Fc) *SpecFactStmt {
+	return NewSpecFactStmt(TruePure, FcAtom{glob.EmptyPkg, glob.KeywordIn}, []Fc{param, paramSet})
+}
+
 func IsFnSet(fc Fc) bool {
 	fcAsFcFn, ok := fc.(*FcFn)
 	if !ok {
