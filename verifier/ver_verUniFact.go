@@ -51,7 +51,10 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state VerState) (bool,
 		}
 
 		for i, indexStr := range indexes {
-			ver.env.ObjDefMem.Insert(ast.NewDefObjStmt([]string{indexStr}, []ast.Fc{newStmt.ParamSets[i]}, []ast.FactStmt{}), glob.EmptyPkg)
+			err := ver.env.ExeDefObjStmt(ast.NewDefObjStmt([]string{indexStr}, []ast.Fc{newStmt.ParamSets[i]}, []ast.FactStmt{}))
+			if err != nil {
+				return false, err
+			}
 		}
 	}
 
@@ -73,7 +76,7 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state VerState) (bool,
 		}
 	}
 
-	if newStmt.IffFacts == nil {
+	if newStmt.IffFacts == nil || len(newStmt.IffFacts) == 0 {
 		return ver.uniFactWithoutIff(newStmt, state)
 	} else {
 		return ver.uniFactWithIff(newStmt, state)

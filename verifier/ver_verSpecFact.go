@@ -62,14 +62,22 @@ func (ver *Verifier) isValidSpecFact_EqualFact(stmt *ast.SpecFactStmt) (bool, er
 		}
 	}
 
-	// 所有函数内部的参数，都要符合函数的要求
-	for _, param := range stmt.Params {
-		ok, err := ver.fcSatisfyFnRequirement(param)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, nil
+	if stmt.NameIs(glob.KeySymbolEqual) {
+		return true, nil
+	}
+
+	if stmt.NameIs(glob.KeywordIn) {
+		return ver.verSpecFactStepByStep(stmt, FinalRoundNoMsg)
+	} else {
+		// 所有函数内部的参数，都要符合函数的要求。这里必须要和in的情况分开，否则容易出问题，因为每次运行检查requirement的时候，都要检查一遍in的情况
+		for _, param := range stmt.Params {
+			ok, err := ver.fcSatisfyFnRequirement(param)
+			if err != nil {
+				return false, err
+			}
+			if !ok {
+				return false, nil
+			}
 		}
 	}
 
@@ -371,7 +379,7 @@ func (ver *Verifier) inFact(stmt *ast.SpecFactStmt, state VerState) (bool, error
 	return false, nil
 }
 
-// 这里需要检查，setParam是否是自由变量
+// TODO: 这里需要检查，setParam是否是自由变量
 func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc) (bool, error) {
 	if fc.IsAtom() {
 		return true, nil

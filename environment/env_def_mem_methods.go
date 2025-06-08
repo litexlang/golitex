@@ -277,3 +277,26 @@ func (e *Env) getFcAtomDefAtCurEnv(fcAtomName *ast.FcAtom) (ast.DefStmt, bool) {
 }
 
 // End of Get DefStmt at current environment
+
+func (e *Env) ExeDefObjStmt(stmt *ast.DefObjStmt) error {
+	err := e.NewDefObj(stmt)
+	if err != nil {
+		return err
+	}
+
+	for _, fact := range stmt.NewInFacts() {
+		err := e.NewFact(fact)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, fact := range stmt.Facts {
+		err := e.NewFact(fact)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

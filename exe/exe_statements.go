@@ -215,26 +215,8 @@ func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt, requireMsg bool) error {
 	if requireMsg {
 		defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
 	}
-	err := exec.env.NewDefObj(stmt)
-	if err != nil {
-		return err
-	}
 
-	for _, fact := range stmt.NewInFacts() {
-		err := exec.env.NewFact(fact)
-		if err != nil {
-			return err
-		}
-	}
-
-	for _, fact := range stmt.Facts {
-		err := exec.env.NewFact(fact)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return exec.env.ExeDefObjStmt(stmt)
 }
 
 func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
