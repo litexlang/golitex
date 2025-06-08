@@ -17,7 +17,7 @@ obj a point, b point, l line:
     a != b
     $point_on_line(a, l)
     $point_on_line(b, l)
-l = line_of(a, b)
+    l = line_of(a, b)
 
 # line_of is commutative
 forall a point, b point:

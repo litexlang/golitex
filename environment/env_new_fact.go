@@ -178,7 +178,7 @@ func (env *Env) newNotExistSt_SpecFactPostProcess(fact *ast.SpecFactStmt) error 
 		}
 	}
 
-	if fact.IsBuiltinInfixRelaProp() {
+	if _, ok := glob.BuiltinKeywordsSet[fact.PropName.Name]; ok || fact.IsBuiltinInfixRelaProp() {
 		return nil
 	} else {
 		return fmt.Errorf("unknown prop %s", fact.PropName)
