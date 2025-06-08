@@ -1,8 +1,35 @@
 # Contribute to Litex
 
-## Join Our Journey
+## Join My Journey
 
 Litex is an ambitious project with a clear vision: to create a simple, intuitive, and powerful formal language for mathematics. While we're in the early stages of development, we've already established a solid foundation that demonstrates the potential of this approach. Like a promising startup, we're building something that could fundamentally change how we think about and work with mathematical formalization.
+
+## Difficulties I Face
+
+This challenge I faced can be summarized as: **The conflict between an individual's limited capacity and the extensive demands of an open-source project** (or, more broadly, **a mismatch between a solo developer's resources and the requirements of a systemic engineering effort**).  
+
+Specifically, it manifests as:  
+1. **Individual capability vs. team-based development**:  
+   Projects like Litex typically require teamwork (development, testing, maintenance, promotion, etc.), but the author is an independent developer and PhD student with limited time and resources, making it difficult to balance academic work and the open-source project.  
+
+2. **Innovation vs. sustained effort**:  
+   Designing the core syntax (intellectual creation) can be achieved by an individual, but subsequent engineering, ecosystem building, and maintenance require long-term systematic effort—far beyond what one person can handle.  
+
+3. **Academic pressure vs. open-source ideals**:  
+   Fully committing to Litex could lead to failing to graduate (a real-world survival issue), but abandoning it would stall the project (a clash between ideals and reality).  
+
+At its core, this is a contradiction between **"individual heroism" and "collective collaboration,"** a classic dilemma faced by many independent developers and researchers.
+
+**If you can help me solve this contradiction, no matter how small, you are welcome to contact me.**
+
+---  
+**Contact:**  
+- **Website:** [litexlang.org](https://litexlang.org)  
+- **GitHub:** [github.com/litexlang/golitex](https://github.com/litexlang/golitex)
+- **Project Email:** litexlang@outlook.com
+- **Litex Creator:** Jiachen Shen
+- **Litex Creator's Email:** malloc_realloc_free@outlook.com
+- **Discord:** [discord](https://discord.gg/uvrHM7eS)
 
 ## Why Contribute?
 
@@ -22,7 +49,7 @@ We welcome contributors from all backgrounds - whether you're a programmer, math
 - Contribute to the compiler and runtime
 - Enhance documentation and tutorials
 
-### 2. Mathematical Formalization
+### 2. Mathematical Formalization (Litex dataset)
 - Formalize mathematical concepts from textbooks
 - Convert mathematical papers into Litex
 - Create example proofs and derivations
