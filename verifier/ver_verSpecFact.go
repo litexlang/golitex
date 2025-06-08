@@ -63,6 +63,15 @@ func (ver *Verifier) isValidSpecFact_EqualFact(stmt *ast.SpecFactStmt) (bool, er
 	}
 
 	// 所有函数内部的参数，都要符合函数的要求
+	for _, param := range stmt.Params {
+		ok, err := ver.fcSatisfyFnRequirement(param)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+	}
 
 	// 所有的传入的参数符号 prop 的要求 以及 stmt name 确实是个 prop
 	return true, nil
@@ -360,4 +369,84 @@ func (ver *Verifier) inFact(stmt *ast.SpecFactStmt, state VerState) (bool, error
 	}
 
 	return false, nil
+}
+
+// 这里需要检查，setParam是否是自由变量
+func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc) (bool, error) {
+	if fc.IsAtom() {
+		return true, nil
+	}
+
+	asFcFn, ok := fc.(*ast.FcFn)
+	if !ok {
+		return false, fmt.Errorf("fc is not a function")
+	}
+
+	// TODO: Here we assume the fcFnHead is an atom. In the future we should support fcFnHead as a fcFn.
+	fcFnHeadAsAtom, ok := asFcFn.FnHead.(*ast.FcAtom)
+	if !ok {
+		return false, fmt.Errorf(glob.NotImplementedMsg("function name is supposed to be an atom"))
+	}
+
+	fnDef, ok := ver.env.GetFnDef(fcFnHeadAsAtom)
+	if !ok {
+		return false, fmt.Errorf("function %s is not declared", fcFnHeadAsAtom.String())
+	}
+
+	if len(fnDef.DefHeader.SetParams) != len(asFcFn.ParamSegs) {
+		return false, fmt.Errorf("function %s has %d params, but %d in sets", fcFnHeadAsAtom.String(), len(asFcFn.ParamSegs), len(fnDef.DefHeader.SetParams))
+	}
+
+	uniMap := map[string]ast.Fc{}
+	for i, param := range asFcFn.ParamSegs {
+		uniMap[fnDef.DefHeader.Params[i]] = param
+	}
+
+	inFacts := []ast.FactStmt{}
+	// TODO: 这里需要检查，setParam是否是自由变量
+	for i, inSet := range fnDef.DefHeader.SetParams {
+		inFact := ast.NewInFactWithFc(asFcFn.ParamSegs[i], inSet)
+		inFacts = append(inFacts, inFact)
+	}
+
+	for _, inFact := range inFacts {
+		ok, err := ver.FactStmt(inFact, FinalRoundNoMsg)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+	}
+
+	domFacts := []ast.FactStmt{}
+	for _, domFact := range fnDef.DomFacts {
+		fixed, err := domFact.Instantiate(uniMap)
+		if err != nil {
+			return false, err
+		}
+		domFacts = append(domFacts, fixed)
+	}
+
+	for _, domFact := range domFacts {
+		ok, err := ver.FactStmt(domFact, FinalRoundNoMsg)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+	}
+
+	for _, param := range asFcFn.ParamSegs {
+		ok, err := ver.fcSatisfyFnRequirement(param)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+	}
+
+	return true, nil
 }
