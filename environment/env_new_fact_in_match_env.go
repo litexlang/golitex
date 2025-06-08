@@ -11,7 +11,6 @@
 // Litex website: https://litexlang.org
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex discord server: https://discord.gg/uvrHM7eS
-// Litex zulip chat: https://litex.zulipchat.com/
 
 package litex_env
 

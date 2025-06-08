@@ -26,4 +26,6 @@ GOOS=linux GOARCH=amd64 go build -o ./binary/linux_64_litex_${VERSION_NAME} main
 # macOS (Intel + Apple Silicon)
 GOOS=darwin GOARCH=amd64 go build -o ./binary/macos_64_litex_${VERSION_NAME} main.go  # Intel Macs
 
+chmod -R 755 ./binary
+
 echo "Build completed. Binaries are in the ./binary directory."

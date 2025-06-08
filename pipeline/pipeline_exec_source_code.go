@@ -11,7 +11,6 @@
 // Litex website: https://litexlang.org
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex discord server: https://discord.gg/uvrHM7eS
-// Litex zulip chat: https://litex.zulipchat.com/
 
 package litex_pipeline
 
@@ -98,7 +97,7 @@ func listen(reader *bufio.Reader, writer io.Writer, parserEnv *parser.ParserEnv,
 				trimmedLine := strings.TrimRight(currentLineStr, " \t\n\r")
 
 				if trimmedLine == "" {
-					goto ProcessStatement
+					break
 				}
 
 				if err != nil {
@@ -124,7 +123,6 @@ func listen(reader *bufio.Reader, writer io.Writer, parserEnv *parser.ParserEnv,
 			}
 		}
 
-	ProcessStatement:
 		currentScopeDepth = 0
 
 		// Clean up input
