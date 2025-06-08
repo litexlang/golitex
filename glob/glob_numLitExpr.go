@@ -176,6 +176,8 @@ func NumLitExprCompareOpt(left *NumLitExpr, right *NumLitExpr, builtinLogicOpt s
 		return cmpDecimalStrings(leftEvaluated, rightEvaluated) <= 0, nil
 	case "==":
 		return cmpDecimalStrings(leftEvaluated, rightEvaluated) == 0, nil
+	case "=":
+		return cmpDecimalStrings(leftEvaluated, rightEvaluated) == 0, nil
 	case "!=":
 		return cmpDecimalStrings(leftEvaluated, rightEvaluated) != 0, nil
 	default:
