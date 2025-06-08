@@ -22,6 +22,22 @@ At its core, this is a contradiction between **"individual heroism" and "collect
 
 **If you can help me solve this contradiction, no matter how small, you are welcome to contact me.**
 
+## Difficulties You Face
+
+Litex is still in the early stage of development, I do not want to underestimate the difficulty of the task. There are 2 main challenges for you to formalize mathematical concepts in Litex, or contribute to the Litex kernel:
+
+- The language is still unstable, there might be some bugs or insufficiencies in the language design.
+- There is very little existing code for Litex, so you need to formalize a lot of mathematical concepts from scratch.
+
+If you are still willing to try, then you are one of the brave ones who dared to believe. I recommend you to start with the following steps:
+
+0. Read the [README](../README.md) to get a sense of the project.
+1. Read the [tutorial](../tutorial/tutorial.md) to get a sense of the language.
+2. Read the [comparison with Lean](../comparison_with_lean/comparison_with_lean.md) to get a sense of the difference between Litex and Lean.
+3. Contribute piece by piece to the Litex kernel or the Litex dataset, e.g. formalize mathematical concepts, fix bugs, add new features, improve documentation, etc.
+
+**THANK YOU FOR YOUR FEARLESS EARLY ADOPTION! HERE IS MY HEARTFELT THANKS TO Litex's EARLIEST FANS -- THE BOLD PIONEERS WHO TRUSTS ME FROM THE START!**
+
 ---  
 **Contact:**  
 - **Website:** [litexlang.org](https://litexlang.org)  
@@ -50,7 +66,7 @@ We welcome contributors from all backgrounds - whether you're a programmer, math
 - Enhance documentation and tutorials
 
 ### 2. Mathematical Formalization (Litex dataset)
-- Formalize mathematical concepts from textbooks (WARNING: This is a very hard task, since it requires a deep understanding of the mathematical concepts and the ability to express them in such an unstable formal language like Litex)
+- Formalize mathematical concepts from textbooks (WARNING: This is a very hard task, since it requires a deep understanding of the mathematical concepts and the ability to express them in such an unstable formal language like Litex. However, it is still recommended to try to formalize them piece by piece)
     - For example, formalize Terrence Tao's [Analysis I](https://tiu-edu.uz/media/books/2024/05/28/1664976801.pdf), which since the beginning of Litex has been the example that I use to test my syntax. By coincidence, Tao himself has launched a project to [formalize Analysis I in Lean](https://github.com/teorth/analysis). It will be very interesting to see how the two languages compare.
     - You can also help to formalize math dataset, e.g. [mini2f2](https://huggingface.co/datasets/cat-searcher/minif2f-lean4), [minif2f-solutions of DeepSeek-Prover-V2](https://github.com/deepseek-ai/DeepSeek-Prover-V2), [formal conjectures](https://github.com/google-deepmind/formal-conjectures), [gsm8k](https://huggingface.co/datasets/openai/gsm8k), [MetaMathQA](https://huggingface.co/datasets/meta-math/MetaMathQA)
     - Some recommended math textbooks to formalize: [The Foundations of Geometry by Hilbert](https://math.berkeley.edu/~wodzicki/160/Hilbert.pdf), [Concrete Mathematics](https://seriouscomputerist.atariverse.com/media/pdf/book/Concrete%20Mathematics.pdf), [Combinatorial Mathematics by Douglas West](https://dokumen.pub/combinatorial-mathematics-1107058589-9781107058583.html) , [Algebra by Michael Artin](https://gregoryberry.net/wp-content/uploads/2024/01/Artin-Algebra.pdf), [Analysis by Terence Tao](https://tiu-edu.uz/media/books/2024/05/28/1664976801.pdf), [Linear Algebra Done Right by Sheldon Axler](https://linear.axler.net/LADR4e.pdf), [Elementary Number Theory and Its Applications](https://users.fmf.uni-lj.si/lavric/Rosen%20-%20Elementary%20number%20theory%20and%20its%20applications.pdf), [Topology by James Munkres](https://eclass.uoa.gr/modules/document/file.php/MATH707/James%20R.%20Munkres%20Topology%20%20Prentice%20Hall%2C%20Incorporated%2C%202000%20by%20James%20R.%20Munkres%20%28z-lib.org%29.pdf), [Differential Geometry of Curves and Surface](https://docenti.ing.unipi.it/griff/files/dC.pdf)

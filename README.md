@@ -108,6 +108,22 @@ Throughout the years, natural languages are [considerably more expressive than t
 
 In a nutshell, Litex is for EVERYONE, from children to experts, to learn and use formal language at AI age. It scales up reasoning by making the process of writing formal reasoning as intuitive as writing in natural language.
 
+## Try Litex Step by Step
+
+Litex is still in the early stage of development, I do not want to underestimate the difficulty of the task. There are 2 main challenges for you to formalize mathematical concepts in Litex, or contribute to the Litex kernel:
+
+- The language is still unstable, there might be some bugs or insufficiencies in the language design.
+- There is very little existing code for Litex, so you need to formalize a lot of mathematical concepts from scratch.
+
+If you are still willing to try, then you are one of the brave ones who dared to believe. I recommend you to start with the following steps:
+
+0. Read the [README](../README.md) to get a sense of the project.
+1. Read the [tutorial](../tutorial/tutorial.md) to get a sense of the language.
+2. Read the [comparison with Lean](../comparison_with_lean/comparison_with_lean.md) to get a sense of the difference between Litex and Lean.
+3. Contribute piece by piece to the Litex kernel or the Litex dataset, e.g. formalize mathematical concepts, fix bugs, add new features, improve documentation, etc.
+
+**THANK YOU FOR YOUR FEARLESS EARLY ADOPTION! HERE IS MY HEARTFELT THANKS TO Litex's EARLIEST FANS -- THE BOLD PIONEERS WHO TRUSTS ME FROM THE START!**
+
 ## Resources
 
 _If I have seen further, it is by standing on the shoulders of giants._
