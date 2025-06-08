@@ -326,8 +326,15 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 	}
 
 	// param in param sets is true
-	for _, paramInParamSet := range instantiatedExistPropDefStmt.ExistParamInSetsFacts() {
-		err := exec.env.NewFact(paramInParamSet)
+	// for _, paramInParamSet := range instantiatedExistPropDefStmt.ExistParamInSetsFacts() {
+	// 	err := exec.env.NewFact(paramInParamSet)
+	// 	if err != nil {
+	// 		return glob.ExecState_Error, err
+	// 	}
+	// }
+
+	for i, existParamSet := range instantiatedExistPropDefStmt.ExistParamSets {
+		err := exec.env.NewFact(ast.NewInFact(stmt.ObjNames[i], existParamSet))
 		if err != nil {
 			return glob.ExecState_Error, err
 		}

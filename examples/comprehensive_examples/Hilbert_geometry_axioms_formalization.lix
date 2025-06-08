@@ -388,6 +388,9 @@ know exist_prop a point st exist_point_right_to_point_with_finite_line_equal_to_
         a != b
         $point_left_to_point_on_one_line(b, a, l)
         $finite_line_equal(finite_line_of(a, b), l)
+know:
+    forall b point, l finite_line:
+        $exist_point_left_to_point_with_finite_line_equal_to_given_finite_line(b, l)
 
 know:
     $commutative_prop(finite_line_equal)
@@ -404,10 +407,8 @@ prove:
     have left  st $exist_point_left_to_point_with_finite_line_equal_to_given_finite_line(middle, l)
     $point_left_to_point_on_one_line(left, middle, l)
 
-    """
-    #TODO
+    left != middle
     $finite_line_equal(finite_line_of(left, middle), l)
-    """
 
 
 # TODO: The user can add relationships between $between, $point_left_to_point_on_one_line, $point_left_point_on_one_line, by himself. 
@@ -465,15 +466,18 @@ prove:
     obj a point, b point, c point, a2 point, b2 point, c2 point:
         $on_one_line(a, b, c)
         $on_one_line(a2, b2, c2)
+        a != b
+        a != c
+        b != c
+        a2 != b2
+        a2 != c2
+        b2 != c2
         $finite_line_equal(finite_line_of(a, b), finite_line_of(a2, b2))
         $finite_line_equal(finite_line_of(b, c), finite_line_of(b2, c2))
 
     $addition_keeps_equal_of_finite_lines(a, b, c, a2, b2, c2)
 
-    """
-    #TODO
     $finite_line_equal(finite_line_of(a, c), finite_line_of(a2, c2))
-    """
 
 # 4. Let an angle ∠ (h,k) be given in the plane α and let a line a′ be given in a plane α′. Suppose also that, in the plane α′, a definite side of the straight line a′ be assigned. Denote by h′ a ray of the straight line a′ emanating from a point O′ of this line. Then in the plane α′ there is one and only one ray k′ such that the angle ∠ (h, k), or ∠ (k, h), is congruent to the angle ∠ (h′, k′) and at the same time all interior points of the angle ∠ (h′, k′) lie upon the given side of a′. We express this relation by means of the notation ∠ (h, k) ≅ ∠ (h′, k′).
 

@@ -76,7 +76,7 @@ func (ver *Verifier) isValidSpecFact_EqualFact(stmt *ast.SpecFactStmt) (bool, er
 				return false, err
 			}
 			if !ok {
-				return false, nil
+				return false, fmt.Errorf("fcSatisfyFnRequirement failed for %s", param.String())
 			}
 		}
 	}
@@ -425,7 +425,7 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc) (bool, error) {
 				return false, err
 			}
 			if !ok {
-				return false, nil
+				return false, fmt.Errorf("in fact %s is unknown", inFact.String())
 			}
 		}
 
@@ -444,7 +444,7 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc) (bool, error) {
 				return false, err
 			}
 			if !ok {
-				return false, nil
+				return false, fmt.Errorf("dom fact %s is unknown", domFact.String())
 			}
 		}
 	}
