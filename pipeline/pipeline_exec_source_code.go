@@ -139,7 +139,7 @@ func listen(reader *bufio.Reader, writer io.Writer, parserEnv *parser.ParserEnv,
 		msg, signal, err := ExecuteCodeAndReturnMessageSliceGivenSettings(inputStr, parserEnv, executor)
 		if err != nil || signal != glob.SysSignalTrue {
 			printMessagesToWriter(writer, msg)
-			fmt.Fprintf(writer, "---\n[Warning] failed\n")
+			fmt.Fprintf(writer, "---\n[Warning] failed :(\n")
 			continue
 		}
 
