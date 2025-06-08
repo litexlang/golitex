@@ -388,53 +388,56 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc) (bool, error) {
 		return false, fmt.Errorf(glob.NotImplementedMsg("function name is supposed to be an atom"))
 	}
 
-	fnDef, ok := ver.env.GetFnDef(fcFnHeadAsAtom)
+	fnDef, ok := ver.env.IsFnDeclared(fcFnHeadAsAtom)
 	if !ok {
 		return false, fmt.Errorf("function %s is not declared", fcFnHeadAsAtom.String())
 	}
 
-	if len(fnDef.DefHeader.SetParams) != len(asFcFn.ParamSegs) {
-		return false, fmt.Errorf("function %s has %d params, but %d in sets", fcFnHeadAsAtom.String(), len(asFcFn.ParamSegs), len(fnDef.DefHeader.SetParams))
-	}
-
-	uniMap := map[string]ast.Fc{}
-	for i, param := range asFcFn.ParamSegs {
-		uniMap[fnDef.DefHeader.Params[i]] = param
-	}
-
-	inFacts := []ast.FactStmt{}
-	// TODO: 这里需要检查，setParam是否是自由变量
-	for i, inSet := range fnDef.DefHeader.SetParams {
-		inFact := ast.NewInFactWithFc(asFcFn.ParamSegs[i], inSet)
-		inFacts = append(inFacts, inFact)
-	}
-
-	for _, inFact := range inFacts {
-		ok, err := ver.FactStmt(inFact, FinalRoundNoMsg)
-		if err != nil {
-			return false, err
+	// fnDef == nil means the function is builtin
+	if fnDef != nil {
+		if len(fnDef.DefHeader.SetParams) != len(asFcFn.ParamSegs) {
+			return false, fmt.Errorf("function %s has %d params, but %d in sets", fcFnHeadAsAtom.String(), len(asFcFn.ParamSegs), len(fnDef.DefHeader.SetParams))
 		}
-		if !ok {
-			return false, nil
-		}
-	}
 
-	domFacts := []ast.FactStmt{}
-	for _, domFact := range fnDef.DomFacts {
-		fixed, err := domFact.Instantiate(uniMap)
-		if err != nil {
-			return false, err
+		uniMap := map[string]ast.Fc{}
+		for i, param := range asFcFn.ParamSegs {
+			uniMap[fnDef.DefHeader.Params[i]] = param
 		}
-		domFacts = append(domFacts, fixed)
-	}
 
-	for _, domFact := range domFacts {
-		ok, err := ver.FactStmt(domFact, FinalRoundNoMsg)
-		if err != nil {
-			return false, err
+		inFacts := []ast.FactStmt{}
+		// TODO: 这里需要检查，setParam是否是自由变量
+		for i, inSet := range fnDef.DefHeader.SetParams {
+			inFact := ast.NewInFactWithFc(asFcFn.ParamSegs[i], inSet)
+			inFacts = append(inFacts, inFact)
 		}
-		if !ok {
-			return false, nil
+
+		for _, inFact := range inFacts {
+			ok, err := ver.FactStmt(inFact, FinalRoundNoMsg)
+			if err != nil {
+				return false, err
+			}
+			if !ok {
+				return false, nil
+			}
+		}
+
+		domFacts := []ast.FactStmt{}
+		for _, domFact := range fnDef.DomFacts {
+			fixed, err := domFact.Instantiate(uniMap)
+			if err != nil {
+				return false, err
+			}
+			domFacts = append(domFacts, fixed)
+		}
+
+		for _, domFact := range domFacts {
+			ok, err := ver.FactStmt(domFact, FinalRoundNoMsg)
+			if err != nil {
+				return false, err
+			}
+			if !ok {
+				return false, nil
+			}
 		}
 	}
 
