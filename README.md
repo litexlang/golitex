@@ -30,6 +30,16 @@ Litex scales reasoning in three ways:
 
 World-class researchers including Terrence Tao, Yoshua Bengio, and AI companies including DeepMind and DeepSeek, are showing great interest how formal languages can be used to scale reasoning AI, ensure AI safety, and many more tasks. Litex is the perfect tool to their challenge. Litex has already gained attention from leading institutions worldwide, including **CMU, Mila, Tsinghua, PKU, OpenMMLab, SJTU, Fudan**. Contributors read [contribute to Litex](./doc/contribute_to_Litex/contribute_to_Litex.md) for more details.
 
+---  
+**Contact:**  
+- **Website:** [litexlang.org](https://litexlang.org)  
+- **GitHub:** [github.com/litexlang/golitex](https://github.com/litexlang/golitex)
+- **Project Email:** litexlang@outlook.com
+- **Litex Creator:** Jiachen Shen
+- **Litex Creator's Email:** malloc_realloc_free@outlook.com
+- **Discord:** [discord](https://discord.gg/uvrHM7eS)
+- **Zulip:** [zulip](https://litex.zulipchat.com/)
+
 ## Learn Basics of Litex in One Minute
 
 _Keep it simple, stupid._
