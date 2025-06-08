@@ -32,7 +32,7 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state VerState) (bool,
 	defer ver.deleteEnvAndRetainMsg()
 
 	// 声明变量
-	paramMap, paramMapStrToStr := processUniFactParams(ver.env, oldStmt.Params)
+	paramMap, paramMapStrToStr, indexes := processUniFactParams(ver.env, oldStmt.Params)
 
 	var newStmt *ast.UniFactStmt = oldStmt
 	var err error
@@ -48,6 +48,10 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state VerState) (bool,
 		newStmt, err = ast.InstantiateUniFact(oldStmt, paramMap)
 		if err != nil {
 			return false, err
+		}
+
+		for i, indexStr := range indexes {
+			ver.env.ObjDefMem.Insert(ast.NewDefObjStmt([]string{indexStr}, []ast.Fc{newStmt.ParamSets[i]}, []ast.FactStmt{}), glob.EmptyPkg)
 		}
 	}
 
@@ -203,10 +207,11 @@ func (ver *Verifier) uniFactWithIff_CheckIffToThen(stmt *ast.UniFactStmt, state 
 	return true, nil
 }
 
-func processUniFactParams(env *env.Env, params []string) (map[string]ast.Fc, map[string]string) {
+func processUniFactParams(env *env.Env, params []string) (map[string]ast.Fc, map[string]string, map[int]string) {
 	paramMap := make(map[string]ast.Fc)
 	paramMapStrToStr := make(map[string]string)
-	for _, param := range params {
+	indexes := make(map[int]string)
+	for i, param := range params {
 		newParam := param
 		for env.IsAtomDeclared(ast.NewFcAtom(glob.EmptyPkg, newParam)) {
 			newParam = fmt.Sprintf("%s%s", glob.UniPrefix, newParam)
@@ -214,7 +219,8 @@ func processUniFactParams(env *env.Env, params []string) (map[string]ast.Fc, map
 		if param != newParam {
 			paramMap[param] = ast.NewFcAtom(glob.EmptyPkg, newParam)
 			paramMapStrToStr[param] = newParam
+			indexes[i] = newParam
 		}
 	}
-	return paramMap, paramMapStrToStr
+	return paramMap, paramMapStrToStr, indexes
 }

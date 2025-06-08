@@ -182,7 +182,7 @@ Lean requires memorizing numerous proof-specific commands:
 - `example`/`exact` syntax requirements
 - Tactical imports just to prove basic statements
 
-Litex eliminates this complexity entirely. The solution reads exactly like standard mathematical working.
+Litex eliminates this complexity entirely. The solution reads exactly like standard mathematical working. No extra commands are needed. Litex does the work for you, making writing and reading Litex code as easy as writing and reading a book.
 
 **Structural Advantage of Litex:**  
 Lean forces you to:
@@ -200,5 +200,7 @@ While Lean provides tactics like `linarith` for simpler proofs:
 1. They fail on complex problems (where Litex's approach scales naturally) because not all problems can be solved by existing tactics.
 2. Writing custom tactics requires advanced Lean syntax knowledge
 3. The cognitive overhead remains even for elementary problems
+
+Litex will in the future introduce a new feature `prove_algo` to mimic how Lean's tactics work.
 
 Litex maintains intuitive accessibility - even a 10-year-old could follow the solution process, with advanced features coming later to match tactics' power without their complexity.
