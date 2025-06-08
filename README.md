@@ -40,7 +40,6 @@ World-class researchers including Terrence Tao, Yoshua Bengio, and AI companies 
 - **Litex Creator:** Jiachen Shen
 - **Litex Creator's Email:** malloc_realloc_free@outlook.com
 - **Discord:** [discord](https://discord.gg/uvrHM7eS)
-- **Zulip:** [zulip](https://litex.zulipchat.com/)
 
 ## Learn Basics of Litex in One Minute
 
