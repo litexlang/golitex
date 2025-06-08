@@ -117,10 +117,12 @@ Litex is still in the early stage of development, I do not want to underestimate
 
 If you are still willing to try, then you are one of the brave ones who dared to believe. I recommend you to start with the following steps:
 
-0. Read the [README](../README.md) to get a sense of the project.
-1. Read the [tutorial](../tutorial/tutorial.md) to get a sense of the language.
-2. Read the [comparison with Lean](../comparison_with_lean/comparison_with_lean.md) to get a sense of the difference between Litex and Lean.
-3. Contribute piece by piece to the Litex kernel or the Litex dataset, e.g. formalize mathematical concepts, fix bugs, add new features, improve documentation, etc.
+0. Read the [README](./README.md) to get a sense of the project.
+1. Read the [tutorial](./doc/tutorial/tutorial.md) to get a sense of the language.
+2. Read the [comparison with Lean](./doc/comparison_with_lean/comparison_with_lean.md) to get a sense of the difference between Litex and Lean.
+3. To learn applications of Litex, read [applications of formal reasoning in AI and many other fields](./doc/applications_of_formal_reasoning/applications_of_formal_reasoning.md).
+4. To read a comprehensive example, read [formalization of Hilbert geometry axioms](./examples/comprehensive_examples/Hilbert_geometry_axioms_formalization.lix).
+5. Contribute piece by piece to the Litex kernel or the Litex dataset, e.g. formalize mathematical concepts, fix bugs, add new features, improve documentation, etc. on [github](https://github.com/litexlang/golitex), [discord](https://discord.gg/uvrHM7eS).
 
 **THANK YOU FOR YOUR FEARLESS EARLY ADOPTION! HERE IS MY HEARTFELT THANKS TO Litex's EARLIEST FANS -- THE BOLD PIONEERS WHO TRUSTS ME FROM THE START!**
 
