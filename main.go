@@ -17,6 +17,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	glob "golitex/glob"
 	sys "golitex/sys"
 	"os"
 )
@@ -25,58 +26,71 @@ func main() {
 	// Define flags
 	helpFlag := flag.Bool("help", false, "Show help message")
 	versionFlag := flag.Bool("version", false, "Show version information")
+	executeFlag := flag.String("e", "", "Execute the given code")
+	fileFlag := flag.String("f", "", "Execute the given file")
 
 	flag.Parse()
 
 	// Handle flags
 	if *helpFlag {
-		fmt.Println("Usage: program [options] [filename]")
+		fmt.Println("Usage: golitex [options]")
 		fmt.Println("Options:")
 		flag.PrintDefaults()
-		fmt.Printf("\nIf no filename provided, defaults to: REPL mode\n")
+		fmt.Printf("\nIf no options provided, defaults to: REPL mode\n")
 		return
 	}
 
 	if *versionFlag {
-		fmt.Println("Litex Processor version -1")
+		fmt.Println("Litex Processor version beta")
 		return
 	}
 
-	// Get non-flag arguments
-	args := flag.Args()
+	// Handle execution flags
+	if *executeFlag != "" {
+		msg, signal, err := sys.ExecuteCodeAndReturnMessage(*executeFlag)
+		if err != nil {
+			fmt.Printf("Error: %v\n", err)
+			// os.Exit(1)
+		} else {
+			// Output results
+			fmt.Println(sys.BetterMsg(msg))
+			if signal == glob.SysSignalTrue {
+				fmt.Println("Success :)")
+			} else if signal == glob.SysSignalFalse {
+				fmt.Println("Failed :(")
+			} else {
+				fmt.Println("Failed :(")
+			}
+		}
+		return
+	}
 
-	if len(args) == 0 {
-		sys.RunREPLInTerminal()
-	} else if len(args) == 2 && args[0] == "-f" {
-		filePath := args[0]
+	if *fileFlag != "" {
 		// Verify file exists
-		if _, err := os.Stat(filePath); os.IsNotExist(err) {
-			fmt.Printf("Error: File '%s' does not exist\n", filePath)
+		if _, err := os.Stat(*fileFlag); os.IsNotExist(err) {
+			fmt.Printf("Error: File '%s' does not exist\n", *fileFlag)
 			os.Exit(1)
 		}
 
 		// Process file
-		msg, signal, err := sys.RunFile(filePath)
+		msg, signal, err := sys.RunFile(*fileFlag)
 		if err != nil {
-			fmt.Printf("Processing error: %v\n", err)
-			os.Exit(1)
+			fmt.Printf("Error: %v\n", err)
+			// os.Exit(1)
+		} else {
+			// Output results
+			fmt.Println(sys.BetterMsg(msg))
+			if signal == glob.SysSignalTrue {
+				fmt.Println("Success :)")
+			} else if signal == glob.SysSignalUnknown {
+				fmt.Println("Unknown :(")
+			} else {
+				fmt.Println("Failed :(")
+			}
 		}
-
-		// Output results
-		fmt.Println("Output:", sys.BetterMsg(msg))
-		fmt.Println("Status:", signal)
-	} else if len(args) == 2 && args[0] == "-e" {
-		code := args[1]
-		msg, signal, err := sys.ExecuteCodeAndReturnMessage(code)
-		if err != nil {
-			fmt.Printf("Processing error: %v\n", err)
-			os.Exit(1)
-		}
-
-		// Output results
-		fmt.Println("Output:", sys.BetterMsg(msg))
-		fmt.Println("Status:", signal)
-	} else {
-		sys.RunREPLInTerminal()
+		return
 	}
+
+	// If no flags are provided, run REPL
+	sys.RunREPLInTerminal()
 }
