@@ -55,11 +55,11 @@ func main() {
 			// Output results
 			fmt.Println(sys.BetterMsg(msg))
 			if signal == glob.SysSignalTrue {
-				fmt.Println("Success :)")
+				fmt.Println(glob.REPLSuccessMessage)
 			} else if signal == glob.SysSignalFalse {
-				fmt.Println("Failed :(")
+				fmt.Println(glob.REPLFailedMessage)
 			} else {
-				fmt.Println("Failed :(")
+				fmt.Println(glob.REPLFailedMessage)
 			}
 		}
 		return
@@ -81,11 +81,11 @@ func main() {
 			// Output results
 			fmt.Println(sys.BetterMsg(msg))
 			if signal == glob.SysSignalTrue {
-				fmt.Println("Success :)")
+				fmt.Println(glob.REPLSuccessMessage)
 			} else if signal == glob.SysSignalUnknown {
-				fmt.Println("Unknown :(")
+				fmt.Println(glob.REPLFailedMessage)
 			} else {
-				fmt.Println("Failed :(")
+				fmt.Println(glob.REPLFailedMessage)
 			}
 		}
 		return

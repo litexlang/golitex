@@ -81,73 +81,6 @@ func ExecuteCodeAndReturnMessageSliceGivenSettings(code string, parserEnv *parse
 	return msgOfTopStatements, glob.SysSignalTrue, nil
 }
 
-// listen processes input from a reader and writes output to a writer
-// func listen(reader *bufio.Reader, writer io.Writer, parserEnv *parser.ParserEnv, executor *exe.Executor) error {
-// 	for {
-// 		fmt.Fprint(writer, ">>> ")
-// 		var input strings.Builder
-// 		currentScopeDepth := 0
-
-// 		for {
-// 			if currentScopeDepth > 0 {
-// 				fmt.Fprint(writer, "... ") // 末尾的+4是未来和">>> "对齐
-// 				input.WriteString("    ")
-
-// 				currentLineStr, err := reader.ReadString('\n')
-// 				trimmedLine := strings.TrimRight(currentLineStr, " \t\n\r")
-
-// 				if trimmedLine == "" {
-// 					break
-// 				}
-
-// 				if err != nil {
-// 					return fmt.Errorf("error reading input: %v", err)
-// 				}
-// 				input.WriteString(currentLineStr)
-
-// 			} else {
-// 				currentLineStr, err := reader.ReadString('\n')
-// 				if err != nil {
-// 					return fmt.Errorf("error reading input: %v", err)
-// 				}
-// 				input.WriteString(currentLineStr)
-
-// 				// input 的非空白的最后一位 不是 :
-// 				trimmedLine := strings.TrimRight(currentLineStr, " \t\n\r")
-// 				if trimmedLine == "" || !strings.HasSuffix(trimmedLine, ":") {
-// 					break
-// 				} else {
-// 					currentScopeDepth = 1
-
-// 				}
-// 			}
-// 		}
-
-// 		currentScopeDepth = 0
-
-// 		// Clean up input
-// 		inputStr := input.String()
-// 		if inputStr == "" {
-// 			continue
-// 		}
-// 		if strings.ToLower(inputStr) == "exit" {
-// 			return nil
-// 		}
-
-// 		// Execute the code
-// 		msg, signal, err := ExecuteCodeAndReturnMessageSliceGivenSettings(inputStr, parserEnv, executor)
-// 		if err != nil || signal != glob.SysSignalTrue {
-// 			printMessagesToWriter(writer, msg)
-// 			fmt.Fprintf(writer, "---\n[Warning] failed :(\n")
-// 			continue
-// 		}
-
-// 		// Print results
-// 		printMessagesToWriter(writer, msg)
-// 		fmt.Fprintln(writer, "---\nsuccess! :)")
-// 	}
-// }
-
 func printMessagesToWriter(writer io.Writer, msg []string) {
 	if len(msg) > 0 {
 		// fmt.Printf("\n")
@@ -205,19 +138,19 @@ func RunREPLInTerminal() {
 
 		// Have to trim space because there is \n at the end of code
 		if strings.TrimSpace(code) == "exit" {
-			fmt.Fprintf(writer, "Goodbye!\n")
+			fmt.Fprintf(writer, glob.REPLGoodbyeMessage)
 			return
 		}
 
 		msg, signal, err := ExecuteCodeAndReturnMessageSliceGivenSettings(code, parserEnv, executor)
 		if err != nil || signal != glob.SysSignalTrue {
 			printMessagesToWriter(writer, msg)
-			fmt.Fprintf(writer, "[Warning] failed :(\n")
+			fmt.Fprintf(writer, glob.REPLFailedMessage)
 			continue
 		}
 
 		printMessagesToWriter(writer, msg)
-		fmt.Fprintf(writer, "[Success] success! :)\n")
+		fmt.Fprintf(writer, glob.REPLSuccessMessage)
 	}
 }
 
