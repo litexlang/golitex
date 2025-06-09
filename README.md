@@ -30,9 +30,11 @@ Litex scales reasoning in three ways:
 
 World-class researchers including Terrence Tao, Yoshua Bengio, and AI companies including DeepMind and DeepSeek, are showing great interest how formal languages can be used to scale reasoning AI, ensure AI safety, and many more tasks. Litex is the perfect tool to their challenge. Litex has already gained attention from leading institutions worldwide, including **CMU, Mila, Tsinghua, PKU, ByteDance, OpenMMLab, SJTU, Fudan**.
 
-Try and download Litex now at [litexlang.org](https://litexlang.org). Learn more in [tutorial](./doc/tutorial/tutorial.md).
+Learn more in [tutorial](./doc/tutorial/tutorial.md).
 
 While Litex is in the early stages of development, it has already established a solid foundation that demonstrates the potential of this approach. Contributors read [contribute to Litex](./doc/contribute_to_Litex/contribute_to_Litex.md) for more details. **If you have any problems, please contact us through [Contact](#contact--contribute-to-litex) methods provided in this README.**
+
+**NOTE: Litex is still under development. THE CREATOR OF LITEX IS LOOKING FOR LONG-TERM OR SHORT-TERM CONTRIBUTORS. READ [CONTRIBUTE TO LITEX](./doc/contribute_to_Litex/contribute_to_Litex.md) FOR MORE DETAILS.**
 
 ## Try Litex Step by Step
 
@@ -50,6 +52,8 @@ If you are on Mac, you might need to give it permission to run. If it still does
 
 step 3: `git clone https://github.com/litexlang/golitex.git` and run `YOUR_BINARY_FILE_NAME PATH_TO_YOUR_CLONED_REPO/examples/comprehensive_examples/syllogism.lix` in the root directory of the cloned repo. This will run the example code. Other examples (e.g. Hilbert geometry axioms formalization for experts, multivariate linear equation for children) are in the same directory. You can also input the code directly in the REPL mode.
 
+**SORRY THERE IS NO MORE EXAMPLES FOR NOW. I SINGLE-HANDEDLY DEVELOPED THE WHOLE LANGUAGE FOR 2800 GIT COMMITS. I HAVE ALREADY DONE MY BEST. THAT IS WHY I AM SO EXCITED TO HAVE YOU HERE.**
+
 After having a sense of Litex, do this:
 
 0. Read the [README](./README.md) to get a sense of the project.
@@ -59,7 +63,7 @@ After having a sense of Litex, do this:
 4. To read a comprehensive example, read [formalization of Hilbert geometry axioms](./examples/comprehensive_examples/Hilbert_geometry_axioms_formalization.lix).
 5. Contribute piece by piece to the Litex kernel or the Litex dataset, e.g. formalize mathematical concepts, fix bugs, add new features, improve documentation, etc. on [github](https://github.com/litexlang/golitex), [discord](https://discord.gg/uvrHM7eS).
 
-**IF YOU HAVE ANY PROBLEMS, PLEASE CONTACT THROUGH [discord](https://discord.gg/uvrHM7eS) litexlang@outlook.com OR [github](https://github.com/litexlang/golitex).**
+**IF YOU HAVE ANY PROBLEMS, PLEASE CONTACT THROUGH [discord](https://discord.gg/uvrHM7eS) OR litexlang@outlook.com OR [github](https://github.com/litexlang/golitex).**
 
 **THANK YOU FOR YOUR FEARLESS EARLY ADOPTION! HERE IS MY HEARTFELT THANKS TO Litex's EARLIEST FANS -- THE BOLD PIONEERS WHO TRUSTS ME FROM THE START!**
 
