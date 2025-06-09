@@ -18,7 +18,9 @@ _Simplicity is the ultimate sophistication._
 
 _-- Leonardo da Vinci_
 
-Litex is an ambitious project with a clear vision: to create a simple, intuitive, and powerful formal language for mathematics. While we're in the early stages of development, we've already established a solid foundation that demonstrates the potential of this approach. Like a promising startup, we're building something that could fundamentally change how we think about and work with mathematical formalization. Unlike traditionally over-complicated formal languages, Litex is intuitive and accessible to everyone. Learn more in [tutorial](./doc/tutorial/tutorial.md), [comparison with Lean](./doc/comparison_with_lean/comparison_with_lean.md).
+Litex is an ambitious project with a clear vision: to create a simple, intuitive, and powerful formal language for mathematics. While we're in the early stages of development, we've already established a solid foundation that demonstrates the potential of this approach. We're building something that could fundamentally change how we think about and work with mathematical formalization. 
+
+If a 10-year-old can intuitively grasp logical reasoning for simple math proofs, a formal language should be just as intuitive and accessible. Litex aims to be that language -- making formal language simple enough for anyone to learn and use. Learn more in [tutorial](./doc/tutorial/tutorial.md), [comparison with Lean](./doc/comparison_with_lean/comparison_with_lean.md).
 
 Try and download Litex now at [litexlang.org](https://litexlang.org).
 
@@ -32,8 +34,7 @@ Litex scales reasoning in three ways:
 
 World-class researchers including Terrence Tao, Yoshua Bengio, and AI companies including DeepMind and DeepSeek, are showing great interest how formal languages can be used to scale reasoning AI, ensure AI safety, and many more tasks. Litex is the perfect tool to their challenge. Litex has already gained attention from leading institutions worldwide, including **CMU, Mila, Tsinghua, PKU, ByteDance, OpenMMLab, SJTU, Fudan**. Contributors read [contribute to Litex](./doc/contribute_to_Litex/contribute_to_Litex.md) for more details.
 
----  
-**Contact:**  
+## Contact
 - **Website:** [litexlang.org](https://litexlang.org)  
 - **GitHub:** [github.com/litexlang/golitex](https://github.com/litexlang/golitex)
 - **Project Email:** litexlang@outlook.com
@@ -73,7 +74,7 @@ Mathematics is the art of deriving new facts from established ones. To illustrat
   </tr>
 </table>
 
-Consider `Human` as the set of all humans. Using `know`, we establish a simple fact: all humans are self-aware. Since Bob is in the set of `Human`, "Bob is self-aware" is true. This simple example shows how Litex builds math from basic pieces, like building blocks. By `match and substitute`, Litex verifies the correctness of the reasoning just like how you verify the correctness of your daily reasoning. Each statement in Litex has four potential outcomes: true, false, unknown, or error.
+Consider `Human` as the set of all humans. Using `know`, we establish a simple fact: all humans are self-aware. Since Bob is in the set of `Human`, "Bob is self-aware" is true. This simple example shows how Litex builds math from basic pieces, like building blocks. By `match and substitute`, Litex verifies the correctness of the reasoning just like how you verify the correctness of your daily reasoning. Each statement in Litex has four potential outcomes: true, false, unknown, or error. All factual statements start with `$` to differentiate them from functions.
 
 Notice how Litex is much simpler than Lean4. Instead of writing complex axioms with special names, you just use familiar words like `know` and `forall`. Litex automatically finds the facts it needs, just like searching in a database. Moreover, there are less unfamiliar keywords, less twisted syntax in Litex. People can understand Litex at first glance and say "oh, I already get this." instead of trying to figure out what this keyword or that syntax means. Users can focus more on math itself instead of the formal language they use. Litex's syntax is similar to Python and Go, so if you've done any programming, you'll feel right at home. See more in [comparison with Lean](./doc/comparison_with_lean/comparison_with_lean.md), [tutorial](./doc/tutorial/tutorial.md).
 
@@ -127,6 +128,8 @@ Litex is still in the early stage of development, I do not want to underestimate
 - There is very little existing code for Litex, so you need to formalize a lot of mathematical concepts from scratch.
 
 If you are still willing to try, then you are one of the brave ones who dared to believe. I recommend you to start with the following steps:
+
+**REMARK: SINCE THE LANGUAGE IS STILL IN DEVELOPMENT, THE BEST WAY TO LEARN LITEX IS TO CONTACT THE CREATORS OF LITEX DIRECTLY THROUGH [CONTACT](#contact) METHODS PROVIDED IN THIS README.**
 
 0. Read the [README](./README.md) to get a sense of the project.
 1. Read the [tutorial](./doc/tutorial/tutorial.md) to get a sense of the language.
