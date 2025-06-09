@@ -18,11 +18,7 @@ _Simplicity is the ultimate sophistication._
 
 _-- Leonardo da Vinci_
 
-Litex is an ambitious project with a clear vision: to create a simple, intuitive, and powerful formal language for mathematics. While we're in the early stages of development, we've already established a solid foundation that demonstrates the potential of this approach. We're building something that could fundamentally change how we think about and work with mathematical formalization. 
-
-If a 10-year-old can intuitively grasp logical reasoning for simple math proofs, a formal language should be just as intuitive and accessible. Litex aims to be that language -- making formal language simple enough for anyone to learn and use. Learn more in [tutorial](./doc/tutorial/tutorial.md), [comparison with Lean](./doc/comparison_with_lean/comparison_with_lean.md).
-
-Try and download Litex now at [litexlang.org](https://litexlang.org).
+Litex is an ambitious project with a clear vision: to create a simple, intuitive, and powerful formal language for mathematics. If a 10-year-old can intuitively grasp logical reasoning for simple math proofs, a formal language should be just as intuitive and accessible. Litex aims to be that language -- making formal language simple enough for anyone to learn and use.
 
 Litex scales reasoning in three ways:
 
@@ -32,7 +28,17 @@ Litex scales reasoning in three ways:
 
 **AI Integration:** Litex provides the perfect **infrastructure for AI** to learn and perform formal reasoning at scale.
 
-World-class researchers including Terrence Tao, Yoshua Bengio, and AI companies including DeepMind and DeepSeek, are showing great interest how formal languages can be used to scale reasoning AI, ensure AI safety, and many more tasks. Litex is the perfect tool to their challenge. Litex has already gained attention from leading institutions worldwide, including **CMU, Mila, Tsinghua, PKU, ByteDance, OpenMMLab, SJTU, Fudan**. Contributors read [contribute to Litex](./doc/contribute_to_Litex/contribute_to_Litex.md) for more details. **If you have any problems, please contact us through [Contact](#contact--contribute-to-litex) methods provided in this README.**
+World-class researchers including Terrence Tao, Yoshua Bengio, and AI companies including DeepMind and DeepSeek, are showing great interest how formal languages can be used to scale reasoning AI, ensure AI safety, and many more tasks. Litex is the perfect tool to their challenge. Litex has already gained attention from leading institutions worldwide, including **CMU, Mila, Tsinghua, PKU, ByteDance, OpenMMLab, SJTU, Fudan**.
+
+Try and download Litex now at [litexlang.org](https://litexlang.org). Learn more in [tutorial](./doc/tutorial/tutorial.md).
+
+While Litex is in the early stages of development, it has already established a solid foundation that demonstrates the potential of this approach. Contributors read [contribute to Litex](./doc/contribute_to_Litex/contribute_to_Litex.md) for more details. **If you have any problems, please contact us through [Contact](#contact--contribute-to-litex) methods provided in this README.**
+
+## Try Litex Step by Step
+
+This section is for you to try Litex step by step. If you just want to have a quick look at Litex, you can skip this section.
+
+
 
 
 ## A Simple Example
@@ -133,11 +139,21 @@ If you are still willing to try, then you are one of the brave ones who dared to
 
 **THANK YOU FOR YOUR FEARLESS EARLY ADOPTION! HERE IS MY HEARTFELT THANKS TO Litex's EARLIEST FANS -- THE BOLD PIONEERS WHO TRUSTS ME FROM THE START!**
 
-## Resources
+## Answers to Common Questions
 
-_If I have seen further, it is by standing on the shoulders of giants._
+1. Why is Litex poised for success now?
 
-_-- Isaac Newton_
+Litex represents an intellectual breakthrough in formal language design. The rapidly expanding AI industry presents the perfect opportunity, as it needs tools for ensuring AI safety, enhancing reasoning, and accelerating scientific discovery.
+
+2. What makes Litex different from other formal languages?
+
+Litex's greatest strength is its remarkable simplicity. While other formal languages require years of expertise to master, Litex is intuitive enough for children to learn, striking the perfect balance between power and accessibility.
+
+3. How do I formalize concepts like uniform distribution over (0,1) or anything like that?
+
+Think of formalization like reading a book - you need to understand the previous pages before the last one. Similarly, formalizing advanced concepts requires building up from fundamentals. For example, formalizing uniform distribution over (0,1) requires many prerequisites. The good news is that translating mathematical concepts to Litex is straightforward once you have the prerequisites in place.
+
+4. Resources of Litex:
 
 [Applications of Formal Reasoning in AI and Many Other Fields](./doc/applications_of_formal_reasoning/applications_of_formal_reasoning.md)
 
@@ -152,19 +168,113 @@ _-- Isaac Newton_
 [Github](https://github.com/litexlang/golitex)
 
 
-## Answers to Common Questions
+##  Examples
 
-1. Why is Litex poised for success now?
+_If I have seen further, it is by standing on the shoulders of giants._
 
-Litex represents an intellectual breakthrough in formal language design. The rapidly expanding AI industry presents the perfect opportunity, as it needs tools for ensuring AI safety, enhancing reasoning, and accelerating scientific discovery.
+_-- Isaac Newton_
 
-2. What makes Litex different from other formal languages?
+Here are some examples of Litex, in comparison with Lean4. Detailed explanations are provided in [comparison with Lean](./doc/comparison_with_lean/comparison_with_lean.md). I put them here for you to get a sense of the language.
 
-Litex's greatest strength is its remarkable simplicity. While other formal languages require years of expertise to master, Litex is intuitive enough for children to learn, striking the perfect balance between power and accessibility.
+The definition of algorithm is a good example. In mathematics, an algorithm is a computational method that can be precisely defined as a quadruple (Q, I, S, f), where:
+- Q is a set representing all possible states of computation
+- I is a subset of Q representing valid inputs
+- S is a subset of Q representing valid outputs
+- f is a function from Q to Q that defines the computational rule
 
-3. How do I formalize concepts like uniform distribution over (0,1) or anything like that?
+The computation proceeds by repeatedly applying f to an input x in I, generating a sequence x₀, x₁, x₂, ... where x₀ = x and xₖ₊₁ = f(xₖ). An algorithm must terminate in finitely many steps for any valid input, producing an output in S. This formal definition ensures that algorithms are well-defined mathematical objects that can be rigorously analyzed and verified.
 
-Think of formalization like reading a book - you need to understand the previous pages before the last one. Similarly, formalizing advanced concepts requires building up from fundamentals. For example, formalizing uniform distribution over (0,1) requires many prerequisites. The good news is that translating mathematical concepts to Litex is straightforward once you have the prerequisites in place.
+
+<table style="border-collapse: collapse; width: 100%;">
+  <tr>
+    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 50%;">Litex</th>
+    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 50%;">Lean 4</th>
+  </tr>
+  <tr>
+    <td style="border: 3px solid black; padding: 8px;">
+      <code>fn comp_seq(Q set, f fn(Q)Q) fn(Q, N)Q:</code><br>
+      <code>&nbsp;&nbsp;forall x Q:</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;comp_seq(Q, f)(x,n) = f(comp_seq(Q, f)(x, n-1))</code><br><br>
+      <code>exist_prop n N st exist_comp_seq_end(Q set, x Q, f fn(Q,N)Q):</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;f(x, n) = f(x, n+1)</code><br><br>
+      <code>prop is_algorithm(Q set, I set, f fn(Q)Q):</code><br>
+      <code>&nbsp;&nbsp;$subset_of(I, Q)</code><br>
+      <code>&nbsp;&nbsp;iff:</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;forall x I:</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$exist_comp_seq_end(Q, x, comp_seq(Q, f))</code>
+    </td>
+    <td style="border: 3px solid black; padding: 8px;">
+      <code>structure ComputationalMethod where</code><br>
+      <code>&nbsp;&nbsp;Q : Type</code><br>
+      <code>&nbsp;&nbsp;I : Set Q</code><br>
+      <code>&nbsp;&nbsp;S : Set Q</code><br>
+      <code>&nbsp;&nbsp;f : Q → Q</code><br>
+      <code>&nbsp;&nbsp;f_fixed : ∀ q ∈ S, f q = q</code><br><br>
+      <code>namespace ComputationalMethod</code><br><br>
+      <code>def comp_seq (cm : ComputationalMethod) (x : cm.Q) : ℕ → cm.Q</code><br>
+      <code>&nbsp;&nbsp;| 0 => x</code><br>
+      <code>&nbsp;&nbsp;| n + 1 => cm.f (comp_seq x n)</code><br><br>
+      <code>def TerminatesIn (cm : ComputationalMethod) (x : cm.Q) (k : ℕ) : Prop :=</code><br>
+      <code>&nbsp;&nbsp;comp_seq cm x k ∈ cm.S ∧</code><br>
+      <code>&nbsp;&nbsp;∀ i < k, comp_seq cm x i ∉ cm.S</code><br><br>
+      <code>def IsAlgorithm (cm : ComputationalMethod) : Prop :=</code><br>
+      <code>&nbsp;&nbsp;∀ x ∈ cm.I, ∃ k, TerminatesIn cm x k</code><br><br>
+      <code>end ComputationalMethod</code>
+    </td>
+  </tr>
+</table>
+
+Next I want to show you how Litex can be used to solve a simple linear equation. It's clear that the Litex version can be read and understood by a 10-year-old, while the Lean version is much more complex.
+
+<table style="border-collapse: collapse; width: 100%;">
+  <tr>
+    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 50%;">Litex</th>
+    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 50%;">Lean 4</th>
+  </tr>
+  <tr>
+    <td style="border: 3px solid black; padding: 8px;">
+      <code>obj x R, y R:</code><br>
+      <code>&nbsp;&nbsp;2 * x + 3 * y = 10</code><br>
+      <code>&nbsp;&nbsp;4 * x + 5 * y = 14</code><br><br>
+      <code>2 * (2 * x + 3 * y) = 2 * 10</code><br>
+      <code>4* x + 6 * y = 2 * 10</code><br>
+      <code>(4*x + 6 * y) - (4*x + 5 * y) = 2 * 10 - 14</code><br>
+      <code>(4*x + 6 * y) - (4*x + 5 * y) = y</code><br>
+      <code>y = 6</code><br>
+      <code>2 * x + 3 * 6 = 10</code><br>
+      <code>2 * x + 18 - 18 = 10 - 18</code><br>
+      <code>2 * x + 18 - 18 = -8</code><br>
+      <code>(2 * x) / 2 = -8 / 2</code><br>
+      <code>(2 * x) / 2 = x</code><br>
+      <code>x = -4</code>
+    </td>
+    <td style="border: 3px solid black; padding: 8px;">
+      <code>import Mathlib.Tactic</code><br><br>
+      <code>example (x y : ℝ) (h₁ : 2 * x + 3 * y = 10) (h₂ : 4 * x + 5 * y = 14) : x = -4 ∧ y = 6 := by</code><br>
+      <code>&nbsp;&nbsp;have h₃ : 2 * (2 * x + 3 * y) = 2 * 10 := by rw [h₁]</code><br>
+      <code>&nbsp;&nbsp;have h₄ : 4 * x + 6 * y = 20 := by linear_combination 2 * h₁</code><br>
+      <code>&nbsp;&nbsp;have h₅ : (4 * x + 6 * y) - (4 * x + 5 * y) = 20 - 14 := by</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;rw [h₄, h₂]</code><br>
+      <code>&nbsp;&nbsp;have h₆ : (4 * x + 6 * y) - (4 * x + 5 * y) = y := by</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;ring</code><br>
+      <code>&nbsp;&nbsp;have h₇ : 20 - 14 = 6 := by norm_num</code><br>
+      <code>&nbsp;&nbsp;have h₈ : y = 6 := by</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;rw [←h₆, h₅, h₇]</code><br>
+      <code>&nbsp;&nbsp;have h₉ : 2 * x + 3 * 6 = 10 := by rw [h₈, h₁]</code><br>
+      <code>&nbsp;&nbsp;have h₁₀ : 2 * x + 18 = 10 := by</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;rw [mul_add] at h₉</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;simp at h₉</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;exact h₉</code><br>
+      <code>&nbsp;&nbsp;have h₁₁ : 2 * x = -8 := by</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;linear_combination h₁₀ - 18</code><br>
+      <code>&nbsp;&nbsp;have h₁₂ : x = -4 := by</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;linear_combination h₁₁ / 2</code><br>
+      <code>&nbsp;&nbsp;exact ⟨h₁₂, h₈⟩</code>
+    </td>
+  </tr>
+</table>
+
+
 
 ## Contact & Contribute to Litex
 _The best way to predict the future is to invent it._
