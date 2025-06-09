@@ -412,9 +412,13 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc) (bool, error) {
 		}
 
 		inFacts := []ast.FactStmt{}
-		// TODO: 这里需要检查，setParam是否是自由变量
 		for i, inSet := range fnDef.DefHeader.SetParams {
-			inFact := ast.NewInFactWithFc(asFcFn.ParamSegs[i], inSet)
+			// 需要把setParam实例化，因为setParam可能包含自由变量
+			setParam, err := inSet.Instantiate(uniMap)
+			if err != nil {
+				return false, err
+			}
+			inFact := ast.NewInFactWithFc(asFcFn.ParamSegs[i], setParam)
 			inFacts = append(inFacts, inFact)
 		}
 
