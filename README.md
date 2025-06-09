@@ -1,5 +1,5 @@
 <div align="center">
-<img src="assets/logo.png" alt="The Litex Logo" width="300">
+<img src="./logo.png" alt="The Litex Logo" width="300">
 </div>
 
 <div align="center">
@@ -282,7 +282,7 @@ Next I want to show you how Litex can be used to solve a simple linear equation.
   </tr>
 </table>
 
-
+I know Lean can use tactics to solve the same problem, and it is shorter. Litex will introduce similar features in the future. What I really want to show you here is that Litex is much more readable and intuitive than Lean in this case. Not every situation can be solved by tactics, and writing tactics itself in Lean is not easy. Litex spares you from remembering all these difficult things like `have`, `by`, `rw`, `simp`, `exact` and strange syntax etc. All you need is basic math knowledge, which significantly reduces the barrier to entry.
 
 ## Contact & Contribute to Litex
 _The best way to predict the future is to invent it._

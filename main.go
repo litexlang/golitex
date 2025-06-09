@@ -47,7 +47,7 @@ func main() {
 
 	if len(args) == 0 {
 		sys.RunREPLInTerminal()
-	} else {
+	} else if len(args) == 2 && args[0] == "-f" {
 		filePath := args[0]
 		// Verify file exists
 		if _, err := os.Stat(filePath); os.IsNotExist(err) {
@@ -65,5 +65,18 @@ func main() {
 		// Output results
 		fmt.Println("Output:", sys.BetterMsg(msg))
 		fmt.Println("Status:", signal)
+	} else if len(args) == 2 && args[0] == "-e" {
+		code := args[1]
+		msg, signal, err := sys.ExecuteCodeAndReturnMessage(code)
+		if err != nil {
+			fmt.Printf("Processing error: %v\n", err)
+			os.Exit(1)
+		}
+
+		// Output results
+		fmt.Println("Output:", sys.BetterMsg(msg))
+		fmt.Println("Status:", signal)
+	} else {
+		sys.RunREPLInTerminal()
 	}
 }
