@@ -44,7 +44,7 @@ func ExecString(code string) (string, glob.SysSignal, error) {
 func BetterMsg(msg string) string {
 	// 把超过一个的 \n 变成一个 (可能是3个，可能是2个，可能多个)
 	msg = strings.ReplaceAll(msg, "\n\n", "\n")
-	return strings.TrimSpace(msg)
+	return msg
 }
 
 func RunREPLInTerminal() {
