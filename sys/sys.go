@@ -50,3 +50,11 @@ func BetterMsg(msg string) string {
 func RunREPLInTerminal() {
 	pipeline.RunREPLInTerminal()
 }
+
+func ExecuteCodeAndReturnMessage(code string) (string, glob.SysSignal, error) {
+	msg, signal, err := pipeline.ExecuteCodeAndReturnMessage(code)
+	if err != nil {
+		return "", signal, err
+	}
+	return msg, signal, nil
+}
