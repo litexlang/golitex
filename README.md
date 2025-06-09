@@ -36,10 +36,32 @@ While Litex is in the early stages of development, it has already established a 
 
 ## Try Litex Step by Step
 
+**WARNING: Litex is still under development. Unexpected bugs might happen.**
+
 This section is for you to try Litex step by step. If you just want to have a quick look at Litex, you can skip this section.
 
+### Download Litex and Try It
 
+step 1: download latest version [release](https://github.com/litexlang/golitex/releases). It is a binary file, so you can just run it in your terminal.
 
+step 2: run your downloaded binary file and enter the REPL (Read-Eval-Print Loop) mode of Litex. Try enter `1 + 1 = 2` and see what happens. Enter `exit` to quit the REPL mode.
+
+If you are on Mac, you might need to give it permission to run. If it still does not work, input `chmod 777 YOUR_BINARY_FILE_NAME` in your terminal and try again.
+
+step 3: `git clone https://github.com/litexlang/golitex.git` and run `YOUR_BINARY_FILE_NAME PATH_TO_YOUR_CLONED_REPO/examples/comprehensive_examples/syllogism.lix` in the root directory of the cloned repo. This will run the example code. Other examples (e.g. Hilbert geometry axioms formalization for experts, multivariate linear equation for children) are in the same directory. You can also input the code directly in the REPL mode.
+
+After having a sense of Litex, do this:
+
+0. Read the [README](./README.md) to get a sense of the project.
+1. Read the [tutorial](./doc/tutorial/tutorial.md) to get a sense of the language.
+2. Read the [comparison with Lean](./doc/comparison_with_lean/comparison_with_lean.md) to get a sense of the difference between Litex and Lean.
+3. To learn applications of Litex, read [applications of formal reasoning in AI and many other fields](./doc/applications_of_formal_reasoning/applications_of_formal_reasoning.md).
+4. To read a comprehensive example, read [formalization of Hilbert geometry axioms](./examples/comprehensive_examples/Hilbert_geometry_axioms_formalization.lix).
+5. Contribute piece by piece to the Litex kernel or the Litex dataset, e.g. formalize mathematical concepts, fix bugs, add new features, improve documentation, etc. on [github](https://github.com/litexlang/golitex), [discord](https://discord.gg/uvrHM7eS).
+
+**IF YOU HAVE ANY PROBLEMS, PLEASE CONTACT THROUGH [discord](https://discord.gg/uvrHM7eS) litexlang@outlook.com OR [github](https://github.com/litexlang/golitex).**
+
+**THANK YOU FOR YOUR FEARLESS EARLY ADOPTION! HERE IS MY HEARTFELT THANKS TO Litex's EARLIEST FANS -- THE BOLD PIONEERS WHO TRUSTS ME FROM THE START!**
 
 ## A Simple Example
 
@@ -97,7 +119,7 @@ All daily math is built around first-order-logic, naive set theory, natural numb
 A major special case of match and substitute is about rational numbers, like 1, 3.5 or 4.123456789. These objects are different from user-defined objects because their literal representation directly encodes information. Rational numbers and their basic operations like addition, multiplication, inequalities are builtin in Litex, and Litex handles all the verification rules for them automatically.
 
 
-## Unique Idea of Litex
+## How Does Litex Differentiate Itself Technically?
 
 _Common sense is not so common._
 
@@ -119,25 +141,7 @@ Throughout the years, natural languages are [considerably more expressive than t
 
 In a nutshell, Litex is for EVERYONE, from children to experts, to learn and use formal language at AI age. It scales up reasoning by making the process of writing formal reasoning as intuitive as writing in natural language.
 
-## Try Litex Step by Step
 
-Litex is still in the early stage of development, I do not want to underestimate the difficulty of the task. There are 2 main challenges for you to formalize mathematical concepts in Litex, or contribute to the Litex kernel:
-
-- The language is still unstable, there might be some bugs or insufficiencies in the language design.
-- There is very little existing code for Litex, so you need to formalize a lot of mathematical concepts from scratch.
-
-If you are still willing to try, then you are one of the brave ones who dared to believe. I recommend you to start with the following steps:
-
-**REMARK: SINCE THE LANGUAGE IS STILL IN DEVELOPMENT, THE BEST WAY TO LEARN LITEX IS TO CONTACT THE CREATORS OF LITEX DIRECTLY THROUGH [CONTACT](#contact--contribute-to-litex) METHODS PROVIDED IN THIS README.**
-
-0. Read the [README](./README.md) to get a sense of the project.
-1. Read the [tutorial](./doc/tutorial/tutorial.md) to get a sense of the language.
-2. Read the [comparison with Lean](./doc/comparison_with_lean/comparison_with_lean.md) to get a sense of the difference between Litex and Lean.
-3. To learn applications of Litex, read [applications of formal reasoning in AI and many other fields](./doc/applications_of_formal_reasoning/applications_of_formal_reasoning.md).
-4. To read a comprehensive example, read [formalization of Hilbert geometry axioms](./examples/comprehensive_examples/Hilbert_geometry_axioms_formalization.lix).
-5. Contribute piece by piece to the Litex kernel or the Litex dataset, e.g. formalize mathematical concepts, fix bugs, add new features, improve documentation, etc. on [github](https://github.com/litexlang/golitex), [discord](https://discord.gg/uvrHM7eS).
-
-**THANK YOU FOR YOUR FEARLESS EARLY ADOPTION! HERE IS MY HEARTFELT THANKS TO Litex's EARLIEST FANS -- THE BOLD PIONEERS WHO TRUSTS ME FROM THE START!**
 
 ## Answers to Common Questions
 

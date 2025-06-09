@@ -1,0 +1,9 @@
+set human
+prop intelligent(x human)
+
+know:
+    forall x human:
+        x is intelligent
+
+obj Jordan human
+Jordan is intelligent
