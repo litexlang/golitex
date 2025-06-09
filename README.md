@@ -32,15 +32,8 @@ Litex scales reasoning in three ways:
 
 **AI Integration:** Litex provides the perfect **infrastructure for AI** to learn and perform formal reasoning at scale.
 
-World-class researchers including Terrence Tao, Yoshua Bengio, and AI companies including DeepMind and DeepSeek, are showing great interest how formal languages can be used to scale reasoning AI, ensure AI safety, and many more tasks. Litex is the perfect tool to their challenge. Litex has already gained attention from leading institutions worldwide, including **CMU, Mila, Tsinghua, PKU, ByteDance, OpenMMLab, SJTU, Fudan**. Contributors read [contribute to Litex](./doc/contribute_to_Litex/contribute_to_Litex.md) for more details.
+World-class researchers including Terrence Tao, Yoshua Bengio, and AI companies including DeepMind and DeepSeek, are showing great interest how formal languages can be used to scale reasoning AI, ensure AI safety, and many more tasks. Litex is the perfect tool to their challenge. Litex has already gained attention from leading institutions worldwide, including **CMU, Mila, Tsinghua, PKU, ByteDance, OpenMMLab, SJTU, Fudan**. Contributors read [contribute to Litex](./doc/contribute_to_Litex/contribute_to_Litex.md) for more details. **If you have any problems, please contact us through [Contact](#contact--contribute-to-litex) methods provided in this README.**
 
-## Contact
-- **Website:** [litexlang.org](https://litexlang.org)  
-- **GitHub:** [github.com/litexlang/golitex](https://github.com/litexlang/golitex)
-- **Project Email:** litexlang@outlook.com
-- **Litex Creator:** Jiachen Shen
-- **Litex Creator's Email:** malloc_realloc_free@outlook.com
-- **Discord:** [discord](https://discord.gg/uvrHM7eS)
 
 ## A Simple Example
 
@@ -129,7 +122,7 @@ Litex is still in the early stage of development, I do not want to underestimate
 
 If you are still willing to try, then you are one of the brave ones who dared to believe. I recommend you to start with the following steps:
 
-**REMARK: SINCE THE LANGUAGE IS STILL IN DEVELOPMENT, THE BEST WAY TO LEARN LITEX IS TO CONTACT THE CREATORS OF LITEX DIRECTLY THROUGH [CONTACT](#contact) METHODS PROVIDED IN THIS README.**
+**REMARK: SINCE THE LANGUAGE IS STILL IN DEVELOPMENT, THE BEST WAY TO LEARN LITEX IS TO CONTACT THE CREATORS OF LITEX DIRECTLY THROUGH [CONTACT](#contact--contribute-to-litex) METHODS PROVIDED IN THIS README.**
 
 0. Read the [README](./README.md) to get a sense of the project.
 1. Read the [tutorial](./doc/tutorial/tutorial.md) to get a sense of the language.
@@ -173,8 +166,7 @@ Litex's greatest strength is its remarkable simplicity. While other formal langu
 
 Think of formalization like reading a book - you need to understand the previous pages before the last one. Similarly, formalizing advanced concepts requires building up from fundamentals. For example, formalizing uniform distribution over (0,1) requires many prerequisites. The good news is that translating mathematical concepts to Litex is straightforward once you have the prerequisites in place.
 
-## Contribute to Litex
-
+## Contact & Contribute to Litex
 _The best way to predict the future is to invent it._
 
 _-- Alan Kay_
@@ -193,5 +185,13 @@ You can contribute by:
 7. Creating the LitexDojo, similar to how LeanDojo is for Lean.
 
 Since 90% of the functionality delivered now is better than 100% of it delivered never[^1], the inventor of Litex put it open-source to welcome everyone, including you, to learn, try, use, and contribute to Litex, even though Litex is not fully ready. Feel free to contact us and join this exciting journey!
+
+
+- **Website:** [litexlang.org](https://litexlang.org)  
+- **GitHub:** [github.com/litexlang/golitex](https://github.com/litexlang/golitex)
+- **Project Email:** litexlang@outlook.com
+- **Litex Creator:** Jiachen Shen
+- **Litex Creator's Email:** malloc_realloc_free@outlook.com
+- **Discord:** [discord](https://discord.gg/uvrHM7eS)
 
 [^1]: Kernighan & Plauger, The Elements of Programming Style, 1978.
