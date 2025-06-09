@@ -30,7 +30,7 @@ Litex scales reasoning in three ways:
 
 World-class researchers including Terrence Tao, Yoshua Bengio, and AI companies including DeepMind and DeepSeek, are showing great interest how formal languages can be used to scale reasoning AI, ensure AI safety, and many more tasks. Litex is the perfect tool to their challenge. Litex has already gained attention from leading institutions worldwide, including **CMU, Mila, Tsinghua, PKU, ByteDance, OpenMMLab, SJTU, Fudan**.
 
-Learn more in [tutorial](./doc/tutorial/tutorial.md).
+Learn more in [tutorial](./doc/tutorial/tutorial.md). Download the latest version of Litex [here](https://github.com/litexlang/golitex/releases).
 
 While Litex is in the early stages of development, it has already established a solid foundation that demonstrates the potential of this approach. Contributors read [contribute to Litex](./doc/contribute_to_Litex/contribute_to_Litex.md) for more details. **If you have any problems, please contact us through [Contact](#contact--contribute-to-litex) methods provided in this README.**
 
@@ -44,6 +44,12 @@ This section is for you to try Litex step by step. If you just want to have a qu
 
 ### Download Litex and Try It
 
+#### Choice 1: Try Litex in your browser
+
+Visit [Litex Playground](https://litexlang.org/playground) to try Litex in your browser.
+
+#### Choice 2: Download the latest version of Litex to your machine
+
 step 1: download latest version [release](https://github.com/litexlang/golitex/releases). It is a binary file, so you can just run it in your terminal.
 
 step 2: run your downloaded binary file and enter the REPL (Read-Eval-Print Loop) mode of Litex. Try enter `1 + 1 = 2` and see what happens. Enter `exit` to quit the REPL mode.
@@ -51,6 +57,8 @@ step 2: run your downloaded binary file and enter the REPL (Read-Eval-Print Loop
 If you are on Mac, you might need to give it permission to run. If it still does not work, input `chmod 777 YOUR_BINARY_FILE_NAME` in your terminal and try again.
 
 step 3: `git clone https://github.com/litexlang/golitex.git` and run `YOUR_BINARY_FILE_NAME PATH_TO_YOUR_CLONED_REPO/examples/comprehensive_examples/syllogism.lix` in the root directory of the cloned repo. This will run the example code. Other examples (e.g. Hilbert geometry axioms formalization for experts, multivariate linear equation for children) are in the same directory. You can also input the code directly in the REPL mode.
+
+Both choices are free. I recommend you to try Litex in your browser first, because it is much more convenient.
 
 **SORRY THERE IS NO MORE EXAMPLES FOR NOW. I SINGLE-HANDEDLY DEVELOPED THE WHOLE LANGUAGE FOR 2800 GIT COMMITS. I HAVE ALREADY DONE MY BEST. THAT IS WHY I AM SO EXCITED TO HAVE YOU HERE.**
 
