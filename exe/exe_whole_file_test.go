@@ -29,7 +29,7 @@ func TestWholeFile(t *testing.T) {
 	// code := readFile("../examples/test_codes/tmp.lix")
 	// code := readFile("../examples/comprehensive_examples/multivariate_linear_equation.lix")
 	// code := readFile("../examples/comprehensive_examples/algorithm.lix")
-	// code := readFile("../examples/comprehensive_examples/syllogism(三段论).lix")
+	// code := readFile("../examples/comprehensive_examples/syllogism.lix")
 	// code := readFile("../examples/test_codes/match_env.lix")
 	readFileTime := time.Since(start)
 	start = time.Now()

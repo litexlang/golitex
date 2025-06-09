@@ -1,9 +1,0 @@
-set human
-prop intelligent(x human)
-
-know:
-    forall x human:
-        x is intelligent
-
-obj Alice human
-Alice is intelligent
