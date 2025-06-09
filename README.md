@@ -10,6 +10,11 @@
 *May 2025*  
 *Created by Jiachen Shen*
 
+[![Github](https://img.shields.io/badge/Github-grey?logo=github)](https://github.com/litexlang/golitex)
+[![Discord](https://img.shields.io/badge/Discord-purple?logo=discord)](https://discord.gg/uvrHM7eS)
+[![Website](https://img.shields.io/badge/Website-blue?logo=website)](https://litexlang.org)
+[![Email](https://img.shields.io/badge/Email-red?logo=email)](mailto:litexlang@outlook.com)
+
 </div>
 
 ## About The Adventure of Litex
