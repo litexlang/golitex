@@ -203,7 +203,8 @@ func RunREPLInTerminal() {
 			continue
 		}
 
-		if code == "exit" {
+		// Have to trim space because there is \n at the end of code
+		if strings.TrimSpace(code) == "exit" {
 			fmt.Fprintf(writer, "Goodbye!\n")
 			return
 		}
@@ -215,7 +216,6 @@ func RunREPLInTerminal() {
 			continue
 		}
 
-		fmt.Fprintf(writer, "%s\n", code)
 		printMessagesToWriter(writer, msg)
 		fmt.Fprintf(writer, "[Success] success! :)\n")
 	}
