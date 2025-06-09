@@ -82,71 +82,71 @@ func ExecuteCodeAndReturnMessageSliceGivenSettings(code string, parserEnv *parse
 }
 
 // listen processes input from a reader and writes output to a writer
-func listen(reader *bufio.Reader, writer io.Writer, parserEnv *parser.ParserEnv, executor *exe.Executor) error {
-	for {
-		fmt.Fprint(writer, ">>> ")
-		var input strings.Builder
-		currentScopeDepth := 0
+// func listen(reader *bufio.Reader, writer io.Writer, parserEnv *parser.ParserEnv, executor *exe.Executor) error {
+// 	for {
+// 		fmt.Fprint(writer, ">>> ")
+// 		var input strings.Builder
+// 		currentScopeDepth := 0
 
-		for {
-			if currentScopeDepth > 0 {
-				fmt.Fprint(writer, "... ") // 末尾的+4是未来和">>> "对齐
-				input.WriteString("    ")
+// 		for {
+// 			if currentScopeDepth > 0 {
+// 				fmt.Fprint(writer, "... ") // 末尾的+4是未来和">>> "对齐
+// 				input.WriteString("    ")
 
-				currentLineStr, err := reader.ReadString('\n')
-				trimmedLine := strings.TrimRight(currentLineStr, " \t\n\r")
+// 				currentLineStr, err := reader.ReadString('\n')
+// 				trimmedLine := strings.TrimRight(currentLineStr, " \t\n\r")
 
-				if trimmedLine == "" {
-					break
-				}
+// 				if trimmedLine == "" {
+// 					break
+// 				}
 
-				if err != nil {
-					return fmt.Errorf("error reading input: %v", err)
-				}
-				input.WriteString(currentLineStr)
+// 				if err != nil {
+// 					return fmt.Errorf("error reading input: %v", err)
+// 				}
+// 				input.WriteString(currentLineStr)
 
-			} else {
-				currentLineStr, err := reader.ReadString('\n')
-				if err != nil {
-					return fmt.Errorf("error reading input: %v", err)
-				}
-				input.WriteString(currentLineStr)
+// 			} else {
+// 				currentLineStr, err := reader.ReadString('\n')
+// 				if err != nil {
+// 					return fmt.Errorf("error reading input: %v", err)
+// 				}
+// 				input.WriteString(currentLineStr)
 
-				// input 的非空白的最后一位 不是 :
-				trimmedLine := strings.TrimRight(currentLineStr, " \t\n\r")
-				if trimmedLine == "" || !strings.HasSuffix(trimmedLine, ":") {
-					break
-				} else {
-					currentScopeDepth = 1
+// 				// input 的非空白的最后一位 不是 :
+// 				trimmedLine := strings.TrimRight(currentLineStr, " \t\n\r")
+// 				if trimmedLine == "" || !strings.HasSuffix(trimmedLine, ":") {
+// 					break
+// 				} else {
+// 					currentScopeDepth = 1
 
-				}
-			}
-		}
+// 				}
+// 			}
+// 		}
 
-		currentScopeDepth = 0
+// 		currentScopeDepth = 0
 
-		// Clean up input
-		inputStr := input.String()
-		if inputStr == "" {
-			continue
-		}
-		if strings.ToLower(inputStr) == "exit" {
-			return nil
-		}
+// 		// Clean up input
+// 		inputStr := input.String()
+// 		if inputStr == "" {
+// 			continue
+// 		}
+// 		if strings.ToLower(inputStr) == "exit" {
+// 			return nil
+// 		}
 
-		// Execute the code
-		msg, signal, err := ExecuteCodeAndReturnMessageSliceGivenSettings(inputStr, parserEnv, executor)
-		if err != nil || signal != glob.SysSignalTrue {
-			printMessagesToWriter(writer, msg)
-			fmt.Fprintf(writer, "---\n[Warning] failed :(\n")
-			continue
-		}
+// 		// Execute the code
+// 		msg, signal, err := ExecuteCodeAndReturnMessageSliceGivenSettings(inputStr, parserEnv, executor)
+// 		if err != nil || signal != glob.SysSignalTrue {
+// 			printMessagesToWriter(writer, msg)
+// 			fmt.Fprintf(writer, "---\n[Warning] failed :(\n")
+// 			continue
+// 		}
 
-		// Print results
-		printMessagesToWriter(writer, msg)
-		fmt.Fprintln(writer, "---\nsuccess! :)")
-	}
-}
+// 		// Print results
+// 		printMessagesToWriter(writer, msg)
+// 		fmt.Fprintln(writer, "---\nsuccess! :)")
+// 	}
+// }
 
 func printMessagesToWriter(writer io.Writer, msg []string) {
 	if len(msg) > 0 {
@@ -173,17 +173,92 @@ func printMessagesToWriter(writer io.Writer, msg []string) {
 	}
 }
 
+// func RunREPLInTerminal() {
+// 	parserEnv := parser.NewParserEnv()
+// 	executor := exe.NewExecutor(env.NewEnv(nil, nil))
+// 	reader := bufio.NewReader(os.Stdin)
+
+// 	fmt.Println("Litex-beta - Type your code or 'exit' to quit\nWarning: not yet ready for production use.")
+
+// 	err := listen(reader, os.Stdout, parserEnv, executor)
+// 	if err != nil {
+// 		fmt.Printf("Error: %v\n", err)
+// 	}
+
+// 	fmt.Println("Goodbye!")
+// }
+
 func RunREPLInTerminal() {
 	parserEnv := parser.NewParserEnv()
 	executor := exe.NewExecutor(env.NewEnv(nil, nil))
 	reader := bufio.NewReader(os.Stdin)
+	writer := os.Stdout
 
 	fmt.Println("Litex-beta - Type your code or 'exit' to quit\nWarning: not yet ready for production use.")
 
-	err := listen(reader, os.Stdout, parserEnv, executor)
-	if err != nil {
-		fmt.Printf("Error: %v\n", err)
-	}
+	for {
+		code, err := listenOneStatement(reader, writer)
+		if err != nil {
+			fmt.Fprintf(writer, "[Error] %v\n", err)
+			continue
+		}
 
-	fmt.Println("Goodbye!")
+		if code == "exit" {
+			fmt.Fprintf(writer, "Goodbye!\n")
+			return
+		}
+
+		msg, signal, err := ExecuteCodeAndReturnMessageSliceGivenSettings(code, parserEnv, executor)
+		if err != nil || signal != glob.SysSignalTrue {
+			printMessagesToWriter(writer, msg)
+			fmt.Fprintf(writer, "[Warning] failed :(\n")
+			continue
+		}
+
+		fmt.Fprintf(writer, "%s\n", code)
+		printMessagesToWriter(writer, msg)
+		fmt.Fprintf(writer, "[Success] success! :)\n")
+	}
+}
+
+func listenOneStatement(reader *bufio.Reader, writer io.Writer) (string, error) {
+	var input strings.Builder
+	fmt.Fprint(writer, ">>> ")
+	currentScopeDepth := 0
+
+	for {
+		if currentScopeDepth > 0 {
+			fmt.Fprint(writer, "... ") // 末尾的+4是未来和">>> "对齐
+			input.WriteString("    ")
+
+			currentLineStr, err := reader.ReadString('\n')
+			trimmedLine := strings.TrimRight(currentLineStr, " \t\n\r")
+
+			if trimmedLine == "" {
+				break
+			}
+
+			if err != nil {
+				return "", fmt.Errorf("error reading input: %v", err)
+			}
+			input.WriteString(currentLineStr)
+
+		} else {
+			currentLineStr, err := reader.ReadString('\n')
+			if err != nil {
+				return "", fmt.Errorf("error reading input: %v", err)
+			}
+			input.WriteString(currentLineStr)
+
+			// input 的非空白的最后一位 不是 :
+			trimmedLine := strings.TrimRight(currentLineStr, " \t\n\r")
+			if trimmedLine == "" || !strings.HasSuffix(trimmedLine, ":") {
+				break
+			} else {
+				currentScopeDepth = 1
+
+			}
+		}
+	}
+	return input.String(), nil
 }
