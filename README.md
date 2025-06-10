@@ -23,7 +23,7 @@ _Simplicity is the ultimate sophistication._
 
 _-- Leonardo da Vinci_
 
-Litex is an ambitious project with a clear vision: to create a simple, intuitive, and powerful formal language for mathematics. If a 10-year-old can intuitively grasp logical reasoning for simple math proofs, a formal language should be just as intuitive and accessible. Litex aims to be that language -- making formal language simple enough for anyone to learn and use.
+Litex is an ambitious project with a clear vision: to create a simple, intuitive, and powerful formal language for mathematics. If a 10-year-old can intuitively grasp logical reasoning for simple math proofs, a formal language should be just as intuitive and accessible. Litex aims to be that human-friendly language -- making formal language simple enough for anyone to learn and use.
 
 Litex scales reasoning in three ways:
 
