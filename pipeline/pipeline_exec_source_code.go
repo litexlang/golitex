@@ -28,10 +28,10 @@ import (
 
 func ExecuteCodeAndReturnMessage(code string) (string, glob.SysSignal, error) {
 	msgOfTopStatements, signal, err := executeCodeAndReturnMessageSlice(code)
-	if err != nil {
-		return "", signal, err
-	}
 	ret := strings.Join(msgOfTopStatements, "\n\n\n")
+	if err != nil {
+		return ret, signal, err
+	}
 	return ret, signal, nil
 }
 
@@ -47,13 +47,13 @@ func executeCodeAndReturnMessageSlice(code string) ([]string, glob.SysSignal, er
 
 	for _, topStmt := range topStmtSlice {
 		execState, err := executor.TopLevelStmt(&topStmt)
+		msgOfTopStatements = append(msgOfTopStatements, executor.GetMsgAsStr0ToEnd())
 		if err != nil {
 			return nil, glob.SysSignalRuntimeError, err
 		}
 		if execState != glob.ExecState_True {
-			return nil, glob.SysSignalRuntimeError, fmt.Errorf("execution failed")
+			return msgOfTopStatements, glob.SysSignalRuntimeError, fmt.Errorf("execution failed")
 		}
-		msgOfTopStatements = append(msgOfTopStatements, executor.GetMsgAsStr0ToEnd())
 	}
 
 	return msgOfTopStatements, glob.SysSignalTrue, nil

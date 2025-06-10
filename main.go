@@ -48,12 +48,12 @@ func main() {
 	// Handle execution flags
 	if *executeFlag != "" {
 		msg, signal, err := sys.ExecuteCodeAndReturnMessage(*executeFlag)
+		fmt.Println(sys.BetterMsg(msg))
 		if err != nil {
 			fmt.Printf("Error: %v\n", err)
 			// os.Exit(1)
 		} else {
 			// Output results
-			fmt.Println(sys.BetterMsg(msg))
 			if signal == glob.SysSignalTrue {
 				fmt.Println(glob.REPLSuccessMessage)
 			} else if signal == glob.SysSignalFalse {
@@ -74,12 +74,12 @@ func main() {
 
 		// Process file
 		msg, signal, err := sys.RunFile(*fileFlag)
+		fmt.Println(sys.BetterMsg(msg))
 		if err != nil {
 			fmt.Printf("Error: %v\n", err)
 			// os.Exit(1)
 		} else {
 			// Output results
-			fmt.Println(sys.BetterMsg(msg))
 			if signal == glob.SysSignalTrue {
 				fmt.Println(glob.REPLSuccessMessage)
 			} else if signal == glob.SysSignalUnknown {
