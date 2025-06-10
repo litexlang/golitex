@@ -22,7 +22,7 @@ Litex is for solving the problem of formalizing math. Traditional formal languag
 
 Unlike Lean (a full Turing-complete language), Litex is a read-only Turing machine, sacrificing generality for clarity. Using match and substitution, Litex works just like how human beings check facts. Think of it like SQL for databases, but for everyday math.
 
-This reference
+This reference is a guide for Litex hard-core users, contributors, developers, and anyone who wants to understand the design principles of Litex. It is not a tutorial.
 
 ## Litex view of math
 
@@ -162,14 +162,14 @@ fn g(x SetX) y SetY:
     dom:
         $some_prop(x)
 
-dom_of(g) 的性质是
+dom_of(g) has the following property:
 forall x SetX:
     then:
         x $in dom_of(g)
     iff:
         $some_prop(x)
 
-ret_set_of(g) 的性质是
+ret_set_of(g) has the following property:
 ret_set_of(g) = SetY
 
 

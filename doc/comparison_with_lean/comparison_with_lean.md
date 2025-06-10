@@ -6,6 +6,8 @@
 
 Technically, the difference between Litex and Lean is that Litex is a read-only Turing machine, while Lean is a full Turing machine. The complexity of Lean stems from its dual purpose: it aims to be both a programming language and a reasoning verifier. This is similar to how Newton couldn't have invented calculus if he had to learn theories that would be developed three centuries later. By sacrificing Turing completeness, Litex eliminates variables, control flow, and execution semantics - concepts that are foreign to pure mathematics. This design choice, similar to how SQL specializes in database operations, allows Litex to focus on everyday mathematics. Since even a 10-year-old can understand and reason about mathematics intuitively, Litex is designed to align as closely as possible with everyday mathematical thinking.
 
+You can think of Litex as a Lean Alternative for Human-Friendly Mathematical Formalization.
+
 ## Compare by Examples
 
 Mathematics is the art of deriving new facts from established ones. To illustrate, consider a classical syllogism proposed by Aristotle in his Prior Analytics, which formalizes deductive reasoning as follows:
