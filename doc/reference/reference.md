@@ -139,6 +139,43 @@ As you can see, mathematics is the science of abstraction, and computer science 
 
 Fields medalist Terence Tao shows great interest in the combination of formal languages and AI. When asked about formalizing everything in formal language, he said: "So I think the smarter thing to do in many cases is just to wait until it's easier. Instead of taking 10 times as long to formalize it, it takes two times as long as the conventional way."[[AI will become mathematicians' co-pilot](https://www.scientificamerican.com/article/ai-will-become-mathematicians-co-pilot/)] Litex is my answer to this challenge. I hope you and many others can join the Litex community to make this happen.
 
+## Language Design Explanations
 
+1. set system in Litex
+
+prop P(x SetX, y SetY) 
+
+is the "short form of"
+
+prop P(x, y):
+    dom:
+        x $in SetX
+        y $in SetY
+
+So the "set system" (in other languages it is called type system) of Litex is actually a syntax sugar. Litex syntax requires you to write the first form for simplicity and strictness.
+
+The reason why you are not permitted to write prop P(x, y) directly without specifying the domain is that, it might lead to serious strictness in the verification process. And since in naive set theory, the definition of proposition and the definition of functions all require you to specify the domain, Litex does so too.
+
+We can objects in parameter list free objects.
+
+That is why free variables can appear in the set of other free objects.
+
+prop is_group(G set, mul function(G, G)G, e G, inv function(G)G)
+
+is the short form of 
+
+prop is_group(G, mul, e, inv):
+    dom:
+        mul $in function(G, G)G
+        e $in G
+        inv $in function(G)G
+
+2. function as function name of a function
+
+definition of functions whose return value is a function
+
+fn f(...) fn(sets)return_set
+
+Here fn(sets)return_set should not include free objects in parameter list of f, because that is how the definition of function in naive set theory works.
 
 [^1]: [Computer programming as an art](https://dl.acm.org/doi/10.1145/1283920.1283929)
