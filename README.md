@@ -165,7 +165,7 @@ This is a summary of the differences between Litex and Lean4.
 | Turing-complete | ❌ No               | ✅ Yes        |  
 | Focus        | Math formalization  | Proof + Programming |  
 | Syntax Style | Python-like         | Functional      |
-| Learning Curve | Low (10-year-old friendly) | High (requires years of training) |
+| Learning Curve | Low (10-year-old friendly) | High (The prerequisites are very high even for PhD students) |
 | Auto-fact Finding | ✅ Yes (automatic) | ❌ No (manual naming) |
 | Type System  | Set theory + first-order logic | Complex (dependent types) |
 | Built-in Math | ✅ Yes (rational numbers, basic operations) | ❌ No (requires libraries) |
