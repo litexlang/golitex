@@ -158,7 +158,19 @@ Throughout the years, natural languages are [considerably more expressive than t
 
 In a nutshell, Litex is for EVERYONE, from children to experts, to learn and use formal language at AI age. It scales up reasoning by making the process of writing formal reasoning as intuitive as writing in natural language.
 
+This is a summary of the differences between Litex and Lean4.
 
+| Feature       | Litex                | Lean4          |  
+|--------------|---------------------|--------------|  
+| Turing-complete | ❌ No               | ✅ Yes        |  
+| Focus        | Math formalization  | Proof + Programming |  
+| Syntax Style | Python-like         | Functional      |
+| Learning Curve | Low (10-year-old friendly) | High (requires years of training) |
+| Auto-fact Finding | ✅ Yes (automatic) | ❌ No (manual naming) |
+| Type System  | Set theory + first-order logic | Complex (dependent types) |
+| Built-in Math | ✅ Yes (rational numbers, basic operations) | ❌ No (requires libraries) |
+| Community Size | Small (growing) | Large (established) |
+| Production Ready | ❌ Not yet | ✅ Yes |
 
 ## Answers to Common Questions
 
@@ -189,7 +201,7 @@ Think of formalization like reading a book - you need to understand the previous
 [Github](https://github.com/litexlang/golitex)
 
 
-##  Examples
+##  Examples: Comparison with Lean
 
 _If I have seen further, it is by standing on the shoulders of giants._
 
