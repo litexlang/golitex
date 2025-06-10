@@ -28,15 +28,15 @@ func RunFile(path string) (string, glob.SysSignal, error) {
 	}
 	msg, signal, err := pipeline.ExecuteCodeAndReturnMessage(string(content))
 	if err != nil {
-		return "", signal, err
+		return msg, signal, err
 	}
 	return msg, signal, nil
 }
 
-func ExecString(code string) (string, glob.SysSignal, error) {
+func ExecuteCodeAndReturnMessage(code string) (string, glob.SysSignal, error) {
 	msg, signal, err := pipeline.ExecuteCodeAndReturnMessage(code)
 	if err != nil {
-		return "", signal, err
+		return msg, signal, err
 	}
 	return msg, signal, nil
 }
@@ -49,12 +49,4 @@ func BetterMsg(msg string) string {
 
 func RunREPLInTerminal() {
 	pipeline.RunREPLInTerminal()
-}
-
-func ExecuteCodeAndReturnMessage(code string) (string, glob.SysSignal, error) {
-	msg, signal, err := pipeline.ExecuteCodeAndReturnMessage(code)
-	if err != nil {
-		return "", signal, err
-	}
-	return msg, signal, nil
 }
