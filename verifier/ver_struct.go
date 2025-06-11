@@ -22,31 +22,6 @@ import (
 	glob "golitex/glob"
 )
 
-// 所有verifier的方法里，只有它和switch里的三大函数可能读入anyState
-func (ver *Verifier) FactStmt(stmt ast.FactStmt, state VerState) (bool, error) {
-	if asSpecFact, ok := isTrueEqualFact(stmt); ok {
-		return ver.verTrueEqualFact(asSpecFact, state)
-	}
-
-	if asSpecFact, ok := stmt.(*ast.SpecFactStmt); ok {
-		return ver.verSpecFact(asSpecFact, state)
-	}
-
-	// if asLogicExpr, ok := stmt.(*ast.LogicExprStmt); ok {
-	// 	return ver.verLogicExpr(asLogicExpr, state)
-	// }
-
-	if asOrStmt, ok := stmt.(*ast.OrStmt); ok {
-		return ver.verOrStmt(asOrStmt, state)
-	}
-
-	if asUniFact, ok := stmt.(*ast.UniFactStmt); ok {
-		return ver.verUniFact(asUniFact, state)
-	}
-
-	return false, fmt.Errorf("unexpected fact statement: %v", stmt)
-}
-
 type Verifier struct {
 	env *env.Env
 }
