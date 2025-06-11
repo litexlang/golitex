@@ -378,8 +378,16 @@ func (ver *Verifier) inFact(stmt *ast.SpecFactStmt, state VerState) (bool, error
 	return false, nil
 }
 
-// TODO: 这里需要检查，setParam是否是自由变量
 func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc) (bool, error) {
+	if isArithmeticFn(fc) {
+		return ver.arithmeticFnRequirement(fc)
+	} else {
+		return ver.fcSatisfyNotBuiltinFnRequirement(fc)
+	}
+}
+
+// TODO: 这里需要检查，setParam是否是自由变量
+func (ver *Verifier) fcSatisfyNotBuiltinFnRequirement(fc ast.Fc) (bool, error) {
 	if fc.IsAtom() {
 		return true, nil
 	}
@@ -463,4 +471,15 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func isArithmeticFn(fc ast.Fc) bool {
+	if fc.IsAtom() {
+		return false
+	}
+	return false
+}
+
+func (ver *Verifier) arithmeticFnRequirement(fc ast.Fc) (bool, error) {
+	return false, nil
 }
