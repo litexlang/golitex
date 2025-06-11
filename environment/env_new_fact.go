@@ -399,11 +399,9 @@ func (env *Env) storeInFact(fact *ast.SpecFactStmt) error {
 		case glob.KeywordComplex:
 			return env.storeInFact_Complex(fact)
 		}
-	} else {
-		return env.storeSpecFactInMem(fact)
 	}
 
-	return nil
+	return env.storeSpecFactInMem(fact)
 }
 
 func (env *Env) storeInFact_Natural(fact *ast.SpecFactStmt) error {
