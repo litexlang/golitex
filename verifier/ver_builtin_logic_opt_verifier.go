@@ -159,6 +159,11 @@ func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactSt
 		return false, err
 	}
 	if ok {
+		if ast.IsFcAtomWithName(stmt.Params[1], glob.KeywordReal) {
+			isSuccess = glob.IsRealNumLitExpr(leftFc)
+			return isSuccess, nil
+		}
+
 		if ast.IsFcAtomWithName(stmt.Params[1], glob.KeywordNatural) {
 			isSuccess = glob.IsNatNumLitExpr(leftFc)
 			return isSuccess, nil
@@ -171,11 +176,6 @@ func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactSt
 
 		if ast.IsFcAtomWithName(stmt.Params[1], glob.KeywordRational) {
 			isSuccess = glob.IsRationalNumLitExpr(leftFc)
-			return isSuccess, nil
-		}
-
-		if ast.IsFcAtomWithName(stmt.Params[1], glob.KeywordReal) {
-			isSuccess = glob.IsRealNumLitExpr(leftFc)
 			return isSuccess, nil
 		}
 

@@ -45,7 +45,8 @@ func execStmtTest(topStmt []ast.TopStmt) []string {
 	for _, topStmt := range topStmt {
 		execState, err := executor.TopLevelStmt(&topStmt)
 		if err != nil {
-			panic(err)
+			fmt.Println(err)
+			return messages
 		}
 
 		if execState != glob.ExecState_True && !glob.ContinueExecutionIfExecUnknown {

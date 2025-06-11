@@ -21,8 +21,9 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if ok, err := ver.isValidSpecFact_EqualFact(stmt); err != nil {
+// Verify a spec fact that is not a true equal fact
+func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	if ok, err := ver.checkSpecFactRequirements(stmt); err != nil {
 		return false, err
 	} else if !ok {
 		return false, nil
@@ -51,7 +52,7 @@ func (ver *Verifier) verSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, 
 	}
 }
 
-func (ver *Verifier) isValidSpecFact_EqualFact(stmt *ast.SpecFactStmt) (bool, error) {
+func (ver *Verifier) checkSpecFactRequirements(stmt *ast.SpecFactStmt) (bool, error) {
 	// stmt参数里所有的涉及到的atom都已经被声明了
 	for _, param := range stmt.Params {
 		atoms := ast.GetAtomsInFc(param)
@@ -131,6 +132,10 @@ func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state VerStat
 }
 
 func (ver *Verifier) verSpecialSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	if stmt.NameIs(glob.KeywordIn) {
+		return ver.inFact(stmt, state)
+	}
+
 	if stmt.NameIs(glob.KeySymbolEqual) {
 		return ver.verNotTrueEqualFact_BuiltinRules(stmt, state)
 	}
@@ -145,10 +150,6 @@ func (ver *Verifier) verSpecialSpecFact(stmt *ast.SpecFactStmt, state VerState) 
 
 	if stmt.NameIs(glob.KeywordCommutativeProp) {
 		return ver.btCommutativeRule(stmt, state)
-	}
-
-	if stmt.NameIs(glob.KeywordIn) {
-		return ver.inFact(stmt, state)
 	}
 
 	if stmt.NameIs(glob.KeySymbolEqualEqual) {
