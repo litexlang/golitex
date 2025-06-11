@@ -106,8 +106,7 @@ Mathematics is the art of deriving new facts from established ones. To illustrat
       <code>def self_aware (x : Human) : Prop := true</code> <br><br>
       <code>axiom self_aware_all :</code><br>
       <code>&nbsp;&nbsp;&nbsp;&nbsp;∀ (x : Human), self_aware x</code> <br><br>
-      <code>def Bob : Human := Human</code> <br><br>
-      <code>example : self_aware Bob := self_aware_all Bob</code>
+      <code>example (Bob : Human) : self_aware Bob := self_aware_all Bob</code>
     </td>
   </tr>
 </table>

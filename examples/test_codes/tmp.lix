@@ -1,2 +1,8 @@
-forall x R:
+set SomeSet
+
+forall x SomeSet:
     x*x = x^2
+
+prop p(x SomeSet)
+
+$p(1)
