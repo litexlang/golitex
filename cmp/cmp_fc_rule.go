@@ -53,11 +53,11 @@ func BuiltinFcEqualRule(left, right ast.Fc) (bool, error) {
 	}
 
 	// Case1: 二者都是 Number 上进行+-*/^
-	ok, err := cmpNumLitExpr(left, right)
+	areNumLit, areEqual, err := AreNumLit_Equal(left, right)
 	if err != nil {
 		return false, err
 	}
-	if ok {
+	if areNumLit && areEqual {
 		return true, nil
 	}
 
@@ -65,24 +65,45 @@ func BuiltinFcEqualRule(left, right ast.Fc) (bool, error) {
 }
 
 // 之所以叫 Expr，因为可能含有运算符+-*/这样的
-func cmpNumLitExpr(left, right ast.Fc) (bool, error) {
+// func cmpNumLitExpr(left, right ast.Fc) (bool, error) {
+// 	leftAsNumLitExpr, ok, err := ast.MakeFcIntoNumLitExpr(left)
+// 	if err != nil {
+// 		return false, err
+// 	}
+// 	if !ok {
+// 		return false, nil
+// 	}
+
+// 	rightAsNumLitExpr, ok, err := ast.MakeFcIntoNumLitExpr(right)
+// 	if err != nil {
+// 		return false, err
+// 	}
+// 	if !ok {
+// 		return false, nil
+// 	}
+
+// 	return glob.NumLitExprEqual(leftAsNumLitExpr, rightAsNumLitExpr)
+// }
+
+func AreNumLit_Equal(left, right ast.Fc) (bool, bool, error) {
 	leftAsNumLitExpr, ok, err := ast.MakeFcIntoNumLitExpr(left)
 	if err != nil {
-		return false, err
+		return false, false, err
 	}
 	if !ok {
-		return false, nil
+		return false, false, nil
 	}
 
 	rightAsNumLitExpr, ok, err := ast.MakeFcIntoNumLitExpr(right)
 	if err != nil {
-		return false, err
+		return false, false, err
 	}
 	if !ok {
-		return false, nil
+		return false, false, nil
 	}
 
-	return glob.NumLitExprEqual(leftAsNumLitExpr, rightAsNumLitExpr)
+	areEqual, err := glob.NumLitExprEqual(leftAsNumLitExpr, rightAsNumLitExpr)
+	return true, areEqual, err
 }
 
 func SliceFcAllEqualToGivenFcBuiltinRule(valuesToBeComped *[]ast.Fc, fcToComp ast.Fc) (bool, error) {

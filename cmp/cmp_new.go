@@ -38,11 +38,11 @@ func CmpUsingBuiltinRule(left, right ast.Fc) (bool, error) {
 	}
 
 	// case 1: 用number rule来比较
-	ok, err = cmpNumLitExpr(left, right)
+	areNumLit, areEqual, err := AreNumLit_Equal(left, right)
 	if err != nil {
 		return false, err
 	}
-	if ok {
+	if areNumLit && areEqual {
 		return true, nil
 	}
 

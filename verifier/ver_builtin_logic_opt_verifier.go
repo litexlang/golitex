@@ -187,11 +187,3 @@ func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactSt
 
 	return false, nil
 }
-
-// return: isBuiltinLogicOpt, satisfyBuiltinLogicOpt, error
-func IsBuiltinLogicOpt_Check(stmt *ast.SpecFactStmt) (bool, bool, error) {
-	if ast.IsFcAtomWithName(&stmt.PropName, glob.KeywordIn) {
-	}
-
-	return false, false, nil
-}
