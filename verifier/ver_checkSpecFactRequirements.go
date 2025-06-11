@@ -56,6 +56,14 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc) (bool, error) {
 	}
 }
 
+func isArithmeticFn(fc ast.Fc) bool {
+	if ok := ast.IsFn_WithHeadNameInSlice(fc, []string{glob.KeySymbolPlus, glob.KeySymbolMinus, glob.KeySymbolStar, glob.KeySymbolSlash, glob.KeySymbolPower}); !ok {
+		return false
+	}
+
+	return true
+}
+
 // TODO: 这里需要检查，setParam是否是自由变量
 func (ver *Verifier) fcSatisfyNotBuiltinFnRequirement(fc ast.Fc) (bool, error) {
 	if fc.IsAtom() {
@@ -101,7 +109,7 @@ func (ver *Verifier) fcSatisfyNotBuiltinFnRequirement(fc ast.Fc) (bool, error) {
 		}
 
 		for _, inFact := range inFacts {
-			ok, err := ver.FactStmt(inFact, FinalRoundNoMsg)
+			ok, err := ver.VerFactStmt(inFact, FinalRoundNoMsg)
 			if err != nil {
 				return false, err
 			}
@@ -120,7 +128,7 @@ func (ver *Verifier) fcSatisfyNotBuiltinFnRequirement(fc ast.Fc) (bool, error) {
 		}
 
 		for _, domFact := range domFacts {
-			ok, err := ver.FactStmt(domFact, FinalRoundNoMsg)
+			ok, err := ver.VerFactStmt(domFact, FinalRoundNoMsg)
 			if err != nil {
 				return false, err
 			}
@@ -138,6 +146,33 @@ func (ver *Verifier) fcSatisfyNotBuiltinFnRequirement(fc ast.Fc) (bool, error) {
 		if !ok {
 			return false, nil
 		}
+	}
+
+	return true, nil
+}
+
+func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn) (bool, error) {
+	// parameter必须是实数
+	for _, param := range fc.ParamSegs {
+		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{param, ast.NewFcAtomWithName(glob.KeywordReal)}), FinalRoundNoMsg)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+	}
+
+	if ast.IsFcAtomWithName(fc.FnHead, glob.KeySymbolSlash) {
+		// 分母不是0
+		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.FalsePure, *ast.NewFcAtomWithName(glob.KeySymbolEqual), []ast.Fc{fc.ParamSegs[1], ast.NewFcAtomWithName("0")}), FinalRoundNoMsg)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+		return true, nil
 	}
 
 	return true, nil

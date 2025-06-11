@@ -85,7 +85,7 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state VerState) (bool,
 func (ver *Verifier) uniFactWithoutIff(stmt *ast.UniFactStmt, state VerState) (bool, error) {
 	// check then facts
 	for _, thenFact := range stmt.ThenFacts {
-		ok, err := ver.FactStmt(thenFact, state) // 这个地方有点tricky，这里是可能读入state是any的，而且我要允许读入any
+		ok, err := ver.VerFactStmt(thenFact, state) // 这个地方有点tricky，这里是可能读入state是any的，而且我要允许读入any
 		if err != nil {
 			return false, err
 		}
@@ -144,7 +144,7 @@ func (ver *Verifier) uniFactWithIff_CheckThenToIff(stmt *ast.UniFactStmt, state 
 	}
 
 	for _, toCheckFact := range stmt.IffFacts {
-		ok, err := ver.FactStmt(toCheckFact, state)
+		ok, err := ver.VerFactStmt(toCheckFact, state)
 		if err != nil {
 			return false, err
 		}
@@ -182,7 +182,7 @@ func (ver *Verifier) uniFactWithIff_CheckIffToThen(stmt *ast.UniFactStmt, state 
 	}
 
 	for _, toCheckFact := range stmt.ThenFacts {
-		ok, err := ver.FactStmt(toCheckFact, state)
+		ok, err := ver.VerFactStmt(toCheckFact, state)
 		if err != nil {
 			return false, err
 		}

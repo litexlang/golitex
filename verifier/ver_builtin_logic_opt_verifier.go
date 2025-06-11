@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) btNumberLogicRelaOptBtRule(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) verNumberLogicRelaOpt_BuiltinRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if stmt.PropName.PkgName != "" {
 		return false, nil
 	}
@@ -76,7 +76,7 @@ func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state VerS
 	return false, nil
 }
 
-func (ver *Verifier) btCommutativeRule(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) varCommutativeProp_BuiltinRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if !ast.IsFcAtomWithName(&stmt.PropName, glob.KeywordCommutativeProp) {
 		return false, nil
 	}
@@ -118,7 +118,7 @@ func (ver *Verifier) btCommutativeRule(stmt *ast.SpecFactStmt, state VerState) (
 
 	uniFact := ast.NewUniFact(uniFactParams, propDef.DefHeader.SetParams, domFacts, []ast.FactStmt{ThenFact}, []ast.FactStmt{IffFact})
 
-	ok, err = ver.FactStmt(uniFact, state.toNoMsg())
+	ok, err = ver.VerFactStmt(uniFact, state.toNoMsg())
 	if err != nil {
 		return false, err
 	}

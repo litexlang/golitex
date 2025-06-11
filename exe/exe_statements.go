@@ -78,7 +78,7 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
 	defer exec.appendMsg("\n")
 
 	curVerifier := verifier.NewVerifier(exec.env)
-	ok, err := curVerifier.FactStmt(stmt, verifier.Round0Msg)
+	ok, err := curVerifier.VerFactStmt(stmt, verifier.Round0Msg)
 	if err != nil {
 		return glob.ExecState_Error, err
 	}
@@ -95,7 +95,7 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
 		if asSpecFact, ok := stmt.(*ast.SpecFactStmt); ok {
 			reversedFact := asSpecFact.ReverseTrue()
 			curVerifier := verifier.NewVerifier(exec.env)
-			ok, err := curVerifier.FactStmt(reversedFact, verifier.Round0Msg)
+			ok, err := curVerifier.VerFactStmt(reversedFact, verifier.Round0Msg)
 			if err != nil {
 				return glob.ExecState_Error, err
 			}

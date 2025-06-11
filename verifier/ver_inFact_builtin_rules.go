@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) inFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if len(stmt.Params) != 2 {
 		return false, fmt.Errorf("invalid number of parameters for in fact")
 	}

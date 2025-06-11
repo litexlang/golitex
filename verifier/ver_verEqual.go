@@ -210,7 +210,7 @@ func (ver *Verifier) equalFact_MatchEnv_SpecMem_atEnv(curEnv *env.Env, left ast.
 
 func (ver *Verifier) verEqualSpecMemAndLogicMem(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
 	equalFact := ver.makeEqualFact(left, right)
-	ok, err := ver.verSpecFactSpecMemAndLogicMem(equalFact, state)
+	ok, err := ver.verSpecFact_SpecMemAndLogicMem(equalFact, state)
 	if err != nil {
 		return false, err
 	}
@@ -222,7 +222,7 @@ func (ver *Verifier) verEqualSpecMemAndLogicMem(left ast.Fc, right ast.Fc, state
 	if err != nil {
 		return false, err
 	}
-	ok, err = ver.verSpecFactSpecMemAndLogicMem(equalFactParamReversed, state)
+	ok, err = ver.verSpecFact_SpecMemAndLogicMem(equalFactParamReversed, state)
 	if err != nil {
 		return false, err
 	}
@@ -234,7 +234,7 @@ func (ver *Verifier) verEqualSpecMemAndLogicMem(left ast.Fc, right ast.Fc, state
 
 func (ver *Verifier) verEqualUniMem(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
 	equalFact := ver.makeEqualFact(left, right)
-	ok, err := ver.verSpecFactUniMem(equalFact, state)
+	ok, err := ver.verSpecFact_UniMem(equalFact, state)
 	if err != nil {
 		return false, err
 	}
@@ -246,7 +246,7 @@ func (ver *Verifier) verEqualUniMem(left ast.Fc, right ast.Fc, state VerState) (
 	if err != nil {
 		return false, err
 	}
-	ok, err = ver.verSpecFactUniMem(equalFactParamReversed, state)
+	ok, err = ver.verSpecFact_UniMem(equalFactParamReversed, state)
 	if err != nil {
 		return false, err
 	}
