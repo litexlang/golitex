@@ -1,5 +1,14 @@
 # Applications of Formal Reasoning in AI and Many Other Fields
 
+The goal of Litex is to scale reasoning at this AI era by making it more accessible to everyone. Litex scales reasoning in three ways:
+
+**Engineering:** Like software engineering, Litex turns individual math work into **mathematical engineering** through clear abstraction and composition. Writing math in Litex can be as simple as writing code in Python.
+
+**Accessibility:** Being much simpler than other formal languages, Litex enables **more people** to participate in formal reasoning, from children to experts.
+
+**AI Integration:** Litex provides the perfect **infrastructure for AI** to learn and perform formal reasoning at scale.
+
+
 ## AI
 
 AI research is shifting from data-driven learning to formal-language-driven reinforcement learning in 2025. With dataset exhaustion becoming common, companies are adopting formal language approaches for self-improving AI systems, inspired by AlphaZero's self-play methodology.
