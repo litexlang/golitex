@@ -380,7 +380,7 @@ func (ver *Verifier) inFact(stmt *ast.SpecFactStmt, state VerState) (bool, error
 
 func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc) (bool, error) {
 	if isArithmeticFn(fc) {
-		return ver.arithmeticFnRequirement(fc)
+		return ver.arithmeticFnRequirement(fc.(*ast.FcFn))
 	} else {
 		return ver.fcSatisfyNotBuiltinFnRequirement(fc)
 	}
@@ -474,12 +474,18 @@ func (ver *Verifier) fcSatisfyNotBuiltinFnRequirement(fc ast.Fc) (bool, error) {
 }
 
 func isArithmeticFn(fc ast.Fc) bool {
-	if fc.IsAtom() {
+	if ok, _ := ast.IsFn_WithHeadNameInSlice(fc, []string{glob.KeySymbolPlus, glob.KeySymbolMinus, glob.KeySymbolStar, glob.KeySymbolSlash, glob.KeySymbolPower}); !ok {
 		return false
 	}
-	return false
+
+	return true
 }
 
-func (ver *Verifier) arithmeticFnRequirement(fc ast.Fc) (bool, error) {
+func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn) (bool, error) {
+	if ast.IsFcAtomWithName(fc.FnHead, glob.KeySymbolSlash) {
+		// 分母不是0
+		// ver.verSpecFact(ast.NewSpecFactStmt(ast.SpecFactType_Equal, ast.NewFcAtomWithName(glob.KeySymbolNotEqual), []ast.Fc{fc.ParamSegs[1], ast.NewFcAtomWithName(glob.KeySymbolZero)}), FinalRoundNoMsg)
+	}
+
 	return false, nil
 }
