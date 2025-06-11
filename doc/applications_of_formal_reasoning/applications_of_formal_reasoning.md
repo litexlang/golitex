@@ -19,7 +19,7 @@ AI research is shifting from data-driven learning to formal-language-driven rein
 
 3. [AlphaGeometry](https://deepmind.google/discover/blog/alphageometry-an-olympiad-level-ai-system-for-geometry/): AlphaGeometry is another example of how a model self iteratively improves itself. It achieves gold medal level in IMO geometry problems, which is super-human level in math.
 
-4. [Safeguarded AI](https://www.aria.org.uk/opportunity-spaces/mathematics-for-safe-ai/safeguarded-ai/): The applications of formal reasoning in AI safety is drawing more and more attention, and this is one of the first AI safety orgnizations to pay attention to formal reasoning. Turing award recipient =  Yoshua Bengio joins Safeguarded AI as Scientific Director
+4. [Safeguarded AI](https://www.aria.org.uk/opportunity-spaces/mathematics-for-safe-ai/safeguarded-ai/): The applications of formal reasoning in AI safety is drawing more and more attention, and this is one of the first AI safety organizations to pay attention to formal reasoning. Turing award recipient Yoshua Bengio joins Safeguarded AI as Scientific Director.
 
 5. [Formal Mathematical Reasoning: A New Frontier in AI](https://arxiv.org/abs/2412.16075): This article argues AI-driven discovery in science, engineering, and beyond can be accelerated by the adoption of formal reasoning.
 
