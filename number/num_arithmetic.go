@@ -237,6 +237,31 @@ func eval(ast *arithAST) polynomial {
 
 // --- Combine like terms ---
 
+// // This version of simplify does not make x * x into x^2
+// func simplify(poly polynomial) polynomial {
+// 	group := map[string]float64{}
+// 	for _, term := range poly {
+// 		key := term.Key()
+// 		group[key] += term.CoEff
+// 	}
+// 	var result polynomial
+// 	for key, coEff := range group {
+// 		if coEff == 0 {
+// 			continue
+// 		}
+// 		vars := []string{}
+// 		if key != "" {
+// 			vars = strings.Split(key, "*")
+// 		}
+// 		result = append(result, arithmeticTerm{CoEff: coEff, Vars: vars})
+// 	}
+// 	sort.Slice(result, func(i, j int) bool {
+// 		return result[i].Key() < result[j].Key()
+// 	})
+// 	return result
+// }
+
+// This version of simplify makes x * x into x^2
 func simplify(poly polynomial) polynomial {
 	group := map[string]float64{}
 	for _, term := range poly {
@@ -250,7 +275,23 @@ func simplify(poly polynomial) polynomial {
 		}
 		vars := []string{}
 		if key != "" {
-			vars = strings.Split(key, "*")
+			// vars = strings.Split(key, "*")
+
+			// Count occurrences of each variable
+			varCount := make(map[string]int)
+			for _, v := range strings.Split(key, "*") {
+				varCount[v]++
+			}
+			// Convert to exponential form
+			for v, count := range varCount {
+				if count == 1 {
+					vars = append(vars, v)
+				} else {
+					vars = append(vars, fmt.Sprintf("%s^%d", v, count))
+				}
+			}
+			// Sort variables for consistent output
+			sort.Strings(vars)
 		}
 		result = append(result, arithmeticTerm{CoEff: coEff, Vars: vars})
 	}
@@ -266,7 +307,8 @@ func ParseAndExpandPolynomial(expr string) polynomial {
 	tokens := tokenize(expr)
 	ast := parseExpr(tokens)
 	poly := eval(ast)
-	return simplify(poly)
+	simplified := simplify(poly)
+	return simplified
 }
 
 func ExpandPolynomial_ReturnStr(expr string) string {
