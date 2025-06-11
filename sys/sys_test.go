@@ -15,7 +15,11 @@
 package litex_sys
 
 import (
+	"bytes"
 	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"testing"
 )
 
@@ -30,4 +34,43 @@ func TestRunFile(t *testing.T) {
 
 func TestRunREPLInTerminal(t *testing.T) {
 	RunREPLInTerminal()
+}
+
+func TestRunComprehensiveCodesInTerminal(t *testing.T) {
+	// Get the path to the .lix file (equivalent to the Python code)
+	exe, err := os.Executable()
+	if err != nil {
+		fmt.Println("Error getting executable path:", err)
+		return
+	}
+
+	// Construct the path to the .lix file
+	path := filepath.Join(filepath.Dir(exe), "..", "examples", "comprehensive_examples", "Hilbert_geometry_axioms_formalization.lix")
+
+	// Read the file content
+	code, err := os.ReadFile(path)
+	if err != nil {
+		fmt.Println("Error reading file:", err)
+		return
+	}
+
+	// Execute the command (assuming main.go is in the same directory)
+
+	cmd := exec.Command("go", "run", "../main.go", "-e", string(code))
+
+	// Capture both stdout and stderr
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	// Run the command
+	err = cmd.Run()
+	if err != nil {
+		fmt.Println("Error running command:", err)
+		fmt.Println("Stderr:", stderr.String())
+		return
+	}
+
+	// Print the output
+	fmt.Println("Output:", stdout.String())
 }

@@ -12,6 +12,10 @@
 # Litex github repository: https://github.com/litexlang/golitex
 # Litex discord server: https://discord.gg/uvrHM7eS
 
+################################################################################
+# Run This File to Generate the Logo of Litex
+################################################################################
+
 import turtle
 import random
 from PIL import ImageGrab
