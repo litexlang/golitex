@@ -407,7 +407,7 @@ func (env *Env) storeInFact(fact *ast.SpecFactStmt) error {
 }
 
 func (env *Env) storeInFact_Natural(fact *ast.SpecFactStmt) error {
-	err := env.storeInFact(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fact.Params[0], ast.NewFcAtomWithName(glob.KeywordNatural)}))
+	err := env.storeSpecFactInMem(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fact.Params[0], ast.NewFcAtomWithName(glob.KeywordNatural)}))
 	if err != nil {
 		return err
 	}
@@ -416,7 +416,7 @@ func (env *Env) storeInFact_Natural(fact *ast.SpecFactStmt) error {
 }
 
 func (env *Env) storeInFact_Int(fact *ast.SpecFactStmt) error {
-	err := env.storeInFact(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fact.Params[0], ast.NewFcAtomWithName(glob.KeywordInt)}))
+	err := env.storeSpecFactInMem(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fact.Params[0], ast.NewFcAtomWithName(glob.KeywordInt)}))
 	if err != nil {
 		return err
 	}
@@ -425,7 +425,7 @@ func (env *Env) storeInFact_Int(fact *ast.SpecFactStmt) error {
 }
 
 func (env *Env) storeInFact_Rational(fact *ast.SpecFactStmt) error {
-	err := env.storeInFact(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fact.Params[0], ast.NewFcAtomWithName(glob.KeywordRational)}))
+	err := env.storeSpecFactInMem(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fact.Params[0], ast.NewFcAtomWithName(glob.KeywordRational)}))
 	if err != nil {
 		return err
 	}
@@ -434,7 +434,7 @@ func (env *Env) storeInFact_Rational(fact *ast.SpecFactStmt) error {
 }
 
 func (env *Env) storeInFact_Real(fact *ast.SpecFactStmt) error {
-	err := env.storeInFact(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fact.Params[0], ast.NewFcAtomWithName(glob.KeywordReal)}))
+	err := env.storeSpecFactInMem(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fact.Params[0], ast.NewFcAtomWithName(glob.KeywordReal)}))
 	if err != nil {
 		return err
 	}
@@ -443,7 +443,7 @@ func (env *Env) storeInFact_Real(fact *ast.SpecFactStmt) error {
 }
 
 func (env *Env) storeInFact_Complex(fact *ast.SpecFactStmt) error {
-	err := env.storeInFact(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fact.Params[0], ast.NewFcAtomWithName(glob.KeywordComplex)}))
+	err := env.storeSpecFactInMem(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fact.Params[0], ast.NewFcAtomWithName(glob.KeywordComplex)}))
 	if err != nil {
 		return err
 	}
