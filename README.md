@@ -24,9 +24,11 @@ _Simplicity is the ultimate sophistication._
 
 _-- Leonardo da Vinci_
 
-Litex is an ambitious project with a clear vision: to create a simple, intuitive, and powerful formal language for mathematics. The goal of Litex is to scale reasoning at this AI era by making it more accessible to everyone. If a 10-year-old can intuitively grasp logical reasoning for simple math proofs, a formal language should be just as intuitive and accessible. Litex aims to be that human-friendly language -- making formal language simple enough for anyone to learn and use.
+Litex is a simple and easy-to-learn formal language. Thanks to its innovative design philosophy, even 10-year-old children can easily understand Litex. This gives it a dimensional advantage over existing formal languages, such as Lean, which even PhD students struggle to master.
 
-World-class researchers including Terrence Tao, Yoshua Bengio, and AI companies including DeepMind and DeepSeek, are showing great interest how formal languages can be used to scale reasoning AI, ensure AI safety, and many more tasks. Litex is the perfect tool to their challenge. Litex has already gained attention from leading institutions worldwide, including **CMU, Mila, Tsinghua, PKU, ByteDance, OpenMMLab, SJTU, Fudan**.
+In the field of AI, formal languages have become an indispensable tool for top researchers. Terence Tao uses them to reconstruct mathematical proofs, Bengio's team employs them to verify AI safety, DeepSeek-R1 leverages them to enhance reasoning capabilities, and the AlphaProof series utilizes them to simultaneously generate problems and answers, forming a self-improving closed loop. Litex is poised to become the key infrastructure for scalable knowledge engineering in the AI era.
+
+Although still in its testing phase, leading institutions such as CMU, Mila, and Oxford have already begun exploring, testing, and experimenting with Litex. Investing in Litex is not just a bet on the future of this technological approach—it also unlocks vast opportunities in the commercialization of formalized datasets and language support services. The relentless engineering efforts of the Litex team will make all these possible.
 
 Learn more in [tutorial](./doc/tutorial/tutorial.md). Download the latest version of Litex [here](https://github.com/litexlang/golitex/releases). Try Litex in your browser [here](https://litexlang.org/playground).
 
