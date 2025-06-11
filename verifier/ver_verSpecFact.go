@@ -62,9 +62,9 @@ func (ver *Verifier) isValidSpecFact_EqualFact(stmt *ast.SpecFactStmt) (bool, er
 		}
 	}
 
-	if stmt.NameIs(glob.KeySymbolEqual) {
-		return true, nil
-	}
+	// if stmt.NameIs(glob.KeySymbolEqual) {
+	// 	return true, nil
+	// }
 
 	if stmt.NameIs(glob.KeywordIn) {
 		return ver.verSpecFactStepByStep(stmt, FinalRoundNoMsg)
@@ -76,7 +76,7 @@ func (ver *Verifier) isValidSpecFact_EqualFact(stmt *ast.SpecFactStmt) (bool, er
 				return false, err
 			}
 			if !ok {
-				return false, fmt.Errorf("fcSatisfyFnRequirement failed for %s", param.String())
+				return false, fmt.Errorf("parameters in %s do not satisfy the requirement of that function", param.String())
 			}
 		}
 	}
@@ -384,12 +384,12 @@ func (ver *Verifier) inFact(stmt *ast.SpecFactStmt, state VerState) (bool, error
 }
 
 func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc) (bool, error) {
-	// if isArithmeticFn(fc) {
-	// 	return ver.arithmeticFnRequirement(fc.(*ast.FcFn))
-	// } else {
-	// 	return ver.fcSatisfyNotBuiltinFnRequirement(fc)
-	// }
-	return ver.fcSatisfyNotBuiltinFnRequirement(fc)
+	if isArithmeticFn(fc) {
+		return ver.arithmeticFnRequirement(fc.(*ast.FcFn))
+	} else {
+		return ver.fcSatisfyNotBuiltinFnRequirement(fc)
+	}
+	// return ver.fcSatisfyNotBuiltinFnRequirement(fc)
 }
 
 // TODO: 这里需要检查，setParam是否是自由变量
@@ -490,11 +490,17 @@ func isArithmeticFn(fc ast.Fc) bool {
 func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn) (bool, error) {
 	if ast.IsFcAtomWithName(fc.FnHead, glob.KeySymbolSlash) {
 		// 分母不是0
-		ver.verSpecFact(ast.NewSpecFactStmt(ast.FalsePure, *ast.NewFcAtomWithName(glob.KeySymbolEqual), []ast.Fc{fc.ParamSegs[1], ast.NewFcAtomWithName("0")}), FinalRoundNoMsg)
+		ok, err := ver.FactStmt(ast.NewSpecFactStmt(ast.FalsePure, *ast.NewFcAtomWithName(glob.KeySymbolEqual), []ast.Fc{fc.ParamSegs[1], ast.NewFcAtomWithName("0")}), FinalRoundNoMsg)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
 		return true, nil
 	}
 
-	return false, nil
+	return true, nil
 }
 
 func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
