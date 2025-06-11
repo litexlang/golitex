@@ -25,7 +25,7 @@ import (
 // 所有verifier的方法里，只有它和switch里的三大函数可能读入anyState
 func (ver *Verifier) FactStmt(stmt ast.FactStmt, state VerState) (bool, error) {
 	if asSpecFact, ok := isTrueEqualFact(stmt); ok {
-		return ver.verEqualFact(asSpecFact, state)
+		return ver.verTrueEqualFact(asSpecFact, state)
 	}
 
 	if asSpecFact, ok := stmt.(*ast.SpecFactStmt); ok {

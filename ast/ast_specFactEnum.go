@@ -21,8 +21,6 @@ type SpecFactEnum uint8
 const (
 	TruePure SpecFactEnum = iota
 	FalsePure
-	// TrueExist
-	// FalseExist
 	TrueExist_St
 	FalseExist_St
 )

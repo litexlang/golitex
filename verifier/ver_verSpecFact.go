@@ -17,6 +17,7 @@ package litex_verifier
 import (
 	"fmt"
 	ast "golitex/ast"
+	cmp "golitex/cmp"
 	glob "golitex/glob"
 )
 
@@ -130,6 +131,10 @@ func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state VerStat
 }
 
 func (ver *Verifier) verSpecialSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	if stmt.NameIs(glob.KeySymbolEqual) {
+		return ver.verNotTrueEqualFact_BuiltinRules(stmt, state)
+	}
+
 	if stmt.NameIs(glob.KeywordProveByMathInduction) {
 		return ver.mathInductionFact(stmt, state)
 	}
@@ -379,11 +384,12 @@ func (ver *Verifier) inFact(stmt *ast.SpecFactStmt, state VerState) (bool, error
 }
 
 func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc) (bool, error) {
-	if isArithmeticFn(fc) {
-		return ver.arithmeticFnRequirement(fc.(*ast.FcFn))
-	} else {
-		return ver.fcSatisfyNotBuiltinFnRequirement(fc)
-	}
+	// if isArithmeticFn(fc) {
+	// 	return ver.arithmeticFnRequirement(fc.(*ast.FcFn))
+	// } else {
+	// 	return ver.fcSatisfyNotBuiltinFnRequirement(fc)
+	// }
+	return ver.fcSatisfyNotBuiltinFnRequirement(fc)
 }
 
 // TODO: 这里需要检查，setParam是否是自由变量
@@ -484,7 +490,32 @@ func isArithmeticFn(fc ast.Fc) bool {
 func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn) (bool, error) {
 	if ast.IsFcAtomWithName(fc.FnHead, glob.KeySymbolSlash) {
 		// 分母不是0
-		// ver.verSpecFact(ast.NewSpecFactStmt(ast.SpecFactType_Equal, ast.NewFcAtomWithName(glob.KeySymbolNotEqual), []ast.Fc{fc.ParamSegs[1], ast.NewFcAtomWithName(glob.KeySymbolZero)}), FinalRoundNoMsg)
+		ver.verSpecFact(ast.NewSpecFactStmt(ast.FalsePure, *ast.NewFcAtomWithName(glob.KeySymbolEqual), []ast.Fc{fc.ParamSegs[1], ast.NewFcAtomWithName("0")}), FinalRoundNoMsg)
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	if stmt.IsTrue() {
+		return false, nil
+	}
+
+	// 如果左右两边能是能被处理的数字
+	areBothNumLit, areEqual, err := cmp.AreNumLit_Equal(stmt.Params[0], stmt.Params[1])
+	if err != nil {
+		return false, err
+	}
+	if areBothNumLit {
+		if !areEqual {
+			if state.requireMsg() {
+				ver.successWithMsg(stmt.String(), "builtin rules")
+			} else {
+				ver.successNoMsg()
+			}
+			return true, nil
+		}
 	}
 
 	return false, nil
