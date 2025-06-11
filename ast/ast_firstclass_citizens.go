@@ -216,3 +216,28 @@ func GetAtomsInFc(fc Fc) []*FcAtom {
 
 	return nil
 }
+
+// Return the name of the function if it is in the slice, otherwise return empty string
+func IsFn_WithHeadNameInSlice(fc Fc, names []string) (bool, string) {
+	if fc.IsAtom() || len(names) == 0 {
+		return false, ""
+	}
+
+	asFcFn, ok := fc.(*FcFn)
+	if !ok {
+		return false, ""
+	}
+
+	asFcFnHeadAsAtom, ok := asFcFn.FnHead.(*FcAtom)
+	if !ok {
+		return false, ""
+	}
+
+	for _, name := range names {
+		if asFcFnHeadAsAtom.Name == name && asFcFnHeadAsAtom.PkgName == glob.EmptyPkg {
+			return true, name
+		}
+	}
+
+	return false, ""
+}

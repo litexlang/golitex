@@ -72,7 +72,7 @@ func (node *NumLitExpr) evalNumLitExpr() (string, bool, error) {
 		result, ok, err = mulBigFloat(leftVal, rightVal)
 	case KeySymbolSlash:
 		result, ok, err = divBigFloat(leftVal, rightVal)
-	case KeySymbolCaret:
+	case KeySymbolPower:
 		if !isNaturalNumber(rightVal) {
 			return "", false, nil
 		}

@@ -58,7 +58,7 @@ var BuiltinOptPrecedenceMap = map[string]BuiltinOptPrecedence{
 	KeySymbolMinus:   PrecAddition,
 	KeySymbolStar:    PrecMultiplication,
 	KeySymbolSlash:   PrecMultiplication,
-	KeySymbolCaret:   PrecExponentiation,
+	KeySymbolPower:   PrecExponentiation,
 	KeySymbolPercent: PrecModulo,
 }
 
