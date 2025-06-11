@@ -1,5 +1,2 @@
-1+1=2
-2+3=5
-
-forall x N:
-    x+1=2
+forall x R:
+    x*x = x^2
