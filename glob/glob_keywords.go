@@ -102,6 +102,8 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordProveOr:              {},
 	KeywordSuppose:              {},
 	KeywordWith:                 {},
+	KeywordComplex:              {},
+	KeywordImaginary:            {},
 }
 
 const (
