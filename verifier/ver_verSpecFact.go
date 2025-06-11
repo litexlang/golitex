@@ -488,6 +488,17 @@ func isArithmeticFn(fc ast.Fc) bool {
 }
 
 func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn) (bool, error) {
+	// parameter必须是实数
+	for _, param := range fc.ParamSegs {
+		ok, err := ver.FactStmt(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{param, ast.NewFcAtomWithName(glob.KeywordReal)}), FinalRoundNoMsg)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+	}
+
 	if ast.IsFcAtomWithName(fc.FnHead, glob.KeySymbolSlash) {
 		// 分母不是0
 		ok, err := ver.FactStmt(ast.NewSpecFactStmt(ast.FalsePure, *ast.NewFcAtomWithName(glob.KeySymbolEqual), []ast.Fc{fc.ParamSegs[1], ast.NewFcAtomWithName("0")}), FinalRoundNoMsg)

@@ -90,6 +90,10 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
 		return nil
 	}
 
+	if fact.NameIs(glob.KeywordIn) {
+		return env.storeInFact(fact)
+	}
+
 	// err := env.KnownFacts.SpecFactMem.NewFactInSpecFactMem(fact, env.CurMatchEnv)
 	err := env.storeSpecFactInMem(fact)
 	if err != nil {
@@ -374,4 +378,75 @@ func (env *Env) isMathInductionPropName_StoreIt(fact *ast.SpecFactStmt) (bool, e
 	}
 
 	return true, nil
+}
+
+func (env *Env) storeInFact(fact *ast.SpecFactStmt) error {
+	if len(fact.Params) != 2 {
+		return fmt.Errorf("in fact expect 2 parameters, get %d in %s", len(fact.Params), fact.String())
+	}
+
+	if fact.Params[1].IsAtom() {
+		atom := fact.Params[1].(*ast.FcAtom)
+		switch atom.Name {
+		case glob.KeywordNatural:
+			return env.storeInFact_Natural(fact)
+		case glob.KeywordInt:
+			return env.storeInFact_Int(fact)
+		case glob.KeywordRational:
+			return env.storeInFact_Rational(fact)
+		case glob.KeywordReal:
+			return env.storeInFact_Real(fact)
+		case glob.KeywordComplex:
+			return env.storeInFact_Complex(fact)
+		}
+	} else {
+		return env.storeSpecFactInMem(fact)
+	}
+
+	return nil
+}
+
+func (env *Env) storeInFact_Natural(fact *ast.SpecFactStmt) error {
+	err := env.storeInFact(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fact.Params[0], ast.NewFcAtomWithName(glob.KeywordNatural)}))
+	if err != nil {
+		return err
+	}
+
+	return env.storeInFact_Int(fact)
+}
+
+func (env *Env) storeInFact_Int(fact *ast.SpecFactStmt) error {
+	err := env.storeInFact(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fact.Params[0], ast.NewFcAtomWithName(glob.KeywordInt)}))
+	if err != nil {
+		return err
+	}
+
+	return env.storeInFact_Rational(fact)
+}
+
+func (env *Env) storeInFact_Rational(fact *ast.SpecFactStmt) error {
+	err := env.storeInFact(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fact.Params[0], ast.NewFcAtomWithName(glob.KeywordRational)}))
+	if err != nil {
+		return err
+	}
+
+	return env.storeInFact_Real(fact)
+}
+
+func (env *Env) storeInFact_Real(fact *ast.SpecFactStmt) error {
+	err := env.storeInFact(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fact.Params[0], ast.NewFcAtomWithName(glob.KeywordReal)}))
+	if err != nil {
+		return err
+	}
+
+	return env.storeInFact_Complex(fact)
+}
+
+func (env *Env) storeInFact_Complex(fact *ast.SpecFactStmt) error {
+	err := env.storeInFact(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fact.Params[0], ast.NewFcAtomWithName(glob.KeywordComplex)}))
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

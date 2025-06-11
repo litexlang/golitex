@@ -1,2 +1,5 @@
-1/0=1
-0/0=1
+obj x N
+x $in Z
+x $in Q
+x $in R
+x $in C
