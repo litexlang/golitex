@@ -287,7 +287,7 @@ func simplify(poly polynomial) polynomial {
 				if count == 1 {
 					vars = append(vars, v)
 				} else {
-					vars = append(vars, fmt.Sprintf("%s^%d", v, count))
+					vars = append(vars, fmt.Sprintf("(%s ^ %d)", v, count))
 				}
 			}
 			// Sort variables for consistent output
