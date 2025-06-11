@@ -112,7 +112,7 @@ func TestRunComprehensiveCodes(t *testing.T) {
 			fmt.Println("Error executing code:", err)
 			return
 		}
-		if signal != glob.SysSignalTrue || err != nil {
+		if signal != glob.SysSignalTrue {
 			fmt.Println(msg)
 			fmt.Println("Error in file:", file.Name())
 			return

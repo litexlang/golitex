@@ -24,7 +24,7 @@ import (
 )
 
 func (ver *Verifier) specFactOrEqualFact_SpecMode(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	return ver.FactStmt(stmt, state.toFinalRound())
+	return ver.VerFactStmt(stmt, state.toFinalRound())
 }
 
 func (ver *Verifier) verSpecFact_SpecMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
@@ -491,7 +491,7 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 		if i == int(knownFact.Index) {
 			continue
 		}
-		ok, err := ver.FactStmt(fact.ReverseTrue(), state)
+		ok, err := ver.VerFactStmt(fact.ReverseTrue(), state)
 		if err != nil {
 			return false, err
 		}
@@ -629,7 +629,7 @@ func (ver *Verifier) leftIsAssociative_UseAssociationToCheckEqual(left ast.Fc, r
 	return false, nil
 }
 
-func (ver *Verifier) mathInductionFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) mathInductionFact_BuiltinRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if len(stmt.Params) != 1 {
 		return false, fmt.Errorf("math induction fact %s should have exactly one parameter, got: %d", stmt.String(), len(stmt.Params))
 	}
@@ -676,7 +676,7 @@ func (ver *Verifier) mathInductionFact(stmt *ast.SpecFactStmt, state VerState) (
 		ast.EmptyIffFacts,
 	)
 
-	ok, err := ver.FactStmt(propNameZeroFact, state)
+	ok, err := ver.VerFactStmt(propNameZeroFact, state)
 	if err != nil {
 		return false, err
 	}
@@ -684,7 +684,7 @@ func (ver *Verifier) mathInductionFact(stmt *ast.SpecFactStmt, state VerState) (
 		return false, nil
 	}
 
-	ok, err = ver.FactStmt(nToNAddOneFact, state)
+	ok, err = ver.VerFactStmt(nToNAddOneFact, state)
 	if err != nil {
 		return false, err
 	}
@@ -696,7 +696,7 @@ func (ver *Verifier) mathInductionFact(stmt *ast.SpecFactStmt, state VerState) (
 }
 
 // TODO: 没有测试过
-func (ver *Verifier) isSetEqualFact_Check(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) isSetEqualFact_Check_BuiltinRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if !stmt.NameIs(glob.KeySymbolEqualEqualEqual) {
 		return false, nil
 	}
@@ -731,7 +731,7 @@ func (ver *Verifier) isSetEqualFact_Check(stmt *ast.SpecFactStmt, state VerState
 
 	// 验证是否在set
 	nextState := state.toFinalRound()
-	ok, err := ver.FactStmt(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{leftSet, ast.NewFcAtomWithName(glob.KeywordIn)}), nextState)
+	ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{leftSet, ast.NewFcAtomWithName(glob.KeywordIn)}), nextState)
 	if err != nil {
 		return false, err
 	}
@@ -749,7 +749,7 @@ func (ver *Verifier) isSetEqualFact_Check(stmt *ast.SpecFactStmt, state VerState
 	}
 
 	// 验证是否在set
-	ok, err = ver.FactStmt(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{rightSet, ast.NewFcAtomWithName(glob.KeywordIn)}), nextState)
+	ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{rightSet, ast.NewFcAtomWithName(glob.KeywordIn)}), nextState)
 	if err != nil {
 		return false, err
 	}
@@ -779,7 +779,7 @@ func (ver *Verifier) isSetEqualFact_Check(stmt *ast.SpecFactStmt, state VerState
 		ast.EmptyIffFacts,
 	)
 
-	ok, err = ver.FactStmt(uniFactItemsInLeftSetInRightSet, state)
+	ok, err = ver.VerFactStmt(uniFactItemsInLeftSetInRightSet, state)
 	if err != nil {
 		return false, err
 	}
@@ -799,7 +799,7 @@ func (ver *Verifier) isSetEqualFact_Check(stmt *ast.SpecFactStmt, state VerState
 		ast.EmptyIffFacts,
 	)
 
-	ok, err = ver.FactStmt(uniFactItemsInRightSetInLeftSet, state)
+	ok, err = ver.VerFactStmt(uniFactItemsInRightSetInLeftSet, state)
 	if err != nil {
 		return false, err
 	}
@@ -816,7 +816,7 @@ func (ver *Verifier) isSetEqualFact_Check(stmt *ast.SpecFactStmt, state VerState
 	return ok, nil
 }
 
-func (ver *Verifier) isFnEqualFact_Check(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) isFnEqualFact_Check_BuiltinRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if !stmt.NameIs(glob.KeySymbolEqualEqual) {
 		return false, nil
 	}
@@ -1112,7 +1112,7 @@ func (ver *Verifier) useKnownOrFactToProveSpecFact(knownFact *env.KnownSpecFact_
 		reversedFact := fact.ReverseTrue()
 		// panic("")
 		// TODO: WARNING: 这里有问题，可能无限循环
-		ok, err := ver.FactStmt(reversedFact, nextState)
+		ok, err := ver.VerFactStmt(reversedFact, nextState)
 		if err != nil {
 			return false, err
 		}
@@ -1137,7 +1137,7 @@ func (ver *Verifier) proveUniFactDomFacts(insUniFact *ast.UniFactStmt, state Ver
 					return false, nil
 				}
 			} else {
-				ok, err := ver.FactStmt(fact, state)
+				ok, err := ver.VerFactStmt(fact, state)
 				if err != nil {
 					return false, err
 				}
@@ -1236,4 +1236,31 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_MatchEnv_applyMatch(stmt *ast.S
 	}
 
 	return false, nil
+}
+
+func (ver *Verifier) verify_specFact_when_given_orStmt_is_true(stmt *ast.SpecFactStmt, orStmt *ast.OrStmt, index int, state VerState) (bool, error) {
+	ver.newEnv(ver.env, ver.env.CurMatchProp)
+	defer ver.deleteEnvAndRetainMsg()
+
+	// 其他是否都错
+	for i := range orStmt.Facts {
+		if i == index {
+			continue
+		}
+		ok, err := ver.VerFactStmt(orStmt.Facts[i].ReverseTrue(), state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+	}
+
+	if state.requireMsg() {
+		ver.successWithMsg(stmt.String(), orStmt.String())
+	} else {
+		ver.successNoMsg()
+	}
+
+	return true, nil
 }

@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) commutativeFnByDef(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) verCommutativeFn_BuiltinRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if len(stmt.Params) != 1 {
 		return false, fmt.Errorf("commutative fn fact %s should have exactly one parameter, got: %d", stmt.String(), len(stmt.Params))
 	}
@@ -52,7 +52,7 @@ func (ver *Verifier) commutativeFnByDef(stmt *ast.SpecFactStmt, state VerState) 
 		ast.EmptyIffFacts,
 	)
 
-	ok, err := ver.FactStmt(uniFact, state.addRound())
+	ok, err := ver.VerFactStmt(uniFact, state.addRound())
 	if err != nil {
 		return false, err
 	}

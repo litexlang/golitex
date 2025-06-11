@@ -44,7 +44,7 @@ func (ver *Verifier) verFactAtIndex_WhenOthersAreFalse(facts []ast.SpecFactStmt,
 		}
 	}
 
-	ok, err := ver.FactStmt(&facts[i], state)
+	ok, err := ver.VerFactStmt(&facts[i], state)
 	if err != nil {
 		return false, err
 	}

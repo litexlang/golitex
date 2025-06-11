@@ -61,13 +61,13 @@ func (ver *Verifier) isSpecFactCommutative(stmt *ast.SpecFactStmt) (bool, error)
 }
 
 func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if ok, err := ver.verSpecialSpecFact(stmt, state); err != nil {
+	if ok, err := ver.verSpecialSpecFact_BuiltinRules(stmt, state); err != nil {
 		return false, err
 	} else if ok {
 		return true, nil
 	}
 
-	if ok, err := ver.verSpecFactUseDefinition(stmt, state); err != nil {
+	if ok, err := ver.verSpecFact_ByDefinition(stmt, state); err != nil {
 		return false, err
 	} else if ok {
 		return true, nil
@@ -86,7 +86,7 @@ func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state VerStat
 			return true, nil
 		}
 
-		if ok, err := ver.verSpecFactUniMem(stmt, state); err != nil {
+		if ok, err := ver.verSpecFact_UniMem(stmt, state); err != nil {
 			return false, err
 		} else if ok {
 			return true, nil
@@ -96,9 +96,15 @@ func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state VerStat
 	return false, nil
 }
 
-func (ver *Verifier) verSpecialSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) verSpecialSpecFact_BuiltinRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if stmt.NameIs(glob.KeywordIn) {
-		return ver.inFact(stmt, state)
+		return ver.inFactBuiltinRules(stmt, state)
+	}
+
+	if ok, err := ver.verNumberLogicRelaOpt_BuiltinRules(stmt, state); err != nil {
+		return false, err
+	} else if ok {
+		return true, nil
 	}
 
 	if stmt.NameIs(glob.KeySymbolEqual) {
@@ -106,47 +112,41 @@ func (ver *Verifier) verSpecialSpecFact(stmt *ast.SpecFactStmt, state VerState) 
 	}
 
 	if stmt.NameIs(glob.KeywordProveByMathInduction) {
-		return ver.mathInductionFact(stmt, state)
+		return ver.mathInductionFact_BuiltinRules(stmt, state)
 	}
 
 	if stmt.NameIs(glob.KeywordCommutativeFn) {
-		return ver.commutativeFnByDef(stmt, state)
+		return ver.verCommutativeFn_BuiltinRules(stmt, state)
 	}
 
 	if stmt.NameIs(glob.KeywordCommutativeProp) {
-		return ver.btCommutativeRule(stmt, state)
+		return ver.varCommutativeProp_BuiltinRules(stmt, state)
 	}
 
 	if stmt.NameIs(glob.KeySymbolEqualEqual) {
-		return ver.isFnEqualFact_Check(stmt, state)
+		return ver.isFnEqualFact_Check_BuiltinRules(stmt, state)
 	}
 
 	if stmt.NameIs(glob.KeySymbolEqualEqualEqual) {
-		return ver.isSetEqualFact_Check(stmt, state)
-	}
-
-	if ok, err := ver.btNumberLogicRelaOptBtRule(stmt, state); err != nil {
-		return false, err
-	} else if ok {
-		return true, nil
+		return ver.isSetEqualFact_Check_BuiltinRules(stmt, state)
 	}
 
 	return false, nil
 }
 
-func (ver *Verifier) verSpecFactUseDefinition(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) verSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if stmt.IsPureFact() {
-		return ver.specFactProveByDefinition(stmt, state)
+		return ver.verPureSpecFact_ByDefinition(stmt, state)
 	}
 
 	if stmt.IsExist_St_Fact() {
-		return ver.useExistPropDefProveExist_St(stmt, state)
+		return ver.verExistSpecFact_ByDefinition(stmt, state)
 	}
 
 	return false, nil
 }
 
-func (ver *Verifier) specFactProveByDefinition(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	nextState := state.addRound()
 
 	if !stmt.IsTrue() {
@@ -177,7 +177,7 @@ func (ver *Verifier) specFactProveByDefinition(stmt *ast.SpecFactStmt, state Ver
 	}
 	// prove all domFacts are true
 	for _, domFact := range instantiatedIffToProp.DomFacts {
-		ok, err := ver.FactStmt(domFact, nextState)
+		ok, err := ver.VerFactStmt(domFact, nextState)
 		if err != nil {
 			return false, err
 		}
@@ -195,7 +195,7 @@ func (ver *Verifier) specFactProveByDefinition(stmt *ast.SpecFactStmt, state Ver
 	return true, nil
 }
 
-func (ver *Verifier) useExistPropDefProveExist_St(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	sepIndex := stmt.Exist_St_SeparatorIndex()
 	if sepIndex == -1 {
 		return false, fmt.Errorf("%s has no separator", stmt.String())
@@ -244,7 +244,7 @@ func (ver *Verifier) useExistPropDefProveExist_St(stmt *ast.SpecFactStmt, state 
 	}
 
 	for _, domFact := range domFacts {
-		ok, err := ver.FactStmt(domFact, state)
+		ok, err := ver.VerFactStmt(domFact, state)
 		if err != nil {
 			return false, err
 		}
@@ -258,7 +258,7 @@ func (ver *Verifier) useExistPropDefProveExist_St(stmt *ast.SpecFactStmt, state 
 	}
 
 	for _, thenFact := range thenFacts {
-		ok, err := ver.FactStmt(thenFact, state)
+		ok, err := ver.VerFactStmt(thenFact, state)
 		if err != nil {
 			return false, err
 		}
@@ -274,7 +274,7 @@ func (ver *Verifier) useExistPropDefProveExist_St(stmt *ast.SpecFactStmt, state 
 	return true, nil
 }
 
-func (ver *Verifier) verSpecFactSpecMemAndLogicMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) verSpecFact_SpecMemAndLogicMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	ok, err := ver.verSpecFact_SpecMem(stmt, state)
 	if err != nil || ok {
 		return ok, err
@@ -288,75 +288,13 @@ func (ver *Verifier) verSpecFactSpecMemAndLogicMem(stmt *ast.SpecFactStmt, state
 	return false, nil
 }
 
-func (ver *Verifier) verSpecFactUniMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	ok, err := ver.verSpecFact_InSpecFact_UniMem(stmt, state)
 	if err != nil || ok {
 		return ok, err
 	}
 
 	return ver.verSpecFact_InLogicExpr_InUniFactMem(stmt, state)
-}
-
-func (ver *Verifier) verify_specFact_when_given_orStmt_is_true(stmt *ast.SpecFactStmt, orStmt *ast.OrStmt, index int, state VerState) (bool, error) {
-	ver.newEnv(ver.env, ver.env.CurMatchProp)
-	defer ver.deleteEnvAndRetainMsg()
-
-	// 其他是否都错
-	for i := range orStmt.Facts {
-		if i == index {
-			continue
-		}
-		ok, err := ver.FactStmt(orStmt.Facts[i].ReverseTrue(), state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, nil
-		}
-	}
-
-	if state.requireMsg() {
-		ver.successWithMsg(stmt.String(), orStmt.String())
-	} else {
-		ver.successNoMsg()
-	}
-
-	return true, nil
-}
-
-func isArithmeticFn(fc ast.Fc) bool {
-	if ok := ast.IsFn_WithHeadNameInSlice(fc, []string{glob.KeySymbolPlus, glob.KeySymbolMinus, glob.KeySymbolStar, glob.KeySymbolSlash, glob.KeySymbolPower}); !ok {
-		return false
-	}
-
-	return true
-}
-
-func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn) (bool, error) {
-	// parameter必须是实数
-	for _, param := range fc.ParamSegs {
-		ok, err := ver.FactStmt(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{param, ast.NewFcAtomWithName(glob.KeywordReal)}), FinalRoundNoMsg)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, nil
-		}
-	}
-
-	if ast.IsFcAtomWithName(fc.FnHead, glob.KeySymbolSlash) {
-		// 分母不是0
-		ok, err := ver.FactStmt(ast.NewSpecFactStmt(ast.FalsePure, *ast.NewFcAtomWithName(glob.KeySymbolEqual), []ast.Fc{fc.ParamSegs[1], ast.NewFcAtomWithName("0")}), FinalRoundNoMsg)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, nil
-		}
-		return true, nil
-	}
-
-	return true, nil
 }
 
 func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
