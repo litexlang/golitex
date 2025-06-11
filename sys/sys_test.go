@@ -19,8 +19,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"testing"
+
+	glob "golitex/glob"
 )
 
 func TestRunFile(t *testing.T) {
@@ -36,22 +37,22 @@ func TestRunREPLInTerminal(t *testing.T) {
 	RunREPLInTerminal()
 }
 
-func TestRunComprehensiveCodesInTerminal(t *testing.T) {
+func runComprehensiveCodesInTerminal(path string) error {
 	// Get the path to the .lix file (equivalent to the Python code)
-	exe, err := os.Executable()
-	if err != nil {
-		fmt.Println("Error getting executable path:", err)
-		return
-	}
+	// exe, err := os.Executable()
+	// if err != nil {
+	// 	fmt.Println("Error getting executable path:", err)
+	// 	return
+	// }
 
 	// Construct the path to the .lix file
-	path := filepath.Join(filepath.Dir(exe), "..", "examples", "comprehensive_examples", "Hilbert_geometry_axioms_formalization.lix")
+	// path := filepath.Join(filepath.Dir(exe), "..", "examples", "comprehensive_examples", "Hilbert_geometry_axioms_formalization.lix")
 
 	// Read the file content
 	code, err := os.ReadFile(path)
 	if err != nil {
 		fmt.Println("Error reading file:", err)
-		return
+		return err
 	}
 
 	// Execute the command (assuming main.go is in the same directory)
@@ -68,9 +69,55 @@ func TestRunComprehensiveCodesInTerminal(t *testing.T) {
 	if err != nil {
 		fmt.Println("Error running command:", err)
 		fmt.Println("Stderr:", stderr.String())
-		return
+		return err
 	}
 
 	// Print the output
 	fmt.Println("Output:", stdout.String())
+	return nil
+}
+
+func TestIterateOverFilesInComprehensiveExamples(t *testing.T) {
+	files, err := os.ReadDir("../examples/comprehensive_examples")
+	if err != nil {
+		fmt.Println("Error reading directory:", err)
+		return
+	}
+
+	for _, file := range files {
+		err := runComprehensiveCodesInTerminal(file.Name())
+		if err != nil {
+			fmt.Println("Error in file:", file.Name())
+			return
+		}
+	}
+}
+
+func TestRunComprehensiveCodes(t *testing.T) {
+	files, err := os.ReadDir("../examples/comprehensive_examples")
+	if err != nil {
+		fmt.Println("Error reading directory:", err)
+		return
+	}
+
+	for _, file := range files {
+		// 读出file的内容，然后执行
+		code, err := os.ReadFile("../examples/comprehensive_examples/" + file.Name())
+		if err != nil {
+			fmt.Println("Error reading file:", err)
+			return
+		}
+		msg, signal, err := ExecuteCodeAndReturnMessage(string(code))
+		if err != nil {
+			fmt.Println("Error executing code:", err)
+			return
+		}
+		if signal != glob.SysSignalTrue || err != nil {
+			fmt.Println(msg)
+			fmt.Println("Error in file:", file.Name())
+			return
+		}
+	}
+
+	fmt.Println("All codes executed successfully")
 }
