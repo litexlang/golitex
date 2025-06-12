@@ -17,6 +17,8 @@ package litex_num
 import (
 	ast "golitex/ast"
 	glob "golitex/glob"
+	"strconv"
+	"strings"
 )
 
 func FcStringForParseAndExpandPolynomial(fc ast.Fc) string {
@@ -51,6 +53,27 @@ func fcFnString(fcFn *ast.FcFn) string {
 		} else {
 			panic("fcFnString: fcFn.ParamSegs has more than 2 elements")
 		}
+	}
+	if ast.IsFcAtomWithNameAndEmptyPkg(fcFn.FnHead, glob.KeySymbolPower) {
+		base := FcStringForParseAndExpandPolynomial(fcFn.ParamSegs[0])
+		exp := FcStringForParseAndExpandPolynomial(fcFn.ParamSegs[1])
+
+		// Try to parse exponent as integer
+		if expInt, err := strconv.Atoi(exp); err == nil {
+			if expInt == 0 {
+				return "1"
+			}
+			if expInt > 0 {
+				// For positive integers, expand into multiplication
+				terms := make([]string, expInt)
+				for i := 0; i < expInt; i++ {
+					terms[i] = base
+				}
+				return "(" + strings.Join(terms, " * ") + ")"
+			}
+		}
+		// For non-integer or negative exponents, keep original form
+		return "(" + base + "^" + exp + ")"
 	}
 	return "[" + fcFn.String() + "]"
 }

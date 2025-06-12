@@ -26,7 +26,7 @@ prop is_algorithm(Q set, I set, f fn(Q)Q):
             $exist_end_of_computational_sequence(Q, x, computational_sequence(Q, f))
 
 """
-Here is a comparison with Lean4 code.
+Here is a Litex for Curious Lean Users4 code.
 """
 
 """
