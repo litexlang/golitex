@@ -26,7 +26,7 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state VerState) 
 		return false, fmt.Errorf("invalid number of parameters for in fact")
 	}
 
-	if ast.IsFcAtomWithName(stmt.Params[1], glob.KeywordObj) {
+	if ast.IsFcAtomWithNameAndEmptyPkg(stmt.Params[1], glob.KeywordObj) {
 		if state.requireMsg() {
 			ver.successWithMsg(stmt.String(), "everything is in the obj set")
 		} else {
@@ -57,7 +57,7 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state VerState) 
 }
 
 func (ver *Verifier) returnValueOfBuiltinArithmeticFnInReal(stmt *ast.SpecFactStmt, state VerState) bool {
-	ok := ast.IsFcAtomWithName(stmt.Params[1], glob.KeywordReal)
+	ok := ast.IsFcAtomWithNameAndEmptyPkg(stmt.Params[1], glob.KeywordReal)
 	if !ok {
 		return false
 	}
@@ -84,7 +84,7 @@ func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactS
 
 	fnDef, ok := ver.env.GetFnDef(fcFn.FnHead)
 	if !ok {
-		return false
+		return false // 这里不传error是有点道理的，因为+-*/的定义不在mem里
 	}
 
 	ok = cmp.CmpFcAsStr(stmt.Params[1], fnDef.RetSet)

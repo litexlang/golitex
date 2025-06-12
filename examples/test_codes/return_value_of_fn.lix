@@ -6,7 +6,4 @@ fn g(x R) R:
 
 g(f(2)) = 2
 
-"""
-fn f(s set) s: 这样是不行的
-
-"""
+fn h(s set) s

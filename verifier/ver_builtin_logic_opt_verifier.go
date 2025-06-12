@@ -77,7 +77,7 @@ func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state VerS
 }
 
 func (ver *Verifier) varCommutativeProp_BuiltinRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if !ast.IsFcAtomWithName(&stmt.PropName, glob.KeywordCommutativeProp) {
+	if !ast.IsFcAtomWithNameAndEmptyPkg(&stmt.PropName, glob.KeywordCommutativeProp) {
 		return false, nil
 	}
 
@@ -86,7 +86,7 @@ func (ver *Verifier) varCommutativeProp_BuiltinRules(stmt *ast.SpecFactStmt, sta
 		return false, nil
 	}
 
-	if ast.IsFcAtomWithName(propNameAsAtom, glob.KeySymbolEqual) {
+	if ast.IsFcAtomWithNameAndEmptyPkg(propNameAsAtom, glob.KeySymbolEqual) {
 		return true, nil
 	}
 
@@ -159,27 +159,27 @@ func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactSt
 		return false, err
 	}
 	if ok {
-		if ast.IsFcAtomWithName(stmt.Params[1], glob.KeywordReal) {
+		if ast.IsFcAtomWithNameAndEmptyPkg(stmt.Params[1], glob.KeywordReal) {
 			isSuccess = glob.IsRealNumLitExpr(leftFc)
 			return isSuccess, nil
 		}
 
-		if ast.IsFcAtomWithName(stmt.Params[1], glob.KeywordNatural) {
+		if ast.IsFcAtomWithNameAndEmptyPkg(stmt.Params[1], glob.KeywordNatural) {
 			isSuccess = glob.IsNatNumLitExpr(leftFc)
 			return isSuccess, nil
 		}
 
-		if ast.IsFcAtomWithName(stmt.Params[1], glob.KeywordInt) {
+		if ast.IsFcAtomWithNameAndEmptyPkg(stmt.Params[1], glob.KeywordInt) {
 			isSuccess = glob.IsIntegerNumLitExpr(leftFc)
 			return isSuccess, nil
 		}
 
-		if ast.IsFcAtomWithName(stmt.Params[1], glob.KeywordRational) {
+		if ast.IsFcAtomWithNameAndEmptyPkg(stmt.Params[1], glob.KeywordRational) {
 			isSuccess = glob.IsRationalNumLitExpr(leftFc)
 			return isSuccess, nil
 		}
 
-		if ast.IsFcAtomWithName(stmt.Params[1], glob.KeywordComplex) {
+		if ast.IsFcAtomWithNameAndEmptyPkg(stmt.Params[1], glob.KeywordComplex) {
 			isSuccess = glob.IsComplexNumLitExpr(leftFc)
 			return isSuccess, nil
 		}

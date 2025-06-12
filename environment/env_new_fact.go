@@ -315,7 +315,7 @@ func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 		return false, nil
 	}
 
-	if !ast.IsFcAtomWithName(&fact.PropName, glob.KeySymbolEqual) {
+	if !ast.IsFcAtomWithNameAndEmptyPkg(&fact.PropName, glob.KeySymbolEqual) {
 		return false, nil
 	}
 
@@ -342,7 +342,7 @@ func (env *Env) isMathInductionPropName_StoreIt(fact *ast.SpecFactStmt) (bool, e
 		return false, nil
 	}
 
-	if !ast.IsFcAtomWithName(&fact.PropName, glob.KeywordProveByMathInduction) {
+	if !ast.IsFcAtomWithNameAndEmptyPkg(&fact.PropName, glob.KeywordProveByMathInduction) {
 		return false, nil
 	}
 

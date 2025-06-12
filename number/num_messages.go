@@ -37,13 +37,13 @@ func fcAtomString(fcAtom *ast.FcAtom) string {
 }
 
 func fcFnString(fcFn *ast.FcFn) string {
-	if ast.IsFcAtomWithName(fcFn.FnHead, glob.KeySymbolPlus) {
+	if ast.IsFcAtomWithNameAndEmptyPkg(fcFn.FnHead, glob.KeySymbolPlus) {
 		return "(" + FcStringForParseAndExpandPolynomial(fcFn.ParamSegs[0]) + " + " + FcStringForParseAndExpandPolynomial(fcFn.ParamSegs[1]) + ")"
 	}
-	if ast.IsFcAtomWithName(fcFn.FnHead, glob.KeySymbolStar) {
+	if ast.IsFcAtomWithNameAndEmptyPkg(fcFn.FnHead, glob.KeySymbolStar) {
 		return "(" + FcStringForParseAndExpandPolynomial(fcFn.ParamSegs[0]) + " * " + FcStringForParseAndExpandPolynomial(fcFn.ParamSegs[1]) + ")"
 	}
-	if ast.IsFcAtomWithName(fcFn.FnHead, glob.KeySymbolMinus) {
+	if ast.IsFcAtomWithNameAndEmptyPkg(fcFn.FnHead, glob.KeySymbolMinus) {
 		if len(fcFn.ParamSegs) == 1 {
 			return "(" + "0" + " - " + FcStringForParseAndExpandPolynomial(fcFn.ParamSegs[0]) + ")"
 		} else if len(fcFn.ParamSegs) == 2 {

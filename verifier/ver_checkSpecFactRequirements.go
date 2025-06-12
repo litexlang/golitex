@@ -163,7 +163,7 @@ func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn) (bool, error) {
 		}
 	}
 
-	if ast.IsFcAtomWithName(fc.FnHead, glob.KeySymbolSlash) {
+	if ast.IsFcAtomWithNameAndEmptyPkg(fc.FnHead, glob.KeySymbolSlash) {
 		// 分母不是0
 		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.FalsePure, *ast.NewFcAtomWithName(glob.KeySymbolEqual), []ast.Fc{fc.ParamSegs[1], ast.NewFcAtomWithName("0")}), FinalRoundNoMsg)
 		if err != nil {
