@@ -66,7 +66,7 @@ After having a sense of Litex, do this:
 
 0. Read the [README](./README.md) to get a sense of the project.
 1. Read the [tutorial](./doc/tutorial/tutorial.md) to get a sense of the language.
-2. Read the [comparison with Lean](./doc/comparison_with_lean/comparison_with_lean.md) to get a sense of the difference between Litex and Lean.
+2. Read the [comparison with Lean](./doc/litex_for_lean_users/litex_for_lean_users.md) to get a sense of the difference between Litex and Lean.
 3. To learn applications of Litex, read [applications of formal reasoning in AI and many other fields](./doc/applications_of_formal_reasoning/applications_of_formal_reasoning.md).
 4. To read a comprehensive example, read [formalization of Hilbert geometry axioms](./examples/comprehensive_examples/Hilbert_geometry_axioms_formalization.lix).
 5. Contribute piece by piece to the Litex kernel or the Litex dataset, e.g. formalize mathematical concepts, fix bugs, add new features, improve documentation, etc. on [github](https://github.com/litexlang/golitex), [discord](https://discord.gg/uvrHM7eS).
@@ -106,9 +106,9 @@ Mathematics is the art of deriving new facts from established ones. To illustrat
   </tr>
 </table>
 
-Consider `Human` as the set of all humans. Using `know`, we establish a simple fact: all humans are self-aware. Since Bob is in the set of `Human`, "Bob is self-aware" is true. This simple example shows how Litex builds math from basic pieces, like building blocks. By `match and substitute`, Litex verifies the correctness of the reasoning just like how you verify the correctness of your daily reasoning. Each statement in Litex has four potential outcomes: true, false, unknown, or error. All factual statements start with `$` to differentiate them from functions.
+Consider `Human` as the set of all humans. Using `know`, we establish a simple fact: all humans are self-aware. Since Bob is in the set of `Human`, "Bob is self-aware" is true. This simple example shows how Litex builds math from basic pieces, like building blocks. Each statement in Litex has four potential outcomes: true, false, unknown, or error. All factual statements start with `$` to differentiate them from functions.
 
-Notice how Litex is much simpler than Lean4. Instead of writing complex axioms with special names, you just use familiar words like `know` and `forall`. Litex automatically finds the facts it needs, just like searching in a database. Moreover, there are less unfamiliar keywords, less twisted syntax in Litex. People can understand Litex at first glance and say "oh, I already get this." instead of trying to figure out what this keyword or that syntax means. Users can focus more on math itself instead of the formal language they use. Litex's syntax is similar to Python and Go, so if you've done any programming, you'll feel right at home. See more in [comparison with Lean](./doc/comparison_with_lean/comparison_with_lean.md), [tutorial](./doc/tutorial/tutorial.md).
+Notice how Litex is much simpler than Lean4. Instead of writing complex axioms with special names, you just use familiar words like `know` and `forall`. Litex automatically finds the facts it needs, just like searching in a database. Moreover, there are less unfamiliar keywords, less twisted syntax in Litex. People can understand Litex at first glance and say "oh, I already get this." instead of trying to figure out what this keyword or that syntax means. Users can focus more on math itself instead of the formal language they use. Litex's syntax is similar to Python and Go, so if you've done any programming, you'll feel right at home. See more in [comparison with Lean](./doc/litex_for_lean_users/litex_for_lean_users.md), [tutorial](./doc/tutorial/tutorial.md).
 
 ## Understand Litex in 60 Seconds: The Core Idea of Match & Substitute
 
@@ -122,6 +122,8 @@ Math is built on top of a small sets of reasoning rules and axioms. There are ba
 
 1. derive from a specific fact: e.g. If I know x = 1, then x = 1
 2. derive from a general fact: e.g. If I know forall human, he is intelligent, and Jordan is a human, then Jordan is intelligent. Litex calls this way of deriving a new fact "match and substitute", because it is like matching a pattern and substituting the pattern with a specific value.
+
+Think of "match and substitute" as a fancy version of "search and find" on your computer (ctrl+f on windows, cmd+f on mac). When Litex is verifying a given factual statement, it "finds" a related known general fact, "substitutes" it with the parameters of current statement, and the new fact is "matched" with the current statement. Then Litex verifies the new fact and stores it into its memory as known fact for future use.
 
 Amazingly, with these two ways of deriving a new fact, and with a set of carefully chosen axioms, we can (nearly) build the entire world of mathematics. And you have ALREADY learned the basic mechanism of Litex in just one minute: **match and substitute**. Pretty simple, right?
 
@@ -188,7 +190,7 @@ Think of formalization like reading a book - you need to understand the previous
 
 [Formalization of Hilbert Geometry Axioms](./examples/comprehensive_examples/Hilbert_geometry_axioms_formalization.lix)
 
-[Compare Litex with Lean](./doc/comparison_with_lean/comparison_with_lean.md)
+[Litex for Lean users](./doc/litex_for_lean_users/litex_for_lean_users.md)
 
 [Website](https://litexlang.org)
 
@@ -201,7 +203,7 @@ _If I have seen further, it is by standing on the shoulders of giants._
 
 _-- Isaac Newton_
 
-Here are some examples of Litex, in comparison with Lean4. Detailed explanations are provided in [comparison with Lean](./doc/comparison_with_lean/comparison_with_lean.md). I put them here for you to get a sense of the language.
+Here are some examples of Litex, in comparison with Lean4. Detailed explanations are provided in [comparison with Lean](./doc/litex_for_lean_users/litex_for_lean_users.md). I put them here for you to get a sense of the language.
 
 The definition of algorithm is a good example. In mathematics, an algorithm is a computational method that can be precisely defined as a quadruple (Q, I, S, f), where:
 - Q is a set representing all possible states of computation
