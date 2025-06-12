@@ -48,7 +48,17 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state VerState) 
 		return true, nil
 	}
 
+	ok = ver.builtinSetsInSetSet(stmt, state)
+	if ok {
+		return true, nil
+	}
+
 	ok = ver.returnValueOfUserDefinedFnInFnReturnSet(stmt, state)
+	if ok {
+		return true, nil
+	}
+
+	ok = ver.anythingIsInObj(stmt, state)
 	if ok {
 		return true, nil
 	}
@@ -99,4 +109,45 @@ func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactS
 	}
 
 	return true
+}
+
+func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state VerState) bool {
+	ok := ast.IsFcAtomWithNameAndEmptyPkg(stmt.Params[1], glob.KeywordSet)
+	if !ok {
+		return false
+	}
+
+	asAtom, ok := stmt.Params[0].(*ast.FcAtom)
+	if !ok {
+		return false
+	}
+
+	if asAtom.PkgName != glob.EmptyPkg {
+		return false
+	}
+
+	if asAtom.Name == glob.KeywordNatural || asAtom.Name == glob.KeywordInt || asAtom.Name == glob.KeywordReal || asAtom.Name == glob.KeywordComplex || asAtom.Name == glob.KeywordRational || asAtom.Name == glob.KeywordSet {
+		if state.requireMsg() {
+			ver.successWithMsg(stmt.String(), "the builtin set is in the set set")
+		} else {
+			ver.successNoMsg()
+		}
+		return true
+	}
+
+	return false
+}
+
+func (ver *Verifier) anythingIsInObj(stmt *ast.SpecFactStmt, state VerState) bool {
+	ok := ast.IsFcAtomWithNameAndEmptyPkg(stmt.Params[1], glob.KeywordObj)
+	if ok {
+		if state.requireMsg() {
+			ver.successWithMsg(stmt.String(), "anything is in the obj set")
+		} else {
+			ver.successNoMsg()
+		}
+		return true
+	}
+
+	return false
 }
