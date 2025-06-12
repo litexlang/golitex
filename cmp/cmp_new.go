@@ -16,7 +16,7 @@ package litex_comparator
 
 import ast "golitex/ast"
 
-func CmpUsingBuiltinRule(left, right ast.Fc) (bool, error) {
+func Cmp_ByBIR(left, right ast.Fc) (bool, error) {
 	// case 0: 按字面量来比较。这必须在比较div和比较polynomial之前，因为可能比较的是 * 和 *，即比较两个函数是不是一样。这种函数的比较，跑到div和polynomial就会出问题，因为在那些地方*都会被当成有参数的东西
 	ok, err := cmpFcLiterally(left, right)
 	if err != nil {
@@ -32,19 +32,18 @@ func CmpUsingBuiltinRule(left, right ast.Fc) (bool, error) {
 	}
 
 	// case: 用polynomial rule来比较
-	cmp := cmpPolynomial(left, right)
+	cmp := cmpPolynomial_ByBIR(left, right)
 	if cmp {
 		return true, nil
 	}
 
-	// case 1: 用number rule来比较
-	areNumLit, areEqual, err := AreNumLit_Equal(left, right)
-	if err != nil {
-		return false, err
-	}
-	if areNumLit && areEqual {
-		return true, nil
-	}
+	// areNumLit, areEqual, err := AreNumLit_Equal(left, right)
+	// if err != nil {
+	// 	return false, err
+	// }
+	// if areNumLit && areEqual {
+	// 	return true, nil
+	// }
 
 	return false, nil
 }

@@ -23,31 +23,10 @@ func CmpFcAsStr(left, right ast.Fc) bool {
 	return left.String() == right.String()
 }
 
-func CmpFcRule(left, right ast.Fc) (bool, error) {
-	ok, err := cmpFcLiterally(left, right)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
-	}
-
-	// 先验证是不是Number，后验证rule，居然让runtime速度提高了1倍。。。
-	ok, err = BuiltinFcEqualRule(left, right)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
-	}
-
-	return false, nil
-}
-
 // 先确定left，right都是builtin fc，然后按builtin rule来验证他们相等
 func BuiltinFcEqualRule(left, right ast.Fc) (bool, error) {
 	// case 0: 比较 polynomial
-	cmp := cmpPolynomial(left, right)
+	cmp := cmpPolynomial_ByBIR(left, right)
 	if cmp {
 		return true, nil
 	}
@@ -108,7 +87,7 @@ func AreNumLit_Equal(left, right ast.Fc) (bool, bool, error) {
 
 func SliceFcAllEqualToGivenFcBuiltinRule(valuesToBeComped *[]ast.Fc, fcToComp ast.Fc) (bool, error) {
 	for _, equalFc := range *valuesToBeComped {
-		ok, err := CmpFcRule(equalFc, fcToComp)
+		ok, err := Cmp_ByBIR(equalFc, fcToComp)
 		if err != nil {
 			return false, err
 		}

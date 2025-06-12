@@ -19,7 +19,8 @@ import (
 	num "golitex/number"
 )
 
-func cmpPolynomial(left ast.Fc, right ast.Fc) bool {
+// TODO: 总感觉需要在开头先检查一下left和right确实是多项式。否则随便传个东西过来不太好。
+func cmpPolynomial_ByBIR(left ast.Fc, right ast.Fc) bool {
 	leftStr := num.FcStringForParseAndExpandPolynomial(left)
 	rightStr := num.FcStringForParseAndExpandPolynomial(right)
 
