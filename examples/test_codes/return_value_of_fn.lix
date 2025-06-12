@@ -6,4 +6,10 @@ fn g(x R) R:
 
 g(f(2)) = 2
 
-fn h(s set) s
+# fn h(s set) s # error: return set cannot include parameters in function parameters
+
+fn t(x R) set
+
+fn k(s R, h t(s)) R
+
+fn k2(h t(h)) R
