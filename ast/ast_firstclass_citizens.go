@@ -153,7 +153,7 @@ func (fc *FcAtom) HasGivenNameAndEmptyPkgName(kw string) bool {
 	return fc.PkgName == glob.EmptyPkg && fc.Name == kw
 }
 
-func IsFcAtomWithName(fc Fc, kw string) bool {
+func IsFcAtomWithNameAndEmptyPkg(fc Fc, kw string) bool {
 	fcAtom, ok := fc.(*FcAtom)
 	if !ok {
 		return false

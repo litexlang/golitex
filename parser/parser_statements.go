@@ -271,7 +271,7 @@ func (tb *tokenBlock) defFnStmt() (*ast.DefFnStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	retType, err := tb.header.rawFc()
+	retSet, err := tb.header.rawFc()
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -287,7 +287,17 @@ func (tb *tokenBlock) defFnStmt() (*ast.DefFnStmt, error) {
 		}
 	}
 
-	return ast.NewDefFnStmt(*decl, domFacts, thenFacts, retType), nil
+	// get all atoms of retSet, none of them is equal to parameters in def params
+	atoms := ast.GetAtomsInFc(retSet)
+	for _, atom := range atoms {
+		for _, param := range decl.Params {
+			if ast.IsFcAtomWithNameAndEmptyPkg(atom, param) {
+				return nil, fmt.Errorf("function return type cannot include parameters in function parameters")
+			}
+		}
+	}
+
+	return ast.NewDefFnStmt(*decl, domFacts, thenFacts, retSet), nil
 }
 
 func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
