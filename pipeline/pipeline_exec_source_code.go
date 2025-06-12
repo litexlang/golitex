@@ -49,7 +49,7 @@ func executeCodeAndReturnMessageSlice(code string) ([]string, glob.SysSignal, er
 		execState, err := executor.TopLevelStmt(&topStmt)
 		msgOfTopStatements = append(msgOfTopStatements, executor.GetMsgAsStr0ToEnd())
 		if err != nil {
-			return nil, glob.SysSignalRuntimeError, err
+			return msgOfTopStatements, glob.SysSignalRuntimeError, err
 		}
 		if execState != glob.ExecState_True {
 			return msgOfTopStatements, glob.SysSignalRuntimeError, fmt.Errorf("execution failed")

@@ -1169,6 +1169,27 @@ func (tb *tokenBlock) param_paramSet_paramInSetFacts(endWith string) ([]string, 
 		return nil, nil, err
 	}
 
+	// params 不能重复
+	for i := range params {
+		for j := i + 1; j < len(params); j++ {
+			if params[i] == params[j] {
+				return nil, nil, fmt.Errorf("parameters cannot be repeated, get duplicate parameter: %s", params[i])
+			}
+		}
+	}
+
+	// nth parameter set should not include 0 to n-1th parameter inside
+	for i, setParam := range setParams {
+		atomsInSetParam := ast.GetAtomsInFc(setParam)
+		for j := i; j < len(params); j++ {
+			for _, atom := range atomsInSetParam {
+				if ast.IsFcAtomWithNameAndEmptyPkg(atom, params[j]) {
+					return nil, nil, fmt.Errorf("the set %s of the %dth parameter cannot include any parameters from the %dth to the last one (found parameter %s)", setParam.String(), i+1, i+1, params[j])
+				}
+			}
+		}
+	}
+
 	return params, setParams, nil
 }
 
