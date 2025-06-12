@@ -433,9 +433,9 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimStmt) (bool, error) {
 	defer func() {
 		exec.appendMsg("\n")
 		if isSuccess {
-			exec.appendNewMsgAtBegin("is true\n")
+			exec.appendNewMsgAtBegin("is true\n\n")
 		} else {
-			exec.appendNewMsgAtBegin("is unknown\n")
+			exec.appendNewMsgAtBegin("is unknown\n\n")
 		}
 		exec.appendNewMsgAtBegin(stmt.String())
 		exec.deleteEnvAndRetainMsg()
