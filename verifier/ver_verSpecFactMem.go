@@ -27,7 +27,7 @@ func (ver *Verifier) specFactOrEqualFact_SpecMode(stmt *ast.SpecFactStmt, state 
 	return ver.VerFactStmt(stmt, state.toFinalRound())
 }
 
-func (ver *Verifier) verSpecFact_SpecMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) verSpecFact_BySpecMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
 	if ver.env.CurMatchProp == nil {
@@ -54,7 +54,7 @@ func (ver *Verifier) verSpecFact_SpecMem(stmt *ast.SpecFactStmt, state VerState)
 	return false, nil
 }
 
-func (ver *Verifier) verSpecFact_LogicMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) verSpecFact_ByLogicMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
 	if ver.env.CurMatchProp == nil {

@@ -52,7 +52,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact(stmt *ast.SpecFactStmt, s
 }
 
 func (ver *Verifier) isSpecFactCommutative(stmt *ast.SpecFactStmt) (bool, error) {
-	if stmt.NameIs(glob.KeySymbolEqual) {
+	if stmt.NameIs(glob.KeySymbolEqual) && stmt.TypeEnum == ast.TruePure {
 		return true, nil
 	}
 
@@ -61,26 +61,26 @@ func (ver *Verifier) isSpecFactCommutative(stmt *ast.SpecFactStmt) (bool, error)
 }
 
 func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if ok, err := ver.verSpecialSpecFact_BuiltinRules(stmt, state); err != nil {
+	if ok, err := ver.verSpecialSpecFact_ByBIR(stmt, state); err != nil {
 		return false, err
 	} else if ok {
 		return true, nil
 	}
 
-	if ok, err := ver.verSpecFact_ByDefinition(stmt, state); err != nil {
+	if ok, err := ver.verSpecFact_ByDEF(stmt, state); err != nil {
 		return false, err
 	} else if ok {
 		return true, nil
 	}
 
-	if ok, err := ver.verSpecFact_SpecMem(stmt, state); err != nil {
+	if ok, err := ver.verSpecFact_BySpecMem(stmt, state); err != nil {
 		return false, err
 	} else if ok {
 		return true, nil
 	}
 
 	if !state.isFinalRound() {
-		if ok, err := ver.verSpecFact_LogicMem(stmt, state); err != nil {
+		if ok, err := ver.verSpecFact_ByLogicMem(stmt, state); err != nil {
 			return false, err
 		} else if ok {
 			return true, nil
@@ -96,7 +96,7 @@ func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state VerStat
 	return false, nil
 }
 
-func (ver *Verifier) verSpecialSpecFact_BuiltinRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) verSpecialSpecFact_ByBIR(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if stmt.NameIs(glob.KeywordIn) {
 		return ver.inFactBuiltinRules(stmt, state)
 	}
@@ -134,7 +134,7 @@ func (ver *Verifier) verSpecialSpecFact_BuiltinRules(stmt *ast.SpecFactStmt, sta
 	return false, nil
 }
 
-func (ver *Verifier) verSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if stmt.IsPureFact() {
 		return ver.verPureSpecFact_ByDefinition(stmt, state)
 	}
@@ -275,12 +275,12 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 }
 
 func (ver *Verifier) verSpecFact_SpecMemAndLogicMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	ok, err := ver.verSpecFact_SpecMem(stmt, state)
+	ok, err := ver.verSpecFact_BySpecMem(stmt, state)
 	if err != nil || ok {
 		return ok, err
 	}
 
-	ok, err = ver.verSpecFact_LogicMem(stmt, state)
+	ok, err = ver.verSpecFact_ByLogicMem(stmt, state)
 	if err != nil || ok {
 		return ok, err
 	}

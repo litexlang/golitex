@@ -17,6 +17,7 @@ package litex_verifier
 import (
 	"fmt"
 	ast "golitex/ast"
+	cmp "golitex/cmp"
 	glob "golitex/glob"
 )
 
@@ -47,6 +48,11 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state VerState) 
 		return true, nil
 	}
 
+	ok = ver.returnValueOfUserDefinedFnInFnReturnSet(stmt, state)
+	if ok {
+		return true, nil
+	}
+
 	return false, nil
 }
 
@@ -68,4 +74,29 @@ func (ver *Verifier) returnValueOfBuiltinArithmeticFnInReal(stmt *ast.SpecFactSt
 	} else {
 		return false
 	}
+}
+
+func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactStmt, state VerState) bool {
+	fcFn, ok := stmt.Params[0].(*ast.FcFn)
+	if !ok {
+		return false
+	}
+
+	fnDef, ok := ver.env.GetFnDef(fcFn.FnHead)
+	if !ok {
+		return false
+	}
+
+	ok = cmp.CmpFcAsStr(stmt.Params[1], fnDef.RetSet)
+	if !ok {
+		return false
+	}
+
+	if state.requireMsg() {
+		ver.successWithMsg(stmt.String(), "the return value of the user defined function is in the function return set")
+	} else {
+		ver.successNoMsg()
+	}
+
+	return true
 }
