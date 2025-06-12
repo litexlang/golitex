@@ -54,6 +54,7 @@ func fcFnString(fcFn *ast.FcFn) string {
 			panic("fcFnString: fcFn.ParamSegs has more than 2 elements")
 		}
 	}
+	// 如果是幂运算，则把它展开成对应的乘法，比如(x+1)^2 展开成 (x+1) * (x+1)
 	if ast.IsFcAtomWithNameAndEmptyPkg(fcFn.FnHead, glob.KeySymbolPower) {
 		base := FcStringForParseAndExpandPolynomial(fcFn.ParamSegs[0])
 		exp := FcStringForParseAndExpandPolynomial(fcFn.ParamSegs[1])

@@ -1,0 +1,6 @@
+fn f(s set) s
+
+f(N) $in N
+# f(N) $in R
+
+(f(N) + 1) $in R
