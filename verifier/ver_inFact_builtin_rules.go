@@ -97,6 +97,16 @@ func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactS
 		return false // 这里不传error是有点道理的，因为+-*/的定义不在mem里
 	}
 
+	// TODO: 暂时不能检查 ret set 里包含 fn 的自由变量的情况
+	atoms := ast.GetAtomsInFc(fnDef.RetSet)
+	for _, atom := range atoms {
+		for _, param := range fnDef.DefHeader.Params {
+			if ast.IsFcAtomWithNameAndEmptyPkg(atom, param) {
+				return false
+			}
+		}
+	}
+
 	ok = cmp.CmpFcAsStr(stmt.Params[1], fnDef.RetSet)
 	if !ok {
 		return false
