@@ -253,27 +253,31 @@ func eval(ast *arithAST) polynomial {
 				panic("exponent must be a non-negative integer")
 			}
 
-			// If exponent is 0, return 1
+			// Handle base cases
 			if exp == 0 {
 				return polynomial{{CoEff: 1.0}}
 			}
+			if exp == 1 {
+				return base
+			}
 
-			// For other natural numbers, calculate by repeated multiplication
+			// Calculate power by repeated multiplication
 			result := base
 			for i := 1; i < exp; i++ {
-				var temp polynomial
-				for _, term1 := range result {
-					for _, term2 := range base {
-						combined := arithmeticTerm{
-							CoEff: term1.CoEff * term2.CoEff,
-							Vars:  append([]string{}, term1.Vars...),
+				result = eval(&arithAST{Type: N_MUL, Children: []*arithAST{
+					{Type: N_NUM, Value: "1", Children: nil},
+					{Type: N_NUM, Value: "1", Children: nil},
+				}})
+				for _, term := range base {
+					for j := 0; j < len(result); j++ {
+						result[j] = arithmeticTerm{
+							CoEff: result[j].CoEff * term.CoEff,
+							Vars:  append([]string{}, result[j].Vars...),
 						}
-						combined.Vars = append(combined.Vars, term2.Vars...)
-						sort.Strings(combined.Vars)
-						temp = append(temp, combined)
+						result[j].Vars = append(result[j].Vars, term.Vars...)
+						sort.Strings(result[j].Vars)
 					}
 				}
-				result = temp
 			}
 			return result
 		}
