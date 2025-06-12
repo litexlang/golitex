@@ -93,7 +93,7 @@ func (ver *Verifier) verFcEqual(left ast.Fc, right ast.Fc, state VerState) (bool
 		// 如果 ver.CurMatchEnv 存在，那还要用specMem来验证
 		if ver.env.CurMatchProp != nil {
 			equalFact := ver.makeEqualFact(left, right)
-			ok, err := ver.verSpecFact_SpecMem(equalFact, state)
+			ok, err := ver.verSpecFact_BySpecMem(equalFact, state)
 			if err != nil {
 				return false, err
 			}
