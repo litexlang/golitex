@@ -1,4 +1,4 @@
-# Compare Litex with Lean
+# Litex for Lean Users
 
 ## Technical Comparison
 
@@ -8,7 +8,7 @@ Technically, the difference between Litex and Lean is that Litex is a read-only 
 
 You can think of Litex as a Lean Alternative for Human-Friendly Mathematical Formalization.
 
-## Compare by Examples
+## Examples
 
 Mathematics is the art of deriving new facts from established ones. To illustrate, consider a classical syllogism proposed by Aristotle in his Prior Analytics, which formalizes deductive reasoning as follows:
 

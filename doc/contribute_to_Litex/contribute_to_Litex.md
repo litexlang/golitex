@@ -33,7 +33,7 @@ If you are still willing to try, then you are one of the brave ones who dared to
 
 0. Read the [README](../README.md) to get a sense of the project.
 1. Read the [tutorial](../tutorial/tutorial.md) to get a sense of the language.
-2. Read the [comparison with Lean](../comparison_with_lean/comparison_with_lean.md) to get a sense of the difference between Litex and Lean.
+2. Read the [comparison with Lean](../litex_for_lean_users/litex_for_lean_users.md) to get a sense of the difference between Litex and Lean.
 3. Contribute piece by piece to the Litex kernel or the Litex dataset, e.g. formalize mathematical concepts, fix bugs, add new features, improve documentation, etc.
 
 **THANK YOU FOR YOUR FEARLESS EARLY ADOPTION! HERE IS MY HEARTFELT THANKS TO Litex's EARLIEST FANS -- THE BOLD PIONEERS WHO TRUSTS ME FROM THE START!**
