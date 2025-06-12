@@ -1,4 +1,4 @@
-# Litex for Lean Users
+# Litex for Curious Lean Users
 
 ## Technical Comparison
 
