@@ -37,8 +37,6 @@ func execStmtTest(topStmt []ast.TopStmt) []string {
 	executor := *NewExecutor(env)
 
 	messages := []string{}
-	var notTrueMessageBuilder strings.Builder
-	notTrueMessageBuilder.WriteString("execution is not true at:\n\n")
 
 	isNotTrue := false
 
@@ -51,9 +49,8 @@ func execStmtTest(topStmt []ast.TopStmt) []string {
 
 		if execState != glob.ExecState_True && !glob.ContinueExecutionIfExecUnknown {
 			isNotTrue = true
-			notTrueMessageBuilder.WriteString(topStmt.String())
-			notTrueMessageBuilder.WriteString("\n\n")
-			break
+			// notTrueMessageBuilder.WriteString(topStmt.String())
+			// notTrueMessageBuilder.WriteString("\n\n")
 		}
 
 		// 如果连续两个 \n 则删除一个
@@ -69,10 +66,15 @@ func execStmtTest(topStmt []ast.TopStmt) []string {
 		executor.env.Msgs = newMsgs
 
 		messages = append(messages, strings.Join(executor.env.Msgs, "\n"))
+
+		if isNotTrue {
+			messages = append(messages, fmt.Sprintf("execution is not true at:\n\n%s", topStmt.String()))
+			break
+		}
 	}
 
 	if isNotTrue {
-		messages = append(messages, notTrueMessageBuilder.String())
+		messages = append(messages, fmt.Sprintf("---\n%s", glob.REPLFailedMessage))
 	} else {
 		messages = append(messages, fmt.Sprintf("---\n%s", glob.REPLSuccessMessage))
 	}

@@ -43,12 +43,12 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state VerState) 
 		return true, nil
 	}
 
-	ok = ver.returnValueOfBuiltinArithmeticFnInReal(stmt, state)
+	ok = ver.builtinSetsInSetSet(stmt, state)
 	if ok {
 		return true, nil
 	}
 
-	ok = ver.builtinSetsInSetSet(stmt, state)
+	ok = ver.returnValueOfBuiltinArithmeticFnInReal(stmt, state)
 	if ok {
 		return true, nil
 	}
@@ -128,7 +128,7 @@ func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state VerState)
 
 	if asAtom.Name == glob.KeywordNatural || asAtom.Name == glob.KeywordInt || asAtom.Name == glob.KeywordReal || asAtom.Name == glob.KeywordComplex || asAtom.Name == glob.KeywordRational || asAtom.Name == glob.KeywordSet {
 		if state.requireMsg() {
-			ver.successWithMsg(stmt.String(), "the builtin set is in the set set")
+			ver.successWithMsg(stmt.String(), "the builtin rules")
 		} else {
 			ver.successNoMsg()
 		}

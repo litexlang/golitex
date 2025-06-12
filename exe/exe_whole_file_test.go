@@ -26,7 +26,7 @@ func TestWholeFile(t *testing.T) {
 	start := time.Now()
 	// code := readFile("../examples/comprehensive_examples/syllogism.lix")
 	// code := readFile("../examples/comprehensive_examples/Hilbert_geometry_axioms_formalization.lix")
-	code := readFile("../examples/test_codes/check_parameter_set_is_a_set.lix")
+	code := readFile("../examples/test_codes/math_induction.lix")
 	// code := readFile("../examples/comprehensive_examples/multivariate_linear_equation.lix")
 	// code := readFile("../examples/comprehensive_examples/algorithm.lix")
 	// code := readFile("../examples/comprehensive_examples/syllogism.lix")

@@ -220,14 +220,6 @@ func (env *Env) newTrueSpecFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) erro
 	return nil
 }
 
-// func (env *Env) newExistFactPostProcess(fact *ast.SpecFactStmt) error {
-// 	if fact.TypeEnum == ast.TrueExist {
-// 		return nil
-// 	} else {
-// 		return env.newFalseExistFactPostProcess(fact)
-// 	}
-// }
-
 func (env *Env) newExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 	if fact.TypeEnum == ast.TrueExist_St {
 		return env.newTrueExist_St_FactPostProcess(fact)
