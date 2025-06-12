@@ -107,7 +107,21 @@ func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactS
 		}
 	}
 
-	ok = cmp.CmpFcAsStr(stmt.Params[1], fnDef.RetSet)
+	uniMap := map[string]ast.Fc{}
+	if len(fnDef.DefHeader.Params) != len(stmt.Params) {
+		return false
+	}
+
+	for i, param := range fnDef.DefHeader.Params {
+		uniMap[param] = stmt.Params[i]
+	}
+
+	instantiatedRetSet, err := fnDef.RetSet.Instantiate(uniMap)
+	if err != nil {
+		return false
+	}
+
+	ok = cmp.CmpFcAsStr(stmt.Params[1], instantiatedRetSet)
 	if !ok {
 		return false
 	}
