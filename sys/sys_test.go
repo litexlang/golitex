@@ -123,7 +123,7 @@ func TestRunComprehensiveCodes(t *testing.T) {
 }
 
 func TestRunFileInTerminalFlagF(t *testing.T) {
-	path := "../examples/test_codes/math_induction.lix"
+	path := "../examples/test_codes/tmp.lix"
 
 	cmd := exec.Command("go", "run", "../main.go", "-f", path)
 

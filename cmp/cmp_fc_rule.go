@@ -46,6 +46,11 @@ func CmpFcRule(left, right ast.Fc) (bool, error) {
 
 // 先确定left，right都是builtin fc，然后按builtin rule来验证他们相等
 func BuiltinFcEqualRule(left, right ast.Fc) (bool, error) {
+	// case: the same
+	if left.String() == right.String() {
+		return true, nil
+	}
+
 	// case 0: 比较 polynomial
 	cmp := cmpPolynomial(left, right)
 	if cmp {
