@@ -58,6 +58,7 @@ const (
 	PLUS
 	MINUS
 	MULTI
+	POWER
 	LPAREN
 	RPAREN
 )
@@ -82,6 +83,9 @@ func tokenize(s string) []arithToken {
 			i++
 		case s[i] == '*':
 			tokens = append(tokens, arithToken{MULTI, "*"})
+			i++
+		case s[i] == '^':
+			tokens = append(tokens, arithToken{POWER, "^"})
 			i++
 		case s[i] == '(':
 			tokens = append(tokens, arithToken{LPAREN, "("})
@@ -121,6 +125,7 @@ type arithNodeType int
 const (
 	N_ADD arithNodeType = iota
 	N_MUL
+	N_POW
 	N_NUM
 	N_VAR
 )
@@ -165,9 +170,16 @@ func (p *arithParser) parseExpr() *arithAST {
 
 func (p *arithParser) parseTerm() *arithAST {
 	node := p.parseFactor()
-	for p.match(MULTI) {
-		right := p.parseFactor()
-		node = &arithAST{Type: N_MUL, Children: []*arithAST{node, right}}
+	for {
+		if p.match(MULTI) {
+			right := p.parseFactor()
+			node = &arithAST{Type: N_MUL, Children: []*arithAST{node, right}}
+		} else if p.match(POWER) {
+			right := p.parseFactor()
+			node = &arithAST{Type: N_POW, Children: []*arithAST{node, right}}
+		} else {
+			break
+		}
 	}
 	return node
 }
@@ -230,6 +242,42 @@ func eval(ast *arithAST) polynomial {
 			}
 		}
 		return result
+	case N_POW:
+		base := eval(ast.Children[0])
+		exponent := eval(ast.Children[1])
+
+		// Check if exponent is a constant natural number
+		if len(exponent) == 1 && len(exponent[0].Vars) == 0 {
+			exp := int(exponent[0].CoEff)
+			if float64(exp) != exponent[0].CoEff || exp < 0 {
+				panic("exponent must be a non-negative integer")
+			}
+
+			// If exponent is 0, return 1
+			if exp == 0 {
+				return polynomial{{CoEff: 1.0}}
+			}
+
+			// For other natural numbers, calculate by repeated multiplication
+			result := base
+			for i := 1; i < exp; i++ {
+				var temp polynomial
+				for _, term1 := range result {
+					for _, term2 := range base {
+						combined := arithmeticTerm{
+							CoEff: term1.CoEff * term2.CoEff,
+							Vars:  append([]string{}, term1.Vars...),
+						}
+						combined.Vars = append(combined.Vars, term2.Vars...)
+						sort.Strings(combined.Vars)
+						temp = append(temp, combined)
+					}
+				}
+				result = temp
+			}
+			return result
+		}
+		panic("exponent must be a constant natural number")
 	default:
 		panic("invalid AST node")
 	}
