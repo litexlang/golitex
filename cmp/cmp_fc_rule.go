@@ -24,8 +24,7 @@ func CmpFcAsStr(left, right ast.Fc) bool {
 }
 
 func CmpFcRule(left, right ast.Fc) (bool, error) {
-	// 先验证是不是Number，后验证rule，居然让runtime速度提高了1倍。。。
-	ok, err := BuiltinFcEqualRule(left, right)
+	ok, err := cmpFcLiterally(left, right)
 	if err != nil {
 		return false, err
 	}
@@ -33,7 +32,8 @@ func CmpFcRule(left, right ast.Fc) (bool, error) {
 		return true, nil
 	}
 
-	ok, err = cmpFcLiterally(left, right)
+	// 先验证是不是Number，后验证rule，居然让runtime速度提高了1倍。。。
+	ok, err = BuiltinFcEqualRule(left, right)
 	if err != nil {
 		return false, err
 	}
@@ -46,11 +46,6 @@ func CmpFcRule(left, right ast.Fc) (bool, error) {
 
 // 先确定left，right都是builtin fc，然后按builtin rule来验证他们相等
 func BuiltinFcEqualRule(left, right ast.Fc) (bool, error) {
-	// case: the same
-	if left.String() == right.String() {
-		return true, nil
-	}
-
 	// case 0: 比较 polynomial
 	cmp := cmpPolynomial(left, right)
 	if cmp {
