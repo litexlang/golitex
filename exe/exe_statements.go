@@ -417,7 +417,7 @@ func (exec *Executor) execProofBlock(proof []ast.Stmt) (glob.ExecState, error) {
 		if execState != glob.ExecState_True {
 			if execState == glob.ExecState_Unknown && glob.ContinueExecutionIfExecUnknown {
 				exec.appendWarningMsg("unknown fact: %s", curStmt.String())
-				continue
+				return glob.ExecState_Unknown, nil
 			} else {
 				return execState, nil
 			}
@@ -457,7 +457,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimStmt) (bool, error) {
 		return false, nil
 	}
 
-	// 写成 prove: ... 这样的事实，是没有toCheckFact的，默认是nil
+	// statements in the form of prove: ....
 	if stmt.ToCheckFact == ast.ClaimStmtEmptyToCheck {
 		isSuccess = true
 		return true, nil
