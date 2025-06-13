@@ -383,3 +383,17 @@ func (cursor *strSliceCursor) fnSet() (ast.Fc, error) {
 
 	return ret, nil
 }
+
+func ParseSourceCodeGetFc(s string) (ast.Fc, error) {
+	blocks, err := makeTokenBlocks([]string{s}, NewParserEnv())
+	if err != nil {
+		return nil, err
+	}
+
+	fc, err := blocks[0].header.RawFc()
+	if err != nil {
+		return nil, err
+	}
+
+	return fc, nil
+}
