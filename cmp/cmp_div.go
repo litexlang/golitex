@@ -14,54 +14,48 @@
 
 package litex_comparator
 
-import (
-	"errors"
-	ast "golitex/ast"
-	glob "golitex/glob"
-)
+// func isFnWithDivOpt(fc ast.Fc) bool {
+// 	asFn, ok := fc.(*ast.FcFn)
+// 	if !ok {
+// 		return false
+// 	}
 
-func isFnWithDivOpt(fc ast.Fc) bool {
-	asFn, ok := fc.(*ast.FcFn)
-	if !ok {
-		return false
-	}
+// 	headAsAtom, ok := asFn.FnHead.(*ast.FcAtom)
+// 	if !ok {
+// 		return false
+// 	}
 
-	headAsAtom, ok := asFn.FnHead.(*ast.FcAtom)
-	if !ok {
-		return false
-	}
+// 	if headAsAtom.Name == glob.KeySymbolSlash {
+// 		return true
+// 	}
 
-	if headAsAtom.Name == glob.KeySymbolSlash {
-		return true
-	}
+// 	return false
+// }
 
-	return false
-}
+// // left must be a fc fn with div opt
+// func cmpFcFnWithDivOptBuiltinRule(left, right ast.Fc) (bool, error) {
+// 	asLeftFn, ok := left.(*ast.FcFn)
+// 	if !ok {
+// 		return false, errors.New("left is not a function")
+// 	}
 
-// left must be a fc fn with div opt
-func cmpFcFnWithDivOptBuiltinRule(left, right ast.Fc) (bool, error) {
-	asLeftFn, ok := left.(*ast.FcFn)
-	if !ok {
-		return false, errors.New("left is not a function")
-	}
+// 	leftDividend := asLeftFn.ParamSegs[0]
+// 	leftDivisor := asLeftFn.ParamSegs[1]
 
-	leftDividend := asLeftFn.ParamSegs[0]
-	leftDivisor := asLeftFn.ParamSegs[1]
+// 	if !isFnWithDivOpt(right) {
+// 		leftDivisorMulRightDividend := ast.NewFcFn(ast.NewFcAtomWithName(glob.KeySymbolStar), []ast.Fc{leftDivisor, right})
+// 		ok, _, err := Cmp_ByBIR(leftDividend, leftDivisorMulRightDividend)
+// 		return ok, err
+// 	}
 
-	if !isFnWithDivOpt(right) {
-		leftDivisorMulRightDividend := ast.NewFcFn(ast.NewFcAtomWithName(glob.KeySymbolStar), []ast.Fc{leftDivisor, right})
-		ok, _, err := Cmp_ByBIR(leftDividend, leftDivisorMulRightDividend)
-		return ok, err
-	}
+// 	asRightFn, _ := right.(*ast.FcFn)
 
-	asRightFn, _ := right.(*ast.FcFn)
+// 	rightDividend := asRightFn.ParamSegs[0]
+// 	rightDivisor := asRightFn.ParamSegs[1]
 
-	rightDividend := asRightFn.ParamSegs[0]
-	rightDivisor := asRightFn.ParamSegs[1]
+// 	leftDividendMulRightDivisor := ast.NewFcFn(ast.NewFcAtomWithName(glob.KeySymbolStar), []ast.Fc{leftDividend, rightDivisor})
+// 	rightDividendMulLeftDivisor := ast.NewFcFn(ast.NewFcAtomWithName(glob.KeySymbolStar), []ast.Fc{rightDividend, leftDivisor})
 
-	leftDividendMulRightDivisor := ast.NewFcFn(ast.NewFcAtomWithName(glob.KeySymbolStar), []ast.Fc{leftDividend, rightDivisor})
-	rightDividendMulLeftDivisor := ast.NewFcFn(ast.NewFcAtomWithName(glob.KeySymbolStar), []ast.Fc{rightDividend, leftDivisor})
-
-	ok, _, err := Cmp_ByBIR(leftDividendMulRightDivisor, rightDividendMulLeftDivisor)
-	return ok, err
-}
+// 	ok, _, err := Cmp_ByBIR(leftDividendMulRightDivisor, rightDividendMulLeftDivisor)
+// 	return ok, err
+// }
