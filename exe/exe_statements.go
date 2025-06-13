@@ -151,13 +151,13 @@ func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) (glob.ExecState, error) {
 	}
 
 	if asSpecFact, ok := stmt.ToCheckFact.(*ast.SpecFactStmt); ok {
-		err = exec.env.Parent.NewFact(asSpecFact)
+		err = exec.env.NewFact(asSpecFact)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
 	} else if asUniFact, ok := stmt.ToCheckFact.(*ast.UniFactStmt); ok {
 		newUniFact := asUniFact
-		err = exec.env.Parent.NewFact(newUniFact)
+		err = exec.env.NewFact(newUniFact)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
