@@ -43,7 +43,7 @@ func execStmtTest(topStmt []ast.TopStmt) []string {
 	for _, topStmt := range topStmt {
 		execState, err := executor.TopLevelStmt(&topStmt)
 		if err != nil {
-			messages = append(messages, err.Error())
+			messages = append(messages, (err.Error()))
 			isNotTrue = true
 		}
 
@@ -68,7 +68,7 @@ func execStmtTest(topStmt []ast.TopStmt) []string {
 		messages = append(messages, strings.Join(executor.env.Msgs, "\n"))
 
 		if isNotTrue {
-			messages = append(messages, fmt.Sprintf("execution is not true at:\n\n%s", topStmt.String()))
+			messages = append(messages, fmt.Sprintf("execution failed at:\n%s", topStmt.String()))
 			break
 		}
 	}
