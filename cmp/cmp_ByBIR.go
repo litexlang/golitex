@@ -35,24 +35,24 @@ func Cmp_ByBIR(left, right ast.Fc) (bool, string, error) {
 	}
 
 	// case: 如果涉及到的是div运算
-	if isFnWithDivOpt(left) {
-		ok, err := cmpFcFnWithDivOptBuiltinRule(left, right)
-		if err != nil {
-			return false, "", err
-		}
-		if ok {
-			return true, "builtin division rules", nil
-		}
-	}
-	if isFnWithDivOpt(right) {
-		ok, err := cmpFcFnWithDivOptBuiltinRule(right, left)
-		if err != nil {
-			return false, "", err
-		}
-		if ok {
-			return true, "builtin division rules", nil
-		}
-	}
+	// if isFnWithDivOpt(left) {
+	// 	ok, err := cmpFcFnWithDivOptBuiltinRule(left, right)
+	// 	if err != nil {
+	// 		return false, "", err
+	// 	}
+	// 	if ok {
+	// 		return true, "builtin division rules", nil
+	// 	}
+	// }
+	// if isFnWithDivOpt(right) {
+	// 	ok, err := cmpFcFnWithDivOptBuiltinRule(right, left)
+	// 	if err != nil {
+	// 		return false, "", err
+	// 	}
+	// 	if ok {
+	// 		return true, "builtin division rules", nil
+	// 	}
+	// }
 
 	// case: 用polynomial rule来比较
 	cmp := cmpPolynomial_ByBIR(left.String(), right.String())

@@ -1,20 +1,9 @@
-prove:
-    exist_prop y N st larger_than_x(x N):
-        y > x
+obj a R, b R, c R, d R:
+    b != 0
+    d != 0
+    c != 0
+    b * d != 0
 
-    know:
-        forall x N, y N:
-            y > 0
-            then:
-                x + y > x
-
-    claim:
-        forall x N:
-            $larger_than_x(x)
-        prove:
-            obj a N
-            know:
-               a = x + 1
-            x + 1 > x
-            a > x
-            exist a st $larger_than_x(x)
+a/b+c/d = (a*d+b*c)/(b*d)
+a/b+c/d = (a*d+b*c)/(b*d) + 0
+(a*c) = a*c*c/c
