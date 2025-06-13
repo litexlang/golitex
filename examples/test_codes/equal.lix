@@ -41,3 +41,12 @@ prove:
         a = 2 - 1
         $p(1)
     $p(a)
+
+prove:
+    obj x R, y R:
+        x != y
+
+    not x = y
+    not y = x
+    x != y
+    y != x

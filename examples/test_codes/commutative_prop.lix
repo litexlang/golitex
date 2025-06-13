@@ -1,22 +1,8 @@
-prove:
-    know a = b
-    b = a
+obj a R, b R
 
+prop q(x N, y N)
 
-
-prove:
-    prop q(x N, y N)
-
-    know $commutative_prop(q)
-    know:
-        $q(1, 2)
-    $q(2,1)
-    $commutative_prop(q)
-
-prove:
-    know:
-        b != c
-    
-    c != b
-    not b = c
-    not c = b
+know $commutative_prop(q)
+know:
+    $q(1, 2)
+$q(2,1)
