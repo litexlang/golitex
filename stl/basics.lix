@@ -1,0 +1,16 @@
+fn abs(x R) R
+know:
+    forall x R:
+        x > 0
+        then:
+            abs(x) = x
+    forall x R:
+        x < 0
+        then:
+            abs(x) = -1 * x
+
+prop order_is_transitive(x R, y R, z R):
+    x > y
+    y > z
+    then:
+        x > z
