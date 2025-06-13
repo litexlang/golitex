@@ -18,6 +18,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	num "golitex/number"
+	parser "golitex/parser"
 )
 
 // TODO: 总感觉需要在开头先检查一下left和right确实是多项式。否则随便传个东西过来不太好。
@@ -34,11 +35,30 @@ func cmpPolynomial_ByBIR(left ast.Fc, right ast.Fc) bool {
 	newLeftStr := fmt.Sprintf("%s*%s", leftNumerator, rightDenominator)
 	newRightStr := fmt.Sprintf("%s*%s", rightNumerator, leftDenominator)
 
-	// leftStr := num.FcStringForParseAndExpandPolynomial(left)
-	// rightStr := num.FcStringForParseAndExpandPolynomial(right)
+	leftFc, err := parser.ParseSourceCodeGetFc(newLeftStr)
+	if err != nil {
+		return false
+	}
+	rightFc, err := parser.ParseSourceCodeGetFc(newRightStr)
+	if err != nil {
+		return false
+	}
 
-	leftPolyAsStr := num.ExpandPolynomial_ReturnStr(formattedLeftStr)
-	rightPolyAsStr := num.ExpandPolynomial_ReturnStr(formattedRightStr)
+	leftStr := num.FcStringForParseAndExpandPolynomial(leftFc)
+	rightStr := num.FcStringForParseAndExpandPolynomial(rightFc)
+
+	leftPolyAsStr := num.ExpandPolynomial_ReturnStr(leftStr)
+	rightPolyAsStr := num.ExpandPolynomial_ReturnStr(rightStr)
 
 	return leftPolyAsStr == rightPolyAsStr
 }
+
+// func cmpPolynomial_ByBIR(left ast.Fc, right ast.Fc) bool {
+// 	leftStr := num.FcStringForParseAndExpandPolynomial(left)
+// 	rightStr := num.FcStringForParseAndExpandPolynomial(right)
+
+// 	leftPolyAsStr := num.ExpandPolynomial_ReturnStr(leftStr)
+// 	rightPolyAsStr := num.ExpandPolynomial_ReturnStr(rightStr)
+
+// 	return leftPolyAsStr == rightPolyAsStr
+// }
