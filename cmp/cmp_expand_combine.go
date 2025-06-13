@@ -16,24 +16,23 @@ package litex_comparator
 
 import (
 	"fmt"
-	ast "golitex/ast"
 	num "golitex/number"
 	parser "golitex/parser"
 )
 
-// TODO: 总感觉需要在开头先检查一下left和right确实是多项式。否则随便传个东西过来不太好。
-func cmpPolynomial_ByBIR(left ast.Fc, right ast.Fc) bool {
-	leftNumerator, leftDenominator, err := num.CombineFractions(left.String())
+// 超级超级低效的比较方法。无数次的变成string，变回fc，变成string，变回fc
+func cmpPolynomial_ByBIR(left string, right string) bool {
+	leftNumerator, leftDenominator, err := num.SplitToFraction(left)
 	if err != nil {
 		return false
 	}
-	rightNumerator, rightDenominator, err := num.CombineFractions(right.String())
+	rightNumerator, rightDenominator, err := num.SplitToFraction(right)
 	if err != nil {
 		return false
 	}
 
-	newLeftStr := fmt.Sprintf("%s*%s", leftNumerator, rightDenominator)
-	newRightStr := fmt.Sprintf("%s*%s", rightNumerator, leftDenominator)
+	newLeftStr := fmt.Sprintf("(%s)*(%s)", leftNumerator, rightDenominator)
+	newRightStr := fmt.Sprintf("(%s)*(%s)", rightNumerator, leftDenominator)
 
 	leftFc, err := parser.ParseSourceCodeGetFc(newLeftStr)
 	if err != nil {

@@ -49,7 +49,7 @@ func TestCombineFractions(t *testing.T) {
 		"a*b/c + d*e/f + g*h/i + j*k/l + m*n/o + p*q/r + s*t/u",
 	}
 	for _, expr := range exprs {
-		numerator, denominator, err := CombineFractions(expr)
+		numerator, denominator, err := SplitToFraction(expr)
 		if err != nil {
 			t.Fatalf("Error combining fractions: %v", err)
 		}
