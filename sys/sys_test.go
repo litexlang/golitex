@@ -77,23 +77,7 @@ func runComprehensiveCodesInTerminal(path string) error {
 	return nil
 }
 
-func TestIterateOverFilesInComprehensiveExamples(t *testing.T) {
-	files, err := os.ReadDir("../examples/comprehensive_examples")
-	if err != nil {
-		fmt.Println("Error reading directory:", err)
-		return
-	}
-
-	for _, file := range files {
-		err := runComprehensiveCodesInTerminal(file.Name())
-		if err != nil {
-			fmt.Println("Error in file:", file.Name())
-			return
-		}
-	}
-}
-
-func TestRunComprehensiveCodes(t *testing.T) {
+func TestRunAllComprehensiveCodes(t *testing.T) {
 	files, err := os.ReadDir("../examples/comprehensive_examples")
 	if err != nil {
 		fmt.Println("Error reading directory:", err)
