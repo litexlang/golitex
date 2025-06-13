@@ -15,10 +15,8 @@
 package litex_sys
 
 import (
-	"bytes"
 	"fmt"
 	"os"
-	"os/exec"
 	"testing"
 
 	glob "golitex/glob"
@@ -37,45 +35,45 @@ func TestRunREPLInTerminal(t *testing.T) {
 	RunREPLInTerminal()
 }
 
-func runComprehensiveCodesInTerminal(path string) error {
-	// Get the path to the .lix file (equivalent to the Python code)
-	// exe, err := os.Executable()
-	// if err != nil {
-	// 	fmt.Println("Error getting executable path:", err)
-	// 	return
-	// }
+// func runComprehensiveCodesInTerminal(path string) error {
+// 	// Get the path to the .lix file (equivalent to the Python code)
+// 	// exe, err := os.Executable()
+// 	// if err != nil {
+// 	// 	fmt.Println("Error getting executable path:", err)
+// 	// 	return
+// 	// }
 
-	// Construct the path to the .lix file
-	// path := filepath.Join(filepath.Dir(exe), "..", "examples", "comprehensive_examples", "Hilbert_geometry_axioms_formalization.lix")
+// 	// Construct the path to the .lix file
+// 	// path := filepath.Join(filepath.Dir(exe), "..", "examples", "comprehensive_examples", "Hilbert_geometry_axioms_formalization.lix")
 
-	// Read the file content
-	code, err := os.ReadFile(path)
-	if err != nil {
-		fmt.Println("Error reading file:", err)
-		return err
-	}
+// 	// Read the file content
+// 	code, err := os.ReadFile(path)
+// 	if err != nil {
+// 		fmt.Println("Error reading file:", err)
+// 		return err
+// 	}
 
-	// Execute the command (assuming main.go is in the same directory)
+// 	// Execute the command (assuming main.go is in the same directory)
 
-	cmd := exec.Command("go", "run", "../main.go", "-e", string(code))
+// 	cmd := exec.Command("go", "run", "../main.go", "-e", string(code))
 
-	// Capture both stdout and stderr
-	var stdout, stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
+// 	// Capture both stdout and stderr
+// 	var stdout, stderr bytes.Buffer
+// 	cmd.Stdout = &stdout
+// 	cmd.Stderr = &stderr
 
-	// Run the command
-	err = cmd.Run()
-	if err != nil {
-		fmt.Println("Error running command:", err)
-		fmt.Println("Stderr:", stderr.String())
-		return err
-	}
+// 	// Run the command
+// 	err = cmd.Run()
+// 	if err != nil {
+// 		fmt.Println("Error running command:", err)
+// 		fmt.Println("Stderr:", stderr.String())
+// 		return err
+// 	}
 
-	// Print the output
-	fmt.Println("Output:", stdout.String())
-	return nil
-}
+// 	// Print the output
+// 	fmt.Println("Output:", stdout.String())
+// 	return nil
+// }
 
 func TestRunAllComprehensiveCodes(t *testing.T) {
 	files, err := os.ReadDir("../examples/comprehensive_examples")

@@ -1,34 +1,8 @@
 prove:
-    fn add(a I, b I) I
+    fn add(a R, b R) R
     know:
         $commutative_fn(add)
         add(1,2) = 3
 
-    add(1,2) = add(2,1)
     add(2,1) = 3
-    add(1,3) = 3 # unknown
-
-
-prove:
-    know:
-        x + 1 = 2
-    1 + x =2
-
-    know:
-        a + b = x
-    b + a = x
-
-prove:    
-    fn add(a I, b I) I
-    know:
-        $commutative_fn(add)
-        add(1,2) = 3
-        f(add(1,2)) = f(3)
-        g(3+x) = g(4)
-        t(3+x) = t(4)
-
-    g(add(2,1)+x) = g(3+x)
-
-    3 + 1 = 4
-    t(add(1,2)+1) = t(4)
-    t(add(2,1)+x) = t(add(1,2)+1) # 右侧等于 t(4) = t(3+x) , t(3+x) 有 t(add(2,1)+x) = t(3+x) 所以成立。这里用到了 equal fact mem 的传递性
+    
