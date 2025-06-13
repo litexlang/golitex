@@ -43,7 +43,7 @@ func execStmtTest(topStmt []ast.TopStmt) []string {
 	for _, topStmt := range topStmt {
 		execState, err := executor.TopLevelStmt(&topStmt)
 		if err != nil {
-			fmt.Println(err)
+			messages = append(messages, err.Error())
 			return messages
 		}
 
