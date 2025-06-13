@@ -392,8 +392,8 @@ func (exec *Executor) defStmt(stmt ast.DefStmt) error {
 }
 
 func (exec *Executor) GetUniFactSettings(asUnivFact *ast.UniFactStmt) error {
-	for _, param := range asUnivFact.Params {
-		err := exec.defStmt(ast.NewDefObjStmt([]string{param}, []ast.Fc{}, []ast.FactStmt{}))
+	for i, param := range asUnivFact.Params {
+		err := exec.defStmt(ast.NewDefObjStmt([]string{param}, []ast.Fc{asUnivFact.ParamSets[i]}, []ast.FactStmt{}))
 		if err != nil {
 			return err
 		}
