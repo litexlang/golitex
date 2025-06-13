@@ -20,3 +20,5 @@ y $in Q
 y $in R
 y $in C
 
+x + x $in R
+x + x + x $in R
