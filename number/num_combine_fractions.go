@@ -12,7 +12,7 @@ type term struct {
 	denominator string   // 分母整体表达式
 }
 
-func combineFractions(expr string) (string, string, error) {
+func CombineFractions(expr string) (string, string, error) {
 	terms := splitTerms(expr)
 	if len(terms) == 0 {
 		return "", "", fmt.Errorf("invalid expression")
