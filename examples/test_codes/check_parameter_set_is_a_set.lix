@@ -1,9 +1,0 @@
-N $in set
-R $in set
-Q $in set
-C $in set
-$in(set,set)
-
-obj x N
-know:
-    $in(1, x)

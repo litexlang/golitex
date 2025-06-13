@@ -42,7 +42,7 @@ func sourceCodeToFc(sourceCode ...string) ([]ast.Fc, error) {
 
 func TestOrder(t *testing.T) {
 	sourceCode := []string{
-		"1+2*(4+ t(x)(x)) + 9 + 4*F(t) + (x-y)*(a+b) ",
+		"1+2*(4+ t(x)(x)) + 9 + 4*F(t) + (x-y)*(a+b) + 1/2*x",
 		"x + x",
 		"2*x",
 	}
