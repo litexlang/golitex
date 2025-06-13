@@ -348,7 +348,7 @@ func (tb *tokenBlock) claimStmt() (*ast.ClaimStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	toCheck, err := tb.body[0].claimToCheckFact()
+	toCheck, err := tb.body[0].factStmt(UniFactDepth0)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -796,39 +796,39 @@ func (tb *tokenBlock) setDefStmt() (*ast.SetDefSetBuilderStmt, error) {
 
 }
 
-func (tb *tokenBlock) claimToCheckFact() (ast.FactStmt, error) {
-	if tb.header.is(glob.KeywordForall) {
-		return tb.uniFactStmt_InClaimStmt()
-	} else {
-		return tb.specFactStmt()
-	}
-}
+// func (tb *tokenBlock) claimToCheckFact() (ast.FactStmt, error) {
+// 	if tb.header.is(glob.KeywordForall) {
+// 		return tb.uniFactStmt(UniFactDepth0)
+// 	} else {
+// 		return tb.specFactStmt()
+// 	}
+// }
 
 // claim 因为实在太难instantiate了(要让所有的stmt都添加instantiate这个方法，太难了)，所以不能让用户随便命名forall里的参数了，用户只能用不存在的参数名
-func (tb *tokenBlock) uniFactStmt_InClaimStmt() (*ast.UniFactStmt, error) {
-	err := tb.header.skip(glob.KeywordForall)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
+// func (tb *tokenBlock) uniFactStmt_InClaimStmt() (*ast.UniFactStmt, error) {
+// 	err := tb.header.skip(glob.KeywordForall)
+// 	if err != nil {
+// 		return nil, &tokenBlockErr{err, *tb}
+// 	}
 
-	declHeader, err := tb.defHeader()
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
+// 	declHeader, err := tb.defHeader()
+// 	if err != nil {
+// 		return nil, &tokenBlockErr{err, *tb}
+// 	}
 
-	domainFacts, thenFacts, iffFacts, err := tb.uniFactBodyFacts(UniFactDepth0, glob.KeywordThen)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
+// 	domainFacts, thenFacts, iffFacts, err := tb.uniFactBodyFacts(UniFactDepth0, glob.KeywordThen)
+// 	if err != nil {
+// 		return nil, &tokenBlockErr{err, *tb}
+// 	}
 
-	if len(iffFacts) == 0 {
-		iffFacts = ast.EmptyIffFacts
-	} else {
-		return nil, fmt.Errorf("universal fact in claim statement should not have iff facts")
-	}
+// 	if len(iffFacts) == 0 {
+// 		iffFacts = ast.EmptyIffFacts
+// 	} else {
+// 		return nil, fmt.Errorf("universal fact in claim statement should not have iff facts")
+// 	}
 
-	return ast.NewUniFact(declHeader.Params, declHeader.SetParams, domainFacts, thenFacts, iffFacts), nil
-}
+// 	return ast.NewUniFact(declHeader.Params, declHeader.SetParams, domainFacts, thenFacts, iffFacts), nil
+// }
 
 func (tb *tokenBlock) uniFactBodyFacts(uniFactDepth uniFactEnum, defaultSectionName string) ([]ast.FactStmt, []ast.FactStmt, []ast.FactStmt, error) {
 	domFacts := []ast.FactStmt{}
