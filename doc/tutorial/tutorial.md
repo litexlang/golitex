@@ -45,6 +45,7 @@ Litex is the perfect language for you. I hope you will enjoy it.
 
 <!-- Follow us on Twitter, Discord, Github, and RedNote -->
 
+
 ## First Example
 
 Let's try some simple Litex commands. Perhaps the most representative example of how reasoning works is Syllogism (三段论), proposed by Greek philosopher Aristotle.

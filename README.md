@@ -20,9 +20,9 @@
 
 ## About The Adventure of Litex
 
-_Simplicity is the ultimate sophistication._
+_Science is what we understand well enough to explain to a computer; art is everything else._
 
-_-- Leonardo da Vinci_
+_-- Donald Knuth_
 
 Litex is a simple and easy-to-learn formal language. Thanks to its innovative design philosophy, even 10-year-olds can learn Litex easily. This gives it a dimensional advantage over existing formal languages, such as Lean, which even PhD students struggle to master.
 
@@ -37,6 +37,10 @@ While Litex is in the early stages of development, it has already established a 
 **NOTE: Litex is still under development. THE CREATOR OF LITEX IS LOOKING FOR LONG-TERM OR SHORT-TERM CONTRIBUTORS. READ [CONTRIBUTE TO LITEX](./doc/contribute_to_Litex/contribute_to_Litex.md) FOR MORE DETAILS.**
 
 ## Try Litex Step by Step
+
+_If I have seen further, it is by standing on the shoulders of giants._
+
+_-- Isaac Newton_
 
 **WARNING: Litex is still under development. Unexpected bugs might happen.**
 
@@ -112,9 +116,13 @@ Notice how Litex is much simpler than Lean4. Instead of writing complex axioms w
 
 ## Understand Litex in 60 Seconds: The Core Idea of Match & Substitute
 
-_Keep it simple, stupid._
+_All human knowledge begins with intuitions, thence passes to concepts and ends with ideas._
 
-_-- The Unix Philosophy_
+_-- Immanuel Kant_
+
+_Mathematics is a game played according to certain simple rules with meaningless marks on paper._
+
+_-- David Hilbert_
 
 There are two things in math: objects and factual statements. Objects are the things that we are talking about, and factual statements are the statements about objects. Sets, functions, numbers, etc. are all objects. And factual statements are statements like "Jordan is intelligent", "1 < 2", "x = 1", etc. In Litex, a factual statement has four potential outcomes: true, false, unknown(not enough information to determine the truth value), or error(the statement is not well-formed). A fact is a statement that is true.
 
@@ -134,9 +142,13 @@ A major special case of match and substitute is about rational numbers, like 1, 
 
 ## How Does Litex Differentiate Itself Technically?
 
-_Common sense is not so common._
+_Simplicity is the ultimate sophistication._
 
-_-- Voltaire_
+_-- Leonardo da Vinci_
+
+_Keep it simple, stupid._
+
+_-- The Unix Philosophy_
 
 Everyone knows how to reason, including 10-year-old. We reason thousands of time every day without even noticing it. Yet, traditional formal languages, like Lean4, Coq, and Isebelle are so complex that even the smartest mathematicians find it hard to use. Why is that?
 
@@ -199,9 +211,9 @@ Think of formalization like reading a book - you need to understand the previous
 
 ##  Examples: Litex for Curious Lean Users
 
-_If I have seen further, it is by standing on the shoulders of giants._
+_Common sense is not so common._
 
-_-- Isaac Newton_
+_-- Voltaire_
 
 Here are some examples of Litex, in Litex for Curious Lean Users4. Detailed explanations are provided in [Litex for Curious Lean Users](./doc/litex_for_curious_lean_users/litex_for_curious_lean_users.md). I put them here for you to get a sense of the language.
 
@@ -306,6 +318,7 @@ Next I want to show you how Litex can be used to solve a simple linear equation.
 I know Lean can use tactics to solve the same problem, and it is shorter. Litex will introduce similar features in the future. What I really want to show you here is that Litex is much more readable and intuitive than Lean in this case. Not every situation can be solved by tactics, and writing tactics itself in Lean is not easy. Litex spares you from remembering all these difficult things like `have`, `by`, `rw`, `simp`, `exact` and strange syntax etc. All you need is basic math knowledge, which significantly reduces the barrier to entry.
 
 ## Contact & Contribute to Litex
+
 _The best way to predict the future is to invent it._
 
 _-- Alan Kay_
