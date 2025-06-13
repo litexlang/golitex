@@ -1,17 +1,3 @@
-// Copyright 2024 Jiachen Shen.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Original Author: Jiachen Shen <malloc_realloc_free@outlook.com>
-// Litex email: <litexlang@outlook.com>
-// Litex website: https://litexlang.org
-// Litex github repository: https://github.com/litexlang/golitex
-// Litex discord server: https://discord.gg/uvrHM7eS
-
 package litex_num
 
 import (
@@ -21,9 +7,9 @@ import (
 )
 
 type term struct {
-	operator    string // + or -
-	numerator   []string
-	denominator string
+	operator    string   // + or -
+	numerator   []string // 乘数组成的分子项
+	denominator string   // 分母整体表达式
 }
 
 func combineFractions(expr string) (string, string, error) {
@@ -41,7 +27,7 @@ func combineFractions(expr string) (string, string, error) {
 		parsed = append(parsed, pt)
 	}
 
-	// construct common denominator
+	// 构造公共分母
 	commonDenominator := "1"
 	for _, t := range parsed {
 		if t.denominator != "1" {
@@ -49,12 +35,12 @@ func combineFractions(expr string) (string, string, error) {
 		}
 	}
 
-	// construct numerator
+	// 构造分子
 	numerator := ""
 	for i, t := range parsed {
 		termNumerator := strings.Join(t.numerator, "*")
 
-		// 乘上其他分母
+		// 乘上其他项的分母
 		for j, ot := range parsed {
 			if i != j && ot.denominator != "1" {
 				termNumerator = fmt.Sprintf("(%s*%s)", termNumerator, ot.denominator)
@@ -75,53 +61,7 @@ func combineFractions(expr string) (string, string, error) {
 	return numerator, commonDenominator, nil
 }
 
-func parseTerm(raw string) (term, error) {
-	raw = strings.TrimSpace(raw)
-	if raw == "" {
-		return term{}, fmt.Errorf("empty term")
-	}
-
-	op := "+"
-	if raw[0] == '+' || raw[0] == '-' {
-		op = string(raw[0])
-		raw = strings.TrimSpace(raw[1:])
-	}
-
-	// split multiplication terms
-	muls := strings.Split(raw, "*")
-	if len(muls) == 0 {
-		return term{}, fmt.Errorf("invalid term: %s", raw)
-	}
-
-	num := []string{}
-	den := "1"
-
-	for _, m := range muls {
-		m = strings.TrimSpace(m)
-		if strings.Contains(m, "/") {
-			parts := strings.Split(m, "/")
-			if len(parts) != 2 {
-				return term{}, fmt.Errorf("invalid fraction format: %s", m)
-			}
-			num = append(num, parts[0])
-			den = fmt.Sprintf("%s*%s", den, parts[1])
-		} else {
-			num = append(num, m)
-		}
-	}
-
-	// clean up denominator多余的 1
-	if den == "1*1" || den == "1" {
-		den = "1"
-	}
-
-	return term{
-		operator:    op,
-		numerator:   num,
-		denominator: den,
-	}, nil
-}
-
+// 拆分表达式为各个项（支持 + 和 -，但忽略科学计数法中的 e-5）
 func splitTerms(expr string) []string {
 	var terms []string
 	var currentTerm strings.Builder
@@ -151,4 +91,94 @@ func isExponentialNotation(expr string, pos int) bool {
 	return (expr[pos] == '+' || expr[pos] == '-') &&
 		unicode.ToLower(rune(expr[pos-1])) == 'e' &&
 		unicode.IsDigit(rune(expr[pos+1]))
+}
+
+// 解析每个 term，识别主层级的除法和乘法
+func parseTerm(raw string) (term, error) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return term{}, fmt.Errorf("empty term")
+	}
+
+	op := "+"
+	if raw[0] == '+' || raw[0] == '-' {
+		op = string(raw[0])
+		raw = strings.TrimSpace(raw[1:])
+	}
+
+	muls := splitMultiplicationPreservingNested(raw)
+	if len(muls) == 0 {
+		return term{}, fmt.Errorf("invalid term: %s", raw)
+	}
+
+	num := []string{}
+	den := "1"
+
+	for _, m := range muls {
+		m = strings.TrimSpace(m)
+
+		if slashIdx := findTopLevelSlash(m); slashIdx != -1 {
+			left := strings.TrimSpace(m[:slashIdx])
+			right := strings.TrimSpace(m[slashIdx+1:])
+			num = append(num, left)
+			den = fmt.Sprintf("%s*%s", den, right)
+		} else {
+			num = append(num, m)
+		}
+	}
+
+	return term{
+		operator:    op,
+		numerator:   num,
+		denominator: den,
+	}, nil
+}
+
+// 在主层级拆分 *，忽略括号或函数中的 *
+func splitMultiplicationPreservingNested(expr string) []string {
+	var parts []string
+	var current strings.Builder
+	nesting := 0
+
+	for _, r := range expr {
+		switch r {
+		case '(':
+			nesting++
+		case ')':
+			if nesting > 0 {
+				nesting--
+			}
+		case '*':
+			if nesting == 0 {
+				parts = append(parts, current.String())
+				current.Reset()
+				continue
+			}
+		}
+		current.WriteRune(r)
+	}
+
+	if current.Len() > 0 {
+		parts = append(parts, current.String())
+	}
+
+	return parts
+}
+
+// 查找主层级的 /，忽略括号中
+func findTopLevelSlash(s string) int {
+	nesting := 0
+	for i, r := range s {
+		switch r {
+		case '(':
+			nesting++
+		case ')':
+			nesting--
+		case '/':
+			if nesting == 0 {
+				return i
+			}
+		}
+	}
+	return -1
 }

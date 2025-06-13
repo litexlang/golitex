@@ -33,3 +33,27 @@ func TestExpandExpression(t *testing.T) {
 	fmt.Println("Expanded:", strings.Join(parts, " + "))
 
 }
+
+func TestCombineFractions(t *testing.T) {
+	exprs := []string{
+		"1/2*h + t*a/b*k - c/d*h",
+		"1*a + f * b",
+		"1/2*h + t*f(a/2)",
+		"(f(a))(b/2) + (f(a))(b/2)",
+		"a*b/c",
+		"a*b/c + d*e/f",
+		"a*b/c + d*e/f + g*h/i",
+		"a*b/c + d*e/f + g*h/i + j*k/l",
+		"a*b/c + d*e/f + g*h/i + j*k/l + m*n/o",
+		"a*b/c + d*e/f + g*h/i + j*k/l + m*n/o + p*q/r",
+		"a*b/c + d*e/f + g*h/i + j*k/l + m*n/o + p*q/r + s*t/u",
+	}
+	for _, expr := range exprs {
+		numerator, denominator, err := combineFractions(expr)
+		if err != nil {
+			t.Fatalf("Error combining fractions: %v", err)
+		}
+		fmt.Println("Numerator:", numerator)
+		fmt.Println("Denominator:", denominator)
+	}
+}
