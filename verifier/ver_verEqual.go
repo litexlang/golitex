@@ -121,12 +121,12 @@ func (ver *Verifier) verFcEqual(left ast.Fc, right ast.Fc, state VerState) (bool
 }
 
 func (ver *Verifier) verEqualBuiltin(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
-	ok, err := cmp.Cmp_ByBIR(left, right) // 完全一样
+	ok, msg, err := cmp.Cmp_ByBIR(left, right) // 完全一样
 	if err != nil {
 		return false, err
 	}
 	if ok {
-		return ver.equalTrueAddSuccessMsg(left, right, state, "builtin rules")
+		return ver.equalTrueAddSuccessMsg(left, right, state, msg)
 	}
 	return false, nil
 }

@@ -16,38 +16,49 @@ package litex_comparator
 
 import ast "golitex/ast"
 
-func Cmp_ByBIR(left, right ast.Fc) (bool, error) {
+func Cmp_ByBIR(left, right ast.Fc) (bool, string, error) {
 	// case 0: 按字面量来比较。这必须在比较div和比较polynomial之前，因为可能比较的是 * 和 *，即比较两个函数是不是一样。这种函数的比较，跑到div和polynomial就会出问题，因为在那些地方*都会被当成有参数的东西
 	ok, err := cmpFcLiterally(left, right)
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 	if ok {
-		return true, nil
+		return true, "literally the same", nil
+	}
+
+	areNumLit, areEqual, err := AreNumLit_Equal(left, right)
+	if err != nil {
+		return false, "", err
+	}
+	if areNumLit && areEqual {
+		return true, "builtin calculation", nil
 	}
 
 	// case: 如果涉及到的是div运算
 	if isFnWithDivOpt(left) {
-		return cmpFcFnWithDivOptBuiltinRule(left, right)
+		ok, err := cmpFcFnWithDivOptBuiltinRule(left, right)
+		if err != nil {
+			return false, "", err
+		}
+		if ok {
+			return true, "builtin division rules", nil
+		}
 	}
 	if isFnWithDivOpt(right) {
-		return cmpFcFnWithDivOptBuiltinRule(right, left)
+		ok, err := cmpFcFnWithDivOptBuiltinRule(right, left)
+		if err != nil {
+			return false, "", err
+		}
+		if ok {
+			return true, "builtin division rules", nil
+		}
 	}
 
 	// case: 用polynomial rule来比较
 	cmp := cmpPolynomial_ByBIR(left, right)
 	if cmp {
-		return true, nil
+		return true, "builtin polynomial expand and combine rules", nil
 	}
 
-	// // TODO： 不确定下面这些有没有用，放着再说
-	// areNumLit, areEqual, err := AreNumLit_Equal(left, right)
-	// if err != nil {
-	// 	return false, err
-	// }
-	// if areNumLit && areEqual {
-	// 	return true, nil
-	// }
-
-	return false, nil
+	return false, "", nil
 }
