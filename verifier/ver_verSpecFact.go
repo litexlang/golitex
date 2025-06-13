@@ -29,7 +29,25 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact(stmt *ast.SpecFactStmt, s
 	}
 
 	if ok, err := ver.isSpecFactCommutative(stmt); err != nil {
-		return false, err
+		ok, err := ver.verSpecFactStepByStep(stmt, state)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			return true, nil
+		}
+		reversedStmt, err := stmt.ReverseSpecFactParamsOrder()
+		if err != nil {
+			return false, err
+		}
+		ok, err = ver.verSpecFactStepByStep(reversedStmt, state)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			return true, nil
+		}
+		return false, nil
 	} else if !ok {
 		return ver.verSpecFactStepByStep(stmt, state)
 	} else {
@@ -56,7 +74,14 @@ func (ver *Verifier) isSpecFactCommutative(stmt *ast.SpecFactStmt) (bool, error)
 		return true, nil
 	}
 
-	_ = stmt
+	ok, err := ver.verSpecFact_BySpecMem(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordCommutativeProp), []ast.Fc{&stmt.PropName}), Round0NoMsg)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
 	return false, nil
 }
 
