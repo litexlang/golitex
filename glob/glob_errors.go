@@ -35,7 +35,7 @@ func (e *ErrLink) Error() string {
 		builder.WriteString(previous.Error())
 	}
 
-	return builder.String()
+	return strings.TrimSuffix(builder.String(), "\n")
 }
 
 func NewErrLink(next error, msg string, a ...any) *ErrLink {
