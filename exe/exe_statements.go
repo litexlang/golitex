@@ -63,7 +63,7 @@ func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 	}
 
 	if err != nil {
-		return glob.ExecState_Error, glob.NewErrLink(err, "%s\nexecution error", stmt.String())
+		return glob.ExecState_Error, glob.NewErrLink(err, "execution error\n%s", stmt.String())
 	} else {
 		return execState, nil
 	}

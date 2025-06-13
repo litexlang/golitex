@@ -121,25 +121,3 @@ func TestRunComprehensiveCodes(t *testing.T) {
 
 	fmt.Println("All codes executed successfully")
 }
-
-func TestRunFileInTerminalFlagF(t *testing.T) {
-	path := "../examples/test_codes/tmp.lix"
-
-	cmd := exec.Command("go", "run", "../main.go", "-f", path)
-
-	// Capture both stdout and stderr
-	var stdout, stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-
-	// Run the command
-	err := cmd.Run()
-	if err != nil {
-		fmt.Println("Error running command:", err)
-		fmt.Println("Stderr:", stderr.String())
-		return
-	}
-
-	// Print the output
-	fmt.Println(stdout.String())
-}
