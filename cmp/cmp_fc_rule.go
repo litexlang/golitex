@@ -24,47 +24,26 @@ func CmpFcAsStr(left, right ast.Fc) bool {
 }
 
 // 先确定left，right都是builtin fc，然后按builtin rule来验证他们相等
-func BuiltinFcEqualRule(left, right ast.Fc) (bool, error) {
-	// case 0: 比较 polynomial
-	cmp := cmpPolynomial_ByBIR(left, right)
-	if cmp {
-		return true, nil
-	}
+// func BuiltinFcEqualRule(left, right ast.Fc) (bool, error) {
+// 	// case 0: 比较 polynomial
+// 	cmp := cmpPolynomial_ByBIR(left, right)
+// 	if cmp {
+// 		return true, nil
+// 	}
 
-	// Case1: 二者都是 Number 上进行+-*/^
-	areNumLit, areEqual, err := AreNumLit_Equal(left, right)
-	if err != nil {
-		return false, err
-	}
-	if areNumLit && areEqual {
-		return true, nil
-	}
-
-	return false, nil
-}
-
-// 之所以叫 Expr，因为可能含有运算符+-*/这样的
-// func cmpNumLitExpr(left, right ast.Fc) (bool, error) {
-// 	leftAsNumLitExpr, ok, err := ast.MakeFcIntoNumLitExpr(left)
+// 	// Case1: 二者都是 Number 上进行+-*/^
+// 	areNumLit, areEqual, err := NumLitEqual_ByEval(left, right)
 // 	if err != nil {
 // 		return false, err
 // 	}
-// 	if !ok {
-// 		return false, nil
+// 	if areNumLit && areEqual {
+// 		return true, nil
 // 	}
 
-// 	rightAsNumLitExpr, ok, err := ast.MakeFcIntoNumLitExpr(right)
-// 	if err != nil {
-// 		return false, err
-// 	}
-// 	if !ok {
-// 		return false, nil
-// 	}
-
-// 	return glob.NumLitExprEqual(leftAsNumLitExpr, rightAsNumLitExpr)
+// 	return false, nil
 // }
 
-func AreNumLit_Equal(left, right ast.Fc) (bool, bool, error) {
+func NumLitEqual_ByEval(left, right ast.Fc) (bool, bool, error) {
 	leftAsNumLitExpr, ok, err := ast.MakeFcIntoNumLitExpr(left)
 	if err != nil {
 		return false, false, err
@@ -81,7 +60,7 @@ func AreNumLit_Equal(left, right ast.Fc) (bool, bool, error) {
 		return false, false, nil
 	}
 
-	areEqual, err := glob.NumLitExprEqual(leftAsNumLitExpr, rightAsNumLitExpr)
+	areEqual, err := glob.NumLitExprEqual_ByEval(leftAsNumLitExpr, rightAsNumLitExpr)
 	return true, areEqual, err
 }
 
