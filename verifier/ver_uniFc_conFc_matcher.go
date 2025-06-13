@@ -61,7 +61,7 @@ func (ver *Verifier) match_FcInFactUnderUniFact_WithConFc(fcInFactUnderUniFact a
 		if isFcAtomInForallParamSet(leftAsAtom, knownFact) {
 			return map[string][]ast.Fc{leftAsAtom.Name: {conFc}}, true, nil
 		} else {
-			ok, err := cmp.BuiltinFcEqualRule(fcInFactUnderUniFact, conFc)
+			ok, _, err := cmp.Cmp_ByBIR(fcInFactUnderUniFact, conFc)
 			if err != nil {
 				return nil, false, err
 			}

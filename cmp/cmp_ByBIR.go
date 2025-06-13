@@ -26,7 +26,7 @@ func Cmp_ByBIR(left, right ast.Fc) (bool, string, error) {
 		return true, "literally the same", nil
 	}
 
-	areNumLit, areEqual, err := AreNumLit_Equal(left, right)
+	areNumLit, areEqual, err := NumLitEqual_ByEval(left, right)
 	if err != nil {
 		return false, "", err
 	}

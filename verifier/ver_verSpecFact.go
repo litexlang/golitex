@@ -303,7 +303,7 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecFactStmt, st
 	}
 
 	// 如果左右两边能是能被处理的数字
-	areBothNumLit, areEqual, err := cmp.AreNumLit_Equal(stmt.Params[0], stmt.Params[1])
+	areBothNumLit, areEqual, err := cmp.NumLitEqual_ByEval(stmt.Params[0], stmt.Params[1])
 	if err != nil {
 		return false, err
 	}

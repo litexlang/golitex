@@ -116,7 +116,7 @@ func (node *NumLitExpr) evalNumLitExpr() (string, bool, error) {
 	return result, true, nil
 }
 
-func NumLitExprEqual(leftAsNumLitExpr *NumLitExpr, rightAsNumLitExpr *NumLitExpr) (bool, error) {
+func NumLitExprEqual_ByEval(leftAsNumLitExpr *NumLitExpr, rightAsNumLitExpr *NumLitExpr) (bool, error) {
 	leftAsStr, ok, err := (leftAsNumLitExpr).evalNumLitExpr()
 	if err != nil {
 		return false, err

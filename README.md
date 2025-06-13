@@ -24,6 +24,10 @@ _Science is what we understand well enough to explain to a computer; art is ever
 
 _-- Donald Knuth_
 
+_The best way to predict the future is to invent it._
+
+_-- Alan Kay_
+
 Litex is a simple and easy-to-learn formal language. Thanks to its innovative design philosophy, even 10-year-olds can learn Litex easily. This gives it a dimensional advantage over existing formal languages, such as Lean, which even PhD students struggle to master.
 
 In the field of AI, formal languages have become an indispensable tool for top researchers. Terence Tao uses them to reconstruct mathematical proofs, Bengio's team employs them to verify AI safety, DeepSeek-R1 leverages them to enhance reasoning capabilities, and the AlphaProof series utilizes them to simultaneously generate problems and answers, forming a self-improving closed loop. Litex is poised to become the key infrastructure for scalable knowledge engineering in the AI era.
@@ -215,6 +219,10 @@ _Common sense is not so common._
 
 _-- Voltaire_
 
+_Beautiful is better than ugly. Explicit is better than implicit. Simple is better than complex._
+
+_-- The Zen of Python_
+
 Here are some examples of Litex, in Litex for Curious Lean Users4. Detailed explanations are provided in [Litex for Curious Lean Users](./doc/litex_for_curious_lean_users/litex_for_curious_lean_users.md). I put them here for you to get a sense of the language.
 
 The definition of algorithm is a good example. In mathematics, an algorithm is a computational method that can be precisely defined as a quadruple (Q, I, S, f), where:
@@ -319,9 +327,13 @@ I know Lean can use tactics to solve the same problem, and it is shorter. Litex 
 
 ## Contact & Contribute to Litex
 
-_The best way to predict the future is to invent it._
+_Cross the river by feeling the stones._
 
-_-- Alan Kay_
+_-- Chinese Proverb_
+
+_Given enough eyeballs, all bugs are shallow._
+
+_-- Linus Torvalds_
 
 Hi, I am Jiachen Shen, the creator of Litex. I am a PhD student in mathematics and programming language enthusiast (a programming language geek, if you are one too, you are welcome to contact me). In 2023, I shockingly found that math is somehow equivalent to programming, after reading Professor Terence Tao's [blog](https://terrytao.wordpress.com/2023/11/18/formalizing-the-proof-of-pfr-in-lean4-using-blueprint-a-short-tour/). This is the most amazing idea that I have ever seen in my life. In 2024, after thinking about it for a year, I started to implement Litex. After more than 2500 git commits, what it means to be a "formal language that is intuitive and as aligned with daily math expression as possible" is finally to make sense to me and my kernel sort of works now.
 
