@@ -39,14 +39,6 @@ func (ver *Verifier) FcSatisfySpecFactParaReq(stmt *ast.SpecFactStmt) (bool, err
 		}
 	}
 
-	// else if stmt.IsExistFact() {
-	// 	_, ok := ver.env.GetExistPropDef(stmt.PropName)
-	// 	if !ok {
-	// 		return false, nil
-	// 	}
-	// }
-
-	// fc
 	for _, param := range stmt.Params {
 		ok, err := ver.FcSatisfyFnParaReq(param)
 		if err != nil {
