@@ -1,10 +1,20 @@
-fn sin(x R) R
-fn cos(x R) R
+prove:
+    exist_prop y N st larger_than_x(x N):
+        y > x
 
-know forall x R:
-    sin(x)^2 + cos(x)^2 = 1
+    know:
+        forall x N, y N:
+            y > 0
+            then:
+                x + y > x
 
-forall y R:
-    1 = sin(y)^2 + cos(y)^2
-        
-sin(2)^2 + cos(2)^2 = 1
+    claim:
+        forall x N:
+            $larger_than_x(x)
+        prove:
+            obj a N
+            know:
+               a = x + 1
+            x + 1 > x
+            a > x
+            exist a st $larger_than_x(x)

@@ -216,6 +216,11 @@ func MakeFnSetFc(fnSets []Fc, retSet Fc) Fc {
 
 func (stmt *DefObjStmt) NewInFacts() []*SpecFactStmt {
 	facts := []*SpecFactStmt{}
+
+	if len(stmt.Objs) != len(stmt.ObjSets) {
+		panic("NewInFacts: len(stmt.Objs) != len(stmt.ObjSets)")
+	}
+
 	for i, obj := range stmt.Objs {
 		paramSet := stmt.ObjSets[i]
 		facts = append(facts, NewInFact(obj, paramSet))
