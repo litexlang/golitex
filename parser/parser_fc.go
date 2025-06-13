@@ -21,7 +21,7 @@ import (
 	"strings"
 )
 
-func (cursor *strSliceCursor) rawFc() (ast.Fc, error) {
+func (cursor *strSliceCursor) RawFc() (ast.Fc, error) {
 	expr, err := cursor.fcInfixExpr(glob.PrecLowest)
 	if err != nil {
 		return nil, err
@@ -134,7 +134,7 @@ func (cursor *strSliceCursor) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence)
 		if curToken == glob.RelaFnPrefix {
 			cursor.skip("") // 消耗curToken
 
-			fn, err := cursor.rawFc()
+			fn, err := cursor.RawFc()
 			if err != nil {
 				return nil, err
 			}
@@ -254,7 +254,7 @@ func (cursor *strSliceCursor) bracedFcSlice() ([]ast.Fc, error) {
 
 	if !cursor.is(glob.KeySymbolRightBrace) {
 		for {
-			fc, err := cursor.rawFc()
+			fc, err := cursor.RawFc()
 
 			if err != nil {
 				return nil, &strSliceErr{err, cursor}
@@ -302,7 +302,7 @@ func (cursor *strSliceCursor) bracedExpr() (ast.Fc, error) {
 	}
 
 	// head, err := cursor.fcInfixExpr(glob.PrecLowest)
-	head, err := cursor.rawFc()
+	head, err := cursor.RawFc()
 	if err != nil {
 		return nil, err
 	}
@@ -358,7 +358,7 @@ func (cursor *strSliceCursor) fnSet() (ast.Fc, error) {
 	fnSets := []ast.Fc{}
 	var retSet ast.Fc
 	for !cursor.ExceedEnd() && !(cursor.is(glob.KeySymbolRightBrace)) {
-		fnSet, err := cursor.rawFc()
+		fnSet, err := cursor.RawFc()
 		if err != nil {
 			return nil, &strSliceErr{err, cursor}
 		}
@@ -374,7 +374,7 @@ func (cursor *strSliceCursor) fnSet() (ast.Fc, error) {
 		return nil, &strSliceErr{err, cursor}
 	}
 
-	retSet, err = cursor.rawFc()
+	retSet, err = cursor.RawFc()
 	if err != nil {
 		return nil, &strSliceErr{err, cursor}
 	}
