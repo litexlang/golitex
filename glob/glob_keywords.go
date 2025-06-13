@@ -40,7 +40,7 @@ const (
 	KeywordAnd                  = "and"
 	KeywordOr                   = "or"
 	KeywordCommutativeProp      = "commutative_prop"
-	KeywordCommutativeFn        = "commutative_fn" // must-have: 否则 a+b=b+a不能验证
+	// KeywordCommutativeFn        = "commutative_fn" // must-have: 否则 a+b=b+a不能验证
 	KeywordAssociativeFn        = "associative_fn" // must-have: 否则 a+1+1=a+2不能验证 // 我觉得暂时不考虑不较好，比较associative的自然数之类的都默认是对的了
 	KeywordNatural              = "N"              // e.g. 0
 	KeywordInt                  = "Z"              // e.g. -1
@@ -86,7 +86,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordIff:                  {},
 	KeywordExist:                {},
 	KeywordCommutativeProp:      {},
-	KeywordCommutativeFn:        {},
+	// KeywordCommutativeFn:        {},
 	KeywordAssociativeFn:        {},
 	KeywordAnd:                  {},
 	KeywordOr:                   {},
