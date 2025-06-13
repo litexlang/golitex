@@ -24,7 +24,7 @@ _Simplicity is the ultimate sophistication._
 
 _-- Leonardo da Vinci_
 
-Litex is a simple and easy-to-learn formal language. Thanks to its innovative design philosophy, even 10-year-old children can easily understand Litex. This gives it a dimensional advantage over existing formal languages, such as Lean, which even PhD students struggle to master.
+Litex is a simple and easy-to-learn formal language. Thanks to its innovative design philosophy, even 10-year-olds can learn Litex easily. This gives it a dimensional advantage over existing formal languages, such as Lean, which even PhD students struggle to master.
 
 In the field of AI, formal languages have become an indispensable tool for top researchers. Terence Tao uses them to reconstruct mathematical proofs, Bengio's team employs them to verify AI safety, DeepSeek-R1 leverages them to enhance reasoning capabilities, and the AlphaProof series utilizes them to simultaneously generate problems and answers, forming a self-improving closed loop. Litex is poised to become the key infrastructure for scalable knowledge engineering in the AI era.
 

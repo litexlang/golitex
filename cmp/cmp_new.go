@@ -30,6 +30,9 @@ func Cmp_ByBIR(left, right ast.Fc) (bool, error) {
 	if isFnWithDivOpt(left) {
 		return cmpFcFnWithDivOptBuiltinRule(left, right)
 	}
+	if isFnWithDivOpt(right) {
+		return cmpFcFnWithDivOptBuiltinRule(right, left)
+	}
 
 	// case: 用polynomial rule来比较
 	cmp := cmpPolynomial_ByBIR(left, right)
@@ -37,6 +40,7 @@ func Cmp_ByBIR(left, right ast.Fc) (bool, error) {
 		return true, nil
 	}
 
+	// // TODO： 不确定下面这些有没有用，放着再说
 	// areNumLit, areEqual, err := AreNumLit_Equal(left, right)
 	// if err != nil {
 	// 	return false, err
