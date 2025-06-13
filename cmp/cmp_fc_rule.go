@@ -87,7 +87,7 @@ func AreNumLit_Equal(left, right ast.Fc) (bool, bool, error) {
 
 func SliceFcAllEqualToGivenFcBuiltinRule(valuesToBeComped *[]ast.Fc, fcToComp ast.Fc) (bool, error) {
 	for _, equalFc := range *valuesToBeComped {
-		ok, err := Cmp_ByBIR(equalFc, fcToComp)
+		ok, _, err := Cmp_ByBIR(equalFc, fcToComp)
 		if err != nil {
 			return false, err
 		}

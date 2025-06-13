@@ -525,11 +525,16 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 
 // 这里需要 recursive 地调用 这个，而不是只是 cmpFcRule. 之后再考虑recursive的情况
 func (ver *Verifier) fcEqual_Commutative_Associative_CmpRule(left ast.Fc, right ast.Fc, verState VerState) (bool, error) {
-	ok, err := cmp.Cmp_ByBIR(left, right)
+	ok, msg, err := cmp.Cmp_ByBIR(left, right)
 	if err != nil {
 		return false, err
 	}
 	if ok {
+		if verState.requireMsg() {
+			ver.successWithMsg(fmt.Sprintf("%s = %s", left.String(), right.String()), msg)
+		} else {
+			ver.successNoMsg()
+		}
 		return true, nil
 	}
 
@@ -581,14 +586,14 @@ func (ver *Verifier) leftIsCommutativeAndUseCommutedLeftToCheckEqualRight(left a
 				if !ok {
 					return false, nil
 				}
-				ok, err := cmp.Cmp_ByBIR(commutativeLeft, right)
+				ok, msg, err := cmp.Cmp_ByBIR(commutativeLeft, right)
 				// ok, err := ver.fcEqual(commutativeLeft, right, verState) // 死循环
 				if err != nil {
 					return false, err
 				}
 				if ok {
 					if verState.requireMsg() {
-						ver.successWithMsg(fmt.Sprintf("%s = %s", left.String(), right.String()), fmt.Sprintf("%s is commutative", leftHeadAsAtom.String()))
+						ver.successWithMsg(fmt.Sprintf("%s = %s", left.String(), right.String()), fmt.Sprintf("%s is commutative, and %s", leftHeadAsAtom.String(), msg))
 					} else {
 						ver.successNoMsg()
 					}
@@ -610,13 +615,13 @@ func (ver *Verifier) leftIsAssociative_UseAssociationToCheckEqual(left ast.Fc, r
 					return false, nil
 				}
 
-				ok, err := cmp.Cmp_ByBIR(leftAssociated, right)
+				ok, msg, err := cmp.Cmp_ByBIR(leftAssociated, right)
 				if err != nil {
 					return false, err
 				}
 				if ok {
 					if verState.requireMsg() {
-						ver.successWithMsg(fmt.Sprintf("%s = %s", left.String(), right.String()), fmt.Sprintf("%s is associative", leftHeadAsAtom.String()))
+						ver.successWithMsg(fmt.Sprintf("%s = %s", left.String(), right.String()), fmt.Sprintf("%s is associative, and %s", leftHeadAsAtom.String(), msg))
 					} else {
 						ver.successNoMsg()
 					}
