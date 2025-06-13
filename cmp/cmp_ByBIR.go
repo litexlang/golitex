@@ -55,7 +55,7 @@ func Cmp_ByBIR(left, right ast.Fc) (bool, string, error) {
 	}
 
 	// case: 用polynomial rule来比较
-	cmp := cmpPolynomial_ByBIR(left, right)
+	cmp := cmpPolynomial_ByBIR(left.String(), right.String())
 	if cmp {
 		return true, "builtin polynomial expand and combine rules", nil
 	}
