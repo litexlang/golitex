@@ -139,3 +139,9 @@ fn greatest_common_divisor_of(b Z, c Z) N:
 """
 Chapter 3
 """
+
+fn finite_sequence_of_integers(n N, length N) set
+    forall x finite_sequence_of_integers(n, N):
+        x $in Z
+
+prop is_mutually_prime_seq(seq fn(N,N)Z):
