@@ -113,7 +113,3 @@ func NewOrStmt(orFacts []SpecFactStmt) *OrStmt {
 func NewSupposeStmt(fact SpecFactStmt, body []Stmt) *SupposeStmt {
 	return &SupposeStmt{fact, body}
 }
-
-func NewProveForallByNotExistStmt(fact *UniFactStmt, existFact *SpecFactStmt, proof []Stmt) *ProveForallByNotExistStmt {
-	return &ProveForallByNotExistStmt{*fact, *existFact, proof}
-}
