@@ -92,20 +92,6 @@ func (memory *ExistPropDefMem) Insert(stmt *ast.DefExistPropStmt, pkgName string
 	return nil
 }
 
-func (memory *SetDefMem) Insert(stmt *ast.SetDefSetBuilderStmt) error {
-	if _, ok := memory.Dict[glob.EmptyPkg]; !ok {
-		memory.Dict[glob.EmptyPkg] = make(map[string]SetMemItem)
-	}
-
-	if _, ok := memory.Dict[glob.EmptyPkg][stmt.SetName]; !ok {
-		memory.Dict[glob.EmptyPkg][stmt.SetName] = SetMemItem{stmt}
-	}
-
-	memory.Dict[glob.EmptyPkg][stmt.SetName] = SetMemItem{stmt}
-
-	return nil
-}
-
 // End of Insert DefStmt into DefMem
 
 // Get DefStmt from DefMem
@@ -157,19 +143,6 @@ func (memory *ObjDefMem) Get(fc ast.FcAtom) (*ast.DefObjStmt, bool) {
 	}
 
 	node, nodeExists := pkgMap[fc.Name]
-	if !nodeExists {
-		return nil, false
-	}
-	return node.Def, true
-}
-
-func (memory *SetDefMem) Get(pkgName string, setName string) (*ast.SetDefSetBuilderStmt, bool) {
-	pkgMap, pkgExists := memory.Dict[pkgName]
-	if !pkgExists {
-		return nil, false
-	}
-
-	node, nodeExists := pkgMap[setName]
 	if !nodeExists {
 		return nil, false
 	}
