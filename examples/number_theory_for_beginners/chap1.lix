@@ -1,0 +1,24 @@
+forall x R, a R, b R:
+    a + x = b
+    then:
+        a + x - a = b - a
+        x = b - a
+
+forall x R, a R, b R:
+    a != 0
+    a * x = b
+    then:
+        a * x / a = b / a
+        x = b / a
+
+know:
+    forall a R, b R:
+        b  >  a
+        then:
+            b - a > 0
+
+    forall a R, b R:
+        b > a
+        then:
+            b >= a 
+            b != a
