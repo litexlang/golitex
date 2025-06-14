@@ -295,10 +295,6 @@ func (l *UniFactStmt) String() string {
 	builder.WriteString(glob.KeywordForall)
 	builder.WriteString(" ")
 
-	if len(l.ParamSets) != len(l.Params) {
-		panic(fmt.Sprintf("uni fact: param sets and params should have the same length, but got: %v", l))
-	}
-
 	if len(l.Params) > 0 {
 		for i := range len(l.Params) - 1 {
 			builder.WriteString(l.Params[i])

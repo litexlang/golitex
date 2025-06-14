@@ -20,7 +20,7 @@ func IsKeySymbol(name string) bool {
 }
 
 func IsBuiltinInfixRelaPropSymbol(op string) bool {
-	return op == KeySymbolEqual || op == KeySymbolLess || op == KeySymbolGreater || op == KeySymbolLessEqual || op == KeySymbolEqualGreaterEqual || op == KeySymbolEqualEqual || op == KeySymbolNotEqual || op == KeySymbolEqualEqualEqual || op == KeySymbolEquivalent || op == KeywordIs || op == KeywordIn || op == KeySymbolLargerEqual || op == KeySymbolLessEqual
+	return op == KeySymbolEqual || op == KeySymbolLess || op == KeySymbolGreater || op == KeySymbolEqualGreaterEqual || op == KeySymbolEqualEqual || op == KeySymbolNotEqual || op == KeySymbolEqualEqualEqual || op == KeySymbolEquivalent || op == KeywordIs || op == KeywordIn || op == KeySymbolLargerEqual || op == KeySymbolLessEqual
 }
 
 func IsBuiltinNumberInfixRelaProp(op string) bool {
