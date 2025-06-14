@@ -168,18 +168,23 @@ func (env *Env) newNotExistSt_SpecFactPostProcess(fact *ast.SpecFactStmt) error 
 		return nil
 	}
 
-	_, ok = env.GetExistPropDef(fact.PropName)
+	existPropDef, ok := env.GetExistPropDef(fact.PropName)
 	if ok {
-		return nil
-		// if fact.TypeEnum == ast.TruePure {
-		// 	return nil
-		// } else {
-		// if glob.KnowSpecFactByDef {
-		// 	return env.newFalseExistFact_EmitEquivalentUniFact(fact)
-		// } else {
-		// 	return nil
-		// }
-		// }
+		if fact.TypeEnum == ast.TruePure {
+			return nil
+		} else {
+			if glob.KnowSpecFactByDef {
+				for _, thenFact := range existPropDef.DefBody.IffFacts {
+					_, ok := thenFact.(*ast.SpecFactStmt)
+					if !ok {
+						return nil
+					}
+				}
+				return env.newFalseExistFact_EmitEquivalentUniFact(fact)
+			} else {
+				return nil
+			}
+		}
 	}
 
 	if _, ok := glob.BuiltinKeywordsSet[fact.PropName.Name]; ok || fact.IsBuiltinInfixRelaProp() {
@@ -230,20 +235,20 @@ func (env *Env) newExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 }
 
 // not exist => forall not
-// func (env *Env) newFalseExistFact_EmitEquivalentUniFact(fact *ast.SpecFactStmt) error {
-// 	uniFact, err := env.NotExistToForall(fact)
-// 	if err != nil {
-// 		return err
-// 	}
+func (env *Env) newFalseExistFact_EmitEquivalentUniFact(fact *ast.SpecFactStmt) error {
+	uniFact, err := env.NotExistToForall(fact)
+	if err != nil {
+		return err
+	}
 
-// 	err = env.newFactNoPostProcess(uniFact)
+	err = env.newFactNoPostProcess(uniFact)
 
-// 	if err != nil {
-// 		return fmt.Errorf("exist fact %s has no definition", fact.String())
-// 	}
+	if err != nil {
+		return fmt.Errorf("exist fact %s has no definition", fact.String())
+	}
 
-// 	return nil
-// }
+	return nil
+}
 
 // have(exist ... st ...) => exist
 func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
@@ -263,45 +268,50 @@ func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 	return nil
 }
 
-// func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, error) {
-// 	existPropDef, ok := env.ExistPropDefMem.Get(fact.PropName)
-// 	if !ok {
-// 		return nil, fmt.Errorf("exist fact %s has no definition", fact.String())
-// 	}
+func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, error) {
+	existPropDef, ok := env.ExistPropDefMem.Get(fact.PropName)
+	if !ok {
+		return nil, fmt.Errorf("exist fact %s has no definition", fact.String())
+	}
 
-// 	uniMap := map[string]ast.Fc{}
-// 	for i, propParam := range existPropDef.DefBody.DefHeader.Params {
-// 		uniMap[propParam] = fact.Params[i]
-// 	}
+	uniMap := map[string]ast.Fc{}
+	for i, propParam := range existPropDef.DefBody.DefHeader.Params {
+		uniMap[propParam] = fact.Params[i]
+	}
 
-// 	domFacts := []ast.FactStmt{}
-// 	for _, domFact := range existPropDef.DefBody.DomFacts {
-// 		instantiated, err := domFact.Instantiate(uniMap)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		domFacts = append(domFacts, instantiated)
-// 	}
+	domFacts := []ast.FactStmt{}
+	for _, domFact := range existPropDef.DefBody.DomFacts {
+		instantiated, err := domFact.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		domFacts = append(domFacts, instantiated)
+	}
 
-// 	specThenFacts := []*ast.SpecFactStmt{}
-// 	for _, thenFact := range existPropDef.DefBody.IffFacts {
-// 		reversedFacts := thenFact.ReverseIsTrue()
-// 		for _, reversedFact := range reversedFacts {
-// 			instantiated, err := reversedFact.Instantiate(uniMap)
-// 			if err != nil {
-// 				return nil, err
-// 			}
-// 			specThenFacts = append(specThenFacts, instantiated.(*ast.SpecFactStmt))
-// 		}
-// 	}
+	specThenFacts := []*ast.SpecFactStmt{}
+	for _, thenFact := range existPropDef.DefBody.IffFacts {
+		asSpecFactStmt, ok := thenFact.(*ast.SpecFactStmt)
+		if !ok {
+			return nil, fmt.Errorf("exist fact %s has no definition", fact.String())
+		}
 
-// 	thenFacts := []ast.FactStmt{}
-// 	for _, specThenFact := range specThenFacts {
-// 		thenFacts = append(thenFacts, specThenFact)
-// 	}
+		reversedFacts := asSpecFactStmt.ReverseIsTrue()
+		for _, reversedFact := range reversedFacts {
+			instantiated, err := reversedFact.Instantiate(uniMap)
+			if err != nil {
+				return nil, err
+			}
+			specThenFacts = append(specThenFacts, instantiated.(*ast.SpecFactStmt))
+		}
+	}
 
-// 	return ast.NewUniFact(existPropDef.ExistParams, existPropDef.DefBody.DefHeader.SetParams, domFacts, thenFacts, ast.EmptyIffFacts), nil
-// }
+	thenFacts := []ast.FactStmt{}
+	for _, specThenFact := range specThenFacts {
+		thenFacts = append(thenFacts, specThenFact)
+	}
+
+	return ast.NewUniFact(existPropDef.ExistParams, existPropDef.DefBody.DefHeader.SetParams, domFacts, thenFacts, ast.EmptyIffFacts), nil
+}
 
 func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 	if !fact.IsTrue() {
