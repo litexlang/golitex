@@ -86,3 +86,22 @@ func (e VerState) toFinalRound() VerState {
 // 		return false
 // 	}
 // }
+
+func (e VerState) String() string {
+	switch e {
+	case FinalRoundMsg:
+		return "FinalRoundMsg"
+	case FinalRoundNoMsg:
+		return "FinalRoundNoMsg"
+	case Round0Msg:
+		return "Round0Msg"
+	case Round0NoMsg:
+		return "Round0NoMsg"
+	case Round1Msg:
+		return "Round1Msg"
+	case Round1NoMsg:
+		return "Round1NoMsg"
+	default:
+		return "Unknown"
+	}
+}
