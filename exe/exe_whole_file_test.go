@@ -32,7 +32,7 @@ func TestWholeFile(t *testing.T) {
 	// code := readFile("../examples/comprehensive_examples/syllogism.lix")
 	// code := readFile("../examples/test_codes/match_env.lix")
 	// code := readFile("../examples/number_theory_for_beginners_by_andre_weil/number_theory_for_beginners_by_andre_weil.lix")
-	code := readFile("../examples/number_theory_for_beginners_by_andre_weil/finite_sequence.lix")
+	code := readFile("../examples/number_theory_for_beginners_by_andre_weil/version1.lix")
 	readFileTime := time.Since(start)
 	start = time.Now()
 	topStmtSlice := setupAndParseStmtTest(code, &parser.ParserEnv{})

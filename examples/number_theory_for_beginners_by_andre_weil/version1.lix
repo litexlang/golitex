@@ -118,8 +118,12 @@ know exist_prop m N st nonempty_set_of_integers_closed_under_addition_has_elemen
 # Corollary 2.1
 # Specialized case
 
+# Define integral linear combination of two integers
+
 exist_prop c Z, d Z st is_linear_combination_of_two_integers(x Z, a Z, b Z):
     x = c * a + d * b
+
+## 可能可以给用户一个语法糖，让他们能更轻松地让下面这两个定义合并
 
 fn set_of_integer_linear_combination_of_two_integers(a Z, b Z) set:
     forall x set_of_integer_linear_combination_of_two_integers(a, b):
@@ -132,6 +136,28 @@ know:
         then:
             x $in set_of_integer_linear_combination_of_two_integers(a, b)
 
+fn set_of_multiples_of(d N) set:
+    forall x set_of_multiples_of(d):
+        x $in Z
+        x $is_divisible_by d
+
+know:
+    forall x Z, d N:
+        x $is_divisible_by d
+        then:
+            x $in set_of_multiples_of(d)
+
+know:
+    forall x Z, d N:
+        x $in set_of_multiples_of(d)
+        then:
+            x $is_divisible_by d
+
+# Corollary itself
+
+know exist_prop d N st exist_d_st_integer_linear_combination_of_two_integers_are_multiples_of_d(a Z, b Z):
+    set_of_multiples_of(d) = set_of_integer_linear_combination_of_two_integers(a, b)
+    
 
 """
 NEEDS TO BE DEFINE LINEAR_COMBINATION_OF_FINITE_SEQUENCE. THIS IS A RECURSIVE DEFINITION. IT MIGHT BE DIFFICULT TO FORMULATE.
