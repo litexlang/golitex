@@ -319,3 +319,10 @@ func ExpandPolynomial_ReturnStr(expr string) string {
 	}
 	return strings.Join(parts, " + ")
 }
+
+// SortStringsByLength sorts a slice of strings by their length
+func SortStringsByLength(strs []string) {
+	sort.Slice(strs, func(i, j int) bool {
+		return len(strs[i]) < len(strs[j])
+	})
+}

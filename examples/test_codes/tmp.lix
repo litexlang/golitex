@@ -1,9 +1,1 @@
-obj a R, b R, c R, d R:
-    b != 0
-    d != 0
-    c != 0
-    b * d != 0
-
-a/b+c/d = (a*d+b*c)/(b*d)
-a/b+c/d = (a*d+b*c)/(b*d) + 0
-(a*c) = a*c*c/c
+b >= a

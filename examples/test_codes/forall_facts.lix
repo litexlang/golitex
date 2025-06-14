@@ -18,7 +18,7 @@ prove:
     set A
     prop p(x A)
     obj a A
-    prop ForallXInAPX()
+            prop ForallXInAPX()
 
     know:
         forall :
