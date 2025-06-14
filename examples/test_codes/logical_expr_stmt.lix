@@ -55,7 +55,7 @@ prove:
         $q(x,y)
 
 prove:
-    set s :
+    obj s set:
         forall x s:
             or:
                 x = 1

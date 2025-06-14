@@ -3,8 +3,8 @@ prove:
         a === b
 
 prove:
-    set a
-    set b
+    obj a set
+    obj b set
     know:
         forall x a:
             x $in b

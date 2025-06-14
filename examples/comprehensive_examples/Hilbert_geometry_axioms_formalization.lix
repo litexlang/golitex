@@ -16,9 +16,9 @@
 # Congruence, two binary relations, one linking line segments and one linking angles, each denoted by an infix ≅.
 # Line segments, angles, and triangles may each be defined in terms of points and straight lines, using the relations of betweenness and containment. All points, straight lines, and planes in the following axioms are distinct unless otherwise stated.
 
-set point
-set line
-set plane
+obj point set
+obj line set
+obj plane set
 
 prop point_on_line(p point, l line)
 prop point_on_plane(q point, p plane)
@@ -291,7 +291,7 @@ prove:
 
 # 4. Pasch's Axiom: Let A, B, C be three points not lying in the same line and let a be a line lying in the plane ABC and not passing through any of the points A, B, C. Then, if the line a passes through a point of the segment AB, it will also pass through either a point of the segment BC or a point of the segment AC.
 
-set finite_line
+obj finite_line set
 
 fn finite_line_of(a point, b point) finite_line:
     a != b
@@ -481,9 +481,9 @@ prove:
 
 # TODO: It seems to me that the proposition itself is not that clear. I formalize it in my own understanding.
 
-set ray
-set half_plane
-set angle
+obj ray set
+obj half_plane set
+obj angle set
 
 prop point_on_ray(a point, r ray)
 
@@ -540,7 +540,7 @@ prove:
 
 # 6. If, in the two triangles ABC and A′B′C′ the congruences AB ≅ A′B′, AC ≅ A′C′, ∠BAC ≅ ∠B′A′C′ hold, then the congruence ∠ABC ≅ ∠A′B′C′ holds (and, by a change of notation, it follows that ∠ACB ≅ ∠A′C′B′ also holds).
 
-set triangle
+obj triangle set
 
 fn triangle_of_points(a point, b point, c point) triangle:
     dom:

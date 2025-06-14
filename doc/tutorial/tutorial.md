@@ -51,7 +51,7 @@ Litex is the perfect language for you. I hope you will enjoy it.
 Let's try some simple Litex commands. Perhaps the most representative example of how reasoning works is Syllogism (三段论), proposed by Greek philosopher Aristotle.
 
 ```
-set human
+obj human set
 prop intelligent(x human)
 
 know:
@@ -73,10 +73,10 @@ There are two things in math: objects and factual statements. Objects are the th
 Let's explain the above code statement by statement.
 
 ```
-set human
+obj human set
 ```
 
-Modern mathematics is built upon set theory (Do not worry if you are not familiar with set theory. You will get familiar with it in the future). In Litex, we use `set` to define a set of objects. Here, we define a set of objects called `human`.
+Modern mathematics is built upon set theory (Do not worry if you are not familiar with set theory. You will get familiar with it in the future). In Litex, we use `obj` to define a set of objects. Here, we define a set of objects called `human`.
 
 ```
 prop intelligent(x human)
@@ -117,7 +117,7 @@ $intelligent(Jordan)
 After running all the above code, the Litex interpreter will output the messages like this (the exact output might be different):
 
 ```
-set human 
+obj human set
 
 prop intelligent(x)
 
@@ -390,7 +390,7 @@ Here is a detailed example showing how we use `match and substitute` to verify a
 
 ```
 prove:
-    set cat
+    obj cat set
     prop is_cute(x cat)
     prop physical(x human)
     prop strong(x human)

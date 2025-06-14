@@ -47,8 +47,6 @@ func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		err = exec.knowPropStmt(stmt)
 	case *ast.KnowExistPropStmt:
 		_, err = exec.knowExistPropStmt(stmt)
-	case *ast.SetDefSetBuilderStmt:
-		err = exec.setDefStmt(stmt)
 	case *ast.ProveInEachCaseStmt:
 		execState, err = exec.proveInEachCaseStmt(stmt)
 	case *ast.SupposeStmt:
@@ -550,20 +548,6 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimStmt) (bool, 
 	}
 
 	return false, nil
-}
-
-func (exec *Executor) setDefStmt(stmt *ast.SetDefSetBuilderStmt) error {
-	defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
-
-	// err := exec.env.SetDefMem.Insert(stmt)
-
-	// insert as obj
-	err := exec.defObjStmt(ast.NewDefObjStmt([]string{stmt.SetName}, []ast.Fc{ast.NewFcAtomWithName(glob.KeywordSet)}, []ast.FactStmt{}), false)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) (glob.ExecState, error) {

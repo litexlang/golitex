@@ -9,7 +9,7 @@ know:
         then:
             abs(x) = -1 * x
 
-set sequence
+obj sequence set
 
 exist_prop n N, m N st Cauchy_bound_within_epsilon(seq sequence, epsilon R, upper N):
     n > upper

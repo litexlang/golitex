@@ -102,12 +102,6 @@ type HaveStmt struct {
 	Fact     SpecFactStmt
 }
 
-type SetDefSetBuilderStmt struct {
-	SetName   string
-	ParentSet Fc
-	Facts     []FactStmt
-}
-
 type SupposeStmt struct {
 	Fact SpecFactStmt
 	Body []Stmt
