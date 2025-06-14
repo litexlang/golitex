@@ -1,4 +1,8 @@
+# Version 1: 2025-06-14
+
 # This is first try to formalize the book. Because the kernel has implemented finite sequence, and it is relatively hard to define finite sequence in pure litex code (and more importantly, it is not necessary because soon I implement the kernel to support finite sequence), sometimes when it comes to definitions on "a finite sequence of numbers", I suppose the finite sequence has exactly 2 elements. For example, mutually prime sequence is defined as a finite sequence of numbers, and each number is a prime number, and the two numbers are mutually prime. In my case, I just define a finite sequence as a pair of numbers.
+
+# Since this is version 1, I do not prove anything. I just formalize all the propositions and definitions and "know" they are true.
 
 """
 Basics
@@ -155,26 +159,39 @@ know:
 
 # Corollary itself
 
-know exist_prop d N st exist_d_st_integer_linear_combination_of_two_integers_are_multiples_of_d(a Z, b Z):
-    set_of_multiples_of(d) = set_of_integer_linear_combination_of_two_integers(a, b)
+# 存在唯一性所以用fn
+# 事实上这就是gcd的定义
+fn gcd(a Z, b Z) N:
+    set_of_multiples_of(gcd(a, b)) = set_of_integer_linear_combination_of_two_integers(a, b)
     
-
-"""
-NEEDS TO BE DEFINE LINEAR_COMBINATION_OF_FINITE_SEQUENCE. THIS IS A RECURSIVE DEFINITION. IT MIGHT BE DIFFICULT TO FORMULATE.
-"""
-
-# TODO: THIS CLAIM CAN BE PROVED
-# TODO: THIS CLAIM IS NOT COMPLETELY FORMULATED
-
 # Corollary 2.2
+# Specialized case
 
-# TODO: THIS CLAIM CAN BE PROVED
-# TODO: THIS CLAIM IS NOT COMPLETELY FORMULATED
+know forall a Z, b Z, d Z:
+    d != 0
+    a $is_divisible_by d
+    b $is_divisible_by d
+    then:
+        gcd(a, b) $is_divisible_by d
 
-fn greatest_common_divisor_of(b Z, c Z) N:
-    greatest_common_divisor_of(b, c) >= 0
+# Definition 1
+
+fn gcd(b Z, c Z) N:
+    gcd(b, c) >= 0
+
 
 """
 Chapter 3
 """
+
+prop relatively_prime(a Z, b Z):
+    gcd(a, b) = 1
+
+exist_prop c Z, d Z st exist_relatively_prime(a Z, b Z):
+    a * c + b * d = 1
+
+know forall a Z, b Z:
+    gcd(a, b) = 1
+    iff:
+        exist_relatively_prime(a, b)
 
