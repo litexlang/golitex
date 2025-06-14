@@ -1,6 +1,6 @@
 """
 prove:
-    set S
+    obj S set
     prop human(x S)
     obj Socrates S
 
@@ -15,7 +15,7 @@ prove:
 
 # forall fact as forall fact condition
 prove:
-    set A
+    obj A set
     prop p(x A)
     obj a A
             prop ForallXInAPX()

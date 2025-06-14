@@ -19,7 +19,7 @@ Mathematics is the art of deriving new facts from established ones. To illustrat
   </tr>
   <tr>
     <td style="border: 3px solid black; padding: 8px;">
-      <code>set Human</code> <br><br>
+      <code>obj Human set</code> <br><br>
       <code>prop self_aware(x Human)</code> <br><br>      <code>know forall x Human:</code> <br>
       <code>&nbsp;&nbsp;&nbsp;&nbsp;$self_aware(x)</code> <br> <br>
       <code>obj Bob Human</code> <br> <br>

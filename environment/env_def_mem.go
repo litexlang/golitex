@@ -39,11 +39,6 @@ type FnDefMem struct {
 	Dict glob.Map2D[FnMemItem]
 }
 
-type SetMemItem struct{ Def *ast.SetDefSetBuilderStmt }
-type SetDefMem struct {
-	Dict glob.Map2D[SetMemItem]
-}
-
 func newPropMemory() *PropDefMem {
 	return &PropDefMem{make(glob.Map2D[PropMemItem])}
 }

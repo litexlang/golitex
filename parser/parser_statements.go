@@ -77,8 +77,6 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 				ret, err = tb.knowFactStmt()
 			}
 		}
-	case glob.KeywordSet:
-		ret, err = tb.setDefStmt()
 	case glob.KeywordSuppose:
 		ret, err = tb.supposePropMatchStmt()
 	case glob.KeywordWith:
@@ -745,43 +743,6 @@ func (tb *tokenBlock) defExistPropStmtBody() (*ast.DefExistPropStmtBody, error) 
 	}
 
 	return ast.NewExistPropDef(*declHeader, domFacts, iffFactsAsFactStatements), nil
-}
-
-func (tb *tokenBlock) setDefStmt() (*ast.SetDefSetBuilderStmt, error) {
-	err := tb.header.skip(glob.KeywordSet)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
-
-	setName, err := tb.header.next()
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
-
-	if tb.header.ExceedEnd() {
-		return ast.NewSetDefSetBuilderStmt(setName, ast.EmptyParentSet, []ast.FactStmt{}), nil
-	}
-
-	var parentSet ast.Fc = nil
-	if !tb.header.is(glob.KeySymbolColon) {
-		parentSet, err = tb.header.RawFc()
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
-		}
-	}
-
-	err = tb.header.skip(glob.KeySymbolColon)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
-
-	facts, err := tb.bodyBlockFacts(UniFactDepth0, len(tb.body))
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
-
-	return ast.NewSetDefSetBuilderStmt(setName, parentSet, facts), nil
-
 }
 
 // func (tb *tokenBlock) claimToCheckFact() (ast.FactStmt, error) {

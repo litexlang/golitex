@@ -1,4 +1,4 @@
-set human
+obj human set
 prop intelligent(x human)
 
 know:

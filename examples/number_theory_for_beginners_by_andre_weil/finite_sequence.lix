@@ -5,11 +5,11 @@ fn finite_sequences_of_integers(length N) set:
     forall x finite_sequences_of_integers(length):
         x $in Z
 
-set seq1 finite_sequences_of_integers(2)
+obj seq1 finite_sequences_of_integers(2)
 
 """
 
-set finite_sequences_of_integers:
+obj finite_sequences_of_integers set:
     forall seq finite_sequences_of_integers:
         seq $in set
         forall x seq:
@@ -22,7 +22,7 @@ fn at_index(seq finite_sequences_of_integers, index N) Z:
         index < length_of_finite_sequence_of_integers(seq)
 
 prove:
-    set seq1 finite_sequences_of_integers:
+    obj seq1 finite_sequences_of_integers:
         length_of_finite_sequence_of_integers(seq1) = 2
     
     length_of_finite_sequence_of_integers(seq1) = 2

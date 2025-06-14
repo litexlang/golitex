@@ -70,10 +70,6 @@ func NewUniFact(params []string, setParams []Fc, domFacts []FactStmt, thenFacts 
 	return &UniFactStmt{params, setParams, domFacts, thenFacts, iffFacts}
 }
 
-func NewSetDefSetBuilderStmt(setName string, parentSet Fc, facts []FactStmt) *SetDefSetBuilderStmt {
-	return &SetDefSetBuilderStmt{setName, parentSet, facts}
-}
-
 func NewProveInEachCaseStmt(orFact OrStmt, thenFacts []FactStmt, proofs [][]Stmt) *ProveInEachCaseStmt {
 	return &ProveInEachCaseStmt{orFact, thenFacts, proofs}
 }
