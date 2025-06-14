@@ -377,15 +377,17 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch(stmt *ast.SpecFac
 }
 
 func (ver *Verifier) specFact_UniMem_atCurEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	if state == Round0NoMsg || state == Round0Msg {
+		return false, fmt.Errorf("specFact_UniMem_atCurEnv: state is %s", state)
+	}
+
 	searchedSpecFacts, got := curEnv.KnownFactsStruct.SpecFactInUniFactMem.GetSameEnumPkgPropFacts(stmt)
 
 	if !got {
 		return false, nil
 	}
 
-	nextState := state.addRound()
-
-	return ver.iterate_KnownSpecInUniFacts_applyMatch(stmt, searchedSpecFacts, nextState)
+	return ver.iterate_KnownSpecInUniFacts_applyMatch(stmt, searchedSpecFacts, state)
 }
 
 func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch(stmt *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InUniFact, state VerState) (bool, error) {

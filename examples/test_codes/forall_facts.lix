@@ -1,5 +1,9 @@
-# syllogism (三段论)
+"""
 prove:
+    set S
+    prop human(x S)
+    obj Socrates S
+
     know:
         $human(Socrates)
         forall x S:
@@ -7,9 +11,15 @@ prove:
             then:
                 $conscious(x)
     $conscious(Socrates)
+"""
 
 # forall fact as forall fact condition
 prove:
+    set A
+    prop p(x A)
+    obj a A
+    prop ForallXInAPX()
+
     know:
         forall :
             forall x A:
@@ -21,6 +31,10 @@ prove:
             $p(y)    
         
     $ForallXInAPX()
+
+
+
+"""
 
 # forall fact as when fact condition 
 prove:
@@ -118,3 +132,5 @@ prove:
                 $result(1,y)
         then:
             $p(1)   
+
+"""
