@@ -122,7 +122,7 @@ fn finite_sequence(n N, length N, domain set) domain:
         n < length
 
 """
-需要定义 linear_combination_of_finite_sequence 这可能很困难，因为这是递归地加起来的
+NEEDS TO BE DEFINE LINEAR_COMBINATION_OF_FINITE_SEQUENCE. THIS IS A RECURSIVE DEFINITION. IT MIGHT BE DIFFICULT TO FORMULATE.
 """
 
 # TODO: THIS CLAIM CAN BE PROVED
@@ -136,3 +136,6 @@ fn finite_sequence(n N, length N, domain set) domain:
 fn greatest_common_divisor_of(b Z, c Z) N:
     greatest_common_divisor_of(b, c) >= 0
 
+"""
+Chapter 3
+"""
