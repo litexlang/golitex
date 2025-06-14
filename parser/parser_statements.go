@@ -86,7 +86,7 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 	case glob.KeywordProveInEachCase:
 		ret, err = tb.proveInEachCaseStmt()
 	case glob.KeywordProveForallByNotExist:
-		ret, err = tb.proveNotForallByExistStmt()
+		ret, err = tb.proveForallByNotExistStmt()
 	default:
 		ret, err = tb.factStmt(UniFactDepth0)
 	}
@@ -1192,7 +1192,7 @@ func (tb *tokenBlock) knowSupposeStmt() (*ast.KnowSupposeStmt, error) {
 	return ast.NewKnowSupposeStmt(*supposeStmt), nil
 }
 
-func (tb *tokenBlock) proveNotForallByExistStmt() (*ast.ProveNotForallByExistStmt, error) {
+func (tb *tokenBlock) proveForallByNotExistStmt() (*ast.ProveForallByNotExistStmt, error) {
 	err := tb.header.skipKwAndColon_ExceedEnd(glob.KeywordProveForallByNotExist)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
@@ -1212,9 +1212,13 @@ func (tb *tokenBlock) proveNotForallByExistStmt() (*ast.ProveNotForallByExistStm
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	fc, err := tb.body[1].header.RawFc()
+	existFact, err := tb.body[1].specFactStmt()
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	if !existFact.IsTrue() {
+		return nil, &tokenBlockErr{fmt.Errorf("prove not forall by exist: expect exist fact, but got %s", existFact.String()), *tb}
 	}
 
 	err = tb.body[2].header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
@@ -1231,5 +1235,5 @@ func (tb *tokenBlock) proveNotForallByExistStmt() (*ast.ProveNotForallByExistStm
 		proof = append(proof, curStmt)
 	}
 
-	return ast.NewProveNotForallByExistStmt(fact, fc, proof), nil
+	return ast.NewProveForallByNotExistStmt(fact, existFact, proof), nil
 }
