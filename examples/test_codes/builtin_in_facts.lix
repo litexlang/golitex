@@ -22,3 +22,21 @@ y $in C
 
 x + x $in R
 x + x + x $in R
+
+obj t Z
+t $in Z
+t $in Q
+t $in R
+t $in C
+
+obj z Q
+z $in Q
+z $in R
+z $in C
+
+obj w R
+w $in R
+w $in C
+
+obj v C
+v $in C
