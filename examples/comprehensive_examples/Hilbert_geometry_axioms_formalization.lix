@@ -394,8 +394,6 @@ know:
 
 know:
     $commutative_prop(finite_line_equal)
-    $commutative_fn(line_of)
-    $commutative_fn(finite_line_of)
     forall a point, b point:
         a != b
         then:

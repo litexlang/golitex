@@ -67,31 +67,16 @@ func (t *tokenizerWithScope) nextToken(line string, start int) (string, int, err
 // tokenizeLine 将一行 tokenize
 func (t *tokenizerWithScope) tokenizeLine(line string) ([]string, error) {
 	tokens := []string{}
-	buffer := ""
 	start := 0
 	for start < len(line) {
 		token, next, err := t.nextToken(line, start)
 		if err != nil {
 			return nil, err
 		}
-		if token == "" {
-			if buffer != "" {
-				tokens = append(tokens, buffer)
-				buffer = ""
-			}
-		} else if glob.GetKeySymbol(line, start) != "" {
-			if buffer != "" {
-				tokens = append(tokens, buffer)
-				buffer = ""
-			}
+		if token != "" {
 			tokens = append(tokens, token)
-		} else {
-			buffer = token
 		}
 		start = next
-	}
-	if buffer != "" {
-		tokens = append(tokens, buffer)
 	}
 	return tokens, nil
 }
