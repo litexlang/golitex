@@ -86,7 +86,7 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 	case glob.KeywordProveInEachCase:
 		ret, err = tb.proveInEachCaseStmt()
 	case glob.KeywordProveForallByNotExist:
-		ret, err = tb.proveForallByNotExistStmt()
+		ret, err = tb.proveNotForallByExistStmt()
 	default:
 		ret, err = tb.factStmt(UniFactDepth0)
 	}
@@ -1190,4 +1190,46 @@ func (tb *tokenBlock) knowSupposeStmt() (*ast.KnowSupposeStmt, error) {
 	}
 
 	return ast.NewKnowSupposeStmt(*supposeStmt), nil
+}
+
+func (tb *tokenBlock) proveNotForallByExistStmt() (*ast.ProveNotForallByExistStmt, error) {
+	err := tb.header.skipKwAndColon_ExceedEnd(glob.KeywordProveForallByNotExist)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	if len(tb.body) != 3 {
+		return nil, &tokenBlockErr{fmt.Errorf("prove not forall by exist: expect 3 body blocks, but got %d", len(tb.body)), *tb}
+	}
+
+	fact, err := tb.body[0].uniFactStmt(UniFactDepth0)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	err = tb.body[1].header.skip(glob.KeywordExist)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	fc, err := tb.body[1].header.RawFc()
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	err = tb.body[2].header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	proof := []ast.Stmt{}
+	for _, stmt := range tb.body[2].body {
+		curStmt, err := stmt.Stmt()
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+		proof = append(proof, curStmt)
+	}
+
+	return ast.NewProveNotForallByExistStmt(fact, fc, proof), nil
 }
