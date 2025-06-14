@@ -135,8 +135,8 @@ type OrStmt struct {
 	Facts []SpecFactStmt
 }
 
-type ProveNotForallByExistStmt struct {
-	Fact     UniFactStmt
-	ExistObj Fc
-	Proof    []Stmt
+type ProveForallByNotExistStmt struct {
+	UniFact   UniFactStmt
+	ExistFact SpecFactStmt
+	Proof     []Stmt
 }

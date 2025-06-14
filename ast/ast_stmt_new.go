@@ -114,6 +114,6 @@ func NewSupposeStmt(fact SpecFactStmt, body []Stmt) *SupposeStmt {
 	return &SupposeStmt{fact, body}
 }
 
-func NewProveNotForallByExistStmt(fact *UniFactStmt, existObj Fc, proof []Stmt) *ProveNotForallByExistStmt {
-	return &ProveNotForallByExistStmt{*fact, existObj, proof}
+func NewProveForallByNotExistStmt(fact *UniFactStmt, existFact *SpecFactStmt, proof []Stmt) *ProveForallByNotExistStmt {
+	return &ProveForallByNotExistStmt{*fact, *existFact, proof}
 }
