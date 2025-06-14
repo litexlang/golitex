@@ -14,7 +14,7 @@
 [![Discord](https://img.shields.io/badge/Discord-purple?logo=discord)](https://discord.gg/uvrHM7eS)
 [![Website](https://img.shields.io/badge/Website-blue?logo=website)](https://litexlang.org)
 [![Email](https://img.shields.io/badge/Email-red?logo=email)](mailto:litexlang@outlook.com)
-[![Litex Playground](https://img.shields.io/badge/Litex%20Playground-green?logo=playground)](https://litexlang.org/playground)
+[![Litex Playground](https://img.shields.io/badge/Litex%20Playground-darkgreen?logo=playground)](https://litexlang.org/playground)
 
 </div>
 
