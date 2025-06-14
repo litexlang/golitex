@@ -22,3 +22,38 @@ know:
         then:
             b >= a 
             b != a
+
+    forall a R, b R:
+        b < a
+        then:
+            a > b
+
+exist_prop x Z st exist_divisor_of(b Z, a Z):
+    a * x = b
+
+prop is_divisible_by(b Z, a Z):
+    b $exist_divisor_of a
+
+prop is_smallest_element_of(x N, s set):
+    dom:
+        forall y s:
+            y $in Z
+        x $in s
+    iff:
+        forall y s:
+            y >= x
+
+exist_prop x N st exist_smallest_element_of(s set):
+    dom:
+        forall y s:
+            y $in Z
+    iff:
+        x $in s
+        $is_smallest_element_of(x, s)
+    
+
+know prop non_empty_set_of_natural_numbers_has_smallest_element(s set):
+    forall x s:
+        x $in N
+    then:
+        $exist_smallest_element_of(s)
