@@ -1,3 +1,7 @@
+"""
+Basics
+"""
+
 forall x R, a R, b R:
     a + x = b
     then:
@@ -57,3 +61,37 @@ know prop non_empty_set_of_natural_numbers_has_smallest_element(s set):
         x $in N
     then:
         $exist_smallest_element_of(s)
+
+"""
+Chapter 1
+"""
+
+prove:
+    obj x R, y R, z R
+    (x + y) + z = x + (y + z)
+    x + y = y + x
+    0 + x = x
+    (x*y)*z = x*(y*z)
+    x*y = y*x
+    1*x = x
+    x*(y+z) = x*y + x*z
+
+know:
+    forall a Z, b Z:
+        a - b $in Z
+        a + b $in Z
+        a * b $in Z
+
+    forall a Q, b Q:
+        a - b $in Q
+        a + b $in Q
+        a * b $in Q
+
+    forall a Q, b Q:
+        a != 0
+        then:
+            b / a $in Q
+
+"""
+Chapter 2
+"""
