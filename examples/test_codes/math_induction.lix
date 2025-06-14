@@ -8,7 +8,7 @@ prove:
             then:
                 $p(x+1)
 
-    $induction(p)
+    $prove_by_math_induction(p)
 
     forall n N:
         $p(n)

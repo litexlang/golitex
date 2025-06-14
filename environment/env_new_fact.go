@@ -362,7 +362,7 @@ func (env *Env) isMathInductionPropName_StoreIt(fact *ast.SpecFactStmt) (bool, e
 		),
 	}
 
-	knownUniFact := ast.NewUniFact(knownUniFactParams, []ast.Fc{}, knownUniFactDomFacts, knownUniFactThenFacts, ast.EmptyIffFacts)
+	knownUniFact := ast.NewUniFact(knownUniFactParams, []ast.Fc{ast.NewFcAtomWithName(glob.KeywordNatural)}, knownUniFactDomFacts, knownUniFactThenFacts, ast.EmptyIffFacts)
 
 	err := env.NewFact(knownUniFact)
 	if err != nil {
