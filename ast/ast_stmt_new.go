@@ -62,7 +62,7 @@ func NewHaveStmt(objNames []string, fact SpecFactStmt) *HaveStmt {
 	return &HaveStmt{objNames, fact}
 }
 
-func NewExistPropDef(declHeader DefHeader, domFacts []FactStmt, iffFacts []LogicOrSpec_Stmt) *DefExistPropStmtBody {
+func NewExistPropDef(declHeader DefHeader, domFacts []FactStmt, iffFacts []FactStmt) *DefExistPropStmtBody {
 	return &DefExistPropStmtBody{declHeader, domFacts, iffFacts}
 }
 
@@ -82,7 +82,7 @@ func NewKnowPropStmt(prop DefPropStmt) *KnowPropStmt {
 	return &KnowPropStmt{prop}
 }
 
-func NewDefExistPropBodyStmt(defHeader DefHeader, domFacts []FactStmt, iffFacts []LogicOrSpec_Stmt) *DefExistPropStmtBody {
+func NewDefExistPropBodyStmt(defHeader DefHeader, domFacts []FactStmt, iffFacts []FactStmt) *DefExistPropStmtBody {
 	return &DefExistPropStmtBody{defHeader, domFacts, iffFacts}
 }
 
