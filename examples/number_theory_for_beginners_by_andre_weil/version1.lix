@@ -1,3 +1,5 @@
+# This is first try to formalize the book. Because the kernel has implemented finite sequence, and it is relatively hard to define finite sequence in pure litex code (and more importantly, it is not necessary because soon I implement the kernel to support finite sequence), sometimes when it comes to definitions on "a finite sequence of numbers", I suppose the finite sequence has exactly 2 elements. For example, mutually prime sequence is defined as a finite sequence of numbers, and each number is a prime number, and the two numbers are mutually prime. In my case, I just define a finite sequence as a pair of numbers.
+
 """
 Basics
 """
@@ -114,12 +116,22 @@ know exist_prop m N st nonempty_set_of_integers_closed_under_addition_has_elemen
             $is_divisible_by(m, x)
 
 # Corollary 2.1
-# This claim can be proved only after finite sequence, properties of finite sequence, basic operations on finite sequence are defined.
+# Specialized case
 
-# Definition of finite sequence: n is the index of current element, length is the total length of the sequence, domain is the set where all elements are in the sequence.
-fn finite_sequence(n N, length N, domain set) domain:
-    dom:
-        n < length
+exist_prop c Z, d Z st is_linear_combination_of_two_integers(x Z, a Z, b Z):
+    x = c * a + d * b
+
+fn set_of_integer_linear_combination_of_two_integers(a Z, b Z) set:
+    forall x set_of_integer_linear_combination_of_two_integers(a, b):
+        x $in Z
+        $is_linear_combination_of_two_integers(x, a, b)
+
+know:
+    forall x Z, a Z, b Z:
+        $is_linear_combination_of_two_integers(x, a, b)
+        then:
+            x $in set_of_integer_linear_combination_of_two_integers(a, b)
+
 
 """
 NEEDS TO BE DEFINE LINEAR_COMBINATION_OF_FINITE_SEQUENCE. THIS IS A RECURSIVE DEFINITION. IT MIGHT BE DIFFICULT TO FORMULATE.
@@ -140,8 +152,3 @@ fn greatest_common_divisor_of(b Z, c Z) N:
 Chapter 3
 """
 
-fn finite_sequence_of_integers(n N, length N) set
-    forall x finite_sequence_of_integers(n, N):
-        x $in Z
-
-prop is_mutually_prime_seq(seq fn(N,N)Z):

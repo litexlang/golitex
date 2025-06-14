@@ -256,7 +256,7 @@ fn f(x):
     ...
 
 // 好：注意到这里 相当于 domain_of_f = {x in R | x > 1}。我这里默认下面是<=>关系，而不是 =>。所以不需要写 for all x R 如果 x > 1 那 x in domain_of_f
-set domain_of_f:
+obj domain_of_f set:
     domain_of_f subsetOf R
     for x domain_of_f:
         x > 1
@@ -407,13 +407,13 @@ litex 采用 ts 的做法
    5. 一个obj可以在很多集合里，同时该obj在每个时刻，只被视作在某个集合（类型）里。
 
 // 定义法1
-set S {1,2,3}
+obj S {1,2,3}
 
 // 定义法2
-set S1 R:
+obj S1 R:
     ret > 0
 
-set S2 nat:
+obj S2 nat:
     ret > 0
     ret < 100
 
@@ -424,7 +424,7 @@ prop P(x S, y S2):
 exist_prop exist_x_st_P_is_valid(y S2):
     // ? Todo: exist x in S s.t. P(x,y)
 
-set S3 exist_x_st_P_is_valid
+obj S3 exist_x_st_P_is_valid
 
 2. type 的声明
    1. (set, opts, props) 一起impl 一个type
@@ -439,7 +439,7 @@ set S3 exist_x_st_P_is_valid
    2. interface 中的函数的一大特点是，很多函数都可能可以满足interface中的对该函数的要求。比如吃int上可以定义很多群结构：正常的+；取余数+；它们都符合群的定义。
       1. 这也是为什么要引入type：不能直接建立set 和 interface 之间的关系：因为同一个set，可能有很多实现interface的方法。必须有个中间层type，来说明一下是以哪种方法实现的。
 
-set R
+ obj R
     type RAsGroup R implements Group: // 表示 集合R上的Type RAsGroup implement  interface叫Group
     __add__ impl __mul__
     0 impl id
@@ -707,16 +707,16 @@ prop Q(S Group, g1 S, g2 S):
 如何声明set
 严格的方法：对应3个定义方式
     定义法1：有限集合 
-        set s :
+        obj s set:
             1,2,a,b // 把所有的元素写在第二行
     法2: S 是 S2的子集，满足一些性质(可以是普通性质，可以是存在性质)
-        set s s2:
+        obj s s2:
             P(inst)
             exist_p(inst)
     法3：其他集合的交并补
-        set s = s1 union s2 intersection s3
+        obj s = s1 union s2 intersection s3
 不严格：直接定义(现在先这样定义；未来成熟之后，用严格定义法引入新的定义方式。因为我也确实不知道怎么严格定义“矩阵集合”这样的集合)
-var nat_matrix_2_2 set
+var nat_matrix_2_2 obj
 fn nat_matrix_2_2::at(a nat, b nat) nat:
     cond:
         0 < a < 2
@@ -1039,8 +1039,8 @@ obj s set:
             x in s
 
 语法糖：更好的定义iff，相当于展开之后就是上面这个
-set s = {x R| p(x)}
-set s {1,2,3} 枚举
+obj s = {x R| p(x)}
+obj s {1,2,3} 枚举
 至于多个集合的叉乘，那就是interface了，不是正常的set了？
 我暂时没想好，但用普通函数或许也？
 fn *(A set, B set)set
@@ -1183,7 +1183,7 @@ exist_prop name(params):
    3. by fact_name_of_a_forall_fact: 推出 not exist
 5. not 不应该绑定在SpecFact上，而应该是更高一层
 6. set s = {x R| p(x)}
-set s {1,2,3} 枚举
+obj s {1,2,3} 枚举
 7. 因为正则表达式匹配太intuitive了。所以没有数学书说明：正则表达式匹配比数学还要抽象层低。其他很多学科也是这样的。
 8. 现在大模型数学里有 1m 个定理
    1. 提高质量
@@ -1647,7 +1647,7 @@ fn_set A fn(X) Y:
 
 fn f A 相当于 直接声明了一个fn叫A，这个 f 的定义域是 X, 值域是 Y (f 无额外的要求；如果你真的想要有额外的要求，那就写在集合X里，不要单独拿出来。事实上我对 fn 的声明里有 dom 这一项，有观望意见；它至多只是一种糖，而不是本质的，因为一般集合论的书写就是不会吧dom额外写出来的； 发现fn的dom是必要，如果 fn_set 这个关键词不存在的话，那如果在定义 fn 的时候，parameter list 里有 fn， 如果此时要对 fn 有要求，那需要借助 dom): 同时它满足 dom. 有点像
 
-set A:
+obj A set:
     cond
 
 obj x A  # 立刻获得 A 的 cond 的所有性质. TODO: 不确定是否要用户一旦声明了之后，A下面的事实直接 以 specFact的格式 emit 出来
