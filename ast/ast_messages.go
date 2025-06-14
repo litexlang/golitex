@@ -584,3 +584,22 @@ func (stmt *OrStmt) String() string {
 	}
 	return strings.TrimSuffix(builder.String(), "\n")
 }
+
+func (stmt *ProveNotForallByExistStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordProveForallByNotExist)
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Fact.String(), 1))
+	builder.WriteByte('\n')
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordExist, 1))
+	builder.WriteString(" ")
+	builder.WriteString(stmt.ExistObj.String())
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+	for _, proof := range stmt.Proof {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 1))
+		builder.WriteByte('\n')
+	}
+	return strings.TrimSuffix(builder.String(), "\n")
+}

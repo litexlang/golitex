@@ -85,6 +85,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.withPropMatchStmt()
 	case glob.KeywordProveInEachCase:
 		ret, err = tb.proveInEachCaseStmt()
+	case glob.KeywordProveForallByNotExist:
+		ret, err = tb.proveForallByNotExistStmt()
 	default:
 		ret, err = tb.factStmt(UniFactDepth0)
 	}
