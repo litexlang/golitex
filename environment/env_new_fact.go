@@ -170,15 +170,16 @@ func (env *Env) newNotExistSt_SpecFactPostProcess(fact *ast.SpecFactStmt) error 
 
 	_, ok = env.GetExistPropDef(fact.PropName)
 	if ok {
-		if fact.TypeEnum == ast.TruePure {
-			return nil
-		} else {
-			if glob.KnowSpecFactByDef {
-				return env.newFalseExistFact_EmitEquivalentUniFact(fact)
-			} else {
-				return nil
-			}
-		}
+		return nil
+		// if fact.TypeEnum == ast.TruePure {
+		// 	return nil
+		// } else {
+		// if glob.KnowSpecFactByDef {
+		// 	return env.newFalseExistFact_EmitEquivalentUniFact(fact)
+		// } else {
+		// 	return nil
+		// }
+		// }
 	}
 
 	if _, ok := glob.BuiltinKeywordsSet[fact.PropName.Name]; ok || fact.IsBuiltinInfixRelaProp() {
