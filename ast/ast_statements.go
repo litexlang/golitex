@@ -47,7 +47,7 @@ type DefExistPropStmtBody struct {
 	IffFacts []FactStmt
 }
 
-// how to  use not exist to prove not forall: under prove_by_contradiction, suppose not forall, then exist x, then not exist contracts with exist x
+// how to  use not exist to prove and store not forall in iff section of exist_prop: define a new exist_prop, give a name to that forall, and make this exist_prop equivalent to original exist_prop. Then use prove_by_contradiction to prove the new exist_prop is also false, then the not forall is proved.
 type DefExistPropStmt struct {
 	DefBody        DefExistPropStmtBody
 	ExistParams    []string
