@@ -19,23 +19,24 @@ type Stmt interface {
 	String() string
 }
 
-func (stmt *DefObjStmt) stmt()        {}
-func (c *DefPropStmt) stmt()          {}
-func (f *DefFnStmt) stmt()            {}
-func (l *UniFactStmt) stmt()          {}
-func (p *SpecFactStmt) stmt()         {}
-func (f *ClaimStmt) stmt()            {}
-func (f *KnowFactStmt) stmt()         {}
-func (s *DefExistPropStmt) stmt()     {}
-func (s *HaveStmt) stmt()             {}
-func (s *SetDefSetBuilderStmt) stmt() {}
-func (s *SupposeStmt) stmt()          {}
-func (s *WithPropMatchStmt) stmt()    {}
-func (s *ProveInEachCaseStmt) stmt()  {}
-func (s *KnowPropStmt) stmt()         {}
-func (s *KnowExistPropStmt) stmt()    {}
-func (s *KnowSupposeStmt) stmt()      {}
-func (s *OrStmt) stmt()               {}
+func (stmt *DefObjStmt) stmt()             {}
+func (c *DefPropStmt) stmt()               {}
+func (f *DefFnStmt) stmt()                 {}
+func (l *UniFactStmt) stmt()               {}
+func (p *SpecFactStmt) stmt()              {}
+func (f *ClaimStmt) stmt()                 {}
+func (f *KnowFactStmt) stmt()              {}
+func (s *DefExistPropStmt) stmt()          {}
+func (s *HaveStmt) stmt()                  {}
+func (s *SetDefSetBuilderStmt) stmt()      {}
+func (s *SupposeStmt) stmt()               {}
+func (s *WithPropMatchStmt) stmt()         {}
+func (s *ProveInEachCaseStmt) stmt()       {}
+func (s *KnowPropStmt) stmt()              {}
+func (s *KnowExistPropStmt) stmt()         {}
+func (s *KnowSupposeStmt) stmt()           {}
+func (s *OrStmt) stmt()                    {}
+func (s *ProveNotForallByExistStmt) stmt() {}
 
 type FactStmt interface {
 	factStmt()
