@@ -103,7 +103,7 @@ know exist_prop q Z st exist_largest_multiple_of(d Z, a Z):
 # Theorem 2.1
 
 # TODO: THIS CLAIM CAN BE PROVED
-know exist_prop m st nonempty_set_of_integers_closed_under_addition_has_elements_divisible_by_a_common_divisor(s set):
+know exist_prop m N st nonempty_set_of_integers_closed_under_addition_has_elements_divisible_by_a_common_divisor(s set):
     dom:
         $non_empty(s)
         forall x s:
@@ -112,4 +112,27 @@ know exist_prop m st nonempty_set_of_integers_closed_under_addition_has_elements
         forall x s:
             x $in Z
             $is_divisible_by(m, x)
+
+# Corollary 2.1
+# This claim can be proved only after finite sequence, properties of finite sequence, basic operations on finite sequence are defined.
+
+# Definition of finite sequence: n is the index of current element, length is the total length of the sequence, domain is the set where all elements are in the sequence.
+fn finite_sequence(n N, length N, domain set) domain:
+    dom:
+        n < length
+
+"""
+需要定义 linear_combination_of_finite_sequence 这可能很困难，因为这是递归地加起来的
+"""
+
+# TODO: THIS CLAIM CAN BE PROVED
+# TODO: THIS CLAIM IS NOT COMPLETELY FORMULATED
+
+# Corollary 2.2
+
+# TODO: THIS CLAIM CAN BE PROVED
+# TODO: THIS CLAIM IS NOT COMPLETELY FORMULATED
+
+fn greatest_common_divisor_of(b Z, c Z) N:
+    greatest_common_divisor_of(b, c) >= 0
 

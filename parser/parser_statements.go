@@ -724,7 +724,7 @@ func (tb *tokenBlock) defExistPropStmtBody() (*ast.DefExistPropStmtBody, error) 
 	// }
 
 	if !tb.header.is(glob.KeySymbolColon) {
-		return ast.NewExistPropDef(*declHeader, []ast.FactStmt{}, []ast.LogicOrSpec_Stmt{}), nil
+		return ast.NewExistPropDef(*declHeader, []ast.FactStmt{}, []ast.FactStmt{}), nil
 	}
 
 	err = tb.header.skip(glob.KeySymbolColon)
@@ -744,19 +744,7 @@ func (tb *tokenBlock) defExistPropStmtBody() (*ast.DefExistPropStmtBody, error) 
 		return nil, fmt.Errorf("expect 'iff' section in proposition definition has at least one fact")
 	}
 
-	iffFactsAsLogicExprOrSpecFacts := make([]ast.LogicOrSpec_Stmt, len(iffFactsAsFactStatements))
-
-	for i, fact := range iffFactsAsFactStatements {
-		if specFact, ok := fact.(*ast.SpecFactStmt); ok {
-			iffFactsAsLogicExprOrSpecFacts[i] = specFact
-		} else if logicExprOrSpecFact, ok := fact.(ast.LogicOrSpec_Stmt); ok {
-			iffFactsAsLogicExprOrSpecFacts[i] = logicExprOrSpecFact
-		} else {
-			return nil, fmt.Errorf("exist_prop: expect specific fact or	logical fact (or fact statement). Since not exist leads to forall not, and not forall is not allowed in Litex, so iff facts in exist_prop should be specific fact or logical fact (which are reversible).\ngot:\n%v", fact.String())
-		}
-	}
-
-	return ast.NewExistPropDef(*declHeader, domFacts, iffFactsAsLogicExprOrSpecFacts), nil
+	return ast.NewExistPropDef(*declHeader, domFacts, iffFactsAsFactStatements), nil
 }
 
 func (tb *tokenBlock) setDefStmt() (*ast.SetDefSetBuilderStmt, error) {
