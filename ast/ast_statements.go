@@ -134,9 +134,3 @@ type KnowSupposeStmt struct {
 type OrStmt struct {
 	Facts []SpecFactStmt
 }
-
-type ProveForallByNotExistStmt struct {
-	UniFact   UniFactStmt
-	ExistFact SpecFactStmt
-	Proof     []Stmt
-}
