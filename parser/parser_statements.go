@@ -752,7 +752,7 @@ func (tb *tokenBlock) defExistPropStmtBody() (*ast.DefExistPropStmtBody, error) 
 		} else if logicExprOrSpecFact, ok := fact.(ast.LogicOrSpec_Stmt); ok {
 			iffFactsAsLogicExprOrSpecFacts[i] = logicExprOrSpecFact
 		} else {
-			return nil, fmt.Errorf("expect spec fact or logic expr or spec fact in iff section, but got: %v", fact)
+			return nil, fmt.Errorf("exist_prop: expect specific fact or	logical fact (or fact statement). Since not exist leads to forall not, and not forall is not allowed in Litex, so iff facts in exist_prop should be specific fact or logical fact (which are reversible).\ngot:\n%v", fact.String())
 		}
 	}
 
