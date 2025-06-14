@@ -161,6 +161,7 @@ know:
 
 # 存在唯一性所以用fn
 # 事实上这就是gcd的定义
+# Definition 1 at page 7
 fn gcd(a Z, b Z) N:
     set_of_multiples_of(gcd(a, b)) = set_of_integer_linear_combination_of_two_integers(a, b)
     
@@ -173,12 +174,6 @@ know forall a Z, b Z, d Z:
     b $is_divisible_by d
     then:
         gcd(a, b) $is_divisible_by d
-
-# Definition 1
-
-fn gcd(b Z, c Z) N:
-    gcd(b, c) >= 0
-
 
 """
 Chapter 3
@@ -195,7 +190,7 @@ exist_prop c Z, d Z st exist_relatively_prime(a Z, b Z):
 know forall a Z, b Z:
     gcd(a, b) = 1
     iff:
-        exist_relatively_prime(a, b)
+        $exist_relatively_prime(a, b)
 
 # Corollary 3.1
 know forall a Z, b Z:
@@ -229,3 +224,4 @@ know forall a Z, b Z, d Z:
     gcd(a, d) = 1
     then:
         gcd(a, b*d) = 1
+

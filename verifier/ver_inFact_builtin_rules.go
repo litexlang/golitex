@@ -63,6 +63,11 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state VerState) 
 		return true, nil
 	}
 
+	ok = ver.verIn_N_Z_Q_R_C_BySpecMem(stmt, state)
+	if ok {
+		return true, nil
+	}
+
 	return false, nil
 }
 
@@ -164,4 +169,90 @@ func (ver *Verifier) anythingIsInObj(stmt *ast.SpecFactStmt, state VerState) boo
 	}
 
 	return false
+}
+
+func (ver *Verifier) verIn_N_Z_Q_R_C_BySpecMem(stmt *ast.SpecFactStmt, state VerState) bool {
+	inSet, ok := stmt.Params[1].(*ast.FcAtom)
+	if !ok {
+		return false
+	}
+
+	if inSet.PkgName != glob.EmptyPkg {
+		return false
+	}
+
+	switch inSet.Name {
+	case glob.KeywordNatural:
+		return ver.verInN_BySpecMem(stmt, state)
+	case glob.KeywordInt:
+		return ver.verInZ_BySpecMem(stmt, state)
+	case glob.KeywordRational:
+		return ver.verInQ_BySpecMem(stmt, state)
+	case glob.KeywordReal:
+		return ver.verInR_BySpecMem(stmt, state)
+	case glob.KeywordComplex:
+		return ver.verInC_BySpecMem(stmt, state)
+	default:
+		return false
+	}
+}
+
+func (ver *Verifier) verInN_BySpecMem(stmt *ast.SpecFactStmt, state VerState) bool {
+	ok, err := ver.verSpecFact_BySpecMem(stmt, state)
+	if err != nil {
+		return false
+	}
+	if !ok {
+		newStmt := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{stmt.Params[0], ast.NewFcAtomWithName(glob.KeywordInt)})
+		return ver.verInN_BySpecMem(newStmt, state)
+	}
+	return true
+}
+
+func (ver *Verifier) verInZ_BySpecMem(stmt *ast.SpecFactStmt, state VerState) bool {
+	ok, err := ver.verSpecFact_BySpecMem(stmt, state)
+	if err != nil {
+		return false
+	}
+	if !ok {
+		newStmt := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{stmt.Params[0], ast.NewFcAtomWithName(glob.KeywordNatural)})
+		return ver.verInZ_BySpecMem(newStmt, state)
+	}
+	return true
+}
+
+func (ver *Verifier) verInQ_BySpecMem(stmt *ast.SpecFactStmt, state VerState) bool {
+	ok, err := ver.verSpecFact_BySpecMem(stmt, state)
+	if err != nil {
+		return false
+	}
+	if !ok {
+		newStmt := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{stmt.Params[0], ast.NewFcAtomWithName(glob.KeywordInt)})
+		return ver.verInQ_BySpecMem(newStmt, state)
+	}
+	return true
+}
+
+func (ver *Verifier) verInR_BySpecMem(stmt *ast.SpecFactStmt, state VerState) bool {
+	ok, err := ver.verSpecFact_BySpecMem(stmt, state)
+	if err != nil {
+		return false
+	}
+	if !ok {
+		newStmt := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{stmt.Params[0], ast.NewFcAtomWithName(glob.KeywordRational)})
+		return ver.verInR_BySpecMem(newStmt, state)
+	}
+	return true
+}
+
+func (ver *Verifier) verInC_BySpecMem(stmt *ast.SpecFactStmt, state VerState) bool {
+	ok, err := ver.verSpecFact_BySpecMem(stmt, state)
+	if err != nil {
+		return false
+	}
+	if !ok {
+		newStmt := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{stmt.Params[0], ast.NewFcAtomWithName(glob.KeywordReal)})
+		return ver.verInR_BySpecMem(newStmt, state)
+	}
+	return true
 }
