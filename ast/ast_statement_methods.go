@@ -237,3 +237,19 @@ func (defHeader *DefHeader) NewInFacts() []*SpecFactStmt {
 
 	return facts
 }
+
+func (stmt *SpecFactStmt) GetAtoms() []*FcAtom {
+	atoms := []*FcAtom{&stmt.PropName}
+	for _, param := range stmt.Params {
+		atoms = append(atoms, GetAtomsInFc(param)...)
+	}
+	return atoms
+}
+
+func (stmt *UniFactStmt) GetAtoms() []*FcAtom {
+	panic("UniFactStmt.GetAtoms: not implemented")
+}
+
+func (stmt *OrStmt) GetAtoms() []*FcAtom {
+	panic("OrStmt.GetAtoms: not implemented")
+}
