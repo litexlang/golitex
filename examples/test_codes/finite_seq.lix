@@ -3,15 +3,23 @@ fn len(seq set) N:
     dom:
         $is_finite_seq(seq)
 
-fn at(seq set, i N) obj:
+fn at(seq set, i N) seq:
     dom:
         $is_finite_seq(seq)
         i < len(seq)
 
-prove:
-    obj seq1 set:
-        seq1 $is_finite_seq
-        len(seq1) = 2
-        seq1 \at 0 = 1
-        seq1 \at 1 = 2
+obj seq1 set:
+    seq1 $is_finite_seq
+    len(seq1) = 2
+    0 < 2 # bug : 为啥不能直接验证出来 0 < len(seq1)
+    1 < 2
+    seq1 \at 0 = 1
+    seq1 \at 1 = 2
+
+seq1 \at 0 $in seq1
+seq1 \at 1 $in seq1
+
+exist_prop i N st any_item_seq_has_index(seq set, i N):
+    i < len(seq)
+    seq \at i = a
 
