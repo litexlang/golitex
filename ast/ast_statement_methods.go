@@ -17,6 +17,7 @@ package litex_ast
 import (
 	"fmt"
 	glob "golitex/glob"
+	"slices"
 )
 
 func (stmt *SpecFactStmt) IsBuiltinInfixRelaProp() bool {
@@ -247,9 +248,37 @@ func (stmt *SpecFactStmt) GetAtoms() []*FcAtom {
 }
 
 func (stmt *UniFactStmt) GetAtoms() []*FcAtom {
-	panic("UniFactStmt.GetAtoms: not implemented")
+	atoms := []*FcAtom{}
+	for _, param := range stmt.ParamSets {
+		atoms = append(atoms, GetAtomsInFc(param)...)
+	}
+	for _, fact := range stmt.DomFacts {
+		atoms = append(atoms, fact.GetAtoms()...)
+	}
+	for _, fact := range stmt.ThenFacts {
+		atoms = append(atoms, fact.GetAtoms()...)
+	}
+	for _, fact := range stmt.IffFacts {
+		atoms = append(atoms, fact.GetAtoms()...)
+	}
+
+	// 如果这个atom是param，那把这项扔了
+	ret := []*FcAtom{}
+	for _, atom := range atoms {
+		if slices.Contains(stmt.Params, atom.Name) && atom.PkgName == glob.EmptyPkg {
+			continue
+		} else {
+			ret = append(ret, atom)
+		}
+	}
+
+	return ret
 }
 
 func (stmt *OrStmt) GetAtoms() []*FcAtom {
-	panic("OrStmt.GetAtoms: not implemented")
+	atoms := []*FcAtom{}
+	for _, fact := range stmt.Facts {
+		atoms = append(atoms, fact.GetAtoms()...)
+	}
+	return atoms
 }

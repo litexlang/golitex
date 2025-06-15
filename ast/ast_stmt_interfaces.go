@@ -59,6 +59,7 @@ type LogicOrSpec_Stmt interface {
 	String() string
 	Instantiate(uniConMap map[string]Fc) (FactStmt, error)
 	ReverseIsTrue() []SpecFactStmt
+	GetAtoms() []*FcAtom
 }
 
 func (s *SpecFactStmt) logicExprOrSpecFactStmt() {}
