@@ -239,6 +239,7 @@ prop is_prime(p Z):
         then:
             x = p
 
+# Theorem 4.1
 know prop a_prime_divides_a_product_of_two_integers_if_it_divides_one_of_the_factors(p Z, a Z, b Z):
     p $is_prime
     p $is_divisible_by a * b
@@ -247,3 +248,20 @@ know prop a_prime_divides_a_product_of_two_integers_if_it_divides_one_of_the_fac
             p $is_divisible_by a
             p $is_divisible_by b
 
+# Theorem 4.2
+# Every integer > 1 is a product of primes
+# TODO: This can be formalized after I implement the kernel to support finite sequence
+"""
+know exist_prop seq finite_seq st exist_primes_whose_equal_to_integer(a Z):
+    a > 1
+    iff:
+        forall x seq:
+            x $is_prime
+            a $is_divisible_by x
+        a = product_of_finite_seq(seq)
+"""
+
+# Theorem 4.3
+know exist_prop p Z st exist_prime_greater_than_any_integer(x Z):
+    p > x
+    p $is_prime
