@@ -326,7 +326,21 @@ know:
     forall x Z, y Z, m Z, d Z:
         dom:
             d != 0
+            x $is_divisible_by d
+            y $is_divisible_by d
+            m $is_divisible_by d
         then:
         	$is_congruent_modulo(x, y, m)
         iff:
             $is_congruent_modulo(x / d, y / d, m / d)
+
+# Definition 5.3
+fn congruence_class(d Z, m Z) set:
+    dom:
+        m != 0
+    iff:
+        forall x congruence_class(d, m):
+            $is_congruent_modulo(x, d, m)
+
+# Theorem 5.1
+# TODO: THIS IS HARD TO FORMALIZE FOR THE TIME BEING BECAUSE THE MOD OPERATOR IS ACTUALLY NOT A FUNCTION. IT IS A SET OF FUNCTIONS
