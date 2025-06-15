@@ -661,24 +661,5 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
 }
 
 func (exec *Executor) knowSupposeStmt(stmt *ast.KnowSupposeStmt) (glob.ExecState, error) {
-	exec.env.CurMatchProp = &stmt.SupposeStmt.Fact
-	defer func() {
-		exec.env.CurMatchProp = nil
-	}()
-
-	knownFacts := []ast.FactStmt{}
-	for _, stmt := range stmt.SupposeStmt.Body {
-		if fact, ok := stmt.(ast.FactStmt); ok {
-			knownFacts = append(knownFacts, fact)
-		} else {
-			return glob.ExecState_Error, fmt.Errorf("currently, know suppose stmt only supports fact stmt")
-		}
-	}
-
-	execState, err := exec.supposeStmt_storeFactsToEnv(knownFacts, &stmt.SupposeStmt, exec.env)
-	if err != nil {
-		return glob.ExecState_Error, err
-	}
-
-	return execState, nil
+	panic("knowSupposeStmt: not implemented")
 }
