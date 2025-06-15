@@ -25,6 +25,20 @@ func (exec *Executor) supposePropMatchStmt(stmt *ast.SupposeStmt) (glob.ExecStat
 	defer exec.appendMsg("\n")
 	defer exec.appendMsg(stmt.String())
 
+	execState, insideFacts, err := exec.supposeStmt_declareParams_runBody(stmt)
+	if err != nil || execState != glob.ExecState_True {
+		return execState, err
+	}
+
+	execState, err = exec.supposeStmt_storeFactsToEnv(insideFacts, stmt, exec.env)
+	if err != nil || execState != glob.ExecState_True {
+		return execState, err
+	}
+
+	return glob.ExecState_True, nil
+}
+
+func (exec *Executor) supposeStmt_declareParams_runBody(stmt *ast.SupposeStmt) (glob.ExecState, []ast.FactStmt, error) {
 	originalEnv := exec.env
 	originalEnv.CurMatchProp = &stmt.Fact // 之所以这么干，是因为要把stmt下面的事实存到originalEnv里，而且要存到 matchEnv 里
 	defer func() {
@@ -36,21 +50,16 @@ func (exec *Executor) supposePropMatchStmt(stmt *ast.SupposeStmt) (glob.ExecStat
 
 	execState, err := exec.supposeStmt_declaredParams(stmt)
 	if err != nil || execState != glob.ExecState_True {
-		return execState, err
+		return execState, nil, err
 	}
 
 	// run stmt body
 	execState, insideFacts, err := exec.supposeStmt_runStmtBody(stmt)
 	if err != nil || execState != glob.ExecState_True {
-		return execState, err
+		return execState, nil, err
 	}
 
-	execState, err = exec.supposeStmt_storeFactsToEnv(insideFacts, stmt, originalEnv)
-	if err != nil || execState != glob.ExecState_True {
-		return execState, err
-	}
-
-	return glob.ExecState_True, nil
+	return execState, insideFacts, nil
 }
 
 func (exec *Executor) supposeStmt_declaredParams(stmt *ast.SupposeStmt) (glob.ExecState, error) {
