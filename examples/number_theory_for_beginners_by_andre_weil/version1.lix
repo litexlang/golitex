@@ -270,3 +270,63 @@ know exist_prop p Z st exist_prime_greater_than_any_integer(x Z):
 Chapter 5
 """
 
+# Definition 5.1
+
+# TODO: 这得在with-suppose正常工作的时候才能奏效
+prop is_commutative_group(G set, op fn(G, G)G, inv fn(G)G, e G):
+    forall a G, b G:
+        op(a, b) = op(b, a)
+
+    forall a G:
+        op(a, e) = a
+        op(e, a) = a
+        op(a, inv(a)) = e
+        op(inv(a), a) = e
+
+    forall a G, b G, c G:
+        op(a, op(b, c)) = op(op(a, b), c)
+
+# Definition 5.2
+
+prop is_congruent_modulo(a Z, b Z, n Z):
+    dom:
+        n != 0
+    then:
+        a - b $is_divisible_by n
+
+prop congruent_modulo_is_transitive(a Z, b Z, c Z, n Z):
+    $is_congruent_modulo(a, b, n)
+    $is_congruent_modulo(b, c, n)
+    then:
+        $is_congruent_modulo(a, c, n)
+
+know:
+    # Reflexive
+    forall x Z, m Z:
+    	$is_congruent_modulo(x, x, m)
+
+    # Transitive
+    forall x Z, y Z, z Z, m Z:
+    	$congruent_modulo_is_transitive(x, y, z, m)
+
+    # Symmetric
+    forall x Z, y Z, m Z:
+    	$is_congruent_modulo(x, y, m)
+        then:
+        	$is_congruent_modulo(y, x, m)
+
+    forall x Z, y Z, x2 Z, y2 Z, m Z:
+    	$is_congruent_modulo(x, y, m)
+        $is_congruent_modulo(x2, y2, m)
+        then:
+            $is_congruent_modulo(x + x2, y + y2, m)
+            $is_congruent_modulo(x - x2, y - y2, m)
+            $is_congruent_modulo(x * x2, y * y2, m)
+
+    forall x Z, y Z, m Z, d Z:
+        dom:
+            d != 0
+        then:
+        	$is_congruent_modulo(x, y, m)
+        iff:
+            $is_congruent_modulo(x / d, y / d, m / d)

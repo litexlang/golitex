@@ -201,11 +201,7 @@ func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right
 }
 
 func (ver *Verifier) equalFact_MatchEnv_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right ast.Fc, state VerState) (bool, error) {
-	_ = curEnv
-	_ = left
-	_ = right
-	_ = state
-	return false, nil
+	panic("equalFact_MatchEnv_SpecMem_atEnv: not implemented")
 }
 
 func (ver *Verifier) verEqualSpecMemAndLogicMem(left ast.Fc, right ast.Fc, state VerState) (bool, error) {

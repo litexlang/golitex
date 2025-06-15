@@ -10,8 +10,10 @@ prop is_group(G set, op fn(G, G)G, e G, inv fn(G)G):
 #         op(a, e) = a
 #         op(a, inv(a)) = e
 
-suppose is_group(G, op, e, inv):
-    know e = inv
+prop properties_about_group(G set, op fn(G, G)G)
+
+suppose is_group(G_, op_, e_, inv_):
+    know $properties_about_group(G_, op_)
 
 obj G set
 fn op(x G, y G)G
@@ -21,4 +23,4 @@ obj e G
 know $is_group(G, op, e, inv)
 
 with is_group(G, op, e, inv):
-    e = inv
+    $properties_about_group(G, op)
