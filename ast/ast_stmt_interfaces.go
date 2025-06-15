@@ -29,7 +29,7 @@ func (f *KnowFactStmt) stmt()        {}
 func (s *DefExistPropStmt) stmt()    {}
 func (s *HaveStmt) stmt()            {}
 func (s *SupposeStmt) stmt()         {}
-func (s *WithPropMatchStmt) stmt()   {}
+func (s *WithStmt) stmt()            {}
 func (s *ProveInEachCaseStmt) stmt() {}
 func (s *KnowPropStmt) stmt()        {}
 func (s *KnowExistPropStmt) stmt()   {}

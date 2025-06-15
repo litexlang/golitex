@@ -92,13 +92,13 @@ func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state VerStat
 		return true, nil
 	}
 
-	if ok, err := ver.verSpecFact_ByDEF(stmt, state); err != nil {
+	if ok, err := ver.verSpecFact_BySpecMem(stmt, state); err != nil {
 		return false, err
 	} else if ok {
 		return true, nil
 	}
 
-	if ok, err := ver.verSpecFact_BySpecMem(stmt, state); err != nil {
+	if ok, err := ver.verSpecFact_ByDEF(stmt, state); err != nil {
 		return false, err
 	} else if ok {
 		return true, nil

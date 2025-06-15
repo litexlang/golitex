@@ -894,7 +894,7 @@ func (tb *tokenBlock) supposePropMatchStmt() (*ast.SupposeStmt, error) {
 	return ast.NewWhenPropMatchStmt(*fact, body), nil
 }
 
-func (tb *tokenBlock) withPropMatchStmt() (*ast.WithPropMatchStmt, error) {
+func (tb *tokenBlock) withPropMatchStmt() (*ast.WithStmt, error) {
 	err := tb.header.skip(glob.KeywordWith)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
