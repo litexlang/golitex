@@ -228,7 +228,7 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 	// the function object is in fn
 	fnSet := ast.MakeFnSetFc(stmt.DefHeader.SetParams, stmt.RetSet)
 
-	inFact := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(stmt.DefHeader.Name), fnSet})
+	inFact := ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(stmt.DefHeader.Name), fnSet})
 	err = exec.env.NewFact(inFact)
 	if err != nil {
 		return err
@@ -248,7 +248,7 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 	if len(stmt.DomFacts) == 0 {
 		fnSet := ast.NewFcFn(ast.NewFcFn(ast.NewFcAtomWithName(glob.KeywordFn), stmt.DefHeader.SetParams), []ast.Fc{stmt.RetSet})
 
-		newFact := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(stmt.DefHeader.Name), fnSet})
+		newFact := ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(stmt.DefHeader.Name), fnSet})
 
 		err = exec.env.NewFact(newFact)
 		if err != nil {
@@ -361,7 +361,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 	existStFactParams = append(existStFactParams, ast.BuiltinExist_St_FactExistParamPropParmSepAtom)
 	existStFactParams = append(existStFactParams, stmt.Fact.Params...)
 
-	newExistStFact := ast.NewSpecFactStmt(ast.TrueExist_St, *ast.NewFcAtomWithName(stmt.Fact.PropName.Name), existStFactParams)
+	newExistStFact := ast.NewSpecFactStmt(ast.TrueExist_St, ast.NewFcAtomWithName(stmt.Fact.PropName.Name), existStFactParams)
 	err = exec.env.NewFact(newExistStFact)
 	if err != nil {
 		return glob.ExecState_True, nil

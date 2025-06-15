@@ -442,22 +442,19 @@ func (tb *tokenBlock) relaFactStmt() (*ast.SpecFactStmt, error) {
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
 		}
-		var propNamePtr ast.Fc = propName
 
-		propNameAsAtomPtr, ok := propNamePtr.(*ast.FcAtom)
-		if !ok {
-			return nil, fmt.Errorf("expect prop name")
+		if tb.header.ExceedEnd() {
+			ret = ast.NewSpecFactStmt(ast.TruePure, propName, []ast.Fc{fc})
+		} else {
+			fc2, err := tb.header.RawFc()
+			if err != nil {
+				return nil, &tokenBlockErr{err, *tb}
+			}
+
+			params := []ast.Fc{fc, fc2}
+
+			ret = ast.NewSpecFactStmt(ast.TruePure, propName, params)
 		}
-		propName = propNameAsAtomPtr
-
-		fc2, err := tb.header.RawFc()
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
-		}
-
-		params := []ast.Fc{fc, fc2}
-
-		ret = ast.NewSpecFactStmt(ast.TruePure, *propName, params)
 	} else if !glob.IsBuiltinInfixRelaPropSymbol(opt) {
 		return nil, fmt.Errorf("expect relation prop")
 	} else {
@@ -473,7 +470,7 @@ func (tb *tokenBlock) relaFactStmt() (*ast.SpecFactStmt, error) {
 
 		params := []ast.Fc{fc, fc2}
 
-		ret = ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(opt), params)
+		ret = ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(opt), params)
 	}
 
 	// 这里加入语法糖：!= 等价于 not =，好处是我 = 有 commutative的性质，我不用额外处理 != 了
@@ -588,9 +585,9 @@ func (tb *tokenBlock) existFactStmt(isTrue bool) (*ast.SpecFactStmt, error) {
 	factParams = append(factParams, pureSpecFact.Params...)
 
 	if isTrue {
-		return ast.NewSpecFactStmt(ast.TrueExist_St, pureSpecFact.PropName, factParams), nil
+		return ast.NewSpecFactStmt(ast.TrueExist_St, &pureSpecFact.PropName, factParams), nil
 	} else {
-		return ast.NewSpecFactStmt(ast.FalseExist_St, pureSpecFact.PropName, factParams), nil
+		return ast.NewSpecFactStmt(ast.FalseExist_St, &pureSpecFact.PropName, factParams), nil
 	}
 }
 
@@ -637,7 +634,7 @@ func (tb *tokenBlock) pureFuncSpecFact() (*ast.SpecFactStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	ret := ast.NewSpecFactStmt(ast.TruePure, *propName, params)
+	ret := ast.NewSpecFactStmt(ast.TruePure, propName, params)
 
 	return ret, nil
 }

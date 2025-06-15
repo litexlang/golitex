@@ -227,7 +227,7 @@ func (ver *Verifier) verInZ_BySpecMem(stmt *ast.SpecFactStmt, state VerState) (b
 		return false, ""
 	}
 	if !ok {
-		newStmt := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{stmt.Params[0], ast.NewFcAtomWithName(glob.KeywordNatural)})
+		newStmt := ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{stmt.Params[0], ast.NewFcAtomWithName(glob.KeywordNatural)})
 		return ver.verInN_BySpecMem(newStmt, state)
 	}
 	return true, stmt.String()
@@ -239,7 +239,7 @@ func (ver *Verifier) verInQ_BySpecMem(stmt *ast.SpecFactStmt, state VerState) (b
 		return false, ""
 	}
 	if !ok {
-		newStmt := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{stmt.Params[0], ast.NewFcAtomWithName(glob.KeywordInt)})
+		newStmt := ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{stmt.Params[0], ast.NewFcAtomWithName(glob.KeywordInt)})
 		return ver.verInZ_BySpecMem(newStmt, state)
 	}
 	return true, stmt.String()
@@ -251,7 +251,7 @@ func (ver *Verifier) verInR_BySpecMem(stmt *ast.SpecFactStmt, state VerState) (b
 		return false, ""
 	}
 	if !ok {
-		newStmt := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{stmt.Params[0], ast.NewFcAtomWithName(glob.KeywordRational)})
+		newStmt := ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{stmt.Params[0], ast.NewFcAtomWithName(glob.KeywordRational)})
 		return ver.verInQ_BySpecMem(newStmt, state)
 	}
 	return true, stmt.String()
@@ -263,7 +263,7 @@ func (ver *Verifier) verInC_BySpecMem(stmt *ast.SpecFactStmt, state VerState) (b
 		return false, ""
 	}
 	if !ok {
-		newStmt := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{stmt.Params[0], ast.NewFcAtomWithName(glob.KeywordReal)})
+		newStmt := ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{stmt.Params[0], ast.NewFcAtomWithName(glob.KeywordReal)})
 		return ver.verInR_BySpecMem(newStmt, state)
 	}
 	return true, stmt.String()

@@ -55,7 +55,7 @@ func (defStmt *DefPropStmt) Make_PropToIff_IffToProp() (*UniFactStmt, *UniFactSt
 		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.EmptyPkg, param))
 	}
 
-	propSpecFact := NewSpecFactStmt(TruePure, FcAtom{glob.EmptyPkg, defStmt.DefHeader.Name}, propSpecFactParams)
+	propSpecFact := NewSpecFactStmt(TruePure, NewFcAtomWithName(defStmt.DefHeader.Name), propSpecFactParams)
 
 	// prop to iff
 	propToIffDomFacts := []FactStmt{propSpecFact}
@@ -79,7 +79,7 @@ func (defStmt *DefPropStmt) IffToPropUniFact() *UniFactStmt {
 		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.EmptyPkg, param))
 	}
 
-	propSpecFact := NewSpecFactStmt(TruePure, FcAtom{glob.EmptyPkg, defStmt.DefHeader.Name}, propSpecFactParams)
+	propSpecFact := NewSpecFactStmt(TruePure, NewFcAtomWithName(defStmt.DefHeader.Name), propSpecFactParams)
 
 	IffToPropDomFacts := []FactStmt{}
 	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.DomFacts...)
@@ -96,7 +96,7 @@ func (defStmt *DefPropStmt) ToSpecFact() *SpecFactStmt {
 		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.EmptyPkg, param))
 	}
 
-	propSpecFact := NewSpecFactStmt(TruePure, FcAtom{glob.EmptyPkg, defStmt.DefHeader.Name}, propSpecFactParams)
+	propSpecFact := NewSpecFactStmt(TruePure, NewFcAtomWithName(defStmt.DefHeader.Name), propSpecFactParams)
 
 	return propSpecFact
 }
@@ -107,7 +107,7 @@ func (defStmt *DefExistPropStmt) ToSpecFact() *SpecFactStmt {
 		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.EmptyPkg, param))
 	}
 
-	propSpecFact := NewSpecFactStmt(TruePure, FcAtom{glob.EmptyPkg, defStmt.DefBody.DefHeader.Name}, propSpecFactParams)
+	propSpecFact := NewSpecFactStmt(TruePure, NewFcAtomWithName(defStmt.DefBody.DefHeader.Name), propSpecFactParams)
 
 	return propSpecFact
 }
@@ -119,7 +119,7 @@ func (stmt *SpecFactStmt) ReverseParameterOrder() (*SpecFactStmt, error) {
 
 	newParams := []Fc{stmt.Params[1], stmt.Params[0]}
 
-	return NewSpecFactStmt(stmt.TypeEnum, stmt.PropName, newParams), nil
+	return NewSpecFactStmt(stmt.TypeEnum, &stmt.PropName, newParams), nil
 }
 
 func (stmt *SpecFactStmt) IsValidEqualFact() (bool, error) {
@@ -143,11 +143,11 @@ func (stmt *SpecFactStmt) IsMathInductionFact() bool {
 }
 
 func NewInFact(param string, paramSet Fc) *SpecFactStmt {
-	return NewSpecFactStmt(TruePure, FcAtom{glob.EmptyPkg, glob.KeywordIn}, []Fc{NewFcAtom(glob.EmptyPkg, param), paramSet})
+	return NewSpecFactStmt(TruePure, NewFcAtomWithName(glob.KeywordIn), []Fc{NewFcAtom(glob.EmptyPkg, param), paramSet})
 }
 
 func NewInFactWithFc(param Fc, paramSet Fc) *SpecFactStmt {
-	return NewSpecFactStmt(TruePure, FcAtom{glob.EmptyPkg, glob.KeywordIn}, []Fc{param, paramSet})
+	return NewSpecFactStmt(TruePure, NewFcAtomWithName(glob.KeywordIn), []Fc{param, paramSet})
 }
 
 func IsFnSet(fc Fc) bool {
@@ -207,7 +207,7 @@ func (stmt *SpecFactStmt) ReverseSpecFactParamsOrder() (*SpecFactStmt, error) {
 	}
 
 	newParams := []Fc{stmt.Params[1], stmt.Params[0]}
-	return NewSpecFactStmt(stmt.TypeEnum, stmt.PropName, newParams), nil
+	return NewSpecFactStmt(stmt.TypeEnum, &stmt.PropName, newParams), nil
 }
 
 func MakeFnSetFc(fnSets []Fc, retSet Fc) Fc {
