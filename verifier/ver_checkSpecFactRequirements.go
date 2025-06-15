@@ -24,10 +24,9 @@ func (ver *Verifier) checkSpecFactRequirements(stmt *ast.SpecFactStmt) (bool, er
 	// 1. Check if all atoms in the parameters are declared
 	for _, param := range stmt.Params {
 		atoms := ast.GetAtomsInFc(param)
-		for _, atom := range atoms {
-			if !ver.env.IsAtomDeclared(atom) {
-				return false, fmt.Errorf("%s is not declared", atom.String())
-			}
+		ok := ver.env.AreAtomsDeclared(atoms)
+		if !ok {
+			return false, fmt.Errorf("atoms %s are not declared", atoms[0].String())
 		}
 	}
 
