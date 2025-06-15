@@ -675,7 +675,7 @@ func (exec *Executor) knowSupposeStmt(stmt *ast.KnowSupposeStmt) (glob.ExecState
 		}
 	}
 
-	execState, err := exec.supposeStmt_storeFactsToParentEnv(knownFacts, &stmt.SupposeStmt, exec.env)
+	execState, err := exec.supposeStmt_storeFactsToEnv(knownFacts, &stmt.SupposeStmt, exec.env)
 	if err != nil {
 		return glob.ExecState_Error, err
 	}
