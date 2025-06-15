@@ -6,7 +6,7 @@
 
 # Litex: Scale Formal Reasoning in AI Age
 
-_Where Natural Expression Meets Scalable Formal Reasoning_
+_The Formal Language Where Natural Expression Meets Scalable Formal Reasoning_
 
 **Release v0.1.1-beta (not yet ready for production use)**  
 *May 2025*  

@@ -652,7 +652,7 @@ func (ver *Verifier) mathInductionFact_BuiltinRules(stmt *ast.SpecFactStmt, stat
 	}
 
 	// propName(0) is true
-	propNameZeroFact := ast.NewSpecFactStmt(ast.TruePure, *propNameAsAtom, []ast.Fc{ast.NewFcAtomWithName("0")})
+	propNameZeroFact := ast.NewSpecFactStmt(ast.TruePure, propNameAsAtom, []ast.Fc{ast.NewFcAtomWithName("0")})
 
 	// propName(n) => propName(n+1)
 	params := []string{"n"}
@@ -660,13 +660,13 @@ func (ver *Verifier) mathInductionFact_BuiltinRules(stmt *ast.SpecFactStmt, stat
 	domFacts := make([]ast.FactStmt, 1)
 	domFacts[0] = ast.NewSpecFactStmt(
 		ast.TruePure,
-		*propNameAsAtom,
+		propNameAsAtom,
 		[]ast.Fc{ast.NewFcAtomWithName("n")},
 	)
 	thenFacts := make([]ast.FactStmt, 1)
 	thenFacts[0] = ast.NewSpecFactStmt(
 		ast.TruePure,
-		*propNameAsAtom,
+		propNameAsAtom,
 		[]ast.Fc{ast.NewFcFn(ast.NewFcAtomWithName(glob.KeySymbolPlus), []ast.Fc{ast.NewFcAtomWithName("n"), ast.NewFcAtomWithName("1")})},
 	)
 
@@ -712,7 +712,7 @@ func (ver *Verifier) isSetEqualFact_Check_BuiltinRules(stmt *ast.SpecFactStmt, s
 		return false, fmt.Errorf("set equal fact %s should have exactly two parameters, got: %d", stmt.String(), len(stmt.Params))
 	}
 
-	equalFact := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeySymbolEqual), stmt.Params)
+	equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeySymbolEqual), stmt.Params)
 
 	if ok, err := ver.isEqualFact_Check(equalFact, state); err != nil {
 		return false, err
@@ -738,7 +738,7 @@ func (ver *Verifier) isSetEqualFact_Check_BuiltinRules(stmt *ast.SpecFactStmt, s
 
 	// 验证是否在set
 	nextState := state.toFinalRound()
-	ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{leftSet, ast.NewFcAtomWithName(glob.KeywordIn)}), nextState)
+	ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{leftSet, ast.NewFcAtomWithName(glob.KeywordIn)}), nextState)
 	if err != nil {
 		return false, err
 	}
@@ -756,7 +756,7 @@ func (ver *Verifier) isSetEqualFact_Check_BuiltinRules(stmt *ast.SpecFactStmt, s
 	}
 
 	// 验证是否在set
-	ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{rightSet, ast.NewFcAtomWithName(glob.KeywordIn)}), nextState)
+	ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{rightSet, ast.NewFcAtomWithName(glob.KeywordIn)}), nextState)
 	if err != nil {
 		return false, err
 	}
@@ -832,7 +832,7 @@ func (ver *Verifier) isFnEqualFact_Check_BuiltinRules(stmt *ast.SpecFactStmt, st
 		return false, fmt.Errorf("fn equal fact %s should have exactly two parameters, got: %d", stmt.String(), len(stmt.Params))
 	}
 
-	equalFact := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeySymbolEqual), stmt.Params)
+	equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeySymbolEqual), stmt.Params)
 	if ok, err := ver.isEqualFact_Check(equalFact, state); err != nil {
 		return false, err
 	} else if ok {

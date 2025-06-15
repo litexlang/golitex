@@ -225,3 +225,25 @@ know forall a Z, b Z, d Z:
     then:
         gcd(a, b*d) = 1
 
+"""
+Chapter 4
+"""
+
+# Definition 4.1
+prop is_prime(p Z):
+    p > 1
+    forall x Z:
+        dom:
+            x > 1
+            p $is_divisible_by x
+        then:
+            x = p
+
+know prop a_prime_divides_a_product_of_two_integers_if_it_divides_one_of_the_factors(p Z, a Z, b Z):
+    p $is_prime
+    p $is_divisible_by a * b
+    then:
+        or:
+            p $is_divisible_by a
+            p $is_divisible_by b
+

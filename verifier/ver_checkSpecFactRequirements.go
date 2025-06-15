@@ -154,7 +154,7 @@ func (ver *Verifier) fcSatisfyNotBuiltinFnRequirement(fc ast.Fc) (bool, error) {
 func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn) (bool, error) {
 	// parameter必须是实数
 	for _, param := range fc.ParamSegs {
-		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{param, ast.NewFcAtomWithName(glob.KeywordReal)}), FinalRoundNoMsg)
+		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{param, ast.NewFcAtomWithName(glob.KeywordReal)}), FinalRoundNoMsg)
 		if err != nil {
 			return false, err
 		}
@@ -165,7 +165,7 @@ func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn) (bool, error) {
 
 	if ast.IsFcAtomWithNameAndEmptyPkg(fc.FnHead, glob.KeySymbolSlash) {
 		// 分母不是0
-		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.FalsePure, *ast.NewFcAtomWithName(glob.KeySymbolEqual), []ast.Fc{fc.ParamSegs[1], ast.NewFcAtomWithName("0")}), FinalRoundNoMsg)
+		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.FalsePure, ast.NewFcAtomWithName(glob.KeySymbolEqual), []ast.Fc{fc.ParamSegs[1], ast.NewFcAtomWithName("0")}), FinalRoundNoMsg)
 		if err != nil {
 			return false, err
 		}
