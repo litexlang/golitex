@@ -53,5 +53,5 @@ func (ver *Verifier) equalTrueAddSuccessMsg(left ast.Fc, right ast.Fc, state Ver
 }
 
 func (ver *Verifier) makeEqualFact(left ast.Fc, right ast.Fc) *ast.SpecFactStmt {
-	return ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeySymbolEqual), []ast.Fc{left, right})
+	return ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeySymbolEqual), []ast.Fc{left, right})
 }

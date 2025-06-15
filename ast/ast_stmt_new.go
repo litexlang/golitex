@@ -38,8 +38,8 @@ func NewDefFnStmt(defHeader DefHeader, domFacts []FactStmt, thenFacts []FactStmt
 	return &DefFnStmt{defHeader, domFacts, thenFacts, retSet}
 }
 
-func NewSpecFactStmt(typeEnum SpecFactEnum, propName FcAtom, params []Fc) *SpecFactStmt {
-	return &SpecFactStmt{typeEnum, propName, params}
+func NewSpecFactStmt(typeEnum SpecFactEnum, propName *FcAtom, params []Fc) *SpecFactStmt {
+	return &SpecFactStmt{typeEnum, *propName, params}
 }
 
 func NewClaimProveStmt(proveTrue bool, toCheckFact FactStmt, proofs []Stmt) *ClaimStmt {

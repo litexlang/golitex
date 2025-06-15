@@ -257,7 +257,7 @@ func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 		return fmt.Errorf("%s has no separator", fact.String())
 	}
 
-	existFact := ast.NewSpecFactStmt(ast.TruePure, fact.PropName, fact.Params[sepIndex+1:])
+	existFact := ast.NewSpecFactStmt(ast.TruePure, &fact.PropName, fact.Params[sepIndex+1:])
 
 	// err := env.KnownFacts.SpecFactMem.NewFactInSpecFactMem(existFact, env.CurMatchEnv)
 	err := env.storeSpecFactInMem(existFact)
@@ -368,7 +368,7 @@ func (env *Env) isMathInductionPropName_StoreIt(fact *ast.SpecFactStmt) (bool, e
 	knownUniFactThenFacts := []ast.FactStmt{
 		ast.NewSpecFactStmt(
 			ast.TruePure,
-			*propNameAsAtom,
+			propNameAsAtom,
 			[]ast.Fc{ast.NewFcAtomWithName("n")},
 		),
 	}
