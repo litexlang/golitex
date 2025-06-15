@@ -32,6 +32,11 @@ func (exec *Executor) supposePropMatchStmt(stmt *ast.SupposeStmt) (glob.ExecStat
 	}()
 
 	exec.newEnv(originalEnv, &stmt.Fact)
+	envWithSupposeParamDeclared := exec.env
+	defer exec.deleteEnvAndRetainMsg()
+
+	// 这是必须的，因为申明了suppose的param要被用来storeFactsToEnv，所以要和运行suppose的环境隔离开来
+	exec.newEnv(originalEnv, &stmt.Fact)
 	defer exec.deleteEnvAndRetainMsg()
 
 	execState, err := exec.supposeStmt_declaredParams(stmt)
@@ -45,7 +50,7 @@ func (exec *Executor) supposePropMatchStmt(stmt *ast.SupposeStmt) (glob.ExecStat
 		return execState, err
 	}
 
-	execState, err = exec.supposeStmt_storeFactsToEnv(insideFacts, stmt, originalEnv)
+	execState, err = exec.supposeStmt_storeFactsToEnv(insideFacts, stmt, originalEnv, envWithSupposeParamDeclared)
 	if err != nil || execState != glob.ExecState_True {
 		return execState, err
 	}
@@ -146,12 +151,12 @@ func (exec *Executor) supposeStmt_runStmtBody(stmt *ast.SupposeStmt) (glob.ExecS
 }
 
 // TODO：这里其实是有问题的，万一涉及到的变量没声明，那就出错了
-func (exec *Executor) supposeStmt_storeFactsToEnv(insideFacts []ast.FactStmt, stmt *ast.SupposeStmt, storeToEnv *env.Env) (glob.ExecState, error) {
+func (exec *Executor) supposeStmt_storeFactsToEnv(insideFacts []ast.FactStmt, stmt *ast.SupposeStmt, storeToEnv *env.Env, envWithSupposeParamsDeclared *env.Env) (glob.ExecState, error) {
 	messages := []string{}
 	for _, fact := range insideFacts {
 		// all atoms in fact should be already declared in storeToEnv
 		allAtoms := fact.GetAtoms()
-		ok := storeToEnv.AreAtomsDeclared(allAtoms)
+		ok := envWithSupposeParamsDeclared.AreAtomsDeclared(allAtoms)
 		if !ok {
 			return glob.ExecState_Error, fmt.Errorf("atom %s not declared in env", allAtoms[0].String())
 		}
