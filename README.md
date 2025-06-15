@@ -42,11 +42,15 @@ While Litex is in the early stages of development, it has already established a 
 
 **NOTE: Litex is still under development. THE CREATOR OF LITEX IS LOOKING FOR LONG-TERM OR SHORT-TERM CONTRIBUTORS. READ [CONTRIBUTE TO LITEX](./doc/contribute_to_Litex/contribute_to_Litex.md) FOR MORE DETAILS.**
 
-## Try Litex Step by Step
+## Using Litex
 
 _If I have seen further, it is by standing on the shoulders of giants._
 
 _-- Isaac Newton_
+
+_The only source of knowledge is experience._
+
+_-- Albert Einstein_
 
 **WARNING: Litex is still under development. Unexpected bugs might happen.**
 
