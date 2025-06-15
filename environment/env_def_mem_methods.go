@@ -171,6 +171,15 @@ func (e *Env) GetPropDef(propName ast.FcAtom) (*ast.DefPropStmt, bool) {
 	return nil, false
 }
 
+func (e *Env) AreAtomsDeclared(atoms []*ast.FcAtom) bool {
+	for _, atom := range atoms {
+		if !e.IsAtomDeclared(atom) {
+			return false
+		}
+	}
+	return true
+}
+
 func (e *Env) IsAtomDeclared(atom *ast.FcAtom) bool {
 	// 如果是内置的符号，那就声明了
 	if glob.IsKeySymbol(atom.Name) {

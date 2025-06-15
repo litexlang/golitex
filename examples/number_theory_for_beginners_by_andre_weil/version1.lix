@@ -265,3 +265,8 @@ know exist_prop seq finite_seq st exist_primes_whose_equal_to_integer(a Z):
 know exist_prop p Z st exist_prime_greater_than_any_integer(x Z):
     p > x
     p $is_prime
+
+“”“
+Chapter 5
+"""
+

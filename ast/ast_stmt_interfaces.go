@@ -41,12 +41,12 @@ type FactStmt interface {
 	stmt()
 	String() string
 	Instantiate(map[string]Fc) (FactStmt, error)
+	GetAtoms() []*FcAtom
 }
 
 func (p *SpecFactStmt) factStmt() {}
 func (l *UniFactStmt) factStmt()  {}
-
-func (s *OrStmt) factStmt() {}
+func (s *OrStmt) factStmt()       {}
 
 type SpecFactParams struct {
 	ObjParams []Fc
