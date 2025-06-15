@@ -87,6 +87,10 @@ After having a sense of Litex, do this:
 
 ## A Simple Example
 
+_Keep it simple, stupid._
+
+_-- The Unix Philosophy_
+
 _If you define the problem correctly, you almost have the solution._
 
 _-- Steve Jobs_
@@ -146,15 +150,15 @@ All daily math is built around first-order-logic, naive set theory, natural numb
 A major special case of match and substitute is about rational numbers, like 1, 3.5 or 4.123456789. These objects are different from user-defined objects because their literal representation directly encodes information. Rational numbers and their basic operations like addition, multiplication, inequalities are builtin in Litex, and Litex handles all the verification rules for them automatically.
 
 
-## How Does Litex Differentiate Itself Technically?
+## The Secret behind Litex's Unique Design
+
+_Cross the river by feeling the stones._
+
+_-- Chinese Proverb_
 
 _Simplicity is the ultimate sophistication._
 
 _-- Leonardo da Vinci_
-
-_Keep it simple, stupid._
-
-_-- The Unix Philosophy_
 
 Everyone knows how to reason, including 10-year-old. We reason thousands of time every day without even noticing it. Yet, traditional formal languages, like Lean4, Coq, and Isebelle are so complex that even the smartest mathematicians find it hard to use. Why is that?
 
@@ -169,6 +173,8 @@ This design choice, similar to how SQL specializes in database operations, allow
 Another important design choice is that the user does not need to give names to facts, because Litex can automatically find the matched facts it needs. It saves a lot of time and effort for the user. Read [tutorial](./doc/tutorial/tutorial.md) for more details.
 
 Throughout the years, natural languages are [considerably more expressive than their formal mathematical counterparts](https://terrytao.wordpress.com/advice-on-writing-papers/take-advantage-of-the-english-language/). With Litex, we can finally make the best of both worlds.
+
+Litex takes a radically different path from traditional formal systems. It isn’t built on fixed theories, but shaped by how we actually reason. When something is hard to express, Litex evolves new features to make formalization natural and intuitive. This trial-and-error, use-driven development makes Litex uniquely adaptable. Its innovation lies not just in what it can express, but in how it grows: guided by practice, not dogma.
 
 In a nutshell, Litex is for EVERYONE, from children to experts, to learn and use formal language at AI age. It scales up reasoning by making the process of writing formal reasoning as intuitive as writing in natural language.
 
@@ -187,6 +193,12 @@ This is a summary of the differences between Litex and Lean4.
 | Production Ready | ❌ Not yet | ✅ Yes |
 
 ## Answers to Common Questions
+
+_Given enough eyeballs, all bugs are shallow._
+
+_-- Linus Torvalds_
+
+Litex's growth is driven by the needs of its users. The users shape the language, not anyone else. If you have any ideas, please contact us through [discord](https://discord.gg/uvrHM7eS) or litexlang@outlook.com.
 
 1. Why is Litex poised for success now?
 
@@ -329,13 +341,13 @@ I know Lean can use tactics to solve the same problem, and it is shorter. Litex 
 
 ## Contact & Contribute to Litex
 
-_Cross the river by feeling the stones._
+_The people who are crazy enough to think they can change the world are the ones who do._
 
-_-- Chinese Proverb_
+_-- Steve Jobs_
 
-_Given enough eyeballs, all bugs are shallow._
+_Talent wins games, but teamwork and intelligence win championships._
 
-_-- Linus Torvalds_
+_-- Michael Jordan_
 
 Hi, I am Jiachen Shen, the creator of Litex. I am a PhD student in mathematics and programming language enthusiast (a programming language geek, if you are one too, you are welcome to contact me). In 2023, I shockingly found that math is somehow equivalent to programming, after reading Professor Terence Tao's [blog](https://terrytao.wordpress.com/2023/11/18/formalizing-the-proof-of-pfr-in-lean4-using-blueprint-a-short-tour/). This is the most amazing idea that I have ever seen in my life. In 2024, after thinking about it for a year, I started to implement Litex. After more than 2500 git commits, what it means to be a "formal language that is intuitive and as aligned with daily math expression as possible" is finally to make sense to me and my kernel sort of works now.
 
