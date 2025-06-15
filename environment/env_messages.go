@@ -34,6 +34,9 @@ func (env *Env) String() string {
 }
 
 func (e *Env) NewMsg(s string) {
+	if e == nil {
+		panic("NewMsg: CurMatchProp is nil")
+	}
 	e.Msgs = append(e.Msgs, s)
 }
 

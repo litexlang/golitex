@@ -35,8 +35,9 @@ func NewExecutor(curEnv *env.Env) *Executor {
 	}
 }
 
-func (e *Executor) newEnv(parent *env.Env, curMatchEnv *ast.SpecFactStmt) {
+func (e *Executor) newEnv(parent *env.Env, curMatchEnv *ast.SpecFactStmt) *env.Env {
 	e.env = env.NewEnv(parent, curMatchEnv)
+	return e.env
 }
 
 func (e *Executor) deleteEnvAndRetainMsg() {
