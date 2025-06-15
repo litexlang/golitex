@@ -430,5 +430,5 @@ prop is_field(field set, add fn(field, field)field, mul fn(field, field)field, i
 
 """
 # Theorem 6.3
-# For any integer m > 1, the ring of congruence modulo m is a field iff m is prime
+# For any integer m > 1, the ring of congruence modulo m is a field
 """
