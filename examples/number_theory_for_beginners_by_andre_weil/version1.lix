@@ -411,5 +411,24 @@ fn set_of_integers_prime_to(m Z) set:
 fn set_of_integers_prime_to_m_cc(m Z) set:
     forall x set_of_integers_prime_to(m):
         cc(m)(x) $in set_of_integers_prime_to_m_cc(m)
+
+# Definition 6.2
+# Definition of Euler's function; For any integer m > 0, the number of integers prime to m is denoted by phi(m)
 """
 
+# Definition 6.3
+# Definition of field
+prop is_field(field set, add fn(field, field)field, mul fn(field, field)field, inv fn(field)field, add_e field, mul_e field, mul_inv fn(field)field):
+    $is_commutative_ring(field, add, mul, inv, add_e, mul_e)
+    forall a field, b field, c field:
+        a != add_e
+        b != add_e
+        c != add_e
+        then:
+            mul(a, mul_inv(b)) = mul_e
+            mul(b, mul_inv(a)) = mul_e
+
+"""
+# Theorem 6.3
+# For any integer m > 1, the ring of congruence modulo m is a field iff m is prime
+"""
