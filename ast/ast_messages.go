@@ -446,7 +446,7 @@ func (stmt *SupposeStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *WithPropMatchStmt) String() string {
+func (stmt *WithStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordWith)
 	builder.WriteString(" ")

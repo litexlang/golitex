@@ -15,15 +15,16 @@
 package litex_executor
 
 import (
+	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
 )
 
-func (exec *Executor) withPropMatchStmt(stmt *ast.WithPropMatchStmt) (glob.ExecState, error) {
+func (exec *Executor) withStmt(stmt *ast.WithStmt) (glob.ExecState, error) {
 	defer exec.appendMsg("\n")
 	defer exec.appendMsg(stmt.String())
 
-	state, err := exec.withPropMatchStmt_checkFact(stmt)
+	state, err := exec.withStmt_checkFact(stmt)
 	if err != nil {
 		return glob.ExecState_Error, err
 	}
@@ -31,7 +32,7 @@ func (exec *Executor) withPropMatchStmt(stmt *ast.WithPropMatchStmt) (glob.ExecS
 		return state, nil
 	}
 
-	state, err = exec.withPropMatchStmt_storeFactsToParentEnv(stmt)
+	state, err = exec.withStmt_storeFactsToParentEnv(stmt)
 	if err != nil {
 		return glob.ExecState_Error, err
 	}
@@ -42,7 +43,7 @@ func (exec *Executor) withPropMatchStmt(stmt *ast.WithPropMatchStmt) (glob.ExecS
 	return glob.ExecState_True, nil
 }
 
-func (exec *Executor) withPropMatchStmt_checkFact(stmt *ast.WithPropMatchStmt) (glob.ExecState, error) {
+func (exec *Executor) withStmt_checkFact(stmt *ast.WithStmt) (glob.ExecState, error) {
 	// exec.newEnv(exec.env, exec.env.CurMatchEnv)
 	exec.newEnv(exec.env, &stmt.Fact)
 	defer exec.deleteEnvAndRetainMsg()
@@ -71,15 +72,41 @@ func (exec *Executor) withPropMatchStmt_checkFact(stmt *ast.WithPropMatchStmt) (
 	return glob.ExecState_True, nil
 }
 
-// TODO 存
-func (exec *Executor) withPropMatchStmt_storeFactsToParentEnv(stmt *ast.WithPropMatchStmt) (glob.ExecState, error) {
-	knowSupposeStmt := ast.NewKnowSupposeStmt(*ast.NewSupposeStmt(stmt.Fact, stmt.Body))
-	execState, err := exec.knowSupposeStmt(knowSupposeStmt)
+func (exec *Executor) withStmt_storeFactsToParentEnv(stmt *ast.WithStmt) (glob.ExecState, error) {
+	execState, err := exec.storeFactsInWithStmt(stmt)
 	if err != nil {
 		return glob.ExecState_Error, err
 	}
 	if execState != glob.ExecState_True {
 		return execState, nil
+	}
+
+	return glob.ExecState_True, nil
+}
+
+func (exec *Executor) storeFactsInWithStmt(stmt *ast.WithStmt) (glob.ExecState, error) {
+	exec.env.CurMatchProp = &stmt.Fact
+	defer func() {
+		exec.env.CurMatchProp = nil
+	}()
+
+	insideFacts := []ast.FactStmt{}
+	for _, fact := range stmt.Body {
+		if asFact, ok := fact.(ast.FactStmt); ok {
+			insideFacts = append(insideFacts, asFact)
+		}
+	}
+
+	for _, fact := range insideFacts {
+		allAtoms := fact.GetAtoms()
+		ok := exec.env.AreAtomsDeclared(allAtoms)
+		if !ok {
+			return glob.ExecState_Error, fmt.Errorf("atom %s not declared in env", allAtoms[0].String())
+		}
+		err := exec.env.NewFact(fact)
+		if err != nil {
+			return glob.ExecState_Error, err
+		}
 	}
 
 	return glob.ExecState_True, nil

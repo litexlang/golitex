@@ -173,7 +173,7 @@ func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right
 
 	if gotLeftEqualFcs && gotRightEqualFcs {
 		if equalToLeftFcs == equalToRightFcs {
-			return ver.equalTrueAddSuccessMsg(left, right, state, "known")
+			return ver.equalTrueAddSuccessMsg(left, right, state, fmt.Sprintf("known fact:\n%s = %s", left.String(), right.String()))
 		}
 	}
 
@@ -182,7 +182,7 @@ func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right
 			if ok, err := ver.cmpFc(equalToLeftFc, right, state); err != nil {
 				return false, err
 			} else if ok {
-				return ver.equalTrueAddSuccessMsg(left, right, state, "known")
+				return ver.equalTrueAddSuccessMsg(left, right, state, fmt.Sprintf("known fact:\n%s = %s", left.String(), right.String()))
 			}
 		}
 	}
@@ -192,7 +192,7 @@ func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right
 			if ok, err := ver.cmpFc(equalToRightFc, left, state); err != nil {
 				return false, err
 			} else if ok {
-				return ver.equalTrueAddSuccessMsg(left, right, state, "known")
+				return ver.equalTrueAddSuccessMsg(left, right, state, fmt.Sprintf("known fact:\n%s = %s", left.String(), right.String()))
 			}
 		}
 	}
