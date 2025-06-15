@@ -336,6 +336,7 @@ know:
             $is_congruent_modulo(x / d, y / d, m / d)
 
 # Definition 5.3
+# ERROR: cc 不是函数，而是集合
 fn cc(d Z, m Z) set:
     dom:
         m != 0
@@ -400,4 +401,15 @@ know prop cc_is_unitary_ring(m Z):
 # EVEN HARDER: THE NUMBER OF ELEMENTS IN A FINITE SEQUENCE IS SORT OF HARD TO Define AND REASON IN LITEX, WHICH DOES NOT IMPLEMENT RECURSION DIRECTLY IN THE LANGUAGE.
 # Theorem 6.2
 # Let m, a, b be with m > 0, put d = gcd(a,m), then the congruence ax = b (mod m) has either exactly d solutions modulo m, or no solution; it has a solution iff b = 0 (mod d); there are exactly m/d distinct values of b modulo m for which this is so.
+
+# Corollary 6.1
+# The congruence classes prime to m modulo m make up a group under multiplication
+fn set_of_integers_prime_to(m Z) set:
+    forall x set_of_integers_prime_to(m):
+        gcd(x, m) = 1
+
+fn set_of_integers_prime_to_m_cc(m Z) set:
+    forall x set_of_integers_prime_to(m):
+        cc(m)(x) $in set_of_integers_prime_to_m_cc(m)
 """
+
