@@ -58,6 +58,7 @@ const (
 	KeywordFiniteSeq            = "finite_seq"
 	KeywordInfiniteSeq          = "infinite_seq"
 	KeywordLen                  = "len"
+	KeywordFnSet                = "fn_set"
 	// 用户用不到的keyword，但litex内部会用
 	// litex version 0.2 的时候可以考虑实现。这样的话fn所在的集合也能像obj一样简单了
 	// KeywordFnSet = "fn_set"
@@ -108,6 +109,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordFiniteSeq:            {},
 	KeywordLen:                  {},
 	KeywordInfiniteSeq:          {},
+	KeywordFnSet:                {},
 }
 
 const (
