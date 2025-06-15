@@ -107,7 +107,7 @@ type SupposeStmt struct {
 	Body []Stmt
 }
 
-type WithPropMatchStmt struct {
+type WithStmt struct {
 	Fact SpecFactStmt
 	Body []Stmt
 }
