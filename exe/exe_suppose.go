@@ -32,11 +32,6 @@ func (exec *Executor) supposePropMatchStmt(stmt *ast.SupposeStmt) (glob.ExecStat
 	}()
 
 	exec.newEnv(originalEnv, &stmt.Fact)
-	envWithSupposeParamDeclared := exec.env
-	defer exec.deleteEnvAndRetainMsg()
-
-	// 这是必须的，因为申明了suppose的param要被用来storeFactsToEnv，所以要和运行suppose的环境隔离开来
-	exec.newEnv(originalEnv, &stmt.Fact)
 	defer exec.deleteEnvAndRetainMsg()
 
 	execState, err := exec.supposeStmt_declaredParams(stmt)
@@ -50,7 +45,7 @@ func (exec *Executor) supposePropMatchStmt(stmt *ast.SupposeStmt) (glob.ExecStat
 		return execState, err
 	}
 
-	execState, err = exec.supposeStmt_storeFactsToEnv(insideFacts, stmt, originalEnv, envWithSupposeParamDeclared)
+	execState, err = exec.supposeStmt_storeFactsToEnv(insideFacts, stmt, originalEnv)
 	if err != nil || execState != glob.ExecState_True {
 		return execState, err
 	}
@@ -69,7 +64,12 @@ func (exec *Executor) supposeStmt_declaredParams(stmt *ast.SupposeStmt) (glob.Ex
 		return glob.ExecState_Error, fmt.Errorf("spec fact parameter number not equal to prop def params number. expect %d, but got %d", len(factSpecDef.DefHeader.Params), len(stmt.Fact.Params))
 	}
 
-	for _, param := range stmt.Fact.Params {
+	uniMap := map[string]ast.Fc{}
+	for i, param := range factSpecDef.DefHeader.Params {
+		uniMap[param] = stmt.Fact.Params[i]
+	}
+
+	for i, param := range stmt.Fact.Params {
 		asAtom, ok := param.(*ast.FcAtom)
 		if !ok {
 			return glob.ExecState_Error, fmt.Errorf("spec fact parameter must be atom, but got: %s", param.String())
@@ -77,15 +77,16 @@ func (exec *Executor) supposeStmt_declaredParams(stmt *ast.SupposeStmt) (glob.Ex
 		if asAtom.PkgName != glob.EmptyPkg {
 			return glob.ExecState_Error, fmt.Errorf("spec fact parameter must be atom, but got: %s", param.String())
 		}
-		err := exec.env.ObjDefMem.Insert(ast.NewDefObjStmt([]string{asAtom.Name}, []ast.Fc{}, []ast.FactStmt{}), glob.EmptyPkg)
+
+		instantiatedSetParam, err := factSpecDef.DefHeader.SetParams[i].Instantiate(uniMap)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
-	}
+		err = exec.env.ObjDefMem.Insert(ast.NewDefObjStmt([]string{asAtom.Name}, []ast.Fc{instantiatedSetParam}, []ast.FactStmt{}), glob.EmptyPkg)
 
-	uniMap := map[string]ast.Fc{}
-	for i, param := range factSpecDef.DefHeader.Params {
-		uniMap[param] = stmt.Fact.Params[i]
+		if err != nil {
+			return glob.ExecState_Error, err
+		}
 	}
 
 	instantiatedFactSpecDef, err := factSpecDef.Instantiate(uniMap)
@@ -151,12 +152,21 @@ func (exec *Executor) supposeStmt_runStmtBody(stmt *ast.SupposeStmt) (glob.ExecS
 }
 
 // TODO：这里其实是有问题的，万一涉及到的变量没声明，那就出错了
-func (exec *Executor) supposeStmt_storeFactsToEnv(insideFacts []ast.FactStmt, stmt *ast.SupposeStmt, storeToEnv *env.Env, envWithSupposeParamsDeclared *env.Env) (glob.ExecState, error) {
+func (exec *Executor) supposeStmt_storeFactsToEnv(insideFacts []ast.FactStmt, stmt *ast.SupposeStmt, storeToEnv *env.Env) (glob.ExecState, error) {
+	curEnv := exec.newEnv(storeToEnv, &stmt.Fact)
+	defer exec.deleteEnvAndRetainMsg()
+
+	// declare atoms in suppose environment
+	execState, err := exec.supposeStmt_declaredParams(stmt)
+	if err != nil || execState != glob.ExecState_True {
+		return execState, err
+	}
+
 	messages := []string{}
 	for _, fact := range insideFacts {
 		// all atoms in fact should be already declared in storeToEnv
 		allAtoms := fact.GetAtoms()
-		ok := envWithSupposeParamsDeclared.AreAtomsDeclared(allAtoms)
+		ok := curEnv.AreAtomsDeclared(allAtoms)
 		if !ok {
 			return glob.ExecState_Error, fmt.Errorf("atom %s not declared in env", allAtoms[0].String())
 		}
