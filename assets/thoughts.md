@@ -2041,3 +2041,12 @@ fn_set f(params):
         fn (...) retSet:
             ...
 
+prop is_finite_seq(set set)
+fn len(seq set) N:
+    dom:
+        $is_finite_seq(seq)
+
+fn at(seq set, i N) obj:
+    dom:
+        $is_finite_seq(seq)
+        i < len(seq)
