@@ -344,3 +344,19 @@ fn congruence_class(d Z, m Z) set:
 
 # Theorem 5.1
 # TODO: THIS IS HARD TO FORMALIZE FOR THE TIME BEING BECAUSE THE MOD OPERATOR IS ACTUALLY NOT A FUNCTION. IT IS A SET OF FUNCTIONS8
+"""
+fn_set congruence_class(m Z):
+    m > 0
+    iff:
+        fn f(d Z) set:
+            forall x Z:
+                $is_congruent_modulo(x, d, m)
+                then:
+                    x $in f(d)
+
+fn_to_fn congruence_class_addition(m Z):
+    m > 0
+    iff:
+        fn f(d congruence_class(m), e congruence_class(m)) congruence_class(m):
+            congruence_class(m)(d +  e) = congruence_class_addition(m)(congruence_class(m)(d), congruence_class(m)(e))
+"""
