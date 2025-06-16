@@ -906,7 +906,8 @@ func (ver *Verifier) specFactSpecMemTrueMsg(stmt *ast.SpecFactStmt, knownFact en
 	verifiedBy.WriteString(knownFact.String())
 	verifiedBy.WriteString("\n")
 	for i, knownParam := range knownFact.Fact.Params {
-		verifiedBy.WriteString(fmt.Sprintf("%s = %s\n", knownParam, stmt.Params[i]))
+		// Have to write matches, because in with-suppose situation, the param is not literally equal to the stmt param
+		verifiedBy.WriteString(fmt.Sprintf("%s matches %s\n", knownParam, stmt.Params[i]))
 	}
 	ver.successWithMsg(stmt.String(), verifiedBy.String())
 }
