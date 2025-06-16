@@ -172,5 +172,34 @@ forall x SetX:
 ret_set_of(g) has the following property:
 ret_set_of(g) = SetY
 
+## Use Iteration to prove forall
+
+1. `is_indexable_set` (countable set)
+   `index_set` might simultaneously include the properties of `set` and `is_indexable_set`.
+
+2. `is_finite_set` applies to `indexable_set` (finite set, for the sake of verification through traversal)
+   `finite_set` might simultaneously include the properties of `set` and `is_finite_set`.
+
+3. `len` can only apply to `finite_set` (to provide an upper bound for traversal)
+
+4. `[]`, `[[]]` can apply to `indexable_set`, but not to `set` (uniqueness of indexing)
+
+The essence of index on `set` is:
+There exists a function `fn index(N)setName`, and we know the `exist_prop m N` such that
+`forall x, setName x = index(m)` (existence of index), and
+if `x = index(m)` and `x = index(n)`, then `m = n` (uniqueness of index)
+
+5. `prove_is_indexable_set` proves or constructs an `indexable_set`.
+   `prove_forall_on_indexable_set` uses traversal to prove `forall`.
+   This method is different from proving `forall` descriptively.
+
+If we are only implementing 1-4, then there’s no need to make 1-4 built-in, because I can define them in Litex.
+What’s truly important is point 5.
+Without point 5, there is no traversal capability; and verification through traversal is independent of all existing logics.
+It is precisely because traversal-based verification is needed that I need to introduce 1-5 to provide a unified syntax for users to define `indexable_set`.
+Just using `or` to verify one by one is not sufficient, because `or` cannot work together with `len`.
+In essence, the act of **counting** relies on extracting information from **literals**,
+while LiTeX’s main functionality does **not** have the ability to **read literal information**.
+
 
 [^1]: [Computer programming as an art](https://dl.acm.org/doi/10.1145/1283920.1283929)
