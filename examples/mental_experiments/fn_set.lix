@@ -18,10 +18,40 @@ f fn(s, s) s 这不是一种in？而是一种性质？？？这种性质是：
 用 fn 来定义函数的时候，相当于约定了函数的真实的参数所在的集合
 而 如果 f 作为参数（或返回值）出现时，并不是它在那个固定的集合，而是有其他意思：函数满足 fn作为参数和返回值出现时的真实语义
 
-如果你对函数的要求，就是定义域是 s,s 返回值是 s 的函数，那我可能要考虑引入其他语法，比如dom_of，result_of来说明。
+如果你对函数的要求，就是定义域是 s,s 返回值是 s 的函数，那我可能要考虑引入其他语法，比如dom_of，result_of，parameter_length_of 来说明。
 
 看来我要做的是，引入新的，能对函数进行做prop的语法，或者说要有个 fn_set 的语法，或者至少能对fn进行描述
 
 fn和普通的obj的区别
 1. fn 出现在 fc 的header。其他没区别
 2. 对 fn 取要求，可以有 dom_of, return_set_of 等语法
+
+为什么要有 fn_set ，不能直接用 set 吗？不太行，因为fn的参数数量是不定的，而prop在litex里的规定的传入的参数数量是固定的（至少如果要传不固定数量的话，会不方便）
+obj set_of_fns set
+forall x set_of_fns:
+    x $in fn
+    $template1(x)
+
+fn_template template1(x S, y S2) S:
+    $properties_of_x_y(x,y)
+    then:
+
+# 如果要对dom做要求
+fn_template template2(x S, y S2) S:
+    dom:
+        $properties_of_x_y(x,y)
+
+# 如果是对参数数量做要求
+fn_template template3(x obj, y obj) obj:
+    
+# 如果是对返回值做要求
+fn_template template4(x obj, y obj) obj:
+    then:
+        properties_of_return_value(template4(x,y))
+
+# 综合要求：对参数数量、参数dom、返回值做要求
+fn_template template5(x obj, y obj) obj:
+    dom:
+        $properties_of_parameter_dom(template5(x,y))
+    then:
+        $properties_of_return_value(template5(x,y))
