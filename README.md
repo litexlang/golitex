@@ -153,8 +153,11 @@ Amazingly, with these two ways of deriving a new fact, and with a set of careful
 
 All daily math is built around first-order-logic, naive set theory, natural numbers related axioms (mathematical induction, Peano axioms, extension to rational numbers and real numbers), and all of these are implemented in Litex. So it does not matter whether you are formalizing algebra or geometry or any other math, as long as you are clear about concepts and axioms of the math you are formalizing, you can use Litex to formalize it.
 
-A major special case of match and substitute is about rational numbers, like 1, 3.5 or 4.123456789. These objects are different from user-defined objects because their literal representation directly encodes information. Rational numbers and their basic operations like addition, multiplication, inequalities are builtin in Litex, and Litex handles all the verification rules for them automatically.
+There are two major special cases of match and substitute:
 
+1. about rational numbers, like 1, 3.5 or 4.123456789. These objects are different from user-defined objects because their literal representation directly encodes information and **match and substitute** is not enough to handle them. Rational numbers and their basic operations like addition, multiplication, inequalities are builtin in Litex, and Litex handles all the verification rules for them automatically. 
+
+2. about counting. Again they are different because their literal representation directly encodes information and **match and substitute** is not enough to handle them. If a set has finite number of elements, we verify case by case to prove a universal fact on that set. Litex provides a special keywords to handle this case.
 
 ## The Secret behind Litex's Unique Design
 
