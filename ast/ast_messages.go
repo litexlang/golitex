@@ -342,13 +342,13 @@ func (head DefHeader) String() string {
 	if len(head.Params) > 0 {
 		for i := 0; i < len(head.Params)-1; i++ {
 			builder.WriteString(head.Params[i])
-			// builder.WriteString(" ")
-			// builder.WriteString(head.SetParams[i].String())
+			builder.WriteString(" ")
+			builder.WriteString(head.SetParams[i].String())
 			builder.WriteString(",")
 		}
 		builder.WriteString(head.Params[len(head.Params)-1])
-		// builder.WriteString(" ")
-		// builder.WriteString(head.SetParams[len(head.Params)-1].String())
+		builder.WriteString(" ")
+		builder.WriteString(head.SetParams[len(head.Params)-1].String())
 	}
 
 	builder.WriteString("):")
