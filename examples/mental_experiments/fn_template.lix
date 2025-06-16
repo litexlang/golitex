@@ -87,4 +87,13 @@ fn_template(t1 templateParamSet1, t2 templateParamSet2) templateName(x set1, y s
     then:
         $properties_of_return_value(templateName(x,y))
 
+不需要引入 <> : 因为可以把参数传在参数列表里（所谓的对类型的要求，在litex里也是一个个的fact。是set的东西，本质上和不是set的东西，在事实的处理上本质没什么区别。这种处理方式，本质上就是和C++的类型是不一样的。）
+
+fn_template templateName(t1 templateParamSet1, t2 templateParamSet2, x set1, y set2) return_set:
+    dom:
+        $properties_of_t1_t2(t1,t2)
+        $properties_of_x_y(x,y, t1, t2)
+    then:
+        $properties_of_return_value(templateName(x,y))
+
 END OF 改进：改进可能是不必要的，因为可以吧 t1, t2 看成是参数出现在fn set 里，然后对它们做prop。

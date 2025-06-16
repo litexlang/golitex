@@ -4,12 +4,6 @@ prop is_group(G set, op fn(G, G)G, e G, inv fn(G)G):
         op(a, e) = a
         op(a, inv(a)) = e
 
-# suppose is_group(G, op, e, inv):
-#     forall a G, b G, c G:
-#         op(a, op(b, c)) = op(op(a, b), c)
-#         op(a, e) = a
-#         op(a, inv(a)) = e
-
 prop properties_about_group(G set, op fn(G, G)G)
 
 suppose is_group(G_, op_, e_, inv_):

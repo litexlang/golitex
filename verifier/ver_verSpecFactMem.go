@@ -28,7 +28,7 @@ func (ver *Verifier) specFactOrEqualFact_SpecMode(stmt *ast.SpecFactStmt, state 
 }
 
 func (ver *Verifier) verSpecFact_BySpecMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
+	upMostEnv := todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
 	if ver.env.CurMatchProp == nil {
 		for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
@@ -55,7 +55,7 @@ func (ver *Verifier) verSpecFact_BySpecMem(stmt *ast.SpecFactStmt, state VerStat
 }
 
 func (ver *Verifier) verSpecFact_ByLogicMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
+	upMostEnv := todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
 	if ver.env.CurMatchProp == nil {
 		for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
@@ -136,7 +136,7 @@ func (ver *Verifier) verSpecFact_ByLogicMem(stmt *ast.SpecFactStmt, state VerSta
 
 func (ver *Verifier) verSpecFact_InSpecFact_UniMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	nextState := state.addRound()
-	upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
+	upMostEnv := todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
 	if ver.env.CurMatchProp == nil {
 		for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
@@ -164,7 +164,7 @@ func (ver *Verifier) verSpecFact_InSpecFact_UniMem(stmt *ast.SpecFactStmt, state
 
 func (ver *Verifier) verSpecFact_InLogicExpr_InUniFactMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	nextState := state.addRound()
-	upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
+	upMostEnv := todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
 	if ver.env.CurMatchProp == nil {
 		for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
