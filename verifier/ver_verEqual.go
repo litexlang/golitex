@@ -22,7 +22,6 @@ import (
 	glob "golitex/glob"
 )
 
-// 暂时先不考虑 fn_commutative, fn_associative 的情况
 func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if ok, err := ver.checkSpecFactRequirements(stmt); err != nil {
 		return false, err
@@ -201,7 +200,9 @@ func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right
 }
 
 func (ver *Verifier) equalFact_MatchEnv_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right ast.Fc, state VerState) (bool, error) {
-	panic("equalFact_MatchEnv_SpecMem_atEnv: not implemented")
+	// panic("equalFact_MatchEnv_SpecMem_atEnv: not implemented")
+	equalFact := ver.makeEqualFact(left, right)
+	return ver.specFact_MatchEnv_SpecMem(curEnv, equalFact, state)
 }
 
 func (ver *Verifier) verEqualSpecMemAndLogicMem(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
