@@ -10,7 +10,7 @@ _The Formal Language Where Natural Expression Meets Scalable Formal Reasoning_
 
 **Release v0.1.1-beta (not yet ready for production use)**  
 *May 2025*  
-*Created by Jiachen Shen*
+*Created by Jiachen Shen (You can call me Jackie Shen.)*
 
 [![Github](https://img.shields.io/badge/Github-grey?logo=github)](https://github.com/litexlang/golitex)
 [![Discord](https://img.shields.io/badge/Discord-purple?logo=discord)](https://discord.gg/uvrHM7eS)
