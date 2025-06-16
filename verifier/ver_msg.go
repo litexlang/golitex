@@ -16,6 +16,10 @@ package litex_verifier
 
 import (
 	"fmt"
+	ast "golitex/ast"
+	env "golitex/environment"
+	glob "golitex/glob"
+	"strings"
 )
 
 func (ver *Verifier) successMsgEnd(stmtStr, stmtVerifiedBy string) {
@@ -34,4 +38,31 @@ func (ver *Verifier) successMsgEnd(stmtStr, stmtVerifiedBy string) {
 func (ver *Verifier) newMsgEnd(format string, args ...any) {
 	message := fmt.Sprintf(format, args...)
 	ver.env.Msgs = append(ver.env.Msgs, message)
+}
+
+func (ver *Verifier) specFactSpecMemTrueMsg(stmt *ast.SpecFactStmt, knownFact env.KnownSpecFact) {
+	var verifiedBy strings.Builder
+
+	verifiedBy.WriteString(knownFact.String())
+	verifiedBy.WriteString("\n")
+	for i, knownParam := range knownFact.Fact.Params {
+		verifiedBy.WriteString(fmt.Sprintf("%s matches %s\n", knownParam, stmt.Params[i]))
+	}
+	ver.successWithMsg(stmt.String(), verifiedBy.String())
+}
+
+func (ver *Verifier) newMsgEndWithCurMatchProp(stmt *ast.SpecFactStmt, knownFact env.KnownSpecFact, knownPreviousSuppose *ast.SpecFactStmt) {
+	var verifiedBy strings.Builder
+
+	if knownPreviousSuppose != nil {
+		verifiedBy.WriteString(fmt.Sprintf("known %s/%s %s:\n", glob.KeywordWith, glob.KeywordSuppose, knownPreviousSuppose.String()))
+		verifiedBy.WriteString(glob.SplitLinesAndAdd4NIndents(knownFact.String(), 1))
+		verifiedBy.WriteString("\n")
+	}
+
+	for i, knownParam := range knownFact.Fact.Params {
+		// Have to write matches, because in with-suppose situation, the param is not literally equal to the stmt param
+		verifiedBy.WriteString(fmt.Sprintf("%s matches %s\n", knownParam, stmt.Params[i]))
+	}
+	ver.successWithMsg(stmt.String(), verifiedBy.String())
 }
