@@ -27,14 +27,31 @@ fn和普通的obj的区别
 2. 对 fn 取要求，可以有 dom_of, return_set_of 等语法
 
 为什么要有 fn_set ，不能直接用 set 吗？不太行，因为fn的参数数量是不定的，而prop在litex里的规定的传入的参数数量是固定的（至少如果要传不固定数量的话，会不方便）
-obj set_of_fns set
-forall x set_of_fns:
-    x $in fn
-    $template1(x)
+
+用 fn_template 来描述 fn 的性质：
+语法
+fn_template template_name(param1 paramSet1, ... paramN paramSetN) S:
+    dom:
+        $properties_of_parameter_dom(param1, ... paramN)
+    then:
+        $properties_of_return_value(template_name(param1, ... paramN))
+
+语义：
+1. 这个函数的参数是N个
+2. 这个函数的dom作为集合是：
+    1. param1 $in paramSet1, ... paramN $in paramSetN
+    2. 这些param满足 $properties_of_parameter_dom(template_name(param1, ... paramN))
+3. 这个函数的返回值是
+    1. forall param 满足 dom，then 返回值满足 $properties_of_return_value(template_name(param1, ... paramN))
+    2. 返回值 $in S
+
+fn(paramSet1, ... paramSetN) S 是特殊的 fn_template，它要求：
+1. 参数数量是N
+2. 参数的dom是 paramSet1, ... paramSetN
+3. 返回值是 S
 
 fn_template template1(x S, y S2) S:
     $properties_of_x_y(x,y)
-    then:
 
 # 如果要对dom做要求
 fn_template template2(x S, y S2) S:
