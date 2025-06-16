@@ -3,7 +3,7 @@ prop intelligent(x human)
 
 know:
     forall x human:
-        x is intelligent
+        $intelligent(x)
 
 obj Jordan human
-Jordan is intelligent
+$intelligent(Jordan)

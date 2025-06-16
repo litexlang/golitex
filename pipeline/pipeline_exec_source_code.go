@@ -18,7 +18,7 @@ import (
 	"bufio"
 	"fmt"
 	env "golitex/environment"
-	exe "golitex/exe"
+	exe "golitex/executor"
 	glob "golitex/glob"
 	parser "golitex/parser"
 	"io"
