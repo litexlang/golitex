@@ -72,6 +72,10 @@ func hasBuiltinOptAndToString(f *FcFn) (bool, string) {
 		return true, fmt.Sprintf("%s[%s]", f.ParamSegs[0], f.ParamSegs[1])
 	}
 
+	if ptr.PkgName == glob.EmptyPkg && ptr.Name == glob.GetIndexOfOp {
+		return true, fmt.Sprintf("%s[[%s]]", f.ParamSegs[0], f.ParamSegs[1])
+	}
+
 	if ptr.PkgName == glob.EmptyPkg && ptr.Name == glob.KeySymbolMinus {
 		if len(f.ParamSegs) == 1 {
 			return true, fmt.Sprintf("(%s %s)", ptr.Name, f.ParamSegs[0])

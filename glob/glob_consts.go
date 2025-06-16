@@ -48,3 +48,4 @@ const ContinueExecutionIfExecUnknown bool = false
 const MaxLogicExprFactsNum int = 8
 
 const AtIndexOp string = KeySymbolLeftSquareBrace
+const GetIndexOfOp string = KeySymbolLeftSquareBrace + KeySymbolLeftSquareBrace
