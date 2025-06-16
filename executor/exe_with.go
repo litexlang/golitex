@@ -98,10 +98,9 @@ func (exec *Executor) storeFactsInWithStmt(stmt *ast.WithStmt) (glob.ExecState, 
 	}
 
 	for _, fact := range insideFacts {
-		allAtoms := fact.GetAtoms()
-		ok := exec.env.AreAtomsDeclared(allAtoms)
+		ok := exec.env.AtomsInFactAreDeclared(fact)
 		if !ok {
-			return glob.ExecState_Error, fmt.Errorf("atom %s not declared in env", allAtoms[0].String())
+			return glob.ExecState_Error, fmt.Errorf("fact %s has undeclared atoms", fact.String())
 		}
 		err := exec.env.NewFact(fact)
 		if err != nil {
