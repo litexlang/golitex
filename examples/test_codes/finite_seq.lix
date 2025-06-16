@@ -1,3 +1,6 @@
+"""
+# 本质上这里有问题。因为finite_seq根本不是set，而是一个函数
+
 prop is_finite_seq(s set)
 fn len(seq set) N:
     dom:
@@ -26,3 +29,11 @@ know exist_prop i N st any_item_seq_has_index(seq set, i N):
     iff:
         seq \at i = a
 
+"""
+
+fn_set finite_seq(length N)
+
+
+fn_set at(seq set, i N) seq:
+    dom:
+        $finite_seq(seq)

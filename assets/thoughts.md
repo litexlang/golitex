@@ -2054,6 +2054,7 @@ fn at(seq set, i N) obj:
 6.16
 finite_set
 len
-at 是送给用户的函数，用来说明finite_set的性质
+[] 是送给用户的函数，用来说明finite_set的性质，因为finite_set上面总是可以被排序整理的，然后我们默认每个finite_set上面都有这么一个排序，这个排序唯一
+[[]] 是送给用户的 是 的反过来，即 得到 一个元素是第几位 比如 some_set[ i ] = x 相当于 some_set[[ x ]] = i
 
 注意到seq不是集合，而是fn。所以说x $in seq 这种写法是错的。至多说存在某个index使得seq \seq_at i = x

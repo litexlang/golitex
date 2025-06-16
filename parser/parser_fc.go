@@ -40,6 +40,14 @@ func (cursor *strSliceCursor) squareBracketExpr() (ast.Fc, error) {
 	}
 
 	cursor.skip(glob.KeySymbolLeftSquareBrace)
+
+	isAtIndexOp := true
+
+	if cursor.is(glob.KeySymbolLeftSquareBrace) {
+		cursor.skip(glob.KeySymbolLeftSquareBrace)
+		isAtIndexOp = false
+	}
+
 	if cursor.ExceedEnd() {
 		return nil, fmt.Errorf("unexpected end of input after '['")
 	}
@@ -53,11 +61,23 @@ func (cursor *strSliceCursor) squareBracketExpr() (ast.Fc, error) {
 		return nil, fmt.Errorf("unexpected end of input after ']'")
 	}
 
-	if err := cursor.skip(glob.KeySymbolRightSquareBrace); err != nil {
-		return nil, fmt.Errorf("expected '%s': %v", glob.KeySymbolRightSquareBrace, err)
-	}
+	if isAtIndexOp {
+		if err := cursor.skip(glob.KeySymbolRightSquareBrace); err != nil {
+			return nil, fmt.Errorf("expected '%s': %v", glob.KeySymbolRightSquareBrace, err)
+		}
 
-	return ast.NewFcFn(ast.NewFcAtomWithName(glob.AtIndexOp), []ast.Fc{fc, fcInBracket}), nil
+		return ast.NewFcFn(ast.NewFcAtomWithName(glob.AtIndexOp), []ast.Fc{fc, fcInBracket}), nil
+	} else {
+		if err := cursor.skip(glob.KeySymbolRightSquareBrace); err != nil {
+			return nil, fmt.Errorf("expected '%s': %v", glob.KeySymbolRightSquareBrace, err)
+		}
+
+		if err := cursor.skip(glob.KeySymbolRightSquareBrace); err != nil {
+			return nil, fmt.Errorf("expected '%s': %v", glob.KeySymbolRightSquareBrace, err)
+		}
+
+		return ast.NewFcFn(ast.NewFcAtomWithName(glob.GetIndexOfOp), []ast.Fc{fc, fcInBracket}), nil
+	}
 }
 
 // “数学”优先级越高，越是底层。所以把括号表达式放在这里处理
