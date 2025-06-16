@@ -19,7 +19,10 @@ obj seq1 set:
 seq1 \at 0 $in seq1
 seq1 \at 1 $in seq1
 
-exist_prop i N st any_item_seq_has_index(seq set, i N):
-    i < len(seq)
-    seq \at i = a
+know exist_prop i N st any_item_seq_has_index(seq set, i N):
+    dom:
+        seq $is_finite_seq
+        i < len(seq)
+    iff:
+        seq \at i = a
 

@@ -2050,3 +2050,10 @@ fn at(seq set, i N) obj:
     dom:
         $is_finite_seq(seq)
         i < len(seq)
+
+6.16
+finite_set
+len
+at 是送给用户的函数，用来说明finite_set的性质
+
+注意到seq不是集合，而是fn。所以说x $in seq 这种写法是错的。至多说存在某个index使得seq \seq_at i = x

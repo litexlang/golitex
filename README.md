@@ -178,7 +178,7 @@ Another important design choice is that the user does not need to give names to 
 
 Throughout the years, natural languages are [considerably more expressive than their formal mathematical counterparts](https://terrytao.wordpress.com/advice-on-writing-papers/take-advantage-of-the-english-language/). With Litex, we can finally make the best of both worlds.
 
-Litex takes a radically different path from traditional formal systems. It isn’t built on fixed theories, but shaped by how we actually reason. When something is hard to express, Litex evolves new features to make formalization natural and intuitive. This trial-and-error, use-driven development makes Litex uniquely adaptable. Its innovation lies not just in what it can express, but in how it grows: guided by practice, not dogma.
+Litex takes a use-driven, example-first approach to formalization. Instead of building on sophisticated theories, it evolves by trying to express real mathematical texts—like Tao’s *Analysis I* or Weil’s *Number Theory for Beginners*. When something is hard to formalize, Litex doesn’t force a fit; it grows new features to make expression natural. This trial-and-error, practice-guided development makes Litex uniquely adaptable and intuitive.
 
 In a nutshell, Litex is for EVERYONE, from children to experts, to learn and use formal language at AI age. It scales up reasoning by making the process of writing formal reasoning as intuitive as writing in natural language.
 
