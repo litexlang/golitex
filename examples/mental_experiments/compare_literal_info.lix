@@ -1,0 +1,59 @@
+# 有趣的思想实验
+
+# 为了能数数（或者说在有限集合上面用遍历的方式证明forall，而不是用匹配替换），我必须要引入 prove_forall_iteratively, finite_set, indexable_set, len, [], [[]], prove_forall_on_finite_set, is_finite_set, is_indexable_set 这些关键词。而一旦我引入了它们，我就图灵完备了? （再引入一个 know iteratively 来设置变量，就真的完备了）
+
+"""
+# 1. 形式化：验证某个变量的字面量是给定的字母
+
+obj a obj, b obj, c obj, d obj, e obj, f obj, g obj, h obj, i obj, j obj, k obj, l obj, m obj, n obj, o obj, p obj, q obj, r obj, s obj, t obj, u obj, v obj, w obj, x obj, y obj, z obj
+
+prop is_abcd(x obj)
+know:
+    $is_abcd(a)
+    $is_abcd(b)
+    $is_abcd(c)
+    $is_abcd(d)
+
+# 用finite_set来作为“变量”
+obj abcd finite_set:
+    abcd[0] = a
+    abcd[1] = b
+    abcd[2] = c
+    abcd[3] = d
+    len(abcd) = 4
+
+prop literally_the_same(left finite_set, right finite_set):
+    len(left) = len(right)
+    forall index N:
+        index < len(left)
+        then:
+            left[index] = right[index]
+
+obj another_abcd finite_set:
+    another_abcd[0] = a
+    another_abcd[1] = b
+    another_abcd[2] = c
+    another_abcd[3] = d
+
+# 自动生成 forall index N: index < 4 : abcd[index] = another_abcd[index]. 它可以推导出 forall index N: index < len(abcd) : abcd[index] = another_abcd[index]
+# 语义：遍历地验证
+prove_forall_iteratively index 4: # index 表示遍历的指标，4 表示遍历的次数。这里的4必须是数字，不能是等于4的obj
+    prove:
+        abcd[index] = another_abcd[index]
+
+prove_forall_on_finite_set index 4: # 4 对应下面的abcd的长度，abcd是 forall x finiteSetName的 finiteSetName
+    forall x abcd:
+        x 
+    prove:
+
+
+"""
+
+
+
+
+
+
+
+
+"""
