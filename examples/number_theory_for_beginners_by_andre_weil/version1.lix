@@ -464,6 +464,8 @@ prop one_item_op_return_value_in_set(s set, f_original_ret_set set, f fn(s)f_ori
     forall x s:
         f(x) $in return_value_set
 
+# 或许应该是要能自动lift？而不是定义lift函数？比如虽然f $in fn(s,s)s 但是如果在items，items上它满足了返回值也是items，那我们也应该认为它是 $in fn(items, items) items ???? 还是说这里的 in 用的不好，而是应该用其他的 特殊的关键词来说明整个事情？或者说我有个新的prop叫can be restricted on 
+
 # Definition 7.1
 fn group_generated_by_items(s set, op fn(s, s)s, e s, inv fn(s)s, items set) set:
     $is_group(s, op, e, inv)
@@ -486,4 +488,13 @@ fn group_generated_by_items(s set, op fn(s, s)s, e s, inv fn(s)s, items set) set
             items $subset_of s
             then:
                 group_generated_by_items(s, op, e, inv, items) $subset_of s
+
+fn mul_on_group(s set, op fn(s, s)s, e s, inv fn(s)s, n N)s :
+    $is_group(s, op, e, inv)
+    then:
+        mul_on_group(s, op, e, inv, 0) = e
+        forall n N:
+            mul_on_group(s, op, e, inv, n + 1) = mul_on_group(s, op, e, inv, n) + 1
+
+
 """
