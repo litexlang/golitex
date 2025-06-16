@@ -901,17 +901,6 @@ func (ver *Verifier) specFact_SpecMem_atEnv(curEnv *env.Env, stmt *ast.SpecFactS
 	return ver.iterateKnownSpecFacts_applyFcEqualSpec(stmt, knownFacts, state)
 }
 
-func (ver *Verifier) specFactSpecMemTrueMsg(stmt *ast.SpecFactStmt, knownFact env.KnownSpecFact) {
-	var verifiedBy strings.Builder
-	verifiedBy.WriteString(knownFact.String())
-	verifiedBy.WriteString("\n")
-	for i, knownParam := range knownFact.Fact.Params {
-		// Have to write matches, because in with-suppose situation, the param is not literally equal to the stmt param
-		verifiedBy.WriteString(fmt.Sprintf("%s matches %s\n", knownParam, stmt.Params[i]))
-	}
-	ver.successWithMsg(stmt.String(), verifiedBy.String())
-}
-
 func (ver *Verifier) specFact_LogicMem(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	knownFacts, got := curEnv.KnownFactsStruct.SpecFactInLogicExprMem.GetSameEnumPkgPropFacts(stmt)
 
@@ -1090,7 +1079,7 @@ LoopOverFacts:
 		}
 
 		if state.requireMsg() {
-			ver.specFactSpecMemTrueMsg(stmt, knownFact)
+			ver.newMsgEndWithCurMatchProp(stmt, knownFact, previousSuppose)
 		} else {
 			ver.successNoMsg()
 		}
