@@ -2,17 +2,15 @@
 
 # 为了能数数（或者说在有限集合上面用遍历的方式证明forall，而不是用匹配替换），我必须要引入 prove_forall_iteratively, finite_set, indexable_set, len, [], [[]], prove_forall_on_finite_set, is_finite_set, is_indexable_set 这些关键词。而一旦我引入了它们，我就图灵完备了? （再引入一个 know iteratively 来设置变量，就真的完备了）
 
-"""
-# 1. 形式化：验证某个变量的字面量是给定的字母
+# 1. 形式化：验证某个变量的字面量是给定的字母。相当于 字符串比较
 
 obj a obj, b obj, c obj, d obj, e obj, f obj, g obj, h obj, i obj, j obj, k obj, l obj, m obj, n obj, o obj, p obj, q obj, r obj, s obj, t obj, u obj, v obj, w obj, x obj, y obj, z obj
 
-prop is_abcd(x obj)
+prop is_abc(x obj)
 know:
-    $is_abcd(a)
-    $is_abcd(b)
-    $is_abcd(c)
-    $is_abcd(d)
+    $is_abc(a)
+    $is_abc(b)
+    $is_abc(c)
 
 # 用finite_set来作为“变量”
 obj abcd finite_set:
@@ -41,19 +39,11 @@ prove_forall_iteratively index 4: # index 表示遍历的指标，4 表示遍历
     prove:
         abcd[index] = another_abcd[index]
 
-prove_forall_on_finite_set index 4: # 4 对应下面的abcd的长度，abcd是 forall x finiteSetName的 finiteSetName
-    forall x abcd:
-        x 
+prove_forall_on_finite_set:
+    forall x abcd: 
+    # 这里的dom必须要是能验证的：要么是true，true时我往下验证；要么是确定是false，false时我跳过。如果验证出来是unknown报错
+        dom:
+            abcd[[x]] < 3
+        $is_abcd(x)
     prove:
-
-
-"""
-
-
-
-
-
-
-
-
-"""
+        $is_abcd(a)
