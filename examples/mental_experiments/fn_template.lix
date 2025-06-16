@@ -72,3 +72,7 @@ fn_template template5(x obj, y obj) obj:
         $properties_of_parameter_dom(template5(x,y))
     then:
         $properties_of_return_value(template5(x,y))
+
+注意到，每个template的参数数量必须是固定的。不能说”对于任意函数，这个函数可能有任意参数“（你非要连函数的参数的数量都不确定，那这个template的语义就太复杂了，你可以考虑用这个函数读入参数是一个finite_set，然后对这个finite_set做prop）
+
+fn_template 的发明，极大借鉴了C++的函数的template

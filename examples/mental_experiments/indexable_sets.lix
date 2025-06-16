@@ -48,3 +48,19 @@ prove_forall_on_finite_set:
     prove:
         $is_abcd(a)
 
+# 增强 prove_forall_on_finite_set 的语义和语法，让它也能iteratively地工作，像是go里的 i, v := range 一样
+prove_forall_on_finite_set (x, index) abcd: # 我会在 index = len(abcd) 时，自动停止
+    dom:
+        ...
+    then:
+        abcd[index] = another_abcd[index]
+
+# prove_forall_on_finite_set (n, index) N: 貌似这是在类比 range 的语法，但是它不能自动停止，因为N有无数个。当然，这么干是不被允许的，因为len(N) 不存在
+
+prove_forall_on_finite_set (x, index) set1, (y, index2) set2: # 我会像是 i, v := range {j, v2 := range set2} 一样去迭代
+    dom:
+        ...
+    then:
+        set1[index] = set2[index2]
+
+总的来说我解决了两个问题 1. 数数 + 用迭代的方式在有限集合上做验证以得到forall 2. 对函数进行描述。现在我貌似没有什么常见的数学表达不能表达了。

@@ -1,5 +1,0 @@
-# 2. know_iteratively 来设置变量
-# 是否用[[]]就能设置所有变量了？
-
-obj variable1 finite_set:
-    variable1[0] = 4
