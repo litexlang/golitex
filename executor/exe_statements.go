@@ -148,18 +148,13 @@ func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) (glob.ExecState, error) {
 		return glob.ExecState_Unknown, nil
 	}
 
-	if asSpecFact, ok := stmt.ToCheckFact.(*ast.SpecFactStmt); ok {
-		err = exec.env.NewFact(asSpecFact)
-		if err != nil {
-			return glob.ExecState_Error, err
-		}
-	} else if asUniFact, ok := stmt.ToCheckFact.(*ast.UniFactStmt); ok {
-		newUniFact := asUniFact
-		err = exec.env.NewFact(newUniFact)
+	if stmt.ToCheckFact != ast.ClaimStmtEmptyToCheck {
+		err = exec.env.NewFact(stmt.ToCheckFact)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
 	}
+
 	return glob.ExecState_True, nil
 }
 
@@ -425,6 +420,15 @@ func (exec *Executor) execProofBlock(proof []ast.Stmt) (glob.ExecState, error) {
 }
 
 func (exec *Executor) claimStmtProve(stmt *ast.ClaimStmt) (bool, error) {
+	// 需要检查stmt.ToCheckFact里的东西都是在外部声明好了的
+	if stmt.ToCheckFact != ast.ClaimStmtEmptyToCheck {
+		allAtoms := stmt.ToCheckFact.GetAtoms()
+		ok := exec.env.AreAtomsDeclared(allAtoms)
+		if !ok {
+			return false, fmt.Errorf("atoms in fact %s are not all declared", stmt.ToCheckFact.String())
+		}
+	}
+
 	exec.newEnv(exec.env, exec.env.CurMatchProp)
 	isSuccess := false
 
