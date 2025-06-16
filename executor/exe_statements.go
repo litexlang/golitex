@@ -422,10 +422,9 @@ func (exec *Executor) execProofBlock(proof []ast.Stmt) (glob.ExecState, error) {
 func (exec *Executor) claimStmtProve(stmt *ast.ClaimStmt) (bool, error) {
 	// 需要检查stmt.ToCheckFact里的东西都是在外部声明好了的
 	if stmt.ToCheckFact != ast.ClaimStmtEmptyToCheck {
-		allAtoms := stmt.ToCheckFact.GetAtoms()
-		ok := exec.env.AreAtomsDeclared(allAtoms)
+		ok := exec.env.AtomsInFactAreDeclared(stmt.ToCheckFact)
 		if !ok {
-			return false, fmt.Errorf("atoms in fact %s are not all declared", stmt.ToCheckFact.String())
+			return false, fmt.Errorf("fact %s has undeclared atoms", stmt.ToCheckFact.String())
 		}
 	}
 

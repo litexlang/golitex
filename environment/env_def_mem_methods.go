@@ -171,7 +171,17 @@ func (e *Env) GetPropDef(propName ast.FcAtom) (*ast.DefPropStmt, bool) {
 	return nil, false
 }
 
-func (e *Env) AreAtomsDeclared(atoms []*ast.FcAtom) bool {
+func (e *Env) AtomsInFcAreDeclared(fc ast.Fc) bool {
+	atoms := ast.GetAtomsInFc(fc)
+	return e.areAtomsDeclared(atoms)
+}
+
+func (e *Env) AtomsInFactAreDeclared(fact ast.FactStmt) bool {
+	atoms := fact.GetAtoms()
+	return e.areAtomsDeclared(atoms)
+}
+
+func (e *Env) areAtomsDeclared(atoms []*ast.FcAtom) bool {
 	for _, atom := range atoms {
 		if !e.IsAtomDeclared(atom) {
 			return false
