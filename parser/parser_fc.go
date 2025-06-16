@@ -332,21 +332,6 @@ func (cursor *strSliceCursor) bracedFcSlice() ([]ast.Fc, error) {
 	return params, nil
 }
 
-func (cursor *strSliceCursor) isExpr(left ast.Fc) (*ast.SpecFactStmt, error) {
-	err := cursor.skip(glob.KeywordIs)
-	if err != nil {
-		return nil, &strSliceErr{err, cursor}
-	}
-
-	opt, err := cursor.rawFcAtom() // get the operator.
-
-	if err != nil {
-		return nil, &strSliceErr{err, cursor}
-	}
-
-	return ast.NewSpecFactStmt(ast.TruePure, opt, []ast.Fc{left}), nil
-}
-
 func (cursor *strSliceCursor) bracedExpr() (ast.Fc, error) {
 	cursor.skip(glob.KeySymbolLeftBrace)
 	if cursor.ExceedEnd() {
