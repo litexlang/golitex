@@ -32,6 +32,8 @@ _-- Alan Kay_
 
 Litex is a simple and easy-to-learn formal language. It makes formal reasoning as natural as writing in natural language. Thanks to its innovative design philosophy, even 10-year-olds can learn Litex easily. This gives it a dimensional advantage over existing formal languages, such as Lean, which even PhD students struggle to master.
 
+This is an adventure with two goals: 1. to make formal reasoning as intuitive as natural language and everyday thinking, from both high-level and low-level perspectives. 2. to spread the idea and power of formal reasoning to a larger audience.
+
 By unifying how we express and verify reasoning (including math), Litex is poised to become the key infrastructure for scalable knowledge engineering in the AI era. In the field of AI, formal languages have become an indispensable tool for top researchers. Terence Tao uses them to reconstruct mathematical proofs, Bengio's team employs them to verify AI safety, DeepSeek-R1 leverages them to enhance reasoning capabilities, and the AlphaProof series utilizes them to simultaneously generate problems and answers, forming a self-improving closed loop.
 
 Although still in its testing phase, leading institutions such as CMU, Mila, and Oxford have already begun exploring, testing, and experimenting with Litex. Investing in Litex is not just a bet on the future of this technological approach—it also unlocks vast opportunities in the commercialization of formalized datasets and language support services. The relentless engineering efforts of the Litex team will make all these possible.

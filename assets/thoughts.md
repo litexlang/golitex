@@ -2068,3 +2068,4 @@ is_finite_set 作用在 indexable_set上
 len只能作用在 indexable_set 上
 [], [[]] 能作用在 indexable_set 上，但不能作用在 set 上
 prove_is_indexable_set 证明，或者构造indexable_set
+prove_forall_on_indexable_set 用遍历的方式去证明forall。这种方式和描述性地证明forall是不同的

@@ -428,10 +428,6 @@ func (tb *tokenBlock) relaFactStmt() (*ast.SpecFactStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	if tb.header.strAtCurIndexPlus(0) == glob.KeywordIs {
-		return tb.header.isExpr(fc)
-	}
-
 	opt, err := tb.header.next()
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
