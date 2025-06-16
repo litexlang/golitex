@@ -162,6 +162,12 @@ func (exec *Executor) supposeStmt_runStmtBody(stmt *ast.SupposeStmt) (glob.ExecS
 
 // TODO：这里其实是有问题的，万一涉及到的变量没声明，那就出错了
 func (exec *Executor) supposeStmt_storeFactsToEnv(insideFacts []ast.FactStmt, stmt *ast.SupposeStmt, storeToEnv *env.Env) (glob.ExecState, error) {
+	originalCurMatchProp := storeToEnv.CurMatchProp
+	storeToEnv.CurMatchProp = &stmt.Fact
+	defer func() {
+		storeToEnv.CurMatchProp = originalCurMatchProp
+	}()
+
 	curEnv := exec.newEnv(storeToEnv, &stmt.Fact)
 	defer exec.deleteEnvAndRetainMsg()
 
