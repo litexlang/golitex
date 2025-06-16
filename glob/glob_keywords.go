@@ -145,11 +145,13 @@ const (
 	KeySymbolLessEqual              = "<="
 	KeySymbolEquivalent             = "<=>"
 	// It's possible for me to overload the meaning of "=" to mean "set equal", but I don't want to do that(I do not want to overload the meaning of "=" too much, which can be very tiring for future maintainers and make confusions), so I use a new keyword
-	KeySymbolEqualEqual      = "=="  // check fn equal. TODO: 要调整语义
-	KeySymbolEqualEqualEqual = "===" // check set equal. TODO: 要调整语义
-	KeySymbolGreaterGreater  = ">>"
-	KeySymbolLessLess        = "<<"
-	KeySymbolPercent         = "%" // prove: 2 % 2 = 0 的时候打印有问题，不知道为什么
+	KeySymbolEqualEqual       = "=="  // check fn equal. TODO: 要调整语义
+	KeySymbolEqualEqualEqual  = "===" // check set equal. TODO: 要调整语义
+	KeySymbolGreaterGreater   = ">>"
+	KeySymbolLessLess         = "<<"
+	KeySymbolPercent          = "%" // prove: 2 % 2 = 0 的时候打印有问题，不知道为什么
+	KeySymbolLeftSquareBrace  = "["
+	KeySymbolRightSquareBrace = "]"
 )
 
 var symbolSet map[string]struct{} = map[string]struct{}{
@@ -191,16 +193,18 @@ var symbolSet map[string]struct{} = map[string]struct{}{
 	KeySymbolQuestion:  {}, // "?"
 	// KeySymbolRightBracket: {}, // "]"
 	// KeySymbolRightCurly:      {}, // "}"
-	KeySymbolRightBrace:      {}, // ")"
-	KeySymbolSemicolon:       {}, // ";"
-	KeySymbolSingleQuote:     {}, // "'"
-	KeySymbolSlash:           {}, // "/"
-	KeySymbolStar:            {}, // "*"
-	KeySymbolTilde:           {}, // "~"
-	KeySymbolAnd:             {}, // "&"
-	KeySymbolEquivalent:      {}, // "<=>"
-	KeySymbolEqualEqualEqual: {}, // "==="
-	KeySymbolGreaterGreater:  {}, // ">>"
-	KeySymbolLessLess:        {}, // "<<"
-	KeySymbolPercent:         {}, // "%"
+	KeySymbolRightBrace:       {}, // ")"
+	KeySymbolSemicolon:        {}, // ";"
+	KeySymbolSingleQuote:      {}, // "'"
+	KeySymbolSlash:            {}, // "/"
+	KeySymbolStar:             {}, // "*"
+	KeySymbolTilde:            {}, // "~"
+	KeySymbolAnd:              {}, // "&"
+	KeySymbolEquivalent:       {}, // "<=>"
+	KeySymbolEqualEqualEqual:  {}, // "==="
+	KeySymbolGreaterGreater:   {}, // ">>"
+	KeySymbolLessLess:         {}, // "<<"
+	KeySymbolPercent:          {}, // "%"
+	KeySymbolLeftSquareBrace:  {}, // "["
+	KeySymbolRightSquareBrace: {}, // "]"
 }
