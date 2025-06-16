@@ -2052,9 +2052,19 @@ fn at(seq set, i N) obj:
         i < len(seq)
 
 6.16
-finite_set
-len
+is_finite_set
+len 
 [] 是送给用户的函数，用来说明finite_set的性质，因为finite_set上面总是可以被排序整理的，然后我们默认每个finite_set上面都有这么一个排序，这个排序唯一
 [[]] 是送给用户的 是 的反过来，即 得到 一个元素是第几位 比如 some_set[ i ] = x 相当于 some_set[[ x ]] = i
 
 注意到seq不是集合，而是fn。所以说x $in seq 这种写法是错的。至多说存在某个index使得seq \seq_at i = x
+
+新的关键词： fn_set 起到的作用和 C++的函数的的template一样。
+
+还有一类其他东西是 indexable_set，这个意义是，只要这个set是可数的，我们就默认它有index，然后我们默认这个index是唯一的。
+
+indexable_set 
+is_finite_set 作用在 indexable_set上
+len只能作用在 indexable_set 上
+[], [[]] 能作用在 indexable_set 上，但不能作用在 set 上
+prove_is_indexable_set 证明，或者构造indexable_set

@@ -31,9 +31,36 @@ know exist_prop i N st any_item_seq_has_index(seq set, i N):
 
 """
 
-fn_set finite_seq(length N)
+prop is_finite_seq(f seq)
 
+# 定义了一个函数集合，这个函数的运算规则是读入一个N，然后返回一个obj
+fn_set seq(x N) obj
 
-fn_set at(seq set, i N) seq:
+fn seq_len(f seq) N:
     dom:
-        $finite_seq(seq)
+        $is_finite_seq(f)
+
+obj f seq:
+    $is_finite_seq(f)
+    seq_len(f) = 2
+
+set_set congruence_class
+
+# 符合让 fn_set 返回 fn_set。比如 fn_set1(x N) 返回 fn_set2(x N)
+fn_set fn_set1(x N) fn_set2
+fn_set fn_set2(x N) obj
+
+# set_of_sets: 
+obj set_of_sets1 set:
+    forall x set_of_sets1:
+        x $in set_of_sets2
+
+obj set_of_sets2 set:
+    forall x set_of_sets2:
+        x $in set
+
+fn congruence_class(n N) set_of_sets1 
+know exist_prop m N st everything_in_set_of_sets1_is_congruent_to_m(x set_of_sets1):
+    everything_in_set_of_sets1_is_congruent_to_m(x) = congruence_class(m)
+
+fn congruence_class_elem(n N, m N) set_of_sets2
