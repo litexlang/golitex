@@ -1,6 +1,6 @@
 # 有趣的思想实验
 
-# 为了能数数（或者说在有限集合上面用遍历的方式证明forall，而不是用匹配替换），我必须要引入 prove_forall_iteratively, finite_set, indexable_set, len, [], [[]], prove_forall_on_finite_set, is_finite_set, is_indexable_set 这些关键词。而一旦我引入了它们，我就图灵完备了? （再引入一个 know iteratively 来设置变量，就真的完备了）
+# 为了能数数（或者说在有限集合上面用遍历的方式证明forall，而不是用匹配替换），我必须要引入 prove_forall_iteratively, finite_set, indexable_set, len, [], [[]], prove_forall_on_finite_set, is_finite_set, is_indexable_set 这些关键词。而一旦我引入了它们，我就距离图灵完备更进了（现在可以验证字符串相等了）? 
 
 # 1. 形式化：验证某个变量的字面量是给定的字母。相当于 字符串比较
 
@@ -47,3 +47,4 @@ prove_forall_on_finite_set:
         $is_abcd(x)
     prove:
         $is_abcd(a)
+
