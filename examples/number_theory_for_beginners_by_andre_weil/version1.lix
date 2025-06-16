@@ -460,22 +460,28 @@ prop two_items_op_return_value_in_set(s set, f_original_ret_set set, f fn(s, s)f
     forall x s, y s:
         f(x, y) $in return_value_set
 
-prop one_item_op_return_value_in_set(s set, f_original_ret_set set, f fn(s, s)f_original_ret_set, return_value_set set):
+prop one_item_op_return_value_in_set(s set, f_original_ret_set set, f fn(s)f_original_ret_set, return_value_set set):
     forall x s:
         f(x) $in return_value_set
 
 # Definition 7.1
 fn group_generated_by_items(s set, op fn(s, s)s, e s, inv fn(s)s, items set) set:
     $is_group(s, op, e, inv)
-    forall x items:
-        x $in s
+    items $subset_of s
+
     then:
-        e $in items
-        $is_group(items, two_items_op_on_subset(s, op, items), e, one_item_op_on_subset(s, op, items)(e))
+        e $in group_generated_by_items(s,op,e,inv,items)
+
+        $one_item_op_return_value_in_set(s, s, one_item_op_on_subset(s, s, op, group_generated_by_items(s,op,e,inv,items)), group_generated_by_items(s,op,e,inv,items))
+        $two_items_op_return_value_in_set(s, s, two_items_op_on_subset(s, s, op, group_generated_by_items(s,op,e,inv,items)), group_generated_by_items(s,op,e,inv,items))
+        
+        $is_group(group_generated_by_items(s,op,e,inv, items), two_items_op_on_subset(s, op, group_generated_by_items(s,op,e,inv,items)), e, one_item_op_on_subset(s, op, group_generated_by_items(s,op,e,inv,items)))
+
         forall x items:
             x $in s
             then:
-                x $in group_generated_by_items(s, op, e, inv, items)
+                x $in group_generated_by_items(s, op, e, inv, group_generated_by_items(s,op,e,inv,items))
+
         forall s set:
             items $subset_of s
             then:
