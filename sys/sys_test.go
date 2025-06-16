@@ -90,12 +90,9 @@ func TestRunAllComprehensiveCodes(t *testing.T) {
 			return
 		}
 		msg, signal, err := ExecuteCodeAndReturnMessage(string(code))
-		if err != nil {
-			fmt.Println("Error executing code:", err)
-			return
-		}
-		if signal != glob.SysSignalTrue {
+		if err != nil || signal != glob.SysSignalTrue {
 			fmt.Println(msg)
+			fmt.Println("Error executing code:", err)
 			fmt.Println("Error in file:", file.Name())
 			return
 		}
