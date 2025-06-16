@@ -432,3 +432,52 @@ prop is_field(field set, add fn(field, field)field, mul fn(field, field)field, i
 # Theorem 6.3
 # For any integer m > 1, the ring of congruence modulo m is a field
 """
+
+"""
+Chapter 7
+"""
+
+# 缺：判断一个函数在某函数集合里
+
+"""
+fn_fn two_items_op_on_subset(s set, op fn(s, s)s, items set):
+    fn (x items, y items) s:
+        op(x, y) = op_on_subset(s, op, items)(x, y)
+    dom:
+        items $subset_of s
+        forall x items, y items:
+            op(x, y) $in s
+
+fn_fn one_item_op_on_subset(s set, op fn(s, s)s, items set):
+    fn (x items) s:
+        op(x, x) = op_on_subset(s, op, items)(x, x)
+    dom:
+        items $subset_of s
+        forall x items:
+            op(x) $in s
+
+prop two_items_op_return_value_in_set(s set, f_original_ret_set set, f fn(s, s)f_original_ret_set, return_value_set set):
+    forall x s, y s:
+        f(x, y) $in return_value_set
+
+prop one_item_op_return_value_in_set(s set, f_original_ret_set set, f fn(s, s)f_original_ret_set, return_value_set set):
+    forall x s:
+        f(x) $in return_value_set
+
+# Definition 7.1
+fn group_generated_by_items(s set, op fn(s, s)s, e s, inv fn(s)s, items set) set:
+    $is_group(s, op, e, inv)
+    forall x items:
+        x $in s
+    then:
+        e $in items
+        $is_group(items, two_items_op_on_subset(s, op, items), e, one_item_op_on_subset(s, op, items)(e))
+        forall x items:
+            x $in s
+            then:
+                x $in group_generated_by_items(s, op, e, inv, items)
+        forall s set:
+            items $subset_of s
+            then:
+                group_generated_by_items(s, op, e, inv, items) $subset_of s
+"""
