@@ -33,7 +33,7 @@ func TestWholeFile(t *testing.T) {
 	// code := readFile("../examples/number_theory_for_beginners_by_andre_weil/number_theory_for_beginners_by_andre_weil.lix")
 	// code := readFile("../examples/test_codes/tmp.lix")
 	// code := readFile("../examples/number_theory_for_beginners_by_andre_weil/version1.lix")
-	code := readFile("../examples/test_codes/with_suppose.lix")
+	code := readFile("../examples/test_codes/with_suppose_equal.lix")
 	// code := readFile("../examples/test_codes/tmp.lix")
 	readFileTime := time.Since(start)
 	start = time.Now()
