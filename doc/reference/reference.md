@@ -83,7 +83,7 @@ The C programming language's syntax and semantics significantly influenced Litex
 
 (Syntactically, Litex learn from python and go. Semantically, Litex learn from Lisp, C and awk. As a daily tool, Litex learn from Tex and python jupyter notebook. Litex design principle is a mixture of all of them.)
 
-fn_template is inspired by C++'s template over function. It is a describing the properties of a function.
+fn_template is inspired by C++'s template over function. It is a describing the properties of a function. However, there are still differences. No need to introduce <> : Because parameters can be passed in the parameter list (so-called requirements for types are essentially individual facts in Litex. Things that are sets and things that are not sets are fundamentally no different in terms of fact handling. This approach is inherently different from C++'s type system.) Here we can see the fundamental difference of "set system" in Litex and "type system" in C++ and other programming languages.
 
 Furthermore, Tex's clear distinction between "math expressions" and "plain words" inspired Litex's separation of "factual expressions" from ordinary symbols. Litex also aspires to achieve the same level of ubiquity and utility as Tex, aiming to become a widely adopted daily tool. This ambition is encapsulated in its name: Litex = Lisp + Tex, symbolizing the fusion of Lisp's expressive elegance and Tex's practicality.
 
