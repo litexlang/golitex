@@ -1,0 +1,27 @@
+"""
+1. is_indexable_set 
+    index_set 或许可以同时包含set的性质和is_indexable_set的性质
+2. is_finite_set 作用在 indexable_set上
+    finite_set 或许可以同时包含set的性质和is_finite_set的性质
+3. len只能作用在 indexable_set 上
+4. [], [[]] 能作用在 indexable_set 上，但不能作用在 set 上
+5. prove_is_indexable_set 证明，或者构造indexable_set
+prove_forall_on_indexable_set 用遍历的方式去证明forall。这种方式和描述性地证明forall是不同的
+
+本质上index的意义是：存在函数fn index(N)setName，且know exist_prop m N st forall x setName x = index(m)
+"""
+
+obj congruence_class indexable_set
+know:
+    forall x N:
+        congruence_class[x] $in finite_set
+        len(congruence_class[x]) = x
+
+    forall y N, x N:
+        y < x
+        then:
+            cc[x][y] $in set
+    
+    forall e cc[x][y]:
+        e $in Z
+        $is_congruent_to_x(e, y, x)

@@ -44,6 +44,7 @@ obj f seq:
     $is_finite_seq(f)
     seq_len(f) = 2
 
+"""
 set_set congruence_class
 
 # 符合让 fn_set 返回 fn_set。比如 fn_set1(x N) 返回 fn_set2(x N)
@@ -60,7 +61,9 @@ obj set_of_sets2 set:
         x $in set
 
 fn congruence_class(n N) set_of_sets1 
-know exist_prop m N st everything_in_set_of_sets1_is_congruent_to_m(x set_of_sets1):
-    everything_in_set_of_sets1_is_congruent_to_m(x) = congruence_class(m)
+know exist_prop m N st everything_in_set_of_sets2_is_congruent_to_m(x set_of_sets2):
+    x = fn_set1(m)
 
 fn congruence_class_elem(n N, m N) set_of_sets2
+"""
+
