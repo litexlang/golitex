@@ -157,7 +157,7 @@ There are two major special cases of match and substitute:
 
 1. about rational numbers, like 1, 3.5 or 4.123456789. These objects are different from user-defined objects because their literal representation directly encodes information and **match and substitute** is not enough to handle them. Rational numbers and their basic operations like addition, multiplication, inequalities are builtin in Litex, and Litex handles all the verification rules for them automatically. 
 
-2. about counting. Again they are different because their literal representation directly encodes information and **match and substitute** is not enough to handle them. If a set has finite number of elements, we verify case by case to prove a universal fact on that set. Litex provides a special keywords to handle this case.
+2. about counting and prove a universal fact on a finite set by iterating over the set. Again they are different because their literal representation directly encodes information and **match and substitute** is not enough to handle them. If a set has finite number of elements, we verify case by case to prove a universal fact on that set. Litex provides a special keywords to handle this case.
 
 ## The Secret behind Litex's Unique Design
 
