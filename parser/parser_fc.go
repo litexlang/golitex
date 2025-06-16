@@ -29,6 +29,37 @@ func (cursor *strSliceCursor) RawFc() (ast.Fc, error) {
 	return expr, nil
 }
 
+func (cursor *strSliceCursor) squareBracketExpr() (ast.Fc, error) {
+	fc, err := cursor.fcAtomAndFcFn()
+	if err != nil {
+		return nil, err
+	}
+
+	if !cursor.is(glob.KeySymbolLeftSquareBrace) {
+		return fc, nil
+	}
+
+	cursor.skip(glob.KeySymbolLeftSquareBrace)
+	if cursor.ExceedEnd() {
+		return nil, fmt.Errorf("unexpected end of input after '['")
+	}
+
+	fcInBracket, err := cursor.RawFc()
+	if err != nil {
+		return nil, err
+	}
+
+	if cursor.ExceedEnd() {
+		return nil, fmt.Errorf("unexpected end of input after ']'")
+	}
+
+	if err := cursor.skip(glob.KeySymbolRightSquareBrace); err != nil {
+		return nil, fmt.Errorf("expected '%s': %v", glob.KeySymbolRightSquareBrace, err)
+	}
+
+	return ast.NewFcFn(ast.NewFcAtomWithName(glob.AtIndexOp), []ast.Fc{fc, fcInBracket}), nil
+}
+
 // “数学”优先级越高，越是底层。所以把括号表达式放在这里处理
 func (cursor *strSliceCursor) fcAtomAndFcFn() (ast.Fc, error) {
 	var expr ast.Fc
@@ -189,7 +220,8 @@ func (cursor *strSliceCursor) unaryOptFc() (ast.Fc, error) {
 		return nil, err
 	}
 	if !glob.IsBuiltinUnaryOpt(unaryOp) {
-		return cursor.fcAtomAndFcFn()
+		// return cursor.fcAtomAndFcFn()
+		return cursor.squareBracketExpr()
 	} else {
 		cursor.skip(unaryOp)
 

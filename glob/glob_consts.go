@@ -46,3 +46,5 @@ const KnowSpecFactByDef = true
 const ContinueExecutionIfExecUnknown bool = false
 
 const MaxLogicExprFactsNum int = 8
+
+const AtIndexOp string = KeySymbolLeftSquareBrace
