@@ -113,6 +113,11 @@ Difference and similarity between standard library and kernel:
 - litex code can be written by much much more people, because Litex users are much more than Litex kernel developers.
 - The standard library must be loaded into memory, every time we initialize the kernel, which might sort of waste some time every time.
 
+Here is difference between Litex (or math) and programming languages:
+
+import in Litex, i.e. all the facts in the imported file are executed at the line where it is used. In programming languages, the imported file does not need to be executed at the line where it is used, it just needs to be loaded into memory and when a function is called, then that function is executed.
+
+
 
 ## Conclusion
 
