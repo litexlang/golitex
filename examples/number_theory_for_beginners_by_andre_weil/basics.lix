@@ -1,0 +1,75 @@
+"""
+Basics
+"""
+
+forall x R, a R, b R:
+    a + x = b
+    then:
+        a + x - a = b - a
+        x = b - a
+
+forall x R, a R, b R:
+    a != 0
+    a * x = b
+    then:
+        a * x / a = b / a
+        x = b / a
+
+know:
+    forall a R, b R:
+        b  >  a
+        then:
+            b - a > 0
+
+    forall a R, b R:
+        b > a
+        then:
+            b >= a 
+            b != a
+
+    forall a R, b R:
+        b < a
+        then:
+            a > b
+
+exist_prop x Z st is_divisible_by(b Z, a Z):
+    a * x = b
+
+prop is_smallest_element_of(x N, s set):
+    dom:
+        forall y s:
+            y $in Z
+        x $in s
+    iff:
+        forall y s:
+            y >= x
+
+exist_prop x obj st non_empty(s set):
+    x $in s
+
+know exist_prop x N st exist_smallest_element_of(s set):
+    dom:
+        $non_empty(s)
+        forall y s:
+            y $in Z
+    iff:
+        x $in s
+        $is_smallest_element_of(x, s)
+    
+know forall x Z, y Z:
+    x * y $in Z
+    x + y $in Z
+    x - y $in Z
+
+know forall x Z, y Z:
+    x * y $in Z
+    x + y $in Z
+    x - y $in Z
+
+know forall x N, y N:
+    x + y $in N
+    x * y $in N
+
+know forall x N, y N:
+    x + y $in N
+    x * y $in N

@@ -1,0 +1,66 @@
+"""
+Chapter 6
+"""
+
+# Definition 6.1
+# TODO: THIS ONLY WORKS WHEN suppose-when is implemented
+# Definition of ring
+prop is_unary_ring(ring set, add fn(ring, ring)ring, mul fn(ring, ring)ring, inv fn(ring)ring, add_e ring, mul_e ring):
+    $is_commutative_group(ring, add, inv, add_e)
+    forall a ring, b ring, c ring:
+        add(mul(a, b), mul(a, c)) = mul(a, add(b, c))
+        mul(a, mul(b, c)) = mul(mul(a, b), c)
+        mul(a, b) = mul(b, a)
+    forall a ring:
+        mul(a, mul_e) = a
+        mul(mul_e, a) = a
+
+"""
+# Implement after I implement the kernel to support fn_set, fn_to_fn
+# Theorem 6.1
+fn_to_fn cc_mul(m Z):
+    m > 0
+    iff:
+        fn f(d cc(m), e cc(m)) cc(m):
+            cc(m)(d * e) = cc_mul(m)(cc(m)(d), cc(m)(e))
+
+know prop cc_is_unitary_ring(m Z):
+    $is_unary_ring(cc(m), cc_add(m), cc_mul(m), cc(m)(0), cc(m)(1))
+"""
+
+"""
+# EVEN HARDER: Implement after I implement the kernel to support fn_set, fn_to_fn, finite_seq, len
+# EVEN HARDER: THE NUMBER OF ELEMENTS IN A FINITE SEQUENCE IS SORT OF HARD TO Define AND REASON IN LITEX, WHICH DOES NOT IMPLEMENT RECURSION DIRECTLY IN THE LANGUAGE.
+# Theorem 6.2
+# Let m, a, b be with m > 0, put d = gcd(a,m), then the congruence ax = b (mod m) has either exactly d solutions modulo m, or no solution; it has a solution iff b = 0 (mod d); there are exactly m/d distinct values of b modulo m for which this is so.
+
+# Corollary 6.1
+# The congruence classes prime to m modulo m make up a group under multiplication
+fn set_of_integers_prime_to(m Z) set:
+    forall x set_of_integers_prime_to(m):
+        gcd(x, m) = 1
+
+fn set_of_integers_prime_to_m_cc(m Z) set:
+    forall x set_of_integers_prime_to(m):
+        cc(m)(x) $in set_of_integers_prime_to_m_cc(m)
+
+# Definition 6.2
+# Definition of Euler's function; For any integer m > 0, the number of integers prime to m is denoted by phi(m)
+"""
+
+# Definition 6.3
+# Definition of field
+prop is_field(field set, add fn(field, field)field, mul fn(field, field)field, inv fn(field)field, add_e field, mul_e field, mul_inv fn(field)field):
+    $is_commutative_ring(field, add, mul, inv, add_e, mul_e)
+    forall a field, b field, c field:
+        a != add_e
+        b != add_e
+        c != add_e
+        then:
+            mul(a, mul_inv(b)) = mul_e
+            mul(b, mul_inv(a)) = mul_e
+
+"""
+# Theorem 6.3
+# For any integer m > 1, the ring of congruence modulo m is a field
+"""
