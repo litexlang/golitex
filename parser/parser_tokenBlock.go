@@ -44,9 +44,9 @@ func (b *tokenBlock) stringWithIndent(indentLevel int) string {
 }
 
 // makeTokenBlocks 合并 tokenization 和 scope 解析的入口函数
-func makeTokenBlocks(lines []string, parserEnv *ParserEnv) ([]tokenBlock, error) {
+func makeTokenBlocks(lines []string) ([]tokenBlock, error) {
 	t := newTokenizerWithScope(lines)
-	return t.parseBlocks(0, parserEnv)
+	return t.parseBlocks(0)
 }
 
 func (tb *tokenBlock) CurrentTokenIs(kw string) bool {

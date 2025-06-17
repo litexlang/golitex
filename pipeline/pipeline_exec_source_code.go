@@ -36,7 +36,7 @@ func ExecuteCodeAndReturnMessage(code string) (string, glob.SysSignal, error) {
 }
 
 func executeCodeAndReturnMessageSlice(code string) ([]string, glob.SysSignal, error) {
-	topStmtSlice, err := parser.ParseSourceCode(code, parser.NewParserEnv())
+	topStmtSlice, err := parser.ParseSourceCode(code)
 	if err != nil {
 		return nil, glob.SysSignalParseError, err
 	}
@@ -59,8 +59,8 @@ func executeCodeAndReturnMessageSlice(code string) ([]string, glob.SysSignal, er
 	return msgOfTopStatements, glob.SysSignalTrue, nil
 }
 
-func ExecuteCodeAndReturnMessageSliceGivenSettings(code string, parserEnv *parser.ParserEnv, executor *exe.Executor) ([]string, glob.SysSignal, error) {
-	topStmtSlice, err := parser.ParseSourceCode(code, parserEnv)
+func ExecuteCodeAndReturnMessageSliceGivenSettings(code string, executor *exe.Executor) ([]string, glob.SysSignal, error) {
+	topStmtSlice, err := parser.ParseSourceCode(code)
 	if err != nil {
 		return nil, glob.SysSignalParseError, err
 	}
@@ -122,7 +122,6 @@ func printMessagesToWriter(writer io.Writer, msg []string) {
 // }
 
 func RunREPLInTerminal() {
-	parserEnv := parser.NewParserEnv()
 	executor := exe.NewExecutor(env.NewEnv(nil, nil))
 	reader := bufio.NewReader(os.Stdin)
 	writer := os.Stdout
@@ -142,7 +141,7 @@ func RunREPLInTerminal() {
 			return
 		}
 
-		msg, signal, err := ExecuteCodeAndReturnMessageSliceGivenSettings(code, parserEnv, executor)
+		msg, signal, err := ExecuteCodeAndReturnMessageSliceGivenSettings(code, executor)
 		if err != nil || signal != glob.SysSignalTrue {
 			printMessagesToWriter(writer, msg)
 			fmt.Fprintf(writer, glob.REPLFailedMessage)

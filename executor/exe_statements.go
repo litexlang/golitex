@@ -683,7 +683,7 @@ func (exec *Executor) importStmt(stmt *ast.ImportStmt) error {
 
 	if stmt.AsPkgName == "" {
 		// read the file
-		topStmtSlice, err := parser.ParseSourceCode(string(code), parser.NewParserEnv())
+		topStmtSlice, err := parser.ParseSourceCode(string(code))
 		if err != nil {
 			return err
 		}

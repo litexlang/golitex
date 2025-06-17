@@ -24,8 +24,8 @@ import (
 	"strings"
 )
 
-func setupAndParseStmtTest(code string, parserEnv *parser.ParserEnv) []ast.TopStmt {
-	topStatements, err := parser.ParseSourceCode(code, parserEnv)
+func setupAndParseStmtTest(code string) []ast.TopStmt {
+	topStatements, err := parser.ParseSourceCode(code)
 	if err != nil {
 		panic(err)
 	}
