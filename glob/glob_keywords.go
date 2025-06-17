@@ -50,17 +50,16 @@ const (
 	KeywordImaginary            = "i"              // e.g. i
 	KeywordIn                   = "in"
 	KeywordProveByMathInduction = "prove_by_math_induction"
-	KeywordAs                   = "as"
 	KeywordProveOr              = "prove_or"
 	KeywordSuppose              = "suppose"
 	KeywordWith                 = "with"
 
-	KeywordFnSet            = "fn_set" // Syntax sugar for fn setName(params paramsSet)  = {z z_set_name(params) | properties(z, params)}
-	KeywordLen              = "len"
-	KeywordIndexableSet     = "indexable_set"
-	KeywordFiniteSet        = "finite_set"
-	KeywordProveIteratively = "prove_iteratively" // syntax connecting forall and finite_set
-	KeywordFnTemplate       = "fn_template"
+	KeywordFnSet                  = "fn_set" // Syntax sugar for fn setName(params paramsSet)  = {z z_set_name(params) | properties(z, params)}
+	KeywordLen                    = "len"
+	KeywordIndexableSet           = "indexable_set"
+	KeywordFiniteSet              = "finite_set"
+	KeywordProveForallIteratively = "prove_iteratively" // syntax connecting forall and finite_set
+	KeywordFnTemplate             = "fn_template"
 
 	// TODO
 	// a syntax connecting or and finite_set
@@ -99,19 +98,18 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordReal:                 {},
 	KeywordIn:                   {},
 	KeywordProveByMathInduction: {},
-	KeywordAs:                   {},
 	KeywordProveOr:              {},
 	KeywordSuppose:              {},
 	KeywordWith:                 {},
 	KeywordComplex:              {},
 	KeywordImaginary:            {},
 
-	KeywordFnSet:            {},
-	KeywordLen:              {},
-	KeywordIndexableSet:     {},
-	KeywordFiniteSet:        {},
-	KeywordProveIteratively: {},
-	KeywordFnTemplate:       {},
+	KeywordFnSet:                  {},
+	KeywordLen:                    {},
+	KeywordIndexableSet:           {},
+	KeywordFiniteSet:              {},
+	KeywordProveForallIteratively: {},
+	KeywordFnTemplate:             {},
 }
 
 const (

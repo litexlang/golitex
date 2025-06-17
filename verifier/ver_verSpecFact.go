@@ -28,8 +28,15 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact(stmt *ast.SpecFactStmt, s
 		return false, nil
 	}
 
-	if ok, err := ver.isSpecFactCommutative(stmt); err != nil {
-		ok, err := ver.verSpecFactStepByStep(stmt, state)
+	ok, err := ver.isSpecFactCommutative(stmt)
+	if err != nil {
+		return false, err
+	}
+
+	if !ok {
+		return ver.verSpecFactStepByStepNotCommutatively(stmt, state)
+	} else {
+		ok, err := ver.verSpecFactStepByStepNotCommutatively(stmt, state)
 		if err != nil {
 			return false, err
 		}
@@ -40,7 +47,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact(stmt *ast.SpecFactStmt, s
 		if err != nil {
 			return false, err
 		}
-		ok, err = ver.verSpecFactStepByStep(reversedStmt, state)
+		ok, err = ver.verSpecFactStepByStepNotCommutatively(reversedStmt, state)
 		if err != nil {
 			return false, err
 		}
@@ -48,25 +55,11 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact(stmt *ast.SpecFactStmt, s
 			return true, nil
 		}
 		return false, nil
-	} else if !ok {
-		return ver.verSpecFactStepByStep(stmt, state)
-	} else {
-		if ok, err := ver.verSpecFactStepByStep(stmt, state); err != nil {
-			return false, err
-		} else if ok {
-			return true, nil
-		} else {
-			paramReversedStmt, err := stmt.ReverseSpecFactParamsOrder()
-			if err != nil {
-				return false, err
-			}
-			ok, err := ver.verSpecFactStepByStep(paramReversedStmt, state)
-			if err == nil && ok {
-				ver.successWithMsg(stmt.String(), "the proposition is commutative")
-			}
-			return ok, err
-		}
 	}
+}
+
+func (ver *Verifier) verSpecFactStepByStepNotCommutatively(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	return ver.verSpecFactStepByStep(stmt, state)
 }
 
 func (ver *Verifier) isSpecFactCommutative(stmt *ast.SpecFactStmt) (bool, error) {
