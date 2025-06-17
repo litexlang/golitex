@@ -14,7 +14,9 @@
 
 package litex_global
 
-var REPLGoodbyeMessage = "Goodbye!\n"
-var REPLSuccessMessage = "Success! :)\n"
-var REPLFailedMessage = "Failed :(\n"
-var REPLErrorMessage = "Error: %v\n"
+var REPLGoodbyeMessage = "---\nGoodbye!\n"
+var REPLSuccessMessage = "---\nSuccess! :)\n"
+var REPLFailedMessage = "---\nFailed :(\n"
+var REPLUnknownMessage = "---\nUnknown :(\n"
+var REPLSyntaxErrorMessage = "---\nSyntax Error :(\n"
+var REPLRuntimeErrorMessage = "---\nRuntime Error :(\n"

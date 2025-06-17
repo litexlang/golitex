@@ -76,9 +76,9 @@ func execStmtTest(topStmt []ast.TopStmt) []string {
 	}
 
 	if isNotTrue {
-		messages = append(messages, fmt.Sprintf("---\n%s", glob.REPLFailedMessage))
+		messages = append(messages, glob.REPLFailedMessage)
 	} else {
-		messages = append(messages, fmt.Sprintf("---\n%s", glob.REPLSuccessMessage))
+		messages = append(messages, glob.REPLSuccessMessage)
 	}
 
 	return messages
