@@ -665,25 +665,38 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
 }
 
 func (exec *Executor) importStmt(stmt *ast.ImportStmt) error {
-	defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
+	execSuccess := false
+	originalMsgLen := exec.env.MsgLen()
+	defer func() {
+		exec.env.ClearMsgFromIndex(originalMsgLen)
+		if !execSuccess {
+			exec.appendMsg(fmt.Sprintf("Failed to execute import statement:\n%s\n", stmt.String()))
+		} else {
+			exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
+		}
+	}()
+
+	code, err := os.ReadFile(stmt.Path)
+	if err != nil {
+		return err
+	}
 
 	if stmt.AsPkgName == "" {
 		// read the file
-		code, err := os.ReadFile(stmt.Path)
-		if err != nil {
-			return err
-		}
-
 		topStmtSlice, err := parser.ParseSourceCode(string(code), parser.NewParserEnv())
 		if err != nil {
 			return err
 		}
 		for _, topStmt := range topStmtSlice {
-			_, err := exec.TopLevelStmt(&topStmt)
+			execState, err := exec.TopLevelStmt(&topStmt)
 			if err != nil {
 				return err
 			}
+			if execState != glob.ExecState_True {
+				break
+			}
 		}
+		execSuccess = true
 	} else {
 		panic(glob.InternalWarningMsg("import with as pkg name is not supported"))
 	}
