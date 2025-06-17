@@ -23,22 +23,55 @@ prop is_unary_ring(ring set, add fn(ring, ring)ring, mul fn(ring, ring)ring, inv
         mul(mul_e, a) = a
 
 
-# Theorem 6.1
-
-
-
-"""
-# Implement after I implement the kernel to support fn_set, fn_to_fn
-# Theorem 6.1
-fn_to_fn cc_mul(m Z):
+# Definition of cc_mul
+fn cc_mul(m Z) fn(cc_mod(m), cc_mod(m))cc_mod(m):
     m > 0
-    iff:
-        fn f(d cc(m), e cc(m)) cc(m):
-            cc(m)(d * e) = cc_mul(m)(cc(m)(d), cc(m)(e))
+    then:
+        forall x N, y N:
+            x < m
+            y < m
+            then:
+                cc(x * y, m) = cc(x, m) \cc_mul(m) cc(y, m)
 
-know prop cc_is_unitary_ring(m Z):
-    $is_unary_ring(cc(m), cc_add(m), cc_mul(m), cc(m)(0), cc(m)(1))
-"""
+# Theorem 6.1
+# For any integer m > 0, the set cc(m) is a unary ring under addition and multiplication modulo m
+know forall m Z:
+    m > 0
+    then:
+        $is_unary_ring(cc_mod(m), cc_add(m), cc_mul(m), cc_inv(m), cc(0, m), cc(1, m))
+
+# Theorem 6.2
+# Let m, a, b be with m > 0, put d = gcd(a,m), then the congruence ax = b (mod m) has either exactly d solutions modulo m, or no solution; it has a solution iff b = 0 (mod d); there are exactly m/d distinct values of b modulo m for which this is so.
+
+fn solutions_of_congruence(a Z, b Z, m Z) set:
+    forall x solutions_of_congruence(a, b, m):
+        x $in Z
+        $is_congruent_modulo(a * x, b, m)
+    forall x Z:
+        $is_congruent_modulo(a * x, b, m)
+        then:
+            x $in solutions_of_congruence(a, b, m)
+
+fn solutions_of_congruence_modulo(a Z, b Z, m Z) finite_set:
+    forall x solutions_of_congruence(a, b, m):
+        x > 0
+        x < m
+        x $in solutions_of_congruence(a, b, m)
+    forall x Z:
+        x > 0
+        x $in solutions_of_congruence(a, b, m)
+        x < m
+        then:
+            x $in solutions_of_congruence_modulo(a, b, m)
+
+know prop solutions_of_congruence_is_finite(a Z, b Z, m Z):
+    or:
+        len(solutions_of_congruence_modulo(a, b, m)) = 0
+        len(solutions_of_congruence_modulo(a, b, m)) = gcd(a, m)
+
+# TODO: ax=b (mod m) has a solution iff b = 0 (mod d). there are exactly m/d distinct values of b modulo m for which this is so.
+
+
 
 """
 # EVEN HARDER: Implement after I implement the kernel to support fn_set, fn_to_fn, finite_seq, len
