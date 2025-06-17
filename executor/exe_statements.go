@@ -679,7 +679,8 @@ func (exec *Executor) importStmt(stmt *ast.ImportStmt) error {
 	}()
 
 	// 需要连上现在所在的repo的名字
-	code, err := os.ReadFile(filepath.Join(taskManager.TaskRepoName, stmt.Path))
+	codePath := filepath.Join(taskManager.TaskRepoName, stmt.Path)
+	code, err := os.ReadFile(codePath)
 	if err != nil {
 		return err
 	}
