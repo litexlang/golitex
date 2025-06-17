@@ -17,7 +17,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	glob "golitex/glob"
 	sys "golitex/sys"
 	"os"
 )
@@ -28,6 +27,7 @@ func main() {
 	versionFlag := flag.Bool("version", false, "Show version information")
 	executeFlag := flag.String("e", "", "Execute the given code")
 	fileFlag := flag.String("f", "", "Execute the given file")
+	repoFlag := flag.String("r", "", "Execute the given repo")
 
 	flag.Parse()
 
@@ -48,19 +48,12 @@ func main() {
 	// Handle execution flags
 	if *executeFlag != "" {
 		msg, signal, err := sys.ExecuteCodeAndReturnMessage(*executeFlag)
-		fmt.Println(sys.BetterMsg(msg))
+		fmt.Println(sys.PostprocessOutputMsg(msg))
 		if err != nil {
 			fmt.Printf("Error: %v\n", err)
-			// os.Exit(1)
 		} else {
-			// Output results
-			if signal == glob.SysSignalTrue {
-				fmt.Println(glob.REPLSuccessMessage)
-			} else if signal == glob.SysSignalFalse {
-				fmt.Println(glob.REPLFailedMessage)
-			} else {
-				fmt.Println(glob.REPLFailedMessage)
-			}
+			msg := sys.RunMainMsg(signal)
+			fmt.Println(msg)
 		}
 		return
 	}
@@ -74,19 +67,31 @@ func main() {
 
 		// Process file
 		msg, signal, err := sys.RunFile(*fileFlag)
-		fmt.Println(sys.BetterMsg(msg))
+		fmt.Println(sys.PostprocessOutputMsg(msg))
 		if err != nil {
 			fmt.Printf("Error: %v\n", err)
-			// os.Exit(1)
 		} else {
-			// Output results
-			if signal == glob.SysSignalTrue {
-				fmt.Println(glob.REPLSuccessMessage)
-			} else if signal == glob.SysSignalUnknown {
-				fmt.Println(glob.REPLFailedMessage)
-			} else {
-				fmt.Println(glob.REPLFailedMessage)
-			}
+			msg := sys.RunMainMsg(signal)
+			fmt.Println(msg)
+		}
+		return
+	}
+
+	if *repoFlag != "" {
+		// verify the repo exists
+		if _, err := os.Stat(*repoFlag); os.IsNotExist(err) {
+			fmt.Printf("Error: Repo '%s' does not exist\n", *repoFlag)
+			os.Exit(1)
+		}
+		// run the repo
+		msg, signal, err := sys.RunRepo(*repoFlag)
+		fmt.Println(sys.PostprocessOutputMsg(msg))
+		if err != nil {
+			fmt.Printf("Error: %v\n", err)
+			os.Exit(1)
+		} else {
+			msg := sys.RunMainMsg(signal)
+			fmt.Println(msg)
 		}
 		return
 	}
