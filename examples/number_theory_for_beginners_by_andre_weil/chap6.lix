@@ -76,7 +76,7 @@ know prop solutions_of_congruence_is_finite(a Z, b Z, m Z):
 fn cc_prime_to(m Z) finite_set:
     forall x cc_prime_to(m):
         x $in cc_mod(m)
-        $is_cc_prime(m, x)
+        $is_cc_prime_to_modulo(m, x)
     forall x Z:
         gcd(x, m) = 1
         then:

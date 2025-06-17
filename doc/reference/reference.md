@@ -112,6 +112,7 @@ Difference and similarity between standard library and kernel:
 - kernel development is much harder to just write litex code. Litex code is much easier to read and write for non-experts.
 - litex code can be written by much much more people, because Litex users are much more than Litex kernel developers.
 - The standard library must be loaded into memory, every time we initialize the kernel, which might sort of waste some time every time.
+- Striking the right balance between whether a feature should be implemented in the standard library or the kernel is hard. The right balance is beneficial for both users(has enough features to express logic they want to express easily) and developer(has minimal features for easier development and maintenance).
 
 Here is difference between Litex (or math) and programming languages:
 
