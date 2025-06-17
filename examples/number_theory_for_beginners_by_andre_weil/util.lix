@@ -1,0 +1,22 @@
+# This file contains some useful functions and properties for the number theory for beginners by Andre Weil. Many of them are used in the book without proof or definition.
+
+know forall x Z:
+    x > 0
+    then:
+        x $in N
+
+know forall x Z, m Z:
+    x > 0
+    m > 0
+    x < m
+    then:
+        x % m = x
+
+
+fn product_of_int_finite_set(s finite_set)Z:
+    forall x s:
+        x $in Z
+    then:
+        forall x s:
+            product_of_int_finite_set(s + 1) = product_of_int_finite_set(s) * x
+

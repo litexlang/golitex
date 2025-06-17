@@ -2,7 +2,7 @@
 Chapter 4
 """
 
-import "std.lix"
+import "util.lix"
 import "basics.lix"
 import "chap1.lix"
 import "chap2.lix"
