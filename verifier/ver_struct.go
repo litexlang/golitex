@@ -10,7 +10,7 @@
 // Litex email: <litexlang@outlook.com>
 // Litex website: https://litexlang.org
 // Litex github repository: https://github.com/litexlang/golitex
-// Litex discord server: https://discord.gg/uvrHM7eS
+// Litex Zulip community: https://litex.zulipchat.com
 
 // verifier 的方法的命名方式：factType+?UseWhatMemToVerify+?atEnv, 比如 RelaFactSpecAtEnv 就是说 证明 relaFact, 方法是用SpecFact，在当前环境里.
 package litex_verifier

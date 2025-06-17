@@ -13,7 +13,7 @@ _The Formal Language Where Natural Expression Meets Scalable Formal Reasoning_
 *Created by Jiachen Shen (You can call me Jackie Shen.)*
 
 [![Github](https://img.shields.io/badge/Github-grey?logo=github)](https://github.com/litexlang/golitex)
-[![Discord](https://img.shields.io/badge/Discord-purple?logo=discord)](https://discord.gg/uvrHM7eS)
+[![Zulip](https://img.shields.io/badge/Zulip-purple?logo=zulip)](https://litex.zulipchat.com)
 [![Website](https://img.shields.io/badge/Website-blue?logo=website)](https://litexlang.org)
 [![Email](https://img.shields.io/badge/Email-red?logo=email)](mailto:litexlang@outlook.com)
 [![Online Playground](https://img.shields.io/badge/Online%20Playground-darkgreen?logo=playground)](https://litexlang.org/playground)
@@ -85,9 +85,9 @@ After having a sense of Litex, do this:
 2. Read the [Litex for Curious Lean Users](./doc/litex_for_curious_lean_users/litex_for_curious_lean_users.md) to get a sense of the difference between Litex and Lean.
 3. To learn applications of Litex, read [applications of formal reasoning in AI and many other fields](./doc/applications_of_formal_reasoning/applications_of_formal_reasoning.md).
 4. To read a comprehensive example, read [formalization of Hilbert geometry axioms](./examples/comprehensive_examples/Hilbert_geometry_axioms_formalization.lix).
-5. Contribute piece by piece to the Litex kernel or the Litex dataset, e.g. formalize mathematical concepts, fix bugs, add new features, improve documentation, etc. on [github](https://github.com/litexlang/golitex), [discord](https://discord.gg/uvrHM7eS).
+5. Contribute piece by piece to the Litex kernel or the Litex dataset, e.g. formalize mathematical concepts, fix bugs, add new features, improve documentation, etc. on [github](https://github.com/litexlang/golitex), [zulip](https://litex.zulipchat.com).
 
-**IF YOU HAVE ANY PROBLEMS, PLEASE CONTACT THROUGH [discord](https://discord.gg/uvrHM7eS) OR litexlang@outlook.com OR [github](https://github.com/litexlang/golitex).**
+**IF YOU HAVE ANY PROBLEMS, PLEASE CONTACT THROUGH [zulip](https://litex.zulipchat.com) OR litexlang@outlook.com OR [github](https://github.com/litexlang/golitex).**
 
 **THANK YOU FOR YOUR FEARLESS EARLY ADOPTION! HERE IS MY HEARTFELT THANKS TO Litex's EARLIEST FANS -- THE BOLD PIONEERS WHO TRUSTS ME FROM THE START!**
 
@@ -157,7 +157,7 @@ There are two major special cases of match and substitute:
 
 1. about rational numbers, like 1, 3.5 or 4.123456789. These objects are different from user-defined objects because their literal representation directly encodes information and **match and substitute** is not enough to handle them. Rational numbers and their basic operations like addition, multiplication, inequalities are builtin in Litex, and Litex handles all the verification rules for them automatically. 
 
-2. about counting and prove a universal fact on a finite set by iterating over the set. Again they are different because their literal representation directly encodes information and **match and substitute** is not enough to handle them. If a set has finite number of elements, we verify case by case to prove a universal fact on that set. Litex provides a special keywords to handle this case.
+2. about counting and prove a universal fact on a finite set by iterating over the set. Again they are different because their literal representation directly encodes information and **match and substitute** is not enough to handle them. If a set has finite number of elements, we verify case by case to prove a universal fact on that set (for infinite sets, we can only use `forall` to express their properties.). Litex provides a special keywords to handle this case.
 
 ## The Secret behind Litex's Unique Design
 
@@ -207,7 +207,7 @@ _Given enough eyeballs, all bugs are shallow._
 
 _-- Linus Torvalds_
 
-Litex's growth is driven by the needs of its users. The users shape the language, not anyone else. If you have any ideas, please contact us through [discord](https://discord.gg/uvrHM7eS) or litexlang@outlook.com.
+Litex's growth is driven by the needs of its users. The users shape the language, not anyone else. If you have any ideas, please contact us through [zulip](https://litex.zulipchat.com) or litexlang@outlook.com.
 
 1. Why is Litex poised for success now?
 
@@ -379,6 +379,6 @@ Since 90% of the functionality delivered now is better than 100% of it delivered
 - **Project Email:** litexlang@outlook.com
 - **Litex Creator:** Jiachen Shen
 - **Litex Creator's Email:** malloc_realloc_free@outlook.com
-- **Discord:** [discord](https://discord.gg/uvrHM7eS)
+- **Litex Zulip Community:** [litex.zulipchat.com](https://litex.zulipchat.com)
 
 [^1]: Kernighan & Plauger, The Elements of Programming Style, 1978.
