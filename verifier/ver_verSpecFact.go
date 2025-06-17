@@ -339,17 +339,20 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecFactStmt, st
 	return false, nil
 }
 
-var reverseMap = map[string]*ast.FcAtom{
+var reverseCmpFcAtomMap = map[string]*ast.FcAtom{
 	glob.KeySymbolLargerEqual: ast.NewFcAtomWithName(glob.KeySymbolLessEqual),
 	glob.KeySymbolLessEqual:   ast.NewFcAtomWithName(glob.KeySymbolLargerEqual),
 	glob.KeySymbolGreater:     ast.NewFcAtomWithName(glob.KeySymbolLess),
 	glob.KeySymbolLess:        ast.NewFcAtomWithName(glob.KeySymbolGreater),
 }
 
+// 只是证明 a >= b 和 b <= a 是等价的，没有用到 a = b => a >=b, a > b => a >= b，因为我觉得后者应该
+// 其实也可以写入标准库而不是放在kernel，但我还是送给用户得了
+// 传递性，就写在标准库吧
 func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	propName := stmt.PropName.Name
 
-	reversePropName := reverseMap[propName]
+	reversePropName := reverseCmpFcAtomMap[propName]
 
 	ok, err := ver.verSpecFactStepByStep(stmt, state)
 	if err != nil {
@@ -358,17 +361,87 @@ func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state VerState) (b
 	if ok {
 		return true, nil
 	}
-	reversedStmt, err := stmt.ReverseSpecFactParamsOrder()
-	if err != nil {
-		return false, err
+
+	// 如果是 >= 操作符，尝试证明 > 或 = 是否成立
+	if propName == glob.KeySymbolLargerEqual {
+		// 尝试证明 >
+		greaterStmt := *stmt
+		greaterStmt.PropName = *ast.NewFcAtomWithName(glob.KeySymbolGreater)
+		ok, err = ver.verSpecFactStepByStep(&greaterStmt, state)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			if state.requireMsg() {
+				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is true", greaterStmt.String()))
+			} else {
+				ver.successNoMsg()
+			}
+			return true, nil
+		}
+
+		// 尝试证明 =
+		equalStmt := *stmt
+		equalStmt.PropName = *ast.NewFcAtomWithName(glob.KeySymbolEqual)
+		ok, err = ver.verTrueEqualFact(&equalStmt, state)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			if state.requireMsg() {
+				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is true", equalStmt.String()))
+			} else {
+				ver.successNoMsg()
+			}
+			return true, nil
+		}
 	}
-	reversedStmt.PropName = *reversePropName
-	ok, err = ver.verSpecFactStepByStep(reversedStmt, state)
-	if err != nil {
-		return false, err
+
+	// 如果 <= 操作符，尝试证明 < 或 = 是否成立
+	if propName == glob.KeySymbolLessEqual {
+		// 尝试证明 <
+		lessStmt := *stmt
+		lessStmt.PropName = *ast.NewFcAtomWithName(glob.KeySymbolLess)
+		ok, err = ver.verSpecFactStepByStep(&lessStmt, state)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			return true, nil
+		}
+
+		// 尝试证明 =
+		equalStmt := *stmt
+		equalStmt.PropName = *ast.NewFcAtomWithName(glob.KeySymbolEqual)
+		ok, err = ver.verTrueEqualFact(&equalStmt, state)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			return true, nil
+		}
 	}
-	if ok {
-		return true, nil
+
+	if propName == glob.KeySymbolGreater || propName == glob.KeySymbolLess {
+		reversedStmt, err := stmt.ReverseSpecFactParamsOrder()
+		if err != nil {
+			return false, err
+		}
+		reversedStmt.PropName = *reversePropName
+		ok, err = ver.verSpecFactStepByStep(reversedStmt, state)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			if state.requireMsg() {
+				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is true", reversedStmt.String()))
+			} else {
+				ver.successNoMsg()
+			}
+			return true, nil
+		}
+		return false, nil
 	}
-	return false, nil
+
+	return false, fmt.Errorf("unknown comparison operator: %s", propName)
 }

@@ -1,0 +1,19 @@
+obj a R:
+    a > 0
+0 < a
+a >= 0
+
+obj b R:
+    b < 0
+0 > b
+b <= 0
+
+obj c R:
+    c = 0
+0 = c
+c <= 0
+
+obj d R:
+    d = 0
+0 = d
+d >= 0
