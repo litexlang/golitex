@@ -71,7 +71,16 @@ know prop solutions_of_congruence_is_finite(a Z, b Z, m Z):
 
 # TODO: ax=b (mod m) has a solution iff b = 0 (mod d). there are exactly m/d distinct values of b modulo m for which this is so.
 
-
+# Corollary 6.1
+# The congruence classes prime to m modulo m make up a group under multiplication
+fn cc_prime_to(m Z) finite_set:
+    forall x cc_prime_to(m):
+        x $in cc_mod(m)
+        $is_cc_prime(m, x)
+    forall x Z:
+        gcd(x, m) = 1
+        then:
+            cc(x, m) $in cc_prime_to(m)
 
 """
 # EVEN HARDER: Implement after I implement the kernel to support fn_set, fn_to_fn, finite_seq, len
