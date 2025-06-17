@@ -18,7 +18,9 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
+	parser "golitex/parser"
 	verifier "golitex/verifier"
+	"os"
 	"strings"
 )
 
@@ -664,6 +666,27 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
 
 func (exec *Executor) importStmt(stmt *ast.ImportStmt) error {
 	defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
+
+	if stmt.AsPkgName == "" {
+		// read the file
+		code, err := os.ReadFile(stmt.Path)
+		if err != nil {
+			return err
+		}
+
+		topStmtSlice, err := parser.ParseSourceCode(string(code), parser.NewParserEnv())
+		if err != nil {
+			return err
+		}
+		for _, topStmt := range topStmtSlice {
+			_, err := exec.TopLevelStmt(&topStmt)
+			if err != nil {
+				return err
+			}
+		}
+	} else {
+		panic(glob.InternalWarningMsg("import with as pkg name is not supported"))
+	}
 
 	return nil
 }
