@@ -66,8 +66,6 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 				ret, err = tb.knowPropStmt()
 			} else if tb.TokenAtHeaderIndexIs(1, glob.KeywordExistProp) {
 				ret, err = tb.knowExistPropStmt()
-			} else if tb.TokenAtHeaderIndexIs(1, glob.KeywordSuppose) {
-				ret, err = tb.knowSupposeStmt()
 			} else {
 				ret, err = tb.knowFactStmt()
 			}
@@ -1167,18 +1165,4 @@ func (tb *tokenBlock) getStringInDoubleQuotes() (string, error) {
 	tb.header.skip(glob.KeySymbolDoubleQuote)
 
 	return builder.String(), nil
-}
-
-func (tb *tokenBlock) knowSupposeStmt() (*ast.KnowSupposeStmt, error) {
-	err := tb.header.skip(glob.KeywordKnow)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
-
-	supposeStmt, err := tb.supposePropMatchStmt()
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
-
-	return ast.NewKnowSupposeStmt(*supposeStmt), nil
 }

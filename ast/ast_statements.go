@@ -122,10 +122,6 @@ type KnowExistPropStmt struct {
 	ExistProp DefExistPropStmt
 }
 
-type KnowSupposeStmt struct {
-	SupposeStmt SupposeStmt
-}
-
 type OrStmt struct {
 	Facts []SpecFactStmt
 }

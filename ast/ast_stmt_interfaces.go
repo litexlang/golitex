@@ -33,7 +33,6 @@ func (s *WithStmt) stmt()            {}
 func (s *ProveInEachCaseStmt) stmt() {}
 func (s *KnowPropStmt) stmt()        {}
 func (s *KnowExistPropStmt) stmt()   {}
-func (s *KnowSupposeStmt) stmt()     {}
 func (s *OrStmt) stmt()              {}
 func (s *ImportStmt) stmt()          {}
 
