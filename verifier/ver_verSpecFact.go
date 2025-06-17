@@ -59,6 +59,10 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact(stmt *ast.SpecFactStmt, s
 }
 
 func (ver *Verifier) verSpecFactStepByStepNotCommutatively(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	if stmt.NameIs(glob.KeySymbolLargerEqual) || stmt.NameIs(glob.KeySymbolLessEqual) || stmt.NameIs(glob.KeySymbolGreater) || stmt.NameIs(glob.KeySymbolLess) {
+		return ver.verBtCmpSpecFact(stmt, state)
+	}
+
 	return ver.verSpecFactStepByStep(stmt, state)
 }
 
@@ -332,5 +336,39 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecFactStmt, st
 		}
 	}
 
+	return false, nil
+}
+
+var reverseMap = map[string]*ast.FcAtom{
+	glob.KeySymbolLargerEqual: ast.NewFcAtomWithName(glob.KeySymbolLessEqual),
+	glob.KeySymbolLessEqual:   ast.NewFcAtomWithName(glob.KeySymbolLargerEqual),
+	glob.KeySymbolGreater:     ast.NewFcAtomWithName(glob.KeySymbolLess),
+	glob.KeySymbolLess:        ast.NewFcAtomWithName(glob.KeySymbolGreater),
+}
+
+func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	propName := stmt.PropName.Name
+
+	reversePropName := reverseMap[propName]
+
+	ok, err := ver.verSpecFactStepByStep(stmt, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+	reversedStmt, err := stmt.ReverseSpecFactParamsOrder()
+	if err != nil {
+		return false, err
+	}
+	reversedStmt.PropName = *reversePropName
+	ok, err = ver.verSpecFactStepByStep(reversedStmt, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
 	return false, nil
 }
