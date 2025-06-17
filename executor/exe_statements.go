@@ -53,9 +53,8 @@ func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		execState, err = exec.supposePropMatchStmt(stmt)
 	case *ast.WithStmt:
 		execState, err = exec.withStmt(stmt)
-	case *ast.KnowSupposeStmt:
-		execState, err = exec.knowSupposeStmt(stmt)
-
+	case *ast.ImportStmt:
+		err = exec.importStmt(stmt)
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}
@@ -663,6 +662,8 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
 	return nil
 }
 
-func (exec *Executor) knowSupposeStmt(stmt *ast.KnowSupposeStmt) (glob.ExecState, error) {
-	panic("knowSupposeStmt: not implemented")
+func (exec *Executor) importStmt(stmt *ast.ImportStmt) error {
+	defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
+
+	return nil
 }

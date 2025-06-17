@@ -1,0 +1,2 @@
+import "test_codes/import_test_pkg"
+import pkgName "test_codes/import_test_pkg"

@@ -549,14 +549,6 @@ func SupposeNewFactsMsg(stmt *SupposeStmt, messages []string) string {
 	return builder.String()
 }
 
-func (stmt *KnowSupposeStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordKnow)
-	builder.WriteString(" ")
-	builder.WriteString(stmt.SupposeStmt.String())
-	return builder.String()
-}
-
 func (stmt *OrStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordOr)

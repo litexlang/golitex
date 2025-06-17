@@ -98,10 +98,6 @@ func NewWithPropMatchStmt(fact SpecFactStmt, body []Stmt) *WithStmt {
 	return &WithStmt{fact, body}
 }
 
-func NewKnowSupposeStmt(supposeStmt SupposeStmt) *KnowSupposeStmt {
-	return &KnowSupposeStmt{supposeStmt}
-}
-
 func NewOrStmt(orFacts []SpecFactStmt) *OrStmt {
 	return &OrStmt{orFacts}
 }
