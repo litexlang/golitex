@@ -25,3 +25,11 @@ func (e *Env) GetFactsFromKnownFactInMatchEnv(envFact *ast.SpecFactStmt) (*Known
 	}
 	return &knownFacts, true
 }
+
+func (e *Env) MsgLen() int {
+	return len(e.Msgs)
+}
+
+func (e *Env) ClearMsgFromIndex(index int) {
+	e.Msgs = e.Msgs[:index]
+}
