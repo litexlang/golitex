@@ -2,6 +2,29 @@
 Chapter 7
 """
 
+# Definition 7.1
+
+prop is_subgroup(s set, op fn(s, s)s, e s, inv fn(s)s, items set):
+    $is_group(s, op, e, inv)
+    items $subset_of s
+    then:
+        # Here need need semantics which says fn(s, s)s does not necessarily mean dom is (s,s) and return value is s, it can mean (s, s) is subset_of its actual domain and return value is in s.
+        $is_group(items, op, e, inv)
+
+prop is_group_containing(s set, op fn(s, s)s, e s, inv fn(s)s, s2 set, items set):
+    $is_group(s2, op, e, inv)
+    s2 $subset_of s
+    items $subset_of s2
+
+prop is_subgroup_generated_by_items(s set, op fn(s, s)s, e s, inv fn(s)s, s2 set, items set):
+    $is_group_containing(s, op, e, inv, s2, items)
+    forall s3 set:
+        s3 $subset_of s
+        $is_group_containing(s, op, e, inv, s3, items)
+        then:
+            s2 $subset_of s3
+
+
 # 缺：判断一个函数在某函数集合里
 
 """
