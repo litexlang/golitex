@@ -18,11 +18,31 @@ import (
 	glob "golitex/glob"
 	pipeline "golitex/pipeline"
 	"os"
+	"path/filepath"
 	"strings"
+
+	taskManager "golitex/task_manager"
 )
 
 func RunFile(path string) (string, glob.SysSignal, error) {
+	// 得到path的repo名
+	repoName := filepath.Base(filepath.Dir(path))
+	taskManager.TaskRepoName = repoName
 	content, err := os.ReadFile(path)
+	if err != nil {
+		return "", glob.SysSignalParseError, err
+	}
+	msg, signal, err := pipeline.ExecuteCodeAndReturnMessage(string(content))
+	if err != nil {
+		return msg, signal, err
+	}
+	return msg, signal, nil
+}
+
+func RunRepo(path string) (string, glob.SysSignal, error) {
+	taskManager.TaskRepoName = path
+	// 运行里面的main.lix
+	content, err := os.ReadFile(filepath.Join(path, "main.lix"))
 	if err != nil {
 		return "", glob.SysSignalParseError, err
 	}

@@ -24,7 +24,9 @@ import (
 	"strings"
 )
 
-func setupAndParseStmtTest(code string) []ast.TopStmt {
+func setupAndParseStmtTest(path string) []ast.TopStmt {
+	code := readFile(path)
+
 	topStatements, err := parser.ParseSourceCode(code)
 	if err != nil {
 		panic(err)

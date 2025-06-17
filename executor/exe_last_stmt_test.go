@@ -19,15 +19,20 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	parser "golitex/parser"
 )
 
 func TestLastStmt(t *testing.T) {
 	start := time.Now()
-	var code = readFile("../examples/test_codes/tmp.lix")
-	code = extractFromLastProveLine(code)
+	allCode := readFile("../examples/test_codes/tmp.lix")
+	code := extractFromLastProveLine(allCode)
 	readFileTime := time.Since(start)
 	start = time.Now()
-	topStmtSlice := setupAndParseStmtTest(code)
+	topStmtSlice, err := parser.ParseSourceCode(code)
+	if err != nil {
+		panic(err)
+	}
 	parseTime := time.Since(start)
 	start = time.Now()
 	var messages []string
