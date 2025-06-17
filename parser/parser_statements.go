@@ -18,6 +18,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
+	"strings"
 )
 
 func (tb *tokenBlock) TopStmt() (*ast.TopStmt, error) {
@@ -25,14 +26,6 @@ func (tb *tokenBlock) TopStmt() (*ast.TopStmt, error) {
 	if tb.header.is(glob.KeywordPub) {
 		tb.header.skip("")
 		pub = true
-	}
-
-	if tb.header.is(glob.KeywordImport) {
-		_, err := tb.importStmt()
-		if err != nil {
-			return nil, err
-		}
-		return nil, nil
 	}
 
 	ret, err := tb.Stmt()
@@ -51,6 +44,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 
 	var ret ast.Stmt
 	switch cur {
+	case glob.KeywordImport:
+		ret, err = tb.importStmt()
 	case glob.KeywordProp:
 		ret, err = tb.defPropStmt()
 	case glob.KeywordExistProp:
@@ -1125,9 +1120,53 @@ func (tb *tokenBlock) param_paramSet_paramInSetFacts(endWith string) ([]string, 
 	return params, setParams, nil
 }
 
-func (tb *tokenBlock) importStmt() (ast.Stmt, error) {
-	// import 是个很重的语句，本质上一旦import了，里面的所有的事实，所有的定理，所有引入的变量，都被放到当前环境里了。在load新的包的过程中，新的包的parser会收到现在的包的parserEnv的影响。
-	return nil, nil
+func (tb *tokenBlock) importStmt() (*ast.ImportStmt, error) {
+	err := tb.header.skip(glob.KeywordImport)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	asPkgName := ""
+	importPath := ""
+	if tb.header.is(glob.KeySymbolDoubleQuote) {
+		importPath, err = tb.getStringInDoubleQuotes()
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+	} else {
+		asPkgName, err = tb.header.next()
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+		importPath, err = tb.getStringInDoubleQuotes()
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+	}
+
+	return ast.NewImportStmt(importPath, asPkgName), nil
+}
+
+func (tb *tokenBlock) getStringInDoubleQuotes() (string, error) {
+	if !tb.header.is(glob.KeySymbolDoubleQuote) {
+		return "", fmt.Errorf("expected double quote but got '%s'", tb.header.strAtCurIndexPlus(0))
+	}
+
+	tb.header.skip(glob.KeySymbolDoubleQuote)
+
+	builder := strings.Builder{}
+
+	for !tb.header.is(glob.KeySymbolDoubleQuote) {
+		curToken, err := tb.header.next()
+		if err != nil {
+			return "", err
+		}
+		builder.WriteString(curToken)
+	}
+
+	tb.header.skip(glob.KeySymbolDoubleQuote)
+
+	return builder.String(), nil
 }
 
 func (tb *tokenBlock) knowSupposeStmt() (*ast.KnowSupposeStmt, error) {

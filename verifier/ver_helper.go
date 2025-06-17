@@ -21,11 +21,9 @@ import (
 	glob "golitex/glob"
 )
 
-func todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt *ast.SpecFactStmt) *env.Env {
-	// TODO: 避免找一定不相关的环境：如果所有涉及到的东西是在 底层环境里声明的 那就 没必要往上找了, 最顶层是 nil
-	var ret *env.Env = nil
+func (ver *Verifier) todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt *ast.SpecFactStmt) *env.Env {
 	_ = stmt
-	return ret
+	return nil
 }
 
 func isTrueEqualFact(stmt ast.FactStmt) (*ast.SpecFactStmt, bool) {

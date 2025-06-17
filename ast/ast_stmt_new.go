@@ -109,3 +109,7 @@ func NewOrStmt(orFacts []SpecFactStmt) *OrStmt {
 func NewSupposeStmt(fact SpecFactStmt, body []Stmt) *SupposeStmt {
 	return &SupposeStmt{fact, body}
 }
+
+func NewImportStmt(path string, asPkgName string) *ImportStmt {
+	return &ImportStmt{path, asPkgName}
+}
