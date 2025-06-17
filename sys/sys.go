@@ -25,8 +25,8 @@ import (
 )
 
 func RunFile(path string) (string, glob.SysSignal, error) {
-	// 得到path的repo名
-	repoName := filepath.Base(filepath.Dir(path))
+	// 得到path的repo名所在的绝对路径
+	repoName := filepath.Dir(path)
 	taskManager.TaskRepoName = repoName
 	content, err := os.ReadFile(path)
 	if err != nil {

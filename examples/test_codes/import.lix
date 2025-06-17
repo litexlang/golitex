@@ -1,4 +1,4 @@
-import "./examples/number_theory_for_beginners_by_andre_weil/version1.lix"
+import "version1.lix"
 
 know 1 $is_divisible_by 1
 1 $is_divisible_by 1
