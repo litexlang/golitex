@@ -1,0 +1,81 @@
+"""
+Chapter 2
+"""
+
+# Lemma 2.1
+
+# TODO: THIS CLAIM CAN BE PROVED
+know exist_prop q Z st exist_largest_multiple_of(d Z, a Z):
+    iff:
+        a >= d * q
+        d*(q+1) > a
+
+# Theorem 2.1
+
+# TODO: THIS CLAIM CAN BE PROVED
+know exist_prop m N st nonempty_set_of_integers_closed_under_addition_has_elements_divisible_by_a_common_divisor(s set):
+    dom:
+        $non_empty(s)
+        forall x s:
+            x $in Z
+    iff:
+        forall x s:
+            x $in Z
+            $is_divisible_by(m, x)
+
+# Corollary 2.1
+# Specialized case
+
+# Define integral linear combination of two integers
+
+exist_prop c Z, d Z st is_linear_combination_of_two_integers(x Z, a Z, b Z):
+    x = c * a + d * b
+
+## 可能可以给用户一个语法糖，让他们能更轻松地让下面这两个定义合并
+
+fn set_of_integer_linear_combination_of_two_integers(a Z, b Z) set:
+    forall x set_of_integer_linear_combination_of_two_integers(a, b):
+        x $in Z
+        $is_linear_combination_of_two_integers(x, a, b)
+
+know:
+    forall x Z, a Z, b Z:
+        $is_linear_combination_of_two_integers(x, a, b)
+        then:
+            x $in set_of_integer_linear_combination_of_two_integers(a, b)
+
+fn set_of_multiples_of(d N) set:
+    forall x set_of_multiples_of(d):
+        x $in Z
+        x $is_divisible_by d
+
+know:
+    forall x Z, d N:
+        x $is_divisible_by d
+        then:
+            x $in set_of_multiples_of(d)
+
+know:
+    forall x Z, d N:
+        x $in set_of_multiples_of(d)
+        then:
+            x $is_divisible_by d
+
+# Corollary itself
+
+# 存在唯一性所以用fn
+# 事实上这就是gcd的定义
+# Definition 1 at page 7
+fn gcd(a Z, b Z) N:
+    set_of_multiples_of(gcd(a, b)) = set_of_integer_linear_combination_of_two_integers(a, b)
+    
+# Corollary 2.2
+# Specialized case
+
+know forall a Z, b Z, d Z:
+    d != 0
+    a $is_divisible_by d
+    b $is_divisible_by d
+    then:
+        gcd(a, b) $is_divisible_by d
+
