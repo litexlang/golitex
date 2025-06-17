@@ -2,8 +2,15 @@
 Chapter 6
 """
 
+import "util.lix"
+import "basics.lix"
+import "chap1.lix"
+import "chap2.lix"
+import "chap3.lix"
+import "chap4.lix"
+import "chap5.lix"
+
 # Definition 6.1
-# TODO: THIS ONLY WORKS WHEN suppose-when is implemented
 # Definition of ring
 prop is_unary_ring(ring set, add fn(ring, ring)ring, mul fn(ring, ring)ring, inv fn(ring)ring, add_e ring, mul_e ring):
     $is_commutative_group(ring, add, inv, add_e)
@@ -14,6 +21,11 @@ prop is_unary_ring(ring set, add fn(ring, ring)ring, mul fn(ring, ring)ring, inv
     forall a ring:
         mul(a, mul_e) = a
         mul(mul_e, a) = a
+
+
+# Theorem 6.1
+
+
 
 """
 # Implement after I implement the kernel to support fn_set, fn_to_fn

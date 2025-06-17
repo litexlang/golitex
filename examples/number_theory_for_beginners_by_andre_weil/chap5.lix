@@ -2,7 +2,7 @@
 Chapter 5
 """
 
-import "std.lix"
+import "util.lix"
 import "basics.lix"
 import "chap1.lix"
 import "chap2.lix"
@@ -104,7 +104,7 @@ fn cc_mod_add(m Z) fn(cc_mod(m), cc_mod(m))cc_mod(m):
             x < m
             y < m
             then:
-                cc_mod(m)[x] \cc_mod_add(m) cc_mod(m)[y] = cc_mod(m)[x + y]
+                cc_mod(m)[x] \cc_mod_add(m) cc_mod(m)[y] = cc_mod(m)[(x + y) % m]
 
 fn cc_mod_inv(m Z) fn(cc_mod(m))cc_mod(m):
     m > 0
@@ -118,23 +118,3 @@ know forall m Z:
     m > 0
     then:
         cc_mod_add(m) $is_commutative_group(cc_mod(m), cc_mod_add(m), cc_mod_inv(m), cc_mod(m)[0])
-
-
-# TODO: THIS IS HARD TO FORMALIZE FOR THE TIME BEING BECAUSE THE MOD OPERATOR IS ACTUALLY NOT A FUNCTION. IT IS A SET OF FUNCTIONS8
-"""
-# cc is short form of congruent class
-fn_set cc(m Z):
-    m > 0
-    iff:
-        fn f(d Z) set:
-            forall x Z:
-                $is_congruent_modulo(x, d, m)
-                then:
-                    x $in f(d)
-
-fn_to_fn cc_add(m Z):
-    m > 0
-    iff:
-        fn f(d cc(m), e cc(m)) cc(m):
-            cc(m)(d +  e) = cc_add(m)(cc(m)(d), cc(m)(e))
-"""
