@@ -33,7 +33,7 @@ func TestWholeFile(t *testing.T) {
 	// codePath := readFile("../examples/number_theory_for_beginners_by_andre_weil/version1.lix")
 	// codePath := readFile("../examples/test_codes/claim.lix")
 	// codePath := readFile("../examples/test_codes/import.lix")
-	codePath := "../examples/test_codes/import.lix"
+	codePath := "../examples/test_codes/tmp.lix"
 	readFileTime := time.Since(start)
 	start = time.Now()
 	topStmtSlice := setupAndParseStmtTest(codePath)
