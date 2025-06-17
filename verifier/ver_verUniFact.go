@@ -63,10 +63,9 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state VerState) (bool,
 
 	// 查看param set 是否已经声明
 	for _, paramSet := range newStmt.ParamSets {
-		atoms := ast.GetAtomsInFc(paramSet)
-		ok := ver.env.AreAtomsDeclared(atoms)
+		ok := ver.env.AtomsInFcAreDeclared(paramSet)
 		if !ok {
-			return false, fmt.Errorf("atoms %s are not declared", atoms[0].String())
+			return false, fmt.Errorf("some atoms in %s are undeclared", paramSet.String())
 		}
 	}
 

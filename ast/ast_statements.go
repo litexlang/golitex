@@ -129,3 +129,8 @@ type KnowSupposeStmt struct {
 type OrStmt struct {
 	Facts []SpecFactStmt
 }
+
+type ImportStmt struct {
+	Path      string
+	AsPkgName string
+}
