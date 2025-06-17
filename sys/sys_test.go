@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	glob "golitex/glob"
 )
@@ -36,6 +37,7 @@ func TestRunREPLInTerminal(t *testing.T) {
 }
 
 func TestRunAllComprehensiveCodes(t *testing.T) {
+	startTime := time.Now()
 	files, err := os.ReadDir("../examples/comprehensive_examples")
 	if err != nil {
 		fmt.Println("Error reading directory:", err)
@@ -57,8 +59,9 @@ func TestRunAllComprehensiveCodes(t *testing.T) {
 			return
 		}
 	}
-
+	elapsed := time.Since(startTime)
 	fmt.Println("All codes executed successfully")
+	fmt.Println("Time taken:", elapsed)
 }
 
 func TestRunRepo(t *testing.T) {

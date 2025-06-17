@@ -24,8 +24,9 @@ prop is_subgroup_generated_by_items(s set, op fn(s, s)s, e s, inv fn(s)s, s2 set
         then:
             s2 $subset_of s3
 
-
 # 缺：判断一个函数在某函数集合里
+
+
 
 """
 fn_fn two_items_op_on_subset(s set, op fn(s, s)s, items set):
