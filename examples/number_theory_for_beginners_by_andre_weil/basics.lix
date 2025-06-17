@@ -61,11 +61,6 @@ know forall x Z, y Z:
     x + y $in Z
     x - y $in Z
 
-know forall x Z, y Z:
-    x * y $in Z
-    x + y $in Z
-    x - y $in Z
-
 know forall x N, y N:
     x + y $in N
     x * y $in N

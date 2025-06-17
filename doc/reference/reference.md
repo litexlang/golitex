@@ -85,6 +85,8 @@ The C programming language's syntax and semantics significantly influenced Litex
 
 fn_template is inspired by C++'s template over function. It is a describing the properties of a function. However, there are still differences. No need to introduce <> : Because parameters can be passed in the parameter list (so-called requirements for types are essentially individual facts in Litex. Things that are sets and things that are not sets are fundamentally no different in terms of fact handling. This approach is inherently different from C++'s type system.) Here we can see the fundamental difference of "set system" in Litex and "type system" in C++ and other programming languages.
 
+The import keyword sort of works like #include in C. #include embed the whole file thoroughly into the line where it is used. Litex run the whole file thoroughly in the line where it is used. If the import statement changes its line, its result might change. There are both "thoroughly" and "depend on the line where it is used" in both keywords.
+
 Furthermore, Tex's clear distinction between "math expressions" and "plain words" inspired Litex's separation of "factual expressions" from ordinary symbols. Litex also aspires to achieve the same level of ubiquity and utility as Tex, aiming to become a widely adopted daily tool. This ambition is encapsulated in its name: Litex = Lisp + Tex, symbolizing the fusion of Lisp's expressive elegance and Tex's practicality.
 
 The best to test Litex is by translating "real-world" into Litex. I use Professor Terrence Tao's Analysis I and II to test Litex. The set theory chapter of Analysis I helps a lot to remind me what functionalities are missing at each stage of implementing Litex.
@@ -100,6 +102,17 @@ Litex is fundamentally a read-only Turing machine. Once any fact is stored, it c
 Litex gets its name from Lisp and Tex. Lisp is a programming language that is very close to math. Tex is a typesetting system that is very close to math. Both of them greatly inspired Litex, making Litex also a formal language that is very close to math.
 
 Litex intentionally has few keywords and minimal syntax sugar to encourage consistent programming habits - there should be only one way to express a given logic. This makes code more readable and prevents users from getting overwhelmed by too many expression choices.
+
+Difference and similarity between standard library and kernel:
+
+1. similarity: some facts can be both implemented in standard library and kernel.
+
+2. difference:
+
+- kernel development is much harder to just write litex code. Litex code is much easier to read and write for non-experts.
+- litex code can be written by much much more people, because Litex users are much more than Litex kernel developers.
+- The standard library must be loaded into memory, every time we initialize the kernel, which might sort of waste some time every time.
+
 
 ## Conclusion
 

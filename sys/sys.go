@@ -61,7 +61,7 @@ func ExecuteCodeAndReturnMessage(code string) (string, glob.SysSignal, error) {
 	return msg, signal, nil
 }
 
-func BetterMsg(msg string) string {
+func PostprocessOutputMsg(msg string) string {
 	// 把超过一个的 \n 变成一个 (可能是3个，可能是2个，可能多个)
 	msg = strings.ReplaceAll(msg, "\n\n", "\n")
 	return msg
@@ -69,4 +69,14 @@ func BetterMsg(msg string) string {
 
 func RunREPLInTerminal() {
 	pipeline.RunREPLInTerminal()
+}
+
+func RunMainMsg(signal glob.SysSignal) string {
+	if signal == glob.SysSignalTrue {
+		return glob.REPLSuccessMessage
+	} else if signal == glob.SysSignalFalse {
+		return glob.REPLFailedMessage
+	} else {
+		return glob.REPLFailedMessage
+	}
 }

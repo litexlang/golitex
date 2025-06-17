@@ -25,5 +25,5 @@ const (
 )
 
 func (s SysSignal) String() string {
-	return []string{REPLSyntaxErrorMessage, REPLRuntimeErrorMessage, REPLSuccessMessage, REPLFailedMessage, REPLUnknownMessage}[s]
+	return []string{REPLSyntaxErrorMessage, REPLRuntimeErrorMessage, REPLSuccessMessage, REPLFalseMessage, REPLUnknownMessage}[s]
 }
