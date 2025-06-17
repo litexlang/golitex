@@ -1,0 +1,7 @@
+fn product_of_int_finite_set(s finite_set)Z:
+    forall x s:
+        x $in Z
+    then:
+        forall x s:
+            product_of_int_finite_set(s + 1) = product_of_int_finite_set(s) * x
+

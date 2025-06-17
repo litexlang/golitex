@@ -19,7 +19,6 @@ import (
 	pipeline "golitex/pipeline"
 	"os"
 	"path/filepath"
-	"strings"
 
 	taskManager "golitex/task_manager"
 )
@@ -63,7 +62,7 @@ func ExecuteCodeAndReturnMessage(code string) (string, glob.SysSignal, error) {
 
 func PostprocessOutputMsg(msg string) string {
 	// 把超过一个的 \n 变成一个 (可能是3个，可能是2个，可能多个)
-	msg = strings.ReplaceAll(msg, "\n\n", "\n")
+	// msg = strings.ReplaceAll(msg, "\n\n", "\n")
 	return msg
 }
 

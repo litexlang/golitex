@@ -71,7 +71,7 @@ func TestRunRepo(t *testing.T) {
 }
 
 func TestRunFileInRepo(t *testing.T) {
-	msg, signal, err := RunFile("../examples/number_theory_for_beginners_by_andre_weil/import.lix")
+	msg, signal, err := RunFile("../examples/number_theory_for_beginners_by_andre_weil/chap4.lix")
 	if err != nil {
 		t.Errorf(err.Error())
 	}

@@ -2,6 +2,13 @@
 Chapter 4
 """
 
+import "std.lix"
+import "basics.lix"
+import "chap1.lix"
+import "chap2.lix"
+import "chap3.lix"
+
+
 # Definition 4.1
 prop is_prime(p Z):
     p > 1
@@ -21,18 +28,14 @@ know prop a_prime_divides_a_product_of_two_integers_if_it_divides_one_of_the_fac
             p $is_divisible_by a
             p $is_divisible_by b
 
-"""
-# Theorem 4.2
-# Every integer > 1 is a product of primes
-# TODO: This can be formalized after I implement the kernel to support finite sequence
-know exist_prop seq finite_seq st exist_primes_whose_equal_to_integer(a Z):
+
+know exist_prop primes finite_set st exist_primes_whose_equal_to_integer(a Z):
     a > 1
     iff:
-        forall x seq:
+        forall x primes:
             x $is_prime
             a $is_divisible_by x
-        a = product_of_finite_seq(seq)
-"""
+        a = product_of_int_finite_set(primes)
 
 # Theorem 4.3
 know exist_prop p Z st exist_prime_greater_than_any_integer(x Z):
