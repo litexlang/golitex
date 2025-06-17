@@ -159,9 +159,11 @@ func (cursor *strSliceCursor) rawFcAtom() (*ast.FcAtom, error) {
 
 	pkgNameStr := pkgName.String()
 
-	if realPkgName, ok := cursor.parserEnv.PkgManagementMap[pkgNameStr]; ok {
-		pkgNameStr = realPkgName
-	}
+	// TODO: 在parse时，把pkgName改成当前项目里定义的 pkgName，而不是继续沿用原来的
+	// REMARK: 我需要一个全局变量，来记录当前项目里定义的 pkgName
+	// if realPkgName, ok := cursor.parserEnv.PkgManagementMap[pkgNameStr]; ok {
+	// 	pkgNameStr = realPkgName
+	// }
 
 	if glob.IsKwThatCanNeverBeFcName(value) {
 		return ast.NewFcAtom(pkgNameStr, value), fmt.Errorf("invalid first citizen: %s", value)
@@ -422,7 +424,7 @@ func (cursor *strSliceCursor) fnSet() (ast.Fc, error) {
 }
 
 func ParseSourceCodeGetFc(s string) (ast.Fc, error) {
-	blocks, err := makeTokenBlocks([]string{s}, NewParserEnv())
+	blocks, err := makeTokenBlocks([]string{s})
 	if err != nil {
 		return nil, err
 	}
