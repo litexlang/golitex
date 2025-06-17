@@ -2069,3 +2069,31 @@ len只能作用在 indexable_set 上
 [], [[]] 能作用在 indexable_set 上，但不能作用在 set 上
 prove_is_indexable_set 证明，或者构造indexable_set
 prove_forall_on_indexable_set 用遍历的方式去证明forall。这种方式和描述性地证明forall是不同的
+
+6.17
+语法糖 set_fn 用来描述 setName(params) = {z ParentSet | properties_of(z, params)}
+举例
+solutions_of_congruence(a, b, m) = {x | x $in Z, a * x = b (mod m)}
+正常写法
+fn solutions_of_congruence(a Z, b Z, m Z) set:
+    forall x solutions_of_congruence(a, b, m):
+        x $in Z
+        $is_congruent_modulo(a * x, b, m)
+    forall x Z:
+        $is_congruent_modulo(a * x, b, m)
+        then:
+            x $in solutions_of_congruence(a, b, m)
+
+语法糖写法
+set_fn solutions_of_congruence(a Z, b Z, m Z) x Z:
+    $is_congruent_modulo(a * x, b, m)
+
+这样会让他自动变成
+fn solutions_of_congruence(a Z, b Z, m Z) set
+know forall x solutions_of_congruence(a, b, m):
+    x $in Z
+    $is_congruent_modulo(a * x, b, m)
+know forall x Z:
+    $is_congruent_modulo(a * x, b, m)
+    then:
+        x $in solutions_of_congruence(a, b, m)

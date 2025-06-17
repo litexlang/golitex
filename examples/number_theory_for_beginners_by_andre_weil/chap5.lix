@@ -124,4 +124,4 @@ know forall m Z:
 prop is_cc_prime_to_modulo(m Z, s cc_mod(m)):
     forall x s:
         gcd(x, m) = 1
-    gcd(cc_mod[[s]],m) = 1
+    # gcd(cc_mod(m)[[x]],m) = 1 works too

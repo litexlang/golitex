@@ -43,6 +43,8 @@ know forall m Z:
 # Theorem 6.2
 # Let m, a, b be with m > 0, put d = gcd(a,m), then the congruence ax = b (mod m) has either exactly d solutions modulo m, or no solution; it has a solution iff b = 0 (mod d); there are exactly m/d distinct values of b modulo m for which this is so.
 
+prop 
+
 fn solutions_of_congruence(a Z, b Z, m Z) set:
     forall x solutions_of_congruence(a, b, m):
         x $in Z
