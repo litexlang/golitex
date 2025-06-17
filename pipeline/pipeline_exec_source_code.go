@@ -28,7 +28,8 @@ import (
 
 func ExecuteCodeAndReturnMessage(code string) (string, glob.SysSignal, error) {
 	msgOfTopStatements, signal, err := executeCodeAndReturnMessageSlice(code)
-	ret := strings.Join(msgOfTopStatements, "\n\n\n")
+	// ret := strings.Join(msgOfTopStatements, "\n\n\n")
+	ret := strings.Join(msgOfTopStatements, "\n")
 	if err != nil {
 		return ret, signal, err
 	}
