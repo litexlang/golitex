@@ -23,7 +23,7 @@ import (
 )
 
 func sourceCodeToFc(sourceCode ...string) ([]ast.Fc, error) {
-	blocks, err := makeTokenBlocks(sourceCode, NewParserEnv())
+	blocks, err := makeTokenBlocks(sourceCode)
 	if err != nil {
 		return nil, err
 	}
