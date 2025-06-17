@@ -19,7 +19,7 @@ Try and download Litex now at [litexlang.org](https://litexlang.org).
 - **Project Email:** litexlang@outlook.com
 - **Litex Creator:** Jiachen Shen
 - **Litex Creator's Email:** malloc_realloc_free@outlook.com
-- **Discord:** [discord](https://discord.gg/uvrHM7eS)
+- **Litex Zulip Community:** [litex.zulipchat.com](https://litex.zulipchat.com)
 
 ## Whetting Your Appetite
 
@@ -32,19 +32,6 @@ In this AI age, formal languages are becoming increasingly crucial for both AI d
 Whether you're an AI researcher developing reasoning models, a mathematics student identifying potential errors in your thesis, a mathematician seeking large-scale collaboration on a proof, a rocket scientist ensuring precise calculations, or simply a math enthusiast, Litex is designed for you. We will explore how Litex's innovative design addresses these challenges throughout this tutorial.
 
 Litex is the perfect language for you. I hope you will enjoy it.
-
-<!-- ## Using The Litex Interpreter, Tools, and Resources -->
-
-<!-- Visit Official site [litexlang.org](https://litexlang.org), Github release [litexlang/golitex](https://github.com/litexlang/golitex) to download the Litex interpreter. -->
-
-<!-- Online Playground: [litexlang.org](https://litexlang.org) -->
-
-<!-- Both .lix and jupyter notebook are supported. -->
-
-<!-- You can read tutorial, reference, blueprint on [litexlang.org](https://litexlang.org). -->
-
-<!-- Follow us on Twitter, Discord, Github, and RedNote -->
-
 
 ## First Example
 

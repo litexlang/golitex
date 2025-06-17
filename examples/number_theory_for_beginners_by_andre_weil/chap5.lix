@@ -121,6 +121,7 @@ know forall m Z:
     then:
         cc_add(m) $is_commutative_group(cc_mod(m), cc_add(m), cc_inv(m), cc(0, m))
 
-prop is_cc_prime(m Z, s cc_mod(m)):
+prop is_cc_prime_to_modulo(m Z, s cc_mod(m)):
     forall x s:
         gcd(x, m) = 1
+    gcd(cc_mod[[s]],m) = 1

@@ -11,7 +11,7 @@
 # Litex email: <litexlang@outlook.com>
 # Litex website: https://litexlang.org 
 # Litex github repository: https://github.com/litexlang/golitex 
-# Litex discord server: https://discord.gg/uvrHM7eS
+# Litex Zulip community: https://litex.zulipchat.com
 
 
 
