@@ -1,2 +1,4 @@
-import "test_codes/import_test_pkg"
-import pkgName "test_codes/import_test_pkg"
+import "/Users/shenjiachen/Desktop/GeekGems/litex/golitex/examples/number_theory_for_beginners_by_andre_weil/version1.lix"
+
+know 1 $is_divisible_by 1
+1 $is_divisible_by 1
