@@ -45,26 +45,13 @@ know forall m Z:
 
 prop 
 
-fn solutions_of_congruence(a Z, b Z, m Z) set:
-    forall x solutions_of_congruence(a, b, m):
-        x $in Z
-        $is_congruent_modulo(a * x, b, m)
-    forall x Z:
-        $is_congruent_modulo(a * x, b, m)
-        then:
-            x $in solutions_of_congruence(a, b, m)
+set_fn solutions_of_congruence(a Z, b Z, m Z) x Z:
+    $is_congruent_modulo(a * x, b, m)
 
-fn solutions_of_congruence_modulo(a Z, b Z, m Z) finite_set:
-    forall x solutions_of_congruence(a, b, m):
-        x > 0
-        x < m
-        x $in solutions_of_congruence(a, b, m)
-    forall x Z:
-        x > 0
-        x $in solutions_of_congruence(a, b, m)
-        x < m
-        then:
-            x $in solutions_of_congruence_modulo(a, b, m)
+set_fn solutions_of_congruence_modulo(a Z, b Z, m Z) x Z:
+    x > 0
+    x < m
+    $is_congruent_modulo(a * x, b, m)
 
 know prop solutions_of_congruence_is_finite(a Z, b Z, m Z):
     or:

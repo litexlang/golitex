@@ -2097,3 +2097,26 @@ know forall x Z:
     $is_congruent_modulo(a * x, b, m)
     then:
         x $in solutions_of_congruence(a, b, m)
+
+语法
+set_fn set_fn_name(params paramsSet) elementName elementSet:
+    dom:
+        $parameter_properties(params)
+    iff:
+        $iff_properties(elementName, params)
+
+语义
+fn set_fn_name(params paramsSet) elementSet:
+    dom:
+        $parameter_properties(params)
+know:
+    forall params paramsSet, elementName set_fn_name(params):
+        $parameter_properties(params)
+        then:
+            elementName $in set_fn_name(params)
+            $iff_properties(elementName, params)
+    forall params paramsSet, elementName elementSet:
+        $parameter_properties(params)
+        $iff_properties(elementName, params)
+        then:
+            elementName $in set_fn_name(params)
