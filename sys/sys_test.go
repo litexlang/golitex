@@ -61,6 +61,15 @@ func TestRunAllComprehensiveCodes(t *testing.T) {
 	fmt.Println("All codes executed successfully")
 }
 
+func TestRunRepo(t *testing.T) {
+	msg, signal, err := RunRepo("../examples/number_theory_for_beginners_by_andre_weil")
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	fmt.Println(msg)
+	fmt.Println(signal)
+}
+
 func TestRunFileInRepo(t *testing.T) {
 	msg, signal, err := RunFile("../examples/number_theory_for_beginners_by_andre_weil/import.lix")
 	if err != nil {

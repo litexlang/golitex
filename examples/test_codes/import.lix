@@ -1,4 +1,1 @@
-import "version1.lix"
-
-know 1 $is_divisible_by 1
-1 $is_divisible_by 1
+import "tmp.lix"
