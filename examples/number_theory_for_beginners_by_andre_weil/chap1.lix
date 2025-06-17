@@ -1,0 +1,30 @@
+"""
+Chapter 1
+"""
+
+# Handy builtin rules are there for verifying basic properties of real numbers.
+prove:
+    obj x R, y R, z R
+    (x + y) + z = x + (y + z)
+    x + y = y + x
+    0 + x = x
+    (x*y)*z = x*(y*z)
+    x*y = y*x
+    1*x = x
+    x*(y+z) = x*y + x*z
+
+know:
+    forall a Z, b Z:
+        a - b $in Z
+        a + b $in Z
+        a * b $in Z
+
+    forall a Q, b Q:
+        a - b $in Q
+        a + b $in Q
+        a * b $in Q
+
+    forall a Q, b Q:
+        a != 0
+        then:
+            b / a $in Q

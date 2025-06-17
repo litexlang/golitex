@@ -19,6 +19,13 @@ import (
 	"strings"
 )
 
+var REPLGoodbyeMessage = "---\nGoodbye! :)\n"
+var REPLSuccessMessage = "---\nSuccess! :)\n"
+var REPLFailedMessage = "---\nFailed :(\n"
+var REPLUnknownMessage = "---\nUnknown :(\n"
+var REPLSyntaxErrorMessage = "---\nSyntax Error :(\n"
+var REPLRuntimeErrorMessage = "---\nRuntime Error :(\n"
+
 func SplitLinesAndAdd4NIndents(line string, n uint32) string {
 	if n == 0 {
 		return line
