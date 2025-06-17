@@ -2113,7 +2113,7 @@ know:
     forall params paramsSet, elementName set_fn_name(params):
         $parameter_properties(params)
         then:
-            elementName $in set_fn_name(params)
+            elementName $in elementSet
             $iff_properties(elementName, params)
     forall params paramsSet, elementName elementSet:
         $parameter_properties(params)
