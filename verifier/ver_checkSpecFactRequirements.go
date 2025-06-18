@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) checkSpecFactRequirements(stmt *ast.SpecFactStmt) (bool, error) {
+func (ver *Verifier) checkSpecFactRequirements(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	// 1. Check if all atoms in the parameters are declared
 	for _, param := range stmt.Params {
 		ok := ver.env.AtomsInFcAreDeclared(param)
@@ -33,7 +33,7 @@ func (ver *Verifier) checkSpecFactRequirements(stmt *ast.SpecFactStmt) (bool, er
 
 	// 2. Check if the parameters satisfy the requirement of the function requirements
 	for _, param := range stmt.Params {
-		ok, err := ver.fcSatisfyFnRequirement(param)
+		ok, err := ver.fcSatisfyFnRequirement(param, state)
 		if err != nil {
 			return false, err
 		}
@@ -42,15 +42,15 @@ func (ver *Verifier) checkSpecFactRequirements(stmt *ast.SpecFactStmt) (bool, er
 		}
 	}
 
-	// 所有的传入的参数符号 prop 的要求 以及 stmt name 确实是个 prop
+	// 所有的传入的参数符号 prop 的要求 以及 stmt name 确实是个 prop。这貌似不需要检查，因为每次你得到新的事实时候，已经检查过了
 	return true, nil
 }
 
-func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc) (bool, error) {
+func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state VerState) (bool, error) {
 	if isArithmeticFn(fc) {
-		return ver.arithmeticFnRequirement(fc.(*ast.FcFn))
+		return ver.arithmeticFnRequirement(fc.(*ast.FcFn), state)
 	} else {
-		return ver.fcSatisfyNotBuiltinFnRequirement(fc)
+		return ver.fcSatisfyNotBuiltinFnRequirement(fc, state)
 	}
 }
 
@@ -63,7 +63,7 @@ func isArithmeticFn(fc ast.Fc) bool {
 }
 
 // TODO: 这里需要检查，setParam是否是自由变量
-func (ver *Verifier) fcSatisfyNotBuiltinFnRequirement(fc ast.Fc) (bool, error) {
+func (ver *Verifier) fcSatisfyNotBuiltinFnRequirement(fc ast.Fc, state VerState) (bool, error) {
 	if fc.IsAtom() {
 		return true, nil
 	}
@@ -107,7 +107,7 @@ func (ver *Verifier) fcSatisfyNotBuiltinFnRequirement(fc ast.Fc) (bool, error) {
 		}
 
 		for _, inFact := range inFacts {
-			ok, err := ver.VerFactStmt(inFact, FinalRoundNoMsg)
+			ok, err := ver.VerFactStmt(inFact, state)
 			if err != nil {
 				return false, err
 			}
@@ -126,7 +126,7 @@ func (ver *Verifier) fcSatisfyNotBuiltinFnRequirement(fc ast.Fc) (bool, error) {
 		}
 
 		for _, domFact := range domFacts {
-			ok, err := ver.VerFactStmt(domFact, FinalRoundNoMsg)
+			ok, err := ver.VerFactStmt(domFact, state)
 			if err != nil {
 				return false, err
 			}
@@ -137,7 +137,7 @@ func (ver *Verifier) fcSatisfyNotBuiltinFnRequirement(fc ast.Fc) (bool, error) {
 	}
 
 	for _, param := range asFcFn.ParamSegs {
-		ok, err := ver.fcSatisfyFnRequirement(param)
+		ok, err := ver.fcSatisfyFnRequirement(param, state)
 		if err != nil {
 			return false, err
 		}
@@ -149,10 +149,10 @@ func (ver *Verifier) fcSatisfyNotBuiltinFnRequirement(fc ast.Fc) (bool, error) {
 	return true, nil
 }
 
-func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn) (bool, error) {
+func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn, state VerState) (bool, error) {
 	// parameter必须是实数
 	for _, param := range fc.ParamSegs {
-		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{param, ast.NewFcAtomWithName(glob.KeywordReal)}), FinalRoundNoMsg)
+		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{param, ast.NewFcAtomWithName(glob.KeywordReal)}), state)
 		if err != nil {
 			return false, err
 		}
@@ -163,7 +163,7 @@ func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn) (bool, error) {
 
 	if ast.IsFcAtomWithNameAndEmptyPkg(fc.FnHead, glob.KeySymbolSlash) {
 		// 分母不是0
-		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.FalsePure, ast.NewFcAtomWithName(glob.KeySymbolEqual), []ast.Fc{fc.ParamSegs[1], ast.NewFcAtomWithName("0")}), FinalRoundNoMsg)
+		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.FalsePure, ast.NewFcAtomWithName(glob.KeySymbolEqual), []ast.Fc{fc.ParamSegs[1], ast.NewFcAtomWithName("0")}), state)
 		if err != nil {
 			return false, err
 		}
