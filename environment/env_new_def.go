@@ -18,6 +18,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
+	"slices"
 )
 
 func (env *Env) isInvalidName(name string) error {
@@ -45,6 +46,11 @@ func (env *Env) isInvalidName(name string) error {
 }
 
 func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) error {
+	// prop名不能和parameter名重叠
+	if slices.Contains(stmt.DefHeader.Params, stmt.DefHeader.Name) {
+		return fmt.Errorf("prop name %s cannot be the same as parameter name %s", stmt.DefHeader.Name, stmt.DefHeader.Name)
+	}
+
 	err := env.isInvalidName(stmt.DefHeader.Name)
 	if err != nil {
 		return err
@@ -77,6 +83,13 @@ func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) error {
 }
 
 func (env *Env) NewDefObj_InsideAtomsDeclared(stmt *ast.DefObjStmt) error {
+	// obj名不能和parameter名重叠
+	for _, objName := range stmt.Objs {
+		if slices.Contains(stmt.Objs, objName) {
+			return fmt.Errorf("obj name %s cannot be the same as parameter name %s", objName, objName)
+		}
+	}
+
 	err := env.NonDuplicateParam_NoUndeclaredParamSet(stmt.Objs, stmt.ObjSets)
 	if err != nil {
 		return err
@@ -118,6 +131,11 @@ func (env *Env) NewDefObj_InsideAtomsDeclared(stmt *ast.DefObjStmt) error {
 }
 
 func (env *Env) NewDefFn_InsideAtomsDeclared(stmt *ast.DefFnStmt) error {
+	// fn名不能和parameter名重叠
+	if slices.Contains(stmt.DefHeader.Params, stmt.DefHeader.Name) {
+		return fmt.Errorf("fn name %s cannot be the same as parameter name %s", stmt.DefHeader.Name, stmt.DefHeader.Name)
+	}
+
 	err := env.NonDuplicateParam_NoUndeclaredParamSet(stmt.DefHeader.Params, stmt.DefHeader.SetParams)
 	if err != nil {
 		return err
@@ -159,6 +177,11 @@ func (env *Env) NewDefFn_InsideAtomsDeclared(stmt *ast.DefFnStmt) error {
 }
 
 func (env *Env) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) error {
+	// prop名不能和parameter名重叠
+	if slices.Contains(append(stmt.ExistParams, stmt.DefBody.DefHeader.Params...), stmt.DefBody.DefHeader.Name) {
+		return fmt.Errorf("prop name %s cannot be the same as parameter name %s", stmt.DefBody.DefHeader.Name, stmt.DefBody.DefHeader.Name)
+	}
+
 	err := env.NonDuplicateParam_NoUndeclaredParamSet(append(stmt.DefBody.DefHeader.Params, stmt.ExistParams...), append(stmt.DefBody.DefHeader.SetParams, stmt.ExistParamSets...))
 	if err != nil {
 		return err
