@@ -32,9 +32,9 @@ _-- Alan Kay_
 
 **Welcome to our [zulip community](https://litex.zulipchat.com) to get the latest updates and discuss with us.**
 
-Litex is a simple and easy-to-learn formal language. It makes formal reasoning as natural as writing in natural language. Thanks to its innovative design philosophy, even 10-year-olds can learn Litex easily. This gives it a dimensional advantage over existing formal languages, such as Lean, which even PhD students struggle to master.
+Litex is a simple and easy-to-learn formal language. It makes formal reasoning as natural as writing in natural language. Thanks to its innovative design, even 10-year-olds can learn Litex easily. This gives it a dimensional advantage over existing formal languages, such as Lean, which even PhD students struggle to master.
 
-This is an adventure with two goals: 1. to make formal reasoning as intuitive as natural language and everyday thinking, from both high-level and low-level perspectives. 2. to spread the idea and power of formal reasoning to a larger audience.
+This is an adventure with two goals: 1. to make formal reasoning as intuitive as natural language and everyday thinking, from both high-level and low-level perspectives. 2. to spread the idea and power of formal reasoning to a larger audience. Both goals serves one ultimate purpose: scale formal reasoning in this new AI age.
 
 By unifying how we express and verify reasoning (including math), Litex is poised to become the key infrastructure for scalable knowledge engineering in the AI era. In the field of AI, formal languages have become an indispensable tool for top researchers. Terence Tao uses them to reconstruct mathematical proofs, Bengio's team employs them to verify AI safety, DeepSeek-R1 leverages them to enhance reasoning capabilities, and the AlphaProof series utilizes them to simultaneously generate problems and answers, forming a self-improving closed loop.
 
@@ -238,6 +238,17 @@ Think of formalization like reading a book - you need to understand the previous
 [Website](https://litexlang.org)
 
 [Github](https://github.com/litexlang/golitex)
+
+5. Who might benefit from Litex?
+
+See [Applications of Formal Reasoning in AI and Many Other Fields](./doc/applications_of_formal_reasoning/applications_of_formal_reasoning.md) for more details.
+
+1. AI researchers. Researchers from OpenAI, Google, Alibaba, DeepSeek, etc are exploring the loop of model itself writes a question, itself solves, and in this way, the model itself improves itself. This is a very promising direction. They need something to tell whether the reasoning process is correct. Litex can be used to ensure the correctness of the reasoning process as long as the reasoning process is formalized in Litex. This makes Litex a very fundamental infrastructure for AI. At the same time, AI safety researchers need to ensure the safety of the output of the model, and now they are turning to formal languages for help.
+
+2. Mathematicians. As we all know, a small piece of error in a proof can lead to a huge disaster, while somehow human beings still manage to push the frontier of math to a very high level. This is truly remarkable. That is why I am excited to see what we can do with Litex, a power tool ensuring the correctness of any piece of reasoning and saving mathematicians from the tedious work of proof checking. The scale of collaboration, the scale of mathematical discovery, and the scale of mathematical knowledge are all going to be scaled up to a new level that nobody can imagine.
+3. Students. Students can use Litex to learn math and formal reasoning. They can use Litex to write their own proofs and verify them. They can use Litex to learn how to write formal proofs.
+
+
 
 
 ##  Examples: Litex for Curious Lean Users
