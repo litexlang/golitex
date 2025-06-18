@@ -1,0 +1,13 @@
+"""
+# This file is used to test the atom without declare error
+
+prop p(x H)
+exist_prop s R st name(x H)
+obj x S
+fn f(x H) H
+
+obj z R:
+    z $in H
+"""
+
+know 1 $in H

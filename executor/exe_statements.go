@@ -17,6 +17,7 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
+	env "golitex/environment"
 	glob "golitex/glob"
 	parser "golitex/parser"
 	taskManager "golitex/task_manager"
@@ -121,6 +122,10 @@ func (exec *Executor) knowFactStmt(stmt *ast.KnowFactStmt) error {
 	defer exec.appendMsg("\n")
 
 	for _, fact := range stmt.Facts {
+		if !exec.env.AreAtomsInFactAreDeclared(fact, map[string]struct{}{}) {
+			return fmt.Errorf(env.AtomsInFactNotDeclaredMsg(fact))
+		}
+
 		err := exec.env.NewFact(fact)
 		if err != nil {
 			return err
@@ -449,7 +454,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimStmt) (bool, error) {
 	if stmt.ToCheckFact != ast.ClaimStmtEmptyToCheck {
 		ok := exec.env.AreAtomsInFactAreDeclared(stmt.ToCheckFact, map[string]struct{}{})
 		if !ok {
-			return false, fmt.Errorf("fact %s has undeclared atoms", stmt.ToCheckFact.String())
+			return false, fmt.Errorf(env.AtomsInFactNotDeclaredMsg(stmt.ToCheckFact))
 		}
 	}
 
@@ -745,7 +750,7 @@ func (exec *Executor) defHeader_NonDuplicateParam_NoUndeclaredParamSet(params []
 		paramSet[param] = struct{}{}
 		ok = exec.env.ArdAtomsInFcAreDeclared(setParams[i], paramSet)
 		if !ok {
-			return fmt.Errorf("atoms in %s are undeclared", setParams[i].String())
+			return fmt.Errorf(env.AtomsInFcNotDeclaredMsg(setParams[i]))
 		}
 	}
 

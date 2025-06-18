@@ -16,6 +16,7 @@ package litex_env
 
 import (
 	"fmt"
+	ast "golitex/ast"
 	glob "golitex/glob"
 	"strings"
 )
@@ -98,4 +99,20 @@ func (knownSpecFact *SpecFact_InLogicExpr_InUniFact) String() string {
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(knownSpecFact.UniFact.String(), 1))
 		return builder.String()
 	}
+}
+
+func (e *Env) MsgLen() int {
+	return len(e.Msgs)
+}
+
+func (e *Env) ClearMsgFromIndex(index int) {
+	e.Msgs = e.Msgs[:index]
+}
+
+func AtomsInFactNotDeclaredMsg(fact ast.FactStmt) string {
+	return fmt.Sprintf("some atoms in the following fact are undeclared:\n%s", fact.String())
+}
+
+func AtomsInFcNotDeclaredMsg(fc ast.Fc) string {
+	return fmt.Sprintf("some atoms in %s are undeclared", fc.String())
 }
