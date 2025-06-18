@@ -140,7 +140,7 @@ func (exec *Executor) supposeStmt_declaredParams(stmt *ast.SupposeStmt) (glob.Ex
 func (exec *Executor) supposeStmt_runStmtBody(stmt *ast.SupposeStmt) (glob.ExecState, []ast.FactStmt, error) {
 	insideFacts := []ast.FactStmt{}
 	for _, bodyFact := range stmt.Body {
-		execState, err := exec.stmt(bodyFact)
+		execState, err := exec.Stmt(bodyFact)
 		if err != nil {
 			return glob.ExecState_Error, nil, err
 		}

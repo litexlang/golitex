@@ -20,7 +20,7 @@ import (
 	"strings"
 )
 
-func (stmt *PubStmt) String() string {
+func (stmt *PublicStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordPub)
 	builder.WriteByte(':')

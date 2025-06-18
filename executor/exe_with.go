@@ -61,7 +61,7 @@ func (exec *Executor) withStmt_checkFact(stmt *ast.WithStmt) (glob.ExecState, er
 
 	// run stmt body
 	for _, bodyFact := range stmt.Body {
-		execState, err = exec.stmt(bodyFact)
+		execState, err = exec.Stmt(bodyFact)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
