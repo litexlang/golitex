@@ -32,7 +32,7 @@ _-- Alan Kay_
 
 **Welcome to our [zulip community](https://litex.zulipchat.com) to get the latest updates and discuss with us.**
 
-Litex is a simple and easy-to-learn formal language. It makes formal reasoning as natural as writing in natural language. Thanks to its innovative design, even 10-year-olds can learn Litex easily. This gives it a dimensional advantage over existing formal languages, such as Lean, which even PhD students struggle to master.
+Litex is a simple and easy-to-learn formal language. It makes formal reasoning as natural as writing in natural language. Thanks to its innovative design, even 10-year-olds can learn Litex easily. This gives it a dimensional advantage over existing formal languages, such as Lean, which even PhD students struggle to master. In the foreseeable future, Litex is going to reduce the time ratio between formalizing a proof and writing it in natural language from 10:1 to 1:1.
 
 This is an adventure with two goals: 1. to make formal reasoning as intuitive as natural language and everyday thinking, from both high-level and low-level perspectives. 2. to spread the idea and power of formal reasoning to a larger audience. Both goals serves one ultimate purpose: scale formal reasoning in this new AI age.
 
@@ -95,9 +95,6 @@ After having a sense of Litex, do this:
 
 ## A Simple Example
 
-_Keep it simple, stupid._
-
-_-- The Unix Philosophy_
 
 _If you define the problem correctly, you almost have the solution._
 
@@ -163,15 +160,15 @@ There are two major special cases of match and substitute:
 
 ## The Secret behind Litex's Unique Design
 
-_Cross the river by feeling the stones._
+_Keep it simple, stupid._
 
-_-- Chinese Proverb_
+_-- The Unix Philosophy_
 
 _Simplicity is the ultimate sophistication._
 
 _-- Leonardo da Vinci_
 
-TL;DR: Traditional formal languages are programming languages. Code in Programming languages are for execution. Litex is a not a programming language, just as math is not a programming language. Verification of mathematical reasoning is done by matching and substituting, and that is exactly what Litex does. The user provides statements to deduce new facts from existing facts (that is what we call reasoning), and Litex is here to make sure every statement makes sense.
+TL;DR: Traditional formal languages are programming languages. Code in Programming languages are for execution. Litex is a not a programming language, just as math is not a programming language. Verification of mathematical reasoning is done by matching and substituting, and that is exactly what Litex does. The user provides statements to deduce new facts from existing facts (that is what we call reasoning), and Litex is here to make sure every statement makes sense. This is the secret behind Litex's accomplishment of reducing the time ratio between formalizing a proof and writing it in natural language from 10:1 to 1:1.
 
 Everyone knows how to reason, including 10-year-old. We reason thousands of time every day without even noticing it. Yet, traditional formal languages, like Lean4, Coq, and Isebelle are so complex that even the smartest mathematicians find it hard to use. Why is that?
 
@@ -186,8 +183,6 @@ This design choice, similar to how SQL specializes in database operations, allow
 Another important design choice is that the user does not need to give names to facts, because Litex can automatically find the matched facts it needs. It saves a lot of time and effort for the user. Read [tutorial](./doc/tutorial/tutorial.md) for more details.
 
 Throughout the years, natural languages are [considerably more expressive than their formal mathematical counterparts](https://terrytao.wordpress.com/advice-on-writing-papers/take-advantage-of-the-english-language/). With Litex, we can finally make the best of both worlds.
-
-Litex takes a use-driven, example-first approach to formalization. Instead of building on sophisticated theories, it evolves by trying to express real mathematical texts—like Tao’s *Analysis I* or Weil’s *Number Theory for Beginners*. When something is hard to formalize, Litex doesn’t force a fit; it grows new features to make expression natural. This trial-and-error, practice-guided development makes Litex uniquely adaptable and intuitive.
 
 In a nutshell, Litex is for EVERYONE, from children to experts, to learn and use formal language at AI age. It scales up reasoning by making the process of writing formal reasoning as intuitive as writing in natural language.
 
@@ -243,9 +238,10 @@ Think of formalization like reading a book - you need to understand the previous
 
 See [Applications of Formal Reasoning in AI and Many Other Fields](./doc/applications_of_formal_reasoning/applications_of_formal_reasoning.md) for more details.
 
-1. AI researchers. Researchers from OpenAI, Google, Alibaba, DeepSeek, etc are exploring the loop of model itself writes a question, itself solves, and in this way, the model itself improves itself. This is a very promising direction. They need something to tell whether the reasoning process is correct. Litex can be used to ensure the correctness of the reasoning process as long as the reasoning process is formalized in Litex. This makes Litex a very fundamental infrastructure for AI. At the same time, AI safety researchers need to ensure the safety of the output of the model, and now they are turning to formal languages for help.
+1. AI researchers. Researchers from OpenAI, Google, Alibaba, DeepSeek, etc are exploring the loop of model itself writes a question, itself solves, and in this way, the model itself improves itself. This is a very promising direction. They need something to tell whether the reasoning process is correct. Litex can be used to ensure the correctness of the reasoning process as long as the reasoning process is formalized in Litex. This makes Litex a very fundamental infrastructure for AI. At the same time, AI safety researchers need to ensure the safety of the output of the model, and now they are turning to formal languages for help. As models are becoming more and more powerful and dangerous, the need for formal languages is becoming more and more urgent.
 
-2. Mathematicians. As we all know, a small piece of error in a proof can lead to a huge disaster, while somehow human beings still manage to push the frontier of math to a very high level. This is truly remarkable. That is why I am excited to see what we can do with Litex, a power tool ensuring the correctness of any piece of reasoning and saving mathematicians from the tedious work of proof checking. The scale of collaboration, the scale of mathematical discovery, and the scale of mathematical knowledge are all going to be scaled up to a new level that nobody can imagine.
+2. Mathematicians. As we all know, a small piece of error in a proof can lead to a huge disaster, while somehow human beings still manage to push the frontier of math to a very high level. This is truly remarkable. That is why I am excited to see what we can do with Litex, a power tool ensuring the correctness of any piece of reasoning and saving mathematicians from the tedious work of proof checking. Mathematicians can finally work together with a stranger and the Litex kernel gives you the certificate of correctness of his/her contribution. The scale of collaboration, the scale of mathematical discovery, and the scale of mathematical knowledge are all going to be scaled up to a new level that nobody can imagine.
+
 3. Students. Students can use Litex to learn math and formal reasoning. They can use Litex to write their own proofs and verify them. They can use Litex to learn how to write formal proofs.
 
 
@@ -362,6 +358,22 @@ Next I want to show you how Litex can be used to solve a simple linear equation.
 </table>
 
 I know Lean can use tactics to solve the same problem, and it is shorter. Litex will introduce similar features in the future. What I really want to show you here is that Litex is much more readable and intuitive than Lean in this case. Not every situation can be solved by tactics, and writing tactics itself in Lean is not easy. Litex spares you from remembering all these difficult things like `have`, `by`, `rw`, `simp`, `exact` and strange syntax etc. All you need is basic math knowledge, which significantly reduces the barrier to entry.
+
+## Evolution and Development of Litex
+
+_Cross the river by feeling the stones._
+
+_-- Chinese Proverb_
+
+_Estimated number of users of C++ is 1 in 1979, 16 in 1980, 38 in 1981, 85 in 1982, ..., 150000 in 1990, 400000 in 1991. In other words, the C++ user population doubled every 7.5 months or so._
+
+_-- Bjarne Stroustrup, A History of C++: 1979-1991_
+
+Litex takes a use-driven, example-first approach to formalization. Instead of building on sophisticated theories, at its invention stage, the creator of Litex evolves it by trying to express real mathematical texts, like Tao's *Analysis I* or Weil's *Number Theory for Beginners* in Litex. When something is hard or impossible to formalize using existing features, it grows new language features (syntactically and semantically) to make expression natural. Any time the creator of Litex feels that the language is not expressive enough, he will add new features to make it more expressive. 
+
+Sometimes the new feature covers the functionalities of the old one and the old one is replaced by the new one. This trial-and-error, practice-guided development makes Litex uniquely adaptable and intuitive. Any feature is added with careful test about whether it is as useful and intuitive as possible and whether it is not harmful to the existing features. In most cases, a feature either works as a syntactic sugar which significantly improves the readability and writing experience of the code, or it is a new feature that is necessary for the user to express certain types of logic.
+
+The creator of Litex wishes Litex to grow exponentially, like C++ and other programming languages did. It does not need a glorious beginning, but it needs a strong engine to grow. That is why Litex really needs YOUR help: to use it, to spread the word about it, to contribute to it, to improve it, to make it better.
 
 ## Contact & Contribute to Litex
 
