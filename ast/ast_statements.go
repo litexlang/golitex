@@ -126,6 +126,6 @@ type ImportStmt struct {
 	AsPkgName string
 }
 
-type PublicStmt struct {
+type PubStmt struct {
 	Stmts []Stmt
 }
