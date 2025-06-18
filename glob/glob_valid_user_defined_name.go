@@ -16,7 +16,6 @@ package litex_global
 
 import (
 	"fmt"
-	"strings"
 )
 
 func IsValidName(name string) error {
@@ -27,11 +26,6 @@ func IsValidName(name string) error {
 	// Check for leading digits
 	if first := name[0]; first >= '0' && first <= '9' {
 		return fmt.Errorf("identifier name cannot begin with a numeric character (0-9)")
-	}
-
-	// Check for universal parameter prefix
-	if len(name) >= 1 && strings.HasPrefix(name, UniPrefix) {
-		return fmt.Errorf("identifier name cannot begin with universal parameter prefix '%s'", UniPrefix)
 	}
 
 	// Check for leading symbols
@@ -52,6 +46,18 @@ func IsValidName(name string) error {
 	// Final check for keywords and symbols
 	if IsKeyword(name) || IsKeySymbol(name) {
 		return fmt.Errorf("identifier name cannot be a reserved keyword or symbol")
+	}
+
+	// todo: For the time being, I assume all names must start with _ or english letter, and later words can only be number, _ or english letter
+	if first := name[0]; first == '_' || first >= 'a' && first <= 'z' || first >= 'A' && first <= 'Z' {
+		for _, char := range name[1:] {
+			if char >= '0' && char <= '9' || char == '_' || char >= 'a' && char <= 'z' || char >= 'A' && char <= 'Z' {
+				continue
+			}
+			return fmt.Errorf("identifier name can only contain numbers, _, or english letters")
+		}
+	} else {
+		return fmt.Errorf("identifier name must start with _ or english letter")
 	}
 
 	return nil

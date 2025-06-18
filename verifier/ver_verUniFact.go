@@ -231,15 +231,13 @@ func processUniFactParams(env *env.Env, params []string) (map[string]ast.Fc, map
 
 func generateUndeclaredRandomName(env *env.Env) string {
 	i := 4
-
 	var randomStr string
 	for {
 		randomStr = glob.RandomString(i)
 		// check if the string is undeclared
 		if !env.IsAtomDeclared(ast.NewFcAtom(glob.EmptyPkg, randomStr), map[string]struct{}{}) {
-			break
+			return randomStr
 		}
 		i++
 	}
-	return randomStr
 }
