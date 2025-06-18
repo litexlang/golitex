@@ -585,3 +585,15 @@ func (stmt *ImportStmt) String() string {
 	builder.WriteString(glob.KeySymbolDoubleQuote)
 	return builder.String()
 }
+
+func (stmt *ProveStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordProve)
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+	for _, proof := range stmt.Proof {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 1))
+		builder.WriteByte('\n')
+	}
+	return builder.String()
+}

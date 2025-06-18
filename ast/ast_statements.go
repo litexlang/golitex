@@ -129,3 +129,7 @@ type ImportStmt struct {
 type PubStmt struct {
 	Stmts []Stmt
 }
+
+type ProveStmt struct {
+	Proof []Stmt
+}
