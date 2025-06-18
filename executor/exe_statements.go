@@ -194,18 +194,21 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
 	for _, param := range stmt.DefHeader.Params {
 		extraAtomNames[param] = struct{}{}
 	}
+	for _, fact := range stmt.DomFacts {
+		if !exec.env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
+			return fmt.Errorf(fmt.Sprintf("%s\nis true by prop %s definition, but there are undeclared atoms in the fact\n", fact.String(), stmt.DefHeader.Name))
+		}
+	}
+	for _, fact := range stmt.IffFacts {
+		if !exec.env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
+			return fmt.Errorf(fmt.Sprintf("%s\nis true by prop %s definition, but there are undeclared atoms in the fact\n", fact.String(), stmt.DefHeader.Name))
+		}
+	}
+
 	propToIff, iffToProp, err := stmt.Make_PropToIff_IffToProp()
 	if err != nil {
 		return err
 	}
-	if !exec.env.AreAtomsInFactAreDeclared(propToIff, extraAtomNames) {
-		return fmt.Errorf(fmt.Sprintf("%s\nis true by prop %s definition, but there are undeclared atoms in the fact\n", propToIff.String(), stmt.DefHeader.Name))
-	}
-
-	if !exec.env.AreAtomsInFactAreDeclared(iffToProp, extraAtomNames) {
-		return fmt.Errorf(fmt.Sprintf("%s\nis true by prop %s definition, but there are undeclared atoms in the fact\n", iffToProp.String(), stmt.DefHeader.Name))
-	}
-
 	err = exec.env.NewFact(propToIff)
 	if err != nil {
 		return err
@@ -246,6 +249,22 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 	err := exec.defHeader_NonDuplicateParam_NoUndeclaredParamSet(stmt.DefHeader.Params, stmt.DefHeader.SetParams)
 	if err != nil {
 		return err
+	}
+	ok := exec.env.AreAtomsInFcAreDeclared(stmt.RetSet, map[string]struct{}{})
+	if !ok {
+		return fmt.Errorf(env.AtomsInFcNotDeclaredMsg(stmt.RetSet))
+	}
+
+	for _, fact := range stmt.DomFacts {
+		if !exec.env.AreAtomsInFactAreDeclared(fact, map[string]struct{}{}) {
+			return fmt.Errorf(fmt.Sprintf("%s\nis true by fn %s definition, but there are undeclared atoms in the fact\n", fact.String(), stmt.DefHeader.Name))
+		}
+	}
+
+	for _, fact := range stmt.ThenFacts {
+		if !exec.env.AreAtomsInFactAreDeclared(fact, map[string]struct{}{}) {
+			return fmt.Errorf(fmt.Sprintf("%s\nis true by fn %s definition, but there are undeclared atoms in the fact\n", fact.String(), stmt.DefHeader.Name))
+		}
 	}
 
 	err = exec.env.NewDefFn(stmt)
@@ -768,11 +787,11 @@ func (exec *Executor) defHeader_NonDuplicateParam_NoUndeclaredParamSet(params []
 		if ok {
 			return fmt.Errorf("parameter %s is declared multiple times", param)
 		}
-		paramSet[param] = struct{}{}
-		ok = exec.env.ArdAtomsInFcAreDeclared(setParams[i], paramSet)
+		ok = exec.env.AreAtomsInFcAreDeclared(setParams[i], paramSet)
 		if !ok {
 			return fmt.Errorf(env.AtomsInFcNotDeclaredMsg(setParams[i]))
 		}
+		paramSet[param] = struct{}{} // setParam 不能 包含它自己
 	}
 
 	return nil

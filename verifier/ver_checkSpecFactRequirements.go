@@ -24,7 +24,7 @@ import (
 func (ver *Verifier) checkSpecFactRequirements(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	// 1. Check if all atoms in the parameters are declared
 	for _, param := range stmt.Params {
-		ok := ver.env.ArdAtomsInFcAreDeclared(param, map[string]struct{}{})
+		ok := ver.env.AreAtomsInFcAreDeclared(param, map[string]struct{}{})
 		if !ok {
 			return false, fmt.Errorf(env.AtomsInFcNotDeclaredMsg(param))
 		}
