@@ -218,7 +218,7 @@ func processUniFactParams(env *env.Env, params []string) (map[string]ast.Fc, map
 	for i, param := range params {
 		newParam := param
 		if env.IsAtomDeclared(ast.NewFcAtom(glob.EmptyPkg, newParam), map[string]struct{}{}) {
-			newParam = fmt.Sprintf("%s%s", glob.UniPrefix, newParam)
+			newParam = generateUndeclaredRandomName(env)
 		}
 		if param != newParam {
 			paramMap[param] = ast.NewFcAtom(glob.EmptyPkg, newParam)
@@ -227,4 +227,19 @@ func processUniFactParams(env *env.Env, params []string) (map[string]ast.Fc, map
 		}
 	}
 	return paramMap, paramMapStrToStr, indexes
+}
+
+func generateUndeclaredRandomName(env *env.Env) string {
+	i := 4
+
+	var randomStr string
+	for {
+		randomStr = glob.RandomString(i)
+		// check if the string is undeclared
+		if !env.IsAtomDeclared(ast.NewFcAtom(glob.EmptyPkg, randomStr), map[string]struct{}{}) {
+			break
+		}
+		i++
+	}
+	return randomStr
 }

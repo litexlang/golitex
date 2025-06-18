@@ -26,7 +26,10 @@ func TestWholeFile(t *testing.T) {
 	codePath := "../examples/test_codes/atom_without_declare_test.lix"
 	readFileTime := time.Since(start)
 	start = time.Now()
-	topStmtSlice := setupAndParseStmtTest(codePath)
+	topStmtSlice, err := setupAndParseStmtTest(codePath)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
 	parseTime := time.Since(start)
 	start = time.Now()
 	messages := execStmtTest(topStmtSlice)
