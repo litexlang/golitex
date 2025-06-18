@@ -75,7 +75,32 @@ func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) error {
 	return env.PropDefMem.Insert(stmt, glob.EmptyPkg)
 }
 
-func (env *Env) NewDefObj(stmt *ast.DefObjStmt) error {
+func (env *Env) NewDefObj_InsideAtomsDeclared(stmt *ast.DefObjStmt) error {
+	err := env.NonDuplicateParam_NoUndeclaredParamSet(stmt.Objs, stmt.ObjSets)
+	if err != nil {
+		return err
+	}
+
+	for _, fact := range stmt.NewInFacts() {
+		if !env.AreAtomsInFactAreDeclared(fact, map[string]struct{}{}) {
+			return fmt.Errorf(AtomsInFactNotDeclaredMsg(fact))
+		}
+		err := env.NewFact(fact)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, fact := range stmt.Facts {
+		if !env.AreAtomsInFactAreDeclared(fact, map[string]struct{}{}) {
+			return fmt.Errorf(AtomsInFactNotDeclaredMsg(fact))
+		}
+		err := env.NewFact(fact)
+		if err != nil {
+			return err
+		}
+	}
+
 	for _, objName := range stmt.Objs {
 		err := env.isInvalidName(objName)
 		if err != nil {
@@ -86,8 +111,29 @@ func (env *Env) NewDefObj(stmt *ast.DefObjStmt) error {
 	return env.ObjDefMem.Insert(stmt, glob.EmptyPkg)
 }
 
-func (env *Env) NewDefFn(stmt *ast.DefFnStmt) error {
-	err := env.isInvalidName(stmt.DefHeader.Name)
+func (env *Env) NewDefFn_InsideAtomsDeclared(stmt *ast.DefFnStmt) error {
+	err := env.NonDuplicateParam_NoUndeclaredParamSet(stmt.DefHeader.Params, stmt.DefHeader.SetParams)
+	if err != nil {
+		return err
+	}
+	ok := env.AreAtomsInFcAreDeclared(stmt.RetSet, map[string]struct{}{})
+	if !ok {
+		return fmt.Errorf(AtomsInFcNotDeclaredMsg(stmt.RetSet))
+	}
+
+	for _, fact := range stmt.DomFacts {
+		if !env.AreAtomsInFactAreDeclared(fact, map[string]struct{}{}) {
+			return fmt.Errorf(fmt.Sprintf("%s\nis true by fn %s definition, but there are undeclared atoms in the fact\n", fact.String(), stmt.DefHeader.Name))
+		}
+	}
+
+	for _, fact := range stmt.ThenFacts {
+		if !env.AreAtomsInFactAreDeclared(fact, map[string]struct{}{}) {
+			return fmt.Errorf(fmt.Sprintf("%s\nis true by fn %s definition, but there are undeclared atoms in the fact\n", fact.String(), stmt.DefHeader.Name))
+		}
+	}
+
+	err = env.isInvalidName(stmt.DefHeader.Name)
 	if err != nil {
 		return err
 	}
@@ -100,8 +146,25 @@ func (env *Env) NewDefFn(stmt *ast.DefFnStmt) error {
 	return nil
 }
 
-func (env *Env) NewDefExistProp(stmt *ast.DefExistPropStmt) error {
-	err := env.isInvalidName(stmt.DefBody.DefHeader.Name)
+func (env *Env) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) error {
+	err := env.NonDuplicateParam_NoUndeclaredParamSet(append(stmt.DefBody.DefHeader.Params, stmt.ExistParams...), append(stmt.DefBody.DefHeader.SetParams, stmt.ExistParamSets...))
+	if err != nil {
+		return err
+	}
+
+	for _, fact := range stmt.DefBody.DomFacts {
+		if !env.AreAtomsInFactAreDeclared(fact, map[string]struct{}{}) {
+			return fmt.Errorf(fmt.Sprintf("%s\nis true by exist_prop %s definition, but there are undeclared atoms in the fact\n", fact.String(), stmt.DefBody.DefHeader.Name))
+		}
+	}
+
+	for _, fact := range stmt.DefBody.IffFacts {
+		if !env.AreAtomsInFactAreDeclared(fact, map[string]struct{}{}) {
+			return fmt.Errorf(fmt.Sprintf("%s\nis true by exist_prop %s definition, but there are undeclared atoms in the fact\n", fact.String(), stmt.DefBody.DefHeader.Name))
+		}
+	}
+
+	err = env.isInvalidName(stmt.DefBody.DefHeader.Name)
 	if err != nil {
 		return err
 	}
