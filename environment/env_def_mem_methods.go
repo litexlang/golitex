@@ -17,7 +17,6 @@ package litex_env
 import (
 	"fmt"
 	ast "golitex/ast"
-	glob "golitex/glob"
 )
 
 // Insert DefStmt into DefMem
@@ -170,54 +169,6 @@ func (e *Env) GetPropDef(propName ast.FcAtom) (*ast.DefPropStmt, bool) {
 		}
 	}
 	return nil, false
-}
-
-func (e *Env) AreAtomsInFcAreDeclared(fc ast.Fc, extraAtomNames map[string]struct{}) bool {
-	atoms := ast.GetAtomsInFc(fc)
-	return e.AreAtomsDeclared(atoms, extraAtomNames)
-}
-
-func (e *Env) AreAtomsInFactAreDeclared(fact ast.FactStmt, extraAtomNames map[string]struct{}) bool {
-	atoms := fact.GetAtoms()
-	return e.AreAtomsDeclared(atoms, extraAtomNames)
-}
-
-func (e *Env) AreAtomsDeclared(atoms []*ast.FcAtom, extraAtomNames map[string]struct{}) bool {
-	for _, atom := range atoms {
-		if !e.IsAtomDeclared(atom, extraAtomNames) {
-			return false
-		}
-	}
-	return true
-}
-
-func (e *Env) IsAtomDeclared(atom *ast.FcAtom, extraAtomNames map[string]struct{}) bool {
-	// 如果是内置的符号，那就声明了
-	if glob.IsKeySymbol(atom.Name) {
-		return true
-	}
-
-	// 是内置的keyword就声明了
-	if glob.IsKeyword(atom.Name) {
-		return true
-	}
-
-	// 如果是数字，那就声明了
-	if _, ok := ast.IsNumLitFcAtom(atom); ok {
-		return true
-	}
-
-	_, ok := e.GetFcAtomDef(atom)
-	if ok {
-		return true
-	}
-
-	_, ok = extraAtomNames[atom.Name]
-	if ok && atom.PkgName == glob.EmptyPkg {
-		return true
-	}
-
-	return false
 }
 
 func (e *Env) GetFcAtomDef(fcAtomName *ast.FcAtom) (ast.DefStmt, bool) {

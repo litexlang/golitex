@@ -15,6 +15,7 @@
 package litex_env
 
 import (
+	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
 )
@@ -43,10 +44,32 @@ func (env *Env) isInvalidName(name string) error {
 	return nil
 }
 
-func (env *Env) NewDefProp(stmt *ast.DefPropStmt) error {
+func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) error {
 	err := env.isInvalidName(stmt.DefHeader.Name)
 	if err != nil {
 		return err
+	}
+
+	err = env.NonDuplicateParam_NoUndeclaredParamSet(stmt.DefHeader.Params, stmt.DefHeader.SetParams)
+	if err != nil {
+		return err
+	}
+
+	extraAtomNames := map[string]struct{}{}
+	for _, param := range stmt.DefHeader.Params {
+		extraAtomNames[param] = struct{}{}
+	}
+
+	for _, fact := range stmt.DomFacts {
+		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
+			return fmt.Errorf(fmt.Sprintf("%s\nis true by prop %s definition, but there are undeclared atoms in the fact\n", fact.String(), stmt.DefHeader.Name))
+		}
+	}
+
+	for _, fact := range stmt.IffFacts {
+		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
+			return fmt.Errorf(fmt.Sprintf("%s\nis true by prop %s definition, but there are undeclared atoms in the fact\n", fact.String(), stmt.DefHeader.Name))
+		}
 	}
 
 	return env.PropDefMem.Insert(stmt, glob.EmptyPkg)
