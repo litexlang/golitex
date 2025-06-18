@@ -52,7 +52,7 @@ func (tb *tokenBlock) stmt() (ast.Stmt, error) {
 	case glob.KeywordClaim:
 		ret, err = tb.claimStmt()
 	case glob.KeywordProve:
-		ret, err = tb.proveClaimStmt()
+		ret, err = tb.proveStmt()
 	case glob.KeywordKnow:
 		{
 			if tb.TokenAtHeaderIndexIs(1, glob.KeywordProp) {
@@ -360,23 +360,6 @@ func (tb *tokenBlock) claimStmt() (*ast.ClaimStmt, error) {
 	}
 
 	return ast.NewClaimProveStmt(isProve, toCheck, *proof), nil
-}
-
-func (tb *tokenBlock) proveClaimStmt() (*ast.ClaimStmt, error) {
-	tb.header.skip(glob.KeywordProve)
-	if err := tb.header.testAndSkip(glob.KeySymbolColon); err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
-
-	innerStmtArr := []ast.Stmt{}
-	for _, innerStmt := range tb.body {
-		curStmt, err := innerStmt.stmt()
-		if err != nil {
-			return nil, err
-		}
-		innerStmtArr = append(innerStmtArr, curStmt)
-	}
-	return ast.NewClaimProveStmt(true, ast.ClaimStmtEmptyToCheck, innerStmtArr), nil
 }
 
 func (tb *tokenBlock) knowFactStmt() (*ast.KnowFactStmt, error) {
@@ -1176,4 +1159,22 @@ func (tb *tokenBlock) pubStmt() (*ast.PubStmt, error) {
 	}
 
 	return ast.NewPubStmt(stmts), nil
+}
+
+func (tb *tokenBlock) proveStmt() (*ast.ProveStmt, error) {
+	err := tb.header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	proof := []ast.Stmt{}
+	for _, stmt := range tb.body {
+		curStmt, err := stmt.stmt()
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+		proof = append(proof, curStmt)
+	}
+
+	return ast.NewProveStmt(proof), nil
 }

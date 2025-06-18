@@ -109,3 +109,7 @@ func NewSupposeStmt(fact SpecFactStmt, body []Stmt) *SupposeStmt {
 func NewImportStmt(path string, asPkgName string) *ImportStmt {
 	return &ImportStmt{path, asPkgName}
 }
+
+func NewProveStmt(proof []Stmt) *ProveStmt {
+	return &ProveStmt{proof}
+}

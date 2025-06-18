@@ -36,6 +36,7 @@ func (s *KnowExistPropStmt) stmt()   {}
 func (s *OrStmt) stmt()              {}
 func (s *ImportStmt) stmt()          {}
 func (s *PubStmt) stmt()             {}
+func (s *ProveStmt) stmt()           {}
 
 type FactStmt interface {
 	factStmt()
