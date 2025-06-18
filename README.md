@@ -13,7 +13,7 @@ _The Formal Language Where Natural Expression Meets Scalable Formal Reasoning_
 *Created by Jiachen Shen (You can call me Jackie Shen.)*
 
 [![Github](https://img.shields.io/badge/Github-grey?logo=github)](https://github.com/litexlang/golitex)
-[![Zulip](https://img.shields.io/badge/Zulip-purple?logo=zulip)](https://litex.zulipchat.com)
+[![Zulip Community](https://img.shields.io/badge/Zulip%20Community-purple?logo=zulip)](https://litex.zulipchat.com)
 [![Website](https://img.shields.io/badge/Website-blue?logo=website)](https://litexlang.org)
 [![Email](https://img.shields.io/badge/Email-red?logo=email)](mailto:litexlang@outlook.com)
 [![Online Playground](https://img.shields.io/badge/Online%20Playground-darkgreen?logo=playground)](https://litexlang.org/playground)
@@ -29,6 +29,8 @@ _-- Donald Knuth_
 _The best way to predict the future is to invent it._
 
 _-- Alan Kay_
+
+**Welcome to our [zulip community](https://litex.zulipchat.com) to get the latest updates and discuss with us.**
 
 Litex is a simple and easy-to-learn formal language. It makes formal reasoning as natural as writing in natural language. Thanks to its innovative design philosophy, even 10-year-olds can learn Litex easily. This gives it a dimensional advantage over existing formal languages, such as Lean, which even PhD students struggle to master.
 
@@ -168,6 +170,8 @@ _-- Chinese Proverb_
 _Simplicity is the ultimate sophistication._
 
 _-- Leonardo da Vinci_
+
+TL;DR: Traditional formal languages are programming languages. Code in Programming languages are for execution. Litex is a not a programming language, just as math is not a programming language. Verification of mathematical reasoning is done by matching and substituting, and that is exactly what Litex does. The user provides statements to deduce new facts from existing facts (that is what we call reasoning), and Litex is here to make sure every statement makes sense.
 
 Everyone knows how to reason, including 10-year-old. We reason thousands of time every day without even noticing it. Yet, traditional formal languages, like Lean4, Coq, and Isebelle are so complex that even the smartest mathematicians find it hard to use. Why is that?
 
