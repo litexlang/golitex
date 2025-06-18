@@ -95,6 +95,9 @@ After having a sense of Litex, do this:
 
 ## A Simple Example
 
+_Beautiful is better than ugly. Explicit is better than implicit. Simple is better than complex._
+
+_-- The Zen of Python_
 
 _If you define the problem correctly, you almost have the solution._
 
@@ -247,17 +250,17 @@ See [Applications of Formal Reasoning in AI and Many Other Fields](./doc/applica
 
 
 
-##  Examples: Litex for Curious Lean Users
+##  Examples: Litex for Curious Formal Language Users
 
 _Common sense is not so common._
 
 _-- Voltaire_
 
-_Beautiful is better than ugly. Explicit is better than implicit. Simple is better than complex._
+_Learning is experience, everything else is just information._
 
-_-- The Zen of Python_
+_-- Albert Einstein_
 
-Here are some examples of Litex, in Litex for Curious Lean Users4. Detailed explanations are provided in [Litex for Curious Lean Users](./doc/litex_for_curious_lean_users/litex_for_curious_lean_users.md). I put them here for you to get a sense of the language.
+Here are some examples of Litex, in Litex for Curious Lean Users and other formal language users. Detailed explanations are provided in [Litex for Curious Lean Users](./doc/litex_for_curious_lean_users/litex_for_curious_lean_users.md). I put them here for you to get a sense of the language.
 
 The definition of algorithm is a good example. In mathematics, an algorithm is a computational method that can be precisely defined as a quadruple (Q, I, S, f), where:
 - Q is a set representing all possible states of computation
