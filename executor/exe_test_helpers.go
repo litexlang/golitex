@@ -24,7 +24,7 @@ import (
 	"strings"
 )
 
-func setupAndParseStmtTest(path string) ([]ast.TopStmt, error) {
+func setupAndParseStmtTest(path string) ([]ast.PubStmt, error) {
 	code := readFile(path)
 
 	topStatements, err := parser.ParseSourceCode(code)
@@ -34,7 +34,7 @@ func setupAndParseStmtTest(path string) ([]ast.TopStmt, error) {
 	return topStatements, nil
 }
 
-func execStmtTest(topStmt []ast.TopStmt) []string {
+func execStmtTest(topStmt []ast.PubStmt) []string {
 	env := env.NewEnv(nil, nil)
 	executor := *NewExecutor(env)
 

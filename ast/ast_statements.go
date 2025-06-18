@@ -14,9 +14,8 @@
 
 package litex_ast
 
-type TopStmt struct {
-	Stmt  Stmt
-	IsPub bool
+type PubStmt struct {
+	Stmts []Stmt
 }
 
 type DefObjStmt struct {

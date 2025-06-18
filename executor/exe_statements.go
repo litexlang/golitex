@@ -71,7 +71,7 @@ func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 	}
 }
 
-func (exec *Executor) TopLevelStmt(stmt *ast.TopStmt) (glob.ExecState, error) {
+func (exec *Executor) TopLevelStmt(stmt *ast.PubStmt) (glob.ExecState, error) {
 	exec.clearMsgAndOutput()
 	return exec.stmt(stmt.Stmt)
 }

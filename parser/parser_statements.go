@@ -21,19 +21,16 @@ import (
 	"strings"
 )
 
-func (tb *tokenBlock) TopStmt() (*ast.TopStmt, error) {
-	pub := false
+func (tb *tokenBlock) TopStmt() (ast.Stmt, error) {
 	if tb.header.is(glob.KeywordPub) {
-		tb.header.skip("")
-		pub = true
+		stmt, err := tb.pubStmt()
+		if err != nil {
+			return nil, err
+		}
+		return stmt, nil
 	}
 
-	ret, err := tb.Stmt()
-	if err != nil {
-		return nil, err
-	}
-
-	return ast.NewTopStmt(ret, pub), nil
+	return tb.Stmt()
 }
 
 func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
@@ -1165,4 +1162,22 @@ func (tb *tokenBlock) getStringInDoubleQuotes() (string, error) {
 	tb.header.skip(glob.KeySymbolDoubleQuote)
 
 	return builder.String(), nil
+}
+
+func (tb *tokenBlock) pubStmt() (*ast.PubStmt, error) {
+	err := tb.header.skipKwAndColon_ExceedEnd(glob.KeywordPub)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	stmts := []ast.Stmt{}
+	for _, stmt := range tb.body {
+		curStmt, err := stmt.Stmt()
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+		stmts = append(stmts, curStmt)
+	}
+
+	return ast.NewPubStmt(stmts), nil
 }

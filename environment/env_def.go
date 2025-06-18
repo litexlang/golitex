@@ -83,13 +83,6 @@ func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) error {
 }
 
 func (env *Env) NewDefObj_InsideAtomsDeclared(stmt *ast.DefObjStmt) error {
-	// obj名不能和parameter名重叠
-	for _, objName := range stmt.Objs {
-		if slices.Contains(stmt.Objs, objName) {
-			return fmt.Errorf("obj name %s cannot be the same as parameter name %s", objName, objName)
-		}
-	}
-
 	err := env.NonDuplicateParam_NoUndeclaredParamSet(stmt.Objs, stmt.ObjSets)
 	if err != nil {
 		return err
