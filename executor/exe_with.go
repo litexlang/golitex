@@ -17,6 +17,7 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
+	env "golitex/environment"
 	glob "golitex/glob"
 )
 
@@ -100,7 +101,7 @@ func (exec *Executor) storeFactsInWithStmt(stmt *ast.WithStmt) (glob.ExecState, 
 	for _, fact := range insideFacts {
 		ok := exec.env.AreAtomsInFactAreDeclared(fact, map[string]struct{}{})
 		if !ok {
-			return glob.ExecState_Error, fmt.Errorf("fact %s has undeclared atoms", fact.String())
+			return glob.ExecState_Error, fmt.Errorf(env.AtomsInFactNotDeclaredMsg(fact))
 		}
 		err := exec.env.NewFact(fact)
 		if err != nil {
