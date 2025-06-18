@@ -60,6 +60,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		execState, err = exec.withStmt(stmt)
 	case *ast.ImportStmt:
 		err = exec.importStmt(stmt)
+	case *ast.PubStmt:
+		execState, err = exec.pubStmt(stmt)
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}
@@ -71,7 +73,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 	}
 }
 
-func (exec *Executor) publicStmt(stmt *ast.PublicStmt) (glob.ExecState, error) {
+func (exec *Executor) pubStmt(stmt *ast.PubStmt) (glob.ExecState, error) {
 	for _, curStmt := range stmt.Stmts {
 		execState, err := exec.Stmt(curStmt)
 		if err != nil {
