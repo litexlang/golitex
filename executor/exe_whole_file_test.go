@@ -22,18 +22,8 @@ import (
 
 func TestWholeFile(t *testing.T) {
 	start := time.Now()
-	// codePath := readFile("../examples/comprehensive_examples/syllogism.lix")
-	// codePath := readFile("../examples/comprehensive_examples/Hilbert_geometry_axioms_formalization.lix")
-	// codePath := readFile("../examples/comprehensive_examples/multivariate_linear_equation.lix")
-	// codePath := readFile("../examples/comprehensive_examples/algorithm.lix")
-	// codePath := readFile("../examples/comprehensive_examples/syllogism.lix")
-	// codePath := readFile("../examples/test_codes/match_env.lix")
-	// codePath := readFile("../examples/number_theory_for_beginners_by_andre_weil/number_theory_for_beginners_by_andre_weil.lix")
-	// codePath := readFile("../examples/test_codes/tmp.lix")ob
-	// codePath := readFile("../examples/number_theory_for_beginners_by_andre_weil/version1.lix")
-	// codePath := readFile("../examples/test_codes/claim.lix")
-	// codePath := readFile("../examples/test_codes/import.lix")
-	codePath := "../examples/test_codes/builtin_cmp.lix"
+	// codePath := "../examples/test_codes/builtin_cmp.lix"
+	codePath := "../examples/test_codes/tmp.lix"
 	readFileTime := time.Since(start)
 	start = time.Now()
 	topStmtSlice := setupAndParseStmtTest(codePath)

@@ -63,7 +63,7 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state VerState) (bool,
 
 	// 查看param set 是否已经声明
 	for _, paramSet := range newStmt.ParamSets {
-		ok := ver.env.AtomsInFcAreDeclared(paramSet)
+		ok := ver.env.ArdAtomsInFcAreDeclared(paramSet, map[string]struct{}{})
 		if !ok {
 			return false, fmt.Errorf("some atoms in %s are undeclared", paramSet.String())
 		}
@@ -217,7 +217,7 @@ func processUniFactParams(env *env.Env, params []string) (map[string]ast.Fc, map
 	indexes := make(map[int]string)
 	for i, param := range params {
 		newParam := param
-		if env.IsAtomDeclared(ast.NewFcAtom(glob.EmptyPkg, newParam)) {
+		if env.IsAtomDeclared(ast.NewFcAtom(glob.EmptyPkg, newParam), map[string]struct{}{}) {
 			newParam = fmt.Sprintf("%s%s", glob.UniPrefix, newParam)
 		}
 		if param != newParam {

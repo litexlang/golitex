@@ -223,6 +223,11 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 		return err
 	}
 
+	err = exec.defHeader_NonDuplicateParam_NoUndeclaredParamSet(&stmt.DefHeader)
+	if err != nil {
+		return err
+	}
+
 	// the function object is in fn
 	fnSet := ast.MakeFnSetFc(stmt.DefHeader.SetParams, stmt.RetSet)
 
@@ -425,7 +430,7 @@ func (exec *Executor) execProofBlock(proof []ast.Stmt) (glob.ExecState, error) {
 func (exec *Executor) claimStmtProve(stmt *ast.ClaimStmt) (bool, error) {
 	// 需要检查stmt.ToCheckFact里的东西都是在外部声明好了的
 	if stmt.ToCheckFact != ast.ClaimStmtEmptyToCheck {
-		ok := exec.env.AtomsInFactAreDeclared(stmt.ToCheckFact)
+		ok := exec.env.AreAtomsInFactAreDeclared(stmt.ToCheckFact, map[string]struct{}{})
 		if !ok {
 			return false, fmt.Errorf("fact %s has undeclared atoms", stmt.ToCheckFact.String())
 		}
@@ -703,6 +708,28 @@ func (exec *Executor) importStmt(stmt *ast.ImportStmt) error {
 		execSuccess = true
 	} else {
 		panic(glob.InternalWarningMsg("import with as pkg name is not supported"))
+	}
+
+	return nil
+}
+
+func (exec *Executor) defHeader_NonDuplicateParam_NoUndeclaredParamSet(defHeader *ast.DefHeader) error {
+	// 建立新的环境，以防污染原来环境
+	exec.newEnv(exec.env, exec.env.CurMatchProp)
+	defer exec.deleteEnvAndRetainMsg()
+
+	// 检查所有参数都声明了
+	paramSet := map[string]struct{}{}
+	for i, param := range defHeader.Params {
+		_, ok := paramSet[param]
+		if ok {
+			return fmt.Errorf("parameter %s is declared multiple times", param)
+		}
+		paramSet[param] = struct{}{}
+		ok = exec.env.ArdAtomsInFcAreDeclared(defHeader.SetParams[i], paramSet)
+		if !ok {
+			return fmt.Errorf("atoms in %s are undeclared", defHeader.SetParams[i].String())
+		}
 	}
 
 	return nil
