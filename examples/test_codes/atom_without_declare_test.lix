@@ -14,5 +14,7 @@ prop p(x N):
     x $in H
 exist_prop s R st name(x R):
     x $in H
+fn f(x N) N:
+    x $in H
 """
 
