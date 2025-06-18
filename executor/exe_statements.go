@@ -169,7 +169,12 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
 	defer exec.appendMsg("\n")
 	defer exec.appendMsg(stmt.String())
 
-	err := exec.env.NewDefProp(stmt)
+	err := exec.defHeader_NonDuplicateParam_NoUndeclaredParamSet(stmt.DefHeader.Params, stmt.DefHeader.SetParams)
+	if err != nil {
+		return err
+	}
+
+	err = exec.env.NewDefProp(stmt)
 	if err != nil {
 		return err
 	}
@@ -207,6 +212,13 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
 }
 
 func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt, requireMsg bool) error {
+	defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
+
+	err := exec.defHeader_NonDuplicateParam_NoUndeclaredParamSet(stmt.Objs, stmt.ObjSets)
+	if err != nil {
+		return err
+	}
+
 	if requireMsg {
 		defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
 	}
@@ -215,15 +227,14 @@ func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt, requireMsg bool) error {
 }
 
 func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
-	// TODO 像定义这样的经常被调用的 事实，应该和普通的事实分离开来，以便于调用吗?
-	defer exec.appendMsg("\n")
-	defer exec.appendMsg(stmt.String())
-	err := exec.env.NewDefFn(stmt)
+	defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
+
+	err := exec.defHeader_NonDuplicateParam_NoUndeclaredParamSet(stmt.DefHeader.Params, stmt.DefHeader.SetParams)
 	if err != nil {
 		return err
 	}
 
-	err = exec.defHeader_NonDuplicateParam_NoUndeclaredParamSet(&stmt.DefHeader)
+	err = exec.env.NewDefFn(stmt)
 	if err != nil {
 		return err
 	}
@@ -266,7 +277,13 @@ func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) error {
 	// TODO 像定义这样的经常被调用的 事实，应该和普通的事实分离开来，以便于调用吗?
 	defer exec.appendMsg("\n")
 	defer exec.appendMsg(stmt.String())
-	err := exec.env.NewDefExistProp(stmt)
+
+	err := exec.defHeader_NonDuplicateParam_NoUndeclaredParamSet(append(stmt.DefBody.DefHeader.Params, stmt.ExistParams...), append(stmt.DefBody.DefHeader.SetParams, stmt.ExistParamSets...))
+	if err != nil {
+		return err
+	}
+
+	err = exec.env.NewDefExistProp(stmt)
 	if err != nil {
 		return err
 	}
@@ -713,22 +730,22 @@ func (exec *Executor) importStmt(stmt *ast.ImportStmt) error {
 	return nil
 }
 
-func (exec *Executor) defHeader_NonDuplicateParam_NoUndeclaredParamSet(defHeader *ast.DefHeader) error {
-	// 建立新的环境，以防污染原来环境
-	exec.newEnv(exec.env, exec.env.CurMatchProp)
-	defer exec.deleteEnvAndRetainMsg()
+func (exec *Executor) defHeader_NonDuplicateParam_NoUndeclaredParamSet(params []string, setParams []ast.Fc) error {
+	if len(params) != len(setParams) {
+		return fmt.Errorf("number of params and set params are not the same")
+	}
 
 	// 检查所有参数都声明了
 	paramSet := map[string]struct{}{}
-	for i, param := range defHeader.Params {
+	for i, param := range params {
 		_, ok := paramSet[param]
 		if ok {
 			return fmt.Errorf("parameter %s is declared multiple times", param)
 		}
 		paramSet[param] = struct{}{}
-		ok = exec.env.ArdAtomsInFcAreDeclared(defHeader.SetParams[i], paramSet)
+		ok = exec.env.ArdAtomsInFcAreDeclared(setParams[i], paramSet)
 		if !ok {
-			return fmt.Errorf("atoms in %s are undeclared", defHeader.SetParams[i].String())
+			return fmt.Errorf("atoms in %s are undeclared", setParams[i].String())
 		}
 	}
 
