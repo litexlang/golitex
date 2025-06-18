@@ -27,7 +27,7 @@ import (
 	"strings"
 )
 
-func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
+func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 	var err error = nil
 	var execState glob.ExecState = glob.ExecState_True
 
@@ -71,9 +71,17 @@ func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 	}
 }
 
-func (exec *Executor) TopLevelStmt(stmt *ast.PubStmt) (glob.ExecState, error) {
-	exec.clearMsgAndOutput()
-	return exec.stmt(stmt.Stmt)
+func (exec *Executor) publicStmt(stmt *ast.PublicStmt) (glob.ExecState, error) {
+	for _, curStmt := range stmt.Stmts {
+		execState, err := exec.Stmt(curStmt)
+		if err != nil {
+			return glob.ExecState_Error, err
+		}
+		if execState != glob.ExecState_True {
+			return execState, nil
+		}
+	}
+	return glob.ExecState_True, nil
 }
 
 func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
@@ -406,7 +414,7 @@ func (exec *Executor) GetUniFactSettings(asUnivFact *ast.UniFactStmt) error {
 
 func (exec *Executor) execProofBlock(proof []ast.Stmt) (glob.ExecState, error) {
 	for _, curStmt := range proof {
-		execState, err := exec.stmt(curStmt)
+		execState, err := exec.Stmt(curStmt)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
@@ -529,7 +537,7 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimStmt) (bool, 
 	}
 
 	for _, curStmt := range stmt.Proofs {
-		execState, err := exec.stmt(curStmt)
+		execState, err := exec.Stmt(curStmt)
 		if err != nil {
 			return false, err
 		}
@@ -603,7 +611,7 @@ func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEach
 	}
 
 	for _, proofStmt := range stmt.Proofs[index] {
-		execState, err := exec.stmt(proofStmt)
+		execState, err := exec.Stmt(proofStmt)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
@@ -692,7 +700,7 @@ func (exec *Executor) importStmt(stmt *ast.ImportStmt) error {
 			return err
 		}
 		for _, topStmt := range topStmtSlice {
-			execState, err := exec.TopLevelStmt(&topStmt)
+			execState, err := exec.Stmt(topStmt)
 			if err != nil {
 				return err
 			}

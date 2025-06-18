@@ -23,7 +23,7 @@ import (
 
 func (tb *tokenBlock) TopStmt() (ast.Stmt, error) {
 	if tb.header.is(glob.KeywordPub) {
-		stmt, err := tb.pubStmt()
+		stmt, err := tb.Stmt()
 		if err != nil {
 			return nil, err
 		}
@@ -1164,7 +1164,7 @@ func (tb *tokenBlock) getStringInDoubleQuotes() (string, error) {
 	return builder.String(), nil
 }
 
-func (tb *tokenBlock) pubStmt() (*ast.PubStmt, error) {
+func (tb *tokenBlock) pubStmt() (*ast.PublicStmt, error) {
 	err := tb.header.skipKwAndColon_ExceedEnd(glob.KeywordPub)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
@@ -1179,5 +1179,5 @@ func (tb *tokenBlock) pubStmt() (*ast.PubStmt, error) {
 		stmts = append(stmts, curStmt)
 	}
 
-	return ast.NewPubStmt(stmts), nil
+	return ast.NewPublicStmt(stmts), nil
 }
