@@ -379,27 +379,10 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 	return glob.ExecState_True, nil
 }
 
-func (exec *Executor) defStmt(stmt ast.DefStmt) error {
-	// TODO：这里需要处理任何可能出现的 Def,包括stmt是个DefObj, DefProp, DefConExistProp, DefConFn, DefConProp. 本函数用于 claim forall x Type. 这里的 Type 可以是 obj, fn, prop, existProp.
-	// 本函数需要处理所有可能的类型，并根据类型调用不同的函数。
-
-	switch stmt := stmt.(type) {
-	case *ast.DefObjStmt:
-		return exec.defObjStmt(stmt, true)
-	case *ast.DefFnStmt:
-		return exec.defFnStmt(stmt)
-	case *ast.DefPropStmt:
-		return exec.defPropStmt(stmt)
-	case *ast.DefExistPropStmt:
-		return exec.defExistPropStmt(stmt)
-	default:
-		return fmt.Errorf("unknown def stmt type: %T", stmt)
-	}
-}
-
-func (exec *Executor) GetUniFactSettings(asUnivFact *ast.UniFactStmt) error {
+func (exec *Executor) getUniFactSettings(asUnivFact *ast.UniFactStmt) error {
 	for i, param := range asUnivFact.Params {
-		err := exec.defStmt(ast.NewDefObjStmt([]string{param}, []ast.Fc{asUnivFact.ParamSets[i]}, []ast.FactStmt{}))
+		// TODO: 有 fn_template 后，fn的声明确实能在 defObjStmt 里处理了。
+		err := exec.defObjStmt(ast.NewDefObjStmt([]string{param}, []ast.Fc{asUnivFact.ParamSets[i]}, []ast.FactStmt{}), false)
 		if err != nil {
 			return err
 		}
@@ -457,7 +440,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimStmt) (bool, error) {
 
 	if asUnivFact, ok := stmt.ToCheckFact.(*ast.UniFactStmt); ok {
 		// 把变量引入，把dom事实引入
-		err := exec.GetUniFactSettings(asUnivFact)
+		err := exec.getUniFactSettings(asUnivFact)
 		if err != nil {
 			return false, err
 		}
