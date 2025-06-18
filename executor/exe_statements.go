@@ -282,6 +282,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 	}
 
 	// TODO： have 可能会引入3种不同的东西：set,obj,fn都可能；每种情况，处理起来不一样：比如如果你是fn和set，那可能就要把你放到 setMem 和 fnMem 里了
+	// 这个 warning 不合时宜了，因为fn的定义其实和obj一样了，就是额外多个满足特定的template
 	exec.appendInternalWarningMsg("Litex only support have obj. if you want to introduce set or fn by the have stmt, you need to use the set or fn stmt to introduce them.")
 
 	// TODO 把 exist prop def 里的东西释放出来
@@ -292,14 +293,6 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 
 	if len(existPropDef.ExistParams) != len(stmt.ObjNames) {
 		return glob.ExecState_Error, fmt.Errorf("exist prop def params number not equal to have stmt obj names number. expect %d, but got %d", len(existPropDef.ExistParams), len(stmt.ObjNames))
-	}
-
-	// TODO 暂时认为都是obj
-	for _, objName := range stmt.ObjNames {
-		err := exec.env.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt([]string{objName}, []ast.Fc{}, []ast.FactStmt{}))
-		if err != nil {
-			return glob.ExecState_Error, err
-		}
 	}
 
 	uniMap := map[string]ast.Fc{}
@@ -317,6 +310,14 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 	instantiatedExistPropDefStmt, err := existPropDef.Instantiate(uniMap)
 	if err != nil {
 		return glob.ExecState_Error, err
+	}
+
+	// 把 obj 放入环境
+	for i, objName := range stmt.ObjNames {
+		err := exec.env.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt([]string{objName}, []ast.Fc{instantiatedExistPropDefStmt.ExistParamSets[i]}, []ast.FactStmt{}))
+		if err != nil {
+			return glob.ExecState_Error, err
+		}
 	}
 
 	// param in param sets is true
@@ -361,7 +362,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 	newExistStFact := ast.NewSpecFactStmt(ast.TrueExist_St, ast.NewFcAtomWithName(stmt.Fact.PropName.Name), existStFactParams)
 	err = exec.env.NewFact(newExistStFact)
 	if err != nil {
-		return glob.ExecState_True, nil
+		return glob.ExecState_Error, err
 	}
 	exec.appendMsg(fmt.Sprintf("%s\nis true by definition", newExistStFact.String()))
 

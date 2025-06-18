@@ -122,13 +122,16 @@ func (stmt *DefObjStmt) String() string {
 	if len(stmt.Objs) > 0 {
 		for i := range len(stmt.Objs) - 1 {
 			builder.WriteString(stmt.Objs[i])
+			builder.WriteString(" ")
+			builder.WriteString(stmt.ObjSets[i].String())
 			builder.WriteString(", ")
 		}
 		builder.WriteString(stmt.Objs[len(stmt.Objs)-1])
+		builder.WriteString(" ")
+		builder.WriteString(stmt.ObjSets[len(stmt.Objs)-1].String())
 	}
 
 	if len(stmt.Facts) > 0 {
-		builder.WriteString(" ")
 		builder.WriteString(glob.KeySymbolColon)
 		builder.WriteByte('\n')
 		builder.WriteString(strOfNonEmptyFactStmtSlice(stmt.Facts, 1))
@@ -260,6 +263,8 @@ func (s *DefExistPropStmt) String() string {
 	if len(s.ExistParams) > 0 {
 		for i := 0; i < len(s.ExistParams)-1; i++ {
 			builder.WriteString(s.ExistParams[i])
+			builder.WriteString(" ")
+			builder.WriteString(s.ExistParamSets[i].String())
 			builder.WriteString(", ")
 		}
 		builder.WriteString(s.ExistParams[len(s.ExistParams)-1])

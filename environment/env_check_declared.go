@@ -27,7 +27,11 @@ func (e *Env) AreAtomsInFcAreDeclared(fc ast.Fc, extraAtomNames map[string]struc
 
 func (e *Env) AreAtomsInFactAreDeclared(fact ast.FactStmt, extraAtomNames map[string]struct{}) bool {
 	atoms := fact.GetAtoms()
-	return e.AreAtomsDeclared(atoms, extraAtomNames)
+	ok := e.AreAtomsDeclared(atoms, extraAtomNames)
+	if !ok {
+		return false
+	}
+	return ok
 }
 
 func (e *Env) AreAtomsDeclared(atoms []*ast.FcAtom, extraAtomNames map[string]struct{}) bool {
