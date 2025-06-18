@@ -24,14 +24,14 @@ import (
 	"strings"
 )
 
-func setupAndParseStmtTest(path string) []ast.TopStmt {
+func setupAndParseStmtTest(path string) ([]ast.TopStmt, error) {
 	code := readFile(path)
 
 	topStatements, err := parser.ParseSourceCode(code)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return topStatements
+	return topStatements, nil
 }
 
 func execStmtTest(topStmt []ast.TopStmt) []string {

@@ -20,7 +20,7 @@ import (
 
 // Insert DefStmt into DefMem
 
-func (memory *PropDefMem) Insert(stmt *ast.DefPropStmt, pkgName string) error {
+func (memory *PropDefMem) insert(stmt *ast.DefPropStmt, pkgName string) error {
 	pkgMap, pkgExists := memory.Dict[pkgName]
 
 	if !pkgExists {
@@ -38,7 +38,7 @@ func (memory *PropDefMem) Insert(stmt *ast.DefPropStmt, pkgName string) error {
 	return nil
 }
 
-func (memory *ObjDefMem) Insert(stmt *ast.DefObjStmt, pkgName string) error {
+func (memory *ObjDefMem) insert(stmt *ast.DefObjStmt, pkgName string) error {
 	pkgMap, pkgExists := memory.Dict[pkgName]
 
 	if !pkgExists {
@@ -56,7 +56,7 @@ func (memory *ObjDefMem) Insert(stmt *ast.DefObjStmt, pkgName string) error {
 	return nil
 }
 
-func (memory *FnDefMem) Insert(stmt *ast.DefFnStmt, pkgName string) error {
+func (memory *FnDefMem) insert(stmt *ast.DefFnStmt, pkgName string) error {
 	pkgMap, pkgExists := memory.Dict[pkgName]
 
 	if !pkgExists {
@@ -74,7 +74,7 @@ func (memory *FnDefMem) Insert(stmt *ast.DefFnStmt, pkgName string) error {
 	return nil
 }
 
-func (memory *ExistPropDefMem) Insert(stmt *ast.DefExistPropStmt, pkgName string) error {
+func (memory *ExistPropDefMem) insert(stmt *ast.DefExistPropStmt, pkgName string) error {
 	pkgMap, pkgExists := memory.Dict[pkgName]
 
 	if !pkgExists {
