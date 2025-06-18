@@ -18,8 +18,8 @@ import (
 	glob "golitex/glob"
 )
 
-func NewPublicStmt(stmts []Stmt) *PublicStmt {
-	return &PublicStmt{stmts}
+func NewPubStmt(stmts []Stmt) *PubStmt {
+	return &PubStmt{stmts}
 }
 
 func NewDefObjStmt(objs []string, objSets []Fc, facts []FactStmt) *DefObjStmt {
