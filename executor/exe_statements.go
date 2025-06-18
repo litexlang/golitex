@@ -210,43 +210,17 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
 func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt, requireMsg bool) error {
 	defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
 
-	err := exec.env.NonDuplicateParam_NoUndeclaredParamSet(stmt.Objs, stmt.ObjSets)
-	if err != nil {
-		return err
-	}
-
 	if requireMsg {
 		defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
 	}
 
-	return exec.env.ExeDefObjStmt(stmt)
+	return exec.env.NewDefObj_InsideAtomsDeclared(stmt)
 }
 
 func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 	defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
 
-	err := exec.env.NonDuplicateParam_NoUndeclaredParamSet(stmt.DefHeader.Params, stmt.DefHeader.SetParams)
-	if err != nil {
-		return err
-	}
-	ok := exec.env.AreAtomsInFcAreDeclared(stmt.RetSet, map[string]struct{}{})
-	if !ok {
-		return fmt.Errorf(env.AtomsInFcNotDeclaredMsg(stmt.RetSet))
-	}
-
-	for _, fact := range stmt.DomFacts {
-		if !exec.env.AreAtomsInFactAreDeclared(fact, map[string]struct{}{}) {
-			return fmt.Errorf(fmt.Sprintf("%s\nis true by fn %s definition, but there are undeclared atoms in the fact\n", fact.String(), stmt.DefHeader.Name))
-		}
-	}
-
-	for _, fact := range stmt.ThenFacts {
-		if !exec.env.AreAtomsInFactAreDeclared(fact, map[string]struct{}{}) {
-			return fmt.Errorf(fmt.Sprintf("%s\nis true by fn %s definition, but there are undeclared atoms in the fact\n", fact.String(), stmt.DefHeader.Name))
-		}
-	}
-
-	err = exec.env.NewDefFn(stmt)
+	err := exec.env.NewDefFn_InsideAtomsDeclared(stmt)
 	if err != nil {
 		return err
 	}
@@ -290,28 +264,7 @@ func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) error {
 	defer exec.appendMsg("\n")
 	defer exec.appendMsg(stmt.String())
 
-	err := exec.env.NonDuplicateParam_NoUndeclaredParamSet(append(stmt.DefBody.DefHeader.Params, stmt.ExistParams...), append(stmt.DefBody.DefHeader.SetParams, stmt.ExistParamSets...))
-	if err != nil {
-		return err
-	}
-
-	for _, fact := range stmt.DefBody.DomFacts {
-		if !exec.env.AreAtomsInFactAreDeclared(fact, map[string]struct{}{}) {
-			return fmt.Errorf(fmt.Sprintf("%s\nis true by exist_prop %s definition, but there are undeclared atoms in the fact\n", fact.String(), stmt.DefBody.DefHeader.Name))
-		}
-	}
-
-	for _, fact := range stmt.DefBody.IffFacts {
-		if !exec.env.AreAtomsInFactAreDeclared(fact, map[string]struct{}{}) {
-			return fmt.Errorf(fmt.Sprintf("%s\nis true by exist_prop %s definition, but there are undeclared atoms in the fact\n", fact.String(), stmt.DefBody.DefHeader.Name))
-		}
-	}
-
-	err = exec.env.NewDefExistProp(stmt)
-	if err != nil {
-		return err
-	}
-	return nil
+	return exec.env.NewDefExistProp_InsideAtomsDeclared(stmt)
 }
 
 func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
@@ -343,7 +296,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 
 	// TODO 暂时认为都是obj
 	for _, objName := range stmt.ObjNames {
-		err := exec.env.NewDefObj(ast.NewDefObjStmt([]string{objName}, []ast.Fc{}, []ast.FactStmt{}))
+		err := exec.env.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt([]string{objName}, []ast.Fc{}, []ast.FactStmt{}))
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
