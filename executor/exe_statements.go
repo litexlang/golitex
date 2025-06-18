@@ -189,24 +189,33 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
 		return nil
 	}
 
+	// 检查propToIff和iffToProp里的atom是否都声明了
+	extraAtomNames := map[string]struct{}{}
+	for _, param := range stmt.DefHeader.Params {
+		extraAtomNames[param] = struct{}{}
+	}
 	propToIff, iffToProp, err := stmt.Make_PropToIff_IffToProp()
 	if err != nil {
 		return err
 	}
+	if !exec.env.AreAtomsInFactAreDeclared(propToIff, extraAtomNames) {
+		return fmt.Errorf(fmt.Sprintf("%s\nis true by prop %s definition, but there are undeclared atoms in the fact\n", propToIff.String(), stmt.DefHeader.Name))
+	}
+
+	if !exec.env.AreAtomsInFactAreDeclared(iffToProp, extraAtomNames) {
+		return fmt.Errorf(fmt.Sprintf("%s\nis true by prop %s definition, but there are undeclared atoms in the fact\n", iffToProp.String(), stmt.DefHeader.Name))
+	}
 
 	err = exec.env.NewFact(propToIff)
-
-	exec.appendMsg(fmt.Sprintf("%s\nis true by definition", propToIff.String()))
-
 	if err != nil {
 		return err
 	}
+	exec.appendMsg(fmt.Sprintf("%s\nis true by definition", propToIff.String()))
 
 	err = exec.env.NewFact(iffToProp)
 	if err != nil {
 		return err
 	}
-
 	exec.appendMsg(fmt.Sprintf("%s\nis true by definition", iffToProp.String()))
 
 	if len(stmt.IffFacts) == 0 {
@@ -286,6 +295,18 @@ func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) error {
 	err := exec.defHeader_NonDuplicateParam_NoUndeclaredParamSet(append(stmt.DefBody.DefHeader.Params, stmt.ExistParams...), append(stmt.DefBody.DefHeader.SetParams, stmt.ExistParamSets...))
 	if err != nil {
 		return err
+	}
+
+	for _, fact := range stmt.DefBody.DomFacts {
+		if !exec.env.AreAtomsInFactAreDeclared(fact, map[string]struct{}{}) {
+			return fmt.Errorf(fmt.Sprintf("%s\nis true by exist_prop %s definition, but there are undeclared atoms in the fact\n", fact.String(), stmt.DefBody.DefHeader.Name))
+		}
+	}
+
+	for _, fact := range stmt.DefBody.IffFacts {
+		if !exec.env.AreAtomsInFactAreDeclared(fact, map[string]struct{}{}) {
+			return fmt.Errorf(fmt.Sprintf("%s\nis true by exist_prop %s definition, but there are undeclared atoms in the fact\n", fact.String(), stmt.DefBody.DefHeader.Name))
+		}
 	}
 
 	err = exec.env.NewDefExistProp(stmt)
@@ -439,7 +460,7 @@ func (exec *Executor) execProofBlock(proof []ast.Stmt) (glob.ExecState, error) {
 		}
 		if execState != glob.ExecState_True {
 			if execState == glob.ExecState_Unknown && glob.ContinueExecutionIfExecUnknown {
-				exec.appendWarningMsg("unknown fact: %s", curStmt.String())
+				exec.appendWarningMsg("unknown fact:\n%s", curStmt.String())
 				return glob.ExecState_Unknown, nil
 			} else {
 				return execState, nil

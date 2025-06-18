@@ -8,6 +8,11 @@ fn f(x H) H
 
 obj z R:
     z $in H
+know 1 $in H
+
+prop p(x N):
+    x $in H
+exist_prop s R st name(x R):
+    x $in H
 """
 
-know 1 $in H

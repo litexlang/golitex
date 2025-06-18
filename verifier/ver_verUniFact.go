@@ -65,7 +65,7 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state VerState) (bool,
 	for _, paramSet := range newStmt.ParamSets {
 		ok := ver.env.ArdAtomsInFcAreDeclared(paramSet, map[string]struct{}{})
 		if !ok {
-			return false, fmt.Errorf("some atoms in %s are undeclared", paramSet.String())
+			return false, fmt.Errorf(env.AtomsInFcNotDeclaredMsg(paramSet))
 		}
 	}
 
