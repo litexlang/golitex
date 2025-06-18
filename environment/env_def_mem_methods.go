@@ -15,6 +15,7 @@
 package litex_env
 
 import (
+	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
 )
@@ -285,6 +286,9 @@ func (e *Env) ExeDefObjStmt(stmt *ast.DefObjStmt) error {
 	}
 
 	for _, fact := range stmt.NewInFacts() {
+		if !e.AreAtomsInFactAreDeclared(fact, map[string]struct{}{}) {
+			return fmt.Errorf(AtomsInFactNotDeclaredMsg(fact))
+		}
 		err := e.NewFact(fact)
 		if err != nil {
 			return err
@@ -292,6 +296,9 @@ func (e *Env) ExeDefObjStmt(stmt *ast.DefObjStmt) error {
 	}
 
 	for _, fact := range stmt.Facts {
+		if !e.AreAtomsInFactAreDeclared(fact, map[string]struct{}{}) {
+			return fmt.Errorf(AtomsInFactNotDeclaredMsg(fact))
+		}
 		err := e.NewFact(fact)
 		if err != nil {
 			return err

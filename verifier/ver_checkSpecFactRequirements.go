@@ -17,6 +17,7 @@ package litex_verifier
 import (
 	"fmt"
 	ast "golitex/ast"
+	env "golitex/environment"
 	glob "golitex/glob"
 )
 
@@ -25,7 +26,7 @@ func (ver *Verifier) checkSpecFactRequirements(stmt *ast.SpecFactStmt, state Ver
 	for _, param := range stmt.Params {
 		ok := ver.env.ArdAtomsInFcAreDeclared(param, map[string]struct{}{})
 		if !ok {
-			return false, fmt.Errorf("some atoms in %s are undeclared", param.String())
+			return false, fmt.Errorf(env.AtomsInFcNotDeclaredMsg(param))
 		}
 	}
 

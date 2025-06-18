@@ -1,4 +1,0 @@
-# prop p(x H)
-# exist_prop s R st name(x H)
-# obj x S
-# fn f(x H) H
