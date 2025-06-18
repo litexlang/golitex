@@ -128,7 +128,8 @@ func (stmt *DefObjStmt) String() string {
 	}
 
 	if len(stmt.Facts) > 0 {
-		builder.WriteString(" :")
+		builder.WriteString(" ")
+		builder.WriteString(glob.KeySymbolColon)
 		builder.WriteByte('\n')
 		builder.WriteString(strOfNonEmptyFactStmtSlice(stmt.Facts, 1))
 	}
@@ -144,9 +145,7 @@ func (fact *DefPropStmt) String() string {
 	builder.WriteString(fact.DefHeader.String())
 
 	if len(fact.DomFacts) == 0 && len(fact.IffFacts) == 0 {
-		ret := builder.String()
-		ret = strings.TrimSuffix(ret, ":")
-		return ret
+		return strings.TrimSuffix(builder.String(), glob.KeySymbolColon)
 	}
 
 	builder.WriteByte('\n')
@@ -185,9 +184,7 @@ func (f *DefFnStmt) String() string {
 	builder.WriteString(f.DefHeader.String())
 
 	if len(f.DomFacts) == 0 && len(f.ThenFacts) == 0 {
-		ret := builder.String()
-		ret = strings.TrimSuffix(ret, ":")
-		return ret
+		return strings.TrimSuffix(builder.String(), glob.KeySymbolColon)
 	}
 
 	builder.WriteByte('\n')
@@ -271,19 +268,25 @@ func (s *DefExistPropStmt) String() string {
 	builder.WriteString(glob.KeywordSt)
 	builder.WriteString(" ")
 	builder.WriteString(s.DefBody.DefHeader.String())
-	builder.WriteString(" ")
-	builder.WriteString(glob.KeySymbolColon)
+
+	if len(s.DefBody.DomFacts) == 0 && len(s.DefBody.IffFacts) == 0 {
+		return strings.TrimSuffix(builder.String(), glob.KeySymbolColon)
+	}
+
+	builder.WriteByte('\n')
 	for _, domFact := range s.DefBody.DomFacts {
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(domFact.String(), 1))
 		builder.WriteString("\n")
 	}
 
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents("iff:", 1))
-	builder.WriteString("\n")
-
-	for _, iffFact := range s.DefBody.IffFacts {
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents(iffFact.String(), 1))
+	if len(s.DefBody.IffFacts) > 0 {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents("iff:", 1))
 		builder.WriteString("\n")
+
+		for _, iffFact := range s.DefBody.IffFacts {
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(iffFact.String(), 2))
+			builder.WriteString("\n")
+		}
 	}
 
 	return builder.String()
