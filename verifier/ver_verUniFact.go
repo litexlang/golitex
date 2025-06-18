@@ -63,7 +63,7 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state VerState) (bool,
 
 	// 查看param set 是否已经声明
 	for _, paramSet := range newStmt.ParamSets {
-		ok := ver.env.ArdAtomsInFcAreDeclared(paramSet, map[string]struct{}{})
+		ok := ver.env.AreAtomsInFcAreDeclared(paramSet, map[string]struct{}{})
 		if !ok {
 			return false, fmt.Errorf(env.AtomsInFcNotDeclaredMsg(paramSet))
 		}

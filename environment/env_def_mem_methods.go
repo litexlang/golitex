@@ -172,7 +172,7 @@ func (e *Env) GetPropDef(propName ast.FcAtom) (*ast.DefPropStmt, bool) {
 	return nil, false
 }
 
-func (e *Env) ArdAtomsInFcAreDeclared(fc ast.Fc, extraAtomNames map[string]struct{}) bool {
+func (e *Env) AreAtomsInFcAreDeclared(fc ast.Fc, extraAtomNames map[string]struct{}) bool {
 	atoms := ast.GetAtomsInFc(fc)
 	return e.AreAtomsDeclared(atoms, extraAtomNames)
 }
