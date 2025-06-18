@@ -59,6 +59,7 @@ func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) error {
 	for _, param := range stmt.DefHeader.Params {
 		extraAtomNames[param] = struct{}{}
 	}
+	extraAtomNames[stmt.DefHeader.Name] = struct{}{}
 
 	for _, fact := range stmt.DomFacts {
 		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
@@ -130,6 +131,7 @@ func (env *Env) NewDefFn_InsideAtomsDeclared(stmt *ast.DefFnStmt) error {
 	for _, param := range stmt.DefHeader.Params {
 		extraAtomNames[param] = struct{}{}
 	}
+	extraAtomNames[stmt.DefHeader.Name] = struct{}{}
 
 	for _, fact := range stmt.DomFacts {
 		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
@@ -166,6 +168,7 @@ func (env *Env) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) 
 	for _, param := range stmt.DefBody.DefHeader.Params {
 		extraAtomNames[param] = struct{}{}
 	}
+	extraAtomNames[stmt.DefBody.DefHeader.Name] = struct{}{}
 
 	for _, param := range stmt.ExistParams {
 		extraAtomNames[param] = struct{}{}
