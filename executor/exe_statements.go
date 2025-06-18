@@ -695,5 +695,9 @@ func (exec *Executor) importStmt(stmt *ast.ImportStmt) error {
 }
 
 func (exec *Executor) proveStmt(stmt *ast.ProveStmt) (glob.ExecState, error) {
+	// new env
+	exec.newEnv(exec.env, exec.env.CurMatchProp)
+	defer exec.deleteEnvAndRetainMsg()
+
 	return exec.execProofBlock(stmt.Proof)
 }
