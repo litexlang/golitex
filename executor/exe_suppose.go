@@ -91,7 +91,8 @@ func (exec *Executor) supposeStmt_declaredParams(stmt *ast.SupposeStmt) (glob.Ex
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
-		err = exec.env.ObjDefMem.Insert(ast.NewDefObjStmt([]string{asAtom.Name}, []ast.Fc{instantiatedSetParam}, []ast.FactStmt{}), glob.EmptyPkg)
+
+		err = exec.env.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt([]string{asAtom.Name}, []ast.Fc{instantiatedSetParam}, []ast.FactStmt{}))
 
 		if err != nil {
 			return glob.ExecState_Error, err
