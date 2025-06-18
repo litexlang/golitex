@@ -21,11 +21,11 @@ import (
 )
 
 // * TODO: 在parse时，把pkgName改成当前项目里定义的 pkgName，而不是继续沿用原来的
-func ParseSourceCode(code string) ([]ast.TopStmt, error) {
+func ParseSourceCode(code string) ([]ast.PubStmt, error) {
 	// code, err := preprocessSourceCode(code)
 	preprocessedCodeLines, err := preprocessSourceCode(code)
 	if err != nil {
-		return []ast.TopStmt{}, err
+		return []ast.PubStmt{}, err
 	}
 
 	blocks, err := makeTokenBlocks(preprocessedCodeLines)
@@ -33,7 +33,7 @@ func ParseSourceCode(code string) ([]ast.TopStmt, error) {
 		return nil, err
 	}
 
-	ret := []ast.TopStmt{}
+	ret := []ast.PubStmt{}
 	for _, block := range blocks {
 		cur, err := block.TopStmt()
 		if err != nil {

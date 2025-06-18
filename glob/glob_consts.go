@@ -25,8 +25,6 @@ const MaxNameLen int = 255
 
 const FuncFactPrefix string = "$"
 
-// const UniPrefix string = "`"
-
 const BuiltinExist_St_FactExistParamPropParmSep string = ";"
 
 const CommentSig string = "#"

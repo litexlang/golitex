@@ -23,11 +23,6 @@ func IsValidName(name string) error {
 		return fmt.Errorf("identifier name cannot be empty")
 	}
 
-	// Check for leading digits
-	if first := name[0]; first >= '0' && first <= '9' {
-		return fmt.Errorf("identifier name cannot begin with a numeric character (0-9)")
-	}
-
 	// Check for leading symbols
 	if IsKeySymbol(name) {
 		return fmt.Errorf("identifier name cannot begin with a reserved symbol")
@@ -41,11 +36,6 @@ func IsValidName(name string) error {
 	// Check maximum length constraint
 	if len(name) > MaxNameLen {
 		return fmt.Errorf("identifier name exceeds maximum length of %d characters", MaxNameLen)
-	}
-
-	// Final check for keywords and symbols
-	if IsKeyword(name) || IsKeySymbol(name) {
-		return fmt.Errorf("identifier name cannot be a reserved keyword or symbol")
 	}
 
 	// todo: For the time being, I assume all names must start with _ or english letter, and later words can only be number, _ or english letter
