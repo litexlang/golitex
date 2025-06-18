@@ -180,7 +180,7 @@ func (exec *Executor) supposeStmt_storeFactsToEnv(insideFacts []ast.FactStmt, st
 	messages := []string{}
 	for _, fact := range insideFacts {
 		// all atoms in fact should be already declared in storeToEnv
-		ok := curEnv.AtomsInFactAreDeclared(fact)
+		ok := curEnv.AreAtomsInFactAreDeclared(fact, map[string]struct{}{})
 		if !ok {
 			return glob.ExecState_Error, fmt.Errorf("fact %s has undeclared atoms", fact.String())
 		}
