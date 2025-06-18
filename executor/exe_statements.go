@@ -174,12 +174,7 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
 	defer exec.appendMsg("\n")
 	defer exec.appendMsg(stmt.String())
 
-	err := exec.defHeader_NonDuplicateParam_NoUndeclaredParamSet(stmt.DefHeader.Params, stmt.DefHeader.SetParams)
-	if err != nil {
-		return err
-	}
-
-	err = exec.env.NewDefProp(stmt)
+	err := exec.env.NewDefProp_InsideAtomsDeclared(stmt)
 	if err != nil {
 		return err
 	}
@@ -187,22 +182,6 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
 	// prop leads to iff
 	if stmt.IffFacts == nil || len(stmt.IffFacts) == 0 {
 		return nil
-	}
-
-	// 检查propToIff和iffToProp里的atom是否都声明了
-	extraAtomNames := map[string]struct{}{}
-	for _, param := range stmt.DefHeader.Params {
-		extraAtomNames[param] = struct{}{}
-	}
-	for _, fact := range stmt.DomFacts {
-		if !exec.env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
-			return fmt.Errorf(fmt.Sprintf("%s\nis true by prop %s definition, but there are undeclared atoms in the fact\n", fact.String(), stmt.DefHeader.Name))
-		}
-	}
-	for _, fact := range stmt.IffFacts {
-		if !exec.env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
-			return fmt.Errorf(fmt.Sprintf("%s\nis true by prop %s definition, but there are undeclared atoms in the fact\n", fact.String(), stmt.DefHeader.Name))
-		}
 	}
 
 	propToIff, iffToProp, err := stmt.Make_PropToIff_IffToProp()
@@ -231,7 +210,7 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
 func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt, requireMsg bool) error {
 	defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
 
-	err := exec.defHeader_NonDuplicateParam_NoUndeclaredParamSet(stmt.Objs, stmt.ObjSets)
+	err := exec.env.NonDuplicateParam_NoUndeclaredParamSet(stmt.Objs, stmt.ObjSets)
 	if err != nil {
 		return err
 	}
@@ -246,7 +225,7 @@ func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt, requireMsg bool) error {
 func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 	defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
 
-	err := exec.defHeader_NonDuplicateParam_NoUndeclaredParamSet(stmt.DefHeader.Params, stmt.DefHeader.SetParams)
+	err := exec.env.NonDuplicateParam_NoUndeclaredParamSet(stmt.DefHeader.Params, stmt.DefHeader.SetParams)
 	if err != nil {
 		return err
 	}
@@ -311,7 +290,7 @@ func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) error {
 	defer exec.appendMsg("\n")
 	defer exec.appendMsg(stmt.String())
 
-	err := exec.defHeader_NonDuplicateParam_NoUndeclaredParamSet(append(stmt.DefBody.DefHeader.Params, stmt.ExistParams...), append(stmt.DefBody.DefHeader.SetParams, stmt.ExistParamSets...))
+	err := exec.env.NonDuplicateParam_NoUndeclaredParamSet(append(stmt.DefBody.DefHeader.Params, stmt.ExistParams...), append(stmt.DefBody.DefHeader.SetParams, stmt.ExistParamSets...))
 	if err != nil {
 		return err
 	}
@@ -770,28 +749,6 @@ func (exec *Executor) importStmt(stmt *ast.ImportStmt) error {
 		execSuccess = true
 	} else {
 		panic(glob.InternalWarningMsg("import with as pkg name is not supported"))
-	}
-
-	return nil
-}
-
-func (exec *Executor) defHeader_NonDuplicateParam_NoUndeclaredParamSet(params []string, setParams []ast.Fc) error {
-	if len(params) != len(setParams) {
-		return fmt.Errorf("number of params and set params are not the same")
-	}
-
-	// 检查所有参数都声明了
-	paramSet := map[string]struct{}{}
-	for i, param := range params {
-		_, ok := paramSet[param]
-		if ok {
-			return fmt.Errorf("parameter %s is declared multiple times", param)
-		}
-		ok = exec.env.AreAtomsInFcAreDeclared(setParams[i], paramSet)
-		if !ok {
-			return fmt.Errorf(env.AtomsInFcNotDeclaredMsg(setParams[i]))
-		}
-		paramSet[param] = struct{}{} // setParam 不能 包含它自己
 	}
 
 	return nil
