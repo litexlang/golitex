@@ -14,10 +14,6 @@
 
 package litex_ast
 
-type PubStmt struct {
-	Stmts []Stmt
-}
-
 type DefObjStmt struct {
 	Objs    []string
 	ObjSets []Fc
@@ -128,4 +124,8 @@ type OrStmt struct {
 type ImportStmt struct {
 	Path      string
 	AsPkgName string
+}
+
+type PublicStmt struct {
+	Stmts []Stmt
 }
