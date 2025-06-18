@@ -171,26 +171,26 @@ func (e *Env) GetPropDef(propName ast.FcAtom) (*ast.DefPropStmt, bool) {
 	return nil, false
 }
 
-func (e *Env) AtomsInFcAreDeclared(fc ast.Fc) bool {
+func (e *Env) ArdAtomsInFcAreDeclared(fc ast.Fc, extraAtomNames map[string]struct{}) bool {
 	atoms := ast.GetAtomsInFc(fc)
-	return e.AreAtomsDeclared(atoms)
+	return e.AreAtomsDeclared(atoms, extraAtomNames)
 }
 
-func (e *Env) AtomsInFactAreDeclared(fact ast.FactStmt) bool {
+func (e *Env) AreAtomsInFactAreDeclared(fact ast.FactStmt, extraAtomNames map[string]struct{}) bool {
 	atoms := fact.GetAtoms()
-	return e.AreAtomsDeclared(atoms)
+	return e.AreAtomsDeclared(atoms, extraAtomNames)
 }
 
-func (e *Env) AreAtomsDeclared(atoms []*ast.FcAtom) bool {
+func (e *Env) AreAtomsDeclared(atoms []*ast.FcAtom, extraAtomNames map[string]struct{}) bool {
 	for _, atom := range atoms {
-		if !e.IsAtomDeclared(atom) {
+		if !e.IsAtomDeclared(atom, extraAtomNames) {
 			return false
 		}
 	}
 	return true
 }
 
-func (e *Env) IsAtomDeclared(atom *ast.FcAtom) bool {
+func (e *Env) IsAtomDeclared(atom *ast.FcAtom, extraAtomNames map[string]struct{}) bool {
 	// 如果是内置的符号，那就声明了
 	if glob.IsKeySymbol(atom.Name) {
 		return true
@@ -207,7 +207,16 @@ func (e *Env) IsAtomDeclared(atom *ast.FcAtom) bool {
 	}
 
 	_, ok := e.GetFcAtomDef(atom)
-	return ok // 如果ok，则声明了
+	if ok {
+		return true
+	}
+
+	_, ok = extraAtomNames[atom.Name]
+	if ok && atom.PkgName == glob.EmptyPkg {
+		return true
+	}
+
+	return false
 }
 
 func (e *Env) GetFcAtomDef(fcAtomName *ast.FcAtom) (ast.DefStmt, bool) {
