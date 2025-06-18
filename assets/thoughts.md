@@ -2120,3 +2120,6 @@ know:
         $iff_properties(elementName, params)
         then:
             elementName $in set_fn_name(params)
+
+6.18
+1. 在功能上，litex只有两个东西： 1. obj 2. prop. fn 是特殊的obj，它能把其他obj作为参数，然后返回一个obj。在litex内核表示上，prop和obj都是以first citizen 格式出现。其中prop一定是 fc atom
