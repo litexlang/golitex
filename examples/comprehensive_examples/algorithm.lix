@@ -15,8 +15,8 @@ integer for which x_k is in S, and in this case it is said to produce the output
 """
 
 fn computational_sequence(Q set, f fn(Q)Q) fn(Q, N)Q:
-    forall x Q:
-        computational_sequence(Q, f)(x,n) = f(computational_sequence(Q, f)(x, n-1))
+    forall x Q, n N:
+        computational_sequence(Q, f)(x,n+1) = f(computational_sequence(Q, f)(x, n))
 exist_prop n N st exist_end_of_computational_sequence(Q set, x Q, f fn(Q,N)Q):
     f(x, n) = f(x, n+1)
 prop is_algorithm(Q set, I set, f fn(Q)Q):

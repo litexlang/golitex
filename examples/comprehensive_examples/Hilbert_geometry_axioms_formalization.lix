@@ -510,6 +510,12 @@ fn angle_of_two_rays_with_the_same_start_point(a point, r1 ray, r2 ray) angle:
 
 prop angle_equal(ang1 angle, ang2 angle)
 
+prop half_plane_to_ray(a point, r ray, p half_plane):
+    $point_on_ray(a, r)
+    or:
+        $half_plane_left_to_ray(a, r, p)
+        $half_plane_right_to_ray(a, r, p)
+
 know exist_prop r2 ray st exist_a_ray_with_the_same_angel_with_given_ray_and_half_plane(a point, r1 ray, p half_plane, ang angle):
     dom:
         $point_on_ray(a, r1)
@@ -600,19 +606,18 @@ prove:
 
 # 1. Playfair's axiom: Let a be any line and A a point not on it. Then there is at most one line in the plane, determined by a and A, that passes through A and does not intersect a.
 
+prop point_on_line1_then_not_on_line2(a point, l1 line, l2 line):
+    dom:
+        $point_on_line(a, l1)
+    iff:
+        not $point_on_line(a, l2)
+
 prop parallel(l1 line, l2 line):
     forall x point:
         $point_on_line1_then_not_on_line2(x, l1, l2)
     
     forall x point:
         $point_on_line1_then_not_on_line2(x, l2, l1)
-
-
-prop point_on_line1_then_not_on_line2(a point, l1 line, l2 line):
-    dom:
-        $point_on_line(a, l1)
-    iff:
-        not $point_on_line(a, l2)
 
 know exist_prop l2 line st exist_one_and_only_one_line_through_point_not_intersect_line(a point, l line):
     dom:
