@@ -18,6 +18,7 @@ const Scope4Indents string = "    "
 
 // const EmptyPkgName = ""
 const EmptyPkg string = ""
+const BuiltinPkg string = "__builtin__"
 
 // const BuiltinUnaryPkgName = "#"
 const MultiLinesCommentSig string = "\"\"\""
