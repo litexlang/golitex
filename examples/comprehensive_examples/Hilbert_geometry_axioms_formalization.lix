@@ -78,7 +78,6 @@ know forall a point, l line:
 prove:
     obj a point, l line:
         $point_on_line(a, l)
-        $point_on_line(b, l)
 
     $exist_at_least_two_points_on_line(a, l)
 
@@ -165,6 +164,14 @@ prove:
 
 # 8. There exist at least four points not lying in a plane.
 
+prop not_on_any_plane(a point, b point, c point, d point):
+    forall p plane:
+        or:
+            not $point_on_plane(a, p)
+            not $point_on_plane(b, p)
+            not $point_on_plane(c, p)
+            not $point_on_plane(d, p)
+
 exist_prop a point, b point, c point, d point st exist_four_points_not_on_any_plane():
     a != b
     a != c
@@ -176,13 +183,6 @@ exist_prop a point, b point, c point, d point st exist_four_points_not_on_any_pl
 
 know $exist_four_points_not_on_any_plane()
 
-prop not_on_any_plane(a point, b point, c point, d point):
-    forall p plane:
-        or:
-            not $point_on_plane(a, p)
-            not $point_on_plane(b, p)
-            not $point_on_plane(c, p)
-            not $point_on_plane(d, p)
 
 prove:
     have a , b , c , d  st $exist_four_points_not_on_any_plane()

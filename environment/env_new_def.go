@@ -81,8 +81,13 @@ func (env *Env) NewDefObj_InsideAtomsDeclared(stmt *ast.DefObjStmt) error {
 		return err
 	}
 
+	extraAtomNames := map[string]struct{}{}
+	for _, objName := range stmt.Objs {
+		extraAtomNames[objName] = struct{}{}
+	}
+
 	for _, fact := range stmt.NewInFacts() {
-		if !env.AreAtomsInFactAreDeclared(fact, map[string]struct{}{}) {
+		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
 			return fmt.Errorf(AtomsInFactNotDeclaredMsg(fact))
 		}
 		err := env.NewFact(fact)
@@ -92,7 +97,7 @@ func (env *Env) NewDefObj_InsideAtomsDeclared(stmt *ast.DefObjStmt) error {
 	}
 
 	for _, fact := range stmt.Facts {
-		if !env.AreAtomsInFactAreDeclared(fact, map[string]struct{}{}) {
+		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
 			return fmt.Errorf(AtomsInFactNotDeclaredMsg(fact))
 		}
 		err := env.NewFact(fact)
@@ -121,14 +126,19 @@ func (env *Env) NewDefFn_InsideAtomsDeclared(stmt *ast.DefFnStmt) error {
 		return fmt.Errorf(AtomsInFcNotDeclaredMsg(stmt.RetSet))
 	}
 
+	extraAtomNames := map[string]struct{}{}
+	for _, param := range stmt.DefHeader.Params {
+		extraAtomNames[param] = struct{}{}
+	}
+
 	for _, fact := range stmt.DomFacts {
-		if !env.AreAtomsInFactAreDeclared(fact, map[string]struct{}{}) {
+		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
 			return fmt.Errorf(fmt.Sprintf("%s\nis true by fn %s definition, but there are undeclared atoms in the fact\n", fact.String(), stmt.DefHeader.Name))
 		}
 	}
 
 	for _, fact := range stmt.ThenFacts {
-		if !env.AreAtomsInFactAreDeclared(fact, map[string]struct{}{}) {
+		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
 			return fmt.Errorf(fmt.Sprintf("%s\nis true by fn %s definition, but there are undeclared atoms in the fact\n", fact.String(), stmt.DefHeader.Name))
 		}
 	}
@@ -152,14 +162,23 @@ func (env *Env) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) 
 		return err
 	}
 
+	extraAtomNames := map[string]struct{}{}
+	for _, param := range stmt.DefBody.DefHeader.Params {
+		extraAtomNames[param] = struct{}{}
+	}
+
+	for _, param := range stmt.ExistParams {
+		extraAtomNames[param] = struct{}{}
+	}
+
 	for _, fact := range stmt.DefBody.DomFacts {
-		if !env.AreAtomsInFactAreDeclared(fact, map[string]struct{}{}) {
+		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
 			return fmt.Errorf(fmt.Sprintf("%s\nis true by exist_prop %s definition, but there are undeclared atoms in the fact\n", fact.String(), stmt.DefBody.DefHeader.Name))
 		}
 	}
 
 	for _, fact := range stmt.DefBody.IffFacts {
-		if !env.AreAtomsInFactAreDeclared(fact, map[string]struct{}{}) {
+		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
 			return fmt.Errorf(fmt.Sprintf("%s\nis true by exist_prop %s definition, but there are undeclared atoms in the fact\n", fact.String(), stmt.DefBody.DefHeader.Name))
 		}
 	}
