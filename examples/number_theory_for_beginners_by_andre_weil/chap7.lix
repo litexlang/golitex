@@ -38,6 +38,8 @@ exist_prop n Z st item_equals_order_of_item(s set, op fn(s, s)s, e s, inv fn(s)s
 fn_set subgroup_generated_by_item(s set, op fn(s, s)s, e s, inv fn(s)s, x s) item s:
     $item_equals_order_of_item(s, op, e, inv, x, item)
 
+# Such function is not unique. For example, maybe m != n but x^m = x^n. Here we just pick one of them.
+# I guess with this function, we do not needs exist_prop item_equals_order_of_item.
 fn index_of_y_in_subgroup_generated_by_item(s set, op fn(s, s)s, e s, inv fn(s)s, x s, y subgroup_generated_by_item(s, op, e, inv, x)) Z:
     y = order_of_item(s, op, e, inv, x, index_of_y_in_subgroup_generated_by_item(s, op, e, inv, x, y))
 
@@ -53,7 +55,7 @@ prop is_bijection(s set, s2 set, f fn(s)s2) :
     $is_injection(s, s2, f)
     $is_surjection(s, s2, f)
 
-fn isomorphism_of_groups(s set, op fn(s, s)s, e s, inv fn(s)s, s2 set, op2 fn(s2, s2)s2, e2 s2, inv2 fn(s2)s2) s2:
+prop is_isomorphism_of_groups(s set, op fn(s, s)s, e s, inv fn(s)s, s2 set, op2 fn(s2, s2)s2, e2 s2, inv2 fn(s2)s2, isomorphism_of_groups fn(s)s2):
     $is_group(s, op, e, inv)
     $is_group(s2, op2, e2, inv2)
     $is_bijection(isomorphism_of_groups)
@@ -63,7 +65,12 @@ fn isomorphism_of_groups(s set, op fn(s, s)s, e s, inv fn(s)s, s2 set, op2 fn(s2
         isomorphism_of_groups(e) = e2
 
 # Theorem 7.2
+forall s set, op fn(s, s)s, e s, inv fn(s)s, x s:
+    or:
+        $is_isomorphism_of_groups(subgroup_generated_by_item(s, op, e, inv, x), op, e, inv, Z, +, 0, -, index_of_y_in_subgroup_generated_by_item)
+        subgroup_generated_by_item(s, op, e, inv, x) $in finite_set
 
-fn map_from_orders_of_item_to_int(s set, op fn(s, s)s, e s, inv fn(s)s, x s, orders_of_x subgroup_generated_by_item(s, op, e, inv, x)) Z:
-
-
+forall s set, op fn(s, s)s, e s, inv fn(s)s, x s:
+    subgroup_generated_by_item(s, op, e, inv, x) $in finite_set
+    then:
+        $is_isomorphism_of_groups(subgroup_generated_by_item(s, op, e, inv, x), op, e, inv, cc(len(subgroup_generated_by_item(s, op, e, inv, x))), cc_add(len(subgroup_generated_by_item(s, op, e, inv, x))), cc_e(len(subgroup_generated_by_item(s, op, e, inv, x))), cc_inv(len(subgroup_generated_by_item(s, op, e, inv, x))), index_of_y_in_subgroup_generated_by_item)
