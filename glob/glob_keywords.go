@@ -61,6 +61,7 @@ const (
 	KeywordProveForallIteratively = "prove_iteratively" // syntax connecting forall and finite_set
 	KeywordFnTemplate             = "fn_template"
 
+	KeywordSubsetOf = "subset_of" // though this can be defined by forall, it's still useful to have it as a keyword
 	// TODO
 	// a syntax connecting or and finite_set
 )
@@ -110,6 +111,8 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordFiniteSet:              {},
 	KeywordProveForallIteratively: {},
 	KeywordFnTemplate:             {},
+
+	KeywordSubsetOf: {},
 }
 
 const (
