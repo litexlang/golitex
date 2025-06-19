@@ -2123,3 +2123,6 @@ know:
 
 6.18
 1. 在功能上，litex只有两个东西： 1. obj 2. prop. fn 是特殊的obj，它能把其他obj作为参数，然后返回一个obj。在litex内核表示上，prop和obj都是以first citizen 格式出现。其中prop一定是 fc atom
+
+6.19
+// how to  use not exist to prove and store not forall in iff section of exist_prop: define a new exist_prop, give a name to that forall, and make this exist_prop equivalent to original exist_prop. Then use prove_by_contradiction to prove the new exist_prop is also false, then the not forall is proved.
