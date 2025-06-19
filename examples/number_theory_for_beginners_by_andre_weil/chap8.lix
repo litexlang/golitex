@@ -3,3 +3,11 @@ Chapter 8
 """
 
 # Theorem 8.1
+exist_prop s2 set st is_cyclic_group_of_order_m_divided_by_d(s set, op fn(s, s)s, e s, inv fn(s)s, x s, d N):
+    $is_cyclic_group(s, op, e, inv, x)
+    len(s) / d = 0
+    iff:
+        $is_cyclic_group(s2, op, e, inv, order_of_item(s, op, e, inv, x, d))
+        len(s2) = m / d
+
+        
