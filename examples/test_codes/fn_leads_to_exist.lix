@@ -1,28 +1,42 @@
-# In many cases, we describe a set as follows: when $properties_of(n) is true, s(n) =  {z | z = f(z,n), properties_of(n)}
-# More generally, we describe a set as follows: when $properties_of(n) is true, s(n) =  {z | $p(z,n,m), properties_of(n), forall m with properties_of(m)}
+# In many cases, we describe a set as follows: when $m_prop(n) is true, s(n) =  {z | z = f(z,n), m_prop(n)}
+# More generally, we describe a set as follows: when $m_prop(n) is true, s(n) =  {z | $p(z,n,m), m_prop(n), forall m with m_prop(m)}
 # Here we can see, we actually defined a set of sets: the n in s(n) is the parameter of the set.
 
 obj M set
-prop properties_of(m M)
+prop m_prop(m M)
 obj S set
+prop m_s_prop(m M, s S)
 
-# when there is no parameter s = {z | z = f(m) for all m with properties_of(m)}
+# when there is no parameter s = {z | z = f(m) for all m with $m_prop(m)} = {z | exist m with $m_prop(m), z = f(m)}
 # Here we can see by definition, there might exist m1 != m2 such that f(m1) = f(m2).
 prove:
     obj s set
     fn f(m M) S
     fn m_of_s(x s) M:
         x = f(m_of_s(x))
+        m_of_s(x) $m_prop
     know forall m M:
-        $properties_of(m)
+        $m_prop(m)
         then:
             f(m) $in s
 
 
+# when there is no parameter, s =  {z |  exist m with $m_prop(m), $m_s_prop(m,z)}
+prove:
+    obj s set
+    fn m_of_s(x s) M:
+        $m_s_prop(m_of_s(x), x)
+        m_of_s(x) $m_prop
+    know forall m M:
+        $m_prop(m)
+        then:
+            $m_s_prop(m, f(m))
+            f(m) $in s
 
 
-# when $properties_of(n) is true, s(n) =  {z | z = f(z,n, m), forall m with properties_of(m)}
+# when $m_prop(n) is true, s(n) =  {z | z = f(z,n, m), forall m with m_prop(m)}
 
 
-# when $properties_of(n) is true, setName(n) =  {z | z = f(z,n, m), forall m with properties_of(m)}
+
+# when $m_prop(n) is true, setName(n) =  {z | z = f(z,n, m), forall m with m_prop(m)}
 
