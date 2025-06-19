@@ -2126,3 +2126,6 @@ know:
 
 6.19
 // how to  use not exist to prove and store not forall in iff section of exist_prop: define a new exist_prop, give a name to that forall, and make this exist_prop equivalent to original exist_prop. Then use prove_by_contradiction to prove the new exist_prop is also false, then the not forall is proved.
+
+解决 obj $in obj 这样可能导致罗素悖论的问题的办法
+1. 用新的谓词(只要不是in)来说一个东西是obj，比如用is，这样我可以说 anything is obj，但我不能说 anything in obj。我定义xxx是一个集合，也可以这样。现在 obj s set 相当于是在说 s is set，也可以说 s in set(set 是这样的一个东西它和in这个谓词可以配合使用，出现在in这个谓词的右侧)（不要和现实产生联想，虽然不要觉得这样定义好像所有东西都在这个叫set的东西里，然后set自己也是个集合；从来没说过能作为谓词in的右侧的东西，一定是in set的。）
