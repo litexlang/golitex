@@ -22,6 +22,9 @@ _The Future of Math and AI: What If A Formal Language Is As Intuitive As Natural
 
 ## About The Adventure of Litex
 
+_Mathematics is the language with which God wrote the universe._
+_-- Galileo Galilei_
+
 _Science is what we understand well enough to explain to a computer; art is everything else._
 
 _-- Donald Knuth_

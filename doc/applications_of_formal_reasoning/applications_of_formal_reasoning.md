@@ -30,3 +30,5 @@ As modern math is becoming more and more abstract and complicated, the math comm
 1. [Machine Assisted Proof](https://terrytao.wordpress.com/wp-content/uploads/2024/03/machine-assisted-proof-notices.pdf): In this article, Fields Medalist Terence Tao forecasts the great potential of the combination of formal reasoning and machine learning in math.
 
 2. [Mathematics and the formal turn](https://arxiv.org/pdf/2311.00007): In this article, Lean advisory board member Jeremy Avigad argues that the formal turn in mathematics holds a lot of promise and the new technology will undoubtedly alter our conception what it means to do mathematics
+
+3. [Terrence Tao on Lex Fridman Podcast](https://www.youtube.com/watch?v=HUkBz-cdB-k&t=5400s): In this podcast, Fields Medalist Terence Tao discusses the potential of formal reasoning in math.
