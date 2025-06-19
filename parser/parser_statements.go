@@ -700,40 +700,6 @@ func (tb *tokenBlock) defExistPropStmtBody() (*ast.DefExistPropStmtBody, error) 
 	return ast.NewExistPropDef(*declHeader, domFacts, iffFactsAsFactStatements), nil
 }
 
-// func (tb *tokenBlock) claimToCheckFact() (ast.FactStmt, error) {
-// 	if tb.header.is(glob.KeywordForall) {
-// 		return tb.uniFactStmt(UniFactDepth0)
-// 	} else {
-// 		return tb.specFactStmt()
-// 	}
-// }
-
-// claim 因为实在太难instantiate了(要让所有的stmt都添加instantiate这个方法，太难了)，所以不能让用户随便命名forall里的参数了，用户只能用不存在的参数名
-// func (tb *tokenBlock) uniFactStmt_InClaimStmt() (*ast.UniFactStmt, error) {
-// 	err := tb.header.skip(glob.KeywordForall)
-// 	if err != nil {
-// 		return nil, &tokenBlockErr{err, *tb}
-// 	}
-
-// 	declHeader, err := tb.defHeader()
-// 	if err != nil {
-// 		return nil, &tokenBlockErr{err, *tb}
-// 	}
-
-// 	domainFacts, thenFacts, iffFacts, err := tb.uniFactBodyFacts(UniFactDepth0, glob.KeywordThen)
-// 	if err != nil {
-// 		return nil, &tokenBlockErr{err, *tb}
-// 	}
-
-// 	if len(iffFacts) == 0 {
-// 		iffFacts = ast.EmptyIffFacts
-// 	} else {
-// 		return nil, fmt.Errorf("universal fact in claim statement should not have iff facts")
-// 	}
-
-// 	return ast.NewUniFact(declHeader.Params, declHeader.SetParams, domainFacts, thenFacts, iffFacts), nil
-// }
-
 func (tb *tokenBlock) uniFactBodyFacts(uniFactDepth uniFactEnum, defaultSectionName string) ([]ast.FactStmt, []ast.FactStmt, []ast.FactStmt, error) {
 	domFacts := []ast.FactStmt{}
 	thenFacts := []ast.FactStmt{}
@@ -944,72 +910,6 @@ func (tb *tokenBlock) proveInEachCaseStmt() (*ast.ProveInEachCaseStmt, error) {
 
 	return ast.NewProveInEachCaseStmt(*orFact, thenFacts, proofs), nil
 }
-
-// func (tb *tokenBlock) proveOrStmt() (*ast.ProveOrStmt, error) {
-// 	err := tb.header.skip(glob.KeywordProveOr)
-// 	if err != nil {
-// 		return nil, &tokenBlockErr{err, *tb}
-// 	}
-
-// 	indexes := map[int]struct{}{}
-// 	for {
-// 		curToken, err := tb.header.getAndSkip("")
-// 		if err != nil {
-// 			return nil, &tokenBlockErr{err, *tb}
-// 		}
-// 		// to int
-// 		curIndex, err := strconv.Atoi(curToken)
-// 		if err != nil {
-// 			return nil, &tokenBlockErr{err, *tb}
-// 		}
-// 		indexes[curIndex] = struct{}{}
-// 		if tb.header.is(glob.KeySymbolComma) {
-// 			tb.header.skip(glob.KeySymbolComma)
-// 			continue
-// 		}
-// 		if tb.header.is(glob.KeySymbolColon) {
-// 			break
-// 		}
-// 		return nil, fmt.Errorf("expect '%s' or '%s' but got '%s'", glob.KeySymbolColon, glob.KeySymbolComma, tb.header.strAtCurIndexPlus(0))
-// 	}
-
-// 	err = tb.header.skip(glob.KeySymbolColon)
-// 	if err != nil {
-// 		return nil, &tokenBlockErr{err, *tb}
-// 	}
-
-// 	// orFact, err := tb.body[0].logicExprStmt(ast.NameDepthMap{})
-// 	orFact, err := tb.body[0].orStmt(ast.NameDepthMap{})
-// 	if err != nil {
-// 		return nil, &tokenBlockErr{err, *tb}
-// 	}
-
-// 	// if !orFact.IsOr {
-// 	// 	return nil, &tokenBlockErr{fmt.Errorf("prove or: expect or fact, but got: %s", orFact.String()), *tb}
-// 	// }
-
-// 	err = tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
-// 	if err != nil {
-// 		return nil, &tokenBlockErr{err, *tb}
-// 	}
-
-// 	proofs := []ast.Stmt{}
-// 	for _, stmt := range tb.body[1].body {
-// 		curStmt, err := stmt.Stmt()
-// 		if err != nil {
-// 			return nil, &tokenBlockErr{err, *tb}
-// 		}
-// 		proofs = append(proofs, curStmt)
-// 	}
-
-// 	for index := range indexes {
-// 		if index < 0 || index >= len(orFact.Facts) {
-// 			return nil, &tokenBlockErr{fmt.Errorf("prove or: index out of range: %d", index), *tb}
-// 		}
-// 	}
-
-// 	return ast.NewProveOrStmt(indexes, *orFact, proofs), nil
-// }
 
 func (tb *tokenBlock) knowExistPropStmt() (*ast.KnowExistPropStmt, error) {
 	err := tb.header.skip(glob.KeywordKnow)
