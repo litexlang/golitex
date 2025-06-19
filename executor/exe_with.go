@@ -51,22 +51,17 @@ func (exec *Executor) withStmt_checkFact(stmt *ast.WithStmt) (glob.ExecState, er
 
 	// check fact
 	execState, err := exec.factStmt(&stmt.Fact)
-	if err != nil {
-		return glob.ExecState_Error, err
-	}
-	if execState != glob.ExecState_True {
-		exec.appendWarningMsg("with fact is not true:\n%s", stmt.Fact.String())
-		return execState, nil
+	if notOkExec(execState, err) {
+		exec.appendMsg(fmt.Sprintf("%s is unknown", stmt.Fact.String()))
+		return execState, err
 	}
 
 	// run stmt body
 	for _, bodyFact := range stmt.Body {
 		execState, err = exec.Stmt(bodyFact)
-		if err != nil {
-			return glob.ExecState_Error, err
-		}
-		if execState != glob.ExecState_True {
-			return execState, nil
+		if notOkExec(execState, err) {
+			exec.appendMsg(fmt.Sprintf("%s is unknown", bodyFact.String()))
+			return execState, err
 		}
 	}
 
@@ -75,11 +70,8 @@ func (exec *Executor) withStmt_checkFact(stmt *ast.WithStmt) (glob.ExecState, er
 
 func (exec *Executor) withStmt_storeFactsToParentEnv(stmt *ast.WithStmt) (glob.ExecState, error) {
 	execState, err := exec.storeFactsInWithStmt(stmt)
-	if err != nil {
-		return glob.ExecState_Error, err
-	}
-	if execState != glob.ExecState_True {
-		return execState, nil
+	if notOkExec(execState, err) {
+		return execState, err
 	}
 
 	return glob.ExecState_True, nil
