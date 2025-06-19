@@ -1,0 +1,4 @@
+obj SeT N
+know 1 $in SeT
+know forall x SeT:
+    x = 1
