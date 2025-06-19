@@ -1,0 +1,28 @@
+# In many cases, we describe a set as follows: when $properties_of(n) is true, s(n) =  {z | z = f(z,n), properties_of(n)}
+# More generally, we describe a set as follows: when $properties_of(n) is true, s(n) =  {z | $p(z,n,m), properties_of(n), forall m with properties_of(m)}
+# Here we can see, we actually defined a set of sets: the n in s(n) is the parameter of the set.
+
+obj M set
+prop properties_of(m M)
+obj S set
+
+# when there is no parameter s = {z | z = f(m) for all m with properties_of(m)}
+# Here we can see by definition, there might exist m1 != m2 such that f(m1) = f(m2).
+prove:
+    obj s set
+    fn f(m M) S
+    fn m_of_s(x s) M:
+        x = f(m_of_s(x))
+    know forall m M:
+        $properties_of(m)
+        then:
+            f(m) $in s
+
+
+
+
+# when $properties_of(n) is true, s(n) =  {z | z = f(z,n, m), forall m with properties_of(m)}
+
+
+# when $properties_of(n) is true, setName(n) =  {z | z = f(z,n, m), forall m with properties_of(m)}
+
