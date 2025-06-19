@@ -6,7 +6,7 @@
 
 # Litex: Scale Formal Reasoning in AI Age
 
-_The Formal Language Where Natural Expression Meets Scalable Formal Reasoning_
+_The Future of Math and AI: What If A Formal Language Is As Intuitive As Natural Language?_
 
 **Release v0.1.1-beta (not yet ready for production use)**  
 *May 2025*  
@@ -201,6 +201,7 @@ This is a summary of the differences between Litex and Lean4.
 | Type System  | Set theory + first-order logic | Complex (dependent types) |
 | Built-in Math | ✅ Yes (rational numbers, basic operations) | ❌ No (requires libraries) |
 | Community Size | Small (growing) | Large (established) |
+| Translation to Natural Language | ✅ Easy and natural | ❌ Difficult and indirect |
 | Production Ready | ❌ Not yet | ✅ Yes |
 
 ## Answers to Common Questions

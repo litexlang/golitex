@@ -1,21 +1,12 @@
-exist_prop y N st larger_than_x(x N):
-    y > x
-
+prop p(x R)
 know:
-    forall x N, y N:
-        y > 0
+    forall x R:
+        x > 0
         then:
-            x + y > x
+            $p(x)
 
 claim:
-    forall x N:
-        $larger_than_x(x)
+    $p(1)
     prove:
-        obj a N
-        know:
-            a = x + 1
-        x + 1 > x
-        a > x
-        exist a st $larger_than_x(x)
-
-$larger_than_x(10)
+        1 > 0
+        $p(1)
