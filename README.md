@@ -29,13 +29,14 @@ _Science is what we understand well enough to explain to a computer; art is ever
 
 _-- Donald Knuth_
 
-_The best way to predict the future is to invent it._
+_Software is eating the world._
 
-_-- Alan Kay_
+_-- Marc Andreessen_
+
 
 **Welcome to our [zulip community](https://litex.zulipchat.com) to get the latest updates and discuss with us.**
 
-Litex is a simple and easy-to-learn formal language. It makes formal reasoning as natural as writing in natural language. Thanks to its innovative design, even 10-year-olds can learn Litex easily. This gives it a dimensional advantage over existing formal languages, such as Lean, which even PhD students struggle to master. In the foreseeable future, Litex is going to reduce the time ratio between formalizing a proof and writing it in natural language from 10:1 to 1:1.
+Litex is a simple and easy-to-learn formal language. It makes formal reasoning as natural as writing in natural language. Thanks to its innovative design, even 10-year-olds can learn Litex easily. This gives it a dimensional advantage over existing formal languages, such as Lean, which even PhD students struggle to master. In the foreseeable future, Litex is going to reduce the time ratio between formalizing a proof and writing it in natural language from 10:1 to 1:1. Mathematics, this ancient discipline, will be understood and written in a completely new way.
 
 This is an adventure with two goals: 1. to make formal reasoning as intuitive as natural language and everyday thinking, from both high-level and low-level perspectives. 2. to spread the idea and power of formal reasoning to a larger audience. Both goals serves one ultimate purpose: scale formal reasoning in this new AI age.
 
@@ -395,6 +396,10 @@ That is why Litex really needs YOUR help: to use it, to spread the word about it
 _The people who are crazy enough to think they can change the world are the ones who do._
 
 _-- Steve Jobs_
+
+_The best way to predict the future is to invent it._
+
+_-- Alan Kay_
 
 _Talent wins games, but teamwork and intelligence win championships._
 

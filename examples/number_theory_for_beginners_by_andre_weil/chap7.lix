@@ -74,3 +74,12 @@ forall s set, op fn(s, s)s, e s, inv fn(s)s, x s:
     subgroup_generated_by_item(s, op, e, inv, x) $in finite_set
     then:
         $is_isomorphism_of_groups(subgroup_generated_by_item(s, op, e, inv, x), op, e, inv, cc(len(subgroup_generated_by_item(s, op, e, inv, x))), cc_add(len(subgroup_generated_by_item(s, op, e, inv, x))), cc_e(len(subgroup_generated_by_item(s, op, e, inv, x))), cc_inv(len(subgroup_generated_by_item(s, op, e, inv, x))), index_of_y_in_subgroup_generated_by_item)
+
+exist_prop x s st is_cyclic_group(s set, op fn(s, s)s, e s, inv fn(s)s):
+    $is_group(s, op, e, inv)
+    s $in finite_set
+    s = subgroup_generated_by_item(s, op, e, inv, x)
+
+prop is_cyclic_group(s set, op fn(s, s)s, e s, inv fn(s)s):
+    $is_group(s, op, e, inv)
+    $is_cyclic_group()
