@@ -80,6 +80,3 @@ exist_prop x s st is_cyclic_group(s set, op fn(s, s)s, e s, inv fn(s)s):
     s $in finite_set
     s = subgroup_generated_by_item(s, op, e, inv, x)
 
-prop is_cyclic_group(s set, op fn(s, s)s, e s, inv fn(s)s):
-    $is_group(s, op, e, inv)
-    $is_cyclic_group()
