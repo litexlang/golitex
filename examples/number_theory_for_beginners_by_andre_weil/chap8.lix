@@ -79,3 +79,29 @@ know forall m N:
     then:
         sum_of_finite_set(primes_to_m(m), len(primes_to_m(m))) = m
 
+# Definition 8.1
+# If G is a group, H is subgroup of G, every set of form xH with x in G is called a left coset of H in G.
+fn left_coset(s set, op fn(s, s)s, e s, inv fn(s)s, x s, s2 set) set:
+    dom:
+        $is_subgroup(s, op, e, inv, s2)
+
+# TODO 
+
+# Lemma 8.1
+prop have_no_common_item(s1 set, s2 set):
+    forall x s1, y s2:
+        x != y
+
+know forall s set, op fn(s, s)s, e s, inv fn(s)s, x s, y s, s2 set:
+    then:
+        or:
+            left_coset(s, op, e, inv, x, s2) = left_coset(s, op, e, inv, y, s2)
+            $have_no_common_item(left_coset(s, op, e, inv, x, s2), left_coset(s, op, e, inv, y, s2))
+
+# Theorem 8.2
+know prop subgroup_of_finite_group_has_order_dividing_order_of_group(s set, op fn(s, s)s, e s, inv fn(s)s, s2 set):
+    $is_subgroup(s, op, e, inv, s2)
+    $is_finite_group(s, op, e, inv)
+    then:
+        len(s2) % len(s) = 0
+
