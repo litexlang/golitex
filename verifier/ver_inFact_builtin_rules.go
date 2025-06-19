@@ -26,15 +26,6 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state VerState) 
 		return false, fmt.Errorf("invalid number of parameters for in fact")
 	}
 
-	if ast.IsFcAtomWithNameAndEmptyPkg(stmt.Params[1], glob.KeywordObj) {
-		if state.requireMsg() {
-			ver.successWithMsg(stmt.String(), "everything is in the obj set")
-		} else {
-			ver.successNoMsg()
-		}
-		return true, nil
-	}
-
 	ok, err := ver.btLitNumInNatOrIntOrRatOrRealOrComplex(stmt, state)
 	if err != nil {
 		return false, err
@@ -54,11 +45,6 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state VerState) 
 	}
 
 	ok = ver.returnValueOfUserDefinedFnInFnReturnSet(stmt, state)
-	if ok {
-		return true, nil
-	}
-
-	ok = ver.anythingIsInObj(stmt, state)
 	if ok {
 		return true, nil
 	}
@@ -157,19 +143,20 @@ func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state VerState)
 	return false
 }
 
-func (ver *Verifier) anythingIsInObj(stmt *ast.SpecFactStmt, state VerState) bool {
-	ok := ast.IsFcAtomWithNameAndEmptyPkg(stmt.Params[1], glob.KeywordObj)
-	if ok {
-		if state.requireMsg() {
-			ver.successWithMsg(stmt.String(), "anything is in the obj set")
-		} else {
-			ver.successNoMsg()
-		}
-		return true
-	}
+// this might lead to Russell's paradox
+// func (ver *Verifier) anythingIsInObj(stmt *ast.SpecFactStmt, state VerState) bool {
+// 	ok := ast.IsFcAtomWithNameAndEmptyPkg(stmt.Params[1], glob.KeywordObj)
+// 	if ok {
+// 		if state.requireMsg() {
+// 			ver.successWithMsg(stmt.String(), "anything is in the obj set")
+// 		} else {
+// 			ver.successNoMsg()
+// 		}
+// 		return true
+// 	}
 
-	return false
-}
+// 	return false
+// }
 
 func (ver *Verifier) verIn_N_Z_Q_R_C_BySpecMem(stmt *ast.SpecFactStmt, state VerState) bool {
 	inSet, ok := stmt.Params[1].(*ast.FcAtom)
