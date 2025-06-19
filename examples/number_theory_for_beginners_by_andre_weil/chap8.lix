@@ -10,4 +10,29 @@ exist_prop s2 set st is_cyclic_group_of_order_m_divided_by_d(s set, op fn(s, s)s
         $is_cyclic_group(s2, op, e, inv, order_of_item(s, op, e, inv, x, d))
         len(s2) = m / d
 
-        
+know forall a Z, b Z, d Z, s set, op fn(s, s)s, e s, inv fn(s)s, x s:
+    $is_cyclic_group(s, op, e, inv, x)
+    order_of_item(s, op, e, inv, x, a*d) = order_of_item(s, op, e, inv, x, b * d)
+    then:
+        da - db % len(s) = 0
+
+exist_prop s2 set st is_cyclic_group_of_order_m_divided_by_d(s set, op fn(s, s)s, e s, inv fn(s)s, x s, d N):
+    $is_cyclic_group(s, op, e, inv, x)
+    len(s) % d = 0
+    iff:
+        $is_cyclic_group(s2, op, e, inv, order_of_item(s, op, e, inv, x, d))
+        len(s2) = m / d
+
+# Corollary 8.1
+know forall n Z, s set, op fn(s, s)s, e s, inv fn(s)s, x s:
+    $is_cyclic_group(s, op, e, inv, x)
+    then:
+        $is_cyclic_group(s, op, e, inv, x)
+        forall s2 set, op2 fn(s2, s2)s2, e2 s2, inv2 fn(s2)s2:
+            $is_cyclic_group(s2, op2, e2, inv2, x)
+            len(s) = len(s2)
+            then:
+                s = s2
+
+
+    
