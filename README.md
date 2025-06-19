@@ -23,16 +23,16 @@ _The Future of Math and AI: What If A Formal Language Is As Intuitive As Natural
 ## About The Adventure of Litex
 
 _Mathematics is the language with which God wrote the universe._
+
 _-- Galileo Galilei_
 
 _Science is what we understand well enough to explain to a computer; art is everything else._
 
 _-- Donald Knuth_
 
-_Software is eating the world._
+_The best way to predict the future is to invent it._
 
-_-- Marc Andreessen_
-
+_-- Alan Kay_
 
 **Welcome to our [zulip community](https://litex.zulipchat.com) to get the latest updates and discuss with us.**
 
@@ -385,7 +385,7 @@ Litex takes a use-driven, example-first approach to formalization. Instead of bu
 
 Sometimes the new feature covers the functionalities of the old one and the old one is replaced by the new one. This trial-and-error, practice-guided development makes Litex uniquely adaptable and intuitive. Any feature is added with careful test about whether it is as useful and intuitive as possible and whether it is not harmful to the existing features. In most cases, a feature either works as a syntactic sugar which significantly improves the readability and writing experience of the code, or it is a new feature that is necessary for the user to express certain types of logic.
 
-Litex is designed to serve users. It is not an academic experiment to design the perfect formal language. It is a practical tool to help users formalize their math, train their AI models, and other tasks. Thus to fulfill its mission, Litex has to grow with its users.
+Litex is designed to serve users. It is not an academic experiment to design the perfect formal language. It is a practical tool to help users formalize their math, train their AI models, and other tasks. Thus to fulfill its mission, Litex has to grow with its users. It is rooted in its unique and simple (However, simplicity is not easy to achieve.) ideas, not theories.
 
 The creator of Litex wishes Litex to obtain adoption exponentially, like C++ and other programming languages did. It does not need a glorious beginning, but it needs a strong engine to grow. Compared with potential number of users of formal languages, all traditional formal languages are tiny. Litex wants to change that.
 
@@ -397,9 +397,9 @@ _The people who are crazy enough to think they can change the world are the ones
 
 _-- Steve Jobs_
 
-_The best way to predict the future is to invent it._
+_Software is eating the world._
 
-_-- Alan Kay_
+_-- Marc Andreessen_
 
 _Talent wins games, but teamwork and intelligence win championships._
 

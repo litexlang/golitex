@@ -7,12 +7,12 @@ exist_prop s2 set st is_cyclic_group_of_order_m_divided_by_d(s set, op fn(s, s)s
     $is_cyclic_group(s, op, e, inv, x)
     len(s) / d = 0
     iff:
-        $is_cyclic_group(s2, op, e, inv, order_of_item(s, op, e, inv, x, d))
+        $is_cyclic_group(s2, op, e, inv, power_of_item(s, op, e, inv, x, d))
         len(s2) = m / d
 
 know forall a Z, b Z, d Z, s set, op fn(s, s)s, e s, inv fn(s)s, x s:
     $is_cyclic_group(s, op, e, inv, x)
-    order_of_item(s, op, e, inv, x, a*d) = order_of_item(s, op, e, inv, x, b * d)
+    power_of_item(s, op, e, inv, x, a*d) = power_of_item(s, op, e, inv, x, b * d)
     then:
         da - db % len(s) = 0
 
@@ -20,7 +20,7 @@ exist_prop s2 set st is_cyclic_group_of_order_m_divided_by_d(s set, op fn(s, s)s
     $is_cyclic_group(s, op, e, inv, x)
     len(s) % d = 0
     iff:
-        $is_cyclic_group(s2, op, e, inv, order_of_item(s, op, e, inv, x, d))
+        $is_cyclic_group(s2, op, e, inv, power_of_item(s, op, e, inv, x, d))
         len(s2) = m / d
 
 # Corollary 8.1
@@ -39,7 +39,7 @@ know forall n Z, s set, op fn(s, s)s, e s, inv fn(s)s, x s:
 know forall a Z, m Z, s set, op fn(s, s)s, e s, inv fn(s)s, x s:
     $is_cyclic_group(s, op, e, inv, x)
     len(s) = m
-    $is_cyclic_group(subgroup_generated_by_item(s, op, e, inv, order_of_item(s, op, e, inv, x, a)), op, e, inv)
+    $is_cyclic_group(subgroup_generated_by_item(s, op, e, inv, power_of_item(s, op, e, inv, x, a)), op, e, inv)
     iff:
         gcd(a, m) = len(m/a)
 
@@ -48,7 +48,7 @@ know forall a Z, m Z, s set, op fn(s, s)s, e s, inv fn(s)s, x s:
 know forall a Z, m Z, s set, op fn(s, s)s, e s, inv fn(s)s, x s:
     $is_cyclic_group(s, op, e, inv, x)
     len(s) = m
-    $is_cyclic_group(subgroup_generated_by_item(s, op, e, inv, order_of_item(s, op, e, inv, x, a)), op, e, inv)
+    $is_cyclic_group(subgroup_generated_by_item(s, op, e, inv, power_of_item(s, op, e, inv, x, a)), op, e, inv)
     iff:
         gcd(a, m) = 1
 
@@ -85,7 +85,17 @@ fn left_coset(s set, op fn(s, s)s, e s, inv fn(s)s, x s, s2 set) set:
     dom:
         $is_subgroup(s, op, e, inv, s2)
 
-# TODO 
+know forall s set, op fn(s, s)s, e s, inv fn(s)s, x s, s2 set:
+    $is_subgroup(s, op, e, inv, s2)
+    then:
+        forall y s2:
+            x \op y $in left_coset(s, op, e, inv, x, s2)
+
+fn h_st_x_mul_h_is_y(s set, op fn(s, s)s, e s, inv fn(s)s, x s, y left_coset(s, op, e, inv, x, s2), s2 set) s2:
+    dom:
+        $is_subgroup(s, op, e, inv, s2)
+    then:
+        x \op h_st_x_mul_h_is_y(s, op, e, inv, x, y, s2) = y
 
 # Lemma 8.1
 prop have_no_common_item(s1 set, s2 set):
@@ -105,3 +115,25 @@ know prop subgroup_of_finite_group_has_order_dividing_order_of_group(s set, op f
     then:
         len(s2) % len(s) = 0
 
+fn order_of_item(s set, op fn(s, s)s, e s, inv fn(s)s, x s) N:
+    power_of_item(s, op, e, inv, x, order_of_item(s, op, e, inv, x)) = e
+
+# Corollary 8.5
+know prop x_is_element_of_group_of_order_m_then_x_order_divides_m(s set, op fn(s, s)s, e s, inv fn(s)s, x s):
+    $is_finite_group(s, op, e, inv)
+    then:
+        len(s) % order_of_item(s, op, e, inv, x) = 0
+
+# Theorem 8.3
+know prop m_is_integer_larger_than_1_x_is_prime_to_m_then_x_order_divides_phi_m(m N, x N):
+    m > 1
+    gcd(x, m) = 1
+    then:
+        (x ^ (phi(m))) % m = 1
+
+# Corollary 8.6
+know forall p N, x N:
+    p is prime
+    gcd(x, p) = 1
+    then:
+        (x ^ (p)) % p = x
