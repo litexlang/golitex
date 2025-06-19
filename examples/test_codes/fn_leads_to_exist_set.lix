@@ -11,7 +11,7 @@ obj K set
 fn f_k_m(k K, m M) S
 prop m_s_k_prop(m M, s S, k K)
 
-# when there is no parameter s = {z | z = f(m) for all m with $m_prop(m)} = {z | exist m with $m_prop(m), z = f(m)}
+# when there is no parameter s = {z in S | z = f(m) for all m with $m_prop(m)} = {z | exist m with $m_prop(m), z = f(m)}
 # Here we can see by definition, there might exist m1 != m2 such that f(m1) = f(m2).
 prove:
     obj s set
@@ -24,7 +24,7 @@ prove:
             f(m) $in s
 
 
-# when there is no parameter, s =  {z |  exist m with $m_prop(m), $m_s_prop(m,z)}
+# when there is no parameter, s =  {z in S |  exist m with $m_prop(m), $m_s_prop(m,z)}
 prove:
     obj s set
     fn m_of_s(x s) M:
@@ -37,7 +37,7 @@ prove:
             f(m) $in s
 
 
-# when $m_prop(k) is true, s_k(k) =  {z | z = f_k_m(k, m), forall m with m_prop(m)}
+# when $m_prop(k) is true, s_k(k) =  {z in S | z = f_k_m(k, m), forall m with m_prop(m)}
 prove:
     fn s_k(k K) set
     know forall k K:
@@ -53,7 +53,7 @@ prove:
 
 
 
-# when $m_prop(k) is true, s_k(k) =  {z | exist m with $m_prop(m), $m_s_prop(m, k,z)}
+# when $m_prop(k) is true, s_k(k) =  {z in S | exist m with $m_prop(m), $m_s_prop(m, k,z)}
 prove:
     fn s_k(k K) set
     know forall k K:
