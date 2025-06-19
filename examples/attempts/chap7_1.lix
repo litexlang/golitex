@@ -1,0 +1,97 @@
+# chap 7
+"""
+fn_fn two_items_op_on_subset(s set, op fn(s, s)s, items set):
+    fn (x items, y items) s:
+        op(x, y) = op_on_subset(s, op, items)(x, y)
+    dom:
+        items $subset_of s
+        forall x items, y items:
+            op(x, y) $in s
+
+fn_fn one_item_op_on_subset(s set, op fn(s, s)s, items set):
+    fn (x items) s:
+        op(x, x) = op_on_subset(s, op, items)(x, x)
+    dom:
+        items $subset_of s
+        forall x items:
+            op(x) $in s
+
+prop two_items_op_return_value_in_set(s set, f_original_ret_set set, f fn(s, s)f_original_ret_set, return_value_set set):
+    forall x s, y s:
+        f(x, y) $in return_value_set
+
+prop one_item_op_return_value_in_set(s set, f_original_ret_set set, f fn(s)f_original_ret_set, return_value_set set):
+    forall x s:
+        f(x) $in return_value_set
+
+# 或许应该是要能自动lift？而不是定义lift函数？比如虽然f $in fn(s,s)s 但是如果在items，items上它满足了返回值也是items，那我们也应该认为它是 $in fn(items, items) items ???? 还是说这里的 in 用的不好，而是应该用其他的 特殊的关键词来说明整个事情？或者说我有个新的prop叫can be restricted on 
+
+# Definition 7.1
+fn group_generated_by_items(s set, op fn(s, s)s, e s, inv fn(s)s, items set) set:
+    $is_group(s, op, e, inv)
+    items $subset_of s
+
+    then:
+        e $in group_generated_by_items(s,op,e,inv,items)
+
+        $one_item_op_return_value_in_set(s, s, one_item_op_on_subset(s, s, op, group_generated_by_items(s,op,e,inv,items)), group_generated_by_items(s,op,e,inv,items))
+        $two_items_op_return_value_in_set(s, s, two_items_op_on_subset(s, s, op, group_generated_by_items(s,op,e,inv,items)), group_generated_by_items(s,op,e,inv,items))
+        
+        $is_group(group_generated_by_items(s,op,e,inv, items), two_items_op_on_subset(s, op, group_generated_by_items(s,op,e,inv,items)), e, one_item_op_on_subset(s, op, group_generated_by_items(s,op,e,inv,items)))
+
+        forall x items:
+            x $in s
+            then:
+                x $in group_generated_by_items(s, op, e, inv, group_generated_by_items(s,op,e,inv,items))
+
+        forall s set:
+            items $subset_of s
+            then:
+                group_generated_by_items(s, op, e, inv, items) $subset_of s
+
+fn mul_on_group(s set, op fn(s, s)s, e s, inv fn(s)s, n N)s :
+    $is_group(s, op, e, inv)
+    then:
+        mul_on_group(s, op, e, inv, 0) = e
+        forall n N:
+            mul_on_group(s, op, e, inv, n + 1) = mul_on_group(s, op, e, inv, n) + 1
+
+# Definition 7.2
+# Isomorphism of groups
+
+prop is_isomorphism_of_groups(s1 set, op1 fn(s1, s1)s1, e1 s1, inv1 fn(s1)s1, s2 set, op2 fn(s2, s2)s2, e2 s2, inv2 fn(s2)s2, iso_map fn(s1)s2):
+    $is_group(s1, op1, e1, inv1)
+    $is_group(s2, op2, e2, inv2)
+    $is_bijection(iso_map)
+    then:
+        forall x s1, y s1:
+            iso_map(op1(x, y)) = op2(iso_map(x), iso_map(y))
+            iso_map(inv1(x)) = inv2(iso_map(x))
+            iso_map(e1) = e2
+
+# Theorem 7.2 ?
+
+# Definition 7.3
+# Definition of cyclic group
+
+fn 1_element_set(s obj) set:
+    forall x 1_element_set(s):
+        x = s
+    s $in 1_element_set(s)
+
+prop is_cyclic_group(s set, op fn(s, s)s, e s, inv fn(s)s, generator s):
+    $is_group(s, op, e, inv)
+    forall x s:
+        s = group_generated_by_items(s, op, e, inv, 1_element_set(s))
+
+# Definition 7.4
+# Definition of order of an element
+
+# TODO: 需要定义n次幂生成出来的元素构成的集合
+
+prop is_order_of_element(s set, op fn(s, s)s, e s, inv fn(s)s, element s, order N):
+    $is_cyclic_group(s, op, e, inv, element)
+    $is_finite_set(s)
+
+"""
+

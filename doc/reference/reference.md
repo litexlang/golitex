@@ -81,6 +81,8 @@ Beyond Go, Litex draws inspiration from other programming languages. For instanc
 
 The C programming language's syntax and semantics significantly influenced Litex's design. Operator overloading behavior is inspired by C++. The inventor of Litex holds a deep appreciation for Lisp's "everything is a list" philosophy, which contributes to the language's conceptual integrity. Also, since C uses postfix like L to make number as type the user want to overloaded  type of a number literal(e.g. 1L represents a long integer), Litex uses postfix to do type inference(e.g. 1r represents 1 as R number). No user defined type overloading is allowed.
 
+TODO: struct keyword does not exist in C before C89. When you want to organize a group of objects, you have to write them one by one, instead of using struct to organize them. Litex now does not have struct keyword to organize objects. But it will be added in the future to make the code cleaner.
+
 (Syntactically, Litex learn from python and go. Semantically, Litex learn from Lisp, C and awk. As a daily tool, Litex learn from Tex and python jupyter notebook. Litex design principle is a mixture of all of them.)
 
 fn_template is inspired by C++'s template over function. It is a describing the properties of a function. However, there are still differences. No need to introduce <> : Because parameters can be passed in the parameter list (so-called requirements for types are essentially individual facts in Litex. Things that are sets and things that are not sets are fundamentally no different in terms of fact handling. This approach is inherently different from C++'s type system.) Here we can see the fundamental difference of "set system" in Litex and "type system" in C++ and other programming languages.
