@@ -215,10 +215,7 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	domFacts, thenFacts, iffFacts, err := tb.uniFactBodyFacts(UniFactDepth1, glob.KeywordIff)
-	if len(thenFacts) > 0 {
-		return nil, fmt.Errorf("%s facts are not allowed in def prop. You probably meant to use '%s' instead of '%s'", glob.KeywordThen, glob.KeywordIff, glob.KeywordThen)
-	}
+	domFacts, iffFacts, err := tb.domIffBody()
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -1181,4 +1178,79 @@ func (tb *tokenBlock) proveStmt() (*ast.ProveStmt, error) {
 	}
 
 	return ast.NewProveStmt(proof), nil
+}
+
+// called by exist_prop and prop def
+func (tb *tokenBlock) domIffBody() ([]ast.FactStmt, []ast.FactStmt, error) {
+	domFacts, iffFacts := []ast.FactStmt{}, []ast.FactStmt{}
+	if len(tb.body) == 0 {
+		return domFacts, iffFacts, nil
+	}
+
+	if tb.body[0].header.is(glob.KeywordDom) {
+		domFacts, err := tb.parseFactBodyWithHeaderNameAndUniFactDepth(glob.KeywordDom, UniFactDepth1)
+		if err != nil {
+			return nil, nil, &tokenBlockErr{err, *tb}
+		}
+
+		if len(tb.body) == 1 {
+			return domFacts, iffFacts, nil
+		} else if len(tb.body) == 2 {
+			iffFacts, err := tb.parseFactBodyWithHeaderNameAndUniFactDepth(glob.KeywordIff, UniFactDepth1)
+			if err != nil {
+				return nil, nil, &tokenBlockErr{err, *tb}
+			}
+			return domFacts, iffFacts, nil
+		} else {
+			return nil, nil, &tokenBlockErr{fmt.Errorf("expect 1 or 2 body facts, but got %d", len(tb.body)), *tb}
+		}
+	} else if tb.body[0].header.is(glob.KeywordIff) {
+		iffFacts, err := tb.parseFactBodyWithHeaderNameAndUniFactDepth(glob.KeywordIff, UniFactDepth1)
+		if err != nil {
+			return nil, nil, &tokenBlockErr{err, *tb}
+		}
+		return domFacts, iffFacts, nil
+	} else {
+		if tb.body[len(tb.body)-1].header.is(glob.KeywordIff) {
+			for i := 0; i < len(tb.body)-1; i++ {
+				curStmt, err := tb.body[i].factStmt(UniFactDepth1)
+				if err != nil {
+					return nil, nil, &tokenBlockErr{err, *tb}
+				}
+				domFacts = append(domFacts, curStmt)
+			}
+			iffFacts, err := tb.body[len(tb.body)-1].parseFactBodyWithHeaderNameAndUniFactDepth(glob.KeywordIff, UniFactDepth1)
+			if err != nil {
+				return nil, nil, &tokenBlockErr{err, *tb}
+			}
+			return domFacts, iffFacts, nil
+		} else {
+			for _, stmt := range tb.body {
+				curStmt, err := stmt.factStmt(UniFactDepth1)
+				if err != nil {
+					return nil, nil, &tokenBlockErr{err, *tb}
+				}
+				iffFacts = append(iffFacts, curStmt)
+			}
+			return domFacts, iffFacts, nil
+		}
+	}
+
+}
+
+func (tb *tokenBlock) parseFactBodyWithHeaderNameAndUniFactDepth(headerName string, uniFactDepth uniFactEnum) ([]ast.FactStmt, error) {
+	err := tb.header.skipKwAndColon_ExceedEnd(headerName)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	facts := []ast.FactStmt{}
+	for _, stmt := range tb.body {
+		curStmt, err := stmt.factStmt(uniFactDepth)
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+		facts = append(facts, curStmt)
+	}
+	return facts, nil
 }
