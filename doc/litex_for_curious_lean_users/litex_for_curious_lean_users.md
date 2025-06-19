@@ -118,6 +118,8 @@ prop is_algorithm(Q set, I set, f fn(Q)Q):
 
 Here we can see that Litex achieves remarkable conciseness in formalizing the definition of algorithm - requiring only 10 lines of code while maintaining mathematical clarity. Each statement is self-explanatory and closely mirrors natural mathematical notation. In contrast, Lean 4 requires approximately three times more code to express the same concept. The additional complexity in Lean 4 stems from its need for explicit type definitions, structural elements, and unfamiliar syntax that are not typically encountered in everyday mathematical expressions. This extra complexity creates a steeper learning curve and can distract users from focusing on the core mathematical concepts they're trying to formalize. Litex's approach, by staying closer to conventional mathematical notation, significantly lowers the barrier to entry while maintaining formal strictness.
 
+At the same time, Lean forces to learn these keywords: `structure`, `namespace`, `def`, `end`, `example`, `exact`, `rw`, `simp`, `ring` before starting to formalize math. Sometimes using extra keywords helps users to express more easily, but in most cases, it just makes the code more complex and harder to understand. The user does not know why he needs to learn these keywords in the first place. Lean usually forces you to learn these keywords before you can start to formalize math no matter whether those keywords are truly useful or not.
+
 Next I want to show you how Litex can be used to solve a simple linear equation.
 
 <table style="border-collapse: collapse; width: 100%;">

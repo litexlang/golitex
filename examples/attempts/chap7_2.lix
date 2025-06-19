@@ -31,15 +31,12 @@ fn order_of_item(s set, op fn(s, s)s, e s, inv fn(s)s, x s, n Z) s:
     order_of_item(s, op, e, inv, x, n - 1) = order_of_item(s, op, e, inv, x, n) \op inv(x)
 
 # Theorem 7.1
-exist_prop n Z st item_equals_order_of_item(s set, op fn(s, s)s, e s, inv fn(s)s, x s, y s):
+exist_prop n Z st item_equals_order_of_item(s, op, e, inv, x, y):
     y = order_of_item(s, op, e, inv, x, n)
 
 # {x^n | n in Z}
-fn_set subgroup_generated_by_item(s set, op fn(s, s)s, e s, inv fn(s)s, x s) item s:
+fn_set subgroup_generated_by_item(s, op, e, inv, x) item s:
     $item_equals_order_of_item(s, op, e, inv, x, item)
-
-fn index_of_y_in_subgroup_generated_by_item(s set, op fn(s, s)s, e s, inv fn(s)s, x s, y subgroup_generated_by_item(s, op, e, inv, x)) Z:
-    y = order_of_item(s, op, e, inv, x, index_of_y_in_subgroup_generated_by_item(s, op, e, inv, x, y))
 
 know forall s set, op fn(s, s)s, e s, inv fn(s)s, x s:
     dom:
@@ -65,5 +62,16 @@ fn isomorphism_of_groups(s set, op fn(s, s)s, e s, inv fn(s)s, s2 set, op2 fn(s2
 # Theorem 7.2
 
 fn map_from_orders_of_item_to_int(s set, op fn(s, s)s, e s, inv fn(s)s, x s, orders_of_x subgroup_generated_by_item(s, op, e, inv, x)) Z:
+
+
+这里出现了严重问题：我不能（很难）表示这样的函数t，使得t(x^a) = a。然后这个t的定义域上对任意y都存在a使得y = x^a. 之所以不能，是因为1. 我 exist_prop 取出来的a，不能出现在 forall 里，因为have不是fact 2. 即使取出来，这个a也不是固定的，因为可能很多a都能满足 x^a = y
+
+所以不能用 exist_prop  item_equals_order_of_item 来表示集合 {x^n | n in Z}。
+
+
+
+
+
+
 
 
