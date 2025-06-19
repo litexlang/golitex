@@ -324,8 +324,10 @@ func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 }
 
 func (tb *tokenBlock) claimStmt() (*ast.ClaimStmt, error) {
-	tb.header.skip(glob.KeywordClaim)
-	err := error(nil)
+	err := tb.header.skip(glob.KeywordClaim)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
 
 	err = tb.header.skip(glob.KeySymbolColon)
 	if err != nil {
@@ -341,12 +343,12 @@ func (tb *tokenBlock) claimStmt() (*ast.ClaimStmt, error) {
 	isProve := true
 	if tb.body[1].header.is(glob.KeywordProveByContradiction) {
 		isProve = false
-		err := tb.header.skipKwAndColon_ExceedEnd(glob.KeywordProveByContradiction)
+		err := tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordProveByContradiction)
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
 		}
 	} else if tb.body[1].header.is(glob.KeywordProve) {
-		err := tb.header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
+		err := tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
 		}
