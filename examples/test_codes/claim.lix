@@ -10,3 +10,19 @@ claim:
     prove:
         1 > 0
         $p(1)
+
+know prop larger_is_transitive(x R, y R, z R):
+    x > y
+    y > z
+    iff:
+        x > z
+
+claim:
+    forall x R:
+        x > 1
+        then:
+            $p(x)
+    prove:
+        $larger_is_transitive(x, 1, 0)
+        x > 0
+        $p(x)

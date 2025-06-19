@@ -215,7 +215,10 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	domFacts, _, iffFacts, err := tb.uniFactBodyFacts(UniFactDepth1, glob.KeywordIff)
+	domFacts, thenFacts, iffFacts, err := tb.uniFactBodyFacts(UniFactDepth1, glob.KeywordIff)
+	if len(thenFacts) > 0 {
+		return nil, fmt.Errorf("%s facts are not allowed in def prop. You probably meant to use '%s' instead of '%s'", glob.KeywordThen, glob.KeywordIff, glob.KeywordThen)
+	}
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -235,10 +238,6 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 				return nil, fmt.Errorf("iff or dom fact cannot be the same as the prop being defined")
 			}
 		}
-	}
-
-	if len(iffFacts) == 0 {
-		iffFacts = ast.EmptyIffFacts
 	}
 
 	return ast.NewDefPropStmt(*declHeader, domFacts, iffFacts), nil
