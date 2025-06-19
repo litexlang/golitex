@@ -1,17 +1,20 @@
-# In many cases, we describe a set as follows: when $m_prop(n) is true, s(n) =  {z | z = f(z,n), m_prop(n)}
-# More generally, we describe a set as follows: when $m_prop(n) is true, s(n) =  {z | $p(z,n,m), m_prop(n), forall m with m_prop(m)}
-# Here we can see, we actually defined a set of sets: the n in s(n) is the parameter of the set.
+# In many cases, we describe a set as follows: when $m_prop(k) is true, s(k) =  {z | z = f(z,k), m_prop(k)}
+# More generally, we describe a set as follows: when $m_prop(k) is true, s(k) =  {z | $p(z,k,m), m_prop(k), forall m with m_prop(m)}
+# Here we can see, we actually defined a set of sets: the k in s(k) is the parameter of the set.
 
 obj M set
 prop m_prop(m M)
 obj S set
+fn f(m M) S
 prop m_s_prop(m M, s S)
+obj K set
+fn f_k_m(k K, m M) S
+prop m_s_k_prop(m M, s S, k K)
 
 # when there is no parameter s = {z | z = f(m) for all m with $m_prop(m)} = {z | exist m with $m_prop(m), z = f(m)}
 # Here we can see by definition, there might exist m1 != m2 such that f(m1) = f(m2).
 prove:
     obj s set
-    fn f(m M) S
     fn m_of_s(x s) M:
         x = f(m_of_s(x))
         m_of_s(x) $m_prop
@@ -34,9 +37,33 @@ prove:
             f(m) $in s
 
 
-# when $m_prop(n) is true, s(n) =  {z | z = f(z,n, m), forall m with m_prop(m)}
+# when $m_prop(k) is true, s_k(k) =  {z | z = f_k_m(k, m), forall m with m_prop(m)}
+prove:
+    fn s_k(k K) set
+    know forall k K:
+        s_k(k) $subset_of S
+    fn m_of_s_k(k K, x s_k(k)) M:
+        x = f_k_m(k, m_of_s_k(k, x))
+        m_of_s_k(k, x) $m_prop
+    know forall m M:
+        $m_prop(m)
+        then:
+            forall k K:
+                f_k_m(k, m) $in s_k(k)
 
 
 
-# when $m_prop(n) is true, setName(n) =  {z | z = f(z,n, m), forall m with m_prop(m)}
-
+# when $m_prop(k) is true, s_k(k) =  {z | exist m with $m_prop(m), $m_s_prop(m, k,z)}
+prove:
+    fn s_k(k K) set
+    know forall k K:
+        s_k(k) $subset_of S
+    fn m_of_s_k(k K, x s_k(k)) M:
+        $m_s_k_prop(m_of_s_k(k, x), k, x)
+        m_of_s_k(k, x) $m_prop
+    know forall m M:
+        $m_prop(m)
+        then:
+            forall k K:
+                $m_s_k_prop(m, k, f_k_m(k, m))
+                f_k_m(k, m) $in s_k(k)

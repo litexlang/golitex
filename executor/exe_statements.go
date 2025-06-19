@@ -347,24 +347,6 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 	return glob.ExecState_True, nil
 }
 
-func (exec *Executor) getUniFactSettings(asUnivFact *ast.UniFactStmt) error {
-	for i, param := range asUnivFact.Params {
-		// TODO: 有 fn_template 后，fn的声明确实能在 defObjStmt 里处理了。
-		err := exec.defObjStmt(ast.NewDefObjStmt([]string{param}, []ast.Fc{asUnivFact.ParamSets[i]}, []ast.FactStmt{}), false)
-		if err != nil {
-			return err
-		}
-	}
-	for _, fact := range asUnivFact.DomFacts {
-		err := exec.env.NewFact(fact)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 func (exec *Executor) execProofBlock(proof []ast.Stmt) (glob.ExecState, error) {
 	for _, curStmt := range proof {
 		execState, err := exec.Stmt(curStmt)
