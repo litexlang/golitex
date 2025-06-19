@@ -254,12 +254,9 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 
 	// 检查 SpecFactStmt 是否满足了
 	execState, err := exec.factStmt(&stmt.Fact)
-	if err != nil {
-		return glob.ExecState_Error, err
-	}
-	if execState != glob.ExecState_True {
+	if notOkExec(execState, err) {
 		exec.appendMsg(fmt.Sprintf("%s is unknown", stmt.Fact.String()))
-		return glob.ExecState_Unknown, nil
+		return execState, err
 	}
 
 	// TODO： have 可能会引入3种不同的东西：set,obj,fn都可能；每种情况，处理起来不一样：比如如果你是fn和set，那可能就要把你放到 setMem 和 fnMem 里了
@@ -474,11 +471,8 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimStmt) (glob.E
 	}
 
 	execState, err := exec.execProofBlock(stmt.Proofs)
-	if err != nil {
-		return glob.ExecState_Error, err
-	}
-	if execState != glob.ExecState_True {
-		return glob.ExecState_Unknown, nil
+	if notOkExec(execState, err) {
+		return execState, err
 	}
 
 	lastStmtAsFact, ok := stmt.Proofs[len(stmt.Proofs)-1].(ast.OrStmt_SpecStmt)
@@ -489,12 +483,9 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimStmt) (glob.E
 	reversedLastFact := lastStmtAsFact.ReverseIsTrue()
 
 	for _, curFact := range reversedLastFact {
-		execState, err := exec.factStmt(&curFact)
-		if err != nil {
-			return glob.ExecState_Error, err
-		}
-		if execState != glob.ExecState_True {
-			return glob.ExecState_Unknown, nil
+		execState, err = exec.factStmt(&curFact)
+		if notOkExec(execState, err) {
+			return execState, err
 		}
 	}
 
@@ -515,20 +506,15 @@ func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) (glob.E
 
 	// prove orFact is true
 	execState, err := exec.factStmt(&stmt.OrFact)
-	if err != nil {
-		return glob.ExecState_Error, err
-	}
-	if execState != glob.ExecState_True {
-		return glob.ExecState_Error, fmt.Errorf("prove in each case: or fact is not true")
+	if notOkExec(execState, err) {
+		exec.appendMsg(fmt.Sprintf("%s is unknown", stmt.OrFact.String()))
+		return execState, err
 	}
 
 	for i := range stmt.OrFact.Facts {
 		execState, err := exec.execProofBlockForEachCase(i, stmt)
-		if err != nil {
-			return glob.ExecState_Error, err
-		}
-		if execState != glob.ExecState_True {
-			return execState, nil
+		if notOkExec(execState, err) {
+			return execState, err
 		}
 	}
 
