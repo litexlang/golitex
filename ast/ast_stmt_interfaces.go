@@ -54,7 +54,7 @@ type SpecFactParams struct {
 	ObjParams []Fc
 }
 
-type LogicOrSpec_Stmt interface {
+type OrStmt_SpecStmt interface {
 	logicExprOrSpecFactStmt()
 	factStmt()
 	stmt()

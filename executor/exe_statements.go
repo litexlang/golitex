@@ -35,7 +35,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 	case ast.FactStmt:
 		execState, err = exec.factStmt(stmt)
 	case *ast.KnowFactStmt:
-		err = exec.knowFactStmt(stmt)
+		err = exec.knowStmt(stmt)
 	case *ast.ClaimStmt:
 		execState, err = exec.claimStmt(stmt)
 	case *ast.DefPropStmt:
@@ -121,7 +121,7 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
 }
 
 // TODO: 再know时就检查，仅仅依赖写在dom里的事实，是否真的能让涉及到的函数和prop能真的满足条件。如果不满足条件，那就warning
-func (exec *Executor) knowFactStmt(stmt *ast.KnowFactStmt) error {
+func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) error {
 	defer exec.appendMsg("\n")
 
 	for _, fact := range stmt.Facts {
@@ -409,17 +409,10 @@ func (exec *Executor) execProofBlock(proof []ast.Stmt) (glob.ExecState, error) {
 }
 
 func (exec *Executor) claimStmtProve(stmt *ast.ClaimStmt) (bool, error) {
-	// 需要检查stmt.ToCheckFact里的东西都是在外部声明好了的
-	if stmt.ToCheckFact != ast.ClaimStmtEmptyToCheck {
-		ok := exec.env.AreAtomsInFactAreDeclared(stmt.ToCheckFact, map[string]struct{}{})
-		if !ok {
-			return false, fmt.Errorf(env.AtomsInFactNotDeclaredMsg(stmt.ToCheckFact))
-		}
-	}
-
-	exec.newEnv(exec.env, exec.env.CurMatchProp)
+	err := error(nil)
 	isSuccess := false
 
+	exec.newEnv(exec.env, exec.env.CurMatchProp)
 	defer func() {
 		exec.appendMsg("\n")
 		if isSuccess {
@@ -431,55 +424,38 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimStmt) (bool, error) {
 		exec.deleteEnvAndRetainMsg()
 	}()
 
-	if asUnivFact, ok := stmt.ToCheckFact.(*ast.UniFactStmt); ok {
-		// 把变量引入，把dom事实引入
-		err := exec.getUniFactSettings(asUnivFact)
+	// 需要检查stmt.ToCheckFact里的东西都是在外部声明好了的
+	if stmt.ToCheckFact != ast.ClaimStmtEmptyToCheck {
+		ok := exec.env.AreAtomsInFactAreDeclared(stmt.ToCheckFact, map[string]struct{}{})
+		if !ok {
+			return false, fmt.Errorf(env.AtomsInFactNotDeclaredMsg(stmt.ToCheckFact))
+		}
+	}
+
+	if _, ok := stmt.ToCheckFact.(*ast.UniFactStmt); ok {
+		isSuccess, err = exec.claimStmtProveUniFact(stmt)
 		if err != nil {
 			return false, err
 		}
-	}
-
-	execState, err := exec.execProofBlock(stmt.Proofs)
-	if err != nil {
-		return false, err
-	}
-	if execState != glob.ExecState_True {
-		return false, nil
-	}
-
-	// statements in the form of prove: ....
-	if stmt.ToCheckFact == ast.ClaimStmtEmptyToCheck {
-		isSuccess = true
-		return true, nil
-	}
-
-	if asSpecFact, ok := stmt.ToCheckFact.(*ast.SpecFactStmt); ok {
-		execState, err := exec.factStmt(asSpecFact)
+		return isSuccess, nil
+	} else {
+		execState, err := exec.execProofBlock(stmt.Proofs)
 		if err != nil {
 			return false, err
 		}
-		if execState == glob.ExecState_True {
-			isSuccess = true
+		if execState != glob.ExecState_True {
+			return false, nil
 		}
-		return execState == glob.ExecState_True, nil
-	}
-
-	// TODO: 需要处理forall的情况
-	if asUniFact, ok := stmt.ToCheckFact.(*ast.UniFactStmt); ok {
-		for _, fact := range asUniFact.ThenFacts {
-			execState, err := exec.factStmt(fact)
-			if err != nil {
-				return false, err
-			}
-			if execState != glob.ExecState_True {
-				return false, nil
-			}
+		// check claim
+		execState, err = exec.factStmt(stmt.ToCheckFact)
+		if err != nil {
+			return false, err
 		}
-		isSuccess = true
+		if execState != glob.ExecState_True {
+			return false, nil
+		}
 		return true, nil
 	}
-
-	return false, fmt.Errorf("unknown claim stmt to check fact type: %T", stmt.ToCheckFact)
 }
 
 func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimStmt) (bool, error) {
@@ -700,4 +676,84 @@ func (exec *Executor) proveStmt(stmt *ast.ProveStmt) (glob.ExecState, error) {
 	defer exec.deleteEnvAndRetainMsg()
 
 	return exec.execProofBlock(stmt.Proof)
+}
+
+func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimStmt) (bool, error) {
+	asUnivFact, ok := stmt.ToCheckFact.(*ast.UniFactStmt)
+	if !ok {
+		return false, fmt.Errorf("claim stmt prove uni fact only support uni fact")
+	}
+
+	// declare parameters in asUnivFact in the env
+	objDefStmt := ast.NewDefObjStmt(asUnivFact.Params, asUnivFact.ParamSets, asUnivFact.DomFacts)
+	err := exec.defObjStmt(objDefStmt, false)
+	if err != nil {
+		exec.appendMsg(fmt.Sprintf("Claim statement error: Failed to declare parameters in universal fact:\n%s\n", objDefStmt.String()))
+		return false, err
+	}
+
+	// exec proof block
+	execState, err := exec.execProofBlock(stmt.Proofs)
+	if err != nil {
+		exec.appendMsg(fmt.Sprintf("Claim statement error: Failed to execute proof block:\n%s\n", stmt.String()))
+		return false, err
+	}
+	if execState != glob.ExecState_True {
+		return false, nil
+	}
+
+	if asUnivFact.IffFacts == nil || len(asUnivFact.IffFacts) == 0 {
+		for _, fact := range asUnivFact.ThenFacts {
+			execState, err := exec.factStmt(fact)
+			if err != nil {
+				exec.appendMsg(fmt.Sprintf("Claim statement error: Failed to execute fact statement:\n%s\n", fact.String()))
+				return false, err
+			}
+			if execState != glob.ExecState_True {
+				return false, nil
+			}
+		}
+		return true, nil
+	} else {
+		isSuccess, err := exec.claimLeftProveRight(asUnivFact.ThenFacts, asUnivFact.IffFacts)
+		if err != nil {
+			exec.appendMsg("Claim statement error: Failed to prove iff facts in universal fact by assuming then facts are true")
+			return false, err
+		}
+		if !isSuccess {
+			return false, nil
+		}
+		isSuccess, err = exec.claimLeftProveRight(asUnivFact.IffFacts, asUnivFact.ThenFacts)
+		if err != nil {
+			exec.appendMsg("Claim statement error: Failed to prove then facts in universal fact by assuming iff facts are true")
+			return false, err
+		}
+		return isSuccess, nil
+	}
+
+}
+
+func (exec *Executor) claimLeftProveRight(leftFacts []ast.FactStmt, rightFacts []ast.FactStmt) (bool, error) {
+	exec.newEnv(exec.env, exec.env.CurMatchProp)
+	defer exec.deleteEnvAndRetainMsg()
+
+	// suppose left are true
+	knowStmt := ast.NewKnowStmt(leftFacts)
+	err := exec.knowStmt(knowStmt)
+	if err != nil {
+		return false, err
+	}
+
+	// prove right are true
+	for _, rightFact := range rightFacts {
+		execState, err := exec.factStmt(rightFact)
+		if err != nil {
+			return false, err
+		}
+		if execState != glob.ExecState_True {
+			return false, nil
+		}
+	}
+
+	return true, nil
 }
