@@ -2132,3 +2132,5 @@ know:
 2. zfc里，说的都是xxx is set，而不是xxx in set。你必须要先是 is set ，才能让其他东西 in 你。litex里为了保持一致性（forall 里面的参数，都是说 xxx in yyySet的，没有is的说法），所以让 is set 用 in set 来代替，即 is set 的语义被 in set 来代替了。is本质上只会出现在 is set 这种类型的表述里，我们只要保证 in set 确实cover住了 is set的功能，同时没有引入问题（因为我没有引入 set is set，或者说 set in set，或者说 in 的右侧参数必须要是 in set的这样的怪异的规则，所以 in set 是没有问题的）。即让 xx in yy 成立有两种方式，1是我 know xxx in  set；另外一种是 know yyy in anotherSet，这里我不会检查你是否 anotherSet in set（当然，我也可以引入语义：如果 know xx in yy 中，yy字面量是 set，那就ok；如果 yy 字面量不是 set，那你必须要是之前已知 yy in set  才行）
 3. 用户自定义的prop，必须要是针对已经定义好了的集合的，即参数列表里的东西的集合的要求 forall v xxx, 必须要是 xxx in（这里in叫is也好，In也好，总之就是必须要有个固定的谓词说明xxx和set这个关键词有关系） set；如果是我内置的，比如in，那不需要
 之所以 内置的 in 不可能有这样的要求，是因为如果对 xxx in yyy 这个语句，yyy必须也要 in set，那会很奇怪：因为 xxx in set 是合理的，所以 set in set 必须成立，但是这又是不被允许的因为会有罗素悖论（这里的in，叫做is，叫其他什么，都无所谓，它只是一个谓词）
+in的内置的语义是，如果右侧的参数字面量是set，那可以对任意xxx做 xxx in set; 如果右侧的东西的字面量不是 set, 那know xxx in yyy 的前提是，yyy in set
+其实集合论的公理里面，很多东西都是不能现有集合的。否则一些东西的定义，比如 union 能作用在所有的集合上（那什么是所有的集合？），那就会导致和 用户推导出来的数学 不一样的地方
