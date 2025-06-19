@@ -2,10 +2,10 @@
 1. 有很多小逻辑需要放到标准库里，比如x>0,y>0则x+y>x这种
 2. 存在性有两种表达，以下面为例
 直接用关键词 exist_prop
-exist_prop n Z st item_equals_order_of_item(s, op, e, inv, x, y):
-    y = order_of_item(s, op, e, inv, x, n)
+exist_prop n Z st item_equals_power_of_item(s, op, e, inv, x, y):
+    y = power_of_item(s, op, e, inv, x, n)
 用某个函数代替：这种形式的函数是唯一的（因为让y = x^n的n不一定唯一的），但是它确实立刻表达了存在性，同时用起来很方便，适合在定义的时候用（因为定义的时候，什么可以）
 fn index_of_y_in_subgroup_generated_by_item(s set, op fn(s, s)s, e s, inv fn(s)s, x s, y subgroup_generated_by_item(s, op, e, inv, x)) Z:
-    y = order_of_item(s, op, e, inv, x, index_of_y_in_subgroup_generated_by_item(s, op, e, inv, x, y))
+    y = power_of_item(s, op, e, inv, x, index_of_y_in_subgroup_generated_by_item(s, op, e, inv, x, y))
 3. C语言以前没有struct，什么东西都是铺开了写；后来用struct来管理，代码更清晰了。Litex现在没有struct，什么东西都是铺开了写；Litex未来会用struct来管理，代码更清晰了。
 """
