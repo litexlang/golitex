@@ -117,7 +117,7 @@ func (tb *tokenBlock) orStmt() (*ast.OrStmt, error) {
 	return ast.NewOrStmt(orFacts), nil
 }
 
-func (tb *tokenBlock) SpecFactOrOrStmt() (ast.LogicOrSpec_Stmt, error) {
+func (tb *tokenBlock) SpecFactOrOrStmt() (ast.OrStmt_SpecStmt, error) {
 	if tb.header.is(glob.KeywordOr) {
 		return tb.orStmt()
 	} else {
@@ -336,19 +336,22 @@ func (tb *tokenBlock) claimStmt() (*ast.ClaimStmt, error) {
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
-	proof := &[]ast.Stmt{}
+	proof := []ast.Stmt{}
 
 	isProve := true
 	if tb.body[1].header.is(glob.KeywordProveByContradiction) {
 		isProve = false
-	} else if !tb.body[1].header.is(glob.KeywordProve) {
+		err := tb.header.skipKwAndColon_ExceedEnd(glob.KeywordProveByContradiction)
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+	} else if tb.body[1].header.is(glob.KeywordProve) {
+		err := tb.header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+	} else {
 		return nil, fmt.Errorf("expect 'prove' or 'prove_by_contradiction'")
-	}
-	tb.body[1].header.skip("")
-
-	err = tb.body[1].header.testAndSkip(glob.KeySymbolColon)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	for _, block := range tb.body[1].body {
@@ -356,10 +359,10 @@ func (tb *tokenBlock) claimStmt() (*ast.ClaimStmt, error) {
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
 		}
-		*proof = append(*proof, curStmt)
+		proof = append(proof, curStmt)
 	}
 
-	return ast.NewClaimProveStmt(isProve, toCheck, *proof), nil
+	return ast.NewClaimProveStmt(isProve, toCheck, proof), nil
 }
 
 func (tb *tokenBlock) knowFactStmt() (*ast.KnowFactStmt, error) {
