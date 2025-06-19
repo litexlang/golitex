@@ -140,33 +140,11 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) error {
 }
 
 func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) (glob.ExecState, error) {
-	isSuccess := false
-	var err error = nil
-
 	if stmt.IsProve {
-		isSuccess, err = exec.claimStmtProve(stmt)
-		if err != nil {
-			return glob.ExecState_Error, err
-		}
+		return exec.claimStmtProve(stmt)
 	} else {
-		isSuccess, err = exec.claimStmtProveByContradiction(stmt)
-		if err != nil {
-			return glob.ExecState_Error, err
-		}
+		return exec.claimStmtProveByContradiction(stmt)
 	}
-
-	if !isSuccess {
-		return glob.ExecState_Unknown, nil
-	}
-
-	if stmt.ToCheckFact != ast.ClaimStmtEmptyToCheck {
-		err = exec.env.NewFact(stmt.ToCheckFact)
-		if err != nil {
-			return glob.ExecState_Error, err
-		}
-	}
-
-	return glob.ExecState_True, nil
 }
 
 func (exec *Executor) GetMsgAsStr0ToEnd() string {
@@ -408,7 +386,7 @@ func (exec *Executor) execProofBlock(proof []ast.Stmt) (glob.ExecState, error) {
 	return glob.ExecState_True, nil
 }
 
-func (exec *Executor) claimStmtProve(stmt *ast.ClaimStmt) (bool, error) {
+func (exec *Executor) claimStmtProve(stmt *ast.ClaimStmt) (glob.ExecState, error) {
 	err := error(nil)
 	isSuccess := false
 
@@ -428,40 +406,43 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimStmt) (bool, error) {
 	if stmt.ToCheckFact != ast.ClaimStmtEmptyToCheck {
 		ok := exec.env.AreAtomsInFactAreDeclared(stmt.ToCheckFact, map[string]struct{}{})
 		if !ok {
-			return false, fmt.Errorf(env.AtomsInFactNotDeclaredMsg(stmt.ToCheckFact))
+			return glob.ExecState_Error, fmt.Errorf(env.AtomsInFactNotDeclaredMsg(stmt.ToCheckFact))
 		}
 	}
 
 	if _, ok := stmt.ToCheckFact.(*ast.UniFactStmt); ok {
 		isSuccess, err = exec.claimStmtProveUniFact(stmt)
 		if err != nil {
-			return false, err
+			return glob.ExecState_Error, err
 		}
-		return isSuccess, nil
+		if !isSuccess {
+			return glob.ExecState_Unknown, nil
+		}
+		return glob.ExecState_True, nil
 	} else {
 		execState, err := exec.execProofBlock(stmt.Proofs)
 		if err != nil {
-			return false, err
+			return glob.ExecState_Error, err
 		}
 		if execState != glob.ExecState_True {
-			return false, nil
+			return glob.ExecState_Unknown, nil
 		}
 		// check claim
 		execState, err = exec.factStmt(stmt.ToCheckFact)
 		if err != nil {
-			return false, err
+			return glob.ExecState_Error, err
 		}
 		if execState != glob.ExecState_True {
-			return false, nil
+			return glob.ExecState_Unknown, nil
 		}
-		return true, nil
+		return glob.ExecState_True, nil
 	}
 }
 
-func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimStmt) (bool, error) {
-	exec.newEnv(exec.env, exec.env.CurMatchProp)
+func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimStmt) (glob.ExecState, error) {
 	isSuccess := false
 
+	exec.newEnv(exec.env, exec.env.CurMatchProp)
 	defer func() {
 		exec.appendMsg("\n")
 		if isSuccess {
@@ -474,48 +455,50 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimStmt) (bool, 
 	}()
 
 	if stmt.ToCheckFact == ast.ClaimStmtEmptyToCheck {
-		return false, fmt.Errorf("prove by contradiction does not support empty check")
+		return glob.ExecState_Error, fmt.Errorf("prove by contradiction does not support empty check")
 	}
 
-	// Must be SpecFactStmt
-	specFactStmt, ok := stmt.ToCheckFact.(*ast.SpecFactStmt)
+	// Must be orStmt or specFactStmt
+	specFactStmt, ok := stmt.ToCheckFact.(ast.OrStmt_SpecStmt)
 	if !ok {
-		return false, fmt.Errorf("prove by contradiction only support spec fact")
+		return glob.ExecState_Error, fmt.Errorf("prove by contradiction only support spec fact")
 	}
 
-	reversedFact := specFactStmt.ReverseTrue()
+	reversedFact := specFactStmt.ReverseIsTrue()
 
-	err := exec.env.NewFact(reversedFact)
-	if err != nil {
-		return false, err
-	}
-
-	for _, curStmt := range stmt.Proofs {
-		execState, err := exec.Stmt(curStmt)
+	for _, curFact := range reversedFact {
+		err := exec.env.NewFact(&curFact)
 		if err != nil {
-			return false, err
+			return glob.ExecState_Error, err
+		}
+	}
+
+	execState, err := exec.execProofBlock(stmt.Proofs)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+	if execState != glob.ExecState_True {
+		return glob.ExecState_Unknown, nil
+	}
+
+	lastStmtAsFact, ok := stmt.Proofs[len(stmt.Proofs)-1].(ast.OrStmt_SpecStmt)
+	if !ok {
+		return glob.ExecState_Error, fmt.Errorf("prove by contradiction only support fact")
+	}
+
+	reversedLastFact := lastStmtAsFact.ReverseIsTrue()
+
+	for _, curFact := range reversedLastFact {
+		execState, err := exec.factStmt(&curFact)
+		if err != nil {
+			return glob.ExecState_Error, err
 		}
 		if execState != glob.ExecState_True {
-			return false, nil
+			return glob.ExecState_Unknown, nil
 		}
 	}
 
-	lastStmtAsFact, ok := stmt.Proofs[len(stmt.Proofs)-1].(*ast.SpecFactStmt)
-	if !ok {
-		return false, fmt.Errorf("prove by contradiction only support fact")
-	}
-
-	reversedLastFact := lastStmtAsFact.ReverseTrue()
-
-	execState, err := exec.factStmt(reversedLastFact)
-	if err != nil {
-		return false, err
-	}
-	if execState == glob.ExecState_True {
-		return true, nil
-	}
-
-	return false, nil
+	return glob.ExecState_True, nil
 }
 
 func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) (glob.ExecState, error) {
