@@ -679,11 +679,6 @@ func (tb *tokenBlock) defExistPropStmtBody() (*ast.DefExistPropStmtBody, error) 
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	// merge nameDepthMap and nameDepthMap2
-	// for key := range existParamDepthMap {
-	// 	nameDepthMap[key] = existParamDepthMap[key]
-	// }
-
 	if !tb.header.is(glob.KeySymbolColon) {
 		return ast.NewExistPropDef(*declHeader, []ast.FactStmt{}, []ast.FactStmt{}), nil
 	}
@@ -696,7 +691,7 @@ func (tb *tokenBlock) defExistPropStmtBody() (*ast.DefExistPropStmtBody, error) 
 	var domFacts []ast.FactStmt
 	var iffFactsAsFactStatements []ast.FactStmt
 
-	domFacts, _, iffFactsAsFactStatements, err = tb.uniFactBodyFacts(UniFactDepth1, glob.KeywordIff)
+	domFacts, iffFactsAsFactStatements, err = tb.domIffBody()
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -1204,15 +1199,10 @@ func (tb *tokenBlock) domIffBody() ([]ast.FactStmt, []ast.FactStmt, error) {
 		} else {
 			return nil, nil, &tokenBlockErr{fmt.Errorf("expect 1 or 2 body facts, but got %d", len(tb.body)), *tb}
 		}
-	} else if tb.body[0].header.is(glob.KeywordIff) {
-		iffFacts, err := tb.parseFactBodyWithHeaderNameAndUniFactDepth(glob.KeywordIff, UniFactDepth1)
-		if err != nil {
-			return nil, nil, &tokenBlockErr{err, *tb}
-		}
-		return domFacts, iffFacts, nil
 	} else {
+		// 如果body下面直接是 iff 那在这里讨论了
 		if tb.body[len(tb.body)-1].header.is(glob.KeywordIff) {
-			for i := 0; i < len(tb.body)-1; i++ {
+			for i := range len(tb.body) - 1 {
 				curStmt, err := tb.body[i].factStmt(UniFactDepth1)
 				if err != nil {
 					return nil, nil, &tokenBlockErr{err, *tb}

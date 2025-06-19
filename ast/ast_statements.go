@@ -18,28 +18,25 @@ type DefObjStmt struct {
 	Objs    []string
 	ObjSets []Fc
 	Facts   []FactStmt
-	// ParamInSetsFacts []FactStmt
 }
 
 type DefHeader struct {
 	Name      string
 	Params    []string
 	SetParams []Fc
-	// ParamInSetsFacts []FactStmt
 }
 
 type DefPropStmt struct {
 	DefHeader DefHeader
-	DomFacts  []FactStmt // 如果输入的参数不满足dom，那就是error
+	DomFacts  []FactStmt
 	IffFacts  []FactStmt
-	// IsCommutative bool
 }
 
+// 虽然它和 defProp 一样，但不排除之后要让iffFacts只能是可逆的事实
 type DefExistPropStmtBody struct {
 	DefHeader DefHeader
 	DomFacts  []FactStmt
-	// 必须是 iff，因为 not exist XXX <=> forall not XXX，而 not XXX 要求 XXX 是 logic_or_spec_stmt
-	IffFacts []FactStmt
+	IffFacts  []FactStmt
 }
 
 // how to  use not exist to prove and store not forall in iff section of exist_prop: define a new exist_prop, give a name to that forall, and make this exist_prop equivalent to original exist_prop. Then use prove_by_contradiction to prove the new exist_prop is also false, then the not forall is proved.
@@ -47,7 +44,6 @@ type DefExistPropStmt struct {
 	DefBody        DefExistPropStmtBody
 	ExistParams    []string
 	ExistParamSets []Fc
-	// ExistInSetsFacts []FactStmt
 }
 
 type DefFnStmt struct {
@@ -63,7 +59,6 @@ type UniFactStmt struct {
 	DomFacts  []FactStmt
 	ThenFacts []FactStmt
 	IffFacts  []FactStmt // TODO: 需要注意到，我存储的所有事实，这一项都是空。未来为了节约空间，可以考虑用新的结构体来存储
-	// ParamInSetsFacts []FactStmt
 }
 
 type SpecFactStmt struct {
