@@ -25,23 +25,23 @@ prop is_subgroup_generated_by_items(s set, op fn(s, s)s, e s, inv fn(s)s, s2 set
             s2 $subset_of s3
 
 # Define order of multiplication of an element in a group
-fn order_of_item(s set, op fn(s, s)s, e s, inv fn(s)s, x s, n Z) s:
-    order_of_item(s, op, e, inv, x, 0) = e
-    order_of_item(s, op, e, inv, x, n + 1) = order_of_item(s, op, e, inv, x, n) \op x
-    order_of_item(s, op, e, inv, x, n - 1) = order_of_item(s, op, e, inv, x, n) \op inv(x)
+fn power_of_item(s set, op fn(s, s)s, e s, inv fn(s)s, x s, n Z) s:
+    power_of_item(s, op, e, inv, x, 0) = e
+    power_of_item(s, op, e, inv, x, n + 1) = power_of_item(s, op, e, inv, x, n) \op x
+    power_of_item(s, op, e, inv, x, n - 1) = power_of_item(s, op, e, inv, x, n) \op inv(x)
 
 # Theorem 7.1
-exist_prop n Z st item_equals_order_of_item(s set, op fn(s, s)s, e s, inv fn(s)s, x s, y s):
-    y = order_of_item(s, op, e, inv, x, n)
+exist_prop n Z st item_equals_power_of_item(s set, op fn(s, s)s, e s, inv fn(s)s, x s, y s):
+    y = power_of_item(s, op, e, inv, x, n)
 
 # {x^n | n in Z}
 fn_set subgroup_generated_by_item(s set, op fn(s, s)s, e s, inv fn(s)s, x s) item s:
-    $item_equals_order_of_item(s, op, e, inv, x, item)
+    $item_equals_power_of_item(s, op, e, inv, x, item)
 
 # Such function is not unique. For example, maybe m != n but x^m = x^n. Here we just pick one of them.
-# I guess with this function, we do not needs exist_prop item_equals_order_of_item.
+# I guess with this function, we do not needs exist_prop item_equals_power_of_item.
 fn index_of_y_in_subgroup_generated_by_item(s set, op fn(s, s)s, e s, inv fn(s)s, x s, y subgroup_generated_by_item(s, op, e, inv, x)) Z:
-    y = order_of_item(s, op, e, inv, x, index_of_y_in_subgroup_generated_by_item(s, op, e, inv, x, y))
+    y = power_of_item(s, op, e, inv, x, index_of_y_in_subgroup_generated_by_item(s, op, e, inv, x, y))
 
 know forall s set, op fn(s, s)s, e s, inv fn(s)s, x s:
     dom:
