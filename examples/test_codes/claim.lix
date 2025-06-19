@@ -32,12 +32,12 @@ know forall x N, y N:
     then:
         x + y > x
 
-exist_prop y N st larger_than_x(x N):
+exist_prop y N st exist_N_larger_than_x(x N):
     y > x
 
 claim:
     forall x N:
-        $larger_than_x(x)
+        $exist_N_larger_than_x(x)
     prove:
         x + 1 > x
-        exist x+1 st $larger_than_x(x)
+        exist x+1 st $exist_N_larger_than_x(x)

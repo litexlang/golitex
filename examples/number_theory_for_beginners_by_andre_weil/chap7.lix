@@ -24,9 +24,45 @@ prop is_subgroup_generated_by_items(s set, op fn(s, s)s, e s, inv fn(s)s, s2 set
         then:
             s2 $subset_of s3
 
-# 缺：判断一个函数在某函数集合里
+# Define order of multiplication of an element in a group
+fn order_of_item(s set, op fn(s, s)s, e s, inv fn(s)s, x s, n Z) s:
+    order_of_item(s, op, e, inv, x, 0) = e
+    order_of_item(s, op, e, inv, x, n + 1) = order_of_item(s, op, e, inv, x, n) \op x
+    order_of_item(s, op, e, inv, x, n - 1) = order_of_item(s, op, e, inv, x, n) \op inv(x)
 
+# Theorem 7.1
+exist_prop n Z st item_equals_order_of_item(s, op, e, inv, x, y):
+    y = order_of_item(s, op, e, inv, x, n)
 
+# {x^n | n in Z}
+fn_set subgroup_generated_by_item(s, op, e, inv, x) item s:
+    $item_equals_order_of_item(s, op, e, inv, x, item)
+
+know forall s set, op fn(s, s)s, e s, inv fn(s)s, x s:
+    dom:
+        $is_group(s, op, e, inv)
+    then:
+        $is_group(subgroup_generated_by_item(s, op, e, inv, x),op, e, inv)
+
+# Definition 7.2
+# Isomorphism of groups
+prop is_bijection(s set, s2 set, f fn(s)s2) :
+    $is_injection(s, s2, f)
+    $is_surjection(s, s2, f)
+
+fn isomorphism_of_groups(s set, op fn(s, s)s, e s, inv fn(s)s, s2 set, op2 fn(s2, s2)s2, e2 s2, inv2 fn(s2)s2) s2:
+    $is_group(s, op, e, inv)
+    $is_group(s2, op2, e2, inv2)
+    $is_bijection(isomorphism_of_groups)
+    forall x s, y s:
+        op2(isomorphism_of_groups(x), isomorphism_of_groups(y)) = isomorphism_of_groups(op(x, y))
+        inv2(isomorphism_of_groups(x)) = isomorphism_of_groups(inv(x))
+        isomorphism_of_groups(e) = e2
+
+# Theorem 7.2
+
+fn map_from_orders_of_item_to_int(s set, op fn(s, s)s, e s, inv fn(s)s, x s, orders_of_x subgroup_generated_by_item(s, op, e, inv, x)) Z:
+    
 
 """
 fn_fn two_items_op_on_subset(s set, op fn(s, s)s, items set):
