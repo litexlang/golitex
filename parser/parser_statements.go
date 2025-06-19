@@ -201,7 +201,7 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	declHeader, err := tb.defHeader()
+	declHeader, err := tb.defHeaderWithoutParsingColonAtEnd()
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -215,7 +215,7 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	domFacts, iffFacts, err := tb.domIffBody()
+	domFacts, iffFacts, err := tb.dom_IffOrThen_Body(glob.KeywordIff)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -246,7 +246,7 @@ func (tb *tokenBlock) defFnStmt() (*ast.DefFnStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	decl, err := tb.defHeader()
+	decl, err := tb.defHeaderWithoutParsingColonAtEnd()
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -448,7 +448,7 @@ func (tb *tokenBlock) relaFactStmt() (*ast.SpecFactStmt, error) {
 	return ret, nil
 }
 
-func (tb *tokenBlock) defHeader() (*ast.DefHeader, error) {
+func (tb *tokenBlock) defHeaderWithoutParsingColonAtEnd() (*ast.DefHeader, error) {
 	name, err := tb.header.next()
 	if err != nil {
 		return nil, err
@@ -674,7 +674,7 @@ func (tb *tokenBlock) bodyBlockFacts(uniFactDepth uniFactEnum, parseBodyFactNum 
 }
 
 func (tb *tokenBlock) defExistPropStmtBody() (*ast.DefExistPropStmtBody, error) {
-	declHeader, err := tb.defHeader()
+	declHeader, err := tb.defHeaderWithoutParsingColonAtEnd()
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -688,10 +688,7 @@ func (tb *tokenBlock) defExistPropStmtBody() (*ast.DefExistPropStmtBody, error) 
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	var domFacts []ast.FactStmt
-	var iffFactsAsFactStatements []ast.FactStmt
-
-	domFacts, iffFactsAsFactStatements, err = tb.domIffBody()
+	domFacts, iffFactsAsFactStatements, err := tb.dom_IffOrThen_Body(glob.KeywordIff)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -1176,32 +1173,33 @@ func (tb *tokenBlock) proveStmt() (*ast.ProveStmt, error) {
 }
 
 // called by exist_prop and prop def
-func (tb *tokenBlock) domIffBody() ([]ast.FactStmt, []ast.FactStmt, error) {
-	domFacts, iffFacts := []ast.FactStmt{}, []ast.FactStmt{}
+func (tb *tokenBlock) dom_IffOrThen_Body(sectionName string) ([]ast.FactStmt, []ast.FactStmt, error) {
+	var err error
+	domFacts, sectionFacts := []ast.FactStmt{}, []ast.FactStmt{}
 	if len(tb.body) == 0 {
-		return domFacts, iffFacts, nil
+		return domFacts, sectionFacts, nil
 	}
 
 	if tb.body[0].header.is(glob.KeywordDom) {
-		domFacts, err := tb.parseFactBodyWithHeaderNameAndUniFactDepth(glob.KeywordDom, UniFactDepth1)
+		domFacts, err = tb.body[0].parseFactBodyWithHeaderNameAndUniFactDepth(glob.KeywordDom, UniFactDepth1)
 		if err != nil {
 			return nil, nil, &tokenBlockErr{err, *tb}
 		}
 
 		if len(tb.body) == 1 {
-			return domFacts, iffFacts, nil
+			return domFacts, sectionFacts, nil
 		} else if len(tb.body) == 2 {
-			iffFacts, err := tb.parseFactBodyWithHeaderNameAndUniFactDepth(glob.KeywordIff, UniFactDepth1)
+			sectionFacts, err = tb.body[1].parseFactBodyWithHeaderNameAndUniFactDepth(sectionName, UniFactDepth1)
 			if err != nil {
 				return nil, nil, &tokenBlockErr{err, *tb}
 			}
-			return domFacts, iffFacts, nil
+			return domFacts, sectionFacts, nil
 		} else {
 			return nil, nil, &tokenBlockErr{fmt.Errorf("expect 1 or 2 body facts, but got %d", len(tb.body)), *tb}
 		}
 	} else {
 		// 如果body下面直接是 iff 那在这里讨论了
-		if tb.body[len(tb.body)-1].header.is(glob.KeywordIff) {
+		if tb.body[len(tb.body)-1].header.is(sectionName) {
 			for i := range len(tb.body) - 1 {
 				curStmt, err := tb.body[i].factStmt(UniFactDepth1)
 				if err != nil {
@@ -1209,20 +1207,20 @@ func (tb *tokenBlock) domIffBody() ([]ast.FactStmt, []ast.FactStmt, error) {
 				}
 				domFacts = append(domFacts, curStmt)
 			}
-			iffFacts, err := tb.body[len(tb.body)-1].parseFactBodyWithHeaderNameAndUniFactDepth(glob.KeywordIff, UniFactDepth1)
+			sectionFacts, err = tb.body[len(tb.body)-1].parseFactBodyWithHeaderNameAndUniFactDepth(sectionName, UniFactDepth1)
 			if err != nil {
 				return nil, nil, &tokenBlockErr{err, *tb}
 			}
-			return domFacts, iffFacts, nil
+			return domFacts, sectionFacts, nil
 		} else {
 			for _, stmt := range tb.body {
 				curStmt, err := stmt.factStmt(UniFactDepth1)
 				if err != nil {
 					return nil, nil, &tokenBlockErr{err, *tb}
 				}
-				iffFacts = append(iffFacts, curStmt)
+				sectionFacts = append(sectionFacts, curStmt)
 			}
-			return domFacts, iffFacts, nil
+			return domFacts, sectionFacts, nil
 		}
 	}
 

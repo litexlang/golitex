@@ -20,7 +20,8 @@ fn computational_sequence(Q set, f fn(Q)Q) fn(Q, N)Q:
 exist_prop n N st exist_end_of_computational_sequence(Q set, x Q, f fn(Q,N)Q):
     f(x, n) = f(x, n+1)
 prop is_algorithm(Q set, I set, f fn(Q)Q):
-    I $subset_of Q
+    forall x Q: # i.e. Q is subset of I
+        f(x) $in I
     iff:
         forall x I:
             $exist_end_of_computational_sequence(Q, x, computational_sequence(Q, f))
