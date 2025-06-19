@@ -369,6 +369,10 @@ _Cross the river by feeling the stones._
 
 _-- Chinese Proverb_
 
+_Quantity changes lead to quality changes._
+
+_-- Hegel_
+
 _Estimated number of users of C++ is 1 in 1979, 16 in 1980, 38 in 1981, 85 in 1982, ..., 150000 in 1990, 400000 in 1991. In other words, the C++ user population doubled every 7.5 months or so._
 
 _-- Bjarne Stroustrup, A History of C++: 1979-1991_
@@ -377,7 +381,11 @@ Litex takes a use-driven, example-first approach to formalization. Instead of bu
 
 Sometimes the new feature covers the functionalities of the old one and the old one is replaced by the new one. This trial-and-error, practice-guided development makes Litex uniquely adaptable and intuitive. Any feature is added with careful test about whether it is as useful and intuitive as possible and whether it is not harmful to the existing features. In most cases, a feature either works as a syntactic sugar which significantly improves the readability and writing experience of the code, or it is a new feature that is necessary for the user to express certain types of logic.
 
-The creator of Litex wishes Litex to grow exponentially, like C++ and other programming languages did. It does not need a glorious beginning, but it needs a strong engine to grow. That is why Litex really needs YOUR help: to use it, to spread the word about it, to contribute to it, to improve it, to make it better.
+Litex is designed to serve users. It is not an academic experiment to design the perfect formal language. It is a practical tool to help users formalize their math, train their AI models, and other tasks. Thus to fulfill its mission, Litex has to grow with its users.
+
+The creator of Litex wishes Litex to obtain adoption exponentially, like C++ and other programming languages did. It does not need a glorious beginning, but it needs a strong engine to grow. Compared with potential number of users of formal languages, all traditional formal languages are tiny. Litex wants to change that.
+
+That is why Litex really needs YOUR help: to use it, to spread the word about it, to contribute to it, to improve it, to make it better.
 
 ## Contact & Contribute to Litex
 
