@@ -72,7 +72,7 @@ func (e *Env) IsAtomDeclared(atom *ast.FcAtom, extraAtomNames map[string]struct{
 	return false
 }
 
-func (e *Env) NonDuplicateParam_NoUndeclaredParamSet(params []string, setParams []ast.Fc) error {
+func (e *Env) NonDuplicateParam_NoUndeclaredParamSet(params []string, setParams []ast.Fc, checkDeclared bool) error {
 	if len(params) != len(setParams) {
 		return fmt.Errorf("number of params and set params are not the same")
 	}
@@ -84,9 +84,11 @@ func (e *Env) NonDuplicateParam_NoUndeclaredParamSet(params []string, setParams 
 		if ok {
 			return fmt.Errorf("parameter %s is declared multiple times", param)
 		}
-		ok = e.AreAtomsInFcAreDeclared(setParams[i], paramSet)
-		if !ok {
-			return fmt.Errorf(AtomsInFcNotDeclaredMsg(setParams[i]))
+		if checkDeclared {
+			ok = e.AreAtomsInFcAreDeclared(setParams[i], paramSet)
+			if !ok {
+				return fmt.Errorf(AtomsInFcNotDeclaredMsg(setParams[i]))
+			}
 		}
 		paramSet[param] = struct{}{} // setParam 不能 包含它自己
 	}
