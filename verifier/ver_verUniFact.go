@@ -34,7 +34,6 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state VerState) (bool,
 	paramMap, paramMapStrToStr, indexes := processUniFactParams(ver.env, oldStmt.Params)
 
 	// 这里要复制一份，因为oldStmt是传入的，不能修改
-	var err error
 	var newStmtPtr *ast.UniFactStmt = oldStmt
 
 	if len(paramMap) == 0 {
@@ -43,16 +42,21 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state VerState) (bool,
 			return false, err
 		}
 	} else {
-		newStmtPtr, err = ast.InstantiateUniFact(oldStmt, paramMap)
+		instantiatedOldStmt, err := ast.InstantiateUniFact(oldStmt, paramMap)
 		if err != nil {
 			return false, err
 		}
 
-		for i, param := range oldStmt.Params {
+		newParams := []string{}
+		for _, param := range oldStmt.Params {
 			if newParam, ok := paramMapStrToStr[param]; ok {
-				newStmtPtr.Params[i] = newParam
+				newParams = append(newParams, newParam)
+			} else {
+				newParams = append(newParams, param)
 			}
 		}
+
+		newStmtPtr = ast.NewUniFact(newParams, instantiatedOldStmt.ParamSets, instantiatedOldStmt.DomFacts, instantiatedOldStmt.ThenFacts, instantiatedOldStmt.IffFacts)
 
 		for i, indexStr := range indexes {
 			err := ver.env.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt([]string{indexStr}, []ast.Fc{newStmtPtr.ParamSets[i]}, []ast.FactStmt{}))
