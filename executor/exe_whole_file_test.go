@@ -23,7 +23,7 @@ import (
 func TestWholeFile(t *testing.T) {
 	start := time.Now()
 	// codePath := "../examples/test_codes/builtin_cmp.lix"
-	codePath := "../examples/common_logic/exist_fn.lix"
+	codePath := "../examples/test_codes/use_obj_to_declare_fn.lix"
 	readFileTime := time.Since(start)
 	start = time.Now()
 	topStmtSlice, err := setupAndParseStmtTest(codePath)

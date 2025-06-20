@@ -1,0 +1,12 @@
+"""
+obj f R
+know f(1) = 1
+f(1) = 1
+
+Error: f is not a declared function
+
+"""
+obj f fn(R)R
+
+forall x R:
+    f(x) = f(x)
