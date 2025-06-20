@@ -82,7 +82,7 @@ func (ver *Verifier) fcSatisfyNotBuiltinFnRequirement(fc ast.Fc, state VerState)
 
 	fnDef, ok := ver.env.IsFnDeclared(fcFnHeadAsAtom)
 	if !ok {
-		return false, fmt.Errorf("function %s is not declared", fcFnHeadAsAtom.String())
+		return false, fmt.Errorf("%s is not a declared function", fcFnHeadAsAtom.String())
 	}
 
 	// fnDef == nil means the function is builtin
