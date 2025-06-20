@@ -74,6 +74,7 @@ func TestFcDot(t *testing.T) {
 		"f(x.y)",
 		"f(x.y).z",
 		"f(x.y).z (a.b)", // 这里不报错，其实是有问题的
+		"f(1.2).z",
 	}
 	fcSlice := []ast.Fc{}
 	for _, code := range sourceCode {

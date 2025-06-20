@@ -253,6 +253,24 @@ See [Applications of Formal Reasoning in AI and Many Other Fields](./doc/applica
 3. Students. Students can use Litex to learn math and formal reasoning. They can use Litex to write their own proofs and verify them. They can use Litex to learn how to write formal proofs.
 
 
+6. What is the similarity and difference between Litex and Prolog?
+
+Prolog might be the programming language that is most similar to Litex. There are still some differences between them.
+
+Similarities:
+
+1. Both of them uses match and substitute to derive new facts from existing facts. They both can express existence and universal quantification.
+
+Differences:
+
+1. Unknown facts are by default false in Prolog, while in Litex, they are by default unknown. This is a very important difference. Since what can not say a claim must be false even if nobody can prove it for the time being, we can not say a claim that is not known to be true must be false.
+
+2. Litex is not a programming language. Prolog is a programming language.
+
+3. Prolog does not have a type system, making it hard to express set theory, which is the foundation of mathematics. This makes translation from natural language to Prolog unimaginably hard. Litex by design has a set system that is very easy to use.
+
+4. Compared to Litex, Prolog is still too complicated and foreign to most people, partly because it is a programming language.
+
 
 
 ##  Examples: Litex for Curious Formal Language Users
