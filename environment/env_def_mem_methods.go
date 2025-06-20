@@ -16,6 +16,7 @@ package litex_env
 
 import (
 	ast "golitex/ast"
+	taskManager "golitex/task_manager"
 )
 
 // Insert DefStmt into DefMem
@@ -38,23 +39,23 @@ func (memory *PropDefMem) insert(stmt *ast.DefPropStmt, pkgName string) error {
 	return nil
 }
 
-func (memory *ObjDefMem) insert(stmt *ast.DefObjStmt, pkgName string) error {
-	pkgMap, pkgExists := memory.Dict[pkgName]
+// func (memory *ObjDefMem) insert(stmt *ast.DefObjStmt, pkgName string) error {
+// 	pkgMap, pkgExists := memory.Dict[pkgName]
 
-	if !pkgExists {
-		memory.Dict[pkgName] = make(map[string]ObjMemItem)
-		pkgMap = memory.Dict[pkgName]
-	}
+// 	if !pkgExists {
+// 		memory.Dict[pkgName] = make(map[string]ObjMemItem)
+// 		pkgMap = memory.Dict[pkgName]
+// 	}
 
-	for _, objName := range stmt.Objs {
-		node, nodeExists := pkgMap[objName]
-		if !nodeExists {
-			node = ObjMemItem{stmt}
-		}
-		pkgMap[objName] = node
-	}
-	return nil
-}
+// 	for _, objName := range stmt.Objs {
+// 		node, nodeExists := pkgMap[objName]
+// 		if !nodeExists {
+// 			node = ObjMemItem{stmt}
+// 		}
+// 		pkgMap[objName] = node
+// 	}
+// 	return nil
+// }
 
 func (memory *FnDefMem) insert(stmt *ast.DefFnStmt, pkgName string) error {
 	pkgMap, pkgExists := memory.Dict[pkgName]
@@ -227,33 +228,20 @@ func (e *Env) getFcAtomDefAtCurEnv(fcAtomName *ast.FcAtom) (ast.DefStmt, bool) {
 	return nil, false
 }
 
-// End of Get DefStmt at current environment
+func (memory *ObjDefMem) insertItem(objName string) error {
+	pkgMap, pkgExists := memory.Dict[taskManager.CurrentPkg]
 
-// func (e *Env) ExeDefObjStmt(stmt *ast.DefObjStmt) error {
-// 	err := e.NewDefObj_InsideAtomsDeclared(stmt)
-// 	if err != nil {
-// 		return err
-// 	}
+	if !pkgExists {
+		memory.Dict[taskManager.CurrentPkg] = make(map[string]ObjMemItem)
+		pkgMap = memory.Dict[taskManager.CurrentPkg]
+	}
 
-// 	for _, fact := range stmt.NewInFacts() {
-// 		if !e.AreAtomsInFactAreDeclared(fact, map[string]struct{}{}) {
-// 			return fmt.Errorf(AtomsInFactNotDeclaredMsg(fact))
-// 		}
-// 		err := e.NewFact(fact)
-// 		if err != nil {
-// 			return err
-// 		}
-// 	}
+	node, nodeExists := pkgMap[objName]
+	if !nodeExists {
+		node = ObjMemItem{nil}
+	}
 
-// 	for _, fact := range stmt.Facts {
-// 		if !e.AreAtomsInFactAreDeclared(fact, map[string]struct{}{}) {
-// 			return fmt.Errorf(AtomsInFactNotDeclaredMsg(fact))
-// 		}
-// 		err := e.NewFact(fact)
-// 		if err != nil {
-// 			return err
-// 		}
-// 	}
+	pkgMap[objName] = node
 
-// 	return nil
-// }
+	return nil
+}
