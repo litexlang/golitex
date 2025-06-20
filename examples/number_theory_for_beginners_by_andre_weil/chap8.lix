@@ -117,6 +117,11 @@ know prop subgroup_of_finite_group_has_order_dividing_order_of_group(s set, op f
 
 fn order_of_item(s set, op fn(s, s)s, e s, inv fn(s)s, x s) N:
     power_of_item(s, op, e, inv, x, order_of_item(s, op, e, inv, x)) = e
+    forall n N:
+        power_of_item(s, op, e, inv, x, n) = e
+        n > 0
+        then:
+            n >= order_of_item(s, op, e, inv, x)
 
 # Corollary 8.5
 know prop x_is_element_of_group_of_order_m_then_x_order_divides_m(s set, op fn(s, s)s, e s, inv fn(s)s, x s):

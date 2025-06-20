@@ -1,0 +1,35 @@
+# Exist function that satisfies some properties.
+exist_prop add fn(R, R)R st exist_opt():
+    iff:
+        forall x R, y R:
+            f(x, y) = x + y
+
+exist + st $exist_opt()
+
+
+
+# Exist and only exist function that satisfies some properties.
+exist_prop add fn(R, R)R st exist_opt2(x R, y R):
+    iff:
+        x + y = x \add y
+
+exist + st $exist_opt2(1, 2)
+
+# Define equal of functions
+# TODO: This Logic should be implemented in the kernel
+prop fn_equal(f fn(R, R)R, g fn(R, R)R):
+    iff:
+        forall x R, y R:
+            f(x, y) = g(x, y)
+
+fn add(x R, y R)R:
+    x + y = x \add y
+
+
+"""
+forall add fn(R, R)R, x R, y R:
+    exist add st $exist_opt2(x, y)
+    then:
+        x + y = x \add y
+        #$fn_equal(+, add)
+"""
