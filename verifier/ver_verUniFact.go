@@ -33,8 +33,9 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state VerState) (bool,
 	// 声明变量
 	paramMap, paramMapStrToStr, indexes := processUniFactParams(ver.env, oldStmt.Params)
 
-	var newStmt *ast.UniFactStmt = oldStmt
+	// 这里要复制一份，因为oldStmt是传入的，不能修改
 	var err error
+	var newStmtPtr *ast.UniFactStmt = oldStmt
 
 	if len(paramMap) == 0 {
 		err := ver.env.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt(oldStmt.Params, oldStmt.ParamSets, []ast.FactStmt{}))
@@ -42,19 +43,19 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state VerState) (bool,
 			return false, err
 		}
 	} else {
-		for i, param := range oldStmt.Params {
-			if newParam, ok := paramMapStrToStr[param]; ok {
-				newStmt.Params[i] = newParam
-			}
-		}
-
-		newStmt, err = ast.InstantiateUniFact(oldStmt, paramMap)
+		newStmtPtr, err = ast.InstantiateUniFact(oldStmt, paramMap)
 		if err != nil {
 			return false, err
 		}
 
+		for i, param := range oldStmt.Params {
+			if newParam, ok := paramMapStrToStr[param]; ok {
+				newStmtPtr.Params[i] = newParam
+			}
+		}
+
 		for i, indexStr := range indexes {
-			err := ver.env.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt([]string{indexStr}, []ast.Fc{newStmt.ParamSets[i]}, []ast.FactStmt{}))
+			err := ver.env.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt([]string{indexStr}, []ast.Fc{newStmtPtr.ParamSets[i]}, []ast.FactStmt{}))
 			if err != nil {
 				return false, err
 			}
@@ -62,7 +63,7 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state VerState) (bool,
 	}
 
 	// 查看param set 是否已经声明
-	for _, paramSet := range newStmt.ParamSets {
+	for _, paramSet := range newStmtPtr.ParamSets {
 		ok := ver.env.AreAtomsInFcAreDeclared(paramSet, map[string]struct{}{})
 		if !ok {
 			return false, fmt.Errorf(env.AtomsInFcNotDeclaredMsg(paramSet))
@@ -70,17 +71,17 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state VerState) (bool,
 	}
 
 	// know cond facts
-	for _, condFact := range newStmt.DomFacts {
+	for _, condFact := range newStmtPtr.DomFacts {
 		err := ver.env.NewFact(condFact)
 		if err != nil {
 			return false, err
 		}
 	}
 
-	if newStmt.IffFacts == nil || len(newStmt.IffFacts) == 0 {
-		return ver.uniFactWithoutIff(newStmt, state)
+	if newStmtPtr.IffFacts == nil || len(newStmtPtr.IffFacts) == 0 {
+		return ver.uniFactWithoutIff(newStmtPtr, state)
 	} else {
-		return ver.uniFactWithIff(newStmt, state)
+		return ver.uniFactWithIff(newStmtPtr, state)
 	}
 }
 
