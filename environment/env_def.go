@@ -32,13 +32,17 @@ func (env *Env) isInvalidName(name string) error {
 		if ok {
 			return duplicateDefMsg(glob.EmptyPkg, name, glob.KeywordObj)
 		}
-		_, ok = curEnv.FnDefMem.Dict[glob.EmptyPkg][name]
-		if ok {
-			return duplicateDefMsg(glob.EmptyPkg, name, glob.KeywordFn)
-		}
+		// _, ok = curEnv.FnDefMem.Dict[glob.EmptyPkg][name]
+		// if ok {
+		// 	return duplicateDefMsg(glob.EmptyPkg, name, glob.KeywordFn)
+		// }
 		_, ok = curEnv.PropDefMem.Dict[glob.EmptyPkg][name]
 		if ok {
 			return duplicateDefMsg(glob.EmptyPkg, name, glob.KeywordProp)
+		}
+		_, ok = curEnv.ExistPropDefMem.Dict[glob.EmptyPkg][name]
+		if ok {
+			return duplicateDefMsg(glob.EmptyPkg, name, glob.KeywordExistProp)
 		}
 	}
 
@@ -56,7 +60,7 @@ func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) error {
 		return err
 	}
 
-	err = env.NonDuplicateParam_NoUndeclaredParamSet(stmt.DefHeader.Params, stmt.DefHeader.SetParams)
+	err = env.NonDuplicateParam_NoUndeclaredParamSet(stmt.DefHeader.Params, stmt.DefHeader.SetParams, true)
 	if err != nil {
 		return err
 	}
@@ -83,7 +87,7 @@ func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) error {
 }
 
 func (env *Env) NewDefObj_InsideAtomsDeclared(stmt *ast.DefObjStmt) error {
-	err := env.NonDuplicateParam_NoUndeclaredParamSet(stmt.Objs, stmt.ObjSets)
+	err := env.NonDuplicateParam_NoUndeclaredParamSet(stmt.Objs, stmt.ObjSets, true)
 	if err != nil {
 		return err
 	}
@@ -145,7 +149,7 @@ func (env *Env) NewDefFn_InsideAtomsDeclared(stmt *ast.DefFnStmt) error {
 		return fmt.Errorf("fn name %s cannot be the same as parameter name %s", stmt.DefHeader.Name, stmt.DefHeader.Name)
 	}
 
-	err := env.NonDuplicateParam_NoUndeclaredParamSet(stmt.DefHeader.Params, stmt.DefHeader.SetParams)
+	err := env.NonDuplicateParam_NoUndeclaredParamSet(stmt.DefHeader.Params, stmt.DefHeader.SetParams, false)
 	if err != nil {
 		return err
 	}
@@ -172,10 +176,10 @@ func (env *Env) NewDefFn_InsideAtomsDeclared(stmt *ast.DefFnStmt) error {
 		}
 	}
 
-	err = env.isInvalidName(stmt.DefHeader.Name)
-	if err != nil {
-		return err
-	}
+	// err = env.isInvalidName(stmt.DefHeader.Name)
+	// if err != nil {
+	// 	return err
+	// }
 
 	err = env.FnDefMem.insert(stmt, glob.EmptyPkg)
 	if err != nil {
@@ -191,7 +195,7 @@ func (env *Env) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) 
 		return fmt.Errorf("prop name %s cannot be the same as parameter name %s", stmt.DefBody.DefHeader.Name, stmt.DefBody.DefHeader.Name)
 	}
 
-	err := env.NonDuplicateParam_NoUndeclaredParamSet(append(stmt.DefBody.DefHeader.Params, stmt.ExistParams...), append(stmt.DefBody.DefHeader.SetParams, stmt.ExistParamSets...))
+	err := env.NonDuplicateParam_NoUndeclaredParamSet(append(stmt.DefBody.DefHeader.Params, stmt.ExistParams...), append(stmt.DefBody.DefHeader.SetParams, stmt.ExistParamSets...), true)
 	if err != nil {
 		return err
 	}
