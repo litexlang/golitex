@@ -2140,3 +2140,12 @@ in的内置的语义是，如果右侧的参数字面量是set，那可以对任
 
 6.20
 1. in 在 右侧的参数是 fn_template 时也要特别处理。单纯 in 这个集合，是很难被用起来的。
+2. 严重问题：fn f(p Z, s F(p)) 如果F对p有要求怎么办？你直接 know s $in F(p) 我是要warning的！
+解决方法，用,,来分割，然后有几个,,来表示有几个分割开来的dom的组合，然后运行顺序是 obj a; properties_of(a); obj b; properties_of(a, b); obj c d; properties_of(a, b, c, d)
+fn f(a,, b,, c, d) ret:
+    dom:
+        properties_of(a)
+    dom:
+        properties_of(a, b)
+    dom:
+        properties_of(a, b, c, d)
