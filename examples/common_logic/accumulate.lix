@@ -12,7 +12,5 @@ fn accumulate(s finite_set, op fn(s, s)s) fn(n N) s:
             then:
                 accumulate(s, op)(n) = accumulate(s, op)(len(s) - 1)
 
-
-
-
-
+fn accumulation_of_finite_set(s finite_set, op fn(s, s)s) s:
+    accumulate(s, op)(len(s) - 1)
