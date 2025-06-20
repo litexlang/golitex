@@ -120,7 +120,23 @@ func (env *Env) NewDefObj_InsideAtomsDeclared(stmt *ast.DefObjStmt) error {
 		}
 	}
 
-	return env.ObjDefMem.insert(stmt, glob.EmptyPkg)
+	err = env.ObjDefMem.insert(stmt, glob.EmptyPkg)
+	if err != nil {
+		return err
+	}
+
+	// 如果这个obj是fn，那么要插入到fn def mem中
+	for i, objName := range stmt.Objs {
+		if ast.IsFnDeclarationFc(stmt.ObjSets[i]) {
+			fnDefStmt := ast.FromFnDeclFcToDefFnStmt(objName, stmt.ObjSets[i])
+			err = env.NewDefFn_InsideAtomsDeclared(fnDefStmt)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func (env *Env) NewDefFn_InsideAtomsDeclared(stmt *ast.DefFnStmt) error {
