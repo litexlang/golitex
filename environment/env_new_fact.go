@@ -90,10 +90,6 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
 		return nil
 	}
 
-	if fact.NameIs(glob.KeywordIn) {
-		return env.storeInFact(fact)
-	}
-
 	// err := env.KnownFacts.SpecFactMem.NewFactInSpecFactMem(fact, env.CurMatchEnv)
 	err := env.storeSpecFactInMem(fact)
 	if err != nil {
@@ -265,6 +261,19 @@ func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 		return err
 	}
 
+	// iff facts
+	iffFacts, err := env.iffFactsInExistStFact(fact)
+	if err != nil {
+		return err
+	}
+
+	for _, iffFact := range iffFacts {
+		err := env.NewFact(iffFact)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -383,71 +392,35 @@ func (env *Env) isMathInductionPropName_StoreIt(fact *ast.SpecFactStmt) (bool, e
 	return true, nil
 }
 
-func (env *Env) storeInFact(fact *ast.SpecFactStmt) error {
-	// if len(fact.Params) != 2 {
-	// 	return fmt.Errorf("in fact expect 2 parameters, get %d in %s", len(fact.Params), fact.String())
-	// }
+func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, error) {
+	sepIndex := fact.Exist_St_SeparatorIndex()
+	if sepIndex == -1 {
+		return nil, fmt.Errorf("%s has no separator", fact.String())
+	}
 
-	// if fact.Params[1].IsAtom() {
-	// 	atom := fact.Params[1].(*ast.FcAtom)
-	// 	switch atom.Name {
-	// 	case glob.KeywordNatural:
-	// 		return env.storeInFact_Natural(fact)
-	// 	case glob.KeywordInt:
-	// 		return env.storeInFact_Int(fact)
-	// 	case glob.KeywordRational:
-	// 		return env.storeInFact_Rational(fact)
-	// 	case glob.KeywordReal:
-	// 		return env.storeInFact_Real(fact)
-	// 	case glob.KeywordComplex:
-	// 		return env.storeInFact_Complex(fact)
-	// 	}
-	// }
+	existPropDef, ok := env.ExistPropDefMem.Get(fact.PropName)
+	if !ok {
+		return nil, fmt.Errorf("exist fact %s has no definition", fact.String())
+	}
 
-	return env.storeSpecFactInMem(fact)
+	uniMap := map[string]ast.Fc{}
+	for i := range sepIndex {
+		uniMap[existPropDef.ExistParams[i]] = fact.Params[i]
+	}
+
+	for i := sepIndex + 1; i < len(fact.Params); i++ {
+		uniMap[existPropDef.DefBody.DefHeader.Params[i-sepIndex-1]] = fact.Params[i]
+	}
+
+	instantiatedIffFacts := []ast.FactStmt{}
+	// instantiate iff facts
+	for _, iffFact := range existPropDef.DefBody.IffFacts {
+		instantiated, err := iffFact.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		instantiatedIffFacts = append(instantiatedIffFacts, instantiated)
+	}
+
+	return instantiatedIffFacts, nil
 }
-
-// func (env *Env) storeInFact_Natural(fact *ast.SpecFactStmt) error {
-// 	err := env.storeSpecFactInMem(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fact.Params[0], ast.NewFcAtomWithName(glob.KeywordNatural)}))
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	return env.storeInFact_Int(fact)
-// }
-
-// func (env *Env) storeInFact_Int(fact *ast.SpecFactStmt) error {
-// 	err := env.storeSpecFactInMem(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fact.Params[0], ast.NewFcAtomWithName(glob.KeywordInt)}))
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	return env.storeInFact_Rational(fact)
-// }
-
-// func (env *Env) storeInFact_Rational(fact *ast.SpecFactStmt) error {
-// 	err := env.storeSpecFactInMem(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fact.Params[0], ast.NewFcAtomWithName(glob.KeywordRational)}))
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	return env.storeInFact_Real(fact)
-// }
-
-// func (env *Env) storeInFact_Real(fact *ast.SpecFactStmt) error {
-// 	err := env.storeSpecFactInMem(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fact.Params[0], ast.NewFcAtomWithName(glob.KeywordReal)}))
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	return env.storeInFact_Complex(fact)
-// }
-
-// func (env *Env) storeInFact_Complex(fact *ast.SpecFactStmt) error {
-// 	err := env.storeSpecFactInMem(ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fact.Params[0], ast.NewFcAtomWithName(glob.KeywordComplex)}))
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	return nil
-// }

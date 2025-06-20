@@ -16,8 +16,17 @@ prop fn_equal(f fn(R, R)R, g fn(R, R)R):
 fn add(x R, y R)R:
     x + y = x \add y
 
+fn add2(x R, y R)R
+
+know exist add2 st $exist_opt()
+
+forall x R, y R:
+    x + y = x \add2 y
+
+"""
 forall add fn(R, R)R, x R, y R:
     exist add st $exist_opt2(x, y)
     then:
         x + y = x \add y
         #$fn_equal(+, add)
+"""
