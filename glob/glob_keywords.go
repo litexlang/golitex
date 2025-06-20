@@ -53,6 +53,7 @@ const (
 	KeywordProveOr              = "prove_or"
 	KeywordSuppose              = "suppose"
 	KeywordWith                 = "with"
+	KeywordAs                   = "as" // as a fn_template
 
 	KeywordFnSet                  = "fn_set" // Syntax sugar for fn setName(params paramsSet)  = {z z_set_name(params) | properties(z, params)}
 	KeywordLen                    = "len"
@@ -90,21 +91,21 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordExist:                {},
 	KeywordCommutativeProp:      {},
 	// KeywordCommutativeFn:        {},
-	KeywordAssociativeFn:        {},
-	KeywordAnd:                  {},
-	KeywordOr:                   {},
-	KeywordNatural:              {},
-	KeywordInt:                  {},
-	KeywordRational:             {},
-	KeywordReal:                 {},
-	KeywordIn:                   {},
-	KeywordProveByMathInduction: {},
-	KeywordProveOr:              {},
-	KeywordSuppose:              {},
-	KeywordWith:                 {},
-	KeywordComplex:              {},
-	KeywordImaginary:            {},
-
+	KeywordAssociativeFn:          {},
+	KeywordAnd:                    {},
+	KeywordOr:                     {},
+	KeywordNatural:                {},
+	KeywordInt:                    {},
+	KeywordRational:               {},
+	KeywordReal:                   {},
+	KeywordIn:                     {},
+	KeywordProveByMathInduction:   {},
+	KeywordProveOr:                {},
+	KeywordSuppose:                {},
+	KeywordWith:                   {},
+	KeywordComplex:                {},
+	KeywordImaginary:              {},
+	KeywordAs:                     {},
 	KeywordFnSet:                  {},
 	KeywordLen:                    {},
 	KeywordIndexableSet:           {},
