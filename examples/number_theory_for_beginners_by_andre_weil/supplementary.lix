@@ -1,0 +1,40 @@
+"""
+Supplementary
+"""
+
+# Define polynomial of Fp
+
+# fn_template. Any fn_set is $in set
+fn_set Fp_polynomial(p Z) fn(x cc_mod(p)) item cc_mod(p):
+    dom:
+        p $is_prime
+
+fn Fp_polynomial_parameters(p Z, f Fp_polynomial(p)) finite_set:
+    dom:
+        p $is_prime
+    then:
+        forall x Fp_polynomial_parameters(p, f):
+            x $in cc_mod(p)
+
+know forall p Z:
+    p $is_prime
+    then:
+        forall x cc_mod(p):
+            Fp_polynomial(p)(x) = accumulation_of_finite_set(Fp_polynomial_parameters(p, Fp_polynomial(p)), Fp_add(p))(x)
+
+fn degree_of_Fp_polynomial(p Z, f Fp_polynomial(p)) N:
+    dom:
+        p $is_prime
+    then:
+        len(Fp_polynomial_parameters(p, f)) - 1 = degree_of_Fp_polynomial(p, f)
+
+know exist_prop Q Fp_polynomial(p) st there_is_a_unique_Fp_polynomial_with_A_minus_BQ_is_0_or_order_smaller_than_degree_of_B(p Z, A Fp_polynomial(p), B Fp_polynomial(p)):
+    dom:
+        p $is_prime
+        B $is_not_0
+    iff:
+        or:
+            # 这里 Fp_mul 和 Fp_minus作用在了返回值是 cc_mod(p)的函数上，和Fp_mul的正常作用域不一样了。内核应该推理出来这里的真实的意思是返回值是 cc_mod(p)的函数
+            degree_of_Fp_polynomial(p, A \Fp_minus(p) Fp_mul(B, Q)) < degree_of_Fp_polynomial(p, B)
+            not A \Fp_minus(p) Fp_mul(B, Q) $is_not_0
+
