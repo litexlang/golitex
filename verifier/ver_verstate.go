@@ -35,6 +35,14 @@ func (e VerState) requireMsg() bool {
 	}
 }
 
+func (e VerState) isRound0() bool {
+	if e == Round0Msg || e == Round0NoMsg {
+		return true
+	} else {
+		return false
+	}
+}
+
 func (e VerState) isFinalRound() bool {
 	if e == FinalRoundMsg || e == FinalRoundNoMsg {
 		return true

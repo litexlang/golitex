@@ -33,7 +33,6 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state VerState) (bool,
 	// 声明变量
 	paramMap, paramMapStrToStr, indexes := processUniFactParams(ver.env, oldStmt.Params)
 
-	// 这里要复制一份，因为oldStmt是传入的，不能修改
 	var newStmtPtr *ast.UniFactStmt = oldStmt
 
 	if len(paramMap) == 0 {

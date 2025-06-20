@@ -278,7 +278,7 @@ func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 }
 
 func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, error) {
-	existPropDef, ok := env.ExistPropDefMem.Get(fact.PropName)
+	existPropDef, ok := env.GetExistPropDef(fact.PropName)
 	if !ok {
 		return nil, fmt.Errorf("exist fact %s has no definition", fact.String())
 	}
@@ -398,7 +398,7 @@ func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, e
 		return nil, fmt.Errorf("%s has no separator", fact.String())
 	}
 
-	existPropDef, ok := env.ExistPropDefMem.Get(fact.PropName)
+	existPropDef, ok := env.GetExistPropDef(fact.PropName)
 	if !ok {
 		return nil, fmt.Errorf("exist fact %s has no definition", fact.String())
 	}
