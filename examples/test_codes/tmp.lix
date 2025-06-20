@@ -1,13 +1,6 @@
-prop p(x R)
-
-know forall x R:
-    $p(x)
-
-fn f(x R)R
-
-forall:
-    forall x R:
-        f(x) = x
+forall add3 fn(R, R)R:
+    forall x R, y R:
+        add3(x, y) = x + y
     then:
-        forall x R:
-            f(x) = x
+        forall x R, y R:
+            add3(x, y) = x + y
