@@ -108,7 +108,20 @@ func (cursor *strSliceCursor) fcAtomAndFcFn() (ast.Fc, error) {
 		if err != nil {
 			return nil, &strSliceErr{err, cursor}
 		}
-		return cursor.consumeBracedFc(fcStr)
+		ret, err := cursor.consumeBracedFc(fcStr)
+		if err != nil {
+			return nil, &strSliceErr{err, cursor}
+		}
+		// dot
+		if cursor.is(glob.KeySymbolDot) {
+			cursor.skip(glob.KeySymbolDot)
+			dotFc, err := cursor.rawFcAtom()
+			if err != nil {
+				return nil, &strSliceErr{err, cursor}
+			}
+			ret = ast.NewFcFn(ast.NewFcAtomWithName(glob.KeySymbolDot), []ast.Fc{ret, dotFc})
+		}
+		return ret, nil
 	}
 }
 
@@ -173,7 +186,7 @@ func (cursor *strSliceCursor) rawFcAtom() (*ast.FcAtom, error) {
 }
 
 func (cursor *strSliceCursor) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence) (ast.Fc, error) {
-	left, err := cursor.fcPrimaryExpr()
+	left, err := cursor.unaryOptFc()
 	if err != nil {
 		return nil, err
 	}
@@ -228,13 +241,13 @@ func (cursor *strSliceCursor) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence)
 	return left, nil
 }
 
-func (cursor *strSliceCursor) fcPrimaryExpr() (ast.Fc, error) {
-	if cursor.ExceedEnd() {
-		return nil, fmt.Errorf("unexpected end of input, expected expression")
-	}
+// func (cursor *strSliceCursor) fcPrimaryExpr() (ast.Fc, error) {
+// 	if cursor.ExceedEnd() {
+// 		return nil, fmt.Errorf("unexpected end of input, expected expression")
+// 	}
 
-	return cursor.unaryOptFc()
-}
+// 	return cursor.unaryOptFc()
+// }
 
 func (cursor *strSliceCursor) unaryOptFc() (ast.Fc, error) {
 	unaryOp, err := cursor.currentToken()
@@ -247,7 +260,7 @@ func (cursor *strSliceCursor) unaryOptFc() (ast.Fc, error) {
 	} else {
 		cursor.skip(unaryOp)
 
-		right, err := cursor.fcPrimaryExpr()
+		right, err := cursor.unaryOptFc()
 		if err != nil {
 			return nil, err
 		}
