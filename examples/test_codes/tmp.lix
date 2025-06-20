@@ -1,0 +1,13 @@
+prop p(x R)
+
+know forall x R:
+    $p(x)
+
+fn f(x R)R
+
+forall:
+    forall x R:
+        f(x) = x
+    then:
+        forall x R:
+            f(x) = x
