@@ -32,10 +32,10 @@ func (env *Env) isInvalidName(name string) error {
 		if ok {
 			return duplicateDefMsg(glob.EmptyPkg, name, glob.KeywordObj)
 		}
-		// _, ok = curEnv.FnDefMem.Dict[glob.EmptyPkg][name]
-		// if ok {
-		// 	return duplicateDefMsg(glob.EmptyPkg, name, glob.KeywordFn)
-		// }
+		_, ok = curEnv.FnDefMem.Dict[glob.EmptyPkg][name]
+		if ok {
+			return duplicateDefMsg(glob.EmptyPkg, name, glob.KeywordFn)
+		}
 		_, ok = curEnv.PropDefMem.Dict[glob.EmptyPkg][name]
 		if ok {
 			return duplicateDefMsg(glob.EmptyPkg, name, glob.KeywordProp)
@@ -48,6 +48,24 @@ func (env *Env) isInvalidName(name string) error {
 
 	return nil
 }
+
+// func (env *Env) isDeclaredFn_Prop_ExistProp(name string) bool {
+// 	for curEnv := env; curEnv != nil; curEnv = curEnv.Parent {
+// 		_, ok := curEnv.FnDefMem.Dict[glob.EmptyPkg][name]
+// 		if ok {
+// 			return true
+// 		}
+// 		_, ok = curEnv.PropDefMem.Dict[glob.EmptyPkg][name]
+// 		if ok {
+// 			return true
+// 		}
+// 		_, ok = curEnv.ExistPropDefMem.Dict[glob.EmptyPkg][name]
+// 		if ok {
+// 			return true
+// 		}
+// 	}
+// 	return false
+// }
 
 func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) error {
 	// prop名不能和parameter名重叠
@@ -124,16 +142,16 @@ func (env *Env) NewDefObj_InsideAtomsDeclared(stmt *ast.DefObjStmt) error {
 		}
 	}
 
-	err = env.ObjDefMem.insert(stmt, glob.EmptyPkg)
-	if err != nil {
-		return err
-	}
-
 	// 如果这个obj是fn，那么要插入到fn def mem中
 	for i, objName := range stmt.Objs {
 		if ast.IsFnDeclarationFc(stmt.ObjSets[i]) {
 			fnDefStmt := ast.FromFnDeclFcToDefFnStmt(objName, stmt.ObjSets[i])
 			err = env.NewDefFn_InsideAtomsDeclared(fnDefStmt)
+			if err != nil {
+				return err
+			}
+		} else {
+			err = env.ObjDefMem.insertItem(objName)
 			if err != nil {
 				return err
 			}
@@ -176,10 +194,11 @@ func (env *Env) NewDefFn_InsideAtomsDeclared(stmt *ast.DefFnStmt) error {
 		}
 	}
 
-	// err = env.isInvalidName(stmt.DefHeader.Name)
-	// if err != nil {
-	// 	return err
-	// }
+	// TODO: WARNING: 这里有严重问题。因为貌似同一个fn可以implement很多的fn_template，所以即使之前知道它怎么样，我也不能说明什么问题
+	err = env.isInvalidName(stmt.DefHeader.Name)
+	if err != nil {
+		return err
+	}
 
 	err = env.FnDefMem.insert(stmt, glob.EmptyPkg)
 	if err != nil {
