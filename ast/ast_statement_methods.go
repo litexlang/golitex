@@ -282,3 +282,49 @@ func (stmt *OrStmt) GetAtoms() []*FcAtom {
 	}
 	return atoms
 }
+
+func IsFnDeclarationFc(fc Fc) bool {
+	fcAsFn, ok := fc.(*FcFn)
+	if !ok {
+		return false
+	}
+
+	fcAsFnHeadAsFn, ok := fcAsFn.FnHead.(*FcFn)
+	if !ok {
+		return false
+	}
+
+	return isFcAtomWithName(fcAsFnHeadAsFn.FnHead, glob.KeywordFn)
+}
+
+func GetFnDeclarationFcInsideItems(fc Fc) ([]Fc, Fc) {
+	fcAsFn, ok := fc.(*FcFn)
+	if !ok {
+		return nil, nil
+	}
+
+	fcAsFnHeadAsFn, ok := fcAsFn.FnHead.(*FcFn)
+	if !ok {
+		return nil, nil
+	}
+
+	paramSets := []Fc{}
+	paramSets = append(paramSets, fcAsFnHeadAsFn.ParamSegs...)
+
+	return paramSets, fcAsFn.ParamSegs[0]
+}
+
+func FromFnDeclFcToDefFnStmt(name string, fc Fc) *DefFnStmt {
+	paramSets, retSet := GetFnDeclarationFcInsideItems(fc)
+
+	params := []string{}
+
+	for range len(paramSets) {
+		randomStr := glob.RandomString(4)
+		params = append(params, randomStr)
+	}
+
+	fnDefStmt := NewDefFnStmt(*NewDefHeader(name, params, paramSets), []FactStmt{}, []FactStmt{}, retSet)
+
+	return fnDefStmt
+}
