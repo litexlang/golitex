@@ -53,7 +53,7 @@ const (
 	KeywordProveOr              = "prove_or"
 	KeywordSuppose              = "suppose"
 	KeywordWith                 = "with"
-	KeywordAs                   = "as" // as a fn_template
+	KeywordAs                   = "as" // as a fn_template。这非常难以实现，尤其是出现 fn 理论上作用在M上，现在是作用在返回值是M的函数上时做推理，非常困难，需要最后实现而不是现在
 
 	KeywordFnSet                  = "fn_set" // Syntax sugar for fn setName(params paramsSet)  = {z z_set_name(params) | properties(z, params)}
 	KeywordLen                    = "len"

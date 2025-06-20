@@ -2,23 +2,5 @@
 Chapter 9
 """
 
-# Define polynomial of Fp
-
-# fn_template. Any fn_set is $in set
-fn_set Fp_polynomial(p Z) fn(x cc_mod(p)) item cc_mod(p):
-    dom:
-        p $is_prime
-
-fn Fp_polynomial_parameters(p Z, f Fp_polynomial(p)) finite_set:
-    dom:
-        p $is_prime
-    then:
-        forall x Fp_polynomial_parameters(p, f):
-            x $in cc_mod(p)
-
-know forall p Z:
-    p $is_prime
-    then:
-        forall x cc_mod(p):
-            Fp_polynomial(p)(x) = accumulation_of_finite_set(Fp_polynomial_parameters(p, Fp_polynomial(p)), Fp_add)(x)
-
+# Define polynomial on a field
+fn_set K_polynomial(K field) fn(x K) item K:
