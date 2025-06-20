@@ -27,3 +27,34 @@ know exist_prop Q K_polynomial(K) st there_is_a_unique_K_polynomial_with_A_minus
         or:
             degree_of_K_polynomial(K, A \K_minus(K) K_mul(B, Q)) < degree_of_K_polynomial(K, B)
             not degree_of_K_polynomial(K, A \K_minus(K) K_mul(B, Q)) $is_0_K_polynomial(K)
+
+// 多项式的余数
+fn K_polynomial_remainder(K field, A K_polynomial(K), B K_polynomial(K)) K_polynomial(K):
+    dom:
+        not $is_0_K_polynomial(K, B)
+    then:
+        A \K_minus(K) K_mul(B, Q) = K_polynomial_remainder(K, A, B)
+
+prop is_non_empty_set_of_K_polynomial_closed_under_K_add(K field, s finite_set):
+    forall k s:
+        k $in K_polynomial(K)
+    forall f g s:
+        f \k.add g $in K_polynomial(K)
+
+# 这里D是生成元，s是生成元生成的集合
+exist_prop D K_polynomial(K) st exist_d_generate_non_empty_set_of_K_polynomial(K field, s finite_set):
+	dom:
+        $is_non_empty_set_of_K_polynomial_closed_under_K_add(K, s)
+    iff:
+
+fn K_polynomial_0(K field) K_polynomial(K):
+    forall x K:
+        K_polynomial_0(K)(x) = K.e
+    	
+prop generate_non_empty_set_of_K_polynomial(K field, s finite_set, D K_polynomial(K)):
+	dom:
+		$is_non_empty_set_of_K_polynomial_closed_under_K_add(K, s)
+	then:
+    	forall x s:
+            K_polynomial_remainder(K, x, D) = K_polynomial_0(K)
+
