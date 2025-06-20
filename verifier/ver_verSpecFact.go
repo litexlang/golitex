@@ -243,22 +243,21 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 		domFacts = append(domFacts, fixed)
 	}
 
-	thenFacts := []*ast.SpecFactStmt{}
-	for _, thenFact := range propDef.DefBody.IffFacts {
-		fixed, err := thenFact.Instantiate(uniConMap)
+	// iffFacts := []*ast.SpecFactStmt{}
+	iffFacts := []ast.FactStmt{}
+	for _, iffFact := range propDef.DefBody.IffFacts {
+		fixed, err := iffFact.Instantiate(uniConMap)
 		if err != nil {
 			return false, err
 		}
-		fixedAsSpecFact, ok := fixed.(*ast.SpecFactStmt)
-		if !ok {
-			return false, nil
-			// 还是有可能then里不是 specFact的，比如定义可惜收敛；这时候我不报错，我只是让你不能证明 not exist。通常这种时候用法也都是 exist，用不着考虑not exist。你非要考虑not exist,那就用 not exist 来表示 forall，即给forall取个名字
-			// return false, fmt.Errorf("instantiate spec fact stmt failed")
-		}
-		if !stmt.IsTrue() {
-			fixedAsSpecFact = fixedAsSpecFact.ReverseTrue()
-		}
-		thenFacts = append(thenFacts, fixedAsSpecFact)
+		iffFacts = append(iffFacts, fixed)
+		// fixedAsSpecFact, ok := fixed.(*ast.SpecFactStmt)
+		// if !ok {
+		// }
+		// if !stmt.IsTrue() {
+		// 	fixedAsSpecFact = fixedAsSpecFact.ReverseTrue()
+		// }
+		// iffFacts = append(iffFacts, fixedAsSpecFact)
 	}
 
 	for _, domFact := range domFacts {
@@ -275,8 +274,8 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 		}
 	}
 
-	for _, thenFact := range thenFacts {
-		ok, err := ver.VerFactStmt(thenFact, state)
+	for _, iffFact := range iffFacts {
+		ok, err := ver.VerFactStmt(iffFact, state)
 		if err != nil {
 			return false, err
 		}
@@ -286,7 +285,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 	}
 
 	if state.requireMsg() {
-		ver.successMsgEnd(stmt.String(), "")
+		ver.successMsgEnd(stmt.String(), "by definition")
 	}
 
 	return true, nil
