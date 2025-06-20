@@ -46,6 +46,7 @@ type DefExistPropStmt struct {
 	ExistParamSets []Fc
 }
 
+// 这里 fn(p Z, F(p) set) 其实有点问题，因为F可能需要对p有一些要求，这些要求是写在dom里的，需要先运行dom然后才能运行
 type DefFnStmt struct {
 	DefHeader DefHeader
 	DomFacts  []FactStmt

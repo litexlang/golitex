@@ -1,0 +1,3 @@
+If something is a group, then we can use G to represent the group, G.e to represent the zero of the group, G.m to represent the multiplication of the group, G.i to represent the inverse of the group, using the struct keyword in Litex: struct GroupStruct {G set, e G, m fn(G, G)G, i fn(G)G}
+
+However
