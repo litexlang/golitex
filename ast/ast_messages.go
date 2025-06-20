@@ -422,6 +422,10 @@ func (f *FcFn) String() string {
 		return fnSetString(f)
 	}
 
+	if IsFcAtomWithNameAndEmptyPkg(f.FnHead, glob.KeySymbolDot) {
+		return fmt.Sprintf("%s.%s", f.ParamSegs[0].String(), f.ParamSegs[1].String())
+	}
+
 	if ok, str := hasBuiltinOptAndToString(f); ok {
 		return str
 	}
