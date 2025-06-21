@@ -125,7 +125,18 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) error {
 	defer exec.appendMsg("\n")
 
 	for _, fact := range stmt.Facts {
-		if !exec.env.AreAtomsInFactAreDeclared(fact, map[string]struct{}{}) {
+		extraAtoms := map[string]struct{}{}
+		if asUniFact, ok := fact.(*ast.UniFactStmt); ok {
+			for _, param := range asUniFact.Params {
+				extraAtoms[param] = struct{}{}
+			}
+		} else if asUniFactWithIff, ok := fact.(*ast.UniFactWithIffStmt); ok {
+			for _, param := range asUniFactWithIff.UniFact.Params {
+				extraAtoms[param] = struct{}{}
+			}
+		}
+
+		if !exec.env.AreAtomsInFactAreDeclared(fact, extraAtoms) {
 			return fmt.Errorf(env.AtomsInFactNotDeclaredMsg(fact))
 		}
 
