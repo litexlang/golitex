@@ -169,7 +169,7 @@ func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecSta
 }
 
 func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) (glob.ExecState, error) {
-	state, err := exec.claimStmtProveByContradiction(&stmt.Claim)
+	state, err := exec.claimStmtProveByContradiction(stmt)
 	if notOkExec(state, err) {
 		return state, err
 	}
@@ -451,7 +451,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecState, 
 	}
 }
 
-func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveStmt) (glob.ExecState, error) {
+func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) (glob.ExecState, error) {
 	isSuccess := false
 
 	exec.newEnv(exec.env, exec.env.CurMatchProp)
@@ -462,16 +462,16 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveStmt) (g
 		} else {
 			exec.appendNewMsgAtBegin("is unknown\n")
 		}
-		exec.appendNewMsgAtBegin(stmt.String())
+		exec.appendNewMsgAtBegin(stmt.Claim.String())
 		exec.deleteEnvAndRetainMsg()
 	}()
 
-	if stmt.ToCheckFact == ast.ClaimStmtEmptyToCheck {
+	if stmt.Claim.ToCheckFact == ast.ClaimStmtEmptyToCheck {
 		return glob.ExecState_Error, fmt.Errorf("prove by contradiction does not support empty check")
 	}
 
 	// Must be orStmt or specFactStmt
-	specFactStmt, ok := stmt.ToCheckFact.(ast.OrStmt_SpecStmt)
+	specFactStmt, ok := stmt.Claim.ToCheckFact.(ast.OrStmt_SpecStmt)
 	if !ok {
 		return glob.ExecState_Error, fmt.Errorf("prove by contradiction only support spec fact")
 	}
@@ -485,12 +485,12 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveStmt) (g
 		}
 	}
 
-	execState, err := exec.execProofBlock(stmt.Proofs)
+	execState, err := exec.execProofBlock(stmt.Claim.Proofs)
 	if notOkExec(execState, err) {
 		return execState, err
 	}
 
-	lastStmtAsFact, ok := stmt.Proofs[len(stmt.Proofs)-1].(ast.OrStmt_SpecStmt)
+	lastStmtAsFact, ok := stmt.Claim.Proofs[len(stmt.Claim.Proofs)-1].(ast.OrStmt_SpecStmt)
 	if !ok {
 		return glob.ExecState_Error, fmt.Errorf("prove by contradiction only support fact")
 	}
@@ -699,46 +699,5 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 		}
 	}
 	return true, nil
-	// } else {
-	// 	isSuccess, err := exec.claimLeftProveRight(asUnivFact.ThenFacts, asUnivFact.IffFacts)
-	// 	if err != nil {
-	// 		exec.appendMsg("Claim statement error: Failed to prove iff facts in universal fact by assuming then facts are true")
-	// 		return false, err
-	// 	}
-	// 	if !isSuccess {
-	// 		return false, nil
-	// 	}
-	// 	isSuccess, err = exec.claimLeftProveRight(asUnivFact.IffFacts, asUnivFact.ThenFacts)
-	// 	if err != nil {
-	// 		exec.appendMsg("Claim statement error: Failed to prove then facts in universal fact by assuming iff facts are true")
-	// 		return false, err
-	// 	}
-	// 	return isSuccess, nil
-	// }
 
 }
-
-// func (exec *Executor) claimLeftProveRight(leftFacts []ast.FactStmt, rightFacts []ast.FactStmt) (bool, error) {
-// 	exec.newEnv(exec.env, exec.env.CurMatchProp)
-// 	defer exec.deleteEnvAndRetainMsg()
-
-// 	// suppose left are true
-// 	knowStmt := ast.NewKnowStmt(leftFacts)
-// 	err := exec.knowStmt(knowStmt)
-// 	if err != nil {
-// 		return false, err
-// 	}
-
-// 	// prove right are true
-// 	for _, rightFact := range rightFacts {
-// 		execState, err := exec.factStmt(rightFact)
-// 		if err != nil {
-// 			return false, err
-// 		}
-// 		if execState != glob.ExecState_True {
-// 			return false, nil
-// 		}
-// 	}
-
-// 	return true, nil
-// }

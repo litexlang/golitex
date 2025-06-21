@@ -26,3 +26,29 @@ claim:
     prove:
         exist x + 1 st $exist_x_larger_than(x)
 
+obj x R:
+    1 >= x
+
+know forall x R, y R:
+    not x < y
+    iff:
+        x >= y
+
+know forall x R, y R:
+    x > y
+    then:
+        not y >= x
+
+know prop larger_equal_is_transitive(x R, y R, z R):
+    x >= y
+    y > z
+    iff:
+        x > z
+
+claim:
+    x < 2
+    prove_by_contradiction:
+        x >= 2
+        $larger_equal_is_transitive(x, 2, 1)
+        x > 1
+        not 1 >= x
