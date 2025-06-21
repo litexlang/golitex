@@ -1,8 +1,0 @@
-forall x A:
-    forall y B:
-        $p(x, y)
-    then:
-        forall z C:
-            $p(x, z)
-
-
