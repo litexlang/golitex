@@ -326,7 +326,7 @@ func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 	return ast.NewDefObjStmt(objNames, objSets, facts), nil
 }
 
-func (tb *tokenBlock) claimStmt() (*ast.ClaimStmt, error) {
+func (tb *tokenBlock) claimStmt() (ast.ClaimInterface, error) {
 	err := tb.header.skip(glob.KeywordClaim)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
@@ -367,7 +367,11 @@ func (tb *tokenBlock) claimStmt() (*ast.ClaimStmt, error) {
 		proof = append(proof, curStmt)
 	}
 
-	return ast.NewClaimProveStmt(isProve, toCheck, proof), nil
+	if isProve {
+		return ast.NewClaimStmt(toCheck, proof), nil
+	} else {
+		return ast.NewClaimProveByContradictionStmt(*ast.NewClaimStmt(toCheck, proof)), nil
+	}
 }
 
 func (tb *tokenBlock) knowFactStmt() (*ast.KnowFactStmt, error) {
