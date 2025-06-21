@@ -57,7 +57,7 @@ func (e *Env) AreAtomsDeclared(atoms []*ast.FcAtom, extraAtomNames map[string]st
 
 func (e *Env) IsAtomDeclared(atom *ast.FcAtom, extraAtomNames map[string]struct{}) bool {
 	// 如果是内置的符号，那就声明了
-	if glob.IsKeySymbol(atom.Name) {
+	if glob.IsBuiltinKeywordKeySymbolCanBeFcAtomName(atom.Name) {
 		return true
 	}
 

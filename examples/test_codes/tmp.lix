@@ -1,7 +1,2 @@
-obj s set
-
-know forall x s:
-    x = 1
-
-forall x s:
-    x = 1
+1 + 2 =3
+obj s ;
