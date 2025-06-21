@@ -102,12 +102,11 @@ func RunFilesInRepo(repo string) error {
 		if err != nil || signal != glob.SysSignalTrue {
 			fmt.Println(msg)
 			fmt.Println("Error executing code:", err)
-			fmt.Println("Error in file:", file.Name())
-			return fmt.Errorf("error executing code: %v", err)
+			return fmt.Errorf("error in file: %s", file.Name())
 		}
 	}
 	elapsed := time.Since(startTime)
-	fmt.Println("All codes executed successfully")
+	fmt.Printf("All files in %s executed successfully\n", repo)
 	fmt.Println("Time taken:", elapsed)
 
 	return nil
