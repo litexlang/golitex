@@ -228,7 +228,8 @@ func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt, requireMsg bool) error {
 		defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
 	}
 
-	return exec.env.NewDefObj_InsideAtomsDeclared(stmt)
+	ver := verifier.NewVerifier(exec.env)
+	return ver.NewDefObj_InsideAtomsDeclared(stmt)
 }
 
 func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
@@ -323,9 +324,11 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 		return glob.ExecState_Error, err
 	}
 
+	ver := verifier.NewVerifier(exec.env)
+
 	// 把 obj 放入环境
 	for i, objName := range stmt.ObjNames {
-		err := exec.env.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt([]string{objName}, []ast.Fc{instantiatedExistPropDefStmt.ExistParamSets[i]}, []ast.FactStmt{}))
+		err := ver.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt([]string{objName}, []ast.Fc{instantiatedExistPropDefStmt.ExistParamSets[i]}, []ast.FactStmt{}))
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
