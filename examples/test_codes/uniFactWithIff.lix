@@ -1,0 +1,18 @@
+prop p(x R)
+prop q(x R)
+
+know  forall x R:
+    $p(x)
+    iff:
+        $q(x)
+
+forall x R:
+    $p(x)
+    then:
+        $q(x)
+
+forall x R:
+    $q(x)
+    then:
+        $p(x)
+    
