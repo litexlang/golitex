@@ -370,6 +370,10 @@ func (tb *tokenBlock) claimStmt() (ast.ClaimInterface, error) {
 	if isProve {
 		return ast.NewClaimStmt(toCheck, proof), nil
 	} else {
+		if _, ok := toCheck.(ast.OrStmt_SpecStmt); !ok {
+			return nil, fmt.Errorf("fact in claim prove by contradiction must be allowed reversible")
+		}
+
 		return ast.NewClaimProveByContradictionStmt(*ast.NewClaimStmt(toCheck, proof)), nil
 	}
 }
