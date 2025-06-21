@@ -24,20 +24,20 @@ func (stmt *SpecFactStmt) IsBuiltinInfixRelaProp() bool {
 	return stmt.PropName.PkgName == glob.EmptyPkg && glob.IsBuiltinInfixRelaPropSymbol(stmt.PropName.Name)
 }
 
-func (stmt *UniFactStmt) NewUniFactWithThenToIff() *UniFactStmt {
-	newUniFact := NewUniFact(stmt.Params, stmt.ParamSets, stmt.DomFacts, stmt.IffFacts, EmptyIffFacts)
-	newUniFact.DomFacts = append(newUniFact.DomFacts, stmt.ThenFacts...)
+func (stmt *UniFactWithIffStmt) NewUniFactWithThenToIff() *UniFactStmt {
+	newUniFact := NewUniFact(stmt.UniFact.Params, stmt.UniFact.ParamSets, stmt.UniFact.DomFacts, stmt.UniFact.ThenFacts)
+	newUniFact.DomFacts = append(newUniFact.DomFacts, stmt.IffFacts...)
 	return newUniFact
 }
 
-func (stmt *UniFactStmt) NewUniFactWithIffToThen() *UniFactStmt {
-	newUniFact := NewUniFact(stmt.Params, stmt.ParamSets, stmt.DomFacts, stmt.ThenFacts, EmptyIffFacts)
+func (stmt *UniFactWithIffStmt) NewUniFactWithIffToThen() *UniFactStmt {
+	newUniFact := NewUniFact(stmt.UniFact.Params, stmt.UniFact.ParamSets, stmt.UniFact.DomFacts, stmt.UniFact.ThenFacts)
 	newUniFact.DomFacts = append(newUniFact.DomFacts, stmt.IffFacts...)
 	return newUniFact
 }
 
 func MergeOuterInnerUniFacts(outer *UniFactStmt, inner *UniFactStmt) *UniFactStmt {
-	newOuter := NewUniFact(outer.Params, outer.ParamSets, outer.DomFacts, inner.ThenFacts, EmptyIffFacts)
+	newOuter := NewUniFact(outer.Params, outer.ParamSets, outer.DomFacts, inner.ThenFacts)
 
 	newOuter.Params = append(newOuter.Params, inner.Params...)
 	newOuter.ParamSets = append(newOuter.ParamSets, inner.ParamSets...)
@@ -62,14 +62,14 @@ func (defStmt *DefPropStmt) Make_PropToIff_IffToProp() (*UniFactStmt, *UniFactSt
 	propToIffDomFacts := []FactStmt{propSpecFact}
 	propToIffDomFacts = append(propToIffDomFacts, defStmt.DomFacts...)
 
-	propToIff := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.SetParams, propToIffDomFacts, defStmt.IffFacts, EmptyIffFacts)
+	propToIff := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.SetParams, propToIffDomFacts, defStmt.IffFacts)
 
 	// iff to prop
 	IffToPropDomFacts := []FactStmt{}
 	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.DomFacts...)
 	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.IffFacts...)
 
-	IffToProp := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.SetParams, IffToPropDomFacts, []FactStmt{propSpecFact}, EmptyIffFacts)
+	IffToProp := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.SetParams, IffToPropDomFacts, []FactStmt{propSpecFact})
 
 	return propToIff, IffToProp, nil
 }
@@ -86,7 +86,7 @@ func (defStmt *DefPropStmt) IffToPropUniFact() *UniFactStmt {
 	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.DomFacts...)
 	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.IffFacts...)
 
-	IffToProp := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.SetParams, IffToPropDomFacts, []FactStmt{propSpecFact}, EmptyIffFacts)
+	IffToProp := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.SetParams, IffToPropDomFacts, []FactStmt{propSpecFact})
 
 	return IffToProp
 }
@@ -258,9 +258,9 @@ func (stmt *UniFactStmt) GetAtoms() []*FcAtom {
 	for _, fact := range stmt.ThenFacts {
 		atoms = append(atoms, fact.GetAtoms()...)
 	}
-	for _, fact := range stmt.IffFacts {
-		atoms = append(atoms, fact.GetAtoms()...)
-	}
+	// for _, fact := range stmt.IffFacts {
+	// 	atoms = append(atoms, fact.GetAtoms()...)
+	// }
 
 	// 如果这个atom是param，那把这项扔了
 	ret := []*FcAtom{}
@@ -273,6 +273,14 @@ func (stmt *UniFactStmt) GetAtoms() []*FcAtom {
 	}
 
 	return ret
+}
+
+func (stmt *UniFactWithIffStmt) GetAtoms() []*FcAtom {
+	atoms := stmt.UniFact.GetAtoms()
+	for _, fact := range stmt.IffFacts {
+		atoms = append(atoms, fact.GetAtoms()...)
+	}
+	return atoms
 }
 
 func (stmt *OrStmt) GetAtoms() []*FcAtom {

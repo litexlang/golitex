@@ -218,7 +218,7 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 	thenFacts := []ast.FactStmt{}
 	thenFacts = append(thenFacts, stmt.ThenFacts...)
 
-	uniFact := ast.NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.SetParams, stmt.DomFacts, thenFacts, ast.EmptyIffFacts)
+	uniFact := ast.NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.SetParams, stmt.DomFacts, thenFacts)
 	err = exec.env.NewFact(uniFact)
 
 	if err != nil {
@@ -548,7 +548,7 @@ func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) (glob.ExecS
 	}
 
 	thenFacts := []ast.FactStmt{stmt.ExistProp.ToSpecFact()}
-	knownUniFact := ast.NewUniFact(stmt.ExistProp.DefBody.DefHeader.Params, stmt.ExistProp.DefBody.DefHeader.SetParams, stmt.ExistProp.DefBody.DomFacts, thenFacts, ast.EmptyIffFacts)
+	knownUniFact := ast.NewUniFact(stmt.ExistProp.DefBody.DefHeader.Params, stmt.ExistProp.DefBody.DefHeader.SetParams, stmt.ExistProp.DefBody.DomFacts, thenFacts)
 
 	err = exec.env.NewFact(knownUniFact)
 	if err != nil {
@@ -569,7 +569,7 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
 	}
 
 	thenFacts := []ast.FactStmt{stmt.Prop.ToSpecFact()}
-	knownUniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.SetParams, stmt.Prop.DomFacts, thenFacts, ast.EmptyIffFacts)
+	knownUniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.SetParams, stmt.Prop.DomFacts, thenFacts)
 
 	err = exec.env.NewFact(knownUniFact)
 	if err != nil {
@@ -653,34 +653,35 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimStmt) (bool, error) {
 		return false, nil
 	}
 
-	if asUnivFact.IffFacts == nil || len(asUnivFact.IffFacts) == 0 {
-		for _, fact := range asUnivFact.ThenFacts {
-			execState, err := exec.factStmt(fact)
-			if err != nil {
-				exec.appendMsg(fmt.Sprintf("Claim statement error: Failed to execute fact statement:\n%s\n", fact.String()))
-				return false, err
-			}
-			if execState != glob.ExecState_True {
-				return false, nil
-			}
-		}
-		return true, nil
-	} else {
-		isSuccess, err := exec.claimLeftProveRight(asUnivFact.ThenFacts, asUnivFact.IffFacts)
+	// TODO: 让claim能forall if
+	// if asUnivFact.IffFacts == nil || len(asUnivFact.IffFacts) == 0 {
+	for _, fact := range asUnivFact.ThenFacts {
+		execState, err := exec.factStmt(fact)
 		if err != nil {
-			exec.appendMsg("Claim statement error: Failed to prove iff facts in universal fact by assuming then facts are true")
+			exec.appendMsg(fmt.Sprintf("Claim statement error: Failed to execute fact statement:\n%s\n", fact.String()))
 			return false, err
 		}
-		if !isSuccess {
+		if execState != glob.ExecState_True {
 			return false, nil
 		}
-		isSuccess, err = exec.claimLeftProveRight(asUnivFact.IffFacts, asUnivFact.ThenFacts)
-		if err != nil {
-			exec.appendMsg("Claim statement error: Failed to prove then facts in universal fact by assuming iff facts are true")
-			return false, err
-		}
-		return isSuccess, nil
 	}
+	return true, nil
+	// } else {
+	// 	isSuccess, err := exec.claimLeftProveRight(asUnivFact.ThenFacts, asUnivFact.IffFacts)
+	// 	if err != nil {
+	// 		exec.appendMsg("Claim statement error: Failed to prove iff facts in universal fact by assuming then facts are true")
+	// 		return false, err
+	// 	}
+	// 	if !isSuccess {
+	// 		return false, nil
+	// 	}
+	// 	isSuccess, err = exec.claimLeftProveRight(asUnivFact.IffFacts, asUnivFact.ThenFacts)
+	// 	if err != nil {
+	// 		exec.appendMsg("Claim statement error: Failed to prove then facts in universal fact by assuming iff facts are true")
+	// 		return false, err
+	// 	}
+	// 	return isSuccess, nil
+	// }
 
 }
 

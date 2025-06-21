@@ -37,6 +37,7 @@ func (s *OrStmt) stmt()              {}
 func (s *ImportStmt) stmt()          {}
 func (s *PubStmt) stmt()             {}
 func (s *ProveStmt) stmt()           {}
+func (s *UniFactWithIffStmt) stmt()  {}
 
 type FactStmt interface {
 	factStmt()
@@ -46,9 +47,10 @@ type FactStmt interface {
 	GetAtoms() []*FcAtom
 }
 
-func (p *SpecFactStmt) factStmt() {}
-func (l *UniFactStmt) factStmt()  {}
-func (s *OrStmt) factStmt()       {}
+func (p *SpecFactStmt) factStmt()       {}
+func (l *UniFactStmt) factStmt()        {}
+func (l *UniFactWithIffStmt) factStmt() {}
+func (s *OrStmt) factStmt()             {}
 
 type SpecFactParams struct {
 	ObjParams []Fc
@@ -89,3 +91,15 @@ func (s *DefObjStmt) defStmt()       {}
 func (s *DefFnStmt) defStmt()        {}
 func (s *DefPropStmt) defStmt()      {}
 func (s *DefExistPropStmt) defStmt() {}
+
+type UniFactInterface interface {
+	factStmt()
+	stmt()
+	String() string
+	Instantiate(map[string]Fc) (FactStmt, error)
+	GetAtoms() []*FcAtom
+	uniFact()
+}
+
+func (stmt *UniFactStmt) uniFact()        {}
+func (stmt *UniFactWithIffStmt) uniFact() {}
