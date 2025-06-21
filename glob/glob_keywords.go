@@ -231,6 +231,7 @@ var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]s
 	KeywordComplex:            {},
 	KeywordImaginary:          {},
 	KeywordAs:                 {},
+	KeywordIn:                 {},
 	KeywordSubsetOf:           {},
 	KeySymbolEqual:            {},
 	KeySymbolSlash:            {},
@@ -250,10 +251,22 @@ var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]s
 	KeySymbolLeftSquareBrace:  {},
 	KeySymbolRightSquareBrace: {},
 
-	KeySymbolSemicolon: {},
+	KeywordCommutativeProp: {},
+	KeySymbolSemicolon:     {},
 }
 
 func IsBuiltinKeywordKeySymbolCanBeFcAtomName(name string) bool {
-	_, ok := BuiltinKeywordKeySymbolCanBeFcAtomNameSet[name]
-	return ok
+	if IsKeyword(name) || IsKeySymbol(name) {
+		_, ok := BuiltinKeywordKeySymbolCanBeFcAtomNameSet[name]
+		return ok
+	}
+	return false
+}
+
+func IsBuiltinKeywordKeySymbol_NeverBeFcAtom(name string) bool {
+	if IsKeyword(name) || IsKeySymbol(name) {
+		_, ok := BuiltinKeywordKeySymbolCanBeFcAtomNameSet[name]
+		return !ok
+	}
+	return false
 }
