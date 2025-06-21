@@ -15,12 +15,12 @@
 package litex_verifier
 
 import (
-	"fmt"
 	ast "golitex/ast"
 )
 
 func (ver *Verifier) verUniFactWithIff(stmt *ast.UniFactWithIffStmt, state VerState) (bool, error) {
-	ok, err := ver.uniFactWithIff_CheckThenToIff(stmt, state)
+	thenToIff := stmt.NewUniFactWithThenToIff()
+	ok, err := ver.verUniFact(thenToIff, state)
 	if err != nil {
 		return false, err
 	}
@@ -28,88 +28,13 @@ func (ver *Verifier) verUniFactWithIff(stmt *ast.UniFactWithIffStmt, state VerSt
 		return false, nil
 	}
 
-	ok, err = ver.uniFactWithIff_CheckIffToThen(stmt, state)
+	iffToThen := stmt.NewUniFactWithIffToThen()
+	ok, err = ver.verUniFact(iffToThen, state)
 	if err != nil {
 		return false, err
 	}
 	if !ok {
 		return false, nil
-	}
-
-	return true, nil
-}
-
-func (ver *Verifier) uniFactWithIff_CheckThenToIff(stmt *ast.UniFactWithIffStmt, state VerState) (bool, error) {
-	ver.newEnv(ver.env, ver.env.CurMatchProp)
-	defer ver.deleteEnvAndRetainMsg()
-	for _, condFact := range stmt.UniFact.ThenFacts {
-		err := ver.env.NewFact(condFact)
-		if err != nil {
-			return false, err
-		}
-	}
-
-	for _, toCheckFact := range stmt.IffFacts {
-		ok, err := ver.VerFactStmt(toCheckFact, state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			if state.requireMsg() {
-				ver.newMsgEnd("%s is unknown", toCheckFact.String())
-			}
-			return false, nil
-		}
-
-		err = ver.env.NewFact(toCheckFact)
-		if err != nil {
-			return false, err
-		}
-	}
-
-	if state.requireMsg() {
-		err := ver.newMsgAtParent(fmt.Sprintf("%s\nis true", stmt.String()))
-		if err != nil {
-			return false, err
-		}
-	}
-
-	return true, nil
-}
-
-func (ver *Verifier) uniFactWithIff_CheckIffToThen(stmt *ast.UniFactWithIffStmt, state VerState) (bool, error) {
-	ver.newEnv(ver.env, ver.env.CurMatchProp)
-	defer ver.deleteEnvAndRetainMsg()
-	for _, condFact := range stmt.IffFacts {
-		err := ver.env.NewFact(condFact)
-		if err != nil {
-			return false, err
-		}
-	}
-
-	for _, toCheckFact := range stmt.UniFact.ThenFacts {
-		ok, err := ver.VerFactStmt(toCheckFact, state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			if state.requireMsg() {
-				ver.newMsgEnd("%s is unknown", toCheckFact.String())
-			}
-			return false, nil
-		}
-
-		err = ver.env.NewFact(toCheckFact)
-		if err != nil {
-			return false, err
-		}
-	}
-
-	if state.requireMsg() {
-		err := ver.newMsgAtParent(fmt.Sprintf("%s\nis true", stmt.String()))
-		if err != nil {
-			return false, err
-		}
 	}
 
 	return true, nil
