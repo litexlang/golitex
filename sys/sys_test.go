@@ -16,11 +16,7 @@ package litex_sys
 
 import (
 	"fmt"
-	"os"
 	"testing"
-	"time"
-
-	glob "golitex/glob"
 )
 
 func TestRunFile(t *testing.T) {
@@ -34,34 +30,6 @@ func TestRunFile(t *testing.T) {
 
 func TestRunREPLInTerminal(t *testing.T) {
 	RunREPLInTerminal()
-}
-
-func TestRunAllComprehensiveCodes(t *testing.T) {
-	startTime := time.Now()
-	files, err := os.ReadDir("../examples/comprehensive_examples")
-	if err != nil {
-		fmt.Println("Error reading directory:", err)
-		return
-	}
-
-	for _, file := range files {
-		// 读出file的内容，然后执行
-		code, err := os.ReadFile("../examples/comprehensive_examples/" + file.Name())
-		if err != nil {
-			fmt.Println("Error reading file:", err)
-			return
-		}
-		msg, signal, err := ExecuteCodeAndReturnMessage(string(code))
-		if err != nil || signal != glob.SysSignalTrue {
-			fmt.Println(msg)
-			fmt.Println("Error executing code:", err)
-			fmt.Println("Error in file:", file.Name())
-			return
-		}
-	}
-	elapsed := time.Since(startTime)
-	fmt.Println("All codes executed successfully")
-	fmt.Println("Time taken:", elapsed)
 }
 
 func TestRunRepo(t *testing.T) {
@@ -80,4 +48,19 @@ func TestRunFileInRepo(t *testing.T) {
 	}
 	fmt.Println(msg)
 	fmt.Println(signal)
+}
+
+func TestRunAllComprehensiveCodes(t *testing.T) {
+	pathSlice := []string{
+		"../examples/comprehensive_examples",
+		"../examples/testings",
+	}
+
+	for _, path := range pathSlice {
+		err := RunFilesInRepo(path)
+		if err != nil {
+			fmt.Println("Error running files:", err)
+			return
+		}
+	}
 }

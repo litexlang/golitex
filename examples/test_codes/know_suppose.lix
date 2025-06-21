@@ -1,8 +1,0 @@
-prop p(x N)
-prop q(x N, y N)
-
-know suppose $q(x, y):
-    $p(x)
-
-suppose $q(x, y):
-    $p(x)

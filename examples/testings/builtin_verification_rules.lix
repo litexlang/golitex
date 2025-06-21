@@ -1,3 +1,73 @@
+# This file is used to test the builtin fact verification rules
+prove:
+    obj a R:
+        a > 0
+    0 < a
+    a >= 0
+
+    obj b R:
+        b < 0
+    0 > b
+    b <= 0
+
+    obj c R:
+        c = 0
+    0 = c
+    c <= 0
+
+    obj d R:
+        d = 0
+    0 = d
+    d >= 0
+
+# In fact
+
+prove:
+    obj x N
+    x $in N
+    x $in Z
+    x $in Q
+    x $in R
+    x $in C
+
+    1 $in N
+    1 $in Z
+    1 $in Q
+    1 $in R
+    1 $in C
+
+    1.1 $in Q
+    1.1 $in R
+    1.1 $in C
+
+    obj y Q
+    y $in Q
+    y $in R
+    y $in C
+
+    x + x $in R
+    x + x + x $in R
+
+    obj t Z
+    t $in Z
+    t $in Q
+    t $in R
+    t $in C
+
+    obj z Q
+    z $in Q
+    z $in R
+    z $in C
+
+    obj w R
+    w $in R
+    w $in C
+
+    obj v C
+    v $in C
+
+# number related
+
 # - as prefix opt
 prove:
     -1 = -1
@@ -80,3 +150,24 @@ prove:
 
 prove:
     1 + 1 = 2
+
+# Arithmetic
+
+prove:
+
+    obj x R, y R, z R
+
+    -8 = 10 - 18
+    obj a R, b R, c R
+    (a + b) + c = a + (b + c)
+    - a = -1 * a
+
+    (x-1)^2 = x^2 - 2*x + 1
+    (x+1)^10 = x^10 + 10*x^9 + 45*x^8 + 120*x^7 + 210*x^6 + 252*x^5 + 210*x^4 + 120*x^3 + 45*x^2 + 10*x + 1
+    # x*(x+2) = x^2 + 2*x
+
+    prove:
+        x + x = 2 * x
+
+    prove:
+        x + x + x = 3 * x

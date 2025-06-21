@@ -1,8 +1,0 @@
-fn f(x A, y B) set:
-    $p(x,y)
-    then:
-        $q(x,y)
-
-fn (x A, y B) ret {} # {} 里面存放dom
-
-# forall x A, y B {;;}
