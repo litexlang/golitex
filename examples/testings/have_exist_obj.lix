@@ -2,6 +2,7 @@ exist_prop a R st exist_x_larger_than(x R) :
     iff:
         a > x
 
+# claim spec fact prove
 claim:
     $exist_x_larger_than(1)
     prove:
@@ -19,7 +20,7 @@ know forall x R,  y R:
         x + y > y
         y + x > y
 
-
+# claim forall prove
 claim:
     forall x R:
         $exist_x_larger_than(x)
@@ -45,6 +46,7 @@ know prop larger_equal_is_transitive(x R, y R, z R):
     iff:
         x > z
 
+# claim spec fact prove by contradiction
 claim:
     x < 2
     prove_by_contradiction:

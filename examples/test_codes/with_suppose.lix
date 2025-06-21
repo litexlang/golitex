@@ -18,3 +18,15 @@ know $is_group(G, op, e, inv)
 
 with is_group(G, op, e, inv):
     $properties_about_group(G, op)
+
+obj s set
+
+know prop random_property(x s)
+
+suppose random_property(x):
+    know x = 1
+
+obj x s
+
+with random_property(x):
+    x = 1
