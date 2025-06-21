@@ -25,8 +25,8 @@ func (stmt *SpecFactStmt) IsBuiltinInfixRelaProp() bool {
 }
 
 func (stmt *UniFactWithIffStmt) NewUniFactWithThenToIff() *UniFactStmt {
-	newUniFact := NewUniFact(stmt.UniFact.Params, stmt.UniFact.ParamSets, stmt.UniFact.DomFacts, stmt.UniFact.ThenFacts)
-	newUniFact.DomFacts = append(newUniFact.DomFacts, stmt.IffFacts...)
+	newUniFact := NewUniFact(stmt.UniFact.Params, stmt.UniFact.ParamSets, stmt.UniFact.DomFacts, stmt.IffFacts)
+	newUniFact.DomFacts = append(newUniFact.DomFacts, stmt.UniFact.ThenFacts...)
 	return newUniFact
 }
 
