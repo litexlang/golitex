@@ -81,10 +81,10 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state VerState) (bool,
 		}
 	}
 
-	return ver.uniFactWithoutIff(newStmtPtr, state)
+	return ver.uniFact_checkThenFacts(newStmtPtr, state)
 }
 
-func (ver *Verifier) uniFactWithoutIff(stmt *ast.UniFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state VerState) (bool, error) {
 	// check then facts
 	for _, thenFact := range stmt.ThenFacts {
 		ok, err := ver.VerFactStmt(thenFact, state) // 这个地方有点tricky，这里是可能读入state是any的，而且我要允许读入any
@@ -100,102 +100,6 @@ func (ver *Verifier) uniFactWithoutIff(stmt *ast.UniFactStmt, state VerState) (b
 
 		// if true, store it
 		err = ver.env.NewFact(thenFact)
-		if err != nil {
-			return false, err
-		}
-	}
-
-	if state.requireMsg() {
-		err := ver.newMsgAtParent(fmt.Sprintf("%s\nis true", stmt.String()))
-		if err != nil {
-			return false, err
-		}
-	}
-
-	return true, nil
-}
-
-func (ver *Verifier) verUniFactWithIff(stmt *ast.UniFactWithIffStmt, state VerState) (bool, error) {
-	ok, err := ver.uniFactWithIff_CheckThenToIff(stmt, state)
-	if err != nil {
-		return false, err
-	}
-	if !ok {
-		return false, nil
-	}
-
-	ok, err = ver.uniFactWithIff_CheckIffToThen(stmt, state)
-	if err != nil {
-		return false, err
-	}
-	if !ok {
-		return false, nil
-	}
-
-	return true, nil
-}
-
-func (ver *Verifier) uniFactWithIff_CheckThenToIff(stmt *ast.UniFactWithIffStmt, state VerState) (bool, error) {
-	ver.newEnv(ver.env, ver.env.CurMatchProp)
-	defer ver.deleteEnvAndRetainMsg()
-	for _, condFact := range stmt.UniFact.ThenFacts {
-		err := ver.env.NewFact(condFact)
-		if err != nil {
-			return false, err
-		}
-	}
-
-	for _, toCheckFact := range stmt.IffFacts {
-		ok, err := ver.VerFactStmt(toCheckFact, state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			if state.requireMsg() {
-				ver.newMsgEnd("%s is unknown", toCheckFact.String())
-			}
-			return false, nil
-		}
-
-		err = ver.env.NewFact(toCheckFact)
-		if err != nil {
-			return false, err
-		}
-	}
-
-	if state.requireMsg() {
-		err := ver.newMsgAtParent(fmt.Sprintf("%s\nis true", stmt.String()))
-		if err != nil {
-			return false, err
-		}
-	}
-
-	return true, nil
-}
-
-func (ver *Verifier) uniFactWithIff_CheckIffToThen(stmt *ast.UniFactWithIffStmt, state VerState) (bool, error) {
-	ver.newEnv(ver.env, ver.env.CurMatchProp)
-	defer ver.deleteEnvAndRetainMsg()
-	for _, condFact := range stmt.IffFacts {
-		err := ver.env.NewFact(condFact)
-		if err != nil {
-			return false, err
-		}
-	}
-
-	for _, toCheckFact := range stmt.UniFact.ThenFacts {
-		ok, err := ver.VerFactStmt(toCheckFact, state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			if state.requireMsg() {
-				ver.newMsgEnd("%s is unknown", toCheckFact.String())
-			}
-			return false, nil
-		}
-
-		err = ver.env.NewFact(toCheckFact)
 		if err != nil {
 			return false, err
 		}
