@@ -36,7 +36,7 @@ _-- Alan Kay_
 
 **Welcome to our [zulip community](https://litex.zulipchat.com) to get the latest updates and discuss with us.**
 
-Litex is a simple and easy-to-learn formal language. It makes formal reasoning as natural as writing in natural language. Thanks to its innovative design, even 10-year-olds can learn Litex easily. This gives it a dimensional advantage over existing formal languages, such as Lean, which even PhD students struggle to master. In the foreseeable future, Litex is going to reduce the time ratio between formalizing a proof and writing it in natural language from 10:1 to 1:1. Mathematics, this ancient discipline, will be understood and written in a completely new way.
+Litex is a simple and easy-to-learn formal language. It makes formal reasoning as natural as writing in natural language. Thanks to its innovative design, even 10-year-olds can learn Litex easily. This gives it a dimensional advantage over existing formal languages, such as Lean, which even PhD students struggle to master. In the foreseeable future, Litex is going to reduce the time ratio between formalizing a proof and writing it in natural language from 10:1 to 1:1. By deliberately sacrificing Turing completeness, Litex focuses solely on mathematical verification and is the perfect domain language for formal reasoning. Mathematics, this ancient discipline, will be understood and written in a completely new way.
 
 This is an adventure with two goals: 1. to make formal reasoning as intuitive as natural language and everyday thinking, from both high-level and low-level perspectives. 2. to spread the idea and power of formal reasoning to a larger audience. Both goals serves one ultimate purpose: scale formal reasoning in this new AI age.
 
@@ -185,7 +185,7 @@ If Newton had to learn those theories before inventing calculus, he would never 
 
 On the other hand, Litex is a formal language that operates as a Read-Only Turing Machine. By deliberately sacrificing Turing completeness, Litex focuses solely on mathematical verification. Unlike programming languages, Litex eliminates variables, control flow, and execution semantics - concepts that are foreign to pure mathematics. 
 
-This design choice, similar to how SQL specializes in database operations, allows Litex to specialize in everyday math as much as possible. The language adopts Python-like syntax for accessibility.
+This design choice, similar to how SQL specializes in database operations, allows Litex to specialize in everyday math as much as possible. The language adopts Python-like syntax for accessibility. To be more specific, Litex is a domain specific language for formal reasoning.
 
 Another important design choice is that the user does not need to give names to facts, because Litex can automatically find the matched facts it needs. It saves a lot of time and effort for the user. Read [tutorial](./doc/tutorial/tutorial.md) for more details.
 
@@ -269,8 +269,9 @@ Differences:
 
 3. Prolog does not have a type system, making it hard to express set theory, which is the foundation of mathematics. This makes translation from natural language to Prolog unimaginably hard. Litex by design has a set system that is very easy to use.
 
-4. Compared to Litex, Prolog is still too complicated and foreign to most people, partly because it is a programming language.
+4. Compared to Litex, Prolog is still too complicated and foreign to most people, partly because it is a programming language. The biggest strength of Litex is that its extremely deep insight into the nature of math and its extremely simple design to make the language as natural as possible. Just like you can use Python or Assembly to write a program and in most cases, Python is easier to use, Litex is easier to use than Prolog.
 
+5. Technical difference: 1. exist proposition must be given a name in Litex and it is user's duty to specify which object satisfy the proposition requirement. 2. prolog might encounter dead lock when proving iff condition, and Litex avoids infinite search by setting the upper bound of searching to 2 layers. 3. In Litex, you can express forall facts without giving it a name, while Prolog forces you to do so.
 
 
 ##  Examples: Litex for Curious Formal Language Users
