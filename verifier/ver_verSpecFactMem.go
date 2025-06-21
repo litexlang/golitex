@@ -680,7 +680,6 @@ func (ver *Verifier) mathInductionFact_BuiltinRules(stmt *ast.SpecFactStmt, stat
 		paramSets,
 		domFacts,
 		thenFacts,
-		ast.EmptyIffFacts,
 	)
 
 	ok, err := ver.VerFactStmt(propNameZeroFact, state)
@@ -783,7 +782,6 @@ func (ver *Verifier) isSetEqualFact_Check_BuiltinRules(stmt *ast.SpecFactStmt, s
 		paramSets,
 		[]ast.FactStmt{},
 		[]ast.FactStmt{ast.NewInFact("x", rightSet)},
-		ast.EmptyIffFacts,
 	)
 
 	ok, err = ver.VerFactStmt(uniFactItemsInLeftSetInRightSet, state)
@@ -803,7 +801,6 @@ func (ver *Verifier) isSetEqualFact_Check_BuiltinRules(stmt *ast.SpecFactStmt, s
 		paramSets,
 		[]ast.FactStmt{},
 		[]ast.FactStmt{ast.NewInFact("x", leftSet)},
-		ast.EmptyIffFacts,
 	)
 
 	ok, err = ver.VerFactStmt(uniFactItemsInRightSetInLeftSet, state)

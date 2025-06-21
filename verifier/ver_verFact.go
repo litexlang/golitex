@@ -37,5 +37,9 @@ func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state VerState) (bool, error
 		return ver.verUniFact(asUniFact, state)
 	}
 
+	if asUniFactWithIff, ok := stmt.(*ast.UniFactWithIffStmt); ok {
+		return ver.verUniFactWithIff(asUniFactWithIff, state)
+	}
+
 	return false, fmt.Errorf("unexpected fact statement: %v", stmt)
 }

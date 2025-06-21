@@ -118,14 +118,14 @@ func InstantiateUniFact(stmt *UniFactStmt, uniMap map[string]Fc) (*UniFactStmt, 
 		newThenFacts = append(newThenFacts, newFact)
 	}
 
-	newIffFacts := []FactStmt{}
-	for _, fact := range stmt.IffFacts {
-		newFact, err := fact.Instantiate(uniMap)
-		if err != nil {
-			return nil, err
-		}
-		newIffFacts = append(newIffFacts, newFact)
-	}
+	// newIffFacts := []FactStmt{}
+	// for _, fact := range stmt.IffFacts {
+	// 	newFact, err := fact.Instantiate(uniMap)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	newIffFacts = append(newIffFacts, newFact)
+	// }
 
 	newSetParams := []Fc{}
 	for _, setParam := range stmt.ParamSets {
@@ -137,7 +137,7 @@ func InstantiateUniFact(stmt *UniFactStmt, uniMap map[string]Fc) (*UniFactStmt, 
 	}
 
 	// newParamInSetsFacts := ParamsParamSetsToInFacts(stmt.Params, newParamTypes)
-	return NewUniFact(newParams, newSetParams, newDomFacts, newThenFacts, newIffFacts), nil
+	return NewUniFact(newParams, newSetParams, newDomFacts, newThenFacts), nil
 }
 
 func (stmt *UniFactStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
@@ -250,4 +250,22 @@ func (stmt *OrStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
 	}
 
 	return NewOrStmt(newOrFacts), nil
+}
+
+func (stmt *UniFactWithIffStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
+	newUniFact, err := stmt.UniFact.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+
+	instantiatedIffFacts := []FactStmt{}
+	for _, fact := range stmt.IffFacts {
+		newFact, err := fact.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		instantiatedIffFacts = append(instantiatedIffFacts, newFact)
+	}
+
+	return NewUniFactWithIff(newUniFact.(*UniFactStmt), instantiatedIffFacts), nil
 }

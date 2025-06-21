@@ -55,7 +55,7 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state VerState) (bool,
 			}
 		}
 
-		newStmtPtr = ast.NewUniFact(newParams, instantiatedOldStmt.ParamSets, instantiatedOldStmt.DomFacts, instantiatedOldStmt.ThenFacts, instantiatedOldStmt.IffFacts)
+		newStmtPtr = ast.NewUniFact(newParams, instantiatedOldStmt.ParamSets, instantiatedOldStmt.DomFacts, instantiatedOldStmt.ThenFacts)
 
 		for i, indexStr := range indexes {
 			err := ver.env.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt([]string{indexStr}, []ast.Fc{newStmtPtr.ParamSets[i]}, []ast.FactStmt{}))
@@ -81,11 +81,7 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state VerState) (bool,
 		}
 	}
 
-	if newStmtPtr.IffFacts == nil || len(newStmtPtr.IffFacts) == 0 {
-		return ver.uniFactWithoutIff(newStmtPtr, state)
-	} else {
-		return ver.uniFactWithIff(newStmtPtr, state)
-	}
+	return ver.uniFactWithoutIff(newStmtPtr, state)
 }
 
 func (ver *Verifier) uniFactWithoutIff(stmt *ast.UniFactStmt, state VerState) (bool, error) {
@@ -119,7 +115,7 @@ func (ver *Verifier) uniFactWithoutIff(stmt *ast.UniFactStmt, state VerState) (b
 	return true, nil
 }
 
-func (ver *Verifier) uniFactWithIff(stmt *ast.UniFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) verUniFactWithIff(stmt *ast.UniFactWithIffStmt, state VerState) (bool, error) {
 	ok, err := ver.uniFactWithIff_CheckThenToIff(stmt, state)
 	if err != nil {
 		return false, err
@@ -139,10 +135,10 @@ func (ver *Verifier) uniFactWithIff(stmt *ast.UniFactStmt, state VerState) (bool
 	return true, nil
 }
 
-func (ver *Verifier) uniFactWithIff_CheckThenToIff(stmt *ast.UniFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) uniFactWithIff_CheckThenToIff(stmt *ast.UniFactWithIffStmt, state VerState) (bool, error) {
 	ver.newEnv(ver.env, ver.env.CurMatchProp)
 	defer ver.deleteEnvAndRetainMsg()
-	for _, condFact := range stmt.ThenFacts {
+	for _, condFact := range stmt.UniFact.ThenFacts {
 		err := ver.env.NewFact(condFact)
 		if err != nil {
 			return false, err
@@ -177,7 +173,7 @@ func (ver *Verifier) uniFactWithIff_CheckThenToIff(stmt *ast.UniFactStmt, state 
 	return true, nil
 }
 
-func (ver *Verifier) uniFactWithIff_CheckIffToThen(stmt *ast.UniFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) uniFactWithIff_CheckIffToThen(stmt *ast.UniFactWithIffStmt, state VerState) (bool, error) {
 	ver.newEnv(ver.env, ver.env.CurMatchProp)
 	defer ver.deleteEnvAndRetainMsg()
 	for _, condFact := range stmt.IffFacts {
@@ -187,7 +183,7 @@ func (ver *Verifier) uniFactWithIff_CheckIffToThen(stmt *ast.UniFactStmt, state 
 		}
 	}
 
-	for _, toCheckFact := range stmt.ThenFacts {
+	for _, toCheckFact := range stmt.UniFact.ThenFacts {
 		ok, err := ver.VerFactStmt(toCheckFact, state)
 		if err != nil {
 			return false, err

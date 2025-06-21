@@ -319,7 +319,7 @@ func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, erro
 		thenFacts = append(thenFacts, specThenFact)
 	}
 
-	return ast.NewUniFact(existPropDef.ExistParams, existPropDef.DefBody.DefHeader.SetParams, domFacts, thenFacts, ast.EmptyIffFacts), nil
+	return ast.NewUniFact(existPropDef.ExistParams, existPropDef.DefBody.DefHeader.SetParams, domFacts, thenFacts), nil
 }
 
 func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
@@ -382,7 +382,7 @@ func (env *Env) isMathInductionPropName_StoreIt(fact *ast.SpecFactStmt) (bool, e
 		),
 	}
 
-	knownUniFact := ast.NewUniFact(knownUniFactParams, []ast.Fc{ast.NewFcAtomWithName(glob.KeywordNatural)}, knownUniFactDomFacts, knownUniFactThenFacts, ast.EmptyIffFacts)
+	knownUniFact := ast.NewUniFact(knownUniFactParams, []ast.Fc{ast.NewFcAtomWithName(glob.KeywordNatural)}, knownUniFactDomFacts, knownUniFactThenFacts)
 
 	err := env.NewFact(knownUniFact)
 	if err != nil {

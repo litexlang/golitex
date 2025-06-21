@@ -59,7 +59,12 @@ type UniFactStmt struct {
 	ParamSets []Fc
 	DomFacts  []FactStmt
 	ThenFacts []FactStmt
-	IffFacts  []FactStmt // TODO: 需要注意到，我存储的所有事实，这一项都是空。未来为了节约空间，可以考虑用新的结构体来存储
+	// IffFacts  []FactStmt // TODO: 需要注意到，我存储的所有事实，这一项都是空。未来为了节约空间，可以考虑用新的结构体来存储
+}
+
+type UniFactWithIffStmt struct {
+	UniFact  UniFactStmt
+	IffFacts []FactStmt
 }
 
 type SpecFactStmt struct {

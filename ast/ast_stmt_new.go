@@ -66,8 +66,12 @@ func NewExistPropDef(declHeader DefHeader, domFacts []FactStmt, iffFacts []FactS
 	return &DefExistPropStmtBody{declHeader, domFacts, iffFacts}
 }
 
-func NewUniFact(params []string, setParams []Fc, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt) *UniFactStmt {
-	return &UniFactStmt{params, setParams, domFacts, thenFacts, iffFacts}
+func NewUniFact(params []string, setParams []Fc, domFacts []FactStmt, thenFacts []FactStmt) *UniFactStmt {
+	return &UniFactStmt{params, setParams, domFacts, thenFacts}
+}
+
+func NewUniFactWithIff(uniFact *UniFactStmt, iffFacts []FactStmt) *UniFactWithIffStmt {
+	return &UniFactWithIffStmt{*uniFact, iffFacts}
 }
 
 func NewProveInEachCaseStmt(orFact OrStmt, thenFacts []FactStmt, proofs [][]Stmt) *ProveInEachCaseStmt {

@@ -332,6 +332,14 @@ func (l *UniFactStmt) String() string {
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(l.ThenFacts[len(l.ThenFacts)-1].String(), 2))
 	}
 
+	return builder.String()
+}
+
+func (l *UniFactWithIffStmt) String() string {
+	var builder strings.Builder
+
+	builder.WriteString(strings.TrimSuffix(l.UniFact.String(), "\n"))
+
 	if l.IffFacts != nil && len(l.IffFacts) > 0 {
 		builder.WriteByte('\n')
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents("iff:", 1))

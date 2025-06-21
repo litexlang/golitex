@@ -159,7 +159,7 @@ func (tb *tokenBlock) specFactStmt() (*ast.SpecFactStmt, error) {
 	}
 }
 
-func (tb *tokenBlock) uniFactStmt(uniFactDepth uniFactEnum) (*ast.UniFactStmt, error) {
+func (tb *tokenBlock) uniFactStmt(uniFactDepth uniFactEnum) (ast.UniFactInterface, error) {
 	err := tb.header.skip(glob.KeywordForall)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
@@ -176,10 +176,10 @@ func (tb *tokenBlock) uniFactStmt(uniFactDepth uniFactEnum) (*ast.UniFactStmt, e
 	}
 
 	if len(iffFacts) == 0 {
-		iffFacts = ast.EmptyIffFacts
+		return ast.NewUniFact(params, setParams, domainFacts, thenFacts), nil
 	}
 
-	return ast.NewUniFact(params, setParams, domainFacts, thenFacts, iffFacts), nil
+	return ast.NewUniFactWithIff(ast.NewUniFact(params, setParams, domainFacts, thenFacts), iffFacts), nil
 }
 
 func (tb *tokenBlock) bodyFacts(uniFactDepth uniFactEnum) ([]ast.FactStmt, error) {
