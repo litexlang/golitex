@@ -15,10 +15,12 @@
 package litex_sys
 
 import (
+	"fmt"
 	glob "golitex/glob"
 	pipeline "golitex/pipeline"
 	"os"
 	"path/filepath"
+	"time"
 
 	taskManager "golitex/task_manager"
 )
@@ -78,4 +80,35 @@ func RunMainMsg(signal glob.SysSignal) string {
 	} else {
 		return glob.REPLFailedMessage
 	}
+}
+
+func RunFilesInRepo(repo string) error {
+	files, err := os.ReadDir(repo)
+	if err != nil {
+		fmt.Println("Error reading directory:", err)
+		return err
+	}
+
+	startTime := time.Now()
+	for _, file := range files {
+		// 读出file的内容，然后执行
+		path := filepath.Join(repo, file.Name())
+		code, err := os.ReadFile(path)
+		if err != nil {
+			fmt.Println("Error reading file:", err)
+			return err
+		}
+		msg, signal, err := ExecuteCodeAndReturnMessage(string(code))
+		if err != nil || signal != glob.SysSignalTrue {
+			fmt.Println(msg)
+			fmt.Println("Error executing code:", err)
+			fmt.Println("Error in file:", file.Name())
+			return fmt.Errorf("error executing code: %v", err)
+		}
+	}
+	elapsed := time.Since(startTime)
+	fmt.Println("All codes executed successfully")
+	fmt.Println("Time taken:", elapsed)
+
+	return nil
 }
