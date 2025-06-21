@@ -152,10 +152,34 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) error {
 
 func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) (glob.ExecState, error) {
 	if stmt.IsProve {
-		return exec.claimStmtProve(stmt)
+		return exec.execClaimStmtProve(stmt)
 	} else {
-		return exec.claimStmtProveByContradiction(stmt)
+		return exec.execClaimStmtProveByContradiction(stmt)
 	}
+}
+
+func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimStmt) (glob.ExecState, error) {
+	state, err := exec.claimStmtProve(stmt)
+	if notOkExec(state, err) {
+		return state, err
+	}
+
+	// 检查 stmt fact 中的所有元素已经定义过了
+	exec.knowStmt(ast.NewKnowStmt([]ast.FactStmt{stmt.ToCheckFact}))
+
+	return glob.ExecState_True, nil
+}
+
+func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimStmt) (glob.ExecState, error) {
+	state, err := exec.claimStmtProveByContradiction(stmt)
+	if notOkExec(state, err) {
+		return state, err
+	}
+
+	// 检查 stmt fact 中的所有元素已经定义过了
+	exec.knowStmt(ast.NewKnowStmt([]ast.FactStmt{stmt.ToCheckFact}))
+
+	return glob.ExecState_True, nil
 }
 
 func (exec *Executor) GetMsgAsStr0ToEnd() string {

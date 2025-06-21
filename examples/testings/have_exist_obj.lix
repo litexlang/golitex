@@ -6,12 +6,19 @@ claim:
     $exist_x_larger_than(1)
     prove:
         exist 2 st $exist_x_larger_than(1)
+        
+$exist_x_larger_than(1)
+        
+have a st $exist_x_larger_than(1)
+a $in R
+a > 1
 
 know forall x R,  y R:
     x > 0
     then:
         x + y > y
         y + x > y
+
 
 claim:
     forall x R:
