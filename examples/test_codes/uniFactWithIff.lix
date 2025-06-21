@@ -2,7 +2,8 @@ prop p(x R)
 prop q(x R)
 
 know  forall x R:
-    $p(x)
+    then:
+        $p(x)
     iff:
         $q(x)
 

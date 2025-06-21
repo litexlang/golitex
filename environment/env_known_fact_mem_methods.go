@@ -328,3 +328,19 @@ func (e *Env) IsFnDeclared(fc *ast.FcAtom) (*ast.DefFnStmt, bool) {
 	}
 	return fnDef, true
 }
+
+func (e *Env) newUniFactWithIff(stmt *ast.UniFactWithIffStmt) error {
+	thenToIff := stmt.NewUniFactWithThenToIff()
+	err := e.newUniFact(thenToIff)
+	if err != nil {
+		return err
+	}
+
+	iffToThen := stmt.NewUniFactWithIffToThen()
+	err = e.newUniFact(iffToThen)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

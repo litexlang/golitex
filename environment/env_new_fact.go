@@ -28,6 +28,8 @@ func (env *Env) NewFact(stmt ast.FactStmt) error {
 		return env.newLogicExprFact(f)
 	case *ast.UniFactStmt:
 		return env.newUniFact(f)
+	case *ast.UniFactWithIffStmt:
+		return env.newUniFactWithIff(f)
 	default:
 		return fmt.Errorf("unknown fact type: %T", stmt)
 	}
