@@ -73,10 +73,14 @@ type SpecFactStmt struct {
 	Params   []Fc
 }
 
-type ClaimStmt struct {
-	IsProve     bool
+type ClaimProveStmt struct {
+	// IsProve     bool
 	ToCheckFact FactStmt
 	Proofs      []Stmt
+}
+
+type ClaimProveByContradictionStmt struct {
+	Claim ClaimProveStmt
 }
 
 type KnowFactStmt struct {

@@ -36,7 +36,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		execState, err = exec.factStmt(stmt)
 	case *ast.KnowFactStmt:
 		err = exec.knowStmt(stmt)
-	case *ast.ClaimStmt:
+	case *ast.ClaimProveStmt:
 		execState, err = exec.claimStmt(stmt)
 	case *ast.DefPropStmt:
 		err = exec.defPropStmt(stmt)
@@ -64,6 +64,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		execState, err = exec.pubStmt(stmt)
 	case *ast.ProveStmt:
 		execState, err = exec.proveStmt(stmt)
+	case *ast.ClaimProveByContradictionStmt:
+		execState, err = exec.execClaimStmtProveByContradiction(stmt)
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}
@@ -150,15 +152,11 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) error {
 	return nil
 }
 
-func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) (glob.ExecState, error) {
-	if stmt.IsProve {
-		return exec.execClaimStmtProve(stmt)
-	} else {
-		return exec.execClaimStmtProveByContradiction(stmt)
-	}
+func (exec *Executor) claimStmt(stmt *ast.ClaimProveStmt) (glob.ExecState, error) {
+	return exec.execClaimStmtProve(stmt)
 }
 
-func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimStmt) (glob.ExecState, error) {
+func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecState, error) {
 	state, err := exec.claimStmtProve(stmt)
 	if notOkExec(state, err) {
 		return state, err
@@ -170,14 +168,14 @@ func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimStmt) (glob.ExecState, e
 	return glob.ExecState_True, nil
 }
 
-func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimStmt) (glob.ExecState, error) {
-	state, err := exec.claimStmtProveByContradiction(stmt)
+func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) (glob.ExecState, error) {
+	state, err := exec.claimStmtProveByContradiction(&stmt.Claim)
 	if notOkExec(state, err) {
 		return state, err
 	}
 
 	// 检查 stmt fact 中的所有元素已经定义过了
-	exec.knowStmt(ast.NewKnowStmt([]ast.FactStmt{stmt.ToCheckFact}))
+	exec.knowStmt(ast.NewKnowStmt([]ast.FactStmt{stmt.Claim.ToCheckFact}))
 
 	return glob.ExecState_True, nil
 }
@@ -400,7 +398,7 @@ func (exec *Executor) execProofBlock(proof []ast.Stmt) (glob.ExecState, error) {
 	return glob.ExecState_True, nil
 }
 
-func (exec *Executor) claimStmtProve(stmt *ast.ClaimStmt) (glob.ExecState, error) {
+func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecState, error) {
 	err := error(nil)
 	isSuccess := false
 
@@ -453,7 +451,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimStmt) (glob.ExecState, error
 	}
 }
 
-func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimStmt) (glob.ExecState, error) {
+func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveStmt) (glob.ExecState, error) {
 	isSuccess := false
 
 	exec.newEnv(exec.env, exec.env.CurMatchProp)
@@ -664,7 +662,7 @@ func (exec *Executor) proveStmt(stmt *ast.ProveStmt) (glob.ExecState, error) {
 	return exec.execProofBlock(stmt.Proof)
 }
 
-func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimStmt) (bool, error) {
+func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, error) {
 	asUnivFact, ok := stmt.ToCheckFact.(*ast.UniFactStmt)
 	if !ok {
 		return false, fmt.Errorf("claim stmt prove uni fact only support uni fact")
@@ -720,27 +718,27 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimStmt) (bool, error) {
 
 }
 
-func (exec *Executor) claimLeftProveRight(leftFacts []ast.FactStmt, rightFacts []ast.FactStmt) (bool, error) {
-	exec.newEnv(exec.env, exec.env.CurMatchProp)
-	defer exec.deleteEnvAndRetainMsg()
+// func (exec *Executor) claimLeftProveRight(leftFacts []ast.FactStmt, rightFacts []ast.FactStmt) (bool, error) {
+// 	exec.newEnv(exec.env, exec.env.CurMatchProp)
+// 	defer exec.deleteEnvAndRetainMsg()
 
-	// suppose left are true
-	knowStmt := ast.NewKnowStmt(leftFacts)
-	err := exec.knowStmt(knowStmt)
-	if err != nil {
-		return false, err
-	}
+// 	// suppose left are true
+// 	knowStmt := ast.NewKnowStmt(leftFacts)
+// 	err := exec.knowStmt(knowStmt)
+// 	if err != nil {
+// 		return false, err
+// 	}
 
-	// prove right are true
-	for _, rightFact := range rightFacts {
-		execState, err := exec.factStmt(rightFact)
-		if err != nil {
-			return false, err
-		}
-		if execState != glob.ExecState_True {
-			return false, nil
-		}
-	}
+// 	// prove right are true
+// 	for _, rightFact := range rightFacts {
+// 		execState, err := exec.factStmt(rightFact)
+// 		if err != nil {
+// 			return false, err
+// 		}
+// 		if execState != glob.ExecState_True {
+// 			return false, nil
+// 		}
+// 	}
 
-	return true, nil
-}
+// 	return true, nil
+// }
