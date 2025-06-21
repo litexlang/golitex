@@ -243,7 +243,6 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 		domFacts = append(domFacts, fixed)
 	}
 
-	// iffFacts := []*ast.SpecFactStmt{}
 	iffFacts := []ast.FactStmt{}
 	for _, iffFact := range propDef.DefBody.IffFacts {
 		fixed, err := iffFact.Instantiate(uniConMap)
@@ -251,13 +250,6 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 			return false, err
 		}
 		iffFacts = append(iffFacts, fixed)
-		// fixedAsSpecFact, ok := fixed.(*ast.SpecFactStmt)
-		// if !ok {
-		// }
-		// if !stmt.IsTrue() {
-		// 	fixedAsSpecFact = fixedAsSpecFact.ReverseTrue()
-		// }
-		// iffFacts = append(iffFacts, fixedAsSpecFact)
 	}
 
 	for _, domFact := range domFacts {

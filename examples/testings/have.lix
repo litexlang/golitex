@@ -1,0 +1,21 @@
+exist_prop a R st exist_x_larger_than(x R) :
+    iff:
+        a > x
+
+claim:
+    $exist_x_larger_than(1)
+    prove:
+        exist 2 st $exist_x_larger_than(1)
+
+know forall x R,  y R:
+    x > 0
+    then:
+        x + y > y
+        y + x > y
+
+claim:
+    forall x R:
+        $exist_x_larger_than(x)
+    prove:
+        exist x + 1 st $exist_x_larger_than(x)
+
