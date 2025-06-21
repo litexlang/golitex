@@ -6,7 +6,7 @@
 
 # Litex: Scale Formal Reasoning in AI Age
 
-_The Future of Math and AI: What If A Formal Language Is As Intuitive As Natural Language?_
+_The Language of Math: What If A Formal Language Is As Intuitive As Natural Language?_
 
 **Release v0.1.1-beta (not yet ready for production use)**  
 *May 2025*  
@@ -396,6 +396,10 @@ _Quantity changes lead to quality changes._
 
 _-- Hegel_
 
+_Worse is better._
+
+_-- A Famous Software Development Proverb_
+
 _Estimated number of users of C++ is 1 in 1979, 16 in 1980, 38 in 1981, 85 in 1982, ..., 150000 in 1990, 400000 in 1991. In other words, the C++ user population doubled every 7.5 months or so._
 
 _-- Bjarne Stroustrup, A History of C++: 1979-1991_
@@ -405,6 +409,8 @@ Litex takes a use-driven, example-first approach to formalization. Instead of bu
 Sometimes the new feature covers the functionalities of the old one and the old one is replaced by the new one. This trial-and-error, practice-guided development makes Litex uniquely adaptable and intuitive. Any feature is added with careful test about whether it is as useful and intuitive as possible and whether it is not harmful to the existing features. In most cases, a feature either works as a syntactic sugar which significantly improves the readability and writing experience of the code, or it is a new feature that is necessary for the user to express certain types of logic.
 
 Litex is designed to serve users. It is not an academic experiment to design the perfect formal language. It is a practical tool to help users formalize their math, train their AI models, and other tasks. Thus to fulfill its mission, Litex has to grow with its users. 
+
+Litex development follows the humble [worse is better](https://www.dreamsongs.com/RiseOfWorseIsBetter.html) philosophy. Think about it: JavaScript made every mistake in the world of programming languages while it did everything right to make itself influential by serving its users' most urgent needs, which makes it one of the most successful programming languages in the history. Now the world runs on top of JavaScript because it is the language of the Internet. Litex is not perfect, but it is pragmatic enough.
 
 It's hard to know how to implement Litex. It's even harder to know what to implement, how different language features work together with one another. Since Litex is so different, the creator of Litex has to try to implement it by trial-and-error instead of following any existing theories or just mimicking existing formal languages. Litex is rooted in its unique and simple (However, this simplicity is not easy to achieve.) ideas, not theories.
 
