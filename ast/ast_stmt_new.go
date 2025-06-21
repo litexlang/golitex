@@ -42,8 +42,12 @@ func NewSpecFactStmt(typeEnum SpecFactEnum, propName *FcAtom, params []Fc) *Spec
 	return &SpecFactStmt{typeEnum, *propName, params}
 }
 
-func NewClaimProveStmt(proveTrue bool, toCheckFact FactStmt, proofs []Stmt) *ClaimStmt {
-	return &ClaimStmt{proveTrue, toCheckFact, proofs}
+func NewClaimProveByContradictionStmt(claim ClaimProveStmt) *ClaimProveByContradictionStmt {
+	return &ClaimProveByContradictionStmt{claim}
+}
+
+func NewClaimStmt(toCheckFact FactStmt, proofs []Stmt) *ClaimProveStmt {
+	return &ClaimProveStmt{toCheckFact, proofs}
 }
 
 func NewKnowStmt(facts []FactStmt) *KnowFactStmt {

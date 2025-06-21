@@ -265,7 +265,7 @@ Differences:
 
 1. Unknown facts are by default false in Prolog, while in Litex, they are by default unknown. This is a very important difference. Since what can not say a claim must be false even if nobody can prove it for the time being, we can not say a claim that is not known to be true must be false.
 
-2. Litex is not a programming language. Prolog is a programming language.
+2. Litex is not a programming language, which is a read-only Turing Machine. Prolog is a programming language, which is a Turing complete language.
 
 3. Prolog does not have a type system, making it hard to express set theory, which is the foundation of mathematics. This makes translation from natural language to Prolog unimaginably hard. Litex by design has a set system that is very easy to use.
 
@@ -410,7 +410,7 @@ Sometimes the new feature covers the functionalities of the old one and the old 
 
 Litex is designed to serve users. It is not an academic experiment to design the perfect formal language. It is a practical tool to help users formalize their math, train their AI models, and other tasks. Thus to fulfill its mission, Litex has to grow with its users. 
 
-Litex development follows the humble [worse is better](https://www.dreamsongs.com/RiseOfWorseIsBetter.html) philosophy. Think about it: JavaScript made every mistake in the world of programming languages while it did everything right to make itself influential by serving its users' most urgent needs, which makes it one of the most successful programming languages in the history. Now the world runs on top of JavaScript because it is the language of the Internet. Litex is not perfect, but it is pragmatic enough.
+Litex development follows the humble [worse is better](https://www.dreamsongs.com/RiseOfWorseIsBetter.html) philosophy. Think about it: JavaScript made every mistake in its design as a programming language while it did everything right to make itself one of the most influential programming languages in the world by serving its users' most urgent needs: the language of the Internet. Litex is not perfect, but it is pragmatic enough.
 
 It's hard to know how to implement Litex. It's even harder to know what to implement, how different language features work together with one another. Since Litex is so different, the creator of Litex has to try to implement it by trial-and-error instead of following any existing theories or just mimicking existing formal languages. Litex is rooted in its unique and simple (However, this simplicity is not easy to achieve.) ideas, not theories.
 

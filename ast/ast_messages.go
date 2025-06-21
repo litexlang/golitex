@@ -220,42 +220,33 @@ func (f *DefFnStmt) String() string {
 
 	return builder.String()
 }
-func (f *ClaimStmt) String() string {
+
+func (f *ClaimProveByContradictionStmt) String() string {
+	return ClaimProve_ClaimProveByContradiction(glob.KeywordProveByContradiction, f.Claim.ToCheckFact, f.Claim.Proofs)
+}
+
+func (f *ClaimProveStmt) String() string {
+	return ClaimProve_ClaimProveByContradiction(glob.KeywordProve, f.ToCheckFact, f.Proofs)
+}
+
+func ClaimProve_ClaimProveByContradiction(kw string, toCheckFact FactStmt, proofs []Stmt) string {
 	var builder strings.Builder
 
-	if (f.ToCheckFact) == nil {
-		if f.IsProve {
-			builder.WriteString(glob.KeywordProve)
-		} else {
-			builder.WriteString(glob.KeywordProveByContradiction)
-		}
-		builder.WriteString(":\n")
-		for _, fact := range f.Proofs {
-			builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 1))
-			builder.WriteByte('\n')
-		}
-		return strings.TrimSpace(builder.String())
-	} else {
-		builder.WriteString(glob.KeywordClaim)
-		builder.WriteByte(':')
-		builder.WriteByte('\n')
+	builder.WriteString(glob.KeywordClaim)
+	builder.WriteByte(':')
+	builder.WriteByte('\n')
 
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents(f.ToCheckFact.String(), 1))
-		builder.WriteByte('\n')
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(toCheckFact.String(), 1))
+	builder.WriteByte('\n')
 
-		if f.IsProve {
-			builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve, 1))
-		} else {
-			builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProveByContradiction, 1))
-		}
-		builder.WriteByte(':')
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(kw, 1))
+	builder.WriteByte(':')
+	builder.WriteByte('\n')
+	for _, fact := range proofs {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 2))
 		builder.WriteByte('\n')
-		for _, fact := range f.Proofs {
-			builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 2))
-			builder.WriteByte('\n')
-		}
-		return strings.TrimSpace(builder.String())
 	}
+	return strings.TrimSpace(builder.String())
 }
 
 func (s *DefExistPropStmt) String() string {
