@@ -86,7 +86,7 @@ func (tb *tokenBlock) stmt() (ast.Stmt, error) {
 
 func (tb *tokenBlock) factStmt(uniFactDepth uniFactEnum) (ast.FactStmt, error) {
 	if tb.header.is(glob.KeywordForall) {
-		return tb.uniFactStmt(uniFactDepth)
+		return tb.uniFactInterface(uniFactDepth)
 	} else if tb.header.is(glob.KeywordOr) {
 		return tb.orStmt()
 	} else {
@@ -159,7 +159,7 @@ func (tb *tokenBlock) specFactStmt() (*ast.SpecFactStmt, error) {
 	}
 }
 
-func (tb *tokenBlock) uniFactStmt(uniFactDepth uniFactEnum) (ast.UniFactInterface, error) {
+func (tb *tokenBlock) uniFactInterface(uniFactDepth uniFactEnum) (ast.UniFactInterface, error) {
 	err := tb.header.skip(glob.KeywordForall)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
@@ -177,9 +177,16 @@ func (tb *tokenBlock) uniFactStmt(uniFactDepth uniFactEnum) (ast.UniFactInterfac
 
 	if len(iffFacts) == 0 {
 		return ast.NewUniFact(params, setParams, domainFacts, thenFacts), nil
+	} else {
+		ret := ast.NewUniFactWithIff(ast.NewUniFact(params, setParams, domainFacts, thenFacts), iffFacts)
+
+		if len(thenFacts) == 0 {
+			return nil, fmt.Errorf("expect %s section to have at least one fact in %s", glob.KeywordThen, ret.String())
+		}
+
+		return ret, nil
 	}
 
-	return ast.NewUniFactWithIff(ast.NewUniFact(params, setParams, domainFacts, thenFacts), iffFacts), nil
 }
 
 func (tb *tokenBlock) bodyFacts(uniFactDepth uniFactEnum) ([]ast.FactStmt, error) {
