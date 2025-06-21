@@ -44,6 +44,8 @@ func (ver *Verifier) checkSpecFactRequirements(stmt *ast.SpecFactStmt, state Ver
 	}
 
 	// 所有的传入的参数符号 prop 的要求 以及 stmt name 确实是个 prop。这貌似不需要检查，因为每次你得到新的事实时候，已经检查过了
+	// 但是最好在这里警告一下用户，如果不满足prop的要求的话，可能出问题
+
 	return true, nil
 }
 

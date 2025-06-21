@@ -1,6 +1,7 @@
-forall add3 fn(R, R)R:
-    forall x R, y R:
-        add3(x, y) = x + y
-    then:
-        forall x R, y R:
-            add3(x, y) = x + y
+obj s set
+
+know forall x s:
+    x = 1
+
+forall x s:
+    x = 1
