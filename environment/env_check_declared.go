@@ -61,11 +61,6 @@ func (e *Env) IsAtomDeclared(atom *ast.FcAtom, extraAtomNames map[string]struct{
 		return true
 	}
 
-	// 是内置的keyword就声明了
-	if glob.IsKeyword(atom.Name) {
-		return true
-	}
-
 	// 如果是数字，那就声明了
 	if _, ok := ast.IsNumLitFcAtom(atom); ok {
 		return true
