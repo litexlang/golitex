@@ -228,7 +228,7 @@ func (e *Env) getFcAtomDefAtCurEnv(fcAtomName *ast.FcAtom) (ast.DefStmt, bool) {
 	return nil, false
 }
 
-func (memory *ObjDefMem) insertItem(objName string) error {
+func (memory *ObjDefMem) InsertItem(objName string) error {
 	pkgMap, pkgExists := memory.Dict[taskManager.CurrentPkg]
 
 	if !pkgExists {
