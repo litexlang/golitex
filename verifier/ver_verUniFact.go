@@ -36,7 +36,7 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state VerState) (bool,
 	var newStmtPtr *ast.UniFactStmt = oldStmt
 
 	if len(paramMap) == 0 {
-		err := ver.env.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt(oldStmt.Params, oldStmt.ParamSets, []ast.FactStmt{}))
+		err := ver.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt(oldStmt.Params, oldStmt.ParamSets, []ast.FactStmt{}))
 		if err != nil {
 			return false, err
 		}
@@ -58,7 +58,7 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state VerState) (bool,
 		newStmtPtr = ast.NewUniFact(newParams, instantiatedOldStmt.ParamSets, instantiatedOldStmt.DomFacts, instantiatedOldStmt.ThenFacts)
 
 		for i, indexStr := range indexes {
-			err := ver.env.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt([]string{indexStr}, []ast.Fc{newStmtPtr.ParamSets[i]}, []ast.FactStmt{}))
+			err := ver.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt([]string{indexStr}, []ast.Fc{newStmtPtr.ParamSets[i]}, []ast.FactStmt{}))
 			if err != nil {
 				return false, err
 			}

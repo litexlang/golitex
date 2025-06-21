@@ -21,7 +21,7 @@ import (
 	"slices"
 )
 
-func (env *Env) isInvalidName(name string) error {
+func (env *Env) IsInvalidName(name string) error {
 	err := glob.IsValidName(name)
 	if err != nil {
 		return err
@@ -73,7 +73,7 @@ func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) error {
 		return fmt.Errorf("prop name %s cannot be the same as parameter name %s", stmt.DefHeader.Name, stmt.DefHeader.Name)
 	}
 
-	err := env.isInvalidName(stmt.DefHeader.Name)
+	err := env.IsInvalidName(stmt.DefHeader.Name)
 	if err != nil {
 		return err
 	}
@@ -104,62 +104,62 @@ func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) error {
 	return env.PropDefMem.insert(stmt, glob.EmptyPkg)
 }
 
-func (env *Env) NewDefObj_InsideAtomsDeclared(stmt *ast.DefObjStmt) error {
-	err := env.NonDuplicateParam_NoUndeclaredParamSet(stmt.Objs, stmt.ObjSets, true)
-	if err != nil {
-		return err
-	}
+// func (env *Env) NewDefObj_InsideAtomsDeclared(stmt *ast.DefObjStmt) error {
+// 	err := env.NonDuplicateParam_NoUndeclaredParamSet(stmt.Objs, stmt.ObjSets, true)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	extraAtomNames := map[string]struct{}{}
-	for _, objName := range stmt.Objs {
-		extraAtomNames[objName] = struct{}{}
-	}
+// 	extraAtomNames := map[string]struct{}{}
+// 	for _, objName := range stmt.Objs {
+// 		extraAtomNames[objName] = struct{}{}
+// 	}
 
-	for _, fact := range stmt.NewInFacts() {
-		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
-			return fmt.Errorf(AtomsInFactNotDeclaredMsg(fact))
-		}
-		err := env.NewFact(fact)
-		if err != nil {
-			return err
-		}
-	}
+// 	for _, fact := range stmt.NewInFacts() {
+// 		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
+// 			return fmt.Errorf(AtomsInFactNotDeclaredMsg(fact))
+// 		}
+// 		err := env.NewFact(fact)
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
 
-	for _, fact := range stmt.Facts {
-		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
-			return fmt.Errorf(AtomsInFactNotDeclaredMsg(fact))
-		}
-		err := env.NewFact(fact)
-		if err != nil {
-			return err
-		}
-	}
+// 	for _, fact := range stmt.Facts {
+// 		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
+// 			return fmt.Errorf(AtomsInFactNotDeclaredMsg(fact))
+// 		}
+// 		err := env.NewFact(fact)
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
 
-	for _, objName := range stmt.Objs {
-		err := env.isInvalidName(objName)
-		if err != nil {
-			return err
-		}
-	}
+// 	for _, objName := range stmt.Objs {
+// 		err := env.IsInvalidName(objName)
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
 
-	// 如果这个obj是fn，那么要插入到fn def mem中
-	for i, objName := range stmt.Objs {
-		if ast.IsFnDeclarationFc(stmt.ObjSets[i]) {
-			fnDefStmt := ast.FromFnDeclFcToDefFnStmt(objName, stmt.ObjSets[i])
-			err = env.NewDefFn_InsideAtomsDeclared(fnDefStmt)
-			if err != nil {
-				return err
-			}
-		} else {
-			err = env.ObjDefMem.insertItem(objName)
-			if err != nil {
-				return err
-			}
-		}
-	}
+// 	// 如果这个obj是fn，那么要插入到fn def mem中
+// 	for i, objName := range stmt.Objs {
+// 		if ast.IsFnDeclarationFc(stmt.ObjSets[i]) {
+// 			fnDefStmt := ast.FromFnDeclFcToDefFnStmt(objName, stmt.ObjSets[i])
+// 			err = env.NewDefFn_InsideAtomsDeclared(fnDefStmt)
+// 			if err != nil {
+// 				return err
+// 			}
+// 		} else {
+// 			err = env.ObjDefMem.InsertItem(objName)
+// 			if err != nil {
+// 				return err
+// 			}
+// 		}
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 func (env *Env) NewDefFn_InsideAtomsDeclared(stmt *ast.DefFnStmt) error {
 	// fn名不能和parameter名重叠
@@ -195,7 +195,7 @@ func (env *Env) NewDefFn_InsideAtomsDeclared(stmt *ast.DefFnStmt) error {
 	}
 
 	// TODO: WARNING: 这里有严重问题。因为貌似同一个fn可以implement很多的fn_template，所以即使之前知道它怎么样，我也不能说明什么问题
-	err = env.isInvalidName(stmt.DefHeader.Name)
+	err = env.IsInvalidName(stmt.DefHeader.Name)
 	if err != nil {
 		return err
 	}
@@ -241,7 +241,7 @@ func (env *Env) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) 
 		}
 	}
 
-	err = env.isInvalidName(stmt.DefBody.DefHeader.Name)
+	err = env.IsInvalidName(stmt.DefBody.DefHeader.Name)
 	if err != nil {
 		return err
 	}

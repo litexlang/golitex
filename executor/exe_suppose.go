@@ -19,6 +19,7 @@ import (
 	ast "golitex/ast"
 	env "golitex/environment"
 	glob "golitex/glob"
+	verifier "golitex/verifier"
 )
 
 func (exec *Executor) supposePropMatchStmt(stmt *ast.SupposeStmt) (glob.ExecState, error) {
@@ -78,6 +79,8 @@ func (exec *Executor) supposeStmt_declaredParams(stmt *ast.SupposeStmt) (glob.Ex
 		uniMap[param] = stmt.Fact.Params[i]
 	}
 
+	ver := verifier.NewVerifier(exec.env)
+
 	for i, param := range stmt.Fact.Params {
 		asAtom, ok := param.(*ast.FcAtom)
 		if !ok {
@@ -92,7 +95,7 @@ func (exec *Executor) supposeStmt_declaredParams(stmt *ast.SupposeStmt) (glob.Ex
 			return glob.ExecState_Error, err
 		}
 
-		err = exec.env.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt([]string{asAtom.Name}, []ast.Fc{instantiatedSetParam}, []ast.FactStmt{}))
+		err = ver.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt([]string{asAtom.Name}, []ast.Fc{instantiatedSetParam}, []ast.FactStmt{}))
 
 		if err != nil {
 			return glob.ExecState_Error, err
