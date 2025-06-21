@@ -179,11 +179,11 @@ TL;DR: Traditional formal languages are programming languages. Code in Programmi
 
 Everyone knows how to reason, including 10-year-old. We reason thousands of time every day without even noticing it. Yet, traditional formal languages, like Lean4, Coq, and Isebelle are so complex that even the smartest mathematicians find it hard to use. Why is that?
 
-It turns out that these languages attempt to serve two distinct purposes simultaneously: they want to be both programming languages and reasoning verifiers. This dual nature makes it technically challenging to create a simple and intuitive system. These languages heavily rely on type theory and functional programming concepts, which even mathematics PhD students need years to master. 
+It turns out that these languages attempt to serve two distinct purposes simultaneously: they want to be both programming languages and reasoning verifiers. This dual nature makes it technically challenging to create a simple and intuitive system. These languages heavily rely on type theory and functional programming concepts, which even mathematics PhD students need years to master. There are good points in making a prover a programming language, because it hands to duty of tackling with tricky details of math to the user and the user can have enough freedom to do whatever he wants. But this is very hard for beginners.
 
 If Newton had to learn those theories before inventing calculus, he would never succeed, because those theories would be invented 3 centuries later.
 
-On the other hand, Litex is a formal language that operates as a Read-Only Turing Machine. By deliberately sacrificing Turing completeness, Litex focuses solely on mathematical verification. Unlike programming languages, Litex eliminates variables, control flow, and execution semantics - concepts that are foreign to pure mathematics. 
+On the other hand, Litex is a formal language that operates as a Read-Only Turing Machine. By deliberately sacrificing Turing completeness, Litex focuses solely on mathematical verification. Unlike programming languages, Litex eliminates variables, control flow, and execution semantics - concepts that are foreign to pure mathematics. By carefully choosing what to include and what to exclude, Litex is able to be as simple as possible.
 
 This design choice, similar to how SQL specializes in database operations, allows Litex to specialize in everyday math as much as possible. The language adopts Python-like syntax for accessibility. To be more specific, Litex is a domain specific language for formal reasoning.
 
