@@ -144,7 +144,3 @@ var notFcAtomNameSet = map[string]struct{}{
 }
 
 // TODO
-func IsKwThatCanNeverBeFcName(s string) bool {
-	_, ok := notFcAtomNameSet[s]
-	return ok
-}

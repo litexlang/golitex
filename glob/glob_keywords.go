@@ -221,3 +221,39 @@ var symbolSet map[string]struct{} = map[string]struct{}{
 	KeySymbolLeftSquareBrace:  {}, // "["
 	KeySymbolRightSquareBrace: {}, // "]"
 }
+
+var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]struct{}{
+	KeywordSet:                {},
+	KeywordNatural:            {},
+	KeywordInt:                {},
+	KeywordRational:           {},
+	KeywordReal:               {},
+	KeywordComplex:            {},
+	KeywordImaginary:          {},
+	KeywordAs:                 {},
+	KeywordSubsetOf:           {},
+	KeySymbolEqual:            {},
+	KeySymbolSlash:            {},
+	KeySymbolPlus:             {},
+	KeySymbolMinus:            {},
+	KeySymbolStar:             {},
+	KeySymbolPower:            {},
+	KeySymbolLess:             {},
+	KeySymbolGreater:          {},
+	KeySymbolLargerEqual:      {},
+	KeySymbolLessEqual:        {},
+	KeySymbolNotEqual:         {},
+	KeySymbolEquivalent:       {},
+	KeySymbolEqualEqual:       {},
+	KeySymbolEqualEqualEqual:  {},
+	KeySymbolPercent:          {}, // prove: 2 % 2 = 0 的时候打印有问题，不知道为什么
+	KeySymbolLeftSquareBrace:  {},
+	KeySymbolRightSquareBrace: {},
+
+	KeySymbolSemicolon: {},
+}
+
+func IsBuiltinKeywordKeySymbolCanBeFcAtomName(name string) bool {
+	_, ok := BuiltinKeywordKeySymbolCanBeFcAtomNameSet[name]
+	return ok
+}
