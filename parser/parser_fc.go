@@ -178,7 +178,7 @@ func (cursor *strSliceCursor) rawFcAtom() (*ast.FcAtom, error) {
 	// 	pkgNameStr = realPkgName
 	// }
 
-	if !glob.IsBuiltinKeywordKeySymbolCanBeFcAtomName(value) {
+	if glob.IsBuiltinKeywordKeySymbol_NeverBeFcAtom(value) {
 		return ast.NewFcAtom(pkgNameStr, value), fmt.Errorf("invalid first citizen: %s", value)
 	} else {
 		return ast.NewFcAtom(pkgNameStr, value), nil
