@@ -39,6 +39,7 @@ func (s *PubStmt) stmt()                       {}
 func (s *ProveStmt) stmt()                     {}
 func (s *UniFactWithIffStmt) stmt()            {}
 func (s *ClaimProveByContradictionStmt) stmt() {}
+func (s *FnTemplateDefStmt) stmt()             {}
 
 type FactStmt interface {
 	factStmt()

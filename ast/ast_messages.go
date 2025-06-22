@@ -182,9 +182,9 @@ func (fact *DefPropStmt) String() string {
 
 }
 
-func (f *DefFnStmt) String() string {
+func fnDefStmtStringGivenKw(kw string, f *DefFnStmt) string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordFn)
+	builder.WriteString(kw)
 	builder.WriteString(" ")
 
 	builder.WriteString(f.DefHeader.StringWithoutColonAtEnd())
@@ -222,8 +222,16 @@ func (f *DefFnStmt) String() string {
 	return builder.String()
 }
 
+func (f *DefFnStmt) String() string {
+	return fnDefStmtStringGivenKw(glob.KeywordFn, f)
+}
+
+func (f *FnTemplateDefStmt) String() string {
+	return fnDefStmtStringGivenKw(glob.KeywordFnTemplate, &f.DefFnStmt)
+}
+
 func (f *ClaimProveByContradictionStmt) String() string {
-	return ClaimProve_ClaimProveByContradiction(glob.KeywordProveByContradiction, f.Claim.ToCheckFact, f.Claim.Proofs)
+	return ClaimProve_ClaimProveByContradiction(glob.KeywordProveByContradiction, f.ClaimProveStmt.ToCheckFact, f.ClaimProveStmt.Proofs)
 }
 
 func (f *ClaimProveStmt) String() string {

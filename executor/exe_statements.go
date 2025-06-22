@@ -66,6 +66,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		execState, err = exec.proveStmt(stmt)
 	case *ast.ClaimProveByContradictionStmt:
 		execState, err = exec.execClaimStmtProveByContradiction(stmt)
+	case *ast.FnTemplateDefStmt:
+		err = exec.defFnTemplateStmt(stmt)
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}
@@ -175,7 +177,7 @@ func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByCo
 	}
 
 	// 检查 stmt fact 中的所有元素已经定义过了
-	exec.knowStmt(ast.NewKnowStmt([]ast.FactStmt{stmt.Claim.ToCheckFact}))
+	exec.knowStmt(ast.NewKnowStmt([]ast.FactStmt{stmt.ClaimProveStmt.ToCheckFact}))
 
 	return glob.ExecState_True, nil
 }
@@ -269,6 +271,17 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 		if err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (exec *Executor) defFnTemplateStmt(stmt *ast.FnTemplateDefStmt) error {
+	defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
+
+	err := exec.env.NewDefFnTemplate_InsideAtomsDeclared(stmt)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -465,16 +478,16 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContra
 		} else {
 			exec.appendNewMsgAtBegin("is unknown\n")
 		}
-		exec.appendNewMsgAtBegin(stmt.Claim.String())
+		exec.appendNewMsgAtBegin(stmt.ClaimProveStmt.String())
 		exec.deleteEnvAndRetainMsg()
 	}()
 
-	if stmt.Claim.ToCheckFact == ast.ClaimStmtEmptyToCheck {
+	if stmt.ClaimProveStmt.ToCheckFact == ast.ClaimStmtEmptyToCheck {
 		return glob.ExecState_Error, fmt.Errorf("prove by contradiction does not support empty check")
 	}
 
 	// Must be orStmt or specFactStmt
-	specFactStmt, ok := stmt.Claim.ToCheckFact.(ast.OrStmt_SpecStmt)
+	specFactStmt, ok := stmt.ClaimProveStmt.ToCheckFact.(ast.OrStmt_SpecStmt)
 	if !ok {
 		return glob.ExecState_Error, fmt.Errorf("prove by contradiction only support spec fact")
 	}
@@ -488,12 +501,12 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContra
 		}
 	}
 
-	execState, err := exec.execProofBlock(stmt.Claim.Proofs)
+	execState, err := exec.execProofBlock(stmt.ClaimProveStmt.Proofs)
 	if notOkExec(execState, err) {
 		return execState, err
 	}
 
-	lastStmtAsFact, ok := stmt.Claim.Proofs[len(stmt.Claim.Proofs)-1].(ast.OrStmt_SpecStmt)
+	lastStmtAsFact, ok := stmt.ClaimProveStmt.Proofs[len(stmt.ClaimProveStmt.Proofs)-1].(ast.OrStmt_SpecStmt)
 	if !ok {
 		return glob.ExecState_Error, fmt.Errorf("prove by contradiction only support fact")
 	}
