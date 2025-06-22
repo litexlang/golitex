@@ -84,7 +84,9 @@ func (memory *FnDefMem) insert(stmt *ast.DefFnStmt, pkgName string) error {
 
 	node, nodeExists := pkgMap[stmt.DefHeader.Name]
 	if !nodeExists {
-		node = FnMemItem{stmt}
+		node = FnMemItem{[]*ast.DefFnStmt{stmt}}
+	} else {
+		node.Def = append(node.Def, stmt)
 	}
 
 	pkgMap[stmt.DefHeader.Name] = node
@@ -140,7 +142,7 @@ func (memory *ExistPropDefMem) Get(fc ast.FcAtom) (*ast.DefExistPropStmt, bool) 
 	return node.Def, true
 }
 
-func (memory *FnDefMem) Get(fc ast.FcAtom) (*ast.DefFnStmt, bool) {
+func (memory *FnDefMem) Get(fc ast.FcAtom) ([]*ast.DefFnStmt, bool) {
 	pkgMap, pkgExists := memory.Dict[fc.PkgName]
 	if !pkgExists {
 		return nil, false
@@ -150,6 +152,7 @@ func (memory *FnDefMem) Get(fc ast.FcAtom) (*ast.DefFnStmt, bool) {
 	if !nodeExists {
 		return nil, false
 	}
+
 	return node.Def, true
 }
 
@@ -201,17 +204,17 @@ func (e *Env) GetPropDef(propName ast.FcAtom) (*ast.DefPropStmt, bool) {
 	return nil, false
 }
 
-func (e *Env) GetFcAtomDef(fcAtomName *ast.FcAtom) (ast.DefStmtInterface, bool) {
+func (e *Env) GetFcAtomDef(fcAtomName *ast.FcAtom) bool {
 	for env := e; env != nil; env = env.Parent {
-		fcAtomDef, ok := env.getFcAtomDefAtCurEnv(fcAtomName)
+		ok := env.getFcAtomDefAtCurEnv(fcAtomName)
 		if ok {
-			return fcAtomDef, true
+			return true
 		}
 	}
-	return nil, false
+	return false
 }
 
-func (e *Env) GetFnDef(fn ast.Fc) (*ast.DefFnStmt, bool) {
+func (e *Env) GetFnDef(fn ast.Fc) ([]*ast.DefFnStmt, bool) {
 	fnAsAtom, isFnAsAtom := fn.(*ast.FcAtom)
 	if !isFnAsAtom {
 		return nil, false
@@ -230,38 +233,38 @@ func (e *Env) GetFnDef(fn ast.Fc) (*ast.DefFnStmt, bool) {
 
 // Get DefStmt at current environment
 
-func (e *Env) getFcAtomDefAtCurEnv(fcAtomName *ast.FcAtom) (ast.DefStmtInterface, bool) {
+func (e *Env) getFcAtomDefAtCurEnv(fcAtomName *ast.FcAtom) bool {
 	// Case1: It is a prop
-	prop, ok := e.PropDefMem.Get(*fcAtomName)
+	_, ok := e.PropDefMem.Get(*fcAtomName)
 	if ok {
-		return prop, true
+		return true
 	}
 
 	// Case2: It is a fn
-	fn, ok := e.FnDefMem.Get(*fcAtomName)
+	_, ok = e.FnDefMem.Get(*fcAtomName)
 	if ok {
-		return fn, true
+		return true
 	}
 
 	// Case3: It is a exist prop
-	existProp, ok := e.ExistPropDefMem.Get(*fcAtomName)
+	_, ok = e.ExistPropDefMem.Get(*fcAtomName)
 	if ok {
-		return existProp, true
+		return true
 	}
 
 	// Case4: It is a obj
-	obj, ok := e.ObjDefMem.Get(*fcAtomName)
+	_, ok = e.ObjDefMem.Get(*fcAtomName)
 	if ok {
-		return obj, true
+		return true
 	}
 
 	// Case5: It is a fn template
-	fnTemplate, ok := e.FnTemplateDefMem.Get(*fcAtomName)
+	_, ok = e.FnTemplateDefMem.Get(*fcAtomName)
 	if ok {
-		return fnTemplate, true
+		return true
 	}
 
-	return nil, false
+	return false
 }
 
 func (memory *ObjDefMem) InsertItem(objName string) error {
@@ -293,7 +296,7 @@ func (e *Env) GetTemplateOfFn(fc *ast.FcFn) (ast.Fc, bool) {
 			return nil, false
 		}
 
-		return fnDef.RetSet, true
+		return fnDef[0].RetSet, true
 	} else {
 		fcHeadAsFn, ok := fc.FnHead.(*ast.FcFn)
 		if !ok {
@@ -308,7 +311,7 @@ func (e *Env) GetTemplateOfFn(fc *ast.FcFn) (ast.Fc, bool) {
 		if _, retSet, ok := ast.Get_FnTemplate_InFcForm_ParamSetsAndRetSet(fc); ok {
 			return retSet, true
 		} else {
-			panic("not implemented")
+			panic("")
 		}
 	}
 }

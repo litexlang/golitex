@@ -115,3 +115,5 @@ type ClaimInterface interface {
 
 func (stmt *ClaimProveStmt) claimStmt()                {}
 func (stmt *ClaimProveByContradictionStmt) claimStmt() {}
+
+type FactStmtSlice []FactStmt
