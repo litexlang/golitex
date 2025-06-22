@@ -1,2 +1,5 @@
-1 + 2 =3
-obj s ;
+fn f(x Z) fn(Z) Z
+know forall x Z, y Z:
+    f(x)(y) = x + y
+
+f(1)(2) = 1 + 2
