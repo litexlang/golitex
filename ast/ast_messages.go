@@ -97,25 +97,15 @@ func exist_st_FactString(stmt *SpecFactStmt) string {
 	builder.WriteString(glob.KeywordExist)
 	builder.WriteByte(' ')
 
-	sepIndex := stmt.Exist_St_SeparatorIndex()
-	if sepIndex == -1 {
-		return ""
-	} else {
-		for i := range sepIndex {
-			builder.WriteString(stmt.Params[i].String())
-			builder.WriteString(" ")
-		}
+	existParams, factParams := GetExistFactExistParamsAndFactParams(stmt)
 
-		builder.WriteString(glob.KeywordSt)
-		builder.WriteString(" ")
+	builder.WriteString(FcSliceString(existParams))
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeywordSt)
+	builder.WriteString(" ")
+	builder.WriteString(NewSpecFactStmt(TruePure, &stmt.PropName, factParams).String())
 
-		builder.WriteString(glob.FuncFactPrefix)
-		builder.WriteString(stmt.PropName.String())
-		builder.WriteByte('(')
-		builder.WriteString(FcSliceString(stmt.Params[sepIndex+1:]))
-		builder.WriteByte(')')
-		return builder.String()
-	}
+	return builder.String()
 }
 
 func (stmt *DefObjStmt) String() string {

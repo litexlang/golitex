@@ -151,12 +151,12 @@ const (
 	KeySymbolBacktick               = "`"
 	KeySymbolEqualGreaterEqual      = "=>"
 	KeySymbolMinusGreaterRightArrow = "->"
-	KeySymbolSemicolon              = ";"
-	KeySymbolHash                   = "#"
-	KeySymbolAt                     = "@"
-	KeySymbolLargerEqual            = ">="
-	KeySymbolLessEqual              = "<="
-	KeySymbolEquivalent             = "<=>"
+	// KeySymbolSemicolon              = ";"
+	KeySymbolHash        = "#"
+	KeySymbolAt          = "@"
+	KeySymbolLargerEqual = ">="
+	KeySymbolLessEqual   = "<="
+	KeySymbolEquivalent  = "<=>"
 	// It's possible for me to overload the meaning of "=" to mean "set equal", but I don't want to do that(I do not want to overload the meaning of "=" too much, which can be very tiring for future maintainers and make confusions), so I use a new keyword
 	KeySymbolEqualEqual       = "=="  // check fn equal. TODO: 要调整语义
 	KeySymbolEqualEqualEqual  = "===" // check set equal. TODO: 要调整语义
@@ -206,8 +206,8 @@ var symbolSet map[string]struct{} = map[string]struct{}{
 	KeySymbolQuestion:  {}, // "?"
 	// KeySymbolRightBracket: {}, // "]"
 	// KeySymbolRightCurly:      {}, // "}"
-	KeySymbolRightBrace:       {}, // ")"
-	KeySymbolSemicolon:        {}, // ";"
+	KeySymbolRightBrace: {}, // ")"
+	// KeySymbolSemicolon:        {}, // ";"
 	KeySymbolSingleQuote:      {}, // "'"
 	KeySymbolSlash:            {}, // "/"
 	KeySymbolStar:             {}, // "*"
@@ -252,7 +252,7 @@ var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]s
 	KeySymbolRightSquareBrace: {},
 
 	KeywordCommutativeProp: {},
-	KeySymbolSemicolon:     {},
+	// KeySymbolSemicolon:     {},
 }
 
 func IsBuiltinKeywordKeySymbolCanBeFcAtomName(name string) bool {

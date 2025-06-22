@@ -562,10 +562,7 @@ func (tb *tokenBlock) existFactStmt(isTrue bool) (*ast.SpecFactStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	factParams := []ast.Fc{}
-	factParams = append(factParams, existParams...)
-	factParams = append(factParams, ast.BuiltinExist_St_FactExistParamPropParmSepAtom)
-	factParams = append(factParams, pureSpecFact.Params...)
+	factParams := ast.MakeExistFactParamsSlice(existParams, pureSpecFact.Params)
 
 	if isTrue {
 		return ast.NewSpecFactStmt(ast.TrueExist_St, &pureSpecFact.PropName, factParams), nil
