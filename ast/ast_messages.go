@@ -187,12 +187,13 @@ func (f *DefFnStmt) String() string {
 	builder.WriteString(glob.KeywordFn)
 	builder.WriteString(" ")
 
-	builder.WriteString(f.DefHeader.String())
+	builder.WriteString(f.DefHeader.StringWithoutColonAtEnd())
+	builder.WriteString(" ")
+	builder.WriteString(f.RetSet.String())
 
 	if len(f.DomFacts) == 0 && len(f.ThenFacts) == 0 {
-		return strings.TrimSuffix(builder.String(), glob.KeySymbolColon)
+		return builder.String()
 	}
-
 	builder.WriteByte('\n')
 
 	if len(f.DomFacts) > 0 {
@@ -344,7 +345,7 @@ func (l *UniFactWithIffStmt) String() string {
 	return builder.String()
 }
 
-func (head DefHeader) String() string {
+func (head DefHeader) StringWithoutColonAtEnd() string {
 	var builder strings.Builder
 	builder.WriteString(head.Name)
 	builder.WriteString("(")
@@ -361,7 +362,14 @@ func (head DefHeader) String() string {
 		builder.WriteString(head.SetParams[len(head.Params)-1].String())
 	}
 
-	builder.WriteString("):")
+	builder.WriteString(")")
+	return builder.String()
+}
+
+func (head DefHeader) String() string {
+	var builder strings.Builder
+	builder.WriteString(head.StringWithoutColonAtEnd())
+	builder.WriteString(glob.KeySymbolColon)
 	return builder.String()
 }
 
