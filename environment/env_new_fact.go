@@ -423,7 +423,7 @@ func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, e
 }
 
 func (env *Env) ExecDefFnStmt(stmt *ast.DefFnStmt) error {
-	err := env.NewDefFn_InsideAtomsDeclared(stmt)
+	err := env.NewFnSatisfyFnTemplateFact_InsideAtomsDeclared(stmt)
 	if err != nil {
 		return err
 	}
