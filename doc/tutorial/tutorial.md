@@ -19,7 +19,7 @@ Try and download Litex now at [litexlang.org](https://litexlang.org).
 - **Project Email:** litexlang@outlook.com
 - **Litex Creator:** Jiachen Shen
 - **Litex Creator's Email:** malloc_realloc_free@outlook.com
-- **Litex Zulip Community:** [litex.zulipchat.com](https://litex.zulipchat.com)
+- **Litex Zulip Community:** [litex.zulipchat.com](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
 
 ## Whetting Your Appetite
 
