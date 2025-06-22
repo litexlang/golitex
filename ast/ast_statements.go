@@ -80,7 +80,7 @@ type ClaimProveStmt struct {
 }
 
 type ClaimProveByContradictionStmt struct {
-	Claim ClaimProveStmt
+	ClaimProveStmt
 }
 
 type KnowFactStmt struct {
@@ -137,4 +137,8 @@ type PubStmt struct {
 
 type ProveStmt struct {
 	Proof []Stmt
+}
+
+type FnTemplateDefStmt struct {
+	DefFnStmt DefFnStmt
 }

@@ -121,3 +121,7 @@ func NewImportStmt(path string, asPkgName string) *ImportStmt {
 func NewProveStmt(proof []Stmt) *ProveStmt {
 	return &ProveStmt{proof}
 }
+
+func NewFnTemplateDefStmt(defFnStmt DefFnStmt) *FnTemplateDefStmt {
+	return &FnTemplateDefStmt{defFnStmt}
+}

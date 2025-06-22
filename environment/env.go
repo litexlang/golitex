@@ -36,6 +36,7 @@ type Env struct {
 	ObjDefMem           ObjDefMem
 	PropDefMem          PropDefMem
 	FnDefMem            FnDefMem // 即使我会存 f in f(params set)retSet,这个项仍然必要，因为我在验证prop里的参数符合prop的要求时要用定义。而且即使后者也不必要，我放着总没错
+	FnTemplateDefMem    FnTemplateDefMem
 	ExistPropDefMem     ExistPropDefMem
 	KnownFactsStruct    KnownFactsStruct
 	KnownFactInMatchEnv glob.Map2D[KnownFactsStruct]
@@ -50,6 +51,7 @@ func NewEnv(parent *Env, curMatchEnv *ast.SpecFactStmt) *Env {
 		ObjDefMem:           *newObjMemory(),
 		PropDefMem:          *newPropMemory(),
 		FnDefMem:            *newFnMemory(),
+		FnTemplateDefMem:    *newFnTemplateMemory(),
 		ExistPropDefMem:     *newExistPropMemory(),
 		KnownFactsStruct:    makeKnownFactsStruct(),
 		EqualMem:            make(map[string]shared_ptr_to_slice_of_fc),

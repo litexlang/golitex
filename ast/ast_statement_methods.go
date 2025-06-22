@@ -349,7 +349,10 @@ func Get_FnTemplate_InFcForm_ParamSetsAndRetSet(fc Fc) ([]Fc, Fc, error) {
 		return nil, nil, fmt.Errorf("GetFnFcFnParamSetsAndRetSet: given fc is not a function")
 	}
 
-	// must have name fn
+	if len(fcAsFcFn.Params) != 1 {
+		return nil, nil, fmt.Errorf("GetFnFcFnParamSetsAndRetSet: given fc is not a function")
+	}
+
 	if !isFcAtomWithName(fcAsFcFnHeadAsFcFn.FnHead, glob.KeywordFn) {
 		return nil, nil, fmt.Errorf("GetFnFcFnParamSetsAndRetSet: given fc is not a function")
 	}
