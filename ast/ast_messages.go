@@ -216,7 +216,7 @@ func (f *DefFnStmt) String() string {
 	return fnDefStmtStringGivenKw(glob.KeywordFn, f)
 }
 
-func (f *FnTemplateDefStmt) String() string {
+func (f *DefFnTemplateStmt) String() string {
 	return fnDefStmtStringGivenKw(glob.KeywordFnTemplate, &f.DefFnStmt)
 }
 

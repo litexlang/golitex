@@ -422,6 +422,46 @@ func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, e
 	return instantiatedIffFacts, nil
 }
 
+func (env *Env) ExecDefFnStmt(stmt *ast.DefFnStmt) error {
+	err := env.NewDefFn_InsideAtomsDeclared(stmt)
+	if err != nil {
+		return err
+	}
+
+	// the function object is in fn
+	fnSet := ast.MakeFnSetFc(stmt.DefHeader.SetParams, stmt.RetSet)
+
+	inFact := ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(stmt.DefHeader.Name), fnSet})
+	err = env.NewFact(inFact)
+	if err != nil {
+		return err
+	}
+
+	thenFacts := []ast.FactStmt{}
+	thenFacts = append(thenFacts, stmt.ThenFacts...)
+
+	uniFact := ast.NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.SetParams, stmt.DomFacts, thenFacts)
+	err = env.NewFact(uniFact)
+
+	if err != nil {
+		return err
+	}
+
+	// 现在只处理dom里没额外的东西的情况
+	if len(stmt.DomFacts) == 0 {
+		fnSet := ast.NewFcFn(ast.NewFcFn(ast.NewFcAtomWithName(glob.KeywordFn), stmt.DefHeader.SetParams), []ast.Fc{stmt.RetSet})
+
+		newFact := ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(stmt.DefHeader.Name), fnSet})
+
+		err = env.NewFact(newFact)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (env *Env) newInFactPostProcess(fact *ast.SpecFactStmt) error {
 	if len(fact.Params) != 2 {
 		return fmt.Errorf("in fact expect 2 parameters, get %d in %s", len(fact.Params), fact.String())
@@ -430,7 +470,16 @@ func (env *Env) newInFactPostProcess(fact *ast.SpecFactStmt) error {
 	if asAtom, ok := fact.Params[1].(*ast.FcAtom); ok {
 		// 如果是 fn_template
 		if fnTemplateDef, ok := env.FnTemplateDefMem.Get(*asAtom); ok {
-			err := env.FnDefMem.insert(&fnTemplateDef.DefFnStmt, asAtom.PkgName)
+			fnName, ok := fact.Params[0].(*ast.FcAtom)
+			if !ok {
+				panic("For the time being, the first parameter of in fact should be a function name atom")
+			}
+
+			instantiatedDefFnStmt, err := fnTemplateDef.InstantiateByFnName(fnName.Name)
+			if err != nil {
+				return err
+			}
+			err = env.ExecDefFnStmt(instantiatedDefFnStmt)
 			if err != nil {
 				return err
 			}

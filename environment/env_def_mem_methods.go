@@ -57,7 +57,7 @@ func (memory *PropDefMem) insert(stmt *ast.DefPropStmt, pkgName string) error {
 // 	return nil
 // }
 
-func (memory *FnTemplateDefMem) insert(stmt *ast.FnTemplateDefStmt, pkgName string) error {
+func (memory *FnTemplateDefMem) insert(stmt *ast.DefFnTemplateStmt, pkgName string) error {
 	pkgMap, pkgExists := memory.Dict[pkgName]
 
 	if !pkgExists {
@@ -114,7 +114,7 @@ func (memory *ExistPropDefMem) insert(stmt *ast.DefExistPropStmt, pkgName string
 // End of Insert DefStmt into DefMem
 
 // Get DefStmt from DefMem
-func (memory *FnTemplateDefMem) Get(fc ast.FcAtom) (*ast.FnTemplateDefStmt, bool) {
+func (memory *FnTemplateDefMem) Get(fc ast.FcAtom) (*ast.DefFnTemplateStmt, bool) {
 	pkgMap, pkgExists := memory.Dict[fc.PkgName]
 	if !pkgExists {
 		return nil, false
@@ -242,10 +242,10 @@ func (e *Env) getFcAtomDefAtCurEnv(fcAtomName *ast.FcAtom) bool {
 	}
 
 	// Case2: It is a fn
-	_, ok = e.FnDefMem.Get(*fcAtomName)
-	if ok {
-		return true
-	}
+	// _, ok = e.FnDefMem.Get(*fcAtomName)
+	// if ok {
+	// 	return true
+	// }
 
 	// Case3: It is a exist prop
 	_, ok = e.ExistPropDefMem.Get(*fcAtomName)

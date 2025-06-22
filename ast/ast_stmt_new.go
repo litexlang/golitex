@@ -122,6 +122,6 @@ func NewProveStmt(proof []Stmt) *ProveStmt {
 	return &ProveStmt{proof}
 }
 
-func NewFnTemplateDefStmt(defFnStmt DefFnStmt) *FnTemplateDefStmt {
-	return &FnTemplateDefStmt{defFnStmt}
+func NewFnTemplateDefStmt(defFnStmt DefFnStmt) *DefFnTemplateStmt {
+	return &DefFnTemplateStmt{defFnStmt}
 }
