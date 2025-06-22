@@ -245,3 +245,17 @@ func (memory *ObjDefMem) InsertItem(objName string) error {
 
 	return nil
 }
+
+func (e *Env) GetTemplateOfFn(fc *ast.FcFn) (ast.Fc, bool) {
+	fcHeadAsAtom, ok := fc.FnHead.(*ast.FcAtom)
+	if !ok {
+		return e.GetTemplateOfFn(fc.FnHead.(*ast.FcFn))
+	}
+
+	fnDef, ok := e.GetFnDef(fcHeadAsAtom)
+	if !ok {
+		return nil, false
+	}
+
+	return fnDef.RetSet, true
+}
