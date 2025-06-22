@@ -48,7 +48,7 @@ func (ver *Verifier) NewDefObj_InsideAtomsDeclared(stmt *ast.DefObjStmt) error {
 	for i, objName := range stmt.Objs {
 		if ast.IsFnDeclarationFc(stmt.ObjSets[i]) {
 			fnDefStmt := ast.FromFnDeclFcToDefFnStmt(objName, stmt.ObjSets[i])
-			err = ver.env.NewDefFn_InsideAtomsDeclared(fnDefStmt)
+			err = ver.env.NewFnSatisfyFnTemplateFact_InsideAtomsDeclared(fnDefStmt)
 			if err != nil {
 				return err
 			}

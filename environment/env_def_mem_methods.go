@@ -74,7 +74,7 @@ func (memory *FnTemplateDefMem) insert(stmt *ast.DefFnTemplateStmt, pkgName stri
 	return nil
 }
 
-func (memory *FnDefMem) insert(stmt *ast.DefFnStmt, pkgName string) error {
+func (memory *FnSatisfyFnDefMem) insert(stmt *ast.DefFnStmt, pkgName string) error {
 	pkgMap, pkgExists := memory.Dict[pkgName]
 
 	if !pkgExists {
@@ -155,7 +155,7 @@ func (memory *ExistPropDefMem) Get(fc ast.FcAtom) (*ast.DefExistPropStmt, bool) 
 	return node.Def, true
 }
 
-func (memory *FnDefMem) Get(fc ast.FcAtom) ([]*ast.DefFnStmt, bool) {
+func (memory *FnSatisfyFnDefMem) Get(fc ast.FcAtom) ([]*ast.DefFnStmt, bool) {
 	pkgMap, pkgExists := memory.Dict[fc.PkgName]
 	if !pkgExists {
 		return nil, false
@@ -221,7 +221,7 @@ func (e *Env) GetLatestFnDef(fn ast.Fc) (*ast.DefFnStmt, bool) {
 	}
 
 	for env := e; env != nil; env = env.Parent {
-		fnDef, ok := env.FnDefMem.Get(*fnAsAtom)
+		fnDef, ok := env.FnSatisfyFnDefMem.Get(*fnAsAtom)
 		if ok {
 			// REMARK: 默认返回最后一个函数的定义
 			return fnDef[len(fnDef)-1], true
@@ -240,12 +240,6 @@ func (e *Env) getFcAtomDefAtCurEnv(fcAtomName *ast.FcAtom) bool {
 	if ok {
 		return true
 	}
-
-	// Case2: It is a fn
-	// _, ok = e.FnDefMem.Get(*fcAtomName)
-	// if ok {
-	// 	return true
-	// }
 
 	// Case3: It is a exist prop
 	_, ok = e.ExistPropDefMem.Get(*fcAtomName)

@@ -129,7 +129,7 @@ func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) error {
 // 	return nil
 // }
 
-func (env *Env) defFnStmt_InsideAtomsDeclared(stmt *ast.DefFnStmt) error {
+func (env *Env) FnSatisfyFnDefStmt_InsideAtomsDeclared(stmt *ast.DefFnStmt) error {
 	// fn名不能和parameter名重叠
 	if slices.Contains(stmt.DefHeader.Params, stmt.DefHeader.Name) {
 		return fmt.Errorf("fn name %s cannot be the same as parameter name %s", stmt.DefHeader.Name, stmt.DefHeader.Name)
@@ -171,13 +171,13 @@ func (env *Env) defFnStmt_InsideAtomsDeclared(stmt *ast.DefFnStmt) error {
 	return nil
 }
 
-func (env *Env) NewDefFn_InsideAtomsDeclared(stmt *ast.DefFnStmt) error {
-	err := env.defFnStmt_InsideAtomsDeclared(stmt)
+func (env *Env) NewFnSatisfyFnTemplateFact_InsideAtomsDeclared(stmt *ast.DefFnStmt) error {
+	err := env.FnSatisfyFnDefStmt_InsideAtomsDeclared(stmt)
 	if err != nil {
 		return err
 	}
 
-	err = env.FnDefMem.insert(stmt, glob.EmptyPkg)
+	err = env.FnSatisfyFnDefMem.insert(stmt, glob.EmptyPkg)
 	if err != nil {
 		return err
 	}
@@ -186,7 +186,7 @@ func (env *Env) NewDefFn_InsideAtomsDeclared(stmt *ast.DefFnStmt) error {
 }
 
 func (env *Env) NewDefFnTemplate_InsideAtomsDeclared(stmt *ast.DefFnTemplateStmt) error {
-	err := env.defFnStmt_InsideAtomsDeclared(&stmt.DefFnStmt)
+	err := env.FnSatisfyFnDefStmt_InsideAtomsDeclared(&stmt.DefFnStmt)
 	if err != nil {
 		return err
 	}
