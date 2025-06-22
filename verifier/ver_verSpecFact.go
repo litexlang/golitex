@@ -223,30 +223,22 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 	}
 
 	uniConMap := map[string]ast.Fc{}
-	for i := 0; i < len(existParams); i++ {
+	for i := range existParams {
 		uniConMap[propDef.ExistParams[i]] = existParams[i]
 	}
 
-	for i := 0; i < len(factParams); i++ {
+	for i := range factParams {
 		uniConMap[propDef.DefBody.DefHeader.Params[i]] = factParams[i]
 	}
 
-	domFacts := []ast.FactStmt{}
-	for _, fact := range propDef.DefBody.DomFacts {
-		fixed, err := fact.Instantiate(uniConMap)
-		if err != nil {
-			return false, err
-		}
-		domFacts = append(domFacts, fixed)
+	domFacts, err := propDef.DefBody.DomFacts.Instantiate(uniConMap)
+	if err != nil {
+		return false, err
 	}
 
-	iffFacts := []ast.FactStmt{}
-	for _, iffFact := range propDef.DefBody.IffFacts {
-		fixed, err := iffFact.Instantiate(uniConMap)
-		if err != nil {
-			return false, err
-		}
-		iffFacts = append(iffFacts, fixed)
+	iffFacts, err := propDef.DefBody.IffFacts.Instantiate(uniConMap)
+	if err != nil {
+		return false, err
 	}
 
 	for _, domFact := range domFacts {
@@ -282,12 +274,18 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 
 func (ver *Verifier) verSpecFact_SpecMemAndLogicMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	ok, err := ver.verSpecFact_BySpecMem(stmt, state)
-	if err != nil || ok {
+	if err != nil {
+		return false, err
+	}
+	if ok {
 		return ok, err
 	}
 
 	ok, err = ver.verSpecFact_ByLogicMem(stmt, state)
-	if err != nil || ok {
+	if err != nil {
+		return false, err
+	}
+	if ok {
 		return ok, err
 	}
 
