@@ -50,6 +50,7 @@ func (ver *Verifier) checkSpecFactRequirements(stmt *ast.SpecFactStmt, state Ver
 }
 
 func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state VerState) (bool, error) {
+	// 单独处理特殊的内置prop
 	if isArithmeticFn(fc) {
 		return ver.arithmeticFnRequirement(fc.(*ast.FcFn), state)
 	} else {
@@ -58,7 +59,7 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state VerState) (bool, er
 }
 
 func isArithmeticFn(fc ast.Fc) bool {
-	if ok := ast.IsFn_WithHeadNameInSlice(fc, []string{glob.KeySymbolPlus, glob.KeySymbolMinus, glob.KeySymbolStar, glob.KeySymbolSlash, glob.KeySymbolPower}); !ok {
+	if ok := ast.IsFn_WithHeadNameInSlice(fc, []string{glob.KeySymbolPlus, glob.KeySymbolMinus, glob.KeySymbolStar, glob.KeySymbolSlash, glob.KeySymbolPower, glob.KeySymbolPercent}); !ok {
 		return false
 	}
 
@@ -78,67 +79,28 @@ func (ver *Verifier) fcSatisfyNotBuiltinFnRequirement(fc ast.Fc, state VerState)
 
 	// TODO: Here we assume the fcFnHead is an atom. In the future we should support fcFnHead as a fcFn.
 	fcFnHeadAsAtom, ok := asFcFn.FnHead.(*ast.FcAtom)
-	if !ok {
+	if ok {
+		fnDef, ok := ver.env.IsFnDeclared(fcFnHeadAsAtom)
+		if !ok {
+			return false, fmt.Errorf("%s is not a declared function", fcFnHeadAsAtom.String())
+		}
+
+		if fnDef != nil {
+			ok, err := ver.fcFnParamsSatisfyFnHeadAtomRequirement(asFcFn, fnDef, state)
+			if err != nil {
+				return false, err
+			}
+			if !ok {
+				return false, fmt.Errorf("parameters in %s do not satisfy the requirement of that function", fcFnHeadAsAtom.String())
+			}
+		} else {
+			return false, fmt.Errorf("builtin function %s is not implemented", fcFnHeadAsAtom.String())
+		}
+	} else {
 		return false, fmt.Errorf(glob.NotImplementedMsg("function name is supposed to be an atom"))
 	}
 
-	fnDef, ok := ver.env.IsFnDeclared(fcFnHeadAsAtom)
-	if !ok {
-		return false, fmt.Errorf("%s is not a declared function", fcFnHeadAsAtom.String())
-	}
-
-	// fnDef == nil means the function is builtin
-	if fnDef != nil {
-		if len(fnDef.DefHeader.SetParams) != len(asFcFn.ParamSegs) {
-			return false, fmt.Errorf("function %s has %d params, but %d in sets", fcFnHeadAsAtom.String(), len(asFcFn.ParamSegs), len(fnDef.DefHeader.SetParams))
-		}
-
-		uniMap := map[string]ast.Fc{}
-		for i, param := range asFcFn.ParamSegs {
-			uniMap[fnDef.DefHeader.Params[i]] = param
-		}
-
-		inFacts := []ast.FactStmt{}
-		for i, inSet := range fnDef.DefHeader.SetParams {
-			// 需要把setParam实例化，因为setParam可能包含自由变量
-			setParam, err := inSet.Instantiate(uniMap)
-			if err != nil {
-				return false, err
-			}
-			inFact := ast.NewInFactWithFc(asFcFn.ParamSegs[i], setParam)
-			inFacts = append(inFacts, inFact)
-		}
-
-		for _, inFact := range inFacts {
-			ok, err := ver.VerFactStmt(inFact, state)
-			if err != nil {
-				return false, err
-			}
-			if !ok {
-				return false, fmt.Errorf("in fact %s is unknown", inFact.String())
-			}
-		}
-
-		domFacts := []ast.FactStmt{}
-		for _, domFact := range fnDef.DomFacts {
-			fixed, err := domFact.Instantiate(uniMap)
-			if err != nil {
-				return false, err
-			}
-			domFacts = append(domFacts, fixed)
-		}
-
-		for _, domFact := range domFacts {
-			ok, err := ver.VerFactStmt(domFact, state)
-			if err != nil {
-				return false, err
-			}
-			if !ok {
-				return false, fmt.Errorf("dom fact %s is unknown", domFact.String())
-			}
-		}
-	}
-
+	// 参数列表里的每个参数，内部的参数，符合参数列表里的参数的要求
 	for _, param := range asFcFn.ParamSegs {
 		ok, err := ver.fcSatisfyFnRequirement(param, state)
 		if err != nil {
@@ -174,6 +136,92 @@ func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn, state VerState) (bool
 			return false, nil
 		}
 		return true, nil
+	}
+
+	if ast.IsFcAtomWithNameAndEmptyPkg(fc.FnHead, glob.KeySymbolPercent) {
+		// 分母不是0
+		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.FalsePure, ast.NewFcAtomWithName(glob.KeySymbolEqual), []ast.Fc{fc.ParamSegs[1], ast.NewFcAtomWithName("0")}), state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+
+		// 分子分母必须是整数
+		ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fc.ParamSegs[0], ast.NewFcAtomWithName(glob.KeywordInt)}), state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+		ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fc.ParamSegs[1], ast.NewFcAtomWithName(glob.KeywordInt)}), state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+		return true, nil
+	}
+
+	return true, nil
+}
+
+func (ver *Verifier) fcFnParamsSatisfyFnHeadAtomRequirement(asFcFn *ast.FcFn, fnDef *ast.DefFnStmt, state VerState) (bool, error) {
+	fcFnHeadAsAtom, ok := asFcFn.FnHead.(*ast.FcAtom)
+	if !ok {
+		return false, fmt.Errorf(glob.NotImplementedMsg("function name is supposed to be an atom"))
+	}
+
+	if len(fnDef.DefHeader.SetParams) != len(asFcFn.ParamSegs) {
+		return false, fmt.Errorf("function %s has %d params, but %d in sets", fcFnHeadAsAtom.String(), len(asFcFn.ParamSegs), len(fnDef.DefHeader.SetParams))
+	}
+
+	uniMap := map[string]ast.Fc{}
+	for i, param := range asFcFn.ParamSegs {
+		uniMap[fnDef.DefHeader.Params[i]] = param
+	}
+
+	inFacts := []ast.FactStmt{}
+	for i, inSet := range fnDef.DefHeader.SetParams {
+		// 需要把setParam实例化，因为setParam可能包含自由变量
+		setParam, err := inSet.Instantiate(uniMap)
+		if err != nil {
+			return false, err
+		}
+		inFact := ast.NewInFactWithFc(asFcFn.ParamSegs[i], setParam)
+		inFacts = append(inFacts, inFact)
+	}
+
+	for _, inFact := range inFacts {
+		ok, err := ver.VerFactStmt(inFact, state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, fmt.Errorf("in fact %s is unknown", inFact.String())
+		}
+	}
+
+	domFacts := []ast.FactStmt{}
+	for _, domFact := range fnDef.DomFacts {
+		fixed, err := domFact.Instantiate(uniMap)
+		if err != nil {
+			return false, err
+		}
+		domFacts = append(domFacts, fixed)
+	}
+
+	for _, domFact := range domFacts {
+		ok, err := ver.VerFactStmt(domFact, state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, fmt.Errorf("dom fact %s is unknown", domFact.String())
+		}
 	}
 
 	return true, nil
