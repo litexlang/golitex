@@ -97,7 +97,41 @@ func (ver *Verifier) fcSatisfyNotBuiltinFnRequirement(fc ast.Fc, state VerState)
 			return false, fmt.Errorf("builtin function %s is not implemented", fcFnHeadAsAtom.String())
 		}
 	} else {
-		return false, fmt.Errorf(glob.NotImplementedMsg("function name is supposed to be an atom"))
+		fcFnHeadAsFcFn, ok := asFcFn.FnHead.(*ast.FcFn)
+		if !ok {
+			return false, fmt.Errorf("fc is not a function")
+		}
+
+		templateOfFn, ok := ver.env.GetTemplateOfFn(fcFnHeadAsFcFn)
+		if !ok {
+			return false, fmt.Errorf("function %s is not implemented", fcFnHeadAsFcFn.String())
+		}
+		templateOfFnAsFcFn, ok := templateOfFn.(*ast.FcFn)
+		if !ok {
+			return false, fmt.Errorf("function %s is not implemented", fcFnHeadAsFcFn.String())
+		}
+
+		// 暂时还没有template，只有以fc形式出现的retSet
+		fcFnHeadAsFnFnHeadAsFc, ok := templateOfFnAsFcFn.FnHead.(*ast.FcFn)
+		if !ok {
+			return false, fmt.Errorf("function %s is not implemented", fcFnHeadAsFcFn.String())
+		}
+
+		if len(templateOfFnAsFcFn.ParamSegs) != len(asFcFn.ParamSegs) {
+			return false, fmt.Errorf("function %s has %d params, but %d in sets", fcFnHeadAsFcFn.String(), len(asFcFn.ParamSegs), len(templateOfFnAsFcFn.ParamSegs))
+		}
+
+		for i, param := range asFcFn.ParamSegs {
+			inFact := ast.NewInFactWithFc(param, fcFnHeadAsFnFnHeadAsFc.ParamSegs[i])
+			ok, err := ver.VerFactStmt(inFact, state)
+			if err != nil {
+				return false, err
+			}
+			if !ok {
+				return false, fmt.Errorf("in fact %s is unknown", inFact.String())
+			}
+		}
+		return true, nil
 	}
 
 	// 参数列表里的每个参数，内部的参数，符合参数列表里的参数的要求
