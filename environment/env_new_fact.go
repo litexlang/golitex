@@ -401,7 +401,7 @@ func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, e
 
 	uniMap := map[string]ast.Fc{}
 	for i := range existParams {
-		uniMap[existPropDef.ExistParams[i]] = factParams[i]
+		uniMap[existPropDef.ExistParams[i]] = existParams[i]
 	}
 
 	for i := range factParams {
