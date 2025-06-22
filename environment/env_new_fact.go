@@ -103,7 +103,7 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
 		return env.newExist_St_FactPostProcess(fact)
 	}
 
-	return env.newNotExistSt_SpecFactPostProcess(fact)
+	return env.newPureFactPostProcess(fact)
 }
 
 func storeCommutativeTransitiveFact(mem map[string]*[]ast.Fc, fact *ast.SpecFactStmt) error {
@@ -152,13 +152,19 @@ func storeCommutativeTransitiveFact(mem map[string]*[]ast.Fc, fact *ast.SpecFact
 	return nil
 }
 
-func (env *Env) newNotExistSt_SpecFactPostProcess(fact *ast.SpecFactStmt) error {
+func (env *Env) newPureFactPostProcess(fact *ast.SpecFactStmt) error {
+	if _, ok := glob.BuiltinKeywordsSet[fact.PropName.Name]; ok {
+		if fact.PropName.HasGivenNameAndEmptyPkgName(glob.KeywordIn) {
+			return env.newInFactPostProcess(fact)
+		}
+	}
+
 	_, ok := env.GetPropDef(fact.PropName)
 
 	if ok {
 		if fact.TypeEnum == ast.TruePure {
 			if glob.KnowSpecFactByDef {
-				return env.newTrueSpecFact_EmitFactsKnownByDef(fact)
+				return env.newTruePureFact_EmitFactsKnownByDef(fact)
 			} else {
 				return nil
 			}
@@ -185,15 +191,10 @@ func (env *Env) newNotExistSt_SpecFactPostProcess(fact *ast.SpecFactStmt) error 
 		}
 	}
 
-	if _, ok := glob.BuiltinKeywordsSet[fact.PropName.Name]; ok || fact.IsBuiltinInfixRelaProp() {
-		return nil
-	} else {
-		return fmt.Errorf("unknown prop %s", fact.PropName)
-	}
-
+	return fmt.Errorf("unknown prop %s", fact.PropName)
 }
 
-func (env *Env) newTrueSpecFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) error {
+func (env *Env) newTruePureFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) error {
 	propDef, ok := env.GetPropDef(fact.PropName)
 	if !ok {
 		// TODO 这里需要考虑prop的定义是否在当前包中。当然这里有点复杂，因为如果是内置的prop，那么可能需要到builtin包中去找
@@ -419,4 +420,23 @@ func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, e
 	}
 
 	return instantiatedIffFacts, nil
+}
+
+func (env *Env) newInFactPostProcess(fact *ast.SpecFactStmt) error {
+	if len(fact.Params) != 2 {
+		return fmt.Errorf("in fact expect 2 parameters, get %d in %s", len(fact.Params), fact.String())
+	}
+
+	if asAtom, ok := fact.Params[1].(*ast.FcAtom); ok {
+		// 如果是 fn_template
+		if fnTemplateDef, ok := env.FnTemplateDefMem.Get(*asAtom); ok {
+			err := env.FnDefMem.insert(&fnTemplateDef.DefFnStmt, asAtom.PkgName)
+			if err != nil {
+				return err
+			}
+			return nil
+		}
+	}
+
+	return nil
 }
