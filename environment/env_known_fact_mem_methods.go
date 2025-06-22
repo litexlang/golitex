@@ -326,7 +326,7 @@ func (e *Env) IsFnDeclared(fc *ast.FcAtom) (*ast.DefFnStmt, bool) {
 	if !ok {
 		return nil, false
 	}
-	return fnDef, true
+	return fnDef[0], true
 }
 
 func (e *Env) newUniFactWithIff(stmt *ast.UniFactWithIffStmt) error {
