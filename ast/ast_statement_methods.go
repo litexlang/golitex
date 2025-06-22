@@ -337,28 +337,28 @@ func FromFnDeclFcToDefFnStmt(name string, fc Fc) *DefFnStmt {
 	return fnDefStmt
 }
 
-func Get_FnTemplate_InFcForm_ParamSetsAndRetSet(fc Fc) ([]Fc, Fc, error) {
+func Get_FnTemplate_InFcForm_ParamSetsAndRetSet(fc Fc) ([]Fc, Fc, bool) {
 	// given fc must be a function
 	fcAsFcFn, ok := fc.(*FcFn)
 	if !ok {
-		return nil, nil, fmt.Errorf("GetFnFcFnParamSetsAndRetSet: given fc is not a function")
+		return nil, nil, false
 	}
 
 	fcAsFcFnHeadAsFcFn, ok := fcAsFcFn.FnHead.(*FcFn)
 	if !ok {
-		return nil, nil, fmt.Errorf("GetFnFcFnParamSetsAndRetSet: given fc is not a function")
+		return nil, nil, false
 	}
 
 	if len(fcAsFcFn.Params) != 1 {
-		return nil, nil, fmt.Errorf("GetFnFcFnParamSetsAndRetSet: given fc is not a function")
+		return nil, nil, false
 	}
 
 	if !isFcAtomWithName(fcAsFcFnHeadAsFcFn.FnHead, glob.KeywordFn) {
-		return nil, nil, fmt.Errorf("GetFnFcFnParamSetsAndRetSet: given fc is not a function")
+		return nil, nil, false
 	}
 
 	paramSets := []Fc{}
 	paramSets = append(paramSets, fcAsFcFnHeadAsFcFn.Params...)
 
-	return paramSets, fcAsFcFn.Params[0], nil
+	return paramSets, fcAsFcFn.Params[0], true
 }
