@@ -18,7 +18,7 @@ import (
 	"fmt"
 )
 
-func IsValidName(name string) error {
+func IsValidUserDefinedName(name string) error {
 	if len(name) == 0 {
 		return fmt.Errorf("identifier name cannot be empty")
 	}

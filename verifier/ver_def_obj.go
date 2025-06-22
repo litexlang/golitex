@@ -38,7 +38,7 @@ func (ver *Verifier) NewDefObj_InsideAtomsDeclared(stmt *ast.DefObjStmt) error {
 	}
 
 	for _, objName := range stmt.Objs {
-		err := ver.env.IsInvalidName(objName)
+		err := ver.env.IsValidUserDefinedName_NoDuplicate(objName)
 		if err != nil {
 			return err
 		}
