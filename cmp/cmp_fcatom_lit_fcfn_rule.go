@@ -51,12 +51,12 @@ func cmpFcFnRule(left, right *ast.FcFn) (bool, error) {
 		return comp == 0, err
 	}
 
-	if len(left.ParamSegs) != len(right.ParamSegs) {
+	if len(left.Params) != len(right.Params) {
 		return false, nil
 	}
 
-	for i := 0; i < len(left.ParamSegs); i++ {
-		ok, _, err := Cmp_ByBIR(left.ParamSegs[i], right.ParamSegs[i])
+	for i := 0; i < len(left.Params); i++ {
+		ok, _, err := Cmp_ByBIR(left.Params[i], right.Params[i])
 		if err != nil {
 			return false, err
 		}

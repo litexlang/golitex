@@ -317,9 +317,9 @@ func GetFnDeclarationFcInsideItems(fc Fc) ([]Fc, Fc) {
 	}
 
 	paramSets := []Fc{}
-	paramSets = append(paramSets, fcAsFnHeadAsFn.ParamSegs...)
+	paramSets = append(paramSets, fcAsFnHeadAsFn.Params...)
 
-	return paramSets, fcAsFn.ParamSegs[0]
+	return paramSets, fcAsFn.Params[0]
 }
 
 func FromFnDeclFcToDefFnStmt(name string, fc Fc) *DefFnStmt {
@@ -335,4 +335,27 @@ func FromFnDeclFcToDefFnStmt(name string, fc Fc) *DefFnStmt {
 	fnDefStmt := NewDefFnStmt(*NewDefHeader(name, params, paramSets), []FactStmt{}, []FactStmt{}, retSet)
 
 	return fnDefStmt
+}
+
+func Get_FnTemplate_InFcForm_ParamSetsAndRetSet(fc Fc) ([]Fc, Fc, error) {
+	// given fc must be a function
+	fcAsFcFn, ok := fc.(*FcFn)
+	if !ok {
+		return nil, nil, fmt.Errorf("GetFnFcFnParamSetsAndRetSet: given fc is not a function")
+	}
+
+	fcAsFcFnHeadAsFcFn, ok := fcAsFcFn.FnHead.(*FcFn)
+	if !ok {
+		return nil, nil, fmt.Errorf("GetFnFcFnParamSetsAndRetSet: given fc is not a function")
+	}
+
+	// must have name fn
+	if !isFcAtomWithName(fcAsFcFnHeadAsFcFn.FnHead, glob.KeywordFn) {
+		return nil, nil, fmt.Errorf("GetFnFcFnParamSetsAndRetSet: given fc is not a function")
+	}
+
+	paramSets := []Fc{}
+	paramSets = append(paramSets, fcAsFcFnHeadAsFcFn.Params...)
+
+	return paramSets, fcAsFcFn.Params[0], nil
 }

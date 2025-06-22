@@ -38,8 +38,8 @@ type FcAtom struct {
 }
 
 type FcFn struct {
-	FnHead    Fc // 必须是 fc, 而不是 fcAtom，因为函数头可能是另一个函数的返回值
-	ParamSegs []Fc
+	FnHead Fc // 必须是 fc, 而不是 fcAtom，因为函数头可能是另一个函数的返回值
+	Params []Fc
 }
 
 func NewFcAtom(pkgName string, value string) *FcAtom {
@@ -69,19 +69,19 @@ func hasBuiltinOptAndToString(f *FcFn) (bool, string) {
 	}
 
 	if ptr.PkgName == glob.EmptyPkg && ptr.Name == glob.AtIndexOp {
-		return true, fmt.Sprintf("%s[%s]", f.ParamSegs[0], f.ParamSegs[1])
+		return true, fmt.Sprintf("%s[%s]", f.Params[0], f.Params[1])
 	}
 
 	if ptr.PkgName == glob.EmptyPkg && ptr.Name == glob.GetIndexOfOp {
-		return true, fmt.Sprintf("%s[[%s]]", f.ParamSegs[0], f.ParamSegs[1])
+		return true, fmt.Sprintf("%s[[%s]]", f.Params[0], f.Params[1])
 	}
 
 	if ptr.PkgName == glob.EmptyPkg && ptr.Name == glob.KeySymbolMinus {
-		if len(f.ParamSegs) == 1 {
-			return true, fmt.Sprintf("(%s %s)", ptr.Name, f.ParamSegs[0])
+		if len(f.Params) == 1 {
+			return true, fmt.Sprintf("(%s %s)", ptr.Name, f.Params[0])
 		}
 
-		return true, fmt.Sprintf("(%s %s %s)", f.ParamSegs[0], ptr.Name, f.ParamSegs[1])
+		return true, fmt.Sprintf("(%s %s %s)", f.Params[0], ptr.Name, f.Params[1])
 	}
 
 	if ptr.PkgName != glob.EmptyPkg {
@@ -92,7 +92,7 @@ func hasBuiltinOptAndToString(f *FcFn) (bool, string) {
 
 	outPut := string(ptr.Name)
 	if glob.IsKeySymbolRelaFn(outPut) {
-		return true, fmt.Sprintf("(%s %s %s)", f.ParamSegs[0], outPut, f.ParamSegs[1])
+		return true, fmt.Sprintf("(%s %s %s)", f.Params[0], outPut, f.Params[1])
 	}
 
 	return false, ""
@@ -116,7 +116,7 @@ func IsFcBuiltinInfixOpt(f FcFn) bool {
 		return false
 	}
 
-	return ptrHeadAsAtom.IsBuiltinRelaFn() && len(f.ParamSegs) == 2
+	return ptrHeadAsAtom.IsBuiltinRelaFn() && len(f.Params) == 2
 }
 
 func IsFcBuiltinUnaryFn(fc FcFn) bool {
@@ -125,7 +125,7 @@ func IsFcBuiltinUnaryFn(fc FcFn) bool {
 		return false
 	}
 
-	return fcAsFnHead.IsBuiltinUnaryOpt() && len(fc.ParamSegs) == 1
+	return fcAsFnHead.IsBuiltinUnaryOpt() && len(fc.Params) == 1
 }
 
 func (f *FcAtom) IsBuiltinUnaryOpt() bool {
@@ -170,15 +170,15 @@ func IsFcAtomWithNameAndEmptyPkg(fc Fc, kw string) bool {
 }
 
 func (f *FcFn) HasTwoParamsAndSwitchOrder() (*FcFn, bool) {
-	if len(f.ParamSegs) != 2 {
+	if len(f.Params) != 2 {
 		return nil, false
 	}
 
-	return NewFcFn(f.FnHead, []Fc{f.ParamSegs[0], f.ParamSegs[1]}), true
+	return NewFcFn(f.FnHead, []Fc{f.Params[0], f.Params[1]}), true
 }
 
 func (f *FcFn) HasTwoParams_FirstParamHasTheSameNameAsItself() (*FcFn, bool) {
-	if len(f.ParamSegs) != 2 {
+	if len(f.Params) != 2 {
 		return nil, false
 	}
 
@@ -189,16 +189,16 @@ func (f *FcFn) HasTwoParams_FirstParamHasTheSameNameAsItself() (*FcFn, bool) {
 		return nil, false
 	}
 
-	if f_firstParam_as_fn, ok := f.ParamSegs[0].(*FcFn); ok {
+	if f_firstParam_as_fn, ok := f.Params[0].(*FcFn); ok {
 		if f_firstParam_headAsAtom, ok := f_firstParam_as_fn.FnHead.(*FcAtom); ok {
 			if f_firstParam_headAsAtom.Name == fHeadAsAtom.Name && f_firstParam_headAsAtom.PkgName == fHeadAsAtom.PkgName {
-				if len(f_firstParam_as_fn.ParamSegs) != 2 {
+				if len(f_firstParam_as_fn.Params) != 2 {
 					return nil, false
 				}
 
-				newRight := NewFcFn(f.FnHead, []Fc{f_firstParam_as_fn.ParamSegs[0], f.ParamSegs[1]})
+				newRight := NewFcFn(f.FnHead, []Fc{f_firstParam_as_fn.Params[0], f.Params[1]})
 
-				return NewFcFn(f.FnHead, []Fc{f_firstParam_as_fn.ParamSegs[0], newRight}), true
+				return NewFcFn(f.FnHead, []Fc{f_firstParam_as_fn.Params[0], newRight}), true
 			}
 		}
 	}
@@ -215,7 +215,7 @@ func GetAtomsInFc(fc Fc) []*FcAtom {
 	}
 
 	if fcFn, ok := fc.(*FcFn); ok {
-		for _, param := range fcFn.ParamSegs {
+		for _, param := range fcFn.Params {
 			atoms := GetAtomsInFc(param)
 			ret = append(ret, atoms...)
 		}
