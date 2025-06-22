@@ -138,6 +138,6 @@ type ProveStmt struct {
 	Proof []Stmt
 }
 
-type FnTemplateDefStmt struct {
+type DefFnTemplateStmt struct {
 	DefFnStmt DefFnStmt
 }
