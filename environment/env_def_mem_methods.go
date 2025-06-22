@@ -166,6 +166,19 @@ func (memory *ObjDefMem) Get(fc ast.FcAtom) (*ast.DefObjStmt, bool) {
 	return node.Def, true
 }
 
+func (memory *FnTemplateDefMem) Get(fc ast.FcAtom) (*ast.FnTemplateDefStmt, bool) {
+	pkgMap, pkgExists := memory.Dict[fc.PkgName]
+	if !pkgExists {
+		return nil, false
+	}
+
+	node, nodeExists := pkgMap[fc.Name]
+	if !nodeExists {
+		return nil, false
+	}
+	return node.Def, true
+}
+
 // Get Def Recursively From environments
 
 func (e *Env) GetExistPropDef(propName ast.FcAtom) (*ast.DefExistPropStmt, bool) {
@@ -188,7 +201,7 @@ func (e *Env) GetPropDef(propName ast.FcAtom) (*ast.DefPropStmt, bool) {
 	return nil, false
 }
 
-func (e *Env) GetFcAtomDef(fcAtomName *ast.FcAtom) (ast.DefStmt, bool) {
+func (e *Env) GetFcAtomDef(fcAtomName *ast.FcAtom) (ast.DefStmtInterface, bool) {
 	for env := e; env != nil; env = env.Parent {
 		fcAtomDef, ok := env.getFcAtomDefAtCurEnv(fcAtomName)
 		if ok {
@@ -217,7 +230,7 @@ func (e *Env) GetFnDef(fn ast.Fc) (*ast.DefFnStmt, bool) {
 
 // Get DefStmt at current environment
 
-func (e *Env) getFcAtomDefAtCurEnv(fcAtomName *ast.FcAtom) (ast.DefStmt, bool) {
+func (e *Env) getFcAtomDefAtCurEnv(fcAtomName *ast.FcAtom) (ast.DefStmtInterface, bool) {
 	// Case1: It is a prop
 	prop, ok := e.PropDefMem.Get(*fcAtomName)
 	if ok {
@@ -240,6 +253,12 @@ func (e *Env) getFcAtomDefAtCurEnv(fcAtomName *ast.FcAtom) (ast.DefStmt, bool) {
 	obj, ok := e.ObjDefMem.Get(*fcAtomName)
 	if ok {
 		return obj, true
+	}
+
+	// Case5: It is a fn template
+	fnTemplate, ok := e.FnTemplateDefMem.Get(*fcAtomName)
+	if ok {
+		return fnTemplate, true
 	}
 
 	return nil, false

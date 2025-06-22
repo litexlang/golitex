@@ -83,16 +83,17 @@ func (stmt *OrStmt) ReverseIsTrue() []SpecFactStmt {
 	return reversedFacts
 }
 
-type DefStmt interface {
+type DefStmtInterface interface {
 	defStmt()
 	stmt()
 	String() string
 }
 
-func (s *DefObjStmt) defStmt()       {}
-func (s *DefFnStmt) defStmt()        {}
-func (s *DefPropStmt) defStmt()      {}
-func (s *DefExistPropStmt) defStmt() {}
+func (s *DefObjStmt) defStmt()        {}
+func (s *DefFnStmt) defStmt()         {}
+func (s *DefPropStmt) defStmt()       {}
+func (s *DefExistPropStmt) defStmt()  {}
+func (s *FnTemplateDefStmt) defStmt() {}
 
 type UniFactInterface interface {
 	factStmt()
