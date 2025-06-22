@@ -322,11 +322,11 @@ func (e *Env) IsFnDeclared(fc *ast.FcAtom) (*ast.DefFnStmt, bool) {
 		return nil, true
 	}
 
-	fnDef, ok := e.GetFnDef(fc)
+	fnDef, ok := e.GetLatestFnDef(fc)
 	if !ok {
 		return nil, false
 	}
-	return fnDef[0], true
+	return fnDef, true
 }
 
 func (e *Env) newUniFactWithIff(stmt *ast.UniFactWithIffStmt) error {
