@@ -122,7 +122,7 @@ func (ver *Verifier) fcSatisfyNotBuiltinFnRequirement(fc ast.Fc, state VerState)
 	}
 
 	// 参数列表里的每个参数，内部的参数，符合参数列表里的参数的要求
-	for _, param := range asFcFn.ParamSegs {
+	for _, param := range asFcFn.Params {
 		ok, err := ver.fcSatisfyFnRequirement(param, state)
 		if err != nil {
 			return false, err
@@ -137,7 +137,7 @@ func (ver *Verifier) fcSatisfyNotBuiltinFnRequirement(fc ast.Fc, state VerState)
 
 func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn, state VerState) (bool, error) {
 	// parameter必须是实数
-	for _, param := range fc.ParamSegs {
+	for _, param := range fc.Params {
 		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{param, ast.NewFcAtomWithName(glob.KeywordReal)}), state)
 		if err != nil {
 			return false, err
@@ -149,7 +149,7 @@ func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn, state VerState) (bool
 
 	if ast.IsFcAtomWithNameAndEmptyPkg(fc.FnHead, glob.KeySymbolSlash) {
 		// 分母不是0
-		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.FalsePure, ast.NewFcAtomWithName(glob.KeySymbolEqual), []ast.Fc{fc.ParamSegs[1], ast.NewFcAtomWithName("0")}), state)
+		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.FalsePure, ast.NewFcAtomWithName(glob.KeySymbolEqual), []ast.Fc{fc.Params[1], ast.NewFcAtomWithName("0")}), state)
 		if err != nil {
 			return false, err
 		}
@@ -161,7 +161,7 @@ func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn, state VerState) (bool
 
 	if ast.IsFcAtomWithNameAndEmptyPkg(fc.FnHead, glob.KeySymbolPercent) {
 		// 分母不是0
-		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.FalsePure, ast.NewFcAtomWithName(glob.KeySymbolEqual), []ast.Fc{fc.ParamSegs[1], ast.NewFcAtomWithName("0")}), state)
+		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.FalsePure, ast.NewFcAtomWithName(glob.KeySymbolEqual), []ast.Fc{fc.Params[1], ast.NewFcAtomWithName("0")}), state)
 		if err != nil {
 			return false, err
 		}
@@ -170,14 +170,14 @@ func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn, state VerState) (bool
 		}
 
 		// 分子分母必须是整数
-		ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fc.ParamSegs[0], ast.NewFcAtomWithName(glob.KeywordInt)}), state)
+		ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fc.Params[0], ast.NewFcAtomWithName(glob.KeywordInt)}), state)
 		if err != nil {
 			return false, err
 		}
 		if !ok {
 			return false, nil
 		}
-		ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fc.ParamSegs[1], ast.NewFcAtomWithName(glob.KeywordInt)}), state)
+		ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fc.Params[1], ast.NewFcAtomWithName(glob.KeywordInt)}), state)
 		if err != nil {
 			return false, err
 		}
@@ -196,12 +196,12 @@ func (ver *Verifier) fcFnParamsSatisfyFnHeadAtomRequirement(asFcFn *ast.FcFn, fn
 		return false, fmt.Errorf(glob.NotImplementedMsg("function name is supposed to be an atom"))
 	}
 
-	if len(fnDef.DefHeader.SetParams) != len(asFcFn.ParamSegs) {
-		return false, fmt.Errorf("function %s has %d params, but %d in sets", fcFnHeadAsAtom.String(), len(asFcFn.ParamSegs), len(fnDef.DefHeader.SetParams))
+	if len(fnDef.DefHeader.SetParams) != len(asFcFn.Params) {
+		return false, fmt.Errorf("function %s has %d params, but %d in sets", fcFnHeadAsAtom.String(), len(asFcFn.Params), len(fnDef.DefHeader.SetParams))
 	}
 
 	uniMap := map[string]ast.Fc{}
-	for i, param := range asFcFn.ParamSegs {
+	for i, param := range asFcFn.Params {
 		uniMap[fnDef.DefHeader.Params[i]] = param
 	}
 
@@ -212,7 +212,7 @@ func (ver *Verifier) fcFnParamsSatisfyFnHeadAtomRequirement(asFcFn *ast.FcFn, fn
 		if err != nil {
 			return false, err
 		}
-		inFact := ast.NewInFactWithFc(asFcFn.ParamSegs[i], setParam)
+		inFact := ast.NewInFactWithFc(asFcFn.Params[i], setParam)
 		inFacts = append(inFacts, inFact)
 	}
 
@@ -250,17 +250,13 @@ func (ver *Verifier) fcFnParamsSatisfyFnHeadAtomRequirement(asFcFn *ast.FcFn, fn
 
 func (ver *Verifier) fcFnParamsSatisfyFnFcTemplateRequirement(asFcFn *ast.FcFn, templateOfFnAsFcFn *ast.FcFn, state VerState) (bool, error) {
 	// 暂时还没有template，只有以fc形式出现的retSet
-	fcFnHeadAsFnFnHeadAsFc, ok := templateOfFnAsFcFn.FnHead.(*ast.FcFn)
-	if !ok {
-		return false, fmt.Errorf("function %s is not implemented", templateOfFnAsFcFn.FnHead.String())
+	paramSets, _, err := ast.Get_FnTemplate_InFcForm_ParamSetsAndRetSet(templateOfFnAsFcFn)
+	if err != nil {
+		return false, err
 	}
 
-	if len(templateOfFnAsFcFn.ParamSegs) != len(asFcFn.ParamSegs) {
-		return false, fmt.Errorf("function %s requires %d params, but %d in sets", templateOfFnAsFcFn.String(), len(templateOfFnAsFcFn.ParamSegs), len(asFcFn.ParamSegs))
-	}
-
-	for i, param := range asFcFn.ParamSegs {
-		inFact := ast.NewInFactWithFc(param, fcFnHeadAsFnFnHeadAsFc.ParamSegs[i])
+	for i, param := range asFcFn.Params {
+		inFact := ast.NewInFactWithFc(param, paramSets[i])
 		ok, err := ver.VerFactStmt(inFact, state)
 		if err != nil {
 			return false, err

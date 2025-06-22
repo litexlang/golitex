@@ -580,7 +580,7 @@ func (ver *Verifier) leftIsCommutativeAndUseCommutedLeftToCheckEqualRight(left a
 	if leftAsFn, ok := left.(*ast.FcFn); ok {
 		if leftHeadAsAtom, ok := leftAsFn.FnHead.(*ast.FcAtom); ok {
 			if ver.isCommutativeFn_BuiltinRule(*leftHeadAsAtom) { // 暂时认为只能是 atom 形式的opt name 才能判断
-				if len(leftAsFn.ParamSegs) != 2 {
+				if len(leftAsFn.Params) != 2 {
 					return false, nil
 				}
 

@@ -48,18 +48,18 @@ func InstantiateFcFn(fc *FcFn, uniMap map[string]Fc) (Fc, error) {
 			return nil, errors.New("invalid type assertion for FnHead")
 		}
 		newFc.FnHead = newHeadAsFcFn.FnHead
-		newFc.ParamSegs = append(newFc.ParamSegs, newHeadAsFcFn.ParamSegs...)
+		newFc.Params = append(newFc.Params, newHeadAsFcFn.Params...)
 	}
 
-	newParamSegs := make([]Fc, len(fc.ParamSegs))
-	for i, seg := range fc.ParamSegs {
+	newParamSegs := make([]Fc, len(fc.Params))
+	for i, seg := range fc.Params {
 		newSeg, err := seg.Instantiate(uniMap)
 		if err != nil {
 			return nil, err
 		}
 		newParamSegs[i] = newSeg
 	}
-	newFc.ParamSegs = newParamSegs
+	newFc.Params = newParamSegs
 
 	return &newFc, nil
 }

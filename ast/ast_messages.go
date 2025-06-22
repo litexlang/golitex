@@ -430,7 +430,7 @@ func (f *FcFn) String() string {
 	}
 
 	if IsFcAtomWithNameAndEmptyPkg(f.FnHead, glob.KeySymbolDot) {
-		return fmt.Sprintf("%s.%s", f.ParamSegs[0].String(), f.ParamSegs[1].String())
+		return fmt.Sprintf("%s.%s", f.Params[0].String(), f.Params[1].String())
 	}
 
 	if ok, str := hasBuiltinOptAndToString(f); ok {
@@ -440,12 +440,12 @@ func (f *FcFn) String() string {
 	var builder strings.Builder
 	builder.WriteString(f.FnHead.String())
 	builder.WriteString("(")
-	if len(f.ParamSegs) > 0 {
-		for i := range len(f.ParamSegs) - 1 {
-			builder.WriteString(f.ParamSegs[i].String())
+	if len(f.Params) > 0 {
+		for i := range len(f.Params) - 1 {
+			builder.WriteString(f.Params[i].String())
 			builder.WriteString(", ")
 		}
-		builder.WriteString(f.ParamSegs[len(f.ParamSegs)-1].String())
+		builder.WriteString(f.Params[len(f.Params)-1].String())
 	}
 	builder.WriteString(")")
 
@@ -556,7 +556,7 @@ func fnSetString(f *FcFn) string {
 	var builder strings.Builder
 	builder.WriteString(f.FnHead.String())
 	builder.WriteString(" ")
-	builder.WriteString(f.ParamSegs[0].String())
+	builder.WriteString(f.Params[0].String())
 	return builder.String()
 }
 
