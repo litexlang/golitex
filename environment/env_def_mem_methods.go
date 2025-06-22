@@ -86,7 +86,7 @@ func (memory *FnDefMem) insert(stmt *ast.DefFnStmt, pkgName string) error {
 	if !nodeExists {
 		node = FnMemItem{[]*ast.DefFnStmt{stmt}}
 	} else {
-		node.Def3 = append(node.Def3, stmt)
+		node.Def = append(node.Def, stmt)
 	}
 
 	pkgMap[stmt.DefHeader.Name] = node
@@ -114,6 +114,19 @@ func (memory *ExistPropDefMem) insert(stmt *ast.DefExistPropStmt, pkgName string
 // End of Insert DefStmt into DefMem
 
 // Get DefStmt from DefMem
+func (memory *FnTemplateDefMem) Get(fc ast.FcAtom) (*ast.FnTemplateDefStmt, bool) {
+	pkgMap, pkgExists := memory.Dict[fc.PkgName]
+	if !pkgExists {
+		return nil, false
+	}
+
+	node, nodeExists := pkgMap[fc.Name]
+	if !nodeExists {
+		return nil, false
+	}
+
+	return node.Def, true
+}
 
 func (memory *PropDefMem) Get(fc ast.FcAtom) (*ast.DefPropStmt, bool) {
 	pkgMap, pkgExists := memory.Dict[fc.PkgName]
@@ -153,23 +166,10 @@ func (memory *FnDefMem) Get(fc ast.FcAtom) ([]*ast.DefFnStmt, bool) {
 		return nil, false
 	}
 
-	return node.Def3, true
-}
-
-func (memory *ObjDefMem) Get(fc ast.FcAtom) (*ast.DefObjStmt, bool) {
-	pkgMap, pkgExists := memory.Dict[fc.PkgName]
-	if !pkgExists {
-		return nil, false
-	}
-
-	node, nodeExists := pkgMap[fc.Name]
-	if !nodeExists {
-		return nil, false
-	}
 	return node.Def, true
 }
 
-func (memory *FnTemplateDefMem) Get(fc ast.FcAtom) (*ast.FnTemplateDefStmt, bool) {
+func (memory *ObjDefMem) Get(fc ast.FcAtom) (*ast.DefObjStmt, bool) {
 	pkgMap, pkgExists := memory.Dict[fc.PkgName]
 	if !pkgExists {
 		return nil, false
