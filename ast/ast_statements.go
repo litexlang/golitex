@@ -17,7 +17,7 @@ package litex_ast
 type DefObjStmt struct {
 	Objs    []string
 	ObjSets []Fc
-	Facts   []FactStmt
+	Facts   FactStmtSlice
 }
 
 type DefHeader struct {
@@ -28,15 +28,15 @@ type DefHeader struct {
 
 type DefPropStmt struct {
 	DefHeader DefHeader
-	DomFacts  []FactStmt
-	IffFacts  []FactStmt
+	DomFacts  FactStmtSlice
+	IffFacts  FactStmtSlice
 }
 
 // 虽然它和 defProp 一样，但不排除之后要让iffFacts只能是可逆的事实
 type DefExistPropStmtBody struct {
 	DefHeader DefHeader
-	DomFacts  []FactStmt
-	IffFacts  []FactStmt
+	DomFacts  FactStmtSlice
+	IffFacts  FactStmtSlice
 }
 
 // how to  use not exist to prove and store not forall in iff section of exist_prop: define a new exist_prop, give a name to that forall, and make this exist_prop equivalent to original exist_prop. Then use prove_by_contradiction to prove the new exist_prop is also false, then the not forall is proved.
@@ -49,22 +49,21 @@ type DefExistPropStmt struct {
 // 这里 fn(p Z, F(p) set) 其实有点问题，因为F可能需要对p有一些要求，这些要求是写在dom里的，需要先运行dom然后才能运行
 type DefFnStmt struct {
 	DefHeader DefHeader
-	DomFacts  []FactStmt
-	ThenFacts []FactStmt
+	DomFacts  FactStmtSlice
+	ThenFacts FactStmtSlice
 	RetSet    Fc
 }
 
 type UniFactStmt struct {
 	Params    []string
 	ParamSets []Fc
-	DomFacts  []FactStmt
-	ThenFacts []FactStmt
-	// IffFacts  []FactStmt // TODO: 需要注意到，我存储的所有事实，这一项都是空。未来为了节约空间，可以考虑用新的结构体来存储
+	DomFacts  FactStmtSlice
+	ThenFacts FactStmtSlice
 }
 
 type UniFactWithIffStmt struct {
 	UniFact  UniFactStmt
-	IffFacts []FactStmt
+	IffFacts FactStmtSlice
 }
 
 type SpecFactStmt struct {
@@ -84,7 +83,7 @@ type ClaimProveByContradictionStmt struct {
 }
 
 type KnowFactStmt struct {
-	Facts []FactStmt
+	Facts FactStmtSlice
 }
 
 type KnowPropStmt struct {
@@ -114,7 +113,7 @@ type WithStmt struct {
 
 type ProveInEachCaseStmt struct {
 	OrFact    OrStmt
-	ThenFacts []FactStmt
+	ThenFacts FactStmtSlice
 	Proofs    [][]Stmt
 }
 
