@@ -106,13 +106,13 @@ func (ver *Verifier) fcSatisfyNotBuiltinFnRequirement(fc ast.Fc, state VerState)
 		if !ok {
 			return false, fmt.Errorf("function %s is not implemented", fcFnHeadAsFcFn.String())
 		}
-		templateOfFnAsFcFn, ok := templateOfFn.(*ast.FcFn)
+		templateOfFnHead, ok := templateOfFn.(*ast.FcFn)
 		if !ok {
 			return false, fmt.Errorf("function %s is not implemented", fcFnHeadAsFcFn.String())
 		}
 
 		// 暂时还没有template，只有以fc形式出现的retSet
-		ok, err := ver.fcFnParamsSatisfyFnTemplateRequirement(fcFnHeadAsFcFn, templateOfFnAsFcFn, state)
+		ok, err := ver.fcFnParamsSatisfyFnTemplateRequirement(fcFnHeadAsFcFn, templateOfFnHead, state)
 		if err != nil {
 			return false, err
 		}

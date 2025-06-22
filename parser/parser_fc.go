@@ -18,7 +18,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
-	"strings"
+	taskManager "golitex/task_manager"
 )
 
 func (cursor *strSliceCursor) RawFc() (ast.Fc, error) {
@@ -125,63 +125,25 @@ func (cursor *strSliceCursor) fcAtomAndFcFn() (ast.Fc, error) {
 	}
 }
 
-// func (cursor *strSliceCursor) rawFcFn(optName ast.Fc) (ast.Fc, error) {
-// 	typeParamsObjParamsPairs, err := cursor.fcFnSegs()
-
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	var curHead ast.Fc = optName
-// 	for _, seg := range typeParamsObjParamsPairs {
-// 		curHead = ast.NewFcFn(curHead, seg, nil)
-// 	}
-
-// 	return curHead, nil
-// }
-
-// func (cursor *strSliceCursor) fcFnSegs() ([][]ast.Fc, error) {
-// 	params := [][]ast.Fc{}
-
-// 	for !cursor.ExceedEnd() && (cursor.is(glob.KeySymbolLeftBrace)) {
-// 		objParamsPtr, err := cursor.bracedFcSlice()
-// 		if err != nil {
-// 			return nil, &strSliceErr{err, cursor}
-// 		}
-
-// 		params = append(params, (objParamsPtr))
-// 	}
-
-// 	return params, nil
-// }
-
 func (cursor *strSliceCursor) rawFcAtom() (*ast.FcAtom, error) {
 	value, err := cursor.next()
 	if err != nil {
 		return nil, err
 	}
 
-	var pkgName strings.Builder
+	var pkgName = taskManager.CurrentPkg
 	if cursor.is(glob.KeySymbolColonColon) {
-		pkgName.WriteString(value)
+		pkgName = (value)
 		value, err = cursor.next()
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	pkgNameStr := pkgName.String()
-
-	// TODO: 在parse时，把pkgName改成当前项目里定义的 pkgName，而不是继续沿用原来的
-	// REMARK: 我需要一个全局变量，来记录当前项目里定义的 pkgName
-	// if realPkgName, ok := cursor.parserEnv.PkgManagementMap[pkgNameStr]; ok {
-	// 	pkgNameStr = realPkgName
-	// }
-
 	if glob.IsBuiltinKeywordKeySymbol_NeverBeFcAtom(value) {
-		return ast.NewFcAtom(pkgNameStr, value), fmt.Errorf("invalid first citizen: %s", value)
+		return ast.NewFcAtom(glob.EmptyBuiltinPkgName, value), fmt.Errorf("invalid first citizen: %s", value)
 	} else {
-		return ast.NewFcAtom(pkgNameStr, value), nil
+		return ast.NewFcAtom(pkgName, value), nil
 	}
 }
 

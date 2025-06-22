@@ -18,7 +18,6 @@ const Scope4Indents string = "    "
 
 // const EmptyPkgName = ""
 const EmptyPkg string = ""
-const BuiltinPkg string = "__builtin__"
 
 // const BuiltinUnaryPkgName = "#"
 const MultiLinesCommentSig string = "\"\"\""
@@ -48,3 +47,5 @@ const MaxLogicExprFactsNum int = 8
 
 const AtIndexOp string = KeySymbolLeftSquareBrace
 const GetIndexOfOp string = KeySymbolLeftSquareBrace + KeySymbolLeftSquareBrace
+
+const EmptyBuiltinPkgName string = ""
