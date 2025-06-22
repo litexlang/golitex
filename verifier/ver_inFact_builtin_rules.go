@@ -83,21 +83,21 @@ func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactS
 		return false
 	}
 
-	fnDef, ok := ver.env.GetFnDef(fcFn.FnHead)
+	fnDef, ok := ver.env.GetLatestFnDef(fcFn.FnHead)
 	if !ok {
 		return false // 这里不传error是有点道理的，因为+-*/的定义不在mem里
 	}
 
 	uniMap := map[string]ast.Fc{}
-	if len(fnDef[0].DefHeader.Params) != len(fcFn.Params) {
+	if len(fnDef.DefHeader.Params) != len(fcFn.Params) {
 		return false
 	}
 
-	for i, param := range fnDef[0].DefHeader.Params {
+	for i, param := range fnDef.DefHeader.Params {
 		uniMap[param] = fcFn.Params[i]
 	}
 
-	instantiatedRetSet, err := fnDef[0].RetSet.Instantiate(uniMap)
+	instantiatedRetSet, err := fnDef.RetSet.Instantiate(uniMap)
 	if err != nil {
 		return false
 	}
