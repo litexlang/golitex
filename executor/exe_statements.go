@@ -66,7 +66,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		execState, err = exec.proveStmt(stmt)
 	case *ast.ClaimProveByContradictionStmt:
 		execState, err = exec.execClaimStmtProveByContradiction(stmt)
-	case *ast.FnTemplateDefStmt:
+	case *ast.DefFnTemplateStmt:
 		err = exec.defFnTemplateStmt(stmt)
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
@@ -237,46 +237,15 @@ func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt, requireMsg bool) error {
 func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 	defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
 
-	err := exec.env.NewDefFn_InsideAtomsDeclared(stmt)
+	err := exec.env.ExecDefFnStmt(stmt)
 	if err != nil {
 		return err
-	}
-
-	// the function object is in fn
-	fnSet := ast.MakeFnSetFc(stmt.DefHeader.SetParams, stmt.RetSet)
-
-	inFact := ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(stmt.DefHeader.Name), fnSet})
-	err = exec.env.NewFact(inFact)
-	if err != nil {
-		return err
-	}
-
-	thenFacts := []ast.FactStmt{}
-	thenFacts = append(thenFacts, stmt.ThenFacts...)
-
-	uniFact := ast.NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.SetParams, stmt.DomFacts, thenFacts)
-	err = exec.env.NewFact(uniFact)
-
-	if err != nil {
-		return err
-	}
-
-	// 现在只处理dom里没额外的东西的情况
-	if len(stmt.DomFacts) == 0 {
-		fnSet := ast.NewFcFn(ast.NewFcFn(ast.NewFcAtomWithName(glob.KeywordFn), stmt.DefHeader.SetParams), []ast.Fc{stmt.RetSet})
-
-		newFact := ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(stmt.DefHeader.Name), fnSet})
-
-		err = exec.env.NewFact(newFact)
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil
 }
 
-func (exec *Executor) defFnTemplateStmt(stmt *ast.FnTemplateDefStmt) error {
+func (exec *Executor) defFnTemplateStmt(stmt *ast.DefFnTemplateStmt) error {
 	defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
 
 	err := exec.env.NewDefFnTemplate_InsideAtomsDeclared(stmt)

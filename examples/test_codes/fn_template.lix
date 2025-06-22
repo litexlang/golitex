@@ -1,7 +1,9 @@
 fn_template f_template(x Z) Z:
     dom:
         x >= 0
-    then::
+    then:
         f_template(x) = x + 1  
 
 obj m f_template
+
+m(0) = 0 + 1

@@ -185,7 +185,7 @@ func (env *Env) NewDefFn_InsideAtomsDeclared(stmt *ast.DefFnStmt) error {
 	return nil
 }
 
-func (env *Env) NewDefFnTemplate_InsideAtomsDeclared(stmt *ast.FnTemplateDefStmt) error {
+func (env *Env) NewDefFnTemplate_InsideAtomsDeclared(stmt *ast.DefFnTemplateStmt) error {
 	err := env.defFnStmt_InsideAtomsDeclared(&stmt.DefFnStmt)
 	if err != nil {
 		return err

@@ -402,3 +402,20 @@ func (factStmtSlice FactStmtSlice) Instantiate(uniMap map[string]Fc) (FactStmtSl
 	}
 	return instantiatedFacts, nil
 }
+
+func (stmt *DefFnTemplateStmt) InstantiateByFnName(fnName string) (*DefFnStmt, error) {
+	newDefHeader := NewDefHeader(fnName, stmt.DefFnStmt.DefHeader.Params, stmt.DefFnStmt.DefHeader.SetParams)
+
+	uniMap := map[string]Fc{stmt.DefFnStmt.DefHeader.Name: NewFcAtomWithName(fnName)}
+	instantiatedDomFacts, err := stmt.DefFnStmt.DomFacts.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+
+	instantiatedThenFacts, err := stmt.DefFnStmt.ThenFacts.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewDefFnStmt(*newDefHeader, instantiatedDomFacts, instantiatedThenFacts, stmt.DefFnStmt.RetSet), nil
+}

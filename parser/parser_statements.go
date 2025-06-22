@@ -1157,7 +1157,7 @@ func (tb *tokenBlock) parseFactBodyWithHeaderNameAndUniFactDepth(headerName stri
 	return facts, nil
 }
 
-func (tb *tokenBlock) defFnTemplateStmt() (*ast.FnTemplateDefStmt, error) {
+func (tb *tokenBlock) defFnTemplateStmt() (*ast.DefFnTemplateStmt, error) {
 	fnDef, err := tb.defFnStmt(glob.KeywordFnTemplate)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}

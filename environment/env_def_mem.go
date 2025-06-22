@@ -29,7 +29,7 @@ type ExistPropDefMem struct {
 	Dict glob.Map2D[ExistPropMemItem]
 }
 
-type FnTemplateMemItem struct{ Def *ast.FnTemplateDefStmt }
+type FnTemplateMemItem struct{ Def *ast.DefFnTemplateStmt }
 type FnTemplateDefMem struct {
 	Dict glob.Map2D[FnTemplateMemItem]
 }
