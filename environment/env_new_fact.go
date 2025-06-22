@@ -250,12 +250,9 @@ func (env *Env) newFalseExistFact_EmitEquivalentUniFact(fact *ast.SpecFactStmt) 
 
 // have(exist ... st ...) => exist
 func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
-	sepIndex := fact.Exist_St_SeparatorIndex()
-	if sepIndex == -1 {
-		return fmt.Errorf("%s has no separator", fact.String())
-	}
+	_, factParams := ast.GetExistFactExistParamsAndFactParams(fact)
 
-	existFact := ast.NewSpecFactStmt(ast.TruePure, &fact.PropName, fact.Params[sepIndex+1:])
+	existFact := ast.NewSpecFactStmt(ast.TruePure, &fact.PropName, factParams)
 
 	// err := env.KnownFacts.SpecFactMem.NewFactInSpecFactMem(existFact, env.CurMatchEnv)
 	err := env.storeSpecFactInMem(existFact)
@@ -395,10 +392,7 @@ func (env *Env) isMathInductionPropName_StoreIt(fact *ast.SpecFactStmt) (bool, e
 }
 
 func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, error) {
-	sepIndex := fact.Exist_St_SeparatorIndex()
-	if sepIndex == -1 {
-		return nil, fmt.Errorf("%s has no separator", fact.String())
-	}
+	existParams, factParams := ast.GetExistFactExistParamsAndFactParams(fact)
 
 	existPropDef, ok := env.GetExistPropDef(fact.PropName)
 	if !ok {
@@ -406,12 +400,12 @@ func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, e
 	}
 
 	uniMap := map[string]ast.Fc{}
-	for i := range sepIndex {
-		uniMap[existPropDef.ExistParams[i]] = fact.Params[i]
+	for i := range existParams {
+		uniMap[existPropDef.ExistParams[i]] = factParams[i]
 	}
 
-	for i := sepIndex + 1; i < len(fact.Params); i++ {
-		uniMap[existPropDef.DefBody.DefHeader.Params[i-sepIndex-1]] = fact.Params[i]
+	for i := range factParams {
+		uniMap[existPropDef.DefBody.DefHeader.Params[i]] = factParams[i]
 	}
 
 	instantiatedIffFacts := []ast.FactStmt{}

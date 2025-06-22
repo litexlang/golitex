@@ -25,7 +25,7 @@ const MaxNameLen int = 255
 
 const FuncFactPrefix string = "$"
 
-const BuiltinExist_St_FactExistParamPropParmSep string = KeySymbolSemicolon
+// const BuiltinExist_St_FactExistParamPropParmSep string = KeySymbolSemicolon
 
 const CommentSig string = "#"
 

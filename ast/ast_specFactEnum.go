@@ -14,7 +14,9 @@
 
 package litex_ast
 
-import glob "golitex/glob"
+import (
+	glob "golitex/glob"
+)
 
 type SpecFactEnum uint8
 
@@ -51,18 +53,7 @@ func (f *SpecFactStmt) IsExist_St_Fact() bool {
 }
 
 func (f *SpecFactStmt) IsTrue() bool {
-	// return f.TypeEnum == TruePure || f.TypeEnum == TrueExist || f.TypeEnum == TrueExist_St
 	return f.TypeEnum == TruePure || f.TypeEnum == TrueExist_St
-}
-
-func (f *SpecFactStmt) Exist_St_SeparatorIndex() int {
-	for i, param := range f.Params {
-		paramAsAtom, ok := param.(*FcAtom)
-		if ok && paramAsAtom.PkgName == glob.EmptyPkg && paramAsAtom.Name == glob.BuiltinExist_St_FactExistParamPropParmSep {
-			return i
-		}
-	}
-	return -1
 }
 
 func (f *SpecFactStmt) NameIs(givenName string) bool {

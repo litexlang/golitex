@@ -167,9 +167,9 @@ There are two major special cases of match and substitute:
 
 ## Litex's Unique Design
 
-_Keep it simple, stupid._
+_Common sense is not so common._
 
-_-- The Unix Philosophy_
+_-- Voltaire_
 
 _Simplicity is the ultimate sophistication._
 
@@ -276,9 +276,9 @@ Differences:
 
 ##  Examples: Litex for Curious Formal Language Users
 
-_Common sense is not so common._
+_Keep it simple, stupid._
 
-_-- Voltaire_
+_-- The Unix Philosophy_
 
 _Learning is experience, everything else is just information._
 
