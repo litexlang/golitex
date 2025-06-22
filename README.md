@@ -13,7 +13,7 @@ _The Language of Math: What If A Formal Language Is As Intuitive As Natural Lang
 *Created by Jiachen Shen (You can call me Jackie Shen.)*
 
 [![Github](https://img.shields.io/badge/Github-grey?logo=github)](https://github.com/litexlang/golitex)
-[![Zulip Community](https://img.shields.io/badge/Zulip%20Community-purple?logo=zulip)](https://litex.zulipchat.com)
+[![Zulip Community](https://img.shields.io/badge/Zulip%20Community-purple?logo=zulip)](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
 [![Website](https://img.shields.io/badge/Website-blue?logo=website)](https://litexlang.org)
 [![Email](https://img.shields.io/badge/Email-red?logo=email)](mailto:litexlang@outlook.com)
 [![Online Playground](https://img.shields.io/badge/Online%20Playground-darkgreen?logo=playground)](https://litexlang.org/playground)
@@ -34,7 +34,7 @@ _The best way to predict the future is to invent it._
 
 _-- Alan Kay_
 
-**Welcome to our [zulip community](https://litex.zulipchat.com) to get the latest updates and discuss with us.**
+**Welcome to our [zulip community](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/) to get the latest updates and discuss with us.**
 
 Litex is a simple and easy-to-learn formal language. It makes formal reasoning as natural as writing in natural language. Thanks to its innovative design, even 10-year-olds can learn Litex easily. This gives it a dimensional advantage over existing formal languages, such as Lean, which even PhD students struggle to master. In the foreseeable future, Litex is going to reduce the time ratio between formalizing a proof and writing it in natural language from 10:1 to 1:1. By deliberately sacrificing Turing completeness, Litex focuses solely on mathematical verification and is the perfect domain language for formal reasoning. Mathematics, this ancient discipline, will be understood and written in a completely new way.
 
@@ -91,9 +91,9 @@ After having a sense of Litex, do this:
 2. Read the [Litex for Curious Lean Users](./doc/litex_for_curious_lean_users/litex_for_curious_lean_users.md) to get a sense of the difference between Litex and Lean.
 3. To learn applications of Litex, read [applications of formal reasoning in AI and many other fields](./doc/applications_of_formal_reasoning/applications_of_formal_reasoning.md).
 4. To read a comprehensive example, read [formalization of Hilbert geometry axioms](./examples/comprehensive_examples/Hilbert_geometry_axioms_formalization.lix).
-5. Contribute piece by piece to the Litex kernel or the Litex dataset, e.g. formalize mathematical concepts, fix bugs, add new features, improve documentation, etc. on [github](https://github.com/litexlang/golitex), [zulip](https://litex.zulipchat.com).
+5. Contribute piece by piece to the Litex kernel or the Litex dataset, e.g. formalize mathematical concepts, fix bugs, add new features, improve documentation, etc. on [github](https://github.com/litexlang/golitex), [zulip](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/).
 
-**IF YOU HAVE ANY PROBLEMS, PLEASE CONTACT THROUGH [zulip](https://litex.zulipchat.com) OR litexlang@outlook.com OR [github](https://github.com/litexlang/golitex).**
+**IF YOU HAVE ANY PROBLEMS, PLEASE CONTACT THROUGH [zulip](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/) OR litexlang@outlook.com OR [github](https://github.com/litexlang/golitex).**
 
 **THANK YOU FOR YOUR FEARLESS EARLY ADOPTION! HERE IS MY HEARTFELT THANKS TO Litex's EARLIEST FANS -- THE BOLD PIONEERS WHO TRUSTS ME FROM THE START!**
 
@@ -214,7 +214,7 @@ _Given enough eyeballs, all bugs are shallow._
 
 _-- Linus Torvalds_
 
-Litex's growth is driven by the needs of its users. The users shape the language, not anyone else. If you have any ideas, please contact us through [zulip](https://litex.zulipchat.com) or litexlang@outlook.com.
+Litex's growth is driven by the needs of its users. The users shape the language, not anyone else. If you have any ideas, please contact us through [zulip](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/) or litexlang@outlook.com.
 
 1. Why is Litex poised for success now?
 
@@ -453,6 +453,6 @@ Since 90% of the functionality delivered now is better than 100% of it delivered
 - **Project Email:** litexlang@outlook.com
 - **Litex Creator:** Jiachen Shen
 - **Litex Creator's Email:** malloc_realloc_free@outlook.com
-- **Litex Zulip Community:** [litex.zulipchat.com](https://litex.zulipchat.com)
+- **Litex Zulip Community:** [litex.zulipchat.com](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
 
 [^1]: Kernighan & Plauger, The Elements of Programming Style, 1978.
