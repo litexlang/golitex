@@ -29,6 +29,11 @@ type ExistPropDefMem struct {
 	Dict glob.Map2D[ExistPropMemItem]
 }
 
+type FnTemplateMemItem struct{ Def *ast.FnTemplateDefStmt }
+type FnTemplateDefMem struct {
+	Dict glob.Map2D[FnTemplateMemItem]
+}
+
 type ObjMemItem struct{ Def *ast.DefObjStmt }
 type ObjDefMem struct {
 	Dict glob.Map2D[ObjMemItem]
@@ -52,4 +57,8 @@ func newObjMemory() *ObjDefMem {
 
 func newExistPropMemory() *ExistPropDefMem {
 	return &ExistPropDefMem{make(glob.Map2D[ExistPropMemItem])}
+}
+
+func newFnTemplateMemory() *FnTemplateDefMem {
+	return &FnTemplateDefMem{make(glob.Map2D[FnTemplateMemItem])}
 }

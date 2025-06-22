@@ -44,7 +44,7 @@ func (tb *tokenBlock) stmt() (ast.Stmt, error) {
 	case glob.KeywordExistProp:
 		ret, err = tb.defExistPropStmt()
 	case glob.KeywordFn:
-		ret, err = tb.defFnStmt()
+		ret, err = tb.defFnStmt(glob.KeywordFn)
 	case glob.KeywordObj:
 		ret, err = tb.defObjStmt()
 	case glob.KeywordHave:
@@ -69,6 +69,8 @@ func (tb *tokenBlock) stmt() (ast.Stmt, error) {
 		ret, err = tb.withPropMatchStmt()
 	case glob.KeywordProveInEachCase:
 		ret, err = tb.proveInEachCaseStmt()
+	case glob.KeywordFnTemplate:
+		ret, err = tb.defFnTemplateStmt()
 	default:
 		ret, err = tb.factStmt(UniFactDepth0)
 	}
@@ -247,8 +249,8 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 	return ast.NewDefPropStmt(*declHeader, domFacts, iffFacts), nil
 }
 
-func (tb *tokenBlock) defFnStmt() (*ast.DefFnStmt, error) {
-	err := tb.header.skip(glob.KeywordFn)
+func (tb *tokenBlock) defFnStmt(keyword string) (*ast.DefFnStmt, error) {
+	err := tb.header.skip(keyword)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -1156,4 +1158,13 @@ func (tb *tokenBlock) parseFactBodyWithHeaderNameAndUniFactDepth(headerName stri
 		facts = append(facts, curStmt)
 	}
 	return facts, nil
+}
+
+func (tb *tokenBlock) defFnTemplateStmt() (*ast.FnTemplateDefStmt, error) {
+	fnDef, err := tb.defFnStmt(glob.KeywordFnTemplate)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	return ast.NewFnTemplateDefStmt(*fnDef), nil
 }

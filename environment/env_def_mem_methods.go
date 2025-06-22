@@ -57,6 +57,23 @@ func (memory *PropDefMem) insert(stmt *ast.DefPropStmt, pkgName string) error {
 // 	return nil
 // }
 
+func (memory *FnTemplateDefMem) insert(stmt *ast.FnTemplateDefStmt, pkgName string) error {
+	pkgMap, pkgExists := memory.Dict[pkgName]
+
+	if !pkgExists {
+		memory.Dict[pkgName] = make(map[string]FnTemplateMemItem)
+		pkgMap = memory.Dict[pkgName]
+	}
+
+	node, nodeExists := pkgMap[stmt.DefFnStmt.DefHeader.Name]
+	if !nodeExists {
+		node = FnTemplateMemItem{stmt}
+	}
+	pkgMap[stmt.DefFnStmt.DefHeader.Name] = node
+
+	return nil
+}
+
 func (memory *FnDefMem) insert(stmt *ast.DefFnStmt, pkgName string) error {
 	pkgMap, pkgExists := memory.Dict[pkgName]
 
