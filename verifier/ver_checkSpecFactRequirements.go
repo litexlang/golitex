@@ -249,22 +249,18 @@ func (ver *Verifier) fcFnParamsSatisfyFnHeadAtomRequirement(asFcFn *ast.FcFn, fn
 }
 
 func (ver *Verifier) fcFnParamsSatisfyFnTemplateRequirement(head *ast.FcFn, templateOfFn ast.Fc, state VerState) (bool, error) {
-	if head.FnHead.IsAtom() {
-		if _, _, err := ast.Get_FnTemplate_InFcForm_ParamSetsAndRetSet(templateOfFn); err == nil {
-			return ver.fcFnParamsSatisfy_FnTemplateInFcForm_Requirement(head, templateOfFn.(*ast.FcFn), state)
-		} else {
-			panic("not implemented")
-		}
+	if _, _, ok := ast.Get_FnTemplate_InFcForm_ParamSetsAndRetSet(templateOfFn); ok {
+		return ver.fcFnParamsSatisfy_FnTemplateInFcForm_Requirement(head, templateOfFn.(*ast.FcFn), state)
 	} else {
-		panic("")
+		panic("not implemented")
 	}
 }
 
 func (ver *Verifier) fcFnParamsSatisfy_FnTemplateInFcForm_Requirement(asFcFn *ast.FcFn, templateOfFnAsFcFn *ast.FcFn, state VerState) (bool, error) {
 	// 暂时还没有template，只有以fc形式出现的retSet
-	paramSets, _, err := ast.Get_FnTemplate_InFcForm_ParamSetsAndRetSet(templateOfFnAsFcFn)
-	if err != nil {
-		return false, err
+	paramSets, _, ok := ast.Get_FnTemplate_InFcForm_ParamSetsAndRetSet(templateOfFnAsFcFn)
+	if !ok {
+		panic("not implemented")
 	}
 
 	for i, param := range asFcFn.Params {
