@@ -142,13 +142,13 @@ func (ver *Verifier) match_FcFnInFactUnderUniFact_ConFc(fcFnUnFactUnderUniFact *
 	}
 	mergeMatchMaps(matchMap, retMap)
 
-	if len(conParamAsFcFn.ParamSegs) != len(fcFnUnFactUnderUniFact.ParamSegs) {
+	if len(conParamAsFcFn.Params) != len(fcFnUnFactUnderUniFact.Params) {
 		return nil, false, nil //? 不清楚应该报错还是说直接返回不对，应该是返回不对
 	}
 
-	for i, uniPipe := range fcFnUnFactUnderUniFact.ParamSegs {
+	for i, uniPipe := range fcFnUnFactUnderUniFact.Params {
 		// matchMap, ok, err := ver.match_FcInFactUnderUniFact_WithConFc(param, conParamAsFcFn.ParamSegs[i][j], uniParams)
-		matchMap, ok, err := ver.match_FcInFactUnderUniFact_WithConFc(uniPipe, conParamAsFcFn.ParamSegs[i], knownFact)
+		matchMap, ok, err := ver.match_FcInFactUnderUniFact_WithConFc(uniPipe, conParamAsFcFn.Params[i], knownFact)
 		if err != nil {
 			return nil, false, err
 		}

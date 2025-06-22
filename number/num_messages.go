@@ -40,24 +40,24 @@ func fcAtomString(fcAtom *ast.FcAtom) string {
 
 func fcFnString(fcFn *ast.FcFn) string {
 	if ast.IsFcAtomWithNameAndEmptyPkg(fcFn.FnHead, glob.KeySymbolPlus) {
-		return "(" + FcStringForParseAndExpandPolynomial(fcFn.ParamSegs[0]) + " + " + FcStringForParseAndExpandPolynomial(fcFn.ParamSegs[1]) + ")"
+		return "(" + FcStringForParseAndExpandPolynomial(fcFn.Params[0]) + " + " + FcStringForParseAndExpandPolynomial(fcFn.Params[1]) + ")"
 	}
 	if ast.IsFcAtomWithNameAndEmptyPkg(fcFn.FnHead, glob.KeySymbolStar) {
-		return "(" + FcStringForParseAndExpandPolynomial(fcFn.ParamSegs[0]) + " * " + FcStringForParseAndExpandPolynomial(fcFn.ParamSegs[1]) + ")"
+		return "(" + FcStringForParseAndExpandPolynomial(fcFn.Params[0]) + " * " + FcStringForParseAndExpandPolynomial(fcFn.Params[1]) + ")"
 	}
 	if ast.IsFcAtomWithNameAndEmptyPkg(fcFn.FnHead, glob.KeySymbolMinus) {
-		if len(fcFn.ParamSegs) == 1 {
-			return "(" + "0" + " - " + FcStringForParseAndExpandPolynomial(fcFn.ParamSegs[0]) + ")"
-		} else if len(fcFn.ParamSegs) == 2 {
-			return "(" + FcStringForParseAndExpandPolynomial(fcFn.ParamSegs[0]) + " - " + FcStringForParseAndExpandPolynomial(fcFn.ParamSegs[1]) + ")"
+		if len(fcFn.Params) == 1 {
+			return "(" + "0" + " - " + FcStringForParseAndExpandPolynomial(fcFn.Params[0]) + ")"
+		} else if len(fcFn.Params) == 2 {
+			return "(" + FcStringForParseAndExpandPolynomial(fcFn.Params[0]) + " - " + FcStringForParseAndExpandPolynomial(fcFn.Params[1]) + ")"
 		} else {
 			panic("fcFnString: fcFn.ParamSegs has more than 2 elements")
 		}
 	}
 	// 如果是幂运算，则把它展开成对应的乘法，比如(x+1)^2 展开成 (x+1) * (x+1)
 	if ast.IsFcAtomWithNameAndEmptyPkg(fcFn.FnHead, glob.KeySymbolPower) {
-		base := FcStringForParseAndExpandPolynomial(fcFn.ParamSegs[0])
-		exp := FcStringForParseAndExpandPolynomial(fcFn.ParamSegs[1])
+		base := FcStringForParseAndExpandPolynomial(fcFn.Params[0])
+		exp := FcStringForParseAndExpandPolynomial(fcFn.Params[1])
 
 		// Try to parse exponent as integer
 		if expInt, err := strconv.Atoi(exp); err == nil {

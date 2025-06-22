@@ -48,12 +48,12 @@ func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state VerState) (b
 				return false, err
 			}
 			if fnNameEqual {
-				if len(leftAsFn.ParamSegs) != len(rightAsFn.ParamSegs) {
+				if len(leftAsFn.Params) != len(rightAsFn.Params) {
 					return false, nil
 				}
 
-				for i := range leftAsFn.ParamSegs {
-					ok, err := ver.verFcEqual(leftAsFn.ParamSegs[i], rightAsFn.ParamSegs[i], state)
+				for i := range leftAsFn.Params {
+					ok, err := ver.verFcEqual(leftAsFn.Params[i], rightAsFn.Params[i], state)
 					if err != nil {
 						return false, err
 					}

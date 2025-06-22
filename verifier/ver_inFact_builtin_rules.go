@@ -89,12 +89,12 @@ func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactS
 	}
 
 	uniMap := map[string]ast.Fc{}
-	if len(fnDef.DefHeader.Params) != len(fcFn.ParamSegs) {
+	if len(fnDef.DefHeader.Params) != len(fcFn.Params) {
 		return false
 	}
 
 	for i, param := range fnDef.DefHeader.Params {
-		uniMap[param] = fcFn.ParamSegs[i]
+		uniMap[param] = fcFn.Params[i]
 	}
 
 	instantiatedRetSet, err := fnDef.RetSet.Instantiate(uniMap)
