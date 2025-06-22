@@ -20,7 +20,7 @@ var EmptyIffFacts []FactStmt = nil
 
 var ClaimStmtEmptyToCheck FactStmt = nil
 
-var BuiltinExist_St_FactExistParamPropParmSepAtom = &FcAtom{glob.EmptyPkg, glob.BuiltinExist_St_FactExistParamPropParmSep}
+// var BuiltinExist_St_FactExistParamPropParmSepAtom = &FcAtom{glob.EmptyPkg, glob.BuiltinExist_St_FactExistParamPropParmSep}
 
 var EmptyKnowClaimName = ""
 

@@ -18,6 +18,7 @@ import (
 	"fmt"
 	glob "golitex/glob"
 	"slices"
+	"strconv"
 )
 
 func (stmt *SpecFactStmt) IsBuiltinInfixRelaProp() bool {
@@ -361,4 +362,31 @@ func Get_FnTemplate_InFcForm_ParamSetsAndRetSet(fc Fc) ([]Fc, Fc, bool) {
 	paramSets = append(paramSets, fcAsFcFnHeadAsFcFn.Params...)
 
 	return paramSets, fcAsFcFn.Params[0], true
+}
+
+func MakeExistFactParamsSlice(existParams []Fc, paramsInFact []Fc) []Fc {
+	lengthOfExistParams := len(existParams)
+
+	factParams := []Fc{}
+	factParams = append(factParams, NewFcAtomWithName(fmt.Sprintf("%d", lengthOfExistParams)))
+	factParams = append(factParams, existParams...)
+	factParams = append(factParams, paramsInFact...)
+
+	return factParams
+}
+
+func GetExistFactExistParamsAndFactParams(stmt *SpecFactStmt) ([]Fc, []Fc) {
+	lengthOfExistParams, _ := strconv.Atoi(stmt.Params[0].(*FcAtom).Name)
+
+	existParams := []Fc{}
+	factParams := []Fc{}
+	for i := 1; i < lengthOfExistParams+1; i++ {
+		existParams = append(existParams, stmt.Params[i])
+	}
+
+	for i := lengthOfExistParams + 1; i < len(stmt.Params); i++ {
+		factParams = append(factParams, stmt.Params[i])
+	}
+
+	return existParams, factParams
 }

@@ -214,10 +214,7 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 }
 
 func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	sepIndex := stmt.Exist_St_SeparatorIndex()
-	if sepIndex == -1 {
-		return false, fmt.Errorf("%s has no separator", stmt.String())
-	}
+	existParams, factParams := ast.GetExistFactExistParamsAndFactParams(stmt)
 
 	propDef, ok := ver.env.GetExistPropDef(stmt.PropName)
 	if !ok {
@@ -226,12 +223,12 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 	}
 
 	uniConMap := map[string]ast.Fc{}
-	for i := 0; i < sepIndex; i++ {
-		uniConMap[propDef.ExistParams[i]] = stmt.Params[i]
+	for i := 0; i < len(existParams); i++ {
+		uniConMap[propDef.ExistParams[i]] = existParams[i]
 	}
 
-	for i := sepIndex + 1; i < len(stmt.Params); i++ {
-		uniConMap[propDef.DefBody.DefHeader.Params[i-sepIndex-1]] = stmt.Params[i]
+	for i := 0; i < len(factParams); i++ {
+		uniConMap[propDef.DefBody.DefHeader.Params[i]] = factParams[i]
 	}
 
 	domFacts := []ast.FactStmt{}
