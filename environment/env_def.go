@@ -21,51 +21,19 @@ import (
 	"slices"
 )
 
-func (env *Env) IsInvalidName(name string) error {
-	err := glob.IsValidName(name)
+func (env *Env) IsValidUserDefinedName_NoDuplicate(name string) error {
+	err := glob.IsValidUserDefinedName(name)
 	if err != nil {
 		return err
 	}
 
-	for curEnv := env; curEnv != nil; curEnv = curEnv.Parent {
-		_, ok := curEnv.ObjDefMem.Dict[glob.EmptyPkg][name]
-		if ok {
-			return duplicateDefMsg(glob.EmptyPkg, name, glob.KeywordObj)
-		}
-		_, ok = curEnv.FnDefMem.Dict[glob.EmptyPkg][name]
-		if ok {
-			return duplicateDefMsg(glob.EmptyPkg, name, glob.KeywordFn)
-		}
-		_, ok = curEnv.PropDefMem.Dict[glob.EmptyPkg][name]
-		if ok {
-			return duplicateDefMsg(glob.EmptyPkg, name, glob.KeywordProp)
-		}
-		_, ok = curEnv.ExistPropDefMem.Dict[glob.EmptyPkg][name]
-		if ok {
-			return duplicateDefMsg(glob.EmptyPkg, name, glob.KeywordExistProp)
-		}
+	defStmt, ok := env.GetFcAtomDef(ast.NewFcAtomWithName(name))
+	if ok {
+		return duplicateDefError(glob.EmptyPkg, name, defStmt.String())
 	}
 
 	return nil
 }
-
-// func (env *Env) isDeclaredFn_Prop_ExistProp(name string) bool {
-// 	for curEnv := env; curEnv != nil; curEnv = curEnv.Parent {
-// 		_, ok := curEnv.FnDefMem.Dict[glob.EmptyPkg][name]
-// 		if ok {
-// 			return true
-// 		}
-// 		_, ok = curEnv.PropDefMem.Dict[glob.EmptyPkg][name]
-// 		if ok {
-// 			return true
-// 		}
-// 		_, ok = curEnv.ExistPropDefMem.Dict[glob.EmptyPkg][name]
-// 		if ok {
-// 			return true
-// 		}
-// 	}
-// 	return false
-// }
 
 func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) error {
 	// prop名不能和parameter名重叠
@@ -73,7 +41,7 @@ func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) error {
 		return fmt.Errorf("prop name %s cannot be the same as parameter name %s", stmt.DefHeader.Name, stmt.DefHeader.Name)
 	}
 
-	err := env.IsInvalidName(stmt.DefHeader.Name)
+	err := env.IsValidUserDefinedName_NoDuplicate(stmt.DefHeader.Name)
 	if err != nil {
 		return err
 	}
@@ -195,7 +163,7 @@ func (env *Env) defFnStmt_InsideAtomsDeclared(stmt *ast.DefFnStmt) error {
 	}
 
 	// TODO: WARNING: 这里有严重问题。因为貌似同一个fn可以implement很多的fn_template，所以即使之前知道它怎么样，我也不能说明什么问题
-	err = env.IsInvalidName(stmt.DefHeader.Name)
+	err = env.IsValidUserDefinedName_NoDuplicate(stmt.DefHeader.Name)
 	if err != nil {
 		return err
 	}
@@ -264,7 +232,7 @@ func (env *Env) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) 
 		}
 	}
 
-	err = env.IsInvalidName(stmt.DefBody.DefHeader.Name)
+	err = env.IsValidUserDefinedName_NoDuplicate(stmt.DefBody.DefHeader.Name)
 	if err != nil {
 		return err
 	}
