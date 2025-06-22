@@ -86,7 +86,7 @@ func (memory *FnDefMem) insert(stmt *ast.DefFnStmt, pkgName string) error {
 	if !nodeExists {
 		node = FnMemItem{[]*ast.DefFnStmt{stmt}}
 	} else {
-		node.Def = append(node.Def, stmt)
+		node.Def3 = append(node.Def3, stmt)
 	}
 
 	pkgMap[stmt.DefHeader.Name] = node
@@ -153,7 +153,7 @@ func (memory *FnDefMem) Get(fc ast.FcAtom) ([]*ast.DefFnStmt, bool) {
 		return nil, false
 	}
 
-	return node.Def, true
+	return node.Def3, true
 }
 
 func (memory *ObjDefMem) Get(fc ast.FcAtom) (*ast.DefObjStmt, bool) {
@@ -214,7 +214,7 @@ func (e *Env) GetFcAtomDef(fcAtomName *ast.FcAtom) bool {
 	return false
 }
 
-func (e *Env) GetFnDef(fn ast.Fc) ([]*ast.DefFnStmt, bool) {
+func (e *Env) GetLatestFnDef(fn ast.Fc) (*ast.DefFnStmt, bool) {
 	fnAsAtom, isFnAsAtom := fn.(*ast.FcAtom)
 	if !isFnAsAtom {
 		return nil, false
@@ -223,7 +223,8 @@ func (e *Env) GetFnDef(fn ast.Fc) ([]*ast.DefFnStmt, bool) {
 	for env := e; env != nil; env = env.Parent {
 		fnDef, ok := env.FnDefMem.Get(*fnAsAtom)
 		if ok {
-			return fnDef, true
+			// REMARK: 默认返回最后一个函数的定义
+			return fnDef[len(fnDef)-1], true
 		}
 	}
 	return nil, false
@@ -260,11 +261,8 @@ func (e *Env) getFcAtomDefAtCurEnv(fcAtomName *ast.FcAtom) bool {
 
 	// Case5: It is a fn template
 	_, ok = e.FnTemplateDefMem.Get(*fcAtomName)
-	if ok {
-		return true
-	}
 
-	return false
+	return ok
 }
 
 func (memory *ObjDefMem) InsertItem(objName string) error {
@@ -291,12 +289,12 @@ func (e *Env) GetTemplateOfFn(fc *ast.FcFn) (ast.Fc, bool) {
 			return e.GetTemplateOfFn(fc.FnHead.(*ast.FcFn))
 		}
 
-		fnDef, ok := e.GetFnDef(fcHeadAsAtom)
+		fnDef, ok := e.GetLatestFnDef(fcHeadAsAtom)
 		if !ok {
 			return nil, false
 		}
 
-		return fnDef[0].RetSet, true
+		return fnDef.RetSet, true
 	} else {
 		fcHeadAsFn, ok := fc.FnHead.(*ast.FcFn)
 		if !ok {

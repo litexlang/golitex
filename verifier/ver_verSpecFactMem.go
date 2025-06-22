@@ -841,23 +841,23 @@ func (ver *Verifier) isFnEqualFact_Check_BuiltinRules(stmt *ast.SpecFactStmt, st
 		return true, nil
 	}
 
-	leftFnDef, ok := ver.env.GetFnDef(stmt.Params[0])
+	leftFnDef, ok := ver.env.GetLatestFnDef(stmt.Params[0])
 	if !ok {
 		return false, nil
 	}
 
-	rightFnDef, ok := ver.env.GetFnDef(stmt.Params[1])
+	rightFnDef, ok := ver.env.GetLatestFnDef(stmt.Params[1])
 	if !ok {
 		return false, nil
 	}
 
 	// 元素数量相等
-	if len(leftFnDef[0].DefHeader.Params) != len(rightFnDef[0].DefHeader.Params) {
+	if len(leftFnDef.DefHeader.Params) != len(rightFnDef.DefHeader.Params) {
 		return false, nil
 	}
 
 	// left to right
-	ok, err := ver.leftFnAlwaysEqualToRight(leftFnDef[0], rightFnDef[0], state)
+	ok, err := ver.leftFnAlwaysEqualToRight(leftFnDef, rightFnDef, state)
 	if err != nil {
 		return false, err
 	}
@@ -866,7 +866,7 @@ func (ver *Verifier) isFnEqualFact_Check_BuiltinRules(stmt *ast.SpecFactStmt, st
 	}
 
 	// right to left
-	ok, err = ver.leftFnAlwaysEqualToRight(rightFnDef[0], leftFnDef[0], state)
+	ok, err = ver.leftFnAlwaysEqualToRight(rightFnDef, leftFnDef, state)
 	if err != nil {
 		return false, err
 	}
