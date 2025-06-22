@@ -39,7 +39,7 @@ type ObjDefMem struct {
 	Dict glob.Map2D[ObjMemItem]
 }
 
-type FnMemItem struct{ Def3 []*ast.DefFnStmt }
+type FnMemItem struct{ Def []*ast.DefFnStmt }
 
 type FnDefMem struct {
 	Dict glob.Map2D[FnMemItem]
