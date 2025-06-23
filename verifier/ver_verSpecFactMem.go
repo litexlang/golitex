@@ -852,7 +852,7 @@ func (ver *Verifier) isFnEqualFact_Check_BuiltinRules(stmt *ast.SpecFactStmt, st
 	}
 
 	// 元素数量相等
-	if len(leftFnDef.DefHeader.Params) != len(rightFnDef.DefHeader.Params) {
+	if len(leftFnDef.Params) != len(rightFnDef.Params) {
 		return false, nil
 	}
 

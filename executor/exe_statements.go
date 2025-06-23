@@ -243,13 +243,13 @@ func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt, requireMsg bool) error {
 func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 	defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
 
-	err := exec.env.KnowDefFnSatisfyFnTemplate_KnowUniFactDerivedFromDefFn(&stmt.FnTemplateStmt)
+	err := exec.env.KnowDefFnSatisfyFnTemplate_KnowUniFactDerivedFromDefFn(ast.NewFcAtomWithName(stmt.Name), &stmt.FnTemplateStmt)
 	if err != nil {
 		return err
 	}
 
 	// put into obj mem
-	err = exec.env.ObjDefMem.InsertItem(stmt.FnTemplateStmt.DefHeader.Name)
+	err = exec.env.ObjDefMem.InsertItem(stmt.Name)
 	if err != nil {
 		return err
 	}

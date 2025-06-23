@@ -97,11 +97,11 @@ func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactS
 	}
 
 	uniMap := map[string]ast.Fc{}
-	if len(fnDef.DefHeader.Params) != len(fcFn.Params) {
+	if len(fnDef.Params) != len(fcFn.Params) {
 		return false
 	}
 
-	for i, param := range fnDef.DefHeader.Params {
+	for i, param := range fnDef.Params {
 		uniMap[param] = fcFn.Params[i]
 	}
 
@@ -275,7 +275,7 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state VerState) (b
 		return false, nil
 	}
 
-	instantiatedDefFnStmt, err := fnT.InstantiateByFnName(stmt.Params[0].String())
+	instantiatedDefFnStmt, err := fnT.InstantiateByFnName(stmt.Params[0])
 	if err != nil {
 		return false, nil
 	}
@@ -286,7 +286,7 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state VerState) (b
 	}
 
 	for i := len(specFactDefs) - 1; i >= 0; i-- {
-		ok, err := ver.leftDomLeadToRightDom_RightDomLeadsToRightThen(specFactDefs[i], instantiatedDefFnStmt, state)
+		ok, err := ver.leftDomLeadToRightDom_RightDomLeadsToRightThen(stmt.Params[0], specFactDefs[i], instantiatedDefFnStmt, state)
 		if err != nil {
 			return false, err
 		}
@@ -300,14 +300,14 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state VerState) (b
 
 // left dom >= right dom
 // left dom + left then + right dom => right then
-func (ver *Verifier) leftDomLeadToRightDom_RightDomLeadsToRightThen(leftFnDef *ast.FnTemplateStmt, rightFnDef *ast.FnTemplateStmt, state VerState) (bool, error) {
-	if len(leftFnDef.DefHeader.Params) != len(rightFnDef.DefHeader.Params) {
+func (ver *Verifier) leftDomLeadToRightDom_RightDomLeadsToRightThen(funcName ast.Fc, leftFnDef *ast.FnTemplateStmt, rightFnDef *ast.FnTemplateStmt, state VerState) (bool, error) {
+	if len(leftFnDef.Params) != len(rightFnDef.Params) {
 		return false, fmt.Errorf("the number of parameters of the left function definition is not equal to the number of parameters of the right function definition")
 	}
 
 	uniMap := map[string]ast.Fc{}
-	for i, param := range rightFnDef.DefHeader.Params {
-		uniMap[param] = ast.NewFcAtomWithName(leftFnDef.DefHeader.Params[i])
+	for i, param := range rightFnDef.Params {
+		uniMap[param] = ast.NewFcAtomWithName(leftFnDef.Params[i])
 	}
 
 	instantiatedSetParams, instantiatedDomFacts, instantiatedThenFacts, instantiatedRetSet, err := rightFnDef.Instantiate_SetParamsInFacts_DomFacts_ThenFacts_RetSet(uniMap)
@@ -317,19 +317,19 @@ func (ver *Verifier) leftDomLeadToRightDom_RightDomLeadsToRightThen(leftFnDef *a
 
 	inRightSetParamFacts := []ast.FactStmt{}
 	for i, setParam := range instantiatedSetParams {
-		inRightSetParamFacts = append(inRightSetParamFacts, ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(leftFnDef.DefHeader.Params[i]), setParam}))
+		inRightSetParamFacts = append(inRightSetParamFacts, ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(leftFnDef.Params[i]), setParam}))
 	}
 
 	fcFnParams := []ast.Fc{}
-	for _, param := range leftFnDef.DefHeader.Params {
+	for _, param := range leftFnDef.Params {
 		fcFnParams = append(fcFnParams, ast.NewFcAtomWithName(param))
 	}
-	fcFn := ast.NewFcFn(ast.NewFcAtomWithName(leftFnDef.DefHeader.Name), fcFnParams)
+	fcFn := ast.NewFcFn(funcName, fcFnParams)
 
 	fcFnInLeftRetSet := ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fcFn, leftFnDef.RetSet})
 
 	// left dom => right dom
-	leftDomToRightDomUniFact := ast.NewUniFact(leftFnDef.DefHeader.Params, leftFnDef.DefHeader.SetParams, leftFnDef.DomFacts, append(inRightSetParamFacts, instantiatedThenFacts...))
+	leftDomToRightDomUniFact := ast.NewUniFact(leftFnDef.Params, leftFnDef.ParamSets, leftFnDef.DomFacts, append(inRightSetParamFacts, instantiatedThenFacts...))
 
 	ok, err := ver.VerFactStmt(leftDomToRightDomUniFact, state)
 	if err != nil {
@@ -351,7 +351,7 @@ func (ver *Verifier) leftDomLeadToRightDom_RightDomLeadsToRightThen(leftFnDef *a
 	rightThenFacts = append(rightThenFacts, ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fcFn, instantiatedRetSet}))
 	rightThenFacts = append(rightThenFacts, instantiatedThenFacts...)
 
-	leftDom_leftThen_rightDom_rightThen_uniFact := ast.NewUniFact(leftFnDef.DefHeader.Params, leftFnDef.DefHeader.SetParams, leftDomToRightDomFacts, rightThenFacts)
+	leftDom_leftThen_rightDom_rightThen_uniFact := ast.NewUniFact(leftFnDef.Params, leftFnDef.ParamSets, leftDomToRightDomFacts, rightThenFacts)
 
 	if ok, err := ver.VerFactStmt(leftDom_leftThen_rightDom_rightThen_uniFact, state); err != nil || !ok {
 		return false, err

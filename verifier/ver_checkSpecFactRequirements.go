@@ -193,17 +193,17 @@ func (ver *Verifier) fcFnParamsSatisfyFnHeadAtomRequirement(asFcFn *ast.FcFn, fn
 		return false, fmt.Errorf(glob.NotImplementedMsg("function name is supposed to be an atom"))
 	}
 
-	if len(fnDef.DefHeader.SetParams) != len(asFcFn.Params) {
-		return false, fmt.Errorf("function %s has %d params, but %d in sets", fcFnHeadAsAtom.String(), len(asFcFn.Params), len(fnDef.DefHeader.SetParams))
+	if len(fnDef.ParamSets) != len(asFcFn.Params) {
+		return false, fmt.Errorf("function %s has %d params, but %d in sets", fcFnHeadAsAtom.String(), len(asFcFn.Params), len(fnDef.ParamSets))
 	}
 
 	uniMap := map[string]ast.Fc{}
 	for i, param := range asFcFn.Params {
-		uniMap[fnDef.DefHeader.Params[i]] = param
+		uniMap[fnDef.Params[i]] = param
 	}
 
 	inFacts := []ast.FactStmt{}
-	for i, inSet := range fnDef.DefHeader.SetParams {
+	for i, inSet := range fnDef.ParamSets {
 		// 需要把setParam实例化，因为setParam可能包含自由变量
 		setParam, err := inSet.Instantiate(uniMap)
 		if err != nil {
@@ -248,7 +248,7 @@ func (ver *Verifier) fcFnParamsSatisfyFnHeadAtomRequirement(asFcFn *ast.FcFn, fn
 func (ver *Verifier) fcFnParamsSatisfyFnTemplateRequirement(head *ast.FcFn, templateOfFn *ast.FnTemplateStmt, state VerState) (bool, error) {
 	uniMap := map[string]ast.Fc{}
 	for i, param := range head.Params {
-		uniMap[templateOfFn.DefHeader.Params[i]] = param
+		uniMap[templateOfFn.Params[i]] = param
 	}
 
 	paramSets, instantiatedDomFacts, _, _, err := templateOfFn.Instantiate_SetParamsInFacts_DomFacts_ThenFacts_RetSet(uniMap)
