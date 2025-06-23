@@ -251,7 +251,7 @@ func (ver *Verifier) fcFnParamsSatisfyFnTemplateRequirement(head *ast.FcFn, temp
 		uniMap[templateOfFn.Params[i]] = param
 	}
 
-	paramSets, instantiatedDomFacts, _, _, err := templateOfFn.Instantiate_SetParamsInFacts_DomFacts_ThenFacts_RetSet(uniMap)
+	paramSets, instantiatedDomFacts, _, _, err := templateOfFn.InstantiateFnTWithoutChangingTName(uniMap)
 	if err != nil {
 		return false, err
 	}
