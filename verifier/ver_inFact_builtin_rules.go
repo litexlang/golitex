@@ -54,7 +54,10 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state VerState) 
 		return true, nil
 	}
 
-	ok = ver.inFnTemplateFact(stmt, state)
+	ok, err = ver.inFnTemplateFact(stmt, state)
+	if err != nil {
+		return false, err
+	}
 	if ok {
 		return true, nil
 	}
@@ -261,48 +264,47 @@ func (ver *Verifier) verInC_BySpecMem(stmt *ast.SpecFactStmt, state VerState) (b
 	return true, stmt.String()
 }
 
-func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state VerState) bool {
+func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	templateName, ok := stmt.Params[1].(*ast.FcAtom)
 	if !ok {
-		return false
+		return false, nil
 	}
 
 	fnT, ok := ver.env.FnTemplateDefMem.Get(*templateName)
 	if !ok {
-		return false
+		return false, nil
 	}
 
 	instantiatedDefFnStmt, err := fnT.InstantiateByFnName(templateName.Name)
 	if err != nil {
-		return false
+		return false, nil
 	}
 
-	ok, err := ver.leftFnDefSatisfyRightFnDef(instantiatedDefFnStmt, stmt.Params[0], state)
-	if err != nil {
-		return false
-	}
-
+	specFactDefs, ok := ver.env.FnSatisfyFnDefMem.Get(stmt.PropName)
 	if !ok {
-
-	return true
-}
-
-func (ver *Verifier) leftFnDefSatisfyRightFnDef(leftFnDef *ast.DefFnStmt, rightFnDef *ast.DefFnStmt, state VerState) (bool, error) {
-	if len(leftFnDef.DefHeader.Params) != len(rightFnDef.DefHeader.Params) {
-		return false, fmt.Errorf("the number of parameters of the left function definition is not equal to the number of parameters of the right function definition")
+		return false, nil
 	}
 
-	ok, err := ver.leftDomLeadToRightDom_RightDomLeadsToRightThen(leftFnDef, rightFnDef, state)
-	if err != nil {
-		return false, err
+	for i := len(specFactDefs) - 1; i >= 0; i-- {
+		ok, err := ver.leftDomLeadToRightDom_RightDomLeadsToRightThen(specFactDefs[i], instantiatedDefFnStmt, state)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			return true, nil
+		}
 	}
 
-	return ok, nil
+	return false, nil
 }
 
 // left dom >= right dom
 // left dom + left then + right dom => right then
 func (ver *Verifier) leftDomLeadToRightDom_RightDomLeadsToRightThen(leftFnDef *ast.DefFnStmt, rightFnDef *ast.DefFnStmt, state VerState) (bool, error) {
+	if len(leftFnDef.DefHeader.Params) != len(rightFnDef.DefHeader.Params) {
+		return false, fmt.Errorf("the number of parameters of the left function definition is not equal to the number of parameters of the right function definition")
+	}
+
 	uniMap := map[string]ast.Fc{}
 	for i, param := range rightFnDef.DefHeader.Params {
 		uniMap[param] = ast.NewFcAtomWithName(leftFnDef.DefHeader.Params[i])
@@ -320,18 +322,26 @@ func (ver *Verifier) leftDomLeadToRightDom_RightDomLeadsToRightThen(leftFnDef *a
 
 	// left dom => right dom
 	leftDomToRightDomUniFact := ast.NewUniFact(leftFnDef.DefHeader.Params, leftFnDef.DefHeader.SetParams, leftFnDef.DomFacts, instantiatedRightThen)
+
 	ok, err := ver.VerFactStmt(leftDomToRightDomUniFact, state)
 	if err != nil {
 		return false, err
 	}
+	if !ok {
+		return false, nil
+	}
 
 	// left dom + left then + right dom => right then
-	leftDom_leftThen_rightDom := []ast.FactStmt{leftFnDef.DomFacts, leftFnDef.ThenFacts, instantiatedRightDom}
-	leftDom_leftThen_rightDom_rightThen_uniFact := ast.NewUniFact(leftFnDef.DefHeader.Params, leftFnDef.DefHeader.SetParams, leftDom_leftThen_rightDom, instantiatedRightThen)
-	ok, err = ver.VerFactStmt(leftDom_leftThen_rightDom_rightThen_uniFact, state)
-	if err != nil {
+	leftDomToRightDomFacts := []ast.FactStmt{}
+	leftDomToRightDomFacts = append(leftDomToRightDomFacts, leftFnDef.DomFacts...)
+	leftDomToRightDomFacts = append(leftDomToRightDomFacts, leftFnDef.ThenFacts...)
+	leftDomToRightDomFacts = append(leftDomToRightDomFacts, instantiatedRightDom...)
+
+	leftDom_leftThen_rightDom_rightThen_uniFact := ast.NewUniFact(leftFnDef.DefHeader.Params, leftFnDef.DefHeader.SetParams, leftDomToRightDomFacts, instantiatedRightThen)
+
+	if ok, err := ver.VerFactStmt(leftDom_leftThen_rightDom_rightThen_uniFact, state); err != nil || !ok {
 		return false, err
 	}
 
-	return ok, nil
+	return true, nil
 }
