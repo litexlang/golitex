@@ -250,18 +250,18 @@ func (ver *Verifier) fcFnParamsSatisfyFnTemplateRequirement(head *ast.FcFn, temp
 		uniMap[templateOfFn.DefHeader.Params[i]] = param
 	}
 
-	instantiatedSetParamsInFacts, instantiatedDomFacts, _, _, err := templateOfFn.Instantiate_SetParamsInFacts_DomFacts_ThenFacts_RetSet(uniMap)
+	paramSets, instantiatedDomFacts, _, _, err := templateOfFn.Instantiate_SetParamsInFacts_DomFacts_ThenFacts_RetSet(uniMap)
 	if err != nil {
 		return false, err
 	}
 
-	for _, inFact := range instantiatedSetParamsInFacts {
-		ok, err := ver.VerFactStmt(inFact, state)
+	for i, paramSet := range paramSets {
+		ok, err := ver.VerFactStmt(ast.NewInFactWithFc(head.Params[i], paramSet), state)
 		if err != nil {
 			return false, err
 		}
 		if !ok {
-			return false, fmt.Errorf("in fact %s is unknown", inFact.String())
+			return false, fmt.Errorf("in fact %s is unknown", ast.NewInFactWithFc(head.Params[i], paramSet).String())
 		}
 	}
 
