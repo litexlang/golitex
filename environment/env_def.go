@@ -129,13 +129,15 @@ func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) error {
 // 	return nil
 // }
 
-func (env *Env) insideAtomsDeclared(stmt *ast.FnTemplateStmt) error {
+func (env *Env) insideAtomsDeclared(nameAsFc ast.Fc, stmt *ast.FnTemplateStmt) error {
 	// fn名不能和parameter名重叠
-	if slices.Contains(stmt.DefHeader.Params, stmt.DefHeader.Name) {
-		return fmt.Errorf("fn name %s cannot be the same as parameter name %s", stmt.DefHeader.Name, stmt.DefHeader.Name)
+	name := nameAsFc.String()
+
+	if slices.Contains(stmt.Params, name) {
+		return fmt.Errorf("fn name %s cannot be the same as parameter name %s", name, name)
 	}
 
-	err := env.NonDuplicateParam_NoUndeclaredParamSet(stmt.DefHeader.Params, stmt.DefHeader.SetParams, false)
+	err := env.NonDuplicateParam_NoUndeclaredParamSet(stmt.Params, stmt.ParamSets, false)
 	if err != nil {
 		return err
 	}
@@ -145,20 +147,20 @@ func (env *Env) insideAtomsDeclared(stmt *ast.FnTemplateStmt) error {
 	}
 
 	extraAtomNames := map[string]struct{}{}
-	for _, param := range stmt.DefHeader.Params {
+	for _, param := range stmt.Params {
 		extraAtomNames[param] = struct{}{}
 	}
-	extraAtomNames[stmt.DefHeader.Name] = struct{}{}
+	extraAtomNames[name] = struct{}{}
 
 	for _, fact := range stmt.DomFacts {
 		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
-			return fmt.Errorf(fmt.Sprintf("%s\nis true by fn %s definition, but there are undeclared atoms in the fact\n", fact.String(), stmt.DefHeader.Name))
+			return fmt.Errorf(fmt.Sprintf("%s\nis true by fn %s definition, but there are undeclared atoms in the fact\n", fact.String(), name))
 		}
 	}
 
 	for _, fact := range stmt.ThenFacts {
 		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
-			return fmt.Errorf(fmt.Sprintf("%s\nis true by fn %s definition, but there are undeclared atoms in the fact\n", fact.String(), stmt.DefHeader.Name))
+			return fmt.Errorf(fmt.Sprintf("%s\nis true by fn %s definition, but there are undeclared atoms in the fact\n", fact.String(), name))
 		}
 	}
 

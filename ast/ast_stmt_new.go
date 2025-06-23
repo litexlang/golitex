@@ -15,7 +15,7 @@
 package litex_ast
 
 import (
-	glob "golitex/glob"
+	taskManager "golitex/task_manager"
 )
 
 func NewPubStmt(stmts []Stmt) *PubStmt {
@@ -91,7 +91,8 @@ func NewDefExistPropBodyStmt(defHeader DefHeader, domFacts []FactStmt, iffFacts 
 }
 
 func NewFcAtomWithName(name string) *FcAtom {
-	return NewFcAtom(glob.EmptyPkg, name)
+	// return NewFcAtom(glob.EmptyPkg, name)
+	return NewFcAtom(taskManager.CurrentPkg, name)
 }
 
 func NewKnowExistPropStmt(existProp DefExistPropStmt) *KnowExistPropStmt {
