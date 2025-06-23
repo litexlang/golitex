@@ -43,15 +43,15 @@ type FnMemItem struct {
 	Def []*ast.FnTemplateStmt
 }
 
-type FnInFnTemplateMem struct {
+type FnInFnTemplateFactsMem struct {
 	Dict glob.Map2D[FnMemItem]
 }
 
 func newPropMemory() *PropDefMem {
 	return &PropDefMem{make(glob.Map2D[PropMemItem])}
 }
-func newFnMemory() *FnInFnTemplateMem {
-	return &FnInFnTemplateMem{make(glob.Map2D[FnMemItem])}
+func newFnMemory() *FnInFnTemplateFactsMem {
+	return &FnInFnTemplateFactsMem{make(glob.Map2D[FnMemItem])}
 }
 
 func newObjMemory() *ObjDefMem {

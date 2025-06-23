@@ -69,7 +69,7 @@ func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) error {
 		}
 	}
 
-	return env.PropDefMem.insert(stmt, glob.EmptyPkg)
+	return env.PropDefMem.insert(stmt)
 }
 
 // func (env *Env) NewDefObj_InsideAtomsDeclared(stmt *ast.DefObjStmt) error {
@@ -211,5 +211,5 @@ func (env *Env) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) 
 		return err
 	}
 
-	return env.ExistPropDefMem.insert(stmt, glob.EmptyPkg)
+	return env.ExistPropDefMem.insert(stmt)
 }

@@ -23,12 +23,12 @@ import (
 
 // Insert DefStmt into DefMem
 
-func (memory *PropDefMem) insert(stmt *ast.DefPropStmt, pkgName string) error {
-	pkgMap, pkgExists := memory.Dict[pkgName]
+func (memory *PropDefMem) insert(stmt *ast.DefPropStmt) error {
+	pkgMap, pkgExists := memory.Dict[taskManager.CurrentPkg]
 
 	if !pkgExists {
-		memory.Dict[pkgName] = make(map[string]PropMemItem)
-		pkgMap = memory.Dict[pkgName]
+		memory.Dict[taskManager.CurrentPkg] = make(map[string]PropMemItem)
+		pkgMap = memory.Dict[taskManager.CurrentPkg]
 	}
 
 	node, nodeExists := pkgMap[stmt.DefHeader.Name]
@@ -41,30 +41,12 @@ func (memory *PropDefMem) insert(stmt *ast.DefPropStmt, pkgName string) error {
 	return nil
 }
 
-// func (memory *ObjDefMem) insert(stmt *ast.DefObjStmt, pkgName string) error {
-// 	pkgMap, pkgExists := memory.Dict[pkgName]
-
-// 	if !pkgExists {
-// 		memory.Dict[pkgName] = make(map[string]ObjMemItem)
-// 		pkgMap = memory.Dict[pkgName]
-// 	}
-
-// 	for _, objName := range stmt.Objs {
-// 		node, nodeExists := pkgMap[objName]
-// 		if !nodeExists {
-// 			node = ObjMemItem{stmt}
-// 		}
-// 		pkgMap[objName] = node
-// 	}
-// 	return nil
-// }
-
-func (memory *FnTemplateDefMem) insert(stmt *ast.DefFnTemplateStmt, pkgName string) error {
-	pkgMap, pkgExists := memory.Dict[pkgName]
+func (memory *FnTemplateDefMem) insert(stmt *ast.DefFnTemplateStmt) error {
+	pkgMap, pkgExists := memory.Dict[taskManager.CurrentPkg]
 
 	if !pkgExists {
-		memory.Dict[pkgName] = make(map[string]FnTemplateMemItem)
-		pkgMap = memory.Dict[pkgName]
+		memory.Dict[taskManager.CurrentPkg] = make(map[string]FnTemplateMemItem)
+		pkgMap = memory.Dict[taskManager.CurrentPkg]
 	}
 
 	node, nodeExists := pkgMap[stmt.Name]
@@ -76,32 +58,12 @@ func (memory *FnTemplateDefMem) insert(stmt *ast.DefFnTemplateStmt, pkgName stri
 	return nil
 }
 
-func (memory *FnInFnTemplateMem) insert(name string, stmt *ast.FnTemplateStmt) error {
+func (memory *ExistPropDefMem) insert(stmt *ast.DefExistPropStmt) error {
 	pkgMap, pkgExists := memory.Dict[taskManager.CurrentPkg]
 
 	if !pkgExists {
-		memory.Dict[taskManager.CurrentPkg] = make(map[string]FnMemItem)
+		memory.Dict[taskManager.CurrentPkg] = make(map[string]ExistPropMemItem)
 		pkgMap = memory.Dict[taskManager.CurrentPkg]
-	}
-
-	node, nodeExists := pkgMap[name]
-	if !nodeExists {
-		node = FnMemItem{[]*ast.FnTemplateStmt{stmt}}
-	} else {
-		node.Def = append(node.Def, stmt)
-	}
-
-	pkgMap[name] = node
-
-	return nil
-}
-
-func (memory *ExistPropDefMem) insert(stmt *ast.DefExistPropStmt, pkgName string) error {
-	pkgMap, pkgExists := memory.Dict[pkgName]
-
-	if !pkgExists {
-		memory.Dict[pkgName] = make(map[string]ExistPropMemItem)
-		pkgMap = memory.Dict[pkgName]
 	}
 
 	node, nodeExists := pkgMap[stmt.DefBody.DefHeader.Name]
@@ -157,7 +119,7 @@ func (memory *ExistPropDefMem) Get(fc ast.FcAtom) (*ast.DefExistPropStmt, bool) 
 	return node.Def, true
 }
 
-func (memory *FnInFnTemplateMem) Get(fc ast.FcAtom) ([]*ast.FnTemplateStmt, bool) {
+func (memory *FnInFnTemplateFactsMem) Get(fc ast.FcAtom) ([]*ast.FnTemplateStmt, bool) {
 	pkgMap, pkgExists := memory.Dict[fc.PkgName]
 	if !pkgExists {
 		return nil, false
@@ -185,6 +147,15 @@ func (memory *ObjDefMem) Get(fc ast.FcAtom) (*ast.DefObjStmt, bool) {
 }
 
 // Get Def Recursively From environments
+func (e *Env) GetFnTemplateDef(fcAtomName *ast.FcAtom) (*ast.DefFnTemplateStmt, bool) {
+	for env := e; env != nil; env = env.Parent {
+		fnTemplateDef, ok := env.FnTemplateDefMem.Get(*fcAtomName)
+		if ok {
+			return fnTemplateDef, true
+		}
+	}
+	return nil, false
+}
 
 func (e *Env) GetExistPropDef(propName ast.FcAtom) (*ast.DefExistPropStmt, bool) {
 	for env := e; env != nil; env = env.Parent {
@@ -231,36 +202,6 @@ func (e *Env) GetFnDefs(fn ast.Fc) ([]*ast.FnTemplateStmt, bool) {
 	return nil, false
 }
 
-func (e *Env) GetLatestFnDef(fn ast.Fc) (*ast.FnTemplateStmt, bool) {
-	fnAsAtom, isFnAsAtom := fn.(*ast.FcAtom)
-	if !isFnAsAtom {
-		return nil, false
-	}
-
-	for env := e; env != nil; env = env.Parent {
-		fnDef, ok := env.FnSatisfyFnDefMem.Get(*fnAsAtom)
-		if ok {
-			// REMARK: 默认返回最后一个函数的定义
-			return fnDef[len(fnDef)-1], true
-		}
-	}
-	return nil, false
-}
-
-func (e *Env) GetFnTemplateDef(fcAtomName *ast.FcAtom) (*ast.DefFnTemplateStmt, bool) {
-	for env := e; env != nil; env = env.Parent {
-		fnTemplateDef, ok := env.FnTemplateDefMem.Get(*fcAtomName)
-		if ok {
-			return fnTemplateDef, true
-		}
-	}
-	return nil, false
-}
-
-// End of Get Def Recursively From environments
-
-// Get DefStmt at current environment
-
 func (e *Env) getFcAtomDefAtCurEnv(fcAtomName *ast.FcAtom) bool {
 	// Case1: It is a prop
 	_, ok := e.PropDefMem.Get(*fcAtomName)
@@ -306,7 +247,7 @@ func (memory *ObjDefMem) InsertItem(objName string) error {
 
 func (e *Env) GetTemplateOfFn(fc *ast.FcFn) (*ast.FnTemplateStmt, bool) {
 	if fcHeadAsAtom, ok := fc.FnHead.(*ast.FcAtom); ok {
-		fnDef, ok := e.GetLatestFnDef(fcHeadAsAtom)
+		fnDef, ok := e.GetLatestFnTemplate(fcHeadAsAtom)
 		if !ok {
 			return nil, false
 		}
