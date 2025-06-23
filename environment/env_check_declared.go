@@ -66,7 +66,7 @@ func (e *Env) IsAtomDeclared(atom *ast.FcAtom, extraAtomNames map[string]struct{
 		return true
 	}
 
-	ok := e.GetFcAtomDef(atom)
+	ok := e.IsFcAtomDeclared(atom)
 	if ok {
 		return true
 	}

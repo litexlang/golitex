@@ -13,3 +13,34 @@
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
 package litex_env
+
+import (
+	"fmt"
+	ast "golitex/ast"
+	glob "golitex/glob"
+)
+
+func (e *Env) isValidObjName(name string) bool {
+	if glob.IsValidUserDefinedName(name) != nil {
+		return false
+	}
+
+	if e.IsFcAtomDeclared(ast.NewFcAtomWithName(name)) {
+		return false
+	}
+
+	return true
+}
+
+func (e *Env) NewObj(name string) error {
+	if !e.isValidObjName(name) {
+		return fmt.Errorf("invalid name: %s", name)
+	}
+
+	err := e.ObjDefMem.insert(name)
+	if err != nil {
+		return err
+	}
+
+	return e.ObjDefMem.insert(name)
+}

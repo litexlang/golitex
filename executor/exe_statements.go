@@ -699,7 +699,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 	defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
 
-	err := exec.env.NewObj_CheckValidName(stmt.FnTemplateStmt.Name)
+	err := exec.env.NewObj(stmt.FnTemplateStmt.Name)
 	if err != nil {
 		return err
 	}
