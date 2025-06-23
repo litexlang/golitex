@@ -884,7 +884,7 @@ func (ver *Verifier) isFnEqualFact_Check_BuiltinRules(stmt *ast.SpecFactStmt, st
 }
 
 // TODO: 估计有点问题
-func (ver *Verifier) leftFnAlwaysEqualToRight(leftFnDef *ast.DefFnStmt, rightFnDef *ast.DefFnStmt, state VerState) (bool, error) {
+func (ver *Verifier) leftFnAlwaysEqualToRight(leftFnDef *ast.FnTemplateStmt, rightFnDef *ast.FnTemplateStmt, state VerState) (bool, error) {
 	panic("not implemented")
 }
 

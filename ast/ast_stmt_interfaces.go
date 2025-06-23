@@ -21,7 +21,7 @@ type Stmt interface {
 
 func (stmt *DefObjStmt) stmt()                 {}
 func (c *DefPropStmt) stmt()                   {}
-func (f *DefFnStmt) stmt()                     {}
+func (l *DefFnStmt) stmt()                     {}
 func (l *UniFactStmt) stmt()                   {}
 func (p *SpecFactStmt) stmt()                  {}
 func (f *ClaimProveStmt) stmt()                {}
@@ -90,7 +90,7 @@ type DefStmtInterface interface {
 }
 
 func (s *DefObjStmt) defStmt()        {}
-func (s *DefFnStmt) defStmt()         {}
+func (s *FnTemplateStmt) defStmt()    {}
 func (s *DefPropStmt) defStmt()       {}
 func (s *DefExistPropStmt) defStmt()  {}
 func (s *DefFnTemplateStmt) defStmt() {}

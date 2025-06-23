@@ -323,7 +323,7 @@ func GetFnDeclarationFcInsideItems(fc Fc) ([]Fc, Fc) {
 	return paramSets, fcAsFn.Params[0]
 }
 
-func FromFnDeclFcToDefFnStmt(name string, fc Fc) *DefFnStmt {
+func FromFnDeclFcToDefFnStmt(name string, fc Fc) *FnTemplateStmt {
 	paramSets, retSet := GetFnDeclarationFcInsideItems(fc)
 
 	params := []string{}
@@ -333,7 +333,7 @@ func FromFnDeclFcToDefFnStmt(name string, fc Fc) *DefFnStmt {
 		params = append(params, randomStr)
 	}
 
-	fnDefStmt := NewDefFnStmt(*NewDefHeader(name, params, paramSets), []FactStmt{}, []FactStmt{}, retSet)
+	fnDefStmt := NewFnTemplateStmt(*NewDefHeader(name, params, paramSets), []FactStmt{}, []FactStmt{}, retSet)
 
 	return fnDefStmt
 }
@@ -403,7 +403,7 @@ func (factStmtSlice FactStmtSlice) Instantiate(uniMap map[string]Fc) (FactStmtSl
 	return instantiatedFacts, nil
 }
 
-func (stmt *DefFnTemplateStmt) InstantiateByFnName(fnName string) (*DefFnStmt, error) {
+func (stmt *DefFnTemplateStmt) InstantiateByFnName(fnName string) (*FnTemplateStmt, error) {
 	newDefHeader := NewDefHeader(fnName, stmt.DefFnStmt.DefHeader.Params, stmt.DefFnStmt.DefHeader.SetParams)
 
 	uniMap := map[string]Fc{stmt.DefFnStmt.DefHeader.Name: NewFcAtomWithName(fnName)}
@@ -417,10 +417,10 @@ func (stmt *DefFnTemplateStmt) InstantiateByFnName(fnName string) (*DefFnStmt, e
 		return nil, err
 	}
 
-	return NewDefFnStmt(*newDefHeader, instantiatedDomFacts, instantiatedThenFacts, stmt.DefFnStmt.RetSet), nil
+	return NewFnTemplateStmt(*newDefHeader, instantiatedDomFacts, instantiatedThenFacts, stmt.DefFnStmt.RetSet), nil
 }
 
-func (stmt *DefFnStmt) Instantiate_SetParamsInFacts_DomFacts_ThenFacts_RetSet(uniMap map[string]Fc) ([]Fc, FactStmtSlice, FactStmtSlice, Fc, error) {
+func (stmt *FnTemplateStmt) Instantiate_SetParamsInFacts_DomFacts_ThenFacts_RetSet(uniMap map[string]Fc) ([]Fc, FactStmtSlice, FactStmtSlice, Fc, error) {
 	// 1. instantiate set params in facts
 	newSetParams := []Fc{}
 	for _, setParam := range stmt.DefHeader.SetParams {

@@ -300,7 +300,7 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state VerState) (b
 
 // left dom >= right dom
 // left dom + left then + right dom => right then
-func (ver *Verifier) leftDomLeadToRightDom_RightDomLeadsToRightThen(leftFnDef *ast.DefFnStmt, rightFnDef *ast.DefFnStmt, state VerState) (bool, error) {
+func (ver *Verifier) leftDomLeadToRightDom_RightDomLeadsToRightThen(leftFnDef *ast.FnTemplateStmt, rightFnDef *ast.FnTemplateStmt, state VerState) (bool, error) {
 	if len(leftFnDef.DefHeader.Params) != len(rightFnDef.DefHeader.Params) {
 		return false, fmt.Errorf("the number of parameters of the left function definition is not equal to the number of parameters of the right function definition")
 	}

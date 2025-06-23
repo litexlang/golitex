@@ -186,7 +186,7 @@ func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn, state VerState) (bool
 	return true, nil
 }
 
-func (ver *Verifier) fcFnParamsSatisfyFnHeadAtomRequirement(asFcFn *ast.FcFn, fnDef *ast.DefFnStmt, state VerState) (bool, error) {
+func (ver *Verifier) fcFnParamsSatisfyFnHeadAtomRequirement(asFcFn *ast.FcFn, fnDef *ast.FnTemplateStmt, state VerState) (bool, error) {
 	fcFnHeadAsAtom, ok := asFcFn.FnHead.(*ast.FcAtom)
 	if !ok {
 		return false, fmt.Errorf(glob.NotImplementedMsg("function name is supposed to be an atom"))
@@ -244,7 +244,7 @@ func (ver *Verifier) fcFnParamsSatisfyFnHeadAtomRequirement(asFcFn *ast.FcFn, fn
 	return true, nil
 }
 
-func (ver *Verifier) fcFnParamsSatisfyFnTemplateRequirement(head *ast.FcFn, templateOfFn *ast.DefFnStmt, state VerState) (bool, error) {
+func (ver *Verifier) fcFnParamsSatisfyFnTemplateRequirement(head *ast.FcFn, templateOfFn *ast.FnTemplateStmt, state VerState) (bool, error) {
 	uniMap := map[string]ast.Fc{}
 	for i, param := range head.Params {
 		uniMap[templateOfFn.DefHeader.Params[i]] = param
