@@ -90,9 +90,9 @@ type DefStmtInterface interface {
 }
 
 func (s *DefObjStmt) defStmt()        {}
-func (s *FnTemplateStmt) defStmt()    {}
 func (s *DefPropStmt) defStmt()       {}
 func (s *DefExistPropStmt) defStmt()  {}
+func (s *DefFnStmt) defStmt()         {}
 func (s *DefFnTemplateStmt) defStmt() {}
 
 type UniFactInterface interface {

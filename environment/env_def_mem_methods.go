@@ -65,11 +65,11 @@ func (memory *FnTemplateDefMem) insert(stmt *ast.DefFnTemplateStmt, pkgName stri
 		pkgMap = memory.Dict[pkgName]
 	}
 
-	node, nodeExists := pkgMap[stmt.DefFnStmt.DefHeader.Name]
+	node, nodeExists := pkgMap[stmt.FnTemplateStmt.DefHeader.Name]
 	if !nodeExists {
 		node = FnTemplateMemItem{stmt}
 	}
-	pkgMap[stmt.DefFnStmt.DefHeader.Name] = node
+	pkgMap[stmt.FnTemplateStmt.DefHeader.Name] = node
 
 	return nil
 }

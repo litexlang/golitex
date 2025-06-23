@@ -217,7 +217,7 @@ func (f *FnTemplateStmt) String() string {
 }
 
 func (f *DefFnTemplateStmt) String() string {
-	return fnDefStmtStringGivenKw(glob.KeywordFnTemplate, &f.DefFnStmt)
+	return fnDefStmtStringGivenKw(glob.KeywordFnTemplate, &f.FnTemplateStmt)
 }
 
 func (f *ClaimProveByContradictionStmt) String() string {
