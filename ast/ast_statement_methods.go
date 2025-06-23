@@ -419,3 +419,31 @@ func (stmt *DefFnTemplateStmt) InstantiateByFnName(fnName string) (*DefFnStmt, e
 
 	return NewDefFnStmt(*newDefHeader, instantiatedDomFacts, instantiatedThenFacts, stmt.DefFnStmt.RetSet), nil
 }
+
+func (stmt *DefFnStmt) Instantiate(newParams []string, uniMap map[string]Fc) (*DefFnStmt, error) {
+	newSetParams := []Fc{}
+	for _, param := range stmt.DefHeader.SetParams {
+		instantiatedParam, err := param.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newSetParams = append(newSetParams, instantiatedParam)
+	}
+
+	instantiatedDomFacts, err := stmt.DomFacts.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+
+	instantiatedThenFacts, err := stmt.ThenFacts.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+
+	instantiatedRetSet, err := stmt.RetSet.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewDefFnStmt(*NewDefHeader(stmt.DefHeader.Name, newParams, newSetParams), instantiatedDomFacts, instantiatedThenFacts, instantiatedRetSet), nil
+}
