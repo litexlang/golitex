@@ -277,22 +277,61 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state VerState) bo
 		return false
 	}
 
-	//
+	ok, err := ver.leftFnDefSatisfyRightFnDef(instantiatedDefFnStmt, stmt.Params[0], state)
+	if err != nil {
+		return false
+	}
+
+	if !ok {
 
 	return true
 }
 
-func (ver *Verifier) leftFnDefSatisfyRightFnDef(leftFnDef *ast.DefFnStmt, rightFnDef *ast.DefFnStmt) (bool, error) {
+func (ver *Verifier) leftFnDefSatisfyRightFnDef(leftFnDef *ast.DefFnStmt, rightFnDef *ast.DefFnStmt, state VerState) (bool, error) {
 	if len(leftFnDef.DefHeader.Params) != len(rightFnDef.DefHeader.Params) {
 		return false, fmt.Errorf("the number of parameters of the left function definition is not equal to the number of parameters of the right function definition")
 	}
 
-	// left dom >= right dom
-	ok, err := ver.leftDomLeadToRightDom(leftFnDef.DefHeader.Params, rightFnDef.DefHeader.Params)
+	ok, err := ver.leftDomLeadToRightDom_RightDomLeadsToRightThen(leftFnDef, rightFnDef, state)
+	if err != nil {
+		return false, err
+	}
 
-	// left dom + left then + right dom => right then
+	return ok, nil
 }
 
-func (ver *Verifier) leftDomLeadToRightDom(leftFnDef *ast.DefFnStmt, rightFnDef *ast.DefFnStmt) (bool, error) {
+// left dom >= right dom
+// left dom + left then + right dom => right then
+func (ver *Verifier) leftDomLeadToRightDom_RightDomLeadsToRightThen(leftFnDef *ast.DefFnStmt, rightFnDef *ast.DefFnStmt, state VerState) (bool, error) {
+	uniMap := map[string]ast.Fc{}
+	for i, param := range rightFnDef.DefHeader.Params {
+		uniMap[param] = ast.NewFcAtomWithName(leftFnDef.DefHeader.Params[i])
+	}
 
+	instantiatedRightDom, err := rightFnDef.DomFacts.Instantiate(uniMap)
+	if err != nil {
+		return false, err
+	}
+
+	instantiatedRightThen, err := rightFnDef.ThenFacts.Instantiate(uniMap)
+	if err != nil {
+		return false, err
+	}
+
+	// left dom => right dom
+	leftDomToRightDomUniFact := ast.NewUniFact(leftFnDef.DefHeader.Params, leftFnDef.DefHeader.SetParams, leftFnDef.DomFacts, instantiatedRightThen)
+	ok, err := ver.VerFactStmt(leftDomToRightDomUniFact, state)
+	if err != nil {
+		return false, err
+	}
+
+	// left dom + left then + right dom => right then
+	leftDom_leftThen_rightDom := []ast.FactStmt{leftFnDef.DomFacts, leftFnDef.ThenFacts, instantiatedRightDom}
+	leftDom_leftThen_rightDom_rightThen_uniFact := ast.NewUniFact(leftFnDef.DefHeader.Params, leftFnDef.DefHeader.SetParams, leftDom_leftThen_rightDom, instantiatedRightThen)
+	ok, err = ver.VerFactStmt(leftDom_leftThen_rightDom_rightThen_uniFact, state)
+	if err != nil {
+		return false, err
+	}
+
+	return ok, nil
 }
