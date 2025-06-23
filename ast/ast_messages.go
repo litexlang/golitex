@@ -172,12 +172,16 @@ func (fact *DefPropStmt) String() string {
 
 }
 
-func fnDefStmtStringGivenKw(kw string, f *FnTemplateStmt) string {
+func fnDefStmtStringGivenKw(kw string, name string, f *FnTemplateStmt) string {
 	var builder strings.Builder
 	builder.WriteString(kw)
 	builder.WriteString(" ")
-
-	builder.WriteString(f.DefHeader.StringWithoutColonAtEnd())
+	if name != "" {
+		builder.WriteString(name)
+	}
+	builder.WriteString("(")
+	builder.WriteString(FcSliceString(f.ParamSets))
+	builder.WriteString(")")
 	builder.WriteString(" ")
 	builder.WriteString(f.RetSet.String())
 
@@ -213,11 +217,11 @@ func fnDefStmtStringGivenKw(kw string, f *FnTemplateStmt) string {
 }
 
 func (f *FnTemplateStmt) String() string {
-	return fnDefStmtStringGivenKw(glob.KeywordFn, f)
+	return fnDefStmtStringGivenKw(glob.KeywordFn, "", f)
 }
 
 func (f *DefFnTemplateStmt) String() string {
-	return fnDefStmtStringGivenKw(glob.KeywordFnTemplate, &f.FnTemplateStmt)
+	return fnDefStmtStringGivenKw(glob.KeywordFnTemplate, f.Name, &f.FnTemplateStmt)
 }
 
 func (f *ClaimProveByContradictionStmt) String() string {
@@ -608,5 +612,5 @@ func (stmt *ProveStmt) String() string {
 }
 
 func (stmt *DefFnStmt) String() string {
-	return fnDefStmtStringGivenKw(glob.KeywordFn, &stmt.FnTemplateStmt)
+	return fnDefStmtStringGivenKw(glob.KeywordFn, stmt.Name, &stmt.FnTemplateStmt)
 }

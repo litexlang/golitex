@@ -65,16 +65,16 @@ func (memory *FnTemplateDefMem) insert(stmt *ast.DefFnTemplateStmt, pkgName stri
 		pkgMap = memory.Dict[pkgName]
 	}
 
-	node, nodeExists := pkgMap[stmt.FnTemplateStmt.DefHeader.Name]
+	node, nodeExists := pkgMap[stmt.Name]
 	if !nodeExists {
 		node = FnTemplateMemItem{stmt}
 	}
-	pkgMap[stmt.FnTemplateStmt.DefHeader.Name] = node
+	pkgMap[stmt.Name] = node
 
 	return nil
 }
 
-func (memory *FnSatisfyFnDefMem) insert(stmt *ast.FnTemplateStmt, pkgName string) error {
+func (memory *FnSatisfyFnDefMem) insert(name string, stmt *ast.FnTemplateStmt, pkgName string) error {
 	pkgMap, pkgExists := memory.Dict[pkgName]
 
 	if !pkgExists {
@@ -82,14 +82,14 @@ func (memory *FnSatisfyFnDefMem) insert(stmt *ast.FnTemplateStmt, pkgName string
 		pkgMap = memory.Dict[pkgName]
 	}
 
-	node, nodeExists := pkgMap[stmt.DefHeader.Name]
+	node, nodeExists := pkgMap[name]
 	if !nodeExists {
 		node = FnMemItem{[]*ast.FnTemplateStmt{stmt}}
 	} else {
 		node.Def = append(node.Def, stmt)
 	}
 
-	pkgMap[stmt.DefHeader.Name] = node
+	pkgMap[name] = node
 
 	return nil
 }

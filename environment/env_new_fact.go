@@ -477,7 +477,7 @@ func (env *Env) newInFactPostProcess(fact *ast.SpecFactStmt) error {
 	if asAtom, ok := fact.Params[1].(*ast.FcAtom); ok {
 		// 如果是 fn_template
 		if fnTemplateDef, ok := env.GetFnTemplateDef(asAtom); ok {
-			fnName := fact.Params[0].String()
+			fnName := fact.Params[0]
 			instantiatedDefFnStmt, err := fnTemplateDef.InstantiateByFnName(fnName)
 			if err != nil {
 				return err
