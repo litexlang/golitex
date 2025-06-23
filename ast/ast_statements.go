@@ -23,7 +23,7 @@ type DefObjStmt struct {
 type DefHeader struct {
 	Name      string
 	Params    []string
-	SetParams []Fc
+	ParamSets []Fc
 }
 
 type DefPropStmt struct {
@@ -48,15 +48,17 @@ type DefExistPropStmt struct {
 
 // 这里 fn(p Z, F(p) set) 其实有点问题，因为F可能需要对p有一些要求，这些要求是写在dom里的，需要先运行dom然后才能运行
 type FnTemplateStmt struct {
-	Params    []string
-	ParamSets []Fc
+	// Name      string
+	// Params    []string
+	// ParamSets []Fc
+	DefHeader
 	DomFacts  FactStmtSlice
 	ThenFacts FactStmtSlice
 	RetSet    Fc
 }
 
 type DefFnStmt struct {
-	Name           string
+	// Name           string
 	FnTemplateStmt FnTemplateStmt
 }
 
@@ -145,6 +147,6 @@ type ProveStmt struct {
 }
 
 type DefFnTemplateStmt struct {
-	Name           string
+	// Name           string
 	FnTemplateStmt FnTemplateStmt
 }

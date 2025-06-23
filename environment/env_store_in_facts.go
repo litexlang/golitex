@@ -18,7 +18,7 @@ import (
 	ast "golitex/ast"
 )
 
-func (e *Env) StoreFnInFnTemplateFact(fn ast.Fc, fnTemplate *ast.FnTemplateStmt) error {
+func (e *Env) StoreFnInFnTemplateFactMem(fn ast.Fc, fnTemplate *ast.FnTemplateStmt) error {
 	err := e.FnInFnTemplateFactsMem.insert(fn, fnTemplate)
 	if err != nil {
 		return err
