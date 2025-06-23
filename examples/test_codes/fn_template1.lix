@@ -4,7 +4,7 @@ fn_template f_template(x Z) Z:
         x >= 0
     then:
         f_template(x) = x + 1  
-
+"""
 prove:
     obj m f_template
     m(0) = 0 + 1
@@ -18,12 +18,12 @@ fn f2(x Z) Z:
 
 prove:
     f2 $in f_template
-
+"""
 # fn name as fn name
 fn f3(x Z) f_template:
     dom:
         x > 0 
 
 prove:
-    f3(1) $in f_template # true, because return value of f3 is $in f_template。这是要写的，否则找不到f3(1) 的性质
+    know f3(1) $in f_template # true, because return value of f3 is $in f_template。这是要写的，否则找不到f3(1) 的性质
     f3(1)(2) = 2 + 1

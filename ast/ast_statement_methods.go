@@ -404,14 +404,12 @@ func (factStmtSlice FactStmtSlice) Instantiate(uniMap map[string]Fc) (FactStmtSl
 }
 
 func (stmt *DefFnTemplateStmt) InstantiateByFnName(fc Fc) (*FnTemplateStmt, error) {
-	newParams := stmt.FnTemplateStmt.Params
-
 	newParamSets, newDomFacts, newThenFacts, newRetSet, err := stmt.FnTemplateStmt.Instantiate_SetParamsInFacts_DomFacts_ThenFacts_RetSet(map[string]Fc{stmt.Name: fc})
 	if err != nil {
 		return nil, err
 	}
 
-	return NewFnTemplateStmt(newParams, newParamSets, newDomFacts, newThenFacts, newRetSet), nil
+	return NewFnTemplateStmt(stmt.FnTemplateStmt.Params, newParamSets, newDomFacts, newThenFacts, newRetSet), nil
 }
 
 func (stmt *FnTemplateStmt) Instantiate_SetParamsInFacts_DomFacts_ThenFacts_RetSet(uniMap map[string]Fc) ([]Fc, FactStmtSlice, FactStmtSlice, Fc, error) {
