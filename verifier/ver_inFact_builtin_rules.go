@@ -54,6 +54,11 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state VerState) 
 		return true, nil
 	}
 
+	ok = ver.inFnTemplateFact(stmt, state)
+	if ok {
+		return true, nil
+	}
+
 	return false, nil
 }
 
@@ -254,4 +259,40 @@ func (ver *Verifier) verInC_BySpecMem(stmt *ast.SpecFactStmt, state VerState) (b
 		return ver.verInR_BySpecMem(newStmt, state)
 	}
 	return true, stmt.String()
+}
+
+func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state VerState) bool {
+	templateName, ok := stmt.Params[1].(*ast.FcAtom)
+	if !ok {
+		return false
+	}
+
+	fnT, ok := ver.env.FnTemplateDefMem.Get(*templateName)
+	if !ok {
+		return false
+	}
+
+	instantiatedDefFnStmt, err := fnT.InstantiateByFnName(templateName.Name)
+	if err != nil {
+		return false
+	}
+
+	//
+
+	return true
+}
+
+func (ver *Verifier) leftFnDefSatisfyRightFnDef(leftFnDef *ast.DefFnStmt, rightFnDef *ast.DefFnStmt) (bool, error) {
+	if len(leftFnDef.DefHeader.Params) != len(rightFnDef.DefHeader.Params) {
+		return false, fmt.Errorf("the number of parameters of the left function definition is not equal to the number of parameters of the right function definition")
+	}
+
+	// left dom >= right dom
+	ok, err := ver.leftDomLeadToRightDom(leftFnDef.DefHeader.Params, rightFnDef.DefHeader.Params)
+
+	// left dom + left then + right dom => right then
+}
+
+func (ver *Verifier) leftDomLeadToRightDom(leftFnDef *ast.DefFnStmt, rightFnDef *ast.DefFnStmt) (bool, error) {
+
 }
