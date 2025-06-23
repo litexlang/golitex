@@ -265,7 +265,7 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state VerState) (b
 		return false, nil
 	}
 
-	specFactDefs, ok := ver.env.GetFnDefs(stmt.Params[0])
+	specFactDefs, ok := ver.env.GetFnTemplateOfGivenFc(stmt.Params[0])
 	if !ok {
 		return false, nil
 	}

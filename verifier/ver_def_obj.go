@@ -67,7 +67,7 @@ func (ver *Verifier) NewDefObj_InsideAtomsDeclared(stmt *ast.DefObjStmt) error {
 				return err
 			}
 		} else {
-			err = ver.env.ObjDefMem.InsertItem(objName)
+			err = ver.env.ObjDefMem.Insert(objName)
 			if err != nil {
 				return err
 			}
