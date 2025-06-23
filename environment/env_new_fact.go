@@ -430,7 +430,7 @@ func (env *Env) KnowDefFnSatisfyFnTemplate_KnowUniFactDerivedFromDefFn(fc ast.Fc
 		return err
 	}
 
-	err = env.FnSatisfyFnDefMem.insert(fc.String(), stmt, glob.EmptyPkg)
+	err = env.StoreFnInFnTemplateFact(fc, stmt)
 	if err != nil {
 		return err
 	}
