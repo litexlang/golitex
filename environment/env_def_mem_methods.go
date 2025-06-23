@@ -302,33 +302,20 @@ func (memory *ObjDefMem) InsertItem(objName string) error {
 	return nil
 }
 
-func (e *Env) GetTemplateOfFn(fc *ast.FcFn) (ast.Fc, bool) {
+func (e *Env) GetTemplateOfFn(fc *ast.FcFn) (*ast.DefFnStmt, bool) {
 	if fcHeadAsAtom, ok := fc.FnHead.(*ast.FcAtom); ok {
-		if !ok {
-			return e.GetTemplateOfFn(fc.FnHead.(*ast.FcFn))
-		}
-
 		fnDef, ok := e.GetLatestFnDef(fcHeadAsAtom)
 		if !ok {
 			return nil, false
 		}
 
-		return fnDef.RetSet, true
+		return fnDef, true
 	} else {
 		fcHeadAsFn, ok := fc.FnHead.(*ast.FcFn)
 		if !ok {
 			return nil, false
 		}
 
-		fc, ok := e.GetTemplateOfFn(fcHeadAsFn)
-		if !ok {
-			return nil, false
-		}
-
-		if _, retSet, ok := ast.Get_FnTemplate_InFcForm_ParamSetsAndRetSet(fc); ok {
-			return retSet, true
-		} else {
-			panic("")
-		}
+		return e.GetTemplateOfFn(fcHeadAsFn)
 	}
 }
