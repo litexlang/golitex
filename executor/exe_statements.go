@@ -695,3 +695,12 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 	return true, nil
 
 }
+
+func (exec *Executor) execDefFn2(stmt *ast.DefFnStmt) error {
+	err := exec.env.NewObj_CheckValidName(stmt.Name)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
