@@ -424,30 +424,18 @@ func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, e
 	return instantiatedIffFacts, nil
 }
 
-func (env *Env) KnowDefFnSatisfyFnTemplate_KnowUniFactDerivedFromDefFn(stmt *ast.FnTemplateStmt) error {
-	err := env.insideAtomsDeclared(stmt)
+func (env *Env) KnowDefFnSatisfyFnTemplate_KnowUniFactDerivedFromDefFn(fc ast.Fc, stmt *ast.FnTemplateStmt) error {
+	err := env.insideAtomsDeclared(fc, stmt)
 	if err != nil {
 		return err
 	}
 
-	err = env.FnSatisfyFnDefMem.insert(stmt, glob.EmptyPkg)
+	err = env.FnSatisfyFnDefMem.insert(fc.String(), stmt, glob.EmptyPkg)
 	if err != nil {
 		return err
 	}
 
-	// // the function object is in fn
-	// fnSet := ast.MakeFnSetFc(stmt.DefHeader.SetParams, stmt.RetSet)
-
-	// inFact := ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(stmt.DefHeader.Name), fnSet})
-	// err = env.NewFact(inFact)
-	// if err != nil {
-	// 	return err
-	// }
-
-	thenFacts := []ast.FactStmt{}
-	thenFacts = append(thenFacts, stmt.ThenFacts...)
-
-	uniFact := ast.NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.SetParams, stmt.DomFacts, thenFacts)
+	uniFact := ast.NewUniFact(stmt.Params, stmt.ParamSets, stmt.DomFacts, stmt.ThenFacts)
 	err = env.NewFact(uniFact)
 
 	if err != nil {
@@ -456,10 +444,8 @@ func (env *Env) KnowDefFnSatisfyFnTemplate_KnowUniFactDerivedFromDefFn(stmt *ast
 
 	// 现在只处理dom里没额外的东西的情况
 	if len(stmt.DomFacts) == 0 {
-		fnSet := ast.NewFcFn(ast.NewFcFn(ast.NewFcAtomWithName(glob.KeywordFn), stmt.DefHeader.SetParams), []ast.Fc{stmt.RetSet})
-
-		newFact := ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(stmt.DefHeader.Name), fnSet})
-
+		fnSet := ast.NewFcFn(ast.NewFcFn(ast.NewFcAtomWithName(glob.KeywordFn), stmt.ParamSets), []ast.Fc{stmt.RetSet})
+		newFact := ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fc, fnSet})
 		err = env.NewFact(newFact)
 		if err != nil {
 			return err
@@ -482,7 +468,7 @@ func (env *Env) newInFactPostProcess(fact *ast.SpecFactStmt) error {
 			if err != nil {
 				return err
 			}
-			err = env.KnowDefFnSatisfyFnTemplate_KnowUniFactDerivedFromDefFn(instantiatedDefFnStmt)
+			err = env.KnowDefFnSatisfyFnTemplate_KnowUniFactDerivedFromDefFn(fnName, instantiatedDefFnStmt)
 			if err != nil {
 				return err
 			}
@@ -494,7 +480,7 @@ func (env *Env) newInFactPostProcess(fact *ast.SpecFactStmt) error {
 }
 
 func (env *Env) ExecDefFnTemplate(stmt *ast.DefFnTemplateStmt) error {
-	err := env.insideAtomsDeclared(&stmt.FnTemplateStmt)
+	err := env.insideAtomsDeclared(ast.NewFcAtomWithName(stmt.Name), &stmt.FnTemplateStmt)
 	if err != nil {
 		return err
 	}
