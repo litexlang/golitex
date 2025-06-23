@@ -23,9 +23,9 @@ import (
 
 func duplicateDefError(pkgName string, name string, keyword string) error {
 	if pkgName == "" {
-		return fmt.Errorf("duplicate definition of %s, it is a %s\n", name, keyword)
+		return fmt.Errorf("duplicate definition of %s, it is a %s", name, keyword)
 	} else {
-		return fmt.Errorf("duplicate definition of %s in %s package, it is a %s\n", name, pkgName, keyword)
+		return fmt.Errorf("duplicate definition of %s in %s package, it is a %s", name, pkgName, keyword)
 	}
 }
 

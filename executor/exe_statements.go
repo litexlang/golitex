@@ -237,7 +237,7 @@ func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt, requireMsg bool) error {
 func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 	defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
 
-	err := exec.env.ExecDefFnStmt(stmt)
+	err := exec.env.KnowDefFnSatisfyFnTemplate_KnowUniFactDerivedFromDefFn(stmt)
 	if err != nil {
 		return err
 	}
@@ -254,7 +254,7 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 func (exec *Executor) defFnTemplateStmt(stmt *ast.DefFnTemplateStmt) error {
 	defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
 
-	err := exec.env.NewDefFnTemplate_InsideAtomsDeclared(stmt)
+	err := exec.env.ExecDefFnTemplate(stmt)
 	if err != nil {
 		return err
 	}
