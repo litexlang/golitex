@@ -22,7 +22,6 @@ func (e *Env) GetLatestFnTemplate(fn ast.Fc) (*ast.FnTemplateStmt, bool) {
 	for env := e; env != nil; env = env.Parent {
 		fnDef, ok := env.FnInFnTemplateFactsMem.Get(fn)
 		if ok {
-			// REMARK: 默认返回最后一个函数的定义
 			return fnDef[len(fnDef)-1], true
 		}
 	}

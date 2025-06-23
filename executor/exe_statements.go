@@ -240,22 +240,22 @@ func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt, requireMsg bool) error {
 	return ver.NewDefObj_InsideAtomsDeclared(stmt)
 }
 
-func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
-	defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
+// func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
+// 	defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
 
-	err := exec.env.KnowDefFnSatisfyFnTemplate_KnowUniFactDerivedFromDefFn(ast.NewFcAtomWithName(stmt.Name), &stmt.FnTemplateStmt)
-	if err != nil {
-		return err
-	}
+// 	err := exec.env.KnowDefFnSatisfyFnTemplate_KnowUniFactDerivedFromDefFn(ast.NewFcAtomWithName(stmt.Name), &stmt.FnTemplateStmt)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	// put into obj mem
-	err = exec.env.ObjDefMem.InsertItem(stmt.Name)
-	if err != nil {
-		return err
-	}
+// 	// put into obj mem
+// 	err = exec.env.ObjDefMem.InsertItem(stmt.Name)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 func (exec *Executor) defFnTemplateStmt(stmt *ast.DefFnTemplateStmt) error {
 	defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
@@ -696,7 +696,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 
 }
 
-func (exec *Executor) execDefFn2(stmt *ast.DefFnStmt) error {
+func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 	defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
 
 	err := exec.env.NewObj_CheckValidName(stmt.Name)
