@@ -276,7 +276,7 @@ func (tb *tokenBlock) defFnStmt(keyword string) (*ast.DefFnStmt, error) {
 		}
 	}
 
-	return ast.NewDefFnStmt(*decl, domFacts, thenFacts, retSet), nil
+	return ast.NewDefFnStmt(ast.NewFnTemplateStmt(*decl, domFacts, thenFacts, retSet)), nil
 }
 
 func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
@@ -1163,5 +1163,5 @@ func (tb *tokenBlock) defFnTemplateStmt() (*ast.DefFnTemplateStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	return ast.NewFnTemplateDefStmt(*fnDef), nil
+	return ast.NewFnTemplateDefStmt(fnDef.FnTemplateStmt), nil
 }

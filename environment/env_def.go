@@ -129,7 +129,7 @@ func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) error {
 // 	return nil
 // }
 
-func (env *Env) insideAtomsDeclared(stmt *ast.DefFnStmt) error {
+func (env *Env) insideAtomsDeclared(stmt *ast.FnTemplateStmt) error {
 	// fn名不能和parameter名重叠
 	if slices.Contains(stmt.DefHeader.Params, stmt.DefHeader.Name) {
 		return fmt.Errorf("fn name %s cannot be the same as parameter name %s", stmt.DefHeader.Name, stmt.DefHeader.Name)
