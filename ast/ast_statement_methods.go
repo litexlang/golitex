@@ -445,5 +445,5 @@ func (stmt *FnTemplateStmt) Instantiate_SetParamsInFacts_DomFacts_ThenFacts_RetS
 }
 
 func (fnTemplate *FnTemplateStmt) DeriveUniFact(fn Fc) *UniFactStmt {
-	return NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, fnTemplate.ThenFacts)
+	return NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, append(fnTemplate.ThenFacts, NewSpecFactStmt(TruePure, NewFcAtomWithName(glob.KeywordIn), []Fc{fn, fnTemplate.RetSet})))
 }
