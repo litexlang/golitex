@@ -310,9 +310,14 @@ func (ver *Verifier) leftDomLeadToRightDom_RightDomLeadsToRightThen(leftFnDef *a
 		uniMap[param] = ast.NewFcAtomWithName(leftFnDef.DefHeader.Params[i])
 	}
 
-	instantiatedSetParamsInFacts, instantiatedDomFacts, instantiatedThenFacts, instantiatedRetSet, err := rightFnDef.Instantiate_SetParamsInFacts_DomFacts_ThenFacts_RetSet(uniMap)
+	instantiatedSetParams, instantiatedDomFacts, instantiatedThenFacts, instantiatedRetSet, err := rightFnDef.Instantiate_SetParamsInFacts_DomFacts_ThenFacts_RetSet(uniMap)
 	if err != nil {
 		return false, err
+	}
+
+	inRightSetParamFacts := []ast.FactStmt{}
+	for i, setParam := range instantiatedSetParams {
+		inRightSetParamFacts = append(inRightSetParamFacts, ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(leftFnDef.DefHeader.Params[i]), setParam}))
 	}
 
 	fcFnParams := []ast.Fc{}
@@ -324,7 +329,7 @@ func (ver *Verifier) leftDomLeadToRightDom_RightDomLeadsToRightThen(leftFnDef *a
 	fcFnInLeftRetSet := ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fcFn, leftFnDef.RetSet})
 
 	// left dom => right dom
-	leftDomToRightDomUniFact := ast.NewUniFact(leftFnDef.DefHeader.Params, leftFnDef.DefHeader.SetParams, leftFnDef.DomFacts, append(instantiatedSetParamsInFacts, instantiatedThenFacts...))
+	leftDomToRightDomUniFact := ast.NewUniFact(leftFnDef.DefHeader.Params, leftFnDef.DefHeader.SetParams, leftFnDef.DomFacts, append(inRightSetParamFacts, instantiatedThenFacts...))
 
 	ok, err := ver.VerFactStmt(leftDomToRightDomUniFact, state)
 	if err != nil {
@@ -339,7 +344,7 @@ func (ver *Verifier) leftDomLeadToRightDom_RightDomLeadsToRightThen(leftFnDef *a
 	leftDomToRightDomFacts = append(leftDomToRightDomFacts, leftFnDef.DomFacts...)
 	leftDomToRightDomFacts = append(leftDomToRightDomFacts, fcFnInLeftRetSet)
 	leftDomToRightDomFacts = append(leftDomToRightDomFacts, leftFnDef.ThenFacts...)
-	leftDomToRightDomFacts = append(leftDomToRightDomFacts, instantiatedSetParamsInFacts...)
+	leftDomToRightDomFacts = append(leftDomToRightDomFacts, inRightSetParamFacts...)
 	leftDomToRightDomFacts = append(leftDomToRightDomFacts, instantiatedDomFacts...)
 
 	rightThenFacts := []ast.FactStmt{}

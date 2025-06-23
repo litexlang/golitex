@@ -420,20 +420,15 @@ func (stmt *DefFnTemplateStmt) InstantiateByFnName(fnName string) (*DefFnStmt, e
 	return NewDefFnStmt(*newDefHeader, instantiatedDomFacts, instantiatedThenFacts, stmt.DefFnStmt.RetSet), nil
 }
 
-func (stmt *DefFnStmt) Instantiate_SetParamsInFacts_DomFacts_ThenFacts_RetSet(uniMap map[string]Fc) ([]FactStmt, FactStmtSlice, FactStmtSlice, Fc, error) {
+func (stmt *DefFnStmt) Instantiate_SetParamsInFacts_DomFacts_ThenFacts_RetSet(uniMap map[string]Fc) ([]Fc, FactStmtSlice, FactStmtSlice, Fc, error) {
 	// 1. instantiate set params in facts
 	newSetParams := []Fc{}
-	for _, param := range stmt.DefHeader.SetParams {
-		instantiatedParam, err := param.Instantiate(uniMap)
+	for _, setParam := range stmt.DefHeader.SetParams {
+		instantiatedParam, err := setParam.Instantiate(uniMap)
 		if err != nil {
 			return nil, nil, nil, nil, err
 		}
 		newSetParams = append(newSetParams, instantiatedParam)
-	}
-
-	newSetParamsInFacts := []FactStmt{}
-	for _, param := range newSetParams {
-		newSetParamsInFacts = append(newSetParamsInFacts, NewInFactWithFc(param, param))
 	}
 
 	// 2. instantiate dom facts
@@ -454,5 +449,5 @@ func (stmt *DefFnStmt) Instantiate_SetParamsInFacts_DomFacts_ThenFacts_RetSet(un
 		return nil, nil, nil, nil, err
 	}
 
-	return newSetParamsInFacts, instantiatedDomFacts, instantiatedThenFacts, instantiatedRetSet, nil
+	return newSetParams, instantiatedDomFacts, instantiatedThenFacts, instantiatedRetSet, nil
 }
