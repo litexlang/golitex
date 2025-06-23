@@ -1,4 +1,4 @@
-// know ... $in fn_template
+# know ... $in fn_template
 fn_template f_template(x Z) Z:
     dom:
         x >= 0
@@ -9,7 +9,7 @@ prove:
     obj m f_template
     m(0) = 0 + 1
 
-// prove xxx $in fn_template
+# prove xxx $in fn_template
 fn f2(x Z) Z:
     dom:
         x >= -1
@@ -17,7 +17,4 @@ fn f2(x Z) Z:
         f2(x) = x + 1
 
 prove:
-    obj m f2
-    m(0) = 0 + 1
-
-
+    f2 $in f_template

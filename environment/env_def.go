@@ -163,10 +163,10 @@ func (env *Env) FnSatisfyFnDefStmt_InsideAtomsDeclared(stmt *ast.DefFnStmt) erro
 	}
 
 	// TODO: WARNING: 这里有严重问题。因为貌似同一个fn可以implement很多的fn_template，所以即使之前知道它怎么样，我也不能说明什么问题
-	err = env.IsValidUserDefinedName_NoDuplicate(stmt.DefHeader.Name)
-	if err != nil {
-		return err
-	}
+	// err = env.IsValidUserDefinedName_NoDuplicate(stmt.DefHeader.Name)
+	// if err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
