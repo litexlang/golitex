@@ -435,14 +435,14 @@ func (env *Env) KnowDefFnSatisfyFnTemplate_KnowUniFactDerivedFromDefFn(stmt *ast
 		return err
 	}
 
-	// the function object is in fn
-	fnSet := ast.MakeFnSetFc(stmt.DefHeader.SetParams, stmt.RetSet)
+	// // the function object is in fn
+	// fnSet := ast.MakeFnSetFc(stmt.DefHeader.SetParams, stmt.RetSet)
 
-	inFact := ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(stmt.DefHeader.Name), fnSet})
-	err = env.NewFact(inFact)
-	if err != nil {
-		return err
-	}
+	// inFact := ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(stmt.DefHeader.Name), fnSet})
+	// err = env.NewFact(inFact)
+	// if err != nil {
+	// 	return err
+	// }
 
 	thenFacts := []ast.FactStmt{}
 	thenFacts = append(thenFacts, stmt.ThenFacts...)
