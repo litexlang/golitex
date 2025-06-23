@@ -172,13 +172,11 @@ func (fact *DefPropStmt) String() string {
 
 }
 
-func fnDefStmtStringGivenKw(kw string, name string, f *FnTemplateStmt) string {
+func fnDefStmtStringGivenKw(kw string, f *FnTemplateStmt) string {
 	var builder strings.Builder
 	builder.WriteString(kw)
 	builder.WriteString(" ")
-	if name != "" {
-		builder.WriteString(name)
-	}
+	builder.WriteString(f.Name)
 	builder.WriteString("(")
 	builder.WriteString(FcSliceString(f.ParamSets))
 	builder.WriteString(")")
@@ -217,11 +215,11 @@ func fnDefStmtStringGivenKw(kw string, name string, f *FnTemplateStmt) string {
 }
 
 func (f *FnTemplateStmt) String() string {
-	return fnDefStmtStringGivenKw(glob.KeywordFn, "", f)
+	return fnDefStmtStringGivenKw(glob.KeywordFn, f)
 }
 
 func (f *DefFnTemplateStmt) String() string {
-	return fnDefStmtStringGivenKw(glob.KeywordFnTemplate, f.Name, &f.FnTemplateStmt)
+	return fnDefStmtStringGivenKw(glob.KeywordFnTemplate, &f.FnTemplateStmt)
 }
 
 func (f *ClaimProveByContradictionStmt) String() string {
@@ -356,12 +354,12 @@ func (head DefHeader) StringWithoutColonAtEnd() string {
 		for i := 0; i < len(head.Params)-1; i++ {
 			builder.WriteString(head.Params[i])
 			builder.WriteString(" ")
-			builder.WriteString(head.SetParams[i].String())
+			builder.WriteString(head.ParamSets[i].String())
 			builder.WriteString(",")
 		}
 		builder.WriteString(head.Params[len(head.Params)-1])
 		builder.WriteString(" ")
-		builder.WriteString(head.SetParams[len(head.Params)-1].String())
+		builder.WriteString(head.ParamSets[len(head.Params)-1].String())
 	}
 
 	builder.WriteString(")")
@@ -612,5 +610,5 @@ func (stmt *ProveStmt) String() string {
 }
 
 func (stmt *DefFnStmt) String() string {
-	return fnDefStmtStringGivenKw(glob.KeywordFn, stmt.Name, &stmt.FnTemplateStmt)
+	return fnDefStmtStringGivenKw(glob.KeywordFn, &stmt.FnTemplateStmt)
 }

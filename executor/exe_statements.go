@@ -575,7 +575,7 @@ func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) (glob.ExecS
 	}
 
 	thenFacts := []ast.FactStmt{stmt.ExistProp.ToSpecFact()}
-	knownUniFact := ast.NewUniFact(stmt.ExistProp.DefBody.DefHeader.Params, stmt.ExistProp.DefBody.DefHeader.SetParams, stmt.ExistProp.DefBody.DomFacts, thenFacts)
+	knownUniFact := ast.NewUniFact(stmt.ExistProp.DefBody.DefHeader.Params, stmt.ExistProp.DefBody.DefHeader.ParamSets, stmt.ExistProp.DefBody.DomFacts, thenFacts)
 
 	err = exec.env.NewFact(knownUniFact)
 	if err != nil {
@@ -596,7 +596,7 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
 	}
 
 	thenFacts := []ast.FactStmt{stmt.Prop.ToSpecFact()}
-	knownUniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.SetParams, stmt.Prop.DomFacts, thenFacts)
+	knownUniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.DomFacts, thenFacts)
 
 	err = exec.env.NewFact(knownUniFact)
 	if err != nil {
@@ -699,17 +699,17 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 	defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
 
-	err := exec.env.NewObj_CheckValidName(stmt.Name)
+	err := exec.env.NewObj_CheckValidName(stmt.FnTemplateStmt.Name)
 	if err != nil {
 		return err
 	}
 
-	err = exec.env.StoreFnInFnTemplateFact(ast.NewFcAtomWithName(stmt.Name), &stmt.FnTemplateStmt)
+	err = exec.env.StoreFnInFnTemplateFactMem(ast.NewFcAtomWithName(stmt.FnTemplateStmt.Name), &stmt.FnTemplateStmt)
 	if err != nil {
 		return err
 	}
 
-	derivedFact := stmt.FnTemplateStmt.DeriveUniFact(ast.NewFcAtomWithName(stmt.Name))
+	derivedFact := stmt.FnTemplateStmt.DeriveUniFact(ast.NewFcAtomWithName(stmt.FnTemplateStmt.Name))
 	err = exec.env.NewFact(derivedFact)
 	if err != nil {
 		return err

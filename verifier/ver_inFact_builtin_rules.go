@@ -270,12 +270,12 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state VerState) (b
 		return false, nil
 	}
 
-	fnT, ok := ver.env.GetFnTemplateDef(templateName)
+	fnTDef, ok := ver.env.GetFnTemplateDef(templateName)
 	if !ok {
 		return false, nil
 	}
 
-	instantiatedDefFnStmt, err := fnT.InstantiateByFnName(stmt.Params[0])
+	instantiatedDefFnStmt, err := fnTDef.FnTemplateStmt.InstantiateByFnName_WithTemplateNameGivenFc(stmt.Params[0])
 	if err != nil {
 		return false, nil
 	}

@@ -37,12 +37,26 @@ func (e *Env) inFactPostProcess_InFnTemplate(fact *ast.SpecFactStmt) (bool, erro
 		return false, nil
 	}
 
-	curInTemplate, ok := e.GetLatestFnTemplate(templateName)
+	curInTemplate, ok := e.Parent.GetFnTemplateDef(templateName)
 	if !ok {
 		return false, nil
 	}
 
-	_ = curInTemplate
+	instantiatedDefFnStmt, err := curInTemplate.FnTemplateStmt.InstantiateByFnName_WithTemplateNameGivenFc(fact.Params[0])
+	if err != nil {
+		return false, err
+	}
 
-	panic("")
+	err = e.StoreFnInFnTemplateFactMem(fact.Params[0], instantiatedDefFnStmt)
+	if err != nil {
+		return false, err
+	}
+
+	derivedFact := instantiatedDefFnStmt.DeriveUniFact(fact.Params[0])
+	err = e.NewFact(derivedFact)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }

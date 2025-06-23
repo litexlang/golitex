@@ -63,14 +63,14 @@ func (defStmt *DefPropStmt) Make_PropToIff_IffToProp() (*UniFactStmt, *UniFactSt
 	propToIffDomFacts := []FactStmt{propSpecFact}
 	propToIffDomFacts = append(propToIffDomFacts, defStmt.DomFacts...)
 
-	propToIff := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.SetParams, propToIffDomFacts, defStmt.IffFacts)
+	propToIff := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.ParamSets, propToIffDomFacts, defStmt.IffFacts)
 
 	// iff to prop
 	IffToPropDomFacts := []FactStmt{}
 	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.DomFacts...)
 	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.IffFacts...)
 
-	IffToProp := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.SetParams, IffToPropDomFacts, []FactStmt{propSpecFact})
+	IffToProp := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.ParamSets, IffToPropDomFacts, []FactStmt{propSpecFact})
 
 	return propToIff, IffToProp, nil
 }
@@ -87,7 +87,7 @@ func (defStmt *DefPropStmt) IffToPropUniFact() *UniFactStmt {
 	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.DomFacts...)
 	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.IffFacts...)
 
-	IffToProp := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.SetParams, IffToPropDomFacts, []FactStmt{propSpecFact})
+	IffToProp := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.ParamSets, IffToPropDomFacts, []FactStmt{propSpecFact})
 
 	return IffToProp
 }
@@ -234,7 +234,7 @@ func (stmt *DefObjStmt) NewInFacts() []*SpecFactStmt {
 func (defHeader *DefHeader) NewInFacts() []*SpecFactStmt {
 	facts := []*SpecFactStmt{}
 	for i, param := range defHeader.Params {
-		facts = append(facts, NewInFact(param, defHeader.SetParams[i]))
+		facts = append(facts, NewInFact(param, defHeader.ParamSets[i]))
 	}
 
 	return facts
@@ -333,7 +333,7 @@ func FromFnDeclFcToDefFnStmt(name string, fc Fc) *FnTemplateStmt {
 		params = append(params, randomStr)
 	}
 
-	fnDefStmt := NewFnTemplateStmt(params, paramSets, []FactStmt{}, []FactStmt{}, retSet)
+	fnDefStmt := NewFnTemplateStmt(*NewDefHeader(name, params, paramSets), []FactStmt{}, []FactStmt{}, retSet)
 
 	return fnDefStmt
 }
@@ -403,13 +403,13 @@ func (factStmtSlice FactStmtSlice) Instantiate(uniMap map[string]Fc) (FactStmtSl
 	return instantiatedFacts, nil
 }
 
-func (stmt *DefFnTemplateStmt) InstantiateByFnName(fc Fc) (*FnTemplateStmt, error) {
-	newParamSets, newDomFacts, newThenFacts, newRetSet, err := stmt.FnTemplateStmt.Instantiate_SetParamsInFacts_DomFacts_ThenFacts_RetSet(map[string]Fc{stmt.Name: fc})
+func (stmt *FnTemplateStmt) InstantiateByFnName_WithTemplateNameGivenFc(fc Fc) (*FnTemplateStmt, error) {
+	newParamSets, newDomFacts, newThenFacts, newRetSet, err := stmt.Instantiate_SetParamsInFacts_DomFacts_ThenFacts_RetSet(map[string]Fc{stmt.Name: fc})
 	if err != nil {
 		return nil, err
 	}
 
-	return NewFnTemplateStmt(stmt.FnTemplateStmt.Params, newParamSets, newDomFacts, newThenFacts, newRetSet), nil
+	return NewFnTemplateStmt(*NewDefHeader(fc.String(), stmt.Params, newParamSets), newDomFacts, newThenFacts, newRetSet), nil
 }
 
 func (stmt *FnTemplateStmt) Instantiate_SetParamsInFacts_DomFacts_ThenFacts_RetSet(uniMap map[string]Fc) ([]Fc, FactStmtSlice, FactStmtSlice, Fc, error) {
