@@ -39,19 +39,20 @@ type ObjDefMem struct {
 	Dict glob.Map2D[ObjMemItem]
 }
 
-type FnMemItem struct {
-	Def []*ast.FnTemplateStmt
-}
+// type FnMemItem struct {
+// 	Def []*ast.FnTemplateStmt
+// }
 
-type FnInFnTemplateFactsMem struct {
-	Dict glob.Map2D[FnMemItem]
-}
+//	type FnInFnTemplateFactsMem struct {
+//		Dict glob.Map2D[FnMemItem]
+//	}
+type FnInFnTemplateFactsMem map[string][]*ast.FnTemplateStmt
 
 func newPropMemory() *PropDefMem {
 	return &PropDefMem{make(glob.Map2D[PropMemItem])}
 }
-func newFnMemory() *FnInFnTemplateFactsMem {
-	return &FnInFnTemplateFactsMem{make(glob.Map2D[FnMemItem])}
+func newFnMemory() FnInFnTemplateFactsMem {
+	return make(FnInFnTemplateFactsMem)
 }
 
 func newObjMemory() *ObjDefMem {
