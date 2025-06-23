@@ -38,7 +38,7 @@ type Env struct {
 	FnTemplateDefMem    FnTemplateDefMem
 	ExistPropDefMem     ExistPropDefMem
 	KnownFactsStruct    KnownFactsStruct
-	FnSatisfyFnDefMem   FnInFnTemplateMem
+	FnSatisfyFnDefMem   FnInFnTemplateFactsMem
 	KnownFactInMatchEnv glob.Map2D[KnownFactsStruct]
 	EqualMem            map[string]shared_ptr_to_slice_of_fc
 	CurMatchProp        *MatchProp
