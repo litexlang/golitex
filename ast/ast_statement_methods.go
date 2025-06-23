@@ -404,20 +404,20 @@ func (factStmtSlice FactStmtSlice) Instantiate(uniMap map[string]Fc) (FactStmtSl
 }
 
 func (stmt *DefFnTemplateStmt) InstantiateByFnName(fnName string) (*FnTemplateStmt, error) {
-	newDefHeader := NewDefHeader(fnName, stmt.DefFnStmt.DefHeader.Params, stmt.DefFnStmt.DefHeader.SetParams)
+	newDefHeader := NewDefHeader(fnName, stmt.FnTemplateStmt.DefHeader.Params, stmt.FnTemplateStmt.DefHeader.SetParams)
 
-	uniMap := map[string]Fc{stmt.DefFnStmt.DefHeader.Name: NewFcAtomWithName(fnName)}
-	instantiatedDomFacts, err := stmt.DefFnStmt.DomFacts.Instantiate(uniMap)
+	uniMap := map[string]Fc{stmt.FnTemplateStmt.DefHeader.Name: NewFcAtomWithName(fnName)}
+	instantiatedDomFacts, err := stmt.FnTemplateStmt.DomFacts.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}
 
-	instantiatedThenFacts, err := stmt.DefFnStmt.ThenFacts.Instantiate(uniMap)
+	instantiatedThenFacts, err := stmt.FnTemplateStmt.ThenFacts.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewFnTemplateStmt(*newDefHeader, instantiatedDomFacts, instantiatedThenFacts, stmt.DefFnStmt.RetSet), nil
+	return NewFnTemplateStmt(*newDefHeader, instantiatedDomFacts, instantiatedThenFacts, stmt.FnTemplateStmt.RetSet), nil
 }
 
 func (stmt *FnTemplateStmt) Instantiate_SetParamsInFacts_DomFacts_ThenFacts_RetSet(uniMap map[string]Fc) ([]Fc, FactStmtSlice, FactStmtSlice, Fc, error) {

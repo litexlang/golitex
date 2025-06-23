@@ -83,7 +83,7 @@ type ClaimProveStmt struct {
 }
 
 type ClaimProveByContradictionStmt struct {
-	ClaimProveStmt
+	ClaimProveStmt ClaimProveStmt
 }
 
 type KnowFactStmt struct {
@@ -143,5 +143,5 @@ type ProveStmt struct {
 }
 
 type DefFnTemplateStmt struct {
-	DefFnStmt FnTemplateStmt
+	FnTemplateStmt FnTemplateStmt
 }
