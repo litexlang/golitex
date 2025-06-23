@@ -40,7 +40,7 @@ type ObjDefMem struct {
 }
 
 type FnMemItem struct {
-	Def []*ast.DefFnStmt
+	Def []*ast.FnTemplateStmt
 }
 
 type FnSatisfyFnDefMem struct {

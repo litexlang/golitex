@@ -311,7 +311,7 @@ func (e *Env) GetSpecFact_InLogicExpr_InUniFactMem() (*SpecFact_InLogicExpr_InUn
 	return &e.KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem, true
 }
 
-func (e *Env) IsFnDeclared(fc *ast.FcAtom) (*ast.DefFnStmt, bool) {
+func (e *Env) IsFnDeclared(fc *ast.FcAtom) (*ast.FnTemplateStmt, bool) {
 	// TODO 这里需要更严格检查一下是否是正常的函数名
 	if _, ok := glob.BuiltinKeywordsSet[fc.Name]; ok {
 		return nil, true

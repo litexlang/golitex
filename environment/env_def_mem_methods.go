@@ -74,7 +74,7 @@ func (memory *FnTemplateDefMem) insert(stmt *ast.DefFnTemplateStmt, pkgName stri
 	return nil
 }
 
-func (memory *FnSatisfyFnDefMem) insert(stmt *ast.DefFnStmt, pkgName string) error {
+func (memory *FnSatisfyFnDefMem) insert(stmt *ast.FnTemplateStmt, pkgName string) error {
 	pkgMap, pkgExists := memory.Dict[pkgName]
 
 	if !pkgExists {
@@ -84,7 +84,7 @@ func (memory *FnSatisfyFnDefMem) insert(stmt *ast.DefFnStmt, pkgName string) err
 
 	node, nodeExists := pkgMap[stmt.DefHeader.Name]
 	if !nodeExists {
-		node = FnMemItem{[]*ast.DefFnStmt{stmt}}
+		node = FnMemItem{[]*ast.FnTemplateStmt{stmt}}
 	} else {
 		node.Def = append(node.Def, stmt)
 	}
@@ -155,7 +155,7 @@ func (memory *ExistPropDefMem) Get(fc ast.FcAtom) (*ast.DefExistPropStmt, bool) 
 	return node.Def, true
 }
 
-func (memory *FnSatisfyFnDefMem) Get(fc ast.FcAtom) ([]*ast.DefFnStmt, bool) {
+func (memory *FnSatisfyFnDefMem) Get(fc ast.FcAtom) ([]*ast.FnTemplateStmt, bool) {
 	pkgMap, pkgExists := memory.Dict[fc.PkgName]
 	if !pkgExists {
 		return nil, false
@@ -214,7 +214,7 @@ func (e *Env) GetFcAtomDef(fcAtomName *ast.FcAtom) bool {
 	return false
 }
 
-func (e *Env) GetFnDefs(fn ast.Fc) ([]*ast.DefFnStmt, bool) {
+func (e *Env) GetFnDefs(fn ast.Fc) ([]*ast.FnTemplateStmt, bool) {
 	fnAsAtom, isFnAsAtom := fn.(*ast.FcAtom)
 	if !isFnAsAtom {
 		return nil, false
@@ -229,7 +229,7 @@ func (e *Env) GetFnDefs(fn ast.Fc) ([]*ast.DefFnStmt, bool) {
 	return nil, false
 }
 
-func (e *Env) GetLatestFnDef(fn ast.Fc) (*ast.DefFnStmt, bool) {
+func (e *Env) GetLatestFnDef(fn ast.Fc) (*ast.FnTemplateStmt, bool) {
 	fnAsAtom, isFnAsAtom := fn.(*ast.FcAtom)
 	if !isFnAsAtom {
 		return nil, false
@@ -302,7 +302,7 @@ func (memory *ObjDefMem) InsertItem(objName string) error {
 	return nil
 }
 
-func (e *Env) GetTemplateOfFn(fc *ast.FcFn) (*ast.DefFnStmt, bool) {
+func (e *Env) GetTemplateOfFn(fc *ast.FcFn) (*ast.FnTemplateStmt, bool) {
 	if fcHeadAsAtom, ok := fc.FnHead.(*ast.FcAtom); ok {
 		fnDef, ok := e.GetLatestFnDef(fcHeadAsAtom)
 		if !ok {

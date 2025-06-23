@@ -172,7 +172,7 @@ func (fact *DefPropStmt) String() string {
 
 }
 
-func fnDefStmtStringGivenKw(kw string, f *DefFnStmt) string {
+func fnDefStmtStringGivenKw(kw string, f *FnTemplateStmt) string {
 	var builder strings.Builder
 	builder.WriteString(kw)
 	builder.WriteString(" ")
@@ -212,7 +212,7 @@ func fnDefStmtStringGivenKw(kw string, f *DefFnStmt) string {
 	return builder.String()
 }
 
-func (f *DefFnStmt) String() string {
+func (f *FnTemplateStmt) String() string {
 	return fnDefStmtStringGivenKw(glob.KeywordFn, f)
 }
 
@@ -605,4 +605,8 @@ func (stmt *ProveStmt) String() string {
 		builder.WriteByte('\n')
 	}
 	return builder.String()
+}
+
+func (stmt *DefFnStmt) String() string {
+	return fnDefStmtStringGivenKw(glob.KeywordFn, &stmt.FnTemplateStmt)
 }

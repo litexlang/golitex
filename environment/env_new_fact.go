@@ -424,7 +424,7 @@ func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, e
 	return instantiatedIffFacts, nil
 }
 
-func (env *Env) KnowDefFnSatisfyFnTemplate_KnowUniFactDerivedFromDefFn(stmt *ast.DefFnStmt) error {
+func (env *Env) KnowDefFnSatisfyFnTemplate_KnowUniFactDerivedFromDefFn(stmt *ast.FnTemplateStmt) error {
 	err := env.insideAtomsDeclared(stmt)
 	if err != nil {
 		return err
