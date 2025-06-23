@@ -16,37 +16,6 @@ package litex_env
 
 import ast "golitex/ast"
 
-func (e *Env) IsFcAtomDeclared(fcAtomName *ast.FcAtom) bool {
-	for env := e; env != nil; env = env.Parent {
-		ok := env.isFcAtomDeclaredAtCurEnv(fcAtomName)
-		if ok {
-			return true
-		}
-	}
-	return false
-}
-
-func (e *Env) isFcAtomDeclaredAtCurEnv(fcAtomName *ast.FcAtom) bool {
-	_, ok := e.PropDefMem.Get(*fcAtomName)
-	if ok {
-		return true
-	}
-
-	_, ok = e.ExistPropDefMem.Get(*fcAtomName)
-	if ok {
-		return true
-	}
-
-	_, ok = e.ObjDefMem.Get(*fcAtomName)
-	if ok {
-		return true
-	}
-
-	_, ok = e.FnTemplateDefMem.Get(*fcAtomName)
-
-	return ok
-}
-
 func (e *Env) GetFnTemplateDef(fcAtomName *ast.FcAtom) (*ast.DefFnTemplateStmt, bool) {
 	for env := e; env != nil; env = env.Parent {
 		fnTemplateDef, ok := env.FnTemplateDefMem.Get(*fcAtomName)
@@ -75,18 +44,4 @@ func (e *Env) GetPropDef(propName ast.FcAtom) (*ast.DefPropStmt, bool) {
 		}
 	}
 	return nil, false
-}
-
-func (memory *PropDefMem) Get(fc ast.FcAtom) (*ast.DefPropStmt, bool) {
-	pkgMap, pkgExists := memory.Dict[fc.PkgName]
-	if !pkgExists {
-		return nil, false
-	}
-
-	node, nodeExists := pkgMap[fc.Name]
-	if !nodeExists {
-		return nil, false
-	}
-
-	return node.Def, true
 }
