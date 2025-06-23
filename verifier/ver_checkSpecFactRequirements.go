@@ -106,13 +106,9 @@ func (ver *Verifier) fcSatisfyNotBuiltinFnRequirement(fc ast.Fc, state VerState)
 		if !ok {
 			return false, fmt.Errorf("function %s is not implemented", fcFnHeadAsFcFn.String())
 		}
-		templateOfFnHead, ok := templateOfFn.(*ast.FcFn)
-		if !ok {
-			return false, fmt.Errorf("function %s is not implemented", fcFnHeadAsFcFn.String())
-		}
 
 		// 暂时还没有template，只有以fc形式出现的retSet
-		ok, err := ver.fcFnParamsSatisfyFnTemplateRequirement(fcFnHeadAsFcFn, templateOfFnHead, state)
+		ok, err := ver.fcFnParamsSatisfyFnTemplateRequirement(fcFnHeadAsFcFn, templateOfFn, state)
 		if err != nil {
 			return false, err
 		}
@@ -248,29 +244,34 @@ func (ver *Verifier) fcFnParamsSatisfyFnHeadAtomRequirement(asFcFn *ast.FcFn, fn
 	return true, nil
 }
 
-func (ver *Verifier) fcFnParamsSatisfyFnTemplateRequirement(head *ast.FcFn, templateOfFn ast.Fc, state VerState) (bool, error) {
-	if _, _, ok := ast.Get_FnTemplate_InFcForm_ParamSetsAndRetSet(templateOfFn); ok {
-		return ver.fcFnParamsSatisfy_FnTemplateInFcForm_Requirement(head, templateOfFn.(*ast.FcFn), state)
-	} else {
-		panic("not implemented")
-	}
-}
-
-func (ver *Verifier) fcFnParamsSatisfy_FnTemplateInFcForm_Requirement(asFcFn *ast.FcFn, templateOfFnAsFcFn *ast.FcFn, state VerState) (bool, error) {
-	// 暂时还没有template，只有以fc形式出现的retSet
-	paramSets, _, ok := ast.Get_FnTemplate_InFcForm_ParamSetsAndRetSet(templateOfFnAsFcFn)
-	if !ok {
-		panic("not implemented")
+func (ver *Verifier) fcFnParamsSatisfyFnTemplateRequirement(head *ast.FcFn, templateOfFn *ast.DefFnStmt, state VerState) (bool, error) {
+	uniMap := map[string]ast.Fc{}
+	for i, param := range head.Params {
+		uniMap[templateOfFn.DefHeader.Params[i]] = param
 	}
 
-	for i, param := range asFcFn.Params {
-		inFact := ast.NewInFactWithFc(param, paramSets[i])
+	instantiatedSetParamsInFacts, instantiatedDomFacts, _, _, err := templateOfFn.Instantiate_SetParamsInFacts_DomFacts_ThenFacts_RetSet(uniMap)
+	if err != nil {
+		return false, err
+	}
+
+	for _, inFact := range instantiatedSetParamsInFacts {
 		ok, err := ver.VerFactStmt(inFact, state)
 		if err != nil {
 			return false, err
 		}
 		if !ok {
 			return false, fmt.Errorf("in fact %s is unknown", inFact.String())
+		}
+	}
+
+	for _, domFact := range instantiatedDomFacts {
+		ok, err := ver.VerFactStmt(domFact, state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, fmt.Errorf("dom fact %s is unknown", domFact.String())
 		}
 	}
 

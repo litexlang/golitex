@@ -420,30 +420,39 @@ func (stmt *DefFnTemplateStmt) InstantiateByFnName(fnName string) (*DefFnStmt, e
 	return NewDefFnStmt(*newDefHeader, instantiatedDomFacts, instantiatedThenFacts, stmt.DefFnStmt.RetSet), nil
 }
 
-func (stmt *DefFnStmt) Instantiate(newParams []string, uniMap map[string]Fc) (*DefFnStmt, error) {
+func (stmt *DefFnStmt) Instantiate_SetParamsInFacts_DomFacts_ThenFacts_RetSet(uniMap map[string]Fc) ([]FactStmt, FactStmtSlice, FactStmtSlice, Fc, error) {
+	// 1. instantiate set params in facts
 	newSetParams := []Fc{}
 	for _, param := range stmt.DefHeader.SetParams {
 		instantiatedParam, err := param.Instantiate(uniMap)
 		if err != nil {
-			return nil, err
+			return nil, nil, nil, nil, err
 		}
 		newSetParams = append(newSetParams, instantiatedParam)
 	}
 
+	newSetParamsInFacts := []FactStmt{}
+	for _, param := range newSetParams {
+		newSetParamsInFacts = append(newSetParamsInFacts, NewInFactWithFc(param, param))
+	}
+
+	// 2. instantiate dom facts
 	instantiatedDomFacts, err := stmt.DomFacts.Instantiate(uniMap)
 	if err != nil {
-		return nil, err
+		return nil, nil, nil, nil, err
 	}
 
+	// 3. instantiate then facts
 	instantiatedThenFacts, err := stmt.ThenFacts.Instantiate(uniMap)
 	if err != nil {
-		return nil, err
+		return nil, nil, nil, nil, err
 	}
 
+	// 4. instantiate ret set
 	instantiatedRetSet, err := stmt.RetSet.Instantiate(uniMap)
 	if err != nil {
-		return nil, err
+		return nil, nil, nil, nil, err
 	}
 
-	return NewDefFnStmt(*NewDefHeader(stmt.DefHeader.Name, newParams, newSetParams), instantiatedDomFacts, instantiatedThenFacts, instantiatedRetSet), nil
+	return newSetParamsInFacts, instantiatedDomFacts, instantiatedThenFacts, instantiatedRetSet, nil
 }
