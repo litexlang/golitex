@@ -242,6 +242,12 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 		return err
 	}
 
+	// put into obj mem
+	err = exec.env.ObjDefMem.InsertItem(stmt.DefHeader.Name)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
