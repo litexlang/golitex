@@ -31,14 +31,15 @@ type KnownFactsStruct struct {
 }
 
 type Env struct {
-	Parent              *Env
-	Msgs                []string
-	ObjDefMem           ObjDefMem
-	PropDefMem          PropDefMem
-	FnTemplateDefMem    FnTemplateDefMem
-	ExistPropDefMem     ExistPropDefMem
-	KnownFactsStruct    KnownFactsStruct
-	FnSatisfyFnDefMem   FnInFnTemplateFactsMem
+	Parent                 *Env
+	Msgs                   []string
+	ObjDefMem              ObjDefMem
+	PropDefMem             PropDefMem
+	FnTemplateDefMem       FnTemplateDefMem
+	ExistPropDefMem        ExistPropDefMem
+	KnownFactsStruct       KnownFactsStruct
+	FnInFnTemplateFactsMem FnInFnTemplateFactsMem
+	// FnInFnTemplateFactsMem map[string]FnInFnTemplateFactsMem
 	KnownFactInMatchEnv glob.Map2D[KnownFactsStruct]
 	EqualMem            map[string]shared_ptr_to_slice_of_fc
 	CurMatchProp        *MatchProp
@@ -46,11 +47,12 @@ type Env struct {
 
 func NewEnv(parent *Env, curMatchEnv *ast.SpecFactStmt) *Env {
 	env := &Env{
-		Parent:              parent,
-		Msgs:                []string{},
-		ObjDefMem:           *newObjMemory(),
-		PropDefMem:          *newPropMemory(),
-		FnSatisfyFnDefMem:   *newFnMemory(),
+		Parent:                 parent,
+		Msgs:                   []string{},
+		ObjDefMem:              *newObjMemory(),
+		PropDefMem:             *newPropMemory(),
+		FnInFnTemplateFactsMem: newFnMemory(),
+		// FnInFnTemplateFactsMem: make(map[string]FnInFnTemplateFactsMem),
 		FnTemplateDefMem:    *newFnTemplateMemory(),
 		ExistPropDefMem:     *newExistPropMemory(),
 		KnownFactsStruct:    makeKnownFactsStruct(),

@@ -697,6 +697,8 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 }
 
 func (exec *Executor) execDefFn2(stmt *ast.DefFnStmt) error {
+	defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
+
 	err := exec.env.NewObj_CheckValidName(stmt.Name)
 	if err != nil {
 		return err
@@ -706,6 +708,14 @@ func (exec *Executor) execDefFn2(stmt *ast.DefFnStmt) error {
 	if err != nil {
 		return err
 	}
+
+	derivedFact := stmt.FnTemplateStmt.DeriveUniFact(ast.NewFcAtomWithName(stmt.Name))
+	err = exec.env.NewFact(derivedFact)
+	if err != nil {
+		return err
+	}
+
+	exec.appendMsg(fmt.Sprintf("%s\nis true by definition", derivedFact.String()))
 
 	return nil
 }
