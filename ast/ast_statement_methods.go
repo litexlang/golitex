@@ -443,3 +443,7 @@ func (stmt *FnTemplateStmt) Instantiate_SetParamsInFacts_DomFacts_ThenFacts_RetS
 
 	return newSetParams, instantiatedDomFacts, instantiatedThenFacts, instantiatedRetSet, nil
 }
+
+func DerivedFact_FromFnInFnTemplate(fn Fc, fnTemplate *FnTemplateStmt) FactStmt {
+	return nil
+}

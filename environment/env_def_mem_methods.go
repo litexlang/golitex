@@ -76,12 +76,12 @@ func (memory *FnTemplateDefMem) insert(stmt *ast.DefFnTemplateStmt, pkgName stri
 	return nil
 }
 
-func (memory *FnSatisfyFnDefMem) insert(name string, stmt *ast.FnTemplateStmt, pkgName string) error {
-	pkgMap, pkgExists := memory.Dict[pkgName]
+func (memory *FnInFnTemplateMem) insert(name string, stmt *ast.FnTemplateStmt) error {
+	pkgMap, pkgExists := memory.Dict[taskManager.CurrentPkg]
 
 	if !pkgExists {
-		memory.Dict[pkgName] = make(map[string]FnMemItem)
-		pkgMap = memory.Dict[pkgName]
+		memory.Dict[taskManager.CurrentPkg] = make(map[string]FnMemItem)
+		pkgMap = memory.Dict[taskManager.CurrentPkg]
 	}
 
 	node, nodeExists := pkgMap[name]
@@ -157,7 +157,7 @@ func (memory *ExistPropDefMem) Get(fc ast.FcAtom) (*ast.DefExistPropStmt, bool) 
 	return node.Def, true
 }
 
-func (memory *FnSatisfyFnDefMem) Get(fc ast.FcAtom) ([]*ast.FnTemplateStmt, bool) {
+func (memory *FnInFnTemplateMem) Get(fc ast.FcAtom) ([]*ast.FnTemplateStmt, bool) {
 	pkgMap, pkgExists := memory.Dict[fc.PkgName]
 	if !pkgExists {
 		return nil, false

@@ -702,5 +702,10 @@ func (exec *Executor) execDefFn2(stmt *ast.DefFnStmt) error {
 		return err
 	}
 
+	err = exec.env.StoreFnInFnTemplateFact(ast.NewFcAtomWithName(stmt.Name), &stmt.FnTemplateStmt)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
