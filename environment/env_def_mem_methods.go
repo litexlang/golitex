@@ -214,6 +214,21 @@ func (e *Env) GetFcAtomDef(fcAtomName *ast.FcAtom) bool {
 	return false
 }
 
+func (e *Env) GetFnDefs(fn ast.Fc) ([]*ast.DefFnStmt, bool) {
+	fnAsAtom, isFnAsAtom := fn.(*ast.FcAtom)
+	if !isFnAsAtom {
+		return nil, false
+	}
+
+	for env := e; env != nil; env = env.Parent {
+		fnDefs, ok := env.FnSatisfyFnDefMem.Get(*fnAsAtom)
+		if ok {
+			return fnDefs, true
+		}
+	}
+	return nil, false
+}
+
 func (e *Env) GetLatestFnDef(fn ast.Fc) (*ast.DefFnStmt, bool) {
 	fnAsAtom, isFnAsAtom := fn.(*ast.FcAtom)
 	if !isFnAsAtom {
@@ -225,6 +240,16 @@ func (e *Env) GetLatestFnDef(fn ast.Fc) (*ast.DefFnStmt, bool) {
 		if ok {
 			// REMARK: 默认返回最后一个函数的定义
 			return fnDef[len(fnDef)-1], true
+		}
+	}
+	return nil, false
+}
+
+func (e *Env) GetFnTemplateDef(fcAtomName *ast.FcAtom) (*ast.DefFnTemplateStmt, bool) {
+	for env := e; env != nil; env = env.Parent {
+		fnTemplateDef, ok := env.FnTemplateDefMem.Get(*fcAtomName)
+		if ok {
+			return fnTemplateDef, true
 		}
 	}
 	return nil, false

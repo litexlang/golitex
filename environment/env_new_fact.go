@@ -153,9 +153,11 @@ func storeCommutativeTransitiveFact(mem map[string]*[]ast.Fc, fact *ast.SpecFact
 }
 
 func (env *Env) newPureFactPostProcess(fact *ast.SpecFactStmt) error {
-	if _, ok := glob.BuiltinKeywordsSet[fact.PropName.Name]; ok {
+	if glob.IsBuiltinKeywordKeySymbolCanBeFcAtomName(fact.PropName.Name) {
 		if fact.PropName.HasGivenNameAndEmptyPkgName(glob.KeywordIn) {
 			return env.newInFactPostProcess(fact)
+		} else {
+			return nil
 		}
 	}
 
@@ -469,7 +471,7 @@ func (env *Env) newInFactPostProcess(fact *ast.SpecFactStmt) error {
 
 	if asAtom, ok := fact.Params[1].(*ast.FcAtom); ok {
 		// 如果是 fn_template
-		if fnTemplateDef, ok := env.FnTemplateDefMem.Get(*asAtom); ok {
+		if fnTemplateDef, ok := env.GetFnTemplateDef(asAtom); ok {
 			fnName, ok := fact.Params[0].(*ast.FcAtom)
 			if !ok {
 				panic("For the time being, the first parameter of in fact should be a function name atom")
