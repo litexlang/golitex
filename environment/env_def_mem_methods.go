@@ -15,7 +15,9 @@
 package litex_env
 
 import (
+	"fmt"
 	ast "golitex/ast"
+	glob "golitex/glob"
 	taskManager "golitex/task_manager"
 )
 
@@ -318,4 +320,29 @@ func (e *Env) GetTemplateOfFn(fc *ast.FcFn) (*ast.FnTemplateStmt, bool) {
 
 		return e.GetTemplateOfFn(fcHeadAsFn)
 	}
+}
+
+func (e *Env) NewObj_CheckValidName(name string) error {
+	if !e.IsValidObjName(name) {
+		return fmt.Errorf("invalid name: %s", name)
+	}
+
+	err := e.ObjDefMem.InsertItem(name)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (e *Env) IsValidObjName(name string) bool {
+	if glob.IsValidUserDefinedName(name) != nil {
+		return false
+	}
+
+	if e.GetFcAtomDef(ast.NewFcAtomWithName(name)) {
+		return false
+	}
+
+	return true
 }
