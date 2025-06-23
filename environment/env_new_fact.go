@@ -424,8 +424,13 @@ func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, e
 	return instantiatedIffFacts, nil
 }
 
-func (env *Env) ExecDefFnStmt(stmt *ast.DefFnStmt) error {
-	err := env.NewFnSatisfyFnTemplateFact_InsideAtomsDeclared(stmt)
+func (env *Env) KnowDefFnSatisfyFnTemplate_KnowUniFactDerivedFromDefFn(stmt *ast.DefFnStmt) error {
+	err := env.insideAtomsDeclared(stmt)
+	if err != nil {
+		return err
+	}
+
+	err = env.FnSatisfyFnDefMem.insert(stmt, glob.EmptyPkg)
 	if err != nil {
 		return err
 	}
@@ -481,12 +486,26 @@ func (env *Env) newInFactPostProcess(fact *ast.SpecFactStmt) error {
 			if err != nil {
 				return err
 			}
-			err = env.ExecDefFnStmt(instantiatedDefFnStmt)
+			err = env.KnowDefFnSatisfyFnTemplate_KnowUniFactDerivedFromDefFn(instantiatedDefFnStmt)
 			if err != nil {
 				return err
 			}
 			return nil
 		}
+	}
+
+	return nil
+}
+
+func (env *Env) ExecDefFnTemplate(stmt *ast.DefFnTemplateStmt) error {
+	err := env.insideAtomsDeclared(&stmt.DefFnStmt)
+	if err != nil {
+		return err
+	}
+
+	err = env.FnTemplateDefMem.insert(stmt, glob.EmptyPkg)
+	if err != nil {
+		return err
 	}
 
 	return nil
