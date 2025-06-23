@@ -74,7 +74,7 @@ func (ver *Verifier) fcAtomDefined(fc *ast.FcAtom) (bool, error) {
 		return true, nil
 	}
 
-	ok := ver.env.GetFcAtomDef(fc)
+	ok := ver.env.IsFcAtomDeclared(fc)
 	if !ok {
 		return false, nil
 	}
