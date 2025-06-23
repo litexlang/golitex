@@ -28,14 +28,18 @@ func (e *Env) GetFnTemplateOfFc(fn ast.Fc) ([]*ast.FnTemplateStmt, bool) {
 }
 
 func (e *Env) GetCurrentTemplateOfFc(fc *ast.FcFn) (*ast.FnTemplateStmt, bool) {
-	head := fc.FnHead
-	if fcHeadAsAtom, ok := head.(*ast.FcAtom); ok {
-		fnDef, ok := e.GetLatestFnTemplate(fcHeadAsAtom)
-		if !ok {
-			return nil, false
-		}
-		return fnDef, true
+	fnDef, ok := e.GetLatestFnTemplate(fc.FnHead)
+	if !ok {
+		return nil, false
+	}
+	return fnDef, true
+}
+
+func (memory FnInFnTemplateFactsMem) Get(fc ast.Fc) ([]*ast.FnTemplateStmt, bool) {
+	fnDefs, ok := memory[fc.String()]
+	if !ok {
+		return nil, false
 	}
 
-	return nil, false
+	return fnDefs, true
 }

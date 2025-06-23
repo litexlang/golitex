@@ -16,32 +16,33 @@ package litex_env
 
 import ast "golitex/ast"
 
-func (e *Env) GetFnTemplateDef(fcAtomName *ast.FcAtom) (*ast.DefFnTemplateStmt, bool) {
+func (e *Env) IsFcAtomDeclared(fcAtomName *ast.FcAtom) bool {
 	for env := e; env != nil; env = env.Parent {
-		fnTemplateDef, ok := env.FnTemplateDefMem.Get(*fcAtomName)
+		ok := env.isFcAtomDeclaredAtCurEnv(fcAtomName)
 		if ok {
-			return fnTemplateDef, true
+			return true
 		}
 	}
-	return nil, false
+	return false
 }
 
-func (e *Env) GetExistPropDef(propName ast.FcAtom) (*ast.DefExistPropStmt, bool) {
-	for env := e; env != nil; env = env.Parent {
-		existProp, ok := env.ExistPropDefMem.Get(propName)
-		if ok {
-			return existProp, true
-		}
+func (e *Env) isFcAtomDeclaredAtCurEnv(fcAtomName *ast.FcAtom) bool {
+	_, ok := e.PropDefMem.Get(*fcAtomName)
+	if ok {
+		return true
 	}
-	return nil, false
-}
 
-func (e *Env) GetPropDef(propName ast.FcAtom) (*ast.DefPropStmt, bool) {
-	for env := e; env != nil; env = env.Parent {
-		prop, ok := env.PropDefMem.Get(propName)
-		if ok {
-			return prop, true
-		}
+	_, ok = e.ExistPropDefMem.Get(*fcAtomName)
+	if ok {
+		return true
 	}
-	return nil, false
+
+	_, ok = e.ObjDefMem.Get(*fcAtomName)
+	if ok {
+		return true
+	}
+
+	_, ok = e.FnTemplateDefMem.Get(*fcAtomName)
+
+	return ok
 }
