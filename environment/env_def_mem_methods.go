@@ -119,18 +119,13 @@ func (memory *ExistPropDefMem) Get(fc ast.FcAtom) (*ast.DefExistPropStmt, bool) 
 	return node.Def, true
 }
 
-func (memory *FnInFnTemplateFactsMem) Get(fc ast.FcAtom) ([]*ast.FnTemplateStmt, bool) {
-	pkgMap, pkgExists := memory.Dict[fc.PkgName]
-	if !pkgExists {
+func (memory FnInFnTemplateFactsMem) Get(fc ast.Fc) ([]*ast.FnTemplateStmt, bool) {
+	fnDefs, ok := memory[fc.String()]
+	if !ok {
 		return nil, false
 	}
 
-	node, nodeExists := pkgMap[fc.Name]
-	if !nodeExists {
-		return nil, false
-	}
-
-	return node.Def, true
+	return fnDefs, true
 }
 
 func (memory *ObjDefMem) Get(fc ast.FcAtom) (*ast.DefObjStmt, bool) {
@@ -188,13 +183,8 @@ func (e *Env) GetFcAtomDef(fcAtomName *ast.FcAtom) bool {
 }
 
 func (e *Env) GetFnDefs(fn ast.Fc) ([]*ast.FnTemplateStmt, bool) {
-	fnAsAtom, isFnAsAtom := fn.(*ast.FcAtom)
-	if !isFnAsAtom {
-		return nil, false
-	}
-
 	for env := e; env != nil; env = env.Parent {
-		fnDefs, ok := env.FnSatisfyFnDefMem.Get(*fnAsAtom)
+		fnDefs, ok := env.FnInFnTemplateFactsMem.Get(fn)
 		if ok {
 			return fnDefs, true
 		}

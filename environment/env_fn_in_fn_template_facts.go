@@ -16,17 +16,11 @@ package litex_env
 
 import (
 	ast "golitex/ast"
-	taskManager "golitex/task_manager"
 )
 
 func (e *Env) GetLatestFnTemplate(fn ast.Fc) (*ast.FnTemplateStmt, bool) {
-	fnAsAtom, isFnAsAtom := fn.(*ast.FcAtom)
-	if !isFnAsAtom {
-		return nil, false
-	}
-
 	for env := e; env != nil; env = env.Parent {
-		fnDef, ok := env.FnSatisfyFnDefMem.Get(*fnAsAtom)
+		fnDef, ok := env.FnInFnTemplateFactsMem.Get(fn)
 		if ok {
 			// REMARK: 默认返回最后一个函数的定义
 			return fnDef[len(fnDef)-1], true
@@ -35,22 +29,15 @@ func (e *Env) GetLatestFnTemplate(fn ast.Fc) (*ast.FnTemplateStmt, bool) {
 	return nil, false
 }
 
-func (memory *FnInFnTemplateFactsMem) insert(name string, stmt *ast.FnTemplateStmt) error {
-	pkgMap, pkgExists := memory.Dict[taskManager.CurrentPkg]
-
-	if !pkgExists {
-		memory.Dict[taskManager.CurrentPkg] = make(map[string]FnMemItem)
-		pkgMap = memory.Dict[taskManager.CurrentPkg]
+func (memory FnInFnTemplateFactsMem) insert(fc ast.Fc, stmt *ast.FnTemplateStmt) error {
+	fnDefs, ok := memory[fc.String()]
+	if !ok {
+		memory[fc.String()] = []*ast.FnTemplateStmt{stmt}
+		return nil
 	}
 
-	node, nodeExists := pkgMap[name]
-	if !nodeExists {
-		node = FnMemItem{[]*ast.FnTemplateStmt{stmt}}
-	} else {
-		node.Def = append(node.Def, stmt)
-	}
-
-	pkgMap[name] = node
+	fnDefs = append(fnDefs, stmt)
+	memory[fc.String()] = fnDefs
 
 	return nil
 }

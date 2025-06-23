@@ -444,6 +444,6 @@ func (stmt *FnTemplateStmt) Instantiate_SetParamsInFacts_DomFacts_ThenFacts_RetS
 	return newSetParams, instantiatedDomFacts, instantiatedThenFacts, instantiatedRetSet, nil
 }
 
-func DerivedFact_FromFnInFnTemplate(fn Fc, fnTemplate *FnTemplateStmt) FactStmt {
-	return nil
+func (fnTemplate *FnTemplateStmt) DeriveUniFact(fn Fc) *UniFactStmt {
+	return NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, fnTemplate.ThenFacts)
 }

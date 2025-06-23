@@ -19,7 +19,7 @@ import (
 )
 
 func (e *Env) StoreFnInFnTemplateFact(fn ast.Fc, fnTemplate *ast.FnTemplateStmt) error {
-	err := e.FnSatisfyFnDefMem.insert(fn.String(), fnTemplate)
+	err := e.FnInFnTemplateFactsMem.insert(fn, fnTemplate)
 	if err != nil {
 		return err
 	}
