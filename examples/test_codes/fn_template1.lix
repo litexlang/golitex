@@ -25,5 +25,5 @@ fn f3(x Z) f_template:
         x > 0 
 
 prove:
-    f3(1) $in f_template
+    f3(1) $in f_template # true, because return value of f3 is $in f_template。这是要写的，否则找不到f3(1) 的性质
     f3(1)(2) = 2 + 1

@@ -80,7 +80,13 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 }
 
 func (exec *Executor) pubStmt(stmt *ast.PubStmt) (glob.ExecState, error) {
-	return exec.execProofBlock(stmt.Stmts)
+	for _, curStmt := range stmt.Stmts {
+		execState, err := exec.Stmt(curStmt)
+		if notOkExec(execState, err) {
+			return execState, err
+		}
+	}
+	return glob.ExecState_True, nil
 }
 
 func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
