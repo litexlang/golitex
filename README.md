@@ -165,13 +165,8 @@ There are two major special cases of match and substitute:
 
 2. about counting and prove a universal fact on a finite set by iterating over the set. Again they are different because their literal representation directly encodes information and **match and substitute** is not enough to handle them. If a set has finite number of elements, we verify case by case to prove a universal fact on that set (for infinite sets, we can only use `forall` to express their properties.). Litex provides a special keywords to handle this case.
 
-*The **match and substitute** is actually a very interesting and fundamental way of understanding what math actually is. Throughout centuries, the definition of math is always changing, different mathematicians and philosophers have different opinions on what it is. If math is truly a game of **match and substitute**, with just a few exceptions like counting and natural numbers, then it is technically possible to formalize all math in Litex. If not, then Litex semantics needs extra features. Moreover, giving semantics to keywords like **prop** or **in** is actually very tricky for Litex, because people just assume what they mean and do not think about the underlying mechanism and the Litex creator has to think about it by himself. This is the major challenge of Litex.*
 
 ## Litex's Unique Design
-
-_Common sense is not so common._
-
-_-- Voltaire_
 
 _Simplicity is the ultimate sophistication._
 
@@ -391,6 +386,18 @@ Next I want to show you how Litex can be used to solve a simple linear equation.
 </table>
 
 I know Lean can use tactics to solve the same problem, and it is shorter. Litex will introduce similar features in the future. What I really want to show you here is that Litex is much more readable and intuitive than Lean in this case. Not every situation can be solved by tactics, and writing tactics itself in Lean is not easy. Litex spares you from remembering all these difficult things like `have`, `by`, `rw`, `simp`, `exact` and strange syntax etc. All you need is basic math knowledge, which significantly reduces the barrier to entry.
+
+## Challenge of Litex
+
+_Common sense is not so common._
+
+_-- Voltaire_
+
+The **match and substitute**, which is the basic way of reasoning in math, is actually a very interesting and fundamental way of understanding what math actually is. Throughout centuries, the definition of math is always changing, different mathematicians and philosophers have different opinions on what it is. If math is truly a game of **match and substitute**, with just a few exceptions like counting and natural numbers, then it is technically possible to formalize all math in Litex. If not, then Litex semantics needs extra features. 
+
+Moreover, giving semantics to keywords like **prop** or **in** is actually very tricky for Litex, because people just assume what they mean and do not think about the underlying mechanism and the Litex creator has to think about it by himself. This is the major challenge of Litex.
+
+Fortunately, Litex has translated a vast amount of mathematical material, and there has never been a case where the logic could not be expressed. Empirically, the user does not need to worry about this.
 
 ## Evolution and Development of Litex
 
