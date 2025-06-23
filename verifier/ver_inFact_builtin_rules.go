@@ -91,7 +91,7 @@ func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactS
 		return false
 	}
 
-	fnDef, ok := ver.env.GetLatestFnDef(fcFn.FnHead)
+	fnDef, ok := ver.env.GetLatestFnTemplate(fcFn.FnHead)
 	if !ok {
 		return false // 这里不传error是有点道理的，因为+-*/的定义不在mem里
 	}
@@ -280,7 +280,7 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state VerState) (b
 		return false, nil
 	}
 
-	specFactDefs, ok := ver.env.GetFnDefs(stmt.Params[0])
+	specFactDefs, ok := ver.env.GetFnTemplates(stmt.Params[0])
 	if !ok {
 		return false, nil
 	}

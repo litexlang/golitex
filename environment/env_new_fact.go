@@ -485,7 +485,7 @@ func (env *Env) ExecDefFnTemplate(stmt *ast.DefFnTemplateStmt) error {
 		return err
 	}
 
-	err = env.FnTemplateDefMem.insert(stmt, glob.EmptyPkg)
+	err = env.FnTemplateDefMem.insert(stmt)
 	if err != nil {
 		return err
 	}

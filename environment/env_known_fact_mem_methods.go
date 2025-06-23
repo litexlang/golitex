@@ -322,7 +322,7 @@ func (e *Env) IsFnDeclared(fc *ast.FcAtom) (*ast.FnTemplateStmt, bool) {
 		return nil, true
 	}
 
-	fnDef, ok := e.GetLatestFnDef(fc)
+	fnDef, ok := e.GetLatestFnTemplate(fc)
 	if !ok {
 		return nil, false
 	}

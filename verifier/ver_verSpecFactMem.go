@@ -841,12 +841,12 @@ func (ver *Verifier) isFnEqualFact_Check_BuiltinRules(stmt *ast.SpecFactStmt, st
 		return true, nil
 	}
 
-	leftFnDef, ok := ver.env.GetLatestFnDef(stmt.Params[0])
+	leftFnDef, ok := ver.env.GetLatestFnTemplate(stmt.Params[0])
 	if !ok {
 		return false, nil
 	}
 
-	rightFnDef, ok := ver.env.GetLatestFnDef(stmt.Params[1])
+	rightFnDef, ok := ver.env.GetLatestFnTemplate(stmt.Params[1])
 	if !ok {
 		return false, nil
 	}
