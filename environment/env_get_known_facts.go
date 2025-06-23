@@ -16,32 +16,26 @@ package litex_env
 
 import ast "golitex/ast"
 
-func (e *Env) GetFnTemplateDef(fcAtomName *ast.FcAtom) (*ast.DefFnTemplateStmt, bool) {
+func (e *Env) GetFnTemplateOfFc(fn ast.Fc) ([]*ast.FnTemplateStmt, bool) {
+	fnDefs := []*ast.FnTemplateStmt{}
 	for env := e; env != nil; env = env.Parent {
-		fnTemplateDef, ok := env.FnTemplateDefMem.Get(*fcAtomName)
+		fnDefsFromEnv, ok := env.FnInFnTemplateFactsMem.Get(fn)
 		if ok {
-			return fnTemplateDef, true
+			fnDefs = append(fnDefs, fnDefsFromEnv...)
 		}
 	}
-	return nil, false
+	return fnDefs, true
 }
 
-func (e *Env) GetExistPropDef(propName ast.FcAtom) (*ast.DefExistPropStmt, bool) {
-	for env := e; env != nil; env = env.Parent {
-		existProp, ok := env.ExistPropDefMem.Get(propName)
-		if ok {
-			return existProp, true
+func (e *Env) GetCurrentTemplateOfFc(fc *ast.FcFn) (*ast.FnTemplateStmt, bool) {
+	head := fc.FnHead
+	if fcHeadAsAtom, ok := head.(*ast.FcAtom); ok {
+		fnDef, ok := e.GetLatestFnTemplate(fcHeadAsAtom)
+		if !ok {
+			return nil, false
 		}
+		return fnDef, true
 	}
-	return nil, false
-}
 
-func (e *Env) GetFcAtomDef(fcAtomName *ast.FcAtom) bool {
-	for env := e; env != nil; env = env.Parent {
-		ok := env.getFcAtomDefAtCurEnv(fcAtomName)
-		if ok {
-			return true
-		}
-	}
-	return false
+	return nil, false
 }

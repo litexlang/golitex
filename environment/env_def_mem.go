@@ -24,30 +24,6 @@ type PropDefMem struct {
 	Dict glob.Map2D[PropMemItem]
 }
 
-func (memory *PropDefMem) Get(fc ast.FcAtom) (*ast.DefPropStmt, bool) {
-	pkgMap, pkgExists := memory.Dict[fc.PkgName]
-	if !pkgExists {
-		return nil, false
-	}
-
-	node, nodeExists := pkgMap[fc.Name]
-	if !nodeExists {
-		return nil, false
-	}
-
-	return node.Def, true
-}
-
-func (e *Env) GetPropDef(propName ast.FcAtom) (*ast.DefPropStmt, bool) {
-	for env := e; env != nil; env = env.Parent {
-		prop, ok := env.PropDefMem.Get(propName)
-		if ok {
-			return prop, true
-		}
-	}
-	return nil, false
-}
-
 type ExistPropMemItem struct{ Def *ast.DefExistPropStmt }
 type ExistPropDefMem struct {
 	Dict glob.Map2D[ExistPropMemItem]
@@ -63,13 +39,6 @@ type ObjDefMem struct {
 	Dict glob.Map2D[ObjMemItem]
 }
 
-// type FnMemItem struct {
-// 	Def []*ast.FnTemplateStmt
-// }
-
-//	type FnInFnTemplateFactsMem struct {
-//		Dict glob.Map2D[FnMemItem]
-//	}
 type FnInFnTemplateFactsMem map[string][]*ast.FnTemplateStmt
 
 func newPropMemory() *PropDefMem {

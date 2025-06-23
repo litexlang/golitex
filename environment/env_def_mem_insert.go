@@ -71,7 +71,7 @@ func (memory *ExistPropDefMem) insert(stmt *ast.DefExistPropStmt) error {
 	return nil
 }
 
-func (memory *ObjDefMem) Insert(objName string) error {
+func (memory *ObjDefMem) insert(objName string) error {
 	pkgMap, pkgExists := memory.Dict[taskManager.CurrentPkg]
 
 	if !pkgExists {

@@ -27,7 +27,7 @@ func (env *Env) IsValidUserDefinedName_NoDuplicate(name string) error {
 		return err
 	}
 
-	ok := env.GetFcAtomDef(ast.NewFcAtomWithName(name))
+	ok := env.IsFcAtomDeclared(ast.NewFcAtomWithName(name))
 	if ok {
 		return duplicateDefError(glob.EmptyPkg, name, "")
 	}
