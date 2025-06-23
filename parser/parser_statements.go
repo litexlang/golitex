@@ -249,20 +249,20 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 	return ast.NewDefPropStmt(*declHeader, domFacts, iffFacts), nil
 }
 
-func (tb *tokenBlock) FnTemplateStmt(keyword string) (string, *ast.FnTemplateStmt, error) {
+func (tb *tokenBlock) FnTemplateStmt(keyword string) (*ast.FnTemplateStmt, error) {
 	err := tb.header.skip(keyword)
 	if err != nil {
-		return "", nil, &tokenBlockErr{err, *tb}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	decl, err := tb.defHeaderWithoutParsingColonAtEnd()
 	if err != nil {
-		return "", nil, &tokenBlockErr{err, *tb}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	retSet, err := tb.header.RawFc()
 	if err != nil {
-		return "", nil, &tokenBlockErr{err, *tb}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	domFacts := []ast.FactStmt{}
@@ -272,11 +272,11 @@ func (tb *tokenBlock) FnTemplateStmt(keyword string) (string, *ast.FnTemplateStm
 		tb.header.skip("")
 		domFacts, thenFacts, _, err = tb.uniFactBodyFacts(UniFactDepth1, glob.KeywordThen)
 		if err != nil {
-			return "", nil, &tokenBlockErr{err, *tb}
+			return nil, &tokenBlockErr{err, *tb}
 		}
 	}
 
-	return decl.Name, ast.NewFnTemplateStmt(decl.Params, decl.SetParams, domFacts, thenFacts, retSet), nil
+	return ast.NewFnTemplateStmt(*decl, domFacts, thenFacts, retSet), nil
 }
 
 func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
@@ -1158,19 +1158,19 @@ func (tb *tokenBlock) parseFactBodyWithHeaderNameAndUniFactDepth(headerName stri
 }
 
 func (tb *tokenBlock) defFnTemplateStmt() (*ast.DefFnTemplateStmt, error) {
-	name, fnTemplateStmt, err := tb.FnTemplateStmt(glob.KeywordFnTemplate)
+	fnTemplateStmt, err := tb.FnTemplateStmt(glob.KeywordFnTemplate)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	return ast.NewFnTemplateDefStmt(name, fnTemplateStmt), nil
+	return ast.NewFnTemplateDefStmt(fnTemplateStmt), nil
 }
 
 func (tb *tokenBlock) defFnStmt() (*ast.DefFnStmt, error) {
-	name, fnTemplateStmt, err := tb.FnTemplateStmt(glob.KeywordFn)
+	fnTemplateStmt, err := tb.FnTemplateStmt(glob.KeywordFn)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	return ast.NewDefFnStmt(name, fnTemplateStmt), nil
+	return ast.NewDefFnStmt(fnTemplateStmt), nil
 }

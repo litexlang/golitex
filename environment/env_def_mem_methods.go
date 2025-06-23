@@ -49,11 +49,11 @@ func (memory *FnTemplateDefMem) insert(stmt *ast.DefFnTemplateStmt) error {
 		pkgMap = memory.Dict[taskManager.CurrentPkg]
 	}
 
-	node, nodeExists := pkgMap[stmt.Name]
+	node, nodeExists := pkgMap[stmt.FnTemplateStmt.Name]
 	if !nodeExists {
 		node = FnTemplateMemItem{stmt}
 	}
-	pkgMap[stmt.Name] = node
+	pkgMap[stmt.FnTemplateStmt.Name] = node
 
 	return nil
 }

@@ -155,7 +155,7 @@ func storeCommutativeTransitiveFact(mem map[string]*[]ast.Fc, fact *ast.SpecFact
 func (env *Env) newPureFactPostProcess(fact *ast.SpecFactStmt) error {
 	if glob.IsBuiltinKeywordKeySymbolCanBeFcAtomName(fact.PropName.Name) {
 		if fact.PropName.HasGivenNameAndEmptyPkgName(glob.KeywordIn) {
-			return env.newInFactPostProcess(fact)
+			return env.inFactPostProcess(fact)
 		} else {
 			return nil
 		}
@@ -321,7 +321,7 @@ func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, erro
 		thenFacts = append(thenFacts, specThenFact)
 	}
 
-	return ast.NewUniFact(existPropDef.ExistParams, existPropDef.DefBody.DefHeader.SetParams, domFacts, thenFacts), nil
+	return ast.NewUniFact(existPropDef.ExistParams, existPropDef.DefBody.DefHeader.ParamSets, domFacts, thenFacts), nil
 }
 
 func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
@@ -430,7 +430,7 @@ func (env *Env) KnowDefFnSatisfyFnTemplate_KnowUniFactDerivedFromDefFn(fc ast.Fc
 		return err
 	}
 
-	err = env.StoreFnInFnTemplateFact(fc, stmt)
+	err = env.StoreFnInFnTemplateFactMem(fc, stmt)
 	if err != nil {
 		return err
 	}
@@ -455,32 +455,32 @@ func (env *Env) KnowDefFnSatisfyFnTemplate_KnowUniFactDerivedFromDefFn(fc ast.Fc
 	return nil
 }
 
-func (env *Env) newInFactPostProcess(fact *ast.SpecFactStmt) error {
-	if len(fact.Params) != 2 {
-		return fmt.Errorf("in fact expect 2 parameters, get %d in %s", len(fact.Params), fact.String())
-	}
+// func (env *Env) newInFactPostProcess(fact *ast.SpecFactStmt) error {
+// 	if len(fact.Params) != 2 {
+// 		return fmt.Errorf("in fact expect 2 parameters, get %d in %s", len(fact.Params), fact.String())
+// 	}
 
-	if asAtom, ok := fact.Params[1].(*ast.FcAtom); ok {
-		// 如果是 fn_template
-		if fnTemplateDef, ok := env.GetFnTemplateDef(asAtom); ok {
-			fnName := fact.Params[0]
-			instantiatedDefFnStmt, err := fnTemplateDef.InstantiateByFnName(fnName)
-			if err != nil {
-				return err
-			}
-			err = env.KnowDefFnSatisfyFnTemplate_KnowUniFactDerivedFromDefFn(fnName, instantiatedDefFnStmt)
-			if err != nil {
-				return err
-			}
-			return nil
-		}
-	}
+// 	if asAtom, ok := fact.Params[1].(*ast.FcAtom); ok {
+// 		// 如果是 fn_template
+// 		if fnTemplateDef, ok := env.GetFnTemplateDef(asAtom); ok {
+// 			fnName := fact.Params[0]
+// 			instantiatedDefFnStmt, err := fnTemplateDef.FnTemplateStmt.InstantiateByFnName_WithTemplateNameGivenFc(fnName)
+// 			if err != nil {
+// 				return err
+// 			}
+// 			err = env.KnowDefFnSatisfyFnTemplate_KnowUniFactDerivedFromDefFn(fnName, instantiatedDefFnStmt)
+// 			if err != nil {
+// 				return err
+// 			}
+// 			return nil
+// 		}
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 func (env *Env) ExecDefFnTemplate(stmt *ast.DefFnTemplateStmt) error {
-	err := env.insideAtomsDeclared(ast.NewFcAtomWithName(stmt.Name), &stmt.FnTemplateStmt)
+	err := env.insideAtomsDeclared(ast.NewFcAtomWithName(stmt.FnTemplateStmt.Name), &stmt.FnTemplateStmt)
 	if err != nil {
 		return err
 	}

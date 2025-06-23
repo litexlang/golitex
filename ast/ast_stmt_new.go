@@ -34,8 +34,8 @@ func NewDefExistPropStmt(def *DefExistPropStmtBody, existParams []string, existP
 	return &DefExistPropStmt{*def, existParams, existParamSets}
 }
 
-func NewFnTemplateStmt(params []string, paramSets []Fc, domFacts []FactStmt, thenFacts []FactStmt, retSet Fc) *FnTemplateStmt {
-	return &FnTemplateStmt{params, paramSets, domFacts, thenFacts, retSet}
+func NewFnTemplateStmt(defHeader DefHeader, domFacts []FactStmt, thenFacts []FactStmt, retSet Fc) *FnTemplateStmt {
+	return &FnTemplateStmt{defHeader, domFacts, thenFacts, retSet}
 }
 
 func NewSpecFactStmt(typeEnum SpecFactEnum, propName *FcAtom, params []Fc) *SpecFactStmt {
@@ -122,10 +122,10 @@ func NewProveStmt(proof []Stmt) *ProveStmt {
 	return &ProveStmt{proof}
 }
 
-func NewFnTemplateDefStmt(name string, fnTemplateStmt *FnTemplateStmt) *DefFnTemplateStmt {
-	return &DefFnTemplateStmt{name, *fnTemplateStmt}
+func NewFnTemplateDefStmt(fnTemplateStmt *FnTemplateStmt) *DefFnTemplateStmt {
+	return &DefFnTemplateStmt{*fnTemplateStmt}
 }
 
-func NewDefFnStmt(name string, fnTemplateStmt *FnTemplateStmt) *DefFnStmt {
-	return &DefFnStmt{name, *fnTemplateStmt}
+func NewDefFnStmt(fnTemplateStmt *FnTemplateStmt) *DefFnStmt {
+	return &DefFnStmt{*fnTemplateStmt}
 }

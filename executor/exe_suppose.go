@@ -90,7 +90,7 @@ func (exec *Executor) supposeStmt_declaredParams(stmt *ast.SupposeStmt) (glob.Ex
 			return glob.ExecState_Error, fmt.Errorf("spec fact parameter must be atom, but got: %s", param.String())
 		}
 
-		instantiatedSetParam, err := factSpecDef.DefHeader.SetParams[i].Instantiate(uniMap)
+		instantiatedSetParam, err := factSpecDef.DefHeader.ParamSets[i].Instantiate(uniMap)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
