@@ -165,6 +165,8 @@ There are two major special cases of match and substitute:
 
 2. about counting and prove a universal fact on a finite set by iterating over the set. Again they are different because their literal representation directly encodes information and **match and substitute** is not enough to handle them. If a set has finite number of elements, we verify case by case to prove a universal fact on that set (for infinite sets, we can only use `forall` to express their properties.). Litex provides a special keywords to handle this case.
 
+*The **match and substitute** is actually a very interesting and fundamental way of understanding what math actually is. Throughout centuries, the definition of math is always changing, different mathematicians and philosophers have different opinions on what it is. If math is truly a game of **match and substitute**, with just a few exceptions like counting and natural numbers, then it is technically possible to formalize all math in Litex. If not, then Litex semantics needs extra features. Moreover, giving semantics to keywords like **prop** or **in** is actually very tricky for Litex, because people just assume what they mean and do not think about the underlying mechanism and the Litex creator has to think about it by himself. This is the major challenge of Litex.*
+
 ## Litex's Unique Design
 
 _Common sense is not so common._
@@ -214,11 +216,15 @@ _Given enough eyeballs, all bugs are shallow._
 
 _-- Linus Torvalds_
 
+_Software is eating the world._
+
+_-- Marc Andreessen_
+
 Litex's growth is driven by the needs of its users. The users shape the language, not anyone else. If you have any ideas, please contact us through [zulip](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/) or litexlang@outlook.com.
 
 1. Why is Litex poised for success now?
 
-Litex represents an intellectual breakthrough in formal language design. The rapidly expanding AI industry presents the perfect opportunity, as it needs tools for ensuring AI safety, enhancing reasoning, and accelerating scientific discovery.
+Litex represents an intellectual breakthrough in formal language design. The rapidly expanding AI industry presents the perfect opportunity, as it needs tools for ensuring AI safety, enhancing reasoning, and accelerating scientific discovery. For a long time, softwares are drastically changing nearly every industry, but how people do math is still almost the same as 100 years ago. A good formal language can be that transformative force that changes the way people do math.
 
 2. What makes Litex different from other formal languages?
 
@@ -424,15 +430,13 @@ _The people who are crazy enough to think they can change the world are the ones
 
 _-- Steve Jobs_
 
-_Software is eating the world._
-
-_-- Marc Andreessen_
-
 _Talent wins games, but teamwork and intelligence win championships._
 
 _-- Michael Jordan_
 
-Hi, I am Jiachen Shen, the creator of Litex. I am a PhD student in mathematics and programming language enthusiast (a programming language geek, if you are one too, you are welcome to contact me). In 2023, I shockingly found that math is somehow equivalent to programming, after reading Professor Terence Tao's [blog](https://terrytao.wordpress.com/2023/11/18/formalizing-the-proof-of-pfr-in-lean4-using-blueprint-a-short-tour/). This is the most amazing idea that I have ever seen in my life. In 2024, after thinking about it for a year, I started to implement Litex. After more than 2500 git commits, what it means to be a "formal language that is intuitive and as aligned with daily math expression as possible" is finally to make sense to me and my kernel sort of works now.
+Hi, I am Jiachen Shen, the creator of Litex. I am a PhD student in mathematics and programming language enthusiast (a programming language geek, if you are one too, you are welcome to contact me). In 2023, I shockingly found that math is somehow equivalent to programming, after reading Professor Terence Tao's [blog](https://terrytao.wordpress.com/2023/11/18/formalizing-the-proof-of-pfr-in-lean4-using-blueprint-a-short-tour/). This is the most amazing idea that I have ever seen in my life. In 2024, after thinking about it for a year, I started to implement Litex. After more than 3000 git commits, what it means to be a "formal language that is intuitive and as aligned with daily math expression as possible" is finally to make sense to me and my kernel sort of works now.
+
+As Arabic numbers transforms the world of math by its clean and concise expression, Litex aims to transform the world of math by its intuitive and natural expression using formal language. Giving semantics to keywords and syntax to Litex and at the same time making what it means as aligned with daily math expression as possible, is the major challenge of Litex. The creator of Litex is trying to make it happen, and that is almost done.
 
 Litex is evolving from implementation to community-driven development. The interpreter is 90% complete and covers most daily math. However, it is still not ready for production use. Now, I face a big challenge: the conflict between an individual's limited capacity and the extensive demands of an open-source project. See more in [contribute to Litex](./doc/contribute_to_Litex/contribute_to_Litex.md) to help me grow the project.
 

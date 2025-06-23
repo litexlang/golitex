@@ -494,7 +494,7 @@ func (env *Env) newInFactPostProcess(fact *ast.SpecFactStmt) error {
 }
 
 func (env *Env) ExecDefFnTemplate(stmt *ast.DefFnTemplateStmt) error {
-	err := env.insideAtomsDeclared(&stmt.DefFnStmt)
+	err := env.insideAtomsDeclared(&stmt.FnTemplateStmt)
 	if err != nil {
 		return err
 	}
