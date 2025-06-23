@@ -15,11 +15,11 @@
 package litex_ast
 
 import (
-	"errors"
+	glob "golitex/glob"
 )
 
 func InstantiateFcAtom(fc *FcAtom, uniMap map[string]Fc) (Fc, error) {
-	if fc.PkgName == "" {
+	if fc.PkgName == glob.EmptyPkg {
 		instance, ok := uniMap[fc.Name]
 		if ok {
 			return instance, nil
@@ -33,23 +33,21 @@ func (fc *FcAtom) Instantiate(uniMap map[string]Fc) (Fc, error) {
 }
 
 func InstantiateFcFn(fc *FcFn, uniMap map[string]Fc) (Fc, error) {
-	var newFc FcFn
-
 	newHead, err := fc.FnHead.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}
 
-	if newHeadAsAtom, ok := newHead.(*FcAtom); ok {
-		newFc.FnHead = newHeadAsAtom
-	} else {
-		newHeadAsFcFn, ok := newHead.(*FcFn)
-		if !ok {
-			return nil, errors.New("invalid type assertion for FnHead")
-		}
-		newFc.FnHead = newHeadAsFcFn.FnHead
-		newFc.Params = append(newFc.Params, newHeadAsFcFn.Params...)
-	}
+	// if newHeadAsAtom, ok := newHead.(*FcAtom); ok {
+	// 	newFc.FnHead = newHeadAsAtom
+	// } else {
+	// 	newHeadAsFcFn, ok := newHead.(*FcFn)
+	// 	if !ok {
+	// 		return nil, errors.New("invalid type assertion for FnHead")
+	// 	}
+	// 	newFc.FnHead = newHeadAsFcFn.FnHead
+	// 	newFc.Params = append(newFc.Params, newHeadAsFcFn.Params...)
+	// }
 
 	newParamSegs := make([]Fc, len(fc.Params))
 	for i, seg := range fc.Params {
@@ -59,9 +57,8 @@ func InstantiateFcFn(fc *FcFn, uniMap map[string]Fc) (Fc, error) {
 		}
 		newParamSegs[i] = newSeg
 	}
-	newFc.Params = newParamSegs
 
-	return &newFc, nil
+	return NewFcFn(newHead, newParamSegs), nil
 }
 
 func (fc *FcFn) Instantiate(uniMap map[string]Fc) (Fc, error) {
@@ -70,15 +67,15 @@ func (fc *FcFn) Instantiate(uniMap map[string]Fc) (Fc, error) {
 
 func InstantiateSpecFact(stmt *SpecFactStmt, uniMap map[string]Fc) (*SpecFactStmt, error) {
 	// 把 PropName 也换了
-	newPropName, err := stmt.PropName.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
+	// newPropName, err := stmt.PropName.Instantiate(uniMap)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	propNameAtom, ok := newPropName.(*FcAtom)
-	if !ok {
-		return nil, errors.New("PropName is not of type *FcAtom")
-	}
+	// propNameAtom, ok := newPropName.(*FcAtom)
+	// if !ok {
+	// 	return nil, errors.New("PropName is not of type *FcAtom")
+	// }
 
 	newParams := []Fc{}
 	for _, param := range stmt.Params {
@@ -89,7 +86,8 @@ func InstantiateSpecFact(stmt *SpecFactStmt, uniMap map[string]Fc) (*SpecFactStm
 		newParams = append(newParams, newParam)
 	}
 
-	return NewSpecFactStmt(stmt.TypeEnum, propNameAtom, newParams), nil
+	// return NewSpecFactStmt(stmt.TypeEnum, propNameAtom, newParams), nil
+	return NewSpecFactStmt(stmt.TypeEnum, &stmt.PropName, newParams), nil
 }
 
 func (stmt *SpecFactStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
