@@ -37,7 +37,7 @@ func (e *Env) inFactPostProcess_InFnTemplate(fact *ast.SpecFactStmt) (bool, erro
 		return false, nil
 	}
 
-	curInTemplate, ok := e.Parent.GetFnTemplateDef(templateName)
+	curInTemplate, ok := e.GetFnTemplateDef(templateName)
 	if !ok {
 		return false, nil
 	}
