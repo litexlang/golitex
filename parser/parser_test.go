@@ -89,3 +89,19 @@ func TestFcDot(t *testing.T) {
 		fmt.Println(fc)
 	}
 }
+
+func TestColonColon(t *testing.T) {
+	sourceCode := []string{
+		"a::b",
+		"a::b::c::d",
+	}
+	for _, code := range sourceCode {
+		fc, err := ParseSourceCodeGetFc(code)
+		if err != nil {
+			t.Fatal(err)
+		}
+		fmt.Println(fc.String())
+		fmt.Println(fc.(*ast.FcAtom).PkgName)
+		fmt.Println(fc.(*ast.FcAtom).Name)
+	}
+}

@@ -1,3 +1,0 @@
-fn_template f(x Z) fn(Z)Z
-f $in set
-$in(N, set)
