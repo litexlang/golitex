@@ -452,3 +452,12 @@ func FnFcToFnTemplateStmt(fc Fc) (*FnTemplateStmt, error) {
 
 	return fnDefStmt, nil
 }
+
+func IsFcAtomWithBuiltinPkgAndName(fc Fc, name string) bool {
+	fcAtom, ok := fc.(*FcAtom)
+	if !ok {
+		return false
+	}
+
+	return fcAtom.PkgName == glob.BuiltinPkgName && fcAtom.Name == name
+}
