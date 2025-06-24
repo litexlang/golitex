@@ -85,9 +85,11 @@ func (cursor *strSliceCursor) fcAtomAndFcFn() (ast.Fc, error) {
 	var expr ast.Fc
 	var err error
 
-	if cursor.is(glob.KeywordFn) {
-		return cursor.fnSet()
-	} else if cursor.is(glob.KeySymbolLeftBrace) {
+	// if cursor.is(glob.KeywordFn) {
+	// 	return cursor.fnSet()
+	// } else
+
+	if cursor.is(glob.KeySymbolLeftBrace) {
 		expr, err = cursor.bracedExpr()
 		if err != nil {
 			return nil, err
@@ -365,38 +367,38 @@ func (cursor *strSliceCursor) consumeBracedFc(head ast.Fc) (ast.Fc, error) {
 	return head, nil
 }
 
-func (cursor *strSliceCursor) fnSet() (ast.Fc, error) {
-	cursor.skip(glob.KeywordFn)
-	cursor.skip(glob.KeySymbolLeftBrace)
+// func (cursor *strSliceCursor) fnSet() (ast.Fc, error) {
+// 	cursor.skip(glob.KeywordFn)
+// 	cursor.skip(glob.KeySymbolLeftBrace)
 
-	fnSets := []ast.Fc{}
-	var retSet ast.Fc
-	for !cursor.ExceedEnd() && !(cursor.is(glob.KeySymbolRightBrace)) {
-		fnSet, err := cursor.RawFc()
-		if err != nil {
-			return nil, &strSliceErr{err, cursor}
-		}
-		fnSets = append(fnSets, fnSet)
-		if cursor.is(glob.KeySymbolComma) {
-			cursor.skip(glob.KeySymbolComma)
-			continue
-		}
-	}
+// 	fnSets := []ast.Fc{}
+// 	var retSet ast.Fc
+// 	for !cursor.ExceedEnd() && !(cursor.is(glob.KeySymbolRightBrace)) {
+// 		fnSet, err := cursor.RawFc()
+// 		if err != nil {
+// 			return nil, &strSliceErr{err, cursor}
+// 		}
+// 		fnSets = append(fnSets, fnSet)
+// 		if cursor.is(glob.KeySymbolComma) {
+// 			cursor.skip(glob.KeySymbolComma)
+// 			continue
+// 		}
+// 	}
 
-	err := cursor.skip(glob.KeySymbolRightBrace)
-	if err != nil {
-		return nil, &strSliceErr{err, cursor}
-	}
+// 	err := cursor.skip(glob.KeySymbolRightBrace)
+// 	if err != nil {
+// 		return nil, &strSliceErr{err, cursor}
+// 	}
 
-	retSet, err = cursor.RawFc()
-	if err != nil {
-		return nil, &strSliceErr{err, cursor}
-	}
+// 	retSet, err = cursor.RawFc()
+// 	if err != nil {
+// 		return nil, &strSliceErr{err, cursor}
+// 	}
 
-	ret := ast.MakeFnSetFc(fnSets, retSet)
+// 	ret := ast.MakeFnSetFc(fnSets, retSet)
 
-	return ret, nil
-}
+// 	return ret, nil
+// }
 
 func ParseSourceCodeGetFc(s string) (ast.Fc, error) {
 	blocks, err := makeTokenBlocks([]string{s})
