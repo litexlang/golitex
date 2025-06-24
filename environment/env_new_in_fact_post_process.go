@@ -47,7 +47,7 @@ func (e *Env) inFactPostProcess_InFnTemplate(fact *ast.SpecFactStmt) (bool, erro
 		return false, err
 	}
 
-	err = e.StoreFnInFnTemplateFactMem(fact.Params[0], instantiatedFnTStmt)
+	err = e.StoreFnSatisfyFnTemplateFact(fact.Params[0], instantiatedFnTStmt)
 	if err != nil {
 		return false, err
 	}

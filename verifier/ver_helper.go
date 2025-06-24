@@ -53,3 +53,20 @@ func (ver *Verifier) equalTrueAddSuccessMsg(left ast.Fc, right ast.Fc, state Ver
 func (ver *Verifier) makeEqualFact(left ast.Fc, right ast.Fc) *ast.SpecFactStmt {
 	return ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeySymbolEqual), []ast.Fc{left, right})
 }
+
+func isErrOrOk(ok bool, err error) bool {
+	return err != nil || ok
+}
+
+func isErrOrNotOk(ok bool, err error) bool {
+	return err != nil && !ok
+}
+
+func (ver *Verifier) processOkMsg(state VerState, msg string, verifiedBy string) (bool, error) {
+	if state.requireMsg() {
+		ver.successMsgEnd(msg, verifiedBy)
+	} else {
+		ver.successNoMsg()
+	}
+	return true, nil
+}

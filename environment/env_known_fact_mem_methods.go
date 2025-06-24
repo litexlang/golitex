@@ -344,3 +344,12 @@ func (e *Env) newUniFactWithIff(stmt *ast.UniFactWithIffStmt) error {
 
 	return nil
 }
+
+func (e *Env) StoreFnSatisfyFnTemplateFact(fn ast.Fc, fnTemplate *ast.FnTemplateStmt) error {
+	err := e.FnInFnTemplateFactsMem.insert(fn, fnTemplate)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
