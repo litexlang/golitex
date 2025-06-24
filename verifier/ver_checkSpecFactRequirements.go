@@ -103,7 +103,7 @@ func (ver *Verifier) fcSatisfyNotBuiltinFnRequirement(fc ast.Fc, state VerState)
 			return false, fmt.Errorf("fc is not a function")
 		}
 
-		templateOfFn, ok := ver.env.GetCurrentTemplateOfFc(fcFnHeadAsFcFn)
+		templateOfFn, ok := ver.env.GetTemplateOfFcFnRecursively(fcFnHeadAsFcFn)
 		if !ok {
 			return false, fmt.Errorf("function %s is not implemented", fcFnHeadAsFcFn.String())
 		}
