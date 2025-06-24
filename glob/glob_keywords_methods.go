@@ -142,5 +142,3 @@ var notFcAtomNameSet = map[string]struct{}{
 	KeywordIff:   {},
 	KeywordExist: {},
 }
-
-// TODO

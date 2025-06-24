@@ -48,6 +48,6 @@ const MaxLogicExprFactsNum int = 8
 const AtIndexOp string = KeySymbolLeftBracket
 const GetIndexOfOp string = KeySymbolLeftBracket + KeySymbolLeftBracket
 
-const EmptyBuiltinPkgName string = ""
+const BuiltinPkgName string = ""
 
 const MemberAccessOpt string = KeySymbolDot
