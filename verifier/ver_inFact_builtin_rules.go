@@ -250,17 +250,29 @@ func (ver *Verifier) verInC_BySpecMem(stmt *ast.SpecFactStmt, state VerState) (b
 }
 
 func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	templateName, ok := stmt.Params[1].(*ast.FcAtom)
-	if !ok {
+	var fnTemplate *ast.FnTemplateStmt
+	var err error
+
+	if templateName, ok := stmt.Params[1].(*ast.FcAtom); ok {
+		if !ok {
+			return false, nil
+		}
+
+		fnTDef, ok := ver.env.GetFnTemplateDef(templateName)
+		if !ok {
+			return false, nil
+		}
+		fnTemplate = &fnTDef.FnTemplateStmt
+	} else if ast.IsFnFcFn(stmt.Params[1]) {
+		fnTemplate, err = ast.FnFcToFnTemplateStmt(stmt.Params[1])
+		if err != nil {
+			return false, err
+		}
+	} else {
 		return false, nil
 	}
 
-	fnTDef, ok := ver.env.GetFnTemplateDef(templateName)
-	if !ok {
-		return false, nil
-	}
-
-	instantiatedDefFnStmt, err := fnTDef.FnTemplateStmt.InstantiateByFnName_WithTemplateNameGivenFc(stmt.Params[0])
+	instantiatedDefFnStmt, err := fnTemplate.InstantiateByFnName_WithTemplateNameGivenFc(stmt.Params[0])
 	if err != nil {
 		return false, nil
 	}

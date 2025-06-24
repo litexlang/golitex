@@ -54,6 +54,8 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state VerState) (bool, er
 	// 单独处理特殊的内置prop
 	if isArithmeticFn(fc) {
 		return ver.arithmeticFnRequirement(fc.(*ast.FcFn), state)
+	} else if ast.IsFnFcFn(fc) {
+		return true, nil
 	} else {
 		return ver.fcSatisfyNotBuiltinFnRequirement(fc, state)
 	}
