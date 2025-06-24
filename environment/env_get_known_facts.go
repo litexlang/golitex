@@ -46,20 +46,20 @@ func (memory FnInFnTemplateFactsMem) Get(fc ast.Fc) ([]*ast.FnTemplateStmt, bool
 
 // return template and parameters of each level of fcFn
 // 返回的slice是从左到右的template和params
-func (e *Env) GetTemplateOfFcFnRecursively(fcFn *ast.FcFn) ([]*ast.FnTemplateStmt, [][]ast.Fc, bool) {
+func (e *Env) GetTemplateOfFcFnRecursively(fcFn *ast.FcFn) ([]*ast.FnTemplateStmt, []*ast.FcFn, bool) {
 	currentFcFn := fcFn
 	var leftMostHead *ast.FcAtom
 	count := 0
-	paramsOfEachLevel := [][]ast.Fc{}
+	fcOfEachLevel := []*ast.FcFn{}
 
 	for {
 		if headAsAtom, ok := currentFcFn.FnHead.(*ast.FcAtom); ok {
 			leftMostHead = headAsAtom
-			paramsOfEachLevel = append([][]ast.Fc{currentFcFn.Params}, paramsOfEachLevel...)
+			fcOfEachLevel = append([]*ast.FcFn{currentFcFn}, fcOfEachLevel...)
 			break
 		} else {
 			currentFcFn = currentFcFn.FnHead.(*ast.FcFn)
-			paramsOfEachLevel = append([][]ast.Fc{currentFcFn.Params}, paramsOfEachLevel...)
+			fcOfEachLevel = append([]*ast.FcFn{currentFcFn}, fcOfEachLevel...)
 			count++
 		}
 	}
@@ -72,7 +72,7 @@ func (e *Env) GetTemplateOfFcFnRecursively(fcFn *ast.FcFn) ([]*ast.FnTemplateStm
 		return nil, nil, false
 	}
 
-	templateOfEachLevel = append(templateOfEachLevel, fnT)
+	templateOfEachLevel = append([]*ast.FnTemplateStmt{fnT}, templateOfEachLevel...)
 	fnDefRetSet := fnT.RetSet
 
 	// 从 template 的定义中，得到 template的返回值类型
@@ -89,5 +89,5 @@ func (e *Env) GetTemplateOfFcFnRecursively(fcFn *ast.FcFn) ([]*ast.FnTemplateStm
 		fnDefRetSet = templateDef.FnTemplateStmt.RetSet
 	}
 
-	return templateOfEachLevel, paramsOfEachLevel, true
+	return templateOfEachLevel, fcOfEachLevel, true
 }

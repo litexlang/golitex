@@ -42,17 +42,21 @@ func (e *Env) inFactPostProcess_InFnTemplate(fact *ast.SpecFactStmt) (bool, erro
 		return false, nil
 	}
 
-	instantiatedFnTStmt, err := curInTemplate.FnTemplateStmt.InstantiateByFnName_WithTemplateNameGivenFc(fact.Params[0])
+	return e.Postprocess_FcSatisfyFreeTemplate(fact.Params[0], &curInTemplate.FnTemplateStmt)
+}
+
+func (e *Env) Postprocess_FcSatisfyFreeTemplate(fc ast.Fc, fnTemplate *ast.FnTemplateStmt) (bool, error) {
+	instantiatedFnTStmt, err := fnTemplate.InstantiateByFnName_WithTemplateNameGivenFc(fc)
 	if err != nil {
 		return false, err
 	}
 
-	err = e.StoreFnSatisfyFnTemplateFact(fact.Params[0], instantiatedFnTStmt)
+	err = e.StoreFnSatisfyFnTemplateFact(fc, instantiatedFnTStmt)
 	if err != nil {
 		return false, err
 	}
 
-	derivedFact := instantiatedFnTStmt.DeriveUniFact(fact.Params[0])
+	derivedFact := instantiatedFnTStmt.DeriveUniFact(fc)
 	err = e.NewFact(derivedFact)
 	if err != nil {
 		return false, err
