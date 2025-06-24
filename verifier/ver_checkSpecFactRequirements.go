@@ -90,11 +90,18 @@ func (ver *Verifier) fcSatisfyNotBuiltinFnRequirement(fc ast.Fc, state VerState)
 			return false, ver.verErr(err, "parameters in %s do not satisfy the requirement of that function", asFcFn.String())
 		}
 
-		// store the fact that the parameters satisfy the requirement of the function
-		ok, err = ver.env.Postprocess_FcSatisfyFreeTemplate(fcOfEachLevel[i], templatesOfEachLevel[i])
-		if isErrOrNotOk(ok, err) {
-			return false, ver.verErr(err, "parameters in %s do not satisfy the requirement of that function", asFcFn.String())
-		}
+		// 我不清楚是这只要释放最后一位的性质，还是每一位都要释放
+		// ok, err = ver.env.StoreAndDeriveFacts_From_FcSatisfyFreeTemplateFact(fcOfEachLevel[i], templatesOfEachLevel[i])
+		// if isErrOrNotOk(ok, err) {
+		// 	return false, ver.verErr(err, "parameters in %s do not satisfy the requirement of that function", asFcFn.String())
+		// }
+	}
+
+	// store the fact that the parameters satisfy the requirement of the function
+	// REMARK 这里必须要存储，否则很多关于函数的事实是不工作的。但这里牵扯到一个问题是，这里以下释放这么多事实，是不是浪费了。而且我不清楚是只要释放最后一位的性质，还是每一位都要释放
+	ok, err := ver.env.FcSatisfy_FreeTemplateFact_Store_DeriveFacts(fcOfEachLevel[len(fcOfEachLevel)-1], templatesOfEachLevel[len(templatesOfEachLevel)-1])
+	if isErrOrNotOk(ok, err) {
+		return false, ver.verErr(err, "parameters in %s do not satisfy the requirement of that function", asFcFn.String())
 	}
 
 	return true, nil
