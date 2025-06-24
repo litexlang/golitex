@@ -103,18 +103,20 @@ func (ver *Verifier) fcSatisfyNotBuiltinFnRequirement(fc ast.Fc, state VerState)
 			return false, fmt.Errorf("fc is not a function")
 		}
 
-		templateOfFn, ok := ver.env.GetTemplateOfFcFnRecursively(fcFnHeadAsFcFn)
+		templatesOfEachLevel, paramsOfEachLevel, ok := ver.env.GetTemplateOfFcFnRecursively(fcFnHeadAsFcFn)
 		if !ok {
 			return false, fmt.Errorf("function %s is not implemented", fcFnHeadAsFcFn.String())
 		}
 
 		// 暂时还没有template，只有以fc形式出现的retSet
-		ok, err := ver.fcFnParamsSatisfyFnTemplateRequirement(fcFnHeadAsFcFn, templateOfFn, state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, fmt.Errorf("parameters in %s do not satisfy the requirement of that function", fcFnHeadAsFcFn.String())
+		for i := len(templatesOfEachLevel) - 1; i >= 0; i-- {
+			ok, err := ver.fcFnParamsSatisfyFnTemplateRequirement(paramsOfEachLevel[i], templatesOfEachLevel[i], state)
+			if err != nil {
+				return false, err
+			}
+			if !ok {
+				return false, fmt.Errorf("parameters in %s do not satisfy the requirement of that function", fcFnHeadAsFcFn.String())
+			}
 		}
 	}
 
@@ -245,9 +247,9 @@ func (ver *Verifier) fcFnParamsSatisfyFnHeadAtomRequirement(asFcFn *ast.FcFn, fn
 	return true, nil
 }
 
-func (ver *Verifier) fcFnParamsSatisfyFnTemplateRequirement(head *ast.FcFn, templateOfFn *ast.FnTemplateStmt, state VerState) (bool, error) {
+func (ver *Verifier) fcFnParamsSatisfyFnTemplateRequirement(params []ast.Fc, templateOfFn *ast.FnTemplateStmt, state VerState) (bool, error) {
 	uniMap := map[string]ast.Fc{}
-	for i, param := range head.Params {
+	for i, param := range params {
 		uniMap[templateOfFn.Params[i]] = param
 	}
 
@@ -257,12 +259,12 @@ func (ver *Verifier) fcFnParamsSatisfyFnTemplateRequirement(head *ast.FcFn, temp
 	}
 
 	for i, paramSet := range paramSets {
-		ok, err := ver.VerFactStmt(ast.NewInFactWithFc(head.Params[i], paramSet), state)
+		ok, err := ver.VerFactStmt(ast.NewInFactWithFc(params[i], paramSet), state)
 		if err != nil {
 			return false, err
 		}
 		if !ok {
-			return false, fmt.Errorf("in fact %s is unknown", ast.NewInFactWithFc(head.Params[i], paramSet).String())
+			return false, fmt.Errorf("in fact %s is unknown", ast.NewInFactWithFc(params[i], paramSet).String())
 		}
 	}
 
