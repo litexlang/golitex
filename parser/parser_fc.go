@@ -35,16 +35,16 @@ func (cursor *strSliceCursor) squareBracketExpr() (ast.Fc, error) {
 		return nil, err
 	}
 
-	if !cursor.is(glob.KeySymbolLeftSquareBrace) {
+	if !cursor.is(glob.KeySymbolLeftBracket) {
 		return fc, nil
 	}
 
-	cursor.skip(glob.KeySymbolLeftSquareBrace)
+	cursor.skip(glob.KeySymbolLeftBracket)
 
 	isAtIndexOp := true
 
-	if cursor.is(glob.KeySymbolLeftSquareBrace) {
-		cursor.skip(glob.KeySymbolLeftSquareBrace)
+	if cursor.is(glob.KeySymbolLeftBracket) {
+		cursor.skip(glob.KeySymbolLeftBracket)
 		isAtIndexOp = false
 	}
 
@@ -62,18 +62,18 @@ func (cursor *strSliceCursor) squareBracketExpr() (ast.Fc, error) {
 	}
 
 	if isAtIndexOp {
-		if err := cursor.skip(glob.KeySymbolRightSquareBrace); err != nil {
-			return nil, fmt.Errorf("expected '%s': %v", glob.KeySymbolRightSquareBrace, err)
+		if err := cursor.skip(glob.KeySymbolRightBracket); err != nil {
+			return nil, fmt.Errorf("expected '%s': %v", glob.KeySymbolRightBracket, err)
 		}
 
 		return ast.NewFcFn(ast.NewFcAtomWithName(glob.AtIndexOp), []ast.Fc{fc, fcInBracket}), nil
 	} else {
-		if err := cursor.skip(glob.KeySymbolRightSquareBrace); err != nil {
-			return nil, fmt.Errorf("expected '%s': %v", glob.KeySymbolRightSquareBrace, err)
+		if err := cursor.skip(glob.KeySymbolRightBracket); err != nil {
+			return nil, fmt.Errorf("expected '%s': %v", glob.KeySymbolRightBracket, err)
 		}
 
-		if err := cursor.skip(glob.KeySymbolRightSquareBrace); err != nil {
-			return nil, fmt.Errorf("expected '%s': %v", glob.KeySymbolRightSquareBrace, err)
+		if err := cursor.skip(glob.KeySymbolRightBracket); err != nil {
+			return nil, fmt.Errorf("expected '%s': %v", glob.KeySymbolRightBracket, err)
 		}
 
 		return ast.NewFcFn(ast.NewFcAtomWithName(glob.GetIndexOfOp), []ast.Fc{fc, fcInBracket}), nil
@@ -85,11 +85,9 @@ func (cursor *strSliceCursor) fcAtomAndFcFn() (ast.Fc, error) {
 	var expr ast.Fc
 	var err error
 
-	// if cursor.is(glob.KeywordFn) {
-	// 	return cursor.fnSet()
-	// } else
-
-	if cursor.is(glob.KeySymbolLeftBrace) {
+	if cursor.is(glob.KeywordFn) {
+		return cursor.fnSet()
+	} else if cursor.is(glob.KeySymbolLeftBrace) {
 		expr, err = cursor.bracedExpr()
 		if err != nil {
 			return nil, err
@@ -115,13 +113,13 @@ func (cursor *strSliceCursor) fcAtomAndFcFn() (ast.Fc, error) {
 			return nil, &strSliceErr{err, cursor}
 		}
 		// dot
-		if cursor.is(glob.KeySymbolDot) {
-			cursor.skip(glob.KeySymbolDot)
+		if cursor.is(glob.MemberAccessOpt) {
+			cursor.skip(glob.MemberAccessOpt)
 			dotFc, err := cursor.rawFcAtom()
 			if err != nil {
 				return nil, &strSliceErr{err, cursor}
 			}
-			ret = ast.NewFcFn(ast.NewFcAtomWithName(glob.KeySymbolDot), []ast.Fc{ret, dotFc})
+			ret = ast.NewFcFn(ast.NewFcAtomWithName(glob.MemberAccessOpt), []ast.Fc{ret, dotFc})
 		}
 		return ret, nil
 	}
@@ -367,38 +365,38 @@ func (cursor *strSliceCursor) consumeBracedFc(head ast.Fc) (ast.Fc, error) {
 	return head, nil
 }
 
-// func (cursor *strSliceCursor) fnSet() (ast.Fc, error) {
-// 	cursor.skip(glob.KeywordFn)
-// 	cursor.skip(glob.KeySymbolLeftBrace)
+func (cursor *strSliceCursor) fnSet() (ast.Fc, error) {
+	cursor.skip(glob.KeywordFn)
+	cursor.skip(glob.KeySymbolLeftBrace)
 
-// 	fnSets := []ast.Fc{}
-// 	var retSet ast.Fc
-// 	for !cursor.ExceedEnd() && !(cursor.is(glob.KeySymbolRightBrace)) {
-// 		fnSet, err := cursor.RawFc()
-// 		if err != nil {
-// 			return nil, &strSliceErr{err, cursor}
-// 		}
-// 		fnSets = append(fnSets, fnSet)
-// 		if cursor.is(glob.KeySymbolComma) {
-// 			cursor.skip(glob.KeySymbolComma)
-// 			continue
-// 		}
-// 	}
+	fnSets := []ast.Fc{}
+	var retSet ast.Fc
+	for !cursor.ExceedEnd() && !(cursor.is(glob.KeySymbolRightBrace)) {
+		fnSet, err := cursor.RawFc()
+		if err != nil {
+			return nil, &strSliceErr{err, cursor}
+		}
+		fnSets = append(fnSets, fnSet)
+		if cursor.is(glob.KeySymbolComma) {
+			cursor.skip(glob.KeySymbolComma)
+			continue
+		}
+	}
 
-// 	err := cursor.skip(glob.KeySymbolRightBrace)
-// 	if err != nil {
-// 		return nil, &strSliceErr{err, cursor}
-// 	}
+	err := cursor.skip(glob.KeySymbolRightBrace)
+	if err != nil {
+		return nil, &strSliceErr{err, cursor}
+	}
 
-// 	retSet, err = cursor.RawFc()
-// 	if err != nil {
-// 		return nil, &strSliceErr{err, cursor}
-// 	}
+	retSet, err = cursor.RawFc()
+	if err != nil {
+		return nil, &strSliceErr{err, cursor}
+	}
 
-// 	ret := ast.MakeFnSetFc(fnSets, retSet)
+	ret := ast.MakeFnSetFc(fnSets, retSet)
 
-// 	return ret, nil
-// }
+	return ret, nil
+}
 
 func ParseSourceCodeGetFc(s string) (ast.Fc, error) {
 	blocks, err := makeTokenBlocks([]string{s})

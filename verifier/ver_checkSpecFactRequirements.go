@@ -75,12 +75,12 @@ func (ver *Verifier) fcSatisfyNotBuiltinFnRequirement(fc ast.Fc, state VerState)
 
 	asFcFn, ok := fc.(*ast.FcFn)
 	if !ok {
-		return false, fmt.Errorf("fc is not a function")
+		return false, fmt.Errorf("%s is not a function", fc.String())
 	}
 
 	templatesOfEachLevel, fcOfEachLevel, ok := ver.env.GetTemplateOfFcFnRecursively(asFcFn)
 	if !ok {
-		return false, fmt.Errorf("function %s is not implemented", asFcFn.String())
+		return false, fmt.Errorf("failed to get template of each level of function %s", asFcFn.String())
 	}
 
 	// 暂时还没有template，只有以fc形式出现的retSet
