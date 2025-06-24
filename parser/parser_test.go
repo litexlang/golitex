@@ -94,6 +94,8 @@ func TestColonColon(t *testing.T) {
 	sourceCode := []string{
 		"a::b",
 		"a::b::c::d",
+		"+",
+		"=",
 	}
 	for _, code := range sourceCode {
 		fc, err := ParseSourceCodeGetFc(code)

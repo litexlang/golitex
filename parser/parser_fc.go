@@ -128,9 +128,6 @@ func (cursor *strSliceCursor) fcAtomAndFcFn() (ast.Fc, error) {
 
 func (cursor *strSliceCursor) rawFcAtom() (*ast.FcAtom, error) {
 	pkgNames := []string{}
-	if taskManager.CurrentPkg != "" {
-		pkgNames = append(pkgNames, taskManager.CurrentPkg)
-	}
 
 	value, err := cursor.next()
 	if err != nil {
@@ -149,6 +146,10 @@ func (cursor *strSliceCursor) rawFcAtom() (*ast.FcAtom, error) {
 	if glob.IsBuiltinKeywordKeySymbol_NeverBeFcAtom(value) {
 		return ast.NewFcAtom(glob.BuiltinPkgName, value), fmt.Errorf("invalid first citizen: %s", value)
 	} else {
+		if taskManager.CurrentPkg != "" && !glob.IsBuiltinKeywordOrSymbol(value) {
+			pkgNames = append([]string{taskManager.CurrentPkg}, pkgNames...)
+		}
+
 		return ast.NewFcAtom(strings.Join(pkgNames, glob.KeySymbolColonColon), value), nil
 	}
 }
