@@ -14,8 +14,6 @@
 
 package litex_ast
 
-import glob "golitex/glob"
-
 func (stmt *FnTemplateStmt) InstantiateByFnName_WithTemplateNameGivenFc(fc Fc) (*FnTemplateStmt, error) {
 	newParamSets, newDomFacts, newThenFacts, newRetSet, err := stmt.InstantiateFnTWithoutChangingTName(map[string]Fc{stmt.Name: fc})
 	if err != nil {
@@ -26,7 +24,8 @@ func (stmt *FnTemplateStmt) InstantiateByFnName_WithTemplateNameGivenFc(fc Fc) (
 }
 
 func (fnTemplate *FnTemplateStmt) DeriveUniFact(fn Fc) *UniFactStmt {
-	return NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, append(fnTemplate.ThenFacts, NewSpecFactStmt(TruePure, NewFcAtomWithName(glob.KeywordIn), []Fc{fn, fnTemplate.RetSet})))
+	// return NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, append(fnTemplate.ThenFacts, NewSpecFactStmt(TruePure, NewFcAtomWithName(glob.KeywordIn), []Fc{fn, fnTemplate.RetSet})))
+	return NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, fnTemplate.ThenFacts)
 }
 
 func (stmt *FnTemplateStmt) InstantiateFnTWithoutChangingTName(uniMap map[string]Fc) ([]Fc, FactStmtSlice, FactStmtSlice, Fc, error) {

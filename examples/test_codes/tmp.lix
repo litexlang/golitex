@@ -1,7 +1,1 @@
-fn_template fn_template1(x Z) Z:
-    dom:
-        x > 0
-    then:
-        f(x) = x + 1
-
-obj f fn_template1
+-10 > 0 
