@@ -19,11 +19,7 @@ import (
 	ast "golitex/ast"
 	env "golitex/environment"
 	glob "golitex/glob"
-	parser "golitex/parser"
-	taskManager "golitex/task_manager"
 	verifier "golitex/verifier"
-	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -590,48 +586,6 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
 	err = exec.env.NewFact(knownUniFact)
 	if err != nil {
 		return err
-	}
-
-	return nil
-}
-
-func (exec *Executor) importStmt(stmt *ast.ImportStmt) error {
-	execSuccess := false
-	originalMsgLen := exec.env.MsgLen()
-	defer func() {
-		exec.env.ClearMsgFromIndex(originalMsgLen)
-		if !execSuccess {
-			exec.appendMsg(fmt.Sprintf("Failed to execute import statement:\n%s\n", stmt.String()))
-		} else {
-			exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
-		}
-	}()
-
-	// 需要连上现在所在的repo的名字
-	codePath := filepath.Join(taskManager.TaskRepoName, stmt.Path)
-	code, err := os.ReadFile(codePath)
-	if err != nil {
-		return err
-	}
-
-	if stmt.AsPkgName == "" {
-		// read the file
-		topStmtSlice, err := parser.ParseSourceCode(string(code))
-		if err != nil {
-			return err
-		}
-		for _, topStmt := range topStmtSlice {
-			execState, err := exec.Stmt(topStmt)
-			if err != nil {
-				return err
-			}
-			if execState != glob.ExecState_True {
-				break
-			}
-		}
-		execSuccess = true
-	} else {
-		panic(glob.InternalWarningMsg("import with as pkg name is not supported"))
 	}
 
 	return nil
