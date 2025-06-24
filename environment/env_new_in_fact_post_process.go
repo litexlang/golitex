@@ -17,6 +17,7 @@ package litex_env
 import (
 	"fmt"
 	ast "golitex/ast"
+	glob "golitex/glob"
 )
 
 func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) error {
@@ -26,6 +27,22 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) error {
 
 	if isTemplate, err := e.inFactPostProcess_InFnTemplate(fact); isTemplate {
 		return err
+	}
+
+	if ast.IsFcWithFcFnHeadWithName(fact.Params[0], glob.KeywordFn) {
+		templateStmt, err := ast.FnFcToFnTemplateStmt(fact.Params[0])
+		if err != nil {
+			return err
+		}
+
+		ok, err := e.FcSatisfy_FreeTemplateFact_Store_DeriveFacts(fact.Params[0], templateStmt)
+		if err != nil {
+			return err
+		}
+
+		if !ok {
+			return fmt.Errorf("failed to satisfy the function template of %s", fact.Params[0].String())
+		}
 	}
 
 	return nil
