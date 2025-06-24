@@ -704,7 +704,7 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 		return err
 	}
 
-	err = exec.env.StoreFnInFnTemplateFactMem(ast.NewFcAtomWithName(stmt.FnTemplateStmt.Name), &stmt.FnTemplateStmt)
+	err = exec.env.StoreFnSatisfyFnTemplateFact(ast.NewFcAtomWithName(stmt.FnTemplateStmt.Name), &stmt.FnTemplateStmt)
 	if err != nil {
 		return err
 	}
