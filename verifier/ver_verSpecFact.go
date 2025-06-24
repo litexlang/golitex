@@ -274,18 +274,12 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 
 func (ver *Verifier) verSpecFact_SpecMemAndLogicMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	ok, err := ver.verSpecFact_BySpecMem(stmt, state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
+	if isErrOrOk(ok, err) {
 		return ok, err
 	}
 
 	ok, err = ver.verSpecFact_ByLogicMem(stmt, state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
+	if isErrOrOk(ok, err) {
 		return ok, err
 	}
 
@@ -294,7 +288,7 @@ func (ver *Verifier) verSpecFact_SpecMemAndLogicMem(stmt *ast.SpecFactStmt, stat
 
 func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	ok, err := ver.verSpecFact_InSpecFact_UniMem(stmt, state)
-	if err != nil || ok {
+	if isErrOrOk(ok, err) {
 		return ok, err
 	}
 
@@ -313,12 +307,7 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecFactStmt, st
 	}
 	if areBothNumLit {
 		if !areEqual {
-			if state.requireMsg() {
-				ver.successWithMsg(stmt.String(), "builtin rules")
-			} else {
-				ver.successNoMsg()
-			}
-			return true, nil
+			return ver.processOkMsg(state, stmt.String(), "builtin rules")
 		}
 	}
 
@@ -358,12 +347,7 @@ func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state VerState) (b
 			return false, err
 		}
 		if ok {
-			if state.requireMsg() {
-				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is true", greaterStmt.String()))
-			} else {
-				ver.successNoMsg()
-			}
-			return true, nil
+			return ver.processOkMsg(state, stmt.String(), fmt.Sprintf("%s is true", greaterStmt.String()))
 		}
 
 		// 尝试证明 =
@@ -374,12 +358,7 @@ func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state VerState) (b
 			return false, err
 		}
 		if ok {
-			if state.requireMsg() {
-				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is true", equalStmt.String()))
-			} else {
-				ver.successNoMsg()
-			}
-			return true, nil
+			return ver.processOkMsg(state, stmt.String(), fmt.Sprintf("%s is true", equalStmt.String()))
 		}
 	}
 
@@ -389,22 +368,16 @@ func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state VerState) (b
 		lessStmt := *stmt
 		lessStmt.PropName = *ast.NewFcAtomWithName(glob.KeySymbolLess)
 		ok, err = ver.verSpecFactStepByStep(&lessStmt, state)
-		if err != nil {
-			return false, err
-		}
-		if ok {
-			return true, nil
+		if isErrOrOk(ok, err) {
+			return ok, err
 		}
 
 		// 尝试证明 =
 		equalStmt := *stmt
 		equalStmt.PropName = *ast.NewFcAtomWithName(glob.KeySymbolEqual)
 		ok, err = ver.verTrueEqualFact(&equalStmt, state)
-		if err != nil {
-			return false, err
-		}
-		if ok {
-			return true, nil
+		if isErrOrOk(ok, err) {
+			return ok, err
 		}
 	}
 
@@ -419,12 +392,7 @@ func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state VerState) (b
 			return false, err
 		}
 		if ok {
-			if state.requireMsg() {
-				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is true", reversedStmt.String()))
-			} else {
-				ver.successNoMsg()
-			}
-			return true, nil
+			return ver.processOkMsg(state, stmt.String(), fmt.Sprintf("%s is true", reversedStmt.String()))
 		}
 		return false, nil
 	}

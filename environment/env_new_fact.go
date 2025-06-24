@@ -430,7 +430,7 @@ func (env *Env) KnowDefFnSatisfyFnTemplate_KnowUniFactDerivedFromDefFn(fc ast.Fc
 		return err
 	}
 
-	err = env.StoreFnInFnTemplateFactMem(fc, stmt)
+	err = env.StoreFnSatisfyFnTemplateFact(fc, stmt)
 	if err != nil {
 		return err
 	}
