@@ -429,5 +429,5 @@ func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state VerState) (b
 		return false, nil
 	}
 
-	return false, fmt.Errorf("unknown comparison operator: %s", propName)
+	return false, nil
 }
