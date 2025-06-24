@@ -1,0 +1,19 @@
+# 如果一个集合，是迭代地定义的，那我可以考虑内置一个sequence类型，这是个特殊的函数，它上面可以作用函数[]，来获取sequence中的元素
+# 如果一个集合，是定义在不可数集合上的，那没法迭代地定义了，只能用描述性语言了。比如s = {x+y| x != y}，有个函数f，f(s z) S让 f(s) \at 0 + f(s) \at 1 = z, S = X * Y
+# 更典型的例子是，集合s = X * Y，怎么描述?比如 s = (x,y)，有个函数f(z s, index N) 使得 f(z, 0) = x, f(z, 1) = y
+# 更典型的例子是，集合 s = product{a in A} A_a, 怎么描述？其实很容易： f(z s, a) = z在a的第a个元素
+
+# 表达 s = {x+y| x != y}
+
+# 表达 s = {y = x^n | n $in N}
+obj s set
+fn for_all_y_in_s_there_exists_n_in_N_such_that_y_equals_x_to_the_power_of_n(y s) N:
+    y = x^n
+
+# or
+obj s sequence:
+    forall n N:
+        s[n] = x^n
+
+sequence # 这其实是一个集合。虽然这个sequence的index可以无限大，但是其实到了某个N，任何index>N, s[n] 都在 {s[0], s[1], ..., s[N-1]} 中了
+[]相当于在sequence上的一个函数，sequence中的元素，都是set，比如这里的s就是set
