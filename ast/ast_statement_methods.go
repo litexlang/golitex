@@ -403,7 +403,7 @@ func (factStmtSlice FactStmtSlice) Instantiate(uniMap map[string]Fc) (FactStmtSl
 	return instantiatedFacts, nil
 }
 
-func IsFcWithFcFnHeadWithName(fc Fc, name string) bool {
+func isFcWithFcFnHeadWithName(fc Fc, name string) bool {
 	fcAsFcFn, ok := fc.(*FcFn)
 	if !ok {
 		return false
@@ -415,6 +415,10 @@ func IsFcWithFcFnHeadWithName(fc Fc, name string) bool {
 	}
 
 	return isFcAtomWithName(fcAsFcFnHeadAsFcFn.FnHead, name)
+}
+
+func IsFnFcFn(fc Fc) bool {
+	return isFcWithFcFnHeadWithName(fc, glob.KeywordFn)
 }
 
 func FnFcToFnTemplateStmt(fc Fc) (*FnTemplateStmt, error) {

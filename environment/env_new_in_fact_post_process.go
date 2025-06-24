@@ -17,7 +17,6 @@ package litex_env
 import (
 	"fmt"
 	ast "golitex/ast"
-	glob "golitex/glob"
 )
 
 func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) error {
@@ -29,7 +28,7 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) error {
 		return err
 	}
 
-	if ast.IsFcWithFcFnHeadWithName(fact.Params[1], glob.KeywordFn) {
+	if ast.IsFnFcFn(fact.Params[1]) {
 		templateStmt, err := ast.FnFcToFnTemplateStmt(fact.Params[1])
 		if err != nil {
 			return err
