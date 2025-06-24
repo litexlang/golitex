@@ -70,3 +70,7 @@ func (ver *Verifier) processOkMsg(state VerState, msg string, verifiedBy string)
 	}
 	return true, nil
 }
+
+func (ver *Verifier) verErr(err error, msg string, args ...any) error {
+	return fmt.Errorf("%s\n%s", err.Error(), fmt.Sprintf(msg, args...))
+}
