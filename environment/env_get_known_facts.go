@@ -45,6 +45,7 @@ func (memory FnInFnTemplateFactsMem) Get(fc ast.Fc) ([]*ast.FnTemplateStmt, bool
 }
 
 // return template and parameters of each level of fcFn
+// 返回的slice是从左到右的template和params
 func (e *Env) GetTemplateOfFcFnRecursively(fcFn *ast.FcFn) ([]*ast.FnTemplateStmt, [][]ast.Fc, bool) {
 	currentFcFn := fcFn
 	var leftMostHead *ast.FcAtom
