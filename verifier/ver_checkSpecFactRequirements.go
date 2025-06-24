@@ -78,58 +78,24 @@ func (ver *Verifier) fcSatisfyNotBuiltinFnRequirement(fc ast.Fc, state VerState)
 		return false, fmt.Errorf("fc is not a function")
 	}
 
-	// // TODO: Here we assume the fcFnHead is an atom. In the future we should support fcFnHead as a fcFn.
-	// fcFnHeadAsAtom, ok := asFcFn.FnHead.(*ast.FcAtom)
-	// if ok {
-	// 	fnDef, ok := ver.env.IsFnDeclared(fcFnHeadAsAtom)
-	// 	if !ok {
-	// 		return false, fmt.Errorf("%s is not a declared function", fcFnHeadAsAtom.String())
-	// 	}
-
-	// 	if fnDef != nil {
-	// 		ok, err := ver.fcFnParamsSatisfyFnHeadAtomRequirement(asFcFn, fnDef, state)
-	// 		if err != nil {
-	// 			return false, err
-	// 		}
-	// 		if !ok {
-	// 			return false, fmt.Errorf("parameters in %s do not satisfy the requirement of that function", fcFnHeadAsAtom.String())
-	// 		}
-	// 	} else {
-	// 		return false, fmt.Errorf("builtin function %s is not implemented", fcFnHeadAsAtom.String())
-	// 	}
-	// } else {
-	// fcFnHeadAsFcFn, ok := asFcFn.FnHead.(*ast.FcFn)
-	// if !ok {
-	// 	return false, fmt.Errorf("fc is not a function")
-	// }
-
-	templatesOfEachLevel, paramsOfEachLevel, ok := ver.env.GetTemplateOfFcFnRecursively(asFcFn)
+	templatesOfEachLevel, fcOfEachLevel, ok := ver.env.GetTemplateOfFcFnRecursively(asFcFn)
 	if !ok {
 		return false, fmt.Errorf("function %s is not implemented", asFcFn.String())
 	}
 
 	// 暂时还没有template，只有以fc形式出现的retSet
-	for i := len(templatesOfEachLevel) - 1; i >= 0; i-- {
-		ok, err := ver.fcFnParamsSatisfyFnTemplateRequirement(paramsOfEachLevel[i], templatesOfEachLevel[i], state)
-		if err != nil {
-			return false, err
+	for i := range templatesOfEachLevel {
+		ok, err := ver.fcFnParamsSatisfyFnTemplateRequirement(fcOfEachLevel[i].Params, templatesOfEachLevel[i], state)
+		if isErrOrNotOk(ok, err) {
+			return false, ver.verErr(err, "parameters in %s do not satisfy the requirement of that function", asFcFn.String())
 		}
-		if !ok {
-			return false, fmt.Errorf("parameters in %s do not satisfy the requirement of that function", asFcFn.String())
+
+		// store the fact that the parameters satisfy the requirement of the function
+		ok, err = ver.env.Postprocess_FcSatisfyFreeTemplate(fcOfEachLevel[i], templatesOfEachLevel[i])
+		if isErrOrNotOk(ok, err) {
+			return false, ver.verErr(err, "parameters in %s do not satisfy the requirement of that function", asFcFn.String())
 		}
 	}
-	// }
-
-	// // 参数列表里的每个参数，内部的参数，符合参数列表里的参数的要求
-	// for _, param := range asFcFn.Params {
-	// 	ok, err := ver.fcSatisfyFnRequirement(param, state)
-	// 	if err != nil {
-	// 		return false, err
-	// 	}
-	// 	if !ok {
-	// 		return false, nil
-	// 	}
-	// }
 
 	return true, nil
 }
@@ -138,22 +104,16 @@ func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn, state VerState) (bool
 	// parameter必须是实数
 	for _, param := range fc.Params {
 		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{param, ast.NewFcAtomWithName(glob.KeywordReal)}), state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, nil
+		if isErrOrNotOk(ok, err) {
+			return false, ver.verErr(err, "parameters in %s must be in set %s, %s in %s is not valid", fc.FnHead.String(), glob.KeywordReal, param.String(), fc.String())
 		}
 	}
 
 	if ast.IsFcAtomWithNameAndEmptyPkg(fc.FnHead, glob.KeySymbolSlash) {
 		// 分母不是0
 		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.FalsePure, ast.NewFcAtomWithName(glob.KeySymbolEqual), []ast.Fc{fc.Params[1], ast.NewFcAtomWithName("0")}), state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, nil
+		if isErrOrNotOk(ok, err) {
+			return ok, err
 		}
 		return true, nil
 	}
@@ -161,27 +121,18 @@ func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn, state VerState) (bool
 	if ast.IsFcAtomWithNameAndEmptyPkg(fc.FnHead, glob.KeySymbolPercent) {
 		// 分母不是0
 		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.FalsePure, ast.NewFcAtomWithName(glob.KeySymbolEqual), []ast.Fc{fc.Params[1], ast.NewFcAtomWithName("0")}), state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, nil
+		if isErrOrNotOk(ok, err) {
+			return ok, err
 		}
 
 		// 分子分母必须是整数
 		ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fc.Params[0], ast.NewFcAtomWithName(glob.KeywordInt)}), state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, nil
+		if isErrOrNotOk(ok, err) {
+			return ok, err
 		}
 		ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fc.Params[1], ast.NewFcAtomWithName(glob.KeywordInt)}), state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, nil
+		if isErrOrNotOk(ok, err) {
+			return ok, err
 		}
 		return true, nil
 	}
