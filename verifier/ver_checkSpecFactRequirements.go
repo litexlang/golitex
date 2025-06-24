@@ -149,64 +149,6 @@ func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn, state VerState) (bool
 	return true, nil
 }
 
-func (ver *Verifier) fcFnParamsSatisfyFnHeadAtomRequirement(asFcFn *ast.FcFn, fnDef *ast.FnTemplateStmt, state VerState) (bool, error) {
-	fcFnHeadAsAtom, ok := asFcFn.FnHead.(*ast.FcAtom)
-	if !ok {
-		return false, fmt.Errorf(glob.NotImplementedMsg("function name is supposed to be an atom"))
-	}
-
-	if len(fnDef.ParamSets) != len(asFcFn.Params) {
-		return false, fmt.Errorf("function %s has %d params, but %d in sets", fcFnHeadAsAtom.String(), len(asFcFn.Params), len(fnDef.ParamSets))
-	}
-
-	uniMap := map[string]ast.Fc{}
-	for i, param := range asFcFn.Params {
-		uniMap[fnDef.Params[i]] = param
-	}
-
-	inFacts := []ast.FactStmt{}
-	for i, inSet := range fnDef.ParamSets {
-		// 需要把setParam实例化，因为setParam可能包含自由变量
-		setParam, err := inSet.Instantiate(uniMap)
-		if err != nil {
-			return false, err
-		}
-		inFact := ast.NewInFactWithFc(asFcFn.Params[i], setParam)
-		inFacts = append(inFacts, inFact)
-	}
-
-	for _, inFact := range inFacts {
-		ok, err := ver.VerFactStmt(inFact, state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, fmt.Errorf("in fact %s is unknown", inFact.String())
-		}
-	}
-
-	domFacts := []ast.FactStmt{}
-	for _, domFact := range fnDef.DomFacts {
-		fixed, err := domFact.Instantiate(uniMap)
-		if err != nil {
-			return false, err
-		}
-		domFacts = append(domFacts, fixed)
-	}
-
-	for _, domFact := range domFacts {
-		ok, err := ver.VerFactStmt(domFact, state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, fmt.Errorf("dom fact %s is unknown", domFact.String())
-		}
-	}
-
-	return true, nil
-}
-
 func (ver *Verifier) fcFnParamsSatisfyFnTemplateRequirement(params []ast.Fc, templateOfFn *ast.FnTemplateStmt, state VerState) (bool, error) {
 	uniMap := map[string]ast.Fc{}
 	for i, param := range params {
