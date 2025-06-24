@@ -26,7 +26,15 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state VerState) 
 		return false, fmt.Errorf("invalid number of parameters for in fact")
 	}
 
-	ok, err := ver.btLitNumInNatOrIntOrRatOrRealOrComplex(stmt, state)
+	ok, err := ver.verInSet(stmt, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
+	ok, err = ver.btLitNumInNatOrIntOrRatOrRealOrComplex(stmt, state)
 	if err != nil {
 		return false, err
 	}
@@ -289,6 +297,38 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state VerState) (b
 		}
 		if ok {
 			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+func (ver *Verifier) verInSet(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	ok := ast.IsFcAtomWithBuiltinPkgAndName(stmt.Params[1], glob.KeywordSet)
+	if !ok {
+		return false, nil
+	}
+
+	// 如果它是N, Z, Q, R, C, 则直接返回true
+	ok = ast.IsFcAtomWithBuiltinPkgAndName(stmt.Params[0], glob.KeywordNatural) ||
+		ast.IsFcAtomWithBuiltinPkgAndName(stmt.Params[0], glob.KeywordInt) ||
+		ast.IsFcAtomWithBuiltinPkgAndName(stmt.Params[0], glob.KeywordRational) ||
+		ast.IsFcAtomWithBuiltinPkgAndName(stmt.Params[0], glob.KeywordReal) ||
+		ast.IsFcAtomWithBuiltinPkgAndName(stmt.Params[0], glob.KeywordComplex)
+	if ok {
+		return ver.processOkMsg(state, stmt.String(), "%s is a builtin set", stmt.Params[0].String())
+	}
+
+	// 如果是被定义好了的fn_template，则直接返回true
+	ok = ast.IsFnFcFn(stmt.Params[1])
+	if ok {
+		return ver.processOkMsg(state, stmt.String(), "%s is a fn template and all fn templates are sets", stmt.Params[0].String())
+	}
+
+	if leftAsAtom, ok := stmt.Params[0].(*ast.FcAtom); ok {
+		_, ok := ver.env.GetFnTemplateDef(leftAsAtom)
+		if ok {
+			return ver.processOkMsg(state, stmt.String(), "%s is a fn template and all fn templates are sets", leftAsAtom.Name)
 		}
 	}
 

@@ -62,9 +62,9 @@ func isErrOrNotOk(ok bool, err error) bool {
 	return err != nil && !ok
 }
 
-func (ver *Verifier) processOkMsg(state VerState, msg string, verifiedBy string) (bool, error) {
+func (ver *Verifier) processOkMsg(state VerState, msg string, verifiedBy string, args ...any) (bool, error) {
 	if state.requireMsg() {
-		ver.successMsgEnd(msg, verifiedBy)
+		ver.successMsgEnd(msg, fmt.Sprintf(verifiedBy, args...))
 	} else {
 		ver.successNoMsg()
 	}
