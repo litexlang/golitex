@@ -19,6 +19,7 @@ import (
 	ast "golitex/ast"
 	glob "golitex/glob"
 	taskManager "golitex/task_manager"
+	"strings"
 )
 
 func (cursor *strSliceCursor) RawFc() (ast.Fc, error) {
@@ -126,14 +127,19 @@ func (cursor *strSliceCursor) fcAtomAndFcFn() (ast.Fc, error) {
 }
 
 func (cursor *strSliceCursor) rawFcAtom() (*ast.FcAtom, error) {
+	pkgNames := []string{}
+	if taskManager.CurrentPkg != "" {
+		pkgNames = append(pkgNames, taskManager.CurrentPkg)
+	}
+
 	value, err := cursor.next()
 	if err != nil {
 		return nil, err
 	}
 
-	var pkgName = taskManager.CurrentPkg
-	if cursor.is(glob.KeySymbolColonColon) {
-		pkgName = (value)
+	for cursor.is(glob.KeySymbolColonColon) {
+		cursor.skip(glob.KeySymbolColonColon)
+		pkgNames = append(pkgNames, value)
 		value, err = cursor.next()
 		if err != nil {
 			return nil, err
@@ -143,7 +149,7 @@ func (cursor *strSliceCursor) rawFcAtom() (*ast.FcAtom, error) {
 	if glob.IsBuiltinKeywordKeySymbol_NeverBeFcAtom(value) {
 		return ast.NewFcAtom(glob.BuiltinPkgName, value), fmt.Errorf("invalid first citizen: %s", value)
 	} else {
-		return ast.NewFcAtom(pkgName, value), nil
+		return ast.NewFcAtom(strings.Join(pkgNames, glob.KeySymbolColonColon), value), nil
 	}
 }
 

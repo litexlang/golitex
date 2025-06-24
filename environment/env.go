@@ -39,10 +39,9 @@ type Env struct {
 	ExistPropDefMem        ExistPropDefMem
 	KnownFactsStruct       KnownFactsStruct
 	FnInFnTemplateFactsMem FnInFnTemplateFactsMem
-	// FnInFnTemplateFactsMem map[string]FnInFnTemplateFactsMem
-	KnownFactInMatchEnv glob.Map2D[KnownFactsStruct]
-	EqualMem            map[string]shared_ptr_to_slice_of_fc
-	CurMatchProp        *MatchProp
+	KnownFactInMatchEnv    glob.Map2D[KnownFactsStruct]
+	EqualMem               map[string]shared_ptr_to_slice_of_fc
+	CurMatchProp           *MatchProp
 }
 
 func NewEnv(parent *Env, curMatchEnv *ast.SpecFactStmt) *Env {
@@ -52,13 +51,12 @@ func NewEnv(parent *Env, curMatchEnv *ast.SpecFactStmt) *Env {
 		ObjDefMem:              *newObjMemory(),
 		PropDefMem:             *newPropMemory(),
 		FnInFnTemplateFactsMem: newFnMemory(),
-		// FnInFnTemplateFactsMem: make(map[string]FnInFnTemplateFactsMem),
-		FnTemplateDefMem:    *newFnTemplateMemory(),
-		ExistPropDefMem:     *newExistPropMemory(),
-		KnownFactsStruct:    makeKnownFactsStruct(),
-		EqualMem:            make(map[string]shared_ptr_to_slice_of_fc),
-		KnownFactInMatchEnv: make(glob.Map2D[KnownFactsStruct]),
-		CurMatchProp:        curMatchEnv,
+		FnTemplateDefMem:       *newFnTemplateMemory(),
+		ExistPropDefMem:        *newExistPropMemory(),
+		KnownFactsStruct:       makeKnownFactsStruct(),
+		EqualMem:               make(map[string]shared_ptr_to_slice_of_fc),
+		KnownFactInMatchEnv:    make(glob.Map2D[KnownFactsStruct]),
+		CurMatchProp:           curMatchEnv,
 	}
 	return env
 }
