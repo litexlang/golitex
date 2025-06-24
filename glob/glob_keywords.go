@@ -270,3 +270,10 @@ func IsBuiltinKeywordKeySymbol_NeverBeFcAtom(name string) bool {
 	}
 	return false
 }
+
+func IsBuiltinKeywordOrSymbol(name string) bool {
+	if IsKeyword(name) || IsKeySymbol(name) {
+		return true
+	}
+	return false
+}
