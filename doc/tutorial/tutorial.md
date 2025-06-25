@@ -750,7 +750,56 @@ With a predicted reduction of the de Bruijn factor from ~10 in traditional forma
 
 In today's highly connected world, there is no project model better than open-source, especially for a fresh project. Now Litex is coming from the stage of originating an idea to the stage of being tested, debugged, and improved by real people. Feel free to contact me if you have any questions or suggestions via [github](https://github.com/litexlang/golitex) and [mail](litexlang@outlook.com). Obviously, Litex is is still in the early stage of development. Any feedbacks are welcome.
 
+## Using Litex
+
+_If I have seen further, it is by standing on the shoulders of giants._
+
+_-- Isaac Newton_
+
+_The only source of knowledge is experience._
+
+_-- Albert Einstein_
+
+**WARNING: Litex is still under development. Unexpected bugs might happen.**
+
+This section is for you to try Litex step by step. If you just want to have a quick look at Litex, you can skip this section.
+
+### Download Litex and Try It
+
+#### Choice 1: Try Litex in your browser
+
+Visit [Litex Playground](https://litexlang.org/playground) to try Litex in your browser.
+
+#### Choice 2: Download the latest version of Litex to your machine
+
+step 1: download latest version [release](https://github.com/litexlang/golitex/releases). It is a binary file, so you can just run it in your terminal.
+
+step 2: run your downloaded binary file and enter the REPL (Read-Eval-Print Loop) mode of Litex. Try enter `1 + 1 = 2` and see what happens. Enter `exit` to quit the REPL mode.
+
+If you are on Mac, you might need to give it permission to run. If it still does not work, input `chmod 777 YOUR_BINARY_FILE_NAME` in your terminal and try again.
+
+step 3: `git clone https://github.com/litexlang/golitex.git` and run `YOUR_BINARY_FILE_NAME PATH_TO_YOUR_CLONED_REPO/examples/comprehensive_examples/syllogism.lix` in the root directory of the cloned repo. This will run the example code. Other examples (e.g. Hilbert geometry axioms formalization for experts, multivariate linear equation for children) are in the same directory. You can also input the code directly in the REPL mode.
+
+Both choices are free. I recommend you to try Litex in your browser first, because it is much more convenient.
+
+**SORRY THERE IS NO MORE EXAMPLES FOR NOW. I SINGLE-HANDEDLY DEVELOPED THE WHOLE LANGUAGE FOR 2800 GIT COMMITS. I HAVE ALREADY DONE MY BEST. THAT IS WHY I AM SO EXCITED TO HAVE YOU HERE.**
+
+After having a sense of Litex, do this:
+
+0. Read the [README](./README.md) to get a sense of the project.
+1. Read the [tutorial](./doc/tutorial/tutorial.md) to get a sense of the language.
+2. Read the [Litex for Curious Lean Users](./doc/litex_for_curious_lean_users/litex_for_curious_lean_users.md) to get a sense of the difference between Litex and Lean.
+3. To learn applications of Litex, read [applications of formal reasoning in AI and many other fields](./doc/applications_of_formal_reasoning/applications_of_formal_reasoning.md).
+4. To read a comprehensive example, read [formalization of Hilbert geometry axioms](./examples/comprehensive_examples/Hilbert_geometry_axioms_formalization.lix).
+5. Contribute piece by piece to the Litex kernel or the Litex dataset, e.g. formalize mathematical concepts, fix bugs, add new features, improve documentation, etc. on [github](https://github.com/litexlang/golitex), [zulip](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/).
+
+**IF YOU HAVE ANY PROBLEMS, PLEASE CONTACT THROUGH [zulip](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/) OR litexlang@outlook.com OR [github](https://github.com/litexlang/golitex).**
+
+**THANK YOU FOR YOUR FEARLESS EARLY ADOPTION! HERE IS MY HEARTFELT THANKS TO Litex's EARLIEST FANS -- THE BOLD PIONEERS WHO TRUSTS ME FROM THE START!**
+
+
 
 [^1]: [Mathematics for Computer Science](https://courses.csail.mit.edu/6.042/spring18/mcs.pdf)
 
 [^2]: [The Cathedral and the Bazaar](https://www.catb.org/esr/writings/cathedral-bazaar/cathedral-bazaar/index.html)
+
