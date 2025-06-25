@@ -20,7 +20,7 @@ func IsKeySymbol(name string) bool {
 }
 
 func IsBuiltinInfixRelaPropSymbol(op string) bool {
-	return op == KeySymbolEqual || op == KeySymbolLess || op == KeySymbolGreater || op == KeySymbolEqualGreaterEqual || op == KeySymbolEqualEqual || op == KeySymbolNotEqual || op == KeySymbolEqualEqualEqual || op == KeySymbolEquivalent || op == KeywordIn || op == KeySymbolLargerEqual || op == KeySymbolLessEqual
+	return op == KeySymbolEqual || op == KeySymbolLess || op == KeySymbolGreater || op == KeySymbolEqualEqual || op == KeySymbolNotEqual || op == KeywordIn || op == KeySymbolLargerEqual || op == KeySymbolLessEqual
 }
 
 func IsBuiltinNumberInfixRelaProp(op string) bool {
@@ -79,12 +79,12 @@ func GetKeySymbol(inputString string, start int) string {
 	}
 
 	// 先检查 3 字符符号
-	if start+3 <= len(inputString) {
-		candidate := inputString[start : start+3]
-		if _, ok := symbolSet[candidate]; ok {
-			return candidate
-		}
-	}
+	// if start+3 <= len(inputString) {
+	// 	candidate := inputString[start : start+3]
+	// 	if _, ok := symbolSet[candidate]; ok {
+	// 		return candidate
+	// 	}
+	// }
 
 	// 再检查 2 字符符号
 	if start+2 <= len(inputString) {
@@ -121,24 +121,24 @@ func IsBuiltinUnaryOpt(name string) bool {
 	return ok
 }
 
-var notFcAtomNameSet = map[string]struct{}{
-	// 常规关键字
-	KeywordForall: {},
-	// KeywordWhen:     {},
-	KeywordDom:  {},
-	KeywordThen: {},
-	KeywordHave: {},
-	KeywordSt:   {},
-	// KeywordConstructorProp:      {},
-	KeywordClaim:   {},
-	KeywordProve:   {},
-	KeywordPub:     {},
-	KeywordImport:  {},
-	KeywordPackage: {},
-	KeywordNot:     {},
-	// KeywordAxiom:                {},
-	KeywordProveByContradiction: {},
-	// KeywordThm:                  {},
-	KeywordIff:   {},
-	KeywordExist: {},
-}
+// var notFcAtomNameSet = map[string]struct{}{
+// 	// 常规关键字
+// 	KeywordForall: {},
+// 	// KeywordWhen:     {},
+// 	KeywordDom:  {},
+// 	KeywordThen: {},
+// 	KeywordHave: {},
+// 	KeywordSt:   {},
+// 	// KeywordConstructorProp:      {},
+// 	KeywordClaim:   {},
+// 	KeywordProve:   {},
+// 	KeywordPub:     {},
+// 	KeywordImport:  {},
+// 	KeywordPackage: {},
+// 	KeywordNot:     {},
+// 	// KeywordAxiom:                {},
+// 	KeywordProveByContradiction: {},
+// 	// KeywordThm:                  {},
+// 	KeywordIff:   {},
+// 	KeywordExist: {},
+// }

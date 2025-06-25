@@ -474,7 +474,7 @@ func IsFcAtomWithBuiltinPkgAndName(fc Fc, name string) bool {
 	return fcAtom.Name == name
 }
 
-func (fcAtom *FcAtom) NoPkgName() bool {
+func (fcAtom *FcAtom) WithoutPkgName() bool {
 	// string has no colon colon
 	return !strings.Contains(fcAtom.Name, glob.KeySymbolColonColon)
 }

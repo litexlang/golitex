@@ -145,9 +145,9 @@ func (ver *Verifier) verSpecialSpecFact_ByBIR(stmt *ast.SpecFactStmt, state VerS
 		return ver.isFnEqualFact_Check_BuiltinRules(stmt, state)
 	}
 
-	if stmt.NameIs(glob.KeySymbolEqualEqualEqual) {
-		return ver.isSetEqualFact_Check_BuiltinRules(stmt, state)
-	}
+	// if stmt.NameIs(glob.KeySymbolEqualEqualEqual) {
+	// 	return ver.isSetEqualFact_Check_BuiltinRules(stmt, state)
+	// }
 
 	return false, nil
 }
