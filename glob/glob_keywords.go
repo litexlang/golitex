@@ -263,13 +263,13 @@ func IsBuiltinKeywordKeySymbolCanBeFcAtomName(name string) bool {
 	return false
 }
 
-func IsBuiltinKeywordKeySymbol_NeverBeFcAtom(name string) bool {
-	if IsKeyword(name) || IsKeySymbol(name) {
-		_, ok := BuiltinKeywordKeySymbolCanBeFcAtomNameSet[name]
-		return !ok
-	}
-	return false
-}
+// func IsBuiltinKeywordKeySymbol_NeverBeFcAtom(name string) bool {
+// 	if IsKeyword(name) || IsKeySymbol(name) {
+// 		_, ok := BuiltinKeywordKeySymbolCanBeFcAtomNameSet[name]
+// 		return !ok
+// 	}
+// 	return false
+// }
 
 func IsBuiltinKeywordOrSymbol(name string) bool {
 	if IsKeyword(name) || IsKeySymbol(name) {
