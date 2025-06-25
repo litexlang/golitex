@@ -148,7 +148,7 @@ func (cursor *strSliceCursor) rawFcAtom() (*ast.FcAtom, error) {
 	// 	return ast.NewFcAtom(value), fmt.Errorf("invalid first citizen: %s", value)
 	// } else {
 	// 不是内置元素，不是数字
-	if taskManager.CurrentPkg != "" && !glob.IsBuiltinKeywordOrSymbol(value) && !(value[0] >= '0' && value[0] <= '9') {
+	if taskManager.CurrentPkg != "" && !glob.IsBuiltinKeywordOrBuiltinSymbolOrNumber(value) {
 		values = append([]string{taskManager.CurrentPkg}, values...)
 	}
 
