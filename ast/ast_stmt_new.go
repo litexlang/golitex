@@ -22,16 +22,16 @@ func NewDefObjStmt(objs []string, objSets []Fc, facts []FactStmt) *DefObjStmt {
 	return &DefObjStmt{objs, objSets, facts}
 }
 
-func NewDefPropStmt(defHeader DefHeader, domFacts []FactStmt, iffFacts []FactStmt) *DefPropStmt {
-	return &DefPropStmt{defHeader, domFacts, iffFacts}
+func NewDefPropStmt(defHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt) *DefPropStmt {
+	return &DefPropStmt{*defHeader, domFacts, iffFacts}
 }
 
 func NewDefExistPropStmt(def *DefExistPropStmtBody, existParams []string, existParamSets []Fc) *DefExistPropStmt {
 	return &DefExistPropStmt{*def, existParams, existParamSets}
 }
 
-func NewFnTemplateStmt(defHeader DefHeader, domFacts []FactStmt, thenFacts []FactStmt, retSet Fc) *FnTemplateStmt {
-	return &FnTemplateStmt{defHeader, domFacts, thenFacts, retSet}
+func NewFnTemplateStmt(defHeader *DefHeader, domFacts []FactStmt, thenFacts []FactStmt, retSet Fc) *FnTemplateStmt {
+	return &FnTemplateStmt{*defHeader, domFacts, thenFacts, retSet}
 }
 
 func NewSpecFactStmt(typeEnum SpecFactEnum, propName *FcAtom, params []Fc) *SpecFactStmt {
@@ -62,8 +62,8 @@ func NewHaveStmt(objNames []string, fact SpecFactStmt) *HaveStmt {
 	return &HaveStmt{objNames, fact}
 }
 
-func NewExistPropDef(declHeader DefHeader, domFacts []FactStmt, iffFacts []FactStmt) *DefExistPropStmtBody {
-	return &DefExistPropStmtBody{declHeader, domFacts, iffFacts}
+func NewExistPropDef(declHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt) *DefExistPropStmtBody {
+	return &DefExistPropStmtBody{*declHeader, domFacts, iffFacts}
 }
 
 func NewUniFact(params []string, setParams []Fc, domFacts []FactStmt, thenFacts []FactStmt) *UniFactStmt {
@@ -82,8 +82,8 @@ func NewKnowPropStmt(prop DefPropStmt) *KnowPropStmt {
 	return &KnowPropStmt{prop}
 }
 
-func NewDefExistPropBodyStmt(defHeader DefHeader, domFacts []FactStmt, iffFacts []FactStmt) *DefExistPropStmtBody {
-	return &DefExistPropStmtBody{defHeader, domFacts, iffFacts}
+func NewDefExistPropBodyStmt(defHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt) *DefExistPropStmtBody {
+	return &DefExistPropStmtBody{*defHeader, domFacts, iffFacts}
 }
 
 func NewFcAtomWithName(name string) *FcAtom {

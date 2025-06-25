@@ -176,7 +176,7 @@ func (defPropStmt *DefPropStmt) Instantiate(uniMap map[string]Fc) (*DefPropStmt,
 		newIffFacts = append(newIffFacts, newFact)
 	}
 
-	return NewDefPropStmt(*newDefHeader, newDomFacts, newIffFacts), nil
+	return NewDefPropStmt(newDefHeader, newDomFacts, newIffFacts), nil
 }
 
 func (stmt *DefExistPropStmtBody) Instantiate(uniMap map[string]Fc) (*DefExistPropStmtBody, error) {
@@ -203,7 +203,7 @@ func (stmt *DefExistPropStmtBody) Instantiate(uniMap map[string]Fc) (*DefExistPr
 		newIffFacts = append(newIffFacts, newFact)
 	}
 
-	return NewDefExistPropBodyStmt(*newDefHeader, newDomFacts, newIffFacts), nil
+	return NewDefExistPropBodyStmt(newDefHeader, newDomFacts, newIffFacts), nil
 }
 
 func (stmt *DefExistPropStmt) Instantiate(uniMap map[string]Fc) (*DefExistPropStmt, error) {
