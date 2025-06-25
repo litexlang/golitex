@@ -349,7 +349,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 	// 相关的 exist st 事实也成立
 	existStFactParams := ast.MakeExistFactParamsSlice(ExistParamsAtoms, stmt.Fact.Params)
 
-	newExistStFact := ast.NewSpecFactStmt(ast.TrueExist_St, ast.NewFcAtomWithName(stmt.Fact.PropName.Name), existStFactParams)
+	newExistStFact := ast.NewSpecFactStmt(ast.TrueExist_St, ast.NewFcAtomWithName(string(stmt.Fact.PropName)), existStFactParams)
 	err = exec.env.NewFact(newExistStFact)
 	if err != nil {
 		return glob.ExecState_Error, err

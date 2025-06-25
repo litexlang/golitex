@@ -93,7 +93,7 @@ func cmpFcAtomLit(left, right ast.FcAtom) (int, error) {
 	// }
 	// return 0, nil
 
-	return strings.Compare(left.Name, right.Name), nil // 直接对两个string相减得了
+	return strings.Compare(string(left), string(right)), nil // 直接对两个string相减得了
 }
 
 func cmpFcFnLit(left, right *ast.FcFn) (int, error) {

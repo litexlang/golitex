@@ -74,7 +74,7 @@ func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state VerState) (b
 }
 
 func isValidEqualFact(stmt *ast.SpecFactStmt) bool {
-	return len(stmt.Params) == 2 && stmt.PropName.Name == glob.KeySymbolEqual
+	return len(stmt.Params) == 2 && string(stmt.PropName) == glob.KeySymbolEqual
 }
 
 func (ver *Verifier) verFcEqual(left ast.Fc, right ast.Fc, state VerState) (bool, error) {

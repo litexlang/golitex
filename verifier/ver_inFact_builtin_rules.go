@@ -147,7 +147,7 @@ func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state VerState)
 	// 	return false
 	// }
 
-	if asAtom.Name == glob.KeywordNatural || asAtom.Name == glob.KeywordInt || asAtom.Name == glob.KeywordReal || asAtom.Name == glob.KeywordComplex || asAtom.Name == glob.KeywordRational {
+	if string(asAtom) == glob.KeywordNatural || string(asAtom) == glob.KeywordInt || string(asAtom) == glob.KeywordReal || string(asAtom) == glob.KeywordComplex || string(asAtom) == glob.KeywordRational {
 		if state.requireMsg() {
 			ver.successWithMsg(stmt.String(), "the builtin rules")
 		} else {
@@ -173,7 +173,7 @@ func (ver *Verifier) verIn_N_Z_Q_R_C_BySpecMem(stmt *ast.SpecFactStmt, state Ver
 
 	var msg string
 
-	switch inSet.Name {
+	switch string(inSet) {
 	case glob.KeywordNatural:
 		ok, msg = ver.verInN_BySpecMem(stmt, nextState)
 	case glob.KeywordInt:
@@ -328,7 +328,7 @@ func (ver *Verifier) verInSet(stmt *ast.SpecFactStmt, state VerState) (bool, err
 	if leftAsAtom, ok := stmt.Params[0].(ast.FcAtom); ok {
 		_, ok := ver.env.GetFnTemplateDef(leftAsAtom)
 		if ok {
-			return ver.processOkMsg(state, stmt.String(), "%s is a fn template and all fn templates are sets", leftAsAtom.Name)
+			return ver.processOkMsg(state, stmt.String(), "%s is a fn template and all fn templates are sets", leftAsAtom)
 		}
 	}
 

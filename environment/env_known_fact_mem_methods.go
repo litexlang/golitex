@@ -49,7 +49,7 @@ func (s SpecFactMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([]KnownSpe
 	// }
 
 	// sameEnumPkgPropFacts, memExist := sameEnumPkgFacts[stmt.PropName.Name]
-	sameEnumPkgPropFacts, memExist := sameEnumFacts[stmt.PropName.Name]
+	sameEnumPkgPropFacts, memExist := sameEnumFacts[string(stmt.PropName)]
 	if !memExist {
 		return nil, false
 	}
@@ -72,10 +72,10 @@ func (s SpecFactMem) newFact(stmt *ast.SpecFactStmt, supposedEnv *ast.SpecFactSt
 	// }
 	// sameEnumFacts[stmt.PropName.PkgName][stmt.PropName.Name] = append(sameEnumFacts[stmt.PropName.PkgName][stmt.PropName.Name], KnownSpecFact{stmt, supposedEnv})
 
-	if _, ok := sameEnumFacts[stmt.PropName.Name]; !ok {
-		sameEnumFacts[stmt.PropName.Name] = []KnownSpecFact{}
+	if _, ok := sameEnumFacts[string(stmt.PropName)]; !ok {
+		sameEnumFacts[string(stmt.PropName)] = []KnownSpecFact{}
 	}
-	sameEnumFacts[stmt.PropName.Name] = append(sameEnumFacts[stmt.PropName.Name], KnownSpecFact{stmt, supposedEnv})
+	sameEnumFacts[string(stmt.PropName)] = append(sameEnumFacts[string(stmt.PropName)], KnownSpecFact{stmt, supposedEnv})
 
 	return nil
 }
@@ -108,7 +108,7 @@ func (s SpecFactInLogicExprMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) 
 	// }
 
 	// sameEnumPkgPropFacts, memExist := sameEnumPkgFacts[stmt.PropName.Name]
-	sameEnumPkgPropFacts, memExist := sameEnumFacts[stmt.PropName.Name]
+	sameEnumPkgPropFacts, memExist := sameEnumFacts[string(stmt.PropName)]
 	if !memExist {
 		return nil, false
 	}
@@ -131,10 +131,10 @@ func (s SpecFactInLogicExprMem) newFact(logicExpr *ast.OrStmt, supposedEnv *ast.
 		// }
 		// sameEnumFacts[fact.PropName.PkgName][fact.PropName.Name] = append(sameEnumFacts[fact.PropName.PkgName][fact.PropName.Name], *NewKnownSpecFact_InLogicExpr(&fact, i, logicExpr, supposedEnv))
 
-		if _, ok := sameEnumFacts[fact.PropName.Name]; !ok {
-			sameEnumFacts[fact.PropName.Name] = []KnownSpecFact_InLogicExpr{}
+		if _, ok := sameEnumFacts[string(fact.PropName)]; !ok {
+			sameEnumFacts[string(fact.PropName)] = []KnownSpecFact_InLogicExpr{}
 		}
-		sameEnumFacts[fact.PropName.Name] = append(sameEnumFacts[fact.PropName.Name], *NewKnownSpecFact_InLogicExpr(&fact, i, logicExpr, supposedEnv))
+		sameEnumFacts[string(fact.PropName)] = append(sameEnumFacts[string(fact.PropName)], *NewKnownSpecFact_InLogicExpr(&fact, i, logicExpr, supposedEnv))
 	}
 
 	return nil
@@ -168,7 +168,7 @@ func (s SpecFactInUniFactMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([
 	// }
 
 	// sameEnumPkgPropFacts, memExist := sameEnumPkgFacts[stmt.PropName.Name]
-	sameEnumPkgPropFacts, memExist := sameEnumFacts[stmt.PropName.Name]
+	sameEnumPkgPropFacts, memExist := sameEnumFacts[string(stmt.PropName)]
 	if !memExist {
 		return nil, false
 	}
@@ -216,10 +216,10 @@ func (s SpecFactInUniFactMem) newFact(stmtAsSpecFact *ast.SpecFactStmt, uniFact 
 	// }
 
 	// sameEnumFacts[stmtAsSpecFact.PropName.PkgName][stmtAsSpecFact.PropName.Name] = append(sameEnumFacts[stmtAsSpecFact.PropName.PkgName][stmtAsSpecFact.PropName.Name], KnownSpecFact_InUniFact{stmtAsSpecFact, uniFact, supposedEnv})
-	if _, ok := sameEnumFacts[stmtAsSpecFact.PropName.Name]; !ok {
-		sameEnumFacts[stmtAsSpecFact.PropName.Name] = []KnownSpecFact_InUniFact{}
+	if _, ok := sameEnumFacts[string(stmtAsSpecFact.PropName)]; !ok {
+		sameEnumFacts[string(stmtAsSpecFact.PropName)] = []KnownSpecFact_InUniFact{}
 	}
-	sameEnumFacts[stmtAsSpecFact.PropName.Name] = append(sameEnumFacts[stmtAsSpecFact.PropName.Name], KnownSpecFact_InUniFact{stmtAsSpecFact, uniFact, supposedEnv})
+	sameEnumFacts[string(stmtAsSpecFact.PropName)] = append(sameEnumFacts[string(stmtAsSpecFact.PropName)], KnownSpecFact_InUniFact{stmtAsSpecFact, uniFact, supposedEnv})
 
 	return nil
 }
@@ -252,7 +252,7 @@ func (s SpecFact_InLogicExpr_InUniFactMem) GetSameEnumPkgPropFacts(stmt *ast.Spe
 	// }
 
 	// sameEnumPkgPropFacts, memExist := sameEnumPkgFacts[stmt.PropName.Name]
-	sameEnumPkgPropFacts, memExist := sameEnumFacts[stmt.PropName.Name]
+	sameEnumPkgPropFacts, memExist := sameEnumFacts[string(stmt.PropName)]
 	if !memExist {
 		return nil, false
 	}
@@ -276,10 +276,10 @@ func (s SpecFact_InLogicExpr_InUniFactMem) NewFact(uniStmt *ast.UniFactStmt, log
 
 		// sameEnumFacts[fact.PropName.PkgName][fact.PropName.Name] = append(sameEnumFacts[fact.PropName.PkgName][fact.PropName.Name], *NewSpecFact_InLogicExpr_InUniFact(&fact, uniStmt, i, logicExpr, supposedEnv))
 
-		if _, ok := sameEnumFacts[fact.PropName.Name]; !ok {
-			sameEnumFacts[fact.PropName.Name] = []SpecFact_InLogicExpr_InUniFact{}
+		if _, ok := sameEnumFacts[string(fact.PropName)]; !ok {
+			sameEnumFacts[string(fact.PropName)] = []SpecFact_InLogicExpr_InUniFact{}
 		}
-		sameEnumFacts[fact.PropName.Name] = append(sameEnumFacts[fact.PropName.Name], *NewSpecFact_InLogicExpr_InUniFact(&fact, uniStmt, i, logicExpr, supposedEnv))
+		sameEnumFacts[string(fact.PropName)] = append(sameEnumFacts[string(fact.PropName)], *NewSpecFact_InLogicExpr_InUniFact(&fact, uniStmt, i, logicExpr, supposedEnv))
 	}
 
 	return nil
@@ -344,12 +344,12 @@ func (e *Env) GetSpecFact_InLogicExpr_InUniFactMem() (*SpecFact_InLogicExpr_InUn
 
 func (e *Env) IsFnDeclared(fc ast.FcAtom) (*ast.FnTemplateStmt, bool) {
 	// TODO 这里需要更严格检查一下是否是正常的函数名
-	if _, ok := glob.BuiltinKeywordsSet[fc.Name]; ok {
+	if _, ok := glob.BuiltinKeywordsSet[string(fc)]; ok {
 		return nil, true
 	}
 
 	// TODO 这里需要更严格检查一下是否是正常的函数名
-	if glob.IsKeySymbol(fc.Name) {
+	if glob.IsKeySymbol(string(fc)) {
 		return nil, true
 	}
 
