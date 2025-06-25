@@ -19,6 +19,7 @@ import (
 	glob "golitex/glob"
 	"slices"
 	"strconv"
+	"strings"
 )
 
 func (stmt *SpecFactStmt) IsBuiltinInfixRelaProp() bool {
@@ -471,4 +472,9 @@ func IsFcAtomWithBuiltinPkgAndName(fc Fc, name string) bool {
 
 	// return fcAtom.PkgName == glob.BuiltinPkgName && fcAtom.Name == name
 	return fcAtom.Name == name
+}
+
+func (fcAtom *FcAtom) NoPkgName() bool {
+	// string has no colon colon
+	return !strings.Contains(fcAtom.Name, glob.KeySymbolColonColon)
 }

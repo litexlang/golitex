@@ -21,9 +21,9 @@ import (
 )
 
 func (ver *Verifier) verNumberLogicRelaOpt_BuiltinRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if stmt.PropName.PkgName != "" {
-		return false, nil
-	}
+	// if stmt.PropName.PkgName != "" {
+	// 	return false, nil
+	// }
 
 	if ok, err := ver.btNumberInfixCompareProp(stmt, state); err != nil {
 		return false, err

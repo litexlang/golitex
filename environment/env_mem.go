@@ -16,7 +16,6 @@ package litex_env
 
 import (
 	ast "golitex/ast"
-	glob "golitex/glob"
 )
 
 type KnownSpecFact struct {
@@ -25,10 +24,14 @@ type KnownSpecFact struct {
 }
 
 type SpecFactMem struct {
-	PureFacts         glob.Map2D[[]KnownSpecFact]
-	NotPureFacts      glob.Map2D[[]KnownSpecFact]
-	Exist_St_Facts    glob.Map2D[[]KnownSpecFact]
-	NotExist_St_Facts glob.Map2D[[]KnownSpecFact]
+	// PureFacts         glob.Map2D[[]KnownSpecFact]
+	// NotPureFacts      glob.Map2D[[]KnownSpecFact]
+	// Exist_St_Facts    glob.Map2D[[]KnownSpecFact]
+	// NotExist_St_Facts glob.Map2D[[]KnownSpecFact]
+	PureFacts         map[string][]KnownSpecFact
+	NotPureFacts      map[string][]KnownSpecFact
+	Exist_St_Facts    map[string][]KnownSpecFact
+	NotExist_St_Facts map[string][]KnownSpecFact
 }
 
 type KnownSpecFact_InLogicExpr struct {
@@ -43,10 +46,14 @@ func NewKnownSpecFact_InLogicExpr(specFact *ast.SpecFactStmt, index int, logicEx
 }
 
 type SpecFactInLogicExprMem struct {
-	PureFacts         glob.Map2D[[]KnownSpecFact_InLogicExpr]
-	NotPureFacts      glob.Map2D[[]KnownSpecFact_InLogicExpr]
-	Exist_St_Facts    glob.Map2D[[]KnownSpecFact_InLogicExpr]
-	NotExist_St_Facts glob.Map2D[[]KnownSpecFact_InLogicExpr]
+	// PureFacts         glob.Map2D[[]KnownSpecFact_InLogicExpr]
+	// NotPureFacts      glob.Map2D[[]KnownSpecFact_InLogicExpr]
+	// Exist_St_Facts    glob.Map2D[[]KnownSpecFact_InLogicExpr]
+	// NotExist_St_Facts glob.Map2D[[]KnownSpecFact_InLogicExpr]
+	PureFacts         map[string][]KnownSpecFact_InLogicExpr
+	NotPureFacts      map[string][]KnownSpecFact_InLogicExpr
+	Exist_St_Facts    map[string][]KnownSpecFact_InLogicExpr
+	NotExist_St_Facts map[string][]KnownSpecFact_InLogicExpr
 }
 
 type KnownSpecFact_InUniFact struct {
@@ -56,10 +63,14 @@ type KnownSpecFact_InUniFact struct {
 }
 
 type SpecFactInUniFactMem struct {
-	PureFacts         glob.Map2D[[]KnownSpecFact_InUniFact]
-	NotPureFacts      glob.Map2D[[]KnownSpecFact_InUniFact]
-	Exist_St_Facts    glob.Map2D[[]KnownSpecFact_InUniFact]
-	NotExist_St_Facts glob.Map2D[[]KnownSpecFact_InUniFact]
+	// PureFacts         glob.Map2D[[]KnownSpecFact_InUniFact]
+	// NotPureFacts      glob.Map2D[[]KnownSpecFact_InUniFact]
+	// Exist_St_Facts    glob.Map2D[[]KnownSpecFact_InUniFact]
+	// NotExist_St_Facts glob.Map2D[[]KnownSpecFact_InUniFact]
+	PureFacts         map[string][]KnownSpecFact_InUniFact
+	NotPureFacts      map[string][]KnownSpecFact_InUniFact
+	Exist_St_Facts    map[string][]KnownSpecFact_InUniFact
+	NotExist_St_Facts map[string][]KnownSpecFact_InUniFact
 }
 
 type SpecFact_InLogicExpr_InUniFact struct {
@@ -75,44 +86,64 @@ func NewSpecFact_InLogicExpr_InUniFact(specFact *ast.SpecFactStmt, uniFact *ast.
 }
 
 type SpecFact_InLogicExpr_InUniFactMem struct {
-	PureFacts         glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]
-	NotPureFacts      glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]
-	Exist_St_Facts    glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]
-	NotExist_St_Facts glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]
+	// PureFacts         glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]
+	// NotPureFacts      glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]
+	// Exist_St_Facts    glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]
+	// NotExist_St_Facts glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]
+	PureFacts         map[string][]SpecFact_InLogicExpr_InUniFact
+	NotPureFacts      map[string][]SpecFact_InLogicExpr_InUniFact
+	Exist_St_Facts    map[string][]SpecFact_InLogicExpr_InUniFact
+	NotExist_St_Facts map[string][]SpecFact_InLogicExpr_InUniFact
 }
 
 func newSpecFactMem() *SpecFactMem {
 	return &SpecFactMem{
-		PureFacts:         make(glob.Map2D[[]KnownSpecFact]),
-		NotPureFacts:      make(glob.Map2D[[]KnownSpecFact]),
-		Exist_St_Facts:    make(glob.Map2D[[]KnownSpecFact]),
-		NotExist_St_Facts: make(glob.Map2D[[]KnownSpecFact]),
+		// PureFacts:         make(glob.Map2D[[]KnownSpecFact]),
+		// NotPureFacts:      make(glob.Map2D[[]KnownSpecFact]),
+		// Exist_St_Facts:    make(glob.Map2D[[]KnownSpecFact]),
+		// NotExist_St_Facts: make(glob.Map2D[[]KnownSpecFact]),
+		PureFacts:         make(map[string][]KnownSpecFact),
+		NotPureFacts:      make(map[string][]KnownSpecFact),
+		Exist_St_Facts:    make(map[string][]KnownSpecFact),
+		NotExist_St_Facts: make(map[string][]KnownSpecFact),
 	}
 }
 
 func newSpecFactInLogicExprMem() *SpecFactInLogicExprMem {
 	return &SpecFactInLogicExprMem{
-		PureFacts:         make(glob.Map2D[[]KnownSpecFact_InLogicExpr]),
-		NotPureFacts:      make(glob.Map2D[[]KnownSpecFact_InLogicExpr]),
-		Exist_St_Facts:    make(glob.Map2D[[]KnownSpecFact_InLogicExpr]),
-		NotExist_St_Facts: make(glob.Map2D[[]KnownSpecFact_InLogicExpr]),
+		// PureFacts:         make(glob.Map2D[[]KnownSpecFact_InLogicExpr]),
+		// NotPureFacts:      make(glob.Map2D[[]KnownSpecFact_InLogicExpr]),
+		// Exist_St_Facts:    make(glob.Map2D[[]KnownSpecFact_InLogicExpr]),
+		// NotExist_St_Facts: make(glob.Map2D[[]KnownSpecFact_InLogicExpr]),
+		PureFacts:         make(map[string][]KnownSpecFact_InLogicExpr),
+		NotPureFacts:      make(map[string][]KnownSpecFact_InLogicExpr),
+		Exist_St_Facts:    make(map[string][]KnownSpecFact_InLogicExpr),
+		NotExist_St_Facts: make(map[string][]KnownSpecFact_InLogicExpr),
 	}
 }
 
 func newSpecFactInUniFact() *SpecFactInUniFactMem {
 	return &SpecFactInUniFactMem{
-		PureFacts:         make(glob.Map2D[[]KnownSpecFact_InUniFact]),
-		NotPureFacts:      make(glob.Map2D[[]KnownSpecFact_InUniFact]),
-		Exist_St_Facts:    make(glob.Map2D[[]KnownSpecFact_InUniFact]),
-		NotExist_St_Facts: make(glob.Map2D[[]KnownSpecFact_InUniFact]),
+		// PureFacts:         make(glob.Map2D[[]KnownSpecFact_InUniFact]),
+		// NotPureFacts:      make(glob.Map2D[[]KnownSpecFact_InUniFact]),
+		// Exist_St_Facts:    make(glob.Map2D[[]KnownSpecFact_InUniFact]),
+		// NotExist_St_Facts: make(glob.Map2D[[]KnownSpecFact_InUniFact]),
+		PureFacts:         make(map[string][]KnownSpecFact_InUniFact),
+		NotPureFacts:      make(map[string][]KnownSpecFact_InUniFact),
+		Exist_St_Facts:    make(map[string][]KnownSpecFact_InUniFact),
+		NotExist_St_Facts: make(map[string][]KnownSpecFact_InUniFact),
 	}
 }
 
 func NewKnownSpecFact_InLogicExpr_InUniFactMem() *SpecFact_InLogicExpr_InUniFactMem {
 	return &SpecFact_InLogicExpr_InUniFactMem{
-		PureFacts:         make(glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]),
-		NotPureFacts:      make(glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]),
-		Exist_St_Facts:    make(glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]),
-		NotExist_St_Facts: make(glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]),
+		// PureFacts:         make(glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]),
+		// NotPureFacts:      make(glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]),
+		// Exist_St_Facts:    make(glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]),
+		// NotExist_St_Facts: make(glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]),
+		PureFacts:         make(map[string][]SpecFact_InLogicExpr_InUniFact),
+		NotPureFacts:      make(map[string][]SpecFact_InLogicExpr_InUniFact),
+		Exist_St_Facts:    make(map[string][]SpecFact_InLogicExpr_InUniFact),
+		NotExist_St_Facts: make(map[string][]SpecFact_InLogicExpr_InUniFact),
 	}
 }

@@ -16,7 +16,6 @@ package litex_env
 
 import (
 	ast "golitex/ast"
-	glob "golitex/glob"
 )
 
 type shared_ptr_to_slice_of_fc = *[]ast.Fc
@@ -39,9 +38,10 @@ type Env struct {
 	ExistPropDefMem        ExistPropDefMem
 	KnownFactsStruct       KnownFactsStruct
 	FnInFnTemplateFactsMem FnInFnTemplateFactsMem
-	KnownFactInMatchEnv    glob.Map2D[KnownFactsStruct]
-	EqualMem               map[string]shared_ptr_to_slice_of_fc
-	CurMatchProp           *MatchProp
+	// KnownFactInMatchEnv    glob.Map2D[KnownFactsStruct]
+	KnownFactInMatchEnv map[string]KnownFactsStruct
+	EqualMem            map[string]shared_ptr_to_slice_of_fc
+	CurMatchProp        *MatchProp
 }
 
 func NewEnv(parent *Env, curMatchEnv *ast.SpecFactStmt) *Env {
@@ -55,8 +55,9 @@ func NewEnv(parent *Env, curMatchEnv *ast.SpecFactStmt) *Env {
 		ExistPropDefMem:        *newExistPropMemory(),
 		KnownFactsStruct:       makeKnownFactsStruct(),
 		EqualMem:               make(map[string]shared_ptr_to_slice_of_fc),
-		KnownFactInMatchEnv:    make(glob.Map2D[KnownFactsStruct]),
-		CurMatchProp:           curMatchEnv,
+		// KnownFactInMatchEnv:    make(glob.Map2D[KnownFactsStruct]),
+		KnownFactInMatchEnv: make(map[string]KnownFactsStruct),
+		CurMatchProp:        curMatchEnv,
 	}
 	return env
 }
