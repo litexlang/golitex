@@ -127,7 +127,7 @@ func (cursor *strSliceCursor) fcAtomAndFcFn() (ast.Fc, error) {
 }
 
 func (cursor *strSliceCursor) rawFcAtom() (*ast.FcAtom, error) {
-	pkgNames := []string{}
+	values := []string{}
 
 	value, err := cursor.next()
 	if err != nil {
@@ -136,28 +136,28 @@ func (cursor *strSliceCursor) rawFcAtom() (*ast.FcAtom, error) {
 
 	for cursor.is(glob.KeySymbolColonColon) {
 		cursor.skip(glob.KeySymbolColonColon)
-		pkgNames = append(pkgNames, value)
+		values = append(values, value)
 		value, err = cursor.next()
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	if glob.IsBuiltinKeywordKeySymbol_NeverBeFcAtom(value) {
-		// return ast.NewFcAtom(glob.BuiltinPkgName, value), fmt.Errorf("invalid first citizen: %s", value)
-		return ast.NewFcAtom(value), fmt.Errorf("invalid first citizen: %s", value)
-	} else {
-		// 不是内置元素，不是数字
-		if taskManager.CurrentPkg != "" && !glob.IsBuiltinKeywordOrSymbol(value) && !(value[0] >= '0' && value[0] <= '9') {
-			pkgNames = append([]string{taskManager.CurrentPkg}, pkgNames...)
-		}
-
-		pkgNames = append(pkgNames, value)
-
-		// return ast.NewFcAtom(strings.Join(pkgNames, glob.KeySymbolColonColon), value), nil
-		return ast.NewFcAtom(strings.Join(pkgNames, glob.KeySymbolColonColon)), nil
-
+	// if glob.IsBuiltinKeywordKeySymbol_NeverBeFcAtom(value) {
+	// return ast.NewFcAtom(glob.BuiltinPkgName, value), fmt.Errorf("invalid first citizen: %s", value)
+	// 	return ast.NewFcAtom(value), fmt.Errorf("invalid first citizen: %s", value)
+	// } else {
+	// 不是内置元素，不是数字
+	if taskManager.CurrentPkg != "" && !glob.IsBuiltinKeywordOrSymbol(value) && !(value[0] >= '0' && value[0] <= '9') {
+		values = append([]string{taskManager.CurrentPkg}, values...)
 	}
+
+	values = append(values, value)
+
+	// return ast.NewFcAtom(strings.Join(pkgNames, glob.KeySymbolColonColon), value), nil
+	return ast.NewFcAtom(strings.Join(values, glob.KeySymbolColonColon)), nil
+
+	// }
 }
 
 func (cursor *strSliceCursor) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence) (ast.Fc, error) {

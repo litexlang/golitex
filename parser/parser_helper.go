@@ -21,5 +21,8 @@ import (
 )
 
 func addPkgNameToString(name string) string {
+	if taskManager.CurrentPkg == "" {
+		return name
+	}
 	return fmt.Sprintf("%s%s%s", taskManager.CurrentPkg, glob.KeySymbolColonColon, name)
 }
