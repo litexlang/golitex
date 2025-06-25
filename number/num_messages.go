@@ -22,7 +22,7 @@ import (
 )
 
 func FcStringForParseAndExpandPolynomial(fc ast.Fc) string {
-	if asAtom, ok := fc.(*ast.FcAtom); ok {
+	if asAtom, ok := fc.(ast.FcAtom); ok {
 		return fcAtomString(asAtom)
 	}
 	if asFn, ok := fc.(*ast.FcFn); ok {
@@ -31,7 +31,7 @@ func FcStringForParseAndExpandPolynomial(fc ast.Fc) string {
 	return ""
 }
 
-func fcAtomString(fcAtom *ast.FcAtom) string {
+func fcAtomString(fcAtom ast.FcAtom) string {
 	if len(fcAtom.Name) != 0 && '0' <= fcAtom.Name[0] && fcAtom.Name[0] <= '9' {
 		return fcAtom.Name
 	}

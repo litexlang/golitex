@@ -14,7 +14,7 @@
 
 package litex_ast
 
-func InstantiateFcAtom(fc *FcAtom, uniMap map[string]Fc) (Fc, error) {
+func InstantiateFcAtom(fc FcAtom, uniMap map[string]Fc) (Fc, error) {
 	// if fc.PkgName == glob.EmptyPkg {
 	instance, ok := uniMap[fc.Name]
 	if ok {
@@ -24,7 +24,7 @@ func InstantiateFcAtom(fc *FcAtom, uniMap map[string]Fc) (Fc, error) {
 	return fc, nil
 }
 
-func (fc *FcAtom) Instantiate(uniMap map[string]Fc) (Fc, error) {
+func (fc FcAtom) Instantiate(uniMap map[string]Fc) (Fc, error) {
 	return InstantiateFcAtom(fc, uniMap)
 }
 
@@ -34,7 +34,7 @@ func InstantiateFcFn(fc *FcFn, uniMap map[string]Fc) (Fc, error) {
 		return nil, err
 	}
 
-	// if newHeadAsAtom, ok := newHead.(*FcAtom); ok {
+	// if newHeadAsAtom, ok := newHead.(FcAtom); ok {
 	// 	newFc.FnHead = newHeadAsAtom
 	// } else {
 	// 	newHeadAsFcFn, ok := newHead.(*FcFn)
@@ -68,9 +68,9 @@ func InstantiateSpecFact(stmt *SpecFactStmt, uniMap map[string]Fc) (*SpecFactStm
 	// 	return nil, err
 	// }
 
-	// propNameAtom, ok := newPropName.(*FcAtom)
+	// propNameAtom, ok := newPropName.(FcAtom)
 	// if !ok {
-	// 	return nil, errors.New("PropName is not of type *FcAtom")
+	// 	return nil, errors.New("PropName is not of type FcAtom")
 	// }
 
 	newParams := []Fc{}
@@ -83,7 +83,7 @@ func InstantiateSpecFact(stmt *SpecFactStmt, uniMap map[string]Fc) (*SpecFactStm
 	}
 
 	// return NewSpecFactStmt(stmt.TypeEnum, propNameAtom, newParams), nil
-	return NewSpecFactStmt(stmt.TypeEnum, &stmt.PropName, newParams), nil
+	return NewSpecFactStmt(stmt.TypeEnum, stmt.PropName, newParams), nil
 }
 
 func (stmt *SpecFactStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {

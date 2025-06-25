@@ -82,7 +82,7 @@ func (exec *Executor) supposeStmt_declaredParams(stmt *ast.SupposeStmt) (glob.Ex
 	ver := verifier.NewVerifier(exec.env)
 
 	for i, param := range stmt.Fact.Params {
-		asAtom, ok := param.(*ast.FcAtom)
+		asAtom, ok := param.(ast.FcAtom)
 		if !ok {
 			return glob.ExecState_Error, fmt.Errorf("spec fact parameter must be atom, but got: %s", param.String())
 		}

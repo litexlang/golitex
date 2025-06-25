@@ -138,7 +138,7 @@ func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state VerState)
 		return false
 	}
 
-	asAtom, ok := stmt.Params[0].(*ast.FcAtom)
+	asAtom, ok := stmt.Params[0].(ast.FcAtom)
 	if !ok {
 		return false
 	}
@@ -160,7 +160,7 @@ func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state VerState)
 }
 
 func (ver *Verifier) verIn_N_Z_Q_R_C_BySpecMem(stmt *ast.SpecFactStmt, state VerState) bool {
-	inSet, ok := stmt.Params[1].(*ast.FcAtom)
+	inSet, ok := stmt.Params[1].(ast.FcAtom)
 	if !ok {
 		return false
 	}
@@ -261,7 +261,7 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state VerState) (b
 	var fnTemplate *ast.FnTemplateStmt
 	var err error
 
-	if templateName, ok := stmt.Params[1].(*ast.FcAtom); ok {
+	if templateName, ok := stmt.Params[1].(ast.FcAtom); ok {
 		if !ok {
 			return false, nil
 		}
@@ -325,7 +325,7 @@ func (ver *Verifier) verInSet(stmt *ast.SpecFactStmt, state VerState) (bool, err
 		return ver.processOkMsg(state, stmt.String(), "%s is a fn template and all fn templates are sets", stmt.Params[0].String())
 	}
 
-	if leftAsAtom, ok := stmt.Params[0].(*ast.FcAtom); ok {
+	if leftAsAtom, ok := stmt.Params[0].(ast.FcAtom); ok {
 		_, ok := ver.env.GetFnTemplateDef(leftAsAtom)
 		if ok {
 			return ver.processOkMsg(state, stmt.String(), "%s is a fn template and all fn templates are sets", leftAsAtom.Name)

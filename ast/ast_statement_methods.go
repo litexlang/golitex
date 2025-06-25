@@ -127,7 +127,7 @@ func (stmt *SpecFactStmt) ReverseParameterOrder() (*SpecFactStmt, error) {
 
 	newParams := []Fc{stmt.Params[1], stmt.Params[0]}
 
-	return NewSpecFactStmt(stmt.TypeEnum, &stmt.PropName, newParams), nil
+	return NewSpecFactStmt(stmt.TypeEnum, stmt.PropName, newParams), nil
 }
 
 func (stmt *SpecFactStmt) IsValidEqualFact() (bool, error) {
@@ -176,7 +176,7 @@ func IsFnSet(fc Fc) bool {
 }
 
 func isFcAtomWithName(fc Fc, name string) bool {
-	fcAsFcAtom, ok := fc.(*FcAtom)
+	fcAsFcAtom, ok := fc.(FcAtom)
 	if !ok {
 		return false
 	}
@@ -219,7 +219,7 @@ func (stmt *SpecFactStmt) ReverseSpecFactParamsOrder() (*SpecFactStmt, error) {
 	}
 
 	newParams := []Fc{stmt.Params[1], stmt.Params[0]}
-	return NewSpecFactStmt(stmt.TypeEnum, &stmt.PropName, newParams), nil
+	return NewSpecFactStmt(stmt.TypeEnum, stmt.PropName, newParams), nil
 }
 
 func MakeFnSetFc(fnSets []Fc, retSet Fc) Fc {
@@ -250,16 +250,16 @@ func (defHeader *DefHeader) NewInFacts() []*SpecFactStmt {
 	return facts
 }
 
-func (stmt *SpecFactStmt) GetAtoms() []*FcAtom {
-	atoms := []*FcAtom{&stmt.PropName}
+func (stmt *SpecFactStmt) GetAtoms() []FcAtom {
+	atoms := []FcAtom{stmt.PropName}
 	for _, param := range stmt.Params {
 		atoms = append(atoms, GetAtomsInFc(param)...)
 	}
 	return atoms
 }
 
-func (stmt *UniFactStmt) GetAtoms() []*FcAtom {
-	atoms := []*FcAtom{}
+func (stmt *UniFactStmt) GetAtoms() []FcAtom {
+	atoms := []FcAtom{}
 	for _, param := range stmt.ParamSets {
 		atoms = append(atoms, GetAtomsInFc(param)...)
 	}
@@ -274,7 +274,7 @@ func (stmt *UniFactStmt) GetAtoms() []*FcAtom {
 	// }
 
 	// 如果这个atom是param，那把这项扔了
-	ret := []*FcAtom{}
+	ret := []FcAtom{}
 	for _, atom := range atoms {
 		// if slices.Contains(stmt.Params, atom.Name) && atom.PkgName == glob.EmptyPkg {
 		if slices.Contains(stmt.Params, atom.Name) {
@@ -287,7 +287,7 @@ func (stmt *UniFactStmt) GetAtoms() []*FcAtom {
 	return ret
 }
 
-func (stmt *UniFactWithIffStmt) GetAtoms() []*FcAtom {
+func (stmt *UniFactWithIffStmt) GetAtoms() []FcAtom {
 	atoms := stmt.UniFact.GetAtoms()
 	for _, fact := range stmt.IffFacts {
 		atoms = append(atoms, fact.GetAtoms()...)
@@ -295,8 +295,8 @@ func (stmt *UniFactWithIffStmt) GetAtoms() []*FcAtom {
 	return atoms
 }
 
-func (stmt *OrStmt) GetAtoms() []*FcAtom {
-	atoms := []*FcAtom{}
+func (stmt *OrStmt) GetAtoms() []FcAtom {
+	atoms := []FcAtom{}
 	for _, fact := range stmt.Facts {
 		atoms = append(atoms, fact.GetAtoms()...)
 	}
@@ -387,7 +387,7 @@ func MakeExistFactParamsSlice(existParams []Fc, paramsInFact []Fc) []Fc {
 }
 
 func GetExistFactExistParamsAndFactParams(stmt *SpecFactStmt) ([]Fc, []Fc) {
-	lengthOfExistParams, _ := strconv.Atoi(stmt.Params[0].(*FcAtom).Name)
+	lengthOfExistParams, _ := strconv.Atoi(stmt.Params[0].(FcAtom).Name)
 
 	existParams := []Fc{}
 	factParams := []Fc{}
@@ -465,7 +465,7 @@ func FnFcToFnTemplateStmt(fc Fc) (*FnTemplateStmt, error) {
 }
 
 func IsFcAtomWithBuiltinPkgAndName(fc Fc, name string) bool {
-	fcAtom, ok := fc.(*FcAtom)
+	fcAtom, ok := fc.(FcAtom)
 	if !ok {
 		return false
 	}
@@ -474,7 +474,7 @@ func IsFcAtomWithBuiltinPkgAndName(fc Fc, name string) bool {
 	return fcAtom.Name == name
 }
 
-func (fcAtom *FcAtom) WithoutPkgName() bool {
+func (fcAtom FcAtom) WithoutPkgName() bool {
 	// string has no colon colon
 	return !strings.Contains(fcAtom.Name, glob.KeySymbolColonColon)
 }

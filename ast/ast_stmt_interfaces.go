@@ -46,7 +46,7 @@ type FactStmt interface {
 	stmt()
 	String() string
 	Instantiate(map[string]Fc) (FactStmt, error)
-	GetAtoms() []*FcAtom
+	GetAtoms() []FcAtom
 }
 
 func (p *SpecFactStmt) factStmt()       {}
@@ -65,7 +65,7 @@ type OrStmt_SpecStmt interface {
 	String() string
 	Instantiate(uniConMap map[string]Fc) (FactStmt, error)
 	ReverseIsTrue() []SpecFactStmt
-	GetAtoms() []*FcAtom
+	GetAtoms() []FcAtom
 }
 
 func (s *SpecFactStmt) logicExprOrSpecFactStmt() {}
@@ -100,7 +100,7 @@ type UniFactInterface interface {
 	stmt()
 	String() string
 	Instantiate(map[string]Fc) (FactStmt, error)
-	GetAtoms() []*FcAtom
+	GetAtoms() []FcAtom
 	uniFact()
 }
 
