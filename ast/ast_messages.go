@@ -63,7 +63,8 @@ func pureFactString(stmt *SpecFactStmt) string {
 		builder.WriteString(glob.KeywordNot)
 		builder.WriteByte(' ')
 	}
-	if stmt.PropName.PkgName == glob.EmptyPkg && glob.IsKeySymbol(stmt.PropName.Name) {
+	// if stmt.PropName.PkgName == glob.EmptyPkg && glob.IsKeySymbol(stmt.PropName.Name) {
+	if glob.IsKeySymbol(stmt.PropName.Name) {
 		builder.WriteString(relaFactWithoutNotString(stmt))
 	} else {
 		builder.WriteString(glob.FuncFactPrefix)
@@ -417,11 +418,11 @@ func (stmt *HaveStmt) String() string {
 }
 
 func (f *FcAtom) String() string {
-	if f.PkgName == glob.EmptyPkg {
-		return string(f.Name)
-	} else {
-		return fmt.Sprintf("%s::%s", f.PkgName, string(f.Name))
-	}
+	// if f.PkgName == glob.EmptyPkg {
+	return f.Name
+	// } else {
+	// 	return fmt.Sprintf("%s::%s", f.PkgName, string(f.Name))
+	// }
 }
 
 func (f *FcFn) String() string {

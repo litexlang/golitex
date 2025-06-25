@@ -14,10 +14,6 @@
 
 package litex_ast
 
-import (
-	glob "golitex/glob"
-)
-
 func NewPubStmt(stmts []Stmt) *PubStmt {
 	return &PubStmt{stmts}
 }
@@ -91,7 +87,8 @@ func NewDefExistPropBodyStmt(defHeader DefHeader, domFacts []FactStmt, iffFacts 
 }
 
 func NewFcAtomWithName(name string) *FcAtom {
-	return NewFcAtom(glob.EmptyPkg, name)
+	// return NewFcAtom(glob.EmptyPkg, name)
+	return NewFcAtom(name)
 }
 
 func NewKnowExistPropStmt(existProp DefExistPropStmt) *KnowExistPropStmt {

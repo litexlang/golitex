@@ -14,8 +14,6 @@
 
 package litex_ast
 
-import glob "golitex/glob"
-
 var EmptyIffFacts []FactStmt = nil
 
 var ClaimStmtEmptyToCheck FactStmt = nil
@@ -26,6 +24,8 @@ var EmptyKnowClaimName = ""
 
 var EmptyParentSet Fc = nil
 
-var EmptyFcAtom = *NewFcAtom(glob.EmptyPkg, "")
+// var EmptyFcAtom = *NewFcAtom(glob.EmptyPkg, "")
+var EmptyFcAtom = FcAtom{""}
 
-var EmptyFc Fc = &FcAtom{glob.EmptyPkg, ""}
+// var EmptyFc Fc = &FcAtom{glob.EmptyPkg, ""}
+var EmptyFc Fc = &FcAtom{""}
