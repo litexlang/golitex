@@ -26,7 +26,7 @@ func cmpFcLiterally(left, right ast.Fc) (bool, error) {
 	}
 
 	if fcEnum == FcAtomEnum {
-		cmp, err := cmpFcAtomLit(left.(*ast.FcAtom), right.(*ast.FcAtom))
+		cmp, err := cmpFcAtomLit(left.(ast.FcAtom), right.(ast.FcAtom))
 		if err != nil {
 			return false, err
 		}

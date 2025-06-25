@@ -255,7 +255,7 @@ func (env *Env) newFalseExistFact_EmitEquivalentUniFact(fact *ast.SpecFactStmt) 
 func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 	_, factParams := ast.GetExistFactExistParamsAndFactParams(fact)
 
-	existFact := ast.NewSpecFactStmt(ast.TruePure, &fact.PropName, factParams)
+	existFact := ast.NewSpecFactStmt(ast.TruePure, fact.PropName, factParams)
 
 	// err := env.KnownFacts.SpecFactMem.NewFactInSpecFactMem(existFact, env.CurMatchEnv)
 	err := env.storeSpecFactInMem(existFact)
@@ -364,12 +364,12 @@ func (env *Env) isMathInductionPropName_StoreIt(fact *ast.SpecFactStmt) (bool, e
 		return true, fmt.Errorf("math induction prop is supposed to have one parameter, but %s has %d parameters", fact.PropName, len(fact.Params))
 	}
 
-	propNameAsAtom, ok := fact.Params[0].(*ast.FcAtom)
+	propNameAsAtom, ok := fact.Params[0].(ast.FcAtom)
 	if !ok {
 		return false, fmt.Errorf("math induction fact %s should have a prop name as parameter, got: %s", fact.String(), fact.Params[0])
 	}
 
-	_, ok = env.GetPropDef(*propNameAsAtom)
+	_, ok = env.GetPropDef(propNameAsAtom)
 	if !ok {
 		return false, fmt.Errorf("math induction fact %s should have a prop name that is defined, got: %s", fact.String(), propNameAsAtom)
 	}
@@ -460,7 +460,7 @@ func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, e
 // 		return fmt.Errorf("in fact expect 2 parameters, get %d in %s", len(fact.Params), fact.String())
 // 	}
 
-// 	if asAtom, ok := fact.Params[1].(*ast.FcAtom); ok {
+// 	if asAtom, ok := fact.Params[1].(ast.FcAtom); ok {
 // 		// 如果是 fn_template
 // 		if fnTemplateDef, ok := env.GetFnTemplateDef(asAtom); ok {
 // 			fnName := fact.Params[0]

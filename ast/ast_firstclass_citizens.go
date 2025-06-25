@@ -27,10 +27,10 @@ type Fc interface {
 	IsAtom() bool
 }
 
-func (f *FcAtom) fc()          {}
-func (f *FcAtom) IsAtom() bool { return true }
-func (f *FcFn) fc()            {}
-func (f *FcFn) IsAtom() bool   { return false }
+func (f FcAtom) fc()          {}
+func (f FcAtom) IsAtom() bool { return true }
+func (f *FcFn) fc()           {}
+func (f *FcFn) IsAtom() bool  { return false }
 
 type FcAtom struct {
 	// PkgName string
@@ -44,12 +44,12 @@ type FcFn struct {
 	Params []Fc
 }
 
-// func NewFcAtom(pkgName string, value string) *FcAtom {
+// func NewFcAtom(pkgName string, value string) FcAtom {
 // 	return &FcAtom{pkgName, value}
 // }
 
-func NewFcAtom(value string) *FcAtom {
-	return &FcAtom{value}
+func NewFcAtom(value string) FcAtom {
+	return FcAtom{value}
 }
 
 func NewFcFn(fnHead Fc, callPipe []Fc) *FcFn {
@@ -69,7 +69,7 @@ func hasBuiltinOptAndToString(f *FcFn) (bool, string) {
 	// 	return true, str
 	// }
 
-	ptr, ok := f.FnHead.(*FcAtom)
+	ptr, ok := f.FnHead.(FcAtom)
 	if !ok {
 		return false, ""
 	}
@@ -108,7 +108,7 @@ func hasBuiltinOptAndToString(f *FcFn) (bool, string) {
 }
 
 func IsNumLitFcAtom(f Fc) (string, bool) {
-	ptr, ok := f.(*FcAtom)
+	ptr, ok := f.(FcAtom)
 	if !ok || ptr.Name == "" {
 		return "", false
 	}
@@ -120,7 +120,7 @@ func IsNumLitFcAtom(f Fc) (string, bool) {
 }
 
 func IsFcBuiltinInfixOpt(f FcFn) bool {
-	ptrHeadAsAtom, ok := f.FnHead.(*FcAtom)
+	ptrHeadAsAtom, ok := f.FnHead.(FcAtom)
 	if !ok {
 		return false
 	}
@@ -129,7 +129,7 @@ func IsFcBuiltinInfixOpt(f FcFn) bool {
 }
 
 func IsFcBuiltinUnaryFn(fc FcFn) bool {
-	fcAsFnHead, ok := fc.FnHead.(*FcAtom)
+	fcAsFnHead, ok := fc.FnHead.(FcAtom)
 	if !ok {
 		return false
 	}
@@ -137,17 +137,17 @@ func IsFcBuiltinUnaryFn(fc FcFn) bool {
 	return fcAsFnHead.IsBuiltinUnaryOpt() && len(fc.Params) == 1
 }
 
-func (f *FcAtom) IsBuiltinUnaryOpt() bool {
+func (f FcAtom) IsBuiltinUnaryOpt() bool {
 	// return f.PkgName == glob.EmptyPkg && glob.IsKeySymbolUnaryFn(f.Name)
 	return glob.IsKeySymbolUnaryFn(f.Name)
 }
 
-func (f *FcAtom) IsBuiltinRelaFn() bool {
+func (f FcAtom) IsBuiltinRelaFn() bool {
 	// return f.PkgName == glob.EmptyPkg && glob.IsKeySymbolRelaFn(f.Name)
 	return glob.IsKeySymbolRelaFn(f.Name)
 }
 
-func (fcAtom *FcAtom) NameIsBuiltinKw_PkgNameEmpty() bool {
+func (fcAtom FcAtom) NameIsBuiltinKw_PkgNameEmpty() bool {
 	// if fcAtom.PkgName == glob.EmptyPkg {
 	_, ok := glob.BuiltinKeywordsSet[fcAtom.Name]
 	return ok
@@ -156,7 +156,7 @@ func (fcAtom *FcAtom) NameIsBuiltinKw_PkgNameEmpty() bool {
 }
 
 func IsFcAtomAndHasBuiltinPropName(fc Fc) bool {
-	fcAtom, ok := fc.(*FcAtom)
+	fcAtom, ok := fc.(FcAtom)
 	if !ok {
 		return false
 	}
@@ -168,13 +168,13 @@ func IsFcAtomAndHasBuiltinPropName(fc Fc) bool {
 	return glob.IsBuiltinInfixRelaPropSymbol(fcAtom.Name)
 }
 
-func (fc *FcAtom) HasGivenNameAndEmptyPkgName(kw string) bool {
+func (fc FcAtom) HasGivenNameAndEmptyPkgName(kw string) bool {
 	// return fc.PkgName == glob.EmptyPkg && fc.Name == kw
 	return fc.Name == kw
 }
 
 func IsFcAtomWithNameAndEmptyPkg(fc Fc, kw string) bool {
-	fcAtom, ok := fc.(*FcAtom)
+	fcAtom, ok := fc.(FcAtom)
 	if !ok {
 		return false
 	}
@@ -194,15 +194,15 @@ func (f *FcFn) HasTwoParams_FirstParamHasTheSameNameAsItself() (*FcFn, bool) {
 		return nil, false
 	}
 
-	var fHeadAsAtom *FcAtom
+	var fHeadAsAtom FcAtom
 	var ok bool = false
-	fHeadAsAtom, ok = f.FnHead.(*FcAtom)
+	fHeadAsAtom, ok = f.FnHead.(FcAtom)
 	if !ok {
 		return nil, false
 	}
 
 	if f_firstParam_as_fn, ok := f.Params[0].(*FcFn); ok {
-		if f_firstParam_headAsAtom, ok := f_firstParam_as_fn.FnHead.(*FcAtom); ok {
+		if f_firstParam_headAsAtom, ok := f_firstParam_as_fn.FnHead.(FcAtom); ok {
 			if f_firstParam_headAsAtom.Name == fHeadAsAtom.Name {
 				// if f_firstParam_headAsAtom.PkgName == fHeadAsAtom.PkgName {
 				if len(f_firstParam_as_fn.Params) != 2 {
@@ -219,10 +219,10 @@ func (f *FcFn) HasTwoParams_FirstParamHasTheSameNameAsItself() (*FcFn, bool) {
 	return nil, false
 }
 
-func GetAtomsInFc(fc Fc) []*FcAtom {
-	ret := []*FcAtom{}
+func GetAtomsInFc(fc Fc) []FcAtom {
+	ret := []FcAtom{}
 
-	if fcAtom, ok := fc.(*FcAtom); ok {
+	if fcAtom, ok := fc.(FcAtom); ok {
 		ret = append(ret, fcAtom)
 		return ret
 	}
@@ -249,7 +249,7 @@ func IsFn_WithHeadNameInSlice(fc Fc, names []string) bool {
 		return false
 	}
 
-	asFcFnHeadAsAtom, ok := asFcFn.FnHead.(*FcAtom)
+	asFcFnHeadAsAtom, ok := asFcFn.FnHead.(FcAtom)
 	if !ok {
 		return false
 	}
@@ -274,7 +274,7 @@ func IsFnWithHeadName(fc Fc, name string) bool {
 		return false
 	}
 
-	fcAsFnHeadAsAtom, ok := fcAsFn.FnHead.(*FcAtom)
+	fcAsFnHeadAsAtom, ok := fcAsFn.FnHead.(FcAtom)
 	if !ok {
 		return false
 	}

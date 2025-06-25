@@ -314,7 +314,7 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecFactStmt, st
 	return false, nil
 }
 
-var reverseCmpFcAtomMap = map[string]*ast.FcAtom{
+var reverseCmpFcAtomMap = map[string]ast.FcAtom{
 	glob.KeySymbolLargerEqual: ast.NewFcAtomWithName(glob.KeySymbolLessEqual),
 	glob.KeySymbolLessEqual:   ast.NewFcAtomWithName(glob.KeySymbolLargerEqual),
 	glob.KeySymbolGreater:     ast.NewFcAtomWithName(glob.KeySymbolLess),
@@ -341,7 +341,7 @@ func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state VerState) (b
 	if propName == glob.KeySymbolLargerEqual {
 		// 尝试证明 >
 		greaterStmt := *stmt
-		greaterStmt.PropName = *ast.NewFcAtomWithName(glob.KeySymbolGreater)
+		greaterStmt.PropName = ast.NewFcAtomWithName(glob.KeySymbolGreater)
 		ok, err = ver.verSpecFactStepByStep(&greaterStmt, state)
 		if err != nil {
 			return false, err
@@ -352,7 +352,7 @@ func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state VerState) (b
 
 		// 尝试证明 =
 		equalStmt := *stmt
-		equalStmt.PropName = *ast.NewFcAtomWithName(glob.KeySymbolEqual)
+		equalStmt.PropName = ast.NewFcAtomWithName(glob.KeySymbolEqual)
 		ok, err = ver.verTrueEqualFact(&equalStmt, state)
 		if err != nil {
 			return false, err
@@ -366,7 +366,7 @@ func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state VerState) (b
 	if propName == glob.KeySymbolLessEqual {
 		// 尝试证明 <
 		lessStmt := *stmt
-		lessStmt.PropName = *ast.NewFcAtomWithName(glob.KeySymbolLess)
+		lessStmt.PropName = ast.NewFcAtomWithName(glob.KeySymbolLess)
 		ok, err = ver.verSpecFactStepByStep(&lessStmt, state)
 		if isErrOrOk(ok, err) {
 			return ok, err
@@ -374,7 +374,7 @@ func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state VerState) (b
 
 		// 尝试证明 =
 		equalStmt := *stmt
-		equalStmt.PropName = *ast.NewFcAtomWithName(glob.KeySymbolEqual)
+		equalStmt.PropName = ast.NewFcAtomWithName(glob.KeySymbolEqual)
 		ok, err = ver.verTrueEqualFact(&equalStmt, state)
 		if isErrOrOk(ok, err) {
 			return ok, err
@@ -386,7 +386,7 @@ func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state VerState) (b
 		if err != nil {
 			return false, err
 		}
-		reversedStmt.PropName = *reversePropName
+		reversedStmt.PropName = reversePropName
 		ok, err = ver.verSpecFactStepByStep(reversedStmt, state)
 		if err != nil {
 			return false, err

@@ -106,7 +106,7 @@ func TestColonColon(t *testing.T) {
 			t.Fatal(err)
 		}
 		fmt.Println(fc.String())
-		// fmt.Println(fc.(*ast.FcAtom).PkgName)
-		fmt.Println(fc.(*ast.FcAtom).Name)
+		// fmt.Println(fc.(ast.FcAtom).PkgName)
+		fmt.Println(fc.(ast.FcAtom).Name)
 	}
 }

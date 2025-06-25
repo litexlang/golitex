@@ -48,7 +48,7 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) error {
 }
 
 func (e *Env) inFactPostProcess_InFnTemplate(fact *ast.SpecFactStmt) (bool, error) {
-	templateName, ok := fact.Params[1].(*ast.FcAtom)
+	templateName, ok := fact.Params[1].(ast.FcAtom)
 	if !ok {
 		return false, nil
 	}

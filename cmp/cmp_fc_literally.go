@@ -30,7 +30,7 @@ const (
 func CmpFcType(left, right ast.Fc) (int, FcEnum, error) {
 	var knownEnum FcEnum
 	switch left.(type) {
-	case *ast.FcAtom:
+	case ast.FcAtom:
 		knownEnum = FcAtomEnum
 	case *ast.FcFn:
 		knownEnum = FcFnEnum
@@ -40,7 +40,7 @@ func CmpFcType(left, right ast.Fc) (int, FcEnum, error) {
 
 	var givenEnum FcEnum
 	switch right.(type) {
-	case *ast.FcAtom:
+	case ast.FcAtom:
 		givenEnum = FcAtomEnum
 	case *ast.FcFn:
 		givenEnum = FcFnEnum
@@ -63,7 +63,7 @@ func cmpFcLit(left, right ast.Fc) (int, error) {
 	}
 
 	if fcEnum == FcAtomEnum {
-		return cmpFcAtomLit(left.(*ast.FcAtom), right.(*ast.FcAtom))
+		return cmpFcAtomLit(left.(ast.FcAtom), right.(ast.FcAtom))
 	} else if fcEnum == FcFnEnum {
 		return cmpFcFnLit(left.(*ast.FcFn), right.(*ast.FcFn))
 	}
@@ -71,7 +71,7 @@ func cmpFcLit(left, right ast.Fc) (int, error) {
 	return -1, fmt.Errorf("")
 }
 
-func cmpFcAtomLit(left, right *ast.FcAtom) (int, error) {
+func cmpFcAtomLit(left, right ast.FcAtom) (int, error) {
 	// if len(left.PkgName) != len(right.PkgName) {
 	// 	return len(left.PkgName) - len(right.PkgName), nil
 	// }

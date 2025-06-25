@@ -126,12 +126,12 @@ func (cursor *strSliceCursor) fcAtomAndFcFn() (ast.Fc, error) {
 	}
 }
 
-func (cursor *strSliceCursor) rawFcAtom() (*ast.FcAtom, error) {
+func (cursor *strSliceCursor) rawFcAtom() (ast.FcAtom, error) {
 	values := []string{}
 
 	value, err := cursor.next()
 	if err != nil {
-		return nil, err
+		return ast.EmptyFcAtom, err
 	}
 
 	for cursor.is(glob.KeySymbolColonColon) {
@@ -139,7 +139,7 @@ func (cursor *strSliceCursor) rawFcAtom() (*ast.FcAtom, error) {
 		values = append(values, value)
 		value, err = cursor.next()
 		if err != nil {
-			return nil, err
+			return ast.EmptyFcAtom, err
 		}
 	}
 
@@ -248,16 +248,16 @@ func (cursor *strSliceCursor) unaryOptFc() (ast.Fc, error) {
 	}
 }
 
-func (cursor *strSliceCursor) numberStr() (*ast.FcAtom, error) {
+func (cursor *strSliceCursor) numberStr() (ast.FcAtom, error) {
 	left, err := cursor.next()
 	if err != nil {
-		return &ast.EmptyFcAtom, err
+		return ast.EmptyFcAtom, err
 	}
 
 	// 检查left是否全是数字
 	for _, c := range left {
 		if c < '0' || c > '9' {
-			return &ast.EmptyFcAtom, fmt.Errorf("invalid number: %s", left)
+			return ast.EmptyFcAtom, fmt.Errorf("invalid number: %s", left)
 		}
 	}
 
@@ -280,7 +280,7 @@ func (cursor *strSliceCursor) numberStr() (*ast.FcAtom, error) {
 			cursor.skip("")
 			right, err := cursor.next()
 			if err != nil {
-				return &ast.EmptyFcAtom, fmt.Errorf("invalid number: %s", right)
+				return ast.EmptyFcAtom, fmt.Errorf("invalid number: %s", right)
 			}
 			return ast.NewFcAtomWithName(left + "." + right), nil
 		}

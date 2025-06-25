@@ -463,7 +463,7 @@ func (tb *tokenBlock) relaFactStmt() (*ast.SpecFactStmt, error) {
 	if ret.NameIs(glob.KeySymbolNotEqual) {
 		ret.TypeEnum = ast.FalsePure
 		// ret.PropName = *ast.NewFcAtom(glob.EmptyPkg, glob.KeySymbolEqual)
-		ret.PropName = *ast.NewFcAtom(glob.KeySymbolEqual)
+		ret.PropName = ast.NewFcAtom(glob.KeySymbolEqual)
 	}
 
 	return ret, nil
@@ -570,9 +570,9 @@ func (tb *tokenBlock) existFactStmt(isTrue bool) (*ast.SpecFactStmt, error) {
 	factParams := ast.MakeExistFactParamsSlice(existParams, pureSpecFact.Params)
 
 	if isTrue {
-		return ast.NewSpecFactStmt(ast.TrueExist_St, &pureSpecFact.PropName, factParams), nil
+		return ast.NewSpecFactStmt(ast.TrueExist_St, pureSpecFact.PropName, factParams), nil
 	} else {
-		return ast.NewSpecFactStmt(ast.FalseExist_St, &pureSpecFact.PropName, factParams), nil
+		return ast.NewSpecFactStmt(ast.FalseExist_St, pureSpecFact.PropName, factParams), nil
 	}
 }
 

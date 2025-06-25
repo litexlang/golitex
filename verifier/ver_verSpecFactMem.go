@@ -210,7 +210,7 @@ func (ver *Verifier) iterate_KnownSpec_InLogic_InUni_MatchEnv_applyMatch(stmt *a
 		if knownFactUnderLogicExpr.EnvFact != previousSuppose {
 			uniMapForMatchEnv = map[string]ast.Fc{}
 			for i, param := range knownFactUnderLogicExpr.EnvFact.Params {
-				atom, ok := param.(*ast.FcAtom)
+				atom, ok := param.(ast.FcAtom)
 				if !ok {
 					return false, fmt.Errorf("known param %s is not an atom", param.String())
 				}
@@ -578,8 +578,8 @@ func (ver *Verifier) fcEqual_Commutative_Associative_CmpRule(left ast.Fc, right 
 
 func (ver *Verifier) leftIsCommutativeAndUseCommutedLeftToCheckEqualRight(left ast.Fc, right ast.Fc, verState VerState) (bool, error) {
 	if leftAsFn, ok := left.(*ast.FcFn); ok {
-		if leftHeadAsAtom, ok := leftAsFn.FnHead.(*ast.FcAtom); ok {
-			if ver.isCommutativeFn_BuiltinRule(*leftHeadAsAtom) { // 暂时认为只能是 atom 形式的opt name 才能判断
+		if leftHeadAsAtom, ok := leftAsFn.FnHead.(ast.FcAtom); ok {
+			if ver.isCommutativeFn_BuiltinRule(leftHeadAsAtom) { // 暂时认为只能是 atom 形式的opt name 才能判断
 				if len(leftAsFn.Params) != 2 {
 					return false, nil
 				}
@@ -610,8 +610,8 @@ func (ver *Verifier) leftIsCommutativeAndUseCommutedLeftToCheckEqualRight(left a
 
 func (ver *Verifier) leftIsAssociative_UseAssociationToCheckEqual(left ast.Fc, right ast.Fc, verState VerState) (bool, error) {
 	if leftAsFn, ok := left.(*ast.FcFn); ok {
-		if leftHeadAsAtom, ok := leftAsFn.FnHead.(*ast.FcAtom); ok {
-			if ver.isAssociativeFn_BuiltinRule(*leftHeadAsAtom) {
+		if leftHeadAsAtom, ok := leftAsFn.FnHead.(ast.FcAtom); ok {
+			if ver.isAssociativeFn_BuiltinRule(leftHeadAsAtom) {
 				leftAssociated, ok := leftAsFn.HasTwoParams_FirstParamHasTheSameNameAsItself()
 				if !ok {
 					return false, nil
@@ -641,12 +641,12 @@ func (ver *Verifier) mathInductionFact_BuiltinRules(stmt *ast.SpecFactStmt, stat
 		return false, fmt.Errorf("math induction fact %s should have exactly one parameter, got: %d", stmt.String(), len(stmt.Params))
 	}
 
-	propNameAsAtom, ok := stmt.Params[0].(*ast.FcAtom)
+	propNameAsAtom, ok := stmt.Params[0].(ast.FcAtom)
 	if !ok {
 		return false, fmt.Errorf("math induction fact %s should have a prop name as parameter, got: %s", stmt.String(), stmt.Params[0])
 	}
 
-	_, ok = ver.env.GetPropDef(*propNameAsAtom)
+	_, ok = ver.env.GetPropDef(propNameAsAtom)
 	if !ok {
 		return false, fmt.Errorf("math induction fact %s should have a prop name that is defined, got: %s", stmt.String(), propNameAsAtom)
 	}
@@ -1054,7 +1054,7 @@ LoopOverFacts:
 		if knownFact.EnvFact != previousSuppose {
 			previousUniMap = map[string]ast.Fc{}
 			for i, param := range knownFact.EnvFact.Params {
-				atom, ok := param.(*ast.FcAtom)
+				atom, ok := param.(ast.FcAtom)
 				if !ok {
 					return false, fmt.Errorf("known param %s is not an atom", param.String())
 				}
@@ -1170,7 +1170,7 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_MatchEnv_applyMatch(stmt *ast.S
 		if knownFact.EnvFact != previousSuppose {
 			uniMapForMatchEnv = map[string]ast.Fc{}
 			for i, param := range knownFact.EnvFact.Params {
-				atom, ok := param.(*ast.FcAtom)
+				atom, ok := param.(ast.FcAtom)
 				if !ok {
 					return false, fmt.Errorf("known param %s is not an atom", param.String())
 				}
