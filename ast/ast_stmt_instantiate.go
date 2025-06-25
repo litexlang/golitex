@@ -16,7 +16,7 @@ package litex_ast
 
 func InstantiateFcAtom(fc FcAtom, uniMap map[string]Fc) (Fc, error) {
 	// if fc.PkgName == glob.EmptyPkg {
-	instance, ok := uniMap[fc.Name]
+	instance, ok := uniMap[string(fc)]
 	if ok {
 		return instance, nil
 	}

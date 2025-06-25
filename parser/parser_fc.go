@@ -27,6 +27,11 @@ func (cursor *strSliceCursor) RawFc() (ast.Fc, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	if _, ok := expr.(*ast.FcAtom); ok {
+		return expr, fmt.Errorf("invalid first citizen: %s", expr)
+	}
+
 	return expr, nil
 }
 

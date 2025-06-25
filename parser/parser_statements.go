@@ -235,7 +235,7 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 	// iff, dom 里不能出现和被定义的prop同名的prop，否则用def做验证的时候会出问题
 	for _, fact := range iffFacts {
 		if factAsSpecFact, ok := fact.(*ast.SpecFactStmt); ok {
-			if factAsSpecFact.PropName.Name == declHeader.Name {
+			if string(factAsSpecFact.PropName) == declHeader.Name {
 				return nil, fmt.Errorf("iff or dom fact cannot be the same as the prop being defined")
 			}
 		}
@@ -243,7 +243,7 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 
 	for _, fact := range domFacts {
 		if factAsSpecFact, ok := fact.(*ast.SpecFactStmt); ok {
-			if factAsSpecFact.PropName.Name == declHeader.Name {
+			if string(factAsSpecFact.PropName) == declHeader.Name {
 				return nil, fmt.Errorf("iff or dom fact cannot be the same as the prop being defined")
 			}
 		}

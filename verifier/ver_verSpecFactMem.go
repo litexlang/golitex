@@ -214,7 +214,7 @@ func (ver *Verifier) iterate_KnownSpec_InLogic_InUni_MatchEnv_applyMatch(stmt *a
 				if !ok {
 					return false, fmt.Errorf("known param %s is not an atom", param.String())
 				}
-				uniMapForMatchEnv[atom.Name] = ver.env.CurMatchProp.Params[i]
+				uniMapForMatchEnv[string(atom)] = ver.env.CurMatchProp.Params[i]
 			}
 			previousSuppose = knownFactUnderLogicExpr.EnvFact
 		}
@@ -939,7 +939,7 @@ func (ver *Verifier) specFact_LogicMem(curEnv *env.Env, stmt *ast.SpecFactStmt, 
 
 func (ver *Verifier) specFact_MatchEnv_SpecMem(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	// knownStruct, got := curEnv.KnownFactInMatchEnv.Get(ver.env.CurMatchProp.PropName.PkgName, ver.env.CurMatchProp.PropName.Name)
-	knownStruct, got := curEnv.KnownFactInMatchEnv[ver.env.CurMatchProp.PropName.Name]
+	knownStruct, got := curEnv.KnownFactInMatchEnv[string(ver.env.CurMatchProp.PropName)]
 
 	if !got {
 		return false, nil
@@ -955,7 +955,7 @@ func (ver *Verifier) specFact_MatchEnv_SpecMem(curEnv *env.Env, stmt *ast.SpecFa
 
 func (ver *Verifier) specFact_MatchEnv_LogicMem(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	// knownStruct, got := curEnv.KnownFactInMatchEnv.Get(ver.env.CurMatchProp.PropName.PkgName, ver.env.CurMatchProp.PropName.Name)
-	knownStruct, got := curEnv.KnownFactInMatchEnv[ver.env.CurMatchProp.PropName.Name]
+	knownStruct, got := curEnv.KnownFactInMatchEnv[string(ver.env.CurMatchProp.PropName)]
 
 	if !got {
 		return false, nil
@@ -1027,7 +1027,7 @@ func (ver *Verifier) matchTwoSpecFacts(stmt *ast.SpecFactStmt, knownFact *ast.Sp
 // TODO
 func (ver *Verifier) specFact_MatchEnv_UniMem(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	// knownStruct, got := curEnv.KnownFactInMatchEnv.Get(ver.env.CurMatchProp.PropName.PkgName, ver.env.CurMatchProp.PropName.Name)
-	knownStruct, got := curEnv.KnownFactInMatchEnv[ver.env.CurMatchProp.PropName.Name]
+	knownStruct, got := curEnv.KnownFactInMatchEnv[string(ver.env.CurMatchProp.PropName)]
 
 	if !got {
 		return false, nil
@@ -1058,7 +1058,7 @@ LoopOverFacts:
 				if !ok {
 					return false, fmt.Errorf("known param %s is not an atom", param.String())
 				}
-				previousUniMap[atom.Name] = ver.env.CurMatchProp.Params[i]
+				previousUniMap[string(atom)] = ver.env.CurMatchProp.Params[i]
 			}
 			previousSuppose = knownFact.EnvFact
 		}
@@ -1174,7 +1174,7 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_MatchEnv_applyMatch(stmt *ast.S
 				if !ok {
 					return false, fmt.Errorf("known param %s is not an atom", param.String())
 				}
-				uniMapForMatchEnv[atom.Name] = ver.env.CurMatchProp.Params[i]
+				uniMapForMatchEnv[string(atom)] = ver.env.CurMatchProp.Params[i]
 			}
 			previousSuppose = knownFact.EnvFact
 		}

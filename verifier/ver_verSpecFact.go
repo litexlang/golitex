@@ -71,7 +71,7 @@ func (ver *Verifier) isSpecFactCommutative(stmt *ast.SpecFactStmt) (bool, error)
 		return true, nil
 	}
 
-	ok, err := ver.verSpecFact_BySpecMem(ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordCommutativeProp), []ast.Fc{&stmt.PropName}), Round0NoMsg)
+	ok, err := ver.verSpecFact_BySpecMem(ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordCommutativeProp), []ast.Fc{stmt.PropName}), Round0NoMsg)
 	if err != nil {
 		return false, err
 	}
@@ -325,7 +325,7 @@ var reverseCmpFcAtomMap = map[string]ast.FcAtom{
 // 其实也可以写入标准库而不是放在kernel，但我还是送给用户得了
 // 传递性，就写在标准库吧
 func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	propName := stmt.PropName.Name
+	propName := string(stmt.PropName)
 
 	reversePropName := reverseCmpFcAtomMap[propName]
 

@@ -35,7 +35,7 @@ func (ver *Verifier) verNumberLogicRelaOpt_BuiltinRules(stmt *ast.SpecFactStmt, 
 }
 
 func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if !glob.IsBuiltinNumberInfixRelaProp(stmt.PropName.Name) {
+	if !glob.IsBuiltinNumberInfixRelaProp(string(stmt.PropName)) {
 		return false, nil
 	}
 
@@ -59,7 +59,7 @@ func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state VerS
 		return false, nil
 	}
 
-	ok, err = glob.NumLitExprCompareOpt(leftNumLitExpr, rightNumLitExpr, stmt.PropName.Name)
+	ok, err = glob.NumLitExprCompareOpt(leftNumLitExpr, rightNumLitExpr, string(stmt.PropName))
 
 	if err != nil {
 		return false, err
@@ -77,7 +77,7 @@ func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state VerS
 }
 
 func (ver *Verifier) varCommutativeProp_BuiltinRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if !ast.IsFcAtomWithNameAndEmptyPkg(&stmt.PropName, glob.KeywordCommutativeProp) {
+	if !ast.IsFcAtomWithNameAndEmptyPkg(stmt.PropName, glob.KeywordCommutativeProp) {
 		return false, nil
 	}
 

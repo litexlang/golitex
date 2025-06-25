@@ -25,7 +25,7 @@ func (ver *Verifier) FcSatisfySpecFactParaReq(stmt *ast.SpecFactStmt) (bool, err
 	}
 
 	// prop Name
-	if ast.IsFcAtomAndHasBuiltinPropName(&stmt.PropName) {
+	if ast.IsFcAtomAndHasBuiltinPropName(stmt.PropName) {
 		return true, nil
 	} else if stmt.IsPureFact() {
 		_, ok := ver.env.GetPropDef(stmt.PropName)

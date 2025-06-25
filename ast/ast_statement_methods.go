@@ -24,7 +24,7 @@ import (
 
 func (stmt *SpecFactStmt) IsBuiltinInfixRelaProp() bool {
 	// return stmt.PropName.PkgName == glob.EmptyPkg && glob.IsBuiltinInfixRelaPropSymbol(stmt.PropName.Name)
-	return glob.IsBuiltinInfixRelaPropSymbol(stmt.PropName.Name)
+	return glob.IsBuiltinInfixRelaPropSymbol(string(stmt.PropName))
 }
 
 func (stmt *UniFactWithIffStmt) NewUniFactWithThenToIff() *UniFactStmt {
@@ -144,12 +144,12 @@ func (stmt *SpecFactStmt) IsValidEqualFact() (bool, error) {
 
 func (stmt *SpecFactStmt) IsBuiltinProp_ExceptEqual() bool {
 	// return stmt.PropName.PkgName == glob.EmptyPkg && glob.IsBuiltinInfixRelaPropSymbol(stmt.PropName.Name) && !stmt.NameIs(glob.KeySymbolEqual)
-	return glob.IsBuiltinInfixRelaPropSymbol(stmt.PropName.Name) && !stmt.NameIs(glob.KeySymbolEqual)
+	return glob.IsBuiltinInfixRelaPropSymbol(string(stmt.PropName)) && !stmt.NameIs(glob.KeySymbolEqual)
 }
 
 func (stmt *SpecFactStmt) IsMathInductionFact() bool {
 	// return stmt.PropName.PkgName == glob.EmptyPkg && stmt.PropName.Name == glob.KeywordProveByMathInduction
-	return stmt.PropName.Name == glob.KeywordProveByMathInduction
+	return string(stmt.PropName) == glob.KeywordProveByMathInduction
 }
 
 func NewInFact(param string, paramSet Fc) *SpecFactStmt {
@@ -182,7 +182,7 @@ func isFcAtomWithName(fc Fc, name string) bool {
 	}
 
 	// return fcAsFcAtom.Name == name && fcAsFcAtom.PkgName == glob.EmptyPkg
-	return fcAsFcAtom.Name == name
+	return string(fcAsFcAtom) == name
 }
 
 func GetParamsSetFromInStatements(inStatements []FactStmt) ([]Fc, error) {
@@ -277,7 +277,7 @@ func (stmt *UniFactStmt) GetAtoms() []FcAtom {
 	ret := []FcAtom{}
 	for _, atom := range atoms {
 		// if slices.Contains(stmt.Params, atom.Name) && atom.PkgName == glob.EmptyPkg {
-		if slices.Contains(stmt.Params, atom.Name) {
+		if slices.Contains(stmt.Params, string(atom)) {
 			continue
 		} else {
 			ret = append(ret, atom)
@@ -387,7 +387,7 @@ func MakeExistFactParamsSlice(existParams []Fc, paramsInFact []Fc) []Fc {
 }
 
 func GetExistFactExistParamsAndFactParams(stmt *SpecFactStmt) ([]Fc, []Fc) {
-	lengthOfExistParams, _ := strconv.Atoi(stmt.Params[0].(FcAtom).Name)
+	lengthOfExistParams, _ := strconv.Atoi(string(stmt.Params[0].(FcAtom)))
 
 	existParams := []Fc{}
 	factParams := []Fc{}
@@ -471,10 +471,10 @@ func IsFcAtomWithBuiltinPkgAndName(fc Fc, name string) bool {
 	}
 
 	// return fcAtom.PkgName == glob.BuiltinPkgName && fcAtom.Name == name
-	return fcAtom.Name == name
+	return string(fcAtom) == name
 }
 
 func (fcAtom FcAtom) WithoutPkgName() bool {
 	// string has no colon colon
-	return !strings.Contains(fcAtom.Name, glob.KeySymbolColonColon)
+	return !strings.Contains(string(fcAtom), glob.KeySymbolColonColon)
 }
