@@ -73,11 +73,12 @@ func (e *Env) IsAtomDeclared(atom *ast.FcAtom, extraAtomNames map[string]struct{
 
 	_, ok = extraAtomNames[atom.Name]
 	// if ok && atom.PkgName == glob.EmptyPkg {
-	if ok {
-		return true
-	}
+	// if ok {
+	// 	return true
+	// }
 
-	return false
+	// return false
+	return ok
 }
 
 func (e *Env) NonDuplicateParam_NoUndeclaredParamSet(params []string, setParams []ast.Fc, checkDeclared bool) error {

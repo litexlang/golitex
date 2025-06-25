@@ -18,6 +18,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	num "golitex/number"
+	taskManager "golitex/task_manager"
 	"strings"
 	"testing"
 )
@@ -96,7 +97,9 @@ func TestColonColon(t *testing.T) {
 		"a::b::c::d",
 		"+",
 		"=",
+		"1",
 	}
+	taskManager.CurrentPkg = "pkg1"
 	for _, code := range sourceCode {
 		fc, err := ParseSourceCodeGetFc(code)
 		if err != nil {

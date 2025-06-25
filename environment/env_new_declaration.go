@@ -16,31 +16,30 @@ package litex_env
 
 import (
 	"fmt"
-	ast "golitex/ast"
-	glob "golitex/glob"
 )
 
-func (e *Env) isValidObjName(name string) bool {
-	if glob.IsValidUserDefinedName(name) != nil {
-		return false
-	}
+// func (e *Env) isValidObjName(name string) bool {
+// 	if glob.IsValidUserDefinedName(name) != nil {
+// 		return false
+// 	}
 
-	if e.IsFcAtomDeclared(ast.NewFcAtomWithName(name)) {
-		return false
-	}
+// 	if e.IsFcAtomDeclared(ast.NewFcAtomWithName(name)) {
+// 		return false
+// 	}
 
-	return true
-}
+// 	return true
+// }
 
 func (e *Env) NewObj(name string) error {
-	if !e.isValidObjName(name) {
+	err := e.IsValidUserDefinedName_NoDuplicate(name)
+	if err != nil {
 		return fmt.Errorf("invalid name: %s", name)
 	}
 
-	err := e.ObjDefMem.insert(name)
+	err = e.ObjDefMem.insert(name)
 	if err != nil {
 		return err
 	}
 
-	return e.ObjDefMem.insert(name)
+	return nil
 }
