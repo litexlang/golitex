@@ -424,36 +424,36 @@ func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, e
 	return instantiatedIffFacts, nil
 }
 
-func (env *Env) KnowDefFnSatisfyFnTemplate_KnowUniFactDerivedFromDefFn(fc ast.Fc, stmt *ast.FnTemplateStmt) error {
-	err := env.insideAtomsDeclared(fc, stmt)
-	if err != nil {
-		return err
-	}
+// func (env *Env) KnowDefFnSatisfyFnTemplate_KnowUniFactDerivedFromDefFn(fc ast.Fc, stmt *ast.FnTemplateStmt) error {
+// 	err := env.insideAtomsDeclared(fc, stmt)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	err = env.StoreFnSatisfyFnTemplateFact(fc, stmt)
-	if err != nil {
-		return err
-	}
+// 	err = env.StoreFnSatisfyFnTemplateFact(fc, stmt)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	uniFact := ast.NewUniFact(stmt.Params, stmt.ParamSets, stmt.DomFacts, stmt.ThenFacts)
-	err = env.NewFact(uniFact)
+// 	uniFact := ast.NewUniFact(stmt.Params, stmt.ParamSets, stmt.DomFacts, stmt.ThenFacts)
+// 	err = env.NewFact(uniFact)
 
-	if err != nil {
-		return err
-	}
+// 	if err != nil {
+// 		return err
+// 	}
 
-	// 现在只处理dom里没额外的东西的情况
-	if len(stmt.DomFacts) == 0 {
-		fnSet := ast.NewFcFn(ast.NewFcFn(ast.NewFcAtomWithName(glob.KeywordFn), stmt.ParamSets), []ast.Fc{stmt.RetSet})
-		newFact := ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fc, fnSet})
-		err = env.NewFact(newFact)
-		if err != nil {
-			return err
-		}
-	}
+// 	// 现在只处理dom里没额外的东西的情况
+// 	if len(stmt.DomFacts) == 0 {
+// 		fnSet := ast.NewFcFn(ast.NewFcFn(ast.NewFcAtomWithName(glob.KeywordFn), stmt.ParamSets), []ast.Fc{stmt.RetSet})
+// 		newFact := ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fc, fnSet})
+// 		err = env.NewFact(newFact)
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 // func (env *Env) newInFactPostProcess(fact *ast.SpecFactStmt) error {
 // 	if len(fact.Params) != 2 {
