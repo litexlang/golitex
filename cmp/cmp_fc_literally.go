@@ -17,6 +17,7 @@ package litex_comparator
 import (
 	"fmt"
 	ast "golitex/ast"
+	"strings"
 )
 
 type FcEnum uint8
@@ -71,27 +72,28 @@ func cmpFcLit(left, right ast.Fc) (int, error) {
 }
 
 func cmpFcAtomLit(left, right *ast.FcAtom) (int, error) {
-	if len(left.PkgName) != len(right.PkgName) {
-		return len(left.PkgName) - len(right.PkgName), nil
-	}
+	// if len(left.PkgName) != len(right.PkgName) {
+	// 	return len(left.PkgName) - len(right.PkgName), nil
+	// }
 
-	for i := 0; i < len(left.PkgName); i++ {
-		if left.PkgName[i] != right.PkgName[i] {
-			return int(left.PkgName[i]) - int(right.PkgName[i]), nil
-		}
-	}
+	// for i := 0; i < len(left.PkgName); i++ {
+	// 	if left.PkgName[i] != right.PkgName[i] {
+	// 		return int(left.PkgName[i]) - int(right.PkgName[i]), nil
+	// 	}
+	// }
 
-	if len(left.Name) != len(right.Name) {
-		return len(left.Name) - len(right.Name), nil
-	}
+	// if len(left.Name) != len(right.Name) {
+	// 	return len(left.Name) - len(right.Name), nil
+	// }
 
-	for i := 0; i < len(left.Name); i++ {
-		if left.Name[i] != right.Name[i] {
-			return int(left.Name[i]) - int(right.Name[i]), nil
-		}
-	}
+	// for i := 0; i < len(left.Name); i++ {
+	// 	if left.Name[i] != right.Name[i] {
+	// 		return int(left.Name[i]) - int(right.Name[i]), nil
+	// 	}
+	// }
+	// return 0, nil
 
-	return 0, nil
+	return strings.Compare(left.Name, right.Name), nil // 直接对两个string相减得了
 }
 
 func cmpFcFnLit(left, right *ast.FcFn) (int, error) {

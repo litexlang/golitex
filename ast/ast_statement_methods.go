@@ -22,7 +22,8 @@ import (
 )
 
 func (stmt *SpecFactStmt) IsBuiltinInfixRelaProp() bool {
-	return stmt.PropName.PkgName == glob.EmptyPkg && glob.IsBuiltinInfixRelaPropSymbol(stmt.PropName.Name)
+	// return stmt.PropName.PkgName == glob.EmptyPkg && glob.IsBuiltinInfixRelaPropSymbol(stmt.PropName.Name)
+	return glob.IsBuiltinInfixRelaPropSymbol(stmt.PropName.Name)
 }
 
 func (stmt *UniFactWithIffStmt) NewUniFactWithThenToIff() *UniFactStmt {
@@ -54,7 +55,8 @@ func MergeOuterInnerUniFacts(outer *UniFactStmt, inner *UniFactStmt) *UniFactStm
 func (defStmt *DefPropStmt) Make_PropToIff_IffToProp() (*UniFactStmt, *UniFactStmt, error) {
 	propSpecFactParams := []Fc{}
 	for _, param := range defStmt.DefHeader.Params {
-		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.EmptyPkg, param))
+		// propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.EmptyPkg, param))
+		propSpecFactParams = append(propSpecFactParams, NewFcAtom(param))
 	}
 
 	propSpecFact := NewSpecFactStmt(TruePure, NewFcAtomWithName(defStmt.DefHeader.Name), propSpecFactParams)
@@ -78,7 +80,8 @@ func (defStmt *DefPropStmt) Make_PropToIff_IffToProp() (*UniFactStmt, *UniFactSt
 func (defStmt *DefPropStmt) IffToPropUniFact() *UniFactStmt {
 	propSpecFactParams := []Fc{}
 	for _, param := range defStmt.DefHeader.Params {
-		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.EmptyPkg, param))
+		// propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.EmptyPkg, param))
+		propSpecFactParams = append(propSpecFactParams, NewFcAtom(param))
 	}
 
 	propSpecFact := NewSpecFactStmt(TruePure, NewFcAtomWithName(defStmt.DefHeader.Name), propSpecFactParams)
@@ -95,7 +98,8 @@ func (defStmt *DefPropStmt) IffToPropUniFact() *UniFactStmt {
 func (defStmt *DefPropStmt) ToSpecFact() *SpecFactStmt {
 	propSpecFactParams := []Fc{}
 	for _, param := range defStmt.DefHeader.Params {
-		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.EmptyPkg, param))
+		// propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.EmptyPkg, param))
+		propSpecFactParams = append(propSpecFactParams, NewFcAtom(param))
 	}
 
 	propSpecFact := NewSpecFactStmt(TruePure, NewFcAtomWithName(defStmt.DefHeader.Name), propSpecFactParams)
@@ -106,7 +110,8 @@ func (defStmt *DefPropStmt) ToSpecFact() *SpecFactStmt {
 func (defStmt *DefExistPropStmt) ToSpecFact() *SpecFactStmt {
 	propSpecFactParams := []Fc{}
 	for _, param := range defStmt.DefBody.DefHeader.Params {
-		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.EmptyPkg, param))
+		// propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.EmptyPkg, param))
+		propSpecFactParams = append(propSpecFactParams, NewFcAtom(param))
 	}
 
 	propSpecFact := NewSpecFactStmt(TruePure, NewFcAtomWithName(defStmt.DefBody.DefHeader.Name), propSpecFactParams)
@@ -137,15 +142,18 @@ func (stmt *SpecFactStmt) IsValidEqualFact() (bool, error) {
 }
 
 func (stmt *SpecFactStmt) IsBuiltinProp_ExceptEqual() bool {
-	return stmt.PropName.PkgName == glob.EmptyPkg && glob.IsBuiltinInfixRelaPropSymbol(stmt.PropName.Name) && !stmt.NameIs(glob.KeySymbolEqual)
+	// return stmt.PropName.PkgName == glob.EmptyPkg && glob.IsBuiltinInfixRelaPropSymbol(stmt.PropName.Name) && !stmt.NameIs(glob.KeySymbolEqual)
+	return glob.IsBuiltinInfixRelaPropSymbol(stmt.PropName.Name) && !stmt.NameIs(glob.KeySymbolEqual)
 }
 
 func (stmt *SpecFactStmt) IsMathInductionFact() bool {
-	return stmt.PropName.PkgName == glob.EmptyPkg && stmt.PropName.Name == glob.KeywordProveByMathInduction
+	// return stmt.PropName.PkgName == glob.EmptyPkg && stmt.PropName.Name == glob.KeywordProveByMathInduction
+	return stmt.PropName.Name == glob.KeywordProveByMathInduction
 }
 
 func NewInFact(param string, paramSet Fc) *SpecFactStmt {
-	return NewSpecFactStmt(TruePure, NewFcAtomWithName(glob.KeywordIn), []Fc{NewFcAtom(glob.EmptyPkg, param), paramSet})
+	// return NewSpecFactStmt(TruePure, NewFcAtomWithName(glob.KeywordIn), []Fc{NewFcAtom(glob.EmptyPkg, param), paramSet})
+	return NewSpecFactStmt(TruePure, NewFcAtomWithName(glob.KeywordIn), []Fc{NewFcAtom(param), paramSet})
 }
 
 func NewInFactWithFc(param Fc, paramSet Fc) *SpecFactStmt {
@@ -172,7 +180,8 @@ func isFcAtomWithName(fc Fc, name string) bool {
 		return false
 	}
 
-	return fcAsFcAtom.Name == name && fcAsFcAtom.PkgName == glob.EmptyPkg
+	// return fcAsFcAtom.Name == name && fcAsFcAtom.PkgName == glob.EmptyPkg
+	return fcAsFcAtom.Name == name
 }
 
 func GetParamsSetFromInStatements(inStatements []FactStmt) ([]Fc, error) {
@@ -266,7 +275,8 @@ func (stmt *UniFactStmt) GetAtoms() []*FcAtom {
 	// 如果这个atom是param，那把这项扔了
 	ret := []*FcAtom{}
 	for _, atom := range atoms {
-		if slices.Contains(stmt.Params, atom.Name) && atom.PkgName == glob.EmptyPkg {
+		// if slices.Contains(stmt.Params, atom.Name) && atom.PkgName == glob.EmptyPkg {
+		if slices.Contains(stmt.Params, atom.Name) {
 			continue
 		} else {
 			ret = append(ret, atom)
@@ -459,5 +469,6 @@ func IsFcAtomWithBuiltinPkgAndName(fc Fc, name string) bool {
 		return false
 	}
 
-	return fcAtom.PkgName == glob.BuiltinPkgName && fcAtom.Name == name
+	// return fcAtom.PkgName == glob.BuiltinPkgName && fcAtom.Name == name
+	return fcAtom.Name == name
 }

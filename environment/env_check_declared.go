@@ -72,7 +72,8 @@ func (e *Env) IsAtomDeclared(atom *ast.FcAtom, extraAtomNames map[string]struct{
 	}
 
 	_, ok = extraAtomNames[atom.Name]
-	if ok && atom.PkgName == glob.EmptyPkg {
+	// if ok && atom.PkgName == glob.EmptyPkg {
+	if ok {
 		return true
 	}
 

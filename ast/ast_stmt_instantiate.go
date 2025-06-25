@@ -14,17 +14,13 @@
 
 package litex_ast
 
-import (
-	glob "golitex/glob"
-)
-
 func InstantiateFcAtom(fc *FcAtom, uniMap map[string]Fc) (Fc, error) {
-	if fc.PkgName == glob.EmptyPkg {
-		instance, ok := uniMap[fc.Name]
-		if ok {
-			return instance, nil
-		}
+	// if fc.PkgName == glob.EmptyPkg {
+	instance, ok := uniMap[fc.Name]
+	if ok {
+		return instance, nil
 	}
+	// }
 	return fc, nil
 }
 
