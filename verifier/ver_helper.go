@@ -36,7 +36,7 @@ func isTrueEqualFact(stmt ast.FactStmt) (*ast.SpecFactStmt, bool) {
 		return nil, false
 	}
 
-	if asSpecFact.PropName.Name == glob.KeySymbolEqual {
+	if string(asSpecFact.PropName) == glob.KeySymbolEqual {
 		return asSpecFact, true
 	}
 

@@ -39,7 +39,7 @@ func MakeFcIntoNumLitExpr(fc Fc) (*glob.NumLitExpr, bool, error) {
 			return nil, false, nil
 		}
 
-		if ptr.Name == glob.KeySymbolMinus {
+		if string(ptr) == glob.KeySymbolMinus {
 			left, ok, err := MakeFcIntoNumLitExpr(asFcFn.Params[0])
 			if err != nil {
 				return nil, false, err
@@ -81,6 +81,6 @@ func MakeFcIntoNumLitExpr(fc Fc) (*glob.NumLitExpr, bool, error) {
 	if !ok {
 		return nil, false, nil
 	}
-	opt := ptr.Name
+	opt := string(ptr)
 	return &glob.NumLitExpr{IsPositive: true, Left: left, OptOrNumber: opt, Right: right}, true, nil
 }

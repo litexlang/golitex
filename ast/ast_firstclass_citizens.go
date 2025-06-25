@@ -32,24 +32,15 @@ func (f FcAtom) IsAtom() bool { return true }
 func (f *FcFn) fc()           {}
 func (f *FcFn) IsAtom() bool  { return false }
 
-type FcAtom struct {
-	// PkgName string
-	Name string
-}
-
-// type FcAtom string
+type FcAtom string // 把 FcAtom 从 {pkgName string, Name string} 改成 string, 本质上是因为后者更合理，实际上还是让速度快了10%
 
 type FcFn struct {
 	FnHead Fc // 必须是 fc, 而不是 fcAtom，因为函数头可能是另一个函数的返回值
 	Params []Fc
 }
 
-// func NewFcAtom(pkgName string, value string) FcAtom {
-// 	return &FcAtom{pkgName, value}
-// }
-
 func NewFcAtom(value string) FcAtom {
-	return FcAtom{value}
+	return FcAtom(value)
 }
 
 func NewFcFn(fnHead Fc, callPipe []Fc) *FcFn {
@@ -75,22 +66,25 @@ func hasBuiltinOptAndToString(f *FcFn) (bool, string) {
 	}
 
 	// if ptr.PkgName == glob.EmptyPkg && ptr.Name == glob.AtIndexOp {
-	if ptr.Name == glob.AtIndexOp {
+	// if ptr.Name == glob.AtIndexOp {
+	if string(ptr) == glob.AtIndexOp {
 		return true, fmt.Sprintf("%s[%s]", f.Params[0], f.Params[1])
 	}
 
 	// if ptr.PkgName == glob.EmptyPkg && ptr.Name == glob.GetIndexOfOp {
-	if ptr.Name == glob.GetIndexOfOp {
+	// if ptr.Name == glob.GetIndexOfOp {
+	if string(ptr) == glob.GetIndexOfOp {
 		return true, fmt.Sprintf("%s[[%s]]", f.Params[0], f.Params[1])
 	}
 
 	// if ptr.PkgName == glob.EmptyPkg && ptr.Name == glob.KeySymbolMinus {
-	if ptr.Name == glob.KeySymbolMinus {
+	// if ptr.Name == glob.KeySymbolMinus {
+	if string(ptr) == glob.KeySymbolMinus {
 		if len(f.Params) == 1 {
-			return true, fmt.Sprintf("(%s %s)", ptr.Name, f.Params[0])
+			return true, fmt.Sprintf("(%s %s)", string(ptr), f.Params[0])
 		}
 
-		return true, fmt.Sprintf("(%s %s %s)", f.Params[0], ptr.Name, f.Params[1])
+		return true, fmt.Sprintf("(%s %s %s)", f.Params[0], string(ptr), f.Params[1])
 	}
 
 	// if ptr.PkgName != glob.EmptyPkg {
@@ -99,7 +93,7 @@ func hasBuiltinOptAndToString(f *FcFn) (bool, string) {
 
 	// TODO 如何处理unary?
 
-	outPut := string(ptr.Name)
+	outPut := string(ptr)
 	if glob.IsKeySymbolRelaFn(outPut) {
 		return true, fmt.Sprintf("(%s %s %s)", f.Params[0], outPut, f.Params[1])
 	}
@@ -109,12 +103,12 @@ func hasBuiltinOptAndToString(f *FcFn) (bool, string) {
 
 func IsNumLitFcAtom(f Fc) (string, bool) {
 	ptr, ok := f.(FcAtom)
-	if !ok || ptr.Name == "" {
+	if !ok || string(ptr) == "" {
 		return "", false
 	}
 
-	if glob.IsNumLitStr(ptr.Name) {
-		return ptr.Name, true
+	if glob.IsNumLitStr(string(ptr)) {
+		return string(ptr), true
 	}
 	return "", false
 }
@@ -139,17 +133,17 @@ func IsFcBuiltinUnaryFn(fc FcFn) bool {
 
 func (f FcAtom) IsBuiltinUnaryOpt() bool {
 	// return f.PkgName == glob.EmptyPkg && glob.IsKeySymbolUnaryFn(f.Name)
-	return glob.IsKeySymbolUnaryFn(f.Name)
+	return glob.IsKeySymbolUnaryFn(string(f))
 }
 
 func (f FcAtom) IsBuiltinRelaFn() bool {
 	// return f.PkgName == glob.EmptyPkg && glob.IsKeySymbolRelaFn(f.Name)
-	return glob.IsKeySymbolRelaFn(f.Name)
+	return glob.IsKeySymbolRelaFn(string(f))
 }
 
 func (fcAtom FcAtom) NameIsBuiltinKw_PkgNameEmpty() bool {
 	// if fcAtom.PkgName == glob.EmptyPkg {
-	_, ok := glob.BuiltinKeywordsSet[fcAtom.Name]
+	_, ok := glob.BuiltinKeywordsSet[string(fcAtom)]
 	return ok
 	// }
 	// return false
@@ -165,12 +159,12 @@ func IsFcAtomAndHasBuiltinPropName(fc Fc) bool {
 	// 	return false
 	// }
 
-	return glob.IsBuiltinInfixRelaPropSymbol(fcAtom.Name)
+	return glob.IsBuiltinInfixRelaPropSymbol(string(fcAtom))
 }
 
 func (fc FcAtom) HasGivenNameAndEmptyPkgName(kw string) bool {
 	// return fc.PkgName == glob.EmptyPkg && fc.Name == kw
-	return fc.Name == kw
+	return string(fc) == kw
 }
 
 func IsFcAtomWithNameAndEmptyPkg(fc Fc, kw string) bool {
@@ -203,7 +197,7 @@ func (f *FcFn) HasTwoParams_FirstParamHasTheSameNameAsItself() (*FcFn, bool) {
 
 	if f_firstParam_as_fn, ok := f.Params[0].(*FcFn); ok {
 		if f_firstParam_headAsAtom, ok := f_firstParam_as_fn.FnHead.(FcAtom); ok {
-			if f_firstParam_headAsAtom.Name == fHeadAsAtom.Name {
+			if string(f_firstParam_headAsAtom) == string(fHeadAsAtom) {
 				// if f_firstParam_headAsAtom.PkgName == fHeadAsAtom.PkgName {
 				if len(f_firstParam_as_fn.Params) != 2 {
 					return nil, false
@@ -256,7 +250,7 @@ func IsFn_WithHeadNameInSlice(fc Fc, names []string) bool {
 
 	for _, name := range names {
 		// if asFcFnHeadAsAtom.Name == name && asFcFnHeadAsAtom.PkgName == glob.EmptyPkg {
-		if asFcFnHeadAsAtom.Name == name {
+		if string(asFcFnHeadAsAtom) == name {
 			return true
 		}
 	}
@@ -280,5 +274,5 @@ func IsFnWithHeadName(fc Fc, name string) bool {
 	}
 
 	// return fcAsFnHeadAsAtom.Name == name && fcAsFnHeadAsAtom.PkgName == glob.EmptyPkg
-	return fcAsFnHeadAsAtom.Name == name
+	return string(fcAsFnHeadAsAtom) == name
 }

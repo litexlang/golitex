@@ -48,7 +48,7 @@ func (ver *Verifier) matchStoredUniSpecWithSpec_preventDifferentVarsMatchTheSame
 func isFcAtomInForallParamSet(fcAtom ast.FcAtom, knownFact env.KnownSpecFact_InUniFact) bool {
 	for _, param := range knownFact.UniFact.Params {
 		// if fcAtom.PkgName == glob.EmptyPkg && param == fcAtom.Name {
-		if param == fcAtom.Name {
+		if param == string(fcAtom) {
 			return true
 		}
 	}
@@ -59,7 +59,7 @@ func isFcAtomInForallParamSet(fcAtom ast.FcAtom, knownFact env.KnownSpecFact_InU
 func (ver *Verifier) match_FcInFactUnderUniFact_WithConFc(fcInFactUnderUniFact ast.Fc, conFc ast.Fc, knownFact env.KnownSpecFact_InUniFact) (map[string][]ast.Fc, bool, error) {
 	if leftAsAtom, ok := fcInFactUnderUniFact.(ast.FcAtom); ok {
 		if isFcAtomInForallParamSet(leftAsAtom, knownFact) {
-			return map[string][]ast.Fc{leftAsAtom.Name: {conFc}}, true, nil
+			return map[string][]ast.Fc{string(leftAsAtom): {conFc}}, true, nil
 		} else {
 			ok, _, err := cmp.Cmp_ByBIR(fcInFactUnderUniFact, conFc)
 			if err != nil {
@@ -105,7 +105,7 @@ func (ver *Verifier) match_FcAtomInFactUnderUniFact_ConFc(fcAtomInFactUnderUniFa
 	retMap := make(map[string][]ast.Fc)
 
 	if isFcAtomInForallParamSet(fcAtomInFactUnderUniFact, knownFact) {
-		retMap[fcAtomInFactUnderUniFact.Name] = []ast.Fc{conFc}
+		retMap[string(fcAtomInFactUnderUniFact)] = []ast.Fc{conFc}
 		return retMap, true, nil
 	}
 

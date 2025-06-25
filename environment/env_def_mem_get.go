@@ -23,7 +23,7 @@ func (memory *FnTemplateDefMem) Get(fc ast.FcAtom) (*ast.DefFnTemplateStmt, bool
 	// }
 
 	// node, nodeExists := pkgMap[fc.Name]
-	node, nodeExists := memory.Dict[fc.Name]
+	node, nodeExists := memory.Dict[string(fc)]
 	if !nodeExists {
 		return nil, false
 	}
@@ -38,7 +38,7 @@ func (memory *ExistPropDefMem) Get(fc ast.FcAtom) (*ast.DefExistPropStmt, bool) 
 	// }
 
 	// node, nodeExists := pkgMap[fc.Name]
-	node, nodeExists := memory.Dict[fc.Name]
+	node, nodeExists := memory.Dict[string(fc)]
 	if !nodeExists {
 		return nil, false
 	}
@@ -52,7 +52,7 @@ func (memory *ObjDefMem) Get(fc ast.FcAtom) (*ast.DefObjStmt, bool) {
 	// }
 
 	// node, nodeExists := pkgMap[fc.Name]
-	node, nodeExists := memory.Dict[fc.Name]
+	node, nodeExists := memory.Dict[string(fc)]
 	if !nodeExists {
 		return nil, false
 	}
@@ -66,7 +66,7 @@ func (memory *PropDefMem) Get(fc ast.FcAtom) (*ast.DefPropStmt, bool) {
 	// }
 
 	// node, nodeExists := pkgMap[fc.Name]
-	node, nodeExists := memory.Dict[fc.Name]
+	node, nodeExists := memory.Dict[string(fc)]
 	if !nodeExists {
 		return nil, false
 	}
