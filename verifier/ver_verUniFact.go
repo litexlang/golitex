@@ -121,11 +121,13 @@ func processUniFactParams(env *env.Env, params []string) (map[string]ast.Fc, map
 	indexes := make(map[int]string)
 	for i, param := range params {
 		newParam := param
-		if env.IsAtomDeclared(ast.NewFcAtom(glob.EmptyPkg, newParam), map[string]struct{}{}) {
+		// if env.IsAtomDeclared(ast.NewFcAtom(glob.EmptyPkg, newParam), map[string]struct{}{}) {
+		if env.IsAtomDeclared(ast.NewFcAtom(newParam), map[string]struct{}{}) {
 			newParam = generateUndeclaredRandomName(env)
 		}
 		if param != newParam {
-			paramMap[param] = ast.NewFcAtom(glob.EmptyPkg, newParam)
+			// paramMap[param] = ast.NewFcAtom(glob.EmptyPkg, newParam)
+			paramMap[param] = ast.NewFcAtom(newParam)
 			paramMapStrToStr[param] = newParam
 			indexes[i] = newParam
 		}
@@ -139,7 +141,8 @@ func generateUndeclaredRandomName(env *env.Env) string {
 	for {
 		randomStr = glob.RandomString(i)
 		// check if the string is undeclared
-		if !env.IsAtomDeclared(ast.NewFcAtom(glob.EmptyPkg, randomStr), map[string]struct{}{}) {
+		// if !env.IsAtomDeclared(ast.NewFcAtom(glob.EmptyPkg, randomStr), map[string]struct{}{}) {
+		if !env.IsAtomDeclared(ast.NewFcAtom(randomStr), map[string]struct{}{}) {
 			return randomStr
 		}
 		i++

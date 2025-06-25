@@ -16,75 +16,82 @@ package litex_env
 
 import (
 	ast "golitex/ast"
-	taskManager "golitex/task_manager"
 )
 
 func (memory *PropDefMem) insert(stmt *ast.DefPropStmt) error {
-	pkgMap, pkgExists := memory.Dict[taskManager.CurrentPkg]
+	// pkgMap, pkgExists := memory.Dict[taskManager.CurrentPkg]
 
-	if !pkgExists {
-		memory.Dict[taskManager.CurrentPkg] = make(map[string]PropMemItem)
-		pkgMap = memory.Dict[taskManager.CurrentPkg]
-	}
+	// if !pkgExists {
+	// 	memory.Dict[taskManager.CurrentPkg] = make(map[string]PropMemItem)
+	// 	pkgMap = memory.Dict[taskManager.CurrentPkg]
+	// }
 
-	node, nodeExists := pkgMap[stmt.DefHeader.Name]
+	// node, nodeExists := pkgMap[stmt.DefHeader.Name]
+	node, nodeExists := memory.Dict[stmt.DefHeader.Name]
 	if !nodeExists {
 		node = PropMemItem{stmt}
 	}
 
-	pkgMap[stmt.DefHeader.Name] = node
+	// pkgMap[stmt.DefHeader.Name] = node
+	memory.Dict[stmt.DefHeader.Name] = node
 
 	return nil
 }
 
 func (memory *FnTemplateDefMem) insert(stmt *ast.DefFnTemplateStmt) error {
-	pkgMap, pkgExists := memory.Dict[taskManager.CurrentPkg]
+	// pkgMap, pkgExists := memory.Dict[taskManager.CurrentPkg]
 
-	if !pkgExists {
-		memory.Dict[taskManager.CurrentPkg] = make(map[string]FnTemplateMemItem)
-		pkgMap = memory.Dict[taskManager.CurrentPkg]
-	}
+	// if !pkgExists {
+	// 	memory.Dict[taskManager.CurrentPkg] = make(map[string]FnTemplateMemItem)
+	// 	pkgMap = memory.Dict[taskManager.CurrentPkg]
+	// }
 
-	node, nodeExists := pkgMap[stmt.FnTemplateStmt.Name]
+	// node, nodeExists := pkgMap[stmt.FnTemplateStmt.Name]
+	node, nodeExists := memory.Dict[stmt.FnTemplateStmt.Name]
 	if !nodeExists {
 		node = FnTemplateMemItem{stmt}
 	}
-	pkgMap[stmt.FnTemplateStmt.Name] = node
+	// pkgMap[stmt.FnTemplateStmt.Name] = node
+	memory.Dict[stmt.FnTemplateStmt.Name] = node
 
 	return nil
 }
 
 func (memory *ExistPropDefMem) insert(stmt *ast.DefExistPropStmt) error {
-	pkgMap, pkgExists := memory.Dict[taskManager.CurrentPkg]
+	// pkgMap, pkgExists := memory.Dict[taskManager.CurrentPkg]
 
-	if !pkgExists {
-		memory.Dict[taskManager.CurrentPkg] = make(map[string]ExistPropMemItem)
-		pkgMap = memory.Dict[taskManager.CurrentPkg]
-	}
+	// if !pkgExists {
+	// 	memory.Dict[taskManager.CurrentPkg] = make(map[string]ExistPropMemItem)
+	// 	pkgMap = memory.Dict[taskManager.CurrentPkg]
+	// }
 
-	node, nodeExists := pkgMap[stmt.DefBody.DefHeader.Name]
+	// node, nodeExists := pkgMap[stmt.DefBody.DefHeader.Name]
+	node, nodeExists := memory.Dict[stmt.DefBody.DefHeader.Name]
 	if !nodeExists {
 		node = ExistPropMemItem{stmt}
 	}
-	pkgMap[stmt.DefBody.DefHeader.Name] = node
+	// pkgMap[stmt.DefBody.DefHeader.Name] = node
+	memory.Dict[stmt.DefBody.DefHeader.Name] = node
 
 	return nil
 }
 
 func (memory *ObjDefMem) insert(objName string) error {
-	pkgMap, pkgExists := memory.Dict[taskManager.CurrentPkg]
+	// pkgMap, pkgExists := memory.Dict[taskManager.CurrentPkg]
 
-	if !pkgExists {
-		memory.Dict[taskManager.CurrentPkg] = make(map[string]ObjMemItem)
-		pkgMap = memory.Dict[taskManager.CurrentPkg]
-	}
+	// if !pkgExists {
+	// 	memory.Dict[taskManager.CurrentPkg] = make(map[string]ObjMemItem)
+	// 	pkgMap = memory.Dict[taskManager.CurrentPkg]
+	// }
 
-	node, nodeExists := pkgMap[objName]
+	// node, nodeExists := pkgMap[objName]
+	node, nodeExists := memory.Dict[objName]
 	if !nodeExists {
 		node = ObjMemItem{nil}
 	}
 
-	pkgMap[objName] = node
+	// pkgMap[objName] = node
+	memory.Dict[objName] = node
 
 	return nil
 }
