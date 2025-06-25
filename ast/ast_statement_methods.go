@@ -344,7 +344,7 @@ func FromFnDeclFcToDefFnStmt(name string, fc Fc) *FnTemplateStmt {
 		params = append(params, randomStr)
 	}
 
-	fnDefStmt := NewFnTemplateStmt(*NewDefHeader(name, params, paramSets), []FactStmt{}, []FactStmt{}, retSet)
+	fnDefStmt := NewFnTemplateStmt(NewDefHeader(name, params, paramSets), []FactStmt{}, []FactStmt{}, retSet)
 
 	return fnDefStmt
 }
@@ -459,7 +459,7 @@ func FnFcToFnTemplateStmt(fc Fc) (*FnTemplateStmt, error) {
 	paramSets := fcAsFcFnHeadAsFcFn.Params
 	retSet := fcAsFcFn.Params[0]
 
-	fnDefStmt := NewFnTemplateStmt(*NewDefHeader(glob.EmptyPkg, randomParams, paramSets), []FactStmt{}, []FactStmt{}, retSet)
+	fnDefStmt := NewFnTemplateStmt(NewDefHeader(glob.EmptyPkg, randomParams, paramSets), []FactStmt{}, []FactStmt{}, retSet)
 
 	return fnDefStmt, nil
 }

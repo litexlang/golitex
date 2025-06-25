@@ -219,7 +219,7 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 	}
 
 	if !tb.header.is(glob.KeySymbolColon) {
-		return ast.NewDefPropStmt(*declHeader, nil, nil), nil
+		return ast.NewDefPropStmt(declHeader, nil, nil), nil
 	}
 
 	err = tb.header.skip(glob.KeySymbolColon)
@@ -249,7 +249,7 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 		}
 	}
 
-	return ast.NewDefPropStmt(*declHeader, domFacts, iffFacts), nil
+	return ast.NewDefPropStmt(declHeader, domFacts, iffFacts), nil
 }
 
 func (tb *tokenBlock) FnTemplateStmt(keyword string) (*ast.FnTemplateStmt, error) {
@@ -279,7 +279,7 @@ func (tb *tokenBlock) FnTemplateStmt(keyword string) (*ast.FnTemplateStmt, error
 		}
 	}
 
-	return ast.NewFnTemplateStmt(*decl, domFacts, thenFacts, retSet), nil
+	return ast.NewFnTemplateStmt(decl, domFacts, thenFacts, retSet), nil
 }
 
 func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
@@ -699,7 +699,7 @@ func (tb *tokenBlock) defExistPropStmtBody() (*ast.DefExistPropStmtBody, error) 
 	}
 
 	if !tb.header.is(glob.KeySymbolColon) {
-		return ast.NewExistPropDef(*declHeader, []ast.FactStmt{}, []ast.FactStmt{}), nil
+		return ast.NewExistPropDef(declHeader, []ast.FactStmt{}, []ast.FactStmt{}), nil
 	}
 
 	err = tb.header.skip(glob.KeySymbolColon)
@@ -716,7 +716,7 @@ func (tb *tokenBlock) defExistPropStmtBody() (*ast.DefExistPropStmtBody, error) 
 		return nil, fmt.Errorf("expect 'iff' section in proposition definition has at least one fact")
 	}
 
-	return ast.NewExistPropDef(*declHeader, domFacts, iffFactsAsFactStatements), nil
+	return ast.NewExistPropDef(declHeader, domFacts, iffFactsAsFactStatements), nil
 }
 
 func (tb *tokenBlock) uniFactBodyFacts(uniFactDepth uniFactEnum, defaultSectionName string) ([]ast.FactStmt, []ast.FactStmt, []ast.FactStmt, error) {
