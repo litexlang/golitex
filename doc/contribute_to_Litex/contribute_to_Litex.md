@@ -1,5 +1,62 @@
 # Contribute to Litex
 
+Litex is evolving from implementation to community-driven development. The interpreter is 90% complete and covers most daily math. However, it is still not ready for production use. Now, I face a big challenge: the conflict between an individual's limited capacity and the extensive demands of an open-source project. See more in [contribute to Litex](./doc/contribute_to_Litex/contribute_to_Litex.md) to help me grow the project.
+
+You can contribute by:
+1. Contributing to the interpreter or standard library
+2. Creating datasets for AI training
+3. Improving documentation
+4. Exploring Litex's mathematical capabilities
+5. Spreading the word about Litex
+6. Building standard library of Litex
+7. Creating the LitexDojo, similar to how LeanDojo is for Lean.
+
+Since 90% of the functionality delivered now is better than 100% of it delivered never[^1], the inventor of Litex put it open-source to welcome everyone, including you, to learn, try, use, and contribute to Litex, even though Litex is not fully ready. Feel free to contact us and join this exciting journey!
+
+## Challenge of Litex
+
+_Common sense is not so common._
+
+_-- Voltaire_
+
+The **match and substitute**, which is the basic way of reasoning in math, is actually a very interesting and fundamental way of understanding what math actually is. Throughout centuries, the definition of math is always changing, different mathematicians and philosophers have different opinions on what it is. If math is truly a game of **match and substitute**, with just a few exceptions like counting and natural numbers, then it is technically possible to formalize all math in Litex. If not, then Litex semantics needs extra features. 
+
+Moreover, giving semantics to keywords like **prop** or **in** is actually very tricky for Litex, because people just assume what they mean and do not think about the underlying mechanism and the Litex creator has to think about it by himself. This is the major challenge of Litex.
+
+Fortunately, Litex has translated a vast amount of mathematical material, and there has never been a case where the logic could not be expressed. Empirically, the user does not need to worry about this.
+
+## Evolution and Development of Litex
+
+_Cross the river by feeling the stones._
+
+_-- Chinese Proverb_
+
+_Quantity changes lead to quality changes._
+
+_-- Hegel_
+
+_Worse is better._
+
+_-- A Famous Software Development Proverb_
+
+_Estimated number of users of C++ is 1 in 1979, 16 in 1980, 38 in 1981, 85 in 1982, ..., 150000 in 1990, 400000 in 1991. In other words, the C++ user population doubled every 7.5 months or so._
+
+_-- Bjarne Stroustrup, A History of C++: 1979-1991_
+
+Litex takes a use-driven, example-first approach to formalization. Instead of building on sophisticated theories, at its invention stage, the creator of Litex evolves it by trying to express real mathematical texts, like Tao's *Analysis I* or Weil's *Number Theory for Beginners* in Litex. When something is hard or impossible to formalize using existing features, it grows new language features (syntactically and semantically) to make expression natural. Any time the creator of Litex feels that the language is not expressive enough, he will add new features to make it more expressive. 
+
+Sometimes the new feature covers the functionalities of the old one and the old one is replaced by the new one. This trial-and-error, practice-guided development makes Litex uniquely adaptable and intuitive. Any feature is added with careful test about whether it is as useful and intuitive as possible and whether it is not harmful to the existing features. In most cases, a feature either works as a syntactic sugar which significantly improves the readability and writing experience of the code, or it is a new feature that is necessary for the user to express certain types of logic.
+
+Litex is designed to serve users. It is not an academic experiment to design the perfect formal language. It is a practical tool to help users formalize their math, train their AI models, and other tasks. Thus to fulfill its mission, Litex has to grow with its users. 
+
+Litex development follows the humble [worse is better](https://www.dreamsongs.com/RiseOfWorseIsBetter.html) philosophy. Think about it: JavaScript made every mistake in its design as a programming language while it did everything right to make itself one of the most influential programming languages in the world by serving its users' most urgent needs: the language of the Internet. Litex is not perfect, but it is pragmatic enough.
+
+It's hard to know how to implement Litex. It's even harder to know what to implement, how different language features work together with one another. Since Litex is so different, the creator of Litex has to try to implement it by trial-and-error instead of following any existing theories or just mimicking existing formal languages. Litex is rooted in its unique and simple (However, this simplicity is not easy to achieve.) ideas, not theories.
+
+The creator of Litex wishes Litex to obtain adoption exponentially, like C++ and other programming languages did. It does not need a glorious beginning, but it needs a strong engine to grow. Compared with potential number of users of formal languages, all traditional formal languages are tiny. Litex wants to change that.
+
+That is why Litex really needs YOUR help: to use it, to spread the word about it, to contribute to it, to improve it, to make it better.
+
 ## Join My Journey
 
 Litex is an ambitious project with a clear vision: to create a simple, intuitive, and powerful formal language for mathematics. While we're in the early stages of development, we've already established a solid foundation that demonstrates the potential of this approach. Like a promising startup, we're building something that could fundamentally change how we think about and work with mathematical formalization.
