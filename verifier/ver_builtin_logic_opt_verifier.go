@@ -81,7 +81,7 @@ func (ver *Verifier) varCommutativeProp_BuiltinRules(stmt *ast.SpecFactStmt, sta
 		return false, nil
 	}
 
-	propNameAsAtom, ok := stmt.Params[0].(*ast.FcAtom)
+	propNameAsAtom, ok := stmt.Params[0].(ast.FcAtom)
 	if !ok {
 		return false, nil
 	}
@@ -90,7 +90,7 @@ func (ver *Verifier) varCommutativeProp_BuiltinRules(stmt *ast.SpecFactStmt, sta
 		return true, nil
 	}
 
-	propDef, ok := ver.env.GetPropDef(*propNameAsAtom)
+	propDef, ok := ver.env.GetPropDef(propNameAsAtom)
 	if !ok {
 		return false, nil
 	}

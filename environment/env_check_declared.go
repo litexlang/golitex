@@ -46,7 +46,7 @@ func (e *Env) AreAtomsInFactAreDeclared(fact ast.FactStmt, extraAtomNames map[st
 	return ok
 }
 
-func (e *Env) AreAtomsDeclared(atoms []*ast.FcAtom, extraAtomNames map[string]struct{}) bool {
+func (e *Env) AreAtomsDeclared(atoms []ast.FcAtom, extraAtomNames map[string]struct{}) bool {
 	for _, atom := range atoms {
 		if !e.IsAtomDeclared(atom, extraAtomNames) {
 			return false
@@ -55,7 +55,7 @@ func (e *Env) AreAtomsDeclared(atoms []*ast.FcAtom, extraAtomNames map[string]st
 	return true
 }
 
-func (e *Env) IsAtomDeclared(atom *ast.FcAtom, extraAtomNames map[string]struct{}) bool {
+func (e *Env) IsAtomDeclared(atom ast.FcAtom, extraAtomNames map[string]struct{}) bool {
 	// 如果是内置的符号，那就声明了
 	if glob.IsBuiltinKeywordKeySymbolCanBeFcAtomName(atom.Name) {
 		return true

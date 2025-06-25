@@ -34,7 +34,7 @@ func MakeFcIntoNumLitExpr(fc Fc) (*glob.NumLitExpr, bool, error) {
 	}
 
 	if IsFcBuiltinUnaryFn(*asFcFn) {
-		ptr, ok := asFcFn.FnHead.(*FcAtom)
+		ptr, ok := asFcFn.FnHead.(FcAtom)
 		if !ok {
 			return nil, false, nil
 		}
@@ -77,7 +77,7 @@ func MakeFcIntoNumLitExpr(fc Fc) (*glob.NumLitExpr, bool, error) {
 		return nil, false, nil
 	}
 
-	ptr, ok := asFcFn.FnHead.(*FcAtom)
+	ptr, ok := asFcFn.FnHead.(FcAtom)
 	if !ok {
 		return nil, false, nil
 	}

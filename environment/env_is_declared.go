@@ -16,7 +16,7 @@ package litex_env
 
 import ast "golitex/ast"
 
-func (e *Env) IsFcAtomDeclared(fcAtomName *ast.FcAtom) bool {
+func (e *Env) IsFcAtomDeclared(fcAtomName ast.FcAtom) bool {
 	for env := e; env != nil; env = env.Parent {
 		ok := env.isFcAtomDeclaredAtCurEnv(fcAtomName)
 		if ok {
@@ -26,23 +26,23 @@ func (e *Env) IsFcAtomDeclared(fcAtomName *ast.FcAtom) bool {
 	return false
 }
 
-func (e *Env) isFcAtomDeclaredAtCurEnv(fcAtomName *ast.FcAtom) bool {
-	_, ok := e.PropDefMem.Get(*fcAtomName)
+func (e *Env) isFcAtomDeclaredAtCurEnv(fcAtomName ast.FcAtom) bool {
+	_, ok := e.PropDefMem.Get(fcAtomName)
 	if ok {
 		return true
 	}
 
-	_, ok = e.ExistPropDefMem.Get(*fcAtomName)
+	_, ok = e.ExistPropDefMem.Get(fcAtomName)
 	if ok {
 		return true
 	}
 
-	_, ok = e.ObjDefMem.Get(*fcAtomName)
+	_, ok = e.ObjDefMem.Get(fcAtomName)
 	if ok {
 		return true
 	}
 
-	_, ok = e.FnTemplateDefMem.Get(*fcAtomName)
+	_, ok = e.FnTemplateDefMem.Get(fcAtomName)
 
 	return ok
 }

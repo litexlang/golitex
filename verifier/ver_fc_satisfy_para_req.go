@@ -52,7 +52,7 @@ func (ver *Verifier) FcSatisfySpecFactParaReq(stmt *ast.SpecFactStmt) (bool, err
 }
 
 func (ver *Verifier) FcSatisfyFnParaReq(fc ast.Fc) (bool, error) {
-	if asAtom, ok := fc.(*ast.FcAtom); ok {
+	if asAtom, ok := fc.(ast.FcAtom); ok {
 		return ver.fcAtomSatisfyParaReq(asAtom)
 	} else if asFcFn, ok := fc.(*ast.FcFn); ok {
 		return ver.fcFnSatisfyFnParaReq(asFcFn)
@@ -61,11 +61,11 @@ func (ver *Verifier) FcSatisfyFnParaReq(fc ast.Fc) (bool, error) {
 	return false, nil
 }
 
-func (ver *Verifier) fcAtomSatisfyParaReq(fc *ast.FcAtom) (bool, error) {
+func (ver *Verifier) fcAtomSatisfyParaReq(fc ast.FcAtom) (bool, error) {
 	return ver.fcAtomDefined(fc)
 }
 
-func (ver *Verifier) fcAtomDefined(fc *ast.FcAtom) (bool, error) {
+func (ver *Verifier) fcAtomDefined(fc ast.FcAtom) (bool, error) {
 	if _, ok, _ := ast.MakeFcIntoNumLitExpr(fc); ok {
 		return true, nil
 	}
@@ -83,7 +83,7 @@ func (ver *Verifier) fcAtomDefined(fc *ast.FcAtom) (bool, error) {
 }
 
 func (ver *Verifier) FcDefined(fc ast.Fc) (bool, error) {
-	if asAtom, ok := fc.(*ast.FcAtom); ok {
+	if asAtom, ok := fc.(ast.FcAtom); ok {
 		return ver.fcAtomDefined(asAtom)
 	} else if asFcFn, ok := fc.(*ast.FcFn); ok {
 		return ver.fcFnDefined(asFcFn)

@@ -45,7 +45,7 @@ func (ver *Verifier) matchStoredUniSpecWithSpec_preventDifferentVarsMatchTheSame
 	return retMap, true, nil
 }
 
-func isFcAtomInForallParamSet(fcAtom *ast.FcAtom, knownFact env.KnownSpecFact_InUniFact) bool {
+func isFcAtomInForallParamSet(fcAtom ast.FcAtom, knownFact env.KnownSpecFact_InUniFact) bool {
 	for _, param := range knownFact.UniFact.Params {
 		// if fcAtom.PkgName == glob.EmptyPkg && param == fcAtom.Name {
 		if param == fcAtom.Name {
@@ -57,7 +57,7 @@ func isFcAtomInForallParamSet(fcAtom *ast.FcAtom, knownFact env.KnownSpecFact_In
 
 // paramInFactUnderUniFact 可能是自由的，可能是固定的，反正它来自一个forall下面的某个specFact
 func (ver *Verifier) match_FcInFactUnderUniFact_WithConFc(fcInFactUnderUniFact ast.Fc, conFc ast.Fc, knownFact env.KnownSpecFact_InUniFact) (map[string][]ast.Fc, bool, error) {
-	if leftAsAtom, ok := fcInFactUnderUniFact.(*ast.FcAtom); ok {
+	if leftAsAtom, ok := fcInFactUnderUniFact.(ast.FcAtom); ok {
 		if isFcAtomInForallParamSet(leftAsAtom, knownFact) {
 			return map[string][]ast.Fc{leftAsAtom.Name: {conFc}}, true, nil
 		} else {
@@ -89,7 +89,7 @@ func (ver *Verifier) match_FcInFactUnderUniFact_WithConFc(fcInFactUnderUniFact a
 
 	// // Safe type switching
 	// switch param := fcInFactUnderUniFact.(type) {
-	// case *ast.FcAtom:
+	// case ast.FcAtom:
 	// 	// return ver.match_FcAtomInFactUnderUniFact_ConFc(param, conFc, uniFactUniParams)
 	// 	return ver.match_FcAtomInFactUnderUniFact_ConFc(param, conFc)
 	// case *ast.FcFn:
@@ -100,8 +100,8 @@ func (ver *Verifier) match_FcInFactUnderUniFact_WithConFc(fcInFactUnderUniFact a
 	// }
 }
 
-// func (ver *Verifier) match_FcAtomInFactUnderUniFact_ConFc(fcAtomInFactUnderUniFact *ast.FcAtom, conFc ast.Fc, uniParams []string) (map[string][]ast.Fc, bool, error) {
-func (ver *Verifier) match_FcAtomInFactUnderUniFact_ConFc(fcAtomInFactUnderUniFact *ast.FcAtom, conFc ast.Fc, knownFact env.KnownSpecFact_InUniFact) (map[string][]ast.Fc, bool, error) {
+// func (ver *Verifier) match_FcAtomInFactUnderUniFact_ConFc(fcAtomInFactUnderUniFact ast.FcAtom, conFc ast.Fc, uniParams []string) (map[string][]ast.Fc, bool, error) {
+func (ver *Verifier) match_FcAtomInFactUnderUniFact_ConFc(fcAtomInFactUnderUniFact ast.FcAtom, conFc ast.Fc, knownFact env.KnownSpecFact_InUniFact) (map[string][]ast.Fc, bool, error) {
 	retMap := make(map[string][]ast.Fc)
 
 	if isFcAtomInForallParamSet(fcAtomInFactUnderUniFact, knownFact) {

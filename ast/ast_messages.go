@@ -104,7 +104,7 @@ func exist_st_FactString(stmt *SpecFactStmt) string {
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeywordSt)
 	builder.WriteString(" ")
-	builder.WriteString(NewSpecFactStmt(TruePure, &stmt.PropName, factParams).String())
+	builder.WriteString(NewSpecFactStmt(TruePure, stmt.PropName, factParams).String())
 
 	return builder.String()
 }
@@ -417,7 +417,7 @@ func (stmt *HaveStmt) String() string {
 	return builder.String()
 }
 
-func (f *FcAtom) String() string {
+func (f FcAtom) String() string {
 	// if f.PkgName == glob.EmptyPkg {
 	return f.Name
 	// } else {

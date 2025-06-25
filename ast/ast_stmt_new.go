@@ -34,8 +34,8 @@ func NewFnTemplateStmt(defHeader *DefHeader, domFacts []FactStmt, thenFacts []Fa
 	return &FnTemplateStmt{*defHeader, domFacts, thenFacts, retSet}
 }
 
-func NewSpecFactStmt(typeEnum SpecFactEnum, propName *FcAtom, params []Fc) *SpecFactStmt {
-	return &SpecFactStmt{typeEnum, *propName, params}
+func NewSpecFactStmt(typeEnum SpecFactEnum, propName FcAtom, params []Fc) *SpecFactStmt {
+	return &SpecFactStmt{typeEnum, propName, params}
 }
 
 func NewClaimProveByContradictionStmt(claim ClaimProveStmt) *ClaimProveByContradictionStmt {
@@ -86,7 +86,7 @@ func NewDefExistPropBodyStmt(defHeader *DefHeader, domFacts []FactStmt, iffFacts
 	return &DefExistPropStmtBody{*defHeader, domFacts, iffFacts}
 }
 
-func NewFcAtomWithName(name string) *FcAtom {
+func NewFcAtomWithName(name string) FcAtom {
 	// return NewFcAtom(glob.EmptyPkg, name)
 	return NewFcAtom(name)
 }

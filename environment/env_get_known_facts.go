@@ -48,12 +48,12 @@ func (memory FnInFnTemplateFactsMem) Get(fc ast.Fc) ([]*ast.FnTemplateStmt, bool
 // 返回的slice是从左到右的template和params
 func (e *Env) GetTemplateOfFcFnRecursively(fcFn *ast.FcFn) ([]*ast.FnTemplateStmt, []*ast.FcFn, bool) {
 	currentFcFn := fcFn
-	var leftMostHead *ast.FcAtom
+	var leftMostHead ast.FcAtom
 	count := 0
 	fcOfEachLevel := []*ast.FcFn{}
 
 	for {
-		if headAsAtom, ok := currentFcFn.FnHead.(*ast.FcAtom); ok {
+		if headAsAtom, ok := currentFcFn.FnHead.(ast.FcAtom); ok {
 			leftMostHead = headAsAtom
 			fcOfEachLevel = append([]*ast.FcFn{currentFcFn}, fcOfEachLevel...)
 			break
@@ -77,7 +77,7 @@ func (e *Env) GetTemplateOfFcFnRecursively(fcFn *ast.FcFn) ([]*ast.FnTemplateStm
 
 	// 从 template 的定义中，得到 template的返回值类型
 	for i := count - 1; i >= 0; i-- {
-		retSetAtAtom, ok := fnDefRetSet.(*ast.FcAtom)
+		retSetAtAtom, ok := fnDefRetSet.(ast.FcAtom)
 		if !ok {
 			return nil, nil, false
 		}
