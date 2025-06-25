@@ -22,9 +22,20 @@ import (
 	taskManager "golitex/task_manager"
 	"os"
 	"path/filepath"
+	"slices"
 )
 
 func (exec *Executor) importStmt(stmt *ast.ImportStmt) error {
+	// import name should be valid
+	err := glob.IsValidUserDefinedName(stmt.AsPkgName)
+	if err != nil {
+		return err
+	}
+
+	if slices.Contains(taskManager.DeclaredPkgNames, stmt.AsPkgName) {
+		return fmt.Errorf("duplicate package name: '%s'", stmt.AsPkgName)
+	}
+
 	execSuccess := false
 	originalMsgLen := exec.env.MsgLen()
 	defer func() {

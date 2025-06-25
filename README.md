@@ -26,10 +26,6 @@ _Mathematics is the language with which God wrote the universe._
 
 _-- Galileo Galilei_
 
-_Science is what we understand well enough to explain to a computer; art is everything else._
-
-_-- Donald Knuth_
-
 _The best way to predict the future is to invent it._
 
 _-- Alan Kay_
@@ -171,6 +167,10 @@ There are two major special cases of match and substitute:
 _Simplicity is the ultimate sophistication._
 
 _-- Leonardo da Vinci_
+
+_Science is what we understand well enough to explain to a computer; art is everything else._
+
+_-- Donald Knuth_
 
 TL;DR: Traditional formal languages are programming languages. Code in Programming languages are for execution. Litex is a not a programming language, just as math is not a programming language. Verification of mathematical reasoning is done by matching and substituting, and that is exactly what Litex does. The user provides statements to deduce new facts from existing facts (that is what we call reasoning), and Litex is here to make sure every statement makes sense. This is the secret behind Litex's accomplishment of reducing the time ratio between formalizing a proof and writing it in natural language from 10:1 to 1:1.
 
@@ -436,6 +436,10 @@ That is why Litex really needs YOUR help: to use it, to spread the word about it
 _The people who are crazy enough to think they can change the world are the ones who do._
 
 _-- Steve Jobs_
+
+_What I cannot create, I do not understand._
+
+_-- Richard Feynman_
 
 _Talent wins games, but teamwork and intelligence win championships._
 

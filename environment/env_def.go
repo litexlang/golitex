@@ -32,6 +32,8 @@ func (env *Env) IsValidUserDefinedName_NoDuplicate(name string) error {
 		return duplicateDefError(glob.EmptyPkg, name, "")
 	}
 
+	// 不清楚是否允许pkg name 和 obj name 重叠，目前允许
+
 	return nil
 }
 
