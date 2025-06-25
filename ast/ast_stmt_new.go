@@ -50,9 +50,9 @@ func NewKnowStmt(facts []FactStmt) *KnowFactStmt {
 	return &KnowFactStmt{facts}
 }
 
-func NewFcFnDecl(name string, params []string) *FcFnDecl {
-	return &FcFnDecl{name, params}
-}
+// func NewFcFnDecl(name string, params []string) *FcFnDecl {
+// 	return &FcFnDecl{name, params}
+// }
 
 func NewDefHeader(name string, params []string, setParams []Fc) *DefHeader {
 	return &DefHeader{name, params, setParams}
