@@ -19,7 +19,8 @@ import (
 )
 
 func (e *Env) GetFactsFromKnownFactInMatchEnv(envFact *ast.SpecFactStmt) (*KnownFactsStruct, bool) {
-	knownFacts, ok := e.KnownFactInMatchEnv.Get(envFact.PropName.PkgName, envFact.PropName.Name)
+	// knownFacts, ok := e.KnownFactInMatchEnv.Get(envFact.PropName.PkgName, envFact.PropName.Name)
+	knownFacts, ok := e.KnownFactInMatchEnv[envFact.PropName.Name]
 	if !ok {
 		return nil, false
 	}

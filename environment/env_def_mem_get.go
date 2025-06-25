@@ -17,12 +17,13 @@ package litex_env
 import ast "golitex/ast"
 
 func (memory *FnTemplateDefMem) Get(fc ast.FcAtom) (*ast.DefFnTemplateStmt, bool) {
-	pkgMap, pkgExists := memory.Dict[fc.PkgName]
-	if !pkgExists {
-		return nil, false
-	}
+	// pkgMap, pkgExists := memory.Dict[fc.PkgName]
+	// if !pkgExists {
+	// 	return nil, false
+	// }
 
-	node, nodeExists := pkgMap[fc.Name]
+	// node, nodeExists := pkgMap[fc.Name]
+	node, nodeExists := memory.Dict[fc.Name]
 	if !nodeExists {
 		return nil, false
 	}
@@ -31,12 +32,13 @@ func (memory *FnTemplateDefMem) Get(fc ast.FcAtom) (*ast.DefFnTemplateStmt, bool
 }
 
 func (memory *ExistPropDefMem) Get(fc ast.FcAtom) (*ast.DefExistPropStmt, bool) {
-	pkgMap, pkgExists := memory.Dict[fc.PkgName]
-	if !pkgExists {
-		return nil, false
-	}
+	// pkgMap, pkgExists := memory.Dict[fc.PkgName]
+	// if !pkgExists {
+	// 	return nil, false
+	// }
 
-	node, nodeExists := pkgMap[fc.Name]
+	// node, nodeExists := pkgMap[fc.Name]
+	node, nodeExists := memory.Dict[fc.Name]
 	if !nodeExists {
 		return nil, false
 	}
@@ -44,12 +46,13 @@ func (memory *ExistPropDefMem) Get(fc ast.FcAtom) (*ast.DefExistPropStmt, bool) 
 }
 
 func (memory *ObjDefMem) Get(fc ast.FcAtom) (*ast.DefObjStmt, bool) {
-	pkgMap, pkgExists := memory.Dict[fc.PkgName]
-	if !pkgExists {
-		return nil, false
-	}
+	// pkgMap, pkgExists := memory.Dict[fc.PkgName]
+	// if !pkgExists {
+	// 	return nil, false
+	// }
 
-	node, nodeExists := pkgMap[fc.Name]
+	// node, nodeExists := pkgMap[fc.Name]
+	node, nodeExists := memory.Dict[fc.Name]
 	if !nodeExists {
 		return nil, false
 	}
@@ -57,12 +60,13 @@ func (memory *ObjDefMem) Get(fc ast.FcAtom) (*ast.DefObjStmt, bool) {
 }
 
 func (memory *PropDefMem) Get(fc ast.FcAtom) (*ast.DefPropStmt, bool) {
-	pkgMap, pkgExists := memory.Dict[fc.PkgName]
-	if !pkgExists {
-		return nil, false
-	}
+	// pkgMap, pkgExists := memory.Dict[fc.PkgName]
+	// if !pkgExists {
+	// 	return nil, false
+	// }
 
-	node, nodeExists := pkgMap[fc.Name]
+	// node, nodeExists := pkgMap[fc.Name]
+	node, nodeExists := memory.Dict[fc.Name]
 	if !nodeExists {
 		return nil, false
 	}

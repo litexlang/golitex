@@ -938,7 +938,8 @@ func (ver *Verifier) specFact_LogicMem(curEnv *env.Env, stmt *ast.SpecFactStmt, 
 // }
 
 func (ver *Verifier) specFact_MatchEnv_SpecMem(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	knownStruct, got := curEnv.KnownFactInMatchEnv.Get(ver.env.CurMatchProp.PropName.PkgName, ver.env.CurMatchProp.PropName.Name)
+	// knownStruct, got := curEnv.KnownFactInMatchEnv.Get(ver.env.CurMatchProp.PropName.PkgName, ver.env.CurMatchProp.PropName.Name)
+	knownStruct, got := curEnv.KnownFactInMatchEnv[ver.env.CurMatchProp.PropName.Name]
 
 	if !got {
 		return false, nil
@@ -953,7 +954,8 @@ func (ver *Verifier) specFact_MatchEnv_SpecMem(curEnv *env.Env, stmt *ast.SpecFa
 }
 
 func (ver *Verifier) specFact_MatchEnv_LogicMem(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	knownStruct, got := curEnv.KnownFactInMatchEnv.Get(ver.env.CurMatchProp.PropName.PkgName, ver.env.CurMatchProp.PropName.Name)
+	// knownStruct, got := curEnv.KnownFactInMatchEnv.Get(ver.env.CurMatchProp.PropName.PkgName, ver.env.CurMatchProp.PropName.Name)
+	knownStruct, got := curEnv.KnownFactInMatchEnv[ver.env.CurMatchProp.PropName.Name]
 
 	if !got {
 		return false, nil
@@ -1024,7 +1026,8 @@ func (ver *Verifier) matchTwoSpecFacts(stmt *ast.SpecFactStmt, knownFact *ast.Sp
 
 // TODO
 func (ver *Verifier) specFact_MatchEnv_UniMem(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	knownStruct, got := curEnv.KnownFactInMatchEnv.Get(ver.env.CurMatchProp.PropName.PkgName, ver.env.CurMatchProp.PropName.Name)
+	// knownStruct, got := curEnv.KnownFactInMatchEnv.Get(ver.env.CurMatchProp.PropName.PkgName, ver.env.CurMatchProp.PropName.Name)
+	knownStruct, got := curEnv.KnownFactInMatchEnv[ver.env.CurMatchProp.PropName.Name]
 
 	if !got {
 		return false, nil

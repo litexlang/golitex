@@ -18,7 +18,6 @@ import (
 	ast "golitex/ast"
 	cmp "golitex/cmp"
 	env "golitex/environment"
-	glob "golitex/glob"
 )
 
 // REMARK: 2025.6.4 这个文件很本质，需要未来检查一下里面逻辑有没有问题
@@ -48,7 +47,8 @@ func (ver *Verifier) matchStoredUniSpecWithSpec_preventDifferentVarsMatchTheSame
 
 func isFcAtomInForallParamSet(fcAtom *ast.FcAtom, knownFact env.KnownSpecFact_InUniFact) bool {
 	for _, param := range knownFact.UniFact.Params {
-		if fcAtom.PkgName == glob.EmptyPkg && param == fcAtom.Name {
+		// if fcAtom.PkgName == glob.EmptyPkg && param == fcAtom.Name {
+		if param == fcAtom.Name {
 			return true
 		}
 	}

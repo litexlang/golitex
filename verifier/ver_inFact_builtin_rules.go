@@ -143,9 +143,9 @@ func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state VerState)
 		return false
 	}
 
-	if asAtom.PkgName != glob.EmptyPkg {
-		return false
-	}
+	// if asAtom.PkgName != glob.EmptyPkg {
+	// 	return false
+	// }
 
 	if asAtom.Name == glob.KeywordNatural || asAtom.Name == glob.KeywordInt || asAtom.Name == glob.KeywordReal || asAtom.Name == glob.KeywordComplex || asAtom.Name == glob.KeywordRational {
 		if state.requireMsg() {
@@ -167,9 +167,9 @@ func (ver *Verifier) verIn_N_Z_Q_R_C_BySpecMem(stmt *ast.SpecFactStmt, state Ver
 
 	nextState := state.toFinalRound().toNoMsg()
 
-	if inSet.PkgName != glob.EmptyPkg {
-		return false
-	}
+	// if inSet.PkgName != glob.EmptyPkg {
+	// 	return false
+	// }
 
 	var msg string
 
