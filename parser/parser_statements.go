@@ -171,6 +171,9 @@ func (tb *tokenBlock) uniFactInterface(uniFactDepth uniFactEnum) (ast.UniFactInt
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
+	for i, param := range params {
+		params[i] = addPkgNameToString(param)
+	}
 
 	domainFacts, thenFacts, iffFacts, err := tb.uniFactBodyFacts(uniFactDepth.addDepth(), glob.KeywordThen)
 	if err != nil {
@@ -293,7 +296,7 @@ func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
 		}
-		objNames = append(objNames, objName)
+		objNames = append(objNames, addPkgNameToString(objName))
 
 		tp, err := tb.header.RawFc()
 		if err != nil {
@@ -471,6 +474,7 @@ func (tb *tokenBlock) defHeaderWithoutParsingColonAtEnd() (*ast.DefHeader, error
 	if err != nil {
 		return nil, err
 	}
+	name = addPkgNameToString(name)
 
 	err = tb.header.skip(glob.KeySymbolLeftBrace)
 	if err != nil {
@@ -500,7 +504,7 @@ func (tb *tokenBlock) defExistPropStmt() (*ast.DefExistPropStmt, error) {
 			return nil, &tokenBlockErr{err, *tb}
 		}
 
-		existParams = append(existParams, param)
+		existParams = append(existParams, addPkgNameToString(param))
 
 		paramSet, err := tb.header.RawFc()
 		if err != nil {
@@ -634,7 +638,7 @@ func (tb *tokenBlock) defHaveStmt() (*ast.HaveStmt, error) {
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
 		}
-		objNames = append(objNames, objName)
+		objNames = append(objNames, addPkgNameToString(objName))
 		if tb.header.is(glob.KeySymbolComma) {
 			tb.header.skip(glob.KeySymbolComma)
 			continue
@@ -951,7 +955,7 @@ func (tb *tokenBlock) param_paramSet_paramInSetFacts(endWith string) ([]string, 
 				return nil, nil, err
 			}
 
-			params = append(params, param)
+			params = append(params, addPkgNameToString(param))
 
 			setParam, err := tb.header.RawFc()
 			if err != nil {

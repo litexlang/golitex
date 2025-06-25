@@ -48,9 +48,6 @@ type DefExistPropStmt struct {
 
 // 这里 fn(p Z, F(p) set) 其实有点问题，因为F可能需要对p有一些要求，这些要求是写在dom里的，需要先运行dom然后才能运行
 type FnTemplateStmt struct {
-	// Name      string
-	// Params    []string
-	// ParamSets []Fc
 	DefHeader
 	DomFacts  FactStmtSlice
 	ThenFacts FactStmtSlice
@@ -58,7 +55,6 @@ type FnTemplateStmt struct {
 }
 
 type DefFnStmt struct {
-	// Name           string
 	FnTemplateStmt FnTemplateStmt
 }
 
@@ -96,11 +92,6 @@ type KnowFactStmt struct {
 
 type KnowPropStmt struct {
 	Prop DefPropStmt
-}
-
-type FcFnDecl struct {
-	Name   string
-	Params []string
 }
 
 // have 是可能引入 fn 和 prop 的
@@ -147,6 +138,5 @@ type ProveStmt struct {
 }
 
 type DefFnTemplateStmt struct {
-	// Name           string
 	FnTemplateStmt FnTemplateStmt
 }
