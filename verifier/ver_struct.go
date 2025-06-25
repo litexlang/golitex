@@ -19,7 +19,6 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	env "golitex/environment"
-	glob "golitex/glob"
 )
 
 type Verifier struct {
@@ -69,6 +68,6 @@ func (ver *Verifier) newMsgAtParent(s string) error {
 
 // func (ver *Verifier)
 
-func (ver *Verifier) appendInternalWarningMsg(s string, args ...any) {
-	ver.env.Msgs = append(ver.env.Msgs, glob.InternalWarningMsg(s, args...))
-}
+// func (ver *Verifier) appendInternalWarningMsg(s string, args ...any) {
+// 	ver.env.Msgs = append(ver.env.Msgs, glob.InternalWarningMsg(s, args...))
+// }

@@ -24,13 +24,8 @@ func IsValidUserDefinedName(name string) error {
 	}
 
 	// Check for leading symbols
-	if IsKeySymbol(name) {
-		return fmt.Errorf("identifier name cannot begin with a reserved symbol")
-	}
-
-	// Check for reserved keywords
-	if IsKeyword(name) {
-		return fmt.Errorf("identifier name cannot be a reserved keyword: '%s'", name)
+	if IsBuiltinKeywordKeySymbolCanBeFcAtomName(name) {
+		return fmt.Errorf("identifier name cannot begin with number, or be a builtin keyword or builtin symbol, get: %s", name)
 	}
 
 	// Check maximum length constraint

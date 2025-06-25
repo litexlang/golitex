@@ -702,123 +702,123 @@ func (ver *Verifier) mathInductionFact_BuiltinRules(stmt *ast.SpecFactStmt, stat
 }
 
 // TODO: 没有测试过
-func (ver *Verifier) isSetEqualFact_Check_BuiltinRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if !stmt.NameIs(glob.KeySymbolEqualEqualEqual) {
-		return false, nil
-	}
+// func (ver *Verifier) isSetEqualFact_Check_BuiltinRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+// 	if !stmt.NameIs(glob.KeySymbolEqualEqualEqual) {
+// 		return false, nil
+// 	}
 
-	if len(stmt.Params) != 2 {
-		return false, fmt.Errorf("set equal fact %s should have exactly two parameters, got: %d", stmt.String(), len(stmt.Params))
-	}
+// 	if len(stmt.Params) != 2 {
+// 		return false, fmt.Errorf("set equal fact %s should have exactly two parameters, got: %d", stmt.String(), len(stmt.Params))
+// 	}
 
-	equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeySymbolEqual), stmt.Params)
+// 	equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeySymbolEqual), stmt.Params)
 
-	if ok, err := ver.isEqualFact_Check(equalFact, state); err != nil {
-		return false, err
-	} else if ok {
-		if state.requireMsg() {
-			ver.successWithMsg(stmt.String(), equalFact.String())
-		} else {
-			ver.successNoMsg()
-		}
-		return true, nil
-	}
+// 	if ok, err := ver.isEqualFact_Check(equalFact, state); err != nil {
+// 		return false, err
+// 	} else if ok {
+// 		if state.requireMsg() {
+// 			ver.successWithMsg(stmt.String(), equalFact.String())
+// 		} else {
+// 			ver.successNoMsg()
+// 		}
+// 		return true, nil
+// 	}
 
-	leftSet := stmt.Params[0]
-	rightSet := stmt.Params[1]
+// 	leftSet := stmt.Params[0]
+// 	rightSet := stmt.Params[1]
 
-	// they are both sets
-	// TODO: Currently can only check a fcAtom as set. If a set is a return value of a fn, current implementation will not work.
-	ver.appendInternalWarningMsg("Currently can only check a fcAtom as set. If a set is a return value of a fn, current implementation will not work.")
+// 	// they are both sets
+// 	// TODO: Currently can only check a fcAtom as set. If a set is a return value of a fn, current implementation will not work.
+// 	ver.appendInternalWarningMsg("Currently can only check a fcAtom as set. If a set is a return value of a fn, current implementation will not work.")
 
-	// _, ok := ver.env.GetSetDef(leftSet)
+// 	// _, ok := ver.env.GetSetDef(leftSet)
 
-	var ok bool = false
+// 	var ok bool = false
 
-	// 验证是否在set
-	nextState := state.toFinalRound()
-	ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{leftSet, ast.NewFcAtomWithName(glob.KeywordIn)}), nextState)
-	if err != nil {
-		return false, err
-	}
-	if !ok {
-		return false, nil
-	}
+// 	// 验证是否在set
+// 	nextState := state.toFinalRound()
+// 	ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{leftSet, ast.NewFcAtomWithName(glob.KeywordIn)}), nextState)
+// 	if err != nil {
+// 		return false, err
+// 	}
+// 	if !ok {
+// 		return false, nil
+// 	}
 
-	if !ok {
-		if state.requireMsg() {
-			ver.successWithMsg(stmt.String(), fmt.Sprintf("left set %s is not a declared set", leftSet.String()))
-		} else {
-			ver.successNoMsg()
-		}
-		return false, nil
-	}
+// 	if !ok {
+// 		if state.requireMsg() {
+// 			ver.successWithMsg(stmt.String(), fmt.Sprintf("left set %s is not a declared set", leftSet.String()))
+// 		} else {
+// 			ver.successNoMsg()
+// 		}
+// 		return false, nil
+// 	}
 
-	// 验证是否在set
-	ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{rightSet, ast.NewFcAtomWithName(glob.KeywordIn)}), nextState)
-	if err != nil {
-		return false, err
-	}
-	if !ok {
-		return false, nil
-	}
+// 	// 验证是否在set
+// 	ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{rightSet, ast.NewFcAtomWithName(glob.KeywordIn)}), nextState)
+// 	if err != nil {
+// 		return false, err
+// 	}
+// 	if !ok {
+// 		return false, nil
+// 	}
 
-	if !ok {
-		if state.requireMsg() {
-			ver.successWithMsg(stmt.String(), fmt.Sprintf("right set %s is not a declared set", rightSet.String()))
-		} else {
-			ver.successNoMsg()
-		}
-		return false, nil
-	}
+// 	if !ok {
+// 		if state.requireMsg() {
+// 			ver.successWithMsg(stmt.String(), fmt.Sprintf("right set %s is not a declared set", rightSet.String()))
+// 		} else {
+// 			ver.successNoMsg()
+// 		}
+// 		return false, nil
+// 	}
 
-	paramInSetsFacts := make([]ast.FactStmt, 1)
-	paramInSetsFacts[0] = ast.NewInFact("x", rightSet)
-	paramSets := make([]ast.Fc, 1)
-	paramSets[0] = rightSet
+// 	paramInSetsFacts := make([]ast.FactStmt, 1)
+// 	paramInSetsFacts[0] = ast.NewInFact("x", rightSet)
+// 	paramSets := make([]ast.Fc, 1)
+// 	paramSets[0] = rightSet
 
-	uniFactItemsInLeftSetInRightSet := ast.NewUniFact(
-		[]string{"x"},
-		paramSets,
-		[]ast.FactStmt{},
-		[]ast.FactStmt{ast.NewInFact("x", rightSet)},
-	)
+// 	uniFactItemsInLeftSetInRightSet := ast.NewUniFact(
+// 		[]string{"x"},
+// 		paramSets,
+// 		[]ast.FactStmt{},
+// 		[]ast.FactStmt{ast.NewInFact("x", rightSet)},
+// 	)
 
-	ok, err = ver.VerFactStmt(uniFactItemsInLeftSetInRightSet, state)
-	if err != nil {
-		return false, err
-	}
-	if !ok {
-		return false, nil
-	}
+// 	ok, err = ver.VerFactStmt(uniFactItemsInLeftSetInRightSet, state)
+// 	if err != nil {
+// 		return false, err
+// 	}
+// 	if !ok {
+// 		return false, nil
+// 	}
 
-	paramInSetsFacts[0] = ast.NewInFact("x", leftSet)
-	paramSets[0] = leftSet
+// 	paramInSetsFacts[0] = ast.NewInFact("x", leftSet)
+// 	paramSets[0] = leftSet
 
-	// forall x rightSet: x in leftSet
-	uniFactItemsInRightSetInLeftSet := ast.NewUniFact(
-		[]string{"x"},
-		paramSets,
-		[]ast.FactStmt{},
-		[]ast.FactStmt{ast.NewInFact("x", leftSet)},
-	)
+// 	// forall x rightSet: x in leftSet
+// 	uniFactItemsInRightSetInLeftSet := ast.NewUniFact(
+// 		[]string{"x"},
+// 		paramSets,
+// 		[]ast.FactStmt{},
+// 		[]ast.FactStmt{ast.NewInFact("x", leftSet)},
+// 	)
 
-	ok, err = ver.VerFactStmt(uniFactItemsInRightSetInLeftSet, state)
-	if err != nil {
-		return false, err
-	}
-	if !ok {
-		return false, nil
-	}
+// 	ok, err = ver.VerFactStmt(uniFactItemsInRightSetInLeftSet, state)
+// 	if err != nil {
+// 		return false, err
+// 	}
+// 	if !ok {
+// 		return false, nil
+// 	}
 
-	if state.requireMsg() {
-		ver.successWithMsg(stmt.String(), "set equal definition")
-	} else {
-		ver.successNoMsg()
-	}
+// 	if state.requireMsg() {
+// 		ver.successWithMsg(stmt.String(), "set equal definition")
+// 	} else {
+// 		ver.successNoMsg()
+// 	}
 
-	return ok, nil
-}
+// 	return ok, nil
+// }
 
 func (ver *Verifier) isFnEqualFact_Check_BuiltinRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if !stmt.NameIs(glob.KeySymbolEqualEqual) {

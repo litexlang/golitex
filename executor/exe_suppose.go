@@ -87,7 +87,7 @@ func (exec *Executor) supposeStmt_declaredParams(stmt *ast.SupposeStmt) (glob.Ex
 			return glob.ExecState_Error, fmt.Errorf("spec fact parameter must be atom, but got: %s", param.String())
 		}
 		// if asAtom.PkgName != glob.EmptyPkg {
-		if !asAtom.NoPkgName() {
+		if !asAtom.WithoutPkgName() {
 			return glob.ExecState_Error, fmt.Errorf("spec fact parameter must be atom, but got: %s", param.String())
 		}
 

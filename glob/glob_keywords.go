@@ -119,73 +119,74 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 
 const (
 	// Builtin Symbols
-	KeySymbolColon                  = ":"
-	KeySymbolLeftBrace              = "("
-	KeySymbolRightBrace             = ")"
-	KeySymbolComma                  = ","
-	KeySymbolDollar                 = "$"
-	KeySymbolEqual                  = "="
-	KeySymbolSlash                  = "/"
-	KeySymbolPlus                   = "+"
-	KeySymbolMinus                  = "-"
-	KeySymbolStar                   = "*"
-	KeySymbolPower                  = "^"
-	KeySymbolLess                   = "<"
-	KeySymbolGreater                = ">"
-	KeySymbolExclaim                = "!"
-	KeySymbolPipe                   = "|"
-	KeySymbolTilde                  = "~"
-	KeySymbolAnd                    = "&"
-	KeySymbolBackslash              = "\\"
-	KeySymbolDot                    = "."
-	KeySymbolColonColon             = "::"
-	KeySymbolPlusPlus               = "++"
-	KeySymbolMinusMinus             = "--"
-	KeySymbolAndAnd                 = "&&"
-	KeySymbolPipePipe               = "||"
-	KeySymbolNotEqual               = "!=" // 在parse就立刻变成 not =，exec里没有对它的处理
-	KeySymbolQuestion               = "?"
-	KeySymbolStarStar               = "**"
-	KeySymbolDoubleQuote            = "\""
-	KeySymbolSingleQuote            = "'"
-	KeySymbolBacktick               = "`"
-	KeySymbolEqualGreaterEqual      = "=>"
-	KeySymbolMinusGreaterRightArrow = "->"
+	KeySymbolColon      = ":"
+	KeySymbolLeftBrace  = "("
+	KeySymbolRightBrace = ")"
+	KeySymbolComma      = ","
+	KeySymbolDollar     = "$"
+	KeySymbolEqual      = "="
+	KeySymbolSlash      = "/"
+	KeySymbolPlus       = "+"
+	KeySymbolMinus      = "-"
+	KeySymbolStar       = "*"
+	KeySymbolPower      = "^"
+	KeySymbolLess       = "<"
+	KeySymbolGreater    = ">"
+	KeySymbolExclaim    = "!"
+	// KeySymbolPipe       = "|"
+	// KeySymbolTilde      = "~"
+	// KeySymbolAnd        = "&"
+	KeySymbolBackslash  = "\\"
+	KeySymbolDot        = "."
+	KeySymbolColonColon = "::"
+	// KeySymbolPlusPlus   = "++"
+	// KeySymbolMinusMinus = "--"
+	// KeySymbolAndAnd     = "&&"
+	// KeySymbolPipePipe   = "||"
+	KeySymbolNotEqual = "!=" // 在parse就立刻变成 not =，exec里没有对它的处理
+	// KeySymbolQuestion   = "?"
+	// KeySymbolStarStar    = "**"
+	KeySymbolDoubleQuote = "\""
+	// KeySymbolSingleQuote            = "'"
+	// KeySymbolBacktick = "`"
+	// KeySymbolEqualGreaterEqual      = "=>"
+	// KeySymbolMinusGreaterRightArrow = "->"
 	// KeySymbolSemicolon              = ";"
-	KeySymbolHash        = "#"
-	KeySymbolAt          = "@"
+	KeySymbolHash = "#"
+	// KeySymbolAt          = "@"
 	KeySymbolLargerEqual = ">="
 	KeySymbolLessEqual   = "<="
-	KeySymbolEquivalent  = "<=>"
+	// KeySymbolEquivalent  = "<=>"
 	// It's possible for me to overload the meaning of "=" to mean "set equal", but I don't want to do that(I do not want to overload the meaning of "=" too much, which can be very tiring for future maintainers and make confusions), so I use a new keyword
-	KeySymbolEqualEqual      = "=="  // check fn equal. TODO: 要调整语义
-	KeySymbolEqualEqualEqual = "===" // check set equal. TODO: 要调整语义
-	KeySymbolGreaterGreater  = ">>"
-	KeySymbolLessLess        = "<<"
-	KeySymbolPercent         = "%" // prove: 2 % 2 = 0 的时候打印有问题，不知道为什么
-	KeySymbolLeftBracket     = "["
-	KeySymbolRightBracket    = "]"
+	KeySymbolEqualEqual = "==" // check fn equal. TODO: 要调整语义
+	// KeySymbolEqualEqualEqual = "===" // check set equal. TODO: 要调整语义
+	// KeySymbolGreaterGreater = ">>"
+	// KeySymbolLessLess     = "<<"
+	KeySymbolPercent      = "%" // prove: 2 % 2 = 0 的时候打印有问题，不知道为什么
+	KeySymbolLeftBracket  = "["
+	KeySymbolRightBracket = "]"
 )
 
+// 最多双字符，或者单字符，否则parser的逻辑 GetKeySymbol 有问题
 var symbolSet map[string]struct{} = map[string]struct{}{
 	// 双字符符号（长度 2）
-	KeySymbolAndAnd:                 {}, // "&&"
-	KeySymbolEqualEqual:             {}, // "=="
-	KeySymbolEqualGreaterEqual:      {}, // "=>"
-	KeySymbolLargerEqual:            {}, // ">="
-	KeySymbolLessEqual:              {}, // "<="
-	KeySymbolMinusGreaterRightArrow: {}, // "->"
-	KeySymbolNotEqual:               {}, // "!="
-	KeySymbolPipePipe:               {}, // "||"
-	KeySymbolPlusPlus:               {}, // "++"
-	KeySymbolMinusMinus:             {}, // "--"
-	KeySymbolStarStar:               {}, // "**"
-	KeySymbolColonColon:             {}, // "::"
+	// KeySymbolAndAnd:     {}, // "&&"
+	KeySymbolEqualEqual: {}, // "=="
+	// KeySymbolEqualGreaterEqual:      {}, // "=>"
+	KeySymbolLargerEqual: {}, // ">="
+	KeySymbolLessEqual:   {}, // "<="
+	// KeySymbolMinusGreaterRightArrow: {}, // "->"
+	KeySymbolNotEqual: {}, // "!="
+	// KeySymbolPipePipe:   {}, // "||"
+	// KeySymbolPlusPlus:   {}, // "++"
+	// KeySymbolMinusMinus: {}, // "--"
+	// KeySymbolStarStar:               {}, // "**"
+	KeySymbolColonColon: {}, // "::"
 
 	// 单字符符号（长度 1）
-	KeySymbolAt:          {}, // "@"
-	KeySymbolBackslash:   {}, // "\\"
-	KeySymbolBacktick:    {}, // "`"
+	// KeySymbolAt:          {}, // "@"
+	KeySymbolBackslash: {}, // "\\"
+	// KeySymbolBacktick:    {}, // "`"
 	KeySymbolPower:       {}, // "^"
 	KeySymbolColon:       {}, // ":"
 	KeySymbolComma:       {}, // ","
@@ -201,66 +202,66 @@ var symbolSet map[string]struct{} = map[string]struct{}{
 	KeySymbolLeftBrace: {}, // "("
 	KeySymbolLess:      {}, // "<"
 	KeySymbolMinus:     {}, // "-"
-	KeySymbolPipe:      {}, // "|"
-	KeySymbolPlus:      {}, // "+"
-	KeySymbolQuestion:  {}, // "?"
+	// KeySymbolPipe:      {}, // "|"
+	KeySymbolPlus: {}, // "+"
+	// KeySymbolQuestion: {}, // "?"
 	// KeySymbolRightBracket: {}, // "]"
 	// KeySymbolRightCurly:      {}, // "}"
 	KeySymbolRightBrace: {}, // ")"
 	// KeySymbolSemicolon:        {}, // ";"
-	KeySymbolSingleQuote:     {}, // "'"
-	KeySymbolSlash:           {}, // "/"
-	KeySymbolStar:            {}, // "*"
-	KeySymbolTilde:           {}, // "~"
-	KeySymbolAnd:             {}, // "&"
-	KeySymbolEquivalent:      {}, // "<=>"
-	KeySymbolEqualEqualEqual: {}, // "==="
-	KeySymbolGreaterGreater:  {}, // ">>"
-	KeySymbolLessLess:        {}, // "<<"
-	KeySymbolPercent:         {}, // "%"
-	KeySymbolLeftBracket:     {}, // "["
-	KeySymbolRightBracket:    {}, // "]"
+	// KeySymbolSingleQuote: {}, // "'"
+	KeySymbolSlash: {}, // "/"
+	KeySymbolStar:  {}, // "*"
+	// KeySymbolTilde: {}, // "~"
+	// KeySymbolAnd: {}, // "&"
+	// KeySymbolEquivalent:  {}, // "<=>"
+	// KeySymbolEqualEqualEqual: {}, // "==="
+	// KeySymbolGreaterGreater: {}, // ">>"
+	// KeySymbolLessLess:     {}, // "<<"
+	KeySymbolPercent:      {}, // "%"
+	KeySymbolLeftBracket:  {}, // "["
+	KeySymbolRightBracket: {}, // "]"
 }
 
 var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]struct{}{
-	KeywordSet:               {},
-	KeywordNatural:           {},
-	KeywordInt:               {},
-	KeywordRational:          {},
-	KeywordReal:              {},
-	KeywordComplex:           {},
-	KeywordImaginary:         {},
-	KeywordAs:                {},
-	KeywordIn:                {},
-	KeywordSubsetOf:          {},
-	KeySymbolEqual:           {},
-	KeySymbolSlash:           {},
-	KeySymbolPlus:            {},
-	KeySymbolMinus:           {},
-	KeySymbolStar:            {},
-	KeySymbolPower:           {},
-	KeySymbolLess:            {},
-	KeySymbolGreater:         {},
-	KeySymbolLargerEqual:     {},
-	KeySymbolLessEqual:       {},
-	KeySymbolNotEqual:        {},
-	KeySymbolEquivalent:      {},
-	KeySymbolEqualEqual:      {},
-	KeySymbolEqualEqualEqual: {},
-	KeySymbolPercent:         {}, // prove: 2 % 2 = 0 的时候打印有问题，不知道为什么
-	KeySymbolLeftBracket:     {},
-	KeySymbolRightBracket:    {},
+	KeywordSet:           {},
+	KeywordNatural:       {},
+	KeywordInt:           {},
+	KeywordRational:      {},
+	KeywordReal:          {},
+	KeywordComplex:       {},
+	KeywordImaginary:     {},
+	KeywordAs:            {},
+	KeywordIn:            {},
+	KeywordSubsetOf:      {},
+	KeySymbolEqual:       {},
+	KeySymbolSlash:       {},
+	KeySymbolPlus:        {},
+	KeySymbolMinus:       {},
+	KeySymbolStar:        {},
+	KeySymbolPower:       {},
+	KeySymbolLess:        {},
+	KeySymbolGreater:     {},
+	KeySymbolLargerEqual: {},
+	KeySymbolLessEqual:   {},
+	KeySymbolNotEqual:    {},
+	// KeySymbolEquivalent:  {},
+	KeySymbolEqualEqual: {},
+	// KeySymbolEqualEqualEqual: {},
+	KeySymbolPercent:      {}, // prove: 2 % 2 = 0 的时候打印有问题，不知道为什么
+	KeySymbolLeftBracket:  {},
+	KeySymbolRightBracket: {},
 
 	KeywordCommutativeProp: {},
 	// KeySymbolSemicolon:     {},
 }
 
 func IsBuiltinKeywordKeySymbolCanBeFcAtomName(name string) bool {
-	if IsKeyword(name) || IsKeySymbol(name) {
-		_, ok := BuiltinKeywordKeySymbolCanBeFcAtomNameSet[name]
-		return ok
-	}
-	return false
+	// if IsKeyword(name) || IsKeySymbol(name) {
+	_, ok := BuiltinKeywordKeySymbolCanBeFcAtomNameSet[name]
+	return ok
+	// }
+	// return false
 }
 
 // func IsBuiltinKeywordKeySymbol_NeverBeFcAtom(name string) bool {
@@ -271,8 +272,8 @@ func IsBuiltinKeywordKeySymbolCanBeFcAtomName(name string) bool {
 // 	return false
 // }
 
-func IsBuiltinKeywordOrSymbol(name string) bool {
-	if IsKeyword(name) || IsKeySymbol(name) {
+func IsBuiltinKeywordOrBuiltinSymbolOrNumber(name string) bool {
+	if IsKeyword(name) || IsKeySymbol(name) || (name[0] >= '0' && name[0] <= '9') {
 		return true
 	}
 	return false
