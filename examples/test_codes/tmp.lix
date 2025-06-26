@@ -1,7 +1,7 @@
 $in(+, fn(R, R)R)
 
-exist_prop self_add fn(Z, Z)Z st exist_f_always_equal_to_add():
-    forall x Z, y Z:
-        self_add(x, y) = x + y
+import pkg1 "pkg1.lix"
 
-exist + st $exist_f_always_equal_to_add()
+have opt st $pkg1::exist_f_always_equal_to_add()
+
+opt(1,2)=1+2
