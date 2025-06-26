@@ -87,13 +87,57 @@ func (tb *tokenBlock) stmt() (ast.Stmt, error) {
 }
 
 func (tb *tokenBlock) factStmt(uniFactDepth uniFactEnum) (ast.FactStmt, error) {
-	if tb.header.is(glob.KeywordForall) {
+	if tb.header.is(glob.KeywordForall) || tb.header.is(glob.KeywordEnum) {
 		return tb.uniFactInterface(uniFactDepth)
 	} else if tb.header.is(glob.KeywordOr) {
 		return tb.orStmt()
 	} else {
 		return tb.specFactStmt()
 	}
+}
+
+func (tb *tokenBlock) enumStmt() (*ast.UniFactStmt, error) {
+	err := tb.header.skip(glob.KeywordEnum)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	setName, err := tb.header.RawFc()
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	// skip colon and get end
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil || !tb.header.ExceedEnd() {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	if len(tb.body) != 1 {
+		return nil, fmt.Errorf("syntax error: expect a list of objects to be enumerated")
+	}
+
+	enumFcs := []ast.Fc{}
+	for _, factToParse := range tb.body {
+		fc, err := factToParse.header.RawFc()
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+		enumFcs = append(enumFcs, fc)
+	}
+
+	return transformEnumToUniFact(setName, enumFcs), nil
+}
+
+func transformEnumToUniFact(setName ast.Fc, enumFcs []ast.Fc) *ast.UniFactStmt {
+	freeObjName := ast.FcAtom(glob.RandomString(4))
+	equalFacts := []ast.SpecFactStmt{}
+	for _, fc := range enumFcs {
+		equalFacts = append(equalFacts, *ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{freeObjName, fc}))
+	}
+
+	orFact := ast.NewOrStmt(equalFacts)
+	return ast.NewUniFact([]string{string(freeObjName)}, []ast.Fc{setName}, []ast.FactStmt{}, []ast.FactStmt{orFact})
 }
 
 func (tb *tokenBlock) orStmt() (*ast.OrStmt, error) {
@@ -162,6 +206,10 @@ func (tb *tokenBlock) specFactStmt() (*ast.SpecFactStmt, error) {
 }
 
 func (tb *tokenBlock) uniFactInterface(uniFactDepth uniFactEnum) (ast.UniFactInterface, error) {
+	if tb.header.is(glob.KeywordEnum) {
+		return tb.enumStmt()
+	}
+
 	err := tb.header.skip(glob.KeywordForall)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
