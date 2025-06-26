@@ -14,8 +14,31 @@
 
 package litex_task_manager
 
+import "fmt"
+
 // 存储当前的传入的repo的repo名
 var TaskRepoName string
 
 var CurrentPkg string = ""
+var previousPkg string = ""
 var DeclaredPkgNames = map[string]struct{}{"": {}}
+var ImportMode bool = false
+
+func ImportStmtInit(newPkg string) error {
+	ImportMode = true
+
+	previousPkg = CurrentPkg
+	CurrentPkg = newPkg
+	if _, ok := DeclaredPkgNames[newPkg]; !ok {
+		DeclaredPkgNames[newPkg] = struct{}{}
+	} else {
+		return fmt.Errorf("duplicate package name: '%s'", newPkg)
+	}
+	return nil
+}
+
+func ImportStmtEnd() {
+	ImportMode = false
+
+	CurrentPkg = previousPkg
+}

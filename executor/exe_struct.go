@@ -19,6 +19,7 @@ import (
 	ast "golitex/ast"
 	env "golitex/environment"
 	glob "golitex/glob"
+	taskManager "golitex/task_manager"
 )
 
 // type Executor env.Env
@@ -48,17 +49,25 @@ func (e *Executor) deleteEnvAndRetainMsg() {
 }
 
 func (e *Executor) appendMsg(msg string, str ...any) {
-	e.env.Msgs = append(e.env.Msgs, fmt.Sprintf(msg, str...))
+	if !taskManager.ImportMode {
+		e.env.Msgs = append(e.env.Msgs, fmt.Sprintf(msg, str...))
+	}
 }
 
 func (e *Executor) appendNewMsgAtBegin(msg string, str ...any) {
-	e.env.Msgs = append([]string{fmt.Sprintf(msg, str...)}, e.env.Msgs...)
+	if !taskManager.ImportMode {
+		e.env.Msgs = append([]string{fmt.Sprintf(msg, str...)}, e.env.Msgs...)
+	}
 }
 
 func (e *Executor) appendWarningMsg(msg string, str ...any) {
-	e.env.Msgs = append(e.env.Msgs, fmt.Sprintf(`warning: %s`, fmt.Sprintf(msg, str...)))
+	if !taskManager.ImportMode {
+		e.env.Msgs = append(e.env.Msgs, fmt.Sprintf(`warning: %s`, fmt.Sprintf(msg, str...)))
+	}
 }
 
 func (e *Executor) appendInternalWarningMsg(msg string, str ...any) {
-	e.env.Msgs = append(e.env.Msgs, glob.InternalWarningMsg(msg, str...))
+	if !taskManager.ImportMode {
+		e.env.Msgs = append(e.env.Msgs, glob.InternalWarningMsg(msg, str...))
+	}
 }
