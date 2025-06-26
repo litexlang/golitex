@@ -1045,7 +1045,7 @@ func (tb *tokenBlock) param_paramSet_paramInSetFacts(endWith string) ([]string, 
 		atomsInSetParam := ast.GetAtomsInFc(setParam)
 		for j := i; j < len(params); j++ {
 			for _, atom := range atomsInSetParam {
-				if ast.IsFcAtomWithNameAndEmptyPkg(atom, params[j]) {
+				if ast.IsFcAtomEqualToGivenString(atom, params[j]) {
 					return nil, nil, fmt.Errorf("the set %s of the parameter if index %d cannot include any parameters from the index %d to the last one (found parameter %s)", setParam.String(), i, j, params[j])
 				}
 			}
