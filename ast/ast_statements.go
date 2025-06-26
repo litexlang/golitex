@@ -141,3 +141,8 @@ type ProveStmt struct {
 type DefFnTemplateStmt struct {
 	FnTemplateStmt FnTemplateStmt
 }
+
+type EnumStmt struct {
+	EnumName   Fc
+	EnumValues []Fc
+}

@@ -40,6 +40,7 @@ func (s *ProveStmt) stmt()                     {}
 func (s *UniFactWithIffStmt) stmt()            {}
 func (s *ClaimProveByContradictionStmt) stmt() {}
 func (s *DefFnTemplateStmt) stmt()             {}
+func (s *EnumStmt) stmt()                      {}
 
 type FactStmt interface {
 	factStmt()
@@ -53,6 +54,7 @@ func (p *SpecFactStmt) factStmt()       {}
 func (l *UniFactStmt) factStmt()        {}
 func (l *UniFactWithIffStmt) factStmt() {}
 func (s *OrStmt) factStmt()             {}
+func (s *EnumStmt) factStmt()           {}
 
 type SpecFactParams struct {
 	ObjParams []Fc

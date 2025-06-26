@@ -25,11 +25,11 @@ func (ver *Verifier) isCommutativeProp_BuiltinRule(stmt *ast.SpecFactStmt) bool 
 }
 
 func (ver *Verifier) isCommutativeFn_BuiltinRule(fnName ast.FcAtom) bool {
-	if ast.IsFcAtomEqualToGivenString(fnName, glob.KeySymbolPlus) {
+	if fnName == glob.KeySymbolPlus {
 		return true
 	}
 
-	if ast.IsFcAtomEqualToGivenString(fnName, glob.KeySymbolStar) {
+	if fnName == glob.KeySymbolStar {
 		return true
 	}
 
@@ -37,11 +37,11 @@ func (ver *Verifier) isCommutativeFn_BuiltinRule(fnName ast.FcAtom) bool {
 }
 
 func (ver *Verifier) isAssociativeFn_BuiltinRule(fnName ast.FcAtom) bool {
-	if ast.IsFcAtomEqualToGivenString(fnName, glob.KeySymbolPlus) {
+	if fnName == glob.KeySymbolPlus {
 		return true
 	}
 
-	if ast.IsFcAtomEqualToGivenString(fnName, glob.KeySymbolStar) {
+	if fnName == glob.KeySymbolStar {
 		return true
 	}
 

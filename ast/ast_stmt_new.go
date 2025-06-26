@@ -126,3 +126,7 @@ func NewFnTemplateDefStmt(fnTemplateStmt *FnTemplateStmt) *DefFnTemplateStmt {
 func NewDefFnStmt(fnTemplateStmt *FnTemplateStmt) *DefFnStmt {
 	return &DefFnStmt{*fnTemplateStmt}
 }
+
+func NewEnumStmt(enumName Fc, enumValues []Fc) *EnumStmt {
+	return &EnumStmt{enumName, enumValues}
+}
