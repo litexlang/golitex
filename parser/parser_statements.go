@@ -505,14 +505,14 @@ func (tb *tokenBlock) relaFactStmt() (*ast.SpecFactStmt, error) {
 
 		params := []ast.Fc{fc, fc2}
 
-		ret = ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(opt), params)
+		ret = ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(opt), params)
 	}
 
 	// 这里加入语法糖：!= 等价于 not =，好处是我 = 有 commutative的性质，我不用额外处理 != 了
 	if ret.NameIs(glob.KeySymbolNotEqual) {
 		ret.TypeEnum = ast.FalsePure
 		// ret.PropName = *ast.NewFcAtom(glob.EmptyPkg, glob.KeySymbolEqual)
-		ret.PropName = ast.NewFcAtom(glob.KeySymbolEqual)
+		ret.PropName = ast.FcAtom(glob.KeySymbolEqual)
 	}
 
 	return ret, nil

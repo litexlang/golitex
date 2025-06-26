@@ -289,7 +289,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 	uniMap := map[string]ast.Fc{}
 	ExistParamsAtoms := []ast.Fc{}
 	for i, param := range existPropDef.ExistParams {
-		paramAsAtom := ast.NewFcAtomWithName(stmt.ObjNames[i])
+		paramAsAtom := ast.FcAtom(stmt.ObjNames[i])
 		uniMap[param] = paramAsAtom
 		ExistParamsAtoms = append(ExistParamsAtoms, paramAsAtom)
 	}
@@ -349,7 +349,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 	// 相关的 exist st 事实也成立
 	existStFactParams := ast.MakeExistFactParamsSlice(ExistParamsAtoms, stmt.Fact.Params)
 
-	newExistStFact := ast.NewSpecFactStmt(ast.TrueExist_St, ast.NewFcAtomWithName(string(stmt.Fact.PropName)), existStFactParams)
+	newExistStFact := ast.NewSpecFactStmt(ast.TrueExist_St, ast.FcAtom(string(stmt.Fact.PropName)), existStFactParams)
 	err = exec.env.NewFact(newExistStFact)
 	if err != nil {
 		return glob.ExecState_Error, err
@@ -647,12 +647,12 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 		return err
 	}
 
-	err = exec.env.StoreFnSatisfyFnTemplateFact(ast.NewFcAtomWithName(stmt.FnTemplateStmt.Name), &stmt.FnTemplateStmt)
+	err = exec.env.StoreFnSatisfyFnTemplateFact(ast.FcAtom(stmt.FnTemplateStmt.Name), &stmt.FnTemplateStmt)
 	if err != nil {
 		return err
 	}
 
-	derivedFact := stmt.FnTemplateStmt.DeriveUniFact(ast.NewFcAtomWithName(stmt.FnTemplateStmt.Name))
+	derivedFact := stmt.FnTemplateStmt.DeriveUniFact(ast.FcAtom(stmt.FnTemplateStmt.Name))
 	err = exec.env.NewFact(derivedFact)
 	if err != nil {
 		return err

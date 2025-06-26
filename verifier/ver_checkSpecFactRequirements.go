@@ -112,7 +112,7 @@ func (ver *Verifier) fcSatisfyNotBuiltinFnRequirement(fc ast.Fc, state VerState)
 func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn, state VerState) (bool, error) {
 	// parameter必须是实数
 	for _, param := range fc.Params {
-		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{param, ast.NewFcAtomWithName(glob.KeywordReal)}), state)
+		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{param, ast.FcAtom(glob.KeywordReal)}), state)
 		if isErrOrNotOk(ok, err) {
 			return false, ver.verErr(err, "parameters in %s must be in set %s, %s in %s is not valid", fc.FnHead.String(), glob.KeywordReal, param.String(), fc.String())
 		}
@@ -120,7 +120,7 @@ func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn, state VerState) (bool
 
 	if ast.IsFcAtomWithNameAndEmptyPkg(fc.FnHead, glob.KeySymbolSlash) {
 		// 分母不是0
-		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.FalsePure, ast.NewFcAtomWithName(glob.KeySymbolEqual), []ast.Fc{fc.Params[1], ast.NewFcAtomWithName("0")}), state)
+		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{fc.Params[1], ast.FcAtom("0")}), state)
 		if isErrOrNotOk(ok, err) {
 			return ok, err
 		}
@@ -129,17 +129,17 @@ func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn, state VerState) (bool
 
 	if ast.IsFcAtomWithNameAndEmptyPkg(fc.FnHead, glob.KeySymbolPercent) {
 		// 分母不是0
-		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.FalsePure, ast.NewFcAtomWithName(glob.KeySymbolEqual), []ast.Fc{fc.Params[1], ast.NewFcAtomWithName("0")}), state)
+		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{fc.Params[1], ast.FcAtom("0")}), state)
 		if isErrOrNotOk(ok, err) {
 			return ok, err
 		}
 
 		// 分子分母必须是整数
-		ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fc.Params[0], ast.NewFcAtomWithName(glob.KeywordInt)}), state)
+		ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fc.Params[0], ast.FcAtom(glob.KeywordInt)}), state)
 		if isErrOrNotOk(ok, err) {
 			return ok, err
 		}
-		ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fc.Params[1], ast.NewFcAtomWithName(glob.KeywordInt)}), state)
+		ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fc.Params[1], ast.FcAtom(glob.KeywordInt)}), state)
 		if isErrOrNotOk(ok, err) {
 			return ok, err
 		}
