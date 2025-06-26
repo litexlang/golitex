@@ -490,15 +490,27 @@ func (fcAtom FcAtom) WithoutPkgName() bool {
 	return !strings.Contains(string(fcAtom), glob.KeySymbolColonColon)
 }
 
-func TransformEnumToUniFact(setName Fc, enumFcs []Fc) (*UniFactStmt, []*SpecFactStmt) {
+func TransformEnumToUniFact(setName Fc, enumFcs []Fc) (*UniFactStmt, []*SpecFactStmt, []*SpecFactStmt) {
 	freeObjName := FcAtom(glob.RandomString(4))
-	equalFacts := []*SpecFactStmt{}
+	equalFactsInOrFact := []*SpecFactStmt{}
+	itemsInSetFacts := []*SpecFactStmt{}
 	for _, fc := range enumFcs {
-		equalFacts = append(equalFacts, NewSpecFactStmt(TruePure, FcAtom(glob.KeySymbolEqual), []Fc{freeObjName, fc}))
+		equalFactsInOrFact = append(equalFactsInOrFact, NewSpecFactStmt(TruePure, FcAtom(glob.KeySymbolEqual), []Fc{freeObjName, fc}))
+		itemsInSetFacts = append(itemsInSetFacts, NewSpecFactStmt(TruePure, FcAtom(glob.KeywordIn), []Fc{fc, setName}))
 	}
 
-	orFact := NewOrStmt(equalFacts)
-	newUniFact := NewUniFact([]string{string(freeObjName)}, []Fc{setName}, []FactStmt{}, []FactStmt{orFact})
+	pairwiseNotEqualFacts := []*SpecFactStmt{}
+	for i := range len(enumFcs) {
+		for j := range len(enumFcs) {
+			if i == j {
+				continue
+			}
+			pairwiseNotEqualFacts = append(pairwiseNotEqualFacts, NewSpecFactStmt(FalsePure, FcAtom(glob.KeySymbolEqual), []Fc{enumFcs[i], enumFcs[j]}))
+		}
+	}
 
-	return newUniFact, equalFacts
+	orFact := NewOrStmt(equalFactsInOrFact)
+	forallItemInSetEqualToOneOfGivenItems := NewUniFact([]string{string(freeObjName)}, []Fc{setName}, []FactStmt{}, []FactStmt{orFact})
+
+	return forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts
 }

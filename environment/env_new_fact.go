@@ -30,6 +30,8 @@ func (env *Env) NewFact(stmt ast.FactStmt) error {
 		return env.newUniFact(f)
 	case *ast.UniFactWithIffStmt:
 		return env.newUniFactWithIff(f)
+	case *ast.EnumStmt:
+		return env.newEnumFact(f)
 	default:
 		return fmt.Errorf("unknown fact type: %T", stmt)
 	}
@@ -480,7 +482,7 @@ func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, e
 // }
 
 func (env *Env) ExecDefFnTemplate(stmt *ast.DefFnTemplateStmt) error {
-	err := env.insideAtomsDeclared(ast.FcAtom(stmt.FnTemplateStmt.Name), &stmt.FnTemplateStmt)
+	err := env.AtomsInFnTemplateDeclared(ast.FcAtom(stmt.FnTemplateStmt.Name), &stmt.FnTemplateStmt)
 	if err != nil {
 		return err
 	}
@@ -488,6 +490,31 @@ func (env *Env) ExecDefFnTemplate(stmt *ast.DefFnTemplateStmt) error {
 	err = env.FnTemplateDefMem.insert(stmt)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (env *Env) newEnumFact(stmt *ast.EnumStmt) error {
+	forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts := ast.TransformEnumToUniFact(stmt.EnumName, stmt.EnumValues)
+
+	err := env.NewFact(forallItemInSetEqualToOneOfGivenItems)
+	if err != nil {
+		return err
+	}
+
+	for _, pairwiseNotEqualFact := range pairwiseNotEqualFacts {
+		err := env.NewFact(pairwiseNotEqualFact)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, equalFact := range itemsInSetFacts {
+		err := env.NewFact(equalFact)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

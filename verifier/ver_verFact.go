@@ -37,6 +37,10 @@ func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state VerState) (bool, error
 		return ver.verUniFact(asUniFact, state)
 	}
 
+	if asEnumStmt, ok := stmt.(*ast.EnumStmt); ok {
+		return ver.verEnumStmt(asEnumStmt, state)
+	}
+
 	if asUniFactWithIff, ok := stmt.(*ast.UniFactWithIffStmt); ok {
 		return ver.verUniFactWithIff(asUniFactWithIff, state)
 	}
