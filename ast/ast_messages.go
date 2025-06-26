@@ -613,3 +613,22 @@ func (stmt *ProveStmt) String() string {
 func (stmt *DefFnStmt) String() string {
 	return fnDefStmtStringGivenKw(glob.KeywordFn, &stmt.FnTemplateStmt)
 }
+
+func (stmt *EnumStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordEnum)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.EnumName.String())
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+
+	var nextLine strings.Builder
+	for i := range len(stmt.EnumValues) - 1 {
+		nextLine.WriteString(stmt.EnumValues[i].String())
+		nextLine.WriteString(", ")
+	}
+	nextLine.WriteString(stmt.EnumValues[len(stmt.EnumValues)-1].String())
+
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(nextLine.String(), 1))
+	return builder.String()
+}

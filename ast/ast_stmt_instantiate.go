@@ -263,3 +263,21 @@ func (stmt *UniFactWithIffStmt) Instantiate(uniMap map[string]Fc) (FactStmt, err
 
 	return NewUniFactWithIff(newUniFact.(*UniFactStmt), instantiatedIffFacts), nil
 }
+
+func (stmt *EnumStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
+	enumName, err := stmt.EnumName.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+
+	newEnumValues := []Fc{}
+	for _, value := range stmt.EnumValues {
+		newValue, err := value.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newEnumValues = append(newEnumValues, newValue)
+	}
+
+	return NewEnumStmt(enumName, newEnumValues), nil
+}
