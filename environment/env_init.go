@@ -25,24 +25,24 @@ func (env *Env) Init() {
 }
 
 func add_minus_star_slash_mod_in_template(env *Env) {
-	addAtom := ast.NewFcAtom(glob.KeySymbolPlus)
-	addTemplate := ast.NewFnTemplateStmt(ast.NewDefHeader(addAtom.String(), []string{"x", "y"}, []ast.Fc{ast.NewFcAtom(glob.KeywordReal), ast.NewFcAtom(glob.KeywordReal)}), []ast.FactStmt{}, []ast.FactStmt{}, ast.NewFcAtom(glob.KeywordReal))
+	addAtom := ast.FcAtom(glob.KeySymbolPlus)
+	addTemplate := ast.NewFnTemplateStmt(ast.NewDefHeader(addAtom.String(), []string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordReal), ast.FcAtom(glob.KeywordReal)}), []ast.FactStmt{}, []ast.FactStmt{}, ast.FcAtom(glob.KeywordReal))
 	env.FcSatisfy_FreeTemplateFact_Store_DeriveFacts(addAtom, addTemplate)
 
-	minusAtom := ast.NewFcAtom(glob.KeySymbolMinus)
-	minusTemplate := ast.NewFnTemplateStmt(ast.NewDefHeader(minusAtom.String(), []string{"x", "y"}, []ast.Fc{ast.NewFcAtom(glob.KeywordReal), ast.NewFcAtom(glob.KeywordReal)}), []ast.FactStmt{}, []ast.FactStmt{}, ast.NewFcAtom(glob.KeywordReal))
+	minusAtom := ast.FcAtom(glob.KeySymbolMinus)
+	minusTemplate := ast.NewFnTemplateStmt(ast.NewDefHeader(minusAtom.String(), []string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordReal), ast.FcAtom(glob.KeywordReal)}), []ast.FactStmt{}, []ast.FactStmt{}, ast.FcAtom(glob.KeywordReal))
 	env.FcSatisfy_FreeTemplateFact_Store_DeriveFacts(minusAtom, minusTemplate)
 
-	starAtom := ast.NewFcAtom(glob.KeySymbolStar)
-	starTemplate := ast.NewFnTemplateStmt(ast.NewDefHeader(starAtom.String(), []string{"x", "y"}, []ast.Fc{ast.NewFcAtom(glob.KeywordReal), ast.NewFcAtom(glob.KeywordReal)}), []ast.FactStmt{}, []ast.FactStmt{}, ast.NewFcAtom(glob.KeywordReal))
+	starAtom := ast.FcAtom(glob.KeySymbolStar)
+	starTemplate := ast.NewFnTemplateStmt(ast.NewDefHeader(starAtom.String(), []string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordReal), ast.FcAtom(glob.KeywordReal)}), []ast.FactStmt{}, []ast.FactStmt{}, ast.FcAtom(glob.KeywordReal))
 	env.FcSatisfy_FreeTemplateFact_Store_DeriveFacts(starAtom, starTemplate)
 
-	slashAtom := ast.NewFcAtom(glob.KeySymbolSlash)
-	slashTemplate := ast.NewFnTemplateStmt(ast.NewDefHeader(slashAtom.String(), []string{"x", "y"}, []ast.Fc{ast.NewFcAtom(glob.KeywordReal), ast.NewFcAtom(glob.KeywordReal)}), []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.NewFcAtom(glob.KeySymbolEqual), []ast.Fc{ast.NewFcAtom("y"), ast.NewFcAtom("0")})}, ast.NewFcAtom(glob.KeywordReal))
+	slashAtom := ast.FcAtom(glob.KeySymbolSlash)
+	slashTemplate := ast.NewFnTemplateStmt(ast.NewDefHeader(slashAtom.String(), []string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordReal), ast.FcAtom(glob.KeywordReal)}), []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{ast.FcAtom("y"), ast.FcAtom("0")})}, ast.FcAtom(glob.KeywordReal))
 	env.FcSatisfy_FreeTemplateFact_Store_DeriveFacts(slashAtom, slashTemplate)
 
-	modAtom := ast.NewFcAtom(glob.KeySymbolPercent)
-	modTemplate := ast.NewFnTemplateStmt(ast.NewDefHeader(modAtom.String(), []string{"x", "y"}, []ast.Fc{ast.NewFcAtom(glob.KeywordInt), ast.NewFcAtom(glob.KeywordInt)}), []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.NewFcAtom(glob.KeySymbolEqual), []ast.Fc{ast.NewFcAtom("y"), ast.NewFcAtom("0")})}, ast.NewFcAtom(glob.KeywordInt))
+	modAtom := ast.FcAtom(glob.KeySymbolPercent)
+	modTemplate := ast.NewFnTemplateStmt(ast.NewDefHeader(modAtom.String(), []string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordInt), ast.FcAtom(glob.KeywordInt)}), []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{ast.FcAtom("y"), ast.FcAtom("0")})}, ast.FcAtom(glob.KeywordInt))
 	env.FcSatisfy_FreeTemplateFact_Store_DeriveFacts(modAtom, modTemplate)
 
 }

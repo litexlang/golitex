@@ -29,7 +29,7 @@ func (ver *Verifier) leftDomLeadToRightDom_RightDomLeadsToRightThen(funcName ast
 
 	uniMap := map[string]ast.Fc{}
 	for i, param := range rightT.Params {
-		uniMap[param] = ast.NewFcAtomWithName(leftT.Params[i])
+		uniMap[param] = ast.FcAtom(leftT.Params[i])
 	}
 
 	instantiatedSetParams, instantiatedDomFacts, instantiatedThenFacts, instantiatedRetSet, err := rightT.InstantiateFnTWithoutChangingTName(uniMap)
@@ -39,16 +39,16 @@ func (ver *Verifier) leftDomLeadToRightDom_RightDomLeadsToRightThen(funcName ast
 
 	inRightSetParamFacts := []ast.FactStmt{}
 	for i, setParam := range instantiatedSetParams {
-		inRightSetParamFacts = append(inRightSetParamFacts, ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{ast.NewFcAtomWithName(leftT.Params[i]), setParam}))
+		inRightSetParamFacts = append(inRightSetParamFacts, ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{ast.FcAtom(leftT.Params[i]), setParam}))
 	}
 
 	fcFnParams := []ast.Fc{}
 	for _, param := range leftT.Params {
-		fcFnParams = append(fcFnParams, ast.NewFcAtomWithName(param))
+		fcFnParams = append(fcFnParams, ast.FcAtom(param))
 	}
 	fcFn := ast.NewFcFn(funcName, fcFnParams)
 
-	fcFnInLeftRetSet := ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fcFn, leftT.RetSet})
+	fcFnInLeftRetSet := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fcFn, leftT.RetSet})
 
 	// left dom => right dom
 	leftDomToRightDomUniFact := ast.NewUniFact(leftT.Params, leftT.ParamSets, leftT.DomFacts, append(inRightSetParamFacts, instantiatedThenFacts...))
@@ -70,7 +70,7 @@ func (ver *Verifier) leftDomLeadToRightDom_RightDomLeadsToRightThen(funcName ast
 	leftDomToRightDomFacts = append(leftDomToRightDomFacts, instantiatedDomFacts...)
 
 	rightThenFacts := []ast.FactStmt{}
-	rightThenFacts = append(rightThenFacts, ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{fcFn, instantiatedRetSet}))
+	rightThenFacts = append(rightThenFacts, ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fcFn, instantiatedRetSet}))
 	rightThenFacts = append(rightThenFacts, instantiatedThenFacts...)
 
 	leftDom_leftThen_rightDom_rightThen_uniFact := ast.NewUniFact(leftT.Params, leftT.ParamSets, leftDomToRightDomFacts, rightThenFacts)

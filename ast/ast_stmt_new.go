@@ -86,10 +86,10 @@ func NewDefExistPropBodyStmt(defHeader *DefHeader, domFacts []FactStmt, iffFacts
 	return &DefExistPropStmtBody{*defHeader, domFacts, iffFacts}
 }
 
-func NewFcAtomWithName(name string) FcAtom {
-	// return NewFcAtom(glob.EmptyPkg, name)
-	return NewFcAtom(name)
-}
+// func NewFcAtomWithName(name string) FcAtom {
+// return NewFcAtom(glob.EmptyPkg, name)
+// 	return FcAtom(name)
+// }
 
 func NewKnowExistPropStmt(existProp DefExistPropStmt) *KnowExistPropStmt {
 	return &KnowExistPropStmt{existProp}

@@ -57,10 +57,10 @@ func (defStmt *DefPropStmt) Make_PropToIff_IffToProp() (*UniFactStmt, *UniFactSt
 	propSpecFactParams := []Fc{}
 	for _, param := range defStmt.DefHeader.Params {
 		// propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.EmptyPkg, param))
-		propSpecFactParams = append(propSpecFactParams, NewFcAtom(param))
+		propSpecFactParams = append(propSpecFactParams, FcAtom(param))
 	}
 
-	propSpecFact := NewSpecFactStmt(TruePure, NewFcAtomWithName(defStmt.DefHeader.Name), propSpecFactParams)
+	propSpecFact := NewSpecFactStmt(TruePure, FcAtom(defStmt.DefHeader.Name), propSpecFactParams)
 
 	// prop to iff
 	propToIffDomFacts := []FactStmt{propSpecFact}
@@ -82,10 +82,10 @@ func (defStmt *DefPropStmt) IffToPropUniFact() *UniFactStmt {
 	propSpecFactParams := []Fc{}
 	for _, param := range defStmt.DefHeader.Params {
 		// propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.EmptyPkg, param))
-		propSpecFactParams = append(propSpecFactParams, NewFcAtom(param))
+		propSpecFactParams = append(propSpecFactParams, FcAtom(param))
 	}
 
-	propSpecFact := NewSpecFactStmt(TruePure, NewFcAtomWithName(defStmt.DefHeader.Name), propSpecFactParams)
+	propSpecFact := NewSpecFactStmt(TruePure, FcAtom(defStmt.DefHeader.Name), propSpecFactParams)
 
 	IffToPropDomFacts := []FactStmt{}
 	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.DomFacts...)
@@ -100,10 +100,10 @@ func (defStmt *DefPropStmt) ToSpecFact() *SpecFactStmt {
 	propSpecFactParams := []Fc{}
 	for _, param := range defStmt.DefHeader.Params {
 		// propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.EmptyPkg, param))
-		propSpecFactParams = append(propSpecFactParams, NewFcAtom(param))
+		propSpecFactParams = append(propSpecFactParams, FcAtom(param))
 	}
 
-	propSpecFact := NewSpecFactStmt(TruePure, NewFcAtomWithName(defStmt.DefHeader.Name), propSpecFactParams)
+	propSpecFact := NewSpecFactStmt(TruePure, FcAtom(defStmt.DefHeader.Name), propSpecFactParams)
 
 	return propSpecFact
 }
@@ -112,10 +112,10 @@ func (defStmt *DefExistPropStmt) ToSpecFact() *SpecFactStmt {
 	propSpecFactParams := []Fc{}
 	for _, param := range defStmt.DefBody.DefHeader.Params {
 		// propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.EmptyPkg, param))
-		propSpecFactParams = append(propSpecFactParams, NewFcAtom(param))
+		propSpecFactParams = append(propSpecFactParams, FcAtom(param))
 	}
 
-	propSpecFact := NewSpecFactStmt(TruePure, NewFcAtomWithName(defStmt.DefBody.DefHeader.Name), propSpecFactParams)
+	propSpecFact := NewSpecFactStmt(TruePure, FcAtom(defStmt.DefBody.DefHeader.Name), propSpecFactParams)
 
 	return propSpecFact
 }
@@ -154,11 +154,11 @@ func (stmt *SpecFactStmt) IsMathInductionFact() bool {
 
 func NewInFact(param string, paramSet Fc) *SpecFactStmt {
 	// return NewSpecFactStmt(TruePure, NewFcAtomWithName(glob.KeywordIn), []Fc{NewFcAtom(glob.EmptyPkg, param), paramSet})
-	return NewSpecFactStmt(TruePure, NewFcAtomWithName(glob.KeywordIn), []Fc{NewFcAtom(param), paramSet})
+	return NewSpecFactStmt(TruePure, FcAtom(glob.KeywordIn), []Fc{FcAtom(param), paramSet})
 }
 
 func NewInFactWithFc(param Fc, paramSet Fc) *SpecFactStmt {
-	return NewSpecFactStmt(TruePure, NewFcAtomWithName(glob.KeywordIn), []Fc{param, paramSet})
+	return NewSpecFactStmt(TruePure, FcAtom(glob.KeywordIn), []Fc{param, paramSet})
 }
 
 func IsFnSet(fc Fc) bool {
@@ -223,7 +223,7 @@ func (stmt *SpecFactStmt) ReverseSpecFactParamsOrder() (*SpecFactStmt, error) {
 }
 
 func MakeFnSetFc(fnSets []Fc, retSet Fc) Fc {
-	return NewFcFn(NewFcFn(NewFcAtomWithName(glob.KeywordFn), fnSets), []Fc{retSet})
+	return NewFcFn(NewFcFn(FcAtom(glob.KeywordFn), fnSets), []Fc{retSet})
 }
 
 func (stmt *DefObjStmt) NewInFacts() []*SpecFactStmt {
@@ -379,7 +379,7 @@ func MakeExistFactParamsSlice(existParams []Fc, paramsInFact []Fc) []Fc {
 	lengthOfExistParams := len(existParams)
 
 	factParams := []Fc{}
-	factParams = append(factParams, NewFcAtomWithName(fmt.Sprintf("%d", lengthOfExistParams)))
+	factParams = append(factParams, FcAtom(fmt.Sprintf("%d", lengthOfExistParams)))
 	factParams = append(factParams, existParams...)
 	factParams = append(factParams, paramsInFact...)
 

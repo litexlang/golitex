@@ -39,9 +39,9 @@ type FcFn struct {
 	Params []Fc
 }
 
-func NewFcAtom(value string) FcAtom {
-	return FcAtom(value)
-}
+// func NewFcAtom(value string) FcAtom {
+// 	return FcAtom(value)
+// }
 
 func NewFcFn(fnHead Fc, callPipe []Fc) *FcFn {
 	return &FcFn{fnHead, callPipe}
@@ -164,7 +164,8 @@ func IsFcAtomAndHasBuiltinPropName(fc Fc) bool {
 
 func (fc FcAtom) HasGivenNameAndEmptyPkgName(kw string) bool {
 	// return fc.PkgName == glob.EmptyPkg && fc.Name == kw
-	return string(fc) == kw
+	// 不含有 ::
+	return string(fc) == kw && !strings.Contains(string(fc), glob.KeySymbolColonColon)
 }
 
 func IsFcAtomWithNameAndEmptyPkg(fc Fc, kw string) bool {

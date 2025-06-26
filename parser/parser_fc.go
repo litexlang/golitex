@@ -72,7 +72,7 @@ func (cursor *strSliceCursor) squareBracketExpr() (ast.Fc, error) {
 			return nil, fmt.Errorf("expected '%s': %v", glob.KeySymbolRightBracket, err)
 		}
 
-		return ast.NewFcFn(ast.NewFcAtomWithName(glob.AtIndexOp), []ast.Fc{fc, fcInBracket}), nil
+		return ast.NewFcFn(ast.FcAtom(glob.AtIndexOp), []ast.Fc{fc, fcInBracket}), nil
 	} else {
 		if err := cursor.skip(glob.KeySymbolRightBracket); err != nil {
 			return nil, fmt.Errorf("expected '%s': %v", glob.KeySymbolRightBracket, err)
@@ -82,7 +82,7 @@ func (cursor *strSliceCursor) squareBracketExpr() (ast.Fc, error) {
 			return nil, fmt.Errorf("expected '%s': %v", glob.KeySymbolRightBracket, err)
 		}
 
-		return ast.NewFcFn(ast.NewFcAtomWithName(glob.GetIndexOfOp), []ast.Fc{fc, fcInBracket}), nil
+		return ast.NewFcFn(ast.FcAtom(glob.GetIndexOfOp), []ast.Fc{fc, fcInBracket}), nil
 	}
 }
 
@@ -125,7 +125,7 @@ func (cursor *strSliceCursor) fcAtomAndFcFn() (ast.Fc, error) {
 			if err != nil {
 				return nil, &strSliceErr{err, cursor}
 			}
-			ret = ast.NewFcFn(ast.NewFcAtomWithName(glob.MemberAccessOpt), []ast.Fc{ret, dotFc})
+			ret = ast.NewFcFn(ast.FcAtom(glob.MemberAccessOpt), []ast.Fc{ret, dotFc})
 		}
 		return ret, nil
 	}
@@ -160,7 +160,7 @@ func (cursor *strSliceCursor) rawFcAtom() (ast.FcAtom, error) {
 	values = append(values, value)
 
 	// return ast.NewFcAtom(strings.Join(pkgNames, glob.KeySymbolColonColon), value), nil
-	return ast.NewFcAtom(strings.Join(values, glob.KeySymbolColonColon)), nil
+	return ast.FcAtom(strings.Join(values, glob.KeySymbolColonColon)), nil
 
 	// }
 }
@@ -211,7 +211,7 @@ func (cursor *strSliceCursor) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence)
 			return nil, err
 		}
 
-		leftHead := ast.NewFcAtomWithName(curToken)
+		leftHead := ast.FcAtom(curToken)
 		left = ast.NewFcFn(
 			leftHead,
 			[]ast.Fc{left, right},
@@ -245,7 +245,7 @@ func (cursor *strSliceCursor) unaryOptFc() (ast.Fc, error) {
 			return nil, err
 		}
 
-		leftHead := ast.NewFcAtomWithName(unaryOp)
+		leftHead := ast.FcAtom(unaryOp)
 		return ast.NewFcFn(
 			leftHead,
 			[]ast.Fc{right},
@@ -270,7 +270,7 @@ func (cursor *strSliceCursor) numberStr() (ast.FcAtom, error) {
 		// 检查下一个字符是否是数字
 		nextChar := cursor.strAtCurIndexPlus(1)
 		if len(nextChar) == 0 {
-			return ast.NewFcAtomWithName(left), nil
+			return ast.FcAtom(left), nil
 		}
 
 		allDigits := true
@@ -287,12 +287,12 @@ func (cursor *strSliceCursor) numberStr() (ast.FcAtom, error) {
 			if err != nil {
 				return ast.EmptyFcAtom, fmt.Errorf("invalid number: %s", right)
 			}
-			return ast.NewFcAtomWithName(left + "." + right), nil
+			return ast.FcAtom(left + "." + right), nil
 		}
-		return ast.NewFcAtomWithName(left), nil
+		return ast.FcAtom(left), nil
 	}
 
-	return ast.NewFcAtomWithName(left), nil
+	return ast.FcAtom(left), nil
 }
 
 func (cursor *strSliceCursor) bracedFcSlice() ([]ast.Fc, error) {
