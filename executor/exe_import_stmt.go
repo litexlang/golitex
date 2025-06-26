@@ -22,6 +22,7 @@ import (
 	taskManager "golitex/task_manager"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func (exec *Executor) importStmt(stmt *ast.ImportStmt) error {
@@ -31,7 +32,9 @@ func (exec *Executor) importStmt(stmt *ast.ImportStmt) error {
 		return err
 	}
 
-	if _, ok := taskManager.DeclaredPkgNames[stmt.AsPkgName]; ok {
+	if _, ok := taskManager.DeclaredPkgNames[stmt.AsPkgName]; !ok {
+		taskManager.DeclaredPkgNames[stmt.AsPkgName] = struct{}{}
+	} else {
 		return fmt.Errorf("duplicate package name: '%s'", stmt.AsPkgName)
 	}
 
@@ -46,56 +49,71 @@ func (exec *Executor) importStmt(stmt *ast.ImportStmt) error {
 		}
 	}()
 
+	// 如果 path 的末尾是 .lix
+	if strings.HasSuffix(stmt.Path, ".lix") {
+		execState, err := exec.runImportFile(stmt)
+		if err != nil {
+			return err
+		}
+		execSuccess = execState == glob.ExecState_True
+	} else {
+		execState, err := exec.runImportDir(stmt)
+		if err != nil {
+			return err
+		}
+		execSuccess = execState == glob.ExecState_True
+	}
+
+	return nil
+}
+
+func (exec *Executor) runImportDir(stmt *ast.ImportStmt) (glob.ExecState, error) {
+	panic("not implemented")
+}
+
+func (exec *Executor) runImportFile(stmt *ast.ImportStmt) (glob.ExecState, error) {
+	err := taskManager.ImportStmtInit(stmt.AsPkgName)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+	defer func() {
+		taskManager.ImportStmtEnd()
+	}()
+
 	// 需要连上现在所在的repo的名字
 	codePath := filepath.Join(taskManager.TaskRepoName, stmt.Path)
 	code, err := os.ReadFile(codePath)
 	if err != nil {
-		return err
+		return glob.ExecState_Error, err
 	}
 
 	if stmt.AsPkgName == "" {
 		// read the file
 		execState, err := exec.runSourceCode(string(code))
 		if err != nil {
-			return err
+			return glob.ExecState_Error, err
 		}
 		if execState != glob.ExecState_True {
-			return fmt.Errorf("failed to execute import statement:\n%s\nSome statements in the imported file are not executed successfully", stmt.String())
+			return glob.ExecState_Error, fmt.Errorf("failed to execute import statement:\n%s\nSome statements in the imported file are not executed successfully", stmt.String())
 		}
-		execSuccess = true
 	} else {
-		originalPkg := taskManager.CurrentPkg
-		taskManager.CurrentPkg = stmt.AsPkgName
-		defer func() {
-			taskManager.CurrentPkg = originalPkg
-		}()
 
 		if _, ok := taskManager.DeclaredPkgNames[stmt.AsPkgName]; !ok {
 			taskManager.DeclaredPkgNames[stmt.AsPkgName] = struct{}{}
 		} else {
-			return fmt.Errorf("duplicate package name: '%s'", stmt.AsPkgName)
+			return glob.ExecState_Error, fmt.Errorf("duplicate package name: '%s'", stmt.AsPkgName)
 		}
 
 		execState, err := exec.runSourceCode(string(code))
 		if err != nil {
-			return err
+			return glob.ExecState_Error, err
 		}
 		if execState != glob.ExecState_True {
-			return fmt.Errorf("failed to execute import statement:\n%s\nSome statements in the imported file are not executed successfully", stmt.String())
+			return glob.ExecState_Error, fmt.Errorf("failed to execute import statement:\n%s\nSome statements in the imported file are not executed successfully", stmt.String())
 		}
-		execSuccess = true
 	}
 
-	return nil
-}
-
-func (exec *Executor) execOnlyPubStmt(stmt ast.Stmt) (glob.ExecState, error) {
-	switch stmt := (stmt).(type) {
-	case *ast.PubStmt:
-		return exec.pubStmt(stmt)
-	default:
-		return glob.ExecState_True, nil
-	}
+	return glob.ExecState_True, nil
 }
 
 func (exec *Executor) runSourceCode(sourceCode string) (glob.ExecState, error) {
