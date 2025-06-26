@@ -522,7 +522,7 @@ func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEach
 
 	caseStmt := stmt.OrFact.Facts[index]
 
-	err := exec.env.NewFact(&caseStmt)
+	err := exec.env.NewFact(caseStmt)
 	if err != nil {
 		return glob.ExecState_Error, err
 	}

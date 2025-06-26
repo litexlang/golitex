@@ -87,16 +87,18 @@ func (tb *tokenBlock) stmt() (ast.Stmt, error) {
 }
 
 func (tb *tokenBlock) factStmt(uniFactDepth uniFactEnum) (ast.FactStmt, error) {
-	if tb.header.is(glob.KeywordForall) || tb.header.is(glob.KeywordEnum) {
+	if tb.header.is(glob.KeywordForall) {
 		return tb.uniFactInterface(uniFactDepth)
 	} else if tb.header.is(glob.KeywordOr) {
 		return tb.orStmt()
+	} else if tb.header.is(glob.KeywordEnum) {
+		return tb.enumStmt()
 	} else {
 		return tb.specFactStmt()
 	}
 }
 
-func (tb *tokenBlock) enumStmt() (*ast.UniFactStmt, error) {
+func (tb *tokenBlock) enumStmt() (*ast.EnumStmt, error) {
 	err := tb.header.skip(glob.KeywordEnum)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
@@ -130,22 +132,11 @@ func (tb *tokenBlock) enumStmt() (*ast.UniFactStmt, error) {
 		}
 	}
 
-	return transformEnumToUniFact(setName, enumFcs), nil
-}
-
-func transformEnumToUniFact(setName ast.Fc, enumFcs []ast.Fc) *ast.UniFactStmt {
-	freeObjName := ast.FcAtom(glob.RandomString(4))
-	equalFacts := []ast.SpecFactStmt{}
-	for _, fc := range enumFcs {
-		equalFacts = append(equalFacts, *ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{freeObjName, fc}))
-	}
-
-	orFact := ast.NewOrStmt(equalFacts)
-	return ast.NewUniFact([]string{string(freeObjName)}, []ast.Fc{setName}, []ast.FactStmt{}, []ast.FactStmt{orFact})
+	return ast.NewEnumStmt(setName, enumFcs), nil
 }
 
 func (tb *tokenBlock) orStmt() (*ast.OrStmt, error) {
-	orFacts := []ast.SpecFactStmt{}
+	orFacts := []*ast.SpecFactStmt{}
 	isOr := tb.header.isAndSkip(glob.KeywordOr)
 	if !isOr {
 		return nil, fmt.Errorf("expect 'or'")
@@ -161,7 +152,7 @@ func (tb *tokenBlock) orStmt() (*ast.OrStmt, error) {
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
 		}
-		orFacts = append(orFacts, *fact)
+		orFacts = append(orFacts, fact)
 	}
 
 	return ast.NewOrStmt(orFacts), nil
@@ -210,10 +201,6 @@ func (tb *tokenBlock) specFactStmt() (*ast.SpecFactStmt, error) {
 }
 
 func (tb *tokenBlock) uniFactInterface(uniFactDepth uniFactEnum) (ast.UniFactInterface, error) {
-	if tb.header.is(glob.KeywordEnum) {
-		return tb.enumStmt()
-	}
-
 	err := tb.header.skip(glob.KeywordForall)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
