@@ -489,3 +489,16 @@ func (fcAtom FcAtom) WithoutPkgName() bool {
 	// string has no colon colon
 	return !strings.Contains(string(fcAtom), glob.KeySymbolColonColon)
 }
+
+func TransformEnumToUniFact(setName Fc, enumFcs []Fc) (*UniFactStmt, []*SpecFactStmt) {
+	freeObjName := FcAtom(glob.RandomString(4))
+	equalFacts := []*SpecFactStmt{}
+	for _, fc := range enumFcs {
+		equalFacts = append(equalFacts, NewSpecFactStmt(TruePure, FcAtom(glob.KeySymbolEqual), []Fc{freeObjName, fc}))
+	}
+
+	orFact := NewOrStmt(equalFacts)
+	newUniFact := NewUniFact([]string{string(freeObjName)}, []Fc{setName}, []FactStmt{}, []FactStmt{orFact})
+
+	return newUniFact, equalFacts
+}
