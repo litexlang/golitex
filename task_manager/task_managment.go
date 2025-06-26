@@ -17,15 +17,15 @@ package litex_task_manager
 import "fmt"
 
 // 存储当前的传入的repo的repo名
-var TaskRepoName string
+var TaskDirName string
 
 var CurrentPkg string = ""
 var previousPkg string = ""
 var DeclaredPkgNames = map[string]struct{}{"": {}}
-var ImportMode bool = false
+var ImportState uint = 0 // 之所以uint而不是bool，因为可以import里有import，离开一个import后我不能让它false掉，因为可能还是在某个import里
 
 func ImportStmtInit(newPkg string) error {
-	ImportMode = true
+	ImportState++
 
 	previousPkg = CurrentPkg
 	CurrentPkg = newPkg
@@ -38,7 +38,11 @@ func ImportStmtInit(newPkg string) error {
 }
 
 func ImportStmtEnd() {
-	ImportMode = false
+	ImportState--
 
 	CurrentPkg = previousPkg
+}
+
+func IsImportState() bool {
+	return ImportState > 0
 }
