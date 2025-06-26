@@ -16,6 +16,10 @@ package litex_verifier
 
 import ast "golitex/ast"
 
+// 如果我尝试通过逐个子命题 m 的方式，使用“其余为假，m 为真”的方法去验证 a ∨ b ∨ c ∨ ... ∨ n，但全部尝试都失败了，那就可以断言 a ∨ b ∨ c ∨ ... ∨ n 为假。反过来，只要有一次成立了，那就可以断言 a ∨ b ∨ c ∨ ... ∨ n 为真。
+
+// 反过来，用已知的 a ∨ b ∨ c ∨ ... ∨ n 为真，去验证 a ，需要先验证b, c, ... , n 为假，才能得到 a 为真。
+
 func (ver *Verifier) verOrStmt(stmt *ast.OrStmt, state VerState) (bool, error) {
 	nextState := state.addRound()
 	for i := range stmt.Facts {
