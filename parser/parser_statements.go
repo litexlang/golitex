@@ -171,9 +171,6 @@ func (tb *tokenBlock) uniFactInterface(uniFactDepth uniFactEnum) (ast.UniFactInt
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
-	for i, param := range params {
-		params[i] = addPkgNameToString(param)
-	}
 
 	domainFacts, thenFacts, iffFacts, err := tb.uniFactBodyFacts(uniFactDepth.addDepth(), glob.KeywordThen)
 	if err != nil {
