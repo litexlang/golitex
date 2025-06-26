@@ -1,0 +1,6 @@
+exist_prop x s1, y s1 st exist_2_items_with_the_same_image_by_pigeon_hole_principle(s1 set, s2 set, f f(s1) s2):
+    s1 $is_finite_set
+    s2 $is_finite_set
+    len(s1) > len(s2)
+    then:
+        f(x) = f(y)
