@@ -51,3 +51,5 @@ const GetIndexOfOp string = KeySymbolLeftBracket + KeySymbolLeftBracket
 const BuiltinPkgName string = ""
 
 const MemberAccessOpt string = KeySymbolDot
+
+var AssumeImportFilesAreTrue bool = false

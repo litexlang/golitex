@@ -49,25 +49,25 @@ func (e *Executor) deleteEnvAndRetainMsg() {
 }
 
 func (e *Executor) appendMsg(msg string, str ...any) {
-	if !taskManager.ImportMode {
+	if !taskManager.IsImportState() {
 		e.env.Msgs = append(e.env.Msgs, fmt.Sprintf(msg, str...))
 	}
 }
 
 func (e *Executor) appendNewMsgAtBegin(msg string, str ...any) {
-	if !taskManager.ImportMode {
+	if !taskManager.IsImportState() {
 		e.env.Msgs = append([]string{fmt.Sprintf(msg, str...)}, e.env.Msgs...)
 	}
 }
 
 func (e *Executor) appendWarningMsg(msg string, str ...any) {
-	if !taskManager.ImportMode {
+	if !taskManager.IsImportState() {
 		e.env.Msgs = append(e.env.Msgs, fmt.Sprintf(`warning: %s`, fmt.Sprintf(msg, str...)))
 	}
 }
 
 func (e *Executor) appendInternalWarningMsg(msg string, str ...any) {
-	if !taskManager.ImportMode {
+	if !taskManager.IsImportState() {
 		e.env.Msgs = append(e.env.Msgs, glob.InternalWarningMsg(msg, str...))
 	}
 }
