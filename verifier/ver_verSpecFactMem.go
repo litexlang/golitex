@@ -652,7 +652,7 @@ func (ver *Verifier) mathInductionFact_BuiltinRules(stmt *ast.SpecFactStmt, stat
 	}
 
 	// propName(0) is true
-	propNameZeroFact := ast.NewSpecFactStmt(ast.TruePure, propNameAsAtom, []ast.Fc{ast.NewFcAtomWithName("0")})
+	propNameZeroFact := ast.NewSpecFactStmt(ast.TruePure, propNameAsAtom, []ast.Fc{ast.FcAtom("0")})
 
 	// propName(n) => propName(n+1)
 	params := []string{"n"}
@@ -661,19 +661,19 @@ func (ver *Verifier) mathInductionFact_BuiltinRules(stmt *ast.SpecFactStmt, stat
 	domFacts[0] = ast.NewSpecFactStmt(
 		ast.TruePure,
 		propNameAsAtom,
-		[]ast.Fc{ast.NewFcAtomWithName("n")},
+		[]ast.Fc{ast.FcAtom("n")},
 	)
 	thenFacts := make([]ast.FactStmt, 1)
 	thenFacts[0] = ast.NewSpecFactStmt(
 		ast.TruePure,
 		propNameAsAtom,
-		[]ast.Fc{ast.NewFcFn(ast.NewFcAtomWithName(glob.KeySymbolPlus), []ast.Fc{ast.NewFcAtomWithName("n"), ast.NewFcAtomWithName("1")})},
+		[]ast.Fc{ast.NewFcFn(ast.FcAtom(glob.KeySymbolPlus), []ast.Fc{ast.FcAtom("n"), ast.FcAtom("1")})},
 	)
 
 	paramInSetsFacts := make([]ast.FactStmt, 1)
-	paramInSetsFacts[0] = ast.NewInFact("n", ast.NewFcAtomWithName(glob.KeywordNatural))
+	paramInSetsFacts[0] = ast.NewInFact("n", ast.FcAtom(glob.KeywordNatural))
 	paramSets := make([]ast.Fc, 1)
-	paramSets[0] = ast.NewFcAtomWithName(glob.KeywordNatural)
+	paramSets[0] = ast.FcAtom(glob.KeywordNatural)
 
 	nToNAddOneFact := ast.NewUniFact(
 		params,
@@ -829,7 +829,7 @@ func (ver *Verifier) isFnEqualFact_Check_BuiltinRules(stmt *ast.SpecFactStmt, st
 		return false, fmt.Errorf("fn equal fact %s should have exactly two parameters, got: %d", stmt.String(), len(stmt.Params))
 	}
 
-	equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeySymbolEqual), stmt.Params)
+	equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), stmt.Params)
 	if ok, err := ver.isEqualFact_Check(equalFact, state); err != nil {
 		return false, err
 	} else if ok {

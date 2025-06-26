@@ -380,11 +380,11 @@ func (env *Env) isMathInductionPropName_StoreIt(fact *ast.SpecFactStmt) (bool, e
 		ast.NewSpecFactStmt(
 			ast.TruePure,
 			propNameAsAtom,
-			[]ast.Fc{ast.NewFcAtomWithName("n")},
+			[]ast.Fc{ast.FcAtom("n")},
 		),
 	}
 
-	knownUniFact := ast.NewUniFact(knownUniFactParams, []ast.Fc{ast.NewFcAtomWithName(glob.KeywordNatural)}, knownUniFactDomFacts, knownUniFactThenFacts)
+	knownUniFact := ast.NewUniFact(knownUniFactParams, []ast.Fc{ast.FcAtom(glob.KeywordNatural)}, knownUniFactDomFacts, knownUniFactThenFacts)
 
 	err := env.NewFact(knownUniFact)
 	if err != nil {
@@ -480,7 +480,7 @@ func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, e
 // }
 
 func (env *Env) ExecDefFnTemplate(stmt *ast.DefFnTemplateStmt) error {
-	err := env.insideAtomsDeclared(ast.NewFcAtomWithName(stmt.FnTemplateStmt.Name), &stmt.FnTemplateStmt)
+	err := env.insideAtomsDeclared(ast.FcAtom(stmt.FnTemplateStmt.Name), &stmt.FnTemplateStmt)
 	if err != nil {
 		return err
 	}

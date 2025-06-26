@@ -71,7 +71,7 @@ func (ver *Verifier) isSpecFactCommutative(stmt *ast.SpecFactStmt) (bool, error)
 		return true, nil
 	}
 
-	ok, err := ver.verSpecFact_BySpecMem(ast.NewSpecFactStmt(ast.TruePure, ast.NewFcAtomWithName(glob.KeywordCommutativeProp), []ast.Fc{stmt.PropName}), Round0NoMsg)
+	ok, err := ver.verSpecFact_BySpecMem(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordCommutativeProp), []ast.Fc{stmt.PropName}), Round0NoMsg)
 	if err != nil {
 		return false, err
 	}
@@ -315,10 +315,10 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecFactStmt, st
 }
 
 var reverseCmpFcAtomMap = map[string]ast.FcAtom{
-	glob.KeySymbolLargerEqual: ast.NewFcAtomWithName(glob.KeySymbolLessEqual),
-	glob.KeySymbolLessEqual:   ast.NewFcAtomWithName(glob.KeySymbolLargerEqual),
-	glob.KeySymbolGreater:     ast.NewFcAtomWithName(glob.KeySymbolLess),
-	glob.KeySymbolLess:        ast.NewFcAtomWithName(glob.KeySymbolGreater),
+	glob.KeySymbolLargerEqual: ast.FcAtom(glob.KeySymbolLessEqual),
+	glob.KeySymbolLessEqual:   ast.FcAtom(glob.KeySymbolLargerEqual),
+	glob.KeySymbolGreater:     ast.FcAtom(glob.KeySymbolLess),
+	glob.KeySymbolLess:        ast.FcAtom(glob.KeySymbolGreater),
 }
 
 // 只是证明 a >= b 和 b <= a 是等价的，没有用到 a = b => a >=b, a > b => a >= b，因为我觉得后者应该
@@ -341,7 +341,7 @@ func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state VerState) (b
 	if propName == glob.KeySymbolLargerEqual {
 		// 尝试证明 >
 		greaterStmt := *stmt
-		greaterStmt.PropName = ast.NewFcAtomWithName(glob.KeySymbolGreater)
+		greaterStmt.PropName = ast.FcAtom(glob.KeySymbolGreater)
 		ok, err = ver.verSpecFactStepByStep(&greaterStmt, state)
 		if err != nil {
 			return false, err
@@ -352,7 +352,7 @@ func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state VerState) (b
 
 		// 尝试证明 =
 		equalStmt := *stmt
-		equalStmt.PropName = ast.NewFcAtomWithName(glob.KeySymbolEqual)
+		equalStmt.PropName = ast.FcAtom(glob.KeySymbolEqual)
 		ok, err = ver.verTrueEqualFact(&equalStmt, state)
 		if err != nil {
 			return false, err
@@ -366,7 +366,7 @@ func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state VerState) (b
 	if propName == glob.KeySymbolLessEqual {
 		// 尝试证明 <
 		lessStmt := *stmt
-		lessStmt.PropName = ast.NewFcAtomWithName(glob.KeySymbolLess)
+		lessStmt.PropName = ast.FcAtom(glob.KeySymbolLess)
 		ok, err = ver.verSpecFactStepByStep(&lessStmt, state)
 		if isErrOrOk(ok, err) {
 			return ok, err
@@ -374,7 +374,7 @@ func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state VerState) (b
 
 		// 尝试证明 =
 		equalStmt := *stmt
-		equalStmt.PropName = ast.NewFcAtomWithName(glob.KeySymbolEqual)
+		equalStmt.PropName = ast.FcAtom(glob.KeySymbolEqual)
 		ok, err = ver.verTrueEqualFact(&equalStmt, state)
 		if isErrOrOk(ok, err) {
 			return ok, err
