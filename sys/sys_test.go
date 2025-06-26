@@ -42,7 +42,7 @@ func TestRunRepo(t *testing.T) {
 }
 
 func TestRunFileInRepo(t *testing.T) {
-	msg, signal, err := RunFile("../examples/number_theory_for_beginners_by_andre_weil/chap6.lix")
+	msg, signal, err := RunFile("../examples/test_codes/tmp.lix")
 	if err != nil {
 		t.Errorf(err.Error())
 	}
