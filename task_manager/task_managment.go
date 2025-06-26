@@ -18,4 +18,4 @@ package litex_task_manager
 var TaskRepoName string
 
 var CurrentPkg string = ""
-var DeclaredPkgNames = map[string]struct{}{"": {}, "cur": {}}
+var DeclaredPkgNames = map[string]struct{}{"": {}}

@@ -16,13 +16,11 @@ package litex_executor
 
 import (
 	"fmt"
-	taskManager "golitex/task_manager"
 	"testing"
 	"time"
 )
 
 func TestWholeFile(t *testing.T) {
-	taskManager.CurrentPkg = "cur"
 	start := time.Now()
 	// codePath := "../examples/test_codes/builtin_cmp.lix"
 	codePath := "../examples/test_codes/tmp.lix"
