@@ -122,7 +122,7 @@ type KnowExistPropStmt struct {
 }
 
 type OrStmt struct {
-	Facts []SpecFactStmt
+	Facts []*SpecFactStmt
 }
 
 type ImportStmt struct {

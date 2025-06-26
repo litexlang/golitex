@@ -118,7 +118,7 @@ func (s SpecFactInLogicExprMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) 
 
 func (s SpecFactInLogicExprMem) newFact(logicExpr *ast.OrStmt, supposedEnv *ast.SpecFactStmt) error {
 	for i, fact := range logicExpr.Facts {
-		sameEnumFacts, err := s.getSameEnumFacts(&fact)
+		sameEnumFacts, err := s.getSameEnumFacts(fact)
 		if err != nil {
 			return err
 		}
@@ -134,7 +134,7 @@ func (s SpecFactInLogicExprMem) newFact(logicExpr *ast.OrStmt, supposedEnv *ast.
 		if _, ok := sameEnumFacts[string(fact.PropName)]; !ok {
 			sameEnumFacts[string(fact.PropName)] = []KnownSpecFact_InLogicExpr{}
 		}
-		sameEnumFacts[string(fact.PropName)] = append(sameEnumFacts[string(fact.PropName)], *NewKnownSpecFact_InLogicExpr(&fact, i, logicExpr, supposedEnv))
+		sameEnumFacts[string(fact.PropName)] = append(sameEnumFacts[string(fact.PropName)], *NewKnownSpecFact_InLogicExpr(fact, i, logicExpr, supposedEnv))
 	}
 
 	return nil
@@ -262,7 +262,7 @@ func (s SpecFact_InLogicExpr_InUniFactMem) GetSameEnumPkgPropFacts(stmt *ast.Spe
 
 func (s SpecFact_InLogicExpr_InUniFactMem) NewFact(uniStmt *ast.UniFactStmt, logicExpr *ast.OrStmt, supposedEnv *ast.SpecFactStmt) error {
 	for i, fact := range logicExpr.Facts {
-		sameEnumFacts, err := s.getSameEnumFacts(&fact)
+		sameEnumFacts, err := s.getSameEnumFacts(fact)
 		if err != nil {
 			return err
 		}
@@ -279,7 +279,7 @@ func (s SpecFact_InLogicExpr_InUniFactMem) NewFact(uniStmt *ast.UniFactStmt, log
 		if _, ok := sameEnumFacts[string(fact.PropName)]; !ok {
 			sameEnumFacts[string(fact.PropName)] = []SpecFact_InLogicExpr_InUniFact{}
 		}
-		sameEnumFacts[string(fact.PropName)] = append(sameEnumFacts[string(fact.PropName)], *NewSpecFact_InLogicExpr_InUniFact(&fact, uniStmt, i, logicExpr, supposedEnv))
+		sameEnumFacts[string(fact.PropName)] = append(sameEnumFacts[string(fact.PropName)], *NewSpecFact_InLogicExpr_InUniFact(fact, uniStmt, i, logicExpr, supposedEnv))
 	}
 
 	return nil

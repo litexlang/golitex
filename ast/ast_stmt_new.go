@@ -103,7 +103,7 @@ func NewWithPropMatchStmt(fact SpecFactStmt, body []Stmt) *WithStmt {
 	return &WithStmt{fact, body}
 }
 
-func NewOrStmt(orFacts []SpecFactStmt) *OrStmt {
+func NewOrStmt(orFacts []*SpecFactStmt) *OrStmt {
 	return &OrStmt{orFacts}
 }
 

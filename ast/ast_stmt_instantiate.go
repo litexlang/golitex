@@ -233,14 +233,13 @@ func (stmt *DefExistPropStmt) ExistParamInSetsFacts() []FactStmt {
 }
 
 func (stmt *OrStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
-	newOrFacts := make([]SpecFactStmt, len(stmt.Facts))
+	newOrFacts := make([]*SpecFactStmt, len(stmt.Facts))
 	for i, fact := range stmt.Facts {
 		newFact, err := fact.Instantiate(uniMap)
 		if err != nil {
 			return nil, err
 		}
-		newFactPtr := newFact.(*SpecFactStmt)
-		newOrFacts[i] = *newFactPtr
+		newOrFacts[i] = newFact.(*SpecFactStmt)
 	}
 
 	return NewOrStmt(newOrFacts), nil
