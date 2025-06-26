@@ -118,12 +118,16 @@ func (tb *tokenBlock) enumStmt() (*ast.UniFactStmt, error) {
 	}
 
 	enumFcs := []ast.Fc{}
-	for _, factToParse := range tb.body {
-		fc, err := factToParse.header.RawFc()
+	for {
+		fc, err := tb.body[0].header.RawFc()
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
 		}
 		enumFcs = append(enumFcs, fc)
+		tb.body[0].header.skipIfIs(glob.KeySymbolComma)
+		if tb.body[0].header.ExceedEnd() {
+			break
+		}
 	}
 
 	return transformEnumToUniFact(setName, enumFcs), nil
