@@ -131,7 +131,7 @@ func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) error {
 // 	return nil
 // }
 
-func (env *Env) insideAtomsDeclared(nameAsFc ast.Fc, stmt *ast.FnTemplateStmt) error {
+func (env *Env) AtomsInFnTemplateDeclared(nameAsFc ast.Fc, stmt *ast.FnTemplateStmt) error {
 	// fn名不能和parameter名重叠
 	name := nameAsFc.String()
 

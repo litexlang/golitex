@@ -8,6 +8,14 @@ know forall x s:
         x = 5
         x = 6
 
+know:
+    1 $in s
+    2 $in s
+    3 $in s
+    4 $in s
+    5 $in s
+    6 $in s
+
 prove:
     forall x s:
         or:
