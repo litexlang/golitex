@@ -55,22 +55,35 @@ func (exec *Executor) importStmt(stmt *ast.ImportStmt) error {
 
 	if stmt.AsPkgName == "" {
 		// read the file
-		topStmtSlice, err := parser.ParseSourceCode(string(code))
+		execState, err := exec.runSourceCode(string(code))
 		if err != nil {
 			return err
 		}
-		for _, topStmt := range topStmtSlice {
-			execState, err := exec.execOnlyPubStmt(topStmt)
-			if err != nil {
-				return err
-			}
-			if execState != glob.ExecState_True {
-				return fmt.Errorf("failed to execute import statement:\n%s\nSome statements in the imported file are not executed successfully", stmt.String())
-			}
+		if execState != glob.ExecState_True {
+			return fmt.Errorf("failed to execute import statement:\n%s\nSome statements in the imported file are not executed successfully", stmt.String())
 		}
 		execSuccess = true
 	} else {
-		panic(glob.InternalWarningMsg("import with as pkg name is not supported"))
+		originalPkg := taskManager.CurrentPkg
+		taskManager.CurrentPkg = stmt.AsPkgName
+		defer func() {
+			taskManager.CurrentPkg = originalPkg
+		}()
+
+		if _, ok := taskManager.DeclaredPkgNames[stmt.AsPkgName]; !ok {
+			taskManager.DeclaredPkgNames[stmt.AsPkgName] = struct{}{}
+		} else {
+			return fmt.Errorf("duplicate package name: '%s'", stmt.AsPkgName)
+		}
+
+		execState, err := exec.runSourceCode(string(code))
+		if err != nil {
+			return err
+		}
+		if execState != glob.ExecState_True {
+			return fmt.Errorf("failed to execute import statement:\n%s\nSome statements in the imported file are not executed successfully", stmt.String())
+		}
+		execSuccess = true
 	}
 
 	return nil
@@ -83,4 +96,21 @@ func (exec *Executor) execOnlyPubStmt(stmt ast.Stmt) (glob.ExecState, error) {
 	default:
 		return glob.ExecState_True, nil
 	}
+}
+
+func (exec *Executor) runSourceCode(sourceCode string) (glob.ExecState, error) {
+	topStmtSlice, err := parser.ParseSourceCode(sourceCode)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+	for _, topStmt := range topStmtSlice {
+		execState, err := exec.Stmt(topStmt)
+		if err != nil {
+			return glob.ExecState_Error, err
+		}
+		if execState != glob.ExecState_True {
+			return glob.ExecState_Error, fmt.Errorf("failed to execute source code:\n%s\nSome statements in the source code are not executed successfully", sourceCode)
+		}
+	}
+	return glob.ExecState_True, nil
 }
