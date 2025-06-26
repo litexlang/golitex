@@ -430,7 +430,7 @@ func (f *FcFn) String() string {
 		return fnSetString(f)
 	}
 
-	if IsFcAtomWithNameAndEmptyPkg(f.FnHead, glob.KeySymbolDot) {
+	if IsFcAtomEqualToGivenString(f.FnHead, glob.KeySymbolDot) {
 		return fmt.Sprintf("%s.%s", f.Params[0].String(), f.Params[1].String())
 	}
 

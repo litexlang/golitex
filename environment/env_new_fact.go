@@ -154,7 +154,7 @@ func storeCommutativeTransitiveFact(mem map[string]*[]ast.Fc, fact *ast.SpecFact
 
 func (env *Env) newPureFactPostProcess(fact *ast.SpecFactStmt) error {
 	if glob.IsBuiltinKeywordKeySymbolCanBeFcAtomName(string(fact.PropName)) {
-		if fact.PropName.HasGivenNameAndEmptyPkgName(glob.KeywordIn) {
+		if fact.PropName == glob.KeywordIn {
 			return env.inFactPostProcess(fact)
 		} else {
 			return nil
@@ -329,7 +329,7 @@ func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 		return false, nil
 	}
 
-	if !ast.IsFcAtomWithNameAndEmptyPkg(fact.PropName, glob.KeySymbolEqual) {
+	if !ast.IsFcAtomEqualToGivenString(fact.PropName, glob.KeySymbolEqual) {
 		return false, nil
 	}
 
@@ -356,7 +356,7 @@ func (env *Env) isMathInductionPropName_StoreIt(fact *ast.SpecFactStmt) (bool, e
 		return false, nil
 	}
 
-	if !ast.IsFcAtomWithNameAndEmptyPkg(fact.PropName, glob.KeywordProveByMathInduction) {
+	if !ast.IsFcAtomEqualToGivenString(fact.PropName, glob.KeywordProveByMathInduction) {
 		return false, nil
 	}
 

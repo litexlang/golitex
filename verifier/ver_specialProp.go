@@ -20,15 +20,16 @@ import (
 )
 
 func (ver *Verifier) isCommutativeProp_BuiltinRule(stmt *ast.SpecFactStmt) bool {
-	return ast.IsFcAtomWithNameAndEmptyPkg(stmt.PropName, glob.KeySymbolEqual)
+	// return ast.IsFcAtomEqualToGivenString(stmt.PropName, glob.KeySymbolEqual)
+	return stmt.PropName == glob.KeySymbolEqual
 }
 
 func (ver *Verifier) isCommutativeFn_BuiltinRule(fnName ast.FcAtom) bool {
-	if ast.IsFcAtomWithNameAndEmptyPkg(fnName, glob.KeySymbolPlus) {
+	if ast.IsFcAtomEqualToGivenString(fnName, glob.KeySymbolPlus) {
 		return true
 	}
 
-	if ast.IsFcAtomWithNameAndEmptyPkg(fnName, glob.KeySymbolStar) {
+	if ast.IsFcAtomEqualToGivenString(fnName, glob.KeySymbolStar) {
 		return true
 	}
 
@@ -36,11 +37,11 @@ func (ver *Verifier) isCommutativeFn_BuiltinRule(fnName ast.FcAtom) bool {
 }
 
 func (ver *Verifier) isAssociativeFn_BuiltinRule(fnName ast.FcAtom) bool {
-	if ast.IsFcAtomWithNameAndEmptyPkg(fnName, glob.KeySymbolPlus) {
+	if ast.IsFcAtomEqualToGivenString(fnName, glob.KeySymbolPlus) {
 		return true
 	}
 
-	if ast.IsFcAtomWithNameAndEmptyPkg(fnName, glob.KeySymbolStar) {
+	if ast.IsFcAtomEqualToGivenString(fnName, glob.KeySymbolStar) {
 		return true
 	}
 

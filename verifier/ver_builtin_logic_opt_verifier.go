@@ -77,7 +77,7 @@ func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state VerS
 }
 
 func (ver *Verifier) varCommutativeProp_BuiltinRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if !ast.IsFcAtomWithNameAndEmptyPkg(stmt.PropName, glob.KeywordCommutativeProp) {
+	if stmt.PropName != glob.KeywordCommutativeProp {
 		return false, nil
 	}
 
@@ -86,7 +86,8 @@ func (ver *Verifier) varCommutativeProp_BuiltinRules(stmt *ast.SpecFactStmt, sta
 		return false, nil
 	}
 
-	if ast.IsFcAtomWithNameAndEmptyPkg(propNameAsAtom, glob.KeySymbolEqual) {
+	// if ast.IsFcAtomEqualToGivenString(propNameAsAtom, glob.KeySymbolEqual) {
+	if propNameAsAtom == glob.KeySymbolEqual {
 		return true, nil
 	}
 
@@ -135,6 +136,10 @@ func (ver *Verifier) varCommutativeProp_BuiltinRules(stmt *ast.SpecFactStmt, sta
 }
 
 func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	if stmt.PropName != glob.KeywordIn {
+		return false, nil
+	}
+
 	isSuccess := false
 	defer func() {
 		if isSuccess {
@@ -146,10 +151,6 @@ func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactSt
 		}
 	}()
 
-	if !stmt.PropName.HasGivenNameAndEmptyPkgName(glob.KeywordIn) {
-		return false, nil
-	}
-
 	if len(stmt.Params) != 2 {
 		return false, fmt.Errorf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params))
 	}
@@ -159,27 +160,27 @@ func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactSt
 		return false, err
 	}
 	if ok {
-		if ast.IsFcAtomWithNameAndEmptyPkg(stmt.Params[1], glob.KeywordReal) {
+		if ast.IsFcAtomEqualToGivenString(stmt.Params[1], glob.KeywordReal) {
 			isSuccess = glob.IsRealNumLitExpr(leftFc)
 			return isSuccess, nil
 		}
 
-		if ast.IsFcAtomWithNameAndEmptyPkg(stmt.Params[1], glob.KeywordNatural) {
+		if ast.IsFcAtomEqualToGivenString(stmt.Params[1], glob.KeywordNatural) {
 			isSuccess = glob.IsNatNumLitExpr(leftFc)
 			return isSuccess, nil
 		}
 
-		if ast.IsFcAtomWithNameAndEmptyPkg(stmt.Params[1], glob.KeywordInt) {
+		if ast.IsFcAtomEqualToGivenString(stmt.Params[1], glob.KeywordInt) {
 			isSuccess = glob.IsIntegerNumLitExpr(leftFc)
 			return isSuccess, nil
 		}
 
-		if ast.IsFcAtomWithNameAndEmptyPkg(stmt.Params[1], glob.KeywordRational) {
+		if ast.IsFcAtomEqualToGivenString(stmt.Params[1], glob.KeywordRational) {
 			isSuccess = glob.IsRationalNumLitExpr(leftFc)
 			return isSuccess, nil
 		}
 
-		if ast.IsFcAtomWithNameAndEmptyPkg(stmt.Params[1], glob.KeywordComplex) {
+		if ast.IsFcAtomEqualToGivenString(stmt.Params[1], glob.KeywordComplex) {
 			isSuccess = glob.IsComplexNumLitExpr(leftFc)
 			return isSuccess, nil
 		}

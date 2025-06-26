@@ -162,18 +162,19 @@ func IsFcAtomAndHasBuiltinPropName(fc Fc) bool {
 	return glob.IsBuiltinInfixRelaPropSymbol(string(fcAtom))
 }
 
-func (fc FcAtom) HasGivenNameAndEmptyPkgName(kw string) bool {
-	// return fc.PkgName == glob.EmptyPkg && fc.Name == kw
-	// 不含有 ::
-	return string(fc) == kw && !strings.Contains(string(fc), glob.KeySymbolColonColon)
-}
+// func (fc FcAtom) HasGivenNameAndEmptyPkgName(kw string) bool {
+// return fc.PkgName == glob.EmptyPkg && fc.Name == kw
+// 不含有 ::
+// 	return string(fc) == kw && !strings.Contains(string(fc), glob.KeySymbolColonColon)
+// }
 
-func IsFcAtomWithNameAndEmptyPkg(fc Fc, kw string) bool {
+func IsFcAtomEqualToGivenString(fc Fc, kw string) bool {
 	fcAtom, ok := fc.(FcAtom)
 	if !ok {
 		return false
 	}
-	return fcAtom.HasGivenNameAndEmptyPkgName(kw)
+
+	return string(fcAtom) == kw && !strings.Contains(string(fcAtom), glob.KeySymbolColonColon)
 }
 
 func (f *FcFn) HasTwoParamsAndSwitchOrder() (*FcFn, bool) {
