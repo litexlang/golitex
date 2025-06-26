@@ -22,7 +22,7 @@ import (
 )
 
 func (env *Env) IsValidUserDefinedName_NoDuplicate(name string) error {
-	err := glob.IsValidUserDefinedName(name)
+	err := glob.IsValidUseDefinedFcAtom(name)
 	if err != nil {
 		return err
 	}

@@ -16,9 +16,11 @@ package litex_global
 
 import (
 	"fmt"
+	taskManager "golitex/task_manager"
+	"strings"
 )
 
-func IsValidUserDefinedName(name string) error {
+func isValidUserDefinedName(name string) error {
 	if len(name) == 0 {
 		return fmt.Errorf("identifier name cannot be empty")
 	}
@@ -43,6 +45,26 @@ func IsValidUserDefinedName(name string) error {
 		}
 	} else {
 		return fmt.Errorf("identifier name must start with _ or english letter")
+	}
+
+	return nil
+}
+
+func IsValidUseDefinedFcAtom(name string) error {
+	// 用：：切割，得到PkgName 和 Name
+	values := strings.Split(name, KeySymbolColonColon)
+
+	// values 必须满足 IsValidUserDefinedName
+	for _, value := range values {
+		if err := isValidUserDefinedName(value); err != nil {
+			return err
+		}
+	}
+
+	// pkgName 必须声明过啦, 前n-1位join起来
+	pkgName := strings.Join(values[:len(values)-1], KeySymbolColonColon)
+	if _, ok := taskManager.DeclaredPkgNames[pkgName]; !ok {
+		return fmt.Errorf("package %s is not declared", pkgName)
 	}
 
 	return nil
