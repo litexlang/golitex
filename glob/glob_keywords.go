@@ -66,6 +66,7 @@ const (
 	KeywordSubsetOf = "subset_of" // though this can be defined by forall, it's still useful to have it as a keyword
 	// TODO
 	// a syntax connecting or and finite_set
+	KeywordEnum = "enum"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -115,6 +116,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordFnTemplate:             {},
 	KeywordStruct:                 {},
 	KeywordSubsetOf:               {},
+	KeywordEnum:                   {},
 }
 
 const (
