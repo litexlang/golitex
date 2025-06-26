@@ -258,6 +258,17 @@ func (stmt *SpecFactStmt) GetAtoms() []FcAtom {
 	return atoms
 }
 
+func (stmt *EnumStmt) GetAtoms() []FcAtom {
+	atomsOfName := GetAtomsInFc(stmt.EnumName)
+
+	atoms := []FcAtom{}
+	atoms = append(atoms, atomsOfName...)
+	for _, value := range stmt.EnumValues {
+		atoms = append(atoms, GetAtomsInFc(value)...)
+	}
+	return atoms
+}
+
 func (stmt *UniFactStmt) GetAtoms() []FcAtom {
 	atoms := []FcAtom{}
 	for _, param := range stmt.ParamSets {
