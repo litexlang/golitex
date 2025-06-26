@@ -43,7 +43,7 @@ For discussions about design of Litex, please refer to [design](./doc/design/des
 - **Project Email:** litexlang@outlook.com
 - **Litex Creator:** Jiachen Shen
 - **Litex Creator's Email:** malloc_realloc_free@outlook.com
-- **Litex Zulip Community:** [litex.zulipchat.com](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
+- **Litex Zulip Community:** [Litex Zulip Community](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
 
 ## A Simple Example
 
