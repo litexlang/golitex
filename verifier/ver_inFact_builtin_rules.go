@@ -74,7 +74,7 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state VerState) 
 }
 
 func (ver *Verifier) returnValueOfBuiltinArithmeticFnInReal(stmt *ast.SpecFactStmt, state VerState) bool {
-	ok := ast.IsFcAtomWithNameAndEmptyPkg(stmt.Params[1], glob.KeywordReal)
+	ok := ast.IsFcAtomEqualToGivenString(stmt.Params[1], glob.KeywordReal)
 	if !ok {
 		return false
 	}
@@ -133,7 +133,7 @@ func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactS
 }
 
 func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state VerState) bool {
-	ok := ast.IsFcAtomWithNameAndEmptyPkg(stmt.Params[1], glob.KeywordSet)
+	ok := ast.IsFcAtomEqualToGivenString(stmt.Params[1], glob.KeywordSet)
 	if !ok {
 		return false
 	}

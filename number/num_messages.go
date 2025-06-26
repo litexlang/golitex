@@ -39,13 +39,13 @@ func fcAtomString(fcAtom ast.FcAtom) string {
 }
 
 func fcFnString(fcFn *ast.FcFn) string {
-	if ast.IsFcAtomWithNameAndEmptyPkg(fcFn.FnHead, glob.KeySymbolPlus) {
+	if ast.IsFcAtomEqualToGivenString(fcFn.FnHead, glob.KeySymbolPlus) {
 		return "(" + FcStringForParseAndExpandPolynomial(fcFn.Params[0]) + " + " + FcStringForParseAndExpandPolynomial(fcFn.Params[1]) + ")"
 	}
-	if ast.IsFcAtomWithNameAndEmptyPkg(fcFn.FnHead, glob.KeySymbolStar) {
+	if ast.IsFcAtomEqualToGivenString(fcFn.FnHead, glob.KeySymbolStar) {
 		return "(" + FcStringForParseAndExpandPolynomial(fcFn.Params[0]) + " * " + FcStringForParseAndExpandPolynomial(fcFn.Params[1]) + ")"
 	}
-	if ast.IsFcAtomWithNameAndEmptyPkg(fcFn.FnHead, glob.KeySymbolMinus) {
+	if ast.IsFcAtomEqualToGivenString(fcFn.FnHead, glob.KeySymbolMinus) {
 		if len(fcFn.Params) == 1 {
 			return "(" + "0" + " - " + FcStringForParseAndExpandPolynomial(fcFn.Params[0]) + ")"
 		} else if len(fcFn.Params) == 2 {
@@ -55,7 +55,7 @@ func fcFnString(fcFn *ast.FcFn) string {
 		}
 	}
 	// 如果是幂运算，则把它展开成对应的乘法，比如(x+1)^2 展开成 (x+1) * (x+1)
-	if ast.IsFcAtomWithNameAndEmptyPkg(fcFn.FnHead, glob.KeySymbolPower) {
+	if ast.IsFcAtomEqualToGivenString(fcFn.FnHead, glob.KeySymbolPower) {
 		base := FcStringForParseAndExpandPolynomial(fcFn.Params[0])
 		exp := FcStringForParseAndExpandPolynomial(fcFn.Params[1])
 
