@@ -27,6 +27,8 @@ One major challenge is that I require less functionality than a Turing machine. 
 
 Fortunately, Litex has translated a vast amount of mathematical material, and there has never been a case where the logic could not be expressed. Empirically, the user does not need to worry about this.
 
+After implementing 1. arithmetic and 2. counting, Litex has been able to express common language features in Python which math does not need. Now inventing new features is not about making Litex logically complete so that there is no logic it is not able to express. It is about making Litex more natural to use, which means implementing features that people are already most familiar with in their daily life.
+
 ## Evolution and Development of Litex
 
 _Cross the river by feeling the stones._

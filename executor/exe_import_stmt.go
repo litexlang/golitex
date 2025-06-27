@@ -71,16 +71,17 @@ func (exec *Executor) importStmt(stmt *ast.ImportStmt) (glob.ExecState, error) {
 
 }
 
-func (exec *Executor) runFileToMakeSureTheFileIsTrue(codePath string) (glob.ExecState, []*ast.PubStmt, error) {
+func (exec *Executor) runFileToMakeSureTheFileIsTrue(codePath string) (glob.ExecState, []ast.Stmt, error) {
 	code, err := os.ReadFile(codePath)
 	if err != nil {
 		return glob.ExecState_Error, nil, err
 	}
 
+	// TODO 这里有问题，即使我不运行，我也应该能把stmt传出去
 	var execState glob.ExecState = glob.ExecState_True
-	var pubStmtSlice []*ast.PubStmt = []*ast.PubStmt{}
+	var topStmtSlice []ast.Stmt = []ast.Stmt{}
 	if !glob.AssumeImportFilesAreTrue {
-		execState, pubStmtSlice, err = exec.runSourceCode(true, string(code))
+		execState, topStmtSlice, err = exec.runSourceCode(true, string(code))
 		if err != nil {
 			return glob.ExecState_Error, nil, err
 		}
@@ -89,10 +90,10 @@ func (exec *Executor) runFileToMakeSureTheFileIsTrue(codePath string) (glob.Exec
 		}
 	}
 
-	return execState, pubStmtSlice, nil
+	return execState, topStmtSlice, nil
 }
 
-func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string) (glob.ExecState, []*ast.PubStmt, error) {
+func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string) (glob.ExecState, []ast.Stmt, error) {
 	if runInNewEnv {
 		exec.newEnv(exec.env, nil)
 		defer func() {
@@ -101,7 +102,6 @@ func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string) (glob.E
 	}
 
 	topStmtSlice, err := parser.ParseSourceCode(sourceCode)
-	var pubStmtSlice []*ast.PubStmt = []*ast.PubStmt{}
 	var execState glob.ExecState = glob.ExecState_True
 	if err != nil {
 		return glob.ExecState_Error, nil, err
@@ -114,27 +114,22 @@ func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string) (glob.E
 		if execState != glob.ExecState_True {
 			return glob.ExecState_Error, nil, fmt.Errorf("failed to execute source code:\n%s\nSome statements in the source code are not executed successfully", sourceCode)
 		}
-		if pubStmt, ok := topStmt.(*ast.PubStmt); ok {
-			pubStmtSlice = append(pubStmtSlice, pubStmt)
-		}
 	}
 
-	return execState, pubStmtSlice, nil
+	return execState, topStmtSlice, nil
 }
 
-func (exec *Executor) runSourceCodePubStmt(pubStmtSlice []*ast.PubStmt) (glob.ExecState, error) {
+func (exec *Executor) runSourceAssumeStmtIsTrue(topStmtSlice []ast.Stmt) (glob.ExecState, error) {
 	upMostEnv := exec.env.GetUpMostEnv()
 	newExec := NewExecutor(upMostEnv)
 
-	for _, pubStmt := range pubStmtSlice {
-		for _, stmt := range pubStmt.Stmts {
-			execState, err := newExec.assumeStmtIsTrueRun(stmt)
-			if err != nil {
-				return glob.ExecState_Error, err
-			}
-			if execState != glob.ExecState_True {
-				return glob.ExecState_Error, fmt.Errorf("failed to execute source code:\n%s\nSome statements in the source code are not executed successfully", pubStmt.String())
-			}
+	for _, topStmt := range topStmtSlice {
+		execState, err := newExec.assumeStmtIsTrueRun(topStmt)
+		if err != nil {
+			return glob.ExecState_Error, err
+		}
+		if execState != glob.ExecState_True {
+			return glob.ExecState_Error, fmt.Errorf("failed to execute source code:\n%s\nSome statements in the source code are not executed successfully", topStmt.String())
 		}
 	}
 	return glob.ExecState_True, nil
@@ -162,7 +157,7 @@ func (exec *Executor) importFileWithoutPkgName(stmt *ast.ImportStmt) (glob.ExecS
 // 把指定的文件里的所有东西，以及涉及到的包的所有的main文件递归地提取出来，都提取出来到全局里
 func (exec *Executor) importFileWithPkgName(importPath string, pkgName string) (glob.ExecState, error) {
 	codePath := filepath.Join(glob.TaskDirName, importPath)
-	execState, pubStmtSlice, err := exec.runFileToMakeSureTheFileIsTrue(codePath)
+	execState, topStmtSlice, err := exec.runFileToMakeSureTheFileIsTrue(codePath)
 	if err != nil {
 		return glob.ExecState_Error, fmt.Errorf("failed to execute import statement:\n%s", ast.NewImportStmt(importPath, pkgName).String())
 	}
@@ -171,7 +166,7 @@ func (exec *Executor) importFileWithPkgName(importPath string, pkgName string) (
 		return glob.ExecState_Error, fmt.Errorf("failed to execute import statement:\n%s\nSome statements in the imported file are not executed successfully", ast.NewImportStmt(importPath, pkgName).String())
 	}
 
-	execState, err = exec.runSourceCodePubStmt(pubStmtSlice)
+	execState, err = exec.runSourceAssumeStmtIsTrue(topStmtSlice)
 	if err != nil {
 		return glob.ExecState_Error, err
 	}

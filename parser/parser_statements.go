@@ -22,11 +22,13 @@ import (
 )
 
 func (tb *tokenBlock) TopStmt() (ast.Stmt, error) {
-	if tb.header.is(glob.KeywordPub) {
-		return tb.pubStmt()
-	} else {
-		return tb.stmt()
-	}
+	// if tb.header.is(glob.KeywordPub) {
+	// 	return tb.pubStmt()
+	// } else {
+	// 	return tb.stmt()
+	// }
+	return tb.stmt()
+
 }
 
 func (tb *tokenBlock) stmt() (ast.Stmt, error) {
@@ -1087,23 +1089,23 @@ func (tb *tokenBlock) getStringInDoubleQuotes() (string, error) {
 	return builder.String(), nil
 }
 
-func (tb *tokenBlock) pubStmt() (*ast.PubStmt, error) {
-	err := tb.header.skipKwAndColon_ExceedEnd(glob.KeywordPub)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
+// func (tb *tokenBlock) pubStmt() (*ast.PubStmt, error) {
+// 	err := tb.header.skipKwAndColon_ExceedEnd(glob.KeywordPub)
+// 	if err != nil {
+// 		return nil, &tokenBlockErr{err, *tb}
+// 	}
 
-	stmts := []ast.Stmt{}
-	for _, stmt := range tb.body {
-		curStmt, err := stmt.stmt()
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
-		}
-		stmts = append(stmts, curStmt)
-	}
+// 	stmts := []ast.Stmt{}
+// 	for _, stmt := range tb.body {
+// 		curStmt, err := stmt.stmt()
+// 		if err != nil {
+// 			return nil, &tokenBlockErr{err, *tb}
+// 		}
+// 		stmts = append(stmts, curStmt)
+// 	}
 
-	return ast.NewPubStmt(stmts), nil
-}
+// 	return ast.NewPubStmt(stmts), nil
+// }
 
 func (tb *tokenBlock) proveStmt() (*ast.ProveStmt, error) {
 	err := tb.header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
