@@ -194,6 +194,25 @@ func (env *Env) newUniFact(stmt *ast.UniFactStmt) error {
 			if err != nil {
 				return err
 			}
+		} else if thenStmtAsEnum, ok := thenStmt.(*ast.EnumStmt); ok {
+			forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts := ast.TransformEnumToUniFact(thenStmtAsEnum.EnumName, thenStmtAsEnum.EnumValues)
+			mergedUniFact := ast.MergeOuterInnerUniFacts(stmt, forallItemInSetEqualToOneOfGivenItems)
+			err := env.newUniFact(mergedUniFact)
+			if err != nil {
+				return err
+			}
+			for _, fact := range pairwiseNotEqualFacts {
+				err := env.storeUniFact(fact, stmt)
+				if err != nil {
+					return err
+				}
+			}
+			for _, fact := range itemsInSetFacts {
+				err := env.storeUniFact(fact, stmt)
+				if err != nil {
+					return err
+				}
+			}
 		} else {
 			return fmt.Errorf("TODO: newSpecFactInUniFact Currently only support spec fact in uni fact, but got: %s", thenStmt.String())
 		}

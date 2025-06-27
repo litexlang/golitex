@@ -103,22 +103,11 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
 	}
 
 	if glob.CheckFalse {
-		if asSpecFact, ok := stmt.(*ast.SpecFactStmt); ok {
-			reversedFact := asSpecFact.ReverseTrue()
-			curVerifier := verifier.NewVerifier(exec.env)
-			ok, err := curVerifier.VerFactStmt(reversedFact, verifier.Round0Msg)
-			if err != nil {
-				return glob.ExecState_Error, err
-			}
-			if ok {
-				exec.appendMsg(asSpecFact.String() + "\nis false")
-				return glob.ExecState_False, nil
-			} else {
-				exec.appendMsg(stmt.String() + "\nis unknown")
-			}
-		} else {
-			exec.appendMsg(stmt.String() + "\nis unknown")
+		state, err := exec.checkReverse(stmt)
+		if notOkExec(state, err) {
+			return state, err
 		}
+		return state, nil
 	} else {
 		exec.appendMsg(stmt.String() + "\nis unknown")
 	}
@@ -661,4 +650,34 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 	exec.appendMsg(fmt.Sprintf("%s\nis true by definition", derivedFact.String()))
 
 	return nil
+}
+
+func (exec *Executor) checkReverse(stmt ast.FactStmt) (glob.ExecState, error) {
+	if asSpecFact, ok := stmt.(*ast.SpecFactStmt); ok {
+		reversedFact := asSpecFact.ReverseTrue()
+		curVerifier := verifier.NewVerifier(exec.env)
+		ok, err := curVerifier.VerFactStmt(reversedFact, verifier.Round0Msg)
+		if err != nil {
+			return glob.ExecState_Error, err
+		}
+		if ok {
+			exec.appendMsg(asSpecFact.String() + "\nis false")
+			return glob.ExecState_False, nil
+		} else {
+			exec.appendMsg(stmt.String() + "\nis unknown")
+		}
+	} else if asOrStmt, ok := stmt.(*ast.OrStmt); ok {
+		for _, fact := range asOrStmt.Facts {
+			execState, err := exec.checkReverse(fact)
+			if notOkExec(execState, err) {
+				exec.appendMsg(stmt.String() + "\nis unknown")
+				return execState, err
+			}
+		}
+		exec.appendMsg(stmt.String() + "\nis false")
+	} else {
+		exec.appendMsg(stmt.String() + "\nis unknown")
+	}
+
+	return glob.ExecState_Unknown, nil
 }
