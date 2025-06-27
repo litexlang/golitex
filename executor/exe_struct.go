@@ -15,10 +15,8 @@
 package litex_executor
 
 import (
-	"fmt"
 	ast "golitex/ast"
 	env "golitex/environment"
-	glob "golitex/glob"
 )
 
 // type Executor env.Env
@@ -38,35 +36,4 @@ func NewExecutor(curEnv *env.Env) *Executor {
 func (e *Executor) newEnv(parent *env.Env, curMatchEnv *ast.SpecFactStmt) *env.Env {
 	e.env = env.NewEnv(parent, curMatchEnv)
 	return e.env
-}
-
-func (e *Executor) deleteEnvAndRetainMsg() {
-	for _, msg := range e.env.Msgs {
-		e.env.Parent.AppendMsg(msg)
-	}
-	e.env = e.env.Parent
-}
-
-func (e *Executor) appendMsg(msg string, str ...any) {
-	if !glob.IsImportState() {
-		e.env.Msgs = append(e.env.Msgs, fmt.Sprintf(msg, str...))
-	}
-}
-
-func (e *Executor) appendNewMsgAtBegin(msg string, str ...any) {
-	if !glob.IsImportState() {
-		e.env.Msgs = append([]string{fmt.Sprintf(msg, str...)}, e.env.Msgs...)
-	}
-}
-
-func (e *Executor) appendWarningMsg(msg string, str ...any) {
-	if !glob.IsImportState() {
-		e.env.Msgs = append(e.env.Msgs, fmt.Sprintf(`warning: %s`, fmt.Sprintf(msg, str...)))
-	}
-}
-
-func (e *Executor) appendInternalWarningMsg(msg string, str ...any) {
-	if !glob.IsImportState() {
-		e.env.Msgs = append(e.env.Msgs, glob.InternalWarningMsg(msg, str...))
-	}
 }

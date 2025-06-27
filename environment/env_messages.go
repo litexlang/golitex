@@ -35,7 +35,7 @@ func (env *Env) String() string {
 }
 
 func (e *Env) AppendMsg(s string) {
-	if glob.IsImportState() {
+	if glob.IsNotImportState() {
 		return
 	}
 	if e == nil {
