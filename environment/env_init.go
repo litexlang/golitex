@@ -20,11 +20,6 @@ import (
 )
 
 func (env *Env) Init() {
-	// 求余数
-	add_minus_star_slash_mod_in_template(env)
-}
-
-func add_minus_star_slash_mod_in_template(env *Env) {
 	addAtom := ast.FcAtom(glob.KeySymbolPlus)
 	addTemplate := ast.NewFnTemplateStmt(ast.NewDefHeader(addAtom.String(), []string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordReal), ast.FcAtom(glob.KeywordReal)}), []ast.FactStmt{}, []ast.FactStmt{}, ast.FcAtom(glob.KeywordReal))
 	env.FcSatisfy_FreeTemplateFact_Store_DeriveFacts(addAtom, addTemplate)
@@ -45,4 +40,7 @@ func add_minus_star_slash_mod_in_template(env *Env) {
 	modTemplate := ast.NewFnTemplateStmt(ast.NewDefHeader(modAtom.String(), []string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordInt), ast.FcAtom(glob.KeywordInt)}), []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{ast.FcAtom("y"), ast.FcAtom("0")})}, ast.FcAtom(glob.KeywordInt))
 	env.FcSatisfy_FreeTemplateFact_Store_DeriveFacts(modAtom, modTemplate)
 
+	lenAtom := ast.FcAtom(glob.KeywordLen)
+	lenTemplate := ast.NewFnTemplateStmt(ast.NewDefHeader(lenAtom.String(), []string{"x"}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}), []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIsFiniteSet), []ast.Fc{ast.FcAtom("x")})}, []ast.FactStmt{}, ast.FcAtom(glob.KeywordNatural))
+	env.FcSatisfy_FreeTemplateFact_Store_DeriveFacts(lenAtom, lenTemplate)
 }
