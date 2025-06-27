@@ -159,6 +159,7 @@ func (exec *Executor) importFileWithoutPkgName(stmt *ast.ImportStmt) (glob.ExecS
 	return glob.ExecState_True, nil
 }
 
+// 把指定的文件里的所有东西，以及涉及到的包的所有的main文件递归地提取出来，都提取出来到全局里
 func (exec *Executor) importFileWithPkgName(importPath string, pkgName string) (glob.ExecState, error) {
 	codePath := filepath.Join(glob.TaskDirName, importPath)
 	execState, pubStmtSlice, err := exec.runFileToMakeSureTheFileIsTrue(codePath)
@@ -178,6 +179,7 @@ func (exec *Executor) importFileWithPkgName(importPath string, pkgName string) (
 	return execState, nil
 }
 
+// Recursively 地找到所有的包和子包的main文件，把里面的东西都提取出来到全局里
 func (exec *Executor) importDirWithPkgName(stmt *ast.ImportStmt) (glob.ExecState, error) {
 	glob.TaskDirName = filepath.Join(glob.TaskDirName, stmt.Path)
 	return exec.importFileWithPkgName("main.lix", stmt.AsPkgName)
