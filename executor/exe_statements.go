@@ -56,8 +56,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		execState, err = exec.withStmt(stmt)
 	case *ast.ImportStmt:
 		execState, err = exec.importStmt(stmt)
-	case *ast.PubStmt:
-		execState, err = exec.pubStmt(stmt)
+	// case *ast.PubStmt:
+	// 	execState, err = exec.pubStmt(stmt)
 	case *ast.ProveStmt:
 		execState, err = exec.proveStmt(stmt)
 	case *ast.ClaimProveByContradictionStmt:
@@ -75,15 +75,15 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 	}
 }
 
-func (exec *Executor) pubStmt(stmt *ast.PubStmt) (glob.ExecState, error) {
-	for _, curStmt := range stmt.Stmts {
-		execState, err := exec.Stmt(curStmt)
-		if notOkExec(execState, err) {
-			return execState, err
-		}
-	}
-	return glob.ExecState_True, nil
-}
+// func (exec *Executor) pubStmt(stmt *ast.PubStmt) (glob.ExecState, error) {
+// 	for _, curStmt := range stmt.Stmts {
+// 		execState, err := exec.Stmt(curStmt)
+// 		if notOkExec(execState, err) {
+// 			return execState, err
+// 		}
+// 	}
+// 	return glob.ExecState_True, nil
+// }
 
 func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
 	if glob.IsNotImportState() {

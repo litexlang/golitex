@@ -14,9 +14,9 @@
 
 package litex_ast
 
-func NewPubStmt(stmts []Stmt) *PubStmt {
-	return &PubStmt{stmts}
-}
+// func NewPubStmt(stmts []Stmt) *PubStmt {
+// 	return &PubStmt{stmts}
+// }
 
 func NewDefObjStmt(objs []string, objSets []Fc, facts []FactStmt) *DefObjStmt {
 	return &DefObjStmt{objs, objSets, facts}

@@ -1,3 +1,2 @@
-pub:
-    obj a N:
-        a = 1
+obj a N:
+    a = 1
