@@ -29,17 +29,16 @@ func (exec *Executor) importStmt(stmt *ast.ImportStmt) error {
 	if err != nil {
 		return err
 	}
-	defer func() {
-		glob.ImportStmtEnd()
-	}()
 
 	execSuccess := false
 	defer func() {
+		glob.ImportStmtEnd()
 		if !execSuccess {
 			exec.appendMsg(fmt.Sprintf("Failed to execute import statement:\n%s\n", stmt.String()))
 		} else {
 			exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
 		}
+
 	}()
 
 	// 如果 path 的末尾是 .lix

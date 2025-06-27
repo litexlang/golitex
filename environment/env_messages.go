@@ -34,7 +34,10 @@ func (env *Env) String() string {
 	return ""
 }
 
-func (e *Env) NewMsg(s string) {
+func (e *Env) AppendMsg(s string) {
+	if glob.IsImportState() {
+		return
+	}
 	if e == nil {
 		panic("NewMsg: CurMatchProp is nil")
 	}
