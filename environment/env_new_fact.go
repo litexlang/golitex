@@ -18,6 +18,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
+	"strconv"
 )
 
 func (env *Env) NewFact(stmt ast.FactStmt) error {
@@ -515,6 +516,22 @@ func (env *Env) newEnumFact(stmt *ast.EnumStmt) error {
 		if err != nil {
 			return err
 		}
+	}
+
+	// postprocess 1. s is $is_finite_set 2. len(s) = number of items in set
+	finiteSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIsFiniteSet), []ast.Fc{stmt.EnumName})
+	err = env.NewFact(finiteSetFact)
+	if err != nil {
+		return err
+	}
+
+	lengthOfSet := strconv.Itoa(len(stmt.EnumValues))
+	lengthOfSetAsFcAtom := ast.FcAtom(lengthOfSet)
+
+	lenFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{ast.NewFcFn(ast.FcAtom(glob.KeywordLen), []ast.Fc{stmt.EnumName}), lengthOfSetAsFcAtom})
+	err = env.NewFact(lenFact)
+	if err != nil {
+		return err
 	}
 
 	return nil
