@@ -35,11 +35,11 @@ func (exec *Executor) importStmt(stmt *ast.ImportStmt) error {
 		glob.ImportStmtEnd()
 		if !execSuccess {
 			if glob.IsNotImportState() {
-				exec.appendMsg2(fmt.Sprintf("Failed to execute import statement:\n%s\n", stmt.String()))
+				exec.appendMsg(fmt.Sprintf("Failed to execute import statement:\n%s\n", stmt.String()))
 			}
 		} else {
 			if glob.IsNotImportState() {
-				exec.appendMsg2(fmt.Sprintf("%s\n", stmt.String()))
+				exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
 			}
 		}
 

@@ -25,8 +25,8 @@ import (
 func (exec *Executor) supposePropMatchStmt(stmt *ast.SupposeStmt) (glob.ExecState, error) {
 	defer func() {
 		if glob.IsNotImportState() {
-			exec.appendMsg2("\n")
-			exec.appendMsg2(stmt.String())
+			exec.appendMsg("\n")
+			exec.appendMsg(stmt.String())
 		}
 	}()
 
@@ -202,7 +202,7 @@ func (exec *Executor) supposeStmt_storeFactsToEnv(insideFacts []ast.FactStmt, st
 	}
 
 	if glob.IsNotImportState() {
-		exec.appendMsg2(ast.SupposeNewFactsMsg(stmt, messages))
+		exec.appendMsg(ast.SupposeNewFactsMsg(stmt, messages))
 	}
 
 	return glob.ExecState_True, nil
