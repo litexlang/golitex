@@ -55,7 +55,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 	case *ast.WithStmt:
 		execState, err = exec.withStmt(stmt)
 	case *ast.ImportStmt:
-		err = exec.importStmt(stmt)
+		execState, err = exec.importStmt(stmt)
 	case *ast.PubStmt:
 		execState, err = exec.pubStmt(stmt)
 	case *ast.ProveStmt:
