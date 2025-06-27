@@ -14,4 +14,4 @@
 
 package litex_global
 
-const CheckFalse = true
+const CheckFalse = false
