@@ -16,7 +16,7 @@ package litex_global
 
 import (
 	"fmt"
-	"path/filepath"
+	"strings"
 )
 
 // 存储当前的传入的repo的repo名
@@ -32,9 +32,13 @@ func ImportStmtInit(newPkg string) error {
 
 	previousPkg = CurrentPkg
 	if newPkg != "" {
-		CurrentPkg = filepath.Join(CurrentPkg, newPkg)
+		if CurrentPkg == "" {
+			CurrentPkg = newPkg
+		} else {
+			CurrentPkg = strings.Join([]string{CurrentPkg, newPkg}, KeySymbolColonColon)
+		}
 		// import name should be valid
-		err := IsValidUseDefinedFcAtom(CurrentPkg)
+		err := IsValidUseDefinedFcAtom(newPkg)
 		if err != nil {
 			return err
 		}
