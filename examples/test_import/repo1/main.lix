@@ -1,0 +1,5 @@
+import  "./repo1_1" as pkg1_1
+
+pub:
+    obj a N:
+        a = pkg1_1::a

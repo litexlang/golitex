@@ -1,5 +1,8 @@
-import  "./pkg1.lix" as pkg1
+import  "./pkg0.lix" as pkg0
 import  "./proof1.lix"
-import  "./repo1" as pkg2
+import  "./repo1" as pkg1
 
-a = 1
+obj a N:
+    a = pkg1::a
+
+a = pkg1::pkg1_1::a

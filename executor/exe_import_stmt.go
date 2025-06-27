@@ -64,8 +64,18 @@ func (exec *Executor) importStmt(stmt *ast.ImportStmt) error {
 }
 
 func (exec *Executor) runImportDir(stmt *ast.ImportStmt) (glob.ExecState, error) {
-	codePath := filepath.Join(glob.TaskDirName, stmt.Path)
-	codePath = filepath.Join(codePath, "main.lix")
+	glob.TaskDirName = filepath.Join(glob.TaskDirName, stmt.Path)
+
+	err := glob.ImportStmtInit(stmt.AsPkgName)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+
+	defer func() {
+		glob.ImportStmtEnd()
+	}()
+
+	codePath := filepath.Join(glob.TaskDirName, "main.lix")
 	code, err := os.ReadFile(codePath)
 	if err != nil {
 		return glob.ExecState_Error, err
@@ -125,10 +135,9 @@ func (exec *Executor) runImportFileWithPkgName(stmt *ast.ImportStmt) (glob.ExecS
 
 func (exec *Executor) runSourceCodeAsByteSlice(code []byte) (glob.ExecState, error) {
 	var err error
-	var pubStmtSlice []*ast.PubStmt = []*ast.PubStmt{}
 	var execState glob.ExecState = glob.ExecState_True
 	if !glob.AssumeImportFilesAreTrue {
-		execState, pubStmtSlice, err = exec.runSourceCode(true, string(code))
+		execState, _, err = exec.runSourceCode(true, string(code))
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
@@ -137,22 +146,28 @@ func (exec *Executor) runSourceCodeAsByteSlice(code []byte) (glob.ExecState, err
 		}
 	}
 
-	for _, pubStmt := range pubStmtSlice {
-		for _, stmt := range pubStmt.Stmts {
-			execState, err := exec.assumeStmtIsTrueRun(stmt)
-			if err != nil {
-				return glob.ExecState_Error, err
-			}
-			if execState != glob.ExecState_True {
-				return glob.ExecState_Error, fmt.Errorf("failed to execute import statement:\n%s\nSome statements in the imported file are not executed successfully", stmt.String())
-			}
-		}
-	}
-
 	return execState, nil
 }
 
 func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string) (glob.ExecState, []*ast.PubStmt, error) {
+	execState, pubStmtSlice, err := exec.runSourceCodeTopStmt(sourceCode, runInNewEnv)
+	if err != nil {
+		return glob.ExecState_Error, nil, err
+	}
+
+	if execState != glob.ExecState_True {
+		return glob.ExecState_Error, nil, fmt.Errorf("failed to execute source code:\n%s\nSome statements in the source code are not executed successfully", sourceCode)
+	}
+
+	execState, err = exec.runSourceCodePubStmt(pubStmtSlice)
+	if err != nil {
+		return glob.ExecState_Error, nil, err
+	}
+
+	return execState, pubStmtSlice, nil
+}
+
+func (exec *Executor) runSourceCodeTopStmt(sourceCode string, runInNewEnv bool) (glob.ExecState, []*ast.PubStmt, error) {
 	if runInNewEnv {
 		exec.env = exec.newEnv(exec.env, nil)
 		defer func() {
@@ -177,5 +192,24 @@ func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string) (glob.E
 			pubStmtSlice = append(pubStmtSlice, pubStmt)
 		}
 	}
+
 	return glob.ExecState_True, pubStmtSlice, nil
+}
+
+func (exec *Executor) runSourceCodePubStmt(pubStmtSlice []*ast.PubStmt) (glob.ExecState, error) {
+	upMostEnv := exec.env.GetUpMostEnv()
+	newExec := NewExecutor(upMostEnv)
+
+	for _, pubStmt := range pubStmtSlice {
+		for _, stmt := range pubStmt.Stmts {
+			execState, err := newExec.assumeStmtIsTrueRun(stmt)
+			if err != nil {
+				return glob.ExecState_Error, err
+			}
+			if execState != glob.ExecState_True {
+				return glob.ExecState_Error, fmt.Errorf("failed to execute source code:\n%s\nSome statements in the source code are not executed successfully", pubStmt.String())
+			}
+		}
+	}
+	return glob.ExecState_True, nil
 }

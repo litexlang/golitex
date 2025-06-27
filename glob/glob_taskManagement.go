@@ -14,7 +14,10 @@
 
 package litex_global
 
-import "fmt"
+import (
+	"fmt"
+	"path/filepath"
+)
 
 // 存储当前的传入的repo的repo名
 var TaskDirName string
@@ -28,18 +31,18 @@ func ImportStmtInit(newPkg string) error {
 	ImportState++
 
 	previousPkg = CurrentPkg
-	CurrentPkg = newPkg
 	if newPkg != "" {
+		CurrentPkg = filepath.Join(CurrentPkg, newPkg)
 		// import name should be valid
-		err := IsValidUseDefinedFcAtom(newPkg)
+		err := IsValidUseDefinedFcAtom(CurrentPkg)
 		if err != nil {
 			return err
 		}
 
-		if _, ok := DeclaredPkgNames[newPkg]; !ok {
-			DeclaredPkgNames[newPkg] = struct{}{}
+		if _, ok := DeclaredPkgNames[CurrentPkg]; !ok {
+			DeclaredPkgNames[CurrentPkg] = struct{}{}
 		} else {
-			return fmt.Errorf("duplicate package name: '%s'", newPkg)
+			return fmt.Errorf("duplicate package name: '%s'", CurrentPkg)
 		}
 	}
 	return nil
