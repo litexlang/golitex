@@ -6,3 +6,4 @@ obj a N:
     a = pkg1::a
 
 a = pkg1::pkg1_1::a
+a = proof1_a

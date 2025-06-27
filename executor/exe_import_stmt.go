@@ -66,14 +66,14 @@ func (exec *Executor) importStmt(stmt *ast.ImportStmt) error {
 func (exec *Executor) runImportDir(stmt *ast.ImportStmt) (glob.ExecState, error) {
 	glob.TaskDirName = filepath.Join(glob.TaskDirName, stmt.Path)
 
-	err := glob.ImportStmtInit(stmt.AsPkgName)
-	if err != nil {
-		return glob.ExecState_Error, err
-	}
+	// err := glob.ImportStmtInit(stmt.AsPkgName)
+	// if err != nil {
+	// 	return glob.ExecState_Error, err
+	// }
 
-	defer func() {
-		glob.ImportStmtEnd()
-	}()
+	// defer func() {
+	// 	glob.ImportStmtEnd()
+	// }()
 
 	codePath := filepath.Join(glob.TaskDirName, "main.lix")
 	code, err := os.ReadFile(codePath)
