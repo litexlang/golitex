@@ -44,6 +44,13 @@ type Env struct {
 	CurMatchProp        *MatchProp
 }
 
+func (env *Env) GetUpMostEnv() *Env {
+	if env.Parent == nil {
+		return env
+	}
+	return env.Parent.GetUpMostEnv()
+}
+
 func NewEnv(parent *Env, curMatchEnv *ast.SpecFactStmt) *Env {
 	env := &Env{
 		Parent:                 parent,
