@@ -17,6 +17,7 @@ package litex_sys
 import (
 	"fmt"
 	"testing"
+	"time"
 )
 
 func TestRunFile(t *testing.T) {
@@ -42,12 +43,15 @@ func TestRunRepo(t *testing.T) {
 }
 
 func TestRunFileInRepo(t *testing.T) {
+	startTime := time.Now()
 	msg, signal, err := RunFile("../examples/test_import/main.lix")
 	if err != nil {
 		t.Errorf(err.Error())
 	}
 	fmt.Println(msg)
 	fmt.Println(signal)
+	executionTime := time.Since(startTime)
+	fmt.Printf("execution time: %v\n", executionTime)
 }
 
 func TestRunAllComprehensiveCodes(t *testing.T) {

@@ -1050,17 +1050,13 @@ func (tb *tokenBlock) importStmt() (*ast.ImportStmt, error) {
 
 	asPkgName := ""
 	importPath := ""
-	if tb.header.is(glob.KeySymbolDoubleQuote) {
-		importPath, err = tb.getStringInDoubleQuotes()
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
-		}
-	} else {
+	importPath, err = tb.getStringInDoubleQuotes()
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+	if tb.header.is(glob.KeywordAs) {
+		tb.header.skip(glob.KeywordAs)
 		asPkgName, err = tb.header.next()
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
-		}
-		importPath, err = tb.getStringInDoubleQuotes()
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
 		}
