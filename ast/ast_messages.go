@@ -588,13 +588,18 @@ func (stmt *ImportStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordImport)
 	builder.WriteString(" ")
-	if stmt.AsPkgName != "" {
-		builder.WriteString(stmt.AsPkgName)
-		builder.WriteString(" ")
-	}
+
 	builder.WriteString(glob.KeySymbolDoubleQuote)
 	builder.WriteString(stmt.Path)
 	builder.WriteString(glob.KeySymbolDoubleQuote)
+	builder.WriteString(" ")
+
+	if stmt.AsPkgName != "" {
+		builder.WriteString(glob.KeywordAs)
+		builder.WriteString(" ")
+		builder.WriteString(stmt.AsPkgName)
+	}
+
 	return builder.String()
 }
 
