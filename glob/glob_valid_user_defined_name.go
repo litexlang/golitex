@@ -16,7 +16,6 @@ package litex_global
 
 import (
 	"fmt"
-	taskManager "golitex/task_manager"
 	"strings"
 )
 
@@ -63,7 +62,7 @@ func IsValidUseDefinedFcAtom(name string) error {
 
 	// pkgName 必须声明过啦, 前n-1位join起来
 	pkgName := strings.Join(values[:len(values)-1], KeySymbolColonColon)
-	if _, ok := taskManager.DeclaredPkgNames[pkgName]; !ok {
+	if _, ok := DeclaredPkgNames[pkgName]; !ok {
 		return fmt.Errorf("package %s is not declared", pkgName)
 	}
 

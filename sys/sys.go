@@ -21,14 +21,12 @@ import (
 	"os"
 	"path/filepath"
 	"time"
-
-	taskManager "golitex/task_manager"
 )
 
 func RunFile(path string) (string, glob.SysSignal, error) {
 	// 得到path的repo名所在的绝对路径
 	repoName := filepath.Dir(path)
-	taskManager.TaskDirName = repoName
+	glob.TaskDirName = repoName
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return "", glob.SysSignalParseError, err
@@ -41,7 +39,7 @@ func RunFile(path string) (string, glob.SysSignal, error) {
 }
 
 func RunRepo(path string) (string, glob.SysSignal, error) {
-	taskManager.TaskDirName = path
+	glob.TaskDirName = path
 	// 运行里面的main.lix
 	content, err := os.ReadFile(filepath.Join(path, "main.lix"))
 	if err != nil {
