@@ -82,9 +82,19 @@ Mathematics is the art of deriving new facts from established ones. To illustrat
 
 The above example means: `Human` is the set of all humans. Using `know`, we establish a simple fact: all humans are self-aware. When the user input `self_aware(Bob)`, the system will automatically find the fact `forall x Human: $self_aware(x)` and substitute `x` with `Bob`, and then check if the result is true. This process is called `match and substitution`. Since Bob is in the set of `Human`, "Bob is self-aware" is true.
 
-You just learned how Litex builds math from basic pieces, like building blocks. Each statement in Litex has four potential outcomes: true, false, unknown, or error. All factual statements start with `$` to differentiate them from functions. Most mathematical facts are verified in this way of `match and substitution`. Only symbols with literal information (e.g. numbers like 1, 2, 3, counting etc) are not verified in this way, and Litex has builtin rules to verify them.
+Each statement in Litex has four potential outcomes: true, false, unknown, or error. All factual statements start with `$` to differentiate them from functions. 
 
-Voltaire once said: "Common sense is not so common." In the case of Litex, Litex makes the process of building math as easy as `ctrl+f/cmd+f` in your browser, by discovering that math is nothing but a special kind of `match and substitution` problem. Everyone is so familiar with this process, but almost no one actually finds its significance and use this idea to create a simple formal language. The real magic of Litex is that it works just like how people think in daily life. This is a hard magic for the language designer, because it requires a deep understanding of both the nature of mathematics and the nature of programming, but is worth the effort.
+There are and only are two ways of deriving new facts from established ones:
+
+1. From special case to special case. e.g. `a = 1` => `a = 1`. The derived fact `a = 1` (the second statement) is true because the first statement is true and the first statement is written exactly the same as the second statement. I call it `match`.
+
+2. From general case to special case. e.g. `forall x Human: $self_aware(x)` => `$self_aware(Bob)`. The derived fact `self_aware(Bob)` is true because by substituting `x` with `Bob`, the first statement is true, and the second statement is written exactly the same as the first statement after substitution. I call it `match and substitution`.
+
+You just learned how Litex builds math from basic pieces, like building blocks. To sum up, `match and substitution` is the basic way of deriving new facts from established ones. We can construct the whole math system by this way in Lite as long as basic arithmetic and counting are built-in. [^1][^2]
+
+[^1]: There are exceptions. Facts about symbols with literal information (e.g. numbers like 1, 2, 3, counting etc) are not verified in this way. Facts related to counting are not verified in this way. There are and only these two exceptions. Those facts are verified by Litex's builtin rules, the user does not need to worry about them.
+
+[^2]: Voltaire once said: "Common sense is not so common." In the case of Litex, Litex makes the process of building math as easy as `ctrl+f/cmd+f` in your browser, by discovering that math is nothing but a special kind of `match and substitution` problem. Everyone is so familiar with this process, but almost no one actually finds its significance and use this idea to create a simple formal language. The real magic of Litex is that it works just like how people think in daily life. This is a hard magic for the language designer, because it requires a deep understanding of both the nature of mathematics and the nature of programming, but is worth the effort.
 
 ##  Examples: Litex for Curious Formal Language Users
 
