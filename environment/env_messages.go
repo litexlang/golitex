@@ -34,13 +34,7 @@ func (env *Env) String() string {
 	return ""
 }
 
-func (e *Env) AppendMsg(s string) {
-	if glob.IsNotImportState() {
-		return
-	}
-	if e == nil {
-		panic("NewMsg: CurMatchProp is nil")
-	}
+func (e *Env) AppendMsg2(s string) {
 	e.Msgs = append(e.Msgs, s)
 }
 
@@ -102,14 +96,6 @@ func (knownSpecFact *SpecFact_InLogicExpr_InUniFact) String() string {
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(knownSpecFact.UniFact.String(), 1))
 		return builder.String()
 	}
-}
-
-func (e *Env) MsgLen() int {
-	return len(e.Msgs)
-}
-
-func (e *Env) ClearMsgFromIndex(index int) {
-	e.Msgs = e.Msgs[:index]
 }
 
 func AtomsInFactNotDeclaredMsg(fact ast.FactStmt) string {
