@@ -18,7 +18,6 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
-	taskManager "golitex/task_manager"
 	"strings"
 )
 
@@ -153,8 +152,8 @@ func (cursor *strSliceCursor) rawFcAtom() (ast.FcAtom, error) {
 	// 	return ast.NewFcAtom(value), fmt.Errorf("invalid first citizen: %s", value)
 	// } else {
 	// 不是内置元素，不是数字
-	if taskManager.CurrentPkg != "" && !glob.IsBuiltinKeywordOrBuiltinSymbolOrNumber(value) {
-		values = append([]string{taskManager.CurrentPkg}, values...)
+	if glob.CurrentPkg != "" && !glob.IsBuiltinKeywordOrBuiltinSymbolOrNumber(value) {
+		values = append([]string{glob.CurrentPkg}, values...)
 	}
 
 	values = append(values, value)

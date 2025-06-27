@@ -19,37 +19,22 @@ import (
 	ast "golitex/ast"
 	glob "golitex/glob"
 	parser "golitex/parser"
-	taskManager "golitex/task_manager"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
 func (exec *Executor) importStmt(stmt *ast.ImportStmt) error {
-	err := taskManager.ImportStmtInit(stmt.AsPkgName)
+	err := glob.ImportStmtInit(stmt.AsPkgName)
 	if err != nil {
 		return err
 	}
 	defer func() {
-		taskManager.ImportStmtEnd()
+		glob.ImportStmtEnd()
 	}()
 
-	// import name should be valid
-	err = glob.IsValidUseDefinedFcAtom(stmt.AsPkgName)
-	if err != nil {
-		return err
-	}
-
-	if _, ok := taskManager.DeclaredPkgNames[stmt.AsPkgName]; !ok {
-		taskManager.DeclaredPkgNames[stmt.AsPkgName] = struct{}{}
-	} else {
-		return fmt.Errorf("duplicate package name: '%s'", stmt.AsPkgName)
-	}
-
 	execSuccess := false
-	originalMsgLen := exec.env.MsgLen()
 	defer func() {
-		exec.env.ClearMsgFromIndex(originalMsgLen)
 		if !execSuccess {
 			exec.appendMsg(fmt.Sprintf("Failed to execute import statement:\n%s\n", stmt.String()))
 		} else {
@@ -89,7 +74,7 @@ func (exec *Executor) runImportFile(stmt *ast.ImportStmt) (glob.ExecState, error
 
 // 直接把file embed 过来执行
 func (exec *Executor) runImportFileWithoutPkgName(stmt *ast.ImportStmt) (glob.ExecState, error) {
-	codePath := filepath.Join(taskManager.TaskDirName, stmt.Path)
+	codePath := filepath.Join(glob.TaskDirName, stmt.Path)
 	code, err := os.ReadFile(codePath)
 	if err != nil {
 		return glob.ExecState_Error, err
@@ -109,16 +94,10 @@ func (exec *Executor) runImportFileWithoutPkgName(stmt *ast.ImportStmt) (glob.Ex
 
 // 把file 当成一个pkg，然后执行
 func (exec *Executor) runImportFileWithPkgName(stmt *ast.ImportStmt) (glob.ExecState, error) {
-	codePath := filepath.Join(taskManager.TaskDirName, stmt.Path)
+	codePath := filepath.Join(glob.TaskDirName, stmt.Path)
 	code, err := os.ReadFile(codePath)
 	if err != nil {
 		return glob.ExecState_Error, err
-	}
-
-	if _, ok := taskManager.DeclaredPkgNames[stmt.AsPkgName]; !ok {
-		taskManager.DeclaredPkgNames[stmt.AsPkgName] = struct{}{}
-	} else {
-		return glob.ExecState_Error, fmt.Errorf("duplicate package name: '%s'", stmt.AsPkgName)
 	}
 
 	var pubStmtSlice []*ast.PubStmt = []*ast.PubStmt{}

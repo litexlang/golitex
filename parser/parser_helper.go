@@ -17,12 +17,11 @@ package litex_parser
 import (
 	"fmt"
 	glob "golitex/glob"
-	taskManager "golitex/task_manager"
 )
 
 func addPkgNameToString(name string) string {
-	if taskManager.CurrentPkg == "" {
+	if glob.CurrentPkg == "" {
 		return name
 	}
-	return fmt.Sprintf("%s%s%s", taskManager.CurrentPkg, glob.KeySymbolColonColon, name)
+	return fmt.Sprintf("%s%s%s", glob.CurrentPkg, glob.KeySymbolColonColon, name)
 }
