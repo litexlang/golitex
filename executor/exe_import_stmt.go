@@ -32,121 +32,64 @@ func (exec *Executor) importStmt(stmt *ast.ImportStmt) (glob.ExecState, error) {
 		}
 
 		return execState, nil
-	} else if strings.HasSuffix(stmt.Path, ".lix") {
-		execState, err := exec.importFileWithPkgName(stmt)
+	} else {
+		err := glob.ImportStmtInit(stmt.AsPkgName)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
-		return execState, nil
-	}
 
-	err := glob.ImportStmtInit(stmt.AsPkgName)
-	if err != nil {
-		return glob.ExecState_Error, err
-	}
-
-	execSuccess := false
-	defer func() {
-		glob.ImportStmtEnd()
-		if !execSuccess {
-			if glob.IsNotImportState() {
-				exec.appendMsg(fmt.Sprintf("Failed to execute import statement:\n%s\n", stmt.String()))
+		execSuccess := false
+		defer func() {
+			glob.ImportStmtEnd()
+			if !execSuccess {
+				if glob.IsNotImportState() {
+					exec.appendMsg(fmt.Sprintf("Failed to execute import statement:\n%s\n", stmt.String()))
+				}
+			} else {
+				if glob.IsNotImportState() {
+					exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
+				}
 			}
+		}()
+
+		if strings.HasSuffix(stmt.Path, ".lix") {
+			execState, err := exec.importFileWithPkgName(stmt)
+			if err != nil {
+				return glob.ExecState_Error, err
+			}
+			execSuccess = execState == glob.ExecState_True
+			return execState, nil
 		} else {
-			if glob.IsNotImportState() {
-				exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
+			execState, err := exec.importDirWithPkgName(stmt)
+			if err != nil {
+				return glob.ExecState_Error, err
 			}
+			execSuccess = execState == glob.ExecState_True
+			return execState, nil
 		}
-
-	}()
-
-	// 如果 path 的末尾是 .lix
-	if strings.HasSuffix(stmt.Path, ".lix") {
-		execState, err := exec.runImportFile(stmt)
-		if err != nil {
-			return glob.ExecState_Error, err
-		}
-		execSuccess = execState == glob.ExecState_True
-	} else {
-		execState, err := exec.runImportDir(stmt)
-		if err != nil {
-			return glob.ExecState_Error, err
-		}
-		execSuccess = execState == glob.ExecState_True
 	}
 
-	return glob.ExecState_True, nil
 }
 
-func (exec *Executor) runImportDir(stmt *ast.ImportStmt) (glob.ExecState, error) {
-	glob.TaskDirName = filepath.Join(glob.TaskDirName, stmt.Path)
-
-	codePath := filepath.Join(glob.TaskDirName, "main.lix")
-	// code, err := os.ReadFile(codePath)
-	// if err != nil {
-	// 	return glob.ExecState_Error, err
-	// }
-
-	execState, err := exec.runFileToMakeSureTheFileIsTrue(codePath)
-	if err != nil {
-		return glob.ExecState_Error, fmt.Errorf("failed to execute import statement:\n%s", stmt.String())
-	}
-
-	return execState, nil
-}
-
-func (exec *Executor) runImportFile(stmt *ast.ImportStmt) (glob.ExecState, error) {
-	if stmt.AsPkgName == "" {
-		return exec.runImportFileWithoutPkgName(stmt)
-	} else {
-		codePath := filepath.Join(glob.TaskDirName, stmt.Path)
-		execState, err := exec.runFileToMakeSureTheFileIsTrue(codePath)
-		if err != nil {
-			return glob.ExecState_Error, fmt.Errorf("failed to execute import statement:\n%s", stmt.String())
-		}
-
-		return execState, nil
-	}
-}
-
-// 直接把file embed 过来执行
-func (exec *Executor) runImportFileWithoutPkgName(stmt *ast.ImportStmt) (glob.ExecState, error) {
-	codePath := filepath.Join(glob.TaskDirName, stmt.Path)
+func (exec *Executor) runFileToMakeSureTheFileIsTrue(codePath string) (glob.ExecState, []*ast.PubStmt, error) {
 	code, err := os.ReadFile(codePath)
 	if err != nil {
-		return glob.ExecState_Error, err
-	}
-
-	// read the file
-	execState, _, err := exec.runSourceCode(false, string(code))
-	if err != nil {
-		return glob.ExecState_Error, err
-	}
-	if execState != glob.ExecState_True {
-		return glob.ExecState_Error, fmt.Errorf("failed to execute import statement:\n%s\nSome statements in the imported file are not executed successfully", stmt.String())
-	}
-
-	return glob.ExecState_True, nil
-}
-
-func (exec *Executor) runFileToMakeSureTheFileIsTrue(codePath string) (glob.ExecState, error) {
-	code, err := os.ReadFile(codePath)
-	if err != nil {
-		return glob.ExecState_Error, err
+		return glob.ExecState_Error, nil, err
 	}
 
 	var execState glob.ExecState = glob.ExecState_True
+	var pubStmtSlice []*ast.PubStmt = []*ast.PubStmt{}
 	if !glob.AssumeImportFilesAreTrue {
-		execState, _, err = exec.runSourceCode(true, string(code))
+		execState, pubStmtSlice, err = exec.runSourceCode(true, string(code))
 		if err != nil {
-			return glob.ExecState_Error, err
+			return glob.ExecState_Error, nil, err
 		}
 		if execState != glob.ExecState_True {
-			return glob.ExecState_Error, fmt.Errorf("failed to execute import statement")
+			return glob.ExecState_Error, nil, fmt.Errorf("failed to execute import statement")
 		}
 	}
 
-	return execState, nil
+	return execState, pubStmtSlice, nil
 }
 
 func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string) (glob.ExecState, []*ast.PubStmt, error) {
@@ -157,31 +100,14 @@ func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string) (glob.E
 		}()
 	}
 
-	execState, pubStmtSlice, err := exec.runSourceCodeTopStmt(sourceCode)
-	if err != nil {
-		return glob.ExecState_Error, nil, err
-	}
-
-	if execState != glob.ExecState_True {
-		return glob.ExecState_Error, nil, fmt.Errorf("failed to execute source code:\n%s\nSome statements in the source code are not executed successfully", sourceCode)
-	}
-
-	execState, err = exec.runSourceCodePubStmt(pubStmtSlice)
-	if err != nil {
-		return glob.ExecState_Error, nil, err
-	}
-
-	return execState, pubStmtSlice, nil
-}
-
-func (exec *Executor) runSourceCodeTopStmt(sourceCode string) (glob.ExecState, []*ast.PubStmt, error) {
 	topStmtSlice, err := parser.ParseSourceCode(sourceCode)
 	var pubStmtSlice []*ast.PubStmt = []*ast.PubStmt{}
+	var execState glob.ExecState = glob.ExecState_True
 	if err != nil {
 		return glob.ExecState_Error, nil, err
 	}
 	for _, topStmt := range topStmtSlice {
-		execState, err := exec.Stmt(topStmt)
+		execState, err = exec.Stmt(topStmt)
 		if err != nil {
 			return glob.ExecState_Error, nil, err
 		}
@@ -193,7 +119,7 @@ func (exec *Executor) runSourceCodeTopStmt(sourceCode string) (glob.ExecState, [
 		}
 	}
 
-	return glob.ExecState_True, pubStmtSlice, nil
+	return execState, pubStmtSlice, nil
 }
 
 func (exec *Executor) runSourceCodePubStmt(pubStmtSlice []*ast.PubStmt) (glob.ExecState, error) {
@@ -234,30 +160,40 @@ func (exec *Executor) importFileWithoutPkgName(stmt *ast.ImportStmt) (glob.ExecS
 }
 
 func (exec *Executor) importFileWithPkgName(stmt *ast.ImportStmt) (glob.ExecState, error) {
-	err := glob.ImportStmtInit(stmt.AsPkgName)
+	codePath := filepath.Join(glob.TaskDirName, stmt.Path)
+	execState, pubStmtSlice, err := exec.runFileToMakeSureTheFileIsTrue(codePath)
+	if err != nil {
+		return glob.ExecState_Error, fmt.Errorf("failed to execute import statement:\n%s", stmt.String())
+	}
+
+	if execState != glob.ExecState_True {
+		return glob.ExecState_Error, fmt.Errorf("failed to execute import statement:\n%s\nSome statements in the imported file are not executed successfully", stmt.String())
+	}
+
+	execState, err = exec.runSourceCodePubStmt(pubStmtSlice)
 	if err != nil {
 		return glob.ExecState_Error, err
 	}
 
-	execSuccess := false
-	defer func() {
-		glob.ImportStmtEnd()
-		if !execSuccess {
-			if glob.IsNotImportState() {
-				exec.appendMsg(fmt.Sprintf("Failed to execute import statement:\n%s\n", stmt.String()))
-			}
-		} else {
-			if glob.IsNotImportState() {
-				exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
-			}
-		}
+	return execState, nil
+}
 
-	}()
+func (exec *Executor) importDirWithPkgName(stmt *ast.ImportStmt) (glob.ExecState, error) {
+	glob.TaskDirName = filepath.Join(glob.TaskDirName, stmt.Path)
 
-	codePath := filepath.Join(glob.TaskDirName, stmt.Path)
-	execState, err := exec.runFileToMakeSureTheFileIsTrue(codePath)
+	codePath := filepath.Join(glob.TaskDirName, "main.lix")
+	execState, pubStmtSlice, err := exec.runFileToMakeSureTheFileIsTrue(codePath)
 	if err != nil {
 		return glob.ExecState_Error, fmt.Errorf("failed to execute import statement:\n%s", stmt.String())
+	}
+
+	if execState != glob.ExecState_True {
+		return glob.ExecState_Error, fmt.Errorf("failed to execute import statement:\n%s\nSome statements in the imported file are not executed successfully", stmt.String())
+	}
+
+	execState, err = exec.runSourceCodePubStmt(pubStmtSlice)
+	if err != nil {
+		return glob.ExecState_Error, err
 	}
 
 	return execState, nil
