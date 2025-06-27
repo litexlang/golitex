@@ -42,7 +42,7 @@ func (e *Executor) newEnv(parent *env.Env, curMatchEnv *ast.SpecFactStmt) *env.E
 
 func (e *Executor) deleteEnvAndRetainMsg() {
 	for _, msg := range e.env.Msgs {
-		e.env.Parent.NewMsg(msg)
+		e.env.Parent.AppendMsg(msg)
 	}
 	e.env = e.env.Parent
 }
