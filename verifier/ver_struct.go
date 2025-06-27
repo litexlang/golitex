@@ -19,6 +19,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	env "golitex/environment"
+	glob "golitex/glob"
 )
 
 type Verifier struct {
@@ -48,7 +49,9 @@ func (ver *Verifier) newEnv(parent *env.Env, curMatchEnv *ast.SpecFactStmt) {
 func (ver *Verifier) deleteEnvAndRetainMsg() error {
 	if ver.env.Parent != nil {
 		for _, msg := range ver.env.Msgs {
-			ver.env.Parent.AppendMsg(msg)
+			if glob.IsNotImportState() {
+				ver.env.Parent.AppendMsg2(msg)
+			}
 		}
 		ver.env = ver.env.Parent
 		return nil
@@ -61,7 +64,9 @@ func (ver *Verifier) newMsgAtParent(s string) error {
 	if ver.env.Parent == nil {
 		return fmt.Errorf("no parent env")
 	} else {
-		ver.env.Parent.AppendMsg(s)
+		if glob.IsNotImportState() {
+			ver.env.Parent.AppendMsg2(s)
+		}
 		return nil
 	}
 }

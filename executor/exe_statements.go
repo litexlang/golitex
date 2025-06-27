@@ -86,11 +86,9 @@ func (exec *Executor) pubStmt(stmt *ast.PubStmt) (glob.ExecState, error) {
 }
 
 func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
-	defer func() {
-		if glob.IsNotImportState() {
-			exec.appendMsg2("\n")
-		}
-	}()
+	if glob.IsNotImportState() {
+		defer exec.appendMsg("\n")
+	}
 
 	curVerifier := verifier.NewVerifier(exec.env)
 	ok, err := curVerifier.VerFactStmt(stmt, verifier.Round0Msg)
@@ -114,7 +112,7 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
 		return state, nil
 	} else {
 		if glob.IsNotImportState() {
-			exec.appendMsg2(stmt.String() + "\nis unknown")
+			exec.appendMsg(stmt.String() + "\nis unknown")
 		}
 	}
 
@@ -123,11 +121,9 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
 
 // TODO: 再know时就检查，仅仅依赖写在dom里的事实，是否真的能让涉及到的函数和prop能真的满足条件。如果不满足条件，那就warning
 func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) error {
-	defer func() {
-		if glob.IsNotImportState() {
-			exec.appendMsg2("\n")
-		}
-	}()
+	if glob.IsNotImportState() {
+		defer exec.appendMsg("\n")
+	}
 
 	for _, fact := range stmt.Facts {
 		if !exec.env.AreAtomsInFactAreDeclared(fact, map[string]struct{}{}) {
@@ -141,7 +137,7 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) error {
 	}
 
 	if glob.IsNotImportState() {
-		exec.appendMsg2(stmt.String())
+		exec.appendMsg(stmt.String())
 	}
 	return nil
 }
@@ -181,11 +177,9 @@ func (exec *Executor) GetMsgAsStr0ToEnd() string {
 }
 
 func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
-	defer func() {
-		if glob.IsNotImportState() {
-			exec.appendMsg2(stmt.String() + "\n")
-		}
-	}()
+	if glob.IsNotImportState() {
+		defer exec.appendMsg(stmt.String() + "\n")
+	}
 
 	err := exec.env.NewDefProp_InsideAtomsDeclared(stmt)
 	if err != nil {
@@ -206,7 +200,7 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
 		return err
 	}
 	if glob.IsNotImportState() {
-		exec.appendMsg2(fmt.Sprintf("%s\nis true by definition", propToIff.String()))
+		exec.appendMsg(fmt.Sprintf("%s\nis true by definition", propToIff.String()))
 	}
 
 	err = exec.env.NewFact(iffToProp)
@@ -214,7 +208,7 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
 		return err
 	}
 	if glob.IsNotImportState() {
-		exec.appendMsg2(fmt.Sprintf("%s\nis true by definition", iffToProp.String()))
+		exec.appendMsg(fmt.Sprintf("%s\nis true by definition", iffToProp.String()))
 	}
 
 	if len(stmt.IffFacts) == 0 {
@@ -225,15 +219,13 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
 }
 
 func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt, requireMsg bool) error {
-	defer func() {
-		if glob.IsNotImportState() {
-			exec.appendMsg2(fmt.Sprintf("%s\n", stmt.String()))
-		}
-	}()
+	if glob.IsNotImportState() {
+		defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
+	}
 
 	if requireMsg {
 		if glob.IsNotImportState() {
-			exec.appendMsg2(fmt.Sprintf("%s\n", stmt.String()))
+			exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
 		}
 	}
 
@@ -259,11 +251,9 @@ func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt, requireMsg bool) error {
 // }
 
 func (exec *Executor) defFnTemplateStmt(stmt *ast.DefFnTemplateStmt) error {
-	defer func() {
-		if glob.IsNotImportState() {
-			exec.appendMsg2(fmt.Sprintf("%s\n", stmt.String()))
-		}
-	}()
+	if glob.IsNotImportState() {
+		defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
+	}
 
 	err := exec.env.ExecDefFnTemplate(stmt)
 	if err != nil {
@@ -275,11 +265,9 @@ func (exec *Executor) defFnTemplateStmt(stmt *ast.DefFnTemplateStmt) error {
 
 func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) error {
 	// TODO 像定义这样的经常被调用的 事实，应该和普通的事实分离开来，以便于调用吗?
-	defer func() {
-		if glob.IsNotImportState() {
-			exec.appendMsg2(fmt.Sprintf("%s\n", stmt.String()))
-		}
-	}()
+	if glob.IsNotImportState() {
+		defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
+	}
 
 	return exec.env.NewDefExistProp_InsideAtomsDeclared(stmt)
 }
@@ -287,7 +275,7 @@ func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) error {
 func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 	defer func() {
 		if glob.IsNotImportState() {
-			exec.appendMsg2(fmt.Sprintf("%s\n", stmt.String()))
+			exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
 		}
 	}()
 
@@ -295,7 +283,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 	execState, err := exec.factStmt(&stmt.Fact)
 	if notOkExec(execState, err) {
 		if glob.IsNotImportState() {
-			exec.appendMsg2(fmt.Sprintf("%s is unknown", stmt.Fact.String()))
+			exec.appendMsg(fmt.Sprintf("%s is unknown", stmt.Fact.String()))
 		}
 		return execState, err
 	}
@@ -363,7 +351,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 			return glob.ExecState_Error, err
 		}
 		if glob.IsNotImportState() {
-			exec.appendMsg2(fmt.Sprintf("%s\nis true by definition", domFact.String()))
+			exec.appendMsg(fmt.Sprintf("%s\nis true by definition", domFact.String()))
 		}
 	}
 
@@ -374,7 +362,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 			return glob.ExecState_Error, err
 		}
 		if glob.IsNotImportState() {
-			exec.appendMsg2(fmt.Sprintf("%s\nis true by definition", iffFact.String()))
+			exec.appendMsg(fmt.Sprintf("%s\nis true by definition", iffFact.String()))
 		}
 	}
 
@@ -387,7 +375,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 		return glob.ExecState_Error, err
 	}
 	if glob.IsNotImportState() {
-		exec.appendMsg2(fmt.Sprintf("%s\nis true by definition", newExistStFact.String()))
+		exec.appendMsg(fmt.Sprintf("%s\nis true by definition", newExistStFact.String()))
 	}
 
 	return glob.ExecState_True, nil
@@ -416,20 +404,18 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecState, 
 	isSuccess := false
 
 	exec.newEnv(exec.env, exec.env.CurMatchProp)
-	defer func() {
-		if glob.IsNotImportState() {
-			exec.appendMsg2("\n")
-		}
-		if isSuccess {
-			exec.appendNewMsgAtBegin("is true\n\n")
-		} else {
-			exec.appendNewMsgAtBegin("is unknown\n\n")
-		}
-		if glob.IsNotImportState() {
+	if glob.IsNotImportState() {
+		defer func() {
+			exec.appendMsg("\n")
+			if isSuccess {
+				exec.appendNewMsgAtBegin("is true\n\n")
+			} else {
+				exec.appendNewMsgAtBegin("is unknown\n\n")
+			}
 			exec.appendNewMsgAtBegin(stmt.String())
-		}
-		exec.deleteEnvAndRetainMsg()
-	}()
+			exec.deleteEnvAndRetainMsg()
+		}()
+	}
 
 	// 需要检查stmt.ToCheckFact里的东西都是在外部声明好了的
 	if stmt.ToCheckFact != ast.ClaimStmtEmptyToCheck {
@@ -472,18 +458,18 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContra
 	isSuccess := false
 
 	exec.newEnv(exec.env, exec.env.CurMatchProp)
-	defer func() {
-		if glob.IsNotImportState() {
-			exec.appendMsg2("\n")
-		}
-		if isSuccess {
-			exec.appendNewMsgAtBegin("is true\n")
-		} else {
-			exec.appendNewMsgAtBegin("is unknown\n")
-		}
-		exec.appendNewMsgAtBegin(stmt.ClaimProveStmt.String())
-		exec.deleteEnvAndRetainMsg()
-	}()
+	if glob.IsNotImportState() {
+		defer func() {
+			exec.appendMsg("\n")
+			if isSuccess {
+				exec.appendNewMsgAtBegin("is true\n")
+			} else {
+				exec.appendNewMsgAtBegin("is unknown\n")
+			}
+			exec.appendNewMsgAtBegin(stmt.ClaimProveStmt.String())
+			exec.deleteEnvAndRetainMsg()
+		}()
+	}
 
 	if stmt.ClaimProveStmt.ToCheckFact == ast.ClaimStmtEmptyToCheck {
 		return glob.ExecState_Error, fmt.Errorf("prove by contradiction does not support empty check")
@@ -530,23 +516,21 @@ func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) (glob.E
 	isSuccess := false
 	defer func() {
 		if glob.IsNotImportState() {
-			exec.appendMsg2("\n")
+			exec.appendMsg("\n")
 		}
 		if isSuccess {
 			exec.appendNewMsgAtBegin("is true\n")
 		} else {
 			exec.appendNewMsgAtBegin("is unknown\n")
 		}
-		if glob.IsNotImportState() {
-			exec.appendNewMsgAtBegin(stmt.String())
-		}
+		exec.appendNewMsgAtBegin(stmt.String())
 	}()
 
 	// prove orFact is true
 	execState, err := exec.factStmt(&stmt.OrFact)
 	if notOkExec(execState, err) {
 		if glob.IsNotImportState() {
-			exec.appendMsg2(fmt.Sprintf("%s is unknown", stmt.OrFact.String()))
+			exec.appendMsg(fmt.Sprintf("%s is unknown", stmt.OrFact.String()))
 		}
 		return execState, err
 	}
@@ -598,11 +582,11 @@ func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEach
 }
 
 func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) (glob.ExecState, error) {
-	defer func() {
-		if glob.IsNotImportState() {
-			exec.appendMsg2(fmt.Sprintf("%s\n", stmt.String()))
-		}
-	}()
+	if glob.IsNotImportState() {
+		defer func() {
+			exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
+		}()
+	}
 
 	err := exec.defExistPropStmt(&stmt.ExistProp)
 	if err != nil {
@@ -618,18 +602,18 @@ func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) (glob.ExecS
 	}
 
 	if glob.IsNotImportState() {
-		exec.appendMsg2(fmt.Sprintf("%s\nis true by definition", knownUniFact.String()))
+		exec.appendMsg(fmt.Sprintf("%s\nis true by definition", knownUniFact.String()))
 	}
 
 	return glob.ExecState_True, nil
 }
 
 func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
-	defer func() {
-		if glob.IsNotImportState() {
-			exec.appendMsg2(fmt.Sprintf("%s\n", stmt.String()))
-		}
-	}()
+	if glob.IsNotImportState() {
+		defer func() {
+			exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
+		}()
+	}
 
 	err := exec.defPropStmt(&stmt.Prop)
 	if err != nil {
@@ -666,7 +650,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 	err := exec.defObjStmt(objDefStmt, false)
 	if err != nil {
 		if glob.IsNotImportState() {
-			exec.appendMsg2(fmt.Sprintf("Claim statement error: Failed to declare parameters in universal fact:\n%s\n", objDefStmt.String()))
+			exec.appendMsg(fmt.Sprintf("Claim statement error: Failed to declare parameters in universal fact:\n%s\n", objDefStmt.String()))
 		}
 		return false, err
 	}
@@ -675,7 +659,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 	execState, err := exec.execProofBlock(stmt.Proofs)
 	if err != nil {
 		if glob.IsNotImportState() {
-			exec.appendMsg2(fmt.Sprintf("Claim statement error: Failed to execute proof block:\n%s\n", stmt.String()))
+			exec.appendMsg(fmt.Sprintf("Claim statement error: Failed to execute proof block:\n%s\n", stmt.String()))
 		}
 		return false, err
 	}
@@ -689,7 +673,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 		execState, err := exec.factStmt(fact)
 		if err != nil {
 			if glob.IsNotImportState() {
-				exec.appendMsg2(fmt.Sprintf("Claim statement error: Failed to execute fact statement:\n%s\n", fact.String()))
+				exec.appendMsg(fmt.Sprintf("Claim statement error: Failed to execute fact statement:\n%s\n", fact.String()))
 			}
 			return false, err
 		}
@@ -702,11 +686,11 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 }
 
 func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
-	defer func() {
-		if glob.IsNotImportState() {
-			exec.appendMsg2(fmt.Sprintf("%s\n", stmt.String()))
-		}
-	}()
+	if glob.IsNotImportState() {
+		defer func() {
+			exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
+		}()
+	}
 
 	err := exec.env.NewObj(stmt.FnTemplateStmt.Name)
 	if err != nil {
@@ -725,7 +709,7 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 	}
 
 	if glob.IsNotImportState() {
-		exec.appendMsg2(fmt.Sprintf("%s\nis true by definition", derivedFact.String()))
+		exec.appendMsg(fmt.Sprintf("%s\nis true by definition", derivedFact.String()))
 	}
 
 	return nil
@@ -741,12 +725,12 @@ func (exec *Executor) checkReverse(stmt ast.FactStmt) (glob.ExecState, error) {
 		}
 		if ok {
 			if glob.IsNotImportState() {
-				exec.appendMsg2(asSpecFact.String() + "\nis false")
+				exec.appendMsg(asSpecFact.String() + "\nis false")
 			}
 			return glob.ExecState_False, nil
 		} else {
 			if glob.IsNotImportState() {
-				exec.appendMsg2(stmt.String() + "\nis unknown")
+				exec.appendMsg(stmt.String() + "\nis unknown")
 			}
 		}
 	} else if asOrStmt, ok := stmt.(*ast.OrStmt); ok {
@@ -754,17 +738,17 @@ func (exec *Executor) checkReverse(stmt ast.FactStmt) (glob.ExecState, error) {
 			execState, err := exec.checkReverse(fact)
 			if notOkExec(execState, err) {
 				if glob.IsNotImportState() {
-					exec.appendMsg2(stmt.String() + "\nis unknown")
+					exec.appendMsg(stmt.String() + "\nis unknown")
 				}
 				return execState, err
 			}
 		}
 		if glob.IsNotImportState() {
-			exec.appendMsg2(stmt.String() + "\nis false")
+			exec.appendMsg(stmt.String() + "\nis false")
 		}
 	} else {
 		if glob.IsNotImportState() {
-			exec.appendMsg2(stmt.String() + "\nis unknown")
+			exec.appendMsg(stmt.String() + "\nis unknown")
 		}
 	}
 
