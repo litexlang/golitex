@@ -130,9 +130,9 @@ type ImportStmt struct {
 	AsPkgName string
 }
 
-type PubStmt struct {
-	Stmts []Stmt
-}
+// type PubStmt struct {
+// 	Stmts []Stmt
+// }
 
 type ProveStmt struct {
 	Proof []Stmt

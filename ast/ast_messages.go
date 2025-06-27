@@ -20,17 +20,17 @@ import (
 	"strings"
 )
 
-func (stmt *PubStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordPub)
-	builder.WriteByte(':')
-	builder.WriteByte('\n')
-	for _, stmt := range stmt.Stmts {
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.String(), 1))
-		builder.WriteByte('\n')
-	}
-	return strings.TrimSuffix(builder.String(), "\n")
-}
+// func (stmt *PubStmt) String() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(glob.KeywordPub)
+// 	builder.WriteByte(':')
+// 	builder.WriteByte('\n')
+// 	for _, stmt := range stmt.Stmts {
+// 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.String(), 1))
+// 		builder.WriteByte('\n')
+// 	}
+// 	return strings.TrimSuffix(builder.String(), "\n")
+// }
 
 func (stmt *KnowFactStmt) String() string {
 	var builder strings.Builder
