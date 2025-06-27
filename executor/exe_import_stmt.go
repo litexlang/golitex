@@ -64,7 +64,19 @@ func (exec *Executor) importStmt(stmt *ast.ImportStmt) error {
 }
 
 func (exec *Executor) runImportDir(stmt *ast.ImportStmt) (glob.ExecState, error) {
-	panic("not implemented")
+	codePath := filepath.Join(glob.TaskDirName, stmt.Path)
+	codePath = filepath.Join(codePath, "main.lix")
+	code, err := os.ReadFile(codePath)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+
+	execState, err := exec.runSourceCodeAsByteSlice(code)
+	if err != nil {
+		return glob.ExecState_Error, fmt.Errorf("failed to execute import statement:\n%s", stmt.String())
+	}
+
+	return execState, nil
 }
 
 func (exec *Executor) runImportFile(stmt *ast.ImportStmt) (glob.ExecState, error) {
@@ -103,6 +115,16 @@ func (exec *Executor) runImportFileWithPkgName(stmt *ast.ImportStmt) (glob.ExecS
 		return glob.ExecState_Error, err
 	}
 
+	execState, err := exec.runSourceCodeAsByteSlice(code)
+	if err != nil {
+		return glob.ExecState_Error, fmt.Errorf("failed to execute import statement:\n%s", stmt.String())
+	}
+
+	return execState, nil
+}
+
+func (exec *Executor) runSourceCodeAsByteSlice(code []byte) (glob.ExecState, error) {
+	var err error
 	var pubStmtSlice []*ast.PubStmt = []*ast.PubStmt{}
 	var execState glob.ExecState = glob.ExecState_True
 	if !glob.AssumeImportFilesAreTrue {
@@ -111,7 +133,7 @@ func (exec *Executor) runImportFileWithPkgName(stmt *ast.ImportStmt) (glob.ExecS
 			return glob.ExecState_Error, err
 		}
 		if execState != glob.ExecState_True {
-			return glob.ExecState_Error, fmt.Errorf("failed to execute import statement:\n%s\nSome statements in the imported file are not executed successfully", stmt.String())
+			return glob.ExecState_Error, fmt.Errorf("failed to execute import statement")
 		}
 	}
 
@@ -127,7 +149,7 @@ func (exec *Executor) runImportFileWithPkgName(stmt *ast.ImportStmt) (glob.ExecS
 		}
 	}
 
-	return glob.ExecState_True, nil
+	return execState, nil
 }
 
 func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string) (glob.ExecState, []*ast.PubStmt, error) {

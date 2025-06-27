@@ -1,4 +1,5 @@
 import  "./pkg1.lix" as pkg1
 import  "./proof1.lix"
+import  "./repo1" as pkg2
 
 a = 1
