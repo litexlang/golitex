@@ -28,3 +28,26 @@ prove:
 
 enum s:
     1,2,3,4,5,6
+
+obj s2 set
+know enum s2:
+    1,2,3,4,5,6
+$is_finite_set(s2)
+len(s2) = 6
+
+prove:
+    forall x s2:
+        or:
+            x = 1
+            x = 2
+            x = 3
+            x = 4
+            x = 5
+            x = 6
+    
+    1 $in s2
+    2 $in s2
+    3 $in s2
+    4 $in s2
+    5 $in s2
+    6 $in s2
