@@ -23,6 +23,8 @@ The **match and substitute**, which is the basic way of reasoning in math, is ac
 
 Moreover, giving semantics to keywords like **prop** or **in** is actually very tricky for Litex, because people just assume what they mean and do not think about the underlying mechanism and the Litex creator has to think about it by himself. This is the major challenge of Litex.
 
+One major challenge is that I require less functionality than a Turing machine. I only need enough syntax and semantics to express mathematics, which allows the language to be much more concise. However, deciding which features to remove from a Turing-complete system (or from typical programming languages like Python), and which to retain in order to correctly express mathematics, is a serious problem.
+
 Fortunately, Litex has translated a vast amount of mathematical material, and there has never been a case where the logic could not be expressed. Empirically, the user does not need to worry about this.
 
 ## Evolution and Development of Litex

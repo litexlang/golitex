@@ -17,8 +17,8 @@ package litex_parser
 import (
 	"fmt"
 	ast "golitex/ast"
+	glob "golitex/glob"
 	num "golitex/number"
-	taskManager "golitex/task_manager"
 	"strings"
 	"testing"
 )
@@ -99,7 +99,7 @@ func TestColonColon(t *testing.T) {
 		"=",
 		"1",
 	}
-	taskManager.CurrentPkg = "pkg1"
+	glob.CurrentPkg = "pkg1"
 	for _, code := range sourceCode {
 		fc, err := ParseSourceCodeGetFc(code)
 		if err != nil {
