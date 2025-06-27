@@ -163,7 +163,9 @@ func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByCo
 }
 
 func (exec *Executor) GetMsgAsStr0ToEnd() string {
-	return strings.Join(exec.env.Msgs, "\n")
+	ret := strings.Join(exec.env.Msgs, "\n")
+	exec.env.Msgs = []string{}
+	return ret
 }
 
 func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
