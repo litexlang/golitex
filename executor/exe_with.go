@@ -22,8 +22,12 @@ import (
 )
 
 func (exec *Executor) withStmt(stmt *ast.WithStmt) (glob.ExecState, error) {
-	defer exec.appendMsg("\n")
-	defer exec.appendMsg(stmt.String())
+	defer func() {
+		if glob.IsNotImportState() {
+			exec.appendMsg2("\n")
+			exec.appendMsg2(stmt.String())
+		}
+	}()
 
 	state, err := exec.withStmt_checkFact(stmt)
 	if err != nil {
@@ -52,15 +56,18 @@ func (exec *Executor) withStmt_checkFact(stmt *ast.WithStmt) (glob.ExecState, er
 	// check fact
 	execState, err := exec.factStmt(&stmt.Fact)
 	if notOkExec(execState, err) {
-		exec.appendMsg(fmt.Sprintf("%s is unknown", stmt.Fact.String()))
-		return execState, err
+		if glob.IsNotImportState() {
+			exec.appendMsg2(fmt.Sprintf("%s is unknown", stmt.Fact.String()))
+		}
 	}
 
 	// run stmt body
 	for _, bodyFact := range stmt.Body {
 		execState, err = exec.Stmt(bodyFact)
 		if notOkExec(execState, err) {
-			exec.appendMsg(fmt.Sprintf("%s is unknown", bodyFact.String()))
+			if glob.IsNotImportState() {
+				exec.appendMsg2(fmt.Sprintf("%s is unknown", bodyFact.String()))
+			}
 			return execState, err
 		}
 	}
