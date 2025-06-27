@@ -499,7 +499,12 @@ func (env *Env) ExecDefFnTemplate(stmt *ast.DefFnTemplateStmt) error {
 func (env *Env) newEnumFact(stmt *ast.EnumStmt) error {
 	forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts := ast.TransformEnumToUniFact(stmt.EnumName, stmt.EnumValues)
 
-	err := env.NewFact(forallItemInSetEqualToOneOfGivenItems)
+	err := env.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.EnumName, ast.FcAtom(glob.KeywordSet)}))
+	if err != nil {
+		return err
+	}
+
+	err = env.NewFact(forallItemInSetEqualToOneOfGivenItems)
 	if err != nil {
 		return err
 	}

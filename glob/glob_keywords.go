@@ -255,6 +255,7 @@ var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]s
 	KeySymbolRightBracket: {},
 
 	KeywordCommutativeProp: {},
+	KeywordIsFiniteSet:     {},
 	// KeySymbolSemicolon:     {},
 }
 
