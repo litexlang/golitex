@@ -51,6 +51,6 @@ func ImportStmtEnd() {
 	CurrentPkg = previousPkg
 }
 
-func IsImportState() bool {
-	return ImportState > 0
+func IsNotImportState() bool {
+	return ImportState == 0
 }
