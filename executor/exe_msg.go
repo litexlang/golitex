@@ -21,7 +21,7 @@ import (
 
 func (e *Executor) deleteEnvAndRetainMsg() {
 	for _, msg := range e.env.Msgs {
-		if glob.IsNotImportState() {
+		if glob.IsNotImportDirStmt() {
 			e.env.Parent.AppendMsg2(msg)
 		}
 	}

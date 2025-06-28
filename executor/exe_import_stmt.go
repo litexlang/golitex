@@ -23,49 +23,40 @@ import (
 	"path/filepath"
 )
 
-func (exec *Executor) importStmt(stmt *ast.ImportStmt) (glob.ExecState, error) {
+func (exec *Executor) importDirStmt(stmt *ast.ImportDirStmt) (glob.ExecState, error) {
 	if !glob.AllowImport {
 		return glob.ExecState_Error, fmt.Errorf("imported file should not contain import statement, get %s", stmt.String())
 	}
 
-	if stmt.AsPkgName == "" {
-		execState, err := exec.importFileWithoutPkgName(stmt)
-		if err != nil {
-			return glob.ExecState_Error, err
-		}
-
-		return execState, nil
-	} else {
-		err := glob.ImportStmtInit(stmt.AsPkgName, stmt.Path)
-		if err != nil {
-			return glob.ExecState_Error, err
-		}
-
-		execSuccess := false
-		defer func() {
-			glob.ImportStmtEnd()
-			if !execSuccess {
-				if glob.IsNotImportState() {
-					exec.appendMsg(fmt.Sprintf("Failed to execute import statement:\n%s\n", stmt.String()))
-				}
-			} else {
-				if glob.IsNotImportState() {
-					exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
-				}
-			}
-		}()
-
-		execState, err := exec.importDirWithPkgName(stmt)
-		if err != nil {
-			return glob.ExecState_Error, err
-		}
-		execSuccess = execState == glob.ExecState_True
-		return execState, nil
+	err := glob.ImportDirStmtInit(stmt.AsPkgName, stmt.Path)
+	if err != nil {
+		return glob.ExecState_Error, err
 	}
+
+	execSuccess := false
+	defer func() {
+		glob.ImportDirStmtEnd()
+		if !execSuccess {
+			if glob.IsNotImportDirStmt() {
+				exec.appendMsg(fmt.Sprintf("Failed to execute import statement:\n%s\n", stmt.String()))
+			}
+		} else {
+			if glob.IsNotImportDirStmt() {
+				exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
+			}
+		}
+	}()
+
+	execState, err := exec.importDirWithPkgName(stmt)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+	execSuccess = execState == glob.ExecState_True
+	return execState, nil
 }
 
 // Recursively 地找到所有的包和子包的main文件，把里面的东西都提取出来到全局里
-func (exec *Executor) importDirWithPkgName(stmt *ast.ImportStmt) (glob.ExecState, error) {
+func (exec *Executor) importDirWithPkgName(stmt *ast.ImportDirStmt) (glob.ExecState, error) {
 	// glob.TaskDirName = filepath.Join(glob.TaskDirName, stmt.Path)
 	mainFilePath := filepath.Join(glob.CurrentTaskDirName, "main.lix")
 
@@ -99,7 +90,7 @@ func (exec *Executor) importDirWithPkgName(stmt *ast.ImportStmt) (glob.ExecState
 	return execState, nil
 }
 
-func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string, importStmt *ast.ImportStmt) (glob.ExecState, error) {
+func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string, importStmt ast.ImportStmtInterface) (glob.ExecState, error) {
 	if runInNewEnv {
 		exec.newEnv(exec.env, nil)
 		defer func() {
@@ -141,30 +132,6 @@ func (exec *Executor) runStmtInUpmostEnv_AssumeTheyAreTrue(topStmtSlice []ast.St
 	return glob.ExecState_True, nil
 }
 
-func (exec *Executor) importFileWithoutPkgName(stmt *ast.ImportStmt) (glob.ExecState, error) {
-	glob.AllowImport = false
-	defer func() {
-		glob.AllowImport = true
-	}()
-
-	codePath := filepath.Join(glob.CurrentTaskDirName, stmt.Path)
-	code, err := os.ReadFile(codePath)
-	if err != nil {
-		return glob.ExecState_Error, err
-	}
-
-	// read the file
-	execState, err := exec.runSourceCode(false, string(code), stmt)
-	if err != nil {
-		return glob.ExecState_Error, err
-	}
-	if execState != glob.ExecState_True {
-		return glob.ExecState_Error, fmt.Errorf("failed to execute import statement:\n%s\nSome statements in the imported file are not executed successfully", stmt.String())
-	}
-
-	return glob.ExecState_True, nil
-}
-
 func getGloballyImportedStmtSlice(code string) ([]ast.Stmt, error) {
 	topStmtSlice, err := parser.ParseSourceCode(code)
 	if err != nil {
@@ -175,7 +142,7 @@ func getGloballyImportedStmtSlice(code string) ([]ast.Stmt, error) {
 	for _, topStmt := range topStmtSlice {
 		if _, ok := topStmt.(*ast.ImportGloballyStmt); ok {
 			continue
-		} else if _, ok := topStmt.(*ast.ImportStmt); ok {
+		} else if _, ok := topStmt.(*ast.ImportDirStmt); ok {
 			continue
 		} else {
 			ret = append(ret, topStmt)

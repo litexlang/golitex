@@ -1046,27 +1046,30 @@ func (tb *tokenBlock) param_paramSet_paramInSetFacts(endWith string) ([]string, 
 	return params, setParams, nil
 }
 
-func (tb *tokenBlock) importStmt() (*ast.ImportStmt, error) {
+func (tb *tokenBlock) importStmt() (ast.ImportStmtInterface, error) {
 	err := tb.header.skip(glob.KeywordImport)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	asPkgName := ""
 	importPath := ""
 	importPath, err = tb.getStringInDoubleQuotes()
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
+
 	if tb.header.is(glob.KeywordAs) {
+		asPkgName := ""
 		tb.header.skip(glob.KeywordAs)
 		asPkgName, err = tb.header.next()
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
 		}
+		return ast.NewImportStmt(importPath, asPkgName), nil
+	} else {
+		return ast.NewImportFileStmt(importPath), nil
 	}
 
-	return ast.NewImportStmt(importPath, asPkgName), nil
 }
 
 func (tb *tokenBlock) getStringInDoubleQuotes() (string, error) {
