@@ -584,7 +584,7 @@ func (stmt *OrStmt) String() string {
 	return strings.TrimSuffix(builder.String(), "\n")
 }
 
-func (stmt *ImportStmt) String() string {
+func (stmt *ImportDirStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordImport)
 	builder.WriteString(" ")
@@ -641,6 +641,16 @@ func (stmt *EnumStmt) String() string {
 func (stmt *ImportGloballyStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordImportGlobally)
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeySymbolDoubleQuote)
+	builder.WriteString(stmt.Path)
+	builder.WriteString(glob.KeySymbolDoubleQuote)
+	return builder.String()
+}
+
+func (stmt *ImportFileStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordImport)
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeySymbolDoubleQuote)
 	builder.WriteString(stmt.Path)

@@ -220,7 +220,7 @@ func (env *Env) newTruePureFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) erro
 
 		err = env.newFactNoPostProcess(instantiated)
 
-		if glob.IsNotImportState() {
+		if glob.IsNotImportDirStmt() {
 			env.AppendMsg2(fmt.Sprintf("%s\nis true by definition", instantiated.String()))
 		}
 

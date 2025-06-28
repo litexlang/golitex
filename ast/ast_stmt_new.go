@@ -111,8 +111,8 @@ func NewSupposeStmt(fact SpecFactStmt, body []Stmt) *SupposeStmt {
 	return &SupposeStmt{fact, body}
 }
 
-func NewImportStmt(path string, asPkgName string) *ImportStmt {
-	return &ImportStmt{path, asPkgName}
+func NewImportStmt(path string, asPkgName string) *ImportDirStmt {
+	return &ImportDirStmt{path, asPkgName}
 }
 
 func NewProveStmt(proof []Stmt) *ProveStmt {
@@ -133,4 +133,8 @@ func NewEnumStmt(enumName Fc, enumValues []Fc) *EnumStmt {
 
 func NewImportGloballyStmt(path string) *ImportGloballyStmt {
 	return &ImportGloballyStmt{path}
+}
+
+func NewImportFileStmt(path string) *ImportFileStmt {
+	return &ImportFileStmt{path}
 }

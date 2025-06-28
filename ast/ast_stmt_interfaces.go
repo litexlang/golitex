@@ -34,8 +34,9 @@ func (s *ProveInEachCaseStmt) stmt() {}
 func (s *KnowPropStmt) stmt()        {}
 func (s *KnowExistPropStmt) stmt()   {}
 func (s *OrStmt) stmt()              {}
-func (s *ImportStmt) stmt()          {}
+func (s *ImportDirStmt) stmt()       {}
 func (s *ImportGloballyStmt) stmt()  {}
+func (s *ImportFileStmt) stmt()      {}
 
 // func (s *PubStmt) stmt()                       {}
 func (s *ProveStmt) stmt()                     {}
@@ -121,3 +122,12 @@ func (stmt *ClaimProveStmt) claimStmt()                {}
 func (stmt *ClaimProveByContradictionStmt) claimStmt() {}
 
 type FactStmtSlice []FactStmt
+
+type ImportStmtInterface interface {
+	importStmt()
+	stmt()
+	String() string
+}
+
+func (stmt *ImportDirStmt) importStmt()  {}
+func (stmt *ImportFileStmt) importStmt() {}

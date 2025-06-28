@@ -23,7 +23,7 @@ import (
 
 func (exec *Executor) withStmt(stmt *ast.WithStmt) (glob.ExecState, error) {
 	defer func() {
-		if glob.IsNotImportState() {
+		if glob.IsNotImportDirStmt() {
 			exec.appendMsg("\n")
 			exec.appendMsg(stmt.String())
 		}
@@ -56,7 +56,7 @@ func (exec *Executor) withStmt_checkFact(stmt *ast.WithStmt) (glob.ExecState, er
 	// check fact
 	execState, err := exec.factStmt(&stmt.Fact)
 	if notOkExec(execState, err) {
-		if glob.IsNotImportState() {
+		if glob.IsNotImportDirStmt() {
 			exec.appendMsg(fmt.Sprintf("%s is unknown", stmt.Fact.String()))
 		}
 	}
@@ -65,7 +65,7 @@ func (exec *Executor) withStmt_checkFact(stmt *ast.WithStmt) (glob.ExecState, er
 	for _, bodyFact := range stmt.Body {
 		execState, err = exec.Stmt(bodyFact)
 		if notOkExec(execState, err) {
-			if glob.IsNotImportState() {
+			if glob.IsNotImportDirStmt() {
 				exec.appendMsg(fmt.Sprintf("%s is unknown", bodyFact.String()))
 			}
 			return execState, err
