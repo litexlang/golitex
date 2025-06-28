@@ -758,5 +758,5 @@ func (exec *Executor) checkReverse(stmt ast.FactStmt) (glob.ExecState, error) {
 }
 
 func (exec *Executor) importGloballyStmt(stmt *ast.ImportGloballyStmt) (glob.ExecState, error) {
-	return exec.importFileWithPkgName(stmt.Path, "")
+	return exec.importFileWithoutPkgName(ast.NewImportStmt(stmt.Path, glob.EmptyPkg))
 }
