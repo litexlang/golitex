@@ -64,6 +64,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		execState, err = exec.execClaimStmtProveByContradiction(stmt)
 	case *ast.DefFnTemplateStmt:
 		err = exec.defFnTemplateStmt(stmt)
+	case *ast.ImportGloballyStmt:
+		execState, err = exec.importGloballyStmt(stmt)
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}
@@ -753,4 +755,8 @@ func (exec *Executor) checkReverse(stmt ast.FactStmt) (glob.ExecState, error) {
 	}
 
 	return glob.ExecState_Unknown, nil
+}
+
+func (exec *Executor) importGloballyStmt(stmt *ast.ImportGloballyStmt) (glob.ExecState, error) {
+	return exec.importFileWithPkgName(stmt.Path, "")
 }
