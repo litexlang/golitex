@@ -23,14 +23,14 @@ import (
 var TaskDirName string
 
 var CurrentPkg string = ""
-var previousPkg string = ""
+var previousPkgSlice []string = []string{}
 var DeclaredPkgNames = map[string]struct{}{"": {}}
 var ImportState uint = 0 // 之所以uint而不是bool，因为可以import里有import，离开一个import后我不能让它false掉，因为可能还是在某个import里
 
 func ImportStmtInit(newPkg string) error {
 	ImportState++
 
-	previousPkg = CurrentPkg
+	previousPkgSlice = append(previousPkgSlice, CurrentPkg)
 	if newPkg != "" {
 		if CurrentPkg == "" {
 			CurrentPkg = newPkg
@@ -55,7 +55,8 @@ func ImportStmtInit(newPkg string) error {
 func ImportStmtEnd() {
 	ImportState--
 
-	CurrentPkg = previousPkg
+	CurrentPkg = previousPkgSlice[len(previousPkgSlice)-1]
+	previousPkgSlice = previousPkgSlice[:len(previousPkgSlice)-1]
 }
 
 func IsNotImportState() bool {

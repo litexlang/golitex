@@ -1217,7 +1217,7 @@ func (tb *tokenBlock) defFnStmt() (*ast.DefFnStmt, error) {
 }
 
 func (tb *tokenBlock) importGloballyStmt() (*ast.ImportGloballyStmt, error) {
-	err := tb.header.skipKwAndColon_ExceedEnd(glob.KeywordImportGlobally)
+	err := tb.header.skip(glob.KeywordImportGlobally)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
