@@ -1,4 +1,5 @@
 import  "./repo1_1" as pkg1_1
+import_globally "./repo1_global.lix"
 
 obj a N:
     a = pkg1_1::a
