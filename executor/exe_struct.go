@@ -25,15 +25,15 @@ type Executor struct {
 	env *env.Env
 }
 
-func NewExecutor(curEnv *env.Env) *Executor {
+func NewExecutor(curEnv *env.Env, isSandBoxUpperBound bool) *Executor {
 	if curEnv == nil {
-		return &Executor{env: env.NewEnv(nil, nil)}
+		return &Executor{env: env.NewEnv(nil, nil, isSandBoxUpperBound)}
 	} else {
 		return &Executor{env: curEnv}
 	}
 }
 
-func (e *Executor) newEnv(parent *env.Env, curMatchEnv *ast.SpecFactStmt) *env.Env {
-	e.env = env.NewEnv(parent, curMatchEnv)
+func (e *Executor) newEnv(parent *env.Env, curMatchEnv *ast.SpecFactStmt, isSandBoxUpperBound bool) *env.Env {
+	e.env = env.NewEnv(parent, curMatchEnv, isSandBoxUpperBound)
 	return e.env
 }
