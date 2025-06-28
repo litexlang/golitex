@@ -1,4 +1,3 @@
-import  "./pkg0.lix" as pkg0
 import  "./proof1.lix"
 import  "./repo1" as pkg1
 
