@@ -50,7 +50,7 @@ func (exec *Executor) withStmt(stmt *ast.WithStmt) (glob.ExecState, error) {
 
 func (exec *Executor) withStmt_checkFact(stmt *ast.WithStmt) (glob.ExecState, error) {
 	// exec.newEnv(exec.env, exec.env.CurMatchEnv)
-	exec.newEnv(exec.env, &stmt.Fact, false)
+	exec.newEnv(exec.env, &stmt.Fact)
 	defer exec.deleteEnvAndRetainMsg()
 
 	// check fact

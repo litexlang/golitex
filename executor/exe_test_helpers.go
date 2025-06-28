@@ -35,9 +35,9 @@ func setupAndParseStmtTest(path string) ([]ast.Stmt, error) {
 }
 
 func execStmtTest(topStmt []ast.Stmt) []string {
-	env := env.NewEnv(nil, nil, true)
+	env := env.NewEnv(nil, nil)
 	env.Init()
-	executor := *NewExecutor(env, true)
+	executor := *NewExecutor(env)
 
 	messages := []string{}
 
