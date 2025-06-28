@@ -583,6 +583,7 @@ func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEach
 	return glob.ExecState_True, nil
 }
 
+// 只要 dom 成立，那prop成立，进而prop的iff成立
 func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) (glob.ExecState, error) {
 	if glob.IsNotImportState() {
 		defer func() {
@@ -610,6 +611,7 @@ func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) (glob.ExecS
 	return glob.ExecState_True, nil
 }
 
+// 只要 dom 成立，那prop成立，进而prop的iff成立
 func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
 	if glob.IsNotImportState() {
 		defer func() {
