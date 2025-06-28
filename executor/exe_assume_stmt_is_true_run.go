@@ -55,7 +55,8 @@ func (exec *Executor) assumeStmtIsTrueRun(stmt ast.Stmt) (glob.ExecState, error)
 	case *ast.ImportStmt:
 		return glob.ExecState_True, nil
 	case *ast.ImportGloballyStmt:
-		return exec.importGloballyStmt(stmt)
+		// return exec.importGloballyStmt(stmt)
+		return glob.ExecState_True, nil
 	// case *ast.PubStmt:
 	// 	panic("implement me")
 	case *ast.ProveStmt:

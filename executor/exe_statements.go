@@ -19,7 +19,10 @@ import (
 	ast "golitex/ast"
 	env "golitex/environment"
 	glob "golitex/glob"
+	parser "golitex/parser"
 	verifier "golitex/verifier"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -405,7 +408,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecState, 
 	err := error(nil)
 	isSuccess := false
 
-	exec.newEnv(exec.env, exec.env.CurMatchProp, false)
+	exec.newEnv(exec.env, exec.env.CurMatchProp)
 	if glob.IsNotImportState() {
 		defer func() {
 			exec.appendMsg("\n")
@@ -459,7 +462,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecState, 
 func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) (glob.ExecState, error) {
 	isSuccess := false
 
-	exec.newEnv(exec.env, exec.env.CurMatchProp, false)
+	exec.newEnv(exec.env, exec.env.CurMatchProp)
 	if glob.IsNotImportState() {
 		defer func() {
 			exec.appendMsg("\n")
@@ -549,7 +552,7 @@ func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) (glob.E
 }
 
 func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEachCaseStmt) (glob.ExecState, error) {
-	exec.newEnv(exec.env, exec.env.CurMatchProp, false)
+	exec.newEnv(exec.env, exec.env.CurMatchProp)
 	defer exec.deleteEnvAndRetainMsg()
 
 	caseStmt := stmt.OrFact.Facts[index]
@@ -635,7 +638,7 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
 
 func (exec *Executor) proveStmt(stmt *ast.ProveStmt) (glob.ExecState, error) {
 	// new env
-	exec.newEnv(exec.env, exec.env.CurMatchProp, false)
+	exec.newEnv(exec.env, exec.env.CurMatchProp)
 	defer exec.deleteEnvAndRetainMsg()
 
 	return exec.execProofBlock(stmt.Proof)
@@ -758,5 +761,28 @@ func (exec *Executor) checkReverse(stmt ast.FactStmt) (glob.ExecState, error) {
 }
 
 func (exec *Executor) importGloballyStmt(stmt *ast.ImportGloballyStmt) (glob.ExecState, error) {
-	return exec.importFileWithoutPkgName(ast.NewImportStmt(stmt.Path, glob.EmptyPkg))
+	codePath := filepath.Join(glob.CurrentTaskDirName, stmt.Path)
+	code, err := os.ReadFile(codePath)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+
+	//parse code
+	stmts, err := parser.ParseSourceCode(string(code))
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+
+	for _, stmt := range stmts {
+		execState, err := exec.Stmt(stmt)
+		if notOkExec(execState, err) {
+			return execState, err
+		}
+	}
+
+	// 这是必要的，因为有可能 import_globally 就是在最顶层运行的
+	if exec.env.Parent != nil {
+		return exec.runGloballyImportedStmts(stmts)
+	}
+	return glob.ExecState_True, nil
 }
