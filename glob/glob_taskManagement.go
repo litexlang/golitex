@@ -22,45 +22,43 @@ import (
 
 // 存储当前的传入的repo的repo名
 var CurrentTaskDirName string = ""
-var previousTaskDirNameSlice []string = []string{}
+var PreviousTaskDirNameSlice []string = []string{}
 
 var CurrentPkg string = ""
-var previousPkgSlice []string = []string{}
+var PreviousPkgSlice []string = []string{}
 var DeclaredPkgNames = map[string]struct{}{"": {}}
 
 func ImportStmtInit(newPkg string, path string) error {
-	previousTaskDirNameSlice = append(previousTaskDirNameSlice, CurrentTaskDirName)
+	PreviousTaskDirNameSlice = append(PreviousTaskDirNameSlice, CurrentTaskDirName)
 	CurrentTaskDirName = filepath.Join(CurrentTaskDirName, path)
 
-	previousPkgSlice = append(previousPkgSlice, CurrentPkg)
-	if newPkg != "" {
-		if CurrentPkg == "" {
-			CurrentPkg = newPkg
-		} else {
-			CurrentPkg = strings.Join([]string{CurrentPkg, newPkg}, KeySymbolColonColon)
-		}
-		// import name should be valid
-		err := IsValidUseDefinedFcAtom(newPkg)
-		if err != nil {
-			return err
-		}
+	PreviousPkgSlice = append(PreviousPkgSlice, CurrentPkg)
+	if CurrentPkg == "" {
+		CurrentPkg = newPkg
+	} else {
+		CurrentPkg = strings.Join([]string{CurrentPkg, newPkg}, KeySymbolColonColon)
+	}
+	// import name should be valid
+	err := IsValidUseDefinedFcAtom(newPkg)
+	if err != nil {
+		return err
+	}
 
-		if _, ok := DeclaredPkgNames[CurrentPkg]; !ok {
-			DeclaredPkgNames[CurrentPkg] = struct{}{}
-		} else {
-			return fmt.Errorf("duplicate package name: '%s'", CurrentPkg)
-		}
+	if _, ok := DeclaredPkgNames[CurrentPkg]; !ok {
+		DeclaredPkgNames[CurrentPkg] = struct{}{}
+	} else {
+		return fmt.Errorf("duplicate package name: '%s'", CurrentPkg)
 	}
 	return nil
 }
 
 func ImportStmtEnd() {
-	CurrentPkg = previousPkgSlice[len(previousPkgSlice)-1]
-	previousPkgSlice = previousPkgSlice[:len(previousPkgSlice)-1]
-	CurrentTaskDirName = previousTaskDirNameSlice[len(previousTaskDirNameSlice)-1]
-	previousTaskDirNameSlice = previousTaskDirNameSlice[:len(previousTaskDirNameSlice)-1]
+	CurrentPkg = PreviousPkgSlice[len(PreviousPkgSlice)-1]
+	PreviousPkgSlice = PreviousPkgSlice[:len(PreviousPkgSlice)-1]
+	CurrentTaskDirName = PreviousTaskDirNameSlice[len(PreviousTaskDirNameSlice)-1]
+	PreviousTaskDirNameSlice = PreviousTaskDirNameSlice[:len(PreviousTaskDirNameSlice)-1]
 }
 
 func IsNotImportState() bool {
-	return len(previousPkgSlice) == 0
+	return len(PreviousPkgSlice) == 0
 }
