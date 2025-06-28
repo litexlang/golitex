@@ -32,7 +32,7 @@ func (exec *Executor) importStmt(stmt *ast.ImportStmt) (glob.ExecState, error) {
 
 		return execState, nil
 	} else {
-		err := glob.ImportStmtInit(stmt.AsPkgName, stmt.Path)
+		err := ExecImportStmtInit(stmt.AsPkgName, stmt.Path, exec.env)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
@@ -122,8 +122,8 @@ func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string, importS
 }
 
 func (exec *Executor) runGloballyImportedStmts(topStmtSlice []ast.Stmt) (glob.ExecState, error) {
-	upMostEnv := exec.env.GetUpMostEnv()
-	newExec := NewExecutor(upMostEnv)
+	curEnv := exec.env.GetUpMostEnv()
+	newExec := NewExecutor(curEnv)
 
 	for _, topStmt := range topStmtSlice {
 		execState, err := newExec.assumeStmtIsTrueRun(topStmt)
