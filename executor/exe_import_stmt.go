@@ -65,13 +65,28 @@ func (exec *Executor) importDirWithPkgName(stmt *ast.ImportStmt) (glob.ExecState
 	glob.TaskDirName = filepath.Join(glob.TaskDirName, stmt.Path)
 	mainFilePath := filepath.Join(glob.TaskDirName, "main.lix")
 
-	execState, topStmtSlice, err := exec.runFileToMakeSureTheFileIsTrue(mainFilePath)
+	code, err := os.ReadFile(mainFilePath)
 	if err != nil {
-		return glob.ExecState_Error, fmt.Errorf("failed to execute import statement:\n%s", ast.NewImportStmt(mainFilePath, stmt.AsPkgName).String())
+		return glob.ExecState_Error, err
 	}
 
-	if execState != glob.ExecState_True {
-		return glob.ExecState_Error, fmt.Errorf("failed to execute import statement:\n%s\nSome statements in the imported file are not executed successfully", ast.NewImportStmt(mainFilePath, stmt.AsPkgName).String())
+	// TODO 这里有问题，即使我不运行，我也应该能把stmt传出去
+	var execState glob.ExecState = glob.ExecState_True
+	var topStmtSlice []ast.Stmt = []ast.Stmt{}
+
+	if !glob.AssumeImportFilesAreTrue {
+		execState, topStmtSlice, err = exec.runSourceCode(true, string(code), stmt)
+		if err != nil {
+			return glob.ExecState_Error, err
+		}
+		if execState != glob.ExecState_True {
+			return glob.ExecState_Error, fmt.Errorf("failed to execute import statement")
+		}
+	} else {
+		topStmtSlice, err = getGloballyImportedStmt(code)
+		if err != nil {
+			return glob.ExecState_Error, err
+		}
 	}
 
 	execState, err = exec.runSourceAssumeStmtIsTrue(topStmtSlice)
@@ -82,29 +97,7 @@ func (exec *Executor) importDirWithPkgName(stmt *ast.ImportStmt) (glob.ExecState
 	return execState, nil
 }
 
-func (exec *Executor) runFileToMakeSureTheFileIsTrue(codePath string) (glob.ExecState, []ast.Stmt, error) {
-	code, err := os.ReadFile(codePath)
-	if err != nil {
-		return glob.ExecState_Error, nil, err
-	}
-
-	// TODO 这里有问题，即使我不运行，我也应该能把stmt传出去
-	var execState glob.ExecState = glob.ExecState_True
-	var topStmtSlice []ast.Stmt = []ast.Stmt{}
-	if !glob.AssumeImportFilesAreTrue {
-		execState, topStmtSlice, err = exec.runSourceCode(true, string(code))
-		if err != nil {
-			return glob.ExecState_Error, nil, err
-		}
-		if execState != glob.ExecState_True {
-			return glob.ExecState_Error, nil, fmt.Errorf("failed to execute import statement")
-		}
-	}
-
-	return execState, topStmtSlice, nil
-}
-
-func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string) (glob.ExecState, []ast.Stmt, error) {
+func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string, importStmt *ast.ImportStmt) (glob.ExecState, []ast.Stmt, error) {
 	if runInNewEnv {
 		exec.newEnv(exec.env, nil)
 		defer func() {
@@ -123,7 +116,7 @@ func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string) (glob.E
 			return glob.ExecState_Error, nil, err
 		}
 		if execState != glob.ExecState_True {
-			return glob.ExecState_Error, nil, fmt.Errorf("failed to execute source code:\n%s\nSome statements in the source code are not executed successfully", sourceCode)
+			return glob.ExecState_Error, nil, fmt.Errorf("failed to execute source code when executing '%s':\n%s", importStmt.String(), topStmt.String())
 		}
 	}
 
@@ -154,7 +147,7 @@ func (exec *Executor) importFileWithoutPkgName(stmt *ast.ImportStmt) (glob.ExecS
 	}
 
 	// read the file
-	execState, _, err := exec.runSourceCode(false, string(code))
+	execState, _, err := exec.runSourceCode(false, string(code), stmt)
 	if err != nil {
 		return glob.ExecState_Error, err
 	}
@@ -165,4 +158,30 @@ func (exec *Executor) importFileWithoutPkgName(stmt *ast.ImportStmt) (glob.ExecS
 	return glob.ExecState_True, nil
 }
 
-// 把指定的文件里的所有东西，以及涉及到的包的所有的main文件递归地提取出来，都提取出来到全局里
+func getGloballyImportedStmt(code []byte) ([]ast.Stmt, error) {
+	topStmtSlice, err := parser.ParseSourceCode(string(code))
+	if err != nil {
+		return nil, err
+	}
+
+	ret := []ast.Stmt{}
+	for _, topStmt := range topStmtSlice {
+		if topStmtAsImportGlobally, ok := topStmt.(*ast.ImportGloballyStmt); ok {
+			codeInside, err := os.ReadFile(filepath.Join(glob.TaskDirName, topStmtAsImportGlobally.Path))
+			if err != nil {
+				return nil, err
+			}
+			stmtInside, err := parser.ParseSourceCode(string(codeInside))
+			if err != nil {
+				return nil, err
+			}
+			ret = append(ret, stmtInside...)
+		} else if _, ok := topStmt.(*ast.ImportStmt); ok {
+			continue
+		} else {
+			ret = append(ret, topStmt)
+		}
+	}
+
+	return ret, nil
+}
