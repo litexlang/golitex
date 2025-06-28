@@ -405,7 +405,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecState, 
 	err := error(nil)
 	isSuccess := false
 
-	exec.newEnv(exec.env, exec.env.CurMatchProp)
+	exec.newEnv(exec.env, exec.env.CurMatchProp, false)
 	if glob.IsNotImportState() {
 		defer func() {
 			exec.appendMsg("\n")
@@ -459,7 +459,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecState, 
 func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) (glob.ExecState, error) {
 	isSuccess := false
 
-	exec.newEnv(exec.env, exec.env.CurMatchProp)
+	exec.newEnv(exec.env, exec.env.CurMatchProp, false)
 	if glob.IsNotImportState() {
 		defer func() {
 			exec.appendMsg("\n")
@@ -549,7 +549,7 @@ func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) (glob.E
 }
 
 func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEachCaseStmt) (glob.ExecState, error) {
-	exec.newEnv(exec.env, exec.env.CurMatchProp)
+	exec.newEnv(exec.env, exec.env.CurMatchProp, false)
 	defer exec.deleteEnvAndRetainMsg()
 
 	caseStmt := stmt.OrFact.Facts[index]
@@ -635,7 +635,7 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
 
 func (exec *Executor) proveStmt(stmt *ast.ProveStmt) (glob.ExecState, error) {
 	// new env
-	exec.newEnv(exec.env, exec.env.CurMatchProp)
+	exec.newEnv(exec.env, exec.env.CurMatchProp, false)
 	defer exec.deleteEnvAndRetainMsg()
 
 	return exec.execProofBlock(stmt.Proof)

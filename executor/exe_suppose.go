@@ -50,7 +50,7 @@ func (exec *Executor) supposeStmt_declareParams_runBody(stmt *ast.SupposeStmt) (
 		originalEnv.CurMatchProp = nil
 	}()
 
-	exec.newEnv(originalEnv, &stmt.Fact)
+	exec.newEnv(originalEnv, &stmt.Fact, false)
 	defer exec.deleteEnvAndRetainMsg()
 
 	execState, err := exec.supposeStmt_declaredParams(stmt)
@@ -177,7 +177,7 @@ func (exec *Executor) supposeStmt_storeFactsToEnv(insideFacts []ast.FactStmt, st
 		storeToEnv.CurMatchProp = originalCurMatchProp
 	}()
 
-	curEnv := exec.newEnv(storeToEnv, &stmt.Fact)
+	curEnv := exec.newEnv(storeToEnv, &stmt.Fact, false)
 	defer exec.deleteEnvAndRetainMsg()
 
 	// declare atoms in suppose environment

@@ -42,11 +42,9 @@ func executeCodeAndReturnMessageSlice(code string) ([]string, glob.SysSignal, er
 		return nil, glob.SysSignalParseError, err
 	}
 
-	curEnv := env.NewEnv(nil, nil)
+	curEnv := env.NewEnv(nil, nil, true)
 	curEnv.Init()
-	exe.ExecImportStmtInit("", "", curEnv)
-	defer exe.ExecImportStmtEnd(curEnv)
-	executor := *exe.NewExecutor(curEnv)
+	executor := *exe.NewExecutor(curEnv, true)
 
 	msgOfTopStatements := []string{}
 
@@ -127,11 +125,9 @@ func printMessagesToWriter(writer io.Writer, msg []string) {
 // }
 
 func RunREPLInTerminal() {
-	curEnv := env.NewEnv(nil, nil)
+	curEnv := env.NewEnv(nil, nil, true)
 	curEnv.Init()
-	exe.ExecImportStmtInit("", "", curEnv)
-	defer exe.ExecImportStmtEnd(curEnv)
-	executor := exe.NewExecutor(curEnv)
+	executor := exe.NewExecutor(curEnv, true)
 
 	reader := bufio.NewReader(os.Stdin)
 	writer := os.Stdout
