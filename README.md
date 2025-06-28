@@ -47,10 +47,6 @@ For discussions about design of Litex, please refer to [design](./doc/design/des
 
 ## A Simple Example
 
-_Common sense is not so common._
-
-_-- Voltaire_
-
 _If you define the problem correctly, you almost have the solution._
 
 _-- Steve Jobs_
@@ -84,7 +80,13 @@ The above example means: `Human` is the set of all humans. Using `know`, we esta
 
 Each statement in Litex has four potential outcomes: true, false, unknown, or error. All factual statements start with `$` to differentiate them from functions. 
 
-There are and only are two ways of deriving new facts from established ones:
+## How does verification work? How does Litex work?
+
+_Common sense is not so common._
+
+_-- Voltaire_
+
+Math is about deriving new facts from established ones. Verification is about making sure the new facts are true based on the established ones. There are and only are two ways of verifying a new fact:
 
 1. From special case to special case. e.g. `a = 1` => `a = 1`. The derived fact `a = 1` (the second statement) is true because the first statement is true and the first statement is written exactly the same as the second statement. I call it `match`.
 
@@ -95,6 +97,31 @@ You just learned how Litex builds math from basic pieces, like building blocks. 
 [^1]: There are exceptions. Facts about symbols with literal information (e.g. numbers like 1, 2, 3, counting etc) are not verified in this way. Facts related to counting are not verified in this way. There are and only these two exceptions. Those facts are verified by Litex's builtin rules, the user does not need to worry about them.
 
 [^2]: Voltaire once said: "Common sense is not so common." In the case of Litex, Litex makes the process of building math as easy as `ctrl+f/cmd+f` in your browser, by discovering that math is nothing but a special kind of `match and substitution` problem. Everyone is so familiar with this process, but almost no one actually finds its significance and use this idea to create a simple formal language. The real magic of Litex is that it works just like how people think in daily life. This is a hard magic for the language designer, because it requires a deep understanding of both the nature of mathematics and the nature of programming, but is worth the effort.
+
+## Math is not a programming language, Litex takes advantage of this fact
+
+_Mathematics is nothing more than a game played according to certain simple rules with meaningless marks on a paper._
+
+_-- David Hilbert_
+
+Since the beginning of human history, math has served two purposes: 1. for computation, i.e. calculate the output of a function given the input, and 2. for verification, i.e. make sure a new statement is correct given the established ones. The revolution of computer industry, or software industry, has dramatically changed the landscape of the first purpose, and the second purpose is almost forgotten. Litex is here to bring back the second purpose.
+
+There are huge gaps between programming and verification. The following table might give you a sense of the gap:
+
+| Feature              | Mathematics                                                                 | Programming                                                                    |
+|----------------------|------------------------------------------------------------------------------|--------------------------------------------------------------------------------|
+| **Variable**          | No real "variable" — once an object is defined, its meaning is fixed        | Variables can change values during execution                                   |
+| **Function**          | A symbol that builds new expressions from input symbols (no execution)      | A block of executable code that performs computation or side effects           |
+| **Execution**         | No execution — everything is symbolic manipulation or `match and substitution`           | Involves actual computation steps and runtime behavior                         |
+| **Control Flow**      | Uses logical constructs like `∀` (for all) to reason about all cases         | Uses constructs like `for`, `while`, `if` to control the flow of execution     |
+| **Iteration**         | Infinite or large domains handled abstractly (e.g. by induction or logic)    | Requires explicit loops and step-by-step computation                           |
+| **Existential Quantification** |  Existential quantification is a fundamental part of math | No existential quantification — all objects are explicitly defined |
+| **Purpose**           | To prove or verify truth symbolically                                        | To perform tasks, process data, interact with systems                          |
+
+
+The reason why traditional formal languages, like Lean, Coq, and Isabelle, are so complicated is that they want to be both programming languages and reasoning verifiers. This dual nature makes it technically challenging to create a simple and intuitive system, also making their users, including the most talented mathematicians, confused. 
+
+Litex, as a domain language, takes advantage of the difference between programming and verification, and is designed to be a simple and intuitive reasoning verifier. For a long time, the software industry has been using the wrong tools to do verification, and softwares barely touches the second purpose of math. Litex is here to change this.
 
 ##  Examples: Litex for Curious Formal Language Users
 
