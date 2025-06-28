@@ -78,9 +78,11 @@ Mathematics is the art of deriving new facts from established ones. To illustrat
 
 The above example means: `Human` is the set of all humans. Using `know`, we establish a simple fact: all humans are self-aware. When the user input `self_aware(Bob)`, the system will automatically find the fact `forall x Human: $self_aware(x)` and substitute `x` with `Bob`, and then check if the result is true. This process is called `match and substitution`. Since Bob is in the set of `Human`, "Bob is self-aware" is true.
 
-Each statement in Litex has four potential outcomes: true, false, unknown, or error. All factual statements start with `$` to differentiate them from functions. 
+Each statement in Litex has four potential outcomes: true, false, unknown, or error. All factual statements start with `$` to differentiate them from functions.
 
-## How does verification work? How does Litex work?
+Keep this example in mind. The next section will show you how Litex works. Refer to this example when you are reading the next section.
+
+## Verification is pattern matching, and so is Litex.
 
 _Common sense is not so common._
 
@@ -98,7 +100,7 @@ You just learned how Litex builds math from basic pieces, like building blocks. 
 
 [^2]: Voltaire once said: "Common sense is not so common." In the case of Litex, Litex makes the process of building math as easy as `ctrl+f/cmd+f` in your browser, by discovering that math is nothing but a special kind of `match and substitution` problem. Everyone is so familiar with this process, but almost no one actually finds its significance and use this idea to create a simple formal language. The real magic of Litex is that it works just like how people think in daily life. This is a hard magic for the language designer, because it requires a deep understanding of both the nature of mathematics and the nature of programming, but is worth the effort.
 
-## Math is not a programming language, Litex takes advantage of this fact
+## Math is not a programming language, and neither is Litex.
 
 _Mathematics is nothing more than a game played according to certain simple rules with meaningless marks on a paper._
 
