@@ -28,16 +28,13 @@ _The best way to predict the future is to invent it._
 
 _-- Alan Kay_
 
-Litex is a simple and easy-to-learn formal language. It makes formal reasoning as natural as writing in natural language. Thanks to its innovative design, even 10-year-olds can learn Litex easily. In the foreseeable future, Litex is going to reduce the time ratio between formalizing a proof and writing it in natural language from 10:1 to 1:1. 
+Litex is a simple and easy-to-learn formal language. It makes formal reasoning as natural as writing in natural language. Thanks to its innovative design, even 10-year-olds can learn Litex easily. In the foreseeable future, Litex is going to reduce the time ratio between formalizing a proof and writing it in natural language from 10:1 to 1:1.
 
 Litex is designed to be a domain language as close as daily mathematical writing as possible. The key insight of Litex is: mathematical verification is nothing but a special kind of **match and substitution** problem, similar to "ctrl+f (or cmd+f)" in your browser. By deliberately sacrificing Turing completeness, Litex can have a much cleaner and intuitive syntax and semantics, focused on and only on mathematical verification. This gives it a dimensional advantage over existing formal languages.
 
 This README shows how the deep understanding of both the nature of mathematics and the nature of programming shapes the unique design of Litex. Let's start with a simple example.
 
 ---
-Litex is a domain language under development. It is not yet ready for production use.
-
-For discussions about design of Litex, please refer to [design](./doc/design/design.md). For continuous updates, please refer to [Zulip community](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/). For trying Litex in your browser, please refer to [playground](https://litexlang.org/playground). For the latest version of Litex, please refer to [release](https://github.com/litexlang/golitex/releases). For the full tutorial, please refer to [tutorial](./doc/tutorial/tutorial.md). For contributions, please refer to [contributing](./CONTRIBUTING.md). For applications of formal reasoning, please refer to [applications of formal reasoning](./doc/applications_of_formal_reasoning/applications_of_formal_reasoning.md). For the license, please refer to [license](./LICENSE).
 
 - **Website:** [litexlang.org](https://litexlang.org)  
 - **GitHub:** [github.com/litexlang/golitex](https://github.com/litexlang/golitex)
@@ -45,6 +42,12 @@ For discussions about design of Litex, please refer to [design](./doc/design/des
 - **Litex Creator:** Jiachen Shen
 - **Litex Creator's Email:** malloc_realloc_free@outlook.com
 - **Litex Zulip Community:** [Litex Zulip Community](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
+- **Litex Design(Under Development):** [Litex Design](./doc/design/design.md)
+- **Litex Playground:** [Litex Playground](https://litexlang.org/playground)
+- **Litex Tutorial:** [Litex Tutorial](./doc/tutorial/tutorial.md)
+- **Litex Applications of Formal Reasoning:** [Litex Applications of Formal Reasoning](./doc/applications_of_formal_reasoning/applications_of_formal_reasoning.md)
+- **Litex License:** [Litex License](./LICENSE)
+- **Litex Contributing:** [Litex Contributing](./CONTRIBUTING.md)
 
 ## A Simple Example
 
@@ -52,7 +55,7 @@ _If you define the problem correctly, you almost have the solution._
 
 _-- Steve Jobs_
 
-Mathematics is the art of deriving new facts from established ones. To illustrate, consider a classical syllogism proposed by Aristotle, which formalizes deductive reasoning as follows:
+Mathematics is the art of deriving new facts from established ones. To illustrate, consider a classical syllogism proposed by Aristotle, which formalizes deductive reasoning as follows. Run this example on [playground](https://litexlang.org/playground):
 
 <table style="border-collapse: collapse; width: 100%;">
   <tr>
@@ -136,7 +139,7 @@ _Beautiful is better than ugly. Explicit is better than implicit. Simple is bett
 
 _-- The Zen of Python_
 
-Here are some examples of Litex, in Litex for Curious Lean Users and other formal language users. Detailed explanations are provided in [Litex for Curious Lean Users](./doc/litex_for_curious_lean_users/litex_for_curious_lean_users.md). I put them here for you to get a sense of the language.
+Here are some examples of Litex, in Litex for Curious Lean Users and other formal language users. Detailed explanations are provided in [Litex for Curious Lean Users](./doc/litex_for_curious_lean_users/litex_for_curious_lean_users.md). I put them here for you to get a sense of the language. Run these examples on [playground](https://litexlang.org/playground).
 
 I will show you how Litex is shaped by common sense, and why common sense is not so common in traditional formal languages. It must be noted that making Litex so common sense is a very uncommon thing, because it requires a deep understanding of both the nature of mathematics and the nature of programming.
 
