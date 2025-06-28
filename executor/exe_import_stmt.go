@@ -32,7 +32,7 @@ func (exec *Executor) importStmt(stmt *ast.ImportStmt) (glob.ExecState, error) {
 
 		return execState, nil
 	} else {
-		err := glob.ImportStmtInit(stmt.AsPkgName)
+		err := glob.ImportStmtInit(stmt.AsPkgName, stmt.Path)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
@@ -62,8 +62,8 @@ func (exec *Executor) importStmt(stmt *ast.ImportStmt) (glob.ExecState, error) {
 
 // Recursively 地找到所有的包和子包的main文件，把里面的东西都提取出来到全局里
 func (exec *Executor) importDirWithPkgName(stmt *ast.ImportStmt) (glob.ExecState, error) {
-	glob.TaskDirName = filepath.Join(glob.TaskDirName, stmt.Path)
-	mainFilePath := filepath.Join(glob.TaskDirName, "main.lix")
+	// glob.TaskDirName = filepath.Join(glob.TaskDirName, stmt.Path)
+	mainFilePath := filepath.Join(glob.CurrentTaskDirName, "main.lix")
 
 	code, err := os.ReadFile(mainFilePath)
 	if err != nil {
@@ -138,7 +138,7 @@ func (exec *Executor) runGloballyImportedStmts(topStmtSlice []ast.Stmt) (glob.Ex
 }
 
 func (exec *Executor) importFileWithoutPkgName(stmt *ast.ImportStmt) (glob.ExecState, error) {
-	codePath := filepath.Join(glob.TaskDirName, stmt.Path)
+	codePath := filepath.Join(glob.CurrentTaskDirName, stmt.Path)
 	code, err := os.ReadFile(codePath)
 	if err != nil {
 		return glob.ExecState_Error, err
@@ -165,7 +165,7 @@ func getGloballyImportedStmtSlice(code string) ([]ast.Stmt, error) {
 	ret := []ast.Stmt{}
 	for _, topStmt := range topStmtSlice {
 		if topStmtAsImportGlobally, ok := topStmt.(*ast.ImportGloballyStmt); ok {
-			codeInside, err := os.ReadFile(filepath.Join(glob.TaskDirName, topStmtAsImportGlobally.Path))
+			codeInside, err := os.ReadFile(filepath.Join(glob.CurrentTaskDirName, topStmtAsImportGlobally.Path))
 			if err != nil {
 				return nil, err
 			}
