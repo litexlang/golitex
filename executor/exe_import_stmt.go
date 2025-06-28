@@ -21,7 +21,6 @@ import (
 	parser "golitex/parser"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 func (exec *Executor) importStmt(stmt *ast.ImportStmt) (glob.ExecState, error) {
@@ -52,23 +51,35 @@ func (exec *Executor) importStmt(stmt *ast.ImportStmt) (glob.ExecState, error) {
 			}
 		}()
 
-		if strings.HasSuffix(stmt.Path, ".lix") {
-			execState, err := exec.importFileWithPkgName(stmt.Path, stmt.AsPkgName)
-			if err != nil {
-				return glob.ExecState_Error, err
-			}
-			execSuccess = execState == glob.ExecState_True
-			return execState, nil
-		} else {
-			execState, err := exec.importDirWithPkgName(stmt)
-			if err != nil {
-				return glob.ExecState_Error, err
-			}
-			execSuccess = execState == glob.ExecState_True
-			return execState, nil
+		execState, err := exec.importDirWithPkgName(stmt)
+		if err != nil {
+			return glob.ExecState_Error, err
 		}
+		execSuccess = execState == glob.ExecState_True
+		return execState, nil
+	}
+}
+
+// Recursively 地找到所有的包和子包的main文件，把里面的东西都提取出来到全局里
+func (exec *Executor) importDirWithPkgName(stmt *ast.ImportStmt) (glob.ExecState, error) {
+	glob.TaskDirName = filepath.Join(glob.TaskDirName, stmt.Path)
+	mainFilePath := filepath.Join(glob.TaskDirName, "main.lix")
+
+	execState, topStmtSlice, err := exec.runFileToMakeSureTheFileIsTrue(mainFilePath)
+	if err != nil {
+		return glob.ExecState_Error, fmt.Errorf("failed to execute import statement:\n%s", ast.NewImportStmt(mainFilePath, stmt.AsPkgName).String())
 	}
 
+	if execState != glob.ExecState_True {
+		return glob.ExecState_Error, fmt.Errorf("failed to execute import statement:\n%s\nSome statements in the imported file are not executed successfully", ast.NewImportStmt(mainFilePath, stmt.AsPkgName).String())
+	}
+
+	execState, err = exec.runSourceAssumeStmtIsTrue(topStmtSlice)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+
+	return execState, nil
 }
 
 func (exec *Executor) runFileToMakeSureTheFileIsTrue(codePath string) (glob.ExecState, []ast.Stmt, error) {
@@ -155,27 +166,3 @@ func (exec *Executor) importFileWithoutPkgName(stmt *ast.ImportStmt) (glob.ExecS
 }
 
 // 把指定的文件里的所有东西，以及涉及到的包的所有的main文件递归地提取出来，都提取出来到全局里
-func (exec *Executor) importFileWithPkgName(importPath string, pkgName string) (glob.ExecState, error) {
-	codePath := filepath.Join(glob.TaskDirName, importPath)
-	execState, topStmtSlice, err := exec.runFileToMakeSureTheFileIsTrue(codePath)
-	if err != nil {
-		return glob.ExecState_Error, fmt.Errorf("failed to execute import statement:\n%s", ast.NewImportStmt(importPath, pkgName).String())
-	}
-
-	if execState != glob.ExecState_True {
-		return glob.ExecState_Error, fmt.Errorf("failed to execute import statement:\n%s\nSome statements in the imported file are not executed successfully", ast.NewImportStmt(importPath, pkgName).String())
-	}
-
-	execState, err = exec.runSourceAssumeStmtIsTrue(topStmtSlice)
-	if err != nil {
-		return glob.ExecState_Error, err
-	}
-
-	return execState, nil
-}
-
-// Recursively 地找到所有的包和子包的main文件，把里面的东西都提取出来到全局里
-func (exec *Executor) importDirWithPkgName(stmt *ast.ImportStmt) (glob.ExecState, error) {
-	glob.TaskDirName = filepath.Join(glob.TaskDirName, stmt.Path)
-	return exec.importFileWithPkgName("main.lix", stmt.AsPkgName)
-}
