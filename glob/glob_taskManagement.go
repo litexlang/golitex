@@ -30,7 +30,7 @@ var CurrentPkg string = ""
 var PreviousPkgSlice []string = []string{}
 var DeclaredPkgNames = map[string]struct{}{"": {}}
 
-func ImportStmtInit(newPkg string, path string) error {
+func ImportDirStmtInit(newPkg string, path string) error {
 	PreviousTaskDirNameSlice = append(PreviousTaskDirNameSlice, CurrentTaskDirName)
 	CurrentTaskDirName = filepath.Join(CurrentTaskDirName, path)
 
@@ -54,13 +54,13 @@ func ImportStmtInit(newPkg string, path string) error {
 	return nil
 }
 
-func ImportStmtEnd() {
+func ImportDirStmtEnd() {
 	CurrentPkg = PreviousPkgSlice[len(PreviousPkgSlice)-1]
 	PreviousPkgSlice = PreviousPkgSlice[:len(PreviousPkgSlice)-1]
 	CurrentTaskDirName = PreviousTaskDirNameSlice[len(PreviousTaskDirNameSlice)-1]
 	PreviousTaskDirNameSlice = PreviousTaskDirNameSlice[:len(PreviousTaskDirNameSlice)-1]
 }
 
-func IsNotImportState() bool {
+func IsNotImportDirStmt() bool {
 	return len(PreviousPkgSlice) == 0
 }

@@ -125,7 +125,7 @@ type OrStmt struct {
 	Facts []*SpecFactStmt
 }
 
-type ImportStmt struct {
+type ImportDirStmt struct {
 	Path      string
 	AsPkgName string
 }
@@ -148,5 +148,9 @@ type EnumStmt struct {
 }
 
 type ImportGloballyStmt struct {
+	Path string
+}
+
+type ImportFileStmt struct {
 	Path string
 }
