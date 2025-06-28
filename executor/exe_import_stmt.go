@@ -32,7 +32,7 @@ func (exec *Executor) importStmt(stmt *ast.ImportStmt) (glob.ExecState, error) {
 
 		return execState, nil
 	} else {
-		err := ExecImportStmtInit(stmt.AsPkgName, stmt.Path, exec.env)
+		err := glob.ImportStmtInit(stmt.AsPkgName, stmt.Path)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
@@ -97,7 +97,7 @@ func (exec *Executor) importDirWithPkgName(stmt *ast.ImportStmt) (glob.ExecState
 
 func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string, importStmt *ast.ImportStmt) (glob.ExecState, error) {
 	if runInNewEnv {
-		exec.newEnv(exec.env, nil)
+		exec.newEnv(exec.env, nil, true)
 		defer func() {
 			exec.deleteEnvAndRetainMsg()
 		}()
@@ -123,7 +123,8 @@ func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string, importS
 
 func (exec *Executor) runGloballyImportedStmts(topStmtSlice []ast.Stmt) (glob.ExecState, error) {
 	curEnv := exec.env.GetUpMostEnv()
-	newExec := NewExecutor(curEnv)
+	// TODO??
+	newExec := NewExecutor(curEnv, false)
 
 	for _, topStmt := range topStmtSlice {
 		execState, err := newExec.assumeStmtIsTrueRun(topStmt)
