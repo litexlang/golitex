@@ -16,19 +16,21 @@ package litex_global
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 )
 
 // 存储当前的传入的repo的repo名
-var TaskDirName string
+var CurrentTaskDirName string
+var previousTaskDirNameSlice []string = []string{}
 
 var CurrentPkg string = ""
 var previousPkgSlice []string = []string{}
 var DeclaredPkgNames = map[string]struct{}{"": {}}
-var ImportState uint = 0 // 之所以uint而不是bool，因为可以import里有import，离开一个import后我不能让它false掉，因为可能还是在某个import里
 
-func ImportStmtInit(newPkg string) error {
-	ImportState++
+func ImportStmtInit(newPkg string, path string) error {
+	previousTaskDirNameSlice = append(previousTaskDirNameSlice, CurrentTaskDirName)
+	CurrentTaskDirName = filepath.Join(CurrentTaskDirName, path)
 
 	previousPkgSlice = append(previousPkgSlice, CurrentPkg)
 	if newPkg != "" {
@@ -53,12 +55,12 @@ func ImportStmtInit(newPkg string) error {
 }
 
 func ImportStmtEnd() {
-	ImportState--
-
 	CurrentPkg = previousPkgSlice[len(previousPkgSlice)-1]
 	previousPkgSlice = previousPkgSlice[:len(previousPkgSlice)-1]
+	CurrentTaskDirName = previousTaskDirNameSlice[len(previousTaskDirNameSlice)-1]
+	previousTaskDirNameSlice = previousTaskDirNameSlice[:len(previousTaskDirNameSlice)-1]
 }
 
 func IsNotImportState() bool {
-	return ImportState == 0
+	return len(previousPkgSlice) == 0
 }

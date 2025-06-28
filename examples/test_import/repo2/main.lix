@@ -1,0 +1,4 @@
+import_globally "./repo2_global.lix"
+
+obj a N:
+    a = 1
