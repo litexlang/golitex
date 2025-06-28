@@ -67,6 +67,8 @@ const (
 	// TODO
 	// a syntax connecting or and finite_set
 	KeywordEnum = "enum"
+
+	KeywordImportGlobally = "import_globally"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -117,6 +119,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordStruct:                 {},
 	KeywordSubsetOf:               {},
 	KeywordEnum:                   {},
+	KeywordImportGlobally:         {},
 }
 
 const (

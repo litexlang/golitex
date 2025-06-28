@@ -130,3 +130,7 @@ func NewDefFnStmt(fnTemplateStmt *FnTemplateStmt) *DefFnStmt {
 func NewEnumStmt(enumName Fc, enumValues []Fc) *EnumStmt {
 	return &EnumStmt{enumName, enumValues}
 }
+
+func NewImportGloballyStmt(path string) *ImportGloballyStmt {
+	return &ImportGloballyStmt{path}
+}
