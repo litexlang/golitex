@@ -21,7 +21,7 @@ import (
 )
 
 // 存储当前的传入的repo的repo名
-var CurrentTaskDirName string
+var CurrentTaskDirName string = ""
 var previousTaskDirNameSlice []string = []string{}
 
 var CurrentPkg string = ""

@@ -1,2 +1,8 @@
+import_globally "./repo1_1_global.lix"
+import "./repo1_1_1" as pkg1_1_1
+
 obj a N:
-    a = 1
+    a = repo1_1_global_a * pkg1_1_1::a
+
+a = 1 * 1
+a = 1
