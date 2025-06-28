@@ -20,6 +20,8 @@ import (
 	"strings"
 )
 
+var AllowImport bool = true
+
 // 存储当前的传入的repo的repo名
 var CurrentTaskDirName string = ""
 var PreviousTaskDirNameSlice []string = []string{}
