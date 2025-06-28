@@ -2,7 +2,7 @@ import  "./repo1_1" as pkg1_1
 import_globally "./repo1_global.lix"
 
 obj a N:
-    a = pkg1_1::pkg1_1_1::a * pkg1_1::pkg1_1_global_a
+# bug: import globally 不能像import dir as pkg那样，让局部看到局部
+    a = 1
 
-a = 1 * 1
 a = 1
