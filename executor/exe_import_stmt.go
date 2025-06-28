@@ -25,7 +25,7 @@ import (
 
 func (exec *Executor) importStmt(stmt *ast.ImportStmt) (glob.ExecState, error) {
 	if !glob.AllowImport {
-		return glob.ExecState_Error, fmt.Errorf("imported file should not contain import statement")
+		return glob.ExecState_Error, fmt.Errorf("imported file should not contain import statement, get %s", stmt.String())
 	}
 
 	if stmt.AsPkgName == "" {

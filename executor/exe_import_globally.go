@@ -25,7 +25,7 @@ import (
 
 func (exec *Executor) importGloballyStmt(stmt *ast.ImportGloballyStmt) (glob.ExecState, error) {
 	if !glob.AllowImport {
-		return glob.ExecState_Error, fmt.Errorf("import_globally is not allowed in imported file")
+		return glob.ExecState_Error, fmt.Errorf("import_globally is not allowed in imported file, get %s", stmt.String())
 	}
 
 	glob.AllowImport = false
