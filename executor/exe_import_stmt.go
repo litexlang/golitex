@@ -24,6 +24,10 @@ import (
 )
 
 func (exec *Executor) importStmt(stmt *ast.ImportStmt) (glob.ExecState, error) {
+	if !glob.AllowImport {
+		return glob.ExecState_Error, fmt.Errorf("imported file should not contain import statement")
+	}
+
 	if stmt.AsPkgName == "" {
 		execState, err := exec.importFileWithoutPkgName(stmt)
 		if err != nil {
@@ -87,7 +91,7 @@ func (exec *Executor) importDirWithPkgName(stmt *ast.ImportStmt) (glob.ExecState
 		}
 	}
 
-	execState, err = exec.runGloballyImportedStmts(topStmtSlice)
+	execState, err = exec.runStmtInUpmostEnv_AssumeTheyAreTrue(topStmtSlice)
 	if err != nil {
 		return glob.ExecState_Error, err
 	}
@@ -121,9 +125,8 @@ func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string, importS
 	return execState, nil
 }
 
-func (exec *Executor) runGloballyImportedStmts(topStmtSlice []ast.Stmt) (glob.ExecState, error) {
+func (exec *Executor) runStmtInUpmostEnv_AssumeTheyAreTrue(topStmtSlice []ast.Stmt) (glob.ExecState, error) {
 	curEnv := exec.env.GetUpMostEnv()
-	// TODO??
 	newExec := NewExecutor(curEnv)
 
 	for _, topStmt := range topStmtSlice {
@@ -139,6 +142,11 @@ func (exec *Executor) runGloballyImportedStmts(topStmtSlice []ast.Stmt) (glob.Ex
 }
 
 func (exec *Executor) importFileWithoutPkgName(stmt *ast.ImportStmt) (glob.ExecState, error) {
+	glob.AllowImport = false
+	defer func() {
+		glob.AllowImport = true
+	}()
+
 	codePath := filepath.Join(glob.CurrentTaskDirName, stmt.Path)
 	code, err := os.ReadFile(codePath)
 	if err != nil {
@@ -167,15 +175,6 @@ func getGloballyImportedStmtSlice(code string) ([]ast.Stmt, error) {
 	for _, topStmt := range topStmtSlice {
 		if _, ok := topStmt.(*ast.ImportGloballyStmt); ok {
 			continue
-			// codeInside, err := os.ReadFile(filepath.Join(glob.CurrentTaskDirName, topStmtAsImportGlobally.Path))
-			// if err != nil {
-			// 	return nil, err
-			// }
-			// stmtInside, err := parser.ParseSourceCode(string(codeInside))
-			// if err != nil {
-			// 	return nil, err
-			// }
-			// ret = append(ret, stmtInside...)
 		} else if _, ok := topStmt.(*ast.ImportStmt); ok {
 			continue
 		} else {
