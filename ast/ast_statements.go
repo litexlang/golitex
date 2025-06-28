@@ -146,3 +146,7 @@ type EnumStmt struct {
 	EnumName   Fc
 	EnumValues []Fc
 }
+
+type ImportGloballyStmt struct {
+	Path string
+}

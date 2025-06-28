@@ -73,6 +73,8 @@ func (tb *tokenBlock) stmt() (ast.Stmt, error) {
 		ret, err = tb.proveInEachCaseStmt()
 	case glob.KeywordFnTemplate:
 		ret, err = tb.defFnTemplateStmt()
+	case glob.KeywordImportGlobally:
+		ret, err = tb.importGloballyStmt()
 	default:
 		ret, err = tb.factStmt(UniFactDepth0)
 	}
@@ -1212,4 +1214,18 @@ func (tb *tokenBlock) defFnStmt() (*ast.DefFnStmt, error) {
 	}
 
 	return ast.NewDefFnStmt(fnTemplateStmt), nil
+}
+
+func (tb *tokenBlock) importGloballyStmt() (*ast.ImportGloballyStmt, error) {
+	err := tb.header.skipKwAndColon_ExceedEnd(glob.KeywordImportGlobally)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	path, err := tb.getStringInDoubleQuotes()
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	return ast.NewImportGloballyStmt(path), nil
 }
