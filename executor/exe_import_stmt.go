@@ -97,7 +97,7 @@ func (exec *Executor) importDirWithPkgName(stmt *ast.ImportStmt) (glob.ExecState
 
 func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string, importStmt *ast.ImportStmt) (glob.ExecState, error) {
 	if runInNewEnv {
-		exec.newEnv(exec.env, nil, true)
+		exec.newEnv(exec.env, nil)
 		defer func() {
 			exec.deleteEnvAndRetainMsg()
 		}()
@@ -124,7 +124,7 @@ func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string, importS
 func (exec *Executor) runGloballyImportedStmts(topStmtSlice []ast.Stmt) (glob.ExecState, error) {
 	curEnv := exec.env.GetUpMostEnv()
 	// TODO??
-	newExec := NewExecutor(curEnv, false)
+	newExec := NewExecutor(curEnv)
 
 	for _, topStmt := range topStmtSlice {
 		execState, err := newExec.assumeStmtIsTrueRun(topStmt)
@@ -165,16 +165,17 @@ func getGloballyImportedStmtSlice(code string) ([]ast.Stmt, error) {
 
 	ret := []ast.Stmt{}
 	for _, topStmt := range topStmtSlice {
-		if topStmtAsImportGlobally, ok := topStmt.(*ast.ImportGloballyStmt); ok {
-			codeInside, err := os.ReadFile(filepath.Join(glob.CurrentTaskDirName, topStmtAsImportGlobally.Path))
-			if err != nil {
-				return nil, err
-			}
-			stmtInside, err := parser.ParseSourceCode(string(codeInside))
-			if err != nil {
-				return nil, err
-			}
-			ret = append(ret, stmtInside...)
+		if _, ok := topStmt.(*ast.ImportGloballyStmt); ok {
+			continue
+			// codeInside, err := os.ReadFile(filepath.Join(glob.CurrentTaskDirName, topStmtAsImportGlobally.Path))
+			// if err != nil {
+			// 	return nil, err
+			// }
+			// stmtInside, err := parser.ParseSourceCode(string(codeInside))
+			// if err != nil {
+			// 	return nil, err
+			// }
+			// ret = append(ret, stmtInside...)
 		} else if _, ok := topStmt.(*ast.ImportStmt); ok {
 			continue
 		} else {
