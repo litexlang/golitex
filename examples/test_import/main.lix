@@ -8,6 +8,7 @@ obj a N:
 
 a = 1
 a = pkg1::pkg1_1::a
+a = 1 * 1
 a = pkg1::pkg1_1::pkg1_1_1::a * pkg1::pkg1_1::repo1_1_global_a
 a = pkg1::repo1_global_a
 a = proof1_a
