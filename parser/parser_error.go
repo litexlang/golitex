@@ -36,33 +36,15 @@ func (e *strSliceErr) Error() string {
 	}
 }
 
-// ----------------------------------------
-// tokenBlockErr
-// ----------------------------------------
-
-type tokenBlockErr struct {
-	previous error
-	stmt     tokenBlock
-}
-
-func (e *tokenBlockErr) Error() string {
-	var source, tokenInfo string
-
-	source = e.stmt.String()
-
-	// 尝试获取当前token（失败不影响主要错误信息）
-	if curTok, err := e.stmt.header.currentToken(); err == nil {
-		tokenInfo = fmt.Sprintf(" at '%s'", curTok)
+func tbErr(previousErr error, stmt *tokenBlock) error {
+	tokenInfo := ""
+	if curTok, err := stmt.header.currentToken(); err == nil {
+		tokenInfo = fmt.Sprintf("at '%s'", curTok)
 	}
 
-	if e.previous == nil {
-		return fmt.Sprintf("parse error:\n%s\n%s",
-			source,
-			tokenInfo)
+	if previousErr == nil {
+		return fmt.Errorf("parse error:\n%s\n%s", stmt.String(), tokenInfo)
 	} else {
-		return fmt.Sprintf("parse error:\n%s\n%s\n%s",
-			source,
-			tokenInfo,
-			e.previous.Error())
+		return fmt.Errorf("parse error:\n%s\n%s\n%s", stmt.String(), tokenInfo, previousErr.Error())
 	}
 }
