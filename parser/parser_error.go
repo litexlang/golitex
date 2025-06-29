@@ -18,15 +18,6 @@ import (
 	"fmt"
 )
 
-func strSliceErr(previousErr error, parser *strSliceCursor) error {
-	curTok, err := parser.currentToken()
-	if err != nil {
-		return fmt.Errorf("error at %s, column %d: %s", parser.String(), parser.getIndex(), previousErr.Error())
-	} else {
-		return fmt.Errorf("error at %s, column %d, at '%s': %s", parser.String(), parser.getIndex(), curTok, previousErr.Error())
-	}
-}
-
 func tbErr(previousErr error, stmt *tokenBlock) error {
 	tokenInfo := ""
 	if curTok, err := stmt.header.currentToken(); err == nil {
