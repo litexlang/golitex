@@ -122,13 +122,43 @@ You just learned how Litex builds math from basic pieces, like building blocks. 
 
 [^2]: Voltaire once said: "Common sense is not so common." In the case of Litex, Litex makes the process of building math as easy as `ctrl+f/cmd+f` in your browser, by discovering that math is nothing but a special kind of `match and substitution` problem. Everyone is so familiar with this process, but almost no one actually finds its significance and use this idea to create a simple formal language. The real magic of Litex is that it works just like how people think in daily life. This is a hard magic for the language designer, because it requires a deep understanding of both the nature of mathematics and the nature of programming, but is worth the effort.
 
-<!-- ## Litex Keywords -->
-
-##  Examples: Litex for Curious Formal Language Users
+## Litex Keywords
 
 _Keep it simple, stupid._
 
 _-- The Unix Philosophy_
+
+Litex is a simple language. I hope many of the keywords are already familiar to you.
+
+| Keyword | Meaning |
+|---------|---------|
+| `obj` | Define an object. Anything in Litex is an object. |
+| `prop` | Define a proposition. A factual statement must has its proposition name and its proposition objects. |
+| `know` | Establish a fact |
+| `forall` | Universal quantification |
+| `exist` | Existential quantification |
+| `have` | Introduce an object using an existential quantification |
+| `exist_prop` | Existential quantification with a proposition |
+| `iff` | Equivalence |
+| `then` | Implication |
+| `or` | Disjunction |
+| `not` | Negation |
+| `fn` | Define a function |
+| `fn_template` | Define a class of functions |
+| `set` | set |
+| `in` | membership of an object in a set |
+| `dom` | domain of a proposition, function, function template, etc. |
+| `enum` | enumeration |
+| `len`  | length of a set |
+| `prove` | open a local environment to write some statements without affecting the global environment |
+| `claim` | claim a factual statement, prove it here |
+| `prove_by_contradiction` | prove by contradiction |
+| `prove_in_each_case` | prove by case analysis |
+| `prove_by_math_induction` | prove by mathematical induction |
+| `import` | import a file or directory |
+| `import_globally` | import a file globally |
+
+##  Examples: Litex for Curious Formal Language Users
 
 _Beautiful is better than ugly. Explicit is better than implicit. Simple is better than complex._
 
