@@ -111,18 +111,18 @@ func (cursor *strSliceCursor) fcAtomAndFcFn() (ast.Fc, error) {
 	} else {
 		fcStr, err := cursor.rawFcAtom()
 		if err != nil {
-			return nil, &strSliceErr{err, cursor}
+			return nil, strSliceErr(err, cursor)
 		}
 		ret, err := cursor.consumeBracedFc(fcStr)
 		if err != nil {
-			return nil, &strSliceErr{err, cursor}
+			return nil, strSliceErr(err, cursor)
 		}
 		// dot
 		if cursor.is(glob.MemberAccessOpt) {
 			cursor.skip(glob.MemberAccessOpt)
 			dotFc, err := cursor.rawFcAtom()
 			if err != nil {
-				return nil, &strSliceErr{err, cursor}
+				return nil, strSliceErr(err, cursor)
 			}
 			ret = ast.NewFcFn(ast.FcAtom(glob.MemberAccessOpt), []ast.Fc{ret, dotFc})
 		}
@@ -303,7 +303,7 @@ func (cursor *strSliceCursor) bracedFcSlice() ([]ast.Fc, error) {
 			fc, err := cursor.RawFc()
 
 			if err != nil {
-				return nil, &strSliceErr{err, cursor}
+				return nil, strSliceErr(err, cursor)
 			}
 
 			params = append(params, fc)
@@ -317,7 +317,7 @@ func (cursor *strSliceCursor) bracedFcSlice() ([]ast.Fc, error) {
 				break
 			}
 
-			return nil, &strSliceErr{fmt.Errorf("expected ',' or '%s' but got '%s'", glob.KeySymbolRightBrace, cursor.strAtCurIndexPlus(0)), cursor}
+			return nil, strSliceErr(fmt.Errorf("expected ',' or '%s' but got '%s'", glob.KeySymbolRightBrace, cursor.strAtCurIndexPlus(0)), cursor)
 		}
 	}
 
@@ -374,7 +374,7 @@ func (cursor *strSliceCursor) consumeBracedFc(head ast.Fc) (ast.Fc, error) {
 	for !cursor.ExceedEnd() && (cursor.is(glob.KeySymbolLeftBrace)) {
 		objParamsPtr, err := cursor.bracedFcSlice()
 		if err != nil {
-			return nil, &strSliceErr{err, cursor}
+			return nil, strSliceErr(err, cursor)
 		}
 		head = ast.NewFcFn(head, objParamsPtr)
 	}
@@ -391,7 +391,7 @@ func (cursor *strSliceCursor) fnSet() (ast.Fc, error) {
 	for !cursor.ExceedEnd() && !(cursor.is(glob.KeySymbolRightBrace)) {
 		fnSet, err := cursor.RawFc()
 		if err != nil {
-			return nil, &strSliceErr{err, cursor}
+			return nil, strSliceErr(err, cursor)
 		}
 		fnSets = append(fnSets, fnSet)
 		if cursor.is(glob.KeySymbolComma) {
@@ -402,12 +402,12 @@ func (cursor *strSliceCursor) fnSet() (ast.Fc, error) {
 
 	err := cursor.skip(glob.KeySymbolRightBrace)
 	if err != nil {
-		return nil, &strSliceErr{err, cursor}
+		return nil, strSliceErr(err, cursor)
 	}
 
 	retSet, err = cursor.RawFc()
 	if err != nil {
-		return nil, &strSliceErr{err, cursor}
+		return nil, strSliceErr(err, cursor)
 	}
 
 	ret := ast.MakeFnSetFc(fnSets, retSet)

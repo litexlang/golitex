@@ -18,21 +18,12 @@ import (
 	"fmt"
 )
 
-// ----------------------------------------
-// strSliceErr
-// ----------------------------------------
-
-type strSliceErr struct {
-	previous error
-	parser   *strSliceCursor
-}
-
-func (e *strSliceErr) Error() string {
-	curTok, err := e.parser.currentToken()
+func strSliceErr(previousErr error, parser *strSliceCursor) error {
+	curTok, err := parser.currentToken()
 	if err != nil {
-		return fmt.Sprintf("error at %s, column %d: %s", e.parser.String(), e.parser.getIndex(), e.previous.Error())
+		return fmt.Errorf("error at %s, column %d: %s", parser.String(), parser.getIndex(), previousErr.Error())
 	} else {
-		return fmt.Sprintf("error at %s, column %d, at '%s': %s", e.parser.String(), e.parser.getIndex(), curTok, e.previous.Error())
+		return fmt.Errorf("error at %s, column %d, at '%s': %s", parser.String(), parser.getIndex(), curTok, previousErr.Error())
 	}
 }
 
