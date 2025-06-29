@@ -122,6 +122,8 @@ You just learned how Litex builds math from basic pieces, like building blocks. 
 
 [^2]: Voltaire once said: "Common sense is not so common." In the case of Litex, Litex makes the process of building math as easy as `ctrl+f/cmd+f` in your browser, by discovering that math is nothing but a special kind of `match and substitution` problem. Everyone is so familiar with this process, but almost no one actually finds its significance and use this idea to create a simple formal language. The real magic of Litex is that it works just like how people think in daily life. This is a hard magic for the language designer, because it requires a deep understanding of both the nature of mathematics and the nature of programming, but is worth the effort.
 
+<!-- ## Litex Keywords -->
+
 ##  Examples: Litex for Curious Formal Language Users
 
 _Keep it simple, stupid._
