@@ -31,7 +31,7 @@ func sourceCodeToFc(sourceCode ...string) ([]ast.Fc, error) {
 
 	ret := []ast.Fc{}
 	for _, block := range blocks {
-		cur, err := block.header.RawFc()
+		cur, err := block.RawFc()
 		if err != nil {
 			return nil, err
 		}

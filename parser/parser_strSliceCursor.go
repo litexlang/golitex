@@ -50,10 +50,6 @@ func (cursor *strSliceCursor) IsTokenAtIndexGivenWord(index int, s string) bool 
 	return index < len(cursor.slice) && cursor.slice[index] == s
 }
 
-func (cursor *strSliceCursor) getIndex() int {
-	return cursor.index
-}
-
 func (cursor *strSliceCursor) getSlice() []string {
 	return cursor.slice
 }
