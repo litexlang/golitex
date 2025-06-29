@@ -21,8 +21,8 @@ import (
 	"strings"
 )
 
-func (cursor *tokenBlock) RawFc() (ast.Fc, error) {
-	expr, err := cursor.fcInfixExpr(glob.PrecLowest)
+func (tb *tokenBlock) RawFc() (ast.Fc, error) {
+	expr, err := tb.fcInfixExpr(glob.PrecLowest)
 	if err != nil {
 		return nil, err
 	}
@@ -34,50 +34,50 @@ func (cursor *tokenBlock) RawFc() (ast.Fc, error) {
 	return expr, nil
 }
 
-func (cursor *tokenBlock) squareBracketExpr() (ast.Fc, error) {
-	fc, err := cursor.fcAtomAndFcFn()
+func (tb *tokenBlock) squareBracketExpr() (ast.Fc, error) {
+	fc, err := tb.fcAtomAndFcFn()
 	if err != nil {
 		return nil, err
 	}
 
-	if !cursor.header.is(glob.KeySymbolLeftBracket) {
+	if !tb.header.is(glob.KeySymbolLeftBracket) {
 		return fc, nil
 	}
 
-	cursor.header.skip(glob.KeySymbolLeftBracket)
+	tb.header.skip(glob.KeySymbolLeftBracket)
 
 	isAtIndexOp := true
 
-	if cursor.header.is(glob.KeySymbolLeftBracket) {
-		cursor.header.skip(glob.KeySymbolLeftBracket)
+	if tb.header.is(glob.KeySymbolLeftBracket) {
+		tb.header.skip(glob.KeySymbolLeftBracket)
 		isAtIndexOp = false
 	}
 
-	if cursor.header.ExceedEnd() {
+	if tb.header.ExceedEnd() {
 		return nil, fmt.Errorf("unexpected end of input after '['")
 	}
 
-	fcInBracket, err := cursor.RawFc()
+	fcInBracket, err := tb.RawFc()
 	if err != nil {
 		return nil, err
 	}
 
-	if cursor.header.ExceedEnd() {
+	if tb.header.ExceedEnd() {
 		return nil, fmt.Errorf("unexpected end of input after ']'")
 	}
 
 	if isAtIndexOp {
-		if err := cursor.header.skip(glob.KeySymbolRightBracket); err != nil {
+		if err := tb.header.skip(glob.KeySymbolRightBracket); err != nil {
 			return nil, fmt.Errorf("expected '%s': %v", glob.KeySymbolRightBracket, err)
 		}
 
 		return ast.NewFcFn(ast.FcAtom(glob.AtIndexOp), []ast.Fc{fc, fcInBracket}), nil
 	} else {
-		if err := cursor.header.skip(glob.KeySymbolRightBracket); err != nil {
+		if err := tb.header.skip(glob.KeySymbolRightBracket); err != nil {
 			return nil, fmt.Errorf("expected '%s': %v", glob.KeySymbolRightBracket, err)
 		}
 
-		if err := cursor.header.skip(glob.KeySymbolRightBracket); err != nil {
+		if err := tb.header.skip(glob.KeySymbolRightBracket); err != nil {
 			return nil, fmt.Errorf("expected '%s': %v", glob.KeySymbolRightBracket, err)
 		}
 
@@ -86,43 +86,43 @@ func (cursor *tokenBlock) squareBracketExpr() (ast.Fc, error) {
 }
 
 // “数学”优先级越高，越是底层。所以把括号表达式放在这里处理
-func (cursor *tokenBlock) fcAtomAndFcFn() (ast.Fc, error) {
+func (tb *tokenBlock) fcAtomAndFcFn() (ast.Fc, error) {
 	var expr ast.Fc
 	var err error
 
-	if cursor.header.is(glob.KeywordFn) {
-		return cursor.fnSet()
-	} else if cursor.header.is(glob.KeySymbolLeftBrace) {
-		expr, err = cursor.bracedExpr()
+	if tb.header.is(glob.KeywordFn) {
+		return tb.fnSet()
+	} else if tb.header.is(glob.KeySymbolLeftBrace) {
+		expr, err = tb.bracedExpr()
 		if err != nil {
 			return nil, err
 		}
-		return cursor.consumeBracedFc(expr)
-	} else if cursor.header.curTokenBeginWithNumber() {
-		expr, err = cursor.numberStr()
+		return tb.consumeBracedFc(expr)
+	} else if tb.header.curTokenBeginWithNumber() {
+		expr, err = tb.numberStr()
 		if err != nil {
 			return nil, err
 		}
-		if cursor.header.is(glob.KeySymbolLeftBrace) {
+		if tb.header.is(glob.KeySymbolLeftBrace) {
 			return nil, fmt.Errorf("unexpected left brace after number")
 		} else {
 			return expr, nil
 		}
 	} else {
-		fcStr, err := cursor.rawFcAtom()
+		fcStr, err := tb.rawFcAtom()
 		if err != nil {
-			return nil, tbErr(err, cursor)
+			return nil, tbErr(err, tb)
 		}
-		ret, err := cursor.consumeBracedFc(fcStr)
+		ret, err := tb.consumeBracedFc(fcStr)
 		if err != nil {
-			return nil, tbErr(err, cursor)
+			return nil, tbErr(err, tb)
 		}
 		// dot
-		if cursor.header.is(glob.MemberAccessOpt) {
-			cursor.header.skip(glob.MemberAccessOpt)
-			dotFc, err := cursor.rawFcAtom()
+		if tb.header.is(glob.MemberAccessOpt) {
+			tb.header.skip(glob.MemberAccessOpt)
+			dotFc, err := tb.rawFcAtom()
 			if err != nil {
-				return nil, tbErr(err, cursor)
+				return nil, tbErr(err, tb)
 			}
 			ret = ast.NewFcFn(ast.FcAtom(glob.MemberAccessOpt), []ast.Fc{ret, dotFc})
 		}
@@ -130,18 +130,18 @@ func (cursor *tokenBlock) fcAtomAndFcFn() (ast.Fc, error) {
 	}
 }
 
-func (cursor *tokenBlock) rawFcAtom() (ast.FcAtom, error) {
+func (tb *tokenBlock) rawFcAtom() (ast.FcAtom, error) {
 	values := []string{}
 
-	value, err := cursor.header.next()
+	value, err := tb.header.next()
 	if err != nil {
 		return ast.EmptyFcAtom, err
 	}
 
-	for cursor.header.is(glob.KeySymbolColonColon) {
-		cursor.header.skip(glob.KeySymbolColonColon)
+	for tb.header.is(glob.KeySymbolColonColon) {
+		tb.header.skip(glob.KeySymbolColonColon)
 		values = append(values, value)
-		value, err = cursor.header.next()
+		value, err = tb.header.next()
 		if err != nil {
 			return ast.EmptyFcAtom, err
 		}
@@ -164,27 +164,27 @@ func (cursor *tokenBlock) rawFcAtom() (ast.FcAtom, error) {
 	// }
 }
 
-func (cursor *tokenBlock) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence) (ast.Fc, error) {
-	left, err := cursor.unaryOptFc()
+func (tb *tokenBlock) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence) (ast.Fc, error) {
+	left, err := tb.unaryOptFc()
 	if err != nil {
 		return nil, err
 	}
 
-	for !cursor.header.ExceedEnd() {
-		curToken, err := cursor.header.currentToken()
+	for !tb.header.ExceedEnd() {
+		curToken, err := tb.header.currentToken()
 		if err != nil {
 			return nil, fmt.Errorf("unexpected end of input while parsing infix expression")
 		}
 
 		if curToken == glob.RelaFnPrefix {
-			cursor.header.skip("") // 消耗curToken
+			tb.header.skip("") // 消耗curToken
 
-			fn, err := cursor.RawFc()
+			fn, err := tb.RawFc()
 			if err != nil {
 				return nil, err
 			}
 
-			right, err := cursor.fcInfixExpr(glob.PrecLowest)
+			right, err := tb.fcInfixExpr(glob.PrecLowest)
 			if err != nil {
 				return nil, err
 			}
@@ -204,8 +204,8 @@ func (cursor *tokenBlock) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence) (as
 			break
 		}
 
-		cursor.header.skip("") // 消耗运算符
-		right, err := cursor.fcInfixExpr(curPrec)
+		tb.header.skip("") // 消耗运算符
+		right, err := tb.fcInfixExpr(curPrec)
 		if err != nil {
 			return nil, err
 		}
@@ -220,26 +220,26 @@ func (cursor *tokenBlock) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence) (as
 	return left, nil
 }
 
-// func (cursor *tokenBlock) fcPrimaryExpr() (ast.Fc, error) {
-// 	if cursor.ExceedEnd() {
+// func (tb *tokenBlock) fcPrimaryExpr() (ast.Fc, error) {
+// 	if tb.ExceedEnd() {
 // 		return nil, fmt.Errorf("unexpected end of input, expected expression")
 // 	}
 
-// 	return cursor.unaryOptFc()
+// 	return tb.unaryOptFc()
 // }
 
-func (cursor *tokenBlock) unaryOptFc() (ast.Fc, error) {
-	unaryOp, err := cursor.header.currentToken()
+func (tb *tokenBlock) unaryOptFc() (ast.Fc, error) {
+	unaryOp, err := tb.header.currentToken()
 	if err != nil {
 		return nil, err
 	}
 	if !glob.IsBuiltinUnaryOpt(unaryOp) {
-		// return cursor.fcAtomAndFcFn()
-		return cursor.squareBracketExpr()
+		// return tb.fcAtomAndFcFn()
+		return tb.squareBracketExpr()
 	} else {
-		cursor.header.skip(unaryOp)
+		tb.header.skip(unaryOp)
 
-		right, err := cursor.unaryOptFc()
+		right, err := tb.unaryOptFc()
 		if err != nil {
 			return nil, err
 		}
@@ -252,8 +252,8 @@ func (cursor *tokenBlock) unaryOptFc() (ast.Fc, error) {
 	}
 }
 
-func (cursor *tokenBlock) numberStr() (ast.FcAtom, error) {
-	left, err := cursor.header.next()
+func (tb *tokenBlock) numberStr() (ast.FcAtom, error) {
+	left, err := tb.header.next()
 	if err != nil {
 		return ast.EmptyFcAtom, err
 	}
@@ -265,9 +265,9 @@ func (cursor *tokenBlock) numberStr() (ast.FcAtom, error) {
 		}
 	}
 
-	if cursor.header.is(glob.KeySymbolDot) {
+	if tb.header.is(glob.KeySymbolDot) {
 		// 检查下一个字符是否是数字
-		nextChar := cursor.header.strAtCurIndexPlus(1)
+		nextChar := tb.header.strAtCurIndexPlus(1)
 		if len(nextChar) == 0 {
 			return ast.FcAtom(left), nil
 		}
@@ -281,8 +281,8 @@ func (cursor *tokenBlock) numberStr() (ast.FcAtom, error) {
 		}
 
 		if allDigits {
-			cursor.header.skip("")
-			right, err := cursor.header.next()
+			tb.header.skip("")
+			right, err := tb.header.next()
 			if err != nil {
 				return ast.EmptyFcAtom, fmt.Errorf("invalid number: %s", right)
 			}
@@ -294,59 +294,59 @@ func (cursor *tokenBlock) numberStr() (ast.FcAtom, error) {
 	return ast.FcAtom(left), nil
 }
 
-func (cursor *tokenBlock) bracedFcSlice() ([]ast.Fc, error) {
+func (tb *tokenBlock) bracedFcSlice() ([]ast.Fc, error) {
 	params := []ast.Fc{}
-	cursor.header.skip(glob.KeySymbolLeftBrace)
+	tb.header.skip(glob.KeySymbolLeftBrace)
 
-	if !cursor.header.is(glob.KeySymbolRightBrace) {
+	if !tb.header.is(glob.KeySymbolRightBrace) {
 		for {
-			fc, err := cursor.RawFc()
+			fc, err := tb.RawFc()
 
 			if err != nil {
-				return nil, tbErr(err, cursor)
+				return nil, tbErr(err, tb)
 			}
 
 			params = append(params, fc)
 
-			if cursor.header.is(glob.KeySymbolComma) {
-				cursor.header.skip(glob.KeySymbolComma)
+			if tb.header.is(glob.KeySymbolComma) {
+				tb.header.skip(glob.KeySymbolComma)
 				continue
 			}
 
-			if cursor.header.is(glob.KeySymbolRightBrace) {
+			if tb.header.is(glob.KeySymbolRightBrace) {
 				break
 			}
 
-			return nil, tbErr(fmt.Errorf("expected ',' or '%s' but got '%s'", glob.KeySymbolRightBrace, cursor.header.strAtCurIndexPlus(0)), cursor)
+			return nil, tbErr(fmt.Errorf("expected ',' or '%s' but got '%s'", glob.KeySymbolRightBrace, tb.header.strAtCurIndexPlus(0)), tb)
 		}
 	}
 
-	cursor.header.skip(glob.KeySymbolRightBrace)
+	tb.header.skip(glob.KeySymbolRightBrace)
 
 	return params, nil
 }
 
-func (cursor *tokenBlock) bracedExpr() (ast.Fc, error) {
-	cursor.header.skip(glob.KeySymbolLeftBrace)
-	if cursor.header.ExceedEnd() {
+func (tb *tokenBlock) bracedExpr() (ast.Fc, error) {
+	tb.header.skip(glob.KeySymbolLeftBrace)
+	if tb.header.ExceedEnd() {
 		return nil, fmt.Errorf("unexpected end of input after '('")
 	}
 
-	// head, err := cursor.fcInfixExpr(glob.PrecLowest)
-	head, err := cursor.RawFc()
+	// head, err := tb.fcInfixExpr(glob.PrecLowest)
+	head, err := tb.RawFc()
 	if err != nil {
 		return nil, err
 	}
 
-	if cursor.header.ExceedEnd() {
+	if tb.header.ExceedEnd() {
 		return nil, fmt.Errorf("unexpected end of input, expected ')'")
 	}
 
-	if err := cursor.header.skip(glob.KeySymbolRightBrace); err != nil {
+	if err := tb.header.skip(glob.KeySymbolRightBrace); err != nil {
 		return nil, fmt.Errorf("expected '%s': %v", glob.KeySymbolRightBrace, err)
 	}
 
-	if !cursor.header.is(glob.KeySymbolLeftBrace) {
+	if !tb.header.is(glob.KeySymbolLeftBrace) {
 		return head, nil
 	}
 
@@ -354,10 +354,10 @@ func (cursor *tokenBlock) bracedExpr() (ast.Fc, error) {
 
 	// segs := [][]ast.Fc{}
 
-	// for !cursor.header.ExceedEnd() {
-	// 	seg, err := cursor.bracedFcSlice()
+	// for !tb.header.ExceedEnd() {
+	// 	seg, err := tb.bracedFcSlice()
 	// 	if err != nil {
-	// 		return nil, &strSliceError{err, cursor}
+	// 		return nil, &strSliceError{err, tb}
 	// 	}
 	// 	segs = append(segs, seg)
 	// }
@@ -370,11 +370,11 @@ func (cursor *tokenBlock) bracedExpr() (ast.Fc, error) {
 	// return curHead, nil
 }
 
-func (cursor *tokenBlock) consumeBracedFc(head ast.Fc) (ast.Fc, error) {
-	for !cursor.header.ExceedEnd() && (cursor.header.is(glob.KeySymbolLeftBrace)) {
-		objParamsPtr, err := cursor.bracedFcSlice()
+func (tb *tokenBlock) consumeBracedFc(head ast.Fc) (ast.Fc, error) {
+	for !tb.header.ExceedEnd() && (tb.header.is(glob.KeySymbolLeftBrace)) {
+		objParamsPtr, err := tb.bracedFcSlice()
 		if err != nil {
-			return nil, tbErr(err, cursor)
+			return nil, tbErr(err, tb)
 		}
 		head = ast.NewFcFn(head, objParamsPtr)
 	}
@@ -382,32 +382,32 @@ func (cursor *tokenBlock) consumeBracedFc(head ast.Fc) (ast.Fc, error) {
 	return head, nil
 }
 
-func (cursor *tokenBlock) fnSet() (ast.Fc, error) {
-	cursor.header.skip(glob.KeywordFn)
-	cursor.header.skip(glob.KeySymbolLeftBrace)
+func (tb *tokenBlock) fnSet() (ast.Fc, error) {
+	tb.header.skip(glob.KeywordFn)
+	tb.header.skip(glob.KeySymbolLeftBrace)
 
 	fnSets := []ast.Fc{}
 	var retSet ast.Fc
-	for !cursor.header.ExceedEnd() && !(cursor.header.is(glob.KeySymbolRightBrace)) {
-		fnSet, err := cursor.RawFc()
+	for !tb.header.ExceedEnd() && !(tb.header.is(glob.KeySymbolRightBrace)) {
+		fnSet, err := tb.RawFc()
 		if err != nil {
-			return nil, tbErr(err, cursor)
+			return nil, tbErr(err, tb)
 		}
 		fnSets = append(fnSets, fnSet)
-		if cursor.header.is(glob.KeySymbolComma) {
-			cursor.header.skip(glob.KeySymbolComma)
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
 			continue
 		}
 	}
 
-	err := cursor.header.skip(glob.KeySymbolRightBrace)
+	err := tb.header.skip(glob.KeySymbolRightBrace)
 	if err != nil {
-		return nil, tbErr(err, cursor)
+		return nil, tbErr(err, tb)
 	}
 
-	retSet, err = cursor.RawFc()
+	retSet, err = tb.RawFc()
 	if err != nil {
-		return nil, tbErr(err, cursor)
+		return nil, tbErr(err, tb)
 	}
 
 	ret := ast.MakeFnSetFc(fnSets, retSet)
