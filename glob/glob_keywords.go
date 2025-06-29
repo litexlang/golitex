@@ -30,9 +30,7 @@ const (
 	KeywordExistProp            = "exist_prop"
 	KeywordClaim                = "claim"
 	KeywordProve                = "prove"
-	KeywordPub                  = "pub"
 	KeywordImport               = "import"
-	KeywordPackage              = "package"
 	KeywordNot                  = "not"
 	KeywordIff                  = "iff"
 	KeywordProveByContradiction = "prove_by_contradiction"
@@ -50,12 +48,12 @@ const (
 	KeywordImaginary            = "i"              // e.g. i
 	KeywordIn                   = "in"
 	KeywordProveByMathInduction = "prove_by_math_induction"
-	KeywordProveOr              = "prove_or"
-	KeywordSuppose              = "suppose"
-	KeywordWith                 = "with"
-	KeywordAs                   = "as" // as a fn_template。这非常难以实现，尤其是出现 fn 理论上作用在M上，现在是作用在返回值是M的函数上时做推理，非常困难，需要最后实现而不是现在
+	// KeywordProveOr              = "prove_or"
+	KeywordSuppose = "suppose"
+	KeywordWith    = "with"
+	KeywordAs      = "as" // as a fn_template。这非常难以实现，尤其是出现 fn 理论上作用在M上，现在是作用在返回值是M的函数上时做推理，非常困难，需要最后实现而不是现在
 
-	KeywordFnSet                  = "fn_set" // Syntax sugar for fn setName(params paramsSet)  = {z z_set_name(params) | properties(z, params)}
+	// KeywordFnSet                  = "fn_set" // Syntax sugar for fn setName(params paramsSet)  = {z z_set_name(params) | properties(z, params)}
 	KeywordLen                    = "len"
 	KeywordIsIndexableSet         = "is_indexable_set"
 	KeywordIsFiniteSet            = "is_finite_set"
@@ -85,9 +83,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordSt:                   {},
 	KeywordClaim:                {},
 	KeywordProve:                {},
-	KeywordPub:                  {},
 	KeywordImport:               {},
-	KeywordPackage:              {},
 	KeywordNot:                  {},
 	KeywordProveByContradiction: {},
 	KeywordProveInEachCase:      {},
@@ -95,22 +91,22 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordExist:                {},
 	KeywordCommutativeProp:      {},
 	// KeywordCommutativeFn:        {},
-	KeywordAssociativeFn:          {},
-	KeywordAnd:                    {},
-	KeywordOr:                     {},
-	KeywordNatural:                {},
-	KeywordInt:                    {},
-	KeywordRational:               {},
-	KeywordReal:                   {},
-	KeywordIn:                     {},
-	KeywordProveByMathInduction:   {},
-	KeywordProveOr:                {},
-	KeywordSuppose:                {},
-	KeywordWith:                   {},
-	KeywordComplex:                {},
-	KeywordImaginary:              {},
-	KeywordAs:                     {},
-	KeywordFnSet:                  {},
+	KeywordAssociativeFn:        {},
+	KeywordAnd:                  {},
+	KeywordOr:                   {},
+	KeywordNatural:              {},
+	KeywordInt:                  {},
+	KeywordRational:             {},
+	KeywordReal:                 {},
+	KeywordIn:                   {},
+	KeywordProveByMathInduction: {},
+	// KeywordProveOr:                {},
+	KeywordSuppose:   {},
+	KeywordWith:      {},
+	KeywordComplex:   {},
+	KeywordImaginary: {},
+	KeywordAs:        {},
+	// KeywordFnSet:                  {},
 	KeywordLen:                    {},
 	KeywordIsIndexableSet:         {},
 	KeywordIsFiniteSet:            {},
