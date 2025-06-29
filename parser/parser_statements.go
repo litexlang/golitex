@@ -108,7 +108,7 @@ func (tb *tokenBlock) enumStmt() (*ast.EnumStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	setName, err := tb.header.RawFc()
+	setName, err := tb.RawFc()
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -125,7 +125,7 @@ func (tb *tokenBlock) enumStmt() (*ast.EnumStmt, error) {
 
 	enumFcs := []ast.Fc{}
 	for {
-		fc, err := tb.body[0].header.RawFc()
+		fc, err := tb.body[0].RawFc()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -303,7 +303,7 @@ func (tb *tokenBlock) FnTemplateStmt(keyword string) (*ast.FnTemplateStmt, error
 		return nil, tbErr(err, tb)
 	}
 
-	retSet, err := tb.header.RawFc()
+	retSet, err := tb.RawFc()
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -338,7 +338,7 @@ func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 		}
 		objNames = append(objNames, addPkgNameToString(objName))
 
-		tp, err := tb.header.RawFc()
+		tp, err := tb.RawFc()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -453,7 +453,7 @@ func (tb *tokenBlock) knowFactStmt() (*ast.KnowFactStmt, error) {
 func (tb *tokenBlock) relaFactStmt() (*ast.SpecFactStmt, error) {
 	var ret *ast.SpecFactStmt
 
-	fc, err := tb.header.RawFc()
+	fc, err := tb.RawFc()
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -464,7 +464,7 @@ func (tb *tokenBlock) relaFactStmt() (*ast.SpecFactStmt, error) {
 	}
 
 	if opt == glob.FuncFactPrefix {
-		propName, err := tb.header.rawFcAtom()
+		propName, err := tb.rawFcAtom()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -472,7 +472,7 @@ func (tb *tokenBlock) relaFactStmt() (*ast.SpecFactStmt, error) {
 		if tb.header.ExceedEnd() {
 			ret = ast.NewSpecFactStmt(ast.TruePure, propName, []ast.Fc{fc})
 		} else {
-			fc2, err := tb.header.RawFc()
+			fc2, err := tb.RawFc()
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}
@@ -484,7 +484,7 @@ func (tb *tokenBlock) relaFactStmt() (*ast.SpecFactStmt, error) {
 	} else if !glob.IsBuiltinInfixRelaPropSymbol(opt) {
 		return nil, fmt.Errorf("expect relation prop")
 	} else {
-		fc2, err := tb.header.RawFc()
+		fc2, err := tb.RawFc()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -546,7 +546,7 @@ func (tb *tokenBlock) defExistPropStmt() (*ast.DefExistPropStmt, error) {
 
 		existParams = append(existParams, addPkgNameToString(param))
 
-		paramSet, err := tb.header.RawFc()
+		paramSet, err := tb.RawFc()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -586,7 +586,7 @@ func (tb *tokenBlock) existFactStmt(isTrue bool) (*ast.SpecFactStmt, error) {
 	existParams := []ast.Fc{}
 
 	for !tb.header.is(glob.KeywordSt) {
-		param, err := tb.header.RawFc()
+		param, err := tb.RawFc()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -621,7 +621,7 @@ func (tb *tokenBlock) pureFuncSpecFact() (*ast.SpecFactStmt, error) {
 		tb.header.skip(glob.FuncFactPrefix)
 	}
 
-	propName, err := tb.header.rawFcAtom()
+	propName, err := tb.rawFcAtom()
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -634,7 +634,7 @@ func (tb *tokenBlock) pureFuncSpecFact() (*ast.SpecFactStmt, error) {
 
 	if !tb.header.is(glob.KeySymbolRightBrace) {
 		for {
-			param, err := tb.header.RawFc()
+			param, err := tb.RawFc()
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}
@@ -997,7 +997,7 @@ func (tb *tokenBlock) param_paramSet_paramInSetFacts(endWith string) ([]string, 
 
 			params = append(params, addPkgNameToString(param))
 
-			setParam, err := tb.header.RawFc()
+			setParam, err := tb.RawFc()
 			if err != nil {
 				return nil, nil, err
 			}
