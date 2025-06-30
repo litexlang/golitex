@@ -3,3 +3,8 @@ obj a2, b2 N, c2 N, d2 N, e2, f2, g2 N:
     a = 1
 
 $in(a, obj)
+
+fn f(a N):
+    a = 1
+
+f(a) $in obj

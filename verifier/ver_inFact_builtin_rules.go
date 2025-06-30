@@ -357,7 +357,7 @@ func (ver *Verifier) inObjFact(stmt *ast.SpecFactStmt, state VerState) (bool, er
 	}
 
 	if state.requireMsg() {
-		ver.successWithMsg(stmt.String(), "all atoms in the left param are declared as obj")
+		ver.successWithMsg(stmt.String(), fmt.Sprintf("all atoms in %s are declared as obj", stmt.Params[0].String()))
 	} else {
 		ver.successNoMsg()
 	}
