@@ -44,6 +44,7 @@ func (s *UniFactWithIffStmt) stmt()            {}
 func (s *ClaimProveByContradictionStmt) stmt() {}
 func (s *DefFnTemplateStmt) stmt()             {}
 func (s *EnumStmt) stmt()                      {}
+func (s *ClaimPropStmt) stmt()                 {}
 
 type FactStmt interface {
 	factStmt()
@@ -120,6 +121,7 @@ type ClaimInterface interface {
 
 func (stmt *ClaimProveStmt) claimStmt()                {}
 func (stmt *ClaimProveByContradictionStmt) claimStmt() {}
+func (stmt *ClaimPropStmt) claimStmt()                 {}
 
 type FactStmtSlice []FactStmt
 

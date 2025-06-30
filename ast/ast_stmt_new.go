@@ -138,3 +138,7 @@ func NewImportGloballyStmt(path string) *ImportGloballyStmt {
 func NewImportFileStmt(path string) *ImportFileStmt {
 	return &ImportFileStmt{path}
 }
+
+func NewClaimPropStmt(prop *DefPropStmt, proofs []Stmt) *ClaimPropStmt {
+	return &ClaimPropStmt{*prop, proofs}
+}
