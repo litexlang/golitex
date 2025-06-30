@@ -27,9 +27,6 @@ func (ver *Verifier) NewDefObj_InsideAtomsDeclared(stmt *ast.DefObjStmt) error {
 	}
 
 	extraAtomNames := map[string]struct{}{}
-	// for _, objName := range stmt.Objs {
-	// 	extraAtomNames[objName] = struct{}{}
-	// }
 
 	for _, objName := range stmt.Objs {
 		err := ver.env.IsValidUserDefinedName_NoDuplicate(objName)
@@ -40,18 +37,10 @@ func (ver *Verifier) NewDefObj_InsideAtomsDeclared(stmt *ast.DefObjStmt) error {
 
 	// 如果这个obj是fn，那么要插入到fn def mem中
 	for _, objName := range stmt.Objs {
-		// if ast.IsFnDeclarationFc(stmt.ObjSets[i]) {
-		// 	fnDefStmt := ast.FromFnDeclFcToDefFnStmt(objName, stmt.ObjSets[i])
-		// 	err = ver.env.KnowDefFnSatisfyFnTemplate_KnowUniFactDerivedFromDefFn(ast.NewFcAtomWithName(objName), fnDefStmt)
-		// 	if err != nil {
-		// 		return err
-		// 	}
-		// } else {
 		err = ver.env.NewObj(objName)
 		if err != nil {
 			return err
 		}
-		// }
 	}
 
 	for _, fact := range stmt.NewInFacts() {
