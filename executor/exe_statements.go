@@ -58,8 +58,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		execState, err = exec.importDirStmt(stmt)
 	case *ast.ImportFileStmt:
 		execState, err = exec.importFileStmt(stmt)
-	// case *ast.PubStmt:
-	// 	execState, err = exec.pubStmt(stmt)
+	case *ast.ClaimPropStmt:
+		execState, err = exec.claimPropStmt(stmt)
 	case *ast.ProveStmt:
 		execState, err = exec.proveStmt(stmt)
 	case *ast.ClaimProveByContradictionStmt:
@@ -759,4 +759,47 @@ func (exec *Executor) checkReverse(stmt ast.FactStmt) (glob.ExecState, error) {
 	}
 
 	return glob.ExecState_Unknown, nil
+}
+
+func (exec *Executor) claimPropStmt(stmt *ast.ClaimPropStmt) (glob.ExecState, error) {
+	// prop all atoms declared
+	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.DomFacts, stmt.Prop.IffFacts)
+	if !exec.env.AreAtomsInFactAreDeclared(uniFact, map[string]struct{}{}) && !exec.env.IsFcAtomDeclared(ast.FcAtom(stmt.Prop.DefHeader.Name)) {
+		return glob.ExecState_Error, fmt.Errorf("claim prop statement error: atoms in fact are not declared")
+	}
+
+	// check proofs
+	execState, err := exec.checkClaimPropStmtProofs(stmt)
+	if notOkExec(execState, err) {
+		return execState, err
+	}
+
+	// know exec
+	err = exec.knowPropStmt(ast.NewKnowPropStmt(stmt.Prop))
+	if notOkExec(execState, err) {
+		return execState, err
+	}
+
+	return glob.ExecState_True, nil
+}
+
+func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimPropStmt) (glob.ExecState, error) {
+	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.DomFacts, stmt.Prop.IffFacts)
+
+	exec.newEnv(exec.env, exec.env.CurMatchProp)
+	defer func() {
+		exec.deleteEnvAndRetainMsg()
+	}()
+
+	execState, err := exec.execProofBlock(stmt.Proofs)
+	if notOkExec(execState, err) {
+		return execState, err
+	}
+
+	execState, err = exec.factStmt(uniFact)
+	if notOkExec(execState, err) {
+		return execState, err
+	}
+
+	return glob.ExecState_True, nil
 }
