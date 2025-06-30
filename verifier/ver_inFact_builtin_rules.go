@@ -351,13 +351,14 @@ func (ver *Verifier) inObjFact(stmt *ast.SpecFactStmt, state VerState) (bool, er
 	}
 
 	atoms := ast.GetAtomsInFc(stmt.Params[0])
-	ok = ver.env.AtomsAreObjDeclaredByUser(atoms)
+	// 这里有点问题，N,Q,C 这种没算进去，要重新写一下。这里不能直接用 declared, 因为一方面 isDeclared会包含 prop, 一方面 obj isDeclared，会导致罗素悖论
+	ok = ver.env.AtomsAreObj(atoms)
 	if !ok {
 		return false, nil
 	}
 
 	if state.requireMsg() {
-		ver.successWithMsg(stmt.String(), fmt.Sprintf("all atoms in %s are declared as obj", stmt.Params[0].String()))
+		ver.successWithMsg(stmt.String(), fmt.Sprintf("all atoms in %s are declared as obj or literal number", stmt.Params[0].String()))
 	} else {
 		ver.successNoMsg()
 	}
