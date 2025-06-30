@@ -2152,3 +2152,5 @@ fn f(a,, b,, c, d) ret:
 
 6.30
 forall x,y N 可以作为 forall x N, y N 的语法糖
+
+定义一个集合有且只有 xxx 性质的元素，可以提供一个语法糖
