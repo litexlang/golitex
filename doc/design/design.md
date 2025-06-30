@@ -71,3 +71,11 @@ This is a summary of the differences between Litex and Lean4.
 | Community Size | Small (growing) | Large (established) |
 | Translation to Natural Language | ✅ Easy and natural | ❌ Difficult and indirect |
 | Production Ready | ❌ Not yet | ✅ Yes |
+
+# Why is math hard? How Litex makes it easier?
+
+1. abstract concepts (topology, limits, measurability)
+    1. very few students were able to actually define a real number, or even a integer, properly, even though they could visualize these numbers intuitively and manipulate them algebraically.
+        1. Litex allows you to use these concepts directly without defining them, and you can add them later.
+2. advanced math requires a high level of rigour and proof
+    1. Litex strikes the right balance between rigour and accessibility.
