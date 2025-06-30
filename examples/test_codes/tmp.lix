@@ -8,3 +8,6 @@ fn f(a N):
     a = 1
 
 f(a) $in obj
+1 $in obj
+
+N $in obj

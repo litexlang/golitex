@@ -281,3 +281,12 @@ func IsBuiltinKeywordOrBuiltinSymbolOrNumber(name string) bool {
 	}
 	return false
 }
+
+var BuiltinObjKeywordSet map[string]struct{} = map[string]struct{}{
+	KeywordNatural:   {},
+	KeywordInt:       {},
+	KeywordRational:  {},
+	KeywordReal:      {},
+	KeywordComplex:   {},
+	KeywordImaginary: {},
+}
