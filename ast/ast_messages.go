@@ -657,3 +657,17 @@ func (stmt *ImportFileStmt) String() string {
 	builder.WriteString(glob.KeySymbolDoubleQuote)
 	return builder.String()
 }
+
+func (stmt *ClaimPropStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordClaim)
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteString("\n")
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Prop.String(), 1))
+	builder.WriteByte('\n')
+	for _, proof := range stmt.Proofs {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 1))
+		builder.WriteByte('\n')
+	}
+	return strings.TrimSuffix(builder.String(), "\n")
+}

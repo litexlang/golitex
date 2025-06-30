@@ -78,13 +78,17 @@ type SpecFactStmt struct {
 }
 
 type ClaimProveStmt struct {
-	// IsProve     bool
 	ToCheckFact FactStmt
 	Proofs      []Stmt
 }
 
 type ClaimProveByContradictionStmt struct {
 	ClaimProveStmt ClaimProveStmt
+}
+
+type ClaimPropStmt struct {
+	Prop   DefPropStmt
+	Proofs []Stmt
 }
 
 type KnowFactStmt struct {

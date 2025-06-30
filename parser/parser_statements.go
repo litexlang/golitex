@@ -22,11 +22,6 @@ import (
 )
 
 func (tb *tokenBlock) TopStmt() (ast.Stmt, error) {
-	// if tb.header.is(glob.KeywordPub) {
-	// 	return tb.pubStmt()
-	// } else {
-	// 	return tb.stmt()
-	// }
 	return tb.stmt()
 
 }
@@ -372,6 +367,10 @@ func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 }
 
 func (tb *tokenBlock) claimStmt() (ast.ClaimInterface, error) {
+	if tb.header.is(glob.KeywordProp) {
+		return tb.claimPropStmt()
+	}
+
 	err := tb.header.skip(glob.KeywordClaim)
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -1231,4 +1230,36 @@ func (tb *tokenBlock) importGloballyStmt() (*ast.ImportGloballyStmt, error) {
 	}
 
 	return ast.NewImportGloballyStmt(path), nil
+}
+
+func (tb *tokenBlock) claimPropStmt() (*ast.ClaimPropStmt, error) {
+	err := tb.header.skip(glob.KeywordClaim)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	prop, err := tb.body[0].defPropStmt()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	proofs := []ast.Stmt{}
+	if tb.body[1].header.is(glob.KeywordProve) {
+		err = tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		for _, stmt := range tb.body[1].body {
+			curStmt, err := stmt.stmt()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			proofs = append(proofs, curStmt)
+		}
+	} else {
+		return nil, fmt.Errorf("expect 'prove' or 'prove_by_contradiction'")
+	}
+
+	return ast.NewClaimPropStmt(prop, proofs), nil
 }
