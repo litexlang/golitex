@@ -44,7 +44,7 @@ Traditional formal languages like Lean, Coq, [are fundamentally different from L
 | **Existential Quantification** |  Existential quantification is a fundamental part of math | No existential quantification — all objects are explicitly defined |
 | **Purpose**           | To prove or verify truth symbolically                                        | To perform tasks, process data, interact with systems                          |
 
-Litex, as a domain language, takes advantage of the difference between programming and verification, and is designed to be a simple and intuitive reasoning verifier. Math serves two purposes: 1. for computation, i.e. calculate the output of a function given the input, and 2. for verification, i.e. make sure a new statement is correct given the established ones. The software industry has already revolutionized how we compute, and Litex is here to change how we verify.
+Litex, as a domain language, takes advantage of the difference between programming and verification, and is designed to be a simple and intuitive reasoning verifier. Math serves two purposes: 1. for computation, i.e. calculate the output of a function given the input, and 2. for verification, i.e. make sure a new statement is correct given the established ones. Computation is how math is used to solve real-world problems. Verification is how math, the old language of the universe, enriches itself by making sure the new statements are correct. The software industry has already revolutionized how we compute, and Litex is here to change how we verify.
 
 This README shows how the deep understanding of both the nature of mathematics and the nature of programming shapes the unique design of Litex. Let's start with a simple example.
 
