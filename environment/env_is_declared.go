@@ -52,20 +52,37 @@ func (e *Env) isFcAtomDeclaredAtCurEnv(fcAtomName ast.FcAtom) bool {
 	return ok
 }
 
-func (e *Env) AtomsAreObjDeclaredByUser(atomSlice []ast.FcAtom) bool {
+func (e *Env) isAtomObj(atom ast.FcAtom) bool {
+	_, ok := ast.IsNumLitFcAtom(atom)
+	if ok {
+		return true
+	}
+
+	_, ok = glob.BuiltinObjKeywordSet[string(atom)]
+	if ok {
+		return true
+	}
+
+	return e.isUserDefinedObj(atom)
+}
+
+func (e *Env) AtomsAreObj(atomSlice []ast.FcAtom) bool {
 	for _, atom := range atomSlice {
-		ok := false
-		for curEnv := e; curEnv != nil; curEnv = curEnv.Parent {
-			_, ok = curEnv.ObjDefMem.Get(atom)
-			if ok {
-				break
-			}
-		}
-		if !ok {
+		if !e.isAtomObj(atom) {
 			return false
 		}
 	}
 	return true
+}
+
+func (e *Env) isUserDefinedObj(atom ast.FcAtom) bool {
+	for curEnv := e; curEnv != nil; curEnv = curEnv.Parent {
+		_, ok := curEnv.ObjDefMem.Get(atom)
+		if ok {
+			return true
+		}
+	}
+	return false
 }
 
 func (e *Env) AreAtomsInFcAreDeclared(fc ast.Fc, extraAtomNames map[string]struct{}) bool {
