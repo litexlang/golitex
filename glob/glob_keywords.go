@@ -225,6 +225,7 @@ var symbolSet map[string]struct{} = map[string]struct{}{
 }
 
 var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]struct{}{
+	KeywordObj:           {},
 	KeywordSet:           {},
 	KeywordNatural:       {},
 	KeywordInt:           {},

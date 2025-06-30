@@ -70,6 +70,14 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state VerState) 
 		return true, nil
 	}
 
+	ok, err = ver.inObjFact(stmt, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
 	return false, nil
 }
 
@@ -333,4 +341,26 @@ func (ver *Verifier) verInSet(stmt *ast.SpecFactStmt, state VerState) (bool, err
 	}
 
 	return false, nil
+}
+
+func (ver *Verifier) inObjFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	// right param is obj
+	ok := ast.IsFcAtomEqualToGivenString(stmt.Params[1], glob.KeywordObj)
+	if !ok {
+		return false, nil
+	}
+
+	atoms := ast.GetAtomsInFc(stmt.Params[0])
+	ok = ver.env.AtomsAreObjDeclaredByUser(atoms)
+	if !ok {
+		return false, nil
+	}
+
+	if state.requireMsg() {
+		ver.successWithMsg(stmt.String(), "all atoms in the left param are declared as obj")
+	} else {
+		ver.successNoMsg()
+	}
+
+	return true, nil
 }
