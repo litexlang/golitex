@@ -986,6 +986,7 @@ func (tb *tokenBlock) knowExistPropStmt() (*ast.KnowExistPropStmt, error) {
 func (tb *tokenBlock) param_paramSet_paramInSetFacts(endWith string) ([]string, []ast.Fc, error) {
 	params := []string{}
 	setParams := []ast.Fc{}
+	paramWithoutSetCount := 0
 
 	if !tb.header.is(endWith) {
 		for {
@@ -996,12 +997,24 @@ func (tb *tokenBlock) param_paramSet_paramInSetFacts(endWith string) ([]string, 
 
 			params = append(params, addPkgNameToString(param))
 
+			if tb.header.is(glob.KeySymbolComma) {
+				tb.header.skip(glob.KeySymbolComma)
+				paramWithoutSetCount++
+				continue
+			}
+
 			setParam, err := tb.RawFc()
 			if err != nil {
 				return nil, nil, err
 			}
 
-			setParams = append(setParams, setParam)
+			if paramWithoutSetCount == 0 {
+				setParams = append(setParams, setParam)
+			} else {
+				for range paramWithoutSetCount + 1 {
+					setParams = append(setParams, setParam)
+				}
+			}
 
 			if tb.header.is(glob.KeySymbolComma) {
 				tb.header.skip(glob.KeySymbolComma)

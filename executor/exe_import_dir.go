@@ -24,6 +24,8 @@ import (
 )
 
 func (exec *Executor) importDirStmt(stmt *ast.ImportDirStmt) (glob.ExecState, error) {
+	exec.appendMsg("start importing directory \"%s\"\n", stmt.Path)
+
 	if !glob.AllowImport {
 		return glob.ExecState_Error, fmt.Errorf("imported file should not contain import statement, get %s", stmt.String())
 	}
@@ -42,7 +44,7 @@ func (exec *Executor) importDirStmt(stmt *ast.ImportDirStmt) (glob.ExecState, er
 			}
 		} else {
 			if glob.IsNotImportDirStmt() {
-				exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
+				exec.appendMsg(fmt.Sprintf("import directory \"%s\" success\n", stmt.Path))
 			}
 		}
 	}()
@@ -52,6 +54,7 @@ func (exec *Executor) importDirStmt(stmt *ast.ImportDirStmt) (glob.ExecState, er
 		return glob.ExecState_Error, err
 	}
 	execSuccess = execState == glob.ExecState_True
+
 	return execState, nil
 }
 
