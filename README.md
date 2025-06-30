@@ -8,7 +8,7 @@
 
 **Release v0.1.1-beta (not yet ready for production use)**  
 *May 2025*  
-*Created by Jiachen Shen (You can call me Jackie Shen.)*
+*Created by Jack Shen*
 
 [![Github](https://img.shields.io/badge/Github-grey?logo=github)](https://github.com/litexlang/golitex)
 [![Zulip Community](https://img.shields.io/badge/Zulip%20Community-purple?logo=zulip)](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
@@ -78,27 +78,27 @@ Mathematics is the art of deriving new facts from established ones. To illustrat
   </tr>
   <tr>
     <td style="border: 3px solid black; padding: 8px;">
-      <code>obj Human set</code> <br><br>
-      <code>prop self_aware(x Human)</code> <br><br>      <code>know forall x Human:</code> <br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;$self_aware(x)</code> <br> <br>
-      <code>obj Bob Human</code> <br> <br>
-      <code>$self_aware(Bob)</code>
+      <code>obj human set</code> <br><br>
+      <code>prop intelligent(x Human)</code> <br><br>      <code>know forall x Human:</code> <br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;$intelligent(x)</code> <br> <br>
+      <code>obj Jordan human</code> <br> <br>
+      <code>$intelligent(Jordan)</code>
     </td>
     <td style="border: 3px solid black; padding: 8px;">
       <code>def Human := Type</code> <br><br>
-      <code>def self_aware (x : Human) : Prop := true</code> <br><br>
-      <code>axiom self_aware_all :</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;∀ (x : Human), self_aware x</code> <br><br>
-      <code>example (Bob : Human) : self_aware Bob := self_aware_all Bob</code>
+      <code>def intelligent (x : Human) : Prop := true</code> <br><br>
+      <code>axiom intelligent_all :</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;∀ (x : Human), intelligent x</code> <br><br>
+      <code>example (Jordan : Human) : intelligent Jordan := intelligent_all Jordan</code>
     </td>
   </tr>
 </table>
 
-The above example means: `Human` is the set of all humans. Using `know`, we establish a simple fact: all humans are self-aware. When the user input `self_aware(Bob)`, the system will automatically find the fact `forall x Human: $self_aware(x)` and substitute `x` with `Bob`, and then check if the result is true. This process is called `match and substitution`. Since Bob is in the set of `Human`, "Bob is self-aware" is true.
+The above example means: `Human` is the set of all humans. Using `know`, we establish a simple fact: all humans are intelligent. When the user input `intelligent(Jordan)`, the system will automatically find the fact `forall x Human: $intelligent(x)` and substitute `x` with `Jordan`, and then check if the result is true. This process is called `match and substitution`. Since Jordan is in the set of `Human`, "Jordan is intelligent" is true.
 
 Each statement in Litex has four potential outcomes: true, false, unknown, or error. All factual statements start with `$` to differentiate them from functions.
 
-Keep this example in mind. The next section will show you how Litex works. Refer to this example when you are reading the next section.
+Keep this example in mind. This is the most classic example of how people uses `match and substitution` to establish new facts. Refer to this example when you are reading the next section.
 
 ## Verification is pattern matching, and so is Litex.
 
@@ -114,7 +114,7 @@ Math is about deriving new facts from established ones. Verification is about ma
 
 1. From special case to special case. e.g. `a = 1` => `a = 1`. The derived fact `a = 1` (the second statement) is true because the first statement is true and the first statement is written exactly the same as the second statement. I call it `match`.
 
-2. From general case to special case. e.g. `forall x Human: $self_aware(x)` => `$self_aware(Bob)`. The derived fact `self_aware(Bob)` is true because by substituting `x` with `Bob`, the first statement is true, and the second statement is written exactly the same as the first statement after substitution. I call it `match and substitution`.
+2. From general case to special case. e.g. `forall x Human: $intelligent(x)` => `$intelligent(Jordan)`. The derived fact `intelligent(Jordan)` is true because by substituting `x` with `Jordan`, the first statement is true, and the second statement is written exactly the same as the first statement after substitution. I call it `match and substitution`.
 
 You just learned how Litex builds math from basic pieces, like building blocks. To sum up, `match and substitution` is the basic way of deriving new facts from established ones. Such method is called first-order logic. We can construct the whole math system by this way in Lite as long as basic arithmetic and counting are built-in. [^1][^2][^3]
 
@@ -192,12 +192,13 @@ The computation proceeds by repeatedly applying f to an input x in I, generating
   <tr>
     <td style="border: 3px solid black; padding: 8px;">
       <code>fn comp_seq(Q set, f fn(Q)Q) fn(Q, N)Q:</code><br>
-      <code>&nbsp;&nbsp;forall x Q:</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;comp_seq(Q, f)(x,n) = f(comp_seq(Q, f)(x, n-1))</code><br><br>
+      <code>&nbsp;&nbsp;forall x Q, n N:</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;comp_seq(Q, f)(x,n+1) = f(comp_seq(Q, f)(x, n))</code><br><br>
       <code>exist_prop n N st exist_comp_seq_end(Q set, x Q, f fn(Q,N)Q):</code><br>
       <code>&nbsp;&nbsp;&nbsp;&nbsp;f(x, n) = f(x, n+1)</code><br><br>
       <code>prop is_algorithm(Q set, I set, f fn(Q)Q):</code><br>
-      <code>&nbsp;&nbsp;$subset_of(I, Q)</code><br>
+      <code>&nbsp;&nbsp;forall x Q: # i.e. Q is subset of I</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;f(x) $in I</code><br>
       <code>&nbsp;&nbsp;iff:</code><br>
       <code>&nbsp;&nbsp;&nbsp;&nbsp;forall x I:</code><br>
       <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$exist_comp_seq_end(Q, x, comp_seq(Q, f))</code>
@@ -285,7 +286,7 @@ _What I cannot create, I do not understand._
 
 _-- Richard Feynman_
 
-Hi, I am Jiachen Shen, the creator of Litex. I am a PhD student in mathematics and programming language enthusiast (a programming language geek, if you are one too, you are welcome to contact me). In 2023, I shockingly found that math is somehow equivalent to programming, after reading Professor Terence Tao's [blog](https://terrytao.wordpress.com/2023/11/18/formalizing-the-proof-of-pfr-in-lean4-using-blueprint-a-short-tour/). This is the most amazing idea that I have ever seen in my life. In 2024, after thinking about it for a year, I started to implement Litex. After more than 3000 git commits, what it means to be a "formal language that is intuitive and as aligned with daily math expression as possible" is finally to make sense to me and my kernel sort of works now.
+Hi, I am Jiachen Shen (call me Jackie Shen), the creator of Litex. I am a PhD student in mathematics and programming language enthusiast (a programming language geek, if you are one too, you are welcome to contact me). In 2023, I shockingly found that math is somehow equivalent to programming, after reading Professor Terence Tao's [blog](https://terrytao.wordpress.com/2023/11/18/formalizing-the-proof-of-pfr-in-lean4-using-blueprint-a-short-tour/). This is the most amazing idea that I have ever seen in my life. In 2024, after thinking about it for a year, I started to implement Litex. After more than 3000 git commits, what it means to be a "formal language that is intuitive and as aligned with daily math expression as possible" is finally to make sense to me and my kernel sort of works now.
 
 As Arabic numbers transforms the world of math by its clean and concise expression, Litex aims to transform the world of math by its intuitive and natural expression using formal language. Giving semantics to keywords and syntax to Litex and at the same time making what it means as aligned with daily math expression as possible, is the major challenge of Litex. The creator of Litex is trying to make it happen, and that is almost done.
 
