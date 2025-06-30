@@ -1,0 +1,39 @@
+# This file is translation of Lean4 code website https://leanprover-community.github.io/theories/naturals.html to Litex code.
+
+4 + 1 + 1 = 6
+4 - 3 =1
+5 -6 != 0
+1 != 0
+4 * 7 = 28
+
+forall m, n, p N:
+    m + p = n + p
+    then:
+        m + p - p = n + p - p
+        m = n
+
+forall m, n, p N:
+    a * (b + c) = a * b + a * c
+
+# Basic facts like this will be implemented in standard library.
+know forall m, n, x N:
+    m + x < n + x
+    then:
+        m < n
+
+know forall a, b, n N:
+    n > 0
+    a > b
+    then:
+        a ^ n > b ^ n
+
+forall m, n N:
+    m + 1 < n + 1
+    then:
+        m < n
+
+forall a, b, n N:
+    n > 0
+    a > b
+    then:
+        a ^ n > b ^ n
