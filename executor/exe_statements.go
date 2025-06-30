@@ -764,7 +764,7 @@ func (exec *Executor) checkReverse(stmt ast.FactStmt) (glob.ExecState, error) {
 func (exec *Executor) claimPropStmt(stmt *ast.ClaimPropStmt) (glob.ExecState, error) {
 	// prop all atoms declared
 	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.DomFacts, stmt.Prop.IffFacts)
-	if !exec.env.AreAtomsInFactAreDeclared(uniFact, map[string]struct{}{}) && !exec.env.IsFcAtomDeclared(ast.FcAtom(stmt.Prop.DefHeader.Name)) {
+	if !exec.env.AreAtomsInFactAreDeclared(uniFact, map[string]struct{}{}) && !exec.env.IsFcAtomDeclaredByUser(ast.FcAtom(stmt.Prop.DefHeader.Name)) {
 		return glob.ExecState_Error, fmt.Errorf("claim prop statement error: atoms in fact are not declared")
 	}
 

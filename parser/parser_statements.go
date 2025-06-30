@@ -515,31 +515,13 @@ func (tb *tokenBlock) defExistPropStmt() (*ast.DefExistPropStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	existParams := []string{}
-	existParamSets := []ast.Fc{}
-
-	for !tb.header.is(glob.KeywordSt) {
-		param, err := tb.header.next()
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-
-		existParams = append(existParams, addPkgNameToString(param))
-
-		paramSet, err := tb.RawFc()
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-
-		existParamSets = append(existParamSets, paramSet)
-
-		if tb.header.is(glob.KeySymbolComma) {
-			tb.header.skip(glob.KeySymbolComma)
-		}
+	existParams, existParamSets, err := tb.param_paramSet_paramInSetFacts(glob.KeywordSt, false)
+	if err != nil {
+		return nil, tbErr(err, tb)
 	}
 
 	if len(existParams) == 0 {
-		return nil, fmt.Errorf("expect at least one parameter")
+		return nil, fmt.Errorf("expect at least one parameter in exist prop definition")
 	}
 
 	err = tb.header.skip(glob.KeywordSt)
