@@ -205,7 +205,7 @@ func (tb *tokenBlock) uniFactInterface(uniFactDepth uniFactEnum) (ast.UniFactInt
 		return nil, tbErr(err, tb)
 	}
 
-	params, setParams, err := tb.param_paramSet_paramInSetFacts(glob.KeySymbolColon)
+	params, setParams, err := tb.param_paramSet_paramInSetFacts(glob.KeySymbolColon, false)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -323,23 +323,9 @@ func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	objNames := []string{}
-	objSets := []ast.Fc{}
-
-	for !tb.header.is(glob.KeySymbolColon) && !tb.header.ExceedEnd() {
-		objName, err := tb.header.next()
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-		objNames = append(objNames, addPkgNameToString(objName))
-
-		tp, err := tb.RawFc()
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-		objSets = append(objSets, tp)
-
-		tb.header.skipIfIs(glob.KeySymbolComma)
+	objNames, objSets, err := tb.param_paramSet_paramInSetFacts(glob.KeySymbolColon, true)
+	if err != nil {
+		return nil, tbErr(err, tb)
 	}
 
 	if len(objNames) == 0 {
@@ -348,7 +334,7 @@ func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 
 	facts := []ast.FactStmt{}
 
-	if !tb.header.ExceedEnd() && tb.header.is(glob.KeySymbolColon) {
+	if len(objSets) > 0 {
 		tb.header.skip("")
 		facts, err = tb.bodyFacts(UniFactDepth0)
 		if err != nil {
@@ -356,11 +342,6 @@ func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 		}
 	} else if !tb.header.ExceedEnd() {
 		return nil, fmt.Errorf("expect ':' or end of block")
-	}
-
-	paramInSetsFacts := make([]ast.FactStmt, len(objSets))
-	for i, objSet := range objSets {
-		paramInSetsFacts[i] = ast.NewInFact(objNames[i], objSet)
 	}
 
 	return ast.NewDefObjStmt(objNames, objSets, facts), nil
@@ -520,7 +501,7 @@ func (tb *tokenBlock) defHeaderWithoutParsingColonAtEnd() (*ast.DefHeader, error
 		return nil, err
 	}
 
-	params, setParams, err := tb.param_paramSet_paramInSetFacts(glob.KeySymbolRightBrace)
+	params, setParams, err := tb.param_paramSet_paramInSetFacts(glob.KeySymbolRightBrace, false)
 	if err != nil {
 		return nil, err
 	}
@@ -983,7 +964,7 @@ func (tb *tokenBlock) knowExistPropStmt() (*ast.KnowExistPropStmt, error) {
 	return ast.NewKnowExistPropStmt(*existProp), nil
 }
 
-func (tb *tokenBlock) param_paramSet_paramInSetFacts(endWith string) ([]string, []ast.Fc, error) {
+func (tb *tokenBlock) param_paramSet_paramInSetFacts(endWith string, allowExceedEnd bool) ([]string, []ast.Fc, error) {
 	params := []string{}
 	setParams := []ast.Fc{}
 	paramWithoutSetCount := 0
@@ -1022,7 +1003,7 @@ func (tb *tokenBlock) param_paramSet_paramInSetFacts(endWith string) ([]string, 
 				continue
 			}
 
-			if tb.header.is(endWith) {
+			if tb.header.is(endWith) || (allowExceedEnd && tb.header.ExceedEnd()) {
 				break
 			}
 
@@ -1030,9 +1011,11 @@ func (tb *tokenBlock) param_paramSet_paramInSetFacts(endWith string) ([]string, 
 		}
 	}
 
-	err := tb.header.skip(endWith)
-	if err != nil {
-		return nil, nil, err
+	if !allowExceedEnd || !tb.header.ExceedEnd() {
+		err := tb.header.skip(endWith)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
 	// params 不能重复
