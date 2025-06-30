@@ -348,10 +348,6 @@ func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 }
 
 func (tb *tokenBlock) claimStmt() (ast.ClaimInterface, error) {
-	if tb.header.is(glob.KeywordProp) {
-		return tb.claimPropStmt()
-	}
-
 	err := tb.header.skip(glob.KeywordClaim)
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -360,6 +356,10 @@ func (tb *tokenBlock) claimStmt() (ast.ClaimInterface, error) {
 	err = tb.header.skip(glob.KeySymbolColon)
 	if err != nil {
 		return nil, tbErr(err, tb)
+	}
+
+	if tb.body[0].header.is(glob.KeywordProp) {
+		return tb.claimPropStmt()
 	}
 
 	toCheck, err := tb.body[0].factStmt(UniFactDepth0)
@@ -393,13 +393,13 @@ func (tb *tokenBlock) claimStmt() (ast.ClaimInterface, error) {
 	}
 
 	if isProve {
-		return ast.NewClaimStmt(toCheck, proof), nil
+		return ast.NewClaimProveStmt(toCheck, proof), nil
 	} else {
 		if _, ok := toCheck.(ast.OrStmt_SpecStmt); !ok {
 			return nil, fmt.Errorf("fact in claim prove by contradiction must be allowed reversible")
 		}
 
-		return ast.NewClaimProveByContradictionStmt(*ast.NewClaimStmt(toCheck, proof)), nil
+		return ast.NewClaimProveByContradictionStmt(*ast.NewClaimProveStmt(toCheck, proof)), nil
 	}
 }
 
@@ -1207,11 +1207,6 @@ func (tb *tokenBlock) importGloballyStmt() (*ast.ImportGloballyStmt, error) {
 }
 
 func (tb *tokenBlock) claimPropStmt() (*ast.ClaimPropStmt, error) {
-	err := tb.header.skip(glob.KeywordClaim)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
 	prop, err := tb.body[0].defPropStmt()
 	if err != nil {
 		return nil, tbErr(err, tb)
