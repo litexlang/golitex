@@ -42,7 +42,7 @@ func NewClaimProveByContradictionStmt(claim ClaimProveStmt) *ClaimProveByContrad
 	return &ClaimProveByContradictionStmt{claim}
 }
 
-func NewClaimStmt(toCheckFact FactStmt, proofs []Stmt) *ClaimProveStmt {
+func NewClaimProveStmt(toCheckFact FactStmt, proofs []Stmt) *ClaimProveStmt {
 	return &ClaimProveStmt{toCheckFact, proofs}
 }
 
