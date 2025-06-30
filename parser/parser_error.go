@@ -19,14 +19,9 @@ import (
 )
 
 func tbErr(previousErr error, stmt *tokenBlock) error {
-	tokenInfo := ""
 	if curTok, err := stmt.header.currentToken(); err == nil {
-		tokenInfo = fmt.Sprintf("at '%s'", curTok)
-	}
-
-	if previousErr == nil {
-		return fmt.Errorf("parse error:\n%s\n%s", stmt.String(), tokenInfo)
+		return fmt.Errorf("parse error:\nline \"%s\", error at \"%s\"\nerror block:\n%s", &stmt.header, curTok, stmt.String())
 	} else {
-		return fmt.Errorf("parse error:\n%s\n%s\n%s", stmt.String(), tokenInfo, previousErr.Error())
+		return fmt.Errorf("parse error:\nline \"%s\", error at end of statement\nerror block:\n%s", &stmt.header, stmt.String())
 	}
 }
