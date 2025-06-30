@@ -1014,6 +1014,7 @@ func (tb *tokenBlock) param_paramSet_paramInSetFacts(endWith string) ([]string, 
 				for range paramWithoutSetCount + 1 {
 					setParams = append(setParams, setParam)
 				}
+				paramWithoutSetCount = 0
 			}
 
 			if tb.header.is(glob.KeySymbolComma) {

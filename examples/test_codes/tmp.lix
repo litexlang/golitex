@@ -1,6 +1,16 @@
-know exist_prop m N st there_exists_smallest_member_in_set_of_natural_numbers(s set):
-    forall x s:
-        x $in N
+forall x, y N:
+    x + y = y + x
     then:
-        forall x s:
-            x >= m
+        x + y = y + x
+
+fn f(x, y N) N :
+    f(x, y) = x + y
+
+f(1,2) = 1 + 2
+f(1,2) = 3
+
+prop p(x, y N, a N, b, c N):
+    iff:
+        x + y = a + b + c
+
+$p(0, 0, 0, 0, 0)
