@@ -645,6 +645,7 @@ func (exec *Executor) proveStmt(stmt *ast.ProveStmt) (glob.ExecState, error) {
 	return exec.execProofBlock(stmt.Proof)
 }
 
+// prove uniFact in claim at current env
 func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, error) {
 	asUnivFact, ok := stmt.ToCheckFact.(*ast.UniFactStmt)
 	if !ok {
@@ -791,14 +792,12 @@ func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimPropStmt) (glob.Ex
 		exec.deleteEnvAndRetainMsg()
 	}()
 
-	execState, err := exec.execProofBlock(stmt.Proofs)
-	if notOkExec(execState, err) {
-		return execState, err
+	ok, err := exec.claimStmtProveUniFact(ast.NewClaimProveStmt(uniFact, stmt.Proofs))
+	if err != nil {
+		return glob.ExecState_Error, err
 	}
-
-	execState, err = exec.factStmt(uniFact)
-	if notOkExec(execState, err) {
-		return execState, err
+	if !ok {
+		return glob.ExecState_False, nil
 	}
 
 	return glob.ExecState_True, nil

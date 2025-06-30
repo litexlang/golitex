@@ -2,4 +2,6 @@ claim:
     prop p(x, y N):
         x + y = y + x
     prove:
-        
+        x + y = y + x
+
+$p(1,2)
