@@ -61,7 +61,7 @@ const (
 	KeywordFnTemplate             = "fn_template"
 	KeywordStruct                 = "struct"
 
-	KeywordSubsetOf = "subset_of" // though this can be defined by forall, it's still useful to have it as a keyword
+	// KeywordSubsetOf = "subset_of" // though this can be defined by forall, it's still useful to have it as a keyword
 	// TODO
 	// a syntax connecting or and finite_set
 	KeywordEnum = "enum"
@@ -113,9 +113,9 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordProveForallIteratively: {},
 	KeywordFnTemplate:             {},
 	KeywordStruct:                 {},
-	KeywordSubsetOf:               {},
-	KeywordEnum:                   {},
-	KeywordImportGlobally:         {},
+	// KeywordSubsetOf:               {},
+	KeywordEnum:           {},
+	KeywordImportGlobally: {},
 }
 
 const (
@@ -225,17 +225,17 @@ var symbolSet map[string]struct{} = map[string]struct{}{
 }
 
 var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]struct{}{
-	KeywordObj:           {},
-	KeywordSet:           {},
-	KeywordNatural:       {},
-	KeywordInt:           {},
-	KeywordRational:      {},
-	KeywordReal:          {},
-	KeywordComplex:       {},
-	KeywordImaginary:     {},
-	KeywordAs:            {},
-	KeywordIn:            {},
-	KeywordSubsetOf:      {},
+	KeywordObj:       {},
+	KeywordSet:       {},
+	KeywordNatural:   {},
+	KeywordInt:       {},
+	KeywordRational:  {},
+	KeywordReal:      {},
+	KeywordComplex:   {},
+	KeywordImaginary: {},
+	KeywordAs:        {},
+	KeywordIn:        {},
+	// KeywordSubsetOf:      {},
 	KeySymbolEqual:       {},
 	KeySymbolSlash:       {},
 	KeySymbolPlus:        {},

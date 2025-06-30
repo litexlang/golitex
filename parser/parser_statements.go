@@ -524,11 +524,6 @@ func (tb *tokenBlock) defExistPropStmt() (*ast.DefExistPropStmt, error) {
 		return nil, fmt.Errorf("expect at least one parameter in exist prop definition")
 	}
 
-	err = tb.header.skip(glob.KeywordSt)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
 	def, err := tb.defExistPropStmtBody()
 
 	if err != nil {
