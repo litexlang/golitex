@@ -150,11 +150,14 @@ Litex is a simple language. I hope many of the keywords are already familiar to 
 | `dom` | domain of a proposition, function, function template, etc. |
 | `enum` | enumeration |
 | `len`  | length of a set |
+| `finite_set` | a set with a finite number of elements |
+| `indexable_set` | a set with a countable number of elements |
 | `prove` | open a local environment to write some statements without affecting the global environment |
 | `claim` | claim a factual statement, prove it here |
 | `prove_by_contradiction` | prove by contradiction |
 | `prove_in_each_case` | prove by case analysis |
 | `prove_by_math_induction` | prove by mathematical induction |
+| `prove_iteratively` | prove a universal statement by iterating over a finite et |
 | `import` | import a file or directory |
 | `import_globally` | import a file globally |
 
