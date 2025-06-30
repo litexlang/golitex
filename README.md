@@ -116,11 +116,13 @@ Math is about deriving new facts from established ones. Verification is about ma
 
 2. From general case to special case. e.g. `forall x Human: $self_aware(x)` => `$self_aware(Bob)`. The derived fact `self_aware(Bob)` is true because by substituting `x` with `Bob`, the first statement is true, and the second statement is written exactly the same as the first statement after substitution. I call it `match and substitution`.
 
-You just learned how Litex builds math from basic pieces, like building blocks. To sum up, `match and substitution` is the basic way of deriving new facts from established ones. We can construct the whole math system by this way in Lite as long as basic arithmetic and counting are built-in. [^1][^2]
+You just learned how Litex builds math from basic pieces, like building blocks. To sum up, `match and substitution` is the basic way of deriving new facts from established ones. Such method is called first-order logic. We can construct the whole math system by this way in Lite as long as basic arithmetic and counting are built-in. [^1][^2][^3]
 
 [^1]: There are exceptions. Facts about symbols with literal information (e.g. numbers like 1, 2, 3, counting etc) are not verified in this way. Facts related to counting are not verified in this way. There are and only these two exceptions. Those facts are verified by Litex's builtin rules, the user does not need to worry about them.
 
 [^2]: Voltaire once said: "Common sense is not so common." In the case of Litex, Litex makes the process of building math as easy as `ctrl+f/cmd+f` in your browser, by discovering that math is nothing but a special kind of `match and substitution` problem. Everyone is so familiar with this process, but almost no one actually finds its significance and use this idea to create a simple formal language. The real magic of Litex is that it works just like how people think in daily life. This is a hard magic for the language designer, because it requires a deep understanding of both the nature of mathematics and the nature of programming, but is worth the effort.
+
+[^3]: In naive set theory, where almost all daily math is based on, all facts are derived by `match and substitution` using first-order logic, with only two exceptions: 1. mathematical induction. 2. the axiom of replacement. Those two are builtin in Litex.
 
 ## Litex Keywords
 
@@ -128,7 +130,7 @@ _Keep it simple, stupid._
 
 _-- The Unix Philosophy_
 
-Litex is a simple language. I hope many of the keywords are already familiar to you.
+Litex is a simple language. I hope many of the keywords are already familiar to you.[^3]
 
 | Keyword | Meaning |
 |---------|---------|
@@ -160,6 +162,8 @@ Litex is a simple language. I hope many of the keywords are already familiar to 
 | `prove_iteratively` | prove a universal statement by iterating over a finite et |
 | `import` | import a file or directory |
 | `import_globally` | import a file globally |
+
+[^3]: Although these keywords are rarely defined strictly in math textbooks, they are used everyday and everywhere. The Litex creator tried his best to make the meaning of these keywords as close to the meaning in our daily math expression, along with his own ideas and understanding, so that Litex is both intuitive and strict.
 
 ##  Examples: Litex for Curious Formal Language Users
 
