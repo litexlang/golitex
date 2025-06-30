@@ -20,8 +20,8 @@ import (
 
 func tbErr(previousErr error, stmt *tokenBlock) error {
 	if curTok, err := stmt.header.currentToken(); err == nil {
-		return fmt.Errorf("parse error:\nline \"%s\", error at \"%s\"\nerror block:\n%s", &stmt.header, curTok, stmt.String())
+		return fmt.Errorf("parse error:\nline \"%s\", error at \"%s\"\nerror block:\n%s\n%s", &stmt.header, curTok, stmt.String(), previousErr.Error())
 	} else {
-		return fmt.Errorf("parse error:\nline \"%s\", error at end of statement\nerror block:\n%s", &stmt.header, stmt.String())
+		return fmt.Errorf("parse error:\nline \"%s\", error at end of statement\nerror block:\n%s\n%s", &stmt.header, stmt.String(), previousErr.Error())
 	}
 }
