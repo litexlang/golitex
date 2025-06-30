@@ -2149,3 +2149,6 @@ fn f(a,, b,, c, d) ret:
         properties_of(a, b)
     dom:
         properties_of(a, b, c, d)
+
+6.30
+forall x,y N 可以作为 forall x N, y N 的语法糖

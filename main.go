@@ -48,7 +48,7 @@ func main() {
 	// Handle execution flags
 	if *executeFlag != "" {
 		msg, signal, err := sys.ExecuteCodeAndReturnMessage(*executeFlag)
-		fmt.Println(sys.PostprocessOutputMsg(msg))
+		fmt.Println(msg)
 		if err != nil {
 			fmt.Printf("Error: %v\n", err)
 		} else {
@@ -67,7 +67,7 @@ func main() {
 
 		// Process file
 		msg, signal, err := sys.RunFile(*fileFlag)
-		fmt.Println(sys.PostprocessOutputMsg(msg))
+		fmt.Println(msg)
 		if err != nil {
 			fmt.Printf("Error: %v\n", err)
 		} else {
@@ -85,7 +85,7 @@ func main() {
 		}
 		// run the repo
 		msg, signal, err := sys.RunRepo(*repoFlag)
-		fmt.Println(sys.PostprocessOutputMsg(msg))
+		fmt.Println(msg)
 		if err != nil {
 			fmt.Printf("Error: %v\n", err)
 			os.Exit(1)

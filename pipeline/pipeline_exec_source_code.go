@@ -26,10 +26,10 @@ import (
 	"strings"
 )
 
+// main function for running a single code and return the message
 func ExecuteCodeAndReturnMessage(code string) (string, glob.SysSignal, error) {
 	msgOfTopStatements, signal, err := executeCodeAndReturnMessageSlice(code)
-	// ret := strings.Join(msgOfTopStatements, "\n\n\n")
-	ret := strings.Join(msgOfTopStatements, "\n")
+	ret := strings.TrimSpace(strings.Join(msgOfTopStatements, "\n"))
 	if err != nil {
 		return ret, signal, err
 	}
@@ -108,21 +108,6 @@ func printMessagesToWriter(writer io.Writer, msg []string) {
 		fmt.Fprintln(writer, builder.String()[:len(builder.String())-1])
 	}
 }
-
-// func RunREPLInTerminal() {
-// 	parserEnv := parser.NewParserEnv()
-// 	executor := exe.NewExecutor(env.NewEnv(nil, nil))
-// 	reader := bufio.NewReader(os.Stdin)
-
-// 	fmt.Println("Litex-beta - Type your code or 'exit' to quit\nWarning: not yet ready for production use.")
-
-// 	err := listen(reader, os.Stdout, parserEnv, executor)
-// 	if err != nil {
-// 		fmt.Printf("Error: %v\n", err)
-// 	}
-
-// 	fmt.Println("Goodbye!")
-// }
 
 func RunREPLInTerminal() {
 	curEnv := env.NewEnv(nil, nil)
