@@ -66,8 +66,9 @@ const (
 	// a syntax connecting or and finite_set
 	KeywordEnum = "enum"
 
-	KeywordImportGlobally    = "import_globally"
-	KeywordHaveByReplacement = "have_by_replacement"
+	KeywordImportGlobally         = "import_globally"
+	KeywordHaveByReplacement      = "have_by_replacement"
+	KeywordLastTwoObjectsAreEqual = "last_two_objects_are_equal"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -115,9 +116,10 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordFnTemplate:             {},
 	KeywordStruct:                 {},
 	// KeywordSubsetOf:               {},
-	KeywordEnum:              {},
-	KeywordImportGlobally:    {},
-	KeywordHaveByReplacement: {},
+	KeywordEnum:                   {},
+	KeywordImportGlobally:         {},
+	KeywordHaveByReplacement:      {},
+	KeywordLastTwoObjectsAreEqual: {},
 }
 
 const (
