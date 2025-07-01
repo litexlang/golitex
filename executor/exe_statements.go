@@ -70,6 +70,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		err = exec.defFnTemplateStmt(stmt)
 	case *ast.ImportGloballyStmt:
 		execState, err = exec.importGloballyStmt(stmt)
+	case *ast.ProveByMathInductionStmt:
+		execState, err = exec.proveByMathInductionStmt(stmt)
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}
@@ -80,16 +82,6 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		return execState, nil
 	}
 }
-
-// func (exec *Executor) pubStmt(stmt *ast.PubStmt) (glob.ExecState, error) {
-// 	for _, curStmt := range stmt.Stmts {
-// 		execState, err := exec.Stmt(curStmt)
-// 		if notOkExec(execState, err) {
-// 			return execState, err
-// 		}
-// 	}
-// 	return glob.ExecState_True, nil
-// }
 
 func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
 	if glob.IsNotImportDirStmt() {
@@ -812,4 +804,8 @@ func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) (glob.Exe
 
 func (exec *Executor) checkClaimExistPropStmtProofs(stmt *ast.ClaimExistPropStmt) (glob.ExecState, error) {
 	panic("not implemented")
+}
+
+func (exec *Executor) proveByMathInductionStmt(stmt *ast.ProveByMathInductionStmt) (glob.ExecState, error) {
+	return glob.ExecState_True, nil
 }

@@ -70,6 +70,8 @@ func (tb *tokenBlock) stmt() (ast.Stmt, error) {
 		ret, err = tb.defFnTemplateStmt()
 	case glob.KeywordImportGlobally:
 		ret, err = tb.importGloballyStmt()
+	case glob.KeywordProveByMathInduction:
+		ret, err = tb.proveByMathInductionStmt()
 	default:
 		ret, err = tb.factStmt(UniFactDepth0)
 	}
@@ -1260,4 +1262,37 @@ func (tb *tokenBlock) claimExistPropStmt() (*ast.ClaimExistPropStmt, error) {
 	}
 
 	return ast.NewClaimExistPropStmt(existProp, proofs), nil
+}
+
+func (tb *tokenBlock) proveByMathInductionStmt() (*ast.ProveByMathInductionStmt, error) {
+	err := tb.header.skip(glob.KeywordProveByMathInduction)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	propName, err := tb.rawFcAtom()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	start, err := tb.RawFc()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	proof := []ast.Stmt{}
+	for _, stmt := range tb.body {
+		curStmt, err := stmt.stmt()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		proof = append(proof, curStmt)
+	}
+
+	return ast.NewProveByMathInductionStmt(propName, start, proof), nil
 }
