@@ -21,7 +21,20 @@ import (
 	verifier "golitex/verifier"
 )
 
-func (exec *Executor) mathInductionFact_BuiltinRules(stmt *ast.ProveByMathInductionStmt) (bool, error) {
+func (exec *Executor) mathInductionFact_BuiltinRules(stmt *ast.ProveByMathInductionStmt) (glob.ExecState, error) {
+	isTrue := false
+	exec.newEnv(exec.env, exec.env.CurMatchProp)
+	var propNameZeroFact ast.FactStmt
+	var nToNAddOneFact ast.FactStmt
+	var resultingFact *ast.UniFactStmt
+
+	defer func() {
+		exec.deleteEnvAndRetainMsg()
+		if isTrue {
+			exec.appendMsg("%s\nis true\n%s\nis true, thus\n%s\nis true.\n%s\nis true.", propNameZeroFact.String(), nToNAddOneFact.String(), stmt.String(), resultingFact.String())
+		}
+	}()
+
 	ver := verifier.NewVerifier(exec.env)
 
 	propNameAsAtom := stmt.PropName
@@ -30,12 +43,12 @@ func (exec *Executor) mathInductionFact_BuiltinRules(stmt *ast.ProveByMathInduct
 	if !ok {
 		_, ok := exec.env.GetExistPropDef(propNameAsAtom)
 		if !ok {
-			return false, fmt.Errorf("math induction fact %s should have a prop name that is defined, got: %s", stmt.String(), propNameAsAtom)
+			return glob.ExecState_Error, fmt.Errorf("math induction fact %s should have a prop name that is defined, got: %s", stmt.String(), propNameAsAtom)
 		}
 	}
 
 	// propName(start) is true
-	propNameZeroFact := ast.NewSpecFactStmt(ast.TruePure, propNameAsAtom, []ast.Fc{stmt.Start})
+	propNameZeroFact = ast.NewSpecFactStmt(ast.TruePure, propNameAsAtom, []ast.Fc{stmt.Start})
 
 	// propName(n) => propName(n+1)
 	params := []string{"n"}
@@ -60,31 +73,50 @@ func (exec *Executor) mathInductionFact_BuiltinRules(stmt *ast.ProveByMathInduct
 		[]ast.Fc{ast.NewFcFn(ast.FcAtom(glob.KeySymbolPlus), []ast.Fc{ast.FcAtom("n"), ast.FcAtom("1")})},
 	)
 
+	paramInSetsFacts := make([]ast.FactStmt, 1)
+	paramInSetsFacts[0] = ast.NewInFact("n", ast.FcAtom(glob.KeywordNatural))
 	paramSets := make([]ast.Fc, 1)
 	paramSets[0] = ast.FcAtom(glob.KeywordNatural)
 
-	nToNAddOneFact := ast.NewUniFact(
+	nToNAddOneFact = ast.NewUniFact(
 		params,
 		paramSets,
 		domFacts,
 		thenFacts,
 	)
 
-	ok, err := ver.VerFactStmt(propNameZeroFact, verifier.Round0Msg)
+	ok, err := ver.VerFactStmt(propNameZeroFact, verifier.Round0NoMsg)
 	if err != nil {
-		return false, err
+		return glob.ExecState_Error, err
 	}
 	if !ok {
-		return false, nil
+		return glob.ExecState_Error, nil
 	}
 
-	ok, err = ver.VerFactStmt(nToNAddOneFact, verifier.Round0Msg)
+	ok, err = ver.VerFactStmt(nToNAddOneFact, verifier.Round0NoMsg)
 	if err != nil {
-		return false, err
+		return glob.ExecState_Error, err
 	}
 	if !ok {
-		return false, nil
+		return glob.ExecState_Error, nil
 	}
 
-	return true, nil
+	isTrue = true
+
+	resultingFact = ast.NewUniFact(
+		params,
+		paramSets,
+		[]ast.FactStmt{ast.NewSpecFactStmt(
+			ast.TruePure,
+			ast.FcAtom(glob.KeySymbolLargerEqual),
+			[]ast.Fc{ast.FcAtom("n"), stmt.Start},
+		)},
+		[]ast.FactStmt{ast.NewSpecFactStmt(
+			ast.TruePure,
+			propNameAsAtom,
+			[]ast.Fc{ast.FcAtom("n")},
+		)},
+	)
+
+	return glob.ExecState_True, nil
 }
