@@ -72,6 +72,8 @@ func (tb *tokenBlock) stmt() (ast.Stmt, error) {
 		ret, err = tb.importGloballyStmt()
 	case glob.KeywordProveByMathInduction:
 		ret, err = tb.proveByMathInductionStmt()
+	case glob.KeywordHaveByReplacement:
+		ret, err = tb.haveByReplacementStmt()
 	default:
 		ret, err = tb.factStmt(UniFactDepth0)
 	}
@@ -1280,27 +1282,34 @@ func (tb *tokenBlock) proveByMathInductionStmt() (*ast.ProveByMathInductionStmt,
 		return nil, tbErr(err, tb)
 	}
 
-	if tb.header.ExceedEnd() {
-		if len(tb.body) == 0 {
-			return ast.NewProveByMathInductionStmt(propName, start, []ast.Stmt{}), nil
-		} else {
-			return nil, fmt.Errorf("expect %s", glob.KeySymbolColon)
-		}
-	}
+	return ast.NewProveByMathInductionStmt(propName, start), nil
+}
 
-	err = tb.header.skip(glob.KeySymbolColon)
+func (tb *tokenBlock) haveByReplacementStmt() (*ast.HaveByReplacementStmt, error) {
+	err := tb.header.skip(glob.KeywordHaveByReplacement)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
 
-	proof := []ast.Stmt{}
-	for _, stmt := range tb.body {
-		curStmt, err := stmt.stmt()
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-		proof = append(proof, curStmt)
+	name, err := tb.header.next()
+	if err != nil {
+		return nil, tbErr(err, tb)
 	}
 
-	return ast.NewProveByMathInductionStmt(propName, start, proof), nil
+	domSet, err := tb.RawFc()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	rangeSet, err := tb.RawFc()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	propName, err := tb.rawFcAtom()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	return ast.NewHaveByReplacementStmt(name, domSet, rangeSet, propName), nil
 }

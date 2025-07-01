@@ -45,6 +45,7 @@ func (s *EnumStmt) stmt()                      {}
 func (s *ClaimPropStmt) stmt()                 {}
 func (s *ClaimExistPropStmt) stmt()            {}
 func (s *ProveByMathInductionStmt) stmt()      {}
+func (s *HaveByReplacementStmt) stmt()         {}
 
 type FactStmt interface {
 	factStmt()
