@@ -74,7 +74,8 @@ func fcFnString(fcFn *ast.FcFn) string {
 			}
 		}
 		// For non-integer or negative exponents, keep original form
-		return "(" + base + "^" + exp + ")"
+		// return "(" + base + "^" + exp + ")"
+		return "[" + fcFn.String() + "]"
 	}
 	return "[" + fcFn.String() + "]"
 }
