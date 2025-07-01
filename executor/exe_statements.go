@@ -60,6 +60,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		execState, err = exec.importFileStmt(stmt)
 	case *ast.ClaimPropStmt:
 		execState, err = exec.claimPropStmt(stmt)
+	case *ast.ClaimExistPropStmt:
+		execState, err = exec.claimExistPropStmt(stmt)
 	case *ast.ProveStmt:
 		execState, err = exec.proveStmt(stmt)
 	case *ast.ClaimProveByContradictionStmt:
@@ -762,6 +764,7 @@ func (exec *Executor) checkReverse(stmt ast.FactStmt) (glob.ExecState, error) {
 	return glob.ExecState_Unknown, nil
 }
 
+// 也许我应该语义改成，先声明prop，然后再证明prop，而不是现在这个样子
 func (exec *Executor) claimPropStmt(stmt *ast.ClaimPropStmt) (glob.ExecState, error) {
 	// prop all atoms declared
 	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.DomFacts, stmt.Prop.IffFacts)
@@ -801,4 +804,12 @@ func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimPropStmt) (glob.Ex
 	}
 
 	return glob.ExecState_True, nil
+}
+
+func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) (glob.ExecState, error) {
+	return exec.checkClaimExistPropStmtProofs(stmt)
+}
+
+func (exec *Executor) checkClaimExistPropStmtProofs(stmt *ast.ClaimExistPropStmt) (glob.ExecState, error) {
+	panic("not implemented")
 }
