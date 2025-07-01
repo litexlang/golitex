@@ -159,3 +159,9 @@ type ImportGloballyStmt struct {
 type ImportFileStmt struct {
 	Path string
 }
+
+type ProveByMathInductionStmt struct {
+	PropName FcAtom
+	Start    Fc
+	Proof    []Stmt
+}

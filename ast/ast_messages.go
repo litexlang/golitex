@@ -685,3 +685,20 @@ func (stmt *ClaimExistPropStmt) String() string {
 	}
 	return strings.TrimSuffix(builder.String(), "\n")
 }
+
+func (stmt *ProveByMathInductionStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordProveByMathInduction)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.PropName.String())
+	builder.WriteString(" ")
+	builder.WriteString(stmt.Start.String())
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+	for _, proof := range stmt.Proof {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 1))
+		builder.WriteByte('\n')
+	}
+	return builder.String()
+}

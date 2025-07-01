@@ -26,23 +26,6 @@ func (ver *Verifier) todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt *ast.Sp
 	return nil
 }
 
-func isTrueEqualFact(stmt ast.FactStmt) (*ast.SpecFactStmt, bool) {
-	asSpecFact, ok := stmt.(*ast.SpecFactStmt)
-	if !ok {
-		return nil, false
-	}
-
-	if asSpecFact.TypeEnum != ast.TruePure {
-		return nil, false
-	}
-
-	if string(asSpecFact.PropName) == glob.KeySymbolEqual {
-		return asSpecFact, true
-	}
-
-	return nil, false
-}
-
 func (ver *Verifier) equalTrueAddSuccessMsg(left ast.Fc, right ast.Fc, state VerState, msg string) (bool, error) {
 	if state.requireMsg() {
 		ver.successMsgEnd(fmt.Sprintf("%s = %s", left.String(), right.String()), msg)
