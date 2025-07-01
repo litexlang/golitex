@@ -21,35 +21,38 @@ import (
 	verifier "golitex/verifier"
 )
 
-func (exec *Executor) mathInductionFact_BuiltinRules(stmt *ast.SpecFactStmt) (bool, error) {
+func (exec *Executor) mathInductionFact_BuiltinRules(stmt *ast.ProveByMathInductionStmt) (bool, error) {
 	ver := verifier.NewVerifier(exec.env)
 
-	if len(stmt.Params) != 1 {
-		return false, fmt.Errorf("math induction fact %s should have exactly one parameter, got: %d", stmt.String(), len(stmt.Params))
-	}
+	propNameAsAtom := stmt.PropName
 
-	propNameAsAtom, ok := stmt.Params[0].(ast.FcAtom)
+	_, ok := exec.env.GetPropDef(propNameAsAtom)
 	if !ok {
-		return false, fmt.Errorf("math induction fact %s should have a prop name as parameter, got: %s", stmt.String(), stmt.Params[0])
+		_, ok := exec.env.GetExistPropDef(propNameAsAtom)
+		if !ok {
+			return false, fmt.Errorf("math induction fact %s should have a prop name that is defined, got: %s", stmt.String(), propNameAsAtom)
+		}
 	}
 
-	_, ok = exec.env.GetPropDef(propNameAsAtom)
-	if !ok {
-		return false, fmt.Errorf("math induction fact %s should have a prop name that is defined, got: %s", stmt.String(), propNameAsAtom)
-	}
-
-	// propName(0) is true
-	propNameZeroFact := ast.NewSpecFactStmt(ast.TruePure, propNameAsAtom, []ast.Fc{ast.FcAtom("0")})
+	// propName(start) is true
+	propNameZeroFact := ast.NewSpecFactStmt(ast.TruePure, propNameAsAtom, []ast.Fc{stmt.Start})
 
 	// propName(n) => propName(n+1)
 	params := []string{"n"}
 
-	domFacts := make([]ast.FactStmt, 1)
+	domFacts := make([]ast.FactStmt, 2)
 	domFacts[0] = ast.NewSpecFactStmt(
+		ast.TruePure,
+		ast.FcAtom(glob.KeySymbolLargerEqual),
+		[]ast.Fc{ast.FcAtom("n"), stmt.Start},
+	)
+
+	domFacts[1] = ast.NewSpecFactStmt(
 		ast.TruePure,
 		propNameAsAtom,
 		[]ast.Fc{ast.FcAtom("n")},
 	)
+
 	thenFacts := make([]ast.FactStmt, 1)
 	thenFacts[0] = ast.NewSpecFactStmt(
 		ast.TruePure,
@@ -57,8 +60,6 @@ func (exec *Executor) mathInductionFact_BuiltinRules(stmt *ast.SpecFactStmt) (bo
 		[]ast.Fc{ast.NewFcFn(ast.FcAtom(glob.KeySymbolPlus), []ast.Fc{ast.FcAtom("n"), ast.FcAtom("1")})},
 	)
 
-	paramInSetsFacts := make([]ast.FactStmt, 1)
-	paramInSetsFacts[0] = ast.NewInFact("n", ast.FcAtom(glob.KeywordNatural))
 	paramSets := make([]ast.Fc, 1)
 	paramSets[0] = ast.FcAtom(glob.KeywordNatural)
 
