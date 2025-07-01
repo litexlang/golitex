@@ -16,6 +16,8 @@ _-- Alan Kay_
 
 I, Jiachen Shen, a hacker and a math enthusiast, am the creator of Litex. I majored in math and self-taught programming. I have been working on Litex since 2024, and I am still working on it. I really like designing and engineering new languages. I even more like working on my language which serves people's needs.
 
+Computation is how math is used to solve real-world problems. Verification is how math, the old language of the universe, enriches itself by making sure the new statements are correct. The software industry has already revolutionized how we compute, and Litex is here to change how we verify.
+
 A good art is what makes its creator happy and makes its users find it useful.[^1] I hope Litex can be a good art for both me and its users.
 
 Litex is for solving the problem of formalizing math. Traditional formal languages are too complex and too far removed from everyday mathematical notation. These languages heavily rely on type theory and functional programming concepts, which even mathematics PhD students need years to master. The fundamental reason for this complexity is that these languages attempt to serve two distinct purposes simultaneously: they want to be both programming languages and reasoning verifiers.

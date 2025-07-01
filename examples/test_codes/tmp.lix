@@ -1,5 +1,5 @@
-claim:
-    prop p(x, y N):
-        x + y = y + x
-    prove:
-        
+forall a, b, c, d R:
+    b != 0
+    d != 0
+    then:
+        a / b + c / d = (a * d + b * c) / (b * d)
