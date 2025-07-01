@@ -16,10 +16,9 @@ forall a, b, c N:
     a * (b + c) = a * b + a * c
 
 # Basic facts like this will be implemented in standard library.
-know forall m, n, x N:
-    m + x < n + x
-    then:
-        m + x - x < n + x - x
+know prop less_is_than_is_preserved_by_addition(m N, n N, p N):
+    m + p < n + p
+    iff:
         m < n
 
 know forall a, b, n N:
@@ -28,12 +27,10 @@ know forall a, b, n N:
     then:
         a ^ n > b ^ n
 
-forall m, n N:
-    m + 1 < n + 1
+forall a, b N:
+    a + 1 < b + 1
     then:
-        m + 1 - 1 < n + 1 - 1
-        m + 0 < n + 0
-        m < n
+        $less_is_than_is_preserved_by_addition(a, b, 1)
 
 forall a, b, n N:
     n > 0
