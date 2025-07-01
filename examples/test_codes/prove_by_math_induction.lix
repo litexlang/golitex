@@ -8,3 +8,4 @@ know:
             $p(n+1)
 
 prove_by_math_induction p 0
+
