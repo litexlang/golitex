@@ -1,2 +1,10 @@
-prove_by_math_induction p 0:
-    1 = 1
+prop p(n N)
+
+know:
+    $p(0)
+    forall n N:
+        $p(n)
+        then:
+            $p(n+1)
+
+prove_by_math_induction p 0

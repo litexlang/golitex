@@ -1280,6 +1280,14 @@ func (tb *tokenBlock) proveByMathInductionStmt() (*ast.ProveByMathInductionStmt,
 		return nil, tbErr(err, tb)
 	}
 
+	if tb.header.ExceedEnd() {
+		if len(tb.body) == 0 {
+			return ast.NewProveByMathInductionStmt(propName, start, []ast.Stmt{}), nil
+		} else {
+			return nil, fmt.Errorf("expect %s", glob.KeySymbolColon)
+		}
+	}
+
 	err = tb.header.skip(glob.KeySymbolColon)
 	if err != nil {
 		return nil, tbErr(err, tb)

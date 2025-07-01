@@ -693,12 +693,16 @@ func (stmt *ProveByMathInductionStmt) String() string {
 	builder.WriteString(stmt.PropName.String())
 	builder.WriteString(" ")
 	builder.WriteString(stmt.Start.String())
-	builder.WriteString(" ")
-	builder.WriteString(glob.KeySymbolColon)
-	builder.WriteByte('\n')
-	for _, proof := range stmt.Proof {
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 1))
+	if len(stmt.Proof) > 0 {
+		builder.WriteString(" ")
+		builder.WriteString(glob.KeySymbolColon)
 		builder.WriteByte('\n')
+		for _, proof := range stmt.Proof {
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 1))
+			builder.WriteByte('\n')
+		}
+		return builder.String()
+	} else {
+		return builder.String()
 	}
-	return builder.String()
 }
