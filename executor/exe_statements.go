@@ -72,6 +72,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		execState, err = exec.importGloballyStmt(stmt)
 	case *ast.ProveByMathInductionStmt:
 		execState, err = exec.mathInductionFact_BuiltinRules(stmt)
+	case *ast.HaveByReplacementStmt:
+		execState, err = exec.haveByReplacementStmt(stmt)
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}
@@ -803,5 +805,9 @@ func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) (glob.Exe
 }
 
 func (exec *Executor) checkClaimExistPropStmtProofs(stmt *ast.ClaimExistPropStmt) (glob.ExecState, error) {
+	panic("not implemented")
+}
+
+func (exec *Executor) haveByReplacementStmt(stmt *ast.HaveByReplacementStmt) (glob.ExecState, error) {
 	panic("not implemented")
 }

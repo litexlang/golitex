@@ -163,5 +163,11 @@ type ImportFileStmt struct {
 type ProveByMathInductionStmt struct {
 	PropName FcAtom
 	Start    Fc
-	Proof    []Stmt
+}
+
+type HaveByReplacementStmt struct {
+	Name     string
+	DomSet   Fc
+	RangeSet Fc
+	PropName FcAtom
 }
