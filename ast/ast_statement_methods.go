@@ -153,8 +153,11 @@ func (stmt *SpecFactStmt) IsMathInductionFact() bool {
 }
 
 func NewInFact(param string, paramSet Fc) *SpecFactStmt {
-	// return NewSpecFactStmt(TruePure, NewFcAtomWithName(glob.KeywordIn), []Fc{NewFcAtom(glob.EmptyPkg, param), paramSet})
 	return NewSpecFactStmt(TruePure, FcAtom(glob.KeywordIn), []Fc{FcAtom(param), paramSet})
+}
+
+func NewInFactWithParamFc(param Fc, paramSet Fc) *SpecFactStmt {
+	return NewSpecFactStmt(TruePure, FcAtom(glob.KeywordIn), []Fc{param, paramSet})
 }
 
 func NewInFactWithFc(param Fc, paramSet Fc) *SpecFactStmt {
