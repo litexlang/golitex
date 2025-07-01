@@ -17,15 +17,16 @@ package litex_verifier
 import (
 	"fmt"
 	ast "golitex/ast"
+	glob "golitex/glob"
 )
 
 // 所有verifier的方法里，只有它和switch里的三大函数可能读入anyState
 func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state VerState) (bool, error) {
-	if asSpecFact, ok := isTrueEqualFact(stmt); ok {
-		return ver.verTrueEqualFact(asSpecFact, state)
-	}
-
 	if asSpecFact, ok := stmt.(*ast.SpecFactStmt); ok {
+		if asSpecFact.NameIs(glob.KeySymbolEqual) && asSpecFact.TypeEnum == ast.TruePure {
+			return ver.verTrueEqualFact(asSpecFact, state)
+		}
+
 		return ver.verSpecFactThatIsNotTrueEqualFact(asSpecFact, state)
 	}
 
