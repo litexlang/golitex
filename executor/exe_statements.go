@@ -807,7 +807,3 @@ func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) (glob.Exe
 func (exec *Executor) checkClaimExistPropStmtProofs(stmt *ast.ClaimExistPropStmt) (glob.ExecState, error) {
 	panic("not implemented")
 }
-
-func (exec *Executor) haveByReplacementStmt(stmt *ast.HaveByReplacementStmt) (glob.ExecState, error) {
-	panic("not implemented")
-}
