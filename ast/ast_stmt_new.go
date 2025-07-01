@@ -146,3 +146,7 @@ func NewClaimPropStmt(prop *DefPropStmt, proofs []Stmt) *ClaimPropStmt {
 func NewClaimExistPropStmt(existProp *DefExistPropStmt, proofs []Stmt) *ClaimExistPropStmt {
 	return &ClaimExistPropStmt{*existProp, proofs}
 }
+
+func NewProveByMathInductionStmt(propName FcAtom, start Fc, proof []Stmt) *ProveByMathInductionStmt {
+	return &ProveByMathInductionStmt{propName, start, proof}
+}
