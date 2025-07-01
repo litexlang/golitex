@@ -10,15 +10,16 @@ forall m, n, p N:
     m + p = n + p
     then:
         m + p - p = n + p - p
-        m = n
+        # m = n
 
-forall m, n, p N:
+forall a, b, c N:
     a * (b + c) = a * b + a * c
 
 # Basic facts like this will be implemented in standard library.
 know forall m, n, x N:
     m + x < n + x
     then:
+        m + x - x < n + x - x
         m < n
 
 know forall a, b, n N:
@@ -30,6 +31,8 @@ know forall a, b, n N:
 forall m, n N:
     m + 1 < n + 1
     then:
+        m + 1 - 1 < n + 1 - 1
+        m + 0 < n + 0
         m < n
 
 forall a, b, n N:
