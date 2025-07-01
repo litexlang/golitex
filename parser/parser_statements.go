@@ -360,6 +360,8 @@ func (tb *tokenBlock) claimStmt() (ast.ClaimInterface, error) {
 
 	if tb.body[0].header.is(glob.KeywordProp) {
 		return tb.claimPropStmt()
+	} else if tb.body[0].header.is(glob.KeywordExistProp) {
+		return tb.claimExistPropStmt()
 	}
 
 	toCheck, err := tb.body[0].factStmt(UniFactDepth0)
@@ -1227,8 +1229,35 @@ func (tb *tokenBlock) claimPropStmt() (*ast.ClaimPropStmt, error) {
 			proofs = append(proofs, curStmt)
 		}
 	} else {
-		return nil, fmt.Errorf("expect 'prove' or 'prove_by_contradiction'")
+		return nil, fmt.Errorf("expect 'prove'")
 	}
 
 	return ast.NewClaimPropStmt(prop, proofs), nil
+}
+
+func (tb *tokenBlock) claimExistPropStmt() (*ast.ClaimExistPropStmt, error) {
+	existProp, err := tb.body[0].defExistPropStmt()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	proofs := []ast.Stmt{}
+	if tb.body[1].header.is(glob.KeywordProve) {
+		err = tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		for _, stmt := range tb.body[1].body {
+			curStmt, err := stmt.stmt()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			proofs = append(proofs, curStmt)
+		}
+	} else {
+		return nil, fmt.Errorf("expect 'prove'")
+	}
+
+	return ast.NewClaimExistPropStmt(existProp, proofs), nil
 }
