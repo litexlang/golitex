@@ -147,6 +147,10 @@ func NewClaimExistPropStmt(existProp *DefExistPropStmt, proofs []Stmt) *ClaimExi
 	return &ClaimExistPropStmt{*existProp, proofs}
 }
 
-func NewProveByMathInductionStmt(propName FcAtom, start Fc, proof []Stmt) *ProveByMathInductionStmt {
-	return &ProveByMathInductionStmt{propName, start, proof}
+func NewProveByMathInductionStmt(propName FcAtom, start Fc) *ProveByMathInductionStmt {
+	return &ProveByMathInductionStmt{propName, start}
+}
+
+func NewHaveByReplacementStmt(name string, domSet Fc, rangeSet Fc, propName FcAtom) *HaveByReplacementStmt {
+	return &HaveByReplacementStmt{name, domSet, rangeSet, propName}
 }
