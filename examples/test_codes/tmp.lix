@@ -1,5 +1,31 @@
-forall a, b, c, d R:
-    b != 0
-    d != 0
+"""
+prop p(n N)
+
+prop q(n N):
+    n = 1
+
+prop p2(n N):
+    dom:
+        n = 1
+
+prop p3(n N):
+    dom:
+        n = 1
+    iff:
+        $p(n)
+
+prop p4(n N):
+    n = 1
+    iff:
+        $p(n)
+
+prop p5(n N):
+    iff:
+        $p(n)
+
+"""
+
+prop p6(n N):
+    n = 1
     then:
-        a / b + c / d = (a * d + b * c) / (b * d)
+        $p(n)

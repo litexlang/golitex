@@ -266,7 +266,8 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	domFacts, iffFacts, err := tb.dom_IffOrThen_Body(glob.KeywordIff)
+	// domFacts, iffFacts, err := tb.dom_IffOrThen_Body(glob.KeywordIff)
+	domFacts, iffFacts, err := tb.dom_and_section(glob.KeywordIff, glob.KeywordThen)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -1312,4 +1313,66 @@ func (tb *tokenBlock) haveByReplacementStmt() (*ast.HaveByReplacementStmt, error
 	}
 
 	return ast.NewHaveByReplacementStmt(name, domSet, rangeSet, propName), nil
+}
+
+func (tb *tokenBlock) dom_and_section(kw string, kw_should_not_exist_in_body string) ([]ast.FactStmt, []ast.FactStmt, error) {
+	if len(tb.body) == 0 {
+		return nil, nil, fmt.Errorf("expect dom or section")
+	}
+
+	var err error
+	domFacts, sectionFacts := []ast.FactStmt{}, []ast.FactStmt{}
+
+	if tb.body[len(tb.body)-1].header.is(kw_should_not_exist_in_body) {
+		return nil, nil, fmt.Errorf("%s section is not allowed to be the last section", kw_should_not_exist_in_body)
+	}
+
+	// there are 5 cases: 1. no dom, just section 2. dom and section without dom specification 3. dom and section with both specification 4. just dom 5. just section
+	if !tb.body[0].header.is(glob.KeywordDom) && !tb.body[len(tb.body)-1].header.is(kw) {
+		for _, stmt := range tb.body {
+			curStmt, err := stmt.factStmt(UniFactDepth1)
+			if err != nil {
+				return nil, nil, tbErr(err, tb)
+			}
+			sectionFacts = append(sectionFacts, curStmt)
+		}
+		return domFacts, sectionFacts, nil
+	} else if !tb.body[0].header.is(glob.KeywordDom) && tb.body[len(tb.body)-1].header.is(kw) {
+		for i := range len(tb.body) - 1 {
+			curStmt, err := tb.body[i].factStmt(UniFactDepth1)
+			if err != nil {
+				return nil, nil, tbErr(err, tb)
+			}
+			domFacts = append(domFacts, curStmt)
+		}
+		sectionFacts, err = tb.body[len(tb.body)-1].parseFactBodyWithHeaderNameAndUniFactDepth(kw, UniFactDepth1)
+		if err != nil {
+			return nil, nil, tbErr(err, tb)
+		}
+		return domFacts, sectionFacts, nil
+	} else if len(tb.body) == 2 && tb.body[0].header.is(glob.KeywordDom) && tb.body[1].header.is(kw) {
+		domFacts, err = tb.body[0].parseFactBodyWithHeaderNameAndUniFactDepth(glob.KeywordDom, UniFactDepth1)
+		if err != nil {
+			return nil, nil, tbErr(err, tb)
+		}
+		sectionFacts, err = tb.body[1].parseFactBodyWithHeaderNameAndUniFactDepth(kw, UniFactDepth1)
+		if err != nil {
+			return nil, nil, tbErr(err, tb)
+		}
+		return domFacts, sectionFacts, nil
+	} else if len(tb.body) == 1 && tb.body[0].header.is(glob.KeywordDom) {
+		domFacts, err = tb.body[0].parseFactBodyWithHeaderNameAndUniFactDepth(glob.KeywordDom, UniFactDepth1)
+		if err != nil {
+			return nil, nil, tbErr(err, tb)
+		}
+		return domFacts, sectionFacts, nil
+	} else if len(tb.body) == 1 && tb.body[0].header.is(kw) {
+		sectionFacts, err = tb.body[0].parseFactBodyWithHeaderNameAndUniFactDepth(kw, UniFactDepth1)
+		if err != nil {
+			return nil, nil, tbErr(err, tb)
+		}
+		return domFacts, sectionFacts, nil
+	} else {
+		return nil, nil, fmt.Errorf("expect dom section and %s section", kw)
+	}
 }
