@@ -142,3 +142,7 @@ func NewImportFileStmt(path string) *ImportFileStmt {
 func NewClaimPropStmt(prop *DefPropStmt, proofs []Stmt) *ClaimPropStmt {
 	return &ClaimPropStmt{*prop, proofs}
 }
+
+func NewClaimExistPropStmt(existProp *DefExistPropStmt, proofs []Stmt) *ClaimExistPropStmt {
+	return &ClaimExistPropStmt{*existProp, proofs}
+}

@@ -100,7 +100,11 @@ type KnowPropStmt struct {
 	Prop DefPropStmt
 }
 
-// have 是可能引入 fn 和 prop 的
+type ClaimExistPropStmt struct {
+	ExistProp DefExistPropStmt
+	Proofs    []Stmt
+}
+
 type HaveStmt struct {
 	ObjNames []string
 	Fact     SpecFactStmt
@@ -134,10 +138,6 @@ type ImportDirStmt struct {
 	Path      string
 	AsPkgName string
 }
-
-// type PubStmt struct {
-// 	Stmts []Stmt
-// }
 
 type ProveStmt struct {
 	Proof []Stmt
