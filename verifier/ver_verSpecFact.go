@@ -133,10 +133,6 @@ func (ver *Verifier) verSpecialSpecFact_ByBIR(stmt *ast.SpecFactStmt, state VerS
 		return ver.verNotTrueEqualFact_BuiltinRules(stmt, state)
 	}
 
-	if stmt.NameIs(glob.KeywordProveByMathInduction) {
-		return ver.mathInductionFact_BuiltinRules(stmt, state)
-	}
-
 	if stmt.NameIs(glob.KeywordCommutativeProp) {
 		return ver.varCommutativeProp_BuiltinRules(stmt, state)
 	}
