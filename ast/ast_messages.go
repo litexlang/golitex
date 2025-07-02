@@ -700,11 +700,9 @@ func (stmt *HaveByReplacementStmt) String() string {
 
 func (stmt *SetEqualStmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordSetEqual)
-	builder.WriteString(" ")
 	builder.WriteString(stmt.CurSet.String())
 	builder.WriteString(" ")
-	builder.WriteString(glob.KeySymbolEqual)
+	builder.WriteString(glob.KeySymbolColonEqual)
 	builder.WriteString(" ")
 	builder.WriteString(stmt.Param)
 	builder.WriteString(" ")

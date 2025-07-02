@@ -102,10 +102,8 @@ func (tb *tokenBlock) factStmt(uniFactDepth uniFactEnum) (ast.FactStmt, error) {
 		return tb.orStmt()
 	case glob.KeywordEnum:
 		return tb.enumStmt()
-	case glob.KeywordSetEqual:
-		return tb.setEqualStmt()
 	default:
-		return tb.specFactStmt()
+		return tb.factStmt_setEqualFact()
 	}
 
 }
@@ -1335,22 +1333,7 @@ func (tb *tokenBlock) dom_and_section(kw string, kw_should_not_exist_in_body str
 	}
 }
 
-func (tb *tokenBlock) setEqualStmt() (*ast.SetEqualStmt, error) {
-	err := tb.header.skip(glob.KeywordSetEqual)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	curSet, err := tb.RawFc()
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	err = tb.header.skip(glob.KeySymbolEqual)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
+func (tb *tokenBlock) setEqualStmt(curSet ast.Fc) (*ast.SetEqualStmt, error) {
 	param, err := tb.header.next()
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -1376,4 +1359,88 @@ func (tb *tokenBlock) setEqualStmt() (*ast.SetEqualStmt, error) {
 	}
 
 	return ast.NewSetEqualStmt(curSet, param, parentSet, proofs), nil
+}
+
+func (tb *tokenBlock) factStmt_setEqualFact() (ast.FactStmt, error) {
+	if tb.header.is(glob.KeywordNot) {
+		return tb.specFactStmt()
+	}
+
+	if tb.header.is(glob.KeywordExist) {
+		return tb.existFactStmt(true)
+	}
+
+	if tb.header.is(glob.FuncFactPrefix) {
+		ret, err := tb.pureFuncSpecFact()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		return ret, nil
+	} else {
+		ret, err := tb.relaFact_setEqualFact()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		return ret, nil
+	}
+}
+
+func (tb *tokenBlock) relaFact_setEqualFact() (ast.FactStmt, error) {
+	var ret *ast.SpecFactStmt
+
+	fc, err := tb.RawFc()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	opt, err := tb.header.next()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	if opt == glob.FuncFactPrefix {
+		propName, err := tb.rawFcAtom()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		if tb.header.ExceedEnd() {
+			ret = ast.NewSpecFactStmt(ast.TruePure, propName, []ast.Fc{fc})
+		} else {
+			fc2, err := tb.RawFc()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+
+			params := []ast.Fc{fc, fc2}
+
+			ret = ast.NewSpecFactStmt(ast.TruePure, propName, params)
+		}
+	} else if opt == glob.KeySymbolColonEqual {
+		return tb.setEqualStmt(fc)
+	} else if !glob.IsBuiltinInfixRelaPropSymbol(opt) {
+		return nil, fmt.Errorf("expect relation prop")
+	} else {
+		fc2, err := tb.RawFc()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		// 必须到底了
+		if !tb.header.ExceedEnd() {
+			return nil, fmt.Errorf("expect end of line")
+		}
+
+		params := []ast.Fc{fc, fc2}
+
+		ret = ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(opt), params)
+	}
+
+	// 这里加入语法糖：!= 等价于 not =，好处是我 = 有 commutative的性质，我不用额外处理 != 了
+	if ret.NameIs(glob.KeySymbolNotEqual) {
+		ret.TypeEnum = ast.FalsePure
+		ret.PropName = ast.FcAtom(glob.KeySymbolEqual)
+	}
+
+	return ret, nil
 }
