@@ -100,10 +100,8 @@ func (tb *tokenBlock) factStmt(uniFactDepth uniFactEnum) (ast.FactStmt, error) {
 		return tb.uniFactInterface(uniFactDepth)
 	case glob.KeywordOr:
 		return tb.orStmt()
-	// case glob.KeywordEnum:
-	// 	return tb.enumStmt()
 	default:
-		return tb.factStmt_setEqualFact()
+		return tb.specFact_intensionalSetFact_enumFact()
 	}
 
 }
@@ -1320,7 +1318,7 @@ func (tb *tokenBlock) dom_and_section(kw string, kw_should_not_exist_in_body str
 	}
 }
 
-func (tb *tokenBlock) setEqualStmt(curSet ast.Fc) (*ast.SetEqualStmt, error) {
+func (tb *tokenBlock) intensionalSetStmt(curSet ast.Fc) (*ast.IntensionalSetStmt, error) {
 	param, err := tb.header.next()
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -1331,9 +1329,13 @@ func (tb *tokenBlock) setEqualStmt(curSet ast.Fc) (*ast.SetEqualStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	err = tb.header.skipKwAndColon_ExceedEnd(glob.KeySymbolColon)
+	err = tb.header.skip(glob.KeySymbolColon)
 	if err != nil {
 		return nil, tbErr(err, tb)
+	}
+
+	if !tb.header.ExceedEnd() {
+		return nil, fmt.Errorf("expect end of line")
 	}
 
 	proofs := []*ast.SpecFactStmt{}
@@ -1345,10 +1347,10 @@ func (tb *tokenBlock) setEqualStmt(curSet ast.Fc) (*ast.SetEqualStmt, error) {
 		proofs = append(proofs, curStmt)
 	}
 
-	return ast.NewSetEqualStmt(curSet, param, parentSet, proofs), nil
+	return ast.NewIntensionalSetStmt(curSet, param, parentSet, proofs), nil
 }
 
-func (tb *tokenBlock) factStmt_setEqualFact() (ast.FactStmt, error) {
+func (tb *tokenBlock) specFact_intensionalSetFact_enumFact() (ast.FactStmt, error) {
 	if tb.header.is(glob.KeywordNot) {
 		return tb.specFactStmt()
 	}
@@ -1364,7 +1366,7 @@ func (tb *tokenBlock) factStmt_setEqualFact() (ast.FactStmt, error) {
 		}
 		return ret, nil
 	} else {
-		ret, err := tb.relaFact_setEqualFact()
+		ret, err := tb.relaFact_intensionalSetFact_enumStmt()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -1372,7 +1374,7 @@ func (tb *tokenBlock) factStmt_setEqualFact() (ast.FactStmt, error) {
 	}
 }
 
-func (tb *tokenBlock) relaFact_setEqualFact() (ast.FactStmt, error) {
+func (tb *tokenBlock) relaFact_intensionalSetFact_enumStmt() (ast.FactStmt, error) {
 	var ret *ast.SpecFactStmt
 
 	fc, err := tb.RawFc()
@@ -1404,7 +1406,7 @@ func (tb *tokenBlock) relaFact_setEqualFact() (ast.FactStmt, error) {
 			ret = ast.NewSpecFactStmt(ast.TruePure, propName, params)
 		}
 	} else if opt == glob.KeySymbolColonEqual {
-		return tb.enumStmt_or_setEqualFact(fc)
+		return tb.enumStmt_or_intensionalSetStmt(fc)
 	} else if !glob.IsBuiltinInfixRelaPropSymbol(opt) {
 		return nil, fmt.Errorf("expect relation prop")
 	} else {
@@ -1432,10 +1434,10 @@ func (tb *tokenBlock) relaFact_setEqualFact() (ast.FactStmt, error) {
 	return ret, nil
 }
 
-func (tb *tokenBlock) enumStmt_or_setEqualFact(fc ast.Fc) (ast.FactStmt, error) {
+func (tb *tokenBlock) enumStmt_or_intensionalSetStmt(fc ast.Fc) (ast.FactStmt, error) {
 	if tb.header.is(glob.KeySymbolLeftCurly) {
 		return tb.enumStmt(fc)
 	} else {
-		return tb.setEqualStmt(fc)
+		return tb.intensionalSetStmt(fc)
 	}
 }

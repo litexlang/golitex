@@ -22,33 +22,25 @@ import (
 
 // 所有verifier的方法里，只有它和switch里的三大函数可能读入anyState
 func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state VerState) (bool, error) {
-	if asSpecFact, ok := stmt.(*ast.SpecFactStmt); ok {
-		if asSpecFact.NameIs(glob.KeySymbolEqual) && asSpecFact.TypeEnum == ast.TruePure {
-			return ver.verTrueEqualFact(asSpecFact, state)
+	switch asStmt := stmt.(type) {
+	case *ast.SpecFactStmt:
+		{
+			if asStmt.NameIs(glob.KeySymbolEqual) && asStmt.TypeEnum == ast.TruePure {
+				return ver.verTrueEqualFact(asStmt, state)
+			}
+			return ver.verSpecFactThatIsNotTrueEqualFact(asStmt, state)
 		}
-
-		return ver.verSpecFactThatIsNotTrueEqualFact(asSpecFact, state)
+	case *ast.OrStmt:
+		return ver.verOrStmt(asStmt, state)
+	case *ast.UniFactStmt:
+		return ver.verUniFact(asStmt, state)
+	case *ast.EnumStmt:
+		return ver.verEnumStmt(asStmt, state)
+	case *ast.UniFactWithIffStmt:
+		return ver.verUniFactWithIff(asStmt, state)
+	case *ast.IntensionalSetStmt:
+		return ver.verIntensionalSetStmt(asStmt, state)
+	default:
+		return false, fmt.Errorf("unexpected fact statement: %v", asStmt)
 	}
-
-	if asOrStmt, ok := stmt.(*ast.OrStmt); ok {
-		return ver.verOrStmt(asOrStmt, state)
-	}
-
-	if asUniFact, ok := stmt.(*ast.UniFactStmt); ok {
-		return ver.verUniFact(asUniFact, state)
-	}
-
-	if asEnumStmt, ok := stmt.(*ast.EnumStmt); ok {
-		return ver.verEnumStmt(asEnumStmt, state)
-	}
-
-	if asUniFactWithIff, ok := stmt.(*ast.UniFactWithIffStmt); ok {
-		return ver.verUniFactWithIff(asUniFactWithIff, state)
-	}
-
-	if asSetEqualStmt, ok := stmt.(*ast.SetEqualStmt); ok {
-		return ver.verSetEqualStmt(asSetEqualStmt, state)
-	}
-
-	return false, fmt.Errorf("unexpected fact statement: %v", stmt)
 }

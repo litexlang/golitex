@@ -102,6 +102,8 @@ func (e *Env) AreAtomsInFactAreDeclared(fact ast.FactStmt, extraAtomNames map[st
 		for _, param := range asUniFactIff.UniFact.Params {
 			extraAtomNames[param] = struct{}{}
 		}
+	} else if asIntentionalSetStmt, ok := fact.(*ast.IntensionalSetStmt); ok {
+		extraAtomNames[asIntentionalSetStmt.Param] = struct{}{}
 	}
 
 	ok := e.AreAtomsDeclared(atoms, extraAtomNames)
