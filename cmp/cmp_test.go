@@ -24,7 +24,7 @@ func TestCmpPolynomial_ByBIR(t *testing.T) {
 		{"a/b+c/d", "(a*d+b*c)/(b*d)"},
 	}
 	for _, statement := range statements {
-		cmp := cmpPolynomial_ByBIR(statement[0], statement[1])
+		cmp := cmpArith_ByBIR(statement[0], statement[1])
 		fmt.Println(cmp)
 	}
 }

@@ -37,7 +37,7 @@ func fcAtomString(fcAtom ast.FcAtom) string {
 	} else if len(string(fcAtom)) > 1 && string(fcAtom)[0] == '-' && string(fcAtom)[1] >= '0' && string(fcAtom)[1] <= '9' {
 		return "(" + "0" + " - " + string(fcAtom)[1:] + ")"
 	}
-	return "[" + fcAtom.String() + "]"
+	return "{" + fcAtom.String() + "}"
 }
 
 func fcFnString(fcFn *ast.FcFn) string {
@@ -77,7 +77,7 @@ func fcFnString(fcFn *ast.FcFn) string {
 		}
 		// For non-integer or negative exponents, keep original form
 		// return "(" + base + "^" + exp + ")"
-		return "[" + fcFn.String() + "]"
+		return "{" + fcFn.String() + "}"
 	}
-	return "[" + fcFn.String() + "]"
+	return "{" + fcFn.String() + "}"
 }
