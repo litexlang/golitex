@@ -22,6 +22,7 @@ import (
 	glob "golitex/glob"
 )
 
+// how equality is verified is different from other facts because 1. it is stored differently 2. its transitive and commutative property is automatically used by the verifier
 func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if ok, err := ver.checkSpecFactRequirements(stmt, state); err != nil {
 		return false, err
