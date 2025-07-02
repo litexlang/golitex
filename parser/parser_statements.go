@@ -100,46 +100,33 @@ func (tb *tokenBlock) factStmt(uniFactDepth uniFactEnum) (ast.FactStmt, error) {
 		return tb.uniFactInterface(uniFactDepth)
 	case glob.KeywordOr:
 		return tb.orStmt()
-	case glob.KeywordEnum:
-		return tb.enumStmt()
+	// case glob.KeywordEnum:
+	// 	return tb.enumStmt()
 	default:
 		return tb.factStmt_setEqualFact()
 	}
 
 }
 
-func (tb *tokenBlock) enumStmt() (*ast.EnumStmt, error) {
-	err := tb.header.skip(glob.KeywordEnum)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	setName, err := tb.RawFc()
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
+func (tb *tokenBlock) enumStmt(setName ast.Fc) (*ast.EnumStmt, error) {
 	// skip colon and get end
-	err = tb.header.skip(glob.KeySymbolColon)
-	if err != nil || !tb.header.ExceedEnd() {
+	err := tb.header.skip(glob.KeySymbolLeftCurly)
+	if err != nil {
 		return nil, tbErr(err, tb)
-	}
-
-	if len(tb.body) != 1 {
-		return nil, fmt.Errorf("syntax error: expect a list of objects to be enumerated")
 	}
 
 	enumFcs := []ast.Fc{}
-	for {
-		fc, err := tb.body[0].RawFc()
+	for !tb.CurrentTokenIs(glob.KeySymbolRightCurly) {
+		fc, err := tb.RawFc()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
 		enumFcs = append(enumFcs, fc)
-		tb.body[0].header.skipIfIs(glob.KeySymbolComma)
-		if tb.body[0].header.ExceedEnd() {
-			break
-		}
+		tb.header.skipIfIs(glob.KeySymbolComma)
+	}
+	err = tb.header.skip(glob.KeySymbolRightCurly)
+	if err != nil {
+		return nil, tbErr(err, tb)
 	}
 
 	return ast.NewEnumStmt(setName, enumFcs), nil
@@ -1417,7 +1404,7 @@ func (tb *tokenBlock) relaFact_setEqualFact() (ast.FactStmt, error) {
 			ret = ast.NewSpecFactStmt(ast.TruePure, propName, params)
 		}
 	} else if opt == glob.KeySymbolColonEqual {
-		return tb.setEqualStmt(fc)
+		return tb.enumStmt_or_setEqualFact(fc)
 	} else if !glob.IsBuiltinInfixRelaPropSymbol(opt) {
 		return nil, fmt.Errorf("expect relation prop")
 	} else {
@@ -1443,4 +1430,12 @@ func (tb *tokenBlock) relaFact_setEqualFact() (ast.FactStmt, error) {
 	}
 
 	return ret, nil
+}
+
+func (tb *tokenBlock) enumStmt_or_setEqualFact(fc ast.Fc) (ast.FactStmt, error) {
+	if tb.header.is(glob.KeySymbolLeftCurly) {
+		return tb.enumStmt(fc)
+	} else {
+		return tb.setEqualStmt(fc)
+	}
 }
