@@ -252,6 +252,24 @@ func (tb *tokenBlock) unaryOptFc() (ast.Fc, error) {
 		}
 
 		leftHead := ast.FcAtom(unaryOp)
+
+		// REMARK
+		// TODO: 我有点想让纯数字的 - x (x 字面量是数字) 就直接变成 -x 作为 fcAtom 而不是 fcfn . 然后让 不是 数字x 的 -x 的情况变成 -1 * x 这样让 - 这个运算符就只有双目运算符了
+
+		// 如果 right 是数字，那返回 - right
+		// 如果 right 是非数字的fc，返回 -1 * right。这样可以更好的让 forall 里的 -1 * x 和 x 匹配
+
+		// if _, ok := right.(ast.FcAtom); ok {
+		// 	if glob.IsNumLitStr(string(right.(ast.FcAtom))) {
+		// 		return ast.NewFcFn(
+		// 			leftHead,
+		// 			[]ast.Fc{right},
+		// 		), nil
+		// 	}
+		// } else {
+		// 	return ast.NewFcFn(ast.FcAtom(glob.KeySymbolStar), []ast.Fc{ast.NewFcFn(leftHead, []ast.Fc{ast.FcAtom("1")}), right}), nil
+		// }
+
 		return ast.NewFcFn(
 			leftHead,
 			[]ast.Fc{right},

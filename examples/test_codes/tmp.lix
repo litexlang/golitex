@@ -4,9 +4,13 @@ $in(-, dom_R_R_ret_R)
 $in(+, dom_R_R_ret_R)
 
 fn_template dom_R_ret_R(x R) R:
-    dom_R_ret_R(x) = - x
+    dom_R_ret_R(x) = -1 * x
 
 fn reverse(x R) R:
     reverse(x) = - x
+
+forall x R:
+    reverse(x) = - x
+    reverse(x) = -1 * x
 
 $in(reverse, dom_R_ret_R)
