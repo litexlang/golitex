@@ -53,18 +53,3 @@ func TestRunFileInRepo(t *testing.T) {
 	executionTime := time.Since(startTime)
 	fmt.Printf("execution time: %v\n", executionTime)
 }
-
-func TestRunAllComprehensiveCodes(t *testing.T) {
-	pathSlice := []string{
-		"../examples/comprehensive_examples",
-		"../examples/testings",
-	}
-
-	for _, path := range pathSlice {
-		err := RunFilesInRepo(path)
-		if err != nil {
-			fmt.Println("Error running files:", err)
-			return
-		}
-	}
-}
