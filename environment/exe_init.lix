@@ -1,0 +1,9 @@
+prop last_two_objects_are_equal(x, y, y2 obj):
+	y = y2
+
+$last_two_objects_are_equal(1, 2, 2)
+
+forall x, y, y2 obj:
+    $last_two_objects_are_equal(x, y, y2)
+    then:
+        y = y2

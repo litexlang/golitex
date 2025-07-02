@@ -25,7 +25,7 @@ type Executor struct {
 	env *env.Env
 }
 
-func NewExecutor(curEnv *env.Env) *Executor {
+func newExecutor(curEnv *env.Env) *Executor {
 	if curEnv == nil {
 		return &Executor{env: env.NewEnv(nil, nil)}
 	} else {
@@ -36,4 +36,14 @@ func NewExecutor(curEnv *env.Env) *Executor {
 func (e *Executor) newEnv(parent *env.Env, curMatchEnv *ast.SpecFactStmt) *env.Env {
 	e.env = env.NewEnv(parent, curMatchEnv)
 	return e.env
+}
+
+func NewExecutorWithInit(curEnv *env.Env) *Executor {
+	ret := newExecutor(curEnv)
+	ret.Init()
+	return ret
+}
+
+func NewExecutorWithoutInit(curEnv *env.Env) *Executor {
+	return newExecutor(curEnv)
 }
