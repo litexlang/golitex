@@ -26,12 +26,10 @@ prove:
             x = 5
             x = 6
 
-enum s:
-    1,2,3,4,5,6
+s := {1,2,3,4,5,6}
 
 obj s2 set
-know enum s2:
-    1,2,3,4,5,6
+know s2 := {1,2,3,4,5,6}
 $is_finite_set(s2)
 len(s2) = 6
 
