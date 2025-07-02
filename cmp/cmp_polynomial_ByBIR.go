@@ -21,6 +21,7 @@ import (
 )
 
 // 超级超级低效的比较方法。无数次的变成string，变回fc，变成string，变回fc
+// 大部分的时间都被浪费在这里了
 func cmpPolynomial_ByBIR(left string, right string) bool {
 	leftNumerator, leftDenominator, err := num.SplitToFraction(left)
 	if err != nil {
