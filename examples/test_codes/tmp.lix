@@ -1,0 +1,3 @@
+$last_two_objects_are_equal(1, 2, 2)
+
+$larger_is_transitive(3, 2, 1)

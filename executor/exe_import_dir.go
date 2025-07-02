@@ -121,7 +121,7 @@ func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string, importS
 
 func (exec *Executor) runStmtInUpmostEnv_AssumeTheyAreTrue(topStmtSlice []ast.Stmt) (glob.ExecState, error) {
 	curEnv := exec.env.GetUpMostEnv()
-	newExec := NewExecutorWithoutInit(curEnv)
+	newExec := NewExecutor(curEnv)
 
 	for _, topStmt := range topStmtSlice {
 		execState, err := newExec.assumeStmtIsTrueRun(topStmt)
