@@ -19,7 +19,7 @@ import (
 	glob "golitex/glob"
 )
 
-// template of arithmetic operations
+// template of arithmetic operations。 不知道是不是应该放在 pipeline_init.go 里
 func (env *Env) Init() {
 	addAtom := ast.FcAtom(glob.KeySymbolPlus)
 	addTemplate := ast.NewFnTemplateStmt(ast.NewDefHeader(addAtom.String(), []string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordReal), ast.FcAtom(glob.KeywordReal)}), []ast.FactStmt{}, []ast.FactStmt{}, ast.FcAtom(glob.KeywordReal))
