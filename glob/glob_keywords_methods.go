@@ -64,9 +64,9 @@ var BuiltinOptPrecedenceMap = map[string]BuiltinOptPrecedence{
 
 // All Unary operators have higher Precedence than infix operators
 // TODO 未来有其他的unary opt的时候，需要修改 strSliceCursor.unaryOptFc
-var UnaryPrecedence = map[string]BuiltinOptPrecedence{
-	KeySymbolMinus: PrecUnary,
-}
+// var UnaryPrecedence = map[string]BuiltinOptPrecedence{
+// 	KeySymbolMinus: PrecUnary,
+// }
 
 func IsKeyword(s string) bool {
 	_, ok := BuiltinKeywordsSet[s]
@@ -105,21 +105,21 @@ func GetKeySymbol(inputString string, start int) string {
 	return ""
 }
 
-func IsKeySymbolUnaryFn(name string) bool {
-	_, ok := UnaryPrecedence[name]
-	return ok
-}
+// func IsKeySymbolUnaryFn(name string) bool {
+// 	_, ok := UnaryPrecedence[name]
+// 	return ok
+// }
 
-func IsKeywordSymbolUnaryAndInfixAtTheSameTime(name string) bool {
-	_, ok := BuiltinOptPrecedenceMap[name]
-	_, ok2 := UnaryPrecedence[name]
-	return ok && ok2
-}
+// func IsKeywordSymbolUnaryAndInfixAtTheSameTime(name string) bool {
+// 	_, ok := BuiltinOptPrecedenceMap[name]
+// 	_, ok2 := UnaryPrecedence[name]
+// 	return ok && ok2
+// }
 
-func IsBuiltinUnaryOpt(name string) bool {
-	_, ok := UnaryPrecedence[name]
-	return ok
-}
+// func IsBuiltinUnaryOpt(name string) bool {
+// 	_, ok := UnaryPrecedence[name]
+// 	return ok
+// }
 
 // var notFcAtomNameSet = map[string]struct{}{
 // 	// 常规关键字

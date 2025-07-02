@@ -228,16 +228,23 @@ func (tb *tokenBlock) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence) (ast.Fc
 // 	return tb.unaryOptFc()
 // }
 
+// TODO： 现在只有 - 是单目运算符，其他都是双目运算符。以后可能会添加其他单目运算符
 func (tb *tokenBlock) unaryOptFc() (ast.Fc, error) {
 	unaryOp, err := tb.header.currentToken()
 	if err != nil {
 		return nil, err
 	}
-	if !glob.IsBuiltinUnaryOpt(unaryOp) {
+	if unaryOp != glob.KeySymbolMinus {
+		// if !glob.(unaryOp) {
 		// return tb.fcAtomAndFcFn()
 		return tb.squareBracketExpr()
 	} else {
 		tb.header.skip(unaryOp)
+
+		// 如果后面跟的是逗号，那只返回 -
+		if tb.header.is(glob.KeySymbolComma) {
+			return ast.FcAtom(unaryOp), nil
+		}
 
 		right, err := tb.unaryOptFc()
 		if err != nil {

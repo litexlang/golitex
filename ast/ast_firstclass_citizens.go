@@ -133,7 +133,7 @@ func IsFcBuiltinUnaryFn(fc FcFn) bool {
 
 func (f FcAtom) IsBuiltinUnaryOpt() bool {
 	// return f.PkgName == glob.EmptyPkg && glob.IsKeySymbolUnaryFn(f.Name)
-	return glob.IsKeySymbolUnaryFn(string(f))
+	return (string(f)) == glob.KeySymbolMinus
 }
 
 func (f FcAtom) IsBuiltinRelaFn() bool {
