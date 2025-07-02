@@ -91,3 +91,14 @@ func (e *Env) GetTemplateOfFcFnRecursively(fcFn *ast.FcFn) ([]*ast.FnTemplateStm
 
 	return templateOfEachLevel, fcOfEachLevel, true
 }
+
+func (e *Env) GetEnumFact(enumName string) ([]ast.Fc, bool) {
+	for env := e; env != nil; env = env.Parent {
+		enumFacts, ok := env.EnumFacts[enumName]
+		if ok {
+			return enumFacts, true
+		}
+	}
+
+	return nil, false
+}
