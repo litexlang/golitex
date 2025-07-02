@@ -454,7 +454,7 @@ func TransformEnumToUniFact(setName Fc, enumFcs []Fc) (*UniFactStmt, []*SpecFact
 	return forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts
 }
 
-func (stmt *SetEqualStmt) ToEquivalentUniFacts(uniMap map[string]Fc) (*UniFactStmt, *UniFactStmt, error) {
+func (stmt *SetEqualStmt) ToEquivalentUniFacts() (*UniFactStmt, *UniFactStmt, error) {
 	leftDomFacts := []FactStmt{}
 	for _, proof := range stmt.Proofs {
 		leftDomFacts = append(leftDomFacts, proof)

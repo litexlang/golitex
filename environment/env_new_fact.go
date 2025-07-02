@@ -33,6 +33,8 @@ func (env *Env) NewFact(stmt ast.FactStmt) error {
 		return env.newUniFactWithIff(f)
 	case *ast.EnumStmt:
 		return env.newEnumFact(f)
+	case *ast.SetEqualStmt:
+		return env.newSetEqualFact(f)
 	default:
 		return fmt.Errorf("unknown fact type: %T", stmt)
 	}
@@ -542,4 +544,93 @@ func (env *Env) newEnumFact(stmt *ast.EnumStmt) error {
 	}
 
 	return nil
+}
+
+func (env *Env) newSetEqualFact(stmt *ast.SetEqualStmt) error {
+	leftUniFact, rightUniFact, err := stmt.ToEquivalentUniFacts()
+	if err != nil {
+		return err
+	}
+
+	if err = env.NewFact(leftUniFact); err != nil {
+		return err
+	}
+
+	if err = env.NewFact(rightUniFact); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (env *Env) newUniFact_ThenFactIsSpecFact(stmt *ast.UniFactStmt, thenFact *ast.SpecFactStmt) error {
+	return env.storeUniFact(thenFact, stmt)
+}
+
+func (env *Env) newUniFact_ThenFactIsOrStmt(stmt *ast.UniFactStmt, thenFact *ast.OrStmt) error {
+	return env.KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem.NewFact(stmt, thenFact, env.CurMatchProp)
+}
+
+func (env *Env) newUniFact_ThenFactIsEnumStmt(stmt *ast.UniFactStmt, thenFact *ast.EnumStmt) error {
+	forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts := ast.TransformEnumToUniFact(thenFact.EnumName, thenFact.EnumValues)
+	mergedUniFact := ast.MergeOuterInnerUniFacts(stmt, forallItemInSetEqualToOneOfGivenItems)
+	err := env.newUniFact(mergedUniFact)
+	if err != nil {
+		return err
+	}
+	for _, fact := range pairwiseNotEqualFacts {
+		err := env.storeUniFact(fact, stmt)
+		if err != nil {
+			return err
+		}
+	}
+	for _, fact := range itemsInSetFacts {
+		err := env.storeUniFact(fact, stmt)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (env *Env) newUniFact_ThenFactIsSetEqualStmt(stmt *ast.UniFactStmt, thenFact *ast.SetEqualStmt) error {
+	leftUniFact, rightUniFact, err := thenFact.ToEquivalentUniFacts()
+	if err != nil {
+		return err
+	}
+
+	mergedLeftUniFact := ast.MergeOuterInnerUniFacts(stmt, leftUniFact)
+	if err := env.newUniFact(mergedLeftUniFact); err != nil {
+		return err
+	}
+
+	mergedRightUniFact := ast.MergeOuterInnerUniFacts(stmt, rightUniFact)
+	if err := env.newUniFact(mergedRightUniFact); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (env *Env) newUniFact_ThenFactIsIffStmt(stmt *ast.UniFactStmt, thenFact *ast.UniFactWithIffStmt) error {
+	thenToIff := thenFact.NewUniFactWithThenToIff()
+	iffToThen := thenFact.NewUniFactWithIffToThen()
+
+	mergedThenToIff := ast.MergeOuterInnerUniFacts(stmt, thenToIff)
+	if err := env.newUniFact(mergedThenToIff); err != nil {
+		return err
+	}
+
+	mergedIffToThen := ast.MergeOuterInnerUniFacts(stmt, iffToThen)
+	if err := env.newUniFact(mergedIffToThen); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (env *Env) newUniFact_ThenFactIsUniFactStmt(stmt *ast.UniFactStmt, thenFact *ast.UniFactStmt) error {
+	mergedUniFact := ast.MergeOuterInnerUniFacts(stmt, thenFact)
+	return env.newUniFact(mergedUniFact)
 }
