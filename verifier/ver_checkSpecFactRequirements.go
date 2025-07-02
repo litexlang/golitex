@@ -23,7 +23,8 @@ import (
 
 func (ver *Verifier) checkSpecFactRequirements(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	// 1. Check if all atoms in the parameters are declared
-	// TODO： 一层层搜索的时候，会重复检查是否存在，可以优化
+	// REMARK
+	// TODO： 一层层搜索的时候，会重复检查是否存在，可以优化。比如我要检查 a * f(b) $in R 的时候，我要查 a, f(b) 是否满足条件，就要查 f(b) $in R 是否成立，这时候又查了一遍 f, b 是否存在
 	for _, param := range stmt.Params {
 		ok := ver.env.AreAtomsInFcAreDeclared(param, map[string]struct{}{})
 		if !ok {

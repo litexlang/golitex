@@ -1,11 +1,1 @@
-know forall x, y R:
-    x != 0
-    y != 0
-    then:
-        x * y != 0
-
-forall a, b, c, d R:
-    b != 0
-    d != 0
-    then:
-        a / b + c / d = (a * d + b * c) / (b * d)
+a != b

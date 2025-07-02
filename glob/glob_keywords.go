@@ -68,7 +68,6 @@ const (
 
 	KeywordImportGlobally    = "import_globally"
 	KeywordHaveByReplacement = "have_by_replacement"
-	KeywordSetEqual          = "set_equal"
 	// KeywordLastTwoObjectsAreEqual = "last_two_objects_are_equal"
 )
 
@@ -120,7 +119,6 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordEnum:              {},
 	KeywordImportGlobally:    {},
 	KeywordHaveByReplacement: {},
-	KeywordSetEqual:          {},
 }
 
 const (
@@ -171,6 +169,7 @@ const (
 	KeySymbolPercent      = "%" // prove: 2 % 2 = 0 的时候打印有问题，不知道为什么
 	KeySymbolLeftBracket  = "["
 	KeySymbolRightBracket = "]"
+	KeySymbolColonEqual   = ":="
 )
 
 // 最多双字符，或者单字符，否则parser的逻辑 GetKeySymbol 有问题
@@ -188,7 +187,7 @@ var symbolSet map[string]struct{} = map[string]struct{}{
 	// KeySymbolMinusMinus: {}, // "--"
 	// KeySymbolStarStar:               {}, // "**"
 	KeySymbolColonColon: {}, // "::"
-
+	KeySymbolColonEqual: {}, // ":="
 	// 单字符符号（长度 1）
 	// KeySymbolAt:          {}, // "@"
 	KeySymbolBackslash: {}, // "\\"
@@ -252,6 +251,7 @@ var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]s
 	KeySymbolLargerEqual: {},
 	KeySymbolLessEqual:   {},
 	KeySymbolNotEqual:    {},
+	KeySymbolColonEqual:  {},
 	// KeySymbolEquivalent:  {},
 	KeySymbolEqualEqual: {},
 	// KeySymbolEqualEqualEqual: {},
