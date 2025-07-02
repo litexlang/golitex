@@ -811,15 +811,6 @@ func (exec *Executor) checkClaimExistPropStmtProofs(stmt *ast.ClaimExistPropStmt
 }
 
 func (exec *Executor) proveOverFiniteSetStmt(stmt *ast.ProveOverFiniteSetStmt) (glob.ExecState, error) {
-	// make sure all paramSets have enum
-	enums := [][]ast.Fc{}
-	for _, paramSet := range stmt.Fact.ParamSets {
-		enumFacts, ok := exec.env.GetEnumFact(paramSet.String())
-		if !ok {
-			return glob.ExecState_Error, fmt.Errorf("prove over finite set statement error: enum not found")
-		}
-		enums = append(enums, enumFacts)
-	}
-
-	return glob.ExecState_True, nil
+	ver := verifier.NewVerifier(exec.env)
+	return ver.ProveOverFiniteSet(stmt)
 }

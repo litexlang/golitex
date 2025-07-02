@@ -15,14 +15,49 @@
 package litex_verifier
 
 import (
+	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
 )
 
-func cartesianProductOfFcs(input [][]ast.Fc) [][]ast.Fc {
-	return glob.CartesianProduct(input)
-}
+func (ver *Verifier) ProveOverFiniteSet(stmt *ast.ProveOverFiniteSetStmt) (glob.ExecState, error) {
+	enums := [][]ast.Fc{}
+	for _, paramSet := range stmt.Fact.ParamSets {
+		enumFacts, ok := ver.env.GetEnumFact(paramSet.String())
+		if !ok {
+			return glob.ExecState_Error, fmt.Errorf("prove over finite set statement error: enum not found")
+		}
+		enums = append(enums, enumFacts)
+	}
 
-func cartesianProductOfInstantiatedUniFactDomAndThenFacts(instantiatedUniFact *ast.UniFactStmt, enums [][]ast.Fc) ([]ast.Stmt, []ast.FactStmt, error) {
-	return nil, nil, nil
+	cartesianProductOfFcs := glob.CartesianProduct(enums)
+
+	for _, fcSlice := range cartesianProductOfFcs {
+		uniMap := map[string]ast.Fc{}
+		for i, param := range stmt.Fact.Params {
+			uniMap[param] = fcSlice[i]
+		}
+
+		instantiatedThenFacts := []ast.FactStmt{}
+		for _, thenFact := range stmt.Fact.ThenFacts {
+			instantiatedThenFact, err := thenFact.Instantiate(uniMap)
+			if err != nil {
+				return glob.ExecState_Error, err
+			}
+			instantiatedThenFacts = append(instantiatedThenFacts, instantiatedThenFact)
+		}
+
+		// ver facts
+		for _, fact := range instantiatedThenFacts {
+			ok, err := ver.VerFactStmt(fact, Round0NoMsg)
+			if err != nil {
+				return glob.ExecState_Error, err
+			}
+			if !ok {
+				return glob.ExecState_False, fmt.Errorf("failed to prove instantiated then facts: %s", fact.String())
+			}
+		}
+	}
+
+	return glob.ExecState_True, nil
 }
