@@ -37,7 +37,7 @@ func Cmp_ByBIR(left, right ast.Fc) (bool, string, error) {
 	leftStr := left.String()
 	rightStr := right.String()
 
-	cmp := cmpPolynomial_ByBIR(leftStr, rightStr)
+	cmp := cmpArith_ByBIR(leftStr, rightStr)
 	if cmp {
 		return true, "builtin rules for *, +, -, /", nil
 	}

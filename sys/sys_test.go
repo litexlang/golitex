@@ -21,12 +21,15 @@ import (
 )
 
 func TestRunFile(t *testing.T) {
+	startTime := time.Now()
 	msg, signal, err := RunFile("../examples/test_codes/tmp.lix")
 	if err != nil {
 		t.Errorf(err.Error())
 	}
 	fmt.Println(msg)
 	fmt.Println(signal)
+	executionTime := time.Since(startTime)
+	fmt.Printf("execution time: %v\n", executionTime)
 }
 
 func TestRunREPLInTerminal(t *testing.T) {

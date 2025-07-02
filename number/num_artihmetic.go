@@ -37,7 +37,7 @@ func (t arithmeticTerm) String() string {
 	}
 	var varParts []string
 	for _, v := range t.Vars {
-		varParts = append(varParts, fmt.Sprintf("[%s]", v))
+		varParts = append(varParts, fmt.Sprintf("{%s}", v))
 	}
 	key := strings.Join(varParts, "*")
 	if t.CoEff == 1 {
@@ -89,13 +89,13 @@ func tokenize(s string) []arithToken {
 		case s[i] == ')':
 			tokens = append(tokens, arithToken{RPAREN, ")"})
 			i++
-		case s[i] == '[':
+		case s[i] == '{':
 			j := i + 1
-			for j < len(s) && s[j] != ']' {
+			for j < len(s) && s[j] != '}' {
 				j++
 			}
 			if j >= len(s) {
-				panic("missing closing ']' for variable")
+				panic("missing closing '}' for variable")
 			}
 			varName := s[i+1 : j]
 			tokens = append(tokens, arithToken{VAR, varName})

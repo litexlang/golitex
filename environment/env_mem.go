@@ -24,10 +24,6 @@ type KnownSpecFact struct {
 }
 
 type SpecFactMem struct {
-	// PureFacts         glob.Map2D[[]KnownSpecFact]
-	// NotPureFacts      glob.Map2D[[]KnownSpecFact]
-	// Exist_St_Facts    glob.Map2D[[]KnownSpecFact]
-	// NotExist_St_Facts glob.Map2D[[]KnownSpecFact]
 	PureFacts         map[string][]KnownSpecFact
 	NotPureFacts      map[string][]KnownSpecFact
 	Exist_St_Facts    map[string][]KnownSpecFact
@@ -46,10 +42,6 @@ func NewKnownSpecFact_InLogicExpr(specFact *ast.SpecFactStmt, index int, logicEx
 }
 
 type SpecFactInLogicExprMem struct {
-	// PureFacts         glob.Map2D[[]KnownSpecFact_InLogicExpr]
-	// NotPureFacts      glob.Map2D[[]KnownSpecFact_InLogicExpr]
-	// Exist_St_Facts    glob.Map2D[[]KnownSpecFact_InLogicExpr]
-	// NotExist_St_Facts glob.Map2D[[]KnownSpecFact_InLogicExpr]
 	PureFacts         map[string][]KnownSpecFact_InLogicExpr
 	NotPureFacts      map[string][]KnownSpecFact_InLogicExpr
 	Exist_St_Facts    map[string][]KnownSpecFact_InLogicExpr
