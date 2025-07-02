@@ -165,7 +165,7 @@ Litex is a simple language. I hope many of the keywords are already familiar to 
 | `prove_by_contradiction` | prove by contradiction |
 | `prove_in_each_case` | prove by case analysis |
 | `prove_by_math_induction` | prove by mathematical induction |
-| `prove_iteratively` | prove a universal statement by iterating over a finite et |
+| `prove_over_finite_set` | prove a universal statement by iterating over a finite set |
 | `import` | import a file or directory |
 | `import_globally` | import a file globally |
 
@@ -180,55 +180,6 @@ _-- The Zen of Python_
 Here are some examples of Litex, in Litex for Curious Lean Users and other formal language users. Detailed explanations are provided in [Litex for Curious Lean Users](./doc/litex_for_curious_lean_users/litex_for_curious_lean_users.md). I put them here for you to get a sense of the language. Run these examples on [playground](https://litexlang.org/playground).
 
 I will show you how Litex is shaped by common sense, and why common sense is not so common in traditional formal languages. It must be noted that making Litex so common sense is a very uncommon thing, because it requires a deep understanding of both the nature of mathematics and the nature of programming.
-
-The definition of algorithm is a good example. In mathematics, an algorithm is a computational method that can be precisely defined as a quadruple (Q, I, S, f), where:
-- Q is a set representing all possible states of computation
-- I is a subset of Q representing valid inputs
-- S is a subset of Q representing valid outputs
-- f is a function from Q to Q that defines the computational rule
-
-The computation proceeds by repeatedly applying f to an input x in I, generating a sequence x₀, x₁, x₂, ... where x₀ = x and xₖ₊₁ = f(xₖ). An algorithm must terminate in finitely many steps for any valid input, producing an output in S. This formal definition ensures that algorithms are well-defined mathematical objects that can be rigorously analyzed and verified.
-
-
-<table style="border-collapse: collapse; width: 100%;">
-  <tr>
-    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 50%;">Litex</th>
-    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 50%;">Lean 4</th>
-  </tr>
-  <tr>
-    <td style="border: 3px solid black; padding: 8px;">
-      <code>fn comp_seq(Q set, f fn(Q)Q) fn(Q, N)Q:</code><br>
-      <code>&nbsp;&nbsp;forall x Q, n N:</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;comp_seq(Q, f)(x,n+1) = f(comp_seq(Q, f)(x, n))</code><br><br>
-      <code>exist_prop n N st exist_comp_seq_end(Q set, x Q, f fn(Q,N)Q):</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;f(x, n) = f(x, n+1)</code><br><br>
-      <code>prop is_algorithm(Q set, I set, f fn(Q)Q):</code><br>
-      <code>&nbsp;&nbsp;forall x Q: # i.e. Q is subset of I</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;f(x) $in I</code><br>
-      <code>&nbsp;&nbsp;iff:</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;forall x I:</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$exist_comp_seq_end(Q, x, comp_seq(Q, f))</code>
-    </td>
-    <td style="border: 3px solid black; padding: 8px;">
-      <code>structure ComputationalMethod where</code><br>
-      <code>&nbsp;&nbsp;Q : Type</code><br>
-      <code>&nbsp;&nbsp;I : Set Q</code><br>
-      <code>&nbsp;&nbsp;S : Set Q</code><br>
-      <code>&nbsp;&nbsp;f : Q → Q</code><br>
-      <code>&nbsp;&nbsp;f_fixed : ∀ q ∈ S, f q = q</code><br><br>
-      <code>namespace ComputationalMethod</code><br><br>
-      <code>def comp_seq (cm : ComputationalMethod) (x : cm.Q) : ℕ → cm.Q</code><br>
-      <code>&nbsp;&nbsp;| 0 => x</code><br>
-      <code>&nbsp;&nbsp;| n + 1 => cm.f (comp_seq x n)</code><br><br>
-      <code>def TerminatesIn (cm : ComputationalMethod) (x : cm.Q) (k : ℕ) : Prop :=</code><br>
-      <code>&nbsp;&nbsp;comp_seq cm x k ∈ cm.S ∧</code><br>
-      <code>&nbsp;&nbsp;∀ i < k, comp_seq cm x i ∉ cm.S</code><br><br>
-      <code>def IsAlgorithm (cm : ComputationalMethod) : Prop :=</code><br>
-      <code>&nbsp;&nbsp;∀ x ∈ cm.I, ∃ k, TerminatesIn cm x k</code><br><br>
-      <code>end ComputationalMethod</code>
-    </td>
-  </tr>
-</table>
 
 Next I want to show you how Litex can be used to solve a simple linear equation. It's clear that the Litex version can be read and understood by a 10-year-old, while the Lean version is much more complex.
 
@@ -281,6 +232,56 @@ Next I want to show you how Litex can be used to solve a simple linear equation.
 </table>
 
 I know Lean can use tactics to solve the same problem, and it is shorter. Litex will introduce similar features in the future. What I really want to show you here is that Litex is much more readable and intuitive than Lean in this case. Not every situation can be solved by tactics, and writing tactics itself in Lean is not easy. Litex spares you from remembering all these difficult things like `have`, `by`, `rw`, `simp`, `exact` and strange syntax etc. All you need is basic math knowledge, which significantly reduces the barrier to entry.
+
+The definition of algorithm is a good example. In mathematics, an algorithm is a computational method that can be precisely defined as a quadruple (Q, I, S, f), where:
+- Q is a set representing all possible states of computation
+- I is a subset of Q representing valid inputs
+- S is a subset of Q representing valid outputs
+- f is a function from Q to Q that defines the computational rule
+
+The computation proceeds by repeatedly applying f to an input x in I, generating a sequence x₀, x₁, x₂, ... where x₀ = x and xₖ₊₁ = f(xₖ). An algorithm must terminate in finitely many steps for any valid input, producing an output in S. This formal definition ensures that algorithms are well-defined mathematical objects that can be rigorously analyzed and verified.
+
+
+<table style="border-collapse: collapse; width: 100%;">
+  <tr>
+    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 50%;">Litex</th>
+    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 50%;">Lean 4</th>
+  </tr>
+  <tr>
+    <td style="border: 3px solid black; padding: 8px;">
+      <code>fn comp_seq(Q set, f fn(Q)Q) fn(Q, N)Q:</code><br>
+      <code>&nbsp;&nbsp;forall x Q, n N:</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;comp_seq(Q, f)(x,n+1) = f(comp_seq(Q, f)(x, n))</code><br><br>
+      <code>exist_prop n N st exist_comp_seq_end(Q set, x Q, f fn(Q,N)Q):</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;f(x, n) = f(x, n+1)</code><br><br>
+      <code>prop is_algorithm(Q set, I set, f fn(Q)Q):</code><br>
+      <code>&nbsp;&nbsp;forall x Q: # i.e. Q is subset of I</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;f(x) $in I</code><br>
+      <code>&nbsp;&nbsp;iff:</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;forall x I:</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$exist_comp_seq_end(Q, x, comp_seq(Q, f))</code>
+    </td>
+    <td style="border: 3px solid black; padding: 8px;">
+      <code>structure ComputationalMethod where</code><br>
+      <code>&nbsp;&nbsp;Q : Type</code><br>
+      <code>&nbsp;&nbsp;I : Set Q</code><br>
+      <code>&nbsp;&nbsp;S : Set Q</code><br>
+      <code>&nbsp;&nbsp;f : Q → Q</code><br>
+      <code>&nbsp;&nbsp;f_fixed : ∀ q ∈ S, f q = q</code><br><br>
+      <code>namespace ComputationalMethod</code><br><br>
+      <code>def comp_seq (cm : ComputationalMethod) (x : cm.Q) : ℕ → cm.Q</code><br>
+      <code>&nbsp;&nbsp;| 0 => x</code><br>
+      <code>&nbsp;&nbsp;| n + 1 => cm.f (comp_seq x n)</code><br><br>
+      <code>def TerminatesIn (cm : ComputationalMethod) (x : cm.Q) (k : ℕ) : Prop :=</code><br>
+      <code>&nbsp;&nbsp;comp_seq cm x k ∈ cm.S ∧</code><br>
+      <code>&nbsp;&nbsp;∀ i < k, comp_seq cm x i ∉ cm.S</code><br><br>
+      <code>def IsAlgorithm (cm : ComputationalMethod) : Prop :=</code><br>
+      <code>&nbsp;&nbsp;∀ x ∈ cm.I, ∃ k, TerminatesIn cm x k</code><br><br>
+      <code>end ComputationalMethod</code>
+    </td>
+  </tr>
+</table>
+
 
 ## Contact & Contribute to Litex
 
