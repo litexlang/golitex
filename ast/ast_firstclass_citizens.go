@@ -218,28 +218,20 @@ func (f *FcFn) HasTwoParams_FirstParamHasTheSameNameAsItself() (*FcFn, bool) {
 func GetAtomsInFc(fc Fc) []FcAtom {
 	ret := []FcAtom{}
 
-	if fcAtom, ok := fc.(FcAtom); ok {
-		ret = append(ret, fcAtom)
-		return ret
-	}
-
-	if fcFn, ok := fc.(*FcFn); ok {
-		for _, param := range fcFn.Params {
+	switch asFc := fc.(type) {
+	case FcAtom:
+		ret = append(ret, asFc)
+	case *FcFn:
+		for _, param := range asFc.Params {
 			atoms := GetAtomsInFc(param)
 			ret = append(ret, atoms...)
 		}
-		return ret
 	}
-
-	return nil
+	return ret
 }
 
 // Return the name of the function if it is in the slice, otherwise return empty string
 func IsFn_WithHeadNameInSlice(fc Fc, names []string) bool {
-	if fc.IsAtom() || len(names) == 0 {
-		return false
-	}
-
 	asFcFn, ok := fc.(*FcFn)
 	if !ok {
 		return false
@@ -251,30 +243,10 @@ func IsFn_WithHeadNameInSlice(fc Fc, names []string) bool {
 	}
 
 	for _, name := range names {
-		// if asFcFnHeadAsAtom.Name == name && asFcFnHeadAsAtom.PkgName == glob.EmptyPkg {
 		if string(asFcFnHeadAsAtom) == name {
 			return true
 		}
 	}
 
 	return false
-}
-
-func IsFnWithHeadName(fc Fc, name string) bool {
-	if fc.IsAtom() || name == "" {
-		return false
-	}
-
-	fcAsFn, ok := fc.(*FcFn)
-	if !ok {
-		return false
-	}
-
-	fcAsFnHeadAsAtom, ok := fcAsFn.FnHead.(FcAtom)
-	if !ok {
-		return false
-	}
-
-	// return fcAsFnHeadAsAtom.Name == name && fcAsFnHeadAsAtom.PkgName == glob.EmptyPkg
-	return string(fcAsFnHeadAsAtom) == name
 }
