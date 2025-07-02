@@ -88,7 +88,7 @@ func (ver *Verifier) fcSatisfyNotBuiltinFnRequirement(fc ast.Fc, state VerState)
 	// 暂时还没有template，只有以fc形式出现的retSet
 	for i := range templatesOfEachLevel {
 		ok, err := ver.fcFnParamsSatisfyFnTemplateRequirement(fcOfEachLevel[i].Params, templatesOfEachLevel[i], state)
-		if isErrOrNotOk(ok, err) {
+		if err != nil || !ok {
 			return false, ver.verErr(err, "parameters in %s do not satisfy the requirement of that function", asFcFn.String())
 		}
 
@@ -102,7 +102,7 @@ func (ver *Verifier) fcSatisfyNotBuiltinFnRequirement(fc ast.Fc, state VerState)
 	// store the fact that the parameters satisfy the requirement of the function
 	// REMARK 这里必须要存储，否则很多关于函数的事实是不工作的。但这里牵扯到一个问题是，这里以下释放这么多事实，是不是浪费了。而且我不清楚是只要释放最后一位的性质，还是每一位都要释放
 	ok, err := ver.env.FcSatisfy_FreeTemplateFact_Store_DeriveFacts(fcOfEachLevel[len(fcOfEachLevel)-1], templatesOfEachLevel[len(templatesOfEachLevel)-1])
-	if isErrOrNotOk(ok, err) {
+	if err != nil || !ok {
 		return false, ver.verErr(err, "parameters in %s do not satisfy the requirement of that function", asFcFn.String())
 	}
 
@@ -113,7 +113,7 @@ func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn, state VerState) (bool
 	// parameter必须是实数
 	for _, param := range fc.Params {
 		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{param, ast.FcAtom(glob.KeywordReal)}), state)
-		if isErrOrNotOk(ok, err) {
+		if err != nil || !ok {
 			return false, ver.verErr(err, "parameters in %s must be in set %s, %s in %s is not valid", fc.FnHead.String(), glob.KeywordReal, param.String(), fc.String())
 		}
 	}
@@ -121,7 +121,7 @@ func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn, state VerState) (bool
 	if ast.IsFcAtomEqualToGivenString(fc.FnHead, glob.KeySymbolSlash) {
 		// 分母不是0
 		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{fc.Params[1], ast.FcAtom("0")}), state)
-		if isErrOrNotOk(ok, err) {
+		if err != nil || !ok {
 			return ok, err
 		}
 		return true, nil
@@ -130,17 +130,17 @@ func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn, state VerState) (bool
 	if ast.IsFcAtomEqualToGivenString(fc.FnHead, glob.KeySymbolPercent) {
 		// 分母不是0
 		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{fc.Params[1], ast.FcAtom("0")}), state)
-		if isErrOrNotOk(ok, err) {
+		if err != nil || !ok {
 			return ok, err
 		}
 
 		// 分子分母必须是整数
 		ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fc.Params[0], ast.FcAtom(glob.KeywordInt)}), state)
-		if isErrOrNotOk(ok, err) {
+		if err != nil || !ok {
 			return ok, err
 		}
 		ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fc.Params[1], ast.FcAtom(glob.KeywordInt)}), state)
-		if isErrOrNotOk(ok, err) {
+		if err != nil || !ok {
 			return ok, err
 		}
 		return true, nil
