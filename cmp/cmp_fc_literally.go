@@ -51,10 +51,6 @@ func CmpFcType(left, right ast.Fc) (int, FcEnum, error) {
 	return int(knownEnum - givenEnum), knownEnum, nil
 }
 
-// func EqualFactMemoryTreeNodeCompare(left, right *mem.EqualFactMemoryTreeNode) (int, error) {
-// 	return cmpFcLit(left.FcAsKey, right.FcAsKey)
-// }
-
 // 注：像1+1=2这种字面量的比较，我在这里不比。我是比完完全全一样的
 func cmpFcLit(left, right ast.Fc) (int, error) {
 	typeComp, fcEnum, err := CmpFcType(left, right)
@@ -72,35 +68,10 @@ func cmpFcLit(left, right ast.Fc) (int, error) {
 }
 
 func cmpFcAtomLit(left, right ast.FcAtom) (int, error) {
-	// if len(left.PkgName) != len(right.PkgName) {
-	// 	return len(left.PkgName) - len(right.PkgName), nil
-	// }
-
-	// for i := 0; i < len(left.PkgName); i++ {
-	// 	if left.PkgName[i] != right.PkgName[i] {
-	// 		return int(left.PkgName[i]) - int(right.PkgName[i]), nil
-	// 	}
-	// }
-
-	// if len(left.Name) != len(right.Name) {
-	// 	return len(left.Name) - len(right.Name), nil
-	// }
-
-	// for i := 0; i < len(left.Name); i++ {
-	// 	if left.Name[i] != right.Name[i] {
-	// 		return int(left.Name[i]) - int(right.Name[i]), nil
-	// 	}
-	// }
-	// return 0, nil
-
 	return strings.Compare(string(left), string(right)), nil // 直接对两个string相减得了
 }
 
 func cmpFcFnLit(left, right *ast.FcFn) (int, error) {
-	// if comp, err := cmpFcAtomLit(&left.FnHead, &right.FnHead); comp != 0 || err != nil {
-	// 	return comp, err
-	// }
-
 	if comp, err := cmpFcLit(left.FnHead, right.FnHead); comp != 0 || err != nil {
 		return comp, err
 	}
