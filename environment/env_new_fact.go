@@ -543,6 +543,11 @@ func (env *Env) newEnumFact(stmt *ast.EnumStmt) error {
 		return err
 	}
 
+	err = env.storeFactInEnumMem(stmt)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -633,4 +638,9 @@ func (env *Env) newUniFact_ThenFactIsIffStmt(stmt *ast.UniFactStmt, thenFact *as
 func (env *Env) newUniFact_ThenFactIsUniFactStmt(stmt *ast.UniFactStmt, thenFact *ast.UniFactStmt) error {
 	mergedUniFact := ast.MergeOuterInnerUniFacts(stmt, thenFact)
 	return env.newUniFact(mergedUniFact)
+}
+
+func (env *Env) storeFactInEnumMem(stmt *ast.EnumStmt) error {
+	env.EnumFacts[stmt.EnumName.String()] = stmt.EnumValues
+	return nil
 }

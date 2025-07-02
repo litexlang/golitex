@@ -74,6 +74,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		execState, err = exec.mathInductionFact_BuiltinRules(stmt)
 	case *ast.HaveByReplacementStmt:
 		execState, err = exec.haveByReplacementStmt(stmt)
+	case *ast.ProveOverFiniteSetStmt:
+		execState, err = exec.proveOverFiniteSetStmt(stmt)
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}
@@ -806,4 +808,18 @@ func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) (glob.Exe
 
 func (exec *Executor) checkClaimExistPropStmtProofs(stmt *ast.ClaimExistPropStmt) (glob.ExecState, error) {
 	panic("not implemented")
+}
+
+func (exec *Executor) proveOverFiniteSetStmt(stmt *ast.ProveOverFiniteSetStmt) (glob.ExecState, error) {
+	// make sure all paramSets have enum
+	enums := [][]ast.Fc{}
+	for _, paramSet := range stmt.Fact.ParamSets {
+		enumFacts, ok := exec.env.GetEnumFact(paramSet.String())
+		if !ok {
+			return glob.ExecState_Error, fmt.Errorf("prove over finite set statement error: enum not found")
+		}
+		enums = append(enums, enumFacts)
+	}
+
+	return glob.ExecState_True, nil
 }
