@@ -246,7 +246,7 @@ func (stmt *EnumStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
 	return NewEnumStmt(enumName, newEnumValues), nil
 }
 
-func (stmt *SetEqualStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
+func (stmt *IntensionalSetStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
 	newCurSet, err := stmt.CurSet.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
@@ -266,5 +266,5 @@ func (stmt *SetEqualStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
 		newProofs[i] = newProof.(*SpecFactStmt)
 	}
 
-	return NewSetEqualStmt(newCurSet, stmt.Param, newParentSet, newProofs), nil
+	return NewIntensionalSetStmt(newCurSet, stmt.Param, newParentSet, newProofs), nil
 }

@@ -46,7 +46,7 @@ func (s *ClaimPropStmt) stmt()                 {}
 func (s *ClaimExistPropStmt) stmt()            {}
 func (s *ProveByMathInductionStmt) stmt()      {}
 func (s *HaveByReplacementStmt) stmt()         {}
-func (s *SetEqualStmt) stmt()                  {}
+func (s *IntensionalSetStmt) stmt()            {}
 
 type FactStmt interface {
 	factStmt()
@@ -61,7 +61,7 @@ func (l *UniFactStmt) factStmt()        {}
 func (l *UniFactWithIffStmt) factStmt() {}
 func (s *OrStmt) factStmt()             {}
 func (s *EnumStmt) factStmt()           {}
-func (s *SetEqualStmt) factStmt()       {}
+func (s *IntensionalSetStmt) factStmt() {}
 
 type SpecFactParams struct {
 	ObjParams []Fc

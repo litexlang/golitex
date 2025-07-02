@@ -614,13 +614,14 @@ func (stmt *EnumStmt) String() string {
 	builder.WriteString(glob.KeySymbolColonEqual)
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeySymbolLeftCurly)
-	var nextLine strings.Builder
-	for i := range len(stmt.EnumValues) - 1 {
-		nextLine.WriteString(stmt.EnumValues[i].String())
-		nextLine.WriteString(", ")
+	if len(stmt.EnumValues) > 0 {
+		for i := range len(stmt.EnumValues) - 1 {
+			builder.WriteString(stmt.EnumValues[i].String())
+			builder.WriteString(", ")
+		}
+		builder.WriteString(stmt.EnumValues[len(stmt.EnumValues)-1].String())
 	}
-	nextLine.WriteString(stmt.EnumValues[len(stmt.EnumValues)-1].String())
-	nextLine.WriteString(glob.KeySymbolRightCurly)
+	builder.WriteString(glob.KeySymbolRightCurly)
 	return builder.String()
 }
 
@@ -696,7 +697,7 @@ func (stmt *HaveByReplacementStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *SetEqualStmt) String() string {
+func (stmt *IntensionalSetStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(stmt.CurSet.String())
 	builder.WriteString(" ")
