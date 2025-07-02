@@ -78,10 +78,6 @@ func NewSpecFact_InLogicExpr_InUniFact(specFact *ast.SpecFactStmt, uniFact *ast.
 }
 
 type SpecFact_InLogicExpr_InUniFactMem struct {
-	// PureFacts         glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]
-	// NotPureFacts      glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]
-	// Exist_St_Facts    glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]
-	// NotExist_St_Facts glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]
 	PureFacts         map[string][]SpecFact_InLogicExpr_InUniFact
 	NotPureFacts      map[string][]SpecFact_InLogicExpr_InUniFact
 	Exist_St_Facts    map[string][]SpecFact_InLogicExpr_InUniFact
@@ -90,10 +86,6 @@ type SpecFact_InLogicExpr_InUniFactMem struct {
 
 func newSpecFactMem() *SpecFactMem {
 	return &SpecFactMem{
-		// PureFacts:         make(glob.Map2D[[]KnownSpecFact]),
-		// NotPureFacts:      make(glob.Map2D[[]KnownSpecFact]),
-		// Exist_St_Facts:    make(glob.Map2D[[]KnownSpecFact]),
-		// NotExist_St_Facts: make(glob.Map2D[[]KnownSpecFact]),
 		PureFacts:         make(map[string][]KnownSpecFact),
 		NotPureFacts:      make(map[string][]KnownSpecFact),
 		Exist_St_Facts:    make(map[string][]KnownSpecFact),
@@ -103,10 +95,6 @@ func newSpecFactMem() *SpecFactMem {
 
 func newSpecFactInLogicExprMem() *SpecFactInLogicExprMem {
 	return &SpecFactInLogicExprMem{
-		// PureFacts:         make(glob.Map2D[[]KnownSpecFact_InLogicExpr]),
-		// NotPureFacts:      make(glob.Map2D[[]KnownSpecFact_InLogicExpr]),
-		// Exist_St_Facts:    make(glob.Map2D[[]KnownSpecFact_InLogicExpr]),
-		// NotExist_St_Facts: make(glob.Map2D[[]KnownSpecFact_InLogicExpr]),
 		PureFacts:         make(map[string][]KnownSpecFact_InLogicExpr),
 		NotPureFacts:      make(map[string][]KnownSpecFact_InLogicExpr),
 		Exist_St_Facts:    make(map[string][]KnownSpecFact_InLogicExpr),

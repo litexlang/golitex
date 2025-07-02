@@ -42,6 +42,7 @@ type Env struct {
 	KnownFactInMatchEnv map[string]KnownFactsStruct
 	EqualMem            map[string]shared_ptr_to_slice_of_fc
 	CurMatchProp        *MatchProp
+	EnumFacts           map[string][]ast.Fc
 }
 
 func (env *Env) GetUpMostEnv() *Env {
@@ -65,6 +66,7 @@ func NewEnv(parent *Env, curMatchEnv *ast.SpecFactStmt) *Env {
 		// KnownFactInMatchEnv:    make(glob.Map2D[KnownFactsStruct]),
 		KnownFactInMatchEnv: make(map[string]KnownFactsStruct),
 		CurMatchProp:        curMatchEnv,
+		EnumFacts:           make(map[string][]ast.Fc),
 	}
 	return env
 }
