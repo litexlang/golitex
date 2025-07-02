@@ -1,3 +1,4 @@
+"""
 fn_template dom_R_R_ret_R(x, y R) R
 
 $in(-, dom_R_R_ret_R)
@@ -14,3 +15,6 @@ forall x R:
     reverse(x) = -1 * x
 
 $in(reverse, dom_R_ret_R)
+"""
+
+-1 = -1

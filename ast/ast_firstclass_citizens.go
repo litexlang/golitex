@@ -80,9 +80,9 @@ func hasBuiltinOptAndToString(f *FcFn) (bool, string) {
 	// if ptr.PkgName == glob.EmptyPkg && ptr.Name == glob.KeySymbolMinus {
 	// if ptr.Name == glob.KeySymbolMinus {
 	if string(ptr) == glob.KeySymbolMinus {
-		if len(f.Params) == 1 {
-			return true, fmt.Sprintf("(%s %s)", string(ptr), f.Params[0])
-		}
+		// if len(f.Params) == 1 {
+		// 	return true, fmt.Sprintf("(%s %s)", string(ptr), f.Params[0])
+		// }
 
 		return true, fmt.Sprintf("(%s %s %s)", f.Params[0], string(ptr), f.Params[1])
 	}
