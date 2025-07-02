@@ -17,7 +17,6 @@ package litex_pipeline
 import (
 	"bufio"
 	"fmt"
-	env "golitex/environment"
 	exe "golitex/executor"
 	glob "golitex/glob"
 	parser "golitex/parser"
@@ -42,8 +41,13 @@ func executeCodeAndReturnMessageSlice(code string) ([]string, glob.SysSignal, er
 		return nil, glob.SysSignalParseError, err
 	}
 
-	curEnv := env.NewEnv(nil, nil)
-	executor := exe.NewExecutorWithInit(curEnv)
+	executor, err := pipelineExecutorInit()
+	if err != nil {
+		return nil, glob.SysSignalRuntimeError, err
+	}
+
+	// curEnv := env.NewEnv(nil, nil)
+	// executor := exe.NewExecutorWithInit(curEnv)
 	// curEnv.Init()
 	// executor := *exe.NewExecutor(curEnv)
 
@@ -111,8 +115,14 @@ func printMessagesToWriter(writer io.Writer, msg []string) {
 }
 
 func RunREPLInTerminal() {
-	curEnv := env.NewEnv(nil, nil)
-	executor := exe.NewExecutorWithInit(curEnv)
+	executor, err := pipelineExecutorInit()
+	if err != nil {
+		fmt.Println("Error initializing pipeline:", err)
+		return
+	}
+
+	// curEnv := env.NewEnv(nil, nil)
+	// executor := exe.NewExecutorWithInit(curEnv)
 	// curEnv.Init()
 	// executor := exe.NewExecutor(curEnv)
 
