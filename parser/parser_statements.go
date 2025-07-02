@@ -1460,6 +1460,10 @@ func (tb *tokenBlock) proveOverFiniteSetStmt() (*ast.ProveOverFiniteSetStmt, err
 		return nil, fmt.Errorf("expect universal fact without iff")
 	}
 
+	if len(uniFactAsUniFactStmt.ParamSets) != 0 {
+		return nil, fmt.Errorf("%s expect universal fact without param sets", glob.KeywordProveOverFiniteSet)
+	}
+
 	err = tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -1473,5 +1477,6 @@ func (tb *tokenBlock) proveOverFiniteSetStmt() (*ast.ProveOverFiniteSetStmt, err
 		}
 		proofs = append(proofs, curStmt)
 	}
+
 	return ast.NewProveOverFiniteSetStmt(uniFactAsUniFactStmt, proofs), nil
 }
