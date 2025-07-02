@@ -94,16 +94,17 @@ func (e *Env) AreAtomsInFcAreDeclared(fc ast.Fc, extraAtomNames map[string]struc
 func (e *Env) AreAtomsInFactAreDeclared(fact ast.FactStmt, extraAtomNames map[string]struct{}) bool {
 	atoms := fact.GetAtoms()
 
-	if asUniFact, ok := fact.(*ast.UniFactStmt); ok {
-		for _, param := range asUniFact.Params {
+	switch asStmt := fact.(type) {
+	case *ast.UniFactStmt:
+		for _, param := range asStmt.Params {
 			extraAtomNames[param] = struct{}{}
 		}
-	} else if asUniFactIff, ok := fact.(*ast.UniFactWithIffStmt); ok {
-		for _, param := range asUniFactIff.UniFact.Params {
+	case *ast.UniFactWithIffStmt:
+		for _, param := range asStmt.UniFact.Params {
 			extraAtomNames[param] = struct{}{}
 		}
-	} else if asIntentionalSetStmt, ok := fact.(*ast.IntensionalSetStmt); ok {
-		extraAtomNames[asIntentionalSetStmt.Param] = struct{}{}
+	case *ast.IntensionalSetStmt:
+		extraAtomNames[asStmt.Param] = struct{}{}
 	}
 
 	ok := e.AreAtomsDeclared(atoms, extraAtomNames)
