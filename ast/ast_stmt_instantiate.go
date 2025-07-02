@@ -280,3 +280,7 @@ func (stmt *EnumStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
 
 	return NewEnumStmt(enumName, newEnumValues), nil
 }
+
+func (stmt *SetEqualStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
+	panic("not implemented")
+}

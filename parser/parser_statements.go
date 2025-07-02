@@ -74,8 +74,6 @@ func (tb *tokenBlock) stmt() (ast.Stmt, error) {
 		ret, err = tb.proveByMathInductionStmt()
 	case glob.KeywordHaveByReplacement:
 		ret, err = tb.haveByReplacementStmt()
-	case glob.KeywordSetEqual:
-		ret, err = tb.setEqualStmt()
 	default:
 		ret, err = tb.factStmt(UniFactDepth0)
 	}
@@ -92,15 +90,24 @@ func (tb *tokenBlock) stmt() (ast.Stmt, error) {
 }
 
 func (tb *tokenBlock) factStmt(uniFactDepth uniFactEnum) (ast.FactStmt, error) {
-	if tb.header.is(glob.KeywordForall) {
+	cur, err := tb.header.currentToken()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	switch cur {
+	case glob.KeywordForall:
 		return tb.uniFactInterface(uniFactDepth)
-	} else if tb.header.is(glob.KeywordOr) {
+	case glob.KeywordOr:
 		return tb.orStmt()
-	} else if tb.header.is(glob.KeywordEnum) {
+	case glob.KeywordEnum:
 		return tb.enumStmt()
-	} else {
+	case glob.KeywordSetEqual:
+		return tb.setEqualStmt()
+	default:
 		return tb.specFactStmt()
 	}
+
 }
 
 func (tb *tokenBlock) enumStmt() (*ast.EnumStmt, error) {

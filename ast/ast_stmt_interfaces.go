@@ -61,6 +61,7 @@ func (l *UniFactStmt) factStmt()        {}
 func (l *UniFactWithIffStmt) factStmt() {}
 func (s *OrStmt) factStmt()             {}
 func (s *EnumStmt) factStmt()           {}
+func (s *SetEqualStmt) factStmt()       {}
 
 type SpecFactParams struct {
 	ObjParams []Fc
