@@ -24,12 +24,10 @@ import (
 func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state VerState) (bool, error) {
 	switch asStmt := stmt.(type) {
 	case *ast.SpecFactStmt:
-		{
-			if asStmt.NameIs(glob.KeySymbolEqual) && asStmt.TypeEnum == ast.TruePure {
-				return ver.verTrueEqualFact(asStmt, state)
-			}
-			return ver.verSpecFactThatIsNotTrueEqualFact(asStmt, state)
+		if asStmt.NameIs(glob.KeySymbolEqual) && asStmt.TypeEnum == ast.TruePure {
+			return ver.verTrueEqualFact(asStmt, state)
 		}
+		return ver.verSpecFactThatIsNotTrueEqualFact(asStmt, state)
 	case *ast.OrStmt:
 		return ver.verOrStmt(asStmt, state)
 	case *ast.UniFactStmt:
