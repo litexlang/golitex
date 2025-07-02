@@ -609,20 +609,18 @@ func (stmt *DefFnStmt) String() string {
 
 func (stmt *EnumStmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordEnum)
-	builder.WriteString(" ")
 	builder.WriteString(stmt.EnumName.String())
-	builder.WriteString(glob.KeySymbolColon)
-	builder.WriteByte('\n')
-
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeySymbolColonEqual)
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeySymbolLeftCurly)
 	var nextLine strings.Builder
 	for i := range len(stmt.EnumValues) - 1 {
 		nextLine.WriteString(stmt.EnumValues[i].String())
 		nextLine.WriteString(", ")
 	}
 	nextLine.WriteString(stmt.EnumValues[len(stmt.EnumValues)-1].String())
-
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents(nextLine.String(), 1))
+	nextLine.WriteString(glob.KeySymbolRightCurly)
 	return builder.String()
 }
 

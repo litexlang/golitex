@@ -1,1 +1,51 @@
-a != b
+obj s set
+know forall x s:
+    or:
+        x = 1
+        x = 2
+        x = 3
+        x = 4
+        x = 5
+        x = 6
+
+know:
+    1 $in s
+    2 $in s
+    3 $in s
+    4 $in s
+    5 $in s
+    6 $in s
+
+prove:
+    forall x s:
+        or:
+            x = 1
+            x = 2
+            x = 3
+            x = 4
+            x = 5
+            x = 6
+
+s := {1,2,3,4,5,6}
+
+obj s2 set
+know s2 := {1,2,3,4,5,6}
+$is_finite_set(s2)
+len(s2) = 6
+
+prove:
+    forall x s2:
+        or:
+            x = 1
+            x = 2
+            x = 3
+            x = 4
+            x = 5
+            x = 6
+    
+    1 $in s2
+    2 $in s2
+    3 $in s2
+    4 $in s2
+    5 $in s2
+    6 $in s2

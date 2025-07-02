@@ -64,7 +64,7 @@ const (
 	// KeywordSubsetOf = "subset_of" // though this can be defined by forall, it's still useful to have it as a keyword
 	// TODO
 	// a syntax connecting or and finite_set
-	KeywordEnum = "enum"
+	// KeywordEnum = "enum"
 
 	KeywordImportGlobally    = "import_globally"
 	KeywordHaveByReplacement = "have_by_replacement"
@@ -116,7 +116,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordFnTemplate:             {},
 	KeywordStruct:                 {},
 	// KeywordSubsetOf:               {},
-	KeywordEnum:              {},
+	// KeywordEnum:              {},
 	KeywordImportGlobally:    {},
 	KeywordHaveByReplacement: {},
 }
@@ -170,6 +170,8 @@ const (
 	KeySymbolLeftBracket  = "["
 	KeySymbolRightBracket = "]"
 	KeySymbolColonEqual   = ":="
+	KeySymbolLeftCurly    = "{"
+	KeySymbolRightCurly   = "}"
 )
 
 // 最多双字符，或者单字符，否则parser的逻辑 GetKeySymbol 有问题
@@ -226,6 +228,8 @@ var symbolSet map[string]struct{} = map[string]struct{}{
 	KeySymbolPercent:      {}, // "%"
 	KeySymbolLeftBracket:  {}, // "["
 	KeySymbolRightBracket: {}, // "]"
+	KeySymbolLeftCurly:    {}, // "{"
+	KeySymbolRightCurly:   {}, // "}"
 }
 
 var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]struct{}{
