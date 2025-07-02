@@ -178,44 +178,94 @@ func (s SpecFactInUniFactMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([
 
 func (env *Env) newUniFact(stmt *ast.UniFactStmt) error {
 	for _, thenStmt := range stmt.ThenFacts {
-		if stmtAsSpecFact, ok := thenStmt.(*ast.SpecFactStmt); ok {
-			err := env.storeUniFact(stmtAsSpecFact, stmt)
-			if err != nil {
-				return err
-			}
-		} else if thenStmtAsUniFact, ok := thenStmt.(*ast.UniFactStmt); ok {
-			mergedUniFact := ast.MergeOuterInnerUniFacts(stmt, thenStmtAsUniFact)
-			err := env.newUniFact(mergedUniFact)
-			if err != nil {
-				return err
-			}
-		} else if thenStmtAsLogicExpr, ok := thenStmt.(*ast.OrStmt); ok {
-			err := env.KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem.NewFact(stmt, thenStmtAsLogicExpr, env.CurMatchProp)
-			if err != nil {
-				return err
-			}
-		} else if thenStmtAsEnum, ok := thenStmt.(*ast.EnumStmt); ok {
-			forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts := ast.TransformEnumToUniFact(thenStmtAsEnum.EnumName, thenStmtAsEnum.EnumValues)
-			mergedUniFact := ast.MergeOuterInnerUniFacts(stmt, forallItemInSetEqualToOneOfGivenItems)
-			err := env.newUniFact(mergedUniFact)
-			if err != nil {
-				return err
-			}
-			for _, fact := range pairwiseNotEqualFacts {
-				err := env.storeUniFact(fact, stmt)
-				if err != nil {
-					return err
-				}
-			}
-			for _, fact := range itemsInSetFacts {
-				err := env.storeUniFact(fact, stmt)
-				if err != nil {
-					return err
-				}
-			}
-		} else {
-			return fmt.Errorf("TODO: newSpecFactInUniFact Currently only support spec fact in uni fact, but got: %s", thenStmt.String())
+		var err error
+		switch stmtAsSpecFact := thenStmt.(type) {
+		case *ast.SpecFactStmt:
+			err = env.newUniFact_ThenFactIsSpecFact(stmt, stmtAsSpecFact)
+		case *ast.OrStmt:
+			err = env.newUniFact_ThenFactIsOrStmt(stmt, stmtAsSpecFact)
+		case *ast.EnumStmt:
+			err = env.newUniFact_ThenFactIsEnumStmt(stmt, stmtAsSpecFact)
+		case *ast.SetEqualStmt:
+			err = env.newUniFact_ThenFactIsSetEqualStmt(stmt, stmtAsSpecFact)
+		case *ast.UniFactWithIffStmt:
+			err = env.newUniFact_ThenFactIsIffStmt(stmt, stmtAsSpecFact)
+		case *ast.UniFactStmt:
+			err = env.newUniFact_ThenFactIsUniFactStmt(stmt, stmtAsSpecFact)
+		default:
+			return fmt.Errorf("TODO: newUniFact Currently only support spec fact in uni fact, but got: %s", thenStmt.String())
 		}
+
+		if err != nil {
+			return err
+		}
+
+		// if stmtAsSpecFact, ok := thenStmt.(*ast.SpecFactStmt); ok {
+		// 	err := env.storeUniFact(stmtAsSpecFact, stmt)
+		// 	if err != nil {
+		// 		return err
+		// 	}
+		// } else if thenStmtAsUniFact, ok := thenStmt.(*ast.UniFactStmt); ok {
+		// 	mergedUniFact := ast.MergeOuterInnerUniFacts(stmt, thenStmtAsUniFact)
+		// 	err := env.newUniFact(mergedUniFact)
+		// 	if err != nil {
+		// 		return err
+		// 	}
+		// } else if thenStmtAsLogicExpr, ok := thenStmt.(*ast.OrStmt); ok {
+		// 	err := env.KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem.NewFact(stmt, thenStmtAsLogicExpr, env.CurMatchProp)
+		// 	if err != nil {
+		// 		return err
+		// 	}
+		// } else if thenStmtAsEnum, ok := thenStmt.(*ast.EnumStmt); ok {
+		// 	forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts := ast.TransformEnumToUniFact(thenStmtAsEnum.EnumName, thenStmtAsEnum.EnumValues)
+		// 	mergedUniFact := ast.MergeOuterInnerUniFacts(stmt, forallItemInSetEqualToOneOfGivenItems)
+		// 	err := env.newUniFact(mergedUniFact)
+		// 	if err != nil {
+		// 		return err
+		// 	}
+		// 	for _, fact := range pairwiseNotEqualFacts {
+		// 		err := env.storeUniFact(fact, stmt)
+		// 		if err != nil {
+		// 			return err
+		// 		}
+		// 	}
+		// 	for _, fact := range itemsInSetFacts {
+		// 		err := env.storeUniFact(fact, stmt)
+		// 		if err != nil {
+		// 			return err
+		// 		}
+		// 	}
+		// } else if thenStmtAsSetEqual, ok := thenStmt.(*ast.SetEqualStmt); ok {
+		// 	leftUniFact, rightUniFact, err := thenStmtAsSetEqual.ToEquivalentUniFacts()
+		// 	if err != nil {
+		// 		return err
+		// 	}
+
+		// 	mergedLeftUniFact := ast.MergeOuterInnerUniFacts(stmt, leftUniFact)
+		// 	if err := env.newUniFact(mergedLeftUniFact); err != nil {
+		// 		return err
+		// 	}
+
+		// 	mergedRightUniFact := ast.MergeOuterInnerUniFacts(stmt, rightUniFact)
+		// 	if err := env.newUniFact(mergedRightUniFact); err != nil {
+		// 		return err
+		// 	}
+		// } else if iffUniFact, ok := thenStmt.(*ast.UniFactWithIffStmt); ok {
+		// 	thenToIff := iffUniFact.NewUniFactWithThenToIff()
+		// 	iffToThen := iffUniFact.NewUniFactWithIffToThen()
+
+		// 	mergedThenToIff := ast.MergeOuterInnerUniFacts(stmt, thenToIff)
+		// 	if err := env.newUniFact(mergedThenToIff); err != nil {
+		// 		return err
+		// 	}
+
+		// 	mergedIffToThen := ast.MergeOuterInnerUniFacts(stmt, iffToThen)
+		// 	if err := env.newUniFact(mergedIffToThen); err != nil {
+		// 		return err
+		// 	}
+		// } else {
+		// 	return fmt.Errorf("TODO: newSpecFactInUniFact Currently only support spec fact in uni fact, but got: %s", thenStmt.String())
+		// }
 	}
 	return nil
 

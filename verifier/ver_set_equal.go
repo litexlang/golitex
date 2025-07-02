@@ -17,5 +17,20 @@ package litex_verifier
 import ast "golitex/ast"
 
 func (ver *Verifier) verSetEqualStmt(stmt *ast.SetEqualStmt, state VerState) (bool, error) {
-	panic("not implemented")
+	leftUniFact, rightUniFact, err := stmt.ToEquivalentUniFacts()
+	if err != nil {
+		return false, err
+	}
+
+	ok, err := ver.verUniFact(leftUniFact, state)
+	if err != nil || !ok {
+		return false, err
+	}
+
+	ok, err = ver.verUniFact(rightUniFact, state)
+	if err != nil || !ok {
+		return false, err
+	}
+
+	return true, nil
 }
