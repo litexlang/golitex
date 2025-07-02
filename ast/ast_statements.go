@@ -181,3 +181,8 @@ type IntensionalSetStmt struct {
 	ParentSet Fc
 	Proofs    []*SpecFactStmt
 }
+
+type ProveOverFiniteSetStmt struct {
+	Fact   UniFactStmt
+	Proofs []Stmt
+}

@@ -714,3 +714,23 @@ func (stmt *IntensionalSetStmt) String() string {
 	}
 	return strings.TrimSuffix(builder.String(), "\n")
 }
+
+func (stmt *ProveOverFiniteSetStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordProveOverFiniteSet)
+	builder.WriteString(":")
+	builder.WriteByte('\n')
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Fact.String(), 1))
+	builder.WriteByte('\n')
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Fact.String(), 1))
+	builder.WriteByte('\n')
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve, 1))
+	builder.WriteString("\n")
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeySymbolColon, 1))
+	builder.WriteByte('\n')
+	for _, proof := range stmt.Proofs {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 2))
+		builder.WriteByte('\n')
+	}
+	return strings.TrimSuffix(builder.String(), "\n")
+}

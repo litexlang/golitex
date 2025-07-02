@@ -158,3 +158,7 @@ func NewHaveByReplacementStmt(name string, domSet Fc, rangeSet Fc, propName FcAt
 func NewIntensionalSetStmt(curSet Fc, param string, parentSet Fc, proofs []*SpecFactStmt) *IntensionalSetStmt {
 	return &IntensionalSetStmt{curSet, param, parentSet, proofs}
 }
+
+func NewProveOverFiniteSetStmt(fact *UniFactStmt, proofs []Stmt) *ProveOverFiniteSetStmt {
+	return &ProveOverFiniteSetStmt{*fact, proofs}
+}
