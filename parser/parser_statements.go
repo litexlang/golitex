@@ -721,7 +721,7 @@ func (tb *tokenBlock) defExistPropStmtBody() (*ast.DefExistPropStmtBody, error) 
 		return nil, tbErr(err, tb)
 	}
 
-	domFacts, iffFactsAsFactStatements, err := tb.dom_IffOrThen_Body(glob.KeywordIff)
+	domFacts, iffFactsAsFactStatements, err := tb.dom_and_section(glob.KeywordIff, glob.KeywordThen)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -1121,58 +1121,6 @@ func (tb *tokenBlock) proveStmt() (*ast.ProveStmt, error) {
 }
 
 // called by exist_prop and prop def
-func (tb *tokenBlock) dom_IffOrThen_Body(sectionName string) ([]ast.FactStmt, []ast.FactStmt, error) {
-	var err error
-	domFacts, sectionFacts := []ast.FactStmt{}, []ast.FactStmt{}
-	if len(tb.body) == 0 {
-		return domFacts, sectionFacts, nil
-	}
-
-	if tb.body[0].header.is(glob.KeywordDom) {
-		domFacts, err = tb.body[0].parseFactBodyWithHeaderNameAndUniFactDepth(glob.KeywordDom, UniFactDepth1)
-		if err != nil {
-			return nil, nil, tbErr(err, tb)
-		}
-
-		if len(tb.body) == 1 {
-			return domFacts, sectionFacts, nil
-		} else if len(tb.body) == 2 {
-			sectionFacts, err = tb.body[1].parseFactBodyWithHeaderNameAndUniFactDepth(sectionName, UniFactDepth1)
-			if err != nil {
-				return nil, nil, tbErr(err, tb)
-			}
-			return domFacts, sectionFacts, nil
-		} else {
-			return nil, nil, tbErr(fmt.Errorf("expect 1 or 2 body facts, but got %d", len(tb.body)), tb)
-		}
-	} else {
-		// 如果body下面直接是 iff 那在这里讨论了
-		if tb.body[len(tb.body)-1].header.is(sectionName) {
-			for i := range len(tb.body) - 1 {
-				curStmt, err := tb.body[i].factStmt(UniFactDepth1)
-				if err != nil {
-					return nil, nil, tbErr(err, tb)
-				}
-				domFacts = append(domFacts, curStmt)
-			}
-			sectionFacts, err = tb.body[len(tb.body)-1].parseFactBodyWithHeaderNameAndUniFactDepth(sectionName, UniFactDepth1)
-			if err != nil {
-				return nil, nil, tbErr(err, tb)
-			}
-			return domFacts, sectionFacts, nil
-		} else {
-			for _, stmt := range tb.body {
-				curStmt, err := stmt.factStmt(UniFactDepth1)
-				if err != nil {
-					return nil, nil, tbErr(err, tb)
-				}
-				sectionFacts = append(sectionFacts, curStmt)
-			}
-			return domFacts, sectionFacts, nil
-		}
-	}
-
-}
 
 func (tb *tokenBlock) parseFactBodyWithHeaderNameAndUniFactDepth(headerName string, uniFactDepth uniFactEnum) ([]ast.FactStmt, error) {
 	err := tb.header.skipKwAndColon_ExceedEnd(headerName)

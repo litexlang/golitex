@@ -1,23 +1,11 @@
-prop p(n N)
+know forall x, y R:
+    x != 0
+    y != 0
+    then:
+        x * y != 0
 
-prop q(n N):
-    n = 1
-
-prop p2(n N):
-    dom:
-        n = 1
-
-prop p3(n N):
-    dom:
-        n = 1
-    iff:
-        $p(n)
-
-prop p4(n N):
-    n = 1
-    iff:
-        $p(n)
-
-prop p5(n N):
-    iff:
-        $p(n)
+forall a, b, c, d R:
+    b != 0
+    d != 0
+    then:
+        a / b + c / d = (a * d + b * c) / (b * d)
