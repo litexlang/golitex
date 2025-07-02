@@ -1,3 +1,12 @@
-$last_two_objects_are_equal(1, 2, 2)
+fn_template dom_R_R_ret_R(x, y R) R
 
-$larger_is_transitive(3, 2, 1)
+$in(-, dom_R_R_ret_R)
+$in(+, dom_R_R_ret_R)
+
+fn_template dom_R_ret_R(x R) R:
+    dom_R_ret_R(x) = - x
+
+fn reverse(x R) R:
+    reverse(x) = - x
+
+$in(reverse, dom_R_ret_R)
