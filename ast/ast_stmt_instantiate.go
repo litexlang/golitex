@@ -15,12 +15,10 @@
 package litex_ast
 
 func InstantiateFcAtom(fc FcAtom, uniMap map[string]Fc) (Fc, error) {
-	// if fc.PkgName == glob.EmptyPkg {
 	instance, ok := uniMap[string(fc)]
 	if ok {
 		return instance, nil
 	}
-	// }
 	return fc, nil
 }
 
@@ -33,17 +31,6 @@ func InstantiateFcFn(fc *FcFn, uniMap map[string]Fc) (Fc, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	// if newHeadAsAtom, ok := newHead.(FcAtom); ok {
-	// 	newFc.FnHead = newHeadAsAtom
-	// } else {
-	// 	newHeadAsFcFn, ok := newHead.(*FcFn)
-	// 	if !ok {
-	// 		return nil, errors.New("invalid type assertion for FnHead")
-	// 	}
-	// 	newFc.FnHead = newHeadAsFcFn.FnHead
-	// 	newFc.Params = append(newFc.Params, newHeadAsFcFn.Params...)
-	// }
 
 	newParamSegs := make([]Fc, len(fc.Params))
 	for i, seg := range fc.Params {
@@ -62,17 +49,6 @@ func (fc *FcFn) Instantiate(uniMap map[string]Fc) (Fc, error) {
 }
 
 func InstantiateSpecFact(stmt *SpecFactStmt, uniMap map[string]Fc) (*SpecFactStmt, error) {
-	// 把 PropName 也换了
-	// newPropName, err := stmt.PropName.Instantiate(uniMap)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// propNameAtom, ok := newPropName.(FcAtom)
-	// if !ok {
-	// 	return nil, errors.New("PropName is not of type FcAtom")
-	// }
-
 	newParams := []Fc{}
 	for _, param := range stmt.Params {
 		newParam, err := param.Instantiate(uniMap)
@@ -82,7 +58,6 @@ func InstantiateSpecFact(stmt *SpecFactStmt, uniMap map[string]Fc) (*SpecFactStm
 		newParams = append(newParams, newParam)
 	}
 
-	// return NewSpecFactStmt(stmt.TypeEnum, propNameAtom, newParams), nil
 	return NewSpecFactStmt(stmt.TypeEnum, stmt.PropName, newParams), nil
 }
 
@@ -112,15 +87,6 @@ func InstantiateUniFact(stmt *UniFactStmt, uniMap map[string]Fc) (*UniFactStmt, 
 		newThenFacts = append(newThenFacts, newFact)
 	}
 
-	// newIffFacts := []FactStmt{}
-	// for _, fact := range stmt.IffFacts {
-	// 	newFact, err := fact.Instantiate(uniMap)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	newIffFacts = append(newIffFacts, newFact)
-	// }
-
 	newSetParams := []Fc{}
 	for _, setParam := range stmt.ParamSets {
 		newSetParam, err := setParam.Instantiate(uniMap)
@@ -130,7 +96,6 @@ func InstantiateUniFact(stmt *UniFactStmt, uniMap map[string]Fc) (*UniFactStmt, 
 		newSetParams = append(newSetParams, newSetParam)
 	}
 
-	// newParamInSetsFacts := ParamsParamSetsToInFacts(stmt.Params, newParamTypes)
 	return NewUniFact(newParams, newSetParams, newDomFacts, newThenFacts), nil
 }
 
@@ -282,5 +247,24 @@ func (stmt *EnumStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
 }
 
 func (stmt *SetEqualStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
-	panic("not implemented")
+	newCurSet, err := stmt.CurSet.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+
+	newParentSet, err := stmt.ParentSet.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+
+	newProofs := make([]*SpecFactStmt, len(stmt.Proofs))
+	for i, proof := range stmt.Proofs {
+		newProof, err := proof.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newProofs[i] = newProof.(*SpecFactStmt)
+	}
+
+	return NewSetEqualStmt(newCurSet, stmt.Param, newParentSet, newProofs), nil
 }
