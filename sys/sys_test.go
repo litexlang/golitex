@@ -21,7 +21,7 @@ import (
 )
 
 func TestRunFile(t *testing.T) {
-	msg, signal, err := RunFile("../litex_code_examples/litex_as_regex_matcher.lix")
+	msg, signal, err := RunFile("../examples/test_codes/tmp.lix")
 	if err != nil {
 		t.Errorf(err.Error())
 	}
