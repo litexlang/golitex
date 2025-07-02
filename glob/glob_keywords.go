@@ -68,6 +68,7 @@ const (
 
 	KeywordImportGlobally    = "import_globally"
 	KeywordHaveByReplacement = "have_by_replacement"
+	KeywordSetEqual          = "set_equal"
 	// KeywordLastTwoObjectsAreEqual = "last_two_objects_are_equal"
 )
 
@@ -119,6 +120,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordEnum:              {},
 	KeywordImportGlobally:    {},
 	KeywordHaveByReplacement: {},
+	KeywordSetEqual:          {},
 }
 
 const (

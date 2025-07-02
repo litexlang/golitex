@@ -709,3 +709,23 @@ func (stmt *HaveByReplacementStmt) String() string {
 	builder.WriteString(stmt.PropName.String())
 	return builder.String()
 }
+
+func (stmt *SetEqualStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordSetEqual)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.CurSet.String())
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeySymbolEqual)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.Param)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.ParentSet.String())
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+	for _, proof := range stmt.Proofs {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 1))
+		builder.WriteByte('\n')
+	}
+	return strings.TrimSuffix(builder.String(), "\n")
+}

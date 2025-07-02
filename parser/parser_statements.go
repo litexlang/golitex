@@ -74,6 +74,8 @@ func (tb *tokenBlock) stmt() (ast.Stmt, error) {
 		ret, err = tb.proveByMathInductionStmt()
 	case glob.KeywordHaveByReplacement:
 		ret, err = tb.haveByReplacementStmt()
+	case glob.KeywordSetEqual:
+		ret, err = tb.setEqualStmt()
 	default:
 		ret, err = tb.factStmt(UniFactDepth0)
 	}
@@ -292,7 +294,7 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 	return ast.NewDefPropStmt(declHeader, domFacts, iffFacts), nil
 }
 
-func (tb *tokenBlock) FnTemplateStmt(keyword string) (*ast.FnTemplateStmt, error) {
+func (tb *tokenBlock) fnTemplateStmt(keyword string) (*ast.FnTemplateStmt, error) {
 	err := tb.header.skip(keyword)
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -313,7 +315,8 @@ func (tb *tokenBlock) FnTemplateStmt(keyword string) (*ast.FnTemplateStmt, error
 
 	if tb.header.is(glob.KeySymbolColon) {
 		tb.header.skip("")
-		domFacts, thenFacts, _, err = tb.uniFactBodyFacts(UniFactDepth1, glob.KeywordThen)
+		// domFacts, thenFacts, _, err = tb.uniFactBodyFacts(UniFactDepth1, glob.KeywordThen)
+		domFacts, thenFacts, err = tb.dom_and_section(glob.KeywordThen, glob.KeywordIff)
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -1182,7 +1185,7 @@ func (tb *tokenBlock) parseFactBodyWithHeaderNameAndUniFactDepth(headerName stri
 }
 
 func (tb *tokenBlock) defFnTemplateStmt() (*ast.DefFnTemplateStmt, error) {
-	fnTemplateStmt, err := tb.FnTemplateStmt(glob.KeywordFnTemplate)
+	fnTemplateStmt, err := tb.fnTemplateStmt(glob.KeywordFnTemplate)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -1191,7 +1194,7 @@ func (tb *tokenBlock) defFnTemplateStmt() (*ast.DefFnTemplateStmt, error) {
 }
 
 func (tb *tokenBlock) defFnStmt() (*ast.DefFnStmt, error) {
-	fnTemplateStmt, err := tb.FnTemplateStmt(glob.KeywordFn)
+	fnTemplateStmt, err := tb.fnTemplateStmt(glob.KeywordFn)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -1375,4 +1378,47 @@ func (tb *tokenBlock) dom_and_section(kw string, kw_should_not_exist_in_body str
 	} else {
 		return nil, nil, fmt.Errorf("expect dom section and %s section", kw)
 	}
+}
+
+func (tb *tokenBlock) setEqualStmt() (*ast.SetEqualStmt, error) {
+	err := tb.header.skip(glob.KeywordSetEqual)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	curSet, err := tb.RawFc()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolEqual)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	param, err := tb.header.next()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	parentSet, err := tb.RawFc()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skipKwAndColon_ExceedEnd(glob.KeySymbolColon)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	proofs := []*ast.SpecFactStmt{}
+	for _, stmt := range tb.body {
+		curStmt, err := stmt.specFactStmt()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		proofs = append(proofs, curStmt)
+	}
+
+	return ast.NewSetEqualStmt(curSet, param, parentSet, proofs), nil
 }
