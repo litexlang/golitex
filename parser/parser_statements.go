@@ -74,6 +74,8 @@ func (tb *tokenBlock) stmt() (ast.Stmt, error) {
 		ret, err = tb.proveByMathInductionStmt()
 	case glob.KeywordHaveByReplacement:
 		ret, err = tb.haveByReplacementStmt()
+	case glob.KeywordProveOverFiniteSet:
+		ret, err = tb.proveOverFiniteSetStmt()
 	default:
 		ret, err = tb.factStmt(UniFactDepth0)
 	}
@@ -1440,4 +1442,36 @@ func (tb *tokenBlock) enumStmt_or_intensionalSetStmt(fc ast.Fc) (ast.FactStmt, e
 	} else {
 		return tb.intensionalSetStmt(fc)
 	}
+}
+
+func (tb *tokenBlock) proveOverFiniteSetStmt() (*ast.ProveOverFiniteSetStmt, error) {
+	err := tb.header.skipKwAndColon_ExceedEnd(glob.KeywordProveOverFiniteSet)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	uniFact, err := tb.body[0].uniFactInterface(UniFactDepth0)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	uniFactAsUniFactStmt, ok := uniFact.(*ast.UniFactStmt)
+	if !ok {
+		return nil, fmt.Errorf("expect universal fact without iff")
+	}
+
+	err = tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	proofs := []ast.Stmt{}
+	for _, stmt := range tb.body[1].body {
+		curStmt, err := stmt.stmt()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		proofs = append(proofs, curStmt)
+	}
+	return ast.NewProveOverFiniteSetStmt(uniFactAsUniFactStmt, proofs), nil
 }

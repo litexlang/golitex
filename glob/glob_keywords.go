@@ -54,12 +54,12 @@ const (
 	KeywordAs      = "as" // as a fn_template。这非常难以实现，尤其是出现 fn 理论上作用在M上，现在是作用在返回值是M的函数上时做推理，非常困难，需要最后实现而不是现在
 
 	// KeywordFnSet                  = "fn_set" // Syntax sugar for fn setName(params paramsSet)  = {z z_set_name(params) | properties(z, params)}
-	KeywordLen                    = "len"
-	KeywordIsIndexableSet         = "is_indexable_set"
-	KeywordIsFiniteSet            = "is_finite_set"
-	KeywordProveForallIteratively = "prove_iteratively" // syntax connecting forall and finite_set
-	KeywordFnTemplate             = "fn_template"
-	KeywordStruct                 = "struct"
+	KeywordLen                = "len"
+	KeywordIsIndexableSet     = "is_indexable_set"
+	KeywordIsFiniteSet        = "is_finite_set"
+	KeywordProveOverFiniteSet = "prove_over_finite_set" // syntax connecting forall and finite_set
+	KeywordFnTemplate         = "fn_template"
+	KeywordStruct             = "struct"
 
 	// KeywordSubsetOf = "subset_of" // though this can be defined by forall, it's still useful to have it as a keyword
 	// TODO
@@ -109,12 +109,12 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordImaginary: {},
 	KeywordAs:        {},
 	// KeywordFnSet:                  {},
-	KeywordLen:                    {},
-	KeywordIsIndexableSet:         {},
-	KeywordIsFiniteSet:            {},
-	KeywordProveForallIteratively: {},
-	KeywordFnTemplate:             {},
-	KeywordStruct:                 {},
+	KeywordLen:                {},
+	KeywordIsIndexableSet:     {},
+	KeywordIsFiniteSet:        {},
+	KeywordProveOverFiniteSet: {},
+	KeywordFnTemplate:         {},
+	KeywordStruct:             {},
 	// KeywordSubsetOf:               {},
 	// KeywordEnum:              {},
 	KeywordImportGlobally:    {},

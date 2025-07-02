@@ -47,6 +47,7 @@ func (s *ClaimExistPropStmt) stmt()            {}
 func (s *ProveByMathInductionStmt) stmt()      {}
 func (s *HaveByReplacementStmt) stmt()         {}
 func (s *IntensionalSetStmt) stmt()            {}
+func (s *ProveOverFiniteSetStmt) stmt()        {}
 
 type FactStmt interface {
 	factStmt()
