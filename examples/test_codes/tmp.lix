@@ -18,3 +18,22 @@ $in(reverse, dom_R_ret_R)
 """
 
 -1 = -1
+
+obj s set:
+    s := {1, 2, 3}
+
+$is_finite_set(s)
+#prove_over_finite_set(s finite_set)
+
+obj s2 set:
+    forall x s2:
+        or:
+            x = 1
+            x = 2
+            x = 3
+    
+    1 $in s2
+    2 $in s2
+    3 $in s2
+
+s2 := {1,2 ,3}
