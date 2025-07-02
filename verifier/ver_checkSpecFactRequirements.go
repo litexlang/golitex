@@ -23,6 +23,7 @@ import (
 
 func (ver *Verifier) checkSpecFactRequirements(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	// 1. Check if all atoms in the parameters are declared
+	// TODO： 一层层搜索的时候，会重复检查是否存在，可以优化
 	for _, param := range stmt.Params {
 		ok := ver.env.AreAtomsInFcAreDeclared(param, map[string]struct{}{})
 		if !ok {
@@ -122,7 +123,7 @@ func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn, state VerState) (bool
 		// 分母不是0
 		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{fc.Params[1], ast.FcAtom("0")}), state)
 		if err != nil || !ok {
-			return ok, err
+			return ok, fmt.Errorf("parameters in %s must be not equal to 0. %s != 0 is unknown", fc.FnHead.String(), fc.Params[1].String())
 		}
 		return true, nil
 	}

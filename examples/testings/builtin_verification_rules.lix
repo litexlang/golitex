@@ -171,3 +171,13 @@ prove:
 
     prove:
         x + x + x = 3 * x
+
+forall a, b R:
+    b != 0
+    then:
+        a * b $in R
+        a / b $in R
+        a + b $in R
+        a - b $in R
+        a * b $in R
+        a ^ b $in R
