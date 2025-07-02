@@ -414,6 +414,7 @@ func FnFcToFnTemplateStmt(fc Fc) (*FnTemplateStmt, error) {
 	return fnDefStmt, nil
 }
 
+// TODO REMOVE THIS FUNCTION
 func IsFcAtomWithBuiltinPkgAndName(fc Fc, name string) bool {
 	fcAtom, ok := fc.(FcAtom)
 	if !ok {
