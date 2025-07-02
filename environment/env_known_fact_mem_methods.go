@@ -186,8 +186,8 @@ func (env *Env) newUniFact(stmt *ast.UniFactStmt) error {
 			err = env.newUniFact_ThenFactIsOrStmt(stmt, stmtAsSpecFact)
 		case *ast.EnumStmt:
 			err = env.newUniFact_ThenFactIsEnumStmt(stmt, stmtAsSpecFact)
-		case *ast.SetEqualStmt:
-			err = env.newUniFact_ThenFactIsSetEqualStmt(stmt, stmtAsSpecFact)
+		case *ast.IntensionalSetStmt:
+			err = env.newUniFact_ThenFactIsIntensionalSetStmt(stmt, stmtAsSpecFact)
 		case *ast.UniFactWithIffStmt:
 			err = env.newUniFact_ThenFactIsIffStmt(stmt, stmtAsSpecFact)
 		case *ast.UniFactStmt:
@@ -199,73 +199,6 @@ func (env *Env) newUniFact(stmt *ast.UniFactStmt) error {
 		if err != nil {
 			return err
 		}
-
-		// if stmtAsSpecFact, ok := thenStmt.(*ast.SpecFactStmt); ok {
-		// 	err := env.storeUniFact(stmtAsSpecFact, stmt)
-		// 	if err != nil {
-		// 		return err
-		// 	}
-		// } else if thenStmtAsUniFact, ok := thenStmt.(*ast.UniFactStmt); ok {
-		// 	mergedUniFact := ast.MergeOuterInnerUniFacts(stmt, thenStmtAsUniFact)
-		// 	err := env.newUniFact(mergedUniFact)
-		// 	if err != nil {
-		// 		return err
-		// 	}
-		// } else if thenStmtAsLogicExpr, ok := thenStmt.(*ast.OrStmt); ok {
-		// 	err := env.KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem.NewFact(stmt, thenStmtAsLogicExpr, env.CurMatchProp)
-		// 	if err != nil {
-		// 		return err
-		// 	}
-		// } else if thenStmtAsEnum, ok := thenStmt.(*ast.EnumStmt); ok {
-		// 	forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts := ast.TransformEnumToUniFact(thenStmtAsEnum.EnumName, thenStmtAsEnum.EnumValues)
-		// 	mergedUniFact := ast.MergeOuterInnerUniFacts(stmt, forallItemInSetEqualToOneOfGivenItems)
-		// 	err := env.newUniFact(mergedUniFact)
-		// 	if err != nil {
-		// 		return err
-		// 	}
-		// 	for _, fact := range pairwiseNotEqualFacts {
-		// 		err := env.storeUniFact(fact, stmt)
-		// 		if err != nil {
-		// 			return err
-		// 		}
-		// 	}
-		// 	for _, fact := range itemsInSetFacts {
-		// 		err := env.storeUniFact(fact, stmt)
-		// 		if err != nil {
-		// 			return err
-		// 		}
-		// 	}
-		// } else if thenStmtAsSetEqual, ok := thenStmt.(*ast.SetEqualStmt); ok {
-		// 	leftUniFact, rightUniFact, err := thenStmtAsSetEqual.ToEquivalentUniFacts()
-		// 	if err != nil {
-		// 		return err
-		// 	}
-
-		// 	mergedLeftUniFact := ast.MergeOuterInnerUniFacts(stmt, leftUniFact)
-		// 	if err := env.newUniFact(mergedLeftUniFact); err != nil {
-		// 		return err
-		// 	}
-
-		// 	mergedRightUniFact := ast.MergeOuterInnerUniFacts(stmt, rightUniFact)
-		// 	if err := env.newUniFact(mergedRightUniFact); err != nil {
-		// 		return err
-		// 	}
-		// } else if iffUniFact, ok := thenStmt.(*ast.UniFactWithIffStmt); ok {
-		// 	thenToIff := iffUniFact.NewUniFactWithThenToIff()
-		// 	iffToThen := iffUniFact.NewUniFactWithIffToThen()
-
-		// 	mergedThenToIff := ast.MergeOuterInnerUniFacts(stmt, thenToIff)
-		// 	if err := env.newUniFact(mergedThenToIff); err != nil {
-		// 		return err
-		// 	}
-
-		// 	mergedIffToThen := ast.MergeOuterInnerUniFacts(stmt, iffToThen)
-		// 	if err := env.newUniFact(mergedIffToThen); err != nil {
-		// 		return err
-		// 	}
-		// } else {
-		// 	return fmt.Errorf("TODO: newSpecFactInUniFact Currently only support spec fact in uni fact, but got: %s", thenStmt.String())
-		// }
 	}
 	return nil
 
@@ -277,14 +210,6 @@ func (s SpecFactInUniFactMem) newFact(stmtAsSpecFact *ast.SpecFactStmt, uniFact 
 		return err
 	}
 
-	// if _, ok := sameEnumFacts[stmtAsSpecFact.PropName.PkgName]; !ok {
-	// 	sameEnumFacts[stmtAsSpecFact.PropName.PkgName] = make(map[string][]KnownSpecFact_InUniFact)
-	// }
-	// if _, ok := sameEnumFacts[stmtAsSpecFact.PropName.PkgName][stmtAsSpecFact.PropName.Name]; !ok {
-	// 	sameEnumFacts[stmtAsSpecFact.PropName.PkgName][stmtAsSpecFact.PropName.Name] = []KnownSpecFact_InUniFact{}
-	// }
-
-	// sameEnumFacts[stmtAsSpecFact.PropName.PkgName][stmtAsSpecFact.PropName.Name] = append(sameEnumFacts[stmtAsSpecFact.PropName.PkgName][stmtAsSpecFact.PropName.Name], KnownSpecFact_InUniFact{stmtAsSpecFact, uniFact, supposedEnv})
 	if _, ok := sameEnumFacts[string(stmtAsSpecFact.PropName)]; !ok {
 		sameEnumFacts[string(stmtAsSpecFact.PropName)] = []KnownSpecFact_InUniFact{}
 	}
@@ -293,7 +218,6 @@ func (s SpecFactInUniFactMem) newFact(stmtAsSpecFact *ast.SpecFactStmt, uniFact 
 	return nil
 }
 
-// func (s SpecFact_InLogicExpr_InUniFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (glob.Map2D[[]SpecFact_InLogicExpr_InUniFact], error) {
 func (s SpecFact_InLogicExpr_InUniFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string][]SpecFact_InLogicExpr_InUniFact, error) {
 	switch stmt.TypeEnum {
 	case ast.TruePure:

@@ -80,7 +80,7 @@ func (stmt *OrStmt) GetAtoms() []FcAtom {
 	return atoms
 }
 
-func (stmt *SetEqualStmt) GetAtoms() []FcAtom {
+func (stmt *IntensionalSetStmt) GetAtoms() []FcAtom {
 	atoms := []FcAtom{}
 	atoms = append(atoms, GetAtomsInFc(stmt.CurSet)...)
 	atoms = append(atoms, GetAtomsInFc(stmt.ParentSet)...)

@@ -155,6 +155,6 @@ func NewHaveByReplacementStmt(name string, domSet Fc, rangeSet Fc, propName FcAt
 	return &HaveByReplacementStmt{name, domSet, rangeSet, propName}
 }
 
-func NewSetEqualStmt(curSet Fc, param string, parentSet Fc, proofs []*SpecFactStmt) *SetEqualStmt {
-	return &SetEqualStmt{curSet, param, parentSet, proofs}
+func NewIntensionalSetStmt(curSet Fc, param string, parentSet Fc, proofs []*SpecFactStmt) *IntensionalSetStmt {
+	return &IntensionalSetStmt{curSet, param, parentSet, proofs}
 }

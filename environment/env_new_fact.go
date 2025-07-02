@@ -33,8 +33,8 @@ func (env *Env) NewFact(stmt ast.FactStmt) error {
 		return env.newUniFactWithIff(f)
 	case *ast.EnumStmt:
 		return env.newEnumFact(f)
-	case *ast.SetEqualStmt:
-		return env.newSetEqualFact(f)
+	case *ast.IntensionalSetStmt:
+		return env.newIntensionalSetFact(f)
 	default:
 		return fmt.Errorf("unknown fact type: %T", stmt)
 	}
@@ -546,7 +546,7 @@ func (env *Env) newEnumFact(stmt *ast.EnumStmt) error {
 	return nil
 }
 
-func (env *Env) newSetEqualFact(stmt *ast.SetEqualStmt) error {
+func (env *Env) newIntensionalSetFact(stmt *ast.IntensionalSetStmt) error {
 	leftUniFact, rightUniFact, err := stmt.ToEquivalentUniFacts()
 	if err != nil {
 		return err
@@ -594,7 +594,7 @@ func (env *Env) newUniFact_ThenFactIsEnumStmt(stmt *ast.UniFactStmt, thenFact *a
 	return nil
 }
 
-func (env *Env) newUniFact_ThenFactIsSetEqualStmt(stmt *ast.UniFactStmt, thenFact *ast.SetEqualStmt) error {
+func (env *Env) newUniFact_ThenFactIsIntensionalSetStmt(stmt *ast.UniFactStmt, thenFact *ast.IntensionalSetStmt) error {
 	leftUniFact, rightUniFact, err := thenFact.ToEquivalentUniFacts()
 	if err != nil {
 		return err
