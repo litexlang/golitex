@@ -175,45 +175,7 @@ func IsFnSet(fc Fc) bool {
 		return false
 	}
 
-	return isFcAtomWithName(fcHeadAsFcFn.FnHead, glob.KeywordFn)
-}
-
-func isFcAtomWithName(fc Fc, name string) bool {
-	fcAsFcAtom, ok := fc.(FcAtom)
-	if !ok {
-		return false
-	}
-
-	// return fcAsFcAtom.Name == name && fcAsFcAtom.PkgName == glob.EmptyPkg
-	return string(fcAsFcAtom) == name
-}
-
-func GetParamsSetFromInStatements(inStatements []FactStmt) ([]Fc, error) {
-	paramsSets := []Fc{}
-	for _, inStmt := range inStatements {
-		paramSet, err := GetParamSetFromInStmt(inStmt)
-		if err != nil {
-			return nil, err
-		}
-		paramsSets = append(paramsSets, paramSet)
-	}
-
-	return paramsSets, nil
-}
-
-func GetParamSetFromInStmt(inStmt FactStmt) (Fc, error) {
-	inStmtAsSpecFact, ok := inStmt.(*SpecFactStmt)
-	if !ok {
-		return nil, fmt.Errorf("GetParamsSetFromInStatements: expected SpecFactStmt, but got %T", inStmt)
-	}
-	if inStmtAsSpecFact.NameIs(glob.KeywordIn) {
-		if len(inStmtAsSpecFact.Params) != 2 {
-			return nil, fmt.Errorf("GetParamsSetFromInStatements: expected 2 params, but got %d", len(inStmtAsSpecFact.Params))
-		}
-		return inStmtAsSpecFact.Params[1], nil
-	}
-
-	return nil, fmt.Errorf("GetParamsSetFromInStatements: expected In fact, but got %s", inStmtAsSpecFact.String())
+	return isFcAtomAndEqualToStr(fcHeadAsFcFn.FnHead, glob.KeywordFn)
 }
 
 func (stmt *SpecFactStmt) ReverseSpecFactParamsOrder() (*SpecFactStmt, error) {
@@ -223,10 +185,6 @@ func (stmt *SpecFactStmt) ReverseSpecFactParamsOrder() (*SpecFactStmt, error) {
 
 	newParams := []Fc{stmt.Params[1], stmt.Params[0]}
 	return NewSpecFactStmt(stmt.TypeEnum, stmt.PropName, newParams), nil
-}
-
-func MakeFnSetFc(fnSets []Fc, retSet Fc) Fc {
-	return NewFcFn(NewFcFn(FcAtom(glob.KeywordFn), fnSets), []Fc{retSet})
 }
 
 func (stmt *DefObjStmt) NewInFacts() []*SpecFactStmt {
@@ -253,21 +211,7 @@ func (defHeader *DefHeader) NewInFacts() []*SpecFactStmt {
 	return facts
 }
 
-func IsFnDeclarationFc(fc Fc) bool {
-	fcAsFn, ok := fc.(*FcFn)
-	if !ok {
-		return false
-	}
-
-	fcAsFnHeadAsFn, ok := fcAsFn.FnHead.(*FcFn)
-	if !ok {
-		return false
-	}
-
-	return isFcAtomWithName(fcAsFnHeadAsFn.FnHead, glob.KeywordFn)
-}
-
-func GetFnDeclarationFcInsideItems(fc Fc) ([]Fc, Fc) {
+func getFnDeclarationFcInsideItems(fc Fc) ([]Fc, Fc) {
 	fcAsFn, ok := fc.(*FcFn)
 	if !ok {
 		return nil, nil
@@ -285,7 +229,7 @@ func GetFnDeclarationFcInsideItems(fc Fc) ([]Fc, Fc) {
 }
 
 func FromFnDeclFcToDefFnStmt(name string, fc Fc) *FnTemplateStmt {
-	paramSets, retSet := GetFnDeclarationFcInsideItems(fc)
+	paramSets, retSet := getFnDeclarationFcInsideItems(fc)
 
 	params := []string{}
 
@@ -315,7 +259,7 @@ func Get_FnTemplate_InFcForm_ParamSetsAndRetSet(fc Fc) ([]Fc, Fc, bool) {
 		return nil, nil, false
 	}
 
-	if !isFcAtomWithName(fcAsFcFnHeadAsFcFn.FnHead, glob.KeywordFn) {
+	if !isFcAtomAndEqualToStr(fcAsFcFnHeadAsFcFn.FnHead, glob.KeywordFn) {
 		return nil, nil, false
 	}
 
@@ -375,7 +319,7 @@ func isFcWithFcFnHeadWithName(fc Fc, name string) bool {
 		return false
 	}
 
-	return isFcAtomWithName(fcAsFcFnHeadAsFcFn.FnHead, name)
+	return isFcAtomAndEqualToStr(fcAsFcFnHeadAsFcFn.FnHead, name)
 }
 
 func IsFnFcFn(fc Fc) bool {

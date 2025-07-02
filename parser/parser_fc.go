@@ -433,7 +433,7 @@ func (tb *tokenBlock) fnSet() (ast.Fc, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	ret := ast.MakeFnSetFc(fnSets, retSet)
+	ret := ast.NewFcFn(ast.NewFcFn(ast.FcAtom(glob.KeywordFn), fnSets), []ast.Fc{retSet})
 
 	return ret, nil
 }
