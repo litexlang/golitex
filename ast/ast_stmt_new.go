@@ -154,3 +154,7 @@ func NewProveByMathInductionStmt(propName FcAtom, start Fc) *ProveByMathInductio
 func NewHaveByReplacementStmt(name string, domSet Fc, rangeSet Fc, propName FcAtom) *HaveByReplacementStmt {
 	return &HaveByReplacementStmt{name, domSet, rangeSet, propName}
 }
+
+func NewSetEqualStmt(curSet Fc, param string, parentSet Fc, proofs []*SpecFactStmt) *SetEqualStmt {
+	return &SetEqualStmt{curSet, param, parentSet, proofs}
+}

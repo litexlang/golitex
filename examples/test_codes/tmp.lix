@@ -1,4 +1,3 @@
-"""
 prop p(n N)
 
 prop q(n N):
@@ -21,11 +20,4 @@ prop p4(n N):
 
 prop p5(n N):
     iff:
-        $p(n)
-
-"""
-
-prop p6(n N):
-    n = 1
-    then:
         $p(n)

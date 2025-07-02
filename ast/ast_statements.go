@@ -171,3 +171,10 @@ type HaveByReplacementStmt struct {
 	RangeSet Fc
 	PropName FcAtom
 }
+
+type SetEqualStmt struct {
+	CurSet    Fc
+	Param     string
+	ParentSet Fc
+	Proofs    []*SpecFactStmt
+}
