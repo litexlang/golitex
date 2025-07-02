@@ -15,8 +15,10 @@
 package litex_pipeline
 
 import (
+	"fmt"
 	env "golitex/environment"
 	exe "golitex/executor"
+	glob "golitex/glob"
 	parser "golitex/parser"
 )
 
@@ -32,29 +34,18 @@ func pipelineExecutorInit() (*exe.Executor, error) {
 }
 
 func useHardcodedCodeToInit(executor *exe.Executor) error {
-	code := `
-prop last_two_objects_are_equal(x, y, y2 obj):
-	y = y2
-
-know prop larger_is_transitive(x, y, z R):
-	x > y
-	y > z
-
-know forall x, y, z R:
-	$larger_is_transitive(x, y, z)
-	then:
-		x > z
-		`
-
-	statements, err := parser.ParseSourceCode(code)
+	statements, err := parser.ParseSourceCode(glob.PipelineInitCode)
 	if err != nil {
 		return err
 	}
 	for _, statement := range statements {
-		_, err := executor.Stmt(statement)
-		if err != nil {
-			return err
+		execState, err := executor.Stmt(statement)
+		if err != nil || execState != glob.ExecState_True {
+			return fmt.Errorf("failed to init pipeline: %v", err)
 		}
 	}
+
+	executor.ClearMsgs()
+
 	return nil
 }
