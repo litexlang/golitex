@@ -42,6 +42,6 @@ func (env *Env) Init() {
 	env.FcSatisfy_FreeTemplateFact_Store_DeriveFacts(modAtom, modTemplate)
 
 	lenAtom := ast.FcAtom(glob.KeywordLen)
-	lenTemplate := ast.NewFnTemplateStmt(ast.NewDefHeader(lenAtom.String(), []string{"x"}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}), []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIsFiniteSet), []ast.Fc{ast.FcAtom("x")})}, []ast.FactStmt{}, ast.FcAtom(glob.KeywordNatural))
+	lenTemplate := ast.NewFnTemplateStmt(ast.NewDefHeader(lenAtom.String(), []string{"x"}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}), []ast.FactStmt{ast.NewInFactWithFc(ast.FcAtom("x"), ast.FcAtom(glob.KeywordFiniteSet))}, []ast.FactStmt{}, ast.FcAtom(glob.KeywordNatural))
 	env.FcSatisfy_FreeTemplateFact_Store_DeriveFacts(lenAtom, lenTemplate)
 }
