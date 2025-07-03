@@ -624,10 +624,9 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
 		return err
 	}
 
-	thenFacts := []ast.FactStmt{stmt.Prop.ToSpecFact()}
-	knownUniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.DomFacts, thenFacts)
+	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, []ast.FactStmt{}, stmt.ThenFacts)
 
-	err = exec.env.NewFact(knownUniFact)
+	err = exec.env.NewFact(uniFact)
 	if err != nil {
 		return err
 	}
@@ -762,25 +761,26 @@ func (exec *Executor) checkReverse(stmt ast.FactStmt) (glob.ExecState, error) {
 
 // 也许我应该语义改成，先声明prop，然后再证明prop，而不是现在这个样子
 func (exec *Executor) claimPropStmt(stmt *ast.ClaimPropStmt) (glob.ExecState, error) {
-	// prop all atoms declared
-	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.DomFacts, stmt.Prop.IffFacts)
-	if !exec.env.AreAtomsInFactAreDeclared(uniFact, map[string]struct{}{}) && !exec.env.IsFcAtomDeclaredByUser(ast.FcAtom(stmt.Prop.DefHeader.Name)) {
-		return glob.ExecState_Error, fmt.Errorf("claim prop statement error: atoms in fact are not declared")
-	}
+	panic("not implemented")
+	// // prop all atoms declared
+	// uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.DomFacts, stmt.Prop.IffFacts)
+	// if !exec.env.AreAtomsInFactAreDeclared(uniFact, map[string]struct{}{}) && !exec.env.IsFcAtomDeclaredByUser(ast.FcAtom(stmt.Prop.DefHeader.Name)) {
+	// 	return glob.ExecState_Error, fmt.Errorf("claim prop statement error: atoms in fact are not declared")
+	// }
 
-	// check proofs
-	execState, err := exec.checkClaimPropStmtProofs(stmt)
-	if notOkExec(execState, err) {
-		return execState, err
-	}
+	// // check proofs
+	// execState, err := exec.checkClaimPropStmtProofs(stmt)
+	// if notOkExec(execState, err) {
+	// 	return execState, err
+	// }
 
-	// know exec
-	err = exec.knowPropStmt(ast.NewKnowPropStmt(stmt.Prop))
-	if notOkExec(execState, err) {
-		return execState, err
-	}
+	// // know exec
+	// err = exec.knowPropStmt(ast.NewKnowPropStmt(stmt.Prop))
+	// if notOkExec(execState, err) {
+	// 	return execState, err
+	// }
 
-	return glob.ExecState_True, nil
+	// return glob.ExecState_True, nil
 }
 
 func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimPropStmt) (glob.ExecState, error) {

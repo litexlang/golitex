@@ -55,7 +55,7 @@ forall a Z, b Z, m Z:
     $int_set_has_lower_bound_and_upper_bound_is_finite(solutions_of_congruence_modulo(a, b, m), 0, m)
     solutions_of_congruence_modulo(a, b, m) $in finite_set
 
-know prop solutions_of_congruence_is_finite(a Z, b Z, m Z):
+prop solutions_of_congruence_is_finite(a Z, b Z, m Z):
     or:
         len(solutions_of_congruence_modulo(a, b, m)) = 0
         len(solutions_of_congruence_modulo(a, b, m)) = gcd(a, m)

@@ -18,7 +18,7 @@ forall a, b, c N:
 # Basic facts like this will be implemented in standard library.
 know prop less_is_preserved_by_addition(m N, n N, p N):
     m + p < n + p
-    iff:
+    then:
         m < n
 
 know forall a, b, n N:

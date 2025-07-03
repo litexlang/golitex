@@ -21,7 +21,7 @@ with is_group(G, op, e, inv):
 
 obj s set
 
-know prop random_property(x s)
+prop random_property(x s)
 
 suppose random_property(x):
     know x = 1
