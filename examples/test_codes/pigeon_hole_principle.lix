@@ -1,20 +1,34 @@
 # 把 is_finite_set 改成 finite_set 这样方便几百倍
 
+prop pigeon_hole_principle_at_len_n(n N):
+    forall s, s2 finite_set:
+    	len(s) = n
+        len(s2) > len(s)
+        then:
+            $exist_obj_not_in_left_set_but_in_right_set(s, s2)
+
+
 claim:
-    forall s set, s2 set:
+    forall s finite_set, s2 finite_set:
         len(s) = 0
         len(s2) > len(s)
         then:
             $exist_obj_not_in_left_set_but_in_right_set(s, s2)
     prove:
         obj a s2 # 本质上这里应该是 have ，因为 s2 一定不是空集
-        know:
-            not a $in s
         not a $in s # 内置：任何东西不在长度为0的集合里
         exist a st $exist_obj_not_in_left_set_but_in_right_set(s, s2)
 
+$pigeon_hole_principle_at_len_n(0)
+
 claim:
-    forall s set, s2 set:
-        len(s) + 1 = len(s2)
-        
-        
+    forall n N:
+        $pigeon_hole_principle_at_len_n(n)
+        then:
+            $pigeon_hole_principle_at_len_n(n+1)
+    prove:
+        """
+        要让我知道 集合 减去2个元素后，长度减少2，添加3个元素后，长度添加3
+        subset := {a, b}
+        len(s \exclude subset) = len(s) - len(subset) # 前提：subset 确实里面的元素都是s的元素。这种事实写在 glob_init 里很好
+        """

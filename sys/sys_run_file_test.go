@@ -22,7 +22,7 @@ import (
 
 func TestRunCodeInFile(t *testing.T) {
 	startTime := time.Now()
-	msg, signal, err := RunFile("../examples/test_codes/tmp.lix")
+	msg, signal, err := RunFile("../examples/test_codes/pigeon_hole_principle.lix")
 	if err != nil {
 		t.Errorf(err.Error())
 	}

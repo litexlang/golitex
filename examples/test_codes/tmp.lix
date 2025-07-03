@@ -1,4 +1,0 @@
-obj s finite_set:
-    len(s) = 0
-
-s := {}
