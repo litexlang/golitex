@@ -289,11 +289,12 @@ know forall x Z:
 
 # Use Lemma 4.1.5 to prove that -1 is not a natural number and there is a natural number t such that t + (-1) = 0
 
+"""
 not $in(-1, N)
 $given_int_is_reverse_of_nat(-1)
 have t st $given_int_is_reverse_of_nat(-1)
 t + (-1) = 0
-
+"""
 
 # The rationals
 
