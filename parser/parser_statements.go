@@ -870,12 +870,53 @@ func (tb *tokenBlock) knowPropStmt() (*ast.KnowPropStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	prop, err := tb.defPropStmt()
+	err = tb.header.skip(glob.KeywordProp)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
 
-	return ast.NewKnowPropStmt(*prop), nil
+	declHeader, err := tb.defHeaderWithoutParsingColonAtEnd()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	if !tb.header.is(glob.KeySymbolColon) {
+		return ast.NewKnowPropStmt(*ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, []ast.FactStmt{}), []ast.FactStmt{}), nil
+	}
+
+	err = tb.header.skipKwAndColon_ExceedEnd(glob.KeySymbolColon)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	if len(tb.body) < 2 {
+		return nil, fmt.Errorf("expect at least 2 statements in know prop body, but got %d", len(tb.body))
+	}
+
+	iffFacts := []ast.FactStmt{}
+	thenFacts := []ast.FactStmt{}
+	for i := range len(tb.body) - 1 {
+		iffFact, err := tb.body[i].factStmt(UniFactDepth1)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		iffFacts = append(iffFacts, iffFact)
+	}
+
+	err = tb.body[len(tb.body)-1].header.skipKwAndColon_ExceedEnd(glob.KeywordThen)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	for _, stmt := range tb.body[len(tb.body)-1].body {
+		curStmt, err := stmt.factStmt(UniFactDepth1)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		thenFacts = append(thenFacts, curStmt)
+	}
+
+	return ast.NewKnowPropStmt(*ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts), thenFacts), nil
 }
 
 func (tb *tokenBlock) proveInEachCaseStmt() (*ast.ProveInEachCaseStmt, error) {
