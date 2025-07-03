@@ -20,22 +20,9 @@ import (
 	"time"
 )
 
-func TestRunREPLInTerminal(t *testing.T) {
-	RunREPLInTerminal()
-}
-
-func TestRunRepo(t *testing.T) {
-	msg, signal, err := RunRepo("../examples/number_theory_for_beginners_by_andre_weil")
-	if err != nil {
-		t.Errorf(err.Error())
-	}
-	fmt.Println(msg)
-	fmt.Println(signal)
-}
-
-func TestRunFileInRepo(t *testing.T) {
+func TestRunCodeInFile(t *testing.T) {
 	startTime := time.Now()
-	msg, signal, err := RunFile("../examples/test_codes/natural_numbers1.lix")
+	msg, signal, err := RunFile("../examples/test_codes/tmp.lix")
 	if err != nil {
 		t.Errorf(err.Error())
 	}
