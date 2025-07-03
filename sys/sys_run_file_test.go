@@ -20,7 +20,7 @@ import (
 	"time"
 )
 
-func TestRunCodeInFile(t *testing.T) {
+func Test_File(t *testing.T) {
 	startTime := time.Now()
 	msg, signal, err := RunFile("../examples/test_codes/tmp.lix")
 	if err != nil {
