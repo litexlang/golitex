@@ -133,7 +133,7 @@ know prop two_points_on_line_then_line_on_plane(a point, b point, l line, p plan
         $point_on_line(b, l)
         $point_on_plane(a, p)
         $point_on_plane(b, p)
-        iff:
+        then:
             $line_on_plane(l, p)
 
 prove:
@@ -261,7 +261,7 @@ know prop no_more_than_one_point_between_three_points_on_line(a point, b point, 
     a != c
     b != c
     $point_on_line(a, line_of(b, c))
-    iff:
+    then:
         or:
             $between(a, b, c)
             $between(a, c, b)
@@ -309,15 +309,14 @@ prop line_intersect_line(a point, b point, l line):
         l != finite_line_of(a, b)
 
 know prop line_intersect_finite_line_then_line_intersect_line(a point, b point, c point, l line):
-    dom:
         a != b
         a != c
         b != c
         $line_intersect_finite_line(a, b, l)
-    iff:
-        or:
-            $line_intersect_finite_line(a , c, l)
-            $line_intersect_finite_line(b , c, l)
+        then:
+            or:
+                $line_intersect_finite_line(a , c, l)
+                $line_intersect_finite_line(b , c, l)
 
 prove:
     obj a point, b point, c point, l line:
@@ -416,10 +415,9 @@ prove:
 # 2. If a segment AB is congruent to the segment A′B′ and also to the segment A″B″, then the segment A′B′ is congruent to the segment A″B″; that is, if AB ≅ A′B′ and AB ≅ A″B″, then A′B′ ≅ A″B″.
 
 know prop finite_line_equal_transitive(l1 finite_line, l2 finite_line, l3 finite_line):
-    dom:
-        $finite_line_equal(l1, l2)
-        $finite_line_equal(l2, l3)
-    iff:
+    $finite_line_equal(l1, l2)
+    $finite_line_equal(l2, l3)
+    then:
         $finite_line_equal(l1, l3)
 
 prove:
@@ -457,7 +455,7 @@ know prop addition_keeps_equal_of_finite_lines(a point, b point, c point, a2 poi
     $on_one_line(a2, b2, c2)
     $finite_line_equal(finite_line_of(a, b), finite_line_of(a2, b2))
     $finite_line_equal(finite_line_of(b, c), finite_line_of(b2, c2))
-    iff:
+    then:
         $finite_line_equal(finite_line_of(a, c), finite_line_of(a2, c2))
 
 prove:
@@ -528,10 +526,9 @@ know exist_prop r2 ray st exist_a_ray_with_the_same_angel_with_given_ray_and_hal
 # 5. If the angle ∠ (h, k) is congruent to the angle ∠ (h′, k′) and to the angle ∠ (h″, k″), then the angle ∠ (h′, k′) is congruent to the angle ∠ (h″, k″); that is to say, if ∠ (h, k) ≅ ∠ (h′, k′) and ∠ (h, k) ≅ ∠ (h″, k″), then ∠ (h′, k′) ≅ ∠ (h″, k″).
 
 know prop angle_equal_transitive(ang1 angle, ang2 angle, ang3 angle):
-    dom:
-        $angle_equal(ang1, ang2)
-        $angle_equal(ang2, ang3)
-    iff:
+    $angle_equal(ang1, ang2)
+    $angle_equal(ang2, ang3)
+    then:
         $angle_equal(ang1, ang3)
 
 know:
@@ -575,17 +572,16 @@ know forall a point, b point, c point:
         $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(c, b, a))
 
 know prop triangle_equal_by_two_sides_and_included_angle_equal(a point, b point, c point, a2 point, b2 point, c2 point):
-    dom:
-        a != b
-        a != c
-        b != c
-        a2 != b2
-        a2 != c2
-        b2 != c2
-        $finite_line_equal(finite_line_of(a, b), finite_line_of(a2, b2))
-        $finite_line_equal(finite_line_of(b, c), finite_line_of(b2, c2))
-        $angle_equal(angle_of_points(a, b, c), angle_of_points(a2, b2, c2))
-    iff:
+    a != b
+    a != c
+    b != c
+    a2 != b2
+    a2 != c2
+    b2 != c2
+    $finite_line_equal(finite_line_of(a, b), finite_line_of(a2, b2))
+    $finite_line_equal(finite_line_of(b, c), finite_line_of(b2, c2))
+    $angle_equal(angle_of_points(a, b, c), angle_of_points(a2, b2, c2))
+    then:
         $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(a2, b2, c2))
 prove:
     obj a point, b point, c point, a2 point, b2 point, c2 point:

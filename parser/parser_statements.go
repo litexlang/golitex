@@ -884,9 +884,13 @@ func (tb *tokenBlock) knowPropStmt() (*ast.KnowPropStmt, error) {
 		return ast.NewKnowPropStmt(*ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, []ast.FactStmt{}), []ast.FactStmt{}), nil
 	}
 
-	err = tb.header.skipKwAndColon_ExceedEnd(glob.KeySymbolColon)
+	err = tb.header.skip(glob.KeySymbolColon)
 	if err != nil {
 		return nil, tbErr(err, tb)
+	}
+
+	if !tb.header.ExceedEnd() {
+		return nil, fmt.Errorf("expect end of know prop body, but got '%s'", tb.header.strAtCurIndexPlus(0))
 	}
 
 	if len(tb.body) < 2 {

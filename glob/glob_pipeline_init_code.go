@@ -21,16 +21,12 @@ prop last_two_objects_are_equal(x, y, y2 obj):
 know prop larger_is_transitive(x, y, z R):
 	x > y
 	y > z
-
-know forall x, y, z R:
-	$larger_is_transitive(x, y, z)
 	then:
 		x > z
 
 exist_prop a in_set st exist_obj_not_in_left_set_but_in_right_set(not_in_set, in_set set):
 	not a $in not_in_set
 
-# pigeon hole principle
 """
 know forall small_set, big_set set:
 	dom:
