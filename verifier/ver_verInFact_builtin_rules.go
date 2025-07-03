@@ -321,6 +321,16 @@ func (ver *Verifier) verInSet(stmt *ast.SpecFactStmt, state VerState) (bool, err
 		return false, nil
 	}
 
+	// 如果它是finite_set，则直接返回true
+	finiteSetFact := ast.NewInFactWithFc(stmt.Params[0], ast.FcAtom(glob.KeywordFiniteSet))
+	ok, err := ver.VerFactStmt(finiteSetFact, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
 	// 如果它是N, Z, Q, R, C, 则直接返回true
 	ok = ast.IsFcAtomWithBuiltinPkgAndName(stmt.Params[0], glob.KeywordNatural) ||
 		ast.IsFcAtomWithBuiltinPkgAndName(stmt.Params[0], glob.KeywordInt) ||

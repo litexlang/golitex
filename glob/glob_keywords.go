@@ -56,7 +56,7 @@ const (
 	// KeywordFnSet                  = "fn_set" // Syntax sugar for fn setName(params paramsSet)  = {z z_set_name(params) | properties(z, params)}
 	KeywordLen                = "len"
 	KeywordIsIndexableSet     = "is_indexable_set"
-	KeywordIsFiniteSet        = "is_finite_set"
+	KeywordFiniteSet          = "finite_set"
 	KeywordProveOverFiniteSet = "prove_over_finite_set" // syntax connecting forall and finite_set
 	KeywordFnTemplate         = "fn_template"
 	KeywordStruct             = "struct"
@@ -111,7 +111,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	// KeywordFnSet:                  {},
 	KeywordLen:                {},
 	KeywordIsIndexableSet:     {},
-	KeywordIsFiniteSet:        {},
+	KeywordFiniteSet:          {},
 	KeywordProveOverFiniteSet: {},
 	KeywordFnTemplate:         {},
 	KeywordStruct:             {},
@@ -264,7 +264,7 @@ var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]s
 	KeySymbolRightBracket: {},
 
 	KeywordCommutativeProp: {},
-	KeywordIsFiniteSet:     {},
+	KeywordFiniteSet:       {},
 	// KeySymbolSemicolon:     {},
 }
 

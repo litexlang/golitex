@@ -528,7 +528,8 @@ func (env *Env) newEnumFact(stmt *ast.EnumStmt) error {
 	}
 
 	// postprocess 1. s is $is_finite_set 2. len(s) = number of items in set
-	finiteSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIsFiniteSet), []ast.Fc{stmt.EnumName})
+	// finiteSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIsFiniteSet), []ast.Fc{stmt.EnumName})
+	finiteSetFact := ast.NewInFactWithFc(stmt.EnumName, ast.FcAtom(glob.KeywordFiniteSet))
 	err = env.NewFact(finiteSetFact)
 	if err != nil {
 		return err
