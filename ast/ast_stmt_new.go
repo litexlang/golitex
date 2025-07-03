@@ -22,8 +22,8 @@ func NewDefObjStmt(objs []string, objSets []Fc, facts []FactStmt) *DefObjStmt {
 	return &DefObjStmt{objs, objSets, facts}
 }
 
-func NewDefPropStmt(defHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt) *DefPropStmt {
-	return &DefPropStmt{*defHeader, domFacts, iffFacts}
+func NewDefPropStmt(defHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt, thenFacts []FactStmt) *DefPropStmt {
+	return &DefPropStmt{*defHeader, domFacts, iffFacts, thenFacts}
 }
 
 func NewDefExistPropStmt(def *DefExistPropStmtBody, existParams []string, existParamSets []Fc) *DefExistPropStmt {
@@ -78,8 +78,8 @@ func NewProveInEachCaseStmt(orFact OrStmt, thenFacts []FactStmt, proofs [][]Stmt
 	return &ProveInEachCaseStmt{orFact, thenFacts, proofs}
 }
 
-func NewKnowPropStmt(prop DefPropStmt, thenFacts []FactStmt) *KnowPropStmt {
-	return &KnowPropStmt{prop, thenFacts}
+func NewKnowPropStmt(prop DefPropStmt) *KnowPropStmt {
+	return &KnowPropStmt{prop}
 }
 
 func NewDefExistPropBodyStmt(defHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt) *DefExistPropStmtBody {
