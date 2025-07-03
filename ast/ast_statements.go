@@ -189,3 +189,8 @@ type ProveOverFiniteSetStmt struct {
 	Fact   UniFactStmt
 	Proofs []Stmt
 }
+
+type HaveFromSet struct {
+	Param   string
+	SetName Fc
+}

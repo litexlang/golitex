@@ -208,3 +208,85 @@ While Lean provides tactics like `linarith` for simpler proofs:
 Litex will in the future introduce a new feature `prove_algo` to mimic how Lean's tactics work.
 
 Litex maintains intuitive accessibility - even a 10-year-old could follow the solution process, with advanced features coming later to match tactics' power without their complexity.
+
+## Comparison 3: definition of union
+
+```
+# Define a function called union, which takes 2 functions as parameters and return a set as return value
+fn union(s, s2 set) set:
+    forall x obj:
+        or:
+            x $in s
+            x $in s2
+        then:
+            x $in union(s, s2)
+
+# Property of union: if an item is in the union of 2 sets, then it is in at least one of the sets
+know prop union_items_in_at_least_one_of_child_set(x obj, s, s2 set):
+    x $in union(s, s2)    
+    then:
+        or:
+            x $in s
+            x $in s2
+
+# Example: union(s, s2) is the union of s and s2
+prove:
+    obj s, s2 set
+    obj x s
+    x $in union(s, s2)
+
+    forall s, s2 set, x union(s, s2):
+        $union_items_in_at_least_one_of_child_set(x, s, s2)
+
+# Example: union(s, {}) is itself
+claim:
+    prop union_with_empty_set_is_itself(x obj, s, s2 set):
+        s2 := {}
+        x $in union(s, s2)
+        then:
+            x $in s
+    prove:
+        not x $in s2
+        $union_items_in_at_least_one_of_child_set(x, s, s2)
+```
+
+```
+-- Define a set as a predicate of a type
+def set (α : Type) := α → Prop
+
+-- The membership relation of a set
+notation x "∈" s => s x
+
+-- The empty set
+def empty_set {α : Type} : set α := λ _ => False
+
+-- The union operation of sets
+def union {α : Type} (s1 s2 : set α) : set α := λ x => s1 x ∨ s2 x
+
+-- The property of union: x ∈ union s1 s2 if and only if x ∈ s1 or x ∈ s2
+theorem union_items_in_either_set {α : Type} (x : α) (s1 s2 : set α) :
+  x ∈ union s1 s2 ↔ x ∈ s1 ∨ x ∈ s2 :=
+begin
+  refl  -- directly from the definition
+end
+
+-- Proof: if x ∈ s, then x ∈ union s s2
+example {α : Type} (x : α) (s s2 : set α) (h : x ∈ s) :
+  x ∈ union s s2 :=
+begin
+  left,
+  exact h
+end
+
+-- Proof: the union of a set with the empty set is the original set
+theorem union_with_empty_set_is_itself {α : Type} (x : α) (s : set α) :
+  x ∈ union s empty_set ↔ x ∈ s :=
+begin
+  rw union_items_in_either_set,
+  simp [empty_set],  -- simplify the disjunction of false
+end
+```
+
+We can see since Lean 4 is built on top of type theory, when the user wants to define a set, he has to define a type first, and then define a set as a predicate of the type. This is a very complex process. 
+
+On the other hand, Litex does not need to define a type first. It can directly define a set as a predicate of a type. This is a very simple process. Your proof is very clean and conceptually integral. There is no extra mental brought by the formal language. There is no barrier between your thinking and the formalized math.
