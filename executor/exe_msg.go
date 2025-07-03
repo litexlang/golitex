@@ -22,7 +22,7 @@ import (
 func (e *Executor) deleteEnvAndRetainMsg() {
 	for _, msg := range e.env.Msgs {
 		if glob.IsNotImportDirStmt() {
-			e.env.Parent.AppendMsg2(msg)
+			e.env.Parent.AppendMsg(msg)
 		}
 	}
 	e.env = e.env.Parent

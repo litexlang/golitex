@@ -349,6 +349,19 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch(stmt *ast.SpecFac
 			continue
 		}
 
+		// 如果有var没配对上，那就报错
+		curUniFact := knownFactUnderLogicExpr.UniFact
+		notOk := false
+		for _, param := range curUniFact.Params {
+			if _, ok := uniConMap[param]; !ok {
+				notOk = true
+			}
+		}
+
+		if notOk {
+			continue
+		}
+
 		instantiatedLogicExpr, err := knownFactUnderLogicExpr.LogicExpr.Instantiate(uniConMap)
 		if err != nil {
 			return false, err
