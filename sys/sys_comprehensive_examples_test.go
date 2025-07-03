@@ -19,7 +19,7 @@ import (
 	"testing"
 )
 
-func TestRunAllComprehensiveCodes(t *testing.T) {
+func Test_ComprehensiveCodes(t *testing.T) {
 	pathSlice := []string{
 		"../examples/comprehensive_examples",
 		"../examples/testings",
