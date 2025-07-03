@@ -97,7 +97,8 @@ type KnowFactStmt struct {
 }
 
 type KnowPropStmt struct {
-	Prop DefPropStmt
+	Prop      DefPropStmt
+	ThenFacts FactStmtSlice
 }
 
 type ClaimExistPropStmt struct {

@@ -78,8 +78,8 @@ func NewProveInEachCaseStmt(orFact OrStmt, thenFacts []FactStmt, proofs [][]Stmt
 	return &ProveInEachCaseStmt{orFact, thenFacts, proofs}
 }
 
-func NewKnowPropStmt(prop DefPropStmt) *KnowPropStmt {
-	return &KnowPropStmt{prop}
+func NewKnowPropStmt(prop DefPropStmt, thenFacts []FactStmt) *KnowPropStmt {
+	return &KnowPropStmt{prop, thenFacts}
 }
 
 func NewDefExistPropBodyStmt(defHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt) *DefExistPropStmtBody {
