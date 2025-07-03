@@ -26,6 +26,10 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state VerState) 
 		return false, fmt.Errorf("invalid number of parameters for in fact")
 	}
 
+	if stmt.TypeEnum == ast.FalsePure {
+		return ver.falseInFactBuiltinRules(stmt, state)
+	}
+
 	ok, err := ver.verInSet(stmt, state)
 	if err != nil {
 		return false, err
@@ -364,4 +368,31 @@ func (ver *Verifier) inObjFact(stmt *ast.SpecFactStmt, state VerState) (bool, er
 	}
 
 	return true, nil
+}
+
+func (ver *Verifier) falseInFactBuiltinRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	// 任何东西不在空集里
+	ok, err := ver.nothingIsInEmptySet(stmt, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (ver *Verifier) nothingIsInEmptySet(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	lenOverStmtName := ast.NewFcFn(ast.FcAtom(glob.KeywordLen), []ast.Fc{stmt.Params[1]})
+	equalFact := ast.EqualFact(lenOverStmtName, ast.FcAtom("0"))
+	ok, err := ver.VerFactStmt(equalFact, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
+	return false, nil
 }

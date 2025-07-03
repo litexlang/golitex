@@ -1,5 +1,20 @@
-obj s set:
-    s $is_finite_set
-    len(s) = 0
+# 把 is_finite_set 改成 finite_set 这样方便几百倍
 
-s := {}
+claim:
+    forall s set, s2 set:
+        len(s) = 0
+        len(s2) > len(s)
+        then:
+            $exist_obj_not_in_left_set_but_in_right_set(s, s2)
+    prove:
+        obj a s2 # 本质上这里应该是 have ，因为 s2 一定不是空集
+        know:
+            not a $in s
+        not a $in s # 内置：任何东西不在长度为0的集合里
+        exist a st $exist_obj_not_in_left_set_but_in_right_set(s, s2)
+
+claim:
+    forall s set, s2 set:
+        len(s) + 1 = len(s2)
+        
+        
