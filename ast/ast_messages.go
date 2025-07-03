@@ -725,8 +725,7 @@ func (stmt *ProveOverFiniteSetStmt) String() string {
 	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Fact.String(), 1))
 	builder.WriteByte('\n')
 	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve, 1))
-	builder.WriteString("\n")
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeySymbolColon, 1))
+	builder.WriteString(glob.KeySymbolColon)
 	builder.WriteByte('\n')
 	for _, proof := range stmt.Proofs {
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 2))
