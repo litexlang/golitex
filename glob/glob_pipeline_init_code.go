@@ -27,6 +27,11 @@ know prop larger_is_transitive(x, y, z R):
 exist_prop a in_set st exist_obj_not_in_left_set_but_in_right_set(not_in_set, in_set set):
 	not a $in not_in_set
 
+know forall x Z:
+    x < 0
+    then:
+        not x $in N
+	
 """
 know forall small_set, big_set set:
 	dom:
