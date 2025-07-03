@@ -15,10 +15,16 @@
 package litex_verifier
 
 import (
+	"fmt"
 	ast "golitex/ast"
+	glob "golitex/glob"
 )
 
 func (ver *Verifier) verEnumStmt(stmt *ast.EnumStmt, state VerState) (bool, error) {
+	if ok, _ := ver.lenIsZeroThenEnumIsEmpty(stmt, state); ok {
+		return true, nil
+	}
+
 	forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts := ast.TransformEnumToUniFact(stmt.EnumName, stmt.EnumValues)
 
 	ok, err := ver.VerFactStmt(forallItemInSetEqualToOneOfGivenItems, state)
@@ -47,6 +53,24 @@ func (ver *Verifier) verEnumStmt(stmt *ast.EnumStmt, state VerState) (bool, erro
 		if !ok {
 			return false, nil
 		}
+	}
+
+	return true, nil
+}
+
+func (ver *Verifier) lenIsZeroThenEnumIsEmpty(stmt *ast.EnumStmt, state VerState) (bool, error) {
+	lenOverStmtName := ast.NewFcFn(ast.FcAtom(glob.KeywordLen), []ast.Fc{stmt.EnumName})
+	equalFact := ast.EqualFact(lenOverStmtName, ast.FcAtom("0"))
+	ok, err := ver.VerFactStmt(equalFact, state)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
+
+	if state.requireMsg() {
+		ver.successMsgEnd(stmt.String(), fmt.Sprintf("len(%s) = 0 is equivalent to %s", stmt.EnumName, stmt.String()))
 	}
 
 	return true, nil

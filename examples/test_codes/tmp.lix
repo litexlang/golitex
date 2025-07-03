@@ -1,0 +1,5 @@
+obj s set:
+    s $is_finite_set
+    len(s) = 0
+
+s := {}
