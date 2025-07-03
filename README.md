@@ -24,9 +24,9 @@ _Mathematics is the language with which God wrote the universe._
 
 _-- Galileo Galilei_
 
-_The best way to predict the future is to invent it._
+_Common sense is not so common._
 
-_-- Alan Kay_
+_-- Voltaire_
 
 Litex is a simple and easy-to-learn formal language. It makes formal reasoning as natural as writing in natural language. Thanks to its innovative design, even 10-year-olds can learn Litex easily. In the foreseeable future, Litex is going to reduce the time ratio between formalizing a proof and writing it in natural language from 10:1 to 1:1.
 
@@ -108,13 +108,13 @@ Keep this example in mind. This is the most classic example of how people uses `
 
 ## Verification is pattern matching, and so is Litex.
 
-_Common sense is not so common._
-
-_-- Voltaire_
-
 _Mathematics is nothing more than a game played according to certain simple rules with meaningless marks on a paper._
 
 _-- David Hilbert_
+
+_God made the integers, man made the rest._
+
+_-- Kronecker_
 
 Math is about deriving new facts from established ones. Verification is about making sure the new facts are true based on the established ones. There are and only are two ways of verifying a new fact:
 
@@ -176,6 +176,11 @@ Litex is a simple language. I hope many of the keywords are already familiar to 
 _Beautiful is better than ugly. Explicit is better than implicit. Simple is better than complex._
 
 _-- The Zen of Python_
+
+_What I cannot create, I do not understand._
+
+_-- Richard Feynman_
+
 
 Here are some examples of Litex, in Litex for Curious Lean Users and other formal language users. Detailed explanations are provided in [Litex for Curious Lean Users](./doc/litex_for_curious_lean_users/litex_for_curious_lean_users.md). I put them here for you to get a sense of the language. Run these examples on [playground](https://litexlang.org/playground).
 
@@ -289,9 +294,9 @@ _The people who are crazy enough to think they can change the world are the ones
 
 _-- Steve Jobs_
 
-_What I cannot create, I do not understand._
+_The best way to predict the future is to invent it._
 
-_-- Richard Feynman_
+_-- Alan Kay_
 
 Hi, I am Jiachen Shen (call me Jackie Shen), the creator of Litex. I am a PhD student in mathematics and programming language geek. In 2023, I shockingly found that math is somehow equivalent to programming, after reading Professor Terence Tao's [blog](https://terrytao.wordpress.com/2023/11/18/formalizing-the-proof-of-pfr-in-lean4-using-blueprint-a-short-tour/). This is the most amazing idea that I have ever seen in my life. In 2024, after thinking about it for a year, I started to implement Litex. After more than 3000 git commits, what it means to be a "formal language that is intuitive and as aligned with daily math expression as possible" is finally to make sense to me and my kernel sort of works now.
 

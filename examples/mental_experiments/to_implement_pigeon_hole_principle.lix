@@ -1,0 +1,18 @@
+前提
+1. 有了基本的集合运算以及他们的性质。内置。和len交互
+2. 如何推导出来一个集合是有限的？ 一个是用 enum 一个是 它是某有限集合的子集
+3. {} 也作为特殊的fc出现，里面可以有任意数量的东西。它是很特殊的运算符
+4. have 可以从 非空集合里拿出东西来
+
+a = b \union c
+not x $in a
+not x $in b
+
+know prop in_union_then_in_some_of_it(x obj, b, c set):
+    x $in b \union c
+    then:
+        or:
+            x $in b
+            x $in c
+
+a = (a \exclude {1}) \union {1}  # 如果 1 确实在a里面，那就OK
