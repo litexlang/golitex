@@ -26,4 +26,16 @@ know forall x, y, z R:
 	$larger_is_transitive(x, y, z)
 	then:
 		x > z
+
+exist_prop a in_set st exist_obj_not_in_left_set_but_in_right_set(not_in_set, in_set set):
+	not a $in not_in_set
+
+# pigeon hole principle
+"""
+know forall small_set, big_set set:
+	dom:
+		len(small_set) < len(big_set)
+	then:
+		$exist_obj_not_in_left_set_but_in_right_set(small_set, big_set)
+"""
 `
