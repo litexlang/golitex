@@ -733,3 +733,21 @@ func (stmt *ProveOverFiniteSetStmt) String() string {
 	}
 	return strings.TrimSuffix(builder.String(), "\n")
 }
+
+func (stmt *HaveFromSetStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordHave)
+	builder.WriteString(" ")
+	if len(stmt.ObjNames) > 0 {
+		for i := range len(stmt.ObjNames) - 1 {
+			builder.WriteString(stmt.ObjNames[i])
+			builder.WriteString(" ")
+			builder.WriteString(stmt.ObjSets[i].String())
+			builder.WriteString(", ")
+		}
+		builder.WriteString(stmt.ObjNames[len(stmt.ObjNames)-1])
+		builder.WriteString(" ")
+		builder.WriteString(stmt.ObjSets[len(stmt.ObjSets)-1].String())
+	}
+	return builder.String()
+}
