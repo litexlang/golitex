@@ -18,7 +18,9 @@ import (
 	ast "golitex/ast"
 )
 
-type PropMemItem struct{ Def *ast.DefPropStmt }
+type PropMemItem struct {
+	Def *ast.DefPropStmt
+}
 type PropDefMem struct {
 	// Dict glob.Map2D[PropMemItem]
 	Dict map[string]PropMemItem

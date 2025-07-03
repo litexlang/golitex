@@ -30,6 +30,7 @@ type DefPropStmt struct {
 	DefHeader DefHeader
 	DomFacts  FactStmtSlice
 	IffFacts  FactStmtSlice
+	ThenFacts FactStmtSlice
 }
 
 // 虽然它和 defProp 一样，但不排除之后要让iffFacts只能是可逆的事实
@@ -97,8 +98,7 @@ type KnowFactStmt struct {
 }
 
 type KnowPropStmt struct {
-	Prop      DefPropStmt
-	ThenFacts FactStmtSlice
+	Prop DefPropStmt
 }
 
 type ClaimExistPropStmt struct {
