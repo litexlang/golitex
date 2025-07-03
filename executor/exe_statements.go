@@ -624,7 +624,7 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
 		return err
 	}
 
-	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, []ast.FactStmt{}, stmt.ThenFacts)
+	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, []ast.FactStmt{}, stmt.Prop.ThenFacts)
 
 	err = exec.env.NewFact(uniFact)
 	if err != nil {
@@ -783,24 +783,24 @@ func (exec *Executor) claimPropStmt(stmt *ast.ClaimPropStmt) (glob.ExecState, er
 	// return glob.ExecState_True, nil
 }
 
-func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimPropStmt) (glob.ExecState, error) {
-	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.DomFacts, stmt.Prop.IffFacts)
+// func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimPropStmt) (glob.ExecState, error) {
+// uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.DomFacts, stmt.Prop.IffFacts)
 
-	exec.newEnv(exec.env, exec.env.CurMatchProp)
-	defer func() {
-		exec.deleteEnvAndRetainMsg()
-	}()
+// exec.newEnv(exec.env, exec.env.CurMatchProp)
+// defer func() {
+// 	exec.deleteEnvAndRetainMsg()
+// }()
 
-	ok, err := exec.claimStmtProveUniFact(ast.NewClaimProveStmt(uniFact, stmt.Proofs))
-	if err != nil {
-		return glob.ExecState_Error, err
-	}
-	if !ok {
-		return glob.ExecState_False, nil
-	}
+// ok, err := exec.claimStmtProveUniFact(ast.NewClaimProveStmt(uniFact, stmt.Proofs))
+// if err != nil {
+// 	return glob.ExecState_Error, err
+// }
+// if !ok {
+// 	return glob.ExecState_False, nil
+// }
 
-	return glob.ExecState_True, nil
-}
+// return glob.ExecState_True, nil
+// }
 
 func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) (glob.ExecState, error) {
 	return exec.checkClaimExistPropStmtProofs(stmt)

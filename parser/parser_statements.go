@@ -252,7 +252,7 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 	}
 
 	if !tb.header.is(glob.KeySymbolColon) {
-		return ast.NewDefPropStmt(declHeader, nil, nil), nil
+		return ast.NewDefPropStmt(declHeader, nil, nil, []ast.FactStmt{}), nil
 	}
 
 	err = tb.header.skip(glob.KeySymbolColon)
@@ -283,7 +283,7 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 		}
 	}
 
-	return ast.NewDefPropStmt(declHeader, domFacts, iffFacts), nil
+	return ast.NewDefPropStmt(declHeader, domFacts, iffFacts, []ast.FactStmt{}), nil
 }
 
 func (tb *tokenBlock) fnTemplateStmt(keyword string) (*ast.FnTemplateStmt, error) {
@@ -880,10 +880,6 @@ func (tb *tokenBlock) knowPropStmt() (*ast.KnowPropStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	if !tb.header.is(glob.KeySymbolColon) {
-		return ast.NewKnowPropStmt(*ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, []ast.FactStmt{}), []ast.FactStmt{}), nil
-	}
-
 	err = tb.header.skip(glob.KeySymbolColon)
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -920,7 +916,7 @@ func (tb *tokenBlock) knowPropStmt() (*ast.KnowPropStmt, error) {
 		thenFacts = append(thenFacts, curStmt)
 	}
 
-	return ast.NewKnowPropStmt(*ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts), thenFacts), nil
+	return ast.NewKnowPropStmt(*ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts, thenFacts)), nil
 }
 
 func (tb *tokenBlock) proveInEachCaseStmt() (*ast.ProveInEachCaseStmt, error) {
