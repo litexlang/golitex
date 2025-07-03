@@ -323,10 +323,7 @@ func (ver *Verifier) verInSet(stmt *ast.SpecFactStmt, state VerState) (bool, err
 
 	// 如果它是finite_set，则直接返回true
 	finiteSetFact := ast.NewInFactWithFc(stmt.Params[0], ast.FcAtom(glob.KeywordFiniteSet))
-	ok, err := ver.VerFactStmt(finiteSetFact, state)
-	if err != nil {
-		return false, err
-	}
+	ok, _ = ver.VerFactStmt(finiteSetFact, state)
 	if ok {
 		return true, nil
 	}
@@ -393,12 +390,14 @@ func (ver *Verifier) falseInFactBuiltinRules(stmt *ast.SpecFactStmt, state VerSt
 	return false, nil
 }
 
+// TODO 需要先证明一下它是finite set 去开始验证 len(n) = 0
 func (ver *Verifier) nothingIsInEmptySet(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	lenOverStmtName := ast.NewFcFn(ast.FcAtom(glob.KeywordLen), []ast.Fc{stmt.Params[1]})
 	equalFact := ast.EqualFact(lenOverStmtName, ast.FcAtom("0"))
 	ok, err := ver.VerFactStmt(equalFact, state)
 	if err != nil {
-		return false, err
+		// return false, err
+		return false, nil
 	}
 	if ok {
 		return true, nil
