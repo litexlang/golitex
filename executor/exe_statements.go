@@ -761,46 +761,45 @@ func (exec *Executor) checkReverse(stmt ast.FactStmt) (glob.ExecState, error) {
 
 // 也许我应该语义改成，先声明prop，然后再证明prop，而不是现在这个样子
 func (exec *Executor) claimPropStmt(stmt *ast.ClaimPropStmt) (glob.ExecState, error) {
-	panic("not implemented")
-	// // prop all atoms declared
-	// uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.DomFacts, stmt.Prop.IffFacts)
-	// if !exec.env.AreAtomsInFactAreDeclared(uniFact, map[string]struct{}{}) && !exec.env.IsFcAtomDeclaredByUser(ast.FcAtom(stmt.Prop.DefHeader.Name)) {
-	// 	return glob.ExecState_Error, fmt.Errorf("claim prop statement error: atoms in fact are not declared")
-	// }
+	// prop all atoms declared
+	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.DomFacts, stmt.Prop.IffFacts)
+	if !exec.env.AreAtomsInFactAreDeclared(uniFact, map[string]struct{}{}) && !exec.env.IsFcAtomDeclaredByUser(ast.FcAtom(stmt.Prop.DefHeader.Name)) {
+		return glob.ExecState_Error, fmt.Errorf("claim prop statement error: atoms in fact are not declared")
+	}
 
-	// // check proofs
-	// execState, err := exec.checkClaimPropStmtProofs(stmt)
-	// if notOkExec(execState, err) {
-	// 	return execState, err
-	// }
+	// check proofs
+	execState, err := exec.checkClaimPropStmtProofs(stmt)
+	if notOkExec(execState, err) {
+		return execState, err
+	}
 
-	// // know exec
-	// err = exec.knowPropStmt(ast.NewKnowPropStmt(stmt.Prop))
-	// if notOkExec(execState, err) {
-	// 	return execState, err
-	// }
+	// know exec
+	err = exec.knowPropStmt(ast.NewKnowPropStmt(stmt.Prop))
+	if notOkExec(execState, err) {
+		return execState, err
+	}
 
-	// return glob.ExecState_True, nil
+	return glob.ExecState_True, nil
 }
 
-// func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimPropStmt) (glob.ExecState, error) {
-// uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.DomFacts, stmt.Prop.IffFacts)
+func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimPropStmt) (glob.ExecState, error) {
+	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFacts, stmt.Prop.ThenFacts)
 
-// exec.newEnv(exec.env, exec.env.CurMatchProp)
-// defer func() {
-// 	exec.deleteEnvAndRetainMsg()
-// }()
+	exec.newEnv(exec.env, exec.env.CurMatchProp)
+	defer func() {
+		exec.deleteEnvAndRetainMsg()
+	}()
 
-// ok, err := exec.claimStmtProveUniFact(ast.NewClaimProveStmt(uniFact, stmt.Proofs))
-// if err != nil {
-// 	return glob.ExecState_Error, err
-// }
-// if !ok {
-// 	return glob.ExecState_False, nil
-// }
+	ok, err := exec.claimStmtProveUniFact(ast.NewClaimProveStmt(uniFact, stmt.Proofs))
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+	if !ok {
+		return glob.ExecState_False, nil
+	}
 
-// return glob.ExecState_True, nil
-// }
+	return glob.ExecState_True, nil
+}
 
 func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) (glob.ExecState, error) {
 	return exec.checkClaimExistPropStmtProofs(stmt)
