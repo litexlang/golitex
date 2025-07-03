@@ -34,7 +34,7 @@ func (env *Env) String() string {
 	return ""
 }
 
-func (e *Env) AppendMsg2(s string) {
+func (e *Env) AppendMsg(s string) {
 	e.Msgs = append(e.Msgs, s)
 }
 

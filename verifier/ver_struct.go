@@ -50,7 +50,7 @@ func (ver *Verifier) deleteEnvAndRetainMsg() error {
 	if ver.env.Parent != nil {
 		for _, msg := range ver.env.Msgs {
 			if glob.IsNotImportDirStmt() {
-				ver.env.Parent.AppendMsg2(msg)
+				ver.env.Parent.AppendMsg(msg)
 			}
 		}
 		ver.env = ver.env.Parent
@@ -65,7 +65,7 @@ func (ver *Verifier) newMsgAtParent(s string) error {
 		return fmt.Errorf("no parent env")
 	} else {
 		if glob.IsNotImportDirStmt() {
-			ver.env.Parent.AppendMsg2(s)
+			ver.env.Parent.AppendMsg(s)
 		}
 		return nil
 	}
