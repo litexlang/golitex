@@ -18,6 +18,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
+	"slices"
 	"strings"
 )
 
@@ -45,7 +46,11 @@ func (tb *tokenBlock) stmt() (ast.Stmt, error) {
 	case glob.KeywordObj:
 		ret, err = tb.defObjStmt()
 	case glob.KeywordHave:
-		ret, err = tb.defHaveStmt()
+		if slices.Contains(tb.body[0].header.slice, glob.KeywordSt) {
+			ret, err = tb.haveStmt()
+		} else {
+			ret, err = tb.haveFromSetStmt()
+		}
 	case glob.KeywordClaim:
 		ret, err = tb.claimStmt()
 	case glob.KeywordProve:
@@ -623,7 +628,7 @@ func (tb *tokenBlock) pureFuncSpecFact() (*ast.SpecFactStmt, error) {
 	return ret, nil
 }
 
-func (tb *tokenBlock) defHaveStmt() (*ast.HaveStmt, error) {
+func (tb *tokenBlock) haveStmt() (*ast.HaveStmt, error) {
 	err := tb.header.skip(glob.KeywordHave)
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -1545,4 +1550,18 @@ func (tb *tokenBlock) headerOfProp() (*ast.DefHeader, error) {
 	}
 
 	return declHeader, nil
+}
+
+func (tb *tokenBlock) haveFromSetStmt() (*ast.HaveFromSetStmt, error) {
+	err := tb.header.skip(glob.KeywordHave)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	objNames, objSets, err := tb.param_paramSet_paramInSetFacts(glob.KeySymbolColon, true)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	return ast.NewHaveFromSetStmt(objNames, objSets), nil
 }
