@@ -1,3 +1,11 @@
-not $in(-1, N)
+$larger_is_transitive(3, 2, 1)
+3 > 1
 
-#$in(N, finite_set)
+claim:
+    prop p(x N):
+        x > 1
+        then:
+            x > -1
+    prove:
+        $larger_is_transitive(x, 1, -1)
+        x > -1
