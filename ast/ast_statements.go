@@ -190,7 +190,7 @@ type ProveOverFiniteSetStmt struct {
 	Proofs []Stmt
 }
 
-type HaveFromSet struct {
-	Param   string
-	SetName Fc
+type HaveFromSetStmt struct {
+	ObjNames []string
+	ObjSets  []Fc
 }

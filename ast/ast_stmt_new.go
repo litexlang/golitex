@@ -162,3 +162,7 @@ func NewIntensionalSetStmt(curSet Fc, param string, parentSet Fc, proofs []*Spec
 func NewProveOverFiniteSetStmt(fact *UniFactStmt, proofs []Stmt) *ProveOverFiniteSetStmt {
 	return &ProveOverFiniteSetStmt{*fact, proofs}
 }
+
+func NewHaveFromSetStmt(param []string, setName []Fc) *HaveFromSetStmt {
+	return &HaveFromSetStmt{param, setName}
+}
