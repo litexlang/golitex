@@ -298,4 +298,5 @@ var BuiltinObjKeywordSet map[string]struct{} = map[string]struct{}{
 	KeywordReal:      {},
 	KeywordComplex:   {},
 	KeywordImaginary: {},
+	KeywordFiniteSet: {},
 }
