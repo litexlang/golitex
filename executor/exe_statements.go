@@ -811,6 +811,8 @@ func (exec *Executor) checkClaimExistPropStmtProofs(stmt *ast.ClaimExistPropStmt
 }
 
 func (exec *Executor) proveOverFiniteSetStmt(stmt *ast.ProveOverFiniteSetStmt) (glob.ExecState, error) {
+	exec.appendMsg(stmt.String())
+
 	ver := verifier.NewVerifier(exec.env)
 	return ver.ProveOverFiniteSet(stmt)
 }
