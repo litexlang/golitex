@@ -43,7 +43,7 @@ know forall x R, y R:
 know prop larger_equal_is_transitive(x R, y R, z R):
     x >= y
     y > z
-    iff:
+    then:
         x > z
 
 # claim spec fact prove by contradiction
