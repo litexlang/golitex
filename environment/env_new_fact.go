@@ -223,7 +223,24 @@ func (env *Env) newTruePureFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) erro
 		err = env.newFactNoPostProcess(instantiated)
 
 		if glob.IsNotImportDirStmt() {
-			env.AppendMsg2(fmt.Sprintf("%s\nis true by definition", instantiated.String()))
+			env.AppendMsg(fmt.Sprintf("%s\nis true by definition", instantiated.String()))
+		}
+
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, thenFact := range propDef.ThenFacts {
+		instantiated, err := thenFact.Instantiate(uniMap)
+		if err != nil {
+			return err
+		}
+
+		err = env.newFactNoPostProcess(instantiated)
+
+		if glob.IsNotImportDirStmt() {
+			env.AppendMsg(fmt.Sprintf("%s\nis true by definition", instantiated.String()))
 		}
 
 		if err != nil {
