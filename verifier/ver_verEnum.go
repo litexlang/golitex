@@ -25,7 +25,7 @@ func (ver *Verifier) verEnumStmt(stmt *ast.EnumStmt, state VerState) (bool, erro
 		return true, nil
 	}
 
-	forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts := ast.TransformEnumToUniFact(stmt.EnumName, stmt.EnumValues)
+	forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts := ast.TransformEnumToUniFact(stmt.CurSet, stmt.Items)
 
 	ok, err := ver.VerFactStmt(forallItemInSetEqualToOneOfGivenItems, state)
 	if err != nil {
@@ -59,7 +59,7 @@ func (ver *Verifier) verEnumStmt(stmt *ast.EnumStmt, state VerState) (bool, erro
 }
 
 func (ver *Verifier) lenIsZeroThenEnumIsEmpty(stmt *ast.EnumStmt, state VerState) (bool, error) {
-	lenOverStmtName := ast.NewFcFn(ast.FcAtom(glob.KeywordLen), []ast.Fc{stmt.EnumName})
+	lenOverStmtName := ast.NewFcFn(ast.FcAtom(glob.KeywordLen), []ast.Fc{stmt.CurSet})
 	equalFact := ast.EqualFact(lenOverStmtName, ast.FcAtom("0"))
 	ok, err := ver.VerFactStmt(equalFact, state)
 	if err != nil {
@@ -70,7 +70,7 @@ func (ver *Verifier) lenIsZeroThenEnumIsEmpty(stmt *ast.EnumStmt, state VerState
 	}
 
 	if state.requireMsg() {
-		ver.successMsgEnd(stmt.String(), fmt.Sprintf("len(%s) = 0 is equivalent to %s", stmt.EnumName, stmt.String()))
+		ver.successMsgEnd(stmt.String(), fmt.Sprintf("len(%s) = 0 is equivalent to %s", stmt.CurSet, stmt.String()))
 	}
 
 	return true, nil

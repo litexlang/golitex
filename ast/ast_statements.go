@@ -152,8 +152,8 @@ type DefFnTemplateStmt struct {
 // s := {1,2,3} 是枚举语法糖，等价于 forall x s: x = 1 or x = 2 or x = 3; 1 $in s; 2 $in s; 3 $in s;
 // s := {} 表示 这是个空集
 type EnumStmt struct {
-	EnumName   Fc
-	EnumValues []Fc
+	CurSet Fc
+	Items  []Fc
 }
 
 // 本质上这可能是不必要的，我应该让需要global的文件全部以main开头，这样就可以分辨哪些要global了，即import一个以main作为文件名开头的文件默认是 import globally

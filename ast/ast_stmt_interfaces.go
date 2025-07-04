@@ -149,5 +149,5 @@ type SetDeclarationStmtInterface interface {
 
 func (stmt *EnumStmt) setDeclarationStmt()           {}
 func (stmt *IntensionalSetStmt) setDeclarationStmt() {}
-func (stmt *EnumStmt) GetPropName() Fc               { return stmt.EnumName }
+func (stmt *EnumStmt) GetPropName() Fc               { return stmt.CurSet }
 func (stmt *IntensionalSetStmt) GetPropName() Fc     { return stmt.CurSet }

@@ -202,21 +202,21 @@ func (exec *Executor) haveSetStmt(stmt *ast.HaveSetStmt) (glob.ExecState, error)
 
 func (exec *Executor) haveEnumSetStmt(stmt *ast.EnumStmt) (glob.ExecState, error) {
 	// 验证里面的各个元素不相等
-	for i := range len(stmt.EnumValues) {
-		for j := i + 1; j < len(stmt.EnumValues); j++ {
-			notEqualFact := ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{stmt.EnumValues[i], stmt.EnumValues[j]})
+	for i := range len(stmt.Items) {
+		for j := i + 1; j < len(stmt.Items); j++ {
+			notEqualFact := ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{stmt.Items[i], stmt.Items[j]})
 			ok, err := exec.factStmt(notEqualFact)
 			if err != nil {
 				return glob.ExecState_Error, err
 			}
-			if ok == glob.ExecState_True {
-				return glob.ExecState_Error, fmt.Errorf("enum set elements are not distinct")
+			if ok != glob.ExecState_True {
+				return glob.ExecState_Error, fmt.Errorf("enumeration set items must be distinct, but %s is unknown", notEqualFact.String())
 			}
 		}
 	}
 
 	// 定义这个新的集合
-	defObjStmt := ast.NewDefObjStmt([]string{stmt.EnumName.String()}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}, []ast.FactStmt{stmt})
+	defObjStmt := ast.NewDefObjStmt([]string{stmt.CurSet.String()}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}, []ast.FactStmt{stmt})
 	err := exec.defObjStmt(defObjStmt, false)
 	if err != nil {
 		return glob.ExecState_Error, err
@@ -226,5 +226,11 @@ func (exec *Executor) haveEnumSetStmt(stmt *ast.EnumStmt) (glob.ExecState, error
 }
 
 func (exec *Executor) haveIntensionalSetStmt(stmt *ast.IntensionalSetStmt) (glob.ExecState, error) {
+	defObjStmt := ast.NewDefObjStmt([]string{stmt.CurSet.String()}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}, []ast.FactStmt{stmt})
+	err := exec.defObjStmt(defObjStmt, false)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+
 	return glob.ExecState_True, nil
 }

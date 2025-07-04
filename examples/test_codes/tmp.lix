@@ -1,4 +1,27 @@
-have s := {1, 2, 3}
-have s := x N:
-    s > 0
+exist_prop x N st exist_x_larger_than_1():
+        x > 1
 
+exist 2 st $exist_x_larger_than_1()
+
+have x st $exist_x_larger_than_1()
+x > 1
+
+fn zero_func(x Z)Z:
+    x = 0
+
+exist_prop f fn(Z)Z st exist_f_is_always_zero():
+    forall x Z:
+        f(x) = 0
+
+exist zero_func st $exist_f_is_always_zero()
+
+have f st $exist_f_is_always_zero()
+forall x Z:
+    f(x) = 0
+
+# 诡异的地方1：这里的x因为和外部世界的x同名了，所以改成了随机的另外一个东西，一旦改了就不知道怎么工作了 2. 这里传入+，没有检查+的dom是否覆盖z,z，很奇怪
+exist_prop self_add fn(Z, Z)Z st exist_f_always_equal_to_add():
+    forall x2 Z, y Z:
+        self_add(x2, y) = x2 + y
+
+exist + st $exist_f_always_equal_to_add()

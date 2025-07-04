@@ -522,9 +522,9 @@ func (env *Env) ExecDefFnTemplate(stmt *ast.DefFnTemplateStmt) error {
 }
 
 func (env *Env) newEnumFact(stmt *ast.EnumStmt) error {
-	forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts := ast.TransformEnumToUniFact(stmt.EnumName, stmt.EnumValues)
+	forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts := ast.TransformEnumToUniFact(stmt.CurSet, stmt.Items)
 
-	err := env.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.EnumName, ast.FcAtom(glob.KeywordSet)}))
+	err := env.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.CurSet, ast.FcAtom(glob.KeywordSet)}))
 	if err != nil {
 		return err
 	}
@@ -550,16 +550,16 @@ func (env *Env) newEnumFact(stmt *ast.EnumStmt) error {
 
 	// postprocess 1. s is $is_finite_set 2. len(s) = number of items in set
 	// finiteSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIsFiniteSet), []ast.Fc{stmt.EnumName})
-	finiteSetFact := ast.NewInFactWithFc(stmt.EnumName, ast.FcAtom(glob.KeywordFiniteSet))
+	finiteSetFact := ast.NewInFactWithFc(stmt.CurSet, ast.FcAtom(glob.KeywordFiniteSet))
 	err = env.NewFact(finiteSetFact)
 	if err != nil {
 		return err
 	}
 
-	lengthOfSet := strconv.Itoa(len(stmt.EnumValues))
+	lengthOfSet := strconv.Itoa(len(stmt.Items))
 	lengthOfSetAsFcAtom := ast.FcAtom(lengthOfSet)
 
-	lenFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{ast.NewFcFn(ast.FcAtom(glob.KeywordLen), []ast.Fc{stmt.EnumName}), lengthOfSetAsFcAtom})
+	lenFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{ast.NewFcFn(ast.FcAtom(glob.KeywordLen), []ast.Fc{stmt.CurSet}), lengthOfSetAsFcAtom})
 	err = env.NewFact(lenFact)
 	if err != nil {
 		return err
@@ -599,7 +599,7 @@ func (env *Env) newUniFact_ThenFactIsOrStmt(stmt *ast.UniFactStmt, thenFact *ast
 }
 
 func (env *Env) newUniFact_ThenFactIsEnumStmt(stmt *ast.UniFactStmt, thenFact *ast.EnumStmt) error {
-	forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts := ast.TransformEnumToUniFact(thenFact.EnumName, thenFact.EnumValues)
+	forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts := ast.TransformEnumToUniFact(thenFact.CurSet, thenFact.Items)
 	mergedUniFact := ast.MergeOuterInnerUniFacts(stmt, forallItemInSetEqualToOneOfGivenItems)
 	err := env.newUniFact(mergedUniFact)
 	if err != nil {
@@ -663,6 +663,6 @@ func (env *Env) newUniFact_ThenFactIsUniFactStmt(stmt *ast.UniFactStmt, thenFact
 }
 
 func (env *Env) storeFactInEnumMem(stmt *ast.EnumStmt) error {
-	env.EnumFacts[stmt.EnumName.String()] = stmt.EnumValues
+	env.EnumFacts[stmt.CurSet.String()] = stmt.Items
 	return nil
 }

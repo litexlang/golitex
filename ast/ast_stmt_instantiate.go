@@ -237,13 +237,13 @@ func (stmt *UniFactWithIffStmt) Instantiate(uniMap map[string]Fc) (FactStmt, err
 }
 
 func (stmt *EnumStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
-	enumName, err := stmt.EnumName.Instantiate(uniMap)
+	enumName, err := stmt.CurSet.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}
 
 	newEnumValues := []Fc{}
-	for _, value := range stmt.EnumValues {
+	for _, value := range stmt.Items {
 		newValue, err := value.Instantiate(uniMap)
 		if err != nil {
 			return nil, err
