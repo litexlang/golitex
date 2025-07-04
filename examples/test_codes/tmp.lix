@@ -1,4 +1,4 @@
-prop is_set(s set, mul fn(s, s)s, inv fn(s)s, e s):
+prop is_group(s set, mul fn(s, s)s, inv fn(s)s, e s):
     forall x s, y s, z s:
         mul(mul(x, y), z) = mul(x, mul(y, z))
     forall x s:
@@ -10,12 +10,19 @@ know forall x Z, y Z:
 
 + $in fn(Z, Z)Z
 
-"""
 fn inverse(x Z)Z:
-    inverse(x) = -x
+    inverse(x) + x = 0
 
+forall x Z:
+    inverse(x) $in Z
 
+    # 这里太呆了需要额外说明一下 in R
+    inverse(x) $in R
 
-$is_set(Z, +, -, 0)
+    # 这里太呆了需要额外申明一下交换律成立
+    x + inverse(x) = inverse(x) + x
+    inverse(x) + x = 0
 
-"""
+    x + inverse(x) = 0
+
+$is_group(Z, +, inverse, 0)
