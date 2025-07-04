@@ -1553,7 +1553,7 @@ func (tb *tokenBlock) headerOfProp() (*ast.DefHeader, error) {
 }
 
 func (tb *tokenBlock) haveInSetStmt() (*ast.HaveInSetStmt, error) {
-	err := tb.header.skip(glob.KeywordObj)
+	err := tb.header.skip(glob.KeywordHave)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}

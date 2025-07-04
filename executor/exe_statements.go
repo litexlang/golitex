@@ -76,6 +76,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		execState, err = exec.haveByReplacementStmt(stmt)
 	case *ast.ProveOverFiniteSetStmt:
 		execState, err = exec.proveOverFiniteSetStmt(stmt)
+	case *ast.HaveInSetStmt:
+		execState, err = exec.haveInSetStmt(stmt)
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}
@@ -836,9 +838,12 @@ func (exec *Executor) proveOverFiniteSetStmt(stmt *ast.ProveOverFiniteSetStmt) (
 }
 
 func (exec *Executor) checkInFactInExistSt(pureInFact *ast.SpecFactStmt) (bool, error) {
+	if _, ok := glob.BuiltinObjKeywordSet[pureInFact.Params[0].String()]; ok {
+		return true, nil
+	}
 
-	isIFiniteSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{pureInFact.Params[0], ast.FcAtom(glob.KeywordFiniteSet)})
-	ok, err := exec.factStmt(isIFiniteSetFact)
+	isFiniteSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{pureInFact.Params[0], ast.FcAtom(glob.KeywordFiniteSet)})
+	ok, err := exec.factStmt(isFiniteSetFact)
 	if err != nil {
 		return false, err
 	}
@@ -856,4 +861,17 @@ func (exec *Executor) checkInFactInExistSt(pureInFact *ast.SpecFactStmt) (bool, 
 	}
 
 	return false, nil
+}
+
+func (exec *Executor) haveInSetStmt(stmt *ast.HaveInSetStmt) (glob.ExecState, error) {
+	for i := range len(stmt.Objs) {
+		existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordExistIn), []ast.Fc{stmt.ObjSets[i]})
+		haveStmt := ast.NewHaveStmt([]string{stmt.Objs[i]}, *existInFact)
+		execState, err := exec.haveStmt(haveStmt)
+		if notOkExec(execState, err) {
+			return execState, err
+		}
+	}
+
+	return glob.ExecState_True, nil
 }
