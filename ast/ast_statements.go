@@ -190,7 +190,13 @@ type ProveOverFiniteSetStmt struct {
 	Proofs []Stmt
 }
 
+// have xxx st exist_in 的语法糖
 type HaveInSetStmt struct {
 	Objs    []string
 	ObjSets []Fc
+}
+
+// 由朴素集合论，枚举法定义集合，用specification的方式去定义集合，是可以的。这样定义出来的集合的存在性是直接得到保证的
+type HaveSetStmt struct {
+	Fact SetDeclarationStmtInterface
 }
