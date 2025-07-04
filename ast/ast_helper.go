@@ -28,3 +28,7 @@ func isFcAtomAndEqualToStr(fc Fc, name string) bool {
 func EqualFact(left, right Fc) *SpecFactStmt {
 	return NewSpecFactStmt(TruePure, FcAtom(glob.KeySymbolEqual), []Fc{left, right})
 }
+
+func NewIsEmptySetFact(set Fc) *EnumStmt {
+	return NewEnumStmt(set, []Fc{})
+}
