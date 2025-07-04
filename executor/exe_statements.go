@@ -275,10 +275,6 @@ func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) error {
 }
 
 func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
-	if stmt.Fact.PropName == glob.KeywordIn {
-		return exec.haveInFact(stmt)
-	}
-
 	defer func() {
 		if glob.IsNotImportDirStmt() {
 			exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
@@ -287,11 +283,30 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 
 	// 检查 SpecFactStmt 是否满足了
 	execState, err := exec.factStmt(&stmt.Fact)
+
+	if stmt.Fact.PropName == glob.KeywordExistIn && execState != glob.ExecState_True && err == nil {
+		ok, err := exec.checkInFactInExistSt(&stmt.Fact)
+		if err != nil {
+			return glob.ExecState_Error, err
+		}
+		if ok {
+			execState = glob.ExecState_True
+		}
+	}
+
 	if notOkExec(execState, err) {
 		if glob.IsNotImportDirStmt() {
 			exec.appendMsg(fmt.Sprintf("%s is unknown", stmt.Fact.String()))
 		}
 		return execState, err
+	}
+
+	if stmt.Fact.PropName == glob.KeywordExistIn && execState == glob.ExecState_True {
+		err := exec.defObjStmt(ast.NewDefObjStmt([]string{stmt.ObjNames[0]}, []ast.Fc{stmt.Fact.Params[0]}, []ast.FactStmt{}), false)
+		if err != nil {
+			return glob.ExecState_Error, err
+		}
+		return glob.ExecState_True, nil
 	}
 
 	// TODO： have 可能会引入3种不同的东西：set,obj,fn都可能；每种情况，处理起来不一样：比如如果你是fn和set，那可能就要把你放到 setMem 和 fnMem 里了
@@ -820,43 +835,16 @@ func (exec *Executor) proveOverFiniteSetStmt(stmt *ast.ProveOverFiniteSetStmt) (
 	return ver.ProveOverFiniteSet(stmt)
 }
 
-func (exec *Executor) haveInFact(stmt *ast.HaveStmt) (glob.ExecState, error) {
-	pureInFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.ExistInFactPropName), []ast.Fc{ast.FcAtom(stmt.ObjNames[0]), stmt.Fact.Params[0]})
-
-	if ok, err := exec.checkInFactInExistSt(pureInFact); err != nil || !ok {
-		return glob.ExecState_Error, nil
-	}
-
-	defObjStmt := ast.NewDefObjStmt([]string{stmt.ObjNames[0]}, []ast.Fc{stmt.Fact.Params[0]}, []ast.FactStmt{})
-	err := exec.defObjStmt(defObjStmt, false)
-	if err != nil {
-		return glob.ExecState_Error, err
-	}
-
-	return glob.ExecState_True, nil
-}
-
 func (exec *Executor) checkInFactInExistSt(pureInFact *ast.SpecFactStmt) (bool, error) {
-	isTrue := false
-	for curEnv := exec.env; curEnv != nil; curEnv = curEnv.Parent {
-		_, ok := curEnv.KnownFactsStruct.SpecFactMem.GetSameEnumPkgPropFacts(pureInFact)
-		if ok {
-			isTrue = true
-			break
-		}
-	}
-	if isTrue {
-		return true, nil
-	}
 
-	isIFiniteSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{pureInFact.Params[1], ast.FcAtom(glob.KeywordFiniteSet)})
+	isIFiniteSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{pureInFact.Params[0], ast.FcAtom(glob.KeywordFiniteSet)})
 	ok, err := exec.factStmt(isIFiniteSetFact)
 	if err != nil {
 		return false, err
 	}
 	if ok == glob.ExecState_True {
 		// 如果 len > 0 那就是可以
-		lenOverStmtName := ast.NewFcFn(ast.FcAtom(glob.KeywordLen), []ast.Fc{pureInFact.Params[1]})
+		lenOverStmtName := ast.NewFcFn(ast.FcAtom(glob.KeywordLen), []ast.Fc{pureInFact.Params[0]})
 		largerThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolGreater), []ast.Fc{lenOverStmtName, ast.FcAtom("0")})
 		ok, err := exec.factStmt(largerThanZeroFact)
 		if err != nil {

@@ -105,13 +105,11 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
 
 	// postprocess
 	if fact.IsExist_St_Fact() {
-		if fact.PropName == glob.KeywordIn {
-			if fact.TypeEnum == ast.TrueExist_St {
-				env.newSpecFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.ExistInFactPropName), []ast.Fc{fact.Params[0], fact.Params[2]}))
-			}
-			return nil
+		if fact.PropName == glob.KeywordExistIn {
+			existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordExistIn), []ast.Fc{fact.Params[2]})
+			err := env.storeSpecFactInMem(existInFact)
+			return err
 		}
-
 		return env.newExist_St_FactPostProcess(fact)
 	}
 
