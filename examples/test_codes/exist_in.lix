@@ -1,8 +1,6 @@
-# 本质上我认为这里用in重载不太好，还是用新的关键词比较好 exist_in
-
 prove:
     obj s set, a obj
-    know a $in s # 有人可能觉得这里的in和普通in重载了，而且被重载的in有两个参数而这里只有一个，所以觉得这种设计有问题。但其实没问题：两个参数的in是pureFact的in，而这里是exist st fact的in，不冲突。
+    know a $in s
     exist a st $exist_in(s)
     $exist_in(s)
     have b st $exist_in(s)
@@ -15,3 +13,8 @@ prove:
     len(s) > 0
     have a st $exist_in(s)
     a $in s
+
+    have a2 N
+    have a3 st $exist_in(N)
+
+    have a4 s
