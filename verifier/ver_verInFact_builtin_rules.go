@@ -22,10 +22,6 @@ import (
 )
 
 func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if stmt.TypeEnum == ast.TrueExist_St {
-		return ver.trueExistInSt(stmt, state)
-	}
-
 	if len(stmt.Params) != 2 {
 		return false, fmt.Errorf("invalid number of parameters for in fact")
 	}
