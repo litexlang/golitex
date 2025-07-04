@@ -105,6 +105,13 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
 
 	// postprocess
 	if fact.IsExist_St_Fact() {
+		if fact.PropName == glob.KeywordIn {
+			if fact.TypeEnum == ast.TrueExist_St {
+				env.newSpecFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.ExistInFactPropName), []ast.Fc{fact.Params[0], fact.Params[2]}))
+			}
+			return nil
+		}
+
 		return env.newExist_St_FactPostProcess(fact)
 	}
 
@@ -205,7 +212,6 @@ func (env *Env) newTruePureFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) erro
 	propDef, ok := env.GetPropDef(fact.PropName)
 	if !ok {
 		// TODO 这里需要考虑prop的定义是否在当前包中。当然这里有点复杂，因为如果是内置的prop，那么可能需要到builtin包中去找
-		// return fmt.Errorf("prop %s has no definition", fact.PropName)
 		return nil
 	}
 

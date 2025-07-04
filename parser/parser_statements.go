@@ -542,11 +542,6 @@ func (tb *tokenBlock) defExistPropStmt() (*ast.DefExistPropStmt, error) {
 
 // 本质上这个设计是有问题的。exist把 sep 这个奇怪的东西混进param 来了
 func (tb *tokenBlock) existFactStmt(isTrue bool) (*ast.SpecFactStmt, error) {
-	// 如果没有st，那就是存在一个元素在这个集合里
-	if slices.Contains(tb.header.slice, glob.KeywordSt) {
-		return tb.existObjInSet()
-	}
-
 	err := tb.header.skip(glob.KeywordExist)
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -1569,8 +1564,4 @@ func (tb *tokenBlock) haveFromSetStmt() (*ast.HaveFromSetStmt, error) {
 	}
 
 	return ast.NewHaveFromSetStmt(objNames, objSets), nil
-}
-
-func (tb *tokenBlock) existObjInSet() (*ast.SpecFactStmt, error) {
-	panic("not implemented")
 }
