@@ -42,13 +42,14 @@ func (s *UniFactWithIffStmt) stmt()            {}
 func (s *ClaimProveByContradictionStmt) stmt() {}
 func (s *DefFnTemplateStmt) stmt()             {}
 func (s *EnumStmt) stmt()                      {}
+func (s *IntensionalSetStmt) stmt()            {}
 func (s *ClaimPropStmt) stmt()                 {}
 func (s *ClaimExistPropStmt) stmt()            {}
 func (s *ProveByMathInductionStmt) stmt()      {}
 func (s *HaveByReplacementStmt) stmt()         {}
-func (s *IntensionalSetStmt) stmt()            {}
 func (s *ProveOverFiniteSetStmt) stmt()        {}
 func (s *HaveInSetStmt) stmt()                 {}
+func (s *HaveSetStmt) stmt()                   {}
 
 type FactStmt interface {
 	factStmt()
@@ -139,3 +140,11 @@ type ImportStmtInterface interface {
 
 func (stmt *ImportDirStmt) importStmt()  {}
 func (stmt *ImportFileStmt) importStmt() {}
+
+type SetDeclarationStmtInterface interface {
+	setDeclarationStmt()
+	String() string
+}
+
+func (stmt *EnumStmt) setDeclarationStmt()           {}
+func (stmt *IntensionalSetStmt) setDeclarationStmt() {}

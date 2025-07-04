@@ -48,6 +48,8 @@ func (tb *tokenBlock) stmt() (ast.Stmt, error) {
 	case glob.KeywordHave:
 		if slices.Contains(tb.header.slice, glob.KeywordSt) {
 			ret, err = tb.haveStmt()
+		} else if slices.Contains(tb.header.slice, glob.KeySymbolColonEqual) {
+			ret, err = tb.haveSetStmt()
 		} else {
 			ret, err = tb.haveInSetStmt()
 		}
@@ -1568,4 +1570,25 @@ func (tb *tokenBlock) haveInSetStmt() (*ast.HaveInSetStmt, error) {
 	}
 
 	return ast.NewHaveInSetStmt(objNames, objSets), nil
+}
+
+func (tb *tokenBlock) haveSetStmt() (*ast.HaveSetStmt, error) {
+	err := tb.header.skip(glob.KeywordHave)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	fact, err := tb.body[0].relaFact_intensionalSetFact_enumStmt()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	asStmt, ok := fact.(ast.SetDeclarationStmtInterface)
+	if !ok {
+		return nil, fmt.Errorf("expect enum or intensional set")
+	}
+
+	// asStmt 的 PropName 必须是 fcAtom 而且必须是 没有 colon colon 的
+
+	return ast.NewHaveSetStmt(asStmt), nil
 }
