@@ -1578,7 +1578,7 @@ func (tb *tokenBlock) haveSetStmt() (*ast.HaveSetStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	fact, err := tb.body[0].relaFact_intensionalSetFact_enumStmt()
+	fact, err := tb.relaFact_intensionalSetFact_enumStmt()
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
