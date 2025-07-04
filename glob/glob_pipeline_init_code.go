@@ -31,12 +31,9 @@ know forall x Z:
     x < 0
     then:
         not x $in N
-	
-"""
-know forall small_set, big_set set:
-	dom:
-		len(small_set) < len(big_set)
-	then:
-		$exist_obj_not_in_left_set_but_in_right_set(small_set, big_set)
-"""
+
+know forall x Z, y Z:
+    x + y $in Z
+	x - y $in Z
+	x * y $in Z	
 `
