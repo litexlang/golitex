@@ -823,16 +823,7 @@ func (exec *Executor) proveOverFiniteSetStmt(stmt *ast.ProveOverFiniteSetStmt) (
 func (exec *Executor) haveInFact(stmt *ast.HaveStmt) (glob.ExecState, error) {
 	pureInFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.ExistInFactPropName), []ast.Fc{ast.FcAtom(stmt.ObjNames[0]), stmt.Fact.Params[0]})
 
-	isTrue := false
-	for curEnv := exec.env; curEnv != nil; curEnv = curEnv.Parent {
-		_, ok := curEnv.KnownFactsStruct.SpecFactMem.GetSameEnumPkgPropFacts(pureInFact)
-		if ok {
-			isTrue = true
-			break
-		}
-	}
-
-	if !isTrue {
+	if ok, err := exec.checkInFactInExistSt(pureInFact); err != nil || !ok {
 		return glob.ExecState_Error, nil
 	}
 
@@ -843,4 +834,38 @@ func (exec *Executor) haveInFact(stmt *ast.HaveStmt) (glob.ExecState, error) {
 	}
 
 	return glob.ExecState_True, nil
+}
+
+func (exec *Executor) checkInFactInExistSt(pureInFact *ast.SpecFactStmt) (bool, error) {
+	isTrue := false
+	for curEnv := exec.env; curEnv != nil; curEnv = curEnv.Parent {
+		_, ok := curEnv.KnownFactsStruct.SpecFactMem.GetSameEnumPkgPropFacts(pureInFact)
+		if ok {
+			isTrue = true
+			break
+		}
+	}
+	if isTrue {
+		return true, nil
+	}
+
+	isIFiniteSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{pureInFact.Params[1], ast.FcAtom(glob.KeywordFiniteSet)})
+	ok, err := exec.factStmt(isIFiniteSetFact)
+	if err != nil {
+		return false, err
+	}
+	if ok == glob.ExecState_True {
+		// 如果 len > 0 那就是可以
+		lenOverStmtName := ast.NewFcFn(ast.FcAtom(glob.KeywordLen), []ast.Fc{pureInFact.Params[1]})
+		largerThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolGreater), []ast.Fc{lenOverStmtName, ast.FcAtom("0")})
+		ok, err := exec.factStmt(largerThanZeroFact)
+		if err != nil {
+			return false, err
+		}
+		if ok == glob.ExecState_True {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
