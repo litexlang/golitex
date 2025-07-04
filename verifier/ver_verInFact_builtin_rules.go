@@ -302,6 +302,8 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state VerState) (b
 		return false, nil
 	}
 
+	// TODO 用直接验证的方式去验证，比如 know forall x Z, y Z: x + y $in Z, 可以推出 fn(Z, Z) Z
+
 	for i := len(specFactDefs) - 1; i >= 0; i-- {
 		ok, err := ver.leftDomLeadToRightDom_RightDomLeadsToRightThen(stmt.Params[0], specFactDefs[i], instantiatedDefFnStmt, state)
 		if err != nil {
