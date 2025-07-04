@@ -601,7 +601,8 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 		return err
 	}
 
-	derivedFact := stmt.FnTemplateStmt.DeriveUniFact(ast.FcAtom(stmt.FnTemplateStmt.Name))
+	// derivedFact := stmt.FnTemplateStmt.DeriveUniFact(ast.FcAtom(stmt.FnTemplateStmt.Name))
+	derivedFact := stmt.FnTemplateStmt.DeriveUniFact()
 	err = exec.env.NewFact(derivedFact)
 	if err != nil {
 		return err

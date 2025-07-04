@@ -292,6 +292,24 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state VerState) (b
 		return false, nil
 	}
 
+	// Case1: 用直接验证的方式去验证，比如 know forall x Z, y Z: x + y $in Z, 可以推出 fn(Z, Z) Z·
+	// derivedUniFact := fnTemplate.DeriveUniFact(stmt.Params[0])
+	derivedUniFact := fnTemplate.DeriveUniFact()
+	instantiatedUniFact, err := derivedUniFact.Instantiate(map[string]ast.Fc{fnTemplate.DefHeader.Name: stmt.Params[0]})
+	if err != nil {
+		return false, err
+	}
+
+	ok, err := ver.VerFactStmt(instantiatedUniFact, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
+	// Case2: 用已知的符合的fn_template去验证
+
 	instantiatedDefFnStmt, err := fnTemplate.InstantiateByFnName_WithTemplateNameGivenFc(stmt.Params[0])
 	if err != nil {
 		return false, nil
@@ -301,8 +319,6 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state VerState) (b
 	if !ok {
 		return false, nil
 	}
-
-	// TODO 用直接验证的方式去验证，比如 know forall x Z, y Z: x + y $in Z, 可以推出 fn(Z, Z) Z
 
 	for i := len(specFactDefs) - 1; i >= 0; i-- {
 		ok, err := ver.leftDomLeadToRightDom_RightDomLeadsToRightThen(stmt.Params[0], specFactDefs[i], instantiatedDefFnStmt, state)
