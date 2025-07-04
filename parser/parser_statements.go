@@ -1589,6 +1589,13 @@ func (tb *tokenBlock) haveSetStmt() (*ast.HaveSetStmt, error) {
 	}
 
 	// asStmt 的 PropName 必须是 fcAtom 而且必须是 没有 colon colon 的
+	if propName, ok := asStmt.GetPropName().(ast.FcAtom); !ok {
+		return nil, fmt.Errorf("invalid set name")
+	} else {
+		if glob.IsBuiltinKeywordKeySymbolCanBeFcAtomName(string(propName)) {
+			return nil, fmt.Errorf("invalid set name")
+		}
+	}
 
 	return ast.NewHaveSetStmt(asStmt), nil
 }

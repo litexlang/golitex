@@ -19,7 +19,7 @@ import (
 	"strings"
 )
 
-func isValidUserDefinedName(name string) error {
+func IsValidUserDefinedNameWithoutPkgName(name string) error {
 	if len(name) == 0 {
 		return fmt.Errorf("identifier name cannot be empty")
 	}
@@ -55,7 +55,7 @@ func IsValidUseDefinedFcAtom(name string) error {
 
 	// values 必须满足 IsValidUserDefinedName
 	for _, value := range values {
-		if err := isValidUserDefinedName(value); err != nil {
+		if err := IsValidUserDefinedNameWithoutPkgName(value); err != nil {
 			return err
 		}
 	}

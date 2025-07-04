@@ -144,7 +144,10 @@ func (stmt *ImportFileStmt) importStmt() {}
 type SetDeclarationStmtInterface interface {
 	setDeclarationStmt()
 	String() string
+	GetPropName() Fc
 }
 
 func (stmt *EnumStmt) setDeclarationStmt()           {}
 func (stmt *IntensionalSetStmt) setDeclarationStmt() {}
+func (stmt *EnumStmt) GetPropName() Fc               { return stmt.EnumName }
+func (stmt *IntensionalSetStmt) GetPropName() Fc     { return stmt.CurSet }
