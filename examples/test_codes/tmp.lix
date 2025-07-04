@@ -1,5 +1,14 @@
-obj s set, a obj
-know a $in s # 有人可能觉得这里的in和普通in重载了，而且被重载的in有两个参数而这里只有一个，所以觉得这种设计有问题。但其实没问题：两个参数的in是pureFact的in，而这里是exist st fact的in，不冲突。
-exist a st $in(s)
-have b st $in(s)
-b $in s
+prove:
+    obj s set, a obj
+    know a $in s # 有人可能觉得这里的in和普通in重载了，而且被重载的in有两个参数而这里只有一个，所以觉得这种设计有问题。但其实没问题：两个参数的in是pureFact的in，而这里是exist st fact的in，不冲突。
+    exist a st $in(s)
+    have b st $in(s)
+    b $in s
+
+prove:
+    obj s finite_set:
+        len(s) = 1
+    1 > 0
+    len(s) > 0
+    have a st $in(s)
+    a $in s
