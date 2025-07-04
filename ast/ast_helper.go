@@ -28,3 +28,11 @@ func isFcAtomAndEqualToStr(fc Fc, name string) bool {
 func EqualFact(left, right Fc) *SpecFactStmt {
 	return NewSpecFactStmt(TruePure, FcAtom(glob.KeySymbolEqual), []Fc{left, right})
 }
+
+func (stmt *UniFactStmt) ParamInParamSetFacts() []*SpecFactStmt {
+	paramSetFacts := make([]*SpecFactStmt, len(stmt.Params))
+	for i, param := range stmt.Params {
+		paramSetFacts[i] = NewInFact(param, stmt.ParamSets[i])
+	}
+	return paramSetFacts
+}
