@@ -122,6 +122,25 @@ func (stmt *DefObjStmt) String() string {
 	return builder.String()
 }
 
+func (stmt *HaveInSetStmt) String() string {
+	var builder strings.Builder
+
+	builder.WriteString("have ")
+	if len(stmt.Objs) > 0 {
+		for i := range len(stmt.Objs) - 1 {
+			builder.WriteString(stmt.Objs[i])
+			builder.WriteString(" ")
+			builder.WriteString(stmt.ObjSets[i].String())
+			builder.WriteString(", ")
+		}
+		builder.WriteString(stmt.Objs[len(stmt.Objs)-1])
+		builder.WriteString(" ")
+		builder.WriteString(stmt.ObjSets[len(stmt.Objs)-1].String())
+	}
+
+	return builder.String()
+}
+
 func (fact *DefPropStmt) String() string {
 	var builder strings.Builder
 
@@ -732,22 +751,4 @@ func (stmt *ProveOverFiniteSetStmt) String() string {
 		builder.WriteByte('\n')
 	}
 	return strings.TrimSuffix(builder.String(), "\n")
-}
-
-func (stmt *HaveFromSetStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordHave)
-	builder.WriteString(" ")
-	if len(stmt.ObjNames) > 0 {
-		for i := range len(stmt.ObjNames) - 1 {
-			builder.WriteString(stmt.ObjNames[i])
-			builder.WriteString(" ")
-			builder.WriteString(stmt.ObjSets[i].String())
-			builder.WriteString(", ")
-		}
-		builder.WriteString(stmt.ObjNames[len(stmt.ObjNames)-1])
-		builder.WriteString(" ")
-		builder.WriteString(stmt.ObjSets[len(stmt.ObjSets)-1].String())
-	}
-	return builder.String()
 }

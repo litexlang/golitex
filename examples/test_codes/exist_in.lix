@@ -14,5 +14,4 @@ prove:
     1 > 0
     len(s) > 0
     have a st $exist_in(s)
-    have a s # have a st $exist_in(s) 的语法糖
     a $in s
