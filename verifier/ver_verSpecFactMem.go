@@ -354,6 +354,31 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch(stmt *ast.SpecFac
 			continue
 		}
 
+		insKnownUniFact, err := ast.InstantiateUniFact(knownFactUnderLogicExpr.UniFact, uniConMap)
+		if err != nil {
+			return false, err
+		}
+
+		// TODO 要证明在paramSet里
+		paramInParamSetFacts := insKnownUniFact.ParamInParamSetFacts()
+		for _, paramInParamSetFact := range paramInParamSetFacts {
+			ok, err = ver.verSpecFact_InSpecFact_UniMem(paramInParamSetFact, state)
+			if err != nil {
+				return false, err
+			}
+			if !ok {
+				return false, nil
+			}
+		}
+
+		ok, err = ver.proveUniFactDomFacts(insKnownUniFact, state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+
 		instantiatedLogicExpr, err := knownFactUnderLogicExpr.LogicExpr.Instantiate(uniConMap)
 		if err != nil {
 			return false, err
@@ -422,6 +447,18 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch(stmt *ast.SpecFactSt
 		insKnownUniFact, err := ast.InstantiateUniFact(knownFact.UniFact, uniConMap)
 		if err != nil {
 			return false, err
+		}
+
+		// TODO 要证明在paramSet里
+		paramInParamSetFacts := insKnownUniFact.ParamInParamSetFacts()
+		for _, paramInParamSetFact := range paramInParamSetFacts {
+			ok, err = ver.verSpecFact_InSpecFact_UniMem(paramInParamSetFact, state)
+			if err != nil {
+				return false, err
+			}
+			if !ok {
+				return false, nil
+			}
 		}
 
 		ok, err = ver.proveUniFactDomFacts(insKnownUniFact, state)
