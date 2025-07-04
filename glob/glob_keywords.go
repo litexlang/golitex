@@ -68,6 +68,7 @@ const (
 
 	KeywordImportGlobally    = "import_globally"
 	KeywordHaveByReplacement = "have_by_replacement"
+	KeywordIsEmptySet        = "is_empty_set"
 	// KeywordLastTwoObjectsAreEqual = "last_two_objects_are_equal"
 )
 
@@ -119,6 +120,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	// KeywordEnum:              {},
 	KeywordImportGlobally:    {},
 	KeywordHaveByReplacement: {},
+	KeywordIsEmptySet:        {},
 }
 
 const (
@@ -265,6 +267,7 @@ var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]s
 
 	KeywordCommutativeProp: {},
 	KeywordFiniteSet:       {},
+	KeywordIsEmptySet:      {},
 	// KeySymbolSemicolon:     {},
 }
 

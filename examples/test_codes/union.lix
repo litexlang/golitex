@@ -1,0 +1,37 @@
+# Define a function called union, which takes 2 functions as parameters and return a set as return value
+fn union(s, s2 set) set:
+    forall x obj:
+        or:
+            x $in s
+            x $in s2
+        then:
+            x $in union(s, s2)
+
+# Property of union: if an item is in the union of 2 sets, then it is in at least one of the sets
+know prop union_items_in_at_least_one_of_child_set(x obj, s, s2 set):
+    x $in union(s, s2)    
+    then:
+        or:
+            x $in s
+            x $in s2
+
+# Example: union(s, s2) is the union of s and s2
+prove:
+    obj s, s2 set
+    obj x s
+    x $in union(s, s2)
+
+    forall s, s2 set, x union(s, s2):
+        $union_items_in_at_least_one_of_child_set(x, s, s2)
+
+# Example: union(s, {}) is itself
+claim:
+    prop union_with_empty_set_is_itself(x obj, s, s2 set):
+        s2 := {}
+        x $in union(s, s2)
+        then:
+            x $in s
+    prove:
+        not x $in s2
+        $union_items_in_at_least_one_of_child_set(x, s, s2)
+
