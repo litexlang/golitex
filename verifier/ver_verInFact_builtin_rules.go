@@ -22,6 +22,10 @@ import (
 )
 
 func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	if stmt.TypeEnum == ast.TrueExist_St {
+		return ver.trueExistInSt(stmt, state)
+	}
+
 	if len(stmt.Params) != 2 {
 		return false, fmt.Errorf("invalid number of parameters for in fact")
 	}
@@ -410,5 +414,17 @@ func (ver *Verifier) nothingIsInEmptySet(stmt *ast.SpecFactStmt, state VerState)
 		return true, nil
 	}
 
+	return false, nil
+}
+
+func (ver *Verifier) trueExistInSt(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	pureInFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.Params[1], stmt.Params[2]})
+	ok, err := ver.VerFactStmt(pureInFact, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
 	return false, nil
 }
