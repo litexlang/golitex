@@ -275,6 +275,10 @@ func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) error {
 }
 
 func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
+	if stmt.Fact.PropName == glob.KeywordIn {
+		return exec.haveInFact(stmt)
+	}
+
 	defer func() {
 		if glob.IsNotImportDirStmt() {
 			exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
@@ -814,4 +818,8 @@ func (exec *Executor) proveOverFiniteSetStmt(stmt *ast.ProveOverFiniteSetStmt) (
 
 	ver := verifier.NewVerifier(exec.env)
 	return ver.ProveOverFiniteSet(stmt)
+}
+
+func (exec *Executor) haveInFact(stmt *ast.HaveStmt) (glob.ExecState, error) {
+
 }
