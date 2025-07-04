@@ -25,11 +25,11 @@ func (stmt *SpecFactStmt) GetAtoms() []FcAtom {
 }
 
 func (stmt *EnumStmt) GetAtoms() []FcAtom {
-	atomsOfName := GetAtomsInFc(stmt.EnumName)
+	atomsOfName := GetAtomsInFc(stmt.CurSet)
 
 	atoms := []FcAtom{}
 	atoms = append(atoms, atomsOfName...)
-	for _, value := range stmt.EnumValues {
+	for _, value := range stmt.Items {
 		atoms = append(atoms, GetAtomsInFc(value)...)
 	}
 	return atoms

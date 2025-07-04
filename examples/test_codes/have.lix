@@ -1,0 +1,40 @@
+# have statements
+
+# have sets by naive set theory
+prove:
+    have s := {1, 2, 3}
+    have s2 := x N:
+        x > 5
+
+    s := {3, 2, 1}
+
+    forall x s2:
+        x > 5
+
+# have objects from builtin sets
+prove:
+    have a N, b Z, c Q, d R, e C
+    have s set
+    have s2 finite_set
+
+
+# have objects from finite sets len > 0
+prove:
+    obj s finite_set:
+        len(s) = 1
+    1 > 0
+    len(s) > 0
+    have a st $exist_in(s)
+    a $in s
+
+
+# have objectName st exist_in(setName)
+# it has syntax sugar: have objectName setName
+prove:
+    obj s set, a obj
+    know a $in s
+    exist a st $exist_in(s)
+    $exist_in(s)
+    have b st $exist_in(s)
+    b $in s
+
