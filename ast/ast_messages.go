@@ -752,3 +752,11 @@ func (stmt *ProveOverFiniteSetStmt) String() string {
 	}
 	return strings.TrimSuffix(builder.String(), "\n")
 }
+
+func (stmt *HaveSetStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordHave)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.Fact.String())
+	return builder.String()
+}
