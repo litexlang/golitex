@@ -238,14 +238,7 @@ Next I want to show you how Litex can be used to solve a simple linear equation.
 
 I know Lean can use tactics to solve the same problem, and it is shorter. Litex will introduce similar features in the future. What I really want to show you here is that Litex is much more readable and intuitive than Lean in this case. Not every situation can be solved by tactics, and writing tactics itself in Lean is not easy. Litex spares you from remembering all these difficult things like `have`, `by`, `rw`, `simp`, `exact` and strange syntax etc. All you need is basic math knowledge, which significantly reduces the barrier to entry.
 
-The definition of algorithm is a good example. In mathematics, an algorithm is a computational method that can be precisely defined as a quadruple (Q, I, S, f), where:
-- Q is a set representing all possible states of computation
-- I is a subset of Q representing valid inputs
-- S is a subset of Q representing valid outputs
-- f is a function from Q to Q that defines the computational rule
-
-The computation proceeds by repeatedly applying f to an input x in I, generating a sequence x₀, x₁, x₂, ... where x₀ = x and xₖ₊₁ = f(xₖ). An algorithm must terminate in finitely many steps for any valid input, producing an output in S. This formal definition ensures that algorithms are well-defined mathematical objects that can be rigorously analyzed and verified.
-
+Next I want to show you how Litex can be used to verify a simple group theory statement. It's clear that the Litex version can be read and understood by a 10-year-old, while the Lean version is much more complex.
 
 <table style="border-collapse: collapse; width: 100%;">
   <tr>
@@ -254,35 +247,48 @@ The computation proceeds by repeatedly applying f to an input x in I, generating
   </tr>
   <tr>
     <td style="border: 3px solid black; padding: 8px;">
-      <code>fn comp_seq(Q set, f fn(Q)Q) fn(Q, N)Q:</code><br>
-      <code>&nbsp;&nbsp;forall x Q, n N:</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;comp_seq(Q, f)(x,n+1) = f(comp_seq(Q, f)(x, n))</code><br><br>
-      <code>exist_prop n N st exist_comp_seq_end(Q set, x Q, f fn(Q,N)Q):</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;f(x, n) = f(x, n+1)</code><br><br>
-      <code>prop is_algorithm(Q set, I set, f fn(Q)Q):</code><br>
-      <code>&nbsp;&nbsp;forall x Q: # i.e. Q is subset of I</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;f(x) $in I</code><br>
-      <code>&nbsp;&nbsp;iff:</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;forall x I:</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$exist_comp_seq_end(Q, x, comp_seq(Q, f))</code>
+      <code>prop is_group(s set, mul fn(s, s)s, inv fn(s)s, e s):</code><br>
+      <code>&nbsp;&nbsp;forall x s, y s, z s:</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;mul(mul(x, y), z) = mul(x, mul(y, z))</code><br>
+      <code>&nbsp;&nbsp;forall x s:</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;mul(x, inv(x)) = e</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;mul(inv(x), x) = e</code><br><br>
+      <code>fn inverse(x R)R:</code><br>
+      <code>&nbsp;&nbsp;inverse(x) + x = 0</code><br><br>
+      <code>forall x R:</code><br>
+      <code>&nbsp;&nbsp;inverse(x) $in R</code><br>
+      <code>&nbsp;&nbsp;x + inverse(x) = inverse(x) + x</code><br>
+      <code>&nbsp;&nbsp;inverse(x) + x = 0</code><br>
+      <code>&nbsp;&nbsp;x + inverse(x) = 0</code><br><br>
+      <code>$is_group(R, +, inverse, 0)</code><br>
+      <code>$is_group(Z, +, inverse, 0)</code>
     </td>
     <td style="border: 3px solid black; padding: 8px;">
-      <code>structure ComputationalMethod where</code><br>
-      <code>&nbsp;&nbsp;Q : Type</code><br>
-      <code>&nbsp;&nbsp;I : Set Q</code><br>
-      <code>&nbsp;&nbsp;S : Set Q</code><br>
-      <code>&nbsp;&nbsp;f : Q → Q</code><br>
-      <code>&nbsp;&nbsp;f_fixed : ∀ q ∈ S, f q = q</code><br><br>
-      <code>namespace ComputationalMethod</code><br><br>
-      <code>def comp_seq (cm : ComputationalMethod) (x : cm.Q) : ℕ → cm.Q</code><br>
-      <code>&nbsp;&nbsp;| 0 => x</code><br>
-      <code>&nbsp;&nbsp;| n + 1 => cm.f (comp_seq x n)</code><br><br>
-      <code>def TerminatesIn (cm : ComputationalMethod) (x : cm.Q) (k : ℕ) : Prop :=</code><br>
-      <code>&nbsp;&nbsp;comp_seq cm x k ∈ cm.S ∧</code><br>
-      <code>&nbsp;&nbsp;∀ i < k, comp_seq cm x i ∉ cm.S</code><br><br>
-      <code>def IsAlgorithm (cm : ComputationalMethod) : Prop :=</code><br>
-      <code>&nbsp;&nbsp;∀ x ∈ cm.I, ∃ k, TerminatesIn cm x k</code><br><br>
-      <code>end ComputationalMethod</code>
+      <code>structure MyGroup (G : Type) where</code><br>
+      <code>&nbsp;&nbsp;add : G → G → G</code><br>
+      <code>&nbsp;&nbsp;zero : G</code><br>
+      <code>&nbsp;&nbsp;neg : G → G</code><br>
+      <code>&nbsp;&nbsp;add_assoc : ∀ a b c : G, add (add a b) c = add a (add b c)</code><br>
+      <code>&nbsp;&nbsp;zero_add : ∀ a : G, add zero a = a</code><br>
+      <code>&nbsp;&nbsp;add_zero : ∀ a : G, add a zero = a</code><br>
+      <code>&nbsp;&nbsp;add_left_neg : ∀ a : G, add (neg a) a = zero</code><br><br>
+      <code>def intAddGroup : MyGroup Int where</code><br>
+      <code>&nbsp;&nbsp;add := Int.add</code><br>
+      <code>&nbsp;&nbsp;zero := 0</code><br>
+      <code>&nbsp;&nbsp;neg := Int.neg</code><br>
+      <code>&nbsp;&nbsp;add_assoc := by intros; apply Int.add_assoc</code><br>
+      <code>&nbsp;&nbsp;zero_add := by intros; apply Int.zero_add</code><br>
+      <code>&nbsp;&nbsp;add_zero := by intros; apply Int.add_zero</code><br>
+      <code>&nbsp;&nbsp;add_left_neg := by intros; apply Int.neg_add_self</code><br><br>
+      <code>-- R is not builtin in Lean, the user has to define it himself or rely on the library. We skip use float as an example.</code><br>
+      <code>def floatAddGroup : MyGroup Float where</code><br>
+      <code>&nbsp;&nbsp;add := Float.add</code><br>
+      <code>&nbsp;&nbsp;zero := 0.0</code><br>
+      <code>&nbsp;&nbsp;neg := Float.neg</code><br>
+      <code>&nbsp;&nbsp;add_assoc := by intros; apply Float.add_assoc</code><br>
+      <code>&nbsp;&nbsp;zero_add := by intros; apply Float.zero_add</code><br>
+      <code>&nbsp;&nbsp;add_zero := by intros; apply Float.add_zero</code><br>
+      <code>&nbsp;&nbsp;add_left_neg := by intros; apply Float.neg_add_self</code><br>
     </td>
   </tr>
 </table>

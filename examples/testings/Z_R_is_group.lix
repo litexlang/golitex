@@ -16,3 +16,36 @@ forall x R:
 
 $is_group(R, +, inverse, 0)
 $is_group(Z, +, inverse, 0)
+
+"""
+-- 定义群结构（加法形式）
+structure MyGroup (G : Type) where
+  add : G → G → G
+  zero : G
+  neg : G → G
+  add_assoc : ∀ a b c : G, add (add a b) c = add a (add b c)
+  zero_add : ∀ a : G, add zero a = a
+  add_zero : ∀ a : G, add a zero = a
+  add_left_neg : ∀ a : G, add (neg a) a = zero
+
+-- ℤ 是一个群
+def intAddGroup : MyGroup Int where
+  add := Int.add
+  zero := 0
+  neg := Int.neg
+  add_assoc := by intros; apply Int.add_assoc
+  zero_add := by intros; apply Int.zero_add
+  add_zero := by intros; apply Int.add_zero
+  add_left_neg := by intros; apply Int.neg_add_self
+
+-- ℝ（用 Float 近似）是一个群
+def floatAddGroup : MyGroup Float where
+  add := Float.add
+  zero := 0.0
+  neg := Float.neg
+  add_assoc := by intros; apply Float.add_assoc
+  zero_add := by intros; apply Float.zero_add
+  add_zero := by intros; apply Float.add_zero
+  add_left_neg := by intros; apply Float.neg_add_self
+
+"""
