@@ -1,8 +1,21 @@
-obj x Z
+prop is_set(s set, mul fn(s, s)s, inv fn(s)s, e s):
+    forall x s, y s, z s:
+        mul(mul(x, y), z) = mul(x, mul(y, z))
+    forall x s:
+        mul(x, inv(x)) = e
+        mul(inv(x), x) = e
 
-# 诡异的地方1：这里的x因为和外部世界的x同名了，所以改成了随机的另外一个东西，一旦改了就不知道怎么工作了 2. 这里传入+，没有检查+的dom是否覆盖z,z，很奇怪
-exist_prop self_add fn(Z, Z)Z st exist_f_always_equal_to_add():
-    forall x Z, y Z:
-        self_add(x, y) = x + y
+know forall x Z, y Z:
+    x + y $in Z
 
-exist + st $exist_f_always_equal_to_add()
++ $in fn(Z, Z)Z
+
+"""
+fn inverse(x Z)Z:
+    inverse(x) = -x
+
+
+
+$is_set(Z, +, -, 0)
+
+"""
