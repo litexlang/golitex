@@ -362,7 +362,7 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch(stmt *ast.SpecFac
 		// TODO 要证明在paramSet里
 		paramInParamSetFacts := insKnownUniFact.ParamInParamSetFacts()
 		for _, paramInParamSetFact := range paramInParamSetFacts {
-			ok, err = ver.verSpecFact_InSpecFact_UniMem(paramInParamSetFact, state)
+			ok, err = ver.VerFactStmt(paramInParamSetFact, state)
 			if err != nil {
 				return false, err
 			}
@@ -452,7 +452,7 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch(stmt *ast.SpecFactSt
 		// TODO 要证明在paramSet里
 		paramInParamSetFacts := insKnownUniFact.ParamInParamSetFacts()
 		for _, paramInParamSetFact := range paramInParamSetFacts {
-			ok, err = ver.verSpecFact_InSpecFact_UniMem(paramInParamSetFact, state)
+			ok, err = ver.VerFactStmt(paramInParamSetFact, state)
 			if err != nil {
 				return false, err
 			}

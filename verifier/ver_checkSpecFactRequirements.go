@@ -114,9 +114,12 @@ func (ver *Verifier) fcSatisfyNotBuiltinFnRequirement(fc ast.Fc, state VerState)
 func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn, state VerState) (bool, error) {
 	// parameter必须是实数
 	for _, param := range fc.Params {
-		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{param, ast.FcAtom(glob.KeywordReal)}), state)
-		if err != nil || !ok {
-			return false, ver.verErr(err, "parameters in %s must be in set %s, %s in %s is not valid", fc.FnHead.String(), glob.KeywordReal, param.String(), fc.String())
+		ok, err := ver.paramIs_R_Z_Q_N(param, state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, fmt.Errorf("parameters in %s must be in set %s or %s or %s or %s, %s in %s is not valid", fc.FnHead.String(), glob.KeywordReal, glob.KeywordInt, glob.KeywordRational, glob.KeywordNatural, param.String(), fc.String())
 		}
 	}
 
@@ -183,4 +186,40 @@ func (ver *Verifier) fcFnParamsSatisfyFnTemplateRequirement(params []ast.Fc, tem
 	}
 
 	return true, nil
+}
+
+func (ver *Verifier) paramIs_R_Z_Q_N(fc ast.Fc, state VerState) (bool, error) {
+	ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fc, ast.FcAtom(glob.KeywordReal)}), state)
+	if err != nil {
+		return false, ver.verErr(err, "parameters in %s must be in set %s, %s in %s is not valid", fc.String(), glob.KeywordReal, fc.String(), fc.String())
+	}
+	if ok {
+		return true, nil
+	}
+
+	ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fc, ast.FcAtom(glob.KeywordInt)}), state)
+	if err != nil {
+		return false, ver.verErr(err, "parameters in %s must be in set %s, %s in %s is not valid", fc.String(), glob.KeywordInt, fc.String(), fc.String())
+	}
+	if ok {
+		return true, nil
+	}
+
+	ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fc, ast.FcAtom(glob.KeywordRational)}), state)
+	if err != nil {
+		return false, ver.verErr(err, "parameters in %s must be in set %s, %s in %s is not valid", fc.String(), glob.KeywordRational, fc.String(), fc.String())
+	}
+	if ok {
+		return true, nil
+	}
+
+	ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fc, ast.FcAtom(glob.KeywordNatural)}), state)
+	if err != nil {
+		return false, ver.verErr(err, "parameters in %s must be in set %s, %s in %s is not valid", fc.String(), glob.KeywordNatural, fc.String(), fc.String())
+	}
+	if ok {
+		return true, nil
+	}
+
+	return false, nil
 }

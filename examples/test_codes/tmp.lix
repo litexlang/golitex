@@ -1,8 +1,18 @@
-fn inverse(x R) R:
+prop is_group(s set, mul fn(s, s)s, inv fn(s)s, e s):
+    forall x s, y s, z s:
+        mul(mul(x, y), z) = mul(x, mul(y, z))
+    forall x s:
+        mul(x, inv(x)) = e
+        mul(inv(x), x) = e
+
+fn inverse(x R)R:
     inverse(x) + x = 0
 
-know forall x Z:
+forall x R:
+    inverse(x) $in R
+    x + inverse(x) = inverse(x) + x
+    inverse(x) + x = 0
     x + inverse(x) = 0
 
-forall x R:
-    x + inverse(x) = 0
+$is_group(R, +, inverse, 0)
+$is_group(Z, +, inverse, 0)
