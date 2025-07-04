@@ -72,7 +72,8 @@ func (e *Env) FcSatisfy_FreeTemplateFact_Store_DeriveFacts(fc ast.Fc, fnTemplate
 		return false, err
 	}
 
-	derivedFact := instantiatedFnTStmt.DeriveUniFact(fc)
+	// derivedFact := instantiatedFnTStmt.DeriveUniFact(fc)
+	derivedFact := instantiatedFnTStmt.DeriveUniFact()
 	err = e.NewFact(derivedFact)
 	if err != nil {
 		return false, err

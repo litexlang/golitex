@@ -23,7 +23,7 @@ func (stmt *FnTemplateStmt) InstantiateByFnName_WithTemplateNameGivenFc(fc Fc) (
 	return NewFnTemplateStmt(NewDefHeader(fc.String(), stmt.Params, newParamSets), newDomFacts, newThenFacts, newRetSet), nil
 }
 
-func (fnTemplate *FnTemplateStmt) DeriveUniFact(fn Fc) *UniFactStmt {
+func (fnTemplate *FnTemplateStmt) DeriveUniFact() *UniFactStmt {
 	// return NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, append(fnTemplate.ThenFacts, NewSpecFactStmt(TruePure, NewFcAtomWithName(glob.KeywordIn), []Fc{fn, fnTemplate.RetSet})))
 	return NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, fnTemplate.ThenFacts)
 }
