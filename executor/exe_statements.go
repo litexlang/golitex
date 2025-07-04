@@ -821,5 +821,26 @@ func (exec *Executor) proveOverFiniteSetStmt(stmt *ast.ProveOverFiniteSetStmt) (
 }
 
 func (exec *Executor) haveInFact(stmt *ast.HaveStmt) (glob.ExecState, error) {
+	pureInFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.ExistInFactPropName), []ast.Fc{ast.FcAtom(stmt.ObjNames[0]), stmt.Fact.Params[0]})
 
+	isTrue := false
+	for curEnv := exec.env; curEnv != nil; curEnv = curEnv.Parent {
+		_, ok := curEnv.KnownFactsStruct.SpecFactMem.GetSameEnumPkgPropFacts(pureInFact)
+		if ok {
+			isTrue = true
+			break
+		}
+	}
+
+	if !isTrue {
+		return glob.ExecState_Error, nil
+	}
+
+	defObjStmt := ast.NewDefObjStmt([]string{stmt.ObjNames[0]}, []ast.Fc{stmt.Fact.Params[0]}, []ast.FactStmt{})
+	err := exec.defObjStmt(defObjStmt, false)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+
+	return glob.ExecState_True, nil
 }
