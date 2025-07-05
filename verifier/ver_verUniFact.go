@@ -31,7 +31,7 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state VerState) (bool,
 	defer ver.deleteEnvAndRetainMsg()
 
 	// 声明变量
-	paramMap, paramMapStrToStr, indexes := processUniFactParamsDuplicateDeclared(ver.env, oldStmt.Params)
+	paramMap, paramMapStrToStr, _ := processUniFactParamsDuplicateDeclared(ver.env, oldStmt.Params)
 
 	var newStmtPtr *ast.UniFactStmt = oldStmt
 
@@ -57,26 +57,10 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state VerState) (bool,
 
 		newStmtPtr = ast.NewUniFact(newParams, instantiatedOldStmt.ParamSets, instantiatedOldStmt.DomFacts, instantiatedOldStmt.ThenFacts)
 
-		for i, param := range oldStmt.Params {
-			if indexStr, ok := indexes[i]; ok {
-				err := ver.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt([]string{indexStr}, []ast.Fc{newStmtPtr.ParamSets[i]}, []ast.FactStmt{}))
-				if err != nil {
-					return false, err
-				}
-			} else {
-				err := ver.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt([]string{param}, []ast.Fc{instantiatedOldStmt.ParamSets[i]}, []ast.FactStmt{}))
-				if err != nil {
-					return false, err
-				}
-			}
+		err = ver.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt(newStmtPtr.Params, newStmtPtr.ParamSets, []ast.FactStmt{}))
+		if err != nil {
+			return false, err
 		}
-
-		// for i, indexStr := range indexes {
-		// 	err := ver.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt([]string{indexStr}, []ast.Fc{newStmtPtr.ParamSets[i]}, []ast.FactStmt{}))
-		// 	if err != nil {
-		// 		return false, err
-		// 	}
-		// }
 	}
 
 	// 查看param set 是否已经声明
@@ -135,12 +119,8 @@ func processUniFactParamsDuplicateDeclared(env *env.Env, params []string) (map[s
 	indexesOfDuplicateParams := make(map[int]string)
 	for i, param := range params {
 		newParam := param
-		// if env.IsAtomDeclared(ast.NewFcAtom(glob.EmptyPkg, newParam), map[string]struct{}{}) {
 		if env.IsAtomDeclared(ast.FcAtom(newParam), map[string]struct{}{}) {
 			newParam = generateUndeclaredRandomName(env)
-		}
-		if param != newParam {
-			// paramMap[param] = ast.NewFcAtom(glob.EmptyPkg, newParam)
 			paramMap[param] = ast.FcAtom(newParam)
 			paramMapStrToStr[param] = newParam
 			indexesOfDuplicateParams[i] = newParam
