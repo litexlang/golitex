@@ -37,7 +37,7 @@ func (ver *Verifier) NewDefObj_InsideAtomsDeclared(stmt *ast.DefObjStmt) error {
 
 	// 如果这个obj是fn，那么要插入到fn def mem中
 	for _, objName := range stmt.Objs {
-		err = ver.env.NewObj(objName)
+		err = ver.env.NewObj_NoDuplicate(objName)
 		if err != nil {
 			return err
 		}
