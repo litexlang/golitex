@@ -193,32 +193,38 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
 	}
 
 	// prop leads to iff
-	if stmt.IffFacts == nil || len(stmt.IffFacts) == 0 {
-		return nil
+	if stmt.IffFacts != nil && len(stmt.IffFacts) > 0 {
+		propToIff, iffToProp, err := stmt.Make_PropToIff_IffToProp()
+		if err != nil {
+			return err
+		}
+		err = exec.env.NewFact(propToIff)
+		if err != nil {
+			return err
+		}
+		if glob.IsNotImportDirStmt() {
+			exec.appendMsg(fmt.Sprintf("%s\nis true by definition", propToIff.String()))
+		}
+
+		err = exec.env.NewFact(iffToProp)
+		if err != nil {
+			return err
+		}
+		if glob.IsNotImportDirStmt() {
+			exec.appendMsg(fmt.Sprintf("%s\nis true by definition", iffToProp.String()))
+		}
 	}
 
-	propToIff, iffToProp, err := stmt.Make_PropToIff_IffToProp()
-	if err != nil {
-		return err
-	}
-	err = exec.env.NewFact(propToIff)
-	if err != nil {
-		return err
-	}
-	if glob.IsNotImportDirStmt() {
-		exec.appendMsg(fmt.Sprintf("%s\nis true by definition", propToIff.String()))
+	paramsAsFc := []ast.Fc{}
+	for i := range stmt.DefHeader.Params {
+		paramsAsFc = append(paramsAsFc, ast.FcAtom(stmt.DefHeader.Params[i]))
 	}
 
-	err = exec.env.NewFact(iffToProp)
+	uniFact := ast.NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(stmt.DefHeader.Name), paramsAsFc)}, stmt.ThenFacts)
+
+	err = exec.env.NewFact(uniFact)
 	if err != nil {
 		return err
-	}
-	if glob.IsNotImportDirStmt() {
-		exec.appendMsg(fmt.Sprintf("%s\nis true by definition", iffToProp.String()))
-	}
-
-	if len(stmt.IffFacts) == 0 {
-		return nil
 	}
 
 	return nil
@@ -515,13 +521,6 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
 	}
 
 	err := exec.defPropStmt(&stmt.Prop)
-	if err != nil {
-		return err
-	}
-
-	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, []ast.FactStmt{}, stmt.Prop.ThenFacts)
-
-	err = exec.env.NewFact(uniFact)
 	if err != nil {
 		return err
 	}

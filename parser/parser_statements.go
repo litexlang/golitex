@@ -877,10 +877,6 @@ func (tb *tokenBlock) knowPropStmt() (*ast.KnowPropStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	if len(tb.body) < 2 {
-		return nil, fmt.Errorf("expect at least 2 statements in know prop body, but got %d", len(tb.body))
-	}
-
 	declHeader, err := tb.headerOfProp()
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -1173,10 +1169,6 @@ func (tb *tokenBlock) importGloballyStmt() (*ast.ImportGloballyStmt, error) {
 }
 
 func (tb *tokenBlock) claimPropStmt() (*ast.ClaimPropStmt, error) {
-	if len(tb.body) != 2 {
-		return nil, fmt.Errorf("expect 2 statements in claim prop body, but got %d", len(tb.body))
-	}
-
 	declHeader, err := tb.body[0].headerOfProp()
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -1506,28 +1498,41 @@ func (tb *tokenBlock) bodyOfKnowProp() ([]ast.FactStmt, []ast.FactStmt, error) {
 	var err error
 	iffFacts := []ast.FactStmt{}
 	thenFacts := []ast.FactStmt{}
-	for i := range len(tb.body) - 1 {
-		iffFact, err := tb.body[i].factStmt(UniFactDepth1)
+
+	if tb.body[len(tb.body)-1].header.is(glob.KeywordThen) {
+		for i := range len(tb.body) - 1 {
+			iffFact, err := tb.body[i].factStmt(UniFactDepth1)
+			if err != nil {
+				return nil, nil, tbErr(err, tb)
+			}
+			iffFacts = append(iffFacts, iffFact)
+		}
+
+		err = tb.body[len(tb.body)-1].header.skipKwAndColon_ExceedEnd(glob.KeywordThen)
 		if err != nil {
 			return nil, nil, tbErr(err, tb)
 		}
-		iffFacts = append(iffFacts, iffFact)
-	}
 
-	err = tb.body[len(tb.body)-1].header.skipKwAndColon_ExceedEnd(glob.KeywordThen)
-	if err != nil {
-		return nil, nil, tbErr(err, tb)
-	}
-
-	for _, stmt := range tb.body[len(tb.body)-1].body {
-		curStmt, err := stmt.factStmt(UniFactDepth1)
-		if err != nil {
-			return nil, nil, tbErr(err, tb)
+		for _, stmt := range tb.body[len(tb.body)-1].body {
+			curStmt, err := stmt.factStmt(UniFactDepth1)
+			if err != nil {
+				return nil, nil, tbErr(err, tb)
+			}
+			thenFacts = append(thenFacts, curStmt)
 		}
-		thenFacts = append(thenFacts, curStmt)
-	}
 
-	return iffFacts, thenFacts, nil
+		return iffFacts, thenFacts, nil
+	} else {
+		for i := range len(tb.body) {
+			thenFact, err := tb.body[i].factStmt(UniFactDepth1)
+			if err != nil {
+				return nil, nil, tbErr(err, tb)
+			}
+			thenFacts = append(thenFacts, thenFact)
+		}
+
+		return iffFacts, thenFacts, nil
+	}
 }
 
 func (tb *tokenBlock) headerOfProp() (*ast.DefHeader, error) {
