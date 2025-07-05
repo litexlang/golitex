@@ -179,19 +179,19 @@ func (s SpecFactInUniFactMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([
 func (env *Env) newUniFact(stmt *ast.UniFactStmt) error {
 	for _, thenStmt := range stmt.ThenFacts {
 		var err error
-		switch stmtAsSpecFact := thenStmt.(type) {
+		switch asFact := thenStmt.(type) {
 		case *ast.SpecFactStmt:
-			err = env.newUniFact_ThenFactIsSpecFact(stmt, stmtAsSpecFact)
+			err = env.newUniFact_ThenFactIsSpecFact(stmt, asFact)
 		case *ast.OrStmt:
-			err = env.newUniFact_ThenFactIsOrStmt(stmt, stmtAsSpecFact)
+			err = env.newUniFact_ThenFactIsOrStmt(stmt, asFact)
 		case *ast.EnumStmt:
-			err = env.newUniFact_ThenFactIsEnumStmt(stmt, stmtAsSpecFact)
+			err = env.newUniFact_ThenFactIsEnumStmt(stmt, asFact)
 		case *ast.IntensionalSetStmt:
-			err = env.newUniFact_ThenFactIsIntensionalSetStmt(stmt, stmtAsSpecFact)
+			err = env.newUniFact_ThenFactIsIntensionalSetStmt(stmt, asFact)
 		case *ast.UniFactWithIffStmt:
-			err = env.newUniFact_ThenFactIsIffStmt(stmt, stmtAsSpecFact)
+			err = env.newUniFact_ThenFactIsIffStmt(stmt, asFact)
 		case *ast.UniFactStmt:
-			err = env.newUniFact_ThenFactIsUniFactStmt(stmt, stmtAsSpecFact)
+			err = env.newUniFact_ThenFactIsUniFactStmt(stmt, asFact)
 		default:
 			return fmt.Errorf("TODO: newUniFact Currently only support spec fact in uni fact, but got: %s", thenStmt.String())
 		}
