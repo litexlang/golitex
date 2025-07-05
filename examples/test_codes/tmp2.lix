@@ -13,3 +13,4 @@ $exclude_property(s1, s2)
 not x $in s2
 
 # 或许可以 x $in fnName() 后，自动释放 fnName 里的性质
+# 然后所以 set 来专门声明能释放出来then的集合

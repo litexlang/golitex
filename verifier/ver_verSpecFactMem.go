@@ -360,7 +360,7 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch(stmt *ast.SpecFac
 		}
 
 		// TODO 要证明在paramSet里
-		paramInParamSetFacts := insKnownUniFact.ParamInParamSetFacts()
+		paramInParamSetFacts := insKnownUniFact.ParamInParamSetFacts(uniConMap)
 		for _, paramInParamSetFact := range paramInParamSetFacts {
 			ok, err = ver.VerFactStmt(paramInParamSetFact, state)
 			if err != nil {
@@ -440,7 +440,7 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch(stmt *ast.SpecFactSt
 		}
 
 		// 有一些 param 没有被实例化，则continue
-		if len(knownFact.UniFact.Params) > len(uniConMap) {
+		if len(knownFact.UniFact.Params) != len(uniConMap) {
 			continue
 		}
 
@@ -450,7 +450,7 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch(stmt *ast.SpecFactSt
 		}
 
 		// TODO 要证明在paramSet里
-		paramInParamSetFacts := insKnownUniFact.ParamInParamSetFacts()
+		paramInParamSetFacts := insKnownUniFact.ParamInParamSetFacts(uniConMap)
 		for _, paramInParamSetFact := range paramInParamSetFacts {
 			ok, err = ver.VerFactStmt(paramInParamSetFact, state)
 			if err != nil {
