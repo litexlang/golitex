@@ -1,20 +1,8 @@
 fn exclude(s1, s2 set) set
 
 know prop exclude_property(s1, s2 set):
-    s1 $in set
-    s2 $in set
-    then:
         exclude(s1, s2) := x s1:
             not x $in s2
-
-obj s1, s2 set
-obj x exclude(s1, s2)
-$exclude_property(s1, s2)
-not x $in s2
-
-forall a1, a2 set, t exclude(a1, a2):
-    $exclude_property(a1, a2)
-    not t $in a2
 
 forall s1, s2 set, x exclude(s1, s2):
     $exclude_property(s1, s2)
