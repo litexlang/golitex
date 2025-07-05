@@ -16,19 +16,19 @@ package litex_env
 
 import ast "golitex/ast"
 
-func (memory *FnTemplateDefMem) Get(fc ast.FcAtom) (*ast.DefFnTemplateStmt, bool) {
+func (memory FnTemplateDefMem) Get(fc ast.FcAtom) (*ast.DefFnTemplateStmt, bool) {
 	// pkgMap, pkgExists := memory.Dict[fc.PkgName]
 	// if !pkgExists {
 	// 	return nil, false
 	// }
 
 	// node, nodeExists := pkgMap[fc.Name]
-	node, nodeExists := memory.Dict[string(fc)]
+	node, nodeExists := memory[string(fc)]
 	if !nodeExists {
 		return nil, false
 	}
 
-	return node.Def, true
+	return &node, true
 }
 
 func (memory *ExistPropDefMem) Get(fc ast.FcAtom) (*ast.DefExistPropStmt, bool) {
