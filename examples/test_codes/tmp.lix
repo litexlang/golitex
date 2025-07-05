@@ -2,8 +2,8 @@ fn exclude(s1, s2 set) set:
     exclude(s1, s2) := x s1:
         not x $in s2
 
-# forall x exclude(s1, s2):
-forall s1, s2 set, x exclude(s1, s2):
+forall x exclude(s1, s2):
+#forall s1, s2 set, x exclude(s1, s2):
     x $in s1
     not x $in s2
 

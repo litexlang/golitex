@@ -28,11 +28,11 @@ import (
 // main function for running a single code and return the message
 func ExecuteCodeAndReturnMessage(code string) (string, glob.SysSignal, error) {
 	msgOfTopStatements, signal, err := executeCodeAndReturnMessageSlice(code)
-	ret := strings.TrimSpace(strings.Join(msgOfTopStatements, "\n"))
 	if err != nil {
-		return ret, signal, err
+		msgOfTopStatements = append(msgOfTopStatements, err.Error())
 	}
-	return ret, signal, nil
+	ret := strings.TrimSpace(strings.Join(msgOfTopStatements, "\n"))
+	return ret, signal, err
 }
 
 func executeCodeAndReturnMessageSlice(code string) ([]string, glob.SysSignal, error) {

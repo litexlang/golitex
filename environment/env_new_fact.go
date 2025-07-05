@@ -73,6 +73,12 @@ func (env *Env) newFactNoPostProcess(stmt ast.FactStmt) error {
 		return env.newLogicExprFact(f)
 	case *ast.UniFactStmt:
 		return env.newUniFact(f)
+	case *ast.IntensionalSetStmt:
+		return env.newIntensionalSetFact(f)
+	case *ast.UniFactWithIffStmt:
+		return env.newUniFactWithIff(f)
+	case *ast.EnumStmt:
+		return env.newEnumFact(f)
 	default:
 		return fmt.Errorf("unknown fact type: %T", stmt)
 	}
