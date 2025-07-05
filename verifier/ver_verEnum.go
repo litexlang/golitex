@@ -21,8 +21,13 @@ import (
 )
 
 func (ver *Verifier) verEnumStmt(stmt *ast.EnumStmt, state VerState) (bool, error) {
-	if ok, _ := ver.lenIsZeroThenEnumIsEmpty(stmt, state); ok {
-		return true, nil
+	if ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.CurSet, ast.FcAtom(glob.KeywordFiniteSet)}), state); err != nil || ok {
+		if err != nil {
+			return false, err
+		}
+		if ok, _ := ver.lenIsZeroThenEnumIsEmpty(stmt, state); ok {
+			return true, nil
+		}
 	}
 
 	forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts := ast.TransformEnumToUniFact(stmt.CurSet, stmt.Items)
