@@ -33,7 +33,7 @@ know s2 := {1,2,3,4,5,6}
 s2 $in finite_set
 len(s2) = 6
 
-prove:
+prove_over_finite_set:
     forall x s2:
         or:
             x = 1
@@ -42,10 +42,12 @@ prove:
             x = 4
             x = 5
             x = 6
+    prove:
+        1 = 1
     
-    1 $in s2
-    2 $in s2
-    3 $in s2
-    4 $in s2
-    5 $in s2
-    6 $in s2
+1 $in s2
+2 $in s2
+3 $in s2
+4 $in s2
+5 $in s2
+6 $in s2

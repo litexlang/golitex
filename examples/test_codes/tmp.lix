@@ -1,9 +1,18 @@
-have exclude(s1, s2 set) := x s1:
-    not x $in s2
+fn_template f_template(x Z) Z:
+    dom:
+        x >= -1
+    then:
+        f_template(x) = x + 1  
+prove:
+    obj m f_template
+    m(0) = 0 + 1
 
-forall s1, s2 set:
-    exclude(s1, s2) $in set
+# prove xxx $in fn_template
+fn f2(x Z) Z:
+    dom:
+        x >= -1
+    then:
+        f2(x) = x + 1
 
-forall s1, s2 set, x exclude(s1, s2):
-    x $in s1
-    not x $in s2
+prove:
+    f2 $in f_template

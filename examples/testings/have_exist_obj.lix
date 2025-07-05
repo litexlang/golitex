@@ -1,56 +1,106 @@
-exist_prop a R st exist_x_larger_than(x R) :
-    iff:
-        a > x
+prove:
+    exist_prop a R st exist_x_larger_than(x R) :
+        iff:
+            a > x
 
-# claim spec fact prove
-claim:
+    # claim spec fact prove
+    claim:
+        $exist_x_larger_than(1)
+        prove:
+            exist 2 st $exist_x_larger_than(1)
+            
     $exist_x_larger_than(1)
-    prove:
-        exist 2 st $exist_x_larger_than(1)
-        
-$exist_x_larger_than(1)
-        
-have a st $exist_x_larger_than(1)
-a $in R
-a > 1
+            
+    have a st $exist_x_larger_than(1)
+    a $in R
+    a > 1
 
-know forall x R,  y R:
-    x > 0
-    then:
-        x + y > y
-        y + x > y
+    know forall x R,  y R:
+        x > 0
+        then:
+            x + y > y
+            y + x > y
 
-# claim forall prove
-claim:
-    forall x R:
-        $exist_x_larger_than(x)
-    prove:
-        exist x + 1 st $exist_x_larger_than(x)
+    # claim forall prove
+    claim:
+        forall x R:
+            $exist_x_larger_than(x)
+        prove:
+            exist x + 1 st $exist_x_larger_than(x)
 
-obj x R:
-    1 >= x
+    obj x R:
+        1 >= x
 
-know forall x R, y R:
-    not x < y
-    iff:
+    know forall x R, y R:
+        not x < y
+        iff:
+            x >= y
+
+    know forall x R, y R:
+        x > y
+        then:
+            not y >= x
+
+    know prop larger_equal_is_transitive(x R, y R, z R):
         x >= y
+        y > z
+        then:
+            x > z
 
-know forall x R, y R:
-    x > y
-    then:
-        not y >= x
+    # claim spec fact prove by contradiction
+    claim:
+        x < 2
+        prove_by_contradiction:
+            x >= 2
+            $larger_equal_is_transitive(x, 2, 1)
+            x > 1
+            not 1 >= x
 
-know prop larger_equal_is_transitive(x R, y R, z R):
-    x >= y
-    y > z
-    then:
-        x > z
+prove:
+    have s := {1, 2, 3}
+    have s2 := x N:
+        x > 5
 
-# claim spec fact prove by contradiction
-claim:
-    x < 2
-    prove_by_contradiction:
-        x >= 2
-        $larger_equal_is_transitive(x, 2, 1)
-        x > 1
-        not 1 >= x
+    s := {3, 2, 1}
+
+    forall x s2:
+        x > 5
+
+# have objects from builtin sets
+prove:
+    have a N, b Z, c Q, d R, e C
+    have s set
+    have s2 finite_set
+
+
+# have objects from finite sets len > 0
+prove:
+    obj s finite_set:
+        len(s) = 1
+    1 > 0
+    len(s) > 0
+    have a st $exist_in(s)
+    a $in s
+
+
+# have objectName st exist_in(setName)
+# it has syntax sugar: have objectName setName
+prove:
+    obj s set, a obj
+    know a $in s
+    exist a st $exist_in(s)
+    $exist_in(s)
+    have b st $exist_in(s)
+    b $in s
+
+# have set fn
+prove:
+    have exclude(s1, s2 set) := x s1:
+        not x $in s2
+
+    forall s1, s2 set:
+        exclude(s1, s2) $in set
+
+    forall s1, s2 set, x exclude(s1, s2):
+        x $in s1
+        not x $in s2
