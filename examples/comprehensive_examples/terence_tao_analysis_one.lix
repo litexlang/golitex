@@ -296,7 +296,6 @@ t + (-1) = 0
 
 # The rationals
 
-"""
 know forall x2, y2 R:
     x2 != 0
     y2 != 0
@@ -310,7 +309,6 @@ forall a2, b2, c2, d2 R:
     then:
         b2 * d2 != 0
         a2 / b2 + c2 / d2 = (a2 * d2 + b2 * c2) / (b2 * d2)
-"""
 
 forall a, b Q:
     a + b = b + a
