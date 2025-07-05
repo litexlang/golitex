@@ -76,63 +76,6 @@ func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) error {
 	return nil
 }
 
-// func (env *Env) NewDefObj_InsideAtomsDeclared(stmt *ast.DefObjStmt) error {
-// 	err := env.NonDuplicateParam_NoUndeclaredParamSet(stmt.Objs, stmt.ObjSets, true)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	extraAtomNames := map[string]struct{}{}
-// 	for _, objName := range stmt.Objs {
-// 		extraAtomNames[objName] = struct{}{}
-// 	}
-
-// 	for _, fact := range stmt.NewInFacts() {
-// 		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
-// 			return fmt.Errorf(AtomsInFactNotDeclaredMsg(fact))
-// 		}
-// 		err := env.NewFact(fact)
-// 		if err != nil {
-// 			return err
-// 		}
-// 	}
-
-// 	for _, fact := range stmt.Facts {
-// 		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
-// 			return fmt.Errorf(AtomsInFactNotDeclaredMsg(fact))
-// 		}
-// 		err := env.NewFact(fact)
-// 		if err != nil {
-// 			return err
-// 		}
-// 	}
-
-// 	for _, objName := range stmt.Objs {
-// 		err := env.IsInvalidName(objName)
-// 		if err != nil {
-// 			return err
-// 		}
-// 	}
-
-// 	// 如果这个obj是fn，那么要插入到fn def mem中
-// 	for i, objName := range stmt.Objs {
-// 		if ast.IsFnDeclarationFc(stmt.ObjSets[i]) {
-// 			fnDefStmt := ast.FromFnDeclFcToDefFnStmt(objName, stmt.ObjSets[i])
-// 			err = env.NewDefFn_InsideAtomsDeclared(fnDefStmt)
-// 			if err != nil {
-// 				return err
-// 			}
-// 		} else {
-// 			err = env.ObjDefMem.InsertItem(objName)
-// 			if err != nil {
-// 				return err
-// 			}
-// 		}
-// 	}
-
-// 	return nil
-// }
-
 func (env *Env) AtomsInFnTemplateDeclared(nameAsFc ast.Fc, stmt *ast.FnTemplateStmt) error {
 	// fn名不能和parameter名重叠
 	name := nameAsFc.String()
@@ -217,5 +160,16 @@ func (env *Env) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) 
 
 	key := stmt.DefBody.DefHeader.Name
 	env.ExistPropDefMem[key] = *stmt
+	return nil
+}
+
+func (e *Env) NewObj_NoDuplicate(name string) error {
+	err := e.IsValidUserDefinedName_NoDuplicate(name)
+	if err != nil {
+		return fmt.Errorf("invalid name: %s", name)
+	}
+
+	e.ObjDefMem[name] = struct{}{}
+
 	return nil
 }

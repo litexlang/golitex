@@ -16,34 +16,6 @@ package litex_env
 
 import ast "golitex/ast"
 
-func (e *Env) GetFnTemplateOfFc(fn ast.Fc) ([]*ast.FnTemplateStmt, bool) {
-	fnDefs := []*ast.FnTemplateStmt{}
-	for env := e; env != nil; env = env.Parent {
-		fnDefsFromEnv, ok := env.FnInFnTemplateFactsMem.Get(fn)
-		if ok {
-			fnDefs = append(fnDefs, fnDefsFromEnv...)
-		}
-	}
-	return fnDefs, true
-}
-
-// func (e *Env) GetCurrentTemplateOfFc(fc *ast.FcFn) (*ast.FnTemplateStmt, bool) {
-// 	fnDef, ok := e.GetLatestFnTemplate(fc.FnHead)
-// 	if !ok {
-// 		return nil, false
-// 	}
-// 	return fnDef, true
-// }
-
-func (memory FnInFnTemplateFactsMem) Get(fc ast.Fc) ([]*ast.FnTemplateStmt, bool) {
-	fnDefs, ok := memory[fc.String()]
-	if !ok {
-		return nil, false
-	}
-
-	return fnDefs, true
-}
-
 // return template and parameters of each level of fcFn
 // 返回的slice是从左到右的template和params
 func (e *Env) GetTemplateOfFcFnRecursively(fcFn *ast.FcFn) ([]*ast.FnTemplateStmt, []*ast.FcFn, bool) {

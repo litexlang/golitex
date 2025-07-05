@@ -32,22 +32,22 @@ func (e *Env) IsFcAtomDeclaredByUser(fcAtomName ast.FcAtom) bool {
 
 // 其实最好要分类：有可能是obj，有可能是prop，不能在验证obj的时候验证是prop
 func (e *Env) isFcAtomDeclaredAtCurEnv(fcAtomName ast.FcAtom) bool {
-	_, ok := e.PropDefMem.Get(fcAtomName)
+	_, ok := e.PropDefMem[string(fcAtomName)]
 	if ok {
 		return true
 	}
 
-	_, ok = e.ExistPropDefMem.Get(fcAtomName)
+	_, ok = e.ExistPropDefMem[string(fcAtomName)]
 	if ok {
 		return true
 	}
 
-	_, ok = e.ObjDefMem.Get(fcAtomName)
+	_, ok = e.ObjDefMem[string(fcAtomName)]
 	if ok {
 		return true
 	}
 
-	_, ok = e.FnTemplateDefMem.Get(fcAtomName)
+	_, ok = e.FnTemplateDefMem[string(fcAtomName)]
 
 	return ok
 }
@@ -73,16 +73,6 @@ func (e *Env) AtomsAreObj(atomSlice []ast.FcAtom) bool {
 		}
 	}
 	return true
-}
-
-func (e *Env) isUserDefinedObj(atom ast.FcAtom) bool {
-	for curEnv := e; curEnv != nil; curEnv = curEnv.Parent {
-		_, ok := curEnv.ObjDefMem.Get(atom)
-		if ok {
-			return true
-		}
-	}
-	return false
 }
 
 func (e *Env) AreAtomsInFcAreDeclared(fc ast.Fc, extraAtomNames map[string]struct{}) bool {
