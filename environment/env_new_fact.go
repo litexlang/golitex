@@ -65,6 +65,7 @@ func (env *Env) newSpecFactNoPostProcess(fact *ast.SpecFactStmt) error {
 }
 
 // 为了防止 p 的定义中推导出q，q的定义中推导出p，导致循环定义，所以需要这个函数
+// ? 总觉得这里的 除了 spec fact 以外，其他fact 的定义中推导出p，p的定义中推导出其他fact，也可能导致循环
 func (env *Env) newFactNoPostProcess(stmt ast.FactStmt) error {
 	switch f := stmt.(type) {
 	case *ast.SpecFactStmt:

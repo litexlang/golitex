@@ -29,10 +29,10 @@ func EqualFact(left, right Fc) *SpecFactStmt {
 	return NewSpecFactStmt(TruePure, FcAtom(glob.KeySymbolEqual), []Fc{left, right})
 }
 
-func (stmt *UniFactStmt) ParamInParamSetFacts() []*SpecFactStmt {
+func (stmt *UniFactStmt) ParamInParamSetFacts(uniConMap map[string]Fc) []*SpecFactStmt {
 	paramSetFacts := make([]*SpecFactStmt, len(stmt.Params))
 	for i, param := range stmt.Params {
-		paramSetFacts[i] = NewInFact(param, stmt.ParamSets[i])
+		paramSetFacts[i] = NewInFactWithParamFc(uniConMap[param], stmt.ParamSets[i])
 	}
 	return paramSetFacts
 }
