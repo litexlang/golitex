@@ -49,7 +49,11 @@ func (tb *tokenBlock) stmt() (ast.Stmt, error) {
 		if slices.Contains(tb.header.slice, glob.KeywordSt) {
 			ret, err = tb.haveStmt()
 		} else if slices.Contains(tb.header.slice, glob.KeySymbolColonEqual) {
-			ret, err = tb.haveSetStmt()
+			if !slices.Contains(tb.header.slice, glob.KeySymbolLeftBrace) {
+				ret, err = tb.haveSetStmt()
+			} else {
+				ret, err = tb.haveSetFnStmt()
+			}
 		} else {
 			ret, err = tb.haveInSetStmt()
 		}
@@ -1333,33 +1337,42 @@ func (tb *tokenBlock) dom_and_section(kw string, kw_should_not_exist_in_body str
 	}
 }
 
-func (tb *tokenBlock) intensionalSetStmt(curSet ast.Fc) (*ast.IntensionalSetStmt, error) {
+func (tb *tokenBlock) intentionalSetBody() (string, ast.Fc, []*ast.SpecFactStmt, error) {
 	param, err := tb.header.next()
 	if err != nil {
-		return nil, tbErr(err, tb)
+		return "", nil, nil, tbErr(err, tb)
 	}
 
 	parentSet, err := tb.RawFc()
 	if err != nil {
-		return nil, tbErr(err, tb)
+		return "", nil, nil, tbErr(err, tb)
 	}
 
 	err = tb.header.skip(glob.KeySymbolColon)
 	if err != nil {
-		return nil, tbErr(err, tb)
+		return "", nil, nil, tbErr(err, tb)
 	}
 
 	if !tb.header.ExceedEnd() {
-		return nil, fmt.Errorf("expect end of line")
+		return "", nil, nil, fmt.Errorf("expect end of line")
 	}
 
 	proofs := []*ast.SpecFactStmt{}
 	for _, stmt := range tb.body {
 		curStmt, err := stmt.specFactStmt()
 		if err != nil {
-			return nil, tbErr(err, tb)
+			return "", nil, nil, tbErr(err, tb)
 		}
 		proofs = append(proofs, curStmt)
+	}
+
+	return param, parentSet, proofs, nil
+}
+
+func (tb *tokenBlock) intensionalSetStmt(curSet ast.Fc) (*ast.IntensionalSetStmt, error) {
+	param, parentSet, proofs, err := tb.intentionalSetBody()
+	if err != nil {
+		return nil, tbErr(err, tb)
 	}
 
 	return ast.NewIntensionalSetStmt(curSet, param, parentSet, proofs), nil
@@ -1603,4 +1616,28 @@ func (tb *tokenBlock) haveSetStmt() (*ast.HaveSetStmt, error) {
 	}
 
 	return ast.NewHaveSetStmt(asStmt), nil
+}
+
+func (tb *tokenBlock) haveSetFnStmt() (*ast.HaveSetFnStmt, error) {
+	err := tb.header.skip(glob.KeywordHave)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	declHeader, err := tb.defHeaderWithoutParsingColonAtEnd()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolColonEqual)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	param, parentSet, proofs, err := tb.intentionalSetBody()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	return ast.NewHaveSetFnStmt(declHeader, param, parentSet, proofs), nil
 }

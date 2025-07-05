@@ -50,6 +50,7 @@ func (s *HaveByReplacementStmt) stmt()         {}
 func (s *ProveOverFiniteSetStmt) stmt()        {}
 func (s *HaveInSetStmt) stmt()                 {}
 func (s *HaveSetStmt) stmt()                   {}
+func (s *HaveSetFnStmt) stmt()                 {}
 
 type FactStmt interface {
 	factStmt()

@@ -200,3 +200,10 @@ type HaveInSetStmt struct {
 type HaveSetStmt struct {
 	Fact SetDeclarationStmtInterface
 }
+
+type HaveSetFnStmt struct {
+	DefHeader DefHeader
+	Param     string
+	ParentSet Fc
+	Proofs    []*SpecFactStmt
+}
