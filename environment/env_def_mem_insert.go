@@ -38,7 +38,7 @@ func (memory *PropDefMem) insert(stmt *ast.DefPropStmt) error {
 	return nil
 }
 
-func (memory *FnTemplateDefMem) insert(stmt *ast.DefFnTemplateStmt) error {
+func (memory FnTemplateDefMem) insert(stmt *ast.DefFnTemplateStmt) error {
 	// pkgMap, pkgExists := memory.Dict[taskManager.CurrentPkg]
 
 	// if !pkgExists {
@@ -47,12 +47,12 @@ func (memory *FnTemplateDefMem) insert(stmt *ast.DefFnTemplateStmt) error {
 	// }
 
 	// node, nodeExists := pkgMap[stmt.FnTemplateStmt.Name]
-	node, nodeExists := memory.Dict[stmt.FnTemplateStmt.Name]
+	node, nodeExists := memory[stmt.FnTemplateStmt.Name]
 	if !nodeExists {
-		node = FnTemplateMemItem{stmt}
+		node = *stmt
 	}
 	// pkgMap[stmt.FnTemplateStmt.Name] = node
-	memory.Dict[stmt.FnTemplateStmt.Name] = node
+	memory[stmt.FnTemplateStmt.Name] = node
 
 	return nil
 }

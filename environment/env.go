@@ -61,7 +61,7 @@ func NewEnv(parent *Env, curMatchEnv *ast.SpecFactStmt) *Env {
 		ObjDefMem:              *newObjMemory(),
 		PropDefMem:             *newPropMemory(),
 		FnInFnTemplateFactsMem: newFnMemory(),
-		FnTemplateDefMem:       *newFnTemplateMemory(),
+		FnTemplateDefMem:       make(FnTemplateDefMem),
 		ExistPropDefMem:        *newExistPropMemory(),
 		KnownFactsStruct:       makeKnownFactsStruct(),
 		EqualMem:               make(map[string]shared_ptr_to_slice_of_fc),
