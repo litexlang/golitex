@@ -30,10 +30,13 @@ type ExistPropDefMem struct {
 	Dict map[string]ExistPropMemItem
 }
 
-type FnTemplateMemItem struct{ Def *ast.DefFnTemplateStmt }
-type FnTemplateDefMem struct {
-	Dict map[string]FnTemplateMemItem
-}
+// type FnTemplateMemItem struct{ Def *ast.DefFnTemplateStmt }
+
+// type FnTemplateDefMem struct {
+// 	Dict map[string]FnTemplateMemItem
+// }
+
+type FnTemplateDefMem map[string]ast.DefFnTemplateStmt
 
 type ObjMemItem struct{ Def *ast.DefObjStmt }
 type ObjDefMem struct {
@@ -57,6 +60,10 @@ func newExistPropMemory() *ExistPropDefMem {
 	return &ExistPropDefMem{make(map[string]ExistPropMemItem)}
 }
 
-func newFnTemplateMemory() *FnTemplateDefMem {
-	return &FnTemplateDefMem{make(map[string]FnTemplateMemItem)}
-}
+// func newFnTemplateMemory() *FnTemplateDefMem {
+// 	return &FnTemplateDefMem{make(map[string]FnTemplateMemItem)}
+// }
+
+// func newFnTemplateMemory() FnTemplateDefMem {
+// 	return make(FnTemplateDefMem)
+// }
