@@ -36,4 +36,11 @@ know forall x Z, y Z:
     x + y $in Z
 	x - y $in Z
 	x * y $in Z	
+
+know forall x2, y2 R:
+    x2 != 0
+    y2 != 0
+    then:
+        x2 * y2 != 0
+
 `
