@@ -170,3 +170,7 @@ func NewHaveInSetStmt(objNames []string, objSets []Fc) *HaveInSetStmt {
 func NewHaveSetStmt(fact SetDeclarationStmtInterface) *HaveSetStmt {
 	return &HaveSetStmt{fact}
 }
+
+func NewHaveSetFnStmt(declHeader *DefHeader, param string, parentSet Fc, proofs []*SpecFactStmt) *HaveSetFnStmt {
+	return &HaveSetFnStmt{*declHeader, param, parentSet, proofs}
+}
