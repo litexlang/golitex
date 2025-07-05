@@ -45,3 +45,13 @@ func (e *Env) GetPropDef(propName ast.FcAtom) (*ast.DefPropStmt, bool) {
 	}
 	return nil, false
 }
+
+func (e *Env) GetHaveSetFnDef(fnName ast.FcAtom) (*ast.HaveSetFnStmt, bool) {
+	for env := e; env != nil; env = env.Parent {
+		haveSetFn, ok := env.HaveSetFnDefMem[fnName.String()]
+		if ok {
+			return &haveSetFn, true
+		}
+	}
+	return nil, false
+}

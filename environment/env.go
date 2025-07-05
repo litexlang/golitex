@@ -38,11 +38,11 @@ type Env struct {
 	ExistPropDefMem        ExistPropDefMem
 	KnownFactsStruct       KnownFactsStruct
 	FnInFnTemplateFactsMem FnInFnTemplateFactsMem
-	// KnownFactInMatchEnv    glob.Map2D[KnownFactsStruct]
-	KnownFactInMatchEnv map[string]KnownFactsStruct
-	EqualMem            map[string]shared_ptr_to_slice_of_fc
-	CurMatchProp        *MatchProp
-	EnumFacts           map[string][]ast.Fc
+	KnownFactInMatchEnv    map[string]KnownFactsStruct
+	EqualMem               map[string]shared_ptr_to_slice_of_fc
+	CurMatchProp           *MatchProp
+	EnumFacts              map[string][]ast.Fc
+	HaveSetFnDefMem        map[string]ast.HaveSetFnStmt
 }
 
 func (env *Env) GetUpMostEnv() *Env {

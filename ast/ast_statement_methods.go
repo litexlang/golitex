@@ -416,3 +416,20 @@ func (stmt *IntensionalSetStmt) ToEquivalentUniFacts() (*UniFactStmt, *UniFactSt
 
 	return leftUniFact, rightUniFact, nil
 }
+
+func (stmt *HaveSetFnStmt) ToDefFnStmt() *DefFnStmt {
+	return NewDefFnStmt(NewFnTemplateStmt(&stmt.DefHeader, []FactStmt{}, []FactStmt{stmt.ToIntensionalSetStmt()}, FcAtom(glob.KeywordSet)))
+}
+
+func (stmt *HaveSetFnStmt) ToIntensionalSetStmt() *IntensionalSetStmt {
+	params := []Fc{}
+	for _, param := range stmt.DefHeader.Params {
+		params = append(params, FcAtom(param))
+	}
+
+	fnName := FcAtom(stmt.DefHeader.Name)
+	curSet := NewFcFn(fnName, params)
+	intensionalSetStmt := NewIntensionalSetStmt(curSet, stmt.Param, stmt.ParentSet, stmt.Proofs)
+
+	return intensionalSetStmt
+}

@@ -80,6 +80,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		execState, err = exec.haveInSetStmt(stmt)
 	case *ast.HaveSetStmt:
 		execState, err = exec.haveSetStmt(stmt)
+	case *ast.HaveSetFnStmt:
+		execState, err = exec.haveSetFnStmt(stmt)
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}
@@ -729,4 +731,20 @@ func (exec *Executor) proveOverFiniteSetStmt(stmt *ast.ProveOverFiniteSetStmt) (
 
 	ver := verifier.NewVerifier(exec.env)
 	return ver.ProveOverFiniteSet(stmt)
+}
+
+func (exec *Executor) haveSetFnStmt(stmt *ast.HaveSetFnStmt) (glob.ExecState, error) {
+	exec.appendMsg(stmt.String())
+
+	// declare related fn
+	fnDefStmt := stmt.ToDefFnStmt()
+	err := exec.defFnStmt(fnDefStmt)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+
+	// have set fn
+	exec.env.HaveSetFnDefMem[stmt.DefHeader.Name] = *stmt
+
+	return glob.ExecState_True, nil
 }
