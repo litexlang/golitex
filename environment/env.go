@@ -22,6 +22,8 @@ type shared_ptr_to_slice_of_fc = *[]ast.Fc
 
 type MatchProp = ast.SpecFactStmt
 
+type HaveSetFnDefMem map[string]ast.HaveSetFnStmt
+
 type KnownFactsStruct struct {
 	SpecFactMem                       SpecFactMem
 	SpecFactInLogicExprMem            SpecFactInLogicExprMem
@@ -42,7 +44,7 @@ type Env struct {
 	EqualMem               map[string]shared_ptr_to_slice_of_fc
 	CurMatchProp           *MatchProp
 	EnumFacts              map[string][]ast.Fc
-	HaveSetFnDefMem        map[string]ast.HaveSetFnStmt
+	HaveSetFnDefMem        HaveSetFnDefMem
 }
 
 func (env *Env) GetUpMostEnv() *Env {
@@ -67,6 +69,7 @@ func NewEnv(parent *Env, curMatchEnv *ast.SpecFactStmt) *Env {
 		KnownFactInMatchEnv: make(map[string]KnownFactsStruct),
 		CurMatchProp:        curMatchEnv,
 		EnumFacts:           make(map[string][]ast.Fc),
+		HaveSetFnDefMem:     make(HaveSetFnDefMem),
 	}
 	return env
 }

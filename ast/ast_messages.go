@@ -194,6 +194,7 @@ func fnDefStmtStringGivenKw(kw string, f *FnTemplateStmt) string {
 	if len(f.DomFacts) == 0 && len(f.ThenFacts) == 0 {
 		return builder.String()
 	}
+	builder.WriteString(glob.KeySymbolColon)
 	builder.WriteByte('\n')
 
 	if len(f.DomFacts) > 0 {
@@ -765,8 +766,8 @@ func (stmt *HaveSetFnStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordHave)
 	builder.WriteString(" ")
-	builder.WriteString(stmt.DefHeader.String())
-	builder.WriteString("")
+	builder.WriteString(stmt.DefHeader.StringWithoutColonAtEnd())
+	builder.WriteString(" ")
 	builder.WriteString(glob.KeySymbolColonEqual)
 	builder.WriteString(" ")
 	builder.WriteString(stmt.Param)
