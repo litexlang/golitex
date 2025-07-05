@@ -18,17 +18,21 @@ import (
 	ast "golitex/ast"
 )
 
-type PropMemItem struct {
-	Def *ast.DefPropStmt
-}
-type PropDefMem struct {
-	Dict map[string]PropMemItem
-}
+// type PropMemItem struct {
+// 	Def *ast.DefPropStmt
+// }
+// type PropDefMem struct {
+// 	Dict map[string]PropMemItem
+// }
 
-type ExistPropMemItem struct{ Def *ast.DefExistPropStmt }
-type ExistPropDefMem struct {
-	Dict map[string]ExistPropMemItem
-}
+type PropDefMem map[string]ast.DefPropStmt
+
+type ExistPropDefMem map[string]ast.DefExistPropStmt
+
+// type ExistPropMemItem struct{ Def *ast.DefExistPropStmt }
+// type ExistPropDefMem struct {
+// 	Dict map[string]ExistPropMemItem
+// }
 
 // type FnTemplateMemItem struct{ Def *ast.DefFnTemplateStmt }
 
@@ -38,27 +42,29 @@ type ExistPropDefMem struct {
 
 type FnTemplateDefMem map[string]ast.DefFnTemplateStmt
 
-type ObjMemItem struct{ Def *ast.DefObjStmt }
-type ObjDefMem struct {
-	Dict map[string]ObjMemItem
-}
+// type ObjMemItem struct{ Def *ast.DefObjStmt }
+// type ObjDefMem struct {
+// 	Dict map[string]ObjMemItem
+// }
+
+type ObjDefMem map[string]struct{}
 
 type FnInFnTemplateFactsMem map[string][]*ast.FnTemplateStmt
 
-func newPropMemory() *PropDefMem {
-	return &PropDefMem{make(map[string]PropMemItem)}
-}
-func newFnMemory() FnInFnTemplateFactsMem {
-	return make(FnInFnTemplateFactsMem)
-}
+//	func newPropMemory() *PropDefMem {
+//		return &PropDefMem{make(map[string]PropMemItem)}
+//	}
+// func newFnMemory() FnInFnTemplateFactsMem {
+// 	return make(FnInFnTemplateFactsMem)
+// }
 
-func newObjMemory() *ObjDefMem {
-	return &ObjDefMem{make(map[string]ObjMemItem)}
-}
+// func newObjMemory() *ObjDefMem {
+// 	return &ObjDefMem{make(map[string]ObjMemItem)}
+// }
 
-func newExistPropMemory() *ExistPropDefMem {
-	return &ExistPropDefMem{make(map[string]ExistPropMemItem)}
-}
+// func newExistPropMemory() *ExistPropDefMem {
+// 	return &ExistPropDefMem{make(map[string]ExistPropMemItem)}
+// }
 
 // func newFnTemplateMemory() *FnTemplateDefMem {
 // 	return &FnTemplateDefMem{make(map[string]FnTemplateMemItem)}
