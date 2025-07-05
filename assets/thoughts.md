@@ -2154,3 +2154,17 @@ fn f(a,, b,, c, d) ret:
 forall x,y N 可以作为 forall x N, y N 的语法糖
 
 定义一个集合有且只有 xxx 性质的元素，可以提供一个语法糖
+
+7.5
+have exclude(s1, s2 set) := x s1:
+    not x $in s2
+
+"""
+fn exclude(s1, s2 set) set:
+    exclude(s1, s2) := x s1:
+        not x $in s2
+
+# 同时一旦 x $in exclude(s1, s2) 那 x s1: not x $in s2 自动被释放，而不是需要给 exclude 取个名字（因为这里的是三个参数x, s1, s2，不能直接匹配)
+"""
+
+obj x exclude(s1, s2) # 自动获得 set_fn 下面的性质

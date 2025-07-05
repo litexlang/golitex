@@ -1,7 +1,6 @@
 fn exclude(s1, s2 set) set
 
 know prop exclude_property(s1, s2 set):
-    s1 $in set
     then:
         exclude(s1, s2) := x s1:
             not x $in s2
