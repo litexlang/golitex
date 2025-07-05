@@ -31,45 +31,45 @@ func (memory FnTemplateDefMem) Get(fc ast.FcAtom) (*ast.DefFnTemplateStmt, bool)
 	return &node, true
 }
 
-func (memory *ExistPropDefMem) Get(fc ast.FcAtom) (*ast.DefExistPropStmt, bool) {
+func (memory ExistPropDefMem) Get(fc ast.FcAtom) (*ast.DefExistPropStmt, bool) {
 	// pkgMap, pkgExists := memory.Dict[fc.PkgName]
 	// if !pkgExists {
 	// 	return nil, false
 	// }
 
 	// node, nodeExists := pkgMap[fc.Name]
-	node, nodeExists := memory.Dict[string(fc)]
+	node, nodeExists := memory[string(fc)]
 	if !nodeExists {
 		return nil, false
 	}
-	return node.Def, true
+	return &node, true
 }
 
-func (memory *ObjDefMem) Get(fc ast.FcAtom) (*ast.DefObjStmt, bool) {
+func (memory ObjDefMem) Get(fc ast.FcAtom) (struct{}, bool) {
 	// pkgMap, pkgExists := memory.Dict[fc.PkgName]
 	// if !pkgExists {
 	// 	return nil, false
 	// }
 
 	// node, nodeExists := pkgMap[fc.Name]
-	node, nodeExists := memory.Dict[string(fc)]
+	_, nodeExists := memory[string(fc)]
 	if !nodeExists {
-		return nil, false
+		return struct{}{}, false
 	}
-	return node.Def, true
+	return struct{}{}, true
 }
 
-func (memory *PropDefMem) Get(fc ast.FcAtom) (*ast.DefPropStmt, bool) {
+func (memory PropDefMem) Get(fc ast.FcAtom) (*ast.DefPropStmt, bool) {
 	// pkgMap, pkgExists := memory.Dict[fc.PkgName]
 	// if !pkgExists {
 	// 	return nil, false
 	// }
 
 	// node, nodeExists := pkgMap[fc.Name]
-	node, nodeExists := memory.Dict[string(fc)]
+	node, nodeExists := memory[string(fc)]
 	if !nodeExists {
 		return nil, false
 	}
 
-	return node.Def, true
+	return &node, true
 }

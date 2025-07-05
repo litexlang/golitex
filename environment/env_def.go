@@ -71,7 +71,9 @@ func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) error {
 		}
 	}
 
-	return env.PropDefMem.insert(stmt)
+	key := stmt.DefHeader.Name
+	env.PropDefMem[key] = *stmt
+	return nil
 }
 
 // func (env *Env) NewDefObj_InsideAtomsDeclared(stmt *ast.DefObjStmt) error {
@@ -213,5 +215,7 @@ func (env *Env) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) 
 		return err
 	}
 
-	return env.ExistPropDefMem.insert(stmt)
+	key := stmt.DefBody.DefHeader.Name
+	env.ExistPropDefMem[key] = *stmt
+	return nil
 }
