@@ -19,7 +19,7 @@ prove:
 # know ... $in fn_template
 fn_template f_template(x Z) Z:
     dom:
-        x >= 0
+        x >= -1
     then:
         f_template(x) = x + 1  
 prove:
