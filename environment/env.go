@@ -22,6 +22,16 @@ type shared_ptr_to_slice_of_fc = *[]ast.Fc
 
 type MatchProp = ast.SpecFactStmt
 
+type PropDefMem map[string]ast.DefPropStmt
+
+type ExistPropDefMem map[string]ast.DefExistPropStmt
+
+type FnTemplateDefMem map[string]ast.DefFnTemplateStmt
+
+type ObjDefMem map[string]struct{}
+
+type FnInFnTemplateFactsMem map[string][]*ast.FnTemplateStmt
+
 type HaveSetFnDefMem map[string]ast.HaveSetFnStmt
 
 type KnownFactsStruct struct {

@@ -20,7 +20,7 @@ import (
 
 func (e *Env) GetLatestFnTemplate(fn ast.Fc) (*ast.FnTemplateStmt, bool) {
 	for env := e; env != nil; env = env.Parent {
-		fnDef, ok := env.FnInFnTemplateFactsMem.Get(fn)
+		fnDef, ok := env.FnInFnTemplateFactsMem[fn.String()]
 		if ok {
 			return fnDef[len(fnDef)-1], true
 		}
@@ -39,4 +39,15 @@ func (memory FnInFnTemplateFactsMem) insert(fc ast.Fc, stmt *ast.FnTemplateStmt)
 	memory[fc.String()] = fnDefs
 
 	return nil
+}
+
+func (e *Env) GetFnTemplateOfFc(fn ast.Fc) ([]*ast.FnTemplateStmt, bool) {
+	fnDefs := []*ast.FnTemplateStmt{}
+	for env := e; env != nil; env = env.Parent {
+		fnDefsFromEnv, ok := env.FnInFnTemplateFactsMem[fn.String()]
+		if ok {
+			fnDefs = append(fnDefs, fnDefsFromEnv...)
+		}
+	}
+	return fnDefs, true
 }

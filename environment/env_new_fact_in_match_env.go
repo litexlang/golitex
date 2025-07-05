@@ -26,9 +26,6 @@ func (env *Env) storeSpecFactInMem(stmt *ast.SpecFactStmt) error {
 		envFact := env.CurMatchProp
 		knownFactsStructPtr, ok = env.GetFactsFromKnownFactInMatchEnv(envFact)
 		if !ok {
-			// env.KnownFactInMatchEnv[envFact.PropName.PkgName] = make(map[string]KnownFactsStruct)
-			// env.KnownFactInMatchEnv[envFact.PropName.PkgName][envFact.PropName.Name] = makeKnownFactsStruct()
-			// knownFactsStruct := env.KnownFactInMatchEnv[envFact.PropName.PkgName][envFact.PropName.Name]
 			knownFactsStruct := makeKnownFactsStruct()
 			knownFactsStructPtr = &knownFactsStruct
 		}
@@ -52,9 +49,6 @@ func (env *Env) storeLogicFact(stmt *ast.OrStmt) error {
 		envFact := env.CurMatchProp
 		knownFactsStructPtr, ok = env.GetFactsFromKnownFactInMatchEnv(envFact)
 		if !ok {
-			// env.KnownFactInMatchEnv[envFact.PropName.PkgName] = make(map[string]KnownFactsStruct)
-			// env.KnownFactInMatchEnv[envFact.PropName.PkgName][envFact.PropName.Name] = makeKnownFactsStruct()
-			// knownFactsStruct := env.KnownFactInMatchEnv[envFact.PropName.PkgName][envFact.PropName.Name]
 			knownFactsStruct := makeKnownFactsStruct()
 			knownFactsStructPtr = &knownFactsStruct
 		}
@@ -78,9 +72,6 @@ func (env *Env) storeUniFact(specFact *ast.SpecFactStmt, uniFact *ast.UniFactStm
 		envFact := env.CurMatchProp
 		knownFactsStructPtr, ok = env.GetFactsFromKnownFactInMatchEnv(envFact)
 		if !ok {
-			// env.KnownFactInMatchEnv[envFact.PropName.PkgName] = make(map[string]KnownFactsStruct)
-			// env.KnownFactInMatchEnv[envFact.PropName.PkgName][envFact.PropName.Name] = makeKnownFactsStruct()
-			// knownFactsStruct := env.KnownFactInMatchEnv[envFact.PropName.PkgName][envFact.PropName.Name]
 			knownFactsStruct := makeKnownFactsStruct()
 			knownFactsStructPtr = &knownFactsStruct
 		}
