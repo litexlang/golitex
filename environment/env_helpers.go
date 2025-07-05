@@ -26,3 +26,19 @@ func (e *Env) GetFactsFromKnownFactInMatchEnv(envFact *ast.SpecFactStmt) (*Known
 	}
 	return &knownFacts, true
 }
+
+func (e *Env) isSetFnRetValue(fc ast.Fc) (*ast.HaveSetFnStmt, bool) {
+	asFn, ok := fc.(*ast.FcFn)
+	if !ok {
+		return nil, false
+	}
+
+	// name
+	fnName := asFn.FnHead
+	fnNameAsAtom, ok := fnName.(ast.FcAtom)
+	if !ok {
+		return nil, false
+	}
+	haveSetFn, ok := e.GetHaveSetFnDef(fnNameAsAtom)
+	return haveSetFn, ok
+}

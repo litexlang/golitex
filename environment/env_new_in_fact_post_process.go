@@ -24,7 +24,11 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) error {
 		return fmt.Errorf("in fact expect 2 parameters, get %d in %s", len(fact.Params), fact.String())
 	}
 
-	if isTemplate, err := e.inFactPostProcess_InFnTemplate(fact); isTemplate {
+	if def, ok := e.isSetFnRetValue(fact.Params[1]); ok {
+		return e.inFactPostProcess_InSetFnRetValue(fact, def)
+	}
+
+	if isTemplate, err := e.inFactPostProcess_InFnTemplate(fact); isTemplate || err != nil {
 		return err
 	}
 
@@ -80,4 +84,29 @@ func (e *Env) FcSatisfy_FreeTemplateFact_Store_DeriveFacts(fc ast.Fc, fnTemplate
 	}
 
 	return true, nil
+}
+
+func (e *Env) inFactPostProcess_InSetFnRetValue(fact *ast.SpecFactStmt, def *ast.HaveSetFnStmt) error {
+	inFactRightParamAsFcFnPt, ok := fact.Params[1].(*ast.FcFn)
+	if !ok {
+		return fmt.Errorf("in fact expect 2 parameters, get %d in %s", len(fact.Params), fact.String())
+	}
+
+	uniMap := map[string]ast.Fc{}
+	for i, param := range def.DefHeader.Params {
+		uniMap[param] = inFactRightParamAsFcFnPt.Params[i]
+	}
+
+	defToIntensionalSetStmt := def.ToIntensionalSetStmt()
+	instantiated, err := defToIntensionalSetStmt.Instantiate(uniMap)
+	if err != nil {
+		return err
+	}
+
+	err = e.NewFact(instantiated)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

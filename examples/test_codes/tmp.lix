@@ -1,0 +1,9 @@
+have exclude(s1, s2 set) := x s1:
+    not x $in s2
+
+forall s1, s2 set:
+    exclude(s1, s2) $in set
+
+forall s1, s2 set, x exclude(s1, s2):
+    x $in s1
+    not x $in s2
