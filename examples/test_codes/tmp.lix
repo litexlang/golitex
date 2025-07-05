@@ -1,18 +1,14 @@
-prop is_group(s set, mul fn(s, s)s, inv fn(s)s, e s):
-    forall x s, y s, z s:
-        mul(mul(x, y), z) = mul(x, mul(y, z))
-    forall x s:
-        mul(x, inv(x)) = e
-        mul(inv(x), x) = e
+fn exclude(s1, s2 set) set:
+    exclude(s1, s2) := x s1:
+        not x $in s2
 
-fn inverse(x R)R:
-    inverse(x) + x = 0
+# forall x exclude(s1, s2):
+forall s1, s2 set, x exclude(s1, s2):
+    x $in s1
+    not x $in s2
 
-forall x R:
-    inverse(x) $in R
-    x + inverse(x) = inverse(x) + x
-    inverse(x) + x = 0
-    x + inverse(x) = 0
-
-$is_group(R, +, inverse, 0)
-$is_group(Z, +, inverse, 0)
+know forall s1 finite_set, s2 finite_set:
+	forall x s2:
+		x $in s1
+    then:
+        len(s1) - len(s2) = len(exclude(s1, s2))

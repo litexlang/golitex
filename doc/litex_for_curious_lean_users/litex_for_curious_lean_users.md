@@ -211,107 +211,35 @@ Litex maintains intuitive accessibility - even a 10-year-old could follow the so
 
 ## Comparison 3: definition of union
 
-<table style="border-collapse: collapse; width: 100%;">
-  <tr>
-    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 50%;">Litex</th>
-    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 50%;">Lean 4</th>
-  </tr>
-   <tr>
-    <td style="border: 3px solid black; padding: 8px;">
-      <code>fn union(s, s2 set) set:</code> <br>      
-      <code>&nbsp;&nbsp;forall x obj:</code> <br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;or:</code> <br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x $in s</code> <br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x $in s2</code>
-        <code>&nbsp;&nbsp;&nbsp;&nbsp;then:</code> <br>
-        <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x $in union(s, s2)</code>
-        <br>
-        <code>know prop union_items_in_at_least_one_of_child_set(x obj, s, s2 set):</code> <br>
-        <code>&nbsp;&nbsp;x $in union(s, s2)</code> <br>
-        <code>&nbsp;&nbsp;then:</code> <br>
-        <code>&nbsp;&nbsp;&nbsp;&nbsp;or:</code> <br>
-        <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x $in s</code> <br>
-        <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x $in
-        <code>&nbsp;&nbsp;obj s, s2 set</code> <br>
-        <code>&nbsp;&nbsp;obj x s</code> <br>
-        <code>&nbsp;&nbsp;x $in union(s, s2)</code> <br>
-        <code>&nbsp;&nbsp;forall s, s2 set, x union(s, s2):</code> <br>
-        <code>&nbsp;&nbsp;&nbsp;&nbsp;$union_items_in_at_least_one_of_child_set(x, s, s2)</code> <br>
-        <code>claim:</code> <br>
-        <code>&nbsp;&nbsp;prop union_with_empty_set_is_itself(x obj, s, s2 set):</code> <br>
-        <code>&nbsp;&nbsp;&nbsp;&nbsp;s2 := {}</code> <br>
-        <code>&nbsp;&nbsp;&nbsp;&nbsp;x $in union(s, s2)</code> <br>
-        <code>&nbsp;&nbsp;&nbsp;&nbsp;then:</code> <br>
-        <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x $in s</code>
-        <br>
-        <code>prove:</code> <br>
-        <code>&nbsp;&nbsp;not x $in s2</code> <br>
-        <code>&nbsp;&nbsp;$union_items_in_at_least_one_of_child_set(x, s, s2)</code>
-    </td>
-    <td style="border: 3px solid black; padding: 8px;">
-      <code>-- Define a set as a predicate of a type</code> <br>
-      <code>def set (α : Type) := α → Prop</code> <br>
-      <code>-- The membership relation of a set</code> <br>
-      <code>notation x "∈" s => s x</code> <br>
-      <code>-- The empty set</code> <br>
-      <code>def empty_set {α : Type} : set α := λ _ => False</code> <br>
-      <code>-- The union operation of sets</code> <br>
-      <code>def union {α : Type} (s1 s2 : set α) : set α := λ x => s1 x ∨ s2 x</code> <br>
-      <code>-- The property of union: x ∈ union s1 s2 if and only if x ∈ s1 or x ∈ s2</code> <br>
-      <code>theorem union_items_in_either_set {α : Type} (x : α) (s1 s2 : set α) :</code> <br>
-      <code>&nbsp;&nbsp;x ∈ union s1 s2 ↔ x ∈ s1 ∨ x ∈ s2</code> <br>
-      <code>begin</code> <br>
-      <code>&nbsp;&nbsp;refl</code> <br>
-      <code>&nbsp;&nbsp;end</code> <br>
-      <code>-- Proof: if x ∈ s, then x ∈ union s s2</code> <br>
-      <code>example {α : Type} (x : α) (s s2 : set α) (h : x ∈ s) :</code> <br>
-      <code>&nbsp;&nbsp;x ∈ union s s2</code> <br>
-      <code>begin</code> <br>
-      <code>&nbsp;&nbsp;left</code> <br>
-      <code>&nbsp;&nbsp;exact h</code> <br>
-      <code>&nbsp;&nbsp;end</code> <br>
-      <code>-- Proof: the union of a set with the empty set is the original set</code> <br>
-      <code>theorem union_with_empty_set_is_itself {α : Type} (x : α) (s : set α) :</code> <br>
-      <code>&nbsp;&nbsp;x ∈ union s empty_set ↔ x ∈ s</code> <br>
-      <code>begin</code> <br>
-      <code>&nbsp;&nbsp;rw union_items_in_either_set</code> <br>
-      <code>&nbsp;&nbsp;simp [empty_set]</code> <br>
-      <code>&nbsp;&nbsp;end</code> <br>
-    </td>
-  </tr>
+Since union is a built-in concept in Litex, we can define self_define here avoid duplicate naming and make it has the same meaning as union.
 
 ```
-# Define a function called union, which takes 2 functions as parameters and return a set as return value
-fn union(s, s2 set) set:
+fn self_union(s, s2 set) set:
     forall x obj:
         or:
             x $in s
             x $in s2
         then:
-            x $in union(s, s2)
+            x $in self_union(s, s2)
 
-# Property of union: if an item is in the union of 2 sets, then it is in at least one of the sets
 know prop union_items_in_at_least_one_of_child_set(x obj, s, s2 set):
-    x $in union(s, s2)    
+    x $in self_union(s, s2)    
     then:
         or:
             x $in s
             x $in s2
 
-# Example: union(s, s2) is the union of s and s2
 prove:
     obj s, s2 set
     obj x s
-    x $in union(s, s2)
-
-    forall s, s2 set, x union(s, s2):
+    x $in self_union(s, s2)
+    forall s, s2 set, x self_union(s, s2):
         $union_items_in_at_least_one_of_child_set(x, s, s2)
 
-# Example: union(s, {}) is itself
 claim:
     prop union_with_empty_set_is_itself(x obj, s, s2 set):
         s2 := {}
-        x $in union(s, s2)
+        x $in self_union(s, s2)
         then:
             x $in s
     prove:
@@ -320,42 +248,90 @@ claim:
 ```
 
 ```
--- Define a set as a predicate of a type
 def set (α : Type) := α → Prop
 
--- The membership relation of a set
 notation x "∈" s => s x
 
--- The empty set
 def empty_set {α : Type} : set α := λ _ => False
 
--- The union operation of sets
-def union {α : Type} (s1 s2 : set α) : set α := λ x => s1 x ∨ s2 x
+def self_union {α : Type} (s1 s2 : set α) : set α := λ x => s1 x ∨ s2 x
 
--- The property of union: x ∈ union s1 s2 if and only if x ∈ s1 or x ∈ s2
 theorem union_items_in_either_set {α : Type} (x : α) (s1 s2 : set α) :
-  x ∈ union s1 s2 ↔ x ∈ s1 ∨ x ∈ s2 :=
+  x ∈ self_union s1 s2 ↔ x ∈ s1 ∨ x ∈ s2 :=
 begin
-  refl  -- directly from the definition
+  refl
 end
 
--- Proof: if x ∈ s, then x ∈ union s s2
 example {α : Type} (x : α) (s s2 : set α) (h : x ∈ s) :
-  x ∈ union s s2 :=
+  x ∈ self_union s s2 :=
 begin
   left,
   exact h
 end
 
--- Proof: the union of a set with the empty set is the original set
 theorem union_with_empty_set_is_itself {α : Type} (x : α) (s : set α) :
-  x ∈ union s empty_set ↔ x ∈ s :=
+  x ∈ self_union s empty_set ↔ x ∈ s :=
 begin
   rw union_items_in_either_set,
-  simp [empty_set],  -- simplify the disjunction of false
+  simp [empty_set],
 end
 ```
 
 We can see since Lean 4 is built on top of type theory, when the user wants to define a set, he has to define a type first, and then define a set as a predicate of the type. This is a very foreign concept even to most mathematicians, not to mention ordinary people.
 
 On the other hand, Litex does not need to define a type first. It can directly define a set as a predicate of a type. This is a very simple process. Your proof is very clean and conceptually integral. There is no extra mental brought by the formal language. There is no barrier between your thinking and the formalized math. With a small amount of practice (no more than the effort of learning LaTeX or Python), an ordinary person can be as productive as a professional mathematician when using Litex to formalize math (the only difference between you and a professional mathematician is what you write in Litex, not how fast you write in Litex.). 
+
+Next I want to show you how Litex can be used to verify a simple group theory statement. It's clear that the Litex version can be read and understood by a 10-year-old, while the Lean version is much more complex.
+
+<table style="border-collapse: collapse; width: 100%;">
+  <tr>
+    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 50%;">Litex</th>
+    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 50%;">Lean 4</th>
+  </tr>
+  <tr>
+    <td style="border: 3px solid black; padding: 8px;">
+      <code>prop is_group(s set, mul fn(s, s)s, inv fn(s)s, e s):</code><br>
+      <code>&nbsp;&nbsp;forall x s, y s, z s:</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;mul(mul(x, y), z) = mul(x, mul(y, z))</code><br>
+      <code>&nbsp;&nbsp;forall x s:</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;mul(x, inv(x)) = e</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;mul(inv(x), x) = e</code><br><br>
+      <code>fn inverse(x R)R:</code><br>
+      <code>&nbsp;&nbsp;inverse(x) + x = 0</code><br><br>
+      <code>forall x R:</code><br>
+      <code>&nbsp;&nbsp;inverse(x) $in R</code><br>
+      <code>&nbsp;&nbsp;x + inverse(x) = inverse(x) + x</code><br>
+      <code>&nbsp;&nbsp;inverse(x) + x = 0</code><br>
+      <code>&nbsp;&nbsp;x + inverse(x) = 0</code><br><br>
+      <code>$is_group(R, +, inverse, 0)</code><br>
+      <code>$is_group(Z, +, inverse, 0)</code>
+    </td>
+    <td style="border: 3px solid black; padding: 8px;">
+      <code>structure MyGroup (G : Type) where</code><br>
+      <code>&nbsp;&nbsp;add : G → G → G</code><br>
+      <code>&nbsp;&nbsp;zero : G</code><br>
+      <code>&nbsp;&nbsp;neg : G → G</code><br>
+      <code>&nbsp;&nbsp;add_assoc : ∀ a b c : G, add (add a b) c = add a (add b c)</code><br>
+      <code>&nbsp;&nbsp;zero_add : ∀ a : G, add zero a = a</code><br>
+      <code>&nbsp;&nbsp;add_zero : ∀ a : G, add a zero = a</code><br>
+      <code>&nbsp;&nbsp;add_left_neg : ∀ a : G, add (neg a) a = zero</code><br><br>
+      <code>def intAddGroup : MyGroup Int where</code><br>
+      <code>&nbsp;&nbsp;add := Int.add</code><br>
+      <code>&nbsp;&nbsp;zero := 0</code><br>
+      <code>&nbsp;&nbsp;neg := Int.neg</code><br>
+      <code>&nbsp;&nbsp;add_assoc := by intros; apply Int.add_assoc</code><br>
+      <code>&nbsp;&nbsp;zero_add := by intros; apply Int.zero_add</code><br>
+      <code>&nbsp;&nbsp;add_zero := by intros; apply Int.add_zero</code><br>
+      <code>&nbsp;&nbsp;add_left_neg := by intros; apply Int.neg_add_self</code><br><br>
+      <code>-- R is not builtin in Lean, the user has to define it himself or rely on the library. We skip use float as an example.</code><br>
+      <code>def floatAddGroup : MyGroup Float where</code><br>
+      <code>&nbsp;&nbsp;add := Float.add</code><br>
+      <code>&nbsp;&nbsp;zero := 0.0</code><br>
+      <code>&nbsp;&nbsp;neg := Float.neg</code><br>
+      <code>&nbsp;&nbsp;add_assoc := by intros; apply Float.add_assoc</code><br>
+      <code>&nbsp;&nbsp;zero_add := by intros; apply Float.zero_add</code><br>
+      <code>&nbsp;&nbsp;add_zero := by intros; apply Float.add_zero</code><br>
+      <code>&nbsp;&nbsp;add_left_neg := by intros; apply Float.neg_add_self</code><br>
+    </td>
+  </tr>
+</table>
