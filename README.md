@@ -294,6 +294,7 @@ Next I want to show you how Litex can be used to verify a simple group theory st
 </table>
 
 
+
 ## Contact & Contribute to Litex
 
 _The people who are crazy enough to think they can change the world are the ones who do._
