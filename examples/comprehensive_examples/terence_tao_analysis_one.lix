@@ -296,18 +296,21 @@ t + (-1) = 0
 
 # The rationals
 
-know forall x, y R:
-    x != 0
-    y != 0
+"""
+know forall x2, y2 R:
+    x2 != 0
+    y2 != 0
     then:
-        x * y != 0
+        x2 * y2 != 0
 
 # proved by builtin rules for *, +, -, /
-forall a, b, c, d R:
-    b != 0
-    d != 0
+forall a2, b2, c2, d2 R:
+    b2 != 0
+    d2 != 0
     then:
-        a / b + c / d = (a * d + b * c) / (b * d)
+        b2 * d2 != 0
+        a2 / b2 + c2 / d2 = (a2 * d2 + b2 * c2) / (b2 * d2)
+"""
 
 forall a, b Q:
     a + b = b + a
