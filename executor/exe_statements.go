@@ -193,11 +193,12 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
 	}
 
 	// prop leads to iff
-	if stmt.IffFacts != nil && len(stmt.IffFacts) > 0 {
-		propToIff, iffToProp, err := stmt.Make_PropToIff_IffToProp()
-		if err != nil {
-			return err
-		}
+	propToIff, iffToProp, err := stmt.Make_PropToIff_IffToProp()
+	if err != nil {
+		return err
+	}
+
+	if len(stmt.IffFacts) > 0 {
 		err = exec.env.NewFact(propToIff)
 		if err != nil {
 			return err
@@ -205,26 +206,35 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
 		if glob.IsNotImportDirStmt() {
 			exec.appendMsg(fmt.Sprintf("%s\nis true by definition", propToIff.String()))
 		}
+	}
 
-		err = exec.env.NewFact(iffToProp)
+	err = exec.env.NewFact(iffToProp)
+	if err != nil {
+		return err
+	}
+	if glob.IsNotImportDirStmt() {
+		exec.appendMsg(fmt.Sprintf("%s\nis true by definition", iffToProp.String()))
+	}
+	// }
+
+	if len(stmt.ThenFacts) > 0 {
+		paramsAsFc := []ast.Fc{}
+		for i := range stmt.DefHeader.Params {
+			paramsAsFc = append(paramsAsFc, ast.FcAtom(stmt.DefHeader.Params[i]))
+		}
+
+		uniFact := ast.NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(stmt.DefHeader.Name), paramsAsFc)}, stmt.ThenFacts)
+
+		err = exec.env.NewFact(uniFact)
 		if err != nil {
 			return err
 		}
-		if glob.IsNotImportDirStmt() {
-			exec.appendMsg(fmt.Sprintf("%s\nis true by definition", iffToProp.String()))
+
+		uniFact2 := ast.NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, stmt.IffFacts, stmt.ThenFacts)
+		err = exec.env.NewFact(uniFact2)
+		if err != nil {
+			return err
 		}
-	}
-
-	paramsAsFc := []ast.Fc{}
-	for i := range stmt.DefHeader.Params {
-		paramsAsFc = append(paramsAsFc, ast.FcAtom(stmt.DefHeader.Params[i]))
-	}
-
-	uniFact := ast.NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(stmt.DefHeader.Name), paramsAsFc)}, stmt.ThenFacts)
-
-	err = exec.env.NewFact(uniFact)
-	if err != nil {
-		return err
 	}
 
 	return nil
