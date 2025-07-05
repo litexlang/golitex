@@ -36,10 +36,11 @@ func (e *Env) NewObj(name string) error {
 		return fmt.Errorf("invalid name: %s", name)
 	}
 
-	err = e.ObjDefMem.insert(name)
-	if err != nil {
-		return err
-	}
+	// err = e.ObjDefMem.insert(name)
+	e.ObjDefMem[name] = struct{}{}
+	// if err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
