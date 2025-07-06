@@ -20,7 +20,7 @@ import (
 
 type shared_ptr_to_slice_of_fc = *[]ast.Fc
 
-type MatchProp = ast.SpecFactStmt
+// type MatchProp = ast.SpecFactStmt
 
 type PropDefMem map[string]ast.DefPropStmt
 
@@ -52,9 +52,9 @@ type Env struct {
 	FnInFnTemplateFactsMem FnInFnTemplateFactsMem
 	KnownFactInMatchEnv    map[string]KnownFactsStruct
 	EqualMem               map[string]shared_ptr_to_slice_of_fc
-	CurMatchProp           *MatchProp
-	EnumFacts              map[string][]ast.Fc
-	HaveSetFnDefMem        HaveSetFnDefMem
+	// CurMatchProp           *MatchProp
+	EnumFacts       map[string][]ast.Fc
+	HaveSetFnDefMem HaveSetFnDefMem
 }
 
 func (env *Env) GetUpMostEnv() *Env {
@@ -64,7 +64,7 @@ func (env *Env) GetUpMostEnv() *Env {
 	return env.Parent.GetUpMostEnv()
 }
 
-func NewEnv(parent *Env, curMatchEnv *ast.SpecFactStmt) *Env {
+func NewEnv(parent *Env) *Env {
 	env := &Env{
 		Parent:                 parent,
 		Msgs:                   []string{},
@@ -77,9 +77,9 @@ func NewEnv(parent *Env, curMatchEnv *ast.SpecFactStmt) *Env {
 		EqualMem:               make(map[string]shared_ptr_to_slice_of_fc),
 		// KnownFactInMatchEnv:    make(glob.Map2D[KnownFactsStruct]),
 		KnownFactInMatchEnv: make(map[string]KnownFactsStruct),
-		CurMatchProp:        curMatchEnv,
-		EnumFacts:           make(map[string][]ast.Fc),
-		HaveSetFnDefMem:     make(HaveSetFnDefMem),
+		// CurMatchProp:        curMatchEnv,
+		EnumFacts:       make(map[string][]ast.Fc),
+		HaveSetFnDefMem: make(HaveSetFnDefMem),
 	}
 	return env
 }

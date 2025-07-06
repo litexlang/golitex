@@ -19,8 +19,8 @@ import (
 )
 
 type KnownSpecFact struct {
-	Fact    *ast.SpecFactStmt
-	EnvFact *ast.SpecFactStmt
+	Fact *ast.SpecFactStmt
+	// EnvFact *ast.SpecFactStmt
 }
 
 type SpecFactMem struct {
@@ -34,11 +34,11 @@ type KnownSpecFact_InLogicExpr struct {
 	SpecFact  *ast.SpecFactStmt
 	Index     int
 	LogicExpr *ast.OrStmt
-	EnvFact   *ast.SpecFactStmt
+	// EnvFact   *ast.SpecFactStmt
 }
 
-func NewKnownSpecFact_InLogicExpr(specFact *ast.SpecFactStmt, index int, logicExpr *ast.OrStmt, envFact *ast.SpecFactStmt) *KnownSpecFact_InLogicExpr {
-	return &KnownSpecFact_InLogicExpr{specFact, index, logicExpr, envFact}
+func NewKnownSpecFact_InLogicExpr(specFact *ast.SpecFactStmt, index int, logicExpr *ast.OrStmt) *KnownSpecFact_InLogicExpr {
+	return &KnownSpecFact_InLogicExpr{specFact, index, logicExpr}
 }
 
 type SpecFactInLogicExprMem struct {
@@ -51,7 +51,7 @@ type SpecFactInLogicExprMem struct {
 type KnownSpecFact_InUniFact struct {
 	SpecFact *ast.SpecFactStmt
 	UniFact  *ast.UniFactStmt
-	EnvFact  *ast.SpecFactStmt
+	// EnvFact  *ast.SpecFactStmt
 }
 
 type SpecFactInUniFactMem struct {
@@ -70,11 +70,11 @@ type SpecFact_InLogicExpr_InUniFact struct {
 	UniFact   *ast.UniFactStmt
 	Index     int
 	LogicExpr *ast.OrStmt
-	EnvFact   *ast.SpecFactStmt
+	// EnvFact   *ast.SpecFactStmt
 }
 
-func NewSpecFact_InLogicExpr_InUniFact(specFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt, index int, logicExpr *ast.OrStmt, envFact *ast.SpecFactStmt) *SpecFact_InLogicExpr_InUniFact {
-	return &SpecFact_InLogicExpr_InUniFact{specFact, uniFact, index, logicExpr, envFact}
+func NewSpecFact_InLogicExpr_InUniFact(specFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt, index int, logicExpr *ast.OrStmt) *SpecFact_InLogicExpr_InUniFact {
+	return &SpecFact_InLogicExpr_InUniFact{specFact, uniFact, index, logicExpr}
 }
 
 type SpecFact_InLogicExpr_InUniFactMem struct {

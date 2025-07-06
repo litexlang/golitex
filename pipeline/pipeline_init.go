@@ -23,7 +23,7 @@ import (
 )
 
 func pipelineExecutorInit() (*exe.Executor, error) {
-	curEnv := env.NewEnv(nil, nil)
+	curEnv := env.NewEnv(nil)
 	curEnv.Init()
 	executor := exe.NewExecutor(curEnv)
 	err := useHardcodedCodeToInit(executor)

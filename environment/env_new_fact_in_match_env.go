@@ -20,20 +20,20 @@ import (
 
 func (env *Env) storeSpecFactInMem(stmt *ast.SpecFactStmt) error {
 	var knownFactsStructPtr *KnownFactsStruct
-	var ok bool
+	// var ok bool
 
-	if env.CurMatchProp != nil {
-		envFact := env.CurMatchProp
-		knownFactsStructPtr, ok = env.GetFactsFromKnownFactInMatchEnv(envFact)
-		if !ok {
-			knownFactsStruct := makeKnownFactsStruct()
-			knownFactsStructPtr = &knownFactsStruct
-		}
-	} else {
-		knownFactsStructPtr = &env.KnownFactsStruct
-	}
+	// if env.CurMatchProp != nil {
+	// 	envFact := env.CurMatchProp
+	// 	knownFactsStructPtr, ok = env.GetFactsFromKnownFactInMatchEnv(envFact)
+	// 	if !ok {
+	// 		knownFactsStruct := makeKnownFactsStruct()
+	// 		knownFactsStructPtr = &knownFactsStruct
+	// 	}
+	// } else {
+	knownFactsStructPtr = &env.KnownFactsStruct
+	// }
 
-	err := knownFactsStructPtr.SpecFactMem.newFact(stmt, env.CurMatchProp)
+	err := knownFactsStructPtr.SpecFactMem.newFact(stmt)
 	if err != nil {
 		return err
 	}
@@ -43,20 +43,20 @@ func (env *Env) storeSpecFactInMem(stmt *ast.SpecFactStmt) error {
 
 func (env *Env) storeLogicFact(stmt *ast.OrStmt) error {
 	var knownFactsStructPtr *KnownFactsStruct
-	var ok bool
+	// var ok bool
 
-	if env.CurMatchProp != nil {
-		envFact := env.CurMatchProp
-		knownFactsStructPtr, ok = env.GetFactsFromKnownFactInMatchEnv(envFact)
-		if !ok {
-			knownFactsStruct := makeKnownFactsStruct()
-			knownFactsStructPtr = &knownFactsStruct
-		}
-	} else {
-		knownFactsStructPtr = &env.KnownFactsStruct
-	}
+	// if env.CurMatchProp != nil {
+	// 	envFact := env.CurMatchProp
+	// 	knownFactsStructPtr, ok = env.GetFactsFromKnownFactInMatchEnv(envFact)
+	// 	if !ok {
+	// 		knownFactsStruct := makeKnownFactsStruct()
+	// 		knownFactsStructPtr = &knownFactsStruct
+	// 	}
+	// } else {
+	knownFactsStructPtr = &env.KnownFactsStruct
+	// }
 
-	err := knownFactsStructPtr.SpecFactInLogicExprMem.newFact(stmt, env.CurMatchProp)
+	err := knownFactsStructPtr.SpecFactInLogicExprMem.newFact(stmt)
 	if err != nil {
 		return nil
 	}
@@ -66,20 +66,20 @@ func (env *Env) storeLogicFact(stmt *ast.OrStmt) error {
 
 func (env *Env) storeUniFact(specFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt) error {
 	var knownFactsStructPtr *KnownFactsStruct
-	var ok bool
+	// var ok bool
 
-	if env.CurMatchProp != nil {
-		envFact := env.CurMatchProp
-		knownFactsStructPtr, ok = env.GetFactsFromKnownFactInMatchEnv(envFact)
-		if !ok {
-			knownFactsStruct := makeKnownFactsStruct()
-			knownFactsStructPtr = &knownFactsStruct
-		}
-	} else {
-		knownFactsStructPtr = &env.KnownFactsStruct
-	}
+	// if env.CurMatchProp != nil {
+	// 	envFact := env.CurMatchProp
+	// 	knownFactsStructPtr, ok = env.GetFactsFromKnownFactInMatchEnv(envFact)
+	// 	if !ok {
+	// 		knownFactsStruct := makeKnownFactsStruct()
+	// 		knownFactsStructPtr = &knownFactsStruct
+	// 	}
+	// } else {
+	knownFactsStructPtr = &env.KnownFactsStruct
+	// }
 
-	err := knownFactsStructPtr.SpecFactInUniFactMem.newFact(specFact, uniFact, env.CurMatchProp)
+	err := knownFactsStructPtr.SpecFactInUniFactMem.newFact(specFact, uniFact)
 	if err != nil {
 		return err
 	}
