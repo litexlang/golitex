@@ -73,7 +73,7 @@ func isArithmeticFn(fc ast.Fc) bool {
 
 // TODO: 这里需要检查，setParam是否是自由变量
 func (ver *Verifier) fcSatisfyNotBuiltinFnRequirement(fc ast.Fc, state VerState) (bool, error) {
-	if fc.IsAtom() {
+	if _, ok := fc.(ast.FcAtom); ok {
 		return true, nil
 	}
 
