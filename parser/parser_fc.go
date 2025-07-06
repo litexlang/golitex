@@ -179,7 +179,7 @@ func (tb *tokenBlock) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence) (ast.Fc
 		if curToken == glob.RelaFnPrefix {
 			tb.header.skip("") // 消耗curToken
 
-			fn, err := tb.RawFc()
+			fn, err := tb.header.next()
 			if err != nil {
 				return nil, err
 			}
@@ -189,7 +189,7 @@ func (tb *tokenBlock) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence) (ast.Fc
 				return nil, err
 			}
 
-			left = ast.NewFcFn(fn, []ast.Fc{left, right})
+			left = ast.NewFcFn(ast.FcAtom(fn), []ast.Fc{left, right})
 			break
 		}
 

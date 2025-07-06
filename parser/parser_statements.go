@@ -1444,9 +1444,7 @@ func (tb *tokenBlock) relaFact_intensionalSetFact_enumStmt() (ast.FactStmt, erro
 		}
 	} else if opt == glob.KeySymbolColonEqual {
 		return tb.enumStmt_or_intensionalSetStmt(fc)
-	} else if !glob.IsBuiltinInfixRelaPropSymbol(opt) {
-		return nil, fmt.Errorf("expect relation prop")
-	} else {
+	} else if glob.IsBuiltinInfixRelaPropSymbol(opt) {
 		fc2, err := tb.RawFc()
 		if err != nil {
 			return nil, tbErr(err, tb)
@@ -1460,6 +1458,8 @@ func (tb *tokenBlock) relaFact_intensionalSetFact_enumStmt() (ast.FactStmt, erro
 		params := []ast.Fc{fc, fc2}
 
 		ret = ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(opt), params)
+	} else {
+		return nil, fmt.Errorf("expect relation prop")
 	}
 
 	// 这里加入语法糖：!= 等价于 not =，好处是我 = 有 commutative的性质，我不用额外处理 != 了
