@@ -16,7 +16,7 @@ forall a, b, c N:
     a * (b + c) = a * b + a * c
 
 # Basic facts like this will be implemented in standard library.
-know prop less_is_preserved_by_addition(m N, n N, p N):
+know @less_is_preserved_by_addition(m N, n N, p N):
     m + p < n + p
     then:
         m < n

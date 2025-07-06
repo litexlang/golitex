@@ -41,7 +41,7 @@ prove:
         then:
             not y >= x
 
-    know prop larger_equal_is_transitive(x R, y R, z R):
+    know @larger_equal_is_transitive(x R, y R, z R):
         x >= y
         y > z
         then:

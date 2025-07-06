@@ -38,39 +38,27 @@ const (
 	KeywordAnd                  = "and"
 	KeywordOr                   = "or"
 	KeywordCommutativeProp      = "commutative_prop"
-	// KeywordCommutativeFn        = "commutative_fn" // must-have: 否则 a+b=b+a不能验证
-	KeywordAssociativeFn        = "associative_fn" // must-have: 否则 a+1+1=a+2不能验证 // 我觉得暂时不考虑不较好，比较associative的自然数之类的都默认是对的了
-	KeywordNatural              = "N"              // e.g. 0
-	KeywordInt                  = "Z"              // e.g. -1
-	KeywordRational             = "Q"              // e.g. -1.1
-	KeywordReal                 = "R"              // e.g. pi
-	KeywordComplex              = "C"              // e.g. 1+i
-	KeywordImaginary            = "i"              // e.g. i
+	KeywordNatural              = "N" // e.g. 0
+	KeywordInt                  = "Z" // e.g. -1
+	KeywordRational             = "Q" // e.g. -1.1
+	KeywordReal                 = "R" // e.g. pi
+	KeywordComplex              = "C" // e.g. 1+i
+	KeywordImaginary            = "i" // e.g. i
 	KeywordIn                   = "in"
 	KeywordProveByMathInduction = "prove_by_math_induction"
-	// KeywordProveOr              = "prove_or"
-	KeywordSuppose = "suppose"
-	KeywordWith    = "with"
-	KeywordAs      = "as" // as a fn_template。这非常难以实现，尤其是出现 fn 理论上作用在M上，现在是作用在返回值是M的函数上时做推理，非常困难，需要最后实现而不是现在
-
-	// KeywordFnSet                  = "fn_set" // Syntax sugar for fn setName(params paramsSet)  = {z z_set_name(params) | properties(z, params)}
-	KeywordLen                = "len"
-	KeywordIsIndexableSet     = "is_indexable_set"
-	KeywordFiniteSet          = "finite_set"
-	KeywordProveOverFiniteSet = "prove_over_finite_set" // syntax connecting forall and finite_set
-	KeywordFnTemplate         = "fn_template"
-	KeywordStruct             = "struct"
-
-	// KeywordSubsetOf = "subset_of" // though this can be defined by forall, it's still useful to have it as a keyword
-	// TODO
-	// a syntax connecting or and finite_set
-	// KeywordEnum = "enum"
-
-	KeywordImportGlobally    = "import_globally"
-	KeywordHaveByReplacement = "have_by_replacement"
-	KeywordIsEmptySet        = "is_empty_set"
-	KeywordExistIn           = "exist_in"
-	// KeywordLastTwoObjectsAreEqual = "last_two_objects_are_equal"
+	KeywordSuppose              = "suppose"
+	KeywordWith                 = "with"
+	KeywordAs                   = "as" // as a fn_template。这非常难以实现，尤其是出现 fn 理论上作用在M上，现在是作用在返回值是M的函数上时做推理，非常困难，需要最后实现而不是现在
+	KeywordLen                  = "len"
+	KeywordIsIndexableSet       = "is_indexable_set"
+	KeywordFiniteSet            = "finite_set"
+	KeywordProveOverFiniteSet   = "prove_over_finite_set" // syntax connecting forall and finite_set
+	KeywordFnTemplate           = "fn_template"
+	KeywordStruct               = "struct"
+	KeywordImportGlobally       = "import_globally"
+	KeywordHaveByReplacement    = "have_by_replacement"
+	KeywordIsEmptySet           = "is_empty_set"
+	KeywordExistIn              = "exist_in"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -94,8 +82,6 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordIff:                  {},
 	KeywordExist:                {},
 	KeywordCommutativeProp:      {},
-	// KeywordCommutativeFn:        {},
-	KeywordAssociativeFn:        {},
 	KeywordAnd:                  {},
 	KeywordOr:                   {},
 	KeywordNatural:              {},
@@ -104,78 +90,55 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordReal:                 {},
 	KeywordIn:                   {},
 	KeywordProveByMathInduction: {},
-	// KeywordProveOr:                {},
-	KeywordSuppose:   {},
-	KeywordWith:      {},
-	KeywordComplex:   {},
-	KeywordImaginary: {},
-	KeywordAs:        {},
-	// KeywordFnSet:                  {},
-	KeywordLen:                {},
-	KeywordIsIndexableSet:     {},
-	KeywordFiniteSet:          {},
-	KeywordProveOverFiniteSet: {},
-	KeywordFnTemplate:         {},
-	KeywordStruct:             {},
-	// KeywordSubsetOf:               {},
-	// KeywordEnum:              {},
-	KeywordImportGlobally:    {},
-	KeywordHaveByReplacement: {},
-	KeywordIsEmptySet:        {},
-	KeywordExistIn:           {},
+	KeywordSuppose:              {},
+	KeywordWith:                 {},
+	KeywordComplex:              {},
+	KeywordImaginary:            {},
+	KeywordAs:                   {},
+	KeywordLen:                  {},
+	KeywordIsIndexableSet:       {},
+	KeywordFiniteSet:            {},
+	KeywordProveOverFiniteSet:   {},
+	KeywordFnTemplate:           {},
+	KeywordStruct:               {},
+	KeywordImportGlobally:       {},
+	KeywordHaveByReplacement:    {},
+	KeywordIsEmptySet:           {},
+	KeywordExistIn:              {},
 }
 
 const (
 	// Builtin Symbols
-	KeySymbolColon      = ":"
-	KeySymbolLeftBrace  = "("
-	KeySymbolRightBrace = ")"
-	KeySymbolComma      = ","
-	KeySymbolDollar     = "$"
-	KeySymbolEqual      = "="
-	KeySymbolSlash      = "/"
-	KeySymbolPlus       = "+"
-	KeySymbolMinus      = "-"
-	KeySymbolStar       = "*"
-	KeySymbolPower      = "^"
-	KeySymbolLess       = "<"
-	KeySymbolGreater    = ">"
-	KeySymbolExclaim    = "!"
-	// KeySymbolPipe       = "|"
-	// KeySymbolTilde      = "~"
-	// KeySymbolAnd        = "&"
-	KeySymbolBackslash  = "\\"
-	KeySymbolDot        = "."
-	KeySymbolColonColon = "::"
-	// KeySymbolPlusPlus   = "++"
-	// KeySymbolMinusMinus = "--"
-	// KeySymbolAndAnd     = "&&"
-	// KeySymbolPipePipe   = "||"
-	KeySymbolNotEqual = "!=" // 在parse就立刻变成 not =，exec里没有对它的处理
-	// KeySymbolQuestion   = "?"
-	// KeySymbolStarStar    = "**"
-	KeySymbolDoubleQuote = "\""
-	// KeySymbolSingleQuote            = "'"
-	// KeySymbolBacktick = "`"
-	// KeySymbolEqualGreaterEqual      = "=>"
-	// KeySymbolMinusGreaterRightArrow = "->"
-	// KeySymbolSemicolon              = ";"
-	KeySymbolHash = "#"
-	// KeySymbolAt          = "@"
-	KeySymbolLargerEqual = ">="
-	KeySymbolLessEqual   = "<="
-	// KeySymbolEquivalent  = "<=>"
-	// It's possible for me to overload the meaning of "=" to mean "set equal", but I don't want to do that(I do not want to overload the meaning of "=" too much, which can be very tiring for future maintainers and make confusions), so I use a new keyword
-	KeySymbolEqualEqual = "==" // check fn equal. TODO: 要调整语义
-	// KeySymbolEqualEqualEqual = "===" // check set equal. TODO: 要调整语义
-	// KeySymbolGreaterGreater = ">>"
-	// KeySymbolLessLess     = "<<"
-	KeySymbolPercent      = "%" // prove: 2 % 2 = 0 的时候打印有问题，不知道为什么
+	KeySymbolColon        = ":"
+	KeySymbolLeftBrace    = "("
+	KeySymbolRightBrace   = ")"
+	KeySymbolComma        = ","
+	KeySymbolDollar       = "$"
+	KeySymbolEqual        = "="
+	KeySymbolSlash        = "/"
+	KeySymbolPlus         = "+"
+	KeySymbolMinus        = "-"
+	KeySymbolStar         = "*"
+	KeySymbolPower        = "^"
+	KeySymbolLess         = "<"
+	KeySymbolGreater      = ">"
+	KeySymbolExclaim      = "!"
+	KeySymbolBackslash    = "\\"
+	KeySymbolDot          = "."
+	KeySymbolColonColon   = "::"
+	KeySymbolNotEqual     = "!=" // 在parse就立刻变成 not =，exec里没有对它的处理
+	KeySymbolDoubleQuote  = "\""
+	KeySymbolHash         = "#"
+	KeySymbolLargerEqual  = ">="
+	KeySymbolLessEqual    = "<="
+	KeySymbolEqualEqual   = "==" // check fn equal. TODO: 要调整语义
+	KeySymbolPercent      = "%"  // prove: 2 % 2 = 0 的时候打印有问题，不知道为什么
 	KeySymbolLeftBracket  = "["
 	KeySymbolRightBracket = "]"
 	KeySymbolColonEqual   = ":="
 	KeySymbolLeftCurly    = "{"
 	KeySymbolRightCurly   = "}"
+	KeySymbolAt           = "@"
 )
 
 // 最多双字符，或者单字符，否则parser的逻辑 GetKeySymbol 有问题
@@ -234,6 +197,7 @@ var symbolSet map[string]struct{} = map[string]struct{}{
 	KeySymbolRightBracket: {}, // "]"
 	KeySymbolLeftCurly:    {}, // "{"
 	KeySymbolRightCurly:   {}, // "}"
+	KeySymbolAt:           {}, // "@"
 }
 
 var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]struct{}{
