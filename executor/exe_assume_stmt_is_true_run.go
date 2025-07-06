@@ -48,10 +48,10 @@ func (exec *Executor) assumeStmtIsTrueRun(stmt ast.Stmt) (glob.ExecState, error)
 		_, err = exec.knowExistPropStmt(stmt)
 	case *ast.ProveInEachCaseStmt:
 		panic("implement me")
-	case *ast.SupposeStmt:
-		panic("implement me")
-	case *ast.WithStmt:
-		panic("implement me")
+	// case *ast.SupposeStmt:
+	// 	panic("implement me")
+	// case *ast.WithStmt:
+	// 	panic("implement me")
 	case *ast.ImportDirStmt:
 		return glob.ExecState_True, nil
 	case *ast.ImportGloballyStmt:

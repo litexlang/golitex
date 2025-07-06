@@ -102,6 +102,7 @@ type KnowPropStmt struct {
 	Prop DefPropStmt
 }
 
+// TODO: 这个的parser还没有像claim_prop那样改成用@
 type ClaimExistPropStmt struct {
 	ExistProp DefExistPropStmt
 	Proofs    []Stmt

@@ -1,5 +1,5 @@
 prove:
-    # Counting is hard to implement in Litex because even in set theory books, they are "known by default"
+    # Counting is hard to implement in Litex because even in set theory books, they are "known by default". I as language implementer have to implement basic properties of counting by myself.
 
     prop is_subset_of(x, y set):
         forall z x:

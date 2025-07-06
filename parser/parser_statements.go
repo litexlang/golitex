@@ -71,10 +71,10 @@ func (tb *tokenBlock) stmt() (ast.Stmt, error) {
 				ret, err = tb.knowFactStmt()
 			}
 		}
-	case glob.KeywordSuppose:
-		ret, err = tb.supposePropMatchStmt()
-	case glob.KeywordWith:
-		ret, err = tb.withPropMatchStmt()
+	// case glob.KeywordSuppose:
+	// 	ret, err = tb.supposePropMatchStmt()
+	// case glob.KeywordWith:
+	// 	ret, err = tb.withPropMatchStmt()
 	case glob.KeywordProveInEachCase:
 		ret, err = tb.proveInEachCaseStmt()
 	case glob.KeywordFnTemplate:
@@ -817,63 +817,63 @@ func (tb *tokenBlock) uniFactBodyFacts(uniFactDepth uniFactEnum, defaultSectionN
 	return domFacts, thenFacts, iffFacts, nil
 }
 
-func (tb *tokenBlock) supposePropMatchStmt() (*ast.SupposeStmt, error) {
-	err := tb.header.skip(glob.KeywordSuppose)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+// func (tb *tokenBlock) supposePropMatchStmt() (*ast.SupposeStmt, error) {
+// 	err := tb.header.skip(glob.KeywordSuppose)
+// 	if err != nil {
+// 		return nil, tbErr(err, tb)
+// 	}
 
-	fact, err := tb.pureFuncSpecFact()
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+// 	fact, err := tb.pureFuncSpecFact()
+// 	if err != nil {
+// 		return nil, tbErr(err, tb)
+// 	}
 
-	err = tb.header.skip(glob.KeySymbolColon)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+// 	err = tb.header.skip(glob.KeySymbolColon)
+// 	if err != nil {
+// 		return nil, tbErr(err, tb)
+// 	}
 
-	body := []ast.Stmt{}
-	for _, stmt := range tb.body {
-		curStmt, err := stmt.stmt()
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
+// 	body := []ast.Stmt{}
+// 	for _, stmt := range tb.body {
+// 		curStmt, err := stmt.stmt()
+// 		if err != nil {
+// 			return nil, tbErr(err, tb)
+// 		}
 
-		// TODO 暂时只能全是fact
-		body = append(body, curStmt)
-	}
+// 		// TODO 暂时只能全是fact
+// 		body = append(body, curStmt)
+// 	}
 
-	return ast.NewWhenPropMatchStmt(*fact, body), nil
-}
+// 	return ast.NewWhenPropMatchStmt(*fact, body), nil
+// }
 
-func (tb *tokenBlock) withPropMatchStmt() (*ast.WithStmt, error) {
-	err := tb.header.skip(glob.KeywordWith)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+// func (tb *tokenBlock) withPropMatchStmt() (*ast.WithStmt, error) {
+// 	err := tb.header.skip(glob.KeywordWith)
+// 	if err != nil {
+// 		return nil, tbErr(err, tb)
+// 	}
 
-	fact, err := tb.pureFuncSpecFact()
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+// 	fact, err := tb.pureFuncSpecFact()
+// 	if err != nil {
+// 		return nil, tbErr(err, tb)
+// 	}
 
-	err = tb.header.skip(glob.KeySymbolColon)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+// 	err = tb.header.skip(glob.KeySymbolColon)
+// 	if err != nil {
+// 		return nil, tbErr(err, tb)
+// 	}
 
-	body := []ast.Stmt{}
-	for _, stmt := range tb.body {
-		curStmt, err := stmt.stmt()
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-		body = append(body, curStmt)
-	}
+// 	body := []ast.Stmt{}
+// 	for _, stmt := range tb.body {
+// 		curStmt, err := stmt.stmt()
+// 		if err != nil {
+// 			return nil, tbErr(err, tb)
+// 		}
+// 		body = append(body, curStmt)
+// 	}
 
-	return ast.NewWithPropMatchStmt(*fact, body), nil
-}
+// 	return ast.NewWithPropMatchStmt(*fact, body), nil
+// }
 
 func (tb *tokenBlock) knowPropStmt() (*ast.KnowPropStmt, error) {
 	err := tb.header.skip(glob.KeywordKnow)
