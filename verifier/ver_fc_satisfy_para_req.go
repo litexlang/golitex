@@ -70,7 +70,7 @@ func (ver *Verifier) fcAtomDefined(fc ast.FcAtom) (bool, error) {
 		return true, nil
 	}
 
-	if fc.NameIsBuiltinKw_PkgNameEmpty() {
+	if _, ok := glob.BuiltinKeywordsSet[string(fc)]; ok {
 		return true, nil
 	}
 

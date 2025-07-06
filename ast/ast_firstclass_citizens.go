@@ -17,6 +17,7 @@ package litex_ast
 import (
 	"fmt"
 	glob "golitex/glob"
+	"slices"
 	"strings"
 )
 
@@ -40,7 +41,7 @@ func NewFcFn(fnHead Fc, callPipe []Fc) *FcFn {
 	return &FcFn{fnHead, callPipe}
 }
 
-func FcSliceString(params []Fc) string {
+func fcSliceString(params []Fc) string {
 	output := make([]string, len(params))
 	for i, param := range params {
 		output[i] = param.String()
@@ -54,33 +55,18 @@ func hasBuiltinOptAndToString(f *FcFn) (bool, string) {
 		return false, ""
 	}
 
-	// if ptr.PkgName == glob.EmptyPkg && ptr.Name == glob.AtIndexOp {
-	// if ptr.Name == glob.AtIndexOp {
 	if string(ptr) == glob.AtIndexOp {
 		return true, fmt.Sprintf("%s[%s]", f.Params[0], f.Params[1])
 	}
 
-	// if ptr.PkgName == glob.EmptyPkg && ptr.Name == glob.GetIndexOfOp {
-	// if ptr.Name == glob.GetIndexOfOp {
 	if string(ptr) == glob.GetIndexOfOp {
 		return true, fmt.Sprintf("%s[[%s]]", f.Params[0], f.Params[1])
 	}
 
-	// if ptr.PkgName == glob.EmptyPkg && ptr.Name == glob.KeySymbolMinus {
-	// if ptr.Name == glob.KeySymbolMinus {
 	if string(ptr) == glob.KeySymbolMinus {
-		// if len(f.Params) == 1 {
-		// 	return true, fmt.Sprintf("(%s %s)", string(ptr), f.Params[0])
-		// }
 
 		return true, fmt.Sprintf("(%s %s %s)", f.Params[0], string(ptr), f.Params[1])
 	}
-
-	// if ptr.PkgName != glob.EmptyPkg {
-	// 	return false, ""
-	// }
-
-	// TODO 如何处理unary?
 
 	outPut := string(ptr)
 	if glob.IsKeySymbolRelaFn(outPut) {
@@ -108,7 +94,7 @@ func IsFcBuiltinInfixOpt(f FcFn) bool {
 		return false
 	}
 
-	return ptrHeadAsAtom.IsBuiltinRelaFn() && len(f.Params) == 2
+	return glob.IsKeySymbolRelaFn(string(ptrHeadAsAtom)) && len(f.Params) == 2
 }
 
 func IsFcBuiltinUnaryFn(fc FcFn) bool {
@@ -121,22 +107,17 @@ func IsFcBuiltinUnaryFn(fc FcFn) bool {
 }
 
 func (f FcAtom) IsBuiltinUnaryOpt() bool {
-	// return f.PkgName == glob.EmptyPkg && glob.IsKeySymbolUnaryFn(f.Name)
 	return (string(f)) == glob.KeySymbolMinus
 }
 
-func (f FcAtom) IsBuiltinRelaFn() bool {
-	// return f.PkgName == glob.EmptyPkg && glob.IsKeySymbolRelaFn(f.Name)
-	return glob.IsKeySymbolRelaFn(string(f))
-}
+// func (f FcAtom) IsBuiltinRelaFn() bool {
+// 	return glob.IsKeySymbolRelaFn(string(f))
+// }
 
-func (fcAtom FcAtom) NameIsBuiltinKw_PkgNameEmpty() bool {
-	// if fcAtom.PkgName == glob.EmptyPkg {
-	_, ok := glob.BuiltinKeywordsSet[string(fcAtom)]
-	return ok
-	// }
-	// return false
-}
+// func (fcAtom FcAtom) NameIsBuiltinKw_PkgNameEmpty() bool {
+// 	_, ok := glob.BuiltinKeywordsSet[string(fcAtom)]
+// 	return ok
+// }
 
 func IsFcAtomAndHasBuiltinPropName(fc Fc) bool {
 	fcAtom, ok := fc.(FcAtom)
@@ -144,18 +125,8 @@ func IsFcAtomAndHasBuiltinPropName(fc Fc) bool {
 		return false
 	}
 
-	// if fcAtom.PkgName != glob.EmptyPkg {
-	// 	return false
-	// }
-
 	return glob.IsBuiltinInfixRelaPropSymbol(string(fcAtom))
 }
-
-// func (fc FcAtom) HasGivenNameAndEmptyPkgName(kw string) bool {
-// return fc.PkgName == glob.EmptyPkg && fc.Name == kw
-// 不含有 ::
-// 	return string(fc) == kw && !strings.Contains(string(fc), glob.KeySymbolColonColon)
-// }
 
 func IsFcAtomEqualToGivenString(fc Fc, kw string) bool {
 	fcAtom, ok := fc.(FcAtom)
@@ -166,43 +137,42 @@ func IsFcAtomEqualToGivenString(fc Fc, kw string) bool {
 	return string(fcAtom) == kw && !strings.Contains(string(fcAtom), glob.KeySymbolColonColon)
 }
 
-func (f *FcFn) HasTwoParamsAndSwitchOrder() (*FcFn, bool) {
-	if len(f.Params) != 2 {
-		return nil, false
-	}
+// func (f *FcFn) HasTwoParamsAndSwitchOrder() (*FcFn, bool) {
+// 	if len(f.Params) != 2 {
+// 		return nil, false
+// 	}
 
-	return NewFcFn(f.FnHead, []Fc{f.Params[0], f.Params[1]}), true
-}
+// 	return NewFcFn(f.FnHead, []Fc{f.Params[0], f.Params[1]}), true
+// }
 
-func (f *FcFn) HasTwoParams_FirstParamHasTheSameNameAsItself() (*FcFn, bool) {
-	if len(f.Params) != 2 {
-		return nil, false
-	}
+// func (f *FcFn) HasTwoParams_FirstParamHasTheSameNameAsItself() (*FcFn, bool) {
+// 	if len(f.Params) != 2 {
+// 		return nil, false
+// 	}
 
-	var fHeadAsAtom FcAtom
-	var ok bool = false
-	fHeadAsAtom, ok = f.FnHead.(FcAtom)
-	if !ok {
-		return nil, false
-	}
+// 	var fHeadAsAtom FcAtom
+// 	var ok bool = false
+// 	fHeadAsAtom, ok = f.FnHead.(FcAtom)
+// 	if !ok {
+// 		return nil, false
+// 	}
 
-	if f_firstParam_as_fn, ok := f.Params[0].(*FcFn); ok {
-		if f_firstParam_headAsAtom, ok := f_firstParam_as_fn.FnHead.(FcAtom); ok {
-			if string(f_firstParam_headAsAtom) == string(fHeadAsAtom) {
-				// if f_firstParam_headAsAtom.PkgName == fHeadAsAtom.PkgName {
-				if len(f_firstParam_as_fn.Params) != 2 {
-					return nil, false
-				}
+// 	if f_firstParam_as_fn, ok := f.Params[0].(*FcFn); ok {
+// 		if f_firstParam_headAsAtom, ok := f_firstParam_as_fn.FnHead.(FcAtom); ok {
+// 			if string(f_firstParam_headAsAtom) == string(fHeadAsAtom) {
+// 				if len(f_firstParam_as_fn.Params) != 2 {
+// 					return nil, false
+// 				}
 
-				newRight := NewFcFn(f.FnHead, []Fc{f_firstParam_as_fn.Params[0], f.Params[1]})
+// 				newRight := NewFcFn(f.FnHead, []Fc{f_firstParam_as_fn.Params[0], f.Params[1]})
 
-				return NewFcFn(f.FnHead, []Fc{f_firstParam_as_fn.Params[0], newRight}), true
-			}
-		}
-	}
+// 				return NewFcFn(f.FnHead, []Fc{f_firstParam_as_fn.Params[0], newRight}), true
+// 			}
+// 		}
+// 	}
 
-	return nil, false
-}
+// 	return nil, false
+// }
 
 func GetAtomsInFc(fc Fc) []FcAtom {
 	ret := []FcAtom{}
@@ -231,11 +201,5 @@ func IsFn_WithHeadNameInSlice(fc Fc, names []string) bool {
 		return false
 	}
 
-	for _, name := range names {
-		if string(asFcFnHeadAsAtom) == name {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(names, string(asFcFnHeadAsAtom))
 }
