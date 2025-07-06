@@ -19,17 +19,18 @@ type Stmt interface {
 	String() string
 }
 
-func (stmt *DefObjStmt) stmt()                 {}
-func (c *DefPropStmt) stmt()                   {}
-func (l *DefFnStmt) stmt()                     {}
-func (l *UniFactStmt) stmt()                   {}
-func (p *SpecFactStmt) stmt()                  {}
-func (f *ClaimProveStmt) stmt()                {}
-func (f *KnowFactStmt) stmt()                  {}
-func (s *DefExistPropStmt) stmt()              {}
-func (s *HaveStmt) stmt()                      {}
-func (s *SupposeStmt) stmt()                   {}
-func (s *WithStmt) stmt()                      {}
+func (stmt *DefObjStmt) stmt()    {}
+func (c *DefPropStmt) stmt()      {}
+func (l *DefFnStmt) stmt()        {}
+func (l *UniFactStmt) stmt()      {}
+func (p *SpecFactStmt) stmt()     {}
+func (f *ClaimProveStmt) stmt()   {}
+func (f *KnowFactStmt) stmt()     {}
+func (s *DefExistPropStmt) stmt() {}
+func (s *HaveStmt) stmt()         {}
+
+// func (s *SupposeStmt) stmt()                   {}
+// func (s *WithStmt) stmt()                      {}
 func (s *ProveInEachCaseStmt) stmt()           {}
 func (s *KnowPropStmt) stmt()                  {}
 func (s *KnowExistPropStmt) stmt()             {}
@@ -48,7 +49,7 @@ func (s *ClaimExistPropStmt) stmt()            {}
 func (s *ProveByMathInductionStmt) stmt()      {}
 func (s *HaveByReplacementStmt) stmt()         {}
 func (s *ProveOverFiniteSetStmt) stmt()        {}
-func (s *HaveInSetStmt) stmt()                 {}
+func (s *HaveObjInNonEmptySetStmt) stmt()      {}
 func (s *HaveSetStmt) stmt()                   {}
 func (s *HaveSetFnStmt) stmt()                 {}
 

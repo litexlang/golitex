@@ -163,8 +163,8 @@ func NewProveOverFiniteSetStmt(fact *UniFactStmt, proofs []Stmt) *ProveOverFinit
 	return &ProveOverFiniteSetStmt{*fact, proofs}
 }
 
-func NewHaveInSetStmt(objNames []string, objSets []Fc) *HaveInSetStmt {
-	return &HaveInSetStmt{objNames, objSets}
+func NewHaveInSetStmt(objNames []string, objSets []Fc) *HaveObjInNonEmptySetStmt {
+	return &HaveObjInNonEmptySetStmt{objNames, objSets}
 }
 
 func NewHaveSetStmt(fact SetDeclarationStmtInterface) *HaveSetStmt {
