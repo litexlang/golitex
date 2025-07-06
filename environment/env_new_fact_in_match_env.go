@@ -13,34 +13,3 @@
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
 package litex_env
-
-import (
-	ast "golitex/ast"
-)
-
-func (env *Env) storeSpecFactInMem(stmt *ast.SpecFactStmt) error {
-	err := env.KnownFactsStruct.SpecFactMem.newFact(stmt)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (env *Env) storeLogicFact(stmt *ast.OrStmt) error {
-	err := env.KnownFactsStruct.SpecFactInLogicExprMem.newFact(stmt)
-	if err != nil {
-		return nil
-	}
-
-	return nil
-}
-
-func (env *Env) storeUniFact(specFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt) error {
-	err := env.KnownFactsStruct.SpecFactInUniFactMem.newFact(specFact, uniFact)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}

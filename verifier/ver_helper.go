@@ -41,10 +41,6 @@ func isErrOrOk(ok bool, err error) bool {
 	return err != nil || ok
 }
 
-// func isErrOrNotOk(ok bool, err error) bool {
-// 	return err != nil && !ok
-// }
-
 func (ver *Verifier) processOkMsg(state VerState, msg string, verifiedBy string, args ...any) (bool, error) {
 	if state.requireMsg() {
 		ver.successMsgEnd(msg, fmt.Sprintf(verifiedBy, args...))
@@ -56,4 +52,8 @@ func (ver *Verifier) processOkMsg(state VerState, msg string, verifiedBy string,
 
 func (ver *Verifier) verErr(err error, msg string, args ...any) error {
 	return fmt.Errorf("%s\n%s", err.Error(), fmt.Sprintf(msg, args...))
+}
+
+func (ver *Verifier) isCommutativeProp_BuiltinRule(stmt *ast.SpecFactStmt) bool {
+	return stmt.PropName == glob.KeySymbolEqual
 }

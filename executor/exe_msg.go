@@ -44,12 +44,6 @@ func (e *Executor) appendInternalWarningMsg(msg string, str ...any) {
 	e.env.Msgs = append(e.env.Msgs, glob.InternalWarningMsg(msg, str...))
 }
 
-// func (e *Executor) appendMsg(msg string, str ...any) {
-// 	if !glob.IsImportState() {
-// 		e.env.Msgs = append(e.env.Msgs, fmt.Sprintf(msg, str...))
-// 	}
-// }
-
 func (e *Executor) ClearMsgs() {
 	e.env.Msgs = []string{}
 }
