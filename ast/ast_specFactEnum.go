@@ -41,7 +41,6 @@ func (stmt *SpecFactStmt) ReverseTrue() *SpecFactStmt {
 }
 
 func (f *SpecFactStmt) IsPropNameEqual() bool {
-	// return f.PropName.Name == glob.KeySymbolEqual && f.PropName.PkgName == glob.EmptyPkg
 	return string(f.PropName) == glob.KeySymbolEqual
 }
 

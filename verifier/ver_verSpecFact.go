@@ -131,7 +131,7 @@ func (ver *Verifier) verSpecialSpecFact_ByBIR(stmt *ast.SpecFactStmt, state VerS
 		return true, nil
 	}
 
-	if stmt.NameIs(glob.KeySymbolEqual) {
+	if stmt.NameIs(glob.KeySymbolEqual) && stmt.TypeEnum == ast.FalsePure {
 		return ver.verNotTrueEqualFact_BuiltinRules(stmt, state)
 	}
 
