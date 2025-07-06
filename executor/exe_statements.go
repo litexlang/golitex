@@ -314,11 +314,9 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecState, 
 	}
 
 	// 需要检查stmt.ToCheckFact里的东西都是在外部声明好了的
-	if stmt.ToCheckFact != ast.ClaimStmtEmptyToCheck {
-		ok := exec.env.AreAtomsInFactAreDeclared(stmt.ToCheckFact, map[string]struct{}{})
-		if !ok {
-			return glob.ExecState_Error, fmt.Errorf(env.AtomsInFactNotDeclaredMsg(stmt.ToCheckFact))
-		}
+	ok := exec.env.AreAtomsInFactAreDeclared(stmt.ToCheckFact, map[string]struct{}{})
+	if !ok {
+		return glob.ExecState_Error, fmt.Errorf(env.AtomsInFactNotDeclaredMsg(stmt.ToCheckFact))
 	}
 
 	if _, ok := stmt.ToCheckFact.(*ast.UniFactStmt); ok {
@@ -365,10 +363,6 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContra
 			exec.appendNewMsgAtBegin(stmt.ClaimProveStmt.String())
 			exec.deleteEnvAndRetainMsg()
 		}()
-	}
-
-	if stmt.ClaimProveStmt.ToCheckFact == ast.ClaimStmtEmptyToCheck {
-		return glob.ExecState_Error, fmt.Errorf("prove by contradiction does not support empty check")
 	}
 
 	// Must be orStmt or specFactStmt

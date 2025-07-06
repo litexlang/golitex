@@ -46,7 +46,7 @@ Traditional formal languages like Lean, Coq, [are fundamentally different from L
 
 Litex, as a domain language, takes advantage of the difference between programming and verification, and is designed to be a simple and intuitive reasoning verifier. [^1]
 
-Math serves two purposes: 1. for computation, i.e. calculate the output of a function given the input, and 2. for verification, i.e. make sure a new statement is correct given the established ones. The software industry has already revolutionized how we compute, and Litex is here to change how we verify.
+Math serves two purposes: 1. for computation, i.e. calculate the output of a function given the input, and 2. for reasoning and verification, i.e. make sure a new statement is correct given the established ones. Math is the language of the universe and since the beginning of history we human beings have been using math to know how things work to do real-life problems. The software industry has already revolutionized how we compute, and Litex is here to change how we reason.
 
 This README shows how the deep understanding of both the nature of mathematics and the nature of programming shapes the unique design of Litex. Let's start with a simple example.
 
