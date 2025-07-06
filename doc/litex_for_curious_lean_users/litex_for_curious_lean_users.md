@@ -222,7 +222,7 @@ fn self_union(s, s2 set) set:
         then:
             x $in self_union(s, s2)
 
-know prop union_items_in_at_least_one_of_child_set(x obj, s, s2 set):
+know @union_items_in_at_least_one_of_child_set(x obj, s, s2 set):
     x $in self_union(s, s2)    
     then:
         or:
@@ -237,7 +237,7 @@ prove:
         $union_items_in_at_least_one_of_child_set(x, s, s2)
 
 claim:
-    prop union_with_empty_set_is_itself(x obj, s, s2 set):
+    @union_with_empty_set_is_itself(x obj, s, s2 set):
         s2 := {}
         x $in self_union(s, s2)
         then:

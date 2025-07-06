@@ -63,7 +63,7 @@ func (tb *tokenBlock) stmt() (ast.Stmt, error) {
 		ret, err = tb.proveStmt()
 	case glob.KeywordKnow:
 		{
-			if tb.TokenAtHeaderIndexIs(1, glob.KeywordProp) {
+			if tb.TokenAtHeaderIndexIs(1, glob.KeySymbolAt) {
 				ret, err = tb.knowPropStmt()
 			} else if tb.TokenAtHeaderIndexIs(1, glob.KeywordExistProp) {
 				ret, err = tb.knowExistPropStmt()
@@ -369,7 +369,7 @@ func (tb *tokenBlock) claimStmt() (ast.ClaimInterface, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	if tb.body[0].header.is(glob.KeywordProp) {
+	if tb.body[0].header.is(glob.KeySymbolAt) {
 		return tb.claimPropStmt()
 	} else if tb.body[0].header.is(glob.KeywordExistProp) {
 		return tb.claimExistPropStmt()
@@ -881,7 +881,7 @@ func (tb *tokenBlock) knowPropStmt() (*ast.KnowPropStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	declHeader, err := tb.headerOfProp()
+	declHeader, err := tb.headerOfAtProp()
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -1173,7 +1173,7 @@ func (tb *tokenBlock) importGloballyStmt() (*ast.ImportGloballyStmt, error) {
 }
 
 func (tb *tokenBlock) claimPropStmt() (*ast.ClaimPropStmt, error) {
-	declHeader, err := tb.body[0].headerOfProp()
+	declHeader, err := tb.body[0].headerOfAtProp()
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -1548,9 +1548,9 @@ func (tb *tokenBlock) bodyOfKnowProp() ([]ast.FactStmt, []ast.FactStmt, error) {
 	}
 }
 
-func (tb *tokenBlock) headerOfProp() (*ast.DefHeader, error) {
+func (tb *tokenBlock) headerOfAtProp() (*ast.DefHeader, error) {
 	var err error
-	err = tb.header.skip(glob.KeywordProp)
+	err = tb.header.skip(glob.KeySymbolAt)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -1566,7 +1566,7 @@ func (tb *tokenBlock) headerOfProp() (*ast.DefHeader, error) {
 	}
 
 	if !tb.header.ExceedEnd() {
-		return nil, fmt.Errorf("expect end of know prop body, but got '%s'", tb.header.strAtCurIndexPlus(0))
+		return nil, fmt.Errorf("expect end of @ body, but got '%s'", tb.header.strAtCurIndexPlus(0))
 	}
 
 	return declHeader, nil

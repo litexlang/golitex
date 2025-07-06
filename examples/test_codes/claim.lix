@@ -1,5 +1,5 @@
 claim:
-    prop p(x, y N):
+    @p(x, y N):
         x + y = y + x
     prove:
         x + y = y + x

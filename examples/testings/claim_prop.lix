@@ -5,7 +5,7 @@ prove:
     3 > 1
 
     claim:
-        prop p(x N):
+        @p(x N):
             x > 1
             then:
                 x > -1
@@ -24,7 +24,7 @@ prove:
     prop p(x, y N)
     prop p2(x, y, z N)
     claim:
-        prop q(x, y, z N):
+        @q(x, y, z N):
             $p2(x, y, z)
             then:
                 $p(x, y)
