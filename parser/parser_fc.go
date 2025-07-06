@@ -135,7 +135,7 @@ func (tb *tokenBlock) rawFcAtom() (ast.FcAtom, error) {
 
 	value, err := tb.header.next()
 	if err != nil {
-		return ast.EmptyFcAtom, err
+		return ast.FcAtom(""), err
 	}
 
 	for tb.header.is(glob.KeySymbolColonColon) {
@@ -143,7 +143,7 @@ func (tb *tokenBlock) rawFcAtom() (ast.FcAtom, error) {
 		values = append(values, value)
 		value, err = tb.header.next()
 		if err != nil {
-			return ast.EmptyFcAtom, err
+			return ast.FcAtom(""), err
 		}
 	}
 
@@ -278,13 +278,13 @@ func (tb *tokenBlock) unaryOptFc() (ast.Fc, error) {
 func (tb *tokenBlock) numberStr() (ast.FcAtom, error) {
 	left, err := tb.header.next()
 	if err != nil {
-		return ast.EmptyFcAtom, err
+		return ast.FcAtom(""), err
 	}
 
 	// 检查left是否全是数字
 	for _, c := range left {
 		if c < '0' || c > '9' {
-			return ast.EmptyFcAtom, fmt.Errorf("invalid number: %s", left)
+			return ast.FcAtom(""), fmt.Errorf("invalid number: %s", left)
 		}
 	}
 
@@ -307,9 +307,9 @@ func (tb *tokenBlock) numberStr() (ast.FcAtom, error) {
 			tb.header.skip("")
 			right, err := tb.header.next()
 			if err != nil {
-				return ast.EmptyFcAtom, fmt.Errorf("invalid number: %s", right)
+				return ast.FcAtom(""), fmt.Errorf("invalid number: %s", right)
 			}
-			return ast.FcAtom(left + "." + right), nil
+			return ast.FcAtom(fmt.Sprintf("%s.%s", left, right)), nil
 		}
 		return ast.FcAtom(left), nil
 	}
