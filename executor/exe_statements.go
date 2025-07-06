@@ -76,7 +76,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		execState, err = exec.haveByReplacementStmt(stmt)
 	case *ast.ProveOverFiniteSetStmt:
 		execState, err = exec.proveOverFiniteSetStmt(stmt)
-	case *ast.HaveInSetStmt:
+	case *ast.HaveObjInNonEmptySetStmt:
 		execState, err = exec.haveInSetStmt(stmt)
 	case *ast.HaveSetStmt:
 		execState, err = exec.haveSetStmt(stmt)

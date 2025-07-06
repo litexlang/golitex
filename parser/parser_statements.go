@@ -1581,7 +1581,7 @@ func (tb *tokenBlock) headerOfAtProp() (*ast.DefHeader, error) {
 	return declHeader, nil
 }
 
-func (tb *tokenBlock) haveInSetStmt() (*ast.HaveInSetStmt, error) {
+func (tb *tokenBlock) haveInSetStmt() (*ast.HaveObjInNonEmptySetStmt, error) {
 	err := tb.header.skip(glob.KeywordHave)
 	if err != nil {
 		return nil, tbErr(err, tb)

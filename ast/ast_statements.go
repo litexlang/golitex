@@ -192,7 +192,7 @@ type ProveOverFiniteSetStmt struct {
 }
 
 // have xxx st exist_in 的语法糖
-type HaveInSetStmt struct {
+type HaveObjInNonEmptySetStmt struct {
 	Objs    []string
 	ObjSets []Fc
 }

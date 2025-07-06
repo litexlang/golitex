@@ -149,7 +149,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 	return glob.ExecState_True, nil
 }
 
-func (exec *Executor) haveInSetStmt(stmt *ast.HaveInSetStmt) (glob.ExecState, error) {
+func (exec *Executor) haveInSetStmt(stmt *ast.HaveObjInNonEmptySetStmt) (glob.ExecState, error) {
 	for i := range len(stmt.Objs) {
 		existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordExistIn), []ast.Fc{stmt.ObjSets[i]})
 		haveStmt := ast.NewHaveStmt([]string{stmt.Objs[i]}, *existInFact)
