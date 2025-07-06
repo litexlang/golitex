@@ -169,7 +169,7 @@ func IsFnSet(fc Fc) bool {
 		return false
 	}
 
-	return isFcAtomAndEqualToStr(fcHeadAsFcFn.FnHead, glob.KeywordFn)
+	return IsFcAtomAndEqualToStr(fcHeadAsFcFn.FnHead, glob.KeywordFn)
 }
 
 func (stmt *SpecFactStmt) ReverseSpecFactParamsOrder() (*SpecFactStmt, error) {
@@ -253,7 +253,7 @@ func Get_FnTemplate_InFcForm_ParamSetsAndRetSet(fc Fc) ([]Fc, Fc, bool) {
 		return nil, nil, false
 	}
 
-	if !isFcAtomAndEqualToStr(fcAsFcFnHeadAsFcFn.FnHead, glob.KeywordFn) {
+	if !IsFcAtomAndEqualToStr(fcAsFcFnHeadAsFcFn.FnHead, glob.KeywordFn) {
 		return nil, nil, false
 	}
 
@@ -313,7 +313,7 @@ func isFcWithFcFnHeadWithName(fc Fc, name string) bool {
 		return false
 	}
 
-	return isFcAtomAndEqualToStr(fcAsFcFnHeadAsFcFn.FnHead, name)
+	return IsFcAtomAndEqualToStr(fcAsFcFnHeadAsFcFn.FnHead, name)
 }
 
 func IsFnFcFn(fc Fc) bool {

@@ -16,15 +16,6 @@ package litex_ast
 
 import glob "golitex/glob"
 
-func isFcAtomAndEqualToStr(fc Fc, name string) bool {
-	fcAsFcAtom, ok := fc.(FcAtom)
-	if !ok {
-		return false
-	}
-
-	return string(fcAsFcAtom) == name
-}
-
 func EqualFact(left, right Fc) *SpecFactStmt {
 	return NewSpecFactStmt(TruePure, FcAtom(glob.KeySymbolEqual), []Fc{left, right})
 }
