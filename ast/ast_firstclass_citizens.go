@@ -24,24 +24,17 @@ type Fc interface {
 	fc()
 	String() string
 	Instantiate(map[string]Fc) (Fc, error)
-	IsAtom() bool
 }
 
-func (f FcAtom) fc()          {}
-func (f FcAtom) IsAtom() bool { return true }
-func (f *FcFn) fc()           {}
-func (f *FcFn) IsAtom() bool  { return false }
+func (f FcAtom) fc() {}
+func (f *FcFn) fc()  {}
 
-type FcAtom string // 把 FcAtom 从 {pkgName string, Name string} 改成 string, 本质上是因为后者更合理，实际上还是让速度快了10%
+type FcAtom string
 
 type FcFn struct {
-	FnHead Fc // 必须是 fc, 而不是 fcAtom，因为函数头可能是另一个函数的返回值
+	FnHead Fc
 	Params []Fc
 }
-
-// func NewFcAtom(value string) FcAtom {
-// 	return FcAtom(value)
-// }
 
 func NewFcFn(fnHead Fc, callPipe []Fc) *FcFn {
 	return &FcFn{fnHead, callPipe}
@@ -56,10 +49,6 @@ func FcSliceString(params []Fc) string {
 }
 
 func hasBuiltinOptAndToString(f *FcFn) (bool, string) {
-	// if ok, str := isFnSetAndToString(f); ok {
-	// 	return true, str
-	// }
-
 	ptr, ok := f.FnHead.(FcAtom)
 	if !ok {
 		return false, ""
