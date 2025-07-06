@@ -1,0 +1,16 @@
+prop p(x, y N)
+prop q(x, y N)
+
+know forall x, y N:
+    $p(x, y)
+    then:
+        $q(x, y)
+
+claim:
+    @t(x, y, z N):
+        not $q(x, y)
+        then:
+            not $p(x, y)
+    prove_by_contradiction:
+        $p(x, y)
+        $q(x, y)

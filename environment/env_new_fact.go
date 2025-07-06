@@ -41,13 +41,13 @@ func (env *Env) NewFact(stmt ast.FactStmt) error {
 }
 
 func (env *Env) newSpecFactNoPostProcess(fact *ast.SpecFactStmt) error {
-	if env.CurMatchProp == nil {
-		if isEqualFact, err := env.isTrueEqualFact_StoreIt(fact); err != nil {
-			return err
-		} else if isEqualFact {
-			return nil
-		}
+	// if env.CurMatchProp == nil {
+	if isEqualFact, err := env.isTrueEqualFact_StoreIt(fact); err != nil {
+		return err
+	} else if isEqualFact {
+		return nil
 	}
+	// }
 
 	if isMathInductionProp, err := env.isMathInductionPropName_StoreIt(fact); err != nil {
 		return err
@@ -90,13 +90,13 @@ func (env *Env) newLogicExprFact(fact *ast.OrStmt) error {
 }
 
 func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
-	if env.CurMatchProp == nil {
-		if isEqualFact, err := env.isTrueEqualFact_StoreIt(fact); err != nil {
-			return err
-		} else if isEqualFact {
-			return nil
-		}
+	// if env.CurMatchProp == nil {
+	if isEqualFact, err := env.isTrueEqualFact_StoreIt(fact); err != nil {
+		return err
+	} else if isEqualFact {
+		return nil
 	}
+	// }
 
 	if isMathInductionProp, err := env.isMathInductionPropName_StoreIt(fact); err != nil {
 		return err
@@ -603,7 +603,7 @@ func (env *Env) newUniFact_ThenFactIsSpecFact(stmt *ast.UniFactStmt, thenFact *a
 }
 
 func (env *Env) newUniFact_ThenFactIsOrStmt(stmt *ast.UniFactStmt, thenFact *ast.OrStmt) error {
-	return env.KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem.NewFact(stmt, thenFact, env.CurMatchProp)
+	return env.KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem.NewFact(stmt, thenFact)
 }
 
 func (env *Env) newUniFact_ThenFactIsEnumStmt(stmt *ast.UniFactStmt, thenFact *ast.EnumStmt) error {

@@ -27,7 +27,7 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state VerState) (bool,
 	}
 
 	// 在局部环境声明新变量
-	ver.newEnv(ver.env, ver.env.CurMatchProp)
+	ver.newEnv(ver.env)
 	defer ver.deleteEnvAndRetainMsg()
 
 	// 声明变量

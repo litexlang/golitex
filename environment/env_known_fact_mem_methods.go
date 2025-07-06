@@ -57,7 +57,7 @@ func (s SpecFactMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([]KnownSpe
 	return sameEnumPkgPropFacts, true
 }
 
-func (s SpecFactMem) newFact(stmt *ast.SpecFactStmt, supposedEnv *ast.SpecFactStmt) error {
+func (s SpecFactMem) newFact(stmt *ast.SpecFactStmt) error {
 	// 要考虑pkgName和propName是否存在
 	sameEnumFacts, err := s.getSameEnumFacts(stmt)
 	if err != nil {
@@ -75,8 +75,7 @@ func (s SpecFactMem) newFact(stmt *ast.SpecFactStmt, supposedEnv *ast.SpecFactSt
 	if _, ok := sameEnumFacts[string(stmt.PropName)]; !ok {
 		sameEnumFacts[string(stmt.PropName)] = []KnownSpecFact{}
 	}
-	sameEnumFacts[string(stmt.PropName)] = append(sameEnumFacts[string(stmt.PropName)], KnownSpecFact{stmt, supposedEnv})
-
+	sameEnumFacts[string(stmt.PropName)] = append(sameEnumFacts[string(stmt.PropName)], KnownSpecFact{stmt})
 	return nil
 }
 
@@ -116,7 +115,7 @@ func (s SpecFactInLogicExprMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) 
 	return sameEnumPkgPropFacts, true
 }
 
-func (s SpecFactInLogicExprMem) newFact(logicExpr *ast.OrStmt, supposedEnv *ast.SpecFactStmt) error {
+func (s SpecFactInLogicExprMem) newFact(logicExpr *ast.OrStmt) error {
 	for i, fact := range logicExpr.Facts {
 		sameEnumFacts, err := s.getSameEnumFacts(fact)
 		if err != nil {
@@ -134,7 +133,7 @@ func (s SpecFactInLogicExprMem) newFact(logicExpr *ast.OrStmt, supposedEnv *ast.
 		if _, ok := sameEnumFacts[string(fact.PropName)]; !ok {
 			sameEnumFacts[string(fact.PropName)] = []KnownSpecFact_InLogicExpr{}
 		}
-		sameEnumFacts[string(fact.PropName)] = append(sameEnumFacts[string(fact.PropName)], *NewKnownSpecFact_InLogicExpr(fact, i, logicExpr, supposedEnv))
+		sameEnumFacts[string(fact.PropName)] = append(sameEnumFacts[string(fact.PropName)], *NewKnownSpecFact_InLogicExpr(fact, i, logicExpr))
 	}
 
 	return nil
@@ -204,7 +203,7 @@ func (env *Env) newUniFact(stmt *ast.UniFactStmt) error {
 
 }
 
-func (s SpecFactInUniFactMem) newFact(stmtAsSpecFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt, supposedEnv *ast.SpecFactStmt) error {
+func (s SpecFactInUniFactMem) newFact(stmtAsSpecFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt) error {
 	sameEnumFacts, err := s.getSameEnumFacts(stmtAsSpecFact)
 	if err != nil {
 		return err
@@ -213,7 +212,7 @@ func (s SpecFactInUniFactMem) newFact(stmtAsSpecFact *ast.SpecFactStmt, uniFact 
 	if _, ok := sameEnumFacts[string(stmtAsSpecFact.PropName)]; !ok {
 		sameEnumFacts[string(stmtAsSpecFact.PropName)] = []KnownSpecFact_InUniFact{}
 	}
-	sameEnumFacts[string(stmtAsSpecFact.PropName)] = append(sameEnumFacts[string(stmtAsSpecFact.PropName)], KnownSpecFact_InUniFact{stmtAsSpecFact, uniFact, supposedEnv})
+	sameEnumFacts[string(stmtAsSpecFact.PropName)] = append(sameEnumFacts[string(stmtAsSpecFact.PropName)], KnownSpecFact_InUniFact{stmtAsSpecFact, uniFact})
 
 	return nil
 }
@@ -253,7 +252,7 @@ func (s SpecFact_InLogicExpr_InUniFactMem) GetSameEnumPkgPropFacts(stmt *ast.Spe
 	return sameEnumPkgPropFacts, true
 }
 
-func (s SpecFact_InLogicExpr_InUniFactMem) NewFact(uniStmt *ast.UniFactStmt, logicExpr *ast.OrStmt, supposedEnv *ast.SpecFactStmt) error {
+func (s SpecFact_InLogicExpr_InUniFactMem) NewFact(uniStmt *ast.UniFactStmt, logicExpr *ast.OrStmt) error {
 	for i, fact := range logicExpr.Facts {
 		sameEnumFacts, err := s.getSameEnumFacts(fact)
 		if err != nil {
@@ -272,7 +271,7 @@ func (s SpecFact_InLogicExpr_InUniFactMem) NewFact(uniStmt *ast.UniFactStmt, log
 		if _, ok := sameEnumFacts[string(fact.PropName)]; !ok {
 			sameEnumFacts[string(fact.PropName)] = []SpecFact_InLogicExpr_InUniFact{}
 		}
-		sameEnumFacts[string(fact.PropName)] = append(sameEnumFacts[string(fact.PropName)], *NewSpecFact_InLogicExpr_InUniFact(fact, uniStmt, i, logicExpr, supposedEnv))
+		sameEnumFacts[string(fact.PropName)] = append(sameEnumFacts[string(fact.PropName)], *NewSpecFact_InLogicExpr_InUniFact(fact, uniStmt, i, logicExpr))
 	}
 
 	return nil
@@ -292,46 +291,46 @@ func newSpecFact_InLogicExpr_InUniFactMem() *SpecFact_InLogicExpr_InUniFactMem {
 }
 
 func (e *Env) GetSpecFactMem() (*SpecFactMem, bool) {
-	if e.CurMatchProp != nil {
-		knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(e.CurMatchProp)
-		if !ok {
-			return nil, false
-		}
-		return &knownFacts.SpecFactMem, true
-	}
+	// if e.CurMatchProp != nil {
+	// 	knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(e.CurMatchProp)
+	// 	if !ok {
+	// 		return nil, false
+	// 	}
+	// 	return &knownFacts.SpecFactMem, true
+	// }
 	return &e.KnownFactsStruct.SpecFactMem, true
 }
 
 func (e *Env) GetSpecFactInLogicExprMem() (*SpecFactInLogicExprMem, bool) {
-	if e.CurMatchProp != nil {
-		knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(e.CurMatchProp)
-		if !ok {
-			return nil, false
-		}
-		return &knownFacts.SpecFactInLogicExprMem, true
-	}
+	// if e.CurMatchProp != nil {
+	// 	knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(e.CurMatchProp)
+	// 	if !ok {
+	// 		return nil, false
+	// 	}
+	// 	return &knownFacts.SpecFactInLogicExprMem, true
+	// }
 	return &e.KnownFactsStruct.SpecFactInLogicExprMem, true
 }
 
 func (e *Env) GetSpecFactInUniFactMem() (*SpecFactInUniFactMem, bool) {
-	if e.CurMatchProp != nil {
-		knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(e.CurMatchProp)
-		if !ok {
-			return nil, false
-		}
-		return &knownFacts.SpecFactInUniFactMem, true
-	}
+	// if e.CurMatchProp != nil {
+	// 	knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(e.CurMatchProp)
+	// 	if !ok {
+	// 		return nil, false
+	// 	}
+	// 	return &knownFacts.SpecFactInUniFactMem, true
+	// }
 	return &e.KnownFactsStruct.SpecFactInUniFactMem, true
 }
 
 func (e *Env) GetSpecFact_InLogicExpr_InUniFactMem() (*SpecFact_InLogicExpr_InUniFactMem, bool) {
-	if e.CurMatchProp != nil {
-		knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(e.CurMatchProp)
-		if !ok {
-			return nil, false
-		}
-		return &knownFacts.SpecFact_InLogicExpr_InUniFactMem, true
-	}
+	// if e.CurMatchProp != nil {
+	// 	knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(e.CurMatchProp)
+	// 	if !ok {
+	// 		return nil, false
+	// 	}
+	// 	return &knownFacts.SpecFact_InLogicExpr_InUniFactMem, true
+	// }
 	return &e.KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem, true
 }
 

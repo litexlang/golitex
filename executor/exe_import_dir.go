@@ -95,7 +95,7 @@ func (exec *Executor) importDirWithPkgName(stmt *ast.ImportDirStmt) (glob.ExecSt
 
 func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string, importStmt ast.ImportStmtInterface) (glob.ExecState, error) {
 	if runInNewEnv {
-		exec.newEnv(exec.env, nil)
+		exec.newEnv(exec.env)
 		defer func() {
 			exec.deleteEnvAndRetainMsg()
 		}()

@@ -23,7 +23,7 @@ import (
 
 func (exec *Executor) mathInductionFact_BuiltinRules(stmt *ast.ProveByMathInductionStmt) (glob.ExecState, error) {
 	isTrue := false
-	exec.newEnv(exec.env, exec.env.CurMatchProp)
+	exec.newEnv(exec.env)
 	var propNameZeroFact ast.FactStmt
 	var nToNAddOneFact ast.FactStmt
 	var resultingFact *ast.UniFactStmt
