@@ -119,13 +119,13 @@ func IsFcAtomAndHasBuiltinPropName(fc Fc) bool {
 	return glob.IsBuiltinInfixRelaPropSymbol(string(fcAtom))
 }
 
-func IsFcAtomEqualToGivenString(fc Fc, kw string) bool {
-	fcAtom, ok := fc.(FcAtom)
+func IsFcAtomAndEqualToStr(fc Fc, name string) bool {
+	fcAsFcAtom, ok := fc.(FcAtom)
 	if !ok {
 		return false
 	}
 
-	return string(fcAtom) == kw && !strings.Contains(string(fcAtom), glob.KeySymbolColonColon)
+	return string(fcAsFcAtom) == name
 }
 
 func GetAtomsInFc(fc Fc) []FcAtom {

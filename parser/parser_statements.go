@@ -1022,14 +1022,17 @@ func (tb *tokenBlock) param_paramSet_paramInSetFacts(endWith string, allowExceed
 		}
 	}
 
-	// nth parameter set should not include 0 to n-1th parameter inside
+	// nth parameter set should not include nth to last parameter inside
 	for i, setParam := range setParams {
 		atomsInSetParam := ast.GetAtomsInFc(setParam)
+		atomsInSetParamAsStr := make([]string, len(atomsInSetParam))
+		for i, atom := range atomsInSetParam {
+			atomsInSetParamAsStr[i] = string(atom)
+		}
+
 		for j := i; j < len(params); j++ {
-			for _, atom := range atomsInSetParam {
-				if ast.IsFcAtomEqualToGivenString(atom, params[j]) {
-					return nil, nil, fmt.Errorf("the set %s of the parameter if index %d cannot include any parameters from the index %d to the last one (found parameter %s)", setParam.String(), i, j, params[j])
-				}
+			if slices.Contains(atomsInSetParamAsStr, params[j]) {
+				return nil, nil, fmt.Errorf("the set %s of the parameter if index %d cannot include any parameters from the index %d to the last one (found parameter %s)", setParam.String(), i, j, params[j])
 			}
 		}
 	}
