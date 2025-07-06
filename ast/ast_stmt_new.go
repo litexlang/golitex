@@ -14,10 +14,6 @@
 
 package litex_ast
 
-// func NewPubStmt(stmts []Stmt) *PubStmt {
-// 	return &PubStmt{stmts}
-// }
-
 func NewDefObjStmt(objs []string, objSets []Fc, facts []FactStmt) *DefObjStmt {
 	return &DefObjStmt{objs, objSets, facts}
 }
@@ -50,10 +46,6 @@ func NewKnowStmt(facts []FactStmt) *KnowFactStmt {
 	return &KnowFactStmt{facts}
 }
 
-// func NewFcFnDecl(name string, params []string) *FcFnDecl {
-// 	return &FcFnDecl{name, params}
-// }
-
 func NewDefHeader(name string, params []string, setParams []Fc) *DefHeader {
 	return &DefHeader{name, params, setParams}
 }
@@ -85,11 +77,6 @@ func NewKnowPropStmt(prop DefPropStmt) *KnowPropStmt {
 func NewDefExistPropBodyStmt(defHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt) *DefExistPropStmtBody {
 	return &DefExistPropStmtBody{*defHeader, domFacts, iffFacts}
 }
-
-// func NewFcAtomWithName(name string) FcAtom {
-// return NewFcAtom(glob.EmptyPkg, name)
-// 	return FcAtom(name)
-// }
 
 func NewKnowExistPropStmt(existProp DefExistPropStmt) *KnowExistPropStmt {
 	return &KnowExistPropStmt{existProp}

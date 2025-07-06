@@ -50,7 +50,7 @@ func pureFactString(stmt *SpecFactStmt) string {
 		builder.WriteString(glob.KeywordNot)
 		builder.WriteByte(' ')
 	}
-	// if stmt.PropName.PkgName == glob.EmptyPkg && glob.IsKeySymbol(stmt.PropName.Name) {
+
 	if glob.IsKeySymbol(string(stmt.PropName)) {
 		builder.WriteString(relaFactWithoutNotString(stmt))
 	} else {

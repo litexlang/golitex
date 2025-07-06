@@ -23,7 +23,6 @@ import (
 )
 
 func (stmt *SpecFactStmt) IsBuiltinInfixRelaProp() bool {
-	// return stmt.PropName.PkgName == glob.EmptyPkg && glob.IsBuiltinInfixRelaPropSymbol(stmt.PropName.Name)
 	return glob.IsBuiltinInfixRelaPropSymbol(string(stmt.PropName))
 }
 
@@ -56,7 +55,6 @@ func MergeOuterInnerUniFacts(outer *UniFactStmt, inner *UniFactStmt) *UniFactStm
 func (defStmt *DefPropStmt) Make_PropToIff_IffToProp() (*UniFactStmt, *UniFactStmt, error) {
 	propSpecFactParams := []Fc{}
 	for _, param := range defStmt.DefHeader.Params {
-		// propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.EmptyPkg, param))
 		propSpecFactParams = append(propSpecFactParams, FcAtom(param))
 	}
 
@@ -81,7 +79,6 @@ func (defStmt *DefPropStmt) Make_PropToIff_IffToProp() (*UniFactStmt, *UniFactSt
 func (defStmt *DefPropStmt) IffToPropUniFact() *UniFactStmt {
 	propSpecFactParams := []Fc{}
 	for _, param := range defStmt.DefHeader.Params {
-		// propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.EmptyPkg, param))
 		propSpecFactParams = append(propSpecFactParams, FcAtom(param))
 	}
 
@@ -111,7 +108,6 @@ func (defStmt *DefPropStmt) ToSpecFact() *SpecFactStmt {
 func (defStmt *DefExistPropStmt) ToSpecFact() *SpecFactStmt {
 	propSpecFactParams := []Fc{}
 	for _, param := range defStmt.DefBody.DefHeader.Params {
-		// propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.EmptyPkg, param))
 		propSpecFactParams = append(propSpecFactParams, FcAtom(param))
 	}
 
@@ -143,12 +139,10 @@ func (stmt *SpecFactStmt) IsValidEqualFact() (bool, error) {
 }
 
 func (stmt *SpecFactStmt) IsBuiltinProp_ExceptEqual() bool {
-	// return stmt.PropName.PkgName == glob.EmptyPkg && glob.IsBuiltinInfixRelaPropSymbol(stmt.PropName.Name) && !stmt.NameIs(glob.KeySymbolEqual)
 	return glob.IsBuiltinInfixRelaPropSymbol(string(stmt.PropName)) && !stmt.NameIs(glob.KeySymbolEqual)
 }
 
 func (stmt *SpecFactStmt) IsMathInductionFact() bool {
-	// return stmt.PropName.PkgName == glob.EmptyPkg && stmt.PropName.Name == glob.KeywordProveByMathInduction
 	return string(stmt.PropName) == glob.KeywordProveByMathInduction
 }
 
@@ -365,7 +359,6 @@ func IsFcAtomWithBuiltinPkgAndName(fc Fc, name string) bool {
 		return false
 	}
 
-	// return fcAtom.PkgName == glob.BuiltinPkgName && fcAtom.Name == name
 	return string(fcAtom) == name
 }
 

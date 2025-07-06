@@ -110,15 +110,6 @@ func (f FcAtom) IsBuiltinUnaryOpt() bool {
 	return (string(f)) == glob.KeySymbolMinus
 }
 
-// func (f FcAtom) IsBuiltinRelaFn() bool {
-// 	return glob.IsKeySymbolRelaFn(string(f))
-// }
-
-// func (fcAtom FcAtom) NameIsBuiltinKw_PkgNameEmpty() bool {
-// 	_, ok := glob.BuiltinKeywordsSet[string(fcAtom)]
-// 	return ok
-// }
-
 func IsFcAtomAndHasBuiltinPropName(fc Fc) bool {
 	fcAtom, ok := fc.(FcAtom)
 	if !ok {
@@ -136,43 +127,6 @@ func IsFcAtomEqualToGivenString(fc Fc, kw string) bool {
 
 	return string(fcAtom) == kw && !strings.Contains(string(fcAtom), glob.KeySymbolColonColon)
 }
-
-// func (f *FcFn) HasTwoParamsAndSwitchOrder() (*FcFn, bool) {
-// 	if len(f.Params) != 2 {
-// 		return nil, false
-// 	}
-
-// 	return NewFcFn(f.FnHead, []Fc{f.Params[0], f.Params[1]}), true
-// }
-
-// func (f *FcFn) HasTwoParams_FirstParamHasTheSameNameAsItself() (*FcFn, bool) {
-// 	if len(f.Params) != 2 {
-// 		return nil, false
-// 	}
-
-// 	var fHeadAsAtom FcAtom
-// 	var ok bool = false
-// 	fHeadAsAtom, ok = f.FnHead.(FcAtom)
-// 	if !ok {
-// 		return nil, false
-// 	}
-
-// 	if f_firstParam_as_fn, ok := f.Params[0].(*FcFn); ok {
-// 		if f_firstParam_headAsAtom, ok := f_firstParam_as_fn.FnHead.(FcAtom); ok {
-// 			if string(f_firstParam_headAsAtom) == string(fHeadAsAtom) {
-// 				if len(f_firstParam_as_fn.Params) != 2 {
-// 					return nil, false
-// 				}
-
-// 				newRight := NewFcFn(f.FnHead, []Fc{f_firstParam_as_fn.Params[0], f.Params[1]})
-
-// 				return NewFcFn(f.FnHead, []Fc{f_firstParam_as_fn.Params[0], newRight}), true
-// 			}
-// 		}
-// 	}
-
-// 	return nil, false
-// }
 
 func GetAtomsInFc(fc Fc) []FcAtom {
 	ret := []FcAtom{}
