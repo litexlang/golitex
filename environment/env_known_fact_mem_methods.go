@@ -22,7 +22,7 @@ import (
 )
 
 // func (s SpecFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (glob.Map2D[[]KnownSpecFact], error) {
-func (s SpecFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string][]KnownSpecFact, error) {
+func (s SpecFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string][]ast.SpecFactStmt, error) {
 	switch stmt.TypeEnum {
 	case ast.TruePure:
 		return s.PureFacts, nil
@@ -37,7 +37,7 @@ func (s SpecFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string][]Know
 	}
 }
 
-func (s SpecFactMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([]KnownSpecFact, bool) {
+func (s SpecFactMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([]ast.SpecFactStmt, bool) {
 	sameEnumFacts, err := s.getSameEnumFacts(stmt)
 	if err != nil {
 		return nil, false
@@ -73,9 +73,9 @@ func (s SpecFactMem) newFact(stmt *ast.SpecFactStmt) error {
 	// sameEnumFacts[stmt.PropName.PkgName][stmt.PropName.Name] = append(sameEnumFacts[stmt.PropName.PkgName][stmt.PropName.Name], KnownSpecFact{stmt, supposedEnv})
 
 	if _, ok := sameEnumFacts[string(stmt.PropName)]; !ok {
-		sameEnumFacts[string(stmt.PropName)] = []KnownSpecFact{}
+		sameEnumFacts[string(stmt.PropName)] = []ast.SpecFactStmt{}
 	}
-	sameEnumFacts[string(stmt.PropName)] = append(sameEnumFacts[string(stmt.PropName)], KnownSpecFact{stmt})
+	sameEnumFacts[string(stmt.PropName)] = append(sameEnumFacts[string(stmt.PropName)], *stmt)
 	return nil
 }
 
