@@ -1,5 +1,23 @@
-fn mul(x, y N)N:
-    mul(mul(x, y), z) = mul(x, mul(y, z))
+prove:
+    # Counting is hard to implement in Litex because even in set theory books, they are "known by default"
 
-forall x N, y N, z N:
-    (x \mul y) \mul z = x \mul (y \mul z)
+    prop is_subset_of(x, y set):
+        forall z x:
+            z $in x
+            then:
+                z $in y
+        forall:
+            y $in finite_set
+            then:
+                x $in finite_set
+                len(x) <= len(y)
+
+    have y := {1, 2, 3}
+
+    have x set
+
+    know $is_subset_of(x, y)
+
+    prove:
+        x $in finite_set
+        len(x) <= len(y)
