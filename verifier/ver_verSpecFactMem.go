@@ -583,100 +583,100 @@ func (ver *Verifier) fcEqual_Commutative_Associative_CmpRule(left ast.Fc, right 
 	}
 
 	// if left = opt(x,y) and opt is commutative, then left = opt(y,x)
-	ok, err = ver.leftIsCommutativeAndUseCommutedLeftToCheckEqualRight(left, right, verState)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
-	}
+	// ok, err = ver.leftIsCommutativeAndUseCommutedLeftToCheckEqualRight(left, right, verState)
+	// if err != nil {
+	// 	return false, err
+	// }
+	// if ok {
+	// 	return true, nil
+	// }
 
-	ok, err = ver.leftIsCommutativeAndUseCommutedLeftToCheckEqualRight(right, left, verState)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
-	}
+	// ok, err = ver.leftIsCommutativeAndUseCommutedLeftToCheckEqualRight(right, left, verState)
+	// if err != nil {
+	// 	return false, err
+	// }
+	// if ok {
+	// 	return true, nil
+	// }
 
-	ok, err = ver.leftIsAssociative_UseAssociationToCheckEqual(left, right, verState)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
-	}
+	// ok, err = ver.leftIsAssociative_UseAssociationToCheckEqual(left, right, verState)
+	// if err != nil {
+	// 	return false, err
+	// }
+	// if ok {
+	// 	return true, nil
+	// }
 
-	ok, err = ver.leftIsAssociative_UseAssociationToCheckEqual(right, left, verState)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
-	}
-
-	return false, nil
-}
-
-func (ver *Verifier) leftIsCommutativeAndUseCommutedLeftToCheckEqualRight(left ast.Fc, right ast.Fc, verState VerState) (bool, error) {
-	if leftAsFn, ok := left.(*ast.FcFn); ok {
-		if leftHeadAsAtom, ok := leftAsFn.FnHead.(ast.FcAtom); ok {
-			if ver.isCommutativeFn_BuiltinRule(leftHeadAsAtom) { // 暂时认为只能是 atom 形式的opt name 才能判断
-				if len(leftAsFn.Params) != 2 {
-					return false, nil
-				}
-
-				commutativeLeft, ok := leftAsFn.HasTwoParamsAndSwitchOrder()
-				if !ok {
-					return false, nil
-				}
-				ok, msg, err := cmp.Cmp_ByBIR(commutativeLeft, right)
-				// ok, err := ver.fcEqual(commutativeLeft, right, verState) // 死循环
-				if err != nil {
-					return false, err
-				}
-				if ok {
-					if verState.requireMsg() {
-						ver.successWithMsg(fmt.Sprintf("%s = %s", left.String(), right.String()), fmt.Sprintf("%s is commutative, and %s", leftHeadAsAtom.String(), msg))
-					} else {
-						ver.successNoMsg()
-					}
-					return true, nil
-				}
-			}
-		}
-	}
+	// ok, err = ver.leftIsAssociative_UseAssociationToCheckEqual(right, left, verState)
+	// if err != nil {
+	// 	return false, err
+	// }
+	// if ok {
+	// 	return true, nil
+	// }
 
 	return false, nil
 }
 
-func (ver *Verifier) leftIsAssociative_UseAssociationToCheckEqual(left ast.Fc, right ast.Fc, verState VerState) (bool, error) {
-	if leftAsFn, ok := left.(*ast.FcFn); ok {
-		if leftHeadAsAtom, ok := leftAsFn.FnHead.(ast.FcAtom); ok {
-			if ver.isAssociativeFn_BuiltinRule(leftHeadAsAtom) {
-				leftAssociated, ok := leftAsFn.HasTwoParams_FirstParamHasTheSameNameAsItself()
-				if !ok {
-					return false, nil
-				}
+// func (ver *Verifier) leftIsCommutativeAndUseCommutedLeftToCheckEqualRight(left ast.Fc, right ast.Fc, verState VerState) (bool, error) {
+// 	if leftAsFn, ok := left.(*ast.FcFn); ok {
+// 		if leftHeadAsAtom, ok := leftAsFn.FnHead.(ast.FcAtom); ok {
+// 			if ver.isCommutativeFn_BuiltinRule(leftHeadAsAtom) { // 暂时认为只能是 atom 形式的opt name 才能判断
+// 				if len(leftAsFn.Params) != 2 {
+// 					return false, nil
+// 				}
 
-				ok, msg, err := cmp.Cmp_ByBIR(leftAssociated, right)
-				if err != nil {
-					return false, err
-				}
-				if ok {
-					if verState.requireMsg() {
-						ver.successWithMsg(fmt.Sprintf("%s = %s", left.String(), right.String()), fmt.Sprintf("%s is associative, and %s", leftHeadAsAtom.String(), msg))
-					} else {
-						ver.successNoMsg()
-					}
-					return true, nil
-				}
-			}
-		}
-	}
+// 				commutativeLeft, ok := leftAsFn.HasTwoParamsAndSwitchOrder()
+// 				if !ok {
+// 					return false, nil
+// 				}
+// 				ok, msg, err := cmp.Cmp_ByBIR(commutativeLeft, right)
+// 				// ok, err := ver.fcEqual(commutativeLeft, right, verState) // 死循环
+// 				if err != nil {
+// 					return false, err
+// 				}
+// 				if ok {
+// 					if verState.requireMsg() {
+// 						ver.successWithMsg(fmt.Sprintf("%s = %s", left.String(), right.String()), fmt.Sprintf("%s is commutative, and %s", leftHeadAsAtom.String(), msg))
+// 					} else {
+// 						ver.successNoMsg()
+// 					}
+// 					return true, nil
+// 				}
+// 			}
+// 		}
+// 	}
 
-	return false, nil
-}
+// 	return false, nil
+// }
+
+// func (ver *Verifier) leftIsAssociative_UseAssociationToCheckEqual(left ast.Fc, right ast.Fc, verState VerState) (bool, error) {
+// 	if leftAsFn, ok := left.(*ast.FcFn); ok {
+// 		if leftHeadAsAtom, ok := leftAsFn.FnHead.(ast.FcAtom); ok {
+// 			if ver.isAssociativeFn_BuiltinRule(leftHeadAsAtom) {
+// 				leftAssociated, ok := leftAsFn.HasTwoParams_FirstParamHasTheSameNameAsItself()
+// 				if !ok {
+// 					return false, nil
+// 				}
+
+// 				ok, msg, err := cmp.Cmp_ByBIR(leftAssociated, right)
+// 				if err != nil {
+// 					return false, err
+// 				}
+// 				if ok {
+// 					if verState.requireMsg() {
+// 						ver.successWithMsg(fmt.Sprintf("%s = %s", left.String(), right.String()), fmt.Sprintf("%s is associative, and %s", leftHeadAsAtom.String(), msg))
+// 					} else {
+// 						ver.successNoMsg()
+// 					}
+// 					return true, nil
+// 				}
+// 			}
+// 		}
+// 	}
+
+// 	return false, nil
+// }
 
 func (ver *Verifier) isFnEqualFact_Check_BuiltinRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if !stmt.NameIs(glob.KeySymbolEqualEqual) {
