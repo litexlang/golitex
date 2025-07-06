@@ -37,8 +37,6 @@ func setupAndParseStmtTest(path string) ([]ast.Stmt, error) {
 func execStmtTest(topStmt []ast.Stmt) []string {
 	env := env.NewEnv(nil)
 	executor := NewExecutor(env)
-	// env.Init()
-	// executor := *NewExecutor(env)
 
 	messages := []string{}
 
@@ -53,8 +51,6 @@ func execStmtTest(topStmt []ast.Stmt) []string {
 
 		if execState != glob.ExecState_True && !glob.ContinueExecutionIfExecUnknown {
 			isNotTrue = true
-			// notTrueMessageBuilder.WriteString(topStmt.String())
-			// notTrueMessageBuilder.WriteString("\n\n")
 		}
 
 		// 如果连续两个 \n 则删除一个
@@ -62,7 +58,7 @@ func execStmtTest(topStmt []ast.Stmt) []string {
 		for i := 0; i < len(executor.env.Msgs); i++ {
 			if i < len(executor.env.Msgs)-1 && executor.env.Msgs[i] == "\n" && executor.env.Msgs[i+1] == "\n" {
 				newMsgs = append(newMsgs, executor.env.Msgs[i])
-				i++ // Skip the next newline
+				i++
 			} else {
 				newMsgs = append(newMsgs, executor.env.Msgs[i])
 			}

@@ -50,10 +50,6 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		_, err = exec.knowExistPropStmt(stmt)
 	case *ast.ProveInEachCaseStmt:
 		execState, err = exec.proveInEachCaseStmt(stmt)
-	// case *ast.SupposeStmt:
-	// 	execState, err = exec.supposePropMatchStmt(stmt)
-	// case *ast.WithStmt:
-	// 	execState, err = exec.withStmt(stmt)
 	case *ast.ImportDirStmt:
 		execState, err = exec.importDirStmt(stmt)
 	case *ast.ImportFileStmt:
