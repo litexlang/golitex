@@ -36,3 +36,49 @@ func (stmt *UniFactStmt) ParamInParamSetFacts(uniConMap map[string]Fc) []*SpecFa
 	}
 	return paramSetFacts
 }
+
+func ReverseSliceOfReversibleFacts(facts []OrStmt_SpecStmt) []OrStmt_SpecStmt {
+	ret := []OrStmt_SpecStmt{}
+	if len(facts) == 1 {
+		reversed := facts[0].ReverseIsTrue()
+		for _, fact := range reversed {
+			ret = append(ret, &fact)
+		}
+		return ret
+	}
+
+	specFactsInFacts := []*SpecFactStmt{}
+	orFactsInFacts := []*OrStmt{}
+	for _, fact := range facts {
+		switch asFact := fact.(type) {
+		case *SpecFactStmt:
+			specFactsInFacts = append(specFactsInFacts, asFact)
+		case *OrStmt:
+			orFactsInFacts = append(orFactsInFacts, asFact)
+		default:
+			panic("ReverseSliceOfReversibleFacts: fact is not a spec fact or an or fact")
+		}
+	}
+
+	reversedSpecFacts := make([]*SpecFactStmt, len(specFactsInFacts))
+	for i, specFact := range specFactsInFacts {
+		reversedSpecFacts[i] = specFact.ReverseTrue()
+	}
+
+	orFact_GotBYReversedSpecFacts := NewOrStmt(reversedSpecFacts)
+	ret = append(ret, orFact_GotBYReversedSpecFacts)
+
+	specFacts_GotByReversedOrFacts := []*SpecFactStmt{}
+	for _, orFact := range orFactsInFacts {
+		reversedOrFact := orFact.ReverseIsTrue()
+		for _, fact := range reversedOrFact {
+			specFacts_GotByReversedOrFacts = append(specFacts_GotByReversedOrFacts, &fact)
+		}
+	}
+
+	for _, specFact := range specFacts_GotByReversedOrFacts {
+		ret = append(ret, specFact)
+	}
+
+	return ret
+}
