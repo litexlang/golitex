@@ -50,10 +50,10 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		_, err = exec.knowExistPropStmt(stmt)
 	case *ast.ProveInEachCaseStmt:
 		execState, err = exec.proveInEachCaseStmt(stmt)
-	case *ast.SupposeStmt:
-		execState, err = exec.supposePropMatchStmt(stmt)
-	case *ast.WithStmt:
-		execState, err = exec.withStmt(stmt)
+	// case *ast.SupposeStmt:
+	// 	execState, err = exec.supposePropMatchStmt(stmt)
+	// case *ast.WithStmt:
+	// 	execState, err = exec.withStmt(stmt)
 	case *ast.ImportDirStmt:
 		execState, err = exec.importDirStmt(stmt)
 	case *ast.ImportFileStmt:
@@ -299,7 +299,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecState, 
 	err := error(nil)
 	isSuccess := false
 
-	exec.newEnv(exec.env, exec.env.CurMatchProp)
+	exec.newEnv(exec.env)
 	if glob.IsNotImportDirStmt() {
 		defer func() {
 			exec.appendMsg("\n")
@@ -351,7 +351,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecState, 
 func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) (glob.ExecState, error) {
 	isSuccess := false
 
-	exec.newEnv(exec.env, exec.env.CurMatchProp)
+	exec.newEnv(exec.env)
 	if glob.IsNotImportDirStmt() {
 		defer func() {
 			exec.appendMsg("\n")
@@ -437,7 +437,7 @@ func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) (glob.E
 }
 
 func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEachCaseStmt) (glob.ExecState, error) {
-	exec.newEnv(exec.env, exec.env.CurMatchProp)
+	exec.newEnv(exec.env)
 	defer exec.deleteEnvAndRetainMsg()
 
 	caseStmt := stmt.OrFact.Facts[index]
@@ -546,7 +546,7 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
 
 func (exec *Executor) proveStmt(stmt *ast.ProveStmt) (glob.ExecState, error) {
 	// new env
-	exec.newEnv(exec.env, exec.env.CurMatchProp)
+	exec.newEnv(exec.env)
 	defer exec.deleteEnvAndRetainMsg()
 
 	return exec.execProofBlockAtCurEnv(stmt.Proof)
@@ -706,7 +706,7 @@ func (exec *Executor) claimPropStmt(stmt *ast.ClaimPropStmt) (glob.ExecState, er
 func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimPropStmt) (glob.ExecState, error) {
 	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFacts, stmt.Prop.ThenFacts)
 
-	exec.newEnv(exec.env, exec.env.CurMatchProp)
+	exec.newEnv(exec.env)
 	defer func() {
 		exec.deleteEnvAndRetainMsg()
 	}()
@@ -754,7 +754,7 @@ func (exec *Executor) haveSetFnStmt(stmt *ast.HaveSetFnStmt) (glob.ExecState, er
 }
 
 func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimPropStmt) (glob.ExecState, error) {
-	exec.newEnv(exec.env, exec.env.CurMatchProp)
+	exec.newEnv(exec.env)
 	defer func() {
 		exec.deleteEnvAndRetainMsg()
 	}()

@@ -17,7 +17,6 @@ package litex_verifier
 
 import (
 	"fmt"
-	ast "golitex/ast"
 	env "golitex/environment"
 	glob "golitex/glob"
 )
@@ -28,7 +27,7 @@ type Verifier struct {
 
 func NewVerifier(curEnv *env.Env) *Verifier {
 	if curEnv == nil {
-		return &Verifier{env: env.NewEnv(nil, nil)}
+		return &Verifier{env: env.NewEnv(nil)}
 	} else {
 		return &Verifier{env: curEnv}
 	}
@@ -41,8 +40,8 @@ func (ver *Verifier) successWithMsg(stmtString, storedStmtString string) {
 func (ver *Verifier) successNoMsg() {
 }
 
-func (ver *Verifier) newEnv(parent *env.Env, curMatchEnv *ast.SpecFactStmt) {
-	newEnv := env.NewEnv(parent, curMatchEnv)
+func (ver *Verifier) newEnv(parent *env.Env) {
+	newEnv := env.NewEnv(parent)
 	ver.env = newEnv
 }
 

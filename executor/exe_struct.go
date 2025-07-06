@@ -15,7 +15,6 @@
 package litex_executor
 
 import (
-	ast "golitex/ast"
 	env "golitex/environment"
 )
 
@@ -27,14 +26,14 @@ type Executor struct {
 
 func NewExecutor(curEnv *env.Env) *Executor {
 	if curEnv == nil {
-		return &Executor{env: env.NewEnv(nil, nil)}
+		return &Executor{env: env.NewEnv(nil)}
 	} else {
 		return &Executor{env: curEnv}
 	}
 }
 
-func (e *Executor) newEnv(parent *env.Env, curMatchEnv *ast.SpecFactStmt) *env.Env {
-	e.env = env.NewEnv(parent, curMatchEnv)
+func (e *Executor) newEnv(parent *env.Env) *env.Env {
+	e.env = env.NewEnv(parent)
 	return e.env
 }
 

@@ -89,19 +89,20 @@ func (ver *Verifier) verFcEqual(left ast.Fc, right ast.Fc, state VerState) (bool
 		return false, err
 	} else if ok {
 		return true, nil
-	} else {
-		// 如果 ver.CurMatchEnv 存在，那还要用specMem来验证
-		if ver.env.CurMatchProp != nil {
-			equalFact := ver.makeEqualFact(left, right)
-			ok, err := ver.verSpecFact_BySpecMem(equalFact, state)
-			if err != nil {
-				return false, err
-			}
-			if ok {
-				return true, nil
-			}
-		}
 	}
+	// else {
+	// 如果 ver.CurMatchEnv 存在，那还要用specMem来验证
+	// if ver.env.CurMatchProp != nil {
+	// 	equalFact := ver.makeEqualFact(left, right)
+	// 	ok, err := ver.verSpecFact_BySpecMem(equalFact, state)
+	// 	if err != nil {
+	// 		return false, err
+	// 	}
+	// 	if ok {
+	// 		return true, nil
+	// 	}
+	// }
+	// }
 
 	if ok, err := ver.verEqualSpecMemAndLogicMem(left, right, state); err != nil {
 		return false, err
@@ -132,35 +133,35 @@ func (ver *Verifier) verEqualBuiltin(left ast.Fc, right ast.Fc, state VerState) 
 }
 
 func (ver *Verifier) verEqualSpecMem(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
-	if ver.env.CurMatchProp == nil {
-		for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
-			ok, err := ver.equalFact_SpecMem_atEnv(curEnv, left, right, state)
-			if err != nil {
-				return false, err
-			}
-			if ok {
-				return true, nil
-			}
+	// if ver.env.CurMatchProp == nil {
+	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
+		ok, err := ver.equalFact_SpecMem_atEnv(curEnv, left, right, state)
+		if err != nil {
+			return false, err
 		}
-	} else {
-		for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
-			ok, err := ver.equalFact_SpecMem_atEnv(curEnv, left, right, state)
-			if err != nil {
-				return false, err
-			}
-			if ok {
-				return true, nil
-			}
-
-			ok, err = ver.equalFact_MatchEnv_SpecMem_atEnv(curEnv, left, right, state)
-			if err != nil {
-				return false, err
-			}
-			if ok {
-				return true, nil
-			}
+		if ok {
+			return true, nil
 		}
 	}
+	// } else {
+	// 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
+	// 		ok, err := ver.equalFact_SpecMem_atEnv(curEnv, left, right, state)
+	// 		if err != nil {
+	// 			return false, err
+	// 		}
+	// 		if ok {
+	// 			return true, nil
+	// 		}
+
+	// 		ok, err = ver.equalFact_MatchEnv_SpecMem_atEnv(curEnv, left, right, state)
+	// 		if err != nil {
+	// 			return false, err
+	// 		}
+	// 		if ok {
+	// 			return true, nil
+	// 		}
+	// 	}
+	// }
 	return false, nil
 }
 
@@ -200,11 +201,11 @@ func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right
 	return false, nil
 }
 
-func (ver *Verifier) equalFact_MatchEnv_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right ast.Fc, state VerState) (bool, error) {
-	// panic("equalFact_MatchEnv_SpecMem_atEnv: not implemented")
-	equalFact := ver.makeEqualFact(left, right)
-	return ver.specFact_MatchEnv_SpecMem(curEnv, equalFact, state)
-}
+// func (ver *Verifier) equalFact_MatchEnv_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right ast.Fc, state VerState) (bool, error) {
+// 	// panic("equalFact_MatchEnv_SpecMem_atEnv: not implemented")
+// 	equalFact := ver.makeEqualFact(left, right)
+// 	return ver.specFact_MatchEnv_SpecMem(curEnv, equalFact, state)
+// }
 
 func (ver *Verifier) verEqualSpecMemAndLogicMem(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
 	equalFact := ver.makeEqualFact(left, right)
