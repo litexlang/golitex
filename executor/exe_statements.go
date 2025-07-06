@@ -767,21 +767,22 @@ func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimProp
 		return glob.ExecState_Error, err
 	}
 
-	// assume reverse of all then facts in prop or true
-	if len(stmt.Prop.ThenFacts) == 1 {
-		thenFact := stmt.Prop.ThenFacts[0]
-		thenFactAsReversible, ok := thenFact.(ast.OrStmt_SpecStmt)
+	thenFactsAsReversible := []ast.OrStmt_SpecStmt{}
+	for _, fact := range stmt.Prop.ThenFacts {
+		asReversible, ok := fact.(ast.OrStmt_SpecStmt)
 		if !ok {
 			return glob.ExecState_Error, fmt.Errorf("claim prop statement error: then fact is not an or statement")
 		}
-		for _, fact := range thenFactAsReversible.ReverseIsTrue() {
-			err = exec.env.NewFact(&fact)
-			if err != nil {
-				return glob.ExecState_Error, err
-			}
+		thenFactsAsReversible = append(thenFactsAsReversible, asReversible)
+	}
+
+	// assume reverse of all then facts in prop or true
+	reversedThenFacts := ast.ReverseSliceOfReversibleFacts(thenFactsAsReversible)
+	for _, fact := range reversedThenFacts {
+		err := exec.env.NewFact(fact)
+		if err != nil {
+			return glob.ExecState_Error, err
 		}
-	} else {
-		return glob.ExecState_Error, fmt.Errorf("claim prop statement error: for the time being, only support one then fact in prop")
 	}
 
 	execState, err := exec.execProofBlockAtCurEnv(stmt.Proofs)
