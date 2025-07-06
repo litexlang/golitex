@@ -7,7 +7,7 @@ know forall x, y N:
         $q(x, y)
 
 claim:
-    @p(x, y, z N):
+    @t(x, y, z N):
         not $q(x, y)
         then:
             not $p(x, y)
