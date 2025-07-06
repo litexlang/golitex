@@ -28,11 +28,6 @@ func duplicateDefError(pkgName string, name string, keyword string) error {
 	}
 }
 
-func (env *Env) String() string {
-	// TODO
-	return ""
-}
-
 func (e *Env) AppendMsg(s string) {
 	e.Msgs = append(e.Msgs, s)
 }

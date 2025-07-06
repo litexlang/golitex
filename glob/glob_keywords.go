@@ -35,19 +35,16 @@ const (
 	KeywordIff                  = "iff"
 	KeywordProveByContradiction = "prove_by_contradiction"
 	KeywordProveInEachCase      = "prove_in_each_case" // 必要：和or一起使用
-	KeywordAnd                  = "and"
 	KeywordOr                   = "or"
-	KeywordCommutativeProp      = "commutative_prop"
-	KeywordNatural              = "N" // e.g. 0
-	KeywordInt                  = "Z" // e.g. -1
-	KeywordRational             = "Q" // e.g. -1.1
-	KeywordReal                 = "R" // e.g. pi
-	KeywordComplex              = "C" // e.g. 1+i
-	KeywordImaginary            = "i" // e.g. i
+	KeywordCommutativeProp      = "commutative_prop" // 这个 keyword是真的在工作的
+	KeywordNatural              = "N"                // e.g. 0
+	KeywordInt                  = "Z"                // e.g. -1
+	KeywordRational             = "Q"                // e.g. -1.1
+	KeywordReal                 = "R"                // e.g. pi
+	KeywordComplex              = "C"                // e.g. 1+i
+	KeywordImaginary            = "i"                // e.g. i
 	KeywordIn                   = "in"
 	KeywordProveByMathInduction = "prove_by_math_induction"
-	KeywordSuppose              = "suppose"
-	KeywordWith                 = "with"
 	KeywordAs                   = "as" // as a fn_template。这非常难以实现，尤其是出现 fn 理论上作用在M上，现在是作用在返回值是M的函数上时做推理，非常困难，需要最后实现而不是现在
 	KeywordLen                  = "len"
 	KeywordIsIndexableSet       = "is_indexable_set"
@@ -82,7 +79,6 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordIff:                  {},
 	KeywordExist:                {},
 	KeywordCommutativeProp:      {},
-	KeywordAnd:                  {},
 	KeywordOr:                   {},
 	KeywordNatural:              {},
 	KeywordInt:                  {},
@@ -90,8 +86,6 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordReal:                 {},
 	KeywordIn:                   {},
 	KeywordProveByMathInduction: {},
-	KeywordSuppose:              {},
-	KeywordWith:                 {},
 	KeywordComplex:              {},
 	KeywordImaginary:            {},
 	KeywordAs:                   {},

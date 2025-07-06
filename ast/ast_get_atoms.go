@@ -46,14 +46,10 @@ func (stmt *UniFactStmt) GetAtoms() []FcAtom {
 	for _, fact := range stmt.ThenFacts {
 		atoms = append(atoms, fact.GetAtoms()...)
 	}
-	// for _, fact := range stmt.IffFacts {
-	// 	atoms = append(atoms, fact.GetAtoms()...)
-	// }
 
 	// 如果这个atom是param，那把这项扔了
 	ret := []FcAtom{}
 	for _, atom := range atoms {
-		// if slices.Contains(stmt.Params, atom.Name) && atom.PkgName == glob.EmptyPkg {
 		if slices.Contains(stmt.Params, string(atom)) {
 			continue
 		} else {
