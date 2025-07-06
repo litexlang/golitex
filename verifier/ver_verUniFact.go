@@ -31,7 +31,7 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state VerState) (bool,
 	defer ver.deleteEnvAndRetainMsg()
 
 	// 声明变量
-	paramMap, paramMapStrToStr, _ := processUniFactParamsDuplicateDeclared(ver.env, oldStmt.Params)
+	paramMap, paramMapStrToStr := processUniFactParamsDuplicateDeclared(ver.env, oldStmt.Params)
 
 	var newStmtPtr *ast.UniFactStmt = oldStmt
 
@@ -113,20 +113,21 @@ func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state VerStat
 	return true, nil
 }
 
-func processUniFactParamsDuplicateDeclared(env *env.Env, params []string) (map[string]ast.Fc, map[string]string, map[int]string) {
+func processUniFactParamsDuplicateDeclared(env *env.Env, params []string) (map[string]ast.Fc, map[string]string) {
 	paramMap := make(map[string]ast.Fc)
 	paramMapStrToStr := make(map[string]string)
-	indexesOfDuplicateParams := make(map[int]string)
-	for i, param := range params {
+	// indexesOfDuplicateParams := make(map[int]string)
+	for _, param := range params {
 		newParam := param
 		if env.IsAtomDeclared(ast.FcAtom(newParam), map[string]struct{}{}) {
 			newParam = generateUndeclaredRandomName(env)
 			paramMap[param] = ast.FcAtom(newParam)
 			paramMapStrToStr[param] = newParam
-			indexesOfDuplicateParams[i] = newParam
+			// indexesOfDuplicateParams[i] = newParam
 		}
 	}
-	return paramMap, paramMapStrToStr, indexesOfDuplicateParams
+	return paramMap, paramMapStrToStr
+	// return paramMap, paramMapStrToStr, indexesOfDuplicateParams
 }
 
 func generateUndeclaredRandomName(env *env.Env) string {
