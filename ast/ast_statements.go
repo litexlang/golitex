@@ -88,10 +88,10 @@ type ClaimProveByContradictionStmt struct {
 	ClaimProveStmt ClaimProveStmt
 }
 
-// 严重缺陷：这里需要有个field来说明这是 prove 还是 prove_by_contradiction
 type ClaimPropStmt struct {
-	Prop   DefPropStmt
-	Proofs []Stmt
+	Prop    DefPropStmt
+	Proofs  []Stmt
+	IsProve bool
 }
 
 type KnowFactStmt struct {

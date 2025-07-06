@@ -277,7 +277,7 @@ func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) error {
 	return exec.env.NewDefExistProp_InsideAtomsDeclared(stmt)
 }
 
-func (exec *Executor) execProofBlock(proof []ast.Stmt) (glob.ExecState, error) {
+func (exec *Executor) execProofBlockAtCurEnv(proof []ast.Stmt) (glob.ExecState, error) {
 	for _, curStmt := range proof {
 		execState, err := exec.Stmt(curStmt)
 		if err != nil {
@@ -329,7 +329,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecState, 
 		}
 		return glob.ExecState_True, nil
 	} else {
-		execState, err := exec.execProofBlock(stmt.Proofs)
+		execState, err := exec.execProofBlockAtCurEnv(stmt.Proofs)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
@@ -380,7 +380,7 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContra
 		}
 	}
 
-	execState, err := exec.execProofBlock(stmt.ClaimProveStmt.Proofs)
+	execState, err := exec.execProofBlockAtCurEnv(stmt.ClaimProveStmt.Proofs)
 	if notOkExec(execState, err) {
 		return execState, err
 	}
@@ -549,7 +549,7 @@ func (exec *Executor) proveStmt(stmt *ast.ProveStmt) (glob.ExecState, error) {
 	exec.newEnv(exec.env, exec.env.CurMatchProp)
 	defer exec.deleteEnvAndRetainMsg()
 
-	return exec.execProofBlock(stmt.Proof)
+	return exec.execProofBlockAtCurEnv(stmt.Proof)
 }
 
 // prove uniFact in claim at current env
@@ -570,7 +570,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 	}
 
 	// exec proof block
-	execState, err := exec.execProofBlock(stmt.Proofs)
+	execState, err := exec.execProofBlockAtCurEnv(stmt.Proofs)
 	if err != nil {
 		if glob.IsNotImportDirStmt() {
 			exec.appendMsg(fmt.Sprintf("Claim statement error: Failed to execute proof block:\n%s\n", stmt.String()))
@@ -672,6 +672,9 @@ func (exec *Executor) checkReverse(stmt ast.FactStmt) (glob.ExecState, error) {
 
 // 也许我应该语义改成，先声明prop，然后再证明prop，而不是现在这个样子
 func (exec *Executor) claimPropStmt(stmt *ast.ClaimPropStmt) (glob.ExecState, error) {
+	var err error
+	var execState glob.ExecState = glob.ExecState_Error
+
 	// prop all atoms declared
 	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.DomFacts, stmt.Prop.IffFacts)
 	if !exec.env.AreAtomsInFactAreDeclared(uniFact, map[string]struct{}{}) && !exec.env.IsFcAtomDeclaredByUser(ast.FcAtom(stmt.Prop.DefHeader.Name)) {
@@ -679,9 +682,16 @@ func (exec *Executor) claimPropStmt(stmt *ast.ClaimPropStmt) (glob.ExecState, er
 	}
 
 	// check proofs
-	execState, err := exec.checkClaimPropStmtProofs(stmt)
-	if notOkExec(execState, err) {
-		return execState, err
+	if stmt.IsProve {
+		execState, err = exec.checkClaimPropStmtProofs(stmt)
+		if notOkExec(execState, err) {
+			return execState, err
+		}
+	} else {
+		execState, err = exec.checkClaimPropStmtProveByContradiction(stmt)
+		if notOkExec(execState, err) {
+			return execState, err
+		}
 	}
 
 	// know exec
@@ -739,6 +749,40 @@ func (exec *Executor) haveSetFnStmt(stmt *ast.HaveSetFnStmt) (glob.ExecState, er
 
 	// have set fn
 	exec.env.HaveSetFnDefMem[stmt.DefHeader.Name] = *stmt
+
+	return glob.ExecState_True, nil
+}
+
+func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimPropStmt) (glob.ExecState, error) {
+	exec.newEnv(exec.env, exec.env.CurMatchProp)
+	defer func() {
+		exec.deleteEnvAndRetainMsg()
+	}()
+
+	// declare parameters in prop
+
+	objDefStmt := ast.NewDefObjStmt(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.DomFacts)
+	err := exec.defObjStmt(objDefStmt, false)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+
+	execState, err := exec.execProofBlockAtCurEnv(stmt.Proofs)
+	if notOkExec(execState, err) {
+		return execState, err
+	}
+
+	// 最后一项的逆也对
+	lastProof := stmt.Proofs[len(stmt.Proofs)-1]
+	lastProofAsReversible, ok := lastProof.(ast.OrStmt_SpecStmt)
+	if !ok {
+		return glob.ExecState_Error, fmt.Errorf("claim prop statement error: last proof is not an or statement")
+	}
+
+	execState, err = exec.checkReverse(lastProofAsReversible)
+	if notOkExec(execState, err) {
+		return execState, err
+	}
 
 	return glob.ExecState_True, nil
 }
