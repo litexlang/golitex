@@ -18,16 +18,16 @@ import (
 	ast "golitex/ast"
 )
 
-type KnownSpecFact struct {
-	Fact *ast.SpecFactStmt
-	// EnvFact *ast.SpecFactStmt
-}
+// type KnownSpecFact struct {
+// 	Fact *ast.SpecFactStmt
+// EnvFact *ast.SpecFactStmt
+// }
 
 type SpecFactMem struct {
-	PureFacts         map[string][]KnownSpecFact
-	NotPureFacts      map[string][]KnownSpecFact
-	Exist_St_Facts    map[string][]KnownSpecFact
-	NotExist_St_Facts map[string][]KnownSpecFact
+	PureFacts         map[string][]ast.SpecFactStmt
+	NotPureFacts      map[string][]ast.SpecFactStmt
+	Exist_St_Facts    map[string][]ast.SpecFactStmt
+	NotExist_St_Facts map[string][]ast.SpecFactStmt
 }
 
 type KnownSpecFact_InLogicExpr struct {
@@ -86,10 +86,10 @@ type SpecFact_InLogicExpr_InUniFactMem struct {
 
 func newSpecFactMem() *SpecFactMem {
 	return &SpecFactMem{
-		PureFacts:         make(map[string][]KnownSpecFact),
-		NotPureFacts:      make(map[string][]KnownSpecFact),
-		Exist_St_Facts:    make(map[string][]KnownSpecFact),
-		NotExist_St_Facts: make(map[string][]KnownSpecFact),
+		PureFacts:         make(map[string][]ast.SpecFactStmt),
+		NotPureFacts:      make(map[string][]ast.SpecFactStmt),
+		Exist_St_Facts:    make(map[string][]ast.SpecFactStmt),
+		NotExist_St_Facts: make(map[string][]ast.SpecFactStmt),
 	}
 }
 

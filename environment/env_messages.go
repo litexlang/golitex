@@ -37,17 +37,17 @@ func (e *Env) AppendMsg(s string) {
 	e.Msgs = append(e.Msgs, s)
 }
 
-func (knownSpecFact *KnownSpecFact) String() string {
-	// return knownSpecFact.Fact.String()
-	var builder strings.Builder
-	// if knownSpecFact.EnvFact == nil {
-	builder.WriteString(knownSpecFact.Fact.String())
-	return builder.String()
-	// } else {
-	// 	builder.WriteString(knownSpecFact.EnvFact.String())
-	// 	return builder.String()
-	// }
-}
+// func (knownSpecFact *KnownSpecFact) String() string {
+// return knownSpecFact.Fact.String()
+// var builder strings.Builder
+// if knownSpecFact.EnvFact == nil {
+// builder.WriteString(knownSpecFact.Fact.String())
+// return builder.String()
+// } else {
+// 	builder.WriteString(knownSpecFact.EnvFact.String())
+// 	return builder.String()
+// }
+// }
 
 func (knownSpecFact *KnownSpecFact_InLogicExpr) String() string {
 	var builder strings.Builder

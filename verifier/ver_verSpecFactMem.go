@@ -827,24 +827,24 @@ func (ver *Verifier) specFact_LogicMem(curEnv *env.Env, stmt *ast.SpecFactStmt, 
 // 	return ver.iterateKnownLogicFacts_applyFcEqualSpec(stmt, knownFacts, state)
 // }
 
-func (ver *Verifier) iterateKnownLogicFacts_applyFcEqualSpec(stmt *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InLogicExpr, state VerState) (bool, error) {
-	for _, knownFactUnderLogicExpr := range knownFacts {
-		ok, err := ver.SpecFactSpecUnderLogicalExpr(&knownFactUnderLogicExpr, stmt, state)
-		if err != nil {
-			return false, err
-		}
-		if ok {
-			return true, nil
-		}
-	}
+// func (ver *Verifier) iterateKnownLogicFacts_applyFcEqualSpec(stmt *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InLogicExpr, state VerState) (bool, error) {
+// 	for _, knownFactUnderLogicExpr := range knownFacts {
+// 		ok, err := ver.SpecFactSpecUnderLogicalExpr(&knownFactUnderLogicExpr, stmt, state)
+// 		if err != nil {
+// 			return false, err
+// 		}
+// 		if ok {
+// 			return true, nil
+// 		}
+// 	}
 
-	return false, nil
-}
+// 	return false, nil
+// }
 
-func (ver *Verifier) iterateKnownSpecFacts_applyFcEqualSpec(stmt *ast.SpecFactStmt, knownFacts []env.KnownSpecFact, state VerState) (bool, error) {
+func (ver *Verifier) iterateKnownSpecFacts_applyFcEqualSpec(stmt *ast.SpecFactStmt, knownFacts []ast.SpecFactStmt, state VerState) (bool, error) {
 LoopOverFacts:
 	for _, knownFact := range knownFacts {
-		ok, err := ver.matchTwoSpecFacts(stmt, knownFact.Fact, state)
+		ok, err := ver.matchTwoSpecFacts(stmt, &knownFact, state)
 		if err != nil {
 			return false, err
 		}
