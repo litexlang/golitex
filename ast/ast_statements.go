@@ -75,8 +75,7 @@ type UniFactWithIffStmt struct {
 type SpecFactStmt struct {
 	TypeEnum SpecFactEnum
 	PropName FcAtom
-	// PropName string
-	Params []Fc
+	Params   []Fc
 }
 
 type ClaimProveStmt struct {

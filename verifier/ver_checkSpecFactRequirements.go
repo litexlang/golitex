@@ -123,7 +123,7 @@ func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn, state VerState) (bool
 		}
 	}
 
-	if ast.IsFcAtomEqualToGivenString(fc.FnHead, glob.KeySymbolSlash) {
+	if ast.IsFcAtomAndEqualToStr(fc.FnHead, glob.KeySymbolSlash) {
 		// 分母不是0
 		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{fc.Params[1], ast.FcAtom("0")}), state)
 		if err != nil || !ok {
@@ -132,7 +132,7 @@ func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn, state VerState) (bool
 		return true, nil
 	}
 
-	if ast.IsFcAtomEqualToGivenString(fc.FnHead, glob.KeySymbolPercent) {
+	if ast.IsFcAtomAndEqualToStr(fc.FnHead, glob.KeySymbolPercent) {
 		// 分母不是0
 		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{fc.Params[1], ast.FcAtom("0")}), state)
 		if err != nil || !ok {

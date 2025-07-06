@@ -160,27 +160,27 @@ func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactSt
 		return false, err
 	}
 	if ok {
-		if ast.IsFcAtomEqualToGivenString(stmt.Params[1], glob.KeywordReal) {
+		if ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordReal) {
 			isSuccess = glob.IsRealNumLitExpr(leftFc)
 			return isSuccess, nil
 		}
 
-		if ast.IsFcAtomEqualToGivenString(stmt.Params[1], glob.KeywordNatural) {
+		if ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordNatural) {
 			isSuccess = glob.IsNatNumLitExpr(leftFc)
 			return isSuccess, nil
 		}
 
-		if ast.IsFcAtomEqualToGivenString(stmt.Params[1], glob.KeywordInt) {
+		if ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordInt) {
 			isSuccess = glob.IsIntegerNumLitExpr(leftFc)
 			return isSuccess, nil
 		}
 
-		if ast.IsFcAtomEqualToGivenString(stmt.Params[1], glob.KeywordRational) {
+		if ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordRational) {
 			isSuccess = glob.IsRationalNumLitExpr(leftFc)
 			return isSuccess, nil
 		}
 
-		if ast.IsFcAtomEqualToGivenString(stmt.Params[1], glob.KeywordComplex) {
+		if ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordComplex) {
 			isSuccess = glob.IsComplexNumLitExpr(leftFc)
 			return isSuccess, nil
 		}
