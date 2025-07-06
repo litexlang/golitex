@@ -761,10 +761,27 @@ func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimProp
 
 	// declare parameters in prop
 
-	objDefStmt := ast.NewDefObjStmt(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.DomFacts)
+	objDefStmt := ast.NewDefObjStmt(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFacts)
 	err := exec.defObjStmt(objDefStmt, false)
 	if err != nil {
 		return glob.ExecState_Error, err
+	}
+
+	// assume reverse of all then facts in prop or true
+	if len(stmt.Prop.ThenFacts) == 1 {
+		thenFact := stmt.Prop.ThenFacts[0]
+		thenFactAsReversible, ok := thenFact.(ast.OrStmt_SpecStmt)
+		if !ok {
+			return glob.ExecState_Error, fmt.Errorf("claim prop statement error: then fact is not an or statement")
+		}
+		for _, fact := range thenFactAsReversible.ReverseIsTrue() {
+			err = exec.env.NewFact(&fact)
+			if err != nil {
+				return glob.ExecState_Error, err
+			}
+		}
+	} else {
+		return glob.ExecState_Error, fmt.Errorf("claim prop statement error: for the time being, only support one then fact in prop")
 	}
 
 	execState, err := exec.execProofBlockAtCurEnv(stmt.Proofs)
@@ -779,9 +796,12 @@ func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimProp
 		return glob.ExecState_Error, fmt.Errorf("claim prop statement error: last proof is not an or statement")
 	}
 
-	execState, err = exec.checkReverse(lastProofAsReversible)
-	if notOkExec(execState, err) {
-		return execState, err
+	reverseLastProof := lastProofAsReversible.ReverseIsTrue()
+	for _, fact := range reverseLastProof {
+		execState, err := exec.factStmt(&fact)
+		if notOkExec(execState, err) {
+			return execState, err
+		}
 	}
 
 	return glob.ExecState_True, nil
