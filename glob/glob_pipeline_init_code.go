@@ -18,7 +18,7 @@ var PipelineInitCode = `
 prop last_two_objects_are_equal(x, y, y2 obj):
 	y = y2
 
-know prop larger_is_transitive(x, y, z R):
+know @larger_is_transitive(x, y, z R):
 	x > y
 	y > z
 	then:

@@ -7,7 +7,7 @@ fn union(s, s2 set) set:
             x $in union(s, s2)
 
 # 或许我应该给用户一个语法糖，让他们能把和某个fn或者prop相关的prop用.访问到，这样做intellisense更容易：否则一直要记住in_union_then_in_each_set太烦了，如果可以是union::union_items_in_either_set 就更好了（当然，我可以让用户有良好的写作习惯：如果是和union相关的，写成 union_XXX，这样你输入 union_后我也能给你intellisense
-know prop union_items_in_either_set(x obj, s, s2 set):
+know @union_items_in_either_set(x obj, s, s2 set):
     x $in union(s, s2)    
     then:
         or:
@@ -23,7 +23,7 @@ prove:
         $union_items_in_either_set(x, s, s2)
 
 claim:
-    prop union_with_empty_set_is_itself(x obj, s, s2 set):
+    @union_with_empty_set_is_itself(x obj, s, s2 set):
         s2 := {}
         x $in union(s, s2)
         then:
