@@ -1183,7 +1183,16 @@ func (tb *tokenBlock) claimPropStmt() (*ast.ClaimPropStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	err = tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
+	isProve := false
+	if tb.body[1].header.is(glob.KeywordProve) {
+		isProve = true
+		err = tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
+	} else if tb.body[1].header.is(glob.KeywordProveByContradiction) {
+		err = tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordProveByContradiction)
+	} else {
+		return nil, fmt.Errorf("expect 'prove' or 'prove_by_contradiction'")
+	}
+
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -1197,7 +1206,7 @@ func (tb *tokenBlock) claimPropStmt() (*ast.ClaimPropStmt, error) {
 		proofs = append(proofs, curStmt)
 	}
 
-	return ast.NewClaimPropStmt(ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts, thenFacts), proofs), nil
+	return ast.NewClaimPropStmt(ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts, thenFacts), proofs, isProve), nil
 }
 
 func (tb *tokenBlock) claimExistPropStmt() (*ast.ClaimExistPropStmt, error) {
