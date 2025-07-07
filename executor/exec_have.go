@@ -29,7 +29,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt) (glob.ExecState, er
 	}()
 
 	if string(stmt.Fact.PropName) == glob.KeywordExistByReplacement {
-		execState, err := exec.haveSetDefinedByReplacementStmt(stmt)
+		execState, err := exec.haveExistByReplacementStmt(stmt)
 		if notOkExec(execState, err) {
 			return execState, err
 		}
@@ -242,7 +242,7 @@ func (exec *Executor) haveIntensionalSetStmt(stmt *ast.IntensionalSetStmt) (glob
 	return glob.ExecState_True, nil
 }
 
-func (exec *Executor) haveSetDefinedByReplacementStmt(stmt *ast.HaveObjStStmt) (glob.ExecState, error) {
+func (exec *Executor) haveExistByReplacementStmt(stmt *ast.HaveObjStStmt) (glob.ExecState, error) {
 	if len(stmt.Fact.Params) != 4 {
 		return glob.ExecState_Error, fmt.Errorf("set defined by replacement must have 3 parameters, but %s has %d", stmt.Fact.String(), len(stmt.Fact.Params))
 	}

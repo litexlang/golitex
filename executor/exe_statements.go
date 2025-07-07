@@ -74,6 +74,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		execState, err = exec.haveSetStmt(stmt)
 	case *ast.HaveSetFnStmt:
 		execState, err = exec.haveSetFnStmt(stmt)
+	case *ast.HaveSetDefinedByReplacementStmt:
+		execState, err = exec.haveSetDefinedByReplacementStmt(stmt)
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}
@@ -795,6 +797,18 @@ func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimProp
 		if notOkExec(execState, err) {
 			return execState, err
 		}
+	}
+
+	return glob.ExecState_True, nil
+}
+
+func (exec *Executor) haveSetDefinedByReplacementStmt(stmt *ast.HaveSetDefinedByReplacementStmt) (glob.ExecState, error) {
+	exec.appendMsg(stmt.String())
+
+	defObjStmt := ast.NewDefObjStmt([]string{stmt.Name}, []ast.Fc{ast.NewFcFn(ast.FcAtom(glob.KeywordSetDefinedByReplacement), []ast.Fc{stmt.DomSet, stmt.RangeSet, stmt.PropName})}, []ast.FactStmt{})
+	err := exec.defObjStmt(defObjStmt, false)
+	if err != nil {
+		return glob.ExecState_Error, err
 	}
 
 	return glob.ExecState_True, nil
