@@ -13,18 +13,3 @@
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
 package litex_executor
-
-import (
-	ast "golitex/ast"
-	glob "golitex/glob"
-)
-
-func (exec *Executor) haveSetByReplacementStmt(stmt *ast.HaveSetByReplacementStmt) (glob.ExecState, error) {
-	uniFact := stmt.ForallXOnlyOneYSatisfyGivenProp()
-	execState, err := exec.factStmt(uniFact)
-	if notOkExec(execState, err) {
-		return execState, err
-	}
-
-	panic("not implemented")
-}

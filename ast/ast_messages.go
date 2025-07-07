@@ -578,20 +578,6 @@ func (stmt *ProveByMathInductionStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *HaveSetByReplacementStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordHaveSetByReplacement)
-	builder.WriteString(" ")
-	builder.WriteString(stmt.Name)
-	builder.WriteString(" ")
-	builder.WriteString(stmt.DomSet.String())
-	builder.WriteString(" ")
-	builder.WriteString(stmt.RangeSet.String())
-	builder.WriteString(" ")
-	builder.WriteString(stmt.PropName.String())
-	return builder.String()
-}
-
 func (stmt *IntensionalSetStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(stmt.CurSet.String())

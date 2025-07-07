@@ -16,15 +16,24 @@ package litex_ast
 
 import glob "golitex/glob"
 
-func (stmt *HaveSetByReplacementStmt) ForallXOnlyOneYSatisfyGivenProp() *UniFactStmt {
+func GetForallXOnlyOneYSatisfyGivenProp(domSet, rangeSet Fc, propName FcAtom) *UniFactStmt {
 	params := []string{"x", "y1", "y2"}
-	setParams := []Fc{stmt.DomSet, stmt.RangeSet, stmt.RangeSet}
+	setParams := []Fc{domSet, rangeSet, rangeSet}
 	domFacts := []FactStmt{
-		NewSpecFactStmt(TruePure, stmt.PropName, []Fc{FcAtom("x"), FcAtom("y1")}),
-		NewSpecFactStmt(TruePure, stmt.PropName, []Fc{FcAtom("x"), FcAtom("y2")}),
+		NewSpecFactStmt(TruePure, propName, []Fc{FcAtom("x"), FcAtom("y1")}),
+		NewSpecFactStmt(TruePure, propName, []Fc{FcAtom("x"), FcAtom("y2")}),
 	}
 	thenFacts := []FactStmt{
 		NewSpecFactStmt(TruePure, FcAtom(glob.LastTwoObjectsAreEqual), []Fc{FcAtom("x"), FcAtom("y1"), FcAtom("y2")}),
 	}
 	return NewUniFact(params, setParams, domFacts, thenFacts)
+}
+
+func ForallYInSetDefinedByReplacementThereIsXSTProp_X_YIsTrue(setDefinedByReplacement *FcFn) *UniFactStmt {
+	params := []string{"x"}
+	setParams := []Fc{setDefinedByReplacement}
+
+	specFact := NewSpecFactStmt(TruePure, FcAtom(glob.KeywordExistByReplacement), []Fc{setDefinedByReplacement.Params[0], setDefinedByReplacement.Params[1], setDefinedByReplacement.Params[2], FcAtom("x")})
+
+	return NewUniFact(params, setParams, []FactStmt{}, []FactStmt{specFact})
 }
