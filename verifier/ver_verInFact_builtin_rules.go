@@ -275,8 +275,8 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state VerState) (b
 			return false, nil
 		}
 		fnTemplate = &fnTDef.FnTemplateStmt
-	} else if ast.IsFnFcFn(stmt.Params[1]) {
-		fnTemplate, err = ast.FnFcToFnTemplateStmt(stmt.Params[1])
+	} else if fnFn, ok := stmt.Params[1].(*ast.FcFn); ok && ast.IsFnFcFn(fnFn) {
+		fnTemplate, err = ast.FnFcToFnTemplateStmt(fnFn)
 		if err != nil {
 			return false, err
 		}
@@ -353,7 +353,11 @@ func (ver *Verifier) verInSet(stmt *ast.SpecFactStmt, state VerState) (bool, err
 	}
 
 	// 如果是被定义好了的fn_template，则直接返回true
-	ok = ast.IsFnFcFn(stmt.Params[1])
+	asFcFn, ok := stmt.Params[1].(*ast.FcFn)
+	if !ok {
+		return false, nil
+	}
+	ok = ast.IsFnFcFn(asFcFn)
 	if ok {
 		return ver.processOkMsg(state, stmt.String(), "%s is a fn template and all fn templates are sets", stmt.Params[0].String())
 	}
