@@ -44,7 +44,7 @@ Traditional formal languages like Lean, Coq, [are fundamentally different from L
 | **Existential Quantification** |  Existential quantification is a fundamental part of math | No existential quantification — all objects are explicitly defined |
 | **Purpose**           | To prove or verify truth symbolically                                        | To perform tasks, process data, interact with systems                          |
 
-Litex, as a domain language, takes advantage of the difference between programming and verification, and is designed to be a simple and intuitive reasoning verifier. Technically, Litex is a "Read-Only Turing Machine". It does not have variables, execution, control flow, iteration, etc. [^1]
+Litex, as a domain language, takes advantage of the difference between programming and verification, and is designed to be a simple and intuitive reasoning verifier. Technically, Litex is a "Read-Only Turing Machine". It does not have variables, execution, control flow, iteration, etc. Traditional formal languages sort of robbed you of the joy of exploring mathematics by forcing you to spend most of your time wrestling with the formal language itself. Litex brings that joy back! [^1]
 
 Math serves two purposes: 1. for computation, i.e. calculate the output of a function given the input, and 2. for reasoning and verification, i.e. make sure a new statement is correct given the established ones. Math is the language of the universe and since the beginning of history we human beings have been using math to know how things work to do real-life problems. The software industry has already revolutionized how we compute, and Litex is here to change how we reason.
 

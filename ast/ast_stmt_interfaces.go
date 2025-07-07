@@ -137,7 +137,7 @@ type ImportStmtInterface interface {
 func (stmt *ImportDirStmt) importStmt()  {}
 func (stmt *ImportFileStmt) importStmt() {}
 
-type SetDeclarationStmtInterface interface {
+type EnumSet_IntensionalSet_FactualStmtInterface interface {
 	setDeclarationStmt()
 	String() string
 	GetPropName() Fc
@@ -151,3 +151,10 @@ func (stmt *EnumStmt) setDeclarationStmt()           {}
 func (stmt *IntensionalSetStmt) setDeclarationStmt() {}
 func (stmt *EnumStmt) GetPropName() Fc               { return stmt.CurSet }
 func (stmt *IntensionalSetStmt) GetPropName() Fc     { return stmt.CurSet }
+
+type FnTemplate_Or_DefObjStmtInterface interface {
+	fnTemplate_Or_DefObjStmt()
+}
+
+func (stmt *DefObjStmt) fnTemplate_Or_DefObjStmt()     {}
+func (stmt *FnTemplateStmt) fnTemplate_Or_DefObjStmt() {}

@@ -146,7 +146,7 @@ func NewHaveObjInNonEmptySetStmt(objNames []string, objSets []Fc) *HaveObjInNonE
 	return &HaveObjInNonEmptySetStmt{objNames, objSets}
 }
 
-func NewHaveSetStmt(fact SetDeclarationStmtInterface) *HaveSetStmt {
+func NewHaveSetStmt(fact EnumSet_IntensionalSet_FactualStmtInterface) *HaveSetStmt {
 	return &HaveSetStmt{fact}
 }
 
