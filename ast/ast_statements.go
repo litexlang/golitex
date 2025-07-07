@@ -107,7 +107,7 @@ type ClaimExistPropStmt struct {
 	Proofs    []Stmt
 }
 
-type HaveStmt struct {
+type HaveObjStStmt struct {
 	ObjNames []string
 	Fact     SpecFactStmt
 }
@@ -199,4 +199,11 @@ type HaveSetFnStmt struct {
 	Param     string
 	ParentSet Fc
 	Proofs    []*SpecFactStmt
+}
+
+type HaveSetDefinedByReplacementStmt struct {
+	Name     string
+	DomSet   Fc
+	RangeSet Fc
+	PropName FcAtom
 }

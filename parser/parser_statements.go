@@ -47,7 +47,7 @@ func (tb *tokenBlock) stmt() (ast.Stmt, error) {
 		ret, err = tb.defObjStmt()
 	case glob.KeywordHave:
 		if slices.Contains(tb.header.slice, glob.KeywordSt) {
-			ret, err = tb.haveStmt()
+			ret, err = tb.haveObjStStmt()
 		} else if slices.Contains(tb.header.slice, glob.KeySymbolColonEqual) {
 			if !slices.Contains(tb.header.slice, glob.KeySymbolLeftBrace) {
 				ret, err = tb.haveSetStmt()
@@ -626,7 +626,7 @@ func (tb *tokenBlock) pureFuncSpecFact() (*ast.SpecFactStmt, error) {
 	return ret, nil
 }
 
-func (tb *tokenBlock) haveStmt() (*ast.HaveStmt, error) {
+func (tb *tokenBlock) haveObjStStmt() (*ast.HaveObjStStmt, error) {
 	err := tb.header.skip(glob.KeywordHave)
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -1437,7 +1437,7 @@ func (tb *tokenBlock) relaFact_intensionalSetFact_enumStmt() (ast.FactStmt, erro
 	return ret, nil
 }
 
-func (tb *tokenBlock) enumStmt_or_intensionalSetStmt(fc ast.Fc) (ast.FactStmt, error) {
+func (tb *tokenBlock) enumStmt_or_intensionalSetStmt(fc ast.Fc) (ast.SetDeclarationStmtInterface, error) {
 	if tb.header.is(glob.KeySymbolLeftCurly) {
 		return tb.enumStmt(fc)
 	} else {
@@ -1565,32 +1565,72 @@ func (tb *tokenBlock) haveObjInNonEmptySetStmt() (*ast.HaveObjInNonEmptySetStmt,
 	return ast.NewHaveObjInNonEmptySetStmt(objNames, objSets), nil
 }
 
-func (tb *tokenBlock) haveSetStmt() (*ast.HaveSetStmt, error) {
+func (tb *tokenBlock) haveSetStmt() (ast.Stmt, error) {
 	err := tb.header.skip(glob.KeywordHave)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
 
-	fact, err := tb.relaFact_intensionalSetFact_enumStmt()
+	haveSetName, err := tb.header.next()
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
 
-	asStmt, ok := fact.(ast.SetDeclarationStmtInterface)
-	if !ok {
-		return nil, fmt.Errorf("expect enum or intensional set")
+	err = tb.header.skip(glob.KeySymbolColonEqual)
+	if err != nil {
+		return nil, tbErr(err, tb)
 	}
 
-	// asStmt 的 PropName 必须是 fcAtom 而且必须是 没有 colon colon 的
-	if propName, ok := asStmt.GetPropName().(ast.FcAtom); !ok {
-		return nil, fmt.Errorf("invalid set name")
-	} else {
-		if glob.IsBuiltinKeywordKeySymbolCanBeFcAtomName(string(propName)) {
-			return nil, fmt.Errorf("invalid set name")
+	if tb.header.is(glob.KeywordSetDefinedByReplacement) {
+		err = tb.header.skip(glob.KeywordSetDefinedByReplacement)
+		if err != nil {
+			return nil, tbErr(err, tb)
 		}
+
+		err = tb.header.skip(glob.KeySymbolLeftBrace)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		domSet, err := tb.RawFc()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		err = tb.header.skip(glob.KeySymbolComma)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		rangeSet, err := tb.RawFc()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		err = tb.header.skip(glob.KeySymbolComma)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		propName, err := tb.rawFcAtom()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		err = tb.header.skip(glob.KeySymbolRightBrace)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		return ast.NewHaveSetDefinedByReplacementStmt(haveSetName, domSet, rangeSet, propName), nil
 	}
 
-	return ast.NewHaveSetStmt(asStmt), nil
+	fact, err := tb.enumStmt_or_intensionalSetStmt(ast.FcAtom(haveSetName))
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	return ast.NewHaveSetStmt(fact), nil
 }
 
 func (tb *tokenBlock) haveSetFnStmt() (*ast.HaveSetFnStmt, error) {

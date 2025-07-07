@@ -362,7 +362,7 @@ func (head DefHeader) String() string {
 	return builder.String()
 }
 
-func (stmt *HaveStmt) String() string {
+func (stmt *HaveObjStStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordHave)
 	builder.WriteString(" ")
@@ -651,5 +651,15 @@ func (stmt *HaveSetFnStmt) String() string {
 		proofStrSlice[i] = glob.SplitLinesAndAdd4NIndents(proof.String(), 1)
 	}
 	builder.WriteString(strings.Join(proofStrSlice, "\n"))
+	return builder.String()
+}
+
+func (stmt *HaveSetDefinedByReplacementStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordHave)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.Name)
+	builder.WriteString(" ")
+	builder.WriteString(NewFcFn(FcAtom(glob.KeywordSetDefinedByReplacement), []Fc{stmt.DomSet, stmt.RangeSet, stmt.PropName}).String())
 	return builder.String()
 }
