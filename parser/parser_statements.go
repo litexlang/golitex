@@ -77,8 +77,8 @@ func (tb *tokenBlock) stmt() (ast.Stmt, error) {
 		ret, err = tb.defFnTemplateStmt()
 	case glob.KeywordProveByMathInduction:
 		ret, err = tb.proveByMathInductionStmt()
-	case glob.KeywordHaveByReplacement:
-		ret, err = tb.haveByReplacementStmt()
+	case glob.KeywordHaveSetByReplacement:
+		ret, err = tb.haveSetByReplacementStmt()
 	case glob.KeywordProveOverFiniteSet:
 		ret, err = tb.proveOverFiniteSetStmt()
 	default:
@@ -1252,13 +1252,13 @@ func (tb *tokenBlock) proveByMathInductionStmt() (*ast.ProveByMathInductionStmt,
 	return ast.NewProveByMathInductionStmt(propName, start), nil
 }
 
-func (tb *tokenBlock) haveByReplacementStmt() (*ast.HaveByReplacementStmt, error) {
-	err := tb.header.skip(glob.KeywordHaveByReplacement)
+func (tb *tokenBlock) haveSetByReplacementStmt() (*ast.HaveSetByReplacementStmt, error) {
+	err := tb.header.skip(glob.KeywordHaveSetByReplacement)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
 
-	name, err := tb.header.next()
+	setName, err := tb.header.next()
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -1278,7 +1278,7 @@ func (tb *tokenBlock) haveByReplacementStmt() (*ast.HaveByReplacementStmt, error
 		return nil, tbErr(err, tb)
 	}
 
-	return ast.NewHaveByReplacementStmt(name, domSet, rangeSet, propName), nil
+	return ast.NewHaveSetByReplacementStmt(setName, domSet, rangeSet, propName), nil
 }
 
 func (tb *tokenBlock) dom_and_section(kw string, kw_should_not_exist_in_body string) ([]ast.FactStmt, []ast.FactStmt, error) {
