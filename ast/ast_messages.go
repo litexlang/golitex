@@ -300,20 +300,28 @@ func (l *UniFactStmt) String() string {
 	builder.WriteString(strFcSetPairs(l.Params, l.ParamSets))
 
 	builder.WriteString(":\n")
-	domFactStrSlice := make([]string, len(l.DomFacts))
-	for i := range len(l.DomFacts) {
-		domFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(l.DomFacts[i].String(), 1)
-	}
-	builder.WriteString(strings.Join(domFactStrSlice, "\n"))
-	builder.WriteByte('\n')
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents("then:", 1))
-	builder.WriteByte('\n')
+	if len(l.DomFacts) > 0 {
+		domFactStrSlice := make([]string, len(l.DomFacts))
+		for i := range len(l.DomFacts) {
+			domFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(l.DomFacts[i].String(), 1)
+		}
+		builder.WriteString(strings.Join(domFactStrSlice, "\n"))
 
-	thenFactStrSlice := make([]string, len(l.ThenFacts))
-	for i := range len(l.ThenFacts) {
-		thenFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(l.ThenFacts[i].String(), 2)
+		builder.WriteByte('\n')
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents("then:", 1))
+		builder.WriteByte('\n')
+		thenFactStrSlice := make([]string, len(l.ThenFacts))
+		for i := range len(l.ThenFacts) {
+			thenFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(l.ThenFacts[i].String(), 2)
+		}
+		builder.WriteString(strings.Join(thenFactStrSlice, "\n"))
+	} else {
+		thenFactStrSlice := make([]string, len(l.ThenFacts))
+		for i := range len(l.ThenFacts) {
+			thenFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(l.ThenFacts[i].String(), 1)
+		}
+		builder.WriteString(strings.Join(thenFactStrSlice, "\n"))
 	}
-	builder.WriteString(strings.Join(thenFactStrSlice, "\n"))
 
 	return builder.String()
 }
