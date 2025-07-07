@@ -28,7 +28,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt) (glob.ExecState, er
 		}
 	}()
 
-	if string(stmt.Fact.PropName) == glob.KeywordExistByReplacement {
+	if string(stmt.Fact.PropName) == glob.KeywordExistPropPreImageByReplacement {
 		execState, err := exec.haveExistByReplacementStmt(stmt)
 		if notOkExec(execState, err) {
 			return execState, err
