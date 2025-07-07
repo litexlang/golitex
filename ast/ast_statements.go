@@ -170,13 +170,6 @@ type ProveByMathInductionStmt struct {
 	Start    Fc
 }
 
-type HaveSetByReplacementStmt struct {
-	Name     string
-	DomSet   Fc
-	RangeSet Fc
-	PropName FcAtom
-}
-
 type IntensionalSetStmt struct {
 	CurSet    Fc
 	Param     string

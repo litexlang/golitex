@@ -1,4 +1,0 @@
-obj a obj:
-    a = set_defined_by_replacement(1)
-
-a = set_defined_by_replacement(1)

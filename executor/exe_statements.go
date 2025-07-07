@@ -66,12 +66,10 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		err = exec.defFnTemplateStmt(stmt)
 	case *ast.ProveByMathInductionStmt:
 		execState, err = exec.mathInductionFact_BuiltinRules(stmt)
-	case *ast.HaveSetByReplacementStmt:
-		execState, err = exec.haveSetByReplacementStmt(stmt)
 	case *ast.ProveOverFiniteSetStmt:
 		execState, err = exec.proveOverFiniteSetStmt(stmt)
 	case *ast.HaveObjInNonEmptySetStmt:
-		execState, err = exec.haveInSetStmt(stmt)
+		execState, err = exec.haveObjInNonEmptySetStmt(stmt)
 	case *ast.HaveSetStmt:
 		execState, err = exec.haveSetStmt(stmt)
 	case *ast.HaveSetFnStmt:
