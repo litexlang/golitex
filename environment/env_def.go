@@ -163,13 +163,13 @@ func (env *Env) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) 
 	return nil
 }
 
-func (e *Env) NewObj_NoDuplicate(name string) error {
+func (e *Env) NewObj_NoDuplicate(name string, stmt ast.FnTemplate_Or_DefObjStmtInterface) error {
 	err := e.IsValidUserDefinedName_NoDuplicate(name)
 	if err != nil {
 		return fmt.Errorf("invalid name: %s", name)
 	}
 
-	e.ObjDefMem[name] = struct{}{}
+	e.ObjDefMem[name] = stmt
 
 	return nil
 }

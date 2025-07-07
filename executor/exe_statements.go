@@ -600,7 +600,7 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 		}()
 	}
 
-	err := exec.env.NewObj_NoDuplicate(stmt.FnTemplateStmt.Name)
+	err := exec.env.NewObj_NoDuplicate(stmt.FnTemplateStmt.Name, &stmt.FnTemplateStmt)
 	if err != nil {
 		return err
 	}
