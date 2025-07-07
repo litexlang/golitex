@@ -33,13 +33,6 @@ func NewVerifier(curEnv *env.Env) *Verifier {
 	}
 }
 
-func (ver *Verifier) successWithMsg(stmtString, storedStmtString string) {
-	ver.successMsgEnd(stmtString, storedStmtString)
-}
-
-func (ver *Verifier) successNoMsg() {
-}
-
 func (ver *Verifier) newEnv(parent *env.Env) {
 	newEnv := env.NewEnv(parent)
 	ver.env = newEnv
@@ -58,20 +51,3 @@ func (ver *Verifier) deleteEnvAndRetainMsg() error {
 		return fmt.Errorf("parent env does not exist")
 	}
 }
-
-func (ver *Verifier) newMsgAtParent(s string) error {
-	if ver.env.Parent == nil {
-		return fmt.Errorf("no parent env")
-	} else {
-		if glob.IsNotImportDirStmt() {
-			ver.env.Parent.AppendMsg(s)
-		}
-		return nil
-	}
-}
-
-// func (ver *Verifier)
-
-// func (ver *Verifier) appendInternalWarningMsg(s string, args ...any) {
-// 	ver.env.Msgs = append(ver.env.Msgs, glob.InternalWarningMsg(s, args...))
-// }

@@ -28,7 +28,7 @@ func (ver *Verifier) todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt *ast.Sp
 
 func (ver *Verifier) equalTrueAddSuccessMsg(left ast.Fc, right ast.Fc, state VerState, msg string) (bool, error) {
 	if state.requireMsg() {
-		ver.successMsgEnd(fmt.Sprintf("%s = %s", left.String(), right.String()), msg)
+		ver.successWithMsg(fmt.Sprintf("%s = %s", left.String(), right.String()), msg)
 	}
 	return true, nil
 }
@@ -43,9 +43,7 @@ func isErrOrOk(ok bool, err error) bool {
 
 func (ver *Verifier) processOkMsg(state VerState, msg string, verifiedBy string, args ...any) (bool, error) {
 	if state.requireMsg() {
-		ver.successMsgEnd(msg, fmt.Sprintf(verifiedBy, args...))
-	} else {
-		ver.successNoMsg()
+		ver.successWithMsg(msg, fmt.Sprintf(verifiedBy, args...))
 	}
 	return true, nil
 }
