@@ -805,8 +805,16 @@ func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimProp
 func (exec *Executor) haveSetDefinedByReplacementStmt(stmt *ast.HaveSetDefinedByReplacementStmt) (glob.ExecState, error) {
 	exec.appendMsg(stmt.String())
 
-	defObjStmt := ast.NewDefObjStmt([]string{stmt.Name}, []ast.Fc{ast.NewFcFn(ast.FcAtom(glob.KeywordSetDefinedByReplacement), []ast.Fc{stmt.DomSet, stmt.RangeSet, stmt.PropName})}, []ast.FactStmt{})
+	setDefinedByReplacement := ast.NewFcFn(ast.FcAtom(glob.KeywordSetDefinedByReplacement), []ast.Fc{stmt.DomSet, stmt.RangeSet, stmt.PropName})
+
+	defObjStmt := ast.NewDefObjStmt([]string{stmt.Name}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}, []ast.FactStmt{ast.NewEqualFact(ast.FcAtom(stmt.Name), setDefinedByReplacement)})
+
 	err := exec.defObjStmt(defObjStmt, false)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+
+	err = exec.env.SetEqualToSetDefinedByReplacement_PostProcess(ast.FcAtom(stmt.Name), setDefinedByReplacement)
 	if err != nil {
 		return glob.ExecState_Error, err
 	}

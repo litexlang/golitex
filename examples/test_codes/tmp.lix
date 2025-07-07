@@ -1,11 +1,13 @@
 obj A set, B set
 prop P(x A, y B)
 
-forall x A, y1, y2 B:
+know forall x A, y1, y2 B:
     $P(x, y1)
     $P(x, y2)
     then:
         $last_two_objects_are_equal(x, y1, y2)
 
-have y set_defined_by_replacement(A, B, P)
-y $in B
+have y  := set_defined_by_replacement(A, B, P)
+
+forall x y:
+    x $in B

@@ -1673,5 +1673,10 @@ func (tb *tokenBlock) haveSetDefinedByReplacementStmt() (ast.Stmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
+	// exceed end
+	if !tb.header.ExceedEnd() {
+		return nil, fmt.Errorf("expect end of line")
+	}
+
 	return ast.NewHaveSetDefinedByReplacementStmt(haveSetName, domSet, rangeSet, propName), nil
 }
