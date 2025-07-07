@@ -33,7 +33,7 @@ func ForallYInSetDefinedByReplacementThereIsXSTProp_X_YIsTrue(setDefinedByReplac
 	params := []string{"x"}
 	setParams := []Fc{setDefinedByReplacement}
 
-	specFact := NewSpecFactStmt(TruePure, FcAtom(glob.KeywordExistByReplacement), []Fc{setDefinedByReplacement.Params[0], setDefinedByReplacement.Params[1], setDefinedByReplacement.Params[2], FcAtom("x")})
+	specFact := NewSpecFactStmt(TruePure, FcAtom(glob.KeywordExistPropPreImageByReplacement), []Fc{setDefinedByReplacement.Params[0], setDefinedByReplacement.Params[1], setDefinedByReplacement.Params[2], FcAtom("x")})
 
 	return NewUniFact(params, setParams, []FactStmt{}, []FactStmt{specFact})
 }
