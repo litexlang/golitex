@@ -57,7 +57,7 @@ const (
 	KeywordExistIn                        = "exist_in"
 	KeywordSetDefinedByReplacement        = "set_defined_by_replacement"
 	KeywordExistPropPreImageByReplacement = "exist_prop_preimage_by_replacement"
-	KeywordExistByReplacementFn           = "exist_by_replacement_fn"
+	KeywordExistFnPreImageByReplacement   = "exist_fn_preimage_by_replacement"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -102,7 +102,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordExistIn:                        {},
 	KeywordSetDefinedByReplacement:        {},
 	KeywordExistPropPreImageByReplacement: {},
-	KeywordExistByReplacementFn:           {},
+	KeywordExistFnPreImageByReplacement:   {},
 }
 
 const (
@@ -119,7 +119,6 @@ const (
 	KeySymbolPower        = "^"
 	KeySymbolLess         = "<"
 	KeySymbolGreater      = ">"
-	KeySymbolExclaim      = "!"
 	KeySymbolBackslash    = "\\"
 	KeySymbolDot          = "."
 	KeySymbolColonColon   = "::"
@@ -154,7 +153,6 @@ var symbolSet map[string]struct{} = map[string]struct{}{
 	KeySymbolDollar:       {}, // "$"
 	KeySymbolDoubleQuote:  {}, // "\""
 	KeySymbolEqual:        {}, // "="
-	KeySymbolExclaim:      {}, // "!"
 	KeySymbolGreater:      {}, // ">"
 	KeySymbolHash:         {}, // "#"
 	KeySymbolLeftBrace:    {}, // "("
@@ -205,7 +203,7 @@ var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]s
 	KeywordExistIn:                        {},
 	KeywordSetDefinedByReplacement:        {},
 	KeywordExistPropPreImageByReplacement: {},
-	KeywordExistByReplacementFn:           {},
+	KeywordExistFnPreImageByReplacement:   {},
 }
 
 func IsBuiltinKeywordKeySymbolCanBeFcAtomName(name string) bool {
