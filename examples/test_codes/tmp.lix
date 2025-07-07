@@ -1,3 +1,4 @@
-obj s set, s2 set:
-    s := {1,2,3}
-    s2 := {}
+obj a obj:
+    a = set_defined_by_replacement(1)
+
+a = set_defined_by_replacement(1)

@@ -26,4 +26,5 @@ func (exec *Executor) haveSetByReplacementStmt(stmt *ast.HaveSetByReplacementStm
 		return execState, err
 	}
 
+	panic("not implemented")
 }
