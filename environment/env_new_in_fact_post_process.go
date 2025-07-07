@@ -132,3 +132,20 @@ func (e *Env) in_setDefinedByReplacement_postProcess(setDefinedByReplacement *as
 
 	return nil
 }
+
+func (e *Env) SetEqualToSetDefinedByReplacement_PostProcess(setAtom ast.FcAtom, setDefinedByReplacement *ast.FcFn) error {
+	uniFact := ast.ForallYInSetDefinedByReplacementThereIsXSTProp_X_YIsTrue(setDefinedByReplacement)
+	uniFact.ParamSets[0] = setAtom
+	err := e.NewFact(uniFact)
+	if err != nil {
+		return err
+	}
+
+	forallXInSetDefinedByReplacement_ItIsInB := ast.NewUniFact([]string{"x"}, []ast.Fc{setAtom}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{ast.FcAtom("x"), setDefinedByReplacement.Params[1]})})
+	err = e.NewFact(forallXInSetDefinedByReplacement_ItIsInB)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
