@@ -71,16 +71,10 @@ func (tb *tokenBlock) stmt() (ast.Stmt, error) {
 				ret, err = tb.knowFactStmt()
 			}
 		}
-	// case glob.KeywordSuppose:
-	// 	ret, err = tb.supposePropMatchStmt()
-	// case glob.KeywordWith:
-	// 	ret, err = tb.withPropMatchStmt()
 	case glob.KeywordProveInEachCase:
 		ret, err = tb.proveInEachCaseStmt()
 	case glob.KeywordFnTemplate:
 		ret, err = tb.defFnTemplateStmt()
-	case glob.KeywordImportGlobally:
-		ret, err = tb.importGloballyStmt()
 	case glob.KeywordProveByMathInduction:
 		ret, err = tb.proveByMathInductionStmt()
 	case glob.KeywordHaveByReplacement:
@@ -1161,19 +1155,19 @@ func (tb *tokenBlock) defFnStmt() (*ast.DefFnStmt, error) {
 	return ast.NewDefFnStmt(fnTemplateStmt), nil
 }
 
-func (tb *tokenBlock) importGloballyStmt() (*ast.ImportGloballyStmt, error) {
-	err := tb.header.skip(glob.KeywordImportGlobally)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+// func (tb *tokenBlock) importGloballyStmt() (*ast.ImportGloballyStmt, error) {
+// 	err := tb.header.skip(glob.KeywordImportGlobally)
+// 	if err != nil {
+// 		return nil, tbErr(err, tb)
+// 	}
 
-	path, err := tb.getStringInDoubleQuotes()
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+// 	path, err := tb.getStringInDoubleQuotes()
+// 	if err != nil {
+// 		return nil, tbErr(err, tb)
+// 	}
 
-	return ast.NewImportGloballyStmt(path), nil
-}
+// 	return ast.NewImportGloballyStmt(path), nil
+// }
 
 func (tb *tokenBlock) claimPropStmt() (*ast.ClaimPropStmt, error) {
 	declHeader, err := tb.body[0].headerOfAtProp()

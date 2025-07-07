@@ -19,21 +19,22 @@ type Stmt interface {
 	String() string
 }
 
-func (stmt *DefObjStmt) stmt()                 {}
-func (c *DefPropStmt) stmt()                   {}
-func (l *DefFnStmt) stmt()                     {}
-func (l *UniFactStmt) stmt()                   {}
-func (p *SpecFactStmt) stmt()                  {}
-func (f *ClaimProveStmt) stmt()                {}
-func (f *KnowFactStmt) stmt()                  {}
-func (s *DefExistPropStmt) stmt()              {}
-func (s *HaveStmt) stmt()                      {}
-func (s *ProveInEachCaseStmt) stmt()           {}
-func (s *KnowPropStmt) stmt()                  {}
-func (s *KnowExistPropStmt) stmt()             {}
-func (s *OrStmt) stmt()                        {}
-func (s *ImportDirStmt) stmt()                 {}
-func (s *ImportGloballyStmt) stmt()            {}
+func (stmt *DefObjStmt) stmt()       {}
+func (c *DefPropStmt) stmt()         {}
+func (l *DefFnStmt) stmt()           {}
+func (l *UniFactStmt) stmt()         {}
+func (p *SpecFactStmt) stmt()        {}
+func (f *ClaimProveStmt) stmt()      {}
+func (f *KnowFactStmt) stmt()        {}
+func (s *DefExistPropStmt) stmt()    {}
+func (s *HaveStmt) stmt()            {}
+func (s *ProveInEachCaseStmt) stmt() {}
+func (s *KnowPropStmt) stmt()        {}
+func (s *KnowExistPropStmt) stmt()   {}
+func (s *OrStmt) stmt()              {}
+func (s *ImportDirStmt) stmt()       {}
+
+// func (s *ImportGloballyStmt) stmt()            {}
 func (s *ImportFileStmt) stmt()                {}
 func (s *ProveStmt) stmt()                     {}
 func (s *UniFactWithIffStmt) stmt()            {}

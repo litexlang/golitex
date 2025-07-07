@@ -1,5 +1,5 @@
 import  "./repo1_1" as pkg1_1
-import_globally "./repo1_global.lix"
+import "./main_repo1_global.lix"
 
 obj a N:
 # bug: import globally 不能像import dir as pkg那样，让局部看到局部
