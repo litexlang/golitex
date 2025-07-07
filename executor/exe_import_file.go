@@ -20,9 +20,25 @@ import (
 	glob "golitex/glob"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func (exec *Executor) importFileStmt(stmt *ast.ImportFileStmt) (glob.ExecState, error) {
+	codePath := filepath.Join(glob.CurrentTaskDirName, stmt.Path)
+
+	fileName := filepath.Base(codePath)
+	fileExt := filepath.Ext(fileName)
+	if fileExt != ".lix" {
+		return glob.ExecState_Error, fmt.Errorf("imported file should have .lix extension, get %s", stmt.Path)
+	}
+
+	fileNameWithoutExt := strings.TrimSuffix(fileName, fileExt)
+	if strings.HasPrefix(fileNameWithoutExt, "main") {
+		return exec.importGloballyStmt(stmt)
+	}
+
+	exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("importing file \"%s\"", fileNameWithoutExt))
+
 	exec.appendMsg("start importing file \"%s\"\n", stmt.Path)
 
 	if !glob.AllowImport {
@@ -34,7 +50,6 @@ func (exec *Executor) importFileStmt(stmt *ast.ImportFileStmt) (glob.ExecState, 
 		glob.AllowImport = true
 	}()
 
-	codePath := filepath.Join(glob.CurrentTaskDirName, stmt.Path)
 	code, err := os.ReadFile(codePath)
 	if err != nil {
 		return glob.ExecState_Error, err

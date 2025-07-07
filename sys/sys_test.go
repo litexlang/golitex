@@ -25,7 +25,7 @@ func TestRunREPLInTerminal(t *testing.T) {
 }
 
 func TestRunRepo(t *testing.T) {
-	msg, signal, err := RunRepo("../examples/number_theory_for_beginners_by_andre_weil")
+	msg, signal, err := RunRepo("../examples/test_import")
 	if err != nil {
 		t.Errorf(err.Error())
 	}

@@ -23,11 +23,11 @@ import (
 	"path/filepath"
 )
 
-func (exec *Executor) importGloballyStmt(stmt *ast.ImportGloballyStmt) (glob.ExecState, error) {
+func (exec *Executor) importGloballyStmt(stmt *ast.ImportFileStmt) (glob.ExecState, error) {
 	exec.appendMsg("start importing file globally \"%s\"\n", stmt.Path)
 
 	if !glob.AllowImport {
-		return glob.ExecState_Error, fmt.Errorf("import_globally is not allowed in imported file, get %s", stmt.String())
+		return glob.ExecState_Error, fmt.Errorf("import globally is not allowed in imported file, get %s", stmt.String())
 	}
 
 	glob.AllowImport = false

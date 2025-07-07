@@ -169,7 +169,6 @@ Litex is a simple language. I hope many of the keywords are already familiar to 
 | `prove_by_math_induction` | prove by mathematical induction |
 | `prove_over_finite_set` | prove a universal statement by iterating over a finite set |
 | `import` | import a file or directory |
-| `import_globally` | import a file globally |
 
 [^3]: Although these keywords are rarely defined strictly in math textbooks, they are used everyday and everywhere. Litex creator can not find strict definition for keywords like `proposition`, `is`, `in` etc (actually, the word `definition` is also a vague word). He tried his best to make the meaning of these keywords as close to the meaning in our daily math expression, along with his own ideas and understanding, so that Litex is both intuitive and strict.
 

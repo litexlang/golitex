@@ -50,14 +50,14 @@ func (exec *Executor) assumeStmtIsTrueRun(stmt ast.Stmt) (glob.ExecState, error)
 		panic("implement me")
 	case *ast.ImportDirStmt:
 		return glob.ExecState_True, nil
-	case *ast.ImportGloballyStmt:
-		return glob.ExecState_True, nil
 	case *ast.ProveStmt:
 		panic("implement me")
 	case *ast.ClaimProveByContradictionStmt:
 		panic("implement me")
 	case *ast.DefFnTemplateStmt:
 		err = exec.defFnTemplateStmt(stmt)
+	case *ast.ImportFileStmt:
+		return glob.ExecState_True, nil
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}
