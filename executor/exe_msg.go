@@ -40,10 +40,6 @@ func (e *Executor) appendWarningMsg(msg string, str ...any) {
 	e.env.Msgs = append(e.env.Msgs, fmt.Sprintf(`warning: %s`, fmt.Sprintf(msg, str...)))
 }
 
-func (e *Executor) appendInternalWarningMsg(msg string, str ...any) {
-	e.env.Msgs = append(e.env.Msgs, glob.InternalWarningMsg(msg, str...))
-}
-
 func (e *Executor) ClearMsgs() {
 	e.env.Msgs = []string{}
 }

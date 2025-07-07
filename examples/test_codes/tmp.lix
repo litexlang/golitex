@@ -18,3 +18,5 @@ have x st $exist_by_replacement(A, B, P, y)
 
 x $in A
 $P(x, y)
+
+have x := set_defined_by_replacement(A, B, P)
