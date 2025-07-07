@@ -67,8 +67,6 @@ func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state VerS
 	if ok {
 		if state.requireMsg() {
 			ver.successWithMsg(stmt.String(), "builtin rules")
-		} else {
-			ver.successNoMsg()
 		}
 		return true, nil
 	}
@@ -103,8 +101,6 @@ func (ver *Verifier) varCommutativeProp_BuiltinRules(stmt *ast.SpecFactStmt, sta
 	if ver.isCommutativeProp_BuiltinRule(stmt) {
 		if state.requireMsg() {
 			ver.successWithMsg(stmt.String(), fmt.Sprintf("prop %s is commutative", stmt.PropName.String()))
-		} else {
-			ver.successNoMsg()
 		}
 		return true, nil
 	}
@@ -126,8 +122,6 @@ func (ver *Verifier) varCommutativeProp_BuiltinRules(stmt *ast.SpecFactStmt, sta
 	if ok {
 		if state.requireMsg() {
 			ver.successWithMsg(stmt.String(), fmt.Sprintf("the definition of commutative property: %s is true iff\n%s", stmt.String(), uniFact.String()))
-		} else {
-			ver.successNoMsg()
 		}
 		return true, nil
 	}
@@ -145,8 +139,6 @@ func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactSt
 		if isSuccess {
 			if state.requireMsg() {
 				ver.successWithMsg(stmt.String(), "builtin rules")
-			} else {
-				ver.successNoMsg()
 			}
 		}
 	}()

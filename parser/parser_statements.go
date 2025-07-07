@@ -55,7 +55,7 @@ func (tb *tokenBlock) stmt() (ast.Stmt, error) {
 				ret, err = tb.haveSetFnStmt()
 			}
 		} else {
-			ret, err = tb.haveInSetStmt()
+			ret, err = tb.haveObjInNonEmptySetStmt()
 		}
 	case glob.KeywordClaim:
 		ret, err = tb.claimStmt()
@@ -1578,7 +1578,7 @@ func (tb *tokenBlock) headerOfAtProp() (*ast.DefHeader, error) {
 	return declHeader, nil
 }
 
-func (tb *tokenBlock) haveInSetStmt() (*ast.HaveObjInNonEmptySetStmt, error) {
+func (tb *tokenBlock) haveObjInNonEmptySetStmt() (*ast.HaveObjInNonEmptySetStmt, error) {
 	err := tb.header.skip(glob.KeywordHave)
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -1593,7 +1593,7 @@ func (tb *tokenBlock) haveInSetStmt() (*ast.HaveObjInNonEmptySetStmt, error) {
 		return nil, fmt.Errorf("expect at least one object")
 	}
 
-	return ast.NewHaveInSetStmt(objNames, objSets), nil
+	return ast.NewHaveObjInNonEmptySetStmt(objNames, objSets), nil
 }
 
 func (tb *tokenBlock) haveSetStmt() (*ast.HaveSetStmt, error) {

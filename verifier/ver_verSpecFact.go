@@ -200,8 +200,6 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 
 	if state.requireMsg() {
 		ver.successWithMsg(stmt.String(), defStmt.String())
-	} else {
-		ver.successNoMsg()
 	}
 
 	return true, nil
@@ -260,7 +258,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 	}
 
 	if state.requireMsg() {
-		ver.successMsgEnd(stmt.String(), "by definition")
+		ver.successWithMsg(stmt.String(), "by definition")
 	}
 
 	return true, nil
