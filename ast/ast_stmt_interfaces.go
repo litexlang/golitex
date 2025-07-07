@@ -45,7 +45,7 @@ func (s *IntensionalSetStmt) stmt()            {}
 func (s *ClaimPropStmt) stmt()                 {}
 func (s *ClaimExistPropStmt) stmt()            {}
 func (s *ProveByMathInductionStmt) stmt()      {}
-func (s *HaveByReplacementStmt) stmt()         {}
+func (s *HaveSetByReplacementStmt) stmt()      {}
 func (s *ProveOverFiniteSetStmt) stmt()        {}
 func (s *HaveObjInNonEmptySetStmt) stmt()      {}
 func (s *HaveSetStmt) stmt()                   {}

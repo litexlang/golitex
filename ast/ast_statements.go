@@ -170,7 +170,7 @@ type ProveByMathInductionStmt struct {
 	Start    Fc
 }
 
-type HaveByReplacementStmt struct {
+type HaveSetByReplacementStmt struct {
 	Name     string
 	DomSet   Fc
 	RangeSet Fc
