@@ -232,6 +232,20 @@ func (ver *Verifier) paramIs_R_Z_Q_N(fc ast.Fc, state VerState) (bool, error) {
 
 // TODO: 这里需要检查！
 func (ver *Verifier) setDefinedByReplacementFnRequirement(fc *ast.FcFn, state VerState) (bool, error) {
-	_, _ = fc, state
-	return true, nil
+	if len(fc.Params) != 3 {
+		return false, fmt.Errorf("parameters in %s must be 3, %s in %s is not valid", fc.FnHead.String(), fc.String(), fc.String())
+	}
+
+	propName, ok := fc.Params[2].(ast.FcAtom)
+	if !ok {
+		return false, fmt.Errorf("parameters in %s must be 3, %s in %s is not valid", fc.FnHead.String(), fc.String(), fc.String())
+	}
+
+	forallXOnlyOneYSatisfyGivenProp := ast.GetForallXOnlyOneYSatisfyGivenProp(fc.Params[0], fc.Params[1], propName)
+	ok, err := ver.VerFactStmt(forallXOnlyOneYSatisfyGivenProp, state)
+	if err != nil {
+		return false, err
+	}
+
+	return ok, nil
 }

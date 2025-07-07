@@ -17,6 +17,7 @@ package litex_env
 import (
 	"fmt"
 	ast "golitex/ast"
+	glob "golitex/glob"
 )
 
 func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) error {
@@ -46,6 +47,10 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) error {
 		if !ok {
 			return fmt.Errorf("failed to satisfy the function template of %s", fact.Params[0].String())
 		}
+	}
+
+	if setDefinedByReplacement, ok := fact.Params[1].(*ast.FcFn); ok && ast.IsFcAtomAndEqualToStr(setDefinedByReplacement.FnHead, glob.KeywordSetDefinedByReplacement) {
+		return e.in_setDefinedByReplacement_postProcess(setDefinedByReplacement)
 	}
 
 	return nil
@@ -104,6 +109,16 @@ func (e *Env) inFactPostProcess_InSetFnRetValue(fact *ast.SpecFactStmt, def *ast
 	}
 
 	err = e.NewFact(instantiated)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (e *Env) in_setDefinedByReplacement_postProcess(setDefinedByReplacement *ast.FcFn) error {
+	uniFact := ast.ForallYInSetDefinedByReplacementThereIsXSTProp_X_YIsTrue(setDefinedByReplacement)
+	err := e.NewFact(uniFact)
 	if err != nil {
 		return err
 	}
