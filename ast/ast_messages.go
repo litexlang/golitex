@@ -518,15 +518,15 @@ func (stmt *EnumStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *ImportGloballyStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordImportGlobally)
-	builder.WriteString(" ")
-	builder.WriteString(glob.KeySymbolDoubleQuote)
-	builder.WriteString(stmt.Path)
-	builder.WriteString(glob.KeySymbolDoubleQuote)
-	return builder.String()
-}
+// func (stmt *ImportGloballyStmt) String() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(glob.KeywordImportGlobally)
+// 	builder.WriteString(" ")
+// 	builder.WriteString(glob.KeySymbolDoubleQuote)
+// 	builder.WriteString(stmt.Path)
+// 	builder.WriteString(glob.KeySymbolDoubleQuote)
+// 	return builder.String()
+// }
 
 func (stmt *ImportFileStmt) String() string {
 	var builder strings.Builder

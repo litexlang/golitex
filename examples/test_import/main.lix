@@ -1,7 +1,7 @@
 import  "./proof1.lix"
 import  "./repo1" as pkg1
 import "./repo2" as pkg2
-import_globally "./main_global.lix"
+import "./main_global.lix"
 
 obj a N:
     a = pkg1::a

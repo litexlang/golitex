@@ -118,9 +118,9 @@ func NewEnumStmt(enumName Fc, enumValues []Fc) *EnumStmt {
 	return &EnumStmt{enumName, enumValues}
 }
 
-func NewImportGloballyStmt(path string) *ImportGloballyStmt {
-	return &ImportGloballyStmt{path}
-}
+// func NewImportGloballyStmt(path string) *ImportGloballyStmt {
+// 	return &ImportGloballyStmt{path}
+// }
 
 func NewImportFileStmt(path string) *ImportFileStmt {
 	return &ImportFileStmt{path}
