@@ -10,3 +10,11 @@ know forall x A, y1, y2 B:
 obj s set_defined_by_replacement(A, B, P)
 forall x set_defined_by_replacement(A, B, P):
     $exist_by_replacement(A, B, P, x)
+
+obj y set_defined_by_replacement(A, B, P)
+y $in B
+
+have x st $exist_by_replacement(A, B, P, y)
+
+x $in A
+$P(x, y)
