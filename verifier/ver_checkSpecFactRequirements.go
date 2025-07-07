@@ -58,6 +58,8 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state VerState) (bool, er
 		return ver.arithmeticFnRequirement(fc.(*ast.FcFn), state)
 	} else if ast.IsFnFcFn(fc) {
 		return true, nil
+	} else if asFcFn, ok := fc.(*ast.FcFn); ok && ast.IsFcAtomAndEqualToStr(asFcFn.FnHead, glob.KeywordSetDefinedByReplacement) {
+		return ver.setDefinedByReplacementFnRequirement(fc.(*ast.FcFn), state)
 	} else {
 		return ver.fcSatisfyNotBuiltinFnRequirement(fc, state)
 	}
@@ -222,4 +224,10 @@ func (ver *Verifier) paramIs_R_Z_Q_N(fc ast.Fc, state VerState) (bool, error) {
 	}
 
 	return false, nil
+}
+
+// TODO: 这里需要检查！
+func (ver *Verifier) setDefinedByReplacementFnRequirement(fc *ast.FcFn, state VerState) (bool, error) {
+	_, _ = fc, state
+	return true, nil
 }
