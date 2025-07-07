@@ -578,9 +578,9 @@ func (stmt *ProveByMathInductionStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *HaveByReplacementStmt) String() string {
+func (stmt *HaveSetByReplacementStmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordHaveByReplacement)
+	builder.WriteString(glob.KeywordHaveSetByReplacement)
 	builder.WriteString(" ")
 	builder.WriteString(stmt.Name)
 	builder.WriteString(" ")

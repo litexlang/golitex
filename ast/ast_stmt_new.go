@@ -118,10 +118,6 @@ func NewEnumStmt(enumName Fc, enumValues []Fc) *EnumStmt {
 	return &EnumStmt{enumName, enumValues}
 }
 
-// func NewImportGloballyStmt(path string) *ImportGloballyStmt {
-// 	return &ImportGloballyStmt{path}
-// }
-
 func NewImportFileStmt(path string) *ImportFileStmt {
 	return &ImportFileStmt{path}
 }
@@ -138,8 +134,8 @@ func NewProveByMathInductionStmt(propName FcAtom, start Fc) *ProveByMathInductio
 	return &ProveByMathInductionStmt{propName, start}
 }
 
-func NewHaveByReplacementStmt(name string, domSet Fc, rangeSet Fc, propName FcAtom) *HaveByReplacementStmt {
-	return &HaveByReplacementStmt{name, domSet, rangeSet, propName}
+func NewHaveByReplacementStmt(name string, domSet Fc, rangeSet Fc, propName FcAtom) *HaveSetByReplacementStmt {
+	return &HaveSetByReplacementStmt{name, domSet, rangeSet, propName}
 }
 
 func NewIntensionalSetStmt(curSet Fc, param string, parentSet Fc, proofs []*SpecFactStmt) *IntensionalSetStmt {
@@ -160,4 +156,8 @@ func NewHaveSetStmt(fact SetDeclarationStmtInterface) *HaveSetStmt {
 
 func NewHaveSetFnStmt(declHeader *DefHeader, param string, parentSet Fc, proofs []*SpecFactStmt) *HaveSetFnStmt {
 	return &HaveSetFnStmt{*declHeader, param, parentSet, proofs}
+}
+
+func NewHaveSetByReplacementStmt(setName string, domSet Fc, rangeSet Fc, propName FcAtom) *HaveSetByReplacementStmt {
+	return &HaveSetByReplacementStmt{setName, domSet, rangeSet, propName}
 }

@@ -19,8 +19,13 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) haveByReplacementStmt(stmt *ast.HaveByReplacementStmt) (glob.ExecState, error) {
-	panic("not implemented")
+func (exec *Executor) haveSetByReplacementStmt(stmt *ast.HaveSetByReplacementStmt) (glob.ExecState, error) {
+	uniFact := stmt.ForallXOnlyOneYSatisfyGivenProp()
+	execState, err := exec.factStmt(uniFact)
+	if notOkExec(execState, err) {
+		return execState, err
+	}
+
 	// exec.newEnv(exec.env, exec.env.CurMatchProp)
 	// defer exec.deleteEnvAndRetainMsg()
 

@@ -53,9 +53,9 @@ const (
 	KeywordFnTemplate           = "fn_template"
 	KeywordStruct               = "struct"
 	// KeywordImportGlobally       = "import_globally"
-	KeywordHaveByReplacement = "have_by_replacement"
-	KeywordIsEmptySet        = "is_empty_set"
-	KeywordExistIn           = "exist_in"
+	KeywordHaveSetByReplacement = "have_set_by_replacement"
+	KeywordIsEmptySet           = "is_empty_set"
+	KeywordExistIn              = "exist_in"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -95,7 +95,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordProveOverFiniteSet:   {},
 	KeywordFnTemplate:           {},
 	KeywordStruct:               {},
-	KeywordHaveByReplacement:    {},
+	KeywordHaveSetByReplacement: {},
 	KeywordIsEmptySet:           {},
 	KeywordExistIn:              {},
 }

@@ -73,3 +73,7 @@ func ReverseSliceOfReversibleFacts(facts []OrStmt_SpecStmt) []OrStmt_SpecStmt {
 
 	return ret
 }
+
+func NewEqualFact(left, right Fc) *SpecFactStmt {
+	return NewSpecFactStmt(TruePure, FcAtom(glob.KeySymbolEqual), []Fc{left, right})
+}
