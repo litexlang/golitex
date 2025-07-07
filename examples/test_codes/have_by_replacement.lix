@@ -1,20 +1,36 @@
-have A set, B set
-prop P(x A, y B)
+prove:
+    have A set, B set
+    prop P(x A, y B)
 
-know forall x A, y1, y2 B:
-    $P(x, y1)
-    $P(x, y2)
-    then:
-        $last_two_objects_are_equal(x, y1, y2)
+    know forall x A, y1, y2 B:
+        $P(x, y1)
+        $P(x, y2)
+        then:
+            $last_two_objects_are_equal(x, y1, y2)
 
-obj s set_defined_by_replacement(A, B, P)
-forall x set_defined_by_replacement(A, B, P):
-    $exist_by_replacement(A, B, P, x)
+    obj s set_defined_by_replacement(A, B, P)
+    forall x set_defined_by_replacement(A, B, P):
+        $exist_prop_preimage_by_replacement(A, B, P, x)
 
-obj y set_defined_by_replacement(A, B, P)
-y $in B
+    obj y set_defined_by_replacement(A, B, P)
+    y $in B
 
-have x st $exist_by_replacement(A, B, P, y)
+    have x st $exist_prop_preimage_by_replacement(A, B, P, y)
 
-x $in A
-$P(x, y)
+    x $in A
+    $P(x, y)
+
+prove:
+    obj A set, B set
+    prop P(x A, y B)
+
+    know forall x A, y1, y2 B:
+        $P(x, y1)
+        $P(x, y2)
+        then:
+            $last_two_objects_are_equal(x, y1, y2)
+
+    have y  := set_defined_by_replacement(A, B, P)
+
+    forall x y:
+        x $in B
