@@ -28,6 +28,14 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 		}
 	}()
 
+	if string(stmt.Fact.PropName) == glob.KeywordSetDefinedByReplacement {
+		execState, err := exec.haveSetDefinedByReplacementStmt(stmt)
+		if notOkExec(execState, err) {
+			return execState, err
+		}
+		return glob.ExecState_True, nil
+	}
+
 	// 检查 SpecFactStmt 是否满足了
 	execState, err := exec.factStmt(&stmt.Fact)
 
@@ -228,6 +236,38 @@ func (exec *Executor) haveEnumSetStmt(stmt *ast.EnumStmt) (glob.ExecState, error
 func (exec *Executor) haveIntensionalSetStmt(stmt *ast.IntensionalSetStmt) (glob.ExecState, error) {
 	defObjStmt := ast.NewDefObjStmt([]string{stmt.CurSet.String()}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}, []ast.FactStmt{stmt})
 	err := exec.defObjStmt(defObjStmt, false)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+
+	return glob.ExecState_True, nil
+}
+
+func (exec *Executor) haveSetDefinedByReplacementStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
+	if len(stmt.Fact.Params) != 4 {
+		return glob.ExecState_Error, fmt.Errorf("set defined by replacement must have 3 parameters, but %s has %d", stmt.Fact.String(), len(stmt.Fact.Params))
+	}
+
+	propName, ok := stmt.Fact.Params[2].(ast.FcAtom)
+	if !ok {
+		return glob.ExecState_Error, fmt.Errorf("third parameter of set defined by replacement must be a prop name, but %s is not", stmt.Fact.String())
+	}
+
+	uniFact := ast.GetForallXOnlyOneYSatisfyGivenProp(stmt.Fact.Params[0], stmt.Fact.Params[1], propName)
+
+	execState, err := exec.factStmt(uniFact)
+	if notOkExec(execState, err) {
+		return execState, err
+	}
+
+	fourthObjInSetDefinedByReplacement := ast.NewInFactWithFc(stmt.Fact.Params[3], ast.NewFcFn(ast.FcAtom(glob.KeywordSetDefinedByReplacement), []ast.Fc{stmt.Fact.Params[0], stmt.Fact.Params[1], propName}))
+	execState, err = exec.factStmt(fourthObjInSetDefinedByReplacement)
+	if notOkExec(execState, err) {
+		return execState, err
+	}
+
+	defObjStmt := ast.NewDefObjStmt([]string{stmt.ObjNames[0]}, []ast.Fc{stmt.Fact.Params[0]}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, propName, []ast.Fc{ast.FcAtom(stmt.ObjNames[0]), stmt.Fact.Params[3]})})
+	err = exec.defObjStmt(defObjStmt, false)
 	if err != nil {
 		return glob.ExecState_Error, err
 	}

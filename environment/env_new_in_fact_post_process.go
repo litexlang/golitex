@@ -123,5 +123,12 @@ func (e *Env) in_setDefinedByReplacement_postProcess(setDefinedByReplacement *as
 		return err
 	}
 
+	// forall x set_defined_by_replacement(A, B, P), x is in B
+	forallXInSetDefinedByReplacement_ItIsInB := ast.NewUniFact([]string{"x"}, []ast.Fc{setDefinedByReplacement}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{ast.FcAtom("x"), setDefinedByReplacement.Params[1]})})
+	err = e.NewFact(forallXInSetDefinedByReplacement_ItIsInB)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
