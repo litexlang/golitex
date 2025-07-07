@@ -28,7 +28,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 		}
 	}()
 
-	if string(stmt.Fact.PropName) == glob.KeywordSetDefinedByReplacement {
+	if string(stmt.Fact.PropName) == glob.KeywordExistByReplacement {
 		execState, err := exec.haveSetDefinedByReplacementStmt(stmt)
 		if notOkExec(execState, err) {
 			return execState, err
@@ -66,7 +66,6 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 
 	// TODO： have 可能会引入3种不同的东西：set,obj,fn都可能；每种情况，处理起来不一样：比如如果你是fn和set，那可能就要把你放到 setMem 和 fnMem 里了
 	// 这个 warning 不合时宜了，因为fn的定义其实和obj一样了，就是额外多个满足特定的template
-	exec.appendInternalWarningMsg("Litex only support have obj. if you want to introduce set or fn by the have stmt, you need to use the set or fn stmt to introduce them.")
 
 	// TODO 把 exist prop def 里的东西释放出来
 	existPropDef, ok := exec.env.GetExistPropDef(stmt.Fact.PropName)
