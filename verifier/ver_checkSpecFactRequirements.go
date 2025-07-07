@@ -53,15 +53,23 @@ func (ver *Verifier) checkSpecFactRequirements(stmt *ast.SpecFactStmt, state Ver
 }
 
 func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state VerState) (bool, error) {
-	// 单独处理特殊的内置prop
-	if isArithmeticFn(fc) {
-		return ver.arithmeticFnRequirement(fc.(*ast.FcFn), state)
-	} else if ast.IsFnFcFn(fc) {
+	if _, ok := fc.(ast.FcAtom); ok {
 		return true, nil
-	} else if asFcFn, ok := fc.(*ast.FcFn); ok && ast.IsFcAtomAndEqualToStr(asFcFn.FnHead, glob.KeywordSetDefinedByReplacement) {
-		return ver.setDefinedByReplacementFnRequirement(fc.(*ast.FcFn), state)
+	}
+	fcAsFcFn, ok := fc.(*ast.FcFn)
+	if !ok {
+		return false, fmt.Errorf("%s is not a function", fc.String())
+	}
+
+	// 单独处理特殊的内置prop
+	if isArithmeticFn(fcAsFcFn) {
+		return ver.arithmeticFnRequirement(fcAsFcFn, state)
+	} else if ast.IsFnFcFn(fcAsFcFn) {
+		return true, nil
+	} else if ast.IsFcAtomAndEqualToStr(fcAsFcFn.FnHead, glob.KeywordSetDefinedByReplacement) {
+		return ver.setDefinedByReplacementFnRequirement(fcAsFcFn, state)
 	} else {
-		return ver.fcSatisfyNotBuiltinFnRequirement(fc, state)
+		return ver.fcFnSatisfyNotBuiltinFnRequirement(fcAsFcFn, state)
 	}
 }
 
@@ -74,11 +82,7 @@ func isArithmeticFn(fc ast.Fc) bool {
 }
 
 // TODO: 这里需要检查，setParam是否是自由变量
-func (ver *Verifier) fcSatisfyNotBuiltinFnRequirement(fc ast.Fc, state VerState) (bool, error) {
-	if _, ok := fc.(ast.FcAtom); ok {
-		return true, nil
-	}
-
+func (ver *Verifier) fcFnSatisfyNotBuiltinFnRequirement(fc ast.Fc, state VerState) (bool, error) {
 	asFcFn, ok := fc.(*ast.FcFn)
 	if !ok {
 		return false, fmt.Errorf("%s is not a function", fc.String())

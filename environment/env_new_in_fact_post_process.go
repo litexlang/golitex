@@ -32,8 +32,8 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) error {
 		return err
 	}
 
-	if ast.IsFnFcFn(fact.Params[1]) {
-		templateStmt, err := ast.FnFcToFnTemplateStmt(fact.Params[1])
+	if fnFn, ok := fact.Params[1].(*ast.FcFn); ok && ast.IsFnFcFn(fnFn) {
+		templateStmt, err := ast.FnFcToFnTemplateStmt(fnFn)
 		if err != nil {
 			return err
 		}
