@@ -52,7 +52,11 @@ func (tb *tokenBlock) stmt() (ast.Stmt, error) {
 			if !slices.Contains(tb.header.slice, glob.KeySymbolLeftBrace) {
 				ret, err = tb.haveSetStmt()
 			} else {
-				ret, err = tb.haveSetFnStmt()
+				if tb.header.strAtCurIndexPlus(2) == glob.KeySymbolColonEqual {
+					ret, err = tb.haveSetDefinedByReplacementStmt()
+				} else {
+					ret, err = tb.haveSetFnStmt()
+				}
 			}
 		} else {
 			ret, err = tb.haveObjInNonEmptySetStmt()
@@ -1581,50 +1585,6 @@ func (tb *tokenBlock) haveSetStmt() (ast.Stmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	if tb.header.is(glob.KeywordSetDefinedByReplacement) {
-		err = tb.header.skip(glob.KeywordSetDefinedByReplacement)
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-
-		err = tb.header.skip(glob.KeySymbolLeftBrace)
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-
-		domSet, err := tb.RawFc()
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-
-		err = tb.header.skip(glob.KeySymbolComma)
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-
-		rangeSet, err := tb.RawFc()
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-
-		err = tb.header.skip(glob.KeySymbolComma)
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-
-		propName, err := tb.rawFcAtom()
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-
-		err = tb.header.skip(glob.KeySymbolRightBrace)
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-
-		return ast.NewHaveSetDefinedByReplacementStmt(haveSetName, domSet, rangeSet, propName), nil
-	}
-
 	fact, err := tb.enumStmt_or_intensionalSetStmt(ast.FcAtom(haveSetName))
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -1633,7 +1593,7 @@ func (tb *tokenBlock) haveSetStmt() (ast.Stmt, error) {
 	return ast.NewHaveSetStmt(fact), nil
 }
 
-func (tb *tokenBlock) haveSetFnStmt() (*ast.HaveSetFnStmt, error) {
+func (tb *tokenBlock) haveSetFnStmt() (ast.Stmt, error) {
 	err := tb.header.skip(glob.KeywordHave)
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -1655,4 +1615,63 @@ func (tb *tokenBlock) haveSetFnStmt() (*ast.HaveSetFnStmt, error) {
 	}
 
 	return ast.NewHaveSetFnStmt(declHeader, param, parentSet, proofs), nil
+}
+
+func (tb *tokenBlock) haveSetDefinedByReplacementStmt() (ast.Stmt, error) {
+	err := tb.header.skip(glob.KeywordHave)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	haveSetName, err := tb.header.next()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolColonEqual)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeywordSetDefinedByReplacement)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	domSet, err := tb.RawFc()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolComma)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	rangeSet, err := tb.RawFc()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolComma)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	propName, err := tb.rawFcAtom()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolRightBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	return ast.NewHaveSetDefinedByReplacementStmt(haveSetName, domSet, rangeSet, propName), nil
 }
