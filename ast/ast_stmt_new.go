@@ -150,7 +150,7 @@ func NewProveOverFiniteSetStmt(fact *UniFactStmt, proofs []Stmt) *ProveOverFinit
 	return &ProveOverFiniteSetStmt{*fact, proofs}
 }
 
-func NewHaveInSetStmt(objNames []string, objSets []Fc) *HaveObjInNonEmptySetStmt {
+func NewHaveObjInNonEmptySetStmt(objNames []string, objSets []Fc) *HaveObjInNonEmptySetStmt {
 	return &HaveObjInNonEmptySetStmt{objNames, objSets}
 }
 

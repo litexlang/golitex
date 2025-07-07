@@ -96,8 +96,6 @@ func (ver *Verifier) returnValueOfBuiltinArithmeticFnInReal(stmt *ast.SpecFactSt
 	if ok {
 		if state.requireMsg() {
 			ver.successWithMsg(stmt.String(), "the return value of the builtin arithmetic function is in the real set")
-		} else {
-			ver.successNoMsg()
 		}
 		return true
 	} else {
@@ -137,8 +135,6 @@ func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactS
 
 	if state.requireMsg() {
 		ver.successWithMsg(stmt.String(), "the return value of the user defined function is in the function return set")
-	} else {
-		ver.successNoMsg()
 	}
 
 	return true
@@ -162,8 +158,6 @@ func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state VerState)
 	if string(asAtom) == glob.KeywordNatural || string(asAtom) == glob.KeywordInt || string(asAtom) == glob.KeywordReal || string(asAtom) == glob.KeywordComplex || string(asAtom) == glob.KeywordRational {
 		if state.requireMsg() {
 			ver.successWithMsg(stmt.String(), "the builtin rules")
-		} else {
-			ver.successNoMsg()
 		}
 		return true
 	}
@@ -204,8 +198,6 @@ func (ver *Verifier) verIn_N_Z_Q_R_C_BySpecMem(stmt *ast.SpecFactStmt, state Ver
 	if ok {
 		if state.requireMsg() {
 			ver.successWithMsg(stmt.String(), msg)
-		} else {
-			ver.successNoMsg()
 		}
 		return true
 	}
@@ -392,8 +384,6 @@ func (ver *Verifier) inObjFact(stmt *ast.SpecFactStmt, state VerState) (bool, er
 
 	if state.requireMsg() {
 		ver.successWithMsg(stmt.String(), fmt.Sprintf("all atoms in %s are declared as obj or literal number", stmt.Params[0].String()))
-	} else {
-		ver.successNoMsg()
 	}
 
 	return true, nil

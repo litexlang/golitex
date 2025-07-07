@@ -17,21 +17,9 @@ package litex_verifier
 import (
 	"fmt"
 	ast "golitex/ast"
+	glob "golitex/glob"
 	"strings"
 )
-
-func (ver *Verifier) successMsgEnd(stmtStr, stmtVerifiedBy string) {
-	if stmtStr != "" {
-		ver.env.Msgs = append(ver.env.Msgs, stmtStr)
-	}
-	if stmtVerifiedBy != "" {
-		message := fmt.Sprintf("is true. proved by\n%v", stmtVerifiedBy)
-		ver.env.Msgs = append(ver.env.Msgs, message)
-	} else {
-		message := "is true."
-		ver.env.Msgs = append(ver.env.Msgs, message)
-	}
-}
 
 func (ver *Verifier) newMsgEnd(format string, args ...any) {
 	message := fmt.Sprintf(format, args...)
@@ -49,18 +37,26 @@ func (ver *Verifier) specFactSpecMemTrueMsg(stmt *ast.SpecFactStmt, knownFact as
 	ver.successWithMsg(stmt.String(), verifiedBy.String())
 }
 
-// func (ver *Verifier) newMsgEndWithCurMatchProp(stmt *ast.SpecFactStmt, knownFact env.KnownSpecFact, knownPreviousSuppose *ast.SpecFactStmt) {
-// 	var verifiedBy strings.Builder
+func (ver *Verifier) successWithMsg(stmtStr, stmtVerifiedBy string) {
+	if stmtStr != "" {
+		ver.env.Msgs = append(ver.env.Msgs, stmtStr)
+	}
+	if stmtVerifiedBy != "" {
+		message := fmt.Sprintf("is true. proved by\n%v", stmtVerifiedBy)
+		ver.env.Msgs = append(ver.env.Msgs, message)
+	} else {
+		message := "is true."
+		ver.env.Msgs = append(ver.env.Msgs, message)
+	}
+}
 
-// 	if knownPreviousSuppose != nil {
-// 		verifiedBy.WriteString(fmt.Sprintf("known %s/%s %s:\n", glob.KeywordWith, glob.KeywordSuppose, knownPreviousSuppose.String()))
-// 		verifiedBy.WriteString(glob.SplitLinesAndAdd4NIndents(knownFact.String(), 1))
-// 		verifiedBy.WriteString("\n")
-// 	}
-
-// 	for i, knownParam := range knownFact.Fact.Params {
-// 		// Have to write matches, because in with-suppose situation, the param is not literally equal to the stmt param
-// 		verifiedBy.WriteString(fmt.Sprintf("%s matches %s\n", knownParam, stmt.Params[i]))
-// 	}
-// 	ver.successWithMsg(stmt.String(), verifiedBy.String())
-// }
+func (ver *Verifier) newMsgAtParent(s string) error {
+	if ver.env.Parent == nil {
+		return fmt.Errorf("no parent env")
+	} else {
+		if glob.IsNotImportDirStmt() {
+			ver.env.Parent.AppendMsg(s)
+		}
+		return nil
+	}
+}

@@ -396,8 +396,6 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch(stmt *ast.SpecFac
 		if ok {
 			if state.requireMsg() {
 				ver.successWithMsg(stmt.String(), knownFactUnderLogicExpr.String())
-			} else {
-				ver.successNoMsg()
 			}
 			return true, nil
 		}
@@ -469,8 +467,6 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch(stmt *ast.SpecFactSt
 		if ok {
 			if state.requireMsg() {
 				ver.successWithMsg(stmt.String(), knownFact.String())
-			} else {
-				ver.successNoMsg()
 			}
 			return true, nil
 		}
@@ -560,8 +556,6 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 			verifiedBy.WriteString(fmt.Sprintf("%s = %s\n", knownParam, stmt.Params[i]))
 		}
 		ver.successWithMsg(stmt.String(), verifiedBy.String())
-	} else {
-		ver.successNoMsg()
 	}
 
 	return true, nil
@@ -576,8 +570,6 @@ func (ver *Verifier) fcEqual_Commutative_Associative_CmpRule(left ast.Fc, right 
 	if ok {
 		if verState.requireMsg() {
 			ver.successWithMsg(fmt.Sprintf("%s = %s", left.String(), right.String()), msg)
-		} else {
-			ver.successNoMsg()
 		}
 		return true, nil
 	}
@@ -693,8 +685,6 @@ func (ver *Verifier) isFnEqualFact_Check_BuiltinRules(stmt *ast.SpecFactStmt, st
 	} else if ok {
 		if state.requireMsg() {
 			ver.successWithMsg(stmt.String(), equalFact.String())
-		} else {
-			ver.successNoMsg()
 		}
 		return true, nil
 	}
@@ -734,8 +724,6 @@ func (ver *Verifier) isFnEqualFact_Check_BuiltinRules(stmt *ast.SpecFactStmt, st
 
 	if state.requireMsg() {
 		ver.successWithMsg(stmt.String(), "fn equal definition")
-	} else {
-		ver.successNoMsg()
 	}
 
 	return true, nil
@@ -854,8 +842,6 @@ LoopOverFacts:
 
 		if state.requireMsg() {
 			ver.specFactSpecMemTrueMsg(stmt, knownFact)
-		} else {
-			ver.successNoMsg()
 		}
 
 		return true, nil
@@ -1113,8 +1099,6 @@ func (ver *Verifier) verify_specFact_when_given_orStmt_is_true(stmt *ast.SpecFac
 
 	if state.requireMsg() {
 		ver.successWithMsg(stmt.String(), orStmt.String())
-	} else {
-		ver.successNoMsg()
 	}
 
 	return true, nil
