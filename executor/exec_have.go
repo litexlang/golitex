@@ -21,7 +21,7 @@ import (
 	verifier "golitex/verifier"
 )
 
-func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
+func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt) (glob.ExecState, error) {
 	defer func() {
 		if glob.IsNotImportDirStmt() {
 			exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
@@ -160,7 +160,7 @@ func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStm
 	for i := range len(stmt.Objs) {
 		existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordExistIn), []ast.Fc{stmt.ObjSets[i]})
 		haveStmt := ast.NewHaveStmt([]string{stmt.Objs[i]}, *existInFact)
-		execState, err := exec.haveStmt(haveStmt)
+		execState, err := exec.haveObjStStmt(haveStmt)
 		if notOkExec(execState, err) {
 			return execState, err
 		}
@@ -242,7 +242,7 @@ func (exec *Executor) haveIntensionalSetStmt(stmt *ast.IntensionalSetStmt) (glob
 	return glob.ExecState_True, nil
 }
 
-func (exec *Executor) haveSetDefinedByReplacementStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
+func (exec *Executor) haveSetDefinedByReplacementStmt(stmt *ast.HaveObjStStmt) (glob.ExecState, error) {
 	if len(stmt.Fact.Params) != 4 {
 		return glob.ExecState_Error, fmt.Errorf("set defined by replacement must have 3 parameters, but %s has %d", stmt.Fact.String(), len(stmt.Fact.Params))
 	}

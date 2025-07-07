@@ -50,8 +50,8 @@ func NewDefHeader(name string, params []string, setParams []Fc) *DefHeader {
 	return &DefHeader{name, params, setParams}
 }
 
-func NewHaveStmt(objNames []string, fact SpecFactStmt) *HaveStmt {
-	return &HaveStmt{objNames, fact}
+func NewHaveStmt(objNames []string, fact SpecFactStmt) *HaveObjStStmt {
+	return &HaveObjStStmt{objNames, fact}
 }
 
 func NewExistPropDef(declHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt) *DefExistPropStmtBody {
@@ -152,4 +152,8 @@ func NewHaveSetStmt(fact SetDeclarationStmtInterface) *HaveSetStmt {
 
 func NewHaveSetFnStmt(declHeader *DefHeader, param string, parentSet Fc, proofs []*SpecFactStmt) *HaveSetFnStmt {
 	return &HaveSetFnStmt{*declHeader, param, parentSet, proofs}
+}
+
+func NewHaveSetDefinedByReplacementStmt(name string, domSet Fc, rangeSet Fc, propName FcAtom) *HaveSetDefinedByReplacementStmt {
+	return &HaveSetDefinedByReplacementStmt{name, domSet, rangeSet, propName}
 }
