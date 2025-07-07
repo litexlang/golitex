@@ -1,9 +1,0 @@
-prove_set_has_and_only_has_items setName, item1, item2:
-
-1. 证明 setName 是 set
-2. 证明 item1 和 item2 是 setName 的元素
-3. 证明 setName 只有 item1 和 item2 两个元素，即
-forall x setName:
-    or:
-        x = item1
-        x = item2
