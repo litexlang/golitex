@@ -109,7 +109,7 @@ func (tb *tokenBlock) factStmt(uniFactDepth uniFactEnum) (ast.FactStmt, error) {
 
 }
 
-func (tb *tokenBlock) enumStmt(setName ast.Fc) (*ast.EnumStmt, error) {
+func (tb *tokenBlock) enumFactualStmt(setName ast.Fc) (*ast.EnumStmt, error) {
 	// skip colon and get end
 	err := tb.header.skip(glob.KeySymbolLeftCurly)
 	if err != nil {
@@ -1342,7 +1342,7 @@ func (tb *tokenBlock) intentionalSetBody() (string, ast.Fc, []*ast.SpecFactStmt,
 	return param, parentSet, proofs, nil
 }
 
-func (tb *tokenBlock) intensionalSetStmt(curSet ast.Fc) (*ast.IntensionalSetStmt, error) {
+func (tb *tokenBlock) intensionalSetFactualStmt(curSet ast.Fc) (*ast.IntensionalSetStmt, error) {
 	param, parentSet, proofs, err := tb.intentionalSetBody()
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -1435,11 +1435,11 @@ func (tb *tokenBlock) relaFact_intensionalSetFact_enumStmt() (ast.FactStmt, erro
 	return ret, nil
 }
 
-func (tb *tokenBlock) enumStmt_or_intensionalSetStmt(fc ast.Fc) (ast.SetDeclarationStmtInterface, error) {
+func (tb *tokenBlock) enumStmt_or_intensionalSetStmt(fc ast.Fc) (ast.EnumSet_IntensionalSet_FactualStmtInterface, error) {
 	if tb.header.is(glob.KeySymbolLeftCurly) {
-		return tb.enumStmt(fc)
+		return tb.enumFactualStmt(fc)
 	} else {
-		return tb.intensionalSetStmt(fc)
+		return tb.intensionalSetFactualStmt(fc)
 	}
 }
 

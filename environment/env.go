@@ -28,7 +28,7 @@ type ExistPropDefMem map[string]ast.DefExistPropStmt
 
 type FnTemplateDefMem map[string]ast.DefFnTemplateStmt
 
-type ObjDefMem map[string]struct{}
+type ObjDefMem map[string]ast.FnTemplate_Or_DefObjStmtInterface // 因为很多的obj会共享一个def obj
 
 type FnInFnTemplateFactsMem map[string][]*ast.FnTemplateStmt
 
