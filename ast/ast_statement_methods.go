@@ -316,16 +316,11 @@ func isFcWithFcFnHeadWithName(fc Fc, name string) bool {
 	return IsFcAtomAndEqualToStr(fcAsFcFnHeadAsFcFn.FnHead, name)
 }
 
-func IsFnFcFn(fc Fc) bool {
-	return isFcWithFcFnHeadWithName(fc, glob.KeywordFn)
+func IsFnFcFn(fcFn *FcFn) bool {
+	return isFcWithFcFnHeadWithName(fcFn, glob.KeywordFn)
 }
 
-func FnFcToFnTemplateStmt(fc Fc) (*FnTemplateStmt, error) {
-	fcAsFcFn, ok := fc.(*FcFn)
-	if !ok {
-		return nil, fmt.Errorf("expected FcFn, but got %T", fc)
-	}
-
+func FnFcToFnTemplateStmt(fcAsFcFn *FcFn) (*FnTemplateStmt, error) {
 	fcAsFcFnHeadAsFcFn, ok := fcAsFcFn.FnHead.(*FcFn)
 	if !ok {
 		return nil, fmt.Errorf("expected FcFn, but got %T", fcAsFcFn.FnHead)
