@@ -1,13 +1,15 @@
 fn logBase(x, y N) N:
     dom:
-        y != 0
+        x != 0
 
 know forall x, y, z N:
-    logBase(x^y, z) = y * logBase(x, z)
-    logBase(x*y, z) = logBase(x, z) + logBase(y, z)
+    logBase(z, x^y) = y * logBase(z, x)
+    logBase(z, x*y) = logBase(z, x) + logBase(z, y)
 
 know forall x N:
-    logBase(x, x) = 1
+    x != 0
+    then:
+        logBase(x, x) = 1
 
 claim:
     not sqrt(2) $in Q
@@ -18,22 +20,22 @@ claim:
         x ^ 2 = (sqrt(2) ^ 2) * (y ^ 2)
         sqrt(2) ^ 2 = 2 # must write it out
         x ^ 2 = 2 * (y ^ 2)
-        logBase(x ^ 2, 2) = logBase(2 * (y ^ 2), 2)
+        logBase(2, x ^ 2) = logBase(2, 2 * (y ^ 2))
         
-        logBase(x ^ 2, 2) = 2 * logBase(x, 2)
-        logBase(y ^ 2, 2) = 2 * logBase(y, 2)
+        logBase(2, x ^ 2) = 2 * logBase(2, x)
+        logBase(2, y ^ 2) = 2 * logBase(2, y)
 
-        logBase(2 * (y ^ 2), 2) = logBase(2, 2) + logBase(y ^ 2, 2)
+        logBase(2, 2 * (y ^ 2)) = logBase(2, 2) + logBase(2, y ^ 2)
         logBase(2, 2) = 1
-        logBase(2 * (y ^ 2), 2) = 1 + logBase(y ^ 2, 2)
+        logBase(2, 2 * (y ^ 2)) = 1 + logBase(2, y ^ 2)
 
-        logBase(x ^ 2, 2) = 1 + 2 * logBase(y, 2)
-        2 * logBase(x, 2) = 1 + 2 * logBase(y, 2)
+        logBase(2, x ^ 2) = 1 + 2 * logBase(2, y)
+        2 * logBase(2, x) = 1 + 2 * logBase(2, y)
 
-        (2 * logBase(x, 2)) % 2 = (1 + 2 * logBase(y, 2)) % 2
-        (2 * logBase(x, 2)) % 2 = 0
-        0 = (1 + 2 * logBase(y, 2)) % 2
+        (2 * logBase(2, x)) % 2 = (1 + 2 * logBase(2, y)) % 2
+        (2 * logBase(2, x)) % 2 = 0
+        0 = (1 + 2 * logBase(2, y)) % 2
 
-        (1 + 2 * logBase(y, 2)) % 2 = 1 % 2 + (2 * logBase(y, 2)) % 2
-        1 % 2 + (2 * logBase(y, 2)) % 2 = 1 + 0
+        (1 + 2 * logBase(2, y)) % 2 = 1 % 2 + (2 * logBase(2, y)) % 2
+        1 % 2 + (2 * logBase(2, y)) % 2 = 1 + 0
         0 = 1

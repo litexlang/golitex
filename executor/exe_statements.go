@@ -35,7 +35,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 	case *ast.ClaimProveStmt:
 		execState, err = exec.claimStmt(stmt)
 	case *ast.DefPropStmt:
-		err = exec.defPropStmt(stmt)
+		err = exec.defPropStmt(stmt, true)
 	case *ast.DefObjStmt:
 		err = exec.defObjStmt(stmt, true)
 	case *ast.HaveObjStStmt:
@@ -178,7 +178,7 @@ func (exec *Executor) GetMsgAsStr0ToEnd() string {
 	return ret
 }
 
-func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
+func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool) error {
 	if glob.RequireMsg() {
 		defer exec.newMsg(stmt.String() + "\n")
 	}
@@ -192,28 +192,29 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
 		return nil
 	}
 
-	// prop leads to iff
-	propToIff, iffToProp, err := stmt.Make_PropToIff_IffToProp()
-	if err != nil {
-		return err
-	}
+	if generateIffUniFact {
+		// prop leads to iff
+		propToIff, iffToProp, err := stmt.Make_PropToIff_IffToProp()
+		if err != nil {
+			return err
+		}
 
-	err = exec.env.NewFact(propToIff)
-	if err != nil {
-		return err
-	}
-	if glob.RequireMsg() {
-		exec.newMsg(fmt.Sprintf("%s\nis true by definition", propToIff))
-	}
+		err = exec.env.NewFact(propToIff)
+		if err != nil {
+			return err
+		}
+		if glob.RequireMsg() {
+			exec.newMsg(fmt.Sprintf("%s\nis true by definition", propToIff))
+		}
 
-	err = exec.env.NewFact(iffToProp)
-	if err != nil {
-		return err
+		err = exec.env.NewFact(iffToProp)
+		if err != nil {
+			return err
+		}
+		if glob.RequireMsg() {
+			exec.newMsg(fmt.Sprintf("%s\nis true by definition", iffToProp))
+		}
 	}
-	if glob.RequireMsg() {
-		exec.newMsg(fmt.Sprintf("%s\nis true by definition", iffToProp))
-	}
-
 	return nil
 }
 
@@ -501,7 +502,7 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
 		}()
 	}
 
-	err := exec.defPropStmt(&stmt.Prop)
+	err := exec.defPropStmt(&stmt.Prop, false)
 	if err != nil {
 		return err
 	}
