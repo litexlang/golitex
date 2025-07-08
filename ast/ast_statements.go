@@ -201,6 +201,7 @@ type HaveSetFnStmt struct {
 	Proofs    []*SpecFactStmt
 }
 
+// TODO: 这里需要变成factStmt, haveSetInterface，而不是只被用在声明的时候
 type HaveSetDefinedByReplacementStmt struct {
 	Name     string
 	DomSet   Fc
