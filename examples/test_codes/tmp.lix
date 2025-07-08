@@ -1,0 +1,15 @@
+prop is_group(s set, mul fn(s, s)s, inv fn(s)s, e s):
+    forall x s, y s, z s:
+        mul(mul(x, y), z) = mul(x, mul(y, z))
+    forall x s:
+        mul(x, inv(x)) = e
+        mul(inv(x), x) = e
+
+fn inverse(x R)R:
+    inverse(x) + x = 0
+
+know forall x Z:
+    inverse(x) $in Z
+
+inverse $in fn(Z, Z)Z
+

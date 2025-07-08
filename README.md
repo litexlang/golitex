@@ -323,7 +323,7 @@ The Litex proof requires no extra knowledge except basic math knowledge, but the
   </tr>
 </table>
 
-Next I want to show you how Litex can be used to verify a simple group theory statement. It's clear that the Litex version can be read and understood by a 10-year-old, while the Lean version is much more complex.
+Next I want to show you how Litex can be used to verify a simple group theory statement. It's clear that the Litex version can be read and understood by a 10-year-old, while the Lean version is much more complex. Look how easy it is to narrow the function type of `inverse` from `R` to `Z`.
 
 <table style="border-collapse: collapse; width: 100%;">
   <tr>
@@ -365,15 +365,7 @@ Next I want to show you how Litex can be used to verify a simple group theory st
       <code>&nbsp;&nbsp;zero_add := by intros; apply Int.zero_add</code><br>
       <code>&nbsp;&nbsp;add_zero := by intros; apply Int.add_zero</code><br>
       <code>&nbsp;&nbsp;add_left_neg := by intros; apply Int.neg_add_self</code><br><br>
-      <code>-- R is not builtin in Lean, the user has to define it himself or rely on the library. We skip use float as an example.</code><br>
-      <code>def floatAddGroup : MyGroup Float where</code><br>
-      <code>&nbsp;&nbsp;add := Float.add</code><br>
-      <code>&nbsp;&nbsp;zero := 0.0</code><br>
-      <code>&nbsp;&nbsp;neg := Float.neg</code><br>
-      <code>&nbsp;&nbsp;add_assoc := by intros; apply Float.add_assoc</code><br>
-      <code>&nbsp;&nbsp;zero_add := by intros; apply Float.zero_add</code><br>
-      <code>&nbsp;&nbsp;add_zero := by intros; apply Float.add_zero</code><br>
-      <code>&nbsp;&nbsp;add_left_neg := by intros; apply Float.neg_add_self</code><br>
+      <code>-- R is not builtin in Lean, the user has to define it himself or rely on the library. We skip it.</code><br>
     </td>
   </tr>
 </table>

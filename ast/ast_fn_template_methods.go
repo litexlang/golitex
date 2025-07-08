@@ -24,7 +24,15 @@ func (stmt *FnTemplateStmt) InstantiateByFnName_WithTemplateNameGivenFc(fc Fc) (
 }
 
 func (fnTemplate *FnTemplateStmt) DeriveUniFact() *UniFactStmt {
-	return NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, fnTemplate.ThenFacts)
+	paramAsFc := []Fc{}
+	for _, param := range fnTemplate.Params {
+		paramAsFc = append(paramAsFc, FcAtom(param))
+	}
+
+	thenFacts := []FactStmt{NewInFactWithParamFc(NewFcFn(FcAtom(fnTemplate.Name), paramAsFc), fnTemplate.RetSet)}
+	thenFacts = append(thenFacts, fnTemplate.ThenFacts...)
+
+	return NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, thenFacts)
 }
 
 func (stmt *FnTemplateStmt) InstantiateFnTWithoutChangingTName(uniMap map[string]Fc) ([]Fc, FactStmtSlice, FactStmtSlice, Fc, error) {
