@@ -1,8 +1,5 @@
 fn logBase(x, y N) N:
     x > 0
-
-know forall x N:
-    x > 0
     then:
         logBase(x, x) = 1
 
@@ -10,33 +7,5 @@ know forall x, y, z N:
     logBase(x^y, z) = y * logBase(x, z)
     logBase(x*y, z) = logBase(x, z) + logBase(y, z)
 
-claim:
-    not sqrt(2) $in Q
-    prove_by_contradiction:
-        have x, y st $rational_number_representation_in_fraction(sqrt(2))
-        x / y = sqrt(2)
-        y != 0
-        
-        x = sqrt(2) * y
-        x ^ 2 = (sqrt(2) ^ 2) * (y ^ 2)
-        sqrt(2) ^ 2 = 2 # must write it out
-        x ^ 2 = 2 * (y ^ 2)
-        
-        2 * (y ^ 2) $in N
-        
-        know logBase(x ^ 2, 2) = 2 * logBase(x, 2)
-        logBase(2 * (y ^ 2), 2) = logBase(2, 2) + logBase(y ^ 2, 2)
-        logBase(2, 2) = 1
-        logBase(2 * (y ^ 2), 2) = 1 + logBase(y ^ 2, 2)
-        know logBase(y ^ 2, 2) = 2 * logBase(y, 2)
-
-        logBase(x ^ 2, 2) = logBase(2 * (y ^ 2), 2)
-        logBase(x ^ 2, 2) = 1 + 2 * logBase(y, 2)
-        know 2 * logBase(y, 2) = 1 + 2 * logBase(y, 2)
-
-        know 2 * logBase(y, 2) $in N
-        (2 * logBase(y, 2)) % 2 = (1 + 2 * logBase(y, 2)) % 2
-        
-        know 0 = (1 + 2 * logBase(y, 2)) % 2
-        know 0 = 1 + 0
-        0 = 1
+obj x, y, z N
+logBase(x, z) + logBase(y, z) $in N
