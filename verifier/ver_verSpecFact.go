@@ -345,7 +345,7 @@ func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state VerState) (b
 		// 尝试证明 =
 		equalStmt := *stmt
 		equalStmt.PropName = ast.FcAtom(glob.KeySymbolEqual)
-		ok, err = ver.verTrueEqualFact(&equalStmt, state)
+		ok, err = ver.verTrueEqualFact(&equalStmt, state, true)
 		if err != nil {
 			return false, err
 		}
@@ -367,7 +367,7 @@ func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state VerState) (b
 		// 尝试证明 =
 		equalStmt := *stmt
 		equalStmt.PropName = ast.FcAtom(glob.KeySymbolEqual)
-		ok, err = ver.verTrueEqualFact(&equalStmt, state)
+		ok, err = ver.verTrueEqualFact(&equalStmt, state, true)
 		if isErrOrOk(ok, err) {
 			return ok, err
 		}

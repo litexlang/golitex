@@ -23,15 +23,17 @@ import (
 )
 
 // how equality is verified is different from other facts because 1. it is stored differently 2. its transitive and commutative property is automatically used by the verifier
-func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if ok, err := ver.checkSpecFactRequirements(stmt, state); err != nil {
-		return false, err
-	} else if !ok {
-		return false, nil
-	}
+func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state VerState, checkRequirements bool) (bool, error) {
+	if checkRequirements {
+		if ok, err := ver.checkSpecFactRequirements(stmt, state); err != nil {
+			return false, err
+		} else if !ok {
+			return false, nil
+		}
 
-	if !isValidEqualFact(stmt) {
-		return false, fmt.Errorf("invalid equal fact: %v", stmt)
+		if !isValidEqualFact(stmt) {
+			return false, fmt.Errorf("invalid equal fact: %v", stmt)
+		}
 	}
 
 	ok, err := ver.verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(stmt.Params[0], stmt.Params[1], state)
@@ -44,7 +46,7 @@ func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state VerState) (b
 
 	if leftAsFn, ok := stmt.Params[0].(*ast.FcFn); ok {
 		if rightAsFn, ok := stmt.Params[1].(*ast.FcFn); ok {
-			ok, err := ver.verTrueEqualFact_FcFnEqual(leftAsFn, rightAsFn, state)
+			ok, err := ver.verTrueEqualFact_FcFnEqual_NoCheckRequirements(leftAsFn, rightAsFn, state)
 			if err != nil {
 				return false, err
 			}
