@@ -260,6 +260,89 @@ Next I want to show you how Litex can be used to solve a simple linear equation.
 
 I know Lean can use tactics to solve the same problem, and it is shorter. Litex will introduce similar features in the future. What I really want to show you here is that Litex is much more readable and intuitive than Lean in this case. Not every situation can be solved by tactics, and writing tactics itself in Lean is not easy. Litex spares you from remembering all these difficult things like `have`, `by`, `rw`, `simp`, `exact` and strange syntax etc. All you need is basic math knowledge, which significantly reduces the barrier to entry.
 
+Next we prove `sqrt(2) is irrational`. Since the standard library is not yet implemented, we have to define the logBase function ourselves for now. Note that how easy it is to define a new concept in Litex. You do not have to start from a very low level concept and build up to a higher level concept. You can define a new concept directly.
+
+The Litex proof requires no extra knowledge except basic math knowledge, but the Lean proof requires a huge amount of knowledge about Lean tactics. Tactics are not easy to learn, not easy to remember, and very far from what we are truly thinking when we are doing math.
+
+Litex:
+
+```
+fn logBase(x, y N) N:
+    dom:
+        y != 0
+
+know forall x, y, z N:
+    logBase(x^y, z) = y * logBase(x, z)
+    logBase(x*y, z) = logBase(x, z) + logBase(y, z)
+
+know forall x N:
+    logBase(x, x) = 1
+
+claim:
+    not sqrt(2) $in Q
+    prove_by_contradiction:
+        have x, y st $rational_number_representation_in_fraction(sqrt(2))
+        
+        x = sqrt(2) * y
+        x ^ 2 = (sqrt(2) ^ 2) * (y ^ 2)
+        sqrt(2) ^ 2 = 2 # must write it out
+        x ^ 2 = 2 * (y ^ 2)
+        logBase(x ^ 2, 2) = logBase(2 * (y ^ 2), 2)
+        
+        logBase(x ^ 2, 2) = 2 * logBase(x, 2)
+        logBase(y ^ 2, 2) = 2 * logBase(y, 2)
+
+        logBase(2 * (y ^ 2), 2) = logBase(2, 2) + logBase(y ^ 2, 2)
+        logBase(2, 2) = 1
+        logBase(2 * (y ^ 2), 2) = 1 + logBase(y ^ 2, 2)
+
+        logBase(x ^ 2, 2) = 1 + 2 * logBase(y, 2)
+        2 * logBase(x, 2) = 1 + 2 * logBase(y, 2)
+
+        (2 * logBase(x, 2)) % 2 = (1 + 2 * logBase(y, 2)) % 2
+        (2 * logBase(x, 2)) % 2 = 0
+        0 = (1 + 2 * logBase(y, 2)) % 2
+
+        (1 + 2 * logBase(y, 2)) % 2 = 1 % 2 + (2 * logBase(y, 2)) % 2
+        1 % 2 + (2 * logBase(y, 2)) % 2 = 1 + 0
+        0 = 1
+```
+
+Lean:
+
+```
+theorem sqrt2_irrational : 
+  ¬ ∃ a b : ℕ, a.gcd b = 1 ∧ a * a = 2 * b * b := by
+  intro h
+  obtain ⟨a, b, hcop, h⟩ := h
+
+  have ha_even : Even (a) := by
+    rw [Nat.mul_assoc] at h
+    have : Even (a * a) := by rw [h]; exact even_mul_right b b
+    exact even_of_even_sq this
+
+  obtain ⟨k, hk⟩ := ha_even
+
+  have h2 : 2 * k * k = b * b := by
+    rw [hk, ←mul_assoc, ←mul_assoc, mul_comm 2 2, ←mul_assoc] at h
+    apply Nat.mul_right_cancel (Nat.zero_lt_succ _)
+    rw [←h, ←mul_assoc, ←mul_assoc]
+    rfl
+
+  have hb_even : Even b := even_of_even_sq (by rw [←h2]; exact even_mul_left _ _)
+
+  obtain ⟨m, hm⟩ := hb_even  -- b = 2m
+
+  have : a.gcd b ≠ 1 := by
+    rw [hk, hm]
+    have : (2 * k).gcd (2 * m) = 2 * (k.gcd m) := Nat.gcd_mul_left_right
+    apply Nat.ne_of_gt
+    apply Nat.mul_pos (by decide)
+    exact Nat.gcd_pos_left m (by decide)
+
+  contradiction
+```
+
 Next I want to show you how Litex can be used to verify a simple group theory statement. It's clear that the Litex version can be read and understood by a 10-year-old, while the Lean version is much more complex.
 
 <table style="border-collapse: collapse; width: 100%;">
