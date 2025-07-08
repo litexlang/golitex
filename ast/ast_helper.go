@@ -77,3 +77,32 @@ func ReverseSliceOfReversibleFacts(facts []OrStmt_SpecStmt) []OrStmt_SpecStmt {
 func NewEqualFact(left, right Fc) *SpecFactStmt {
 	return NewSpecFactStmt(TruePure, FcAtom(glob.KeySymbolEqual), []Fc{left, right})
 }
+
+func IsFcFnWithHeadName(fc Fc, headName string) bool {
+	fcFn, ok := fc.(*FcFn)
+	if !ok {
+		return false
+	}
+
+	headAtom, ok := fcFn.FnHead.(FcAtom)
+	if !ok {
+		return false
+	}
+
+	return string(headAtom) == headName
+}
+
+func IsFcFnWithHeadNameInSlice(fc Fc, headNames map[string]struct{}) bool {
+	fcFn, ok := fc.(*FcFn)
+	if !ok {
+		return false
+	}
+
+	headAtom, ok := fcFn.FnHead.(FcAtom)
+	if !ok {
+		return false
+	}
+
+	_, ok = headNames[string(headAtom)]
+	return ok
+}

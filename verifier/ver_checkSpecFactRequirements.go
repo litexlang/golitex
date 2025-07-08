@@ -100,11 +100,6 @@ func (ver *Verifier) fcFnSatisfyNotBuiltinFnRequirement(fc ast.Fc, state VerStat
 			return false, ver.verErr(err, "parameters in %s do not satisfy the requirement of that function", asFcFn.String())
 		}
 
-		// 我不清楚是这只要释放最后一位的性质，还是每一位都要释放
-		// ok, err = ver.env.StoreAndDeriveFacts_From_FcSatisfyFreeTemplateFact(fcOfEachLevel[i], templatesOfEachLevel[i])
-		// if isErrOrNotOk(ok, err) {
-		// 	return false, ver.verErr(err, "parameters in %s do not satisfy the requirement of that function", asFcFn.String())
-		// }
 	}
 
 	// store the fact that the parameters satisfy the requirement of the function
