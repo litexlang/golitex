@@ -14,7 +14,10 @@
 
 package litex_ast
 
-import glob "golitex/glob"
+import (
+	glob "golitex/glob"
+	std "golitex/std"
+)
 
 func GetForallXOnlyOneYSatisfyGivenProp(domSet, rangeSet Fc, propName FcAtom) *UniFactStmt {
 	params := []string{"x", "y1", "y2"}
@@ -24,7 +27,7 @@ func GetForallXOnlyOneYSatisfyGivenProp(domSet, rangeSet Fc, propName FcAtom) *U
 		NewSpecFactStmt(TruePure, propName, []Fc{FcAtom("x"), FcAtom("y2")}),
 	}
 	thenFacts := []FactStmt{
-		NewSpecFactStmt(TruePure, FcAtom(glob.LastTwoObjectsAreEqual), []Fc{FcAtom("x"), FcAtom("y1"), FcAtom("y2")}),
+		NewSpecFactStmt(TruePure, FcAtom(std.LastTwoObjectsAreEqual), []Fc{FcAtom("x"), FcAtom("y1"), FcAtom("y2")}),
 	}
 	return NewUniFact(params, setParams, domFacts, thenFacts)
 }

@@ -28,6 +28,7 @@ type ExistPropDefMem map[string]ast.DefExistPropStmt
 
 type FnTemplateDefMem map[string]ast.DefFnTemplateStmt
 
+// 我暂时不清楚 map[string]struct{} 有没有问题，我暂时用不到def obj 相关的任何的东西
 type ObjDefMem map[string]ast.FnTemplate_Or_DefObjStmtInterface // 因为很多的obj会共享一个def obj
 
 type FnInFnTemplateFactsMem map[string][]*ast.FnTemplateStmt
@@ -52,9 +53,8 @@ type Env struct {
 	FnInFnTemplateFactsMem FnInFnTemplateFactsMem
 	KnownFactInMatchEnv    map[string]KnownFactsStruct
 	EqualMem               map[string]shared_ptr_to_slice_of_fc
-	// CurMatchProp           *MatchProp
-	EnumFacts       map[string][]ast.Fc
-	HaveSetFnDefMem HaveSetFnDefMem
+	EnumFacts              map[string][]ast.Fc
+	HaveSetFnDefMem        HaveSetFnDefMem
 }
 
 func (env *Env) GetUpMostEnv() *Env {
