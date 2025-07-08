@@ -14,7 +14,9 @@
 
 package litex_ast
 
-import glob "golitex/glob"
+import (
+	glob "golitex/glob"
+)
 
 func EqualFact(left, right Fc) *SpecFactStmt {
 	return NewSpecFactStmt(TruePure, FcAtom(glob.KeySymbolEqual), []Fc{left, right})
