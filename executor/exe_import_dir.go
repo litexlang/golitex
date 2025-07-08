@@ -24,7 +24,7 @@ import (
 )
 
 func (exec *Executor) importDirStmt(stmt *ast.ImportDirStmt) (glob.ExecState, error) {
-	exec.appendMsg("start importing directory \"%s\"\n", stmt.Path)
+	exec.appendMsg(fmt.Sprintf("start importing directory \"%s\"\n", stmt.Path))
 
 	if !glob.AllowImport {
 		return glob.ExecState_Error, fmt.Errorf("imported file should not contain import statement, get %s", stmt.String())

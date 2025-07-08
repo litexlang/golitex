@@ -28,8 +28,8 @@ func (e *Executor) deleteEnvAndRetainMsg() {
 	e.env = e.env.Parent
 }
 
-func (e *Executor) appendMsg(msg string, str ...any) {
-	e.env.Msgs = append(e.env.Msgs, fmt.Sprintf(msg, str...))
+func (e *Executor) appendMsg(msg string) {
+	e.env.Msgs = append(e.env.Msgs, msg)
 }
 
 func (e *Executor) appendNewMsgAtBegin(msg string, str ...any) {

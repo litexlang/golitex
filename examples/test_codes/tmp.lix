@@ -1,3 +1,5 @@
+know 0 = 1 % 2
+"""
 fn logBase(x, y N) N:
     x > 1
 
@@ -43,3 +45,4 @@ claim:
         know 0 = (1 + 2 * logBase(y, 2)) % 2
         know 0 = 1 + 0
         0 = 1
+"""
