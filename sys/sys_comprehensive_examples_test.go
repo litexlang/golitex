@@ -28,7 +28,7 @@ func Test_ComprehensiveCodes(t *testing.T) {
 	for _, path := range pathSlice {
 		err := RunFilesInRepo(path)
 		if err != nil {
-			panic(fmt.Sprintf("Error running files: %v", err))
+			panic(fmt.Sprintf("Error running files: %s", err))
 		}
 	}
 }

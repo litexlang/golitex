@@ -339,7 +339,7 @@ func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state VerState) (b
 			return false, err
 		}
 		if ok {
-			return ver.processOkMsg(state, stmt.String(), fmt.Sprintf("%s is true", greaterStmt))
+			return ver.processOkMsg(state, stmt.String(), fmt.Sprintf("%s is true", greaterStmt.String()))
 		}
 
 		// 尝试证明 =
@@ -350,7 +350,7 @@ func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state VerState) (b
 			return false, err
 		}
 		if ok {
-			return ver.processOkMsg(state, stmt.String(), fmt.Sprintf("%s is true", equalStmt))
+			return ver.processOkMsg(state, stmt.String(), fmt.Sprintf("%s is true", equalStmt.String()))
 		}
 	}
 

@@ -68,17 +68,17 @@ func (tb *tokenBlock) squareBracketExpr() (ast.Fc, error) {
 
 	if isAtIndexOp {
 		if err := tb.header.skip(glob.KeySymbolRightBracket); err != nil {
-			return nil, fmt.Errorf("expected '%s': %v", glob.KeySymbolRightBracket, err)
+			return nil, fmt.Errorf("expected '%s': %s", glob.KeySymbolRightBracket, err)
 		}
 
 		return ast.NewFcFn(ast.FcAtom(glob.AtIndexOp), []ast.Fc{fc, fcInBracket}), nil
 	} else {
 		if err := tb.header.skip(glob.KeySymbolRightBracket); err != nil {
-			return nil, fmt.Errorf("expected '%s': %v", glob.KeySymbolRightBracket, err)
+			return nil, fmt.Errorf("expected '%s': %s", glob.KeySymbolRightBracket, err)
 		}
 
 		if err := tb.header.skip(glob.KeySymbolRightBracket); err != nil {
-			return nil, fmt.Errorf("expected '%s': %v", glob.KeySymbolRightBracket, err)
+			return nil, fmt.Errorf("expected '%s': %s", glob.KeySymbolRightBracket, err)
 		}
 
 		return ast.NewFcFn(ast.FcAtom(glob.GetIndexOfOp), []ast.Fc{fc, fcInBracket}), nil
@@ -373,7 +373,7 @@ func (tb *tokenBlock) bracedExpr() (ast.Fc, error) {
 	}
 
 	if err := tb.header.skip(glob.KeySymbolRightBrace); err != nil {
-		return nil, fmt.Errorf("expected '%s': %v", glob.KeySymbolRightBrace, err)
+		return nil, fmt.Errorf("expected '%s': %s", glob.KeySymbolRightBrace, err)
 	}
 
 	if !tb.header.is(glob.KeySymbolLeftBrace) {

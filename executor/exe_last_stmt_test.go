@@ -43,7 +43,7 @@ func TestLastStmt(t *testing.T) {
 	}
 	executionTime := time.Since(start)
 	printExecMsg(messages)
-	fmt.Printf("get last top stmt takes %v\nparsing takes %v\nexecution takes %v\n", readFileTime, parseTime, executionTime)
+	fmt.Printf("get last top stmt takes %s\nparsing takes %s\nexecution takes %s\n", readFileTime, parseTime, executionTime)
 }
 
 func extractFromLastProveLine(content string) string {

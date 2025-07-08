@@ -38,7 +38,7 @@ func TestPolynomialPrint(t *testing.T) {
 			fmt.Printf("Result: %s\n", result)
 			fmt.Printf("Polynomial terms:\n")
 			for i, term := range poly {
-				fmt.Printf("  Term %d: CoEff=%g, Vars=%v\n", i+1, term.CoEff, term.Vars)
+				fmt.Printf("  Term %d: CoEff=%g, Vars=%s\n", i+1, term.CoEff, term.Vars)
 			}
 			fmt.Println("---")
 		})

@@ -27,7 +27,7 @@ func (exec *Executor) importDirStmt(stmt *ast.ImportDirStmt) (glob.ExecState, er
 	exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("start importing directory \"%s\"\n", stmt.Path))
 
 	if !glob.AllowImport {
-		return glob.ExecState_Error, fmt.Errorf("imported file should not contain import statement, get %v", stmt)
+		return glob.ExecState_Error, fmt.Errorf("imported file should not contain import statement, get %s", stmt)
 	}
 
 	err := glob.ImportDirStmtInit(stmt.AsPkgName, stmt.Path)
@@ -40,7 +40,7 @@ func (exec *Executor) importDirStmt(stmt *ast.ImportDirStmt) (glob.ExecState, er
 		glob.ImportDirStmtEnd()
 		if !execSuccess {
 			if glob.RequireMsg() {
-				exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("Failed to execute import statement:\n%v\n", stmt))
+				exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("Failed to execute import statement:\n%s\n", stmt))
 			}
 		} else {
 			if glob.RequireMsg() {
@@ -112,7 +112,7 @@ func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string, importS
 			return glob.ExecState_Error, err
 		}
 		if execState != glob.ExecState_True {
-			return glob.ExecState_Error, fmt.Errorf("failed to execute source code when executing '%v':\n%v", importStmt, topStmt)
+			return glob.ExecState_Error, fmt.Errorf("failed to execute source code when executing '%s':\n%s", importStmt, topStmt)
 		}
 	}
 
@@ -129,7 +129,7 @@ func (exec *Executor) runStmtInUpmostEnv_AssumeTheyAreTrue(topStmtSlice []ast.St
 			return glob.ExecState_Error, err
 		}
 		if execState != glob.ExecState_True {
-			return glob.ExecState_Error, fmt.Errorf("failed to execute source code:\n%v\nSome statements in the source code are not executed successfully", topStmt)
+			return glob.ExecState_Error, fmt.Errorf("failed to execute source code:\n%s\nSome statements in the source code are not executed successfully", topStmt)
 		}
 	}
 	return glob.ExecState_True, nil

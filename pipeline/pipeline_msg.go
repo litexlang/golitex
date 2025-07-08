@@ -17,4 +17,4 @@ package litex_pipeline
 var REPLGoodbyeMessage = "Goodbye!\n"
 var REPLSuccessMessage = "[Success] success! :)\n"
 var REPLFailedMessage = "[Warning] failed :(\n"
-var REPLErrorMessage = "[Error] %v\n"
+var REPLErrorMessage = "[Error] %s\n"

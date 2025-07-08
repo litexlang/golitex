@@ -79,7 +79,7 @@ func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state VerState) (boo
 		if gotLeftEqualFcs && gotRightEqualFcs {
 			if equalToLeftFcs == equalToRightFcs {
 				if state.requireMsg() {
-					ver.successWithMsg(fmt.Sprintf("known %v = %v", left, right), "")
+					ver.successWithMsg(fmt.Sprintf("known %s = %s", left, right), "")
 				}
 				return true, nil
 			}
@@ -96,7 +96,7 @@ func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state VerState) (boo
 					return false, err
 				} else if ok {
 					if state.requireMsg() {
-						ver.successWithMsg(fmt.Sprintf("known:\n%v = %v\n%v = %v", equalToLeftFc, right, equalToLeftFc, left), "")
+						ver.successWithMsg(fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToLeftFc, right, equalToLeftFc, left), "")
 					}
 					return true, nil
 				}

@@ -37,7 +37,7 @@ func (ver *Verifier) successWithMsg(stmtStr, stmtVerifiedBy string) {
 		ver.env.Msgs = append(ver.env.Msgs, stmtStr)
 	}
 	if stmtVerifiedBy != "" {
-		message := fmt.Sprintf("is true. proved by\n%v", stmtVerifiedBy)
+		message := fmt.Sprintf("is true. proved by\n%s", stmtVerifiedBy)
 		ver.env.Msgs = append(ver.env.Msgs, message)
 	} else {
 		message := "is true."

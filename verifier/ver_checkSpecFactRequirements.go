@@ -42,7 +42,7 @@ func (ver *Verifier) checkSpecFactRequirements(stmt *ast.SpecFactStmt, state Ver
 			return false, err
 		}
 		if !ok {
-			return false, fmt.Errorf("parameters in %v do not satisfy the requirement of that function", param)
+			return false, fmt.Errorf("parameters in %s do not satisfy the requirement of that function", param)
 		}
 	}
 
@@ -58,7 +58,7 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state VerState) (bool, er
 	}
 	fcAsFcFn, ok := fc.(*ast.FcFn)
 	if !ok {
-		return false, fmt.Errorf("%v is not a function", fc)
+		return false, fmt.Errorf("%s is not a function", fc)
 	}
 
 	// 单独处理特殊的内置prop
@@ -97,7 +97,7 @@ func (ver *Verifier) fcFnSatisfyNotBuiltinFnRequirement(fc ast.Fc, state VerStat
 	for i := range templatesOfEachLevel {
 		ok, err := ver.fcFnParamsSatisfyFnTemplateRequirement(fcOfEachLevel[i].Params, templatesOfEachLevel[i], state)
 		if err != nil || !ok {
-			return false, fmt.Errorf("parameters in %v do not satisfy the requirement of that function:\n%v", asFcFn, err)
+			return false, fmt.Errorf("parameters in %s do not satisfy the requirement of that function:\n%s", asFcFn, err)
 		}
 
 	}
@@ -106,7 +106,7 @@ func (ver *Verifier) fcFnSatisfyNotBuiltinFnRequirement(fc ast.Fc, state VerStat
 	// REMARK 这里必须要存储，否则很多关于函数的事实是不工作的。但这里牵扯到一个问题是，这里以下释放这么多事实，是不是浪费了。而且我不清楚是只要释放最后一位的性质，还是每一位都要释放
 	ok, err := ver.env.FcSatisfy_FreeTemplateFact_Store_DeriveFacts(fcOfEachLevel[len(fcOfEachLevel)-1], templatesOfEachLevel[len(templatesOfEachLevel)-1])
 	if err != nil || !ok {
-		return false, ver.verErr(err, "parameters in %v do not satisfy the requirement of that function", asFcFn)
+		return false, ver.verErr(err, "parameters in %s do not satisfy the requirement of that function", asFcFn)
 	}
 
 	return true, nil
@@ -120,7 +120,7 @@ func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn, state VerState) (bool
 			return false, err
 		}
 		if !ok {
-			return false, fmt.Errorf("parameters in %v must be in set %s or %s or %s or %s, %v in %v is not valid", fc.FnHead, glob.KeywordReal, glob.KeywordInt, glob.KeywordRational, glob.KeywordNatural, param, fc)
+			return false, fmt.Errorf("parameters in %s must be in set %s or %s or %s or %s, %s in %s is not valid", fc.FnHead, glob.KeywordReal, glob.KeywordInt, glob.KeywordRational, glob.KeywordNatural, param, fc)
 		}
 	}
 
@@ -128,7 +128,7 @@ func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn, state VerState) (bool
 		// 分母不是0
 		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{fc.Params[1], ast.FcAtom("0")}), state)
 		if err != nil || !ok {
-			return ok, fmt.Errorf("parameters in %v must be not equal to 0. %v != 0 is unknown", fc, fc.Params[1])
+			return ok, fmt.Errorf("parameters in %s must be not equal to 0. %s != 0 is unknown", fc, fc.Params[1])
 		}
 		return true, nil
 	}
@@ -137,7 +137,7 @@ func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn, state VerState) (bool
 		// 分母不是0
 		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{fc.Params[1], ast.FcAtom("0")}), state)
 		if err != nil || !ok {
-			return ok, fmt.Errorf("second parameter in %v must be not equal to 0. %v != 0 is unknown", fc, fc.Params[1])
+			return ok, fmt.Errorf("second parameter in %s must be not equal to 0. %s != 0 is unknown", fc, fc.Params[1])
 		}
 
 		// 分子分母必须是整数
@@ -172,7 +172,7 @@ func (ver *Verifier) fcFnParamsSatisfyFnTemplateRequirement(params []ast.Fc, tem
 			return false, err
 		}
 		if !ok {
-			return false, fmt.Errorf("in fact %v is unknown", ast.NewInFactWithFc(params[i], paramSet))
+			return false, fmt.Errorf("in fact %s is unknown", ast.NewInFactWithFc(params[i], paramSet))
 		}
 	}
 
@@ -182,7 +182,7 @@ func (ver *Verifier) fcFnParamsSatisfyFnTemplateRequirement(params []ast.Fc, tem
 			return false, err
 		}
 		if !ok {
-			return false, fmt.Errorf("dom fact %v is unknown", domFact)
+			return false, fmt.Errorf("dom fact %s is unknown", domFact)
 		}
 	}
 
@@ -193,7 +193,7 @@ func (ver *Verifier) paramIs_R_Z_Q_N(fc ast.Fc, state VerState) (bool, error) {
 	inRFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fc, ast.FcAtom(glob.KeywordReal)})
 	ok, err := ver.VerFactStmt(inRFact, state)
 	if err != nil {
-		return false, ver.verErr(err, "failed to check %v", inRFact.String())
+		return false, ver.verErr(err, "failed to check %s", inRFact.String())
 	}
 	if ok {
 		return true, nil
@@ -201,7 +201,7 @@ func (ver *Verifier) paramIs_R_Z_Q_N(fc ast.Fc, state VerState) (bool, error) {
 
 	ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fc, ast.FcAtom(glob.KeywordInt)}), state)
 	if err != nil {
-		return false, ver.verErr(err, "parameters in %v must be in set %s, %v in %v is not valid", fc, glob.KeywordInt, fc, fc)
+		return false, ver.verErr(err, "parameters in %s must be in set %s, %s in %s is not valid", fc, glob.KeywordInt, fc, fc)
 	}
 	if ok {
 		return true, nil
@@ -209,7 +209,7 @@ func (ver *Verifier) paramIs_R_Z_Q_N(fc ast.Fc, state VerState) (bool, error) {
 
 	ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fc, ast.FcAtom(glob.KeywordRational)}), state)
 	if err != nil {
-		return false, ver.verErr(err, "parameters in %v must be in set %s, %v in %v is not valid", fc, glob.KeywordRational, fc, fc)
+		return false, ver.verErr(err, "parameters in %s must be in set %s, %s in %s is not valid", fc, glob.KeywordRational, fc, fc)
 	}
 	if ok {
 		return true, nil
@@ -217,7 +217,7 @@ func (ver *Verifier) paramIs_R_Z_Q_N(fc ast.Fc, state VerState) (bool, error) {
 
 	ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fc, ast.FcAtom(glob.KeywordNatural)}), state)
 	if err != nil {
-		return false, ver.verErr(err, "parameters in %v must be in set %s, %v in %v is not valid", fc, glob.KeywordNatural, fc, fc)
+		return false, ver.verErr(err, "parameters in %s must be in set %s, %s in %s is not valid", fc, glob.KeywordNatural, fc, fc)
 	}
 	if ok {
 		return true, nil
@@ -229,12 +229,12 @@ func (ver *Verifier) paramIs_R_Z_Q_N(fc ast.Fc, state VerState) (bool, error) {
 // TODO: 这里需要检查！
 func (ver *Verifier) setDefinedByReplacementFnRequirement(fc *ast.FcFn, state VerState) (bool, error) {
 	if len(fc.Params) != 3 {
-		return false, fmt.Errorf("parameters in %v must be 3, %v in %v is not valid", fc.FnHead, fc, fc)
+		return false, fmt.Errorf("parameters in %s must be 3, %s in %s is not valid", fc.FnHead, fc, fc)
 	}
 
 	propName, ok := fc.Params[2].(ast.FcAtom)
 	if !ok {
-		return false, fmt.Errorf("parameters in %v must be 3, %v in %v is not valid", fc.FnHead, fc, fc)
+		return false, fmt.Errorf("parameters in %s must be 3, %s in %s is not valid", fc.FnHead, fc, fc)
 	}
 
 	forallXOnlyOneYSatisfyGivenProp := ast.GetForallXOnlyOneYSatisfyGivenProp(fc.Params[0], fc.Params[1], propName)
