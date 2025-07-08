@@ -23,8 +23,8 @@ import (
 
 func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt) (glob.ExecState, error) {
 	defer func() {
-		if glob.IsNotImportDirStmt() {
-			exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
+		if glob.RequireMsg() {
+			exec.newMsg(fmt.Sprintf("%s\n", stmt.String()))
 		}
 	}()
 
@@ -50,8 +50,8 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt) (glob.ExecState, er
 	}
 
 	if notOkExec(execState, err) {
-		if glob.IsNotImportDirStmt() {
-			exec.appendMsg(fmt.Sprintf("%s is unknown", stmt.Fact.String()))
+		if glob.RequireMsg() {
+			exec.newMsg(fmt.Sprintf("%s is unknown", stmt.Fact.String()))
 		}
 		return execState, err
 	}
@@ -125,8 +125,8 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt) (glob.ExecState, er
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
-		if glob.IsNotImportDirStmt() {
-			exec.appendMsg(fmt.Sprintf("%s\nis true by definition", domFact.String()))
+		if glob.RequireMsg() {
+			exec.newMsg(fmt.Sprintf("%s\nis true by definition", domFact.String()))
 		}
 	}
 
@@ -136,8 +136,8 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt) (glob.ExecState, er
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
-		if glob.IsNotImportDirStmt() {
-			exec.appendMsg(fmt.Sprintf("%s\nis true by definition", iffFact.String()))
+		if glob.RequireMsg() {
+			exec.newMsg(fmt.Sprintf("%s\nis true by definition", iffFact.String()))
 		}
 	}
 
@@ -149,8 +149,8 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt) (glob.ExecState, er
 	if err != nil {
 		return glob.ExecState_Error, err
 	}
-	if glob.IsNotImportDirStmt() {
-		exec.appendMsg(fmt.Sprintf("%s\nis true by definition", newExistStFact.String()))
+	if glob.RequireMsg() {
+		exec.newMsg(fmt.Sprintf("%s\nis true by definition", newExistStFact.String()))
 	}
 
 	return glob.ExecState_True, nil
@@ -196,7 +196,7 @@ func (exec *Executor) checkInFactInSet_SetIsNonEmpty(pureInFact *ast.SpecFactStm
 }
 
 func (exec *Executor) haveSetStmt(stmt *ast.HaveSetStmt) (glob.ExecState, error) {
-	exec.appendMsg(stmt.String())
+	exec.newMsg(stmt.String())
 	switch asStmt := stmt.Fact.(type) {
 	case *ast.EnumStmt:
 		return exec.haveEnumSetStmt(asStmt)

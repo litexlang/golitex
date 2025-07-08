@@ -241,7 +241,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 		if !ok {
 			if state.requireMsg() {
 				msg := fmt.Sprintf("dom fact %s is unknown\n", domFact.String())
-				ver.newMsgEnd(msg)
+				ver.env.Msgs = append(ver.env.Msgs, msg)
 			}
 			return false, nil
 		}

@@ -21,11 +21,6 @@ import (
 	"strings"
 )
 
-func (ver *Verifier) newMsgEnd(format string, args ...any) {
-	message := fmt.Sprintf(format, args...)
-	ver.env.Msgs = append(ver.env.Msgs, message)
-}
-
 func (ver *Verifier) specFactSpecMemTrueMsg(stmt *ast.SpecFactStmt, knownFact ast.SpecFactStmt) {
 	var verifiedBy strings.Builder
 
@@ -54,8 +49,8 @@ func (ver *Verifier) newMsgAtParent(s string) error {
 	if ver.env.Parent == nil {
 		return fmt.Errorf("no parent env")
 	} else {
-		if glob.IsNotImportDirStmt() {
-			ver.env.Parent.AppendMsg(s)
+		if glob.RequireMsg() {
+			ver.env.Parent.Msgs = append(ver.env.Parent.Msgs, s)
 		}
 		return nil
 	}
