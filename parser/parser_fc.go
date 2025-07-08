@@ -310,11 +310,18 @@ func (tb *tokenBlock) numberStr() (ast.FcAtom, error) {
 				return ast.FcAtom(""), fmt.Errorf("invalid number: %s", right)
 			}
 			return ast.FcAtom(fmt.Sprintf("%s.%s", left, right)), nil
+		} else {
+			return ast.FcAtom(""), fmt.Errorf("invalid number: %s", left)
 		}
+		// return ast.FcAtom(left), nil
+	} else {
+		// 不能开头是0，除非你真的是0
+		if left[0] == '0' && len(left) > 1 {
+			return ast.FcAtom(""), fmt.Errorf("invalid number: %s", left)
+		}
+
 		return ast.FcAtom(left), nil
 	}
-
-	return ast.FcAtom(left), nil
 }
 
 func (tb *tokenBlock) bracedFcSlice() ([]ast.Fc, error) {
