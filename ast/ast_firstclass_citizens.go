@@ -64,7 +64,6 @@ func hasBuiltinOptAndToString(f *FcFn) (bool, string) {
 	}
 
 	if string(ptr) == glob.KeySymbolMinus {
-
 		return true, fmt.Sprintf("(%s %s %s)", f.Params[0], string(ptr), f.Params[1])
 	}
 
