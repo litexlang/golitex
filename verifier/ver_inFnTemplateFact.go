@@ -79,5 +79,7 @@ func (ver *Verifier) leftDomLeadToRightDom_RightDomLeadsToRightThen(funcName ast
 		return false, err
 	}
 
+	// TODO 有严重问题：没考虑返回值要在返回值集合里
+
 	return true, nil
 }
