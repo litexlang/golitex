@@ -91,7 +91,7 @@ func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state VerStat
 		}
 		if !ok {
 			if state.requireMsg() {
-				ver.env.Msgs = append(ver.env.Msgs, fmt.Sprintf("%v is unknown", thenFact))
+				ver.env.Msgs = append(ver.env.Msgs, fmt.Sprintf("%s is unknown", thenFact))
 			}
 			return false, nil
 		}
@@ -104,7 +104,7 @@ func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state VerStat
 	}
 
 	if state.requireMsg() {
-		err := ver.newMsgAtParent(fmt.Sprintf("%v\nis true", stmt))
+		err := ver.newMsgAtParent(fmt.Sprintf("%s\nis true", stmt))
 		if err != nil {
 			return false, err
 		}

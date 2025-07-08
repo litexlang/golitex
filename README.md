@@ -84,7 +84,7 @@ Mathematics is the art of deriving new facts from established ones. To illustrat
     <td style="border: 3px solid black; padding: 8px;">
       <code>obj human set</code> <br><br>
       <code>prop intelligent(x Human)</code> <br><br>      <code>know forall x Human:</code> <br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;$intelligent(x)</code> <br> <br>
+      <code>&nbsp;&nbsp;$intelligent(x)</code> <br> <br>
       <code>obj Jordan human</code> <br> <br>
       <code>$intelligent(Jordan)</code>
     </td>
@@ -92,7 +92,7 @@ Mathematics is the art of deriving new facts from established ones. To illustrat
       <code>def Human := Type</code> <br><br>
       <code>def intelligent (x : Human) : Prop := true</code> <br><br>
       <code>axiom intelligent_all :</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;∀ (x : Human), intelligent x</code> <br><br>
+      <code>&nbsp;&nbsp;∀ (x : Human), intelligent x</code> <br><br>
       <code>example (Jordan : Human) : intelligent Jordan := intelligent_all Jordan</code>
     </td>
   </tr>
@@ -238,21 +238,21 @@ Next I want to show you how Litex can be used to solve a simple linear equation.
       <code>&nbsp;&nbsp;have h₃ : 2 * (2 * x + 3 * y) = 2 * 10 := by rw [h₁]</code><br>
       <code>&nbsp;&nbsp;have h₄ : 4 * x + 6 * y = 20 := by linear_combination 2 * h₁</code><br>
       <code>&nbsp;&nbsp;have h₅ : (4 * x + 6 * y) - (4 * x + 5 * y) = 20 - 14 := by</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;rw [h₄, h₂]</code><br>
+      <code>&nbsp;&nbsp;rw [h₄, h₂]</code><br>
       <code>&nbsp;&nbsp;have h₆ : (4 * x + 6 * y) - (4 * x + 5 * y) = y := by</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;ring</code><br>
+      <code>&nbsp;&nbsp;ring</code><br>
       <code>&nbsp;&nbsp;have h₇ : 20 - 14 = 6 := by norm_num</code><br>
       <code>&nbsp;&nbsp;have h₈ : y = 6 := by</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;rw [←h₆, h₅, h₇]</code><br>
+      <code>&nbsp;&nbsp;rw [←h₆, h₅, h₇]</code><br>
       <code>&nbsp;&nbsp;have h₉ : 2 * x + 3 * 6 = 10 := by rw [h₈, h₁]</code><br>
       <code>&nbsp;&nbsp;have h₁₀ : 2 * x + 18 = 10 := by</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;rw [mul_add] at h₉</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;simp at h₉</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;exact h₉</code><br>
+      <code>&nbsp;&nbsp;rw [mul_add] at h₉</code><br>
+      <code>&nbsp;&nbsp;simp at h₉</code><br>
+      <code>&nbsp;&nbsp;exact h₉</code><br>
       <code>&nbsp;&nbsp;have h₁₁ : 2 * x = -8 := by</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;linear_combination h₁₀ - 18</code><br>
+      <code>&nbsp;&nbsp;linear_combination h₁₀ - 18</code><br>
       <code>&nbsp;&nbsp;have h₁₂ : x = -4 := by</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;linear_combination h₁₁ / 2</code><br>
+      <code>&nbsp;&nbsp;linear_combination h₁₁ / 2</code><br>
       <code>&nbsp;&nbsp;exact ⟨h₁₂, h₈⟩</code>
     </td>
   </tr>
@@ -262,86 +262,66 @@ I know Lean can use tactics to solve the same problem, and it is shorter. Litex 
 
 Next we prove `sqrt(2) is irrational`. Since the standard library is not yet implemented, we have to define the logBase function ourselves for now. Note that how easy it is to define a new concept in Litex. You do not have to start from a very low level concept and build up to a higher level concept. You can define a new concept directly.
 
-The Litex proof requires no extra knowledge except basic math knowledge, but the Lean proof requires a huge amount of knowledge about Lean tactics. Tactics are not easy to learn, not easy to remember, and very far from what we are truly thinking when we are doing math.
+The Litex proof requires no extra knowledge except basic math knowledge, but the Lean proof requires a huge amount of knowledge about Lean tactics. Tactics are not easy to learn, not easy to remember, and very far from what we are truly thinking when we are doing math. On the other hand, any line of Litex code is very obvious to understand.
 
-Litex:
-
-```
-fn logBase(x, y N) N:
-    dom:
-        y != 0
-
-know forall x, y, z N:
-    logBase(x^y, z) = y * logBase(x, z)
-    logBase(x*y, z) = logBase(x, z) + logBase(y, z)
-
-know forall x N:
-    logBase(x, x) = 1
-
-claim:
-    not sqrt(2) $in Q
-    prove_by_contradiction:
-        have x, y st $rational_number_representation_in_fraction(sqrt(2))
-        
-        x = sqrt(2) * y
-        x ^ 2 = (sqrt(2) ^ 2) * (y ^ 2)
-        sqrt(2) ^ 2 = 2 # must write it out
-        x ^ 2 = 2 * (y ^ 2)
-        logBase(x ^ 2, 2) = logBase(2 * (y ^ 2), 2)
-        
-        logBase(x ^ 2, 2) = 2 * logBase(x, 2)
-        logBase(y ^ 2, 2) = 2 * logBase(y, 2)
-
-        logBase(2 * (y ^ 2), 2) = logBase(2, 2) + logBase(y ^ 2, 2)
-        logBase(2, 2) = 1
-        logBase(2 * (y ^ 2), 2) = 1 + logBase(y ^ 2, 2)
-
-        logBase(x ^ 2, 2) = 1 + 2 * logBase(y, 2)
-        2 * logBase(x, 2) = 1 + 2 * logBase(y, 2)
-
-        (2 * logBase(x, 2)) % 2 = (1 + 2 * logBase(y, 2)) % 2
-        (2 * logBase(x, 2)) % 2 = 0
-        0 = (1 + 2 * logBase(y, 2)) % 2
-
-        (1 + 2 * logBase(y, 2)) % 2 = 1 % 2 + (2 * logBase(y, 2)) % 2
-        1 % 2 + (2 * logBase(y, 2)) % 2 = 1 + 0
-        0 = 1
-```
-
-Lean:
-
-```
-theorem sqrt2_irrational : 
-  ¬ ∃ a b : ℕ, a.gcd b = 1 ∧ a * a = 2 * b * b := by
-  intro h
-  obtain ⟨a, b, hcop, h⟩ := h
-
-  have ha_even : Even (a) := by
-    rw [Nat.mul_assoc] at h
-    have : Even (a * a) := by rw [h]; exact even_mul_right b b
-    exact even_of_even_sq this
-
-  obtain ⟨k, hk⟩ := ha_even
-
-  have h2 : 2 * k * k = b * b := by
-    rw [hk, ←mul_assoc, ←mul_assoc, mul_comm 2 2, ←mul_assoc] at h
-    apply Nat.mul_right_cancel (Nat.zero_lt_succ _)
-    rw [←h, ←mul_assoc, ←mul_assoc]
-    rfl
-
-  have hb_even : Even b := even_of_even_sq (by rw [←h2]; exact even_mul_left _ _)
-
-  obtain ⟨m, hm⟩ := hb_even  -- b = 2m
-
-  have : a.gcd b ≠ 1 := by
-    rw [hk, hm]
-    have : (2 * k).gcd (2 * m) = 2 * (k.gcd m) := Nat.gcd_mul_left_right
-    apply Nat.ne_of_gt
-    apply Nat.mul_pos (by decide)
-    exact Nat.gcd_pos_left m (by decide)
-
-  contradiction
-```
+<table style="border-collapse: collapse; width: 100%;">
+  <tr>
+    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 40%;">Litex</th>
+    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 60%;">Lean 4</th>
+  </tr>
+  <tr>
+    <td style="border: 3px solid black; padding: 8px;">
+      <code>claim:</code><br>
+      <code>&nbsp;&nbsp;not sqrt(2) $in Q</code><br>
+      <code>&nbsp;&nbsp;prove_by_contradiction:</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;have x, y st $rational_number_representation_in_fraction(sqrt(2))</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;x = sqrt(2) * y</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;x ^ 2 = (sqrt(2) ^ 2) * (y ^ 2)</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;sqrt(2) ^ 2 = 2</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;x ^ 2 = 2 * (y ^ 2)</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;logBase(x ^ 2, 2) = logBase(2 * (y ^ 2), 2)</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;logBase(x ^ 2, 2) = 2 * logBase(x, 2)</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;logBase(y ^ 2, 2) = 2 * logBase(y, 2)</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;logBase(2 * (y ^ 2), 2) = logBase(2, 2) + logBase(y ^ 2, 2)</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;logBase(2, 2) = 1</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;logBase(2 * (y ^ 2), 2) = 1 + logBase(y ^ 2, 2)</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;logBase(x ^ 2, 2) = 1 + 2 * logBase(y, 2)</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;2 * logBase(x, 2) = 1 + 2 * logBase(y, 2)</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;(2 * logBase(x, 2)) % 2 = (1 + 2 * logBase(y, 2)) % 2</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;(2 * logBase(x, 2)) % 2 = 0</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;0 = (1 + 2 * logBase(y, 2)) % 2</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;(1 + 2 * logBase(y, 2)) % 2 = 1 % 2 + (2 * logBase(y, 2)) % 2</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;1 % 2 + (2 * logBase(y, 2)) % 2 = 1 + 0</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;0 = 1</code>
+    </td>
+    <td style="border: 3px solid black; padding: 8px;">
+      <code>theorem sqrt2_irrational :</code><br>
+      <code>&nbsp;&nbsp;¬ ∃ a b : ℕ, a.gcd b = 1 ∧ a * a = 2 * b * b := by</code><br>
+      <code>&nbsp;&nbsp;intro h</code><br>
+      <code>&nbsp;&nbsp;obtain ⟨a, b, hcop, h⟩ := h</code><br><br>
+      <code>have ha_even : Even a := by</code><br>
+      <code>&nbsp;&nbsp;rw [Nat.mul_assoc] at h</code><br>
+      <code>&nbsp;&nbsp;have : Even (a * a) := by rw [h]; exact even_mul_right b b</code><br>
+      <code>&nbsp;&nbsp;exact even_of_even_sq this</code><br><br>
+      <code>obtain ⟨k, hk⟩ := ha_even</code><br><br>
+      <code>have h2 : 2 * k * k = b * b := by</code><br>
+      <code>&nbsp;&nbsp;rw [hk, ←mul_assoc, ←mul_assoc, mul_comm 2 2, ←mul_assoc] at h</code><br>
+      <code>&nbsp;&nbsp;apply Nat.mul_right_cancel (Nat.zero_lt_succ _)</code><br>
+      <code>&nbsp;&nbsp;rw [←h, ←mul_assoc, ←mul_assoc]</code><br>
+      <code>&nbsp;&nbsp;rfl</code><br><br>
+      <code>have hb_even : Even b :=</code><br>
+      <code>&nbsp;&nbsp;even_of_even_sq (by rw [←h2]; exact even_mul_left _ _)</code><br><br>
+      <code>obtain ⟨m, hm⟩ := hb_even</code><br><br>
+      <code>have : a.gcd b ≠ 1 := by</code><br>
+      <code>&nbsp;&nbsp;rw [hk, hm]</code><br>
+      <code>&nbsp;&nbsp;have : (2 * k).gcd (2 * m) = 2 * (k.gcd m) := Nat.gcd_mul_left_right</code><br>
+      <code>&nbsp;&nbsp;apply Nat.ne_of_gt</code><br>
+      <code>&nbsp;&nbsp;apply Nat.mul_pos (by decide)</code><br>
+      <code>&nbsp;&nbsp;exact Nat.gcd_pos_left m (by decide)</code><br><br>
+      <code>contradiction</code>
+    </td>
+  </tr>
+</table>
 
 Next I want to show you how Litex can be used to verify a simple group theory statement. It's clear that the Litex version can be read and understood by a 10-year-old, while the Lean version is much more complex.
 
@@ -354,10 +334,10 @@ Next I want to show you how Litex can be used to verify a simple group theory st
     <td style="border: 3px solid black; padding: 8px;">
       <code>prop is_group(s set, mul fn(s, s)s, inv fn(s)s, e s):</code><br>
       <code>&nbsp;&nbsp;forall x s, y s, z s:</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;mul(mul(x, y), z) = mul(x, mul(y, z))</code><br>
+      <code>&nbsp;&nbsp;mul(mul(x, y), z) = mul(x, mul(y, z))</code><br>
       <code>&nbsp;&nbsp;forall x s:</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;mul(x, inv(x)) = e</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;mul(inv(x), x) = e</code><br><br>
+      <code>&nbsp;&nbsp;mul(x, inv(x)) = e</code><br>
+      <code>&nbsp;&nbsp;mul(inv(x), x) = e</code><br><br>
       <code>fn inverse(x R)R:</code><br>
       <code>&nbsp;&nbsp;inverse(x) + x = 0</code><br><br>
       <code>forall x R:</code><br>
@@ -414,4 +394,4 @@ Hi, I am Jiachen Shen (call me Jackie Shen), the creator of Litex. I am a PhD st
 
 As Arabic numbers transforms the world of math by its clean and concise expression, Litex aims to transform the world of math by its intuitive and natural expression using formal language. Giving semantics to keywords and syntax to Litex and at the same time making what it means as aligned with daily math expression as possible, is the major challenge of Litex. This is a long journey, but I am trying my best to make it happen.
 
-As formal languages are becoming more and more important [in the AI safety, AI reasoning, math collaboration](./doc/applications_of_formal_reasoning/applications_of_formal_reasoning.md), I think it is time to make Litex more accessible to the public. Hope you enjoy Litex and feel free to contact [me](mailto:litexlang@outlook.com) or join the [Zulip community](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/) to discuss.
+As formal languages are becoming more and more important [in the AI safety, AI reasoning, math collaboration](./doc/applications_of_formal_reasoning/applications_of_formal_reasoning.md), I think it is time to make Litex more accessible to the public. Some of the features of Litex are still under development and not yet open-sourced. Hope you enjoy Litex and feel free to contact [me](mailto:litexlang@outlook.com) or join the [Zulip community](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/) to discuss. If you want to contribute or have any questions, please contact me through [email](mailto:litexlang@outlook.com).

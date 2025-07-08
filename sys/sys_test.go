@@ -42,5 +42,5 @@ func TestRunFileInRepo(t *testing.T) {
 	fmt.Println(msg)
 	fmt.Println(signal)
 	executionTime := time.Since(startTime)
-	fmt.Printf("execution time: %v\n", executionTime)
+	fmt.Printf("execution time: %s\n", executionTime)
 }

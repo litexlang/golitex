@@ -37,5 +37,5 @@ func TestWholeFile(t *testing.T) {
 	messages := execStmtTest(topStmtSlice)
 	executionTime := time.Since(start)
 	printExecMsg(messages)
-	fmt.Printf("read file takes %v\nparsing takes %v\nexecution takes %v\n", readFileTime, parseTime, executionTime)
+	fmt.Printf("read file takes %s\nparsing takes %s\nexecution takes %s\n", readFileTime, parseTime, executionTime)
 }

@@ -192,7 +192,7 @@ func (env *Env) newUniFact(stmt *ast.UniFactStmt) error {
 		case *ast.UniFactStmt:
 			err = env.newUniFact_ThenFactIsUniFactStmt(stmt, asFact)
 		default:
-			return fmt.Errorf("invalid then fact type: %v", thenStmt)
+			return fmt.Errorf("invalid then fact type: %s", thenStmt)
 		}
 
 		if err != nil {

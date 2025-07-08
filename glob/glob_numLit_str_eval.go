@@ -457,7 +457,7 @@ func powBigFloat(a, b string) (string, bool, error) {
 	// Parse exponent (already validated as natural number)
 	exponent, err := parseNaturalNumber(b)
 	if err != nil {
-		return "", false, fmt.Errorf("invalid exponent: %v", err)
+		return "", false, fmt.Errorf("invalid exponent: %s", err)
 	}
 
 	// Handle special cases
@@ -473,7 +473,7 @@ func powBigFloat(a, b string) (string, bool, error) {
 		var ok bool
 		result, ok, err = mulBigFloat(result, aAbs)
 		if err != nil {
-			return "", false, fmt.Errorf("multiplication error: %v", err)
+			return "", false, fmt.Errorf("multiplication error: %s", err)
 		}
 		if !ok {
 			return "", false, nil
@@ -554,7 +554,7 @@ func divBigFloat(a, b string) (string, bool, error) {
 	// Perform division
 	quotient, remainder, err := longDivision(aTotal, bTotal)
 	if err != nil {
-		return "", false, fmt.Errorf("division error: %v", err)
+		return "", false, fmt.Errorf("division error: %s", err)
 	}
 
 	// Check for exact division
@@ -685,7 +685,7 @@ func modBigFloat(a, b string) (string, bool, error) {
 	// Perform long division to get remainder
 	_, remainder, err := longDivision(aTotal, bTotal)
 	if err != nil {
-		return "", false, fmt.Errorf("modulo error: %v", err)
+		return "", false, fmt.Errorf("modulo error: %s", err)
 	}
 
 	// Clean up remainder (remove leading zeros)
@@ -711,7 +711,7 @@ func modBigFloat(a, b string) (string, bool, error) {
 				var ok bool = false
 				remainder, ok, err = addBigFloat(remainder, bAbs)
 				if err != nil {
-					return "", false, fmt.Errorf("modulo adjustment error: %v", err)
+					return "", false, fmt.Errorf("modulo adjustment error: %s", err)
 				}
 				if !ok {
 					return "", false, nil
@@ -726,7 +726,7 @@ func modBigFloat(a, b string) (string, bool, error) {
 				var ok bool = false
 				remainder, ok, err = addBigFloat(remainder, bAbs)
 				if err != nil {
-					return "", false, fmt.Errorf("modulo adjustment error: %v", err)
+					return "", false, fmt.Errorf("modulo adjustment error: %s", err)
 				}
 				if !ok {
 					return "", false, nil

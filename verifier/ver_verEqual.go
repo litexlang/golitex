@@ -32,7 +32,7 @@ func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state VerState, ch
 		}
 
 		if !isValidEqualFact(stmt) {
-			return false, fmt.Errorf("invalid equal fact: %v", stmt)
+			return false, fmt.Errorf("invalid equal fact: %s", stmt)
 		}
 	}
 
