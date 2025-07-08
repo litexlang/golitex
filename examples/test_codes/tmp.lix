@@ -1,12 +1,10 @@
 fn logBase(x, y N) N:
     x > 0
-    then:
-        logBase(x, x) = 1
 
 know forall x, y, z N:
-    logBase(x^y, z) = y * logBase(x, z)
-    logBase(x*y, z) = logBase(x, z) + logBase(y, z)
+    logBase(z, x^y) = logBase(z, x) * y
+    logBase(z, x*y) = logBase(z, x) + logBase(z, y)
 
 obj x, y, z N:
     z > 0
-logBase(x, z) + logBase(y, z) $in N
+logBase(z, x) + logBase(z, y) $in N
