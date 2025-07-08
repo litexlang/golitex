@@ -7,5 +7,6 @@ know forall x, y, z N:
     logBase(x^y, z) = y * logBase(x, z)
     logBase(x*y, z) = logBase(x, z) + logBase(y, z)
 
-obj x, y, z N
+obj x, y, z N:
+    z > 0
 logBase(x, z) + logBase(y, z) $in N
