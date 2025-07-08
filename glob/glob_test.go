@@ -16,16 +16,8 @@ package litex_global
 
 import (
 	"fmt"
-	"log"
-	"runtime"
 	"testing"
 )
-
-func TestRuntimeGetFuncName(t *testing.T) {
-	pc, _, _, _ := runtime.Caller(0)
-	fcName := runtime.FuncForPC(pc).Name()
-	log.Println(NewErrLinkAtFunc(nil, fcName, "").Error())
-}
 
 func TestIsValidName(t *testing.T) {
 	tests := []struct {

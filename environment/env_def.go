@@ -61,13 +61,13 @@ func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) error {
 
 	for _, fact := range stmt.DomFacts {
 		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
-			return fmt.Errorf(fmt.Sprintf("%s\nis true by prop %s definition, but there are undeclared atoms in the fact\n", fact.String(), stmt.DefHeader.Name))
+			return fmt.Errorf("%v\nis true by prop %s definition, but there are undeclared atoms in the fact", fact, stmt.DefHeader.Name)
 		}
 	}
 
 	for _, fact := range stmt.IffFacts {
 		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
-			return fmt.Errorf(fmt.Sprintf("%s\nis true by prop %s definition, but there are undeclared atoms in the fact\n", fact.String(), stmt.DefHeader.Name))
+			return fmt.Errorf("%v\nis true by prop %s definition, but there are undeclared atoms in the fact", fact, stmt.DefHeader.Name)
 		}
 	}
 
@@ -101,13 +101,13 @@ func (env *Env) AtomsInFnTemplateDeclared(nameAsFc ast.Fc, stmt *ast.FnTemplateS
 
 	for _, fact := range stmt.DomFacts {
 		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
-			return fmt.Errorf(fmt.Sprintf("%s\nis true by fn %s definition, but there are undeclared atoms in the fact\n", fact.String(), name))
+			return fmt.Errorf("%v\nis true by fn %s definition, but there are undeclared atoms in the fact", fact, name)
 		}
 	}
 
 	for _, fact := range stmt.ThenFacts {
 		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
-			return fmt.Errorf(fmt.Sprintf("%s\nis true by fn %s definition, but there are undeclared atoms in the fact\n", fact.String(), name))
+			return fmt.Errorf("%v\nis true by fn %s definition, but there are undeclared atoms in the fact", fact, name)
 		}
 	}
 
@@ -143,13 +143,13 @@ func (env *Env) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) 
 
 	for _, fact := range stmt.DefBody.DomFacts {
 		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
-			return fmt.Errorf(fmt.Sprintf("%s\nis true by exist_prop %s definition, but there are undeclared atoms in the fact\n", fact.String(), stmt.DefBody.DefHeader.Name))
+			return fmt.Errorf("%v\nis true by exist_prop %s definition, but there are undeclared atoms in the fact", fact, stmt.DefBody.DefHeader.Name)
 		}
 	}
 
 	for _, fact := range stmt.DefBody.IffFacts {
 		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
-			return fmt.Errorf(fmt.Sprintf("%s\nis true by exist_prop %s definition, but there are undeclared atoms in the fact\n", fact.String(), stmt.DefBody.DefHeader.Name))
+			return fmt.Errorf("%v\nis true by exist_prop %s definition, but there are undeclared atoms in the fact", fact, stmt.DefBody.DefHeader.Name)
 		}
 	}
 

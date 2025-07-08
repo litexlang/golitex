@@ -67,7 +67,7 @@ func execStmtTest(topStmt []ast.Stmt) []string {
 		executor.env.Msgs = newMsgs
 
 		if isNotTrue {
-			messages = append(messages, fmt.Sprintf("execution failed at:\n%s", topStmt.String()))
+			messages = append(messages, fmt.Sprintf("execution failed at:\n%v", topStmt))
 			break
 		} else {
 			messages = append(messages, strings.Join(executor.env.Msgs, "\n"))

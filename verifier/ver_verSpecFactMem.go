@@ -569,7 +569,7 @@ func (ver *Verifier) fcEqual_Commutative_Associative_CmpRule(left ast.Fc, right 
 	}
 	if ok {
 		if verState.requireMsg() {
-			ver.successWithMsg(fmt.Sprintf("%s = %s", left.String(), right.String()), msg)
+			ver.successWithMsg(fmt.Sprintf("%s = %s", left, right), msg)
 		}
 		return true, nil
 	}
