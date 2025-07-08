@@ -102,7 +102,28 @@ The above example means: `Human` is the set of all humans. Using `know`, we esta
 
 Each statement in Litex has four potential outcomes: true, false, unknown, or error. Factual statements start with `$` to differentiate them from functions.[^1]
 
-Keep this example in mind. This is the most classic example of how people uses `match and substitution` to establish new facts. Refer to this example when you are reading the next section.
+When you run the above example on [playground](https://litexlang.org/playground), you might see the output similar to this:
+
+```
+Jordan = Jordan
+is true. proved by
+literally the same
+human = human
+is true. proved by
+literally the same
+$in(Jordan, human)
+is true. proved by
+$in(Jordan, human)
+Jordan matches Jordan
+human matches human
+
+$intelligent(Jordan)
+is true. proved by
+forall x human:
+    $intelligent(x)
+```
+
+It says how the factual statement `$intelligent(Jordan)` is verified by the Litex kernel based on the established facts. Here a universal fact `forall x Human: $intelligent(x)` is used to verify the specific factual statement `$intelligent(Jordan)`. Keep this example in mind. This is the most classic example of how people uses `match and substitution` to establish new facts. Refer to this example when you are reading the next section.
 
 [^1]: Factual expressions are typically written as $propName(objects). They begin with `$` to differentiate them from functions. Litex is a language close to everyday math, that is why it provides 3 handy exceptions to make your code nicer: 1. builtin keywords like =, > are written as daily life math 2. If the proposition requires one and only one object, it can be written as "object $propName" 3. If the proposition requires two objects, it can be written as "object1 $propName object2".
 
