@@ -78,7 +78,7 @@ func (ver *Verifier) verInN_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(st
 			if ok {
 				ok, _ = ver.verInN_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fcFn.Params[1], ast.FcAtom(glob.KeywordNatural)}), state)
 				if ok {
-					return true, fmt.Sprintf("%s has function name in *+-^, and both params are in N", fcFn.String())
+					return true, fmt.Sprintf("%s has function name in *+-^, and both params are in N", fcFn)
 				}
 			}
 		}
@@ -112,7 +112,7 @@ func (ver *Verifier) verInZ_BySpecMem__ReturnValueOfUserDefinedFnInFnReturnSet(s
 			if ok {
 				ok, _ = ver.verInZ_BySpecMem__ReturnValueOfUserDefinedFnInFnReturnSet(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fcFn.Params[1], ast.FcAtom(glob.KeywordInt)}), state)
 				if ok {
-					return true, fmt.Sprintf("%s has function name in *+-, and both params are in Z", fcFn.String())
+					return true, fmt.Sprintf("%s has function name in *+-, and both params are in Z", fcFn)
 				}
 			}
 		}
@@ -148,7 +148,7 @@ func (ver *Verifier) verInQ_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(st
 			if ok {
 				ok, _ = ver.verInQ_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fcFn.Params[1], ast.FcAtom(glob.KeywordRational)}), state)
 				if ok {
-					return true, fmt.Sprintf("%s has function name in *+-, and both params are in Q", fcFn.String())
+					return true, fmt.Sprintf("%s has function name in *+-, and both params are in Q", fcFn)
 				}
 			}
 		}
@@ -180,7 +180,7 @@ func (ver *Verifier) verInR_BySpecMem(stmt *ast.SpecFactStmt, state VerState) (b
 			if ok {
 				ok, _ = ver.verInR_BySpecMem(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fcFn.Params[1], ast.FcAtom(glob.KeywordReal)}), state)
 				if ok {
-					return true, fmt.Sprintf("%s has function name in *+-, and both params are in R", fcFn.String())
+					return true, fmt.Sprintf("%s has function name in *+-, and both params are in R", fcFn)
 				}
 			}
 		}

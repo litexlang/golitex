@@ -36,13 +36,3 @@ func (e *Executor) newEnv(parent *env.Env) *env.Env {
 	e.env = env.NewEnv(parent)
 	return e.env
 }
-
-// func NewExecutorWithInit(curEnv *env.Env) *Executor {
-// 	ret := newExecutor(curEnv)
-// 	ret.env.Init()
-// 	return ret
-// }
-
-// func NewExecutorWithoutInit(curEnv *env.Env) *Executor {
-// 	return NewExecutor(curEnv)
-// }

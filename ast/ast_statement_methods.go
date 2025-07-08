@@ -131,7 +131,7 @@ func (stmt *SpecFactStmt) IsValidEqualFact() (bool, error) {
 		if len(stmt.Params) == 2 {
 			return true, nil
 		} else {
-			return false, fmt.Errorf("equal fact %s should have 2 params, but got %d", stmt.String(), len(stmt.Params))
+			return false, fmt.Errorf("equal fact %v should have 2 params, but got %d", stmt, len(stmt.Params))
 		}
 	} else {
 		return false, nil

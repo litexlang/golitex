@@ -100,7 +100,7 @@ func (ver *Verifier) varCommutativeProp_BuiltinRules(stmt *ast.SpecFactStmt, sta
 
 	if ver.isCommutativeProp_BuiltinRule(stmt) {
 		if state.requireMsg() {
-			ver.successWithMsg(stmt.String(), fmt.Sprintf("prop %s is commutative", stmt.PropName.String()))
+			ver.successWithMsg(stmt.String(), fmt.Sprintf("prop %v is commutative", stmt.PropName))
 		}
 		return true, nil
 	}
@@ -121,7 +121,7 @@ func (ver *Verifier) varCommutativeProp_BuiltinRules(stmt *ast.SpecFactStmt, sta
 	}
 	if ok {
 		if state.requireMsg() {
-			ver.successWithMsg(stmt.String(), fmt.Sprintf("the definition of commutative property: %s is true iff\n%s", stmt.String(), uniFact.String()))
+			ver.successWithMsg(stmt.String(), fmt.Sprintf("the definition of commutative property: %v is true iff\n%v", stmt, uniFact))
 		}
 		return true, nil
 	}

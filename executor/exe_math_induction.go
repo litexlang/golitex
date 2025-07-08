@@ -31,7 +31,7 @@ func (exec *Executor) mathInductionFact_BuiltinRules(stmt *ast.ProveByMathInduct
 	defer func() {
 		exec.deleteEnvAndRetainMsg()
 		if isTrue {
-			exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("by %s\n%s\nis true", glob.KeywordProveByMathInduction, resultingFact.String()))
+			exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("by %s\n%v\nis true", glob.KeywordProveByMathInduction, resultingFact))
 			exec.knowStmt(ast.NewKnowStmt([]ast.FactStmt{resultingFact}))
 		}
 	}()
@@ -44,7 +44,7 @@ func (exec *Executor) mathInductionFact_BuiltinRules(stmt *ast.ProveByMathInduct
 	if !ok {
 		_, ok := exec.env.GetExistPropDef(propNameAsAtom)
 		if !ok {
-			return glob.ExecState_Error, fmt.Errorf("math induction fact %s should have a prop name that is defined, got: %s", stmt.String(), propNameAsAtom)
+			return glob.ExecState_Error, fmt.Errorf("math induction fact %v should have a prop name that is defined, got: %v", stmt, propNameAsAtom)
 		}
 	}
 

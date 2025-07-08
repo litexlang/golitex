@@ -220,7 +220,7 @@ func (tb *tokenBlock) uniFactInterface(uniFactDepth uniFactEnum) (ast.UniFactInt
 		ret := ast.NewUniFactWithIff(ast.NewUniFact(params, setParams, domainFacts, thenFacts), iffFacts)
 
 		if len(thenFacts) == 0 {
-			return nil, fmt.Errorf("expect %s section to have at least one fact in %s", glob.KeywordThen, ret.String())
+			return nil, fmt.Errorf("expect %s section to have at least one fact in %v", glob.KeywordThen, ret)
 		}
 
 		return ret, nil
@@ -1022,7 +1022,7 @@ func (tb *tokenBlock) param_paramSet_paramInSetFacts(endWith string, allowExceed
 
 		for j := i; j < len(params); j++ {
 			if slices.Contains(atomsInSetParamAsStr, params[j]) {
-				return nil, nil, fmt.Errorf("the set %s of the parameter if index %d cannot include any parameters from the index %d to the last one (found parameter %s)", setParam.String(), i, j, params[j])
+				return nil, nil, fmt.Errorf("the set %v of the parameter if index %d cannot include any parameters from the index %d to the last one (found parameter %s)", setParam, i, j, params[j])
 			}
 		}
 	}

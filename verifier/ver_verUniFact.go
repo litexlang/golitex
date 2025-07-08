@@ -104,7 +104,7 @@ func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state VerStat
 	}
 
 	if state.requireMsg() {
-		err := ver.newMsgAtParent(fmt.Sprintf("%s\nis true", stmt.String()))
+		err := ver.newMsgAtParent(fmt.Sprintf("%v\nis true", stmt))
 		if err != nil {
 			return false, err
 		}
