@@ -1,0 +1,9 @@
+obj human set
+prop intelligent(x human)
+
+know:
+    forall x human:
+        $intelligent(x)
+
+obj Jordan human
+$intelligent(Jordan)
