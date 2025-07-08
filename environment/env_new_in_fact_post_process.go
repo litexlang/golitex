@@ -22,7 +22,7 @@ import (
 
 func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) error {
 	if len(fact.Params) != 2 {
-		return fmt.Errorf("in fact expect 2 parameters, get %d in %s", len(fact.Params), fact.String())
+		return fmt.Errorf("in fact expect 2 parameters, get %d in %v", len(fact.Params), fact)
 	}
 
 	if def, ok := e.isSetFnRetValue(fact.Params[1]); ok {
@@ -45,7 +45,7 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) error {
 		}
 
 		if !ok {
-			return fmt.Errorf("failed to satisfy the function template of %s", fact.Params[0].String())
+			return fmt.Errorf("failed to satisfy the function template of %v", fact.Params[0])
 		}
 	}
 
@@ -94,7 +94,7 @@ func (e *Env) FcSatisfy_FreeTemplateFact_Store_DeriveFacts(fc ast.Fc, fnTemplate
 func (e *Env) inFactPostProcess_InSetFnRetValue(fact *ast.SpecFactStmt, def *ast.HaveSetFnStmt) error {
 	inFactRightParamAsFcFnPt, ok := fact.Params[1].(*ast.FcFn)
 	if !ok {
-		return fmt.Errorf("in fact expect 2 parameters, get %d in %s", len(fact.Params), fact.String())
+		return fmt.Errorf("in fact expect 2 parameters, get %d in %v", len(fact.Params), fact)
 	}
 
 	uniMap := map[string]ast.Fc{}

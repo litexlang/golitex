@@ -54,7 +54,7 @@ func (ver *Verifier) ProveOverFiniteSet(stmt *ast.ProveOverFiniteSetStmt) (glob.
 				return glob.ExecState_Error, err
 			}
 			if !ok {
-				return glob.ExecState_False, fmt.Errorf("failed to prove instantiated then facts: %s", fact.String())
+				return glob.ExecState_False, fmt.Errorf("failed to prove instantiated then facts: %s", fact)
 			}
 		}
 	}

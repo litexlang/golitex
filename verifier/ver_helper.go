@@ -28,7 +28,7 @@ func (ver *Verifier) todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt *ast.Sp
 
 func (ver *Verifier) equalTrueAddSuccessMsg(left ast.Fc, right ast.Fc, state VerState, msg string) (bool, error) {
 	if state.requireMsg() {
-		ver.successWithMsg(fmt.Sprintf("%s = %s", left.String(), right.String()), msg)
+		ver.successWithMsg(fmt.Sprintf("%v = %v", left, right), msg)
 	}
 	return true, nil
 }

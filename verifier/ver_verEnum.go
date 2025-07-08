@@ -75,7 +75,7 @@ func (ver *Verifier) lenIsZeroThenEnumIsEmpty(stmt *ast.EnumStmt, state VerState
 	}
 
 	if state.requireMsg() {
-		ver.successWithMsg(stmt.String(), fmt.Sprintf("len(%s) = 0 is equivalent to %s", stmt.CurSet, stmt.String()))
+		ver.successWithMsg(stmt.String(), fmt.Sprintf("len(%s) = 0 is equivalent to %s", stmt.CurSet, stmt))
 	}
 
 	return true, nil

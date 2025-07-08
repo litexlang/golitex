@@ -211,7 +211,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 	propDef, ok := ver.env.GetExistPropDef(stmt.PropName)
 	if !ok {
 		// TODO: 如果没声明，应该报错
-		return false, fmt.Errorf("%s has no definition", stmt.String())
+		return false, fmt.Errorf("%s has no definition", stmt)
 	}
 
 	uniConMap := map[string]ast.Fc{}
@@ -240,7 +240,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 		}
 		if !ok {
 			if state.requireMsg() {
-				msg := fmt.Sprintf("dom fact %s is unknown\n", domFact.String())
+				msg := fmt.Sprintf("dom fact %s is unknown\n", domFact)
 				ver.env.Msgs = append(ver.env.Msgs, msg)
 			}
 			return false, nil
@@ -339,7 +339,7 @@ func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state VerState) (b
 			return false, err
 		}
 		if ok {
-			return ver.processOkMsg(state, stmt.String(), fmt.Sprintf("%s is true", greaterStmt.String()))
+			return ver.processOkMsg(state, stmt.String(), fmt.Sprintf("%s is true", greaterStmt))
 		}
 
 		// 尝试证明 =
@@ -350,7 +350,7 @@ func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state VerState) (b
 			return false, err
 		}
 		if ok {
-			return ver.processOkMsg(state, stmt.String(), fmt.Sprintf("%s is true", equalStmt.String()))
+			return ver.processOkMsg(state, stmt.String(), fmt.Sprintf("%s is true", equalStmt))
 		}
 	}
 
@@ -384,7 +384,7 @@ func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state VerState) (b
 			return false, err
 		}
 		if ok {
-			return ver.processOkMsg(state, stmt.String(), fmt.Sprintf("%s is true", reversedStmt.String()))
+			return ver.processOkMsg(state, stmt.String(), fmt.Sprintf("%s is true", reversedStmt))
 		}
 		return false, nil
 	}

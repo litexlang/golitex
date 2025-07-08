@@ -81,7 +81,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 	}
 
 	if err != nil {
-		return glob.ExecState_Error, glob.NewErrLink(err, "execution error:")
+		return glob.ExecState_Error, fmt.Errorf("execution error: %w", err)
 	} else {
 		return execState, nil
 	}
@@ -203,7 +203,7 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
 		return err
 	}
 	if glob.RequireMsg() {
-		exec.newMsg(fmt.Sprintf("%s\nis true by definition", propToIff.String()))
+		exec.newMsg(fmt.Sprintf("%v\nis true by definition", propToIff))
 	}
 
 	err = exec.env.NewFact(iffToProp)
@@ -211,7 +211,7 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
 		return err
 	}
 	if glob.RequireMsg() {
-		exec.newMsg(fmt.Sprintf("%s\nis true by definition", iffToProp.String()))
+		exec.newMsg(fmt.Sprintf("%v\nis true by definition", iffToProp))
 	}
 
 	return nil
@@ -219,12 +219,12 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
 
 func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt, requireMsg bool) error {
 	if glob.RequireMsg() {
-		defer exec.newMsg(fmt.Sprintf("%s\n", stmt.String()))
+		defer exec.newMsg(fmt.Sprintf("%v\n", stmt))
 	}
 
 	if requireMsg {
 		if glob.RequireMsg() {
-			exec.newMsg(fmt.Sprintf("%s\n", stmt.String()))
+			exec.newMsg(fmt.Sprintf("%v\n", stmt))
 		}
 	}
 
@@ -251,7 +251,7 @@ func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt, requireMsg bool) error {
 
 func (exec *Executor) defFnTemplateStmt(stmt *ast.DefFnTemplateStmt) error {
 	if glob.RequireMsg() {
-		defer exec.newMsg(fmt.Sprintf("%s\n", stmt.String()))
+		defer exec.newMsg(fmt.Sprintf("%v\n", stmt))
 	}
 
 	err := exec.env.ExecDefFnTemplate(stmt)
@@ -265,7 +265,7 @@ func (exec *Executor) defFnTemplateStmt(stmt *ast.DefFnTemplateStmt) error {
 func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) error {
 	// TODO 像定义这样的经常被调用的 事实，应该和普通的事实分离开来，以便于调用吗?
 	if glob.RequireMsg() {
-		defer exec.newMsg(fmt.Sprintf("%s\n", stmt.String()))
+		defer exec.newMsg(fmt.Sprintf("%v\n", stmt))
 	}
 
 	return exec.env.NewDefExistProp_InsideAtomsDeclared(stmt)
@@ -279,7 +279,7 @@ func (exec *Executor) execProofBlockAtCurEnv(proof []ast.Stmt) (glob.ExecState, 
 		}
 		if execState != glob.ExecState_True {
 			if execState == glob.ExecState_Unknown && glob.ContinueExecutionIfExecUnknown {
-				exec.appendWarningMsg(fmt.Sprintf("unknown fact:\n%s", curStmt.String()))
+				exec.appendWarningMsg(fmt.Sprintf("unknown fact:\n%v", curStmt))
 				return glob.ExecState_Unknown, nil
 			} else {
 				return execState, nil
@@ -414,7 +414,7 @@ func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) (glob.E
 	execState, err := exec.factStmt(&stmt.OrFact)
 	if notOkExec(execState, err) {
 		if glob.RequireMsg() {
-			exec.newMsg(fmt.Sprintf("%s is unknown", stmt.OrFact.String()))
+			exec.newMsg(fmt.Sprintf("%v is unknown", stmt.OrFact))
 		}
 		return execState, err
 	}
@@ -469,7 +469,7 @@ func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEach
 func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) (glob.ExecState, error) {
 	if glob.RequireMsg() {
 		defer func() {
-			exec.newMsg(fmt.Sprintf("%s\n", stmt.String()))
+			exec.newMsg(fmt.Sprintf("%v\n", stmt))
 		}()
 	}
 
@@ -487,7 +487,7 @@ func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) (glob.ExecS
 	}
 
 	if glob.RequireMsg() {
-		exec.newMsg(fmt.Sprintf("%s\nis true by definition", knownUniFact.String()))
+		exec.newMsg(fmt.Sprintf("%v\nis true by definition", knownUniFact))
 	}
 
 	return glob.ExecState_True, nil
@@ -497,7 +497,7 @@ func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) (glob.ExecS
 func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
 	if glob.RequireMsg() {
 		defer func() {
-			exec.newMsg(fmt.Sprintf("%s\n", stmt.String()))
+			exec.newMsg(fmt.Sprintf("%v\n", stmt))
 		}()
 	}
 
@@ -558,7 +558,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 	err := exec.defObjStmt(objDefStmt, false)
 	if err != nil {
 		if glob.RequireMsg() {
-			exec.newMsg(fmt.Sprintf("Claim statement error: Failed to declare parameters in universal fact:\n%s\n", objDefStmt.String()))
+			exec.newMsg(fmt.Sprintf("Claim statement error: Failed to declare parameters in universal fact:\n%v\n", objDefStmt))
 		}
 		return false, err
 	}
@@ -567,7 +567,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 	execState, err := exec.execProofBlockAtCurEnv(stmt.Proofs)
 	if err != nil {
 		if glob.RequireMsg() {
-			exec.newMsg(fmt.Sprintf("Claim statement error: Failed to execute proof block:\n%s\n", stmt.String()))
+			exec.newMsg(fmt.Sprintf("Claim statement error: Failed to execute proof block:\n%v\n", stmt))
 		}
 		return false, err
 	}
@@ -581,7 +581,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 		execState, err := exec.factStmt(fact)
 		if err != nil {
 			if glob.RequireMsg() {
-				exec.newMsg(fmt.Sprintf("Claim statement error: Failed to execute fact statement:\n%s\n", fact.String()))
+				exec.newMsg(fmt.Sprintf("Claim statement error: Failed to execute fact statement:\n%v\n", fact))
 			}
 			return false, err
 		}
@@ -596,7 +596,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 	if glob.RequireMsg() {
 		defer func() {
-			exec.newMsg(fmt.Sprintf("%s\n", stmt.String()))
+			exec.newMsg(fmt.Sprintf("%v\n", stmt))
 		}()
 	}
 
@@ -618,7 +618,7 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 	}
 
 	if glob.RequireMsg() {
-		exec.newMsg(fmt.Sprintf("%s\nis true by definition", derivedFact.String()))
+		exec.newMsg(fmt.Sprintf("%v\nis true by definition", derivedFact))
 	}
 
 	return nil
@@ -634,12 +634,12 @@ func (exec *Executor) checkReverse(stmt ast.FactStmt) (glob.ExecState, error) {
 		}
 		if ok {
 			if glob.RequireMsg() {
-				exec.newMsg(asSpecFact.String() + "\nis false")
+				exec.newMsg(fmt.Sprintf("%v\nis false", asSpecFact))
 			}
 			return glob.ExecState_False, nil
 		} else {
 			if glob.RequireMsg() {
-				exec.newMsg(stmt.String() + "\nis unknown")
+				exec.newMsg(fmt.Sprintf("%v\nis unknown", stmt))
 			}
 		}
 	} else if asOrStmt, ok := stmt.(*ast.OrStmt); ok {
@@ -647,17 +647,17 @@ func (exec *Executor) checkReverse(stmt ast.FactStmt) (glob.ExecState, error) {
 			execState, err := exec.checkReverse(fact)
 			if notOkExec(execState, err) {
 				if glob.RequireMsg() {
-					exec.newMsg(stmt.String() + "\nis unknown")
+					exec.newMsg(fmt.Sprintf("%v\nis unknown", stmt))
 				}
 				return execState, err
 			}
 		}
 		if glob.RequireMsg() {
-			exec.newMsg(stmt.String() + "\nis false")
+			exec.newMsg(fmt.Sprintf("%v\nis false", stmt))
 		}
 	} else {
 		if glob.RequireMsg() {
-			exec.newMsg(stmt.String() + "\nis unknown")
+			exec.newMsg(fmt.Sprintf("%v\nis unknown", stmt))
 		}
 	}
 
