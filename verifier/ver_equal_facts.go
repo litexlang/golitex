@@ -17,6 +17,7 @@ package litex_verifier
 import (
 	"fmt"
 	ast "golitex/ast"
+	glob "golitex/glob"
 )
 
 func (ver *Verifier) isEqualFact_Check(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
@@ -135,6 +136,7 @@ func (ver *Verifier) fcFnEq(left, right *ast.FcFn, state VerState) (bool, error)
 
 	for i := range left.Params {
 		ok, err := ver.fcEqualSpec(left.Params[i], right.Params[i], state)
+		// ok, err := ver.verTrueEqualFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{left.Params[i], right.Params[i]}), state)
 		if err != nil {
 			return false, err
 		}
@@ -144,11 +146,44 @@ func (ver *Verifier) fcFnEq(left, right *ast.FcFn, state VerState) (bool, error)
 	}
 
 	ok, err = ver.fcEqualSpec(left.FnHead, right.FnHead, state)
+	// ok, err = ver.verTrueEqualFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{left.FnHead, right.FnHead}), state)
 	if err != nil {
 		return false, err
 	}
 	if !ok {
 		return false, nil
+	}
+
+	return true, nil
+}
+
+func (ver *Verifier) verTrueEqualFact_FcFnEqual(left, right *ast.FcFn, state VerState) (bool, error) {
+	var ok bool
+	var err error
+	state = state.addRound()
+
+	if len(left.Params) != len(right.Params) {
+		return false, nil
+	}
+
+	// ok, err = ver.fcEqualSpec(left.FnHead, right.FnHead, state)
+	ok, err = ver.verTrueEqualFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{left.FnHead, right.FnHead}), state)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
+
+	for i := range left.Params {
+		// ok, err := ver.fcEqualSpec(left.Params[i], right.Params[i], state)
+		ok, err := ver.verTrueEqualFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{left.Params[i], right.Params[i]}), state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
 	}
 
 	return true, nil

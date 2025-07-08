@@ -34,7 +34,7 @@ func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state VerState) (b
 		return false, fmt.Errorf("invalid equal fact: %v", stmt)
 	}
 
-	ok, err := ver.verFcEqual(stmt.Params[0], stmt.Params[1], state)
+	ok, err := ver.verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(stmt.Params[0], stmt.Params[1], state)
 	if err != nil {
 		return false, err
 	}
@@ -44,41 +44,26 @@ func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state VerState) (b
 
 	if leftAsFn, ok := stmt.Params[0].(*ast.FcFn); ok {
 		if rightAsFn, ok := stmt.Params[1].(*ast.FcFn); ok {
-			fnNameEqual, err := ver.verFcEqual(leftAsFn.FnHead, rightAsFn.FnHead, state)
+			ok, err := ver.verTrueEqualFact_FcFnEqual(leftAsFn, rightAsFn, state)
 			if err != nil {
 				return false, err
 			}
-			if fnNameEqual {
-				if len(leftAsFn.Params) != len(rightAsFn.Params) {
-					return false, nil
-				}
-
-				for i := range leftAsFn.Params {
-					ok, err := ver.verFcEqual(leftAsFn.Params[i], rightAsFn.Params[i], state)
-					if err != nil {
-						return false, err
-					}
-					if !ok {
-						return false, nil
-					}
-				}
+			if ok {
 				return true, nil
-			} else {
-				return false, nil
 			}
-		} else {
-			return false, nil
 		}
 	} else {
 		return false, nil
 	}
+
+	return false, nil
 }
 
 func isValidEqualFact(stmt *ast.SpecFactStmt) bool {
 	return len(stmt.Params) == 2 && string(stmt.PropName) == glob.KeySymbolEqual
 }
 
-func (ver *Verifier) verFcEqual(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
+func (ver *Verifier) verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
 	if ok, err := ver.verEqualBuiltin(left, right, state); err != nil {
 		return false, err
 	} else if ok {
@@ -90,19 +75,6 @@ func (ver *Verifier) verFcEqual(left ast.Fc, right ast.Fc, state VerState) (bool
 	} else if ok {
 		return true, nil
 	}
-	// else {
-	// 如果 ver.CurMatchEnv 存在，那还要用specMem来验证
-	// if ver.env.CurMatchProp != nil {
-	// 	equalFact := ver.makeEqualFact(left, right)
-	// 	ok, err := ver.verSpecFact_BySpecMem(equalFact, state)
-	// 	if err != nil {
-	// 		return false, err
-	// 	}
-	// 	if ok {
-	// 		return true, nil
-	// 	}
-	// }
-	// }
 
 	if ok, err := ver.verEqualSpecMemAndLogicMem(left, right, state); err != nil {
 		return false, err

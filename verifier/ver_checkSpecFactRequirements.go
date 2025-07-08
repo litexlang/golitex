@@ -137,7 +137,7 @@ func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn, state VerState) (bool
 		// 分母不是0
 		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{fc.Params[1], ast.FcAtom("0")}), state)
 		if err != nil || !ok {
-			return ok, err
+			return ok, fmt.Errorf("second parameter in %s must be not equal to 0. %s != 0 is unknown", fc.FnHead.String(), fc.Params[1].String())
 		}
 
 		// 分子分母必须是整数
