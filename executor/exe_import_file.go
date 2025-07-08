@@ -39,7 +39,7 @@ func (exec *Executor) importFileStmt(stmt *ast.ImportFileStmt) (glob.ExecState, 
 
 	exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("importing file \"%s\"", fileNameWithoutExt))
 
-	exec.appendMsg("start importing file \"%s\"\n", stmt.Path)
+	exec.appendMsg(fmt.Sprintf("start importing file \"%s\"\n", stmt.Path))
 
 	if !glob.AllowImport {
 		return glob.ExecState_Error, fmt.Errorf("imported file should not contain import statement, get %s", stmt.String())
@@ -64,7 +64,7 @@ func (exec *Executor) importFileStmt(stmt *ast.ImportFileStmt) (glob.ExecState, 
 		return glob.ExecState_Error, fmt.Errorf("failed to execute import statement:\n%s\nSome statements in the imported file are not executed successfully", stmt.String())
 	}
 
-	exec.appendMsg("import file \"%s\" success\n", stmt.Path)
+	exec.appendMsg(fmt.Sprintf("import file \"%s\" success\n", stmt.Path))
 
 	return glob.ExecState_True, nil
 }

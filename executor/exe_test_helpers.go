@@ -56,11 +56,12 @@ func execStmtTest(topStmt []ast.Stmt) []string {
 		// 如果连续两个 \n 则删除一个
 		var newMsgs []string
 		for i := 0; i < len(executor.env.Msgs); i++ {
-			if i < len(executor.env.Msgs)-1 && executor.env.Msgs[i] == "\n" && executor.env.Msgs[i+1] == "\n" {
-				newMsgs = append(newMsgs, executor.env.Msgs[i])
+			curMsg := executor.env.Msgs[i]
+			if i < len(executor.env.Msgs)-1 && curMsg == "\n" && executor.env.Msgs[i+1] == "\n" {
+				newMsgs = append(newMsgs, curMsg)
 				i++
 			} else {
-				newMsgs = append(newMsgs, executor.env.Msgs[i])
+				newMsgs = append(newMsgs, curMsg)
 			}
 		}
 		executor.env.Msgs = newMsgs
