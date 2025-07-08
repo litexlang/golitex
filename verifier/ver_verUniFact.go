@@ -91,7 +91,7 @@ func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state VerStat
 		}
 		if !ok {
 			if state.requireMsg() {
-				ver.newMsgEnd("%s is unknown", thenFact.String())
+				ver.env.Msgs = append(ver.env.Msgs, fmt.Sprintf("%v is unknown", thenFact))
 			}
 			return false, nil
 		}

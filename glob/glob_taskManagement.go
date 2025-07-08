@@ -29,6 +29,7 @@ var PreviousTaskDirNameSlice []string = []string{}
 var CurrentPkg string = ""
 var PreviousPkgSlice []string = []string{}
 var DeclaredPkgNames = map[string]struct{}{"": {}}
+var IsRunningPipelineInit bool = false
 
 func ImportDirStmtInit(newPkg string, path string) error {
 	PreviousTaskDirNameSlice = append(PreviousTaskDirNameSlice, CurrentTaskDirName)
@@ -61,6 +62,6 @@ func ImportDirStmtEnd() {
 	PreviousTaskDirNameSlice = PreviousTaskDirNameSlice[:len(PreviousTaskDirNameSlice)-1]
 }
 
-func IsNotImportDirStmt() bool {
-	return len(PreviousPkgSlice) == 0
+func RequireMsg() bool {
+	return len(PreviousPkgSlice) == 0 && !IsRunningPipelineInit
 }

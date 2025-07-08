@@ -24,7 +24,7 @@ import (
 )
 
 func (exec *Executor) importGloballyStmt(stmt *ast.ImportFileStmt) (glob.ExecState, error) {
-	exec.appendMsg(fmt.Sprintf("start importing file globally \"%s\"\n", stmt.Path))
+	exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("start importing file globally \"%s\"\n", stmt.Path))
 
 	if !glob.AllowImport {
 		return glob.ExecState_Error, fmt.Errorf("import globally is not allowed in imported file, get %s", stmt.String())
@@ -59,7 +59,7 @@ func (exec *Executor) importGloballyStmt(stmt *ast.ImportFileStmt) (glob.ExecSta
 		return exec.runStmtInUpmostEnv_AssumeTheyAreTrue(stmts)
 	}
 
-	exec.appendMsg(fmt.Sprintf("import file globally \"%s\" success\n", stmt.Path))
+	exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("import file globally \"%s\" success\n", stmt.Path))
 
 	return glob.ExecState_True, nil
 }

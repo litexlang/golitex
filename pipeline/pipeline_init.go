@@ -24,6 +24,11 @@ import (
 )
 
 func pipelineExecutorInit() (*exe.Executor, error) {
+	glob.IsRunningPipelineInit = true
+	defer func() {
+		glob.IsRunningPipelineInit = false
+	}()
+
 	curEnv := env.NewEnv(nil)
 	curEnv.Init()
 	executor := exe.NewExecutor(curEnv)

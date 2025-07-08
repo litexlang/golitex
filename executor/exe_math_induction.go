@@ -31,7 +31,7 @@ func (exec *Executor) mathInductionFact_BuiltinRules(stmt *ast.ProveByMathInduct
 	defer func() {
 		exec.deleteEnvAndRetainMsg()
 		if isTrue {
-			exec.appendMsg(fmt.Sprintf("by %s\n%s\nis true", glob.KeywordProveByMathInduction, resultingFact.String()))
+			exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("by %s\n%s\nis true", glob.KeywordProveByMathInduction, resultingFact.String()))
 			exec.knowStmt(ast.NewKnowStmt([]ast.FactStmt{resultingFact}))
 		}
 	}()

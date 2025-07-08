@@ -21,23 +21,23 @@ import (
 
 func (e *Executor) deleteEnvAndRetainMsg() {
 	for _, msg := range e.env.Msgs {
-		if glob.IsNotImportDirStmt() {
-			e.env.Parent.AppendMsg(msg)
+		if glob.RequireMsg() {
+			e.env.Parent.Msgs = append(e.env.Parent.Msgs, msg)
 		}
 	}
 	e.env = e.env.Parent
 }
 
-func (e *Executor) appendMsg(msg string) {
+func (e *Executor) newMsg(msg string) {
 	e.env.Msgs = append(e.env.Msgs, msg)
 }
 
-func (e *Executor) appendNewMsgAtBegin(msg string, str ...any) {
-	e.env.Msgs = append([]string{fmt.Sprintf(msg, str...)}, e.env.Msgs...)
+func (e *Executor) appendNewMsgAtBegin(msg string) {
+	e.env.Msgs = append([]string{msg}, e.env.Msgs...)
 }
 
-func (e *Executor) appendWarningMsg(msg string, str ...any) {
-	e.env.Msgs = append(e.env.Msgs, fmt.Sprintf(`warning: %s`, fmt.Sprintf(msg, str...)))
+func (e *Executor) appendWarningMsg(msg string) {
+	e.env.Msgs = append(e.env.Msgs, fmt.Sprintf(`warning: %s`, msg))
 }
 
 func (e *Executor) ClearMsgs() {
