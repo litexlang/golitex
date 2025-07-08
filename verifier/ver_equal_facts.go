@@ -157,17 +157,16 @@ func (ver *Verifier) fcFnEq(left, right *ast.FcFn, state VerState) (bool, error)
 	return true, nil
 }
 
-func (ver *Verifier) verTrueEqualFact_FcFnEqual(left, right *ast.FcFn, state VerState) (bool, error) {
+func (ver *Verifier) verTrueEqualFact_FcFnEqual_NoCheckRequirements(left, right *ast.FcFn, state VerState) (bool, error) {
 	var ok bool
 	var err error
-	state = state.addRound()
 
 	if len(left.Params) != len(right.Params) {
 		return false, nil
 	}
 
 	// ok, err = ver.fcEqualSpec(left.FnHead, right.FnHead, state)
-	ok, err = ver.verTrueEqualFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{left.FnHead, right.FnHead}), state)
+	ok, err = ver.verTrueEqualFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{left.FnHead, right.FnHead}), state, false)
 	if err != nil {
 		return false, err
 	}
@@ -177,7 +176,8 @@ func (ver *Verifier) verTrueEqualFact_FcFnEqual(left, right *ast.FcFn, state Ver
 
 	for i := range left.Params {
 		// ok, err := ver.fcEqualSpec(left.Params[i], right.Params[i], state)
-		ok, err := ver.verTrueEqualFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{left.Params[i], right.Params[i]}), state)
+
+		ok, err := ver.verTrueEqualFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{left.Params[i], right.Params[i]}), state, false)
 		if err != nil {
 			return false, err
 		}
