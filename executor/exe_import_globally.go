@@ -27,7 +27,7 @@ func (exec *Executor) importGloballyStmt(stmt *ast.ImportFileStmt) (glob.ExecSta
 	exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("start importing file globally \"%s\"\n", stmt.Path))
 
 	if !glob.AllowImport {
-		return glob.ExecState_Error, fmt.Errorf("import globally is not allowed in imported file, get %v", stmt)
+		return glob.ExecState_Error, fmt.Errorf("import globally is not allowed in imported file, get %s", stmt)
 	}
 
 	glob.AllowImport = false

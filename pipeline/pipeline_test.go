@@ -26,10 +26,10 @@ func TestExecuteCodeAndReturnMessage(t *testing.T) {
 	code := readFile("../examples/test_codes/tmp.lix")
 	msg, signal, err := ExecuteCodeAndReturnMessage(code)
 	if err != nil {
-		t.Errorf("Error: %v", err)
+		t.Errorf("Error: %s", err)
 	}
 	if signal != glob.SysSignalTrue {
-		t.Errorf("Expected signal to be true, got %v", signal)
+		t.Errorf("Expected signal to be true, got %s", signal)
 	}
 	fmt.Println(msg)
 }

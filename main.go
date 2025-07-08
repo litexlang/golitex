@@ -50,7 +50,7 @@ func main() {
 		msg, signal, err := sys.ExecuteCodeAndReturnMessage(*executeFlag)
 		fmt.Println(msg)
 		if err != nil {
-			fmt.Printf("Error: %v\n", err)
+			fmt.Printf("Error: %s\n", err)
 		} else {
 			msg := sys.RunMainMsg(signal)
 			fmt.Println(msg)
@@ -69,7 +69,7 @@ func main() {
 		msg, signal, err := sys.RunFile(*fileFlag)
 		fmt.Println(msg)
 		if err != nil {
-			fmt.Printf("Error: %v\n", err)
+			fmt.Printf("Error: %s\n", err)
 		} else {
 			msg := sys.RunMainMsg(signal)
 			fmt.Println(msg)
@@ -87,7 +87,7 @@ func main() {
 		msg, signal, err := sys.RunRepo(*repoFlag)
 		fmt.Println(msg)
 		if err != nil {
-			fmt.Printf("Error: %v\n", err)
+			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)
 		} else {
 			msg := sys.RunMainMsg(signal)

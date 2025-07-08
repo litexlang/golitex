@@ -79,7 +79,7 @@ func relaFactWithoutNotString(stmt *SpecFactStmt) string {
 func strFcSetPairs(objs []string, objSets []Fc) string {
 	pairStrSlice := make([]string, len(objs))
 	for i := range len(objs) {
-		pairStrSlice[i] = fmt.Sprintf("%s %v", objs[i], objSets[i])
+		pairStrSlice[i] = fmt.Sprintf("%s %s", objs[i], objSets[i])
 	}
 	return strings.Join(pairStrSlice, ", ")
 }
@@ -386,7 +386,7 @@ func (f *FcFn) String() string {
 
 	// if IsFcAtomEqualToGivenString_WithoutColonColon(f.FnHead, glob.KeySymbolDot) {
 	if IsFcAtomAndEqualToStr(f.FnHead, glob.KeySymbolDot) {
-		return fmt.Sprintf("%v.%v", f.Params[0], f.Params[1])
+		return fmt.Sprintf("%s.%s", f.Params[0], f.Params[1])
 	}
 
 	if ok, str := hasBuiltinOptAndToString(f); ok {

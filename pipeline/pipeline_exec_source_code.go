@@ -134,7 +134,7 @@ func RunREPLInTerminal() {
 	for {
 		code, err := listenOneStatement(reader, writer)
 		if err != nil {
-			fmt.Fprintf(writer, "[Error] %v\n", err)
+			fmt.Fprintf(writer, "[Error] %s\n", err)
 			continue
 		}
 
@@ -174,14 +174,14 @@ func listenOneStatement(reader *bufio.Reader, writer io.Writer) (string, error) 
 			}
 
 			if err != nil {
-				return "", fmt.Errorf("error reading input: %v", err)
+				return "", fmt.Errorf("error reading input: %s", err)
 			}
 			input.WriteString(currentLineStr)
 
 		} else {
 			currentLineStr, err := reader.ReadString('\n')
 			if err != nil {
-				return "", fmt.Errorf("error reading input: %v", err)
+				return "", fmt.Errorf("error reading input: %s", err)
 			}
 			input.WriteString(currentLineStr)
 

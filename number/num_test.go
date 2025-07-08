@@ -51,7 +51,7 @@ func TestCombineFractions(t *testing.T) {
 	for _, expr := range exprs {
 		numerator, denominator, err := SplitToFraction(expr)
 		if err != nil {
-			t.Fatalf("Error combining fractions: %v", err)
+			t.Fatalf("Error combining fractions: %s", err)
 		}
 		fmt.Println("Numerator:", numerator)
 		fmt.Println("Denominator:", denominator)

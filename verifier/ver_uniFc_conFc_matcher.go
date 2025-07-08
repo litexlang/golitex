@@ -96,7 +96,7 @@ func (ver *Verifier) match_FcInFactUnderUniFact_WithConFc(fcInFactUnderUniFact a
 	// 	// return ver.match_FcFnInFactUnderUniFact_ConFc(param, conFc, uniFactUniParams)
 	// 	return ver.match_FcFnInFactUnderUniFact_ConFc(param, conFc)
 	// default:
-	// 	return nil, false, fmt.Errorf("unexpected type %T for parameter %v", param, fcInFactUnderUniFact.String())
+	// 	return nil, false, fmt.Errorf("unexpected type %T for parameter %s", param, fcInFactUnderUniFact.String())
 	// }
 }
 

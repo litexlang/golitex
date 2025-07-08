@@ -125,7 +125,7 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
 
 func storeCommutativeTransitiveFact(mem map[string]*[]ast.Fc, fact *ast.SpecFactStmt) error {
 	if len(fact.Params) != 2 {
-		return fmt.Errorf("commutative transitive fact expect 2 parameters, get %d in %v", len(fact.Params), fact)
+		return fmt.Errorf("commutative transitive fact expect 2 parameters, get %d in %s", len(fact.Params), fact)
 	}
 
 	leftAsStr := fact.Params[0].String()
@@ -234,7 +234,7 @@ func (env *Env) newTruePureFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) erro
 		err = env.newFactNoPostProcess(instantiated)
 
 		if glob.RequireMsg() {
-			env.Msgs = append(env.Msgs, fmt.Sprintf("%v\nis true by definition", instantiated))
+			env.Msgs = append(env.Msgs, fmt.Sprintf("%s\nis true by definition", instantiated))
 		}
 
 		if err != nil {
@@ -251,7 +251,7 @@ func (env *Env) newTruePureFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) erro
 		err = env.newFactNoPostProcess(instantiated)
 
 		if glob.RequireMsg() {
-			env.Msgs = append(env.Msgs, fmt.Sprintf("%v\nis true by definition", instantiated))
+			env.Msgs = append(env.Msgs, fmt.Sprintf("%s\nis true by definition", instantiated))
 		}
 
 		if err != nil {
@@ -280,7 +280,7 @@ func (env *Env) newFalseExistFact_EmitEquivalentUniFact(fact *ast.SpecFactStmt) 
 	err = env.newFactNoPostProcess(uniFact)
 
 	if err != nil {
-		return fmt.Errorf("exist fact %v has no definition", fact)
+		return fmt.Errorf("exist fact %s has no definition", fact)
 	}
 
 	return nil
@@ -317,7 +317,7 @@ func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, error) {
 	existPropDef, ok := env.GetExistPropDef(fact.PropName)
 	if !ok {
-		return nil, fmt.Errorf("exist fact %v has no definition", fact)
+		return nil, fmt.Errorf("exist fact %s has no definition", fact)
 	}
 
 	uniMap := map[string]ast.Fc{}
@@ -338,7 +338,7 @@ func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, erro
 	for _, thenFact := range existPropDef.DefBody.IffFacts {
 		asSpecFactStmt, ok := thenFact.(*ast.SpecFactStmt)
 		if !ok {
-			return nil, fmt.Errorf("exist fact %v has no definition", fact)
+			return nil, fmt.Errorf("exist fact %s has no definition", fact)
 		}
 
 		reversedFacts := asSpecFactStmt.ReverseIsTrue()
@@ -369,7 +369,7 @@ func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 	}
 
 	if len(fact.Params) != 2 {
-		return true, fmt.Errorf("'=' fact expect 2 parameters, get %d in %v", len(fact.Params), fact)
+		return true, fmt.Errorf("'=' fact expect 2 parameters, get %d in %s", len(fact.Params), fact)
 	}
 
 	err := storeCommutativeTransitiveFact(env.EqualMem, fact)
@@ -401,12 +401,12 @@ func (env *Env) isMathInductionPropName_StoreIt(fact *ast.SpecFactStmt) (bool, e
 
 	propNameAsAtom, ok := fact.Params[0].(ast.FcAtom)
 	if !ok {
-		return false, fmt.Errorf("math induction fact %v should have a prop name as parameter, got: %v", fact, fact.Params[0])
+		return false, fmt.Errorf("math induction fact %s should have a prop name as parameter, got: %s", fact, fact.Params[0])
 	}
 
 	_, ok = env.GetPropDef(propNameAsAtom)
 	if !ok {
-		return false, fmt.Errorf("math induction fact %v should have a prop name that is defined, got: %v", fact, propNameAsAtom)
+		return false, fmt.Errorf("math induction fact %s should have a prop name that is defined, got: %s", fact, propNameAsAtom)
 	}
 
 	knownUniFactParams := []string{"n"}
@@ -434,7 +434,7 @@ func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, e
 
 	existPropDef, ok := env.GetExistPropDef(fact.PropName)
 	if !ok {
-		return nil, fmt.Errorf("exist fact %v has no definition", fact)
+		return nil, fmt.Errorf("exist fact %s has no definition", fact)
 	}
 
 	uniMap := map[string]ast.Fc{}

@@ -24,7 +24,7 @@ import (
 func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt) (glob.ExecState, error) {
 	defer func() {
 		if glob.RequireMsg() {
-			exec.newMsg(fmt.Sprintf("%v\n", stmt))
+			exec.newMsg(fmt.Sprintf("%s\n", stmt))
 		}
 	}()
 
@@ -51,7 +51,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt) (glob.ExecState, er
 
 	if notOkExec(execState, err) {
 		if glob.RequireMsg() {
-			exec.newMsg(fmt.Sprintf("%v is unknown", stmt.Fact))
+			exec.newMsg(fmt.Sprintf("%s is unknown", stmt.Fact.String()))
 		}
 		return execState, err
 	}
@@ -126,7 +126,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt) (glob.ExecState, er
 			return glob.ExecState_Error, err
 		}
 		if glob.RequireMsg() {
-			exec.newMsg(fmt.Sprintf("%v\nis true by definition", domFact))
+			exec.newMsg(fmt.Sprintf("%s\nis true by definition", domFact))
 		}
 	}
 
@@ -137,7 +137,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt) (glob.ExecState, er
 			return glob.ExecState_Error, err
 		}
 		if glob.RequireMsg() {
-			exec.newMsg(fmt.Sprintf("%v\nis true by definition", iffFact))
+			exec.newMsg(fmt.Sprintf("%s\nis true by definition", iffFact))
 		}
 	}
 
@@ -150,7 +150,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt) (glob.ExecState, er
 		return glob.ExecState_Error, err
 	}
 	if glob.RequireMsg() {
-		exec.newMsg(fmt.Sprintf("%v\nis true by definition", newExistStFact))
+		exec.newMsg(fmt.Sprintf("%s\nis true by definition", newExistStFact))
 	}
 
 	return glob.ExecState_True, nil
@@ -217,7 +217,7 @@ func (exec *Executor) haveEnumSetStmt(stmt *ast.EnumStmt) (glob.ExecState, error
 				return glob.ExecState_Error, err
 			}
 			if ok != glob.ExecState_True {
-				return glob.ExecState_Error, fmt.Errorf("enumeration set items must be distinct, but %v is unknown", notEqualFact)
+				return glob.ExecState_Error, fmt.Errorf("enumeration set items must be distinct, but %s is unknown", notEqualFact)
 			}
 		}
 	}
@@ -244,12 +244,12 @@ func (exec *Executor) haveIntensionalSetStmt(stmt *ast.IntensionalSetStmt) (glob
 
 func (exec *Executor) haveExistByReplacementStmt(stmt *ast.HaveObjStStmt) (glob.ExecState, error) {
 	if len(stmt.Fact.Params) != 4 {
-		return glob.ExecState_Error, fmt.Errorf("set defined by replacement must have 3 parameters, but %v has %d", stmt.Fact, len(stmt.Fact.Params))
+		return glob.ExecState_Error, fmt.Errorf("set defined by replacement must have 3 parameters, but %s has %d", stmt.Fact.String(), len(stmt.Fact.Params))
 	}
 
 	propName, ok := stmt.Fact.Params[2].(ast.FcAtom)
 	if !ok {
-		return glob.ExecState_Error, fmt.Errorf("third parameter of set defined by replacement must be a prop name, but %v is not", stmt.Fact)
+		return glob.ExecState_Error, fmt.Errorf("third parameter of set defined by replacement must be a prop name, but %s is not", stmt.Fact.String())
 	}
 
 	uniFact := ast.GetForallXOnlyOneYSatisfyGivenProp(stmt.Fact.Params[0], stmt.Fact.Params[1], propName)
