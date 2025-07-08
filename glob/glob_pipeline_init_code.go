@@ -13,36 +13,3 @@
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
 package litex_global
-
-const LastTwoObjectsAreEqual = "last_two_objects_are_equal"
-
-var PipelineInitCode = `
-prop last_two_objects_are_equal(x, y, y2 obj):
-	y = y2
-
-know @larger_is_transitive(x, y, z R):
-	x > y
-	y > z
-	then:
-		x > z
-
-exist_prop a in_set st exist_obj_not_in_left_set_but_in_right_set(not_in_set, in_set set):
-	not a $in not_in_set
-
-know forall x Z:
-    x < 0
-    then:
-        not x $in N
-
-know forall x Z, y Z:
-    x + y $in Z
-	x - y $in Z
-	x * y $in Z	
-
-know forall x2, y2 R:
-    x2 != 0
-    y2 != 0
-    then:
-        x2 * y2 != 0
-
-`
