@@ -97,7 +97,7 @@ func (ver *Verifier) fcFnSatisfyNotBuiltinFnRequirement(fc ast.Fc, state VerStat
 	for i := range templatesOfEachLevel {
 		ok, err := ver.fcFnParamsSatisfyFnTemplateRequirement(fcOfEachLevel[i].Params, templatesOfEachLevel[i], state)
 		if err != nil || !ok {
-			return false, ver.verErr(err, "parameters in %s do not satisfy the requirement of that function", asFcFn.String())
+			return false, fmt.Errorf("parameters in %s do not satisfy the requirement of that function:\n%v", asFcFn.String(), err)
 		}
 
 	}
@@ -190,9 +190,10 @@ func (ver *Verifier) fcFnParamsSatisfyFnTemplateRequirement(params []ast.Fc, tem
 }
 
 func (ver *Verifier) paramIs_R_Z_Q_N(fc ast.Fc, state VerState) (bool, error) {
-	ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fc, ast.FcAtom(glob.KeywordReal)}), state)
+	inRFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fc, ast.FcAtom(glob.KeywordReal)})
+	ok, err := ver.VerFactStmt(inRFact, state)
 	if err != nil {
-		return false, ver.verErr(err, "parameters in %s must be in set %s, %s in %s is not valid", fc.String(), glob.KeywordReal, fc.String(), fc.String())
+		return false, ver.verErr(err, "failed to check %v", inRFact.String())
 	}
 	if ok {
 		return true, nil
