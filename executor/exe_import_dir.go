@@ -24,7 +24,7 @@ import (
 )
 
 func (exec *Executor) importDirStmt(stmt *ast.ImportDirStmt) (glob.ExecState, error) {
-	exec.appendMsg(fmt.Sprintf("start importing directory \"%s\"\n", stmt.Path))
+	exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("start importing directory \"%s\"\n", stmt.Path))
 
 	if !glob.AllowImport {
 		return glob.ExecState_Error, fmt.Errorf("imported file should not contain import statement, get %s", stmt.String())
@@ -39,12 +39,12 @@ func (exec *Executor) importDirStmt(stmt *ast.ImportDirStmt) (glob.ExecState, er
 	defer func() {
 		glob.ImportDirStmtEnd()
 		if !execSuccess {
-			if glob.IsNotImportDirStmt() {
-				exec.appendMsg(fmt.Sprintf("Failed to execute import statement:\n%s\n", stmt.String()))
+			if glob.RequireMsg() {
+				exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("Failed to execute import statement:\n%s\n", stmt.String()))
 			}
 		} else {
-			if glob.IsNotImportDirStmt() {
-				exec.appendMsg(fmt.Sprintf("import directory \"%s\" success\n", stmt.Path))
+			if glob.RequireMsg() {
+				exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("import directory \"%s\" success\n", stmt.Path))
 			}
 		}
 	}()

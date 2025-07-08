@@ -28,10 +28,6 @@ func duplicateDefError(pkgName string, name string, keyword string) error {
 	}
 }
 
-func (e *Env) AppendMsg(s string) {
-	e.Msgs = append(e.Msgs, s)
-}
-
 func (knownSpecFact *KnownSpecFact_InLogicExpr) String() string {
 	var builder strings.Builder
 	builder.WriteString(knownSpecFact.LogicExpr.String())
