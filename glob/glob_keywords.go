@@ -229,3 +229,9 @@ var BuiltinObjKeywordSet map[string]struct{} = map[string]struct{}{
 	KeywordFiniteSet: {},
 	KeywordSet:       {},
 }
+
+var AddMinusStarSet map[string]struct{} = map[string]struct{}{
+	KeySymbolPlus:  {},
+	KeySymbolMinus: {},
+	KeySymbolStar:  {},
+}

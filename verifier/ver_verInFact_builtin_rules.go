@@ -61,7 +61,7 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state VerState) 
 		return true, nil
 	}
 
-	ok = ver.verIn_N_Z_Q_R_C_BySpecMem(stmt, state)
+	ok = ver.verIn_N_Z_Q_R_C(stmt, state)
 	if ok {
 		return true, nil
 	}
@@ -165,20 +165,14 @@ func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state VerState)
 	return false
 }
 
-func (ver *Verifier) verIn_N_Z_Q_R_C_BySpecMem(stmt *ast.SpecFactStmt, state VerState) bool {
+func (ver *Verifier) verIn_N_Z_Q_R_C(stmt *ast.SpecFactStmt, state VerState) bool {
 	inSet, ok := stmt.Params[1].(ast.FcAtom)
 	if !ok {
 		return false
 	}
 
 	nextState := state.toFinalRound().toNoMsg()
-
-	// if inSet.PkgName != glob.EmptyPkg {
-	// 	return false
-	// }
-
 	var msg string
-
 	switch string(inSet) {
 	case glob.KeywordNatural:
 		ok, msg = ver.verInN_BySpecMem(stmt, nextState)
@@ -208,6 +202,24 @@ func (ver *Verifier) verInN_BySpecMem(stmt *ast.SpecFactStmt, state VerState) (b
 	ok, err := ver.verSpecFact_BySpecMem(stmt, state)
 	if err != nil {
 		return false, ""
+	}
+
+	if ast.IsFcFnWithHeadNameInSlice(stmt.Params[0], glob.AddMinusStarSet) {
+		fcFn, ok := stmt.Params[0].(*ast.FcFn)
+		if !ok {
+			return false, ""
+		}
+
+		ok, _ = ver.verInN_BySpecMem(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fcFn.Params[0], ast.FcAtom(glob.KeywordNatural)}), state)
+		if !ok {
+			return false, ""
+		}
+		ok, _ = ver.verInN_BySpecMem(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fcFn.Params[1], ast.FcAtom(glob.KeywordNatural)}), state)
+		if !ok {
+			return false, ""
+		}
+
+		return true, fmt.Sprintf("%s has function name in *+-, and both params are in N", fcFn.String())
 	}
 
 	return ok, stmt.String()
