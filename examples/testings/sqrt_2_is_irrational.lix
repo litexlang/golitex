@@ -1,5 +1,6 @@
 fn logBase(x, y N) N:
-    x > 1
+    dom:
+        y != 0
 
 know forall x, y, z N:
     logBase(x^y, z) = y * logBase(x, z)
@@ -17,7 +18,7 @@ claim:
         x ^ 2 = (sqrt(2) ^ 2) * (y ^ 2)
         sqrt(2) ^ 2 = 2 # must write it out
         x ^ 2 = 2 * (y ^ 2)
-        2 * (y ^ 2) $in N
+        logBase(x ^ 2, 2) = logBase(2 * (y ^ 2), 2)
         
         logBase(x ^ 2, 2) = 2 * logBase(x, 2)
         logBase(y ^ 2, 2) = 2 * logBase(y, 2)
@@ -26,15 +27,13 @@ claim:
         logBase(2, 2) = 1
         logBase(2 * (y ^ 2), 2) = 1 + logBase(y ^ 2, 2)
 
-        logBase(x ^ 2, 2) = logBase(2 * (y ^ 2), 2)
         logBase(x ^ 2, 2) = 1 + 2 * logBase(y, 2)
         2 * logBase(x, 2) = 1 + 2 * logBase(y, 2)
 
         (2 * logBase(x, 2)) % 2 = (1 + 2 * logBase(y, 2)) % 2
-
         (2 * logBase(x, 2)) % 2 = 0
-        
         0 = (1 + 2 * logBase(y, 2)) % 2
+
         (1 + 2 * logBase(y, 2)) % 2 = 1 % 2 + (2 * logBase(y, 2)) % 2
         1 % 2 + (2 * logBase(y, 2)) % 2 = 1 + 0
         0 = 1
