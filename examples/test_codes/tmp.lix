@@ -1,9 +1,27 @@
-obj human set
-prop intelligent(x human)
+fn logBase(x, y N) N
+    x > 0
 
-know:
-    forall x human:
-        $intelligent(x)
+know forall x:
+    x > 0
+    then:
+        logBase(x, x) = 1
 
-obj Jordan human
-$intelligent(Jordan)
+know @logBase_is_linear(x, y, z N):
+    logBase(x^y, z) = y * logBase(x, z)
+    logBase(x*y, z) = logBase(x, z) + logBase(y, z)
+
+know forall x, y, z N:
+    z != 0
+
+
+claim:
+    not sqrt(2) $in Q
+    prove_by_contradiction:
+        have x, y N st $rational_number_representation_in_fraction(sqrt(2))
+        x / y = sqrt(2)
+        x = sqrt(2) * y
+        x ^ 2 = (sqrt(2) * y) ^ 2
+        x ^ 2 = (sqrt(2) ^ 2) * (y ^ 2)
+        x ^ 2 = 2 * (y ^ 2)
+        $logBase_is_linear(x ^ 2, 2, 2)
+        $logBase_is_linear(2 * (y ^ 2), 2, 2)
