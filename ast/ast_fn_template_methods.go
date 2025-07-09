@@ -29,8 +29,33 @@ func (fnTemplate *FnTemplateStmt) DeriveUniFact() *UniFactStmt {
 		paramAsFc = append(paramAsFc, FcAtom(param))
 	}
 
-	// thenFacts := []FactStmt{NewInFactWithParamFc(NewFcFn(FcAtom(fnTemplate.Name), paramAsFc), fnTemplate.RetSet)}
-	thenFacts := []FactStmt{}
+	thenFacts := []FactStmt{NewInFactWithParamFc(NewFcFn(FcAtom(fnTemplate.Name), paramAsFc), fnTemplate.RetSet)}
+	// thenFacts := []FactStmt{}
+	thenFacts = append(thenFacts, fnTemplate.ThenFacts...)
+
+	return NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, thenFacts)
+}
+
+func (fnTemplate *FnTemplateStmt) DeriveUniFact2() *UniFactStmt {
+	paramAsFc := []Fc{}
+	for _, param := range fnTemplate.Params {
+		paramAsFc = append(paramAsFc, FcAtom(param))
+	}
+
+	thenFacts := []FactStmt{NewInFactWithParamFc(NewFcFn(FcAtom(fnTemplate.Name), paramAsFc), fnTemplate.RetSet)}
+	// thenFacts := []FactStmt{}
+	thenFacts = append(thenFacts, fnTemplate.ThenFacts...)
+
+	return NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, thenFacts)
+}
+
+func (fnTemplate *FnTemplateStmt) DeriveUniFact3(fnHeadName Fc) *UniFactStmt {
+	paramAsFc := []Fc{}
+	for _, param := range fnTemplate.Params {
+		paramAsFc = append(paramAsFc, FcAtom(param))
+	}
+
+	thenFacts := []FactStmt{NewInFactWithParamFc(NewFcFn(fnHeadName, paramAsFc), fnTemplate.RetSet)}
 	thenFacts = append(thenFacts, fnTemplate.ThenFacts...)
 
 	return NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, thenFacts)
