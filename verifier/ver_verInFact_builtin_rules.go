@@ -190,18 +190,29 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state VerState) (b
 
 	// Case1: 用直接验证的方式去验证，比如 know forall x Z, y Z: x + y $in Z, 可以推出 fn(Z, Z) Z·
 	// derivedUniFact := fnTemplate.DeriveUniFact(stmt.Params[0])
-	derivedUniFact := fnTemplate.DeriveUniFact()
-	instantiatedUniFact, err := derivedUniFact.Instantiate(map[string]ast.Fc{fnTemplate.DefHeader.Name: stmt.Params[0]})
-	if err != nil {
-		return false, err
-	}
+	if fnTemplate.Name != "" {
+		derivedUniFact := fnTemplate.DeriveUniFact2()
+		instantiatedUniFact, err := derivedUniFact.Instantiate(map[string]ast.Fc{fnTemplate.DefHeader.Name: stmt.Params[0]})
+		if err != nil {
+			return false, err
+		}
 
-	ok, err := ver.VerFactStmt(instantiatedUniFact, state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
+		ok, err := ver.VerFactStmt(instantiatedUniFact, state)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			return true, nil
+		}
+	} else {
+		derivedUniFact := fnTemplate.DeriveUniFact3(stmt.Params[0])
+		ok, err := ver.VerFactStmt(derivedUniFact, state)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			return true, nil
+		}
 	}
 
 	// Case2: 用已知的符合的fn_template去验证
