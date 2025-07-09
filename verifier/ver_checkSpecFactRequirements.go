@@ -21,7 +21,8 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) checkSpecFactRequirements(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) checkSpecFactRequirements(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+
 	// 1. Check if all atoms in the parameters are declared
 	// REMARK
 	// TODO： 一层层搜索的时候，会重复检查是否存在，可以优化。比如我要检查 a * f(b) $in R 的时候，我要查 a, f(b) 是否满足条件，就要查 f(b) $in R 是否成立，这时候又查了一遍 f, b 是否存在
@@ -49,6 +50,7 @@ func (ver *Verifier) checkSpecFactRequirements(stmt *ast.SpecFactStmt, state Ver
 	// 所有的传入的参数符号 prop 的要求 以及 stmt name 确实是个 prop。这貌似不需要检查，因为每次你得到新的事实时候，已经检查过了
 	// 但是最好在这里警告一下用户，如果不满足prop的要求的话，可能出问题
 
+	*state = state.toReqOk()
 	return true, nil
 }
 
