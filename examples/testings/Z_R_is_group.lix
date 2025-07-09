@@ -9,10 +9,14 @@ fn inverse(x R)R:
     inverse(x) + x = 0
 
 forall x R:
-    inverse(x) $in R
-    x + inverse(x) = inverse(x) + x
     inverse(x) + x = 0
     x + inverse(x) = 0
+
+forall x Z:
+    x + inverse(x) = 0
+    inverse(x) = -x
+    -x $in Z
+    inverse(x) $in Z
 
 $is_group(R, +, inverse, 0)
 $is_group(Z, +, inverse, 0)
