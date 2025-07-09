@@ -387,12 +387,22 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContra
 
 	reversedLastFact := lastStmtAsFact.ReverseIsTrue()
 
+	reversedLastFactStr := []string{"and:"}
+	for _, curFact := range reversedLastFact {
+		reversedLastFactStr = append(reversedLastFactStr, curFact.String())
+	}
+	reversedLastFactStrStr := strings.Join(reversedLastFactStr, "\n\t")
+
+	exec.newMsg(fmt.Sprintf("the reversed last statement of current claim statement is:\n%s\nwe prove it(them)\n", reversedLastFactStrStr))
+
 	for _, curFact := range reversedLastFact {
 		execState, err = exec.factStmt(&curFact)
 		if notOkExec(execState, err) {
 			return execState, err
 		}
 	}
+
+	exec.newMsg(fmt.Sprintf("last statement of current claim statement:\n%s\nis true and false. Prove by contradiction is successful!", lastStmtAsFact))
 
 	return glob.ExecState_True, nil
 }
