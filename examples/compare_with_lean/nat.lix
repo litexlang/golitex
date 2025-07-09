@@ -1,0 +1,30 @@
+# Translation of the natural numbers example from Lean to Litex
+# Original Lean code is here https://leanprover-community.github.io/theories/naturals.html
+
+4 + 1 + 1 = 6
+4 - 3 = 1
+1 != 0
+7 * 4 = 28
+forall x, y, z R:
+    x + z = y + z
+    then:
+        $add_cancel(x, y, z)
+        x = y
+forall x, y, z R:
+    x * (y + z) = x * y + x * z
+forall x, y, z R:
+    x + z <= y + z
+    then:
+        $less_equal_add_cancel(x, y, z)
+forall x, y, z R:
+    x > 0
+    y > 0
+    z > 0
+    x ^ z > y ^ z
+    then:
+        $greater_than_pow_cancel(x, y, z)
+abs(6-4) = 2
+forall x R:
+    x != 0
+    then:
+        abs(x) > 0
