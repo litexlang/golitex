@@ -23,3 +23,14 @@ forall x, y, z R:
     x ^ z > y ^ z
     then:
         $greater_than_pow_cancel(x, y, z)
+# Early Litex version does not support execution, so getting output of function factorial is not supported. But Litex supports verifying properties of factorial.
+fn factorial(n N) N
+know: # This is a property of factorial by definition.
+    factorial(0) = 1
+    forall n N:
+        factorial(n + 1) = (n + 1) * factorial(n)
+abs(6-4) = 2
+forall x R:
+    x != 0
+    then:
+        abs(x) > 0
