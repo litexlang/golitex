@@ -1,21 +1,25 @@
-prop is_group(s set, mul fn(s, s)s, inv fn(s)s, e s):
-    forall x s, y s, z s:
-        mul(mul(x, y), z) = mul(x, mul(y, z))
-    forall x s:
-        mul(x, inv(x)) = e
-        mul(inv(x), x) = e
+# Translation of the natural numbers example from Lean to Litex
+# Original Lean code is here https://leanprover-community.github.io/theories/naturals.html
 
-fn inverse(x R)R:
-    inverse(x) + x = 0
-
-forall x Z:
-    inverse(x) + x =0
-    x + inverse(x) = 0
-    inverse(x) = -x
-    -x $in Z
-    inverse(x) $in Z
-
-#$in(+, fn(N, N)N)
-#$in(inverse, fn(N)N)
-#$is_group(Z, +, inverse, 0)
-$is_group(N, +, inverse, 0)
+4 + 1 + 1 = 6
+4 - 3 = 1
+1 != 0
+7 * 4 = 28
+forall x, y, z R:
+    x + z = y + z
+    then:
+        $add_cancel(x, y, z)
+        x = y
+forall x, y, z R:
+    x * (y + z) = x * y + x * z
+forall x, y, z R:
+    x + z <= y + z
+    then:
+        $less_equal_add_cancel(x, y, z)
+forall x, y, z R:
+    x > 0
+    y > 0
+    z > 0
+    x ^ z > y ^ z
+    then:
+        $greater_than_pow_cancel(x, y, z)
