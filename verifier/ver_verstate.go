@@ -25,7 +25,7 @@ const (
 	Round0NoMsg
 	Round1Msg
 	Round1NoMsg
-	FinalRoundMsg_ReqOk
+	FinalRoundMsg_ReqOk // ReqOk 了就说明是req已经检查好了，不需要检查了
 	FinalRoundNoMsg_ReqOk
 	Round0Msg_ReqOk
 	Round0NoMsg_ReqOk

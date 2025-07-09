@@ -23,24 +23,13 @@ import (
 
 func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if !state.IsReqOk() {
-		if ok, err := ver.checkSpecFactRequirements(stmt, &state); err != nil {
+		if ok, err := ver.checkSpecFactRequirements(stmt, &state); err != nil || !ok {
 			return false, err
-		} else if !ok {
-			return false, nil
 		}
 	}
 
 	var ok bool
 	var err error
-
-	// check given parameters satisfy prop requirement
-	// ok, err = ver.propParamsSatisfyPropRequirement(stmt, state)
-	// if err != nil {
-	// 	return false, err
-	// }
-	// if !ok {
-	// 	return false, nil
-	// }
 
 	ok, err = ver.isSpecFactCommutative(stmt)
 	if err != nil {
