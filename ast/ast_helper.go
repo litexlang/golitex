@@ -108,3 +108,15 @@ func IsFcFnWithHeadNameInSlice(fc Fc, headNames map[string]struct{}) bool {
 	_, ok = headNames[string(headAtom)]
 	return ok
 }
+
+func (defHeader *DefHeader) GetInstantiatedParamInParamSetFact(uniMap map[string]Fc) ([]*SpecFactStmt, error) {
+	paramSetFacts := make([]*SpecFactStmt, len(defHeader.Params))
+	for i, param := range defHeader.Params {
+		instantiatedSet, err := defHeader.ParamSets[i].Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		paramSetFacts[i] = NewInFactWithParamFc(uniMap[param], instantiatedSet)
+	}
+	return paramSetFacts, nil
+}
