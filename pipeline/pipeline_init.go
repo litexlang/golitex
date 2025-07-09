@@ -19,8 +19,8 @@ import (
 	env "golitex/environment"
 	exe "golitex/executor"
 	glob "golitex/glob"
+	kernelLib "golitex/kernel_lib"
 	parser "golitex/parser"
-	std "golitex/std"
 )
 
 func pipelineExecutorInit() (*exe.Executor, error) {
@@ -40,7 +40,7 @@ func pipelineExecutorInit() (*exe.Executor, error) {
 }
 
 func useHardcodedCodeToInit(executor *exe.Executor) error {
-	statements, err := parser.ParseSourceCode(std.PipelineInitCode)
+	statements, err := parser.ParseSourceCode(kernelLib.PipelineInitCode)
 	if err != nil {
 		return err
 	}
