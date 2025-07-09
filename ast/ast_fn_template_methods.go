@@ -29,7 +29,8 @@ func (fnTemplate *FnTemplateStmt) DeriveUniFact() *UniFactStmt {
 		paramAsFc = append(paramAsFc, FcAtom(param))
 	}
 
-	thenFacts := []FactStmt{NewInFactWithParamFc(NewFcFn(FcAtom(fnTemplate.Name), paramAsFc), fnTemplate.RetSet)}
+	// thenFacts := []FactStmt{NewInFactWithParamFc(NewFcFn(FcAtom(fnTemplate.Name), paramAsFc), fnTemplate.RetSet)}
+	thenFacts := []FactStmt{}
 	thenFacts = append(thenFacts, fnTemplate.ThenFacts...)
 
 	return NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, thenFacts)
