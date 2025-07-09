@@ -8,8 +8,14 @@ prop is_group(s set, mul fn(s, s)s, inv fn(s)s, e s):
 fn inverse(x R)R:
     inverse(x) + x = 0
 
-know forall x Z:
+forall x Z:
+    inverse(x) + x =0
+    x + inverse(x) = 0
+    inverse(x) = -x
+    -x $in Z
     inverse(x) $in Z
 
-inverse $in fn(Z, Z)Z
-
+$in(+, fn(Z, Z)Z)
+$in(inverse, fn(Z)Z)
+$is_group(Z, +, inverse, 0)
+$is_group(N, +, inverse, 0)
