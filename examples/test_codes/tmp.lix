@@ -1,4 +1,3 @@
-"""
 prop is_group(s set, mul fn(s, s)s, inv fn(s)s, e s):
     forall x s, y s, z s:
         mul(mul(x, y), z) = mul(x, mul(y, z))
@@ -18,13 +17,5 @@ forall x Z:
 
 #$in(+, fn(N, N)N)
 #$in(inverse, fn(N)N)
+#$is_group(Z, +, inverse, 0)
 $is_group(N, +, inverse, 0)
-"""
-
-obj s set
-obj x s
-prop q(x s)
-prop p(x N):
-    $q(x)
-know $q(x)
-$p(x)

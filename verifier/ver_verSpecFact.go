@@ -28,7 +28,19 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact(stmt *ast.SpecFactStmt, s
 		return false, nil
 	}
 
-	ok, err := ver.isSpecFactCommutative(stmt)
+	var ok bool
+	var err error
+
+	// check given parameters satisfy prop requirement
+	// ok, err = ver.propParamsSatisfyPropRequirement(stmt, state)
+	// if err != nil {
+	// 	return false, err
+	// }
+	// if !ok {
+	// 	return false, nil
+	// }
+
+	ok, err = ver.isSpecFactCommutative(stmt)
 	if err != nil {
 		return false, err
 	}
@@ -180,6 +192,21 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 	paramArrMap := map[string]ast.Fc{}
 	for i, param := range stmt.Params {
 		paramArrMap[defStmt.DefHeader.Params[i]] = param
+	}
+
+	paramSetFacts, err := defStmt.DefHeader.GetInstantiatedParamInParamSetFact(paramArrMap)
+	if err != nil {
+		return false, err
+	}
+
+	for _, paramSetFact := range paramSetFacts {
+		ok, err := ver.VerFactStmt(paramSetFact, state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
 	}
 
 	// 本质上不需要把所有的参数都instantiate，只需要instantiate在dom里的就行
