@@ -7,8 +7,7 @@
 # Litex: Scale Formal Reasoning in AI Age
 
 **Release v0.1.1-beta (not yet ready for production use)**  
-*May 2025*  
-*Created by Jack Shen*
+*Jiachen Shen and The Litex Team*
 
 [![Github](https://img.shields.io/badge/Github-grey?logo=github)](https://github.com/litexlang/golitex)
 [![Zulip Community](https://img.shields.io/badge/Zulip%20Community-purple?logo=zulip)](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
