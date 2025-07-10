@@ -106,9 +106,18 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 		}
 	}
 
-	// know then facts
+	// know reversed then facts
+	thenFactsAsReversibleFacts := []ast.OrStmt_SpecStmt{}
 	for _, thenFact := range newStmtPtr.ThenFacts {
-		err := exec.env.NewFact(thenFact)
+		if reversibleThenFact, ok := thenFact.(ast.OrStmt_SpecStmt); ok {
+			thenFactsAsReversibleFacts = append(thenFactsAsReversibleFacts, reversibleThenFact)
+		} else {
+			return glob.ExecState_Error, fmt.Errorf("then fact:\n%s\nis not reversible. Then section of universal fact prove by contradiction only support reversible fact", thenFact)
+		}
+	}
+	reversedThenFacts := ast.ReverseSliceOfReversibleFacts(thenFactsAsReversibleFacts)
+	for _, reversedThenFact := range reversedThenFacts {
+		err := exec.env.NewFact(reversedThenFact)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
@@ -128,12 +137,21 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 
 	reversedLastFact := lastFact.ReverseIsTrue()
 
+	reversedLastFactStr := []string{}
+	for _, curFact := range reversedLastFact {
+		reversedLastFactStr = append(reversedLastFactStr, curFact.String())
+	}
+	reversedLastFactStrStr := strings.Join(reversedLastFactStr, "\n\t")
+	exec.newMsg(fmt.Sprintf("the reversed last statement of current claim statement is(are):\n\n%s\n\nwe prove it(them)\n", reversedLastFactStrStr))
+
 	for _, curFact := range reversedLastFact {
 		execState, err = exec.factStmt(&curFact)
 		if notOkExec(execState, err) {
 			return execState, err
 		}
 	}
+
+	exec.newMsg(fmt.Sprintf("last statement of current claim statement:\n%s\nis true and false. Prove by contradiction is successful!", lastFact))
 
 	return glob.ExecState_True, nil
 }
