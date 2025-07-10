@@ -106,8 +106,34 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 		}
 	}
 
-	// suppose reverse of then facts is true
-	panic("not implemented")
+	// know then facts
+	for _, thenFact := range newStmtPtr.ThenFacts {
+		err := exec.env.NewFact(thenFact)
+		if err != nil {
+			return glob.ExecState_Error, err
+		}
+	}
+
+	// run proof block
+	execState, err := exec.execProofBlockAtCurEnv(stmt.ClaimProveStmt.Proofs)
+	if notOkExec(execState, err) {
+		return execState, err
+	}
+
+	// the reversed last statement of current claim statement is true
+	lastFact, ok := stmt.ClaimProveStmt.Proofs[len(stmt.ClaimProveStmt.Proofs)-1].(ast.OrStmt_SpecStmt)
+	if !ok {
+		return glob.ExecState_Error, fmt.Errorf("prove by contradiction only support fact")
+	}
+
+	reversedLastFact := lastFact.ReverseIsTrue()
+
+	for _, curFact := range reversedLastFact {
+		execState, err = exec.factStmt(&curFact)
+		if notOkExec(execState, err) {
+			return execState, err
+		}
+	}
 
 	return glob.ExecState_True, nil
 }
