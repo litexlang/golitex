@@ -18,6 +18,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
+	verifier "golitex/verifier"
 	"strings"
 )
 
@@ -91,5 +92,22 @@ func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.OrStmt
 }
 
 func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt, stmt *ast.ClaimProveByContradictionStmt) (glob.ExecState, error) {
+	ver := verifier.NewVerifier(exec.env)
+	newStmtPtr, err := ver.PreprocessUniFactParams_DeclareParams(specFactStmt)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+
+	// know cond facts
+	for _, condFact := range newStmtPtr.DomFacts {
+		err := exec.env.NewFact(condFact)
+		if err != nil {
+			return glob.ExecState_Error, err
+		}
+	}
+
+	// suppose reverse of then facts is true
 	panic("not implemented")
+
+	return glob.ExecState_True, nil
 }

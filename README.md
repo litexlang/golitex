@@ -377,6 +377,10 @@ Next I want to show you how Litex can be used to verify a simple group theory st
 
 ## Litex Introduction For Non-Technical Readers
 
+_It is always wise to look ahead, but difficult to look further than you can see._
+
+_-- Winston Churchill_
+
 **Litex** is a simple and easy-to-learn formal language. Its design philosophy is to make the process of formal reasoning as intuitive and natural as writing in natural language. Thanks to its innovative syntax and semantic mechanisms, even ten-year-olds can quickly learn to use Litex for basic formal expression.
 
 In the foreseeable future, Litex aims to reduce the time cost ratio between *formalizing* a mathematical proof and *writing* it in natural language from the current \~10:1 to 1:1, dramatically improving the efficiency of structuring mathematical knowledge.
