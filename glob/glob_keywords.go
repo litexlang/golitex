@@ -53,7 +53,6 @@ const (
 	KeywordFnTemplate                     = "fn_template"
 	KeywordStruct                         = "struct"
 	KeywordHaveSetByReplacement           = "have_set_by_replacement"
-	KeywordIsEmptySet                     = "is_empty_set"
 	KeywordExistIn                        = "exist_in"
 	KeywordSetDefinedByReplacement        = "set_defined_by_replacement"
 	KeywordExistPropPreImageByReplacement = "exist_prop_preimage_by_replacement"
@@ -99,7 +98,6 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordFnTemplate:                     {},
 	KeywordStruct:                         {},
 	KeywordHaveSetByReplacement:           {},
-	KeywordIsEmptySet:                     {},
 	KeywordExistIn:                        {},
 	KeywordSetDefinedByReplacement:        {},
 	KeywordExistPropPreImageByReplacement: {},
@@ -201,7 +199,6 @@ var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]s
 	KeySymbolRightBracket:                 {},
 	KeywordCommutativeProp:                {},
 	KeywordFiniteSet:                      {},
-	KeywordIsEmptySet:                     {},
 	KeywordExistIn:                        {},
 	KeywordSetDefinedByReplacement:        {},
 	KeywordExistPropPreImageByReplacement: {},
