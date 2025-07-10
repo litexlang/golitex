@@ -1,15 +1,18 @@
-fn exclude(s1, s2 set) set
+exist_prop x obj st obj_exist_in_set(s set):
+    x $in s
 
-know @exclude_property(s1, s2 set):
-    then:
-        exclude(s1, s2) := x s1:
-            not x $in s2
+prop is_empty_set(x set):
+    forall a obj:
+        not a $in x
 
+obj s set:
+	not $is_empty_set(s)
 
-obj s1, s2 set
-obj x exclude(s1, s2)
-$exclude_property(s1, s2)
-not x $in s2
-
-# 或许可以 x $in fnName() 后，自动释放 fnName 里的性质
-# 然后所以 set 来专门声明能释放出来then的集合
+# 需要让 not exist 能释放出来 exist_prop 下面的东西
+claim:
+	$obj_exist_in_set(s)
+    prove_by_contradiction:
+        not $obj_exist_in_set(s)
+        forall x obj:
+            not x $in s
+        $is_empty_set(s)
