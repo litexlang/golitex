@@ -55,11 +55,13 @@ func (ver *Verifier) verSpecFact_BySpecMem(stmt *ast.SpecFactStmt, state VerStat
 }
 
 func (ver *Verifier) verSpecFact_ByLogicMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	nextState := state.addRound()
+
 	upMostEnv := ver.todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
 	// if ver.env.CurMatchProp == nil {
 	for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
-		ok, err := ver.specFact_LogicMem(curEnv, stmt, state)
+		ok, err := ver.specFact_LogicMem(curEnv, stmt, nextState)
 		if err != nil || ok {
 			return ok, err
 		}

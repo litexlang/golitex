@@ -297,12 +297,14 @@ func (ver *Verifier) verSpecFact_SpecMemAndLogicMem(stmt *ast.SpecFactStmt, stat
 }
 
 func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	ok, err := ver.verSpecFact_InSpecFact_UniMem(stmt, state)
+	nextState := state.addRound()
+
+	ok, err := ver.verSpecFact_InSpecFact_UniMem(stmt, nextState)
 	if isErrOrOk(ok, err) {
 		return ok, err
 	}
 
-	return ver.verSpecFact_InLogicExpr_InUniFactMem(stmt, state)
+	return ver.verSpecFact_InLogicExpr_InUniFactMem(stmt, nextState)
 }
 
 func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {

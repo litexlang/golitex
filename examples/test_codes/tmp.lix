@@ -33,3 +33,37 @@ claim:
             not x $in s
         $is_empty_set(s)
         
+# You can define a finite set of items like this:
+have set_of_one_two_three := {1, 2, 3}
+
+# Pairwise Union
+fn union(s1 set, s2 set) set
+know:
+    forall s1, s2 set, x s1:
+    	x $in union(s1, s2) # 如果写成 x $in s1 会死循环
+    forall s1, s2 set, x s2:
+    	x $in union(s1, s2) # 如果写成 x $in s2 会死循环
+    forall s1, s2 set, x union(s1, s2):
+    	or:
+    		x $in s1
+    		x $in s2
+
+# {a, b} = {a} \union {b}
+prove:
+    have s1 := {1}
+    have s2 := {2}
+    obj x union(s1, s2)
+
+    prove_in_each_case:
+        or:
+            x $in s1
+            x $in s2
+        then:
+            1 = 1
+        prove:
+            x $in s1
+            x = 1
+        prove:
+        	x $in s2
+            1 = 1
+            x = 2

@@ -248,8 +248,7 @@ func (ver *Verifier) verInSet(stmt *ast.SpecFactStmt, state VerState) (bool, err
 	}
 
 	// 如果它是finite_set，则直接返回true
-	finiteSetFact := ast.NewInFactWithFc(stmt.Params[0], ast.FcAtom(glob.KeywordFiniteSet))
-	ok, err = ver.VerFactStmt(finiteSetFact, state)
+	ok, err = ver.fcIsFiniteSet(stmt, state)
 	if err != nil {
 		return false, err
 	}
@@ -349,5 +348,21 @@ func (ver *Verifier) trueExistInSt(stmt *ast.SpecFactStmt, state VerState) (bool
 	if ok {
 		return true, nil
 	}
+	return false, nil
+}
+
+func (ver *Verifier) fcIsFiniteSet(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	// TODO: not sure whether I should add this nextState
+	nextState := state.addRound()
+
+	finiteSetFact := ast.NewInFactWithFc(stmt.Params[0], ast.FcAtom(glob.KeywordFiniteSet))
+	ok, err := ver.VerFactStmt(finiteSetFact, nextState)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
 	return false, nil
 }
