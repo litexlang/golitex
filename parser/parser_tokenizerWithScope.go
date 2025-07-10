@@ -96,7 +96,7 @@ func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]tokenBlock, error
 		}
 
 		if indent > currentIndent {
-			return nil, fmt.Errorf("incorrect indentation:\n\"%s\"", line)
+			return nil, fmt.Errorf("incorrect indentation:\n\"%s\"\nMaybe the previous nonempty line should end with \":\"", line)
 		}
 
 		// indent == currentIndent:
