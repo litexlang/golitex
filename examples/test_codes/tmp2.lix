@@ -1,11 +1,12 @@
-know forall s1 set, x s1:
-    x $in s1
+@add_cancellation(x, y, z R):
+	x + z = y + z
+    then:
+        x + z - z = y + z - z
+        x = y + z - z
+        x = y
 
-have s1 := {1}
-have s2 := {2}
-obj x union(s1, s2)
+obj a, b, c R:
+	a + c = b + c
 
-
-or:
-	x $in s1
-	x $in s2
+$add_cancellation(a, b, c )
+a = b
