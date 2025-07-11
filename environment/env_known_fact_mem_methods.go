@@ -161,12 +161,6 @@ func (s SpecFactInUniFactMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([
 		return nil, false
 	}
 
-	// sameEnumPkgFacts, memExist := sameEnumFacts[stmt.PropName.PkgName]
-	// if !memExist {
-	// 	return nil, false
-	// }
-
-	// sameEnumPkgPropFacts, memExist := sameEnumPkgFacts[stmt.PropName.Name]
 	sameEnumPkgPropFacts, memExist := sameEnumFacts[string(stmt.PropName)]
 	if !memExist {
 		return nil, false
