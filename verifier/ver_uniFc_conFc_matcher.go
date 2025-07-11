@@ -39,7 +39,7 @@ func (ver *Verifier) matchStoredUniSpecWithSpec_preventDifferentVarsMatchTheSame
 		if !matched {
 			return nil, false, nil
 		}
-		mergeMatchMaps(matchMap, retMap)
+		retMap = mergeMatchMaps(matchMap, retMap)
 	}
 
 	return retMap, true, nil
@@ -140,7 +140,7 @@ func (ver *Verifier) match_FcFnInFactUnderUniFact_ConFc(fcFnUnFactUnderUniFact *
 	if !ok {
 		return nil, false, nil
 	}
-	mergeMatchMaps(matchMap, retMap)
+	retMap = mergeMatchMaps(matchMap, retMap)
 
 	if len(conParamAsFcFn.Params) != len(fcFnUnFactUnderUniFact.Params) {
 		return nil, false, nil //? 不清楚应该报错还是说直接返回不对，应该是返回不对
@@ -155,13 +155,13 @@ func (ver *Verifier) match_FcFnInFactUnderUniFact_ConFc(fcFnUnFactUnderUniFact *
 		if !ok {
 			return nil, false, nil
 		}
-		mergeMatchMaps(matchMap, retMap)
+		retMap = mergeMatchMaps(matchMap, retMap)
 	}
 
 	return retMap, true, nil
 }
 
-func mergeMatchMaps(from map[string][]ast.Fc, to map[string][]ast.Fc) {
+func mergeMatchMaps(from map[string][]ast.Fc, to map[string][]ast.Fc) map[string][]ast.Fc {
 	for key, value := range from {
 		if _, ok := (to)[key]; ok {
 			(to)[key] = append((to)[key], value...)
@@ -169,4 +169,5 @@ func mergeMatchMaps(from map[string][]ast.Fc, to map[string][]ast.Fc) {
 			(to)[key] = value
 		}
 	}
+	return to
 }

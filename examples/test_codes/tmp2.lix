@@ -3,7 +3,7 @@ prop is_subset_of(s1 set, s2 set):
     forall x s1:
         x $in s2
 
-"""
+
 claim:
     @subset_of_is_transitive(a, b, c set):
         a $is_subset_of b
@@ -16,6 +16,7 @@ claim:
             x $in c
         forall x a:
             x $in c
+
 """
 obj a, b, c set
 
@@ -27,3 +28,5 @@ forall x a:
     x $in c
 
 a $is_subset_of c
+"""
+
