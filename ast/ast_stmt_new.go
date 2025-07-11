@@ -157,3 +157,7 @@ func NewHaveSetFnStmt(declHeader *DefHeader, param string, parentSet Fc, proofs 
 func NewHaveSetDefinedByReplacementStmt(name string, domSet Fc, rangeSet Fc, propName FcAtom) *HaveSetDefinedByReplacementStmt {
 	return &HaveSetDefinedByReplacementStmt{name, domSet, rangeSet, propName}
 }
+
+func NewNamedUniFactStmt(defPropStmt *DefPropStmt) *NamedUniFactStmt {
+	return &NamedUniFactStmt{*defPropStmt}
+}
