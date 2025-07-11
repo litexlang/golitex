@@ -73,21 +73,21 @@ type OrStmt_SpecStmt interface {
 	stmt()
 	String() string
 	Instantiate(uniConMap map[string]Fc) (FactStmt, error)
-	ReverseIsTrue() []SpecFactStmt
+	ReverseIsTrue() []*SpecFactStmt
 	GetAtoms() []FcAtom
 }
 
 func (s *SpecFactStmt) logicExprOrSpecFactStmt() {}
 func (s *OrStmt) logicExprOrSpecFactStmt()       {}
 
-func (stmt *SpecFactStmt) ReverseIsTrue() []SpecFactStmt {
-	return []SpecFactStmt{*stmt.ReverseTrue()}
+func (stmt *SpecFactStmt) ReverseIsTrue() []*SpecFactStmt {
+	return []*SpecFactStmt{stmt.ReverseTrue()}
 }
 
-func (stmt *OrStmt) ReverseIsTrue() []SpecFactStmt {
-	reversedFacts := make([]SpecFactStmt, len(stmt.Facts))
+func (stmt *OrStmt) ReverseIsTrue() []*SpecFactStmt {
+	reversedFacts := make([]*SpecFactStmt, len(stmt.Facts))
 	for i, fact := range stmt.Facts {
-		reversedFacts[i] = *fact.ReverseTrue()
+		reversedFacts[i] = fact.ReverseTrue()
 	}
 	return reversedFacts
 }

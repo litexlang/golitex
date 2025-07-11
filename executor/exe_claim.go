@@ -53,13 +53,13 @@ func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.OrStmt
 	reversedFact := specFactStmt.ReverseIsTrue()
 
 	for _, curFact := range reversedFact {
-		err := exec.env.NewFact(&curFact)
+		err := exec.env.NewFact(curFact)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
 	}
 
-	execState, err := exec.execProofBlockAtCurEnv(stmt.ClaimProveStmt.Proofs)
+	execState, err := exec.execStmtsAtCurEnv(stmt.ClaimProveStmt.Proofs)
 	if notOkExec(execState, err) {
 		return execState, err
 	}
@@ -80,7 +80,7 @@ func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.OrStmt
 	exec.newMsg(fmt.Sprintf("the reversed last statement of current claim statement is:\n%s\nwe prove it(them)\n", reversedLastFactStrStr))
 
 	for _, curFact := range reversedLastFact {
-		execState, err = exec.factStmt(&curFact)
+		execState, err = exec.factStmt(curFact)
 		if notOkExec(execState, err) {
 			return execState, err
 		}
@@ -124,7 +124,7 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 	}
 
 	// run proof block
-	execState, err := exec.execProofBlockAtCurEnv(stmt.ClaimProveStmt.Proofs)
+	execState, err := exec.execStmtsAtCurEnv(stmt.ClaimProveStmt.Proofs)
 	if notOkExec(execState, err) {
 		return execState, err
 	}
@@ -145,7 +145,7 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 	exec.newMsg(fmt.Sprintf("the reversed last statement of current claim statement is(are):\n\n%s\n\nwe prove it(them)\n", reversedLastFactStrStr))
 
 	for _, curFact := range reversedLastFact {
-		execState, err = exec.factStmt(&curFact)
+		execState, err = exec.factStmt(curFact)
 		if notOkExec(execState, err) {
 			return execState, err
 		}
