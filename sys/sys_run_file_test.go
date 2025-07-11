@@ -22,7 +22,7 @@ import (
 
 func Test_File(t *testing.T) {
 	startTime := time.Now()
-	fileName := "../examples/test_codes/tmp.lix"
+	fileName := "../examples/test_codes/tmp2.lix"
 	msg, signal, err := RunFile(fileName)
 	if err != nil {
 		t.Errorf("failed to run file %s\n", fileName)

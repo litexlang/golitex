@@ -60,13 +60,13 @@ func (e VerState) addRound() VerState {
 	case Round1NoMsg:
 		return FinalRoundNoMsg
 	case Round0Msg_ReqOk:
-		return Round0Msg_ReqOk
-	case Round0NoMsg_ReqOk:
-		return Round0NoMsg_ReqOk
-	case Round1Msg_ReqOk:
 		return Round1Msg_ReqOk
-	case Round1NoMsg_ReqOk:
+	case Round0NoMsg_ReqOk:
 		return Round1NoMsg_ReqOk
+	case Round1Msg_ReqOk:
+		return FinalRoundMsg_ReqOk
+	case Round1NoMsg_ReqOk:
+		return FinalRoundNoMsg_ReqOk
 	default:
 		return e
 	}
@@ -80,12 +80,12 @@ func (e VerState) toNoMsg() VerState {
 		return Round1NoMsg
 	case FinalRoundMsg:
 		return FinalRoundNoMsg
-	case FinalRoundMsg_ReqOk:
-		return FinalRoundMsg_ReqOk
-	case FinalRoundNoMsg_ReqOk:
-		return FinalRoundNoMsg_ReqOk
 	case Round0Msg_ReqOk:
-		return Round0Msg_ReqOk
+		return Round0NoMsg_ReqOk
+	case Round1Msg_ReqOk:
+		return Round1NoMsg_ReqOk
+	case FinalRoundMsg_ReqOk:
+		return FinalRoundNoMsg_ReqOk
 	default:
 		return e
 	}
