@@ -509,7 +509,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 	}
 
 	// declare parameters in asUnivFact in the env
-	objDefStmt := ast.NewDefObjStmt(asUnivFact.Params, asUnivFact.ParamSets, asUnivFact.DomFacts)
+	objDefStmt := ast.NewDefObjStmt(asUnivFact.Params, asUnivFact.ParamSets, []ast.FactStmt{})
 	err := exec.defObjStmt(objDefStmt, false)
 	if err != nil {
 		if glob.RequireMsg() {
@@ -518,17 +518,40 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 		return false, err
 	}
 
+	// know dom facts
+	err = exec.knowStmt(ast.NewKnowStmt(asUnivFact.DomFacts))
+	if err != nil {
+		return false, err
+	}
+
 	// exec proof block
-	execState, err := exec.execProofBlockAtCurEnv(stmt.Proofs)
+	// execState, err := exec.execProofBlockAtCurEnv(stmt.Proofs)
+
+	for _, curStmt := range stmt.Proofs {
+		execState, err := exec.Stmt(curStmt)
+		if err != nil {
+			return false, err
+		}
+		if execState != glob.ExecState_True {
+			if execState == glob.ExecState_Unknown && glob.ContinueExecutionIfExecUnknown {
+				exec.appendWarningMsg(fmt.Sprintf("unknown fact:\n%s", curStmt))
+				return false, nil
+			} else {
+				return false, nil
+			}
+		}
+	}
+
 	if err != nil {
 		if glob.RequireMsg() {
 			exec.newMsg(fmt.Sprintf("Claim statement error: Failed to execute proof block:\n%s\n", stmt))
 		}
 		return false, err
 	}
-	if execState != glob.ExecState_True {
-		return false, nil
-	}
+
+	// if execState != glob.ExecState_True {
+	// 	return false, nil
+	// }
 
 	// TODO: 让claim能forall if
 	// if asUnivFact.IffFacts == nil || len(asUnivFact.IffFacts) == 0 {

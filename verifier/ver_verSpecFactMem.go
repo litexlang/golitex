@@ -147,20 +147,6 @@ func (ver *Verifier) verSpecFact_InSpecFact_UniMem(stmt *ast.SpecFactStmt, state
 			return ok, err
 		}
 	}
-	// } else {
-	// 	for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
-	// 		ok, err := ver.specFact_UniMem_atCurEnv(curEnv, stmt, nextState)
-	// 		if err != nil || ok {
-	// 			return ok, err
-	// 		}
-
-	// 		ok, err = ver.specFact_MatchEnv_UniMem(curEnv, stmt, state)
-	// 		if err != nil || ok {
-	// 			return ok, err
-	// 		}
-	// 	}
-	// }
-
 	return false, nil
 }
 
@@ -363,14 +349,20 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch(stmt *ast.SpecFac
 
 		// TODO 要证明在paramSet里
 		paramInParamSetFacts := insKnownUniFact.ParamInParamSetFacts(uniConMap)
+		setFactSatisfied := true
 		for _, paramInParamSetFact := range paramInParamSetFacts {
 			ok, err = ver.VerFactStmt(paramInParamSetFact, state)
 			if err != nil {
 				return false, err
 			}
 			if !ok {
-				return false, nil
+				setFactSatisfied = false
+				break
 			}
+		}
+
+		if !setFactSatisfied {
+			continue
 		}
 
 		ok, err = ver.proveUniFactDomFacts(insKnownUniFact, state)
@@ -378,7 +370,7 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch(stmt *ast.SpecFac
 			return false, err
 		}
 		if !ok {
-			return false, nil
+			continue
 		}
 
 		instantiatedLogicExpr, err := knownFactUnderLogicExpr.LogicExpr.Instantiate(uniConMap)
@@ -451,19 +443,25 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch(stmt *ast.SpecFactSt
 
 		// TODO 要证明在paramSet里
 		paramInParamSetFacts := insKnownUniFact.ParamInParamSetFacts(uniConMap)
+		setFactSatisfied := true
 		for _, paramInParamSetFact := range paramInParamSetFacts {
 			ok, err = ver.VerFactStmt(paramInParamSetFact, state)
 			if err != nil {
 				return false, err
 			}
 			if !ok {
-				return false, nil
+				setFactSatisfied = false
+				break
 			}
+		}
+
+		if !setFactSatisfied {
+			continue
 		}
 
 		ok, err = ver.proveUniFactDomFacts(insKnownUniFact, state)
 		if err != nil {
-			return false, err
+			continue
 		}
 
 		if ok {
