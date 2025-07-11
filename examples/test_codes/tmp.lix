@@ -78,3 +78,15 @@ claim:
             prove:
                 x $in s2
                 x = b
+
+prop is_subset_of(s1 set, s2 set):
+    forall x s1:
+        x $in s2
+
+prove:
+    have a := {1, 2, 4}
+    have b := {1, 2, 3, 4, 5}
+    prove_over_finite_set:
+        forall x a:
+            x $in b
+    a $is_subset_of b

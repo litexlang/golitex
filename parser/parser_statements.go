@@ -1461,6 +1461,10 @@ func (tb *tokenBlock) proveOverFiniteSetStmt() (*ast.ProveOverFiniteSetStmt, err
 		return nil, fmt.Errorf("%s expect universal fact without dom facts", glob.KeywordProveOverFiniteSet)
 	}
 
+	if len(tb.body) == 1 {
+		return ast.NewProveOverFiniteSetStmt(uniFactAsUniFactStmt, []ast.Stmt{}), nil
+	}
+
 	err = tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
 	if err != nil {
 		return nil, tbErr(err, tb)
