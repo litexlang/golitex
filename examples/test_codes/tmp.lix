@@ -104,3 +104,57 @@ claim:
         forall x a:
             x $in c
         a $is_subset_of c
+
+# Axiom of Specification
+prove:
+    obj A set
+    prop P(x A)
+	have a := x A:
+        $P(x)
+    forall x A:
+        $P(x)
+        then:
+        	x $in a
+    forall x a:
+        x $in A
+        $P(x)
+
+# Intersection
+know @obj_in_intersection_is_in_both_sets(s1 set, s2 set, x obj):
+    x $in s1
+    x $in s2
+
+fn intersection(s1 set, s2 set) set:
+    forall x s1:
+        x $in intersection(s1, s2)
+    forall x s2:
+        x $in intersection(s1, s2)
+    forall x intersection(s1, s2):
+        $obj_in_intersection_is_in_both_sets(s1, s2, x)
+
+# The set of all natural numbers is the union of the set of all natural numbers greater than n and the set of all natural numbers less than or equal to n
+know @union_of_N_greater_than_n_and_less_than_or_equal_to_n_is_N(n N, s1 set, s2 set):
+	s1 := x N:
+		x > n
+	s2 := x N:
+		x <= n
+	then:
+		union(s1, s2) = N
+
+prove:
+    have a := x N:
+        x > 0
+    have b := x N:
+        x <= 0
+    $union_of_N_greater_than_n_and_less_than_or_equal_to_n_is_N(0, a, b)
+    union(a, b) = N
+
+fn difference(s1 set, s2 set) set:
+	forall x difference(s1, s2):
+		x $in s1
+		not x $in s2
+    forall x s1:
+        not x $in s2
+        then:
+            x $in difference(s1, s2)
+
