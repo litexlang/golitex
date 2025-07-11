@@ -383,7 +383,7 @@ _-- Bill Gates_
 
 **Litex** is a simple and easy-to-learn formal language. Its design philosophy is to make the process of formal reasoning as intuitive and natural as writing in natural language. Thanks to its innovative syntax and semantic mechanisms, even ten-year-olds can quickly learn to use Litex for basic formal expression.
 
-In the foreseeable future, Litex aims to reduce the time cost ratio between *formalizing* a mathematical proof and *writing* it in natural language from the current \~10:1 to 1:1, dramatically improving the efficiency of structuring mathematical knowledge. 
+Existing formal languages (such as Lean, Coq, Isabelle, etc.) are too complex and have steep learning curves, severely limiting their broader adoption and impact. In the foreseeable future, Litex aims to reduce the time cost ratio between *formalizing* a mathematical proof and *writing* it in natural language from the current \~10:1 to 1:1, dramatically improving the efficiency of structuring mathematical knowledge. 
 
 At its core, mathematics serves two key purposes: one is **computation**, i.e., deriving outputs from known inputs; the other is **reasoning and verification**, ensuring the correctness of new propositions based on existing knowledge. Computation has already been revolutionized by the software industry—from manual calculations to high-performance computing, from the Turing machine model to modern deep learning frameworks. In contrast, the domain of reasoning still largely relies on human experts expressing and checking arguments in natural language.
 
@@ -393,7 +393,7 @@ In areas like probability theory, calculus, combinatorics, etc., where so many r
 
 For the time being, The number of people who study and use math is 100-1000 times more than the number of people who study and use formal languages. There is certainly a huge existing opportunity for Litex to make a difference.
 
-Litex is here not to just solve existing problems, but also to open the door to a new world in the age of AI. As large language models evolve, reasoning ability is increasingly seen as a core indicator of intelligence. Research institutions like DeepMind, OpenAI, and DeepSeek have already begun integrating formal languages into their training pipelines to enhance models' logical consistency and reliability. However, existing formal languages (such as Lean, Coq, Isabelle, etc.) are often complex and have steep learning curves, severely limiting their broader adoption and impact. Formal languages will certainly be an essential part of the AI infrastructure.
+Litex is here not to just solve existing problems, but also to open the door to a new world in the age of AI. As large language models evolve, reasoning ability is increasingly seen as a core indicator of intelligence. Research institutions like DeepMind, OpenAI, and DeepSeek have already begun integrating formal languages into their training pipelines to enhance models' logical consistency and reliability. Just as how programming languages like Python have become essential parts of the AI infrastructure, formal languages like Litex will certainly be an essential part of the AI infrastructure on our path to AGI.
 
 **Litex**, driven by minimalist design, balances readability, expressive power, and automation. It aspires to become the *standard intermediate language for AI reasoning systems*, while also supporting formal verification tasks across research, education, and industry. 
 
