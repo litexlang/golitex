@@ -227,23 +227,6 @@ func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt, requireMsg bool) error {
 	return ver.NewDefObj_InsideAtomsDeclared(stmt)
 }
 
-// func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
-// 	defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
-
-// 	err := exec.env.KnowDefFnSatisfyFnTemplate_KnowUniFactDerivedFromDefFn(ast.NewFcAtomWithName(stmt.Name), &stmt.FnTemplateStmt)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	// put into obj mem
-// 	err = exec.env.ObjDefMem.InsertItem(stmt.Name)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	return nil
-// }
-
 func (exec *Executor) defFnTemplateStmt(stmt *ast.DefFnTemplateStmt) error {
 	if glob.RequireMsg() {
 		defer exec.newMsg(fmt.Sprintf("%s\n", stmt))
@@ -682,9 +665,11 @@ func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimProp
 
 	// assume reverse of all then facts in prop or true
 	reversedThenFacts := ast.ReverseSliceOfReversibleFacts(thenFactsAsReversible)
-	err = exec.env.NewReversibleFacts(reversedThenFacts)
-	if err != nil {
-		return glob.ExecState_Error, err
+	for _, fact := range reversedThenFacts {
+		err := exec.env.NewFact(fact)
+		if err != nil {
+			return glob.ExecState_Error, err
+		}
 	}
 
 	execState, err := exec.execStmtsAtCurEnv(stmt.Proofs)

@@ -701,13 +701,3 @@ func (env *Env) storeUniFact(specFact *ast.SpecFactStmt, uniFact *ast.UniFactStm
 
 	return nil
 }
-
-func (env *Env) NewReversibleFacts(facts []ast.OrStmt_SpecStmt) error {
-	for _, fact := range facts {
-		err := env.NewFact(fact)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
