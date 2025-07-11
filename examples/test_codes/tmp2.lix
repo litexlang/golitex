@@ -1,12 +1,29 @@
-@add_cancellation(x, y, z R):
-	x + z = y + z
-    then:
-        x + z - z = y + z - z
-        x = y + z - z
-        x = y
 
-obj a, b, c R:
-	a + c = b + c
+prop is_subset_of(s1 set, s2 set):
+    forall x s1:
+        x $in s2
 
-$add_cancellation(a, b, c )
-a = b
+"""
+claim:
+    @subset_of_is_transitive(a, b, c set):
+        a $is_subset_of b
+        b $is_subset_of c
+        then:
+            1 =1
+    prove:
+        forall x a:
+            x $in b
+            x $in c
+        forall x a:
+            x $in c
+"""
+obj a, b, c set
+
+know forall x a:
+    x $in b
+    x $in c
+
+forall x a:
+    x $in c
+
+a $is_subset_of c
