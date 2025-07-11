@@ -683,7 +683,18 @@ func (exec *Executor) proveOverFiniteSetStmt(stmt *ast.ProveOverFiniteSetStmt) (
 	exec.newMsg(stmt.String())
 
 	ver := verifier.NewVerifier(exec.env)
-	return ver.ProveOverFiniteSet(stmt)
+	execState, err := ver.ProveOverFiniteSet(stmt)
+	if notOkExec(execState, err) {
+		return execState, err
+	}
+
+	// know uniFact
+	err = exec.env.NewFact(&stmt.Fact)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+
+	return glob.ExecState_True, nil
 }
 
 func (exec *Executor) haveSetFnStmt(stmt *ast.HaveSetFnStmt) (glob.ExecState, error) {

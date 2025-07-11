@@ -51,7 +51,7 @@ const (
 	KeywordFiniteSet            = "finite_set"
 	KeywordProveOverFiniteSet   = "prove_over_finite_set" // syntax connecting forall and finite_set
 	KeywordFnTemplate           = "fn_template"
-	KeywordStruct               = "struct"
+	KeywordStruct               = "struct" // 意义：让then section中，没有涉及到所有的自由变量的那些事实，能用一个struct instance就能传入很多变量
 	// KeywordHaveSetByReplacement           = "have_set_by_replacement"
 	KeywordExistIn                        = "exist_in"
 	KeywordSetDefinedByReplacement        = "set_defined_by_replacement"
