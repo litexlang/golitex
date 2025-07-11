@@ -46,29 +46,35 @@ prop obj_in_union_is_in_one_of_the_sets(s1 set, s2 set, x obj):
 
 know:
     forall s1, s2 set, x s1:
-    	x $in union(s1, s2) # 如果写成 x $in s1 会死循环
+    	x $in union(s1, s2) 
     forall s1, s2 set, x s2:
-    	x $in union(s1, s2) # 如果写成 x $in s2 会死循环
+    	x $in union(s1, s2) 
     forall s1, s2 set, x union(s1, s2):
         $obj_in_union_is_in_one_of_the_sets(s1, s2, x)
 
 # {a, b} = {a} \union {b}
-prove:
-    have s1 := {1}
-    have s2 := {2}
-    obj x union(s1, s2)
-    $obj_in_union_is_in_one_of_the_sets(s1, s2, x)
-
-    prove_in_each_case:
-        or:
-            x $in s1
-            x $in s2
+claim:
+	forall a, b obj, s1, s2, x obj:
+        s1 := {a}
+        s2 := {b}
+        x $in union(s1, s2)
         then:
-            1 = 1
-        prove:
-            x $in s1
-            x = 1
-        prove:
-        	x $in s2
-            1 = 1
-            x = 2
+            or:
+                x = a
+                x = b
+    prove:
+        $obj_in_union_is_in_one_of_the_sets(s1, s2, x)
+        prove_in_each_case:
+            or:
+                x $in s1
+                x $in s2
+            then:
+                or:
+                	x = a
+                    x = b
+            prove:
+                x $in s1
+                x = a
+            prove:
+                x $in s2
+                x = b
