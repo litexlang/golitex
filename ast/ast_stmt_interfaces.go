@@ -50,6 +50,7 @@ func (s *HaveObjInNonEmptySetStmt) stmt()        {}
 func (s *HaveSetStmt) stmt()                     {}
 func (s *HaveSetFnStmt) stmt()                   {}
 func (s *HaveSetDefinedByReplacementStmt) stmt() {}
+func (s *NamedUniFactStmt) stmt()                {}
 
 type FactStmt interface {
 	factStmt()
