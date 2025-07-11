@@ -1,18 +1,10 @@
-exist_prop x obj st obj_exist_in_set(s set):
-    x $in s
+know forall s1 set, x s1:
+    x $in s1
 
-prop is_empty_set(x set):
-    forall a obj:
-        not a $in x
+have s1 := {1}
+have s2 := {2}
+obj x union(s1, s2)
 
-obj s set:
-	not $is_empty_set(s)
-
-# 需要让 not exist 能释放出来 exist_prop 下面的东西
-claim:
-	$obj_exist_in_set(s)
-    prove_by_contradiction:
-        not $obj_exist_in_set(s)
-        forall x obj:
-            not x $in s
-        $is_empty_set(s)
+or:
+	x $in s1
+	x $in s2
