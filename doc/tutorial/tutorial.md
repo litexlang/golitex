@@ -797,6 +797,27 @@ After having a sense of Litex, do this:
 
 **THANK YOU FOR YOUR FEARLESS EARLY ADOPTION! HERE IS MY HEARTFELT THANKS TO Litex's EARLIEST FANS -- THE BOLD PIONEERS WHO TRUSTS ME FROM THE START!**
 
+## Tips
+
+1. There are many cases when a fact in then section in a universal fact is does not have all parameters in the parameter list of the universal fact, which might lead to that universal fact can not use `match and substitute` to prove the statement because the parameter in the universal fact parameter list which does not appear in the fact in then section can not be matched. For example, statements which is related to cancellation law like:
+
+forall x,y,z R:
+    x + z = y + z
+    then:
+        x = y
+
+In this case, `x=y` does not have all parameters in the parameter list of the universal fact. When the kernel reads `x=y`, it does not know which `z` to match, because `x=y` does not have `z` in its parameter list.
+
+To solve such problems, we give a name to this universal fact, can call that named universal fact later.
+
+prop add_cancel_law(x,y,z R):
+    x + z = y + z
+    then:
+        x = y
+
+forall x,y,z R:
+    $add_cancel_law(x,y,z)
+
 
 
 [^1]: [Mathematics for Computer Science](https://courses.csail.mit.edu/6.042/spring18/mcs.pdf)
