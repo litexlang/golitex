@@ -375,6 +375,12 @@ func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) (glob.E
 		}
 	}
 
+	// emit then fact
+	err = exec.knowStmt(ast.NewKnowStmt(stmt.ThenFacts))
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+
 	isSuccess = true
 	return glob.ExecState_True, nil
 }

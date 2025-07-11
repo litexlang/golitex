@@ -1665,11 +1665,6 @@ func (tb *tokenBlock) haveSetDefinedByReplacementStmt(name string) (ast.Stmt, er
 }
 
 func (tb *tokenBlock) namedUniFactStmt() (ast.Stmt, error) {
-	err := tb.header.skip(glob.KeySymbolAt)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
 	declHeader, err := tb.headerOfAtProp()
 	if err != nil {
 		return nil, tbErr(err, tb)
