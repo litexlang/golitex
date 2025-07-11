@@ -108,16 +108,8 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
 		return glob.ExecState_True, nil
 	}
 
-	if glob.CheckFalse {
-		state, err := exec.checkReverse(stmt)
-		if notOkExec(state, err) {
-			return state, err
-		}
-		return state, nil
-	} else {
-		if glob.RequireMsg() {
-			exec.newMsg(stmt.String() + "\nis unknown")
-		}
+	if glob.RequireMsg() {
+		exec.newMsg(stmt.String() + "\nis unknown")
 	}
 
 	return glob.ExecState_Unknown, nil
@@ -274,7 +266,7 @@ func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) error {
 	return exec.env.NewDefExistProp_InsideAtomsDeclared(stmt)
 }
 
-func (exec *Executor) execProofBlockAtCurEnv(proof []ast.Stmt) (glob.ExecState, error) {
+func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) (glob.ExecState, error) {
 	for _, curStmt := range proof {
 		execState, err := exec.Stmt(curStmt)
 		if err != nil {
@@ -326,7 +318,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecState, 
 		}
 		return glob.ExecState_True, nil
 	} else {
-		execState, err := exec.execProofBlockAtCurEnv(stmt.Proofs)
+		execState, err := exec.execStmtsAtCurEnv(stmt.Proofs)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
@@ -396,25 +388,17 @@ func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEach
 		return glob.ExecState_Error, err
 	}
 
-	for _, proofStmt := range stmt.Proofs[index] {
-		execState, err := exec.Stmt(proofStmt)
-		if err != nil {
-			return glob.ExecState_Error, err
-		}
-		if execState != glob.ExecState_True {
-			return execState, nil
-		}
+	execState, err := exec.execStmtsAtCurEnv(stmt.Proofs[index])
+	if notOkExec(execState, err) {
+		return execState, err
 	}
 
 	// verify thenFacts are true
-	for _, thenFact := range stmt.ThenFacts {
-		execState, err := exec.factStmt(thenFact)
-		if err != nil {
-			return glob.ExecState_Error, err
-		}
-		if execState != glob.ExecState_True {
-			return execState, nil
-		}
+	execState, failedFact, err := verifier.ExecFactsAtCurEnv_retRailedFact(stmt.ThenFacts, exec.env)
+	if err != nil {
+		return execState, fmt.Errorf("prove in each case statement error: failed to verify then facts:\n%s\n%s", failedFact, err)
+	} else if execState != glob.ExecState_True {
+		return execState, fmt.Errorf("prove in each case statement error: failed to verify then facts:\n%s", failedFact)
 	}
 
 	return glob.ExecState_True, nil
@@ -498,7 +482,7 @@ func (exec *Executor) proveStmt(stmt *ast.ProveStmt) (glob.ExecState, error) {
 	exec.newEnv(exec.env)
 	defer exec.deleteEnvAndRetainMsg()
 
-	return exec.execProofBlockAtCurEnv(stmt.Proof)
+	return exec.execStmtsAtCurEnv(stmt.Proof)
 }
 
 // prove uniFact in claim at current env
@@ -525,48 +509,26 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 	}
 
 	// exec proof block
-	// execState, err := exec.execProofBlockAtCurEnv(stmt.Proofs)
-
-	for _, curStmt := range stmt.Proofs {
-		execState, err := exec.Stmt(curStmt)
-		if err != nil {
-			return false, err
-		}
-		if execState != glob.ExecState_True {
-			if execState == glob.ExecState_Unknown && glob.ContinueExecutionIfExecUnknown {
-				exec.appendWarningMsg(fmt.Sprintf("unknown fact:\n%s", curStmt))
-				return false, nil
-			} else {
-				return false, nil
-			}
-		}
-	}
-
+	execState, err := exec.execStmtsAtCurEnv(stmt.Proofs)
 	if err != nil {
 		if glob.RequireMsg() {
 			exec.newMsg(fmt.Sprintf("Claim statement error: Failed to execute proof block:\n%s\n", stmt))
 		}
 		return false, err
 	}
-
-	// if execState != glob.ExecState_True {
-	// 	return false, nil
-	// }
+	if execState != glob.ExecState_True {
+		return false, nil
+	}
 
 	// TODO: 让claim能forall if
 	// if asUnivFact.IffFacts == nil || len(asUnivFact.IffFacts) == 0 {
-	for _, fact := range asUnivFact.ThenFacts {
-		execState, err := exec.factStmt(fact)
-		if err != nil {
-			if glob.RequireMsg() {
-				exec.newMsg(fmt.Sprintf("Claim statement error: Failed to execute fact statement:\n%s\n", fact))
-			}
-			return false, err
-		}
-		if execState != glob.ExecState_True {
-			return false, nil
-		}
+	execState, failedFact, err := verifier.ExecFactsAtCurEnv_retRailedFact(asUnivFact.ThenFacts, exec.env)
+	if err != nil {
+		return false, fmt.Errorf("claim statement error: failed to verify fact:\n%s\n%s", failedFact, err)
+	} else if execState != glob.ExecState_True {
+		return false, fmt.Errorf("claim statement error: failed to verify fact:\n%s", failedFact)
 	}
+
 	return true, nil
 
 }
@@ -588,7 +550,6 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 		return err
 	}
 
-	// derivedFact := stmt.FnTemplateStmt.DeriveUniFact(ast.FcAtom(stmt.FnTemplateStmt.Name))
 	derivedFact := stmt.FnTemplateStmt.DeriveUniFact()
 	err = exec.env.NewFact(derivedFact)
 	if err != nil {
@@ -600,46 +561,6 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 	}
 
 	return nil
-}
-
-func (exec *Executor) checkReverse(stmt ast.FactStmt) (glob.ExecState, error) {
-	if asSpecFact, ok := stmt.(*ast.SpecFactStmt); ok {
-		reversedFact := asSpecFact.ReverseTrue()
-		curVerifier := verifier.NewVerifier(exec.env)
-		ok, err := curVerifier.VerFactStmt(reversedFact, verifier.Round0Msg)
-		if err != nil {
-			return glob.ExecState_Error, err
-		}
-		if ok {
-			if glob.RequireMsg() {
-				exec.newMsg(fmt.Sprintf("%s\nis false", asSpecFact))
-			}
-			return glob.ExecState_False, nil
-		} else {
-			if glob.RequireMsg() {
-				exec.newMsg(fmt.Sprintf("%s\nis unknown", stmt))
-			}
-		}
-	} else if asOrStmt, ok := stmt.(*ast.OrStmt); ok {
-		for _, fact := range asOrStmt.Facts {
-			execState, err := exec.checkReverse(fact)
-			if notOkExec(execState, err) {
-				if glob.RequireMsg() {
-					exec.newMsg(fmt.Sprintf("%s\nis unknown", stmt))
-				}
-				return execState, err
-			}
-		}
-		if glob.RequireMsg() {
-			exec.newMsg(fmt.Sprintf("%s\nis false", stmt))
-		}
-	} else {
-		if glob.RequireMsg() {
-			exec.newMsg(fmt.Sprintf("%s\nis unknown", stmt))
-		}
-	}
-
-	return glob.ExecState_Unknown, nil
 }
 
 // 也许我应该语义改成，先声明prop，然后再证明prop，而不是现在这个样子
@@ -761,14 +682,12 @@ func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimProp
 
 	// assume reverse of all then facts in prop or true
 	reversedThenFacts := ast.ReverseSliceOfReversibleFacts(thenFactsAsReversible)
-	for _, fact := range reversedThenFacts {
-		err := exec.env.NewFact(fact)
-		if err != nil {
-			return glob.ExecState_Error, err
-		}
+	err = exec.env.NewReversibleFacts(reversedThenFacts)
+	if err != nil {
+		return glob.ExecState_Error, err
 	}
 
-	execState, err := exec.execProofBlockAtCurEnv(stmt.Proofs)
+	execState, err := exec.execStmtsAtCurEnv(stmt.Proofs)
 	if notOkExec(execState, err) {
 		return execState, err
 	}
@@ -781,11 +700,11 @@ func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimProp
 	}
 
 	reverseLastProof := lastProofAsReversible.ReverseIsTrue()
-	for _, fact := range reverseLastProof {
-		execState, err := exec.factStmt(&fact)
-		if notOkExec(execState, err) {
-			return execState, err
-		}
+	execState, failedFact, err := verifier.ExecSpecFactsAtCurEnv_retRailedFact(reverseLastProof, exec.env)
+	if err != nil {
+		return execState, fmt.Errorf("claim prop statement error: failed to verify reverse of last proof:\n%s\n%s", failedFact, err)
+	} else if execState != glob.ExecState_True {
+		return execState, fmt.Errorf("claim prop statement error: failed to verify reverse of last proof:\n%s", failedFact)
 	}
 
 	return glob.ExecState_True, nil

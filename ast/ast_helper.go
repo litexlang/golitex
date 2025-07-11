@@ -35,7 +35,7 @@ func ReverseSliceOfReversibleFacts(facts []OrStmt_SpecStmt) []OrStmt_SpecStmt {
 	if len(facts) == 1 {
 		reversed := facts[0].ReverseIsTrue()
 		for _, fact := range reversed {
-			ret = append(ret, &fact)
+			ret = append(ret, fact)
 		}
 		return ret
 	}
@@ -65,7 +65,7 @@ func ReverseSliceOfReversibleFacts(facts []OrStmt_SpecStmt) []OrStmt_SpecStmt {
 	for _, orFact := range orFactsInFacts {
 		reversedOrFact := orFact.ReverseIsTrue()
 		for _, fact := range reversedOrFact {
-			specFacts_GotByReversedOrFacts = append(specFacts_GotByReversedOrFacts, &fact)
+			specFacts_GotByReversedOrFacts = append(specFacts_GotByReversedOrFacts, fact)
 		}
 	}
 

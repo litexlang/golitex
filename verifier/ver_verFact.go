@@ -17,6 +17,7 @@ package litex_verifier
 import (
 	"fmt"
 	ast "golitex/ast"
+	env "golitex/environment"
 	glob "golitex/glob"
 )
 
@@ -41,4 +42,42 @@ func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state VerState) (bool, error
 	default:
 		return false, fmt.Errorf("unexpected fact statement: %s", asStmt)
 	}
+}
+
+func ExecFactsAtCurEnv_retRailedFact(facts []ast.FactStmt, env *env.Env) (glob.ExecState, ast.FactStmt, error) {
+	ver := NewVerifier(env)
+
+	for _, fact := range facts {
+		ok, err := ver.VerFactStmt(fact, Round0Msg)
+		if err != nil {
+			return glob.ExecState_Error, fact, err
+		}
+		if !ok {
+			return glob.ExecState_Unknown, fact, nil
+		}
+		err = env.NewFact(fact)
+		if err != nil {
+			return glob.ExecState_Error, fact, err
+		}
+	}
+	return glob.ExecState_True, nil, nil
+}
+
+func ExecSpecFactsAtCurEnv_retRailedFact(facts []*ast.SpecFactStmt, env *env.Env) (glob.ExecState, *ast.SpecFactStmt, error) {
+	ver := NewVerifier(env)
+
+	for _, fact := range facts {
+		ok, err := ver.VerFactStmt(fact, Round0Msg)
+		if err != nil {
+			return glob.ExecState_Error, fact, err
+		}
+		if !ok {
+			return glob.ExecState_Unknown, fact, nil
+		}
+		err = env.NewFact(fact)
+		if err != nil {
+			return glob.ExecState_Error, fact, err
+		}
+	}
+	return glob.ExecState_True, nil, nil
 }
