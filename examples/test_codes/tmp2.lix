@@ -5,6 +5,7 @@ have s1 := {1}
 have s2 := {2}
 obj x union(s1, s2)
 
+
 or:
 	x $in s1
 	x $in s2
