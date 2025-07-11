@@ -76,6 +76,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		execState, err = exec.haveSetFnStmt(stmt)
 	case *ast.HaveSetDefinedByReplacementStmt:
 		execState, err = exec.haveSetDefinedByReplacementStmt(stmt)
+	case *ast.NamedUniFactStmt:
+		execState, err = exec.namedUniFactStmt(stmt)
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}
@@ -764,6 +766,23 @@ func (exec *Executor) haveSetDefinedByReplacementStmt(stmt *ast.HaveSetDefinedBy
 	err = exec.env.SetEqualToSetDefinedByReplacement_PostProcess(ast.FcAtom(stmt.Name), setDefinedByReplacement)
 	if err != nil {
 		return glob.ExecState_Error, err
+	}
+
+	return glob.ExecState_True, nil
+}
+
+func (exec *Executor) namedUniFactStmt(stmt *ast.NamedUniFactStmt) (glob.ExecState, error) {
+	exec.newMsg(stmt.String())
+
+	uniFact := ast.NewUniFact(stmt.DefPropStmt.DefHeader.Params, stmt.DefPropStmt.DefHeader.ParamSets, stmt.DefPropStmt.IffFacts, stmt.DefPropStmt.ThenFacts)
+	execState, err := exec.factStmt(uniFact)
+	if notOkExec(execState, err) {
+		return execState, err
+	}
+
+	err = exec.knowPropStmt(ast.NewKnowPropStmt(stmt.DefPropStmt))
+	if notOkExec(execState, err) {
+		return execState, err
 	}
 
 	return glob.ExecState_True, nil
