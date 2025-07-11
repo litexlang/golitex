@@ -77,6 +77,8 @@ func (tb *tokenBlock) stmt() (ast.Stmt, error) {
 		ret, err = tb.proveByMathInductionStmt()
 	case glob.KeywordProveOverFiniteSet:
 		ret, err = tb.proveOverFiniteSetStmt()
+	case glob.KeySymbolAt:
+		ret, err = tb.namedUniFactStmt()
 	default:
 		ret, err = tb.factStmt(UniFactDepth0)
 	}
@@ -1660,4 +1662,23 @@ func (tb *tokenBlock) haveSetDefinedByReplacementStmt(name string) (ast.Stmt, er
 	}
 
 	return ast.NewHaveSetDefinedByReplacementStmt(name, domSet, rangeSet, propName), nil
+}
+
+func (tb *tokenBlock) namedUniFactStmt() (ast.Stmt, error) {
+	err := tb.header.skip(glob.KeySymbolAt)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	declHeader, err := tb.headerOfAtProp()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	iffFacts, thenFacts, err := tb.bodyOfKnowProp()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	return ast.NewNamedUniFactStmt(ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts, thenFacts)), nil
 }

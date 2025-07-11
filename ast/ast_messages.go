@@ -663,3 +663,11 @@ func (stmt *HaveSetDefinedByReplacementStmt) String() string {
 	builder.WriteString(NewFcFn(FcAtom(glob.KeywordSetDefinedByReplacement), []Fc{stmt.DomSet, stmt.RangeSet, stmt.PropName}).String())
 	return builder.String()
 }
+
+func (stmt *NamedUniFactStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeySymbolAt)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.DefPropStmt.String())
+	return builder.String()
+}

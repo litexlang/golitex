@@ -208,3 +208,7 @@ type HaveSetDefinedByReplacementStmt struct {
 	RangeSet Fc
 	PropName FcAtom
 }
+
+type NamedUniFactStmt struct {
+	DefPropStmt DefPropStmt
+}
