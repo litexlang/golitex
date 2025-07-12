@@ -109,7 +109,7 @@ func generateUndeclaredRandomName(env *env.Env) string {
 }
 
 func (ver *Verifier) PreprocessUniFactParams_DeclareParams(oldStmt *ast.UniFactStmt) (*ast.UniFactStmt, error) {
-	newStmtPtr, err := ver.instantiateUniFactWithoutDuplicate(oldStmt)
+	newStmtPtr, _, err := ver.instantiateUniFactWithoutDuplicate(oldStmt)
 	if err != nil {
 		return nil, err
 	}
