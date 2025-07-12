@@ -58,12 +58,11 @@ func (ver *Verifier) verSpecFact_ByLogicMem(stmt *ast.SpecFactStmt, state VerSta
 }
 
 func (ver *Verifier) verSpecFact_InSpecFact_UniMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	nextState := state.addRound()
 	upMostEnv := ver.todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
 	// if ver.env.CurMatchProp == nil {
 	for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
-		ok, err := ver.specFact_UniMem_atCurEnv(curEnv, stmt, nextState)
+		ok, err := ver.specFact_UniMem_atCurEnv(curEnv, stmt, state)
 		if err != nil || ok {
 			return ok, err
 		}
@@ -72,12 +71,11 @@ func (ver *Verifier) verSpecFact_InSpecFact_UniMem(stmt *ast.SpecFactStmt, state
 }
 
 func (ver *Verifier) verSpecFact_InLogicExpr_InUniFactMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	nextState := state.addRound()
 	upMostEnv := ver.todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
 	// if ver.env.CurMatchProp == nil {
 	for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
-		ok, err := ver.specFact_inLogicExpr_inUniFactMem_atEnv(curEnv, stmt, nextState)
+		ok, err := ver.specFact_inLogicExpr_inUniFactMem_atEnv(curEnv, stmt, state)
 		if err != nil || ok {
 			return ok, err
 		}
@@ -193,7 +191,8 @@ func (ver *Verifier) specFact_UniMem_atCurEnv(curEnv *env.Env, stmt *ast.SpecFac
 }
 
 func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch(stmt *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InUniFact, state VerState) (bool, error) {
-	for _, knownFact := range knownFacts {
+	for i := len(knownFacts) - 1; i >= 0; i-- {
+		knownFact := knownFacts[i]
 		paramArrMap, ok, err := ver.matchStoredUniSpecWithSpec_preventDifferentVarsMatchTheSameFreeVar(knownFact, stmt)
 		if err != nil {
 			return false, err
