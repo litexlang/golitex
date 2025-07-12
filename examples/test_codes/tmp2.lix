@@ -1,31 +1,7 @@
-
-prop is_subset_of(s1 set, s2 set):
-    forall x s1:
-        x $in s2
-
-
-"""
-claim:
-    @subset_of_is_transitive(a, b, c set):
-        a $is_subset_of b
-        b $is_subset_of c
-        then:
-            1 =1
-    prove:
-        know forall x a:
-            x $in c
-        forall x a:
-            x $in c
-
-"""
-
-obj a, b, c set:
-    a $is_subset_of b
-    b $is_subset_of c
-
-forall x a:
-    x $in b
-    x $in c
-
-forall x a:
-    x $in c
+prove:
+	have a := {1, 2, 3, 4}
+    have b := {2, 4, 6}
+    obj s set
+    know forall x s:
+    	x $in a
+    $finite_set_subset_is_finite_set(a, s)
