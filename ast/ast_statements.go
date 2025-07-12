@@ -194,6 +194,7 @@ type HaveSetStmt struct {
 	Fact EnumSet_IntensionalSet_FactualStmtInterface
 }
 
+// 定义返回值是集合的函数；这个的好处是，fn的定义不能保证函数的存在性；而have可以保证函数的存在性
 type HaveSetFnStmt struct {
 	DefHeader DefHeader
 	Param     string
