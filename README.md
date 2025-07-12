@@ -396,8 +396,7 @@ For the time being, The number of people who study and use math is 100-1000 time
 Litex isn’t just solving today’s problems—it’s opening the door to a new era in AI. As language models evolve, reasoning is emerging as the true measure of intelligence. Leading labs like DeepMind, OpenAI, and DeepSeek are already integrating formal languages into training to improve logical consistency. Meta’s \$15B investment in Scale AI shows the future of AI lies in data—especially structured, logic-rich data. Natural language alone falls short; to teach reasoning, we need formal languages. Just as Python became core to AI development, formal languages like Litex are poised to become vital infrastructure on the path to AGI.
 
 
-**Litex**, driven by minimalist design, balances readability, expressive power, and automation. It aspires to become the *standard intermediate language for AI reasoning systems*, while also supporting formal verification tasks across research, education, and industry. 
-
+**Litex**, driven by minimalist design, balances readability, expressive power, and automation. It aspires to become the *standard intermediate language for AI reasoning systems*, while also supporting formal verification tasks across advanced manufacturing, crypto-currency, software engineering, and education. 
 
 **In one sentence**: Computation has been automated—reasoning should be too. Litex is making that a reality.
 
