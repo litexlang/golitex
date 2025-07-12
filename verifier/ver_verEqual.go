@@ -80,7 +80,7 @@ func (ver *Verifier) verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Fc, r
 	}
 
 	if !state.isFinalRound() {
-		if ok, err := ver.verEqualSpecMemAndLogicMem(left, right, state); err != nil {
+		if ok, err := ver.verLogicMem_leftToRight_RightToLeft(left, right, state); err != nil {
 			return false, err
 		} else if ok {
 			return true, nil
@@ -182,9 +182,9 @@ func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right
 // 	return ver.specFact_MatchEnv_SpecMem(curEnv, equalFact, state)
 // }
 
-func (ver *Verifier) verEqualSpecMemAndLogicMem(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
+func (ver *Verifier) verLogicMem_leftToRight_RightToLeft(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
 	equalFact := ver.makeEqualFact(left, right)
-	ok, err := ver.verSpecFact_SpecMemAndLogicMem(equalFact, state)
+	ok, err := ver.verSpecFactLogicMem(equalFact, state)
 	if err != nil {
 		return false, err
 	}
@@ -196,7 +196,7 @@ func (ver *Verifier) verEqualSpecMemAndLogicMem(left ast.Fc, right ast.Fc, state
 	if err != nil {
 		return false, err
 	}
-	ok, err = ver.verSpecFact_SpecMemAndLogicMem(equalFactParamReversed, state)
+	ok, err = ver.verSpecFactLogicMem(equalFactParamReversed, state)
 	if err != nil {
 		return false, err
 	}

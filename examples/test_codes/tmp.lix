@@ -2,14 +2,43 @@
 
 # Definition of Two Sets are Equal
 know forall x, y set:
+    x = y
+    iff:
+        forall a2 x:
+            a2 $in y
+        forall a2 y:
+            a2 $in x
+
+"""
+know @equal_sets_have_the_same_elements(x, y set):
+    forall a2 x:
+        a2 $in y
+    forall a2 y:
+        a2 $in x
     then:
         x = y
-    iff:
-        forall a x:
-            a $in y
-        forall a y:
-            a $in x
+"""
+"""
+know forall x,y set, a obj:
+	x = y
+    a $in x
+    then:
+        a $in y
 
+know forall x,y set, a obj:
+	x = y
+    a $in y
+    then:
+        a $in x
+
+know forall x, y set:
+    forall a x:
+        a $in y
+    forall a y:
+        a $in x
+    then:
+        x = y
+"""
 
 know @two_sets_are_equal_iff_they_have_the_same_elements(x, y set):
     forall a x:
@@ -212,6 +241,8 @@ claim:
     forall a set:
         forall x union(a, a):
             x $in a
+        forall x a:
+            x $in union(a, a)
     prove:
         claim:
         	forall x union(a, a):
@@ -232,3 +263,8 @@ claim:
                     prove:
                         x $in a
                 x $in a
+        forall x a:
+        	x $in union(a, a)
+        forall x union(a, a):
+            x $in a
+        union(a, a) = a
