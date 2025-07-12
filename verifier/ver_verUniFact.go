@@ -109,37 +109,15 @@ func generateUndeclaredRandomName(env *env.Env) string {
 }
 
 func (ver *Verifier) PreprocessUniFactParams_DeclareParams(oldStmt *ast.UniFactStmt) (*ast.UniFactStmt, error) {
-	// 声明变量
-	paramMap, paramMapStrToStr := processUniFactParamsDuplicateDeclared(ver.env, oldStmt.Params)
+	newStmtPtr, err := ver.instantiateUniFactWithoutDuplicate(oldStmt)
+	if err != nil {
+		return nil, err
+	}
 
-	var newStmtPtr *ast.UniFactStmt = oldStmt
-
-	if len(paramMap) == 0 {
-		err := ver.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt(oldStmt.Params, oldStmt.ParamSets, []ast.FactStmt{}))
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		instantiatedOldStmt, err := ast.InstantiateUniFact(oldStmt, paramMap)
-		if err != nil {
-			return nil, err
-		}
-
-		newParams := []string{}
-		for _, param := range oldStmt.Params {
-			if newParam, ok := paramMapStrToStr[param]; ok {
-				newParams = append(newParams, newParam)
-			} else {
-				newParams = append(newParams, param)
-			}
-		}
-
-		newStmtPtr = ast.NewUniFact(newParams, instantiatedOldStmt.ParamSets, instantiatedOldStmt.DomFacts, instantiatedOldStmt.ThenFacts)
-
-		err = ver.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt(newStmtPtr.Params, newStmtPtr.ParamSets, []ast.FactStmt{}))
-		if err != nil {
-			return nil, err
-		}
+	// declare
+	err = ver.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt(newStmtPtr.Params, newStmtPtr.ParamSets, []ast.FactStmt{}))
+	if err != nil {
+		return nil, err
 	}
 
 	// 查看param set 是否已经声明
