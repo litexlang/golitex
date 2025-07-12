@@ -192,11 +192,12 @@ func (ver *Verifier) specFact_UniMem_atCurEnv(curEnv *env.Env, stmt *ast.SpecFac
 
 func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch(stmt *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InUniFact, state VerState) (bool, error) {
 	for i := len(knownFacts) - 1; i >= 0; i-- {
-		knownFact_paramProcessed, err := ver.preprocessKnownUniFactParams(&knownFacts[i])
-		if err != nil {
-			return false, err
-		}
+		// knownFact_paramProcessed, err := ver.preprocessKnownUniFactParams(&knownFacts[i])
+		// if err != nil {
+		// 	return false, err
+		// }
 
+		knownFact_paramProcessed := knownFacts[i]
 		// 这里需要用的是 instantiated 的 knownFact
 
 		paramArrMap, ok, err := ver.matchStoredUniSpecWithSpec_preventDifferentVarsMatchTheSameFreeVar(knownFact_paramProcessed, stmt)
