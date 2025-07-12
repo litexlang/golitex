@@ -54,6 +54,10 @@ type KnownSpecFact_InUniFact struct {
 	// EnvFact  *ast.SpecFactStmt
 }
 
+func MakeKnownSpecFact_InUniFact(specFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt) KnownSpecFact_InUniFact {
+	return KnownSpecFact_InUniFact{specFact, uniFact}
+}
+
 type SpecFactInUniFactMem struct {
 	// PureFacts         glob.Map2D[[]KnownSpecFact_InUniFact]
 	// NotPureFacts      glob.Map2D[[]KnownSpecFact_InUniFact]

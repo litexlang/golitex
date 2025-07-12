@@ -192,8 +192,14 @@ func (ver *Verifier) specFact_UniMem_atCurEnv(curEnv *env.Env, stmt *ast.SpecFac
 
 func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch(stmt *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InUniFact, state VerState) (bool, error) {
 	for i := len(knownFacts) - 1; i >= 0; i-- {
-		knownFact := knownFacts[i]
-		paramArrMap, ok, err := ver.matchStoredUniSpecWithSpec_preventDifferentVarsMatchTheSameFreeVar(knownFact, stmt)
+		knownFact_paramProcessed, err := ver.preprocessKnownUniFactParams(&knownFacts[i])
+		if err != nil {
+			return false, err
+		}
+
+		// 这里需要用的是 instantiated 的 knownFact
+
+		paramArrMap, ok, err := ver.matchStoredUniSpecWithSpec_preventDifferentVarsMatchTheSameFreeVar(knownFact_paramProcessed, stmt)
 		if err != nil {
 			return false, err
 		}
@@ -211,7 +217,7 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch(stmt *ast.SpecFactSt
 		}
 
 		// 有一些 param 没有被实例化，则continue
-		if len(knownFact.UniFact.Params) != len(uniConMap) {
+		if len(knownFact_paramProcessed.UniFact.Params) != len(uniConMap) {
 			continue
 		}
 
@@ -220,7 +226,7 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch(stmt *ast.SpecFactSt
 		// 	return false, err
 		// }
 
-		insKnownUniFact, err := ast.InstantiateUniFact(knownFact.UniFact, uniConMap)
+		insKnownUniFact, err := ast.InstantiateUniFact(knownFact_paramProcessed.UniFact, uniConMap)
 		if err != nil {
 			return false, err
 		}
@@ -250,7 +256,7 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch(stmt *ast.SpecFactSt
 
 		if ok {
 			if state.requireMsg() {
-				ver.successWithMsg(stmt.String(), knownFact.String())
+				ver.successWithMsg(stmt.String(), knownFact_paramProcessed.String())
 			}
 			return true, nil
 		}
