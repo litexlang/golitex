@@ -2,12 +2,14 @@
 
 # Definition of Two Sets are Equal
 know forall x, y set:
-	x = y
     then:
+        x = y
+    iff:
         forall a x:
             a $in y
         forall a y:
             a $in x
+
 
 know @two_sets_are_equal_iff_they_have_the_same_elements(x, y set):
     forall a x:
@@ -208,12 +210,25 @@ claim:
 # Union of a set and itself is the set itself
 claim:
     forall a set:
-    	union(a, a) = a
+        forall x union(a, a):
+            x $in a
     prove:
         claim:
         	forall x union(a, a):
                 x $in a
-        prove:
-            $obj_in_union_is_in_one_of_the_sets(a, a, x)
-            x $in a
-        	
+            prove:
+                $obj_in_union_is_in_one_of_the_sets(a, a, x)
+                or:
+                	x $in a
+                    x $in a
+                prove_in_each_case:
+                    or:
+                        x $in a
+                        x $in a
+                    then:
+                        x $in a
+                    prove:
+                        x $in a
+                    prove:
+                        x $in a
+                x $in a
