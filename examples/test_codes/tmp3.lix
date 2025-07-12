@@ -1,10 +1,18 @@
 know forall x, y set:
     x = y
-    iff:
+    then:
         forall a x:
             a $in y
         forall a y:
             a $in x
+
+know forall x, y set:
+    forall a x:
+        a $in y
+    forall a y:
+        a $in x
+    then:
+        x = y
 
 fn f(s set) set
 obj a set
