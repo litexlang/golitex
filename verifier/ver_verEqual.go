@@ -79,13 +79,13 @@ func (ver *Verifier) verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Fc, r
 		return true, nil
 	}
 
-	if ok, err := ver.verEqualSpecMemAndLogicMem(left, right, state); err != nil {
-		return false, err
-	} else if ok {
-		return true, nil
-	}
-
 	if !state.isFinalRound() {
+		if ok, err := ver.verEqualSpecMemAndLogicMem(left, right, state); err != nil {
+			return false, err
+		} else if ok {
+			return true, nil
+		}
+
 		if ok, err := ver.verEqualUniMem(left, right, state); err != nil {
 			return false, err
 		} else if ok {
