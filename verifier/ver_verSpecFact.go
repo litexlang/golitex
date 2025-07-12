@@ -282,11 +282,13 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 	return true, nil
 }
 
-func (ver *Verifier) verSpecFact_SpecMemAndLogicMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	ok, err := ver.verSpecFact_BySpecMem(stmt, state)
-	if isErrOrOk(ok, err) {
-		return ok, err
-	}
+func (ver *Verifier) verSpecFactLogicMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	var ok bool
+	var err error
+	// ok, err := ver.verSpecFact_BySpecMem(stmt, state)
+	// if isErrOrOk(ok, err) {
+	// 	return ok, err
+	// }
 
 	ok, err = ver.verSpecFact_ByLogicMem(stmt, state)
 	if isErrOrOk(ok, err) {
