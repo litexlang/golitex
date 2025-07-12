@@ -1,0 +1,29 @@
+know forall x,y set, a obj:
+	x = y
+    a $in x
+    then:
+        a $in y
+
+know forall x,y set, a obj:
+	x = y
+    a $in y
+    then:
+        a $in x
+
+know forall x, y set:
+    forall a x:
+        a $in y
+    forall a y:
+        a $in x
+    then:
+        x = y
+
+obj x2, y2 set
+
+know:
+    forall a2 x2:
+        a2 $in y2
+    forall a2 y2:
+        a2 $in x2
+
+x2 = y2
