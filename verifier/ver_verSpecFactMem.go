@@ -215,6 +215,11 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch(stmt *ast.SpecFactSt
 			continue
 		}
 
+		// noDuplicateUniFact, err := ver.instantiateUniFactWithoutDuplicate(knownFact.UniFact)
+		// if err != nil {
+		// 	return false, err
+		// }
+
 		insKnownUniFact, err := ast.InstantiateUniFact(knownFact.UniFact, uniConMap)
 		if err != nil {
 			return false, err
