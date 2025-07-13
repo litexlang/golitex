@@ -80,18 +80,46 @@ func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state VerStat
 func processUniFactParamsDuplicateDeclared(env *env.Env, params []string) (map[string]ast.Fc, map[string]string) {
 	paramMap := make(map[string]ast.Fc)
 	paramMapStrToStr := make(map[string]string)
-	// indexesOfDuplicateParams := make(map[int]string)
 	for _, param := range params {
-		newParam := param
-		if env.IsAtomDeclared(ast.FcAtom(newParam), map[string]struct{}{}) {
-			newParam = generateUndeclaredRandomName(env)
-			paramMap[param] = ast.FcAtom(newParam)
-			paramMapStrToStr[param] = newParam
-			// indexesOfDuplicateParams[i] = newParam
+		for {
+			newParam := param
+			if env.IsAtomDeclared(ast.FcAtom(newParam), map[string]struct{}{}) {
+				newParam = generateUndeclaredRandomName(env)
+				if !env.IsAtomDeclared(ast.FcAtom(newParam), map[string]struct{}{}) {
+					paramMap[param] = ast.FcAtom(newParam)
+					paramMapStrToStr[param] = newParam
+					break
+				}
+			} else {
+				break
+			}
 		}
 	}
 	return paramMap, paramMapStrToStr
-	// return paramMap, paramMapStrToStr, indexesOfDuplicateParams
+}
+
+func processUniFactParamsDuplicateDeclared_notInGivenMap(env *env.Env, params []string, notInMap map[string]struct{}) (map[string]ast.Fc, map[string]string) {
+	paramMap := make(map[string]ast.Fc)
+	paramMapStrToStr := make(map[string]string)
+	for _, param := range params {
+		for {
+			newParam := param
+			_, inNotOnMap := notInMap[newParam]
+			if env.IsAtomDeclared(ast.FcAtom(newParam), map[string]struct{}{}) || inNotOnMap {
+				newParam = generateUndeclaredRandomName(env)
+
+				_, inNotOnMap = notInMap[newParam]
+				if !env.IsAtomDeclared(ast.FcAtom(newParam), map[string]struct{}{}) && !inNotOnMap {
+					paramMap[param] = ast.FcAtom(newParam)
+					paramMapStrToStr[param] = newParam
+					break
+				}
+			} else {
+				break
+			}
+		}
+	}
+	return paramMap, paramMapStrToStr
 }
 
 func generateUndeclaredRandomName(env *env.Env) string {
