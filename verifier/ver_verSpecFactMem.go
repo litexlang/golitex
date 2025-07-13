@@ -122,13 +122,31 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch(stmt *ast.SpecFac
 			continue
 		}
 
-		insKnownUniFact, err := ast.InstantiateUniFact(knownFactUnderLogicExpr.UniFact, uniConMap)
+		randomizedUniFactWithoutThen, _, paramMapStrToStr, randomizedOrStmt, err := ver.preprocessUniFactParamsWithoutThenFacts_OrStmt(knownFactUnderLogicExpr.UniFact, knownFactUnderLogicExpr.LogicExpr)
 		if err != nil {
 			return false, err
 		}
 
+		for k, v := range uniConMap {
+			if newParam, ok := paramMapStrToStr[k]; ok {
+				uniConMap[newParam] = v
+				delete(uniConMap, k)
+			}
+		}
+
+		instantiatedUniFactWithoutThen, err := instantiateUniFactWithoutThenFacts(randomizedUniFactWithoutThen, uniConMap)
+		if err != nil {
+			return false, err
+		}
+
+		// insKnownUniFact, err := ast.InstantiateUniFact(knownFactUnderLogicExpr.UniFact, uniConMap)
+		// if err != nil {
+		// 	return false, err
+		// }
+
 		// TODO 要证明在paramSet里
-		paramInParamSetFacts := insKnownUniFact.ParamInParamSetFacts(uniConMap)
+		// paramInParamSetFacts := insKnownUniFact.ParamInParamSetFacts(uniConMap)
+		paramInParamSetFacts := instantiatedUniFactWithoutThen.ParamInParamSetFacts(uniConMap)
 		setFactSatisfied := true
 		for _, paramInParamSetFact := range paramInParamSetFacts {
 			ok, err = ver.VerFactStmt(paramInParamSetFact, state)
@@ -145,7 +163,8 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch(stmt *ast.SpecFac
 			continue
 		}
 
-		ok, err = ver.proveUniFactDomFacts(insKnownUniFact.DomFacts, state)
+		// ok, err = ver.proveUniFactDomFacts(insKnownUniFact.DomFacts, state)
+		ok, err = ver.proveUniFactDomFacts(instantiatedUniFactWithoutThen.DomFacts, state)
 		if err != nil {
 			return false, err
 		}
@@ -153,7 +172,7 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch(stmt *ast.SpecFac
 			continue
 		}
 
-		instantiatedLogicExpr, err := knownFactUnderLogicExpr.LogicExpr.Instantiate(uniConMap)
+		instantiatedLogicExpr, err := randomizedOrStmt.Instantiate(uniConMap)
 		if err != nil {
 			return false, err
 		}
@@ -219,7 +238,7 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch(stmt *ast.SpecFactSt
 			continue
 		}
 
-		randomizedUniFactWithoutThen, _, paramMapStrToStr, err := ver.preprocessKnownUniFactParams_ThenFactNotProcessed(knownFact_paramProcessed.UniFact)
+		randomizedUniFactWithoutThen, _, paramMapStrToStr, err := ver.preprocessUniFactParamsWithoutThenFacts(knownFact_paramProcessed.UniFact)
 		if err != nil {
 			return false, err
 		}

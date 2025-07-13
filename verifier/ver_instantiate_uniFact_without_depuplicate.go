@@ -125,7 +125,21 @@ func processUniFactParamsDuplicateDeclared_notInGivenMap(env *env.Env, params []
 	return paramMap, paramMapStrToStr
 }
 
-func (ver *Verifier) preprocessKnownUniFactParams_ThenFactNotProcessed(knownUniFact *ast.UniFactStmt) (*uniFactWithoutThenFacts, map[string]ast.Fc, map[string]string, error) {
+func (ver *Verifier) preprocessUniFactParamsWithoutThenFacts_OrStmt(knownUniFact *ast.UniFactStmt, orStmt *ast.OrStmt) (*uniFactWithoutThenFacts, map[string]ast.Fc, map[string]string, *ast.OrStmt, error) {
+	uniFactWithoutThen, paramMap, paramMapStrToStr, err := ver.preprocessUniFactParamsWithoutThenFacts(knownUniFact)
+	if err != nil {
+		return nil, nil, nil, nil, err
+	}
+
+	instantiatedOrStmt, err := orStmt.Instantiate(paramMap)
+	if err != nil {
+		return nil, nil, nil, nil, err
+	}
+
+	return uniFactWithoutThen, paramMap, paramMapStrToStr, instantiatedOrStmt.(*ast.OrStmt), nil
+}
+
+func (ver *Verifier) preprocessUniFactParamsWithoutThenFacts(knownUniFact *ast.UniFactStmt) (*uniFactWithoutThenFacts, map[string]ast.Fc, map[string]string, error) {
 	paramMap, paramMapStrToStr := processUniFactParamsDuplicateDeclared(ver.env, knownUniFact.Params)
 
 	domFacts_paramRandomized := []ast.FactStmt{}
