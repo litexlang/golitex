@@ -9,14 +9,6 @@ know forall x, y set:
         forall a y:
             a $in x
 
-know @two_sets_are_equal_iff_they_have_the_same_elements(x, y set):
-    forall a x:
-        a $in y
-    forall a y:
-        a $in x
-    then:
-        x = y
-
 # Definition of Empty Set
 prop is_empty_set(x set):
     forall a obj:

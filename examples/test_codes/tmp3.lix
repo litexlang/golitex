@@ -1,26 +1,5 @@
-know forall x, y set:
-    x = y
-    then:
-        forall a x:
-            a $in y
-        forall a y:
-            a $in x
+obj s set:
+	forall x obj:
+        not x $in s
 
-know forall x, y set:
-    forall a x:
-        a $in y
-    forall a y:
-        a $in x
-    then:
-        x = y
-
-fn f(s set) set
-obj a set
-
-know:
-	forall x a:
-		x $in f(a)
-	forall x f(a):
-		x $in a
-
-f(a) = a
+s := {}
