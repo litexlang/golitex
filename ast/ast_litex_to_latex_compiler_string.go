@@ -44,7 +44,11 @@ func (l *UniFactStmt) ToLatexString() string {
 	builder.WriteString(".")
 	return builder.String()
 }
-func (p *SpecFactStmt) ToLatexString() string   { return "" }
+func (p *SpecFactStmt) ToLatexString() string {
+	str := p.String()
+	str = strings.TrimPrefix(str, glob.KeySymbolDollar)
+	return str
+}
 func (f *ClaimProveStmt) ToLatexString() string { return "" }
 func (f *KnowFactStmt) ToLatexString() string {
 	var builder strings.Builder
@@ -89,3 +93,4 @@ func (s *HaveSetStmt) ToLatexString() string                     { return "" }
 func (s *HaveSetFnStmt) ToLatexString() string                   { return "" }
 func (s *HaveSetDefinedByReplacementStmt) ToLatexString() string { return "" }
 func (s *NamedUniFactStmt) ToLatexString() string                { return "" }
+func (s *FnTemplateStmt) ToLatexString() string                  { return "" }
