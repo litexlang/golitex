@@ -98,16 +98,34 @@ func processUniFactParamsDuplicateDeclared_notInGivenMap(env *env.Env, params []
 func (ver *Verifier) preprocessKnownUniFactParams(knownUniFact *env.KnownSpecFact_InUniFact) (env.KnownSpecFact_InUniFact, map[string]string, error) {
 	paramMap, paramMapStrToStr := processUniFactParamsDuplicateDeclared(ver.env, knownUniFact.UniFact.Params)
 
+	domFacts_paramRandomized := []ast.FactStmt{}
+
 	for _, domFact := range knownUniFact.UniFact.DomFacts {
-		curParamMap, curParamMapStrToStr := map[string]ast.Fc{}, map[string]string{}
 		switch asStmt := domFact.(type) {
 		case *ast.UniFactStmt:
-			curParamMap, curParamMapStrToStr = processUniFactParamsDuplicateDeclared_notInGivenMap(ver.env, asStmt.Params, paramMapStrToStr)
-			// newDomFact, _, err := useRandomParamToReplaceOriginalParam(asStmt, curParamMap, curParamMapStrToStr)
-			// if err != nil {
-			// 	return env.KnownSpecFact_InUniFact{}, nil, err
-			// }
-			// newDomFacts = append(newDomFacts, newDomFact)
+			copiedParamMap, copiedMapStrToStr := make(map[string]ast.Fc), make(map[string]string)
+			for k, v := range paramMap {
+				copiedParamMap[k] = v
+			}
+			for k, v := range paramMapStrToStr {
+				copiedMapStrToStr[k] = v
+			}
+
+			curParamMap, curParamMapStrToStr := processUniFactParamsDuplicateDeclared_notInGivenMap(ver.env, asStmt.Params, copiedMapStrToStr)
+
+			// merge curParamMap and paramMap
+			for k, v := range curParamMap {
+				copiedParamMap[k] = v
+			}
+			for k, v := range curParamMapStrToStr {
+				copiedMapStrToStr[k] = v
+			}
+
+			newDomFact, _, err := useRandomParamToReplaceOriginalParam(asStmt, copiedParamMap, copiedMapStrToStr)
+			if err != nil {
+				return env.KnownSpecFact_InUniFact{}, nil, err
+			}
+			domFacts_paramRandomized = append(domFacts_paramRandomized, newDomFact)
 		case *ast.UniFactWithIffStmt:
 			panic("not implemented")
 			// curParamMap, curParamMapStrToStr = processUniFactParamsDuplicateDeclared_notInGivenMap(ver.env, asStmt.UniFact.Params, paramMapStrToStr)
@@ -117,22 +135,48 @@ func (ver *Verifier) preprocessKnownUniFactParams(knownUniFact *env.KnownSpecFac
 			// }
 			// newDomFacts = append(newDomFacts, newDomFact)
 		default:
-			// newDomFacts = append(newDomFacts, domFact)
+			domFacts_paramRandomized = append(domFacts_paramRandomized, domFact)
 			continue
 		}
 
 	}
+
 	// TODO
 	// 这里会instantiate整个uniFact，其实then里面没必要ins
-	newStmtPtr, paramMap, err := useRandomParamToReplaceOriginalParam(knownUniFact.UniFact, paramMap, paramMapStrToStr)
-	if err != nil {
-		return env.KnownSpecFact_InUniFact{}, nil, err
+	newParams := []string{}
+	for _, param := range knownUniFact.UniFact.Params {
+		if newParam, ok := paramMapStrToStr[param]; ok {
+			newParams = append(newParams, newParam)
+		} else {
+			newParams = append(newParams, param)
+		}
 	}
+
+	newParamSets := []ast.Fc{}
+	for _, paramSet := range knownUniFact.UniFact.ParamSets {
+		inst, err := paramSet.Instantiate(paramMap)
+		if err != nil {
+			return env.KnownSpecFact_InUniFact{}, nil, err
+		}
+		newParamSets = append(newParamSets, inst)
+	}
+
+	newDomFacts := []ast.FactStmt{}
+	for _, domFact := range domFacts_paramRandomized {
+		inst, err := domFact.Instantiate(paramMap)
+		if err != nil {
+			return env.KnownSpecFact_InUniFact{}, nil, err
+		}
+		newDomFacts = append(newDomFacts, inst)
+	}
+
+	// WARNING: THEN 我这里没有处理，因为不需要处理
+	newUniFactStmt := ast.NewUniFact(newParams, newParamSets, newDomFacts, knownUniFact.UniFact.ThenFacts)
 
 	newSpecFactStmt, err := knownUniFact.SpecFact.Instantiate(paramMap)
 	if err != nil {
 		return env.KnownSpecFact_InUniFact{}, nil, err
 	}
 
-	return env.MakeKnownSpecFact_InUniFact(newSpecFactStmt.(*ast.SpecFactStmt), newStmtPtr), paramMapStrToStr, nil
+	return env.MakeKnownSpecFact_InUniFact(newSpecFactStmt.(*ast.SpecFactStmt), newUniFactStmt), paramMapStrToStr, nil
 }
