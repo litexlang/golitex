@@ -25,6 +25,15 @@ type Fc interface {
 	fc()
 	String() string
 	Instantiate(map[string]Fc) (Fc, error)
+	ToLatexString() string
+}
+
+func (f FcAtom) ToLatexString() string {
+	return string(f)
+}
+
+func (f *FcFn) ToLatexString() string {
+	return ""
 }
 
 func (f FcAtom) fc() {}
