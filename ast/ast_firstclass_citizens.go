@@ -33,7 +33,7 @@ func (f FcAtom) ToLatexString() string {
 }
 
 func (f *FcFn) ToLatexString() string {
-	return ""
+	return f.String()
 }
 
 func (f FcAtom) fc() {}
