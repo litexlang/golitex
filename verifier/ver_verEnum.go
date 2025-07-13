@@ -30,6 +30,10 @@ func (ver *Verifier) verEnumStmt(stmt *ast.EnumStmt, state VerState) (bool, erro
 		}
 	}
 
+	if ok, _ := ver.forallObjNotInSetThenTheSetIsEmpty(stmt, state); ok {
+		return true, nil
+	}
+
 	forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts := ast.TransformEnumToUniFact(stmt.CurSet, stmt.Items)
 
 	ok, err := ver.VerFactStmt(forallItemInSetEqualToOneOfGivenItems, state)
@@ -76,6 +80,27 @@ func (ver *Verifier) lenIsZeroThenEnumIsEmpty(stmt *ast.EnumStmt, state VerState
 
 	if state.requireMsg() {
 		ver.successWithMsg(stmt.String(), fmt.Sprintf("len(%s) = 0 is equivalent to %s", stmt.CurSet, stmt))
+	}
+
+	return true, nil
+}
+
+func (ver *Verifier) forallObjNotInSetThenTheSetIsEmpty(stmt *ast.EnumStmt, state VerState) (bool, error) {
+	if len(stmt.Items) != 0 {
+		return false, nil
+	}
+
+	allObjectsNotInSetThenSetIsEmpty := ast.NewUniFact([]string{"x"}, []ast.Fc{ast.FcAtom(glob.KeywordObj)}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{ast.FcAtom("x"), stmt.CurSet})})
+	ok, err := ver.VerFactStmt(allObjectsNotInSetThenSetIsEmpty, state)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
+
+	if state.requireMsg() {
+		ver.successWithMsg(stmt.String(), fmt.Sprintf("builtin rule:\n%s\nis equivalent to\n%s", allObjectsNotInSetThenSetIsEmpty, stmt))
 	}
 
 	return true, nil
