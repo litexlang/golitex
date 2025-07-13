@@ -118,3 +118,11 @@ func (defHeader *DefHeader) GetInstantiatedParamInParamSetFact(uniMap map[string
 	}
 	return paramSetFacts, nil
 }
+
+func (stmt *UniFactStmt) ParamInParamSet() []*SpecFactStmt {
+	paramSetFacts := make([]*SpecFactStmt, len(stmt.Params))
+	for i, param := range stmt.Params {
+		paramSetFacts[i] = NewInFactWithParamFc(FcAtom(param), stmt.ParamSets[i])
+	}
+	return paramSetFacts
+}
