@@ -23,6 +23,10 @@ import (
 func (ver *Verifier) instantiateUniFactWithoutDuplicate(oldStmt *ast.UniFactStmt) (*ast.UniFactStmt, map[string]ast.Fc, error) {
 	paramMap, paramMapStrToStr := processUniFactParamsDuplicateDeclared(ver.env, oldStmt.Params)
 
+	return useRandomParamToReplaceOriginalParam(oldStmt, paramMap, paramMapStrToStr)
+}
+
+func useRandomParamToReplaceOriginalParam(oldStmt *ast.UniFactStmt, paramMap map[string]ast.Fc, paramMapStrToStr map[string]string) (*ast.UniFactStmt, map[string]ast.Fc, error) {
 	if len(paramMap) == 0 {
 		return oldStmt, nil, nil
 	}
@@ -46,22 +50,84 @@ func (ver *Verifier) instantiateUniFactWithoutDuplicate(oldStmt *ast.UniFactStmt
 	return newStmtPtr, paramMap, nil
 }
 
-func (ver *Verifier) preprocessKnownUniFactParams(knownFact *env.KnownSpecFact_InUniFact) (env.KnownSpecFact_InUniFact, error) {
-	// TODO: 其实这里也没必要把 uniFact 的 then 也 instantiate 了，因为 我们不用考虑then
-	newUniFactStmt, paramMap, err := ver.instantiateUniFactWithoutDuplicate(knownFact.UniFact)
+func processUniFactParamsDuplicateDeclared(env *env.Env, params []string) (map[string]ast.Fc, map[string]string) {
+	paramMap := make(map[string]ast.Fc)
+	paramMapStrToStr := make(map[string]string)
+	for _, param := range params {
+		for {
+			newParam := param
+			if env.IsAtomDeclared(ast.FcAtom(newParam), map[string]struct{}{}) {
+				newParam = generateUndeclaredRandomName(env)
+				if !env.IsAtomDeclared(ast.FcAtom(newParam), map[string]struct{}{}) {
+					paramMap[param] = ast.FcAtom(newParam)
+					paramMapStrToStr[param] = newParam
+					break
+				}
+			} else {
+				break
+			}
+		}
+	}
+	return paramMap, paramMapStrToStr
+}
 
-	if len(paramMap) == 0 {
-		return *knownFact, nil
+func processUniFactParamsDuplicateDeclared_notInGivenMap(env *env.Env, params []string, notInMap map[string]string) (map[string]ast.Fc, map[string]string) {
+	paramMap := make(map[string]ast.Fc)
+	paramMapStrToStr := make(map[string]string)
+	for _, param := range params {
+		for {
+			newParam := param
+			_, inNotOnMap := notInMap[newParam]
+			if env.IsAtomDeclared(ast.FcAtom(newParam), map[string]struct{}{}) || inNotOnMap {
+				newParam = generateUndeclaredRandomName(env)
+
+				_, inNotOnMap = notInMap[newParam]
+				if !env.IsAtomDeclared(ast.FcAtom(newParam), map[string]struct{}{}) && !inNotOnMap {
+					paramMap[param] = ast.FcAtom(newParam)
+					paramMapStrToStr[param] = newParam
+					break
+				}
+			} else {
+				break
+			}
+		}
+	}
+	return paramMap, paramMapStrToStr
+}
+
+func (ver *Verifier) preprocessKnownUniFactParams(knownUniFact *env.KnownSpecFact_InUniFact) (env.KnownSpecFact_InUniFact, map[string]ast.Fc, error) {
+	paramMap, paramMapStrToStr := processUniFactParamsDuplicateDeclared(ver.env, knownUniFact.UniFact.Params)
+
+	for _, domFact := range knownUniFact.UniFact.DomFacts {
+		curParamMap, curParamMapStrToStr := map[string]ast.Fc{}, map[string]string{}
+		switch asStmt := domFact.(type) {
+		case *ast.UniFactStmt:
+			curParamMap, curParamMapStrToStr = processUniFactParamsDuplicateDeclared_notInGivenMap(ver.env, asStmt.Params, paramMapStrToStr)
+		case *ast.UniFactWithIffStmt:
+			curParamMap, curParamMapStrToStr = processUniFactParamsDuplicateDeclared_notInGivenMap(ver.env, asStmt.UniFact.Params, paramMapStrToStr)
+		default:
+			continue
+		}
+
+		// merge curParamMap and paramMap
+		for k, v := range curParamMap {
+			paramMap[k] = v
+		}
+		for k, v := range curParamMapStrToStr {
+			paramMapStrToStr[k] = v
+		}
 	}
 
+	// 这里会instantiate整个uniFact，其实then里面没必要ins
+	newStmtPtr, paramMap, err := useRandomParamToReplaceOriginalParam(knownUniFact.UniFact, paramMap, paramMapStrToStr)
 	if err != nil {
-		return env.KnownSpecFact_InUniFact{}, err
+		return env.KnownSpecFact_InUniFact{}, nil, err
 	}
 
-	newSpecFactStmt, err := knownFact.SpecFact.Instantiate(paramMap)
+	newSpecFactStmt, err := knownUniFact.SpecFact.Instantiate(paramMap)
 	if err != nil {
-		return env.KnownSpecFact_InUniFact{}, err
+		return env.KnownSpecFact_InUniFact{}, nil, err
 	}
 
-	return env.MakeKnownSpecFact_InUniFact(newSpecFactStmt.(*ast.SpecFactStmt), newUniFactStmt), nil
+	return env.MakeKnownSpecFact_InUniFact(newSpecFactStmt.(*ast.SpecFactStmt), newStmtPtr), paramMap, nil
 }
