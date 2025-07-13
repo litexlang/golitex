@@ -97,7 +97,9 @@ func (ver *Verifier) specFact_inLogicExpr_inUniFactMem_atEnv(curEnv *env.Env, st
 }
 
 func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch(stmt *ast.SpecFactStmt, knownFacts []env.SpecFact_InLogicExpr_InUniFact, state VerState) (bool, error) {
-	for _, knownFactUnderLogicExpr := range knownFacts {
+	for i := len(knownFacts) - 1; i >= 0; i-- {
+		knownFactUnderLogicExpr := knownFacts[i]
+
 		paramArrMap, ok, err := ver.matchStoredUniSpecWithSpec_preventDifferentVarsMatchTheSameFreeVar(env.KnownSpecFact_InUniFact{SpecFact: knownFactUnderLogicExpr.SpecFact, UniFact: knownFactUnderLogicExpr.UniFact}, stmt)
 		if err != nil {
 			return false, err
@@ -143,7 +145,7 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch(stmt *ast.SpecFac
 			continue
 		}
 
-		ok, err = ver.proveUniFactDomFacts(insKnownUniFact, state)
+		ok, err = ver.proveUniFactDomFacts(insKnownUniFact.DomFacts, state)
 		if err != nil {
 			return false, err
 		}
@@ -192,11 +194,6 @@ func (ver *Verifier) specFact_UniMem_atCurEnv(curEnv *env.Env, stmt *ast.SpecFac
 
 func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch(stmt *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InUniFact, state VerState) (bool, error) {
 	for i := len(knownFacts) - 1; i >= 0; i-- {
-		// knownFact_paramProcessed, err := ver.preprocessKnownUniFactParams(&knownFacts[i])
-		// if err != nil {
-		// 	return false, err
-		// }
-
 		knownFact_paramProcessed := knownFacts[i]
 		// 这里需要用的是 instantiated 的 knownFact
 
@@ -222,7 +219,7 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch(stmt *ast.SpecFactSt
 			continue
 		}
 
-		knownFact_paramProcessed, paramMapStrToStr, err := ver.preprocessKnownUniFactParams_ThenFactNotProcessed(&knownFact_paramProcessed)
+		randomizedUniFact, _, paramMapStrToStr, err := ver.preprocessKnownUniFactParams_ThenFactNotProcessed(knownFact_paramProcessed.UniFact)
 		if err != nil {
 			return false, err
 		}
@@ -234,7 +231,7 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch(stmt *ast.SpecFactSt
 			}
 		}
 
-		insKnownUniFact, err := ast.InstantiateUniFact(knownFact_paramProcessed.UniFact, uniConMap)
+		insKnownUniFact, err := ast.InstantiateUniFact(randomizedUniFact, uniConMap)
 		if err != nil {
 			return false, err
 		}
@@ -257,7 +254,7 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch(stmt *ast.SpecFactSt
 			continue
 		}
 
-		ok, err = ver.proveUniFactDomFacts(insKnownUniFact, state)
+		ok, err = ver.proveUniFactDomFacts(insKnownUniFact.DomFacts, state)
 		if err != nil {
 			continue
 		}
@@ -529,9 +526,9 @@ func (ver *Verifier) useKnownOrFactToProveSpecFact(knownFact *env.KnownSpecFact_
 	return true, nil
 }
 
-func (ver *Verifier) proveUniFactDomFacts(insUniFact *ast.UniFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) proveUniFactDomFacts(domFacts []ast.FactStmt, state VerState) (bool, error) {
 	if !state.isFinalRound() {
-		for _, fact := range insUniFact.DomFacts {
+		for _, fact := range domFacts {
 			asSpecFact, ok := fact.(*ast.SpecFactStmt)
 			if ok {
 				ok, err := ver.specFactOrEqualFact_SpecMode(asSpecFact, state)
@@ -553,7 +550,7 @@ func (ver *Verifier) proveUniFactDomFacts(insUniFact *ast.UniFactStmt, state Ver
 		}
 		return true, nil
 	} else {
-		for _, fact := range insUniFact.DomFacts {
+		for _, fact := range domFacts {
 			asSpecFact, ok := fact.(*ast.SpecFactStmt)
 			if !ok {
 				return false, nil
