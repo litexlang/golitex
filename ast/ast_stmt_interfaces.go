@@ -17,24 +17,23 @@ package litex_ast
 type Stmt interface {
 	stmt()
 	String() string
+	ToLatexString() string
 }
 
-func (stmt *DefObjStmt) stmt()       {}
-func (c *DefPropStmt) stmt()         {}
-func (l *DefFnStmt) stmt()           {}
-func (l *UniFactStmt) stmt()         {}
-func (p *SpecFactStmt) stmt()        {}
-func (f *ClaimProveStmt) stmt()      {}
-func (f *KnowFactStmt) stmt()        {}
-func (s *DefExistPropStmt) stmt()    {}
-func (s *HaveObjStStmt) stmt()       {}
-func (s *ProveInEachCaseStmt) stmt() {}
-func (s *KnowPropStmt) stmt()        {}
-func (s *KnowExistPropStmt) stmt()   {}
-func (s *OrStmt) stmt()              {}
-func (s *ImportDirStmt) stmt()       {}
-
-// func (s *ImportGloballyStmt) stmt()            {}
+func (stmt *DefObjStmt) stmt()                   {}
+func (c *DefPropStmt) stmt()                     {}
+func (l *DefFnStmt) stmt()                       {}
+func (l *UniFactStmt) stmt()                     {}
+func (p *SpecFactStmt) stmt()                    {}
+func (f *ClaimProveStmt) stmt()                  {}
+func (f *KnowFactStmt) stmt()                    {}
+func (s *DefExistPropStmt) stmt()                {}
+func (s *HaveObjStStmt) stmt()                   {}
+func (s *ProveInEachCaseStmt) stmt()             {}
+func (s *KnowPropStmt) stmt()                    {}
+func (s *KnowExistPropStmt) stmt()               {}
+func (s *OrStmt) stmt()                          {}
+func (s *ImportDirStmt) stmt()                   {}
 func (s *ImportFileStmt) stmt()                  {}
 func (s *ProveStmt) stmt()                       {}
 func (s *UniFactWithIffStmt) stmt()              {}
@@ -58,6 +57,7 @@ type FactStmt interface {
 	String() string
 	Instantiate(map[string]Fc) (FactStmt, error)
 	GetAtoms() []FcAtom
+	ToLatexString() string
 }
 
 func (p *SpecFactStmt) factStmt()       {}
@@ -75,6 +75,7 @@ type OrStmt_SpecStmt interface {
 	Instantiate(uniConMap map[string]Fc) (FactStmt, error)
 	ReverseIsTrue() []*SpecFactStmt
 	GetAtoms() []FcAtom
+	ToLatexString() string
 }
 
 func (s *SpecFactStmt) logicExprOrSpecFactStmt() {}
@@ -96,6 +97,7 @@ type DefStmtInterface interface {
 	defStmt()
 	stmt()
 	String() string
+	ToLatexString() string
 }
 
 func (s *DefObjStmt) defStmt()        {}
@@ -111,6 +113,7 @@ type UniFactInterface interface {
 	Instantiate(map[string]Fc) (FactStmt, error)
 	GetAtoms() []FcAtom
 	uniFact()
+	ToLatexString() string
 }
 
 func (stmt *UniFactStmt) uniFact()        {}
@@ -120,6 +123,7 @@ type ClaimInterface interface {
 	claimStmt()
 	String() string
 	stmt()
+	ToLatexString() string
 }
 
 func (stmt *ClaimProveStmt) claimStmt()                {}
@@ -133,6 +137,7 @@ type ImportStmtInterface interface {
 	importStmt()
 	stmt()
 	String() string
+	ToLatexString() string
 }
 
 func (stmt *ImportDirStmt) importStmt()  {}
@@ -146,6 +151,7 @@ type EnumSet_IntensionalSet_FactualStmtInterface interface {
 	stmt()
 	Instantiate(map[string]Fc) (FactStmt, error)
 	GetAtoms() []FcAtom
+	ToLatexString() string
 }
 
 func (stmt *EnumStmt) setDeclarationStmt()           {}
@@ -155,6 +161,7 @@ func (stmt *IntensionalSetStmt) GetPropName() Fc     { return stmt.CurSet }
 
 type FnTemplate_Or_DefObjStmtInterface interface {
 	fnTemplate_Or_DefObjStmt()
+	ToLatexString() string
 }
 
 func (stmt *DefObjStmt) fnTemplate_Or_DefObjStmt()     {}
