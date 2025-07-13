@@ -222,7 +222,7 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch(stmt *ast.SpecFactSt
 			continue
 		}
 
-		knownFact_paramProcessed, paramMapStrToStr, err := ver.preprocessKnownUniFactParams(&knownFact_paramProcessed)
+		knownFact_paramProcessed, paramMapStrToStr, err := ver.preprocessKnownUniFactParams_ThenFactNotProcessed(&knownFact_paramProcessed)
 		if err != nil {
 			return false, err
 		}
