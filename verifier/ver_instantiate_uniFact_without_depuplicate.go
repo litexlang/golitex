@@ -15,18 +15,48 @@
 package litex_verifier
 
 import (
+	"errors"
 	ast "golitex/ast"
 	env "golitex/environment"
+	glob "golitex/glob"
 )
 
 // 在用uniFact来验证specFact时，这个已知的uniFact 可能形如 forall a x: $p(a,x)。然后我代入的x刚好是a。于是整个forall被instantiate成 forall a a: $p(a,a)。然后我要验证这个 forall a a: $p(a,a) 我发现a已经在外面定义go了，于是把它替换成了乱码ABCD, 然后变成验证 forall ABCD ABCD: $p(ABCD,ABCD)。总之就错了。避免这个的办法是，让knownUniFact先把param先随机化啦，然后再代入
 func (ver *Verifier) instantiateUniFactWithoutDuplicate(oldStmt *ast.UniFactStmt) (*ast.UniFactStmt, map[string]ast.Fc, error) {
 	paramMap, paramMapStrToStr := processUniFactParamsDuplicateDeclared(ver.env, oldStmt.Params)
 
-	return useRandomParamToReplaceOriginalParam(oldStmt, paramMap, paramMapStrToStr)
+	return useRandomParamToReplaceOriginalParamInUniFact(oldStmt, paramMap, paramMapStrToStr)
 }
 
-func useRandomParamToReplaceOriginalParam(oldStmt *ast.UniFactStmt, paramMap map[string]ast.Fc, paramMapStrToStr map[string]string) (*ast.UniFactStmt, map[string]ast.Fc, error) {
+func useRandomParamToReplaceOriginalParamInUniFactWithIff(oldStmt *ast.UniFactWithIffStmt, paramMap map[string]ast.Fc, paramMapStrToStr map[string]string) (*ast.UniFactWithIffStmt, map[string]ast.Fc, error) {
+	if len(paramMap) == 0 {
+		return oldStmt, nil, nil
+	}
+
+	instantiatedOldStmt, err := oldStmt.Instantiate(paramMap)
+	if err != nil {
+		return nil, nil, err
+	}
+	instantiatedOldStmtAsUniFactIff, ok := instantiatedOldStmt.(*ast.UniFactWithIffStmt)
+	if !ok {
+		return nil, nil, errors.New("instantiatedOldStmt is not a UniFactWithIffStmt")
+	}
+
+	newParams := []string{}
+	for _, param := range instantiatedOldStmtAsUniFactIff.UniFact.Params {
+		if newParam, ok := paramMapStrToStr[param]; ok {
+			newParams = append(newParams, newParam)
+		} else {
+			newParams = append(newParams, param)
+		}
+	}
+
+	newStmtPtr := ast.NewUniFactWithIff(ast.NewUniFact(newParams, instantiatedOldStmtAsUniFactIff.UniFact.ParamSets, instantiatedOldStmtAsUniFactIff.UniFact.DomFacts, instantiatedOldStmtAsUniFactIff.UniFact.ThenFacts), instantiatedOldStmtAsUniFactIff.IffFacts)
+
+	return newStmtPtr, paramMap, nil
+}
+
+func useRandomParamToReplaceOriginalParamInUniFact(oldStmt *ast.UniFactStmt, paramMap map[string]ast.Fc, paramMapStrToStr map[string]string) (*ast.UniFactStmt, map[string]ast.Fc, error) {
 	if len(paramMap) == 0 {
 		return oldStmt, nil, nil
 	}
@@ -95,7 +125,7 @@ func processUniFactParamsDuplicateDeclared_notInGivenMap(env *env.Env, params []
 	return paramMap, paramMapStrToStr
 }
 
-func (ver *Verifier) preprocessKnownUniFactParams(knownUniFact *env.KnownSpecFact_InUniFact) (env.KnownSpecFact_InUniFact, map[string]string, error) {
+func (ver *Verifier) preprocessKnownUniFactParams_ThenFactNotProcessed(knownUniFact *env.KnownSpecFact_InUniFact) (env.KnownSpecFact_InUniFact, map[string]string, error) {
 	paramMap, paramMapStrToStr := processUniFactParamsDuplicateDeclared(ver.env, knownUniFact.UniFact.Params)
 
 	domFacts_paramRandomized := []ast.FactStmt{}
@@ -103,37 +133,32 @@ func (ver *Verifier) preprocessKnownUniFactParams(knownUniFact *env.KnownSpecFac
 	for _, domFact := range knownUniFact.UniFact.DomFacts {
 		switch asStmt := domFact.(type) {
 		case *ast.UniFactStmt:
-			copiedParamMap, copiedMapStrToStr := make(map[string]ast.Fc), make(map[string]string)
-			for k, v := range paramMap {
-				copiedParamMap[k] = v
-			}
-			for k, v := range paramMapStrToStr {
-				copiedMapStrToStr[k] = v
-			}
+			copiedParamMap, copiedMapStrToStr := glob.CopyMap(paramMap), glob.CopyMap(paramMapStrToStr)
 
 			curParamMap, curParamMapStrToStr := processUniFactParamsDuplicateDeclared_notInGivenMap(ver.env, asStmt.Params, copiedMapStrToStr)
 
 			// merge curParamMap and paramMap
-			for k, v := range curParamMap {
-				copiedParamMap[k] = v
-			}
-			for k, v := range curParamMapStrToStr {
-				copiedMapStrToStr[k] = v
-			}
+			copiedParamMap = glob.MergeMap(curParamMap, copiedParamMap)
+			copiedMapStrToStr = glob.MergeMap(curParamMapStrToStr, copiedMapStrToStr)
 
-			newDomFact, _, err := useRandomParamToReplaceOriginalParam(asStmt, copiedParamMap, copiedMapStrToStr)
+			newDomFact, _, err := useRandomParamToReplaceOriginalParamInUniFact(asStmt, copiedParamMap, copiedMapStrToStr)
 			if err != nil {
 				return env.KnownSpecFact_InUniFact{}, nil, err
 			}
 			domFacts_paramRandomized = append(domFacts_paramRandomized, newDomFact)
 		case *ast.UniFactWithIffStmt:
-			panic("not implemented")
-			// curParamMap, curParamMapStrToStr = processUniFactParamsDuplicateDeclared_notInGivenMap(ver.env, asStmt.UniFact.Params, paramMapStrToStr)
-			// newDomFact, _, err := useRandomParamToReplaceOriginalParam(asStmt.UniFact, curParamMap, curParamMapStrToStr)
-			// if err != nil {
-			// 	return env.KnownSpecFact_InUniFact{}, nil, err
-			// }
-			// newDomFacts = append(newDomFacts, newDomFact)
+			copiedParamMap, copiedMapStrToStr := glob.CopyMap(paramMap), glob.CopyMap(paramMapStrToStr)
+
+			curParamMap, curParamMapStrToStr := processUniFactParamsDuplicateDeclared_notInGivenMap(ver.env, asStmt.UniFact.Params, copiedMapStrToStr)
+
+			copiedParamMap = glob.MergeMap(curParamMap, copiedParamMap)
+			copiedMapStrToStr = glob.MergeMap(curParamMapStrToStr, copiedMapStrToStr)
+
+			newDomFact, _, err := useRandomParamToReplaceOriginalParamInUniFactWithIff(asStmt, copiedParamMap, copiedMapStrToStr)
+			if err != nil {
+				return env.KnownSpecFact_InUniFact{}, nil, err
+			}
+			domFacts_paramRandomized = append(domFacts_paramRandomized, newDomFact)
 		default:
 			domFacts_paramRandomized = append(domFacts_paramRandomized, domFact)
 			continue
@@ -141,8 +166,6 @@ func (ver *Verifier) preprocessKnownUniFactParams(knownUniFact *env.KnownSpecFac
 
 	}
 
-	// TODO
-	// 这里会instantiate整个uniFact，其实then里面没必要ins
 	newParams := []string{}
 	for _, param := range knownUniFact.UniFact.Params {
 		if newParam, ok := paramMapStrToStr[param]; ok {
