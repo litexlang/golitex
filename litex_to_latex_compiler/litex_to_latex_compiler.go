@@ -12,23 +12,4 @@
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
-package litex_sys
-
-import (
-	"fmt"
-	"testing"
-	"time"
-)
-
-func Test_File(t *testing.T) {
-	startTime := time.Now()
-	fileName := "../examples/test_codes/tmp3.lix"
-	msg, signal, err := RunFile(fileName)
-	if err != nil {
-		t.Errorf("failed to run file %s\n", fileName)
-	}
-	fmt.Println(msg)
-	fmt.Println(signal)
-	executionTime := time.Since(startTime)
-	fmt.Printf("execution time: %s\n", executionTime)
-}
+package litex_to_latex_compiler
