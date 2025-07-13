@@ -24,15 +24,22 @@ func (stmt *KnowFactStmt) String() string {
 	var builder strings.Builder
 
 	builder.WriteString(glob.KeywordKnow)
-	builder.WriteString(glob.KeySymbolColon)
-	builder.WriteByte('\n')
 
-	factStrSlice := make([]string, len(stmt.Facts))
-	for i := range len(stmt.Facts) {
-		factStrSlice[i] = glob.SplitLinesAndAdd4NIndents(stmt.Facts[i].String(), 1)
+	if len(stmt.Facts) > 1 {
+		builder.WriteString(glob.KeySymbolColon)
+		builder.WriteByte('\n')
+
+		factStrSlice := make([]string, len(stmt.Facts))
+		for i := range len(stmt.Facts) {
+			factStrSlice[i] = glob.SplitLinesAndAdd4NIndents(stmt.Facts[i].String(), 1)
+		}
+		builder.WriteString(strings.Join(factStrSlice, "\n"))
+		return builder.String()
+	} else {
+		builder.WriteString(" ")
+		builder.WriteString(stmt.Facts[0].String())
+		return builder.String()
 	}
-	builder.WriteString(strings.Join(factStrSlice, "\n"))
-	return builder.String()
 }
 
 func (stmt *SpecFactStmt) String() string {

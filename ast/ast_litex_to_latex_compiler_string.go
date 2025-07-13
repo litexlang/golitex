@@ -14,13 +14,58 @@
 
 package litex_ast
 
-func (s *DefObjStmt) ToLatexString() string                      { return "" }
-func (c *DefPropStmt) ToLatexString() string                     { return "" }
-func (l *DefFnStmt) ToLatexString() string                       { return "" }
-func (l *UniFactStmt) ToLatexString() string                     { return "" }
-func (p *SpecFactStmt) ToLatexString() string                    { return "" }
-func (f *ClaimProveStmt) ToLatexString() string                  { return "" }
-func (f *KnowFactStmt) ToLatexString() string                    { return "" }
+import (
+	glob "golitex/glob"
+	"strings"
+)
+
+func (s *DefObjStmt) ToLatexString() string  { return "" }
+func (c *DefPropStmt) ToLatexString() string { return "" }
+func (l *DefFnStmt) ToLatexString() string   { return "" }
+func (l *UniFactStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("\\forall ")
+	paramSetFacts := l.ParamInParamSet()
+	for _, paramSetFact := range paramSetFacts {
+		builder.WriteString(paramSetFact.ToLatexString())
+		builder.WriteString(", ")
+	}
+	builder.WriteString("when ")
+	for _, domFact := range l.DomFacts {
+		builder.WriteString(domFact.ToLatexString())
+		builder.WriteString(", ")
+	}
+	builder.WriteString("then ")
+	thenFactToLatexStr := []string{}
+	for _, fact := range l.ThenFacts {
+		thenFactToLatexStr = append(thenFactToLatexStr, fact.ToLatexString())
+	}
+	builder.WriteString(strings.Join(thenFactToLatexStr, ", "))
+	builder.WriteString(".")
+	return builder.String()
+}
+func (p *SpecFactStmt) ToLatexString() string   { return "" }
+func (f *ClaimProveStmt) ToLatexString() string { return "" }
+func (f *KnowFactStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("Assume ")
+
+	if len(f.Facts) > 1 {
+		builder.WriteString(glob.KeySymbolColon)
+		builder.WriteByte('\n')
+
+		factStrSlice := make([]string, len(f.Facts))
+		for i := range len(f.Facts) {
+			factStrSlice[i] = glob.SplitLinesAndAdd4NIndents(f.Facts[i].ToLatexString(), 1)
+		}
+		builder.WriteString(strings.Join(factStrSlice, "\n"))
+		return builder.String()
+	} else {
+		builder.WriteString(" ")
+		builder.WriteString(f.Facts[0].ToLatexString())
+		return builder.String()
+	}
+}
 func (s *DefExistPropStmt) ToLatexString() string                { return "" }
 func (s *HaveObjStStmt) ToLatexString() string                   { return "" }
 func (s *ProveInEachCaseStmt) ToLatexString() string             { return "" }
