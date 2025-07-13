@@ -95,7 +95,7 @@ func processUniFactParamsDuplicateDeclared_notInGivenMap(env *env.Env, params []
 	return paramMap, paramMapStrToStr
 }
 
-func (ver *Verifier) preprocessKnownUniFactParams(knownUniFact *env.KnownSpecFact_InUniFact) (env.KnownSpecFact_InUniFact, map[string]ast.Fc, error) {
+func (ver *Verifier) preprocessKnownUniFactParams(knownUniFact *env.KnownSpecFact_InUniFact) (env.KnownSpecFact_InUniFact, map[string]string, error) {
 	paramMap, paramMapStrToStr := processUniFactParamsDuplicateDeclared(ver.env, knownUniFact.UniFact.Params)
 
 	for _, domFact := range knownUniFact.UniFact.DomFacts {
@@ -103,21 +103,26 @@ func (ver *Verifier) preprocessKnownUniFactParams(knownUniFact *env.KnownSpecFac
 		switch asStmt := domFact.(type) {
 		case *ast.UniFactStmt:
 			curParamMap, curParamMapStrToStr = processUniFactParamsDuplicateDeclared_notInGivenMap(ver.env, asStmt.Params, paramMapStrToStr)
+			// newDomFact, _, err := useRandomParamToReplaceOriginalParam(asStmt, curParamMap, curParamMapStrToStr)
+			// if err != nil {
+			// 	return env.KnownSpecFact_InUniFact{}, nil, err
+			// }
+			// newDomFacts = append(newDomFacts, newDomFact)
 		case *ast.UniFactWithIffStmt:
-			curParamMap, curParamMapStrToStr = processUniFactParamsDuplicateDeclared_notInGivenMap(ver.env, asStmt.UniFact.Params, paramMapStrToStr)
+			panic("not implemented")
+			// curParamMap, curParamMapStrToStr = processUniFactParamsDuplicateDeclared_notInGivenMap(ver.env, asStmt.UniFact.Params, paramMapStrToStr)
+			// newDomFact, _, err := useRandomParamToReplaceOriginalParam(asStmt.UniFact, curParamMap, curParamMapStrToStr)
+			// if err != nil {
+			// 	return env.KnownSpecFact_InUniFact{}, nil, err
+			// }
+			// newDomFacts = append(newDomFacts, newDomFact)
 		default:
+			// newDomFacts = append(newDomFacts, domFact)
 			continue
 		}
 
-		// merge curParamMap and paramMap
-		for k, v := range curParamMap {
-			paramMap[k] = v
-		}
-		for k, v := range curParamMapStrToStr {
-			paramMapStrToStr[k] = v
-		}
 	}
-
+	// TODO
 	// 这里会instantiate整个uniFact，其实then里面没必要ins
 	newStmtPtr, paramMap, err := useRandomParamToReplaceOriginalParam(knownUniFact.UniFact, paramMap, paramMapStrToStr)
 	if err != nil {
@@ -129,5 +134,5 @@ func (ver *Verifier) preprocessKnownUniFactParams(knownUniFact *env.KnownSpecFac
 		return env.KnownSpecFact_InUniFact{}, nil, err
 	}
 
-	return env.MakeKnownSpecFact_InUniFact(newSpecFactStmt.(*ast.SpecFactStmt), newStmtPtr), paramMap, nil
+	return env.MakeKnownSpecFact_InUniFact(newSpecFactStmt.(*ast.SpecFactStmt), newStmtPtr), paramMapStrToStr, nil
 }

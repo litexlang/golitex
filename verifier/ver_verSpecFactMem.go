@@ -222,6 +222,18 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch(stmt *ast.SpecFactSt
 			continue
 		}
 
+		knownFact_paramProcessed, paramMapStrToStr, err := ver.preprocessKnownUniFactParams(&knownFact_paramProcessed)
+		if err != nil {
+			return false, err
+		}
+
+		for k, v := range uniConMap {
+			if newParam, ok := paramMapStrToStr[k]; ok {
+				uniConMap[newParam] = v
+				delete(uniConMap, k)
+			}
+		}
+
 		insKnownUniFact, err := ast.InstantiateUniFact(knownFact_paramProcessed.UniFact, uniConMap)
 		if err != nil {
 			return false, err
