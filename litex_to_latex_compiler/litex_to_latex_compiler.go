@@ -13,3 +13,31 @@
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
 package litex_to_latex_compiler
+
+import (
+	parser "golitex/parser"
+	"os"
+	"strings"
+)
+
+func CompileStmtToLatexString(litexCode string) (string, error) {
+	stmtSlice, err := parser.ParseSourceCode(litexCode)
+	if err != nil {
+		return "", err
+	}
+
+	latexStr := []string{}
+	for _, stmt := range stmtSlice {
+		latexStr = append(latexStr, stmt.ToLatexString())
+	}
+
+	return strings.Join(latexStr, "\n"), nil
+}
+
+func CompileStmtToLatexString_StoreToFile(litexCode string, fileName string) {
+	latexStr, err := CompileStmtToLatexString(litexCode)
+	if err != nil {
+		panic(err)
+	}
+	os.WriteFile(fileName, []byte(latexStr), 0644)
+}

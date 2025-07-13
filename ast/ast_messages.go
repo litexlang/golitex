@@ -23,6 +23,10 @@ import (
 func (stmt *KnowFactStmt) String() string {
 	var builder strings.Builder
 
+	if len(stmt.Facts) == 0 {
+		return ""
+	}
+
 	builder.WriteString(glob.KeywordKnow)
 
 	if len(stmt.Facts) > 1 {
