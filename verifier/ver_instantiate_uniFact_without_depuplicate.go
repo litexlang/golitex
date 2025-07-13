@@ -125,7 +125,7 @@ func processUniFactParamsDuplicateDeclared_notInGivenMap(env *env.Env, params []
 	return paramMap, paramMapStrToStr
 }
 
-func (ver *Verifier) preprocessKnownUniFactParams_ThenFactNotProcessed(knownUniFact *ast.UniFactStmt) (*ast.UniFactStmt, map[string]ast.Fc, map[string]string, error) {
+func (ver *Verifier) preprocessKnownUniFactParams_ThenFactNotProcessed(knownUniFact *ast.UniFactStmt) (*uniFactWithoutThenFacts, map[string]ast.Fc, map[string]string, error) {
 	paramMap, paramMapStrToStr := processUniFactParamsDuplicateDeclared(ver.env, knownUniFact.Params)
 
 	domFacts_paramRandomized := []ast.FactStmt{}
@@ -193,7 +193,51 @@ func (ver *Verifier) preprocessKnownUniFactParams_ThenFactNotProcessed(knownUniF
 		newDomFacts = append(newDomFacts, inst)
 	}
 
-	newUniFactStmt := ast.NewUniFact(newParams, newParamSets, newDomFacts, knownUniFact.ThenFacts)
+	newUniFactWithoutThen := newUniFactWithoutThenFacts(newParams, newParamSets, newDomFacts)
 
-	return newUniFactStmt, paramMap, paramMapStrToStr, nil
+	return newUniFactWithoutThen, paramMap, paramMapStrToStr, nil
+}
+
+type uniFactWithoutThenFacts struct {
+	Params    []string
+	ParamSets []ast.Fc
+	DomFacts  []ast.FactStmt
+}
+
+func newUniFactWithoutThenFacts(params []string, paramSets []ast.Fc, domFacts []ast.FactStmt) *uniFactWithoutThenFacts {
+	return &uniFactWithoutThenFacts{
+		Params:    params,
+		ParamSets: paramSets,
+		DomFacts:  domFacts,
+	}
+}
+
+func instantiateUniFactWithoutThenFacts(u *uniFactWithoutThenFacts, paramMap map[string]ast.Fc) (*uniFactWithoutThenFacts, error) {
+	instantiatedParamSets := []ast.Fc{}
+	for _, paramSet := range u.ParamSets {
+		instantiatedParamSet, err := paramSet.Instantiate(paramMap)
+		if err != nil {
+			return nil, err
+		}
+		instantiatedParamSets = append(instantiatedParamSets, instantiatedParamSet)
+	}
+
+	instantiatedDomFacts := []ast.FactStmt{}
+	for _, domFact := range u.DomFacts {
+		instantiatedDomFact, err := domFact.Instantiate(paramMap)
+		if err != nil {
+			return nil, err
+		}
+		instantiatedDomFacts = append(instantiatedDomFacts, instantiatedDomFact)
+	}
+
+	return newUniFactWithoutThenFacts(u.Params, instantiatedParamSets, instantiatedDomFacts), nil
+}
+
+func (u *uniFactWithoutThenFacts) ParamInParamSetFacts(paramMap map[string]ast.Fc) []*ast.SpecFactStmt {
+	paramSetFacts := make([]*ast.SpecFactStmt, len(u.Params))
+	for i, param := range u.Params {
+		paramSetFacts[i] = ast.NewInFactWithParamFc(paramMap[param], u.ParamSets[i])
+	}
+	return paramSetFacts
 }
