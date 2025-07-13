@@ -4,41 +4,10 @@
 know forall x, y set:
     x = y
     iff:
-        forall a2 x:
-            a2 $in y
-        forall a2 y:
-            a2 $in x
-
-"""
-know @equal_sets_have_the_same_elements(x, y set):
-    forall a2 x:
-        a2 $in y
-    forall a2 y:
-        a2 $in x
-    then:
-        x = y
-"""
-"""
-know forall x,y set, a obj:
-	x = y
-    a $in x
-    then:
-        a $in y
-
-know forall x,y set, a obj:
-	x = y
-    a $in y
-    then:
-        a $in x
-
-know forall x, y set:
-    forall a x:
-        a $in y
-    forall a y:
-        a $in x
-    then:
-        x = y
-"""
+        forall a x:
+            a $in y
+        forall a y:
+            a $in x
 
 know @two_sets_are_equal_iff_they_have_the_same_elements(x, y set):
     forall a x:
@@ -198,6 +167,7 @@ know:
         not x $in b
         then:
             x $in difference(a, b)
+Using have keyword can make sure existence of such a set.
 """
 have difference(s1 set, s2 set) := x s1:
     not x $in s2
@@ -207,8 +177,7 @@ claim:
 	forall a set, s set:
         s := {}
         then:
-            forall x union(a, s):
-                x $in a
+            union(a, s) = a
     prove:
         claim:
         	forall x union(a, s):
@@ -224,25 +193,22 @@ claim:
 	forall a set, s set:
         s := {}
         then:
-            forall x intersection(a, s):
-                x $in a
+            forall x obj:
+            	not x $in intersection(a,s)
     prove:
         claim:
-        	forall x intersection(a, s):
-                x $in a
+            forall x obj:
+                not x $in intersection(a, s)
             prove_by_contradiction:
-            	not x $in a
+                x $in intersection(a, s)
                 $obj_in_intersection_is_in_both_sets(a, s, x)
                 x $in s
-                not x $in s
+        
 
 # Union of a set and itself is the set itself
 claim:
     forall a set:
-        forall x union(a, a):
-            x $in a
-        forall x a:
-            x $in union(a, a)
+        union(a, a) = a
     prove:
         claim:
         	forall x union(a, a):
