@@ -57,8 +57,8 @@ prove:
             not 1 >= x
 
 prove:
-    have s := {1, 2, 3}
-    have s2 := x N:
+    have set s := {1, 2, 3}
+    have set s2 := x N:
         x > 5
 
     s := {3, 2, 1}
@@ -95,7 +95,7 @@ prove:
 
 # have set fn
 prove:
-    have exclude(s1, s2 set) := x s1:
+    have set fn exclude(s1, s2 set) := x s1:
         not x $in s2
 
     forall s1, s2 set:
