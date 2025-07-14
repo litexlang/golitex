@@ -241,6 +241,7 @@ prove:
     x $in A
     $P(x, y)
 
+# {1,2,3,4} \ {2,4,6} = {1,3}
 prove:
 	have set s := {1,2,3,4}
     have set t := {2,4,6}
@@ -287,32 +288,44 @@ prove:
             4 $in difference(s, t)
             4 $in s
             not 4 $in t
+
+    forall x difference(s, t):
+        x $in s
+        or:
+            x = 1
+            x = 2
+            x = 3
+            x = 4
+
     claim:
-        forall x difference(s, t):
-            x $in u
+        forall k difference(s, t):
+            or:
+                k = 1
+                k = 3
+        prove_by_contradiction:
+            not k = 1
+            not k = 3
+            not k = 2
+            not k = 4
+            or:
+                k = 1
+                k  = 2
+                k = 3
+                k = 4
+
+    claim:
+        forall k difference(s, t):
+            k $in u
         prove:
-            claim:
-            	forall x difference(s, t):
-                    or:
-                    	x = 1
-                        x = 3
-                prove_by_contradiction:
-                    not x = 1
-                    not x = 3
-                    not x = 2
-                    not x = 4
-                    or:
-                        x = 1
-                        x  = 2
-                        x = 3
-                        x = 4
-                prove_in_each_case:
-                    or:
-                        x = 1
-                        x = 3
-                    then:
-                        x $in u
-                    prove:
-                        x $in u
-                    prove:
-                        x $in u
+            prove_in_each_case:
+                or:
+                    k = 1
+                    k = 3
+                then:
+                    k $in u
+                prove:
+                    k $in u
+                prove:
+                    k $in u
+
+    difference(s, t) = u

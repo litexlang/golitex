@@ -1,23 +1,27 @@
-obj a N
+obj a N, s set
 know:
-	or:
-    	a = 1
-        a = 2
-        a = 3
-        a = 4
-know not a = 1
-know not a = 2
-
-claim:
-    or:
-    	a = 3
-        a = 4
-    prove_by_contradiction:
-        not a = 3
-        not a = 4
+    forall a s:
         or:
-        	a = 1
+            a = 1
             a = 2
             a = 3
             a = 4
+    forall a s:
+        not a = 1
+        not a = 2
+
+claim:
+    forall k s:
+        or:
+            k = 3
+            k = 4
+    prove_by_contradiction:
+        not k = 3
+        not k = 4
+        or:
+        	k = 1
+            k = 2
+            k = 3
+            k = 4
+
     	
