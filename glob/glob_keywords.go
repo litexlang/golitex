@@ -58,6 +58,8 @@ const (
 	KeywordExistPropPreImageByReplacement = "exist_prop_preimage_by_replacement"
 	KeywordExistFnPreImageByReplacement   = "exist_fn_preimage_by_replacement"
 	KeywordFnTemplateTemplate             = "fn_template_template"
+
+	KeywordSetProduct = "set_product"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -103,6 +105,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordExistPropPreImageByReplacement: {},
 	KeywordExistFnPreImageByReplacement:   {},
 	KeywordFnTemplateTemplate:             {},
+	KeywordSetProduct:                     {},
 }
 
 const (

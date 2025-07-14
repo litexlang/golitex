@@ -149,18 +149,6 @@ prove:
     $union_of_N_greater_than_n_and_less_than_or_equal_to_n_is_N(0, a, b)
     union(a, b) = N
 
-"""
-Declaration of difference(s1 set, s2 set) in have statement is equivalent to:
-know:
-    forall x difference(a, b):
-        x $in a
-        not x $in b
-    forall x a:
-        not x $in b
-        then:
-            x $in difference(a, b)
-Using have keyword can make sure existence of such a set.
-"""
 have difference(s1 set, s2 set) := x s1:
     not x $in s2
 

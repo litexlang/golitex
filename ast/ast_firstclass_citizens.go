@@ -68,10 +68,6 @@ func hasBuiltinOptAndToString(f *FcFn) (bool, string) {
 		return true, fmt.Sprintf("%s[%s]", f.Params[0], f.Params[1])
 	}
 
-	if string(ptr) == glob.GetIndexOfOp {
-		return true, fmt.Sprintf("%s[[%s]]", f.Params[0], f.Params[1])
-	}
-
 	if string(ptr) == glob.KeySymbolMinus {
 		return true, fmt.Sprintf("(%s %s %s)", f.Params[0], string(ptr), f.Params[1])
 	}
