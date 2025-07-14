@@ -8,19 +8,22 @@ prove:
         then:
             $last_two_objects_are_equal(x, y1, y2)
 
-    obj s set_defined_by_replacement(A, B, P)
+    have set s = set_defined_by_replacement(A, B, P)
     forall x set_defined_by_replacement(A, B, P):
-        $exist_prop_preimage_by_replacement(A, B, P, x)
+        $obj_exist_as_preimage_of_prop(A, B, P, x)
 
-    obj y set_defined_by_replacement(A, B, P)
+    obj y set_defined_by_replacement(A, B, P) # set_defined_by_replacement 像1,2,3一样，有内置的一些功能；比如这里一旦知道 y $in set_defined_by_replacement(A, B, P)，那么 y $in B 就自动成立
     y $in B
 
-    have x st $exist_prop_preimage_by_replacement(A, B, P, y)
+    have x st $obj_exist_as_preimage_of_prop(A, B, P, y)
 
     x $in A
     $P(x, y)
 
-prove: 
+
+
+prove:
+
     obj A set, B set
     prop P(x A, y B)
 
@@ -30,7 +33,7 @@ prove:
         then:
             $last_two_objects_are_equal(x, y1, y2)
 
-    have y  := set_defined_by_replacement(A, B, P)
+    have set y = set_defined_by_replacement(A, B, P)
 
     forall x y:
         x $in B
