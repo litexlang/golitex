@@ -46,7 +46,6 @@ const ContinueExecutionIfExecUnknown bool = false
 const MaxLogicExprFactsNum int = 8
 
 const AtIndexOp string = KeySymbolLeftBracket
-const GetIndexOfOp string = KeySymbolLeftBracket + KeySymbolLeftBracket
 
 const BuiltinPkgName string = ""
 
