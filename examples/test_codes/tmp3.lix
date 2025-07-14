@@ -1,39 +1,23 @@
-prove:
-    have A set, B set
-    prop P(x A, y B)
+obj a N
+know:
+	or:
+    	a = 1
+        a = 2
+        a = 3
+        a = 4
+know not a = 1
+know not a = 2
 
-    know forall x A, y1, y2 B:
-        $P(x, y1)
-        $P(x, y2)
-        then:
-            $last_two_objects_are_equal(x, y1, y2)
-
-    obj s set_defined_by_replacement(A, B, P)
-    forall x set_defined_by_replacement(A, B, P):
-        $obj_exist_as_preimage_of_prop(A, B, P, x)
-
-    obj y set_defined_by_replacement(A, B, P)
-    y $in B
-
-    have x st $obj_exist_as_preimage_of_prop(A, B, P, y)
-
-    x $in A
-    $P(x, y)
-
-
-
-prove:
-
-    obj A set, B set
-    prop P(x A, y B)
-
-    know forall x A, y1, y2 B:
-        $P(x, y1)
-        $P(x, y2)
-        then:
-            $last_two_objects_are_equal(x, y1, y2)
-
-    have set y = set_defined_by_replacement(A, B, P)
-
-    forall x y:
-        x $in B
+claim:
+    or:
+    	a = 3
+        a = 4
+    prove_by_contradiction:
+        not a = 3
+        not a = 4
+        or:
+        	a = 1
+            a = 2
+            a = 3
+            a = 4
+    	
