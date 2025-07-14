@@ -54,12 +54,13 @@ const (
 	KeywordStruct               = "struct" // 意义：让then section中，没有涉及到所有的自由变量的那些事实，能用一个struct instance就能传入很多变量
 	// KeywordHaveSetByReplacement           = "have_set_by_replacement"
 	KeywordExistIn                        = "exist_in"
-	KeywordSetDefinedByReplacement        = "set_defined_by_replacement"
-	KeywordExistPropPreImageByReplacement = "exist_prop_preimage_by_replacement"
-	KeywordExistFnPreImageByReplacement   = "exist_fn_preimage_by_replacement"
+	KeywordSetDefinedByReplacement        = "set_defined_by_replacement"    // 这是一个函数，返回一个集合，而不是一个prop
+	KeywordExistPropPreImageByReplacement = "obj_exist_as_preimage_of_prop" //"exist_prop_preimage_by_replacement"
+	KeywordExistFnPreImageByReplacement   = "obj_exist_as_preimage_of_fn"   // "exist_fn_preimage_by_replacement"
 	KeywordFnTemplateTemplate             = "fn_template_template"
 
 	KeywordSetProduct = "set_product"
+	// KeywordExistSetByAxiomOfReplacement = "exist_set_by_axiom_of_replacement"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -106,6 +107,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordExistFnPreImageByReplacement:   {},
 	KeywordFnTemplateTemplate:             {},
 	KeywordSetProduct:                     {},
+	// KeywordExistSetByAxiomOfReplacement:   {},
 }
 
 const (
