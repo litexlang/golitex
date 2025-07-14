@@ -20,7 +20,7 @@ prove:
     x $in A
     $P(x, y)
 
-prove:
+prove: 
     obj A set, B set
     prop P(x A, y B)
 

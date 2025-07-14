@@ -15,7 +15,7 @@ prop is_empty_set(x set):
         not a $in x
 
 # There is a builtin-in empty set in Litex
-have builtin_empty_set := {}
+have set builtin_empty_set := {}
 forall x obj:
     not x $in builtin_empty_set
 
@@ -34,7 +34,7 @@ claim:
         $is_empty_set(s)
         
 # You can define a finite set of items like this:
-have set_of_one_two_three := {1, 2, 3}
+have set set_of_one_two_three := {1, 2, 3}
 
 # Pairwise Union
 fn union(s1 set, s2 set) set
@@ -84,8 +84,8 @@ prop is_subset_of(s1 set, s2 set):
         x $in s2
 
 prove:
-    have a := {1, 2, 4}
-    have b := {1, 2, 3, 4, 5}
+    have set a := {1, 2, 4}
+    have set b := {1, 2, 3, 4, 5}
     prove_over_finite_set:
         forall x a:
             x $in b
@@ -109,7 +109,7 @@ claim:
 prove:
     obj A set
     prop P(x A)
-	have a := x A:
+	have set a := x A:
         $P(x)
     forall x A:
         $P(x)
@@ -142,14 +142,14 @@ know @union_of_N_greater_than_n_and_less_than_or_equal_to_n_is_N(n N, s1 set, s2
 		union(s1, s2) = N
 
 prove:
-    have a := x N:
+    have set a := x N:
         x > 0
-    have b := x N:
+    have set b := x N:
         x <= 0
     $union_of_N_greater_than_n_and_less_than_or_equal_to_n_is_N(0, a, b)
     union(a, b) = N
 
-have difference(s1 set, s2 set) := x s1:
+have set fn difference(s1 set, s2 set) := x s1:
     not x $in s2
 
 # Union of a set and the empty set is the set itself

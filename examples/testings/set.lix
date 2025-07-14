@@ -12,7 +12,7 @@ prove:
                 x $in finite_set
                 len(x) <= len(y)
 
-    have y := {1, 2, 3}
+    have set y := {1, 2, 3}
 
     have x set
 
