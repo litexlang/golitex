@@ -99,7 +99,40 @@ func (c *DefPropStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (l *DefFnStmt) ToLatexString() string { return "" }
+func (l *DefFnStmt) ToLatexString() string {
+	var builder strings.Builder
+
+	builder.WriteString("Suppose we have a function: ")
+	builder.WriteString(l.FnTemplateStmt.DefHeader.NameWithParamsLatexString())
+	builder.WriteString(".")
+
+	if len(l.FnTemplateStmt.DomFacts) == 0 && len(l.FnTemplateStmt.ThenFacts) == 0 {
+		return builder.String()
+	}
+
+	if len(l.FnTemplateStmt.DomFacts) > 0 {
+		builder.WriteString("Its domain is: ")
+		domFactStrSlice := make([]string, len(l.FnTemplateStmt.DomFacts))
+		for i := range len(l.FnTemplateStmt.DomFacts) {
+			domFactStrSlice[i] = l.FnTemplateStmt.DomFacts[i].ToLatexString()
+		}
+		builder.WriteString(strings.Join(domFactStrSlice, ", "))
+		builder.WriteString(".")
+	}
+
+	if len(l.FnTemplateStmt.ThenFacts) > 0 {
+		builder.WriteString("We also suppose the function has the following properties: ")
+		thenFactStrSlice := make([]string, len(l.FnTemplateStmt.ThenFacts))
+		for i := range len(l.FnTemplateStmt.ThenFacts) {
+			thenFactStrSlice[i] = l.FnTemplateStmt.ThenFacts[i].ToLatexString()
+		}
+		builder.WriteString(strings.Join(thenFactStrSlice, ", "))
+		builder.WriteString(".")
+	}
+
+	return builder.String()
+}
+
 func (l *UniFactStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("\\forall ")
@@ -122,12 +155,32 @@ func (l *UniFactStmt) ToLatexString() string {
 	builder.WriteString(".")
 	return builder.String()
 }
+
 func (p *SpecFactStmt) ToLatexString() string {
 	str := p.String()
 	str = strings.TrimPrefix(str, glob.KeySymbolDollar)
 	return str
 }
-func (f *ClaimProveStmt) ToLatexString() string { return "" }
+
+func (f *ClaimProveStmt) ToLatexString() string {
+	var builder strings.Builder
+
+	builder.WriteString("We claim that ")
+	builder.WriteString(f.ToCheckFact.ToLatexString())
+	builder.WriteString(".")
+
+	if len(f.Proofs) > 0 {
+		builder.WriteString("[Proof] ")
+		proofStrSlice := make([]string, len(f.Proofs))
+		for i := range len(f.Proofs) {
+			proofStrSlice[i] = f.Proofs[i].ToLatexString()
+		}
+		builder.WriteString(strings.Join(proofStrSlice, ", "))
+		builder.WriteString(".")
+	}
+
+	return builder.String()
+}
 func (f *KnowFactStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("Assume ")
@@ -148,6 +201,7 @@ func (f *KnowFactStmt) ToLatexString() string {
 		return builder.String()
 	}
 }
+
 func (s *DefExistPropStmt) ToLatexString() string                { return "" }
 func (s *HaveObjStStmt) ToLatexString() string                   { return "" }
 func (s *ProveInEachCaseStmt) ToLatexString() string             { return "" }
