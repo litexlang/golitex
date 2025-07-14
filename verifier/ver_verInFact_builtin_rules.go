@@ -317,6 +317,14 @@ func (ver *Verifier) falseInFactBuiltinRules(stmt *ast.SpecFactStmt, state VerSt
 		return true, nil
 	}
 
+	ok, err = ver.objNotInSetWhenAllItemsInThatSetAreNotEqualToIt(stmt, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
 	return false, nil
 }
 
@@ -364,5 +372,22 @@ func (ver *Verifier) fcIsFiniteSet(stmt *ast.SpecFactStmt, state VerState) (bool
 		return true, nil
 	}
 
+	return false, nil
+}
+
+func (ver *Verifier) objNotInSetWhenAllItemsInThatSetAreNotEqualToIt(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	if stmt.TypeEnum != ast.FalsePure {
+		return false, nil
+	}
+
+	notAllItemsInThatSetAreNotEqualToIt := ast.NewUniFact([]string{"x"}, []ast.Fc{stmt.Params[1]}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{ast.FcAtom("x"), stmt.Params[0]})})
+
+	ok, err := ver.VerFactStmt(notAllItemsInThatSetAreNotEqualToIt, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
 	return false, nil
 }
