@@ -46,13 +46,6 @@ func (tb *tokenBlock) squareBracketExpr() (ast.Fc, error) {
 
 	tb.header.skip(glob.KeySymbolLeftBracket)
 
-	isAtIndexOp := true
-
-	if tb.header.is(glob.KeySymbolLeftBracket) {
-		tb.header.skip(glob.KeySymbolLeftBracket)
-		isAtIndexOp = false
-	}
-
 	if tb.header.ExceedEnd() {
 		return nil, fmt.Errorf("unexpected end of input after '['")
 	}
@@ -66,23 +59,11 @@ func (tb *tokenBlock) squareBracketExpr() (ast.Fc, error) {
 		return nil, fmt.Errorf("unexpected end of input after ']'")
 	}
 
-	if isAtIndexOp {
-		if err := tb.header.skip(glob.KeySymbolRightBracket); err != nil {
-			return nil, fmt.Errorf("expected '%s': %s", glob.KeySymbolRightBracket, err)
-		}
-
-		return ast.NewFcFn(ast.FcAtom(glob.AtIndexOp), []ast.Fc{fc, fcInBracket}), nil
-	} else {
-		if err := tb.header.skip(glob.KeySymbolRightBracket); err != nil {
-			return nil, fmt.Errorf("expected '%s': %s", glob.KeySymbolRightBracket, err)
-		}
-
-		if err := tb.header.skip(glob.KeySymbolRightBracket); err != nil {
-			return nil, fmt.Errorf("expected '%s': %s", glob.KeySymbolRightBracket, err)
-		}
-
-		return ast.NewFcFn(ast.FcAtom(glob.GetIndexOfOp), []ast.Fc{fc, fcInBracket}), nil
+	if err := tb.header.skip(glob.KeySymbolRightBracket); err != nil {
+		return nil, fmt.Errorf("expected '%s': %s", glob.KeySymbolRightBracket, err)
 	}
+
+	return ast.NewFcFn(ast.FcAtom(glob.AtIndexOp), []ast.Fc{fc, fcInBracket}), nil
 }
 
 // “数学”优先级越高，越是底层。所以把括号表达式放在这里处理
