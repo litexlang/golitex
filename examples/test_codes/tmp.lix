@@ -241,12 +241,3 @@ prove:
     x $in A
     $P(x, y)
 
-prove:
-	have set s := {1,2,3,4}
-    have set t := {2,4,6}
-    prove_over_finite_set:
-        forall x t:
-        	x != 1
-    forall x t:
-        x != 1
-    not 1 $in t
