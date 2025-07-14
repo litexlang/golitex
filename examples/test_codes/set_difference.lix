@@ -1,0 +1,53 @@
+prove:
+	have set s := {1,2,3,4}
+    have set t := {2,4,6}
+    have set u := {1,3}
+    prove_over_finite_set:
+        forall x t:
+        	x != 1
+            x != 3
+    forall x t:
+        x != 1
+        x != 3
+    not 1 $in t
+    not 3 $in t
+    2 $in t
+    4 $in t
+    1 $in difference(s, t)
+    3 $in difference(s, t)
+    claim:
+        not 2 $in difference(s, t)
+        prove_by_contradiction:
+        	2 $in difference(s, t)
+            2 $in s
+            not 2 $in t
+    claim:
+    	not 4 $in difference(s, t)
+        prove_by_contradiction:
+        	4 $in difference(s, t)
+            4 $in s
+            not 4 $in t
+    prove_over_finite_set:
+        forall x u:
+            x $in difference(s, t)
+    claim:
+        forall x difference(s, t):
+            x $in u
+        prove:
+            forall x difference(s, t):
+                x $in s
+                or:
+                	x = 1
+                    x = 2
+                    x = 3
+                    x = 4
+            know forall x difference(s, t):
+                x != 2
+            know forall x difference(s, t):
+                x != 4
+            # 这里可能要引入一个新的规则，就是or: a,b,c 中 a错了，那 or: bc 必然对了
+            forall x difference(s, t):
+                or:
+                	x = 1
+                    x = 3
+                x $in u
