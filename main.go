@@ -17,6 +17,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	glob "golitex/glob"
 	sys "golitex/sys"
 	"os"
 )
@@ -28,6 +29,7 @@ func main() {
 	executeFlag := flag.String("e", "", "Execute the given code")
 	fileFlag := flag.String("f", "", "Execute the given file")
 	repoFlag := flag.String("r", "", "Execute the given repo")
+	latexFlag := flag.String("latex", "", "Compile the given file to latex")
 
 	flag.Parse()
 
@@ -93,6 +95,16 @@ func main() {
 			msg := sys.RunMainMsg(signal)
 			fmt.Println(msg)
 		}
+		return
+	}
+
+	if *latexFlag != "" {
+		msg, signal, err := sys.CompileFileToLatex(*latexFlag)
+		if err != nil || signal != glob.SysSignalTrue {
+			fmt.Printf("Error: %s\n", err)
+			os.Exit(1)
+		}
+		fmt.Println(msg)
 		return
 	}
 
