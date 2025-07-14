@@ -1,5 +1,0 @@
-obj s set:
-	forall x obj:
-        not x $in s
-
-s := {}

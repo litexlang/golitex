@@ -27,10 +27,6 @@ func (tb *tokenBlock) RawFc() (ast.Fc, error) {
 		return nil, err
 	}
 
-	if _, ok := expr.(*ast.FcAtom); ok {
-		return expr, fmt.Errorf("invalid first citizen: %s", expr)
-	}
-
 	return expr, nil
 }
 
@@ -74,11 +70,11 @@ func (tb *tokenBlock) fcAtomAndFcFn() (ast.Fc, error) {
 	if tb.header.is(glob.KeywordFn) {
 		return tb.fnSet()
 	} else if tb.header.is(glob.KeySymbolLeftBrace) {
-		expr, err = tb.bracedExpr()
+		expr, err = tb.bracedExpr_orTuple()
 		if err != nil {
 			return nil, err
 		}
-		return tb.consumeBracedFc(expr)
+		return tb.whenTheNextTokIsLeftBrace_MakeFcFn(expr)
 	} else if tb.header.curTokenBeginWithNumber() {
 		expr, err = tb.numberStr()
 		if err != nil {
@@ -94,7 +90,7 @@ func (tb *tokenBlock) fcAtomAndFcFn() (ast.Fc, error) {
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
-		ret, err := tb.consumeBracedFc(fcStr)
+		ret, err := tb.whenTheNextTokIsLeftBrace_MakeFcFn(fcStr)
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -337,51 +333,84 @@ func (tb *tokenBlock) bracedFcSlice() ([]ast.Fc, error) {
 	return params, nil
 }
 
-func (tb *tokenBlock) bracedExpr() (ast.Fc, error) {
-	tb.header.skip(glob.KeySymbolLeftBrace)
+// func (tb *tokenBlock) bracedExpr_orTuple() (ast.Fc, error) {
+// 	tb.header.skip(glob.KeySymbolLeftBrace)
+// 	if tb.header.ExceedEnd() {
+// 		return nil, fmt.Errorf("unexpected end of input after '('")
+// 	}
+
+// 	// head, err := tb.fcInfixExpr(glob.PrecLowest)
+// 	head, err := tb.RawFc()
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	if tb.header.ExceedEnd() {
+// 		return nil, fmt.Errorf("unexpected end of input, expected ')'")
+// 	}
+
+// 	if err := tb.header.skip(glob.KeySymbolRightBrace); err != nil {
+// 		return nil, fmt.Errorf("expected '%s': %s", glob.KeySymbolRightBrace, err)
+// 	}
+
+// 	if !tb.header.is(glob.KeySymbolLeftBrace) {
+// 		return head, nil
+// 	}
+
+// 	return head, nil
+
+// }
+
+func (tb *tokenBlock) bracedExpr_orTuple() (ast.Fc, error) {
+	if err := tb.header.skip(glob.KeySymbolLeftBrace); err != nil {
+		return nil, fmt.Errorf("expected '(': %s", err)
+	}
+
 	if tb.header.ExceedEnd() {
 		return nil, fmt.Errorf("unexpected end of input after '('")
 	}
 
-	// head, err := tb.fcInfixExpr(glob.PrecLowest)
-	head, err := tb.RawFc()
+	// Peek after first expression to check for comma
+	firstExpr, err := tb.RawFc()
 	if err != nil {
 		return nil, err
 	}
 
-	if tb.header.ExceedEnd() {
-		return nil, fmt.Errorf("unexpected end of input, expected ')'")
+	// Check if it's a tuple: look for comma
+	if tb.header.is(glob.KeySymbolComma) {
+		// It's a tuple — collect all expressions until ')'
+		exprs := []ast.Fc{firstExpr}
+		for tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+
+			if tb.header.is(glob.KeySymbolRightBrace) {
+				// Allow trailing comma: (1, 2, 3,)
+				break
+			}
+
+			nextExpr, err := tb.RawFc()
+			if err != nil {
+				return nil, err
+			}
+			exprs = append(exprs, nextExpr)
+		}
+
+		if err := tb.header.skip(glob.KeySymbolRightBrace); err != nil {
+			return nil, fmt.Errorf("expected ')': %s", err)
+		}
+
+		return ast.NewFcFn(ast.FcAtom(glob.TupleFcFnHead), exprs), nil
 	}
 
+	// If no comma, expect a single expression followed by ')'
 	if err := tb.header.skip(glob.KeySymbolRightBrace); err != nil {
-		return nil, fmt.Errorf("expected '%s': %s", glob.KeySymbolRightBrace, err)
+		return nil, fmt.Errorf("expected ')': %s", err)
 	}
 
-	if !tb.header.is(glob.KeySymbolLeftBrace) {
-		return head, nil
-	}
-
-	return head, nil
-
-	// segs := [][]ast.Fc{}
-
-	// for !tb.header.ExceedEnd() {
-	// 	seg, err := tb.bracedFcSlice()
-	// 	if err != nil {
-	// 		return nil, &strSliceError{err, tb}
-	// 	}
-	// 	segs = append(segs, seg)
-	// }
-
-	// var curHead ast.Fc = head
-	// for _, seg := range segs {
-	// 	curHead = ast.NewFcFn(curHead, seg, nil)
-	// }
-
-	// return curHead, nil
+	return firstExpr, nil
 }
 
-func (tb *tokenBlock) consumeBracedFc(head ast.Fc) (ast.Fc, error) {
+func (tb *tokenBlock) whenTheNextTokIsLeftBrace_MakeFcFn(head ast.Fc) (ast.Fc, error) {
 	for !tb.header.ExceedEnd() && (tb.header.is(glob.KeySymbolLeftBrace)) {
 		objParamsPtr, err := tb.bracedFcSlice()
 		if err != nil {
