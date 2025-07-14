@@ -46,14 +46,18 @@ func (tb *tokenBlock) stmt() (ast.Stmt, error) {
 	case glob.KeywordObj:
 		ret, err = tb.defObjStmt()
 	case glob.KeywordHave:
-		if slices.Contains(tb.header.slice, glob.KeywordSt) {
-			ret, err = tb.haveObjStStmt()
-		} else if tb.header.strAtCurIndexPlus(1) == glob.KeywordSet {
+		if tb.header.strAtCurIndexPlus(1) == glob.KeywordSet {
 			if tb.header.strAtCurIndexPlus(2) == glob.KeywordFn {
 				ret, err = tb.haveSetFnStmt()
 			} else {
-				ret, err = tb.haveSetStmt()
+				if slices.Contains(tb.header.slice, glob.KeywordSetDefinedByReplacement) {
+					ret, err = tb.haveSetDefinedByReplacementStmt()
+				} else {
+					ret, err = tb.haveSetStmt()
+				}
 			}
+		} else if slices.Contains(tb.header.slice, glob.KeywordSt) {
+			ret, err = tb.haveObjStStmt()
 		} else {
 			ret, err = tb.haveObjInNonEmptySetStmt()
 		}
@@ -1588,10 +1592,6 @@ func (tb *tokenBlock) haveSetStmt() (ast.Stmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	if tb.header.strAtCurIndexPlus(1) == glob.KeywordSetDefinedByReplacement {
-		return tb.haveSetDefinedByReplacementStmt(haveSetName)
-	}
-
 	fact, err := tb.enumStmt_or_intensionalSetStmt(ast.FcAtom(haveSetName))
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -1623,8 +1623,19 @@ func (tb *tokenBlock) haveSetFnStmt() (ast.Stmt, error) {
 	return ast.NewHaveSetFnStmt(declHeader, param, parentSet, proofs), nil
 }
 
-func (tb *tokenBlock) haveSetDefinedByReplacementStmt(name string) (ast.Stmt, error) {
-	var err error
+func (tb *tokenBlock) haveSetDefinedByReplacementStmt() (ast.Stmt, error) {
+	tb.header.skip(glob.KeywordHave)
+	tb.header.skip(glob.KeywordSet)
+
+	setName, err := tb.header.next()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolEqual)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
 
 	err = tb.header.skip(glob.KeywordSetDefinedByReplacement)
 	if err != nil {
@@ -1671,7 +1682,7 @@ func (tb *tokenBlock) haveSetDefinedByReplacementStmt(name string) (ast.Stmt, er
 		return nil, fmt.Errorf("expect end of line")
 	}
 
-	return ast.NewHaveSetDefinedByReplacementStmt(name, domSet, rangeSet, propName), nil
+	return ast.NewHaveSetDefinedByReplacementStmt(setName, domSet, rangeSet, propName), nil
 }
 
 func (tb *tokenBlock) namedUniFactStmt() (ast.Stmt, error) {
