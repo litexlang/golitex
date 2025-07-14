@@ -48,10 +48,12 @@ func (tb *tokenBlock) stmt() (ast.Stmt, error) {
 	case glob.KeywordHave:
 		if slices.Contains(tb.header.slice, glob.KeywordSt) {
 			ret, err = tb.haveObjStStmt()
-		} else if tb.header.strAtCurIndexPlus(2) == glob.KeySymbolColonEqual {
-			ret, err = tb.haveSetStmt()
-		} else if tb.header.strAtCurIndexPlus(2) == glob.KeySymbolLeftBrace {
-			ret, err = tb.haveSetFnStmt()
+		} else if tb.header.strAtCurIndexPlus(1) == glob.KeywordSet {
+			if tb.header.strAtCurIndexPlus(2) == glob.KeywordFn {
+				ret, err = tb.haveSetFnStmt()
+			} else {
+				ret, err = tb.haveSetStmt()
+			}
 		} else {
 			ret, err = tb.haveObjInNonEmptySetStmt()
 		}
@@ -1571,6 +1573,11 @@ func (tb *tokenBlock) haveSetStmt() (ast.Stmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
+	err = tb.header.skip(glob.KeywordSet)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
 	haveSetName, err := tb.header.next()
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -1594,10 +1601,9 @@ func (tb *tokenBlock) haveSetStmt() (ast.Stmt, error) {
 }
 
 func (tb *tokenBlock) haveSetFnStmt() (ast.Stmt, error) {
-	err := tb.header.skip(glob.KeywordHave)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+	tb.header.skip(glob.KeywordHave)
+	tb.header.skip(glob.KeywordSet)
+	tb.header.skip(glob.KeywordFn)
 
 	declHeader, err := tb.defHeaderWithoutParsingColonAtEnd()
 	if err != nil {
