@@ -15,13 +15,91 @@
 package litex_ast
 
 import (
+	"fmt"
 	glob "golitex/glob"
 	"strings"
 )
 
-func (s *DefObjStmt) ToLatexString() string  { return "" }
-func (c *DefPropStmt) ToLatexString() string { return "" }
-func (l *DefFnStmt) ToLatexString() string   { return "" }
+func strFcSetPairsLatexString(objs []string, objSets []Fc) string {
+	pairStrSlice := make([]string, len(objs))
+	for i := range len(objs) {
+		pairStrSlice[i] = fmt.Sprintf("%s \\in %s", objs[i], objSets[i])
+	}
+	return strings.Join(pairStrSlice, ", ")
+}
+
+func (s *DefObjStmt) ToLatexString() string {
+	var builder strings.Builder
+
+	builder.WriteString("Suppose we have objects: ")
+	builder.WriteString(strFcSetPairsLatexString(s.Objs, s.ObjSets))
+	builder.WriteString(".")
+
+	if len(s.Facts) > 0 {
+		builder.WriteString("And the following facts: ")
+		factStrSlice := make([]string, len(s.Facts))
+		for i := range len(s.Facts) {
+			factStrSlice[i] = s.Facts[i].ToLatexString()
+		}
+		builder.WriteString(strings.Join(factStrSlice, ", "))
+		builder.WriteString(".")
+	}
+
+	return builder.String()
+}
+
+func (head DefHeader) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString(head.Name)
+	builder.WriteString("(")
+	builder.WriteString(strFcSetPairsLatexString(head.Params, head.ParamSets))
+	builder.WriteString(")")
+	return builder.String()
+}
+
+func (head DefHeader) NameWithParamsLatexString() string {
+	var builder strings.Builder
+	builder.WriteString(head.Name)
+	builder.WriteString("(")
+	builder.WriteString(strings.Join(head.Params, ", "))
+	builder.WriteString(")")
+}
+
+func (c *DefPropStmt) ToLatexString() string {
+	var builder strings.Builder
+
+	builder.WriteString("[Definition] Proposition ")
+	builder.WriteString(c.DefHeader.ToLatexString())
+	builder.WriteString(".")
+
+	if len(c.DomFacts) == 0 && len(c.IffFacts) == 0 {
+		return builder.String()
+	}
+
+	if len(c.DomFacts) > 0 {
+		builder.WriteString(" \\text{When}:")
+		domFactStrSlice := make([]string, len(c.DomFacts))
+		for i := range len(c.DomFacts) {
+			domFactStrSlice[i] = c.DomFacts[i].ToLatexString()
+		}
+		builder.WriteString(strings.Join(domFactStrSlice, ", "))
+		builder.WriteString(".")
+	}
+
+	if len(c.IffFacts) > 0 {
+		builder.WriteString(fmt.Sprintf("We say %s \\text{Iff}:", c.DefHeader.NameWithParamsLatexString()))
+		iffFactStrSlice := make([]string, len(c.IffFacts))
+		for i := range len(c.IffFacts) {
+			iffFactStrSlice[i] = c.IffFacts[i].ToLatexString()
+		}
+		builder.WriteString(strings.Join(iffFactStrSlice, ", "))
+		builder.WriteString(".")
+	}
+
+	return builder.String()
+}
+
+func (l *DefFnStmt) ToLatexString() string { return "" }
 func (l *UniFactStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("\\forall ")
