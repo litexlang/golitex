@@ -52,3 +52,5 @@ const BuiltinPkgName string = ""
 const MemberAccessOpt string = KeySymbolDot
 
 var AssumeImportFilesAreTrue bool = false
+
+const TupleFcFnHead string = "()"
