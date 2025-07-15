@@ -242,7 +242,35 @@ func (s *DefExistPropStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (s *HaveObjStStmt) ToLatexString() string { return "" }
+func propNameParamsLatexString(propName FcAtom, params []Fc) string {
+	var builder strings.Builder
+	builder.WriteString(propName.String())
+	builder.WriteString("(")
+	paramStrSlice := make([]string, len(params))
+	for i := range len(params) {
+		paramStrSlice[i] = params[i].ToLatexString()
+	}
+	builder.WriteString(strings.Join(paramStrSlice, ", "))
+	builder.WriteString(")")
+	return builder.String()
+}
+
+func fcParamsLatexString(params []Fc) string {
+	paramStrSlice := make([]string, len(params))
+	for i := range len(params) {
+		paramStrSlice[i] = params[i].ToLatexString()
+	}
+	return strings.Join(paramStrSlice, ", ")
+}
+
+func (s *HaveObjStStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString(fmt.Sprintf("Since existential proposition %s is true", propNameParamsLatexString(s.Fact.PropName, s.Fact.Params)))
+	builder.WriteString(" we have ")
+	builder.WriteString(fcParamsLatexString(s.Fact.Params))
+	builder.WriteString(fmt.Sprintf(" which makes %s true", propNameParamsLatexString(s.Fact.PropName, s.Fact.Params)))
+	return builder.String()
+}
 
 func (s *ProveInEachCaseStmt) ToLatexString() string { return "" }
 
