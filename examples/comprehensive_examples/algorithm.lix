@@ -14,17 +14,18 @@ integer for which x_k is in S, and in this case it is said to produce the output
 
 """
 
-fn comp_seq(Q set, f fn(Q)Q) fn(Q, N)Q:
-    forall x Q, n N:
-        comp_seq(Q, f)(x,n+1) = f(comp_seq(Q, f)(x, n))
-exist_prop n N st exist_end_of_computational_sequence(Q set, x Q, f fn(Q,N)Q):
+fn comp_seq(D set, f fn(D)D) fn(D, N)D:
+    forall x D, n N:
+        comp_seq(D, f)(x,n+1) = f(comp_seq(D, f)(x, n))
+    comp_seq(D, f)(x, 0) = x
+exist_prop n N st exist_end_of_computational_sequence(D set, x D, f fn(D,N)D):
     f(x, n) = f(x, n+1)
-prop is_algorithm(Q set, I set, f fn(Q)Q):
-    forall x Q: # i.e. Q is subset of I
-        f(x) $in I
+prop is_algorithm(D set, I set, f fn(D)D):
+    forall x I: # i.e. I is subset of D
+        x $in D
     iff:
         forall x I:
-            $exist_end_of_computational_sequence(Q, x, comp_seq(Q, f))
+            $exist_end_of_computational_sequence(D, x, comp_seq(D, f))
 
 """
 Here is a Litex for Curious Lean Users4 code.
