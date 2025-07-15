@@ -308,7 +308,9 @@ func (s *KnowPropStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (s *KnowExistPropStmt) ToLatexString() string { return "" }
+func (s *KnowExistPropStmt) ToLatexString() string {
+	return "knowExistPropStmt latex to be implemented"
+}
 
 func (s *OrStmt) ToLatexString() string {
 	factStrSlice := make([]string, len(s.Facts))
@@ -318,13 +320,53 @@ func (s *OrStmt) ToLatexString() string {
 	return strings.Join(factStrSlice, "\\text{or} ")
 }
 
-func (s *ImportDirStmt) ToLatexString() string { return "" }
+func (s *ImportDirStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("Import directory ")
+	builder.WriteString(s.Path)
+	builder.WriteString(" as ")
+	builder.WriteString(s.AsPkgName)
+	return builder.String()
+}
 
-func (s *ImportFileStmt) ToLatexString() string { return "" }
+func (s *ImportFileStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("Import file ")
+	builder.WriteString(s.Path)
+	return builder.String()
+}
 
-func (s *ProveStmt) ToLatexString() string { return "" }
+func (s *ProveStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("[Example] ")
+	stmtSlice := make([]string, len(s.Proof))
+	for i := range s.Proof {
+		stmtSlice[i] = s.Proof[i].ToLatexString()
+	}
+	builder.WriteString(strings.Join(stmtSlice, ", "))
+	builder.WriteString(".")
+	return builder.String()
+}
 
-func (s *UniFactWithIffStmt) ToLatexString() string { return "" }
+func (s *UniFactWithIffStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString(strings.Join(paramInParamSetInFactLatexStringSlice(s.UniFact.Params, s.UniFact.ParamSets), ", "))
+
+	if len(s.UniFact.DomFacts) > 0 {
+		builder.WriteString(" \\text{When}: ")
+		builder.WriteString(strings.Join(s.UniFact.DomFacts.factStmtSliceToLatexStringSlice(), ", "))
+	}
+
+	builder.WriteString(" \\text{then}: ")
+
+	builder.WriteString(strings.Join(s.UniFact.ThenFacts.factStmtSliceToLatexStringSlice(), ", "))
+
+	builder.WriteString(" \\text{Iff}: ")
+	builder.WriteString(strings.Join(s.IffFacts.factStmtSliceToLatexStringSlice(), ", "))
+
+	builder.WriteString(".")
+	return builder.String()
+}
 
 func (s *ClaimProveByContradictionStmt) ToLatexString() string { return "" }
 
