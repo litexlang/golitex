@@ -368,13 +368,64 @@ func (s *UniFactWithIffStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (s *ClaimProveByContradictionStmt) ToLatexString() string { return "" }
+func (s StmtSlice) stmtSliceToLatexStringSlice() []string {
+	stmtStrSlice := make([]string, len(s))
+	for i := range len(s) {
+		stmtStrSlice[i] = s[i].ToLatexString()
+	}
+	return stmtStrSlice
+}
 
-func (s *DefFnTemplateStmt) ToLatexString() string { return "" }
+func (s *ClaimProveByContradictionStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("We claim that ")
+	builder.WriteString(s.ClaimProveStmt.ToCheckFact.ToLatexString())
+	builder.WriteString(".\n")
+	builder.WriteString("[Proof By Contradiction] ")
+	builder.WriteString(strings.Join(s.ClaimProveStmt.Proofs.stmtSliceToLatexStringSlice(), ", "))
+	return builder.String()
+}
 
-func (s *EnumStmt) ToLatexString() string { return "" }
+func (s *DefFnTemplateStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("Suppose we have a set of functions: ")
+	builder.WriteString("their parameters satisfy condition: ")
+	builder.WriteString(strings.Join(paramInParamSetInFactLatexStringSlice(s.FnTemplateStmt.Params, s.FnTemplateStmt.ParamSets), ", "))
+	builder.WriteString(" \\text{and} ")
+	builder.WriteString(strings.Join(s.FnTemplateStmt.DomFacts.factStmtSliceToLatexStringSlice(), ", "))
+	builder.WriteString("When their parameters satisfies the above condition, they have the following properties: ")
+	builder.WriteString(strings.Join(s.FnTemplateStmt.ThenFacts.factStmtSliceToLatexStringSlice(), ", "))
+	builder.WriteString(".")
+	return builder.String()
+}
 
-func (s *IntensionalSetStmt) ToLatexString() string { return "" }
+func (s *EnumStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("set ")
+	builder.WriteString(s.CurSet.ToLatexString())
+	builder.WriteString(" = {")
+	builder.WriteString(fcParamsLatexString(s.Items))
+	builder.WriteString("}")
+	return builder.String()
+}
+
+func (s *IntensionalSetStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("set ")
+	builder.WriteString(s.CurSet.ToLatexString())
+	builder.WriteString(" = {")
+	builder.WriteString(s.Param)
+	builder.WriteString(" \\in ")
+	builder.WriteString(s.ParentSet.ToLatexString())
+	builder.WriteString(" | ")
+	proofStrSlice := make([]string, len(s.Proofs))
+	for i := range len(s.Proofs) {
+		proofStrSlice[i] = s.Proofs[i].ToLatexString()
+	}
+	builder.WriteString(strings.Join(proofStrSlice, ", "))
+	builder.WriteString("}")
+	return builder.String()
+}
 
 func (s *ClaimPropStmt) ToLatexString() string { return "" }
 

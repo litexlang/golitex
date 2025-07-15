@@ -80,7 +80,7 @@ type SpecFactStmt struct {
 
 type ClaimProveStmt struct {
 	ToCheckFact FactStmt
-	Proofs      []Stmt
+	Proofs      StmtSlice
 }
 
 type ClaimProveByContradictionStmt struct {
