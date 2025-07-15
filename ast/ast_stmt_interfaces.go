@@ -132,6 +132,7 @@ func (stmt *ClaimPropStmt) claimStmt()                 {}
 func (stmt *ClaimExistPropStmt) claimStmt()            {}
 
 type FactStmtSlice []FactStmt
+type StmtSlice []Stmt
 
 type ImportStmtInterface interface {
 	importStmt()
