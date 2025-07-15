@@ -483,14 +483,67 @@ func (s *ProveOverFiniteSetStmt) ToLatexString() string {
 
 	return builder.String()
 }
-func (s *HaveObjInNonEmptySetStmt) ToLatexString() string { return "" }
 
-func (s *HaveSetStmt) ToLatexString() string { return "" }
+func (s *HaveObjInNonEmptySetStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("We have objects from nonempty set(s): ")
+	builder.WriteString(strings.Join(paramInParamSetInFactLatexStringSlice(s.Objs, s.ObjSets), ", "))
+	builder.WriteString(".")
+	return builder.String()
+}
 
-func (s *HaveSetFnStmt) ToLatexString() string { return "" }
+func (s *HaveSetStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("We have a set: ")
+	builder.WriteString(s.Fact.String())
+	builder.WriteString(".")
+	return builder.String()
+}
 
-func (s *HaveSetDefinedByReplacementStmt) ToLatexString() string { return "" }
+func (s *HaveSetFnStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("We have a function returning a set: ")
+	builder.WriteString(s.DefHeader.NameWithParamsLatexString())
+	builder.WriteString(".")
+	return builder.String()
+}
 
-func (s *NamedUniFactStmt) ToLatexString() string { return "" }
+func (s *HaveSetDefinedByReplacementStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("We have a set by axiom of replacement: ")
+	builder.WriteString(s.Name)
+	builder.WriteString(" = {")
+	builder.WriteString("y \\in ")
+	builder.WriteString(s.DomSet.ToLatexString())
+	builder.WriteString(" | there exists x st ")
+	builder.WriteString(s.PropName.String())
+	builder.WriteString("(x, y) is true.")
+	builder.WriteString("}")
+	return builder.String()
+}
 
-func (s *FnTemplateStmt) ToLatexString() string { return "" }
+func (s *NamedUniFactStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("\\forall ")
+	builder.WriteString(strings.Join(paramInParamSetInFactLatexStringSlice(s.DefPropStmt.DefHeader.Params, s.DefPropStmt.DefHeader.ParamSets), ", "))
+	builder.WriteString(" then ")
+	builder.WriteString(strings.Join(s.DefPropStmt.ThenFacts.factStmtSliceToLatexStringSlice(), ", "))
+	builder.WriteString(".")
+	builder.WriteString("We call this fact ")
+	builder.WriteString(s.DefPropStmt.DefHeader.NameWithParamsLatexString())
+	builder.WriteString(".")
+	return builder.String()
+}
+
+func (s *FnTemplateStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("We define a set of functions: ")
+	builder.WriteString("their parameters satisfy condition: ")
+	builder.WriteString(strings.Join(paramInParamSetInFactLatexStringSlice(s.Params, s.ParamSets), ", "))
+	builder.WriteString(" \\text{and} ")
+	builder.WriteString(strings.Join(s.DomFacts.factStmtSliceToLatexStringSlice(), ", "))
+	builder.WriteString("When their parameters satisfies the above condition, they have the following properties: ")
+	builder.WriteString(strings.Join(s.ThenFacts.factStmtSliceToLatexStringSlice(), ", "))
+	builder.WriteString(".")
+	return builder.String()
+}
