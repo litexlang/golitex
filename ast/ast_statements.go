@@ -166,6 +166,7 @@ type ImportFileStmt struct {
 	Path string
 }
 
+// 最好要可以固定prop的某几位，然后某一位是变化的n，这样更合理
 type ProveByMathInductionStmt struct {
 	PropName FcAtom
 	Start    Fc
