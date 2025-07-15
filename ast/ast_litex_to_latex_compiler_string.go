@@ -427,14 +427,62 @@ func (s *IntensionalSetStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (s *ClaimPropStmt) ToLatexString() string { return "" }
+func (s *ClaimPropStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("We claim that forall ")
+	builder.WriteString(strings.Join(paramInParamSetInFactLatexStringSlice(s.Prop.DefHeader.Params, s.Prop.DefHeader.ParamSets), ", "))
+	builder.WriteString(" we have ")
+	builder.WriteString(strings.Join(s.Prop.ThenFacts.factStmtSliceToLatexStringSlice(), ", "))
+	builder.WriteString(".")
+	builder.WriteString("we call this fact ")
+	builder.WriteString(s.Prop.DefHeader.NameWithParamsLatexString())
+	builder.WriteString(".")
+	builder.WriteByte('\n')
 
-func (s *ClaimExistPropStmt) ToLatexString() string { return "" }
+	if s.IsProve {
+		builder.WriteString("[Proof] ")
+	} else {
+		builder.WriteString("[Proof By Contradiction] ")
+	}
 
-func (s *ProveByMathInductionStmt) ToLatexString() string { return "" }
+	proofStrSlice := make([]string, len(s.Proofs))
+	for i := range len(s.Proofs) {
+		proofStrSlice[i] = s.Proofs[i].ToLatexString()
+	}
+	builder.WriteString(strings.Join(proofStrSlice, ", "))
+	return builder.String()
+}
 
-func (s *ProveOverFiniteSetStmt) ToLatexString() string { return "" }
+func (s *ClaimExistPropStmt) ToLatexString() string {
+	return "ClaimExistPropStmt latex to be implemented"
+}
 
+func (s *ProveByMathInductionStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("By mathematical induction, we have ")
+	builder.WriteString(s.PropName.String())
+	builder.WriteString("(i) is true \\forall i \\geq ")
+	builder.WriteString(s.Start.ToLatexString())
+	builder.WriteString(".")
+	return builder.String()
+}
+
+func (s *ProveOverFiniteSetStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("We prove that by iterating over the elements of the finite set(s): ")
+	builder.WriteString(strings.Join(paramInParamSetInFactLatexStringSlice(s.Fact.Params, s.Fact.ParamSets), ", "))
+	builder.WriteString(". ")
+	builder.WriteString(s.Fact.ToLatexString())
+	builder.WriteString(".\n")
+	builder.WriteString("[Proof] ")
+	proofStrSlice := make([]string, len(s.Proofs))
+	for i := range len(s.Proofs) {
+		proofStrSlice[i] = s.Proofs[i].ToLatexString()
+	}
+	builder.WriteString(strings.Join(proofStrSlice, ", "))
+
+	return builder.String()
+}
 func (s *HaveObjInNonEmptySetStmt) ToLatexString() string { return "" }
 
 func (s *HaveSetStmt) ToLatexString() string { return "" }
