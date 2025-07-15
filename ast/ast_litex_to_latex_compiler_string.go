@@ -63,6 +63,7 @@ func (head DefHeader) NameWithParamsLatexString() string {
 	builder.WriteString("(")
 	builder.WriteString(strings.Join(head.Params, ", "))
 	builder.WriteString(")")
+	return builder.String()
 }
 
 func (c *DefPropStmt) ToLatexString() string {
@@ -202,27 +203,87 @@ func (f *KnowFactStmt) ToLatexString() string {
 	}
 }
 
-func (s *DefExistPropStmt) ToLatexString() string                { return "" }
-func (s *HaveObjStStmt) ToLatexString() string                   { return "" }
-func (s *ProveInEachCaseStmt) ToLatexString() string             { return "" }
-func (s *KnowPropStmt) ToLatexString() string                    { return "" }
-func (s *KnowExistPropStmt) ToLatexString() string               { return "" }
-func (s *OrStmt) ToLatexString() string                          { return "" }
-func (s *ImportDirStmt) ToLatexString() string                   { return "" }
-func (s *ImportFileStmt) ToLatexString() string                  { return "" }
-func (s *ProveStmt) ToLatexString() string                       { return "" }
-func (s *UniFactWithIffStmt) ToLatexString() string              { return "" }
-func (s *ClaimProveByContradictionStmt) ToLatexString() string   { return "" }
-func (s *DefFnTemplateStmt) ToLatexString() string               { return "" }
-func (s *EnumStmt) ToLatexString() string                        { return "" }
-func (s *IntensionalSetStmt) ToLatexString() string              { return "" }
-func (s *ClaimPropStmt) ToLatexString() string                   { return "" }
-func (s *ClaimExistPropStmt) ToLatexString() string              { return "" }
-func (s *ProveByMathInductionStmt) ToLatexString() string        { return "" }
-func (s *ProveOverFiniteSetStmt) ToLatexString() string          { return "" }
-func (s *HaveObjInNonEmptySetStmt) ToLatexString() string        { return "" }
-func (s *HaveSetStmt) ToLatexString() string                     { return "" }
-func (s *HaveSetFnStmt) ToLatexString() string                   { return "" }
+func (s FactStmtSlice) factStmtSliceToLatexStringSlice() []string {
+	factStrSlice := make([]string, len(s))
+	for i := range len(s) {
+		factStrSlice[i] = s[i].ToLatexString()
+	}
+	return factStrSlice
+}
+
+func defHeaderToInFactLatexStringSlice(paramNames []string, paramSets []Fc) []string {
+	strSlice := make([]string, len(paramSets))
+	for i, paramSet := range paramSets {
+		strSlice[i] = fmt.Sprintf("%s \\in %s", paramNames[i], paramSet.ToLatexString())
+	}
+	return strSlice
+}
+
+func (s *DefExistPropStmt) ToLatexString() string {
+	var builder strings.Builder
+
+	builder.WriteString("[Definition] Existential Proposition: When ")
+	paramCondStrSlice := defHeaderToInFactLatexStringSlice(s.DefBody.DefHeader.Params, s.DefBody.DefHeader.ParamSets)
+	paramCondStrSlice = append(paramCondStrSlice, s.DefBody.DomFacts.factStmtSliceToLatexStringSlice()...)
+
+	builder.WriteString(strings.Join(paramCondStrSlice, ", "))
+
+	builder.WriteString(", we say ")
+	builder.WriteString(s.DefBody.DefHeader.NameWithParamsLatexString())
+	builder.WriteString(" \\text{Iff}: there exist ")
+
+	existParamInFactStrSlice := defHeaderToInFactLatexStringSlice(s.ExistParams, s.ExistParamSets)
+	builder.WriteString(strings.Join(existParamInFactStrSlice, ", "))
+	builder.WriteString(" st ")
+
+	builder.WriteString(strings.Join(s.DefBody.IffFacts.factStmtSliceToLatexStringSlice(), ", "))
+	builder.WriteString(".")
+
+	return builder.String()
+}
+
+func (s *HaveObjStStmt) ToLatexString() string { return "" }
+
+func (s *ProveInEachCaseStmt) ToLatexString() string { return "" }
+
+func (s *KnowPropStmt) ToLatexString() string { return "" }
+
+func (s *KnowExistPropStmt) ToLatexString() string { return "" }
+
+func (s *OrStmt) ToLatexString() string { return "" }
+
+func (s *ImportDirStmt) ToLatexString() string { return "" }
+
+func (s *ImportFileStmt) ToLatexString() string { return "" }
+
+func (s *ProveStmt) ToLatexString() string { return "" }
+
+func (s *UniFactWithIffStmt) ToLatexString() string { return "" }
+
+func (s *ClaimProveByContradictionStmt) ToLatexString() string { return "" }
+
+func (s *DefFnTemplateStmt) ToLatexString() string { return "" }
+
+func (s *EnumStmt) ToLatexString() string { return "" }
+
+func (s *IntensionalSetStmt) ToLatexString() string { return "" }
+
+func (s *ClaimPropStmt) ToLatexString() string { return "" }
+
+func (s *ClaimExistPropStmt) ToLatexString() string { return "" }
+
+func (s *ProveByMathInductionStmt) ToLatexString() string { return "" }
+
+func (s *ProveOverFiniteSetStmt) ToLatexString() string { return "" }
+
+func (s *HaveObjInNonEmptySetStmt) ToLatexString() string { return "" }
+
+func (s *HaveSetStmt) ToLatexString() string { return "" }
+
+func (s *HaveSetFnStmt) ToLatexString() string { return "" }
+
 func (s *HaveSetDefinedByReplacementStmt) ToLatexString() string { return "" }
-func (s *NamedUniFactStmt) ToLatexString() string                { return "" }
-func (s *FnTemplateStmt) ToLatexString() string                  { return "" }
+
+func (s *NamedUniFactStmt) ToLatexString() string { return "" }
+
+func (s *FnTemplateStmt) ToLatexString() string { return "" }
