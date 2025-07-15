@@ -211,7 +211,7 @@ func (s FactStmtSlice) factStmtSliceToLatexStringSlice() []string {
 	return factStrSlice
 }
 
-func defHeaderToInFactLatexStringSlice(paramNames []string, paramSets []Fc) []string {
+func paramInParamSetInFactLatexStringSlice(paramNames []string, paramSets []Fc) []string {
 	strSlice := make([]string, len(paramSets))
 	for i, paramSet := range paramSets {
 		strSlice[i] = fmt.Sprintf("%s \\in %s", paramNames[i], paramSet.ToLatexString())
@@ -223,7 +223,7 @@ func (s *DefExistPropStmt) ToLatexString() string {
 	var builder strings.Builder
 
 	builder.WriteString("[Definition] Existential Proposition: When ")
-	paramCondStrSlice := defHeaderToInFactLatexStringSlice(s.DefBody.DefHeader.Params, s.DefBody.DefHeader.ParamSets)
+	paramCondStrSlice := paramInParamSetInFactLatexStringSlice(s.DefBody.DefHeader.Params, s.DefBody.DefHeader.ParamSets)
 	paramCondStrSlice = append(paramCondStrSlice, s.DefBody.DomFacts.factStmtSliceToLatexStringSlice()...)
 
 	builder.WriteString(strings.Join(paramCondStrSlice, ", "))
@@ -232,7 +232,7 @@ func (s *DefExistPropStmt) ToLatexString() string {
 	builder.WriteString(s.DefBody.DefHeader.NameWithParamsLatexString())
 	builder.WriteString(" \\text{Iff}: there exist ")
 
-	existParamInFactStrSlice := defHeaderToInFactLatexStringSlice(s.ExistParams, s.ExistParamSets)
+	existParamInFactStrSlice := paramInParamSetInFactLatexStringSlice(s.ExistParams, s.ExistParamSets)
 	builder.WriteString(strings.Join(existParamInFactStrSlice, ", "))
 	builder.WriteString(" st ")
 
@@ -272,13 +272,51 @@ func (s *HaveObjStStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (s *ProveInEachCaseStmt) ToLatexString() string { return "" }
+func (s *ProveInEachCaseStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("Since ")
+	builder.WriteString(s.OrFact.ToLatexString())
+	builder.WriteString(" we prove ")
+	builder.WriteString(strings.Join(s.ThenFacts.factStmtSliceToLatexStringSlice(), ", "))
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+	for i := range s.Proofs {
+		builder.WriteString(fmt.Sprintf("Case %d: %s\n", i+1, s.OrFact.Facts[i]))
+		stmtSlice := make([]string, len(s.Proofs[i]))
+		for j, proof := range s.Proofs[i] {
+			stmtSlice[j] = proof.ToLatexString()
+		}
+		builder.WriteString(strings.Join(stmtSlice, ", "))
+		builder.WriteString("\n")
+	}
 
-func (s *KnowPropStmt) ToLatexString() string { return "" }
+	return builder.String()
+}
+
+func (s *KnowPropStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("Assume forall ")
+	builder.WriteString(strings.Join(paramInParamSetInFactLatexStringSlice(s.Prop.DefHeader.Params, s.Prop.DefHeader.ParamSets), ", "))
+	builder.WriteString(strings.Join(s.Prop.IffFacts.factStmtSliceToLatexStringSlice(), ", "))
+	builder.WriteString(" we have ")
+	builder.WriteString(strings.Join(s.Prop.ThenFacts.factStmtSliceToLatexStringSlice(), ", "))
+
+	builder.WriteString(".")
+	builder.WriteString("We call this fact ")
+	builder.WriteString(s.Prop.DefHeader.NameWithParamsLatexString())
+	builder.WriteString(".")
+	return builder.String()
+}
 
 func (s *KnowExistPropStmt) ToLatexString() string { return "" }
 
-func (s *OrStmt) ToLatexString() string { return "" }
+func (s *OrStmt) ToLatexString() string {
+	factStrSlice := make([]string, len(s.Facts))
+	for i := range len(s.Facts) {
+		factStrSlice[i] = s.Facts[i].ToLatexString()
+	}
+	return strings.Join(factStrSlice, "\\text{or} ")
+}
 
 func (s *ImportDirStmt) ToLatexString() string { return "" }
 
