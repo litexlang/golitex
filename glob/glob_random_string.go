@@ -28,3 +28,18 @@ func RandomString(length int) string {
 	}
 	return string(result)
 }
+
+func GenerateUniqueRandomStrings(n int) []string {
+	uniqueStrings := make([]string, 0, n) // 使用容量n的空切片
+	seen := make(map[string]bool)
+
+	for len(uniqueStrings) < n {
+		s := RandomString(4)
+		if !seen[s] {
+			seen[s] = true
+			uniqueStrings = append(uniqueStrings, s)
+		}
+	}
+
+	return uniqueStrings
+}
