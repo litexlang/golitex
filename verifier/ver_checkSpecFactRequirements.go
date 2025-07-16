@@ -68,8 +68,8 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state VerState) (bool, er
 		return ver.arithmeticFnRequirement(fcAsFcFn, state)
 	} else if ast.IsFnFcFn(fcAsFcFn) {
 		return true, nil
-	} else if ver.isFcFnWithHeadNameBuiltin(fcAsFcFn) {
-		return true, nil
+	} else if ver.isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj(fcAsFcFn) {
+		return ver.isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj_CheckRequirement(fcAsFcFn, state)
 	} else if ast.IsFcAtomAndEqualToStr(fcAsFcFn.FnHead, glob.KeywordSetDefinedByReplacement) {
 		return ver.setDefinedByReplacementFnRequirement(fcAsFcFn, state)
 	} else {
@@ -250,13 +250,24 @@ func (ver *Verifier) setDefinedByReplacementFnRequirement(fc *ast.FcFn, state Ve
 	return ok, nil
 }
 
-func (ver *Verifier) isFcFnWithHeadNameBuiltin(fc *ast.FcFn) bool {
+func (ver *Verifier) isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj(fc *ast.FcFn) bool {
 	fcHeadAsAtom, ok := fc.FnHead.(ast.FcAtom)
 	if !ok {
 		return false
 	}
 
-	_, ok = glob.BuiltinFunctionNameSet[string(fcHeadAsAtom)]
+	_, ok = glob.BuiltinFunctionNameSetAndCanTakeInAnyObj[string(fcHeadAsAtom)]
 
 	return ok
+}
+
+func (ver *Verifier) isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj_CheckRequirement(fc *ast.FcFn, state VerState) (bool, error) {
+	for _, param := range fc.Params {
+		ok, err := ver.fcSatisfyFnRequirement(param, state)
+		if err != nil || !ok {
+			return false, fmt.Errorf("parameter %s in %s do not satisfy the requirement of that function", param, fc.String())
+		}
+	}
+
+	return true, nil
 }

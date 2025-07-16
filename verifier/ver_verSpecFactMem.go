@@ -319,7 +319,7 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 	}
 
 	for i, knownParam := range knownFact.SpecFact.Params {
-		ok, err := ver.fcEqual_Commutative_Associative_CmpRule(knownParam, stmt.Params[i], state)
+		ok, err := ver.fcEqualByBir(knownParam, stmt.Params[i], state)
 		if err != nil {
 			return false, err
 		}
@@ -363,19 +363,43 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 }
 
 // 这里需要 recursive 地调用 这个，而不是只是 cmpFcRule. 之后再考虑recursive的情况
-func (ver *Verifier) fcEqual_Commutative_Associative_CmpRule(left ast.Fc, right ast.Fc, verState VerState) (bool, error) {
-	ok, msg, err := cmp.Cmp_ByBIR(left, right)
+func (ver *Verifier) fcEqualByBir(left ast.Fc, right ast.Fc, verState VerState) (bool, error) {
+	var ok bool
+	var msg string
+	var err error
+
+	defer func() {
+		if ok {
+			if verState.requireMsg() {
+				ver.successWithMsg(fmt.Sprintf("%s = %s", left, right), msg)
+			}
+		}
+	}()
+
+	ok, msg, err = cmp.Cmp_ByBIR(left, right)
+
 	if err != nil {
 		return false, err
 	}
 	if ok {
-		if verState.requireMsg() {
-			ver.successWithMsg(fmt.Sprintf("%s = %s", left, right), msg)
-		}
+		return true, nil
+	}
+
+	ok, msg, err = ver.verEqual_LeftOrRightIsProj(left, right, verState)
+	if err != nil {
+		return false, err
+	}
+	if ok {
 		return true, nil
 	}
 
 	return false, nil
+}
+
+func (ver *Verifier) verEqual_LeftOrRightIsProj(left, right ast.Fc, verState VerState) (bool, string, error) {
+	if ast.IsFcFnWithHeadName(left, glob.KeywordProj) {
+	}
+	return false, "", nil
 }
 
 func (ver *Verifier) isFnEqualFact_Check_BuiltinRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
