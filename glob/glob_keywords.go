@@ -215,7 +215,7 @@ var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]s
 	KeywordProj:                           {},
 }
 
-var BuiltinFunctionNameSet = map[string]struct{}{
+var BuiltinFunctionNameSetAndCanTakeInAnyObj = map[string]struct{}{
 	TupleFcFnHead:     {},
 	KeywordSetProduct: {},
 	KeywordProj:       {},
