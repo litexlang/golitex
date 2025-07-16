@@ -22,16 +22,16 @@ func (e *Env) GetTemplateOfFcFnRecursively(fcFn *ast.FcFn) ([]*ast.FnTemplateStm
 	currentFcFn := fcFn
 	var leftMostHead ast.FcAtom
 	count := 0
-	fcOfEachLevel := []*ast.FcFn{}
+	paramsOfEachLevel := [][]ast.Fc{}
 
 	for {
 		if headAsAtom, ok := currentFcFn.FnHead.(ast.FcAtom); ok {
 			leftMostHead = headAsAtom
-			fcOfEachLevel = append([]*ast.FcFn{currentFcFn}, fcOfEachLevel...)
+			paramsOfEachLevel = append([][]ast.Fc{currentFcFn.Params}, paramsOfEachLevel...)
 			break
 		} else {
 			currentFcFn = currentFcFn.FnHead.(*ast.FcFn)
-			fcOfEachLevel = append([]*ast.FcFn{currentFcFn}, fcOfEachLevel...)
+			paramsOfEachLevel = append([][]ast.Fc{currentFcFn.Params}, paramsOfEachLevel...)
 			count++
 		}
 	}
@@ -71,7 +71,7 @@ func (e *Env) GetTemplateOfFcFnRecursively(fcFn *ast.FcFn) ([]*ast.FnTemplateStm
 		}
 	}
 
-	return templateOfEachLevel, fcOfEachLevel, true
+	return templateOfEachLevel, ast.MakeSliceOfFcFnWithHeadAndParamsOfEachLevel(leftMostHead, paramsOfEachLevel), true
 }
 
 func (e *Env) GetEnumFact(enumName string) ([]ast.Fc, bool) {
