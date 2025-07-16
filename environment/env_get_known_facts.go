@@ -49,20 +49,25 @@ func (e *Env) GetTemplateOfFcFnRecursively(fcFn *ast.FcFn) ([]*ast.FnTemplateStm
 
 	// 从 template 的定义中，得到 template的返回值类型
 	for i := count - 1; i >= 0; i-- {
-		switch retSet := fnDefRetSet.(type) {
+		switch retT := fnDefRetSet.(type) {
 		case ast.FcAtom:
-			retSet, ok := fnDefRetSet.(ast.FcAtom)
+			retT, ok := fnDefRetSet.(ast.FcAtom)
 			if !ok {
 				return nil, nil, false
 			}
-			templateDef, ok := e.GetFnTemplateDef(retSet)
+			templateDef, ok := e.GetFnTemplateDef(retT)
 			if !ok {
 				return nil, nil, false
 			}
 			templateOfEachLevel = append(templateOfEachLevel, &templateDef.FnTemplateStmt)
 			fnDefRetSet = templateDef.FnTemplateStmt.RetSet
 		case *ast.FcFn:
-			panic("")
+			curTemplate, ok := retT.TemplateFcFnToTemplate()
+			if !ok {
+				return nil, nil, false
+			}
+			templateOfEachLevel = append(templateOfEachLevel, curTemplate)
+			fnDefRetSet = curTemplate.RetSet
 		}
 	}
 
