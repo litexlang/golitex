@@ -1284,6 +1284,8 @@ func (tb *tokenBlock) proveByMathInductionStmt() (*ast.ProveByMathInductionStmt,
 		return nil, tbErr(err, tb)
 	}
 
+	// 第ParamIndex个参数必须是atom
+
 	return ast.NewProveByMathInductionStmt(fact, paramIndex, start), nil
 }
 

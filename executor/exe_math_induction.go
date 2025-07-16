@@ -38,39 +38,28 @@ func (exec *Executor) mathInductionFact_BuiltinRules(stmt *ast.ProveByMathInduct
 
 	ver := verifier.NewVerifier(exec.env)
 
-	propNameAsAtom := stmt.PropName
+	startSpecFactParams := glob.CopySlice(stmt.Fact.Params)
+	startSpecFactParams[stmt.ParamIndex] = ast.FcAtom("n") // 这个n可能有点不好，因为n可能和其他的参数重名
 
-	_, ok := exec.env.GetPropDef(propNameAsAtom)
-	if !ok {
-		_, ok := exec.env.GetExistPropDef(propNameAsAtom)
-		if !ok {
-			return glob.ExecState_Error, fmt.Errorf("math induction fact %s should have a prop name that is defined, got: %s", stmt, propNameAsAtom)
-		}
-	}
-
-	// propName(start) is true
-	propNameZeroFact = ast.NewSpecFactStmt(ast.TruePure, propNameAsAtom, []ast.Fc{stmt.Start})
-
-	// propName(n) => propName(n+1)
-	params := []string{"n"}
+	startSpecFact := ast.NewSpecFactStmt(
+		stmt.Fact.TypeEnum,
+		stmt.Fact.PropName,
+		startSpecFactParams,
+	)
 
 	domFacts := make([]ast.FactStmt, 2)
 	domFacts[0] = ast.NewSpecFactStmt(
 		ast.TruePure,
 		ast.FcAtom(glob.KeySymbolLargerEqual),
-		[]ast.Fc{ast.FcAtom("n"), stmt.Start},
+		[]ast.Fc{ast.FcAtom("n"), ast.FcAtom(fmt.Sprintf("%d", stmt.Start))},
 	)
 
-	domFacts[1] = ast.NewSpecFactStmt(
-		ast.TruePure,
-		propNameAsAtom,
-		[]ast.Fc{ast.FcAtom("n")},
-	)
+	domFacts[1] = startSpecFact
 
 	thenFacts := make([]ast.FactStmt, 1)
 	thenFacts[0] = ast.NewSpecFactStmt(
 		ast.TruePure,
-		propNameAsAtom,
+		stmt.Fact.PropName,
 		[]ast.Fc{ast.NewFcFn(ast.FcAtom(glob.KeySymbolPlus), []ast.Fc{ast.FcAtom("n"), ast.FcAtom("1")})},
 	)
 
@@ -80,7 +69,7 @@ func (exec *Executor) mathInductionFact_BuiltinRules(stmt *ast.ProveByMathInduct
 	paramSets[0] = ast.FcAtom(glob.KeywordNatural)
 
 	nToNAddOneFact = ast.NewUniFact(
-		params,
+		[]string{"n"},
 		paramSets,
 		domFacts,
 		thenFacts,
@@ -105,18 +94,14 @@ func (exec *Executor) mathInductionFact_BuiltinRules(stmt *ast.ProveByMathInduct
 	isTrue = true
 
 	resultingFact = ast.NewUniFact(
-		params,
+		[]string{"n"},
 		paramSets,
 		[]ast.FactStmt{ast.NewSpecFactStmt(
 			ast.TruePure,
 			ast.FcAtom(glob.KeySymbolLargerEqual),
-			[]ast.Fc{ast.FcAtom("n"), stmt.Start},
+			[]ast.Fc{ast.FcAtom("n"), ast.FcAtom(fmt.Sprintf("%d", stmt.Start))},
 		)},
-		[]ast.FactStmt{ast.NewSpecFactStmt(
-			ast.TruePure,
-			propNameAsAtom,
-			[]ast.Fc{ast.FcAtom("n")},
-		)},
+		[]ast.FactStmt{startSpecFact},
 	)
 
 	return glob.ExecState_True, nil
