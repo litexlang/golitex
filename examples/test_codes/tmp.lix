@@ -1,3 +1,4 @@
+"""
 fn comp_seq(D set, f fn(D)D) fn(D, N)D:
     forall x D, n N:
         comp_seq(D, f)(x,n+1) = f(comp_seq(D, f)(x, n))
@@ -25,3 +26,16 @@ claim:
         f(x) = x # this is the base case
         $comp_seq_is_fixed(N, f, x, 0)
         prove_by_math_induction 
+"""
+
+prop p(n N)
+
+know:
+    $p(0)
+    forall n N:
+        $p(n)
+        then:
+            $p(n+1)
+
+prove_by_math_induction p 0
+

@@ -195,6 +195,10 @@ Litex is a simple language. I hope many of the keywords are already familiar to 
 | `prove_by_math_induction` | prove by mathematical induction |
 | `prove_over_finite_set` | prove a universal statement by iterating over a finite set |
 | `import` | import a file or directory |
+| `exist_in` | exist a object in a set |
+| `set_defined_by_replacement` | define a set by a axiom of replacement |
+| `obj_exist_as_preimage_of_prop` | exist a object as the preimage of a proposition |
+| `obj_exist_as_preimage_of_fn` | exist a object as the preimage of a function |
 
 [^3]: Although these keywords are rarely defined strictly in math textbooks, they are used everyday and everywhere. Litex creator can not find strict definition for keywords like `proposition`, `is`, `in` etc (actually, the word `definition` is also a vague word). He tried his best to make the meaning of these keywords as close to the meaning in our daily math expression, along with his own ideas and understanding, so that Litex is both intuitive and strict.
 
@@ -265,38 +269,38 @@ Next I want to show you how Litex can be used to solve a simple linear equation.
 
 I know Lean can use tactics to solve the same problem, and it is shorter. Litex will introduce similar features in the future. What I really want to show you here is that Litex is much more readable and intuitive than Lean in this case. Not every situation can be solved by tactics, and writing tactics itself in Lean is not easy. Litex spares you from remembering all these difficult things like `have`, `by`, `rw`, `simp`, `exact` and strange syntax etc. All you need is basic math knowledge, which significantly reduces the barrier to entry.
 
-Next we prove `sqrt(2) is irrational`. Since the standard library is not yet implemented, we have to define the logBase function ourselves for now. Note that how easy it is to define a new concept in Litex. You do not have to start from a very low level concept and build up to a higher level concept. You can define a new concept directly.
+Next we prove `sqrt(2) is irrational`. Since the standard library is not yet implemented, we have to define the log function ourselves for now. Note that how easy it is to define a new concept in Litex. You do not have to start from a very low level concept and build up to a higher level concept. You can define a new concept directly.
 
 The Litex proof requires no extra knowledge except basic math knowledge, but the Lean proof requires a huge amount of knowledge about Lean tactics. Tactics are not easy to learn, not easy to remember, and very far from what we are truly thinking when we are doing math. On the other hand, any line of Litex code is very obvious to understand.
 
 <table style="border-collapse: collapse; width: 100%;">
   <tr>
-    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 40%;">Litex</th>
-    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 60%;">Lean 4</th>
+    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 50%;">Litex</th>
+    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 50%;">Lean 4</th>
   </tr>
   <tr>
     <td style="border: 3px solid black; padding: 8px;">
       <code>claim:</code><br>
       <code>&nbsp;&nbsp;not sqrt(2) $in Q</code><br>
       <code>&nbsp;&nbsp;prove_by_contradiction:</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;have x, y st $rational_number_representation_in_fraction(sqrt(2))</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;have x, y st $Q_representation_in_fraction(sqrt(2))</code><br>
       <code>&nbsp;&nbsp;&nbsp;&nbsp;x = sqrt(2) * y</code><br>
       <code>&nbsp;&nbsp;&nbsp;&nbsp;x ^ 2 = (sqrt(2) ^ 2) * (y ^ 2)</code><br>
       <code>&nbsp;&nbsp;&nbsp;&nbsp;sqrt(2) ^ 2 = 2</code><br>
       <code>&nbsp;&nbsp;&nbsp;&nbsp;x ^ 2 = 2 * (y ^ 2)</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;logBase(2, x ^ 2) = logBase(2, 2 * (y ^ 2))</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;logBase(2, x ^ 2) = 2 * logBase(2, x)</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;logBase(2, y ^ 2) = 2 * logBase(2, y)</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;logBase(2, 2 * (y ^ 2)) = logBase(2, 2) + logBase(2, y ^ 2)</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;logBase(2, 2) = 1</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;logBase(2, 2 * (y ^ 2)) = 1 + logBase(2, y ^ 2)</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;logBase(2, x ^ 2) = 1 + 2 * logBase(2, y)</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;2 * logBase(2, x) = 1 + 2 * logBase(2, y)</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;(2 * logBase(2, x)) % 2 = (1 + 2 * logBase(2, y)) % 2</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;(2 * logBase(2, x)) % 2 = 0</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;0 = (1 + 2 * logBase(2, y)) % 2</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;(1 + 2 * logBase(2, y)) % 2 = 1 % 2 + (2 * logBase(2, y)) % 2</code><br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;1 % 2 + (2 * logBase(2, y)) % 2 = 1 + 0</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;log(2, x ^ 2) = log(2, 2 * (y ^ 2))</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;log(2, x ^ 2) = 2 * log(2, x)</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;log(2, y ^ 2) = 2 * log(2, y)</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;log(2, 2 * (y ^ 2)) = log(2, 2) + log(2, y ^ 2)</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;log(2, 2) = 1</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;log(2, 2 * (y ^ 2)) = 1 + log(2, y ^ 2)</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;log(2, x ^ 2) = 1 + 2 * log(2, y)</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;2 * log(2, x) = 1 + 2 * log(2, y)</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;(2 * log(2, x)) % 2 = (1 + 2 * log(2, y)) % 2</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;(2 * log(2, x)) % 2 = 0</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;0 = (1 + 2 * log(2, y)) % 2</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;(1+2 * log(2, y)) % 2 = 1 % 2 + (2*log(2, y)) % 2</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;1 % 2 + (2 * log(2, y)) % 2 = 1 + 0</code><br>
       <code>&nbsp;&nbsp;&nbsp;&nbsp;0 = 1</code>
     </td>
     <td style="border: 3px solid black; padding: 8px;">
