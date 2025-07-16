@@ -131,12 +131,6 @@ func (stmt *ClaimProveByContradictionStmt) claimStmt() {}
 func (stmt *ClaimPropStmt) claimStmt()                 {}
 func (stmt *ClaimExistPropStmt) claimStmt()            {}
 
-type FactStmtSlice []FactStmt
-type StmtSlice []Stmt
-type SpecFactPtrSlice []*SpecFactStmt
-type StrSlice []string
-type FcSlice []Fc
-
 type ImportStmtInterface interface {
 	importStmt()
 	stmt()

@@ -460,10 +460,13 @@ func (s *ClaimExistPropStmt) ToLatexString() string {
 func (s *ProveByMathInductionStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("By mathematical induction, we have ")
-	builder.WriteString(s.PropName.String())
-	builder.WriteString("(i) is true \\forall i \\geq ")
-	builder.WriteString(s.Start.ToLatexString())
+	builder.WriteString(s.Fact.String())
+
+	indexFc := s.Fact.Params[s.ParamIndex]
+
+	builder.WriteString(fmt.Sprintf("%s is true \\forall %s \\geq %d", s.Fact.ToLatexString(), indexFc.ToLatexString(), s.Start))
 	builder.WriteString(".")
+
 	return builder.String()
 }
 
