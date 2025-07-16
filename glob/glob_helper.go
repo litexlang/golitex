@@ -28,3 +28,9 @@ func MergeMap[T any](from map[string]T, to map[string]T) map[string]T {
 	}
 	return to
 }
+
+func CopySlice[T any](src []T) []T {
+	dst := make([]T, len(src))
+	copy(dst, src)
+	return dst
+}
