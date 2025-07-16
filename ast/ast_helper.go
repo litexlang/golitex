@@ -148,3 +148,13 @@ func (fcFn *FcFn) TemplateFcFnToTemplate() (*FnTemplateStmt, bool) {
 
 	return NewFnTemplateStmt(NewDefHeader("", params, paramSets), []FactStmt{}, []FactStmt{}, retSet), true
 }
+
+func MakeSliceOfFcFnWithHeadAndParamsOfEachLevel(head FcAtom, paramsOfEachLevel [][]Fc) []*FcFn {
+	ret := make([]*FcFn, len(paramsOfEachLevel))
+	var curHead Fc = head
+	for i := range len(ret) {
+		ret[i] = NewFcFn(curHead, paramsOfEachLevel[i])
+		curHead = ret[i]
+	}
+	return ret
+}
