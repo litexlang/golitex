@@ -913,9 +913,9 @@ func (tb *tokenBlock) proveInEachCaseStmt() (*ast.ProveInEachCaseStmt, error) {
 		thenFacts = append(thenFacts, curStmt)
 	}
 
-	proofs := [][]ast.Stmt{}
+	proofs := []ast.StmtSlice{}
 	for i := 2; i < len(tb.body); i++ {
-		proof := []ast.Stmt{}
+		proof := ast.StmtSlice{}
 
 		err = tb.body[i].header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
 		if err != nil {
