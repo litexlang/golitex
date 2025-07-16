@@ -15,15 +15,15 @@
 package litex_ast
 
 type DefObjStmt struct {
-	Objs    []string
-	ObjSets []Fc
+	Objs    StrSlice
+	ObjSets FcSlice
 	Facts   FactStmtSlice
 }
 
 type DefHeader struct {
 	Name      string
-	Params    []string
-	ParamSets []Fc
+	Params    StrSlice
+	ParamSets FcSlice
 }
 
 type DefPropStmt struct {
@@ -43,8 +43,8 @@ type DefExistPropStmtBody struct {
 // how to  use not exist to prove and store not forall in iff section of exist_prop: define a new exist_prop, give a name to that forall, and make this exist_prop equivalent to original exist_prop. Then use prove_by_contradiction to prove the new exist_prop is also false, then the not forall is proved.
 type DefExistPropStmt struct {
 	DefBody        DefExistPropStmtBody
-	ExistParams    []string
-	ExistParamSets []Fc
+	ExistParams    StrSlice
+	ExistParamSets FcSlice
 }
 
 // 这里 fn(p Z, F(p) set) 其实有点问题，因为F可能需要对p有一些要求，这些要求是写在dom里的，需要先运行dom然后才能运行
@@ -61,8 +61,8 @@ type DefFnStmt struct {
 }
 
 type UniFactStmt struct {
-	Params    []string
-	ParamSets []Fc
+	Params    StrSlice
+	ParamSets FcSlice
 	DomFacts  FactStmtSlice
 	ThenFacts FactStmtSlice
 }
@@ -75,7 +75,7 @@ type UniFactWithIffStmt struct {
 type SpecFactStmt struct {
 	TypeEnum SpecFactEnum
 	PropName FcAtom
-	Params   []Fc
+	Params   FcSlice
 }
 
 type ClaimProveStmt struct {
@@ -89,7 +89,7 @@ type ClaimProveByContradictionStmt struct {
 
 type ClaimPropStmt struct {
 	Prop    DefPropStmt
-	Proofs  []Stmt
+	Proofs  StmtSlice
 	IsProve bool
 }
 
@@ -104,28 +104,18 @@ type KnowPropStmt struct {
 // TODO: 这个的parser还没有像claim_prop那样改成用@
 type ClaimExistPropStmt struct {
 	ExistProp DefExistPropStmt
-	Proofs    []Stmt
+	Proofs    StmtSlice
 }
 
 type HaveObjStStmt struct {
-	ObjNames []string
+	ObjNames StrSlice
 	Fact     SpecFactStmt
-}
-
-type SupposeStmt struct {
-	Fact SpecFactStmt
-	Body []Stmt
-}
-
-type WithStmt struct {
-	Fact SpecFactStmt
-	Body []Stmt
 }
 
 type ProveInEachCaseStmt struct {
 	OrFact    OrStmt
 	ThenFacts FactStmtSlice
-	Proofs    [][]Stmt
+	Proofs    []StmtSlice
 }
 
 // 需要改变，因为DefExistPropStmt 里需要有thenFact
@@ -134,7 +124,7 @@ type KnowExistPropStmt struct {
 }
 
 type OrStmt struct {
-	Facts []*SpecFactStmt
+	Facts SpecFactPtrSlice
 }
 
 type ImportDirStmt struct {
@@ -143,7 +133,7 @@ type ImportDirStmt struct {
 }
 
 type ProveStmt struct {
-	Proof []Stmt
+	Proof StmtSlice
 }
 
 type DefFnTemplateStmt struct {
@@ -154,7 +144,7 @@ type DefFnTemplateStmt struct {
 // s := {} 表示 这是个空集
 type EnumStmt struct {
 	CurSet Fc
-	Items  []Fc
+	Items  FcSlice
 }
 
 // 本质上这可能是不必要的，我应该让需要global的文件全部以main开头，这样就可以分辨哪些要global了，即import一个以main作为文件名开头的文件默认是 import globally
@@ -176,19 +166,19 @@ type IntensionalSetStmt struct {
 	CurSet    Fc
 	Param     string
 	ParentSet Fc
-	Proofs    []*SpecFactStmt
+	Proofs    SpecFactPtrSlice
 }
 
 // 某种程度上这个关键词是不必要的，因为如果我发现涉及到的uniFact里面的所有的 paramSet 都是有 enum 的，那我就默认迭代去证明这个forall。但是我还是引入这个关键词以突出我现在用的是iterative的情况
 type ProveOverFiniteSetStmt struct {
 	Fact   UniFactStmt
-	Proofs []Stmt
+	Proofs StmtSlice
 }
 
 // have xxx st exist_in 的语法糖
 type HaveObjInNonEmptySetStmt struct {
-	Objs    []string
-	ObjSets []Fc
+	Objs    StrSlice
+	ObjSets FcSlice
 }
 
 // 由朴素集合论，枚举法定义集合，用specification的方式去定义集合，是可以的。这样定义出来的集合的存在性是直接得到保证的。这个功能必须写入内核，因为have是引入新东西的方式。
@@ -201,7 +191,7 @@ type HaveSetFnStmt struct {
 	DefHeader DefHeader
 	Param     string
 	ParentSet Fc
-	Proofs    []*SpecFactStmt
+	Proofs    SpecFactPtrSlice
 }
 
 // TODO: 这里需要变成factStmt, haveSetInterface，而不是只被用在声明的时候

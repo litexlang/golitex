@@ -66,7 +66,7 @@ func NewUniFactWithIff(uniFact *UniFactStmt, iffFacts []FactStmt) *UniFactWithIf
 	return &UniFactWithIffStmt{*uniFact, iffFacts}
 }
 
-func NewProveInEachCaseStmt(orFact OrStmt, thenFacts []FactStmt, proofs [][]Stmt) *ProveInEachCaseStmt {
+func NewProveInEachCaseStmt(orFact OrStmt, thenFacts []FactStmt, proofs []StmtSlice) *ProveInEachCaseStmt {
 	return &ProveInEachCaseStmt{orFact, thenFacts, proofs}
 }
 
@@ -82,20 +82,8 @@ func NewKnowExistPropStmt(existProp DefExistPropStmt) *KnowExistPropStmt {
 	return &KnowExistPropStmt{existProp}
 }
 
-func NewWhenPropMatchStmt(fact SpecFactStmt, body []Stmt) *SupposeStmt {
-	return &SupposeStmt{fact, body}
-}
-
-func NewWithPropMatchStmt(fact SpecFactStmt, body []Stmt) *WithStmt {
-	return &WithStmt{fact, body}
-}
-
 func NewOrStmt(orFacts []*SpecFactStmt) *OrStmt {
 	return &OrStmt{orFacts}
-}
-
-func NewSupposeStmt(fact SpecFactStmt, body []Stmt) *SupposeStmt {
-	return &SupposeStmt{fact, body}
 }
 
 func NewImportStmt(path string, asPkgName string) *ImportDirStmt {
