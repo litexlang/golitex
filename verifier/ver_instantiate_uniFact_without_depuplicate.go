@@ -87,7 +87,7 @@ func processUniFactParamsDuplicateDeclared(env *env.Env, params []string) (map[s
 		for {
 			newParam := param
 			if env.IsAtomDeclared(ast.FcAtom(newParam), map[string]struct{}{}) {
-				newParam = generateUndeclaredRandomName(env)
+				newParam = env.GenerateUndeclaredRandomName()
 				if !env.IsAtomDeclared(ast.FcAtom(newParam), map[string]struct{}{}) {
 					paramMap[param] = ast.FcAtom(newParam)
 					paramMapStrToStr[param] = newParam
@@ -109,7 +109,7 @@ func processUniFactParamsDuplicateDeclared_notInGivenMap(env *env.Env, params []
 			newParam := param
 			_, inNotOnMap := notInMap[newParam]
 			if env.IsAtomDeclared(ast.FcAtom(newParam), map[string]struct{}{}) || inNotOnMap {
-				newParam = generateUndeclaredRandomName(env)
+				newParam = env.GenerateUndeclaredRandomName()
 
 				_, inNotOnMap = notInMap[newParam]
 				if !env.IsAtomDeclared(ast.FcAtom(newParam), map[string]struct{}{}) && !inNotOnMap {
