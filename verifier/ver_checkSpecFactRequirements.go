@@ -68,6 +68,8 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state VerState) (bool, er
 		return ver.arithmeticFnRequirement(fcAsFcFn, state)
 	} else if ast.IsFnFcFn(fcAsFcFn) {
 		return true, nil
+	} else if ver.isFcFnWithHeadNameBuiltin(fcAsFcFn) {
+		return true, nil
 	} else if ast.IsFcAtomAndEqualToStr(fcAsFcFn.FnHead, glob.KeywordSetDefinedByReplacement) {
 		return ver.setDefinedByReplacementFnRequirement(fcAsFcFn, state)
 	} else {
@@ -246,4 +248,20 @@ func (ver *Verifier) setDefinedByReplacementFnRequirement(fc *ast.FcFn, state Ve
 	}
 
 	return ok, nil
+}
+
+func (ver *Verifier) isFcFnWithHeadNameBuiltin(fc *ast.FcFn) bool {
+	fcHeadAsAtom, ok := fc.FnHead.(ast.FcAtom)
+	if !ok {
+		return false
+	}
+
+	builtinHeadNames := map[string]struct{}{
+		glob.TupleFcFnHead:     {},
+		glob.KeywordSetProduct: {},
+	}
+
+	_, ok = builtinHeadNames[string(fcHeadAsAtom)]
+
+	return ok
 }
