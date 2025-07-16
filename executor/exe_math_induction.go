@@ -24,8 +24,6 @@ import (
 func (exec *Executor) mathInductionFact_BuiltinRules(stmt *ast.ProveByMathInductionStmt) (glob.ExecState, error) {
 	isTrue := false
 	exec.newEnv(exec.env)
-	var propNameZeroFact ast.FactStmt
-	var nToNAddOneFact ast.FactStmt
 	var resultingFact *ast.UniFactStmt
 
 	defer func() {
@@ -38,10 +36,12 @@ func (exec *Executor) mathInductionFact_BuiltinRules(stmt *ast.ProveByMathInduct
 
 	ver := verifier.NewVerifier(exec.env)
 
-	startSpecFactParams := glob.CopySlice(stmt.Fact.Params)
-	startSpecFactParams[stmt.ParamIndex] = ast.FcAtom("n") // 这个n可能有点不好，因为n可能和其他的参数重名
+	freeVarStr := exec.env.GenerateUndeclaredRandomName()
 
-	startSpecFact := ast.NewSpecFactStmt(
+	startSpecFactParams := glob.CopySlice(stmt.Fact.Params)
+	startSpecFactParams[stmt.ParamIndex] = ast.FcAtom(freeVarStr)
+
+	specFactWithFreeVar := ast.NewSpecFactStmt(
 		stmt.Fact.TypeEnum,
 		stmt.Fact.PropName,
 		startSpecFactParams,
@@ -51,28 +51,41 @@ func (exec *Executor) mathInductionFact_BuiltinRules(stmt *ast.ProveByMathInduct
 	domFacts[0] = ast.NewSpecFactStmt(
 		ast.TruePure,
 		ast.FcAtom(glob.KeySymbolLargerEqual),
-		[]ast.Fc{ast.FcAtom("n"), ast.FcAtom(fmt.Sprintf("%d", stmt.Start))},
+		[]ast.Fc{ast.FcAtom(freeVarStr), ast.FcAtom(fmt.Sprintf("%d", stmt.Start))},
 	)
 
-	domFacts[1] = startSpecFact
+	domFacts[1] = specFactWithFreeVar
+
+	startSpecFactParamsPlusOne := glob.CopySlice(stmt.Fact.Params)
+	startSpecFactParamsPlusOne[stmt.ParamIndex] = ast.FcAtom(fmt.Sprintf("%s+1", freeVarStr))
+	specFactWithFreeVarPlusOne := ast.NewSpecFactStmt(
+		stmt.Fact.TypeEnum,
+		stmt.Fact.PropName,
+		startSpecFactParamsPlusOne,
+	)
 
 	thenFacts := make([]ast.FactStmt, 1)
-	thenFacts[0] = ast.NewSpecFactStmt(
-		ast.TruePure,
-		stmt.Fact.PropName,
-		[]ast.Fc{ast.NewFcFn(ast.FcAtom(glob.KeySymbolPlus), []ast.Fc{ast.FcAtom("n"), ast.FcAtom("1")})},
-	)
+	thenFacts[0] = specFactWithFreeVarPlusOne
 
 	paramInSetsFacts := make([]ast.FactStmt, 1)
-	paramInSetsFacts[0] = ast.NewInFact("n", ast.FcAtom(glob.KeywordNatural))
+	paramInSetsFacts[0] = ast.NewInFact(freeVarStr, ast.FcAtom(glob.KeywordNatural))
 	paramSets := make([]ast.Fc, 1)
 	paramSets[0] = ast.FcAtom(glob.KeywordNatural)
 
-	nToNAddOneFact = ast.NewUniFact(
-		[]string{"n"},
+	nToNAddOneFact := ast.NewUniFact(
+		[]string{freeVarStr},
 		paramSets,
 		domFacts,
 		thenFacts,
+	)
+
+	specFactParamsStart := glob.CopySlice(stmt.Fact.Params)
+	specFactParamsStart[stmt.ParamIndex] = ast.FcAtom(fmt.Sprintf("%d", stmt.Start))
+
+	propNameZeroFact := ast.NewSpecFactStmt(
+		stmt.Fact.TypeEnum,
+		stmt.Fact.PropName,
+		specFactParamsStart,
 	)
 
 	ok, err := ver.VerFactStmt(propNameZeroFact, verifier.Round0NoMsg)
@@ -81,6 +94,12 @@ func (exec *Executor) mathInductionFact_BuiltinRules(stmt *ast.ProveByMathInduct
 	}
 	if !ok {
 		return glob.ExecState_Error, nil
+	}
+
+	// 声明 freeVar
+	err = exec.defObjStmt(ast.NewDefObjStmt([]string{freeVarStr}, []ast.Fc{}, []ast.FactStmt{}), false)
+	if err != nil {
+		return glob.ExecState_Error, err
 	}
 
 	ok, err = ver.VerFactStmt(nToNAddOneFact, verifier.Round0NoMsg)
@@ -94,14 +113,10 @@ func (exec *Executor) mathInductionFact_BuiltinRules(stmt *ast.ProveByMathInduct
 	isTrue = true
 
 	resultingFact = ast.NewUniFact(
-		[]string{"n"},
+		[]string{freeVarStr},
 		paramSets,
-		[]ast.FactStmt{ast.NewSpecFactStmt(
-			ast.TruePure,
-			ast.FcAtom(glob.KeySymbolLargerEqual),
-			[]ast.Fc{ast.FcAtom("n"), ast.FcAtom(fmt.Sprintf("%d", stmt.Start))},
-		)},
-		[]ast.FactStmt{startSpecFact},
+		[]ast.FactStmt{domFacts[0]},
+		[]ast.FactStmt{domFacts[1]},
 	)
 
 	return glob.ExecState_True, nil
