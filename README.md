@@ -379,6 +379,98 @@ Next I want to show you how Litex can be used to verify a simple group theory st
   </tr>
 </table>
 
+To better show the power of `fn_template`, There is another example of defining an algorithm mathematically.
+
+
+
+<table style="border-collapse: collapse; width: 100%;">
+  <tr>
+    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 50%;">Litex</th>
+    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 50%;">Lean 4</th>
+  </tr>
+    <td style="border: 3px solid black; padding: 8px;">
+       <code>fn comp_seq(D set, f fn(D)D) fn(D, N)D:</code><br>
+       <code>&nbsp;&nbsp;forall x D, n N:</code><br>
+       <code>&nbsp;&nbsp;&nbsp;&nbsp;comp_seq(D, f)(x,n+1) = f(comp_seq(D, f)(x, n))</code><br>
+       <code>&nbsp;&nbsp;comp_seq(D, f)(x, 0) = x</code><br>
+       <code></code><br>
+       <code>exist_prop n N st exist_end_of_comp_seq(D set, x D, f fn(D,N)D):</code><br>
+       <code>&nbsp;&nbsp;f(x, n) = f(x, n+1)</code><br>
+       <code></code><br>
+       <code>prop is_algorithm(D set, I set, f fn(D)D):</code><br>
+       <code>&nbsp;&nbsp;forall x I: # i.e. I is subset of D</code><br>
+       <code>&nbsp;&nbsp;&nbsp;&nbsp;x $in D</code><br>
+       <code>&nbsp;&nbsp;iff:</code><br>
+       <code>&nbsp;&nbsp;&nbsp;&nbsp;forall x I:</code><br>
+       <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$exist_end_of_comp_seq(D, x, comp_seq(D, f))</code><br>
+       <code></code><br>
+       <code>fn f(x R)R:</code><br>
+       <code>&nbsp;&nbsp;f(x) = x</code><br>
+       <code></code><br>
+       <code>claim:</code><br>
+       <code>&nbsp;&nbsp;forall x R:</code><br>
+       <code>&nbsp;&nbsp;&nbsp;&nbsp;$exist_end_of_comp_seq(R, x, comp_seq(R, f))</code><br>
+       <code>&nbsp;&nbsp;prove:</code><br>
+       <code>&nbsp;&nbsp;&nbsp;&nbsp;comp_seq(R, f)(x, 0) = x</code><br>
+       <code>&nbsp;&nbsp;&nbsp;&nbsp;comp_seq(R, f)(x, 0 + 1) = f(comp_seq(R, f)(x, 0))</code><br>
+       <code>&nbsp;&nbsp;&nbsp;&nbsp;comp_seq(R, f)(x, 0 + 1) = f(x)</code><br>
+       <code>&nbsp;&nbsp;&nbsp;&nbsp;f(x) = x</code><br>
+       <code>&nbsp;&nbsp;&nbsp;&nbsp;comp_seq(R, f)(x, 0 + 1) = x</code><br>
+       <code>&nbsp;&nbsp;&nbsp;&nbsp;comp_seq(R, f)(x, 0) = comp_seq(R, f)(x, 1)</code><br>
+       <code>&nbsp;&nbsp;&nbsp;&nbsp;exist 0 st $exist_end_of_comp_seq(R, x, comp_seq(R, f))</code><br>
+       <code></code><br>
+       <code>$is_algorithm(R, R, f)</code><br>
+       <code></code><br>
+    </td>
+    <td style="border: 3px solid black; padding: 8px;">
+       <code>structure ComputationalMethod where</code><br>
+       <code>  Q : Type</code><br>
+       <code>  I : Set Q</code><br>
+       <code>  S : Set Q</code><br>
+       <code>  f : Q → Q</code><br>
+       <code>  f_fixed : ∀ q ∈ S, f q = q</code><br>
+       <code></code><br>
+       <code>namespace ComputationalMethod</code><br>
+       <code></code><br>
+       <code>def comp_sequence (cm : ComputationalMethod) (x : cm.Q) : ℕ → cm.Q</code><br>
+       <code>  | 0 => x</code><br>
+       <code>  | n + 1 => cm.f (comp_sequence x n)</code><br>
+       <code></code><br>
+       <code>def TerminatesIn (cm : ComputationalMethod) (x : cm.Q) (k : ℕ) : Prop :=</code><br>
+       <code>  comp_sequence cm x k ∈ cm.S ∧</code><br>
+       <code>  ∀ i < k, comp_sequence cm x i ∉ cm.S</code><br>
+       <code></code><br>
+       <code>def IsAlgorithm (cm : ComputationalMethod) : Prop :=</code><br>
+       <code>  ∀ x ∈ cm.I, ∃ k, TerminatesIn cm x k</code><br>
+       <code></code><br>
+       <code>end ComputationalMethod</code><br>
+       <code></code><br>
+       <code>open ComputationalMethod</code><br>
+       <code></code><br>
+       <code>def IdMethod : ComputationalMethod :=</code><br>
+       <code>{ Q := ℝ,</code><br>
+       <code>  I := Set.univ,</code><br>
+       <code>  S := Set.univ,</code><br>
+       <code>  f := id,</code><br>
+       <code>  f_fixed := by intros q h; rfl }</code><br>
+       <code></code><br>
+       <code>example : IsAlgorithm IdMethod :=</code><br>
+       <code>by</code><br>
+       <code>  intros x hx</code><br>
+       <code>  use 0</code><br>
+       <code>  unfold TerminatesIn comp_sequence</code><br>
+       <code>  constructor</code><br>
+       <code>  · simp</code><br>
+       <code>    exact Set.mem_univ _</code><br>
+       <code>  · </code><br>
+       <code>    intros i hi</code><br>
+       <code>    exact False.elim (Nat.not_lt_zero _ hi)</code><br>
+       <code></code><br>
+    </td>
+  </tr>
+</table>
+
+
 ## Litex Introduction For Non-Technical Readers
 
 _We always overestimate the change that will occur in the next two years and underestimate the change that will occur in the next ten._

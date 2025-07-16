@@ -39,7 +39,7 @@ fn f(x R)R:
 
 
 claim:
-	forall x R:
+    forall x R:
         $exist_end_of_comp_seq(R, x, comp_seq(R, f))
     prove:
         comp_seq(R, f)(x, 0) = x
