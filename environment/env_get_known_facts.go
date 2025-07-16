@@ -21,20 +21,19 @@ import ast "golitex/ast"
 func (e *Env) GetTemplateOfFcFnRecursively(fcFn *ast.FcFn) ([]*ast.FnTemplateStmt, []*ast.FcFn, bool) {
 	currentFcFn := fcFn
 	var leftMostHead ast.FcAtom
-	count := 0
-	paramsOfEachLevel := [][]ast.Fc{}
+	paramsOfEachLevel := [][]ast.Fc{currentFcFn.Params}
 
 	for {
 		if headAsAtom, ok := currentFcFn.FnHead.(ast.FcAtom); ok {
 			leftMostHead = headAsAtom
-			paramsOfEachLevel = append([][]ast.Fc{currentFcFn.Params}, paramsOfEachLevel...)
 			break
 		} else {
 			currentFcFn = currentFcFn.FnHead.(*ast.FcFn)
 			paramsOfEachLevel = append([][]ast.Fc{currentFcFn.Params}, paramsOfEachLevel...)
-			count++
 		}
 	}
+
+	lenOfParamOfEachLevelMinusOne := len(paramsOfEachLevel) - 1
 
 	templateOfEachLevel := []*ast.FnTemplateStmt{}
 
@@ -46,9 +45,10 @@ func (e *Env) GetTemplateOfFcFnRecursively(fcFn *ast.FcFn) ([]*ast.FnTemplateStm
 
 	templateOfEachLevel = append([]*ast.FnTemplateStmt{fnT}, templateOfEachLevel...)
 	fnDefRetSet := fnT.RetSet
+	fnDefParams := fnT.DefHeader.Params
 
 	// 从 template 的定义中，得到 template的返回值类型
-	for i := count - 1; i >= 0; i-- {
+	for i := lenOfParamOfEachLevelMinusOne - 1; i >= 0; i-- {
 		switch retT := fnDefRetSet.(type) {
 		case ast.FcAtom:
 			retT, ok := fnDefRetSet.(ast.FcAtom)
@@ -61,8 +61,27 @@ func (e *Env) GetTemplateOfFcFnRecursively(fcFn *ast.FcFn) ([]*ast.FnTemplateStm
 			}
 			templateOfEachLevel = append(templateOfEachLevel, &templateDef.FnTemplateStmt)
 			fnDefRetSet = templateDef.FnTemplateStmt.RetSet
+			fnDefParams = templateDef.FnTemplateStmt.Params
 		case *ast.FcFn:
-			curTemplate, ok := retT.TemplateFcFnToTemplate()
+			curLayer := lenOfParamOfEachLevelMinusOne - i - 1
+
+			curParams := paramsOfEachLevel[curLayer]
+
+			if len(curParams) != len(fnDefParams) {
+				return nil, nil, false
+			}
+
+			uniMap := map[string]ast.Fc{}
+			for j, freeVar := range fnDefParams {
+				uniMap[freeVar] = curParams[j]
+			}
+
+			instRetT, err := retT.Instantiate(uniMap)
+			if err != nil {
+				return nil, nil, false
+			}
+
+			curTemplate, ok := instRetT.(*ast.FcFn).TemplateFcFnToTemplate()
 			if !ok {
 				return nil, nil, false
 			}
@@ -71,7 +90,9 @@ func (e *Env) GetTemplateOfFcFnRecursively(fcFn *ast.FcFn) ([]*ast.FnTemplateStm
 		}
 	}
 
-	return templateOfEachLevel, ast.MakeSliceOfFcFnWithHeadAndParamsOfEachLevel(leftMostHead, paramsOfEachLevel), true
+	fcFnOfEachLevel := ast.MakeSliceOfFcFnWithHeadAndParamsOfEachLevel(leftMostHead, paramsOfEachLevel)
+
+	return templateOfEachLevel, fcFnOfEachLevel, true
 }
 
 func (e *Env) GetEnumFact(enumName string) ([]ast.Fc, bool) {
