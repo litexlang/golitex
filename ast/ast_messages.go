@@ -50,7 +50,7 @@ func (stmt *SpecFactStmt) String() string {
 	if stmt.IsExist_St_Fact() {
 		return exist_st_FactString(stmt)
 	} else {
-		return pureFactString(stmt)
+		return pureSpecFactString(stmt)
 	}
 }
 
@@ -58,7 +58,7 @@ var relaPropSet map[string]struct{} = map[string]struct{}{
 	glob.KeywordIn: {},
 }
 
-func pureFactString(stmt *SpecFactStmt) string {
+func pureSpecFactString(stmt *SpecFactStmt) string {
 	var builder strings.Builder
 
 	if stmt.TypeEnum == FalsePure {
