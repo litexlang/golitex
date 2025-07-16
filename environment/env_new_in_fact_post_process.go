@@ -57,6 +57,7 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) error {
 }
 
 func (e *Env) inFactPostProcess_InFnTemplate(fact *ast.SpecFactStmt) (bool, error) {
+	// TODO 这里如果是 fcFn 类型的template那也要考虑
 	templateName, ok := fact.Params[1].(ast.FcAtom)
 	if !ok {
 		return false, nil

@@ -47,7 +47,7 @@ know:
             $random_proposition(n + 1)
 
 # use "prove_by_math_induction" to prove random_proposition is true for all natural numbers larger than 0
-prove_by_math_induction random_proposition 0
+prove_by_math_induction($random_proposition(n))
 
 # verify: $random_proposition(n) is true for all n N
 forall n N:
