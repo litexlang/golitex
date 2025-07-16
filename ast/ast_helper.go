@@ -126,3 +126,5 @@ func (stmt *UniFactStmt) ParamInParamSet() []*SpecFactStmt {
 	}
 	return paramSetFacts
 }
+
+func (fcFn *FcFn) 

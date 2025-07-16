@@ -1,41 +1,36 @@
-"""
+# Definition of computational sequence
 fn comp_seq(D set, f fn(D)D) fn(D, N)D:
     forall x D, n N:
         comp_seq(D, f)(x,n+1) = f(comp_seq(D, f)(x, n))
     comp_seq(D, f)(x, 0) = x
-exist_prop n N st exist_end_of_computational_sequence(D set, x D, f fn(D,N)D):
+
+# Definition of end of computational sequence
+exist_prop n N st exist_end_of_comp_seq(D set, x D, f fn(D,N)D):
     f(x, n) = f(x, n+1)
+
+# Definition of algorithm
 prop is_algorithm(D set, I set, f fn(D)D):
     forall x I: # i.e. I is subset of D
         x $in D
     iff:
         forall x I:
-            $exist_end_of_computational_sequence(D, x, comp_seq(D, f))
+            $exist_end_of_comp_seq(D, x, comp_seq(D, f))
 
-fn f(x N)N:
+# We prove $is_algorithm(R, R, f(x) = x)
+
+fn f(x R)R:
     f(x) = x
 
-prop comp_seq_of_f_is_fixed(D set, f fn(D)D, x D, n N):
-    comp_seq(D, f)(x, n) = x
 
 claim:
-    forall x N, n N:
-        $comp_seq_is_fixed(N, f, x, n)
+	forall x R:
+        $exist_end_of_comp_seq(R, x, comp_seq(R, f))
     prove:
-    	comp_seq(N, f)(x, 0) = f(x)
-        f(x) = x # this is the base case
-        $comp_seq_is_fixed(N, f, x, 0)
-        prove_by_math_induction 
-"""
+        comp_seq(R, f)(x, 0) = x
+        comp_seq(R, f)(x, 0 + 1) = f(comp_seq(R, f)(x, 0))
+        comp_seq(R, f)(x, 0 + 1) = f(x)
+        comp_seq(R, f)(x, 0 + 1) = x
+        comp_seq(R, f)(x, 0) = comp_seq(R, f)(x, 1)
+        exist 0 st $exist_end_of_comp_seq(R, x, comp_seq(R, f))
 
-prop p(n N)
-
-know:
-    $p(0)
-    forall n N:
-        $p(n)
-        then:
-            $p(n+1)
-
-prove_by_math_induction p 0
-
+$is_algorithm(R, R, f)
