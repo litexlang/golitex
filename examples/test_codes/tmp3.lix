@@ -1,27 +1,13 @@
-obj a N, s set
+prop p(x R, n N)
+
+obj y R
+
 know:
-    forall a s:
-        or:
-            a = 1
-            a = 2
-            a = 3
-            a = 4
-    forall a s:
-        not a = 1
-        not a = 2
+	forall n N:
+        not $p(y, n)
+        then:
+        	not $p(y, n+1)
+    
+    not $p(y, 1)
 
-claim:
-    forall k s:
-        or:
-            k = 3
-            k = 4
-    prove_by_contradiction:
-        not k = 3
-        not k = 4
-        or:
-        	k = 1
-            k = 2
-            k = 3
-            k = 4
-
-    	
+prove_by_math_induction(not $p(y, n), 1,1)    	

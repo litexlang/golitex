@@ -18,7 +18,6 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	env "golitex/environment"
-	glob "golitex/glob"
 )
 
 func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state VerState) (bool, error) {
@@ -75,20 +74,6 @@ func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state VerStat
 	}
 
 	return true, nil
-}
-
-func generateUndeclaredRandomName(env *env.Env) string {
-	i := 4
-	var randomStr string
-	for {
-		randomStr = glob.RandomString(i)
-		// check if the string is undeclared
-		// if !env.IsAtomDeclared(ast.NewFcAtom(glob.EmptyPkg, randomStr), map[string]struct{}{}) {
-		if !env.IsAtomDeclared(ast.FcAtom(randomStr), map[string]struct{}{}) {
-			return randomStr
-		}
-		i++
-	}
 }
 
 func (ver *Verifier) PreprocessUniFactParams_DeclareParams(oldStmt *ast.UniFactStmt) (*ast.UniFactStmt, error) {

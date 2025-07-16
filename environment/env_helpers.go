@@ -16,6 +16,7 @@ package litex_env
 
 import (
 	ast "golitex/ast"
+	glob "golitex/glob"
 )
 
 func (e *Env) GetFactsFromKnownFactInMatchEnv(envFact *ast.SpecFactStmt) (*KnownFactsStruct, bool) {
@@ -40,4 +41,18 @@ func (e *Env) isSetFnRetValue(fc ast.Fc) (*ast.HaveSetFnStmt, bool) {
 	}
 	haveSetFn, ok := e.GetHaveSetFnDef(fnNameAsAtom)
 	return haveSetFn, ok
+}
+
+func (e *Env) GenerateUndeclaredRandomName() string {
+	i := 4
+	var randomStr string
+	for {
+		randomStr = glob.RandomString(i)
+		// check if the string is undeclared
+		// if !env.IsAtomDeclared(ast.NewFcAtom(glob.EmptyPkg, randomStr), map[string]struct{}{}) {
+		if !e.IsAtomDeclared(ast.FcAtom(randomStr), map[string]struct{}{}) {
+			return randomStr
+		}
+		i++
+	}
 }
