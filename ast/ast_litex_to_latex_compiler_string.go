@@ -158,9 +158,82 @@ func (l *UniFactStmt) ToLatexString() string {
 }
 
 func (p *SpecFactStmt) ToLatexString() string {
-	str := p.String()
-	str = strings.TrimPrefix(str, glob.KeySymbolDollar)
-	return str
+	if p.IsExist_St_Fact() {
+		return exist_st_FactString(p)
+	} else {
+		return pureSpecFactLatexString(p)
+	}
+}
+
+func pureSpecFactLatexString(stmt *SpecFactStmt) string {
+	var builder strings.Builder
+
+	if stmt.TypeEnum == FalsePure {
+		builder.WriteString("\\neg ")
+	}
+
+	if glob.IsKeySymbol(string(stmt.PropName)) {
+		builder.WriteString(keySymbolRelaFactWithoutNotLatexString(stmt))
+	} else if _, ok := relaPropSet[string(stmt.PropName)]; ok {
+		builder.WriteString(keywordRelaFactWithoutNotLatexString(stmt))
+	} else {
+		builder.WriteString(stmt.String())
+	}
+
+	return builder.String()
+}
+
+func keySymbolRelaFactWithoutNotLatexString(stmt *SpecFactStmt) string {
+	var builder strings.Builder
+
+	builder.WriteString(stmt.Params[0].ToLatexString())
+	builder.WriteString(" ")
+
+	// 这里根据不同的我str的写法输出不同的latex的写法
+	switch stmt.PropName {
+	case glob.KeySymbolEqual:
+		builder.WriteString("=")
+	case glob.KeySymbolLess:
+		builder.WriteString("\\leq")
+	case glob.KeySymbolGreater:
+		builder.WriteString("\\geq")
+	case glob.KeySymbolEqualEqual:
+		builder.WriteString("==")
+	case glob.KeySymbolNotEqual:
+		builder.WriteString("\\neq")
+	case glob.KeywordIn:
+		builder.WriteString("\\in")
+	case glob.KeySymbolLargerEqual:
+		builder.WriteString("\\geq")
+	case glob.KeySymbolLessEqual:
+		builder.WriteString("\\leq")
+	default:
+		builder.WriteString(stmt.PropName.String())
+	}
+
+	builder.WriteString(" ")
+	builder.WriteString(stmt.Params[1].ToLatexString())
+
+	return builder.String()
+}
+
+func keywordRelaFactWithoutNotLatexString(stmt *SpecFactStmt) string {
+	var builder strings.Builder
+
+	builder.WriteString(stmt.Params[0].ToLatexString())
+	builder.WriteString(" ")
+
+	switch stmt.PropName {
+	case glob.KeywordIn:
+		builder.WriteString("\\in")
+	default:
+		builder.WriteString(stmt.PropName.String())
+	}
+
+	builder.WriteString(" ")
+	builder.WriteString(stmt.Params[1].ToLatexString())
+
+	return builder.String()
 }
 
 func (f *ClaimProveStmt) ToLatexString() string {
