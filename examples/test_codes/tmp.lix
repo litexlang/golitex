@@ -29,6 +29,7 @@ claim:
         comp_seq(R, f)(x, 0) = x
         comp_seq(R, f)(x, 0 + 1) = f(comp_seq(R, f)(x, 0))
         comp_seq(R, f)(x, 0 + 1) = f(x)
+        f(x) = x
         comp_seq(R, f)(x, 0 + 1) = x
         comp_seq(R, f)(x, 0) = comp_seq(R, f)(x, 1)
         exist 0 st $exist_end_of_comp_seq(R, x, comp_seq(R, f))

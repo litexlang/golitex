@@ -144,7 +144,7 @@ func (fcFn *FcFn) TemplateFcFnToTemplate() (*FnTemplateStmt, bool) {
 
 	retSet := fcFn.Params[0]
 
-	params := make([]string, len(paramSets))
+	params := glob.GenerateUniqueRandomStrings(len(paramSets))
 
 	return NewFnTemplateStmt(NewDefHeader("", params, paramSets), []FactStmt{}, []FactStmt{}, retSet), true
 }
