@@ -19,6 +19,7 @@ import (
 	ast "golitex/ast"
 	glob "golitex/glob"
 	"slices"
+	"strconv"
 	"strings"
 )
 
@@ -1234,22 +1235,56 @@ func (tb *tokenBlock) claimExistPropStmt() (*ast.ClaimExistPropStmt, error) {
 }
 
 func (tb *tokenBlock) proveByMathInductionStmt() (*ast.ProveByMathInductionStmt, error) {
-	err := tb.header.skip(glob.KeywordProveByMathInduction)
+	var err error
+	var paramIndex int = 0
+	var start int = 0
+
+	err = tb.header.skip(glob.KeywordProveByMathInduction)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
 
-	propName, err := tb.rawFcAtom()
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
 
-	start, err := tb.RawFc()
+	fact, err := tb.specFactStmt()
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
 
-	return ast.NewProveByMathInductionStmt(propName, start), nil
+	if tb.header.is(glob.KeySymbolComma) {
+		tb.header.skip(glob.KeySymbolComma)
+		paramIndexAsStr, err := tb.header.next()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		paramIndex, err = strconv.Atoi(paramIndexAsStr)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+			startAsStr, err := tb.header.next()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			start, err = strconv.Atoi(startAsStr)
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+		}
+	}
+
+	err = tb.header.skip(glob.KeySymbolRightBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	return ast.NewProveByMathInductionStmt(fact, paramIndex, start), nil
 }
 
 func (tb *tokenBlock) dom_and_section(kw string, kw_should_not_exist_in_body string) ([]ast.FactStmt, []ast.FactStmt, error) {
