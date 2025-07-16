@@ -112,7 +112,7 @@ func (l *DefFnStmt) ToLatexString() string {
 	}
 
 	if len(l.FnTemplateStmt.DomFacts) > 0 {
-		builder.WriteString("Its domain is: ")
+		builder.WriteString(" Its domain is: ")
 		domFactStrSlice := make([]string, len(l.FnTemplateStmt.DomFacts))
 		for i := range len(l.FnTemplateStmt.DomFacts) {
 			domFactStrSlice[i] = l.FnTemplateStmt.DomFacts[i].ToLatexString()
@@ -122,7 +122,7 @@ func (l *DefFnStmt) ToLatexString() string {
 	}
 
 	if len(l.FnTemplateStmt.ThenFacts) > 0 {
-		builder.WriteString("We also suppose the function has the following properties: ")
+		builder.WriteString(fmt.Sprintf(" We also suppose the %s has the following properties: ", l.FnTemplateStmt.DefHeader.Name))
 		thenFactStrSlice := make([]string, len(l.FnTemplateStmt.ThenFacts))
 		for i := range len(l.FnTemplateStmt.ThenFacts) {
 			thenFactStrSlice[i] = l.FnTemplateStmt.ThenFacts[i].ToLatexString()
@@ -338,7 +338,7 @@ func (s *ImportFileStmt) ToLatexString() string {
 
 func (s *ProveStmt) ToLatexString() string {
 	var builder strings.Builder
-	builder.WriteString("[Example] ")
+	builder.WriteString("[Example]\n")
 	stmtSlice := make([]string, len(s.Proof))
 	for i := range s.Proof {
 		stmtSlice[i] = s.Proof[i].ToLatexString()
@@ -386,14 +386,27 @@ func (s *ClaimProveByContradictionStmt) ToLatexString() string {
 	return builder.String()
 }
 
+func (fcSlice FcSlice) fcSliceToLatexStringSlice() string {
+	fcStrSlice := make([]string, len(fcSlice))
+	for i := range len(fcSlice) {
+		fcStrSlice[i] = fcSlice[i].ToLatexString()
+	}
+	return strings.Join(fcStrSlice, ", ")
+}
+
+func (strSlice StrSlice) stringSliceToLatexStringSlice() string {
+	return strings.Join(strSlice, ", ")
+}
+
 func (s *DefFnTemplateStmt) ToLatexString() string {
 	var builder strings.Builder
-	builder.WriteString("Suppose we have a set of functions: ")
-	builder.WriteString("their parameters satisfy condition: ")
+	// 这里我要说的是，用xxx来代表其中的一个
+	builder.WriteString(fmt.Sprintf("Suppose we have a set called %s. It is a set of functions.", s.FnTemplateStmt.DefHeader.Name))
+	builder.WriteString(fmt.Sprintf("It has %d parameter(s) written as %s. These parameters satisfy (i.e. their domain must be superset of a set that satisfies the following condition): ", len(s.FnTemplateStmt.Params), s.FnTemplateStmt.Params.stringSliceToLatexStringSlice()))
 	builder.WriteString(strings.Join(paramInParamSetInFactLatexStringSlice(s.FnTemplateStmt.Params, s.FnTemplateStmt.ParamSets), ", "))
 	builder.WriteString(" \\text{and} ")
 	builder.WriteString(strings.Join(s.FnTemplateStmt.DomFacts.factStmtSliceToLatexStringSlice(), ", "))
-	builder.WriteString("When their parameters satisfies the above condition, they have the following properties: ")
+	builder.WriteString(fmt.Sprintf("The functions (we use %s to represent a function) has the following properties: ", s.FnTemplateStmt.DefHeader.Name))
 	builder.WriteString(strings.Join(s.FnTemplateStmt.ThenFacts.factStmtSliceToLatexStringSlice(), ", "))
 	builder.WriteString(".")
 	return builder.String()
@@ -540,8 +553,7 @@ func (s *NamedUniFactStmt) ToLatexString() string {
 
 func (s *FnTemplateStmt) ToLatexString() string {
 	var builder strings.Builder
-	builder.WriteString("We define a set of functions: ")
-	builder.WriteString("their parameters satisfy condition: ")
+	builder.WriteString("We define a set of functions whose parameters satisfy: ")
 	builder.WriteString(strings.Join(paramInParamSetInFactLatexStringSlice(s.Params, s.ParamSets), ", "))
 	builder.WriteString(" \\text{and} ")
 	builder.WriteString(strings.Join(s.DomFacts.factStmtSliceToLatexStringSlice(), ", "))

@@ -54,6 +54,10 @@ func (stmt *SpecFactStmt) String() string {
 	}
 }
 
+var relaPropSet map[string]struct{} = map[string]struct{}{
+	glob.KeywordIn: {},
+}
+
 func pureFactString(stmt *SpecFactStmt) string {
 	var builder strings.Builder
 
@@ -63,7 +67,9 @@ func pureFactString(stmt *SpecFactStmt) string {
 	}
 
 	if glob.IsKeySymbol(string(stmt.PropName)) {
-		builder.WriteString(relaFactWithoutNotString(stmt))
+		builder.WriteString(keySymbolRelaFactWithoutNotString(stmt))
+	} else if _, ok := relaPropSet[string(stmt.PropName)]; ok {
+		builder.WriteString(keywordRelaFactWithoutNotString(stmt))
 	} else {
 		builder.WriteString(glob.FuncFactPrefix)
 		builder.WriteString(stmt.PropName.String())
@@ -75,7 +81,20 @@ func pureFactString(stmt *SpecFactStmt) string {
 	return builder.String()
 }
 
-func relaFactWithoutNotString(stmt *SpecFactStmt) string {
+func keywordRelaFactWithoutNotString(stmt *SpecFactStmt) string {
+	var builder strings.Builder
+
+	builder.WriteString(stmt.Params[0].String())
+	builder.WriteByte(' ')
+	builder.WriteString(glob.KeySymbolDollar)
+	builder.WriteString(stmt.PropName.String())
+	builder.WriteByte(' ')
+	builder.WriteString(stmt.Params[1].String())
+
+	return builder.String()
+}
+
+func keySymbolRelaFactWithoutNotString(stmt *SpecFactStmt) string {
 	var builder strings.Builder
 
 	builder.WriteString(stmt.Params[0].String())
