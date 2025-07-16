@@ -57,7 +57,7 @@ func (exec *Executor) mathInductionFact_BuiltinRules(stmt *ast.ProveByMathInduct
 	domFacts[1] = specFactWithFreeVar
 
 	startSpecFactParamsPlusOne := glob.CopySlice(stmt.Fact.Params)
-	startSpecFactParamsPlusOne[stmt.ParamIndex] = ast.FcAtom(fmt.Sprintf("%s+1", freeVarStr))
+	startSpecFactParamsPlusOne[stmt.ParamIndex] = ast.NewFcFn(ast.FcAtom(glob.KeySymbolPlus), []ast.Fc{ast.FcAtom(freeVarStr), ast.FcAtom("1")})
 	specFactWithFreeVarPlusOne := ast.NewSpecFactStmt(
 		stmt.Fact.TypeEnum,
 		stmt.Fact.PropName,
@@ -94,12 +94,6 @@ func (exec *Executor) mathInductionFact_BuiltinRules(stmt *ast.ProveByMathInduct
 	}
 	if !ok {
 		return glob.ExecState_Error, nil
-	}
-
-	// 声明 freeVar
-	err = exec.defObjStmt(ast.NewDefObjStmt([]string{freeVarStr}, []ast.Fc{}, []ast.FactStmt{}), false)
-	if err != nil {
-		return glob.ExecState_Error, err
 	}
 
 	ok, err = ver.VerFactStmt(nToNAddOneFact, verifier.Round0NoMsg)
