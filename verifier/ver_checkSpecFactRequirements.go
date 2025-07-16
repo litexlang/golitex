@@ -256,12 +256,7 @@ func (ver *Verifier) isFcFnWithHeadNameBuiltin(fc *ast.FcFn) bool {
 		return false
 	}
 
-	builtinHeadNames := map[string]struct{}{
-		glob.TupleFcFnHead:     {},
-		glob.KeywordSetProduct: {},
-	}
-
-	_, ok = builtinHeadNames[string(fcHeadAsAtom)]
+	_, ok = glob.BuiltinFunctionNameSet[string(fcHeadAsAtom)]
 
 	return ok
 }
