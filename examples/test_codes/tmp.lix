@@ -1,37 +1,21 @@
-# Definition of computational sequence
-fn comp_seq(D set, f fn(D)D) fn(D, N)D:
-    forall x D, n N:
-        comp_seq(D, f)(x,n+1) = f(comp_seq(D, f)(x, n))
-    comp_seq(D, f)(x, 0) = x
+fn_template f_t(x Z) Z:
+    dom:
+        x >= 0
+    then:
+        f_t(x) = x + 10
 
-# Definition of end of computational sequence
-exist_prop n N st exist_end_of_comp_seq(D set, x D, f fn(D,N)D):
-    f(x, n) = f(x, n+1)
+fn_template f_t2(x Z) f_t:
+    dom:
+        x >= 0
 
-# Definition of algorithm
-prop is_algorithm(D set, I set, f fn(D)D):
-    forall x I: # i.e. I is subset of D
-        x $in D
-    iff:
-        forall x I:
-            $exist_end_of_comp_seq(D, x, comp_seq(D, f))
+fn f(x Z) f_t2:
+    dom:
+        x >= 0
 
-# We prove $is_algorithm(R, R, f(x) = x)
+#f(0) $in f_t2
+#f(0)(1) $in f_t
 
-fn f(x R)R:
-    f(x) = x
+f(0) $in f_t2
+f(0)(1) $in f_t
 
-
-claim:
-	forall x R:
-        $exist_end_of_comp_seq(R, x, comp_seq(R, f))
-    prove:
-        comp_seq(R, f)(x, 0) = x
-        comp_seq(R, f)(x, 0 + 1) = f(comp_seq(R, f)(x, 0))
-        comp_seq(R, f)(x, 0 + 1) = f(x)
-        f(x) = x
-        comp_seq(R, f)(x, 0 + 1) = x
-        comp_seq(R, f)(x, 0) = comp_seq(R, f)(x, 1)
-        exist 0 st $exist_end_of_comp_seq(R, x, comp_seq(R, f))
-
-$is_algorithm(R, R, f)
+f(0)(1)(2) = 2 + 10
