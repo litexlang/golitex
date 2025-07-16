@@ -82,6 +82,14 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state VerState) 
 		return true, nil
 	}
 
+	ok, err = ver.verInSetProduct(stmt, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
 	return false, nil
 }
 
@@ -390,4 +398,46 @@ func (ver *Verifier) objNotInSetWhenAllItemsInThatSetAreNotEqualToIt(stmt *ast.S
 		return true, nil
 	}
 	return false, nil
+}
+
+func (ver *Verifier) verInSetProduct(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	// left must be (x, y, ...) right must be product(xSet, ySet, ...)
+	fcFn, ok := stmt.Params[0].(*ast.FcFn)
+	if !ok {
+		return false, nil
+	}
+	ok = ast.IsFcAtomAndEqualToStr(fcFn.FnHead, glob.TupleFcFnHead)
+	if !ok {
+		return false, nil
+	}
+
+	setProductFn, ok := stmt.Params[1].(*ast.FcFn)
+	if !ok {
+		return false, nil
+	}
+	ok = ast.IsFcAtomAndEqualToStr(setProductFn.FnHead, glob.KeywordSetProduct)
+	if !ok {
+		return false, nil
+	}
+
+	if len(fcFn.Params) != len(setProductFn.Params) {
+		return false, nil
+	}
+
+	for i := range len(fcFn.Params) {
+		inFact := ast.NewInFactWithParamFc(fcFn.Params[i], setProductFn.Params[i])
+		ok, err := ver.VerFactStmt(inFact, state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+	}
+
+	if state.requireMsg() {
+		ver.successWithMsg(stmt.String(), fmt.Sprintf("each item in tuple %s is in corresponding set %s", stmt.Params[0], stmt.Params[1]))
+	}
+
+	return true, nil
 }
