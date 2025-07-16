@@ -14,6 +14,12 @@
 
 package litex_ast
 
+type FactStmtSlice []FactStmt
+type StmtSlice []Stmt
+type SpecFactPtrSlice []*SpecFactStmt
+type StrSlice []string
+type FcSlice []Fc
+
 type DefObjStmt struct {
 	Objs    StrSlice
 	ObjSets FcSlice
@@ -158,8 +164,9 @@ type ImportFileStmt struct {
 
 // 最好要可以固定prop的某几位，然后某一位是变化的n，这样更合理
 type ProveByMathInductionStmt struct {
-	PropName FcAtom
-	Start    Fc
+	Fact       *SpecFactStmt
+	ParamIndex int
+	Start      int
 }
 
 type IntensionalSetStmt struct {

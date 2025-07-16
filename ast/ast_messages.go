@@ -598,10 +598,13 @@ func (stmt *ClaimExistPropStmt) String() string {
 func (stmt *ProveByMathInductionStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordProveByMathInduction)
-	builder.WriteString(" ")
-	builder.WriteString(stmt.PropName.String())
-	builder.WriteString(" ")
-	builder.WriteString(stmt.Start.String())
+	builder.WriteString("(")
+	builder.WriteString(stmt.Fact.String())
+	builder.WriteString(", ")
+	builder.WriteString(fmt.Sprintf("%d", stmt.ParamIndex))
+	builder.WriteString(", ")
+	builder.WriteString(fmt.Sprintf("%d", stmt.Start))
+	builder.WriteString(")")
 	return builder.String()
 }
 
