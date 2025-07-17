@@ -1729,17 +1729,17 @@ func (tb *tokenBlock) equalsFactStmt() (ast.Stmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	params, err := tb.bracedFcSlice()
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
+	params := make(ast.FcSlice, 0, len(tb.body))
 	for _, param := range tb.body {
 		param, err := param.RawFc()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
 		params = append(params, param)
+	}
+
+	if len(params) < 2 {
+		return nil, fmt.Errorf("expect at least two params")
 	}
 
 	return ast.NewEqualsFactStmt(params), nil

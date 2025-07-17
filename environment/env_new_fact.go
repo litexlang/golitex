@@ -35,6 +35,8 @@ func (env *Env) NewFact(stmt ast.FactStmt) error {
 		return env.newEnumFact(f)
 	case *ast.IntensionalSetStmt:
 		return env.newIntensionalSetFact(f)
+	case *ast.EqualsFactStmt:
+		return env.newEqualsFact(f)
 	default:
 		return fmt.Errorf("unknown fact type: %T", stmt)
 	}
@@ -699,5 +701,16 @@ func (env *Env) storeUniFact(specFact *ast.SpecFactStmt, uniFact *ast.UniFactStm
 		return err
 	}
 
+	return nil
+}
+
+func (env *Env) newEqualsFact(stmt *ast.EqualsFactStmt) error {
+	equalFacts := stmt.ToEqualFacts()
+	for _, equalFact := range equalFacts {
+		err := env.NewFact(equalFact)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
