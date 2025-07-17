@@ -104,6 +104,15 @@ func (ver *Verifier) verEqualBuiltin(left ast.Fc, right ast.Fc, state VerState) 
 	if ok {
 		return ver.equalTrueAddSuccessMsg(left, right, state, msg)
 	}
+
+	ok, msg, err = ver.verEqual_LeftToRightIsProj(left, right, true, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return ver.equalTrueAddSuccessMsg(left, right, state, msg)
+	}
+
 	return false, nil
 }
 

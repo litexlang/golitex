@@ -60,7 +60,6 @@ const (
 	KeywordFnTemplateTemplate             = "fn_template_template"
 
 	KeywordSetProduct = "set_product"
-	KeywordProj       = "proj"
 	// KeywordExistSetByAxiomOfReplacement = "exist_set_by_axiom_of_replacement"
 )
 
@@ -108,7 +107,6 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordExistFnPreImageByReplacement:   {},
 	KeywordFnTemplateTemplate:             {},
 	KeywordSetProduct:                     {},
-	KeywordProj:                           {},
 	// KeywordExistSetByAxiomOfReplacement:   {},
 }
 
@@ -212,13 +210,12 @@ var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]s
 	KeywordExistFnPreImageByReplacement:   {},
 	TupleFcFnHead:                         {},
 	KeywordSetProduct:                     {},
-	KeywordProj:                           {},
 }
 
 var BuiltinFunctionNameSetAndCanTakeInAnyObj = map[string]struct{}{
 	TupleFcFnHead:     {},
 	KeywordSetProduct: {},
-	KeywordProj:       {},
+	AtIndexOp:         {}, // 之后改成必须要是 $in 某个set_product才行，暂时先这样；同时传入的index需要是int
 }
 
 func IsBuiltinKeywordKeySymbolCanBeFcAtomName(name string) bool {

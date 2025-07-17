@@ -20,6 +20,7 @@ import (
 	cmp "golitex/cmp"
 	env "golitex/environment"
 	glob "golitex/glob"
+	"strconv"
 	"strings"
 )
 
@@ -385,7 +386,7 @@ func (ver *Verifier) fcEqualByBir(left ast.Fc, right ast.Fc, verState VerState) 
 		return true, nil
 	}
 
-	ok, msg, err = ver.verEqual_LeftOrRightIsProj(left, right, verState)
+	ok, msg, err = ver.verEqual_LeftToRightIsProj(left, right, true, verState)
 	if err != nil {
 		return false, err
 	}
@@ -396,10 +397,35 @@ func (ver *Verifier) fcEqualByBir(left ast.Fc, right ast.Fc, verState VerState) 
 	return false, nil
 }
 
-func (ver *Verifier) verEqual_LeftOrRightIsProj(left, right ast.Fc, verState VerState) (bool, string, error) {
-	if ast.IsFcFnWithHeadName(left, glob.KeywordProj) {
+func (ver *Verifier) verEqual_LeftToRightIsProj(left, right ast.Fc, checkReverse bool, verState VerState) (bool, string, error) {
+	if ast.IsFcFnWithHeadName(left, glob.AtIndexOp) {
+		index, ok := left.(*ast.FcFn).Params[1].(ast.FcAtom)
+		if !ok {
+			return false, "", fmt.Errorf("index in %s is not a FcAtom", left)
+		}
+		indexAsInt, err := strconv.Atoi(string(index))
+		if err != nil {
+			return false, "", fmt.Errorf("index in %s is not a int", left)
+		}
+		if ast.IsFcFnWithHeadName(left.(*ast.FcFn).Params[0], glob.TupleFcFnHead) {
+			if indexAsInt < 0 || indexAsInt >= len(left.(*ast.FcFn).Params[0].(*ast.FcFn).Params) {
+				return false, "", fmt.Errorf("index in %s is out of range", left)
+			}
+			ok, err := ver.VerFactStmt(ast.NewEqualFact(left.(*ast.FcFn).Params[0].(*ast.FcFn).Params[indexAsInt], right), verState)
+			if err != nil {
+				return false, "", err
+			}
+			if ok {
+				return true, "", nil
+			}
+		}
 	}
-	return false, "", nil
+
+	if checkReverse {
+		return ver.verEqual_LeftToRightIsProj(right, left, false, verState)
+	} else {
+		return false, "", nil
+	}
 }
 
 func (ver *Verifier) isFnEqualFact_Check_BuiltinRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
