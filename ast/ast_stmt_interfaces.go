@@ -50,6 +50,7 @@ func (s *HaveSetFnStmt) stmt()                   {}
 func (s *HaveSetDefinedByReplacementStmt) stmt() {}
 func (s *NamedUniFactStmt) stmt()                {}
 func (s *EqualsFactStmt) stmt()                  {}
+func (s *KnowExistPropStmt) stmt()               {}
 
 type FactStmt interface {
 	factStmt()

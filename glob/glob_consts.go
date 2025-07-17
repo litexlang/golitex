@@ -45,6 +45,8 @@ const ContinueExecutionIfExecUnknown bool = false
 
 const MaxLogicExprFactsNum int = 8
 
+const TupleAtOp string = "[]"
+
 const BuiltinPkgName string = ""
 
 const MemberAccessOpt string = KeySymbolDot

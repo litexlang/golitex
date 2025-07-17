@@ -211,3 +211,7 @@ type NamedUniFactStmt struct {
 type EqualsFactStmt struct {
 	Params FcSlice
 }
+
+type KnowExistPropStmt struct {
+	ExistProp DefExistPropStmt
+}

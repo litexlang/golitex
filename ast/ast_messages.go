@@ -717,3 +717,11 @@ func (stmt *EqualsFactStmt) String() string {
 	builder.WriteString(strings.Join(factStrSlice, "\n"))
 	return builder.String()
 }
+
+func (stmt *KnowExistPropStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordKnow)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.ExistProp.String())
+	return builder.String()
+}

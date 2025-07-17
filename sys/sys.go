@@ -20,6 +20,7 @@ import (
 	pipeline "golitex/pipeline"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -83,6 +84,11 @@ func RunFilesInRepo(repo string) error {
 
 	startTime := time.Now()
 	for _, file := range files {
+		// file 最后必须以.lix结尾
+		if !strings.HasSuffix(file.Name(), ".lix") {
+			continue
+		}
+
 		// 读出file的内容，然后执行
 		path := filepath.Join(repo, file.Name())
 		code, err := os.ReadFile(path)

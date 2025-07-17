@@ -19,7 +19,6 @@ import (
 	ast "golitex/ast"
 	cmp "golitex/cmp"
 	glob "golitex/glob"
-	kernel_lib "golitex/kernel_lib"
 	"strconv"
 )
 
@@ -453,7 +452,7 @@ func (ver *Verifier) verInSetProduct(stmt *ast.SpecFactStmt, state VerState) (bo
 }
 
 func (ver *Verifier) atTupleIndex(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if !ast.IsFcFnWithHeadName(stmt.Params[0], kernel_lib.TupleAtOp) {
+	if !ast.IsFcFnWithHeadName(stmt.Params[0], glob.TupleAtOp) {
 		return false, nil
 	}
 
