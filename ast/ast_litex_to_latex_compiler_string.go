@@ -177,7 +177,7 @@ func pureSpecFactLatexString(stmt *SpecFactStmt) string {
 	} else if _, ok := relaPropSet[string(stmt.PropName)]; ok {
 		builder.WriteString(keywordRelaFactWithoutNotLatexString(stmt))
 	} else {
-		builder.WriteString(stmt.String())
+		builder.WriteString(strings.TrimPrefix(stmt.String(), "$"))
 	}
 
 	return builder.String()

@@ -112,6 +112,8 @@ func (tb *tokenBlock) factStmt(uniFactDepth uniFactEnum) (ast.FactStmt, error) {
 		return tb.uniFactInterface(uniFactDepth)
 	case glob.KeywordOr:
 		return tb.orStmt()
+	case glob.KeySymbolEqual:
+		return tb.equalsFactStmt()
 	default:
 		return tb.specFact_intensionalSetFact_enumFact()
 	}
@@ -165,9 +167,11 @@ func (tb *tokenBlock) orStmt() (*ast.OrStmt, error) {
 	return ast.NewOrStmt(orFacts), nil
 }
 
-func (tb *tokenBlock) SpecFactOrOrStmt() (ast.ReversibleFact, error) {
+func (tb *tokenBlock) SpecFactOrOrStmt() (ast.FactStmt, error) {
 	if tb.header.is(glob.KeywordOr) {
 		return tb.orStmt()
+	} else if tb.header.is(glob.KeySymbolEqual) {
+		return tb.equalsFactStmt()
 	} else {
 		return tb.specFactStmt()
 	}
@@ -1723,7 +1727,7 @@ func (tb *tokenBlock) namedUniFactStmt() (ast.Stmt, error) {
 }
 
 // TODO: 让 forall 里也能有它
-func (tb *tokenBlock) equalsFactStmt() (ast.Stmt, error) {
+func (tb *tokenBlock) equalsFactStmt() (*ast.EqualsFactStmt, error) {
 	err := tb.header.skipKwAndColon_ExceedEnd(glob.KeySymbolEqual)
 	if err != nil {
 		return nil, tbErr(err, tb)

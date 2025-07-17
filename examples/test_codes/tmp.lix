@@ -7,3 +7,28 @@ fn f(x R)R:
     2-1
 
 f(1) = 2 - 1
+
+forall:
+    forall:
+        =:
+            f(1)
+            1
+            2 - 1
+    then:
+    	=:
+            f(1)
+            1
+            2 - 1
+
+fn g(x R)R
+
+know forall a R, b R:
+	=:
+    	a
+        b + 1
+    then:
+        =:
+        	g(a)
+            g(b)
+
+g(1) = g(0)

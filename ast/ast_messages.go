@@ -714,6 +714,6 @@ func (stmt *EqualsFactStmt) String() string {
 	for i := range len(stmt.Params) {
 		factStrSlice[i] = glob.SplitLinesAndAdd4NIndents(stmt.Params[i].String(), 1)
 	}
-	builder.WriteString(strings.Join(factStrSlice, ", "))
+	builder.WriteString(strings.Join(factStrSlice, "\n"))
 	return builder.String()
 }
