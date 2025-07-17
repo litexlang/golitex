@@ -85,3 +85,11 @@ func (stmt *IntensionalSetStmt) GetAtoms() []FcAtom {
 	}
 	return atoms
 }
+
+func (stmt *EqualsFactStmt) GetAtoms() []FcAtom {
+	atoms := []FcAtom{}
+	for _, param := range stmt.Params {
+		atoms = append(atoms, GetAtomsInFc(param)...)
+	}
+	return atoms
+}

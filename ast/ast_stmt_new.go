@@ -145,3 +145,7 @@ func NewHaveSetDefinedByReplacementStmt(name string, domSet Fc, rangeSet Fc, pro
 func NewNamedUniFactStmt(defPropStmt *DefPropStmt) *NamedUniFactStmt {
 	return &NamedUniFactStmt{*defPropStmt}
 }
+
+func NewEqualsFactStmt(params FcSlice) *EqualsFactStmt {
+	return &EqualsFactStmt{params}
+}
