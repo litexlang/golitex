@@ -21,6 +21,18 @@ import (
 )
 
 func CompileStmtToLatexString(litexCode string) (string, error) {
+	var builder strings.Builder
+
+	builder.WriteString(`\documentclass{article}
+
+\usepackage{amsthm}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+
+\begin{document}
+
+`)
+
 	stmtSlice, err := parser.ParseSourceCode(litexCode)
 	if err != nil {
 		return "", err
@@ -31,7 +43,13 @@ func CompileStmtToLatexString(litexCode string) (string, error) {
 		latexStr = append(latexStr, stmt.ToLatexString())
 	}
 
-	return strings.Join(latexStr, "\n\n"), nil
+	builder.WriteString(strings.Join(latexStr, "\n\n"))
+
+	builder.WriteString(`
+
+\end{document}`)
+
+	return builder.String(), nil
 }
 
 func CompileStmtToLatexString_StoreToFile(litexCode string, fileName string) {
