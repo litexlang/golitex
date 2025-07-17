@@ -49,6 +49,7 @@ func (s *HaveSetStmt) stmt()                     {}
 func (s *HaveSetFnStmt) stmt()                   {}
 func (s *HaveSetDefinedByReplacementStmt) stmt() {}
 func (s *NamedUniFactStmt) stmt()                {}
+func (s *EqualsFactStmt) stmt()                  {}
 
 type FactStmt interface {
 	factStmt()
@@ -65,6 +66,7 @@ func (l *UniFactWithIffStmt) factStmt() {}
 func (s *OrStmt) factStmt()             {}
 func (s *EnumStmt) factStmt()           {}
 func (s *IntensionalSetStmt) factStmt() {}
+func (s *EqualsFactStmt) factStmt()     {}
 
 type OrStmt_SpecStmt interface {
 	logicExprOrSpecFactStmt()
