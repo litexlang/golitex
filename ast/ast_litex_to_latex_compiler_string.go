@@ -644,3 +644,7 @@ func (s *EqualsFactStmt) ToLatexString() string {
 	builder.WriteString(".")
 	return builder.String()
 }
+
+func (s *KnowExistPropStmt) ToLatexString() string {
+	return "knowExistPropStmt latex to be implemented"
+}

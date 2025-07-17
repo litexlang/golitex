@@ -56,6 +56,8 @@ func (exec *Executor) assumeStmtIsTrueRun(stmt ast.Stmt) (glob.ExecState, error)
 		err = exec.defFnTemplateStmt(stmt)
 	case *ast.ImportFileStmt:
 		return glob.ExecState_True, nil
+	case *ast.KnowExistPropStmt:
+		_, err = exec.knowExistPropStmt(stmt)
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}
