@@ -46,8 +46,6 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		err = exec.defFnStmt(stmt)
 	case *ast.KnowPropStmt:
 		err = exec.knowPropStmt(stmt)
-	case *ast.KnowExistPropStmt:
-		_, err = exec.knowExistPropStmt(stmt)
 	case *ast.ProveInEachCaseStmt:
 		execState, err = exec.proveInEachCaseStmt(stmt)
 	case *ast.ImportDirStmt:
@@ -301,34 +299,6 @@ func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEach
 		return execState, fmt.Errorf("prove in each case statement error: failed to verify then facts:\n%s\n%s", failedFact, err)
 	} else if execState != glob.ExecState_True {
 		return execState, fmt.Errorf("prove in each case statement error: failed to verify then facts:\n%s", failedFact)
-	}
-
-	return glob.ExecState_True, nil
-}
-
-// 只要 dom 成立，那prop成立，进而prop的iff成立
-func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) (glob.ExecState, error) {
-	if glob.RequireMsg() {
-		defer func() {
-			exec.newMsg(fmt.Sprintf("%s\n", stmt))
-		}()
-	}
-
-	err := exec.defExistPropStmt(&stmt.ExistProp)
-	if err != nil {
-		return glob.ExecState_Error, err
-	}
-
-	thenFacts := []ast.FactStmt{stmt.ExistProp.ToSpecFact()}
-	knownUniFact := ast.NewUniFact(stmt.ExistProp.DefBody.DefHeader.Params, stmt.ExistProp.DefBody.DefHeader.ParamSets, stmt.ExistProp.DefBody.DomFacts, thenFacts)
-
-	err = exec.env.NewFact(knownUniFact)
-	if err != nil {
-		return glob.ExecState_Error, err
-	}
-
-	if glob.RequireMsg() {
-		exec.newMsg(fmt.Sprintf("%s\nis true by definition", knownUniFact))
 	}
 
 	return glob.ExecState_True, nil

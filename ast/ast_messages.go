@@ -483,14 +483,6 @@ func (stmt *KnowPropStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *KnowExistPropStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordKnow)
-	builder.WriteString(" ")
-	builder.WriteString(stmt.ExistProp.String())
-	return builder.String()
-}
-
 func fnSetString(f *FcFn) string {
 	var builder strings.Builder
 	builder.WriteString(f.FnHead.String())

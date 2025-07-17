@@ -381,10 +381,6 @@ func (s *KnowPropStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (s *KnowExistPropStmt) ToLatexString() string {
-	return "knowExistPropStmt latex to be implemented"
-}
-
 func (s *OrStmt) ToLatexString() string {
 	factStrSlice := make([]string, len(s.Facts))
 	for i := range len(s.Facts) {

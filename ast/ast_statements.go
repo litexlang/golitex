@@ -124,11 +124,6 @@ type ProveInEachCaseStmt struct {
 	Proofs    []StmtSlice
 }
 
-// 需要改变，因为DefExistPropStmt 里需要有thenFact
-type KnowExistPropStmt struct {
-	ExistProp DefExistPropStmt
-}
-
 type OrStmt struct {
 	Facts SpecFactPtrSlice
 }

@@ -44,8 +44,6 @@ func (exec *Executor) assumeStmtIsTrueRun(stmt ast.Stmt) (glob.ExecState, error)
 		err = exec.defFnStmt(stmt)
 	case *ast.KnowPropStmt:
 		err = exec.knowPropStmt(stmt)
-	case *ast.KnowExistPropStmt:
-		_, err = exec.knowExistPropStmt(stmt)
 	case *ast.ProveInEachCaseStmt:
 		panic("implement me")
 	case *ast.ImportDirStmt:
