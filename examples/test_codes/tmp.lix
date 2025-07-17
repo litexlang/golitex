@@ -1,34 +1,9 @@
-fn f(x R)R:
-    f(x) = x
+obj human set
+prop intelligent(x human)
 
-=:
-	f(1)
-    1
-    2-1
+know:
+    forall x human:
+        $intelligent(x)
 
-f(1) = 2 - 1
-
-forall:
-    forall:
-        =:
-            f(1)
-            1
-            2 - 1
-    then:
-    	=:
-            f(1)
-            1
-            2 - 1
-
-fn g(x R)R
-
-know forall a R, b R:
-	=:
-    	a
-        b + 1
-    then:
-        =:
-        	g(a)
-            g(b)
-
-g(1) = g(0)
+obj Jordan human
+$intelligent(Jordan)
