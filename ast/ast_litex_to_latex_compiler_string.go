@@ -139,7 +139,7 @@ func (l *DefFnStmt) ToLatexString() string {
 
 func (l *UniFactStmt) ToLatexString() string {
 	var builder strings.Builder
-	builder.WriteString("\\forall ")
+	builder.WriteString("$\\forall$ ")
 	paramSetFacts := l.ParamInParamSet()
 	for _, paramSetFact := range paramSetFacts {
 		builder.WriteString(paramSetFact.ToLatexString())
@@ -370,7 +370,7 @@ func (s *ProveInEachCaseStmt) ToLatexString() string {
 
 func (s *KnowPropStmt) ToLatexString() string {
 	var builder strings.Builder
-	builder.WriteString("Assume forall ")
+	builder.WriteString("Assume $\\forall$ ")
 	builder.WriteString(strings.Join(paramInParamSetInFactLatexStringSlice(s.Prop.DefHeader.Params, s.Prop.DefHeader.ParamSets), ", "))
 	builder.WriteString(strings.Join(s.Prop.IffFacts.factStmtSliceToLatexStringSlice(), ", "))
 	builder.WriteString(" we have ")
@@ -509,7 +509,7 @@ func (s *IntensionalSetStmt) ToLatexString() string {
 
 func (s *ClaimPropStmt) ToLatexString() string {
 	var builder strings.Builder
-	builder.WriteString("We claim that forall ")
+	builder.WriteString("We claim that $\\forall$ ")
 	builder.WriteString(strings.Join(paramInParamSetInFactLatexStringSlice(s.Prop.DefHeader.Params, s.Prop.DefHeader.ParamSets), ", "))
 	builder.WriteString(" we have ")
 	builder.WriteString(strings.Join(s.Prop.ThenFacts.factStmtSliceToLatexStringSlice(), ", "))
@@ -544,7 +544,7 @@ func (s *ProveByMathInductionStmt) ToLatexString() string {
 
 	indexFc := s.Fact.Params[s.ParamIndex]
 
-	builder.WriteString(fmt.Sprintf("%s is true \\forall %s \\geq %d", s.Fact.ToLatexString(), indexFc.ToLatexString(), s.Start))
+	builder.WriteString(fmt.Sprintf("%s is true $\\forall$ %s $\\geq$ %d", s.Fact.ToLatexString(), indexFc.ToLatexString(), s.Start))
 	builder.WriteString(".")
 
 	return builder.String()
@@ -607,7 +607,7 @@ func (s *HaveSetDefinedByReplacementStmt) ToLatexString() string {
 
 func (s *NamedUniFactStmt) ToLatexString() string {
 	var builder strings.Builder
-	builder.WriteString("\\forall ")
+	builder.WriteString("$\\forall$ ")
 	builder.WriteString(strings.Join(paramInParamSetInFactLatexStringSlice(s.DefPropStmt.DefHeader.Params, s.DefPropStmt.DefHeader.ParamSets), ", "))
 	builder.WriteString(" then ")
 	builder.WriteString(strings.Join(s.DefPropStmt.ThenFacts.factStmtSliceToLatexStringSlice(), ", "))
