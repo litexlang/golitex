@@ -17,7 +17,6 @@ package litex_verifier
 import (
 	"fmt"
 	ast "golitex/ast"
-	cmp "golitex/cmp"
 	env "golitex/environment"
 	glob "golitex/glob"
 	"strconv"
@@ -320,7 +319,7 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 	}
 
 	for i, knownParam := range knownFact.SpecFact.Params {
-		ok, err := ver.fcEqualByBir(knownParam, stmt.Params[i], state)
+		ok, err := ver.verEqualBuiltin(knownParam, stmt.Params[i], state)
 		if err != nil {
 			return false, err
 		}
@@ -363,41 +362,41 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 	return true, nil
 }
 
-// 这里需要 recursive 地调用 这个，而不是只是 cmpFcRule. 之后再考虑recursive的情况
-func (ver *Verifier) fcEqualByBir(left ast.Fc, right ast.Fc, verState VerState) (bool, error) {
-	var ok bool
-	var msg string
-	var err error
+// // 这里需要 recursive 地调用 这个，而不是只是 cmpFcRule. 之后再考虑recursive的情况
+// func (ver *Verifier) fcEqualByBir(left ast.Fc, right ast.Fc, verState VerState) (bool, error) {
+// 	var ok bool
+// 	var msg string
+// 	var err error
 
-	defer func() {
-		if ok {
-			if verState.requireMsg() {
-				ver.successWithMsg(fmt.Sprintf("%s = %s", left, right), msg)
-			}
-		}
-	}()
+// 	defer func() {
+// 		if ok {
+// 			if verState.requireMsg() {
+// 				ver.successWithMsg(fmt.Sprintf("%s = %s", left, right), msg)
+// 			}
+// 		}
+// 	}()
 
-	ok, msg, err = cmp.Cmp_ByBIR(left, right)
+// 	ok, msg, err = cmp.Cmp_ByBIR(left, right)
 
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
-	}
+// 	if err != nil {
+// 		return false, err
+// 	}
+// 	if ok {
+// 		return true, nil
+// 	}
 
-	ok, msg, err = ver.verEqual_LeftToRightIsProj(left, right, true, verState)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
-	}
+// 	ok, msg, err = ver.verEqual_LeftToRightIsProj(left, right, true, verState)
+// 	if err != nil {
+// 		return false, err
+// 	}
+// 	if ok {
+// 		return true, nil
+// 	}
 
-	return false, nil
-}
+// 	return false, nil
+// }
 
-func (ver *Verifier) verEqual_LeftToRightIsProj(left, right ast.Fc, checkReverse bool, verState VerState) (bool, string, error) {
+func (ver *Verifier) verEqual_LeftIsTupleAtIndex(left, right ast.Fc, checkReverse bool, verState VerState) (bool, string, error) {
 	if ast.IsFcFnWithHeadName(left, glob.AtIndexOp) {
 		index, ok := left.(*ast.FcFn).Params[1].(ast.FcAtom)
 		if !ok {
@@ -422,7 +421,7 @@ func (ver *Verifier) verEqual_LeftToRightIsProj(left, right ast.Fc, checkReverse
 	}
 
 	if checkReverse {
-		return ver.verEqual_LeftToRightIsProj(right, left, false, verState)
+		return ver.verEqual_LeftIsTupleAtIndex(right, left, false, verState)
 	} else {
 		return false, "", nil
 	}

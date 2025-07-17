@@ -105,7 +105,7 @@ func (ver *Verifier) verEqualBuiltin(left ast.Fc, right ast.Fc, state VerState) 
 		return ver.equalTrueAddSuccessMsg(left, right, state, msg)
 	}
 
-	ok, msg, err = ver.verEqual_LeftToRightIsProj(left, right, true, state)
+	ok, msg, err = ver.verEqual_LeftIsTupleAtIndex(left, right, true, state)
 	if err != nil {
 		return false, err
 	}
@@ -127,25 +127,6 @@ func (ver *Verifier) verEqualSpecMem(left ast.Fc, right ast.Fc, state VerState) 
 			return true, nil
 		}
 	}
-	// } else {
-	// 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
-	// 		ok, err := ver.equalFact_SpecMem_atEnv(curEnv, left, right, state)
-	// 		if err != nil {
-	// 			return false, err
-	// 		}
-	// 		if ok {
-	// 			return true, nil
-	// 		}
-
-	// 		ok, err = ver.equalFact_MatchEnv_SpecMem_atEnv(curEnv, left, right, state)
-	// 		if err != nil {
-	// 			return false, err
-	// 		}
-	// 		if ok {
-	// 			return true, nil
-	// 		}
-	// 	}
-	// }
 	return false, nil
 }
 
