@@ -276,3 +276,15 @@ func (stmt *IntensionalSetStmt) Instantiate(uniMap map[string]Fc) (FactStmt, err
 
 	return NewIntensionalSetStmt(newCurSet, stmt.Param, newParentSet, newProofs), nil
 }
+
+func (stmt *EqualsFactStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
+	newParams := []Fc{}
+	for _, param := range stmt.Params {
+		newParam, err := param.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newParams = append(newParams, newParam)
+	}
+	return NewEqualsFactStmt(newParams), nil
+}

@@ -84,6 +84,8 @@ func (tb *tokenBlock) stmt() (ast.Stmt, error) {
 		ret, err = tb.proveOverFiniteSetStmt()
 	case glob.KeySymbolAt:
 		ret, err = tb.namedUniFactStmt()
+	case glob.KeySymbolEqual:
+		ret, err = tb.equalsFactStmt()
 	default:
 		ret, err = tb.factStmt(UniFactDepth0)
 	}
@@ -1718,4 +1720,27 @@ func (tb *tokenBlock) namedUniFactStmt() (ast.Stmt, error) {
 	}
 
 	return ast.NewNamedUniFactStmt(ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts, thenFacts)), nil
+}
+
+// TODO: 让 forall 里也能有它
+func (tb *tokenBlock) equalsFactStmt() (ast.Stmt, error) {
+	err := tb.header.skipKwAndColon_ExceedEnd(glob.KeySymbolEqual)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	params, err := tb.bracedFcSlice()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	for _, param := range tb.body {
+		param, err := param.RawFc()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		params = append(params, param)
+	}
+
+	return ast.NewEqualsFactStmt(params), nil
 }
