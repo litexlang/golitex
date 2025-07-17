@@ -23,7 +23,7 @@ import (
 
 func Test_ToLatex(t *testing.T) {
 	startTime := time.Now()
-	fileName := "../examples/testings/fn_template.lix"
+	fileName := "../examples/test_codes/tmp.lix"
 	msg, signal, err := CompileFileToLatex(fileName)
 	if err != nil {
 		t.Errorf("failed to run file %s\n", fileName)
