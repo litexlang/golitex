@@ -704,3 +704,16 @@ func (stmt *NamedUniFactStmt) String() string {
 	builder.WriteString(stmt.DefPropStmt.String())
 	return builder.String()
 }
+
+func (stmt *EqualsFactStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeySymbolEqual)
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteString("\n")
+	factStrSlice := make([]string, len(stmt.Params))
+	for i := range len(stmt.Params) {
+		factStrSlice[i] = glob.SplitLinesAndAdd4NIndents(stmt.Params[i].String(), 1)
+	}
+	builder.WriteString(strings.Join(factStrSlice, ", "))
+	return builder.String()
+}
