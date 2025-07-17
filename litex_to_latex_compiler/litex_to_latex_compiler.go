@@ -31,7 +31,7 @@ func CompileStmtToLatexString(litexCode string) (string, error) {
 		latexStr = append(latexStr, stmt.ToLatexString())
 	}
 
-	return strings.Join(latexStr, "\n"), nil
+	return strings.Join(latexStr, "\n\n"), nil
 }
 
 func CompileStmtToLatexString_StoreToFile(litexCode string, fileName string) {
