@@ -30,8 +30,8 @@ func (stmt *UniFactStmt) ParamInParamSetFacts(uniConMap map[string]Fc) []*SpecFa
 	return paramSetFacts
 }
 
-func ReverseSliceOfReversibleFacts(facts []OrStmt_SpecStmt) []OrStmt_SpecStmt {
-	ret := []OrStmt_SpecStmt{}
+func ReverseSliceOfReversibleFacts(facts []ReversibleFact) []ReversibleFact {
+	ret := []ReversibleFact{}
 	if len(facts) == 1 {
 		reversed := facts[0].ReverseIsTrue()
 		for _, fact := range reversed {

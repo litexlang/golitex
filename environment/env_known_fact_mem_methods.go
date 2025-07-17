@@ -185,6 +185,8 @@ func (env *Env) newUniFact(stmt *ast.UniFactStmt) error {
 			err = env.newUniFact_ThenFactIsIffStmt(stmt, asFact)
 		case *ast.UniFactStmt:
 			err = env.newUniFact_ThenFactIsUniFactStmt(stmt, asFact)
+		case *ast.EqualsFactStmt:
+			err = env.newUniFact_ThenFactIsEqualsFactStmt(stmt, asFact)
 		default:
 			return fmt.Errorf("invalid then fact type: %s", thenStmt)
 		}
