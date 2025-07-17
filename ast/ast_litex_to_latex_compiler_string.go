@@ -623,3 +623,19 @@ func (s *FnTemplateStmt) ToLatexString() string {
 	builder.WriteString(".")
 	return builder.String()
 }
+
+func (s FcSlice) fcSliceToLatexStringSlice() []string {
+	fcStrSlice := make([]string, len(s))
+	for i := range len(s) {
+		fcStrSlice[i] = s[i].ToLatexString()
+	}
+	return fcStrSlice
+}
+
+func (s *EqualsFactStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("The following objects are equal: ")
+	builder.WriteString(strings.Join(s.Params.fcSliceToLatexStringSlice(), ", "))
+	builder.WriteString(".")
+	return builder.String()
+}

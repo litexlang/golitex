@@ -207,3 +207,7 @@ type HaveSetDefinedByReplacementStmt struct {
 type NamedUniFactStmt struct {
 	DefPropStmt DefPropStmt
 }
+
+type EqualsFactStmt struct {
+	Params FcSlice
+}
