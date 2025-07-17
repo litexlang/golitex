@@ -41,7 +41,7 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContra
 	}
 
 	switch asStmt := stmt.ClaimProveStmt.ToCheckFact.(type) {
-	case ast.OrStmt_SpecStmt:
+	case ast.ReversibleFact:
 		return exec.reversibleFactProveByContradiction(asStmt, stmt)
 	case *ast.UniFactStmt:
 		return exec.uniFactProveByContradiction(asStmt, stmt)
@@ -50,7 +50,7 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContra
 	}
 }
 
-func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.OrStmt_SpecStmt, stmt *ast.ClaimProveByContradictionStmt) (glob.ExecState, error) {
+func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.ReversibleFact, stmt *ast.ClaimProveByContradictionStmt) (glob.ExecState, error) {
 	reversedFact := specFactStmt.ReverseIsTrue()
 
 	for _, curFact := range reversedFact {
@@ -65,7 +65,7 @@ func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.OrStmt
 		return execState, err
 	}
 
-	lastStmtAsFact, ok := stmt.ClaimProveStmt.Proofs[len(stmt.ClaimProveStmt.Proofs)-1].(ast.OrStmt_SpecStmt)
+	lastStmtAsFact, ok := stmt.ClaimProveStmt.Proofs[len(stmt.ClaimProveStmt.Proofs)-1].(ast.ReversibleFact)
 	if !ok {
 		return glob.ExecState_Error, fmt.Errorf("prove by contradiction only support fact")
 	}
@@ -108,9 +108,9 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 	}
 
 	// know reversed then facts
-	thenFactsAsReversibleFacts := []ast.OrStmt_SpecStmt{}
+	thenFactsAsReversibleFacts := []ast.ReversibleFact{}
 	for _, thenFact := range newStmtPtr.ThenFacts {
-		if reversibleThenFact, ok := thenFact.(ast.OrStmt_SpecStmt); ok {
+		if reversibleThenFact, ok := thenFact.(ast.ReversibleFact); ok {
 			thenFactsAsReversibleFacts = append(thenFactsAsReversibleFacts, reversibleThenFact)
 		} else {
 			return glob.ExecState_Error, fmt.Errorf("then fact:\n%s\nis not reversible. Then section of universal fact prove by contradiction only support reversible fact", thenFact)
@@ -131,7 +131,7 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 	}
 
 	// the reversed last statement of current claim statement is true
-	lastFact, ok := stmt.ClaimProveStmt.Proofs[len(stmt.ClaimProveStmt.Proofs)-1].(ast.OrStmt_SpecStmt)
+	lastFact, ok := stmt.ClaimProveStmt.Proofs[len(stmt.ClaimProveStmt.Proofs)-1].(ast.ReversibleFact)
 	if !ok {
 		return glob.ExecState_Error, fmt.Errorf("prove by contradiction only support fact")
 	}
@@ -360,9 +360,9 @@ func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimProp
 		return glob.ExecState_Error, err
 	}
 
-	thenFactsAsReversible := []ast.OrStmt_SpecStmt{}
+	thenFactsAsReversible := []ast.ReversibleFact{}
 	for _, fact := range stmt.Prop.ThenFacts {
-		asReversible, ok := fact.(ast.OrStmt_SpecStmt)
+		asReversible, ok := fact.(ast.ReversibleFact)
 		if !ok {
 			return glob.ExecState_Error, fmt.Errorf("claim prop statement error: then fact is not an or statement")
 		}
@@ -385,7 +385,7 @@ func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimProp
 
 	// 最后一项的逆也对
 	lastProof := stmt.Proofs[len(stmt.Proofs)-1]
-	lastProofAsReversible, ok := lastProof.(ast.OrStmt_SpecStmt)
+	lastProofAsReversible, ok := lastProof.(ast.ReversibleFact)
 	if !ok {
 		return glob.ExecState_Error, fmt.Errorf("claim prop statement error: last proof is not an or statement")
 	}
