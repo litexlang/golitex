@@ -28,12 +28,16 @@ type Fc interface {
 	ToLatexString() string
 }
 
+func toLatexString(s string) string {
+	return fmt.Sprintf("$%s$", strings.ReplaceAll(s, "_", "\\_"))
+}
+
 func (f FcAtom) ToLatexString() string {
-	return string(f)
+	return fmt.Sprintf("$%s$", strings.ReplaceAll(string(f), "_", "\\_"))
 }
 
 func (f *FcFn) ToLatexString() string {
-	return f.String()
+	return fmt.Sprintf("$%s$", strings.ReplaceAll(f.String(), "_", "\\_"))
 }
 
 func (f FcAtom) fc() {}

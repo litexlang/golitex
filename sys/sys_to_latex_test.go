@@ -16,6 +16,7 @@ package litex_sys
 
 import (
 	"fmt"
+	"os"
 	"testing"
 	"time"
 )
@@ -27,7 +28,12 @@ func Test_ToLatex(t *testing.T) {
 	if err != nil {
 		t.Errorf("failed to run file %s\n", fileName)
 	}
-	fmt.Println(msg)
+
+	// 把msg写入到文件
+	writeTo := "../past_examples/test_to_latex.tex"
+	os.WriteFile(writeTo, []byte(msg), 0644)
+	fmt.Printf("write to %s\n", writeTo)
+
 	fmt.Println(signal)
 	executionTime := time.Since(startTime)
 	fmt.Printf("execution time: %s\n", executionTime)
