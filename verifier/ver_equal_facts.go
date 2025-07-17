@@ -35,6 +35,10 @@ func (ver *Verifier) isEqualFact_Check(stmt *ast.SpecFactStmt, state VerState) (
 	return ver.fcEqualSpec(stmt.Params[0], stmt.Params[1], state)
 }
 
+// SERIOUS BUG
+// WARNING
+// REMARK
+// TODO: cmpFc, fcFnEq, fcEqualSpec 大循环本质上是有问题的，会有循环论证的风险：know p(p(1,2), 0) = 1, 则现在问 p(1,2) =1 吗？我会比较 p(1,2) = p(p(1,2), 0)，那这时候就出问题了：我因为一位位地比，所以又回到了比较 1 = p(1,2)
 func (ver *Verifier) cmpFc(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
 	ok, msg, err := cmp.Cmp_ByBIR(left, right) // 完全一样
 	if err != nil {
@@ -44,11 +48,7 @@ func (ver *Verifier) cmpFc(left ast.Fc, right ast.Fc, state VerState) (bool, err
 		return ver.equalTrueAddSuccessMsg(left, right, state, msg)
 	}
 
-	if err != nil {
-		return false, err
-	}
 	if ok {
-		// isSuccess = true
 		return true, nil
 	}
 
