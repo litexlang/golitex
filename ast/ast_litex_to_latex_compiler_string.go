@@ -459,14 +459,6 @@ func (s *ClaimProveByContradictionStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (fcSlice FcSlice) fcSliceToLatexStringSlice() string {
-	fcStrSlice := make([]string, len(fcSlice))
-	for i := range len(fcSlice) {
-		fcStrSlice[i] = fcSlice[i].ToLatexString()
-	}
-	return strings.Join(fcStrSlice, ", ")
-}
-
 func (strSlice StrSlice) stringSliceToLatexStringSlice() string {
 	return strings.Join(strSlice, ", ")
 }
