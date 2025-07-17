@@ -1,9 +1,10 @@
-obj human set
-prop intelligent(x human)
+(1,2) $in set_product(N, N)
 
-know:
-    forall x human:
-        $intelligent(x)
 
-obj Jordan human
-$intelligent(Jordan)
+fn add_product(x, y set_product(N, N)) set_product(N, N):
+    x[0] + y[0] = add_product(x, y)[0]
+    x[1] + y[1] = add_product(x, y)[1]
+
+(1,2)[0] = 1
+
+add_product((1,2), (3,4))[0] = (1,2)[0] + (3,4)[0]

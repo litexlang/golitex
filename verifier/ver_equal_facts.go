@@ -17,6 +17,7 @@ package litex_verifier
 import (
 	"fmt"
 	ast "golitex/ast"
+	cmp "golitex/cmp"
 	glob "golitex/glob"
 )
 
@@ -35,7 +36,14 @@ func (ver *Verifier) isEqualFact_Check(stmt *ast.SpecFactStmt, state VerState) (
 }
 
 func (ver *Verifier) cmpFc(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
-	ok, err := ver.verEqualBuiltin(left, right, state)
+	ok, msg, err := cmp.Cmp_ByBIR(left, right) // 完全一样
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return ver.equalTrueAddSuccessMsg(left, right, state, msg)
+	}
+
 	if err != nil {
 		return false, err
 	}
