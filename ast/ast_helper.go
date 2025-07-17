@@ -158,3 +158,11 @@ func MakeSliceOfFcFnWithHeadAndParamsOfEachLevel(head FcAtom, paramsOfEachLevel 
 	}
 	return ret
 }
+
+func (stmt *EqualsFactStmt) ToEqualFacts() []*SpecFactStmt {
+	ret := make([]*SpecFactStmt, len(stmt.Params)-1)
+	for i := range len(stmt.Params) - 1 {
+		ret[i] = NewEqualFact(stmt.Params[i], stmt.Params[i+1])
+	}
+	return ret
+}
