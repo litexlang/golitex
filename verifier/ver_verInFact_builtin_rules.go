@@ -19,6 +19,7 @@ import (
 	ast "golitex/ast"
 	cmp "golitex/cmp"
 	glob "golitex/glob"
+	"strconv"
 )
 
 func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
@@ -83,6 +84,14 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state VerState) 
 	}
 
 	ok, err = ver.verInSetProduct(stmt, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
+	ok, err = ver.atTupleIndex(stmt, state)
 	if err != nil {
 		return false, err
 	}
@@ -440,4 +449,41 @@ func (ver *Verifier) verInSetProduct(stmt *ast.SpecFactStmt, state VerState) (bo
 	}
 
 	return true, nil
+}
+
+func (ver *Verifier) atTupleIndex(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	if !ast.IsFcFnWithHeadName(stmt.Params[0], glob.AtIndexOp) {
+		return false, nil
+	}
+
+	if !ast.IsFcFnWithHeadName(stmt.Params[0].(*ast.FcFn).Params[0], glob.TupleFcFnHead) {
+		return false, nil
+	}
+
+	asIndex, ok := stmt.Params[0].(*ast.FcFn).Params[1].(ast.FcAtom)
+	if !ok {
+		return false, nil
+	}
+
+	asIndexAsInt, err := strconv.Atoi(string(asIndex))
+	if err != nil {
+		return false, nil
+	}
+
+	if asIndexAsInt < 0 || asIndexAsInt >= len(stmt.Params[0].(*ast.FcFn).Params[0].(*ast.FcFn).Params) {
+		return false, nil
+	}
+
+	tupleAtIndex := stmt.Params[0].(*ast.FcFn).Params[0].(*ast.FcFn).Params[asIndexAsInt]
+
+	equalFact := ast.NewInFactWithFc(tupleAtIndex, stmt.Params[1])
+	ok, err = ver.VerFactStmt(equalFact, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
+	return false, nil
 }
