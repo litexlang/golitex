@@ -35,7 +35,7 @@ func (ver *Verifier) isEqualFact_Check(stmt *ast.SpecFactStmt, state VerState) (
 }
 
 func (ver *Verifier) cmpFc(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
-	ok, err := ver.fcEqualByBir(left, right, state)
+	ok, err := ver.verEqualBuiltin(left, right, state)
 	if err != nil {
 		return false, err
 	}
