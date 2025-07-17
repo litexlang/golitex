@@ -142,6 +142,15 @@ func (ver *Verifier) fcFnEq(left, right *ast.FcFn, state VerState) (bool, error)
 		return false, nil
 	}
 
+	// REMARK: 必须先比头部，再比较params。否则 know (1,2)[0] = 1后，我要比较 (1,2) = 1，这时候会死循环：因为 1 = (1,2)[0]，所以 (1,2) 会被拿来和 (1,2)[0] 比较，然后因为是先比params再比头部，所以会先运行 1 和 (1,2) 比较，则死循环.
+	ok, err = ver.fcEqualSpec(left.FnHead, right.FnHead, state)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
+
 	for i := range left.Params {
 		ok, err := ver.fcEqualSpec(left.Params[i], right.Params[i], state)
 		// ok, err := ver.verTrueEqualFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{left.Params[i], right.Params[i]}), state)
@@ -151,15 +160,6 @@ func (ver *Verifier) fcFnEq(left, right *ast.FcFn, state VerState) (bool, error)
 		if !ok {
 			return false, nil
 		}
-	}
-
-	ok, err = ver.fcEqualSpec(left.FnHead, right.FnHead, state)
-	// ok, err = ver.verTrueEqualFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{left.FnHead, right.FnHead}), state)
-	if err != nil {
-		return false, err
-	}
-	if !ok {
-		return false, nil
 	}
 
 	return true, nil
