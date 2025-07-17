@@ -1,13 +1,15 @@
+(0,1,2)[2] = 2
+
+"""
 # 取消掉 proj 用 [], []只能出现在 ()后面，比如 (1,2,3)[0] = 1 相当于Python里 (1,2,3)[0] == 1
 (1,2) $in set_product(N, N)
 
 fn add_product(x, y set_product(N, N)) set_product(N, N):
-    proj(0, x) + proj(0, y) = proj(0, add_product(x, y))
-    proj(1, x) + proj(1, y) = proj(1, add_product(x, y))
+    x[0] + y[0] = add_product(x, y)[0]
+    x[1] + y[1] = add_product(x, y)[1]
 
 (1,2) = (1,2)
 
-"""
 
 proj(0, add_product((1,2), (3,4))) = proj(0, (1,2)) + proj(0, (3,4))
 proj(0, add_product((1,2), (3,4))) = 1 + 3
