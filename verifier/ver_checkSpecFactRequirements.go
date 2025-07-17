@@ -19,6 +19,7 @@ import (
 	ast "golitex/ast"
 	env "golitex/environment"
 	glob "golitex/glob"
+	"golitex/kernel_lib"
 )
 
 func (ver *Verifier) checkSpecFactRequirements(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
@@ -250,13 +251,19 @@ func (ver *Verifier) setDefinedByReplacementFnRequirement(fc *ast.FcFn, state Ve
 	return ok, nil
 }
 
+var builtinFunctionNameSetAndCanTakeInAnyObj = map[string]struct{}{
+	glob.TupleFcFnHead:     {},
+	glob.KeywordSetProduct: {},
+	kernel_lib.TupleAtOp:   {}, // 之后改成必须要是 $in 某个set_product才行，暂时先这样；同时传入的index需要是int
+}
+
 func (ver *Verifier) isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj(fc *ast.FcFn) bool {
 	fcHeadAsAtom, ok := fc.FnHead.(ast.FcAtom)
 	if !ok {
 		return false
 	}
 
-	_, ok = glob.BuiltinFunctionNameSetAndCanTakeInAnyObj[string(fcHeadAsAtom)]
+	_, ok = builtinFunctionNameSetAndCanTakeInAnyObj[string(fcHeadAsAtom)]
 
 	return ok
 }
