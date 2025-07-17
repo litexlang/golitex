@@ -19,6 +19,7 @@ import (
 	ast "golitex/ast"
 	env "golitex/environment"
 	glob "golitex/glob"
+	kernel_lib "golitex/kernel_lib"
 	"strconv"
 	"strings"
 )
@@ -397,7 +398,7 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 // }
 
 func (ver *Verifier) verEqual_LeftIsTupleAtIndex(left, right ast.Fc, checkReverse bool, verState VerState) (bool, string, error) {
-	if ast.IsFcFnWithHeadName(left, glob.AtIndexOp) {
+	if ast.IsFcFnWithHeadName(left, kernel_lib.TupleAtOp) {
 		index, ok := left.(*ast.FcFn).Params[1].(ast.FcAtom)
 		if !ok {
 			return false, "", fmt.Errorf("index in %s is not a FcAtom", left)

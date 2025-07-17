@@ -72,8 +72,8 @@ func (c *DefPropStmt) ToLatexString() string {
 	// 定义命题部分（自然语言风格）
 	builder.WriteString(fmt.Sprintf("\\begin{definition}[%s]\n", c.DefHeader.Name))
 	builder.WriteString("    The proposition ")
-	builder.WriteString(c.DefHeader.ToLatexString())
-	builder.WriteString(" is defined for parameters ")
+	builder.WriteString(c.DefHeader.NameWithParamsLatexString())
+	builder.WriteString(" is defined for each ")
 	builder.WriteString(strFcSetPairsLatexString(c.DefHeader.Params, c.DefHeader.ParamSets))
 	builder.WriteString(".")
 
@@ -260,11 +260,9 @@ func (f *ClaimProveStmt) ToLatexString() string {
 }
 func (f *KnowFactStmt) ToLatexString() string {
 	var builder strings.Builder
-	builder.WriteString("Assume ")
 
 	if len(f.Facts) > 1 {
-		builder.WriteString(glob.KeySymbolColon)
-		builder.WriteByte('\n')
+		builder.WriteString("We assume the following facts are true:\n")
 
 		factStrSlice := make([]string, len(f.Facts))
 		for i := range len(f.Facts) {
@@ -273,6 +271,7 @@ func (f *KnowFactStmt) ToLatexString() string {
 		builder.WriteString(strings.Join(factStrSlice, "\n"))
 		return builder.String()
 	} else {
+		builder.WriteString("Assume ")
 		builder.WriteString(f.Facts[0].ToLatexString())
 		return builder.String()
 	}
