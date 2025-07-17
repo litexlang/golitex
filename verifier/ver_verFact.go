@@ -39,6 +39,8 @@ func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state VerState) (bool, error
 		return ver.verUniFactWithIff(asStmt, state)
 	case *ast.IntensionalSetStmt:
 		return ver.verIntensionalSetStmt(asStmt, state)
+	case *ast.EqualsFactStmt:
+		return ver.verEqualsFactStmt(asStmt, state)
 	default:
 		return false, fmt.Errorf("unexpected fact statement: %s", asStmt)
 	}
