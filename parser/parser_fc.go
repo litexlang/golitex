@@ -18,6 +18,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
+	kernel_lib "golitex/kernel_lib"
 	"strings"
 )
 
@@ -59,7 +60,7 @@ func (tb *tokenBlock) squareBracketExpr() (ast.Fc, error) {
 		return nil, fmt.Errorf("expected '%s': %s", glob.KeySymbolRightBracket, err)
 	}
 
-	return ast.NewFcFn(ast.FcAtom(glob.AtIndexOp), []ast.Fc{fc, fcInBracket}), nil
+	return ast.NewFcFn(ast.FcAtom(kernel_lib.TupleAtOp), []ast.Fc{fc, fcInBracket}), nil
 }
 
 // “数学”优先级越高，越是底层。所以把括号表达式放在这里处理
