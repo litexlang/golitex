@@ -165,7 +165,7 @@ func (tb *tokenBlock) orStmt() (*ast.OrStmt, error) {
 	return ast.NewOrStmt(orFacts), nil
 }
 
-func (tb *tokenBlock) SpecFactOrOrStmt() (ast.OrStmt_SpecStmt, error) {
+func (tb *tokenBlock) SpecFactOrOrStmt() (ast.ReversibleFact, error) {
 	if tb.header.is(glob.KeywordOr) {
 		return tb.orStmt()
 	} else {

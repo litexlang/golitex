@@ -82,6 +82,8 @@ func (env *Env) newFactNoPostProcess(stmt ast.FactStmt) error {
 		return env.newUniFactWithIff(f)
 	case *ast.EnumStmt:
 		return env.newEnumFact(f)
+	case *ast.EqualsFactStmt:
+		return env.newEqualsFactNoPostProcess(f)
 	default:
 		return fmt.Errorf("unknown fact type: %T", stmt)
 	}
@@ -672,6 +674,17 @@ func (env *Env) newUniFact_ThenFactIsUniFactStmt(stmt *ast.UniFactStmt, thenFact
 	return env.newUniFact(mergedUniFact)
 }
 
+func (env *Env) newUniFact_ThenFactIsEqualsFactStmt(stmt *ast.UniFactStmt, thenFact *ast.EqualsFactStmt) error {
+	equalFacts := thenFact.ToEqualFacts()
+	for _, equalFact := range equalFacts {
+		err := env.newUniFact_ThenFactIsSpecFact(stmt, equalFact)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (env *Env) storeFactInEnumMem(stmt *ast.EnumStmt) error {
 	env.EnumFacts[stmt.CurSet.String()] = stmt.Items
 	return nil
@@ -708,6 +721,17 @@ func (env *Env) newEqualsFact(stmt *ast.EqualsFactStmt) error {
 	equalFacts := stmt.ToEqualFacts()
 	for _, equalFact := range equalFacts {
 		err := env.NewFact(equalFact)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (env *Env) newEqualsFactNoPostProcess(stmt *ast.EqualsFactStmt) error {
+	equalFacts := stmt.ToEqualFacts()
+	for _, equalFact := range equalFacts {
+		err := env.newSpecFactNoPostProcess(equalFact)
 		if err != nil {
 			return err
 		}

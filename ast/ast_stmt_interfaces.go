@@ -68,8 +68,8 @@ func (s *EnumStmt) factStmt()           {}
 func (s *IntensionalSetStmt) factStmt() {}
 func (s *EqualsFactStmt) factStmt()     {}
 
-type OrStmt_SpecStmt interface {
-	logicExprOrSpecFactStmt()
+type ReversibleFact interface {
+	reversibleFact()
 	factStmt()
 	stmt()
 	String() string
@@ -79,8 +79,9 @@ type OrStmt_SpecStmt interface {
 	ToLatexString() string
 }
 
-func (s *SpecFactStmt) logicExprOrSpecFactStmt() {}
-func (s *OrStmt) logicExprOrSpecFactStmt()       {}
+func (s *SpecFactStmt) reversibleFact()   {}
+func (s *OrStmt) reversibleFact()         {}
+func (s *EqualsFactStmt) reversibleFact() {}
 
 func (stmt *SpecFactStmt) ReverseIsTrue() []*SpecFactStmt {
 	return []*SpecFactStmt{stmt.ReverseTrue()}
