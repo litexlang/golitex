@@ -70,8 +70,6 @@ func (tb *tokenBlock) stmt() (ast.Stmt, error) {
 		{
 			if tb.TokenAtHeaderIndexIs(1, glob.KeySymbolAt) {
 				ret, err = tb.knowPropStmt()
-			} else if tb.TokenAtHeaderIndexIs(1, glob.KeywordExistProp) {
-				ret, err = tb.knowExistPropStmt()
 			} else {
 				ret, err = tb.knowFactStmt()
 			}
@@ -938,20 +936,6 @@ func (tb *tokenBlock) proveInEachCaseStmt() (*ast.ProveInEachCaseStmt, error) {
 	}
 
 	return ast.NewProveInEachCaseStmt(*orFact, thenFacts, proofs), nil
-}
-
-func (tb *tokenBlock) knowExistPropStmt() (*ast.KnowExistPropStmt, error) {
-	err := tb.header.skip(glob.KeywordKnow)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	existProp, err := tb.defExistPropStmt()
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	return ast.NewKnowExistPropStmt(*existProp), nil
 }
 
 func (tb *tokenBlock) param_paramSet_paramInSetFacts(endWith string, allowExceedEnd bool) ([]string, []ast.Fc, error) {

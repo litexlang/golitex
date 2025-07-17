@@ -78,10 +78,6 @@ func NewDefExistPropBodyStmt(defHeader *DefHeader, domFacts []FactStmt, iffFacts
 	return &DefExistPropStmtBody{*defHeader, domFacts, iffFacts}
 }
 
-func NewKnowExistPropStmt(existProp DefExistPropStmt) *KnowExistPropStmt {
-	return &KnowExistPropStmt{existProp}
-}
-
 func NewOrStmt(orFacts []*SpecFactStmt) *OrStmt {
 	return &OrStmt{orFacts}
 }
