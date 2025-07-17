@@ -143,6 +143,7 @@ func (ver *Verifier) fcFnEq(left, right *ast.FcFn, state VerState) (bool, error)
 	}
 
 	// REMARK: 必须先比头部，再比较params。否则 know (1,2)[0] = 1后，我要比较 (1,2) = 1，这时候会死循环：因为 1 = (1,2)[0]，所以 (1,2) 会被拿来和 (1,2)[0] 比较，然后因为是先比params再比头部，所以会先运行 1 和 (1,2) 比较，则死循环.
+	// 上述疑难杂症其实是在未来解决了死循环问题后能被解决的。但是先比head确实让运行速度快了100%
 	ok, err = ver.fcEqualSpec(left.FnHead, right.FnHead, state)
 	if err != nil {
 		return false, err
