@@ -157,7 +157,7 @@ type ImportFileStmt struct {
 	Path string
 }
 
-// 最好要可以固定prop的某几位，然后某一位是变化的n，这样更合理
+// Fact表示一个事实，paramIndex表示第n位是变化的n $in N(默认第0位是开始)，其他参数固定，start是递归从start开始(默认从0开始)
 type ProveByMathInductionStmt struct {
 	Fact       *SpecFactStmt
 	ParamIndex int
