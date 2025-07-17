@@ -23,7 +23,7 @@ import (
 func strFcSetPairsLatexString(objs []string, objSets []Fc) string {
 	pairStrSlice := make([]string, len(objs))
 	for i := range len(objs) {
-		pairStrSlice[i] = fmt.Sprintf("%s \\in %s", objs[i], objSets[i])
+		pairStrSlice[i] = fmt.Sprintf("%s $\\in$ %s", toLatexString(objs[i]), objSets[i].ToLatexString())
 	}
 	return strings.Join(pairStrSlice, ", ")
 }
@@ -31,7 +31,7 @@ func strFcSetPairsLatexString(objs []string, objSets []Fc) string {
 func (s *DefObjStmt) ToLatexString() string {
 	var builder strings.Builder
 
-	builder.WriteString("Suppose we have objects: ")
+	builder.WriteString("Let ")
 	builder.WriteString(strFcSetPairsLatexString(s.Objs, s.ObjSets))
 	builder.WriteString(".")
 
@@ -69,34 +69,37 @@ func (head DefHeader) NameWithParamsLatexString() string {
 func (c *DefPropStmt) ToLatexString() string {
 	var builder strings.Builder
 
-	builder.WriteString("[Definition] Proposition ")
+	// 定义命题部分（自然语言风格）
+	builder.WriteString(fmt.Sprintf("\\begin{definition}[%s]\n", c.DefHeader.Name))
+	builder.WriteString("    The proposition ")
 	builder.WriteString(c.DefHeader.ToLatexString())
+	builder.WriteString(" is defined for parameters ")
+	builder.WriteString(strFcSetPairsLatexString(c.DefHeader.Params, c.DefHeader.ParamSets))
 	builder.WriteString(".")
 
-	if len(c.DomFacts) == 0 && len(c.IffFacts) == 0 {
-		return builder.String()
-	}
-
+	// 处理条件部分（When）
 	if len(c.DomFacts) > 0 {
-		builder.WriteString("When:")
-		domFactStrSlice := make([]string, len(c.DomFacts))
-		for i := range len(c.DomFacts) {
-			domFactStrSlice[i] = c.DomFacts[i].ToLatexString()
+		builder.WriteString("\n    When the following holds:\n    \\begin{itemize}")
+		for _, fact := range c.DomFacts {
+			builder.WriteString("\n        \\item ")
+			builder.WriteString(fact.ToLatexString())
 		}
-		builder.WriteString(strings.Join(domFactStrSlice, ", "))
-		builder.WriteString(".")
+		builder.WriteString("\n    \\end{itemize}")
 	}
 
+	// 处理等价条件部分（Iff）
 	if len(c.IffFacts) > 0 {
-		builder.WriteString(fmt.Sprintf("We say %s Iff:", c.DefHeader.NameWithParamsLatexString()))
-		iffFactStrSlice := make([]string, len(c.IffFacts))
-		for i := range len(c.IffFacts) {
-			iffFactStrSlice[i] = c.IffFacts[i].ToLatexString()
+		builder.WriteString("\n    We say ")
+		builder.WriteString(c.DefHeader.NameWithParamsLatexString())
+		builder.WriteString(" if and only if:\n    \\begin{itemize}")
+		for _, fact := range c.IffFacts {
+			builder.WriteString("\n        \\item ")
+			builder.WriteString(fact.ToLatexString())
 		}
-		builder.WriteString(strings.Join(iffFactStrSlice, ", "))
-		builder.WriteString(".")
+		builder.WriteString("\n    \\end{itemize}")
 	}
 
+	builder.WriteString("\n\\end{definition}")
 	return builder.String()
 }
 
@@ -202,7 +205,7 @@ func keySymbolRelaFactWithoutNotLatexString(stmt *SpecFactStmt) string {
 	case glob.KeySymbolNotEqual:
 		builder.WriteString("\\neq")
 	case glob.KeywordIn:
-		builder.WriteString("\\in")
+		builder.WriteString("$\\in$")
 	case glob.KeySymbolLargerEqual:
 		builder.WriteString("\\geq")
 	case glob.KeySymbolLessEqual:
@@ -225,7 +228,7 @@ func keywordRelaFactWithoutNotLatexString(stmt *SpecFactStmt) string {
 
 	switch stmt.PropName {
 	case glob.KeywordIn:
-		builder.WriteString("\\in")
+		builder.WriteString("$\\in$")
 	default:
 		builder.WriteString(stmt.PropName.String())
 	}
@@ -270,7 +273,6 @@ func (f *KnowFactStmt) ToLatexString() string {
 		builder.WriteString(strings.Join(factStrSlice, "\n"))
 		return builder.String()
 	} else {
-		builder.WriteString(" ")
 		builder.WriteString(f.Facts[0].ToLatexString())
 		return builder.String()
 	}
@@ -287,7 +289,7 @@ func (s FactStmtSlice) factStmtSliceToLatexStringSlice() []string {
 func paramInParamSetInFactLatexStringSlice(paramNames []string, paramSets []Fc) []string {
 	strSlice := make([]string, len(paramSets))
 	for i, paramSet := range paramSets {
-		strSlice[i] = fmt.Sprintf("%s \\in %s", toLatexString(paramNames[i]), paramSet.ToLatexString())
+		strSlice[i] = fmt.Sprintf("%s $\\in$ %s", toLatexString(paramNames[i]), paramSet.ToLatexString())
 	}
 	return strSlice
 }
@@ -456,13 +458,17 @@ func (s *ClaimProveByContradictionStmt) ToLatexString() string {
 }
 
 func (strSlice StrSlice) stringSliceToLatexStringSlice() string {
-	return strings.Join(strSlice, ", ")
+	retSlice := make([]string, 0, len(strSlice))
+	for _, str := range strSlice {
+		retSlice = append(retSlice, toLatexString(str))
+	}
+	return strings.Join(retSlice, ", ")
 }
 
 func (s *DefFnTemplateStmt) ToLatexString() string {
 	var builder strings.Builder
 	// 这里我要说的是，用xxx来代表其中的一个
-	builder.WriteString(fmt.Sprintf("Suppose we have a set called %s. It is a set of functions.", toLatexString(s.FnTemplateStmt.DefHeader.Name)))
+	builder.WriteString(fmt.Sprintf("[Define Function Template]Suppose we have a set called %s. It is a set of functions.", toLatexString(s.FnTemplateStmt.DefHeader.Name)))
 	builder.WriteString(fmt.Sprintf("It has %d parameter(s) written as %s. These parameters satisfy (i.e. their domain must be superset of a set that satisfies the following condition): ", len(s.FnTemplateStmt.Params), s.FnTemplateStmt.Params.stringSliceToLatexStringSlice()))
 	builder.WriteString(strings.Join(paramInParamSetInFactLatexStringSlice(s.FnTemplateStmt.Params, s.FnTemplateStmt.ParamSets), ", "))
 	builder.WriteString("and ")
@@ -489,7 +495,7 @@ func (s *IntensionalSetStmt) ToLatexString() string {
 	builder.WriteString(s.CurSet.ToLatexString())
 	builder.WriteString(" = {")
 	builder.WriteString(s.Param)
-	builder.WriteString(" \\in ")
+	builder.WriteString(" $\\in$ ")
 	builder.WriteString(s.ParentSet.ToLatexString())
 	builder.WriteString(" | ")
 	proofStrSlice := make([]string, len(s.Proofs))
@@ -590,7 +596,7 @@ func (s *HaveSetDefinedByReplacementStmt) ToLatexString() string {
 	builder.WriteString("We have a set by axiom of replacement: ")
 	builder.WriteString(s.Name)
 	builder.WriteString(" = {")
-	builder.WriteString("y \\in ")
+	builder.WriteString("y $\\in$ ")
 	builder.WriteString(s.DomSet.ToLatexString())
 	builder.WriteString(" | there exists x st ")
 	builder.WriteString(s.PropName.String())
