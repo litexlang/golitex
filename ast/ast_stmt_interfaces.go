@@ -31,7 +31,6 @@ func (s *DefExistPropStmt) stmt()                {}
 func (s *HaveObjStStmt) stmt()                   {}
 func (s *ProveInEachCaseStmt) stmt()             {}
 func (s *KnowPropStmt) stmt()                    {}
-func (s *KnowExistPropStmt) stmt()               {}
 func (s *OrStmt) stmt()                          {}
 func (s *ImportDirStmt) stmt()                   {}
 func (s *ImportFileStmt) stmt()                  {}
