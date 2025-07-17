@@ -149,3 +149,7 @@ func NewNamedUniFactStmt(defPropStmt *DefPropStmt) *NamedUniFactStmt {
 func NewEqualsFactStmt(params FcSlice) *EqualsFactStmt {
 	return &EqualsFactStmt{params}
 }
+
+func NewKnowExistPropStmt(existProp DefExistPropStmt) *KnowExistPropStmt {
+	return &KnowExistPropStmt{existProp}
+}

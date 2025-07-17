@@ -17,7 +17,6 @@ package litex_ast
 import (
 	"fmt"
 	glob "golitex/glob"
-	kernel_lib "golitex/kernel_lib"
 	"slices"
 	"strings"
 )
@@ -69,7 +68,7 @@ func hasBuiltinOptAndToString(f *FcFn) (bool, string) {
 		return false, ""
 	}
 
-	if string(ptr) == kernel_lib.TupleAtOp {
+	if string(ptr) == glob.TupleAtOp {
 		return true, fmt.Sprintf("%s[%s]", f.Params[0], f.Params[1])
 	}
 

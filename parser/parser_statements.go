@@ -70,6 +70,8 @@ func (tb *tokenBlock) stmt() (ast.Stmt, error) {
 		{
 			if tb.TokenAtHeaderIndexIs(1, glob.KeySymbolAt) {
 				ret, err = tb.knowPropStmt()
+			} else if tb.TokenAtHeaderIndexIs(1, glob.KeywordExistProp) {
+				ret, err = tb.knowExistPropStmt()
 			} else {
 				ret, err = tb.knowFactStmt()
 			}
@@ -1747,4 +1749,18 @@ func (tb *tokenBlock) equalsFactStmt() (*ast.EqualsFactStmt, error) {
 	}
 
 	return ast.NewEqualsFactStmt(params), nil
+}
+
+func (tb *tokenBlock) knowExistPropStmt() (*ast.KnowExistPropStmt, error) {
+	err := tb.header.skip(glob.KeywordKnow)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	existProp, err := tb.defExistPropStmt()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	return ast.NewKnowExistPropStmt(*existProp), nil
 }

@@ -76,6 +76,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		execState, err = exec.haveSetDefinedByReplacementStmt(stmt)
 	case *ast.NamedUniFactStmt:
 		execState, err = exec.namedUniFactStmt(stmt)
+	case *ast.KnowExistPropStmt:
+		_, err = exec.knowExistPropStmt(stmt)
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}
@@ -453,6 +455,34 @@ func (exec *Executor) namedUniFactStmt(stmt *ast.NamedUniFactStmt) (glob.ExecSta
 	err = exec.knowPropStmt(ast.NewKnowPropStmt(stmt.DefPropStmt))
 	if notOkExec(execState, err) {
 		return execState, err
+	}
+
+	return glob.ExecState_True, nil
+}
+
+// 只要 dom 成立，那prop成立，进而prop的iff成立
+func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) (glob.ExecState, error) {
+	if glob.RequireMsg() {
+		defer func() {
+			exec.newMsg(fmt.Sprintf("%s\n", stmt))
+		}()
+	}
+
+	err := exec.defExistPropStmt(&stmt.ExistProp)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+
+	thenFacts := []ast.FactStmt{stmt.ExistProp.ToSpecFact()}
+	knownUniFact := ast.NewUniFact(stmt.ExistProp.DefBody.DefHeader.Params, stmt.ExistProp.DefBody.DefHeader.ParamSets, stmt.ExistProp.DefBody.DomFacts, thenFacts)
+
+	err = exec.env.NewFact(knownUniFact)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+
+	if glob.RequireMsg() {
+		exec.newMsg(fmt.Sprintf("%s\nis true by definition", knownUniFact))
 	}
 
 	return glob.ExecState_True, nil
