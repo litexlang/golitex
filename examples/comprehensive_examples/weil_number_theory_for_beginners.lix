@@ -47,7 +47,7 @@ prop is_smallest_element_of(x N, s set):
 exist_prop x obj st non_empty(s set):
     x $in s
 
-know exist_prop x N st exist_smallest_element_of(s set):
+know @exist x N st exist_smallest_element_of(s set):
     dom:
         $non_empty(s)
         forall y s:
@@ -108,7 +108,7 @@ Chapter 2
 # Lemma 2.1
 
 # TODO: THIS CLAIM CAN BE PROVED
-know exist_prop q Z st exist_largest_multiple_of(d Z, a Z):
+know @exist q Z st exist_largest_multiple_of(d Z, a Z):
     iff:
         a >= d * q
         d*(q+1) > a
@@ -116,7 +116,7 @@ know exist_prop q Z st exist_largest_multiple_of(d Z, a Z):
 # Theorem 2.1
 
 # TODO: THIS CLAIM CAN BE PROVED
-know exist_prop m N st nonempty_set_of_integers_closed_under_addition_has_elements_divisible_by_a_common_divisor(s set):
+know @exist m N st nonempty_set_of_integers_closed_under_addition_has_elements_divisible_by_a_common_divisor(s set):
     dom:
         $non_empty(s)
         forall x s:

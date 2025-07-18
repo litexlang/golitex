@@ -47,7 +47,7 @@ prop is_smallest_element_of(x N, s set):
 exist_prop x obj st non_empty(s set):
     x $in s
 
-know exist_prop x N st exist_smallest_element_of(s set):
+know @exist x N st exist_smallest_element_of(s set):
     dom:
         $non_empty(s)
         forall y s:

@@ -69,9 +69,11 @@ func (tb *tokenBlock) stmt() (ast.Stmt, error) {
 	case glob.KeywordKnow:
 		{
 			if tb.TokenAtHeaderIndexIs(1, glob.KeySymbolAt) {
-				ret, err = tb.knowPropStmt()
-			} else if tb.TokenAtHeaderIndexIs(1, glob.KeywordExistProp) {
-				ret, err = tb.knowExistPropStmt()
+				if tb.TokenAtHeaderIndexIs(2, glob.KeywordExist) {
+					ret, err = tb.knowExistPropStmt()
+				} else {
+					ret, err = tb.knowPropStmt()
+				}
 			} else {
 				ret, err = tb.knowFactStmt()
 			}
@@ -524,7 +526,9 @@ func (tb *tokenBlock) defHeaderWithoutParsingColonAtEnd() (*ast.DefHeader, error
 }
 
 func (tb *tokenBlock) defExistPropStmt() (*ast.DefExistPropStmt, error) {
-	err := tb.header.skip(glob.KeywordExistProp)
+	var err error
+
+	err = tb.header.skip(glob.KeywordExistProp)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -1757,10 +1761,30 @@ func (tb *tokenBlock) knowExistPropStmt() (*ast.KnowExistPropStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	existProp, err := tb.defExistPropStmt()
+	err = tb.header.skip(glob.KeySymbolAt)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
 
-	return ast.NewKnowExistPropStmt(*existProp), nil
+	err = tb.header.skip(glob.KeywordExist)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	existParams, existParamSets, err := tb.param_paramSet_paramInSetFacts(glob.KeywordSt, false)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	if len(existParams) == 0 {
+		return nil, fmt.Errorf("expect at least one parameter in exist prop definition")
+	}
+
+	def, err := tb.defExistPropStmtBody()
+
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	return ast.NewKnowExistPropStmt(*ast.NewDefExistPropStmt(def, existParams, existParamSets)), nil
 }
