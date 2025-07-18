@@ -1,3 +1,6 @@
+# Syllogism example: All humans are intelligent. Jordan is a human. Therefore, Jordan is intelligent.
+# 三段论：所有人类都是聪明的。乔丹是人类。因此，乔丹是聪明的。
+
 obj human set
 prop intelligent(x human)
 
