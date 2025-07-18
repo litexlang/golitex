@@ -1,3 +1,6 @@
+# definition of a group, and prove R and Z are groups
+# 定义一个群，并证明 R 和 Z 是群
+
 prop is_group(s set, mul fn(s, s)s, inv fn(s)s, e s):
     forall x s, y s, z s:
         mul(mul(x, y), z) = mul(x, mul(y, z))
