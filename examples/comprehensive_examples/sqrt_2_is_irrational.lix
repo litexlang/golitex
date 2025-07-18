@@ -1,3 +1,6 @@
+# prove sqrt(2) is irrational
+# 证明 sqrt(2) 是无理数
+
 fn logBase(x, y N) N:
     dom:
         x != 0

@@ -85,6 +85,8 @@ Mathematics is the art of deriving new facts from established ones. To illustrat
   </tr>
   <tr>
     <td style="border: 3px solid black; padding: 8px;">
+      <code># Syllogism example: All humans are intelligent. Jordan is a human. Therefore, Jordan is intelligent.</code><br>
+      <code># 三段论：所有人类都是聪明的。乔丹是人类。因此，乔丹是聪明的。</code><br><br>
       <code>obj human set</code> <br><br>
       <code>prop intelligent(x Human)</code> <br><br>      <code>know forall x Human:</code> <br>
       <code>&nbsp;&nbsp;$intelligent(x)</code> <br> <br>
@@ -92,6 +94,8 @@ Mathematics is the art of deriving new facts from established ones. To illustrat
       <code>$intelligent(Jordan)</code>
     </td>
     <td style="border: 3px solid black; padding: 8px;">
+      <code>-- Syllogism example: All humans are intelligent. Jordan is a human. Therefore, Jordan is intelligent.</code><br>
+      <code>-- 三段论：所有人类都是聪明的。乔丹是人类。因此，乔丹是聪明的。</code><br><br>
       <code>def Human := Type</code> <br><br>
       <code>def intelligent (x : Human) : Prop := true</code> <br><br>
       <code>axiom intelligent_all :</code><br>
@@ -226,6 +230,8 @@ Next I want to show you how Litex can be used to solve a simple linear equation.
   </tr>
   <tr>
     <td style="border: 3px solid black; padding: 8px;">
+      <code># Multivariate linear equation example: Solve the equation 2x + 3y = 10 and 4x + 5y = 14.</code><br>
+      <code># 多元线性方程组：解方程 2x + 3y = 10 和 4x + 5y = 14。</code><br><br>
       <code>obj x R, y R:</code><br>
       <code>&nbsp;&nbsp;2 * x + 3 * y = 10</code><br>
       <code>&nbsp;&nbsp;4 * x + 5 * y = 14</code><br><br>
@@ -242,6 +248,8 @@ Next I want to show you how Litex can be used to solve a simple linear equation.
       <code>x = -4</code>
     </td>
     <td style="border: 3px solid black; padding: 8px;">
+      <code>-- Multivariate linear equation example: Solve the equation 2x + 3y = 10 and 4x + 5y = 14.</code><br>
+      <code>-- 多元线性方程组：解方程 2x + 3y = 10 和 4x + 5y = 14。</code><br><br>
       <code>import Mathlib.Tactic</code><br><br>
       <code>example (x y : ℝ) (h₁ : 2 * x + 3 * y = 10) (h₂ : 4 * x + 5 * y = 14) : x = -4 ∧ y = 6 := by</code><br>
       <code>&nbsp;&nbsp;have h₃ : 2 * (2 * x + 3 * y) = 2 * 10 := by rw [h₁]</code><br>
@@ -280,6 +288,8 @@ The Litex proof requires no extra knowledge except basic math knowledge, but the
   </tr>
   <tr>
     <td style="border: 3px solid black; padding: 8px;">
+      <code># prove sqrt(2) is irrational</code><br>
+      <code># 证明 sqrt(2) 是无理数</code><br><br>
       <code>claim:</code><br>
       <code>&nbsp;&nbsp;not sqrt(2) $in Q</code><br>
       <code>&nbsp;&nbsp;prove_by_contradiction:</code><br>
@@ -304,6 +314,8 @@ The Litex proof requires no extra knowledge except basic math knowledge, but the
       <code>&nbsp;&nbsp;&nbsp;&nbsp;0 = 1</code>
     </td>
     <td style="border: 3px solid black; padding: 8px;">
+      <code>-- prove sqrt(2) is irrational</code><br>
+      <code>-- 证明 sqrt(2) 是无理数</code><br><br>
       <code>theorem sqrt2_irrational :</code><br>
       <code>&nbsp;&nbsp;¬ ∃ a b : ℕ, a.gcd b = 1 ∧ a * a = 2 * b * b := by</code><br>
       <code>&nbsp;&nbsp;intro h</code><br>
@@ -341,6 +353,8 @@ Next I want to show you how Litex can be used to verify a simple group theory st
   </tr>
   <tr>
     <td style="border: 3px solid black; padding: 8px;">
+      <code># definition of a group, and prove R is a group</code><br>
+      <code># 定义一个群，并证明 R 是一个群</code><br><br>
       <code>prop is_group(s set, mul fn(s, s)s, inv fn(s)s, e s):</code><br>
       <code>&nbsp;&nbsp;forall x s, y s, z s:</code><br>
       <code>&nbsp;&nbsp;mul(mul(x, y), z) = mul(x, mul(y, z))</code><br>
@@ -358,6 +372,8 @@ Next I want to show you how Litex can be used to verify a simple group theory st
       <code>$is_group(Z, +, inverse, 0)</code>
     </td>
     <td style="border: 3px solid black; padding: 8px;">
+      <code>-- definition of a group, and prove Z is a group</code><br>
+      <code>-- 定义一个群，并证明 Z 是一个群</code><br><br>
       <code>structure MyGroup (G : Type) where</code><br>
       <code>&nbsp;&nbsp;add : G → G → G</code><br>
       <code>&nbsp;&nbsp;zero : G</code><br>
@@ -389,6 +405,8 @@ To better show the power of `fn_template`, There is another example of defining 
     <th style="border: 3px solid black; padding: 8px; text-align: left; width: 50%;">Lean 4</th>
   </tr>
     <td style="border: 3px solid black; padding: 8px;">
+       <code># definition of an algorithm, and prove f(x) = x is an algorithm</code><br>
+       <code># 定义一个算法，并证明 f(x) = x 是一个算法</code><br><br>
        <code>fn comp_seq(D set, f fn(D)D) fn(D, N)D:</code><br>
        <code>&nbsp;&nbsp;forall x D, n N:</code><br>
        <code>&nbsp;&nbsp;&nbsp;&nbsp;comp_seq(D, f)(x,n+1) = f(comp_seq(D, f)(x, n))</code><br>
@@ -423,6 +441,8 @@ To better show the power of `fn_template`, There is another example of defining 
        <code></code><br>
     </td>
     <td style="border: 3px solid black; padding: 8px;">
+       <code>-- definition of an algorithm, and prove f(x) = x is an algorithm</code><br>
+       <code>-- 定义一个算法，并证明 f(x) = x 是一个算法</code><br><br>
        <code>structure ComputationalMethod where</code><br>
        <code>  Q : Type</code><br>
        <code>  I : Set Q</code><br>
