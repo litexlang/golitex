@@ -87,7 +87,7 @@ prove:
 
 # 3.2 There exist at least three points that do not lie on the same line.
 
-know exist_prop c point st exist_one_point_not_on_the_same_line_with_two_points(a point, b point):
+know @exist c point st exist_one_point_not_on_the_same_line_with_two_points(a point, b point):
     a != b
     iff:
     
@@ -101,7 +101,7 @@ prove:
 
 # Tip: It's a good and essential habit to name everything properly. I recommend you to use long names which contains all the information in the name. Do not worry about typing, because most IDEs will prompt or complete the rest of the name when you type the first few characters.
 
-# Tip: know @, know exist_prop is a syntax sugar for making that prop(exist_prop) as an axiom.
+# Tip: know @, know @exist is a syntax sugar for making that prop(exist_prop) as an axiom.
 
 # 4. For every three points A, B, C not situated on the same line there exists a plane α that contains all of them. For every plane there exists a point which lies on it. We write ABC = α. We employ also the expressions: "A, B, C lie in α"; "A, B, C are points of α", etc.
 
@@ -148,7 +148,7 @@ prove:
 
 # 7. If two planes α, β have a point A in common, then they have at least a second point B in common.
 
-know exist_prop b point st two_planes_have_one_common_point_then_they_have_another_common_point(a point, p plane, q plane):
+know @exist b point st two_planes_have_one_common_point_then_they_have_another_common_point(a point, p plane, q plane):
     $point_on_plane(a, p)
     $point_on_plane(a, q)
     iff:
@@ -209,7 +209,7 @@ know forall left point, right point, middle point:
     then:
         $between(right, left, middle)
 
-know exist_prop l line st exist_line_through_three_points(a point, b point, c point):
+know @exist l line st exist_line_through_three_points(a point, b point, c point):
     a != b
     $between(a, b, c)
     iff:
@@ -377,13 +377,13 @@ know forall a point, b point, l line:
             $point_left_to_point_on_one_line(a, b, l)
             $point_left_point_on_one_line(a, b, l)
 
-know exist_prop a point st exist_point_left_to_point_with_finite_line_equal_to_given_finite_line(b point, l finite_line):
+know @exist a point st exist_point_left_to_point_with_finite_line_equal_to_given_finite_line(b point, l finite_line):
     iff:
         a != b
         $point_left_to_point_on_one_line(a, b, l)
         $finite_line_equal(finite_line_of(a, b), l)
 
-know exist_prop a point st exist_point_right_to_point_with_finite_line_equal_to_given_finite_line(b point, l finite_line):
+know @exist a point st exist_point_right_to_point_with_finite_line_equal_to_given_finite_line(b point, l finite_line):
         a != b
         $point_left_to_point_on_one_line(b, a, l)
         $finite_line_equal(finite_line_of(a, b), l)
@@ -514,7 +514,7 @@ prop half_plane_to_ray(a point, r ray, p half_plane):
         $half_plane_left_to_ray(a, r, p)
         $half_plane_right_to_ray(a, r, p)
 
-know exist_prop r2 ray st exist_a_ray_with_the_same_angel_with_given_ray_and_half_plane(a point, r1 ray, p half_plane, ang angle):
+know @exist r2 ray st exist_a_ray_with_the_same_angel_with_given_ray_and_half_plane(a point, r1 ray, p half_plane, ang angle):
     dom:
         $point_on_ray(a, r1)
         $half_plane_to_ray(a, r1, p)
@@ -615,7 +615,7 @@ prop parallel(l1 line, l2 line):
     forall x point:
         $point_on_line1_then_not_on_line2(x, l2, l1)
 
-know exist_prop l2 line st exist_one_and_only_one_line_through_point_not_intersect_line(a point, l line):
+know @exist l2 line st exist_one_and_only_one_line_through_point_not_intersect_line(a point, l line):
     dom:
         not $point_on_line(a, l)
     iff:
@@ -669,7 +669,7 @@ know forall a point, b point, c point:
     then:
         $point_right_to_point_on_one_line(a, c, line_of(a, b))
     
-know exist_prop n R, c point st exist_finite_line_of_direction_and_length(a point, b point, l finite_line):
+know @exist n R, c point st exist_finite_line_of_direction_and_length(a point, b point, l finite_line):
     n > 0
     $point_on_line(c, line_of(a, b))
     line_of(a, c) = n * length_of_finite_line(l)

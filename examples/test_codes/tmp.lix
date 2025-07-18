@@ -1,19 +1,4 @@
-(1,2) $in set_product(N, N)
-(3,4) $in set_product(N, N)
-
-fn add_product(x, y set_product(N, N)) set_product(N, N):
-    #x[0] + y[0] = add_product(x, y)[0]
-    #x[1] + y[1] = add_product(x, y)[1]
-    add_product(x,y)[1] = x[1] + y[1]
-    add_product(x,y)[0] = x[0] + y[0]
-
-(1,2) = (1,2)
-(1,2)[0] = 1 # equivalent to (1,2)[0] == 1 in Python
-(3,4)[0] = 3
-(1,2)[1] = 2
-(3,4)[1] = 4
-
-add_product((1,2), (3,4))[0] = (1,2)[0] + (3,4)[0]
-add_product((1,2), (3,4))[0] = 1 + 3
-add_product((1,2), (3,4))[1] = (1,2)[1] + (3,4)[1]
-add_product((1,2), (3,4))[1] = 2 + 4
+know @exist n R st p(x R):
+	x > 0
+    iff:
+    	n * x > 0
