@@ -20,6 +20,10 @@ import (
 	"strings"
 )
 
+func toLatexString(s string) string {
+	return fmt.Sprintf("$%s$", strings.ReplaceAll(s, "_", "\\_"))
+}
+
 func strFcSetPairsLatexString(objs []string, objSets []Fc) string {
 	pairStrSlice := make([]string, len(objs))
 	for i := range len(objs) {

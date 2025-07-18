@@ -1,4 +1,0 @@
-know @exist n R st p(x R):
-	x > 0
-    iff:
-    	n * x > 0
