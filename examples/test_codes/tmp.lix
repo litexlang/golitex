@@ -9,3 +9,18 @@ prop p(x, y R):
     y > 1
     iff:
         p(x, y) = x + y
+
+forall x, y R:
+    x > 1
+    y > 1
+    then:
+        p(x, y) = x + y
+
+forall x, y R:
+    dom:
+        x > 1
+        y > 1
+    then:
+        p(x, y) = x + y
+    iff:
+        p(x, y) = x + y

@@ -20,6 +20,14 @@ import (
 	"strings"
 )
 
+func shouldInSingleLine(strSlice []string) bool {
+	totalLength := 0
+	for _, s := range strSlice {
+		totalLength += len(s)
+	}
+	return totalLength < 80
+}
+
 func shouldUseSingleLine(facts []FactStmt) bool {
 	totalLength := 0
 	for _, f := range facts {
@@ -89,6 +97,24 @@ func (c *DefPropStmt) ToLatexString() string {
 	// 处理条件部分（When）
 	if len(c.DomFacts) > 0 {
 		builder.WriteString(" Its domain is:")
+		domFactStrSlice := make([]string, len(c.DomFacts))
+		for i := range len(c.DomFacts) {
+			domFactStrSlice[i] = c.DomFacts[i].ToLatexString()
+		}
+
+		if shouldInSingleLine(domFactStrSlice) {
+			builder.WriteString(" ")
+			builder.WriteString(strings.Join(domFactStrSlice, ", "))
+			builder.WriteString(" ")
+		} else {
+			builder.WriteString("\n\n")
+			for i := range len(c.DomFacts) {
+				domFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(domFactStrSlice[i], 1)
+			}
+			builder.WriteString(fmt.Sprintf("%s.", strings.Join(domFactStrSlice, "\n\n")))
+			builder.WriteString("\n\n")
+		}
+
 		if shouldUseSingleLine(c.DomFacts) {
 			builder.WriteString(" ")
 			domFactStrSlice := make([]string, len(c.DomFacts))
@@ -474,16 +500,39 @@ func (s *UniFactWithIffStmt) ToLatexString() string {
 	builder.WriteString(strings.Join(paramInParamSetInFactLatexStringSlice(s.UniFact.Params, s.UniFact.ParamSets), ", "))
 
 	if len(s.UniFact.DomFacts) > 0 {
-		builder.WriteString("When: ")
-		builder.WriteString(strings.Join(s.UniFact.DomFacts.factStmtSliceToLatexStringSlice(), ", "))
+		if shouldUseSingleLine(s.UniFact.DomFacts) {
+			builder.WriteString("When: ")
+			builder.WriteString(strings.Join(s.UniFact.DomFacts.factStmtSliceToLatexStringSlice(), ", "))
+			builder.WriteString(" ")
+		} else {
+			builder.WriteString("When:\n\n")
+			builder.WriteString(strings.Join(s.UniFact.DomFacts.factStmtSliceToLatexStringSlice(), "\n\n"))
+			builder.WriteString("\n\n")
+		}
 	}
 
-	builder.WriteString("then: ")
+	if len(s.UniFact.ThenFacts) > 0 {
+		if shouldUseSingleLine(s.UniFact.ThenFacts) {
+			builder.WriteString("then: ")
+			builder.WriteString(strings.Join(s.UniFact.ThenFacts.factStmtSliceToLatexStringSlice(), ", "))
+			builder.WriteString(" ")
+		} else {
+			builder.WriteString("then:\n\n")
+			builder.WriteString(strings.Join(s.UniFact.ThenFacts.factStmtSliceToLatexStringSlice(), "\n\n"))
+			builder.WriteString("\n\n")
+		}
+	}
 
-	builder.WriteString(strings.Join(s.UniFact.ThenFacts.factStmtSliceToLatexStringSlice(), ", "))
-
-	builder.WriteString("Iff: ")
-	builder.WriteString(strings.Join(s.IffFacts.factStmtSliceToLatexStringSlice(), ", "))
+	if len(s.IffFacts) > 0 {
+		builder.WriteString("if and only if: ")
+		if shouldUseSingleLine(s.IffFacts) {
+			builder.WriteString(" ")
+			builder.WriteString(strings.Join(s.IffFacts.factStmtSliceToLatexStringSlice(), ", "))
+		} else {
+			builder.WriteString("\n\n")
+			builder.WriteString(strings.Join(s.IffFacts.factStmtSliceToLatexStringSlice(), "\n\n"))
+		}
+	}
 
 	builder.WriteString(".")
 	return builder.String()
