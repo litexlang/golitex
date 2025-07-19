@@ -87,10 +87,9 @@ Mathematics is the art of deriving new facts from established ones. To illustrat
     <td style="border: 3px solid black; padding: 8px;">
       <code># Syllogism example: All humans are intelligent. Jordan is a human. Therefore, Jordan is intelligent.</code><br>
       <code># 三段论：所有人类都是聪明的。乔丹是人类。因此，乔丹是聪明的。</code><br><br>
-      <code>obj human set</code> <br><br>
+      <code>obj human set, Jordan human</code> <br><br>
       <code>prop intelligent(x Human)</code> <br><br>      <code>know forall x Human:</code> <br>
       <code>&nbsp;&nbsp;$intelligent(x)</code> <br> <br>
-      <code>obj Jordan human</code> <br> <br>
       <code>$intelligent(Jordan)</code>
     </td>
     <td style="border: 3px solid black; padding: 8px;">
