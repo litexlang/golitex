@@ -27,3 +27,8 @@ forall x, y R:
 
 obj x R, y R:
     x > 0
+
+exist_prop x, y R st q(z R):
+    z > 0
+    iff:
+    	z = x + y
