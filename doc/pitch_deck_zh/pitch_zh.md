@@ -61,3 +61,76 @@ Litex是一门**简单易学、表达力强的形式化语言**，让每一步**
 | **时间成本** | 1×（正常写数学）        | 10×（陶哲轩称写Lean需花他10倍时间）  |
 
 Litex 让逻辑推理像编程一样可控、可拓展，实现真正的可验证与可规模化。它的语法简单，更多人能轻松上手形式化语言，将其应用到各自领域，为未来 AI 的安全性、通用性与功能性提供保障。
+
+
+<table style="border-collapse: collapse; width: 100%; font-size: 12px">
+  <tr>
+    <th style="border: 2px solid black; padding: 4px; text-align: left; width: 30%;">Litex</th>
+    <th style="border: 2px solid black; padding: 4px; text-align: left; width: 70%;">Lean 4</th>
+  </tr>
+    <td style="border: 2px solid black; padding: 2px; line-height: 1.5;">
+       <code>fn f(x, y R) R:</code><br>
+       <code>&nbsp;&nbsp;x > 1</code><br>
+       <code>&nbsp;&nbsp;y > 1</code><br>
+       <code>&nbsp;&nbsp;then:</code><br>
+       <code>&nbsp;&nbsp;	f(x, y) = x + y</code><br>
+       <code></code><br>
+       <code>prop p(x, y R):</code><br>
+       <code>&nbsp;&nbsp;x > 1</code><br>
+       <code>&nbsp;&nbsp;y > 1</code><br>
+       <code>&nbsp;&nbsp;iff:</code><br>
+       <code>&nbsp;&nbsp;&nbsp;&nbsp;p(x, y) = x + y</code><br>
+       <code></code><br>
+    </td>
+    <td style="border: 2px solid black; padding: 2px; line-height: 1.5;">
+       <code>\documentclass{article}</code><br>
+       <code></code><br>
+       <code>\usepackage{amsthm}</code><br>
+       <code>\theoremstyle{definition}</code><br>
+       <code>\newtheorem{definition}{Definition}</code><br>
+       <code></code><br>
+       <code>\begin{document}</code><br>
+       <code></code><br>
+       <code>\begin{definition}[Function]</code><br>
+       <code>$f(x, y)$ is defined for $x$ $\in$ $R$, $y$ $\in$ $R$. Its domain is: $x$ $\geq$ $1$, $y$ $\geq$ $1$. We suppose $f$ satisfies: $f(x, y)$ = $(x + y)$.</code><br>
+       <code>\end{definition}</code><br>
+       <code></code><br>
+       <code>\begin{definition}[Proposition]</code><br>
+       <code>$p(x, y)$ is defined for $x$ $\in$ $R$, $y$ $\in$ $R$. Its domain is: $x$ $\geq$ $1$, $y$ $\geq$ $1$. When parameters satisfy the domain properties, we say $p(x, y)$ is true if and only if: $p(x, y)$ = $(x + y)$.</code><br>
+       <code>\end{definition}</code><br>
+       <code></code><br>
+       <code>\end{document}</code><br>
+       <code></code><br>
+    </td>
+  </tr>
+</table>
+
+**Definition (Function).**
+
+Let $f(x, y)$ be defined for $x \in \mathbb{R}$, $y \in \mathbb{R}$.
+
+Its domain is:
+$$
+x \geq 1, \quad y \geq 1
+$$
+
+We suppose $f$ satisfies:
+$$
+f(x, y) = x + y
+$$
+
+---
+
+**Definition (Proposition).**
+
+Let $p(x, y)$ be defined for $x \in \mathbb{R}$, $y \in \mathbb{R}$.
+
+Its domain is:
+$$
+x \geq 1, \quad y \geq 1
+$$
+
+When parameters satisfy the domain properties, we say $p(x, y)$ is true if and only if:
+$$
+p(x, y) = x + y
+$$

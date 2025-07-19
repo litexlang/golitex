@@ -172,7 +172,7 @@ func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state VerState)
 	// 	return false
 	// }
 
-	if string(asAtom) == glob.KeywordNatural || string(asAtom) == glob.KeywordInt || string(asAtom) == glob.KeywordReal || string(asAtom) == glob.KeywordComplex || string(asAtom) == glob.KeywordRational {
+	if string(asAtom) == glob.KeywordNatural || string(asAtom) == glob.KeywordInteger || string(asAtom) == glob.KeywordReal || string(asAtom) == glob.KeywordComplex || string(asAtom) == glob.KeywordRational {
 		if state.requireMsg() {
 			ver.successWithMsg(stmt.String(), "the builtin rules")
 		}
@@ -275,7 +275,7 @@ func (ver *Verifier) verInSet(stmt *ast.SpecFactStmt, state VerState) (bool, err
 
 	// 如果它是N, Z, Q, R, C, 则直接返回true
 	ok = ast.IsFcAtomWithBuiltinPkgAndName(stmt.Params[0], glob.KeywordNatural) ||
-		ast.IsFcAtomWithBuiltinPkgAndName(stmt.Params[0], glob.KeywordInt) ||
+		ast.IsFcAtomWithBuiltinPkgAndName(stmt.Params[0], glob.KeywordInteger) ||
 		ast.IsFcAtomWithBuiltinPkgAndName(stmt.Params[0], glob.KeywordRational) ||
 		ast.IsFcAtomWithBuiltinPkgAndName(stmt.Params[0], glob.KeywordReal) ||
 		ast.IsFcAtomWithBuiltinPkgAndName(stmt.Params[0], glob.KeywordComplex)

@@ -16,11 +16,25 @@ package litex_ast
 
 import (
 	"fmt"
+	glob "golitex/glob"
 	"strings"
 )
 
 func (f FcAtom) ToLatexString() string {
-	return fmt.Sprintf("$%s$", strings.ReplaceAll(string(f), "_", "\\_"))
+	switch string(f) {
+	case glob.KeywordReal:
+		return "$\\mathbb{R}$"
+	case glob.KeywordNatural:
+		return "$\\mathbb{N}$"
+	case glob.KeywordInteger:
+		return "$\\mathbb{Z}$"
+	case glob.KeywordRational:
+		return "$\\mathbb{Q}$"
+	case glob.KeywordComplex:
+		return "$\\mathbb{C}$"
+	default:
+		return fmt.Sprintf("$%s$", strings.ReplaceAll(string(f), "_", "\\_"))
+	}
 }
 
 func (f *FcFn) ToLatexString() string {
@@ -44,6 +58,14 @@ func isSpecialLatexSymbol_Process(f *FcFn) (bool, string) {
 		case "intersection":
 			return true, fmt.Sprintf("%s $\\cap$ %s", f.Params[0].ToLatexString(), f.Params[1].ToLatexString())
 		}
+	}
+
+	if fHead == glob.KeywordSetProduct {
+		slice := make([]string, len(f.Params))
+		for i, param := range f.Params {
+			slice[i] = param.ToLatexString()
+		}
+		return true, strings.Join(slice, " $\\times$ ")
 	}
 
 	return false, ""
