@@ -3,3 +3,9 @@ fn f(x, y R) R:
     y > 1
     then:
     	f(x, y) = x + y
+
+prop p(x, y R):
+    x > 1
+    y > 1
+    iff:
+        p(x, y) = x + y

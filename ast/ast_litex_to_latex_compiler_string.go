@@ -82,30 +82,52 @@ func (c *DefPropStmt) ToLatexString() string {
 	// 定义命题部分（自然语言风格）
 	builder.WriteString("\\begin{definition}[Proposition]\n")
 	builder.WriteString(c.DefHeader.NameWithParamsLatexString())
-	builder.WriteString(" is defined for each ")
+	builder.WriteString(" is defined for ")
 	builder.WriteString(strFcSetPairsLatexString(c.DefHeader.Params, c.DefHeader.ParamSets))
 	builder.WriteString(".")
 
 	// 处理条件部分（When）
 	if len(c.DomFacts) > 0 {
-		builder.WriteString("\n    When the following holds:\n    \\begin{itemize}")
-		for _, fact := range c.DomFacts {
-			builder.WriteString("\n        \\item ")
-			builder.WriteString(fact.ToLatexString())
+		builder.WriteString(" Its domain is:")
+		if shouldUseSingleLine(c.DomFacts) {
+			builder.WriteString(" ")
+			domFactStrSlice := make([]string, len(c.DomFacts))
+			for i := range len(c.DomFacts) {
+				domFactStrSlice[i] = c.DomFacts[i].ToLatexString()
+			}
+			builder.WriteString(fmt.Sprintf("%s.", strings.Join(domFactStrSlice, ", ")))
+			builder.WriteString(" ")
+		} else {
+			builder.WriteString("\n\n")
+			domFactStrSlice := make([]string, len(c.DomFacts))
+			for i := range len(c.DomFacts) {
+				domFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(c.DomFacts[i].ToLatexString(), 1)
+			}
+			builder.WriteString(fmt.Sprintf("%s.", strings.Join(domFactStrSlice, "\n\n")))
+			builder.WriteString("\n\n")
 		}
-		builder.WriteString("\n    \\end{itemize}")
 	}
 
 	// 处理等价条件部分（Iff）
 	if len(c.IffFacts) > 0 {
-		builder.WriteString("\n    We say ")
+		builder.WriteString("When parameters satisfy the above properties, we say ")
 		builder.WriteString(c.DefHeader.NameWithParamsLatexString())
-		builder.WriteString(" if and only if:\n    \\begin{itemize}")
-		for _, fact := range c.IffFacts {
-			builder.WriteString("\n        \\item ")
-			builder.WriteString(fact.ToLatexString())
+		builder.WriteString(" is true if and only if:")
+		if shouldUseSingleLine(c.IffFacts) {
+			builder.WriteString(" ")
+			iffFactStrSlice := make([]string, len(c.IffFacts))
+			for i := range len(c.IffFacts) {
+				iffFactStrSlice[i] = c.IffFacts[i].ToLatexString()
+			}
+			builder.WriteString(fmt.Sprintf("%s.", strings.Join(iffFactStrSlice, ", ")))
+		} else {
+			builder.WriteString("\n\n")
+			iffFactStrSlice := make([]string, len(c.IffFacts))
+			for i := range len(c.IffFacts) {
+				iffFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(c.IffFacts[i].ToLatexString(), 1)
+			}
+			builder.WriteString(fmt.Sprintf("%s.", strings.Join(iffFactStrSlice, "\n\n")))
 		}
-		builder.WriteString("\n    \\end{itemize}")
 	}
 
 	builder.WriteString("\n\\end{definition}")
@@ -117,45 +139,47 @@ func (l *DefFnStmt) ToLatexString() string {
 
 	builder.WriteString("\\begin{definition}[Function]\n")
 	builder.WriteString(l.FnTemplateStmt.DefHeader.NameWithParamsLatexString())
-	builder.WriteString(" is defined for each ")
+	builder.WriteString(" is defined for ")
 	builder.WriteString(strFcSetPairsLatexString(l.FnTemplateStmt.Params, l.FnTemplateStmt.ParamSets))
 	builder.WriteString(".")
 
 	if len(l.FnTemplateStmt.DomFacts) > 0 {
-		builder.WriteString(" The domain of the function is:")
+		builder.WriteString(" Its domain is:")
 		if shouldUseSingleLine(l.FnTemplateStmt.DomFacts) {
 			builder.WriteString(" ")
 			strSlice := make([]string, len(l.FnTemplateStmt.DomFacts))
 			for i, f := range l.FnTemplateStmt.DomFacts {
 				strSlice[i] = f.ToLatexString()
 			}
-			builder.WriteString(strings.Join(strSlice, ", ") + ".")
+			builder.WriteString(fmt.Sprintf("%s.", strings.Join(strSlice, ", ")))
+			builder.WriteString(" ")
 		} else {
 			builder.WriteString("\n\n")
 			domFactStrSlice := make([]string, len(l.FnTemplateStmt.DomFacts))
 			for i := range len(l.FnTemplateStmt.DomFacts) {
 				domFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(l.FnTemplateStmt.DomFacts[i].ToLatexString(), 1)
 			}
-			builder.WriteString(strings.Join(domFactStrSlice, "\n\n") + ".")
+			builder.WriteString(fmt.Sprintf("%s.", strings.Join(domFactStrSlice, "\n\n")))
+			builder.WriteString("\n\n")
 		}
 	}
 
 	if len(l.FnTemplateStmt.ThenFacts) > 0 {
-		builder.WriteString(fmt.Sprintf(" Suppose the %s has the following properties:", toLatexString(l.FnTemplateStmt.DefHeader.Name)))
+		builder.WriteString(fmt.Sprintf("We suppose %s satisfies:", toLatexString(l.FnTemplateStmt.DefHeader.Name)))
 		if shouldUseSingleLine(l.FnTemplateStmt.ThenFacts) {
 			builder.WriteString(" ")
 			thenFactStrSlice := make([]string, len(l.FnTemplateStmt.ThenFacts))
 			for i := range len(l.FnTemplateStmt.ThenFacts) {
 				thenFactStrSlice[i] = l.FnTemplateStmt.ThenFacts[i].ToLatexString()
 			}
-			builder.WriteString(strings.Join(thenFactStrSlice, ", ") + ".")
+			builder.WriteString(fmt.Sprintf("%s.", strings.Join(thenFactStrSlice, ", ")))
 		} else {
 			builder.WriteString("\n\n")
 			thenFactStrSlice := make([]string, len(l.FnTemplateStmt.ThenFacts))
 			for i := range len(l.FnTemplateStmt.ThenFacts) {
 				thenFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(l.FnTemplateStmt.ThenFacts[i].ToLatexString(), 1)
 			}
-			builder.WriteString(strings.Join(thenFactStrSlice, "\n\n") + ".")
+			builder.WriteString(fmt.Sprintf("%s.", strings.Join(thenFactStrSlice, "\n\n")))
 		}
 	}
 
