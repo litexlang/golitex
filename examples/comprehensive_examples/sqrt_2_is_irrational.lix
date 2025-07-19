@@ -21,7 +21,7 @@ claim:
         
         x = sqrt(2) * y
         x ^ 2 = (sqrt(2) ^ 2) * (y ^ 2)
-        sqrt(2) ^ 2 = 2 # must write it out
+        sqrt(2) ^ 2 = 2
         x ^ 2 = 2 * (y ^ 2)
         logBase(2, x ^ 2) = logBase(2, 2 * (y ^ 2))
         
