@@ -24,6 +24,10 @@ func toLatexString(s string) string {
 	return fmt.Sprintf("$%s$", strings.ReplaceAll(s, "_", "\\_"))
 }
 
+func underlineToSlashUnderline(s string) string {
+	return strings.ReplaceAll(s, "_", "\\_")
+}
+
 func strFcSetPairsLatexString(objs []string, objSets []Fc) string {
 	pairStrSlice := make([]string, len(objs))
 	for i := range len(objs) {
@@ -53,12 +57,7 @@ func (s *DefObjStmt) ToLatexString() string {
 }
 
 func (head DefHeader) ToLatexString() string {
-	var builder strings.Builder
-	builder.WriteString(head.Name)
-	builder.WriteString("(")
-	builder.WriteString(strFcSetPairsLatexString(head.Params, head.ParamSets))
-	builder.WriteString(")")
-	return builder.String()
+	return fmt.Sprintf("$%s$", strings.ReplaceAll(head.String(), "_", "\\_"))
 }
 
 func (head DefHeader) NameWithParamsLatexString() string {
@@ -67,15 +66,14 @@ func (head DefHeader) NameWithParamsLatexString() string {
 	builder.WriteString("(")
 	builder.WriteString(strings.Join(head.Params, ", "))
 	builder.WriteString(")")
-	return builder.String()
+	return fmt.Sprintf("$%s$", strings.ReplaceAll(builder.String(), "_", "\\_"))
 }
 
 func (c *DefPropStmt) ToLatexString() string {
 	var builder strings.Builder
 
 	// 定义命题部分（自然语言风格）
-	builder.WriteString(fmt.Sprintf("\\begin{definition}[%s]\n", c.DefHeader.Name))
-	builder.WriteString("    The proposition ")
+	builder.WriteString(fmt.Sprintf("\\begin{definition}[Proposition\n", toLatexString(c.DefHeader.Name)))
 	builder.WriteString(c.DefHeader.NameWithParamsLatexString())
 	builder.WriteString(" is defined for each ")
 	builder.WriteString(strFcSetPairsLatexString(c.DefHeader.Params, c.DefHeader.ParamSets))
@@ -110,33 +108,33 @@ func (c *DefPropStmt) ToLatexString() string {
 func (l *DefFnStmt) ToLatexString() string {
 	var builder strings.Builder
 
-	builder.WriteString("Suppose we have a function: ")
+	builder.WriteString(fmt.Sprintf("\\begin{definition}[Function]\n", toLatexString(l.FnTemplateStmt.DefHeader.Name)))
 	builder.WriteString(l.FnTemplateStmt.DefHeader.NameWithParamsLatexString())
+	builder.WriteString(" is defined for each ")
+	builder.WriteString(strFcSetPairsLatexString(l.FnTemplateStmt.Params, l.FnTemplateStmt.ParamSets))
 	builder.WriteString(".")
 
-	if len(l.FnTemplateStmt.DomFacts) == 0 && len(l.FnTemplateStmt.ThenFacts) == 0 {
-		return builder.String()
-	}
-
 	if len(l.FnTemplateStmt.DomFacts) > 0 {
-		builder.WriteString(" Its domain is: ")
+		builder.WriteString("\n    The domain of the function is: ")
 		domFactStrSlice := make([]string, len(l.FnTemplateStmt.DomFacts))
 		for i := range len(l.FnTemplateStmt.DomFacts) {
 			domFactStrSlice[i] = l.FnTemplateStmt.DomFacts[i].ToLatexString()
 		}
-		builder.WriteString(strings.Join(domFactStrSlice, ", "))
+		builder.WriteString(strings.Join(domFactStrSlice, "\n"))
 		builder.WriteString(".")
 	}
 
 	if len(l.FnTemplateStmt.ThenFacts) > 0 {
-		builder.WriteString(fmt.Sprintf(" We also suppose the %s has the following properties: ", l.FnTemplateStmt.DefHeader.Name))
+		builder.WriteString(fmt.Sprintf("\nWe also suppose the %s has the following properties: ", toLatexString(l.FnTemplateStmt.DefHeader.Name)))
 		thenFactStrSlice := make([]string, len(l.FnTemplateStmt.ThenFacts))
 		for i := range len(l.FnTemplateStmt.ThenFacts) {
 			thenFactStrSlice[i] = l.FnTemplateStmt.ThenFacts[i].ToLatexString()
 		}
-		builder.WriteString(strings.Join(thenFactStrSlice, ", "))
+		builder.WriteString(strings.Join(thenFactStrSlice, "\n"))
 		builder.WriteString(".")
 	}
+
+	builder.WriteString("\n\\end{definition}")
 
 	return builder.String()
 }
