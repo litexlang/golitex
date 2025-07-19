@@ -38,7 +38,7 @@ func (env *Env) Init() {
 	env.FcSatisfy_FreeTemplateFact_Store_DeriveFacts(slashAtom, slashTemplate)
 
 	modAtom := ast.FcAtom(glob.KeySymbolPercent)
-	modTemplate := ast.NewFnTemplateStmt(ast.NewDefHeader(modAtom.String(), []string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordInt), ast.FcAtom(glob.KeywordInt)}), []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{ast.FcAtom("y"), ast.FcAtom("0")})}, ast.FcAtom(glob.KeywordInt))
+	modTemplate := ast.NewFnTemplateStmt(ast.NewDefHeader(modAtom.String(), []string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordInteger), ast.FcAtom(glob.KeywordInteger)}), []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{ast.FcAtom("y"), ast.FcAtom("0")})}, ast.FcAtom(glob.KeywordInteger))
 	env.FcSatisfy_FreeTemplateFact_Store_DeriveFacts(modAtom, modTemplate)
 
 	lenAtom := ast.FcAtom(glob.KeywordLen)

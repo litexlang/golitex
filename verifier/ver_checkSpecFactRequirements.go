@@ -124,7 +124,7 @@ func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn, state VerState) (bool
 			return false, err
 		}
 		if !ok {
-			return false, fmt.Errorf("parameters in %s must be in set %s or %s or %s or %s, %s in %s is not valid", fc.FnHead, glob.KeywordReal, glob.KeywordInt, glob.KeywordRational, glob.KeywordNatural, param, fc)
+			return false, fmt.Errorf("parameters in %s must be in set %s or %s or %s or %s, %s in %s is not valid", fc.FnHead, glob.KeywordReal, glob.KeywordInteger, glob.KeywordRational, glob.KeywordNatural, param, fc)
 		}
 	}
 
@@ -145,11 +145,11 @@ func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn, state VerState) (bool
 		}
 
 		// 分子分母必须是整数
-		ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fc.Params[0], ast.FcAtom(glob.KeywordInt)}), state)
+		ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fc.Params[0], ast.FcAtom(glob.KeywordInteger)}), state)
 		if err != nil || !ok {
 			return ok, err
 		}
-		ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fc.Params[1], ast.FcAtom(glob.KeywordInt)}), state)
+		ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fc.Params[1], ast.FcAtom(glob.KeywordInteger)}), state)
 		if err != nil || !ok {
 			return ok, err
 		}
@@ -203,9 +203,9 @@ func (ver *Verifier) paramIs_R_Z_Q_N(fc ast.Fc, state VerState) (bool, error) {
 		return true, nil
 	}
 
-	ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fc, ast.FcAtom(glob.KeywordInt)}), state)
+	ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fc, ast.FcAtom(glob.KeywordInteger)}), state)
 	if err != nil {
-		return false, ver.verErr(err, "parameters in %s must be in set %s, %s in %s is not valid", fc, glob.KeywordInt, fc, fc)
+		return false, ver.verErr(err, "parameters in %s must be in set %s, %s in %s is not valid", fc, glob.KeywordInteger, fc, fc)
 	}
 	if ok {
 		return true, nil
