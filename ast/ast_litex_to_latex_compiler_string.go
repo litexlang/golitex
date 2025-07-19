@@ -20,12 +20,19 @@ import (
 	"strings"
 )
 
-func toLatexString(s string) string {
-	return fmt.Sprintf("$%s$", strings.ReplaceAll(s, "_", "\\_"))
+func shouldUseSingleLine(facts []FactStmt) bool {
+	totalLength := 0
+	for _, f := range facts {
+		totalLength += len(f.ToLatexString())
+		if totalLength > 80 || len(f.ToLatexString()) > 40 {
+			return false
+		}
+	}
+	return true
 }
 
-func underlineToSlashUnderline(s string) string {
-	return strings.ReplaceAll(s, "_", "\\_")
+func toLatexString(s string) string {
+	return fmt.Sprintf("$%s$", strings.ReplaceAll(s, "_", "\\_"))
 }
 
 func strFcSetPairsLatexString(objs []string, objSets []Fc) string {
@@ -73,7 +80,7 @@ func (c *DefPropStmt) ToLatexString() string {
 	var builder strings.Builder
 
 	// 定义命题部分（自然语言风格）
-	builder.WriteString(fmt.Sprintf("\\begin{definition}[Proposition\n", toLatexString(c.DefHeader.Name)))
+	builder.WriteString("\\begin{definition}[Proposition]\n")
 	builder.WriteString(c.DefHeader.NameWithParamsLatexString())
 	builder.WriteString(" is defined for each ")
 	builder.WriteString(strFcSetPairsLatexString(c.DefHeader.Params, c.DefHeader.ParamSets))
@@ -108,30 +115,48 @@ func (c *DefPropStmt) ToLatexString() string {
 func (l *DefFnStmt) ToLatexString() string {
 	var builder strings.Builder
 
-	builder.WriteString(fmt.Sprintf("\\begin{definition}[Function]\n", toLatexString(l.FnTemplateStmt.DefHeader.Name)))
+	builder.WriteString("\\begin{definition}[Function]\n")
 	builder.WriteString(l.FnTemplateStmt.DefHeader.NameWithParamsLatexString())
 	builder.WriteString(" is defined for each ")
 	builder.WriteString(strFcSetPairsLatexString(l.FnTemplateStmt.Params, l.FnTemplateStmt.ParamSets))
 	builder.WriteString(".")
 
 	if len(l.FnTemplateStmt.DomFacts) > 0 {
-		builder.WriteString("\n    The domain of the function is: ")
-		domFactStrSlice := make([]string, len(l.FnTemplateStmt.DomFacts))
-		for i := range len(l.FnTemplateStmt.DomFacts) {
-			domFactStrSlice[i] = l.FnTemplateStmt.DomFacts[i].ToLatexString()
+		builder.WriteString(" The domain of the function is:")
+		if shouldUseSingleLine(l.FnTemplateStmt.DomFacts) {
+			builder.WriteString(" ")
+			strSlice := make([]string, len(l.FnTemplateStmt.DomFacts))
+			for i, f := range l.FnTemplateStmt.DomFacts {
+				strSlice[i] = f.ToLatexString()
+			}
+			builder.WriteString(strings.Join(strSlice, ", ") + ".")
+		} else {
+			builder.WriteString("\n\n")
+			domFactStrSlice := make([]string, len(l.FnTemplateStmt.DomFacts))
+			for i := range len(l.FnTemplateStmt.DomFacts) {
+				domFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(l.FnTemplateStmt.DomFacts[i].ToLatexString(), 1)
+			}
+			builder.WriteString(strings.Join(domFactStrSlice, "\n\n") + ".")
 		}
-		builder.WriteString(strings.Join(domFactStrSlice, "\n"))
-		builder.WriteString(".")
 	}
 
 	if len(l.FnTemplateStmt.ThenFacts) > 0 {
-		builder.WriteString(fmt.Sprintf("\nWe also suppose the %s has the following properties: ", toLatexString(l.FnTemplateStmt.DefHeader.Name)))
-		thenFactStrSlice := make([]string, len(l.FnTemplateStmt.ThenFacts))
-		for i := range len(l.FnTemplateStmt.ThenFacts) {
-			thenFactStrSlice[i] = l.FnTemplateStmt.ThenFacts[i].ToLatexString()
+		builder.WriteString(fmt.Sprintf(" Suppose the %s has the following properties:", toLatexString(l.FnTemplateStmt.DefHeader.Name)))
+		if shouldUseSingleLine(l.FnTemplateStmt.ThenFacts) {
+			builder.WriteString(" ")
+			thenFactStrSlice := make([]string, len(l.FnTemplateStmt.ThenFacts))
+			for i := range len(l.FnTemplateStmt.ThenFacts) {
+				thenFactStrSlice[i] = l.FnTemplateStmt.ThenFacts[i].ToLatexString()
+			}
+			builder.WriteString(strings.Join(thenFactStrSlice, ", ") + ".")
+		} else {
+			builder.WriteString("\n\n")
+			thenFactStrSlice := make([]string, len(l.FnTemplateStmt.ThenFacts))
+			for i := range len(l.FnTemplateStmt.ThenFacts) {
+				thenFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(l.FnTemplateStmt.ThenFacts[i].ToLatexString(), 1)
+			}
+			builder.WriteString(strings.Join(thenFactStrSlice, "\n\n") + ".")
 		}
-		builder.WriteString(strings.Join(thenFactStrSlice, "\n"))
-		builder.WriteString(".")
 	}
 
 	builder.WriteString("\n\\end{definition}")
@@ -199,9 +224,9 @@ func keySymbolRelaFactWithoutNotLatexString(stmt *SpecFactStmt) string {
 	case glob.KeySymbolEqual:
 		builder.WriteString("=")
 	case glob.KeySymbolLess:
-		builder.WriteString("\\leq")
+		builder.WriteString("$\\leq$")
 	case glob.KeySymbolGreater:
-		builder.WriteString("\\geq")
+		builder.WriteString("$\\geq$")
 	case glob.KeySymbolEqualEqual:
 		builder.WriteString("==")
 	case glob.KeySymbolNotEqual:
@@ -209,9 +234,9 @@ func keySymbolRelaFactWithoutNotLatexString(stmt *SpecFactStmt) string {
 	case glob.KeywordIn:
 		builder.WriteString("$\\in$")
 	case glob.KeySymbolLargerEqual:
-		builder.WriteString("\\geq")
+		builder.WriteString("$\\geq$")
 	case glob.KeySymbolLessEqual:
-		builder.WriteString("\\leq")
+		builder.WriteString("$\\leq$")
 	default:
 		builder.WriteString(stmt.PropName.String())
 	}
