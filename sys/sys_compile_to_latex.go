@@ -17,7 +17,7 @@ package litex_sys
 import (
 	"errors"
 	glob "golitex/glob"
-	litex_to_latex_compiler "golitex/litex_to_latex_compiler"
+	litex_to_latex_compiler "golitex/to_latex"
 	"os"
 	"path/filepath"
 	"strings"
