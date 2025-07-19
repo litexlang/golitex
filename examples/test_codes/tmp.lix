@@ -40,6 +40,11 @@ know:
         logBase(z, x^(y+1234 * asdf)) = y * logBase(z, x)
         logBase(z, x*y) = logBase(z, x) + logBase(z, y)
 
+know:
+    forall x, y, z N:
+        logBase(z, x^(y+1234 * asdf)) = y * logBase(z, x)
+        logBase(z, x*y) = logBase(z, x) + logBase(z, y)
+
     forall x N:
         x != 0
         then:
