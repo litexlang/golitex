@@ -591,15 +591,46 @@ func (strSlice StrSlice) stringSliceToLatexStringSlice() string {
 
 func (s *DefFnTemplateStmt) ToLatexString() string {
 	var builder strings.Builder
-	// 这里我要说的是，用xxx来代表其中的一个
-	builder.WriteString(fmt.Sprintf("[Define Function Template]Suppose we have a set called %s. It is a set of functions.", toLatexString(s.FnTemplateStmt.DefHeader.Name)))
-	builder.WriteString(fmt.Sprintf("It has %d parameter(s) written as %s. These parameters satisfy (i.e. their domain must be superset of a set that satisfies the following condition): ", len(s.FnTemplateStmt.Params), s.FnTemplateStmt.Params.stringSliceToLatexStringSlice()))
+	builder.WriteString("\\begin{definition}[Function Template]\n\n")
+	builder.WriteString("We say a function satisfies function template ")
+	builder.WriteString(toLatexString(s.FnTemplateStmt.DefHeader.Name))
+	builder.WriteString(fmt.Sprintf(" if it satisfies (we use %s here to represent that function):", s.FnTemplateStmt.DefHeader.Name))
+	builder.WriteString("\n\n")
+
+	builder.WriteString("It has a domain which is superset of the set which contains parameters satisfying the following properties: ")
 	builder.WriteString(strings.Join(paramInParamSetInFactLatexStringSlice(s.FnTemplateStmt.Params, s.FnTemplateStmt.ParamSets), ", "))
-	builder.WriteString("and ")
-	builder.WriteString(strings.Join(s.FnTemplateStmt.DomFacts.factStmtSliceToLatexStringSlice(), ", "))
-	builder.WriteString(fmt.Sprintf("The functions (we use %s to represent a function) has the following properties: ", s.FnTemplateStmt.DefHeader.Name))
-	builder.WriteString(strings.Join(s.FnTemplateStmt.ThenFacts.factStmtSliceToLatexStringSlice(), ", "))
-	builder.WriteString(".")
+
+	if len(s.FnTemplateStmt.DomFacts) > 0 {
+		builder.WriteString(" and ")
+		domFactStrSlice := s.FnTemplateStmt.DomFacts.factStmtSliceToLatexStringSlice()
+		if ShouldInSingleLineAsLatexString(domFactStrSlice) {
+			builder.WriteString(" ")
+			builder.WriteString(strings.Join(domFactStrSlice, ", "))
+		} else {
+			builder.WriteString("\n\n")
+			builder.WriteString(strings.Join(domFactStrSlice, "\n\n"))
+		}
+		builder.WriteString(".")
+	} else {
+		builder.WriteString(".")
+	}
+
+	if len(s.FnTemplateStmt.ThenFacts) > 0 {
+		builder.WriteString("\n\n")
+		builder.WriteString("When its parameters satisfies the above condition, it has the following properties:")
+		thenFactStrSlice := s.FnTemplateStmt.ThenFacts.factStmtSliceToLatexStringSlice()
+		if ShouldInSingleLineAsLatexString(thenFactStrSlice) {
+			builder.WriteString(" ")
+			builder.WriteString(strings.Join(thenFactStrSlice, ", "))
+		} else {
+			builder.WriteString("\n\n")
+			builder.WriteString(strings.Join(thenFactStrSlice, "\n\n"))
+		}
+		builder.WriteString(".")
+	}
+
+	builder.WriteString("\n\\end{definition}")
+
 	return builder.String()
 }
 
@@ -743,45 +774,7 @@ func (s *NamedUniFactStmt) ToLatexString() string {
 }
 
 func (s *FnTemplateStmt) ToLatexString() string {
-	var builder strings.Builder
-	builder.WriteString("\\begin{definition}[Function Template]\n\n")
-	builder.WriteString("We say a function $\\in$ function template ")
-	builder.WriteString(toLatexString(s.DefHeader.Name))
-	builder.WriteString(fmt.Sprintf(" if it satisfies (we use %s here to represent that function):", s.DefHeader.Name))
-	builder.WriteString("\n\n")
-
-	builder.WriteString("It has a domain which is superset of the set which contains parameters satisfying the following properties: ")
-	builder.WriteString(strings.Join(paramInParamSetInFactLatexStringSlice(s.Params, s.ParamSets), ", "))
-
-	if len(s.DomFacts) > 0 {
-		builder.WriteString(" and ")
-		domFactStrSlice := s.DomFacts.factStmtSliceToLatexStringSlice()
-		if ShouldInSingleLineAsLatexString(domFactStrSlice) {
-			builder.WriteString(" ")
-			builder.WriteString(strings.Join(domFactStrSlice, ", "))
-		} else {
-			builder.WriteString("\n\n")
-			builder.WriteString(strings.Join(domFactStrSlice, "\n\n"))
-		}
-		builder.WriteString(".")
-	} else {
-		builder.WriteString(".")
-	}
-
-	if len(s.ThenFacts) > 0 {
-		builder.WriteString("When its parameters satisfies the above condition, it has the following properties:")
-		thenFactStrSlice := s.ThenFacts.factStmtSliceToLatexStringSlice()
-		if ShouldInSingleLineAsLatexString(thenFactStrSlice) {
-			builder.WriteString(" ")
-			builder.WriteString(strings.Join(thenFactStrSlice, ", "))
-		} else {
-			builder.WriteString("\n\n")
-			builder.WriteString(strings.Join(thenFactStrSlice, "\n\n"))
-		}
-		builder.WriteString(".")
-	}
-
-	return builder.String()
+	return NewFnTemplateDefStmt(s).ToLatexString()
 }
 
 func (s FcSlice) fcSliceToLatexStringSlice() []string {

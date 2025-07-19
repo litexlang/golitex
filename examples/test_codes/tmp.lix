@@ -33,7 +33,6 @@ exist_prop x, y R st q(z R):
     z > 0
     iff:
     	z = x + y
-"""
 
 know:
     forall x, y, z N:
@@ -67,3 +66,11 @@ fn f(x, y R) R:
     x > 1
     y > 1
     then:
+
+"""
+
+fn_template f(x, y R) R:
+    x > 1
+    y > 1
+    then:
+        f(x, y) = x + y
