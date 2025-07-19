@@ -42,7 +42,12 @@ func (f *FcFn) ToLatexString() string {
 		return str
 	}
 
-	return fmt.Sprintf("$%s$", strings.ReplaceAll(f.String(), "_", "\\_"))
+	head := strings.ReplaceAll(f.FnHead.ToLatexString(), "$", "")
+	paramSlice := make([]string, len(f.Params))
+	for i, param := range f.Params {
+		paramSlice[i] = strings.ReplaceAll(param.ToLatexString(), "$", "")
+	}
+	return fmt.Sprintf("$%s(%s)$", head, strings.Join(paramSlice, ", "))
 }
 
 func isSpecialLatexSymbol_Process(f *FcFn) (bool, string) {
@@ -57,6 +62,18 @@ func isSpecialLatexSymbol_Process(f *FcFn) (bool, string) {
 			return true, fmt.Sprintf("%s $\\cup$ %s", f.Params[0].ToLatexString(), f.Params[1].ToLatexString())
 		case "intersection":
 			return true, fmt.Sprintf("%s $\\cap$ %s", f.Params[0].ToLatexString(), f.Params[1].ToLatexString())
+		case "^":
+			left := strings.ReplaceAll(f.Params[0].ToLatexString(), "$", "")
+			right := strings.ReplaceAll(f.Params[1].ToLatexString(), "$", "")
+			return true, fmt.Sprintf("$%s^{%s}$", left, right)
+		case "+":
+			return true, fmt.Sprintf("%s $+$ %s", f.Params[0].ToLatexString(), f.Params[1].ToLatexString())
+		case "*":
+			return true, fmt.Sprintf("%s $*$ %s", f.Params[0].ToLatexString(), f.Params[1].ToLatexString())
+		case "-":
+			return true, fmt.Sprintf("%s $-$ %s", f.Params[0].ToLatexString(), f.Params[1].ToLatexString())
+		case "/":
+			return true, fmt.Sprintf("%s $\\div$ %s", f.Params[0].ToLatexString(), f.Params[1].ToLatexString())
 		}
 	}
 
