@@ -20,7 +20,7 @@ import (
 	"strings"
 )
 
-func shouldInSingleLine(strSlice []string) bool {
+func ShouldInSingleLineAsLatexString(strSlice []string) bool {
 	totalLength := 0
 	for _, s := range strSlice {
 		totalLength += len(s)
@@ -53,7 +53,7 @@ func (s *DefObjStmt) ToLatexString() string {
 		for i := range len(s.Facts) {
 			factStrSlice[i] = s.Facts[i].ToLatexString()
 		}
-		if shouldInSingleLine(factStrSlice) {
+		if ShouldInSingleLineAsLatexString(factStrSlice) {
 			builder.WriteString(" ")
 			builder.WriteString(strings.Join(factStrSlice, ", "))
 		} else {
@@ -97,7 +97,7 @@ func bodyToLatexString(defHeader *DefHeader, domFacts FactStmtSlice, iffFacts Fa
 			domFactStrSlice[i] = domFacts[i].ToLatexString()
 		}
 
-		if shouldInSingleLine(domFactStrSlice) {
+		if ShouldInSingleLineAsLatexString(domFactStrSlice) {
 			builder.WriteString(" ")
 			builder.WriteString(strings.Join(domFactStrSlice, ", "))
 			builder.WriteString(".")
@@ -129,7 +129,7 @@ func bodyToLatexString(defHeader *DefHeader, domFacts FactStmtSlice, iffFacts Fa
 		iffFactStrSlice[i] = iffFacts[i].ToLatexString()
 	}
 
-	if shouldInSingleLine(iffFactStrSlice) {
+	if ShouldInSingleLineAsLatexString(iffFactStrSlice) {
 		builder.WriteString(" ")
 		builder.WriteString(fmt.Sprintf("%s.", strings.Join(iffFactStrSlice, ", ")))
 		builder.WriteString(" ")
@@ -172,7 +172,7 @@ func (l *DefFnStmt) ToLatexString() string {
 			domFactStrSlice[i] = l.FnTemplateStmt.DomFacts[i].ToLatexString()
 		}
 
-		if shouldInSingleLine(domFactStrSlice) {
+		if ShouldInSingleLineAsLatexString(domFactStrSlice) {
 			builder.WriteString(" ")
 			builder.WriteString(fmt.Sprintf("%s.", strings.Join(domFactStrSlice, ", ")))
 			builder.WriteString(" ")
@@ -194,7 +194,7 @@ func (l *DefFnStmt) ToLatexString() string {
 			thenFactStrSlice[i] = l.FnTemplateStmt.ThenFacts[i].ToLatexString()
 		}
 
-		if shouldInSingleLine(thenFactStrSlice) {
+		if ShouldInSingleLineAsLatexString(thenFactStrSlice) {
 			builder.WriteString(" ")
 			builder.WriteString(fmt.Sprintf("%s.", strings.Join(thenFactStrSlice, ", ")))
 			builder.WriteString(" ")
@@ -225,7 +225,7 @@ func (l *UniFactStmt) ToLatexString() string {
 			domFactStrSlice[i] = l.DomFacts[i].ToLatexString()
 		}
 
-		if shouldInSingleLine(domFactStrSlice) {
+		if ShouldInSingleLineAsLatexString(domFactStrSlice) {
 			builder.WriteString(" ")
 			builder.WriteString(strings.Join(domFactStrSlice, ", "))
 			builder.WriteString(" ")
@@ -244,7 +244,7 @@ func (l *UniFactStmt) ToLatexString() string {
 		thenFactStrSlice[i] = l.ThenFacts[i].ToLatexString()
 	}
 
-	if shouldInSingleLine(thenFactStrSlice) {
+	if ShouldInSingleLineAsLatexString(thenFactStrSlice) {
 		builder.WriteString(" ")
 		builder.WriteString(strings.Join(thenFactStrSlice, ", "))
 	} else {
@@ -359,17 +359,17 @@ func (f *ClaimProveStmt) ToLatexString() string {
 func (f *KnowFactStmt) ToLatexString() string {
 	var builder strings.Builder
 
+	builder.WriteString("\\begin{assumption}\n\n")
+
 	if len(f.Facts) == 1 {
-		builder.WriteString("\\begin{assumption}[]\n")
 		builder.WriteString(f.Facts[0].ToLatexString())
 		builder.WriteString(".\n")
-		builder.WriteString("\\end{assumption}")
+		builder.WriteString("\n\\end{assumption}")
 		return builder.String()
 	}
 
-	builder.WriteString("\\begin{assumption}[]\n")
 	builder.WriteString("The following facts are assumed to be true:\n\n")
-	builder.WriteString("\\begin{enumerate}\n")
+	builder.WriteString("\\begin{enumerate}\n\n")
 
 	for _, fact := range f.Facts {
 		builder.WriteString("\\item ")
@@ -377,8 +377,8 @@ func (f *KnowFactStmt) ToLatexString() string {
 		builder.WriteString("\n")
 	}
 
-	builder.WriteString("\\end{enumerate}\n")
-	builder.WriteString("\\end{assumption}")
+	builder.WriteString("\n\\end{enumerate}\n")
+	builder.WriteString("\n\\end{assumption}")
 	return builder.String()
 }
 
@@ -499,13 +499,19 @@ func (s *ImportFileStmt) ToLatexString() string {
 
 func (s *ProveStmt) ToLatexString() string {
 	var builder strings.Builder
-	builder.WriteString("[Example]\n\n")
+	builder.WriteString("\\begin{example}\n\n")
 	stmtSlice := make([]string, len(s.Proof))
 	for i := range s.Proof {
 		stmtSlice[i] = s.Proof[i].ToLatexString()
 	}
-	builder.WriteString(strings.Join(stmtSlice, ", "))
-	builder.WriteString(".")
+
+	if ShouldInSingleLineAsLatexString(stmtSlice) {
+		builder.WriteString(strings.Join(stmtSlice, ", "))
+	} else {
+		builder.WriteString(strings.Join(stmtSlice, "\n\n"))
+	}
+
+	builder.WriteString("\n\n\\end{example}")
 	return builder.String()
 }
 
@@ -519,7 +525,7 @@ func (s *UniFactWithIffStmt) ToLatexString() string {
 
 		domFactStrSlice := s.UniFact.DomFacts.factStmtSliceToLatexStringSlice()
 
-		if shouldInSingleLine(domFactStrSlice) {
+		if ShouldInSingleLineAsLatexString(domFactStrSlice) {
 			builder.WriteString(", when ")
 			builder.WriteString(strings.Join(domFactStrSlice, ", "))
 			builder.WriteString(" ")
@@ -532,7 +538,7 @@ func (s *UniFactWithIffStmt) ToLatexString() string {
 
 	if len(s.UniFact.ThenFacts) > 0 {
 		thenFactStrSlice := s.UniFact.ThenFacts.factStmtSliceToLatexStringSlice()
-		if shouldInSingleLine(thenFactStrSlice) {
+		if ShouldInSingleLineAsLatexString(thenFactStrSlice) {
 			builder.WriteString("then ")
 			builder.WriteString(strings.Join(thenFactStrSlice, ", "))
 			builder.WriteString(" ")
@@ -546,7 +552,7 @@ func (s *UniFactWithIffStmt) ToLatexString() string {
 	if len(s.IffFacts) > 0 {
 		builder.WriteString("if and only if ")
 		iffFactStrSlice := s.IffFacts.factStmtSliceToLatexStringSlice()
-		if shouldInSingleLine(iffFactStrSlice) {
+		if ShouldInSingleLineAsLatexString(iffFactStrSlice) {
 			builder.WriteString(" ")
 			builder.WriteString(strings.Join(iffFactStrSlice, ", "))
 		} else {
