@@ -1,6 +1,6 @@
 ## Litex: Scale Formal Reasoning In AI Age
 
-Litex是一门**简单易学、表达力强的形式化语言**，让每一步**逻辑推理**、每一段关键代码、每一个 AI Agent 都能被形式化验证所**守护并加速**。**它能把构建形式化数据集的成本和门槛降低10倍。**
+Litex[^1]是一门**简单易学、表达力强的形式化语言**，让每一步**逻辑推理**、每一段关键代码、每一个 AI Agent 都能被形式化验证所**守护并加速**。**它能把构建形式化数据集的成本和门槛降低10倍。**
 
 例1：多元线性方程组：解方程 2x + 3y = 10 和 4x + 5y = 14。
 
@@ -52,85 +52,17 @@ Litex是一门**简单易学、表达力强的形式化语言**，让每一步**
   </tr>
 </table>
 
+
 | 方面       | Litex            | Lean                      |
-| ---------- | -------------- | ------------------------- |
-| **书写** | 直接写计算步骤     | 类程序代码，编写 tactic 脚本        |
-| **理解** | 未经训练就能直观地理解         | 需掌握 tactic / type / rw / ring / simp / exact / <- / [] / ring_exp / norm_num / have / linear_combination等 |
-| **语义** | 每步清晰语义，AI 易训练与验证 | 自动化依赖复杂 tactic 和结构        |
-| **门槛** | 初中生即可上手，适合众包       | 需数学/ CS背景，并经过长期Lean训练         |
-| **时间成本** | 1×（正常写数学）        | 10×（陶哲轩称写Lean需花他10倍时间）  |
+| ----------- | ---------------- | ------------------------- |
+| **书写** | 直接写计算步骤，类似自然语言    | 语法不直观。数学本身是一门很难的学科，而翻译成Lean的工作量甚至比思考数学本身还大得多。Lean的库只能部分减轻其负担 |
+| **阅读** | 未经训练的普通人就能直观地理解         | 需掌握 tactic / type / rw / ring / simp / exact / ring_exp / norm_num 等。初等方程尚且如此，可想而知进阶数学有多复杂 |
+| **语义** | 每步清晰语义，AI 易训练与验证 | 严重依赖复杂的 tactic，需要给一切已知事实取名字记忆，严重增加用户负担，不同数学领域有不同常用词，学习成本极高 |
+| **门槛** | 初中生即可上手，适合众包       | 即便是使用它训练 AI 的研究者，也往往无法理解模型生成的证明过程，只能依赖 API 进行验证，难以掌控模型实际学到了什么 |
+| **数据成本** | 1倍于正常写数学        | 陶哲轩提到，Lean的表达复杂度10倍于正常写数学。如果能将成本降低到1倍，形式化所有数学书、知识的时机就成熟了[^2] |
 
 Litex 让逻辑推理像编程一样可控、可拓展，实现真正的可验证与可规模化。它的语法简单，更多人能轻松上手形式化语言，将其应用到各自领域，为未来 AI 的安全性、通用性与功能性提供保障。
 
+[^1]: 在官网上试试Litex: https://litexlang.org/playground . Litex 源代码：https://github.com/litexlang/litex . 邮件联系：litexlang@outlook.com
 
-<table style="border-collapse: collapse; width: 100%; font-size: 12px">
-  <tr>
-    <th style="border: 2px solid black; padding: 4px; text-align: left; width: 30%;">Litex</th>
-    <th style="border: 2px solid black; padding: 4px; text-align: left; width: 70%;">Lean 4</th>
-  </tr>
-    <td style="border: 2px solid black; padding: 2px; line-height: 1.5;">
-       <code>fn f(x, y R) R:</code><br>
-       <code>&nbsp;&nbsp;x > 1</code><br>
-       <code>&nbsp;&nbsp;y > 1</code><br>
-       <code>&nbsp;&nbsp;then:</code><br>
-       <code>&nbsp;&nbsp;	f(x, y) = x + y</code><br>
-       <code></code><br>
-       <code>prop p(x, y R):</code><br>
-       <code>&nbsp;&nbsp;x > 1</code><br>
-       <code>&nbsp;&nbsp;y > 1</code><br>
-       <code>&nbsp;&nbsp;iff:</code><br>
-       <code>&nbsp;&nbsp;&nbsp;&nbsp;p(x, y) = x + y</code><br>
-       <code></code><br>
-    </td>
-    <td style="border: 2px solid black; padding: 2px; line-height: 1.5;">
-       <code>\documentclass{article}</code><br>
-       <code></code><br>
-       <code>\usepackage{amsthm}</code><br>
-       <code>\theoremstyle{definition}</code><br>
-       <code>\newtheorem{definition}{Definition}</code><br>
-       <code></code><br>
-       <code>\begin{document}</code><br>
-       <code></code><br>
-       <code>\begin{definition}[Function]</code><br>
-       <code>$f(x, y)$ is defined for $x$ $\in$ $R$, $y$ $\in$ $R$. Its domain is: $x$ $\geq$ $1$, $y$ $\geq$ $1$. We suppose $f$ satisfies: $f(x, y)$ = $(x + y)$.</code><br>
-       <code>\end{definition}</code><br>
-       <code></code><br>
-       <code>\begin{definition}[Proposition]</code><br>
-       <code>$p(x, y)$ is defined for $x$ $\in$ $R$, $y$ $\in$ $R$. Its domain is: $x$ $\geq$ $1$, $y$ $\geq$ $1$. When parameters satisfy the domain properties, we say $p(x, y)$ is true if and only if: $p(x, y)$ = $(x + y)$.</code><br>
-       <code>\end{definition}</code><br>
-       <code></code><br>
-       <code>\end{document}</code><br>
-       <code></code><br>
-    </td>
-  </tr>
-</table>
-
-**Definition (Function).**
-
-Let $f(x, y)$ be defined for $x \in \mathbb{R}$, $y \in \mathbb{R}$.
-
-Its domain is:
-$$
-x \geq 1, \quad y \geq 1
-$$
-
-We suppose $f$ satisfies:
-$$
-f(x, y) = x + y
-$$
-
----
-
-**Definition (Proposition).**
-
-Let $p(x, y)$ be defined for $x \in \mathbb{R}$, $y \in \mathbb{R}$.
-
-Its domain is:
-$$
-x \geq 1, \quad y \geq 1
-$$
-
-When parameters satisfy the domain properties, we say $p(x, y)$ is true if and only if:
-$$
-p(x, y) = x + y
-$$
+[^2]: Terence Tao: AI Will Become Mathematicians’ ‘Co-Pilot’. 2024.6. https://www.scientificamerican.com/article/ai-will-become-mathematicians-co-pilot/
