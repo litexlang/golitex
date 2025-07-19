@@ -26,6 +26,8 @@ func CompileStmtToLatexString(litexCode string) (string, error) {
 	builder.WriteString(`\documentclass{article}
 
 \usepackage{amsthm}
+\usepackage{amssymb}
+
 \theoremstyle{definition}
 \newtheorem{definition}{Definition}
 
