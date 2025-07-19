@@ -24,3 +24,6 @@ forall x, y R:
         p(x, y) = x + y
     iff:
         p(x, y) = x + y
+
+obj x R, y R:
+    x > 0
