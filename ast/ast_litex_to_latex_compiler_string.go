@@ -362,13 +362,11 @@ func (f *KnowFactStmt) ToLatexString() string {
 	builder.WriteString("\\begin{assumption}\n\n")
 
 	if len(f.Facts) == 1 {
-		builder.WriteString(f.Facts[0].ToLatexString())
-		builder.WriteString(".\n")
-		builder.WriteString("\n\\end{assumption}")
-		return builder.String()
+		builder.WriteString("The following fact is assumed to be true:\n\n")
+	} else {
+		builder.WriteString("The following fact(s) are assumed to be true:\n\n")
 	}
 
-	builder.WriteString("The following facts are assumed to be true:\n\n")
 	builder.WriteString("\\begin{enumerate}\n\n")
 
 	for _, fact := range f.Facts {
@@ -746,13 +744,43 @@ func (s *NamedUniFactStmt) ToLatexString() string {
 
 func (s *FnTemplateStmt) ToLatexString() string {
 	var builder strings.Builder
-	builder.WriteString("We define a set of functions whose parameters satisfy: ")
+	builder.WriteString("\\begin{definition}[Function Template]\n\n")
+	builder.WriteString("We say a function $\\in$ function template ")
+	builder.WriteString(toLatexString(s.DefHeader.Name))
+	builder.WriteString(fmt.Sprintf(" if it satisfies (we use %s here to represent that function):", s.DefHeader.Name))
+	builder.WriteString("\n\n")
+
+	builder.WriteString("It has a domain which is superset of the set which contains parameters satisfying the following properties: ")
 	builder.WriteString(strings.Join(paramInParamSetInFactLatexStringSlice(s.Params, s.ParamSets), ", "))
-	builder.WriteString("and ")
-	builder.WriteString(strings.Join(s.DomFacts.factStmtSliceToLatexStringSlice(), ", "))
-	builder.WriteString("When their parameters satisfies the above condition, they have the following properties: ")
-	builder.WriteString(strings.Join(s.ThenFacts.factStmtSliceToLatexStringSlice(), ", "))
-	builder.WriteString(".")
+
+	if len(s.DomFacts) > 0 {
+		builder.WriteString(" and ")
+		domFactStrSlice := s.DomFacts.factStmtSliceToLatexStringSlice()
+		if ShouldInSingleLineAsLatexString(domFactStrSlice) {
+			builder.WriteString(" ")
+			builder.WriteString(strings.Join(domFactStrSlice, ", "))
+		} else {
+			builder.WriteString("\n\n")
+			builder.WriteString(strings.Join(domFactStrSlice, "\n\n"))
+		}
+		builder.WriteString(".")
+	} else {
+		builder.WriteString(".")
+	}
+
+	if len(s.ThenFacts) > 0 {
+		builder.WriteString("When its parameters satisfies the above condition, it has the following properties:")
+		thenFactStrSlice := s.ThenFacts.factStmtSliceToLatexStringSlice()
+		if ShouldInSingleLineAsLatexString(thenFactStrSlice) {
+			builder.WriteString(" ")
+			builder.WriteString(strings.Join(thenFactStrSlice, ", "))
+		} else {
+			builder.WriteString("\n\n")
+			builder.WriteString(strings.Join(thenFactStrSlice, "\n\n"))
+		}
+		builder.WriteString(".")
+	}
+
 	return builder.String()
 }
 
