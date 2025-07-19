@@ -1,6 +1,6 @@
 ## Litex: Scale Formal Reasoning In AI Age
 
-Litex[^1]是一门**简单易学、表达力强的形式化语言**，让每一步**逻辑推理**、每一段关键代码、每一个 AI Agent 都能被形式化验证所**守护并加速**。**它能把构建形式化数据集的成本和门槛降低10倍。**
+Litex[1]是一门**简单易学的形式化语言**，它让每一步**逻辑推理**、每一段关键代码、每一个 AI Agent 都能被形式化验证所**守护并加速**。**把构建形式化数据集的成本和门槛降低10倍。** 创业者沈嘉辰，洪昭宣。
 
 例1：多元线性方程组：解方程 2x + 3y = 10 和 4x + 5y = 14。
 
@@ -58,11 +58,14 @@ Litex[^1]是一门**简单易学、表达力强的形式化语言**，让每一�
 | **阅读**     | 未经训练的普通人就能直观地理解 | 需掌握 tactic / type / rw / ring / simp / exact / ring_exp / norm_num 等。初等方程尚且如此，可想而知进阶数学有多复杂 |
 | **语义**     | 每步清晰语义，AI 易训练与验证  | 严重依赖复杂的 tactic，需要给一切已知事实取名字记忆，严重增加用户负担，不同数学领域有不同常用词，学习成本极高 |
 | **门槛**     | 初中生即可上手，适合众包       | 即便是使用它训练 AI 的研究者，也往往无法理解模型生成的证明过程，只能依赖 API 进行验证，难以掌控模型实际学到了什么 |
-| **数据成本** | 1倍于正常写数学                | 陶哲轩提到，Lean的表达复杂度10倍于正常写数学。如果能将成本降低到1倍，形式化所有数学书、知识的时机就成熟了[^2] |
-
+| **数据成本** | 1倍于正常写数学                | 陶哲轩提到，Lean的表达复杂度10倍于正常写数学。如果能将成本降低到1倍，形式化所有数学书、知识的时机就成熟了[2] |
 
 Litex 让逻辑推理像编程一样可控、可拓展，实现真正的可验证与可规模化。它的语法简单，更多人能轻松上手形式化语言，将其应用到各自领域，为未来 AI 的安全性、通用性与功能性提供保障。
 
-[^1]: 在官网上试试Litex: https://litexlang.org/playground . Litex 源代码：https://github.com/litexlang/litex . 邮件联系：litexlang@outlook.com
+<div style="font-size: 11px; line-height: 1.1; border-collapse: collapse; width: 100%;">
+[1] 官网沙盒: https://litexlang.org/playground . 源代码：https://github.com/litexlang/litex . 邮件联系：litexlang@outlook.com. 
+</div>
 
-[^2]: Terence Tao: AI Will Become Mathematicians’ ‘Co-Pilot’. 2024.6. https://www.scientificamerican.com/article/ai-will-become-mathematicians-co-pilot/
+<div style="font-size: 11px; line-height: 1.1; border-collapse: collapse; width: 100%;">
+[2] 陶哲轩关于AI、形式化语言的采访 https://www.scientificamerican.com/article/ai-will-become-mathematicians-co-pilot/
+</div>
