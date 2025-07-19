@@ -53,3 +53,17 @@ know:
 prove:
 	1^(1234 * asdf + 124) = 1
     2 = 2
+
+1^(1234 * asdf + 124) = 1
+2 = 2
+
+prop p(x, y R):
+    x > 1
+    y > 1
+    iff:
+        p(x, y) = x + y
+
+fn f(x, y R) R:
+    x > 1
+    y > 1
+    then:
