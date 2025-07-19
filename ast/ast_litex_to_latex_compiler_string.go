@@ -238,7 +238,7 @@ func (l *UniFactStmt) ToLatexString() string {
 		builder.WriteString(" ")
 	}
 
-	builder.WriteString("then ")
+	builder.WriteString("then:")
 	thenFactStrSlice := make([]string, len(l.ThenFacts))
 	for i := range len(l.ThenFacts) {
 		thenFactStrSlice[i] = l.ThenFacts[i].ToLatexString()
@@ -360,19 +360,16 @@ func (f *KnowFactStmt) ToLatexString() string {
 	var builder strings.Builder
 
 	if len(f.Facts) == 1 {
-		// 单条前提：用 assumption 环境包裹
-		builder.WriteString("\\begin{assumption}\n")
+		builder.WriteString("\\begin{assumption}[]\n")
 		builder.WriteString(f.Facts[0].ToLatexString())
 		builder.WriteString(".\n")
 		builder.WriteString("\\end{assumption}")
 		return builder.String()
 	}
 
-	// 多条前提：用 itemize 包在一个 assumption 中
-	// 不要让 第一个item连在 assumption
-	builder.WriteString("\\begin{assumption}\n")
-	builder.WriteString("\\par\n")
-	builder.WriteString("\\begin{itemize}\n")
+	builder.WriteString("\\begin{assumption}[]\n")
+	builder.WriteString("The following facts are assumed to be true:\n\n")
+	builder.WriteString("\\begin{enumerate}\n")
 
 	for _, fact := range f.Facts {
 		builder.WriteString("\\item ")
@@ -380,7 +377,7 @@ func (f *KnowFactStmt) ToLatexString() string {
 		builder.WriteString("\n")
 	}
 
-	builder.WriteString("\\end{itemize}\n")
+	builder.WriteString("\\end{enumerate}\n")
 	builder.WriteString("\\end{assumption}")
 	return builder.String()
 }
