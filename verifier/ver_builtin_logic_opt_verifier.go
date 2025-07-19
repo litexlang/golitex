@@ -162,7 +162,7 @@ func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactSt
 			return isSuccess, nil
 		}
 
-		if ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordInt) {
+		if ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordInteger) {
 			isSuccess = glob.IsIntegerNumLitExpr(leftFc)
 			return isSuccess, nil
 		}

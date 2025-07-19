@@ -38,7 +38,7 @@ const (
 	KeywordOr                   = "or"
 	KeywordCommutativeProp      = "commutative_prop" // 这个 keyword是真的在工作的
 	KeywordNatural              = "N"                // e.g. 0
-	KeywordInt                  = "Z"                // e.g. -1
+	KeywordInteger              = "Z"                // e.g. -1
 	KeywordRational             = "Q"                // e.g. -1.1
 	KeywordReal                 = "R"                // e.g. pi
 	KeywordComplex              = "C"                // e.g. 1+i
@@ -86,7 +86,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordCommutativeProp:      {},
 	KeywordOr:                   {},
 	KeywordNatural:              {},
-	KeywordInt:                  {},
+	KeywordInteger:              {},
 	KeywordRational:             {},
 	KeywordReal:                 {},
 	KeywordIn:                   {},
@@ -179,7 +179,7 @@ var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]s
 	KeywordObj:                            {},
 	KeywordSet:                            {},
 	KeywordNatural:                        {},
-	KeywordInt:                            {},
+	KeywordInteger:                        {},
 	KeywordRational:                       {},
 	KeywordReal:                           {},
 	KeywordComplex:                        {},
@@ -226,7 +226,7 @@ func IsBuiltinKeywordOrBuiltinSymbolOrNumber(name string) bool {
 
 var BuiltinObjKeywordSet map[string]struct{} = map[string]struct{}{
 	KeywordNatural:   {},
-	KeywordInt:       {},
+	KeywordInteger:   {},
 	KeywordRational:  {},
 	KeywordReal:      {},
 	KeywordComplex:   {},
