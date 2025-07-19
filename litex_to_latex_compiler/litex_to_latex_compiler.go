@@ -30,6 +30,7 @@ func CompileStmtToLatexString(litexCode string) (string, error) {
 
 \theoremstyle{definition}
 \newtheorem{definition}{Definition}
+\newtheorem{assumption}{Assumption}
 
 \begin{document}
 

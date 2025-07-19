@@ -1,3 +1,4 @@
+"""
 fn f(x, y R) R:
     x > 1
     y > 1
@@ -32,3 +33,14 @@ exist_prop x, y R st q(z R):
     z > 0
     iff:
     	z = x + y
+"""
+
+know:
+    forall x, y, z N:
+        logBase(z, x^y) = y * logBase(z, x)
+        logBase(z, x*y) = logBase(z, x) + logBase(z, y)
+
+    forall x N:
+        x != 0
+        then:
+            logBase(x, x) = 1

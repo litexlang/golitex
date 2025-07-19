@@ -219,7 +219,7 @@ func (l *UniFactStmt) ToLatexString() string {
 	builder.WriteString(strFcSetPairsLatexString(l.Params, l.ParamSets))
 
 	if len(l.DomFacts) > 0 {
-		builder.WriteString(", when ")
+		builder.WriteString(", when")
 		domFactStrSlice := make([]string, len(l.DomFacts))
 		for i := range len(l.DomFacts) {
 			domFactStrSlice[i] = l.DomFacts[i].ToLatexString()
@@ -234,6 +234,8 @@ func (l *UniFactStmt) ToLatexString() string {
 			builder.WriteString(strings.Join(domFactStrSlice, "\n\n"))
 			builder.WriteString("\n\n")
 		}
+	} else {
+		builder.WriteString(" ")
 	}
 
 	builder.WriteString("then ")
@@ -266,16 +268,16 @@ func (p *SpecFactStmt) ToLatexString() string {
 func pureSpecFactLatexString(stmt *SpecFactStmt) string {
 	var builder strings.Builder
 
-	if stmt.TypeEnum == FalsePure {
-		builder.WriteString("\\neg ")
-	}
-
 	if glob.IsKeySymbol(string(stmt.PropName)) {
 		builder.WriteString(keySymbolRelaFactWithoutNotLatexString(stmt))
 	} else if _, ok := relaPropSet[string(stmt.PropName)]; ok {
 		builder.WriteString(keywordRelaFactWithoutNotLatexString(stmt))
 	} else {
 		builder.WriteString(strings.TrimPrefix(stmt.String(), "$"))
+	}
+
+	if stmt.TypeEnum == FalsePure {
+		builder.WriteString(" is false")
 	}
 
 	return builder.String()
@@ -353,23 +355,34 @@ func (f *ClaimProveStmt) ToLatexString() string {
 
 	return builder.String()
 }
+
 func (f *KnowFactStmt) ToLatexString() string {
 	var builder strings.Builder
 
-	if len(f.Facts) > 1 {
-		builder.WriteString("We assume the following facts are true:\n")
-
-		factStrSlice := make([]string, len(f.Facts))
-		for i := range len(f.Facts) {
-			factStrSlice[i] = glob.SplitLinesAndAdd4NIndents(f.Facts[i].ToLatexString(), 1)
-		}
-		builder.WriteString(strings.Join(factStrSlice, "\n"))
-		return builder.String()
-	} else {
-		builder.WriteString("Assume ")
+	if len(f.Facts) == 1 {
+		// 单条前提：用 assumption 环境包裹
+		builder.WriteString("\\begin{assumption}\n")
 		builder.WriteString(f.Facts[0].ToLatexString())
+		builder.WriteString(".\n")
+		builder.WriteString("\\end{assumption}")
 		return builder.String()
 	}
+
+	// 多条前提：用 itemize 包在一个 assumption 中
+	// 不要让 第一个item连在 assumption
+	builder.WriteString("\\begin{assumption}\n")
+	builder.WriteString("\\par\n")
+	builder.WriteString("\\begin{itemize}\n")
+
+	for _, fact := range f.Facts {
+		builder.WriteString("\\item ")
+		builder.WriteString(fact.ToLatexString())
+		builder.WriteString("\n")
+	}
+
+	builder.WriteString("\\end{itemize}\n")
+	builder.WriteString("\\end{assumption}")
+	return builder.String()
 }
 
 func (s FactStmtSlice) factStmtSliceToLatexStringSlice() []string {
