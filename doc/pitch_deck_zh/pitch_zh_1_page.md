@@ -1,6 +1,6 @@
 ## Litex: Scale Formal Reasoning In AI Age
 
-Litex是一门简单直观、易学易用的形式化语言。它让每一步逻辑推理、每一段关键代码、每一个 AI Agent 都能被形式化验证所守护并加速。相比主流形式化语言如Lean，Litex把构建形式化数据集的成本和门槛降低了10倍。创始人沈嘉辰，洪昭宣。
+Litex是一门简单直观、易学易用的形式化语言。沈嘉辰是发明人，洪昭宣开发Litex工具。Litex的愿景是每一步逻辑推理、每一段关键代码、每一个 AI Agent 都能被形式化验证所守护并加速。这里我们举例说明，相比主流形式化语言如Lean，Litex把构建形式化数据集的成本和门槛降低了10倍。
 
 例1：多元线性方程组：解方程 2x + 3y = 10 和 4x + 5y = 14。您可以在官网沙盒[1]上运行这个和更多例子。
 
@@ -60,7 +60,7 @@ Litex是一门简单直观、易学易用的形式化语言。它让每一步逻
 | **门槛**     | 初中生即可上手，适合众包       | 用Lean训练 AI 的研究者，也只有不到20%能理解模型生成的证明过程，只能依赖 API 进行验证，难以掌控模型实际学到了什么 |
 | **数据成本** | 1倍于正常写数学                | 陶哲轩提到，Lean的表达复杂度10倍于正常写数学。如果能将成本降低到1倍，形式化所有数学书、知识的时机就成熟了[2] |
 
-官网的 Litex to LaTeX Compiler\[1] 可将 Litex 代码转换为 LaTeX，降低用户上手门槛。如今 DeepSeek、Google、Meta、OpenAI 等正重金布局形式化语言，Litex 有望成为 AI 推理与智能体开发的基础设施，成为 AI 淘金热中的类 CUDA 铲子型工具。我们的愿景是让形式化语言和日常表达一样简单，让所有人都能轻松使用形式化语言。
+官网的 Litex to LaTeX Compiler\[1] 可将 Litex 代码转换为 LaTeX，降低用户上手门槛。如今 DeepSeek、Google、Meta、OpenAI 等正重金布局形式化语言，Litex 有望成为 AI 推理与智能体开发的基础设施，成为 AI 淘金热中的类 CUDA 铲子型工具。我们希望形式化语言能和日常表达一样简单，让所有人都能轻松使用形式化语言。
 
 <div style="font-size: 11px; line-height: 1.1; border-collapse: collapse; width: 100%;">
 [1] 官网沙盒: https://litexlang.org/playground . 源代码：https://github.com/litexlang/golitex . 邮件联系：litexlang@outlook.com. 
