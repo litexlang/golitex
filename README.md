@@ -78,13 +78,13 @@ _-- Steve Jobs_
 
 Mathematics is the art of deriving new facts from established ones. To illustrate, consider a classical syllogism proposed by Aristotle, which formalizes deductive reasoning as follows. Run this example on [playground](https://litexlang.org/playground):
 
-<table style="border-collapse: collapse; width: 100%;">
+<table style="border-collapse: collapse; width: 100%; font-size: 12px">
   <tr>
-    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 40%;">Litex</th>
-    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 60%;">Lean 4</th>
+    <th style="border: 2px solid black; padding: 4px; text-align: left; width: 40%;">Litex</th>
+    <th style="border: 2px solid black; padding: 4px; text-align: left; width: 60%;">Lean 4</th>
   </tr>
   <tr>
-    <td style="border: 3px solid black; padding: 8px;">
+    <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
       <code># Syllogism example: All humans are intelligent. Jordan is a human. Therefore, Jordan is intelligent.</code><br>
       <code># 三段论：所有人类都是聪明的。乔丹是人类。因此，乔丹是聪明的。</code><br><br>
       <code>obj human set, Jordan human</code> <br><br>
@@ -92,7 +92,7 @@ Mathematics is the art of deriving new facts from established ones. To illustrat
       <code>&nbsp;&nbsp;$intelligent(x)</code> <br> <br>
       <code>$intelligent(Jordan)</code>
     </td>
-    <td style="border: 3px solid black; padding: 8px;">
+    <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
       <code>-- Syllogism example: All humans are intelligent. Jordan is a human. Therefore, Jordan is intelligent.</code><br>
       <code>-- 三段论：所有人类都是聪明的。乔丹是人类。因此，乔丹是聪明的。</code><br><br>
       <code>def Human := Type</code> <br><br>
@@ -222,13 +222,13 @@ I will show you how Litex is shaped by common sense, and why common sense is not
 
 Next I want to show you how Litex can be used to solve a simple linear equation. It's clear that the Litex version can be read and understood by a 10-year-old, while the Lean version is much more complex.
 
-<table style="border-collapse: collapse; width: 100%;">
+<table style="border-collapse: collapse; width: 100%; font-size: 12px">
   <tr>
-    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 50%;">Litex</th>
-    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 50%;">Lean 4</th>
+    <th style="border: 2px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
+    <th style="border: 2px solid black; padding: 4px; text-align: left; width: 50%;">Lean 4</th>
   </tr>
   <tr>
-    <td style="border: 3px solid black; padding: 8px;">
+    <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
       <code># Multivariate linear equation example: Solve the equation 2x + 3y = 10 and 4x + 5y = 14.</code><br>
       <code># 多元线性方程组：解方程 2x + 3y = 10 和 4x + 5y = 14。</code><br><br>
       <code>obj x R, y R:</code><br>
@@ -246,7 +246,7 @@ Next I want to show you how Litex can be used to solve a simple linear equation.
       <code>(2 * x) / 2 = x</code><br>
       <code>x = -4</code>
     </td>
-    <td style="border: 3px solid black; padding: 8px;">
+    <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
       <code>-- Multivariate linear equation example: Solve the equation 2x + 3y = 10 and 4x + 5y = 14.</code><br>
       <code>-- 多元线性方程组：解方程 2x + 3y = 10 和 4x + 5y = 14。</code><br><br>
       <code>import Mathlib.Tactic</code><br><br>
@@ -280,13 +280,13 @@ Next we prove `sqrt(2) is irrational`. Since the standard library is not yet imp
 
 The Litex proof requires no extra knowledge except basic math knowledge, but the Lean proof requires a huge amount of knowledge about Lean tactics. Tactics are not easy to learn, not easy to remember, and very far from what we are truly thinking when we are doing math. On the other hand, any line of Litex code is very obvious to understand.
 
-<table style="border-collapse: collapse; width: 100%;">
+<table style="border-collapse: collapse; width: 100%; font-size: 12px">
   <tr>
-    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 50%;">Litex</th>
-    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 50%;">Lean 4</th>
+    <th style="border: 2px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
+    <th style="border: 2px solid black; padding: 4px; text-align: left; width: 50%;">Lean 4</th>
   </tr>
   <tr>
-    <td style="border: 3px solid black; padding: 8px;">
+    <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
       <code># prove sqrt(2) is irrational</code><br>
       <code># 证明 sqrt(2) 是无理数</code><br><br>
       <code>claim:</code><br>
@@ -312,7 +312,7 @@ The Litex proof requires no extra knowledge except basic math knowledge, but the
       <code>&nbsp;&nbsp;&nbsp;&nbsp;1 % 2 + (2 * log(2, y)) % 2 = 1 + 0</code><br>
       <code>&nbsp;&nbsp;&nbsp;&nbsp;0 = 1</code>
     </td>
-    <td style="border: 3px solid black; padding: 8px;">
+    <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
       <code>-- prove sqrt(2) is irrational</code><br>
       <code>-- 证明 sqrt(2) 是无理数</code><br><br>
       <code>theorem sqrt2_irrational :</code><br>
@@ -345,13 +345,13 @@ The Litex proof requires no extra knowledge except basic math knowledge, but the
 
 Next I want to show you how Litex can be used to verify a simple group theory statement. It's clear that the Litex version can be read and understood by a 10-year-old, while the Lean version is much more complex. Look how easy it is to narrow the function type of `inverse` from `R` to `Z`.
 
-<table style="border-collapse: collapse; width: 100%;">
+<table style="border-collapse: collapse; width: 100%; font-size: 12px;">
   <tr>
-    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 50%;">Litex</th>
-    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 50%;">Lean 4</th>
+    <th style="border: 2px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
+    <th style="border: 2px solid black; padding: 4px; text-align: left; width: 50%;">Lean 4</th>
   </tr>
   <tr>
-    <td style="border: 3px solid black; padding: 8px;">
+    <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
       <code># definition of a group, and prove R is a group</code><br>
       <code># 定义一个群，并证明 R 是一个群</code><br><br>
       <code>prop is_group(s set, mul fn(s, s)s, inv fn(s)s, e s):</code><br>
@@ -370,7 +370,7 @@ Next I want to show you how Litex can be used to verify a simple group theory st
       <code>$is_group(R, +, inverse, 0)</code><br>
       <code>$is_group(Z, +, inverse, 0)</code>
     </td>
-    <td style="border: 3px solid black; padding: 8px;">
+    <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
       <code>-- definition of a group, and prove Z is a group</code><br>
       <code>-- 定义一个群，并证明 Z 是一个群</code><br><br>
       <code>structure MyGroup (G : Type) where</code><br>
@@ -398,12 +398,12 @@ To better show the power of `fn_template`, There is another example of defining 
 
 
 
-<table style="border-collapse: collapse; width: 100%;">
+<table style="border-collapse: collapse; width: 100%; font-size: 12px">
   <tr>
-    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 50%;">Litex</th>
-    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 50%;">Lean 4</th>
+    <th style="border: 2px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
+    <th style="border: 2px solid black; padding: 4px; text-align: left; width: 50%;">Lean 4</th>
   </tr>
-    <td style="border: 3px solid black; padding: 8px;">
+    <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
        <code># definition of an algorithm, and prove f(x) = x is an algorithm</code><br>
        <code># 定义一个算法，并证明 f(x) = x 是一个算法</code><br><br>
        <code>fn comp_seq(D set, f fn(D)D) fn(D, N)D:</code><br>
@@ -439,7 +439,7 @@ To better show the power of `fn_template`, There is another example of defining 
        <code>$is_algorithm(R, R, f)</code><br>
        <code></code><br>
     </td>
-    <td style="border: 3px solid black; padding: 8px;">
+    <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
        <code>-- definition of an algorithm, and prove f(x) = x is an algorithm</code><br>
        <code>-- 定义一个算法，并证明 f(x) = x 是一个算法</code><br><br>
        <code>structure ComputationalMethod where</code><br>
