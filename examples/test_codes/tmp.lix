@@ -39,3 +39,11 @@ prove_in_each_case:
     prove:
     	a = 3
         b = 1
+
+prove_over_finite_set:
+    forall x s:
+        x > 1
+    prove:
+        x > 1
+
+prove_by_math_induction(not $p(y, n, z), 1, 1)

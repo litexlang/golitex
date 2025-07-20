@@ -439,7 +439,7 @@ func (s *OrStmt) ToLatexString() string {
 	for i := range len(s.Facts) {
 		factStrSlice[i] = s.Facts[i].ToLatexString()
 	}
-	return strings.Join(factStrSlice, "or ")
+	return strings.Join(factStrSlice, " or ")
 }
 
 func (s *ImportDirStmt) ToLatexString() string {
@@ -638,25 +638,30 @@ func (s *ClaimExistPropStmt) ToLatexString() string {
 
 func (s *ProveByMathInductionStmt) ToLatexString() string {
 	var builder strings.Builder
+	builder.WriteString("\\begin{proveByMathInduction}\n")
 	builder.WriteString("By mathematical induction, we have ")
-	builder.WriteString(s.Fact.String())
+	builder.WriteString(s.Fact.ToLatexString())
 
 	indexFc := s.Fact.Params[s.ParamIndex]
 
-	builder.WriteString(fmt.Sprintf("%s is true $\\forall$ %s $\\geq$ %d", s.Fact.ToLatexString(), indexFc.ToLatexString(), s.Start))
+	builder.WriteString(fmt.Sprintf(" is true $\\forall$ %s $\\geq$ $%d$", indexFc.ToLatexString(), s.Start))
 	builder.WriteString(".")
 
+	builder.WriteString("\n\\end{proveByMathInduction}")
 	return builder.String()
 }
 
 func (s *ProveOverFiniteSetStmt) ToLatexString() string {
 	var builder strings.Builder
+	builder.WriteString("\\begin{proveOverFiniteSet}\n")
 	builder.WriteString("We prove that by iterating over the elements of the finite set(s): ")
 	builder.WriteString(strings.Join(paramInParamSetInFactLatexStringSlice(s.Fact.Params, s.Fact.ParamSets), ", "))
 	builder.WriteString(". ")
 	builder.WriteString(s.Fact.ToLatexString())
-	builder.WriteString(".\n")
-	builder.WriteString("[Proof] ")
+	builder.WriteString("\n")
+
+	builder.WriteString("\\begin{proof}\n")
+
 	proofStrSlice := make([]string, len(s.Proofs))
 	for i := range len(s.Proofs) {
 		proofStrSlice[i] = s.Proofs[i].ToLatexString()
@@ -668,6 +673,9 @@ func (s *ProveOverFiniteSetStmt) ToLatexString() string {
 		builder.WriteString(strings.Join(proofStrSlice, "\n\n"))
 	}
 
+	builder.WriteString("\n\\end{proof}")
+
+	builder.WriteString("\n\\end{proveOverFiniteSet}")
 	return builder.String()
 }
 
