@@ -1,3 +1,24 @@
 have set s := {1, 2, 3}
 have set t := x R:
 	x > 1
+
+claim:
+	forall x s:
+		x $in t
+	prove:
+		forall x s:
+			x > 1
+
+claim:
+	forall x s:
+		x $in t
+	prove_by_contradiction:
+		forall x s:
+			x > 1
+		x $in s
+		x $in t
+
+have set fn s(x, y R) := t R:
+	t > x + y
+
+have set s = set_defined_by_replacement(A, B, P)
