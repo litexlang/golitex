@@ -420,7 +420,12 @@ func (s *ProveInEachCaseStmt) ToLatexString() string {
 }
 
 func (s *KnowPropStmt) ToLatexString() string {
-	panic("")
+	var builder strings.Builder
+	builder.WriteString(s.Prop.ToLatexString())
+	builder.WriteString("\\begin{assumption}\n")
+	builder.WriteString(s.Prop.ToUniFact().ToLatexString())
+	builder.WriteString("\n\\end{assumption}")
+	return builder.String()
 }
 
 func (s *OrStmt) ToLatexString() string {
@@ -627,7 +632,15 @@ func (s *ClaimPropStmt) ToLatexString() string {
 
 // TODO
 func (s *ClaimExistPropStmt) ToLatexString() string {
-	panic("ClaimExistPropStmt latex to be implemented")
+	var builder strings.Builder
+
+	builder.WriteString(s.ExistProp.ToLatexString())
+
+	builder.WriteString("\n\n")
+
+	builder.WriteString(claimProveBodyToLatexString(s.ExistProp.ToUniFact(), s.Proofs, true))
+
+	return builder.String()
 }
 
 func (s *ProveByMathInductionStmt) ToLatexString() string {
