@@ -751,7 +751,35 @@ func (s *HaveSetDefinedByReplacementStmt) ToLatexString() string {
 }
 
 func (s *NamedUniFactStmt) ToLatexString() string {
-	panic("")
+	var builder strings.Builder
+	builder.WriteString(s.DefPropStmt.ToLatexString())
+	builder.WriteString("\n\n")
+
+	builder.WriteString(VerifiedFactsSectionToLatexString(s.DefPropStmt.IffFacts))
+
+	return builder.String()
+}
+
+func VerifiedFactsSectionToLatexString(verifiedFacts []FactStmt) string {
+	var builder strings.Builder
+
+	builder.WriteString("\\begin{verifiedFacts} We check the following facts:\n")
+
+	strSlice := make([]string, len(verifiedFacts))
+	for i, fact := range verifiedFacts {
+		strSlice[i] = fact.ToLatexString()
+	}
+
+	if ShouldInSingleLineAsLatexString(strSlice) {
+		builder.WriteString(strings.Join(strSlice, ", "))
+	} else {
+		builder.WriteString(strings.Join(strSlice, "\n\n"))
+	}
+
+	builder.WriteString(".\n")
+	builder.WriteString("\\end{verifiedFacts}")
+
+	return builder.String()
 }
 
 func (s *FnTemplateStmt) ToLatexString() string {

@@ -1718,7 +1718,7 @@ func (tb *tokenBlock) haveSetDefinedByReplacementStmt() (ast.Stmt, error) {
 	return ast.NewHaveSetDefinedByReplacementStmt(setName, domSet, rangeSet, propName), nil
 }
 
-func (tb *tokenBlock) namedUniFactStmt() (ast.Stmt, error) {
+func (tb *tokenBlock) namedUniFactStmt() (*ast.NamedUniFactStmt, error) {
 	declHeader, err := tb.headerOfAtProp()
 	if err != nil {
 		return nil, tbErr(err, tb)
