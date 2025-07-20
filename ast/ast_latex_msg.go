@@ -20,26 +20,6 @@ import (
 	"strings"
 )
 
-func ShouldInSingleLineAsLatexString(strSlice []string) bool {
-	totalLength := 0
-	for _, s := range strSlice {
-		totalLength += len(s)
-	}
-	return totalLength < 80
-}
-
-func toLatexString(s string) string {
-	return fmt.Sprintf("$%s$", strings.ReplaceAll(s, "_", "\\_"))
-}
-
-func strFcSetPairsLatexString(objs []string, objSets []Fc) string {
-	pairStrSlice := make([]string, len(objs))
-	for i := range len(objs) {
-		pairStrSlice[i] = fmt.Sprintf("%s $\\in$ %s", toLatexString(objs[i]), objSets[i].ToLatexString())
-	}
-	return strings.Join(pairStrSlice, ", ")
-}
-
 func (s *DefObjStmt) ToLatexString() string {
 	var builder strings.Builder
 
@@ -68,88 +48,11 @@ func (s *DefObjStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (head DefHeader) ToLatexString() string {
-	return fmt.Sprintf("$%s$", strings.ReplaceAll(head.String(), "_", "\\_"))
-}
-
-func (head DefHeader) NameWithParamsLatexString() string {
-	var builder strings.Builder
-	builder.WriteString(head.Name)
-	builder.WriteString("(")
-	builder.WriteString(strings.Join(head.Params, ", "))
-	builder.WriteString(")")
-	return fmt.Sprintf("$%s$", strings.ReplaceAll(builder.String(), "_", "\\_"))
-}
-
-func bodyToLatexString(defHeader *DefHeader, domFacts FactStmtSlice, iffFacts FactStmtSlice, isExistProp bool) string {
-	var builder strings.Builder
-
-	builder.WriteString(defHeader.NameWithParamsLatexString())
-	builder.WriteString(" is defined for ")
-	builder.WriteString(strFcSetPairsLatexString(defHeader.Params, defHeader.ParamSets))
-	builder.WriteString(".")
-
-	// 处理条件部分（When）
-	if len(domFacts) > 0 {
-		builder.WriteString(" Its domain is:")
-		domFactStrSlice := make([]string, len(domFacts))
-		for i := range len(domFacts) {
-			domFactStrSlice[i] = domFacts[i].ToLatexString()
-		}
-
-		if ShouldInSingleLineAsLatexString(domFactStrSlice) {
-			builder.WriteString(" ")
-			builder.WriteString(strings.Join(domFactStrSlice, ", "))
-			builder.WriteString(".")
-			builder.WriteString(" ")
-		} else {
-			builder.WriteString("\n\n")
-			for i := range len(domFacts) {
-				domFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(domFactStrSlice[i], 1)
-			}
-			builder.WriteString(fmt.Sprintf("%s.", strings.Join(domFactStrSlice, "\n\n")))
-			builder.WriteString("\n\n")
-		}
-
-	}
-
-	// 处理等价条件部分（Iff）
-	builder.WriteString("When parameters satisfy the above properties, we say ")
-	builder.WriteString(defHeader.NameWithParamsLatexString())
-	if isExistProp {
-		builder.WriteString(" is true if and only if there exist ")
-		builder.WriteString(strFcSetPairsLatexString(defHeader.Params, defHeader.ParamSets))
-		builder.WriteString(" s.t.")
-	} else {
-		builder.WriteString(" is true if and only if")
-	}
-
-	iffFactStrSlice := make([]string, len(iffFacts))
-	for i := range len(iffFacts) {
-		iffFactStrSlice[i] = iffFacts[i].ToLatexString()
-	}
-
-	if ShouldInSingleLineAsLatexString(iffFactStrSlice) {
-		builder.WriteString(" ")
-		builder.WriteString(fmt.Sprintf("%s.", strings.Join(iffFactStrSlice, ", ")))
-		builder.WriteString(" ")
-	} else {
-		builder.WriteString("\n\n")
-		for i := range len(iffFacts) {
-			iffFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(iffFactStrSlice[i], 1)
-		}
-		builder.WriteString(fmt.Sprintf("%s.", strings.Join(iffFactStrSlice, "\n\n")))
-	}
-
-	return builder.String()
-}
-
 func (c *DefPropStmt) ToLatexString() string {
 	var builder strings.Builder
 
-	// 定义命题部分（自然语言风格）
 	builder.WriteString("\\begin{definition}[Proposition]\n")
-	builder.WriteString(bodyToLatexString(&c.DefHeader, c.DomFacts, c.IffFacts, false))
+	builder.WriteString(prop_fn_bodyToLatexString(&c.DefHeader, c.DomFacts, c.IffFacts, false))
 	builder.WriteString("\n\\end{definition}")
 	return builder.String()
 }
@@ -236,7 +139,7 @@ func (l *UniFactStmt) ToLatexString() string {
 		builder.WriteString(" ")
 	}
 
-	builder.WriteString("then:")
+	builder.WriteString("then")
 	thenFactStrSlice := make([]string, len(l.ThenFacts))
 	for i := range len(l.ThenFacts) {
 		thenFactStrSlice[i] = l.ThenFacts[i].ToLatexString()
@@ -344,6 +247,69 @@ func keywordRelaFactWithoutNotLatexString(stmt *SpecFactStmt) string {
 	return builder.String()
 }
 
+func prop_fn_bodyToLatexString(defHeader *DefHeader, domFacts FactStmtSlice, iffFacts FactStmtSlice, isExistProp bool) string {
+	var builder strings.Builder
+
+	builder.WriteString(defHeader.NameWithParamsLatexString())
+	builder.WriteString(" is defined for ")
+	builder.WriteString(strFcSetPairsLatexString(defHeader.Params, defHeader.ParamSets))
+	builder.WriteString(".")
+
+	// 处理条件部分（When）
+	if len(domFacts) > 0 {
+		builder.WriteString(" Its domain is:")
+		domFactStrSlice := make([]string, len(domFacts))
+		for i := range len(domFacts) {
+			domFactStrSlice[i] = domFacts[i].ToLatexString()
+		}
+
+		if ShouldInSingleLineAsLatexString(domFactStrSlice) {
+			builder.WriteString(" ")
+			builder.WriteString(strings.Join(domFactStrSlice, ", "))
+			builder.WriteString(".")
+			builder.WriteString(" ")
+		} else {
+			builder.WriteString("\n\n")
+			for i := range len(domFacts) {
+				domFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(domFactStrSlice[i], 1)
+			}
+			builder.WriteString(fmt.Sprintf("%s.", strings.Join(domFactStrSlice, "\n\n")))
+			builder.WriteString("\n\n")
+		}
+
+	}
+
+	// 处理等价条件部分（Iff）
+	builder.WriteString("When parameters satisfy the above properties, we say ")
+	builder.WriteString(defHeader.NameWithParamsLatexString())
+	if isExistProp {
+		builder.WriteString(" is true if and only if there exist ")
+		builder.WriteString(strFcSetPairsLatexString(defHeader.Params, defHeader.ParamSets))
+		builder.WriteString(" s.t.")
+	} else {
+		builder.WriteString(" is true if and only if")
+	}
+
+	iffFactStrSlice := make([]string, len(iffFacts))
+	for i := range len(iffFacts) {
+		iffFactStrSlice[i] = iffFacts[i].ToLatexString()
+	}
+
+	if ShouldInSingleLineAsLatexString(iffFactStrSlice) {
+		builder.WriteString(" ")
+		builder.WriteString(fmt.Sprintf("%s.", strings.Join(iffFactStrSlice, ", ")))
+		builder.WriteString(" ")
+	} else {
+		builder.WriteString("\n\n")
+		for i := range len(iffFacts) {
+			iffFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(iffFactStrSlice[i], 1)
+		}
+		builder.WriteString(fmt.Sprintf("%s.", strings.Join(iffFactStrSlice, "\n\n")))
+	}
+
+	return builder.String()
+}
+
 func claimProveBodyToLatexString(toCheck FactStmt, proofs StmtSlice, isProve bool) string {
 	var builder strings.Builder
 
@@ -403,50 +369,13 @@ func (f *KnowFactStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (s FactStmtSlice) factStmtSliceToLatexStringSlice() []string {
-	factStrSlice := make([]string, len(s))
-	for i := range len(s) {
-		factStrSlice[i] = s[i].ToLatexString()
-	}
-	return factStrSlice
-}
-
-func paramInParamSetInFactLatexStringSlice(paramNames []string, paramSets []Fc) []string {
-	strSlice := make([]string, len(paramSets))
-	for i, paramSet := range paramSets {
-		strSlice[i] = fmt.Sprintf("%s $\\in$ %s", toLatexString(paramNames[i]), paramSet.ToLatexString())
-	}
-	return strSlice
-}
-
 func (s *DefExistPropStmt) ToLatexString() string {
 	var builder strings.Builder
 
 	builder.WriteString("\\begin{definition}[Existential Proposition]\n")
-	builder.WriteString(bodyToLatexString(&s.DefBody.DefHeader, s.DefBody.DomFacts, s.DefBody.IffFacts, true))
+	builder.WriteString(prop_fn_bodyToLatexString(&s.DefBody.DefHeader, s.DefBody.DomFacts, s.DefBody.IffFacts, true))
 	builder.WriteString("\n\\end{definition}")
 	return builder.String()
-}
-
-func propNameParamsLatexString(propName FcAtom, params []Fc) string {
-	var builder strings.Builder
-	builder.WriteString(propName.String())
-	builder.WriteString("(")
-	paramStrSlice := make([]string, len(params))
-	for i := range len(params) {
-		paramStrSlice[i] = params[i].ToLatexString()
-	}
-	builder.WriteString(strings.Join(paramStrSlice, ", "))
-	builder.WriteString(")")
-	return builder.String()
-}
-
-func fcParamsLatexString(params []Fc) string {
-	paramStrSlice := make([]string, len(params))
-	for i := range len(params) {
-		paramStrSlice[i] = params[i].ToLatexString()
-	}
-	return strings.Join(paramStrSlice, ", ")
 }
 
 func (s *HaveObjStStmt) ToLatexString() string {
@@ -644,9 +573,15 @@ func (s *EnumStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString(s.CurSet.ToLatexString())
 	builder.WriteString(" = {")
-	builder.WriteString(fcParamsLatexString(s.Items))
+
+	strSlice := make([]string, len(s.Items))
+	for i := range len(s.Items) {
+		strSlice[i] = s.Items[i].ToLatexString()
+	}
+	builder.WriteString(strings.Join(strSlice, ", "))
+
 	builder.WriteString("}")
-	return builder.String()
+	return fmt.Sprintf("$%s$", strings.ReplaceAll(builder.String(), "$", ""))
 }
 
 func (s *IntensionalSetStmt) ToLatexString() string {
@@ -663,7 +598,7 @@ func (s *IntensionalSetStmt) ToLatexString() string {
 	}
 	builder.WriteString(strings.Join(proofStrSlice, ", "))
 	builder.WriteString("}")
-	return builder.String()
+	return fmt.Sprintf("$%s$", strings.ReplaceAll(builder.String(), "$", ""))
 }
 
 func (s *ClaimPropStmt) ToLatexString() string {
@@ -722,9 +657,15 @@ func (s *HaveObjInNonEmptySetStmt) ToLatexString() string {
 
 func (s *HaveSetStmt) ToLatexString() string {
 	var builder strings.Builder
+	builder.WriteString("\\begin{definition}")
+
 	builder.WriteString("We have a set: ")
-	builder.WriteString(s.Fact.String())
-	builder.WriteString(".")
+
+	builder.WriteString(s.Fact.ToLatexString())
+
+	builder.WriteString(".\n")
+
+	builder.WriteString("\\end{definition}")
 	return builder.String()
 }
 
@@ -765,14 +706,6 @@ func (s *NamedUniFactStmt) ToLatexString() string {
 
 func (s *FnTemplateStmt) ToLatexString() string {
 	return NewFnTemplateDefStmt(s).ToLatexString()
-}
-
-func (s FcSlice) fcSliceToLatexStringSlice() []string {
-	fcStrSlice := make([]string, len(s))
-	for i := range len(s) {
-		fcStrSlice[i] = s[i].ToLatexString()
-	}
-	return fcStrSlice
 }
 
 func (s *EqualsFactStmt) ToLatexString() string {
