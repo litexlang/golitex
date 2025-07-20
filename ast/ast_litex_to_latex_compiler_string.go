@@ -139,7 +139,6 @@ func bodyToLatexString(defHeader *DefHeader, domFacts FactStmtSlice, iffFacts Fa
 			iffFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(iffFactStrSlice[i], 1)
 		}
 		builder.WriteString(fmt.Sprintf("%s.", strings.Join(iffFactStrSlice, "\n\n")))
-		builder.WriteString("\n\n")
 	}
 
 	return builder.String()
@@ -204,7 +203,6 @@ func (l *DefFnStmt) ToLatexString() string {
 				thenFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(thenFactStrSlice[i], 1)
 			}
 			builder.WriteString(fmt.Sprintf("%s.", strings.Join(thenFactStrSlice, "\n\n")))
-			builder.WriteString("\n\n")
 		}
 	}
 
@@ -270,17 +268,26 @@ func pureSpecFactLatexString(stmt *SpecFactStmt) string {
 
 	if glob.IsKeySymbol(string(stmt.PropName)) {
 		builder.WriteString(keySymbolRelaFactWithoutNotLatexString(stmt))
+		if stmt.TypeEnum == FalsePure {
+			builder.WriteString(" is false")
+		}
+		return builder.String()
 	} else if _, ok := relaPropSet[string(stmt.PropName)]; ok {
 		builder.WriteString(keywordRelaFactWithoutNotLatexString(stmt))
+		if stmt.TypeEnum == FalsePure {
+			builder.WriteString(" is false")
+		}
+		return builder.String()
 	} else {
-		builder.WriteString(strings.TrimPrefix(stmt.String(), "$"))
-	}
+		curStr := strings.TrimPrefix(stmt.String(), "$")
+		curStr = fmt.Sprintf("$%s$", curStr)
+		builder.WriteString(curStr)
 
-	if stmt.TypeEnum == FalsePure {
-		builder.WriteString(" is false")
+		if stmt.TypeEnum == FalsePure {
+			builder.WriteString(" is false")
+		}
+		return builder.String()
 	}
-
-	return builder.String()
 }
 
 func keySymbolRelaFactWithoutNotLatexString(stmt *SpecFactStmt) string {
