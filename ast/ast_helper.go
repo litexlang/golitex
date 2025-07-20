@@ -200,3 +200,7 @@ func (stmt *DefExistPropStmt) ToProp() *SpecFactStmt {
 func (stmt *DefExistPropStmt) ToUniFact() *UniFactStmt {
 	return NewUniFact(stmt.ExistParams, stmt.ExistParamSets, stmt.DefBody.DomFacts, []FactStmt{stmt.ToProp()})
 }
+
+func (stmt *NamedUniFactStmt) ToUniFact() *UniFactStmt {
+	return NewUniFact(stmt.DefPropStmt.DefHeader.Params, stmt.DefPropStmt.DefHeader.ParamSets, stmt.DefPropStmt.IffFacts, stmt.DefPropStmt.ThenFacts)
+}
