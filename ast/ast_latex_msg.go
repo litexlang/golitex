@@ -420,18 +420,7 @@ func (s *ProveInEachCaseStmt) ToLatexString() string {
 }
 
 func (s *KnowPropStmt) ToLatexString() string {
-	var builder strings.Builder
-	builder.WriteString("Assume $\\forall$ ")
-	builder.WriteString(strings.Join(paramInParamSetInFactLatexStringSlice(s.Prop.DefHeader.Params, s.Prop.DefHeader.ParamSets), ", "))
-	builder.WriteString(strings.Join(s.Prop.IffFacts.factStmtSliceToLatexStringSlice(), ", "))
-	builder.WriteString(" we have ")
-	builder.WriteString(strings.Join(s.Prop.ThenFacts.factStmtSliceToLatexStringSlice(), ", "))
-
-	builder.WriteString(".")
-	builder.WriteString("We call this fact ")
-	builder.WriteString(s.Prop.DefHeader.NameWithParamsLatexString())
-	builder.WriteString(".")
-	return builder.String()
+	panic("")
 }
 
 func (s *OrStmt) ToLatexString() string {
@@ -444,17 +433,21 @@ func (s *OrStmt) ToLatexString() string {
 
 func (s *ImportDirStmt) ToLatexString() string {
 	var builder strings.Builder
+	builder.WriteString("\\begin{import}\n")
 	builder.WriteString("Import directory ")
 	builder.WriteString(s.Path)
 	builder.WriteString(" as ")
 	builder.WriteString(s.AsPkgName)
+	builder.WriteString("\n\\end{import}")
 	return builder.String()
 }
 
 func (s *ImportFileStmt) ToLatexString() string {
 	var builder strings.Builder
+	builder.WriteString("\\begin{import}\n")
 	builder.WriteString("Import file ")
 	builder.WriteString(s.Path)
+	builder.WriteString("\n\\end{import}")
 	return builder.String()
 }
 
@@ -632,8 +625,9 @@ func (s *ClaimPropStmt) ToLatexString() string {
 	return builder.String()
 }
 
+// TODO
 func (s *ClaimExistPropStmt) ToLatexString() string {
-	return "ClaimExistPropStmt latex to be implemented"
+	panic("ClaimExistPropStmt latex to be implemented")
 }
 
 func (s *ProveByMathInductionStmt) ToLatexString() string {
@@ -744,16 +738,7 @@ func (s *HaveSetDefinedByReplacementStmt) ToLatexString() string {
 }
 
 func (s *NamedUniFactStmt) ToLatexString() string {
-	var builder strings.Builder
-	builder.WriteString("$\\forall$ ")
-	builder.WriteString(strings.Join(paramInParamSetInFactLatexStringSlice(s.DefPropStmt.DefHeader.Params, s.DefPropStmt.DefHeader.ParamSets), ", "))
-	builder.WriteString(" $\\Rightarrow$ ")
-	builder.WriteString(strings.Join(s.DefPropStmt.ThenFacts.factStmtSliceToLatexStringSlice(), ", "))
-	builder.WriteString(".")
-	builder.WriteString("We call this fact ")
-	builder.WriteString(s.DefPropStmt.DefHeader.NameWithParamsLatexString())
-	builder.WriteString(".")
-	return builder.String()
+	panic("")
 }
 
 func (s *FnTemplateStmt) ToLatexString() string {
