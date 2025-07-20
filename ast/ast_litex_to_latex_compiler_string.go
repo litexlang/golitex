@@ -629,6 +629,11 @@ func (s *DefFnTemplateStmt) ToLatexString() string {
 		builder.WriteString(".")
 	}
 
+	builder.WriteString("\n\n")
+
+	builder.WriteString("The return value is $\\in$ ")
+	builder.WriteString(s.FnTemplateStmt.RetSet.ToLatexString())
+
 	builder.WriteString("\n\\end{definition}")
 
 	return builder.String()
@@ -636,7 +641,6 @@ func (s *DefFnTemplateStmt) ToLatexString() string {
 
 func (s *EnumStmt) ToLatexString() string {
 	var builder strings.Builder
-	builder.WriteString("set ")
 	builder.WriteString(s.CurSet.ToLatexString())
 	builder.WriteString(" = {")
 	builder.WriteString(fcParamsLatexString(s.Items))
@@ -646,7 +650,6 @@ func (s *EnumStmt) ToLatexString() string {
 
 func (s *IntensionalSetStmt) ToLatexString() string {
 	var builder strings.Builder
-	builder.WriteString("set ")
 	builder.WriteString(s.CurSet.ToLatexString())
 	builder.WriteString(" = {")
 	builder.WriteString(s.Param)
@@ -794,5 +797,12 @@ func (s *EqualsFactStmt) ToLatexString() string {
 }
 
 func (s *KnowExistPropStmt) ToLatexString() string {
-	return "knowExistPropStmt latex to be implemented"
+	var builder strings.Builder
+	defExistProp := NewDefExistPropStmt(&s.ExistProp.DefBody, s.ExistProp.ExistParams, s.ExistProp.ExistParamSets)
+	builder.WriteString(defExistProp.ToLatexString())
+
+	builder.WriteString("\n\n")
+	builder.WriteString("We assume existential proposition is true for all parameters in the proposition's domain.")
+
+	return builder.String()
 }
