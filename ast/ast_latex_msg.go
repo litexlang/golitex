@@ -120,7 +120,7 @@ func (l *UniFactStmt) ToLatexString() string {
 	builder.WriteString(strFcSetPairsLatexString(l.Params, l.ParamSets))
 
 	if len(l.DomFacts) > 0 {
-		builder.WriteString(", when")
+		builder.WriteString(", ")
 		domFactStrSlice := make([]string, len(l.DomFacts))
 		for i := range len(l.DomFacts) {
 			domFactStrSlice[i] = l.DomFacts[i].ToLatexString()
@@ -423,7 +423,7 @@ func (s *KnowPropStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString(s.Prop.ToLatexString())
 	builder.WriteString("\\begin{assumption}\n")
-	builder.WriteString(s.Prop.ToUniFact().ToLatexString())
+	builder.WriteString(s.Prop.ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue().ToLatexString())
 	builder.WriteString("\n\\end{assumption}")
 	return builder.String()
 }
@@ -485,11 +485,11 @@ func (s *UniFactWithIffStmt) ToLatexString() string {
 		domFactStrSlice := s.UniFact.DomFacts.factStmtSliceToLatexStringSlice()
 
 		if ShouldInSingleLineAsLatexString(domFactStrSlice) {
-			builder.WriteString(", when ")
+			builder.WriteString(",  ")
 			builder.WriteString(strings.Join(domFactStrSlice, ", "))
 			builder.WriteString(" ")
 		} else {
-			builder.WriteString(", when\n\n")
+			builder.WriteString(", \n\n")
 			builder.WriteString(strings.Join(domFactStrSlice, "\n\n"))
 			builder.WriteString("\n\n")
 		}
@@ -625,7 +625,7 @@ func (s *ClaimPropStmt) ToLatexString() string {
 
 	builder.WriteString("\n\n")
 
-	builder.WriteString(claimProveBodyToLatexString(s.ToUniFact(), s.Proofs, s.IsProve))
+	builder.WriteString(claimProveBodyToLatexString(s.Prop.ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue(), s.Proofs, s.IsProve))
 
 	return builder.String()
 }
@@ -638,7 +638,7 @@ func (s *ClaimExistPropStmt) ToLatexString() string {
 
 	builder.WriteString("\n\n")
 
-	builder.WriteString(claimProveBodyToLatexString(s.ExistProp.ToUniFact(), s.Proofs, true))
+	builder.WriteString(claimProveBodyToLatexString(s.ExistProp.ToForallParamsSatisfyDomFacts_Then_ExistFactIsTrue(), s.Proofs, true))
 
 	return builder.String()
 }
@@ -763,7 +763,11 @@ func (s *NamedUniFactStmt) ToLatexString() string {
 func VerifiedFactsSectionToLatexString(verifiedFacts []FactStmt) string {
 	var builder strings.Builder
 
-	builder.WriteString("\\begin{verifiedFacts} We check the following facts:\n")
+	if len(verifiedFacts) > 1 {
+		builder.WriteString("\\begin{checkFacts} We check:\n")
+	} else {
+		builder.WriteString("\\begin{checkFacts} We check:\n")
+	}
 
 	strSlice := make([]string, len(verifiedFacts))
 	for i, fact := range verifiedFacts {
@@ -777,7 +781,7 @@ func VerifiedFactsSectionToLatexString(verifiedFacts []FactStmt) string {
 	}
 
 	builder.WriteString(".\n")
-	builder.WriteString("\\end{verifiedFacts}")
+	builder.WriteString("\\end{checkFacts}")
 
 	return builder.String()
 }
