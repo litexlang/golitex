@@ -384,21 +384,27 @@ func (s *DefExistPropStmt) ToLatexString() string {
 
 func (s *HaveObjStStmt) ToLatexString() string {
 	var builder strings.Builder
-	builder.WriteString(fmt.Sprintf("Since existential proposition %s is true", propNameParamsLatexString(s.Fact.PropName, s.Fact.Params)))
+
+	builder.WriteString("\\begin{definition}[Object(s) Exists By Verified Existential Fact]\n")
+
 	builder.WriteString(" we have ")
 	builder.WriteString(fcParamsLatexString(s.Fact.Params))
-	builder.WriteString(fmt.Sprintf(" which makes %s true", propNameParamsLatexString(s.Fact.PropName, s.Fact.Params)))
+	builder.WriteString(fmt.Sprintf(" which makes existential fact %s true", propNameParamsLatexString(s.Fact.PropName, s.Fact.Params)))
+
+	builder.WriteString("\n\\end{definition}")
 	return builder.String()
 }
 
 func (s *ProveInEachCaseStmt) ToLatexString() string {
 	var builder strings.Builder
+	builder.WriteString("\\begin{proveCaseByCase}\n")
 	builder.WriteString("Since ")
 	builder.WriteString(s.OrFact.ToLatexString())
+	builder.WriteString(" is true.")
 	builder.WriteString(" we prove ")
 	builder.WriteString(strings.Join(s.ThenFacts.factStmtSliceToLatexStringSlice(), ", "))
 	builder.WriteString(glob.KeySymbolColon)
-	builder.WriteByte('\n')
+	builder.WriteString("case by case:\n")
 	for i := range s.Proofs {
 		builder.WriteString(fmt.Sprintf("Case %d: %s\n", i+1, s.OrFact.Facts[i]))
 		stmtSlice := make([]string, len(s.Proofs[i]))
@@ -409,6 +415,7 @@ func (s *ProveInEachCaseStmt) ToLatexString() string {
 		builder.WriteString("\n")
 	}
 
+	builder.WriteString("\n\\end{proveCaseByCase}")
 	return builder.String()
 }
 
@@ -576,7 +583,7 @@ func (s *DefFnTemplateStmt) ToLatexString() string {
 func (s *EnumStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString(s.CurSet.ToLatexString())
-	builder.WriteString(" = {")
+	builder.WriteString(" = \\{")
 
 	strSlice := make([]string, len(s.Items))
 	for i := range len(s.Items) {
@@ -584,13 +591,13 @@ func (s *EnumStmt) ToLatexString() string {
 	}
 	builder.WriteString(strings.Join(strSlice, ", "))
 
-	builder.WriteString("}")
+	builder.WriteString("\\}")
 	return fmt.Sprintf("$%s$", strings.ReplaceAll(builder.String(), "$", ""))
 }
 
 func intentionalSetOrIntensionalSetToLatexString(param string, parentSet Fc, proofs SpecFactPtrSlice) string {
 	var builder strings.Builder
-	builder.WriteString(" = {")
+	builder.WriteString(" = \\{")
 	builder.WriteString(param)
 	builder.WriteString(" $\\in$ ")
 	builder.WriteString(parentSet.ToLatexString())
@@ -600,7 +607,7 @@ func intentionalSetOrIntensionalSetToLatexString(param string, parentSet Fc, pro
 		proofStrSlice[i] = proofs[i].ToLatexString()
 	}
 	builder.WriteString(strings.Join(proofStrSlice, ", "))
-	builder.WriteString("}")
+	builder.WriteString("\\}")
 	return fmt.Sprintf("$%s$", strings.ReplaceAll(builder.String(), "$", ""))
 }
 
@@ -654,22 +661,31 @@ func (s *ProveOverFiniteSetStmt) ToLatexString() string {
 	for i := range len(s.Proofs) {
 		proofStrSlice[i] = s.Proofs[i].ToLatexString()
 	}
-	builder.WriteString(strings.Join(proofStrSlice, ", "))
+
+	if ShouldInSingleLineAsLatexString(proofStrSlice) {
+		builder.WriteString(strings.Join(proofStrSlice, ", "))
+	} else {
+		builder.WriteString(strings.Join(proofStrSlice, "\n\n"))
+	}
 
 	return builder.String()
 }
 
 func (s *HaveObjInNonEmptySetStmt) ToLatexString() string {
 	var builder strings.Builder
+	builder.WriteString("\\begin{definition}[Object(s) Exists By Verified Existential Fact]\n")
+
 	builder.WriteString("We have objects from nonempty set(s): ")
 	builder.WriteString(strings.Join(paramInParamSetInFactLatexStringSlice(s.Objs, s.ObjSets), ", "))
-	builder.WriteString(".")
+	builder.WriteString(".\n")
+
+	builder.WriteString("\\end{definition}")
 	return builder.String()
 }
 
 func (s *HaveSetStmt) ToLatexString() string {
 	var builder strings.Builder
-	builder.WriteString("\\begin{definition}[Have Set]")
+	builder.WriteString("\\begin{definition}[Set Exist By Axioms of Set Theory]")
 
 	builder.WriteString("We have a set: ")
 
@@ -683,7 +699,7 @@ func (s *HaveSetStmt) ToLatexString() string {
 
 func (s *HaveSetFnStmt) ToLatexString() string {
 	var builder strings.Builder
-	builder.WriteString("\\begin{definition}[Have Set Function]")
+	builder.WriteString("\\begin{definition}[Function Exist By Axioms of Set Theory]")
 	builder.WriteString(fmt.Sprintf("We have a function %s returning a set, whose domain is: ", s.DefHeader.NameWithParamsLatexString()))
 	builder.WriteString(strings.Join(paramInParamSetInFactLatexStringSlice(s.DefHeader.Params, s.DefHeader.ParamSets), ", "))
 	builder.WriteString(". ")
@@ -699,19 +715,19 @@ func (s *HaveSetFnStmt) ToLatexString() string {
 
 func (s *HaveSetDefinedByReplacementStmt) ToLatexString() string {
 	var builder strings.Builder
-	builder.WriteString("\\begin{definition}[Have Set]")
+	builder.WriteString("\\begin{definition}[Set Exist By Axioms of Set Theory]")
 
 	builder.WriteString("By axiom of replacement, we have a set: ")
 	{
 		var setBuilder strings.Builder
 		setBuilder.WriteString(s.Name)
-		setBuilder.WriteString(" = {")
+		setBuilder.WriteString(" = \\{")
 		setBuilder.WriteString("y $\\in$ ")
 		setBuilder.WriteString(s.DomSet.ToLatexString())
-		setBuilder.WriteString(" | there exists x s.t. ")
+		setBuilder.WriteString(" | \\textnormal{there exists} x \\textnormal{s.t.} ")
 		setBuilder.WriteString(s.PropName.String())
-		setBuilder.WriteString("(x, y) is true.")
-		setBuilder.WriteString("}")
+		setBuilder.WriteString("(x, y) \\textnormal{is true}.")
+		setBuilder.WriteString("\\}")
 		builder.WriteString(fmt.Sprintf("$%s$", strings.ReplaceAll(setBuilder.String(), "$", "")))
 	}
 
