@@ -168,9 +168,9 @@ Litex是一门简单直观、易学易用的形式化语言。沈嘉辰是发明
   </tr>
 </table>
 
+Litex 正在填补两个关键空白：其一，推理是人类的基本能力，但现有形式化语言过于复杂，哪怕顶级 AI 研究员也难以掌握，严重限制了其在科研与工程实践中的普及；其二，形式化数据对 AI 推理能力与安全性至关重要，各大厂投入重金采集，但数据增长远远滞后于模型演进速度，已成为行业发展的核心瓶颈。
 
-
-官网的 Litex to LaTeX Compiler\[1] 可将 Litex 代码转换为 LaTeX，降低用户上手门槛。如今 DeepSeek、Google、Meta、OpenAI 等正重金布局形式化语言，Litex 有望成为 AI 推理与智能体开发的基础设施，成为 AI 淘金热中的类 CUDA 铲子型工具。我们希望形式化语言能和日常表达一样简单，让所有人都能轻松使用形式化语言。
+Litex 以极简设计显著降低形式化语言的使用门槛，配套的 Litex to LaTeX Compiler[1] 可将 Litex 代码快速转为 LaTeX，提高接受度与传播效率。如今 DeepSeek、Google、Meta、OpenAI 等正大力投入形式化语言方向，Litex 有望成为 AI 推理、安全验证与智能体开发的底层基础设施，成为这场 AI 淘金热中类 CUDA 的“铲子型”工具。我们的愿景，是让形式化语言像日常表达一样简单，让每个人都能轻松参与构建可信的 AI 推理系统。
 
 <div style="font-size: 11px; line-height: 1.1; border-collapse: collapse; width: 100%;">
 [1] 官网沙盒: https://litexlang.org/playground . 源代码：https://github.com/litexlang/golitex . 邮件联系：litexlang@outlook.com. 

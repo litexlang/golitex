@@ -1,35 +1,3 @@
-# Formalize Terence Tao Analysis 1 Chapter 3 Set Theory
-
-# Definition of Two Sets are Equal
-know forall x, y set:
-	x = y
-    then:
-        forall a x:
-            a $in y
-        forall a y:
-            a $in x
-
-# Definition of Empty Set
-prop self_is_empty_set(x set):
-    forall a obj:
-        not a $in x
-
-# There is a builtin-in empty set in Litex
-have set self_builtin_empty_set := {}
-forall x obj:
-    not x $in self_builtin_empty_set
-
-exist_prop x obj st self_obj_exist_in_set(s set):
-    x $in s
-
-# There is just one empty set
-claim:
-    forall s set:
-        not $self_is_empty_set(s)
-        then:
-           $self_obj_exist_in_set(s)
-    prove_by_contradiction:
-        forall x obj:
-            not x $in s
-        $self_is_empty_set(s)
-        
+have set s := {1, 2, 3}
+have set t := x R:
+	x > 1
