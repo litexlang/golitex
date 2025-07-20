@@ -47,3 +47,16 @@ prove_over_finite_set:
         x > 1
 
 prove_by_math_induction(not $p(y, n, z), 1, 1)
+
+claim:
+	@p(x, y R):
+		x > y
+        then:
+        	x > y
+    prove:
+    	x > y
+
+@p(x, y R):
+	x > y
+    then:
+        x > y
