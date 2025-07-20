@@ -279,7 +279,8 @@ func pureSpecFactLatexString(stmt *SpecFactStmt) string {
 		}
 		return builder.String()
 	} else {
-		curStr := strings.TrimPrefix(stmt.String(), "$")
+		curStr := strings.TrimPrefix(stmt.String(), "not ")
+		curStr = strings.TrimPrefix(curStr, "$")
 		curStr = fmt.Sprintf("$%s$", curStr)
 		builder.WriteString(curStr)
 
@@ -346,19 +347,26 @@ func keywordRelaFactWithoutNotLatexString(stmt *SpecFactStmt) string {
 func (f *ClaimProveStmt) ToLatexString() string {
 	var builder strings.Builder
 
-	builder.WriteString("We claim that ")
+	builder.WriteString("\\begin{claim}\n")
 	builder.WriteString(f.ToCheckFact.ToLatexString())
 	builder.WriteString(".")
 
 	if len(f.Proofs) > 0 {
-		builder.WriteString("[Proof] ")
+		builder.WriteString("\\begin{proof}\n")
 		proofStrSlice := make([]string, len(f.Proofs))
 		for i := range len(f.Proofs) {
 			proofStrSlice[i] = f.Proofs[i].ToLatexString()
 		}
-		builder.WriteString(strings.Join(proofStrSlice, ", "))
-		builder.WriteString(".")
+		if ShouldInSingleLineAsLatexString(proofStrSlice) {
+			builder.WriteString(strings.Join(proofStrSlice, ", "))
+			builder.WriteString(".")
+		} else {
+			builder.WriteString(strings.Join(proofStrSlice, "\n\n"))
+		}
+		builder.WriteString("\n\\end{proof}")
 	}
+
+	builder.WriteString("\n\\end{claim}")
 
 	return builder.String()
 }
@@ -580,11 +588,13 @@ func (s StmtSlice) stmtSliceToLatexStringSlice() []string {
 
 func (s *ClaimProveByContradictionStmt) ToLatexString() string {
 	var builder strings.Builder
-	builder.WriteString("We claim that ")
+	builder.WriteString("\\begin{claim}\n")
 	builder.WriteString(s.ClaimProveStmt.ToCheckFact.ToLatexString())
 	builder.WriteString(".\n")
-	builder.WriteString("[Proof By Contradiction] ")
+	builder.WriteString("\\begin{proof}[Proof By Contradiction]\n") // 这里要突出是prove by contradiction
 	builder.WriteString(strings.Join(s.ClaimProveStmt.Proofs.stmtSliceToLatexStringSlice(), ", "))
+	builder.WriteString("\n\\end{proof}")
+	builder.WriteString("\n\\end{claim}")
 	return builder.String()
 }
 
