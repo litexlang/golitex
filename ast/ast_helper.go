@@ -166,3 +166,24 @@ func (stmt *EqualsFactStmt) ToEqualFacts() []*SpecFactStmt {
 	}
 	return ret
 }
+
+func (stmt *ClaimPropStmt) ToProp() *DefPropStmt {
+	return NewDefPropStmt(&stmt.Prop.DefHeader, stmt.Prop.DomFacts, stmt.Prop.IffFacts, []FactStmt{})
+}
+
+func (strSlice StrSlice) ToFcSlice() []Fc {
+	ret := make([]Fc, len(strSlice))
+	for i, str := range strSlice {
+		ret[i] = FcAtom(str)
+	}
+	return ret
+}
+
+func (head DefHeader) ToSpecFact() *SpecFactStmt {
+	params := head.Params.ToFcSlice()
+	return NewSpecFactStmt(TruePure, FcAtom(head.Name), params)
+}
+
+func (stmt *ClaimPropStmt) ToUniFact() *UniFactStmt {
+	return NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, []FactStmt{stmt.Prop.DefHeader.ToSpecFact()}, stmt.Prop.ThenFacts)
+}

@@ -382,7 +382,9 @@ func (f *KnowFactStmt) ToLatexString() string {
 		builder.WriteString("The following fact(s) are assumed to be true:\n\n")
 	}
 
-	builder.WriteString("\\begin{enumerate}\n\n")
+	if len(f.Facts) > 1 {
+		builder.WriteString("\\begin{enumerate}\n\n")
+	}
 
 	for _, fact := range f.Facts {
 		builder.WriteString("\\item ")
@@ -390,7 +392,9 @@ func (f *KnowFactStmt) ToLatexString() string {
 		builder.WriteString("\n")
 	}
 
-	builder.WriteString("\n\\end{enumerate}\n")
+	if len(f.Facts) > 1 {
+		builder.WriteString("\n\\end{enumerate}\n")
+	}
 	builder.WriteString("\n\\end{assumption}")
 	return builder.String()
 }
@@ -684,6 +688,13 @@ func (s *IntensionalSetStmt) ToLatexString() string {
 
 func (s *ClaimPropStmt) ToLatexString() string {
 	var builder strings.Builder
+
+	builder.WriteString(s.ToProp().ToLatexString())
+
+	builder.WriteString("\n\n")
+
+	builder.WriteString("\\begin{claim}\n")
+
 	builder.WriteString("We claim that $\\forall$ ")
 	builder.WriteString(strings.Join(paramInParamSetInFactLatexStringSlice(s.Prop.DefHeader.Params, s.Prop.DefHeader.ParamSets), ", "))
 	builder.WriteString(" we have ")
@@ -705,6 +716,7 @@ func (s *ClaimPropStmt) ToLatexString() string {
 		proofStrSlice[i] = s.Proofs[i].ToLatexString()
 	}
 	builder.WriteString(strings.Join(proofStrSlice, ", "))
+	builder.WriteString("\n\\end{claim}")
 	return builder.String()
 }
 
