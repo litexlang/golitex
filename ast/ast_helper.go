@@ -187,3 +187,16 @@ func (head DefHeader) ToSpecFact() *SpecFactStmt {
 func (stmt *ClaimPropStmt) ToUniFact() *UniFactStmt {
 	return NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, []FactStmt{stmt.Prop.DefHeader.ToSpecFact()}, stmt.Prop.ThenFacts)
 }
+
+func (stmt *DefPropStmt) ToUniFact() *UniFactStmt {
+	return NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, []FactStmt{stmt.DefHeader.ToSpecFact()}, stmt.ThenFacts)
+}
+
+func (stmt *DefExistPropStmt) ToProp() *SpecFactStmt {
+	param := stmt.DefBody.DefHeader.Params.ToFcSlice()
+	return NewSpecFactStmt(TruePure, FcAtom(stmt.DefBody.DefHeader.Name), param)
+}
+
+func (stmt *DefExistPropStmt) ToUniFact() *UniFactStmt {
+	return NewUniFact(stmt.ExistParams, stmt.ExistParamSets, stmt.DefBody.DomFacts, []FactStmt{stmt.ToProp()})
+}
