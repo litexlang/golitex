@@ -22,3 +22,20 @@ have set fn s(x, y R) := t R:
 	t > x + y
 
 have set s = set_defined_by_replacement(A, B, P)
+
+have a, b st $p(x, y)
+
+have a R, b R
+
+prove_in_each_case:
+    or:
+    	a = 1
+        b = 2
+    then:
+    	c = 3
+    prove:
+    	a = 2
+        b = 1
+    prove:
+    	a = 3
+        b = 1
