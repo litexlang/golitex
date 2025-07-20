@@ -344,18 +344,18 @@ func keywordRelaFactWithoutNotLatexString(stmt *SpecFactStmt) string {
 	return builder.String()
 }
 
-func (f *ClaimProveStmt) ToLatexString() string {
+func claimProveBodyToLatexString(toCheck FactStmt, proofs StmtSlice, isProve bool) string {
 	var builder strings.Builder
 
 	builder.WriteString("\\begin{claim}\n")
-	builder.WriteString(f.ToCheckFact.ToLatexString())
+	builder.WriteString(toCheck.ToLatexString())
 	builder.WriteString(".")
 
-	if len(f.Proofs) > 0 {
+	if len(proofs) > 0 {
 		builder.WriteString("\\begin{proof}\n")
-		proofStrSlice := make([]string, len(f.Proofs))
-		for i := range len(f.Proofs) {
-			proofStrSlice[i] = f.Proofs[i].ToLatexString()
+		proofStrSlice := make([]string, len(proofs))
+		for i := range len(proofs) {
+			proofStrSlice[i] = proofs[i].ToLatexString()
 		}
 		if ShouldInSingleLineAsLatexString(proofStrSlice) {
 			builder.WriteString(strings.Join(proofStrSlice, ", "))
@@ -369,6 +369,10 @@ func (f *ClaimProveStmt) ToLatexString() string {
 	builder.WriteString("\n\\end{claim}")
 
 	return builder.String()
+}
+
+func (f *ClaimProveStmt) ToLatexString() string {
+	return claimProveBodyToLatexString(f.ToCheckFact, f.Proofs, true)
 }
 
 func (f *KnowFactStmt) ToLatexString() string {
@@ -582,32 +586,8 @@ func (s *UniFactWithIffStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (s StmtSlice) stmtSliceToLatexStringSlice() []string {
-	stmtStrSlice := make([]string, len(s))
-	for i := range len(s) {
-		stmtStrSlice[i] = s[i].ToLatexString()
-	}
-	return stmtStrSlice
-}
-
 func (s *ClaimProveByContradictionStmt) ToLatexString() string {
-	var builder strings.Builder
-	builder.WriteString("\\begin{claim}\n")
-	builder.WriteString(s.ClaimProveStmt.ToCheckFact.ToLatexString())
-	builder.WriteString(".\n")
-	builder.WriteString("\\begin{proof}[Proof By Contradiction]\n") // 这里要突出是prove by contradiction
-	builder.WriteString(strings.Join(s.ClaimProveStmt.Proofs.stmtSliceToLatexStringSlice(), ", "))
-	builder.WriteString("\n\\end{proof}")
-	builder.WriteString("\n\\end{claim}")
-	return builder.String()
-}
-
-func (strSlice StrSlice) stringSliceToLatexStringSlice() string {
-	retSlice := make([]string, 0, len(strSlice))
-	for _, str := range strSlice {
-		retSlice = append(retSlice, toLatexString(str))
-	}
-	return strings.Join(retSlice, ", ")
+	return claimProveBodyToLatexString(s.ClaimProveStmt.ToCheckFact, s.ClaimProveStmt.Proofs, true)
 }
 
 func (s *DefFnTemplateStmt) ToLatexString() string {
@@ -693,30 +673,8 @@ func (s *ClaimPropStmt) ToLatexString() string {
 
 	builder.WriteString("\n\n")
 
-	builder.WriteString("\\begin{claim}\n")
+	builder.WriteString(claimProveBodyToLatexString(s.ToUniFact(), s.Proofs, s.IsProve))
 
-	builder.WriteString("We claim that $\\forall$ ")
-	builder.WriteString(strings.Join(paramInParamSetInFactLatexStringSlice(s.Prop.DefHeader.Params, s.Prop.DefHeader.ParamSets), ", "))
-	builder.WriteString(" we have ")
-	builder.WriteString(strings.Join(s.Prop.ThenFacts.factStmtSliceToLatexStringSlice(), ", "))
-	builder.WriteString(".")
-	builder.WriteString("we call this fact ")
-	builder.WriteString(s.Prop.DefHeader.NameWithParamsLatexString())
-	builder.WriteString(".")
-	builder.WriteByte('\n')
-
-	if s.IsProve {
-		builder.WriteString("[Proof] ")
-	} else {
-		builder.WriteString("[Proof By Contradiction] ")
-	}
-
-	proofStrSlice := make([]string, len(s.Proofs))
-	for i := range len(s.Proofs) {
-		proofStrSlice[i] = s.Proofs[i].ToLatexString()
-	}
-	builder.WriteString(strings.Join(proofStrSlice, ", "))
-	builder.WriteString("\n\\end{claim}")
 	return builder.String()
 }
 
