@@ -10,4 +10,4 @@ know:
     
     not $p(y, 1, z)
 
-prove_by_math_induction(not $p(y, n, z), 1,1)    	
+prove_by_math_induction(not $p(y, n, z), 1,1)

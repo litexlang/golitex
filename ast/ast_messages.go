@@ -725,3 +725,7 @@ func (stmt *KnowExistPropStmt) String() string {
 	builder.WriteString(stmt.ExistProp.String())
 	return builder.String()
 }
+
+func (stmt *CommentStmt) String() string {
+	return stmt.Comment
+}
