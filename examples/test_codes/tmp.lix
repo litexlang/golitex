@@ -1,3 +1,4 @@
+"""
 have set s := {1, 2, 3}
 have set t := x R:
 	x > 1
@@ -60,3 +61,19 @@ claim:
 	x > y
     then:
         x > y
+"""
+
+obj x R
+
+forall x R:
+    x > 1
+
+forall x R:
+    x > 1
+
+1 = 2
+3 = 4
+prove:
+	1 < 2
+
+1 % 2 = 1

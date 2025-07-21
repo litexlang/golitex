@@ -148,12 +148,12 @@ func (l *UniFactStmt) ToLatexString() string {
 	if ShouldInSingleLineAsLatexString(thenFactStrSlice) {
 		builder.WriteString(" ")
 		builder.WriteString(strings.Join(thenFactStrSlice, ", "))
+		builder.WriteString(" $\\rule{0.5ex}{0.5ex}$")
 	} else {
 		builder.WriteString("\n\n")
 		builder.WriteString(strings.Join(thenFactStrSlice, "\n\n"))
+		builder.WriteString("\n\n$\\rule{0.5ex}{0.5ex}$")
 	}
-
-	builder.WriteString(".")
 
 	return builder.String()
 }
@@ -763,11 +763,7 @@ func (s *NamedUniFactStmt) ToLatexString() string {
 func VerifiedFactsSectionToLatexString(verifiedFacts []FactStmt) string {
 	var builder strings.Builder
 
-	if len(verifiedFacts) > 1 {
-		builder.WriteString("\\begin{checkFacts} We check:\n")
-	} else {
-		builder.WriteString("\\begin{checkFacts} We check:\n")
-	}
+	builder.WriteString("\\begin{checkFacts} We check:\n")
 
 	strSlice := make([]string, len(verifiedFacts))
 	for i, fact := range verifiedFacts {
@@ -777,10 +773,10 @@ func VerifiedFactsSectionToLatexString(verifiedFacts []FactStmt) string {
 	if ShouldInSingleLineAsLatexString(strSlice) {
 		builder.WriteString(strings.Join(strSlice, ", "))
 	} else {
+		builder.WriteString("\n")
 		builder.WriteString(strings.Join(strSlice, "\n\n"))
 	}
 
-	builder.WriteString(".\n")
 	builder.WriteString("\\end{checkFacts}")
 
 	return builder.String()
@@ -807,4 +803,8 @@ func (s *KnowExistPropStmt) ToLatexString() string {
 	builder.WriteString("We assume existential proposition is true for all parameters in the proposition's domain.")
 
 	return builder.String()
+}
+
+func (s *CommentStmt) ToLatexString() string {
+	return s.Comment
 }

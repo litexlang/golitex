@@ -23,12 +23,7 @@ import (
 	"strings"
 )
 
-func (tb *tokenBlock) TopStmt() (ast.Stmt, error) {
-	return tb.stmt()
-
-}
-
-func (tb *tokenBlock) stmt() (ast.Stmt, error) {
+func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 	cur, err := tb.header.currentToken()
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -90,6 +85,8 @@ func (tb *tokenBlock) stmt() (ast.Stmt, error) {
 		ret, err = tb.namedUniFactStmt()
 	case glob.KeySymbolEqual:
 		ret, err = tb.equalsFactStmt()
+	case glob.CommentSig:
+		ret, err = tb.commentStmt()
 	default:
 		ret, err = tb.factStmt(UniFactDepth0)
 	}
@@ -405,7 +402,7 @@ func (tb *tokenBlock) claimStmt() (ast.ClaimInterface, error) {
 	}
 
 	for _, block := range tb.body[1].body {
-		curStmt, err := block.stmt()
+		curStmt, err := block.Stmt()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -934,7 +931,7 @@ func (tb *tokenBlock) proveInEachCaseStmt() (*ast.ProveInEachCaseStmt, error) {
 		}
 
 		for _, stmt := range tb.body[i].body {
-			curStmt, err := stmt.stmt()
+			curStmt, err := stmt.Stmt()
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}
@@ -1105,7 +1102,7 @@ func (tb *tokenBlock) proveStmt() (*ast.ProveStmt, error) {
 
 	proof := []ast.Stmt{}
 	for _, stmt := range tb.body {
-		curStmt, err := stmt.stmt()
+		curStmt, err := stmt.Stmt()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -1193,7 +1190,7 @@ func (tb *tokenBlock) claimPropStmt() (*ast.ClaimPropStmt, error) {
 
 	proofs := []ast.Stmt{}
 	for _, stmt := range tb.body[1].body {
-		curStmt, err := stmt.stmt()
+		curStmt, err := stmt.Stmt()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -1217,7 +1214,7 @@ func (tb *tokenBlock) claimExistPropStmt() (*ast.ClaimExistPropStmt, error) {
 		}
 
 		for _, stmt := range tb.body[1].body {
-			curStmt, err := stmt.stmt()
+			curStmt, err := stmt.Stmt()
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}
@@ -1511,7 +1508,7 @@ func (tb *tokenBlock) proveOverFiniteSetStmt() (*ast.ProveOverFiniteSetStmt, err
 
 	proofs := []ast.Stmt{}
 	for _, stmt := range tb.body[1].body {
-		curStmt, err := stmt.stmt()
+		curStmt, err := stmt.Stmt()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -1787,4 +1784,8 @@ func (tb *tokenBlock) knowExistPropStmt() (*ast.KnowExistPropStmt, error) {
 	}
 
 	return ast.NewKnowExistPropStmt(*ast.NewDefExistPropStmt(def, existParams, existParamSets)), nil
+}
+
+func (tb *tokenBlock) commentStmt() (ast.Stmt, error) {
+	panic("not implemented")
 }

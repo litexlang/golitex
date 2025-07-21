@@ -35,13 +35,11 @@ func ParseSourceCode(code string) ([]ast.Stmt, error) {
 
 	ret := []ast.Stmt{}
 	for _, block := range blocks {
-		cur, err := block.TopStmt()
+		cur, err := block.Stmt()
 		if err != nil {
 			return nil, err
 		}
-		if cur != nil { // cur 可能是nil，比如非执行型语句import返回就是nil，因为压根没有要执行的东西
-			ret = append(ret, cur)
-		}
+		ret = append(ret, cur)
 	}
 
 	return ret, nil
