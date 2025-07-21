@@ -20,9 +20,9 @@ import (
 	"strings"
 )
 
-func ParseSourceCodeToLatex(code string) ([]ast.Stmt, error) {
+func ParseSourceCode_WhenCompileToLatex(code string) ([]ast.Stmt, error) {
 	// code, err := preprocessSourceCode(code)
-	preprocessedCodeLines, err := preprocessSourceCodeWhenCompileToLatex(code)
+	preprocessedCodeLines, err := preprocessSourceCode(code)
 	if err != nil {
 		return []ast.Stmt{}, err
 	}
@@ -51,28 +51,42 @@ func preprocessSourceCodeWhenCompileToLatex(code string) ([]string, error) {
 	return lines, nil
 }
 
+const CommentSigPlusCommentSig = glob.CommentSig + glob.CommentSig
+const MultiLinesCommentSigPlusCommentSig = glob.MultiLinesCommentSig + glob.CommentSig
+
 func preprocessCommentsWhenCompileToLatex(lines []string) []string {
 	ret := []string{}
 	for i := 0; i < len(lines); i++ {
-		// 如果是 """ 开头的行，说明是注释块，直接跳过好多行，直到"""再次出现的那一行
-		if strings.HasPrefix(strings.TrimSpace(lines[i]), glob.MultiLinesCommentSig) {
-			i++ // 跳过开始阶段的 """
-
-			var builder strings.Builder
-			builder.WriteString(glob.CommentSig)
-
-			for i < len(lines) && !strings.HasPrefix(strings.TrimSpace(lines[i]), glob.MultiLinesCommentSig) {
-				builder.WriteString(lines[i])
-				builder.WriteString("\n")
-				i++
-			}
-
-			ret = append(ret, builder.String())
-
-			continue // 这时候跳到for的i++环节，i++把“”“跳过了
+		if len(lines[i]) == 0 {
+			continue
 		}
 
-		if strings.HasPrefix(strings.TrimSpace(lines[i]), glob.CommentSig) {
+		// 如果是 """ 开头的行，说明是注释块，直接跳过好多行，直到"""再次出现的那一行
+		if strings.HasPrefix(strings.TrimSpace(lines[i]), glob.MultiLinesCommentSig) {
+			if strings.HasPrefix(strings.TrimSpace(lines[i]), MultiLinesCommentSigPlusCommentSig) {
+				i++ // 跳过开始阶段的 """
+				var builder strings.Builder
+				builder.WriteString(CommentSigPlusCommentSig)
+
+				for i < len(lines) && !strings.HasPrefix(strings.TrimSpace(lines[i]), glob.MultiLinesCommentSig) {
+					builder.WriteString(lines[i])
+					builder.WriteString("\n")
+					i++
+				}
+
+				ret = append(ret, builder.String())
+
+				continue
+			} else {
+				i++ // 跳过开始阶段的 """
+				for i < len(lines) && !strings.HasPrefix(strings.TrimSpace(lines[i]), glob.MultiLinesCommentSig) {
+					i++
+				}
+				continue // 这时候跳到for的i++环节，i++把“”“跳过了
+			}
+		}
+
+		if strings.HasPrefix(strings.TrimSpace(lines[i]), CommentSigPlusCommentSig) {
 			ret = append(ret, strings.TrimSpace(lines[i]))
 			continue
 		}

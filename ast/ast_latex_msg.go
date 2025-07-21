@@ -319,9 +319,9 @@ func claimProveBodyToLatexString(toCheck FactStmt, proofs StmtSlice, isProve boo
 
 	if len(proofs) > 0 {
 		if isProve {
-			builder.WriteString("\\begin{proof}\n")
+			builder.WriteString("\\begin{proof}[proof]\n")
 		} else {
-			builder.WriteString("\\begin{proof}[by contradiction]\n")
+			builder.WriteString("\\begin{proof}[proof by contradiction]\n")
 		}
 		proofStrSlice := make([]string, len(proofs))
 		for i := range len(proofs) {
