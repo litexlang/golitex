@@ -216,3 +216,7 @@ type EqualsFactStmt struct {
 type KnowExistPropStmt struct {
 	ExistProp DefExistPropStmt
 }
+
+type CommentStmt struct {
+	Comment string
+}

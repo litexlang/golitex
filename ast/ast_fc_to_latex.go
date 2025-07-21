@@ -74,6 +74,8 @@ func isSpecialLatexSymbol_Process(f *FcFn) (bool, string) {
 			return true, fmt.Sprintf("%s $-$ %s", f.Params[0].ToLatexString(), f.Params[1].ToLatexString())
 		case "/":
 			return true, fmt.Sprintf("%s $\\div$ %s", f.Params[0].ToLatexString(), f.Params[1].ToLatexString())
+		case "%":
+			return true, fmt.Sprintf("%s $\\%%$ %s", f.Params[0].ToLatexString(), f.Params[1].ToLatexString())
 		}
 	}
 

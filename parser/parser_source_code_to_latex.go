@@ -20,10 +20,9 @@ import (
 	"strings"
 )
 
-// * TODO: 在parse时，把pkgName改成当前项目里定义的 pkgName，而不是继续沿用原来的
-func ParseSourceCode(code string) ([]ast.Stmt, error) {
+func ParseSourceCodeToLatex(code string) ([]ast.Stmt, error) {
 	// code, err := preprocessSourceCode(code)
-	preprocessedCodeLines, err := preprocessSourceCode(code)
+	preprocessedCodeLines, err := preprocessSourceCodeWhenCompileToLatex(code)
 	if err != nil {
 		return []ast.Stmt{}, err
 	}
@@ -45,23 +44,37 @@ func ParseSourceCode(code string) ([]ast.Stmt, error) {
 	return ret, nil
 }
 
-func preprocessSourceCode(code string) ([]string, error) {
+func preprocessSourceCodeWhenCompileToLatex(code string) ([]string, error) {
 	processedCode := strings.ReplaceAll(code, "\t", glob.Scope4Indents)
 	lines := strings.Split(processedCode, "\n")
-	lines = preprocessComments(lines)
+	lines = preprocessCommentsWhenCompileToLatex(lines)
 	return lines, nil
 }
 
-func preprocessComments(lines []string) []string {
+func preprocessCommentsWhenCompileToLatex(lines []string) []string {
 	ret := []string{}
 	for i := 0; i < len(lines); i++ {
 		// 如果是 """ 开头的行，说明是注释块，直接跳过好多行，直到"""再次出现的那一行
 		if strings.HasPrefix(strings.TrimSpace(lines[i]), glob.MultiLinesCommentSig) {
 			i++ // 跳过开始阶段的 """
+
+			var builder strings.Builder
+			builder.WriteString(glob.CommentSig)
+
 			for i < len(lines) && !strings.HasPrefix(strings.TrimSpace(lines[i]), glob.MultiLinesCommentSig) {
+				builder.WriteString(lines[i])
+				builder.WriteString("\n")
 				i++
 			}
+
+			ret = append(ret, builder.String())
+
 			continue // 这时候跳到for的i++环节，i++把“”“跳过了
+		}
+
+		if strings.HasPrefix(strings.TrimSpace(lines[i]), glob.CommentSig) {
+			ret = append(ret, strings.TrimSpace(lines[i]))
+			continue
 		}
 
 		// 移除行内注释
