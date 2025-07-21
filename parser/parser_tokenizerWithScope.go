@@ -156,3 +156,10 @@ func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]tokenBlock, error
 
 	return blocks, nil
 }
+
+func (t *tokenizerWithScope) parseCommentBlock() (tokenBlock, error) {
+	return tokenBlock{
+		header: strSliceCursor{0, []string{glob.CommentSig}},
+		body:   nil,
+	}, nil
+}
