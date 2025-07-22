@@ -89,7 +89,7 @@ func (l *DefFnStmt) ToLatexString() string {
 	}
 
 	if len(l.FnTemplateStmt.ThenFacts) > 0 {
-		builder.WriteString(fmt.Sprintf("We suppose %s satisfies:", toLatexString(l.FnTemplateStmt.DefHeader.Name)))
+		builder.WriteString(fmt.Sprintf("We suppose %s satisfies:", toLatexString(string(l.FnTemplateStmt.DefHeader.Name))))
 
 		thenFactStrSlice := make([]string, len(l.FnTemplateStmt.ThenFacts))
 		for i := range len(l.FnTemplateStmt.ThenFacts) {
@@ -532,8 +532,8 @@ func (s *DefFnTemplateStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("\\begin{definition}[Function Template]\n\n")
 	builder.WriteString("We say a function satisfies function template ")
-	builder.WriteString(toLatexString(s.FnTemplateStmt.DefHeader.Name))
-	builder.WriteString(fmt.Sprintf(" if it satisfies (we use %s here to represent that function):", s.FnTemplateStmt.DefHeader.Name))
+	builder.WriteString(toLatexString(string(s.FnTemplateStmt.DefHeader.Name)))
+	builder.WriteString(fmt.Sprintf(" if it satisfies (we use %s here to represent that function):", string(s.FnTemplateStmt.DefHeader.Name)))
 	builder.WriteString("\n\n")
 
 	builder.WriteString("It has a domain which is superset of the set which contains parameters satisfying the following properties: ")

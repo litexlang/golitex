@@ -525,7 +525,7 @@ func (env *Env) ExecDefFnTemplate(stmt *ast.DefFnTemplateStmt) error {
 	}
 
 	// err = env.FnTemplateDefMem.insert(stmt)
-	env.FnTemplateDefMem[stmt.FnTemplateStmt.Name] = *stmt
+	env.FnTemplateDefMem[string(stmt.FnTemplateStmt.Name)] = *stmt
 	// if err != nil {
 	// 	return err
 	// }
