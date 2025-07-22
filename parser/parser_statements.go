@@ -1787,5 +1787,9 @@ func (tb *tokenBlock) knowExistPropStmt() (*ast.KnowExistPropStmt, error) {
 }
 
 func (tb *tokenBlock) commentStmt() (ast.Stmt, error) {
+	comment := tb.header.strAtCurIndexPlus(1)
+	tb.header.skip(glob.CommentSig)
+	tb.header.skip("")
 
+	return ast.NewCommentStmt(comment), nil
 }

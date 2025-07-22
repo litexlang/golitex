@@ -153,3 +153,7 @@ func NewEqualsFactStmt(params FcSlice) *EqualsFactStmt {
 func NewKnowExistPropStmt(existProp DefExistPropStmt) *KnowExistPropStmt {
 	return &KnowExistPropStmt{existProp}
 }
+
+func NewCommentStmt(comment string) *CommentStmt {
+	return &CommentStmt{comment}
+}
