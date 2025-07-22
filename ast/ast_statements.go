@@ -185,7 +185,7 @@ type HaveObjInNonEmptySetStmt struct {
 
 // 由朴素集合论，枚举法定义集合，用specification的方式去定义集合，是可以的。这样定义出来的集合的存在性是直接得到保证的。这个功能必须写入内核，因为have是引入新东西的方式。
 type HaveSetStmt struct {
-	Fact EnumSet_IntensionalSet_FactualStmtInterface
+	Fact EnumSet_IntensionalSet_EqualDom
 }
 
 // 定义返回值是集合的函数；这个的好处是，fn的定义不能保证函数的存在性；而have可以保证函数的存在性
@@ -228,4 +228,9 @@ type FnTemplateTemplateStmt struct {
 	RetSet            Fc
 	DomFacts          FactStmtSlice
 	ThenFacts         FactStmtSlice
+}
+
+type SetEqualDomOf struct {
+	SetName Fc
+	Fn      Fc
 }
