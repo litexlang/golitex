@@ -15,12 +15,12 @@
 package litex_ast
 
 func (stmt *FnTemplateStmt) InstantiateByFnName_WithTemplateNameGivenFc(fc Fc) (*FnTemplateStmt, error) {
-	newParamSets, newDomFacts, newThenFacts, newRetSet, err := stmt.InstantiateFnTWithoutChangingTName(map[string]Fc{stmt.Name: fc})
+	newParamSets, newDomFacts, newThenFacts, newRetSet, err := stmt.InstantiateFnTWithoutChangingTName(map[string]Fc{string(stmt.Name): fc})
 	if err != nil {
 		return nil, err
 	}
 
-	return NewFnTemplateStmt(NewDefHeader(fc.String(), stmt.Params, newParamSets), newDomFacts, newThenFacts, newRetSet), nil
+	return NewFnTemplateStmt(NewDefHeader(FcAtom(fc.String()), stmt.Params, newParamSets), newDomFacts, newThenFacts, newRetSet), nil
 }
 
 func (fnTemplate *FnTemplateStmt) DeriveUniFact() *UniFactStmt {

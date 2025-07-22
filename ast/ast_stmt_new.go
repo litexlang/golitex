@@ -46,7 +46,7 @@ func NewKnowStmt(facts []FactStmt) *KnowFactStmt {
 	return &KnowFactStmt{facts}
 }
 
-func NewDefHeader(name string, params []string, setParams []Fc) *DefHeader {
+func NewDefHeader(name FcAtom, params []string, setParams []Fc) *DefHeader {
 	return &DefHeader{name, params, setParams}
 }
 
