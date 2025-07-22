@@ -729,3 +729,16 @@ func (stmt *KnowExistPropStmt) String() string {
 func (stmt *CommentStmt) String() string {
 	return stmt.Comment
 }
+
+func (stmt *SetEqualDomOf) String() string {
+	var builder strings.Builder
+	builder.WriteString(stmt.SetName.String())
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeySymbolColonEqual)
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeywordDomOf)
+	builder.WriteString("(")
+	builder.WriteString(stmt.Fn.String())
+	builder.WriteString(")")
+	return builder.String()
+}
