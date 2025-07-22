@@ -3,10 +3,11 @@ asdf
 """
 
 """#
-  adsfadf
+\textbf{This is a multi-line comment}
+\textbf{This is a multi-line comment}
 """
 
-## adsf
+## \textbf{This is a comment}
 
 obj x R
 

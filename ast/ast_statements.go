@@ -220,3 +220,12 @@ type KnowExistPropStmt struct {
 type CommentStmt struct {
 	Comment string
 }
+
+type FnTemplateTemplateStmt struct {
+	TemplateDefHeader DefHeader
+	FnParams          StrSlice
+	FnParamSets       FcSlice
+	RetSet            Fc
+	DomFacts          FactStmtSlice
+	ThenFacts         FactStmtSlice
+}
