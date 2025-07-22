@@ -808,3 +808,16 @@ func (s *KnowExistPropStmt) ToLatexString() string {
 func (s *CommentStmt) ToLatexString() string {
 	return s.Comment
 }
+
+func (s *SetEqualDomOf) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString(s.SetName.ToLatexString())
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeySymbolEqual)
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeywordDomOf)
+	builder.WriteString("(")
+	builder.WriteString(s.Fn.ToLatexString())
+	builder.WriteString(")")
+	return fmt.Sprintf("$%s$", strings.ReplaceAll(builder.String(), "$", ""))
+}

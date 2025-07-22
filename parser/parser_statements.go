@@ -116,7 +116,7 @@ func (tb *tokenBlock) factStmt(uniFactDepth uniFactEnum) (ast.FactStmt, error) {
 	case glob.KeySymbolEqual:
 		return tb.equalsFactStmt()
 	default:
-		return tb.specFact_intensionalSetFact_enumFact()
+		return tb.fact()
 	}
 
 }
@@ -1385,7 +1385,7 @@ func (tb *tokenBlock) intensionalSetFactualStmt(curSet ast.Fc) (*ast.Intensional
 	return ast.NewIntensionalSetStmt(curSet, param, parentSet, proofs), nil
 }
 
-func (tb *tokenBlock) specFact_intensionalSetFact_enumFact() (ast.FactStmt, error) {
+func (tb *tokenBlock) fact() (ast.FactStmt, error) {
 	if tb.header.is(glob.KeywordNot) {
 		return tb.specFactStmt()
 	}
@@ -1441,7 +1441,7 @@ func (tb *tokenBlock) relaFact_intensionalSetFact_enumStmt() (ast.FactStmt, erro
 			ret = ast.NewSpecFactStmt(ast.TruePure, propName, params)
 		}
 	} else if opt == glob.KeySymbolColonEqual {
-		return tb.enumStmt_or_intensionalSetStmt(fc)
+		return tb.enumStmt_or_intensionalSetStmt_or_DomOf(fc)
 	} else if glob.IsBuiltinInfixRelaPropSymbol(opt) {
 		fc2, err := tb.RawFc()
 		if err != nil {
@@ -1469,12 +1469,18 @@ func (tb *tokenBlock) relaFact_intensionalSetFact_enumStmt() (ast.FactStmt, erro
 	return ret, nil
 }
 
-func (tb *tokenBlock) enumStmt_or_intensionalSetStmt(fc ast.Fc) (ast.EnumSet_IntensionalSet_FactualStmtInterface, error) {
+func (tb *tokenBlock) enumStmt_or_intensionalSetStmt_or_DomOf(fc ast.Fc) (ast.EnumSet_IntensionalSet_EqualDom, error) {
 	if tb.header.is(glob.KeySymbolLeftCurly) {
 		return tb.enumFactualStmt(fc)
+	} else if tb.header.is(glob.KeywordDomOf) {
+		return tb.domOfFactualStmt(fc)
 	} else {
 		return tb.intensionalSetFactualStmt(fc)
 	}
+}
+
+func (tb *tokenBlock) domOfFactualStmt(fc ast.Fc) (*ast.SetEqualDomOf, error) {
+	panic("not implemented")
 }
 
 func (tb *tokenBlock) proveOverFiniteSetStmt() (*ast.ProveOverFiniteSetStmt, error) {
@@ -1622,7 +1628,7 @@ func (tb *tokenBlock) haveSetStmt() (ast.Stmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	fact, err := tb.enumStmt_or_intensionalSetStmt(ast.FcAtom(haveSetName))
+	fact, err := tb.enumStmt_or_intensionalSetStmt_or_DomOf(ast.FcAtom(haveSetName))
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}

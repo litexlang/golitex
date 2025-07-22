@@ -130,7 +130,7 @@ func NewHaveObjInNonEmptySetStmt(objNames []string, objSets []Fc) *HaveObjInNonE
 	return &HaveObjInNonEmptySetStmt{objNames, objSets}
 }
 
-func NewHaveSetStmt(fact EnumSet_IntensionalSet_FactualStmtInterface) *HaveSetStmt {
+func NewHaveSetStmt(fact EnumSet_IntensionalSet_EqualDom) *HaveSetStmt {
 	return &HaveSetStmt{fact}
 }
 
@@ -156,4 +156,8 @@ func NewKnowExistPropStmt(existProp DefExistPropStmt) *KnowExistPropStmt {
 
 func NewCommentStmt(comment string) *CommentStmt {
 	return &CommentStmt{comment}
+}
+
+func NewSetEqualDomOf(setName Fc, fn Fc) *SetEqualDomOf {
+	return &SetEqualDomOf{setName, fn}
 }
