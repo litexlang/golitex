@@ -15,6 +15,7 @@
 package litex_parser
 
 import (
+	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
 	"strings"
@@ -27,7 +28,7 @@ func ParseSourceCode_WhenCompileToLatex(code string) ([]ast.Stmt, error) {
 		return []ast.Stmt{}, err
 	}
 
-	blocks, err := makeTokenBlocks(preprocessedCodeLines)
+	blocks, err := makeTokenBlocks_WhenCompileToLatex(preprocessedCodeLines)
 	if err != nil {
 		return nil, err
 	}
@@ -42,6 +43,87 @@ func ParseSourceCode_WhenCompileToLatex(code string) ([]ast.Stmt, error) {
 	}
 
 	return ret, nil
+}
+
+func makeTokenBlocks_WhenCompileToLatex(lines []string) ([]tokenBlock, error) {
+	t := newTokenizerWithScope(lines)
+	return t.parseBlocks_WhenCompileToLatex(0)
+}
+
+func (t *tokenizerWithScope) parseBlocks_WhenCompileToLatex(currentIndent int) ([]tokenBlock, error) {
+	blocks := []tokenBlock{}
+
+	for t.currentLine < len(t.lines) {
+		line := t.lines[t.currentLine]
+
+		// 计算当前行的缩进
+		indent := len(line) - len(strings.TrimLeft(line, " "))
+
+		if indent < currentIndent {
+			// 缩进减少，说明当前块结束
+			return blocks, nil
+		}
+
+		if indent > currentIndent {
+			return nil, fmt.Errorf("incorrect indentation:\n\"%s\"\nMaybe the previous nonempty line should end with \":\"", line)
+		}
+
+		// indent == currentIndent:
+		// 判断是否为 header 行（是否以 : 结尾）
+		lineForTokenize := line
+		if strings.HasSuffix(line, ":") {
+			lineForTokenize = line
+		}
+
+		tokens, err := t.tokenizeLine(lineForTokenize)
+		if err != nil {
+			return nil, err
+		}
+
+		block := tokenBlock{
+			header: strSliceCursor{0, tokens},
+			body:   nil,
+		}
+
+		t.currentLine++ // consume this line
+
+		// 判断是否需要解析子 block
+		if strings.HasSuffix(line, ":") {
+			for t.currentLine < len(t.lines) {
+				nextLine := t.lines[t.currentLine]
+
+				// 同样先处理注释
+				if idx := strings.Index(nextLine, "//"); idx >= 0 {
+					nextLine = nextLine[:idx]
+				}
+				nextTrimmed := strings.TrimSpace(nextLine)
+
+				// 跳过空行
+				if nextTrimmed == "" {
+					t.currentLine++
+					continue
+				}
+
+				nextIndent := len(nextLine) - len(strings.TrimLeft(nextLine, " "))
+				if nextIndent <= currentIndent {
+					// 没有更深缩进，说明没有子块
+					break
+				}
+
+				// 有子 block
+				subBlocks, err := t.parseBlocks(nextIndent)
+				if err != nil {
+					return nil, err
+				}
+				block.body = subBlocks
+				break
+			}
+		}
+
+		blocks = append(blocks, block)
+	}
+
+	return blocks, nil
 }
 
 func preprocessSourceCodeWhenCompileToLatex(code string) ([]string, error) {
