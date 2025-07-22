@@ -1480,7 +1480,21 @@ func (tb *tokenBlock) enumStmt_or_intensionalSetStmt_or_DomOf(fc ast.Fc) (ast.En
 }
 
 func (tb *tokenBlock) domOfFactualStmt(fc ast.Fc) (*ast.SetEqualDomOf, error) {
-	panic("not implemented")
+	err := tb.header.skip(glob.KeywordDomOf)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	fc2, err := tb.RawFc()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	if !tb.header.ExceedEnd() {
+		return nil, fmt.Errorf("expect end of line")
+	}
+
+	return ast.NewSetEqualDomOf(fc, fc2), nil
 }
 
 func (tb *tokenBlock) proveOverFiniteSetStmt() (*ast.ProveOverFiniteSetStmt, error) {
