@@ -1787,5 +1787,5 @@ func (tb *tokenBlock) knowExistPropStmt() (*ast.KnowExistPropStmt, error) {
 }
 
 func (tb *tokenBlock) commentStmt() (ast.Stmt, error) {
-	panic("not implemented")
+
 }
