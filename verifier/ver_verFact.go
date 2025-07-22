@@ -33,17 +33,23 @@ func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state VerState) (bool, error
 		return ver.verOrStmt(asStmt, state)
 	case *ast.UniFactStmt:
 		return ver.verUniFact(asStmt, state)
-	case *ast.EnumStmt:
-		return ver.verEnumStmt(asStmt, state)
 	case *ast.UniFactWithIffStmt:
 		return ver.verUniFactWithIff(asStmt, state)
-	case *ast.IntensionalSetStmt:
-		return ver.verIntensionalSetStmt(asStmt, state)
 	case *ast.EqualsFactStmt:
 		return ver.verEqualsFactStmt(asStmt, state)
+	case *ast.IntensionalSetStmt:
+		return ver.verIntensionalSetStmt(asStmt, state)
+	case *ast.EnumStmt:
+		return ver.verEnumStmt(asStmt, state)
+	case *ast.SetEqualDomOf:
+		return ver.verSetEqualDomOf(asStmt, state)
 	default:
 		return false, fmt.Errorf("unexpected fact statement: %s", asStmt)
 	}
+}
+
+func (ver *Verifier) verSetEqualDomOf(stmt *ast.SetEqualDomOf, state VerState) (bool, error) {
+	panic("not implemented")
 }
 
 func ExecFactsAtCurEnv_retRailedFact(facts []ast.FactStmt, env *env.Env) (glob.ExecState, ast.FactStmt, error) {
