@@ -49,5 +49,8 @@ func (e *Env) GetFnTemplateOfFc(fn ast.Fc) ([]*ast.FnTemplateStmt, bool) {
 			fnDefs = append(fnDefs, fnDefsFromEnv...)
 		}
 	}
+	if len(fnDefs) == 0 {
+		return nil, false
+	}
 	return fnDefs, true
 }

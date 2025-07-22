@@ -1,25 +1,3 @@
-"""
-asdf
-"""
+obj f obj
 
-"""#
-\textbf{This is a multi-line comment}
-\textbf{This is a multi-line comment}
-"""
-
-## \textbf{This is a comment}
-
-obj x R
-
-forall x R:
-    x > 1
-
-forall x R:
-    x > 1
-
-1 = 2
-3 = 4
-prove:
-	1 < 2
-
-1 % 2 = 1
+dom_of(f) = R
