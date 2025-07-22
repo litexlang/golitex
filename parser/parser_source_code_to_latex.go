@@ -23,7 +23,7 @@ import (
 
 func ParseSourceCode_WhenCompileToLatex(code string) ([]ast.Stmt, error) {
 	// code, err := preprocessSourceCode(code)
-	preprocessedCodeLines, err := preprocessSourceCode(code)
+	preprocessedCodeLines, err := preprocessSourceCodeWhenCompileToLatex(code)
 	if err != nil {
 		return []ast.Stmt{}, err
 	}
@@ -55,6 +55,15 @@ func (t *tokenizerWithScope) parseBlocks_WhenCompileToLatex(currentIndent int) (
 
 	for t.currentLine < len(t.lines) {
 		line := t.lines[t.currentLine]
+
+		if strings.HasPrefix(line, glob.CommentSig) {
+			blocks = append(blocks, tokenBlock{
+				header: strSliceCursor{0, []string{glob.CommentSig, strings.TrimPrefix(line, glob.CommentSig)}},
+				body:   nil,
+			})
+			t.currentLine++
+			continue
+		}
 
 		// 计算当前行的缩进
 		indent := len(line) - len(strings.TrimLeft(line, " "))
@@ -169,7 +178,7 @@ func preprocessCommentsWhenCompileToLatex(lines []string) []string {
 		}
 
 		if strings.HasPrefix(strings.TrimSpace(lines[i]), CommentSigPlusCommentSig) {
-			ret = append(ret, strings.TrimSpace(lines[i]))
+			ret = append(ret, strings.TrimPrefix(strings.TrimSpace(lines[i]), glob.CommentSig))
 			continue
 		}
 
