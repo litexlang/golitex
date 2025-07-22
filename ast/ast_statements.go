@@ -27,7 +27,7 @@ type DefObjStmt struct {
 }
 
 type DefHeader struct {
-	Name      string
+	Name      FcAtom
 	Params    StrSlice
 	ParamSets FcSlice
 }

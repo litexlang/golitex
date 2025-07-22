@@ -208,7 +208,7 @@ func fnDefStmtStringGivenKw(kw string, f *FnTemplateStmt) string {
 	var builder strings.Builder
 	builder.WriteString(kw)
 	builder.WriteString(" ")
-	builder.WriteString(f.Name)
+	builder.WriteString(string(f.Name))
 	builder.WriteString("(")
 	builder.WriteString(fcSliceString(f.ParamSets))
 	builder.WriteString(")")
@@ -376,7 +376,7 @@ func (l *UniFactWithIffStmt) String() string {
 
 func (head DefHeader) StringWithoutColonAtEnd() string {
 	var builder strings.Builder
-	builder.WriteString(head.Name)
+	builder.WriteString(string(head.Name))
 	builder.WriteString("(")
 
 	builder.WriteString(strFcSetPairs(head.Params, head.ParamSets))

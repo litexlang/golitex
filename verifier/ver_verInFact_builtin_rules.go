@@ -209,7 +209,7 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state VerState) (b
 	// derivedUniFact := fnTemplate.DeriveUniFact(stmt.Params[0])
 	if fnTemplate.Name != "" {
 		derivedUniFact := fnTemplate.DeriveUniFact2()
-		instantiatedUniFact, err := derivedUniFact.Instantiate(map[string]ast.Fc{fnTemplate.DefHeader.Name: stmt.Params[0]})
+		instantiatedUniFact, err := derivedUniFact.Instantiate(map[string]ast.Fc{string(fnTemplate.DefHeader.Name): stmt.Params[0]})
 		if err != nil {
 			return false, err
 		}

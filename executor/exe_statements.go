@@ -366,7 +366,7 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 		}()
 	}
 
-	err := exec.env.NewObj_NoDuplicate(stmt.FnTemplateStmt.Name, &stmt.FnTemplateStmt)
+	err := exec.env.NewObj_NoDuplicate(string(stmt.FnTemplateStmt.Name), &stmt.FnTemplateStmt)
 	if err != nil {
 		return err
 	}
@@ -418,7 +418,7 @@ func (exec *Executor) haveSetFnStmt(stmt *ast.HaveSetFnStmt) (glob.ExecState, er
 	}
 
 	// have set fn
-	exec.env.HaveSetFnDefMem[stmt.DefHeader.Name] = *stmt
+	exec.env.HaveSetFnDefMem[string(stmt.DefHeader.Name)] = *stmt
 
 	return glob.ExecState_True, nil
 }

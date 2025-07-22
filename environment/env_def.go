@@ -39,11 +39,11 @@ func (env *Env) IsValidUserDefinedName_NoDuplicate(name string) error {
 
 func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) error {
 	// prop名不能和parameter名重叠
-	if slices.Contains(stmt.DefHeader.Params, stmt.DefHeader.Name) {
+	if slices.Contains(stmt.DefHeader.Params, string(stmt.DefHeader.Name)) {
 		return fmt.Errorf("prop name %s cannot be the same as parameter name %s", stmt.DefHeader.Name, stmt.DefHeader.Name)
 	}
 
-	err := env.IsValidUserDefinedName_NoDuplicate(stmt.DefHeader.Name)
+	err := env.IsValidUserDefinedName_NoDuplicate(string(stmt.DefHeader.Name))
 	if err != nil {
 		return err
 	}
@@ -57,7 +57,7 @@ func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) error {
 	for _, param := range stmt.DefHeader.Params {
 		extraAtomNames[param] = struct{}{}
 	}
-	extraAtomNames[stmt.DefHeader.Name] = struct{}{}
+	extraAtomNames[string(stmt.DefHeader.Name)] = struct{}{}
 
 	for _, fact := range stmt.DomFacts {
 		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
@@ -71,7 +71,7 @@ func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) error {
 		}
 	}
 
-	key := stmt.DefHeader.Name
+	key := string(stmt.DefHeader.Name)
 	env.PropDefMem[key] = *stmt
 	return nil
 }
@@ -122,7 +122,7 @@ func (env *Env) AtomsInFnTemplateDeclared(nameAsFc ast.Fc, stmt *ast.FnTemplateS
 
 func (env *Env) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) error {
 	// prop名不能和parameter名重叠
-	if slices.Contains(append(stmt.ExistParams, stmt.DefBody.DefHeader.Params...), stmt.DefBody.DefHeader.Name) {
+	if slices.Contains(append(stmt.ExistParams, stmt.DefBody.DefHeader.Params...), string(stmt.DefBody.DefHeader.Name)) {
 		return fmt.Errorf("prop name %s cannot be the same as parameter name %s", stmt.DefBody.DefHeader.Name, stmt.DefBody.DefHeader.Name)
 	}
 
@@ -135,7 +135,7 @@ func (env *Env) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) 
 	for _, param := range stmt.DefBody.DefHeader.Params {
 		extraAtomNames[param] = struct{}{}
 	}
-	extraAtomNames[stmt.DefBody.DefHeader.Name] = struct{}{}
+	extraAtomNames[string(stmt.DefBody.DefHeader.Name)] = struct{}{}
 
 	for _, param := range stmt.ExistParams {
 		extraAtomNames[param] = struct{}{}
@@ -153,12 +153,12 @@ func (env *Env) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) 
 		}
 	}
 
-	err = env.IsValidUserDefinedName_NoDuplicate(stmt.DefBody.DefHeader.Name)
+	err = env.IsValidUserDefinedName_NoDuplicate(string(stmt.DefBody.DefHeader.Name))
 	if err != nil {
 		return err
 	}
 
-	key := stmt.DefBody.DefHeader.Name
+	key := string(stmt.DefBody.DefHeader.Name)
 	env.ExistPropDefMem[key] = *stmt
 	return nil
 }

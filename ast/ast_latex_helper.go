@@ -48,7 +48,7 @@ func (head DefHeader) ToLatexString() string {
 
 func (head DefHeader) NameWithParamsLatexString() string {
 	var builder strings.Builder
-	builder.WriteString(head.Name)
+	builder.WriteString(string(head.Name))
 	builder.WriteString("(")
 	builder.WriteString(strings.Join(head.Params, ", "))
 	builder.WriteString(")")
