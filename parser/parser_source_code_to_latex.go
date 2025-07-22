@@ -58,7 +58,7 @@ func (t *tokenizerWithScope) parseBlocks_WhenCompileToLatex(currentIndent int) (
 
 		if strings.HasPrefix(line, glob.CommentSig) {
 			blocks = append(blocks, tokenBlock{
-				header: strSliceCursor{0, []string{glob.CommentSig, strings.TrimPrefix(line, glob.CommentSig)}},
+				header: strSliceCursor{0, []string{glob.CommentSig, strings.TrimSpace(strings.TrimPrefix(line, glob.CommentSig))}},
 				body:   nil,
 			})
 			t.currentLine++
@@ -157,7 +157,7 @@ func preprocessCommentsWhenCompileToLatex(lines []string) []string {
 			if strings.HasPrefix(strings.TrimSpace(lines[i]), MultiLinesCommentSigPlusCommentSig) {
 				i++ // 跳过开始阶段的 """
 				var builder strings.Builder
-				builder.WriteString(CommentSigPlusCommentSig)
+				builder.WriteString(glob.CommentSig)
 
 				for i < len(lines) && !strings.HasPrefix(strings.TrimSpace(lines[i]), glob.MultiLinesCommentSig) {
 					builder.WriteString(lines[i])
