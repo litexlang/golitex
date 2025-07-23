@@ -1,22 +1,5 @@
-fn_template_template f(x, y R):
-    dom:
-    	x > 1
-    fn (a, b R) R:
-    	dom:
-        	a = x
-        then:
-        	f(a, b) = y
+obj point set
 
-fn_template_template g(x, y R):
-    fn (a, b R) R:
-        dom:
-        	a = x
-        then:
-        	g(a, b) = y
+obj a point
 
-obj f g(1,2)
-
-f $in g(1,2)
-
-forall b R:
-	f(1, b) = 2
+a $in point

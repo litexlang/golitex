@@ -23,7 +23,11 @@ import (
 
 func (ver *Verifier) checkSpecFactReq(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	if stmt.NameIs(glob.KeywordIn) {
-		return ver.checkSpecFactReq_InFact(stmt, state)
+		if ok, _ := ver.checkSpecFactReq_InFact(stmt, state); ok {
+			return ok, nil
+		} else {
+			return ver.checkSpecFactRequirements_NotInFact(stmt, state)
+		}
 	}
 
 	return ver.checkSpecFactRequirements_NotInFact(stmt, state)
@@ -33,6 +37,10 @@ func (ver *Verifier) checkSpecFactReq_InFact(stmt *ast.SpecFactStmt, state *VerS
 	ok := ver.env.AreAtomsInFcAreDeclared(stmt.Params[0], map[string]struct{}{})
 	if !ok {
 		return false, fmt.Errorf(env.AtomsInFcNotDeclaredMsg(stmt.Params[0]))
+	}
+
+	if _, ok := stmt.Params[1].(*ast.FcFn); !ok {
+		return false, nil
 	}
 
 	head, ok := stmt.Params[1].(*ast.FcFn).IsFcFn_HasAtomHead_ReturnHead()
@@ -153,24 +161,31 @@ func (ver *Verifier) fcFnSatisfyNotBuiltinFnRequirement(fc ast.Fc, state VerStat
 	}
 
 	templatesOfEachLevel, fcOfEachLevel, ok := ver.env.GetTemplateOfFcFnRecursively(asFcFn)
+
 	if !ok {
-		return false, fmt.Errorf("failed to get template of each level of function %s", asFcFn)
+		return false, nil
 	}
 
 	// 暂时还没有template，只有以fc形式出现的retSet
 	for i := range templatesOfEachLevel {
 		ok, err := ver.fcFnParamsSatisfyFnTemplateRequirement(fcOfEachLevel[i].Params, templatesOfEachLevel[i], state)
-		if err != nil || !ok {
-			return false, fmt.Errorf("parameters in %s do not satisfy the requirement of that function:\n%s", asFcFn, err)
+		if err != nil {
+			return false, err
 		}
-
+		if !ok {
+			return false, nil
+		}
 	}
 
 	// store the fact that the parameters satisfy the requirement of the function
 	// REMARK 这里必须要存储，否则很多关于函数的事实是不工作的。但这里牵扯到一个问题是，这里以下释放这么多事实，是不是浪费了。而且我不清楚是只要释放最后一位的性质，还是每一位都要释放
 	ok, err := ver.env.FcSatisfy_FreeTemplateFact_Store_DeriveFacts(fcOfEachLevel[len(fcOfEachLevel)-1], templatesOfEachLevel[len(templatesOfEachLevel)-1])
-	if err != nil || !ok {
-		return false, ver.verErr(err, "parameters in %s do not satisfy the requirement of that function", asFcFn)
+	if err != nil {
+		return false, err
+	}
+
+	if !ok {
+		return false, nil
 	}
 
 	return true, nil
