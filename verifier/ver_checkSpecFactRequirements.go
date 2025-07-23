@@ -21,7 +21,49 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) checkSpecFactRequirements(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) checkSpecFactReq(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+	if stmt.NameIs(glob.KeywordIn) {
+		return ver.checkSpecFactReq_InFact(stmt, state)
+	}
+
+	return ver.checkSpecFactRequirements_NotInFact(stmt, state)
+}
+
+func (ver *Verifier) checkSpecFactReq_InFact(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+	ok := ver.env.AreAtomsInFcAreDeclared(stmt.Params[0], map[string]struct{}{})
+	if !ok {
+		return false, fmt.Errorf(env.AtomsInFcNotDeclaredMsg(stmt.Params[0]))
+	}
+
+	head, ok := stmt.Params[1].(*ast.FcFn).IsFcFn_HasAtomHead_ReturnHead()
+	if ok {
+		_, ok := ver.env.GetFnTemplateTemplateDef(head)
+		if ok {
+			for _, param := range stmt.Params[1].(*ast.FcFn).Params {
+				ok := ver.env.AreAtomsInFcAreDeclared(param, map[string]struct{}{})
+				if !ok {
+					return false, fmt.Errorf(env.AtomsInFcNotDeclaredMsg(param))
+				}
+			}
+			return true, nil
+		} else {
+			ok = ver.env.AreAtomsInFcAreDeclared(stmt.Params[1], map[string]struct{}{})
+			if !ok {
+				return false, fmt.Errorf(env.AtomsInFcNotDeclaredMsg(stmt.Params[1]))
+			}
+			return true, nil
+		}
+	} else {
+		ok = ver.env.AreAtomsInFcAreDeclared(stmt.Params[1], map[string]struct{}{})
+		if !ok {
+			return false, fmt.Errorf(env.AtomsInFcNotDeclaredMsg(stmt.Params[1]))
+		}
+
+		return true, nil
+	}
+}
+
+func (ver *Verifier) checkSpecFactRequirements_NotInFact(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 
 	// 1. Check if all atoms in the parameters are declared
 	// REMARK

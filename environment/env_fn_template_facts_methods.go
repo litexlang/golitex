@@ -28,6 +28,18 @@ func (e *Env) GetLatestFnTemplate(fn ast.Fc) (*ast.FnTemplateStmt, bool) {
 	return nil, false
 }
 
+func (memory FnInFnTemplateTemplateFactsMem) insert(fc ast.Fc, templateWhereFcIs *ast.FcFn) error {
+	fnDefs, ok := memory[fc.String()]
+	if !ok {
+		memory[fc.String()] = []*ast.FcFn{templateWhereFcIs}
+		return nil
+	} else {
+		fnDefs = append(fnDefs, templateWhereFcIs)
+		memory[fc.String()] = fnDefs
+		return nil
+	}
+}
+
 func (memory FnInFnTemplateFactsMem) insert(fc ast.Fc, stmt *ast.FnTemplateStmt) error {
 	fnDefs, ok := memory[fc.String()]
 	if !ok {
