@@ -1840,7 +1840,6 @@ func (tb *tokenBlock) fnTemplateTemplateStmt() (ast.Stmt, error) {
 		return nil, fmt.Errorf("expect one or two body blocks")
 	}
 
-	return nil, nil
 }
 
 func (tb *tokenBlock) fnInFnTemplateTemplateStmt() ([]string, []ast.Fc, ast.Fc, []ast.FactStmt, []ast.FactStmt, error) {

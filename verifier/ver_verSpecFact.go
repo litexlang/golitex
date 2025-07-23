@@ -23,7 +23,7 @@ import (
 
 func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if !state.IsReqOk() {
-		if ok, err := ver.checkSpecFactRequirements(stmt, &state); err != nil || !ok {
+		if ok, err := ver.checkSpecFactReq(stmt, &state); err != nil || !ok {
 			return false, err
 		}
 	}

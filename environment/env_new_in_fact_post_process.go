@@ -33,6 +33,10 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) error {
 		return err
 	}
 
+	if isTemplateTemplate, err := e.inFactPostProcess_InFnTemplateTemplate(fact); isTemplateTemplate || err != nil {
+		return err
+	}
+
 	if fnFn, ok := fact.Params[1].(*ast.FcFn); ok && ast.IsFnFcFn(fnFn) {
 		templateStmt, err := ast.FnFcToFnTemplateStmt(fnFn)
 		if err != nil {
@@ -149,4 +153,23 @@ func (e *Env) SetEqualToSetDefinedByReplacement_PostProcess(setAtom ast.FcAtom, 
 	}
 
 	return nil
+}
+
+func (e *Env) inFactPostProcess_InFnTemplateTemplate(fact *ast.SpecFactStmt) (bool, error) {
+	head, ok := fact.Params[1].(*ast.FcFn).IsFcFn_HasAtomHead_ReturnHead()
+	if !ok {
+		return false, nil
+	}
+
+	_, ok = e.GetFnTemplateTemplateDef(head)
+	if !ok {
+		return false, nil
+	}
+
+	err := e.FnInFnTemplateTemplateFactsMem.insert(fact.Params[0], fact.Params[1].(*ast.FcFn))
+	if err != nil {
+		return false, err
+	}
+
+	return ok, nil
 }

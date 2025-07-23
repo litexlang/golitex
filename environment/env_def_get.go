@@ -26,6 +26,17 @@ func (e *Env) GetFnTemplateDef(fcAtomName ast.FcAtom) (*ast.DefFnTemplateStmt, b
 	return nil, false
 }
 
+func (e *Env) GetFnTemplateTemplateDef(fcAtomName ast.FcAtom) (*ast.FnTemplateTemplateStmt, bool) {
+	for env := e; env != nil; env = env.Parent {
+		fnTemplateTemplateDef, ok := env.FnTemplateTemplateDefMem[string(fcAtomName)]
+		if ok {
+			return &fnTemplateTemplateDef, true
+		}
+	}
+
+	return nil, false
+}
+
 func (e *Env) GetExistPropDef(propName ast.FcAtom) (*ast.DefExistPropStmt, bool) {
 	for env := e; env != nil; env = env.Parent {
 		existProp, ok := env.ExistPropDefMem[string(propName)]

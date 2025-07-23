@@ -200,3 +200,11 @@ func (stmt *DefExistPropStmt) ToForallParamsSatisfyDomFacts_Then_ExistFactIsTrue
 func (stmt *NamedUniFactStmt) ToUniFact() *UniFactStmt {
 	return NewUniFact(stmt.DefPropStmt.DefHeader.Params, stmt.DefPropStmt.DefHeader.ParamSets, stmt.DefPropStmt.IffFacts, stmt.DefPropStmt.ThenFacts)
 }
+
+func (fcFn *FcFn) IsFcFn_HasAtomHead_ReturnHead() (FcAtom, bool) {
+	head, ok := fcFn.FnHead.(FcAtom)
+	if !ok {
+		return "", false
+	}
+	return head, true
+}
