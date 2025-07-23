@@ -114,11 +114,9 @@ func (env *Env) AtomsInFnTemplateDeclared(nameAsFc ast.Fc, stmt *ast.FnTemplateS
 	return nil
 }
 
-func (env *Env) AtomsInFnTemplateFnTemplateDeclared(nameAsFc ast.Fc, stmt *ast.FnTemplateTemplateStmt) error {
+func (env *Env) AtomsInFnTemplateFnTemplateDeclared(name ast.FcAtom, stmt *ast.FnTemplateTemplateStmt) error {
 	// fn名不能和parameter名重叠
-	name := nameAsFc.String()
-
-	if slices.Contains(stmt.TemplateDefHeader.Params, name) {
+	if slices.Contains(stmt.TemplateDefHeader.Params, string(name)) {
 		return fmt.Errorf("fn name %s cannot be the same as parameter name %s", name, name)
 	}
 
@@ -135,11 +133,21 @@ func (env *Env) AtomsInFnTemplateFnTemplateDeclared(nameAsFc ast.Fc, stmt *ast.F
 	for _, param := range stmt.TemplateDefHeader.Params {
 		extraAtomNames[param] = struct{}{}
 	}
-	extraAtomNames[name] = struct{}{}
+	extraAtomNames[string(name)] = struct{}{}
+
+	for _, fact := range stmt.TemplateDomFacts {
+		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
+			return fmt.Errorf("%s\nis true by fn %s definition, but there are undeclared atoms in the fact", fact, name)
+		}
+	}
 
 	err = env.NonDuplicateParam_NoUndeclaredParamSet_ExtraAtomNames(stmt.FnParams, stmt.FnParamSets, extraAtomNames, false)
 	if err != nil {
 		return err
+	}
+
+	for _, param := range stmt.FnParams {
+		extraAtomNames[param] = struct{}{}
 	}
 
 	for _, fact := range stmt.FnDomFacts {
