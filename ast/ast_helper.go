@@ -17,6 +17,7 @@ package litex_ast
 import (
 	"fmt"
 	glob "golitex/glob"
+	"slices"
 )
 
 func EqualFact(left, right Fc) *SpecFactStmt {
@@ -242,4 +243,12 @@ func (stmt *FnTemplateTemplateStmt) Instantiate_GetFnTemplateNoName(fc *FcFn) (*
 	}
 
 	return NewFnTemplateNoName(stmt.FnParams, instantiatedParamSets, instantiatedRetSet, instantiatedDomFacts, instantiatedThenFacts), nil
+}
+
+func (fcFn *FcFn) HasHeadInSlice(headNames []string) bool {
+	headAtom, ok := fcFn.FnHead.(FcAtom)
+	if !ok {
+		return false
+	}
+	return slices.Contains(headNames, string(headAtom))
 }
