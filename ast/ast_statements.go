@@ -223,9 +223,10 @@ type CommentStmt struct {
 
 type FnTemplateTemplateStmt struct {
 	TemplateDefHeader DefHeader
+	TemplateDomFacts  FactStmtSlice
 	FnParams          StrSlice
 	FnParamSets       FcSlice
-	RetSet            Fc
-	DomFacts          FactStmtSlice
-	ThenFacts         FactStmtSlice
+	FnRetSet          Fc
+	FnDomFacts        FactStmtSlice
+	FnThenFacts       FactStmtSlice
 }

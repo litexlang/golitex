@@ -1,3 +1,15 @@
-obj f obj
+fn_template_template f(x, y R):
+    dom:
+    	x > 1
+    fn (a, b R) R:
+    	dom:
+        	a = x
+        then:
+        	f(a, b) = y
 
-dom_of(f) = R
+fn_template_template g(x, y R):
+    fn (a, b R) R:
+        dom:
+        	a = x
+        then:
+        	g(a, b) = y

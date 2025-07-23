@@ -126,9 +126,9 @@ func (env *Env) AtomsInFnTemplateFnTemplateDeclared(nameAsFc ast.Fc, stmt *ast.F
 	if err != nil {
 		return err
 	}
-	ok := env.AreAtomsInFcAreDeclared(stmt.RetSet, map[string]struct{}{})
+	ok := env.AreAtomsInFcAreDeclared(stmt.FnRetSet, map[string]struct{}{})
 	if !ok {
-		return fmt.Errorf(AtomsInFcNotDeclaredMsg(stmt.RetSet))
+		return fmt.Errorf(AtomsInFcNotDeclaredMsg(stmt.FnRetSet))
 	}
 
 	extraAtomNames := map[string]struct{}{}
@@ -142,13 +142,13 @@ func (env *Env) AtomsInFnTemplateFnTemplateDeclared(nameAsFc ast.Fc, stmt *ast.F
 		return err
 	}
 
-	for _, fact := range stmt.DomFacts {
+	for _, fact := range stmt.FnDomFacts {
 		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
 			return fmt.Errorf("%s\nis true by fn %s definition, but there are undeclared atoms in the fact", fact, name)
 		}
 	}
 
-	for _, fact := range stmt.ThenFacts {
+	for _, fact := range stmt.FnThenFacts {
 		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
 			return fmt.Errorf("%s\nis true by fn %s definition, but there are undeclared atoms in the fact", fact, name)
 		}
