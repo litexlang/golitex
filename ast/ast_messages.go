@@ -739,29 +739,29 @@ func (stmt *FnTemplateTemplateStmt) String() string {
 	builder.WriteString(strFcSetPairs(stmt.FnParams, stmt.FnParamSets))
 	builder.WriteString(")")
 	builder.WriteString(" ")
-	builder.WriteString(stmt.RetSet.String())
+	builder.WriteString(stmt.FnRetSet.String())
 	builder.WriteString(glob.KeySymbolColon)
 	builder.WriteByte('\n')
 
-	if len(stmt.DomFacts) > 0 {
+	if len(stmt.FnDomFacts) > 0 {
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordDom, 1))
 		builder.WriteString(glob.KeySymbolColon)
 		builder.WriteByte('\n')
-		domFactStrSlice := make([]string, len(stmt.DomFacts))
-		for i := range len(stmt.DomFacts) {
-			domFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(stmt.DomFacts[i].String(), 2)
+		domFactStrSlice := make([]string, len(stmt.FnDomFacts))
+		for i := range len(stmt.FnDomFacts) {
+			domFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(stmt.FnDomFacts[i].String(), 2)
 		}
 		builder.WriteString(strings.Join(domFactStrSlice, "\n"))
 		builder.WriteByte('\n')
 	}
-	if len(stmt.ThenFacts) > 0 {
+	if len(stmt.FnThenFacts) > 0 {
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordThen, 1))
 		builder.WriteString(glob.KeySymbolColon)
 		builder.WriteByte('\n')
 
-		thenFactStrSlice := make([]string, len(stmt.ThenFacts))
-		for i := range len(stmt.ThenFacts) {
-			thenFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(stmt.ThenFacts[i].String(), 2)
+		thenFactStrSlice := make([]string, len(stmt.FnThenFacts))
+		for i := range len(stmt.FnThenFacts) {
+			thenFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(stmt.FnThenFacts[i].String(), 2)
 		}
 		builder.WriteString(strings.Join(thenFactStrSlice, "\n"))
 	}

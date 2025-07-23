@@ -1803,32 +1803,78 @@ func (tb *tokenBlock) fnTemplateTemplateStmt() (ast.Stmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	err = tb.header.skip(glob.KeySymbolLeftBrace)
-	if err != nil {
-		return nil, err
-	}
-
-	params, setParams, err := tb.param_paramSet_paramInSetFacts(glob.KeySymbolRightBrace, false)
-	if err != nil {
-		return nil, err
-	}
-
-	retSet, err := tb.RawFc()
+	err = tb.header.skip(glob.KeySymbolColon)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
 
-	domFacts := []ast.FactStmt{}
-	thenFacts := []ast.FactStmt{}
+	if !tb.header.ExceedEnd() {
+		return nil, fmt.Errorf("expect end of line")
+	}
 
-	if tb.header.is(glob.KeySymbolColon) {
-		tb.header.skip("")
-		// domFacts, thenFacts, _, err = tb.uniFactBodyFacts(UniFactDepth1, glob.KeywordThen)
-		domFacts, thenFacts, err = tb.dom_and_section(glob.KeywordThen, glob.KeywordIff)
+	if len(tb.body) == 1 {
+		fnParams, fnParamSets, fnRetSet, domFacts, thenFacts, err := tb.body[0].fnInFnTemplateTemplateStmt()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
+
+		return ast.NewFnTemplateTemplateStmt(defHeader, []ast.FactStmt{}, fnParams, fnParamSets, fnRetSet, domFacts, thenFacts), nil
+	} else if len(tb.body) == 2 {
+		err = tb.body[0].header.skipKwAndColon_ExceedEnd(glob.KeywordDom)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		templateDomFacts, err := tb.body[0].bodyFacts(UniFactDepth1)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		fnParams, fnParamSets, fnRetSet, domFacts, thenFacts, err := tb.body[1].fnInFnTemplateTemplateStmt()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		return ast.NewFnTemplateTemplateStmt(defHeader, templateDomFacts, fnParams, fnParamSets, fnRetSet, domFacts, thenFacts), nil
+	} else {
+		return nil, fmt.Errorf("expect one or two body blocks")
 	}
 
-	return ast.NewFnTemplateTemplateStmt(defHeader, params, setParams, retSet, domFacts, thenFacts), nil
+	return nil, nil
+}
+
+func (tb *tokenBlock) fnInFnTemplateTemplateStmt() ([]string, []ast.Fc, ast.Fc, []ast.FactStmt, []ast.FactStmt, error) {
+	var err error
+
+	err = tb.header.skip(glob.KeywordFn)
+	if err != nil {
+		return nil, nil, nil, nil, nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, nil, nil, nil, nil, tbErr(err, tb)
+	}
+
+	fnParams, fnParamSets, err := tb.param_paramSet_paramInSetFacts(glob.KeySymbolRightBrace, false)
+	if err != nil {
+		return nil, nil, nil, nil, nil, tbErr(err, tb)
+	}
+
+	fnRetSet, err := tb.RawFc()
+	if err != nil {
+		return nil, nil, nil, nil, nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, nil, nil, nil, nil, tbErr(err, tb)
+	}
+
+	domFacts, thenFacts, err := tb.dom_and_section(glob.KeywordThen, glob.KeywordIff)
+	if err != nil {
+		return nil, nil, nil, nil, nil, tbErr(err, tb)
+	}
+
+	return fnParams, fnParamSets, fnRetSet, domFacts, thenFacts, nil
 }

@@ -491,7 +491,14 @@ func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) (glob.ExecS
 }
 
 func (exec *Executor) fnTemplateTemplateStmt(stmt *ast.FnTemplateTemplateStmt) error {
-	exec.newMsg(stmt.String())
+	if glob.RequireMsg() {
+		defer exec.newMsg(fmt.Sprintf("%s\n", stmt))
+	}
+
+	// err := exec.env.ExecDefFnTemplateTemplate(stmt)
+	// if err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
