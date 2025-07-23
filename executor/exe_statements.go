@@ -495,10 +495,10 @@ func (exec *Executor) fnTemplateTemplateStmt(stmt *ast.FnTemplateTemplateStmt) e
 		defer exec.newMsg(fmt.Sprintf("%s\n", stmt))
 	}
 
-	// err := exec.env.ExecDefFnTemplateTemplate(stmt)
-	// if err != nil {
-	// 	return err
-	// }
+	err := exec.env.ExecDefFnTemplateTemplate(stmt)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
