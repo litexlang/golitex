@@ -214,8 +214,7 @@ _What I cannot create, I do not understand._
 
 _-- Richard Feynman_
 
-
-Here are some examples of Litex, in Litex for Curious Lean Users and other formal language users. Detailed explanations are provided in [Litex for Curious Lean Users](./doc/litex_for_curious_lean_users/litex_for_curious_lean_users.md). I put them here for you to get a sense of the language. Run these examples on [playground](https://litexlang.org/playground).
+The best way to introduce something is by comparing it to other things of the same kind. Lean is a popular formal language, which has a 1 million LOC library and a vivid user community. The reason why people use Lean instead of Python to write math is that Lean is a programming language based on type theory, and type theory is one of the many ways of defining math. However, type theory is hard (even math PhD students do not understand it) and modern mathematics is built on top of another theory called set theory. Litex is based on set theory. I put examples here for you to get a sense of the simplicity of Litex. Run these examples on [playground](https://litexlang.org/playground).
 
 I will show you how Litex is shaped by common sense, and why common sense is not so common in traditional formal languages. It must be noted that making Litex so common sense is a very uncommon thing, because it requires a deep understanding of both the nature of mathematics and the nature of programming.
 
@@ -272,6 +271,52 @@ This example means: Solve the equation 2x + 3y = 10 and 4x + 5y = 14. (本例是
 </table>
 
 I know Lean can use tactics to solve the same problem, and it is shorter. Litex will introduce similar features in the future. What I really want to show you here is that Litex is much more readable and intuitive than Lean in this case. Not every situation can be solved by tactics, and writing tactics itself in Lean is not easy. Litex spares you from remembering all these difficult things like `have`, `by`, `rw`, `simp`, `exact` and strange syntax etc. All you need is basic math knowledge, which significantly reduces the barrier to entry.
+
+There is another way to write the same example in Litex, a bottom-up way.
+
+
+<table style="border-collapse: collapse; width: 100%; font-size: 12px">
+  <tr>
+    <th style="border: 2px solid black; padding: 4px; text-align: left; width: 40%;">Litex</th>
+    <th style="border: 2px solid black; padding: 4px; text-align: left; width: 60%;">Lean 4</th>
+  </tr>
+    <td style="border: 2px solid black; padding: 2px; line-height: 1.5;">
+       <code>claim:</code><br>
+       <code>&nbsp;forall x, y R:</code><br>
+       <code>&nbsp;&nbsp;&nbsp;&nbsp;x = -4</code><br>
+       <code>&nbsp;&nbsp;&nbsp;&nbsp;y = 6</code><br>
+       <code>&nbsp;&nbsp;&nbsp;&nbsp;then:</code><br>
+       <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2 * x + 3 * y = 10</code><br>
+       <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4 * x + 5 * y = 14</code><br>
+       <code>&nbsp;&nbsp;prove:</code><br>
+       <code>&nbsp;&nbsp;&nbsp;&nbsp;=:</code><br>
+       <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;10</code><br>
+       <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2 * -4 + 3 * 6</code><br>
+       <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2 * x + 3 * y</code><br>
+       <code>&nbsp;&nbsp;&nbsp;&nbsp;=:</code><br>
+       <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;14</code><br>
+       <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4 * -4 + 5 * 6</code><br>
+       <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4 * x + 5 * y</code><br>
+       <code></code><br>
+    </td>
+    <td style="border: 2px solid black; padding: 2px; line-height: 1.5;">
+       <code>example : ∀ x y : ℝ, x = -4 → y = 6 → (2 * x + 3 * y = 10 ∧ 4 * x + 5 * y = 14) :=</code><br>
+       <code>by</code><br>
+       <code>&nbsp;intro x y hx hy</code><br>
+       <code>&nbsp;constructor</code><br>
+       <code>&nbsp;· rw [hx, hy]</code><br>
+       <code>&nbsp;&nbsp;calc</code><br>
+       <code>&nbsp;&nbsp;&nbsp;2 * (-4) + 3 * 6 = (-8) + 18 := by rw [mul_neg, mul_one]</code><br>
+       <code>&nbsp;&nbsp;&nbsp;_                = 10         := by rw [add_comm]</code><br>
+       <code>&nbsp;· rw [hx, hy]</code><br>
+       <code>&nbsp;&nbsp;calc</code><br>
+       <code>&nbsp;&nbsp;&nbsp;4 * (-4) + 5 * 6 = (-16) + 30 := by rw [mul_neg, mul_one]</code><br>
+       <code>&nbsp;&nbsp;&nbsp;_                = 14         := by rw [add_comm]</code><br>
+       <code></code><br>
+    </td>
+  </tr>
+</table>
+
 
 Next we prove `sqrt(2) is irrational`. Since the standard library is not yet implemented, we have to define the log function ourselves for now. Note that how easy it is to define a new concept in Litex. You do not have to start from a very low level concept and build up to a higher level concept. You can define a new concept directly.
 
