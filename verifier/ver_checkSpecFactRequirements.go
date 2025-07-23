@@ -197,7 +197,12 @@ func (ver *Verifier) fcFnSatisfy_FnTemplateTemplate_Requirement(fc ast.Fc, state
 		return false, err
 	}
 
-	return false, nil
+	ok, err = ver.fcFnParamsSatisfyFnTemplateNoNameRequirement(asFcFn, fnTemplateNoName, state)
+	if err != nil {
+		return false, err
+	}
+
+	return ok, nil
 }
 
 // TODO: 这里需要检查，setParam是否是自由变量
@@ -298,6 +303,44 @@ func (ver *Verifier) fcFnParamsSatisfyFnTemplateRequirement(params []ast.Fc, tem
 		}
 		if !ok {
 			return false, fmt.Errorf("in fact %s is unknown", ast.NewInFactWithFc(params[i], paramSet))
+		}
+	}
+
+	for _, domFact := range instantiatedDomFacts {
+		ok, err := ver.VerFactStmt(domFact, state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, fmt.Errorf("dom fact %s is unknown", domFact)
+		}
+	}
+
+	return true, nil
+}
+
+func (ver *Verifier) fcFnParamsSatisfyFnTemplateNoNameRequirement(fcFn *ast.FcFn, templateOfFn *ast.FnTemplateNoName, state VerState) (bool, error) {
+	if len(fcFn.Params) != len(templateOfFn.Params) {
+		return false, fmt.Errorf("parameters in %s must be %d, %s in %s is not valid", fcFn.FnHead, len(templateOfFn.Params), fcFn, fcFn)
+	}
+
+	uniMap := map[string]ast.Fc{}
+	for i, param := range fcFn.Params {
+		uniMap[templateOfFn.Params[i]] = param
+	}
+
+	paramSets, instantiatedDomFacts, _, _, err := templateOfFn.InstantiateFnTWithoutChangingTName(uniMap)
+	if err != nil {
+		return false, err
+	}
+
+	for i, paramSet := range paramSets {
+		ok, err := ver.VerFactStmt(ast.NewInFactWithFc(fcFn.Params[i], paramSet), state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, fmt.Errorf("in fact %s is unknown", ast.NewInFactWithFc(fcFn.Params[i], paramSet))
 		}
 	}
 

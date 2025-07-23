@@ -1,5 +1,25 @@
-obj point set
+fn_template_template f(x, y R):
+    dom:
+    	x > 1
+    fn (a, b R) R:
+    	dom:
+        	a = x
+        then:
+        	f(a, b) = y
 
-obj a point
+fn_template_template g(x, y R):
+    fn (a, b R) R:
+        dom:
+        	a = x
+        then:
+        	g(a, b) = y
 
-a $in point
+obj f g(1,2)
+
+f $in g(1,2)
+
+forall a,b R:
+	a = 1
+    then:
+    	f(a, b) = 2
+
