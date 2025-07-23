@@ -15,6 +15,7 @@
 package litex_ast
 
 import (
+	"fmt"
 	glob "golitex/glob"
 )
 
@@ -207,4 +208,38 @@ func (fcFn *FcFn) IsFcFn_HasAtomHead_ReturnHead() (FcAtom, bool) {
 		return "", false
 	}
 	return head, true
+}
+
+func (stmt *FnTemplateTemplateStmt) InstantiateFnTemplate(fc *FcFn) (*FnTemplateNoName, error) {
+	uniMap := map[string]Fc{}
+	templateParams := stmt.TemplateDefHeader.Params
+	if len(templateParams) != len(fc.Params) {
+		return nil, fmt.Errorf("template params and fc params must have the same length")
+	}
+
+	for i, param := range templateParams {
+		uniMap[param] = fc.Params[i]
+	}
+
+	instantiatedParamSets, err := stmt.TemplateDefHeader.ParamSets.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+
+	instantiatedDomFacts, err := stmt.FnDomFacts.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+
+	instantiatedThenFacts, err := stmt.FnThenFacts.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+
+	instantiatedRetSet, err := stmt.FnRetSet.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewFnTemplateNoName(stmt.FnParams, instantiatedParamSets, instantiatedRetSet, instantiatedDomFacts, instantiatedThenFacts), nil
 }

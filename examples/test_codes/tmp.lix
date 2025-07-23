@@ -17,3 +17,4 @@ fn_template_template g(x, y R):
 obj f g(1,2)
 
 f $in g(1,2)
+

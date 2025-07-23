@@ -230,3 +230,11 @@ type FnTemplateTemplateStmt struct {
 	FnDomFacts        FactStmtSlice
 	FnThenFacts       FactStmtSlice
 }
+
+type FnTemplateNoName struct {
+	Params    StrSlice
+	ParamSets FcSlice
+	RetSet    Fc
+	DomFacts  FactStmtSlice
+	ThenFacts FactStmtSlice
+}
