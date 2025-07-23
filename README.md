@@ -8,6 +8,7 @@
 
 **Release v0.1.1-beta (not yet ready for production use)**  
 *Jiachen Shen and The Litex Team*
+**Try Litex on [playground](https://litexlang.org/playground).**
 
 [![Github](https://img.shields.io/badge/Github-grey?logo=github)](https://github.com/litexlang/golitex)
 [![Zulip Community](https://img.shields.io/badge/Zulip%20Community-purple?logo=zulip)](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
@@ -29,7 +30,7 @@ _-- Voltaire_
 
 **If you are a non-technical reader, please read [this section](#litex-introduction-for-non-technical-readers).**
 
-Litex is a simple and easy-to-learn formal language. Even 10-year-olds can learn Litex easily. Litex reduces the time ratio between formalizing a proof and writing it in natural language from 10:1 to 1:1. Try Litex on [playground](https://litexlang.org/playground).
+Litex is a simple and easy-to-learn formal language. Even 10-year-olds can learn Litex easily. Litex reduces the time ratio between formalizing a proof and writing it in natural language from 10:1 to 1:1. 
 
 The key insight of Litex is: mathematical verification is nothing but a fancy form of **match and substitution** problem, similar to "ctrl+f and ctrl+r (or cmd+f and cmd+r)" in your browser. When doing verification, you find an established fact, match it with the new statement, substitute the variables in the established fact with the new statement, and check if the new statement is equal to the substituted established fact. If they are equal, the new statement is verified. To ignite the process of deriving new facts from established ones, the fundamentals of modern mathematics i.e. axioms of set theory, are built-in in Litex.
 
@@ -78,6 +79,8 @@ _-- Steve Jobs_
 
 Mathematics is the art of deriving new facts from established ones. To illustrate, consider a classical syllogism proposed by Aristotle, which formalizes deductive reasoning as follows. Run this example on [playground](https://litexlang.org/playground):
 
+This example means: All humans are intelligent. Jordan is a human. Therefore, Jordan is intelligent. It is a very typical syllogism example. (本例是一个典型的三段论例子：所有人类都是聪明的。乔丹是人类。因此，乔丹是聪明的。)
+
 <table style="border-collapse: collapse; width: 100%; font-size: 12px">
   <tr>
     <th style="border: 2px solid black; padding: 4px; text-align: left; width: 40%;">Litex</th>
@@ -85,16 +88,12 @@ Mathematics is the art of deriving new facts from established ones. To illustrat
   </tr>
   <tr>
     <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
-      <code># Syllogism example: All humans are intelligent. Jordan is a human. Therefore, Jordan is intelligent.</code><br>
-      <code># 三段论：所有人类都是聪明的。乔丹是人类。因此，乔丹是聪明的。</code><br><br>
       <code>obj human set, Jordan human</code> <br><br>
       <code>prop intelligent(x Human)</code> <br><br>      <code>know forall x Human:</code> <br>
       <code>&nbsp;&nbsp;$intelligent(x)</code> <br> <br>
       <code>$intelligent(Jordan)</code>
     </td>
     <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
-      <code>-- Syllogism example: All humans are intelligent. Jordan is a human. Therefore, Jordan is intelligent.</code><br>
-      <code>-- 三段论：所有人类都是聪明的。乔丹是人类。因此，乔丹是聪明的。</code><br><br>
       <code>def Human := Type</code> <br><br>
       <code>def intelligent (x : Human) : Prop := true</code> <br><br>
       <code>axiom intelligent_all :</code><br>
@@ -222,6 +221,8 @@ I will show you how Litex is shaped by common sense, and why common sense is not
 
 Next I want to show you how Litex can be used to solve a simple linear equation. It's clear that the Litex version can be read and understood by a 10-year-old, while the Lean version is much more complex.
 
+This example means: Solve the equation 2x + 3y = 10 and 4x + 5y = 14. (本例是一个典型的多元线性方程组例子：解方程 2x + 3y = 10 和 4x + 5y = 14。)
+
 <table style="border-collapse: collapse; width: 100%; font-size: 12px">
   <tr>
     <th style="border: 2px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
@@ -229,8 +230,6 @@ Next I want to show you how Litex can be used to solve a simple linear equation.
   </tr>
   <tr>
     <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
-      <code># Multivariate linear equation example: Solve the equation 2x + 3y = 10 and 4x + 5y = 14.</code><br>
-      <code># 多元线性方程组：解方程 2x + 3y = 10 和 4x + 5y = 14。</code><br><br>
       <code>obj x R, y R:</code><br>
       <code>&nbsp;&nbsp;2 * x + 3 * y = 10</code><br>
       <code>&nbsp;&nbsp;4 * x + 5 * y = 14</code><br><br>
@@ -247,8 +246,6 @@ Next I want to show you how Litex can be used to solve a simple linear equation.
       <code>x = -4</code>
     </td>
     <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
-      <code>-- Multivariate linear equation example: Solve the equation 2x + 3y = 10 and 4x + 5y = 14.</code><br>
-      <code>-- 多元线性方程组：解方程 2x + 3y = 10 和 4x + 5y = 14。</code><br><br>
       <code>import Mathlib.Tactic</code><br><br>
       <code>example (x y : ℝ) (h₁ : 2 * x + 3 * y = 10) (h₂ : 4 * x + 5 * y = 14) : x = -4 ∧ y = 6 := by</code><br>
       <code>&nbsp;&nbsp;have h₃ : 2 * (2 * x + 3 * y) = 2 * 10 := by rw [h₁]</code><br>
@@ -280,6 +277,8 @@ Next we prove `sqrt(2) is irrational`. Since the standard library is not yet imp
 
 The Litex proof requires no extra knowledge except basic math knowledge, but the Lean proof requires a huge amount of knowledge about Lean tactics. Tactics are not easy to learn, not easy to remember, and very far from what we are truly thinking when we are doing math. On the other hand, any line of Litex code is very obvious to understand.
 
+This example means: Prove `sqrt(2) is irrational`. (本例是一个典型的无理数证明例子：证明 `sqrt(2) 是无理数`。)
+
 <table style="border-collapse: collapse; width: 100%; font-size: 12px">
   <tr>
     <th style="border: 2px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
@@ -287,8 +286,6 @@ The Litex proof requires no extra knowledge except basic math knowledge, but the
   </tr>
   <tr>
     <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
-      <code># prove sqrt(2) is irrational</code><br>
-      <code># 证明 sqrt(2) 是无理数</code><br><br>
       <code>claim:</code><br>
       <code>&nbsp;&nbsp;not sqrt(2) $in Q</code><br>
       <code>&nbsp;&nbsp;prove_by_contradiction:</code><br>
@@ -313,8 +310,6 @@ The Litex proof requires no extra knowledge except basic math knowledge, but the
       <code>&nbsp;&nbsp;&nbsp;&nbsp;0 = 1</code>
     </td>
     <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
-      <code>-- prove sqrt(2) is irrational</code><br>
-      <code>-- 证明 sqrt(2) 是无理数</code><br><br>
       <code>theorem sqrt2_irrational :</code><br>
       <code>&nbsp;&nbsp;¬ ∃ a b : ℕ, a.gcd b = 1 ∧ a * a = 2 * b * b := by</code><br>
       <code>&nbsp;&nbsp;intro h</code><br>
@@ -345,6 +340,8 @@ The Litex proof requires no extra knowledge except basic math knowledge, but the
 
 Next I want to show you how Litex can be used to verify a simple group theory statement. It's clear that the Litex version can be read and understood by a 10-year-old, while the Lean version is much more complex. Look how easy it is to narrow the function type of `inverse` from `R` to `Z`.
 
+This example means: Define a group, and prove `R` is a group. (本例是一个典型的群论例子：定义一个群，并证明 `R` 是一个群。)
+
 <table style="border-collapse: collapse; width: 100%; font-size: 12px;">
   <tr>
     <th style="border: 2px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
@@ -352,8 +349,6 @@ Next I want to show you how Litex can be used to verify a simple group theory st
   </tr>
   <tr>
     <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
-      <code># definition of a group, and prove R is a group</code><br>
-      <code># 定义一个群，并证明 R 是一个群</code><br><br>
       <code>prop is_group(s set, mul fn(s, s)s, inv fn(s)s, e s):</code><br>
       <code>&nbsp;&nbsp;forall x s, y s, z s:</code><br>
       <code>&nbsp;&nbsp;mul(mul(x, y), z) = mul(x, mul(y, z))</code><br>
@@ -371,8 +366,6 @@ Next I want to show you how Litex can be used to verify a simple group theory st
       <code>$is_group(Z, +, inverse, 0)</code>
     </td>
     <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
-      <code>-- definition of a group, and prove Z is a group</code><br>
-      <code>-- 定义一个群，并证明 Z 是一个群</code><br><br>
       <code>structure MyGroup (G : Type) where</code><br>
       <code>&nbsp;&nbsp;add : G → G → G</code><br>
       <code>&nbsp;&nbsp;zero : G</code><br>
@@ -394,9 +387,7 @@ Next I want to show you how Litex can be used to verify a simple group theory st
   </tr>
 </table>
 
-To better show the power of `fn_template`, There is another example of defining an algorithm mathematically.
-
-
+To better show the power of `fn_template`, There is another example of defining an algorithm mathematically. This example means: Define an algorithm, and prove `f(x) = x` is an algorithm. (本例是一个典型的算法定义例子：定义一个算法，并证明 `f(x) = x` 是一个算法。)
 
 <table style="border-collapse: collapse; width: 100%; font-size: 12px">
   <tr>
@@ -404,8 +395,6 @@ To better show the power of `fn_template`, There is another example of defining 
     <th style="border: 2px solid black; padding: 4px; text-align: left; width: 50%;">Lean 4</th>
   </tr>
     <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
-       <code># definition of an algorithm, and prove f(x) = x is an algorithm</code><br>
-       <code># 定义一个算法，并证明 f(x) = x 是一个算法</code><br><br>
        <code>fn comp_seq(D set, f fn(D)D) fn(D, N)D:</code><br>
        <code>&nbsp;&nbsp;forall x D, n N:</code><br>
        <code>&nbsp;&nbsp;&nbsp;&nbsp;comp_seq(D, f)(x,n+1) = f(comp_seq(D, f)(x, n))</code><br>
@@ -440,8 +429,6 @@ To better show the power of `fn_template`, There is another example of defining 
        <code></code><br>
     </td>
     <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
-       <code>-- definition of an algorithm, and prove f(x) = x is an algorithm</code><br>
-       <code>-- 定义一个算法，并证明 f(x) = x 是一个算法</code><br><br>
        <code>structure ComputationalMethod where</code><br>
        <code>  Q : Type</code><br>
        <code>  I : Set Q</code><br>
