@@ -126,6 +126,26 @@ func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactS
 		return false
 	}
 
+	if fcFn.HasHeadInSlice([]string{glob.KeySymbolPlus, glob.KeySymbolMinus, glob.KeySymbolStar, glob.KeySymbolSlash, glob.KeySymbolPower}) {
+		if stmt.Params[1] == ast.FcAtom(glob.KeywordReal) {
+			if state.requireMsg() {
+				ver.successWithMsg(stmt.String(), "the return value of the builtin arithmetic function is in the real set")
+			}
+			return true
+		}
+		return false
+	}
+
+	if fcFn.HasHeadInSlice([]string{glob.KeywordLen, glob.KeySymbolPercent}) {
+		if stmt.Params[1] == ast.FcAtom(glob.KeywordNatural) {
+			if state.requireMsg() {
+				ver.successWithMsg(stmt.String(), "the return value of the builtin arithmetic function is in the natural set")
+			}
+			return true
+		}
+		return false
+	}
+
 	fnDef, ok := ver.env.GetLatestFnTemplate(fcFn.FnHead)
 	if !ok {
 		return false // 这里不传error是有点道理的，因为+-*/的定义不在mem里
