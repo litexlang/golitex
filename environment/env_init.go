@@ -14,11 +14,6 @@
 
 package litex_env
 
-import (
-	ast "golitex/ast"
-	glob "golitex/glob"
-)
-
 // template of arithmetic operations。 不知道是不是应该放在 pipeline_init.go 里
 func (env *Env) Init() {
 	// addAtom := ast.FcAtom(glob.KeySymbolPlus)
@@ -41,7 +36,7 @@ func (env *Env) Init() {
 	// modTemplate := ast.NewFnTemplateStmt(ast.NewDefHeader(modAtom, []string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordInteger), ast.FcAtom(glob.KeywordInteger)}), []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{ast.FcAtom("y"), ast.FcAtom("0")})}, ast.FcAtom(glob.KeywordInteger))
 	// env.FcSatisfy_FreeTemplateFact_Store_DeriveFacts(modAtom, modTemplate)
 
-	lenAtom := ast.FcAtom(glob.KeywordLen)
-	lenTemplate := ast.NewFnTemplateStmt(ast.NewDefHeader(lenAtom, []string{"x"}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}), []ast.FactStmt{ast.NewInFactWithFc(ast.FcAtom("x"), ast.FcAtom(glob.KeywordFiniteSet))}, []ast.FactStmt{}, ast.FcAtom(glob.KeywordNatural))
-	env.FcSatisfy_FreeTemplateFact_Store_DeriveFacts(lenAtom, lenTemplate)
+	// lenAtom := ast.FcAtom(glob.KeywordLen)
+	// lenTemplate := ast.NewFnTemplateStmt(ast.NewDefHeader(lenAtom, []string{"x"}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}), []ast.FactStmt{ast.NewInFactWithFc(ast.FcAtom("x"), ast.FcAtom(glob.KeywordFiniteSet))}, []ast.FactStmt{}, ast.FcAtom(glob.KeywordNatural))
+	// env.FcSatisfy_FreeTemplateFact_Store_DeriveFacts(lenAtom, lenTemplate)
 }
