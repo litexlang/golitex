@@ -180,7 +180,11 @@ func (e *Env) inFactPostProcess_InFnTemplateTemplate(fact *ast.SpecFactStmt) (bo
 		return false, err
 	}
 
-	derivedFact := fnTemplateNoName.DeriveUniFact(fact.Params[0])
+	derivedFact, err := fnTemplateNoName.DeriveUniFact(string(head), fact.Params[0])
+	if err != nil {
+		return false, err
+	}
+
 	err = e.NewFact(derivedFact)
 	if err != nil {
 		return false, err
