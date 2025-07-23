@@ -210,7 +210,7 @@ func (fcFn *FcFn) IsFcFn_HasAtomHead_ReturnHead() (FcAtom, bool) {
 	return head, true
 }
 
-func (stmt *FnTemplateTemplateStmt) InstantiateFnTemplate(fc *FcFn) (*FnTemplateNoName, error) {
+func (stmt *FnTemplateTemplateStmt) Instantiate_GetFnTemplateNoName(fc *FcFn) (*FnTemplateNoName, error) {
 	uniMap := map[string]Fc{}
 	templateParams := stmt.TemplateDefHeader.Params
 	if len(templateParams) != len(fc.Params) {

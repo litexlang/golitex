@@ -18,3 +18,5 @@ obj f g(1,2)
 
 f $in g(1,2)
 
+forall b R:
+	f(1, b) = 2
