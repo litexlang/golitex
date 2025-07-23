@@ -37,8 +37,6 @@ func (env *Env) NewFact(stmt ast.FactStmt) error {
 		return env.newIntensionalSetFact(f)
 	case *ast.EqualsFactStmt:
 		return env.newEqualsFact(f)
-	case *ast.SetEqualDomOf:
-		return env.newSetEqualDomOf(f)
 	default:
 		return fmt.Errorf("unknown fact type: %T", stmt)
 	}
@@ -739,8 +737,4 @@ func (env *Env) newEqualsFactNoPostProcess(stmt *ast.EqualsFactStmt) error {
 		}
 	}
 	return nil
-}
-
-func (env *Env) newSetEqualDomOf(stmt *ast.SetEqualDomOf) error {
-	panic("not implemented")
 }

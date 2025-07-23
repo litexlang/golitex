@@ -99,6 +99,10 @@ func (cursor *strSliceCursor) skipIfIs(s string) {
 	}
 }
 
+func (cursor *strSliceCursor) skipNext() {
+	cursor.index++
+}
+
 func (cursor *strSliceCursor) skip(expected string) error {
 	if cursor.index >= len(cursor.slice) {
 		return fmt.Errorf("unexpected end of slice %s", cursor.slice)

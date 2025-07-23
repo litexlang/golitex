@@ -158,6 +158,6 @@ func NewCommentStmt(comment string) *CommentStmt {
 	return &CommentStmt{comment}
 }
 
-func NewSetEqualDomOf(setName Fc, fn Fc) *SetEqualDomOf {
-	return &SetEqualDomOf{setName, fn}
+func NewFnTemplateTemplateStmt(defHeader *DefHeader, params []string, setParams []Fc, retSet Fc, domFacts []FactStmt, thenFacts []FactStmt) *FnTemplateTemplateStmt {
+	return &FnTemplateTemplateStmt{*defHeader, params, setParams, retSet, domFacts, thenFacts}
 }
