@@ -161,3 +161,7 @@ func NewCommentStmt(comment string) *CommentStmt {
 func NewFnTemplateTemplateStmt(defHeader *DefHeader, templateDomFacts []FactStmt, fnParams []string, fnParamSets []Fc, fnRetSet Fc, fnDomFacts []FactStmt, fnThenFacts []FactStmt) *FnTemplateTemplateStmt {
 	return &FnTemplateTemplateStmt{*defHeader, templateDomFacts, fnParams, fnParamSets, fnRetSet, fnDomFacts, fnThenFacts}
 }
+
+func NewFnTemplateNoName(params []string, paramSets []Fc, retSet Fc, domFacts []FactStmt, thenFacts []FactStmt) *FnTemplateNoName {
+	return &FnTemplateNoName{params, paramSets, retSet, domFacts, thenFacts}
+}

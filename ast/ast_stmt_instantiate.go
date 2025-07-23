@@ -288,3 +288,27 @@ func (stmt *EqualsFactStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) 
 	}
 	return NewEqualsFactStmt(newParams), nil
 }
+
+func (fcSlice FcSlice) Instantiate(uniMap map[string]Fc) (FcSlice, error) {
+	newFcSlice := make([]Fc, len(fcSlice))
+	for i, fc := range fcSlice {
+		newFc, err := fc.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newFcSlice[i] = newFc
+	}
+	return newFcSlice, nil
+}
+
+func (s SpecFactPtrSlice) Instantiate(uniMap map[string]Fc) (SpecFactPtrSlice, error) {
+	newSpecFactPtrSlice := make([]*SpecFactStmt, len(s))
+	for i, specFactPtr := range s {
+		newSpecFactPtr, err := specFactPtr.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newSpecFactPtrSlice[i] = newSpecFactPtr.(*SpecFactStmt)
+	}
+	return newSpecFactPtrSlice, nil
+}
