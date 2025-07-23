@@ -87,6 +87,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.equalsFactStmt()
 	case glob.CommentSig:
 		ret, err = tb.commentStmt()
+	case glob.KeywordFnTemplateTemplate:
+		ret, err = tb.fnTemplateTemplateStmt()
 	default:
 		ret, err = tb.factStmt(UniFactDepth0)
 	}
@@ -1472,29 +1474,9 @@ func (tb *tokenBlock) relaFact_intensionalSetFact_enumStmt() (ast.FactStmt, erro
 func (tb *tokenBlock) enumStmt_or_intensionalSetStmt_or_DomOf(fc ast.Fc) (ast.EnumSet_IntensionalSet_EqualDom, error) {
 	if tb.header.is(glob.KeySymbolLeftCurly) {
 		return tb.enumFactualStmt(fc)
-	} else if tb.header.is(glob.KeywordDomOf) {
-		return tb.domOfFactualStmt(fc)
 	} else {
 		return tb.intensionalSetFactualStmt(fc)
 	}
-}
-
-func (tb *tokenBlock) domOfFactualStmt(fc ast.Fc) (*ast.SetEqualDomOf, error) {
-	err := tb.header.skip(glob.KeywordDomOf)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	fc2, err := tb.RawFc()
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	if !tb.header.ExceedEnd() {
-		return nil, fmt.Errorf("expect end of line")
-	}
-
-	return ast.NewSetEqualDomOf(fc, fc2), nil
 }
 
 func (tb *tokenBlock) proveOverFiniteSetStmt() (*ast.ProveOverFiniteSetStmt, error) {
@@ -1812,4 +1794,41 @@ func (tb *tokenBlock) commentStmt() (ast.Stmt, error) {
 	tb.header.skip("")
 
 	return ast.NewCommentStmt(comment), nil
+}
+
+func (tb *tokenBlock) fnTemplateTemplateStmt() (ast.Stmt, error) {
+	tb.header.skipNext()
+	defHeader, err := tb.defHeaderWithoutParsingColonAtEnd()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, err
+	}
+
+	params, setParams, err := tb.param_paramSet_paramInSetFacts(glob.KeySymbolRightBrace, false)
+	if err != nil {
+		return nil, err
+	}
+
+	retSet, err := tb.RawFc()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	domFacts := []ast.FactStmt{}
+	thenFacts := []ast.FactStmt{}
+
+	if tb.header.is(glob.KeySymbolColon) {
+		tb.header.skip("")
+		// domFacts, thenFacts, _, err = tb.uniFactBodyFacts(UniFactDepth1, glob.KeywordThen)
+		domFacts, thenFacts, err = tb.dom_and_section(glob.KeywordThen, glob.KeywordIff)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+	}
+
+	return ast.NewFnTemplateTemplateStmt(defHeader, params, setParams, retSet, domFacts, thenFacts), nil
 }

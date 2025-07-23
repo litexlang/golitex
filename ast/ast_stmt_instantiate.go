@@ -288,17 +288,3 @@ func (stmt *EqualsFactStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) 
 	}
 	return NewEqualsFactStmt(newParams), nil
 }
-
-func (stmt *SetEqualDomOf) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
-	newSetName, err := stmt.SetName.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-
-	newFn, err := stmt.Fn.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-
-	return NewSetEqualDomOf(newSetName, newFn), nil
-}
