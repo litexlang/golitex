@@ -156,12 +156,16 @@ func (e *Env) SetEqualToSetDefinedByReplacement_PostProcess(setAtom ast.FcAtom, 
 }
 
 func (e *Env) inFactPostProcess_InFnTemplateTemplate(fact *ast.SpecFactStmt) (bool, error) {
+	if _, ok := fact.Params[1].(*ast.FcFn); !ok {
+		return false, nil
+	}
+
 	head, ok := fact.Params[1].(*ast.FcFn).IsFcFn_HasAtomHead_ReturnHead()
 	if !ok {
 		return false, nil
 	}
 
-	_, ok = e.GetFnTemplateTemplateDef(head)
+	fnTemplateTemplateDef, ok := e.GetFnTemplateTemplateDef(head)
 	if !ok {
 		return false, nil
 	}
@@ -171,5 +175,16 @@ func (e *Env) inFactPostProcess_InFnTemplateTemplate(fact *ast.SpecFactStmt) (bo
 		return false, err
 	}
 
-	return ok, nil
+	fnTemplateNoName, err := fnTemplateTemplateDef.Instantiate_GetFnTemplateNoName(fact.Params[1].(*ast.FcFn))
+	if err != nil {
+		return false, err
+	}
+
+	derivedFact := fnTemplateNoName.DeriveUniFact(fact.Params[0])
+	err = e.NewFact(derivedFact)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }
