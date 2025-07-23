@@ -23,11 +23,16 @@ import (
 
 func (ver *Verifier) checkSpecFactReq(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	if stmt.NameIs(glob.KeywordIn) {
-		if ok, _ := ver.checkSpecFactReq_InFact(stmt, state); ok {
-			return ok, nil
-		} else {
-			return ver.checkSpecFactRequirements_NotInFact(stmt, state)
+		ok, err := ver.checkSpecFactReq_InFact(stmt, state)
+		if err != nil {
+			return false, err
 		}
+
+		if ok {
+			return ok, nil
+		}
+
+		return ver.checkSpecFactRequirements_NotInFact(stmt, state)
 	}
 
 	return ver.checkSpecFactRequirements_NotInFact(stmt, state)
@@ -127,7 +132,7 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state VerState) (bool, er
 		// 	return ver.domOfFnRequirement(fcAsFcFn)
 		// } else {
 	} else {
-		return ver.fcFnSatisfyNotBuiltinFnRequirement(fcAsFcFn, state)
+		return ver.fcFnSatisfyFnTemplateTemplate_FnTemplate_Requirement(fcAsFcFn, state)
 	}
 }
 
@@ -153,8 +158,50 @@ func isArithmeticFn(fc ast.Fc) bool {
 	return true
 }
 
+func (ver *Verifier) fcFnSatisfyFnTemplateTemplate_FnTemplate_Requirement(fc ast.Fc, state VerState) (bool, error) {
+	ok, err := ver.fcFnSatisfy_FnTemplateReq(fc, state)
+	if err != nil {
+		return false, err
+	}
+
+	if ok {
+		return true, nil
+	}
+
+	ok, err = ver.fcFnSatisfy_FnTemplateTemplate_Requirement(fc, state)
+	if err != nil {
+		return false, err
+	}
+
+	return ok, nil
+}
+
+func (ver *Verifier) fcFnSatisfy_FnTemplateTemplate_Requirement(fc ast.Fc, state VerState) (bool, error) {
+	asFcFn, ok := fc.(*ast.FcFn)
+	if !ok {
+		return false, fmt.Errorf("%s is not a function", fc)
+	}
+
+	def, ok := ver.env.GetFnTemplateTemplateDef(asFcFn.FnHead.(ast.FcAtom))
+	if !ok {
+		return false, nil
+	}
+
+	lastFnTTItIsIn, ok := ver.env.GetLatestFnTT_GivenNameIsIn(asFcFn.FnHead.String())
+	if !ok {
+		return false, nil
+	}
+
+	fnTemplateNoName, err := def.Instantiate_GetFnTemplateNoName(lastFnTTItIsIn)
+	if err != nil {
+		return false, err
+	}
+
+	return false, nil
+}
+
 // TODO: 这里需要检查，setParam是否是自由变量
-func (ver *Verifier) fcFnSatisfyNotBuiltinFnRequirement(fc ast.Fc, state VerState) (bool, error) {
+func (ver *Verifier) fcFnSatisfy_FnTemplateReq(fc ast.Fc, state VerState) (bool, error) {
 	asFcFn, ok := fc.(*ast.FcFn)
 	if !ok {
 		return false, fmt.Errorf("%s is not a function", fc)
@@ -166,7 +213,6 @@ func (ver *Verifier) fcFnSatisfyNotBuiltinFnRequirement(fc ast.Fc, state VerStat
 		return false, nil
 	}
 
-	// 暂时还没有template，只有以fc形式出现的retSet
 	for i := range templatesOfEachLevel {
 		ok, err := ver.fcFnParamsSatisfyFnTemplateRequirement(fcOfEachLevel[i].Params, templatesOfEachLevel[i], state)
 		if err != nil {
