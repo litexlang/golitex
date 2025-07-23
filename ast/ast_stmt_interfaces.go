@@ -52,7 +52,7 @@ func (s *NamedUniFactStmt) stmt()                {}
 func (s *EqualsFactStmt) stmt()                  {}
 func (s *KnowExistPropStmt) stmt()               {}
 func (s *CommentStmt) stmt()                     {}
-func (s *SetEqualDomOf) stmt()                   {}
+func (s *FnTemplateTemplateStmt) stmt()          {}
 
 type FactStmt interface {
 	factStmt()
@@ -70,7 +70,6 @@ func (s *OrStmt) factStmt()             {}
 func (s *EnumStmt) factStmt()           {}
 func (s *IntensionalSetStmt) factStmt() {}
 func (s *EqualsFactStmt) factStmt()     {}
-func (s *SetEqualDomOf) factStmt()      {}
 
 type Spec_OrFact interface {
 	reversibleFact()
@@ -159,10 +158,8 @@ type EnumSet_IntensionalSet_EqualDom interface {
 
 func (stmt *EnumStmt) setDeclarationStmt()           {}
 func (stmt *IntensionalSetStmt) setDeclarationStmt() {}
-func (stmt *SetEqualDomOf) setDeclarationStmt()      {}
 func (stmt *EnumStmt) GetPropName() Fc               { return stmt.CurSet }
 func (stmt *IntensionalSetStmt) GetPropName() Fc     { return stmt.CurSet }
-func (stmt *SetEqualDomOf) GetPropName() Fc          { return stmt.SetName }
 
 type FnTemplate_Or_DefObjStmtInterface interface {
 	fnTemplate_Or_DefObjStmt()

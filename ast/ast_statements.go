@@ -229,8 +229,3 @@ type FnTemplateTemplateStmt struct {
 	DomFacts          FactStmtSlice
 	ThenFacts         FactStmtSlice
 }
-
-type SetEqualDomOf struct {
-	SetName Fc
-	Fn      Fc
-}

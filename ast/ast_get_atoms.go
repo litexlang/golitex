@@ -93,10 +93,3 @@ func (stmt *EqualsFactStmt) GetAtoms() []FcAtom {
 	}
 	return atoms
 }
-
-func (stmt *SetEqualDomOf) GetAtoms() []FcAtom {
-	atoms := []FcAtom{}
-	atoms = append(atoms, GetAtomsInFc(stmt.SetName)...)
-	atoms = append(atoms, GetAtomsInFc(stmt.Fn)...)
-	return atoms
-}
