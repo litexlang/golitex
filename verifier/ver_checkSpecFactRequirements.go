@@ -121,8 +121,8 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state VerState) (bool, er
 	// 单独处理特殊的内置prop
 	if isArithmeticFn(fcAsFcFn) {
 		return ver.arithmeticFnRequirement(fcAsFcFn, state)
-		// } else if ast.IsFcFnWithHeadName(fcAsFcFn, glob.KeywordLen) {
-		// 	return ver.lenFnRequirement(fcAsFcFn, state)
+	} else if ast.IsFcFnWithHeadName(fcAsFcFn, glob.KeywordLen) {
+		return ver.lenFnRequirement(fcAsFcFn, state)
 	} else if ast.IsFnFcFn(fcAsFcFn) {
 		return true, nil
 	} else if ver.isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj(fcAsFcFn) {
@@ -444,10 +444,18 @@ func (ver *Verifier) isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj_CheckRequiremen
 	return true, nil
 }
 
-// func (ver *Verifier) lenFnRequirement(fc *ast.FcFn, state VerState) (bool, error) {
-// 	if len(fc.Params) != 1 {
-// 		return false, fmt.Errorf("parameters in %s must be 1, %s in %s is not valid", fc.FnHead, fc, fc)
-// 	}
+func (ver *Verifier) lenFnRequirement(fc *ast.FcFn, state VerState) (bool, error) {
+	if len(fc.Params) != 1 {
+		return false, fmt.Errorf("parameters in %s must be 1, %s in %s is not valid", fc.FnHead, fc, fc)
+	}
 
-// 	return true, nil
-// }
+	ok, err := ver.VerFactStmt(ast.NewInFactWithFc(fc.Params[0], ast.FcAtom(glob.KeywordFiniteSet)), state)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, fmt.Errorf("parameters in %s must be in set %s, %s in %s is not valid", fc.FnHead, glob.KeywordFiniteSet, fc.Params[0], fc)
+	}
+
+	return true, nil
+}
