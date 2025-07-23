@@ -105,3 +105,14 @@ func (e *Env) GetEnumFact(enumName string) ([]ast.Fc, bool) {
 
 	return nil, false
 }
+
+func (e *Env) GetLatestFnTT_GivenNameIsIn(fnName string) (*ast.FcFn, bool) {
+	for env := e; env != nil; env = env.Parent {
+		fnInFnTemplateTemplateFacts, ok := env.FnInFnTemplateTemplateFactsMem[fnName]
+		if ok {
+			return fnInFnTemplateTemplateFacts[len(fnInFnTemplateTemplateFacts)-1], true
+		}
+	}
+
+	return nil, false
+}
