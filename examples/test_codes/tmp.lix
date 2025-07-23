@@ -13,3 +13,7 @@ fn_template_template g(x, y R):
         	a = x
         then:
         	g(a, b) = y
+
+obj f g(1,2)
+
+f $in g(1,2)
