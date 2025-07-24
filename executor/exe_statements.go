@@ -60,8 +60,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		execState, err = exec.proveStmt(stmt)
 	case *ast.ClaimProveByContradictionStmt:
 		execState, err = exec.execClaimStmtProveByContradiction(stmt)
-	case *ast.DefFnTemplateStmt:
-		err = exec.defFnTemplateStmt(stmt)
+	// case *ast.DefFnTemplateStmt:
+	// 	err = exec.defFnTemplateStmt(stmt)
 	case *ast.ProveByMathInductionStmt:
 		execState, err = exec.mathInductionFact_BuiltinRules(stmt)
 	case *ast.ProveOverFiniteSetStmt:
@@ -201,18 +201,18 @@ func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt, requireMsg bool) error {
 	return ver.NewDefObj_InsideAtomsDeclared(stmt)
 }
 
-func (exec *Executor) defFnTemplateStmt(stmt *ast.DefFnTemplateStmt) error {
-	if glob.RequireMsg() {
-		defer exec.newMsg(fmt.Sprintf("%s\n", stmt))
-	}
+// func (exec *Executor) defFnTemplateStmt(stmt *ast.DefFnTemplateStmt) error {
+// 	if glob.RequireMsg() {
+// 		defer exec.newMsg(fmt.Sprintf("%s\n", stmt))
+// 	}
 
-	err := exec.env.ExecDefFnTemplate(stmt)
-	if err != nil {
-		return err
-	}
+// 	err := exec.env.ExecDefFnTemplate(stmt)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) error {
 	// TODO 像定义这样的经常被调用的 事实，应该和普通的事实分离开来，以便于调用吗?
@@ -368,17 +368,24 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 		}()
 	}
 
-	err := exec.env.NewObj_NoDuplicate(string(stmt.FnTemplateStmt.Name), &stmt.FnTemplateStmt)
+	err := exec.env.IsValidUserDefinedName_NoDuplicate(stmt.Name)
 	if err != nil {
 		return err
 	}
 
-	err = exec.env.StoreFnSatisfyFnTemplateFact(ast.FcAtom(stmt.FnTemplateStmt.Name), &stmt.FnTemplateStmt)
+	// 在 objMem 里记录一下
+	exec.env.ObjDefMem[stmt.Name] = nil
+
+	err = exec.env.StoreFnSatisfyFnTemplateTemplateFact_WithInstTNoName(ast.FcAtom(stmt.Name), nil, &stmt.FnTemplate)
 	if err != nil {
 		return err
 	}
 
-	derivedFact := stmt.FnTemplateStmt.DeriveUniFact()
+	derivedFact, err := stmt.FnTemplate.DeriveUniFact_DefFn(stmt.Name)
+	if err != nil {
+		return err
+	}
+
 	err = exec.env.NewFact(derivedFact)
 	if err != nil {
 		return err

@@ -52,8 +52,8 @@ func (exec *Executor) assumeStmtIsTrueRun(stmt ast.Stmt) (glob.ExecState, error)
 		panic("implement me")
 	case *ast.ClaimProveByContradictionStmt:
 		panic("implement me")
-	case *ast.DefFnTemplateStmt:
-		err = exec.defFnTemplateStmt(stmt)
+	// case *ast.DefFnTemplateStmt:
+	// 	err = exec.defFnTemplateStmt(stmt)
 	case *ast.ImportFileStmt:
 		return glob.ExecState_True, nil
 	case *ast.KnowExistPropStmt:
