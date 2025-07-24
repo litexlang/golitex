@@ -518,21 +518,21 @@ func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, e
 // 	return nil
 // }
 
-func (env *Env) ExecDefFnTemplate(stmt *ast.DefFnTemplateStmt) error {
-	// 确保template name 没有被声明过
-	if env.IsAtomDeclared(stmt.FnTemplateStmt.Name, map[string]struct{}{}) {
-		return fmt.Errorf("fn template name %s is already declared", stmt.FnTemplateStmt.Name)
-	}
+// func (env *Env) ExecDefFnTemplate(stmt *ast.DefFnTemplateStmt) error {
+// 	// 确保template name 没有被声明过
+// 	if env.IsAtomDeclared(stmt.FnTemplateStmt.Name, map[string]struct{}{}) {
+// 		return fmt.Errorf("fn template name %s is already declared", stmt.FnTemplateStmt.Name)
+// 	}
 
-	err := env.AtomsInFnTemplateDeclared(ast.FcAtom(stmt.FnTemplateStmt.Name), &stmt.FnTemplateStmt)
-	if err != nil {
-		return err
-	}
+// 	err := env.AtomsInFnTemplateDeclared(ast.FcAtom(stmt.FnTemplateStmt.Name), &stmt.FnTemplateStmt)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	env.FnTemplateDefMem[string(stmt.FnTemplateStmt.Name)] = *stmt
+// 	env.FnTemplateDefMem[string(stmt.FnTemplateStmt.Name)] = *stmt
 
-	return nil
-}
+// 	return nil
+// }
 
 func (env *Env) ExecDefFnTemplateTemplate(stmt *ast.FnTemplateTemplateStmt) error {
 	// 确保template name 没有被声明过

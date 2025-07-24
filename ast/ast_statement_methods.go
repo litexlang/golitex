@@ -17,7 +17,6 @@ package litex_ast
 import (
 	"fmt"
 	glob "golitex/glob"
-	"slices"
 	"strconv"
 	"strings"
 )
@@ -222,20 +221,20 @@ func getFnDeclarationFcInsideItems(fc Fc) ([]Fc, Fc) {
 	return paramSets, fcAsFn.Params[0]
 }
 
-func FromFnDeclFcToDefFnStmt(name FcAtom, fc Fc) *FnTemplateStmt {
-	paramSets, retSet := getFnDeclarationFcInsideItems(fc)
+// func FromFnDeclFcToDefFnStmt(name FcAtom, fc Fc) *FnTemplateStmt {
+// 	paramSets, retSet := getFnDeclarationFcInsideItems(fc)
 
-	params := []string{}
+// 	params := []string{}
 
-	for range len(paramSets) {
-		randomStr := glob.RandomString(4)
-		params = append(params, randomStr)
-	}
+// 	for range len(paramSets) {
+// 		randomStr := glob.RandomString(4)
+// 		params = append(params, randomStr)
+// 	}
 
-	fnDefStmt := NewFnTemplateStmt(NewDefHeader(name, params, paramSets), []FactStmt{}, []FactStmt{}, retSet)
+// 	fnDefStmt := NewFnTemplateStmt(NewDefHeader(name, params, paramSets), []FactStmt{}, []FactStmt{}, retSet)
 
-	return fnDefStmt
-}
+// 	return fnDefStmt
+// }
 
 func Get_FnTemplate_InFcForm_ParamSetsAndRetSet(fc Fc) ([]Fc, Fc, bool) {
 	// given fc must be a function
@@ -320,32 +319,32 @@ func IsFnFcFn(fcFn *FcFn) bool {
 	return isFcWithFcFnHeadWithName(fcFn, glob.KeywordFn)
 }
 
-func FnFcToFnTemplateStmt(fcAsFcFn *FcFn) (*FnTemplateStmt, error) {
-	fcAsFcFnHeadAsFcFn, ok := fcAsFcFn.FnHead.(*FcFn)
-	if !ok {
-		return nil, fmt.Errorf("expected FcFn, but got %T", fcAsFcFn.FnHead)
-	}
+// func FnFcToFnTemplateStmt(fcAsFcFn *FcFn) (*FnTemplateStmt, error) {
+// 	fcAsFcFnHeadAsFcFn, ok := fcAsFcFn.FnHead.(*FcFn)
+// 	if !ok {
+// 		return nil, fmt.Errorf("expected FcFn, but got %T", fcAsFcFn.FnHead)
+// 	}
 
-	if len(fcAsFcFn.Params) != 1 {
-		return nil, fmt.Errorf("expected 1 param, but got %d", len(fcAsFcFn.Params))
-	}
+// 	if len(fcAsFcFn.Params) != 1 {
+// 		return nil, fmt.Errorf("expected 1 param, but got %d", len(fcAsFcFn.Params))
+// 	}
 
-	randomParams := []string{}
-	for range len(fcAsFcFnHeadAsFcFn.Params) {
-		currentParam := glob.RandomString(4)
-		if slices.Contains(randomParams, currentParam) {
-			continue
-		}
-		randomParams = append(randomParams, currentParam)
-	}
+// 	randomParams := []string{}
+// 	for range len(fcAsFcFnHeadAsFcFn.Params) {
+// 		currentParam := glob.RandomString(4)
+// 		if slices.Contains(randomParams, currentParam) {
+// 			continue
+// 		}
+// 		randomParams = append(randomParams, currentParam)
+// 	}
 
-	paramSets := fcAsFcFnHeadAsFcFn.Params
-	retSet := fcAsFcFn.Params[0]
+// 	paramSets := fcAsFcFnHeadAsFcFn.Params
+// 	retSet := fcAsFcFn.Params[0]
 
-	fnDefStmt := NewFnTemplateStmt(NewDefHeader(FcAtom(glob.EmptyPkg), randomParams, paramSets), []FactStmt{}, []FactStmt{}, retSet)
+// 	fnDefStmt := NewFnTemplateStmt(NewDefHeader(FcAtom(glob.EmptyPkg), randomParams, paramSets), []FactStmt{}, []FactStmt{}, retSet)
 
-	return fnDefStmt, nil
-}
+// 	return fnDefStmt, nil
+// }
 
 // TODO REMOVE THIS FUNCTION
 func IsFcAtomWithBuiltinPkgAndName(fc Fc, name string) bool {
@@ -406,7 +405,7 @@ func (stmt *IntensionalSetStmt) ToEquivalentUniFacts() (*UniFactStmt, *UniFactSt
 }
 
 func (stmt *HaveSetFnStmt) ToDefFnStmt() *DefFnStmt {
-	return NewDefFnStmt(NewFnTemplateStmt(&stmt.DefHeader, []FactStmt{}, []FactStmt{stmt.ToIntensionalSetStmt()}, FcAtom(glob.KeywordSet)))
+	return NewDefFnStmt(string(stmt.DefHeader.Name), NewFnTemplateNoName(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, FcAtom(glob.KeywordSet), []FactStmt{}, []FactStmt{stmt.ToIntensionalSetStmt()}))
 }
 
 func (stmt *HaveSetFnStmt) ToIntensionalSetStmt() *IntensionalSetStmt {
