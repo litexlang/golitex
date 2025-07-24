@@ -30,7 +30,7 @@ _-- Voltaire_
 
 **If you are a non-technical reader, please read [this section](#litex-introduction-for-non-technical-readers).**
 
-Litex is a simple and easy-to-learn formal language. It also makes formal language as accessible as daily life math. Even 10-year-olds can learn Litex easily. This simplicity and accessibility of Litex reduces the time ratio, between formalizing a proof and writing it in natural language, from 10:1 to 1:1. That is why constructing Litex codebase is 10x cheaper and has a 10x lower entrance barrier than traditional formal languages.
+**Litex is a simple and easy-to-learn formal language. It also makes formal language as accessible as daily life math. Even 10-year-olds can learn Litex easily. This simplicity and accessibility of Litex reduces the time ratio, between formalizing a proof and writing it in natural language, from 10:1 to 1:1. That is why constructing Litex codebase is 10x cheaper and has a 10x lower entrance barrier than traditional formal languages. This is a blessing for both AI and human.**
 
 The key insight behind Litex's extreme simplicity is: mathematical verification is nothing but a fancy form of **match and substitution** problem, similar to "ctrl+f and ctrl+r (or cmd+f and cmd+r)" in your browser. When doing verification, you find an established fact, match it with the new statement, substitute the variables in the established fact with the new statement, and check if the new statement is equal to the substituted established fact. If they are equal, the new statement is verified. To ignite the process of deriving new facts from established ones, the fundamentals of modern mathematics i.e. axioms of set theory, are built-in in Litex.
 

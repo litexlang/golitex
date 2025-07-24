@@ -33,7 +33,12 @@ type FnTemplateTemplateDefMem map[string]ast.FnTemplateTemplateStmt
 type ObjDefMem map[string]ast.FnTemplate_Or_DefObjStmtInterface // 因为很多的obj会共享一个def obj
 
 type FnInFnTemplateFactsMem map[string][]*ast.FnTemplateStmt
-type FnInFnTemplateTemplateFactsMem map[string][]*ast.FcFn
+type FnInFnTemplateTemplateFactsMem map[string][]FnInFnTTMemItem
+
+type FnInFnTTMemItem struct {
+	InFcFn         *ast.FcFn
+	FnTemplateStmt *ast.FnTemplateNoName
+}
 
 type HaveSetFnDefMem map[string]ast.HaveSetFnStmt
 
