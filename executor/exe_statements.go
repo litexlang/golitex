@@ -381,7 +381,7 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 		return err
 	}
 
-	derivedFact, err := stmt.FnTemplate.DeriveUniFact_DefFn(ast.FcAtom(stmt.Name))
+	derivedFact, err := stmt.FnTemplate.DeriveUniFact_WithGivenFn(ast.FcAtom(stmt.Name))
 	if err != nil {
 		return err
 	}
