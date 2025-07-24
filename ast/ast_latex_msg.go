@@ -58,60 +58,61 @@ func (c *DefPropStmt) ToLatexString() string {
 }
 
 func (l *DefFnStmt) ToLatexString() string {
-	var builder strings.Builder
+	panic("not implemented")
+	// var builder strings.Builder
 
-	builder.WriteString("\\begin{definition}[Function]\n")
-	builder.WriteString(l.FnTemplateStmt.DefHeader.NameWithParamsLatexString())
-	builder.WriteString(" is defined for ")
-	builder.WriteString(strFcSetPairsLatexString(l.FnTemplateStmt.Params, l.FnTemplateStmt.ParamSets))
-	builder.WriteString(".")
+	// builder.WriteString("\\begin{definition}[Function]\n")
+	// builder.WriteString(l.FnTemplateStmt.DefHeader.NameWithParamsLatexString())
+	// builder.WriteString(" is defined for ")
+	// builder.WriteString(strFcSetPairsLatexString(l.FnTemplateStmt.Params, l.FnTemplateStmt.ParamSets))
+	// builder.WriteString(".")
 
-	if len(l.FnTemplateStmt.DomFacts) > 0 {
-		builder.WriteString(" Its domain is:")
+	// if len(l.FnTemplateStmt.DomFacts) > 0 {
+	// 	builder.WriteString(" Its domain is:")
 
-		domFactStrSlice := make([]string, len(l.FnTemplateStmt.DomFacts))
-		for i := range len(l.FnTemplateStmt.DomFacts) {
-			domFactStrSlice[i] = l.FnTemplateStmt.DomFacts[i].ToLatexString()
-		}
+	// 	domFactStrSlice := make([]string, len(l.FnTemplateStmt.DomFacts))
+	// 	for i := range len(l.FnTemplateStmt.DomFacts) {
+	// 		domFactStrSlice[i] = l.FnTemplateStmt.DomFacts[i].ToLatexString()
+	// 	}
 
-		if ShouldInSingleLineAsLatexString(domFactStrSlice) {
-			builder.WriteString(" ")
-			builder.WriteString(fmt.Sprintf("%s.", strings.Join(domFactStrSlice, ", ")))
-			builder.WriteString(" ")
-		} else {
-			builder.WriteString("\n\n")
-			for i := range len(l.FnTemplateStmt.DomFacts) {
-				domFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(domFactStrSlice[i], 1)
-			}
-			builder.WriteString(fmt.Sprintf("%s.", strings.Join(domFactStrSlice, "\n\n")))
-			builder.WriteString("\n\n")
-		}
-	}
+	// 	if ShouldInSingleLineAsLatexString(domFactStrSlice) {
+	// 		builder.WriteString(" ")
+	// 		builder.WriteString(fmt.Sprintf("%s.", strings.Join(domFactStrSlice, ", ")))
+	// 		builder.WriteString(" ")
+	// 	} else {
+	// 		builder.WriteString("\n\n")
+	// 		for i := range len(l.FnTemplateStmt.DomFacts) {
+	// 			domFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(domFactStrSlice[i], 1)
+	// 		}
+	// 		builder.WriteString(fmt.Sprintf("%s.", strings.Join(domFactStrSlice, "\n\n")))
+	// 		builder.WriteString("\n\n")
+	// 	}
+	// }
 
-	if len(l.FnTemplateStmt.ThenFacts) > 0 {
-		builder.WriteString(fmt.Sprintf("We suppose %s satisfies:", toLatexString(string(l.FnTemplateStmt.DefHeader.Name))))
+	// if len(l.FnTemplateStmt.ThenFacts) > 0 {
+	// 	builder.WriteString(fmt.Sprintf("We suppose %s satisfies:", toLatexString(string(l.FnTemplateStmt.DefHeader.Name))))
 
-		thenFactStrSlice := make([]string, len(l.FnTemplateStmt.ThenFacts))
-		for i := range len(l.FnTemplateStmt.ThenFacts) {
-			thenFactStrSlice[i] = l.FnTemplateStmt.ThenFacts[i].ToLatexString()
-		}
+	// 	thenFactStrSlice := make([]string, len(l.FnTemplateStmt.ThenFacts))
+	// 	for i := range len(l.FnTemplateStmt.ThenFacts) {
+	// 		thenFactStrSlice[i] = l.FnTemplateStmt.ThenFacts[i].ToLatexString()
+	// 	}
 
-		if ShouldInSingleLineAsLatexString(thenFactStrSlice) {
-			builder.WriteString(" ")
-			builder.WriteString(fmt.Sprintf("%s.", strings.Join(thenFactStrSlice, ", ")))
-			builder.WriteString(" ")
-		} else {
-			builder.WriteString("\n\n")
-			for i := range len(l.FnTemplateStmt.ThenFacts) {
-				thenFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(thenFactStrSlice[i], 1)
-			}
-			builder.WriteString(fmt.Sprintf("%s.", strings.Join(thenFactStrSlice, "\n\n")))
-		}
-	}
+	// 	if ShouldInSingleLineAsLatexString(thenFactStrSlice) {
+	// 		builder.WriteString(" ")
+	// 		builder.WriteString(fmt.Sprintf("%s.", strings.Join(thenFactStrSlice, ", ")))
+	// 		builder.WriteString(" ")
+	// 	} else {
+	// 		builder.WriteString("\n\n")
+	// 		for i := range len(l.FnTemplateStmt.ThenFacts) {
+	// 			thenFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(thenFactStrSlice[i], 1)
+	// 		}
+	// 		builder.WriteString(fmt.Sprintf("%s.", strings.Join(thenFactStrSlice, "\n\n")))
+	// 	}
+	// }
 
-	builder.WriteString("\n\\end{definition}")
+	// builder.WriteString("\n\\end{definition}")
 
-	return builder.String()
+	// return builder.String()
 }
 
 func (l *UniFactStmt) ToLatexString() string {
@@ -528,55 +529,55 @@ func (s *ClaimProveByContradictionStmt) ToLatexString() string {
 	return claimProveBodyToLatexString(s.ClaimProveStmt.ToCheckFact, s.ClaimProveStmt.Proofs, false)
 }
 
-func (s *DefFnTemplateStmt) ToLatexString() string {
-	var builder strings.Builder
-	builder.WriteString("\\begin{definition}[Function Template]\n\n")
-	builder.WriteString("We say a function satisfies function template ")
-	builder.WriteString(toLatexString(string(s.FnTemplateStmt.DefHeader.Name)))
-	builder.WriteString(fmt.Sprintf(" if it satisfies (we use %s here to represent that function):", string(s.FnTemplateStmt.DefHeader.Name)))
-	builder.WriteString("\n\n")
+// func (s *DefFnTemplateStmt) ToLatexString() string {
+// 	var builder strings.Builder
+// 	builder.WriteString("\\begin{definition}[Function Template]\n\n")
+// 	builder.WriteString("We say a function satisfies function template ")
+// 	builder.WriteString(toLatexString(string(s.FnTemplateStmt.DefHeader.Name)))
+// 	builder.WriteString(fmt.Sprintf(" if it satisfies (we use %s here to represent that function):", string(s.FnTemplateStmt.DefHeader.Name)))
+// 	builder.WriteString("\n\n")
 
-	builder.WriteString("It has a domain which is superset of the set which contains parameters satisfying the following properties: ")
-	builder.WriteString(strings.Join(paramInParamSetInFactLatexStringSlice(s.FnTemplateStmt.Params, s.FnTemplateStmt.ParamSets), ", "))
+// 	builder.WriteString("It has a domain which is superset of the set which contains parameters satisfying the following properties: ")
+// 	builder.WriteString(strings.Join(paramInParamSetInFactLatexStringSlice(s.FnTemplateStmt.Params, s.FnTemplateStmt.ParamSets), ", "))
 
-	if len(s.FnTemplateStmt.DomFacts) > 0 {
-		builder.WriteString(" and ")
-		domFactStrSlice := s.FnTemplateStmt.DomFacts.factStmtSliceToLatexStringSlice()
-		if ShouldInSingleLineAsLatexString(domFactStrSlice) {
-			builder.WriteString(" ")
-			builder.WriteString(strings.Join(domFactStrSlice, ", "))
-		} else {
-			builder.WriteString("\n\n")
-			builder.WriteString(strings.Join(domFactStrSlice, "\n\n"))
-		}
-		builder.WriteString(".")
-	} else {
-		builder.WriteString(".")
-	}
+// 	if len(s.FnTemplateStmt.DomFacts) > 0 {
+// 		builder.WriteString(" and ")
+// 		domFactStrSlice := s.FnTemplateStmt.DomFacts.factStmtSliceToLatexStringSlice()
+// 		if ShouldInSingleLineAsLatexString(domFactStrSlice) {
+// 			builder.WriteString(" ")
+// 			builder.WriteString(strings.Join(domFactStrSlice, ", "))
+// 		} else {
+// 			builder.WriteString("\n\n")
+// 			builder.WriteString(strings.Join(domFactStrSlice, "\n\n"))
+// 		}
+// 		builder.WriteString(".")
+// 	} else {
+// 		builder.WriteString(".")
+// 	}
 
-	if len(s.FnTemplateStmt.ThenFacts) > 0 {
-		builder.WriteString("\n\n")
-		builder.WriteString("When its parameters satisfies the above condition, it has the following properties:")
-		thenFactStrSlice := s.FnTemplateStmt.ThenFacts.factStmtSliceToLatexStringSlice()
-		if ShouldInSingleLineAsLatexString(thenFactStrSlice) {
-			builder.WriteString(" ")
-			builder.WriteString(strings.Join(thenFactStrSlice, ", "))
-		} else {
-			builder.WriteString("\n\n")
-			builder.WriteString(strings.Join(thenFactStrSlice, "\n\n"))
-		}
-		builder.WriteString(".")
-	}
+// 	if len(s.FnTemplateStmt.ThenFacts) > 0 {
+// 		builder.WriteString("\n\n")
+// 		builder.WriteString("When its parameters satisfies the above condition, it has the following properties:")
+// 		thenFactStrSlice := s.FnTemplateStmt.ThenFacts.factStmtSliceToLatexStringSlice()
+// 		if ShouldInSingleLineAsLatexString(thenFactStrSlice) {
+// 			builder.WriteString(" ")
+// 			builder.WriteString(strings.Join(thenFactStrSlice, ", "))
+// 		} else {
+// 			builder.WriteString("\n\n")
+// 			builder.WriteString(strings.Join(thenFactStrSlice, "\n\n"))
+// 		}
+// 		builder.WriteString(".")
+// 	}
 
-	builder.WriteString("\n\n")
+// 	builder.WriteString("\n\n")
 
-	builder.WriteString("The return value is $\\in$ ")
-	builder.WriteString(s.FnTemplateStmt.RetSet.ToLatexString())
+// 	builder.WriteString("The return value is $\\in$ ")
+// 	builder.WriteString(s.FnTemplateStmt.RetSet.ToLatexString())
 
-	builder.WriteString("\n\\end{definition}")
+// 	builder.WriteString("\n\\end{definition}")
 
-	return builder.String()
-}
+// 	return builder.String()
+// }
 
 func (s *EnumStmt) ToLatexString() string {
 	var builder strings.Builder
@@ -782,9 +783,9 @@ func VerifiedFactsSectionToLatexString(verifiedFacts []FactStmt) string {
 	return builder.String()
 }
 
-func (s *FnTemplateStmt) ToLatexString() string {
-	return NewFnTemplateDefStmt(s).ToLatexString()
-}
+// func (s *FnTemplateStmt) ToLatexString() string {
+// 	return NewFnTemplateDefStmt(s).ToLatexString()
+// }
 
 func (s *EqualsFactStmt) ToLatexString() string {
 	var builder strings.Builder
@@ -809,6 +810,53 @@ func (s *CommentStmt) ToLatexString() string {
 	return s.Comment
 }
 
+// TODO 没测试过
 func (s *FnTemplateTemplateStmt) ToLatexString() string {
-	return "FnTemplateTemplateStmt"
+	var builder strings.Builder
+	builder.WriteString("\\begin{definition}[Function Template]\n\n")
+	builder.WriteString("We say a function satisfies function template ")
+	builder.WriteString(toLatexString(string(s.TemplateDefHeader.Name)))
+	builder.WriteString(fmt.Sprintf(" if it satisfies (we use %s here to represent that function):", string(s.TemplateDefHeader.Name)))
+	builder.WriteString("\n\n")
+
+	builder.WriteString("It has a domain which is superset of the set which contains parameters satisfying the following properties: ")
+	builder.WriteString(strings.Join(paramInParamSetInFactLatexStringSlice(s.TemplateDefHeader.Params, s.TemplateDefHeader.ParamSets), ", "))
+
+	if len(s.TemplateDomFacts) > 0 {
+		builder.WriteString(" and ")
+		domFactStrSlice := s.TemplateDomFacts.factStmtSliceToLatexStringSlice()
+		if ShouldInSingleLineAsLatexString(domFactStrSlice) {
+			builder.WriteString(" ")
+			builder.WriteString(strings.Join(domFactStrSlice, ", "))
+		} else {
+			builder.WriteString("\n\n")
+			builder.WriteString(strings.Join(domFactStrSlice, "\n\n"))
+		}
+		builder.WriteString(".")
+	} else {
+		builder.WriteString(".")
+	}
+
+	if len(s.FnThenFacts) > 0 {
+		builder.WriteString("\n\n")
+		builder.WriteString("When its parameters satisfies the above condition, it has the following properties:")
+		thenFactStrSlice := s.FnThenFacts.factStmtSliceToLatexStringSlice()
+		if ShouldInSingleLineAsLatexString(thenFactStrSlice) {
+			builder.WriteString(" ")
+			builder.WriteString(strings.Join(thenFactStrSlice, ", "))
+		} else {
+			builder.WriteString("\n\n")
+			builder.WriteString(strings.Join(thenFactStrSlice, "\n\n"))
+		}
+		builder.WriteString(".")
+	}
+
+	builder.WriteString("\n\n")
+
+	builder.WriteString("The return value is $\\in$ ")
+	builder.WriteString(s.FnRetSet.ToLatexString())
+
+	builder.WriteString("\n\\end{definition}")
+
+	return builder.String()
 }
