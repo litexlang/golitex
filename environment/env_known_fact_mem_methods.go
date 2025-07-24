@@ -366,7 +366,7 @@ func (e *Env) newUniFactWithIff(stmt *ast.UniFactWithIffStmt) error {
 }
 
 func (e *Env) StoreFnSatisfyFnTemplateFact(fn ast.Fc, fnTemplateFcFn *ast.FcFn, fnTNoName *ast.FnTemplateNoName) error {
-	err := e.insertFnInFnTT(fn, fnTemplateFcFn, fnTNoName)
+	err := e.InsertFnInFnTT(fn, fnTemplateFcFn, fnTNoName)
 	if err != nil {
 		return err
 	}
@@ -375,7 +375,7 @@ func (e *Env) StoreFnSatisfyFnTemplateFact(fn ast.Fc, fnTemplateFcFn *ast.FcFn, 
 }
 
 func (e *Env) StoreFnSatisfyFnTemplateTemplateFact_WithInstTNoName(fn ast.Fc, fnTemplateFcFn *ast.FcFn, fnTNoName *ast.FnTemplateNoName) error {
-	err := e.insertFnInFnTT(fn, fnTemplateFcFn, fnTNoName)
+	err := e.InsertFnInFnTT(fn, fnTemplateFcFn, fnTNoName)
 	if err != nil {
 		return err
 	}
@@ -389,7 +389,7 @@ func (e *Env) StoreFnSatisfyFnTemplateTemplateFact(fn ast.Fc, fnTemplateFcFn *as
 		return err
 	}
 
-	err = e.insertFnInFnTT(fn, fnTemplateFcFn, fnTNoName)
+	err = e.InsertFnInFnTT(fn, fnTemplateFcFn, fnTNoName)
 	if err != nil {
 		return err
 	}

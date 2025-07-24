@@ -47,7 +47,8 @@ func (e *Env) isFcAtomDeclaredAtCurEnv(fcAtomName ast.FcAtom) bool {
 		return true
 	}
 
-	_, ok = e.FnTemplateDefMem[string(fcAtomName)]
+	// _, ok = e.FnTemplateDefMem[string(fcAtomName)]
+	_, ok = e.FnTemplateTemplateDefMem[string(fcAtomName)]
 
 	return ok
 }

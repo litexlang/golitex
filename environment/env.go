@@ -30,13 +30,13 @@ type ExistPropDefMem map[string]ast.DefExistPropStmt
 type FnTemplateTemplateDefMem map[string]ast.FnTemplateTemplateStmt
 
 // 我暂时不清楚 map[string]struct{} 有没有问题，我暂时用不到def obj 相关的任何的东西
-type ObjDefMem map[string]ast.FnTemplate_Or_DefObjStmtInterface // 因为很多的obj会共享一个def obj
+type ObjDefMem map[string]ast.FnTemplate_Or_DefObjStmtInterface // 因为很多的obj会共享一个def obj. 可能是 nil
 
 // type FnInFnTemplateFactsMem map[string][]*ast.FnTemplateStmt
 type FnInFnTemplateTemplateFactsMem map[string][]FnInFnTTMemItem
 
 type FnInFnTTMemItem struct {
-	InFcFn         *ast.FcFn // 可能是 fn(R)R 这种，或者 TName(params) 这样
+	InFcFn         *ast.FcFn // 可能是 fn(R)R 这种，或者 TName(params) 这样，或者是nil（比如 defFnStmt 声明出来的）
 	FnTemplateStmt *ast.FnTemplateNoName
 }
 
@@ -51,15 +51,15 @@ type KnownFactsStruct struct {
 
 // 因为 in 类型的事实很多，考虑把fcString为key保留一个map，记录它在什么集合里。比如 a $in N 就保存成 key:a values:[]{N}
 type Env struct {
-	Parent                         *Env
-	Msgs                           []string
-	ObjDefMem                      ObjDefMem
-	PropDefMem                     PropDefMem
-	FnTemplateDefMem               FnTemplateDefMem
-	FnTemplateTemplateDefMem       FnTemplateTemplateDefMem
-	ExistPropDefMem                ExistPropDefMem
-	KnownFactsStruct               KnownFactsStruct
-	FnInFnTemplateFactsMem         FnInFnTemplateFactsMem
+	Parent     *Env
+	Msgs       []string
+	ObjDefMem  ObjDefMem
+	PropDefMem PropDefMem
+	// FnTemplateDefMem               FnTemplateDefMem
+	FnTemplateTemplateDefMem FnTemplateTemplateDefMem
+	ExistPropDefMem          ExistPropDefMem
+	KnownFactsStruct         KnownFactsStruct
+	// FnInFnTemplateFactsMem         FnInFnTemplateFactsMem
 	FnInFnTemplateTemplateFactsMem FnInFnTemplateTemplateFactsMem
 	KnownFactInMatchEnv            map[string]KnownFactsStruct
 	EqualMem                       map[string]shared_ptr_to_slice_of_fc
@@ -76,20 +76,20 @@ func (env *Env) GetUpMostEnv() *Env {
 
 func NewEnv(parent *Env) *Env {
 	env := &Env{
-		Parent:                         parent,
-		Msgs:                           []string{},
-		ObjDefMem:                      make(ObjDefMem),
-		PropDefMem:                     make(PropDefMem),
-		FnInFnTemplateFactsMem:         make(FnInFnTemplateFactsMem),
+		Parent:     parent,
+		Msgs:       []string{},
+		ObjDefMem:  make(ObjDefMem),
+		PropDefMem: make(PropDefMem),
+		// FnInFnTemplateFactsMem:         make(FnInFnTemplateFactsMem),
 		FnTemplateTemplateDefMem:       make(FnTemplateTemplateDefMem),
 		FnInFnTemplateTemplateFactsMem: make(FnInFnTemplateTemplateFactsMem),
-		FnTemplateDefMem:               make(FnTemplateDefMem),
-		ExistPropDefMem:                make(ExistPropDefMem),
-		KnownFactsStruct:               makeKnownFactsStruct(),
-		EqualMem:                       make(map[string]shared_ptr_to_slice_of_fc),
-		KnownFactInMatchEnv:            make(map[string]KnownFactsStruct),
-		EnumFacts:                      make(map[string][]ast.Fc),
-		HaveSetFnDefMem:                make(HaveSetFnDefMem),
+		// FnTemplateDefMem:               make(FnTemplateDefMem),
+		ExistPropDefMem:     make(ExistPropDefMem),
+		KnownFactsStruct:    makeKnownFactsStruct(),
+		EqualMem:            make(map[string]shared_ptr_to_slice_of_fc),
+		KnownFactInMatchEnv: make(map[string]KnownFactsStruct),
+		EnumFacts:           make(map[string][]ast.Fc),
+		HaveSetFnDefMem:     make(HaveSetFnDefMem),
 	}
 	return env
 }

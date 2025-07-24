@@ -56,7 +56,7 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) error {
 		if err != nil {
 			return err
 		}
-		err = e.insertFnInFnTT(fact.Params[0], fnFn, fnTNoName)
+		err = e.InsertFnInFnTT(fact.Params[0], fnFn, fnTNoName)
 		if err != nil {
 			return err
 		}
