@@ -542,6 +542,10 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Fc, fnFcFn ast.Fc, state VerSta
 	for i := 0; i < len(leftIsInWhichFnTT.FnTemplateStmt.Params); i++ {
 		randomNames = append(randomNames, ver.env.GenerateUndeclaredRandomName())
 	}
+	randomAtoms := []ast.Fc{}
+	for i := 0; i < len(leftIsInWhichFnTT.FnTemplateStmt.Params); i++ {
+		randomAtoms = append(randomAtoms, ast.FcAtom(randomNames[i]))
+	}
 
 	uniMap := map[string]ast.Fc{}
 	for i := 0; i < len(leftIsInWhichFnTT.FnTemplateStmt.Params); i++ {
@@ -569,8 +573,52 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Fc, fnFcFn ast.Fc, state VerSta
 	if err != nil {
 		return false, err
 	}
+	instLeftUniFactAsUniFactStmt, ok := instantiatedLeftToUniFact.(*ast.UniFactStmt)
+	if !ok {
+		return false, nil
+	}
 
-	// verInFact
+	for i := range instLeftUniFactAsUniFactStmt.Params {
+		fact := ast.NewInFactWithParamFc(ast.FcAtom(randomNames[i]), leftIsInWhichFnTT.FnTemplateStmt.ParamSets[i])
+		ok, err := ver.VerFactStmt(fact, state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+
+		err = ver.env.NewFact(fact)
+		if err != nil {
+			return false, err
+		}
+	}
+
+	for i := range leftIsInWhichFnTT.FnTemplateStmt.DomFacts {
+		fact := leftIsInWhichFnTT.FnTemplateStmt.DomFacts[i]
+		ok, err := ver.VerFactStmt(fact, state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+
+		err = ver.env.NewFact(fact)
+		if err != nil {
+			return false, err
+		}
+	}
+
+	// whether return value is in ret set of fnFcFn
+	fn := ast.NewFcFn(left, randomAtoms)
+	ok, err = ver.VerFactStmt(ast.NewInFactWithParamFc(fn, leftIsInWhichFnTT.FnTemplateStmt.RetSet), state)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
 
 	return false, nil
 }
