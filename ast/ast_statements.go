@@ -64,6 +64,7 @@ type DefExistPropStmt struct {
 
 type DefFnStmt struct {
 	// FnTemplateStmt FnTemplateStmt
+	Name       string
 	FnTemplate FnTemplateNoName
 }
 

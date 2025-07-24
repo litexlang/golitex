@@ -18,82 +18,82 @@ import ast "golitex/ast"
 
 // return template and parameters of each level of fcFn
 // 返回的slice是从左到右的template和params
-func (e *Env) GetTemplateOfFcFnRecursively(fcFn *ast.FcFn) ([]*ast.FnTemplateStmt, []*ast.FcFn, bool) {
-	currentFcFn := fcFn
-	var leftMostHead ast.FcAtom
-	paramsOfEachLevel := [][]ast.Fc{currentFcFn.Params}
+// func (e *Env) GetTemplateOfFcFnRecursively(fcFn *ast.FcFn) ([]*ast.FnTemplateStmt, []*ast.FcFn, bool) {
+// 	currentFcFn := fcFn
+// 	var leftMostHead ast.FcAtom
+// 	paramsOfEachLevel := [][]ast.Fc{currentFcFn.Params}
 
-	for {
-		if headAsAtom, ok := currentFcFn.FnHead.(ast.FcAtom); ok {
-			leftMostHead = headAsAtom
-			break
-		} else {
-			currentFcFn = currentFcFn.FnHead.(*ast.FcFn)
-			paramsOfEachLevel = append([][]ast.Fc{currentFcFn.Params}, paramsOfEachLevel...)
-		}
-	}
+// 	for {
+// 		if headAsAtom, ok := currentFcFn.FnHead.(ast.FcAtom); ok {
+// 			leftMostHead = headAsAtom
+// 			break
+// 		} else {
+// 			currentFcFn = currentFcFn.FnHead.(*ast.FcFn)
+// 			paramsOfEachLevel = append([][]ast.Fc{currentFcFn.Params}, paramsOfEachLevel...)
+// 		}
+// 	}
 
-	lenOfParamOfEachLevelMinusOne := len(paramsOfEachLevel) - 1
+// 	lenOfParamOfEachLevelMinusOne := len(paramsOfEachLevel) - 1
 
-	templateOfEachLevel := []*ast.FnTemplateStmt{}
+// 	templateOfEachLevel := []*ast.FnTemplateStmt{}
 
-	// get template of leftmost head
-	fnT, ok := e.GetLatestFnTemplate(leftMostHead)
-	if !ok {
-		return nil, nil, false
-	}
+// 	// get template of leftmost head
+// 	fnT, ok := e.GetLatestFnTemplate(leftMostHead)
+// 	if !ok {
+// 		return nil, nil, false
+// 	}
 
-	templateOfEachLevel = append([]*ast.FnTemplateStmt{fnT}, templateOfEachLevel...)
-	fnDefRetSet := fnT.RetSet
-	fnDefParams := fnT.DefHeader.Params
+// 	templateOfEachLevel = append([]*ast.FnTemplateStmt{fnT}, templateOfEachLevel...)
+// 	fnDefRetSet := fnT.RetSet
+// 	fnDefParams := fnT.DefHeader.Params
 
-	// 从 template 的定义中，得到 template的返回值类型
-	for i := lenOfParamOfEachLevelMinusOne - 1; i >= 0; i-- {
-		switch retT := fnDefRetSet.(type) {
-		case ast.FcAtom:
-			retT, ok := fnDefRetSet.(ast.FcAtom)
-			if !ok {
-				return nil, nil, false
-			}
-			templateDef, ok := e.GetFnTemplateDef(retT)
-			if !ok {
-				return nil, nil, false
-			}
-			templateOfEachLevel = append(templateOfEachLevel, &templateDef.FnTemplateStmt)
-			fnDefRetSet = templateDef.FnTemplateStmt.RetSet
-			fnDefParams = templateDef.FnTemplateStmt.Params
-		case *ast.FcFn:
-			curLayer := lenOfParamOfEachLevelMinusOne - i - 1
+// 	// 从 template 的定义中，得到 template的返回值类型
+// 	for i := lenOfParamOfEachLevelMinusOne - 1; i >= 0; i-- {
+// 		switch retT := fnDefRetSet.(type) {
+// 		case ast.FcAtom:
+// 			retT, ok := fnDefRetSet.(ast.FcAtom)
+// 			if !ok {
+// 				return nil, nil, false
+// 			}
+// 			templateDef, ok := e.GetFnTemplateDef(retT)
+// 			if !ok {
+// 				return nil, nil, false
+// 			}
+// 			templateOfEachLevel = append(templateOfEachLevel, &templateDef.FnTemplateStmt)
+// 			fnDefRetSet = templateDef.FnTemplateStmt.RetSet
+// 			fnDefParams = templateDef.FnTemplateStmt.Params
+// 		case *ast.FcFn:
+// 			curLayer := lenOfParamOfEachLevelMinusOne - i - 1
 
-			curParams := paramsOfEachLevel[curLayer]
+// 			curParams := paramsOfEachLevel[curLayer]
 
-			if len(curParams) != len(fnDefParams) {
-				return nil, nil, false
-			}
+// 			if len(curParams) != len(fnDefParams) {
+// 				return nil, nil, false
+// 			}
 
-			uniMap := map[string]ast.Fc{}
-			for j, freeVar := range fnDefParams {
-				uniMap[freeVar] = curParams[j]
-			}
+// 			uniMap := map[string]ast.Fc{}
+// 			for j, freeVar := range fnDefParams {
+// 				uniMap[freeVar] = curParams[j]
+// 			}
 
-			instRetT, err := retT.Instantiate(uniMap)
-			if err != nil {
-				return nil, nil, false
-			}
+// 			instRetT, err := retT.Instantiate(uniMap)
+// 			if err != nil {
+// 				return nil, nil, false
+// 			}
 
-			curTemplate, ok := instRetT.(*ast.FcFn).TemplateFcFnToTemplate()
-			if !ok {
-				return nil, nil, false
-			}
-			templateOfEachLevel = append(templateOfEachLevel, curTemplate)
-			fnDefRetSet = curTemplate.RetSet
-		}
-	}
+// 			curTemplate, ok := instRetT.(*ast.FcFn).TemplateFcFnToTemplate()
+// 			if !ok {
+// 				return nil, nil, false
+// 			}
+// 			templateOfEachLevel = append(templateOfEachLevel, curTemplate)
+// 			fnDefRetSet = curTemplate.RetSet
+// 		}
+// 	}
 
-	fcFnOfEachLevel := ast.MakeSliceOfFcFnWithHeadAndParamsOfEachLevel(leftMostHead, paramsOfEachLevel)
+// 	fcFnOfEachLevel := ast.MakeSliceOfFcFnWithHeadAndParamsOfEachLevel(leftMostHead, paramsOfEachLevel)
 
-	return templateOfEachLevel, fcFnOfEachLevel, true
-}
+// 	return templateOfEachLevel, fcFnOfEachLevel, true
+// }
 
 func (e *Env) GetEnumFact(enumName string) ([]ast.Fc, bool) {
 	for env := e; env != nil; env = env.Parent {

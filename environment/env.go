@@ -26,13 +26,13 @@ type PropDefMem map[string]ast.DefPropStmt
 
 type ExistPropDefMem map[string]ast.DefExistPropStmt
 
-type FnTemplateDefMem map[string]ast.DefFnTemplateStmt
+// type FnTemplateDefMem map[string]ast.DefFnTemplateStmt
 type FnTemplateTemplateDefMem map[string]ast.FnTemplateTemplateStmt
 
 // 我暂时不清楚 map[string]struct{} 有没有问题，我暂时用不到def obj 相关的任何的东西
 type ObjDefMem map[string]ast.FnTemplate_Or_DefObjStmtInterface // 因为很多的obj会共享一个def obj
 
-type FnInFnTemplateFactsMem map[string][]*ast.FnTemplateStmt
+// type FnInFnTemplateFactsMem map[string][]*ast.FnTemplateStmt
 type FnInFnTemplateTemplateFactsMem map[string][]FnInFnTTMemItem
 
 type FnInFnTTMemItem struct {
