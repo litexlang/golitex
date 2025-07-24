@@ -51,6 +51,17 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) error {
 		if !ok {
 			return fmt.Errorf("failed to satisfy the function template of %s", fact.Params[0])
 		}
+
+		fnTNoName, err := fnFn.ToFnTNoName()
+		if err != nil {
+			return err
+		}
+		err = e.insertFnInFnTT(fact.Params[0], fnFn, fnTNoName)
+		if err != nil {
+			return err
+		}
+
+		return nil
 	}
 
 	if setDefinedByReplacement, ok := fact.Params[1].(*ast.FcFn); ok && ast.IsFcAtomAndEqualToStr(setDefinedByReplacement.FnHead, glob.KeywordSetDefinedByReplacement) {
