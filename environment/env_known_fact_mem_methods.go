@@ -330,7 +330,7 @@ func (e *Env) GetSpecFact_InLogicExpr_InUniFactMem() (*SpecFact_InLogicExpr_InUn
 	return &e.KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem, true
 }
 
-func (e *Env) IsFnDeclared(fc ast.FcAtom) (*ast.FnTemplateStmt, bool) {
+func (e *Env) IsFnDeclared(fc ast.FcAtom) (*FnInFnTTMemItem, bool) {
 	// TODO 这里需要更严格检查一下是否是正常的函数名
 	if _, ok := glob.BuiltinKeywordsSet[string(fc)]; ok {
 		return nil, true
@@ -341,7 +341,8 @@ func (e *Env) IsFnDeclared(fc ast.FcAtom) (*ast.FnTemplateStmt, bool) {
 		return nil, true
 	}
 
-	fnDef, ok := e.GetLatestFnTemplate(fc)
+	// fnDef, ok := e.GetLatestFnTemplate(fc)
+	fnDef, ok := e.GetLatestFnTT_GivenNameIsIn(string(fc))
 	if !ok {
 		return nil, false
 	}
@@ -364,8 +365,8 @@ func (e *Env) newUniFactWithIff(stmt *ast.UniFactWithIffStmt) error {
 	return nil
 }
 
-func (e *Env) StoreFnSatisfyFnTemplateFact(fn ast.Fc, fnTemplate *ast.FnTemplateStmt) error {
-	err := e.FnInFnTemplateFactsMem.insert(fn, fnTemplate)
+func (e *Env) StoreFnSatisfyFnTemplateFact(fn ast.Fc, fnTemplateFcFn *ast.FcFn, fnTNoName *ast.FnTemplateNoName) error {
+	err := e.insertFnInFnTT(fn, fnTemplateFcFn, fnTNoName)
 	if err != nil {
 		return err
 	}

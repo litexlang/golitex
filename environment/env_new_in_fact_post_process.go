@@ -29,28 +29,28 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) error {
 		return e.inFactPostProcess_InSetFnRetValue(fact, def)
 	}
 
-	if isTemplate, err := e.inFactPostProcess_InFnTemplate(fact); isTemplate || err != nil {
-		return err
-	}
+	// if isTemplate, err := e.inFactPostProcess_InFnTemplate(fact); isTemplate || err != nil {
+	// 	return err
+	// }
 
 	if isTemplateTemplate, err := e.inFactPostProcess_InFnTemplateTemplate(fact); isTemplateTemplate || err != nil {
 		return err
 	}
 
 	if fnFn, ok := fact.Params[1].(*ast.FcFn); ok && ast.IsFnFcFn(fnFn) {
-		templateStmt, err := ast.FnFcToFnTemplateStmt(fnFn)
-		if err != nil {
-			return err
-		}
+		// templateStmt, err := ast.FnFcToFnTemplateStmt(fnFn)
+		// if err != nil {
+		// 	return err
+		// }
 
-		ok, err := e.FcSatisfy_FreeTemplateFact_Store_DeriveFacts(fact.Params[0], templateStmt)
-		if err != nil {
-			return err
-		}
+		// ok, err := e.FcSatisfy_FreeTemplateFact_Store_DeriveFacts(fact.Params[0], templateStmt)
+		// if err != nil {
+		// 	return err
+		// }
 
-		if !ok {
-			return fmt.Errorf("failed to satisfy the function template of %s", fact.Params[0])
-		}
+		// if !ok {
+		// 	return fmt.Errorf("failed to satisfy the function template of %s", fact.Params[0])
+		// }
 
 		fnTNoName, err := fnFn.FnTFc_ToFnTNoName()
 		if err != nil {
@@ -71,41 +71,41 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) error {
 	return nil
 }
 
-func (e *Env) inFactPostProcess_InFnTemplate(fact *ast.SpecFactStmt) (bool, error) {
-	// TODO 这里如果是 fcFn 类型的template那也要考虑
-	templateName, ok := fact.Params[1].(ast.FcAtom)
-	if !ok {
-		return false, nil
-	}
+// func (e *Env) inFactPostProcess_InFnTemplate(fact *ast.SpecFactStmt) (bool, error) {
+// 	// TODO 这里如果是 fcFn 类型的template那也要考虑
+// 	templateName, ok := fact.Params[1].(ast.FcAtom)
+// 	if !ok {
+// 		return false, nil
+// 	}
 
-	curInTemplate, ok := e.GetFnTemplateDef(templateName)
-	if !ok {
-		return false, nil
-	}
+// 	curInTemplate, ok := e.GetFnTemplateDef(templateName)
+// 	if !ok {
+// 		return false, nil
+// 	}
 
-	return e.FcSatisfy_FreeTemplateFact_Store_DeriveFacts(fact.Params[0], &curInTemplate.FnTemplateStmt)
-}
+// 	return e.FcSatisfy_FreeTemplateFact_Store_DeriveFacts(fact.Params[0], &curInTemplate.FnTemplateStmt)
+// }
 
-func (e *Env) FcSatisfy_FreeTemplateFact_Store_DeriveFacts(fc ast.Fc, fnTemplate *ast.FnTemplateStmt) (bool, error) {
-	instantiatedFnTStmt, err := fnTemplate.InstantiateByFnName_WithTemplateNameGivenFc(fc)
-	if err != nil {
-		return false, err
-	}
+// func (e *Env) FcSatisfy_FreeTemplateFact_Store_DeriveFacts(fc ast.Fc, fnTemplate *ast.FnTemplateStmt) (bool, error) {
+// 	instantiatedFnTStmt, err := fnTemplate.InstantiateByFnName_WithTemplateNameGivenFc(fc)
+// 	if err != nil {
+// 		return false, err
+// 	}
 
-	err = e.StoreFnSatisfyFnTemplateFact(fc, instantiatedFnTStmt)
-	if err != nil {
-		return false, err
-	}
+// 	err = e.StoreFnSatisfyFnTemplateFact(fc, instantiatedFnTStmt)
+// 	if err != nil {
+// 		return false, err
+// 	}
 
-	// derivedFact := instantiatedFnTStmt.DeriveUniFact(fc)
-	derivedFact := instantiatedFnTStmt.DeriveUniFact()
-	err = e.NewFact(derivedFact)
-	if err != nil {
-		return false, err
-	}
+// 	// derivedFact := instantiatedFnTStmt.DeriveUniFact(fc)
+// 	derivedFact := instantiatedFnTStmt.DeriveUniFact()
+// 	err = e.NewFact(derivedFact)
+// 	if err != nil {
+// 		return false, err
+// 	}
 
-	return true, nil
-}
+// 	return true, nil
+// }
 
 func (e *Env) inFactPostProcess_InSetFnRetValue(fact *ast.SpecFactStmt, def *ast.HaveSetFnStmt) error {
 	inFactRightParamAsFcFnPt, ok := fact.Params[1].(*ast.FcFn)
