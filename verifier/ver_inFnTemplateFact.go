@@ -22,7 +22,7 @@ import (
 
 // left dom >= right dom
 // left dom + left then + right dom => right then
-func (ver *Verifier) leftDomLeadToRightDom_RightDomLeadsToRightThen(funcName ast.Fc, leftT *ast.FnTemplateStmt, rightT *ast.FnTemplateStmt, state VerState) (bool, error) {
+func (ver *Verifier) leftDomLeadToRightDom_RightDomLeadsToRightThen(funcName ast.Fc, leftT *ast.FnTemplateNoName, rightT *ast.FnTemplateNoName, state VerState) (bool, error) {
 	if len(leftT.Params) != len(rightT.Params) {
 		return false, fmt.Errorf("the number of parameters of the left function definition is not equal to the number of parameters of the right function definition")
 	}

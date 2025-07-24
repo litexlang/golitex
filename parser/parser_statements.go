@@ -75,8 +75,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		}
 	case glob.KeywordProveInEachCase:
 		ret, err = tb.proveInEachCaseStmt()
-	case glob.KeywordFnTemplate:
-		ret, err = tb.defFnTemplateStmt()
+	// case glob.KeywordFnTemplate:
+	// ret, err = tb.defFnTemplateStmt()
 	case glob.KeywordProveByMathInduction:
 		ret, err = tb.proveByMathInductionStmt()
 	case glob.KeywordProveOverFiniteSet:
@@ -303,36 +303,36 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 	return ast.NewDefPropStmt(declHeader, domFacts, iffFacts, []ast.FactStmt{}), nil
 }
 
-func (tb *tokenBlock) fnTemplateStmt(keyword string) (*ast.FnTemplateStmt, error) {
-	err := tb.header.skip(keyword)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+// func (tb *tokenBlock) fnTemplateStmt(keyword string) (string, *ast.FnTemplateNoName, error) {
+// 	err := tb.header.skip(keyword)
+// 	if err != nil {
+// 		return "", nil, tbErr(err, tb)
+// 	}
 
-	decl, err := tb.defHeaderWithoutParsingColonAtEnd()
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+// 	decl, err := tb.defHeaderWithoutParsingColonAtEnd()
+// 	if err != nil {
+// 		return "", nil, tbErr(err, tb)
+// 	}
 
-	retSet, err := tb.RawFc()
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+// 	retSet, err := tb.RawFc()
+// 	if err != nil {
+// 		return "", nil, tbErr(err, tb)
+// 	}
 
-	domFacts := []ast.FactStmt{}
-	thenFacts := []ast.FactStmt{}
+// 	domFacts := []ast.FactStmt{}
+// 	thenFacts := []ast.FactStmt{}
 
-	if tb.header.is(glob.KeySymbolColon) {
-		tb.header.skip("")
-		// domFacts, thenFacts, _, err = tb.uniFactBodyFacts(UniFactDepth1, glob.KeywordThen)
-		domFacts, thenFacts, err = tb.dom_and_section(glob.KeywordThen, glob.KeywordIff)
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-	}
+// 	if tb.header.is(glob.KeySymbolColon) {
+// 		tb.header.skip("")
+// 		// domFacts, thenFacts, _, err = tb.uniFactBodyFacts(UniFactDepth1, glob.KeywordThen)
+// 		domFacts, thenFacts, err = tb.dom_and_section(glob.KeywordThen, glob.KeywordIff)
+// 		if err != nil {
+// 			return "", nil, tbErr(err, tb)
+// 		}
+// 	}
 
-	return ast.NewFnTemplateStmt(decl, domFacts, thenFacts, retSet), nil
-}
+// 	return string(decl.Name), ast.NewFnTemplateNoName(decl.Params, decl.ParamSets, retSet, domFacts, thenFacts), nil
+// }
 
 func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 	err := tb.header.skip(glob.KeywordObj)
@@ -1133,22 +1133,44 @@ func (tb *tokenBlock) parseFactBodyWithHeaderNameAndUniFactDepth(headerName stri
 	return facts, nil
 }
 
-func (tb *tokenBlock) defFnTemplateStmt() (*ast.DefFnTemplateStmt, error) {
-	fnTemplateStmt, err := tb.fnTemplateStmt(glob.KeywordFnTemplate)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+// func (tb *tokenBlock) defFnTemplateStmt() (*ast.DefFnTemplateStmt, error) {
+// 	fnTemplateStmt, err := tb.fnTemplateStmt(glob.KeywordFnTemplate)
+// 	if err != nil {
+// 		return nil, tbErr(err, tb)
+// 	}
 
-	return ast.NewFnTemplateDefStmt(fnTemplateStmt), nil
-}
+// 	return ast.NewFnTemplateDefStmt(fnTemplateStmt), nil
+// }
 
 func (tb *tokenBlock) defFnStmt() (*ast.DefFnStmt, error) {
-	fnTemplateStmt, err := tb.fnTemplateStmt(glob.KeywordFn)
+	err := tb.header.skip(glob.KeywordFn)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
 
-	return ast.NewDefFnStmt(fnTemplateStmt), nil
+	decl, err := tb.defHeaderWithoutParsingColonAtEnd()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	retSet, err := tb.RawFc()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	domFacts := []ast.FactStmt{}
+	thenFacts := []ast.FactStmt{}
+
+	if tb.header.is(glob.KeySymbolColon) {
+		tb.header.skip("")
+		// domFacts, thenFacts, _, err = tb.uniFactBodyFacts(UniFactDepth1, glob.KeywordThen)
+		domFacts, thenFacts, err = tb.dom_and_section(glob.KeywordThen, glob.KeywordIff)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+	}
+
+	return ast.NewDefFnStmt(string(decl.Name), ast.NewFnTemplateNoName(decl.Params, decl.ParamSets, retSet, domFacts, thenFacts)), nil
 }
 
 // func (tb *tokenBlock) importGloballyStmt() (*ast.ImportGloballyStmt, error) {
