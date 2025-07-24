@@ -179,14 +179,11 @@ func (ver *Verifier) fcFnSatisfyFnTemplateTemplate_FnTemplate_Requirement(fc ast
 }
 
 func (ver *Verifier) fcFnSatisfy_FnTemplateTemplate_Requirement(fc ast.Fc, state VerState) (bool, error) {
+	var err error
+
 	asFcFn, ok := fc.(*ast.FcFn)
 	if !ok {
 		return false, fmt.Errorf("%s is not a function", fc)
-	}
-
-	def, ok := ver.env.GetFnTemplateTemplateDef(asFcFn.FnHead.(ast.FcAtom))
-	if !ok {
-		return false, nil
 	}
 
 	lastFnTTItIsIn, ok := ver.env.GetLatestFnTT_GivenNameIsIn(asFcFn.FnHead.String())
@@ -194,10 +191,7 @@ func (ver *Verifier) fcFnSatisfy_FnTemplateTemplate_Requirement(fc ast.Fc, state
 		return false, nil
 	}
 
-	fnTemplateNoName, err := def.Instantiate_GetFnTemplateNoName(lastFnTTItIsIn)
-	if err != nil {
-		return false, err
-	}
+	fnTemplateNoName := lastFnTTItIsIn.FnTemplateStmt
 
 	ok, err = ver.fcFnParamsSatisfyFnTemplateNoNameRequirement(asFcFn, fnTemplateNoName, state)
 	if err != nil {

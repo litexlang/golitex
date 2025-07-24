@@ -170,7 +170,7 @@ func (e *Env) inFactPostProcess_InFnTemplateTemplate(fact *ast.SpecFactStmt) (bo
 		return false, nil
 	}
 
-	err := e.FnInFnTemplateTemplateFactsMem.insert(fact.Params[0], fact.Params[1].(*ast.FcFn))
+	err := e.insertFnInFnTT(fact.Params[0], fact.Params[1].(*ast.FcFn))
 	if err != nil {
 		return false, err
 	}

@@ -374,7 +374,7 @@ func (e *Env) StoreFnSatisfyFnTemplateFact(fn ast.Fc, fnTemplate *ast.FnTemplate
 }
 
 func (e *Env) StoreFnSatisfyFnTemplateTemplateFact(fn ast.Fc, fnTemplateFcFn *ast.FcFn) error {
-	err := e.FnInFnTemplateTemplateFactsMem.insert(fn, fnTemplateFcFn)
+	err := e.insertFnInFnTT(fn, fnTemplateFcFn)
 	if err != nil {
 		return err
 	}
