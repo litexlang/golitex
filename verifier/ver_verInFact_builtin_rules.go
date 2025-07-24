@@ -212,7 +212,16 @@ func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state VerState)
 
 func (ver *Verifier) inFnTemplateTemplateFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if asFcFn, ok := stmt.Params[1].(*ast.FcFn); ok && ast.IsFnFcFn(asFcFn) {
-		return ver.ver_In_FnFcFn_FnTT(stmt.Params[0], asFcFn, state)
+		ok, err := ver.ver_In_FnFcFn_FnTT(stmt.Params[0], asFcFn, state)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			if state.requireMsg() {
+				ver.successWithMsg(stmt.String(), fmt.Sprintf("dom of template %s is in the domain of the template where function %s is in. Also, the return value of the function is in the return set of the template where function %s is in", stmt.Params[1], stmt.Params[0], stmt.Params[1]))
+			}
+			return true, nil
+		}
 	}
 
 	return false, nil
@@ -527,9 +536,9 @@ func (ver *Verifier) atTupleIndex(stmt *ast.SpecFactStmt, state VerState) (bool,
 	return false, nil
 }
 
-func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Fc, fnFcFn ast.Fc, state VerState) (bool, error) {
+func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Fc, fnFcFn *ast.FcFn, state VerState) (bool, error) {
 	ver.newEnv(ver.env)
-	defer ver.deleteEnvAndRetainMsg()
+	defer ver.deleteEnv_DeleteMsg()
 
 	// check when parameters satisfy given fnFcFn parameter requirements, then it satisfies the fn template template requirement
 
@@ -558,7 +567,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Fc, fnFcFn ast.Fc, state VerSta
 		if err != nil {
 			return false, err
 		}
-		err = ver.env.NewFact(ast.NewInFactWithParamFc(ast.FcAtom(randomName), leftIsInWhichFnTT.FnTemplateStmt.ParamSets[i]))
+		err = ver.env.NewFact(ast.NewInFactWithParamFc(ast.FcAtom(randomName), (fnFcFn.FnHead).(*ast.FcFn).Params[i]))
 		if err != nil {
 			return false, err
 		}
@@ -612,7 +621,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Fc, fnFcFn ast.Fc, state VerSta
 
 	// whether return value is in ret set of fnFcFn
 	fn := ast.NewFcFn(left, randomAtoms)
-	ok, err = ver.VerFactStmt(ast.NewInFactWithParamFc(fn, leftIsInWhichFnTT.FnTemplateStmt.RetSet), state)
+	ok, err = ver.VerFactStmt(ast.NewInFactWithParamFc(fn, fnFcFn.Params[0]), state)
 	if err != nil {
 		return false, err
 	}
@@ -620,5 +629,5 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Fc, fnFcFn ast.Fc, state VerSta
 		return false, nil
 	}
 
-	return false, nil
+	return true, nil
 }

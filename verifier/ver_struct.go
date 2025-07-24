@@ -51,3 +51,12 @@ func (ver *Verifier) deleteEnvAndRetainMsg() error {
 		return fmt.Errorf("parent env does not exist")
 	}
 }
+
+func (ver *Verifier) deleteEnv_DeleteMsg() error {
+	if ver.env.Parent != nil {
+		ver.env = ver.env.Parent
+		return nil
+	} else {
+		return fmt.Errorf("parent env does not exist")
+	}
+}
