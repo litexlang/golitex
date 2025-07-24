@@ -161,16 +161,16 @@ func isArithmeticFn(fc ast.Fc) bool {
 }
 
 func (ver *Verifier) fcFnSatisfyFnTemplateTemplate_FnTemplate_Requirement(fc ast.Fc, state VerState) (bool, error) {
-	ok, err := ver.fcFnSatisfy_FnTemplateReq(fc, state)
-	if err != nil {
-		return false, err
-	}
+	// ok, err := ver.fcFnSatisfy_FnTemplateReq(fc, state)
+	// if err != nil {
+	// 	return false, err
+	// }
 
-	if ok {
-		return true, nil
-	}
+	// if ok {
+	// 	return true, nil
+	// }
 
-	ok, err = ver.fcFnSatisfy_FnTemplateTemplate_Requirement(fc, state)
+	ok, err := ver.fcFnSatisfy_FnTemplateTemplate_Requirement(fc, state)
 	if err != nil {
 		return false, err
 	}
@@ -202,41 +202,41 @@ func (ver *Verifier) fcFnSatisfy_FnTemplateTemplate_Requirement(fc ast.Fc, state
 }
 
 // TODO: 这里需要检查，setParam是否是自由变量
-func (ver *Verifier) fcFnSatisfy_FnTemplateReq(fc ast.Fc, state VerState) (bool, error) {
-	asFcFn, ok := fc.(*ast.FcFn)
-	if !ok {
-		return false, fmt.Errorf("%s is not a function", fc)
-	}
+// func (ver *Verifier) fcFnSatisfy_FnTemplateReq(fc ast.Fc, state VerState) (bool, error) {
+// 	asFcFn, ok := fc.(*ast.FcFn)
+// 	if !ok {
+// 		return false, fmt.Errorf("%s is not a function", fc)
+// 	}
 
-	templatesOfEachLevel, fcOfEachLevel, ok := ver.env.GetTemplateOfFcFnRecursively(asFcFn)
+// 	templatesOfEachLevel, fcOfEachLevel, ok := ver.env.GetTemplateOfFcFnRecursively(asFcFn)
 
-	if !ok {
-		return false, nil
-	}
+// 	if !ok {
+// 		return false, nil
+// 	}
 
-	for i := range templatesOfEachLevel {
-		ok, err := ver.fcFnParamsSatisfyFnTemplateRequirement(fcOfEachLevel[i].Params, templatesOfEachLevel[i], state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, nil
-		}
-	}
+// 	for i := range templatesOfEachLevel {
+// 		ok, err := ver.fcFnParamsSatisfyFnTemplateRequirement(fcOfEachLevel[i].Params, templatesOfEachLevel[i], state)
+// 		if err != nil {
+// 			return false, err
+// 		}
+// 		if !ok {
+// 			return false, nil
+// 		}
+// 	}
 
-	// store the fact that the parameters satisfy the requirement of the function
-	// REMARK 这里必须要存储，否则很多关于函数的事实是不工作的。但这里牵扯到一个问题是，这里以下释放这么多事实，是不是浪费了。而且我不清楚是只要释放最后一位的性质，还是每一位都要释放
-	ok, err := ver.env.FcSatisfy_FreeTemplateFact_Store_DeriveFacts(fcOfEachLevel[len(fcOfEachLevel)-1], templatesOfEachLevel[len(templatesOfEachLevel)-1])
-	if err != nil {
-		return false, err
-	}
+// 	// store the fact that the parameters satisfy the requirement of the function
+// 	// REMARK 这里必须要存储，否则很多关于函数的事实是不工作的。但这里牵扯到一个问题是，这里以下释放这么多事实，是不是浪费了。而且我不清楚是只要释放最后一位的性质，还是每一位都要释放
+// 	ok, err := ver.env.FcSatisfy_FreeTemplateFact_Store_DeriveFacts(fcOfEachLevel[len(fcOfEachLevel)-1], templatesOfEachLevel[len(templatesOfEachLevel)-1])
+// 	if err != nil {
+// 		return false, err
+// 	}
 
-	if !ok {
-		return false, nil
-	}
+// 	if !ok {
+// 		return false, nil
+// 	}
 
-	return true, nil
-}
+// 	return true, nil
+// }
 
 func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn, state VerState) (bool, error) {
 	// parameter必须是实数
@@ -281,39 +281,39 @@ func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn, state VerState) (bool
 	return true, nil
 }
 
-func (ver *Verifier) fcFnParamsSatisfyFnTemplateRequirement(params []ast.Fc, templateOfFn *ast.FnTemplateStmt, state VerState) (bool, error) {
-	uniMap := map[string]ast.Fc{}
-	for i, param := range params {
-		uniMap[templateOfFn.Params[i]] = param
-	}
+// func (ver *Verifier) fcFnParamsSatisfyFnTemplateRequirement(params []ast.Fc, templateOfFn *ast.FnTemplateStmt, state VerState) (bool, error) {
+// 	uniMap := map[string]ast.Fc{}
+// 	for i, param := range params {
+// 		uniMap[templateOfFn.Params[i]] = param
+// 	}
 
-	paramSets, instantiatedDomFacts, _, _, err := templateOfFn.InstantiateFnTWithoutChangingTName(uniMap)
-	if err != nil {
-		return false, err
-	}
+// 	paramSets, instantiatedDomFacts, _, _, err := templateOfFn.InstantiateFnTWithoutChangingTName(uniMap)
+// 	if err != nil {
+// 		return false, err
+// 	}
 
-	for i, paramSet := range paramSets {
-		ok, err := ver.VerFactStmt(ast.NewInFactWithFc(params[i], paramSet), state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, fmt.Errorf("in fact %s is unknown", ast.NewInFactWithFc(params[i], paramSet))
-		}
-	}
+// 	for i, paramSet := range paramSets {
+// 		ok, err := ver.VerFactStmt(ast.NewInFactWithFc(params[i], paramSet), state)
+// 		if err != nil {
+// 			return false, err
+// 		}
+// 		if !ok {
+// 			return false, fmt.Errorf("in fact %s is unknown", ast.NewInFactWithFc(params[i], paramSet))
+// 		}
+// 	}
 
-	for _, domFact := range instantiatedDomFacts {
-		ok, err := ver.VerFactStmt(domFact, state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, fmt.Errorf("dom fact %s is unknown", domFact)
-		}
-	}
+// 	for _, domFact := range instantiatedDomFacts {
+// 		ok, err := ver.VerFactStmt(domFact, state)
+// 		if err != nil {
+// 			return false, err
+// 		}
+// 		if !ok {
+// 			return false, fmt.Errorf("dom fact %s is unknown", domFact)
+// 		}
+// 	}
 
-	return true, nil
-}
+// 	return true, nil
+// }
 
 func (ver *Verifier) fcFnParamsSatisfyFnTemplateNoNameRequirement(fcFn *ast.FcFn, templateOfFn *ast.FnTemplateNoName, state VerState) (bool, error) {
 	if len(fcFn.Params) != len(templateOfFn.Params) {
