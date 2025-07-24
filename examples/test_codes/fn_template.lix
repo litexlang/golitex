@@ -17,6 +17,10 @@ prove:
 
     $in(reverse, dom_R_ret_R)
 
+"""
+
+"""
+
 # know ... $in fn_template
 fn_template f_template(x Z) Z:
     dom:
@@ -45,6 +49,9 @@ prove:
     know f3(1) $in f_template # true, because return value of f3 is $in f_template。这是要写的，否则找不到f3(1) 的性质
     f3(1)(2) = 2 + 1
 
+"""
+
+"""
 prove:
     fn_template f_t(x Z) Z:
         dom:
@@ -63,5 +70,4 @@ prove:
     f(0) $in f_t2
     f(0)(1) $in f_t
     f(0)(1)(2) = 2 + 10
-
 """
