@@ -211,14 +211,8 @@ exist_prop x A st any_non_empty_set_has_item_that_is_not_a_set_or_is_disjoint_fr
         $is_disjoint_from(x, A)
 
 # Axiom 3.10 (Power set axiom) Let X and Y be sets. Then there exists a set denoted by Y^{X} which contains all functions from X to Y
-# keyword "fn_template" is a built-in keyword in Litex for declaring a function template, i.e. a set of functions that satisfy some conditions about its domain and range. This keyword is more powerful and expressive than power set axiom.
 
-# For example, we can declare the set of all functions from natural numbers larger than 10 to real numbers less than 100 as follows:
-fn_template fn_from_N_to_N(x N) R:
-    dom:
-        x > 10
-    then:
-        fn_from_N_to_N(x) < 100
+
 
 # Axiom 3.11 (Union axiom) Let X be a set. Then there exists a set denoted by union(X) which contains all elements of the elements of X.
 fn union_of_set_in_sets(X set) set:

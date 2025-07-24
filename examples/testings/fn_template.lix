@@ -1,3 +1,4 @@
+"""
 prove:
     fn_template dom_R_R_ret_R(x, y R) R
 
@@ -62,3 +63,5 @@ prove:
     f(0) $in f_t2
     f(0)(1) $in f_t
     f(0)(1)(2) = 2 + 10
+
+"""

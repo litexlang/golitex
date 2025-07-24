@@ -211,16 +211,31 @@ func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state VerState)
 }
 
 func (ver *Verifier) inFnTemplateTemplateFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if asFcFn, ok := stmt.Params[1].(*ast.FcFn); ok && ast.IsFnFcFn(asFcFn) {
-		ok, err := ver.ver_In_FnFcFn_FnTT(stmt.Params[0], asFcFn, state)
-		if err != nil {
-			return false, err
-		}
-		if ok {
-			if state.requireMsg() {
-				ver.successWithMsg(stmt.String(), fmt.Sprintf("dom of template %s is in the domain of the template where function %s is in. Also, the return value of the function is in the return set of the template where function %s is in", stmt.Params[1], stmt.Params[0], stmt.Params[1]))
+	if asFcFn, ok := stmt.Params[1].(*ast.FcFn); ok {
+		if ast.IsFnFcFn(asFcFn) {
+			ok, err := ver.ver_In_FnFcFn_FnTT(stmt.Params[0], asFcFn, state)
+			if err != nil {
+				return false, err
 			}
-			return true, nil
+			if ok {
+				if state.requireMsg() {
+					ver.successWithMsg(stmt.String(), fmt.Sprintf("dom of template %s is in the domain of the template where function %s is in. Also, the return value of the function is in the return set of the template where function %s is in", stmt.Params[1], stmt.Params[0], stmt.Params[1]))
+				}
+				return true, nil
+			}
+		} else {
+			// 	ok, err := ver.ver_In_TheTemplateWhereFnIsIn(stmt.Params[0], asFcFn, state)
+			// 	if err != nil {
+			// 		return false, err
+			// 	}
+			// 	if ok {
+			// 		if state.requireMsg() {
+			// 			ver.successWithMsg(stmt.String(), fmt.Sprintf("dom of template %s is in the domain of the template where function %s is in. Also, the return value of the function is in the return set of the template where function %s is in", stmt.Params[1], stmt.Params[0], stmt.Params[1]))
+			// 		}
+			// 		return true, nil
+			// 	}
+			// }
+			return false, nil
 		}
 	}
 
@@ -573,7 +588,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Fc, fnFcFn *ast.FcFn, state Ver
 		}
 	}
 
-	leftToUniFact, err := leftIsInWhichFnTT.FnTemplateStmt.DeriveUniFact_DefFn(left)
+	leftToUniFact, err := leftIsInWhichFnTT.FnTemplateStmt.DeriveUniFact_WithGivenFn(left)
 	if err != nil {
 		return false, err
 	}
