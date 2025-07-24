@@ -23,13 +23,13 @@ package litex_ast
 // 	return NewFnTemplateStmt(NewDefHeader(FcAtom(fc.String()), stmt.Params, newParamSets), newDomFacts, newThenFacts, newRetSet), nil
 // }
 
-func (fnTemplate *FnTemplateNoName) DeriveUniFact_DefFn(name string) (*UniFactStmt, error) {
+func (fnTemplate *FnTemplateNoName) DeriveUniFact_DefFn(fc Fc) (*UniFactStmt, error) {
 	paramAsFc := []Fc{}
 	for _, param := range fnTemplate.Params {
 		paramAsFc = append(paramAsFc, FcAtom(param))
 	}
 
-	thenFacts := []FactStmt{NewInFactWithParamFc(NewFcFn(FcAtom(name), paramAsFc), fnTemplate.RetSet)}
+	thenFacts := []FactStmt{NewInFactWithParamFc(NewFcFn(fc, paramAsFc), fnTemplate.RetSet)}
 	thenFacts = append(thenFacts, fnTemplate.ThenFacts...)
 
 	notInstantiated := NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, thenFacts)

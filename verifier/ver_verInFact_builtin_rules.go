@@ -67,7 +67,7 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state VerState) 
 		return true, nil
 	}
 
-	ok, err = ver.inFnTemplateFact(stmt, state)
+	ok, err = ver.inFnTemplateTemplateFact(stmt, state)
 	if err != nil {
 		return false, err
 	}
@@ -210,82 +210,90 @@ func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state VerState)
 	return false
 }
 
-// TODO: inFnTemplateFact
-func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) inFnTemplateTemplateFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	if asFcFn, ok := stmt.Params[1].(*ast.FcFn); ok && ast.IsFnFcFn(asFcFn) {
+		return ver.ver_In_FnFcFn_FnTT(stmt.Params[0], asFcFn, state)
+	}
+
 	return false, nil
-	// var fnTemplate *ast.FnTemplateStmt
-	// var err error
-
-	// if templateName, ok := stmt.Params[1].(ast.FcAtom); ok {
-	// 	if !ok {
-	// 		return false, nil
-	// 	}
-
-	// 	fnTDef, ok := ver.env.GetFnTemplateDef(templateName)
-	// 	if !ok {
-	// 		return false, nil
-	// 	}
-	// 	fnTemplate = &fnTDef.FnTemplateStmt
-	// } else if fnFn, ok := stmt.Params[1].(*ast.FcFn); ok && ast.IsFnFcFn(fnFn) {
-	// 	fnTemplate, err = ast.FnFcToFnTemplateStmt(fnFn)
-	// 	if err != nil {
-	// 		return false, err
-	// 	}
-	// } else {
-	// 	return false, nil
-	// }
-
-	// // Case1: 用直接验证的方式去验证，比如 know forall x Z, y Z: x + y $in Z, 可以推出 fn(Z, Z) Z·
-	// // derivedUniFact := fnTemplate.DeriveUniFact(stmt.Params[0])
-	// if fnTemplate.Name != "" {
-	// 	derivedUniFact := fnTemplate.DeriveUniFact2()
-	// 	instantiatedUniFact, err := derivedUniFact.Instantiate(map[string]ast.Fc{string(fnTemplate.DefHeader.Name): stmt.Params[0]})
-	// 	if err != nil {
-	// 		return false, err
-	// 	}
-
-	// 	ok, err := ver.VerFactStmt(instantiatedUniFact, state)
-	// 	if err != nil {
-	// 		return false, err
-	// 	}
-	// 	if ok {
-	// 		return true, nil
-	// 	}
-	// } else {
-	// 	derivedUniFact := fnTemplate.DeriveUniFact3(stmt.Params[0])
-	// 	ok, err := ver.VerFactStmt(derivedUniFact, state)
-	// 	if err != nil {
-	// 		return false, err
-	// 	}
-	// 	if ok {
-	// 		return true, nil
-	// 	}
-	// }
-
-	// // Case2: 用已知的符合的fn_template去验证
-
-	// instantiatedDefFnStmt, err := fnTemplate.InstantiateByFnName_WithTemplateNameGivenFc(stmt.Params[0])
-	// if err != nil {
-	// 	return false, nil
-	// }
-
-	// specFactDefs, ok := ver.env.GetFnTemplateOfFc(stmt.Params[0])
-	// if !ok {
-	// 	return false, nil
-	// }
-
-	// for i := len(specFactDefs) - 1; i >= 0; i-- {
-	// 	ok, err := ver.leftDomLeadToRightDom_RightDomLeadsToRightThen(stmt.Params[0], specFactDefs[i], instantiatedDefFnStmt, state)
-	// 	if err != nil {
-	// 		return false, err
-	// 	}
-	// 	if ok {
-	// 		return true, nil
-	// 	}
-	// }
-
-	// return false, nil
 }
+
+// TODO: inFnTemplateFact
+// func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+// 	return false, nil
+// 	var fnTemplate *ast.FnTemplateNoName
+// 	var err error
+
+// 	if templateName, ok := stmt.Params[1].(ast.FcAtom); ok {
+// 		if !ok {
+// 			return false, nil
+// 		}
+
+// 		fnTDef, ok := ver.env.GetFnTemplateTemplateDef(templateName)
+// 		if !ok {
+// 			return false, nil
+// 		}
+// 		fnTemplate = &fnTDef.
+// 	} else if fnFn, ok := stmt.Params[1].(*ast.FcFn); ok && ast.IsFnFcFn(fnFn) {
+// 		fnTemplate, err = ast.FnFcToFnTemplateStmt(fnFn)
+// 		if err != nil {
+// 			return false, err
+// 		}
+// 	} else {
+// 		return false, nil
+// 	}
+
+// 	// Case1: 用直接验证的方式去验证，比如 know forall x Z, y Z: x + y $in Z, 可以推出 fn(Z, Z) Z·
+// 	// derivedUniFact := fnTemplate.DeriveUniFact(stmt.Params[0])
+// 	if fnTemplate.Name != "" {
+// 		derivedUniFact := fnTemplate.DeriveUniFact2()
+// 		instantiatedUniFact, err := derivedUniFact.Instantiate(map[string]ast.Fc{string(fnTemplate.DefHeader.Name): stmt.Params[0]})
+// 		if err != nil {
+// 			return false, err
+// 		}
+
+// 		ok, err := ver.VerFactStmt(instantiatedUniFact, state)
+// 		if err != nil {
+// 			return false, err
+// 		}
+// 		if ok {
+// 			return true, nil
+// 		}
+// 	} else {
+// 		derivedUniFact := fnTemplate.DeriveUniFact3(stmt.Params[0])
+// 		ok, err := ver.VerFactStmt(derivedUniFact, state)
+// 		if err != nil {
+// 			return false, err
+// 		}
+// 		if ok {
+// 			return true, nil
+// 		}
+// 	}
+
+// 	// Case2: 用已知的符合的fn_template去验证
+
+// 	instantiatedDefFnStmt, err := fnTemplate.InstantiateByFnName_WithTemplateNameGivenFc(stmt.Params[0])
+// 	if err != nil {
+// 		return false, nil
+// 	}
+
+// 	specFactDefs, ok := ver.env.GetFnTemplateOfFc(stmt.Params[0])
+// 	if !ok {
+// 		return false, nil
+// 	}
+
+// 	for i := len(specFactDefs) - 1; i >= 0; i-- {
+// 		ok, err := ver.leftDomLeadToRightDom_RightDomLeadsToRightThen(stmt.Params[0], specFactDefs[i], instantiatedDefFnStmt, state)
+// 		if err != nil {
+// 			return false, err
+// 		}
+// 		if ok {
+// 			return true, nil
+// 		}
+// 	}
+
+// 	return false, nil
+// }
 
 func (ver *Verifier) verInSet(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	var err error
@@ -515,6 +523,54 @@ func (ver *Verifier) atTupleIndex(stmt *ast.SpecFactStmt, state VerState) (bool,
 	if ok {
 		return true, nil
 	}
+
+	return false, nil
+}
+
+func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Fc, fnFcFn ast.Fc, state VerState) (bool, error) {
+	ver.newEnv(ver.env)
+	defer ver.deleteEnvAndRetainMsg()
+
+	// check when parameters satisfy given fnFcFn parameter requirements, then it satisfies the fn template template requirement
+
+	leftIsInWhichFnTT, ok := ver.env.GetLatestFnTT_GivenNameIsIn(left.String())
+	if !ok {
+		return false, nil
+	}
+
+	randomNames := []string{}
+	for i := 0; i < len(leftIsInWhichFnTT.FnTemplateStmt.Params); i++ {
+		randomNames = append(randomNames, ver.env.GenerateUndeclaredRandomName())
+	}
+
+	uniMap := map[string]ast.Fc{}
+	for i := 0; i < len(leftIsInWhichFnTT.FnTemplateStmt.Params); i++ {
+		uniMap[leftIsInWhichFnTT.FnTemplateStmt.Params[i]] = ast.FcAtom(randomNames[i])
+	}
+
+	// check parameters of the left satisfies the fn template template requirement
+	for i, randomName := range randomNames {
+		err := ver.env.NewObj_NoDuplicate(randomName, nil)
+		if err != nil {
+			return false, err
+		}
+		err = ver.env.NewFact(ast.NewInFactWithParamFc(ast.FcAtom(randomName), leftIsInWhichFnTT.FnTemplateStmt.ParamSets[i]))
+		if err != nil {
+			return false, err
+		}
+	}
+
+	leftToUniFact, err := leftIsInWhichFnTT.FnTemplateStmt.DeriveUniFact_DefFn(left)
+	if err != nil {
+		return false, err
+	}
+
+	instantiatedLeftToUniFact, err := leftToUniFact.Instantiate(uniMap)
+	if err != nil {
+		return false, err
+	}
+
+	// verInFact
 
 	return false, nil
 }

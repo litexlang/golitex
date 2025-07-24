@@ -204,22 +204,22 @@ func (defHeader *DefHeader) NewInFacts() []*SpecFactStmt {
 	return facts
 }
 
-func getFnDeclarationFcInsideItems(fc Fc) ([]Fc, Fc) {
-	fcAsFn, ok := fc.(*FcFn)
-	if !ok {
-		return nil, nil
-	}
+// func getFnDeclarationFcInsideItems(fc Fc) ([]Fc, Fc) {
+// 	fcAsFn, ok := fc.(*FcFn)
+// 	if !ok {
+// 		return nil, nil
+// 	}
 
-	fcAsFnHeadAsFn, ok := fcAsFn.FnHead.(*FcFn)
-	if !ok {
-		return nil, nil
-	}
+// 	fcAsFnHeadAsFn, ok := fcAsFn.FnHead.(*FcFn)
+// 	if !ok {
+// 		return nil, nil
+// 	}
 
-	paramSets := []Fc{}
-	paramSets = append(paramSets, fcAsFnHeadAsFn.Params...)
+// 	paramSets := []Fc{}
+// 	paramSets = append(paramSets, fcAsFnHeadAsFn.Params...)
 
-	return paramSets, fcAsFn.Params[0]
-}
+// 	return paramSets, fcAsFn.Params[0]
+// }
 
 // func FromFnDeclFcToDefFnStmt(name FcAtom, fc Fc) *FnTemplateStmt {
 // 	paramSets, retSet := getFnDeclarationFcInsideItems(fc)
