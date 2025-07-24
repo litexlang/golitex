@@ -1,1 +1,38 @@
-+ $in fn(R, R)R
+# Definition of computational sequence
+fn comp_seq(D set, f fn(D)D) fn(D, N)D:
+    forall x D, n N:
+        comp_seq(D, f)(x,n+1) = f(comp_seq(D, f)(x, n))
+    comp_seq(D, f)(x, 0) = x
+
+# Definition of end of computational sequence
+exist_prop n N st exist_end_of_comp_seq(D set, x D, f fn(D,N)D):
+    f(x, n) = f(x, n+1)
+
+# Definition of algorithm
+prop is_algorithm(D set, I set, f fn(D)D):
+    forall x I: # i.e. I is subset of D
+        x $in D
+    iff:
+        forall x I:
+            $exist_end_of_comp_seq(D, x, comp_seq(D, f))
+
+# We prove $is_algorithm(R, R, f(x) = x)
+
+fn f(x R)R:
+    f(x) = x
+
+
+claim:
+    forall x R:
+        $exist_end_of_comp_seq(R, x, comp_seq(R, f))
+    prove:
+        comp_seq(R, f) $in fn(R, N)R
+        comp_seq(R, f)(x, 0) = x
+        comp_seq(R, f)(x, 0 + 1) = f(comp_seq(R, f)(x, 0))
+        comp_seq(R, f)(x, 0 + 1) = f(x)
+        f(x) = x
+        comp_seq(R, f)(x, 0 + 1) = x
+        comp_seq(R, f)(x, 0) = comp_seq(R, f)(x, 1)
+        exist 0 st $exist_end_of_comp_seq(R, x, comp_seq(R, f))
+
+$is_algorithm(R, R, f)
