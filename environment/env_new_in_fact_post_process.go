@@ -52,7 +52,7 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) error {
 			return fmt.Errorf("failed to satisfy the function template of %s", fact.Params[0])
 		}
 
-		fnTNoName, err := fnFn.ToFnTNoName()
+		fnTNoName, err := fnFn.FnTFc_ToFnTNoName()
 		if err != nil {
 			return err
 		}
@@ -176,27 +176,25 @@ func (e *Env) inFactPostProcess_InFnTemplateTemplate(fact *ast.SpecFactStmt) (bo
 		return false, nil
 	}
 
-	fnTemplateTemplateDef, ok := e.GetFnTemplateTemplateDef(head)
+	fnTNoName, ok, err := e.getInstantiatedFnTTOfFcFn(fact.Params[1].(*ast.FcFn))
+	if err != nil {
+		return false, err
+	}
 	if !ok {
 		return false, nil
 	}
 
-	err := e.insertFnInFnTT(fact.Params[0], fact.Params[1].(*ast.FcFn))
-	if err != nil {
-		return false, err
-	}
-
-	fnTemplateNoName, err := fnTemplateTemplateDef.Instantiate_GetFnTemplateNoName(fact.Params[1].(*ast.FcFn))
-	if err != nil {
-		return false, err
-	}
-
-	derivedFact, err := fnTemplateNoName.DeriveUniFact(string(head), fact.Params[0])
+	derivedFact, err := fnTNoName.DeriveUniFact(string(head), fact.Params[0])
 	if err != nil {
 		return false, err
 	}
 
 	err = e.NewFact(derivedFact)
+	if err != nil {
+		return false, err
+	}
+
+	err = e.StoreFnSatisfyFnTemplateTemplateFact_WithInstTNoName(fact.Params[0], fact.Params[1].(*ast.FcFn), fnTNoName)
 	if err != nil {
 		return false, err
 	}

@@ -253,7 +253,7 @@ func (fcFn *FcFn) HasHeadInSlice(headNames []string) bool {
 	return slices.Contains(headNames, string(headAtom))
 }
 
-func (fcAsFcFn *FcFn) ToFnTNoName() (*FnTemplateNoName, error) {
+func (fcAsFcFn *FcFn) FnTFc_ToFnTNoName() (*FnTemplateNoName, error) {
 	fcAsFcFnHeadAsFcFn, ok := fcAsFcFn.FnHead.(*FcFn)
 	if !ok {
 		return nil, fmt.Errorf("expected FcFn, but got %T", fcAsFcFn.FnHead)
