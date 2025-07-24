@@ -36,7 +36,7 @@ type FnInFnTemplateFactsMem map[string][]*ast.FnTemplateStmt
 type FnInFnTemplateTemplateFactsMem map[string][]FnInFnTTMemItem
 
 type FnInFnTTMemItem struct {
-	InFcFn         *ast.FcFn
+	InFcFn         *ast.FcFn // 可能是 fn(R)R 这种，或者 TName(params) 这样
 	FnTemplateStmt *ast.FnTemplateNoName
 }
 

@@ -252,3 +252,30 @@ func (fcFn *FcFn) HasHeadInSlice(headNames []string) bool {
 	}
 	return slices.Contains(headNames, string(headAtom))
 }
+
+func (fcAsFcFn *FcFn) ToFnTNoName() (*FnTemplateNoName, error) {
+	fcAsFcFnHeadAsFcFn, ok := fcAsFcFn.FnHead.(*FcFn)
+	if !ok {
+		return nil, fmt.Errorf("expected FcFn, but got %T", fcAsFcFn.FnHead)
+	}
+
+	if len(fcAsFcFn.Params) != 1 {
+		return nil, fmt.Errorf("expected 1 param, but got %d", len(fcAsFcFn.Params))
+	}
+
+	randomParams := []string{}
+	for range len(fcAsFcFnHeadAsFcFn.Params) {
+		currentParam := glob.RandomString(4)
+		if slices.Contains(randomParams, currentParam) {
+			continue
+		}
+		randomParams = append(randomParams, currentParam)
+	}
+
+	paramSets := fcAsFcFnHeadAsFcFn.Params
+	retSet := fcAsFcFn.Params[0]
+
+	fnTNoName := NewFnTemplateNoName(randomParams, paramSets, retSet, []FactStmt{}, []FactStmt{})
+
+	return fnTNoName, nil
+}
