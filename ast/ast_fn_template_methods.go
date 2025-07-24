@@ -14,14 +14,14 @@
 
 package litex_ast
 
-func (stmt *FnTemplateStmt) InstantiateByFnName_WithTemplateNameGivenFc(fc Fc) (*FnTemplateStmt, error) {
-	newParamSets, newDomFacts, newThenFacts, newRetSet, err := stmt.InstantiateFnTWithoutChangingTName(map[string]Fc{string(stmt.Name): fc})
-	if err != nil {
-		return nil, err
-	}
+// func (stmt *FnTemplateStmt) InstantiateByFnName_WithTemplateNameGivenFc(fc Fc) (*FnTemplateStmt, error) {
+// 	newParamSets, newDomFacts, newThenFacts, newRetSet, err := stmt.InstantiateFnTWithoutChangingTName(map[string]Fc{string(stmt.Name): fc})
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	return NewFnTemplateStmt(NewDefHeader(FcAtom(fc.String()), stmt.Params, newParamSets), newDomFacts, newThenFacts, newRetSet), nil
-}
+// 	return NewFnTemplateStmt(NewDefHeader(FcAtom(fc.String()), stmt.Params, newParamSets), newDomFacts, newThenFacts, newRetSet), nil
+// }
 
 func (fnTemplate *FnTemplateNoName) DeriveUniFact(templateName string, fc Fc) (*UniFactStmt, error) {
 	paramAsFc := []Fc{}
@@ -42,75 +42,75 @@ func (fnTemplate *FnTemplateNoName) DeriveUniFact(templateName string, fc Fc) (*
 	return instantiated.(*UniFactStmt), nil
 }
 
-func (fnTemplate *FnTemplateStmt) DeriveUniFact() *UniFactStmt {
-	paramAsFc := []Fc{}
-	for _, param := range fnTemplate.Params {
-		paramAsFc = append(paramAsFc, FcAtom(param))
-	}
+// func (fnTemplate *FnTemplateStmt) DeriveUniFact() *UniFactStmt {
+// 	paramAsFc := []Fc{}
+// 	for _, param := range fnTemplate.Params {
+// 		paramAsFc = append(paramAsFc, FcAtom(param))
+// 	}
 
-	thenFacts := []FactStmt{NewInFactWithParamFc(NewFcFn(FcAtom(fnTemplate.Name), paramAsFc), fnTemplate.RetSet)}
-	// thenFacts := []FactStmt{}
-	thenFacts = append(thenFacts, fnTemplate.ThenFacts...)
+// 	thenFacts := []FactStmt{NewInFactWithParamFc(NewFcFn(FcAtom(fnTemplate.Name), paramAsFc), fnTemplate.RetSet)}
+// 	// thenFacts := []FactStmt{}
+// 	thenFacts = append(thenFacts, fnTemplate.ThenFacts...)
 
-	return NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, thenFacts)
-}
+// 	return NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, thenFacts)
+// }
 
-func (fnTemplate *FnTemplateStmt) DeriveUniFact2() *UniFactStmt {
-	paramAsFc := []Fc{}
-	for _, param := range fnTemplate.Params {
-		paramAsFc = append(paramAsFc, FcAtom(param))
-	}
+// func (fnTemplate *FnTemplateStmt) DeriveUniFact2() *UniFactStmt {
+// 	paramAsFc := []Fc{}
+// 	for _, param := range fnTemplate.Params {
+// 		paramAsFc = append(paramAsFc, FcAtom(param))
+// 	}
 
-	thenFacts := []FactStmt{NewInFactWithParamFc(NewFcFn(FcAtom(fnTemplate.Name), paramAsFc), fnTemplate.RetSet)}
-	// thenFacts := []FactStmt{}
-	thenFacts = append(thenFacts, fnTemplate.ThenFacts...)
+// 	thenFacts := []FactStmt{NewInFactWithParamFc(NewFcFn(FcAtom(fnTemplate.Name), paramAsFc), fnTemplate.RetSet)}
+// 	// thenFacts := []FactStmt{}
+// 	thenFacts = append(thenFacts, fnTemplate.ThenFacts...)
 
-	return NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, thenFacts)
-}
+// 	return NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, thenFacts)
+// }
 
-func (fnTemplate *FnTemplateStmt) DeriveUniFact3(fnHeadName Fc) *UniFactStmt {
-	paramAsFc := []Fc{}
-	for _, param := range fnTemplate.Params {
-		paramAsFc = append(paramAsFc, FcAtom(param))
-	}
+// func (fnTemplate *FnTemplateStmt) DeriveUniFact3(fnHeadName Fc) *UniFactStmt {
+// 	paramAsFc := []Fc{}
+// 	for _, param := range fnTemplate.Params {
+// 		paramAsFc = append(paramAsFc, FcAtom(param))
+// 	}
 
-	thenFacts := []FactStmt{NewInFactWithParamFc(NewFcFn(fnHeadName, paramAsFc), fnTemplate.RetSet)}
-	thenFacts = append(thenFacts, fnTemplate.ThenFacts...)
+// 	thenFacts := []FactStmt{NewInFactWithParamFc(NewFcFn(fnHeadName, paramAsFc), fnTemplate.RetSet)}
+// 	thenFacts = append(thenFacts, fnTemplate.ThenFacts...)
 
-	return NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, thenFacts)
-}
+// 	return NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, thenFacts)
+// }
 
-func (stmt *FnTemplateStmt) InstantiateFnTWithoutChangingTName(uniMap map[string]Fc) ([]Fc, FactStmtSlice, FactStmtSlice, Fc, error) {
-	// 1. instantiate set params in facts
-	newSetParams := []Fc{}
-	for _, setParam := range stmt.ParamSets {
-		instantiatedParam, err := setParam.Instantiate(uniMap)
-		if err != nil {
-			return nil, nil, nil, nil, err
-		}
-		newSetParams = append(newSetParams, instantiatedParam)
-	}
+// func (stmt *FnTemplateStmt) InstantiateFnTWithoutChangingTName(uniMap map[string]Fc) ([]Fc, FactStmtSlice, FactStmtSlice, Fc, error) {
+// 	// 1. instantiate set params in facts
+// 	newSetParams := []Fc{}
+// 	for _, setParam := range stmt.ParamSets {
+// 		instantiatedParam, err := setParam.Instantiate(uniMap)
+// 		if err != nil {
+// 			return nil, nil, nil, nil, err
+// 		}
+// 		newSetParams = append(newSetParams, instantiatedParam)
+// 	}
 
-	// 2. instantiate dom facts
-	instantiatedDomFacts, err := stmt.DomFacts.Instantiate(uniMap)
-	if err != nil {
-		return nil, nil, nil, nil, err
-	}
+// 	// 2. instantiate dom facts
+// 	instantiatedDomFacts, err := stmt.DomFacts.Instantiate(uniMap)
+// 	if err != nil {
+// 		return nil, nil, nil, nil, err
+// 	}
 
-	// 3. instantiate then facts
-	instantiatedThenFacts, err := stmt.ThenFacts.Instantiate(uniMap)
-	if err != nil {
-		return nil, nil, nil, nil, err
-	}
+// 	// 3. instantiate then facts
+// 	instantiatedThenFacts, err := stmt.ThenFacts.Instantiate(uniMap)
+// 	if err != nil {
+// 		return nil, nil, nil, nil, err
+// 	}
 
-	// 4. instantiate ret set
-	instantiatedRetSet, err := stmt.RetSet.Instantiate(uniMap)
-	if err != nil {
-		return nil, nil, nil, nil, err
-	}
+// 	// 4. instantiate ret set
+// 	instantiatedRetSet, err := stmt.RetSet.Instantiate(uniMap)
+// 	if err != nil {
+// 		return nil, nil, nil, nil, err
+// 	}
 
-	return newSetParams, instantiatedDomFacts, instantiatedThenFacts, instantiatedRetSet, nil
-}
+// 	return newSetParams, instantiatedDomFacts, instantiatedThenFacts, instantiatedRetSet, nil
+// }
 
 func (stmt *FnTemplateNoName) InstantiateFnTWithoutChangingTName(uniMap map[string]Fc) ([]Fc, FactStmtSlice, FactStmtSlice, Fc, error) {
 	// 1. instantiate set params in facts

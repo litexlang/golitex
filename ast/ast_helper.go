@@ -129,27 +129,27 @@ func (stmt *UniFactStmt) ParamInParamSet() []*SpecFactStmt {
 	return paramSetFacts
 }
 
-func (fcFn *FcFn) TemplateFcFnToTemplate() (*FnTemplateStmt, bool) {
-	head, ok := fcFn.FnHead.(*FcFn)
-	if !ok {
-		return nil, false
-	}
-	headHead, ok := head.FnHead.(FcAtom)
-	if !ok || string(headHead) != glob.KeywordFn {
-		return nil, false
-	}
-	paramSets := head.Params
+// func (fcFn *FcFn) TemplateFcFnToTemplate() (*FnTemplateStmt, bool) {
+// 	head, ok := fcFn.FnHead.(*FcFn)
+// 	if !ok {
+// 		return nil, false
+// 	}
+// 	headHead, ok := head.FnHead.(FcAtom)
+// 	if !ok || string(headHead) != glob.KeywordFn {
+// 		return nil, false
+// 	}
+// 	paramSets := head.Params
 
-	if len(fcFn.Params) != 1 {
-		return nil, false
-	}
+// 	if len(fcFn.Params) != 1 {
+// 		return nil, false
+// 	}
 
-	retSet := fcFn.Params[0]
+// 	retSet := fcFn.Params[0]
 
-	params := glob.GenerateUniqueRandomStrings(len(paramSets))
+// 	params := glob.GenerateUniqueRandomStrings(len(paramSets))
 
-	return NewFnTemplateStmt(NewDefHeader("", params, paramSets), []FactStmt{}, []FactStmt{}, retSet), true
-}
+// 	return NewFnTemplateStmt(NewDefHeader("", params, paramSets), []FactStmt{}, []FactStmt{}, retSet), true
+// }
 
 func MakeSliceOfFcFnWithHeadAndParamsOfEachLevel(head FcAtom, paramsOfEachLevel [][]Fc) []*FcFn {
 	ret := make([]*FcFn, len(paramsOfEachLevel))
