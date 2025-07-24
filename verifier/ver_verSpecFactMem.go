@@ -427,69 +427,71 @@ func (ver *Verifier) verEqual_LeftIsTupleAtIndex(left, right ast.Fc, checkRevers
 	}
 }
 
+// 函数的 == 有点tricky，因为函数可以被约束在更小的定义域上面
 func (ver *Verifier) isFnEqualFact_Check_BuiltinRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if !stmt.NameIs(glob.KeySymbolEqualEqual) {
-		return false, nil
-	}
+	return false, nil
+	// if !stmt.NameIs(glob.KeySymbolEqualEqual) {
+	// 	return false, nil
+	// }
 
-	if len(stmt.Params) != 2 {
-		return false, fmt.Errorf("fn equal fact %s should have exactly two parameters, got: %d", stmt.String(), len(stmt.Params))
-	}
+	// if len(stmt.Params) != 2 {
+	// 	return false, fmt.Errorf("fn equal fact %s should have exactly two parameters, got: %d", stmt.String(), len(stmt.Params))
+	// }
 
-	equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), stmt.Params)
-	if ok, err := ver.isEqualFact_Check(equalFact, state); err != nil {
-		return false, err
-	} else if ok {
-		if state.requireMsg() {
-			ver.successWithMsg(stmt.String(), equalFact.String())
-		}
-		return true, nil
-	}
+	// equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), stmt.Params)
+	// if ok, err := ver.isEqualFact_Check(equalFact, state); err != nil {
+	// 	return false, err
+	// } else if ok {
+	// 	if state.requireMsg() {
+	// 		ver.successWithMsg(stmt.String(), equalFact.String())
+	// 	}
+	// 	return true, nil
+	// }
 
-	leftFnDef, ok := ver.env.GetLatestFnTemplate(stmt.Params[0])
-	if !ok {
-		return false, nil
-	}
+	// leftFnDef, ok := ver.env.GetLatestFnTemplate(stmt.Params[0])
+	// if !ok {
+	// 	return false, nil
+	// }
 
-	rightFnDef, ok := ver.env.GetLatestFnTemplate(stmt.Params[1])
-	if !ok {
-		return false, nil
-	}
+	// rightFnDef, ok := ver.env.GetLatestFnTemplate(stmt.Params[1])
+	// if !ok {
+	// 	return false, nil
+	// }
 
-	// 元素数量相等
-	if len(leftFnDef.Params) != len(rightFnDef.Params) {
-		return false, nil
-	}
+	// // 元素数量相等
+	// if len(leftFnDef.Params) != len(rightFnDef.Params) {
+	// 	return false, nil
+	// }
 
-	// left to right
-	ok, err := ver.leftFnAlwaysEqualToRight(leftFnDef, rightFnDef, state)
-	if err != nil {
-		return false, err
-	}
-	if !ok {
-		return false, nil
-	}
+	// // left to right
+	// ok, err := ver.leftFnAlwaysEqualToRight(leftFnDef, rightFnDef, state)
+	// if err != nil {
+	// 	return false, err
+	// }
+	// if !ok {
+	// 	return false, nil
+	// }
 
-	// right to left
-	ok, err = ver.leftFnAlwaysEqualToRight(rightFnDef, leftFnDef, state)
-	if err != nil {
-		return false, err
-	}
-	if !ok {
-		return false, nil
-	}
+	// // right to left
+	// ok, err = ver.leftFnAlwaysEqualToRight(rightFnDef, leftFnDef, state)
+	// if err != nil {
+	// 	return false, err
+	// }
+	// if !ok {
+	// 	return false, nil
+	// }
 
-	if state.requireMsg() {
-		ver.successWithMsg(stmt.String(), "fn equal definition")
-	}
+	// if state.requireMsg() {
+	// 	ver.successWithMsg(stmt.String(), "fn equal definition")
+	// }
 
-	return true, nil
+	// return true, nil
 }
 
 // TODO: 估计有点问题
-func (ver *Verifier) leftFnAlwaysEqualToRight(leftFnDef *ast.FnTemplateStmt, rightFnDef *ast.FnTemplateStmt, state VerState) (bool, error) {
-	panic("not implemented")
-}
+// func (ver *Verifier) leftFnAlwaysEqualToRight(leftFnDef *ast.FnTemplateStmt, rightFnDef *ast.FnTemplateStmt, state VerState) (bool, error) {
+// 	panic("not implemented")
+// }
 
 func (ver *Verifier) specFact_SpecMem_atEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	knownFacts, got := curEnv.KnownFactsStruct.SpecFactMem.GetSameEnumPkgPropFacts(stmt)
