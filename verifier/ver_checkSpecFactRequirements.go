@@ -99,7 +99,7 @@ func (ver *Verifier) checkSpecFactRequirements(stmt *ast.SpecFactStmt, state *Ve
 			return false, err
 		}
 		if !ok {
-			return false, fmt.Errorf("parameters in %s do not satisfy the requirement of that function", param)
+			return false, parametersDoNotSatisfyFnReq(param.String(), param.String())
 		}
 	}
 
@@ -131,12 +131,8 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state VerState) (bool, er
 		return ver.isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj_CheckRequirement(fcAsFcFn, state)
 	} else if ast.IsFcAtomAndEqualToStr(fcAsFcFn.FnHead, glob.KeywordSetDefinedByReplacement) {
 		return ver.setDefinedByReplacementFnRequirement(fcAsFcFn, state)
-
-		// } else if ast.IsFcAtomAndEqualToStr(fcAsFcFn.FnHead, glob.KeywordDomOf) {
-		// 	return ver.domOfFnRequirement(fcAsFcFn)
-		// } else {
 	} else {
-		return ver.fcFnSatisfyFnTemplate_FnTemplate_Requirement(fcAsFcFn, state)
+		return ver.fcFnSatisfy_FnTemplate_Requirement(fcAsFcFn, state)
 	}
 }
 
@@ -162,23 +158,14 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state VerState) (bool, er
 // 	return true
 // }
 
-func (ver *Verifier) fcFnSatisfyFnTemplate_FnTemplate_Requirement(fc ast.Fc, state VerState) (bool, error) {
-	// ok, err := ver.fcFnSatisfy_FnTemplateReq(fc, state)
-	// if err != nil {
-	// 	return false, err
-	// }
+// func (ver *Verifier) fcFnSatisfyFnTemplate_FnTemplate_Requirement(fc ast.Fc, state VerState) (bool, error) {
+// 	ok, err := ver.fcFnSatisfy_FnTemplate_Requirement(fc, state)
+// 	if err != nil {
+// 		return false, err
+// 	}
 
-	// if ok {
-	// 	return true, nil
-	// }
-
-	ok, err := ver.fcFnSatisfy_FnTemplate_Requirement(fc, state)
-	if err != nil {
-		return false, err
-	}
-
-	return ok, nil
-}
+// 	return ok, nil
+// }
 
 func (ver *Verifier) fcFnSatisfy_FnTemplate_Requirement(fc ast.Fc, state VerState) (bool, error) {
 	var err error
@@ -256,48 +243,48 @@ func (ver *Verifier) fcFnSatisfy_FnTemplate_Requirement(fc ast.Fc, state VerStat
 // 	return true, nil
 // }
 
-func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn, state VerState) (bool, error) {
-	// parameter必须是实数
-	for _, param := range fc.Params {
-		ok, err := ver.paramIs_R_Z_Q_N(param, state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, fmt.Errorf("parameters in %s must be in set %s or %s or %s or %s, %s in %s is not valid", fc.FnHead, glob.KeywordReal, glob.KeywordInteger, glob.KeywordRational, glob.KeywordNatural, param, fc)
-		}
-	}
+// func (ver *Verifier) arithmeticFnRequirement(fc *ast.FcFn, state VerState) (bool, error) {
+// 	// parameter必须是实数
+// 	for _, param := range fc.Params {
+// 		ok, err := ver.paramIs_R_Z_Q_N(param, state)
+// 		if err != nil {
+// 			return false, err
+// 		}
+// 		if !ok {
+// 			return false, fmt.Errorf("parameters in %s must be in set %s or %s or %s or %s, %s in %s is not valid", fc.FnHead, glob.KeywordReal, glob.KeywordInteger, glob.KeywordRational, glob.KeywordNatural, param, fc)
+// 		}
+// 	}
 
-	if ast.IsFcAtomAndEqualToStr(fc.FnHead, glob.KeySymbolSlash) {
-		// 分母不是0
-		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{fc.Params[1], ast.FcAtom("0")}), state)
-		if err != nil || !ok {
-			return ok, fmt.Errorf("parameters in %s must be not equal to 0. %s != 0 is unknown", fc, fc.Params[1])
-		}
-		return true, nil
-	}
+// 	if ast.IsFcAtomAndEqualToStr(fc.FnHead, glob.KeySymbolSlash) {
+// 		// 分母不是0
+// 		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{fc.Params[1], ast.FcAtom("0")}), state)
+// 		if err != nil || !ok {
+// 			return ok, fmt.Errorf("parameters in %s must be not equal to 0. %s != 0 is unknown", fc, fc.Params[1])
+// 		}
+// 		return true, nil
+// 	}
 
-	if ast.IsFcAtomAndEqualToStr(fc.FnHead, glob.KeySymbolPercent) {
-		// 分母不是0
-		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{fc.Params[1], ast.FcAtom("0")}), state)
-		if err != nil || !ok {
-			return ok, fmt.Errorf("second parameter in %s must be not equal to 0. %s != 0 is unknown", fc, fc.Params[1])
-		}
+// 	if ast.IsFcAtomAndEqualToStr(fc.FnHead, glob.KeySymbolPercent) {
+// 		// 分母不是0
+// 		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{fc.Params[1], ast.FcAtom("0")}), state)
+// 		if err != nil || !ok {
+// 			return ok, fmt.Errorf("second parameter in %s must be not equal to 0. %s != 0 is unknown", fc, fc.Params[1])
+// 		}
 
-		// 分子分母必须是整数
-		ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fc.Params[0], ast.FcAtom(glob.KeywordInteger)}), state)
-		if err != nil || !ok {
-			return ok, err
-		}
-		ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fc.Params[1], ast.FcAtom(glob.KeywordInteger)}), state)
-		if err != nil || !ok {
-			return ok, err
-		}
-		return true, nil
-	}
+// 		// 分子分母必须是整数
+// 		ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fc.Params[0], ast.FcAtom(glob.KeywordInteger)}), state)
+// 		if err != nil || !ok {
+// 			return ok, err
+// 		}
+// 		ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fc.Params[1], ast.FcAtom(glob.KeywordInteger)}), state)
+// 		if err != nil || !ok {
+// 			return ok, err
+// 		}
+// 		return true, nil
+// 	}
 
-	return true, nil
-}
+// 	return true, nil
+// }
 
 // func (ver *Verifier) fcFnParamsSatisfyFnTemplateRequirement(params []ast.Fc, templateOfFn *ast.FnTemplateStmt, state VerState) (bool, error) {
 // 	uniMap := map[string]ast.Fc{}
@@ -449,7 +436,7 @@ func (ver *Verifier) isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj_CheckRequiremen
 	for _, param := range fc.Params {
 		ok, err := ver.fcSatisfyFnRequirement(param, state)
 		if err != nil || !ok {
-			return false, fmt.Errorf("parameter %s in %s do not satisfy the requirement of that function", param, fc.String())
+			return false, parametersDoNotSatisfyFnReq(param.String(), fc.String())
 		}
 	}
 
