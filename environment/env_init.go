@@ -21,6 +21,8 @@ import (
 
 // template of arithmetic operations。用来证明 + $in fn(R, R)R 这样的事实
 func (env *Env) Init() {
+	env.initBuiltinProps()
+
 	addAtom := ast.FcAtom(glob.KeySymbolPlus)
 	addTemplateQ := ast.NewFnTemplateNoName([]string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordRational), ast.FcAtom(glob.KeywordRational)}, ast.FcAtom(glob.KeywordRational), []ast.FactStmt{}, []ast.FactStmt{})
 	env.InsertFnInFnTT(addAtom, nil, addTemplateQ)
@@ -66,13 +68,12 @@ func (env *Env) Init() {
 	env.InsertFnInFnTT(modAtom, nil, modTemplate)
 
 	powerAtom := ast.FcAtom(glob.KeySymbolPower)
-	powerTemplateR := ast.NewFnTemplateNoName([]string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordReal), ast.FcAtom(glob.KeywordReal)}, ast.FcAtom(glob.KeywordComplex), []ast.FactStmt{}, []ast.FactStmt{})
+	powerTemplateR := ast.NewFnTemplateNoName([]string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordReal), ast.FcAtom(glob.KeywordReal)}, ast.FcAtom(glob.KeywordReal), []ast.FactStmt{ast.NewOrStmt([]*ast.SpecFactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolGreater), []ast.Fc{ast.FcAtom("x"), ast.FcAtom("0")}), ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.LeftIsEqual0RightIsPositive), []ast.Fc{ast.FcAtom("x"), ast.FcAtom("y")}), ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.LeftIsNegativeRightIsInteger), []ast.Fc{ast.FcAtom("x"), ast.FcAtom("y")})})}, []ast.FactStmt{})
+	// powerTemplateR := ast.NewFnTemplateNoName([]string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordReal), ast.FcAtom(glob.KeywordReal)}, ast.FcAtom(glob.KeywordComplex), []ast.FactStmt{}, []ast.FactStmt{})
 	env.InsertFnInFnTT(powerAtom, nil, powerTemplateR)
 
 	lenAtom := ast.FcAtom(glob.KeywordLen)
 	lenTemplate := ast.NewFnTemplateNoName([]string{"x"}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}, ast.FcAtom(glob.KeywordNatural), []ast.FactStmt{ast.NewInFactWithFc(ast.FcAtom("x"), ast.FcAtom(glob.KeywordFiniteSet))}, []ast.FactStmt{})
 	env.InsertFnInFnTT(lenAtom, nil, lenTemplate)
-
-	env.initBuiltinProps()
 
 }

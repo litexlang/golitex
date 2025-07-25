@@ -242,3 +242,11 @@ var AddMinusStarSet map[string]struct{} = map[string]struct{}{
 	KeySymbolMinus: {},
 	KeySymbolStar:  {},
 }
+
+const LeftIsEqual0RightIsPositive = "__leftIsEqual0RightIsPositive__"
+const LeftIsNegativeRightIsInteger = "__leftIsNegativeRightIsInteger__"
+
+var builtinPropObjNames = map[string]struct{}{
+	LeftIsEqual0RightIsPositive:  {},
+	LeftIsNegativeRightIsInteger: {},
+}
