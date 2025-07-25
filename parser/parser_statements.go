@@ -1887,6 +1887,10 @@ func (tb *tokenBlock) fnInFnTemplateStmt() ([]string, []ast.Fc, ast.Fc, []ast.Fa
 		return nil, nil, nil, nil, nil, tbErr(err, tb)
 	}
 
+	if tb.header.ExceedEnd() {
+		return fnParams, fnParamSets, fnRetSet, []ast.FactStmt{}, []ast.FactStmt{}, nil
+	}
+
 	err = tb.header.skip(glob.KeySymbolColon)
 	if err != nil {
 		return nil, nil, nil, nil, nil, tbErr(err, tb)
