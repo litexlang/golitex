@@ -72,4 +72,7 @@ func (env *Env) Init() {
 	lenAtom := ast.FcAtom(glob.KeywordLen)
 	lenTemplate := ast.NewFnTemplateNoName([]string{"x"}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}, ast.FcAtom(glob.KeywordNatural), []ast.FactStmt{ast.NewInFactWithFc(ast.FcAtom("x"), ast.FcAtom(glob.KeywordFiniteSet))}, []ast.FactStmt{})
 	env.InsertFnInFnTT(lenAtom, nil, lenTemplate)
+
+	env.initBuiltinProps()
+
 }
