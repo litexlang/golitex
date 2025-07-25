@@ -26,7 +26,7 @@ import ast "golitex/ast"
 // 	return nil, false
 // }
 
-func (e *Env) GetFnTemplateDef(fcAtomName ast.FcAtom) (*ast.FnTemplateStmt, bool) {
+func (e *Env) GetFnTemplateDef(fcAtomName ast.FcAtom) (*ast.FnTemplateDefStmt, bool) {
 	for env := e; env != nil; env = env.Parent {
 		fnTemplateDef, ok := env.FnTemplateDefMem[string(fcAtomName)]
 		if ok {

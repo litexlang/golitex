@@ -27,7 +27,7 @@ type PropDefMem map[string]ast.DefPropStmt
 type ExistPropDefMem map[string]ast.DefExistPropStmt
 
 // type FnTemplateDefMem map[string]ast.DefFnTemplateStmt
-type FnTemplateDefMem map[string]ast.FnTemplateStmt
+type FnTemplateDefMem map[string]ast.FnTemplateDefStmt
 
 // 我暂时不清楚 map[string]struct{} 有没有问题，我暂时用不到def obj 相关的任何的东西
 type ObjDefMem map[string]ast.FnTemplate_Or_DefObjStmtInterface // 因为很多的obj会共享一个def obj. 可能是 nil
@@ -37,7 +37,7 @@ type FnInFnTemplateFactsMem map[string][]FnInFnTTMemItem
 
 type FnInFnTTMemItem struct {
 	InFcFn         *ast.FcFn // 可能是 fn(R)R 这种，或者 TName(params) 这样，或者是nil（比如 defFnStmt 声明出来的）
-	FnTemplateStmt *ast.FnTemplateNoName
+	FnTemplateStmt *ast.FnStruct
 }
 
 type HaveSetFnDefMem map[string]ast.HaveSetFnStmt

@@ -211,7 +211,7 @@ func (fcFn *FcFn) IsFcFn_HasAtomHead_ReturnHead() (FcAtom, bool) {
 	return head, true
 }
 
-func (stmt *FnTemplateStmt) Instantiate_GetFnTemplateNoName(fc *FcFn) (*FnTemplateNoName, error) {
+func (stmt *FnTemplateDefStmt) Instantiate_GetFnTemplateNoName(fc *FcFn) (*FnStruct, error) {
 	uniMap := map[string]Fc{}
 	templateParams := stmt.TemplateDefHeader.Params
 	if len(templateParams) != len(fc.Params) {
@@ -222,27 +222,27 @@ func (stmt *FnTemplateStmt) Instantiate_GetFnTemplateNoName(fc *FcFn) (*FnTempla
 		uniMap[param] = fc.Params[i]
 	}
 
-	instantiatedParamSets, err := stmt.FnParamSets.Instantiate(uniMap)
+	instantiatedParamSets, err := stmt.Fn.ParamSets.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}
 
-	instantiatedDomFacts, err := stmt.FnDomFacts.Instantiate(uniMap)
+	instantiatedDomFacts, err := stmt.Fn.DomFacts.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}
 
-	instantiatedThenFacts, err := stmt.FnThenFacts.Instantiate(uniMap)
+	instantiatedThenFacts, err := stmt.Fn.ThenFacts.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}
 
-	instantiatedRetSet, err := stmt.FnRetSet.Instantiate(uniMap)
+	instantiatedRetSet, err := stmt.Fn.RetSet.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewFnTemplateNoName(stmt.FnParams, instantiatedParamSets, instantiatedRetSet, instantiatedDomFacts, instantiatedThenFacts), nil
+	return NewFnTemplateNoName(stmt.Fn.Params, instantiatedParamSets, instantiatedRetSet, instantiatedDomFacts, instantiatedThenFacts), nil
 }
 
 func (fcFn *FcFn) HasHeadInSlice(headNames []string) bool {
@@ -253,7 +253,7 @@ func (fcFn *FcFn) HasHeadInSlice(headNames []string) bool {
 	return slices.Contains(headNames, string(headAtom))
 }
 
-func (fcAsFcFn *FcFn) FnTFc_ToFnTNoName() (*FnTemplateNoName, error) {
+func (fcAsFcFn *FcFn) FnTFc_ToFnTNoName() (*FnStruct, error) {
 	fcAsFcFnHeadAsFcFn, ok := fcAsFcFn.FnHead.(*FcFn)
 	if !ok {
 		return nil, fmt.Errorf("expected FcFn, but got %T", fcAsFcFn.FnHead)

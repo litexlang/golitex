@@ -28,7 +28,7 @@ import (
 // 	return nil, false
 // }
 
-func (e *Env) InsertFnInFnTT(fc ast.Fc, templateWhereFcIs *ast.FcFn, fnTNoName *ast.FnTemplateNoName) error {
+func (e *Env) InsertFnInFnTT(fc ast.Fc, templateWhereFcIs *ast.FcFn, fnTNoName *ast.FnStruct) error {
 	memory := e.FnInFnTemplateFactsMem
 	fnDefs, ok := memory[fc.String()]
 	if !ok {
