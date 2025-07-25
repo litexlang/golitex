@@ -210,7 +210,7 @@ func fnDefStmtStringGivenKw(kw string, f *FnTemplateNoName, name string) string 
 	builder.WriteString(" ")
 	builder.WriteString(name)
 	builder.WriteString("(")
-	builder.WriteString(fcSliceString(f.ParamSets))
+	builder.WriteString(strFcSetPairs(f.Params, f.ParamSets))
 	builder.WriteString(")")
 	builder.WriteString(" ")
 	builder.WriteString(f.RetSet.String())
@@ -735,36 +735,57 @@ func (stmt *FnTemplateStmt) String() string {
 	builder.WriteString(glob.KeywordFnTemplate)
 	builder.WriteString(" ")
 	builder.WriteString(stmt.TemplateDefHeader.String())
-	builder.WriteString("(")
-	builder.WriteString(strFcSetPairs(stmt.FnParams, stmt.FnParamSets))
-	builder.WriteString(")")
-	builder.WriteString(" ")
-	builder.WriteString(stmt.FnRetSet.String())
-	builder.WriteString(glob.KeySymbolColon)
-	builder.WriteByte('\n')
+	builder.WriteString("\n")
 
-	if len(stmt.FnDomFacts) > 0 {
+	if len(stmt.TemplateDomFacts) > 0 {
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordDom, 1))
 		builder.WriteString(glob.KeySymbolColon)
 		builder.WriteByte('\n')
-		domFactStrSlice := make([]string, len(stmt.FnDomFacts))
-		for i := range len(stmt.FnDomFacts) {
-			domFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(stmt.FnDomFacts[i].String(), 2)
+		domFactStrSlice := make([]string, len(stmt.TemplateDomFacts))
+		for i := range len(stmt.TemplateDomFacts) {
+			domFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(stmt.TemplateDomFacts[i].String(), 2)
 		}
 		builder.WriteString(strings.Join(domFactStrSlice, "\n"))
 		builder.WriteByte('\n')
 	}
-	if len(stmt.FnThenFacts) > 0 {
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordThen, 1))
-		builder.WriteString(glob.KeySymbolColon)
-		builder.WriteByte('\n')
 
-		thenFactStrSlice := make([]string, len(stmt.FnThenFacts))
-		for i := range len(stmt.FnThenFacts) {
-			thenFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(stmt.FnThenFacts[i].String(), 2)
-		}
-		builder.WriteString(strings.Join(thenFactStrSlice, "\n"))
-	}
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(NewDefFnStmt("", NewFnTemplateNoName(stmt.FnParams, stmt.FnParamSets, stmt.FnRetSet, stmt.FnDomFacts, stmt.FnThenFacts)).String(), 1))
+
+	// builder.WriteString("(")
+	// builder.WriteString(strFcSetPairs(stmt.FnParams, stmt.FnParamSets))
+	// builder.WriteString(")")
+	// builder.WriteString(" ")
+	// builder.WriteString(stmt.FnRetSet.String())
+
+	// if len(stmt.FnDomFacts) == 0 && len(stmt.FnThenFacts) == 0 {
+	// 	return builder.String()
+	// }
+
+	// builder.WriteString(glob.KeySymbolColon)
+	// builder.WriteByte('\n')
+
+	// if len(stmt.FnDomFacts) > 0 {
+	// 	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordDom, 1))
+	// 	builder.WriteString(glob.KeySymbolColon)
+	// 	builder.WriteByte('\n')
+	// 	domFactStrSlice := make([]string, len(stmt.FnDomFacts))
+	// 	for i := range len(stmt.FnDomFacts) {
+	// 		domFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(stmt.FnDomFacts[i].String(), 2)
+	// 	}
+	// 	builder.WriteString(strings.Join(domFactStrSlice, "\n"))
+	// 	builder.WriteByte('\n')
+	// }
+	// if len(stmt.FnThenFacts) > 0 {
+	// 	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordThen, 1))
+	// 	builder.WriteString(glob.KeySymbolColon)
+	// 	builder.WriteByte('\n')
+
+	// 	thenFactStrSlice := make([]string, len(stmt.FnThenFacts))
+	// 	for i := range len(stmt.FnThenFacts) {
+	// 		thenFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(stmt.FnThenFacts[i].String(), 2)
+	// 	}
+	// 	builder.WriteString(strings.Join(thenFactStrSlice, "\n"))
+	// }
 
 	return builder.String()
 }

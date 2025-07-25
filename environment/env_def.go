@@ -158,15 +158,17 @@ func (env *Env) AtomsInFnTemplateFnTemplateDeclared(name ast.FcAtom, stmt *ast.F
 	if err != nil {
 		return err
 	}
-	ok := env.AreAtomsInFcAreDeclared(stmt.FnRetSet, map[string]struct{}{})
-	if !ok {
-		return fmt.Errorf(AtomsInFcNotDeclaredMsg(stmt.FnRetSet))
-	}
 
 	extraAtomNames := map[string]struct{}{}
 	for _, param := range stmt.TemplateDefHeader.Params {
 		extraAtomNames[param] = struct{}{}
 	}
+
+	ok := env.AreAtomsInFcAreDeclared(stmt.FnRetSet, extraAtomNames)
+	if !ok {
+		return fmt.Errorf(AtomsInFcNotDeclaredMsg(stmt.FnRetSet))
+	}
+
 	extraAtomNames[string(name)] = struct{}{}
 
 	for _, fact := range stmt.TemplateDomFacts {
