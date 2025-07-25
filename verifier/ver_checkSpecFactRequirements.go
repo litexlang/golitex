@@ -120,9 +120,10 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state VerState) (bool, er
 	}
 
 	// 单独处理特殊的内置prop
-	if isArithmeticFn(fcAsFcFn) {
-		return ver.arithmeticFnRequirement(fcAsFcFn, state)
-	} else if ast.IsFcFnWithHeadName(fcAsFcFn, glob.KeywordLen) {
+	// if isArithmeticFn(fcAsFcFn) {
+	// 	return ver.arithmeticFnRequirement(fcAsFcFn, state)
+	// } else
+	if ast.IsFcFnWithHeadName(fcAsFcFn, glob.KeywordLen) {
 		return ver.lenFnRequirement(fcAsFcFn, state)
 	} else if ast.IsFnFcFn(fcAsFcFn) {
 		return true, nil
