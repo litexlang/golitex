@@ -204,7 +204,7 @@ func (fact *DefPropStmt) String() string {
 
 }
 
-func fnDefStmtStringGivenKw(kw string, f *FnTemplateNoName, name string) string {
+func fnDefStmtStringGivenKw(kw string, f *FnStruct, name string) string {
 	var builder strings.Builder
 	builder.WriteString(kw)
 	builder.WriteString(" ")
@@ -730,7 +730,7 @@ func (stmt *CommentStmt) String() string {
 	return stmt.Comment
 }
 
-func (stmt *FnTemplateStmt) String() string {
+func (stmt *FnTemplateDefStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordFnTemplate)
 	builder.WriteString(" ")
@@ -749,7 +749,7 @@ func (stmt *FnTemplateStmt) String() string {
 		builder.WriteByte('\n')
 	}
 
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents(NewDefFnStmt("", NewFnTemplateNoName(stmt.FnParams, stmt.FnParamSets, stmt.FnRetSet, stmt.FnDomFacts, stmt.FnThenFacts)).String(), 1))
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(NewDefFnStmt("", NewFnTemplateNoName(stmt.Fn.Params, stmt.Fn.ParamSets, stmt.Fn.RetSet, stmt.Fn.DomFacts, stmt.Fn.ThenFacts)).String(), 1))
 
 	// builder.WriteString("(")
 	// builder.WriteString(strFcSetPairs(stmt.FnParams, stmt.FnParamSets))

@@ -811,7 +811,7 @@ func (s *CommentStmt) ToLatexString() string {
 }
 
 // TODO 没测试过
-func (s *FnTemplateStmt) ToLatexString() string {
+func (s *FnTemplateDefStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("\\begin{definition}[Function Template]\n\n")
 	builder.WriteString("We say a function satisfies function template ")
@@ -837,10 +837,10 @@ func (s *FnTemplateStmt) ToLatexString() string {
 		builder.WriteString(".")
 	}
 
-	if len(s.FnThenFacts) > 0 {
+	if len(s.Fn.ThenFacts) > 0 {
 		builder.WriteString("\n\n")
 		builder.WriteString("When its parameters satisfies the above condition, it has the following properties:")
-		thenFactStrSlice := s.FnThenFacts.factStmtSliceToLatexStringSlice()
+		thenFactStrSlice := s.Fn.ThenFacts.factStmtSliceToLatexStringSlice()
 		if ShouldInSingleLineAsLatexString(thenFactStrSlice) {
 			builder.WriteString(" ")
 			builder.WriteString(strings.Join(thenFactStrSlice, ", "))
@@ -854,7 +854,7 @@ func (s *FnTemplateStmt) ToLatexString() string {
 	builder.WriteString("\n\n")
 
 	builder.WriteString("The return value is $\\in$ ")
-	builder.WriteString(s.FnRetSet.ToLatexString())
+	builder.WriteString(s.Fn.RetSet.ToLatexString())
 
 	builder.WriteString("\n\\end{definition}")
 
