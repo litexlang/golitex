@@ -19,14 +19,6 @@ import (
 	"strings"
 )
 
-const LeftIsEqual0RightIsPositive = "__leftIsEqual0RightIsPositive__"
-const LeftIsNegativeRightIsInteger = "__leftIsNegativeRightIsInteger__"
-
-var builtinNames = map[string]struct{}{
-	LeftIsEqual0RightIsPositive:  {},
-	LeftIsNegativeRightIsInteger: {},
-}
-
 func IsValidUserDefinedNameWithoutPkgName(name string) error {
 	if len(name) == 0 {
 		return fmt.Errorf("identifier name cannot be empty")
@@ -37,7 +29,7 @@ func IsValidUserDefinedNameWithoutPkgName(name string) error {
 		return fmt.Errorf("identifier name cannot begin with number, or be a builtin keyword or builtin symbol, get: %s", name)
 	}
 
-	if _, ok := builtinNames[name]; ok {
+	if _, ok := builtinPropObjNames[name]; ok {
 		return fmt.Errorf("identifier name cannot be a builtin name, get: %s", name)
 	}
 
