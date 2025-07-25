@@ -13,3 +13,17 @@
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
 package litex_env
+
+import (
+	ast "golitex/ast"
+	glob "golitex/glob"
+)
+
+func (env *Env) initBuiltinProps() {
+	leftIs0RightIsPositivePropDef := ast.NewDefPropStmt(ast.NewDefHeader(ast.FcAtom(glob.LeftIsEqual0RightIsPositive), []string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordReal), ast.FcAtom(glob.KeywordReal)}), []ast.FactStmt{ast.NewEqualFact(ast.FcAtom("x"), ast.FcAtom("0"))}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolGreater), []ast.Fc{ast.FcAtom("y"), ast.FcAtom("0")})}, []ast.FactStmt{})
+	env.NewDefProp_InsideAtomsDeclared(leftIs0RightIsPositivePropDef)
+
+	leftIsNegativeRightIsIntegerPropDef := ast.NewDefPropStmt(ast.NewDefHeader(ast.FcAtom(glob.LeftIsNegativeRightIsInteger), []string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordReal), ast.FcAtom(glob.KeywordInteger)}), []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{ast.FcAtom("x"), ast.FcAtom("0")})}, []ast.FactStmt{}, []ast.FactStmt{})
+	env.NewDefProp_InsideAtomsDeclared(leftIsNegativeRightIsIntegerPropDef)
+
+}
