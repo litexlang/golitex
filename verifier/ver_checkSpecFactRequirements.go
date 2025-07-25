@@ -154,13 +154,13 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state VerState) (bool, er
 // 	return true, nil
 // }
 
-func isArithmeticFn(fc ast.Fc) bool {
-	if ok := ast.IsFn_WithHeadNameInSlice(fc, []string{glob.KeySymbolPlus, glob.KeySymbolMinus, glob.KeySymbolStar, glob.KeySymbolSlash, glob.KeySymbolPower, glob.KeySymbolPercent}); !ok {
-		return false
-	}
+// func isArithmeticFn(fc ast.Fc) bool {
+// 	if ok := ast.IsFn_WithHeadNameInSlice(fc, []string{glob.KeySymbolPlus, glob.KeySymbolMinus, glob.KeySymbolStar, glob.KeySymbolSlash, glob.KeySymbolPower, glob.KeySymbolPercent}); !ok {
+// 		return false
+// 	}
 
-	return true
-}
+// 	return true
+// }
 
 func (ver *Verifier) fcFnSatisfyFnTemplate_FnTemplate_Requirement(fc ast.Fc, state VerState) (bool, error) {
 	// ok, err := ver.fcFnSatisfy_FnTemplateReq(fc, state)
