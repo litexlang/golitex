@@ -23,7 +23,7 @@ import (
 
 func (ver *Verifier) checkSpecFactReq(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	if stmt.NameIs(glob.KeywordIn) {
-		ok, err := ver.checkSpecFactReq_InFact(stmt, state)
+		ok, err := ver.checkSpecFactReq_InFact_UseBtRules(stmt)
 		if err != nil {
 			return false, err
 		}
@@ -32,13 +32,14 @@ func (ver *Verifier) checkSpecFactReq(stmt *ast.SpecFactStmt, state *VerState) (
 			return ok, nil
 		}
 
-		return ver.checkSpecFactRequirements_NotInFact(stmt, state)
+		return ver.checkSpecFactRequirements(stmt, state)
 	}
 
-	return ver.checkSpecFactRequirements_NotInFact(stmt, state)
+	return ver.checkSpecFactRequirements(stmt, state)
 }
 
-func (ver *Verifier) checkSpecFactReq_InFact(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+// 只验证 1. params都声明了 2. 确实是fn template
+func (ver *Verifier) checkSpecFactReq_InFact_UseBtRules(stmt *ast.SpecFactStmt) (bool, error) {
 	ok := ver.env.AreAtomsInFcAreDeclared(stmt.Params[0], map[string]struct{}{})
 	if !ok {
 		return false, fmt.Errorf(env.AtomsInFcNotDeclaredMsg(stmt.Params[0]))
@@ -50,7 +51,7 @@ func (ver *Verifier) checkSpecFactReq_InFact(stmt *ast.SpecFactStmt, state *VerS
 
 	head, ok := stmt.Params[1].(*ast.FcFn).IsFcFn_HasAtomHead_ReturnHead()
 	if ok {
-		_, ok := ver.env.GetFnTemplateTemplateDef(head)
+		_, ok := ver.env.GetFnTemplateDef(head)
 		if ok {
 			for _, param := range stmt.Params[1].(*ast.FcFn).Params {
 				ok := ver.env.AreAtomsInFcAreDeclared(param, map[string]struct{}{})
@@ -76,7 +77,7 @@ func (ver *Verifier) checkSpecFactReq_InFact(stmt *ast.SpecFactStmt, state *VerS
 	}
 }
 
-func (ver *Verifier) checkSpecFactRequirements_NotInFact(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) checkSpecFactRequirements(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 
 	// 1. Check if all atoms in the parameters are declared
 	// REMARK
@@ -134,7 +135,7 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state VerState) (bool, er
 		// 	return ver.domOfFnRequirement(fcAsFcFn)
 		// } else {
 	} else {
-		return ver.fcFnSatisfyFnTemplateTemplate_FnTemplate_Requirement(fcAsFcFn, state)
+		return ver.fcFnSatisfyFnTemplate_FnTemplate_Requirement(fcAsFcFn, state)
 	}
 }
 
@@ -160,7 +161,7 @@ func isArithmeticFn(fc ast.Fc) bool {
 	return true
 }
 
-func (ver *Verifier) fcFnSatisfyFnTemplateTemplate_FnTemplate_Requirement(fc ast.Fc, state VerState) (bool, error) {
+func (ver *Verifier) fcFnSatisfyFnTemplate_FnTemplate_Requirement(fc ast.Fc, state VerState) (bool, error) {
 	// ok, err := ver.fcFnSatisfy_FnTemplateReq(fc, state)
 	// if err != nil {
 	// 	return false, err
@@ -170,7 +171,7 @@ func (ver *Verifier) fcFnSatisfyFnTemplateTemplate_FnTemplate_Requirement(fc ast
 	// 	return true, nil
 	// }
 
-	ok, err := ver.fcFnSatisfy_FnTemplateTemplate_Requirement(fc, state)
+	ok, err := ver.fcFnSatisfy_FnTemplate_Requirement(fc, state)
 	if err != nil {
 		return false, err
 	}
@@ -178,7 +179,7 @@ func (ver *Verifier) fcFnSatisfyFnTemplateTemplate_FnTemplate_Requirement(fc ast
 	return ok, nil
 }
 
-func (ver *Verifier) fcFnSatisfy_FnTemplateTemplate_Requirement(fc ast.Fc, state VerState) (bool, error) {
+func (ver *Verifier) fcFnSatisfy_FnTemplate_Requirement(fc ast.Fc, state VerState) (bool, error) {
 	var err error
 
 	asFcFn, ok := fc.(*ast.FcFn)
@@ -186,6 +187,7 @@ func (ver *Verifier) fcFnSatisfy_FnTemplateTemplate_Requirement(fc ast.Fc, state
 		return false, fmt.Errorf("%s is not a function", fc)
 	}
 
+	// TODO: 其实这里可以进化一下：我可以推理出来现在的template。比如 f(a,b)(c,d) 我知道 f return fn(R,R)R，那我不用手动声明 f(a,b) $in fn(R,R)R
 	lastFnTTItIsIn, ok := ver.env.GetLatestFnTT_GivenNameIsIn(asFcFn.FnHead.String())
 	if !ok {
 		return false, nil

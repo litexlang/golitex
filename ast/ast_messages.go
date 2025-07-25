@@ -730,9 +730,9 @@ func (stmt *CommentStmt) String() string {
 	return stmt.Comment
 }
 
-func (stmt *FnTemplateTemplateStmt) String() string {
+func (stmt *FnTemplateStmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordFnTemplateTemplate)
+	builder.WriteString(glob.KeywordFnTemplate)
 	builder.WriteString(" ")
 	builder.WriteString(stmt.TemplateDefHeader.String())
 	builder.WriteString("(")

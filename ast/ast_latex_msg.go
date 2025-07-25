@@ -811,7 +811,7 @@ func (s *CommentStmt) ToLatexString() string {
 }
 
 // TODO 没测试过
-func (s *FnTemplateTemplateStmt) ToLatexString() string {
+func (s *FnTemplateStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("\\begin{definition}[Function Template]\n\n")
 	builder.WriteString("We say a function satisfies function template ")

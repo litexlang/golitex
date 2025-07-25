@@ -142,9 +142,9 @@ func (ver *Verifier) verSpecialSpecFact_ByBIR(stmt *ast.SpecFactStmt, state VerS
 		return ver.varCommutativeProp_BuiltinRules(stmt, state)
 	}
 
-	if stmt.NameIs(glob.KeySymbolEqualEqual) {
-		return ver.isFnEqualFact_Check_BuiltinRules(stmt, state)
-	}
+	// if stmt.NameIs(glob.KeySymbolEqualEqual) {
+	// 	return ver.isFnEqualFact_Check_BuiltinRules(stmt, state)
+	// }
 
 	return false, nil
 }
