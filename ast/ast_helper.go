@@ -222,7 +222,7 @@ func (stmt *FnTemplateStmt) Instantiate_GetFnTemplateNoName(fc *FcFn) (*FnTempla
 		uniMap[param] = fc.Params[i]
 	}
 
-	instantiatedParamSets, err := stmt.TemplateDefHeader.ParamSets.Instantiate(uniMap)
+	instantiatedParamSets, err := stmt.FnParamSets.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}
