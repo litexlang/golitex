@@ -20,10 +20,16 @@ import (
 )
 
 func (env *Env) initBuiltinProps() {
-	leftIs0RightIsPositivePropDef := ast.NewDefPropStmt(ast.NewDefHeader(ast.FcAtom(glob.LeftIsEqual0RightIsPositive), []string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordReal), ast.FcAtom(glob.KeywordReal)}), []ast.FactStmt{ast.NewEqualFact(ast.FcAtom("x"), ast.FcAtom("0"))}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolGreater), []ast.Fc{ast.FcAtom("y"), ast.FcAtom("0")})}, []ast.FactStmt{})
-	env.NewDefProp_InsideAtomsDeclared(leftIs0RightIsPositivePropDef)
+	leftIs0RightIsPositivePropDef := ast.NewDefPropStmt(ast.NewDefHeader(ast.FcAtom(glob.LeftIsEqual0RightIsPositive), []string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordReal), ast.FcAtom(glob.KeywordReal)}), []ast.FactStmt{}, []ast.FactStmt{ast.NewEqualFact(ast.FcAtom("x"), ast.FcAtom("0")), ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolGreater), []ast.Fc{ast.FcAtom("y"), ast.FcAtom("0")})}, []ast.FactStmt{})
+	err := env.NewDefProp_BuiltinProp(leftIs0RightIsPositivePropDef)
+	if err != nil {
+		panic(err)
+	}
 
-	leftIsNegativeRightIsIntegerPropDef := ast.NewDefPropStmt(ast.NewDefHeader(ast.FcAtom(glob.LeftIsNegativeRightIsInteger), []string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordReal), ast.FcAtom(glob.KeywordInteger)}), []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{ast.FcAtom("x"), ast.FcAtom("0")})}, []ast.FactStmt{}, []ast.FactStmt{})
-	env.NewDefProp_InsideAtomsDeclared(leftIsNegativeRightIsIntegerPropDef)
+	leftIsNegativeRightIsIntegerPropDef := ast.NewDefPropStmt(ast.NewDefHeader(ast.FcAtom(glob.LeftIsNegativeRightIsInteger), []string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordReal), ast.FcAtom(glob.KeywordReal)}), []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolLess), []ast.Fc{ast.FcAtom("x"), ast.FcAtom("0")}), ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{ast.FcAtom("y"), ast.FcAtom(glob.KeywordInteger)})}, []ast.FactStmt{})
+	err = env.NewDefProp_BuiltinProp(leftIsNegativeRightIsIntegerPropDef)
+	if err != nil {
+		panic(err)
+	}
 
 }
