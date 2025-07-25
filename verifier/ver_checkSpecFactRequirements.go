@@ -188,19 +188,34 @@ func (ver *Verifier) fcFnSatisfy_FnTemplate_Requirement(fc ast.Fc, state VerStat
 	}
 
 	// TODO: 其实这里可以进化一下：我可以推理出来现在的template。比如 f(a,b)(c,d) 我知道 f return fn(R,R)R，那我不用手动声明 f(a,b) $in fn(R,R)R
-	lastFnTTItIsIn, ok := ver.env.GetLatestFnTT_GivenNameIsIn(asFcFn.FnHead.String())
+	// lastFnTTItIsIn, ok := ver.env.GetLatestFnTT_GivenNameIsIn(asFcFn.FnHead.String())
+	// if !ok {
+	// 	return false, nil
+	// }
+
+	// fnTemplateNoName := lastFnTTItIsIn.FnTemplateStmt
+
+	// ok, err = ver.fcFnParamsSatisfyFnTemplateNoNameRequirement(asFcFn, fnTemplateNoName, state)
+	// if err != nil {
+	// 	return false, err
+	// }
+
+	fnTemplateSlice, ok := ver.env.GetFnTemplateSliceTheFnIsIn(asFcFn.FnHead.String())
 	if !ok {
 		return false, nil
 	}
 
-	fnTemplateNoName := lastFnTTItIsIn.FnTemplateStmt
-
-	ok, err = ver.fcFnParamsSatisfyFnTemplateNoNameRequirement(asFcFn, fnTemplateNoName, state)
-	if err != nil {
-		return false, err
+	for _, fnTT := range fnTemplateSlice {
+		ok, err = ver.fcFnParamsSatisfyFnTemplateNoNameRequirement(asFcFn, fnTT.FnTemplateStmt, state)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			return true, nil
+		}
 	}
 
-	return ok, nil
+	return false, nil
 }
 
 // TODO: 这里需要检查，setParam是否是自由变量
