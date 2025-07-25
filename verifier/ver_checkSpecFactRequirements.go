@@ -307,7 +307,7 @@ func (ver *Verifier) fcFnSatisfy_FnTemplate_Requirement(fc ast.Fc, state VerStat
 // 	return true, nil
 // }
 
-func (ver *Verifier) fcFnParamsSatisfyFnTemplateNoNameRequirement(fcFn *ast.FcFn, templateOfFn *ast.FnTemplateNoName, state VerState) (bool, error) {
+func (ver *Verifier) fcFnParamsSatisfyFnTemplateNoNameRequirement(fcFn *ast.FcFn, templateOfFn *ast.FnStruct, state VerState) (bool, error) {
 	if len(fcFn.Params) != len(templateOfFn.Params) {
 		return false, fmt.Errorf("parameters in %s must be %d, %s in %s is not valid", fcFn.FnHead, len(templateOfFn.Params), fcFn, fcFn)
 	}

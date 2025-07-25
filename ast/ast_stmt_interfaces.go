@@ -53,7 +53,7 @@ func (s *NamedUniFactStmt) stmt()                {}
 func (s *EqualsFactStmt) stmt()                  {}
 func (s *KnowExistPropStmt) stmt()               {}
 func (s *CommentStmt) stmt()                     {}
-func (s *FnTemplateStmt) stmt()                  {}
+func (s *FnTemplateDefStmt) stmt()               {}
 
 type FactStmt interface {
 	factStmt()

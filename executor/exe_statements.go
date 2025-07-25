@@ -78,7 +78,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		execState, err = exec.namedUniFactStmt(stmt)
 	case *ast.KnowExistPropStmt:
 		_, err = exec.knowExistPropStmt(stmt)
-	case *ast.FnTemplateStmt:
+	case *ast.FnTemplateDefStmt:
 		err = exec.fnTemplateStmt(stmt)
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
@@ -497,7 +497,7 @@ func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) (glob.ExecS
 	return glob.ExecState_True, nil
 }
 
-func (exec *Executor) fnTemplateStmt(stmt *ast.FnTemplateStmt) error {
+func (exec *Executor) fnTemplateStmt(stmt *ast.FnTemplateDefStmt) error {
 	if glob.RequireMsg() {
 		defer exec.newMsg(fmt.Sprintf("%s\n", stmt))
 	}
