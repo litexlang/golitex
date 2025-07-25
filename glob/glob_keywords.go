@@ -62,6 +62,7 @@ const (
 	KeywordSetProduct = "set_product"
 	KeywordDomOf      = "dom_of"
 	// KeywordExistSetByAxiomOfReplacement = "exist_set_by_axiom_of_replacement"
+	KeywordSeq = "seq"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -109,6 +110,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordFnTemplate:                     {},
 	KeywordSetProduct:                     {},
 	KeywordDomOf:                          {},
+	KeywordSeq:                            {},
 	// KeywordExistSetByAxiomOfReplacement:   {},
 }
 
