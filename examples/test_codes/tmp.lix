@@ -3,3 +3,5 @@ obj a, b R:
     b > 0
 
 $__leftIsEqual0RightIsPositive__(0,1)
+
+$__leftIsNegativeRightIsInteger__(-1, 2)
