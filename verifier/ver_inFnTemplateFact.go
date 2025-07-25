@@ -14,72 +14,66 @@
 
 package litex_verifier
 
-import (
-	"fmt"
-	ast "golitex/ast"
-	glob "golitex/glob"
-)
-
 // left dom >= right dom
 // left dom + left then + right dom => right then
-func (ver *Verifier) leftDomLeadToRightDom_RightDomLeadsToRightThen(funcName ast.Fc, leftT *ast.FnTemplateNoName, rightT *ast.FnTemplateNoName, state VerState) (bool, error) {
-	if len(leftT.Params) != len(rightT.Params) {
-		return false, fmt.Errorf("the number of parameters of the left function definition is not equal to the number of parameters of the right function definition")
-	}
+// func (ver *Verifier) leftDomLeadToRightDom_RightDomLeadsToRightThen(funcName ast.Fc, leftT *ast.FnTemplateNoName, rightT *ast.FnTemplateNoName, state VerState) (bool, error) {
+// 	if len(leftT.Params) != len(rightT.Params) {
+// 		return false, fmt.Errorf("the number of parameters of the left function definition is not equal to the number of parameters of the right function definition")
+// 	}
 
-	uniMap := map[string]ast.Fc{}
-	for i, param := range rightT.Params {
-		uniMap[param] = ast.FcAtom(leftT.Params[i])
-	}
+// 	uniMap := map[string]ast.Fc{}
+// 	for i, param := range rightT.Params {
+// 		uniMap[param] = ast.FcAtom(leftT.Params[i])
+// 	}
 
-	instantiatedSetParams, instantiatedDomFacts, instantiatedThenFacts, instantiatedRetSet, err := rightT.InstantiateFnTWithoutChangingTName(uniMap)
-	if err != nil {
-		return false, err
-	}
+// 	instantiatedSetParams, instantiatedDomFacts, instantiatedThenFacts, instantiatedRetSet, err := rightT.InstantiateFnTWithoutChangingTName(uniMap)
+// 	if err != nil {
+// 		return false, err
+// 	}
 
-	inRightSetParamFacts := []ast.FactStmt{}
-	for i, setParam := range instantiatedSetParams {
-		inRightSetParamFacts = append(inRightSetParamFacts, ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{ast.FcAtom(leftT.Params[i]), setParam}))
-	}
+// 	inRightSetParamFacts := []ast.FactStmt{}
+// 	for i, setParam := range instantiatedSetParams {
+// 		inRightSetParamFacts = append(inRightSetParamFacts, ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{ast.FcAtom(leftT.Params[i]), setParam}))
+// 	}
 
-	fcFnParams := []ast.Fc{}
-	for _, param := range leftT.Params {
-		fcFnParams = append(fcFnParams, ast.FcAtom(param))
-	}
-	fcFn := ast.NewFcFn(funcName, fcFnParams)
+// 	fcFnParams := []ast.Fc{}
+// 	for _, param := range leftT.Params {
+// 		fcFnParams = append(fcFnParams, ast.FcAtom(param))
+// 	}
+// 	fcFn := ast.NewFcFn(funcName, fcFnParams)
 
-	fcFnInLeftRetSet := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fcFn, leftT.RetSet})
+// 	fcFnInLeftRetSet := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fcFn, leftT.RetSet})
 
-	// left dom => right dom
-	leftDomToRightDomUniFact := ast.NewUniFact(leftT.Params, leftT.ParamSets, leftT.DomFacts, append(inRightSetParamFacts, instantiatedThenFacts...))
+// 	// left dom => right dom
+// 	leftDomToRightDomUniFact := ast.NewUniFact(leftT.Params, leftT.ParamSets, leftT.DomFacts, append(inRightSetParamFacts, instantiatedThenFacts...))
 
-	ok, err := ver.VerFactStmt(leftDomToRightDomUniFact, state)
-	if err != nil {
-		return false, err
-	}
-	if !ok {
-		return false, nil
-	}
+// 	ok, err := ver.VerFactStmt(leftDomToRightDomUniFact, state)
+// 	if err != nil {
+// 		return false, err
+// 	}
+// 	if !ok {
+// 		return false, nil
+// 	}
 
-	// left dom + left in set params + left then + right dom + right in set params => right then
-	leftDomToRightDomFacts := []ast.FactStmt{}
-	leftDomToRightDomFacts = append(leftDomToRightDomFacts, leftT.DomFacts...)
-	leftDomToRightDomFacts = append(leftDomToRightDomFacts, fcFnInLeftRetSet)
-	leftDomToRightDomFacts = append(leftDomToRightDomFacts, leftT.ThenFacts...)
-	leftDomToRightDomFacts = append(leftDomToRightDomFacts, inRightSetParamFacts...)
-	leftDomToRightDomFacts = append(leftDomToRightDomFacts, instantiatedDomFacts...)
+// 	// left dom + left in set params + left then + right dom + right in set params => right then
+// 	leftDomToRightDomFacts := []ast.FactStmt{}
+// 	leftDomToRightDomFacts = append(leftDomToRightDomFacts, leftT.DomFacts...)
+// 	leftDomToRightDomFacts = append(leftDomToRightDomFacts, fcFnInLeftRetSet)
+// 	leftDomToRightDomFacts = append(leftDomToRightDomFacts, leftT.ThenFacts...)
+// 	leftDomToRightDomFacts = append(leftDomToRightDomFacts, inRightSetParamFacts...)
+// 	leftDomToRightDomFacts = append(leftDomToRightDomFacts, instantiatedDomFacts...)
 
-	rightThenFacts := []ast.FactStmt{}
-	rightThenFacts = append(rightThenFacts, ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fcFn, instantiatedRetSet}))
-	rightThenFacts = append(rightThenFacts, instantiatedThenFacts...)
+// 	rightThenFacts := []ast.FactStmt{}
+// 	rightThenFacts = append(rightThenFacts, ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fcFn, instantiatedRetSet}))
+// 	rightThenFacts = append(rightThenFacts, instantiatedThenFacts...)
 
-	leftDom_leftThen_rightDom_rightThen_uniFact := ast.NewUniFact(leftT.Params, leftT.ParamSets, leftDomToRightDomFacts, rightThenFacts)
+// 	leftDom_leftThen_rightDom_rightThen_uniFact := ast.NewUniFact(leftT.Params, leftT.ParamSets, leftDomToRightDomFacts, rightThenFacts)
 
-	if ok, err := ver.VerFactStmt(leftDom_leftThen_rightDom_rightThen_uniFact, state); err != nil || !ok {
-		return false, err
-	}
+// 	if ok, err := ver.VerFactStmt(leftDom_leftThen_rightDom_rightThen_uniFact, state); err != nil || !ok {
+// 		return false, err
+// 	}
 
-	// TODO 有严重问题：没考虑返回值要在返回值集合里
+// 	// TODO 有严重问题：没考虑返回值要在返回值集合里
 
-	return true, nil
-}
+// 	return true, nil
+// }

@@ -108,9 +108,9 @@ func (e *Env) GetEnumFact(enumName string) ([]ast.Fc, bool) {
 
 func (e *Env) GetLatestFnTT_GivenNameIsIn(fnName string) (*FnInFnTTMemItem, bool) {
 	for env := e; env != nil; env = env.Parent {
-		fnInFnTemplateTemplateFacts, ok := env.FnInFnTemplateTemplateFactsMem[fnName]
+		fnInFnTemplateFacts, ok := env.FnInFnTemplateFactsMem[fnName]
 		if ok {
-			return &fnInFnTemplateTemplateFacts[len(fnInFnTemplateTemplateFacts)-1], true
+			return &fnInFnTemplateFacts[len(fnInFnTemplateFacts)-1], true
 		}
 	}
 

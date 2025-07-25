@@ -534,7 +534,7 @@ func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, e
 // 	return nil
 // }
 
-func (env *Env) ExecDefFnTemplateTemplate(stmt *ast.FnTemplateTemplateStmt) error {
+func (env *Env) ExecDefFnTemplate(stmt *ast.FnTemplateStmt) error {
 	// 确保template name 没有被声明过
 	if env.IsAtomDeclared(stmt.TemplateDefHeader.Name, map[string]struct{}{}) {
 		return fmt.Errorf("fn template name %s is already declared", stmt.TemplateDefHeader.Name)
@@ -545,7 +545,7 @@ func (env *Env) ExecDefFnTemplateTemplate(stmt *ast.FnTemplateTemplateStmt) erro
 		return err
 	}
 
-	env.FnTemplateTemplateDefMem[string(stmt.TemplateDefHeader.Name)] = *stmt
+	env.FnTemplateDefMem[string(stmt.TemplateDefHeader.Name)] = *stmt
 	return nil
 }
 

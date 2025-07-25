@@ -67,7 +67,7 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state VerState) 
 		return true, nil
 	}
 
-	ok, err = ver.inFnTemplateTemplateFact(stmt, state)
+	ok, err = ver.inFnTemplateFact(stmt, state)
 	if err != nil {
 		return false, err
 	}
@@ -210,7 +210,7 @@ func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state VerState)
 	return false
 }
 
-func (ver *Verifier) inFnTemplateTemplateFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if asFcFn, ok := stmt.Params[1].(*ast.FcFn); ok {
 		if ast.IsFnFcFn(asFcFn) {
 			ok, err := ver.ver_In_FnFcFn_FnTT(stmt.Params[0], asFcFn, state)
