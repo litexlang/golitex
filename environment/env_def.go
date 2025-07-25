@@ -37,6 +37,40 @@ func (env *Env) IsValidUserDefinedName_NoDuplicate(name string) error {
 	return nil
 }
 
+func (env *Env) NewDefProp_BuiltinProp(stmt *ast.DefPropStmt) error {
+	// prop名不能和parameter名重叠
+	if slices.Contains(stmt.DefHeader.Params, string(stmt.DefHeader.Name)) {
+		return fmt.Errorf("prop name %s cannot be the same as parameter name %s", stmt.DefHeader.Name, stmt.DefHeader.Name)
+	}
+
+	err := env.NonDuplicateParam_NoUndeclaredParamSet(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, true)
+	if err != nil {
+		return err
+	}
+
+	extraAtomNames := map[string]struct{}{}
+	for _, param := range stmt.DefHeader.Params {
+		extraAtomNames[param] = struct{}{}
+	}
+	extraAtomNames[string(stmt.DefHeader.Name)] = struct{}{}
+
+	for _, fact := range stmt.DomFacts {
+		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
+			return fmt.Errorf("%s\nis true by prop %s definition, but there are undeclared atoms in the fact", fact, stmt.DefHeader.Name)
+		}
+	}
+
+	for _, fact := range stmt.IffFacts {
+		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
+			return fmt.Errorf("%s\nis true by prop %s definition, but there are undeclared atoms in the fact", fact, stmt.DefHeader.Name)
+		}
+	}
+
+	key := string(stmt.DefHeader.Name)
+	env.PropDefMem[key] = *stmt
+	return nil
+}
+
 func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) error {
 	// prop名不能和parameter名重叠
 	if slices.Contains(stmt.DefHeader.Params, string(stmt.DefHeader.Name)) {
