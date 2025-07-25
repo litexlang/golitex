@@ -212,6 +212,7 @@ var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]s
 	KeywordExistFnPreImageByReplacement:   {},
 	TupleFcFnHead:                         {},
 	KeywordSetProduct:                     {},
+	KeywordLen:                            {},
 }
 
 func IsBuiltinKeywordKeySymbolCanBeFcAtomName(name string) bool {
