@@ -68,7 +68,7 @@ func (env *Env) Init() {
 	env.InsertFnInFnTT(modAtom, nil, modTemplate)
 
 	powerAtom := ast.FcAtom(glob.KeySymbolPower)
-	powerTemplateR := ast.NewFnTemplateNoName([]string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordReal), ast.FcAtom(glob.KeywordReal)}, ast.FcAtom(glob.KeywordReal), []ast.FactStmt{ast.NewOrStmt([]*ast.SpecFactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolGreater), []ast.Fc{ast.FcAtom("x"), ast.FcAtom("0")}), ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.LeftIsEqual0RightIsPositive), []ast.Fc{ast.FcAtom("x"), ast.FcAtom("y")}), ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.LeftIsNegativeRightIsInteger), []ast.Fc{ast.FcAtom("x"), ast.FcAtom("y")})})}, []ast.FactStmt{})
+	powerTemplateR := ast.NewFnTemplateNoName([]string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordReal), ast.FcAtom(glob.KeywordReal)}, ast.FcAtom(glob.KeywordReal), []ast.FactStmt{ast.NewOrStmt([]*ast.SpecFactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{ast.FcAtom("y"), ast.FcAtom(glob.KeywordInteger)}), ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolGreater), []ast.Fc{ast.FcAtom("x"), ast.FcAtom("0")}), ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.LeftIsEqual0RightIsPositive), []ast.Fc{ast.FcAtom("x"), ast.FcAtom("y")}), ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.LeftIsNegativeRightIsInteger), []ast.Fc{ast.FcAtom("x"), ast.FcAtom("y")})})}, []ast.FactStmt{})
 	// powerTemplateR := ast.NewFnTemplateNoName([]string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordReal), ast.FcAtom(glob.KeywordReal)}, ast.FcAtom(glob.KeywordComplex), []ast.FactStmt{}, []ast.FactStmt{})
 	env.InsertFnInFnTT(powerAtom, nil, powerTemplateR)
 

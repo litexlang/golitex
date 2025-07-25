@@ -180,4 +180,3 @@ forall a, b R:
         a + b $in R
         a - b $in R
         a * b $in R
-        a ^ b $in R
