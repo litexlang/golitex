@@ -29,7 +29,7 @@ import (
 // }
 
 func (e *Env) InsertFnInFnTT(fc ast.Fc, templateWhereFcIs *ast.FcFn, fnTNoName *ast.FnTemplateNoName) error {
-	memory := e.FnInFnTemplateTemplateFactsMem
+	memory := e.FnInFnTemplateFactsMem
 	fnDefs, ok := memory[fc.String()]
 	if !ok {
 		memory[fc.String()] = []FnInFnTTMemItem{

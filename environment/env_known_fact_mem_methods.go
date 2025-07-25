@@ -365,7 +365,7 @@ func (e *Env) newUniFactWithIff(stmt *ast.UniFactWithIffStmt) error {
 	return nil
 }
 
-func (e *Env) StoreFnSatisfyFnTemplateFact(fn ast.Fc, fnTemplateFcFn *ast.FcFn, fnTNoName *ast.FnTemplateNoName) error {
+func (e *Env) StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(fn ast.Fc, fnTemplateFcFn *ast.FcFn, fnTNoName *ast.FnTemplateNoName) error {
 	err := e.InsertFnInFnTT(fn, fnTemplateFcFn, fnTNoName)
 	if err != nil {
 		return err
@@ -374,16 +374,7 @@ func (e *Env) StoreFnSatisfyFnTemplateFact(fn ast.Fc, fnTemplateFcFn *ast.FcFn, 
 	return nil
 }
 
-func (e *Env) StoreFnSatisfyFnTemplateTemplateFact_WithInstTNoName(fn ast.Fc, fnTemplateFcFn *ast.FcFn, fnTNoName *ast.FnTemplateNoName) error {
-	err := e.InsertFnInFnTT(fn, fnTemplateFcFn, fnTNoName)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (e *Env) StoreFnSatisfyFnTemplateTemplateFact(fn ast.Fc, fnTemplateFcFn *ast.FcFn) error {
+func (e *Env) StoreFnSatisfyFnTemplateFact(fn ast.Fc, fnTemplateFcFn *ast.FcFn) error {
 	fnTNoName, ok, err := e.getInstantiatedFnTTOfFcFn(fnTemplateFcFn)
 	if err != nil || !ok {
 		return err
@@ -406,7 +397,7 @@ func (e *Env) getInstantiatedFnTTOfFcFn(fcFn *ast.FcFn) (*ast.FnTemplateNoName, 
 		return fnTNoName, true, nil
 	}
 
-	def, ok := e.GetFnTemplateTemplateDef(fcFn.FnHead.(ast.FcAtom))
+	def, ok := e.GetFnTemplateDef(fcFn.FnHead.(ast.FcAtom))
 	if !ok {
 		return nil, false, nil
 	}

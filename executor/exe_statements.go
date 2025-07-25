@@ -78,8 +78,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		execState, err = exec.namedUniFactStmt(stmt)
 	case *ast.KnowExistPropStmt:
 		_, err = exec.knowExistPropStmt(stmt)
-	case *ast.FnTemplateTemplateStmt:
-		err = exec.fnTemplateTemplateStmt(stmt)
+	case *ast.FnTemplateStmt:
+		err = exec.fnTemplateStmt(stmt)
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}
@@ -376,7 +376,7 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 	// 在 objMem 里记录一下
 	exec.env.ObjDefMem[stmt.Name] = nil
 
-	err = exec.env.StoreFnSatisfyFnTemplateTemplateFact_WithInstTNoName(ast.FcAtom(stmt.Name), nil, &stmt.FnTemplate)
+	err = exec.env.StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(ast.FcAtom(stmt.Name), nil, &stmt.FnTemplate)
 	if err != nil {
 		return err
 	}
@@ -497,12 +497,12 @@ func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) (glob.ExecS
 	return glob.ExecState_True, nil
 }
 
-func (exec *Executor) fnTemplateTemplateStmt(stmt *ast.FnTemplateTemplateStmt) error {
+func (exec *Executor) fnTemplateStmt(stmt *ast.FnTemplateStmt) error {
 	if glob.RequireMsg() {
 		defer exec.newMsg(fmt.Sprintf("%s\n", stmt))
 	}
 
-	err := exec.env.ExecDefFnTemplateTemplate(stmt)
+	err := exec.env.ExecDefFnTemplate(stmt)
 	if err != nil {
 		return err
 	}

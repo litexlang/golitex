@@ -1,4 +1,4 @@
-fn_template_template f(x, y R):
+fn_template f(x, y R):
     dom:
     	x > 1
     fn (a, b R) R:
@@ -7,7 +7,7 @@ fn_template_template f(x, y R):
         then:
         	f(a, b) = y
 
-fn_template_template g(x, y R):
+fn_template g(x, y R):
     fn (a, b R) R:
         dom:
         	a = x

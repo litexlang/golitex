@@ -87,8 +87,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.equalsFactStmt()
 	case glob.CommentSig:
 		ret, err = tb.commentStmt()
-	case glob.KeywordFnTemplateTemplate:
-		ret, err = tb.fnTemplateTemplateStmt()
+	case glob.KeywordFnTemplate:
+		ret, err = tb.fnTemplateStmt()
 	default:
 		ret, err = tb.factStmt(UniFactDepth0)
 	}
@@ -1818,7 +1818,7 @@ func (tb *tokenBlock) commentStmt() (ast.Stmt, error) {
 	return ast.NewCommentStmt(comment), nil
 }
 
-func (tb *tokenBlock) fnTemplateTemplateStmt() (ast.Stmt, error) {
+func (tb *tokenBlock) fnTemplateStmt() (ast.Stmt, error) {
 	tb.header.skipNext()
 	defHeader, err := tb.defHeaderWithoutParsingColonAtEnd()
 	if err != nil {
@@ -1835,12 +1835,12 @@ func (tb *tokenBlock) fnTemplateTemplateStmt() (ast.Stmt, error) {
 	}
 
 	if len(tb.body) == 1 {
-		fnParams, fnParamSets, fnRetSet, domFacts, thenFacts, err := tb.body[0].fnInFnTemplateTemplateStmt()
+		fnParams, fnParamSets, fnRetSet, domFacts, thenFacts, err := tb.body[0].fnInFnTemplateStmt()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
 
-		return ast.NewFnTemplateTemplateStmt(defHeader, []ast.FactStmt{}, fnParams, fnParamSets, fnRetSet, domFacts, thenFacts), nil
+		return ast.NewFnTemplateStmt(defHeader, []ast.FactStmt{}, fnParams, fnParamSets, fnRetSet, domFacts, thenFacts), nil
 	} else if len(tb.body) == 2 {
 		err = tb.body[0].header.skipKwAndColon_ExceedEnd(glob.KeywordDom)
 		if err != nil {
@@ -1852,19 +1852,19 @@ func (tb *tokenBlock) fnTemplateTemplateStmt() (ast.Stmt, error) {
 			return nil, tbErr(err, tb)
 		}
 
-		fnParams, fnParamSets, fnRetSet, domFacts, thenFacts, err := tb.body[1].fnInFnTemplateTemplateStmt()
+		fnParams, fnParamSets, fnRetSet, domFacts, thenFacts, err := tb.body[1].fnInFnTemplateStmt()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
 
-		return ast.NewFnTemplateTemplateStmt(defHeader, templateDomFacts, fnParams, fnParamSets, fnRetSet, domFacts, thenFacts), nil
+		return ast.NewFnTemplateStmt(defHeader, templateDomFacts, fnParams, fnParamSets, fnRetSet, domFacts, thenFacts), nil
 	} else {
 		return nil, fmt.Errorf("expect one or two body blocks")
 	}
 
 }
 
-func (tb *tokenBlock) fnInFnTemplateTemplateStmt() ([]string, []ast.Fc, ast.Fc, []ast.FactStmt, []ast.FactStmt, error) {
+func (tb *tokenBlock) fnInFnTemplateStmt() ([]string, []ast.Fc, ast.Fc, []ast.FactStmt, []ast.FactStmt, error) {
 	var err error
 
 	err = tb.header.skip(glob.KeywordFn)

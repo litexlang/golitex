@@ -1,5 +1,0 @@
-$in(+, fn(R, R)R)
-$in(-, fn(R, R)R)
-$in(*, fn(R, R)R)
-have set a := {1, 2, 3}
-len(a)  = 3

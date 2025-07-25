@@ -223,7 +223,7 @@ type CommentStmt struct {
 	Comment string
 }
 
-type FnTemplateTemplateStmt struct {
+type FnTemplateStmt struct {
 	TemplateDefHeader DefHeader
 	TemplateDomFacts  FactStmtSlice
 	FnParams          StrSlice
