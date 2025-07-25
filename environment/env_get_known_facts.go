@@ -116,3 +116,18 @@ func (e *Env) GetLatestFnTT_GivenNameIsIn(fnName string) (*FnInFnTTMemItem, bool
 
 	return nil, false
 }
+
+func (e *Env) GetFnTemplateSliceTheFnIsIn(fnName string) ([]FnInFnTTMemItem, bool) {
+	ret := []FnInFnTTMemItem{}
+	for env := e; env != nil; env = env.Parent {
+		fnInFnTemplateFacts, ok := env.FnInFnTemplateFactsMem[fnName]
+		if ok {
+			ret = append(ret, fnInFnTemplateFacts...)
+		}
+	}
+	if len(ret) == 0 {
+		return nil, false
+	}
+
+	return ret, true
+}
