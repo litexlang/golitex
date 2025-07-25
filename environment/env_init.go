@@ -14,66 +14,33 @@
 
 package litex_env
 
-import (
-	ast "golitex/ast"
-	glob "golitex/glob"
-)
+import kernel_lib "golitex/kernel_lib"
 
 // template of arithmetic operations。用来证明 + $in fn(R, R)R 这样的事实
-func (env *Env) Init() {
-	env.initBuiltinProps()
+func (e *Env) Init() {
+	e.initBuiltinProps()
 
-	addAtom := ast.FcAtom(glob.KeySymbolPlus)
-	addTemplateQ := ast.NewFnTemplateNoName([]string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordRational), ast.FcAtom(glob.KeywordRational)}, ast.FcAtom(glob.KeywordRational), []ast.FactStmt{}, []ast.FactStmt{})
-	env.InsertFnInFnTT(addAtom, nil, addTemplateQ)
-	addTemplateN := ast.NewFnTemplateNoName([]string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordNatural), ast.FcAtom(glob.KeywordNatural)}, ast.FcAtom(glob.KeywordNatural), []ast.FactStmt{}, []ast.FactStmt{})
-	env.InsertFnInFnTT(addAtom, nil, addTemplateN)
-	addTemplateZ := ast.NewFnTemplateNoName([]string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordInteger), ast.FcAtom(glob.KeywordInteger)}, ast.FcAtom(glob.KeywordInteger), []ast.FactStmt{}, []ast.FactStmt{})
-	env.InsertFnInFnTT(addAtom, nil, addTemplateZ)
-	addTemplateR := ast.NewFnTemplateNoName([]string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordReal), ast.FcAtom(glob.KeywordReal)}, ast.FcAtom(glob.KeywordReal), []ast.FactStmt{}, []ast.FactStmt{})
-	env.InsertFnInFnTT(addAtom, nil, addTemplateR)
+	e.InsertFnInFnTT(kernel_lib.AddAtom, nil, kernel_lib.AddTemplateQ)
+	e.InsertFnInFnTT(kernel_lib.AddAtom, nil, kernel_lib.AddTemplateN)
+	e.InsertFnInFnTT(kernel_lib.AddAtom, nil, kernel_lib.AddTemplateZ)
+	e.InsertFnInFnTT(kernel_lib.AddAtom, nil, kernel_lib.AddTemplateR)
 
-	minusAtom := ast.FcAtom(glob.KeySymbolMinus)
-	minusTemplateQ := ast.NewFnTemplateNoName([]string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordRational), ast.FcAtom(glob.KeywordRational)}, ast.FcAtom(glob.KeywordRational), []ast.FactStmt{}, []ast.FactStmt{})
-	env.InsertFnInFnTT(minusAtom, nil, minusTemplateQ)
-	minusTemplateN := ast.NewFnTemplateNoName([]string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordNatural), ast.FcAtom(glob.KeywordNatural)}, ast.FcAtom(glob.KeywordNatural), []ast.FactStmt{}, []ast.FactStmt{})
-	env.InsertFnInFnTT(minusAtom, nil, minusTemplateN)
-	minusTemplateZ := ast.NewFnTemplateNoName([]string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordInteger), ast.FcAtom(glob.KeywordInteger)}, ast.FcAtom(glob.KeywordInteger), []ast.FactStmt{}, []ast.FactStmt{})
-	env.InsertFnInFnTT(minusAtom, nil, minusTemplateZ)
-	minusTemplateR := ast.NewFnTemplateNoName([]string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordReal), ast.FcAtom(glob.KeywordReal)}, ast.FcAtom(glob.KeywordReal), []ast.FactStmt{}, []ast.FactStmt{})
-	env.InsertFnInFnTT(minusAtom, nil, minusTemplateR)
+	e.InsertFnInFnTT(kernel_lib.MinusAtom, nil, kernel_lib.MinusTemplateQ)
+	e.InsertFnInFnTT(kernel_lib.MinusAtom, nil, kernel_lib.MinusTemplateN)
+	e.InsertFnInFnTT(kernel_lib.MinusAtom, nil, kernel_lib.MinusTemplateZ)
+	e.InsertFnInFnTT(kernel_lib.MinusAtom, nil, kernel_lib.MinusTemplateR)
 
-	starAtom := ast.FcAtom(glob.KeySymbolStar)
-	starTemplateQ := ast.NewFnTemplateNoName([]string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordRational), ast.FcAtom(glob.KeywordRational)}, ast.FcAtom(glob.KeywordRational), []ast.FactStmt{}, []ast.FactStmt{})
-	env.InsertFnInFnTT(starAtom, nil, starTemplateQ)
-	starTemplateN := ast.NewFnTemplateNoName([]string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordNatural), ast.FcAtom(glob.KeywordNatural)}, ast.FcAtom(glob.KeywordNatural), []ast.FactStmt{}, []ast.FactStmt{})
-	env.InsertFnInFnTT(starAtom, nil, starTemplateN)
-	starTemplateZ := ast.NewFnTemplateNoName([]string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordInteger), ast.FcAtom(glob.KeywordInteger)}, ast.FcAtom(glob.KeywordInteger), []ast.FactStmt{}, []ast.FactStmt{})
-	env.InsertFnInFnTT(starAtom, nil, starTemplateZ)
-	starTemplateR := ast.NewFnTemplateNoName([]string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordReal), ast.FcAtom(glob.KeywordReal)}, ast.FcAtom(glob.KeywordReal), []ast.FactStmt{}, []ast.FactStmt{})
-	env.InsertFnInFnTT(starAtom, nil, starTemplateR)
+	e.InsertFnInFnTT(kernel_lib.StarAtom, nil, kernel_lib.StarTemplateQ)
+	e.InsertFnInFnTT(kernel_lib.StarAtom, nil, kernel_lib.StarTemplateN)
+	e.InsertFnInFnTT(kernel_lib.StarAtom, nil, kernel_lib.StarTemplateZ)
+	e.InsertFnInFnTT(kernel_lib.StarAtom, nil, kernel_lib.StarTemplateR)
 
-	slashAtom := ast.FcAtom(glob.KeySymbolSlash)
-	slashTemplateQ := ast.NewFnTemplateNoName([]string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordRational), ast.FcAtom(glob.KeywordRational)}, ast.FcAtom(glob.KeywordRational), []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{ast.FcAtom("y"), ast.FcAtom("0")})}, []ast.FactStmt{})
-	env.InsertFnInFnTT(slashAtom, nil, slashTemplateQ)
-	slashTemplateN := ast.NewFnTemplateNoName([]string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordNatural), ast.FcAtom(glob.KeywordNatural)}, ast.FcAtom(glob.KeywordNatural), []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{ast.FcAtom("y"), ast.FcAtom("0")})}, []ast.FactStmt{})
-	env.InsertFnInFnTT(slashAtom, nil, slashTemplateN)
-	slashTemplateZ := ast.NewFnTemplateNoName([]string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordInteger), ast.FcAtom(glob.KeywordInteger)}, ast.FcAtom(glob.KeywordInteger), []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{ast.FcAtom("y"), ast.FcAtom("0")})}, []ast.FactStmt{})
-	env.InsertFnInFnTT(slashAtom, nil, slashTemplateZ)
-	slashTemplateR := ast.NewFnTemplateNoName([]string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordReal), ast.FcAtom(glob.KeywordReal)}, ast.FcAtom(glob.KeywordReal), []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{ast.FcAtom("y"), ast.FcAtom("0")})}, []ast.FactStmt{})
-	env.InsertFnInFnTT(slashAtom, nil, slashTemplateR)
+	e.InsertFnInFnTT(kernel_lib.SlashAtom, nil, kernel_lib.SlashTemplateQ)
+	e.InsertFnInFnTT(kernel_lib.SlashAtom, nil, kernel_lib.SlashTemplateN)
+	e.InsertFnInFnTT(kernel_lib.SlashAtom, nil, kernel_lib.SlashTemplateZ)
+	e.InsertFnInFnTT(kernel_lib.SlashAtom, nil, kernel_lib.SlashTemplateR)
 
-	modAtom := ast.FcAtom(glob.KeySymbolPercent)
-	modTemplate := ast.NewFnTemplateNoName([]string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordInteger), ast.FcAtom(glob.KeywordInteger)}, ast.FcAtom(glob.KeywordInteger), []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{ast.FcAtom("y"), ast.FcAtom("0")})}, []ast.FactStmt{})
-	env.InsertFnInFnTT(modAtom, nil, modTemplate)
+	e.InsertFnInFnTT(kernel_lib.ModAtom, nil, kernel_lib.ModTemplate)
 
-	powerAtom := ast.FcAtom(glob.KeySymbolPower)
-	powerTemplateR := ast.NewFnTemplateNoName([]string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordReal), ast.FcAtom(glob.KeywordReal)}, ast.FcAtom(glob.KeywordReal), []ast.FactStmt{ast.NewOrStmt([]*ast.SpecFactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{ast.FcAtom("y"), ast.FcAtom(glob.KeywordInteger)}), ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolGreater), []ast.Fc{ast.FcAtom("x"), ast.FcAtom("0")}), ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.LeftIsEqual0RightIsPositive), []ast.Fc{ast.FcAtom("x"), ast.FcAtom("y")}), ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.LeftIsNegativeRightIsInteger), []ast.Fc{ast.FcAtom("x"), ast.FcAtom("y")})})}, []ast.FactStmt{})
-	// powerTemplateR := ast.NewFnTemplateNoName([]string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordReal), ast.FcAtom(glob.KeywordReal)}, ast.FcAtom(glob.KeywordComplex), []ast.FactStmt{}, []ast.FactStmt{})
-	env.InsertFnInFnTT(powerAtom, nil, powerTemplateR)
-
-	lenAtom := ast.FcAtom(glob.KeywordLen)
-	lenTemplate := ast.NewFnTemplateNoName([]string{"x"}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}, ast.FcAtom(glob.KeywordNatural), []ast.FactStmt{ast.NewInFactWithFc(ast.FcAtom("x"), ast.FcAtom(glob.KeywordFiniteSet))}, []ast.FactStmt{})
-	env.InsertFnInFnTT(lenAtom, nil, lenTemplate)
-
+	e.InsertFnInFnTT(kernel_lib.PowerAtom, nil, kernel_lib.PowerTemplateR)
 }
