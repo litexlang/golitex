@@ -55,3 +55,7 @@ func (ver *Verifier) newMsgAtParent(s string) error {
 		return nil
 	}
 }
+
+func parametersDoNotSatisfyFnReq(param string, fnName string) error {
+	return fmt.Errorf("parameters in %s do not satisfy the requirement of %s", param, fnName)
+}
