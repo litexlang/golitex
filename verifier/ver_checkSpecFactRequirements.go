@@ -205,8 +205,8 @@ func (ver *Verifier) fcFnSatisfy_FnTemplate_Requirement(fc ast.Fc, state VerStat
 		return false, nil
 	}
 
-	for _, fnTT := range fnTemplateSlice {
-		ok, err = ver.fcFnParamsSatisfyFnTemplateNoNameRequirement(asFcFn, fnTT.FnTemplateStmt, state)
+	for i := len(fnTemplateSlice) - 1; i >= 0; i-- {
+		ok, err = ver.fcFnParamsSatisfyFnTemplateNoNameRequirement(asFcFn, fnTemplateSlice[i].FnTemplateStmt, state)
 		if err != nil {
 			return false, err
 		}
@@ -353,7 +353,7 @@ func (ver *Verifier) fcFnParamsSatisfyFnTemplateNoNameRequirement(fcFn *ast.FcFn
 			return false, err
 		}
 		if !ok {
-			return false, fmt.Errorf("in fact %s is unknown", ast.NewInFactWithFc(fcFn.Params[i], paramSet))
+			return false, nil
 		}
 	}
 
@@ -363,7 +363,7 @@ func (ver *Verifier) fcFnParamsSatisfyFnTemplateNoNameRequirement(fcFn *ast.FcFn
 			return false, err
 		}
 		if !ok {
-			return false, fmt.Errorf("dom fact %s is unknown", domFact)
+			return false, nil
 		}
 	}
 

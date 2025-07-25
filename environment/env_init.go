@@ -22,8 +22,14 @@ import (
 // template of arithmetic operations。用来证明 + $in fn(R, R)R 这样的事实
 func (env *Env) Init() {
 	addAtom := ast.FcAtom(glob.KeySymbolPlus)
-	addTemplate := ast.NewFnTemplateNoName([]string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordReal), ast.FcAtom(glob.KeywordReal)}, ast.FcAtom(glob.KeywordReal), []ast.FactStmt{}, []ast.FactStmt{})
-	env.InsertFnInFnTT(addAtom, nil, addTemplate)
+	addTemplateQ := ast.NewFnTemplateNoName([]string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordRational), ast.FcAtom(glob.KeywordRational)}, ast.FcAtom(glob.KeywordRational), []ast.FactStmt{}, []ast.FactStmt{})
+	env.InsertFnInFnTT(addAtom, nil, addTemplateQ)
+	addTemplateN := ast.NewFnTemplateNoName([]string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordNatural), ast.FcAtom(glob.KeywordNatural)}, ast.FcAtom(glob.KeywordNatural), []ast.FactStmt{}, []ast.FactStmt{})
+	env.InsertFnInFnTT(addAtom, nil, addTemplateN)
+	addTemplateZ := ast.NewFnTemplateNoName([]string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordInteger), ast.FcAtom(glob.KeywordInteger)}, ast.FcAtom(glob.KeywordInteger), []ast.FactStmt{}, []ast.FactStmt{})
+	env.InsertFnInFnTT(addAtom, nil, addTemplateZ)
+	addTemplateR := ast.NewFnTemplateNoName([]string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordReal), ast.FcAtom(glob.KeywordReal)}, ast.FcAtom(glob.KeywordReal), []ast.FactStmt{}, []ast.FactStmt{})
+	env.InsertFnInFnTT(addAtom, nil, addTemplateR)
 
 	minusAtom := ast.FcAtom(glob.KeySymbolMinus)
 	minusTemplate := ast.NewFnTemplateNoName([]string{"x", "y"}, []ast.Fc{ast.FcAtom(glob.KeywordReal), ast.FcAtom(glob.KeywordReal)}, ast.FcAtom(glob.KeywordReal), []ast.FactStmt{}, []ast.FactStmt{})
