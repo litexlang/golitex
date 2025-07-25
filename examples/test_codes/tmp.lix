@@ -1,2 +1,5 @@
-have a R, b Q, c Z, d N
-a + b + c + d = a + b + c + d
+obj a, b R:
+	a = 0
+    b > 0
+
+$__leftIsEqual0RightIsPositive__(0,1)
