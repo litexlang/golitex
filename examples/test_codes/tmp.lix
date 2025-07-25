@@ -20,11 +20,12 @@ claim:
         have x, y st $rational_number_representation_in_fraction(sqrt(2))
         
         x = sqrt(2) * y
-        x $in R
-        sqrt(2) * y  > 0
+
         sqrt(2) > 0
         y > 0
+        sqrt(2) * y  > 0
         x > 0
+        
         x ^ 2 = (sqrt(2) ^ 2) * (y ^ 2)
         sqrt(2) ^ 2 = 2
         x ^ 2 = 2 * (y ^ 2)
