@@ -397,8 +397,9 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 // }
 
 func (ver *Verifier) verEqual_LeftIsTupleAtIndex(left, right ast.Fc, checkReverse bool, verState VerState) (bool, string, error) {
-	if ast.IsFcFnWithHeadName(left, glob.TupleAtOp) {
-		index, ok := left.(*ast.FcFn).Params[1].(ast.FcAtom)
+	// if ast.IsFcFnWithHeadName(left, glob.TupleAtOp) {
+	if ast.IsFcFnWithHeadName(left, glob.KeywordProj) {
+		index, ok := left.(*ast.FcFn).Params[0].(ast.FcAtom)
 		if !ok {
 			return false, "", fmt.Errorf("index in %s is not a FcAtom", left)
 		}
@@ -406,11 +407,11 @@ func (ver *Verifier) verEqual_LeftIsTupleAtIndex(left, right ast.Fc, checkRevers
 		if err != nil {
 			return false, "", fmt.Errorf("index in %s is not a int", left)
 		}
-		if ast.IsFcFnWithHeadName(left.(*ast.FcFn).Params[0], glob.TupleFcFnHead) {
-			if indexAsInt < 0 || indexAsInt >= len(left.(*ast.FcFn).Params[0].(*ast.FcFn).Params) {
+		if ast.IsFcFnWithHeadName(left.(*ast.FcFn).Params[1], glob.TupleFcFnHead) {
+			if indexAsInt < 0 || indexAsInt >= len(left.(*ast.FcFn).Params[1].(*ast.FcFn).Params) {
 				return false, "", fmt.Errorf("index in %s is out of range", left)
 			}
-			ok, err := ver.VerFactStmt(ast.NewEqualFact(left.(*ast.FcFn).Params[0].(*ast.FcFn).Params[indexAsInt], right), verState)
+			ok, err := ver.VerFactStmt(ast.NewEqualFact(left.(*ast.FcFn).Params[1].(*ast.FcFn).Params[indexAsInt], right), verState)
 			if err != nil {
 				return false, "", err
 			}
