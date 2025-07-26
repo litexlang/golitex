@@ -62,7 +62,8 @@ const (
 	KeywordSetProduct = "set_product"
 	KeywordDomOf      = "dom_of"
 	// KeywordExistSetByAxiomOfReplacement = "exist_set_by_axiom_of_replacement"
-	KeywordSeq = "seq"
+	KeywordSeq  = "seq"
+	KeywordProj = "proj"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -111,6 +112,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordSetProduct:                     {},
 	KeywordDomOf:                          {},
 	KeywordSeq:                            {},
+	KeywordProj:                           {},
 	// KeywordExistSetByAxiomOfReplacement:   {},
 }
 
@@ -215,6 +217,7 @@ var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]s
 	TupleFcFnHead:                         {},
 	KeywordSetProduct:                     {},
 	KeywordLen:                            {},
+	KeywordProj:                           {},
 }
 
 func IsBuiltinKeywordKeySymbolCanBeFcAtomName(name string) bool {
