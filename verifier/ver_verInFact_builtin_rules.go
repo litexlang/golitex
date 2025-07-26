@@ -31,7 +31,7 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state VerState) 
 		return ver.falseInFactBuiltinRules(stmt, state)
 	}
 
-	ok, err := ver.verInSet(stmt, state)
+	ok, err := ver.verInSet_UseBtRules_OverAllObjsEqualToIt(stmt, state)
 	if err != nil {
 		return false, err
 	}
@@ -319,7 +319,42 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state VerState) (b
 // 	return false, nil
 // }
 
-func (ver *Verifier) verInSet(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) verInSet_UseBtRules_OverAllObjsEqualToIt(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	ok, err := ver.verInSet_btRules(stmt, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
+	if ver.isProvingObjInSetUsingEqualObjs {
+		return false, nil
+	}
+
+	ver.isProvingObjInSetUsingEqualObjs = true
+	defer func() {
+		ver.isProvingObjInSetUsingEqualObjs = false
+	}()
+
+	objectsEqualToIt, ok := ver.env.GetEqualFcs(stmt.Params[0])
+	if !ok {
+		return false, nil
+	}
+
+	for _, obj := range *objectsEqualToIt {
+		ok, err := ver.VerFactStmt(ast.NewInFactWithFc(obj, stmt.Params[1]), state)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	var err error
 	ok := ast.IsFcAtomWithBuiltinPkgAndName(stmt.Params[1], glob.KeywordSet)
 	if !ok {
