@@ -515,7 +515,8 @@ func (ver *Verifier) verInSetProduct(stmt *ast.SpecFactStmt, state VerState) (bo
 }
 
 func (ver *Verifier) atTupleIndex(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if !ast.IsFcFnWithHeadName(stmt.Params[0], glob.TupleAtOp) {
+	// if !ast.IsFcFnWithHeadName(stmt.Params[0], glob.TupleAtOp) {
+	if !ast.IsFcFnWithHeadName(stmt.Params[0], glob.KeywordProj) {
 		return false, nil
 	}
 
