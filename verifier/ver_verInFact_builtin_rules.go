@@ -688,28 +688,14 @@ func (ver *Verifier) ver_In_FnTT(left ast.Fc, right *ast.FcFn, state VerState) (
 	ver.newEnv(ver.env)
 	defer ver.deleteEnv_DeleteMsg()
 
-	leftIsInWhichFnTT, ok := ver.env.GetLatestFnTT_GivenNameIsIn(left.String())
-	if !ok {
-		return false, nil
-	}
-
-	randomNames := []string{}
-	for i := 0; i < len(leftIsInWhichFnTT.FnTemplateStmt.Params); i++ {
-		randomNames = append(randomNames, ver.env.GenerateUndeclaredRandomName())
-	}
-	randomAtoms := []ast.Fc{}
-	for i := 0; i < len(leftIsInWhichFnTT.FnTemplateStmt.Params); i++ {
-		randomAtoms = append(randomAtoms, ast.FcAtom(randomNames[i]))
-	}
-
-	uniMap := map[string]ast.Fc{}
-	for i := 0; i < len(leftIsInWhichFnTT.FnTemplateStmt.Params); i++ {
-		uniMap[leftIsInWhichFnTT.FnTemplateStmt.Params[i]] = ast.FcAtom(randomNames[i])
-	}
-
 	defOfRight, ok := ver.env.GetFnTemplateDef(rightHeadAsAtom)
 	if !ok {
 		return false, nil
+	}
+
+	uniMap := map[string]ast.Fc{}
+	for i := 0; i < len(defOfRight.TemplateDefHeader.Params); i++ {
+		uniMap[defOfRight.TemplateDefHeader.Params[i]] = right.Params[i]
 	}
 
 	rightToUniFact, err := defOfRight.Fn.DeriveUniFact(string(rightHeadAsAtom), left)
@@ -724,8 +710,23 @@ func (ver *Verifier) ver_In_FnTT(left ast.Fc, right *ast.FcFn, state VerState) (
 
 	instantiatedRightToUniFactAsUniFactStmt, _ := instantiatedRightToUniFact.(*ast.UniFactStmt)
 
+	newLeft := ast.NewFcFn(left, defOfRight.Fn.Params.ToFcSlice())
+
+	// declare fn params
+	for i, param := range defOfRight.Fn.Params {
+		err := ver.env.NewObj_NoDuplicate(string(param), nil)
+		if err != nil {
+			return false, err
+		}
+
+		err = ver.env.NewFact(ast.NewInFactWithParamFc(ast.FcAtom(string(param)), defOfRight.Fn.ParamSets[i]))
+		if err != nil {
+			return false, err
+		}
+	}
+
 	for _, fcSet := range instantiatedRightToUniFactAsUniFactStmt.ParamSets {
-		ok, err := ver.VerFactStmt(ast.NewInFactWithFc(left, fcSet), state)
+		ok, err := ver.VerFactStmt(ast.NewInFactWithFc(newLeft, fcSet), state)
 		if err != nil {
 			return false, err
 		}
@@ -733,7 +734,7 @@ func (ver *Verifier) ver_In_FnTT(left ast.Fc, right *ast.FcFn, state VerState) (
 			return false, nil
 		}
 
-		err = ver.env.NewFact(ast.NewInFactWithFc(left, fcSet))
+		err = ver.env.NewFact(ast.NewInFactWithFc(newLeft, fcSet))
 		if err != nil {
 			return false, err
 		}
