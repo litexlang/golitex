@@ -31,6 +31,10 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact(stmt *ast.SpecFactStmt, s
 	var ok bool
 	var err error
 
+	if stmt.NameIs(glob.KeywordIn) && !ver.isProvingObjInSetUsingEqualObjs {
+		return ver.verInSet_OverAllObjsEqualToIt(stmt, state)
+	}
+
 	ok, err = ver.isSpecFactCommutative(stmt)
 	if err != nil {
 		return false, err
