@@ -22,7 +22,8 @@ import (
 )
 
 type Verifier struct {
-	env *env.Env
+	env                             *env.Env
+	isProvingObjInSetUsingEqualObjs bool
 }
 
 func NewVerifier(curEnv *env.Env) *Verifier {
