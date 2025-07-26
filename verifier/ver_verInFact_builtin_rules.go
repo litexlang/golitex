@@ -31,7 +31,7 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state VerState) 
 		return ver.falseInFactBuiltinRules(stmt, state)
 	}
 
-	ok, err := ver.verInSet_UseBtRules_OverAllObjsEqualToIt(stmt, state)
+	ok, err := ver.verInSet_btRules(stmt, state)
 	if err != nil {
 		return false, err
 	}
@@ -319,23 +319,19 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state VerState) (b
 // 	return false, nil
 // }
 
-func (ver *Verifier) verInSet_UseBtRules_OverAllObjsEqualToIt(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	ok, err := ver.verInSet_btRules(stmt, state)
+func (ver *Verifier) verInSet_OverAllObjsEqualToIt(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	ver.isProvingObjInSetUsingEqualObjs = true
+	defer func() {
+		ver.isProvingObjInSetUsingEqualObjs = false
+	}()
+
+	ok, err := ver.VerFactStmt(stmt, state)
 	if err != nil {
 		return false, err
 	}
 	if ok {
 		return true, nil
 	}
-
-	if ver.isProvingObjInSetUsingEqualObjs {
-		return false, nil
-	}
-
-	ver.isProvingObjInSetUsingEqualObjs = true
-	defer func() {
-		ver.isProvingObjInSetUsingEqualObjs = false
-	}()
 
 	objectsEqualToIt, ok := ver.env.GetEqualFcs(stmt.Params[0])
 	if !ok {
