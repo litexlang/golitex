@@ -37,6 +37,40 @@ func (e *Env) GetFnTemplateDef(fcAtomName ast.FcAtom) (*ast.FnTemplateDefStmt, b
 	return nil, false
 }
 
+func (e *Env) GetFnTemplateDef_ParamsRandomized(fcAtomName ast.FcAtom) (*ast.FnTemplateDefStmt, bool) {
+	var def *ast.FnTemplateDefStmt = nil
+	for env := e; env != nil; env = env.Parent {
+		fnTemplateDef, ok := env.FnTemplateDefMem[string(fcAtomName)]
+		if ok {
+			def = &fnTemplateDef
+			break
+		}
+	}
+
+	if def == nil {
+		return nil, false
+	}
+
+	randomNames := []string{}
+	for i := 0; i < len(def.TemplateDefHeader.Params); i++ {
+		randomNames = append(randomNames, e.GenerateUndeclaredRandomName_AndNotInMap(map[string]struct{}{string(fcAtomName): {}}))
+	}
+
+	randomAtoms := []ast.Fc{}
+	for i := 0; i < len(def.TemplateDefHeader.Params); i++ {
+		randomAtoms = append(randomAtoms, ast.FcAtom(randomNames[i]))
+	}
+
+	def.Fn.Params = ast.StrSlice(randomNames)
+
+	randomMap := map[string]ast.Fc{}
+	for i := 0; i < len(def.TemplateDefHeader.Params); i++ {
+		randomMap[def.TemplateDefHeader.Params[i]] = randomAtoms[i]
+	}
+
+	return def, true
+}
+
 func (e *Env) GetExistPropDef(propName ast.FcAtom) (*ast.DefExistPropStmt, bool) {
 	for env := e; env != nil; env = env.Parent {
 		existProp, ok := env.ExistPropDefMem[string(propName)]

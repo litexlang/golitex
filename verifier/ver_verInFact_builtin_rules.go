@@ -224,6 +224,7 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state VerState) (b
 				return true, nil
 			}
 		} else {
+			// return false, nil
 			ok, err := ver.ver_In_FnTT(stmt.Params[0], asFcFn, state)
 			if err != nil {
 				return false, err
@@ -698,7 +699,7 @@ func (ver *Verifier) ver_In_FnTT(left ast.Fc, right *ast.FcFn, state VerState) (
 		uniMap[defOfRight.TemplateDefHeader.Params[i]] = right.Params[i]
 	}
 
-	rightToUniFact, err := defOfRight.Fn.DeriveUniFact(string(rightHeadAsAtom), left)
+	rightToUniFact, err := ver.env.DeriveUniFactFromFnTemplate(&defOfRight.Fn, string(rightHeadAsAtom), left)
 	if err != nil {
 		return false, err
 	}
