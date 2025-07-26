@@ -1,4 +1,6 @@
 fn_template seq(s set):
+    dom:
+        s = N
 	fn (x N) s
 
 obj f seq(N)
