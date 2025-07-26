@@ -1,9 +1,8 @@
 fn_template seq(s set):
 	fn (n N) s
 
-obj f seq(N)
-f(0) $in N
-
 fn g(x N) R
+
+g $in fn(N)R
 
 g $in seq(R)

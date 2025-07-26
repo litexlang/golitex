@@ -224,19 +224,19 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state VerState) (b
 				return true, nil
 			}
 		} else {
-			// 	ok, err := ver.ver_In_TheTemplateWhereFnIsIn(stmt.Params[0], asFcFn, state)
-			// 	if err != nil {
-			// 		return false, err
-			// 	}
-			// 	if ok {
-			// 		if state.requireMsg() {
-			// 			ver.successWithMsg(stmt.String(), fmt.Sprintf("dom of template %s is in the domain of the template where function %s is in. Also, the return value of the function is in the return set of the template where function %s is in", stmt.Params[1], stmt.Params[0], stmt.Params[1]))
-			// 		}
-			// 		return true, nil
-			// 	}
-			// }
-			return false, nil
+			ok, err := ver.ver_In_FnTT(stmt.Params[0], asFcFn, state)
+			if err != nil {
+				return false, err
+			}
+			if ok {
+				if state.requireMsg() {
+					ver.successWithMsg(stmt.String(), fmt.Sprintf("dom of template %s is in the domain of the template where function %s is in. Also, the return value of the function is in the return set of the template where function %s is in", stmt.Params[1], stmt.Params[0], stmt.Params[1]))
+				}
+				return true, nil
+			}
 		}
+		return false, nil
+		// }
 	}
 
 	return false, nil
@@ -674,6 +674,99 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Fc, fnFcFn *ast.FcFn, state Ver
 	}
 	if !ok {
 		return false, nil
+	}
+
+	return true, nil
+}
+
+func (ver *Verifier) ver_In_FnTT(left ast.Fc, right *ast.FcFn, state VerState) (bool, error) {
+	rightHeadAsAtom, ok := right.FnHead.(ast.FcAtom)
+	if !ok {
+		return false, nil
+	}
+
+	ver.newEnv(ver.env)
+	defer ver.deleteEnv_DeleteMsg()
+
+	leftIsInWhichFnTT, ok := ver.env.GetLatestFnTT_GivenNameIsIn(left.String())
+	if !ok {
+		return false, nil
+	}
+
+	randomNames := []string{}
+	for i := 0; i < len(leftIsInWhichFnTT.FnTemplateStmt.Params); i++ {
+		randomNames = append(randomNames, ver.env.GenerateUndeclaredRandomName())
+	}
+	randomAtoms := []ast.Fc{}
+	for i := 0; i < len(leftIsInWhichFnTT.FnTemplateStmt.Params); i++ {
+		randomAtoms = append(randomAtoms, ast.FcAtom(randomNames[i]))
+	}
+
+	uniMap := map[string]ast.Fc{}
+	for i := 0; i < len(leftIsInWhichFnTT.FnTemplateStmt.Params); i++ {
+		uniMap[leftIsInWhichFnTT.FnTemplateStmt.Params[i]] = ast.FcAtom(randomNames[i])
+	}
+
+	defOfRight, ok := ver.env.GetFnTemplateDef(rightHeadAsAtom)
+	if !ok {
+		return false, nil
+	}
+
+	rightToUniFact, err := defOfRight.Fn.DeriveUniFact(string(rightHeadAsAtom), left)
+	if err != nil {
+		return false, err
+	}
+
+	instantiatedRightToUniFact, err := rightToUniFact.Instantiate(uniMap)
+	if err != nil {
+		return false, err
+	}
+
+	instantiatedRightToUniFactAsUniFactStmt, _ := instantiatedRightToUniFact.(*ast.UniFactStmt)
+
+	for _, fcSet := range instantiatedRightToUniFactAsUniFactStmt.ParamSets {
+		ok, err := ver.VerFactStmt(ast.NewInFactWithFc(left, fcSet), state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+
+		err = ver.env.NewFact(ast.NewInFactWithFc(left, fcSet))
+		if err != nil {
+			return false, err
+		}
+	}
+
+	for _, domFact := range instantiatedRightToUniFactAsUniFactStmt.DomFacts {
+		ok, err := ver.VerFactStmt(domFact, state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+
+		err = ver.env.NewFact(domFact)
+		if err != nil {
+			return false, err
+		}
+	}
+
+	for _, thenFact := range instantiatedRightToUniFactAsUniFactStmt.ThenFacts {
+		ok, err := ver.VerFactStmt(thenFact, state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+
+		err = ver.env.NewFact(thenFact)
+		if err != nil {
+			return false, err
+		}
 	}
 
 	return true, nil
