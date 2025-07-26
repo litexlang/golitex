@@ -814,9 +814,23 @@ func (s *CommentStmt) ToLatexString() string {
 func (s *FnTemplateDefStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("\\begin{definition}[Function Template]\n\n")
-	builder.WriteString("We say a function satisfies function template ")
-	builder.WriteString(toLatexString(string(s.TemplateDefHeader.Name)))
-	builder.WriteString(fmt.Sprintf(" if it satisfies (we use %s here to represent that function):", string(s.TemplateDefHeader.Name)))
+
+	if len(s.TemplateDomFacts) > 0 {
+		builder.WriteString("When")
+		factStrSlice := s.TemplateDomFacts.factStmtSliceToLatexStringSlice()
+		if ShouldInSingleLineAsLatexString(factStrSlice) {
+			builder.WriteString(" ")
+			builder.WriteString(strings.Join(factStrSlice, ", "))
+		} else {
+			builder.WriteString("\n\n")
+			builder.WriteString(strings.Join(factStrSlice, "\n\n"))
+		}
+		builder.WriteString("\n\n")
+	}
+
+	builder.WriteString(fmt.Sprintf("We say a function $\\in$ function template %s ", s.TemplateDefHeader.NameWithParamsLatexString()))
+
+	builder.WriteString(fmt.Sprintf("if it satisfies (we use %s here to represent that function here):", toLatexString(string(s.TemplateDefHeader.Name))))
 	builder.WriteString("\n\n")
 
 	builder.WriteString("It has a domain which is superset of the set which contains parameters satisfying the following properties: ")
