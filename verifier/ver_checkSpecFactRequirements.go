@@ -406,7 +406,7 @@ var builtinFunctionNameSetAndCanTakeInAnyObj = map[string]struct{}{
 	glob.TupleFcFnHead:     {},
 	glob.KeywordSetProduct: {},
 	// glob.TupleAtOp:         {}, // 之后改成必须要是 $in 某个set_product才行，暂时先这样；同时传入的index需要是int
-	glob.KeywordProj: {},
+	// glob.KeywordProj: {},
 }
 
 func (ver *Verifier) isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj(fc *ast.FcFn) bool {

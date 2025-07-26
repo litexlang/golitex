@@ -44,4 +44,6 @@ func (e *Env) Init() {
 	e.InsertFnInFnTT(kernel_lib.ModAtom, nil, kernel_lib.ModTemplate)
 
 	e.InsertFnInFnTT(kernel_lib.PowerAtom, nil, kernel_lib.PowerTemplateR)
+
+	e.InsertFnInFnTT(kernel_lib.ProjAtom, nil, kernel_lib.ProjTemplate)
 }

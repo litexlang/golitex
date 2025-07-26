@@ -1,15 +1,9 @@
-(1,2) $in set_product(N, N)
+fn_template seq(s set):
+	fn (n N) s
 
-fn add_product(x, y set_product(N, N)) set_product(N, N):
-    proj(0, add_product(x, y)) = proj(0, x) + proj(0, y)
-    proj(1, add_product(x, y)) = proj(1, x) + proj(1, y)
+obj f seq(N)
+f(0) $in N
 
-(1,2) = (1,2)
-proj(0, (1,2)) = 1 # equivalent to (1,2)[0] == 1 in Python
+fn g(x N) R
 
-proj(1, (1,2)) = 2
-proj(0, (3,4)) = 3
-proj(1, (3,4)) = 4
-
-proj(0, add_product((1,2), (3,4))) = proj(0, (1,2)) + proj(0, (3,4))
-#proj(1, add_product((1,2), (3,4))) = proj(1, (1,2)) + proj(1, (3,4))
+g $in seq(R)
