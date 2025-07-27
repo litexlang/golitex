@@ -679,31 +679,3 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Fc, fnFcFn *ast.FcFn, state Ver
 
 	return true, nil
 }
-
-func (ver *Verifier) ver_In_FnTT(left ast.Fc, right *ast.FcFn, state VerState) (bool, error) {
-	leftLatestFnT, ok := ver.env.GetLatestFnTT_GivenNameIsIn(left.String())
-	if !ok {
-		return false, nil
-	}
-
-	// with the same fn template name
-	if leftLatestFnT != nil {
-		equalFact := ast.NewInFactWithParamFc(leftLatestFnT.InFcFn, right)
-		ok, err := ver.VerFactStmt(equalFact, state)
-		if err != nil {
-			return false, err
-		}
-		if ok {
-			return true, nil
-		}
-	}
-
-	// right dom <= left dom. on right dom left has all those then facts
-	rightDefT, ok := ver.env.GetFnTemplateDef_KeyIsFcHead(right)
-	if !ok {
-		return false, nil
-	}
-	_ = rightDefT
-
-	return false, nil
-}
