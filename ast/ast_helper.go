@@ -211,7 +211,7 @@ func (fcFn *FcFn) IsFcFn_HasAtomHead_ReturnHead() (FcAtom, bool) {
 	return head, true
 }
 
-func (stmt *FnTemplateDefStmt) Instantiate_GetFnTemplateNoName(fc *FcFn) (*FnStruct, error) {
+func (stmt *FnTemplateDefStmt) Instantiate_GetFnTemplateNoName(fc *FcFn) (*FnTStruct, error) {
 	uniMap := map[string]Fc{}
 	templateParams := stmt.TemplateDefHeader.Params
 	if len(templateParams) != len(fc.Params) {
@@ -242,7 +242,7 @@ func (stmt *FnTemplateDefStmt) Instantiate_GetFnTemplateNoName(fc *FcFn) (*FnStr
 		return nil, err
 	}
 
-	return NewFnTemplateNoName(stmt.Fn.Params, instantiatedParamSets, instantiatedRetSet, instantiatedDomFacts, instantiatedThenFacts), nil
+	return NewFnTStruct(stmt.Fn.Params, instantiatedParamSets, instantiatedRetSet, instantiatedDomFacts, instantiatedThenFacts), nil
 }
 
 func (fcFn *FcFn) HasHeadInSlice(headNames []string) bool {
@@ -253,7 +253,7 @@ func (fcFn *FcFn) HasHeadInSlice(headNames []string) bool {
 	return slices.Contains(headNames, string(headAtom))
 }
 
-func (fcAsFcFn *FcFn) FnTFc_ToFnTNoName() (*FnStruct, error) {
+func (fcAsFcFn *FcFn) FnTFc_ToFnTNoName() (*FnTStruct, error) {
 	fcAsFcFnHeadAsFcFn, ok := fcAsFcFn.FnHead.(*FcFn)
 	if !ok {
 		return nil, fmt.Errorf("expected FcFn, but got %T", fcAsFcFn.FnHead)
@@ -275,7 +275,7 @@ func (fcAsFcFn *FcFn) FnTFc_ToFnTNoName() (*FnStruct, error) {
 	paramSets := fcAsFcFnHeadAsFcFn.Params
 	retSet := fcAsFcFn.Params[0]
 
-	fnTNoName := NewFnTemplateNoName(randomParams, paramSets, retSet, []FactStmt{}, []FactStmt{})
+	fnTNoName := NewFnTStruct(randomParams, paramSets, retSet, []FactStmt{}, []FactStmt{})
 
 	return fnTNoName, nil
 }

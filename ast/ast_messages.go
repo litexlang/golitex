@@ -204,7 +204,7 @@ func (fact *DefPropStmt) String() string {
 
 }
 
-func fnDefStmtStringGivenKw(kw string, f *FnStruct, name string) string {
+func fnDefStmtStringGivenKw(kw string, f *FnTStruct, name string) string {
 	var builder strings.Builder
 	builder.WriteString(kw)
 	builder.WriteString(" ")
@@ -749,7 +749,7 @@ func (stmt *FnTemplateDefStmt) String() string {
 		builder.WriteByte('\n')
 	}
 
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents(NewDefFnStmt("", NewFnTemplateNoName(stmt.Fn.Params, stmt.Fn.ParamSets, stmt.Fn.RetSet, stmt.Fn.DomFacts, stmt.Fn.ThenFacts)).String(), 1))
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(NewDefFnStmt("", NewFnTStruct(stmt.Fn.Params, stmt.Fn.ParamSets, stmt.Fn.RetSet, stmt.Fn.DomFacts, stmt.Fn.ThenFacts)).String(), 1))
 
 	// builder.WriteString("(")
 	// builder.WriteString(strFcSetPairs(stmt.FnParams, stmt.FnParamSets))

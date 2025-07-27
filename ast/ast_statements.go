@@ -65,7 +65,7 @@ type DefExistPropStmt struct {
 type DefFnStmt struct {
 	// FnTemplateStmt FnTemplateStmt
 	Name       string
-	FnTemplate FnStruct
+	FnTemplate FnTStruct
 }
 
 type UniFactStmt struct {
@@ -226,10 +226,10 @@ type CommentStmt struct {
 type FnTemplateDefStmt struct {
 	TemplateDefHeader DefHeader
 	TemplateDomFacts  FactStmtSlice
-	Fn                FnStruct
+	Fn                FnTStruct
 }
 
-type FnStruct struct {
+type FnTStruct struct {
 	Params    StrSlice
 	ParamSets FcSlice
 	RetSet    Fc
