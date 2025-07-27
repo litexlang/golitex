@@ -67,7 +67,7 @@ func (e *Env) GenerateUndeclaredRandomName_AndNotInMap(m map[string]struct{}) st
 		// if !env.IsAtomDeclared(ast.NewFcAtom(glob.EmptyPkg, randomStr), map[string]struct{}{}) {
 		if !e.IsAtomDeclared(ast.FcAtom(randomStr), map[string]struct{}{}) {
 			_, ok := m[randomStr]
-			if ok {
+			if !ok {
 				return randomStr
 			}
 		}
@@ -75,7 +75,7 @@ func (e *Env) GenerateUndeclaredRandomName_AndNotInMap(m map[string]struct{}) st
 	}
 }
 
-func (e *Env) DeriveUniFactFromFnTemplate(fnTemplate *ast.FnStruct, templateName string, fc ast.Fc) (*ast.UniFactStmt, error) {
+func (e *Env) DeriveUniFactFromFnTemplate(fnTemplate *ast.FnTStruct, templateName string, fc ast.Fc) (*ast.UniFactStmt, error) {
 	def, ok := e.GetFnTemplateDef_ParamsRandomized(ast.FcAtom(templateName))
 	if !ok {
 		return nil, fmt.Errorf("failed to get fn template def")

@@ -1170,7 +1170,7 @@ func (tb *tokenBlock) defFnStmt() (*ast.DefFnStmt, error) {
 		}
 	}
 
-	return ast.NewDefFnStmt(string(decl.Name), ast.NewFnTemplateNoName(decl.Params, decl.ParamSets, retSet, domFacts, thenFacts)), nil
+	return ast.NewDefFnStmt(string(decl.Name), ast.NewFnTStruct(decl.Params, decl.ParamSets, retSet, domFacts, thenFacts)), nil
 }
 
 // func (tb *tokenBlock) importGloballyStmt() (*ast.ImportGloballyStmt, error) {

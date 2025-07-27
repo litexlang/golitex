@@ -224,7 +224,7 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state VerState) (b
 				return true, nil
 			}
 		} else {
-			// return false, nil
+			return false, nil
 			ok, err := ver.ver_In_FnTT(stmt.Params[0], asFcFn, state)
 			if err != nil {
 				return false, err

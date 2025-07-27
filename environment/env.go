@@ -37,7 +37,7 @@ type FnInFnTemplateFactsMem map[string][]FnInFnTTMemItem
 
 type FnInFnTTMemItem struct {
 	InFcFn         *ast.FcFn // 可能是 fn(R)R 这种，或者 TName(params) 这样，或者是nil（比如 defFnStmt 声明出来的）
-	FnTemplateStmt *ast.FnStruct
+	FnTemplateStmt *ast.FnTStruct
 }
 
 type HaveSetFnDefMem map[string]ast.HaveSetFnStmt
