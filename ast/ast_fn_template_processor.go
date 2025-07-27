@@ -16,17 +16,8 @@ package litex_ast
 
 import "fmt"
 
-func (stmt *FnTStruct) Instantiate_FnTDefParams(params []Fc) (*FnTStruct, error) {
+func (stmt *FnTStruct) Instantiate(uniMap map[string]Fc) (*FnTStruct, error) {
 	var err error
-
-	if len(params) != len(stmt.Params) {
-		return nil, fmt.Errorf("params length mismatch")
-	}
-
-	uniMap := map[string]Fc{}
-	for i := 0; i < len(stmt.Params); i++ {
-		uniMap[stmt.Params[i]] = params[i]
-	}
 
 	newParamSets := make(FcSlice, len(stmt.ParamSets))
 	for i := 0; i < len(stmt.ParamSets); i++ {
@@ -58,4 +49,22 @@ func (stmt *FnTStruct) Instantiate_FnTDefParams(params []Fc) (*FnTStruct, error)
 	}
 
 	return NewFnTStruct(stmt.Params, newParamSets, newRetSet, newDomFacts, newThenFacts), nil
+}
+
+func (stmt *FnTStruct) Instantiate_FnTDefParams(params []Fc) (*FnTStruct, error) {
+	if len(params) != len(stmt.Params) {
+		return nil, fmt.Errorf("params length mismatch")
+	}
+
+	uniMap := map[string]Fc{}
+	for i := 0; i < len(stmt.Params); i++ {
+		uniMap[stmt.Params[i]] = params[i]
+	}
+
+	return stmt.Instantiate(uniMap)
+}
+
+func (stmt *FnTemplateDefStmt) InstantiateFnStruct_FnName(fnTName string, fc Fc) (*FnTStruct, error) {
+	uniMap := map[string]Fc{fnTName: fc}
+	return stmt.Fn.Instantiate(uniMap)
 }
