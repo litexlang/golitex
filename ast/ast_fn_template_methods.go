@@ -14,7 +14,7 @@
 
 package litex_ast
 
-func (fnTemplate *FnStruct) DeriveUniFact_WithGivenFn(fc Fc) (*UniFactStmt, error) {
+func (fnTemplate *FnTStruct) DeriveUniFact_WithGivenFn(fc Fc) (*UniFactStmt, error) {
 	paramAsFc := []Fc{}
 	for _, param := range fnTemplate.Params {
 		paramAsFc = append(paramAsFc, FcAtom(param))
@@ -28,7 +28,7 @@ func (fnTemplate *FnStruct) DeriveUniFact_WithGivenFn(fc Fc) (*UniFactStmt, erro
 	return notInstantiated, nil
 }
 
-func (fnTemplate *FnStruct) DeriveUniFact(templateName string, fc Fc) (*UniFactStmt, error) {
+func (fnTemplate *FnTStruct) DeriveUniFact(templateName string, fc Fc) (*UniFactStmt, error) {
 	paramAsFc := []Fc{}
 	for _, param := range fnTemplate.Params {
 		paramAsFc = append(paramAsFc, FcAtom(param))
@@ -117,7 +117,7 @@ func (fnTemplate *FnStruct) DeriveUniFact(templateName string, fc Fc) (*UniFactS
 // 	return newSetParams, instantiatedDomFacts, instantiatedThenFacts, instantiatedRetSet, nil
 // }
 
-func (stmt *FnStruct) InstantiateFnTWithoutChangingTName(uniMap map[string]Fc) ([]Fc, FactStmtSlice, FactStmtSlice, Fc, error) {
+func (stmt *FnTStruct) InstantiateFnTWithoutChangingTName(uniMap map[string]Fc) ([]Fc, FactStmtSlice, FactStmtSlice, Fc, error) {
 	// 1. instantiate set params in facts
 	newSetParams := []Fc{}
 	for _, setParam := range stmt.ParamSets {

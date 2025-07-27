@@ -94,7 +94,7 @@ func NewProveStmt(proof []Stmt) *ProveStmt {
 // 	return &DefFnTemplateStmt{*fnTemplateStmt}
 // }
 
-func NewDefFnStmt(name string, fnTemplate *FnStruct) *DefFnStmt {
+func NewDefFnStmt(name string, fnTemplate *FnTStruct) *DefFnStmt {
 	return &DefFnStmt{name, *fnTemplate}
 }
 
@@ -159,9 +159,9 @@ func NewCommentStmt(comment string) *CommentStmt {
 }
 
 func NewFnTemplateStmt(defHeader *DefHeader, templateDomFacts []FactStmt, fnParams []string, fnParamSets []Fc, fnRetSet Fc, fnDomFacts []FactStmt, fnThenFacts []FactStmt) *FnTemplateDefStmt {
-	return &FnTemplateDefStmt{*defHeader, templateDomFacts, *NewFnTemplateNoName(fnParams, fnParamSets, fnRetSet, fnDomFacts, fnThenFacts)}
+	return &FnTemplateDefStmt{*defHeader, templateDomFacts, *NewFnTStruct(fnParams, fnParamSets, fnRetSet, fnDomFacts, fnThenFacts)}
 }
 
-func NewFnTemplateNoName(params []string, paramSets []Fc, retSet Fc, domFacts []FactStmt, thenFacts []FactStmt) *FnStruct {
-	return &FnStruct{params, paramSets, retSet, domFacts, thenFacts}
+func NewFnTStruct(params []string, paramSets []Fc, retSet Fc, domFacts []FactStmt, thenFacts []FactStmt) *FnTStruct {
+	return &FnTStruct{params, paramSets, retSet, domFacts, thenFacts}
 }
