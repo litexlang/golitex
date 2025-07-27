@@ -17,7 +17,6 @@ package litex_verifier
 import (
 	"fmt"
 	ast "golitex/ast"
-	cmp "golitex/cmp"
 	glob "golitex/glob"
 	"strconv"
 )
@@ -173,7 +172,11 @@ func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactS
 		return false
 	}
 
-	ok = cmp.CmpFcAsStr(stmt.Params[1], instantiatedRetSet)
+	// ok = cmp.CmpFcAsStr(stmt.Params[1], instantiatedRetSet) // left.String() == right.String()
+	ok, err = ver.VerFactStmt(ast.NewEqualFact(stmt.Params[1], instantiatedRetSet), state)
+	if err != nil {
+		return false
+	}
 	if !ok {
 		return false
 	}

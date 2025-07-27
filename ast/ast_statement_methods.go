@@ -319,33 +319,6 @@ func IsFnFcFn(fcFn *FcFn) bool {
 	return isFcWithFcFnHeadWithName(fcFn, glob.KeywordFn)
 }
 
-// func FnFcToFnTemplateStmt(fcAsFcFn *FcFn) (*FnTemplateStmt, error) {
-// 	fcAsFcFnHeadAsFcFn, ok := fcAsFcFn.FnHead.(*FcFn)
-// 	if !ok {
-// 		return nil, fmt.Errorf("expected FcFn, but got %T", fcAsFcFn.FnHead)
-// 	}
-
-// 	if len(fcAsFcFn.Params) != 1 {
-// 		return nil, fmt.Errorf("expected 1 param, but got %d", len(fcAsFcFn.Params))
-// 	}
-
-// 	randomParams := []string{}
-// 	for range len(fcAsFcFnHeadAsFcFn.Params) {
-// 		currentParam := glob.RandomString(4)
-// 		if slices.Contains(randomParams, currentParam) {
-// 			continue
-// 		}
-// 		randomParams = append(randomParams, currentParam)
-// 	}
-
-// 	paramSets := fcAsFcFnHeadAsFcFn.Params
-// 	retSet := fcAsFcFn.Params[0]
-
-// 	fnDefStmt := NewFnTemplateStmt(NewDefHeader(FcAtom(glob.EmptyPkg), randomParams, paramSets), []FactStmt{}, []FactStmt{}, retSet)
-
-// 	return fnDefStmt, nil
-// }
-
 // TODO REMOVE THIS FUNCTION
 func IsFcAtomWithBuiltinPkgAndName(fc Fc, name string) bool {
 	fcAtom, ok := fc.(FcAtom)
