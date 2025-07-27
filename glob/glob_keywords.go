@@ -64,6 +64,8 @@ const (
 	// KeywordExistSetByAxiomOfReplacement = "exist_set_by_axiom_of_replacement"
 	KeywordSeq  = "seq"
 	KeywordProj = "proj"
+
+	KeywordProve_In_FnTemplate = "prove_in_fn_template"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -114,6 +116,8 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordSeq:                            {},
 	KeywordProj:                           {},
 	// KeywordExistSetByAxiomOfReplacement:   {},
+
+	KeywordProve_In_FnTemplate: {},
 }
 
 const (
