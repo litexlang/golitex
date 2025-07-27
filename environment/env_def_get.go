@@ -16,16 +16,6 @@ package litex_env
 
 import ast "golitex/ast"
 
-// func (e *Env) GetFnTemplateDef(fcAtomName ast.FcAtom) (*ast.DefFnTemplateStmt, bool) {
-// 	for env := e; env != nil; env = env.Parent {
-// 		fnTemplateDef, ok := env.FnTemplateDefMem[string(fcAtomName)]
-// 		if ok {
-// 			return &fnTemplateDef, true
-// 		}
-// 	}
-// 	return nil, false
-// }
-
 func (e *Env) GetFnTemplateDef(fcAtomName ast.FcAtom) (*ast.FnTemplateDefStmt, bool) {
 	for env := e; env != nil; env = env.Parent {
 		fnTemplateDef, ok := env.FnTemplateDefMem[string(fcAtomName)]
