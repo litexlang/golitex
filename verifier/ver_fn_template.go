@@ -14,7 +14,10 @@
 
 package litex_verifier
 
-import ast "golitex/ast"
+import (
+	ast "golitex/ast"
+	env "golitex/environment"
+)
 
 func (ver *Verifier) ver_In_FnTT(left ast.Fc, right *ast.FcFn, state VerState) (bool, error) {
 	leftLatestFnT, ok := ver.env.GetLatestFnTT_GivenNameIsIn(left.String())
@@ -28,7 +31,7 @@ func (ver *Verifier) ver_In_FnTT(left ast.Fc, right *ast.FcFn, state VerState) (
 		return false, nil
 	}
 
-	ok = ver.leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftLatestFnT.FnTemplateStmt, &rightDefT.Fn)
+	ok = ver.leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftLatestFnT, rightDefT, left, right, state)
 
 	if !ok {
 		return false, nil
@@ -47,10 +50,52 @@ func (ver *Verifier) ver_In_FnTT(left ast.Fc, right *ast.FcFn, state VerState) (
 	return true, nil
 }
 
-func (ver *Verifier) leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftFnTStruct *ast.FnTStruct, rightFnTStruct *ast.FnTStruct) bool {
-	return true
+// right dom is subset of left dom
+func (ver *Verifier) leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftFnTStruct *env.FnInFnTTMemItem, rightFnTDef *ast.FnTemplateDefStmt, left ast.Fc, rightFn *ast.FcFn, state VerState) bool {
+	if len(leftFnTStruct.FnTemplateStmt.Params) != len(rightFn.Params) {
+		return false
+	}
+
+	instRightFnT, err := rightFnTDef.Fn.InstantiateFnStruct_FnName(string(rightFnTDef.TemplateDefHeader.Name), left)
+	if err != nil {
+		return false
+	}
+
+	instRightFnT, err = instRightFnT.Instantiate_FnTDefParams(rightFn.Params)
+	if err != nil {
+		return false
+	}
+
+	mapLeftParamsToRightParams := map[string]ast.Fc{}
+	for i, param := range leftFnTStruct.FnTemplateStmt.Params {
+		mapLeftParamsToRightParams[param] = ast.FcAtom(instRightFnT.Params[i])
+	}
+
+	leftDom, err := leftFnTStruct.FnTemplateStmt.DomFacts.Instantiate(mapLeftParamsToRightParams)
+	if err != nil {
+		return false
+	}
+
+	rightDom, err := instRightFnT.DomFacts.Instantiate(mapLeftParamsToRightParams)
+	if err != nil {
+		return false
+	}
+
+	// forall x in right dom, x in left dom
+	uniParams := instRightFnT.Params
+	uniParamSets := instRightFnT.ParamSets
+	uniDom := rightDom
+	uniThen := leftDom
+	uniFact := ast.NewUniFact(uniParams, uniParamSets, uniDom, uniThen)
+
+	ok, err := ver.VerFactStmt(uniFact, state)
+	if err != nil {
+		return false
+	}
+	return ok
 }
 
+// all right in left
 func (ver *Verifier) f_satisfy_FnT_ThenFacts_On_FnT_Dom(f ast.Fc, fnTDefName string, templateParamUniMap map[string]ast.Fc, fnT *ast.FnTStruct, state VerState) bool {
 	derivedUniFact, err := fnT.DeriveUniFact(fnTDefName, f, templateParamUniMap)
 	if err != nil {
