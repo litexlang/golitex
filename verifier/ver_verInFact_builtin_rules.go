@@ -681,95 +681,29 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Fc, fnFcFn *ast.FcFn, state Ver
 }
 
 func (ver *Verifier) ver_In_FnTT(left ast.Fc, right *ast.FcFn, state VerState) (bool, error) {
-	rightHeadAsAtom, ok := right.FnHead.(ast.FcAtom)
+	leftLatestFnT, ok := ver.env.GetLatestFnTT_GivenNameIsIn(left.String())
 	if !ok {
 		return false, nil
 	}
 
-	ver.newEnv(ver.env)
-	defer ver.deleteEnv_DeleteMsg()
+	// with the same fn template name
+	if leftLatestFnT != nil {
+		equalFact := ast.NewInFactWithParamFc(leftLatestFnT.InFcFn, right)
+		ok, err := ver.VerFactStmt(equalFact, state)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			return true, nil
+		}
+	}
 
-	defOfRight, ok := ver.env.GetFnTemplateDef(rightHeadAsAtom)
+	// right dom <= left dom. on right dom left has all those then facts
+	rightDefT, ok := ver.env.GetFnTemplateDef_KeyIsFcHead(right)
 	if !ok {
 		return false, nil
 	}
+	_ = rightDefT
 
-	uniMap := map[string]ast.Fc{}
-	for i := 0; i < len(defOfRight.TemplateDefHeader.Params); i++ {
-		uniMap[defOfRight.TemplateDefHeader.Params[i]] = right.Params[i]
-	}
-
-	rightToUniFact, err := ver.env.DeriveUniFactFromFnTemplate(&defOfRight.Fn, string(rightHeadAsAtom), left)
-	if err != nil {
-		return false, err
-	}
-
-	instantiatedRightToUniFact, err := rightToUniFact.Instantiate(uniMap)
-	if err != nil {
-		return false, err
-	}
-
-	instantiatedRightToUniFactAsUniFactStmt, _ := instantiatedRightToUniFact.(*ast.UniFactStmt)
-
-	newLeft := ast.NewFcFn(left, defOfRight.Fn.Params.ToFcSlice())
-
-	// declare fn params
-	for i, param := range defOfRight.Fn.Params {
-		err := ver.env.NewObj_NoDuplicate(string(param), nil)
-		if err != nil {
-			return false, err
-		}
-
-		err = ver.env.NewFact(ast.NewInFactWithParamFc(ast.FcAtom(string(param)), defOfRight.Fn.ParamSets[i]))
-		if err != nil {
-			return false, err
-		}
-	}
-
-	for _, fcSet := range instantiatedRightToUniFactAsUniFactStmt.ParamSets {
-		ok, err := ver.VerFactStmt(ast.NewInFactWithFc(newLeft, fcSet), state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, nil
-		}
-
-		err = ver.env.NewFact(ast.NewInFactWithFc(newLeft, fcSet))
-		if err != nil {
-			return false, err
-		}
-	}
-
-	for _, domFact := range instantiatedRightToUniFactAsUniFactStmt.DomFacts {
-		ok, err := ver.VerFactStmt(domFact, state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, nil
-		}
-
-		err = ver.env.NewFact(domFact)
-		if err != nil {
-			return false, err
-		}
-	}
-
-	for _, thenFact := range instantiatedRightToUniFactAsUniFactStmt.ThenFacts {
-		ok, err := ver.VerFactStmt(thenFact, state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, nil
-		}
-
-		err = ver.env.NewFact(thenFact)
-		if err != nil {
-			return false, err
-		}
-	}
-
-	return true, nil
+	return false, nil
 }

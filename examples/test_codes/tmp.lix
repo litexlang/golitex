@@ -3,6 +3,10 @@ fn_template seq(s set):
 
 fn g(x N) R
 
-g $in fn(N)R
+obj t seq(R)
 
-g $in seq(R)
+t $in seq(R)
+
+# g $in fn(N)R
+
+# g $in seq(R)
