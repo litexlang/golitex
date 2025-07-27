@@ -14,6 +14,8 @@
 
 package litex_ast
 
+import glob "golitex/glob"
+
 func (fnTemplate *FnTStruct) DeriveUniFact_WithGivenFn(fc Fc) (*UniFactStmt, error) {
 	paramAsFc := []Fc{}
 	for _, param := range fnTemplate.Params {
@@ -28,18 +30,21 @@ func (fnTemplate *FnTStruct) DeriveUniFact_WithGivenFn(fc Fc) (*UniFactStmt, err
 	return notInstantiated, nil
 }
 
-func (fnTemplate *FnTStruct) DeriveUniFact(templateName string, fc Fc) (*UniFactStmt, error) {
+func (fnTemplate *FnTStruct) DeriveUniFact(defFnTemplateName string, fnFc Fc, templateParamUniMap map[string]Fc) (*UniFactStmt, error) {
 	paramAsFc := []Fc{}
 	for _, param := range fnTemplate.Params {
 		paramAsFc = append(paramAsFc, FcAtom(param))
 	}
 
-	thenFacts := []FactStmt{NewInFactWithParamFc(NewFcFn(fc, paramAsFc), fnTemplate.RetSet)}
+	thenFacts := []FactStmt{NewInFactWithParamFc(NewFcFn(fnFc, paramAsFc), fnTemplate.RetSet)}
 	thenFacts = append(thenFacts, fnTemplate.ThenFacts...)
 
 	notInstantiated := NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, thenFacts)
 
-	instantiated, err := notInstantiated.Instantiate(map[string]Fc{templateName: fc})
+	uniMap := glob.CopyMap(templateParamUniMap)
+	uniMap[defFnTemplateName] = fnFc
+
+	instantiated, err := notInstantiated.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}

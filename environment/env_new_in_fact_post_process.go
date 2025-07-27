@@ -176,6 +176,11 @@ func (e *Env) inFactPostProcess_InFnTemplate(fact *ast.SpecFactStmt) (bool, erro
 		return false, nil
 	}
 
+	def, ok := e.GetFnTemplateDef_KeyIsFcHead(fact.Params[1].(*ast.FcFn))
+	if !ok {
+		return false, nil
+	}
+
 	fnTNoName, ok, err := e.getInstantiatedFnTTOfFcFn(fact.Params[1].(*ast.FcFn))
 	if err != nil {
 		return false, err
@@ -184,7 +189,12 @@ func (e *Env) inFactPostProcess_InFnTemplate(fact *ast.SpecFactStmt) (bool, erro
 		return false, nil
 	}
 
-	derivedFact, err := fnTNoName.DeriveUniFact(string(head), fact.Params[0])
+	templateParamUniMap := map[string]ast.Fc{}
+	for i, param := range def.TemplateDefHeader.Params {
+		templateParamUniMap[param] = fact.Params[1].(*ast.FcFn).Params[i]
+	}
+
+	derivedFact, err := fnTNoName.DeriveUniFact(string(head), fact.Params[0], templateParamUniMap)
 	if err != nil {
 		return false, err
 	}
