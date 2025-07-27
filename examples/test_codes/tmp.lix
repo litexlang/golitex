@@ -1,3 +1,4 @@
+"""
 fn_template seq(s set):
 	fn (n N) s
 
@@ -10,3 +11,15 @@ t $in seq(R)
 g $in fn(N)R
 
 g $in seq(R)
+"""
+
+fn_template seq2(s set):
+	fn (n N) s:
+        dom:
+            n > 3
+
+fn g2(n N) R:
+	dom:
+    	n > 1
+
+g2 $in seq2(R)
