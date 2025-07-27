@@ -7,6 +7,6 @@ obj t seq(R)
 
 t $in seq(R)
 
-# g $in fn(N)R
+g $in fn(N)R
 
-# g $in seq(R)
+g $in seq(R)

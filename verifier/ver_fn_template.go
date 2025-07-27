@@ -22,18 +22,6 @@ func (ver *Verifier) ver_In_FnTT(left ast.Fc, right *ast.FcFn, state VerState) (
 		return false, nil
 	}
 
-	// with the same fn template name
-	if leftLatestFnT != nil {
-		equalFact := ast.NewInFactWithParamFc(leftLatestFnT.InFcFn, right)
-		ok, err := ver.VerFactStmt(equalFact, state)
-		if err != nil {
-			return false, err
-		}
-		if ok {
-			return true, nil
-		}
-	}
-
 	// right dom <= left dom. on right dom left has all those then facts
 	rightDefT, ok := ver.env.GetFnTemplateDef_KeyIsFcHead(right)
 	if !ok {
@@ -46,18 +34,33 @@ func (ver *Verifier) ver_In_FnTT(left ast.Fc, right *ast.FcFn, state VerState) (
 		return false, nil
 	}
 
-	ok = ver.f_satisfy_FnT_ThenFacts_On_FnT_Dom(right, string(rightDefT.TemplateDefHeader.Name), &rightDefT.Fn)
+	templateParamUniMap := map[string]ast.Fc{}
+	for i, param := range rightDefT.TemplateDefHeader.Params {
+		templateParamUniMap[param] = right.Params[i]
+	}
+
+	ok = ver.f_satisfy_FnT_ThenFacts_On_FnT_Dom(left, string(rightDefT.TemplateDefHeader.Name), templateParamUniMap, &rightDefT.Fn, state)
 	if !ok {
 		return false, nil
 	}
 
-	return false, nil
+	return true, nil
 }
 
 func (ver *Verifier) leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftFnTStruct *ast.FnTStruct, rightFnTStruct *ast.FnTStruct) bool {
-	return false
+	return true
 }
 
-func (ver *Verifier) f_satisfy_FnT_ThenFacts_On_FnT_Dom(f ast.Fc, fnTDefName string, fnT *ast.FnTStruct) bool {
-	return false
+func (ver *Verifier) f_satisfy_FnT_ThenFacts_On_FnT_Dom(f ast.Fc, fnTDefName string, templateParamUniMap map[string]ast.Fc, fnT *ast.FnTStruct, state VerState) bool {
+	derivedUniFact, err := fnT.DeriveUniFact(fnTDefName, f, templateParamUniMap)
+	if err != nil {
+		return false
+	}
+
+	ok, err := ver.VerFactStmt(derivedUniFact, state)
+	if err != nil {
+		return false
+	}
+
+	return ok
 }
