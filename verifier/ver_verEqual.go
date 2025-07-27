@@ -173,7 +173,7 @@ func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right
 // }
 
 func (ver *Verifier) verLogicMem_leftToRight_RightToLeft(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
-	equalFact := ver.makeEqualFact(left, right)
+	equalFact := ast.NewEqualFact(left, right)
 	ok, err := ver.verSpecFactLogicMem(equalFact, state)
 	if err != nil {
 		return false, err
@@ -197,7 +197,7 @@ func (ver *Verifier) verLogicMem_leftToRight_RightToLeft(left ast.Fc, right ast.
 }
 
 func (ver *Verifier) verEqualUniMem(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
-	equalFact := ver.makeEqualFact(left, right)
+	equalFact := ast.NewEqualFact(left, right)
 	ok, err := ver.verSpecFact_UniMem(equalFact, state)
 	if err != nil {
 		return false, err
