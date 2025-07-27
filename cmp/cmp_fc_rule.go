@@ -19,30 +19,6 @@ import (
 	glob "golitex/glob"
 )
 
-func CmpFcAsStr(left, right ast.Fc) bool {
-	return left.String() == right.String()
-}
-
-// 先确定left，right都是builtin fc，然后按builtin rule来验证他们相等
-// func BuiltinFcEqualRule(left, right ast.Fc) (bool, error) {
-// 	// case 0: 比较 polynomial
-// 	cmp := cmpPolynomial_ByBIR(left, right)
-// 	if cmp {
-// 		return true, nil
-// 	}
-
-// 	// Case1: 二者都是 Number 上进行+-*/^
-// 	areNumLit, areEqual, err := NumLitEqual_ByEval(left, right)
-// 	if err != nil {
-// 		return false, err
-// 	}
-// 	if areNumLit && areEqual {
-// 		return true, nil
-// 	}
-
-// 	return false, nil
-// }
-
 func NumLitEqual_ByEval(left, right ast.Fc) (bool, bool, error) {
 	leftAsNumLitExpr, ok, err := ast.MakeFcIntoNumLitExpr(left)
 	if err != nil {

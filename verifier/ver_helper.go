@@ -18,7 +18,6 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	env "golitex/environment"
-	glob "golitex/glob"
 )
 
 func (ver *Verifier) todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt *ast.SpecFactStmt) *env.Env {
@@ -33,10 +32,6 @@ func (ver *Verifier) equalTrueAddSuccessMsg(left ast.Fc, right ast.Fc, state Ver
 	return true, nil
 }
 
-func (ver *Verifier) makeEqualFact(left ast.Fc, right ast.Fc) *ast.SpecFactStmt {
-	return ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{left, right})
-}
-
 func isErrOrOk(ok bool, err error) bool {
 	return err != nil || ok
 }
@@ -46,12 +41,4 @@ func (ver *Verifier) processOkMsg(state VerState, msg string, verifiedBy string,
 		ver.successWithMsg(msg, fmt.Sprintf(verifiedBy, args...))
 	}
 	return true, nil
-}
-
-func (ver *Verifier) verErr(err error, msg string, args ...any) error {
-	return fmt.Errorf("%s\n%s", err.Error(), fmt.Sprintf(msg, args...))
-}
-
-func (ver *Verifier) isCommutativeProp_BuiltinRule(stmt *ast.SpecFactStmt) bool {
-	return stmt.PropName == glob.KeySymbolEqual
 }

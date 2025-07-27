@@ -98,13 +98,6 @@ func (ver *Verifier) varCommutativeProp_BuiltinRules(stmt *ast.SpecFactStmt, sta
 		return false, nil
 	}
 
-	if ver.isCommutativeProp_BuiltinRule(stmt) {
-		if state.requireMsg() {
-			ver.successWithMsg(stmt.String(), fmt.Sprintf("prop %s is commutative", stmt.PropName))
-		}
-		return true, nil
-	}
-
 	uniFactParams := propDef.DefHeader.Params
 	domFacts := propDef.DomFacts
 	ThenFact := propDef.ToSpecFact()
