@@ -15,7 +15,6 @@
 package litex_env
 
 import (
-	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
 )
@@ -73,23 +72,4 @@ func (e *Env) GenerateUndeclaredRandomName_AndNotInMap(m map[string]struct{}) st
 		}
 		i++
 	}
-}
-
-func (e *Env) DeriveUniFactFromFnTemplate(fnTemplate *ast.FnTStruct, templateName string, fc ast.Fc) (*ast.UniFactStmt, error) {
-	def, ok := e.GetFnTemplateDef_ParamsRandomized(ast.FcAtom(templateName))
-	if !ok {
-		return nil, fmt.Errorf("failed to get fn template def")
-	}
-
-	uniFact, err := def.Fn.DeriveUniFact_WithGivenFn(fc)
-	if err != nil {
-		return nil, err
-	}
-
-	instantiated, err := ast.InstantiateUniFact(uniFact, map[string]ast.Fc{templateName: fc})
-	if err != nil {
-		return nil, err
-	}
-
-	return instantiated, nil
 }
