@@ -61,7 +61,7 @@ func (ver *Verifier) leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftFnTStruc
 		return false
 	}
 
-	instRightFnT, err = instRightFnT.Instantiate_FnTDefParams(rightFn.Params)
+	instRightFnT, err = instRightFnT.Instantiate_FnTDefParams(rightFnTDef.TemplateDefHeader.Params, rightFn.Params)
 	if err != nil {
 		return false
 	}
@@ -76,15 +76,10 @@ func (ver *Verifier) leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftFnTStruc
 		return false
 	}
 
-	rightDom, err := instRightFnT.DomFacts.Instantiate(mapLeftParamsToRightParams)
-	if err != nil {
-		return false
-	}
-
 	// forall x in right dom, x in left dom
 	uniParams := instRightFnT.Params
 	uniParamSets := instRightFnT.ParamSets
-	uniDom := rightDom
+	uniDom := instRightFnT.DomFacts
 	uniThen := leftDom
 	uniFact := ast.NewUniFact(uniParams, uniParamSets, uniDom, uniThen)
 
