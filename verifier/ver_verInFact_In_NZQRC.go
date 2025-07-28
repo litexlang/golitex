@@ -20,6 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
+// 这是必要的，因为 2 $in N 是这个检查的
 func (ver *Verifier) verIn_N_Z_Q_R_C(stmt *ast.SpecFactStmt, state VerState) bool {
 	inSet, ok := stmt.Params[1].(ast.FcAtom)
 	if !ok {

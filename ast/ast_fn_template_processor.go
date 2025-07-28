@@ -52,7 +52,7 @@ func (stmt *FnTStruct) Instantiate(uniMap map[string]Fc) (*FnTStruct, error) {
 }
 
 func (stmt *FnTStruct) Instantiate_FnTDefParams(templateParams []string, params []Fc) (*FnTStruct, error) {
-	if len(params) != len(stmt.Params) {
+	if len(params) != len(templateParams) {
 		return nil, fmt.Errorf("params length mismatch")
 	}
 
