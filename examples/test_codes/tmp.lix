@@ -123,7 +123,8 @@ claim:
                         a(k)
                         -1 * (- a(k))
                         -1 * (a(k+1))
-                    a(k) = -a(k+1)
+                        -1 * (a(k+1))
+                        -a(k+1)
                     
                 know forall n N:
                 	abs(a(n)) <= 1/2

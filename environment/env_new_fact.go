@@ -691,7 +691,7 @@ func (env *Env) newUniFact_ThenFactIsUniFactStmt(stmt *ast.UniFactStmt, thenFact
 }
 
 func (env *Env) newUniFact_ThenFactIsEqualsFactStmt(stmt *ast.UniFactStmt, thenFact *ast.EqualsFactStmt) error {
-	equalFacts := thenFact.ToEqualFacts()
+	equalFacts := thenFact.ToEqualFacts_PairwiseCombination()
 	for _, equalFact := range equalFacts {
 		err := env.newUniFact_ThenFactIsSpecFact(stmt, equalFact)
 		if err != nil {
