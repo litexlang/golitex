@@ -127,8 +127,6 @@ claim:
                 know forall n N:
                 	abs(a(n)) <= 1/2
 
-                know 1/2 > 0
-
                 $is_alternating_seq_and_has_bound(a, 1/2)
                 
 
