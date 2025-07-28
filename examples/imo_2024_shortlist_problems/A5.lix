@@ -24,3 +24,25 @@ prop is_alternating_seq_and_has_bound(a seq(R), bound R):
     forall n N:
         a(n) = -a(n+1)
         abs(a(n)) <= bound
+
+claim:
+    forall a seq(R):
+        forall n N:
+            a(n+2) + a(n) * a(n) = a(n) + a(n+1) * a(n+1)
+            abs(a(n+1) - a(n)) <= 1
+    	then:
+            or:
+                $is_identity_seq(a)
+                $is_alternating_seq_and_has_bound(a, 1/2)
+    prove:
+        a(n+2) + a(n) * a(n) - a(n) * a(n) = a(n) + a(n+1) * a(n+1) - a(n) * a(n)
+        a(n+2) = a(n) + a(n+1) * a(n+ 1) - a(n) * a(n)
+        =:
+            a(n+2) - a(n)
+            a(n) + a(n+1) * a(n+1) - a(n) * a(n) - a(n)
+            a(n+1) * a(n+1) - a(n) * a(n)
+        =:
+            (a(n+1) + a(n)) * (a(n+1) - a(n) + 1)
+            (a(n+1) * a(n+1) - a(n) * a(n)) + a(n+1) - a(n)
+            a(n+2) - a(n) + a(n+1) - a(n+1)
+        know $is_identity_seq(a)
