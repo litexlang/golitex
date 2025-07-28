@@ -85,7 +85,7 @@ claim:
             forall:
                 $exist_two_consecutive_items_whose_sum_is_0(a)
                 then:
-                    $is_alternating_seq_and_has_bound(a)
+                    $is_alternating_seq_and_has_bound(a, 1/2)
             prove:
                 obj a2 seq(R):
                     forall n N:
@@ -115,9 +115,21 @@ claim:
                         a(k) + a(k+1)
                     
                     =:
-                        -a(k)
+                        - a(k)
                         0 - a(k)
                         a(k) + a(k+1) - a(k)
                         a(k+1)
+                    =:
+                        a(k)
+                        -1 * (- a(k))
+                        -a(k+1)
+                    
+                know forall n N:
+                	abs(a(n)) <= 1/2
 
-                know $is_alternating_seq_and_has_bound(a, 1/2)
+                know 1/2 > 0
+
+                $is_alternating_seq_and_has_bound(a, 1/2)
+                
+
+        know $is_identity_seq(a)
