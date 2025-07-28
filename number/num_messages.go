@@ -15,6 +15,7 @@
 package litex_num
 
 import (
+	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
 	"strconv"
@@ -35,23 +36,23 @@ func fcAtomString(fcAtom ast.FcAtom) string {
 	if len(string(fcAtom)) != 0 && '0' <= string(fcAtom)[0] && string(fcAtom)[0] <= '9' {
 		return string(fcAtom)
 	} else if len(string(fcAtom)) > 1 && string(fcAtom)[0] == '-' && string(fcAtom)[1] >= '0' && string(fcAtom)[1] <= '9' {
-		return "(" + "0" + " - " + string(fcAtom)[1:] + ")"
+		return fmt.Sprintf("(%s - %s)", "0", string(fcAtom)[1:])
 	}
-	return "{" + fcAtom.String() + "}"
+	return fmt.Sprintf("{%s}", fcAtom.String())
 }
 
 func fcFnString(fcFn *ast.FcFn) string {
 	if ast.IsFcAtomAndEqualToStr(fcFn.FnHead, glob.KeySymbolPlus) {
-		return "(" + FcStringForParseAndExpandPolynomial(fcFn.Params[0]) + " + " + FcStringForParseAndExpandPolynomial(fcFn.Params[1]) + ")"
+		return fmt.Sprintf("(%s + %s)", FcStringForParseAndExpandPolynomial(fcFn.Params[0]), FcStringForParseAndExpandPolynomial(fcFn.Params[1]))
 	}
 	if ast.IsFcAtomAndEqualToStr(fcFn.FnHead, glob.KeySymbolStar) {
-		return "(" + FcStringForParseAndExpandPolynomial(fcFn.Params[0]) + " * " + FcStringForParseAndExpandPolynomial(fcFn.Params[1]) + ")"
+		return fmt.Sprintf("(%s * %s)", FcStringForParseAndExpandPolynomial(fcFn.Params[0]), FcStringForParseAndExpandPolynomial(fcFn.Params[1]))
 	}
 	if ast.IsFcAtomAndEqualToStr(fcFn.FnHead, glob.KeySymbolMinus) {
 		if len(fcFn.Params) == 1 {
-			return "(" + "0" + " - " + FcStringForParseAndExpandPolynomial(fcFn.Params[0]) + ")"
+			return fmt.Sprintf("(%s - %s)", "0", FcStringForParseAndExpandPolynomial(fcFn.Params[0]))
 		} else if len(fcFn.Params) == 2 {
-			return "(" + FcStringForParseAndExpandPolynomial(fcFn.Params[0]) + " - " + FcStringForParseAndExpandPolynomial(fcFn.Params[1]) + ")"
+			return fmt.Sprintf("(%s - %s)", FcStringForParseAndExpandPolynomial(fcFn.Params[0]), FcStringForParseAndExpandPolynomial(fcFn.Params[1]))
 		} else {
 			panic("fcFnString: fcFn.ParamSegs has more than 2 elements")
 		}
@@ -72,12 +73,12 @@ func fcFnString(fcFn *ast.FcFn) string {
 				for i := 0; i < expInt; i++ {
 					terms[i] = base
 				}
-				return "(" + strings.Join(terms, " * ") + ")"
+				return fmt.Sprintf("(%s)", strings.Join(terms, " * "))
 			}
 		}
 		// For non-integer or negative exponents, keep original form
 		// return "(" + base + "^" + exp + ")"
-		return "{" + fcFn.String() + "}"
+		return fmt.Sprintf("{%s}", fcFn.String())
 	}
-	return "{" + fcFn.String() + "}"
+	return fmt.Sprintf("{%s}", fcFn.String())
 }

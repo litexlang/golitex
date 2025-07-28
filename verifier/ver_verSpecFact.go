@@ -443,11 +443,11 @@ func (ver *Verifier) verBtCmp_ParamsAreLiteralNum(stmt *ast.SpecFactStmt) (bool,
 
 	left, err := num.CalculatorEval(stmt.Params[0].String())
 	if err != nil {
-		return false, err
+		return false, nil
 	}
 	right, err := num.CalculatorEval(stmt.Params[1].String())
 	if err != nil {
-		return false, err
+		return false, nil
 	}
 
 	switch stmt.PropName {
