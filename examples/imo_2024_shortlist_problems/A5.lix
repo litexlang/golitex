@@ -1,0 +1,10 @@
+# A5 is on page 22 of https://www.imo-official.org/problems/IMO2024SL.pdf
+
+# Prior knowledge:
+# 1. AM-GM inequality
+know @AM_GM_inequality(a seq(R), n N):
+	forall k N:
+    	a(k) >= 0
+    n > 0
+    then:
+    	seq_sum(a, n) / n >= (seq_product(a, n))^(1/n)
