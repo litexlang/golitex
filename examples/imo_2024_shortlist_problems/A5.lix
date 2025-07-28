@@ -14,7 +14,8 @@ exist_prop period N st seq_periodic(a seq(R)):
     forall k N:
         a(k) = a(k+period)
 
-# Problem
+# Proof Segments
+
 prop is_identity_seq(a seq(R)):
     forall n,m N:
         a(n) = a(m)
@@ -26,23 +27,27 @@ prop is_alternating_seq_and_has_bound(a seq(R), bound R):
         abs(a(n)) <= bound
 
 claim:
-    forall a seq(R):
-        forall n N:
-            a(n+2) + a(n) * a(n) = a(n) + a(n+1) * a(n+1)
-            abs(a(n+1) - a(n)) <= 1
+    forall x, y, z R:
+        x + z * z = z + y * y
+        then:
+            x + y = (y + z) * (y - z + 1)
+    prove:
+        =:
+            (y + z) * (y - z + 1)
+            z + y * y + y - z * z
+            x + z * z  + y - z * z
+            x + y
+
+# Problem
+claim:
+    forall a seq(R), n N:
+        a(n+2) + a(n) * a(n) = a(n) + a(n+1) * a(n+1)
+        abs(a(n+1) - a(n)) <= 1
     	then:
             or:
                 $is_identity_seq(a)
                 $is_alternating_seq_and_has_bound(a, 1/2)
     prove:
-        a(n+2) + a(n) * a(n) - a(n) * a(n) = a(n) + a(n+1) * a(n+1) - a(n) * a(n)
-        a(n+2) = a(n) + a(n+1) * a(n+ 1) - a(n) * a(n)
-        =:
-            a(n+2) - a(n)
-            a(n) + a(n+1) * a(n+1) - a(n) * a(n) - a(n)
-            a(n+1) * a(n+1) - a(n) * a(n)
-        =:
-            (a(n+1) + a(n)) * (a(n+1) - a(n) + 1)
-            (a(n+1) * a(n+1) - a(n) * a(n)) + a(n+1) - a(n)
-            a(n+2) - a(n) + a(n+1) - a(n+1)
+        a(n+2) + a(n+1) = (a(n+1) + a(n)) * (a(n+1) - a(n) + 1)
+
         know $is_identity_seq(a)
