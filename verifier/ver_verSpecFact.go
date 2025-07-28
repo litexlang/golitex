@@ -19,6 +19,7 @@ import (
 	ast "golitex/ast"
 	cmp "golitex/cmp"
 	glob "golitex/glob"
+	num "golitex/number"
 )
 
 func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
@@ -348,6 +349,9 @@ func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state VerState) (b
 		return false, err
 	}
 	if verBtCmp_ParamsAreLiteralNum {
+		if state.requireMsg() {
+			ver.successWithMsg(stmt.String(), "builtin rules")
+		}
 		return true, nil
 	}
 
@@ -428,21 +432,34 @@ func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state VerState) (b
 
 func (ver *Verifier) verBtCmp_ParamsAreLiteralNum(stmt *ast.SpecFactStmt) (bool, error) {
 	// 用 glob 里的 NumLitExpr 去比较
-	numLitExpr0, ok, err := ast.MakeFcIntoNumLitExpr(stmt.Params[0])
+	_, ok, err := ast.MakeFcIntoNumLitExpr(stmt.Params[0])
 	if err != nil || !ok {
 		return false, nil
 	}
-	numLitExpr1, ok, err := ast.MakeFcIntoNumLitExpr(stmt.Params[1])
+	_, ok, err = ast.MakeFcIntoNumLitExpr(stmt.Params[1])
 	if err != nil || !ok {
 		return false, nil
 	}
 
-	ok, err = glob.NumLitExprCompareOpt(numLitExpr0, numLitExpr1, string(stmt.PropName))
+	left, err := num.CalculatorEval(stmt.Params[0].String())
 	if err != nil {
 		return false, err
 	}
-	if ok {
-		return true, nil
+	right, err := num.CalculatorEval(stmt.Params[1].String())
+	if err != nil {
+		return false, err
 	}
+
+	switch stmt.PropName {
+	case glob.KeySymbolLargerEqual:
+		return left >= right, nil
+	case glob.KeySymbolLessEqual:
+		return left <= right, nil
+	case glob.KeySymbolGreater:
+		return left > right, nil
+	case glob.KeySymbolLess:
+		return left < right, nil
+	}
+
 	return false, nil
 }
