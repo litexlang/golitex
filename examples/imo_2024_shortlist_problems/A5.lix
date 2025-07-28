@@ -9,8 +9,18 @@ know @AM_GM_inequality(a seq(R), n N):
     	seq_sum(a, n) / (n+1) >= (seq_product(a, n))^(1/(n+1))
 
 # 2. Periodic sequence
-exist_prop n N st seq_has_period(a seq(R), n):
-    n > 0
+exist_prop period N st seq_periodic(a seq(R)):
+    period > 0
     forall k N:
-        a(k) = a(k+n)
+        a(k) = a(k+period)
 
+# Problem
+prop is_identity_seq(a seq(R)):
+    forall n,m N:
+        a(n) = a(m)
+
+prop is_alternating_seq_and_has_bound(a seq(R), bound R):
+    bound > 0
+    forall n N:
+        a(n) = -a(n+1)
+        abs(a(n)) <= bound
