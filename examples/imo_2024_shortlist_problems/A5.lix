@@ -14,8 +14,7 @@ exist_prop period N st seq_periodic(a seq(R)):
     forall k N:
         a(k) = a(k+period)
 
-# Proof Segments
-
+# Independent Proof Segments
 prop is_identity_seq(a seq(R)):
     forall n,m N:
         a(n) = a(m)
@@ -38,6 +37,38 @@ claim:
             x + z * z  + y - z * z
             x + y
 
+exist_prop n N st exist_two_consecutive_items_whose_sum_is_0(a seq(R)):
+    a(n) + a(n+1) = 0
+
+prop two_consecutive_items_of_seq_are_0(a seq(R), n N):
+    a(n) + a(n+1) = 0
+
+claim:
+    forall a seq(R), index N, n N:
+        a(n+2) + a(n) * a(n) = a(n) + a(n+1) * a(n+1)
+        a(index) + a(index+1) = 0
+        then:
+        	forall k N:
+                k > index
+                then:
+                	a(k) = 0
+        prove:
+            know forall k N:
+                k > index
+                then:
+                    a(k) = 0
+
+
+know periodic_seq_which_is_0_since_n_is_always_0(a seq(R), n N):
+    forall m N:
+    	m > n
+        then:
+        	a(m) = 0
+    $seq_periodic(a)
+    then:
+        forall k N:
+        	a(k) = 0
+
 # Problem
 claim:
     forall a seq(R), n N:
@@ -49,5 +80,21 @@ claim:
                 $is_alternating_seq_and_has_bound(a, 1/2)
     prove:
         a(n+2) + a(n+1) = (a(n+1) + a(n)) * (a(n+1) - a(n) + 1)
+
+        claim:
+            forall:
+                $exist_two_consecutive_items_whose_sum_is_0(a)
+                then:
+                    $is_identity_seq(a)
+            prove:
+                obj a2 seq(R):
+                    forall n N:
+                        a2(n) = a(n) + a(n+1)
+
+                have a2_is_0_index st $exist_two_consecutive_items_whose_sum_is_0(a)
+                a(a2_is_0_index) + a(a2_is_0_index+1) = 0
+                a2(a2_is_0_index) = 0
+
+                know $is_identity_seq(a)
 
         know $is_identity_seq(a)
