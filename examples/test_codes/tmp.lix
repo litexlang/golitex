@@ -85,7 +85,7 @@ claim:
             forall:
                 $exist_two_consecutive_items_whose_sum_is_0(a)
                 then:
-                    $is_identity_seq(a)
+                    $is_alternating_seq_and_has_bound(a, 1/2)
             prove:
                 obj a2 seq(R):
                     forall n N:
@@ -98,6 +98,39 @@ claim:
                     a(a2_is_0_index) + a(a2_is_0_index+1)
                     a2(a2_is_0_index)
 
-                know $is_identity_seq(a)
+                know:
+                    forall m N:
+                        m > a2_is_0_index
+                        then:
+                            a2(m) = 0
+
+                    $seq_periodic(a2)
+
+                $periodic_seq_which_is_0_since_n_is_always_0(a2, a2_is_0_index)
+
+                forall k N:
+                    =:
+                        0   
+                        a2(k)
+                        a(k) + a(k+1)
+                    
+                    =:
+                        - a(k)
+                        0 - a(k)
+                        a(k) + a(k+1) - a(k)
+                        a(k+1)
+                    =:
+                        a(k)
+                        -1 * (- a(k))
+                        -1 * (a(k+1))
+                    a(k) = -a(k+1)
+                    
+                know forall n N:
+                	abs(a(n)) <= 1/2
+
+                know 1/2 > 0
+
+                $is_alternating_seq_and_has_bound(a, 1/2)
+                
 
         know $is_identity_seq(a)
