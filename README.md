@@ -28,11 +28,15 @@ _Common sense is not so common._
 
 _-- Voltaire_
 
+[![Click Me To Explore Litex On Online Playground](https://img.shields.io/badge/Click_Here_To_Explore_Litex_On_Online_Playground-%E2%86%92_Explore-FF6B6B?style=for-the-badge)](https://litexlang.org/playground)
+
 **If you are a non-technical reader, please read [this section](#litex-introduction-for-non-technical-readers).**
 
-**Litex is a simple and easy-to-learn formal language. Formal languages play a fundamental role in AI safety and reasoning. Litex believes that since a 10-year-old can reason about basic math, they should be able to learn Litex easily.**
+**Litex is a simple and intuitive formal language, designed for everyone, not just experts. It believes that since a 10-year-old can reason about basic math, even a 10-year-old should be able to learn Litex easily.**
 
-**Formal language makes the process of writing math into a process of writing code. This is a very powerful idea, especially for this centuries-old discipline to survive and thrive in this computer era. Big math is now at the horizon. However, traditional formal languages are too complex for non-technical readers. This simplicity and accessibility of Litex reduces the time ratio, between formalizing a proof and writing it in natural language, from 10:1 to 1:1. That is why constructing Litex codebase is 10x cheaper and has a 10x lower entrance barrier than traditional formal languages. This is a blessing for both AI industry and math community.**
+**Formal language makes the process of writing math into a process of writing code. This is a very powerful idea. AI researchers use it to build better and safer models. However, traditional formal languages are too complex for non-technical readers. AI researchers, mathematicians are calling for a new formal language to boost their job.**
+
+**This simplicity and accessibility of Litex reduces the time ratio, between formalizing a proof and writing it in natural language, from 10:1 to 1:1. That is why constructing Litex codebase is 10x cheaper and has a 10x lower entrance barrier than traditional formal languages. This is a blessing for both AI industry and math community.**
 
 Math is about deriving new facts from established ones. Verification is about making sure the new facts are true based on the established ones. There are just two ways of verifying a new fact:
 
