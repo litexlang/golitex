@@ -20,7 +20,7 @@ func (stmt *FnTStruct) Instantiate(uniMap map[string]Fc) (*FnTStruct, error) {
 	var err error
 
 	newParamSets := make(FcSlice, len(stmt.ParamSets))
-	for i := 0; i < len(stmt.ParamSets); i++ {
+	for i := range stmt.ParamSets {
 		newParamSets[i], err = stmt.ParamSets[i].Instantiate(uniMap)
 		if err != nil {
 			return nil, err
@@ -28,7 +28,7 @@ func (stmt *FnTStruct) Instantiate(uniMap map[string]Fc) (*FnTStruct, error) {
 	}
 
 	newDomFacts := make(FactStmtSlice, len(stmt.DomFacts))
-	for i := 0; i < len(stmt.DomFacts); i++ {
+	for i := range stmt.DomFacts {
 		newDomFacts[i], err = stmt.DomFacts[i].Instantiate(uniMap)
 		if err != nil {
 			return nil, err
@@ -36,7 +36,7 @@ func (stmt *FnTStruct) Instantiate(uniMap map[string]Fc) (*FnTStruct, error) {
 	}
 
 	newThenFacts := make(FactStmtSlice, len(stmt.ThenFacts))
-	for i := 0; i < len(stmt.ThenFacts); i++ {
+	for i := range stmt.ThenFacts {
 		newThenFacts[i], err = stmt.ThenFacts[i].Instantiate(uniMap)
 		if err != nil {
 			return nil, err
@@ -57,7 +57,7 @@ func (stmt *FnTStruct) Instantiate_FnTDefParams(templateParams []string, params 
 	}
 
 	uniMap := map[string]Fc{}
-	for i := 0; i < len(templateParams); i++ {
+	for i := range len(templateParams) {
 		uniMap[templateParams[i]] = params[i]
 	}
 
