@@ -25,18 +25,18 @@ prove:
             f2(a, b) = 2
 
 prove:
-    fn_template seq(s set):
+    fn_template seq3(s set):
         fn (n N) s
 
     fn g(x N) R
 
-    obj t seq(R)
+    obj t seq3(R)
 
-    t $in seq(R)
+    t $in seq3(R)
 
     g $in fn(N)R
 
-    g $in seq(R)
+    g $in seq3(R)
 
     fn_template seq2(s set):
         fn (n N) s:
