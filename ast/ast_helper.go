@@ -129,42 +129,20 @@ func (stmt *UniFactStmt) ParamInParamSet() []*SpecFactStmt {
 	return paramSetFacts
 }
 
-// func (fcFn *FcFn) TemplateFcFnToTemplate() (*FnTemplateStmt, bool) {
-// 	head, ok := fcFn.FnHead.(*FcFn)
-// 	if !ok {
-// 		return nil, false
-// 	}
-// 	headHead, ok := head.FnHead.(FcAtom)
-// 	if !ok || string(headHead) != glob.KeywordFn {
-// 		return nil, false
-// 	}
-// 	paramSets := head.Params
-
-// 	if len(fcFn.Params) != 1 {
-// 		return nil, false
-// 	}
-
-// 	retSet := fcFn.Params[0]
-
-// 	params := glob.GenerateUniqueRandomStrings(len(paramSets))
-
-// 	return NewFnTemplateStmt(NewDefHeader("", params, paramSets), []FactStmt{}, []FactStmt{}, retSet), true
-// }
-
-func MakeSliceOfFcFnWithHeadAndParamsOfEachLevel(head FcAtom, paramsOfEachLevel [][]Fc) []*FcFn {
-	ret := make([]*FcFn, len(paramsOfEachLevel))
-	var curHead Fc = head
-	for i := range len(ret) {
-		ret[i] = NewFcFn(curHead, paramsOfEachLevel[i])
-		curHead = ret[i]
-	}
-	return ret
-}
-
 func (stmt *EqualsFactStmt) ToEqualFacts() []*SpecFactStmt {
 	ret := make([]*SpecFactStmt, len(stmt.Params)-1)
 	for i := range len(stmt.Params) - 1 {
 		ret[i] = NewEqualFact(stmt.Params[i], stmt.Params[i+1])
+	}
+	return ret
+}
+
+func (stmt *EqualsFactStmt) ToEqualFacts_PairwiseCombination() []*SpecFactStmt {
+	ret := []*SpecFactStmt{}
+	for i := range len(stmt.Params) - 1 {
+		for j := i + 1; j < len(stmt.Params); j++ {
+			ret = append(ret, NewEqualFact(stmt.Params[i], stmt.Params[j]))
+		}
 	}
 	return ret
 }
