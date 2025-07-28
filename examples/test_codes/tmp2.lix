@@ -9,7 +9,7 @@ know forall a seq(R):
     seq_product(a, 0) = a(0)
 
 prove:
-	obj b seq(R):
+    obj b seq(R):
         b(1) = 1
         b(0) = 2
     =:
@@ -17,7 +17,7 @@ prove:
         b(0)
         2
     =:
-        seq_sum(b, 1)
-        seq_sum(b, 0) + b(1)
+        seq_sum(b, 0+1)
+        seq_sum(b, 0) + b(0+1)
         2 + 1
         3
