@@ -30,9 +30,23 @@ _-- Voltaire_
 
 **If you are a non-technical reader, please read [this section](#litex-introduction-for-non-technical-readers).**
 
-**Litex is a simple and easy-to-learn formal language. It also makes formal language as accessible as daily life math. Even 10-year-olds can learn Litex easily. This simplicity and accessibility of Litex reduces the time ratio, between formalizing a proof and writing it in natural language, from 10:1 to 1:1. That is why constructing Litex codebase is 10x cheaper and has a 10x lower entrance barrier than traditional formal languages. This is a blessing for both AI and human.**
+**Litex is a simple and easy-to-learn formal language. Formal languages play a fundamental role in AI safety and reasoning. Litex believes that since a 10-year-old can reason about basic math, they should be able to learn Litex easily.**
 
-The key insight behind Litex's extreme simplicity is: mathematical verification is nothing but a fancy form of **match and substitution** problem, similar to "ctrl+f and ctrl+r (or cmd+f and cmd+r)" in your browser. When doing verification, you find an established fact, match it with the new statement, substitute the variables in the established fact with the new statement, and check if the new statement is equal to the substituted established fact. If they are equal, the new statement is verified. To ignite the process of deriving new facts from established ones, the fundamentals of modern mathematics i.e. axioms of set theory, are built-in in Litex.
+**Formal language makes the process of writing math into a process of writing code. This is a very powerful idea, especially for this centuries-old discipline to survive and thrive in this computer era. Big math is now at the horizon. However, traditional formal languages are too complex for non-technical readers. This simplicity and accessibility of Litex reduces the time ratio, between formalizing a proof and writing it in natural language, from 10:1 to 1:1. That is why constructing Litex codebase is 10x cheaper and has a 10x lower entrance barrier than traditional formal languages. This is a blessing for both AI industry and math community.**
+
+Math is about deriving new facts from established ones. Verification is about making sure the new facts are true based on the established ones. There are just two ways of verifying a new fact:
+
+1. From special case to special case. e.g. `a = 1` => `a = 1`. The derived fact `a = 1` (the second statement) is true because the first statement is true and the first statement is written exactly the same as the second statement. I call it `match`.
+
+2. From general case to special case. e.g. `forall x Human: $intelligent(x)` => `$intelligent(Jordan)`. The derived fact `intelligent(Jordan)` is true because by substituting `x` with `Jordan`, the first statement is true, and the second statement is written exactly the same as the first statement after substitution. I call it `match and substitution`.
+
+The key insight behind Litex's extreme simplicity is: mathematical verification is nothing but a fancy form of **match and substitution** problem, similar to "ctrl+f and ctrl+r (or cmd+f and cmd+r)" in your browser. When doing verification, you find an established fact, match it with the new statement, substitute the variables in the established fact with the new statement, and check if the new statement is equal to the substituted established fact. If they are equal, the new statement is verified. 
+
+To ignite the process of deriving new facts from established ones, we need some established facts which are by default true. The fundamentals of modern mathematics i.e. axioms of set theory, are built-in in Litex.
+
+Currently, the bottleneck in this field is that formal languages are too difficult for both humans and AI, resulting in scarce and expensive training data. However, Litex, with its simplicity and close alignment with mathematical syntax and semantics, reduces the cost and barrier of dataset construction by an order of magnitude.
+
+## Difference between Litex and Python and Lean
 
 Litex is very intuitive, which is very rare for a formal language. Traditional formal languages like Lean, Coq, because they are still programming languages, just like Python and C. There are huge gaps between programming and verification. Serving both purpose of computation and verification is technically challenging, which makes them much more complex than Litex. The following table might give you a sense of the gap.
 
