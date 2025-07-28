@@ -1,25 +1,19 @@
-"""
-fn_template seq(s set):
-	fn (n N) s
+prove:
+    fn_template dom_R_R_ret_R():
+        fn (x, y R) R
 
-fn g(x N) R
+    $in(+, dom_R_R_ret_R())
+    $in(-, dom_R_R_ret_R())
 
-obj t seq(R)
+    fn_template dom_R_ret_R():
+        fn (x R) R:
+            dom_R_ret_R(x) = -1 * x
 
-t $in seq(R)
+    fn reverse(x R) R:
+        reverse(x) = - x
 
-g $in fn(N)R
+    forall x R:
+        reverse(x) = - x
+        reverse(x) = -1 * x
 
-g $in seq(R)
-"""
-
-fn_template seq2(s set):
-	fn (n N) s:
-        dom:
-            n > 3
-
-fn g2(n N) R:
-	dom:
-    	n > 1
-
-g2 $in seq2(R)
+    $in(reverse, dom_R_ret_R())

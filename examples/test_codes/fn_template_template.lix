@@ -1,25 +1,75 @@
-fn_template f(x, y R):
-    dom:
-    	x > 1
-    fn (a, b R) R:
-    	dom:
-        	a = x
-        then:
-        	f(a, b) = y
-
-fn_template g(x, y R):
-    fn (a, b R) R:
+prove:
+    fn_template f(x, y R):
         dom:
-        	a = x
+            x > 1
+        fn (a, b R) R:
+            dom:
+                a = x
+            then:
+                f(a, b) = y
+
+    fn_template g(x, y R):
+        fn (a, b R) R:
+            dom:
+                a = x
+            then:
+                g(a, b) = y
+
+    obj f2 g(1,2)
+
+    f2 $in g(1,2)
+
+    forall a,b R:
+        a = 1
         then:
-        	g(a, b) = y
+            f2(a, b) = 2
 
-obj f g(1,2)
+prove:
+    fn_template seq(s set):
+        fn (n N) s
 
-f $in g(1,2)
+    fn g(x N) R
 
-forall a,b R:
-	a = 1
-    then:
-    	f(a, b) = 2
+    obj t seq(R)
 
+    t $in seq(R)
+
+    g $in fn(N)R
+
+    g $in seq(R)
+
+    fn_template seq2(s set):
+        fn (n N) s:
+            dom:
+                n > 3
+
+    fn g2(n N) R:
+        dom:
+            n > 1
+
+    know forall n N:
+        n > 3
+        then:
+            n > 1
+
+    g2 $in seq2(R)
+
+prove:
+    fn_template dom_R_R_ret_R():
+        fn (x, y R) R
+
+    $in(+, dom_R_R_ret_R())
+    $in(-, dom_R_R_ret_R())
+
+    fn_template dom_R_ret_R():
+        fn (x R) R:
+            dom_R_ret_R(x) = -1 * x
+
+    fn reverse(x R) R:
+        reverse(x) = - x
+
+    forall x R:
+        reverse(x) = - x
+        reverse(x) = -1 * x
+
+    $in(reverse, dom_R_ret_R())
