@@ -228,27 +228,16 @@ func (tb *tokenBlock) unaryOptFc() (ast.Fc, error) {
 			return nil, err
 		}
 
-		// leftHead := ast.FcAtom(unaryOp)
-
-		// REMARK
-		// TODO: 我有点想让纯数字的 - x (x 字面量是数字) 就直接变成 -x 作为 fcAtom 而不是 fcfn . 然后让 不是 数字x 的 -x 的情况变成 -1 * x 这样让 - 这个运算符就只有双目运算符了
-		// 像 -1 这种其实因为 数字本来就是内置字面量，所以 -1 就是应该可以被认为是合理的写法。如果硬要让-不重载，那把 -x parse 成 -- x，用 -- 表示前缀的-。然后 -x 如果x是数字那就是 --x 如果x不是数字就是 --1 * x
-
-		// 如果 right 是数字，那返回 - right
-		// 如果 right 是非数字的fc，返回 -1 * right。这样可以更好的让 forall 里的 -1 * x 和 x 匹配
-
-		// 如此，就再也不会有 fcFn(opt = "-1", paramSlice 只有一个元素)
-		// if rightAtom, ok := right.(ast.FcAtom); ok && glob.IsNumLitStr(string(rightAtom)) {
-		// 	return ast.NewFcFn(ast.FcAtom(glob.KeySymbolStar), []ast.Fc{ast.FcAtom("-1"), ast.FcAtom(rightAtom)}), nil
-		// return ast.FcAtom("-" + string(rightAtom)), nil
-		// } else {
+		// 方法1： 返回 -1 * right，好处： -a 可以直接和 -5 对应，因为 -5 其实是 -1 * 5, -n是 -1 * n；缺点是，如果是 -1 * 5
 		return ast.NewFcFn(ast.FcAtom(glob.KeySymbolStar), []ast.Fc{ast.FcAtom("-1"), right}), nil
+
+		// 方法2： 如果right是数字，那返回 - right，否则是 -1 * right
+		// if rightAtom, ok := right.(ast.FcAtom); ok && glob.IsNumLitStr(string(rightAtom)) {
+		// 	return ast.FcAtom("-" + string(rightAtom)), nil
+		// } else {
+		// 	return ast.NewFcFn(ast.FcAtom(glob.KeySymbolStar), []ast.Fc{ast.FcAtom("-1"), right}), nil
 		// }
 
-		// return ast.NewFcFn(
-		// 	leftHead,
-		// 	[]ast.Fc{right},
-		// ), nil
 	}
 }
 

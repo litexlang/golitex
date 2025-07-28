@@ -343,6 +343,14 @@ var reverseCmpFcAtomMap = map[string]ast.FcAtom{
 // 其实也可以写入标准库而不是放在kernel，但我还是送给用户得了
 // 传递性，就写在标准库吧
 func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	verBtCmp_ParamsAreLiteralNum, err := ver.verBtCmp_ParamsAreLiteralNum(stmt)
+	if err != nil {
+		return false, err
+	}
+	if verBtCmp_ParamsAreLiteralNum {
+		return true, nil
+	}
+
 	propName := string(stmt.PropName)
 
 	reversePropName := reverseCmpFcAtomMap[propName]
@@ -415,5 +423,26 @@ func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state VerState) (b
 		return false, nil
 	}
 
+	return false, nil
+}
+
+func (ver *Verifier) verBtCmp_ParamsAreLiteralNum(stmt *ast.SpecFactStmt) (bool, error) {
+	// 用 glob 里的 NumLitExpr 去比较
+	numLitExpr0, ok, err := ast.MakeFcIntoNumLitExpr(stmt.Params[0])
+	if err != nil || !ok {
+		return false, nil
+	}
+	numLitExpr1, ok, err := ast.MakeFcIntoNumLitExpr(stmt.Params[1])
+	if err != nil || !ok {
+		return false, nil
+	}
+
+	ok, err = glob.NumLitExprCompareOpt(numLitExpr0, numLitExpr1, string(stmt.PropName))
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
 	return false, nil
 }
