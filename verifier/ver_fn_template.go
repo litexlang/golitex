@@ -52,7 +52,7 @@ func (ver *Verifier) ver_In_FnTT(left ast.Fc, right *ast.FcFn, state VerState) (
 
 // right dom is subset of left dom
 func (ver *Verifier) leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftFnTStruct *env.FnInFnTTMemItem, rightFnTDef *ast.FnTemplateDefStmt, left ast.Fc, rightFn *ast.FcFn, state VerState) bool {
-	if len(leftFnTStruct.FnTemplateStmt.Params) != len(rightFn.Params) {
+	if len(rightFnTDef.TemplateDefHeader.Params) != len(rightFn.Params) {
 		return false
 	}
 
