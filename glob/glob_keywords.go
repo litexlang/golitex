@@ -64,6 +64,7 @@ const (
 	// KeywordExistSetByAxiomOfReplacement = "exist_set_by_axiom_of_replacement"
 	KeywordSeq  = "seq"
 	KeywordProj = "proj"
+	KeywordNPos = "N_pos"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -113,6 +114,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordDomOf:                          {},
 	KeywordSeq:                            {},
 	KeywordProj:                           {},
+	KeywordNPos:                           {},
 	// KeywordExistSetByAxiomOfReplacement:   {},
 }
 
@@ -218,6 +220,7 @@ var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]s
 	KeywordSetProduct:                     {},
 	KeywordLen:                            {},
 	KeywordProj:                           {},
+	KeywordNPos:                           {},
 }
 
 func IsBuiltinKeywordKeySymbolCanBeFcAtomName(name string) bool {
@@ -240,6 +243,7 @@ var BuiltinObjKeywordSet map[string]struct{} = map[string]struct{}{
 	KeywordComplex:   {},
 	KeywordFiniteSet: {},
 	KeywordSet:       {},
+	KeywordNPos:      {},
 }
 
 var AddMinusStarSet map[string]struct{} = map[string]struct{}{
