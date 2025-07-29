@@ -181,3 +181,4 @@ claim:
             	$is_alternating_seq_and_has_bound(a, 1/2)
             prove:
             	$is_identical_seq(a)
+        
