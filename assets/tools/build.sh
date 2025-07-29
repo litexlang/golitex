@@ -15,7 +15,7 @@ rm -rf ./binary
 mkdir -p ./binary
 
 # Here is version name
-VERSION_NAME="0_1_5_beta"
+VERSION_NAME=$(grep "VERSION =" main.go | awk '{print $4}' | tr -d '"')
 
 # Windows (64-bit only)
 GOOS=windows GOARCH=amd64 go build -o ./binary/windows_64_litex_${VERSION_NAME}.exe main.go
