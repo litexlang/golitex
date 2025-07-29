@@ -30,6 +30,7 @@ func main() {
 	fileFlag := flag.String("f", "", "Execute the given file")
 	repoFlag := flag.String("r", "", "Execute the given repo")
 	latexFlag := flag.String("latex", "", "Compile the given file to latex")
+	jupyterFlag := flag.String("jupyter", "", "Run jupyter notebook")
 
 	flag.Parse()
 
@@ -108,6 +109,12 @@ func main() {
 		return
 	}
 
+	if *jupyterFlag != "" {
+		sys.RunJupyter()
+		return
+	}
+
 	// If no flags are provided, run REPL
 	sys.RunREPLInTerminal()
+
 }
