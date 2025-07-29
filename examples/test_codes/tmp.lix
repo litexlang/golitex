@@ -1,2 +1,8 @@
 have a N
-a $in Z
+
+$exist_in(N_pos)
+
+have b N_pos
+b $in N
+
+1 $in N_pos
