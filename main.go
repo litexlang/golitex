@@ -30,7 +30,7 @@ func main() {
 	fileFlag := flag.String("f", "", "Execute the given file")
 	repoFlag := flag.String("r", "", "Execute the given repo")
 	latexFlag := flag.String("latex", "", "Compile the given file to latex")
-	jupyterFlag := flag.String("jupyter", "", "Run jupyter notebook")
+	jupyterFlag := flag.Bool("jupyter", false, "Run jupyter notebook")
 
 	flag.Parse()
 
@@ -109,7 +109,7 @@ func main() {
 		return
 	}
 
-	if *jupyterFlag != "" {
+	if *jupyterFlag {
 		sys.RunJupyter()
 		return
 	}
