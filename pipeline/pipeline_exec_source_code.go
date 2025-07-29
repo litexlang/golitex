@@ -114,6 +114,56 @@ func printMessagesToWriter(writer io.Writer, msg []string) {
 	}
 }
 
+func readAllInputFromReader(reader *bufio.Reader) (string, error) {
+	var input strings.Builder
+	for {
+		line, err := reader.ReadString('\n')
+		if err != nil && err != io.EOF {
+			return "", err
+		}
+		input.WriteString(line)
+		if err == io.EOF {
+			break
+		}
+	}
+	return input.String(), nil
+}
+
+func RunJupyter() {
+	executor, err := pipelineExecutorInit()
+	if err != nil {
+		fmt.Println("Error initializing pipeline:", err)
+		return
+	}
+
+	reader := bufio.NewReader(os.Stdin)
+	writer := os.Stdout
+
+	for {
+		code, err := readAllInputFromReader(reader) // 直接读取一行输入（含 \n）
+		if err != nil {
+			fmt.Fprintf(writer, "[Error] Failed to read input: %s\n", err)
+			continue
+		}
+
+		code = strings.TrimSpace(code) // 去除首尾空白（包括末尾的 \n）
+		if code == "exit" {
+			fmt.Fprintf(writer, glob.REPLGoodbyeMessage)
+			return
+		}
+
+		msg, signal, err := ExecuteCodeAndReturnMessageSliceGivenSettings(code, executor)
+		if err != nil || signal != glob.SysSignalTrue {
+			printMessagesToWriter(writer, msg)
+			fmt.Fprintf(writer, glob.REPLFailedMessage)
+			continue
+		}
+
+		printMessagesToWriter(writer, msg)
+		fmt.Fprintf(writer, glob.REPLSuccessMessage)
+	}
+}
+
 func RunREPLInTerminal() {
 	executor, err := pipelineExecutorInit()
 	if err != nil {
@@ -121,18 +171,13 @@ func RunREPLInTerminal() {
 		return
 	}
 
-	// curEnv := env.NewEnv(nil, nil)
-	// executor := exe.NewExecutorWithInit(curEnv)
-	// curEnv.Init()
-	// executor := exe.NewExecutor(curEnv)
-
 	reader := bufio.NewReader(os.Stdin)
 	writer := os.Stdout
 
 	fmt.Println("Litex-beta - Type your code or 'exit' to quit\nWarning: not yet ready for production use.")
 
 	for {
-		code, err := listenOneStatement(reader, writer)
+		code, err := listenOneStatementFromTerminal(reader, writer)
 		if err != nil {
 			fmt.Fprintf(writer, "[Error] %s\n", err)
 			continue
@@ -156,7 +201,7 @@ func RunREPLInTerminal() {
 	}
 }
 
-func listenOneStatement(reader *bufio.Reader, writer io.Writer) (string, error) {
+func listenOneStatementFromTerminal(reader *bufio.Reader, writer io.Writer) (string, error) {
 	var input strings.Builder
 	fmt.Fprint(writer, ">>> ")
 	currentScopeDepth := 0
