@@ -206,6 +206,30 @@ func IsNatNumLitExpr(numLitExpr *NumLitExpr) bool {
 	return true
 }
 
+func IsNPosNumLitExpr(numLitExpr *NumLitExpr) bool {
+	str, ok, err := numLitExpr.evalNumLitExpr()
+	if err != nil {
+		return false
+	}
+	if !ok {
+		return false
+	}
+
+	if strings.Contains(str, ".") {
+		return false
+	}
+
+	if strings.HasPrefix(str, "-") {
+		return false
+	}
+
+	if str == "0" {
+		return false
+	}
+
+	return true
+}
+
 func IsIntegerNumLitExpr(numLitExpr *NumLitExpr) bool {
 	str, ok, err := numLitExpr.evalNumLitExpr()
 	if err != nil {
