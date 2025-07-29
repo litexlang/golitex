@@ -109,7 +109,7 @@ claim:
                 $periodic_seq_which_is_0_since_n_is_always_0(a2, a2_is_0_index)
 
                 forall k N:
-                    =:
+                    =:p
                         0   
                         a2(k)
                         a(k) + a(k+1)
