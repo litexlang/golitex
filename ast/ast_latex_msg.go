@@ -58,61 +58,47 @@ func (c *DefPropStmt) ToLatexString() string {
 }
 
 func (l *DefFnStmt) ToLatexString() string {
-	panic("not implemented")
-	// var builder strings.Builder
+	var builder strings.Builder
+	builder.WriteString("\\begin{definition}[Function]\n")
+	builder.WriteString(l.Name)
+	builder.WriteString(" is defined for ")
+	builder.WriteString(strFcSetPairsLatexString(l.FnTemplate.Params, l.FnTemplate.ParamSets))
+	builder.WriteString(".")
 
-	// builder.WriteString("\\begin{definition}[Function]\n")
-	// builder.WriteString(l.FnTemplateStmt.DefHeader.NameWithParamsLatexString())
-	// builder.WriteString(" is defined for ")
-	// builder.WriteString(strFcSetPairsLatexString(l.FnTemplateStmt.Params, l.FnTemplateStmt.ParamSets))
-	// builder.WriteString(".")
+	if len(l.FnTemplate.DomFacts) > 0 {
+		builder.WriteString(" Its domain is:")
 
-	// if len(l.FnTemplateStmt.DomFacts) > 0 {
-	// 	builder.WriteString(" Its domain is:")
+		domFactStrSlice := l.FnTemplate.DomFacts.factStmtSliceToLatexStringSlice()
 
-	// 	domFactStrSlice := make([]string, len(l.FnTemplateStmt.DomFacts))
-	// 	for i := range len(l.FnTemplateStmt.DomFacts) {
-	// 		domFactStrSlice[i] = l.FnTemplateStmt.DomFacts[i].ToLatexString()
-	// 	}
+		if ShouldInSingleLineAsLatexString(domFactStrSlice) {
+			builder.WriteString(" ")
+			builder.WriteString(strings.Join(domFactStrSlice, ", "))
+			builder.WriteString(".")
+		} else {
+			builder.WriteString("\n\n")
+			builder.WriteString(strings.Join(domFactStrSlice, "\n\n"))
+			builder.WriteString("\n\n")
+		}
+	}
 
-	// 	if ShouldInSingleLineAsLatexString(domFactStrSlice) {
-	// 		builder.WriteString(" ")
-	// 		builder.WriteString(fmt.Sprintf("%s.", strings.Join(domFactStrSlice, ", ")))
-	// 		builder.WriteString(" ")
-	// 	} else {
-	// 		builder.WriteString("\n\n")
-	// 		for i := range len(l.FnTemplateStmt.DomFacts) {
-	// 			domFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(domFactStrSlice[i], 1)
-	// 		}
-	// 		builder.WriteString(fmt.Sprintf("%s.", strings.Join(domFactStrSlice, "\n\n")))
-	// 		builder.WriteString("\n\n")
-	// 	}
-	// }
+	builder.WriteString(" Its return value is $\\in$ ")
+	builder.WriteString(l.FnTemplate.RetSet.ToLatexString())
+	builder.WriteString(".")
 
-	// if len(l.FnTemplateStmt.ThenFacts) > 0 {
-	// 	builder.WriteString(fmt.Sprintf("We suppose %s satisfies:", toLatexString(string(l.FnTemplateStmt.DefHeader.Name))))
+	if len(l.FnTemplate.ThenFacts) > 0 {
+		builder.WriteString(" When its parameters satisfies the above condition, it has the following properties:")
+		thenFactStrSlice := l.FnTemplate.ThenFacts.factStmtSliceToLatexStringSlice()
+		if ShouldInSingleLineAsLatexString(thenFactStrSlice) {
+			builder.WriteString(" ")
+			builder.WriteString(strings.Join(thenFactStrSlice, ", "))
+		} else {
+			builder.WriteString("\n\n")
+			builder.WriteString(strings.Join(thenFactStrSlice, "\n\n"))
+		}
+	}
 
-	// 	thenFactStrSlice := make([]string, len(l.FnTemplateStmt.ThenFacts))
-	// 	for i := range len(l.FnTemplateStmt.ThenFacts) {
-	// 		thenFactStrSlice[i] = l.FnTemplateStmt.ThenFacts[i].ToLatexString()
-	// 	}
-
-	// 	if ShouldInSingleLineAsLatexString(thenFactStrSlice) {
-	// 		builder.WriteString(" ")
-	// 		builder.WriteString(fmt.Sprintf("%s.", strings.Join(thenFactStrSlice, ", ")))
-	// 		builder.WriteString(" ")
-	// 	} else {
-	// 		builder.WriteString("\n\n")
-	// 		for i := range len(l.FnTemplateStmt.ThenFacts) {
-	// 			thenFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(thenFactStrSlice[i], 1)
-	// 		}
-	// 		builder.WriteString(fmt.Sprintf("%s.", strings.Join(thenFactStrSlice, "\n\n")))
-	// 	}
-	// }
-
-	// builder.WriteString("\n\\end{definition}")
-
-	// return builder.String()
+	builder.WriteString("\n\\end{definition}")
+	return builder.String()
 }
 
 func (l *UniFactStmt) ToLatexString() string {
