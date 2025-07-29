@@ -36,6 +36,8 @@ func (ver *Verifier) verIn_N_Z_Q_R_C(stmt *ast.SpecFactStmt, state VerState) boo
 		ok, msg = ver.verInZ_BySpecMem__ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
 	case glob.KeywordRational:
 		ok, msg = ver.verInQ_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
+	case glob.KeywordNPos:
+		ok, msg = ver.verInNPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
 	case glob.KeywordReal:
 		ok, msg = ver.verInR_BySpecMem(stmt, nextState)
 	case glob.KeywordComplex:
@@ -52,6 +54,40 @@ func (ver *Verifier) verIn_N_Z_Q_R_C(stmt *ast.SpecFactStmt, state VerState) boo
 		return true
 	}
 	return false
+}
+
+func (ver *Verifier) verInNPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactStmt, state VerState) (bool, string) {
+	if ast.IsFcLiterallyNPosNumber(stmt.Params[0]) {
+		return true, stmt.String()
+	}
+
+	ok, err := ver.verSpecFact_BySpecMem(stmt, state)
+	if err != nil {
+		return false, ""
+	}
+	if ok {
+		return true, stmt.String()
+	}
+
+	ok = ver.returnValueOfUserDefinedFnInFnReturnSet(stmt, state)
+	if ok {
+		return true, stmt.String()
+	}
+
+	if ast.IsFcFnWithHeadNameInSlice(stmt.Params[0], glob.AddMinusStarSet) || ast.IsFcFnWithHeadName(stmt.Params[0], glob.KeySymbolPower) {
+		fcFn, ok := stmt.Params[0].(*ast.FcFn)
+		if ok {
+			ok, _ = ver.verInNPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fcFn.Params[0], ast.FcAtom(glob.KeywordNPos)}), state)
+			if ok {
+				ok, _ = ver.verInNPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fcFn.Params[1], ast.FcAtom(glob.KeywordNPos)}), state)
+				if ok {
+					return true, fmt.Sprintf("%s has function name in *+-^, and both params are in N_pos", fcFn)
+				}
+			}
+		}
+	}
+
+	return false, ""
 }
 
 func (ver *Verifier) verInN_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactStmt, state VerState) (bool, string) {
