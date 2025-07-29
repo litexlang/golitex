@@ -1,8 +1,13 @@
-have a N
+fn_template finite_seq(s set, n N_pos):
+    fn (x N) s:
+    	dom:
+        	x < n
 
-$exist_in(N_pos)
+obj a finite_seq(R, 3):
+    a(0) = 1
+    a(1) = 2
+    a(2) = 3
 
-have b N_pos
-b $in N
-
-1 $in N_pos
+a(0) = 1
+a(1) = 2
+a(2) = 3
