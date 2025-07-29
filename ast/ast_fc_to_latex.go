@@ -32,6 +32,8 @@ func (f FcAtom) ToLatexString() string {
 		return "$\\mathbb{Q}$"
 	case glob.KeywordComplex:
 		return "$\\mathbb{C}$"
+	case glob.KeywordNPos:
+		return "$\\mathbb{N}^{+}$"
 	default:
 		return fmt.Sprintf("$%s$", strings.ReplaceAll(string(f), "_", "\\_"))
 	}

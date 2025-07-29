@@ -169,6 +169,11 @@ func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactSt
 			isSuccess = glob.IsComplexNumLitExpr(leftFc)
 			return isSuccess, nil
 		}
+
+		if ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordNPos) {
+			isSuccess = glob.IsNPosNumLitExpr(leftFc)
+			return isSuccess, nil
+		}
 	}
 
 	return false, nil
