@@ -203,7 +203,7 @@ func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state VerState)
 	// 	return false
 	// }
 
-	if string(asAtom) == glob.KeywordNatural || string(asAtom) == glob.KeywordInteger || string(asAtom) == glob.KeywordReal || string(asAtom) == glob.KeywordComplex || string(asAtom) == glob.KeywordRational {
+	if string(asAtom) == glob.KeywordNatural || string(asAtom) == glob.KeywordInteger || string(asAtom) == glob.KeywordReal || string(asAtom) == glob.KeywordComplex || string(asAtom) == glob.KeywordRational || string(asAtom) == glob.KeywordNPos {
 		if state.requireMsg() {
 			ver.successWithMsg(stmt.String(), "the builtin rules")
 		}
@@ -375,7 +375,8 @@ func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state VerState) (b
 		ast.IsFcAtomWithBuiltinPkgAndName(stmt.Params[0], glob.KeywordInteger) ||
 		ast.IsFcAtomWithBuiltinPkgAndName(stmt.Params[0], glob.KeywordRational) ||
 		ast.IsFcAtomWithBuiltinPkgAndName(stmt.Params[0], glob.KeywordReal) ||
-		ast.IsFcAtomWithBuiltinPkgAndName(stmt.Params[0], glob.KeywordComplex)
+		ast.IsFcAtomWithBuiltinPkgAndName(stmt.Params[0], glob.KeywordComplex) ||
+		ast.IsFcAtomWithBuiltinPkgAndName(stmt.Params[0], glob.KeywordNPos)
 	if ok {
 		return ver.processOkMsg(state, stmt.String(), "%s is a builtin set", stmt.Params[0])
 	}
