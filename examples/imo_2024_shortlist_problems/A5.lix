@@ -14,8 +14,39 @@ exist_prop period N st seq_periodic(a seq(R)):
     forall k N:
         a(k) = a(k+period)
 
+# 3. Product of first k items of finite sequence
+fn product_of_first_k_items_of_finite_seq(k N, m N_pos, a finite_seq(R, m)) R:
+    dom:
+        k < m
+        
+know forall k N, m N_pos, a finite_seq(R, m):
+    k < m - 1
+    then:
+        product_of_first_k_items_of_finite_seq(k+1, m, a) = product_of_first_k_items_of_finite_seq(k, m, a) * a(k+1)
+        
+know forall m N_pos, a finite_seq(R, m):
+    product_of_first_k_items_of_finite_seq(0, m, a) = a(0)
+
+# 4. Telescoping product is 1 (could be proved by induction)
+know @telescoping_product(m N_pos, a finite_seq(R, m), b finite_seq(R, m), c finite_seq(R, m)):
+    forall k N:
+        k < m
+        then:
+        	b(k) != 0
+    forall k N:
+    	k < m - 1
+        then:
+        	a(k) = b(k+1)
+    a(m-1) = b(0) 
+    forall k N:
+    	k < m
+        then:
+        	c(k) = a(k) / b(k)
+    then:
+        product_of_first_k_items_of_finite_seq(m - 1, m, c) = 1
+
 # Independent Proof Segments
-prop is_identity_seq(a seq(R)):
+prop is_identical_seq(a seq(R)):
     forall n,m N:
         a(n) = a(m)
 
@@ -76,7 +107,7 @@ claim:
         abs(a(n+1) - a(n)) <= 1
     	then:
             or:
-                $is_identity_seq(a)
+                $is_identical_seq(a)
                 $is_alternating_seq_and_has_bound(a, 1/2)
     prove:
         a(n+2) + a(n+1) = (a(n+1) + a(n)) * (a(n+1) - a(n) + 1)
@@ -109,7 +140,7 @@ claim:
                 $periodic_seq_which_is_0_since_n_is_always_0(a2, a2_is_0_index)
 
                 forall k N:
-                    =:p
+                    =:
                         0   
                         a2(k)
                         a(k) + a(k+1)
@@ -130,4 +161,23 @@ claim:
                 $is_alternating_seq_and_has_bound(a, 1/2)
                 
 
-        know $is_identity_seq(a)
+        claim:
+        	forall:
+            	not $exist_two_consecutive_items_whose_sum_is_0(a)
+                then:
+                    $is_identical_seq(a)
+            prove:
+                know $is_identical_seq(a)
+
+        prove_in_each_case:
+        	or:
+            	$exist_two_consecutive_items_whose_sum_is_0(a)
+                not $exist_two_consecutive_items_whose_sum_is_0(a)
+            then:
+            	or:
+                    $is_alternating_seq_and_has_bound(a, 1/2)
+                	$is_identical_seq(a)
+            prove:
+            	$is_alternating_seq_and_has_bound(a, 1/2)
+            prove:
+            	$is_identical_seq(a)

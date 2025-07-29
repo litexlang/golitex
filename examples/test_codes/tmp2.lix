@@ -1,8 +1,17 @@
-claim:
-	forall:
-    	not $exist_two_consecutive_items_whose_sum_is_0(a)
-        then:
-        	$is_identity_seq(a)
-    prove:
-    	have T st $seq_periodic(a)
-        
+prove:
+	obj a finite_seq(R, 3), b finite_seq(R, 3), c finite_seq(R, 3):
+        forall k N:
+            k < 3
+            then:
+                b(k) != 0
+        forall k N:
+            k < 2
+            then:
+                a(k) = b(k+1)
+        a(2) = b(0) 
+        forall k N:
+            k < 3
+            then:
+                c(k) = a(k) / b(k)
+    $telescoping_product(3, a, b, c) 
+    product_of_first_k_items_of_finite_seq(2, 3, c) = 1
