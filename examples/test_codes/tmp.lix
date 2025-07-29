@@ -1,13 +1,32 @@
-fn_template finite_seq(s set, n N_pos):
-    fn (x N) s:
-    	dom:
-        	x < n
+fn product_of_first_k_items_of_finite_seq(k N, m N_pos, a finite_seq(R, m)) R:
+    dom:
+    	forall x N:
+            x < k
+            then:
+            	a(x) != 0
+        k < m
+        
+know forall k N, m N_pos, a finite_seq(R, m):
+    k < m - 1
+    then:
+        product_of_first_k_items_of_finite_seq(k+1, m, a) = product_of_first_k_items_of_finite_seq(k, m, a) * a(k+1)
+        
+know forall m N_pos, a finite_seq(R, m):
+    product_of_first_k_items_of_finite_seq(0, m, a) = a(0)
 
-obj a finite_seq(R, 3):
-    a(0) = 1
-    a(1) = 2
-    a(2) = 3
-
-a(0) = 1
-a(1) = 2
-a(2) = 3
+know  m N_pos, a finite_seq(R, m), b finite_seq(R, m), c finite_seq(R, m):
+    forall k N:
+        k < m
+        then:
+        	b(k) != 0
+    forall k N:
+    	k < m - 1
+        then:
+        	a(k) = b(k+1)
+    a(m-1) = b(0) 
+    forall k N:
+    	k < m
+        then:
+        	c(k) = a(k) / b(k)
+    then:
+        product_of_first_k_items_of_finite_seq(m - 1, m, c) = 1
