@@ -18,13 +18,15 @@ mkdir -p ./binary
 VERSION_NAME=$(grep "VERSION =" main.go | awk '{print $4}' | tr -d '"')
 
 # Windows (64-bit only)
-GOOS=windows GOARCH=amd64 go build -o ./binary/windows_64_litex_${VERSION_NAME}.exe main.go
+GOOS=windows GOARCH=amd64 go build -o ./binary/litex_${VERSION_NAME}_windows_amd64.zip main.go
 
 # Linux (64-bit only)
-GOOS=linux GOARCH=amd64 go build -o ./binary/linux_64_litex_${VERSION_NAME} main.go
+GOOS=linux GOARCH=amd64 go build -o ./binary/litex_${VERSION_NAME}_linux_amd64.tar.gz main.go
+
+GOOS=linux GOARCH=arm64 go build -o ./binary/litex_${VERSION_NAME}_linux_arm64.tar.gz main.go
 
 # macOS (Intel + Apple Silicon)
-GOOS=darwin GOARCH=amd64 go build -o ./binary/macos_64_litex_${VERSION_NAME} main.go  # Intel Macs
+GOOS=darwin GOARCH=amd64 go build -o ./binary/litex_${VERSION_NAME}_darwin_amd64 main.go
 
 chmod -R 755 ./binary
 
