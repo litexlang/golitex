@@ -20,19 +20,14 @@ import (
 
 type shared_ptr_to_slice_of_fc = *[]ast.Fc
 
-// type MatchProp = ast.SpecFactStmt
-
 type PropDefMem map[string]ast.DefPropStmt
 
 type ExistPropDefMem map[string]ast.DefExistPropStmt
 
-// type FnTemplateDefMem map[string]ast.DefFnTemplateStmt
 type FnTemplateDefMem map[string]ast.FnTemplateDefStmt
 
-// 我暂时不清楚 map[string]struct{} 有没有问题，我暂时用不到def obj 相关的任何的东西
 type ObjDefMem map[string]ast.FnTemplate_Or_DefObjStmtInterface // 因为很多的obj会共享一个def obj. 可能是 nil
 
-// type FnInFnTemplateFactsMem map[string][]*ast.FnTemplateStmt
 type FnInFnTemplateFactsMem map[string][]FnInFnTTMemItem
 
 type FnInFnTTMemItem struct {
@@ -51,15 +46,13 @@ type KnownFactsStruct struct {
 
 // 因为 in 类型的事实很多，考虑把fcString为key保留一个map，记录它在什么集合里。比如 a $in N 就保存成 key:a values:[]{N}
 type Env struct {
-	Parent     *Env
-	Msgs       []string
-	ObjDefMem  ObjDefMem
-	PropDefMem PropDefMem
-	// FnTemplateDefMem               FnTemplateDefMem
-	FnTemplateDefMem FnTemplateDefMem
-	ExistPropDefMem  ExistPropDefMem
-	KnownFactsStruct KnownFactsStruct
-	// FnInFnTemplateFactsMem         FnInFnTemplateFactsMem
+	Parent                 *Env
+	Msgs                   []string
+	ObjDefMem              ObjDefMem
+	PropDefMem             PropDefMem
+	FnTemplateDefMem       FnTemplateDefMem
+	ExistPropDefMem        ExistPropDefMem
+	KnownFactsStruct       KnownFactsStruct
 	FnInFnTemplateFactsMem FnInFnTemplateFactsMem
 	KnownFactInMatchEnv    map[string]KnownFactsStruct
 	EqualMem               map[string]shared_ptr_to_slice_of_fc
@@ -76,20 +69,18 @@ func (env *Env) GetUpMostEnv() *Env {
 
 func NewEnv(parent *Env) *Env {
 	env := &Env{
-		Parent:     parent,
-		Msgs:       []string{},
-		ObjDefMem:  make(ObjDefMem),
-		PropDefMem: make(PropDefMem),
-		// FnInFnTemplateFactsMem:         make(FnInFnTemplateFactsMem),
+		Parent:                 parent,
+		Msgs:                   []string{},
+		ObjDefMem:              make(ObjDefMem),
+		PropDefMem:             make(PropDefMem),
 		FnTemplateDefMem:       make(FnTemplateDefMem),
 		FnInFnTemplateFactsMem: make(FnInFnTemplateFactsMem),
-		// FnTemplateDefMem:               make(FnTemplateDefMem),
-		ExistPropDefMem:     make(ExistPropDefMem),
-		KnownFactsStruct:    makeKnownFactsStruct(),
-		EqualMem:            make(map[string]shared_ptr_to_slice_of_fc),
-		KnownFactInMatchEnv: make(map[string]KnownFactsStruct),
-		EnumFacts:           make(map[string][]ast.Fc),
-		HaveSetFnDefMem:     make(HaveSetFnDefMem),
+		ExistPropDefMem:        make(ExistPropDefMem),
+		KnownFactsStruct:       makeKnownFactsStruct(),
+		EqualMem:               make(map[string]shared_ptr_to_slice_of_fc),
+		KnownFactInMatchEnv:    make(map[string]KnownFactsStruct),
+		EnumFacts:              make(map[string][]ast.Fc),
+		HaveSetFnDefMem:        make(HaveSetFnDefMem),
 	}
 	return env
 }
