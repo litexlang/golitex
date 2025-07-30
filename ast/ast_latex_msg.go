@@ -515,56 +515,6 @@ func (s *ClaimProveByContradictionStmt) ToLatexString() string {
 	return claimProveBodyToLatexString(s.ClaimProveStmt.ToCheckFact, s.ClaimProveStmt.Proofs, false)
 }
 
-// func (s *DefFnTemplateStmt) ToLatexString() string {
-// 	var builder strings.Builder
-// 	builder.WriteString("\\begin{definition}[Function Template]\n\n")
-// 	builder.WriteString("We say a function satisfies function template ")
-// 	builder.WriteString(toLatexString(string(s.FnTemplateStmt.DefHeader.Name)))
-// 	builder.WriteString(fmt.Sprintf(" if it satisfies (we use %s here to represent that function):", string(s.FnTemplateStmt.DefHeader.Name)))
-// 	builder.WriteString("\n\n")
-
-// 	builder.WriteString("It has a domain which is superset of the set which contains parameters satisfying the following properties: ")
-// 	builder.WriteString(strings.Join(paramInParamSetInFactLatexStringSlice(s.FnTemplateStmt.Params, s.FnTemplateStmt.ParamSets), ", "))
-
-// 	if len(s.FnTemplateStmt.DomFacts) > 0 {
-// 		builder.WriteString(" and ")
-// 		domFactStrSlice := s.FnTemplateStmt.DomFacts.factStmtSliceToLatexStringSlice()
-// 		if ShouldInSingleLineAsLatexString(domFactStrSlice) {
-// 			builder.WriteString(" ")
-// 			builder.WriteString(strings.Join(domFactStrSlice, ", "))
-// 		} else {
-// 			builder.WriteString("\n\n")
-// 			builder.WriteString(strings.Join(domFactStrSlice, "\n\n"))
-// 		}
-// 		builder.WriteString(".")
-// 	} else {
-// 		builder.WriteString(".")
-// 	}
-
-// 	if len(s.FnTemplateStmt.ThenFacts) > 0 {
-// 		builder.WriteString("\n\n")
-// 		builder.WriteString("When its parameters satisfies the above condition, it has the following properties:")
-// 		thenFactStrSlice := s.FnTemplateStmt.ThenFacts.factStmtSliceToLatexStringSlice()
-// 		if ShouldInSingleLineAsLatexString(thenFactStrSlice) {
-// 			builder.WriteString(" ")
-// 			builder.WriteString(strings.Join(thenFactStrSlice, ", "))
-// 		} else {
-// 			builder.WriteString("\n\n")
-// 			builder.WriteString(strings.Join(thenFactStrSlice, "\n\n"))
-// 		}
-// 		builder.WriteString(".")
-// 	}
-
-// 	builder.WriteString("\n\n")
-
-// 	builder.WriteString("The return value is $\\in$ ")
-// 	builder.WriteString(s.FnTemplateStmt.RetSet.ToLatexString())
-
-// 	builder.WriteString("\n\\end{definition}")
-
-// 	return builder.String()
-// }
-
 func (s *EnumStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString(s.CurSet.ToLatexString())
@@ -769,10 +719,6 @@ func VerifiedFactsSectionToLatexString(verifiedFacts []FactStmt) string {
 	return builder.String()
 }
 
-// func (s *FnTemplateStmt) ToLatexString() string {
-// 	return NewFnTemplateDefStmt(s).ToLatexString()
-// }
-
 func (s *EqualsFactStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("The following objects are equal: ")
@@ -796,7 +742,6 @@ func (s *CommentStmt) ToLatexString() string {
 	return s.Comment
 }
 
-// TODO 没测试过
 func (s *FnTemplateDefStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("\\begin{definition}[Function Template]\n\n")

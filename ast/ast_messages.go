@@ -247,14 +247,6 @@ func fnDefStmtStringGivenKw(kw string, f *FnTStruct, name string) string {
 	return builder.String()
 }
 
-// func (f *FnTemplateStmt) String() string {
-// 	return fnDefStmtStringGivenKw(glob.KeywordFn, f)
-// }
-
-// func (f *DefFnTemplateStmt) String() string {
-// 	return fnDefStmtStringGivenKw(glob.KeywordFnTemplate, &f.FnTemplateStmt)
-// }
-
 func (f *ClaimProveByContradictionStmt) String() string {
 	return ClaimProve_ClaimProveByContradiction(glob.KeywordProveByContradiction, f.ClaimProveStmt.ToCheckFact, f.ClaimProveStmt.Proofs)
 }
@@ -414,7 +406,6 @@ func (f *FcFn) String() string {
 		return fnSetString(f)
 	}
 
-	// if IsFcAtomEqualToGivenString_WithoutColonColon(f.FnHead, glob.KeySymbolDot) {
 	if IsFcAtomAndEqualToStr(f.FnHead, glob.KeySymbolDot) {
 		return fmt.Sprintf("%s.%s", f.Params[0], f.Params[1])
 	}
@@ -740,42 +731,6 @@ func (stmt *FnTemplateDefStmt) String() string {
 	}
 
 	builder.WriteString(glob.SplitLinesAndAdd4NIndents(NewDefFnStmt("", NewFnTStruct(stmt.Fn.Params, stmt.Fn.ParamSets, stmt.Fn.RetSet, stmt.Fn.DomFacts, stmt.Fn.ThenFacts)).String(), 1))
-
-	// builder.WriteString("(")
-	// builder.WriteString(strFcSetPairs(stmt.FnParams, stmt.FnParamSets))
-	// builder.WriteString(")")
-	// builder.WriteString(" ")
-	// builder.WriteString(stmt.FnRetSet.String())
-
-	// if len(stmt.FnDomFacts) == 0 && len(stmt.FnThenFacts) == 0 {
-	// 	return builder.String()
-	// }
-
-	// builder.WriteString(glob.KeySymbolColon)
-	// builder.WriteByte('\n')
-
-	// if len(stmt.FnDomFacts) > 0 {
-	// 	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordDom, 1))
-	// 	builder.WriteString(glob.KeySymbolColon)
-	// 	builder.WriteByte('\n')
-	// 	domFactStrSlice := make([]string, len(stmt.FnDomFacts))
-	// 	for i := range len(stmt.FnDomFacts) {
-	// 		domFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(stmt.FnDomFacts[i].String(), 2)
-	// 	}
-	// 	builder.WriteString(strings.Join(domFactStrSlice, "\n"))
-	// 	builder.WriteByte('\n')
-	// }
-	// if len(stmt.FnThenFacts) > 0 {
-	// 	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordThen, 1))
-	// 	builder.WriteString(glob.KeySymbolColon)
-	// 	builder.WriteByte('\n')
-
-	// 	thenFactStrSlice := make([]string, len(stmt.FnThenFacts))
-	// 	for i := range len(stmt.FnThenFacts) {
-	// 		thenFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(stmt.FnThenFacts[i].String(), 2)
-	// 	}
-	// 	builder.WriteString(strings.Join(thenFactStrSlice, "\n"))
-	// }
 
 	return builder.String()
 }

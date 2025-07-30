@@ -55,13 +55,3 @@ func cmpArith_ByBIR(left string, right string) bool {
 
 	return leftPolyAsStr == rightPolyAsStr
 }
-
-// func cmpPolynomial_ByBIR(left ast.Fc, right ast.Fc) bool {
-// 	leftStr := num.FcStringForParseAndExpandPolynomial(left)
-// 	rightStr := num.FcStringForParseAndExpandPolynomial(right)
-
-// 	leftPolyAsStr := num.ExpandPolynomial_ReturnStr(leftStr)
-// 	rightPolyAsStr := num.ExpandPolynomial_ReturnStr(rightStr)
-
-// 	return leftPolyAsStr == rightPolyAsStr
-// }

@@ -356,7 +356,7 @@ func (ver *Verifier) verInSet_OverAllObjsEqualToIt(stmt *ast.SpecFactStmt, state
 
 func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	var err error
-	ok := ast.IsFcAtomWithBuiltinPkgAndName(stmt.Params[1], glob.KeywordSet)
+	ok := ast.IsFcAtomEqualToGivenString(stmt.Params[1], glob.KeywordSet)
 	if !ok {
 		return false, nil
 	}
@@ -371,12 +371,12 @@ func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state VerState) (b
 	}
 
 	// 如果它是N, Z, Q, R, C, 则直接返回true
-	ok = ast.IsFcAtomWithBuiltinPkgAndName(stmt.Params[0], glob.KeywordNatural) ||
-		ast.IsFcAtomWithBuiltinPkgAndName(stmt.Params[0], glob.KeywordInteger) ||
-		ast.IsFcAtomWithBuiltinPkgAndName(stmt.Params[0], glob.KeywordRational) ||
-		ast.IsFcAtomWithBuiltinPkgAndName(stmt.Params[0], glob.KeywordReal) ||
-		ast.IsFcAtomWithBuiltinPkgAndName(stmt.Params[0], glob.KeywordComplex) ||
-		ast.IsFcAtomWithBuiltinPkgAndName(stmt.Params[0], glob.KeywordNPos)
+	ok = ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordNatural) ||
+		ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordInteger) ||
+		ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordRational) ||
+		ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordReal) ||
+		ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordComplex) ||
+		ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordNPos)
 	if ok {
 		return ver.processOkMsg(state, stmt.String(), "%s is a builtin set", stmt.Params[0])
 	}
