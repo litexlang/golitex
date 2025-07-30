@@ -24,6 +24,9 @@ know forall a R:
     then:
     	abs(-a) = a
 
+know forall n N:
+    n >= 0
+
 claim:
     forall a seq(R):
         forall k N:
@@ -69,7 +72,10 @@ claim:
                 abs(a(n+1)) <= 1/2
                 $a_n_has_abs_less_than_1_div_2(a, n+1)
 
-        prove_by_math_induction($a_n_has_abs_less_than_1_div_2(a, 0), 0, 0)
+        prove_by_math_induction($a_n_has_abs_less_than_1_div_2(a, 0), 1, 0)
+
         forall n N:
-            $a_n_has_abs_less_than_1_div_2(a, n)
-            abs(a(n)) <= 1/2
+            n >= 0
+            then:
+                $a_n_has_abs_less_than_1_div_2(a, n)
+                abs(a(n)) <= 1/2

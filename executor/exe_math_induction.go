@@ -30,7 +30,7 @@ func (exec *Executor) mathInductionFact_BuiltinRules(stmt *ast.ProveByMathInduct
 		exec.deleteEnvAndRetainMsg()
 		if isTrue {
 			exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("by %s\n%s\nis true", glob.KeywordProveByMathInduction, resultingFact))
-			exec.knowStmt(ast.NewKnowStmt([]ast.FactStmt{resultingFact}))
+			//			exec.knowStmt(ast.NewKnowStmt([]ast.FactStmt{resultingFact}))
 		}
 	}()
 
@@ -112,6 +112,11 @@ func (exec *Executor) mathInductionFact_BuiltinRules(stmt *ast.ProveByMathInduct
 		[]ast.FactStmt{domFacts[0]},
 		[]ast.FactStmt{domFacts[1]},
 	)
+
+	err = exec.env.Parent.NewFact(resultingFact)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
 
 	return glob.ExecState_True, nil
 }
