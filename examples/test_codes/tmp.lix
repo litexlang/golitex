@@ -1,3 +1,39 @@
+exist_prop period N st seq_periodic(a seq(R)):
+    period > 0
+    forall k N:
+        a(k) = a(k+period)
+
+# 3. Product of first k items of finite sequence
+fn product_of_first_k_items_of_finite_seq(k N, m N_pos, a finite_seq(R, m)) R:
+    dom:
+        k < m
+        
+know forall k N, m N_pos, a finite_seq(R, m):
+    k < m - 1
+    then:
+        product_of_first_k_items_of_finite_seq(k+1, m, a) = product_of_first_k_items_of_finite_seq(k, m, a) * a(k+1)
+        
+know forall m N_pos, a finite_seq(R, m):
+    product_of_first_k_items_of_finite_seq(0, m, a) = a(0)
+
+# 4. Telescoping product is 1 (could be proved by induction)
+know @telescoping_product(m N_pos, a finite_seq(R, m), b finite_seq(R, m), c finite_seq(R, m)):
+    forall k N:
+        k < m
+        then:
+        	b(k) != 0
+    forall k N:
+    	k < m - 1
+        then:
+        	a(k) = b(k+1)
+    a(m-1) = b(0) 
+    forall k N:
+    	k < m
+        then:
+        	c(k) = a(k) / b(k)
+    then:
+        product_of_first_k_items_of_finite_seq(m - 1, m, c) = 1
+
 exist_prop n N st exist_two_consecutive_items_whose_sum_is_0(a seq(R)):
     a(n) + a(n+1) = 0
 
@@ -7,13 +43,34 @@ claim:
             a(n+2) + a(n+1) = (a(n+1) + a(n)) * (a(n+1) - a(n) + 1)
             abs(a(n+1) - a(n)) <= 1
         not $exist_two_consecutive_items_whose_sum_is_0(a)
+        seq_periodic(a)
         then:
             forall n N:
                 a(n) = a(n+1)
     prove:
-        forall n N:
-            a(n) + a(n+1) != 0
+        have T st seq_periodic(a)
 
+        obj b, c, d finite_seq(R, T):
+        	forall n N:
+                n < T
+                then:
+                    b(n) = a(n) + a(n+1)
+            forall n N:
+                n < T
+                then:
+                    c(n) = a(n+1) + a(n+2)
+            forall n N:
+                n < T
+                then:
+                    d(n) = c(n) / b(n)
+            
+        forall n N:
+            n < T
+            then:
+                a(n) + a(n+1) != 0
+                b(n) != 0
+        
+        #$telescoping_product(T, b, c, d)
 
         know forall n N:
             a(n) = a(n+1)

@@ -9,8 +9,7 @@ know @AM_GM_inequality(a seq(R), n N):
     	seq_sum(a, n) / (n+1) >= (seq_product(a, n))^(1/(n+1))
 
 # 2. Periodic sequence
-exist_prop period N st seq_periodic(a seq(R)):
-    period > 0
+exist_prop period N_pos st seq_periodic(a seq(R)):
     forall k N:
         a(k) = a(k+period)
 
