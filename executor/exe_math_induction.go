@@ -21,7 +21,7 @@ import (
 	verifier "golitex/verifier"
 )
 
-func (exec *Executor) mathInductionFact_BuiltinRules(stmt *ast.ProveByMathInductionStmt) (glob.ExecState, error) {
+func (exec *Executor) proveByMathInduction(stmt *ast.ProveByMathInductionStmt) (glob.ExecState, error) {
 	isTrue := false
 	exec.newEnv(exec.env)
 	var resultingFact *ast.UniFactStmt
@@ -30,7 +30,6 @@ func (exec *Executor) mathInductionFact_BuiltinRules(stmt *ast.ProveByMathInduct
 		exec.deleteEnvAndRetainMsg()
 		if isTrue {
 			exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("by %s\n%s\nis true", glob.KeywordProveByMathInduction, resultingFact))
-			//			exec.knowStmt(ast.NewKnowStmt([]ast.FactStmt{resultingFact}))
 		}
 	}()
 
@@ -106,12 +105,21 @@ func (exec *Executor) mathInductionFact_BuiltinRules(stmt *ast.ProveByMathInduct
 
 	isTrue = true
 
-	resultingFact = ast.NewUniFact(
-		[]string{freeVarStr},
-		paramSets,
-		[]ast.FactStmt{domFacts[0]},
-		[]ast.FactStmt{domFacts[1]},
-	)
+	if isSpecFact_ParamIndex1Is0(domFacts[0]) {
+		resultingFact = ast.NewUniFact(
+			[]string{freeVarStr},
+			paramSets,
+			[]ast.FactStmt{},
+			[]ast.FactStmt{domFacts[1]},
+		)
+	} else {
+		resultingFact = ast.NewUniFact(
+			[]string{freeVarStr},
+			paramSets,
+			[]ast.FactStmt{domFacts[0]},
+			[]ast.FactStmt{domFacts[1]},
+		)
+	}
 
 	err = exec.env.Parent.NewFact(resultingFact)
 	if err != nil {
@@ -119,4 +127,12 @@ func (exec *Executor) mathInductionFact_BuiltinRules(stmt *ast.ProveByMathInduct
 	}
 
 	return glob.ExecState_True, nil
+}
+
+func isSpecFact_ParamIndex1Is0(fact ast.FactStmt) bool {
+	asSpecFact, ok := fact.(*ast.SpecFactStmt)
+	if !ok {
+		return false
+	}
+	return asSpecFact.Params[1] == ast.FcAtom("0")
 }

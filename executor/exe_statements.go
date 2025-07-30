@@ -61,7 +61,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 	case *ast.ClaimProveByContradictionStmt:
 		execState, err = exec.execClaimStmtProveByContradiction(stmt)
 	case *ast.ProveByMathInductionStmt:
-		execState, err = exec.mathInductionFact_BuiltinRules(stmt)
+		execState, err = exec.proveByMathInduction(stmt)
 	case *ast.ProveOverFiniteSetStmt:
 		execState, err = exec.proveOverFiniteSetStmt(stmt)
 	case *ast.HaveObjInNonEmptySetStmt:
