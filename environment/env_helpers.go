@@ -49,7 +49,6 @@ func (e *Env) GenerateUndeclaredRandomName() string {
 	for {
 		randomStr = glob.RandomString(i)
 		// check if the string is undeclared
-		// if !env.IsAtomDeclared(ast.NewFcAtom(glob.EmptyPkg, randomStr), map[string]struct{}{}) {
 		if !e.IsAtomDeclared(ast.FcAtom(randomStr), map[string]struct{}{}) {
 			return randomStr
 		}
@@ -63,7 +62,6 @@ func (e *Env) GenerateUndeclaredRandomName_AndNotInMap(m map[string]struct{}) st
 	for {
 		randomStr = glob.RandomString(i)
 		// check if the string is undeclared
-		// if !env.IsAtomDeclared(ast.NewFcAtom(glob.EmptyPkg, randomStr), map[string]struct{}{}) {
 		if !e.IsAtomDeclared(ast.FcAtom(randomStr), map[string]struct{}{}) {
 			_, ok := m[randomStr]
 			if !ok {

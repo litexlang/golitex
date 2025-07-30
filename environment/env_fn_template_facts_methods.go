@@ -18,16 +18,6 @@ import (
 	ast "golitex/ast"
 )
 
-// func (e *Env) GetLatestFnTemplate(fn ast.Fc) (*ast.FnTemplateStmt, bool) {
-// 	for env := e; env != nil; env = env.Parent {
-// 		fnDef, ok := env.FnInFnTemplateFactsMem[fn.String()]
-// 		if ok {
-// 			return fnDef[len(fnDef)-1], true
-// 		}
-// 	}
-// 	return nil, false
-// }
-
 func (e *Env) InsertFnInFnTT(fc ast.Fc, templateWhereFcIs *ast.FcFn, fnTNoName *ast.FnTStruct) error {
 	memory := e.FnInFnTemplateFactsMem
 	fnDefs, ok := memory[fc.String()]
@@ -48,30 +38,3 @@ func (e *Env) InsertFnInFnTT(fc ast.Fc, templateWhereFcIs *ast.FcFn, fnTNoName *
 		return nil
 	}
 }
-
-// func (memory FnInFnTemplateFactsMem) insert(fc ast.Fc, stmt *ast.FnTemplateStmt) error {
-// 	fnDefs, ok := memory[fc.String()]
-// 	if !ok {
-// 		memory[fc.String()] = []*ast.FnTemplateStmt{stmt}
-// 		return nil
-// 	}
-
-// 	fnDefs = append(fnDefs, stmt)
-// 	memory[fc.String()] = fnDefs
-
-// 	return nil
-// }
-
-// func (e *Env) GetFnTemplateOfFc(fn ast.Fc) ([]*ast.FnTemplateStmt, bool) {
-// 	fnDefs := []*ast.FnTemplateStmt{}
-// 	for env := e; env != nil; env = env.Parent {
-// 		fnDefsFromEnv, ok := env.FnInFnTemplateFactsMem[fn.String()]
-// 		if ok {
-// 			fnDefs = append(fnDefs, fnDefsFromEnv...)
-// 		}
-// 	}
-// 	if len(fnDefs) == 0 {
-// 		return nil, false
-// 	}
-// 	return fnDefs, true
-// }

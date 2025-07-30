@@ -21,20 +21,6 @@ import (
 	glob "golitex/glob"
 )
 
-// func (ver *Verifier) isEqualFact_Check(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-// 	if !stmt.IsTrue() {
-// 		return false, nil
-// 	}
-
-// 	if ok, err := stmt.IsValidEqualFact(); err != nil {
-// 		return false, err
-// 	} else if !ok {
-// 		return false, nil
-// 	}
-
-// 	return ver.fcEqualSpec(stmt.Params[0], stmt.Params[1], state)
-// }
-
 // SERIOUS BUG
 // WARNING
 // REMARK

@@ -43,10 +43,6 @@ func cmpFcLiterally(left, right ast.Fc) (bool, error) {
 }
 
 func cmpFcFnRule(left, right *ast.FcFn) (bool, error) {
-	// if comp, err := cmpFcAtomLit(&left.FnHead, &right.FnHead); comp != 0 || err != nil {
-	// 	return comp == 0, err
-	// }
-
 	if comp, err := cmpFcLit(left.FnHead, right.FnHead); comp != 0 || err != nil {
 		return comp == 0, err
 	}
@@ -55,7 +51,7 @@ func cmpFcFnRule(left, right *ast.FcFn) (bool, error) {
 		return false, nil
 	}
 
-	for i := 0; i < len(left.Params); i++ {
+	for i := range len(left.Params) {
 		ok, _, err := Cmp_ByBIR(left.Params[i], right.Params[i])
 		if err != nil {
 			return false, err
@@ -67,21 +63,3 @@ func cmpFcFnRule(left, right *ast.FcFn) (bool, error) {
 
 	return true, nil
 }
-
-// func cmpFcFnSegRule(left, right []ast.Fc) (bool, error) {
-// 	if len(left) != len(right) {
-// 		return false, nil
-// 	}
-
-// 	for i := 0; i < len(left); i++ {
-// 		ok, err := CmpFcRule(left[i], right[i])
-// 		if err != nil {
-// 			return false, err
-// 		}
-// 		if !ok {
-// 			return false, nil
-// 		}
-// 	}
-
-// 	return true, nil
-// }

@@ -21,7 +21,6 @@ import (
 	glob "golitex/glob"
 )
 
-// func (s SpecFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (glob.Map2D[[]KnownSpecFact], error) {
 func (s SpecFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string][]ast.SpecFactStmt, error) {
 	switch stmt.TypeEnum {
 	case ast.TruePure:
@@ -43,12 +42,6 @@ func (s SpecFactMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([]ast.Spec
 		return nil, false
 	}
 
-	// sameEnumPkgFacts, memExist := sameEnumFacts[stmt.PropName.PkgName]
-	// 	if !memExist {
-	// 		return nil, false
-	// }
-
-	// sameEnumPkgPropFacts, memExist := sameEnumPkgFacts[stmt.PropName.Name]
 	sameEnumPkgPropFacts, memExist := sameEnumFacts[string(stmt.PropName)]
 	if !memExist {
 		return nil, false
@@ -64,14 +57,6 @@ func (s SpecFactMem) newFact(stmt *ast.SpecFactStmt) error {
 		return err
 	}
 
-	// if _, ok := sameEnumFacts[stmt.PropName.PkgName]; !ok {
-	// 	sameEnumFacts[stmt.PropName.PkgName] = make(map[string][]KnownSpecFact)
-	// }
-	// if _, ok := sameEnumFacts[stmt.PropName.PkgName][stmt.PropName.Name]; !ok {
-	// 	sameEnumFacts[stmt.PropName.PkgName][stmt.PropName.Name] = []KnownSpecFact{}
-	// }
-	// sameEnumFacts[stmt.PropName.PkgName][stmt.PropName.Name] = append(sameEnumFacts[stmt.PropName.PkgName][stmt.PropName.Name], KnownSpecFact{stmt, supposedEnv})
-
 	if _, ok := sameEnumFacts[string(stmt.PropName)]; !ok {
 		sameEnumFacts[string(stmt.PropName)] = []ast.SpecFactStmt{}
 	}
@@ -79,7 +64,6 @@ func (s SpecFactMem) newFact(stmt *ast.SpecFactStmt) error {
 	return nil
 }
 
-// func (s SpecFactInLogicExprMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (glob.Map2D[[]KnownSpecFact_InLogicExpr], error) {
 func (s SpecFactInLogicExprMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string][]KnownSpecFact_InLogicExpr, error) {
 	switch stmt.TypeEnum {
 	case ast.TruePure:
@@ -101,12 +85,6 @@ func (s SpecFactInLogicExprMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) 
 		return nil, false
 	}
 
-	// sameEnumPkgFacts, memExist := sameEnumFacts[stmt.PropName.PkgName]
-	// if !memExist {
-	// 	return nil, false
-	// }
-
-	// sameEnumPkgPropFacts, memExist := sameEnumPkgFacts[stmt.PropName.Name]
 	sameEnumPkgPropFacts, memExist := sameEnumFacts[string(stmt.PropName)]
 	if !memExist {
 		return nil, false
@@ -122,14 +100,6 @@ func (s SpecFactInLogicExprMem) newFact(logicExpr *ast.OrStmt) error {
 			return err
 		}
 
-		// if _, ok := sameEnumFacts[fact.PropName.PkgName]; !ok {
-		// 	sameEnumFacts[fact.PropName.PkgName] = make(map[string][]KnownSpecFact_InLogicExpr)
-		// }
-		// if _, ok := sameEnumFacts[fact.PropName.PkgName][fact.PropName.Name]; !ok {
-		// 	sameEnumFacts[fact.PropName.PkgName][fact.PropName.Name] = []KnownSpecFact_InLogicExpr{}
-		// }
-		// sameEnumFacts[fact.PropName.PkgName][fact.PropName.Name] = append(sameEnumFacts[fact.PropName.PkgName][fact.PropName.Name], *NewKnownSpecFact_InLogicExpr(&fact, i, logicExpr, supposedEnv))
-
 		if _, ok := sameEnumFacts[string(fact.PropName)]; !ok {
 			sameEnumFacts[string(fact.PropName)] = []KnownSpecFact_InLogicExpr{}
 		}
@@ -139,7 +109,6 @@ func (s SpecFactInLogicExprMem) newFact(logicExpr *ast.OrStmt) error {
 	return nil
 }
 
-// func (s SpecFactInUniFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (glob.Map2D[[]KnownSpecFact_InUniFact], error) {
 func (s SpecFactInUniFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string][]KnownSpecFact_InUniFact, error) {
 	switch stmt.TypeEnum {
 	case ast.TruePure:
@@ -234,12 +203,6 @@ func (s SpecFact_InLogicExpr_InUniFactMem) GetSameEnumPkgPropFacts(stmt *ast.Spe
 		return nil, false
 	}
 
-	// sameEnumPkgFacts, memExist := sameEnumFacts[stmt.PropName.PkgName]
-	// if !memExist {
-	// 	return nil, false
-	// }
-
-	// sameEnumPkgPropFacts, memExist := sameEnumPkgFacts[stmt.PropName.Name]
 	sameEnumPkgPropFacts, memExist := sameEnumFacts[string(stmt.PropName)]
 	if !memExist {
 		return nil, false
@@ -255,15 +218,6 @@ func (s SpecFact_InLogicExpr_InUniFactMem) NewFact(uniStmt *ast.UniFactStmt, log
 			return err
 		}
 
-		// if _, ok := sameEnumFacts[fact.PropName.PkgName]; !ok {
-		// 	sameEnumFacts[fact.PropName.PkgName] = make(map[string][]SpecFact_InLogicExpr_InUniFact)
-		// }
-		// if _, ok := sameEnumFacts[fact.PropName.PkgName][fact.PropName.Name]; !ok {
-		// 	sameEnumFacts[fact.PropName.PkgName][fact.PropName.Name] = []SpecFact_InLogicExpr_InUniFact{}
-		// }
-
-		// sameEnumFacts[fact.PropName.PkgName][fact.PropName.Name] = append(sameEnumFacts[fact.PropName.PkgName][fact.PropName.Name], *NewSpecFact_InLogicExpr_InUniFact(&fact, uniStmt, i, logicExpr, supposedEnv))
-
 		if _, ok := sameEnumFacts[string(fact.PropName)]; !ok {
 			sameEnumFacts[string(fact.PropName)] = []SpecFact_InLogicExpr_InUniFact{}
 		}
@@ -275,10 +229,6 @@ func (s SpecFact_InLogicExpr_InUniFactMem) NewFact(uniStmt *ast.UniFactStmt, log
 
 func newSpecFact_InLogicExpr_InUniFactMem() *SpecFact_InLogicExpr_InUniFactMem {
 	return &SpecFact_InLogicExpr_InUniFactMem{
-		// PureFacts:         make(glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]),
-		// NotPureFacts:      make(glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]),
-		// Exist_St_Facts:    make(glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]),
-		// NotExist_St_Facts: make(glob.Map2D[[]SpecFact_InLogicExpr_InUniFact]),
 		PureFacts:         make(map[string][]SpecFact_InLogicExpr_InUniFact),
 		NotPureFacts:      make(map[string][]SpecFact_InLogicExpr_InUniFact),
 		Exist_St_Facts:    make(map[string][]SpecFact_InLogicExpr_InUniFact),
@@ -287,51 +237,23 @@ func newSpecFact_InLogicExpr_InUniFactMem() *SpecFact_InLogicExpr_InUniFactMem {
 }
 
 func (e *Env) GetSpecFactMem() (*SpecFactMem, bool) {
-	// if e.CurMatchProp != nil {
-	// 	knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(e.CurMatchProp)
-	// 	if !ok {
-	// 		return nil, false
-	// 	}
-	// 	return &knownFacts.SpecFactMem, true
-	// }
 	return &e.KnownFactsStruct.SpecFactMem, true
 }
 
 func (e *Env) GetSpecFactInLogicExprMem() (*SpecFactInLogicExprMem, bool) {
-	// if e.CurMatchProp != nil {
-	// 	knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(e.CurMatchProp)
-	// 	if !ok {
-	// 		return nil, false
-	// 	}
-	// 	return &knownFacts.SpecFactInLogicExprMem, true
-	// }
 	return &e.KnownFactsStruct.SpecFactInLogicExprMem, true
 }
 
 func (e *Env) GetSpecFactInUniFactMem() (*SpecFactInUniFactMem, bool) {
-	// if e.CurMatchProp != nil {
-	// 	knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(e.CurMatchProp)
-	// 	if !ok {
-	// 		return nil, false
-	// 	}
-	// 	return &knownFacts.SpecFactInUniFactMem, true
-	// }
 	return &e.KnownFactsStruct.SpecFactInUniFactMem, true
 }
 
 func (e *Env) GetSpecFact_InLogicExpr_InUniFactMem() (*SpecFact_InLogicExpr_InUniFactMem, bool) {
-	// if e.CurMatchProp != nil {
-	// 	knownFacts, ok := e.GetFactsFromKnownFactInMatchEnv(e.CurMatchProp)
-	// 	if !ok {
-	// 		return nil, false
-	// 	}
-	// 	return &knownFacts.SpecFact_InLogicExpr_InUniFactMem, true
-	// }
 	return &e.KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem, true
 }
 
 func (e *Env) IsFnDeclared(fc ast.FcAtom) (*FnInFnTTMemItem, bool) {
-	// TODO 这里需要更严格检查一下是否是正常的函数名
+	// TODO 这里需要更严格检查一下是否是正常的函数名，但是目前没有
 	if _, ok := glob.BuiltinKeywordsSet[string(fc)]; ok {
 		return nil, true
 	}
@@ -341,7 +263,6 @@ func (e *Env) IsFnDeclared(fc ast.FcAtom) (*FnInFnTTMemItem, bool) {
 		return nil, true
 	}
 
-	// fnDef, ok := e.GetLatestFnTemplate(fc)
 	fnDef, ok := e.GetLatestFnTT_GivenNameIsIn(string(fc))
 	if !ok {
 		return nil, false

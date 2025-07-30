@@ -90,10 +90,6 @@ func NewProveStmt(proof []Stmt) *ProveStmt {
 	return &ProveStmt{proof}
 }
 
-// func NewFnTemplateDefStmt(fnTemplateStmt *FnTemplateStmt) *DefFnTemplateStmt {
-// 	return &DefFnTemplateStmt{*fnTemplateStmt}
-// }
-
 func NewDefFnStmt(name string, fnTemplate *FnTStruct) *DefFnStmt {
 	return &DefFnStmt{name, *fnTemplate}
 }

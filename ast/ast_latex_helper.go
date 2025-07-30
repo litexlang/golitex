@@ -22,9 +22,6 @@ import (
 func ShouldInSingleLineAsLatexString(strSlice []string) bool {
 	totalLength := 0
 	for _, s := range strSlice {
-		// if strings.Contains(s, "\n") {
-		// 	return false
-		// }
 		totalLength += len(s)
 	}
 	return totalLength < 80
