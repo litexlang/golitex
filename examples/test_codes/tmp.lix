@@ -1,53 +1,19 @@
+exist_prop n N st exist_two_consecutive_items_whose_sum_is_0(a seq(R)):
+    a(n) + a(n+1) = 0
+
 claim:
     forall a seq(R):
-        forall k N:
-        	a(k) = - a(k+1)
-            abs(a(k+1) - a(k)) <= 1
-        then:
-            forall k N:
-                abs(a(k)) <= 1/2
-    prove:
-        claim:
-            abs(a(0)) <= 1/2
-            prove_by_contradiction:
-                abs(a(0)) > 1/2
-                a(0) = - a(0+1)
-                -a(0) = a(1)
-                =:
-                    a(1) - a(0) 
-                    -a(0) - a(0)
-                    -2 * a(0)
-                =:
-                    abs(a(1) - a(0)) 
-                    abs(-2 * a(0))
-                    abs(-2) * abs(a(0))
-                    2 * abs(a(0))
-                2 * abs(a(0)) > 2 * (1/2)
-                abs(a(1) - a(0)) > 1
-                not abs(a(1) - a(0)) <= 1
-                abs(a(0+1) - a(0)) <= 1
-        
-        prop a_n_has_abs_less_than_1_div_2(a seq(R), n N):
-            abs(a(n)) <= 1/2
-        
-        claim:
-            forall n N:
-                $a_n_has_abs_less_than_1_div_2(a, n)
-                then:
-                    $a_n_has_abs_less_than_1_div_2(a, n+1)
-            prove:
-                a(n) = - a(n+1)
-                abs(a(n)) <= 1/2
-                =:
-                    abs(a(n))
-                    abs(-a(n))
-                    abs(a(n+1))
-                abs(a(n+1)) <= 1/2
-                $a_n_has_abs_less_than_1_div_2(a, n+1)
-
-        prove_by_math_induction($a_n_has_abs_less_than_1_div_2(a, 0), 1, 0)
-
         forall n N:
-            then:
-                $a_n_has_abs_less_than_1_div_2(a, n)
-                abs(a(n)) <= 1/2
+            a(n+2) + a(n+1) = (a(n+1) + a(n)) * (a(n+1) - a(n) + 1)
+            abs(a(n+1) - a(n)) <= 1
+        not $exist_two_consecutive_items_whose_sum_is_0(a)
+        then:
+            forall n N:
+                a(n) = a(n+1)
+    prove:
+        forall n N:
+            a(n) + a(n+1) != 0
+
+
+        know forall n N:
+            a(n) = a(n+1)
