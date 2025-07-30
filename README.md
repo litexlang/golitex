@@ -54,7 +54,7 @@ Currently, the bottleneck in this field is that formal languages are too difficu
 
 To install or update Litex core, you could run the following commands for different systems.
 
-For macOS user with Homebrwe:
+For macOS user with Homebrew:
 
 ```bash
 # install

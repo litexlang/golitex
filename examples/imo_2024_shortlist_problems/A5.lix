@@ -17,7 +17,7 @@ exist_prop period N_pos st seq_periodic(a seq(R)):
 fn product_of_first_k_items_of_finite_seq(k N, m N_pos, a finite_seq(R, m)) R:
     dom:
         k < m
-        
+
 know forall k N, m N_pos, a finite_seq(R, m):
     k < m - 1
     then:
@@ -25,6 +25,12 @@ know forall k N, m N_pos, a finite_seq(R, m):
         
 know forall m N_pos, a finite_seq(R, m):
     product_of_first_k_items_of_finite_seq(0, m, a) = a(0)
+
+fn sum_of_finite_seq(k N,m N_pos, a finite_seq(R, m)) R:
+    dom:
+        k < m
+
+
 
 # 4. Telescoping product is 1 (could be proved by induction)
 know @telescoping_product(m N_pos, a finite_seq(R, m), b finite_seq(R, m), c finite_seq(R, m)):
@@ -59,6 +65,20 @@ know forall a, b R:
     b > 0
     then:
     	a - b < a
+
+know forall a, b, c R:
+    a = b * c
+    b != 0
+    then:
+        a / b = c
+
+know @finite_seq_equal(s set, m N_pos, a finite_seq(s, m), b finite_seq(s, m)):
+    forall n N:
+        n < m
+        then:
+            a(n) = b(n)
+    then:
+        a = b
 
 # Independent Proof Segments
 prop is_identical_seq(a seq(R)):
@@ -128,7 +148,7 @@ claim:
     prove:
         have T st $seq_periodic(a)
 
-        obj b, c, d finite_seq(R, T):
+        obj b, c, d,e finite_seq(R, T):
         	forall n N:
                 n < T
                 then:
@@ -141,6 +161,10 @@ claim:
                 n < T
                 then:
                     d(n) = c(n) / b(n)
+            forall n N:
+                n < T
+                then:
+                    e(n) = a(n+1) - a(n) + 1
 
         forall n N:
             n < T
@@ -180,143 +204,32 @@ claim:
             
         $telescoping_product(T, c, b, d)
 
+        claim:
+            forall n N:
+                n < T
+                then:
+                	d(n) = e(n)
+            prove:
+                a(n) + a(n+1) != 0
+                a(n+1) + a(n) != 0
+                a(n+2) + a(n+1) = (a(n+1) + a(n)) * (a(n+1) - a(n) + 1)
+                know (a(n+2) + a(n+1)) / (a(n+1) + a(n)) = a(n+1) - a(n) + 1
+                =:
+                    e(n)
+                    a(n+1) - a(n) + 1
+                    (a(n+2) + a(n+1)) / (a(n+1) + a(n))
+                    (a(n+1) + a(n+2)) / (a(n) + a(n+1))
+                    c(n) / b(n)
+                    d(n)
+
+        $finite_seq_equal(R, T, e, d)
+        1 = product_of_first_k_items_of_finite_seq(T-1, T, e)
+
+        $telescoping_product(T, c, b, e)
+
+        
+
         know forall n N:
             a(n) = a(n+1)
 
-claim:
-    forall a seq(R):
-        forall k N:
-        	a(k) = - a(k+1)
-            abs(a(k+1) - a(k)) <= 1
-        then:
-            forall k N:
-                abs(a(k)) <= 1/2
-    prove:
-        claim:
-            abs(a(0)) <= 1/2
-            prove_by_contradiction:
-                abs(a(0)) > 1/2
-                a(0) = - a(0+1)
-                -a(0) = a(1)
-                =:
-                    a(1) - a(0) 
-                    -a(0) - a(0)
-                    -2 * a(0)
-                =:
-                    abs(a(1) - a(0)) 
-                    abs(-2 * a(0))
-                    abs(-2) * abs(a(0))
-                    2 * abs(a(0))
-                2 * abs(a(0)) > 2 * (1/2)
-                abs(a(1) - a(0)) > 1
-                not abs(a(1) - a(0)) <= 1
-                abs(a(0+1) - a(0)) <= 1
         
-        prop a_n_has_abs_less_than_1_div_2(a seq(R), n N):
-            abs(a(n)) <= 1/2
-        
-        claim:
-            forall n N:
-                $a_n_has_abs_less_than_1_div_2(a, n)
-                then:
-                    $a_n_has_abs_less_than_1_div_2(a, n+1)
-            prove:
-                a(n) = - a(n+1)
-                abs(a(n)) <= 1/2
-                =:
-                    abs(a(n))
-                    abs(-a(n))
-                    abs(a(n+1))
-                abs(a(n+1)) <= 1/2
-                $a_n_has_abs_less_than_1_div_2(a, n+1)
-
-        prove_by_math_induction($a_n_has_abs_less_than_1_div_2(a, 0), 1, 0)
-
-        forall n N:
-            then:
-                $a_n_has_abs_less_than_1_div_2(a, n)
-                abs(a(n)) <= 1/2
-
-# Problem
-claim:
-    forall a seq(R), n N:
-        a(n+2) + a(n) * a(n) = a(n) + a(n+1) * a(n+1)
-        abs(a(n+1) - a(n)) <= 1
-    	then:
-            or:
-                $is_identical_seq(a)
-                $is_alternating_seq_and_has_bound(a, 1/2)
-    prove:
-        a(n+2) + a(n+1) = (a(n+1) + a(n)) * (a(n+1) - a(n) + 1)
-
-        claim:
-            forall:
-                $exist_two_consecutive_items_whose_sum_is_0(a)
-                then:
-                    $is_alternating_seq_and_has_bound(a, 1/2)
-            prove:
-                obj a2 seq(R):
-                    forall n N:
-                        a2(n) = a(n) + a(n+1)
-
-                have a2_is_0_index st $exist_two_consecutive_items_whose_sum_is_0(a)
-
-                =:
-                    0
-                    a(a2_is_0_index) + a(a2_is_0_index+1)
-                    a2(a2_is_0_index)
-
-                know:
-                    forall m N:
-                        m > a2_is_0_index
-                        then:
-                            a2(m) = 0
-
-                    $seq_periodic(a2)
-
-                $periodic_seq_which_is_0_since_n_is_always_0(a2, a2_is_0_index)
-
-                forall k N:
-                    =:
-                        0   
-                        a2(k)
-                        a(k) + a(k+1)
-                    
-                    =:
-                        - a(k)
-                        0 - a(k)
-                        a(k) + a(k+1) - a(k)
-                        a(k+1)
-                    =:
-                        a(k)
-                        -1 * (- a(k))
-                        -a(k+1)
-                    
-                know forall n N:
-                    a(n) = - a(n+1)
-                    abs(a(n+1) - a(n)) <= 1
-                	abs(a(n)) <= 1/2
-
-                $is_alternating_seq_and_has_bound(a, 1/2)
-                
-
-        claim:
-        	forall:
-            	not $exist_two_consecutive_items_whose_sum_is_0(a)
-                then:
-                    $is_identical_seq(a)
-            prove:
-                know $is_identical_seq(a)
-
-        prove_in_each_case:
-        	or:
-            	$exist_two_consecutive_items_whose_sum_is_0(a)
-                not $exist_two_consecutive_items_whose_sum_is_0(a)
-            then:
-            	or:
-                    $is_alternating_seq_and_has_bound(a, 1/2)
-                	$is_identical_seq(a)
-            prove:
-            	$is_alternating_seq_and_has_bound(a, 1/2)
-            prove:
-            	$is_identical_seq(a)
