@@ -18,7 +18,6 @@ import (
 	"fmt"
 	glob "golitex/glob"
 	"strconv"
-	"strings"
 )
 
 func (stmt *SpecFactStmt) IsBuiltinInfixRelaProp() bool {
@@ -204,38 +203,6 @@ func (defHeader *DefHeader) NewInFacts() []*SpecFactStmt {
 	return facts
 }
 
-// func getFnDeclarationFcInsideItems(fc Fc) ([]Fc, Fc) {
-// 	fcAsFn, ok := fc.(*FcFn)
-// 	if !ok {
-// 		return nil, nil
-// 	}
-
-// 	fcAsFnHeadAsFn, ok := fcAsFn.FnHead.(*FcFn)
-// 	if !ok {
-// 		return nil, nil
-// 	}
-
-// 	paramSets := []Fc{}
-// 	paramSets = append(paramSets, fcAsFnHeadAsFn.Params...)
-
-// 	return paramSets, fcAsFn.Params[0]
-// }
-
-// func FromFnDeclFcToDefFnStmt(name FcAtom, fc Fc) *FnTemplateStmt {
-// 	paramSets, retSet := getFnDeclarationFcInsideItems(fc)
-
-// 	params := []string{}
-
-// 	for range len(paramSets) {
-// 		randomStr := glob.RandomString(4)
-// 		params = append(params, randomStr)
-// 	}
-
-// 	fnDefStmt := NewFnTemplateStmt(NewDefHeader(name, params, paramSets), []FactStmt{}, []FactStmt{}, retSet)
-
-// 	return fnDefStmt
-// }
-
 func Get_FnTemplate_InFcForm_ParamSetsAndRetSet(fc Fc) ([]Fc, Fc, bool) {
 	// given fc must be a function
 	fcAsFcFn, ok := fc.(*FcFn)
@@ -319,19 +286,13 @@ func IsFnFcFn(fcFn *FcFn) bool {
 	return isFcWithFcFnHeadWithName(fcFn, glob.KeywordFn)
 }
 
-// TODO REMOVE THIS FUNCTION
-func IsFcAtomWithBuiltinPkgAndName(fc Fc, name string) bool {
+func IsFcAtomEqualToGivenString(fc Fc, name string) bool {
 	fcAtom, ok := fc.(FcAtom)
 	if !ok {
 		return false
 	}
 
 	return string(fcAtom) == name
-}
-
-func (fcAtom FcAtom) WithoutPkgName() bool {
-	// string has no colon colon
-	return !strings.Contains(string(fcAtom), glob.KeySymbolColonColon)
 }
 
 func TransformEnumToUniFact(setName Fc, enumFcs []Fc) (*UniFactStmt, []*SpecFactStmt, []*SpecFactStmt) {

@@ -20,25 +20,23 @@ type Stmt interface {
 	ToLatexString() string
 }
 
-func (stmt *DefObjStmt) stmt()                 {}
-func (c *DefPropStmt) stmt()                   {}
-func (l *DefFnStmt) stmt()                     {}
-func (l *UniFactStmt) stmt()                   {}
-func (p *SpecFactStmt) stmt()                  {}
-func (f *ClaimProveStmt) stmt()                {}
-func (f *KnowFactStmt) stmt()                  {}
-func (s *DefExistPropStmt) stmt()              {}
-func (s *HaveObjStStmt) stmt()                 {}
-func (s *ProveInEachCaseStmt) stmt()           {}
-func (s *KnowPropStmt) stmt()                  {}
-func (s *OrStmt) stmt()                        {}
-func (s *ImportDirStmt) stmt()                 {}
-func (s *ImportFileStmt) stmt()                {}
-func (s *ProveStmt) stmt()                     {}
-func (s *UniFactWithIffStmt) stmt()            {}
-func (s *ClaimProveByContradictionStmt) stmt() {}
-
-// func (s *DefFnTemplateStmt) stmt()               {}
+func (stmt *DefObjStmt) stmt()                   {}
+func (c *DefPropStmt) stmt()                     {}
+func (l *DefFnStmt) stmt()                       {}
+func (l *UniFactStmt) stmt()                     {}
+func (p *SpecFactStmt) stmt()                    {}
+func (f *ClaimProveStmt) stmt()                  {}
+func (f *KnowFactStmt) stmt()                    {}
+func (s *DefExistPropStmt) stmt()                {}
+func (s *HaveObjStStmt) stmt()                   {}
+func (s *ProveInEachCaseStmt) stmt()             {}
+func (s *KnowPropStmt) stmt()                    {}
+func (s *OrStmt) stmt()                          {}
+func (s *ImportDirStmt) stmt()                   {}
+func (s *ImportFileStmt) stmt()                  {}
+func (s *ProveStmt) stmt()                       {}
+func (s *UniFactWithIffStmt) stmt()              {}
+func (s *ClaimProveByContradictionStmt) stmt()   {}
 func (s *EnumStmt) stmt()                        {}
 func (s *IntensionalSetStmt) stmt()              {}
 func (s *ClaimPropStmt) stmt()                   {}
@@ -110,8 +108,6 @@ func (s *DefPropStmt) defStmt()      {}
 func (s *DefExistPropStmt) defStmt() {}
 func (s *DefFnStmt) defStmt()        {}
 
-// func (s *DefFnTemplateStmt) defStmt() {}
-
 type UniFactInterface interface {
 	factStmt()
 	stmt()
@@ -169,5 +165,3 @@ type FnTemplate_Or_DefObjStmtInterface interface {
 }
 
 func (stmt *DefObjStmt) fnTemplate_Or_DefObjStmt() {}
-
-// func (stmt *FnTemplateStmt) fnTemplate_Or_DefObjStmt() {}
