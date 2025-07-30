@@ -1,32 +1,3 @@
-know forall a, b R:
-	abs(a * b) = abs(a) * abs(b)
-
-know forall a R, b R:
-    not a <= b
-    then:
-    	a > b
-
-know forall a R, b R:
-	a > b
-    then:
-    	not a <= b
-
-know forall a R:
-    abs(a) = abs(-a)
-
-know forall a R, b R:
-    - a = b
-    then:
-    	a = -b
-
-know forall a R:
-    a > 0
-    then:
-    	abs(-a) = a
-
-know forall n N:
-    n >= 0
-
 claim:
     forall a seq(R):
         forall k N:
@@ -51,7 +22,8 @@ claim:
                     abs(-2 * a(0))
                     abs(-2) * abs(a(0))
                     2 * abs(a(0))
-                know abs(a(1) - a(0)) > 1 # TODO
+                2 * abs(a(0)) > 2 * (1/2)
+                abs(a(1) - a(0)) > 1
                 not abs(a(1) - a(0)) <= 1
                 abs(a(0+1) - a(0)) <= 1
         
@@ -64,8 +36,9 @@ claim:
                 then:
                     $a_n_has_abs_less_than_1_div_2(a, n+1)
             prove:
+                a(n) = - a(n+1)
                 abs(a(n)) <= 1/2
-                know =:
+                =:
                     abs(a(n))
                     abs(-a(n))
                     abs(a(n+1))
