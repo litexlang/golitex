@@ -62,30 +62,53 @@ brew install litexlang/tap/litex
 
 # update
 brew update && brew upgrade
+
+# run litex in your terminal
+litex
 ```
 
 For Ubuntu user with wget command:
 
+amd64 architecture install or update:
 ```bash
-# amd64 architecture install or update
+# install or update
 wget https://github.com/litexlang/golitex/releases/download/latest/litex_0.1.6-beta_amd64.deb
 sudo dpkg -i litex_0.1.6-beta_amd64.deb
 
-# arm64 architecture install or update
+# run litex in your terminal
+litex
+```
+
+arm64 architecture install or update:
+```bash
+# install or update
 wget https://github.com/litexlang/golitex/releases/download/latest/litex_0.1.6-beta_arm64.deb
 sudo dpkg -i litex_0.1.6-beta_arm64.deb
+
+# run litex in your terminal
+litex
 ```
 
 For Ubuntu user with curl command:
 
+amd64 architecture install or update:
 ```bash
-# amd64 architecture install or update
+# install or update
 curl -O https://github.com/litexlang/golitex/releases/download/latest/litex_0.1.6-beta_amd64.deb
 sudo dpkg -i litex_0.1.6-beta_amd64.deb
 
-# arm64 architecture install or update
+# run litex in your terminal
+litex
+```
+
+arm64 architecture install or update:
+```bash
+# install or update
 curl -O https://github.com/litexlang/golitex/releases/download/latest/litex_0.1.6-beta_arm64.deb
 sudo dpkg -i litex_0.1.6-beta_arm64.deb
+
+# run litex in your terminal
+litex
 ```
 
 For windows user:
