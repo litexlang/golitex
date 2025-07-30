@@ -6,7 +6,7 @@
 
 # Litex: Scale Formal Reasoning in AI Age
 
-**Release v0.1.1-beta (not yet ready for production use)**  
+**Release v0.1.6-beta (not yet ready for production use)**  
 *Jiachen Shen and The Litex Team*
 **Try Litex on [playground](https://litexlang.org/playground).**
 
@@ -49,6 +49,52 @@ The key insight behind Litex's extreme simplicity is: mathematical verification 
 To ignite the process of deriving new facts from established ones, we need some established facts which are by default true. The fundamentals of modern mathematics i.e. axioms of set theory, are built-in in Litex.
 
 Currently, the bottleneck in this field is that formal languages are too difficult for both humans and AI, resulting in scarce and expensive training data. However, Litex, with its simplicity and close alignment with mathematical syntax and semantics, reduces the cost and barrier of dataset construction by an order of magnitude.
+
+## Installing and updating
+
+To install or update Litex core, you could run the following commands for different systems.
+
+For macOS user with Homebrwe:
+
+```bash
+# install
+brew install litexlang/tap/litex
+
+# update
+brew update && brew upgrade
+```
+
+For Ubuntu user with wget command:
+
+```bash
+# amd64 architecture install or update
+wget https://github.com/litexlang/golitex/releases/download/latest/litex_0.1.6-beta_amd64.deb
+sudo dpkg -i litex_0.1.6-beta_amd64.deb
+
+# arm64 architecture install or update
+wget https://github.com/litexlang/golitex/releases/download/latest/litex_0.1.6-beta_arm64.deb
+sudo dpkg -i litex_0.1.6-beta_arm64.deb
+```
+
+For Ubuntu user with curl command:
+
+```bash
+# amd64 architecture install or update
+curl -O https://github.com/litexlang/golitex/releases/download/latest/litex_0.1.6-beta_amd64.deb
+sudo dpkg -i litex_0.1.6-beta_amd64.deb
+
+# arm64 architecture install or update
+curl -O https://github.com/litexlang/golitex/releases/download/latest/litex_0.1.6-beta_arm64.deb
+sudo dpkg -i litex_0.1.6-beta_arm64.deb
+```
+
+For windows user:
+
+```bash
+pending...
+```
+
+After installing, your could run `litex -version` to see if it was installed. And enjoy it via command `litex`.
 
 ## Difference between Litex and Python and Lean
 
