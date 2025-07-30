@@ -1,19 +1,14 @@
-know forall a, b, c R:
-    a < b - c
-    then:
-        a + c < b
+# A5 is on page 22 of https://www.imo-official.org/problems/IMO2024SL.pdf
 
-know @subtraction_property_of_inequality(a R, b R, c R):
-    a < b - c
-    c > 0
+# Prior knowledge:
+# 1. AM-GM inequality
+know @AM_GM_inequality(a seq(R), n N):
+	forall k N:
+    	a(k) >= 0
     then:
-        a < b
+    	seq_sum(a, n) / (n+1) >= (seq_product(a, n))^(1/(n+1))
 
-know forall a, b R:
-    b > 0
-    then:
-    	a - b < a
-
+# 2. Periodic sequence
 exist_prop period N_pos st seq_periodic(a seq(R)):
     forall k N:
         a(k) = a(k+period)
@@ -49,8 +44,82 @@ know @telescoping_product(m N_pos, a finite_seq(R, m), b finite_seq(R, m), c fin
     then:
         product_of_first_k_items_of_finite_seq(m - 1, m, c) = 1
 
+know forall a, b, c R:
+    a < b - c
+    then:
+        a + c < b
+
+know @subtraction_property_of_inequality(a R, b R, c R):
+    a < b - c
+    c > 0
+    then:
+        a < b
+
+know forall a, b R:
+    b > 0
+    then:
+    	a - b < a
+
+know forall a, b, c R:
+    a = b * c
+    b != 0
+    then:
+        a / b = c
+
+# Independent Proof Segments
+prop is_identical_seq(a seq(R)):
+    forall n,m N:
+        a(n) = a(m)
+
+prop is_alternating_seq_and_has_bound(a seq(R), bound R):
+    bound > 0
+    forall n N:
+        a(n) = -a(n+1)
+        abs(a(n)) <= bound
+
+claim:
+    forall x, y, z R:
+        x + z * z = z + y * y
+        then:
+            x + y = (y + z) * (y - z + 1)
+    prove:
+        =:
+            (y + z) * (y - z + 1)
+            z + y * y + y - z * z
+            x + z * z  + y - z * z
+            x + y
+
 exist_prop n N st exist_two_consecutive_items_whose_sum_is_0(a seq(R)):
     a(n) + a(n+1) = 0
+
+prop two_consecutive_items_of_seq_are_0(a seq(R), n N):
+    a(n) + a(n+1) = 0
+
+claim:
+    forall a seq(R), index N, n N:
+        a(n+2) + a(n) * a(n) = a(n) + a(n+1) * a(n+1)
+        a(index) + a(index+1) = 0
+        then:
+        	forall k N:
+                k > index
+                then:
+                	a(k) = 0
+    prove:
+        know forall k N:
+            k > index
+            then:
+                a(k) = 0
+
+
+know @periodic_seq_which_is_0_since_n_is_always_0(a seq(R), n N):
+    forall m N:
+    	m > n
+        then:
+        	a(m) = 0
+    $seq_periodic(a)
+    then:
+        forall k N:
+        	a(k) = 0
 
 claim:
     forall a seq(R):
@@ -65,7 +134,7 @@ claim:
     prove:
         have T st $seq_periodic(a)
 
-        obj b, c, d finite_seq(R, T):
+        obj b, c, d,e finite_seq(R, T):
         	forall n N:
                 n < T
                 then:
@@ -78,6 +147,10 @@ claim:
                 n < T
                 then:
                     d(n) = c(n) / b(n)
+            forall n N:
+                n < T
+                then:
+                    e(n) = a(n+1) - a(n) + 1
 
         forall n N:
             n < T
@@ -117,5 +190,25 @@ claim:
             
         $telescoping_product(T, c, b, d)
 
+        claim:
+            forall n N:
+                n < T
+                then:
+                	d(n) = e(n)
+            prove:
+                a(n) + a(n+1) != 0
+                a(n+1) + a(n) != 0
+                a(n+2) + a(n+1) = (a(n+1) + a(n)) * (a(n+1) - a(n) + 1)
+                know (a(n+2) + a(n+1)) / (a(n+1) + a(n)) = a(n+1) - a(n) + 1
+                =:
+                    e(n)
+                    a(n+1) - a(n) + 1
+                    (a(n+2) + a(n+1)) / (a(n+1) + a(n))
+                    (a(n+1) + a(n+2)) / (a(n) + a(n+1))
+                    c(n) / b(n)
+                    d(n)
+
         know forall n N:
             a(n) = a(n+1)
+
+        

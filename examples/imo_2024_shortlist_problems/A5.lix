@@ -44,6 +44,22 @@ know @telescoping_product(m N_pos, a finite_seq(R, m), b finite_seq(R, m), c fin
     then:
         product_of_first_k_items_of_finite_seq(m - 1, m, c) = 1
 
+know forall a, b, c R:
+    a < b - c
+    then:
+        a + c < b
+
+know @subtraction_property_of_inequality(a R, b R, c R):
+    a < b - c
+    c > 0
+    then:
+        a < b
+
+know forall a, b R:
+    b > 0
+    then:
+    	a - b < a
+
 # Independent Proof Segments
 prop is_identical_seq(a seq(R)):
     forall n,m N:
@@ -98,6 +114,74 @@ know @periodic_seq_which_is_0_since_n_is_always_0(a seq(R), n N):
     then:
         forall k N:
         	a(k) = 0
+
+claim:
+    forall a seq(R):
+        forall n N:
+            a(n+2) + a(n+1) = (a(n+1) + a(n)) * (a(n+1) - a(n) + 1)
+            abs(a(n+1) - a(n)) <= 1
+        not $exist_two_consecutive_items_whose_sum_is_0(a)
+        $seq_periodic(a)
+        then:
+            forall n N:
+                a(n) = a(n+1)
+    prove:
+        have T st $seq_periodic(a)
+
+        obj b, c, d finite_seq(R, T):
+        	forall n N:
+                n < T
+                then:
+                    b(n) = a(n) + a(n+1)
+            forall n N:
+                n < T
+                then:
+                    c(n) = a(n+1) + a(n+2)
+            forall n N:
+                n < T
+                then:
+                    d(n) = c(n) / b(n)
+
+        forall n N:
+            n < T
+            then:
+                a(n) + a(n+1) != 0
+                a(n) + a(n+1) = b(n)
+                b(n) != 0
+
+        forall n N:
+            n < T - 1
+            then:
+                n + 1 < T
+                $subtraction_property_of_inequality(n, T, 1)
+                n < T
+                c(n) = a(n+1) + a(n+2)
+                b(n+1) = a(n+1) + a(n+1+1)
+                b(n+1) = a(n+1) + a(n+2)
+                c(n) = b(n+1)
+
+        a(0) = a(0+T)
+        a(1) = a(1+T)
+        T - 1 < T
+        0 < T
+
+        =:
+            c(T-1)
+            a(T-1+1) + a(T-1+2)
+            a(T) + a(T+1)
+            a(0) + a(1)
+            a(0) + a(0+1)
+            b(0)
+            
+        forall k N:
+            k < T
+            then:
+                d(k) = c(k) / b(k)
+            
+        $telescoping_product(T, c, b, d)
+
+        know forall n N:
+            a(n) = a(n+1)
 
 claim:
     forall a seq(R):
