@@ -22,8 +22,8 @@ import (
 
 func Test_File(t *testing.T) {
 	startTime := time.Now()
-	fileName := "../examples/imo_2024_shortlist_problems/A5.lix"
-	// fileName := "../examples/test_codes/tmp.lix"
+	// fileName := "../examples/imo_2024_shortlist_problems/A5.lix"
+	fileName := "../examples/test_codes/tmp.lix"
 	msg, signal, err := RunFile(fileName)
 	if err != nil {
 		t.Errorf("failed to run file %s\n", fileName)

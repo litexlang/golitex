@@ -7,7 +7,8 @@ know:
         k < n - 1
         then:
         	finite_seq_sum(n, a, k+1) = finite_seq_sum(n, a, k) + a(k+1)
-    finite_seq_sum(n, a, 0) = a(0)
+    forall n N_pos, a finite_seq(R, n):
+        finite_seq_sum(n, a, 0) = a(0)
 
 fn finite_seq_product(n N_pos, a finite_seq(R, n), k N) R:
     dom:
@@ -18,7 +19,8 @@ know:
         k < n - 1
         then:
         	finite_seq_product(n, a, k+1) = finite_seq_product(n, a, k) * a(k+1)
-    finite_seq_product(n, a, 0) = a(0)
+    forall n N_pos, a finite_seq(R, n):
+        finite_seq_product(n, a, 0) = a(0)
 
 know @AM_GM_inequality(n N_pos, a finite_seq(R, n)):
 	forall k N:
@@ -26,27 +28,64 @@ know @AM_GM_inequality(n N_pos, a finite_seq(R, n)):
         then:
             a(k) >= 0
     then:
-    	finite_seq_sum(n, a, n-1) / (n+1) >= (finite_seq_product(n, a, n-1))^(1/(n+1))
+    	(finite_seq_sum(n, a, n-1) / n) ^ n >= finite_seq_product(n, a, n-1)
 
 know @AM_GM_inequality_equal_cond(n N_pos, a finite_seq(R, n)):
     forall k N:
     	k < n
         then:
             a(k) >= 0
+    (finite_seq_sum(n, a, n-1) / n) ^ n = finite_seq_product(n, a, n-1)
     then:
-        seq_sum(a, n) / (n+1) = (seq_product(a, n))^(1/(n+1))
-    iff:
         forall k N, k2 N:
             k < n
             k2 < n
             then:
                 a(k) = a(k2)
 
+know @AM_GM_inequality_equal_cond_2(n N_pos, a finite_seq(R, n)):
+    forall k N:
+    	k < n
+        then:
+            a(k) >= 0
+    forall k N, k2 N:
+        k < n
+        k2 < n
+        then:
+            a(k) = a(k2)
+    then:
+        (finite_seq_sum(n, a, n-1) / n) ^ n = finite_seq_product(n, a, n-1)
+    
+
 prove:
     obj a finite_seq(R, 10):
         forall k N:
             k < 10
             then:
-            	a(k) > 0
-        
-    	
+            	a(k) >= 0
+
+    (finite_seq_sum(10, a, 10 - 1) / 10) ^ 10 >= finite_seq_product(10, a, 10 - 1)
+    
+prove:
+    obj a finite_seq(R, 10):
+        forall k N:
+            k < 10
+            then:
+            	a(k) = 1
+
+    forall k N:
+        k < 10
+        then:
+            a(k) = 1
+            1 >= 0
+            a(k) >= 0
+    
+    forall k N, k2 N:
+        k < 10
+        k2 < 10
+        then:
+            1 = a(k)
+            1 = a(k2)
+            a(k) = a(k2)
+
+    (finite_seq_sum(10, a, 10 - 1) / 10) ^ 10 = finite_seq_product(10, a, 10 - 1)
