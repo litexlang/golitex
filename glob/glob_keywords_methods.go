@@ -38,7 +38,6 @@ func IsKeySymbolRelaFn(op string) bool {
 
 type BuiltinOptPrecedence int
 
-// TODO: implement other operators. How logical operators work is also not implemented
 const (
 	PrecLowest         BuiltinOptPrecedence = iota
 	PrecAssignment                          // =
@@ -62,12 +61,6 @@ var BuiltinOptPrecedenceMap = map[string]BuiltinOptPrecedence{
 	KeySymbolPercent: PrecModulo,
 }
 
-// All Unary operators have higher Precedence than infix operators
-// TODO 未来有其他的unary opt的时候，需要修改 strSliceCursor.unaryOptFc
-// var UnaryPrecedence = map[string]BuiltinOptPrecedence{
-// 	KeySymbolMinus: PrecUnary,
-// }
-
 func IsKeyword(s string) bool {
 	_, ok := BuiltinKeywordsSet[s]
 	return ok
@@ -77,14 +70,6 @@ func GetKeySymbol(inputString string, start int) string {
 	if start < 0 || start >= len(inputString) {
 		return ""
 	}
-
-	// 先检查 3 字符符号
-	// if start+3 <= len(inputString) {
-	// 	candidate := inputString[start : start+3]
-	// 	if _, ok := symbolSet[candidate]; ok {
-	// 		return candidate
-	// 	}
-	// }
 
 	// 再检查 2 字符符号
 	if start+2 <= len(inputString) {
