@@ -75,7 +75,6 @@ claim:
         prove_by_math_induction($a_n_has_abs_less_than_1_div_2(a, 0), 1, 0)
 
         forall n N:
-            n >= 0
             then:
                 $a_n_has_abs_less_than_1_div_2(a, n)
                 abs(a(n)) <= 1/2
