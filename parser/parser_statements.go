@@ -112,7 +112,11 @@ func (tb *tokenBlock) factStmt(uniFactDepth uniFactEnum) (ast.FactStmt, error) {
 
 	switch cur {
 	case glob.KeywordForall:
-		return tb.uniFactInterface(uniFactDepth)
+		if tb.GetEnd() == glob.KeySymbolColon {
+			return tb.uniFactInterface(uniFactDepth)
+		} else {
+			return tb.inlineUniFact()
+		}
 	case glob.KeywordOr:
 		return tb.orStmt()
 	case glob.KeySymbolEqual:
@@ -1507,9 +1511,17 @@ func (tb *tokenBlock) proveOverFiniteSetStmt() (*ast.ProveOverFiniteSetStmt, err
 		return nil, tbErr(err, tb)
 	}
 
-	uniFact, err := tb.body[0].uniFactInterface(UniFactDepth0)
-	if err != nil {
-		return nil, tbErr(err, tb)
+	var uniFact ast.UniFactInterface
+	if tb.body[0].GetEnd() == glob.KeySymbolColon {
+		uniFact, err = tb.body[0].uniFactInterface(UniFactDepth0)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+	} else {
+		uniFact, err = tb.body[0].inlineUniFact()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
 	}
 
 	uniFactAsUniFactStmt, ok := uniFact.(*ast.UniFactStmt)
@@ -1910,7 +1922,7 @@ func (tb *tokenBlock) inlineUniFact() (*ast.UniFactStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	params, setParams, err := tb.param_paramSet_paramInSetFacts(glob.KeySymbolColon, false)
+	params, setParams, err := tb.inlineUniFact_Param_ParamSet_ParamInSetFacts()
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -1934,6 +1946,7 @@ func (tb *tokenBlock) inlineUniFactDomFact() ([]ast.FactStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 	if cur == glob.KeySymbolEqualLarger {
+		tb.header.skip(glob.KeySymbolEqualLarger)
 		return []ast.FactStmt{}, nil
 	}
 
@@ -1986,4 +1999,78 @@ func (tb *tokenBlock) inlineUniFactThenFacts() ([]ast.FactStmt, error) {
 	}
 
 	return thenFacts, nil
+}
+
+func (tb *tokenBlock) inlineUniFact_Param_ParamSet_ParamInSetFacts() ([]string, []ast.Fc, error) {
+	params := []string{}
+	setParams := []ast.Fc{}
+	paramWithoutSetCount := 0
+
+	if !tb.header.is(glob.KeySymbolEqualLarger) || !tb.header.is(glob.KeySymbolColon) {
+		for {
+			param, err := tb.header.next()
+			if err != nil {
+				return nil, nil, err
+			}
+
+			params = append(params, addPkgNameToString(param))
+
+			if tb.header.is(glob.KeySymbolComma) {
+				tb.header.skip(glob.KeySymbolComma)
+				paramWithoutSetCount++
+				continue
+			}
+
+			setParam, err := tb.RawFc()
+			if err != nil {
+				return nil, nil, err
+			}
+
+			if paramWithoutSetCount == 0 {
+				setParams = append(setParams, setParam)
+			} else {
+				for range paramWithoutSetCount + 1 {
+					setParams = append(setParams, setParam)
+				}
+				paramWithoutSetCount = 0
+			}
+
+			if tb.header.is(glob.KeySymbolComma) {
+				tb.header.skip(glob.KeySymbolComma)
+				continue
+			}
+
+			if tb.header.is(glob.KeySymbolEqualLarger) || tb.header.is(glob.KeySymbolColon) {
+				break
+			}
+
+			return nil, nil, fmt.Errorf("expected ',' or '=>' but got '%s'", tb.header.strAtCurIndexPlus(0))
+		}
+	}
+
+	// params 不能重复
+	for i := range params {
+		for j := i + 1; j < len(params); j++ {
+			if params[i] == params[j] {
+				return nil, nil, fmt.Errorf("parameters cannot be repeated, get duplicate parameter: %s", params[i])
+			}
+		}
+	}
+
+	// nth parameter set should not include nth to last parameter inside
+	for i, setParam := range setParams {
+		atomsInSetParam := ast.GetAtomsInFc(setParam)
+		atomsInSetParamAsStr := make([]string, len(atomsInSetParam))
+		for i, atom := range atomsInSetParam {
+			atomsInSetParamAsStr[i] = string(atom)
+		}
+
+		for j := i; j < len(params); j++ {
+			if slices.Contains(atomsInSetParamAsStr, params[j]) {
+				return nil, nil, fmt.Errorf("the set %s of the parameter if index %d cannot include any parameters from the index %d to the last one (found parameter %s)", setParam, i, j, params[j])
+			}
+		}
+	}
+
+	return params, setParams, nil
 }
