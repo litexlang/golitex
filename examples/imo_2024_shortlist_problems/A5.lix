@@ -30,8 +30,8 @@ know @AM_GM_inequality_equal_cond_2(n N_pos, a finite_seq(R, n)):
     
 know forall a R: a != 0 => a / a = 1
 know forall a R: a - a = 0 => a = a
-know forall n N_pos, a finite_seq(R, n):
-    forall k N: k < n - 1 => a(k+1) - a(k) = 0
+know @periodic_seq_equal_if_first_T_consecutive_items_are_equal(n N_pos, a seq(R)):
+    forall k N: k < n => a(k+1) - a(k) = 0
     then:
         forall k1, k2 N: k1 < n, k2 < n => a(k1) = a(k2)
 
@@ -291,7 +291,6 @@ claim:
 
         know forall n N: n < T => e(n) = 1
 
-"""
         claim:
             forall n1, n2 N: n1 < T, n2 < T => a(n1) = a(n2)
             prove:
@@ -305,8 +304,7 @@ claim:
                         1 - 1 = a(n+1) - a(n) + 1 - 1
                         0 = a(n+1) - a(n) + 1 - 1
                         0 = a(n+1) - a(n)
-                    """
+                $periodic_seq_equal_if_first_T_consecutive_items_are_equal(T, a)
     
-        know forall n1, n2 N: n1 < T, n2 < T => a(n1) = a(n2)
         $first_T_items_of_periodic_seq_are_equal_then_seq_is_periodic(a, T)
 
