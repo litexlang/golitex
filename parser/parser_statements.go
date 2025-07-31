@@ -488,10 +488,10 @@ func (tb *tokenBlock) relaFactStmt() (*ast.SpecFactStmt, error) {
 			return nil, tbErr(err, tb)
 		}
 
-		// 必须到底了
-		if !tb.header.ExceedEnd() {
-			return nil, fmt.Errorf("expect end of line")
-		}
+		// // 必须到底了
+		// if !tb.header.ExceedEnd() {
+		// 	return nil, fmt.Errorf("expect end of line")
+		// }
 
 		params := []ast.Fc{fc, fc2}
 

@@ -1,9 +1,4 @@
-obj human set, Jordan human
-prop intelligent(x human)
-know forall x human => $intelligent(x)
-$intelligent(Jordan)
-
+prop q(x R)
 prop p(x R):
 	x > 0
-
-know forall x R: x > 0 => $p(x)
+know forall x R: x > 0, $q(x) => $p(x), $q(x)
