@@ -42,10 +42,13 @@ prove:
     obj a finite_seq(R, 10):
         forall k N: k < 10 => a(k) = 1
 
-    forall k N: k < 10 => a(k) = 1
-    1 >= 0
-    a(k) >= 0
-    
+    forall k N: k < 10 => a(k) = 1, 1 >= 0, a(k) >= 0
     forall k N, k2 N: k < 10, k2 < 10 => 1 = a(k), 1 = a(k2), a(k) = a(k2)
-
     (finite_seq_sum(10, a, 10 - 1) / 10) ^ 10 = finite_seq_product(10, a, 10 - 1)
+
+prove:
+	obj a finite_seq(R, 10):
+        forall k N: k < 10 => a(k) >= 0
+        (finite_seq_sum(10, a, 10 - 1) / 10) ^ 10 = finite_seq_product(10, a, 10 - 1)
+    $AM_GM_inequality_equal_cond(10, a)
+    forall k N, k2 N: k < 10, k2 < 10 => a(k) = a(k2)
