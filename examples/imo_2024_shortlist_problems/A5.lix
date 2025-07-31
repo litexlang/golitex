@@ -28,6 +28,12 @@ know @AM_GM_inequality_equal_cond_2(n N_pos, a finite_seq(R, n)):
     then:
         (finite_seq_sum(n, a, n-1) / n) ^ n = finite_seq_product(n, a, n-1)
     
+know forall a R: a != 0 => a / a = 1
+know forall a R: a - a = 0 => a = a
+know forall n N_pos, a finite_seq(R, n):
+    forall k N: k < n - 1 => a(k+1) - a(k) = 0
+    then:
+        forall k1, k2 N: k1 < n, k2 < n => a(k1) = a(k2)
 
 # Prior knowledge:
 # 1. AM-GM inequality
@@ -43,17 +49,6 @@ exist_prop period N_pos st seq_periodic(a seq(R)):
         a(k) = a(k+period)
 
 # 3. Product of first k items of finite sequence
-fn product_of_first_k_items_of_finite_seq(k N, m N_pos, a finite_seq(R, m)) R:
-    dom:
-        k < m
-
-know forall k N, m N_pos, a finite_seq(R, m):
-    k < m - 1
-    then:
-        product_of_first_k_items_of_finite_seq(k+1, m, a) = product_of_first_k_items_of_finite_seq(k, m, a) * a(k+1)
-        
-know forall m N_pos, a finite_seq(R, m):
-    product_of_first_k_items_of_finite_seq(0, m, a) = a(0)
 
 fn sum_of_finite_seq(k N,m N_pos, a finite_seq(R, m)) R:
     dom:
@@ -75,7 +70,7 @@ know @telescoping_product(m N_pos, a finite_seq(R, m), b finite_seq(R, m), c fin
         then:
         	c(k) = a(k) / b(k)
     then:
-        product_of_first_k_items_of_finite_seq(m - 1, m, c) = 1
+        finite_seq_product(m, c, m-1) = 1
 
 know forall a, b, c R:
     a < b - c
@@ -113,6 +108,12 @@ know @finite_seq_equal(s set, m N_pos, a finite_seq(s, m), b finite_seq(s, m)):
 prop T_is_period_of_seq(a seq(R), T N_pos):
     forall n N:
         a(n) = a(n+T)
+
+know @first_T_items_of_periodic_seq_are_equal_then_seq_is_periodic(a seq(R), T N_pos):
+    $T_is_period_of_seq(a, T)
+    forall n, n2 N: n < T, n2 < T => a(n) = a(n2)
+    then:
+        forall n1, n2 N => a(n1) = a(n2)
 
 know @periodic_seq_alternating_minus_add_1_has_average_1_at_period(a seq(R), period N_pos, b finite_seq(R, period)):
     $T_is_period_of_seq(a, period)
@@ -266,12 +267,46 @@ claim:
 
         $telescoping_product(T, c, b, e)
 
-        1 = product_of_first_k_items_of_finite_seq(T-1, T, e)
+        1 = finite_seq_product(T, e, T-1)
 
         $T_is_period_of_seq(a, T)
 
         $periodic_seq_alternating_minus_add_1_has_average_1_at_period(a, T, e)
         finite_seq_sum(T, e, T-1) = T
 
-        know forall n N:
-            a(n) = a(n+1)
+        =:
+            (finite_seq_sum(T, e, T-1)/T)^T
+            (T/T)^T
+            (1)^T
+            1
+            finite_seq_product(T, e, T-1)
+
+        =:
+            finite_seq_product(T, e, T-1)
+            (finite_seq_sum(T, e, T-1) / T) ^ T
+
+        know forall k N: k < T => e(k) >= 0
+        
+        $AM_GM_inequality_equal_cond(T, e)
+
+        know forall n N: n < T => e(n) = 1
+
+"""
+        claim:
+            forall n1, n2 N: n1 < T, n2 < T => a(n1) = a(n2)
+            prove:
+                forall n N:
+                    n < T
+                    then:
+                        =:
+                            1
+                            e(n)
+                            a(n+1) - a(n) + 1
+                        1 - 1 = a(n+1) - a(n) + 1 - 1
+                        0 = a(n+1) - a(n) + 1 - 1
+                        0 = a(n+1) - a(n)
+                    """
+    
+        know forall n1, n2 N: n1 < T, n2 < T => a(n1) = a(n2)
+        $first_T_items_of_periodic_seq_are_equal_then_seq_is_periodic(a, T)
+
