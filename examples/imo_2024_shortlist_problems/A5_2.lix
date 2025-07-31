@@ -93,6 +93,11 @@ know @periodic_seq_alternating_minus_add_1_has_average_1_at_period(a seq(R), per
     then:
         finite_seq_sum(period, b, period-1) = period
 
+know @if_seq_n_plus_1_is_always_equal_to_seq_n_then_seq_is_identical(a seq(R)):
+    forall n N => a(n+1) = a(n)
+    then:
+        forall n, m N => a(n) = a(m)
+
 # Independent Proof Segments
 prop is_identical_seq(a seq(R)):
     forall n,m N => a(n) = a(m)
@@ -265,6 +270,10 @@ claim:
     forall a seq(R), n N:
         a(n+2) + a(n) * a(n) = a(n) + a(n+1) * a(n+1)
         abs(a(n+1) - a(n)) <= 1
+        $seq_periodic(a)
+        forall k N:
+            a(k+2) + a(k) * a(k) = a(k) + a(k+1) * a(k+1)
+            abs(a(k+1) - a(k)) <= 1
     	then:
             or:
                 $is_identical_seq(a)
@@ -322,7 +331,7 @@ claim:
 
                 $is_alternating_seq_and_has_bound(a, 1/2)
                 
-
+"""
         claim:
         	forall:
             	not $exist_two_consecutive_items_whose_sum_is_0(a)
@@ -330,6 +339,7 @@ claim:
                     $is_identical_seq(a)
             prove:
                 know $is_identical_seq(a)
+"""
 
         prove_in_each_case:
         	or:
@@ -342,4 +352,14 @@ claim:
             prove:
             	$is_alternating_seq_and_has_bound(a, 1/2)
             prove:
-            	$is_identical_seq(a)
+                forall n N:
+                    a(n+2) + a(n) * a(n) = a(n) + a(n+1) * a(n+1)
+                    a(n+2) + a(n+1) = (a(n+1) + a(n)) * (a(n+1) - a(n) + 1)
+                forall n N:
+                    abs(a(n+1) - a(n)) <= 1
+                not $exist_two_consecutive_items_whose_sum_is_0(a)
+                $seq_periodic(a)
+
+                forall n N => a(n) = a(n+1)
+                $if_seq_n_plus_1_is_always_equal_to_seq_n_then_seq_is_identical(a)
+                $is_identical_seq(a)
