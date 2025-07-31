@@ -148,6 +148,7 @@ const (
 	KeySymbolLeftCurly    = "{"
 	KeySymbolRightCurly   = "}"
 	KeySymbolAt           = "@"
+	KeySymbolEqualLarger  = "=>"
 )
 
 // 最多双字符，或者单字符，否则parser的逻辑 GetKeySymbol 有问题
@@ -181,6 +182,7 @@ var symbolSet map[string]struct{} = map[string]struct{}{
 	KeySymbolLeftCurly:    {}, // "{"
 	KeySymbolRightCurly:   {}, // "}"
 	KeySymbolAt:           {}, // "@"
+	KeySymbolEqualLarger:  {}, // "=>"
 }
 
 var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]struct{}{
