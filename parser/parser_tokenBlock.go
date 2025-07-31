@@ -59,3 +59,10 @@ func (tb *tokenBlock) TokenAtHeaderIndexIs(index int, kw string) bool {
 	}
 	return tb.header.IsTokenAtIndexGivenWord(index, kw)
 }
+
+func (tb *tokenBlock) GetEnd() string {
+	if len(tb.header.slice) == 0 {
+		return ""
+	}
+	return tb.header.slice[len(tb.header.slice)-1]
+}
