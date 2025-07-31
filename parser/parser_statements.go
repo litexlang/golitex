@@ -1903,3 +1903,87 @@ func (tb *tokenBlock) fnInFnTemplateStmt() ([]string, []ast.Fc, ast.Fc, []ast.Fa
 
 	return fnParams, fnParamSets, fnRetSet, domFacts, thenFacts, nil
 }
+
+func (tb *tokenBlock) inlineUniFact() (*ast.UniFactStmt, error) {
+	err := tb.header.skip(glob.KeywordForall)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	params, setParams, err := tb.param_paramSet_paramInSetFacts(glob.KeySymbolColon, false)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	domFact, err := tb.inlineUniFactDomFact()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	thenFacts, err := tb.inlineUniFactThenFacts()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	return ast.NewUniFact(params, setParams, domFact, thenFacts), nil
+}
+
+func (tb *tokenBlock) inlineUniFactDomFact() ([]ast.FactStmt, error) {
+	cur, err := tb.header.currentToken()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+	if cur == glob.KeySymbolEqualLarger {
+		return []ast.FactStmt{}, nil
+	}
+
+	if cur == glob.KeySymbolColon {
+		tb.header.skip(glob.KeySymbolColon)
+	}
+
+	dom := []ast.FactStmt{}
+	for {
+		specFact, err := tb.specFactStmt()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		dom = append(dom, specFact)
+
+		cur, err = tb.header.currentToken()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		if cur == glob.KeySymbolComma {
+			tb.header.skip(glob.KeySymbolComma)
+		} else if cur == glob.KeySymbolEqualLarger {
+			tb.header.skip(glob.KeySymbolEqualLarger)
+			break
+		} else {
+			return nil, fmt.Errorf("expect comma or =>")
+		}
+	}
+
+	return dom, nil
+}
+
+func (tb *tokenBlock) inlineUniFactThenFacts() ([]ast.FactStmt, error) {
+	thenFacts := []ast.FactStmt{}
+	for {
+		specFact, err := tb.specFactStmt()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		thenFacts = append(thenFacts, specFact)
+
+		if tb.header.ExceedEnd() {
+			break
+		}
+
+		err = tb.header.skip(glob.KeySymbolComma)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+	}
+
+	return thenFacts, nil
+}
