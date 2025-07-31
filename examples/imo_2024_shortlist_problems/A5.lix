@@ -1,5 +1,34 @@
 # A5 is on page 22 of https://www.imo-official.org/problems/IMO2024SL.pdf
 
+fn finite_seq_sum(n N_pos, a finite_seq(R, n), k N) R:
+    dom:
+        k < n
+
+know:
+    forall n N_pos, a finite_seq(R, n), k N: k < n - 1 => finite_seq_sum(n, a, k+1) = finite_seq_sum(n, a, k) + a(k+1)
+    forall n N_pos, a finite_seq(R, n) => finite_seq_sum(n, a, 0) = a(0)
+
+fn finite_seq_product(n N_pos, a finite_seq(R, n), k N) R:
+    dom:
+        k < n
+
+know:
+    forall n N_pos, a finite_seq(R, n), k N: k < n - 1 => finite_seq_product(n, a, k+1) = finite_seq_product(n, a, k) * a(k+1)
+    forall n N_pos, a finite_seq(R, n) => finite_seq_product(n, a, 0) = a(0)
+
+know @AM_GM_inequality_equal_cond(n N_pos, a finite_seq(R, n)):
+    forall k N: k < n => a(k) >= 0
+    (finite_seq_sum(n, a, n-1) / n) ^ n = finite_seq_product(n, a, n-1)
+    then:
+        forall k N, k2 N: k < n, k2 < n => a(k) = a(k2)
+
+know @AM_GM_inequality_equal_cond_2(n N_pos, a finite_seq(R, n)):
+    forall k N: k < n => a(k) >= 0
+    forall k N, k2 N: k < n, k2 < n => a(k) = a(k2)
+    then:
+        (finite_seq_sum(n, a, n-1) / n) ^ n = finite_seq_product(n, a, n-1)
+    
+
 # Prior knowledge:
 # 1. AM-GM inequality
 know @AM_GM_inequality(a seq(R), n N):
@@ -30,8 +59,6 @@ fn sum_of_finite_seq(k N,m N_pos, a finite_seq(R, m)) R:
     dom:
         k < m
 
-
-
 # 4. Telescoping product is 1 (could be proved by induction)
 know @telescoping_product(m N_pos, a finite_seq(R, m), b finite_seq(R, m), c finite_seq(R, m)):
     forall k N:
@@ -54,6 +81,9 @@ know forall a, b, c R:
     a < b - c
     then:
         a + c < b
+
+know forall a R:
+    1^a = 1
 
 know @subtraction_property_of_inequality(a R, b R, c R):
     a < b - c
@@ -79,6 +109,16 @@ know @finite_seq_equal(s set, m N_pos, a finite_seq(s, m), b finite_seq(s, m)):
             a(n) = b(n)
     then:
         a = b
+
+prop T_is_period_of_seq(a seq(R), T N_pos):
+    forall n N:
+        a(n) = a(n+T)
+
+know @periodic_seq_alternating_minus_add_1_has_average_1_at_period(a seq(R), period N_pos, b finite_seq(R, period)):
+    $T_is_period_of_seq(a, period)
+    forall k N: k < period => b(k) = (a(k+1) - a(k) + 1)
+    then:
+        finite_seq_sum(period, b, period-1) = period
 
 # Independent Proof Segments
 prop is_identical_seq(a seq(R)):
@@ -148,7 +188,7 @@ claim:
     prove:
         have T st $seq_periodic(a)
 
-        obj b, c, d,e finite_seq(R, T):
+        obj b, c, d, e finite_seq(R, T):
         	forall n N:
                 n < T
                 then:
@@ -223,13 +263,15 @@ claim:
                     d(n)
 
         $finite_seq_equal(R, T, e, d)
-        1 = product_of_first_k_items_of_finite_seq(T-1, T, e)
 
         $telescoping_product(T, c, b, e)
 
-        
+        1 = product_of_first_k_items_of_finite_seq(T-1, T, e)
+
+        $T_is_period_of_seq(a, T)
+
+        $periodic_seq_alternating_minus_add_1_has_average_1_at_period(a, T, e)
+        finite_seq_sum(T, e, T-1) = T
 
         know forall n N:
             a(n) = a(n+1)
-
-        
