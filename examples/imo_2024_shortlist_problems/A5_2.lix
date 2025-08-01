@@ -29,12 +29,6 @@ know @periodic_seq_equal_if_first_T_consecutive_items_are_equal(n N_pos, a seq(R
     then:
         forall k1, k2 N: k1 < n, k2 < n => a(k1) = a(k2)
 
-# 3. Product of first k items of finite sequence
-
-fn sum_of_finite_seq(k N,m N_pos, a finite_seq(R, m)) R:
-    dom:
-        k < m
-
 # 4. Telescoping product is 1 (could be proved by induction)
 know @telescoping_product(m N_pos, a finite_seq(R, m), b finite_seq(R, m), c finite_seq(R, m)):
     forall k N: k < m => b(k) != 0
@@ -43,18 +37,6 @@ know @telescoping_product(m N_pos, a finite_seq(R, m), b finite_seq(R, m), c fin
     forall k N: k < m => c(k) = a(k) / b(k)
     then:
         finite_seq_product(m, c, m-1) = 1
-
-know forall a, b, c R: a < b - c => a + c < b
-know forall a R => 1^a = 1
-
-know @subtraction_property_of_inequality(a R, b R, c R):
-    a < b - c
-    c > 0
-    then:
-        a < b
-
-know forall a, b R: b > 0 => a - b < a
-know forall a, b, c R: a = b * c, b != 0 => a / b = c
 
 know @finite_seq_equal(s set, m N_pos, a finite_seq(s, m), b finite_seq(s, m)):
     forall n N: n < m => a(n) = b(n)
@@ -140,7 +122,7 @@ claim:
             n < T - 1
             then:
                 n + 1 < T
-                $subtraction_property_of_inequality(n, T, 1)
+                $subtraction_preserves_inequality_with_positive_term(n, T, 1)
                 n < T
                 c(n) = a(n+1) + a(n+2)
                 b(n+1) = a(n+1) + a(n+1+1)
