@@ -19,10 +19,10 @@ Mathematics is the art of deriving new facts from established ones. To illustrat
   </tr>
   <tr>
     <td style="border: 3px solid black; padding: 8px;">
-      <code>obj Human set</code> <br><br>
+      <code>let Human set</code> <br><br>
       <code>prop self_aware(x Human)</code> <br><br>      <code>know forall x Human:</code> <br>
       <code>&nbsp;&nbsp;&nbsp;&nbsp;$self_aware(x)</code> <br> <br>
-      <code>obj Bob Human</code> <br> <br>
+      <code>let Bob Human</code> <br> <br>
       <code>$self_aware(Bob)</code>
     </td>
     <td style="border: 3px solid black; padding: 8px;">
@@ -129,7 +129,7 @@ Next I want to show you how Litex can be used to solve a simple linear equation.
   </tr>
   <tr>
     <td style="border: 3px solid black; padding: 8px;">
-      <code>obj x R, y R:</code><br>
+      <code>let x R, y R:</code><br>
       <code>&nbsp;&nbsp;2 * x + 3 * y = 10</code><br>
       <code>&nbsp;&nbsp;4 * x + 5 * y = 14</code><br><br>
       <code>2 * (2 * x + 3 * y) = 2 * 10</code><br>
@@ -230,8 +230,8 @@ know @union_items_in_at_least_one_of_child_set(x obj, s, s2 set):
             x $in s2
 
 prove:
-    obj s, s2 set
-    obj x s
+    let s, s2 set
+    let x s
     x $in self_union(s, s2)
     forall s, s2 set, x self_union(s, s2):
         $union_items_in_at_least_one_of_child_set(x, s, s2)

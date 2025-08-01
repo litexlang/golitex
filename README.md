@@ -175,7 +175,7 @@ This example means: All humans are intelligent. Jordan is a human. Therefore, Jo
   </tr>
   <tr>
     <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
-      <code>obj human set, Jordan human</code> <br><br>
+      <code>let human set, Jordan human</code> <br><br>
       <code>prop intelligent(x Human)</code> <br><br>      <code>know forall x Human:</code> <br>
       <code>&nbsp;&nbsp;$intelligent(x)</code> <br> <br>
       <code>$intelligent(Jordan)</code>
@@ -316,7 +316,7 @@ This example means: Solve the equation 2x + 3y = 10 and 4x + 5y = 14. (本例是
   </tr>
   <tr>
     <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
-      <code>obj x R, y R:</code><br>
+      <code>let x R, y R:</code><br>
       <code>&nbsp;&nbsp;2 * x + 3 * y = 10</code><br>
       <code>&nbsp;&nbsp;4 * x + 5 * y = 14</code><br><br>
       <code>2 * (2 * x + 3 * y) = 2 * 10</code><br>
