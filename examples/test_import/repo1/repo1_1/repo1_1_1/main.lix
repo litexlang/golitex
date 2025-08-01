@@ -1,2 +1,2 @@
-obj a N:
+let a N:
     a = 1

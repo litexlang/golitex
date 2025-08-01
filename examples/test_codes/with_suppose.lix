@@ -9,24 +9,24 @@ prop properties_about_group(G set, op fn(G, G)G)
 suppose is_group(G_, op_, e_, inv_):
     know $properties_about_group(G_, op_)
 
-obj G set
+let G set
 fn op(x G, y G)G
 fn inv(x G)G
-obj e G
+let e G
 
 know $is_group(G, op, e, inv)
 
 with is_group(G, op, e, inv):
     $properties_about_group(G, op)
 
-obj s set
+let s set
 
 prop random_property(x s)
 
 suppose random_property(x):
     know x = 1
 
-obj x s
+let x s
 
 with random_property(x):
     x = 1

@@ -13,7 +13,7 @@ prove:
             $larger_is_transitive(x, 1, -1)
             x > -1
 
-    obj a N:
+    let a N:
         a > 1
 
     $p(a)
@@ -31,7 +31,7 @@ prove:
         prove:
             know $p(x, y)
 
-    obj a, b, c N:
+    let a, b, c N:
         $p2(a, b, c)
 
     $q(a, b, c)

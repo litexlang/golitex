@@ -41,6 +41,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.defFnStmt()
 	case glob.KeywordObj:
 		ret, err = tb.defObjStmt()
+	case glob.KeywordLet:
+		ret, err = tb.defObjStmt()
 	case glob.KeywordHave:
 		if tb.header.strAtCurIndexPlus(1) == glob.KeywordSet {
 			if tb.header.strAtCurIndexPlus(2) == glob.KeywordFn {
@@ -339,7 +341,7 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 // }
 
 func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
-	err := tb.header.skip(glob.KeywordObj)
+	err := tb.header.skip("")
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}

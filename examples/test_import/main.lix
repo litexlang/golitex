@@ -3,7 +3,7 @@ import  "./repo1" as pkg1
 import "./repo2" as pkg2
 import "./main_global.lix"
 
-obj a N:
+let a N:
     a = pkg1::a
 
 a = 1

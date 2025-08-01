@@ -17,7 +17,7 @@ prove_forall_on_indexable_set 用遍历的方式去证明forall。这种方式�
 
 """
 
-obj congruence_class indexable_set
+let congruence_class indexable_set
 know:
     forall x N:
         congruence_class[x] $in finite_set

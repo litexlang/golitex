@@ -1,4 +1,4 @@
-obj f fn(Z)Z
+let f fn(Z)Z
 
 f(1) $in Z
 

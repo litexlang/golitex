@@ -15,7 +15,7 @@ prove:
             then:
                 g(a, b) = y
 
-    obj f2 g(1,2)
+    let f2 g(1,2)
 
     f2 $in g(1,2)
 
@@ -30,7 +30,7 @@ prove:
 
     fn g(x N) R
 
-    obj t seq3(R)
+    let t seq3(R)
 
     t $in seq3(R)
 
@@ -82,7 +82,7 @@ prove:
             then:
                 f_template(x) = x + 1  
 
-    obj m f_template()
+    let m f_template()
     m(0) = 0 + 1
 
     # prove xxx $in fn_template

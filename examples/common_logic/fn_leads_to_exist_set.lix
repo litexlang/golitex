@@ -2,19 +2,19 @@
 # More generally, we describe a set as follows: when $m_prop(k) is true, s(k) =  {z | $p(z,k,m), m_prop(k), forall m with m_prop(m)}
 # Here we can see, we actually defined a set of sets: the k in s(k) is the parameter of the set.
 
-obj M set
+let M set
 prop m_prop(m M)
-obj S set
+let S set
 fn f(m M) S
 prop m_s_prop(m M, s S)
-obj K set
+let K set
 fn f_k_m(k K, m M) S
 prop m_s_k_prop(m M, s S, k K)
 
 # when there is no parameter s = {z in S | z = f(m) for all m with $m_prop(m)} = {z | exist m with $m_prop(m), z = f(m)}
 # Here we can see by definition, there might exist m1 != m2 such that f(m1) = f(m2).
 prove:
-    obj s set
+    let s set
     fn m_of_s(x s) M:
         x = f(m_of_s(x))
         m_of_s(x) $m_prop
@@ -26,7 +26,7 @@ prove:
 
 # when there is no parameter, s =  {z in S |  exist m with $m_prop(m), $m_s_prop(m,z)}
 prove:
-    obj s set
+    let s set
     fn m_of_s(x s) M:
         $m_s_prop(m_of_s(x), x)
         m_of_s(x) $m_prop
