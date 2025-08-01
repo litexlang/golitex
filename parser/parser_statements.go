@@ -39,8 +39,6 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.defExistPropStmt()
 	case glob.KeywordFn:
 		ret, err = tb.defFnStmt()
-	case glob.KeywordObj:
-		ret, err = tb.defObjStmt()
 	case glob.KeywordLet:
 		ret, err = tb.defObjStmt()
 	case glob.KeywordHave:
