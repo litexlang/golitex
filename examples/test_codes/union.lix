@@ -17,8 +17,8 @@ know @union_items_in_at_least_one_of_child_set(x obj, s, s2 set):
 
 # Example: union(s, s2) is the union of s and s2
 prove:
-    obj s, s2 set
-    obj x s
+    let s, s2 set
+    let x s
     x $in union(s, s2)
 
     forall s, s2 set, x union(s, s2):

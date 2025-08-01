@@ -65,6 +65,7 @@ const (
 	KeywordSeq  = "seq"
 	KeywordProj = "proj"
 	KeywordNPos = "N_pos"
+	KeywordLet  = "let"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -115,6 +116,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordSeq:                            {},
 	KeywordProj:                           {},
 	KeywordNPos:                           {},
+	KeywordLet:                            {},
 	// KeywordExistSetByAxiomOfReplacement:   {},
 }
 

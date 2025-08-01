@@ -1,4 +1,4 @@
-obj s set:
+let s set:
     s := {1, 2, 3}
 
 prove_over_finite_set:
@@ -6,7 +6,7 @@ prove_over_finite_set:
         x > 0
     prove:
 
-obj s2 set:
+let s2 set:
     s2 := {}
 
 # any factual statement is true on empty set
@@ -16,7 +16,7 @@ prove_over_finite_set:
         x < 0
     prove:
 
-obj s3, s4 set:
+let s3, s4 set:
     s3 := {1, 2, 3}
     s4 := {1, 2, 3}
 

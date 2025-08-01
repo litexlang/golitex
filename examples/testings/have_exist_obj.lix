@@ -28,7 +28,7 @@ prove:
         prove:
             exist x + 1 st $exist_x_larger_than(x)
 
-    obj x R:
+    let x R:
         1 >= x
 
     know forall x R, y R:
@@ -75,7 +75,7 @@ prove:
 
 # have objects from finite sets len > 0
 prove:
-    obj s finite_set:
+    let s finite_set:
         len(s) = 1
     1 > 0
     len(s) > 0
@@ -86,7 +86,7 @@ prove:
 # have objectName st exist_in(setName)
 # it has syntax sugar: have objectName setName
 prove:
-    obj s set, a obj
+    let s set, a obj
     know a $in s
     exist a st $exist_in(s)
     $exist_in(s)

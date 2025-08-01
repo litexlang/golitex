@@ -1,4 +1,4 @@
-obj s set:
+let s set:
     s := x N:
         x > 1
 

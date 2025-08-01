@@ -189,7 +189,7 @@ claim:
     prove:
         have T st $seq_periodic(a)
 
-        obj b, c, d, e finite_seq(R, T):
+        let b, c, d, e finite_seq(R, T):
         	forall n N:
                 n < T
                 then:

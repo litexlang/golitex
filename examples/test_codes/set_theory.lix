@@ -107,7 +107,7 @@ claim:
 
 # Axiom of Specification
 prove:
-    obj A set
+    let A set
     prop P(x A)
 	have set a := x A:
         $P(x)

@@ -1,5 +1,5 @@
 import "./main_repo1_1_global.lix"
 import "./repo1_1_1" as pkg1_1_1
 
-obj a N:
+let a N:
     a = 1
