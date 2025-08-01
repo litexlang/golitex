@@ -1,21 +1,21 @@
 # This file is used to test the builtin fact verification rules
 prove:
-    obj a R:
+    let a R:
         a > 0
     0 < a
     a >= 0
 
-    obj b R:
+    let b R:
         b < 0
     0 > b
     b <= 0
 
-    obj c R:
+    let c R:
         c = 0
     0 = c
     c <= 0
 
-    obj d R:
+    let d R:
         d = 0
     0 = d
     d >= 0
@@ -23,7 +23,7 @@ prove:
 # In fact
 
 prove:
-    obj x N
+    let x N
     x $in N
     x $in Z
     x $in Q
@@ -40,7 +40,7 @@ prove:
     1.1 $in R
     1.1 $in C
 
-    obj y Q
+    let y Q
     y $in Q
     y $in R
     y $in C
@@ -48,22 +48,22 @@ prove:
     x + x $in R
     x + x + x $in R
 
-    obj t Z
+    let t Z
     t $in Z
     t $in Q
     t $in R
     t $in C
 
-    obj z Q
+    let z Q
     z $in Q
     z $in R
     z $in C
 
-    obj w R
+    let w R
     w $in R
     w $in C
 
-    obj v C
+    let v C
     v $in C
 
 # number related
@@ -97,7 +97,7 @@ prove:
     know forall x R, y R, z R: # 分配率
         x * (y + z) = x * y + x * z
         (x + y) * z = x * z + y * z
-    obj a R
+    let a R
     -4 * a + 5 * a = (-4+5) * a # match -4 with x, 5 with y, a with z
     -4 * a + 5 * a = 1 * a # 1 match -4+5
 
@@ -107,7 +107,7 @@ prove:
     prop p(x R)
     know forall x R:
         $p(x + 3*3)
-    obj x R
+    let x R
     $p(x + 3*3)
 
 # Detailed examples
@@ -116,7 +116,7 @@ prove:
     0+1+2+3+4+5+6+7+8+9+10+11+12+13+14+15+16+17+18+19+20+21+22+23+24+25+26+27+28+29+30+31+32+33+34+35+36+37+38+39+40+41+42+43+44+45+46+47+48+49+50+51+52+53+54+55+56+57+58+59+60+61+62+63+64+65+66+67+68+69+70+71+72+73+74+75+76+77+78+79+80+81+82+83+84+85+86+87+88+89+90+91+92+93+94+95+96+97+98+99+100 = 5050 
 
 prove:
-    obj a R
+    let a R
     know:
         a  = 1
     a * 1 =1 # unknown，因为a*1对不上a
@@ -155,10 +155,10 @@ prove:
 
 prove:
 
-    obj x R, y R, z R
+    let x R, y R, z R
 
     -8 = 10 - 18
-    obj a R, b R, c R
+    let a R, b R, c R
     (a + b) + c = a + (b + c)
     - a = -1 * a
 

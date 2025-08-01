@@ -12,12 +12,12 @@ sequence是集合，但是不代表i != j时，s[i] != s[j]，比如 s = {x, x, 
 # 表达 s = {x+y| x != y}
 
 # 表达 s = {y = x^n | n $in N}
-obj s set
+let s set
 fn for_all_y_in_s_there_exists_n_in_N_such_that_y_equals_x_to_the_power_of_n(y s) N:
     y = x^n
 
 # or
-obj s sequence:
+let s sequence:
     forall n N:
         s[n] = x^n
 

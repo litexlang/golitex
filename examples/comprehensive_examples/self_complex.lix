@@ -1,4 +1,4 @@
-obj self_complex set
+let self_complex set
 fn sc(x, y R) self_complex # sc means self_complex
 fn sc_add(x, y self_complex) self_complex
 fn sc_mul(x, y self_complex) self_complex

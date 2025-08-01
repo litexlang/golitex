@@ -1,6 +1,6 @@
 prop p(x R, n N, t R)
 
-obj y R, z R
+let y R, z R
 
 know:
 	forall n N:

@@ -76,7 +76,7 @@ Chapter 1
 
 # Handy builtin rules are there for verifying basic properties of real numbers.
 prove:
-    obj x R, y R, z R
+    let x R, y R, z R
     (x + y) + z = x + (y + z)
     x + y = y + x
     0 + x = x

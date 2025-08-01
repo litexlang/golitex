@@ -1,7 +1,7 @@
 import  "./repo1_1" as pkg1_1
 import "./main_repo1_global.lix"
 
-obj a N:
+let a N:
 # bug: import globally 不能像import dir as pkg那样，让局部看到局部
 #    a = 1
     a = pkg1_1::repo1_1_global_a

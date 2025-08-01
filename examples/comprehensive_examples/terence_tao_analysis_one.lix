@@ -178,11 +178,11 @@ prop is_subset_of(A, B set):
 # Axiom 3.5: Axiom of specification. If A is a set and P is a property, then there exists a set B such that B contains and only contains the elements of A that satisfy P.
 # In Litex you can specify a set very flexibly.
 prove:
-    obj s2 set # define a random set
+    let s2 set # define a random set
     prop property_of_s2_items(x s2) # define a property of the elements of s2
     
     # TODO: Litex will provide the user a syntax sugar for defining a set by a property. Now we use the idea of "if and only if" to define a set by a property.
-    obj s set: # define s = {x in s2| property_of_s2_items(x) is true}
+    let s set: # define s = {x in s2| property_of_s2_items(x) is true}
         s $is_subset_of s2
         forall x s:
             $property_of_s2_items(x)

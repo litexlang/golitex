@@ -110,7 +110,7 @@ claim:
     prove:
         have T st $seq_periodic(a)
 
-        obj b, c, d, e finite_seq(R, T):
+        let b, c, d, e finite_seq(R, T):
         	forall n N: n < T => b(n) = a(n) + a(n+1)
             forall n N: n < T => c(n) = a(n+1) + a(n+2)
             forall n N: n < T => d(n) = c(n) / b(n)
@@ -240,7 +240,7 @@ claim:
                 then:
                     $is_alternating_seq_and_has_bound(a, 1/2)
             prove:
-                obj a2 seq(R):
+                let a2 seq(R):
                     forall n N => a2(n) = a(n) + a(n+1)
 
                 have a2_is_0_index st $exist_two_consecutive_items_whose_sum_is_0(a)

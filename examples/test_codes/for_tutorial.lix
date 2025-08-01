@@ -1,6 +1,6 @@
-obj a, b R
-obj a R, b R
-obj a, b R， c Z
+let a, b R
+let a R, b R
+let a, b R， c Z
 
 # N, N_pos, Z, Q, R
 1 $in N
@@ -14,7 +14,7 @@ obj a, b R， c Z
 let a, b R
 a $in obj
 1 $in obj
-obj $in obj
+let $in obj
 set $in obj
 
 let a, b R:

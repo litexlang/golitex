@@ -16,9 +16,9 @@
 # Congruence, two binary relations, one linking line segments and one linking angles, each denoted by an infix ≅.
 # Line segments, angles, and triangles may each be defined in terms of points and straight lines, using the relations of betweenness and containment. All points, straight lines, and planes in the following axioms are distinct unless otherwise stated.
 
-obj point set
-obj line set
-obj plane set
+let point set
+let line set
+let plane set
 
 prop point_on_line(p point, l line)
 prop point_on_plane(q point, p plane)
@@ -43,7 +43,7 @@ fn line_of(a point, b point) line:
 
 prove:
     # a line is determined by two points
-    obj a point, b point, l line:
+    let a point, b point, l line:
         a != b
         $point_on_line(a, l)
         $point_on_line(b, l)
@@ -76,7 +76,7 @@ know forall a point, l line:
         $exist_at_least_two_points_on_line(a, l)
 
 prove:
-    obj a point, l line:
+    let a point, l line:
         $point_on_line(a, l)
 
     $exist_at_least_two_points_on_line(a, l)
@@ -94,7 +94,7 @@ know @exist c point st exist_one_point_not_on_the_same_line_with_two_points(a po
         not $point_on_line(c, line_of(a, b))
 
 prove:
-    obj a point, b point:
+    let a point, b point:
         a != b
     $exist_one_point_not_on_the_same_line_with_two_points(a, b)
     have c st $exist_one_point_not_on_the_same_line_with_two_points(a, b)
@@ -137,7 +137,7 @@ know @two_points_on_line_then_line_on_plane(a point, b point, l line, p plane):
             $line_on_plane(l, p)
 
 prove:
-    obj a point, b point, l line, p plane:
+    let a point, b point, l line, p plane:
         a != b
         $point_on_plane(a, p)
         $point_on_plane(b, p)
@@ -155,7 +155,7 @@ know @exist b point st two_planes_have_one_common_point_then_they_have_another_c
         $point_on_plane(b, p)
 
 prove:
-    obj a point, p plane, q plane:
+    let a point, p plane, q plane:
         $point_on_plane(a, p)
         $point_on_plane(a, q)
     $two_planes_have_one_common_point_then_they_have_another_common_point(a, p, q)
@@ -220,7 +220,7 @@ know @exist l line st exist_line_through_three_points(a point, b point, c point)
         $point_on_line(c, l)
 
 prove:
-    obj left point, right point, middle point:
+    let left point, right point, middle point:
         left != right
         $between(left, right, middle)
 
@@ -245,7 +245,7 @@ know forall a point, b point:
         $exist_point_right_to_given_two_points(a, b)
 
 prove:
-    obj a point, b point:
+    let a point, b point:
         a != b
 
     $exist_point_right_to_given_two_points(a, b)
@@ -271,7 +271,7 @@ know @no_more_than_one_point_between_three_points_on_line(a point, b point, c po
             $between(c, b, a)
 
 prove:
-    obj a point, b point, c point:
+    let a point, b point, c point:
         a != b
         a != c
         b != c
@@ -291,7 +291,7 @@ prove:
 
 # 4. Pasch's Axiom: Let A, B, C be three points not lying in the same line and let a be a line lying in the plane ABC and not passing through any of the points A, B, C. Then, if the line a passes through a point of the segment AB, it will also pass through either a point of the segment BC or a point of the segment AC.
 
-obj finite_line set
+let finite_line set
 
 fn finite_line_of(a point, b point) finite_line:
     a != b
@@ -319,7 +319,7 @@ know @line_intersect_finite_line_then_line_intersect_line(a point, b point, c po
                 $line_intersect_finite_line(b , c, l)
 
 prove:
-    obj a point, b point, c point, l line:
+    let a point, b point, c point, l line:
         a != b
         a != c
         b != c
@@ -399,7 +399,7 @@ know:
             $finite_line_equal(finite_line_of(a, b), finite_line_of(b, a))
 
 prove:
-    obj middle point, l finite_line
+    let middle point, l finite_line
     $exist_point_left_to_point_with_finite_line_equal_to_given_finite_line(middle, l)
     have left  st $exist_point_left_to_point_with_finite_line_equal_to_given_finite_line(middle, l)
     $point_left_to_point_on_one_line(left, middle, l)
@@ -421,7 +421,7 @@ know @finite_line_equal_transitive(l1 finite_line, l2 finite_line, l3 finite_lin
         $finite_line_equal(l1, l3)
 
 prove:
-    obj l1 finite_line, l2 finite_line, l3 finite_line:
+    let l1 finite_line, l2 finite_line, l3 finite_line:
         $finite_line_equal(l1, l2)
         $finite_line_equal(l2, l3)
     $finite_line_equal_transitive(l1, l2, l3)
@@ -459,7 +459,7 @@ know @addition_keeps_equal_of_finite_lines(a point, b point, c point, a2 point, 
         $finite_line_equal(finite_line_of(a, c), finite_line_of(a2, c2))
 
 prove:
-    obj a point, b point, c point, a2 point, b2 point, c2 point:
+    let a point, b point, c point, a2 point, b2 point, c2 point:
         $on_one_line(a, b, c)
         $on_one_line(a2, b2, c2)
         a != b
@@ -479,9 +479,9 @@ prove:
 
 # TODO: It seems to me that the proposition itself is not that clear. I formalize it in my own understanding.
 
-obj ray set
-obj half_plane set
-obj angle set
+let ray set
+let half_plane set
+let angle set
 
 prop point_on_ray(a point, r ray)
 
@@ -535,7 +535,7 @@ know:
     $commutative_prop(angle_equal)
 
 prove:
-    obj ang1 angle, ang2 angle, ang3 angle:
+    let ang1 angle, ang2 angle, ang3 angle:
         $angle_equal(ang1, ang2)
         $angle_equal(ang2, ang3)
     $angle_equal_transitive(ang1, ang2, ang3)
@@ -543,7 +543,7 @@ prove:
 
 # 6. If, in the two triangles ABC and A′B′C′ the congruences AB ≅ A′B′, AC ≅ A′C′, ∠BAC ≅ ∠B′A′C′ hold, then the congruence ∠ABC ≅ ∠A′B′C′ holds (and, by a change of notation, it follows that ∠ACB ≅ ∠A′C′B′ also holds).
 
-obj triangle set
+let triangle set
 
 fn triangle_of_points(a point, b point, c point) triangle:
     dom:
@@ -584,7 +584,7 @@ know @triangle_equal_by_two_sides_and_included_angle_equal(a point, b point, c p
     then:
         $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(a2, b2, c2))
 prove:
-    obj a point, b point, c point, a2 point, b2 point, c2 point:
+    let a point, b point, c point, a2 point, b2 point, c2 point:
         a != b
         a != c
         b != c
@@ -623,7 +623,7 @@ know @exist l2 line st exist_one_and_only_one_line_through_point_not_intersect_l
         $parallel(l, l2)
 
 prove:
-    obj a point, l line:
+    let a point, l line:
         not $point_on_line(a, l)
 
     $exist_one_and_only_one_line_through_point_not_intersect_line(a, l)
