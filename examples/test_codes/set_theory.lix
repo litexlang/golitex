@@ -233,7 +233,7 @@ prove:
     forall x s:
     	x $in B
 
-    obj y set_defined_by_replacement(A, B, P) # set_defined_by_replacement is like 1,2,3, it has some built-in functions; for example, if we know y $in set_defined_by_replacement(A, B, P), then y $in B is automatically true
+    let y set_defined_by_replacement(A, B, P) # set_defined_by_replacement is like 1,2,3, it has some built-in functions; for example, if we know y $in set_defined_by_replacement(A, B, P), then y $in B is automatically true
     y $in B
 
     have x st $obj_exist_as_preimage_of_prop(A, B, P, y) # y $in set_defined_by_replacement(A, B, P) is equivalent to exist x $in A st $P(x, y)
