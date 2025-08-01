@@ -1,20 +1,11 @@
-# A5 is on page 22 of https://www.imo-official.org/problems/IMO2024SL.pdf
+# A5 is on page 22 of https://www.imo-official.org/problems/IMO2024SL.pdf    
 
-fn finite_seq_sum(n N_pos, a finite_seq(R, n), k N) R:
-    dom:
-        k < n
-
-know:
-    forall n N_pos, a finite_seq(R, n), k N: k < n - 1 => finite_seq_sum(n, a, k+1) = finite_seq_sum(n, a, k) + a(k+1)
-    forall n N_pos, a finite_seq(R, n) => finite_seq_sum(n, a, 0) = a(0)
-
-fn finite_seq_product(n N_pos, a finite_seq(R, n), k N) R:
-    dom:
-        k < n
-
-know:
-    forall n N_pos, a finite_seq(R, n), k N: k < n - 1 => finite_seq_product(n, a, k+1) = finite_seq_product(n, a, k) * a(k+1)
-    forall n N_pos, a finite_seq(R, n) => finite_seq_product(n, a, 0) = a(0)
+# Prior knowledge:
+# 1. AM-GM inequality
+know @AM_GM_inequality(a seq(R), n N):
+	forall k N => a(k) >= 0
+    then:
+    	seq_sum(a, n) / (n+1) >= (seq_product(a, n))^(1/(n+1))
 
 know @AM_GM_inequality_equal_cond(n N_pos, a finite_seq(R, n)):
     forall k N: k < n => a(k) >= 0
@@ -27,24 +18,16 @@ know @AM_GM_inequality_equal_cond_2(n N_pos, a finite_seq(R, n)):
     forall k N, k2 N: k < n, k2 < n => a(k) = a(k2)
     then:
         (finite_seq_sum(n, a, n-1) / n) ^ n = finite_seq_product(n, a, n-1)
-    
-know forall a R: a != 0 => a / a = 1
-know forall a R: a - a = 0 => a = a
-know @periodic_seq_equal_if_first_T_consecutive_items_are_equal(n N_pos, a seq(R)):
-    forall k N: k < n => a(k+1) - a(k) = 0
-    then:
-        forall k1, k2 N: k1 < n, k2 < n => a(k1) = a(k2)
-
-# Prior knowledge:
-# 1. AM-GM inequality
-know @AM_GM_inequality(a seq(R), n N):
-	forall k N => a(k) >= 0
-    then:
-    	seq_sum(a, n) / (n+1) >= (seq_product(a, n))^(1/(n+1))
 
 # 2. Periodic sequence
 exist_prop period N_pos st seq_periodic(a seq(R)):
     forall k N => a(k) = a(k+period)
+
+# could be proved by math induction
+know @periodic_seq_equal_if_first_T_consecutive_items_are_equal(n N_pos, a seq(R)):
+    forall k N: k < n => a(k+1) - a(k) = 0
+    then:
+        forall k1, k2 N: k1 < n, k2 < n => a(k1) = a(k2)
 
 # 3. Product of first k items of finite sequence
 
@@ -213,12 +196,9 @@ claim:
 
 claim:
     forall a seq(R):
-        forall k N:
-        	a(k) = - a(k+1)
-            abs(a(k+1) - a(k)) <= 1
+        forall k N => a(k) = - a(k+1), abs(a(k+1) - a(k)) <= 1
         then:
-            forall k N:
-                abs(a(k)) <= 1/2
+            forall k N => abs(a(k)) <= 1/2
     prove:
         claim:
             abs(a(0)) <= 1/2
@@ -226,10 +206,7 @@ claim:
                 abs(a(0)) > 1/2
                 a(0) = - a(0+1)
                 -a(0) = a(1)
-                =:
-                    a(1) - a(0) 
-                    -a(0) - a(0)
-                    -2 * a(0)
+                =: a(1) - a(0), -a(0) - a(0), -2 * a(0)
                 =:
                     abs(a(1) - a(0)) 
                     abs(-2 * a(0))
@@ -251,19 +228,13 @@ claim:
             prove:
                 a(n) = - a(n+1)
                 abs(a(n)) <= 1/2
-                =:
-                    abs(a(n))
-                    abs(-a(n))
-                    abs(a(n+1))
+                =: abs(a(n)), abs(-a(n)), abs(a(n+1))
                 abs(a(n+1)) <= 1/2
                 $a_n_has_abs_less_than_1_div_2(a, n+1)
 
         prove_by_math_induction($a_n_has_abs_less_than_1_div_2(a, 0), 1, 0)
 
-        forall n N:
-            then:
-                $a_n_has_abs_less_than_1_div_2(a, n)
-                abs(a(n)) <= 1/2
+        forall n N => $a_n_has_abs_less_than_1_div_2(a, n), abs(a(n)) <= 1/2
 
 # Problem
 claim:
@@ -288,58 +259,26 @@ claim:
                     $is_alternating_seq_and_has_bound(a, 1/2)
             prove:
                 obj a2 seq(R):
-                    forall n N:
-                        a2(n) = a(n) + a(n+1)
+                    forall n N => a2(n) = a(n) + a(n+1)
 
                 have a2_is_0_index st $exist_two_consecutive_items_whose_sum_is_0(a)
 
-                =:
-                    0
-                    a(a2_is_0_index) + a(a2_is_0_index+1)
-                    a2(a2_is_0_index)
+                =: 0, a(a2_is_0_index) + a(a2_is_0_index+1), a2(a2_is_0_index)
 
                 know:
-                    forall m N:
-                        m > a2_is_0_index
-                        then:
-                            a2(m) = 0
-
+                    forall m N: m > a2_is_0_index => a2(m) = 0
                     $seq_periodic(a2)
 
                 $periodic_seq_which_is_0_since_n_is_always_0(a2, a2_is_0_index)
 
                 forall k N:
-                    =:
-                        0   
-                        a2(k)
-                        a(k) + a(k+1)
+                    =: 0, a2(k), a(k) + a(k+1)
+                    =: - a(k), 0 - a(k), a(k) + a(k+1) - a(k), a(k+1)
+                    =: a(k), -1 * (- a(k)), -a(k+1)
                     
-                    =:
-                        - a(k)
-                        0 - a(k)
-                        a(k) + a(k+1) - a(k)
-                        a(k+1)
-                    =:
-                        a(k)
-                        -1 * (- a(k))
-                        -a(k+1)
-                    
-                know forall n N:
-                    a(n) = - a(n+1)
-                    abs(a(n+1) - a(n)) <= 1
-                	abs(a(n)) <= 1/2
+                know forall n N => a(n) = - a(n+1), abs(a(n)) <= 1/2, abs(a(n+1) - a(n)) <= 1
 
                 $is_alternating_seq_and_has_bound(a, 1/2)
-                
-"""
-        claim:
-        	forall:
-            	not $exist_two_consecutive_items_whose_sum_is_0(a)
-                then:
-                    $is_identical_seq(a)
-            prove:
-                know $is_identical_seq(a)
-"""
 
         prove_in_each_case:
         	or:
@@ -355,8 +294,7 @@ claim:
                 forall n N:
                     a(n+2) + a(n) * a(n) = a(n) + a(n+1) * a(n+1)
                     a(n+2) + a(n+1) = (a(n+1) + a(n)) * (a(n+1) - a(n) + 1)
-                forall n N:
-                    abs(a(n+1) - a(n)) <= 1
+                forall n N =>abs(a(n+1) - a(n)) <= 1
                 not $exist_two_consecutive_items_whose_sum_is_0(a)
                 $seq_periodic(a)
 
