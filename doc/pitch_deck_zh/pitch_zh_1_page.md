@@ -11,7 +11,7 @@ Litex是一门简单直观、易学易用的形式化语言。沈嘉辰是发明
   </tr>
   <tr>
     <td style="border: 2px solid black; padding: 2px;line-height: 1.5">
-      <code>obj x R, y R:</code><br>
+      <code>let x R, y R:</code><br>
       <code>&nbsp;&nbsp;2 * x + 3 * y = 10</code><br>
       <code>&nbsp;&nbsp;4 * x + 5 * y = 14</code><br>
       <code>2 * (2 * x + 3 * y) = 2 * 10</code><br>

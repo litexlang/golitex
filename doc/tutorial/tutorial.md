@@ -38,14 +38,14 @@ Litex is the perfect language for you. I hope you will enjoy it.
 Let's try some simple Litex commands. Perhaps the most representative example of how reasoning works is Syllogism (三段论), proposed by Greek philosopher Aristotle.
 
 ```
-obj human set
+let human set
 prop intelligent(x human)
 
 know:
     forall x human:
         $intelligent(x)
 
-obj Jordan human
+let Jordan human
 $intelligent(Jordan) # check whether Jordan is intelligent
 ```
 
@@ -60,7 +60,7 @@ There are two things in math: objects and factual statements. Objects are the th
 Let's explain the above code statement by statement.
 
 ```
-obj human set
+let human set
 ```
 
 Modern mathematics is built upon set theory (Do not worry if you are not familiar with set theory. You will get familiar with it in the future). In Litex, we use `obj` to define a set of objects. Here, we define a set of objects called `human`.
@@ -90,10 +90,10 @@ The body of the `know` statement is indented. Indentation is Litex's way of grou
 Universal Quantification `forall` is a Litex keyword referring to "for all" in math. It means the following statement is true for all objects when parameters all satisfy given conditions. For example, `forall x human: $intelligent(x)` means the factual statement `intelligent(x)` is true for all objects `x` that are members of the set `human`. A factual statement is a statement that is either true or false, and must start with `$`, to differentiate it from a function.
 
 ```
-obj Jordan human
+let Jordan human
 ```
 
-Litex keyword `obj` introduces a new object into current context. When you use `obj` to introduce a new object, you have to specify the set that the object belongs to. For example, `obj Jordan human` means `Jordan` is a member of the set `human`.
+Litex keyword `obj` introduces a new object into current context. When you use `obj` to introduce a new object, you have to specify the set that the object belongs to. For example, `let Jordan human` means `Jordan` is a member of the set `human`.
 
 ```
 $intelligent(Jordan)
@@ -104,7 +104,7 @@ $intelligent(Jordan)
 After running all the above code, the Litex interpreter will output the messages like this (the exact output might be different):
 
 ```
-obj human set
+let human set
 
 prop intelligent(x)
 
@@ -113,7 +113,7 @@ know:
         then:
             $intelligent(x)
 
-obj Alice
+let Alice
 
 $intelligent(Alice)
 is true. proved by
@@ -163,10 +163,10 @@ Comments are used to explain the code. They are ignored by the Litex interpreter
 
 ```
 prove:  # prove opens a new proof context.
-    obj Kobe human # This object is defined in the prove context.
+    let Kobe human # This object is defined in the prove context.
     $intelligent(Kobe)
 
-obj Kobe human # This Kobe is different from the Kobe in the prove context, because it is defined in the main context.
+let Kobe human # This Kobe is different from the Kobe in the prove context, because it is defined in the main context.
 ```
 
 `prove` statements opens a new and local proof context. It can see all previous facts in the main context, but it cannot affect it. In this example, the `Kobe` object only exists in the `prove` context, and it is different from the `Kobe` object in the `obj` statement. After leaving the `prove` context, the `Kobe` object will be forgotten. `prove` is used to keep the main context clean and make small drafts.
@@ -347,8 +347,8 @@ By a related known specific fact we mean a known specific fact has exactly the s
 
 ```
 prove:
-    obj Stephen human
-    obj Curry human
+    let Stephen human
+    let Curry human
     
     know:
         $male(Stephen)
@@ -377,7 +377,7 @@ Here is a detailed example showing how we use `match and substitute` to verify a
 
 ```
 prove:
-    obj cat set
+    let cat set
     prop is_cute(x cat)
     prop physical(x human)
     prop strong(x human)
@@ -501,8 +501,8 @@ Here is an example of how to define an existential proposition, verify it, and u
 
 ```
 prove:
-    obj Kevin human
-    obj Durant human
+    let Kevin human
+    let Durant human
 
     prop p(x human, y human)
     prop q(x human, y human)
@@ -540,7 +540,7 @@ The main use of `exist` statement is by using known `exist` statement to work wi
 
 ```
 prove:
-    obj James human
+    let James human
     prop P(x human)
     or:
         $P(James)
@@ -601,7 +601,7 @@ If a function has exactly two parameters, you can put the function name infix, w
 
 A set is a collection of objects. In Litex, the parameter list must specify the sets of their parameters. For example, `prop p(x human, y human)` means `p` is a proposition about two human objects. This makes Litex strict and aligned with the set theory.
 
-Unlike types in programming languages, sets in Litex are not a type. An object can be a member of multiple sets. For example, `obj Jordan human` means `Jordan` is defined to be in set `human`. And `know $in(Jordan, basketball_player)` means `Jordan` is defined to be in set `basketball_player`.
+Unlike types in programming languages, sets in Litex are not a type. An object can be a member of multiple sets. For example, `let Jordan human` means `Jordan` is defined to be in set `human`. And `know $in(Jordan, basketball_player)` means `Jordan` is defined to be in set `basketball_player`.
 
 ## Proof Related Statements
 
@@ -613,7 +613,7 @@ There are several more statements related to proof. `prove_by_contradiction` is 
 prove:
     prop P(x N)
     prop Q(x N)
-    obj n N
+    let n N
     
     know:
         forall x N:
@@ -636,7 +636,7 @@ In natural language, the above example says all natural numbers `x` are such tha
 
 ```
 prove:
-    obj Joker human
+    let Joker human
     prop P(x human)
     prop Q(x human)
     prop R(x human)
