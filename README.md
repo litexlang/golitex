@@ -54,7 +54,7 @@ Currently, the bottleneck in this field is that formal languages are too difficu
 
 To install or update Litex core, you could run the following commands for different systems.
 
-For macOS user with Homebrew:
+### macOS
 
 ```bash
 # install
@@ -63,55 +63,35 @@ brew install litexlang/tap/litex
 # update
 brew update && brew upgrade
 
-# run litex in your terminal
+# run litex
 litex
 ```
 
-For Ubuntu user with wget command:
+### Ubuntu/Debian
 
-amd64 architecture install or update:
+Install or update for amd64 architecture :
+
 ```bash
 # install or update
 wget https://github.com/litexlang/golitex/releases/download/v0.1.7-beta/litex_0.1.7-beta_amd64.deb
 sudo dpkg -i litex_0.1.7-beta_amd64.deb
 
-# run litex in your terminal
+# run litex
 litex
 ```
 
-arm64 architecture install or update:
+Install or update for arm64 architecture:
+
 ```bash
 # install or update
 wget https://github.com/litexlang/golitex/releases/download/v0.1.7-beta/litex_0.1.7-beta_arm64.deb
 sudo dpkg -i litex_0.1.7-beta_arm64.deb
 
-# run litex in your terminal
+# run litex
 litex
 ```
 
-For Ubuntu user with curl command:
-
-amd64 architecture install or update:
-```bash
-# install or update
-curl -O https://github.com/litexlang/golitex/releases/download/v0.1.7-beta/litex_0.1.7-beta_amd64.deb
-sudo dpkg -i litex_0.1.7-beta_amd64.deb
-
-# run litex in your terminal
-litex
-```
-
-arm64 architecture install or update:
-```bash
-# install or update
-curl -O https://github.com/litexlang/golitex/releases/download/v0.1.7-beta/litex_0.1.7-beta_arm64.deb
-sudo dpkg -i litex_0.1.7-beta_arm64.deb
-
-# run litex in your terminal
-litex
-```
-
-For windows user:
+### windows
 
 ```bash
 pending...
