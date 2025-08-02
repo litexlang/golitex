@@ -147,10 +147,6 @@ func (ver *Verifier) verSpecialSpecFact_ByBIR(stmt *ast.SpecFactStmt, state VerS
 		return ver.varCommutativeProp_BuiltinRules(stmt, state)
 	}
 
-	// if stmt.NameIs(glob.KeySymbolEqualEqual) {
-	// 	return ver.isFnEqualFact_Check_BuiltinRules(stmt, state)
-	// }
-
 	return false, nil
 }
 
@@ -290,10 +286,6 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 func (ver *Verifier) verSpecFactLogicMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	var ok bool
 	var err error
-	// ok, err := ver.verSpecFact_BySpecMem(stmt, state)
-	// if isErrOrOk(ok, err) {
-	// 	return ok, err
-	// }
 
 	ok, err = ver.verSpecFact_ByLogicMem(stmt, state)
 	if isErrOrOk(ok, err) {
