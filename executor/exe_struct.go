@@ -18,8 +18,6 @@ import (
 	env "golitex/environment"
 )
 
-// type Executor env.Env
-
 type Executor struct {
 	env *env.Env
 }

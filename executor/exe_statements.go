@@ -199,19 +199,6 @@ func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt, requireMsg bool) error {
 	return ver.NewDefObj_InsideAtomsDeclared(stmt)
 }
 
-// func (exec *Executor) defFnTemplateStmt(stmt *ast.DefFnTemplateStmt) error {
-// 	if glob.RequireMsg() {
-// 		defer exec.newMsg(fmt.Sprintf("%s\n", stmt))
-// 	}
-
-// 	err := exec.env.ExecDefFnTemplate(stmt)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	return nil
-// }
-
 func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) error {
 	// TODO 像定义这样的经常被调用的 事实，应该和普通的事实分离开来，以便于调用吗?
 	if glob.RequireMsg() {

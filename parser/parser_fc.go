@@ -94,15 +94,6 @@ func (tb *tokenBlock) fcAtomAndFcFn() (ast.Fc, error) {
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
-		// dot
-		if tb.header.is(glob.MemberAccessOpt) {
-			tb.header.skip(glob.MemberAccessOpt)
-			dotFc, err := tb.rawFcAtom()
-			if err != nil {
-				return nil, tbErr(err, tb)
-			}
-			ret = ast.NewFcFn(ast.FcAtom(glob.MemberAccessOpt), []ast.Fc{ret, dotFc})
-		}
 		return ret, nil
 	}
 }
