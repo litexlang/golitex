@@ -15,44 +15,18 @@
 package litex_global
 
 const Scope4Indents string = "    "
-
-// const EmptyPkgName = ""
 const EmptyPkg string = ""
-
-// const BuiltinUnaryPkgName = "#"
 const MultiLinesCommentSig string = "\"\"\""
 const MaxNameLen int = 255
-
 const FuncFactPrefix string = "$"
-
-// const BuiltinExist_St_FactExistParamPropParmSep string = KeySymbolSemicolon
-
 const CommentSig string = "#"
-
-const FactMaxNumInLogicExpr int = 255
-const MaxLogicExprStmtIndexesSize int = 255
-
 const RelaFnPrefix string = "\\"
-
-// const VerifyFcSatisfySpecFactParaReq bool = true
-const VerifyFcSatisfySpecFactParaReq bool = false
-
-const ProofContinuesIfUnknown bool = true
-
 const KnowSpecFactByDef = true
-
 const ContinueExecutionIfExecUnknown bool = false
-
 const MaxLogicExprFactsNum int = 8
-
 const TupleAtOp string = "[]"
-
 const BuiltinPkgName string = ""
-
-const MemberAccessOpt string = KeySymbolDot
+const TupleFcFnHead string = "()"
+const CheckFalse = false
 
 var AssumeImportFilesAreTrue bool = false
-
-const TupleFcFnHead string = "()"
-
-const CheckFalse = false
