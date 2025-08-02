@@ -21,7 +21,6 @@ const MaxNameLen int = 255
 const FuncFactPrefix string = "$"
 const CommentSig string = "#"
 const RelaFnPrefix string = "\\"
-const KnowSpecFactByDef = true
 const ContinueExecutionIfExecUnknown bool = false
 const MaxLogicExprFactsNum int = 8
 const TupleAtOp string = "[]"
