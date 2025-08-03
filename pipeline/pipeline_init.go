@@ -32,8 +32,8 @@ func pipelineExecutorInit() (*exe.Executor, error) {
 	curEnv := env.NewEnv(nil)
 	curEnv.Init()
 	executor := exe.NewExecutor(curEnv)
-	executor.NewEnv(curEnv)
 	err := useHardcodedCodeToInit(executor)
+	executor.NewEnv(curEnv)
 	if err != nil {
 		return nil, err
 	}

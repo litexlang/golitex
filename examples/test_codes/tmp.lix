@@ -1,4 +1,6 @@
 let a R:
-	a = 1
+    a = 1
+
+#clear
 
 a = 1
