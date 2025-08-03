@@ -236,3 +236,5 @@ type FnTStruct struct {
 	DomFacts  FactStmtSlice
 	ThenFacts FactStmtSlice
 }
+
+type ClearStmt struct{}

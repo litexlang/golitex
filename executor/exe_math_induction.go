@@ -23,7 +23,7 @@ import (
 
 func (exec *Executor) proveByMathInduction(stmt *ast.ProveByMathInductionStmt) (glob.ExecState, error) {
 	isTrue := false
-	exec.newEnv(exec.env)
+	exec.NewEnv(exec.env)
 	var resultingFact *ast.UniFactStmt
 
 	defer func() {

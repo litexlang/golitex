@@ -52,6 +52,7 @@ func (s *EqualsFactStmt) stmt()                  {}
 func (s *KnowExistPropStmt) stmt()               {}
 func (s *CommentStmt) stmt()                     {}
 func (s *FnTemplateDefStmt) stmt()               {}
+func (s *ClearStmt) stmt()                       {}
 
 type FactStmt interface {
 	factStmt()
