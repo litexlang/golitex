@@ -1,6 +1,13 @@
-let a R:
-    a = 1
+have set a := x R:
+    x > 0
 
-#clear
+forall x a:
+    x $in R
+    x > 0
 
-a = 1
+let a set
+
+know forall z a:
+    z $in set
+
+let b a
