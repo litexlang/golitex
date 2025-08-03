@@ -499,7 +499,8 @@ func (exec *Executor) fnTemplateStmt(stmt *ast.FnTemplateDefStmt) error {
 
 func (exec *Executor) clearStmt() error {
 	curEnv := exec.env
-	for curEnv := exec.env; curEnv.Parent != nil; curEnv = curEnv.Parent {
+	for curEnv.Parent != nil {
+		curEnv = curEnv.Parent
 	}
 	exec.env = curEnv
 	return nil

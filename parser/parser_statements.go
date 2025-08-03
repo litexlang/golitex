@@ -2070,5 +2070,14 @@ func (tb *tokenBlock) inlineUniFact_Param_ParamSet_ParamInSetFacts() ([]string, 
 }
 
 func (tb *tokenBlock) clearStmt() (ast.Stmt, error) {
+	err := tb.header.skip(glob.KeywordClear)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	if !tb.header.ExceedEnd() {
+		return nil, fmt.Errorf("expect end of line")
+	}
+
 	return ast.NewClearStmt(), nil
 }
