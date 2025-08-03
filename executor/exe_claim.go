@@ -26,7 +26,7 @@ import (
 func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) (glob.ExecState, error) {
 	isSuccess := false
 
-	exec.newEnv(exec.env)
+	exec.NewEnv(exec.env)
 	if glob.RequireMsg() {
 		defer func() {
 			exec.newMsg("\n")
@@ -189,7 +189,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecState, 
 	err := error(nil)
 	isSuccess := false
 
-	exec.newEnv(exec.env)
+	exec.NewEnv(exec.env)
 	if glob.RequireMsg() {
 		defer func() {
 			exec.newMsg("\n")
@@ -330,7 +330,7 @@ func (exec *Executor) checkClaimExistPropStmtProofs(stmt *ast.ClaimExistPropStmt
 func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimPropStmt) (glob.ExecState, error) {
 	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFacts, stmt.Prop.ThenFacts)
 
-	exec.newEnv(exec.env)
+	exec.NewEnv(exec.env)
 	defer func() {
 		exec.deleteEnvAndRetainMsg()
 	}()
@@ -347,7 +347,7 @@ func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimPropStmt) (glob.Ex
 }
 
 func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimPropStmt) (glob.ExecState, error) {
-	exec.newEnv(exec.env)
+	exec.NewEnv(exec.env)
 	defer func() {
 		exec.deleteEnvAndRetainMsg()
 	}()
