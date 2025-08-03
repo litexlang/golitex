@@ -78,6 +78,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		_, err = exec.knowExistPropStmt(stmt)
 	case *ast.FnTemplateDefStmt:
 		err = exec.fnTemplateStmt(stmt)
+	case *ast.ClearStmt:
+		exec.clearStmt()
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}
@@ -267,7 +269,7 @@ func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) (glob.E
 }
 
 func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEachCaseStmt) (glob.ExecState, error) {
-	exec.newEnv(exec.env)
+	exec.NewEnv(exec.env)
 	defer exec.deleteEnvAndRetainMsg()
 
 	caseStmt := stmt.OrFact.Facts[index]
@@ -340,7 +342,7 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
 
 func (exec *Executor) proveStmt(stmt *ast.ProveStmt) (glob.ExecState, error) {
 	// new env
-	exec.newEnv(exec.env)
+	exec.NewEnv(exec.env)
 	defer exec.deleteEnvAndRetainMsg()
 
 	return exec.execStmtsAtCurEnv(stmt.Proof)
@@ -492,5 +494,13 @@ func (exec *Executor) fnTemplateStmt(stmt *ast.FnTemplateDefStmt) error {
 		return err
 	}
 
+	return nil
+}
+
+func (exec *Executor) clearStmt() error {
+	curEnv := exec.env
+	for curEnv := exec.env; curEnv.Parent != nil; curEnv = curEnv.Parent {
+	}
+	exec.env = curEnv
 	return nil
 }

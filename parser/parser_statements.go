@@ -89,6 +89,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.commentStmt()
 	case glob.KeywordFnTemplate:
 		ret, err = tb.fnTemplateStmt()
+	case glob.KeywordClear:
+		ret, err = tb.clearStmt()
 	default:
 		ret, err = tb.factStmt(UniFactDepth0)
 	}
@@ -306,37 +308,6 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 
 	return ast.NewDefPropStmt(declHeader, domFacts, iffFacts, []ast.FactStmt{}), nil
 }
-
-// func (tb *tokenBlock) fnTemplateStmt(keyword string) (string, *ast.FnTemplateNoName, error) {
-// 	err := tb.header.skip(keyword)
-// 	if err != nil {
-// 		return "", nil, tbErr(err, tb)
-// 	}
-
-// 	decl, err := tb.defHeaderWithoutParsingColonAtEnd()
-// 	if err != nil {
-// 		return "", nil, tbErr(err, tb)
-// 	}
-
-// 	retSet, err := tb.RawFc()
-// 	if err != nil {
-// 		return "", nil, tbErr(err, tb)
-// 	}
-
-// 	domFacts := []ast.FactStmt{}
-// 	thenFacts := []ast.FactStmt{}
-
-// 	if tb.header.is(glob.KeySymbolColon) {
-// 		tb.header.skip("")
-// 		// domFacts, thenFacts, _, err = tb.uniFactBodyFacts(UniFactDepth1, glob.KeywordThen)
-// 		domFacts, thenFacts, err = tb.dom_and_section(glob.KeywordThen, glob.KeywordIff)
-// 		if err != nil {
-// 			return "", nil, tbErr(err, tb)
-// 		}
-// 	}
-
-// 	return string(decl.Name), ast.NewFnTemplateNoName(decl.Params, decl.ParamSets, retSet, domFacts, thenFacts), nil
-// }
 
 func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 	err := tb.header.skip("")
@@ -2096,4 +2067,8 @@ func (tb *tokenBlock) inlineUniFact_Param_ParamSet_ParamInSetFacts() ([]string, 
 	}
 
 	return params, setParams, nil
+}
+
+func (tb *tokenBlock) clearStmt() (ast.Stmt, error) {
+	return ast.NewClearStmt(), nil
 }
