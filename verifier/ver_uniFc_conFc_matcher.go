@@ -31,7 +31,6 @@ func (ver *Verifier) matchStoredUniSpecWithSpec_preventDifferentVarsMatchTheSame
 	retMap := map[string][]ast.Fc{}
 
 	for i, uniParam := range knownFact.SpecFact.Params {
-		// matchMap, matched, err := ver.match_FcInFactUnderUniFact_WithConFc(uniParam, stmt.Params[i], knownFact.UniFact.Params)
 		matchMap, matched, err := ver.match_FcInFactUnderUniFact_WithConFc(uniParam, stmt.Params[i], knownFact)
 		if err != nil {
 			return nil, false, err
@@ -47,7 +46,6 @@ func (ver *Verifier) matchStoredUniSpecWithSpec_preventDifferentVarsMatchTheSame
 
 func isFcAtomInForallParamSet(fcAtom ast.FcAtom, knownFact env.KnownSpecFact_InUniFact) bool {
 	for _, param := range knownFact.UniFact.Params {
-		// if fcAtom.PkgName == glob.EmptyPkg && param == fcAtom.Name {
 		if param == string(fcAtom) {
 			return true
 		}
@@ -75,32 +73,8 @@ func (ver *Verifier) match_FcInFactUnderUniFact_WithConFc(fcInFactUnderUniFact a
 		return ver.match_FcFnInFactUnderUniFact_ConFc(fcInFactUnderUniFact.(*ast.FcFn), conFc, knownFact)
 	}
 
-	// 注意到，如果传入的不是fn，而是atom，那大概率是不能match上的。只有一种例外:
-	// know forall x A: $p(x *(3-2)); $p(1*1) 这时候 3 -2 要能和1对上。而 uniFunc 的对应关系，只是让自由变量去对应，不包括builtinFc的match
-	// 同时，也不能直接去CmpFcRule，因为如果输入的变量的字面量刚好是存着的自由变量的字面量，那恰好相等了，这是不行的。只能是BuiltinFc 之间相等
-	// 为了处理这种情况，引入下面这段代码
-	// ok, err := cmp.BuiltinFcEqualRule(fcInFactUnderUniFact, conFc)
-	// if err != nil {
-	// 	return nil, false, err
-	// }
-	// if ok {
-	// 	return make(map[string][]ast.Fc), true, nil
-	// }
-
-	// // Safe type switching
-	// switch param := fcInFactUnderUniFact.(type) {
-	// case ast.FcAtom:
-	// 	// return ver.match_FcAtomInFactUnderUniFact_ConFc(param, conFc, uniFactUniParams)
-	// 	return ver.match_FcAtomInFactUnderUniFact_ConFc(param, conFc)
-	// case *ast.FcFn:
-	// 	// return ver.match_FcFnInFactUnderUniFact_ConFc(param, conFc, uniFactUniParams)
-	// 	return ver.match_FcFnInFactUnderUniFact_ConFc(param, conFc)
-	// default:
-	// 	return nil, false, fmt.Errorf("unexpected type %T for parameter %s", param, fcInFactUnderUniFact.String())
-	// }
 }
 
-// func (ver *Verifier) match_FcAtomInFactUnderUniFact_ConFc(fcAtomInFactUnderUniFact ast.FcAtom, conFc ast.Fc, uniParams []string) (map[string][]ast.Fc, bool, error) {
 func (ver *Verifier) match_FcAtomInFactUnderUniFact_ConFc(fcAtomInFactUnderUniFact ast.FcAtom, conFc ast.Fc, knownFact env.KnownSpecFact_InUniFact) (map[string][]ast.Fc, bool, error) {
 	retMap := make(map[string][]ast.Fc)
 
@@ -109,8 +83,6 @@ func (ver *Verifier) match_FcAtomInFactUnderUniFact_ConFc(fcAtomInFactUnderUniFa
 		return retMap, true, nil
 	}
 
-	// ok, err := ver.iterateOverKnownSpecEqualFactsAndCheck(fcAtomInFactUnderUniFact, conFc)
-	// ok, err := ver.makeFcEqualFactAndVerify(fcAtomInFactUnderUniFact, conFc, SpecNoMsg)
 	ok, err := ver.fcEqualSpec(fcAtomInFactUnderUniFact, conFc, FinalRoundNoMsg)
 	if err != nil {
 		return nil, false, err
@@ -122,7 +94,6 @@ func (ver *Verifier) match_FcAtomInFactUnderUniFact_ConFc(fcAtomInFactUnderUniFa
 	return nil, false, nil
 }
 
-// func (ver *Verifier) match_FcFnInFactUnderUniFact_ConFc(fcFnUnFactUnderUniFact *ast.FcFn, conFc ast.Fc, uniParams []string) (map[string][]ast.Fc, bool, error) {
 func (ver *Verifier) match_FcFnInFactUnderUniFact_ConFc(fcFnUnFactUnderUniFact *ast.FcFn, conFc ast.Fc, knownFact env.KnownSpecFact_InUniFact) (map[string][]ast.Fc, bool, error) {
 	retMap := map[string][]ast.Fc{}
 
@@ -132,7 +103,6 @@ func (ver *Verifier) match_FcFnInFactUnderUniFact_ConFc(fcFnUnFactUnderUniFact *
 	}
 
 	// match head
-	// matchMap, ok, err := ver.match_FcInFactUnderUniFact_WithConFc(fcFnUnFactUnderUniFact.FnHead, conParamAsFcFn.FnHead, uniParams)
 	matchMap, ok, err := ver.match_FcInFactUnderUniFact_WithConFc(fcFnUnFactUnderUniFact.FnHead, conParamAsFcFn.FnHead, knownFact)
 	if err != nil {
 		return nil, false, err
@@ -147,7 +117,6 @@ func (ver *Verifier) match_FcFnInFactUnderUniFact_ConFc(fcFnUnFactUnderUniFact *
 	}
 
 	for i, uniPipe := range fcFnUnFactUnderUniFact.Params {
-		// matchMap, ok, err := ver.match_FcInFactUnderUniFact_WithConFc(param, conParamAsFcFn.ParamSegs[i][j], uniParams)
 		matchMap, ok, err := ver.match_FcInFactUnderUniFact_WithConFc(uniPipe, conParamAsFcFn.Params[i], knownFact)
 		if err != nil {
 			return nil, false, err
