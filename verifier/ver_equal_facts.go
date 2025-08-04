@@ -116,6 +116,12 @@ func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state VerState) (boo
 		}
 	}
 
+	// if ok, err := ver.verEqualBuiltin(left, right, state); err != nil {
+	// 	return false, err
+	// } else if ok {
+	// 	return true, nil
+	// }
+
 	return false, nil
 }
 
