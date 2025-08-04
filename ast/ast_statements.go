@@ -150,11 +150,6 @@ type EnumStmt struct {
 	Items  FcSlice
 }
 
-// 本质上这可能是不必要的，我应该让需要global的文件全部以main开头，这样就可以分辨哪些要global了，即import一个以main作为文件名开头的文件默认是 import globally
-// type ImportGloballyStmt struct {
-// 	Path string
-// }
-
 type ImportFileStmt struct {
 	Path string
 }
