@@ -381,6 +381,11 @@ func (tb *tokenBlock) claimStmt() (ast.ClaimInterface, error) {
 	proof := []ast.Stmt{}
 
 	isProve := true
+
+	if len(tb.body) != 2 {
+		return nil, fmt.Errorf("expect 'prove' or 'prove_by_contradiction' after claim")
+	}
+
 	if tb.body[1].header.is(glob.KeywordProveByContradiction) {
 		isProve = false
 		err := tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordProveByContradiction)
