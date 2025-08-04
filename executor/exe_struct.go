@@ -18,8 +18,6 @@ import (
 	env "golitex/environment"
 )
 
-// type Executor env.Env
-
 type Executor struct {
 	env *env.Env
 }
@@ -32,7 +30,7 @@ func NewExecutor(curEnv *env.Env) *Executor {
 	}
 }
 
-func (e *Executor) newEnv(parent *env.Env) *env.Env {
+func (e *Executor) NewEnv(parent *env.Env) *env.Env {
 	e.env = env.NewEnv(parent)
 	return e.env
 }

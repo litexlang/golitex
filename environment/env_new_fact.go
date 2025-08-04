@@ -186,11 +186,7 @@ func (env *Env) newPureFactPostProcess(fact *ast.SpecFactStmt) error {
 
 	if ok {
 		if fact.TypeEnum == ast.TruePure {
-			if glob.KnowSpecFactByDef {
-				return env.newTruePureFact_EmitFactsKnownByDef(fact)
-			} else {
-				return nil
-			}
+			return env.newTruePureFact_EmitFactsKnownByDef(fact)
 		}
 		return nil
 	}
@@ -200,17 +196,13 @@ func (env *Env) newPureFactPostProcess(fact *ast.SpecFactStmt) error {
 		if fact.TypeEnum == ast.TruePure {
 			return nil
 		} else {
-			if glob.KnowSpecFactByDef {
-				for _, thenFact := range existPropDef.DefBody.IffFacts {
-					_, ok := thenFact.(*ast.SpecFactStmt)
-					if !ok {
-						return nil
-					}
+			for _, thenFact := range existPropDef.DefBody.IffFacts {
+				_, ok := thenFact.(*ast.SpecFactStmt)
+				if !ok {
+					return nil
 				}
-				return env.newFalseExistFact_EmitEquivalentUniFact(fact)
-			} else {
-				return nil
 			}
+			return env.newFalseExistFact_EmitEquivalentUniFact(fact)
 		}
 	}
 
