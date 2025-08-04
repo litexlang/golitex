@@ -1,0 +1,11 @@
+import "subseq"
+
+exist_prop period N_pos st periodic(a seq(R)):
+    forall k N => a(k) = a(k+period)
+
+prop is_identical_seq(a seq(R)):
+    forall n,m N => a(n) = a(m)
+
+prop is_alternating_seq_and_has_bound(a seq(R), bound R):
+    bound > 0
+    forall n N => a(n) = -a(n+1), abs(a(n)) <= bound
