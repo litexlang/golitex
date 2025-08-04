@@ -1047,8 +1047,9 @@ func (tb *tokenBlock) importStmt() (ast.ImportStmtInterface, error) {
 		if strings.HasSuffix(importPath, ".lix") {
 			return ast.NewImportFileStmt(importPath), nil
 		} else {
-			// 如果importPath不以.lix结尾，往后面添加main.lix, 即 repoPath/main.lix
-			return ast.NewImportFileStmt(filepath.Join(importPath, "main.lix")), nil
+			// 得到 path 的最后一位，默认是 repo 的 repo 名
+			lastPart := filepath.Base(importPath)
+			return ast.NewImportStmt(importPath, lastPart), nil
 		}
 	}
 

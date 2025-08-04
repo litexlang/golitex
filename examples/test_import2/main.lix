@@ -1,0 +1,9 @@
+import "seq"
+
+let a seq(R):
+	$seq::periodic(a)
+
+have T st $seq::periodic(a)
+
+forall n N:
+    a(n) = a(n+T)
