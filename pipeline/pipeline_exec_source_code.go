@@ -80,10 +80,12 @@ func ExecuteCodeAndReturnMessageSliceGivenSettings(code string, executor *exe.Ex
 		if err != nil {
 			return nil, glob.SysSignalRuntimeError, err
 		}
-		if execState != glob.ExecState_True {
-			return nil, glob.SysSignalRuntimeError, fmt.Errorf("execution failed")
-		}
+
 		msgOfTopStatements = append(msgOfTopStatements, executor.GetMsgAsStr0ToEnd())
+
+		if execState != glob.ExecState_True {
+			return msgOfTopStatements, glob.SysSignalRuntimeError, fmt.Errorf("execution failed")
+		}
 	}
 
 	return msgOfTopStatements, glob.SysSignalTrue, nil
