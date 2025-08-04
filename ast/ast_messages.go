@@ -734,3 +734,7 @@ func (stmt *FnTemplateDefStmt) String() string {
 
 	return builder.String()
 }
+
+func (stmt *ClearStmt) String() string {
+	return glob.KeywordClear
+}

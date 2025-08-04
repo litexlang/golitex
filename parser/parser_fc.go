@@ -94,15 +94,6 @@ func (tb *tokenBlock) fcAtomAndFcFn() (ast.Fc, error) {
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
-		// dot
-		if tb.header.is(glob.MemberAccessOpt) {
-			tb.header.skip(glob.MemberAccessOpt)
-			dotFc, err := tb.rawFcAtom()
-			if err != nil {
-				return nil, tbErr(err, tb)
-			}
-			ret = ast.NewFcFn(ast.FcAtom(glob.MemberAccessOpt), []ast.Fc{ret, dotFc})
-		}
 		return ret, nil
 	}
 }
@@ -124,21 +115,13 @@ func (tb *tokenBlock) rawFcAtom() (ast.FcAtom, error) {
 		}
 	}
 
-	// if glob.IsBuiltinKeywordKeySymbol_NeverBeFcAtom(value) {
-	// return ast.NewFcAtom(glob.BuiltinPkgName, value), fmt.Errorf("invalid first citizen: %s", value)
-	// 	return ast.NewFcAtom(value), fmt.Errorf("invalid first citizen: %s", value)
-	// } else {
-	// 不是内置元素，不是数字
 	if glob.CurrentPkg != "" && !glob.IsBuiltinKeywordOrBuiltinSymbolOrNumber(value) {
 		values = append([]string{glob.CurrentPkg}, values...)
 	}
 
 	values = append(values, value)
 
-	// return ast.NewFcAtom(strings.Join(pkgNames, glob.KeySymbolColonColon), value), nil
 	return ast.FcAtom(strings.Join(values, glob.KeySymbolColonColon)), nil
-
-	// }
 }
 
 func (tb *tokenBlock) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence) (ast.Fc, error) {
@@ -197,14 +180,6 @@ func (tb *tokenBlock) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence) (ast.Fc
 	return left, nil
 }
 
-// func (tb *tokenBlock) fcPrimaryExpr() (ast.Fc, error) {
-// 	if tb.ExceedEnd() {
-// 		return nil, fmt.Errorf("unexpected end of input, expected expression")
-// 	}
-
-// 	return tb.unaryOptFc()
-// }
-
 // TODO： 现在只有 - 是单目运算符，其他都是双目运算符。以后可能会添加其他单目运算符
 func (tb *tokenBlock) unaryOptFc() (ast.Fc, error) {
 	unaryOp, err := tb.header.currentToken()
@@ -212,8 +187,6 @@ func (tb *tokenBlock) unaryOptFc() (ast.Fc, error) {
 		return nil, err
 	}
 	if unaryOp != glob.KeySymbolMinus {
-		// if !glob.(unaryOp) {
-		// return tb.fcAtomAndFcFn()
 		return tb.squareBracketExpr()
 	} else {
 		tb.header.skip(unaryOp)

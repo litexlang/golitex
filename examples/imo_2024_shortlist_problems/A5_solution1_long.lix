@@ -1,21 +1,5 @@
 # A5 is on page 22 of https://www.imo-official.org/problems/IMO2024SL.pdf
 
-fn finite_seq_sum(n N_pos, a finite_seq(R, n), k N) R:
-    dom:
-        k < n
-
-know:
-    forall n N_pos, a finite_seq(R, n), k N: k < n - 1 => finite_seq_sum(n, a, k+1) = finite_seq_sum(n, a, k) + a(k+1)
-    forall n N_pos, a finite_seq(R, n) => finite_seq_sum(n, a, 0) = a(0)
-
-fn finite_seq_product(n N_pos, a finite_seq(R, n), k N) R:
-    dom:
-        k < n
-
-know:
-    forall n N_pos, a finite_seq(R, n), k N: k < n - 1 => finite_seq_product(n, a, k+1) = finite_seq_product(n, a, k) * a(k+1)
-    forall n N_pos, a finite_seq(R, n) => finite_seq_product(n, a, 0) = a(0)
-
 know @AM_GM_inequality_equal_cond(n N_pos, a finite_seq(R, n)):
     forall k N: k < n => a(k) >= 0
     (finite_seq_sum(n, a, n-1) / n) ^ n = finite_seq_product(n, a, n-1)

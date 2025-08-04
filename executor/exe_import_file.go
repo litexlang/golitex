@@ -24,7 +24,9 @@ import (
 )
 
 func (exec *Executor) importFileStmt(stmt *ast.ImportFileStmt) (glob.ExecState, error) {
-	codePath := filepath.Join(glob.CurrentTaskDirName, stmt.Path)
+	currentTaskDir := glob.CurrentTaskDirName
+	codePath := glob.ResolvePath(currentTaskDir, stmt.Path)
+	// codePath := filepath.Join(currentTaskDir, stmt.Path)
 
 	fileName := filepath.Base(codePath)
 	fileExt := filepath.Ext(fileName)

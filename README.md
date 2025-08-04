@@ -7,7 +7,7 @@
 # Litex: Scale Formal Reasoning in AI Age
 
 **Release v0.1.6-beta (not yet ready for production use)**  
-*Jiachen Shen and The Litex Team*
+*Jiachen Shen and The Litex Team (Zhaoxuan Hong, et al.)*
 **Try Litex on [playground](https://litexlang.org/playground).**
 
 [![Github](https://img.shields.io/badge/Github-grey?logo=github)](https://github.com/litexlang/golitex)
@@ -15,6 +15,7 @@
 [![Website](https://img.shields.io/badge/Website-blue?logo=website)](https://litexlang.org)
 [![Email](https://img.shields.io/badge/Email-red?logo=email)](mailto:litexlang@outlook.com)
 [![Online Playground](https://img.shields.io/badge/Online%20Playground-darkgreen?logo=playground)](https://litexlang.org/playground)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/litexlang/golitex)
 
 </div>
 
@@ -237,7 +238,7 @@ Litex is a simple language. I hope many of the keywords are already familiar to 
 
 | Keyword | Meaning |
 |---------|---------|
-| `obj` | Define an object. Anything in Litex is an object. |
+| `let` | Define an object. Anything in Litex is an object. |
 | `prop` | Define a proposition. A factual statement must has its proposition name and its proposition objects. |
 | `know` | Establish a fact |
 | `forall` | Universal quantification |
@@ -253,10 +254,8 @@ Litex is a simple language. I hope many of the keywords are already familiar to 
 | `set` | set |
 | `in` | membership of an object in a set |
 | `dom` | domain of a proposition, function, function template, etc. |
-| `enum` | enumeration |
 | `len`  | length of a set |
 | `finite_set` | a set with a finite number of elements |
-| `indexable_set` | a set with a countable number of elements |
 | `prove` | open a local environment to write some statements without affecting the global environment |
 | `claim` | claim a factual statement, prove it here |
 | `prove_by_contradiction` | prove by contradiction |
@@ -268,6 +267,10 @@ Litex is a simple language. I hope many of the keywords are already familiar to 
 | `set_defined_by_replacement` | define a set by a axiom of replacement |
 | `obj_exist_as_preimage_of_prop` | exist a object as the preimage of a proposition |
 | `obj_exist_as_preimage_of_fn` | exist a object as the preimage of a function |
+| `N` `N_pos` `Z` `Q` `R` `C` | builtin sets: natural numbers, positive natural numbers, integers, rational numbers, real numbers, complex numbers |
+| `clear` | clear all facts |
+| `set_product` | a product of sets |
+| `proj` | a projection of a set product |
 
 [^3]: Although these keywords are rarely defined strictly in math textbooks, they are used everyday and everywhere. Litex creator can not find strict definition for keywords like `proposition`, `is`, `in` etc (actually, the word `definition` is also a vague word). He tried his best to make the meaning of these keywords as close to the meaning in our daily math expression, along with his own ideas and understanding, so that Litex is both intuitive and strict.
 
