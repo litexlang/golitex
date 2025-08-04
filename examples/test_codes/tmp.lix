@@ -39,9 +39,9 @@ claim:
         $is_pairwise_sum(s, a)
         $exist_index_where_item_is_zero(s)
         then:
-            forall n N => s(n) = 0
+            $is_alternating_seq_and_has_bound(a, 1)
     prove:
-        know forall n N => s(n) = 0
+        know $is_alternating_seq_and_has_bound(a, 1)
 
 claim:
     @pairwise_difference_of_IMO_2024_A5_Condition_is_zero_when_one_difference_is_zero(a seq(R), d seq(R)):
@@ -49,12 +49,12 @@ claim:
         $is_pairwise_difference(d, a)
         $exist_index_where_item_is_zero(d)
         then:
-            forall n N => d(n) = 0
+            $is_identical_seq(a)
     prove:
-        know forall n N => d(n) = 0
+        know $is_identical_seq(a)
 
 claim:
-    @there_must_be_a_zero_in_difference_or_sum_of_IMO_2024_A5_Condition(a seq(R), s seq(R), d seq(R)):
+    @exist_a_zero_in_difference_or_sum_of_IMO_2024_A5_Condition(a seq(R), s seq(R), d seq(R)):
         $IMO_2024_A5_Condition(a)
         $is_pairwise_sum(s, a)
         $is_pairwise_difference(d, a)
@@ -69,4 +69,15 @@ claim:
         then:
             $IMO_2024_A5_Result(a)
     prove:
-        know $IMO_2024_A5_Result(a)
+        let s, d seq(R):
+            $is_pairwise_sum(s, a),$is_pairwise_difference(d, a)
+        $exist_a_zero_in_difference_or_sum_of_IMO_2024_A5_Condition(a, s, d)
+        prove_in_each_case:
+            or:
+                $exist_index_where_item_is_zero(s) $exist_index_where_item_is_zero(d)
+            then:
+                $IMO_2024_A5_Result(a)
+            prove:
+                $pairwise_sum_of_IMO_2024_A5_Condition_is_zero_when_one_sum_is_zero(a, s)
+            prove:
+                $pairwise_difference_of_IMO_2024_A5_Condition_is_zero_when_one_difference_is_zero(a, d)
