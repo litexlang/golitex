@@ -1,0 +1,5 @@
+exist_prop period N_pos st periodic(a seq(R)):
+    forall k N => a(k) = a(k+period)
+
+prop T_is_period(a seq(R), T N_pos):
+    forall k N => a(k) = a(k+T)

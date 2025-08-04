@@ -1,1 +1,9 @@
-or: 1 = 1, 1 = 2
+import "../../std/Seq/main.lix"
+
+let a seq(R):
+    $periodic(a)
+
+have T st $periodic(a)
+
+forall n N:
+    a(n) = a(n+T)
