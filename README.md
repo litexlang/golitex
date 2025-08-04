@@ -74,8 +74,8 @@ Install or update for amd64 architecture :
 
 ```bash
 # install or update
-wget https://github.com/litexlang/golitex/releases/download/v0.1.7-beta/litex_0.1.7-beta_amd64.deb
-sudo dpkg -i litex_0.1.7-beta_amd64.deb
+wget https://github.com/litexlang/golitex/releases/download/v0.1.8-beta/litex_0.1.8-beta_amd64.deb
+sudo dpkg -i litex_0.1.8-beta_amd64.deb
 
 # run litex
 litex
@@ -85,8 +85,8 @@ Install or update for arm64 architecture:
 
 ```bash
 # install or update
-wget https://github.com/litexlang/golitex/releases/download/v0.1.7-beta/litex_0.1.7-beta_arm64.deb
-sudo dpkg -i litex_0.1.7-beta_arm64.deb
+wget https://github.com/litexlang/golitex/releases/download/v0.1.8-beta/litex_0.1.8-beta_arm64.deb
+sudo dpkg -i litex_0.1.8-beta_arm64.deb
 
 # run litex
 litex
