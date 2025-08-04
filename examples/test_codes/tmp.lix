@@ -1,9 +1,3 @@
-fn ss(a, n R) R:
-    ss(a, n + 1) = ss(a, n) + (n+1)
+import "../test_import/repo3"
 
-let a R
-
-know forall n R:
-    ss(a, n) = ss(a, 0) + (n+1)
-
-ss(a, 1) = ss(a, 0) + 1
+a= 1

@@ -23,8 +23,29 @@ import (
 	"strings"
 )
 
+func resolvePath(base string, relative string) string {
+	parts := strings.Split(relative, "/")
+	baseParts := strings.Split(base, string(filepath.Separator))
+
+	for _, part := range parts {
+		switch part {
+		case "", ".":
+			// do nothing
+		case "..":
+			if len(baseParts) > 0 {
+				baseParts = baseParts[:len(baseParts)-1]
+			}
+		default:
+			baseParts = append(baseParts, part)
+		}
+	}
+
+	return filepath.Clean(strings.Join(baseParts, string(filepath.Separator)))
+}
+
 func (exec *Executor) importFileStmt(stmt *ast.ImportFileStmt) (glob.ExecState, error) {
-	codePath := filepath.Join(glob.CurrentTaskDirName, stmt.Path)
+	currentTaskDir := glob.CurrentTaskDirName
+	codePath := resolvePath(currentTaskDir, stmt.Path)
 
 	fileName := filepath.Base(codePath)
 	fileExt := filepath.Ext(fileName)
