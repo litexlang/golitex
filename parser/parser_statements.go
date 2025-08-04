@@ -76,8 +76,6 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		}
 	case glob.KeywordProveInEachCase:
 		ret, err = tb.proveInEachCaseStmt()
-	// case glob.KeywordFnTemplate:
-	// ret, err = tb.defFnTemplateStmt()
 	case glob.KeywordProveByMathInduction:
 		ret, err = tb.proveByMathInductionStmt()
 	case glob.KeywordProveOverFiniteSet:
@@ -166,12 +164,31 @@ func (tb *tokenBlock) orStmt() (*ast.OrStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	for _, factToParse := range tb.body {
-		fact, err := factToParse.specFactStmt()
-		if err != nil {
-			return nil, tbErr(err, tb)
+	if tb.header.ExceedEnd() {
+		for _, factToParse := range tb.body {
+			fact, err := factToParse.specFactStmt()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			orFacts = append(orFacts, fact)
 		}
-		orFacts = append(orFacts, fact)
+
+	} else {
+		for {
+			fact, err := tb.specFactStmt()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			orFacts = append(orFacts, fact)
+
+			if tb.header.is(glob.KeySymbolComma) {
+				tb.header.skip(glob.KeySymbolComma)
+			} else if tb.header.ExceedEnd() {
+				break
+			} else {
+				return nil, fmt.Errorf("expect ',' or end of line")
+			}
+		}
 	}
 
 	return ast.NewOrStmt(orFacts), nil
