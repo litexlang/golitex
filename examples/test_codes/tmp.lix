@@ -1,4 +1,4 @@
-import "../../std/Seq/main.lix"
+import "../../Std/Seq/main.lix"
 
 let a seq(R):
     $periodic(a)
