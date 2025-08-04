@@ -1,13 +1,9 @@
-have set a := x R:
-    x > 0
+fn ss(a, n R) R:
+    ss(a, n + 1) = ss(a, n) + (n+1)
 
-forall x a:
-    x $in R
-    x > 0
+let a R
 
-let a set
+know forall n R:
+    ss(a, n) = ss(a, 0) + (n+1)
 
-know forall z a:
-    z $in set
-
-let b a
+ss(a, 1) = ss(a, 0) + 1

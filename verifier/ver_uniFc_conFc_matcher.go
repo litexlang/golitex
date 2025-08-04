@@ -18,6 +18,7 @@ import (
 	ast "golitex/ast"
 	cmp "golitex/cmp"
 	env "golitex/environment"
+	"slices"
 )
 
 // REMARK: 2025.6.4 这个文件很本质，需要未来检查一下里面逻辑有没有问题
@@ -45,12 +46,7 @@ func (ver *Verifier) matchStoredUniSpecWithSpec_preventDifferentVarsMatchTheSame
 }
 
 func isFcAtomInForallParamSet(fcAtom ast.FcAtom, knownFact env.KnownSpecFact_InUniFact) bool {
-	for _, param := range knownFact.UniFact.Params {
-		if param == string(fcAtom) {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(knownFact.UniFact.Params, string(fcAtom))
 }
 
 // paramInFactUnderUniFact 可能是自由的，可能是固定的，反正它来自一个forall下面的某个specFact
