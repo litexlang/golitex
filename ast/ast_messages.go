@@ -138,7 +138,7 @@ func exist_st_FactString(stmt *SpecFactStmt) string {
 func (stmt *DefObjStmt) String() string {
 	var builder strings.Builder
 
-	builder.WriteString(glob.KeywordObj)
+	builder.WriteString(glob.KeywordLet)
 	builder.WriteString(" ")
 	builder.WriteString(strFcSetPairs(stmt.Objs, stmt.ObjSets))
 
