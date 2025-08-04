@@ -161,3 +161,7 @@ func NewFnTemplateStmt(defHeader *DefHeader, templateDomFacts []FactStmt, fnPara
 func NewFnTStruct(params []string, paramSets []Fc, retSet Fc, domFacts []FactStmt, thenFacts []FactStmt) *FnTStruct {
 	return &FnTStruct{params, paramSets, retSet, domFacts, thenFacts}
 }
+
+func NewClearStmt() *ClearStmt {
+	return &ClearStmt{}
+}

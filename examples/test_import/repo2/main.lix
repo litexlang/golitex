@@ -1,4 +1,0 @@
-import "./main_repo2_global.lix"
-
-let a N:
-    a = 1

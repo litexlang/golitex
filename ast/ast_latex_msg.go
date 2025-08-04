@@ -805,3 +805,7 @@ func (s *FnTemplateDefStmt) ToLatexString() string {
 
 	return builder.String()
 }
+
+func (s *ClearStmt) ToLatexString() string {
+	return glob.KeywordClear
+}
