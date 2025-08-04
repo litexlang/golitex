@@ -11,8 +11,42 @@ prop IMO_2024_A5_Condition(a seq(R)):
     forall n N => a(n+2) + a(n) * a(n) = a(n) + a(n+1) * a(n+1), abs(a(n+1) - a(n)) <= 1
     $Seq::periodic(a)
 
-know forall a seq(R), s seq(R), d seq(R):
-    $IMO_2024_A5_Condition(a)
-    forall n N => s(n) = a(n+1) + a(n), d(n) = a(n+1) - a(n)
-    then:
-        forall n N => s(n+1) = s(n) * (1 + d(n)), d(n+1) = d(n) * (s(n) - 1), abs(d(n)) <= 1
+prop is_pairwise_sum(b seq(R), a seq(R)):
+    forall n N => b(n) = a(n+1) + a(n)
+
+prop is_pairwise_difference(b seq(R), a seq(R)):
+    forall n N => b(n) = a(n+1) - a(n)
+
+claim:
+    forall a seq(R), s seq(R), d seq(R):
+        $IMO_2024_A5_Condition(a)
+        $is_pairwise_sum(s, a)
+        $is_pairwise_difference(d, a)
+        then:
+            forall n N => s(n+1) = s(n) * (1 + d(n)), d(n+1) = d(n) * (s(n) - 1), abs(d(n)) <= 1
+    prove:
+        know forall n N => s(n+1) = s(n) * (1 + d(n)), d(n+1) = d(n) * (s(n) - 1), abs(d(n)) <= 1
+
+exist_prop index N st exist_index_where_item_is_zero(s seq(R)):
+    s(index) = 0
+
+claim:
+    forall a seq(R), s seq(R):
+        $IMO_2024_A5_Condition(a)
+        $is_pairwise_sum(s, a)
+        $exist_index_where_item_is_zero(s)
+        then:
+            forall n N => s(n) = 0
+    prove:
+        forall n N => s(n) = 0
+
+claim:
+    forall a seq(R), d seq(R):
+        $IMO_2024_A5_Condition(a)
+        $is_pairwise_difference(d, a)
+        $exist_index_where_item_is_zero(d)
+        then:
+            forall n N => d(n) = 0
+    prove:
+        forall n N => d(n) = 0
+
