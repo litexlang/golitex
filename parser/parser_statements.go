@@ -18,6 +18,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
+	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
@@ -1026,7 +1027,12 @@ func (tb *tokenBlock) importStmt() (ast.ImportStmtInterface, error) {
 		}
 		return ast.NewImportStmt(importPath, asPkgName), nil
 	} else {
-		return ast.NewImportFileStmt(importPath), nil
+		if strings.HasSuffix(importPath, ".lix") {
+			return ast.NewImportFileStmt(importPath), nil
+		} else {
+			// 如果importPath不以.lix结尾，往后面添加main.lix, 即 repoPath/main.lix
+			return ast.NewImportFileStmt(filepath.Join(importPath, "main.lix")), nil
+		}
 	}
 
 }
