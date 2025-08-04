@@ -11,6 +11,9 @@ prop IMO_2024_A5_Condition(a seq(R)):
     forall n N => a(n+2) + a(n) * a(n) = a(n) + a(n+1) * a(n+1), abs(a(n+1) - a(n)) <= 1
     $Seq::periodic(a)
 
+prop IMO_2024_A5_Result(a seq(R)):
+    or: $is_identical_seq(a), $is_alternating_seq_and_has_bound(a, 1)
+
 prop is_pairwise_sum(b seq(R), a seq(R)):
     forall n N => b(n) = a(n+1) + a(n)
 
@@ -31,22 +34,39 @@ exist_prop index N st exist_index_where_item_is_zero(s seq(R)):
     s(index) = 0
 
 claim:
-    forall a seq(R), s seq(R):
+    @pairwise_sum_of_IMO_2024_A5_Condition_is_zero_when_one_sum_is_zero(a seq(R), s seq(R)):
         $IMO_2024_A5_Condition(a)
         $is_pairwise_sum(s, a)
         $exist_index_where_item_is_zero(s)
         then:
             forall n N => s(n) = 0
     prove:
-        forall n N => s(n) = 0
+        know forall n N => s(n) = 0
 
 claim:
-    forall a seq(R), d seq(R):
+    @pairwise_difference_of_IMO_2024_A5_Condition_is_zero_when_one_difference_is_zero(a seq(R), d seq(R)):
         $IMO_2024_A5_Condition(a)
         $is_pairwise_difference(d, a)
         $exist_index_where_item_is_zero(d)
         then:
             forall n N => d(n) = 0
     prove:
-        forall n N => d(n) = 0
+        know forall n N => d(n) = 0
 
+claim:
+    @there_must_be_a_zero_in_difference_or_sum_of_IMO_2024_A5_Condition(a seq(R), s seq(R), d seq(R)):
+        $IMO_2024_A5_Condition(a)
+        $is_pairwise_sum(s, a)
+        $is_pairwise_difference(d, a)
+        then:
+            or: $exist_index_where_item_is_zero(s), $exist_index_where_item_is_zero(d)
+    prove:
+        know or: $exist_index_where_item_is_zero(s), $exist_index_where_item_is_zero(d)
+
+claim:
+    @IMO_2024_Problem(a seq(R)):
+        $IMO_2024_A5_Condition(a)
+        then:
+            $IMO_2024_A5_Result(a)
+    prove:
+        know $IMO_2024_A5_Result(a)
