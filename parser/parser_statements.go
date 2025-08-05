@@ -360,6 +360,12 @@ func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
+
+		err = checkFactsUniDepth(facts)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
 		return ast.NewDefObjStmt(objNames, objSets, facts), nil
 	}
 
