@@ -344,17 +344,43 @@ func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 
 	facts := []ast.FactStmt{}
 
-	if len(objSets) > 0 {
-		tb.header.skip("")
+	if tb.header.ExceedEnd() && len(tb.body) == 0 {
+		return ast.NewDefObjStmt(objNames, objSets, []ast.FactStmt{}), nil
+	} else if tb.header.ExceedEnd() && len(tb.body) != 0 {
 		facts, err = tb.bodyFacts(UniFactDepth0)
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
-	} else if !tb.header.ExceedEnd() {
-		return nil, fmt.Errorf("expect ':' or end of block")
+		return ast.NewDefObjStmt(objNames, objSets, facts), nil
+	} else {
+		for {
+			fact, err := tb.specFactStmt()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			facts = append(facts, fact)
+
+			if tb.header.is(glob.KeySymbolComma) {
+				tb.header.skip(glob.KeySymbolComma)
+			} else if tb.header.ExceedEnd() {
+				break
+			} else {
+				return nil, fmt.Errorf("expect ',' or end of line")
+			}
+		}
+		return ast.NewDefObjStmt(objNames, objSets, facts), nil
 	}
 
-	return ast.NewDefObjStmt(objNames, objSets, facts), nil
+	// if len(objSets) > 0 {
+	// 	tb.header.skip("")
+	// 	facts, err = tb.bodyFacts(UniFactDepth0)
+	// 	if err != nil {
+	// 		return nil, tbErr(err, tb)
+	// 	}
+	// } else if !tb.header.ExceedEnd() {
+	// 	return nil, fmt.Errorf("expect ':' or end of block")
+	// }
+
 }
 
 func (tb *tokenBlock) claimStmt() (ast.ClaimInterface, error) {
