@@ -2123,24 +2123,3 @@ func (tb *tokenBlock) clearStmt() (ast.Stmt, error) {
 
 	return ast.NewClearStmt(), nil
 }
-
-func (tb *tokenBlock) inlineFacts_untilEOL() ([]ast.FactStmt, error) {
-	facts := []ast.FactStmt{}
-	for {
-		fact, err := tb.specFactStmt()
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-		facts = append(facts, fact)
-
-		if tb.header.is(glob.KeySymbolComma) {
-			tb.header.skip(glob.KeySymbolComma)
-		} else if tb.header.ExceedEnd() {
-			break
-		} else {
-			return nil, fmt.Errorf("expect ',' or end of line")
-		}
-	}
-
-	return facts, nil
-}

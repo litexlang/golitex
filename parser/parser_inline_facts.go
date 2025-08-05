@@ -1,0 +1,124 @@
+// Copyright 2024 Jiachen Shen.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Original Author: Jiachen Shen <malloc_realloc_free@outlook.com>
+// Litex email: <litexlang@outlook.com>
+// Litex website: https://litexlang.org
+// Litex github repository: https://github.com/litexlang/golitex
+// Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
+
+package litex_parser
+
+import (
+	"fmt"
+	ast "golitex/ast"
+	glob "golitex/glob"
+)
+
+func (tb *tokenBlock) inlineFacts_untilEOL() ([]ast.FactStmt, error) {
+	facts := []ast.FactStmt{}
+	for {
+		fact, err := tb.specFactStmt()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		facts = append(facts, fact)
+
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+		} else if tb.header.ExceedEnd() {
+			break
+		} else {
+			return nil, fmt.Errorf("expect ',' or end of line")
+		}
+	}
+
+	return facts, nil
+}
+
+func (tb *tokenBlock) inlineFacts_untilWord_SkipWord(word string) ([]*ast.SpecFactStmt, error) {
+	facts := []*ast.SpecFactStmt{}
+	for {
+		stmt, err := tb.specFactStmt()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		facts = append(facts, stmt)
+
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+		} else if tb.header.is(word) {
+			break
+		} else {
+			return nil, fmt.Errorf("expect ',' or %s", word)
+		}
+	}
+
+	err := tb.header.skip(word)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	return facts, nil
+}
+
+// fact, isEnd, err
+func (tb *tokenBlock) inlineFact() (ast.FactStmt, bool, error) {
+	curToken, err := tb.header.currentToken()
+	if err != nil {
+		return nil, false, tbErr(err, tb)
+	}
+
+	switch curToken {
+	case glob.KeywordForall:
+		return tb.inlineUniFact()
+	case glob.KeywordOr:
+		return tb.inlineOrStmt()
+	default:
+		return tb.inlineSpecFactStmt()
+	}
+}
+
+func (tb *tokenBlock) inlineSpecFactStmt() (*ast.SpecFactStmt, bool, error) {
+	stmt, err := tb.specFactStmt()
+	if err != nil {
+		return nil, false, tbErr(err, tb)
+	}
+
+	if tb.header.is(glob.KeySymbolComma) {
+		tb.header.skip(glob.KeySymbolComma)
+		return stmt, false, nil
+	} else if tb.header.ExceedEnd() {
+		return stmt, true, nil
+	} else {
+		return nil, false, fmt.Errorf("expect ',' or end of line")
+	}
+}
+
+func (tb *tokenBlock) inlineOrStmt() (*ast.OrStmt, bool, error) {
+	err := tb.header.skip(glob.KeywordOr)
+	if err != nil {
+		return nil, false, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, false, tbErr(err, tb)
+	}
+
+	facts, err := tb.inlineFacts_untilWord_SkipWord(glob.KeySymbolRightBrace)
+	if err != nil {
+		return nil, false, tbErr(err, tb)
+	}
+
+	return ast.NewOrStmt(facts), false, nil
+}
+
+func (tb *tokenBlock) inlineUniFact() (*ast.UniFactStmt, bool, error) {
+	panic("")
+}
