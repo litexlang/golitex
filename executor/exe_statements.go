@@ -496,6 +496,9 @@ func (exec *Executor) clearStmt() error {
 	for curEnv.Parent != nil {
 		curEnv = curEnv.Parent
 	}
-	exec.env = curEnv
+	exec.NewEnv(curEnv)
+	if glob.RequireMsg() {
+		exec.newMsg("clear\n")
+	}
 	return nil
 }
