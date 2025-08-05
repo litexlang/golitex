@@ -29,3 +29,5 @@ const TupleFcFnHead string = "()"
 const CheckFalse = false
 
 var AssumeImportFilesAreTrue bool = false
+
+const EndOfInlineForall string = ";"
