@@ -84,6 +84,67 @@ func (tb *tokenBlock) inlineFact() (ast.FactStmt, bool, error) {
 	}
 }
 
+func (tb *tokenBlock) inlineFacts_InInlineUniFactThenFacts() ([]ast.FactStmt, bool, error) {
+	facts := []ast.FactStmt{}
+	for {
+		fact, isEnd, err := tb.inlineFact()
+		if err != nil {
+			return nil, false, tbErr(err, tb)
+		}
+		if isEnd {
+			return facts, true, nil
+		}
+		facts = append(facts, fact)
+
+		if tb.header.is(glob.KeySymbolSemiColon) {
+			break
+		} else if tb.header.ExceedEnd() {
+			return facts, true, nil
+		} else {
+			return nil, false, fmt.Errorf("expect ';' or end of line")
+		}
+	}
+
+	return facts, false, nil
+}
+
+func (tb *tokenBlock) inlineUniFact() (*ast.UniFactStmt, bool, error) {
+	err := tb.header.skip(glob.KeywordForall)
+	if err != nil {
+		return nil, false, tbErr(err, tb)
+	}
+
+	params, setParams, err := tb.inlineUniFact_Param_ParamSet_ParamInSetFacts()
+	if err != nil {
+		return nil, false, tbErr(err, tb)
+	}
+
+	domFact, err := tb.inlineUniFactDomFact()
+	if err != nil {
+		return nil, false, tbErr(err, tb)
+	}
+
+	thenFacts := []ast.FactStmt{}
+	for {
+		specFact, err := tb.specFactStmt()
+		if err != nil {
+			return nil, false, tbErr(err, tb)
+		}
+		thenFacts = append(thenFacts, specFact)
+
+		if tb.header.ExceedEnd() {
+			break
+		}
+
+		err = tb.header.skip(glob.KeySymbolComma)
+		if err != nil {
+			return nil, false, tbErr(err, tb)
+		}
+	}
+
+	return ast.NewUniFact(params, setParams, domFact, thenFacts), false, nil
+}
+
 func (tb *tokenBlock) inlineSpecFactStmt() (*ast.SpecFactStmt, bool, error) {
 	stmt, err := tb.specFactStmt()
 	if err != nil {
@@ -119,6 +180,6 @@ func (tb *tokenBlock) inlineOrStmt() (*ast.OrStmt, bool, error) {
 	return ast.NewOrStmt(facts), false, nil
 }
 
-func (tb *tokenBlock) inlineUniFact() (*ast.UniFactStmt, bool, error) {
-	panic("")
-}
+// func (tb *tokenBlock) inlineUniFact() (*ast.UniFactStmt, bool, error) {
+// 	panic("")
+// }

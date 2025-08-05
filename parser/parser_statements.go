@@ -116,7 +116,7 @@ func (tb *tokenBlock) factStmt(uniFactDepth uniFactEnum) (ast.FactStmt, error) {
 		if tb.GetEnd() == glob.KeySymbolColon {
 			return tb.uniFactInterface(uniFactDepth)
 		} else {
-			return tb.inlineUniFact()
+			return tb.inlineUniFact_UntilEnd()
 		}
 	case glob.KeywordOr:
 		return tb.orStmt()
@@ -1531,7 +1531,7 @@ func (tb *tokenBlock) proveOverFiniteSetStmt() (*ast.ProveOverFiniteSetStmt, err
 			return nil, tbErr(err, tb)
 		}
 	} else {
-		uniFact, err = tb.body[0].inlineUniFact()
+		uniFact, err = tb.body[0].inlineUniFact_UntilEnd()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -1952,7 +1952,7 @@ func (tb *tokenBlock) fnInFnTemplateStmt() ([]string, []ast.Fc, ast.Fc, []ast.Fa
 	return fnParams, fnParamSets, fnRetSet, domFacts, thenFacts, nil
 }
 
-func (tb *tokenBlock) inlineUniFact() (*ast.UniFactStmt, error) {
+func (tb *tokenBlock) inlineUniFact_UntilEnd() (*ast.UniFactStmt, error) {
 	err := tb.header.skip(glob.KeywordForall)
 	if err != nil {
 		return nil, tbErr(err, tb)
