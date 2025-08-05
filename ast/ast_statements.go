@@ -53,17 +53,7 @@ type DefExistPropStmt struct {
 	ExistParamSets FcSlice
 }
 
-// 这里 fn(p Z, F(p) set) 其实有点问题，因为F可能需要对p有一些要求，这些要求是写在dom里的，需要先运行dom然后才能运行
-// 如果你要对fnTemplate的dom，或者iff里添加要求，请你把该额外要求涉及到的obj，放在fn template 的 params 里以传入。我不提供 C++ 的那种<> 的写法。
-// type FnTemplateStmt struct {
-// 	DefHeader
-// 	DomFacts  FactStmtSlice
-// 	ThenFacts FactStmtSlice
-// 	RetSet    Fc
-// }
-
 type DefFnStmt struct {
-	// FnTemplateStmt FnTemplateStmt
 	Name       string
 	FnTemplate FnTStruct
 }
