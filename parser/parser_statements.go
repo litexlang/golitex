@@ -1781,12 +1781,22 @@ func (tb *tokenBlock) namedUniFactStmt() (*ast.NamedUniFactStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	iffFacts, thenFacts, err := tb.bodyOfKnowProp()
-	if err != nil {
-		return nil, tbErr(err, tb)
+	if tb.header.ExceedEnd() {
+		iffFacts, thenFacts, err := tb.bodyOfKnowProp()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		return ast.NewNamedUniFactStmt(ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts, thenFacts)), nil
+	} else {
+		iffFacts, thenFacts, err := tb.bodyOfInlineDomAndThen()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		return ast.NewNamedUniFactStmt(ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts, thenFacts)), nil
 	}
 
-	return ast.NewNamedUniFactStmt(ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts, thenFacts)), nil
 }
 
 // TODO: 让 forall 里也能有它
@@ -2133,4 +2143,8 @@ func (tb *tokenBlock) clearStmt() (ast.Stmt, error) {
 	}
 
 	return ast.NewClearStmt(), nil
+}
+
+func (tb *tokenBlock) bodyOfInlineDomAndThen() ([]ast.FactStmt, []ast.FactStmt, error) {
+	panic("not implemented")
 }
