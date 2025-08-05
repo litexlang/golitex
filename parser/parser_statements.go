@@ -351,7 +351,12 @@ func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 		}
 		return ast.NewDefObjStmt(objNames, objSets, facts), nil
 	} else {
-		facts, err := tb.inlineFacts_untilEOL()
+		// facts, err := tb.inlineFacts_untilEOL()
+		// if err != nil {
+		// 	return nil, tbErr(err, tb)
+		// }
+		// return ast.NewDefObjStmt(objNames, objSets, facts), nil
+		facts, err := tb.inlineFacts_untilEndOfInline()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}

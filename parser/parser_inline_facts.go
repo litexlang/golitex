@@ -41,6 +41,28 @@ func (tb *tokenBlock) inlineFacts_untilEOL() ([]ast.FactStmt, error) {
 	return facts, nil
 }
 
+func (tb *tokenBlock) inlineFacts_untilEndOfInline() ([]ast.FactStmt, error) {
+	facts := []ast.FactStmt{}
+	for {
+		fact, err := tb.inlineFact()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		facts = append(facts, fact)
+
+		if tb.header.is(glob.EndOfInlineForall) {
+			tb.header.skip(glob.EndOfInlineForall)
+			break
+		}
+
+		if tb.header.ExceedEnd() {
+			break
+		}
+	}
+
+	return facts, nil
+}
+
 func (tb *tokenBlock) inlineFacts_untilWord_SkipWord(word string) ([]*ast.SpecFactStmt, error) {
 	facts := []*ast.SpecFactStmt{}
 	for {
@@ -68,10 +90,10 @@ func (tb *tokenBlock) inlineFacts_untilWord_SkipWord(word string) ([]*ast.SpecFa
 }
 
 // fact, isEnd, err
-func (tb *tokenBlock) inlineFact() (ast.FactStmt, bool, error) {
+func (tb *tokenBlock) inlineFact() (ast.FactStmt, error) {
 	curToken, err := tb.header.currentToken()
 	if err != nil {
-		return nil, false, tbErr(err, tb)
+		return nil, tbErr(err, tb)
 	}
 
 	switch curToken {
@@ -84,100 +106,86 @@ func (tb *tokenBlock) inlineFact() (ast.FactStmt, bool, error) {
 	}
 }
 
-func (tb *tokenBlock) inlineFacts_InInlineUniFactThenFacts() ([]ast.FactStmt, bool, error) {
+func (tb *tokenBlock) inlineFacts_InInlineUniFactThenFacts() ([]ast.FactStmt, error) {
 	facts := []ast.FactStmt{}
 	for {
-		fact, isEnd, err := tb.inlineFact()
+		fact, err := tb.inlineFact()
 		if err != nil {
-			return nil, false, tbErr(err, tb)
-		}
-		if isEnd {
-			return facts, true, nil
+			return nil, tbErr(err, tb)
 		}
 		facts = append(facts, fact)
 
-		if tb.header.is(glob.KeySymbolSemiColon) {
+		if tb.header.is(glob.EndOfInlineForall) {
+			tb.header.skip(glob.EndOfInlineForall)
 			break
-		} else if tb.header.ExceedEnd() {
-			return facts, true, nil
-		} else {
-			return nil, false, fmt.Errorf("expect ';' or end of line")
 		}
-	}
-
-	return facts, false, nil
-}
-
-func (tb *tokenBlock) inlineUniFact() (*ast.UniFactStmt, bool, error) {
-	err := tb.header.skip(glob.KeywordForall)
-	if err != nil {
-		return nil, false, tbErr(err, tb)
-	}
-
-	params, setParams, err := tb.inlineUniFact_Param_ParamSet_ParamInSetFacts()
-	if err != nil {
-		return nil, false, tbErr(err, tb)
-	}
-
-	domFact, err := tb.inlineUniFactDomFact()
-	if err != nil {
-		return nil, false, tbErr(err, tb)
-	}
-
-	thenFacts := []ast.FactStmt{}
-	for {
-		specFact, err := tb.specFactStmt()
-		if err != nil {
-			return nil, false, tbErr(err, tb)
-		}
-		thenFacts = append(thenFacts, specFact)
 
 		if tb.header.ExceedEnd() {
 			break
 		}
-
-		err = tb.header.skip(glob.KeySymbolComma)
-		if err != nil {
-			return nil, false, tbErr(err, tb)
-		}
 	}
 
-	return ast.NewUniFact(params, setParams, domFact, thenFacts), false, nil
+	return facts, nil
 }
 
-func (tb *tokenBlock) inlineSpecFactStmt() (*ast.SpecFactStmt, bool, error) {
+func (tb *tokenBlock) inlineUniFact() (*ast.UniFactStmt, error) {
+	err := tb.header.skip(glob.KeywordForall)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	params, setParams, err := tb.inlineUniFact_Param_ParamSet_ParamInSetFacts()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	domFact, err := tb.inlineUniFactDomFact()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	thenFacts, err := tb.inlineFacts_InInlineUniFactThenFacts()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	return ast.NewUniFact(params, setParams, domFact, thenFacts), nil
+}
+
+func (tb *tokenBlock) inlineSpecFactStmt() (*ast.SpecFactStmt, error) {
 	stmt, err := tb.specFactStmt()
 	if err != nil {
-		return nil, false, tbErr(err, tb)
+		return nil, tbErr(err, tb)
 	}
 
 	if tb.header.is(glob.KeySymbolComma) {
-		tb.header.skip(glob.KeySymbolComma)
-		return stmt, false, nil
-	} else if tb.header.ExceedEnd() {
-		return stmt, true, nil
-	} else {
-		return nil, false, fmt.Errorf("expect ',' or end of line")
+		tb.header.skip("")
 	}
+
+	return stmt, nil
 }
 
-func (tb *tokenBlock) inlineOrStmt() (*ast.OrStmt, bool, error) {
+func (tb *tokenBlock) inlineOrStmt() (*ast.OrStmt, error) {
 	err := tb.header.skip(glob.KeywordOr)
 	if err != nil {
-		return nil, false, tbErr(err, tb)
+		return nil, tbErr(err, tb)
 	}
 
 	err = tb.header.skip(glob.KeySymbolLeftBrace)
 	if err != nil {
-		return nil, false, tbErr(err, tb)
+		return nil, tbErr(err, tb)
 	}
 
 	facts, err := tb.inlineFacts_untilWord_SkipWord(glob.KeySymbolRightBrace)
 	if err != nil {
-		return nil, false, tbErr(err, tb)
+		return nil, tbErr(err, tb)
 	}
 
-	return ast.NewOrStmt(facts), false, nil
+	if tb.header.is(glob.KeySymbolComma) {
+		tb.header.skip("")
+	}
+
+	return ast.NewOrStmt(facts), nil
 }
 
 // func (tb *tokenBlock) inlineUniFact() (*ast.UniFactStmt, bool, error) {
