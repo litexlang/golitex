@@ -1,6 +1,7 @@
-prop p(x , y R): x > 0, y > 0 <=> x + y > 0
 fn f(x R) R: x > 0 => x > 0
 fn g(x R) R => x > 0
 prop q(x R) <=> x > 0
+prop p(x , y R): x > 0, y > 0 <=> x + y > 0
 exist_prop t R st p2(x, y R): x > 0, y > 0 <=> x + y > 0
 exist_prop t R st p3(x, y R) <=> x + y > 0
+

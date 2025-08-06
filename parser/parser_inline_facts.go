@@ -103,20 +103,20 @@ func (tb *tokenBlock) inlineFacts_InInlineUniFactThenFacts() ([]ast.FactStmt, er
 	return facts, nil
 }
 
-func (tb *tokenBlock) inlineFacts_InInlineUniFactThenFacts_UntilEndOfInline(word string, skipColon bool) ([]ast.FactStmt, error) {
+func (tb *tokenBlock) inlineFacts_InInlineUniFactThenFacts_UntilEndOfInline(word string, skipColon bool) ([]ast.FactStmt, bool, error) {
 	cur, err := tb.header.currentToken()
 	if err != nil {
-		return nil, tbErr(err, tb)
+		return nil, false, tbErr(err, tb)
 	}
 	if cur == word {
 		tb.header.skip(word)
-		return []ast.FactStmt{}, nil
+		return []ast.FactStmt{}, true, nil
 	}
 
 	if skipColon && cur == glob.KeySymbolColon {
 		err = tb.header.skip(glob.KeySymbolColon)
 		if err != nil {
-			return nil, tbErr(err, tb)
+			return nil, false, tbErr(err, tb)
 		}
 	}
 
@@ -124,17 +124,17 @@ func (tb *tokenBlock) inlineFacts_InInlineUniFactThenFacts_UntilEndOfInline(word
 	for {
 		specFact, err := tb.inlineFact()
 		if err != nil {
-			return nil, tbErr(err, tb)
+			return nil, false, tbErr(err, tb)
 		}
 		dom = append(dom, specFact)
 		if tb.header.is(word) {
 			tb.header.skip(word)
-			break
+			return dom, true, nil
 		}
 
 	}
 
-	return dom, nil
+	return dom, false, nil
 }
 
 func (tb *tokenBlock) inlineUniFact() (*ast.UniFactStmt, error) {
@@ -149,7 +149,7 @@ func (tb *tokenBlock) inlineUniFact() (*ast.UniFactStmt, error) {
 	}
 
 	// domFact, err := tb.inlineUniFactDomFact()
-	domFact, err := tb.inlineFacts_InInlineUniFactThenFacts_UntilEndOfInline(glob.KeySymbolEqualLarger, true)
+	domFact, _, err := tb.inlineFacts_InInlineUniFactThenFacts_UntilEndOfInline(glob.KeySymbolEqualLarger, true)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -302,4 +302,37 @@ func (tb *tokenBlock) inlineUniFact_Param_ParamSet_ParamInSetFacts() ([]string, 
 	}
 
 	return params, setParams, nil
+}
+
+func (tb *tokenBlock) inlineUniInterface() (ast.UniFactInterface, error) {
+	err := tb.header.skip(glob.KeywordForall)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	params, setParams, err := tb.inlineUniFact_Param_ParamSet_ParamInSetFacts()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	domFact, _, err := tb.inlineFacts_InInlineUniFactThenFacts_UntilEndOfInline(glob.KeySymbolEqualLarger, true)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	thenFact, skippedEquivalent, err := tb.inlineFacts_InInlineUniFactThenFacts_UntilEndOfInline(glob.KeySymbolEquivalent, false)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	if skippedEquivalent {
+		return ast.NewUniFact(params, setParams, domFact, thenFact), nil
+	} else {
+		iffFacts, err := tb.inlineFacts_untilEndOfInline()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		return ast.NewUniFactWithIff(ast.NewUniFact(params, setParams, domFact, thenFact), iffFacts), nil
+	}
 }
