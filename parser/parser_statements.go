@@ -1601,7 +1601,8 @@ func (tb *tokenBlock) proveOverFiniteSetStmt() (*ast.ProveOverFiniteSetStmt, err
 			return nil, tbErr(err, tb)
 		}
 	} else {
-		uniFact, err = tb.body[0].inlineUniFact()
+		// uniFact, err = tb.body[0].inlineUniFact()
+		uniFact, err = tb.body[0].inlineUniInterface()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
