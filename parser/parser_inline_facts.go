@@ -217,7 +217,8 @@ func (tb *tokenBlock) inlineFacts_untilWord(word string) ([]ast.FactStmt, error)
 		}
 		facts = append(facts, fact)
 
-		if tb.header.is(word) || tb.header.ExceedEnd() {
+		if tb.header.is(word) {
+			tb.header.skip(word)
 			break
 		}
 	}
