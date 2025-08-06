@@ -1776,25 +1776,46 @@ func (tb *tokenBlock) haveSetDefinedByReplacementStmt() (ast.Stmt, error) {
 }
 
 func (tb *tokenBlock) namedUniFactStmt() (*ast.NamedUniFactStmt, error) {
-	declHeader, err := tb.headerOfAtProp()
+	var err error
+	err = tb.header.skip(glob.KeySymbolAt)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
 
-	if tb.header.ExceedEnd() {
-		iffFacts, thenFacts, err := tb.bodyOfKnowProp()
+	declHeader, err := tb.defHeaderWithoutParsingColonAtEnd()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	if tb.header.is(glob.KeySymbolColon) {
+		err = tb.header.skip(glob.KeySymbolColon)
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
 
-		return ast.NewNamedUniFactStmt(ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts, thenFacts)), nil
+		if !tb.header.ExceedEnd() {
+			return nil, fmt.Errorf("expect end of @ body, but got '%s'", tb.header.strAtCurIndexPlus(0))
+		}
+
+		if tb.header.ExceedEnd() {
+			iffFacts, thenFacts, err := tb.bodyOfKnowProp()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+
+			return ast.NewNamedUniFactStmt(ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts, thenFacts)), nil
+		} else {
+			iffFacts, thenFacts, err := tb.bodyOfInlineDomAndThen()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+
+			return ast.NewNamedUniFactStmt(ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts, thenFacts)), nil
+		}
+	} else if tb.header.is(glob.KeySymbolEqualLarger) {
+		return nil, fmt.Errorf("not implemented")
 	} else {
-		iffFacts, thenFacts, err := tb.bodyOfInlineDomAndThen()
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-
-		return ast.NewNamedUniFactStmt(ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts, thenFacts)), nil
+		return nil, fmt.Errorf("expect colon or =>")
 	}
 
 }
@@ -2143,8 +2164,4 @@ func (tb *tokenBlock) clearStmt() (ast.Stmt, error) {
 	}
 
 	return ast.NewClearStmt(), nil
-}
-
-func (tb *tokenBlock) bodyOfInlineDomAndThen() ([]ast.FactStmt, []ast.FactStmt, error) {
-	panic("not implemented")
 }
