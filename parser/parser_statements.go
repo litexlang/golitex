@@ -301,30 +301,45 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	// domFacts, iffFacts, err := tb.dom_IffOrThen_Body(glob.KeywordIff)
-	domFacts, iffFacts, err := tb.dom_and_section(glob.KeywordIff, glob.KeywordThen)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+	if tb.header.ExceedEnd() {
+		// domFacts, iffFacts, err := tb.dom_IffOrThen_Body(glob.KeywordIff)
+		domFacts, iffFacts, err := tb.dom_and_section(glob.KeywordIff, glob.KeywordThen)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
 
-	// iff, dom 里不能出现和被定义的prop同名的prop，否则用def做验证的时候会出问题
-	for _, fact := range iffFacts {
-		if factAsSpecFact, ok := fact.(*ast.SpecFactStmt); ok {
-			if string(factAsSpecFact.PropName) == string(declHeader.Name) {
-				return nil, fmt.Errorf("iff or dom fact cannot be the same as the prop being defined")
+		// iff, dom 里不能出现和被定义的prop同名的prop，否则用def做验证的时候会出问题
+		for _, fact := range iffFacts {
+			if factAsSpecFact, ok := fact.(*ast.SpecFactStmt); ok {
+				if string(factAsSpecFact.PropName) == string(declHeader.Name) {
+					return nil, fmt.Errorf("iff or dom fact cannot be the same as the prop being defined")
+				}
 			}
 		}
-	}
 
-	for _, fact := range domFacts {
-		if factAsSpecFact, ok := fact.(*ast.SpecFactStmt); ok {
-			if string(factAsSpecFact.PropName) == string(declHeader.Name) {
-				return nil, fmt.Errorf("iff or dom fact cannot be the same as the prop being defined")
+		for _, fact := range domFacts {
+			if factAsSpecFact, ok := fact.(*ast.SpecFactStmt); ok {
+				if string(factAsSpecFact.PropName) == string(declHeader.Name) {
+					return nil, fmt.Errorf("iff or dom fact cannot be the same as the prop being defined")
+				}
 			}
 		}
+
+		return ast.NewDefPropStmt(declHeader, domFacts, iffFacts, []ast.FactStmt{}), nil
+	} else {
+		domFacts, err := tb.inlineFacts_InInlineUniFactThenFacts_UntilEndOfInline(glob.KeySymbolEquivalent, false)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		iffFacts, err := tb.inlineFacts_untilEndOfInline()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		return ast.NewDefPropStmt(declHeader, domFacts, iffFacts, []ast.FactStmt{}), nil
 	}
 
-	return ast.NewDefPropStmt(declHeader, domFacts, iffFacts, []ast.FactStmt{}), nil
 }
 
 func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
@@ -444,7 +459,6 @@ func (tb *tokenBlock) knowFactStmt() (*ast.KnowFactStmt, error) {
 	tb.header.skip(glob.KeywordKnow)
 
 	if !tb.header.is(glob.KeySymbolColon) {
-
 		facts := []ast.FactStmt{}
 		fact, err := tb.factStmt(UniFactDepth0)
 		if err != nil {
@@ -452,6 +466,7 @@ func (tb *tokenBlock) knowFactStmt() (*ast.KnowFactStmt, error) {
 		}
 		facts = append(facts, fact) // 之所以不能用,让know后面同一行里能有很多很多事实，是因为forall-fact是会换行的
 		return ast.NewKnowStmt(facts), nil
+
 	}
 
 	if err := tb.header.testAndSkip(glob.KeySymbolColon); err != nil {
@@ -467,6 +482,10 @@ func (tb *tokenBlock) knowFactStmt() (*ast.KnowFactStmt, error) {
 		}
 	} else {
 		facts, err = tb.inlineFacts_untilEndOfInline()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		err = checkFactsUniDepth(facts)
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
