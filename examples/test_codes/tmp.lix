@@ -1,4 +1,3 @@
-"""
 fn f(x R) R: x > 0 => x > 0
 fn g(x R) R => x > 0
 prop q(x R) <=> x > 0
@@ -8,5 +7,12 @@ exist_prop t R st p3(x, y R) <=> x + y > 0
 
 forall x R: x > 0 => x > 0 <=> x > 0
 forall x R: x > 0 => x > 0 <=> x > 0
-"""
-know forall x R: x > 0, forall y R: y > 0 => x + y > 0; => x > 0
+
+know:
+    forall => 1 + 1 = 2
+    forall => 1 + 1 = 2 <=> 1 + 1 = 2
+    forall x R => x > 0
+    forall x R => x > 0 <=> x > 0
+    forall x R: x > 0 => x > 0 <=> x > 0
+    forall x R: forall x R: x > 0 => x > 0 <=> x > 0; x > 0 => x > 0
+    forall x R: forall x R: x > 0 => x > 0 <=> x > 0; x > 0 => x > 0
