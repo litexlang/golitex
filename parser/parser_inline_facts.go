@@ -18,6 +18,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
+	"slices"
 )
 
 func (tb *tokenBlock) inlineFacts_untilEndOfInline() ([]ast.FactStmt, error) {
@@ -224,4 +225,78 @@ func (tb *tokenBlock) inlineFacts_untilWord(word string) ([]ast.FactStmt, error)
 	}
 
 	return facts, nil
+}
+
+func (tb *tokenBlock) inlineUniFact_Param_ParamSet_ParamInSetFacts() ([]string, []ast.Fc, error) {
+	params := []string{}
+	setParams := []ast.Fc{}
+	paramWithoutSetCount := 0
+
+	if !tb.header.is(glob.KeySymbolEqualLarger) || !tb.header.is(glob.KeySymbolColon) {
+		for {
+			param, err := tb.header.next()
+			if err != nil {
+				return nil, nil, err
+			}
+
+			params = append(params, addPkgNameToString(param))
+
+			if tb.header.is(glob.KeySymbolComma) {
+				tb.header.skip(glob.KeySymbolComma)
+				paramWithoutSetCount++
+				continue
+			}
+
+			setParam, err := tb.RawFc()
+			if err != nil {
+				return nil, nil, err
+			}
+
+			if paramWithoutSetCount == 0 {
+				setParams = append(setParams, setParam)
+			} else {
+				for range paramWithoutSetCount + 1 {
+					setParams = append(setParams, setParam)
+				}
+				paramWithoutSetCount = 0
+			}
+
+			if tb.header.is(glob.KeySymbolComma) {
+				tb.header.skip(glob.KeySymbolComma)
+				continue
+			}
+
+			if tb.header.is(glob.KeySymbolEqualLarger) || tb.header.is(glob.KeySymbolColon) {
+				break
+			}
+
+			return nil, nil, fmt.Errorf("expected ',' or '=>' but got '%s'", tb.header.strAtCurIndexPlus(0))
+		}
+	}
+
+	// params 不能重复
+	for i := range params {
+		for j := i + 1; j < len(params); j++ {
+			if params[i] == params[j] {
+				return nil, nil, fmt.Errorf("parameters cannot be repeated, get duplicate parameter: %s", params[i])
+			}
+		}
+	}
+
+	// nth parameter set should not include nth to last parameter inside
+	for i, setParam := range setParams {
+		atomsInSetParam := ast.GetAtomsInFc(setParam)
+		atomsInSetParamAsStr := make([]string, len(atomsInSetParam))
+		for i, atom := range atomsInSetParam {
+			atomsInSetParamAsStr[i] = string(atom)
+		}
+
+		for j := i; j < len(params); j++ {
+			if slices.Contains(atomsInSetParamAsStr, params[j]) {
+				return nil, nil, fmt.Errorf("the set %s of the parameter if index %d cannot include any parameters from the index %d to the last one (found parameter %s)", setParam, i, j, params[j])
+			}
+		}
+	}
+
+	return params, setParams, nil
 }
