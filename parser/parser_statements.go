@@ -907,17 +907,24 @@ func (tb *tokenBlock) knowPropStmt() (*ast.KnowPropStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	declHeader, err := tb.headerOfAtProp()
+	// declHeader, err := tb.headerOfAtProp()
+	// if err != nil {
+	// 	return nil, tbErr(err, tb)
+	// }
+
+	// iffFacts, thenFacts, err := tb.bodyOfKnowProp()
+	// if err != nil {
+	// 	return nil, tbErr(err, tb)
+	// }
+
+	// return ast.NewKnowPropStmt(*ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts, thenFacts)), nil
+
+	namedUniFact, err := tb.namedUniFactStmt()
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
 
-	iffFacts, thenFacts, err := tb.bodyOfKnowProp()
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	return ast.NewKnowPropStmt(*ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts, thenFacts)), nil
+	return ast.NewKnowPropStmt(namedUniFact.DefPropStmt), nil
 }
 
 func (tb *tokenBlock) proveInEachCaseStmt() (*ast.ProveInEachCaseStmt, error) {
@@ -1787,37 +1794,26 @@ func (tb *tokenBlock) namedUniFactStmt() (*ast.NamedUniFactStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	if tb.header.is(glob.KeySymbolColon) {
-		err = tb.header.skip(glob.KeySymbolColon)
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	if tb.header.ExceedEnd() {
+		iffFacts, thenFacts, err := tb.bodyOfKnowProp()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
 
-		if !tb.header.ExceedEnd() {
-			return nil, fmt.Errorf("expect end of @ body, but got '%s'", tb.header.strAtCurIndexPlus(0))
-		}
-
-		if tb.header.ExceedEnd() {
-			iffFacts, thenFacts, err := tb.bodyOfKnowProp()
-			if err != nil {
-				return nil, tbErr(err, tb)
-			}
-
-			return ast.NewNamedUniFactStmt(ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts, thenFacts)), nil
-		} else {
-			iffFacts, thenFacts, err := tb.bodyOfInlineDomAndThen()
-			if err != nil {
-				return nil, tbErr(err, tb)
-			}
-
-			return ast.NewNamedUniFactStmt(ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts, thenFacts)), nil
-		}
-	} else if tb.header.is(glob.KeySymbolEqualLarger) {
-		return nil, fmt.Errorf("not implemented")
+		return ast.NewNamedUniFactStmt(ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts, thenFacts)), nil
 	} else {
-		return nil, fmt.Errorf("expect colon or =>")
-	}
+		iffFacts, thenFacts, err := tb.bodyOfInlineDomAndThen()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
 
+		return ast.NewNamedUniFactStmt(ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts, thenFacts)), nil
+	}
 }
 
 // TODO: 让 forall 里也能有它
