@@ -1,6 +1,1 @@
-know @namedUniFact(x, y R): x > 0, y > 0 => x + y > 0
-let a, b R:
-    a > 0
-    b > 0
-$namedUniFact(a, b)
-a + b > 0
+know forall x R: x > 0, forall y R: y> 0 => y = 0 ; => x = 0
