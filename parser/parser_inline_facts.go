@@ -198,8 +198,8 @@ func (tb *tokenBlock) inlineOrStmt() (*ast.OrStmt, error) {
 	return ast.NewOrStmt(facts), nil
 }
 
-func (tb *tokenBlock) bodyOfInlineDomAndThen() ([]ast.FactStmt, []ast.FactStmt, error) {
-	domFacts, err := tb.inlineFacts_untilWord(glob.KeySymbolEqualLarger)
+func (tb *tokenBlock) bodyOfInlineDomAndThen(word string) ([]ast.FactStmt, []ast.FactStmt, error) {
+	domFacts, err := tb.inlineFacts_untilWord(word)
 	if err != nil {
 		return nil, nil, tbErr(err, tb)
 	}
