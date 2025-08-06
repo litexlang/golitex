@@ -165,3 +165,7 @@ func NewFnTStruct(params []string, paramSets []Fc, retSet Fc, domFacts []FactStm
 func NewClearStmt() *ClearStmt {
 	return &ClearStmt{}
 }
+
+func NewInlineFactsStmt(facts []FactStmt) *InlineFactsStmt {
+	return &InlineFactsStmt{facts}
+}
