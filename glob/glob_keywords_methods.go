@@ -71,6 +71,14 @@ func GetKeySymbol(inputString string, start int) string {
 		return ""
 	}
 
+	// 检查3字符号
+	if start+3 <= len(inputString) {
+		candidate := inputString[start : start+3]
+		if _, ok := symbolSet[candidate]; ok {
+			return candidate
+		}
+	}
+
 	// 再检查 2 字符符号
 	if start+2 <= len(inputString) {
 		candidate := inputString[start : start+2]
