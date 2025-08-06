@@ -103,18 +103,21 @@ func (tb *tokenBlock) inlineFacts_InInlineUniFactThenFacts() ([]ast.FactStmt, er
 	return facts, nil
 }
 
-func (tb *tokenBlock) inlineFacts_InInlineUniFactThenFacts_UntilEndOfInline() ([]ast.FactStmt, error) {
+func (tb *tokenBlock) inlineFacts_InInlineUniFactThenFacts_UntilEndOfInline(word string, skipColon bool) ([]ast.FactStmt, error) {
 	cur, err := tb.header.currentToken()
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
-	if cur == glob.KeySymbolEqualLarger {
-		tb.header.skip(glob.KeySymbolEqualLarger)
+	if cur == word {
+		tb.header.skip(word)
 		return []ast.FactStmt{}, nil
 	}
 
-	if cur == glob.KeySymbolColon {
-		tb.header.skip(glob.KeySymbolColon)
+	if skipColon && cur == glob.KeySymbolColon {
+		err = tb.header.skip(glob.KeySymbolColon)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
 	}
 
 	dom := []ast.FactStmt{}
@@ -124,8 +127,8 @@ func (tb *tokenBlock) inlineFacts_InInlineUniFactThenFacts_UntilEndOfInline() ([
 			return nil, tbErr(err, tb)
 		}
 		dom = append(dom, specFact)
-		if tb.header.is(glob.KeySymbolEqualLarger) {
-			tb.header.skip(glob.KeySymbolEqualLarger)
+		if tb.header.is(word) {
+			tb.header.skip(word)
 			break
 		}
 
@@ -146,7 +149,7 @@ func (tb *tokenBlock) inlineUniFact() (*ast.UniFactStmt, error) {
 	}
 
 	// domFact, err := tb.inlineUniFactDomFact()
-	domFact, err := tb.inlineFacts_InInlineUniFactThenFacts_UntilEndOfInline()
+	domFact, err := tb.inlineFacts_InInlineUniFactThenFacts_UntilEndOfInline(glob.KeySymbolEqualLarger, true)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}

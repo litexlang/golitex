@@ -1,1 +1,1 @@
-know forall x R: x > 0, forall y R: y> 0 => y = 0 ; => x = 0
+prop p(x , y R): x > 0, y > 0 <=> x + y > 0
