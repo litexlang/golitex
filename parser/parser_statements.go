@@ -293,7 +293,21 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 	}
 
 	if !tb.header.is(glob.KeySymbolColon) {
-		return ast.NewDefPropStmt(declHeader, nil, nil, []ast.FactStmt{}), nil
+		if tb.header.ExceedEnd() {
+			return ast.NewDefPropStmt(declHeader, nil, nil, []ast.FactStmt{}), nil
+		} else if tb.header.is(glob.KeySymbolEquivalent) {
+			err = tb.header.skip(glob.KeySymbolEquivalent)
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			unitFacts, err := tb.inlineFacts_untilEndOfInline()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			return ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, unitFacts, []ast.FactStmt{}), nil
+		} else {
+			return nil, fmt.Errorf("expect ':' or end of block")
+		}
 	}
 
 	err = tb.header.skip(glob.KeySymbolColon)
@@ -302,7 +316,6 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 	}
 
 	if tb.header.ExceedEnd() {
-		// domFacts, iffFacts, err := tb.dom_IffOrThen_Body(glob.KeywordIff)
 		domFacts, iffFacts, err := tb.dom_and_section(glob.KeywordIff, glob.KeywordThen)
 		if err != nil {
 			return nil, tbErr(err, tb)
@@ -327,12 +340,7 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 
 		return ast.NewDefPropStmt(declHeader, domFacts, iffFacts, []ast.FactStmt{}), nil
 	} else {
-		domFacts, err := tb.inlineFacts_InInlineUniFactThenFacts_UntilEndOfInline(glob.KeySymbolEquivalent, false)
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-
-		iffFacts, err := tb.inlineFacts_untilEndOfInline()
+		domFacts, iffFacts, err := tb.bodyOfInlineDomAndThen(glob.KeySymbolEquivalent)
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -1196,15 +1204,6 @@ func (tb *tokenBlock) parseFactBodyWithHeaderNameAndUniFactDepth(headerName stri
 	return facts, nil
 }
 
-// func (tb *tokenBlock) defFnTemplateStmt() (*ast.DefFnTemplateStmt, error) {
-// 	fnTemplateStmt, err := tb.fnTemplateStmt(glob.KeywordFnTemplate)
-// 	if err != nil {
-// 		return nil, tbErr(err, tb)
-// 	}
-
-// 	return ast.NewFnTemplateDefStmt(fnTemplateStmt), nil
-// }
-
 func (tb *tokenBlock) defFnStmt() (*ast.DefFnStmt, error) {
 	err := tb.header.skip(glob.KeywordFn)
 	if err != nil {
@@ -1226,29 +1225,31 @@ func (tb *tokenBlock) defFnStmt() (*ast.DefFnStmt, error) {
 
 	if tb.header.is(glob.KeySymbolColon) {
 		tb.header.skip("")
-		// domFacts, thenFacts, _, err = tb.uniFactBodyFacts(UniFactDepth1, glob.KeywordThen)
-		domFacts, thenFacts, err = tb.dom_and_section(glob.KeywordThen, glob.KeywordIff)
+		if tb.header.ExceedEnd() {
+			domFacts, thenFacts, err = tb.dom_and_section(glob.KeywordThen, glob.KeywordIff)
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+		} else {
+			domFacts, thenFacts, err = tb.bodyOfInlineDomAndThen(glob.KeySymbolEqualLarger)
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+		}
+	} else if tb.header.is(glob.KeySymbolEqualLarger) {
+		err = tb.header.skip(glob.KeySymbolEqualLarger)
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
+		unitFacts, err := tb.inlineFacts_untilEndOfInline()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		thenFacts = append(thenFacts, unitFacts...)
 	}
 
 	return ast.NewDefFnStmt(string(decl.Name), ast.NewFnTStruct(decl.Params, decl.ParamSets, retSet, domFacts, thenFacts)), nil
 }
-
-// func (tb *tokenBlock) importGloballyStmt() (*ast.ImportGloballyStmt, error) {
-// 	err := tb.header.skip(glob.KeywordImportGlobally)
-// 	if err != nil {
-// 		return nil, tbErr(err, tb)
-// 	}
-
-// 	path, err := tb.getStringInDoubleQuotes()
-// 	if err != nil {
-// 		return nil, tbErr(err, tb)
-// 	}
-
-// 	return ast.NewImportGloballyStmt(path), nil
-// }
 
 func (tb *tokenBlock) claimPropStmt() (*ast.ClaimPropStmt, error) {
 	declHeader, err := tb.body[0].headerOfAtProp()
@@ -1835,7 +1836,7 @@ func (tb *tokenBlock) namedUniFactStmt() (*ast.NamedUniFactStmt, error) {
 
 		return ast.NewNamedUniFactStmt(ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts, thenFacts)), nil
 	} else {
-		iffFacts, thenFacts, err := tb.bodyOfInlineDomAndThen()
+		iffFacts, thenFacts, err := tb.bodyOfInlineDomAndThen(glob.KeySymbolEqualLarger)
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
