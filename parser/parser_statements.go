@@ -116,7 +116,8 @@ func (tb *tokenBlock) factStmt(uniFactDepth uniFactEnum) (ast.FactStmt, error) {
 		if tb.GetEnd() == glob.KeySymbolColon {
 			return tb.uniFactInterface(uniFactDepth)
 		} else {
-			return tb.inlineUniFact()
+			// return tb.inlineUniFact()
+			return tb.inlineUniInterface()
 		}
 	case glob.KeywordOr:
 		return tb.orStmt()
