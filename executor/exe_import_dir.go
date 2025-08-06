@@ -143,9 +143,6 @@ func getGloballyImportedStmtSlice(code string) ([]ast.Stmt, error) {
 
 	ret := []ast.Stmt{}
 	for _, topStmt := range topStmtSlice {
-		// if _, ok := topStmt.(*ast.ImportGloballyStmt); ok {
-		// 	continue
-		// } else
 		if _, ok := topStmt.(*ast.ImportDirStmt); ok {
 			continue
 		} else {
