@@ -17,5 +17,7 @@ package litex_verifier
 import ast "golitex/ast"
 
 func (ver *Verifier) matchUniFactParamsWithSpecFactParams(uniFact *ast.UniFactStmt, specFact *ast.SpecFactStmt) (bool, error) {
+	_ = uniFact
+	_ = specFact
 	return false, nil
 }

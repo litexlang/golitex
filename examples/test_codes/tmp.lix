@@ -1,9 +1,2 @@
-import "../../std/Seq/main.lix"
-
-let a seq(R):
-    $periodic(a)
-
-have T st $periodic(a)
-
-forall n N:
-    a(n) = a(n+T)
+let n R: not n > 5
+n <= 5
