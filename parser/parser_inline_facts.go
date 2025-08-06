@@ -194,6 +194,33 @@ func (tb *tokenBlock) inlineOrStmt() (*ast.OrStmt, error) {
 	return ast.NewOrStmt(facts), nil
 }
 
-// func (tb *tokenBlock) inlineUniFact() (*ast.UniFactStmt, bool, error) {
-// 	panic("")
-// }
+func (tb *tokenBlock) bodyOfInlineDomAndThen() ([]ast.FactStmt, []ast.FactStmt, error) {
+	domFacts, err := tb.inlineFacts_untilWord(glob.KeySymbolEqualLarger)
+	if err != nil {
+		return nil, nil, tbErr(err, tb)
+	}
+
+	thenFacts, err := tb.inlineFacts_untilEndOfInline()
+	if err != nil {
+		return nil, nil, tbErr(err, tb)
+	}
+
+	return domFacts, thenFacts, nil
+}
+
+func (tb *tokenBlock) inlineFacts_untilWord(word string) ([]ast.FactStmt, error) {
+	facts := []ast.FactStmt{}
+	for {
+		fact, err := tb.inlineFact()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		facts = append(facts, fact)
+
+		if tb.header.is(word) || tb.header.ExceedEnd() {
+			break
+		}
+	}
+
+	return facts, nil
+}
