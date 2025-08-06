@@ -295,31 +295,103 @@ func (tb *tokenBlock) inlineUniInterface() (ast.UniFactInterface, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	params, setParams, err := tb.inlineUniFact_Param_ParamSet_ParamInSetFacts()
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+	params := []string{}
+	setParams := []ast.Fc{}
+	domFact := []ast.FactStmt{}
 
-	var domFact []ast.FactStmt = []ast.FactStmt{}
-
-	domFact, _, err = tb.inlineFacts_InInlineUniFactThenFacts_UntilEndOfInline(glob.KeySymbolEqualLarger, true)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	thenFact, skippedEquivalent, err := tb.inlineFacts_InInlineUniFactThenFacts_UntilEndOfInline(glob.KeySymbolEquivalent, false)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	if !skippedEquivalent {
-		return ast.NewUniFact(params, setParams, domFact, thenFact), nil
-	} else {
-		iffFacts, err := tb.inlineFacts_untilEndOfInline()
+	if !tb.header.is(glob.KeySymbolEqualLarger) {
+		params, setParams, err = tb.inlineUniFact_Param_ParamSet_ParamInSetFacts()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
 
-		return ast.NewUniFactWithIff(ast.NewUniFact(params, setParams, domFact, thenFact), iffFacts), nil
+		if tb.header.is(glob.KeySymbolColon) {
+			tb.header.skip(glob.KeySymbolColon)
+			domFact, err = tb.domFactInUniFactInterface()
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	tb.header.skip(glob.KeySymbolEqualLarger)
+	thenFact, isEnd, err := tb.thenFactsInUniFactInterface()
+	if err != nil {
+		return nil, err
+	}
+
+	if isEnd {
+		return ast.NewUniFact(params, setParams, domFact, thenFact), nil
+	}
+
+	err = tb.header.skip(glob.KeySymbolEquivalent)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	iffFacts, err := tb.thenFacts_SkipEnd_Semicolon_or_EOL()
+	if err != nil {
+		return nil, err
+	}
+	return ast.NewUniFactWithIff(ast.NewUniFact(params, setParams, domFact, thenFact), iffFacts), nil
+}
+
+func (tb *tokenBlock) thenFactsInUniFactInterface() ([]ast.FactStmt, bool, error) {
+	facts := []ast.FactStmt{}
+	for {
+		specFact, err := tb.inlineFact()
+		if err != nil {
+			return nil, false, tbErr(err, tb)
+		}
+		facts = append(facts, specFact)
+		if tb.header.is(glob.KeySymbolEquivalent) {
+			return facts, false, nil
+		}
+
+		if tb.header.ExceedEnd() {
+			return facts, true, nil
+		}
+
+		if tb.header.is(glob.KeySymbolSemiColon) {
+			tb.header.skip(glob.KeySymbolSemiColon)
+			return facts, true, nil
+		}
+
+	}
+}
+
+func (tb *tokenBlock) thenFacts_SkipEnd_Semicolon_or_EOL() ([]ast.FactStmt, error) {
+	facts := []ast.FactStmt{}
+	for {
+		specFact, err := tb.inlineFact()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		facts = append(facts, specFact)
+
+		if tb.header.ExceedEnd() {
+			return facts, nil
+		}
+
+		if tb.header.is(glob.KeySymbolSemiColon) {
+			tb.header.skip(glob.KeySymbolSemiColon)
+			return facts, nil
+		}
+
+	}
+}
+
+func (tb *tokenBlock) domFactInUniFactInterface() ([]ast.FactStmt, error) {
+	facts := []ast.FactStmt{}
+	for {
+		specFact, err := tb.inlineFact()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		facts = append(facts, specFact)
+		if tb.header.is(glob.KeySymbolEqualLarger) {
+			tb.header.skip(glob.KeySymbolEqualLarger)
+			return facts, nil
+		}
 	}
 }
