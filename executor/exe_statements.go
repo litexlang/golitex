@@ -187,14 +187,8 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool
 }
 
 func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt, requireMsg bool) error {
-	if glob.RequireMsg() {
+	if glob.RequireMsg() && requireMsg {
 		defer exec.newMsg(fmt.Sprintf("%s\n", stmt))
-	}
-
-	if requireMsg {
-		if glob.RequireMsg() {
-			exec.newMsg(fmt.Sprintf("%s\n", stmt))
-		}
 	}
 
 	ver := verifier.NewVerifier(exec.env)
@@ -502,6 +496,9 @@ func (exec *Executor) clearStmt() error {
 	for curEnv.Parent != nil {
 		curEnv = curEnv.Parent
 	}
-	exec.env = curEnv
+	exec.NewEnv(curEnv)
+	if glob.RequireMsg() {
+		exec.newMsg("clear\n")
+	}
 	return nil
 }
