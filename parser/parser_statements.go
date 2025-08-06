@@ -458,9 +458,18 @@ func (tb *tokenBlock) knowFactStmt() (*ast.KnowFactStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	facts, err := tb.bodyFacts(UniFactDepth0)
-	if err != nil {
-		return nil, tbErr(err, tb)
+	var err error
+	var facts []ast.FactStmt
+	if tb.header.ExceedEnd() {
+		facts, err = tb.bodyFacts(UniFactDepth0)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+	} else {
+		facts, err = tb.inlineFacts_untilEndOfInline()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
 	}
 
 	return ast.NewKnowStmt(facts), nil
