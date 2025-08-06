@@ -770,8 +770,20 @@ func (tb *tokenBlock) defExistPropStmtBody() (*ast.DefExistPropStmtBody, error) 
 		return nil, tbErr(err, tb)
 	}
 
-	if !tb.header.is(glob.KeySymbolColon) {
+	if tb.header.ExceedEnd() {
 		return ast.NewExistPropDef(declHeader, []ast.FactStmt{}, []ast.FactStmt{}), nil
+	}
+
+	if tb.header.is(glob.KeySymbolEquivalent) {
+		err = tb.header.skip(glob.KeySymbolEquivalent)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		unitFacts, err := tb.inlineFacts_untilEndOfInline()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		return ast.NewExistPropDef(declHeader, []ast.FactStmt{}, unitFacts), nil
 	}
 
 	err = tb.header.skip(glob.KeySymbolColon)
@@ -779,16 +791,26 @@ func (tb *tokenBlock) defExistPropStmtBody() (*ast.DefExistPropStmtBody, error) 
 		return nil, tbErr(err, tb)
 	}
 
-	domFacts, iffFactsAsFactStatements, err := tb.dom_and_section(glob.KeywordIff, glob.KeywordThen)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+	if tb.header.ExceedEnd() {
 
-	if len(iffFactsAsFactStatements) == 0 {
-		return nil, fmt.Errorf("expect 'iff' section in proposition definition has at least one fact")
-	}
+		domFacts, iffFactsAsFactStatements, err := tb.dom_and_section(glob.KeywordIff, glob.KeywordThen)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
 
-	return ast.NewExistPropDef(declHeader, domFacts, iffFactsAsFactStatements), nil
+		if len(iffFactsAsFactStatements) == 0 {
+			return nil, fmt.Errorf("expect 'iff' section in proposition definition has at least one fact")
+		}
+
+		return ast.NewExistPropDef(declHeader, domFacts, iffFactsAsFactStatements), nil
+	} else {
+		domFacts, iffFactsAsFactStatements, err := tb.bodyOfInlineDomAndThen(glob.KeySymbolEquivalent)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		return ast.NewExistPropDef(declHeader, domFacts, iffFactsAsFactStatements), nil
+	}
 }
 
 func (tb *tokenBlock) uniFactBodyFacts(uniFactDepth uniFactEnum, defaultSectionName string) ([]ast.FactStmt, []ast.FactStmt, []ast.FactStmt, error) {
