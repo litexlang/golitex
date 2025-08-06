@@ -73,34 +73,12 @@ func (tb *tokenBlock) inlineFact() (ast.FactStmt, error) {
 
 	switch curToken {
 	case glob.KeywordForall:
-		return tb.inlineUniFact()
+		return tb.inlineUniInterface()
 	case glob.KeywordOr:
 		return tb.inlineOrStmt()
 	default:
 		return tb.inlineSpecFactStmt()
 	}
-}
-
-func (tb *tokenBlock) inlineFacts_InInlineUniFactThenFacts() ([]ast.FactStmt, error) {
-	facts := []ast.FactStmt{}
-	for {
-		fact, err := tb.inlineFact()
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-		facts = append(facts, fact)
-
-		if tb.header.is(glob.EndOfInlineForall) {
-			tb.header.skip(glob.EndOfInlineForall)
-			break
-		}
-
-		if tb.header.ExceedEnd() {
-			break
-		}
-	}
-
-	return facts, nil
 }
 
 func (tb *tokenBlock) inlineFacts_InInlineUniFactThenFacts_UntilEndOfInline(word string, skipColon bool) ([]ast.FactStmt, bool, error) {
@@ -132,35 +110,42 @@ func (tb *tokenBlock) inlineFacts_InInlineUniFactThenFacts_UntilEndOfInline(word
 			return dom, true, nil
 		}
 
-	}
+		if tb.header.ExceedEnd() {
+			return dom, false, nil
+		}
 
-	return dom, false, nil
+		if tb.header.is(glob.KeySymbolSemiColon) {
+			tb.header.skip(glob.KeySymbolSemiColon)
+			return dom, false, nil
+		}
+
+	}
 }
 
-func (tb *tokenBlock) inlineUniFact() (*ast.UniFactStmt, error) {
-	err := tb.header.skip(glob.KeywordForall)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+// func (tb *tokenBlock) inlineUniFact() (*ast.UniFactStmt, error) {
+// 	err := tb.header.skip(glob.KeywordForall)
+// 	if err != nil {
+// 		return nil, tbErr(err, tb)
+// 	}
 
-	params, setParams, err := tb.inlineUniFact_Param_ParamSet_ParamInSetFacts()
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+// 	params, setParams, err := tb.inlineUniFact_Param_ParamSet_ParamInSetFacts()
+// 	if err != nil {
+// 		return nil, tbErr(err, tb)
+// 	}
 
-	// domFact, err := tb.inlineUniFactDomFact()
-	domFact, _, err := tb.inlineFacts_InInlineUniFactThenFacts_UntilEndOfInline(glob.KeySymbolEqualLarger, true)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+// 	// domFact, err := tb.inlineUniFactDomFact()
+// 	domFact, _, err := tb.inlineFacts_InInlineUniFactThenFacts_UntilEndOfInline(glob.KeySymbolEqualLarger, true)
+// 	if err != nil {
+// 		return nil, tbErr(err, tb)
+// 	}
 
-	thenFacts, err := tb.inlineFacts_InInlineUniFactThenFacts()
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+// 	thenFacts, err := tb.inlineFacts_InInlineUniFactThenFacts()
+// 	if err != nil {
+// 		return nil, tbErr(err, tb)
+// 	}
 
-	return ast.NewUniFact(params, setParams, domFact, thenFacts), nil
-}
+// 	return ast.NewUniFact(params, setParams, domFact, thenFacts), nil
+// }
 
 func (tb *tokenBlock) inlineSpecFactStmt() (*ast.SpecFactStmt, error) {
 	stmt, err := tb.specFactStmt()
@@ -315,7 +300,9 @@ func (tb *tokenBlock) inlineUniInterface() (ast.UniFactInterface, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	domFact, _, err := tb.inlineFacts_InInlineUniFactThenFacts_UntilEndOfInline(glob.KeySymbolEqualLarger, true)
+	var domFact []ast.FactStmt = []ast.FactStmt{}
+
+	domFact, _, err = tb.inlineFacts_InInlineUniFactThenFacts_UntilEndOfInline(glob.KeySymbolEqualLarger, true)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -325,7 +312,7 @@ func (tb *tokenBlock) inlineUniInterface() (ast.UniFactInterface, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	if skippedEquivalent {
+	if !skippedEquivalent {
 		return ast.NewUniFact(params, setParams, domFact, thenFact), nil
 	} else {
 		iffFacts, err := tb.inlineFacts_untilEndOfInline()
