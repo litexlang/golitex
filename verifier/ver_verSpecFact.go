@@ -67,7 +67,8 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact(stmt *ast.SpecFactStmt, s
 }
 
 func (ver *Verifier) verSpecFactStepByStepNotCommutatively(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if stmt.NameIs(glob.KeySymbolLargerEqual) || stmt.NameIs(glob.KeySymbolLessEqual) || stmt.NameIs(glob.KeySymbolGreater) || stmt.NameIs(glob.KeySymbolLess) {
+	if (stmt.NameIs(glob.KeySymbolLargerEqual) || stmt.NameIs(glob.KeySymbolLessEqual) || stmt.NameIs(glob.KeySymbolGreater) || stmt.NameIs(glob.KeySymbolLess)) && stmt.IsTrue() {
+		// TODO: 本质上这个逻辑应该放在BIR里
 		return ver.verBtCmpSpecFact(stmt, state)
 	}
 
