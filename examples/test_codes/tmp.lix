@@ -1,1 +1,0 @@
-know @AM_GM_inequality_equal_cond(n N_pos, a finite_seq(R, n)): forall k N: k < n => a(k) >= 0; (finite_seq_sum(n, a, n-1) / n) ^ n = finite_seq_product(n, a, n-1) => forall k N, k2 N: k < n, k2 < n => a(k) = a(k2)
