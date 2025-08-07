@@ -1,4 +1,1 @@
-claim:
-    forall a seq(R), index N, n N: a(n+2) + a(n) * a(n) = a(n) + a(n+1) * a(n+1), a(index) + a(index+1) = 0, => forall k N: k > index => a(k) = 0
-    prove:
-        know forall k N: k > index => a(k) = 0
+forall : 1 > 0 => 1 > 0
