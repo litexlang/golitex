@@ -154,6 +154,10 @@ func (tb *tokenBlock) inlineUniFact_Param_ParamSet_ParamInSetFacts() ([]string, 
 	setParams := []ast.Fc{}
 	paramWithoutSetCount := 0
 
+	if tb.header.is(glob.KeySymbolColon) {
+		return params, setParams, nil
+	}
+
 	if !tb.header.is(glob.KeySymbolEqualLarger) || !tb.header.is(glob.KeySymbolColon) {
 		for {
 			param, err := tb.header.next()
