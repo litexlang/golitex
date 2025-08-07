@@ -223,3 +223,7 @@ type FnTStruct struct {
 }
 
 type ClearStmt struct{}
+
+type InlineFactsStmt struct {
+	Facts FactStmtSlice
+}

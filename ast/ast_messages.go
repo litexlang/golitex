@@ -738,3 +738,11 @@ func (stmt *FnTemplateDefStmt) String() string {
 func (stmt *ClearStmt) String() string {
 	return glob.KeywordClear
 }
+
+func (stmt *InlineFactsStmt) String() string {
+	strSlice := make([]string, len(stmt.Facts))
+	for i := range len(stmt.Facts) {
+		strSlice[i] = stmt.Facts[i].String()
+	}
+	return strings.Join(strSlice, "\n")
+}

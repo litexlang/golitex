@@ -53,6 +53,7 @@ func (s *KnowExistPropStmt) stmt()               {}
 func (s *CommentStmt) stmt()                     {}
 func (s *FnTemplateDefStmt) stmt()               {}
 func (s *ClearStmt) stmt()                       {}
+func (s *InlineFactsStmt) stmt()                 {}
 
 type FactStmt interface {
 	factStmt()
