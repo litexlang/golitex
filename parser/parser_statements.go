@@ -82,8 +82,6 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.proveOverFiniteSetStmt()
 	case glob.KeySymbolAt:
 		ret, err = tb.namedUniFactStmt()
-	case glob.KeySymbolEqual:
-		ret, err = tb.equalsFactStmt()
 	case glob.CommentSig:
 		ret, err = tb.commentStmt()
 	case glob.KeywordFnTemplate:
@@ -118,7 +116,6 @@ func (tb *tokenBlock) factStmt(uniFactDepth uniFactEnum) (ast.FactStmt, error) {
 		if tb.GetEnd() == glob.KeySymbolColon {
 			return tb.uniFactInterface(uniFactDepth)
 		} else {
-			// return tb.inlineUniFact()
 			return tb.inlineUniInterface()
 		}
 	case glob.KeywordOr:
@@ -1887,27 +1884,55 @@ func (tb *tokenBlock) namedUniFactStmt() (*ast.NamedUniFactStmt, error) {
 // TODO: 让 forall 里也能有它
 func (tb *tokenBlock) equalsFactStmt() (*ast.EqualsFactStmt, error) {
 	tb.header.skip(glob.KeySymbolEqual)
-	err := tb.header.skip(glob.KeySymbolColon)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
 
-	if tb.header.ExceedEnd() {
-		params := make(ast.FcSlice, 0, len(tb.body))
-		for _, param := range tb.body {
-			param, err := param.RawFc()
-			if err != nil {
-				return nil, tbErr(err, tb)
+	if tb.header.is(glob.KeySymbolColon) {
+		err := tb.header.skip(glob.KeySymbolColon)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		if tb.header.ExceedEnd() {
+			params := make(ast.FcSlice, 0, len(tb.body))
+			for _, param := range tb.body {
+				param, err := param.RawFc()
+				if err != nil {
+					return nil, tbErr(err, tb)
+				}
+				params = append(params, param)
 			}
-			params = append(params, param)
-		}
 
-		if len(params) < 2 {
-			return nil, fmt.Errorf("expect at least two params")
-		}
+			if len(params) < 2 {
+				return nil, fmt.Errorf("expect at least two params")
+			}
 
-		return ast.NewEqualsFactStmt(params), nil
+			return ast.NewEqualsFactStmt(params), nil
+		} else {
+			params := []ast.Fc{}
+			for {
+				curFc, err := tb.RawFc()
+				if err != nil {
+					return nil, tbErr(err, tb)
+				}
+				params = append(params, curFc)
+
+				if tb.header.is(glob.KeySymbolComma) {
+					tb.header.skip(glob.KeySymbolComma)
+					continue
+				}
+
+				if tb.header.ExceedEnd() {
+					break
+				}
+			}
+
+			return ast.NewEqualsFactStmt(params), nil
+		}
 	} else {
+		err := tb.header.skip(glob.KeySymbolLeftBrace)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
 		params := []ast.Fc{}
 		for {
 			curFc, err := tb.RawFc()
@@ -1921,7 +1946,8 @@ func (tb *tokenBlock) equalsFactStmt() (*ast.EqualsFactStmt, error) {
 				continue
 			}
 
-			if tb.header.ExceedEnd() {
+			if tb.header.is(glob.KeySymbolRightBrace) {
+				tb.header.skip(glob.KeySymbolRightBrace)
 				break
 			}
 		}
