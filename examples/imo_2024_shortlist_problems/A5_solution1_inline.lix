@@ -33,7 +33,7 @@ prop is_alternating_seq_and_has_bound(a seq(R), bound R):
 claim:
     forall x, y, z R: x + z * z = z + y * y => x + y = (y + z) * (y - z + 1)
     prove:
-        =: (y + z) * (y - z + 1), z + y * y + y - z * z, x + z * z  + y - z * z, x + y
+        =((y + z) * (y - z + 1), z + y * y + y - z * z, x + z * z  + y - z * z, x + y)
 
 exist_prop n N st exist_two_consecutive_items_whose_sum_is_0(a seq(R)):
     a(n) + a(n+1) = 0
@@ -58,30 +58,22 @@ claim:
 
         forall n N: n < T - 1 => n + 1 < T, $subtraction_preserves_inequality_with_positive_term(n, T, 1), n < T, c(n) = a(n+1) + a(n+2), b(n+1) = a(n+1) + a(n+1+1), b(n+1) = a(n+1) + a(n+2), c(n) = b(n+1)
 
-        ? a(0) = a(0+T), a(1) = a(1+T), T - 1 < T, 0 < T
-        =: c(T-1), a(T-1+1) + a(T-1+2), a(T) + a(T+1), a(0) + a(1), a(0) + a(0+1), b(0)
-        $telescoping_product(T, c, b, d)
+        ? a(0) = a(0+T), a(1) = a(1+T), T - 1 < T, 0 < T, =(c(T-1), a(T-1+1) + a(T-1+2), a(T) + a(T+1), a(0) + a(1), a(0) + a(0+1), b(0)), $telescoping_product(T, c, b, d)
 
         claim:
             forall n N: n < T => d(n) = e(n)
             prove:
                 ? a(n) + a(n+1) != 0, a(n+1) + a(n) != 0, a(n+2) + a(n+1) = (a(n+1) + a(n)) * (a(n+1) - a(n) + 1)
                 know (a(n+2) + a(n+1)) / (a(n+1) + a(n)) = a(n+1) - a(n) + 1
-                =: e(n), a(n+1) - a(n) + 1, (a(n+2) + a(n+1)) / (a(n+1) + a(n)), (a(n+1) + a(n+2)) / (a(n) + a(n+1)), c(n) / b(n), d(n)
+                =(e(n), a(n+1) - a(n) + 1, (a(n+2) + a(n+1)) / (a(n+1) + a(n)), (a(n+1) + a(n+2)) / (a(n) + a(n+1)), c(n) / b(n), d(n))
 
-        ? $finite_seq_equal(R, T, e, d), $telescoping_product(T, c, b, e), 1 = finite_seq_product(T, e, T-1), $T_is_period_of_seq(a, T), $periodic_seq_alternating_minus_add_1_has_average_1_at_period(a, T, e), finite_seq_sum(T, e, T-1) = T
-        =: (finite_seq_sum(T, e, T-1)/T)^T, (T/T)^T, (1)^T, 1, finite_seq_product(T, e, T-1)
         know forall n N: n < T => e(n) = 1, e(n) >= 0
-        $AM_GM_inequality_equal_cond(T, e)
+        ? $finite_seq_equal(R, T, e, d), $telescoping_product(T, c, b, e), 1 = finite_seq_product(T, e, T-1), $T_is_period_of_seq(a, T), $periodic_seq_alternating_minus_add_1_has_average_1_at_period(a, T, e), finite_seq_sum(T, e, T-1) = T, =((finite_seq_sum(T, e, T-1)/T)^T, (T/T)^T, (1)^T, 1, finite_seq_product(T, e, T-1)), $AM_GM_inequality_equal_cond(T, e)
 
         claim:
             forall n1, n2 N: n1 < T, n2 < T => a(n1) = a(n2)
             prove:
-                forall n N:
-                    n < T
-                    then:
-                        =: 1, e(n), a(n+1) - a(n) + 1
-                        =: 0, 1 - 1, a(n+1) - a(n) + 1 - 1, a(n+1) - a(n)
+                forall n N: n < T => =(1, e(n), a(n+1) - a(n) + 1),  =(0, 1 - 1, a(n+1) - a(n) + 1 - 1, a(n+1) - a(n))
                 $periodic_seq_equal_if_first_T_consecutive_items_are_equal(T, a)
     
         $first_T_items_of_periodic_seq_are_equal_then_seq_is_periodic(a, T)
@@ -95,12 +87,8 @@ claim:
             abs(a(0)) <= 1/2
             prove_by_contradiction:
                 ? abs(a(0)) > 1/2, a(0) = - a(0+1), -a(0) = a(1)
-                =: a(1) - a(0), -a(0) - a(0), -2 * a(0)
-                =:
-                    abs(a(1) - a(0)) 
-                    abs(-2 * a(0))
-                    abs(-2) * abs(a(0))
-                    2 * abs(a(0))
+                =(a(1) - a(0), -a(0) - a(0), -2 * a(0))
+                =(abs(a(1) - a(0)),abs(-2 * a(0)), abs(-2) * abs(a(0)), 2 * abs(a(0)))
                 ? 2 * abs(a(0)) > 2 * (1/2), abs(a(1) - a(0)) > 1, not abs(a(1) - a(0)) <= 1
                 abs(a(0+1) - a(0)) <= 1
 
@@ -112,7 +100,7 @@ claim:
             forall n N: $a_n_has_abs_less_than_1_div_2(a, n), => $a_n_has_abs_less_than_1_div_2(a, n+1)
             prove:
                 ? a(n) = - a(n+1), abs(a(n)) <= 1/2
-                =: abs(a(n)), abs(-a(n)), abs(a(n+1))
+                =(abs(a(n)), abs(-a(n)), abs(a(n+1)))
                 ? abs(a(n+1)) <= 1/2, $a_n_has_abs_less_than_1_div_2(a, n+1)
 
         prove_by_math_induction($a_n_has_abs_less_than_1_div_2(a, 0), 1, 0)
@@ -129,14 +117,11 @@ claim:
             prove:
                 let a2 seq(R): forall n N => a2(n) = a(n) + a(n+1)
                 have a2_is_0_index st $exist_two_consecutive_items_whose_sum_is_0(a)
-                =: 0, a(a2_is_0_index) + a(a2_is_0_index+1), a2(a2_is_0_index)
+                =(0, a(a2_is_0_index) + a(a2_is_0_index+1), a2(a2_is_0_index))
                 know: forall m N: m > a2_is_0_index => a2(m) = 0; $seq_periodic(a2)
                 $periodic_seq_which_is_0_since_n_is_always_0(a2, a2_is_0_index)
 
-                forall k N:
-                    =: 0, a2(k), a(k) + a(k+1)
-                    =: - a(k), 0 - a(k), a(k) + a(k+1) - a(k), a(k+1)
-                    =: a(k), -1 * (- a(k)), -a(k+1)
+                forall k N => =(0, a2(k), a(k) + a(k+1)), =(- a(k), 0 - a(k), a(k) + a(k+1) - a(k), a(k+1)), =(a(k), -1 * (- a(k)), -a(k+1))
                 know forall n N => a(n) = - a(n+1), abs(a(n)) <= 1/2, abs(a(n+1) - a(n)) <= 1
                 $is_alternating_seq_and_has_bound(a, 1/2)
 
