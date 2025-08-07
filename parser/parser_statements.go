@@ -1866,12 +1866,21 @@ func (tb *tokenBlock) namedUniFactStmt() (*ast.NamedUniFactStmt, error) {
 
 		return ast.NewNamedUniFactStmt(ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts, thenFacts)), nil
 	} else {
-		iffFacts, thenFacts, err := tb.bodyOfInlineDomAndThen(glob.KeySymbolEqualLarger)
+		// iffFacts, thenFacts, err := tb.bodyOfInlineDomAndThen(glob.KeySymbolEqualLarger)
+		// if err != nil {
+		// 	return nil, tbErr(err, tb)
+		// }
+
+		iffFact, err := tb.domFactInUniFactInterface()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		thenFact, err := tb.thenFacts_SkipEnd_Semicolon_or_EOL()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
 
-		return ast.NewNamedUniFactStmt(ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts, thenFacts)), nil
+		return ast.NewNamedUniFactStmt(ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFact, thenFact)), nil
 	}
 }
 
