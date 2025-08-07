@@ -809,3 +809,9 @@ func (s *FnTemplateDefStmt) ToLatexString() string {
 func (s *ClearStmt) ToLatexString() string {
 	return glob.KeywordClear
 }
+
+func (s *InlineFactsStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString(strings.Join(s.Facts.factStmtSliceToLatexStringSlice(), "\n\n"))
+	return builder.String()
+}
