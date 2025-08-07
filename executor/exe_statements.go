@@ -80,6 +80,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		err = exec.fnTemplateStmt(stmt)
 	case *ast.ClearStmt:
 		exec.clearStmt()
+	case *ast.InlineFactsStmt:
+		execState, err = exec.inlineFactsStmt(stmt)
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}
@@ -501,4 +503,15 @@ func (exec *Executor) clearStmt() error {
 		exec.newMsg("clear\n")
 	}
 	return nil
+}
+
+func (exec *Executor) inlineFactsStmt(stmt *ast.InlineFactsStmt) (glob.ExecState, error) {
+	for _, fact := range stmt.Facts {
+		execState, err := exec.factStmt(fact)
+		if notOkExec(execState, err) {
+			return execState, err
+		}
+	}
+
+	return glob.ExecState_True, nil
 }
