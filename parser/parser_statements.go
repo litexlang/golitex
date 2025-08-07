@@ -90,10 +90,9 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.fnTemplateStmt()
 	case glob.KeywordClear:
 		ret, err = tb.clearStmt()
+	case glob.KeySymbolQuestionMark:
+		ret, err = tb.inlineFactsStmt()
 	default:
-		if tb.GetEnd() != glob.KeySymbolColon {
-			return tb.inlineFactsStmt()
-		}
 		ret, err = tb.factStmt(UniFactDepth0)
 	}
 
@@ -2064,6 +2063,8 @@ func (tb *tokenBlock) clearStmt() (ast.Stmt, error) {
 }
 
 func (tb *tokenBlock) inlineFactsStmt() (ast.Stmt, error) {
+	tb.header.skip(glob.KeySymbolQuestionMark)
+
 	facts, err := tb.inlineFacts_untilEndOfInline()
 	if err != nil {
 		return nil, tbErr(err, tb)

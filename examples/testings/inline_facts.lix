@@ -17,6 +17,3 @@ know:
     forall x R: forall x R: x > 0 => x > 0 <=> x > 0; x > 0 => x > 0
     forall x R: forall x R: x > 0 => x > 0 <=> x > 0; x > 0 => x > 0
     forall x R: forall x R: x > 0 => x > 0 <=> x > 0; x > 0 => forall x R: x > 0 => x > 0 <=> x > 0; x > 0
-
-forall x R: x > 0 => x > 0 <=> x > 0;
-forall x R: x > 0 => x > 0;
