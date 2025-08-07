@@ -42,85 +42,36 @@ prop two_consecutive_items_of_seq_are_0(a seq(R), n N):
     a(n) + a(n+1) = 0
 
 claim:
-    forall a seq(R), index N, n N:
-        a(n+2) + a(n) * a(n) = a(n) + a(n+1) * a(n+1)
-        a(index) + a(index+1) = 0
-        then:
-        	forall k N: k > index => a(k) = 0
+    forall a seq(R), index N, n N: a(n+2) + a(n) * a(n) = a(n) + a(n+1) * a(n+1), a(index) + a(index+1) = 0, => forall k N: k > index => a(k) = 0
     prove:
         know forall k N: k > index => a(k) = 0
 
-know @periodic_seq_which_is_0_since_n_is_always_0(a seq(R), n N):
-    forall m N: m > n => a(m) = 0
-    $seq_periodic(a)
-    then:
-        forall k N => a(k) = 0
+know @periodic_seq_which_is_0_since_n_is_always_0(a seq(R), n N): forall m N: m > n => a(m) = 0; $seq_periodic(a), => forall k N => a(k) = 0
 
 claim:
-    forall a seq(R):
-        forall n N:
-            a(n+2) + a(n+1) = (a(n+1) + a(n)) * (a(n+1) - a(n) + 1)
-            abs(a(n+1) - a(n)) <= 1
-        not $exist_two_consecutive_items_whose_sum_is_0(a)
-        $seq_periodic(a)
-        then:
-            forall n N => a(n) = a(n+1)
+    forall a seq(R): forall n N => a(n+2) + a(n+1) = (a(n+1) + a(n)) * (a(n+1) - a(n) + 1), abs(a(n+1) - a(n)) <= 1; not $exist_two_consecutive_items_whose_sum_is_0(a), $seq_periodic(a), => forall n N => a(n) = a(n+1)
                 
     prove:
         have T st $seq_periodic(a)
-
-        let b, c, d, e finite_seq(R, T):
-        	forall n N: n < T => b(n) = a(n) + a(n+1)
-            forall n N: n < T => c(n) = a(n+1) + a(n+2)
-            forall n N: n < T => d(n) = c(n) / b(n)
-            forall n N: n < T => e(n) = a(n+1) - a(n) + 1
-
+        let b, c, d, e finite_seq(R, T): forall n N: n < T => b(n) = a(n) + a(n+1); forall n N: n < T => c(n) = a(n+1) + a(n+2); forall n N: n < T => d(n) = c(n) / b(n); forall n N: n < T => e(n) = a(n+1) - a(n) + 1
         forall n N: n < T => a(n) + a(n+1) != 0, a(n) + a(n+1) = b(n), b(n) != 0
 
-        forall n N:
-            n < T - 1
-            then:
-                n + 1 < T
-                $subtraction_preserves_inequality_with_positive_term(n, T, 1)
-                n < T
-                c(n) = a(n+1) + a(n+2)
-                b(n+1) = a(n+1) + a(n+1+1)
-                b(n+1) = a(n+1) + a(n+2)
-                c(n) = b(n+1)
+        forall n N: n < T - 1 => n + 1 < T, $subtraction_preserves_inequality_with_positive_term(n, T, 1), n < T, c(n) = a(n+1) + a(n+2), b(n+1) = a(n+1) + a(n+1+1), b(n+1) = a(n+1) + a(n+2), c(n) = b(n+1)
 
-        a(0) = a(0+T)
-        a(1) = a(1+T)
-        T - 1 < T
-        0 < T
-
+        ? a(0) = a(0+T), a(1) = a(1+T), T - 1 < T, 0 < T
         =: c(T-1), a(T-1+1) + a(T-1+2), a(T) + a(T+1), a(0) + a(1), a(0) + a(0+1), b(0)
-            
         $telescoping_product(T, c, b, d)
 
         claim:
             forall n N: n < T => d(n) = e(n)
             prove:
-                a(n) + a(n+1) != 0
-                a(n+1) + a(n) != 0
-                a(n+2) + a(n+1) = (a(n+1) + a(n)) * (a(n+1) - a(n) + 1)
+                ? a(n) + a(n+1) != 0, a(n+1) + a(n) != 0, a(n+2) + a(n+1) = (a(n+1) + a(n)) * (a(n+1) - a(n) + 1)
                 know (a(n+2) + a(n+1)) / (a(n+1) + a(n)) = a(n+1) - a(n) + 1
                 =: e(n), a(n+1) - a(n) + 1, (a(n+2) + a(n+1)) / (a(n+1) + a(n)), (a(n+1) + a(n+2)) / (a(n) + a(n+1)), c(n) / b(n), d(n)
 
-        $finite_seq_equal(R, T, e, d)
-
-        $telescoping_product(T, c, b, e)
-
-        1 = finite_seq_product(T, e, T-1)
-
-        $T_is_period_of_seq(a, T)
-
-        $periodic_seq_alternating_minus_add_1_has_average_1_at_period(a, T, e)
-        finite_seq_sum(T, e, T-1) = T
-
+        ? $finite_seq_equal(R, T, e, d), $telescoping_product(T, c, b, e), 1 = finite_seq_product(T, e, T-1), $T_is_period_of_seq(a, T), $periodic_seq_alternating_minus_add_1_has_average_1_at_period(a, T, e), finite_seq_sum(T, e, T-1) = T
         =: (finite_seq_sum(T, e, T-1)/T)^T, (T/T)^T, (1)^T, 1, finite_seq_product(T, e, T-1)
-
         know forall n N: n < T => e(n) = 1, e(n) >= 0
-
         $AM_GM_inequality_equal_cond(T, e)
 
         claim:
@@ -134,7 +85,6 @@ claim:
                 $periodic_seq_equal_if_first_T_consecutive_items_are_equal(T, a)
     
         $first_T_items_of_periodic_seq_are_equal_then_seq_is_periodic(a, T)
-
 claim:
     forall a seq(R):
         forall k N => a(k) = - a(k+1), abs(a(k+1) - a(k)) <= 1
