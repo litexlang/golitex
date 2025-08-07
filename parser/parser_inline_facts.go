@@ -76,6 +76,8 @@ func (tb *tokenBlock) inlineFact() (ast.FactStmt, error) {
 		return tb.inlineUniInterface()
 	case glob.KeywordOr:
 		return tb.inlineOrStmt()
+	case glob.KeySymbolEqual:
+		return tb.inlineEqualsFactStmt()
 	default:
 		return tb.inlineSpecFactStmt()
 	}
@@ -332,4 +334,41 @@ func (tb *tokenBlock) domFactInUniFactInterface() ([]ast.FactStmt, error) {
 			return facts, nil
 		}
 	}
+}
+
+func (tb *tokenBlock) inlineEqualsFactStmt() (*ast.EqualsFactStmt, error) {
+	err := tb.header.skip(glob.KeySymbolEqual)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	params := []ast.Fc{}
+	for {
+		curFc, err := tb.RawFc()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		params = append(params, curFc)
+
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+			continue
+		}
+
+		if tb.header.is(glob.KeySymbolRightBrace) {
+			tb.header.skip(glob.KeySymbolRightBrace)
+			break
+		}
+	}
+
+	if tb.header.is(glob.KeySymbolComma) {
+		tb.header.skip("")
+	}
+
+	return ast.NewEqualsFactStmt(params), nil
 }
