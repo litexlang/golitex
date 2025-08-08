@@ -1,5 +1,2 @@
-let point set
-forall a, b point:
-    a != b
-    then:
-        b != a
+prop is_h(x R)
+know 1 $is_h
