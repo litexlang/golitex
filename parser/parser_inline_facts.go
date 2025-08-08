@@ -80,7 +80,8 @@ func (tb *tokenBlock) inlineFact() (ast.FactStmt, error) {
 	case glob.KeySymbolEqual:
 		return tb.inlineEqualsFactStmt()
 	default:
-		return tb.inlineSpecFactStmt()
+		// return tb.inlineSpecFactStmt()
+		return tb.inline_specFact_enum_intensional_fact()
 	}
 }
 
@@ -376,7 +377,7 @@ func (tb *tokenBlock) inlineEqualsFactStmt() (*ast.EqualsFactStmt, error) {
 
 func (tb *tokenBlock) inline_specFact_enum_intensional_fact() (ast.FactStmt, error) {
 	if tb.header.is(glob.FuncFactPrefix) || tb.header.is(glob.KeywordNot) || tb.header.is(glob.KeywordExist) {
-		return tb.specFactStmt()
+		return tb.inlineSpecFactStmt()
 	}
 
 	var ret ast.FactStmt
@@ -409,11 +410,13 @@ func (tb *tokenBlock) inline_specFact_enum_intensional_fact() (ast.FactStmt, err
 
 			ret = ast.NewSpecFactStmt(ast.TruePure, propName, params)
 		}
-	} else if !glob.IsBuiltinInfixRelaPropSymbol(opt) {
-		return nil, fmt.Errorf("expect relation prop")
 	} else if opt == glob.KeySymbolColonEqual {
 		return tb.inline_enum_intensional_fact(fc)
 	} else {
+		if !glob.IsBuiltinInfixRelaPropSymbol(opt) {
+			return nil, fmt.Errorf("expect relation prop")
+		}
+
 		fc2, err := tb.RawFc()
 		if err != nil {
 			return nil, tbErr(err, tb)
@@ -422,6 +425,10 @@ func (tb *tokenBlock) inline_specFact_enum_intensional_fact() (ast.FactStmt, err
 		params := []ast.Fc{fc, fc2}
 
 		ret = ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(opt), params)
+
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+		}
 	}
 
 	// 这里加入语法糖：!= 等价于 not =，好处是我 = 有 commutative的性质，我不用额外处理 != 了
@@ -436,6 +443,12 @@ func (tb *tokenBlock) inline_specFact_enum_intensional_fact() (ast.FactStmt, err
 }
 
 func (tb *tokenBlock) inline_enum_intensional_fact(left ast.Fc) (ast.FactStmt, error) {
+	defer func() {
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+		}
+	}()
+
 	err := tb.header.skip(glob.KeySymbolLeftCurly)
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -460,6 +473,9 @@ func (tb *tokenBlock) inline_enum_intensional_fact(left ast.Fc) (ast.FactStmt, e
 				return nil, tbErr(err, tb)
 			}
 			enumItems = append(enumItems, fc)
+			if tb.header.is(glob.KeySymbolComma) {
+				tb.header.skip(glob.KeySymbolComma)
+			}
 		}
 
 		err = tb.header.skip(glob.KeySymbolRightCurly)
