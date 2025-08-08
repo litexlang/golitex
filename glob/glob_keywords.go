@@ -124,7 +124,6 @@ const (
 	KeySymbolPower        = "^"
 	KeySymbolLess         = "<"
 	KeySymbolGreater      = ">"
-	KeySymbolBackslash    = "\\"
 	KeySymbolDot          = "."
 	KeySymbolColonColon   = "::"
 	KeySymbolNotEqual     = "!=" // 在parse就立刻变成 not =，exec里没有对它的处理
@@ -155,7 +154,6 @@ var symbolSet map[string]struct{} = map[string]struct{}{
 	KeySymbolNotEqual:     {}, // "!="
 	KeySymbolColonColon:   {}, // "::"
 	KeySymbolColonEqual:   {}, // ":="
-	KeySymbolBackslash:    {}, // "\\"
 	KeySymbolPower:        {}, // "^"
 	KeySymbolColon:        {}, // ":"
 	KeySymbolComma:        {}, // ","
