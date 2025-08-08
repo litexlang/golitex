@@ -1,9 +1,3 @@
-import "seq"
+import "Seq"
 
-let a seq(R):
-	$seq::periodic(a)
-
-have T st $seq::periodic(a)
-
-forall n N:
-    a(n) = a(n+T)
+let a R: a = Seq::Seq2::a

@@ -92,7 +92,7 @@ type ClaimPropStmt struct {
 }
 
 type KnowFactStmt struct {
-	Facts FactStmtSlice
+	Facts CanBeKnownStmtSlice
 }
 
 type KnowPropStmt struct {
