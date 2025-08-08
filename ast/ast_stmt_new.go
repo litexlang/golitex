@@ -42,7 +42,7 @@ func NewClaimProveStmt(toCheckFact FactStmt, proofs []Stmt) *ClaimProveStmt {
 	return &ClaimProveStmt{toCheckFact, proofs}
 }
 
-func NewKnowStmt(facts []FactStmt) *KnowFactStmt {
+func NewKnowStmt(facts CanBeKnownStmtSlice) *KnowFactStmt {
 	return &KnowFactStmt{facts}
 }
 

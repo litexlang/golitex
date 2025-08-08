@@ -10,6 +10,7 @@ forall x R: x > 0 => x > 0 <=> x > 0
 
 know:
     forall => 1 + 1 = 2
+    forall : 1 > 0 => 1 > 0
     forall => 1 + 1 = 2 <=> 1 + 1 = 2
     forall x R => x > 0
     forall x R => x > 0 <=> x > 0

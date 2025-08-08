@@ -19,6 +19,7 @@ import (
 	ast "golitex/ast"
 	glob "golitex/glob"
 	"slices"
+	"strings"
 )
 
 func (tb *tokenBlock) inlineFacts_untilEndOfInline() ([]ast.FactStmt, error) {
@@ -79,7 +80,8 @@ func (tb *tokenBlock) inlineFact() (ast.FactStmt, error) {
 	case glob.KeySymbolEqual:
 		return tb.inlineEqualsFactStmt()
 	default:
-		return tb.inlineSpecFactStmt()
+		// return tb.inlineSpecFactStmt()
+		return tb.inline_specFact_enum_intensional_fact()
 	}
 }
 
@@ -371,4 +373,147 @@ func (tb *tokenBlock) inlineEqualsFactStmt() (*ast.EqualsFactStmt, error) {
 	}
 
 	return ast.NewEqualsFactStmt(params), nil
+}
+
+func (tb *tokenBlock) inline_specFact_enum_intensional_fact() (ast.FactStmt, error) {
+	if tb.header.is(glob.FuncFactPrefix) || tb.header.is(glob.KeywordNot) || tb.header.is(glob.KeywordExist) {
+		return tb.inlineSpecFactStmt()
+	}
+
+	var ret ast.FactStmt
+
+	fc, err := tb.RawFc()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	opt, err := tb.header.next()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	if opt == glob.FuncFactPrefix {
+		propName, err := tb.rawFcAtom()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		if tb.header.ExceedEnd() {
+			ret = ast.NewSpecFactStmt(ast.TruePure, propName, []ast.Fc{fc})
+		} else {
+			fc2, err := tb.RawFc()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+
+			params := []ast.Fc{fc, fc2}
+
+			ret = ast.NewSpecFactStmt(ast.TruePure, propName, params)
+		}
+	} else if opt == glob.KeySymbolColonEqual {
+		return tb.inline_enum_intensional_fact(fc)
+	} else {
+		if !glob.IsBuiltinInfixRelaPropSymbol(opt) {
+			return nil, fmt.Errorf("expect relation prop")
+		}
+
+		fc2, err := tb.RawFc()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		params := []ast.Fc{fc, fc2}
+
+		ret = ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(opt), params)
+
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+		}
+	}
+
+	// 这里加入语法糖：!= 等价于 not =，好处是我 = 有 commutative的性质，我不用额外处理 != 了
+	if asSpec, ok := ret.(*ast.SpecFactStmt); ok {
+		if asSpec.NameIs(glob.KeySymbolNotEqual) {
+			asSpec.TypeEnum = ast.FalsePure
+			asSpec.PropName = ast.FcAtom(glob.KeySymbolEqual)
+		}
+	}
+
+	return ret, nil
+}
+
+func (tb *tokenBlock) inline_enum_intensional_fact(left ast.Fc) (ast.FactStmt, error) {
+	defer func() {
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+		}
+	}()
+
+	err := tb.header.skip(glob.KeySymbolLeftCurly)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	firstFc, err := tb.RawFc()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	if tb.header.is(glob.KeySymbolComma) || tb.header.is(glob.KeySymbolRightCurly) {
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+		} else {
+			return ast.NewEnumStmt(left, []ast.Fc{firstFc}), nil
+		}
+
+		enumItems := []ast.Fc{firstFc}
+		for !tb.header.is(glob.KeySymbolRightCurly) {
+			fc, err := tb.RawFc()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			enumItems = append(enumItems, fc)
+			if tb.header.is(glob.KeySymbolComma) {
+				tb.header.skip(glob.KeySymbolComma)
+			}
+		}
+
+		err = tb.header.skip(glob.KeySymbolRightCurly)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		return ast.NewEnumStmt(left, enumItems), nil
+	} else {
+		firstFcAsAtom := firstFc.(ast.FcAtom)
+		// 必须是纯的，不能是复合的
+		if strings.Contains(string(firstFcAsAtom), glob.KeySymbolColonColon) {
+			return nil, fmt.Errorf("the first item of enum must be pure, but got %s", firstFcAsAtom)
+		}
+
+		parentSet, err := tb.RawFc()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		err = tb.header.skip(glob.KeySymbolColon)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		facts := []*ast.SpecFactStmt{}
+		for {
+			fact, err := tb.inlineSpecFactStmt()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			facts = append(facts, fact)
+
+			if tb.header.ExceedEnd() {
+				break
+			}
+		}
+
+		return ast.NewIntensionalSetStmt(left, string(firstFcAsAtom), parentSet, facts), nil
+	}
 }
