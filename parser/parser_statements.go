@@ -88,10 +88,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.fnTemplateStmt()
 	case glob.KeywordClear:
 		ret, err = tb.clearStmt()
-	case glob.KeySymbolQuestionMark:
-		ret, err = tb.inlineFactsStmt()
 	default:
-		ret, err = tb.factStmt(UniFactDepth0)
+		ret, err = tb.factsStmt()
 	}
 
 	if err != nil {
@@ -471,13 +469,13 @@ func (tb *tokenBlock) knowFactStmt() (*ast.KnowFactStmt, error) {
 	tb.header.skip(glob.KeywordKnow)
 
 	if !tb.header.is(glob.KeySymbolColon) {
-		facts := []ast.FactStmt{}
+		facts := ast.FactStmtSlice{}
 		fact, err := tb.factStmt(UniFactDepth0)
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
 		facts = append(facts, fact) // 之所以不能用,让know后面同一行里能有很多很多事实，是因为forall-fact是会换行的
-		return ast.NewKnowStmt(facts), nil
+		return ast.NewKnowStmt(facts.ToCanBeKnownStmtSlice()), nil
 
 	}
 
@@ -486,7 +484,7 @@ func (tb *tokenBlock) knowFactStmt() (*ast.KnowFactStmt, error) {
 	}
 
 	var err error
-	var facts []ast.FactStmt
+	var facts ast.FactStmtSlice = ast.FactStmtSlice{}
 	if tb.header.ExceedEnd() {
 		facts, err = tb.bodyFacts(UniFactDepth0)
 		if err != nil {
@@ -503,7 +501,7 @@ func (tb *tokenBlock) knowFactStmt() (*ast.KnowFactStmt, error) {
 		}
 	}
 
-	return ast.NewKnowStmt(facts), nil
+	return ast.NewKnowStmt(facts.ToCanBeKnownStmtSlice()), nil
 }
 
 // relaFact 只支持2个参数的关系
@@ -545,11 +543,6 @@ func (tb *tokenBlock) relaFactStmt() (*ast.SpecFactStmt, error) {
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
-
-		// // 必须到底了
-		// if !tb.header.ExceedEnd() {
-		// 	return nil, fmt.Errorf("expect end of line")
-		// }
 
 		params := []ast.Fc{fc, fc2}
 
@@ -2097,13 +2090,19 @@ func (tb *tokenBlock) clearStmt() (ast.Stmt, error) {
 	return ast.NewClearStmt(), nil
 }
 
-func (tb *tokenBlock) inlineFactsStmt() (ast.Stmt, error) {
-	tb.header.skip(glob.KeySymbolQuestionMark)
+func (tb *tokenBlock) factsStmt() (ast.Stmt, error) {
+	if tb.GetEnd() != glob.KeySymbolColon {
+		facts, err := tb.inlineFacts_untilEndOfInline()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
 
-	facts, err := tb.inlineFacts_untilEndOfInline()
-	if err != nil {
-		return nil, tbErr(err, tb)
+		if len(facts) == 1 {
+			return facts[0], nil
+		}
+
+		return ast.NewInlineFactsStmt(facts), nil
+	} else {
+		return tb.factStmt(UniFactDepth0)
 	}
-
-	return ast.NewInlineFactsStmt(facts), nil
 }

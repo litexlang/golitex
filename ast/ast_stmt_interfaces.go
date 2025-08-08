@@ -62,6 +62,7 @@ type FactStmt interface {
 	Instantiate(map[string]Fc) (FactStmt, error)
 	GetAtoms() []FcAtom
 	ToLatexString() string
+	canBeKnown()
 }
 
 func (p *SpecFactStmt) factStmt()       {}
@@ -81,6 +82,7 @@ type Spec_OrFact interface {
 	ReverseIsTrue() []*SpecFactStmt
 	GetAtoms() []FcAtom
 	ToLatexString() string
+	canBeKnown()
 }
 
 func (s *SpecFactStmt) reversibleFact() {}
@@ -118,6 +120,7 @@ type UniFactInterface interface {
 	GetAtoms() []FcAtom
 	uniFact()
 	ToLatexString() string
+	canBeKnown()
 }
 
 func (stmt *UniFactStmt) uniFact()        {}
@@ -154,6 +157,7 @@ type EnumSet_IntensionalSet_EqualDom interface {
 	Instantiate(map[string]Fc) (FactStmt, error)
 	GetAtoms() []FcAtom
 	ToLatexString() string
+	canBeKnown()
 }
 
 func (stmt *EnumStmt) setDeclarationStmt()           {}
@@ -167,3 +171,29 @@ type FnTemplate_Or_DefObjStmtInterface interface {
 }
 
 func (stmt *DefObjStmt) fnTemplate_Or_DefObjStmt() {}
+
+type CanBeKnownStmt interface {
+	stmt()
+	String() string
+	ToLatexString() string
+	canBeKnown()
+}
+
+func (s *SpecFactStmt) canBeKnown()       {}
+func (s *UniFactStmt) canBeKnown()        {}
+func (s *UniFactWithIffStmt) canBeKnown() {}
+func (s *OrStmt) canBeKnown()             {}
+func (s *EnumStmt) canBeKnown()           {}
+func (s *IntensionalSetStmt) canBeKnown() {}
+func (s *EqualsFactStmt) canBeKnown()     {}
+func (s *KnowPropStmt) canBeKnown()       {}
+
+type CanBeKnownStmtSlice []CanBeKnownStmt
+
+func (s FactStmtSlice) ToCanBeKnownStmtSlice() CanBeKnownStmtSlice {
+	ret := make(CanBeKnownStmtSlice, len(s))
+	for i, fact := range s {
+		ret[i] = fact
+	}
+	return ret
+}

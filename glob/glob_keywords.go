@@ -124,7 +124,6 @@ const (
 	KeySymbolPower        = "^"
 	KeySymbolLess         = "<"
 	KeySymbolGreater      = ">"
-	KeySymbolBackslash    = "\\"
 	KeySymbolDot          = "."
 	KeySymbolColonColon   = "::"
 	KeySymbolNotEqual     = "!=" // 在parse就立刻变成 not =，exec里没有对它的处理
@@ -142,9 +141,9 @@ const (
 	KeySymbolAt           = "@"
 	KeySymbolEqualLarger  = "=>"
 
-	KeySymbolSemiColon    = ";"
-	KeySymbolEquivalent   = "<=>"
-	KeySymbolQuestionMark = "?"
+	KeySymbolSemiColon  = ";"
+	KeySymbolEquivalent = "<=>"
+	// KeySymbolQuestionMark = "?"
 )
 
 // 最多双字符，或者单字符，否则parser的逻辑 GetKeySymbol 有问题
@@ -155,7 +154,6 @@ var symbolSet map[string]struct{} = map[string]struct{}{
 	KeySymbolNotEqual:     {}, // "!="
 	KeySymbolColonColon:   {}, // "::"
 	KeySymbolColonEqual:   {}, // ":="
-	KeySymbolBackslash:    {}, // "\\"
 	KeySymbolPower:        {}, // "^"
 	KeySymbolColon:        {}, // ":"
 	KeySymbolComma:        {}, // ","
@@ -181,7 +179,7 @@ var symbolSet map[string]struct{} = map[string]struct{}{
 	KeySymbolEqualLarger:  {}, // "=>"
 	KeySymbolSemiColon:    {}, // ";"
 	KeySymbolEquivalent:   {}, // "<=>"
-	KeySymbolQuestionMark: {}, // "?"
+	// KeySymbolQuestionMark: {}, // "?"
 }
 
 var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]struct{}{

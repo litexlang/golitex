@@ -1,0 +1,14 @@
+past_examples
+.dist
+.vscode
+*.ipynb
+env.json
+syntax.md
+golitex.code-workspace
+deploy_web
+./reference_manual/thoughts.md
+/binary/
+/kernel_lib/
+./examples/testings/.order
+/to_latex/
+/kernel_builtin_lib/

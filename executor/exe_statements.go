@@ -126,13 +126,23 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) error {
 	}
 
 	for _, fact := range stmt.Facts {
-		if !exec.env.AreAtomsInFactAreDeclared(fact, map[string]struct{}{}) {
-			return fmt.Errorf(env.AtomsInFactNotDeclaredMsg(fact))
-		}
+		switch fact := fact.(type) {
+		case ast.FactStmt:
+			if !exec.env.AreAtomsInFactAreDeclared(fact, map[string]struct{}{}) {
+				return fmt.Errorf(env.AtomsInFactNotDeclaredMsg(fact))
+			}
 
-		err := exec.env.NewFact(fact)
-		if err != nil {
-			return err
+			err := exec.env.NewFact(fact)
+			if err != nil {
+				return err
+			}
+		case *ast.KnowPropStmt:
+			err := exec.knowPropStmt(fact)
+			if err != nil {
+				return err
+			}
+		default:
+			return fmt.Errorf("unknown fact type: %T", fact)
 		}
 	}
 
@@ -255,7 +265,7 @@ func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) (glob.E
 	}
 
 	// emit then fact
-	err = exec.knowStmt(ast.NewKnowStmt(stmt.ThenFacts))
+	err = exec.knowStmt(ast.NewKnowStmt(stmt.ThenFacts.ToCanBeKnownStmtSlice()))
 	if err != nil {
 		return glob.ExecState_Error, err
 	}
