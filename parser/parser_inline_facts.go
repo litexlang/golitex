@@ -411,7 +411,7 @@ func (tb *tokenBlock) inline_specFact_enum_intensional_fact() (ast.FactStmt, err
 	} else if !glob.IsBuiltinInfixRelaPropSymbol(opt) {
 		return nil, fmt.Errorf("expect relation prop")
 	} else if opt == glob.KeySymbolColonEqual {
-		panic("not implemented")
+		return tb.inline_enum_intensional_fact()
 	} else {
 		fc2, err := tb.RawFc()
 		if err != nil {
@@ -432,4 +432,28 @@ func (tb *tokenBlock) inline_specFact_enum_intensional_fact() (ast.FactStmt, err
 	}
 
 	return ret, nil
+}
+
+func (tb *tokenBlock) inline_enum_intensional_fact() (ast.FactStmt, error) {
+	err := tb.header.skip(glob.KeySymbolColonEqual)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolLeftCurly)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	firstFc, err := tb.RawFc()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+	_ = firstFc
+
+	if tb.header.is(glob.KeySymbolComma) || tb.header.is(glob.KeySymbolRightCurly) {
+		panic("not implemented")
+	} else {
+		panic("not implemented")
+	}
 }
