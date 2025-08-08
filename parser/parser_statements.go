@@ -91,7 +91,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 	case glob.KeySymbolQuestionMark:
 		ret, err = tb.inlineFactsStmt()
 	default:
-		ret, err = tb.factStmt(UniFactDepth0)
+		ret, err = tb.factsStmt()
+		// ret, err = tb.factStmt(UniFactDepth0)
 	}
 
 	if err != nil {
@@ -2103,6 +2104,19 @@ func (tb *tokenBlock) inlineFactsStmt() (ast.Stmt, error) {
 	facts, err := tb.inlineFacts_untilEndOfInline()
 	if err != nil {
 		return nil, tbErr(err, tb)
+	}
+
+	return ast.NewInlineFactsStmt(facts), nil
+}
+
+func (tb *tokenBlock) factsStmt() (ast.Stmt, error) {
+	facts, err := tb.inlineFacts_untilEndOfInline()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	if len(facts) == 1 {
+		return facts[0], nil
 	}
 
 	return ast.NewInlineFactsStmt(facts), nil
