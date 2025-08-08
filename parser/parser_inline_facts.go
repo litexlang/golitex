@@ -19,6 +19,7 @@ import (
 	ast "golitex/ast"
 	glob "golitex/glob"
 	"slices"
+	"strings"
 )
 
 func (tb *tokenBlock) inlineFacts_untilEndOfInline() ([]ast.FactStmt, error) {
@@ -411,7 +412,7 @@ func (tb *tokenBlock) inline_specFact_enum_intensional_fact() (ast.FactStmt, err
 	} else if !glob.IsBuiltinInfixRelaPropSymbol(opt) {
 		return nil, fmt.Errorf("expect relation prop")
 	} else if opt == glob.KeySymbolColonEqual {
-		return tb.inline_enum_intensional_fact()
+		return tb.inline_enum_intensional_fact(fc)
 	} else {
 		fc2, err := tb.RawFc()
 		if err != nil {
@@ -434,13 +435,8 @@ func (tb *tokenBlock) inline_specFact_enum_intensional_fact() (ast.FactStmt, err
 	return ret, nil
 }
 
-func (tb *tokenBlock) inline_enum_intensional_fact() (ast.FactStmt, error) {
-	err := tb.header.skip(glob.KeySymbolColonEqual)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	err = tb.header.skip(glob.KeySymbolLeftCurly)
+func (tb *tokenBlock) inline_enum_intensional_fact(left ast.Fc) (ast.FactStmt, error) {
+	err := tb.header.skip(glob.KeySymbolLeftCurly)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -449,11 +445,59 @@ func (tb *tokenBlock) inline_enum_intensional_fact() (ast.FactStmt, error) {
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
-	_ = firstFc
 
 	if tb.header.is(glob.KeySymbolComma) || tb.header.is(glob.KeySymbolRightCurly) {
-		panic("not implemented")
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+		} else {
+			return ast.NewEnumStmt(left, []ast.Fc{firstFc}), nil
+		}
+
+		enumItems := []ast.Fc{firstFc}
+		for !tb.header.is(glob.KeySymbolRightCurly) {
+			fc, err := tb.RawFc()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			enumItems = append(enumItems, fc)
+		}
+
+		err = tb.header.skip(glob.KeySymbolRightCurly)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		return ast.NewEnumStmt(left, enumItems), nil
 	} else {
-		panic("not implemented")
+		firstFcAsAtom := firstFc.(ast.FcAtom)
+		// 必须是纯的，不能是复合的
+		if strings.Contains(string(firstFcAsAtom), glob.KeySymbolColonColon) {
+			return nil, fmt.Errorf("the first item of enum must be pure, but got %s", firstFcAsAtom)
+		}
+
+		parentSet, err := tb.RawFc()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		err = tb.header.skip(glob.KeySymbolColon)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		facts := []*ast.SpecFactStmt{}
+		for {
+			fact, err := tb.inlineSpecFactStmt()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			facts = append(facts, fact)
+
+			if tb.header.ExceedEnd() {
+				break
+			}
+		}
+
+		return ast.NewIntensionalSetStmt(left, string(firstFcAsAtom), parentSet, facts), nil
 	}
 }
