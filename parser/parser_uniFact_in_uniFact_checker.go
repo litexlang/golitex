@@ -19,13 +19,27 @@ import (
 	ast "golitex/ast"
 )
 
-func checkFactsUniDepth(facts []ast.FactStmt) error {
+func checkFactsUniDepth0(facts []ast.FactStmt) error {
 	for _, fact := range facts {
 		switch asFact := fact.(type) {
 		case *ast.UniFactStmt:
 			err := checkUniFactDepth0(asFact)
 			if err != nil {
 				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func checkFactsUniDepth1(facts []ast.FactStmt) error {
+	for _, fact := range facts {
+		switch asFact := fact.(type) {
+		case *ast.UniFactStmt:
+			ok := checkUniFactDepth1(asFact)
+			if !ok {
+				return fmt.Errorf("too many levels of universal fact in universal fact:\n%s\nthere must be at most two levels of universal fact", asFact.String())
 			}
 		}
 	}
