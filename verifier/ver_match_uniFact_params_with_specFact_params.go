@@ -45,7 +45,7 @@ func (ver *Verifier) matchUniFactParamsWithSpecFactParams(knownSpecFactInUniFact
 	for _, instVars := range matchedMap {
 		firstVar := instVars[0]
 		for j := 1; j < len(instVars); j++ {
-			ok, err := ver.VerFactStmt(ast.NewEqualFact(firstVar, instVars[j]), FinalRoundNoMsg)
+			ok, err := ver.verTrueEqualFact(ast.NewEqualFact(firstVar, instVars[j]), FinalRoundNoMsg, false)
 			if err != nil {
 				return false, nil, err
 			}
@@ -66,7 +66,7 @@ func (ver *Verifier) matchUniFactParamsWithSpecFactParams(knownSpecFactInUniFact
 		if err != nil {
 			return false, nil, err
 		}
-		ok, err := ver.VerFactStmt(ast.NewEqualFact(instKnownFreeVar, fcPair.givenFc), FinalRoundNoMsg)
+		ok, err := ver.verTrueEqualFact(ast.NewEqualFact(instKnownFreeVar, fcPair.givenFc), FinalRoundNoMsg, false)
 		if err != nil {
 			return false, nil, err
 		}
@@ -93,7 +93,7 @@ func (ver *Verifier) matchFcInKnownSpecFactAndGivenFc(knownFc ast.Fc, givenFc as
 			}
 			return retMap, []fcPair{}, nil
 		} else {
-			ok, err := ver.VerFactStmt(ast.NewEqualFact(knownFc, givenFc), FinalRoundNoMsg)
+			ok, err := ver.verTrueEqualFact(ast.NewEqualFact(knownFc, givenFc), FinalRoundNoMsg, false)
 			if err != nil {
 				return nil, []fcPair{}, err
 			}
