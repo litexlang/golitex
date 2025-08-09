@@ -32,51 +32,66 @@ type fcPair struct {
 }
 
 // return map{freeVar: instVar}, unMatched fcPairs, matched?, err
-func (ver *Verifier) matchFcInKnownSpecFactAndGivenFc(knownFc ast.Fc, givenFc ast.Fc, freeVars map[string]struct{}) (map[string][]ast.Fc, []fcPair, bool, error) {
+func (ver *Verifier) matchFcInKnownSpecFactAndGivenFc(knownFc ast.Fc, givenFc ast.Fc, freeVars map[string]struct{}) (map[string][]ast.Fc, []fcPair, error) {
 	switch asKnownFc := knownFc.(type) {
 	case ast.FcAtom:
 		if _, ok := freeVars[string(asKnownFc)]; ok {
 			retMap := map[string][]ast.Fc{
 				string(asKnownFc): {givenFc},
 			}
-			return retMap, []fcPair{}, true, nil
+			return retMap, []fcPair{}, nil
 		} else {
 			ok, err := ver.VerFactStmt(ast.NewEqualFact(knownFc, givenFc), FinalRoundNoMsg)
 			if err != nil {
-				return nil, []fcPair{}, false, err
+				return nil, []fcPair{}, err
 			}
 			if !ok {
-				return nil, []fcPair{fcPair{knownFc: knownFc, givenFc: givenFc}}, false, nil
+				return nil, []fcPair{fcPair{knownFc: knownFc, givenFc: givenFc}}, nil
 			}
-			return nil, []fcPair{}, true, nil
+			return nil, []fcPair{}, nil
 		}
 	case *ast.FcFn:
 		switch asGivenFc := givenFc.(type) {
 		case ast.FcAtom:
-			return nil, []fcPair{fcPair{knownFc: knownFc, givenFc: givenFc}}, false, nil
+			return nil, []fcPair{fcPair{knownFc: knownFc, givenFc: givenFc}}, nil
 		case *ast.FcFn:
 			retMap := map[string][]ast.Fc{}
 			retFcPairs := []fcPair{}
-			headMatchedMap, headMatchedFcPairs, _, err := ver.matchFcInKnownSpecFactAndGivenFc(asKnownFc.FnHead, asGivenFc.FnHead, freeVars)
+
+			if len(asKnownFc.Params) != len(asGivenFc.Params) {
+				return nil, []fcPair{fcPair{knownFc: knownFc, givenFc: givenFc}}, nil
+			}
+
+			headMatchedMap, headMatchedFcPairs, err := ver.matchFcInKnownSpecFactAndGivenFc(asKnownFc.FnHead, asGivenFc.FnHead, freeVars)
 			if err != nil {
-				return nil, []fcPair{}, false, err
+				return nil, []fcPair{}, err
 			}
 			retMap, retFcPairs = ver.mergeSingleMatchedMapAndUnMatchedFcPairs(headMatchedMap, headMatchedFcPairs, retMap, retFcPairs)
 
-			paramsMatchedMap, paramsMatchedFcPairs, _, err := ver.matchFcsInKnownSpecFactAndGivenFc(asKnownFc.Params, asGivenFc.Params, freeVars)
+			paramsMatchedMap, paramsMatchedFcPairs, err := ver.matchFcsInKnownSpecFactAndGivenFc(asKnownFc.Params, asGivenFc.Params, freeVars)
 			if err != nil {
-				return nil, []fcPair{}, false, err
+				return nil, []fcPair{}, err
 			}
 			retMap, retFcPairs = ver.mergeMultipleMatchedMapAndUnMatchedFcPairs(paramsMatchedMap, paramsMatchedFcPairs, retMap, retFcPairs)
-			return retMap, retFcPairs, true, nil
+			return retMap, retFcPairs, nil
 		}
 	}
 
-	return nil, []fcPair{}, false, nil
+	return nil, []fcPair{}, nil
 }
 
-func (ver *Verifier) matchFcsInKnownSpecFactAndGivenFc(knownFcs []ast.Fc, givenFcs []ast.Fc, freeVars map[string]struct{}) ([]map[string][]ast.Fc, [][]fcPair, bool, error) {
-	panic("not implemented")
+func (ver *Verifier) matchFcsInKnownSpecFactAndGivenFc(knownFcs []ast.Fc, givenFcs []ast.Fc, freeVars map[string]struct{}) ([]map[string][]ast.Fc, [][]fcPair, error) {
+	matchedMaps := []map[string][]ast.Fc{}
+	unmatchedFcPairs := [][]fcPair{}
+	for i := range knownFcs {
+		matchedMap, matchedFcPairs, err := ver.matchFcInKnownSpecFactAndGivenFc(knownFcs[i], givenFcs[i], freeVars)
+		if err != nil {
+			return nil, [][]fcPair{}, err
+		}
+		matchedMaps = append(matchedMaps, matchedMap)
+		unmatchedFcPairs = append(unmatchedFcPairs, matchedFcPairs)
+	}
+	return matchedMaps, unmatchedFcPairs, nil
 }
 
 func (ver *Verifier) mergeMultipleMatchedMapAndUnMatchedFcPairs(matchedMaps []map[string][]ast.Fc, matchedFcPairs [][]fcPair, putTo map[string][]ast.Fc, putToFcPairs []fcPair) (map[string][]ast.Fc, []fcPair) {
