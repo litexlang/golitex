@@ -14,10 +14,14 @@
 
 package litex_verifier
 
-import ast "golitex/ast"
+import (
+	ast "golitex/ast"
+	env "golitex/environment"
+)
 
-func (ver *Verifier) matchUniFactParamsWithSpecFactParams(uniFact *ast.UniFactStmt, specFact *ast.SpecFactStmt) (bool, error) {
-	_ = uniFact
+func (ver *Verifier) matchUniFactParamsWithSpecFactParams(knownSpecFactInUniFact *env.KnownSpecFact_InUniFact, specFact *ast.SpecFactStmt) (bool, error) {
+	_ = knownSpecFactInUniFact
 	_ = specFact
+
 	return false, nil
 }

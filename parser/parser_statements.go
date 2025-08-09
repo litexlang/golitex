@@ -1222,6 +1222,11 @@ func (tb *tokenBlock) defFnStmt() (*ast.DefFnStmt, error) {
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
+	if asAtom, ok := retSet.(ast.FcAtom); ok {
+		if string(asAtom) == glob.KeySymbolColon {
+			return nil, fmt.Errorf(": is not allowed in return set")
+		}
+	}
 
 	domFacts := []ast.FactStmt{}
 	thenFacts := []ast.FactStmt{}
