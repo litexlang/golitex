@@ -1,2 +1,2 @@
-# 1 + 1 = 2
-(1,2,3) $in set_product(N, N, N)
+fn add(a, b R) R => add(a, b) = a + b
+1 \add 2 = 1 + 2

@@ -136,7 +136,7 @@ func (tb *tokenBlock) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence) (ast.Fc
 			return nil, fmt.Errorf("unexpected end of input while parsing infix expression")
 		}
 
-		if curToken == glob.RelaFnPrefix {
+		if curToken == glob.KeySymbolFnPrefixSig {
 			tb.header.skip("") // 消耗curToken
 
 			fn, err := tb.header.next() // 只允许 \ 后面跟 fcAtom 格式出现的 函数，而不是是 fcFn 格式出现的函数，否则 x \mul (y \mul z) 会被解析成 mul(mul(y,z))(x) 而不是 mul(x, mul(y, z))
