@@ -141,8 +141,9 @@ const (
 	KeySymbolAt           = "@"
 	KeySymbolEqualLarger  = "=>"
 
-	KeySymbolSemiColon  = ";"
-	KeySymbolEquivalent = "<=>"
+	KeySymbolSemiColon   = ";"
+	KeySymbolEquivalent  = "<=>"
+	KeySymbolFnPrefixSig = "\\"
 	// KeySymbolQuestionMark = "?"
 )
 
@@ -179,6 +180,7 @@ var symbolSet map[string]struct{} = map[string]struct{}{
 	KeySymbolEqualLarger:  {}, // "=>"
 	KeySymbolSemiColon:    {}, // ";"
 	KeySymbolEquivalent:   {}, // "<=>"
+	KeySymbolFnPrefixSig:  {},
 	// KeySymbolQuestionMark: {}, // "?"
 }
 
