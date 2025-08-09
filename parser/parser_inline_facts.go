@@ -517,3 +517,31 @@ func (tb *tokenBlock) inline_enum_intensional_fact(left ast.Fc) (ast.FactStmt, e
 		return ast.NewIntensionalSetStmt(left, string(firstFcAsAtom), parentSet, facts), nil
 	}
 }
+
+func (tb *tokenBlock) inlineFacts_checkUniDepth0() ([]ast.FactStmt, error) {
+	facts, err := tb.inlineFacts_untilEndOfInline()
+	if err != nil {
+		return nil, err
+	}
+
+	err = checkFactsUniDepth0(facts)
+	if err != nil {
+		return nil, err
+	}
+
+	return facts, nil
+}
+
+func (tb *tokenBlock) inlineFacts_checkUniDepth1() ([]ast.FactStmt, error) {
+	facts, err := tb.inlineFacts_untilEndOfInline()
+	if err != nil {
+		return nil, err
+	}
+
+	err = checkFactsUniDepth1(facts)
+	if err != nil {
+		return nil, err
+	}
+
+	return facts, nil
+}
