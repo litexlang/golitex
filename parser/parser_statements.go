@@ -475,7 +475,7 @@ func (tb *tokenBlock) knowFactStmt() (*ast.KnowFactStmt, error) {
 			return nil, tbErr(err, tb)
 		}
 	} else {
-		facts, err = tb.inlineFacts_untilEndOfInline()
+		facts, err = tb.inlineFacts_checkUniDepth0()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -760,7 +760,7 @@ func (tb *tokenBlock) defExistPropStmtBody() (*ast.DefExistPropStmtBody, error) 
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
-		unitFacts, err := tb.inlineFacts_untilEndOfInline()
+		unitFacts, err := tb.inlineFacts_checkUniDepth1()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -1244,7 +1244,7 @@ func (tb *tokenBlock) defFnStmt() (*ast.DefFnStmt, error) {
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
-		unitFacts, err := tb.inlineFacts_untilEndOfInline()
+		unitFacts, err := tb.inlineFacts_checkUniDepth1()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
