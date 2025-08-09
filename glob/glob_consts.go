@@ -20,7 +20,6 @@ const MultiLinesCommentSig string = "\"\"\""
 const MaxNameLen int = 255
 const FuncFactPrefix string = "$"
 const CommentSig string = "#"
-const RelaFnPrefix string = "\\"
 const ContinueExecutionIfExecUnknown bool = false
 const TupleAtOp string = "[]" // TODO 删了
 const TupleFcFnHead string = "()"
