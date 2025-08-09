@@ -1,4 +1,14 @@
+"""
 fn ss(a seq(R), n R):
     ss(a, n+1) = ss(a, n) + a(n+1)
 let a seq(R)
 ss(a, 0+1) = ss(a, 0) + a(0+1)
+# ss(a, 0+1) = ss(a, 0) + a(1)
+"""
+
+fn e(a R) R
+fn b(a R) R
+fn c(a R) R
+know b = c
+know forall x R => e(b(c(x))) > 0
+e(c(b(1))) > 0
