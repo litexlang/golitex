@@ -19,7 +19,7 @@ import (
 	env "golitex/environment"
 )
 
-func (ver *Verifier) matchUniFactParamsWithSpecFactParams(knownSpecFactInUniFact *env.KnownSpecFact_InUniFact, specFact *ast.SpecFactStmt) (bool, error) {
+func (ver *Verifier) matchUniFactParamsWithSpecFactParams(knownSpecFactInUniFact *env.KnownSpecFact_InUniFact, specFact *ast.SpecFactStmt) (bool, map[string]ast.Fc, error) {
 	knownFcs := knownSpecFactInUniFact.SpecFact.Params
 	givenFcs := specFact.Params
 	freeVars := knownSpecFactInUniFact.UniFact.Params
@@ -30,14 +30,14 @@ func (ver *Verifier) matchUniFactParamsWithSpecFactParams(knownSpecFactInUniFact
 
 	matchedMaps, unmatchedFcPairs, err := ver.matchFcsInKnownSpecFactAndGivenFc(knownFcs, givenFcs, freeVarsMap)
 	if err != nil {
-		return false, err
+		return false, nil, err
 	}
 	matchedMap, unMatchedFcPairs := ver.mergeMultipleMatchedMapAndUnMatchedFcPairs(matchedMaps, unmatchedFcPairs, map[string][]ast.Fc{}, []fcPair{})
 
 	// 所有的自由变量必须被匹配到了
 	for freeVar := range freeVarsMap {
 		if _, ok := matchedMap[freeVar]; !ok {
-			return false, nil // 有freeVar没有匹配到，说明specFact的参数和uniFact的参数不匹配
+			return false, nil, nil // 有freeVar没有匹配到，说明specFact的参数和uniFact的参数不匹配
 		}
 	}
 
@@ -47,10 +47,10 @@ func (ver *Verifier) matchUniFactParamsWithSpecFactParams(knownSpecFactInUniFact
 		for j := 1; j < len(instVars); j++ {
 			ok, err := ver.VerFactStmt(ast.NewEqualFact(firstVar, instVars[j]), FinalRoundNoMsg)
 			if err != nil {
-				return false, err
+				return false, nil, err
 			}
 			if !ok {
-				return false, nil
+				return false, nil, nil
 			}
 		}
 	}
@@ -64,18 +64,18 @@ func (ver *Verifier) matchUniFactParamsWithSpecFactParams(knownSpecFactInUniFact
 	for _, fcPair := range unMatchedFcPairs {
 		instKnownFreeVar, err := fcPair.knownFc.Instantiate(freeVarToInstVar)
 		if err != nil {
-			return false, err
+			return false, nil, err
 		}
 		ok, err := ver.VerFactStmt(ast.NewEqualFact(instKnownFreeVar, fcPair.givenFc), FinalRoundNoMsg)
 		if err != nil {
-			return false, err
+			return false, nil, err
 		}
 		if !ok {
-			return false, nil
+			return false, nil, nil
 		}
 	}
 
-	return true, nil
+	return true, freeVarToInstVar, nil
 }
 
 type fcPair struct {
