@@ -1,2 +1,4 @@
-fn add(a, b R) R => add(a, b) = a + b
-1 \add 2 = 1 + 2
+fn ss(a seq(R), n R):
+    ss(a, n+1) = ss(a, n) + a(n+1)
+let a seq(R)
+ss(a, 0+1) = ss(a, 0) + a(0+1)
