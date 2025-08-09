@@ -208,7 +208,8 @@ func (ver *Verifier) specFact_UniMem_atCurEnv(curEnv *env.Env, stmt *ast.SpecFac
 		return false, nil
 	}
 
-	return ver.iterate_KnownSpecInUniFacts_applyMatch(stmt, searchedSpecFacts, state)
+	// return ver.iterate_KnownSpecInUniFacts_applyMatch(stmt, searchedSpecFacts, state)
+	return ver.iterate_KnownSpecInUniFacts_applyMatch_new(stmt, searchedSpecFacts, state)
 }
 
 func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch(stmt *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InUniFact, state VerState) (bool, error) {
@@ -561,4 +562,68 @@ func (ver *Verifier) verify_specFact_when_given_orStmt_is_true(stmt *ast.SpecFac
 	}
 
 	return true, nil
+}
+
+func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch_new(stmt *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InUniFact, state VerState) (bool, error) {
+	for i := len(knownFacts) - 1; i >= 0; i-- {
+		knownFact_paramProcessed := knownFacts[i]
+		// 这里需要用的是 instantiated 的 knownFact
+
+		ok, uniConMap, err := ver.matchUniFactParamsWithSpecFactParams(&knownFact_paramProcessed, stmt)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			continue
+		}
+
+		randomizedUniFactWithoutThen, _, paramMapStrToStr, err := ver.preprocessUniFactParamsWithoutThenFacts(knownFact_paramProcessed.UniFact)
+		if err != nil {
+			return false, err
+		}
+
+		for k, v := range uniConMap {
+			if newParam, ok := paramMapStrToStr[k]; ok {
+				uniConMap[newParam] = v
+				delete(uniConMap, k)
+			}
+		}
+
+		instantiatedUniFactWithoutThen, err := instantiateUniFactWithoutThenFacts(randomizedUniFactWithoutThen, uniConMap)
+		if err != nil {
+			return false, err
+		}
+
+		// TODO 要证明在paramSet里
+		paramInParamSetFacts := instantiatedUniFactWithoutThen.ParamInParamSetFacts(uniConMap)
+		setFactSatisfied := true
+		for _, paramInParamSetFact := range paramInParamSetFacts {
+			ok, err = ver.VerFactStmt(paramInParamSetFact, state)
+			if err != nil {
+				return false, err
+			}
+			if !ok {
+				setFactSatisfied = false
+				break
+			}
+		}
+
+		if !setFactSatisfied {
+			continue
+		}
+
+		ok, err = ver.proveUniFactDomFacts(instantiatedUniFactWithoutThen.DomFacts, state)
+		if err != nil {
+			continue
+		}
+
+		if ok {
+			if state.requireMsg() {
+				ver.successWithMsg(stmt.String(), knownFact_paramProcessed.String())
+			}
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
