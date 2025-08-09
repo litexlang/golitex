@@ -20,10 +20,62 @@ import (
 )
 
 func (ver *Verifier) matchUniFactParamsWithSpecFactParams(knownSpecFactInUniFact *env.KnownSpecFact_InUniFact, specFact *ast.SpecFactStmt) (bool, error) {
-	_ = knownSpecFactInUniFact
-	_ = specFact
+	knownFcs := knownSpecFactInUniFact.SpecFact.Params
+	givenFcs := specFact.Params
+	freeVars := knownSpecFactInUniFact.UniFact.Params
+	freeVarsMap := map[string]struct{}{}
+	for _, freeVar := range freeVars {
+		freeVarsMap[freeVar] = struct{}{}
+	}
 
-	return false, nil
+	matchedMaps, unmatchedFcPairs, err := ver.matchFcsInKnownSpecFactAndGivenFc(knownFcs, givenFcs, freeVarsMap)
+	if err != nil {
+		return false, err
+	}
+	matchedMap, unMatchedFcPairs := ver.mergeMultipleMatchedMapAndUnMatchedFcPairs(matchedMaps, unmatchedFcPairs, map[string][]ast.Fc{}, []fcPair{})
+
+	// 所有的自由变量必须被匹配到了
+	for freeVar := range freeVarsMap {
+		if _, ok := matchedMap[freeVar]; !ok {
+			return false, nil // 有freeVar没有匹配到，说明specFact的参数和uniFact的参数不匹配
+		}
+	}
+
+	// 所有自由变量对应的instVar必须相等
+	for _, instVars := range matchedMap {
+		firstVar := instVars[0]
+		for j := 1; j < len(instVars); j++ {
+			ok, err := ver.VerFactStmt(ast.NewEqualFact(firstVar, instVars[j]), FinalRoundNoMsg)
+			if err != nil {
+				return false, err
+			}
+			if !ok {
+				return false, nil
+			}
+		}
+	}
+
+	freeVarToInstVar := map[string]ast.Fc{}
+	for freeVar, instVars := range matchedMap {
+		freeVarToInstVar[freeVar] = instVars[0]
+	}
+
+	// 把实例化了的没被匹配的fcPair拿出来，检查是否是equal
+	for _, fcPair := range unMatchedFcPairs {
+		instKnownFreeVar, err := fcPair.knownFc.Instantiate(freeVarToInstVar)
+		if err != nil {
+			return false, err
+		}
+		ok, err := ver.VerFactStmt(ast.NewEqualFact(instKnownFreeVar, fcPair.givenFc), FinalRoundNoMsg)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+	}
+
+	return true, nil
 }
 
 type fcPair struct {
