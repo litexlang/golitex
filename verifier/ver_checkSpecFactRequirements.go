@@ -39,6 +39,7 @@ func (ver *Verifier) checkSpecFactReq(stmt *ast.SpecFactStmt, state *VerState) (
 }
 
 // 只验证 1. params都声明了 2. 确实是fn template
+// WARNING: 这个函数有严重的问题
 func (ver *Verifier) checkSpecFactReq_InFact_UseBtRules(stmt *ast.SpecFactStmt) (bool, error) {
 	ok := ver.env.AreAtomsInFcAreDeclared(stmt.Params[0], map[string]struct{}{})
 	if !ok {
@@ -49,7 +50,8 @@ func (ver *Verifier) checkSpecFactReq_InFact_UseBtRules(stmt *ast.SpecFactStmt) 
 		return false, nil
 	}
 
-	head, ok := stmt.Params[1].(*ast.FcFn).IsFcFn_HasAtomHead_ReturnHead()
+	head, ok := stmt.Params[1].(*ast.FcFn).IsFcFn_HasAtomHead_ReturnHead() // WARNING: 这里有问题，因为可能不是fn template，而是 fn(R)R 这种
+	// 需要处理 fn(R)R 这种；现在 fn_template 本质上也写成函数形式了
 	if ok {
 		_, ok := ver.env.GetFnTemplateDef(head)
 		if ok {
