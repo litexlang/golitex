@@ -164,7 +164,7 @@ func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecFactStmt, state *VerState) 
 }
 
 func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
-	nextState := state.addRound()
+	nextState := state.GetAddRound()
 
 	if !stmt.IsTrue() {
 		return false, nil
@@ -297,7 +297,7 @@ func (ver *Verifier) verSpecFactLogicMem(stmt *ast.SpecFactStmt, state *VerState
 }
 
 func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
-	nextState := state.addRound()
+	nextState := state.GetAddRound()
 
 	ok, err := ver.verSpecFact_InSpecFact_UniMem(stmt, nextState)
 	if isErrOrOk(ok, err) {

@@ -92,7 +92,7 @@ func (ver *Verifier) checkSpecFactRequirements(stmt *ast.SpecFactStmt, state *Ve
 	// TODO: 这里有点问题。应该做的分类是：builtin的 stmt name，如in；以及非builtin的stmt name
 
 	// 2. Check if the parameters satisfy the requirement of the function requirements
-	stateNoMsg := state.toNoMsg()
+	stateNoMsg := state.GetNoMsg()
 	for _, param := range stmt.Params {
 		ok, err := ver.fcSatisfyFnRequirement(param, stateNoMsg)
 		if err != nil {

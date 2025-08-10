@@ -108,7 +108,7 @@ func (ver *Verifier) varCommutativeProp_BuiltinRules(stmt *ast.SpecFactStmt, sta
 
 	uniFact := ast.NewUniFactWithIff(ast.NewUniFact(uniFactParams, propDef.DefHeader.ParamSets, domFacts, []ast.FactStmt{ThenFact}), []ast.FactStmt{IffFact})
 
-	ok, err = ver.VerFactStmt(uniFact, state.toNoMsg())
+	ok, err = ver.VerFactStmt(uniFact, state.GetNoMsg())
 	if err != nil {
 		return false, err
 	}

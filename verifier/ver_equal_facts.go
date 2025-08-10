@@ -42,7 +42,7 @@ func (ver *Verifier) cmpFc(left ast.Fc, right ast.Fc, state *VerState) (bool, er
 	if ok {
 		rightAsFn, ok := right.(*ast.FcFn)
 		if ok {
-			ok, err = ver.fcFnEq(leftAsFn, rightAsFn, state.toFinalRound())
+			ok, err = ver.fcFnEq(leftAsFn, rightAsFn, state.GetFinalRound())
 			if err != nil {
 				return false, err
 			}
@@ -128,7 +128,7 @@ func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state *VerState) (bo
 func (ver *Verifier) fcFnEq(left, right *ast.FcFn, state *VerState) (bool, error) {
 	var ok bool
 	var err error
-	state = state.addRound()
+	state = state.GetAddRound()
 
 	if len(left.Params) != len(right.Params) {
 		return false, nil

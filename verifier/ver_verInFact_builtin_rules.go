@@ -400,7 +400,7 @@ func (ver *Verifier) trueExistInSt(stmt *ast.SpecFactStmt, state *VerState) (boo
 
 func (ver *Verifier) fcIsFiniteSet(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	// TODO: not sure whether I should add this nextState
-	nextState := state.addRound()
+	nextState := state.GetAddRound()
 
 	finiteSetFact := ast.NewInFactWithFc(stmt.Params[0], ast.FcAtom(glob.KeywordFiniteSet))
 	ok, err := ver.VerFactStmt(finiteSetFact, nextState)
