@@ -100,3 +100,11 @@ prove:
             x > 0 
     know f3(1) $in f_template() # true, because return value of f3 is $in f_template。这是要写的，否则找不到f3(1) 的性质
     f3(1)(2) = 2 + 1
+
+prove:
+    fn fn_add(f fn(R)R, g fn(R)R) fn(R,R)R => forall x R, y R => fn_add(f, g)(x, y) = f(x) + g(y)
+
+    fn f(x R) R => f(x) = x
+    fn_add(f, f) $in fn(R,R)R
+
+    1 \fn_add(f, f)\ 2 = f(1) + f(2)
