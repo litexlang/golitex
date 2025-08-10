@@ -136,10 +136,22 @@ func (tb *tokenBlock) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence) (ast.Fc
 			return nil, fmt.Errorf("unexpected end of input while parsing infix expression")
 		}
 
-		if curToken == glob.KeySymbolFnPrefixSig {
-			tb.header.skip("") // 消耗curToken
+		if curToken == glob.KeySymbolBackSlash {
+			// tb.header.skip("") // 消耗curToken
 
-			fn, err := tb.header.next() // 只允许 \ 后面跟 fcAtom 格式出现的 函数，而不是是 fcFn 格式出现的函数，否则 x \mul (y \mul z) 会被解析成 mul(mul(y,z))(x) 而不是 mul(x, mul(y, z))
+			// fn, err := tb.header.next() // 只允许 \ 后面跟 fcAtom 格式出现的 函数，而不是是 fcFn 格式出现的函数，否则 x \mul (y \mul z) 会被解析成 mul(mul(y,z))(x) 而不是 mul(x, mul(y, z))
+			// if err != nil {
+			// 	return nil, err
+			// }
+
+			// right, err := tb.fcInfixExpr(glob.PrecLowest)
+			// if err != nil {
+			// 	return nil, err
+			// }
+
+			// left = ast.NewFcFn(ast.FcAtom(fn), []ast.Fc{left, right})
+
+			fn, err := tb.backSlashExpr()
 			if err != nil {
 				return nil, err
 			}
@@ -149,7 +161,8 @@ func (tb *tokenBlock) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence) (ast.Fc
 				return nil, err
 			}
 
-			left = ast.NewFcFn(ast.FcAtom(fn), []ast.Fc{left, right})
+			left = ast.NewFcFn(fn, []ast.Fc{left, right})
+
 			break
 		}
 
@@ -424,6 +437,25 @@ func ParseSourceCodeGetFc(s string) (ast.Fc, error) {
 	}
 
 	fc, err := blocks[0].RawFc()
+	if err != nil {
+		return nil, err
+	}
+
+	return fc, nil
+}
+
+func (tb *tokenBlock) backSlashExpr() (ast.Fc, error) {
+	err := tb.header.skip(glob.KeySymbolBackSlash)
+	if err != nil {
+		return nil, err
+	}
+
+	fc, err := tb.unaryOptFc()
+	if err != nil {
+		return nil, err
+	}
+
+	err = tb.header.skip(glob.KeySymbolBackSlash)
 	if err != nil {
 		return nil, err
 	}

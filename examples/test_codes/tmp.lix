@@ -1,6 +1,8 @@
-fn fn_add(f fn(R)R, g fn(R)R) fn(R)R:
-    fn_add(f, g)(x) = f(x) + g(x)
+fn fn_add(f fn(R)R, g fn(R)R) fn(R,R)R:
+    forall x R, y R:
+        fn_add(f, g)(x, y) = f(x) + g(y)
 
 fn f(x R) R => f(x) = x
+fn_add(f, f) $in fn(R,R)R
 
-1 \fn_add(f, f) 2 = f(1) + f(2)
+1 \fn_add(f, f)\ 2 = f(1) + f(2)
