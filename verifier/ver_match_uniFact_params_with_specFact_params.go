@@ -98,20 +98,20 @@ func (ver *Verifier) matchFcInKnownSpecFactAndGivenFc(knownFc ast.Fc, givenFc as
 				return nil, []fcPair{}, err
 			}
 			if !ok {
-				return nil, []fcPair{fcPair{knownFc: knownFc, givenFc: givenFc}}, nil
+				return nil, []fcPair{{knownFc: knownFc, givenFc: givenFc}}, nil
 			}
 			return nil, []fcPair{}, nil
 		}
 	case *ast.FcFn:
 		switch asGivenFc := givenFc.(type) {
 		case ast.FcAtom:
-			return nil, []fcPair{fcPair{knownFc: knownFc, givenFc: givenFc}}, nil
+			return nil, []fcPair{{knownFc: knownFc, givenFc: givenFc}}, nil
 		case *ast.FcFn:
 			retMap := map[string][]ast.Fc{}
 			retFcPairs := []fcPair{}
 
 			if len(asKnownFc.Params) != len(asGivenFc.Params) {
-				return nil, []fcPair{fcPair{knownFc: knownFc, givenFc: givenFc}}, nil
+				return nil, []fcPair{{knownFc: knownFc, givenFc: givenFc}}, nil
 			}
 
 			headMatchedMap, headMatchedFcPairs, err := ver.matchFcInKnownSpecFactAndGivenFc(asKnownFc.FnHead, asGivenFc.FnHead, freeVars)
