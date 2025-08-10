@@ -1,14 +1,6 @@
-fn ss(a seq(R), n R) R:
-    ss(a, n+1) = ss(a, n) + a(n+1)
-let a seq(R)
-#ss(a, 0+1) = ss(a, 0) + a(0+1)
-ss(a, 0+1) = ss(a, 0) + a(1)
+fn fn_add(f fn(R)R, g fn(R)R) fn(R)R:
+    fn_add(f, g)(x) = f(x) + g(x)
 
-"""
-fn e(a R) R
-fn b(a R) R
-fn c(a R) R
-know b = c
-know forall x R => e(b(c(x))) > 0
-e(c(b(1))) > 0
-"""
+fn f(x R) R => f(x) = x
+
+1 \fn_add(f, f) 2 = f(1) + f(2)

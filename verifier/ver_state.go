@@ -22,7 +22,7 @@ type VerState struct {
 	ReqOk   bool
 }
 
-func (s *VerState) addRound() *VerState {
+func (s *VerState) GetAddRound() *VerState {
 	return &VerState{
 		Round:   s.Round + 1,
 		WithMsg: s.WithMsg,
@@ -30,7 +30,7 @@ func (s *VerState) addRound() *VerState {
 	}
 }
 
-func (s *VerState) toNoMsg() *VerState {
+func (s *VerState) GetNoMsg() *VerState {
 	return &VerState{
 		Round:   s.Round,
 		WithMsg: false,
@@ -38,19 +38,11 @@ func (s *VerState) toNoMsg() *VerState {
 	}
 }
 
-func (s *VerState) toReqOk() *VerState {
-	return &VerState{
-		Round:   s.Round,
-		WithMsg: s.WithMsg,
-		ReqOk:   true,
-	}
-}
-
 func (s *VerState) isFinalRound() bool {
 	return s.Round >= 2 // return s.Round == 2
 }
 
-func (s *VerState) toFinalRound() *VerState {
+func (s *VerState) GetFinalRound() *VerState {
 	return &VerState{
 		Round:   2,
 		WithMsg: s.WithMsg,
