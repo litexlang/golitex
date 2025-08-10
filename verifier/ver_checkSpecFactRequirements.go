@@ -344,5 +344,14 @@ func (ver *Verifier) onFnRequirement(fc *ast.FcFn, state *VerState) (bool, error
 		return false, nil
 	}
 
+	tmpT := ast.NewFcFn(ast.NewFcFn(ast.FcAtom(glob.KeywordFn), fc.Params[1:]), []ast.Fc{ast.FcAtom(glob.KeywordObj)}) // 问这个函数是否在 fn(fc[1:]) obj 中
+	ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fc.Params[0], tmpT}), state)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
+
 	return true, nil
 }
