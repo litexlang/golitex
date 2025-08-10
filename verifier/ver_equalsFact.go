@@ -16,7 +16,7 @@ package litex_verifier
 
 import ast "golitex/ast"
 
-func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState) (bool, error) {
 	equalFacts := stmt.ToEqualFacts()
 	for _, equalFact := range equalFacts {
 		ok, err := ver.VerFactStmt(equalFact, state)
