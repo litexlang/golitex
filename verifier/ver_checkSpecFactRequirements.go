@@ -106,11 +106,11 @@ func (ver *Verifier) checkSpecFactRequirements(stmt *ast.SpecFactStmt, state *Ve
 	// 所有的传入的参数符号 prop 的要求 以及 stmt name 确实是个 prop。这貌似不需要检查，因为每次你得到新的事实时候，已经检查过了
 	// 但是最好在这里警告一下用户，如果不满足prop的要求的话，可能出问题
 
-	*state = state.toReqOk()
+	state.ReqOk = true
 	return true, nil
 }
 
-func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state VerState) (bool, error) {
+func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state *VerState) (bool, error) {
 	if _, ok := fc.(ast.FcAtom); ok {
 		return true, nil
 	}
@@ -158,7 +158,7 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state VerState) (bool, er
 // 	return true
 // }
 
-// func (ver *Verifier) fcFnSatisfyFnTemplate_FnTemplate_Requirement(fc ast.Fc, state VerState) (bool, error) {
+// func (ver *Verifier) fcFnSatisfyFnTemplate_FnTemplate_Requirement(fc ast.Fc, state *VerState) (bool, error) {
 // 	ok, err := ver.fcFnSatisfy_FnTemplate_Requirement(fc, state)
 // 	if err != nil {
 // 		return false, err
@@ -167,7 +167,7 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state VerState) (bool, er
 // 	return ok, nil
 // }
 
-func (ver *Verifier) fcFnSatisfy_FnTemplate_Requirement(fc ast.Fc, state VerState) (bool, error) {
+func (ver *Verifier) fcFnSatisfy_FnTemplate_Requirement(fc ast.Fc, state *VerState) (bool, error) {
 	var err error
 
 	asFcFn, ok := fc.(*ast.FcFn)
@@ -193,7 +193,7 @@ func (ver *Verifier) fcFnSatisfy_FnTemplate_Requirement(fc ast.Fc, state VerStat
 	return false, nil
 }
 
-func (ver *Verifier) fcFnParamsSatisfyFnTemplateNoNameRequirement(fcFn *ast.FcFn, templateOfFn *ast.FnTStruct, state VerState) (bool, error) {
+func (ver *Verifier) fcFnParamsSatisfyFnTemplateNoNameRequirement(fcFn *ast.FcFn, templateOfFn *ast.FnTStruct, state *VerState) (bool, error) {
 	if len(fcFn.Params) != len(templateOfFn.Params) {
 		return false, fmt.Errorf("parameters in %s must be %d, %s in %s is not valid", fcFn.FnHead, len(templateOfFn.Params), fcFn, fcFn)
 	}
@@ -231,7 +231,7 @@ func (ver *Verifier) fcFnParamsSatisfyFnTemplateNoNameRequirement(fcFn *ast.FcFn
 	return true, nil
 }
 
-// func (ver *Verifier) paramIs_R_Z_Q_N(fc ast.Fc, state VerState) (bool, error) {
+// func (ver *Verifier) paramIs_R_Z_Q_N(fc ast.Fc, state *VerState) (bool, error) {
 // 	inRFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fc, ast.FcAtom(glob.KeywordReal)})
 // 	ok, err := ver.VerFactStmt(inRFact, state)
 // 	if err != nil {
@@ -269,7 +269,7 @@ func (ver *Verifier) fcFnParamsSatisfyFnTemplateNoNameRequirement(fcFn *ast.FcFn
 // }
 
 // TODO: 这里需要检查！
-func (ver *Verifier) setDefinedByReplacementFnRequirement(fc *ast.FcFn, state VerState) (bool, error) {
+func (ver *Verifier) setDefinedByReplacementFnRequirement(fc *ast.FcFn, state *VerState) (bool, error) {
 	if len(fc.Params) != 3 {
 		return false, fmt.Errorf("parameters in %s must be 3, %s in %s is not valid", fc.FnHead, fc, fc)
 	}
@@ -306,7 +306,7 @@ func (ver *Verifier) isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj(fc *ast.FcFn) b
 	return ok
 }
 
-func (ver *Verifier) isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj_CheckRequirement(fc *ast.FcFn, state VerState) (bool, error) {
+func (ver *Verifier) isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj_CheckRequirement(fc *ast.FcFn, state *VerState) (bool, error) {
 	for _, param := range fc.Params {
 		ok, err := ver.fcSatisfyFnRequirement(param, state)
 		if err != nil || !ok {
@@ -317,7 +317,7 @@ func (ver *Verifier) isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj_CheckRequiremen
 	return true, nil
 }
 
-func (ver *Verifier) lenFnRequirement(fc *ast.FcFn, state VerState) (bool, error) {
+func (ver *Verifier) lenFnRequirement(fc *ast.FcFn, state *VerState) (bool, error) {
 	if len(fc.Params) != 1 {
 		return false, fmt.Errorf("parameters in %s must be 1, %s in %s is not valid", fc.FnHead, fc, fc)
 	}
