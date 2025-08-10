@@ -110,7 +110,7 @@ func (ver *Verifier) returnValueOfBuiltinArithmeticFnInReal(stmt *ast.SpecFactSt
 	ok = ast.IsFn_WithHeadNameInSlice(stmt.Params[0], []string{glob.KeySymbolPlus, glob.KeySymbolMinus, glob.KeySymbolStar, glob.KeySymbolSlash, glob.KeySymbolPower})
 
 	if ok {
-		if state.requireMsg() {
+		if state.WithMsg {
 			ver.successWithMsg(stmt.String(), "the return value of the builtin arithmetic function is in the real set")
 		}
 		return true
@@ -127,7 +127,7 @@ func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactS
 
 	if fcFn.HasHeadInSlice([]string{glob.KeySymbolPlus, glob.KeySymbolMinus, glob.KeySymbolStar, glob.KeySymbolSlash, glob.KeySymbolPower}) {
 		if stmt.Params[1] == ast.FcAtom(glob.KeywordReal) {
-			if state.requireMsg() {
+			if state.WithMsg {
 				ver.successWithMsg(stmt.String(), "the return value of the builtin arithmetic function is in the real set")
 			}
 			return true
@@ -137,7 +137,7 @@ func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactS
 
 	if fcFn.HasHeadInSlice([]string{glob.KeywordLen, glob.KeySymbolPercent}) {
 		if stmt.Params[1] == ast.FcAtom(glob.KeywordNatural) {
-			if state.requireMsg() {
+			if state.WithMsg {
 				ver.successWithMsg(stmt.String(), "the return value of the builtin arithmetic function is in the natural set")
 			}
 			return true
@@ -181,7 +181,7 @@ func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactS
 		return false
 	}
 
-	if state.requireMsg() {
+	if state.WithMsg {
 		ver.successWithMsg(stmt.String(), "the return value of the user defined function is in the function return set")
 	}
 
@@ -204,7 +204,7 @@ func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state *VerState
 	// }
 
 	if string(asAtom) == glob.KeywordNatural || string(asAtom) == glob.KeywordInteger || string(asAtom) == glob.KeywordReal || string(asAtom) == glob.KeywordComplex || string(asAtom) == glob.KeywordRational || string(asAtom) == glob.KeywordNPos {
-		if state.requireMsg() {
+		if state.WithMsg {
 			ver.successWithMsg(stmt.String(), "the builtin rules")
 		}
 		return true
@@ -221,7 +221,7 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state *VerState) (
 				return false, err
 			}
 			if ok {
-				if state.requireMsg() {
+				if state.WithMsg {
 					ver.successWithMsg(stmt.String(), fmt.Sprintf("dom of template %s is in the domain of the template where function %s is in. Also, the return value of the function is in the return set of the template where function %s is in", stmt.Params[1], stmt.Params[0], stmt.Params[1]))
 				}
 				return true, nil
@@ -233,7 +233,7 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state *VerState) (
 				return false, err
 			}
 			if ok {
-				if state.requireMsg() {
+				if state.WithMsg {
 					ver.successWithMsg(stmt.String(), fmt.Sprintf("dom of template %s is in the domain of the template where function %s is in. Also, the return value of the function is in the return set of the template where function %s is in", stmt.Params[1], stmt.Params[0], stmt.Params[1]))
 				}
 				return true, nil
@@ -339,7 +339,7 @@ func (ver *Verifier) inObjFact(stmt *ast.SpecFactStmt, state *VerState) (bool, e
 		return false, nil
 	}
 
-	if state.requireMsg() {
+	if state.WithMsg {
 		ver.successWithMsg(stmt.String(), fmt.Sprintf("all atoms in %s are declared as obj or literal number", stmt.Params[0]))
 	}
 
@@ -466,7 +466,7 @@ func (ver *Verifier) verInSetProduct(stmt *ast.SpecFactStmt, state *VerState) (b
 		}
 	}
 
-	if state.requireMsg() {
+	if state.WithMsg {
 		ver.successWithMsg(stmt.String(), fmt.Sprintf("each item in tuple %s is in corresponding set %s", stmt.Params[0], stmt.Params[1]))
 	}
 

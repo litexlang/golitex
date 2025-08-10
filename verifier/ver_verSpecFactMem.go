@@ -187,7 +187,7 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch(stmt *ast.SpecFac
 		}
 
 		if ok {
-			if state.requireMsg() {
+			if state.WithMsg {
 				ver.successWithMsg(stmt.String(), knownFactUnderLogicExpr.String())
 			}
 			return true, nil
@@ -280,7 +280,7 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch(stmt *ast.SpecFactSt
 		}
 
 		if ok {
-			if state.requireMsg() {
+			if state.WithMsg {
 				ver.successWithMsg(stmt.String(), knownFact_paramProcessed.String())
 			}
 			return true, nil
@@ -350,7 +350,7 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 		}
 	}
 
-	if state.requireMsg() {
+	if state.WithMsg {
 		var verifiedBy strings.Builder
 		verifiedBy.WriteString(knownFact.String())
 		verifiedBy.WriteString("\n")
@@ -439,7 +439,7 @@ LoopOverFacts:
 			continue LoopOverFacts
 		}
 
-		if state.requireMsg() {
+		if state.WithMsg {
 			ver.specFactSpecMemTrueMsg(stmt, knownFact)
 		}
 
@@ -557,7 +557,7 @@ func (ver *Verifier) verify_specFact_when_given_orStmt_is_true(stmt *ast.SpecFac
 		}
 	}
 
-	if state.requireMsg() {
+	if state.WithMsg {
 		ver.successWithMsg(stmt.String(), orStmt.String())
 	}
 
@@ -618,7 +618,7 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch_new(stmt *ast.SpecFa
 		}
 
 		if ok {
-			if state.requireMsg() {
+			if state.WithMsg {
 				ver.successWithMsg(stmt.String(), knownFact_paramProcessed.String())
 			}
 			return true, nil

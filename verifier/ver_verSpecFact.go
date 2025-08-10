@@ -218,7 +218,7 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 		}
 	}
 
-	if state.requireMsg() {
+	if state.WithMsg {
 		ver.successWithMsg(stmt.String(), defStmt.String())
 	}
 
@@ -259,7 +259,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 			return false, err
 		}
 		if !ok {
-			if state.requireMsg() {
+			if state.WithMsg {
 				msg := fmt.Sprintf("dom fact %s is unknown\n", domFact)
 				ver.env.Msgs = append(ver.env.Msgs, msg)
 			}
@@ -277,7 +277,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 		}
 	}
 
-	if state.requireMsg() {
+	if state.WithMsg {
 		ver.successWithMsg(stmt.String(), "by definition")
 	}
 
@@ -342,7 +342,7 @@ func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state *VerState) (
 		return false, err
 	}
 	if verBtCmp_ParamsAreLiteralNum {
-		if state.requireMsg() {
+		if state.WithMsg {
 			ver.successWithMsg(stmt.String(), "builtin rules")
 		}
 		return true, nil
