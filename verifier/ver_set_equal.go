@@ -16,7 +16,7 @@ package litex_verifier
 
 import ast "golitex/ast"
 
-func (ver *Verifier) verIntensionalSetStmt(stmt *ast.IntensionalSetStmt, state VerState) (bool, error) {
+func (ver *Verifier) verIntensionalSetStmt(stmt *ast.IntensionalSetStmt, state *VerState) (bool, error) {
 	leftUniFact, rightUniFact, err := stmt.ToEquivalentUniFacts()
 	if err != nil {
 		return false, err

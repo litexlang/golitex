@@ -22,7 +22,7 @@ import (
 )
 
 // 所有verifier的方法里，只有它和switch里的三大函数可能读入anyState
-func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state VerState) (bool, error) {
+func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) (bool, error) {
 	switch asStmt := stmt.(type) {
 	case *ast.SpecFactStmt:
 		if asStmt.NameIs(glob.KeySymbolEqual) && asStmt.TypeEnum == ast.TruePure {

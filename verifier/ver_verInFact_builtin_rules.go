@@ -21,7 +21,7 @@ import (
 	"strconv"
 )
 
-func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	if len(stmt.Params) != 2 {
 		return false, fmt.Errorf("invalid number of parameters for in fact")
 	}
@@ -101,7 +101,7 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state VerState) 
 	return false, nil
 }
 
-func (ver *Verifier) returnValueOfBuiltinArithmeticFnInReal(stmt *ast.SpecFactStmt, state VerState) bool {
+func (ver *Verifier) returnValueOfBuiltinArithmeticFnInReal(stmt *ast.SpecFactStmt, state *VerState) bool {
 	ok := ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordReal)
 	if !ok {
 		return false
@@ -119,7 +119,7 @@ func (ver *Verifier) returnValueOfBuiltinArithmeticFnInReal(stmt *ast.SpecFactSt
 	}
 }
 
-func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactStmt, state VerState) bool {
+func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactStmt, state *VerState) bool {
 	fcFn, ok := stmt.Params[0].(*ast.FcFn)
 	if !ok {
 		return false
@@ -188,7 +188,7 @@ func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactS
 	return true
 }
 
-func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state VerState) bool {
+func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state *VerState) bool {
 	ok := ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordSet)
 	if !ok {
 		return false
@@ -213,7 +213,7 @@ func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state VerState)
 	return false
 }
 
-func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	if asFcFn, ok := stmt.Params[1].(*ast.FcFn); ok {
 		if ast.IsFnFcFn(asFcFn) {
 			ok, err := ver.ver_In_FnFcFn_FnTT(stmt.Params[0], asFcFn, state)
@@ -246,7 +246,7 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state VerState) (b
 	return false, nil
 }
 
-func (ver *Verifier) verInSet_OverAllObjsEqualToIt(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) verInSet_OverAllObjsEqualToIt(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	ver.isProvingObjInSetUsingEqualObjs = true
 	defer func() {
 		ver.isProvingObjInSetUsingEqualObjs = false
@@ -277,7 +277,7 @@ func (ver *Verifier) verInSet_OverAllObjsEqualToIt(stmt *ast.SpecFactStmt, state
 	return false, nil
 }
 
-func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	var err error
 	ok := ast.IsFcAtomEqualToGivenString(stmt.Params[1], glob.KeywordSet)
 	if !ok {
@@ -325,7 +325,7 @@ func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state VerState) (b
 	return false, nil
 }
 
-func (ver *Verifier) inObjFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) inObjFact(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	// right param is obj
 	ok := ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordObj)
 	if !ok {
@@ -346,7 +346,7 @@ func (ver *Verifier) inObjFact(stmt *ast.SpecFactStmt, state VerState) (bool, er
 	return true, nil
 }
 
-func (ver *Verifier) falseInFactBuiltinRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) falseInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	// 任何东西不在空集里
 	ok, err := ver.nothingIsInEmptySet(stmt, state)
 	if err != nil {
@@ -368,7 +368,7 @@ func (ver *Verifier) falseInFactBuiltinRules(stmt *ast.SpecFactStmt, state VerSt
 }
 
 // TODO 需要先证明一下它是finite set 去开始验证 len(n) = 0
-func (ver *Verifier) nothingIsInEmptySet(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) nothingIsInEmptySet(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	if ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.Params[1], ast.FcAtom(glob.KeywordFiniteSet)}), state); err != nil || !ok {
 		return ok, err
 	}
@@ -386,7 +386,7 @@ func (ver *Verifier) nothingIsInEmptySet(stmt *ast.SpecFactStmt, state VerState)
 	return false, nil
 }
 
-func (ver *Verifier) trueExistInSt(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) trueExistInSt(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	pureInFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.Params[1], stmt.Params[2]})
 	ok, err := ver.VerFactStmt(pureInFact, state)
 	if err != nil {
@@ -398,7 +398,7 @@ func (ver *Verifier) trueExistInSt(stmt *ast.SpecFactStmt, state VerState) (bool
 	return false, nil
 }
 
-func (ver *Verifier) fcIsFiniteSet(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) fcIsFiniteSet(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	// TODO: not sure whether I should add this nextState
 	nextState := state.addRound()
 
@@ -414,7 +414,7 @@ func (ver *Verifier) fcIsFiniteSet(stmt *ast.SpecFactStmt, state VerState) (bool
 	return false, nil
 }
 
-func (ver *Verifier) objNotInSetWhenAllItemsInThatSetAreNotEqualToIt(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) objNotInSetWhenAllItemsInThatSetAreNotEqualToIt(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	if stmt.TypeEnum != ast.FalsePure {
 		return false, nil
 	}
@@ -431,7 +431,7 @@ func (ver *Verifier) objNotInSetWhenAllItemsInThatSetAreNotEqualToIt(stmt *ast.S
 	return false, nil
 }
 
-func (ver *Verifier) verInSetProduct(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) verInSetProduct(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	// left must be (x, y, ...) right must be product(xSet, ySet, ...)
 	fcFn, ok := stmt.Params[0].(*ast.FcFn)
 	if !ok {
@@ -473,7 +473,7 @@ func (ver *Verifier) verInSetProduct(stmt *ast.SpecFactStmt, state VerState) (bo
 	return true, nil
 }
 
-func (ver *Verifier) atTupleIndex(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) atTupleIndex(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	// if !ast.IsFcFnWithHeadName(stmt.Params[0], glob.TupleAtOp) {
 	if !ast.IsFcFnWithHeadName(stmt.Params[0], glob.KeywordProj) {
 		return false, nil
@@ -511,7 +511,7 @@ func (ver *Verifier) atTupleIndex(stmt *ast.SpecFactStmt, state VerState) (bool,
 	return false, nil
 }
 
-func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Fc, fnFcFn *ast.FcFn, state VerState) (bool, error) {
+func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Fc, fnFcFn *ast.FcFn, state *VerState) (bool, error) {
 	ver.newEnv(ver.env)
 	defer ver.deleteEnv_DeleteMsg()
 
