@@ -27,7 +27,7 @@ func (ver *Verifier) verIn_N_Z_Q_R_C(stmt *ast.SpecFactStmt, state *VerState) bo
 		return false
 	}
 
-	nextState := state.toFinalRound().toNoMsg()
+	nextState := state.GetFinalRound().GetNoMsg()
 	var msg string
 	switch string(inSet) {
 	case glob.KeywordNatural:

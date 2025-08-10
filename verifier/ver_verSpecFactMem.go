@@ -24,7 +24,7 @@ import (
 )
 
 func (ver *Verifier) specFactOrEqualFact_SpecMode(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
-	return ver.VerFactStmt(stmt, state.toFinalRound())
+	return ver.VerFactStmt(stmt, state.GetFinalRound())
 }
 
 func (ver *Verifier) verSpecFact_BySpecMem(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
@@ -42,7 +42,7 @@ func (ver *Verifier) verSpecFact_BySpecMem(stmt *ast.SpecFactStmt, state *VerSta
 }
 
 func (ver *Verifier) verSpecFact_ByLogicMem(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
-	nextState := state.addRound()
+	nextState := state.GetAddRound()
 
 	upMostEnv := ver.todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
@@ -91,7 +91,7 @@ func (ver *Verifier) specFact_inLogicExpr_inUniFactMem_atEnv(curEnv *env.Env, st
 		return false, nil
 	}
 
-	nextState := state.addRound().toNoMsg()
+	nextState := state.GetAddRound().GetNoMsg()
 
 	return ver.iterate_KnownSpecInLogic_InUni_applyMatch(stmt, searchedSpecFactsInLogicExpr, nextState)
 }
@@ -479,7 +479,7 @@ func (ver *Verifier) useKnownOrFactToProveSpecFact(knownFact *env.KnownSpecFact_
 		return false, nil
 	}
 
-	nextState := state.addRound()
+	nextState := state.GetAddRound()
 	for i, fact := range knownFact.LogicExpr.Facts {
 		if i == knownFact.Index {
 			continue
