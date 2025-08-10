@@ -22,31 +22,31 @@ type Ver_State struct {
 	ReqOk   bool
 }
 
-func (s Ver_State) addRound() {
+func (s *Ver_State) addRound() {
 	s.Round++
 }
 
-func (s Ver_State) toNoMsg() {
+func (s *Ver_State) toNoMsg() {
 	s.WithMsg = false
 }
 
-func (s Ver_State) toReqOk() {
+func (s *Ver_State) toReqOk() {
 	s.ReqOk = true
 }
 
-func (s Ver_State) isFinalRound() bool {
+func (s *Ver_State) isFinalRound() bool {
 	return s.Round >= 2 // return s.Round == 2
 }
 
-func (s Ver_State) ToFinalRound() Ver_State {
-	return Ver_State{
+func (s *Ver_State) ToFinalRound() *Ver_State {
+	return &Ver_State{
 		Round:   2,
 		WithMsg: s.WithMsg,
 		ReqOk:   s.ReqOk,
 	}
 }
 
-func (s Ver_State) String() string {
+func (s *Ver_State) String() string {
 	if s.WithMsg {
 		return fmt.Sprintf("Round %d with msg", s.Round)
 	} else {
