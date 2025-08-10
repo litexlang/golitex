@@ -6,8 +6,6 @@ fn f(x R) R
 
 fn f(x R) R
 
-know (f \on\ R)(0) = 0
-
-know (f \on\ R) $in fn(R)R
+(f \on\ R) = (f \on\ R)
 
 (f \on\ R)(0) = 0
