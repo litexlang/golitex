@@ -1260,12 +1260,17 @@ func (tb *tokenBlock) defFnStmt() (*ast.DefFnStmt, error) {
 }
 
 func (tb *tokenBlock) claimPropStmt() (*ast.ClaimPropStmt, error) {
-	declHeader, err := tb.body[0].headerOfAtProp()
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+	// declHeader, err := tb.body[0].headerOfAtProp()
+	// if err != nil {
+	// 	return nil, tbErr(err, tb)
+	// }
 
-	iffFacts, thenFacts, err := tb.body[0].bodyOfKnowProp()
+	// iffFacts, thenFacts, err := tb.body[0].bodyOfKnowProp()
+	// if err != nil {
+	// 	return nil, tbErr(err, tb)
+	// }
+
+	namedUniFact, err := tb.body[0].namedUniFactStmt()
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -1293,7 +1298,8 @@ func (tb *tokenBlock) claimPropStmt() (*ast.ClaimPropStmt, error) {
 		proofs = append(proofs, curStmt)
 	}
 
-	return ast.NewClaimPropStmt(ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts, thenFacts), proofs, isProve), nil
+	// return ast.NewClaimPropStmt(ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts, thenFacts), proofs, isProve), nil
+	return ast.NewClaimPropStmt(ast.NewDefPropStmt(&namedUniFact.DefPropStmt.DefHeader, namedUniFact.DefPropStmt.DomFacts, namedUniFact.DefPropStmt.IffFacts, namedUniFact.DefPropStmt.ThenFacts), proofs, isProve), nil
 }
 
 func (tb *tokenBlock) claimExistPropStmt() (*ast.ClaimExistPropStmt, error) {
