@@ -2107,9 +2107,21 @@ func (tb *tokenBlock) factsStmt() (ast.Stmt, error) {
 }
 
 func (tb *tokenBlock) claimStmtInline() (ast.ClaimInterface, error) {
-	fact, err := tb.inlineFact()
-	if err != nil {
-		return nil, tbErr(err, tb)
+	var fact ast.FactStmt
+	var err error
+	var namedUniFact *ast.NamedUniFactStmt
+
+	if tb.header.is(glob.KeySymbolAt) {
+		// 有点小问题，最好必须要规定是named inline
+		namedUniFact, err = tb.namedUniFactStmt()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+	} else {
+		fact, err = tb.inlineFact()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
 	}
 
 	isProve := true
@@ -2146,7 +2158,9 @@ func (tb *tokenBlock) claimStmtInline() (ast.ClaimInterface, error) {
 		proof = append(proof, curStmt)
 	}
 
-	if isProve {
+	if namedUniFact != nil {
+		return ast.NewClaimPropStmt(&namedUniFact.DefPropStmt, proof, isProve), nil
+	} else if isProve {
 		return ast.NewClaimProveStmt(fact, proof), nil
 	} else {
 		return ast.NewClaimProveByContradictionStmt(*ast.NewClaimProveStmt(fact, proof)), nil
