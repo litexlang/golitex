@@ -10,6 +10,6 @@ import "../../Std/Int/main.lix"
 forall x, y, z R: x + z = y + z => $add_cancel(x, y, z), x = y
 forall x, y, z R => x * (y + z) = x * y + x * z
 forall x, y, z R: x + z <= y + z => $less_equal_add_cancel(x, y, z)
-# forall x, y, z R => x > 0, y > 0, z > 0, x ^ z > y ^ z => $greater_than_pow_cancel(x, y, z)
+#forall x, y, z R => x > 0, y > 0, z > 0, x ^ z > y ^ z => $greater_than_pow_cancel(x, y, z)
 abs(6-4) = 2
 forall x R: x != 0 => abs(x) > 0
