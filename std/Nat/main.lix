@@ -1,2 +1,0 @@
-know @add_cancel(x, y, z R): x + z = y + z => x = y
-know @mul_cancel(x, y, z R): z != 0, x * z = y * z => x = y
