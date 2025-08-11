@@ -93,7 +93,8 @@ func (ver *Verifier) specFact_inLogicExpr_inUniFactMem_atEnv(curEnv *env.Env, st
 
 	nextState := state.GetAddRound().GetNoMsg()
 
-	return ver.iterate_KnownSpecInLogic_InUni_applyMatch(stmt, searchedSpecFactsInLogicExpr, nextState)
+	// return ver.iterate_KnownSpecInLogic_InUni_applyMatch(stmt, searchedSpecFactsInLogicExpr, nextState)
+	return ver.iterate_KnownSpecInLogic_InUni_applyMatch_new(stmt, searchedSpecFactsInLogicExpr, nextState)
 }
 
 func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch(stmt *ast.SpecFactStmt, knownFacts []env.SpecFact_InLogicExpr_InUniFact, state *VerState) (bool, error) {
@@ -119,6 +120,94 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch(stmt *ast.SpecFac
 
 		// 如果有var没配对上，那就跳出循环
 		if len(knownFactUnderLogicExpr.UniFact.Params) != len(uniConMap) {
+			continue
+		}
+
+		randomizedUniFactWithoutThen, _, paramMapStrToStr, randomizedOrStmt, err := ver.preprocessUniFactParamsWithoutThenFacts_OrStmt(knownFactUnderLogicExpr.UniFact, knownFactUnderLogicExpr.LogicExpr)
+		if err != nil {
+			return false, err
+		}
+
+		for k, v := range uniConMap {
+			if newParam, ok := paramMapStrToStr[k]; ok {
+				uniConMap[newParam] = v
+				delete(uniConMap, k)
+			}
+		}
+
+		instantiatedUniFactWithoutThen, err := instantiateUniFactWithoutThenFacts(randomizedUniFactWithoutThen, uniConMap)
+		if err != nil {
+			return false, err
+		}
+
+		// insKnownUniFact, err := ast.InstantiateUniFact(knownFactUnderLogicExpr.UniFact, uniConMap)
+		// if err != nil {
+		// 	return false, err
+		// }
+
+		// TODO 要证明在paramSet里
+		// paramInParamSetFacts := insKnownUniFact.ParamInParamSetFacts(uniConMap)
+		paramInParamSetFacts := instantiatedUniFactWithoutThen.ParamInParamSetFacts(uniConMap)
+		setFactSatisfied := true
+		for _, paramInParamSetFact := range paramInParamSetFacts {
+			ok, err = ver.VerFactStmt(paramInParamSetFact, state)
+			if err != nil {
+				return false, err
+			}
+			if !ok {
+				setFactSatisfied = false
+				break
+			}
+		}
+
+		if !setFactSatisfied {
+			continue
+		}
+
+		// ok, err = ver.proveUniFactDomFacts(insKnownUniFact.DomFacts, state)
+		ok, err = ver.proveUniFactDomFacts(instantiatedUniFactWithoutThen.DomFacts, state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			continue
+		}
+
+		instantiatedLogicExpr, err := randomizedOrStmt.Instantiate(uniConMap)
+		if err != nil {
+			return false, err
+		}
+		instantiatedLogicExprAsKnownSpecFact, ok := instantiatedLogicExpr.(*ast.OrStmt)
+		if !ok {
+			return false, fmt.Errorf("instantiatedLogicExpr is not a KnownSpecFact_InLogicExpr")
+		}
+
+		ok, err = ver.verify_specFact_when_given_orStmt_is_true(stmt, instantiatedLogicExprAsKnownSpecFact, knownFactUnderLogicExpr.Index, state)
+		if err != nil {
+			return false, err
+		}
+
+		if ok {
+			if state.WithMsg {
+				ver.successWithMsg(stmt.String(), knownFactUnderLogicExpr.String())
+			}
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch_new(stmt *ast.SpecFactStmt, knownFacts []env.SpecFact_InLogicExpr_InUniFact, state *VerState) (bool, error) {
+	for i := len(knownFacts) - 1; i >= 0; i-- {
+		knownFactUnderLogicExpr := knownFacts[i]
+		knownFact_paramProcessed := env.KnownSpecFact_InUniFact{SpecFact: knownFactUnderLogicExpr.SpecFact, UniFact: knownFactUnderLogicExpr.UniFact}
+
+		ok, uniConMap, err := ver.matchUniFactParamsWithSpecFactParams(&knownFact_paramProcessed, stmt)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
 			continue
 		}
 
