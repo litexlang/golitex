@@ -133,43 +133,10 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state *VerState) (bool, e
 		return ver.isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj_CheckRequirement(fcAsFcFn, state)
 	} else if ast.IsFcAtomAndEqualToStr(fcAsFcFn.FnHead, glob.KeywordSetDefinedByReplacement) {
 		return ver.setDefinedByReplacementFnRequirement(fcAsFcFn, state)
-	} else if ast.IsFcAtomEqualToGivenString(fcAsFcFn.FnHead, glob.KeywordOn) {
-		panic("")
 	} else {
 		return ver.fcFnSatisfy_FnTemplate_Requirement(fcAsFcFn, state)
 	}
 }
-
-// func (ver *Verifier) domOfFnRequirement(fc *ast.FcFn) (bool, error) {
-// 	if len(fc.Params) != 1 {
-// 		return false, fmt.Errorf("parameters in %s must be 1, %s in %s is not valid", fc.FnHead, fc, fc)
-// 	}
-
-// 	// param must be a function
-// 	_, ok := ver.env.GetFnTemplateOfFc(fc.Params[0])
-// 	if !ok {
-// 		return false, fmt.Errorf("%s failed: %s must be a function", fc, fc.Params[0])
-// 	}
-
-// 	return true, nil
-// }
-
-// func isArithmeticFn(fc ast.Fc) bool {
-// 	if ok := ast.IsFn_WithHeadNameInSlice(fc, []string{glob.KeySymbolPlus, glob.KeySymbolMinus, glob.KeySymbolStar, glob.KeySymbolSlash, glob.KeySymbolPower, glob.KeySymbolPercent}); !ok {
-// 		return false
-// 	}
-
-// 	return true
-// }
-
-// func (ver *Verifier) fcFnSatisfyFnTemplate_FnTemplate_Requirement(fc ast.Fc, state *VerState) (bool, error) {
-// 	ok, err := ver.fcFnSatisfy_FnTemplate_Requirement(fc, state)
-// 	if err != nil {
-// 		return false, err
-// 	}
-
-// 	return ok, nil
-// }
 
 func (ver *Verifier) fcFnSatisfy_FnTemplate_Requirement(fc ast.Fc, state *VerState) (bool, error) {
 	var err error
