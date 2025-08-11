@@ -396,6 +396,10 @@ func (tb *tokenBlock) claimStmt() (ast.ClaimInterface, error) {
 		return nil, tbErr(err, tb)
 	}
 
+	if !tb.header.is(glob.KeySymbolColon) {
+		return tb.claimStmtInline()
+	}
+
 	err = tb.header.skip(glob.KeySymbolColon)
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -2099,5 +2103,52 @@ func (tb *tokenBlock) factsStmt() (ast.Stmt, error) {
 		return ast.NewInlineFactsStmt(facts), nil
 	} else {
 		return tb.factStmt(UniFactDepth0)
+	}
+}
+
+func (tb *tokenBlock) claimStmtInline() (ast.ClaimInterface, error) {
+	fact, err := tb.inlineFact()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	isProve := true
+	if tb.header.is(glob.KeySymbolColon) {
+		err := tb.header.skip(glob.KeySymbolColon)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		if !tb.header.ExceedEnd() {
+			return nil, fmt.Errorf("expect end of line")
+		}
+
+	} else if tb.header.is(glob.KeywordProveByContradiction) {
+		err := tb.header.skipKwAndColon_ExceedEnd(glob.KeywordProveByContradiction)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		isProve = false
+	} else if tb.header.is(glob.KeywordProve) {
+		err := tb.header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+	} else {
+		return nil, fmt.Errorf("expect colon or 'prove_by_contradiction'")
+	}
+
+	proof := []ast.Stmt{}
+	for _, block := range tb.body {
+		curStmt, err := block.Stmt()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		proof = append(proof, curStmt)
+	}
+
+	if isProve {
+		return ast.NewClaimProveStmt(fact, proof), nil
+	} else {
+		return ast.NewClaimProveByContradictionStmt(*ast.NewClaimProveStmt(fact, proof)), nil
 	}
 }
