@@ -23,10 +23,10 @@ import (
 )
 
 // how equality is verified is different from other facts because 1. it is stored differently 2. its transitive and commutative property is automatically used by the verifier
-func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state VerState, checkRequirements bool) (bool, error) {
-	if checkRequirements && !state.IsReqOk() {
+func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, checkRequirements bool) (bool, error) {
+	if checkRequirements && !state.ReqOk {
 		// if checkRequirements {
-		if ok, err := ver.checkSpecFactRequirements(stmt, &state); err != nil {
+		if ok, err := ver.checkSpecFactRequirements(stmt, state); err != nil {
 			return false, err
 		} else if !ok {
 			return false, nil
@@ -66,7 +66,7 @@ func isValidEqualFact(stmt *ast.SpecFactStmt) bool {
 	return len(stmt.Params) == 2 && string(stmt.PropName) == glob.KeySymbolEqual
 }
 
-func (ver *Verifier) verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
+func (ver *Verifier) verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Fc, right ast.Fc, state *VerState) (bool, error) {
 	if ok, err := ver.verEqualBuiltin(left, right, state); err != nil {
 		return false, err
 	} else if ok {
@@ -96,7 +96,7 @@ func (ver *Verifier) verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Fc, r
 	return false, nil
 }
 
-func (ver *Verifier) verEqualBuiltin(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
+func (ver *Verifier) verEqualBuiltin(left ast.Fc, right ast.Fc, state *VerState) (bool, error) {
 	ok, msg, err := cmp.Cmp_ByBIR(left, right) // 完全一样
 	if err != nil {
 		return false, err
@@ -116,7 +116,7 @@ func (ver *Verifier) verEqualBuiltin(left ast.Fc, right ast.Fc, state VerState) 
 	return false, nil
 }
 
-func (ver *Verifier) verEqualSpecMem(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
+func (ver *Verifier) verEqualSpecMem(left ast.Fc, right ast.Fc, state *VerState) (bool, error) {
 	// if ver.env.CurMatchProp == nil {
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
 		ok, err := ver.equalFact_SpecMem_atEnv(curEnv, left, right, state)
@@ -130,7 +130,7 @@ func (ver *Verifier) verEqualSpecMem(left ast.Fc, right ast.Fc, state VerState) 
 	return false, nil
 }
 
-func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right ast.Fc, state VerState) (bool, error) {
+func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right ast.Fc, state *VerState) (bool, error) {
 	var equalToLeftFcs, equalToRightFcs *[]ast.Fc
 	var gotLeftEqualFcs, gotRightEqualFcs bool
 
@@ -166,13 +166,13 @@ func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right
 	return false, nil
 }
 
-// func (ver *Verifier) equalFact_MatchEnv_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right ast.Fc, state VerState) (bool, error) {
+// func (ver *Verifier) equalFact_MatchEnv_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right ast.Fc, state *VerState) (bool, error) {
 // 	// panic("equalFact_MatchEnv_SpecMem_atEnv: not implemented")
 // 	equalFact := ver.makeEqualFact(left, right)
 // 	return ver.specFact_MatchEnv_SpecMem(curEnv, equalFact, state)
 // }
 
-func (ver *Verifier) verLogicMem_leftToRight_RightToLeft(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
+func (ver *Verifier) verLogicMem_leftToRight_RightToLeft(left ast.Fc, right ast.Fc, state *VerState) (bool, error) {
 	equalFact := ast.NewEqualFact(left, right)
 	ok, err := ver.verSpecFactLogicMem(equalFact, state)
 	if err != nil {
@@ -196,7 +196,7 @@ func (ver *Verifier) verLogicMem_leftToRight_RightToLeft(left ast.Fc, right ast.
 	return false, nil
 }
 
-func (ver *Verifier) verEqualUniMem(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
+func (ver *Verifier) verEqualUniMem(left ast.Fc, right ast.Fc, state *VerState) (bool, error) {
 	equalFact := ast.NewEqualFact(left, right)
 	ok, err := ver.verSpecFact_UniMem(equalFact, state)
 	if err != nil {

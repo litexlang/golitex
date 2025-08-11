@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verEnumStmt(stmt *ast.EnumStmt, state VerState) (bool, error) {
+func (ver *Verifier) verEnumStmt(stmt *ast.EnumStmt, state *VerState) (bool, error) {
 	if ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.CurSet, ast.FcAtom(glob.KeywordFiniteSet)}), state); err != nil || ok {
 		if err != nil {
 			return false, err
@@ -67,7 +67,7 @@ func (ver *Verifier) verEnumStmt(stmt *ast.EnumStmt, state VerState) (bool, erro
 	return true, nil
 }
 
-func (ver *Verifier) lenIsZeroThenEnumIsEmpty(stmt *ast.EnumStmt, state VerState) (bool, error) {
+func (ver *Verifier) lenIsZeroThenEnumIsEmpty(stmt *ast.EnumStmt, state *VerState) (bool, error) {
 	lenOverStmtName := ast.NewFcFn(ast.FcAtom(glob.KeywordLen), []ast.Fc{stmt.CurSet})
 	equalFact := ast.EqualFact(lenOverStmtName, ast.FcAtom("0"))
 	ok, err := ver.VerFactStmt(equalFact, state)
@@ -78,14 +78,14 @@ func (ver *Verifier) lenIsZeroThenEnumIsEmpty(stmt *ast.EnumStmt, state VerState
 		return false, nil
 	}
 
-	if state.requireMsg() {
+	if state.WithMsg {
 		ver.successWithMsg(stmt.String(), fmt.Sprintf("len(%s) = 0 is equivalent to %s", stmt.CurSet, stmt))
 	}
 
 	return true, nil
 }
 
-func (ver *Verifier) forallObjNotInSetThenTheSetIsEmpty(stmt *ast.EnumStmt, state VerState) (bool, error) {
+func (ver *Verifier) forallObjNotInSetThenTheSetIsEmpty(stmt *ast.EnumStmt, state *VerState) (bool, error) {
 	if len(stmt.Items) != 0 {
 		return false, nil
 	}
@@ -99,7 +99,7 @@ func (ver *Verifier) forallObjNotInSetThenTheSetIsEmpty(stmt *ast.EnumStmt, stat
 		return false, nil
 	}
 
-	if state.requireMsg() {
+	if state.WithMsg {
 		ver.successWithMsg(stmt.String(), fmt.Sprintf("builtin rule:\n%s\nis equivalent to\n%s", allObjectsNotInSetThenSetIsEmpty, stmt))
 	}
 
