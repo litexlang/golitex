@@ -25,7 +25,7 @@ import (
 // WARNING
 // REMARK
 // TODO: cmpFc, fcFnEq, fcEqualSpec 大循环本质上是有问题的，会有循环论证的风险：know p(p(1,2), 0) = 1, 则现在问 p(1,2) =1 吗？我会比较 p(1,2) = p(p(1,2), 0)，那这时候就出问题了：我因为一位位地比，所以又回到了比较 1 = p(1,2)
-func (ver *Verifier) cmpFc(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
+func (ver *Verifier) cmpFc(left ast.Fc, right ast.Fc, state *VerState) (bool, error) {
 	ok, msg, err := cmp.Cmp_ByBIR(left, right) // 完全一样
 	if err != nil {
 		return false, err
@@ -42,7 +42,7 @@ func (ver *Verifier) cmpFc(left ast.Fc, right ast.Fc, state VerState) (bool, err
 	if ok {
 		rightAsFn, ok := right.(*ast.FcFn)
 		if ok {
-			ok, err = ver.fcFnEq(leftAsFn, rightAsFn, state.toFinalRound())
+			ok, err = ver.fcFnEq(leftAsFn, rightAsFn, state.GetFinalRound())
 			if err != nil {
 				return false, err
 			}
@@ -56,7 +56,7 @@ func (ver *Verifier) cmpFc(left ast.Fc, right ast.Fc, state VerState) (bool, err
 }
 
 // Iterate over all equal facts. On each equal fact, use commutative, associative, cmp rule to compare.
-func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
+func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state *VerState) (bool, error) {
 	if ok, err := ver.cmpFc(left, right, state); err != nil {
 		return false, err
 	} else if ok {
@@ -72,7 +72,7 @@ func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state VerState) (boo
 
 		if gotLeftEqualFcs && gotRightEqualFcs {
 			if equalToLeftFcs == equalToRightFcs {
-				if state.requireMsg() {
+				if state.WithMsg {
 					ver.successWithMsg(fmt.Sprintf("known %s = %s", left, right), "")
 				}
 				return true, nil
@@ -89,7 +89,7 @@ func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state VerState) (boo
 				if ok, err := ver.cmpFc(equalToLeftFc, right, state); err != nil {
 					return false, err
 				} else if ok {
-					if state.requireMsg() {
+					if state.WithMsg {
 						ver.successWithMsg(fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToLeftFc, right, equalToLeftFc, left), "")
 					}
 					return true, nil
@@ -107,7 +107,7 @@ func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state VerState) (boo
 				if ok, err := ver.cmpFc(equalToRightFc, left, state); err != nil {
 					return false, err
 				} else if ok {
-					if state.requireMsg() {
+					if state.WithMsg {
 						ver.successWithMsg(fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToRightFc, left, equalToRightFc, right), "")
 					}
 					return true, nil
@@ -125,10 +125,10 @@ func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state VerState) (boo
 	return false, nil
 }
 
-func (ver *Verifier) fcFnEq(left, right *ast.FcFn, state VerState) (bool, error) {
+func (ver *Verifier) fcFnEq(left, right *ast.FcFn, state *VerState) (bool, error) {
 	var ok bool
 	var err error
-	state = state.addRound()
+	state = state.GetAddRound()
 
 	if len(left.Params) != len(right.Params) {
 		return false, nil
@@ -158,7 +158,7 @@ func (ver *Verifier) fcFnEq(left, right *ast.FcFn, state VerState) (bool, error)
 	return true, nil
 }
 
-func (ver *Verifier) verTrueEqualFact_FcFnEqual_NoCheckRequirements(left, right *ast.FcFn, state VerState) (bool, error) {
+func (ver *Verifier) verTrueEqualFact_FcFnEqual_NoCheckRequirements(left, right *ast.FcFn, state *VerState) (bool, error) {
 	var ok bool
 	var err error
 

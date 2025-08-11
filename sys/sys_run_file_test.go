@@ -24,6 +24,7 @@ func Test_File(t *testing.T) {
 	startTime := time.Now()
 	// fileName := "../examples/imo_2024_shortlist_problems/A5_solution1_inline.lix"
 	fileName := "../examples/test_codes/tmp.lix"
+	// fileName := "../examples/comprehensive_examples/sqrt_2_is_irrational.lix"
 	// fileName := "../examples/test_import/main.lix"
 	msg, signal, err := RunFile(fileName)
 	if err != nil {

@@ -18,7 +18,7 @@ import (
 	ast "golitex/ast"
 )
 
-func (ver *Verifier) verUniFactWithIff(stmt *ast.UniFactWithIffStmt, state VerState) (bool, error) {
+func (ver *Verifier) verUniFactWithIff(stmt *ast.UniFactWithIffStmt, state *VerState) (bool, error) {
 	thenToIff := stmt.NewUniFactWithThenToIff()
 	ok, err := ver.verUniFact(thenToIff, state)
 	if err != nil {

@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verNumberLogicRelaOpt_BuiltinRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) verNumberLogicRelaOpt_BuiltinRules(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	if !stmt.IsTrue() {
 		return false, nil
 	}
@@ -34,7 +34,7 @@ func (ver *Verifier) verNumberLogicRelaOpt_BuiltinRules(stmt *ast.SpecFactStmt, 
 	return false, nil
 }
 
-func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	if !glob.IsBuiltinNumberInfixRelaProp(string(stmt.PropName)) {
 		return false, nil
 	}
@@ -65,7 +65,7 @@ func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state VerS
 		return false, err
 	}
 	if ok {
-		if state.requireMsg() {
+		if state.WithMsg {
 			ver.successWithMsg(stmt.String(), "builtin rules")
 		}
 		return true, nil
@@ -74,7 +74,7 @@ func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state VerS
 	return false, nil
 }
 
-func (ver *Verifier) varCommutativeProp_BuiltinRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) varCommutativeProp_BuiltinRules(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	if stmt.PropName != glob.KeywordCommutativeProp {
 		return false, nil
 	}
@@ -108,12 +108,12 @@ func (ver *Verifier) varCommutativeProp_BuiltinRules(stmt *ast.SpecFactStmt, sta
 
 	uniFact := ast.NewUniFactWithIff(ast.NewUniFact(uniFactParams, propDef.DefHeader.ParamSets, domFacts, []ast.FactStmt{ThenFact}), []ast.FactStmt{IffFact})
 
-	ok, err = ver.VerFactStmt(uniFact, state.toNoMsg())
+	ok, err = ver.VerFactStmt(uniFact, state.GetNoMsg())
 	if err != nil {
 		return false, err
 	}
 	if ok {
-		if state.requireMsg() {
+		if state.WithMsg {
 			ver.successWithMsg(stmt.String(), fmt.Sprintf("the definition of commutative property: %s is true iff\n%s", stmt, uniFact))
 		}
 		return true, nil
@@ -122,7 +122,7 @@ func (ver *Verifier) varCommutativeProp_BuiltinRules(stmt *ast.SpecFactStmt, sta
 	return false, nil
 }
 
-func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	if stmt.PropName != glob.KeywordIn {
 		return false, nil
 	}
@@ -130,7 +130,7 @@ func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactSt
 	isSuccess := false
 	defer func() {
 		if isSuccess {
-			if state.requireMsg() {
+			if state.WithMsg {
 				ver.successWithMsg(stmt.String(), "builtin rules")
 			}
 		}

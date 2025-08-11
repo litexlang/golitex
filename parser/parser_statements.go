@@ -302,7 +302,7 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}
-			unitFacts, err := tb.inlineFacts_untilEndOfInline()
+			unitFacts, err := tb.inlineFacts_checkUniDepth1()
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}
@@ -376,34 +376,18 @@ func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 		}
 		return ast.NewDefObjStmt(objNames, objSets, facts), nil
 	} else {
-		// facts, err := tb.inlineFacts_untilEOL()
-		// if err != nil {
-		// 	return nil, tbErr(err, tb)
-		// }
-		// return ast.NewDefObjStmt(objNames, objSets, facts), nil
-		facts, err := tb.inlineFacts_untilEndOfInline()
+		facts, err := tb.inlineFacts_checkUniDepth0()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
 
-		err = checkFactsUniDepth(facts)
+		err = checkFactsUniDepth0(facts)
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
 
 		return ast.NewDefObjStmt(objNames, objSets, facts), nil
 	}
-
-	// if len(objSets) > 0 {
-	// 	tb.header.skip("")
-	// 	facts, err = tb.bodyFacts(UniFactDepth0)
-	// 	if err != nil {
-	// 		return nil, tbErr(err, tb)
-	// 	}
-	// } else if !tb.header.ExceedEnd() {
-	// 	return nil, fmt.Errorf("expect ':' or end of block")
-	// }
-
 }
 
 func (tb *tokenBlock) claimStmt() (ast.ClaimInterface, error) {
@@ -491,11 +475,11 @@ func (tb *tokenBlock) knowFactStmt() (*ast.KnowFactStmt, error) {
 			return nil, tbErr(err, tb)
 		}
 	} else {
-		facts, err = tb.inlineFacts_untilEndOfInline()
+		facts, err = tb.inlineFacts_checkUniDepth0()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
-		err = checkFactsUniDepth(facts)
+		err = checkFactsUniDepth0(facts)
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -776,7 +760,7 @@ func (tb *tokenBlock) defExistPropStmtBody() (*ast.DefExistPropStmtBody, error) 
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
-		unitFacts, err := tb.inlineFacts_untilEndOfInline()
+		unitFacts, err := tb.inlineFacts_checkUniDepth1()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -1238,6 +1222,11 @@ func (tb *tokenBlock) defFnStmt() (*ast.DefFnStmt, error) {
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
+	if asAtom, ok := retSet.(ast.FcAtom); ok {
+		if string(asAtom) == glob.KeySymbolColon {
+			return nil, fmt.Errorf(": is not allowed in return set")
+		}
+	}
 
 	domFacts := []ast.FactStmt{}
 	thenFacts := []ast.FactStmt{}
@@ -1260,7 +1249,7 @@ func (tb *tokenBlock) defFnStmt() (*ast.DefFnStmt, error) {
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
-		unitFacts, err := tb.inlineFacts_untilEndOfInline()
+		unitFacts, err := tb.inlineFacts_checkUniDepth1()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -2092,7 +2081,7 @@ func (tb *tokenBlock) clearStmt() (ast.Stmt, error) {
 
 func (tb *tokenBlock) factsStmt() (ast.Stmt, error) {
 	if tb.GetEnd() != glob.KeySymbolColon {
-		facts, err := tb.inlineFacts_untilEndOfInline()
+		facts, err := tb.inlineFacts_checkUniDepth0()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}

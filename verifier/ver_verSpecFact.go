@@ -22,9 +22,9 @@ import (
 	num "golitex/number"
 )
 
-func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if !state.IsReqOk() {
-		if ok, err := ver.checkSpecFactReq(stmt, &state); err != nil || !ok {
+func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+	if !state.ReqOk {
+		if ok, err := ver.checkSpecFactReq(stmt, state); err != nil || !ok {
 			return false, err
 		}
 	}
@@ -66,7 +66,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact(stmt *ast.SpecFactStmt, s
 	}
 }
 
-func (ver *Verifier) verSpecFactStepByStepNotCommutatively(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) verSpecFactStepByStepNotCommutatively(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	if (stmt.NameIs(glob.KeySymbolLargerEqual) || stmt.NameIs(glob.KeySymbolLessEqual) || stmt.NameIs(glob.KeySymbolGreater) || stmt.NameIs(glob.KeySymbolLess)) && stmt.IsTrue() {
 		// TODO: 本质上这个逻辑应该放在BIR里
 		return ver.verBtCmpSpecFact(stmt, state)
@@ -91,7 +91,7 @@ func (ver *Verifier) isSpecFactCommutative(stmt *ast.SpecFactStmt) (bool, error)
 	return false, nil
 }
 
-func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	if ok, err := ver.verSpecialSpecFact_ByBIR(stmt, state); err != nil {
 		return false, err
 	} else if ok {
@@ -127,7 +127,7 @@ func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state VerStat
 	return false, nil
 }
 
-func (ver *Verifier) verSpecialSpecFact_ByBIR(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) verSpecialSpecFact_ByBIR(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	if stmt.NameIs(glob.KeywordIn) {
 		return ver.inFactBuiltinRules(stmt, state)
 	} else if stmt.NameIs(glob.KeywordExistIn) && stmt.TypeEnum == ast.TrueExist_St {
@@ -151,7 +151,7 @@ func (ver *Verifier) verSpecialSpecFact_ByBIR(stmt *ast.SpecFactStmt, state VerS
 	return false, nil
 }
 
-func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	if stmt.IsPureFact() {
 		return ver.verPureSpecFact_ByDefinition(stmt, state)
 	}
@@ -163,8 +163,8 @@ func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecFactStmt, state VerState) (
 	return false, nil
 }
 
-func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	nextState := state.addRound()
+func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+	nextState := state.GetAddRound()
 
 	if !stmt.IsTrue() {
 		return false, nil
@@ -218,14 +218,14 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 		}
 	}
 
-	if state.requireMsg() {
+	if state.WithMsg {
 		ver.successWithMsg(stmt.String(), defStmt.String())
 	}
 
 	return true, nil
 }
 
-func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	existParams, factParams := ast.GetExistFactExistParamsAndFactParams(stmt)
 
 	propDef, ok := ver.env.GetExistPropDef(stmt.PropName)
@@ -259,7 +259,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 			return false, err
 		}
 		if !ok {
-			if state.requireMsg() {
+			if state.WithMsg {
 				msg := fmt.Sprintf("dom fact %s is unknown\n", domFact)
 				ver.env.Msgs = append(ver.env.Msgs, msg)
 			}
@@ -277,14 +277,14 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 		}
 	}
 
-	if state.requireMsg() {
+	if state.WithMsg {
 		ver.successWithMsg(stmt.String(), "by definition")
 	}
 
 	return true, nil
 }
 
-func (ver *Verifier) verSpecFactLogicMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) verSpecFactLogicMem(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	var ok bool
 	var err error
 
@@ -296,8 +296,8 @@ func (ver *Verifier) verSpecFactLogicMem(stmt *ast.SpecFactStmt, state VerState)
 	return false, nil
 }
 
-func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	nextState := state.addRound()
+func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+	nextState := state.GetAddRound()
 
 	ok, err := ver.verSpecFact_InSpecFact_UniMem(stmt, nextState)
 	if isErrOrOk(ok, err) {
@@ -307,7 +307,7 @@ func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecFactStmt, state VerState) 
 	return ver.verSpecFact_InLogicExpr_InUniFactMem(stmt, nextState)
 }
 
-func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	if stmt.IsTrue() {
 		return false, nil
 	}
@@ -336,13 +336,13 @@ var reverseCmpFcAtomMap = map[string]ast.FcAtom{
 // 只是证明 a >= b 和 b <= a 是等价的，没有用到 a = b => a >=b, a > b => a >= b，因为我觉得后者应该
 // 其实也可以写入标准库而不是放在kernel，但我还是送给用户得了
 // 传递性，就写在标准库吧
-func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	verBtCmp_ParamsAreLiteralNum, err := ver.verBtCmp_ParamsAreLiteralNum(stmt)
 	if err != nil {
 		return false, err
 	}
 	if verBtCmp_ParamsAreLiteralNum {
-		if state.requireMsg() {
+		if state.WithMsg {
 			ver.successWithMsg(stmt.String(), "builtin rules")
 		}
 		return true, nil

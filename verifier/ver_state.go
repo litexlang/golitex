@@ -16,40 +16,59 @@ package litex_verifier
 
 import "fmt"
 
-type Ver_State struct {
+type VerState struct {
 	Round   uint8
 	WithMsg bool
 	ReqOk   bool
 }
 
-func (s Ver_State) addRound() {
-	s.Round++
+func (s *VerState) GetAddRound() *VerState {
+	return &VerState{
+		Round:   s.Round + 1,
+		WithMsg: s.WithMsg,
+		ReqOk:   s.ReqOk,
+	}
 }
 
-func (s Ver_State) toNoMsg() {
-	s.WithMsg = false
+func (s *VerState) GetNoMsg() *VerState {
+	return &VerState{
+		Round:   s.Round,
+		WithMsg: false,
+		ReqOk:   s.ReqOk,
+	}
 }
 
-func (s Ver_State) toReqOk() {
-	s.ReqOk = true
-}
-
-func (s Ver_State) isFinalRound() bool {
+func (s *VerState) isFinalRound() bool {
 	return s.Round >= 2 // return s.Round == 2
 }
 
-func (s Ver_State) ToFinalRound() Ver_State {
-	return Ver_State{
+func (s *VerState) GetFinalRound() *VerState {
+	return &VerState{
 		Round:   2,
 		WithMsg: s.WithMsg,
 		ReqOk:   s.ReqOk,
 	}
 }
 
-func (s Ver_State) String() string {
+func (s *VerState) String() string {
 	if s.WithMsg {
 		return fmt.Sprintf("Round %d with msg", s.Round)
 	} else {
 		return fmt.Sprintf("Round %d without msg", s.Round)
 	}
 }
+
+var (
+	Round0Msg             = &VerState{Round: 0, WithMsg: true, ReqOk: false}
+	Round0NoMsg           = &VerState{Round: 0, WithMsg: false, ReqOk: false}
+	Round1Msg             = &VerState{Round: 1, WithMsg: true, ReqOk: false}
+	Round1NoMsg           = &VerState{Round: 1, WithMsg: false, ReqOk: false}
+	FinalRoundMsg         = &VerState{Round: 2, WithMsg: true, ReqOk: false}
+	FinalRoundNoMsg       = &VerState{Round: 2, WithMsg: false, ReqOk: false}
+	FinalRoundMsg_ReqOk   = &VerState{Round: 2, WithMsg: true, ReqOk: true}
+	FinalRoundNoMsg_ReqOk = &VerState{Round: 2, WithMsg: false, ReqOk: true}
+	Round0Msg_ReqOk       = &VerState{Round: 0, WithMsg: true, ReqOk: true}
+	Round0NoMsg_ReqOk     = &VerState{Round: 0, WithMsg: false, ReqOk: true}
+	Round1Msg_ReqOk       = &VerState{Round: 1, WithMsg: true, ReqOk: true}
+	Round1NoMsg_ReqOk     = &VerState{Round: 1, WithMsg: false, ReqOk: true}
+)
