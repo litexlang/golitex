@@ -61,6 +61,8 @@ const (
 	KeywordNPos  = "N_pos"
 	KeywordLet   = "let"
 	KeywordClear = "clear"
+
+	KeywordOn = "on"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -108,6 +110,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordLet:                            {},
 	KeywordClear:                          {},
 	// KeywordExistSetByAxiomOfReplacement:   {},
+	KeywordOn: {},
 }
 
 const (
@@ -143,6 +146,7 @@ const (
 
 	KeySymbolSemiColon  = ";"
 	KeySymbolEquivalent = "<=>"
+	KeySymbolBackSlash  = "\\"
 	// KeySymbolQuestionMark = "?"
 )
 
@@ -179,6 +183,7 @@ var symbolSet map[string]struct{} = map[string]struct{}{
 	KeySymbolEqualLarger:  {}, // "=>"
 	KeySymbolSemiColon:    {}, // ";"
 	KeySymbolEquivalent:   {}, // "<=>"
+	KeySymbolBackSlash:    {},
 	// KeySymbolQuestionMark: {}, // "?"
 }
 
@@ -220,6 +225,7 @@ var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]s
 	KeywordLen:                            {},
 	KeywordProj:                           {},
 	KeywordNPos:                           {},
+	KeywordOn:                             {},
 }
 
 func IsBuiltinKeywordKeySymbolCanBeFcAtomName(name string) bool {
