@@ -4,8 +4,7 @@ fn f(x R) R
 (f \on\ R) $in fn(R)R
 """
 
-fn f(x R) R
+fn f(x Z) Q
+fn g(x Z) Q
 
-(f \on\ R) = (f \on\ R)
-
-(f \on\ R)(0) = 0
+on(+, Z)(f, g) $in fn(Z)Q

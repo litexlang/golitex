@@ -134,7 +134,7 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state *VerState) (bool, e
 	} else if ast.IsFcAtomAndEqualToStr(fcAsFcFn.FnHead, glob.KeywordSetDefinedByReplacement) {
 		return ver.setDefinedByReplacementFnRequirement(fcAsFcFn, state)
 	} else if ast.IsFcAtomEqualToGivenString(fcAsFcFn.FnHead, glob.KeywordOn) {
-		return ver.onFnRequirement(fcAsFcFn, state)
+		panic("")
 	} else {
 		return ver.fcFnSatisfy_FnTemplate_Requirement(fcAsFcFn, state)
 	}
@@ -332,25 +332,6 @@ func (ver *Verifier) lenFnRequirement(fc *ast.FcFn, state *VerState) (bool, erro
 	}
 	if !ok {
 		return false, fmt.Errorf("parameters in %s must be in set %s, %s in %s is not valid", fc.FnHead, glob.KeywordFiniteSet, fc.Params[0], fc)
-	}
-
-	return true, nil
-}
-
-func (ver *Verifier) onFnRequirement(fc *ast.FcFn, state *VerState) (bool, error) {
-	// param[0] must be a function
-	_, ok := ver.env.GetLatestFnTT_GivenNameIsIn(fc.Params[0].String())
-	if !ok {
-		return false, nil
-	}
-
-	tmpT := ast.NewFcFn(ast.NewFcFn(ast.FcAtom(glob.KeywordFn), fc.Params[1:]), []ast.Fc{ast.FcAtom(glob.KeywordObj)}) // 问这个函数是否在 fn(fc[1:]) obj 中
-	ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fc.Params[0], tmpT}), state)
-	if err != nil {
-		return false, err
-	}
-	if !ok {
-		return false, nil
 	}
 
 	return true, nil
