@@ -1243,7 +1243,21 @@ func (tb *tokenBlock) defFnStmt() (*ast.DefFnStmt, error) {
 				return nil, tbErr(err, tb)
 			}
 		} else {
-			domFacts, thenFacts, err = tb.bodyOfInlineDomAndThen(glob.KeySymbolEqualLarger)
+			domFacts, err = tb.inlineFacts_untilWord_or_exceedEnd_notSkipWord(glob.KeySymbolEqualLarger)
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+
+			if !tb.header.is(glob.KeySymbolEqualLarger) {
+				return ast.NewDefFnStmt(string(decl.Name), ast.NewFnTStruct(decl.Params, decl.ParamSets, retSet, domFacts, thenFacts)), nil
+			}
+
+			err = tb.header.skip(glob.KeySymbolEqualLarger)
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+
+			thenFacts, err = tb.inlineFacts_untilEndOfInline()
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}
