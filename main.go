@@ -20,6 +20,7 @@ import (
 	glob "golitex/glob"
 	sys "golitex/sys"
 	"os"
+	"strings"
 )
 
 // 可以改变version的value，但是不要该VERSION这个名字，因为其他文件的grep依赖它
@@ -53,6 +54,7 @@ func main() {
 	// Handle execution flags
 	if *executeFlag != "" {
 		msg, signal, err := sys.ExecuteCodeAndReturnMessage(*executeFlag)
+		msg = strings.TrimSpace(msg)
 		fmt.Println(msg)
 		if err != nil {
 			fmt.Printf("Error: %s\n", err)
