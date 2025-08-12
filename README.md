@@ -55,50 +55,29 @@ Currently, the bottleneck in this field is that formal languages are too difficu
 
 To install or update Litex core, you could run the following commands for different systems.
 
-### macOS
+We recommand macOS users to install Litex by Homebrew with following command:
 
 ```bash
-# install
 brew install litexlang/tap/litex
-
-# update
-brew update && brew upgrade
-
-# run litex
-litex
 ```
 
-### Ubuntu/Debian
-
-Install or update for amd64 architecture :
+For Ubuntu/Debian users, please paste following command to your terminal:
 
 ```bash
-# install or update
-wget https://github.com/litexlang/golitex/releases/download/v0.1.8-beta/litex_0.1.8-beta_amd64.deb
-sudo dpkg -i litex_0.1.8-beta_amd64.deb
-
-# run litex
-litex
+wget https://github.com/litexlang/golitex/releases/download/0.1.9-beta/litex_0.1.9-beta_amd64.deb
+sudo dpkg -i litex_0.1.9-beta_amd64.deb
 ```
 
-Install or update for arm64 architecture:
-
-```bash
-# install or update
-wget https://github.com/litexlang/golitex/releases/download/v0.1.8-beta/litex_0.1.8-beta_arm64.deb
-sudo dpkg -i litex_0.1.8-beta_arm64.deb
-
-# run litex
-litex
-```
-
-### windows
-
-```bash
-pending...
-```
+For Windows users, please download MSI file form [**HERE**](https://github.com/litexlang/golitex/releases/download/0.1.9-beta/litex_0.1.9-beta_amd64.msi)
 
 After installing, your could run `litex -version` to see if it was installed. And enjoy it via command `litex`.
+
+## Supporting Tools
+
+As you installed Litex core, you can interact with Litex via following tools:
+
+- [litex-python-api](https://github.com/litexlang/litex-python-api)
+- [litex-jupyter-kernel](https://github.com/litexlang/litex-jupyter-kernel)
 
 ## Difference between Litex and Python and Lean
 
