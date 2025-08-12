@@ -1,1 +1,11 @@
-1 = 1
+fn_template self_seq(s set):
+    fn (n N_pos) s
+
+fn sum_of_seq_from_n_to_m(a self_seq(R), n N_pos, m N_pos) R: n <= m 
+
+"""
+know forall a self_seq(R), n N_pos, m N_pos:
+    n <= m
+    then:
+        sum_of_seq_from_n_to_m(a, n, m) = sum_of_seq_from_n_to_m(a, n, m-1) + a(m)
+"""
