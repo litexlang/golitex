@@ -33,7 +33,7 @@ _-- Voltaire_
 
 **If you are a non-technical reader, please read [this section](#litex-introduction-for-non-technical-readers).**
 
-**Litex is an intuitive and scalable formal language to validate your reasoning. Since a 10-year-old can reason about basic math, even a 10-year-old should be able to learn and use Litex easily to solve their own problems.**
+**Litex is an intuitive and scalable formal language to validate your reasoning. Since a 10-year-old can reason about basic math, even a 10-year-old should be able to learn and use Litex easily to solve their own problems. We assume a man without any math or programming background can learn Litex in 1-2 hours.**
 
 **Formal language makes the process of writing math into a process of writing code. This is a very powerful idea. AI researchers use it to build better and safer models. However, traditional formal languages are too complex for non-technical readers. AI researchers, mathematicians are calling for a new formal language to boost their job.**
 
@@ -53,7 +53,11 @@ Currently, the bottleneck in this field is that formal languages are too difficu
 
 ## Installing and updating
 
-To install or update Litex core, you could run the following commands for different systems.
+_Keep it simple, stupid._
+
+_-- The Unix Philosophy_
+
+The core principle of Litex is simplicity. That is why it is easy to install and get your hands dirty with Litex! To install or update Litex core, you could run the following commands for different systems.
 
 For macOS user with Homebrew:
 
@@ -250,9 +254,9 @@ You just learned how Litex builds math from basic pieces, like building blocks. 
 
 ## Litex Keywords
 
-_Keep it simple, stupid._
+_Design and programming are human activities; forget that and all is lost._
 
-_-- The Unix Philosophy_
+_-- Bjarne Stroustrup_
 
 Litex is a simple language. I hope many of the keywords are already familiar to you.[^3]
 
