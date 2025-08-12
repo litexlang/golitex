@@ -1674,29 +1674,29 @@ func (tb *tokenBlock) bodyOfKnowProp() ([]ast.FactStmt, []ast.FactStmt, error) {
 	}
 }
 
-func (tb *tokenBlock) headerOfAtProp() (*ast.DefHeader, error) {
-	var err error
-	err = tb.header.skip(glob.KeySymbolAt)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+// func (tb *tokenBlock) headerOfAtProp() (*ast.DefHeader, error) {
+// 	var err error
+// 	err = tb.header.skip(glob.KeySymbolAt)
+// 	if err != nil {
+// 		return nil, tbErr(err, tb)
+// 	}
 
-	declHeader, err := tb.defHeaderWithoutParsingColonAtEnd()
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+// 	declHeader, err := tb.defHeaderWithoutParsingColonAtEnd()
+// 	if err != nil {
+// 		return nil, tbErr(err, tb)
+// 	}
 
-	err = tb.header.skip(glob.KeySymbolColon)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+// 	err = tb.header.skip(glob.KeySymbolColon)
+// 	if err != nil {
+// 		return nil, tbErr(err, tb)
+// 	}
 
-	if !tb.header.ExceedEnd() {
-		return nil, fmt.Errorf("expect end of @ body, but got '%s'", tb.header.strAtCurIndexPlus(0))
-	}
+// 	if !tb.header.ExceedEnd() {
+// 		return nil, fmt.Errorf("expect end of @ body, but got '%s'", tb.header.strAtCurIndexPlus(0))
+// 	}
 
-	return declHeader, nil
-}
+// 	return declHeader, nil
+// }
 
 func (tb *tokenBlock) haveObjInNonEmptySetStmt() (*ast.HaveObjInNonEmptySetStmt, error) {
 	err := tb.header.skip(glob.KeywordHave)
