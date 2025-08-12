@@ -153,6 +153,27 @@ func (tb *tokenBlock) inlineFacts_untilWord(word string) ([]ast.FactStmt, error)
 	return facts, nil
 }
 
+func (tb *tokenBlock) inlineFacts_untilWord_or_exceedEnd_notSkipWord(word string) ([]ast.FactStmt, error) {
+	facts := []ast.FactStmt{}
+	for {
+		fact, err := tb.inlineFact()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		facts = append(facts, fact)
+
+		if tb.header.is(word) {
+			break
+		}
+
+		if tb.header.ExceedEnd() {
+			break
+		}
+	}
+
+	return facts, nil
+}
+
 func (tb *tokenBlock) inlineUniFact_Param_ParamSet_ParamInSetFacts() ([]string, []ast.Fc, error) {
 	params := []string{}
 	setParams := []ast.Fc{}
