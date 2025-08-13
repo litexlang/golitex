@@ -2199,9 +2199,38 @@ func (tb *tokenBlock) proveByInductionStmt() (ast.Stmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	err = tb.header.skip(glob.KeySymbolRightBrace)
+	err = tb.header.skip(glob.KeySymbolComma)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
 
+	param, err := tb.header.next()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	if !tb.header.is(glob.KeySymbolComma) {
+		err = tb.header.skip(glob.KeySymbolRightBrace)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		return ast.NewProveByInductionStmt(fact, param, ast.FcAtom("1")), nil
+	} else {
+		err = tb.header.skip(glob.KeySymbolComma)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		start, err := tb.RawFc()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		err = tb.header.skip(glob.KeySymbolRightBrace)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		return ast.NewProveByInductionStmt(fact, param, start), nil
+	}
 }
