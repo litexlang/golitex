@@ -40,18 +40,19 @@ prop random_proposition(n N)
 
 # know it satisfies the condition of the principle of mathematical induction
 know:
-    $random_proposition(0)
-    forall n N:
+    $random_proposition(1)
+    forall n N_pos:
+        n >= 1
         $random_proposition(n)
         then:
             $random_proposition(n + 1)
 
 # use "prove_by_math_induction" to prove random_proposition is true for all natural numbers larger than 0
-prove_by_math_induction($random_proposition(n))
+prove_by_induction($random_proposition(n), n, 1)
 
 # verify: $random_proposition(n) is true for all n N
-forall n N:
-    n >= 0
+forall n N_pos:
+    n >= 1
     then:
         $random_proposition(n)
 

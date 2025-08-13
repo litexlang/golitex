@@ -59,7 +59,7 @@ _-- The Unix Philosophy_
 
 The core principle of Litex is simplicity. That is why it is easy to install and get your hands dirty with Litex! To install or update Litex core, you could run the following commands for different systems.
 
-We recommand macOS users to install Litex by Homebrew with following command:
+We recommend macOS users to install Litex by Homebrew with following command:
 
 ```bash
 brew install litexlang/tap/litex
@@ -243,7 +243,7 @@ Litex is a simple language. I hope many of the keywords are already familiar to 
 | `claim` | claim a factual statement, prove it here |
 | `prove_by_contradiction` | prove by contradiction |
 | `prove_in_each_case` | prove by case analysis |
-| `prove_by_math_induction` | prove by mathematical induction |
+| `prove_by_induction` | prove by mathematical induction |
 | `prove_over_finite_set` | prove a universal statement by iterating over a finite set |
 | `import` | import a file or directory |
 | `exist_in` | exist a object in a set |

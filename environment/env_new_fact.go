@@ -51,11 +51,11 @@ func (env *Env) newSpecFactNoPostProcess(fact *ast.SpecFactStmt) error {
 	}
 	// }
 
-	if isMathInductionProp, err := env.isMathInductionPropName_StoreIt(fact); err != nil {
-		return err
-	} else if isMathInductionProp {
-		return nil
-	}
+	// if isMathInductionProp, err := env.isMathInductionPropName_StoreIt(fact); err != nil {
+	// 	return err
+	// } else if isMathInductionProp {
+	// 	return nil
+	// }
 
 	// err := env.KnownFacts.SpecFactMem.NewFactInSpecFactMem(fact, env.CurMatchEnv)
 	err := env.storeSpecFactInMem(fact)
@@ -102,11 +102,11 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
 	}
 	// }
 
-	if isMathInductionProp, err := env.isMathInductionPropName_StoreIt(fact); err != nil {
-		return err
-	} else if isMathInductionProp {
-		return nil
-	}
+	// if isMathInductionProp, err := env.isMathInductionPropName_StoreIt(fact); err != nil {
+	// 	return err
+	// } else if isMathInductionProp {
+	// 	return nil
+	// }
 
 	// err := env.KnownFacts.SpecFactMem.NewFactInSpecFactMem(fact, env.CurMatchEnv)
 	err := env.storeSpecFactInMem(fact)
@@ -382,48 +382,48 @@ func (env *Env) GetEqualFcs(fc ast.Fc) (*[]ast.Fc, bool) {
 	return facts, ok
 }
 
-func (env *Env) isMathInductionPropName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
-	if !fact.IsTrue() {
-		return false, nil
-	}
+// func (env *Env) isMathInductionPropName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
+// 	if !fact.IsTrue() {
+// 		return false, nil
+// 	}
 
-	if fact.PropName != glob.KeywordProveByMathInduction {
-		return false, nil
-	}
+// 	if fact.PropName != glob.KeywordProveByMathInduction {
+// 		return false, nil
+// 	}
 
-	if len(fact.Params) != 1 {
-		return true, fmt.Errorf("math induction prop is supposed to have one parameter, but %s has %d parameters", fact.PropName, len(fact.Params))
-	}
+// 	if len(fact.Params) != 1 {
+// 		return true, fmt.Errorf("math induction prop is supposed to have one parameter, but %s has %d parameters", fact.PropName, len(fact.Params))
+// 	}
 
-	propNameAsAtom, ok := fact.Params[0].(ast.FcAtom)
-	if !ok {
-		return false, fmt.Errorf("math induction fact %s should have a prop name as parameter, got: %s", fact, fact.Params[0])
-	}
+// 	propNameAsAtom, ok := fact.Params[0].(ast.FcAtom)
+// 	if !ok {
+// 		return false, fmt.Errorf("math induction fact %s should have a prop name as parameter, got: %s", fact, fact.Params[0])
+// 	}
 
-	_, ok = env.GetPropDef(propNameAsAtom)
-	if !ok {
-		return false, fmt.Errorf("math induction fact %s should have a prop name that is defined, got: %s", fact, propNameAsAtom)
-	}
+// 	_, ok = env.GetPropDef(propNameAsAtom)
+// 	if !ok {
+// 		return false, fmt.Errorf("math induction fact %s should have a prop name that is defined, got: %s", fact, propNameAsAtom)
+// 	}
 
-	knownUniFactParams := []string{"n"}
-	knownUniFactDomFacts := []ast.FactStmt{}
-	knownUniFactThenFacts := []ast.FactStmt{
-		ast.NewSpecFactStmt(
-			ast.TruePure,
-			propNameAsAtom,
-			[]ast.Fc{ast.FcAtom("n")},
-		),
-	}
+// 	knownUniFactParams := []string{"n"}
+// 	knownUniFactDomFacts := []ast.FactStmt{}
+// 	knownUniFactThenFacts := []ast.FactStmt{
+// 		ast.NewSpecFactStmt(
+// 			ast.TruePure,
+// 			propNameAsAtom,
+// 			[]ast.Fc{ast.FcAtom("n")},
+// 		),
+// 	}
 
-	knownUniFact := ast.NewUniFact(knownUniFactParams, []ast.Fc{ast.FcAtom(glob.KeywordNatural)}, knownUniFactDomFacts, knownUniFactThenFacts)
+// 	knownUniFact := ast.NewUniFact(knownUniFactParams, []ast.Fc{ast.FcAtom(glob.KeywordNatural)}, knownUniFactDomFacts, knownUniFactThenFacts)
 
-	err := env.NewFact(knownUniFact)
-	if err != nil {
-		return false, err
-	}
+// 	err := env.NewFact(knownUniFact)
+// 	if err != nil {
+// 		return false, err
+// 	}
 
-	return true, nil
-}
+// 	return true, nil
+// }
 
 func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, error) {
 	existParams, factParams := ast.GetExistFactExistParamsAndFactParams(fact)
