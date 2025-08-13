@@ -30,7 +30,7 @@ func RunFile(path string) (string, glob.SysSignal, error) {
 	glob.CurrentTaskDirName = repoName
 	content, err := os.ReadFile(path)
 	if err != nil {
-		return "", glob.SysSignalParseError, err
+		return fmt.Sprintf("failed to read file %s: %s", path, err.Error()), glob.SysSignalSystemError, err
 	}
 	msg, signal, err := pipeline.ExecuteCodeAndReturnMessage(string(content))
 	if err != nil {
@@ -44,7 +44,7 @@ func RunRepo(path string) (string, glob.SysSignal, error) {
 	// 运行里面的main.lix
 	content, err := os.ReadFile(filepath.Join(path, "main.lix"))
 	if err != nil {
-		return "", glob.SysSignalParseError, err
+		return "", glob.SysSignalSystemError, err
 	}
 	msg, signal, err := pipeline.ExecuteCodeAndReturnMessage(string(content))
 	if err != nil {
