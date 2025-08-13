@@ -15,6 +15,7 @@
 package litex_executor
 
 import (
+	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
 	verifier "golitex/verifier"
@@ -27,17 +28,19 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) (glob
 	msg := ""
 
 	defer func() {
-		if err != nil {
-			exec.newMsg(stmt.String() + "\nfailed")
-			exec.newMsg(err.Error())
-		}
-		if !isOk {
-			exec.newMsg(stmt.String() + "\nfailed")
-			if msg != "" {
-				exec.newMsg(msg)
+		if glob.RequireMsg() {
+			if err != nil {
+				exec.newMsg(fmt.Sprintf("%s\nerror\n", stmt.String()))
+				exec.newMsg(err.Error())
+			} else if !isOk {
+				exec.newMsg(fmt.Sprintf("%s\nfailed\n", stmt.String()))
+				if msg != "" {
+					exec.newMsg(msg)
+				}
+			} else {
+				exec.newMsg(fmt.Sprintf("%s\nsuccess\n", stmt.String()))
 			}
 		}
-		exec.newMsg(stmt.String() + "\nfinished")
 	}()
 
 	// 输入的 Start 必须是 N_pos
@@ -47,9 +50,7 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) (glob
 		return glob.ExecState_Error, err
 	}
 	if !ok {
-		if glob.RequireMsg() {
-			msg += startIsNPos.String() + "\nis unknown"
-		}
+		msg = fmt.Sprintf("%s\nis unknown", startIsNPos.String())
 		return glob.ExecState_Unknown, nil
 	}
 
@@ -63,9 +64,7 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) (glob
 		return glob.ExecState_Error, err
 	}
 	if !ok {
-		if glob.RequireMsg() {
-			msg += startFact.String() + "\nis unknown"
-		}
+		msg = fmt.Sprintf("%s\nis unknown", startFact.String())
 		return glob.ExecState_Unknown, nil
 	}
 
@@ -79,9 +78,7 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) (glob
 		return glob.ExecState_Error, err
 	}
 	if !ok {
-		if glob.RequireMsg() {
-			msg += uniFact_n_true_leads_n_plus_1_true.String() + "\nis unknown"
-		}
+		msg = fmt.Sprintf("%s\nis unknown", uniFact_n_true_leads_n_plus_1_true.String())
 		return glob.ExecState_Unknown, nil
 	}
 
@@ -101,7 +98,7 @@ func (exec *Executor) proveByInduction_newStartFact(stmt *ast.ProveByInductionSt
 }
 
 func (exec *Executor) proveByInduction_newUniFact_n_true_leads_n_plus_1_true(stmt *ast.ProveByInductionStmt) (ast.FactStmt, error) {
-	uniMap := map[string]ast.Fc{stmt.Param: ast.NewFcFn(ast.FcAtom(glob.KeySymbolPlus), []ast.Fc{stmt.Start, ast.FcAtom("1")})}
+	uniMap := map[string]ast.Fc{stmt.Param: ast.NewFcFn(ast.FcAtom(glob.KeySymbolPlus), []ast.Fc{ast.FcAtom(stmt.Param), ast.FcAtom("1")})}
 
 	retUniFactDom := []ast.FactStmt{
 		ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolLargerEqual), []ast.Fc{ast.FcAtom(stmt.Param), stmt.Start}),
