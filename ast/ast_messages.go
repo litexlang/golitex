@@ -746,3 +746,16 @@ func (stmt *InlineFactsStmt) String() string {
 	}
 	return strings.Join(strSlice, "\n")
 }
+
+func (stmt *ProveByInductionStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordProveByInduction)
+	builder.WriteString("(")
+	builder.WriteString(stmt.Fact.String())
+	builder.WriteString(", ")
+	builder.WriteString(stmt.Param)
+	builder.WriteString(", ")
+	builder.WriteString(stmt.Start.String())
+	builder.WriteString(")")
+	return builder.String()
+}

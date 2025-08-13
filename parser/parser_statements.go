@@ -88,6 +88,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.fnTemplateStmt()
 	case glob.KeywordClear:
 		ret, err = tb.clearStmt()
+	case glob.KeywordProveByInduction:
+		ret, err = tb.proveByInductionStmt()
 	default:
 		ret, err = tb.factsStmt()
 	}
@@ -2179,4 +2181,27 @@ func (tb *tokenBlock) claimStmtInline() (ast.ClaimInterface, error) {
 	} else {
 		return ast.NewClaimProveByContradictionStmt(*ast.NewClaimProveStmt(fact, proof)), nil
 	}
+}
+
+func (tb *tokenBlock) proveByInductionStmt() (ast.Stmt, error) {
+	err := tb.header.skip(glob.KeywordProveByInduction)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	fact, err := tb.specFactStmt()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolRightBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
 }

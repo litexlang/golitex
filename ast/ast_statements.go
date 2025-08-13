@@ -227,3 +227,9 @@ type ClearStmt struct{}
 type InlineFactsStmt struct {
 	Facts FactStmtSlice
 }
+
+type ProveByInductionStmt struct {
+	Fact  *SpecFactStmt
+	Param string
+	Start Fc
+}
