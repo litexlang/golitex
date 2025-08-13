@@ -140,9 +140,9 @@ func (stmt *SpecFactStmt) IsBuiltinProp_ExceptEqual() bool {
 	return glob.IsBuiltinInfixRelaPropSymbol(string(stmt.PropName)) && !stmt.NameIs(glob.KeySymbolEqual)
 }
 
-func (stmt *SpecFactStmt) IsMathInductionFact() bool {
-	return string(stmt.PropName) == glob.KeywordProveByMathInduction
-}
+// func (stmt *SpecFactStmt) IsMathInductionFact() bool {
+// 	return string(stmt.PropName) == glob.KeywordProveByMathInduction
+// }
 
 func NewInFact(param string, paramSet Fc) *SpecFactStmt {
 	return NewSpecFactStmt(TruePure, FcAtom(glob.KeywordIn), []Fc{FcAtom(param), paramSet})

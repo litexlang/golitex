@@ -16,35 +16,35 @@ package litex_global
 
 // ! 每次新增keyword的时候，要记住把它往isKeyword里加
 const (
-	KeywordSet                            = "set"
-	KeywordForall                         = "forall"
-	KeywordDom                            = "dom" // 这是一种语法糖。本质上只要在定义集合的时候写了对集合的要求，那dom就不必要的，因为dom本质上是 ”临时添加新的要求"
-	KeywordThen                           = "then"
-	KeywordObj                            = "obj"
-	KeywordHave                           = "have"
-	KeywordFn                             = "fn"
-	KeywordProp                           = "prop"
-	KeywordKnow                           = "know"
-	KeywordExist                          = "exist"
-	KeywordSt                             = "st"
-	KeywordExistProp                      = "exist_prop"
-	KeywordClaim                          = "claim"
-	KeywordProve                          = "prove"
-	KeywordImport                         = "import"
-	KeywordNot                            = "not"
-	KeywordIff                            = "iff"
-	KeywordProveByContradiction           = "prove_by_contradiction"
-	KeywordProveInEachCase                = "prove_in_each_case" // 必要：和or一起使用
-	KeywordOr                             = "or"
-	KeywordCommutativeProp                = "commutative_prop" // 这个 keyword是真的在工作的
-	KeywordNatural                        = "N"                // e.g. 0
-	KeywordInteger                        = "Z"                // e.g. -1
-	KeywordRational                       = "Q"                // e.g. -1.1
-	KeywordReal                           = "R"                // e.g. pi
-	KeywordComplex                        = "C"                // e.g. 1+i
-	KeywordImaginary                      = "i"                // e.g. i
-	KeywordIn                             = "in"
-	KeywordProveByMathInduction           = "prove_by_math_induction"
+	KeywordSet                  = "set"
+	KeywordForall               = "forall"
+	KeywordDom                  = "dom" // 这是一种语法糖。本质上只要在定义集合的时候写了对集合的要求，那dom就不必要的，因为dom本质上是 ”临时添加新的要求"
+	KeywordThen                 = "then"
+	KeywordObj                  = "obj"
+	KeywordHave                 = "have"
+	KeywordFn                   = "fn"
+	KeywordProp                 = "prop"
+	KeywordKnow                 = "know"
+	KeywordExist                = "exist"
+	KeywordSt                   = "st"
+	KeywordExistProp            = "exist_prop"
+	KeywordClaim                = "claim"
+	KeywordProve                = "prove"
+	KeywordImport               = "import"
+	KeywordNot                  = "not"
+	KeywordIff                  = "iff"
+	KeywordProveByContradiction = "prove_by_contradiction"
+	KeywordProveInEachCase      = "prove_in_each_case" // 必要：和or一起使用
+	KeywordOr                   = "or"
+	KeywordCommutativeProp      = "commutative_prop" // 这个 keyword是真的在工作的
+	KeywordNatural              = "N"                // e.g. 0
+	KeywordInteger              = "Z"                // e.g. -1
+	KeywordRational             = "Q"                // e.g. -1.1
+	KeywordReal                 = "R"                // e.g. pi
+	KeywordComplex              = "C"                // e.g. 1+i
+	KeywordImaginary            = "i"                // e.g. i
+	KeywordIn                   = "in"
+	// KeywordProveByMathInduction           = "prove_by_math_induction"
 	KeywordAs                             = "as" // as a fn_template。这非常难以实现，尤其是出现 fn 理论上作用在M上，现在是作用在返回值是M的函数上时做推理，非常困难，需要最后实现而不是现在
 	KeywordLen                            = "len"
 	KeywordFiniteSet                      = "finite_set"
@@ -68,33 +68,33 @@ const (
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
-	KeywordSet:                            {},
-	KeywordForall:                         {},
-	KeywordDom:                            {},
-	KeywordThen:                           {},
-	KeywordObj:                            {},
-	KeywordHave:                           {},
-	KeywordFn:                             {},
-	KeywordProp:                           {},
-	KeywordKnow:                           {},
-	KeywordExistProp:                      {},
-	KeywordSt:                             {},
-	KeywordClaim:                          {},
-	KeywordProve:                          {},
-	KeywordImport:                         {},
-	KeywordNot:                            {},
-	KeywordProveByContradiction:           {},
-	KeywordProveInEachCase:                {},
-	KeywordIff:                            {},
-	KeywordExist:                          {},
-	KeywordCommutativeProp:                {},
-	KeywordOr:                             {},
-	KeywordNatural:                        {},
-	KeywordInteger:                        {},
-	KeywordRational:                       {},
-	KeywordReal:                           {},
-	KeywordIn:                             {},
-	KeywordProveByMathInduction:           {},
+	KeywordSet:                  {},
+	KeywordForall:               {},
+	KeywordDom:                  {},
+	KeywordThen:                 {},
+	KeywordObj:                  {},
+	KeywordHave:                 {},
+	KeywordFn:                   {},
+	KeywordProp:                 {},
+	KeywordKnow:                 {},
+	KeywordExistProp:            {},
+	KeywordSt:                   {},
+	KeywordClaim:                {},
+	KeywordProve:                {},
+	KeywordImport:               {},
+	KeywordNot:                  {},
+	KeywordProveByContradiction: {},
+	KeywordProveInEachCase:      {},
+	KeywordIff:                  {},
+	KeywordExist:                {},
+	KeywordCommutativeProp:      {},
+	KeywordOr:                   {},
+	KeywordNatural:              {},
+	KeywordInteger:              {},
+	KeywordRational:             {},
+	KeywordReal:                 {},
+	KeywordIn:                   {},
+	// KeywordProveByMathInduction:           {},
 	KeywordComplex:                        {},
 	KeywordImaginary:                      {},
 	KeywordAs:                             {},

@@ -587,18 +587,18 @@ func (stmt *ClaimExistPropStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *ProveByMathInductionStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordProveByMathInduction)
-	builder.WriteString("(")
-	builder.WriteString(stmt.Fact.String())
-	builder.WriteString(", ")
-	builder.WriteString(fmt.Sprintf("%d", stmt.ParamIndex))
-	builder.WriteString(", ")
-	builder.WriteString(fmt.Sprintf("%d", stmt.Start))
-	builder.WriteString(")")
-	return builder.String()
-}
+// func (stmt *ProveByMathInductionStmt) String() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(glob.KeywordProveByMathInduction)
+// 	builder.WriteString("(")
+// 	builder.WriteString(stmt.Fact.String())
+// 	builder.WriteString(", ")
+// 	builder.WriteString(fmt.Sprintf("%d", stmt.ParamIndex))
+// 	builder.WriteString(", ")
+// 	builder.WriteString(fmt.Sprintf("%d", stmt.Start))
+// 	builder.WriteString(")")
+// 	return builder.String()
+// }
 
 func (stmt *IntensionalSetStmt) String() string {
 	var builder strings.Builder
