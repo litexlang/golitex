@@ -82,6 +82,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		exec.clearStmt()
 	case *ast.InlineFactsStmt:
 		execState, err = exec.inlineFactsStmt(stmt)
+	case *ast.ProveByInductionStmt:
+		execState, err = exec.proveByInductionStmt(stmt)
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}

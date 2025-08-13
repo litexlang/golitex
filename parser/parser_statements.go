@@ -2183,7 +2183,7 @@ func (tb *tokenBlock) claimStmtInline() (ast.ClaimInterface, error) {
 	}
 }
 
-func (tb *tokenBlock) proveByInductionStmt() (ast.Stmt, error) {
+func (tb *tokenBlock) proveByInductionStmt() (*ast.ProveByInductionStmt, error) {
 	err := tb.header.skip(glob.KeywordProveByInduction)
 	if err != nil {
 		return nil, tbErr(err, tb)
