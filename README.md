@@ -29,7 +29,7 @@ _Common sense is not so common._
 
 _-- Voltaire_
 
-[![Click Me To Try Litex On Online  Playground](https://img.shields.io/badge/Click_Here_To_Try_Litex_On_Online_Playground-%E2%86%92_Explore-FF6B6B?style=for-the-badge)](https://litexlang.org/playground)
+[![Click Me To Try Litex On Online  Playground](https://img.nshields.io/badge/Click_Here_To_Try_Litex_On_Online_Playground-%E2%86%92_Explore-FF6B6B?style=for-the-badge)](https://litexlang.org/playground)
 
 **If you are a non-technical reader, please read [this section](#litex-introduction-for-non-technical-readers).**
 
