@@ -21,28 +21,29 @@ type Stmt interface {
 	InlineString() string
 }
 
-func (stmt *DefObjStmt) stmt()                   {}
-func (c *DefPropStmt) stmt()                     {}
-func (l *DefFnStmt) stmt()                       {}
-func (l *UniFactStmt) stmt()                     {}
-func (p *SpecFactStmt) stmt()                    {}
-func (f *ClaimProveStmt) stmt()                  {}
-func (f *KnowFactStmt) stmt()                    {}
-func (s *DefExistPropStmt) stmt()                {}
-func (s *HaveObjStStmt) stmt()                   {}
-func (s *ProveInEachCaseStmt) stmt()             {}
-func (s *KnowPropStmt) stmt()                    {}
-func (s *OrStmt) stmt()                          {}
-func (s *ImportDirStmt) stmt()                   {}
-func (s *ImportFileStmt) stmt()                  {}
-func (s *ProveStmt) stmt()                       {}
-func (s *UniFactWithIffStmt) stmt()              {}
-func (s *ClaimProveByContradictionStmt) stmt()   {}
-func (s *EnumStmt) stmt()                        {}
-func (s *IntensionalSetStmt) stmt()              {}
-func (s *ClaimPropStmt) stmt()                   {}
-func (s *ClaimExistPropStmt) stmt()              {}
-func (s *ProveByMathInductionStmt) stmt()        {}
+func (stmt *DefObjStmt) stmt()                 {}
+func (c *DefPropStmt) stmt()                   {}
+func (l *DefFnStmt) stmt()                     {}
+func (l *UniFactStmt) stmt()                   {}
+func (p *SpecFactStmt) stmt()                  {}
+func (f *ClaimProveStmt) stmt()                {}
+func (f *KnowFactStmt) stmt()                  {}
+func (s *DefExistPropStmt) stmt()              {}
+func (s *HaveObjStStmt) stmt()                 {}
+func (s *ProveInEachCaseStmt) stmt()           {}
+func (s *KnowPropStmt) stmt()                  {}
+func (s *OrStmt) stmt()                        {}
+func (s *ImportDirStmt) stmt()                 {}
+func (s *ImportFileStmt) stmt()                {}
+func (s *ProveStmt) stmt()                     {}
+func (s *UniFactWithIffStmt) stmt()            {}
+func (s *ClaimProveByContradictionStmt) stmt() {}
+func (s *EnumStmt) stmt()                      {}
+func (s *IntensionalSetStmt) stmt()            {}
+func (s *ClaimPropStmt) stmt()                 {}
+func (s *ClaimExistPropStmt) stmt()            {}
+
+// func (s *ProveByMathInductionStmt) stmt()        {}
 func (s *ProveOverFiniteSetStmt) stmt()          {}
 func (s *HaveObjInNonEmptySetStmt) stmt()        {}
 func (s *HaveSetStmt) stmt()                     {}
