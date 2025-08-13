@@ -20,7 +20,6 @@ import (
 	glob "golitex/glob"
 	"path/filepath"
 	"slices"
-	"strconv"
 	"strings"
 )
 
@@ -76,8 +75,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		}
 	case glob.KeywordProveInEachCase:
 		ret, err = tb.proveInEachCaseStmt()
-	case glob.KeywordProveByMathInduction:
-		ret, err = tb.proveByMathInductionStmt()
+	// case glob.KeywordProveByMathInduction:
+	// 	ret, err = tb.proveByMathInductionStmt()
 	case glob.KeywordProveOverFiniteSet:
 		ret, err = tb.proveOverFiniteSetStmt()
 	case glob.KeySymbolAt:
@@ -88,6 +87,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.fnTemplateStmt()
 	case glob.KeywordClear:
 		ret, err = tb.clearStmt()
+	case glob.KeywordProveByInduction:
+		ret, err = tb.proveByInductionStmt()
 	default:
 		ret, err = tb.factsStmt()
 	}
@@ -1347,60 +1348,60 @@ func (tb *tokenBlock) claimExistPropStmt() (*ast.ClaimExistPropStmt, error) {
 	return ast.NewClaimExistPropStmt(existProp, proofs), nil
 }
 
-func (tb *tokenBlock) proveByMathInductionStmt() (*ast.ProveByMathInductionStmt, error) {
-	var err error
-	var paramIndex int = 0
-	var start int = 0
+// func (tb *tokenBlock) proveByMathInductionStmt() (*ast.ProveByMathInductionStmt, error) {
+// 	var err error
+// 	var paramIndex int = 0
+// 	var start int = 0
 
-	err = tb.header.skip(glob.KeywordProveByMathInduction)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+// 	err = tb.header.skip(glob.KeywordProveByMathInduction)
+// 	if err != nil {
+// 		return nil, tbErr(err, tb)
+// 	}
 
-	err = tb.header.skip(glob.KeySymbolLeftBrace)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+// 	err = tb.header.skip(glob.KeySymbolLeftBrace)
+// 	if err != nil {
+// 		return nil, tbErr(err, tb)
+// 	}
 
-	fact, err := tb.specFactStmt()
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+// 	fact, err := tb.specFactStmt()
+// 	if err != nil {
+// 		return nil, tbErr(err, tb)
+// 	}
 
-	if tb.header.is(glob.KeySymbolComma) {
-		tb.header.skip(glob.KeySymbolComma)
-		paramIndexAsStr, err := tb.header.next()
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
+// 	if tb.header.is(glob.KeySymbolComma) {
+// 		tb.header.skip(glob.KeySymbolComma)
+// 		paramIndexAsStr, err := tb.header.next()
+// 		if err != nil {
+// 			return nil, tbErr(err, tb)
+// 		}
 
-		paramIndex, err = strconv.Atoi(paramIndexAsStr)
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
+// 		paramIndex, err = strconv.Atoi(paramIndexAsStr)
+// 		if err != nil {
+// 			return nil, tbErr(err, tb)
+// 		}
 
-		if tb.header.is(glob.KeySymbolComma) {
-			tb.header.skip(glob.KeySymbolComma)
-			startAsStr, err := tb.header.next()
-			if err != nil {
-				return nil, tbErr(err, tb)
-			}
-			start, err = strconv.Atoi(startAsStr)
-			if err != nil {
-				return nil, tbErr(err, tb)
-			}
-		}
-	}
+// 		if tb.header.is(glob.KeySymbolComma) {
+// 			tb.header.skip(glob.KeySymbolComma)
+// 			startAsStr, err := tb.header.next()
+// 			if err != nil {
+// 				return nil, tbErr(err, tb)
+// 			}
+// 			start, err = strconv.Atoi(startAsStr)
+// 			if err != nil {
+// 				return nil, tbErr(err, tb)
+// 			}
+// 		}
+// 	}
 
-	err = tb.header.skip(glob.KeySymbolRightBrace)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+// 	err = tb.header.skip(glob.KeySymbolRightBrace)
+// 	if err != nil {
+// 		return nil, tbErr(err, tb)
+// 	}
 
-	// 第ParamIndex个参数必须是atom
+// 	// 第ParamIndex个参数必须是atom
 
-	return ast.NewProveByMathInductionStmt(fact, paramIndex, start), nil
-}
+// 	return ast.NewProveByMathInductionStmt(fact, paramIndex, start), nil
+// }
 
 func (tb *tokenBlock) dom_and_section(kw string, kw_should_not_exist_in_body string) ([]ast.FactStmt, []ast.FactStmt, error) {
 	if len(tb.body) == 0 {
@@ -2178,5 +2179,57 @@ func (tb *tokenBlock) claimStmtInline() (ast.ClaimInterface, error) {
 		return ast.NewClaimProveStmt(fact, proof), nil
 	} else {
 		return ast.NewClaimProveByContradictionStmt(*ast.NewClaimProveStmt(fact, proof)), nil
+	}
+}
+
+func (tb *tokenBlock) proveByInductionStmt() (*ast.ProveByInductionStmt, error) {
+	err := tb.header.skip(glob.KeywordProveByInduction)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	fact, err := tb.specFactStmt()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolComma)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	param, err := tb.header.next()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	if !tb.header.is(glob.KeySymbolComma) {
+		err = tb.header.skip(glob.KeySymbolRightBrace)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		return ast.NewProveByInductionStmt(fact, param, ast.FcAtom("1")), nil
+	} else {
+		err = tb.header.skip(glob.KeySymbolComma)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		start, err := tb.RawFc()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		err = tb.header.skip(glob.KeySymbolRightBrace)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		return ast.NewProveByInductionStmt(fact, param, start), nil
 	}
 }

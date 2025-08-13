@@ -60,8 +60,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		execState, err = exec.proveStmt(stmt)
 	case *ast.ClaimProveByContradictionStmt:
 		execState, err = exec.execClaimStmtProveByContradiction(stmt)
-	case *ast.ProveByMathInductionStmt:
-		execState, err = exec.proveByMathInduction(stmt)
+	// case *ast.ProveByMathInductionStmt:
+	// 	execState, err = exec.proveByMathInduction(stmt)
 	case *ast.ProveOverFiniteSetStmt:
 		execState, err = exec.proveOverFiniteSetStmt(stmt)
 	case *ast.HaveObjInNonEmptySetStmt:
@@ -82,6 +82,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		exec.clearStmt()
 	case *ast.InlineFactsStmt:
 		execState, err = exec.inlineFactsStmt(stmt)
+	case *ast.ProveByInductionStmt:
+		execState, err = exec.proveByInductionStmt(stmt)
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}

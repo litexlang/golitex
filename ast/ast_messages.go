@@ -587,18 +587,18 @@ func (stmt *ClaimExistPropStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *ProveByMathInductionStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordProveByMathInduction)
-	builder.WriteString("(")
-	builder.WriteString(stmt.Fact.String())
-	builder.WriteString(", ")
-	builder.WriteString(fmt.Sprintf("%d", stmt.ParamIndex))
-	builder.WriteString(", ")
-	builder.WriteString(fmt.Sprintf("%d", stmt.Start))
-	builder.WriteString(")")
-	return builder.String()
-}
+// func (stmt *ProveByMathInductionStmt) String() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(glob.KeywordProveByMathInduction)
+// 	builder.WriteString("(")
+// 	builder.WriteString(stmt.Fact.String())
+// 	builder.WriteString(", ")
+// 	builder.WriteString(fmt.Sprintf("%d", stmt.ParamIndex))
+// 	builder.WriteString(", ")
+// 	builder.WriteString(fmt.Sprintf("%d", stmt.Start))
+// 	builder.WriteString(")")
+// 	return builder.String()
+// }
 
 func (stmt *IntensionalSetStmt) String() string {
 	var builder strings.Builder
@@ -745,4 +745,17 @@ func (stmt *InlineFactsStmt) String() string {
 		strSlice[i] = stmt.Facts[i].String()
 	}
 	return strings.Join(strSlice, "\n")
+}
+
+func (stmt *ProveByInductionStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordProveByInduction)
+	builder.WriteString("(")
+	builder.WriteString(stmt.Fact.String())
+	builder.WriteString(", ")
+	builder.WriteString(stmt.Param)
+	builder.WriteString(", ")
+	builder.WriteString(stmt.Start.String())
+	builder.WriteString(")")
+	return builder.String()
 }
