@@ -8,8 +8,6 @@ fn self_sum(a self_seq(R), n N_pos, m N_pos) R:
 
 know forall a self_seq(R), n N_pos => self_sum(a, n, n) = a(n)
 
-# prop result(a self_seq(R), m N_pos): m > 1 <=> self_sum(a, 1, m) = a(1) + self_sum(a, 2, m)
-
 claim:
     forall a self_seq(R):
         forall m N_pos: m > 1 => self_sum(a, 1, m) = a(1) + self_sum(a, 2, m)
