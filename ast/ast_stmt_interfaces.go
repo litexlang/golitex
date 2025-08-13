@@ -55,6 +55,7 @@ func (s *CommentStmt) stmt()                     {}
 func (s *FnTemplateDefStmt) stmt()               {}
 func (s *ClearStmt) stmt()                       {}
 func (s *InlineFactsStmt) stmt()                 {}
+func (s *ProveByInductionStmt) stmt()            {}
 
 type FactStmt interface {
 	factStmt()

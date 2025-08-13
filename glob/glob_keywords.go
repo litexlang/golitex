@@ -63,6 +63,8 @@ const (
 	KeywordClear = "clear"
 
 	KeywordOn = "on"
+
+	KeywordProveByInduction = "prove_by_induction"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -111,6 +113,8 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordClear:                          {},
 	// KeywordExistSetByAxiomOfReplacement:   {},
 	KeywordOn: {},
+
+	KeywordProveByInduction: {},
 }
 
 const (
