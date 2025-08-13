@@ -169,3 +169,7 @@ func NewClearStmt() *ClearStmt {
 func NewInlineFactsStmt(facts []FactStmt) *InlineFactsStmt {
 	return &InlineFactsStmt{facts}
 }
+
+func NewProveByInductionStmt(fact *SpecFactStmt, param string, start Fc) *ProveByInductionStmt {
+	return &ProveByInductionStmt{fact, param, start}
+}
