@@ -59,70 +59,29 @@ _-- The Unix Philosophy_
 
 The core principle of Litex is simplicity. That is why it is easy to install and get your hands dirty with Litex! To install or update Litex core, you could run the following commands for different systems.
 
-For macOS user with Homebrew:
+We recommand macOS users to install Litex by Homebrew with following command:
 
 ```bash
-# install
 brew install litexlang/tap/litex
-
-# update
-brew update && brew upgrade
-
-# run litex in your terminal
-litex
 ```
 
-For Ubuntu user with wget command:
-
-amd64 architecture install or update:
-```bash
-# install or update
-wget https://github.com/litexlang/golitex/releases/download/v0.1.7-beta/litex_0.1.7-beta_amd64.deb
-sudo dpkg -i litex_0.1.7-beta_amd64.deb
-
-# run litex in your terminal
-litex
-```
-
-arm64 architecture install or update:
-```bash
-# install or update
-wget https://github.com/litexlang/golitex/releases/download/v0.1.7-beta/litex_0.1.7-beta_arm64.deb
-sudo dpkg -i litex_0.1.7-beta_arm64.deb
-
-# run litex in your terminal
-litex
-```
-
-For Ubuntu user with curl command:
-
-amd64 architecture install or update:
-```bash
-# install or update
-curl -O https://github.com/litexlang/golitex/releases/download/v0.1.7-beta/litex_0.1.7-beta_amd64.deb
-sudo dpkg -i litex_0.1.7-beta_amd64.deb
-
-# run litex in your terminal
-litex
-```
-
-arm64 architecture install or update:
-```bash
-# install or update
-curl -O https://github.com/litexlang/golitex/releases/download/v0.1.7-beta/litex_0.1.7-beta_arm64.deb
-sudo dpkg -i litex_0.1.7-beta_arm64.deb
-
-# run litex in your terminal
-litex
-```
-
-For windows user:
+For Ubuntu/Debian users, please paste following command to your terminal:
 
 ```bash
-pending...
+wget https://github.com/litexlang/golitex/releases/download/0.1.9-beta/litex_0.1.9-beta_amd64.deb
+sudo dpkg -i litex_0.1.9-beta_amd64.deb
 ```
+
+For Windows users, please download MSI file form [**HERE**](https://github.com/litexlang/golitex/releases/download/0.1.9-beta/litex_0.1.9-beta_amd64.msi)
 
 After installing, your could run `litex -version` to see if it was installed. And enjoy it via command `litex`.
+
+## Supporting Tools
+
+As you installed Litex core, you can interact with Litex via following tools:
+
+- [litex-python-api](https://github.com/litexlang/litex-python-api)
+- [litex-jupyter-kernel](https://github.com/litexlang/litex-jupyter-kernel)
 
 ## Difference between Litex and Python and Lean
 
