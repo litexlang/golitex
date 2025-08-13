@@ -59,7 +59,7 @@ _-- The Unix Philosophy_
 
 The core principle of Litex is simplicity. That is why it is easy to install and get your hands dirty with Litex! To install or update Litex core, you could run the following commands for different systems.
 
-We recommand macOS users to install Litex by Homebrew with following command:
+We recommend macOS users to install Litex by Homebrew with following command:
 
 ```bash
 brew install litexlang/tap/litex
