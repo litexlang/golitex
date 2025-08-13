@@ -396,6 +396,10 @@ func (tb *tokenBlock) claimStmt() (ast.ClaimInterface, error) {
 		return nil, tbErr(err, tb)
 	}
 
+	if !tb.header.is(glob.KeySymbolColon) {
+		return tb.claimStmtInline()
+	}
+
 	err = tb.header.skip(glob.KeySymbolColon)
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -1239,7 +1243,21 @@ func (tb *tokenBlock) defFnStmt() (*ast.DefFnStmt, error) {
 				return nil, tbErr(err, tb)
 			}
 		} else {
-			domFacts, thenFacts, err = tb.bodyOfInlineDomAndThen(glob.KeySymbolEqualLarger)
+			domFacts, err = tb.inlineFacts_untilWord_or_exceedEnd_notSkipWord(glob.KeySymbolEqualLarger)
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+
+			if !tb.header.is(glob.KeySymbolEqualLarger) {
+				return ast.NewDefFnStmt(string(decl.Name), ast.NewFnTStruct(decl.Params, decl.ParamSets, retSet, domFacts, thenFacts)), nil
+			}
+
+			err = tb.header.skip(glob.KeySymbolEqualLarger)
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+
+			thenFacts, err = tb.inlineFacts_untilEndOfInline()
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}
@@ -1260,12 +1278,17 @@ func (tb *tokenBlock) defFnStmt() (*ast.DefFnStmt, error) {
 }
 
 func (tb *tokenBlock) claimPropStmt() (*ast.ClaimPropStmt, error) {
-	declHeader, err := tb.body[0].headerOfAtProp()
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+	// declHeader, err := tb.body[0].headerOfAtProp()
+	// if err != nil {
+	// 	return nil, tbErr(err, tb)
+	// }
 
-	iffFacts, thenFacts, err := tb.body[0].bodyOfKnowProp()
+	// iffFacts, thenFacts, err := tb.body[0].bodyOfKnowProp()
+	// if err != nil {
+	// 	return nil, tbErr(err, tb)
+	// }
+
+	namedUniFact, err := tb.body[0].namedUniFactStmt()
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -1293,7 +1316,8 @@ func (tb *tokenBlock) claimPropStmt() (*ast.ClaimPropStmt, error) {
 		proofs = append(proofs, curStmt)
 	}
 
-	return ast.NewClaimPropStmt(ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts, thenFacts), proofs, isProve), nil
+	// return ast.NewClaimPropStmt(ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts, thenFacts), proofs, isProve), nil
+	return ast.NewClaimPropStmt(ast.NewDefPropStmt(&namedUniFact.DefPropStmt.DefHeader, namedUniFact.DefPropStmt.DomFacts, namedUniFact.DefPropStmt.IffFacts, namedUniFact.DefPropStmt.ThenFacts), proofs, isProve), nil
 }
 
 func (tb *tokenBlock) claimExistPropStmt() (*ast.ClaimExistPropStmt, error) {
@@ -1664,29 +1688,29 @@ func (tb *tokenBlock) bodyOfKnowProp() ([]ast.FactStmt, []ast.FactStmt, error) {
 	}
 }
 
-func (tb *tokenBlock) headerOfAtProp() (*ast.DefHeader, error) {
-	var err error
-	err = tb.header.skip(glob.KeySymbolAt)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+// func (tb *tokenBlock) headerOfAtProp() (*ast.DefHeader, error) {
+// 	var err error
+// 	err = tb.header.skip(glob.KeySymbolAt)
+// 	if err != nil {
+// 		return nil, tbErr(err, tb)
+// 	}
 
-	declHeader, err := tb.defHeaderWithoutParsingColonAtEnd()
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+// 	declHeader, err := tb.defHeaderWithoutParsingColonAtEnd()
+// 	if err != nil {
+// 		return nil, tbErr(err, tb)
+// 	}
 
-	err = tb.header.skip(glob.KeySymbolColon)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+// 	err = tb.header.skip(glob.KeySymbolColon)
+// 	if err != nil {
+// 		return nil, tbErr(err, tb)
+// 	}
 
-	if !tb.header.ExceedEnd() {
-		return nil, fmt.Errorf("expect end of @ body, but got '%s'", tb.header.strAtCurIndexPlus(0))
-	}
+// 	if !tb.header.ExceedEnd() {
+// 		return nil, fmt.Errorf("expect end of @ body, but got '%s'", tb.header.strAtCurIndexPlus(0))
+// 	}
 
-	return declHeader, nil
-}
+// 	return declHeader, nil
+// }
 
 func (tb *tokenBlock) haveObjInNonEmptySetStmt() (*ast.HaveObjInNonEmptySetStmt, error) {
 	err := tb.header.skip(glob.KeywordHave)
@@ -2093,5 +2117,66 @@ func (tb *tokenBlock) factsStmt() (ast.Stmt, error) {
 		return ast.NewInlineFactsStmt(facts), nil
 	} else {
 		return tb.factStmt(UniFactDepth0)
+	}
+}
+
+func (tb *tokenBlock) claimStmtInline() (ast.ClaimInterface, error) {
+	var fact ast.FactStmt
+	var err error
+	var namedUniFact *ast.NamedUniFactStmt
+
+	if tb.header.is(glob.KeySymbolAt) {
+		// 有点小问题，最好必须要规定是named inline
+		namedUniFact, err = tb.namedUniFactStmt()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+	} else {
+		fact, err = tb.inlineFact()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+	}
+
+	isProve := true
+	if tb.header.is(glob.KeySymbolColon) {
+		err := tb.header.skip(glob.KeySymbolColon)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		if !tb.header.ExceedEnd() {
+			return nil, fmt.Errorf("expect end of line")
+		}
+
+	} else if tb.header.is(glob.KeywordProveByContradiction) {
+		err := tb.header.skipKwAndColon_ExceedEnd(glob.KeywordProveByContradiction)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		isProve = false
+	} else if tb.header.is(glob.KeywordProve) {
+		err := tb.header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+	} else {
+		return nil, fmt.Errorf("expect colon or 'prove_by_contradiction'")
+	}
+
+	proof := []ast.Stmt{}
+	for _, block := range tb.body {
+		curStmt, err := block.Stmt()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		proof = append(proof, curStmt)
+	}
+
+	if namedUniFact != nil {
+		return ast.NewClaimPropStmt(&namedUniFact.DefPropStmt, proof, isProve), nil
+	} else if isProve {
+		return ast.NewClaimProveStmt(fact, proof), nil
+	} else {
+		return ast.NewClaimProveByContradictionStmt(*ast.NewClaimProveStmt(fact, proof)), nil
 	}
 }

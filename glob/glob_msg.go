@@ -26,6 +26,7 @@ var REPLUnknownMessage = "---\nUnknown :(\n"
 var REPLSyntaxErrorMessage = "---\nSyntax Error :(\n"
 var REPLRuntimeErrorMessage = "---\nRuntime Error :(\n"
 var REPLFalseMessage = "---\nFalse :(\n"
+var REPLSystemErrorMessage = "---\nSystem Error :(\n"
 
 func SplitLinesAndAdd4NIndents(line string, n uint32) string {
 	if n == 0 {

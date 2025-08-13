@@ -18,6 +18,7 @@ type Stmt interface {
 	stmt()
 	String() string
 	ToLatexString() string
+	InlineString() string
 }
 
 func (stmt *DefObjStmt) stmt()                   {}
@@ -63,6 +64,7 @@ type FactStmt interface {
 	GetAtoms() []FcAtom
 	ToLatexString() string
 	canBeKnown()
+	InlineString() string
 }
 
 func (p *SpecFactStmt) factStmt()       {}
@@ -83,6 +85,7 @@ type Spec_OrFact interface {
 	GetAtoms() []FcAtom
 	ToLatexString() string
 	canBeKnown()
+	InlineString() string
 }
 
 func (s *SpecFactStmt) reversibleFact() {}
@@ -105,6 +108,7 @@ type DefStmtInterface interface {
 	stmt()
 	String() string
 	ToLatexString() string
+	InlineString() string
 }
 
 func (s *DefObjStmt) defStmt()       {}
@@ -121,6 +125,7 @@ type UniFactInterface interface {
 	uniFact()
 	ToLatexString() string
 	canBeKnown()
+	InlineString() string
 }
 
 func (stmt *UniFactStmt) uniFact()        {}
@@ -131,6 +136,7 @@ type ClaimInterface interface {
 	String() string
 	stmt()
 	ToLatexString() string
+	InlineString() string
 }
 
 func (stmt *ClaimProveStmt) claimStmt()                {}
@@ -143,6 +149,7 @@ type ImportStmtInterface interface {
 	stmt()
 	String() string
 	ToLatexString() string
+	InlineString() string
 }
 
 func (stmt *ImportDirStmt) importStmt()  {}
@@ -158,6 +165,7 @@ type EnumSet_IntensionalSet_EqualDom interface {
 	GetAtoms() []FcAtom
 	ToLatexString() string
 	canBeKnown()
+	InlineString() string
 }
 
 func (stmt *EnumStmt) setDeclarationStmt()           {}
@@ -168,6 +176,7 @@ func (stmt *IntensionalSetStmt) GetPropName() Fc     { return stmt.CurSet }
 type FnTemplate_Or_DefObjStmtInterface interface {
 	fnTemplate_Or_DefObjStmt()
 	ToLatexString() string
+	InlineString() string
 }
 
 func (stmt *DefObjStmt) fnTemplate_Or_DefObjStmt() {}
@@ -177,6 +186,7 @@ type CanBeKnownStmt interface {
 	String() string
 	ToLatexString() string
 	canBeKnown()
+	InlineString() string
 }
 
 func (s *SpecFactStmt) canBeKnown()       {}
