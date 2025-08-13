@@ -48,3 +48,4 @@ func (s *CommentStmt) InlineString() string                     { panic("") }
 func (s *FnTemplateDefStmt) InlineString() string               { panic("") }
 func (s *ClearStmt) InlineString() string                       { panic("") }
 func (s *InlineFactsStmt) InlineString() string                 { panic("") }
+func (s *ProveByInductionStmt) InlineString() string            { panic("") }

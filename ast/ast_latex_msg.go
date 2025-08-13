@@ -815,3 +815,17 @@ func (s *InlineFactsStmt) ToLatexString() string {
 	builder.WriteString(strings.Join(s.Facts.factStmtSliceToLatexStringSlice(), "\n\n"))
 	return builder.String()
 }
+
+func (s *ProveByInductionStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("\\begin{proveByMathInduction}\n")
+	builder.WriteString("By mathematical induction, we have ")
+	builder.WriteString(s.Fact.ToLatexString())
+	builder.WriteString(" is true $\\forall$ ")
+	builder.WriteString(s.Param)
+	builder.WriteString(" $\\geq$ ")
+	builder.WriteString(s.Start.ToLatexString())
+	builder.WriteString(".")
+	builder.WriteString("\n\\end{proveByMathInduction}")
+	return builder.String()
+}
