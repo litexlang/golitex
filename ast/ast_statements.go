@@ -145,11 +145,11 @@ type ImportFileStmt struct {
 }
 
 // Fact表示一个事实，paramIndex表示第n位是变化的n $in N(默认第0位是开始)，其他参数固定，start是递归从start开始(默认从0开始)
-type ProveByMathInductionStmt struct {
-	Fact       *SpecFactStmt
-	ParamIndex int
-	Start      int
-}
+// type ProveByMathInductionStmt struct {
+// 	Fact       *SpecFactStmt
+// 	ParamIndex int
+// 	Start      int
+// }
 
 type IntensionalSetStmt struct {
 	CurSet    Fc
@@ -226,4 +226,10 @@ type ClearStmt struct{}
 
 type InlineFactsStmt struct {
 	Facts FactStmtSlice
+}
+
+type ProveByInductionStmt struct {
+	Fact  *SpecFactStmt
+	Param string
+	Start Fc
 }

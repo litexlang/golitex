@@ -24,7 +24,9 @@ func Test_File(t *testing.T) {
 	startTime := time.Now()
 	// fileName := "../examples/imo_2024_shortlist_problems/A5_solution2_inline.lix"
 	// fileName := "../examples/compare_with_lean/naturals.lix"
-	fileName := "../examples/test_codes/tmp.lix"
+	// fileName := "../examples/test_codes/tmp.lix"
+	// fileName := "../examples/test_codes/prove_by_math_induction.lix"
+	fileName := "../examples/test_codes/tmp2.lix"
 	// fileName := "../examples/comprehensive_examples/sqrt_2_is_irrational.lix"
 	// fileName := "../examples/test_import/main.lix"
 	msg, signal, err := RunFile(fileName)

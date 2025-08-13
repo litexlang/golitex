@@ -110,9 +110,9 @@ func NewClaimExistPropStmt(existProp *DefExistPropStmt, proofs []Stmt) *ClaimExi
 	return &ClaimExistPropStmt{*existProp, proofs}
 }
 
-func NewProveByMathInductionStmt(fact *SpecFactStmt, paramIndex int, start int) *ProveByMathInductionStmt {
-	return &ProveByMathInductionStmt{fact, paramIndex, start}
-}
+// func NewProveByMathInductionStmt(fact *SpecFactStmt, paramIndex int, start int) *ProveByMathInductionStmt {
+// 	return &ProveByMathInductionStmt{fact, paramIndex, start}
+// }
 
 func NewIntensionalSetStmt(curSet Fc, param string, parentSet Fc, proofs []*SpecFactStmt) *IntensionalSetStmt {
 	return &IntensionalSetStmt{curSet, param, parentSet, proofs}
@@ -168,4 +168,8 @@ func NewClearStmt() *ClearStmt {
 
 func NewInlineFactsStmt(facts []FactStmt) *InlineFactsStmt {
 	return &InlineFactsStmt{facts}
+}
+
+func NewProveByInductionStmt(fact *SpecFactStmt, param string, start Fc) *ProveByInductionStmt {
+	return &ProveByInductionStmt{fact, param, start}
 }

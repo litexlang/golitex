@@ -580,20 +580,20 @@ func (s *ClaimExistPropStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (s *ProveByMathInductionStmt) ToLatexString() string {
-	var builder strings.Builder
-	builder.WriteString("\\begin{proveByMathInduction}\n")
-	builder.WriteString("By mathematical induction, we have ")
-	builder.WriteString(s.Fact.ToLatexString())
+// func (s *ProveByMathInductionStmt) ToLatexString() string {
+// 	var builder strings.Builder
+// 	builder.WriteString("\\begin{proveByMathInduction}\n")
+// 	builder.WriteString("By mathematical induction, we have ")
+// 	builder.WriteString(s.Fact.ToLatexString())
 
-	indexFc := s.Fact.Params[s.ParamIndex]
+// 	indexFc := s.Fact.Params[s.ParamIndex]
 
-	builder.WriteString(fmt.Sprintf(" is true $\\forall$ %s $\\geq$ $%d$", indexFc.ToLatexString(), s.Start))
-	builder.WriteString(".")
+// 	builder.WriteString(fmt.Sprintf(" is true $\\forall$ %s $\\geq$ $%d$", indexFc.ToLatexString(), s.Start))
+// 	builder.WriteString(".")
 
-	builder.WriteString("\n\\end{proveByMathInduction}")
-	return builder.String()
-}
+// 	builder.WriteString("\n\\end{proveByMathInduction}")
+// 	return builder.String()
+// }
 
 func (s *ProveOverFiniteSetStmt) ToLatexString() string {
 	var builder strings.Builder
@@ -813,5 +813,19 @@ func (s *ClearStmt) ToLatexString() string {
 func (s *InlineFactsStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString(strings.Join(s.Facts.factStmtSliceToLatexStringSlice(), "\n\n"))
+	return builder.String()
+}
+
+func (s *ProveByInductionStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("\\begin{proveByMathInduction}\n")
+	builder.WriteString("By mathematical induction, we have ")
+	builder.WriteString(s.Fact.ToLatexString())
+	builder.WriteString(" is true $\\forall$ ")
+	builder.WriteString(s.Param)
+	builder.WriteString(" $\\geq$ ")
+	builder.WriteString(s.Start.ToLatexString())
+	builder.WriteString(".")
+	builder.WriteString("\n\\end{proveByMathInduction}")
 	return builder.String()
 }
