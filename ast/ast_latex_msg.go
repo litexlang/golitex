@@ -580,20 +580,20 @@ func (s *ClaimExistPropStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (s *ProveByMathInductionStmt) ToLatexString() string {
-	var builder strings.Builder
-	builder.WriteString("\\begin{proveByMathInduction}\n")
-	builder.WriteString("By mathematical induction, we have ")
-	builder.WriteString(s.Fact.ToLatexString())
+// func (s *ProveByMathInductionStmt) ToLatexString() string {
+// 	var builder strings.Builder
+// 	builder.WriteString("\\begin{proveByMathInduction}\n")
+// 	builder.WriteString("By mathematical induction, we have ")
+// 	builder.WriteString(s.Fact.ToLatexString())
 
-	indexFc := s.Fact.Params[s.ParamIndex]
+// 	indexFc := s.Fact.Params[s.ParamIndex]
 
-	builder.WriteString(fmt.Sprintf(" is true $\\forall$ %s $\\geq$ $%d$", indexFc.ToLatexString(), s.Start))
-	builder.WriteString(".")
+// 	builder.WriteString(fmt.Sprintf(" is true $\\forall$ %s $\\geq$ $%d$", indexFc.ToLatexString(), s.Start))
+// 	builder.WriteString(".")
 
-	builder.WriteString("\n\\end{proveByMathInduction}")
-	return builder.String()
-}
+// 	builder.WriteString("\n\\end{proveByMathInduction}")
+// 	return builder.String()
+// }
 
 func (s *ProveOverFiniteSetStmt) ToLatexString() string {
 	var builder strings.Builder
