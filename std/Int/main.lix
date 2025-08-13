@@ -1,0 +1,11 @@
+know @add_cancel(x, y, z R): x + z = y + z => x = y
+know @mul_cancel(x, y, z R): z != 0, x * z = y * z => x = y
+know:
+    forall x Z => x < 0 <=> not x $in N
+    forall x, y Z, z N: z != 0 => (x + y) % z = (x % z + y % z) % z
+    forall x, y Z, z N: z != 0, x % z = 0 => (x * y) % z = 0
+    forall x, z N: z != 0, x < z => x % z = x
+    forall x, y, z N: z != 0 => (x + y) % z = x % z + y % z
+    forall x, y N: y != 0, x < y => x % y = x
+    forall x, y Z => $in(x+y, Z), $in(x-y, Z), $in(x*y, Z)
+    forall x N: x != 0 => x > 0
