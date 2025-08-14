@@ -10,11 +10,12 @@ exist_prop s2 set st is_cyclic_group_of_order_m_divided_by_d(s set, op fn(s, s)s
         $is_cyclic_group(s2, op, e, inv, power_of_item(s, op, e, inv, x, d))
         len(s2) = m / d
 
-know forall a Z, b Z, d Z, s set, op fn(s, s)s, e s, inv fn(s)s, x s:
-    $is_cyclic_group(s, op, e, inv, x)
-    power_of_item(s, op, e, inv, x, a*d) = power_of_item(s, op, e, inv, x, b * d)
-    then:
-        da - db % len(s) = 0
+know:
+    forall a Z, b Z, d Z, s set, op fn(s, s)s, e s, inv fn(s)s, x s:
+        $is_cyclic_group(s, op, e, inv, x)
+        power_of_item(s, op, e, inv, x, a*d) = power_of_item(s, op, e, inv, x, b * d)
+        then:
+            da - db % len(s) = 0
 
 exist_prop s2 set st is_cyclic_group_of_order_m_divided_by_d(s set, op fn(s, s)s, e s, inv fn(s)s, x s, d N):
     $is_cyclic_group(s, op, e, inv, x)
@@ -24,33 +25,36 @@ exist_prop s2 set st is_cyclic_group_of_order_m_divided_by_d(s set, op fn(s, s)s
         len(s2) = m / d
 
 # Corollary 8.1
-know forall n Z, s set, op fn(s, s)s, e s, inv fn(s)s, x s:
-    $is_cyclic_group(s, op, e, inv, x)
-    then:
+know:
+    forall n Z, s set, op fn(s, s)s, e s, inv fn(s)s, x s:
         $is_cyclic_group(s, op, e, inv, x)
-        forall s2 set, op2 fn(s2, s2)s2, e2 s2, inv2 fn(s2)s2:
-            $is_cyclic_group(s2, op2, e2, inv2, x)
-            len(s) = len(s2)
-            then:
-                s = s2
+        then:
+            $is_cyclic_group(s, op, e, inv, x)
+            forall s2 set, op2 fn(s2, s2)s2, e2 s2, inv2 fn(s2)s2:
+                $is_cyclic_group(s2, op2, e2, inv2, x)
+                len(s) = len(s2)
+                then:
+                    s = s2
 
 # Corollary 8.2
 # x^a generates d = len(m/a) subgroup inside cyclic group of order m iff (a, m) = d
-know forall a Z, m Z, s set, op fn(s, s)s, e s, inv fn(s)s, x s:
-    $is_cyclic_group(s, op, e, inv, x)
-    len(s) = m
-    $is_cyclic_group(subgroup_generated_by_item(s, op, e, inv, power_of_item(s, op, e, inv, x, a)), op, e, inv)
-    iff:
-        gcd(a, m) = len(m/a)
+know:
+    forall a Z, m Z, s set, op fn(s, s)s, e s, inv fn(s)s, x s:
+        $is_cyclic_group(s, op, e, inv, x)
+        len(s) = m
+        $is_cyclic_group(subgroup_generated_by_item(s, op, e, inv, power_of_item(s, op, e, inv, x, a)), op, e, inv)
+        iff:
+            gcd(a, m) = len(m/a)
 
 # Corollary 8.3
 # x^a generates s iff (a, m) = 1
-know forall a Z, m Z, s set, op fn(s, s)s, e s, inv fn(s)s, x s:
-    $is_cyclic_group(s, op, e, inv, x)
-    len(s) = m
-    $is_cyclic_group(subgroup_generated_by_item(s, op, e, inv, power_of_item(s, op, e, inv, x, a)), op, e, inv)
-    iff:
-        gcd(a, m) = 1
+know:
+    forall a Z, m Z, s set, op fn(s, s)s, e s, inv fn(s)s, x s:
+        $is_cyclic_group(s, op, e, inv, x)
+        len(s) = m
+        $is_cyclic_group(subgroup_generated_by_item(s, op, e, inv, power_of_item(s, op, e, inv, x, a)), op, e, inv)
+        iff:
+            gcd(a, m) = 1
 
 # Corollary 8.4
 # When we have fn_set as syntax sugar, this is pretty easy.
@@ -74,10 +78,11 @@ fn sum_of_finite_set(s finite_set, n N) R:
     then:
         sum_of_finite_set(s, n + 1) = sum_of_finite_set(s, n) + s[n+1]
 
-know forall m N:
-    m > 0
-    then:
-        sum_of_finite_set(primes_to_m(m), len(primes_to_m(m))) = m
+know:
+    forall m N:
+        m > 0
+        then:
+            sum_of_finite_set(primes_to_m(m), len(primes_to_m(m))) = m
 
 # Definition 8.1
 # If G is a group, H is subgroup of G, every set of form xH with x in G is called a left coset of H in G.
@@ -85,11 +90,12 @@ fn left_coset(s set, op fn(s, s)s, e s, inv fn(s)s, x s, s2 set) set:
     dom:
         $is_subgroup(s, op, e, inv, s2)
 
-know forall s set, op fn(s, s)s, e s, inv fn(s)s, x s, s2 set:
-    $is_subgroup(s, op, e, inv, s2)
-    then:
-        forall y s2:
-            x \op y $in left_coset(s, op, e, inv, x, s2)
+know:
+    forall s set, op fn(s, s)s, e s, inv fn(s)s, x s, s2 set:
+        $is_subgroup(s, op, e, inv, s2)
+        then:
+            forall y s2:
+                x \op y $in left_coset(s, op, e, inv, x, s2)
 
 fn h_st_x_mul_h_is_y(s set, op fn(s, s)s, e s, inv fn(s)s, x s, y left_coset(s, op, e, inv, x, s2), s2 set) s2:
     dom:
@@ -102,11 +108,12 @@ prop have_no_common_item(s1 set, s2 set):
     forall x s1, y s2:
         x != y
 
-know forall s set, op fn(s, s)s, e s, inv fn(s)s, x s, y s, s2 set:
-    then:
-        or:
-            left_coset(s, op, e, inv, x, s2) = left_coset(s, op, e, inv, y, s2)
-            $have_no_common_item(left_coset(s, op, e, inv, x, s2), left_coset(s, op, e, inv, y, s2))
+know:
+    forall s set, op fn(s, s)s, e s, inv fn(s)s, x s, y s, s2 set:
+        then:
+            or:
+                left_coset(s, op, e, inv, x, s2) = left_coset(s, op, e, inv, y, s2)
+                $have_no_common_item(left_coset(s, op, e, inv, x, s2), left_coset(s, op, e, inv, y, s2))
 
 # Theorem 8.2
 know @subgroup_of_finite_group_has_order_dividing_order_of_group(s set, op fn(s, s)s, e s, inv fn(s)s, s2 set):
@@ -137,8 +144,9 @@ know @m_is_integer_larger_than_1_x_is_prime_to_m_then_x_order_divides_phi_m(m N,
         (x ^ (phi(m))) % m = 1
 
 # Corollary 8.6
-know forall p N, x N:
-    p is prime
-    gcd(x, p) = 1
-    then:
-        (x ^ (p)) % p = x
+know:
+    forall p N, x N:
+        p is prime
+        gcd(x, p) = 1
+        then:
+            (x ^ (p)) % p = x
