@@ -15,11 +15,7 @@ prove:
     a $in R
     a > 1
 
-    know forall x R,  y R:
-        x > 0
-        then:
-            x + y > y
-            y + x > y
+    know forall x R,  y R:x > 0 => x + y > y, y + x > y
 
     # claim forall prove
     claim:
@@ -31,15 +27,17 @@ prove:
     let x R:
         1 >= x
 
-    know forall x R, y R:
-        not x < y
-        iff:
-            x >= y
+    know:
+        forall x R, y R:
+            not x < y
+            iff:
+                x >= y
 
-    know forall x R, y R:
-        x > y
-        then:
-            not y >= x
+    know:
+        forall x R, y R:
+            x > y
+            then:
+                not y >= x
 
     know @larger_equal_is_transitive(x R, y R, z R):
         x >= y

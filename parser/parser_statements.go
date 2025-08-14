@@ -458,27 +458,27 @@ func (tb *tokenBlock) knowFactStmt() (*ast.KnowFactStmt, error) {
 	tb.header.skip(glob.KeywordKnow)
 
 	if !tb.header.is(glob.KeySymbolColon) {
-		if tb.GetEnd() == glob.KeySymbolColon {
-			facts := ast.FactStmtSlice{}
-			fact, err := tb.factStmt(UniFactDepth0)
-			if err != nil {
-				return nil, tbErr(err, tb)
-			}
-			facts = append(facts, fact) // 之所以不能用,让know后面同一行里能有很多很多事实，是因为forall-fact是会换行的
-			return ast.NewKnowStmt(facts.ToCanBeKnownStmtSlice()), nil
-		} else {
-			var facts ast.FactStmtSlice = ast.FactStmtSlice{}
-			var err error
-			facts, err = tb.inlineFacts_checkUniDepth0()
-			if err != nil {
-				return nil, tbErr(err, tb)
-			}
-			err = checkFactsUniDepth0(facts)
-			if err != nil {
-				return nil, tbErr(err, tb)
-			}
-			return ast.NewKnowStmt(facts.ToCanBeKnownStmtSlice()), nil
+		// if tb.GetEnd() == glob.KeySymbolColon {
+		// 	facts := ast.FactStmtSlice{}
+		// 	fact, err := tb.factStmt(UniFactDepth0)
+		// 	if err != nil {
+		// 		return nil, tbErr(err, tb)
+		// 	}
+		// 	facts = append(facts, fact) // 之所以不能用,让know后面同一行里能有很多很多事实，是因为forall-fact是会换行的
+		// 	return ast.NewKnowStmt(facts.ToCanBeKnownStmtSlice()), nil
+		// } else {
+		var facts ast.FactStmtSlice = ast.FactStmtSlice{}
+		var err error
+		facts, err = tb.inlineFacts_checkUniDepth0()
+		if err != nil {
+			return nil, tbErr(err, tb)
 		}
+		err = checkFactsUniDepth0(facts)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		return ast.NewKnowStmt(facts.ToCanBeKnownStmtSlice()), nil
+		// }
 	}
 
 	if err := tb.header.testAndSkip(glob.KeySymbolColon); err != nil {
