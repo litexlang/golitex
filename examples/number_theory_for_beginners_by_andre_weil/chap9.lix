@@ -9,9 +9,10 @@ fn K_polynomial_parameters(K field, f K_polynomial(K)) finite_set:
     forall x K_polynomial_parameters(K, f):
         x $in K
 
-know forall K field, f K_polynomial(K):
-    forall x K:
-        f(x) = accumulation_of_finite_set(K_polynomial_parameters(K, f), K_add(K))(x)
+know:
+    forall K field, f K_polynomial(K):
+        forall x K:
+            f(x) = accumulation_of_finite_set(K_polynomial_parameters(K, f), K_add(K))(x)
 
 fn degree_of_K_polynomial(K field, f K_polynomial(K)) N:
     len(K_polynomial_parameters(K, f)) - 1 = degree_of_K_polynomial(K, f)

@@ -35,10 +35,11 @@ fn cc_mul(m Z) fn(cc_mod(m), cc_mod(m))cc_mod(m):
 
 # Theorem 6.1
 # For any integer m > 0, the set cc(m) is a unary ring under addition and multiplication modulo m
-know forall m Z:
-    m > 0
-    then:
-        $is_unary_ring(cc_mod(m), cc_add(m), cc_mul(m), cc_inv(m), cc(0, m), cc(1, m))
+know:
+    forall m Z:
+        m > 0
+        then:
+            $is_unary_ring(cc_mod(m), cc_add(m), cc_mul(m), cc_inv(m), cc(0, m), cc(1, m))
 
 # Theorem 6.2
 # Let m, a, b be with m > 0, put d = gcd(a,m), then the congruence ax = b (mod m) has either exactly d solutions modulo m, or no solution; it has a solution iff b = 0 (mod d); there are exactly m/d distinct values of b modulo m for which this is so.
@@ -72,8 +73,9 @@ forall a Z, b Z, m Z:
     $int_set_has_lower_bound_and_upper_bound_is_finite(distinct_solutions_of_congruence(a, b, m), 0, m)
     distinct_solutions_of_congruence(a, b, m) $in finite_set
 
-know forall a Z, b Z, m Z:
-    len(distinct_solutions_of_congruence(a, b, m)) = m / (gcd(a, m))
+know:
+    forall a Z, b Z, m Z:
+        len(distinct_solutions_of_congruence(a, b, m)) = m / (gcd(a, m))
 
 fn euler_phi(m Z) Z:
     len(cc_prime_to(m))
@@ -137,9 +139,10 @@ know:
 have cc_mul_inv $cc_mul_inv_exists(m)
 
 # Theorem 6.3
-know forall m Z:
-    m > 1
-    then:
-        m $is_prime
-    iff:
-        $is_field(cc_mod(m), cc_add(m), cc_mul(m), cc_inv(m), cc(0, m), cc(1, m), cc_mul_inv(m))
+know:
+    forall m Z:
+        m > 1
+        then:
+            m $is_prime
+        iff:
+            $is_field(cc_mod(m), cc_add(m), cc_mul(m), cc_inv(m), cc(0, m), cc(1, m), cc_mul_inv(m))
