@@ -43,11 +43,12 @@ fn_set subgroup_generated_by_item(s set, op fn(s, s)s, e s, inv fn(s)s, x s) ite
 fn index_of_y_in_subgroup_generated_by_item(s set, op fn(s, s)s, e s, inv fn(s)s, x s, y subgroup_generated_by_item(s, op, e, inv, x)) Z:
     y = power_of_item(s, op, e, inv, x, index_of_y_in_subgroup_generated_by_item(s, op, e, inv, x, y))
 
-know forall s set, op fn(s, s)s, e s, inv fn(s)s, x s:
-    dom:
-        $is_group(s, op, e, inv)
-    then:
-        $is_group(subgroup_generated_by_item(s, op, e, inv, x),op, e, inv)
+know:
+    forall s set, op fn(s, s)s, e s, inv fn(s)s, x s:
+        dom:
+            $is_group(s, op, e, inv)
+        then:
+            $is_group(subgroup_generated_by_item(s, op, e, inv, x),op, e, inv)
 
 # Definition 7.2
 # Isomorphism of groups

@@ -16,11 +16,12 @@ fn Fp_polynomial_parameters(p Z, f Fp_polynomial(p)) finite_set:
         forall x Fp_polynomial_parameters(p, f):
             x $in cc_mod(p)
 
-know forall p Z:
-    p $is_prime
-    then:
-        forall x cc_mod(p):
-            Fp_polynomial(p)(x) = accumulation_of_finite_set(Fp_polynomial_parameters(p, Fp_polynomial(p)), Fp_add(p))(x)
+know:
+    forall p Z:
+        p $is_prime
+        then:
+            forall x cc_mod(p):
+                Fp_polynomial(p)(x) = accumulation_of_finite_set(Fp_polynomial_parameters(p, Fp_polynomial(p)), Fp_add(p))(x)
 
 fn degree_of_Fp_polynomial(p Z, f Fp_polynomial(p)) N:
     dom:
