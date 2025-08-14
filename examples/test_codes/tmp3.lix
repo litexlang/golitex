@@ -47,8 +47,7 @@ prove:
     prop p2(b, c R):
         b + c $in R
 
-    know forall b, c R:
-        b + c $in R
+    know forall b, c R => b + c $in R
 
     1 + 2 $in R
     $p2(1, 2)

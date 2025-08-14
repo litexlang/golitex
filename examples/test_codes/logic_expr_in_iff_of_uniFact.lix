@@ -1,8 +1,9 @@
 prove:
-    know forall a T, b T:
-            or:
-                $p(a,b)
-                $q(a,b)
+    know:
+        forall a T, b T:
+                or:
+                    $p(a,b)
+                    $q(a,b)
 
     know:
         not $p(a,b)
