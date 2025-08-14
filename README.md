@@ -140,8 +140,8 @@ This example means: All humans are intelligent. Jordan is a human. Therefore, Jo
   <tr>
     <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
       <code>let human set, Jordan human</code> <br><br>
-      <code>prop intelligent(x Human)</code> <br><br>      <code>know forall x Human:</code> <br>
-      <code>&nbsp;&nbsp;$intelligent(x)</code> <br> <br>
+      <code>prop intelligent(x Human)</code> <br><br>      
+      <code>know forall x Human => $intelligent(x)</code> <br>
       <code>$intelligent(Jordan)</code>
     </td>
     <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
@@ -338,7 +338,7 @@ There is another way to write the same example in Litex, a bottom-up way.
        <code>&nbsp;forall x, y R:</code><br>
        <code>&nbsp;&nbsp;&nbsp;&nbsp;x = -4</code><br>
        <code>&nbsp;&nbsp;&nbsp;&nbsp;y = 6</code><br>
-       <code>&nbsp;&nbsp;&nbsp;&nbsp;then:</code><br>
+       <code>&nbsp;&nbsp;&nbsp;&nbsp;=>:</code><br>
        <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2 * x + 3 * y = 10</code><br>
        <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4 * x + 5 * y = 14</code><br>
        <code>&nbsp;&nbsp;prove:</code><br>
@@ -504,7 +504,7 @@ To better show the power of `fn_template`, There is another example of defining 
        <code>prop is_algorithm(D set, I set, f fn(D)D):</code><br>
        <code>&nbsp;&nbsp;forall x I: # i.e. I is subset of D</code><br>
        <code>&nbsp;&nbsp;&nbsp;&nbsp;x $in D</code><br>
-       <code>&nbsp;&nbsp;iff:</code><br>
+       <code>&nbsp;&nbsp;<=>:</code><br>
        <code>&nbsp;&nbsp;&nbsp;&nbsp;forall x I:</code><br>
        <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$exist_end_of_comp_seq(D, x, comp_seq(D, f))</code><br>
        <code></code><br>

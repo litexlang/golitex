@@ -32,13 +32,13 @@ prop line_on_plane(l line, p plane)
 
 fn line_of(a point, b point) line:
     a != b
-    then:
+    =>:
         $point_on_line(a, line_of(a, b))
         $point_on_line(b, line_of(a, b))
         forall l line:
             $point_on_line(a, l)
             $point_on_line(b, l)
-            then:
+            =>:
                 l = line_of(a, b)
 
 prove:
@@ -52,7 +52,7 @@ prove:
     # line_of is commutative
     forall a point, b point:
         a != b
-        then:
+        =>:
             b != a
             $point_on_line(a, line_of(a, b))
             $point_on_line(b, line_of(a, b))
@@ -66,14 +66,11 @@ prove:
 
 exist_prop b point st exist_at_least_two_points_on_line(a point, l line):
     $point_on_line(a, l)
-    iff:
+    <=>:
         $point_on_line(b, l)
         b != a
 
-know forall a point, l line:
-    $point_on_line(a, l)
-    then:
-        $exist_at_least_two_points_on_line(a, l)
+know forall a point, l line: $point_on_line(a, l) => $exist_at_least_two_points_on_line(a, l)
 
 prove:
     let a point, l line:
@@ -89,7 +86,7 @@ prove:
 
 know @exist c point st exist_one_point_not_on_the_same_line_with_two_points(a point, b point):
     a != b
-    iff:
+    <=>:
     
         not $point_on_line(c, line_of(a, b))
 
@@ -112,7 +109,7 @@ fn plain_of(a point, b point, c point) plane:
     a != c
     b != c
     not $point_on_line(a, line_of(b, c))
-    then:
+    =>:
         $point_on_plane(a, plain_of(a, b, c))
         $point_on_plane(b, plain_of(a, b, c))
         $point_on_plane(c, plain_of(a, b, c))
@@ -120,7 +117,7 @@ fn plain_of(a point, b point, c point) plane:
             $point_on_plane(a, p)
             $point_on_plane(b, p)
             $point_on_plane(c, p)
-            then:
+            =>:
                 p = plain_of(a, b, c)
 
 # Tip: axiom with uniqueness and existence can be written as a function.
@@ -133,7 +130,7 @@ know @two_points_on_line_then_line_on_plane(a point, b point, l line, p plane):
         $point_on_line(b, l)
         $point_on_plane(a, p)
         $point_on_plane(b, p)
-        then:
+        =>:
             $line_on_plane(l, p)
 
 prove:
@@ -151,7 +148,7 @@ prove:
 know @exist b point st two_planes_have_one_common_point_then_they_have_another_common_point(a point, p plane, q plane):
     $point_on_plane(a, p)
     $point_on_plane(a, q)
-    iff:
+    <=>:
         $point_on_plane(b, p)
 
 prove:
@@ -203,16 +200,12 @@ prop between(left point, right point, middle point):
     dom:
         left != right
 
-know forall left point, right point, middle point:
-    left != right
-    $between(left, right, middle)
-    then:
-        $between(right, left, middle)
+know forall left point, right point, middle point: left != right, $between(left, right, middle) => $between(right, left, middle)
 
 know @exist l line st exist_line_through_three_points(a point, b point, c point):
     a != b
     $between(a, b, c)
-    iff:
+    <=>:
         a != c
         b != c
         $point_on_line(a, l)
@@ -236,13 +229,10 @@ prove:
 
 exist_prop right point st exist_point_right_to_given_two_points(left point, middle point):
     left != middle
-    iff:
+    <=>:
         $between(left, right, middle)
 
-know forall a point, b point:
-    a != b
-    then:
-        $exist_point_right_to_given_two_points(a, b)
+know forall a point, b point: a != b => $exist_point_right_to_given_two_points(a, b)
 
 prove:
     let a point, b point:
@@ -261,7 +251,7 @@ know @no_more_than_one_point_between_three_points_on_line(a point, b point, c po
     a != c
     b != c
     $point_on_line(a, line_of(b, c))
-    then:
+    =>:
         or:
             $between(a, b, c)
             $between(a, c, b)
@@ -295,7 +285,7 @@ let finite_line set
 
 fn finite_line_of(a point, b point) finite_line:
     a != b
-    then:
+    =>:
         $point_on_line(a, finite_line_of(a, b))
         $point_on_line(b, finite_line_of(a, b))
 
@@ -313,7 +303,7 @@ know @line_intersect_finite_line_then_line_intersect_line(a point, b point, c po
         a != c
         b != c
         $line_intersect_finite_line(a, b, l)
-        then:
+        =>:
             or:
                 $line_intersect_finite_line(a , c, l)
                 $line_intersect_finite_line(b , c, l)
@@ -357,7 +347,7 @@ know:
         a != b
         $point_on_line(a, l)
         $point_on_line(b, l)
-        then:
+        =>:
             or:
                 $point_right_to_point_on_one_line(a, b, l)
                 $point_left_to_point_on_one_line(a, b, l)
@@ -368,17 +358,18 @@ prop point_left_point_on_one_line(a point, b point, l line):
         $point_on_line(a, l)
         $point_on_line(b, l)
 
-know forall a point, b point, l line:
-    a != b
-    $point_on_line(a, l)
-    $point_on_line(b, l)
-    then:
-        or:
-            $point_left_to_point_on_one_line(a, b, l)
-            $point_left_point_on_one_line(a, b, l)
+know:
+    forall a point, b point, l line:
+        a != b
+        $point_on_line(a, l)
+        $point_on_line(b, l)
+        =>:
+            or:
+                $point_left_to_point_on_one_line(a, b, l)
+                $point_left_point_on_one_line(a, b, l)
 
 know @exist a point st exist_point_left_to_point_with_finite_line_equal_to_given_finite_line(b point, l finite_line):
-    iff:
+    <=>:
         a != b
         $point_left_to_point_on_one_line(a, b, l)
         $finite_line_equal(finite_line_of(a, b), l)
@@ -395,7 +386,7 @@ know:
     $commutative_prop(finite_line_equal)
     forall a point, b point:
         a != b
-        then:
+        =>:
             $finite_line_equal(finite_line_of(a, b), finite_line_of(b, a))
 
 prove:
@@ -417,7 +408,7 @@ prove:
 know @finite_line_equal_transitive(l1 finite_line, l2 finite_line, l3 finite_line):
     $finite_line_equal(l1, l2)
     $finite_line_equal(l2, l3)
-    then:
+    =>:
         $finite_line_equal(l1, l3)
 
 prove:
@@ -433,7 +424,7 @@ prop on_one_line(a point, b point, c point):
     a != b
     a != c
     b != c
-    iff:
+    <=>:
         $point_on_line(a, line_of(b, c))
 
 # This fact could be proved by other axioms, but I know it anyway.
@@ -443,7 +434,7 @@ know:
         a != c
         b != c
         $on_one_line(a, b, c)
-        then:
+        =>:
             $on_one_line(a, c, b)
             $on_one_line(b, a, c)
             $on_one_line(b, c, a)
@@ -455,7 +446,7 @@ know @addition_keeps_equal_of_finite_lines(a point, b point, c point, a2 point, 
     $on_one_line(a2, b2, c2)
     $finite_line_equal(finite_line_of(a, b), finite_line_of(a2, b2))
     $finite_line_equal(finite_line_of(b, c), finite_line_of(b2, c2))
-    then:
+    =>:
         $finite_line_equal(finite_line_of(a, c), finite_line_of(a2, c2))
 
 prove:
@@ -503,7 +494,7 @@ fn angle_of_two_rays_with_the_same_start_point(a point, r1 ray, r2 ray) angle:
     forall x point:
         $point_on_ray(x, r1)
         $point_on_ray(x, r2)
-        then:
+        =>:
             x = a
 
 prop angle_equal(ang1 angle, ang2 angle)
@@ -518,7 +509,7 @@ know @exist r2 ray st exist_a_ray_with_the_same_angel_with_given_ray_and_half_pl
     dom:
         $point_on_ray(a, r1)
         $half_plane_to_ray(a, r1, p)
-    iff:    
+    <=>:    
         $angle_equal(angle_of_two_rays_with_the_same_start_point(a, r1, r2), ang)
 
 # TODO: Write some tests for this.
@@ -528,7 +519,7 @@ know @exist r2 ray st exist_a_ray_with_the_same_angel_with_given_ray_and_half_pl
 know @angle_equal_transitive(ang1 angle, ang2 angle, ang3 angle):
     $angle_equal(ang1, ang2)
     $angle_equal(ang2, ang3)
-    then:
+    =>:
         $angle_equal(ang1, ang3)
 
 know:
@@ -559,17 +550,18 @@ fn angle_of_points(a point, b point, c point) angle:
         a != c
         b != c
 
-know forall a point, b point, c point:
-    a != b
-    a != c
-    b != c
-    then:
-        $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(a, b, c))
-        $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(a, c, b))
-        $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(b, a, c))
-        $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(b, c, a))
-        $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(c, a, b))
-        $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(c, b, a))
+know:
+    forall a point, b point, c point:
+        a != b
+        a != c
+        b != c
+        =>:
+            $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(a, b, c))
+            $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(a, c, b))
+            $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(b, a, c))
+            $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(b, c, a))
+            $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(c, a, b))
+            $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(c, b, a))
 
 know @triangle_equal_by_two_sides_and_included_angle_equal(a point, b point, c point, a2 point, b2 point, c2 point):
     a != b
@@ -581,7 +573,7 @@ know @triangle_equal_by_two_sides_and_included_angle_equal(a point, b point, c p
     $finite_line_equal(finite_line_of(a, b), finite_line_of(a2, b2))
     $finite_line_equal(finite_line_of(b, c), finite_line_of(b2, c2))
     $angle_equal(angle_of_points(a, b, c), angle_of_points(a2, b2, c2))
-    then:
+    =>:
         $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(a2, b2, c2))
 prove:
     let a point, b point, c point, a2 point, b2 point, c2 point:
@@ -605,7 +597,7 @@ prove:
 prop point_on_line1_then_not_on_line2(a point, l1 line, l2 line):
     dom:
         $point_on_line(a, l1)
-    iff:
+    <=>:
         not $point_on_line(a, l2)
 
 prop parallel(l1 line, l2 line):
@@ -618,7 +610,7 @@ prop parallel(l1 line, l2 line):
 know @exist l2 line st exist_one_and_only_one_line_through_point_not_intersect_line(a point, l line):
     dom:
         not $point_on_line(a, l)
-    iff:
+    <=>:
         $point_on_line(a, l2)
         $parallel(l, l2)
 
@@ -649,25 +641,27 @@ prop in_the_same_direction(a point, b point, c point):
         b != c
         $on_one_line(a, b, c)
 
-know forall a point, b point, c point:
-    a != b
-    a != c
-    b != c
-    $on_one_line(a, b, c)
-    $in_the_same_direction(a, b, line_of(a, b))
-    $point_left_to_point_on_one_line(a, b, line_of(a, b))
-    then:
-        $point_left_to_point_on_one_line(a, c, line_of(a, b))
+know:
+    forall a point, b point, c point:
+        a != b
+        a != c
+        b != c
+        $on_one_line(a, b, c)
+        $in_the_same_direction(a, b, line_of(a, b))
+        $point_left_to_point_on_one_line(a, b, line_of(a, b))
+        =>:
+            $point_left_to_point_on_one_line(a, c, line_of(a, b))
 
-know forall a point, b point, c point:
-    a != b
-    a != c
-    b != c
-    $on_one_line(a, b, c)
-    $in_the_same_direction(a, b, line_of(a, b))
-    $point_right_to_point_on_one_line(a, b, line_of(a, b))
-    then:
-        $point_right_to_point_on_one_line(a, c, line_of(a, b))
+know:
+    forall a point, b point, c point:
+        a != b
+        a != c
+        b != c
+        $on_one_line(a, b, c)
+        $in_the_same_direction(a, b, line_of(a, b))
+        $point_right_to_point_on_one_line(a, b, line_of(a, b))
+        =>:
+            $point_right_to_point_on_one_line(a, c, line_of(a, b))
     
 know @exist n R, c point st exist_finite_line_of_direction_and_length(a point, b point, l finite_line):
     n > 0

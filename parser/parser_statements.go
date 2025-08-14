@@ -252,7 +252,8 @@ func (tb *tokenBlock) uniFactInterface(uniFactDepth uniFactEnum) (ast.UniFactInt
 		return nil, tbErr(err, tb)
 	}
 
-	domainFacts, thenFacts, iffFacts, err := tb.uniFactBodyFacts(uniFactDepth.addDepth(), glob.KeywordThen)
+	// domainFacts, thenFacts, iffFacts, err := tb.uniFactBodyFacts(uniFactDepth.addDepth(), glob.KeywordThen)
+	domainFacts, thenFacts, iffFacts, err := tb.uniFactBodyFacts(uniFactDepth.addDepth(), glob.KeySymbolEqualLarger)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -263,7 +264,8 @@ func (tb *tokenBlock) uniFactInterface(uniFactDepth uniFactEnum) (ast.UniFactInt
 		ret := ast.NewUniFactWithIff(ast.NewUniFact(params, setParams, domainFacts, thenFacts), iffFacts)
 
 		if len(thenFacts) == 0 {
-			return nil, fmt.Errorf("expect %s section to have at least one fact in %s", glob.KeywordThen, ret)
+			// return nil, fmt.Errorf("expect %s section to have at least one fact in %s", glob.KeywordThen, ret)
+			return nil, fmt.Errorf("expect %s section to have at least one fact in %s", glob.KeySymbolEqualLarger, ret)
 		}
 
 		return ret, nil
@@ -319,7 +321,9 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 	}
 
 	if tb.header.ExceedEnd() {
-		domFacts, iffFacts, err := tb.dom_and_section(glob.KeywordIff, glob.KeywordThen)
+		// domFacts, iffFacts, err := tb.dom_and_section(glob.KeywordIff, glob.KeywordThen)
+		// domFacts, iffFacts, err := tb.dom_and_section(glob.KeywordIff, glob.KeySymbolEqualLarger)
+		domFacts, iffFacts, err := tb.dom_and_section(glob.KeySymbolEquivalent, glob.KeySymbolEqualLarger)
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -458,28 +462,8 @@ func (tb *tokenBlock) knowFactStmt() (*ast.KnowFactStmt, error) {
 	tb.header.skip(glob.KeywordKnow)
 
 	if !tb.header.is(glob.KeySymbolColon) {
-		facts := ast.FactStmtSlice{}
-		fact, err := tb.factStmt(UniFactDepth0)
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-		facts = append(facts, fact) // 之所以不能用,让know后面同一行里能有很多很多事实，是因为forall-fact是会换行的
-		return ast.NewKnowStmt(facts.ToCanBeKnownStmtSlice()), nil
-
-	}
-
-	if err := tb.header.testAndSkip(glob.KeySymbolColon); err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	var err error
-	var facts ast.FactStmtSlice = ast.FactStmtSlice{}
-	if tb.header.ExceedEnd() {
-		facts, err = tb.bodyFacts(UniFactDepth0)
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-	} else {
+		var facts ast.FactStmtSlice = ast.FactStmtSlice{}
+		var err error
 		facts, err = tb.inlineFacts_checkUniDepth0()
 		if err != nil {
 			return nil, tbErr(err, tb)
@@ -488,6 +472,18 @@ func (tb *tokenBlock) knowFactStmt() (*ast.KnowFactStmt, error) {
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
+		return ast.NewKnowStmt(facts.ToCanBeKnownStmtSlice()), nil
+	}
+
+	if err := tb.header.testAndSkip(glob.KeySymbolColon); err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	var err error
+	var facts ast.FactStmtSlice = ast.FactStmtSlice{}
+	facts, err = tb.bodyFacts(UniFactDepth0)
+	if err != nil {
+		return nil, tbErr(err, tb)
 	}
 
 	return ast.NewKnowStmt(facts.ToCanBeKnownStmtSlice()), nil
@@ -779,7 +775,9 @@ func (tb *tokenBlock) defExistPropStmtBody() (*ast.DefExistPropStmtBody, error) 
 
 	if tb.header.ExceedEnd() {
 
-		domFacts, iffFactsAsFactStatements, err := tb.dom_and_section(glob.KeywordIff, glob.KeywordThen)
+		// domFacts, iffFactsAsFactStatements, err := tb.dom_and_section(glob.KeywordIff, glob.KeywordThen)
+		// domFacts, iffFactsAsFactStatements, err := tb.dom_and_section(glob.KeywordIff, glob.KeySymbolEqualLarger)
+		domFacts, iffFactsAsFactStatements, err := tb.dom_and_section(glob.KeySymbolEquivalent, glob.KeySymbolEqualLarger)
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -815,7 +813,9 @@ func (tb *tokenBlock) uniFactBodyFacts(uniFactDepth uniFactEnum, defaultSectionN
 		return nil, nil, nil, err
 	}
 
-	if curToken == glob.KeywordDom || curToken == glob.KeywordThen || curToken == glob.KeywordIff {
+	// if curToken == glob.KeywordDom || curToken == glob.KeywordThen || curToken == glob.KeywordIff {
+	// if curToken == glob.KeywordDom || curToken == glob.KeySymbolEqualLarger || curToken == glob.KeywordIff {
+	if curToken == glob.KeywordDom || curToken == glob.KeySymbolEqualLarger || curToken == glob.KeySymbolEquivalent {
 		eachSectionStartWithKw = true
 	}
 
@@ -832,21 +832,25 @@ func (tb *tokenBlock) uniFactBodyFacts(uniFactDepth uniFactEnum, defaultSectionN
 			switch kw {
 			case glob.KeywordDom:
 				domFacts = append(domFacts, facts...)
-			case glob.KeywordThen:
+			// case glob.KeywordThen:
+			case glob.KeySymbolEqualLarger:
 				thenFacts = append(thenFacts, facts...)
-			case glob.KeywordIff:
+			// case glob.KeywordIff:
+			case glob.KeySymbolEquivalent:
 				iffFacts = append(iffFacts, facts...)
 			default:
 				return nil, nil, nil, fmt.Errorf("expect keyword in uni fact body, but got: %s", kw)
 			}
 		}
-	} else if tb.body[len(tb.body)-1].header.is(glob.KeywordThen) {
+		// } else if tb.body[len(tb.body)-1].header.is(glob.KeywordThen) {
+	} else if tb.body[len(tb.body)-1].header.is(glob.KeySymbolEqualLarger) {
 		domFacts, err = tb.bodyBlockFacts(uniFactDepth, len(tb.body)-1)
 		if err != nil {
 			return nil, nil, nil, err
 		}
 
-		err = tb.body[len(tb.body)-1].header.skipKwAndColon_ExceedEnd(glob.KeywordThen)
+		// err = tb.body[len(tb.body)-1].header.skipKwAndColon_ExceedEnd(glob.KeywordThen)
+		err = tb.body[len(tb.body)-1].header.skipKwAndColon_ExceedEnd(glob.KeySymbolEqualLarger)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -854,13 +858,15 @@ func (tb *tokenBlock) uniFactBodyFacts(uniFactDepth uniFactEnum, defaultSectionN
 		if err != nil {
 			return nil, nil, nil, err
 		}
-	} else if tb.body[len(tb.body)-1].header.is(glob.KeywordIff) {
+		// } else if tb.body[len(tb.body)-1].header.is(glob.KeywordIff) {
+	} else if tb.body[len(tb.body)-1].header.is(glob.KeySymbolEquivalent) {
 		thenFacts, err = tb.bodyBlockFacts(uniFactDepth, len(tb.body)-1)
 		if err != nil {
 			return nil, nil, nil, err
 		}
 
-		err = tb.body[len(tb.body)-1].header.skipKwAndColon_ExceedEnd(glob.KeywordIff)
+		// err = tb.body[len(tb.body)-1].header.skipKwAndColon_ExceedEnd(glob.KeywordIff)
+		err = tb.body[len(tb.body)-1].header.skipKwAndColon_ExceedEnd(glob.KeySymbolEquivalent)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -869,12 +875,14 @@ func (tb *tokenBlock) uniFactBodyFacts(uniFactDepth uniFactEnum, defaultSectionN
 			return nil, nil, nil, err
 		}
 	} else {
-		if defaultSectionName == glob.KeywordThen {
+		// if defaultSectionName == glob.KeywordThen {
+		if defaultSectionName == glob.KeySymbolEqualLarger {
 			thenFacts, err = tb.bodyBlockFacts(uniFactDepth, len(tb.body))
 			if err != nil {
 				return nil, nil, nil, err
 			}
-		} else if defaultSectionName == glob.KeywordIff {
+			// } else if defaultSectionName == glob.KeywordIff {
+		} else if defaultSectionName == glob.KeySymbolEquivalent {
 			iffFacts, err = tb.bodyBlockFacts(uniFactDepth, len(tb.body))
 			if err != nil {
 				return nil, nil, nil, err
@@ -983,7 +991,8 @@ func (tb *tokenBlock) proveInEachCaseStmt() (*ast.ProveInEachCaseStmt, error) {
 	}
 
 	thenFacts := []ast.FactStmt{}
-	err = tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordThen)
+	// err = tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordThen)
+	err = tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeySymbolEqualLarger)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -1239,7 +1248,9 @@ func (tb *tokenBlock) defFnStmt() (*ast.DefFnStmt, error) {
 	if tb.header.is(glob.KeySymbolColon) {
 		tb.header.skip("")
 		if tb.header.ExceedEnd() {
-			domFacts, thenFacts, err = tb.dom_and_section(glob.KeywordThen, glob.KeywordIff)
+			// domFacts, thenFacts, err = tb.dom_and_section(glob.KeywordThen, glob.KeywordIff)
+			// domFacts, thenFacts, err = tb.dom_and_section(glob.KeySymbolEqualLarger, glob.KeywordIff)
+			domFacts, thenFacts, err = tb.dom_and_section(glob.KeySymbolEqualLarger, glob.KeySymbolEquivalent)
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}
@@ -1653,7 +1664,8 @@ func (tb *tokenBlock) bodyOfKnowProp() ([]ast.FactStmt, []ast.FactStmt, error) {
 	iffFacts := []ast.FactStmt{}
 	thenFacts := []ast.FactStmt{}
 
-	if tb.body[len(tb.body)-1].header.is(glob.KeywordThen) {
+	// if tb.body[len(tb.body)-1].header.is(glob.KeywordThen) {
+	if tb.body[len(tb.body)-1].header.is(glob.KeySymbolEqualLarger) {
 		for i := range len(tb.body) - 1 {
 			iffFact, err := tb.body[i].factStmt(UniFactDepth1)
 			if err != nil {
@@ -1662,7 +1674,8 @@ func (tb *tokenBlock) bodyOfKnowProp() ([]ast.FactStmt, []ast.FactStmt, error) {
 			iffFacts = append(iffFacts, iffFact)
 		}
 
-		err = tb.body[len(tb.body)-1].header.skipKwAndColon_ExceedEnd(glob.KeywordThen)
+		// err = tb.body[len(tb.body)-1].header.skipKwAndColon_ExceedEnd(glob.KeywordThen)
+		err = tb.body[len(tb.body)-1].header.skipKwAndColon_ExceedEnd(glob.KeySymbolEqualLarger)
 		if err != nil {
 			return nil, nil, tbErr(err, tb)
 		}
@@ -2083,7 +2096,9 @@ func (tb *tokenBlock) fnInFnTemplateStmt() ([]string, []ast.Fc, ast.Fc, []ast.Fa
 		return nil, nil, nil, nil, nil, tbErr(err, tb)
 	}
 
-	domFacts, thenFacts, err := tb.dom_and_section(glob.KeywordThen, glob.KeywordIff)
+	// domFacts, thenFacts, err := tb.dom_and_section(glob.KeywordThen, glob.KeywordIff)
+	// domFacts, thenFacts, err := tb.dom_and_section(glob.KeySymbolEqualLarger, glob.KeywordIff)
+	domFacts, thenFacts, err := tb.dom_and_section(glob.KeySymbolEqualLarger, glob.KeySymbolEquivalent)
 	if err != nil {
 		return nil, nil, nil, nil, nil, tbErr(err, tb)
 	}

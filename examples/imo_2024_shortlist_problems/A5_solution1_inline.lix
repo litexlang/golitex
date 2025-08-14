@@ -69,7 +69,7 @@ claim:
 claim:
     forall a seq(R):
         forall k N => a(k) = - a(k+1), abs(a(k+1) - a(k)) <= 1
-        then:
+        =>:
             forall k N => abs(a(k)) <= 1/2
     prove:
         claim:
@@ -108,7 +108,7 @@ claim:
 
         prove_in_each_case:
         	or($exist_two_consecutive_items_whose_sum_is_0(a), not $exist_two_consecutive_items_whose_sum_is_0(a))
-            then:
+            =>:
             	or($is_alternating_seq_and_has_bound(a, 1/2) ,$is_identical_seq(a))
             prove:
             	$is_alternating_seq_and_has_bound(a, 1/2)
