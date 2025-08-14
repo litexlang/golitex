@@ -487,21 +487,10 @@ func (tb *tokenBlock) knowFactStmt() (*ast.KnowFactStmt, error) {
 
 	var err error
 	var facts ast.FactStmtSlice = ast.FactStmtSlice{}
-	// if tb.header.ExceedEnd() {
 	facts, err = tb.bodyFacts(UniFactDepth0)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
-	// } else {
-	// 	facts, err = tb.inlineFacts_checkUniDepth0()
-	// 	if err != nil {
-	// 		return nil, tbErr(err, tb)
-	// 	}
-	// 	err = checkFactsUniDepth0(facts)
-	// 	if err != nil {
-	// 		return nil, tbErr(err, tb)
-	// 	}
-	// }
 
 	return ast.NewKnowStmt(facts.ToCanBeKnownStmtSlice()), nil
 }
