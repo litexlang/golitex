@@ -66,7 +66,7 @@ prove:
 
 exist_prop b point st exist_at_least_two_points_on_line(a point, l line):
     $point_on_line(a, l)
-    iff:
+    <=>:
         $point_on_line(b, l)
         b != a
 
@@ -86,7 +86,7 @@ prove:
 
 know @exist c point st exist_one_point_not_on_the_same_line_with_two_points(a point, b point):
     a != b
-    iff:
+    <=>:
     
         not $point_on_line(c, line_of(a, b))
 
@@ -148,7 +148,7 @@ prove:
 know @exist b point st two_planes_have_one_common_point_then_they_have_another_common_point(a point, p plane, q plane):
     $point_on_plane(a, p)
     $point_on_plane(a, q)
-    iff:
+    <=>:
         $point_on_plane(b, p)
 
 prove:
@@ -205,7 +205,7 @@ know forall left point, right point, middle point: left != right, $between(left,
 know @exist l line st exist_line_through_three_points(a point, b point, c point):
     a != b
     $between(a, b, c)
-    iff:
+    <=>:
         a != c
         b != c
         $point_on_line(a, l)
@@ -229,7 +229,7 @@ prove:
 
 exist_prop right point st exist_point_right_to_given_two_points(left point, middle point):
     left != middle
-    iff:
+    <=>:
         $between(left, right, middle)
 
 know forall a point, b point: a != b => $exist_point_right_to_given_two_points(a, b)
@@ -369,7 +369,7 @@ know:
                 $point_left_point_on_one_line(a, b, l)
 
 know @exist a point st exist_point_left_to_point_with_finite_line_equal_to_given_finite_line(b point, l finite_line):
-    iff:
+    <=>:
         a != b
         $point_left_to_point_on_one_line(a, b, l)
         $finite_line_equal(finite_line_of(a, b), l)
@@ -424,7 +424,7 @@ prop on_one_line(a point, b point, c point):
     a != b
     a != c
     b != c
-    iff:
+    <=>:
         $point_on_line(a, line_of(b, c))
 
 # This fact could be proved by other axioms, but I know it anyway.
@@ -509,7 +509,7 @@ know @exist r2 ray st exist_a_ray_with_the_same_angel_with_given_ray_and_half_pl
     dom:
         $point_on_ray(a, r1)
         $half_plane_to_ray(a, r1, p)
-    iff:    
+    <=>:    
         $angle_equal(angle_of_two_rays_with_the_same_start_point(a, r1, r2), ang)
 
 # TODO: Write some tests for this.
@@ -597,7 +597,7 @@ prove:
 prop point_on_line1_then_not_on_line2(a point, l1 line, l2 line):
     dom:
         $point_on_line(a, l1)
-    iff:
+    <=>:
         not $point_on_line(a, l2)
 
 prop parallel(l1 line, l2 line):
@@ -610,7 +610,7 @@ prop parallel(l1 line, l2 line):
 know @exist l2 line st exist_one_and_only_one_line_through_point_not_intersect_line(a point, l line):
     dom:
         not $point_on_line(a, l)
-    iff:
+    <=>:
         $point_on_line(a, l2)
         $parallel(l, l2)
 

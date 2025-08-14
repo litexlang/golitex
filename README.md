@@ -504,7 +504,7 @@ To better show the power of `fn_template`, There is another example of defining 
        <code>prop is_algorithm(D set, I set, f fn(D)D):</code><br>
        <code>&nbsp;&nbsp;forall x I: # i.e. I is subset of D</code><br>
        <code>&nbsp;&nbsp;&nbsp;&nbsp;x $in D</code><br>
-       <code>&nbsp;&nbsp;iff:</code><br>
+       <code>&nbsp;&nbsp;<=>:</code><br>
        <code>&nbsp;&nbsp;&nbsp;&nbsp;forall x I:</code><br>
        <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$exist_end_of_comp_seq(D, x, comp_seq(D, f))</code><br>
        <code></code><br>

@@ -33,7 +33,7 @@ know @exist Q Fp_polynomial(p) st there_is_a_unique_Fp_polynomial_with_A_minus_B
     dom:
         p $is_prime
         B $is_not_0
-    iff:
+    <=>:
         or:
             # 这里 Fp_mul 和 Fp_minus作用在了返回值是 cc_mod(p)的函数上，和Fp_mul的正常作用域不一样了。内核应该推理出来这里的真实的意思是返回值是 cc_mod(p)的函数
             degree_of_Fp_polynomial(p, A \Fp_minus(p) Fp_mul(B, Q)) < degree_of_Fp_polynomial(p, B)

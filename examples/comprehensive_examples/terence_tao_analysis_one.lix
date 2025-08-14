@@ -27,7 +27,7 @@ know forall x N => 0 != x + 1
 know:
     forall x N, y N:
         x != y
-        iff:
+        <=>:
             x + 1 != y + 1
 
 # Axiom 2.5 Principle of mathematical induction.
@@ -131,7 +131,7 @@ know forall s set => s $in obj
 know:
     forall A , B set:
         A = B
-        iff:
+        <=>:
             forall x A:
                 x $in B
             forall x B:

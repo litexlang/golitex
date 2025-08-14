@@ -1,6 +1,6 @@
 prove:
     exist_prop a R st exist_x_larger_than(x R) :
-        iff:
+        <=>:
             a > x
 
     # claim spec fact prove
@@ -30,7 +30,7 @@ prove:
     know:
         forall x R, y R:
             not x < y
-            iff:
+            <=>:
                 x >= y
 
     know:

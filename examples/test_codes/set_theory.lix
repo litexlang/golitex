@@ -4,7 +4,7 @@
 know:
     forall x, y set:
         x = y
-        iff:
+        <=>:
             forall a x:
                 a $in y
             forall a y:
