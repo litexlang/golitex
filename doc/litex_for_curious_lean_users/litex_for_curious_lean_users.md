@@ -20,8 +20,8 @@ Mathematics is the art of deriving new facts from established ones. To illustrat
   <tr>
     <td style="border: 3px solid black; padding: 8px;">
       <code>let Human set</code> <br><br>
-      <code>prop self_aware(x Human)</code> <br><br>      <code>know forall x Human:</code> <br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;$self_aware(x)</code> <br> <br>
+      <code>prop self_aware(x Human)</code> <br><br>      
+      <code>know forall x Human => $self_aware(x)</code> <br> <br>
       <code>let Bob Human</code> <br> <br>
       <code>$self_aware(Bob)</code>
     </td>
