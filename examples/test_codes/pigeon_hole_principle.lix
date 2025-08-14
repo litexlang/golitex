@@ -4,7 +4,7 @@ prop pigeon_hole_principle_at_len_n(n N):
     forall s, s2 finite_set:
     	len(s) = n
         len(s2) > len(s)
-        then:
+        =>:
             $exist_obj_not_in_left_set_but_in_right_set(s, s2)
 
 
@@ -12,7 +12,7 @@ claim:
     forall s finite_set, s2 finite_set:
         len(s) = 0
         len(s2) > len(s)
-        then:
+        =>:
             $exist_obj_not_in_left_set_but_in_right_set(s, s2)
     prove:
         let a s2 # 本质上这里应该是 have ，因为 s2 一定不是空集
@@ -24,7 +24,7 @@ $pigeon_hole_principle_at_len_n(0)
 claim:
     forall n N:
         $pigeon_hole_principle_at_len_n(n)
-        then:
+        =>:
             $pigeon_hole_principle_at_len_n(n+1)
     prove:
         """

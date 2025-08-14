@@ -11,12 +11,12 @@ TODO:
 know:
     forall z obj, A set, B set:
         $in(z, A)
-        then:
+        =>:
             $in(z,union(A, B) )
 
     forall z obj, A set, B set:
         $in(z, B)
-        then:
+        =>:
             $in(z,union(A, B) )
 
 prove:
@@ -32,12 +32,12 @@ know:
     forall z obj, A set, B set:
         in(z, A)
         $in(z, B)
-        then:
+        =>:
             $in(z, intersection(A,B))
 
     forall z obj, A set, B set:
         not $in(z, A)
-        then:
+        =>:
             not $in(z, intersection(A,B))
 
 prove:

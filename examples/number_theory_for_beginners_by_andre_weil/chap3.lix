@@ -22,7 +22,7 @@ know:
         dom:
             a != 0
             b != 0
-        then:
+        =>:
             a / gcd(a, b) $in Z
             b / gcd(a, b) $in Z
             gcd(a / gcd(a, b), b / gcd(a, b)) = 1
@@ -32,7 +32,7 @@ know:
     forall a Z, b Z, d Z:
         a $is_divisible_by d
         b $is_divisible_by d
-        then:
+        =>:
             a + b $is_divisible_by d
             a - b $is_divisible_by d
             a * b $is_divisible_by d
@@ -42,7 +42,7 @@ know:
     forall a Z, b Z, d Z:
         gcd(a, d) = 1
         a*b $is_divisible_by d
-        then:
+        =>:
             b $is_divisible_by d
 
 # Corollary 3.1
@@ -50,5 +50,5 @@ know:
     forall a Z, b Z, d Z:
         gcd(a, b) = 1
         gcd(a, d) = 1
-        then:
+        =>:
             gcd(a, b*d) = 1

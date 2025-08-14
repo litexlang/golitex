@@ -16,10 +16,10 @@ package litex_global
 
 // ! 每次新增keyword的时候，要记住把它往isKeyword里加
 const (
-	KeywordSet                  = "set"
-	KeywordForall               = "forall"
-	KeywordDom                  = "dom" // 这是一种语法糖。本质上只要在定义集合的时候写了对集合的要求，那dom就不必要的，因为dom本质上是 ”临时添加新的要求"
-	KeywordThen                 = "then"
+	KeywordSet    = "set"
+	KeywordForall = "forall"
+	KeywordDom    = "dom" // 这是一种语法糖。本质上只要在定义集合的时候写了对集合的要求，那dom就不必要的，因为dom本质上是 ”临时添加新的要求"
+	// KeywordThen                 = "then"
 	KeywordObj                  = "obj"
 	KeywordHave                 = "have"
 	KeywordFn                   = "fn"
@@ -68,10 +68,10 @@ const (
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
-	KeywordSet:                  {},
-	KeywordForall:               {},
-	KeywordDom:                  {},
-	KeywordThen:                 {},
+	KeywordSet:    {},
+	KeywordForall: {},
+	KeywordDom:    {},
+	// KeywordThen:                 {},
 	KeywordObj:                  {},
 	KeywordHave:                 {},
 	KeywordFn:                   {},

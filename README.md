@@ -338,7 +338,7 @@ There is another way to write the same example in Litex, a bottom-up way.
        <code>&nbsp;forall x, y R:</code><br>
        <code>&nbsp;&nbsp;&nbsp;&nbsp;x = -4</code><br>
        <code>&nbsp;&nbsp;&nbsp;&nbsp;y = 6</code><br>
-       <code>&nbsp;&nbsp;&nbsp;&nbsp;then:</code><br>
+       <code>&nbsp;&nbsp;&nbsp;&nbsp;=>:</code><br>
        <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2 * x + 3 * y = 10</code><br>
        <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4 * x + 5 * y = 14</code><br>
        <code>&nbsp;&nbsp;prove:</code><br>
