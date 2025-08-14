@@ -40,7 +40,7 @@ prop is_smallest_element_of(x N, s set):
         forall y s:
             y $in Z
         x $in s
-    iff:
+    <=>:
         forall y s:
             y >= x
 
@@ -52,7 +52,7 @@ know @exist x N st exist_smallest_element_of(s set):
         $non_empty(s)
         forall y s:
             y $in Z
-    iff:
+    <=>:
         x $in s
         $is_smallest_element_of(x, s)
     
@@ -102,7 +102,7 @@ Chapter 2
 
 # TODO: THIS CLAIM CAN BE PROVED
 know @exist q Z st exist_largest_multiple_of(d Z, a Z):
-    iff:
+    <=>:
         a >= d * q
         d*(q+1) > a
 
@@ -114,7 +114,7 @@ know @exist m N st nonempty_set_of_integers_closed_under_addition_has_elements_d
         $non_empty(s)
         forall x s:
             x $in Z
-    iff:
+    <=>:
         forall x s:
             x $in Z
             $is_divisible_by(m, x)
@@ -185,7 +185,7 @@ exist_prop c Z, d Z st exist_relatively_prime(a Z, b Z):
 know:
     forall a Z, b Z:
         gcd(a, b) = 1
-        iff:
+        <=>:
             $exist_relatively_prime(a, b)
 
 # Corollary 3.1

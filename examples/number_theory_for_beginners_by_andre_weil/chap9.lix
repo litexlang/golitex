@@ -24,7 +24,7 @@ prop is_0_K_polynomial(K field, f K_polynomial(K)):
 know @exist Q K_polynomial(K) st there_is_a_unique_K_polynomial_with_A_minus_BQ_is_0_or_order_smaller_than_degree_of_B(K field, A K_polynomial(K), B K_polynomial(K)):
     dom:
         not $is_0_K_polynomial(K, B)
-    iff:
+    <=>:
         or:
             degree_of_K_polynomial(K, A \K_minus(K) K_mul(B, Q)) < degree_of_K_polynomial(K, B)
             not degree_of_K_polynomial(K, A \K_minus(K) K_mul(B, Q)) $is_0_K_polynomial(K)
@@ -46,7 +46,7 @@ prop is_non_empty_set_of_K_polynomial_closed_under_K_add(K field, s finite_set):
 exist_prop D K_polynomial(K) st exist_d_generate_non_empty_set_of_K_polynomial(K field, s finite_set):
 	dom:
         $is_non_empty_set_of_K_polynomial_closed_under_K_add(K, s)
-    iff:
+    <=>:
 
 fn K_polynomial_0(K field) K_polynomial(K):
     forall x K:

@@ -5,13 +5,13 @@ know:
     forall x R:
         =>:
             $p(x)
-        iff:
+        <=>:
             $q(x)
 
 forall x R:
     =>:
         $p(x)
-    iff:
+    <=>:
         $q(x)
 
 forall x R:

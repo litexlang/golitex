@@ -13,7 +13,7 @@ exist_prop c Z, d Z st exist_relatively_prime(a Z, b Z):
 know:
     forall a Z, b Z:
         gcd(a, b) = 1
-        iff:
+        <=>:
             $exist_relatively_prime(a, b)
 
 # Corollary 3.1

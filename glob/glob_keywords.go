@@ -20,19 +20,19 @@ const (
 	KeywordForall = "forall"
 	KeywordDom    = "dom" // 这是一种语法糖。本质上只要在定义集合的时候写了对集合的要求，那dom就不必要的，因为dom本质上是 ”临时添加新的要求"
 	// KeywordThen                 = "then"
-	KeywordObj                  = "obj"
-	KeywordHave                 = "have"
-	KeywordFn                   = "fn"
-	KeywordProp                 = "prop"
-	KeywordKnow                 = "know"
-	KeywordExist                = "exist"
-	KeywordSt                   = "st"
-	KeywordExistProp            = "exist_prop"
-	KeywordClaim                = "claim"
-	KeywordProve                = "prove"
-	KeywordImport               = "import"
-	KeywordNot                  = "not"
-	KeywordIff                  = "iff"
+	KeywordObj       = "obj"
+	KeywordHave      = "have"
+	KeywordFn        = "fn"
+	KeywordProp      = "prop"
+	KeywordKnow      = "know"
+	KeywordExist     = "exist"
+	KeywordSt        = "st"
+	KeywordExistProp = "exist_prop"
+	KeywordClaim     = "claim"
+	KeywordProve     = "prove"
+	KeywordImport    = "import"
+	KeywordNot       = "not"
+	// KeywordIff                  = "iff"
 	KeywordProveByContradiction = "prove_by_contradiction"
 	KeywordProveInEachCase      = "prove_in_each_case" // 必要：和or一起使用
 	KeywordOr                   = "or"
@@ -85,15 +85,15 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordNot:                  {},
 	KeywordProveByContradiction: {},
 	KeywordProveInEachCase:      {},
-	KeywordIff:                  {},
-	KeywordExist:                {},
-	KeywordCommutativeProp:      {},
-	KeywordOr:                   {},
-	KeywordNatural:              {},
-	KeywordInteger:              {},
-	KeywordRational:             {},
-	KeywordReal:                 {},
-	KeywordIn:                   {},
+	// KeywordIff:                  {},
+	KeywordExist:           {},
+	KeywordCommutativeProp: {},
+	KeywordOr:              {},
+	KeywordNatural:         {},
+	KeywordInteger:         {},
+	KeywordRational:        {},
+	KeywordReal:            {},
+	KeywordIn:              {},
 	// KeywordProveByMathInduction:           {},
 	KeywordComplex:                        {},
 	KeywordImaginary:                      {},

@@ -46,13 +46,13 @@ know forall x human =>$intelligent(x)
 
 prop XXX(parameters parameter_sets):
     ...
-    iff:
+    <=>:
         ....
 
 --------------------------------
 
 prop y(x N):
-    iff:
+    <=>:
         x > 2
         x % 2 = 0
 
@@ -69,7 +69,7 @@ know forall x N: $y(x) => x > 2, x % 2 = 0
 prop y2(x N, y R):
     x > 10
     y < 2
-    iff:
+    <=>:
         x % 2 = 0
         y + x = 100
 

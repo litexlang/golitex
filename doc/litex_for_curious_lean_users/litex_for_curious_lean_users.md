@@ -66,7 +66,7 @@ The computation proceeds by repeatedly applying f to an input x in I, generating
       <code>&nbsp;&nbsp;&nbsp;&nbsp;f(x, n) = f(x, n+1)</code><br><br>
       <code>prop is_algorithm(Q set, I set, f fn(Q)Q):</code><br>
       <code>&nbsp;&nbsp;$subset_of(I, Q)</code><br>
-      <code>&nbsp;&nbsp;iff:</code><br>
+      <code>&nbsp;&nbsp;<=>:</code><br>
       <code>&nbsp;&nbsp;&nbsp;&nbsp;forall x I:</code><br>
       <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$exist_comp_seq_end(Q, x, comp_seq(Q, f))</code>
     </td>
@@ -109,7 +109,7 @@ exist_prop n N st exist_comp_seq_end(Q set, x Q, f fn(Q,N)Q):
 ```
 prop is_algorithm(Q set, I set, f fn(Q)Q):
     subset_of(I, Q)
-    iff:
+    <=>:
         forall x I:
             exist_comp_seq_end(Q, x, comp_seq(Q, f))
 ```
