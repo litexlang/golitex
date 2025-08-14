@@ -12,8 +12,7 @@
 0 $in N # This is a factual statement. Its output is true.
 
 # Axiom 2.2 If n is a natural number, then the successor of n is also a natural number.
-know forall x N:
-    x + 1 $in N
+know forall x N => x + 1 $in N
 
 # examples: the followings are true factual statements.
 0 + 1 = 1
@@ -22,14 +21,14 @@ know forall x N:
 2 != 6
 
 # Axiom 2.3 0 is not the successor of any natural number.
-know forall x N:
-    0 != x + 1
+know forall x N => 0 != x + 1
 
 # Axiom 2.4 If two natural numbers are equal, iff their successors are equal.
-know forall x N, y N:
-    x != y
-    iff:
-        x + 1 != y + 1
+know:
+    forall x N, y N:
+        x != y
+        iff:
+            x + 1 != y + 1
 
 # Axiom 2.5 Principle of mathematical induction.
 # prove_by_induction is a built-in function that takes a predicate and a natural number and returns true if the predicate is true for all natural numbers up to and including the natural number.
@@ -82,27 +81,18 @@ prop is_positive_natural_number(n N):
     n != 0
 
 # Proposition 2.2.8: If a is positive, b is natural number, then a + b is positive.
-know forall a N, b N:
-    a != 0
-    then:
-        a + b != 0
+know forall a N, b N: a != 0 => a + b != 0
 
 # Corollary 2.2.9: If a and b are natural numbers such that a + b = 0, then a = 0 and b = 0.
-know forall a N, b N:
-    a + b = 0
-    then:
-        a = 0
-        b = 0
+know forall a N, b N: a + b = 0 => a = 0, b = 0
 
 # Lemma 2.2.10: If a is positive, then there exists exactly one natural number b such that b + 1 = a.
-forall a N:
-    (a - 1) + 1 = a
+know forall a N => (a - 1) + 1 = a
 
 # Proposition 2.2.11: If n and m are natural numbers. We say n is greater than or equal to m, written n >= m, if n = m + k for some natural number k. We say n is strictly greater than m, written n > m, if n >= m and n != m.
 
 # Definition 2.3.1 multiplication of natural numbers.
-forall x N:
-    0 * x = 0
+know forall x N => 0 * x = 0
 
 forall x N, y N:
     (x + 1) * y = x * y + y
@@ -120,12 +110,10 @@ forall x N, y N, z N:
     x * (y + z) = x * y + x * z
 
 # 0 is the multiplicative identity
-forall x N:
-    0 * x = 0
+know forall x N => 0 * x = 0
 
 # 1 is the multiplicative identity
-forall x N:
-    1 * x = x
+know forall x N => 1 * x = x
 
 
 # Chapter 3: Set theory
@@ -137,17 +125,17 @@ forall x N:
 # "obj" is a built-in keyword in Litex for declaring objects. Also, anything declared object (things that are not declared as prop or exist_prop) is an object (writes xxx $in obj). obj itself is not obj.
 # The word "object" every now and then in Analysis I without any definition. It sort to reveals that explanations of basic elements in math are still missing in this book (or maybe in math world in general). The keyword "obj" in Litex is really something aligns with the word "object" means in math with Litex creators's understanding.
 
-forall s set:
-    s $in obj
+know forall s set => s $in obj
 
 # Definition 3.1.4: Set A is equal to set B, written A = B, if and only if every element of A is an element of B and every element of B is an element of A.
-know forall A , B set:
-    A = B
-    iff:
-        forall x A:
-            x $in B
-        forall x B:
-            x $in A
+know:
+    forall A , B set:
+        A = B
+        iff:
+            forall x A:
+                x $in B
+            forall x B:
+                x $in A
 
 # Axiom 3.2: There exists a set which contains no elements
 know @exist empty_set set st exist_empty_set():
@@ -268,19 +256,13 @@ forall x Z:
 forall x Z:
     x * 1 = x
 
-know forall x N:
-    x > 0
-    then:
-        not $in(-x, N)
+know forall x N: x > 0 => not $in(-x, N)
 
 exist_prop x N st given_int_is_reverse_of_nat(y Z):
     x + y = 0
 
 # Lemma 4.1.5: Every integer is either a natural number or the negative of a natural number.
-know forall x Z:
-    or:
-        x $in N
-        $given_int_is_reverse_of_nat(x)
+know forall x Z => or(x $in N, $given_int_is_reverse_of_nat(x))
 
 # Use Lemma 4.1.5 to prove that -1 is not a natural number and there is a natural number t such that t + (-1) = 0
 
@@ -291,11 +273,7 @@ t + (-1) = 0
 
 # The rationals
 
-know forall x2, y2 R:
-    x2 != 0
-    y2 != 0
-    then:
-        x2 * y2 != 0
+know forall x2, y2 R: x2 != 0, y2 != 0 => x2 * y2 != 0
 
 # proved by builtin rules for *, +, -, /
 forall a2, b2, c2, d2 R:
