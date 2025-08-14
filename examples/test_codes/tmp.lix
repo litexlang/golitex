@@ -1,13 +1,1 @@
-prop p(x R, n N, t R)
-
-let y R, z R
-
-know:
-	forall n N:
-        not $p(y, n, z)
-        then:
-        	not $p(y, n+1, z)
-    
-    not $p(y, 1, z)
-
-prove_by_induction(not $p(y, n, z), n, 1)
+know forall x, y Z => x * y $in Z, x + y $in Z, x - y $in Z

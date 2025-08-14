@@ -8,7 +8,7 @@
 
 forall m, n, p N:
     m + p = n + p
-    then:
+    =>:
         m + p - p = n + p - p
         # m = n
 
@@ -18,22 +18,23 @@ forall a, b, c N:
 # Basic facts like this will be implemented in standard library.
 know @less_is_preserved_by_addition(m N, n N, p N):
     m + p < n + p
-    then:
+    =>:
         m < n
 
-know forall a, b, n N:
-    n > 0
-    a > b
-    then:
-        a ^ n > b ^ n
+know:
+    forall a, b, n N:
+        n > 0
+        a > b
+        =>:
+            a ^ n > b ^ n
 
 forall a, b N:
     a + 1 < b + 1
-    then:
+    =>:
         $less_is_preserved_by_addition(a, b, 1)
 
 forall a, b, n N:
     n > 0
     a > b
-    then:
+    =>:
         a ^ n > b ^ n

@@ -16,7 +16,7 @@ claim:
         forall n N:
             a(n+2) + a(n) * a(n) = a(n) + a(n+1) * a(n+1)
             abs(a(n+1) - a(n)) <= 1
-        then:
+        =>:
             or:
                 $is_identical_seq(a)
                 $is_alternating_seq_and_has_bound(a, 1)
@@ -25,7 +25,7 @@ claim:
             or:
                 $exist_two_consecutive_items_whose_sum_is_0(a)
                 not $exist_two_consecutive_items_whose_sum_is_0(a)
-            then:
+            =>:
                 or:
                     $is_identical_seq(a)
                     $is_alternating_seq_and_has_bound(a, 1)
@@ -47,8 +47,7 @@ prove:
     prop p2(b, c R):
         b + c $in R
 
-    know forall b, c R:
-        b + c $in R
+    know forall b, c R => b + c $in R
 
     1 + 2 $in R
     $p2(1, 2)

@@ -1,13 +1,14 @@
 # Formalize Terence Tao Analysis 1 Chapter 3 Set Theory
 
 # Definition of Two Sets are Equal
-know forall x, y set:
-    x = y
-    iff:
-        forall a x:
-            a $in y
-        forall a y:
-            a $in x
+know:
+    forall x, y set:
+        x = y
+        <=>:
+            forall a x:
+                a $in y
+            forall a y:
+                a $in x
 
 # Definition of Empty Set
 prop is_empty_set(x set):
@@ -26,7 +27,7 @@ exist_prop x obj st obj_exist_in_set(s set):
 claim:
     forall s set:
         not $is_empty_set(s)
-        then:
+        =>:
            $obj_exist_in_set(s)
     prove_by_contradiction:
         forall x obj:
@@ -58,7 +59,7 @@ claim:
         s1 := {a}
         s2 := {b}
         x $in union(s1, s2)
-        then:
+        =>:
             or:
                 x = a
                 x = b
@@ -68,7 +69,7 @@ claim:
             or:
                 x $in s1
                 x $in s2
-            then:
+            =>:
                 or:
                 	x = a
                     x = b
@@ -95,7 +96,7 @@ claim:
     @subset_of_is_transitive(a, b, c set):
         a $is_subset_of b
         b $is_subset_of c
-        then:
+        =>:
             a $is_subset_of c
     prove:
         forall x a:
@@ -113,7 +114,7 @@ prove:
         $P(x)
     forall x A:
         $P(x)
-        then:
+        =>:
         	x $in a
     forall x a:
         x $in A
@@ -138,7 +139,7 @@ know @union_of_N_greater_than_n_and_less_than_or_equal_to_n_is_N(n N, s1 set, s2
 		x > n
 	s2 := x N:
 		x <= n
-	then:
+	=>:
 		union(s1, s2) = N
 
 prove:
@@ -156,7 +157,7 @@ have set fn difference(s1 set, s2 set) := x s1:
 claim:
 	forall a set, s set:
         s := {}
-        then:
+        =>:
             union(a, s) = a
     prove:
         claim:
@@ -172,7 +173,7 @@ claim:
 claim:
 	forall a set, s set:
         s := {}
-        then:
+        =>:
             forall x obj:
             	not x $in intersection(a,s)
     prove:
@@ -202,7 +203,7 @@ claim:
                     or:
                         x $in a
                         x $in a
-                    then:
+                    =>:
                         x $in a
                     prove:
                         x $in a
@@ -220,11 +221,12 @@ prove:
     have A set, B set
     prop P(x A, y B)
 
-    know forall x A, y1, y2 B:
-        $P(x, y1)
-        $P(x, y2)
-        then:
-            $last_two_objects_are_equal(x, y1, y2)
+    know:
+        forall x A, y1, y2 B:
+            $P(x, y1)
+            $P(x, y2)
+            =>:
+                $last_two_objects_are_equal(x, y1, y2)
 
     have set s = set_defined_by_replacement(A, B, P)
     forall x set_defined_by_replacement(A, B, P):
@@ -321,7 +323,7 @@ prove:
                 or:
                     k = 1
                     k = 3
-                then:
+                =>:
                     k $in u
                 prove:
                     k $in u

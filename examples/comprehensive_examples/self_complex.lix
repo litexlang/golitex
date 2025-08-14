@@ -21,7 +21,7 @@ know:
         or:
             a != 0
             b != 0
-        then:
+        =>:
         	sc(x, y) \sc_div\ sc(a, b) = sc((x * a + y * b) / (a * a + b * b), (y * a - x * b) / (a * a + b * b))
     	
 prove:
