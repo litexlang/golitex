@@ -12,9 +12,10 @@ prove:
         $exclude_property(s1, s2)
         not x $in s2
 
-    know forall s1 finite_set, s2 finite_set:
-        forall x s2:
-            x $in s1
-        then:
-            len(s1) - len(s2) = len(exclude(s1, s2))
+    know:
+        forall s1 finite_set, s2 finite_set:
+            forall x s2:
+                x $in s1
+            then:
+                len(s1) - len(s2) = len(exclude(s1, s2))
 

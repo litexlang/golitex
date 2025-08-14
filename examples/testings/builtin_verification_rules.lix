@@ -105,8 +105,7 @@ prove:
 # e.g. 3*3 can match 8+1
 prove:
     prop p(x R)
-    know forall x R:
-        $p(x + 3*3)
+    know forall x R => $p(x + 3*3)
     let x R
     $p(x + 3*3)
 
@@ -127,8 +126,7 @@ fn sin(x R) R
 fn cos(x R) R
 
 prove:
-    know forall x R:
-        sin(x)^2 + cos(x)^2 = 1
+    know forall x R => sin(x)^2 + cos(x)^2 = 1
 
     forall y R:
         1 = sin(y)^2 + cos(y)^2

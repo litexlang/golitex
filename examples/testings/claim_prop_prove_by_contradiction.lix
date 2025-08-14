@@ -1,10 +1,11 @@
 prop p(x, y N)
 prop q(x, y N)
 
-know forall x, y N:
-    $p(x, y)
-    then:
-        $q(x, y)
+know:
+    forall x, y N:
+        $p(x, y)
+        then:
+            $q(x, y)
 
 claim:
     @t(x, y, z N):
