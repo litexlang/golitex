@@ -72,10 +72,5 @@ fn gcd(a Z, b Z) N:
 # Corollary 2.2
 # Specialized case
 
-know forall a Z, b Z, d Z:
-    d != 0
-    a $is_divisible_by d
-    b $is_divisible_by d
-    then:
-        gcd(a, b) $is_divisible_by d
+know forall a Z, b Z, d Z: d != 0, a $is_divisible_by d, b $is_divisible_by d => gcd(a, b) $is_divisible_by d
 

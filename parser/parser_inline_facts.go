@@ -447,17 +447,18 @@ func (tb *tokenBlock) inline_specFact_enum_intensional_fact() (ast.FactStmt, err
 
 		ret = ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(opt), params)
 
-		if tb.header.is(glob.KeySymbolComma) {
-			tb.header.skip(glob.KeySymbolComma)
+		// 这里加入语法糖：!= 等价于 not =，好处是我 = 有 commutative的性质，我不用额外处理 != 了
+		if asSpec, ok := ret.(*ast.SpecFactStmt); ok {
+			if asSpec.NameIs(glob.KeySymbolNotEqual) {
+				asSpec.TypeEnum = ast.FalsePure
+				asSpec.PropName = ast.FcAtom(glob.KeySymbolEqual)
+			}
 		}
+
 	}
 
-	// 这里加入语法糖：!= 等价于 not =，好处是我 = 有 commutative的性质，我不用额外处理 != 了
-	if asSpec, ok := ret.(*ast.SpecFactStmt); ok {
-		if asSpec.NameIs(glob.KeySymbolNotEqual) {
-			asSpec.TypeEnum = ast.FalsePure
-			asSpec.PropName = ast.FcAtom(glob.KeySymbolEqual)
-		}
+	if tb.header.is(glob.KeySymbolComma) {
+		tb.header.skip("")
 	}
 
 	return ret, nil

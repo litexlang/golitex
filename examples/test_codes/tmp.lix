@@ -1,7 +1,1 @@
-prop p(x R)
-
-know $p(1), $p(2), $p(3)
-
-$p(1)
-$p(2)
-$p(3)
+know forall x, y Z => x * y $in Z, x + y $in Z, x - y $in Z
