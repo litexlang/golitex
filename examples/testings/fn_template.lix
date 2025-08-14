@@ -47,10 +47,7 @@ prove:
         dom:
             n > 1
 
-    know forall n N:
-        n > 3
-        then:
-            n > 1
+    know forall n N: n > 3 => n > 1
 
     g2 $in seq2(R)
 

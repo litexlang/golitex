@@ -1,11 +1,12 @@
 prop p(x R)
 prop q(x R)
 
-know  forall x R:
-    then:
-        $p(x)
-    iff:
-        $q(x)
+know:
+    forall x R:
+        then:
+            $p(x)
+        iff:
+            $q(x)
 
 forall x R:
     then:

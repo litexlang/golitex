@@ -1,10 +1,11 @@
-know forall x, y set:
-	x = y
-    then:
-        forall a x:
-            a $in y
-        forall a y:
-            a $in x
+know:
+    forall x, y set:
+        x = y
+        then:
+            forall a x:
+                a $in y
+            forall a y:
+                a $in x
 
 prop is_subset_of(x, y set):
 	forall a x:
