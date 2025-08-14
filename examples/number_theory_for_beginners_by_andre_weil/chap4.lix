@@ -31,7 +31,7 @@ know @a_prime_divides_a_product_of_two_integers_if_it_divides_one_of_the_factors
 
 know @exist primes finite_set st exist_primes_whose_equal_to_integer(a Z):
     a > 1
-    iff:
+    <=>:
         forall x primes:
             x $is_prime
             a $is_divisible_by x

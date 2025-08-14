@@ -64,7 +64,7 @@ prop solutions_of_congruence_is_finite(a Z, b Z, m Z):
 set_fn distinct_solutions_of_congruence(a Z, b Z, m Z) x Z:
     dom:
         len(solutions_of_congruence_modulo(a, b, m)) = gcd(a, m)
-    iff:
+    <=>:
         x >= 0 
         x < m
         $is_congruent_modulo(a * x, b, m)
@@ -106,7 +106,7 @@ prop is_field(field set, add fn(field, field)field, mul fn(field, field)field, i
 # Here we directly assume such a function exists. it can actually be proved. To formalize existence of such a function, we use exist_prop.
 exist_prop inv_fn fn(cc_mod(m))cc_mod(m) cc_mul_inv_exists(m Z):
     m > 1
-    iff:
+    <=>:
         forall x cc_mod(m):
             x != cc(0, m)
             =>:
@@ -144,5 +144,5 @@ know:
         m > 1
         =>:
             m $is_prime
-        iff:
+        <=>:
             $is_field(cc_mod(m), cc_add(m), cc_mul(m), cc_inv(m), cc(0, m), cc(1, m), cc_mul_inv(m))

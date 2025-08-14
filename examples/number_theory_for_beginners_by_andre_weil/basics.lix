@@ -40,7 +40,7 @@ prop is_smallest_element_of(x N, s set):
         forall y s:
             y $in Z
         x $in s
-    iff:
+    <=>:
         forall y s:
             y >= x
 
@@ -52,7 +52,7 @@ know @exist x N st exist_smallest_element_of(s set):
         $non_empty(s)
         forall y s:
             y $in Z
-    iff:
+    <=>:
         x $in s
         $is_smallest_element_of(x, s)
     

@@ -69,14 +69,14 @@ know:
             m $is_divisible_by d
         =>:
         	$is_congruent_modulo(x, y, m)
-        iff:
+        <=>:
             $is_congruent_modulo(x / d, y / d, m / d)
 
 # Definition 5.3
 fn cc(d Z, m Z) set:
     dom:
         m != 0
-    iff:
+    <=>:
         forall x cc(d, m):
             $is_congruent_modulo(x, d, m)
         forall x Z:

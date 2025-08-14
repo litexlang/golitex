@@ -190,7 +190,8 @@ func (fact *DefPropStmt) String() string {
 	}
 
 	if len(fact.IffFacts) > 0 {
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordIff, 1))
+		// builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordIff, 1))
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeySymbolEquivalent, 1))
 		builder.WriteString(glob.KeySymbolColon)
 		builder.WriteByte('\n')
 		iffFactStrSlice := make([]string, len(fact.IffFacts))
@@ -301,7 +302,7 @@ func (s *DefExistPropStmt) String() string {
 	}
 
 	if len(s.DefBody.IffFacts) > 0 {
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents("iff:", 1))
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents("<=>:", 1))
 		builder.WriteString("\n")
 
 		iffFactStrSlice := make([]string, len(s.DefBody.IffFacts))
@@ -356,7 +357,7 @@ func (l *UniFactWithIffStmt) String() string {
 
 	if l.IffFacts != nil && len(l.IffFacts) > 0 {
 		builder.WriteByte('\n')
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents("iff:", 1))
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents("<=>:", 1))
 		builder.WriteByte('\n')
 		iffFactStrSlice := make([]string, len(l.IffFacts))
 		for i := range len(l.IffFacts) {
