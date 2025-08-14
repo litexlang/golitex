@@ -94,9 +94,10 @@ prove:
 
 # match
 prove:
-    know forall x R, y R, z R: # 分配率
-        x * (y + z) = x * y + x * z
-        (x + y) * z = x * z + y * z
+    know:
+        forall x R, y R, z R: # 分配率
+            x * (y + z) = x * y + x * z
+            (x + y) * z = x * z + y * z
     let a R
     -4 * a + 5 * a = (-4+5) * a # match -4 with x, 5 with y, a with z
     -4 * a + 5 * a = 1 * a # 1 match -4+5
