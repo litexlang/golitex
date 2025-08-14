@@ -190,7 +190,8 @@ func (fact *DefPropStmt) String() string {
 	}
 
 	if len(fact.IffFacts) > 0 {
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordIff, 1))
+		// builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordIff, 1))
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeySymbolEquivalent, 1))
 		builder.WriteString(glob.KeySymbolColon)
 		builder.WriteByte('\n')
 		iffFactStrSlice := make([]string, len(fact.IffFacts))
@@ -233,7 +234,8 @@ func fnDefStmtStringGivenKw(kw string, f *FnTStruct, name string) string {
 		builder.WriteByte('\n')
 	}
 	if len(f.ThenFacts) > 0 {
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordThen, 1))
+		// builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordThen, 1))
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeySymbolEqualLarger, 1))
 		builder.WriteString(glob.KeySymbolColon)
 		builder.WriteByte('\n')
 
@@ -300,7 +302,7 @@ func (s *DefExistPropStmt) String() string {
 	}
 
 	if len(s.DefBody.IffFacts) > 0 {
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents("iff:", 1))
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents("<=>:", 1))
 		builder.WriteString("\n")
 
 		iffFactStrSlice := make([]string, len(s.DefBody.IffFacts))
@@ -330,7 +332,7 @@ func (l *UniFactStmt) String() string {
 		builder.WriteString(strings.Join(domFactStrSlice, "\n"))
 
 		builder.WriteByte('\n')
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents("then:", 1))
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents("=>:", 1))
 		builder.WriteByte('\n')
 		thenFactStrSlice := make([]string, len(l.ThenFacts))
 		for i := range len(l.ThenFacts) {
@@ -355,7 +357,7 @@ func (l *UniFactWithIffStmt) String() string {
 
 	if l.IffFacts != nil && len(l.IffFacts) > 0 {
 		builder.WriteByte('\n')
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents("iff:", 1))
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents("<=>:", 1))
 		builder.WriteByte('\n')
 		iffFactStrSlice := make([]string, len(l.IffFacts))
 		for i := range len(l.IffFacts) {
@@ -441,7 +443,8 @@ func (stmt *ProveInEachCaseStmt) String() string {
 	builder.WriteString(":\n")
 	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.OrFact.String(), 1))
 	builder.WriteByte('\n')
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordThen, 1))
+	// builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordThen, 1))
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeySymbolEqualLarger, 1))
 	builder.WriteString(glob.KeySymbolColon)
 	builder.WriteByte('\n')
 	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.ThenFacts[0].String(), 2))

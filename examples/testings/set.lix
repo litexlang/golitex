@@ -4,11 +4,11 @@ prove:
     prop is_subset_of(x, y set):
         forall z x:
             z $in x
-            then:
+            =>:
                 z $in y
         forall:
             y $in finite_set
-            then:
+            =>:
                 x $in finite_set
                 len(x) <= len(y)
 

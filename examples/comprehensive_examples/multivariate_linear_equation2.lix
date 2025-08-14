@@ -2,7 +2,7 @@ claim:
 	forall x, y R:
         x = -4
         y = 6
-        then:
+        =>:
             2 * x + 3 * y = 10
             4 * x + 5 * y = 14
     prove:

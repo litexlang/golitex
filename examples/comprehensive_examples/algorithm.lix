@@ -28,7 +28,7 @@ exist_prop n N st exist_end_of_comp_seq(D set, x D, f fn(D,N)D):
 prop is_algorithm(D set, I set, f fn(D)D):
     forall x I: # i.e. I is subset of D
         x $in D
-    iff:
+    <=>:
         forall x I:
             $exist_end_of_comp_seq(D, x, comp_seq(D, f))
 

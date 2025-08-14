@@ -4,32 +4,32 @@ Basics
 
 forall x R, a R, b R:
     a + x = b
-    then:
+    =>:
         a + x - a = b - a
         x = b - a
 
 forall x R, a R, b R:
     a != 0
     a * x = b
-    then:
+    =>:
         a * x / a = b / a
         x = b / a
 
 know:
     forall a R, b R:
         b  >  a
-        then:
+        =>:
             b - a > 0
 
     forall a R, b R:
         b > a
-        then:
+        =>:
             b >= a 
             b != a
 
     forall a R, b R:
         b < a
-        then:
+        =>:
             a > b
 
 exist_prop x Z st is_divisible_by(b Z, a Z):
@@ -40,7 +40,7 @@ prop is_smallest_element_of(x N, s set):
         forall y s:
             y $in Z
         x $in s
-    iff:
+    <=>:
         forall y s:
             y >= x
 
@@ -52,22 +52,15 @@ know @exist x N st exist_smallest_element_of(s set):
         $non_empty(s)
         forall y s:
             y $in Z
-    iff:
+    <=>:
         x $in s
         $is_smallest_element_of(x, s)
     
-know forall x Z, y Z:
-    x * y $in Z
-    x + y $in Z
-    x - y $in Z
+know forall x Z, y Z => x * y $in Z, x + y $in Z, x - y $in Z
 
-know forall x N, y N:
-    x + y $in N
-    x * y $in N
+know forall x N, y N => x + y $in N, x * y $in N
 
-know forall x N, y N:
-    x + y $in N
-    x * y $in N
+know forall x N, y N => x + y $in N, x * y $in N
 
 
  """
@@ -98,7 +91,7 @@ know:
 
     forall a Q, b Q:
         a != 0
-        then:
+        =>:
             b / a $in Q
 
 """
@@ -109,7 +102,7 @@ Chapter 2
 
 # TODO: THIS CLAIM CAN BE PROVED
 know @exist q Z st exist_largest_multiple_of(d Z, a Z):
-    iff:
+    <=>:
         a >= d * q
         d*(q+1) > a
 
@@ -121,7 +114,7 @@ know @exist m N st nonempty_set_of_integers_closed_under_addition_has_elements_d
         $non_empty(s)
         forall x s:
             x $in Z
-    iff:
+    <=>:
         forall x s:
             x $in Z
             $is_divisible_by(m, x)
@@ -144,7 +137,7 @@ fn set_of_integer_linear_combination_of_two_integers(a Z, b Z) set:
 know:
     forall x Z, a Z, b Z:
         $is_linear_combination_of_two_integers(x, a, b)
-        then:
+        =>:
             x $in set_of_integer_linear_combination_of_two_integers(a, b)
 
 fn set_of_multiples_of(d N) set:
@@ -155,13 +148,13 @@ fn set_of_multiples_of(d N) set:
 know:
     forall x Z, d N:
         x $is_divisible_by d
-        then:
+        =>:
             x $in set_of_multiples_of(d)
 
 know:
     forall x Z, d N:
         x $in set_of_multiples_of(d)
-        then:
+        =>:
             x $is_divisible_by d
 
 # Corollary itself
@@ -175,12 +168,7 @@ fn gcd(a Z, b Z) N:
 # Corollary 2.2
 # Specialized case
 
-know forall a Z, b Z, d Z:
-    d != 0
-    a $is_divisible_by d
-    b $is_divisible_by d
-    then:
-        gcd(a, b) $is_divisible_by d
+know forall a Z, b Z, d Z: d != 0, a $is_divisible_by d, b $is_divisible_by d => gcd(a, b) $is_divisible_by d
 
 """
 Chapter 3
@@ -194,41 +182,46 @@ exist_prop c Z, d Z st exist_relatively_prime(a Z, b Z):
     a * c + b * d = 1
 
 # Theorem 3.1
-know forall a Z, b Z:
-    gcd(a, b) = 1
-    iff:
-        $exist_relatively_prime(a, b)
+know:
+    forall a Z, b Z:
+        gcd(a, b) = 1
+        <=>:
+            $exist_relatively_prime(a, b)
 
 # Corollary 3.1
-know forall a Z, b Z:
-    dom:
-        a != 0
-        b != 0
-    then:
-        a / gcd(a, b) $in Z
-        b / gcd(a, b) $in Z
-        gcd(a / gcd(a, b), b / gcd(a, b)) = 1
+know:
+    forall a Z, b Z:
+        dom:
+            a != 0
+            b != 0
+        =>:
+            a / gcd(a, b) $in Z
+            b / gcd(a, b) $in Z
+            gcd(a / gcd(a, b), b / gcd(a, b)) = 1
 
 # facts that are not mentioned but still used
-know forall a Z, b Z, d Z:
-    a $is_divisible_by d
-    b $is_divisible_by d
-    then:
-        a + b $is_divisible_by d
-        a - b $is_divisible_by d
-        a * b $is_divisible_by d
+know:
+    forall a Z, b Z, d Z:
+        a $is_divisible_by d
+        b $is_divisible_by d
+        =>:
+            a + b $is_divisible_by d
+            a - b $is_divisible_by d
+            a * b $is_divisible_by d
 
 # Theorem 3.2
-know forall a Z, b Z, d Z:
-    gcd(a, d) = 1
-    a*b $is_divisible_by d
-    then:
-        b $is_divisible_by d
+know:
+    forall a Z, b Z, d Z:
+        gcd(a, d) = 1
+        a*b $is_divisible_by d
+        =>:
+            b $is_divisible_by d
 
 # Corollary 3.1
-know forall a Z, b Z, d Z:
-    gcd(a, b) = 1
-    gcd(a, d) = 1
-    then:
-        gcd(a, b*d) = 1
+know:
+    forall a Z, b Z, d Z:
+        gcd(a, b) = 1
+        gcd(a, d) = 1
+        =>:
+            gcd(a, b*d) = 1
 

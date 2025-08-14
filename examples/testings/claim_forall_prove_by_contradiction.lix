@@ -1,13 +1,14 @@
 # Formalize Terence Tao Analysis 1 Chapter 3 Set Theory
 
 # Definition of Two Sets are Equal
-know forall x, y set:
-	x = y
-    then:
-        forall a x:
-            a $in y
-        forall a y:
-            a $in x
+know:
+    forall x, y set:
+        x = y
+        =>:
+            forall a x:
+                a $in y
+            forall a y:
+                a $in x
 
 # Definition of Empty Set
 prop self_is_empty_set(x set):
@@ -26,7 +27,7 @@ exist_prop x obj st self_obj_exist_in_set(s set):
 claim:
     forall s set:
         not $self_is_empty_set(s)
-        then:
+        =>:
            $self_obj_exist_in_set(s)
     prove_by_contradiction:
         forall x obj:

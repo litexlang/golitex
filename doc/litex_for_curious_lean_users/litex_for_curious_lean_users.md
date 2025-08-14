@@ -20,8 +20,8 @@ Mathematics is the art of deriving new facts from established ones. To illustrat
   <tr>
     <td style="border: 3px solid black; padding: 8px;">
       <code>let Human set</code> <br><br>
-      <code>prop self_aware(x Human)</code> <br><br>      <code>know forall x Human:</code> <br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;$self_aware(x)</code> <br> <br>
+      <code>prop self_aware(x Human)</code> <br><br>      
+      <code>know forall x Human => $self_aware(x)</code> <br> <br>
       <code>let Bob Human</code> <br> <br>
       <code>$self_aware(Bob)</code>
     </td>
@@ -66,7 +66,7 @@ The computation proceeds by repeatedly applying f to an input x in I, generating
       <code>&nbsp;&nbsp;&nbsp;&nbsp;f(x, n) = f(x, n+1)</code><br><br>
       <code>prop is_algorithm(Q set, I set, f fn(Q)Q):</code><br>
       <code>&nbsp;&nbsp;$subset_of(I, Q)</code><br>
-      <code>&nbsp;&nbsp;iff:</code><br>
+      <code>&nbsp;&nbsp;<=>:</code><br>
       <code>&nbsp;&nbsp;&nbsp;&nbsp;forall x I:</code><br>
       <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$exist_comp_seq_end(Q, x, comp_seq(Q, f))</code>
     </td>
@@ -109,7 +109,7 @@ exist_prop n N st exist_comp_seq_end(Q set, x Q, f fn(Q,N)Q):
 ```
 prop is_algorithm(Q set, I set, f fn(Q)Q):
     subset_of(I, Q)
-    iff:
+    <=>:
         forall x I:
             exist_comp_seq_end(Q, x, comp_seq(Q, f))
 ```
@@ -219,12 +219,12 @@ fn self_union(s, s2 set) set:
         or:
             x $in s
             x $in s2
-        then:
+        =>:
             x $in self_union(s, s2)
 
 know @union_items_in_at_least_one_of_child_set(x obj, s, s2 set):
     x $in self_union(s, s2)    
-    then:
+    =>:
         or:
             x $in s
             x $in s2
@@ -240,7 +240,7 @@ claim:
     @union_with_empty_set_is_itself(x obj, s, s2 set):
         s2 := {}
         x $in self_union(s, s2)
-        then:
+        =>:
             x $in s
     prove:
         not x $in s2

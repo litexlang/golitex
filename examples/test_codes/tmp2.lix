@@ -3,7 +3,7 @@ fn_template self_seq(s set):
 
 fn self_sum(a self_seq(R), n N_pos, m N_pos) R:
     n <= m
-    then:
+    =>:
         self_sum(a, n, m + 1) = self_sum(a, n, m) + a(m + 1)
 
 know forall a self_seq(R), n N_pos => self_sum(a, n, n) = a(n)

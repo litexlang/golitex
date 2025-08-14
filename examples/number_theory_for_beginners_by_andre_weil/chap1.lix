@@ -26,5 +26,5 @@ know:
 
     forall a Q, b Q:
         a != 0
-        then:
+        =>:
             b / a $in Q

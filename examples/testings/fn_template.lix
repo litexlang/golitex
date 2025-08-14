@@ -5,14 +5,14 @@ prove:
         fn (a, b R) R:
             dom:
                 a = x
-            then:
+            =>:
                 f(a, b) = y
 
     fn_template g(x, y R):
         fn (a, b R) R:
             dom:
                 a = x
-            then:
+            =>:
                 g(a, b) = y
 
     let f2 g(1,2)
@@ -21,7 +21,7 @@ prove:
 
     forall a,b R:
         a = 1
-        then:
+        =>:
             f2(a, b) = 2
 
 prove:
@@ -47,10 +47,7 @@ prove:
         dom:
             n > 1
 
-    know forall n N:
-        n > 3
-        then:
-            n > 1
+    know forall n N: n > 3 => n > 1
 
     g2 $in seq2(R)
 
@@ -79,7 +76,7 @@ prove:
         fn (x Z) Z:
             dom:
                 x >= -1
-            then:
+            =>:
                 f_template(x) = x + 1  
 
     let m f_template()
@@ -89,7 +86,7 @@ prove:
     fn f2(x Z) Z:
         dom:
             x >= -1
-        then:
+        =>:
             f2(x) = x + 1
 
     f2 $in f_template()

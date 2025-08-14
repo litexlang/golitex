@@ -42,18 +42,17 @@ know human = R
 
 prop intelligent(x human)
 
-know forall x human:
-    $intelligent(x)
+know forall x human =>$intelligent(x)
 
 prop XXX(parameters parameter_sets):
     ...
-    iff:
+    <=>:
         ....
 
 --------------------------------
 
 prop y(x N):
-    iff:
+    <=>:
         x > 2
         x % 2 = 0
 
@@ -61,24 +60,16 @@ prop y(x N):
 
 prop y(x N)
 
-know forall x N:
-    x > 2
-    x % 2 = 0
-    then:
-        $y(x)
+know forall x N: x > 2, x % 2 = 0 => $y(x)
 
-know forall x N:
-    $y(x)
-    then:
-            x > 2
-            x % 2 = 0
+know forall x N: $y(x) => x > 2, x % 2 = 0
 
 --------------------------------
 
 prop y2(x N, y R):
     x > 10
     y < 2
-    iff:
+    <=>:
         x % 2 = 0
         y + x = 100
 
@@ -88,35 +79,22 @@ prop y2(x N, y R):
         x > 10
         y < 2
 
-know forall x N, y R:
-    x > 10
-    y < 2
-    $y2(x, y)
-    then:
-        x % 2 = 0
-        y + x = 100
+know forall x N, y R: x > 10, y < 2, $y2(x, y) => x % 2 = 0, y + x = 100
 
-know forall x N, y R:
-    x > 10
-    y < 2
-    x % 2 = 0
-    y + x = 100
-    then:
-        $y2(x, y)
+know forall x N, y R: x > 10, y < 2, x % 2 = 0, y + x = 100 => $y2(x, y)
 
 --------------------------------
 
 let human set, Jordan human
 prop intelligent(x human)
-know forall x human:
-    $intelligent(x)
+know forall x human => $intelligent(x)
 $intelligent(Jordan)
 
 --------------------------------
 
 forall n R:
     n > 0
-    then:
+    =>:
         n > 0
 
 forall n R:

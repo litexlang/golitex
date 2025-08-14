@@ -14,18 +14,40 @@
 
 package litex_ast
 
-func (stmt *DefObjStmt) InlineString() string                 { panic("") }
-func (c *DefPropStmt) InlineString() string                   { panic("") }
-func (l *DefFnStmt) InlineString() string                     { panic("") }
-func (l *UniFactStmt) InlineString() string                   { panic("") }
-func (p *SpecFactStmt) InlineString() string                  { panic("") }
-func (f *ClaimProveStmt) InlineString() string                { panic("") }
-func (f *KnowFactStmt) InlineString() string                  { panic("") }
-func (s *DefExistPropStmt) InlineString() string              { panic("") }
-func (s *HaveObjStStmt) InlineString() string                 { panic("") }
-func (s *ProveInEachCaseStmt) InlineString() string           { panic("") }
-func (s *KnowPropStmt) InlineString() string                  { panic("") }
-func (s *OrStmt) InlineString() string                        { panic("") }
+import (
+	glob "golitex/glob"
+	"strings"
+)
+
+func (stmt *DefObjStmt) InlineString() string { panic("") }
+func (c *DefPropStmt) InlineString() string   { panic("") }
+func (l *DefFnStmt) InlineString() string     { panic("") }
+func (l *UniFactStmt) InlineString() string   { panic("") }
+
+func (p *SpecFactStmt) InlineString() string {
+	return p.String()
+}
+
+func (f *ClaimProveStmt) InlineString() string      { panic("") }
+func (f *KnowFactStmt) InlineString() string        { panic("") }
+func (s *DefExistPropStmt) InlineString() string    { panic("") }
+func (s *HaveObjStStmt) InlineString() string       { panic("") }
+func (s *ProveInEachCaseStmt) InlineString() string { panic("") }
+func (s *KnowPropStmt) InlineString() string        { panic("") }
+
+func (s *OrStmt) InlineString() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordOr)
+	builder.WriteString(glob.KeySymbolLeftBrace)
+	orFactStrSlice := make([]string, len(s.Facts))
+	for i, orFact := range s.Facts {
+		orFactStrSlice[i] = orFact.InlineString()
+	}
+	builder.WriteString(strings.Join(orFactStrSlice, ", "))
+	builder.WriteString(glob.KeySymbolRightBrace)
+	return builder.String()
+}
+
 func (s *ImportDirStmt) InlineString() string                 { panic("") }
 func (s *ImportFileStmt) InlineString() string                { panic("") }
 func (s *ProveStmt) InlineString() string                     { panic("") }
@@ -43,10 +65,23 @@ func (s *HaveSetStmt) InlineString() string                     { panic("") }
 func (s *HaveSetFnStmt) InlineString() string                   { panic("") }
 func (s *HaveSetDefinedByReplacementStmt) InlineString() string { panic("") }
 func (s *NamedUniFactStmt) InlineString() string                { panic("") }
-func (s *EqualsFactStmt) InlineString() string                  { panic("") }
-func (s *KnowExistPropStmt) InlineString() string               { panic("") }
-func (s *CommentStmt) InlineString() string                     { panic("") }
-func (s *FnTemplateDefStmt) InlineString() string               { panic("") }
-func (s *ClearStmt) InlineString() string                       { panic("") }
-func (s *InlineFactsStmt) InlineString() string                 { panic("") }
-func (s *ProveByInductionStmt) InlineString() string            { panic("") }
+
+func (s *EqualsFactStmt) InlineString() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeySymbolEqual)
+	builder.WriteString(glob.KeySymbolLeftBrace)
+	fcSlice := make([]string, len(s.Params))
+	for i, param := range s.Params {
+		fcSlice[i] = param.String()
+	}
+	builder.WriteString(strings.Join(fcSlice, ", "))
+	builder.WriteString(glob.KeySymbolRightBrace)
+	return builder.String()
+}
+
+func (s *KnowExistPropStmt) InlineString() string    { panic("") }
+func (s *CommentStmt) InlineString() string          { panic("") }
+func (s *FnTemplateDefStmt) InlineString() string    { panic("") }
+func (s *ClearStmt) InlineString() string            { panic("") }
+func (s *InlineFactsStmt) InlineString() string      { panic("") }
+func (s *ProveByInductionStmt) InlineString() string { panic("") }

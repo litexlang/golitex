@@ -94,9 +94,10 @@ prove:
 
 # match
 prove:
-    know forall x R, y R, z R: # 分配率
-        x * (y + z) = x * y + x * z
-        (x + y) * z = x * z + y * z
+    know:
+        forall x R, y R, z R: # 分配率
+            x * (y + z) = x * y + x * z
+            (x + y) * z = x * z + y * z
     let a R
     -4 * a + 5 * a = (-4+5) * a # match -4 with x, 5 with y, a with z
     -4 * a + 5 * a = 1 * a # 1 match -4+5
@@ -105,8 +106,7 @@ prove:
 # e.g. 3*3 can match 8+1
 prove:
     prop p(x R)
-    know forall x R:
-        $p(x + 3*3)
+    know forall x R => $p(x + 3*3)
     let x R
     $p(x + 3*3)
 
@@ -127,8 +127,7 @@ fn sin(x R) R
 fn cos(x R) R
 
 prove:
-    know forall x R:
-        sin(x)^2 + cos(x)^2 = 1
+    know forall x R => sin(x)^2 + cos(x)^2 = 1
 
     forall y R:
         1 = sin(y)^2 + cos(y)^2
@@ -174,7 +173,7 @@ prove:
 
 forall a, b R:
     b != 0
-    then:
+    =>:
         a * b $in R
         a / b $in R
         a + b $in R

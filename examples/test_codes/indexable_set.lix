@@ -25,7 +25,7 @@ know:
 
     forall y N, x N:
         y < x
-        then:
+        =>:
             cc[x][y] $in set
     
     forall e cc[x][y]:
