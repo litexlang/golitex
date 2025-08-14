@@ -140,8 +140,8 @@ This example means: All humans are intelligent. Jordan is a human. Therefore, Jo
   <tr>
     <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
       <code>let human set, Jordan human</code> <br><br>
-      <code>prop intelligent(x Human)</code> <br><br>      <code>know forall x Human:</code> <br>
-      <code>&nbsp;&nbsp;$intelligent(x)</code> <br> <br>
+      <code>prop intelligent(x Human)</code> <br><br>      
+      <code>know forall x Human => $intelligent(x)</code> <br>
       <code>$intelligent(Jordan)</code>
     </td>
     <td style="border: 2px solid black; padding: 2px; line-height: 1.5">

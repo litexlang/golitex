@@ -5,14 +5,9 @@ fn logBase(x, y N) N:
     dom:
         x != 0
 
-know forall x, y, z N:
-    logBase(z, x^y) = y * logBase(z, x)
-    logBase(z, x*y) = logBase(z, x) + logBase(z, y)
+know forall x, y, z N => logBase(z, x^y) = y * logBase(z, x), logBase(z, x*y) = logBase(z, x) + logBase(z, y)
 
-know forall x N:
-    x != 0
-    then:
-        logBase(x, x) = 1
+know forall x N: x != 0 => logBase(x, x) = 1
 
 claim:
     not sqrt(2) $in Q

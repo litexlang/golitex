@@ -70,10 +70,7 @@ exist_prop b point st exist_at_least_two_points_on_line(a point, l line):
         $point_on_line(b, l)
         b != a
 
-know forall a point, l line:
-    $point_on_line(a, l)
-    then:
-        $exist_at_least_two_points_on_line(a, l)
+know forall a point, l line: $point_on_line(a, l) => $exist_at_least_two_points_on_line(a, l)
 
 prove:
     let a point, l line:
@@ -203,11 +200,7 @@ prop between(left point, right point, middle point):
     dom:
         left != right
 
-know forall left point, right point, middle point:
-    left != right
-    $between(left, right, middle)
-    then:
-        $between(right, left, middle)
+know forall left point, right point, middle point: left != right, $between(left, right, middle) => $between(right, left, middle)
 
 know @exist l line st exist_line_through_three_points(a point, b point, c point):
     a != b
@@ -239,10 +232,7 @@ exist_prop right point st exist_point_right_to_given_two_points(left point, midd
     iff:
         $between(left, right, middle)
 
-know forall a point, b point:
-    a != b
-    then:
-        $exist_point_right_to_given_two_points(a, b)
+know forall a point, b point: a != b => $exist_point_right_to_given_two_points(a, b)
 
 prove:
     let a point, b point:
@@ -368,14 +358,15 @@ prop point_left_point_on_one_line(a point, b point, l line):
         $point_on_line(a, l)
         $point_on_line(b, l)
 
-know forall a point, b point, l line:
-    a != b
-    $point_on_line(a, l)
-    $point_on_line(b, l)
-    then:
-        or:
-            $point_left_to_point_on_one_line(a, b, l)
-            $point_left_point_on_one_line(a, b, l)
+know:
+    forall a point, b point, l line:
+        a != b
+        $point_on_line(a, l)
+        $point_on_line(b, l)
+        then:
+            or:
+                $point_left_to_point_on_one_line(a, b, l)
+                $point_left_point_on_one_line(a, b, l)
 
 know @exist a point st exist_point_left_to_point_with_finite_line_equal_to_given_finite_line(b point, l finite_line):
     iff:
@@ -559,17 +550,18 @@ fn angle_of_points(a point, b point, c point) angle:
         a != c
         b != c
 
-know forall a point, b point, c point:
-    a != b
-    a != c
-    b != c
-    then:
-        $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(a, b, c))
-        $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(a, c, b))
-        $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(b, a, c))
-        $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(b, c, a))
-        $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(c, a, b))
-        $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(c, b, a))
+know:
+    forall a point, b point, c point:
+        a != b
+        a != c
+        b != c
+        then:
+            $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(a, b, c))
+            $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(a, c, b))
+            $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(b, a, c))
+            $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(b, c, a))
+            $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(c, a, b))
+            $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(c, b, a))
 
 know @triangle_equal_by_two_sides_and_included_angle_equal(a point, b point, c point, a2 point, b2 point, c2 point):
     a != b
@@ -649,25 +641,27 @@ prop in_the_same_direction(a point, b point, c point):
         b != c
         $on_one_line(a, b, c)
 
-know forall a point, b point, c point:
-    a != b
-    a != c
-    b != c
-    $on_one_line(a, b, c)
-    $in_the_same_direction(a, b, line_of(a, b))
-    $point_left_to_point_on_one_line(a, b, line_of(a, b))
-    then:
-        $point_left_to_point_on_one_line(a, c, line_of(a, b))
+know:
+    forall a point, b point, c point:
+        a != b
+        a != c
+        b != c
+        $on_one_line(a, b, c)
+        $in_the_same_direction(a, b, line_of(a, b))
+        $point_left_to_point_on_one_line(a, b, line_of(a, b))
+        then:
+            $point_left_to_point_on_one_line(a, c, line_of(a, b))
 
-know forall a point, b point, c point:
-    a != b
-    a != c
-    b != c
-    $on_one_line(a, b, c)
-    $in_the_same_direction(a, b, line_of(a, b))
-    $point_right_to_point_on_one_line(a, b, line_of(a, b))
-    then:
-        $point_right_to_point_on_one_line(a, c, line_of(a, b))
+know:
+    forall a point, b point, c point:
+        a != b
+        a != c
+        b != c
+        $on_one_line(a, b, c)
+        $in_the_same_direction(a, b, line_of(a, b))
+        $point_right_to_point_on_one_line(a, b, line_of(a, b))
+        then:
+            $point_right_to_point_on_one_line(a, c, line_of(a, b))
     
 know @exist n R, c point st exist_finite_line_of_direction_and_length(a point, b point, l finite_line):
     n > 0
