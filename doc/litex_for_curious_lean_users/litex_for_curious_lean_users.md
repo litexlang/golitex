@@ -219,12 +219,12 @@ fn self_union(s, s2 set) set:
         or:
             x $in s
             x $in s2
-        then:
+        =>:
             x $in self_union(s, s2)
 
 know @union_items_in_at_least_one_of_child_set(x obj, s, s2 set):
     x $in self_union(s, s2)    
-    then:
+    =>:
         or:
             x $in s
             x $in s2
@@ -240,7 +240,7 @@ claim:
     @union_with_empty_set_is_itself(x obj, s, s2 set):
         s2 := {}
         x $in self_union(s, s2)
-        then:
+        =>:
             x $in s
     prove:
         not x $in s2

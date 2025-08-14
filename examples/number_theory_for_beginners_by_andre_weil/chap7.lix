@@ -7,7 +7,7 @@ Chapter 7
 prop is_subgroup(s set, op fn(s, s)s, e s, inv fn(s)s, items set):
     $is_group(s, op, e, inv)
     items $subset_of s
-    then:
+    =>:
         # Here need need semantics which says fn(s, s)s does not necessarily mean dom is (s,s) and return value is s, it can mean (s, s) is subset_of its actual domain and return value is in s.
         $is_group(items, op, e, inv)
 
@@ -21,7 +21,7 @@ prop is_subgroup_generated_by_items(s set, op fn(s, s)s, e s, inv fn(s)s, s2 set
     forall s3 set:
         s3 $subset_of s
         $is_subgroup_containing(s, op, e, inv, s3, items)
-        then:
+        =>:
             s2 $subset_of s3
 
 # Define order of multiplication of an element in a group
@@ -47,7 +47,7 @@ know:
     forall s set, op fn(s, s)s, e s, inv fn(s)s, x s:
         dom:
             $is_group(s, op, e, inv)
-        then:
+        =>:
             $is_group(subgroup_generated_by_item(s, op, e, inv, x),op, e, inv)
 
 # Definition 7.2
@@ -73,7 +73,7 @@ forall s set, op fn(s, s)s, e s, inv fn(s)s, x s:
 
 forall s set, op fn(s, s)s, e s, inv fn(s)s, x s:
     subgroup_generated_by_item(s, op, e, inv, x) $in finite_set
-    then:
+    =>:
         $is_isomorphism_of_groups(subgroup_generated_by_item(s, op, e, inv, x), op, e, inv, cc(len(subgroup_generated_by_item(s, op, e, inv, x))), cc_add(len(subgroup_generated_by_item(s, op, e, inv, x))), cc_e(len(subgroup_generated_by_item(s, op, e, inv, x))), cc_inv(len(subgroup_generated_by_item(s, op, e, inv, x))), index_of_y_in_subgroup_generated_by_item)
 
 exist_prop x s st is_cyclic_group(s set, op fn(s, s)s, e s, inv fn(s)s):

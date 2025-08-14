@@ -94,7 +94,7 @@ $intelligent(Jordan)
 
 forall n R:
     n > 0
-    then:
+    =>:
         n > 0
 
 forall n R:

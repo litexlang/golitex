@@ -7,7 +7,7 @@ prove:
     claim:
         @p(x N):
             x > 1
-            then:
+            =>:
                 x > -1
         prove:
             $larger_is_transitive(x, 1, -1)
@@ -26,7 +26,7 @@ prove:
     claim:
         @q(x, y, z N):
             $p2(x, y, z)
-            then:
+            =>:
                 $p(x, y)
         prove:
             know $p(x, y)

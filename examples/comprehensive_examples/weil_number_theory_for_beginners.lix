@@ -4,32 +4,32 @@ Basics
 
 forall x R, a R, b R:
     a + x = b
-    then:
+    =>:
         a + x - a = b - a
         x = b - a
 
 forall x R, a R, b R:
     a != 0
     a * x = b
-    then:
+    =>:
         a * x / a = b / a
         x = b / a
 
 know:
     forall a R, b R:
         b  >  a
-        then:
+        =>:
             b - a > 0
 
     forall a R, b R:
         b > a
-        then:
+        =>:
             b >= a 
             b != a
 
     forall a R, b R:
         b < a
-        then:
+        =>:
             a > b
 
 exist_prop x Z st is_divisible_by(b Z, a Z):
@@ -91,7 +91,7 @@ know:
 
     forall a Q, b Q:
         a != 0
-        then:
+        =>:
             b / a $in Q
 
 """
@@ -137,7 +137,7 @@ fn set_of_integer_linear_combination_of_two_integers(a Z, b Z) set:
 know:
     forall x Z, a Z, b Z:
         $is_linear_combination_of_two_integers(x, a, b)
-        then:
+        =>:
             x $in set_of_integer_linear_combination_of_two_integers(a, b)
 
 fn set_of_multiples_of(d N) set:
@@ -148,13 +148,13 @@ fn set_of_multiples_of(d N) set:
 know:
     forall x Z, d N:
         x $is_divisible_by d
-        then:
+        =>:
             x $in set_of_multiples_of(d)
 
 know:
     forall x Z, d N:
         x $in set_of_multiples_of(d)
-        then:
+        =>:
             x $is_divisible_by d
 
 # Corollary itself
@@ -194,7 +194,7 @@ know:
         dom:
             a != 0
             b != 0
-        then:
+        =>:
             a / gcd(a, b) $in Z
             b / gcd(a, b) $in Z
             gcd(a / gcd(a, b), b / gcd(a, b)) = 1
@@ -204,7 +204,7 @@ know:
     forall a Z, b Z, d Z:
         a $is_divisible_by d
         b $is_divisible_by d
-        then:
+        =>:
             a + b $is_divisible_by d
             a - b $is_divisible_by d
             a * b $is_divisible_by d
@@ -214,7 +214,7 @@ know:
     forall a Z, b Z, d Z:
         gcd(a, d) = 1
         a*b $is_divisible_by d
-        then:
+        =>:
             b $is_divisible_by d
 
 # Corollary 3.1
@@ -222,6 +222,6 @@ know:
     forall a Z, b Z, d Z:
         gcd(a, b) = 1
         gcd(a, d) = 1
-        then:
+        =>:
             gcd(a, b*d) = 1
 

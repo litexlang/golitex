@@ -23,7 +23,7 @@ prove:
             x = 1
             x = 2
             x = 3
-        then:
+        =>:
             $p(x)
         prove:
             $p(x)
@@ -49,7 +49,7 @@ prove:
             x = 1
             x = 2
             x = 3
-        then:
+        =>:
             $p(x)
         prove:
         prove:
