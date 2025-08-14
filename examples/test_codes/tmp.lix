@@ -1,4 +1,7 @@
-fn f(x R) R: x > 0 => x > 0
-fn g(x R) R => x > 0
-fn h(x N) N: forall y N_pos: x < y => f(x) = 0
-fn h(x N) N: forall y N_pos: x < y
+prop p(x R)
+
+know $p(1), $p(2), $p(3)
+
+$p(1)
+$p(2)
+$p(3)
