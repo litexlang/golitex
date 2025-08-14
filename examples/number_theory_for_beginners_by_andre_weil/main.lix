@@ -12,7 +12,7 @@ import "chap3.lix"
 forall a Z, b Z, d Z:
     gcd(a, b) = 1
     gcd(a, d) = 1
-    then:
+    =>:
         b*d $in Z
         gcd(a, b*d) = 1
 

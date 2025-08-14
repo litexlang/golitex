@@ -173,7 +173,7 @@ prove:
 
 forall a, b R:
     b != 0
-    then:
+    =>:
         a * b $in R
         a / b $in R
         a + b $in R

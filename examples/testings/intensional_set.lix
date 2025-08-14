@@ -7,6 +7,6 @@ forall x s:
 
 forall x N:
     x > 1
-    then:
+    =>:
         x $in s
 

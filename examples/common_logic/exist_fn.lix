@@ -26,6 +26,6 @@ $fn_equal(+, add2)
 
 forall add3 fn(R, R)R:
     exist add3 st $exist_opt()
-    then:
+    =>:
         forall x R, y R:
             add3(x, y) = x + y

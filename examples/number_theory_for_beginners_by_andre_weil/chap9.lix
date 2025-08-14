@@ -33,7 +33,7 @@ know @exist Q K_polynomial(K) st there_is_a_unique_K_polynomial_with_A_minus_BQ_
 fn K_polynomial_remainder(K field, A K_polynomial(K), B K_polynomial(K)) K_polynomial(K):
     dom:
         not $is_0_K_polynomial(K, B)
-    then:
+    =>:
         A \K_minus(K) K_mul(B, Q) = K_polynomial_remainder(K, A, B)
 
 prop is_non_empty_set_of_K_polynomial_closed_under_K_add(K field, s finite_set):
@@ -55,7 +55,7 @@ fn K_polynomial_0(K field) K_polynomial(K):
 prop generate_non_empty_set_of_K_polynomial(K field, s finite_set, D K_polynomial(K)):
 	dom:
 		$is_non_empty_set_of_K_polynomial_closed_under_K_add(K, s)
-	then:
+	=>:
     	forall x s:
             K_polynomial_remainder(K, x, D) = K_polynomial_0(K)
 

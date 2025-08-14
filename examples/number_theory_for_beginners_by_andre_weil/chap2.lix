@@ -41,7 +41,7 @@ fn set_of_integer_linear_combination_of_two_integers(a Z, b Z) set:
 know:
     forall x Z, a Z, b Z:
         $is_linear_combination_of_two_integers(x, a, b)
-        then:
+        =>:
             x $in set_of_integer_linear_combination_of_two_integers(a, b)
 
 fn set_of_multiples_of(d N) set:
@@ -52,13 +52,13 @@ fn set_of_multiples_of(d N) set:
 know:
     forall x Z, d N:
         x $is_divisible_by d
-        then:
+        =>:
             x $in set_of_multiples_of(d)
 
 know:
     forall x Z, d N:
         x $in set_of_multiples_of(d)
-        then:
+        =>:
             x $is_divisible_by d
 
 # Corollary itself

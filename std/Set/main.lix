@@ -1,7 +1,7 @@
 know:
     forall x, y set:
         x = y
-        then:
+        =>:
             forall a x:
                 a $in y
             forall a y:
@@ -28,11 +28,11 @@ fn union(x, y set) set:
 fn intersection(x, y set) set:
 	forall a x:
 		a $in y
-		then:
+		=>:
 			a $in intersection(x, y)
 	forall a y:
 		a $in x
-		then:
+		=>:
 			a $in intersection(x, y)
 	forall a intersection(x, y):
 		a $in x

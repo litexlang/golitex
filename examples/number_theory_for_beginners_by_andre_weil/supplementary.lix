@@ -12,21 +12,21 @@ fn_set Fp_polynomial(p Z) fn(x cc_mod(p)) item cc_mod(p):
 fn Fp_polynomial_parameters(p Z, f Fp_polynomial(p)) finite_set:
     dom:
         p $is_prime
-    then:
+    =>:
         forall x Fp_polynomial_parameters(p, f):
             x $in cc_mod(p)
 
 know:
     forall p Z:
         p $is_prime
-        then:
+        =>:
             forall x cc_mod(p):
                 Fp_polynomial(p)(x) = accumulation_of_finite_set(Fp_polynomial_parameters(p, Fp_polynomial(p)), Fp_add(p))(x)
 
 fn degree_of_Fp_polynomial(p Z, f Fp_polynomial(p)) N:
     dom:
         p $is_prime
-    then:
+    =>:
         len(Fp_polynomial_parameters(p, f)) - 1 = degree_of_Fp_polynomial(p, f)
 
 know @exist Q Fp_polynomial(p) st there_is_a_unique_Fp_polynomial_with_A_minus_BQ_is_0_or_order_smaller_than_degree_of_B(p Z, A Fp_polynomial(p), B Fp_polynomial(p)):

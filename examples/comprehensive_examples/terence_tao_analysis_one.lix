@@ -43,7 +43,7 @@ know:
     forall n N_pos:
         n >= 1
         $random_proposition(n)
-        then:
+        =>:
             $random_proposition(n + 1)
 
 # use "prove_by_math_induction" to prove random_proposition is true for all natural numbers larger than 0
@@ -52,7 +52,7 @@ prove_by_induction($random_proposition(n), n, 1)
 # verify: $random_proposition(n) is true for all n N
 forall n N_pos:
     n >= 1
-    then:
+    =>:
         $random_proposition(n)
 
 # Assumption 2.6 There exists a number system N. Set N is built-in.
@@ -177,7 +177,7 @@ prove:
             $property_of_s2_items(x)
         forall x s2:
             $property_of_s2_items(x)
-            then:
+            =>:
                 x $in s
     
 # TODO: Axiom 3.6 solves the problem of exist and only exist. But it is second-order logic. Since early versions of Litex does not support second-order logic for user, Litex will make it as built-in. The reason why early versions of Litex does not support second-order logic is that most math is based on first-order logic and the creator does not want to make it too complex for user. Second-order-logic is still a "match and substitute" logic (but, first order logic only match and substitute objects inside parameter list of a proposition, second order logic can match and substitute the name of that proposition.), but in order to keep the language simple, Litex needs another set of language features to make it independent from the main logic of "first-order logic" which is the default logic of Litex (the new system is similar to first-order logic, but you have to give a name to any universal fact with proposition as parameter because ordinary universal fact can not take proposition as parameter). Implementing and designing it is a matter of time, not something fundamental.
@@ -207,7 +207,7 @@ exist_prop x A st any_non_empty_set_has_item_that_is_not_a_set_or_is_disjoint_fr
 fn union_of_set_in_sets(X set) set:
     forall x X:
         x $in set
-    then:
+    =>:
         x $in union_of_set_in_sets(X)
 
 # Chapter 4: Integers and rationals
@@ -279,7 +279,7 @@ know forall x2, y2 R: x2 != 0, y2 != 0 => x2 * y2 != 0
 forall a2, b2, c2, d2 R:
     b2 != 0
     d2 != 0
-    then:
+    =>:
         b2 * d2 != 0
         a2 / b2 + c2 / d2 = (a2 * d2 + b2 * c2) / (b2 * d2)
 
@@ -301,5 +301,5 @@ forall a Q:
 
 forall a Q:
     a != 0
-    then:
+    =>:
         a / a = 1

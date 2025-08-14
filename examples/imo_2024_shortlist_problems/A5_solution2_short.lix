@@ -20,7 +20,7 @@ prop IMO_2024_A5_Result(a seq(R)):
 claim:
     @IMO_2024_Problem(a seq(R)):
         $IMO_2024_A5_Condition(a)
-        then:
+        =>:
             $IMO_2024_A5_Result(a)    
     prove:
         let s, d seq(R):
@@ -35,7 +35,7 @@ claim:
         claim:
             forall:
                 $exist_index_where_item_is_zero(s)
-                then:
+                =>:
                     $is_alternating_seq_and_has_bound(a, 1)
             prove:
                 know $is_alternating_seq_and_has_bound(a, 1)
@@ -43,7 +43,7 @@ claim:
         claim:
             forall:
                 $exist_index_where_item_is_zero(d)
-                then:
+                =>:
                     $is_identical_seq(a)
             prove:
                 know $is_identical_seq(a)
@@ -58,7 +58,7 @@ claim:
             or:
                 $exist_index_where_item_is_zero(s)
                 $exist_index_where_item_is_zero(d)
-            then:
+            =>:
                 $IMO_2024_A5_Result(a)
             prove:
                 $is_alternating_seq_and_has_bound(a, 1)
