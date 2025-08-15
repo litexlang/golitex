@@ -2041,23 +2041,41 @@ func (tb *tokenBlock) fnTemplateStmt() (ast.Stmt, error) {
 		}
 
 		return ast.NewFnTemplateStmt(defHeader, []ast.FactStmt{}, fnParams, fnParamSets, fnRetSet, domFacts, thenFacts), nil
-	} else if len(tb.body) == 2 {
-		err = tb.body[0].header.skipKwAndColon_ExceedEnd(glob.KeywordDom)
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
+	} else if len(tb.body) >= 2 {
+		if tb.body[0].header.is(glob.KeywordDom) {
+			err = tb.body[0].header.skipKwAndColon_ExceedEnd(glob.KeywordDom)
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
 
-		templateDomFacts, err := tb.body[0].bodyFacts(UniFactDepth1)
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
+			templateDomFacts, err := tb.body[0].bodyFacts(UniFactDepth1)
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
 
-		fnParams, fnParamSets, fnRetSet, domFacts, thenFacts, err := tb.body[1].fnInFnTemplateStmt()
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
+			fnParams, fnParamSets, fnRetSet, domFacts, thenFacts, err := tb.body[1].fnInFnTemplateStmt()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
 
-		return ast.NewFnTemplateStmt(defHeader, templateDomFacts, fnParams, fnParamSets, fnRetSet, domFacts, thenFacts), nil
+			return ast.NewFnTemplateStmt(defHeader, templateDomFacts, fnParams, fnParamSets, fnRetSet, domFacts, thenFacts), nil
+		} else {
+			templateDomFacts := []ast.FactStmt{}
+			for i := range len(tb.body) - 1 {
+				curStmt, err := tb.body[i].factStmt(UniFactDepth1)
+				if err != nil {
+					return nil, tbErr(err, tb)
+				}
+				templateDomFacts = append(templateDomFacts, curStmt)
+			}
+
+			fnParams, fnParamSets, fnRetSet, domFacts, thenFacts, err := tb.body[len(tb.body)-1].fnInFnTemplateStmt()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+
+			return ast.NewFnTemplateStmt(defHeader, templateDomFacts, fnParams, fnParamSets, fnRetSet, domFacts, thenFacts), nil
+		}
 	} else {
 		return nil, fmt.Errorf("expect one or two body blocks")
 	}
