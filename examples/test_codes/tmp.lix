@@ -1,12 +1,12 @@
-# |a| = a if a ≥ 0; |a| = -a if a < 0
+know not 1 + 2 > 3
 
-fn absolute_value(x R) R
-know:
-    forall x R: x >= 0 => absolute_value(x) = x
-    forall x R: x < 0 => absolute_value(x) = -x
+prop form_triangles(x, y, z R):
+    x > 0
+    y > 0
+    z > 0
+    <=>:
+        x + y > z
+        x + z > y
+        y + z > x
 
-let a, b R: a < 0, b >= 0
-absolute_value(a) = -a 
-absolute_value(b) = b
-absolute_value(1) = 1
-=(absolute_value(-1), --1, 1)
+not $form_triangles(1, 2, 3)
