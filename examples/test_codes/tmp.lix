@@ -1,1 +1,12 @@
-know forall x, y Z => x * y $in Z, x + y $in Z, x - y $in Z
+# |a| = a if a ≥ 0; |a| = -a if a < 0
+
+fn absolute_value(x R) R
+know:
+    forall x R: x >= 0 => absolute_value(x) = x
+    forall x R: x < 0 => absolute_value(x) = -x
+
+let a, b R: a < 0, b >= 0
+absolute_value(a) = -a 
+absolute_value(b) = b
+absolute_value(1) = 1
+=(absolute_value(-1), --1, 1)
