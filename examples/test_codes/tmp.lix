@@ -1,8 +1,11 @@
-fn_template finite_positive_sequence_with_at_least_10_items(length N_pos):
-    length >= 10
-    fn (n N_pos) R:
-        n <= length
-        =>:
-            finite_positive_sequence(n) > 0
+prop transitivity_of_less(a, b, c R):
+    a < b
+    b < c
+    <=>:
+        a < c
 
-let f finite_positive_sequence_with_at_least_10_items(12)
+know forall a, b, c R: a < b, b < c => $transitivity_of_less(a, b, c)
+
+let a, b, c R: a < b, b < c
+$transitivity_of_less(a, b, c)
+a < c
