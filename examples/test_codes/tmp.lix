@@ -1,1 +1,11 @@
-know forall x, y Z => x * y $in Z, x + y $in Z, x - y $in Z
+prop transitivity_of_less(a, b, c R):
+    a < b
+    b < c
+    <=>:
+        a < c
+
+know forall a, b, c R: a < b, b < c => $transitivity_of_less(a, b, c)
+
+let a, b, c R: a < b, b < c
+$transitivity_of_less(a, b, c)
+a < c
