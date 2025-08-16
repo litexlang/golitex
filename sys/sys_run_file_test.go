@@ -25,6 +25,7 @@ func Test_File(t *testing.T) {
 	// fileName := "../examples/imo_2024_shortlist_problems/A5_solution2_inline.lix"
 	// fileName := "../examples/compare_with_lean/naturals.lix"
 	fileName := "../examples/test_codes/tmp.lix"
+	// fileName := "../past_examples/proof-from-litex-creator/absolute_value_definition.lix"
 	// fileName := "../examples/test_codes/prove_by_math_induction.lix"
 	// fileName := "../examples/comprehensive_examples/sqrt_2_is_irrational.lix"
 	// fileName := "../examples/test_import/main.lix"

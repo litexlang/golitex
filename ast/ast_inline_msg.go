@@ -83,5 +83,26 @@ func (s *KnowExistPropStmt) InlineString() string    { panic("") }
 func (s *CommentStmt) InlineString() string          { panic("") }
 func (s *FnTemplateDefStmt) InlineString() string    { panic("") }
 func (s *ClearStmt) InlineString() string            { panic("") }
-func (s *InlineFactsStmt) InlineString() string      { panic("") }
+func (s *InlineFactsStmt) InlineString() string      { return inlineFactsString(s.Facts) }
 func (s *ProveByInductionStmt) InlineString() string { panic("") }
+
+func inlineFactsString(facts FactStmtSlice) string {
+	var builder strings.Builder
+	for i := range len(facts) - 1 {
+		switch asFact := facts[i].(type) {
+		case *UniFactStmt:
+			builder.WriteString(asFact.InlineString())
+			builder.WriteString("; ")
+		default:
+			builder.WriteString(asFact.InlineString())
+			builder.WriteString(", ")
+		}
+	}
+	switch asFact := facts[len(facts)-1].(type) {
+	case *UniFactStmt:
+		builder.WriteString(asFact.InlineString())
+	default:
+		builder.WriteString(asFact.InlineString())
+	}
+	return builder.String()
+}

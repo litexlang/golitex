@@ -153,6 +153,10 @@ func (ver *Verifier) verSpecialSpecFact_ByBIR(stmt *ast.SpecFactStmt, state *Ver
 
 func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	if stmt.IsPureFact() {
+		if !stmt.IsTrue() {
+			return ver.verNotPureSpecFact_ByDef(stmt, state)
+		}
+
 		return ver.verPureSpecFact_ByDefinition(stmt, state)
 	}
 
@@ -165,10 +169,6 @@ func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecFactStmt, state *VerState) 
 
 func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	nextState := state.GetAddRound()
-
-	if !stmt.IsTrue() {
-		return false, nil
-	}
 
 	defStmt, ok := ver.env.GetPropDef(stmt.PropName)
 	if !ok {
@@ -187,6 +187,7 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 		paramArrMap[defStmt.DefHeader.Params[i]] = param
 	}
 
+	// TODO: ? 这里还需要检查吗？或者说是在这里检查吗？难道prop的关于参数的检查不应该在更顶层的函数里？
 	paramSetFacts, err := defStmt.DefHeader.GetInstantiatedParamInParamSetFact(paramArrMap)
 	if err != nil {
 		return false, err
@@ -452,6 +453,72 @@ func (ver *Verifier) verBtCmp_ParamsAreLiteralNum(stmt *ast.SpecFactStmt) (bool,
 		return left > right, nil
 	case glob.KeySymbolLess:
 		return left < right, nil
+	}
+
+	return false, nil
+}
+
+func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+	nextState := state.GetAddRound()
+
+	defStmt, ok := ver.env.GetPropDef(stmt.PropName)
+	if !ok {
+		// 这里可能是因为这个propName是exist prop，所以没有定义
+		return false, nil
+	}
+
+	if len(defStmt.IffFacts) == 0 {
+		// REMARK: 如果IFFFacts不存在，那我们认为是 没有iff能验证prop，而不是prop自动成立
+		return false, nil
+	}
+
+	iffToProp := defStmt.IffToPropUniFact()
+	paramArrMap := map[string]ast.Fc{}
+	for i, param := range stmt.Params {
+		paramArrMap[defStmt.DefHeader.Params[i]] = param
+	}
+
+	// TODO: ? 这里还需要检查吗？或者说是在这里检查吗？难道prop的关于参数的检查不应该在更顶层的函数里？
+	paramSetFacts, err := defStmt.DefHeader.GetInstantiatedParamInParamSetFact(paramArrMap)
+	if err != nil {
+		return false, err
+	}
+
+	for _, paramSetFact := range paramSetFacts {
+		ok, err := ver.VerFactStmt(paramSetFact, state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+	}
+
+	// 本质上不需要把所有的参数都instantiate，只需要instantiate在dom里的就行
+	instantiatedIffToProp, err := ast.InstantiateUniFact(iffToProp, paramArrMap)
+	if err != nil {
+		return false, err
+	}
+
+	// 某个fact是false的，那就OK了
+	for _, domFact := range instantiatedIffToProp.DomFacts {
+		domFactAsSpecFact, ok := domFact.(*ast.SpecFactStmt)
+		if !ok {
+			continue
+		}
+		reversedDomFact := domFactAsSpecFact.ReverseTrue()
+
+		ok, err := ver.VerFactStmt(reversedDomFact, nextState)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			if state.WithMsg {
+				ver.successWithMsg(stmt.String(), defStmt.String())
+			}
+
+			return true, nil
+		}
 	}
 
 	return false, nil
