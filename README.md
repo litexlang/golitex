@@ -65,6 +65,13 @@ We recommend macOS users to install Litex by Homebrew with following command:
 brew install litexlang/tap/litex
 ```
 
+When you want to update litex core, use
+
+```bash
+brew update
+brew install litexlang/tap/litex
+```
+
 For Ubuntu/Debian users, please paste following command to your terminal:
 
 ```bash
@@ -72,7 +79,7 @@ wget https://github.com/litexlang/golitex/releases/download/0.1.9-beta/litex_0.1
 sudo dpkg -i litex_0.1.9-beta_amd64.deb
 ```
 
-For Windows users, please download MSI file form [**HERE**](https://github.com/litexlang/golitex/releases/download/0.1.9-beta/litex_0.1.9-beta_amd64.msi)
+For Windows users, please visit [Official Website](https://litexlang.org/doc/Installation) to download the installer.
 
 After installing, your could run `litex -version` to see if it was installed. And enjoy it via command `litex`.
 
@@ -140,8 +147,8 @@ This example means: All humans are intelligent. Jordan is a human. Therefore, Jo
   <tr>
     <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
       <code>let human set, Jordan human</code> <br><br>
-      <code>prop intelligent(x Human)</code> <br><br>      
-      <code>know forall x Human => $intelligent(x)</code> <br>
+      <code>prop intelligent(x Human)</code> <br><br>
+      <code>know forall x Human => $intelligent(x)</code> <br><br>
       <code>$intelligent(Jordan)</code>
     </td>
     <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
