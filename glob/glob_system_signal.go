@@ -17,12 +17,12 @@ package litex_global
 type SysSignal uint8
 
 const (
-	SysSignalParseError SysSignal = iota
-	SysSignalRuntimeError
-	SysSignalTrue
-	SysSignalFalse
+	SysSignalTrue SysSignal = iota
 	SysSignalUnknown
+	SysSignalParseError
+	SysSignalRuntimeError
 	SysSignalSystemError
+	SysSignalFalse
 )
 
 func (s SysSignal) String() string {
