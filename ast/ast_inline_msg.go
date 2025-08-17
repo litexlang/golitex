@@ -36,11 +36,18 @@ func (p *SpecFactStmt) InlineString() string {
 	return p.String()
 }
 
-func (f *ClaimProveStmt) InlineString() string      { panic("") }
-func (f *KnowFactStmt) InlineString() string        { panic("") }
+func (f *ClaimProveStmt) InlineString() string { panic("") }
+func (f *KnowFactStmt) InlineString() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordKnow)
+	builder.WriteString(" ")
+	builder.WriteString(inlineCanBeKnownFactsString(f.Facts))
+	return builder.String()
+}
+
 func (s *DefExistPropStmt) InlineString() string    { panic("") }
 func (s *HaveObjStStmt) InlineString() string       { panic("") }
-func (s *ProveInEachCaseStmt) InlineString() string { panic("") }
+func (s *ProveInEachCaseStmt) InlineString() string { return s.String() }
 func (s *KnowPropStmt) InlineString() string        { panic("") }
 
 func (s *OrStmt) InlineString() string {
@@ -95,6 +102,28 @@ func (s *InlineFactsStmt) InlineString() string      { return inlineFactsString(
 func (s *ProveByInductionStmt) InlineString() string { panic("") }
 
 func inlineFactsString(facts FactStmtSlice) string {
+	var builder strings.Builder
+	for i := range len(facts) - 1 {
+		switch asFact := facts[i].(type) {
+		case *UniFactStmt:
+			builder.WriteString(asFact.InlineString())
+			builder.WriteString("; ")
+		default:
+			builder.WriteString(asFact.InlineString())
+			builder.WriteString(", ")
+		}
+	}
+	switch asFact := facts[len(facts)-1].(type) {
+	case *UniFactStmt:
+		builder.WriteString(asFact.InlineString())
+		builder.WriteString(";")
+	default:
+		builder.WriteString(asFact.InlineString())
+	}
+	return builder.String()
+}
+
+func inlineCanBeKnownFactsString(facts CanBeKnownStmtSlice) string {
 	var builder strings.Builder
 	for i := range len(facts) - 1 {
 		switch asFact := facts[i].(type) {
