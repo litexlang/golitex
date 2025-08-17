@@ -19,10 +19,18 @@ import (
 	"strings"
 )
 
-func (stmt *DefObjStmt) InlineString() string { panic("") }
-func (c *DefPropStmt) InlineString() string   { panic("") }
-func (l *DefFnStmt) InlineString() string     { panic("") }
-func (l *UniFactStmt) InlineString() string   { panic("") }
+func (stmt *DefObjStmt) InlineString() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordLet)
+	builder.WriteString(" ")
+	builder.WriteString(strFcSetPairs(stmt.Objs, stmt.ObjSets))
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteString(inlineFactsString(stmt.Facts))
+	return builder.String()
+}
+func (c *DefPropStmt) InlineString() string { panic("") }
+func (l *DefFnStmt) InlineString() string   { panic("") }
+func (l *UniFactStmt) InlineString() string { panic("") }
 
 func (p *SpecFactStmt) InlineString() string {
 	return p.String()
@@ -101,8 +109,18 @@ func inlineFactsString(facts FactStmtSlice) string {
 	switch asFact := facts[len(facts)-1].(type) {
 	case *UniFactStmt:
 		builder.WriteString(asFact.InlineString())
+		builder.WriteString(";")
 	default:
 		builder.WriteString(asFact.InlineString())
 	}
+	return builder.String()
+}
+
+func (header *DefHeader) InlineString() string {
+	var builder strings.Builder
+	builder.WriteString(header.Name.String())
+	builder.WriteString("(")
+	builder.WriteString(strFcSetPairs(header.Params, header.ParamSets))
+	builder.WriteString(")")
 	return builder.String()
 }
