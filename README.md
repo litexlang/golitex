@@ -33,7 +33,7 @@ _-- Voltaire_
 
 **If you are a non-technical reader, please read [this section](#litex-introduction-for-non-technical-readers).**
 
-**Litex is an intuitive and scalable formal language to validate your reasoning. Since a 10-year-old can reason about basic math, even a 10-year-old should be able to learn and use Litex easily to solve their own problems. We assume a man without any math or programming background can learn Litex in 1-2 hours.**
+**Litex is an intuitive and scalable formal language for coding your reasoning. It ensures all steps of your reasoning are correct. Since a 10-year-old can reason about basic math, even a 10-year-old should be able to learn and use Litex easily to solve their own problems. We assume a man without any math or programming background can learn Litex in 1-2 hours.**
 
 **Formal language makes the process of writing math into a process of writing code. This is a very powerful idea. AI researchers use it to build better and safer models. However, traditional formal languages are too complex for non-technical readers. AI researchers, mathematicians are calling for a new formal language to boost their job.**
 
