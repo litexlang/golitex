@@ -1,5 +1,2 @@
-fn f(x C) C => f(x) = x + 1
-
-let a C
-
-f(a) = a + 1
+have fn f(x R) = x + x: x > 0
+f(2) = 2 + 2

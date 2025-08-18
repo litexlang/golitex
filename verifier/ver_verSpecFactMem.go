@@ -97,106 +97,106 @@ func (ver *Verifier) specFact_inLogicExpr_inUniFactMem_atEnv(curEnv *env.Env, st
 	return ver.iterate_KnownSpecInLogic_InUni_applyMatch_new(stmt, searchedSpecFactsInLogicExpr, nextState)
 }
 
-func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch(stmt *ast.SpecFactStmt, knownFacts []env.SpecFact_InLogicExpr_InUniFact, state *VerState) (bool, error) {
-	for i := len(knownFacts) - 1; i >= 0; i-- {
-		knownFactUnderLogicExpr := knownFacts[i]
+// func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch(stmt *ast.SpecFactStmt, knownFacts []env.SpecFact_InLogicExpr_InUniFact, state *VerState) (bool, error) {
+// 	for i := len(knownFacts) - 1; i >= 0; i-- {
+// 		knownFactUnderLogicExpr := knownFacts[i]
 
-		paramArrMap, ok, err := ver.matchStoredUniSpecWithSpec_preventDifferentVarsMatchTheSameFreeVar(env.KnownSpecFact_InUniFact{SpecFact: knownFactUnderLogicExpr.SpecFact, UniFact: knownFactUnderLogicExpr.UniFact}, stmt)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			continue
-		}
+// 		paramArrMap, ok, err := ver.matchStoredUniSpecWithSpec_preventDifferentVarsMatchTheSameFreeVar(env.KnownSpecFact_InUniFact{SpecFact: knownFactUnderLogicExpr.SpecFact, UniFact: knownFactUnderLogicExpr.UniFact}, stmt)
+// 		if err != nil {
+// 			return false, err
+// 		}
+// 		if !ok {
+// 			continue
+// 		}
 
-		// 防止 两个不相等的参数对应到了同一个自由变量
-		uniConMap, ok, err := ver.ValuesUnderKeyInMatchMapEqualSpec(paramArrMap, state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			continue
-		}
+// 		// 防止 两个不相等的参数对应到了同一个自由变量
+// 		uniConMap, ok, err := ver.ValuesUnderKeyInMatchMapEqualSpec(paramArrMap, state)
+// 		if err != nil {
+// 			return false, err
+// 		}
+// 		if !ok {
+// 			continue
+// 		}
 
-		// 如果有var没配对上，那就跳出循环
-		if len(knownFactUnderLogicExpr.UniFact.Params) != len(uniConMap) {
-			continue
-		}
+// 		// 如果有var没配对上，那就跳出循环
+// 		if len(knownFactUnderLogicExpr.UniFact.Params) != len(uniConMap) {
+// 			continue
+// 		}
 
-		randomizedUniFactWithoutThen, _, paramMapStrToStr, randomizedOrStmt, err := ver.preprocessUniFactParamsWithoutThenFacts_OrStmt(knownFactUnderLogicExpr.UniFact, knownFactUnderLogicExpr.LogicExpr)
-		if err != nil {
-			return false, err
-		}
+// 		randomizedUniFactWithoutThen, _, paramMapStrToStr, randomizedOrStmt, err := ver.preprocessUniFactParamsWithoutThenFacts_OrStmt(knownFactUnderLogicExpr.UniFact, knownFactUnderLogicExpr.LogicExpr)
+// 		if err != nil {
+// 			return false, err
+// 		}
 
-		for k, v := range uniConMap {
-			if newParam, ok := paramMapStrToStr[k]; ok {
-				uniConMap[newParam] = v
-				delete(uniConMap, k)
-			}
-		}
+// 		for k, v := range uniConMap {
+// 			if newParam, ok := paramMapStrToStr[k]; ok {
+// 				uniConMap[newParam] = v
+// 				delete(uniConMap, k)
+// 			}
+// 		}
 
-		instantiatedUniFactWithoutThen, err := instantiateUniFactWithoutThenFacts(randomizedUniFactWithoutThen, uniConMap)
-		if err != nil {
-			return false, err
-		}
+// 		instantiatedUniFactWithoutThen, err := instantiateUniFactWithoutThenFacts(randomizedUniFactWithoutThen, uniConMap)
+// 		if err != nil {
+// 			return false, err
+// 		}
 
-		// insKnownUniFact, err := ast.InstantiateUniFact(knownFactUnderLogicExpr.UniFact, uniConMap)
-		// if err != nil {
-		// 	return false, err
-		// }
+// 		// insKnownUniFact, err := ast.InstantiateUniFact(knownFactUnderLogicExpr.UniFact, uniConMap)
+// 		// if err != nil {
+// 		// 	return false, err
+// 		// }
 
-		// TODO 要证明在paramSet里
-		// paramInParamSetFacts := insKnownUniFact.ParamInParamSetFacts(uniConMap)
-		paramInParamSetFacts := instantiatedUniFactWithoutThen.ParamInParamSetFacts(uniConMap)
-		setFactSatisfied := true
-		for _, paramInParamSetFact := range paramInParamSetFacts {
-			ok, err = ver.VerFactStmt(paramInParamSetFact, state)
-			if err != nil {
-				return false, err
-			}
-			if !ok {
-				setFactSatisfied = false
-				break
-			}
-		}
+// 		// TODO 要证明在paramSet里
+// 		// paramInParamSetFacts := insKnownUniFact.ParamInParamSetFacts(uniConMap)
+// 		paramInParamSetFacts := instantiatedUniFactWithoutThen.ParamInParamSetFacts(uniConMap)
+// 		setFactSatisfied := true
+// 		for _, paramInParamSetFact := range paramInParamSetFacts {
+// 			ok, err = ver.VerFactStmt(paramInParamSetFact, state)
+// 			if err != nil {
+// 				return false, err
+// 			}
+// 			if !ok {
+// 				setFactSatisfied = false
+// 				break
+// 			}
+// 		}
 
-		if !setFactSatisfied {
-			continue
-		}
+// 		if !setFactSatisfied {
+// 			continue
+// 		}
 
-		// ok, err = ver.proveUniFactDomFacts(insKnownUniFact.DomFacts, state)
-		ok, err = ver.proveUniFactDomFacts(instantiatedUniFactWithoutThen.DomFacts, state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			continue
-		}
+// 		// ok, err = ver.proveUniFactDomFacts(insKnownUniFact.DomFacts, state)
+// 		ok, err = ver.proveUniFactDomFacts(instantiatedUniFactWithoutThen.DomFacts, state)
+// 		if err != nil {
+// 			return false, err
+// 		}
+// 		if !ok {
+// 			continue
+// 		}
 
-		instantiatedLogicExpr, err := randomizedOrStmt.Instantiate(uniConMap)
-		if err != nil {
-			return false, err
-		}
-		instantiatedLogicExprAsKnownSpecFact, ok := instantiatedLogicExpr.(*ast.OrStmt)
-		if !ok {
-			return false, fmt.Errorf("instantiatedLogicExpr is not a KnownSpecFact_InLogicExpr")
-		}
+// 		instantiatedLogicExpr, err := randomizedOrStmt.Instantiate(uniConMap)
+// 		if err != nil {
+// 			return false, err
+// 		}
+// 		instantiatedLogicExprAsKnownSpecFact, ok := instantiatedLogicExpr.(*ast.OrStmt)
+// 		if !ok {
+// 			return false, fmt.Errorf("instantiatedLogicExpr is not a KnownSpecFact_InLogicExpr")
+// 		}
 
-		ok, err = ver.verify_specFact_when_given_orStmt_is_true(stmt, instantiatedLogicExprAsKnownSpecFact, knownFactUnderLogicExpr.Index, state)
-		if err != nil {
-			return false, err
-		}
+// 		ok, err = ver.verify_specFact_when_given_orStmt_is_true(stmt, instantiatedLogicExprAsKnownSpecFact, knownFactUnderLogicExpr.Index, state)
+// 		if err != nil {
+// 			return false, err
+// 		}
 
-		if ok {
-			if state.WithMsg {
-				ver.successWithMsg(stmt.String(), knownFactUnderLogicExpr.String())
-			}
-			return true, nil
-		}
-	}
+// 		if ok {
+// 			if state.WithMsg {
+// 				ver.successWithMsg(stmt.String(), knownFactUnderLogicExpr.String())
+// 			}
+// 			return true, nil
+// 		}
+// 	}
 
-	return false, nil
-}
+// 	return false, nil
+// }
 
 func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch_new(stmt *ast.SpecFactStmt, knownFacts []env.SpecFact_InLogicExpr_InUniFact, state *VerState) (bool, error) {
 	for i := len(knownFacts) - 1; i >= 0; i-- {
@@ -301,83 +301,83 @@ func (ver *Verifier) specFact_UniMem_atCurEnv(curEnv *env.Env, stmt *ast.SpecFac
 	return ver.iterate_KnownSpecInUniFacts_applyMatch_new(stmt, searchedSpecFacts, state)
 }
 
-func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch(stmt *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InUniFact, state *VerState) (bool, error) {
-	for i := len(knownFacts) - 1; i >= 0; i-- {
-		knownFact_paramProcessed := knownFacts[i]
-		// 这里需要用的是 instantiated 的 knownFact
+// func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch(stmt *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InUniFact, state *VerState) (bool, error) {
+// 	for i := len(knownFacts) - 1; i >= 0; i-- {
+// 		knownFact_paramProcessed := knownFacts[i]
+// 		// 这里需要用的是 instantiated 的 knownFact
 
-		paramArrMap, ok, err := ver.matchStoredUniSpecWithSpec_preventDifferentVarsMatchTheSameFreeVar(knownFact_paramProcessed, stmt)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			continue
-		}
+// 		paramArrMap, ok, err := ver.matchStoredUniSpecWithSpec_preventDifferentVarsMatchTheSameFreeVar(knownFact_paramProcessed, stmt)
+// 		if err != nil {
+// 			return false, err
+// 		}
+// 		if !ok {
+// 			continue
+// 		}
 
-		// 防止 两个不相等的参数对应到了同一个自由变量
-		uniConMap, ok, err := ver.ValuesUnderKeyInMatchMapEqualSpec(paramArrMap, state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			continue
-		}
+// 		// 防止 两个不相等的参数对应到了同一个自由变量
+// 		uniConMap, ok, err := ver.ValuesUnderKeyInMatchMapEqualSpec(paramArrMap, state)
+// 		if err != nil {
+// 			return false, err
+// 		}
+// 		if !ok {
+// 			continue
+// 		}
 
-		// 有一些 param 没有被实例化，则continue
-		if len(knownFact_paramProcessed.UniFact.Params) != len(uniConMap) {
-			continue
-		}
+// 		// 有一些 param 没有被实例化，则continue
+// 		if len(knownFact_paramProcessed.UniFact.Params) != len(uniConMap) {
+// 			continue
+// 		}
 
-		randomizedUniFactWithoutThen, _, paramMapStrToStr, err := ver.preprocessUniFactParamsWithoutThenFacts(knownFact_paramProcessed.UniFact)
-		if err != nil {
-			return false, err
-		}
+// 		randomizedUniFactWithoutThen, _, paramMapStrToStr, err := ver.preprocessUniFactParamsWithoutThenFacts(knownFact_paramProcessed.UniFact)
+// 		if err != nil {
+// 			return false, err
+// 		}
 
-		for k, v := range uniConMap {
-			if newParam, ok := paramMapStrToStr[k]; ok {
-				uniConMap[newParam] = v
-				delete(uniConMap, k)
-			}
-		}
+// 		for k, v := range uniConMap {
+// 			if newParam, ok := paramMapStrToStr[k]; ok {
+// 				uniConMap[newParam] = v
+// 				delete(uniConMap, k)
+// 			}
+// 		}
 
-		instantiatedUniFactWithoutThen, err := instantiateUniFactWithoutThenFacts(randomizedUniFactWithoutThen, uniConMap)
-		if err != nil {
-			return false, err
-		}
+// 		instantiatedUniFactWithoutThen, err := instantiateUniFactWithoutThenFacts(randomizedUniFactWithoutThen, uniConMap)
+// 		if err != nil {
+// 			return false, err
+// 		}
 
-		// TODO 要证明在paramSet里
-		paramInParamSetFacts := instantiatedUniFactWithoutThen.ParamInParamSetFacts(uniConMap)
-		setFactSatisfied := true
-		for _, paramInParamSetFact := range paramInParamSetFacts {
-			ok, err = ver.VerFactStmt(paramInParamSetFact, state)
-			if err != nil {
-				return false, err
-			}
-			if !ok {
-				setFactSatisfied = false
-				break
-			}
-		}
+// 		// TODO 要证明在paramSet里
+// 		paramInParamSetFacts := instantiatedUniFactWithoutThen.ParamInParamSetFacts(uniConMap)
+// 		setFactSatisfied := true
+// 		for _, paramInParamSetFact := range paramInParamSetFacts {
+// 			ok, err = ver.VerFactStmt(paramInParamSetFact, state)
+// 			if err != nil {
+// 				return false, err
+// 			}
+// 			if !ok {
+// 				setFactSatisfied = false
+// 				break
+// 			}
+// 		}
 
-		if !setFactSatisfied {
-			continue
-		}
+// 		if !setFactSatisfied {
+// 			continue
+// 		}
 
-		ok, err = ver.proveUniFactDomFacts(instantiatedUniFactWithoutThen.DomFacts, state)
-		if err != nil {
-			continue
-		}
+// 		ok, err = ver.proveUniFactDomFacts(instantiatedUniFactWithoutThen.DomFacts, state)
+// 		if err != nil {
+// 			continue
+// 		}
 
-		if ok {
-			if state.WithMsg {
-				ver.successWithMsg(stmt.String(), knownFact_paramProcessed.String())
-			}
-			return true, nil
-		}
-	}
+// 		if ok {
+// 			if state.WithMsg {
+// 				ver.successWithMsg(stmt.String(), knownFact_paramProcessed.String())
+// 			}
+// 			return true, nil
+// 		}
+// 	}
 
-	return false, nil
-}
+// 	return false, nil
+// }
 
 func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]ast.Fc, state *VerState) (map[string]ast.Fc, bool, error) {
 	newMap := map[string]ast.Fc{}
