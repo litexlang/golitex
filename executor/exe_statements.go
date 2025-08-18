@@ -84,6 +84,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		execState, err = exec.proveByInductionStmt(stmt)
 	case *ast.HaveObjEqualStmt:
 		execState, err = exec.haveObjEqualStmt(stmt)
+	case *ast.HaveFnEqualStmt:
+		execState, err = exec.haveFnEqualStmt(stmt)
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}
@@ -529,7 +531,12 @@ func (exec *Executor) inlineFactsStmt(stmt *ast.InlineFactsStmt) (glob.ExecState
 }
 
 func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) (glob.ExecState, error) {
-	exec.newMsg(stmt.String())
+	if glob.RequireMsg() {
+		defer func() {
+			exec.newMsg(fmt.Sprintf("%s\n", stmt))
+		}()
+	}
+
 	ver := verifier.NewVerifier(exec.env)
 
 	for i := range len(stmt.ObjNames) {
@@ -550,4 +557,31 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) (glob.ExecSta
 	}
 
 	return glob.ExecState_True, nil
+}
+
+func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) (glob.ExecState, error) {
+	if glob.RequireMsg() {
+		defer func() {
+			exec.newMsg(fmt.Sprintf("%s\n", stmt))
+		}()
+	}
+
+	newFnDefStmt := ast.NewDefFnStmt(string(stmt.DefHeader.Name), ast.NewFnTStruct(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, fnHeaderToReturnValueOfFn(&stmt.DefHeader), stmt.DomFacts, []ast.FactStmt{ast.NewEqualFact(fnHeaderToReturnValueOfFn(&stmt.DefHeader), stmt.EqualTo)}))
+	err := exec.defFnStmt(newFnDefStmt)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+
+	return glob.ExecState_True, nil
+}
+
+func fnHeaderToReturnValueOfFn(head *ast.DefHeader) ast.Fc {
+	params := make([]ast.Fc, len(head.Params))
+	for i := range len(head.Params) {
+		params[i] = ast.FcAtom(head.Params[i])
+	}
+
+	fnName := ast.FcAtom(head.Name)
+
+	return ast.NewFcFn(fnName, params)
 }
