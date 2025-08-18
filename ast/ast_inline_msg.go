@@ -157,3 +157,7 @@ func (header *DefHeader) InlineString() string {
 func (s *HaveObjEqualStmt) InlineString() string {
 	return s.String()
 }
+
+func (s *HaveFnEqualStmt) InlineString() string {
+	return ""
+}

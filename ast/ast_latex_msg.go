@@ -841,3 +841,15 @@ func (s *HaveObjEqualStmt) ToLatexString() string {
 	builder.WriteString("\\end{definition}")
 	return builder.String()
 }
+
+func (s *HaveFnEqualStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("\\begin{definition}[Function]\n")
+	builder.WriteString(s.DefHeader.NameWithParamsLatexString())
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeySymbolEqual)
+	builder.WriteString(" ")
+	builder.WriteString(s.EqualTo.ToLatexString())
+	builder.WriteString("\\end{definition}")
+	return builder.String()
+}

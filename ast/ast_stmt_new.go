@@ -177,3 +177,7 @@ func NewProveByInductionStmt(fact *SpecFactStmt, param string, start Fc) *ProveB
 func NewHaveObjEqualStmt(objNames []string, objEqualTos []Fc) *HaveObjEqualStmt {
 	return &HaveObjEqualStmt{objNames, objEqualTos}
 }
+
+func NewHaveFnEqualStmt(defHeader *DefHeader, equalTo Fc, domFacts []FactStmt) *HaveFnEqualStmt {
+	return &HaveFnEqualStmt{*defHeader, equalTo, domFacts}
+}
