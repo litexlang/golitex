@@ -54,6 +54,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 			}
 		} else if slices.Contains(tb.header.slice, glob.KeywordSt) {
 			ret, err = tb.haveObjStStmt()
+		} else if slices.Contains(tb.header.slice, glob.KeySymbolEqual) {
+			ret, err = tb.haveObjEqualStmt()
 		} else {
 			ret, err = tb.haveObjInNonEmptySetStmt()
 		}
@@ -75,8 +77,6 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		}
 	case glob.KeywordProveInEachCase:
 		ret, err = tb.proveInEachCaseStmt()
-	// case glob.KeywordProveByMathInduction:
-	// 	ret, err = tb.proveByMathInductionStmt()
 	case glob.KeywordProveOverFiniteSet:
 		ret, err = tb.proveOverFiniteSetStmt()
 	case glob.KeySymbolAt:
@@ -2265,4 +2265,42 @@ func (tb *tokenBlock) proveByInductionStmt() (*ast.ProveByInductionStmt, error) 
 
 		return ast.NewProveByInductionStmt(fact, param, start), nil
 	}
+}
+
+func (tb *tokenBlock) haveObjEqualStmt() (*ast.HaveObjEqualStmt, error) {
+	err := tb.header.skip(glob.KeywordHave)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	objectNames := []string{}
+	objectEqualTos := []ast.Fc{}
+
+	for {
+		objectName, err := tb.header.next()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		err = tb.header.skip(glob.KeySymbolEqual)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		objectEqualTo, err := tb.RawFc()
+
+		objectNames = append(objectNames, objectName)
+		objectEqualTos = append(objectEqualTos, objectEqualTo)
+
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+			continue
+		}
+
+		if tb.header.ExceedEnd() {
+			break
+		}
+	}
+
+	return ast.NewHaveObjEqualStmt(objectNames, objectEqualTos), nil
 }
