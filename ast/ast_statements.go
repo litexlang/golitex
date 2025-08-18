@@ -233,3 +233,8 @@ type ProveByInductionStmt struct {
 	Param string
 	Start Fc
 }
+
+type HaveObjEqualStmt struct {
+	ObjNames StrSlice
+	ObjSets  FcSlice
+}

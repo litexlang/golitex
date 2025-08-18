@@ -153,3 +153,7 @@ func (header *DefHeader) InlineString() string {
 	builder.WriteString(")")
 	return builder.String()
 }
+
+func (s *HaveObjEqualStmt) InlineString() string {
+	return s.String()
+}

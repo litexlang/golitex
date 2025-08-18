@@ -762,3 +762,15 @@ func (stmt *ProveByInductionStmt) String() string {
 	builder.WriteString(")")
 	return builder.String()
 }
+
+func (stmt *HaveObjEqualStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordHave)
+	builder.WriteString(" ")
+	strSlice := make([]string, len(stmt.ObjNames))
+	for i := range len(stmt.ObjNames) {
+		strSlice[i] = fmt.Sprintf("%s %s %s", stmt.ObjNames[i], glob.KeySymbolEqual, stmt.ObjSets[i].String())
+	}
+	builder.WriteString(strings.Join(strSlice, ", "))
+	return builder.String()
+}

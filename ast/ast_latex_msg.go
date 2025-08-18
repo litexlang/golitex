@@ -829,3 +829,15 @@ func (s *ProveByInductionStmt) ToLatexString() string {
 	builder.WriteString("\n\\end{proveByMathInduction}")
 	return builder.String()
 }
+
+func (s *HaveObjEqualStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("\\begin{definition}[Object(s)]\n")
+	strSlice := make([]string, len(s.ObjNames))
+	for i := range len(s.ObjNames) {
+		strSlice[i] = fmt.Sprintf("%s %s %s", s.ObjNames[i], glob.KeySymbolEqual, s.ObjSets[i].ToLatexString())
+	}
+	builder.WriteString(strings.Join(strSlice, ", "))
+	builder.WriteString("\\end{definition}")
+	return builder.String()
+}
