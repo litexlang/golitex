@@ -31,13 +31,11 @@ _-- Voltaire_
 
 [![Click Me To Try Litex On Online  Playground](https://img.nshields.io/badge/Click_Here_To_Try_Litex_On_Online_Playground-%E2%86%92_Explore-FF6B6B?style=for-the-badge)](https://litexlang.org/playground)
 
-**If you are a non-technical reader, please read [this section](#litex-introduction-for-non-technical-readers).**
-
 **Litex is an intuitive and scalable formal language for coding your reasoning. It ensures all steps of your reasoning are correct. We assume a man without any math or programming background can start using Litex after 1-2 hours of learning.**
 
 **Formal language makes the process of writing math into a process of writing code. This is a very powerful idea, because code means automation without human intervention, large-scale collaboration, standardization, etc. The tedious process of verifying a piece of reasoning (e.g. a proof of a mathematical theorem) is now automated.**
 
-**Computers have revolutionized how we calculate. With the combined power of AI (generate reasoning automatically) and formal language (verify reasoning automatically), we are now entering a new era of reasoning. AI researchers use formal languages to build better and safer models. The reasoning capbaility of a model trained on formal language dataset performs much better than those are not, sovling the most fundamental problem AI models face: correctness and efficiency of their output.**
+**Computers have revolutionized how we calculate. With the combined power of AI (generate reasoning automatically) and formal language (verify reasoning automatically), we are now entering a new era of reasoning. AI researchers use formal languages to build better and safer models. The reasoning capability of a model trained on formal language dataset performs much better than those are not, solving the most fundamental problem AI models face: correctness and efficiency of their output.**
 
 **However, traditional formal languages are too complex for non-technical readers. AI researchers, mathematicians are calling for a new formal language to boost their job. Since a 10-year-old can reason about basic math, even a 10-year-old should be able to learn and use formal languages to solve their problems. Litex is such a language that is designed for everyone. It lowers the bar and cost of using formal language by 10 times.**
 
@@ -106,18 +104,27 @@ It says how the factual statement `$intelligent(Jordan)` is verified by the Lite
 
 ## Different ways to run Litex
 
+_Keep it simple, stupid._
+
+_-- The Unix Philosophy_
+
 Litex provides you with many ways to run Litex, I hope there is one that suits you.
 
-### Installation
+### Run Litex in Web Browser
+
+You can run Litex in your web browser by visiting [playground](https://litexlang.org/playground). It is a great way to try Litex without installing anything on your machine. There are plenty of examples in the playground.
+
+### Run Litex locally
 
 You can run Litex locally on your machine (windows, mac, linux). Visit [Installation](https://litexlang.org/doc/Installation) to get started.
 
-## Supporting Tools
+### Run Litex in Python
 
-As you installed Litex core, you can interact with Litex via following tools:
+To make it easier for AI developers to use Litex in Python, we developed a package `pylitex` for you. Follow the steps in [pylitex](https://github.com/litexlang/pylitex) to start using it in your Python environment.
 
-- [litex-python-api](https://github.com/litexlang/litex-python-api)
-- [litex-jupyter-kernel](https://github.com/litexlang/litex-jupyter-kernel)
+### Run Litex in Jupyter Notebook
+
+Jupyter Notebook is a great tool for writing code alongside explanations of the code, as well as inserting images. Follow the steps in [litex-jupyter-kernel](https://github.com/litexlang/litex-jupyter-kernel) to start using it in your Jupyter Notebook.
 
 ## Contact & Contribute to Litex
 
