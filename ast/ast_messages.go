@@ -769,7 +769,7 @@ func (stmt *HaveObjEqualStmt) String() string {
 	builder.WriteString(" ")
 	strSlice := make([]string, len(stmt.ObjNames))
 	for i := range len(stmt.ObjNames) {
-		strSlice[i] = fmt.Sprintf("%s %s %s", stmt.ObjNames[i], glob.KeySymbolEqual, stmt.ObjSets[i].String())
+		strSlice[i] = fmt.Sprintf("%s %s %s", stmt.ObjNames[i], glob.KeySymbolEqual, stmt.ObjEqualTos[i].String())
 	}
 	builder.WriteString(strings.Join(strSlice, ", "))
 	return builder.String()

@@ -235,6 +235,6 @@ type ProveByInductionStmt struct {
 }
 
 type HaveObjEqualStmt struct {
-	ObjNames StrSlice
-	ObjSets  FcSlice
+	ObjNames    StrSlice
+	ObjEqualTos FcSlice
 }
