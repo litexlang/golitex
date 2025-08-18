@@ -28,8 +28,43 @@ func (stmt *DefObjStmt) InlineString() string {
 	builder.WriteString(inlineFactsString(stmt.Facts))
 	return builder.String()
 }
-func (c *DefPropStmt) InlineString() string { panic("") }
-func (l *DefFnStmt) InlineString() string   { panic("") }
+func (c *DefPropStmt) InlineString() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordProp)
+	builder.WriteString(" ")
+	builder.WriteString(string(c.DefHeader.Name))
+	if len(c.DomFacts) > 0 {
+		builder.WriteString(glob.KeySymbolColon)
+		builder.WriteString(inlineFactsString(c.DomFacts))
+	}
+	if len(c.IffFacts) > 0 {
+		builder.WriteString(glob.KeySymbolEquivalent)
+		builder.WriteString(inlineFactsString(c.IffFacts))
+	}
+	if len(c.ThenFacts) > 0 {
+		builder.WriteString(glob.KeySymbolEqualLarger)
+		builder.WriteString(inlineFactsString(c.ThenFacts))
+	}
+	return builder.String()
+}
+func (l *DefFnStmt) InlineString() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordFn)
+	builder.WriteString(" ")
+	builder.WriteString(NewDefHeader(FcAtom(l.Name), l.FnTemplate.Params, l.FnTemplate.ParamSets).StringWithoutColonAtEnd())
+	builder.WriteString(" ")
+	builder.WriteString(l.FnTemplate.RetSet.String())
+	if len(l.FnTemplate.DomFacts) > 0 {
+		builder.WriteString(glob.KeySymbolColon)
+		builder.WriteString(inlineFactsString(l.FnTemplate.DomFacts))
+	}
+	if len(l.FnTemplate.ThenFacts) > 0 {
+		builder.WriteString(glob.KeySymbolEqualLarger)
+		builder.WriteString(inlineFactsString(l.FnTemplate.ThenFacts))
+	}
+
+	return builder.String()
+}
 func (l *UniFactStmt) InlineString() string { panic("") }
 
 func (p *SpecFactStmt) InlineString() string {
