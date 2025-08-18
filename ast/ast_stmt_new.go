@@ -173,3 +173,7 @@ func NewInlineFactsStmt(facts []FactStmt) *InlineFactsStmt {
 func NewProveByInductionStmt(fact *SpecFactStmt, param string, start Fc) *ProveByInductionStmt {
 	return &ProveByInductionStmt{fact, param, start}
 }
+
+func NewHaveObjEqualStmt(objNames []string, objEqualTos []Fc) *HaveObjEqualStmt {
+	return &HaveObjEqualStmt{objNames, objEqualTos}
+}
