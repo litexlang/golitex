@@ -40,6 +40,6 @@ func (s SysSignal) String() string {
 	case SysSignalFalse:
 		return REPLFalseMessage
 	default:
-		return REPLUnknownMessage
+		return REPLRuntimeErrorMessage
 	}
 }

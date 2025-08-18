@@ -46,11 +46,6 @@ func executeCodeAndReturnMessageSlice(code string) ([]string, glob.SysSignal, er
 		return nil, glob.SysSignalRuntimeError, err
 	}
 
-	// curEnv := env.NewEnv(nil, nil)
-	// executor := exe.NewExecutorWithInit(curEnv)
-	// curEnv.Init()
-	// executor := *exe.NewExecutor(curEnv)
-
 	msgOfTopStatements := []string{}
 
 	for _, topStmt := range topStmtSlice {
