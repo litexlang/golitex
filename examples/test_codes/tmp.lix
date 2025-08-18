@@ -1,2 +1,5 @@
-$exist_in(N)
-$exist_in(set)
+fn f(x C) C => f(x) = x + 1
+
+let a C
+
+f(a) = a + 1

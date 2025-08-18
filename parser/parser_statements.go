@@ -52,6 +52,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 					ret, err = tb.haveSetStmt()
 				}
 			}
+		} else if tb.header.strAtCurIndexPlus(1) == glob.KeywordFn {
+			ret, err = tb.haveFnEqualStmt()
 		} else if slices.Contains(tb.header.slice, glob.KeywordSt) {
 			ret, err = tb.haveObjStStmt()
 		} else if slices.Contains(tb.header.slice, glob.KeySymbolEqual) {
@@ -2302,4 +2304,65 @@ func (tb *tokenBlock) haveObjEqualStmt() (*ast.HaveObjEqualStmt, error) {
 	}
 
 	return ast.NewHaveObjEqualStmt(objectNames, objectEqualTos), nil
+}
+
+func (tb *tokenBlock) haveFnEqualStmt() (*ast.HaveFnEqualStmt, error) {
+	err := tb.header.skip(glob.KeywordHave)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeywordFn)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	defHeader, err := tb.defHeaderWithoutParsingColonAtEnd()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolEqual)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	equalTo, err := tb.RawFc()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	if tb.header.is(glob.KeySymbolColon) {
+		err = tb.header.skip(glob.KeySymbolColon)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		domFacts := []ast.FactStmt{}
+		if tb.header.ExceedEnd() {
+			for _, block := range tb.body {
+				curStmt, err := block.factStmt(UniFactDepth1)
+				if err != nil {
+					return nil, tbErr(err, tb)
+				}
+				domFacts = append(domFacts, curStmt)
+			}
+
+			return ast.NewHaveFnEqualStmt(defHeader, equalTo, domFacts), nil
+		} else {
+			domFacts, err = tb.inlineFacts_untilEndOfInline()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+
+			return ast.NewHaveFnEqualStmt(defHeader, equalTo, domFacts), nil
+		}
+
+	} else {
+		if !tb.header.ExceedEnd() {
+			return nil, fmt.Errorf("expect end of line")
+		}
+
+		return ast.NewHaveFnEqualStmt(defHeader, equalTo, []ast.FactStmt{}), nil
+	}
 }
