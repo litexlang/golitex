@@ -2276,7 +2276,7 @@ func (tb *tokenBlock) haveObjEqualStmt() (*ast.HaveObjEqualStmt, error) {
 	objectNames := []string{}
 	objectEqualTos := []ast.Fc{}
 
-	for {
+	for !tb.header.ExceedEnd() {
 		objectName, err := tb.header.next()
 		if err != nil {
 			return nil, tbErr(err, tb)
@@ -2288,18 +2288,17 @@ func (tb *tokenBlock) haveObjEqualStmt() (*ast.HaveObjEqualStmt, error) {
 		}
 
 		objectEqualTo, err := tb.RawFc()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
 
 		objectNames = append(objectNames, objectName)
 		objectEqualTos = append(objectEqualTos, objectEqualTo)
 
 		if tb.header.is(glob.KeySymbolComma) {
 			tb.header.skip(glob.KeySymbolComma)
-			continue
 		}
 
-		if tb.header.ExceedEnd() {
-			break
-		}
 	}
 
 	return ast.NewHaveObjEqualStmt(objectNames, objectEqualTos), nil

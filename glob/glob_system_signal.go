@@ -26,5 +26,20 @@ const (
 )
 
 func (s SysSignal) String() string {
-	return []string{REPLSyntaxErrorMessage, REPLRuntimeErrorMessage, REPLSuccessMessage, REPLFalseMessage, REPLUnknownMessage, REPLSystemErrorMessage}[s]
+	switch s {
+	case SysSignalTrue:
+		return REPLSuccessMessage
+	case SysSignalUnknown:
+		return REPLUnknownMessage
+	case SysSignalParseError:
+		return REPLSyntaxErrorMessage
+	case SysSignalRuntimeError:
+		return REPLRuntimeErrorMessage
+	case SysSignalSystemError:
+		return REPLSystemErrorMessage
+	case SysSignalFalse:
+		return REPLFalseMessage
+	default:
+		return REPLUnknownMessage
+	}
 }
