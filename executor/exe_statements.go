@@ -540,7 +540,7 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) (glob.ExecSta
 		// 检查 等号右边的东西是否存在
 		ok := exec.env.AreAtomsInFcAreDeclared(stmt.ObjEqualTos[i], map[string]struct{}{})
 		if !ok {
-			return glob.ExecState_Error, fmt.Errorf("object %s equal to %s is unknown", stmt.ObjNames[i], stmt.ObjEqualTos[i])
+			return glob.ExecState_Error, fmt.Errorf("%s is not declared", stmt.ObjEqualTos[i])
 		}
 		// new fact: obj = obj
 		err = exec.env.NewFact(ast.NewEqualFact(ast.FcAtom(stmt.ObjNames[i]), stmt.ObjEqualTos[i]))

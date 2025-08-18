@@ -238,3 +238,9 @@ type HaveObjEqualStmt struct {
 	ObjNames    StrSlice
 	ObjEqualTos FcSlice
 }
+
+type HaveFnEqualStmt struct {
+	DefHeader DefHeader
+	EqualTo   Fc
+	DomFacts  FactStmtSlice
+}

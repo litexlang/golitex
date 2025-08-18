@@ -1,1 +1,2 @@
-have a = 1, b = 2
+$exist_in(N)
+$exist_in(set)
