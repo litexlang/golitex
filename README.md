@@ -51,21 +51,17 @@ To ignite the process of deriving new facts from established ones, we need some 
 
 Currently, the bottleneck in this field is that formal languages are too difficult for both humans and AI, resulting in scarce and expensive training data. However, Litex, with its simplicity and close alignment with mathematical syntax and semantics, reduces the cost and barrier of dataset construction by an order of magnitude.
 
-## Installing and updating
+## Installation
 
 _Keep it simple, stupid._
 
 _-- The Unix Philosophy_
 
+### Install Litex
+
 The core principle of Litex is simplicity. That is why it is easy to install and get your hands dirty with Litex! To install or update Litex core, you could run the following commands for different systems.
 
-We recommend macOS users to install Litex by Homebrew with following command:
-
-```bash
-brew install litexlang/tap/litex
-```
-
-When you want to update litex core, use
+We recommend macOS users to install and update Litex by Homebrew with following command:
 
 ```bash
 brew update
@@ -81,7 +77,11 @@ sudo dpkg -i litex_0.1.9-beta_amd64.deb
 
 For Windows users, please visit [Official Website](https://litexlang.org/doc/Installation) to download the installer.
 
-After installing, your could run `litex -version` to see if it was installed. And enjoy it via command `litex`.
+Run the following command to check if Litex is installed correctly:
+
+```bash
+litex
+```
 
 ## Supporting Tools
 
