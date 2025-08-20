@@ -39,6 +39,8 @@ _-- Voltaire_
 
 **However, traditional formal languages are too complex for non-technical readers. AI researchers, mathematicians are calling for a new formal language to boost their job. Since a 10-year-old can reason about basic math, even a 10-year-old should be able to learn and use formal languages to solve their problems. Litex is such a language that is designed for everyone. It lowers the bar and cost of using formal language by 10 times.**
 
+**If we want to build a successful formal language, it must be extremely simple, simple enough for ordinary people to understand. Only then can a formal language truly enter everyday life and have a real impact, rather than remaining an artwork admired only within expert circles.**
+
 **This simplicity and accessibility of Litex reduces the time ratio, between formalizing a proof and writing it in natural language, from 10:1 to 1:1. That is why constructing Litex codebase is 10x cheaper and has a 10x lower entrance barrier than traditional formal languages. This is a blessing for both AI industry and math community.**
 
 ## A Simple Example

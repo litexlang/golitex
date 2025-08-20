@@ -1,2 +1,29 @@
-have fn f(x R) = x + x: x > 0
-f(2) = 2 + 2
+prove:
+    let a, b, c, d R:
+        c = d
+        a + c = b + d
+    $cancel_general(a, b, c, d)
+    a = b
+
+prove:
+    let a, b, c, d R:
+        c = d
+        a - c = b - d
+    $cancel_general(a, b, c, d)
+    a = b
+
+prove:
+    let a, b, c, d R:
+        c = d
+        a * c = b * d
+        c != 0
+    $cancel_general(a, b, c, d)
+    a = b
+
+prove:
+    let a, b, c, d R:
+        c = d
+        a / c = b / d
+        c != 0
+    $cancel_general(a, b, c, d)
+    a = b
