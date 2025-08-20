@@ -1,1 +1,5 @@
-have fn f = lift(+, R)
+let s set
+
+fn g(x N_pos, y Z) Q
+
+have fn f = lift(g, R, N)
