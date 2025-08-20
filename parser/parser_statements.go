@@ -53,7 +53,7 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 				}
 			}
 		} else if tb.header.strAtCurIndexPlus(1) == glob.KeywordFn {
-			if tb.header.strAtCurIndexPlus(3) == glob.KeywordLift {
+			if tb.header.strAtCurIndexPlus(4) == glob.KeywordLift {
 				ret, err = tb.haveFnLiftStmt()
 			} else {
 				ret, err = tb.haveFnEqualStmt()
@@ -2388,6 +2388,11 @@ func (tb *tokenBlock) haveFnLiftStmt() (*ast.HaveFnLiftStmt, error) {
 	}
 
 	err = tb.header.skip(glob.KeySymbolEqual)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeywordLift)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}

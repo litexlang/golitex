@@ -86,6 +86,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		execState, err = exec.haveObjEqualStmt(stmt)
 	case *ast.HaveFnEqualStmt:
 		execState, err = exec.haveFnEqualStmt(stmt)
+	case *ast.HaveFnLiftStmt:
+		execState, err = exec.haveFnLiftStmt(stmt)
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}
@@ -584,4 +586,14 @@ func fnHeaderToReturnValueOfFn(head *ast.DefHeader) ast.Fc {
 	fnName := ast.FcAtom(head.Name)
 
 	return ast.NewFcFn(fnName, params)
+}
+
+func (exec *Executor) haveFnLiftStmt(stmt *ast.HaveFnLiftStmt) (glob.ExecState, error) {
+	if glob.RequireMsg() {
+		defer func() {
+			exec.newMsg(fmt.Sprintf("%s\n", stmt))
+		}()
+	}
+
+	return glob.ExecState_True, nil
 }
