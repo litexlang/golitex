@@ -254,6 +254,7 @@ func (s *HaveFnLiftStmt) InlineString() string {
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeySymbolEqual)
 	builder.WriteString(" ")
+	builder.WriteString(glob.KeywordLift)
 	builder.WriteString(glob.KeySymbolLeftBrace)
 	strSlice := []string{s.Opt.String()}
 	for _, param := range s.DomainOfEachParamOfGivenFn {

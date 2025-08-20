@@ -797,3 +797,24 @@ func (stmt *HaveFnEqualStmt) String() string {
 
 	return builder.String()
 }
+
+func (stmt *HaveFnLiftStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordHave)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.FnName)
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeySymbolEqual)
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeywordLift)
+	builder.WriteString("(")
+	builder.WriteString(stmt.Opt.String())
+	builder.WriteString(", ")
+	strSlice := []string{}
+	for _, param := range stmt.DomainOfEachParamOfGivenFn {
+		strSlice = append(strSlice, param.String())
+	}
+	builder.WriteString(strings.Join(strSlice, ", "))
+	builder.WriteString(")")
+	return builder.String()
+}
