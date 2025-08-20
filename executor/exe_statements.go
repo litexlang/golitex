@@ -618,7 +618,9 @@ func (exec *Executor) haveFnLiftStmt(stmt *ast.HaveFnLiftStmt) (glob.ExecState, 
 	// randomly generate len different params
 	randomParams := glob.GenerateUniqueRandomStrings(len(FnTemplateOfFunctions))
 
-	fnDef := ast.NewDefFnStmt(stmt.FnName, ast.NewFnTStruct(randomParams, FnTemplateOfFunctions, retSet, []ast.FactStmt{}, []ast.FactStmt{}))
+	knownUniFact := exec.haveFnLift_knowFact(stmt, randomParams)
+
+	fnDef := ast.NewDefFnStmt(stmt.FnName, ast.NewFnTStruct(randomParams, FnTemplateOfFunctions, retSet, []ast.FactStmt{}, []ast.FactStmt{knownUniFact}))
 
 	err := exec.defFnStmt(fnDef)
 	if err != nil {
@@ -628,6 +630,33 @@ func (exec *Executor) haveFnLiftStmt(stmt *ast.HaveFnLiftStmt) (glob.ExecState, 
 	return glob.ExecState_True, nil
 }
 
-func (exec *Executor) haveFnLiftStmt_Check(stmt *ast.HaveFnLiftStmt) error {
-	panic("")
+func (exec *Executor) haveFnLift_knowFact(stmt *ast.HaveFnLiftStmt, fnNames []string) *ast.UniFactStmt {
+	// fn a(f fn(DOMAIN_of_x, DOMAIN_of_y, ...)OPT_PRAM0_DOM, g fn(DOMAIN_of_x, DOMAIN_of_y, ...)OPT_PRAM1_DOM, ...) fn(DOMAIN_of_x, DOMAIN_of_y, ...) opt_ret:
+	// 	forall x DOMAIN_of_x, y DOMAIN_of_y, ...:
+	// 		a(f, g, ...)(x, y, z, ...) = opt(f(x,y,z...) , g(x,y,z,...), ...)
+
+	// have a = lift(opt, DOMAIN_of_x, DOMAIN_of_y, ...)
+
+	uniFactParams := glob.GenerateUniqueRandomStrings(len(stmt.DomainOfEachParamOfGivenFn))
+	uniFactParamsAsFc := []ast.Fc{}
+	for i := range len(uniFactParams) {
+		uniFactParamsAsFc = append(uniFactParamsAsFc, ast.FcAtom(uniFactParams[i]))
+	}
+
+	fnNamesAsFc := []ast.Fc{}
+	for i := range len(fnNames) {
+		fnNamesAsFc = append(fnNamesAsFc, ast.FcAtom(fnNames[i]))
+	}
+
+	uniFactParamSets := stmt.DomainOfEachParamOfGivenFn
+	lhs := ast.NewFcFn(ast.NewFcFn(ast.FcAtom(stmt.FnName), fnNamesAsFc), uniFactParamsAsFc)
+
+	rhsParams := []ast.Fc{}
+	for i := range len(fnNamesAsFc) {
+		rhsParams = append(rhsParams, ast.NewFcFn(ast.FcAtom(fnNames[i]), uniFactParamsAsFc))
+	}
+
+	rhs := ast.NewFcFn(stmt.Opt, rhsParams)
+
+	return ast.NewUniFact(uniFactParams, uniFactParamSets, []ast.FactStmt{}, []ast.FactStmt{ast.NewEqualFact(lhs, rhs)})
 }
