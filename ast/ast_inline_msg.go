@@ -65,7 +65,21 @@ func (l *DefFnStmt) InlineString() string {
 
 	return builder.String()
 }
-func (l *UniFactStmt) InlineString() string { panic("") }
+func (l *UniFactStmt) InlineString() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordForall)
+	builder.WriteString(" ")
+	builder.WriteString(strFcSetPairs(l.Params, l.ParamSets))
+	if len(l.DomFacts) > 0 {
+		builder.WriteString(glob.KeySymbolColon)
+		builder.WriteString(inlineFactsString(l.DomFacts))
+	}
+	if len(l.ThenFacts) > 0 {
+		builder.WriteString(glob.KeySymbolEqualLarger)
+		builder.WriteString(inlineFactsString(l.ThenFacts))
+	}
+	return builder.String()
+}
 
 func (p *SpecFactStmt) InlineString() string {
 	return p.String()
@@ -80,8 +94,41 @@ func (f *KnowFactStmt) InlineString() string {
 	return builder.String()
 }
 
-func (s *DefExistPropStmt) InlineString() string    { panic("") }
-func (s *HaveObjStStmt) InlineString() string       { panic("") }
+func (s *DefExistPropStmt) InlineString() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordExistProp)
+	builder.WriteString(" ")
+	builder.WriteString(strFcSetPairs(s.ExistParams, s.ExistParamSets))
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeywordSt)
+	builder.WriteString(" ")
+	builder.WriteString(s.DefBody.DefHeader.InlineString())
+
+	if len(s.DefBody.DomFacts) > 0 {
+		builder.WriteString(glob.KeySymbolColon)
+		builder.WriteString(inlineFactsString(s.DefBody.DomFacts))
+	}
+
+	if len(s.DefBody.IffFacts) > 0 {
+		builder.WriteString(glob.KeySymbolEquivalent)
+		builder.WriteString(inlineFactsString(s.DefBody.IffFacts))
+	}
+
+	return builder.String()
+}
+
+func (s *HaveObjStStmt) InlineString() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordHave)
+	builder.WriteString(" ")
+	builder.WriteString(strings.Join(s.ObjNames, ", "))
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeywordSt)
+	builder.WriteString(" ")
+	builder.WriteString(s.Fact.InlineString())
+	return builder.String()
+}
+
 func (s *ProveInEachCaseStmt) InlineString() string { return s.String() }
 func (s *KnowPropStmt) InlineString() string        { panic("") }
 
@@ -132,7 +179,7 @@ func (s *EqualsFactStmt) InlineString() string {
 func (s *KnowExistPropStmt) InlineString() string    { panic("") }
 func (s *CommentStmt) InlineString() string          { panic("") }
 func (s *FnTemplateDefStmt) InlineString() string    { panic("") }
-func (s *ClearStmt) InlineString() string            { panic("") }
+func (s *ClearStmt) InlineString() string            { return s.String() }
 func (s *InlineFactsStmt) InlineString() string      { return inlineFactsString(s.Facts) }
 func (s *ProveByInductionStmt) InlineString() string { panic("") }
 
