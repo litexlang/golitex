@@ -244,3 +244,9 @@ type HaveFnEqualStmt struct {
 	EqualTo   Fc
 	DomFacts  FactStmtSlice
 }
+
+type HaveFnLiftStmt struct {
+	FnName                     string
+	Opt                        Fc
+	DomainOfEachParamOfGivenFn FcSlice
+}

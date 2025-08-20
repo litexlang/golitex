@@ -243,3 +243,24 @@ func (s *HaveObjEqualStmt) InlineString() string {
 func (s *HaveFnEqualStmt) InlineString() string {
 	return ""
 }
+
+func (s *HaveFnLiftStmt) InlineString() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordHave)
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeywordFn)
+	builder.WriteString(" ")
+	builder.WriteString(s.FnName)
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeySymbolEqual)
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeySymbolLeftBrace)
+	strSlice := []string{s.Opt.String()}
+	for _, param := range s.DomainOfEachParamOfGivenFn {
+		strSlice = append(strSlice, param.String())
+	}
+	builder.WriteString(strings.Join(strSlice, ", "))
+	builder.WriteString(glob.KeySymbolRightBrace)
+
+	return builder.String()
+}
