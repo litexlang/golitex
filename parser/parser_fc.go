@@ -450,15 +450,20 @@ func (tb *tokenBlock) backSlashExpr() (ast.Fc, error) {
 		return nil, err
 	}
 
-	fc, err := tb.unaryOptFc()
+	fc, err := tb.header.next()
 	if err != nil {
 		return nil, err
 	}
 
-	err = tb.header.skip(glob.KeySymbolBackSlash)
-	if err != nil {
-		return nil, err
-	}
+	// fc, err := tb.unaryOptFc()
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	return fc, nil
+	// err = tb.header.skip(glob.KeySymbolBackSlash)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	return ast.FcAtom(fc), nil
 }
