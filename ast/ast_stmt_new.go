@@ -181,3 +181,7 @@ func NewHaveObjEqualStmt(objNames []string, objEqualTos []Fc) *HaveObjEqualStmt 
 func NewHaveFnEqualStmt(defHeader *DefHeader, equalTo Fc, domFacts []FactStmt) *HaveFnEqualStmt {
 	return &HaveFnEqualStmt{*defHeader, equalTo, domFacts}
 }
+
+func NewHaveFnLiftStmt(fnName string, opt Fc, domainOfEachParamOfGivenFn []Fc) *HaveFnLiftStmt {
+	return &HaveFnLiftStmt{fnName, opt, domainOfEachParamOfGivenFn}
+}

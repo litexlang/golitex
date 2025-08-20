@@ -53,7 +53,11 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 				}
 			}
 		} else if tb.header.strAtCurIndexPlus(1) == glob.KeywordFn {
-			ret, err = tb.haveFnEqualStmt()
+			if tb.header.strAtCurIndexPlus(3) == glob.KeywordLift {
+				ret, err = tb.haveFnLiftStmt()
+			} else {
+				ret, err = tb.haveFnEqualStmt()
+			}
 		} else if slices.Contains(tb.header.slice, glob.KeywordSt) {
 			ret, err = tb.haveObjStStmt()
 		} else if slices.Contains(tb.header.slice, glob.KeySymbolEqual) {
@@ -2365,4 +2369,62 @@ func (tb *tokenBlock) haveFnEqualStmt() (*ast.HaveFnEqualStmt, error) {
 
 		return ast.NewHaveFnEqualStmt(defHeader, equalTo, []ast.FactStmt{}), nil
 	}
+}
+
+func (tb *tokenBlock) haveFnLiftStmt() (*ast.HaveFnLiftStmt, error) {
+	err := tb.header.skip(glob.KeywordHave)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeywordFn)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	fnName, err := tb.header.next()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolEqual)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	opt, err := tb.RawFc()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolComma)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	domainOfEachParamOfGivenFn := []ast.Fc{}
+	for !tb.header.is(glob.KeySymbolRightBrace) {
+		curDomain, err := tb.RawFc()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+		}
+
+		domainOfEachParamOfGivenFn = append(domainOfEachParamOfGivenFn, curDomain)
+	}
+
+	err = tb.header.skip(glob.KeySymbolRightBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	return ast.NewHaveFnLiftStmt(fnName, opt, domainOfEachParamOfGivenFn), nil
 }
