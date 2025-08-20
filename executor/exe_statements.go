@@ -595,20 +595,39 @@ func (exec *Executor) haveFnLiftStmt(stmt *ast.HaveFnLiftStmt) (glob.ExecState, 
 		}()
 	}
 
-	// f(x, y, z, ...) OPT_PARAM0_DOM
-	// g(x, y, z, ...) OPT_PARAM1_DOM
-
-	// opt(OPT_PARAM0, OPT_PARAM1, ...)  opt_ret
-
 	// fn a(f fn(DOMAIN_of_x, DOMAIN_of_y, ...)OPT_PRAM0_DOM, g fn(DOMAIN_of_x, DOMAIN_of_y, ...)OPT_PRAM1_DOM, ...) fn(DOMAIN_of_x, DOMAIN_of_y, ...) opt_ret:
 	// 	forall x DOMAIN_of_x, y DOMAIN_of_y, ...:
 	// 		a(f, g, ...)(x, y, z, ...) = opt(f(x,y,z...) , g(x,y,z,...), ...)
 
 	// have a = lift(opt, DOMAIN_of_x, DOMAIN_of_y, ...)
 
-	// 1. 检查输入的参数列表里的函数的定义域，必须要是 DOMAIN_of_x, DOMAIN_of_y, ... 的母集
+	// get definition of opt
+	optDef, ok := exec.env.FnTemplateDefMem[stmt.Opt.String()]
+	if !ok {
+		return glob.ExecState_Error, fmt.Errorf("opt is not defined")
+	}
 
-	// 2. 检查f的返回值的值域，必须要是 OPT_PARAM0_DOM 的子集; 检查g的返回值的值域，必须要是 OPT_PARAM1_DOM 的子集...
+	FnTemplateOfFunctions := []ast.Fc{}
+	for i := range len(optDef.TemplateDefHeader.Params) {
+		head := ast.NewFcFn(ast.FcAtom(glob.KeywordFn), stmt.DomainOfEachParamOfGivenFn)
+		FnTemplateOfFunctions = append(FnTemplateOfFunctions, ast.NewFcFn(head, []ast.Fc{optDef.TemplateDefHeader.ParamSets[i]}))
+	}
+
+	retSet := ast.NewFcFn(ast.NewFcFn(ast.FcAtom(glob.KeywordFn), stmt.DomainOfEachParamOfGivenFn), []ast.Fc{optDef.Fn.RetSet})
+
+	// randomly generate len different params
+	randomParams := glob.GenerateUniqueRandomStrings(len(FnTemplateOfFunctions))
+
+	fnDef := ast.NewDefFnStmt(stmt.FnName, ast.NewFnTStruct(randomParams, FnTemplateOfFunctions, retSet, []ast.FactStmt{}, []ast.FactStmt{}))
+
+	err := exec.defFnStmt(fnDef)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
 
 	return glob.ExecState_True, nil
+}
+
+func (exec *Executor) haveFnLiftStmt_Check(stmt *ast.HaveFnLiftStmt) error {
+	panic("")
 }
