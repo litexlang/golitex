@@ -176,12 +176,22 @@ func (s *EqualsFactStmt) InlineString() string {
 	return builder.String()
 }
 
-func (s *KnowExistPropStmt) InlineString() string    { panic("") }
-func (s *CommentStmt) InlineString() string          { panic("") }
-func (s *FnTemplateDefStmt) InlineString() string    { panic("") }
-func (s *ClearStmt) InlineString() string            { return s.String() }
-func (s *InlineFactsStmt) InlineString() string      { return inlineFactsString(s.Facts) }
-func (s *ProveByInductionStmt) InlineString() string { panic("") }
+func (s *KnowExistPropStmt) InlineString() string { panic("") }
+func (s *CommentStmt) InlineString() string       { panic("") }
+func (s *FnTemplateDefStmt) InlineString() string { panic("") }
+func (s *ClearStmt) InlineString() string         { return s.String() }
+func (s *InlineFactsStmt) InlineString() string   { return inlineFactsString(s.Facts) }
+func (s *ProveByInductionStmt) InlineString() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordProveByInduction)
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteString(s.Fact.InlineString())
+	builder.WriteString(", ")
+	builder.WriteString(s.Param)
+	builder.WriteString(", ")
+	builder.WriteString(s.Start.String())
+	return builder.String()
+}
 
 func inlineFactsString(facts FactStmtSlice) string {
 	var builder strings.Builder
@@ -241,7 +251,7 @@ func (s *HaveObjEqualStmt) InlineString() string {
 }
 
 func (s *HaveFnEqualStmt) InlineString() string {
-	return ""
+	return s.String()
 }
 
 func (s *HaveFnLiftStmt) InlineString() string {
