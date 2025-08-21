@@ -29,7 +29,7 @@ _Common sense is not so common._
 
 _-- Voltaire_
 
-[![Click Me To Try Litex On Online  Playground](https://img.nshields.io/badge/Click_Here_To_Try_Litex_On_Online_Playground-%E2%86%92_Explore-FF6B6B?style=for-the-badge)](https://litexlang.org/playground)
+[![Click Me To Try Litex On Online Playground](https://img.shields.io/badge/Click_Here_To_Try_Litex_On_Online_Playground-%E2%86%92_Explore-FF6B6B?style=for-the-badge)](https://litexlang.org/playground)
 
 **Litex is an intuitive and scalable formal language for coding your reasoning. It ensures all steps of your reasoning are correct. We assume a man without any math or programming background can start using Litex after 1-2 hours of learning.**
 
@@ -42,6 +42,23 @@ _-- Voltaire_
 **If we want to build a successful formal language, it must be extremely simple, simple enough for ordinary people to understand. Only then can a formal language truly enter everyday life and have a real impact, rather than remaining an artwork admired only within expert circles.**
 
 **This simplicity and accessibility of Litex reduces the time ratio, between formalizing a proof and writing it in natural language, from 10:1 to 1:1. That is why constructing Litex codebase is 10x cheaper and has a 10x lower entrance barrier than traditional formal languages. This is a blessing for both AI industry and math community.**
+
+## Different ways to run Litex
+
+_Keep it simple, stupid._
+
+_-- The Unix Philosophy_
+
+Litex provides you with many ways to run Litex, I hope there is one that suits you.
+
+- Run Litex in Web Browser
+- Run Litex locally
+- Run Litex in Python
+- Run Litex in Jupyter Notebook
+
+...
+
+Visit [Start](https://litexlang.org/doc/Start) to get started.
 
 ## A Simple Example
 
@@ -103,30 +120,6 @@ forall x human:
 It says how the factual statement `$intelligent(Jordan)` is verified by the Litex kernel based on the established facts. Here a universal fact `forall x Human => $intelligent(x)` is used to verify the specific factual statement `$intelligent(Jordan)`. Keep this example in mind. This is the most classic example of how people uses `match and substitution` to establish new facts. Refer to this example when you are reading the next section. The kernel prints out how it verifies the statement, so you can see how it works.
 
 [^1]: Factual expressions are typically written as `$propName(objects)`. They begin with `$` to differentiate them from functions. Litex is a language close to everyday math, that is why it provides 3 handy exceptions to make your code nicer: 1. builtin keywords like =, > are written as daily life math 2. If the proposition requires one and only one object, it can be written as `object $propName` 3. If the proposition requires two objects, it can be written as `object1 $propName object2`.
-
-## Different ways to run Litex
-
-_Keep it simple, stupid._
-
-_-- The Unix Philosophy_
-
-Litex provides you with many ways to run Litex, I hope there is one that suits you.
-
-### Run Litex in Web Browser
-
-You can run Litex in your web browser by visiting [playground](https://litexlang.org/playground). It is a great way to try Litex without installing anything on your machine. There are plenty of examples in the playground.
-
-### Run Litex locally
-
-You can run Litex locally on your machine (windows, mac, linux). Visit [Installation](https://litexlang.org/doc/Installation) to get started.
-
-### Run Litex in Python
-
-To make it easier for AI developers to use Litex in Python, we developed a package `pylitex` for you. Follow the steps in [pylitex](https://github.com/litexlang/pylitex) to start using it in your Python environment.
-
-### Run Litex in Jupyter Notebook
-
-Jupyter Notebook is a great tool for writing code alongside explanations of the code, as well as inserting images. Follow the steps in [litex-jupyter-kernel](https://github.com/litexlang/litex-jupyter-kernel) to start using it in your Jupyter Notebook.
 
 ## Contact & Contribute to Litex
 
