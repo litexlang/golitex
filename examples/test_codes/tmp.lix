@@ -1,2 +1,6 @@
-have a non_empty_set
-have s a
+have human non_empty_set, Jordan human
+prop intelligent(x human)
+
+know forall x human => $intelligent(x)
+
+$intelligent(Jordan)
