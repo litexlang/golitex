@@ -1,12 +1,2 @@
-let s set
-
-fn opt(x N_pos, y Z) Q
-
-have fn a = lift(opt, R, N)
-
-fn f(x R, y N) N_pos 
-fn g(x R, y N) Z
-
-a(f, g) $in fn(R, N)Q
-
-a(f, g)(1, 2) = opt(f(1, 2), g(1, 2))
+have a non_empty_set
+have s a
