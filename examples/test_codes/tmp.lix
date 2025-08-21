@@ -1,6 +1,6 @@
-have human non_empty_set, Jordan human
-prop intelligent(x human)
-
-know forall x human => $intelligent(x)
-
-$intelligent(Jordan)
+forall x R:
+    x > 0
+    =>:
+        x > 0
+    <=>:
+        x > 0
