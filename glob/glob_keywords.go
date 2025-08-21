@@ -64,8 +64,7 @@ const (
 
 	KeywordProveByInduction = "prove_by_induction"
 
-	KeywordLift        = "lift"
-	KeywordNonEmptySet = "nonempty_set"
+	KeywordLift = "lift"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -116,8 +115,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 
 	KeywordProveByInduction: {},
 
-	KeywordLift:        {},
-	KeywordNonEmptySet: {},
+	KeywordLift: {},
 }
 
 const (
@@ -232,7 +230,6 @@ var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]s
 	KeywordLen:                            {},
 	KeywordProj:                           {},
 	KeywordNPos:                           {},
-	KeywordNonEmptySet:                    {},
 }
 
 func IsBuiltinKeywordKeySymbolCanBeFcAtomName(name string) bool {
@@ -248,15 +245,14 @@ func IsBuiltinKeywordOrBuiltinSymbolOrNumber(name string) bool {
 }
 
 var BuiltinObjKeywordSet map[string]struct{} = map[string]struct{}{
-	KeywordNatural:     {},
-	KeywordInteger:     {},
-	KeywordRational:    {},
-	KeywordReal:        {},
-	KeywordComplex:     {},
-	KeywordFiniteSet:   {},
-	KeywordSet:         {},
-	KeywordNPos:        {},
-	KeywordNonEmptySet: {},
+	KeywordNatural:   {},
+	KeywordInteger:   {},
+	KeywordRational:  {},
+	KeywordReal:      {},
+	KeywordComplex:   {},
+	KeywordFiniteSet: {},
+	KeywordSet:       {},
+	KeywordNPos:      {},
 }
 
 var AddMinusStarSet map[string]struct{} = map[string]struct{}{
