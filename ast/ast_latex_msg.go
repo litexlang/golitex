@@ -829,3 +829,47 @@ func (s *ProveByInductionStmt) ToLatexString() string {
 	builder.WriteString("\n\\end{proveByMathInduction}")
 	return builder.String()
 }
+
+func (s *HaveObjEqualStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("\\begin{definition}[Object(s)]\n")
+	strSlice := make([]string, len(s.ObjNames))
+	for i := range len(s.ObjNames) {
+		strSlice[i] = fmt.Sprintf("%s %s %s", s.ObjNames[i], glob.KeySymbolEqual, s.ObjEqualTos[i].ToLatexString())
+	}
+	builder.WriteString(strings.Join(strSlice, ", "))
+	builder.WriteString("\\end{definition}")
+	return builder.String()
+}
+
+func (s *HaveFnEqualStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("\\begin{definition}[Function]\n")
+	builder.WriteString(s.DefHeader.NameWithParamsLatexString())
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeySymbolEqual)
+	builder.WriteString(" ")
+	builder.WriteString(s.EqualTo.ToLatexString())
+	builder.WriteString("\\end{definition}")
+	return builder.String()
+}
+
+func (s *HaveFnLiftStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("\\begin{definition}[Function]\n")
+	builder.WriteString(s.FnName)
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeySymbolEqual)
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeywordLift)
+	builder.WriteString("(")
+	builder.WriteString(s.Opt.ToLatexString())
+	builder.WriteString(", ")
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeySymbolLeftBrace)
+	builder.WriteString(strings.Join(s.DomainOfEachParamOfGivenFn.fcSliceToLatexStringSlice(), ", "))
+	builder.WriteString(glob.KeySymbolRightBrace)
+	builder.WriteString(".")
+	builder.WriteString("\n\\end{definition}")
+	return builder.String()
+}
