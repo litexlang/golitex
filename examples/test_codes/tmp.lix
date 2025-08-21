@@ -1,6 +1,1 @@
-forall x R:
-    x > 0
-    =>:
-        x > 0
-    <=>:
-        x > 0
+have x nonempty_set
