@@ -101,7 +101,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 
 func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
 	if glob.RequireMsg() {
-		defer exec.newMsg("\n")
+		defer exec.newMsg(fmt.Sprintf("%s\n", stmt))
 	}
 
 	curVerifier := verifier.NewVerifier(exec.env)
