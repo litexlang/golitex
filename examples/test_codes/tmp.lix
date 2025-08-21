@@ -1,2 +1,15 @@
-have a non_empty_set
-have s a
+have happy_baby_characters non_empty_set
+have little_little_monster, big_big_monster, boss, happy_superman happy_baby_characters
+prop is_leader_of(x, y happy_baby_characters)
+know big_big_monster $is_leader_of little_little_monster, boss $is_leader_of big_big_monster
+know @is_leader_is_transitive(x, y, z happy_baby_characters):
+    x $is_leader_of y
+    y $is_leader_of z
+    =>:
+        x $is_leader_of z
+$is_leader_is_transitive(boss, big_big_monster, little_little_monster)
+boss $is_leader_of little_little_monster
+
+prop is_enemy_of(x, y happy_baby_characters)
+know forall x, y happy_baby_characters => x $is_enemy_of y <=> y $is_enemy_of x; happy_superman $is_enemy_of big_big_monster
+big_big_monster $is_enemy_of happy_superman
