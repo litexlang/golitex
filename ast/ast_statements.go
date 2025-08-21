@@ -233,3 +233,20 @@ type ProveByInductionStmt struct {
 	Param string
 	Start Fc
 }
+
+type HaveObjEqualStmt struct {
+	ObjNames    StrSlice
+	ObjEqualTos FcSlice
+}
+
+type HaveFnEqualStmt struct {
+	DefHeader DefHeader
+	EqualTo   Fc
+	DomFacts  FactStmtSlice
+}
+
+type HaveFnLiftStmt struct {
+	FnName                     string
+	Opt                        Fc
+	DomainOfEachParamOfGivenFn FcSlice
+}

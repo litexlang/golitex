@@ -52,8 +52,16 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 					ret, err = tb.haveSetStmt()
 				}
 			}
+		} else if tb.header.strAtCurIndexPlus(1) == glob.KeywordFn {
+			if tb.header.strAtCurIndexPlus(4) == glob.KeywordLift {
+				ret, err = tb.haveFnLiftStmt()
+			} else {
+				ret, err = tb.haveFnEqualStmt()
+			}
 		} else if slices.Contains(tb.header.slice, glob.KeywordSt) {
 			ret, err = tb.haveObjStStmt()
+		} else if slices.Contains(tb.header.slice, glob.KeySymbolEqual) {
+			ret, err = tb.haveObjEqualStmt()
 		} else {
 			ret, err = tb.haveObjInNonEmptySetStmt()
 		}
@@ -75,8 +83,6 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		}
 	case glob.KeywordProveInEachCase:
 		ret, err = tb.proveInEachCaseStmt()
-	// case glob.KeywordProveByMathInduction:
-	// 	ret, err = tb.proveByMathInductionStmt()
 	case glob.KeywordProveOverFiniteSet:
 		ret, err = tb.proveOverFiniteSetStmt()
 	case glob.KeySymbolAt:
@@ -2265,4 +2271,165 @@ func (tb *tokenBlock) proveByInductionStmt() (*ast.ProveByInductionStmt, error) 
 
 		return ast.NewProveByInductionStmt(fact, param, start), nil
 	}
+}
+
+func (tb *tokenBlock) haveObjEqualStmt() (*ast.HaveObjEqualStmt, error) {
+	err := tb.header.skip(glob.KeywordHave)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	objectNames := []string{}
+	objectEqualTos := []ast.Fc{}
+
+	for !tb.header.ExceedEnd() {
+		objectName, err := tb.header.next()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		err = tb.header.skip(glob.KeySymbolEqual)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		objectEqualTo, err := tb.RawFc()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		objectNames = append(objectNames, objectName)
+		objectEqualTos = append(objectEqualTos, objectEqualTo)
+
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+		}
+
+	}
+
+	return ast.NewHaveObjEqualStmt(objectNames, objectEqualTos), nil
+}
+
+func (tb *tokenBlock) haveFnEqualStmt() (*ast.HaveFnEqualStmt, error) {
+	err := tb.header.skip(glob.KeywordHave)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeywordFn)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	defHeader, err := tb.defHeaderWithoutParsingColonAtEnd()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolEqual)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	equalTo, err := tb.RawFc()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	if tb.header.is(glob.KeySymbolColon) {
+		err = tb.header.skip(glob.KeySymbolColon)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		domFacts := []ast.FactStmt{}
+		if tb.header.ExceedEnd() {
+			for _, block := range tb.body {
+				curStmt, err := block.factStmt(UniFactDepth1)
+				if err != nil {
+					return nil, tbErr(err, tb)
+				}
+				domFacts = append(domFacts, curStmt)
+			}
+
+			return ast.NewHaveFnEqualStmt(defHeader, equalTo, domFacts), nil
+		} else {
+			domFacts, err = tb.inlineFacts_untilEndOfInline()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+
+			return ast.NewHaveFnEqualStmt(defHeader, equalTo, domFacts), nil
+		}
+
+	} else {
+		if !tb.header.ExceedEnd() {
+			return nil, fmt.Errorf("expect end of line")
+		}
+
+		return ast.NewHaveFnEqualStmt(defHeader, equalTo, []ast.FactStmt{}), nil
+	}
+}
+
+func (tb *tokenBlock) haveFnLiftStmt() (*ast.HaveFnLiftStmt, error) {
+	err := tb.header.skip(glob.KeywordHave)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeywordFn)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	fnName, err := tb.header.next()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolEqual)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeywordLift)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	opt, err := tb.RawFc()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolComma)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	domainOfEachParamOfGivenFn := []ast.Fc{}
+	for !tb.header.is(glob.KeySymbolRightBrace) {
+		curDomain, err := tb.RawFc()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+		}
+
+		domainOfEachParamOfGivenFn = append(domainOfEachParamOfGivenFn, curDomain)
+	}
+
+	err = tb.header.skip(glob.KeySymbolRightBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	return ast.NewHaveFnLiftStmt(fnName, opt, domainOfEachParamOfGivenFn), nil
 }

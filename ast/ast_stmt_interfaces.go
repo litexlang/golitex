@@ -57,6 +57,9 @@ func (s *FnTemplateDefStmt) stmt()               {}
 func (s *ClearStmt) stmt()                       {}
 func (s *InlineFactsStmt) stmt()                 {}
 func (s *ProveByInductionStmt) stmt()            {}
+func (s *HaveObjEqualStmt) stmt()                {}
+func (s *HaveFnEqualStmt) stmt()                 {}
+func (s *HaveFnLiftStmt) stmt()                  {}
 
 type FactStmt interface {
 	factStmt()

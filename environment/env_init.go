@@ -14,7 +14,11 @@
 
 package litex_env
 
-import kernel_lib "golitex/kernel_lib"
+import (
+	ast "golitex/ast"
+	glob "golitex/glob"
+	kernel_lib "golitex/kernel_lib"
+)
 
 // template of arithmetic operations。用来证明 + $in fn(R, R)R 这样的事实
 func (e *Env) Init() {
@@ -46,4 +50,6 @@ func (e *Env) Init() {
 	e.InsertFnInFnTT(kernel_lib.PowerAtom, nil, kernel_lib.PowerTemplateR)
 
 	e.InsertFnInFnTT(kernel_lib.ProjAtom, nil, kernel_lib.ProjTemplate)
+
+	e.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordExistIn), []ast.Fc{ast.FcAtom(glob.KeywordSet)}))
 }

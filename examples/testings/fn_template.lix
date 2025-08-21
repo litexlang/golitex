@@ -104,4 +104,4 @@ prove:
     fn f(x R) R => f(x) = x
     fn_add(f, f) $in fn(R,R)R
 
-    1 \fn_add(f, f)\ 2 = f(1) + f(2)
+    fn_add(f, f)(1, 2) = f(1) + f(2)
