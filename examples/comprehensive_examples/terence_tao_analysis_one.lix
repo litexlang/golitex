@@ -194,7 +194,7 @@ prop is_disjoint_from(A obj, B set):
     forall x A:
         not $in(x, B)
 
-exist_prop x A st any_non_empty_set_has_item_that_is_not_a_set_or_is_disjoint_from_A(A set):
+exist_prop x A st any_nonempty_set_has_item_that_is_not_a_set_or_is_disjoint_from_A(A set):
     or:
         not $in(x, set) # "x is a set" is written as $in(x, set)
         $is_disjoint_from(x, A)

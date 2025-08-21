@@ -36,25 +36,25 @@ fn K_polynomial_remainder(K field, A K_polynomial(K), B K_polynomial(K)) K_polyn
     =>:
         A \K_minus(K) K_mul(B, Q) = K_polynomial_remainder(K, A, B)
 
-prop is_non_empty_set_of_K_polynomial_closed_under_K_add(K field, s finite_set):
+prop is_nonempty_set_of_K_polynomial_closed_under_K_add(K field, s finite_set):
     forall k s:
         k $in K_polynomial(K)
     forall f g s:
         f \k.add g $in K_polynomial(K)
 
 # 这里D是生成元，s是生成元生成的集合
-exist_prop D K_polynomial(K) st exist_d_generate_non_empty_set_of_K_polynomial(K field, s finite_set):
+exist_prop D K_polynomial(K) st exist_d_generate_nonempty_set_of_K_polynomial(K field, s finite_set):
 	dom:
-        $is_non_empty_set_of_K_polynomial_closed_under_K_add(K, s)
+        $is_nonempty_set_of_K_polynomial_closed_under_K_add(K, s)
     <=>:
 
 fn K_polynomial_0(K field) K_polynomial(K):
     forall x K:
         K_polynomial_0(K)(x) = K.e
     	
-prop generate_non_empty_set_of_K_polynomial(K field, s finite_set, D K_polynomial(K)):
+prop generate_nonempty_set_of_K_polynomial(K field, s finite_set, D K_polynomial(K)):
 	dom:
-		$is_non_empty_set_of_K_polynomial_closed_under_K_add(K, s)
+		$is_nonempty_set_of_K_polynomial_closed_under_K_add(K, s)
 	=>:
     	forall x s:
             K_polynomial_remainder(K, x, D) = K_polynomial_0(K)
