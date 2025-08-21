@@ -65,7 +65,7 @@ const (
 	KeywordProveByInduction = "prove_by_induction"
 
 	KeywordLift        = "lift"
-	KeywordNonEmptySet = "non_empty_set"
+	KeywordNonEmptySet = "nonempty_set"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
