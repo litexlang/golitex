@@ -45,7 +45,7 @@ const (
 	KeywordImaginary            = "i"                // e.g. i
 	KeywordIn                   = "in"
 	// KeywordProveByMathInduction           = "prove_by_math_induction"
-	KeywordAs                             = "as" // as a fn_template。这非常难以实现，尤其是出现 fn 理论上作用在M上，现在是作用在返回值是M的函数上时做推理，非常困难，需要最后实现而不是现在
+	KeywordAs                             = "as" // 用在 import xxx as ??? 了
 	KeywordLen                            = "len"
 	KeywordFiniteSet                      = "finite_set"
 	KeywordProveOverFiniteSet             = "prove_over_finite_set" // syntax connecting forall and finite_set
@@ -62,9 +62,9 @@ const (
 	KeywordLet   = "let"
 	KeywordClear = "clear"
 
-	KeywordOn = "on"
-
 	KeywordProveByInduction = "prove_by_induction"
+
+	KeywordLift = "lift"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -112,9 +112,10 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordLet:                            {},
 	KeywordClear:                          {},
 	// KeywordExistSetByAxiomOfReplacement:   {},
-	KeywordOn: {},
 
 	KeywordProveByInduction: {},
+
+	KeywordLift: {},
 }
 
 const (
@@ -229,7 +230,6 @@ var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]s
 	KeywordLen:                            {},
 	KeywordProj:                           {},
 	KeywordNPos:                           {},
-	KeywordOn:                             {},
 }
 
 func IsBuiltinKeywordKeySymbolCanBeFcAtomName(name string) bool {

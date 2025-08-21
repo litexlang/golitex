@@ -43,3 +43,22 @@ func GenerateUniqueRandomStrings(n int) []string {
 
 	return uniqueStrings
 }
+
+func GenerateUniqueRandomStrings_NotInGivenStrSlice(n int, notIn []string) []string {
+	uniqueStrings := make([]string, 0, n) // 使用容量n的空切片
+	seen := make(map[string]bool)
+
+	for notInItem := range notIn {
+		seen[notIn[notInItem]] = true
+	}
+
+	for len(uniqueStrings) < n {
+		s := RandomString(4)
+		if !seen[s] {
+			seen[s] = true
+			uniqueStrings = append(uniqueStrings, s)
+		}
+	}
+
+	return uniqueStrings
+}

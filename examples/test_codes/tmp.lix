@@ -1,11 +1,2 @@
-prop transitivity_of_less(a, b, c R):
-    a < b
-    b < c
-    <=>:
-        a < c
-
-know forall a, b, c R: a < b, b < c => $transitivity_of_less(a, b, c)
-
-let a, b, c R: a < b, b < c
-$transitivity_of_less(a, b, c)
-a < c
+have a non_empty_set
+have s a

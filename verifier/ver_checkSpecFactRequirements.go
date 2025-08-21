@@ -101,7 +101,7 @@ func (ver *Verifier) checkSpecFactRequirements(stmt *ast.SpecFactStmt, state *Ve
 			return false, err
 		}
 		if !ok {
-			return false, parametersDoNotSatisfyFnReq(param.String(), param.String())
+			return false, parametersDoNotSatisfyFnReq(param, param)
 		}
 	}
 
@@ -202,43 +202,6 @@ func (ver *Verifier) fcFnParamsSatisfyFnTemplateNoNameRequirement(fcFn *ast.FcFn
 	return true, nil
 }
 
-// func (ver *Verifier) paramIs_R_Z_Q_N(fc ast.Fc, state *VerState) (bool, error) {
-// 	inRFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fc, ast.FcAtom(glob.KeywordReal)})
-// 	ok, err := ver.VerFactStmt(inRFact, state)
-// 	if err != nil {
-// 		return false, ver.verErr(err, "failed to check %s", inRFact.String())
-// 	}
-// 	if ok {
-// 		return true, nil
-// 	}
-
-// 	ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fc, ast.FcAtom(glob.KeywordInteger)}), state)
-// 	if err != nil {
-// 		return false, ver.verErr(err, "parameters in %s must be in set %s, %s in %s is not valid", fc, glob.KeywordInteger, fc, fc)
-// 	}
-// 	if ok {
-// 		return true, nil
-// 	}
-
-// 	ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fc, ast.FcAtom(glob.KeywordRational)}), state)
-// 	if err != nil {
-// 		return false, ver.verErr(err, "parameters in %s must be in set %s, %s in %s is not valid", fc, glob.KeywordRational, fc, fc)
-// 	}
-// 	if ok {
-// 		return true, nil
-// 	}
-
-// 	ok, err = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{fc, ast.FcAtom(glob.KeywordNatural)}), state)
-// 	if err != nil {
-// 		return false, ver.verErr(err, "parameters in %s must be in set %s, %s in %s is not valid", fc, glob.KeywordNatural, fc, fc)
-// 	}
-// 	if ok {
-// 		return true, nil
-// 	}
-
-// 	return false, nil
-// }
-
 // TODO: 这里需要检查！
 func (ver *Verifier) setDefinedByReplacementFnRequirement(fc *ast.FcFn, state *VerState) (bool, error) {
 	if len(fc.Params) != 3 {
@@ -281,7 +244,7 @@ func (ver *Verifier) isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj_CheckRequiremen
 	for _, param := range fc.Params {
 		ok, err := ver.fcSatisfyFnRequirement(param, state)
 		if err != nil || !ok {
-			return false, parametersDoNotSatisfyFnReq(param.String(), fc.String())
+			return false, parametersDoNotSatisfyFnReq(param, fc)
 		}
 	}
 

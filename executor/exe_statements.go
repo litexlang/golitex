@@ -60,8 +60,6 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		execState, err = exec.proveStmt(stmt)
 	case *ast.ClaimProveByContradictionStmt:
 		execState, err = exec.execClaimStmtProveByContradiction(stmt)
-	// case *ast.ProveByMathInductionStmt:
-	// 	execState, err = exec.proveByMathInduction(stmt)
 	case *ast.ProveOverFiniteSetStmt:
 		execState, err = exec.proveOverFiniteSetStmt(stmt)
 	case *ast.HaveObjInNonEmptySetStmt:
@@ -84,6 +82,12 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		execState, err = exec.inlineFactsStmt(stmt)
 	case *ast.ProveByInductionStmt:
 		execState, err = exec.proveByInductionStmt(stmt)
+	case *ast.HaveObjEqualStmt:
+		execState, err = exec.haveObjEqualStmt(stmt)
+	case *ast.HaveFnEqualStmt:
+		execState, err = exec.haveFnEqualStmt(stmt)
+	case *ast.HaveFnLiftStmt:
+		execState, err = exec.haveFnLiftStmt(stmt)
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}
@@ -526,4 +530,137 @@ func (exec *Executor) inlineFactsStmt(stmt *ast.InlineFactsStmt) (glob.ExecState
 	}
 
 	return glob.ExecState_True, nil
+}
+
+func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) (glob.ExecState, error) {
+	if glob.RequireMsg() {
+		defer func() {
+			exec.newMsg(fmt.Sprintf("%s\n", stmt))
+		}()
+	}
+
+	ver := verifier.NewVerifier(exec.env)
+
+	for i := range len(stmt.ObjNames) {
+		err := ver.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt([]string{stmt.ObjNames[i]}, []ast.Fc{ast.FcAtom(glob.KeywordObj)}, []ast.FactStmt{}))
+		if err != nil {
+			return glob.ExecState_Error, err
+		}
+		// 检查 等号右边的东西是否存在
+		ok := exec.env.AreAtomsInFcAreDeclared(stmt.ObjEqualTos[i], map[string]struct{}{})
+		if !ok {
+			return glob.ExecState_Error, fmt.Errorf("%s is not declared", stmt.ObjEqualTos[i])
+		}
+		// new fact: obj = obj
+		err = exec.env.NewFact(ast.NewEqualFact(ast.FcAtom(stmt.ObjNames[i]), stmt.ObjEqualTos[i]))
+		if err != nil {
+			return glob.ExecState_Error, err
+		}
+	}
+
+	return glob.ExecState_True, nil
+}
+
+func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) (glob.ExecState, error) {
+	if glob.RequireMsg() {
+		defer func() {
+			exec.newMsg(fmt.Sprintf("%s\n", stmt))
+		}()
+	}
+
+	newFnDefStmt := ast.NewDefFnStmt(string(stmt.DefHeader.Name), ast.NewFnTStruct(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, fnHeaderToReturnValueOfFn(&stmt.DefHeader), stmt.DomFacts, []ast.FactStmt{ast.NewEqualFact(fnHeaderToReturnValueOfFn(&stmt.DefHeader), stmt.EqualTo)}))
+	err := exec.defFnStmt(newFnDefStmt)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+
+	return glob.ExecState_True, nil
+}
+
+func fnHeaderToReturnValueOfFn(head *ast.DefHeader) ast.Fc {
+	params := make([]ast.Fc, len(head.Params))
+	for i := range len(head.Params) {
+		params[i] = ast.FcAtom(head.Params[i])
+	}
+
+	fnName := ast.FcAtom(head.Name)
+
+	return ast.NewFcFn(fnName, params)
+}
+
+func (exec *Executor) haveFnLiftStmt(stmt *ast.HaveFnLiftStmt) (glob.ExecState, error) {
+	if glob.RequireMsg() {
+		defer func() {
+			exec.newMsg(fmt.Sprintf("%s\n", stmt))
+		}()
+	}
+
+	// fn a(f fn(DOMAIN_of_x, DOMAIN_of_y, ...)OPT_PRAM0_DOM, g fn(DOMAIN_of_x, DOMAIN_of_y, ...)OPT_PRAM1_DOM, ...) fn(DOMAIN_of_x, DOMAIN_of_y, ...) opt_ret:
+	// 	forall x DOMAIN_of_x, y DOMAIN_of_y, ...:
+	// 		a(f, g, ...)(x, y, z, ...) = opt(f(x,y,z...) , g(x,y,z,...), ...)
+
+	// have a = lift(opt, DOMAIN_of_x, DOMAIN_of_y, ...)
+
+	// get definition of opt
+	optDef, ok := exec.env.GetLatestFnTT_GivenNameIsIn(stmt.Opt.String())
+	if !ok {
+		return glob.ExecState_Error, fmt.Errorf("opt is not defined")
+	}
+
+	FnTemplateOfFunctions := []ast.Fc{}
+	for i := range len(optDef.FnTemplateStmt.ParamSets) {
+		head := ast.NewFcFn(ast.FcAtom(glob.KeywordFn), stmt.DomainOfEachParamOfGivenFn)
+		FnTemplateOfFunctions = append(FnTemplateOfFunctions, ast.NewFcFn(head, []ast.Fc{optDef.FnTemplateStmt.ParamSets[i]}))
+	}
+
+	retSet := ast.NewFcFn(ast.NewFcFn(ast.FcAtom(glob.KeywordFn), stmt.DomainOfEachParamOfGivenFn), []ast.Fc{optDef.FnTemplateStmt.RetSet})
+
+	// randomly generate len different params
+	randomParams := glob.GenerateUniqueRandomStrings(len(FnTemplateOfFunctions))
+
+	knownUniFact := exec.haveFnLift_knowFact(stmt, randomParams)
+
+	fnDef := ast.NewDefFnStmt(stmt.FnName, ast.NewFnTStruct(randomParams, FnTemplateOfFunctions, retSet, []ast.FactStmt{}, []ast.FactStmt{knownUniFact}))
+
+	err := exec.defFnStmt(fnDef)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+
+	if glob.RequireMsg() {
+		exec.newMsg(fmt.Sprintf("Declare Function by lifting:\n%s\n", fnDef))
+	}
+
+	return glob.ExecState_True, nil
+}
+
+func (exec *Executor) haveFnLift_knowFact(stmt *ast.HaveFnLiftStmt, fnNames []string) *ast.UniFactStmt {
+	// fn a(f fn(DOMAIN_of_x, DOMAIN_of_y, ...)OPT_PRAM0_DOM, g fn(DOMAIN_of_x, DOMAIN_of_y, ...)OPT_PRAM1_DOM, ...) fn(DOMAIN_of_x, DOMAIN_of_y, ...) opt_ret:
+	// 	forall x DOMAIN_of_x, y DOMAIN_of_y, ...:
+	// 		a(f, g, ...)(x, y, z, ...) = opt(f(x,y,z...) , g(x,y,z,...), ...)
+
+	// have a = lift(opt, DOMAIN_of_x, DOMAIN_of_y, ...)
+
+	uniFactParams := glob.GenerateUniqueRandomStrings_NotInGivenStrSlice(len(stmt.DomainOfEachParamOfGivenFn), fnNames)
+	uniFactParamsAsFc := []ast.Fc{}
+	for i := range len(uniFactParams) {
+		uniFactParamsAsFc = append(uniFactParamsAsFc, ast.FcAtom(uniFactParams[i]))
+	}
+
+	fnNamesAsFc := []ast.Fc{}
+	for i := range len(fnNames) {
+		fnNamesAsFc = append(fnNamesAsFc, ast.FcAtom(fnNames[i]))
+	}
+
+	uniFactParamSets := stmt.DomainOfEachParamOfGivenFn
+	lhs := ast.NewFcFn(ast.NewFcFn(ast.FcAtom(stmt.FnName), fnNamesAsFc), uniFactParamsAsFc)
+
+	rhsParams := []ast.Fc{}
+	for i := range len(fnNamesAsFc) {
+		rhsParams = append(rhsParams, ast.NewFcFn(ast.FcAtom(fnNames[i]), uniFactParamsAsFc))
+	}
+
+	rhs := ast.NewFcFn(stmt.Opt, rhsParams)
+
+	return ast.NewUniFact(uniFactParams, uniFactParamSets, []ast.FactStmt{}, []ast.FactStmt{ast.NewEqualFact(lhs, rhs)})
 }

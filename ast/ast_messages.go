@@ -762,3 +762,59 @@ func (stmt *ProveByInductionStmt) String() string {
 	builder.WriteString(")")
 	return builder.String()
 }
+
+func (stmt *HaveObjEqualStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordHave)
+	builder.WriteString(" ")
+	strSlice := make([]string, len(stmt.ObjNames))
+	for i := range len(stmt.ObjNames) {
+		strSlice[i] = fmt.Sprintf("%s %s %s", stmt.ObjNames[i], glob.KeySymbolEqual, stmt.ObjEqualTos[i].String())
+	}
+	builder.WriteString(strings.Join(strSlice, ", "))
+	return builder.String()
+}
+
+func (stmt *HaveFnEqualStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordHave)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.DefHeader.StringWithoutColonAtEnd())
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeySymbolEqual)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.EqualTo.String())
+
+	if len(stmt.DomFacts) > 0 {
+		builder.WriteString(glob.KeySymbolColon)
+		builder.WriteByte('\n')
+		domFactStrSlice := make([]string, len(stmt.DomFacts))
+		for i := range len(stmt.DomFacts) {
+			domFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(stmt.DomFacts[i].String(), 1)
+		}
+		builder.WriteString(strings.Join(domFactStrSlice, "\n"))
+	}
+
+	return builder.String()
+}
+
+func (stmt *HaveFnLiftStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordHave)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.FnName)
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeySymbolEqual)
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeywordLift)
+	builder.WriteString("(")
+	builder.WriteString(stmt.Opt.String())
+	builder.WriteString(", ")
+	strSlice := []string{}
+	for _, param := range stmt.DomainOfEachParamOfGivenFn {
+		strSlice = append(strSlice, param.String())
+	}
+	builder.WriteString(strings.Join(strSlice, ", "))
+	builder.WriteString(")")
+	return builder.String()
+}
