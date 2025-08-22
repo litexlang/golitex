@@ -24,7 +24,7 @@ import (
 )
 
 // 可以改变version的value，但是不要该VERSION这个名字，因为其他文件的grep依赖它
-const VERSION = "0.1.11-beta"
+const VERSION = "0.1.12-beta"
 
 func main() {
 	// Define flags
