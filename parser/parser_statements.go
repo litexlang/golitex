@@ -2281,33 +2281,48 @@ func (tb *tokenBlock) haveObjEqualStmt() (*ast.HaveObjEqualStmt, error) {
 
 	objectNames := []string{}
 	objectEqualTos := []ast.Fc{}
+	setSlice := []ast.Fc{}
 
-	for !tb.header.ExceedEnd() {
+	for !tb.header.is(glob.KeySymbolEqual) {
 		objectName, err := tb.header.next()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
+		objectNames = append(objectNames, objectName)
 
-		err = tb.header.skip(glob.KeySymbolEqual)
+		set, err := tb.RawFc()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
+		setSlice = append(setSlice, set)
 
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+		}
+	}
+
+	err = tb.header.skip(glob.KeySymbolEqual)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	for !tb.header.ExceedEnd() {
 		objectEqualTo, err := tb.RawFc()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
-
-		objectNames = append(objectNames, objectName)
 		objectEqualTos = append(objectEqualTos, objectEqualTo)
 
 		if tb.header.is(glob.KeySymbolComma) {
 			tb.header.skip(glob.KeySymbolComma)
 		}
-
 	}
 
-	return ast.NewHaveObjEqualStmt(objectNames, objectEqualTos), nil
+	if len(objectEqualTos) != len(setSlice) {
+		return nil, fmt.Errorf("number of objects and sets do not match")
+	}
+
+	return ast.NewHaveObjEqualStmt(objectNames, objectEqualTos, setSlice), nil
 }
 
 func (tb *tokenBlock) haveFnEqualStmt() (*ast.HaveFnEqualStmt, error) {

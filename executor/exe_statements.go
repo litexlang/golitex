@@ -542,12 +542,20 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) (glob.ExecSta
 	ver := verifier.NewVerifier(exec.env)
 
 	for i := range len(stmt.ObjNames) {
-		err := ver.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt([]string{stmt.ObjNames[i]}, []ast.Fc{ast.FcAtom(glob.KeywordObj)}, []ast.FactStmt{}))
+		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.ObjEqualTos[i], stmt.ObjSets[i]}), verifier.Round0Msg)
+		if err != nil {
+			return glob.ExecState_Error, err
+		}
+		if !ok {
+			return glob.ExecState_Error, fmt.Errorf("%s is not in %s", stmt.ObjNames[i], stmt.ObjSets[i])
+		}
+
+		err = ver.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt([]string{stmt.ObjNames[i]}, []ast.Fc{ast.FcAtom(glob.KeywordObj)}, []ast.FactStmt{}))
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
 		// 检查 等号右边的东西是否存在
-		ok := exec.env.AreAtomsInFcAreDeclared(stmt.ObjEqualTos[i], map[string]struct{}{})
+		ok = exec.env.AreAtomsInFcAreDeclared(stmt.ObjEqualTos[i], map[string]struct{}{})
 		if !ok {
 			return glob.ExecState_Error, fmt.Errorf("%s is not declared", stmt.ObjEqualTos[i])
 		}
