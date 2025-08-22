@@ -12,3 +12,4 @@ deploy_web
 ./examples/testings/.order
 /to_latex/
 /kernel_builtin_lib/
+update.sh
