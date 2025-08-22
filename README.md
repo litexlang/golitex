@@ -29,7 +29,68 @@ Litex is an intuitive and scalable formal language for coding reasoning. It ensu
 
 Formal language turns writing math into writing code, enabling automation, collaboration, and standardization. With AI generating reasoning and Litex verifying it, automated reasoning becomes a reality.
 
-Traditional formal languages are too complex. Litex lowers the barrier by 10x, making formalization as easy and fast as natural writing. This benefits both AI research and the math community.
+Traditional formal languages are too complex. Litex lowers the barrier by 10x, making formalization as easy and fast as natural writing. Here is an comparison between Litex and Lean 4 about proving the irrationality of sqrt(2).
+
+<table style="border-collapse: collapse; width: 100%; font-size: 12px">
+  <tr>
+    <th style="border: 2px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
+    <th style="border: 2px solid black; padding: 4px; text-align: left; width: 50%;">Lean 4</th>
+  </tr>
+  <tr>
+    <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
+      <code>claim:</code><br>
+      <code>&nbsp;&nbsp;not sqrt(2) $in Q</code><br>
+      <code>&nbsp;&nbsp;prove_by_contradiction:</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;have x, y st $Q_representation_in_fraction(sqrt(2))</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;x = sqrt(2) * y</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;x ^ 2 = (sqrt(2) ^ 2) * (y ^ 2)</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;sqrt(2) ^ 2 = 2</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;x ^ 2 = 2 * (y ^ 2)</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;log(2, x ^ 2) = log(2, 2 * (y ^ 2))</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;log(2, x ^ 2) = 2 * log(2, x)</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;log(2, y ^ 2) = 2 * log(2, y)</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;log(2, 2 * (y ^ 2)) = log(2, 2) + log(2, y ^ 2)</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;log(2, 2) = 1</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;log(2, 2 * (y ^ 2)) = 1 + log(2, y ^ 2)</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;log(2, x ^ 2) = 1 + 2 * log(2, y)</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;2 * log(2, x) = 1 + 2 * log(2, y)</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;(2 * log(2, x)) % 2 = (1 + 2 * log(2, y)) % 2</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;(2 * log(2, x)) % 2 = 0</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;0 = (1 + 2 * log(2, y)) % 2</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;(1+2 * log(2, y)) % 2 = 1 % 2 + (2*log(2, y)) % 2</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;1 % 2 + (2 * log(2, y)) % 2 = 1 + 0</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;0 = 1</code>
+    </td>
+    <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
+      <code>theorem sqrt2_irrational :</code><br>
+      <code>&nbsp;&nbsp;¬ ∃ a b : ℕ, a.gcd b = 1 ∧ a * a = 2 * b * b := by</code><br>
+      <code>&nbsp;&nbsp;intro h</code><br>
+      <code>&nbsp;&nbsp;obtain ⟨a, b, hcop, h⟩ := h</code><br><br>
+      <code>have ha_even : Even a := by</code><br>
+      <code>&nbsp;&nbsp;rw [Nat.mul_assoc] at h</code><br>
+      <code>&nbsp;&nbsp;have : Even (a * a) := by rw [h]; exact even_mul_right b b</code><br>
+      <code>&nbsp;&nbsp;exact even_of_even_sq this</code><br><br>
+      <code>obtain ⟨k, hk⟩ := ha_even</code><br><br>
+      <code>have h2 : 2 * k * k = b * b := by</code><br>
+      <code>&nbsp;&nbsp;rw [hk, ←mul_assoc, ←mul_assoc, mul_comm 2 2, ←mul_assoc] at h</code><br>
+      <code>&nbsp;&nbsp;apply Nat.mul_right_cancel (Nat.zero_lt_succ _)</code><br>
+      <code>&nbsp;&nbsp;rw [←h, ←mul_assoc, ←mul_assoc]</code><br>
+      <code>&nbsp;&nbsp;rfl</code><br><br>
+      <code>have hb_even : Even b :=</code><br>
+      <code>&nbsp;&nbsp;even_of_even_sq (by rw [←h2]; exact even_mul_left _ _)</code><br><br>
+      <code>obtain ⟨m, hm⟩ := hb_even</code><br><br>
+      <code>have : a.gcd b ≠ 1 := by</code><br>
+      <code>&nbsp;&nbsp;rw [hk, hm]</code><br>
+      <code>&nbsp;&nbsp;have : (2 * k).gcd (2 * m) = 2 * (k.gcd m) := Nat.gcd_mul_left_right</code><br>
+      <code>&nbsp;&nbsp;apply Nat.ne_of_gt</code><br>
+      <code>&nbsp;&nbsp;apply Nat.mul_pos (by decide)</code><br>
+      <code>&nbsp;&nbsp;exact Nat.gcd_pos_left m (by decide)</code><br><br>
+      <code>contradiction</code>
+    </td>
+  </tr>
+</table>
+
+The simplicity of Litex enables both the large-scale adoption of formal languages and their deep integration into AI systems. Litex benefits both AI research and the math community. 
 
 ## Contact & Contribute to Litex
 
