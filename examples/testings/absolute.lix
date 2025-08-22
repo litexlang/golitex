@@ -1,0 +1,12 @@
+# |a| = a if a ≥ 0; |a| = -a if a < 0
+
+fn absolute(x R) R
+know:
+    forall x R: x >= 0 => absolute(x) = x
+    forall x R: x < 0 => absolute(x) = -x
+
+let a, b R: a < 0, b >= 0
+absolute(a) = -a 
+absolute(b) = b
+absolute(1) = 1
+=(absolute(-1), --1, 1)
