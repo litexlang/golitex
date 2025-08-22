@@ -1,0 +1,32 @@
+
+# 今天 Q&A 中有人提问：「union 的最 general 定义是什么样子的？」
+# 也就是说，当一个集合的元素都是集合时，如何定义把这些集合合并在一起的运算。下面是一种写法
+
+prop is_subset_of(x, y set):
+    forall a x:
+        a $in y
+
+prop all_items_in_set_are_sets(s set):
+    forall x s:
+        x $in s
+
+exist_prop s2 set st exist_set_in_set_of_sets_contains(s set, x obj):
+    s2 $in s
+    x $in s2
+
+fn union_of_sets_in_set(s set) set:
+    $all_items_in_set_are_sets(s)
+
+know:
+    forall s set, x s:
+        x $is_subset_of union_of_sets_in_set(s)
+    forall s set, y union_of_sets_in_set(s):
+        $exist_set_in_set_of_sets_contains(s, y)
+
+prove:
+    have set a := {1, 2, 3}
+    have set b := {4, 5, 6}
+    know a != b
+    have set s := {a, b}
+
+    a $is_subset_of union_of_sets_in_set(s)
