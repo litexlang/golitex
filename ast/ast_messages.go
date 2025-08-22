@@ -767,11 +767,19 @@ func (stmt *HaveObjEqualStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordHave)
 	builder.WriteString(" ")
-	strSlice := make([]string, len(stmt.ObjNames))
+	nameSlice := make([]string, len(stmt.ObjNames))
 	for i := range len(stmt.ObjNames) {
-		strSlice[i] = fmt.Sprintf("%s %s %s", stmt.ObjNames[i], glob.KeySymbolEqual, stmt.ObjEqualTos[i].String())
+		nameSlice[i] = fmt.Sprintf("%s %s", stmt.ObjNames[i], stmt.ObjSets[i])
 	}
-	builder.WriteString(strings.Join(strSlice, ", "))
+	builder.WriteString(strings.Join(nameSlice, ", "))
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeySymbolEqual)
+	builder.WriteString(" ")
+	equalToSlice := make([]string, len(stmt.ObjEqualTos))
+	for i := range len(stmt.ObjEqualTos) {
+		equalToSlice[i] = stmt.ObjEqualTos[i].String()
+	}
+	builder.WriteString(strings.Join(equalToSlice, ", "))
 	return builder.String()
 }
 
