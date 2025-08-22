@@ -174,8 +174,8 @@ func NewProveByInductionStmt(fact *SpecFactStmt, param string, start Fc) *ProveB
 	return &ProveByInductionStmt{fact, param, start}
 }
 
-func NewHaveObjEqualStmt(objNames []string, objEqualTos []Fc) *HaveObjEqualStmt {
-	return &HaveObjEqualStmt{objNames, objEqualTos}
+func NewHaveObjEqualStmt(objNames []string, objEqualTos []Fc, objSets []Fc) *HaveObjEqualStmt {
+	return &HaveObjEqualStmt{objNames, objEqualTos, objSets}
 }
 
 func NewHaveFnEqualStmt(defHeader *DefHeader, equalTo Fc, domFacts []FactStmt) *HaveFnEqualStmt {
