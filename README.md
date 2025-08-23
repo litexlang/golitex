@@ -88,7 +88,7 @@ Traditional formal languages are too complex. Litex lowers the barrier by 10x, m
   </tr>
 </table>
 
-The simplicity of Litex enables both the large-scale adoption of formal languages and their deep integration into AI systems. Litex benefits both AI research and the math community. 
+The simplicity of Litex enables both the large-scale adoption of formal languages and their deep integration into AI systems. In Litex, there is no foreign keywords, twisted syntax, or complex semantics, just plain reasoning. Litex benefits both AI research and the math community. 
 
 ## Contact & Contribute to Litex
 
