@@ -21,9 +21,7 @@
 
 ## Litex: The Simplest Formal Language
 
-Visit [Tutorial](https://litexlang.org/doc/Tutorial/Introduction) to learn how to use Litex and try some examples.
-
-Visit [Start](https://litexlang.org/doc/Start) to start using Litex (online, locally, in Python, in Jupyter Notebook, etc.).
+Visit [Official Website](https://litexlang.org/) to learn more about Litex. Visit [Tutorial](https://litexlang.org/doc/Tutorial/Introduction) to learn how to use Litex and try some examples. Visit [Start](https://litexlang.org/doc/Start) to start using Litex (online, locally, in Python, in Jupyter Notebook, etc.).
 
 Litex is an intuitive and scalable formal language for coding reasoning. It ensures every step is correct, and can be learned by anyone in 1–2 hours, even without math or programming background.
 
