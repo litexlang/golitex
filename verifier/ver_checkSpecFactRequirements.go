@@ -127,7 +127,7 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state *VerState) (bool, e
 	// } else
 	if ast.IsFcFnWithHeadName(fcAsFcFn, glob.KeywordLen) {
 		return ver.lenFnRequirement(fcAsFcFn, state)
-	} else if ast.IsFnFcFn(fcAsFcFn) {
+	} else if ast.IsFnTemplate_FcFn(fcAsFcFn) {
 		return true, nil
 	} else if ver.isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj(fcAsFcFn) {
 		return ver.isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj_CheckRequirement(fcAsFcFn, state)
@@ -267,7 +267,7 @@ func (ver *Verifier) lenFnRequirement(fc *ast.FcFn, state *VerState) (bool, erro
 	return true, nil
 }
 
-func (ver *Verifier) GetFnTemplateSliceTheFnIsIn(fnName ast.Fc) ([]FnInFnTTMemItem, bool) {
+func (ver *Verifier) GetFnTemplateSliceTheFnIsIn(fnName ast.Fc) ([]env.FnInFnTTMemItem, bool) {
 	fnInFnTTMenItemSlice, ok := ver.env.GetFnTemplateSliceTheFnIsInFromEnv(fnName.String())
 	if ok {
 		return fnInFnTTMenItemSlice, true
@@ -300,8 +300,11 @@ func (ver *Verifier) GetFnTemplateSliceTheFnIsIn(fnName ast.Fc) ([]FnInFnTTMemIt
 	}
 
 	// 代入到 retSet 里
-
-	return nil, false
+	if ast.IsFnTemplate_FcFn(fnNameAsFcFn) {
+		return ver.instantiateFnTemplateFcFn_WithGivenFc(fnNameAsFcFn, fnTemplateDef)
+	} else {
+		return ver.instantiateFnTemplate_WithGivenFc(fnNameAsFcFn, fnTemplateDef)
+	}
 }
 
 func (ver *Verifier) paramsSatisfyFnTemplateParamReq(fcFn *ast.FcFn, defFnT *ast.FnTemplateDefStmt) (bool, error) {
@@ -331,4 +334,12 @@ func (ver *Verifier) paramsSatisfyFnTemplateParamReq(fcFn *ast.FcFn, defFnT *ast
 	}
 
 	return true, nil
+}
+
+func (ver *Verifier) instantiateFnTemplateFcFn_WithGivenFc(fcFn *ast.FcFn, defFnT *ast.FnTemplateDefStmt) ([]env.FnInFnTTMemItem, bool) {
+	return nil, false
+}
+
+func (ver *Verifier) instantiateFnTemplate_WithGivenFc(fcFn *ast.FcFn, defFnT *ast.FnTemplateDefStmt) ([]env.FnInFnTTMemItem, bool) {
+	return nil, false
 }
