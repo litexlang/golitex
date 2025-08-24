@@ -282,7 +282,7 @@ func isFcWithFcFnHeadWithName(fc Fc, name string) bool {
 	return IsFcAtomAndEqualToStr(fcAsFcFnHeadAsFcFn.FnHead, name)
 }
 
-func IsFnFcFn(fcFn *FcFn) bool {
+func IsFnTemplate_FcFn(fcFn *FcFn) bool {
 	return isFcWithFcFnHeadWithName(fcFn, glob.KeywordFn)
 }
 
