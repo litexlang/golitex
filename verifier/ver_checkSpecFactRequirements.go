@@ -146,7 +146,7 @@ func (ver *Verifier) fcFnSatisfy_FnTemplate_Requirement(fc ast.Fc, state *VerSta
 		return false, fmt.Errorf("%s is not a function", fc)
 	}
 
-	fnTemplateSlice, ok := ver.env.GetFnTemplateSliceTheFnIsIn(asFcFn.FnHead)
+	fnTemplateSlice, ok := ver.GetFnTemplateSliceTheFnIsIn(asFcFn.FnHead)
 	if !ok {
 		return false, nil
 	}
@@ -262,6 +262,72 @@ func (ver *Verifier) lenFnRequirement(fc *ast.FcFn, state *VerState) (bool, erro
 	}
 	if !ok {
 		return false, fmt.Errorf("parameters in %s must be in set %s, %s in %s is not valid", fc.FnHead, glob.KeywordFiniteSet, fc.Params[0], fc)
+	}
+
+	return true, nil
+}
+
+func (ver *Verifier) GetFnTemplateSliceTheFnIsIn(fnName ast.Fc) ([]FnInFnTTMemItem, bool) {
+	fnInFnTTMenItemSlice, ok := ver.env.GetFnTemplateSliceTheFnIsInFromEnv(fnName.String())
+	if ok {
+		return fnInFnTTMenItemSlice, true
+	}
+
+	fnNameAsFcFn, ok := fnName.(*ast.FcFn)
+	if !ok {
+		return nil, false
+	}
+
+	// 先只考虑这个 fnNameAsFcFn 是 f() 形式，而不是 f()() 这种
+	head, ok := fnNameAsFcFn.FnHead.(ast.FcAtom)
+	if !ok {
+		return nil, false
+	}
+
+	// 得到 head 的定义
+	fnTemplateDef, ok := ver.env.GetFnTemplateDef(head)
+	if !ok {
+		return nil, false
+	}
+
+	// 参数满足 fnTemplateDef 的参数要求
+	ok, err := ver.paramsSatisfyFnTemplateParamReq(fnNameAsFcFn, fnTemplateDef)
+	if err != nil {
+		return nil, false
+	}
+	if !ok {
+		return nil, false
+	}
+
+	// 代入到 retSet 里
+
+	return nil, false
+}
+
+func (ver *Verifier) paramsSatisfyFnTemplateParamReq(fcFn *ast.FcFn, defFnT *ast.FnTemplateDefStmt) (bool, error) {
+	if len(fcFn.Params) != len(defFnT.TemplateDefHeader.Params) {
+		return false, fmt.Errorf("parameters in %s must be %d, %s in %s is not valid", fcFn.FnHead, len(defFnT.TemplateDefHeader.Params), fcFn, fcFn)
+	}
+
+	for i := range fcFn.Params {
+		inFact := ast.NewInFactWithFc(fcFn.Params[i], defFnT.Fn.ParamSets[i])
+		ok, err := ver.VerFactStmt(inFact, Round0NoMsg)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+	}
+
+	for _, domFact := range defFnT.Fn.DomFacts {
+		ok, err := ver.VerFactStmt(domFact, Round0NoMsg)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
 	}
 
 	return true, nil

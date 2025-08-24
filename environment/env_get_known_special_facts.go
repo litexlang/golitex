@@ -52,29 +52,3 @@ func (e *Env) GetFnTemplateSliceTheFnIsInFromEnv(fnName string) ([]FnInFnTTMemIt
 
 	return ret, true
 }
-
-func (e *Env) GetFnTemplateSliceTheFnIsIn(fnName ast.Fc) ([]FnInFnTTMemItem, bool) {
-	fnInFnTTMenItemSlice, ok := e.GetFnTemplateSliceTheFnIsInFromEnv(fnName.String())
-	if ok {
-		return fnInFnTTMenItemSlice, true
-	}
-
-	fnNameAsFcFn, ok := fnName.(*ast.FcFn)
-	if !ok {
-		return nil, false
-	}
-
-	// 先只考虑这个 fnNameAsFcFn 是 f() 形式，而不是 f()() 这种
-	head, ok := fnNameAsFcFn.FnHead.(ast.FcAtom)
-	if !ok {
-		return nil, false
-	}
-
-	// 得到 head 的定义
-	fnTemplateDef, ok := e.GetFnTemplateDef(head)
-	if !ok {
-		return nil, false
-	}
-
-	return nil, false
-}
