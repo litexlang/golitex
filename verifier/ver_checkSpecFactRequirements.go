@@ -285,13 +285,46 @@ func (ver *Verifier) GetFnTemplateSliceTheFnIsIn(fnName ast.Fc) ([]env.FnInFnTTM
 	}
 
 	// 得到 head 的定义
-	templateFnIsIn, ok := ver.env.Parent.GetLatestFnTT_GivenNameIsIn(head.String())
+	// templateFnIsIn, ok := ver.env.Parent.GetLatestFnTT_GivenNameIsIn(head.String())
+	// if !ok {
+	// 	return nil, false
+	// }
+	fnInFnTTMemItemSlice, ok := ver.env.FnInFnTemplateFactsMem[head.String()]
 	if !ok {
 		return nil, false
 	}
+	fnInFnTTMemItem := fnInFnTTMemItemSlice[len(fnInFnTTMemItemSlice)-1]
+
+	var templateFnIsIn *env.FnInFnTTMemItem = &env.FnInFnTTMemItem{nil, nil}
+	var err error
+	if fnInFnTTMemItem.InFcFn != nil {
+		uniMap := map[string]ast.Fc{}
+		for i, param := range fnInFnTTMemItem.InFcFn.Params {
+			uniMap[fnInFnTTMemItem.FnTemplateStmt.Params[i]] = param
+		}
+
+		InFcFn, err := fnInFnTTMemItem.InFcFn.Instantiate(uniMap)
+		if err != nil {
+			return nil, false
+		}
+
+		templateFnIsIn.InFcFn = InFcFn.(*ast.FcFn)
+	} else {
+		uniMap := map[string]ast.Fc{}
+		for i, param := range fnInFnTTMemItem.FnTemplateStmt.Params {
+			uniMap[param] = fnNameAsFcFn.Params[i]
+		}
+
+		template, err := fnInFnTTMemItem.FnTemplateStmt.Instantiate(uniMap)
+		if err != nil {
+			return nil, false
+		}
+
+		templateFnIsIn.FnTemplateStmt = template
+	}
 
 	// 参数满足 fnTemplateDef 的参数要求
-	ok, err := ver.paramsSatisfyFnTemplateParamReq(fnNameAsFcFn, templateFnIsIn)
+	ok, err = ver.paramsSatisfyFnTemplateParamReq(fnNameAsFcFn, templateFnIsIn)
 	if err != nil {
 		return nil, false
 	}
@@ -334,7 +367,7 @@ func (ver *Verifier) paramsSatisfyFnTemplateParamReq(fcFn *ast.FcFn, fnInFnTTMem
 				return false, err
 			}
 			if !ok {
-pp				return false, nil
+				return false, nil
 			}
 		}
 
@@ -353,18 +386,18 @@ pp				return false, nil
 
 }
 
-func (ver *Verifier) instantiateFnTemplateFcFn_WithGivenFc(fcFn *ast.FcFn, defFnT *ast.FnTemplateDefStmt) ([]env.FnInFnTTMemItem, bool) {
+func (ver *Verifier) instantiateFnTemplateFcFn_WithGivenFc(fcFn *ast.FcFn, fnInFnTTMemItem *env.FnInFnTTMemItem) ([]env.FnInFnTTMemItem, bool) {
 	uniMap := map[string]ast.Fc{}
 
-	if len(fcFn.Params) != len(defFnT.Fn.Params) {
+	if len(fcFn.Params) != len(fnInFnTTMemItem.FnTemplateStmt.Params) {
 		return nil, false
 	}
 
 	for i := range fcFn.Params {
-		uniMap[defFnT.Fn.Params[i]] = fcFn.Params[i]
+		uniMap[fnInFnTTMemItem.FnTemplateStmt.Params[i]] = fcFn.Params[i]
 	}
 
-	instFnTStruct, err := defFnT.Fn.Instantiate(uniMap)
+	instFnTStruct, err := fnInFnTTMemItem.FnTemplateStmt.Instantiate(uniMap)
 	if err != nil {
 		return nil, false
 	}
