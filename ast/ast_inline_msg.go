@@ -85,7 +85,9 @@ func (p *SpecFactStmt) InlineString() string {
 	return p.String()
 }
 
-func (f *ClaimProveStmt) InlineString() string { panic("") }
+func (f *ClaimProveStmt) InlineString() string {
+	return f.String()
+}
 func (f *KnowFactStmt) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordKnow)
