@@ -215,7 +215,7 @@ func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state *VerState
 
 func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	if asFcFn, ok := stmt.Params[1].(*ast.FcFn); ok {
-		if ast.IsFnFcFn(asFcFn) {
+		if ast.IsFnTemplate_FcFn(asFcFn) {
 			ok, err := ver.ver_In_FnFcFn_FnTT(stmt.Params[0], asFcFn, state)
 			if err != nil {
 				return false, err
@@ -309,7 +309,7 @@ func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state *VerState) (
 	if !ok {
 		return false, nil
 	}
-	ok = ast.IsFnFcFn(asFcFn)
+	ok = ast.IsFnTemplate_FcFn(asFcFn)
 	if ok {
 		return ver.processOkMsg(state, stmt.String(), "%s is a fn template and all fn templates are sets", stmt.Params[0])
 	}
