@@ -132,7 +132,14 @@ func (s *HaveObjStStmt) InlineString() string {
 }
 
 func (s *ProveInEachCaseStmt) InlineString() string { return s.String() }
-func (s *KnowPropStmt) InlineString() string        { panic("") }
+func (s *KnowPropStmt) InlineString() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordKnow)
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeySymbolAt)
+	builder.WriteString(s.Prop.InlineString())
+	return builder.String()
+}
 
 func (s *OrStmt) InlineString() string {
 	var builder strings.Builder
@@ -147,10 +154,35 @@ func (s *OrStmt) InlineString() string {
 	return builder.String()
 }
 
-func (s *ImportDirStmt) InlineString() string                 { panic("") }
-func (s *ImportFileStmt) InlineString() string                { panic("") }
-func (s *ProveStmt) InlineString() string                     { panic("") }
-func (s *UniFactWithIffStmt) InlineString() string            { panic("") }
+func (s *ImportDirStmt) InlineString() string {
+	return s.String()
+}
+
+func (s *ImportFileStmt) InlineString() string {
+	return s.String()
+}
+func (s *ProveStmt) InlineString() string {
+	return s.String()
+}
+func (s *UniFactWithIffStmt) InlineString() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordForall)
+	builder.WriteString(" ")
+	builder.WriteString(strFcSetPairs(s.UniFact.Params, s.UniFact.ParamSets))
+	builder.WriteString(glob.KeySymbolColon)
+	if len(s.UniFact.DomFacts) > 0 {
+		builder.WriteString(inlineFactsString(s.UniFact.DomFacts))
+	}
+	if len(s.UniFact.ThenFacts) > 0 {
+		builder.WriteString(glob.KeySymbolEqualLarger)
+		builder.WriteString(inlineFactsString(s.UniFact.ThenFacts))
+	}
+	if len(s.IffFacts) > 0 {
+		builder.WriteString(glob.KeySymbolEquivalent)
+		builder.WriteString(inlineFactsString(s.IffFacts))
+	}
+	return builder.String()
+}
 func (s *ClaimProveByContradictionStmt) InlineString() string { panic("") }
 func (s *EnumStmt) InlineString() string                      { panic("") }
 func (s *IntensionalSetStmt) InlineString() string            { panic("") }
