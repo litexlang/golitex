@@ -300,15 +300,11 @@ func (ver *Verifier) GetFnTemplateSliceTheFnIsIn(fnName ast.Fc) ([]env.FnInFnTTM
 	}
 
 	// 代入到 retSet 里
-	if ast.IsFnTemplate_FcFn(fnNameAsFcFn) {
-		return ver.instantiateFnTemplateFcFn_WithGivenFc(fnNameAsFcFn, fnTemplateDef)
-	} else {
-		return ver.instantiateFnTemplate_WithGivenFc(fnNameAsFcFn, fnTemplateDef)
-	}
+	return ver.instantiateFnTemplateFcFn_WithGivenFc(fnNameAsFcFn, fnTemplateDef)
 }
 
 func (ver *Verifier) paramsSatisfyFnTemplateParamReq(fcFn *ast.FcFn, defFnT *ast.FnTemplateDefStmt) (bool, error) {
-	if len(fcFn.Params) != len(defFnT.TemplateDefHeader.Params) {
+	if len(fcFn.Params) != len(defFnT.Fn.Params) {
 		return false, fmt.Errorf("parameters in %s must be %d, %s in %s is not valid", fcFn.FnHead, len(defFnT.TemplateDefHeader.Params), fcFn, fcFn)
 	}
 
@@ -337,9 +333,20 @@ func (ver *Verifier) paramsSatisfyFnTemplateParamReq(fcFn *ast.FcFn, defFnT *ast
 }
 
 func (ver *Verifier) instantiateFnTemplateFcFn_WithGivenFc(fcFn *ast.FcFn, defFnT *ast.FnTemplateDefStmt) ([]env.FnInFnTTMemItem, bool) {
-	return nil, false
-}
+	uniMap := map[string]ast.Fc{}
 
-func (ver *Verifier) instantiateFnTemplate_WithGivenFc(fcFn *ast.FcFn, defFnT *ast.FnTemplateDefStmt) ([]env.FnInFnTTMemItem, bool) {
-	return nil, false
+	if len(fcFn.Params) != len(defFnT.Fn.Params) {
+		return nil, false
+	}
+
+	for i := range fcFn.Params {
+		uniMap[defFnT.Fn.Params[i]] = fcFn.Params[i]
+	}
+
+	instFnTStruct, err := defFnT.Fn.Instantiate(uniMap)
+	if err != nil {
+		return nil, false
+	}
+
+	return []env.FnInFnTTMemItem{env.NewFnInFnTTMemItem(nil, instFnTStruct)}, true
 }
