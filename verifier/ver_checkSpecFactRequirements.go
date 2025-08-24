@@ -152,12 +152,40 @@ func (ver *Verifier) fcFnSatisfy_FnTemplate_Requirement(fc ast.Fc, state *VerSta
 	}
 
 	for i := len(fnTemplateSlice) - 1; i >= 0; i-- {
-		ok, err = ver.fcFnParamsSatisfyFnTemplateNoNameRequirement(asFcFn, fnTemplateSlice[i].FnTemplateStmt, state)
-		if err != nil {
-			return false, err
-		}
-		if ok {
-			return true, nil
+		if fnTemplateSlice[i].FnTemplateStmt != nil {
+			ok, err = ver.fcFnParamsSatisfyFnTemplateNoNameRequirement(asFcFn, fnTemplateSlice[i].FnTemplateStmt, state)
+			if err != nil {
+				return false, err
+			}
+			if ok {
+				return true, nil
+			}
+		} else {
+			if fnTemplateSlice[i].InFcFn == nil {
+				return false, nil
+			}
+
+			everythingOK := true
+
+			if len(asFcFn.Params) != len(fnTemplateSlice[i].InFcFn.Params) {
+				return false, nil
+			}
+
+			for i := range asFcFn.Params {
+				ok, err = ver.VerFactStmt(ast.NewInFactWithFc(asFcFn.Params[i], fnTemplateSlice[i].InFcFn.FnHead.(*ast.FcFn).Params[i]), state)
+				if err != nil {
+					return false, err
+				}
+				if !ok {
+					everythingOK = false
+					break
+				}
+			}
+
+			if everythingOK {
+				return true, nil
+			}
+
 		}
 	}
 
@@ -294,6 +322,7 @@ func (ver *Verifier) GetFnTemplateSliceTheFnIsIn(fnName ast.Fc) ([]env.FnInFnTTM
 		return nil, false
 	}
 	fnInFnTTMemItem := fnInFnTTMemItemSlice[len(fnInFnTTMemItemSlice)-1]
+	var ret env.FnInFnTTMemItem = env.FnInFnTTMemItem{nil, nil}
 
 	var templateFnIsIn *env.FnInFnTTMemItem = &env.FnInFnTTMemItem{nil, nil}
 	var err error
@@ -309,6 +338,23 @@ func (ver *Verifier) GetFnTemplateSliceTheFnIsIn(fnName ast.Fc) ([]env.FnInFnTTM
 		}
 
 		templateFnIsIn.InFcFn = InFcFn.(*ast.FcFn)
+
+		retFcFn, err := templateFnIsIn.InFcFn.Params[0].Instantiate(uniMap)
+		if err != nil {
+			return nil, false
+		}
+
+		retFcFnAsFcFn, ok := retFcFn.(*ast.FcFn)
+		if !ok {
+			return nil, false
+		}
+
+		if ast.IsFnTemplate_FcFn(retFcFnAsFcFn) {
+			ret.InFcFn = retFcFn.(*ast.FcFn)
+		} else {
+			// 不知道如何处理返回值是 template 的情况
+			return nil, false
+		}
 	} else {
 		uniMap := map[string]ast.Fc{}
 		for i, param := range fnInFnTTMemItem.FnTemplateStmt.Params {
@@ -321,6 +367,23 @@ func (ver *Verifier) GetFnTemplateSliceTheFnIsIn(fnName ast.Fc) ([]env.FnInFnTTM
 		}
 
 		templateFnIsIn.FnTemplateStmt = template
+
+		retTemplate, err := templateFnIsIn.FnTemplateStmt.RetSet.Instantiate(uniMap)
+		if err != nil {
+			return nil, false
+		}
+
+		retTemplateFcFn, ok := retTemplate.(*ast.FcFn)
+		if !ok {
+			return nil, false
+		}
+
+		if ast.IsFnTemplate_FcFn(retTemplateFcFn) {
+			ret.InFcFn = retTemplateFcFn
+		} else {
+			// 不知道如何处理返回值是 template 的情况
+			return nil, false
+		}
 	}
 
 	// 参数满足 fnTemplateDef 的参数要求
@@ -333,7 +396,7 @@ func (ver *Verifier) GetFnTemplateSliceTheFnIsIn(fnName ast.Fc) ([]env.FnInFnTTM
 	}
 
 	// 代入到 retSet 里
-	return ver.instantiateFnTemplateFcFn_WithGivenFc(fnNameAsFcFn, templateFnIsIn)
+	return []env.FnInFnTTMemItem{ret}, true
 }
 
 func (ver *Verifier) paramsSatisfyFnTemplateParamReq(fcFn *ast.FcFn, fnInFnTTMemItem *env.FnInFnTTMemItem) (bool, error) {
@@ -384,23 +447,4 @@ func (ver *Verifier) paramsSatisfyFnTemplateParamReq(fcFn *ast.FcFn, fnInFnTTMem
 		return true, nil
 	}
 
-}
-
-func (ver *Verifier) instantiateFnTemplateFcFn_WithGivenFc(fcFn *ast.FcFn, fnInFnTTMemItem *env.FnInFnTTMemItem) ([]env.FnInFnTTMemItem, bool) {
-	uniMap := map[string]ast.Fc{}
-
-	if len(fcFn.Params) != len(fnInFnTTMemItem.FnTemplateStmt.Params) {
-		return nil, false
-	}
-
-	for i := range fcFn.Params {
-		uniMap[fnInFnTTMemItem.FnTemplateStmt.Params[i]] = fcFn.Params[i]
-	}
-
-	instFnTStruct, err := fnInFnTTMemItem.FnTemplateStmt.Instantiate(uniMap)
-	if err != nil {
-		return nil, false
-	}
-
-	return []env.FnInFnTTMemItem{env.NewFnInFnTTMemItem(nil, instFnTStruct)}, true
 }
