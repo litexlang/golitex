@@ -33,7 +33,7 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) error {
 		return err
 	}
 
-	if fnFn, ok := fact.Params[1].(*ast.FcFn); ok && ast.IsFnFcFn(fnFn) {
+	if fnFn, ok := fact.Params[1].(*ast.FcFn); ok && ast.IsFnTemplate_FcFn(fnFn) {
 		fnTNoName, err := fnFn.FnTFc_ToFnTNoName()
 		if err != nil {
 			return err
