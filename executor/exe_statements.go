@@ -697,5 +697,25 @@ func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) (glob.ExecState, error) {
 		}
 	}
 
+	fcDerivedFromFnName := ast.NewFcFn(ast.FcAtom(stmt.DefFnStmt.Name), stmt.DefFnStmt.FnTemplate.Params.ToFcSlice())
+
+	// prove return value in newRetFc
+	execState, err := exec.factStmt(ast.NewInFactWithFc(stmt.HaveObjSatisfyFn, stmt.DefFnStmt.FnTemplate.RetSet))
+	if notOkExec(execState, err) {
+		return execState, err
+	}
+
+	newThenFacts := []ast.FactStmt{}
+	for _, thenFact := range stmt.DefFnStmt.FnTemplate.ThenFacts {
+		newThenFacts = append(newThenFacts, thenFact.ReplaceFc(fcDerivedFromFnName, stmt.HaveObjSatisfyFn))
+	}
+
+	for _, thenFact := range newThenFacts {
+		execState, err := exec.factStmt(thenFact)
+		if notOkExec(execState, err) {
+			return execState, err
+		}
+	}
+
 	return glob.ExecState_True, nil
 }
