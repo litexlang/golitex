@@ -26,7 +26,7 @@ type Fc interface {
 	String() string
 	Instantiate(map[string]Fc) (Fc, error)
 	ToLatexString() string
-	ReplaceFc(oldFc Fc, newFc Fc) Fc
+	ReplaceFc(oldFc Fc, newFc Fc) Fc // 这是必要的，因为 have fn 的 proof 里可能出现 replace fc 的情况
 }
 
 func (f FcAtom) fc() {}
