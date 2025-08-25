@@ -257,3 +257,38 @@ func (fcAsFcFn *FcFn) FnTFc_ToFnTNoName() (*FnTStruct, error) {
 
 	return fnTNoName, nil
 }
+
+func ReplaceFcWithFc(fc Fc, oldFc Fc, newFc Fc) Fc {
+	if asAtom, ok := fc.(FcAtom); ok {
+		if string(asAtom) == oldFc.String() {
+			return newFc
+		}
+		return fc
+	}
+
+	fcFn, ok := fc.(*FcFn)
+	if !ok {
+		return fc
+	}
+
+	var newFcFnHead = ReplaceFcWithFc(fcFn.FnHead, oldFc, newFc)
+
+	newFcParams := make([]Fc, len(fcFn.Params))
+	for i, param := range fcFn.Params {
+		newFcParams[i] = ReplaceFcWithFc(param, oldFc, newFc)
+	}
+
+	newFcFn := NewFcFn(newFcFnHead, newFcParams)
+	return newFcFn
+}
+
+func ReplaceFcInFactWithFc(fact FactStmt, oldFc Fc, newFc Fc) FactStmt {
+	switch asFact := fact.(type) {
+	case *SpecFactStmt:
+		return asFact.ReplaceFc(oldFc, newFc)
+	case *UniFactStmt:
+		return asFact.ReplaceFc(oldFc, newFc)
+	default:
+		panic("")
+	}
+}

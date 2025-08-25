@@ -682,5 +682,20 @@ func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) (glob.ExecState, error) {
 		}()
 	}
 
+	exec.NewEnv(exec.env)
+
+	defObjStmt := ast.NewDefObjStmt(stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets, stmt.DefFnStmt.FnTemplate.DomFacts)
+	err := exec.defObjStmt(defObjStmt, false)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+
+	for _, proof := range stmt.Proofs {
+		execState, err := exec.Stmt(proof)
+		if notOkExec(execState, err) {
+			return execState, err
+		}
+	}
+
 	return glob.ExecState_True, nil
 }
