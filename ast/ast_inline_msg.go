@@ -309,3 +309,7 @@ func (s *HaveFnLiftStmt) InlineString() string {
 
 	return builder.String()
 }
+
+func (s *ClaimHaveFnStmt) InlineString() string {
+	return "TODO"
+}
