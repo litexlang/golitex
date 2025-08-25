@@ -93,6 +93,7 @@ type Spec_OrFact interface {
 	ToLatexString() string
 	canBeKnown()
 	InlineString() string
+	ReplaceFc(oldFc Fc, newFc Fc) FactStmt
 }
 
 func (s *SpecFactStmt) reversibleFact() {}
@@ -133,6 +134,7 @@ type UniFactInterface interface {
 	ToLatexString() string
 	canBeKnown()
 	InlineString() string
+	ReplaceFc(oldFc Fc, newFc Fc) FactStmt
 }
 
 func (stmt *UniFactStmt) uniFact()        {}
@@ -173,6 +175,7 @@ type EnumSet_IntensionalSet_EqualDom interface {
 	ToLatexString() string
 	canBeKnown()
 	InlineString() string
+	ReplaceFc(oldFc Fc, newFc Fc) FactStmt
 }
 
 func (stmt *EnumStmt) setDeclarationStmt()           {}
