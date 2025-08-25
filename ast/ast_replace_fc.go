@@ -15,11 +15,31 @@
 package litex_ast
 
 func (stmt *SpecFactStmt) ReplaceFc(oldFc Fc, newFc Fc) FactStmt {
-	panic("")
+	newParams := make([]Fc, len(stmt.Params))
+	for i, param := range stmt.Params {
+		newParams[i] = param.ReplaceFc(oldFc, newFc)
+	}
+
+	return NewSpecFactStmt(stmt.TypeEnum, stmt.PropName, newParams)
 }
 
 func (stmt *UniFactStmt) ReplaceFc(oldFc Fc, newFc Fc) FactStmt {
-	panic("")
+	newParamSets := make([]Fc, len(stmt.ParamSets))
+	for i, paramSet := range stmt.ParamSets {
+		newParamSets[i] = paramSet.ReplaceFc(oldFc, newFc)
+	}
+
+	newDomFacts := make([]FactStmt, len(stmt.DomFacts))
+	for i, domFact := range stmt.DomFacts {
+		newDomFacts[i] = domFact.ReplaceFc(oldFc, newFc)
+	}
+
+	newThenFacts := make([]FactStmt, len(stmt.ThenFacts))
+	for i, thenFact := range stmt.ThenFacts {
+		newThenFacts[i] = thenFact.ReplaceFc(oldFc, newFc)
+	}
+
+	return NewUniFact(stmt.Params, newParamSets, newDomFacts, newThenFacts)
 }
 
 func (stmt *UniFactWithIffStmt) ReplaceFc(oldFc Fc, newFc Fc) FactStmt {

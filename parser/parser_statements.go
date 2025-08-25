@@ -1229,6 +1229,7 @@ func (tb *tokenBlock) parseFactBodyWithHeaderNameAndUniFactDepth(headerName stri
 	return facts, nil
 }
 
+// 要保证 fn 里的params 和 fn 里面的 uniFact 的params 是不一样的，否则可能出现严重的问题
 func (tb *tokenBlock) defFnStmt(skipFn bool) (*ast.DefFnStmt, error) {
 	if skipFn {
 		err := tb.header.skip(glob.KeywordFn)
