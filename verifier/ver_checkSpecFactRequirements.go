@@ -322,9 +322,11 @@ func (ver *Verifier) GetFnTemplateSliceTheFnIsIn(fnName ast.Fc) ([]env.FnInFnTTM
 		return nil, false
 	}
 	fnInFnTTMemItem := fnInFnTTMemItemSlice[len(fnInFnTTMemItemSlice)-1]
-	var ret env.FnInFnTTMemItem = env.FnInFnTTMemItem{nil, nil}
+	// var ret = env.FnInFnTTMemItem{nil, nil}
+	ret := env.MakeFnInFnTTMemItem(nil, nil)
 
-	var templateFnIsIn *env.FnInFnTTMemItem = &env.FnInFnTTMemItem{nil, nil}
+	// var templateFnIsIn = &env.FnInFnTTMemItem{nil, nil}
+	templateFnIsIn := env.MakeFnInFnTTMemItem(nil, nil)
 	var err error
 	if fnInFnTTMemItem.InFcFn != nil {
 		uniMap := map[string]ast.Fc{}
@@ -387,7 +389,7 @@ func (ver *Verifier) GetFnTemplateSliceTheFnIsIn(fnName ast.Fc) ([]env.FnInFnTTM
 	}
 
 	// 参数满足 fnTemplateDef 的参数要求
-	ok, err = ver.paramsSatisfyFnTemplateParamReq(fnNameAsFcFn, templateFnIsIn)
+	ok, err = ver.paramsSatisfyFnTemplateParamReq(fnNameAsFcFn, &templateFnIsIn)
 	if err != nil {
 		return nil, false
 	}

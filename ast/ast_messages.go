@@ -826,3 +826,22 @@ func (stmt *HaveFnLiftStmt) String() string {
 	builder.WriteString(")")
 	return builder.String()
 }
+
+func (stmt *ClaimHaveFnStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordClaim)
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeywordHave)
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeywordFn)
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteString("\n")
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.DefFnStmt.String(), 1))
+	builder.WriteString("\n")
+	for _, proof := range stmt.Proofs {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 1))
+		builder.WriteByte('\n')
+	}
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(fmt.Sprintf("%s %s", glob.KeywordHave, stmt.HaveObjSatisfyFn.String()), 1))
+	return builder.String()
+}
