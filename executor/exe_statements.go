@@ -88,6 +88,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		execState, err = exec.haveFnEqualStmt(stmt)
 	case *ast.HaveFnLiftStmt:
 		execState, err = exec.haveFnLiftStmt(stmt)
+	case *ast.HaveFnStmt:
+		execState, err = exec.haveFnStmt(stmt)
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}
@@ -671,4 +673,49 @@ func (exec *Executor) haveFnLift_knowFact(stmt *ast.HaveFnLiftStmt, fnNames []st
 	rhs := ast.NewFcFn(stmt.Opt, rhsParams)
 
 	return ast.NewUniFact(uniFactParams, uniFactParamSets, []ast.FactStmt{}, []ast.FactStmt{ast.NewEqualFact(lhs, rhs)})
+}
+
+func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) (glob.ExecState, error) {
+	if glob.RequireMsg() {
+		defer func() {
+			exec.newMsg(fmt.Sprintf("%s\n", stmt))
+		}()
+	}
+
+	exec.NewEnv(exec.env)
+
+	defObjStmt := ast.NewDefObjStmt(stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets, stmt.DefFnStmt.FnTemplate.DomFacts)
+	err := exec.defObjStmt(defObjStmt, false)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+
+	for _, proof := range stmt.Proofs {
+		execState, err := exec.Stmt(proof)
+		if notOkExec(execState, err) {
+			return execState, err
+		}
+	}
+
+	fcDerivedFromFnName := ast.NewFcFn(ast.FcAtom(stmt.DefFnStmt.Name), stmt.DefFnStmt.FnTemplate.Params.ToFcSlice())
+
+	// prove return value in newRetFc
+	execState, err := exec.factStmt(ast.NewInFactWithFc(stmt.HaveObjSatisfyFn, stmt.DefFnStmt.FnTemplate.RetSet))
+	if notOkExec(execState, err) {
+		return execState, err
+	}
+
+	newThenFacts := []ast.FactStmt{}
+	for _, thenFact := range stmt.DefFnStmt.FnTemplate.ThenFacts {
+		newThenFacts = append(newThenFacts, thenFact.ReplaceFc(fcDerivedFromFnName, stmt.HaveObjSatisfyFn))
+	}
+
+	for _, thenFact := range newThenFacts {
+		execState, err := exec.factStmt(thenFact)
+		if notOkExec(execState, err) {
+			return execState, err
+		}
+	}
+
+	return glob.ExecState_True, nil
 }

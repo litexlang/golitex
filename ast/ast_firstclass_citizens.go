@@ -26,10 +26,34 @@ type Fc interface {
 	String() string
 	Instantiate(map[string]Fc) (Fc, error)
 	ToLatexString() string
+	ReplaceFc(oldFc Fc, newFc Fc) Fc // 这是必要的，因为 have fn 的 proof 里可能出现 replace fc 的情况
 }
 
 func (f FcAtom) fc() {}
 func (f *FcFn) fc()  {}
+
+func (f FcAtom) ReplaceFc(oldFc Fc, newFc Fc) Fc {
+	if f.String() == oldFc.String() {
+		return newFc
+	}
+	return f
+}
+
+func (f *FcFn) ReplaceFc(oldFc Fc, newFc Fc) Fc {
+	if f.String() == oldFc.String() {
+		return newFc
+	}
+
+	var newFcFnHead = f.FnHead.ReplaceFc(oldFc, newFc)
+
+	newFcParams := make([]Fc, len(f.Params))
+	for i, param := range f.Params {
+		newFcParams[i] = param.ReplaceFc(oldFc, newFc)
+	}
+
+	newFcFn := NewFcFn(newFcFnHead, newFcParams)
+	return newFcFn
+}
 
 type FcAtom string
 

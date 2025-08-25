@@ -873,3 +873,7 @@ func (s *HaveFnLiftStmt) ToLatexString() string {
 	builder.WriteString("\n\\end{definition}")
 	return builder.String()
 }
+
+func (s *HaveFnStmt) ToLatexString() string {
+	return "TODO"
+}

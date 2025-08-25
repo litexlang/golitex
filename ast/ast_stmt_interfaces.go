@@ -60,6 +60,7 @@ func (s *ProveByInductionStmt) stmt()            {}
 func (s *HaveObjEqualStmt) stmt()                {}
 func (s *HaveFnEqualStmt) stmt()                 {}
 func (s *HaveFnLiftStmt) stmt()                  {}
+func (s *HaveFnStmt) stmt()                      {}
 
 type FactStmt interface {
 	factStmt()
@@ -70,6 +71,7 @@ type FactStmt interface {
 	ToLatexString() string
 	canBeKnown()
 	InlineString() string
+	ReplaceFc(oldFc Fc, newFc Fc) FactStmt
 }
 
 func (p *SpecFactStmt) factStmt()       {}
@@ -91,6 +93,7 @@ type Spec_OrFact interface {
 	ToLatexString() string
 	canBeKnown()
 	InlineString() string
+	ReplaceFc(oldFc Fc, newFc Fc) FactStmt
 }
 
 func (s *SpecFactStmt) reversibleFact() {}
@@ -131,6 +134,7 @@ type UniFactInterface interface {
 	ToLatexString() string
 	canBeKnown()
 	InlineString() string
+	ReplaceFc(oldFc Fc, newFc Fc) FactStmt
 }
 
 func (stmt *UniFactStmt) uniFact()        {}
@@ -171,6 +175,7 @@ type EnumSet_IntensionalSet_EqualDom interface {
 	ToLatexString() string
 	canBeKnown()
 	InlineString() string
+	ReplaceFc(oldFc Fc, newFc Fc) FactStmt
 }
 
 func (stmt *EnumStmt) setDeclarationStmt()           {}

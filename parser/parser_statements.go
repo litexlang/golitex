@@ -38,7 +38,7 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 	case glob.KeywordExistProp:
 		ret, err = tb.defExistPropStmt()
 	case glob.KeywordFn:
-		ret, err = tb.defFnStmt()
+		ret, err = tb.defFnStmt(true)
 	case glob.KeywordLet:
 		ret, err = tb.defObjStmt()
 	case glob.KeywordHave:
@@ -53,7 +53,9 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 				}
 			}
 		} else if tb.header.strAtCurIndexPlus(1) == glob.KeywordFn {
-			if tb.header.strAtCurIndexPlus(4) == glob.KeywordLift {
+			if tb.header.strAtCurIndexPlus(2) == glob.KeySymbolColon {
+				ret, err = tb.claimHaveFnStmt()
+			} else if tb.header.strAtCurIndexPlus(4) == glob.KeywordLift {
 				ret, err = tb.haveFnLiftStmt()
 			} else {
 				ret, err = tb.haveFnEqualStmt()
@@ -1227,10 +1229,13 @@ func (tb *tokenBlock) parseFactBodyWithHeaderNameAndUniFactDepth(headerName stri
 	return facts, nil
 }
 
-func (tb *tokenBlock) defFnStmt() (*ast.DefFnStmt, error) {
-	err := tb.header.skip(glob.KeywordFn)
-	if err != nil {
-		return nil, tbErr(err, tb)
+// 要保证 fn 里的params 和 fn 里面的 uniFact 的params 是不一样的，否则可能出现严重的问题
+func (tb *tokenBlock) defFnStmt(skipFn bool) (*ast.DefFnStmt, error) {
+	if skipFn {
+		err := tb.header.skip(glob.KeywordFn)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
 	}
 
 	decl, err := tb.defHeaderWithoutParsingColonAtEnd()
@@ -2447,4 +2452,58 @@ func (tb *tokenBlock) haveFnLiftStmt() (*ast.HaveFnLiftStmt, error) {
 	}
 
 	return ast.NewHaveFnLiftStmt(fnName, opt, domainOfEachParamOfGivenFn), nil
+}
+
+func (tb *tokenBlock) claimHaveFnStmt() (*ast.HaveFnStmt, error) {
+	var err error
+
+	if len(tb.body) != 3 {
+		return nil, fmt.Errorf("expect 3 body blocks")
+	}
+
+	err = tb.header.skip(glob.KeywordHave)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeywordFn)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	defFnStmt, err := tb.body[0].defFnStmt(false)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.body[1].header.skip(glob.KeywordProve)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	proof := []ast.Stmt{}
+	for _, block := range tb.body[1].body {
+		curStmt, err := block.Stmt()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		proof = append(proof, curStmt)
+	}
+
+	err = tb.body[2].header.skip(glob.KeywordHave)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	haveObjSatisfyFn, err := tb.body[2].RawFc()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	return ast.NewClaimHaveFnStmt(defFnStmt, proof, haveObjSatisfyFn), nil
 }
