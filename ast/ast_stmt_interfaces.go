@@ -71,6 +71,7 @@ type FactStmt interface {
 	ToLatexString() string
 	canBeKnown()
 	InlineString() string
+	ReplaceFc(oldFc Fc, newFc Fc) FactStmt
 }
 
 func (p *SpecFactStmt) factStmt()       {}
