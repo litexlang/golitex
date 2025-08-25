@@ -88,6 +88,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		execState, err = exec.haveFnEqualStmt(stmt)
 	case *ast.HaveFnLiftStmt:
 		execState, err = exec.haveFnLiftStmt(stmt)
+	case *ast.HaveFnStmt:
+		execState, err = exec.haveFnStmt(stmt)
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}
@@ -671,4 +673,14 @@ func (exec *Executor) haveFnLift_knowFact(stmt *ast.HaveFnLiftStmt, fnNames []st
 	rhs := ast.NewFcFn(stmt.Opt, rhsParams)
 
 	return ast.NewUniFact(uniFactParams, uniFactParamSets, []ast.FactStmt{}, []ast.FactStmt{ast.NewEqualFact(lhs, rhs)})
+}
+
+func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) (glob.ExecState, error) {
+	if glob.RequireMsg() {
+		defer func() {
+			exec.newMsg(fmt.Sprintf("%s\n", stmt))
+		}()
+	}
+
+	return glob.ExecState_True, nil
 }
