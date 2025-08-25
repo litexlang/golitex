@@ -185,3 +185,7 @@ func NewHaveFnEqualStmt(defHeader *DefHeader, equalTo Fc, domFacts []FactStmt) *
 func NewHaveFnLiftStmt(fnName string, opt Fc, domainOfEachParamOfGivenFn []Fc) *HaveFnLiftStmt {
 	return &HaveFnLiftStmt{fnName, opt, domainOfEachParamOfGivenFn}
 }
+
+func NewClaimHaveFnStmt(defFnStmt *DefFnStmt, proof []Stmt, haveObjSatisfyFn Fc) *ClaimHaveFnStmt {
+	return &ClaimHaveFnStmt{*defFnStmt, proof, haveObjSatisfyFn}
+}
