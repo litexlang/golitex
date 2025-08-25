@@ -310,6 +310,6 @@ func (s *HaveFnLiftStmt) InlineString() string {
 	return builder.String()
 }
 
-func (s *ClaimHaveFnStmt) InlineString() string {
+func (s *HaveFnStmt) InlineString() string {
 	return "TODO"
 }

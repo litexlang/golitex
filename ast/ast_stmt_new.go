@@ -186,6 +186,6 @@ func NewHaveFnLiftStmt(fnName string, opt Fc, domainOfEachParamOfGivenFn []Fc) *
 	return &HaveFnLiftStmt{fnName, opt, domainOfEachParamOfGivenFn}
 }
 
-func NewClaimHaveFnStmt(defFnStmt *DefFnStmt, proof []Stmt, haveObjSatisfyFn Fc) *ClaimHaveFnStmt {
-	return &ClaimHaveFnStmt{*defFnStmt, proof, haveObjSatisfyFn}
+func NewClaimHaveFnStmt(defFnStmt *DefFnStmt, proof []Stmt, haveObjSatisfyFn Fc) *HaveFnStmt {
+	return &HaveFnStmt{*defFnStmt, proof, haveObjSatisfyFn}
 }

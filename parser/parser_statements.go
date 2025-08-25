@@ -53,7 +53,9 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 				}
 			}
 		} else if tb.header.strAtCurIndexPlus(1) == glob.KeywordFn {
-			if tb.header.strAtCurIndexPlus(4) == glob.KeywordLift {
+			if tb.header.strAtCurIndexPlus(2) == glob.KeySymbolColon {
+				ret, err = tb.claimHaveFnStmt()
+			} else if tb.header.strAtCurIndexPlus(4) == glob.KeywordLift {
 				ret, err = tb.haveFnLiftStmt()
 			} else {
 				ret, err = tb.haveFnEqualStmt()
@@ -66,11 +68,7 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 			ret, err = tb.haveObjInNonEmptySetStmt()
 		}
 	case glob.KeywordClaim:
-		if tb.header.strAtCurIndexPlus(1) == glob.KeywordHave {
-			ret, err = tb.claimHaveFnStmt()
-		} else {
-			ret, err = tb.claimStmt()
-		}
+		ret, err = tb.claimStmt()
 	case glob.KeywordProve:
 		ret, err = tb.proveStmt()
 	case glob.KeywordKnow:
@@ -2455,11 +2453,8 @@ func (tb *tokenBlock) haveFnLiftStmt() (*ast.HaveFnLiftStmt, error) {
 	return ast.NewHaveFnLiftStmt(fnName, opt, domainOfEachParamOfGivenFn), nil
 }
 
-func (tb *tokenBlock) claimHaveFnStmt() (*ast.ClaimHaveFnStmt, error) {
-	err := tb.header.skip(glob.KeywordClaim)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+func (tb *tokenBlock) claimHaveFnStmt() (*ast.HaveFnStmt, error) {
+	var err error
 
 	if len(tb.body) != 3 {
 		return nil, fmt.Errorf("expect 3 body blocks")

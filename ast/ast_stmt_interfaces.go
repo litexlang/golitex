@@ -60,7 +60,7 @@ func (s *ProveByInductionStmt) stmt()            {}
 func (s *HaveObjEqualStmt) stmt()                {}
 func (s *HaveFnEqualStmt) stmt()                 {}
 func (s *HaveFnLiftStmt) stmt()                  {}
-func (s *ClaimHaveFnStmt) stmt()                 {}
+func (s *HaveFnStmt) stmt()                      {}
 
 type FactStmt interface {
 	factStmt()

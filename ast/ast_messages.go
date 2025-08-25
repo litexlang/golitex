@@ -827,10 +827,8 @@ func (stmt *HaveFnLiftStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *ClaimHaveFnStmt) String() string {
+func (stmt *HaveFnStmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordClaim)
-	builder.WriteString(" ")
 	builder.WriteString(glob.KeywordHave)
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeywordFn)
