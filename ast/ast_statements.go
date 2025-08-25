@@ -251,3 +251,9 @@ type HaveFnLiftStmt struct {
 	Opt                        Fc
 	DomainOfEachParamOfGivenFn FcSlice
 }
+
+type ClaimHaveFnStmt struct {
+	DefFnStmt        DefFnStmt
+	Proofs           StmtSlice
+	HaveObjSatisfyFn Fc
+}
