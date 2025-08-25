@@ -257,3 +257,18 @@ func (fcAsFcFn *FcFn) FnTFc_ToFnTNoName() (*FnTStruct, error) {
 
 	return fnTNoName, nil
 }
+
+// func ReplaceFcWithFc(fc Fc, oldFc Fc, newFc Fc) Fc {
+// 	if asAtom, ok := fc.(FcAtom); ok {
+// 		if string(asAtom) == oldFc.String() {
+// 			return newFc
+// 		}
+// 		return fc
+// 	}
+
+// 	fcFn, ok := fc.(*FcFn)
+// 	if !ok {
+// 		return fc
+// 	}
+
+// }

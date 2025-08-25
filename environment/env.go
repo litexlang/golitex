@@ -35,7 +35,7 @@ type FnInFnTTMemItem struct {
 	FnTemplateStmt *ast.FnTStruct
 }
 
-func NewFnInFnTTMemItem(inFcFn *ast.FcFn, fnTemplateStmt *ast.FnTStruct) FnInFnTTMemItem {
+func MakeFnInFnTTMemItem(inFcFn *ast.FcFn, fnTemplateStmt *ast.FnTStruct) FnInFnTTMemItem {
 	return FnInFnTTMemItem{
 		InFcFn:         inFcFn,
 		FnTemplateStmt: fnTemplateStmt,
