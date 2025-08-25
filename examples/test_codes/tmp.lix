@@ -18,9 +18,11 @@ prove:
 
 have fn:
 	f(x R) R:
-    	x = 0
         =>:
-            f(x) = 0
+            f(x) * f(x) < 1
+            f(x) > -1
+            f(x) < 1
     prove:
-        x = 0
-    have 1
+        0 < 1
+        0 * 0 < 1
+    have 0

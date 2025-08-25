@@ -40,6 +40,10 @@ func (f FcAtom) ReplaceFc(oldFc Fc, newFc Fc) Fc {
 }
 
 func (f *FcFn) ReplaceFc(oldFc Fc, newFc Fc) Fc {
+	if f.String() == oldFc.String() {
+		return newFc
+	}
+
 	var newFcFnHead = f.FnHead.ReplaceFc(oldFc, newFc)
 
 	newFcParams := make([]Fc, len(f.Params))
