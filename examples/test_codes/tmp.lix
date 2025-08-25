@@ -19,6 +19,8 @@ prove:
 have fn:
 	f(x R) R:
     	x = 0
+        =>:
+            f(x) = 0
     prove:
-        f(1) = 0
+        x = 0
     have 1
