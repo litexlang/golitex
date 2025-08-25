@@ -874,6 +874,6 @@ func (s *HaveFnLiftStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (s *ClaimHaveFnStmt) ToLatexString() string {
+func (s *HaveFnStmt) ToLatexString() string {
 	return "TODO"
 }

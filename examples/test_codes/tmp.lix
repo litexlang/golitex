@@ -1,3 +1,4 @@
+"""
 prove:
     let DOMAIN set, f_RET set, g_RET set, optRET set
     fn opt(x f_RET, y g_RET) optRET
@@ -12,3 +13,12 @@ prove:
     let item DOMAIN
 #    a(f,g) $in fn(DOMAIN)optRET
     a(f,g)(item) = opt(f(item),g(item))
+
+"""
+
+have fn:
+	f(x R) R:
+    	x = 0
+    prove:
+        f(1) = 0
+    have 1
