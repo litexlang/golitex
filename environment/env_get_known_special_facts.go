@@ -27,7 +27,7 @@ func (e *Env) GetEnumFact(enumName string) ([]ast.Fc, bool) {
 	return nil, false
 }
 
-func (e *Env) GetLatestFnTT_GivenNameIsIn(fnName string) (*FnInFnTTMemItem, bool) {
+func (e *Env) GetLatestFnT_GivenNameIsIn(fnName string) (*FnInFnTTMemItem, bool) {
 	for env := e; env != nil; env = env.Parent {
 		fnInFnTemplateFacts, ok := env.FnInFnTemplateFactsMem[fnName]
 		if ok {
