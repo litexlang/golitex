@@ -1,6 +1,11 @@
-fn_template T(t Z):
+fn_template T2(t Z):
     fn (z N) R
+
+fn_template T(t Z):
+    fn (z N) T2(t)
 
 fn a(x R) T(17)
 
-a(1)(2) $in R
+know a(1)(2)(3) = 3
+
+a(1)(2)(3) = 3
