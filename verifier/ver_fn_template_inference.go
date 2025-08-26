@@ -48,34 +48,39 @@ func (ver *Verifier) fcHeadIsAtom_InferTOfFc(fc *ast.FcFn) ([]env.FnInFnTMemItem
 		return nil, false
 	}
 
-	fnInFnTMemItem, ok := ver.env.GetLatestFnT_GivenNameIsIn(fcHeadAsAtom.String())
+	fnHeadTMemItem, ok := ver.env.GetLatestFnT_GivenNameIsIn(fcHeadAsAtom.String())
 	if !ok {
 		return nil, false
 	}
 
-	var templateFcHeadIsIn *env.FnInFnTMemItem
+	// var templateFcHeadIsIn *env.FnInFnTMemItem
 	var templateFcIsIn *env.FnInFnTMemItem
 	var err error
 
-	if fnInFnTMemItem.AsFcFn != nil {
+	if fnHeadTMemItem.AsFcFn != nil {
 		// a(params) 中的a，在 fn(..) fn(..)ret 或 fn(..) T(..) 中
-		templateFcHeadIsIn, templateFcIsIn, ok = ver.FcHeadIsAtom_AndIsInFcFnTWhoseRetIsAlsoT(fc, fnInFnTMemItem)
+		// templateFcHeadIsIn, templateFcIsIn, ok = ver.FcHeadIsAtom_AndIsInFcFnTWhoseRetIsAlsoT(fc, fnHeadTMemItem)
+		_, templateFcIsIn, ok = ver.FcHeadIsAtom_AndIsInFcFnTWhoseRetIsAlsoT(fc, fnHeadTMemItem)
 		if !ok {
 			return nil, false
 		}
 	} else {
 		// a(params) 中的a，在 T(): fn() T2() 或 T(): fn() fn()Ret 中
-		templateFcHeadIsIn, templateFcIsIn, ok = ver.FcHeadIsAtom_AndIsInUserDefinedTemplateWhoseRetIsAlsoFnTemplate(fc, fnInFnTMemItem)
+		// templateFcHeadIsIn, templateFcIsIn, ok = ver.FcHeadIsAtom_AndIsInUserDefinedTemplateWhoseRetIsAlsoFnTemplate(fc, fnHeadTMemItem)
+		_, templateFcIsIn, ok = ver.FcHeadIsAtom_AndIsInUserDefinedTemplateWhoseRetIsAlsoFnTemplate(fc, fnHeadTMemItem)
 		if !ok {
 			return nil, false
 		}
 	}
 
 	// params 满足 a 所在的 template 的参数要求
-	if templateFcHeadIsIn.AsFcFn != nil {
-		ok, err = ver.paramsSatisfy_FcFnT_ParamsReq(fc, templateFcHeadIsIn)
+	// if templateFcHeadIsIn.AsFcFn != nil {
+	if templateFcIsIn.AsFcFn != nil {
+		// ok, err = ver.paramsSatisfy_FcFnT_ParamsReq(fc, templateFcHeadIsIn)
+		ok, err = ver.paramsSatisfy_FcFnT_ParamsReq(fc, fnHeadTMemItem)
 	} else {
-		ok, err = ver.paramsSatisfy_UserDefinedTemplate_ParamsReq(fc, templateFcHeadIsIn)
+		// ok, err = ver.paramsSatisfy_UserDefinedTemplate_ParamsReq(fc, templateFcHeadIsIn)
+		ok, err = ver.paramsSatisfy_UserDefinedTemplate_ParamsReq(fc, fnHeadTMemItem)
 	}
 
 	if err != nil || !ok {
@@ -136,16 +141,16 @@ func (ver *Verifier) paramsSatisfy_UserDefinedTemplate_ParamsReq(fcFn *ast.FcFn,
 }
 
 // fc = a(params), a 在 fn(..) fn(..)ret 或 fn(..) T(..) 中，即 a 坐在的template的返回值还是template
-func (ver *Verifier) FcHeadIsAtom_AndIsInFcFnTWhoseRetIsAlsoT(fc *ast.FcFn, fnInFnTMemItem *env.FnInFnTMemItem) (*env.FnInFnTMemItem, *env.FnInFnTMemItem, bool) {
+func (ver *Verifier) FcHeadIsAtom_AndIsInFcFnTWhoseRetIsAlsoT(fc *ast.FcFn, fnHead_InFnTMemItem *env.FnInFnTMemItem) (*env.FnInFnTMemItem, *env.FnInFnTMemItem, bool) {
 	templateFcHeadIsIn := env.MakeFnInFnTTMemItem(nil, nil)
 	templateFcIsIn := env.MakeFnInFnTTMemItem(nil, nil)
 
 	uniMap := map[string]ast.Fc{}
-	for i, param := range fnInFnTMemItem.AsFcFn.Params {
-		uniMap[fnInFnTMemItem.AsFnTStruct.Params[i]] = param
+	for i, param := range fnHead_InFnTMemItem.AsFcFn.Params {
+		uniMap[fnHead_InFnTMemItem.AsFnTStruct.Params[i]] = param
 	}
 
-	InFcFn, err := fnInFnTMemItem.AsFcFn.Instantiate(uniMap)
+	InFcFn, err := fnHead_InFnTMemItem.AsFcFn.Instantiate(uniMap)
 	if err != nil {
 		return nil, nil, false
 	}
@@ -174,28 +179,34 @@ func (ver *Verifier) FcHeadIsAtom_AndIsInFcFnTWhoseRetIsAlsoT(fc *ast.FcFn, fnIn
 }
 
 // fc = a(params), a 在 T(): fn() T2() 或 T(): fn() fn()Ret 中，即 a 坐在的template的返回值还是template
-func (ver *Verifier) FcHeadIsAtom_AndIsInUserDefinedTemplateWhoseRetIsAlsoFnTemplate(fc *ast.FcFn, fnInFnTMemItem *env.FnInFnTMemItem) (*env.FnInFnTMemItem, *env.FnInFnTMemItem, bool) {
+func (ver *Verifier) FcHeadIsAtom_AndIsInUserDefinedTemplateWhoseRetIsAlsoFnTemplate(fc *ast.FcFn, fnHead_InFnTMemItem *env.FnInFnTMemItem) (*env.FnInFnTMemItem, *env.FnInFnTMemItem, bool) {
 	templateFcHeadIsIn := env.MakeFnInFnTTMemItem(nil, nil)
 	templateFcIsIn := env.MakeFnInFnTTMemItem(nil, nil)
 
-	uniMap := map[string]ast.Fc{}
-	for i, param := range fnInFnTMemItem.AsFnTStruct.Params {
-		uniMap[param] = fc.Params[i]
-	}
+	// uniMap := map[string]ast.Fc{}
+	// for i, param := range fnInFnTMemItem.AsFnTStruct.Params {
+	// 	uniMap[param] = fc.Params[i]
+	// }
 
-	inst_template_where_FcHeadIsIn, err := fnInFnTMemItem.AsFnTStruct.Instantiate(uniMap)
-	if err != nil {
-		return nil, nil, false
-	}
+	// inst_template_where_FcHeadIsIn, err := fnInFnTMemItem.AsFnTStruct.Instantiate(uniMap)
+	// if err != nil {
+	// 	return nil, nil, false
+	// }
 
-	templateFcHeadIsIn.AsFnTStruct = inst_template_where_FcHeadIsIn
+	// templateFcHeadIsIn.AsFnTStruct = inst_template_where_FcHeadIsIn
 
-	retTemplate, err := templateFcHeadIsIn.AsFnTStruct.RetSet.Instantiate(uniMap)
-	if err != nil {
-		return nil, nil, false
-	}
+	// retTemplate, err := templateFcHeadIsIn.AsFnTStruct.RetSet.Instantiate(uniMap)
+	// if err != nil {
+	// 	return nil, nil, false
+	// }
 
-	Template_WhereFcIsIn_AsFcFn, ok := retTemplate.(*ast.FcFn)
+	// Template_WhereFcIsIn_AsFcFn, ok := retTemplate.(*ast.FcFn)
+	// if !ok {
+	// 	return nil, nil, false
+	// }
+
+	Template_WhereFcIsIn := fnHead_InFnTMemItem.AsFnTStruct.RetSet
+	Template_WhereFcIsIn_AsFcFn, ok := Template_WhereFcIsIn.(*ast.FcFn)
 	if !ok {
 		return nil, nil, false
 	}
@@ -205,12 +216,30 @@ func (ver *Verifier) FcHeadIsAtom_AndIsInUserDefinedTemplateWhoseRetIsAlsoFnTemp
 		templateFcIsIn.AsFcFn = Template_WhereFcIsIn_AsFcFn
 	} else {
 		// a(params) 中的 a，在 T(): fn() T2(), retTemplateAsFcFn 是 T2()
+
 		uniMap := map[string]ast.Fc{}
-		if len(fc.Params) != len(fnInFnTMemItem.AsFnTStruct.Params) {
+		for i, param := range fnHead_InFnTMemItem.AsFnTStruct.Params {
+			uniMap[param] = fc.Params[i]
+		}
+
+		inst_template_where_FcHeadIsIn, err := fnHead_InFnTMemItem.AsFnTStruct.Instantiate(uniMap)
+		if err != nil {
 			return nil, nil, false
 		}
 
-		for i, param := range fnInFnTMemItem.AsFnTStruct.Params {
+		templateFcHeadIsIn.AsFnTStruct = inst_template_where_FcHeadIsIn
+
+		retTemplate, err := templateFcHeadIsIn.AsFnTStruct.RetSet.Instantiate(uniMap)
+		if err != nil {
+			return nil, nil, false
+		}
+
+		Template_WhereFcIsIn_AsFcFn, ok := retTemplate.(*ast.FcFn)
+		if !ok {
+			return nil, nil, false
+		}
+
+		for i, param := range fnHead_InFnTMemItem.AsFnTStruct.Params {
 			uniMap[param] = fc.Params[i]
 		}
 		inst_retTemplate, err := Template_WhereFcIsIn_AsFcFn.Instantiate(uniMap)
