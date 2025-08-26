@@ -67,11 +67,11 @@ func (ver *Verifier) leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftFnTStruc
 	}
 
 	mapLeftParamsToRightParams := map[string]ast.Fc{}
-	for i, param := range leftFnTStruct.FnTemplateStmt.Params {
+	for i, param := range leftFnTStruct.FnTStruct.Params {
 		mapLeftParamsToRightParams[param] = ast.FcAtom(instRightFnT.Params[i])
 	}
 
-	leftDom, err := leftFnTStruct.FnTemplateStmt.DomFacts.Instantiate(mapLeftParamsToRightParams)
+	leftDom, err := leftFnTStruct.FnTStruct.DomFacts.Instantiate(mapLeftParamsToRightParams)
 	if err != nil {
 		return false
 	}

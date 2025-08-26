@@ -157,17 +157,17 @@ func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactS
 
 	uniMap := map[string]ast.Fc{}
 	// if len(fnDef.Params) != len(fcFn.Params) {
-	if len(fnDef.FnTemplateStmt.Params) != len(fcFn.Params) {
+	if len(fnDef.FnTStruct.Params) != len(fcFn.Params) {
 		return false
 	}
 
 	// for i, param := range fnDef.Params {
-	for i, param := range fnDef.FnTemplateStmt.Params {
+	for i, param := range fnDef.FnTStruct.Params {
 		uniMap[param] = fcFn.Params[i]
 	}
 
 	// instantiatedRetSet, err := fnDef.RetSet.Instantiate(uniMap)
-	instantiatedRetSet, err := fnDef.FnTemplateStmt.RetSet.Instantiate(uniMap)
+	instantiatedRetSet, err := fnDef.FnTStruct.RetSet.Instantiate(uniMap)
 	if err != nil {
 		return false
 	}
@@ -523,17 +523,17 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Fc, fnFcFn *ast.FcFn, state *Ve
 	}
 
 	randomNames := []string{}
-	for i := 0; i < len(leftIsInWhichFnTT.FnTemplateStmt.Params); i++ {
+	for i := 0; i < len(leftIsInWhichFnTT.FnTStruct.Params); i++ {
 		randomNames = append(randomNames, ver.env.GenerateUndeclaredRandomName())
 	}
 	randomAtoms := []ast.Fc{}
-	for i := 0; i < len(leftIsInWhichFnTT.FnTemplateStmt.Params); i++ {
+	for i := 0; i < len(leftIsInWhichFnTT.FnTStruct.Params); i++ {
 		randomAtoms = append(randomAtoms, ast.FcAtom(randomNames[i]))
 	}
 
 	uniMap := map[string]ast.Fc{}
-	for i := 0; i < len(leftIsInWhichFnTT.FnTemplateStmt.Params); i++ {
-		uniMap[leftIsInWhichFnTT.FnTemplateStmt.Params[i]] = ast.FcAtom(randomNames[i])
+	for i := 0; i < len(leftIsInWhichFnTT.FnTStruct.Params); i++ {
+		uniMap[leftIsInWhichFnTT.FnTStruct.Params[i]] = ast.FcAtom(randomNames[i])
 	}
 
 	// check parameters of the left satisfies the fn template template requirement
@@ -548,7 +548,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Fc, fnFcFn *ast.FcFn, state *Ve
 		}
 	}
 
-	leftToUniFact, err := leftIsInWhichFnTT.FnTemplateStmt.DeriveUniFact_WithGivenFn(left)
+	leftToUniFact, err := leftIsInWhichFnTT.FnTStruct.DeriveUniFact_WithGivenFn(left)
 	if err != nil {
 		return false, err
 	}
@@ -563,7 +563,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Fc, fnFcFn *ast.FcFn, state *Ve
 	}
 
 	for i := range instLeftUniFactAsUniFactStmt.Params {
-		fact := ast.NewInFactWithParamFc(ast.FcAtom(randomNames[i]), leftIsInWhichFnTT.FnTemplateStmt.ParamSets[i])
+		fact := ast.NewInFactWithParamFc(ast.FcAtom(randomNames[i]), leftIsInWhichFnTT.FnTStruct.ParamSets[i])
 		ok, err := ver.VerFactStmt(fact, state)
 		if err != nil {
 			return false, err
@@ -578,8 +578,8 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Fc, fnFcFn *ast.FcFn, state *Ve
 		}
 	}
 
-	for i := range leftIsInWhichFnTT.FnTemplateStmt.DomFacts {
-		fact := leftIsInWhichFnTT.FnTemplateStmt.DomFacts[i]
+	for i := range leftIsInWhichFnTT.FnTStruct.DomFacts {
+		fact := leftIsInWhichFnTT.FnTStruct.DomFacts[i]
 		ok, err := ver.VerFactStmt(fact, state)
 		if err != nil {
 			return false, err
