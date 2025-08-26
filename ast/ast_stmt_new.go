@@ -178,8 +178,8 @@ func NewHaveObjEqualStmt(objNames []string, objEqualTos []Fc, objSets []Fc) *Hav
 	return &HaveObjEqualStmt{objNames, objEqualTos, objSets}
 }
 
-func NewHaveFnEqualStmt(defHeader *DefHeader, equalTo Fc, domFacts []FactStmt) *HaveFnEqualStmt {
-	return &HaveFnEqualStmt{*defHeader, equalTo, domFacts}
+func NewHaveFnEqualStmt(defHeader *DefHeader, retSet Fc, equalTo Fc) *HaveFnEqualStmt {
+	return &HaveFnEqualStmt{*defHeader, retSet, equalTo}
 }
 
 func NewHaveFnLiftStmt(fnName string, opt Fc, domainOfEachParamOfGivenFn []Fc) *HaveFnLiftStmt {

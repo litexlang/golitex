@@ -1,34 +1,8 @@
-prove:
-    have final_set set
-
-    fn_template T8(t R):
-        t >= 17
-        fn (z R) final_set:
-            dom:
-                z >= t
-
-    fn_template T7(t R):
-        fn (z R) T8(t)
-
-    fn_template T6(t R):
-        fn (z R) T7(t)
-
-    fn_template T5(t R):
-        fn (z R) T6(t)
-
-    fn_template T4(t R):
-        fn (z R) T5(t)
-
-    fn_template T3(t R):
-        fn (z R) T4(t)
-
-    fn_template T2(t R):
-        fn (z R) T3(t)
-
-    fn_template T(t R):
-        fn (z R) T2(t)
-
-    fn w(x R) T(17)
-    have b, z, d, g, s, m R
-    w(b) $in T(17)
-    w(b)(z)(d)(g)(s)(m)(m)(17) $in final_set
+have fn:
+	a(x R) R:
+        x > 0
+        =>:
+            a(x) > 0
+    prove:
+        x > 0
+    have x

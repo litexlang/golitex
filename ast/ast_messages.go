@@ -793,16 +793,6 @@ func (stmt *HaveFnEqualStmt) String() string {
 	builder.WriteString(" ")
 	builder.WriteString(stmt.EqualTo.String())
 
-	if len(stmt.DomFacts) > 0 {
-		builder.WriteString(glob.KeySymbolColon)
-		builder.WriteByte('\n')
-		domFactStrSlice := make([]string, len(stmt.DomFacts))
-		for i := range len(stmt.DomFacts) {
-			domFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(stmt.DomFacts[i].String(), 1)
-		}
-		builder.WriteString(strings.Join(domFactStrSlice, "\n"))
-	}
-
 	return builder.String()
 }
 
