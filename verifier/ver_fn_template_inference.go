@@ -41,58 +41,7 @@ func (ver *Verifier) GetFnTemplateSliceTheFnIsIn(fnName ast.Fc) ([]env.FnInFnTTM
 	}
 }
 
-func (ver *Verifier) paramsSatisfyFnTemplateParamReq(fcFn *ast.FcFn, fnInFnTTMemItem *env.FnInFnTTMemItem) (bool, error) {
-	if fnInFnTTMemItem.InFcFn != nil {
-		head, ok := fnInFnTTMemItem.InFcFn.FnHead.(*ast.FcFn)
-		if !ok {
-			return false, nil
-		}
-
-		for i, setWhereParamIsIn := range head.Params {
-			ok, err := ver.VerFactStmt(ast.NewInFactWithFc(fcFn.Params[i], setWhereParamIsIn), Round0NoMsg)
-			if err != nil {
-				return false, err
-			}
-			if !ok {
-				return false, nil
-			}
-		}
-
-		return true, nil
-
-	} else {
-		if len(fcFn.Params) != len(fnInFnTTMemItem.FnTemplateStmt.Params) {
-			return false, fmt.Errorf("parameters in %s must be %d, %s in %s is not valid", fcFn.FnHead, len(fnInFnTTMemItem.FnTemplateStmt.Params), fcFn, fcFn)
-		}
-
-		for i := range fcFn.Params {
-			inFact := ast.NewInFactWithFc(fcFn.Params[i], fnInFnTTMemItem.FnTemplateStmt.ParamSets[i])
-			ok, err := ver.VerFactStmt(inFact, Round0NoMsg)
-			if err != nil {
-				return false, err
-			}
-			if !ok {
-				return false, nil
-			}
-		}
-
-		for _, domFact := range fnInFnTTMemItem.FnTemplateStmt.DomFacts {
-			ok, err := ver.VerFactStmt(domFact, Round0NoMsg)
-			if err != nil {
-				return false, err
-			}
-			if !ok {
-				return false, nil
-			}
-		}
-
-		return true, nil
-	}
-
-}
-
 func (ver *Verifier) fcHeadIsAtom_InferTOfFc(fnNameAsFcFn *ast.FcFn) ([]env.FnInFnTTMemItem, bool) {
-	// 先只考虑这个 fnNameAsFcFn 是 f() 形式，而不是 f()() 这种
 	head, ok := fnNameAsFcFn.FnHead.(ast.FcAtom)
 	if !ok {
 		return nil, false
@@ -167,7 +116,12 @@ func (ver *Verifier) fcHeadIsAtom_InferTOfFc(fnNameAsFcFn *ast.FcFn) ([]env.FnIn
 	}
 
 	// 参数满足 fnTemplateDef 的参数要求
-	ok, err = ver.paramsSatisfyFnTemplateParamReq(fnNameAsFcFn, &templateFnIsIn)
+	if templateFnIsIn.InFcFn != nil {
+		ok, err = ver.paramsSatisfy_FcFnT_ParamsReq(fnNameAsFcFn, &templateFnIsIn)
+	} else {
+		ok, err = ver.paramsSatisfy_UserDefinedTemplate_ParamsReq(fnNameAsFcFn, &templateFnIsIn)
+	}
+
 	if err != nil {
 		return nil, false
 	}
@@ -177,4 +131,53 @@ func (ver *Verifier) fcHeadIsAtom_InferTOfFc(fnNameAsFcFn *ast.FcFn) ([]env.FnIn
 
 	// 代入到 retSet 里
 	return []env.FnInFnTTMemItem{ret}, true
+}
+
+func (ver *Verifier) paramsSatisfy_FcFnT_ParamsReq(fcFn *ast.FcFn, fnInFnTTMemItem *env.FnInFnTTMemItem) (bool, error) {
+	head, ok := fnInFnTTMemItem.InFcFn.FnHead.(*ast.FcFn)
+	if !ok {
+		return false, nil
+	}
+
+	for i, setWhereParamIsIn := range head.Params {
+		ok, err := ver.VerFactStmt(ast.NewInFactWithFc(fcFn.Params[i], setWhereParamIsIn), Round0NoMsg)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+	}
+
+	return true, nil
+
+}
+
+func (ver *Verifier) paramsSatisfy_UserDefinedTemplate_ParamsReq(fcFn *ast.FcFn, fnInFnTTMemItem *env.FnInFnTTMemItem) (bool, error) {
+	if len(fcFn.Params) != len(fnInFnTTMemItem.FnTemplateStmt.Params) {
+		return false, fmt.Errorf("parameters in %s must be %d, %s in %s is not valid", fcFn.FnHead, len(fnInFnTTMemItem.FnTemplateStmt.Params), fcFn, fcFn)
+	}
+
+	for i := range fcFn.Params {
+		inFact := ast.NewInFactWithFc(fcFn.Params[i], fnInFnTTMemItem.FnTemplateStmt.ParamSets[i])
+		ok, err := ver.VerFactStmt(inFact, Round0NoMsg)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+	}
+
+	for _, domFact := range fnInFnTTMemItem.FnTemplateStmt.DomFacts {
+		ok, err := ver.VerFactStmt(domFact, Round0NoMsg)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+	}
+
+	return true, nil
 }
