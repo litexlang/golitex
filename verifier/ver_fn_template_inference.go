@@ -58,39 +58,15 @@ func (ver *Verifier) fcHeadIsAtom_InferTOfFc(fc *ast.FcFn) ([]env.FnInFnTMemItem
 
 	var err error
 	if fnInFnTMemItem.InFcFn != nil {
+		// a(params) 中的a，在 fn(..) fn(..)ret 或 fn(..) T(..) 中
 		templateFcHeadIsIn, templateFcIsIn, ok = ver.FcHead_In_FcFnTWhoseRetIsAlsoT(fc, fnInFnTMemItem)
 		if !ok {
 			return nil, false
 		}
 	} else {
 		// a(params) 中的a，在 T(): fn() T2() 或 T(): fn() fn()Ret 中
-
-		uniMap := map[string]ast.Fc{}
-		for i, param := range fnInFnTMemItem.FnTemplateStmt.Params {
-			uniMap[param] = fc.Params[i]
-		}
-
-		template, err := fnInFnTMemItem.FnTemplateStmt.Instantiate(uniMap)
-		if err != nil {
-			return nil, false
-		}
-
-		templateFcHeadIsIn.FnTemplateStmt = template
-
-		retTemplate, err := templateFcHeadIsIn.FnTemplateStmt.RetSet.Instantiate(uniMap)
-		if err != nil {
-			return nil, false
-		}
-
-		retTemplateFcFn, ok := retTemplate.(*ast.FcFn)
+		templateFcHeadIsIn, templateFcIsIn, ok = ver.FcHead_In_UserDefinedTemplateWhoseRetIsAlsoFnTemplate(fc, fnInFnTMemItem)
 		if !ok {
-			return nil, false
-		}
-
-		if ast.IsFnTemplate_FcFn(retTemplateFcFn) {
-			templateFcIsIn.InFcFn = retTemplateFcFn
-		} else {
-			// 不知道如何处理返回值是 template 的情况
 			return nil, false
 		}
 	}
@@ -193,6 +169,42 @@ func (ver *Verifier) FcHead_In_FcFnTWhoseRetIsAlsoT(fc *ast.FcFn, fnInFnTMemItem
 		templateFcIsIn.InFcFn = retFcFn.(*ast.FcFn)
 	} else {
 		// a(params) 中的 a， 在 fn(..) T(..) 中 (T是某template)
+		return nil, nil, false
+	}
+
+	return &templateFcHeadIsIn, &templateFcIsIn, true
+}
+
+func (ver *Verifier) FcHead_In_UserDefinedTemplateWhoseRetIsAlsoFnTemplate(fc *ast.FcFn, fnInFnTMemItem *env.FnInFnTMemItem) (*env.FnInFnTMemItem, *env.FnInFnTMemItem, bool) {
+	templateFcHeadIsIn := env.MakeFnInFnTTMemItem(nil, nil)
+	templateFcIsIn := env.MakeFnInFnTTMemItem(nil, nil)
+
+	uniMap := map[string]ast.Fc{}
+	for i, param := range fnInFnTMemItem.FnTemplateStmt.Params {
+		uniMap[param] = fc.Params[i]
+	}
+
+	template, err := fnInFnTMemItem.FnTemplateStmt.Instantiate(uniMap)
+	if err != nil {
+		return nil, nil, false
+	}
+
+	templateFcHeadIsIn.FnTemplateStmt = template
+
+	retTemplate, err := templateFcHeadIsIn.FnTemplateStmt.RetSet.Instantiate(uniMap)
+	if err != nil {
+		return nil, nil, false
+	}
+
+	retTemplateFcFn, ok := retTemplate.(*ast.FcFn)
+	if !ok {
+		return nil, nil, false
+	}
+
+	if ast.IsFnTemplate_FcFn(retTemplateFcFn) {
+		templateFcIsIn.InFcFn = retTemplateFcFn
+	} else {
+		// 不知道如何处理返回值是 template 的情况
 		return nil, nil, false
 	}
 
