@@ -152,8 +152,8 @@ func (ver *Verifier) fcFnSatisfy_FnTemplate_Requirement(fc ast.Fc, state *VerSta
 	}
 
 	for i := len(fnTemplateSlice) - 1; i >= 0; i-- {
-		if fnTemplateSlice[i].FnTStruct != nil {
-			ok, err = ver.fcFnParamsSatisfyFnTemplateNoNameRequirement(asFcFn, fnTemplateSlice[i].FnTStruct, state)
+		if fnTemplateSlice[i].AsFnTStruct != nil {
+			ok, err = ver.fcFnParamsSatisfyFnTemplateNoNameRequirement(asFcFn, fnTemplateSlice[i].AsFnTStruct, state)
 			if err != nil {
 				return false, err
 			}
@@ -161,18 +161,18 @@ func (ver *Verifier) fcFnSatisfy_FnTemplate_Requirement(fc ast.Fc, state *VerSta
 				return true, nil
 			}
 		} else {
-			if fnTemplateSlice[i].InFcFn == nil {
+			if fnTemplateSlice[i].AsFcFn == nil {
 				return false, nil
 			}
 
 			everythingOK := true
 
-			if len(asFcFn.Params) != len(fnTemplateSlice[i].InFcFn.Params) {
+			if len(asFcFn.Params) != len(fnTemplateSlice[i].AsFcFn.Params) {
 				return false, nil
 			}
 
 			for i := range asFcFn.Params {
-				ok, err = ver.VerFactStmt(ast.NewInFactWithFc(asFcFn.Params[i], fnTemplateSlice[i].InFcFn.FnHead.(*ast.FcFn).Params[i]), state)
+				ok, err = ver.VerFactStmt(ast.NewInFactWithFc(asFcFn.Params[i], fnTemplateSlice[i].AsFcFn.FnHead.(*ast.FcFn).Params[i]), state)
 				if err != nil {
 					return false, err
 				}
