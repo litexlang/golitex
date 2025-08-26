@@ -252,7 +252,7 @@ func (e *Env) GetSpecFact_InLogicExpr_InUniFactMem() (*SpecFact_InLogicExpr_InUn
 	return &e.KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem, true
 }
 
-func (e *Env) IsFnDeclared(fc ast.FcAtom) (*FnInFnTTMemItem, bool) {
+func (e *Env) IsFnDeclared(fc ast.FcAtom) (*FnInFnTMemItem, bool) {
 	// TODO 这里需要更严格检查一下是否是正常的函数名，但是目前没有
 	if _, ok := glob.BuiltinKeywordsSet[string(fc)]; ok {
 		return nil, true
