@@ -31,14 +31,14 @@ type ObjDefMem map[string]ast.FnTemplate_Or_DefObjStmtInterface // 因为很多�
 type FnInFnTMem map[string][]FnInFnTMemItem
 
 type FnInFnTMemItem struct {
-	InFcFn    *ast.FcFn // 可能是 fn(R)R 这种，或者 TName(params) 这样，或者是nil（比如 defFnStmt 声明出来的）
-	FnTStruct *ast.FnTStruct
+	AsFcFn      *ast.FcFn // 可能是 fn(R)R 这种，或者 TName(params) 这样，或者是nil（比如 defFnStmt 声明出来的）
+	AsFnTStruct *ast.FnTStruct
 }
 
 func MakeFnInFnTTMemItem(inFcFn *ast.FcFn, fnTemplateStmt *ast.FnTStruct) FnInFnTMemItem {
 	return FnInFnTMemItem{
-		InFcFn:    inFcFn,
-		FnTStruct: fnTemplateStmt,
+		AsFcFn:      inFcFn,
+		AsFnTStruct: fnTemplateStmt,
 	}
 }
 
