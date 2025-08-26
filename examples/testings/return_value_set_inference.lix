@@ -1,0 +1,43 @@
+prove:
+    fn_template T(t Z):
+        fn (z N) fn(R)R
+
+    fn a(x R) T(17)
+
+#    know a(1)(2)(3) = 17
+
+    a(1)(2)(3) $in R
+
+prove:
+    fn_template T2(t Z):
+        fn (z N) R
+
+    fn_template T(t Z):
+        fn (z N) T2(t)
+
+    fn a(x R) T(17)
+
+    a(1)(2)(3) $in R
+
+prove:
+    let DOMAIN set, f_RET set, g_RET set, optRET set
+    fn opt(x f_RET, y g_RET) optRET
+
+    fn a(f fn(DOMAIN)f_RET, g fn(DOMAIN)g_RET) fn(DOMAIN)optRET: # 最右侧的R，因为+的返回值是R所以是R
+        forall x DOMAIN:
+            a(f,g)(x) = opt(f(x),g(x))
+            
+    fn f(x DOMAIN)f_RET
+    fn g(x DOMAIN)g_RET
+
+    let item DOMAIN
+
+    a(f,g)(item) = opt(f(item),g(item))
+
+prove:
+	fn_template T(t Z):
+		fn (z N) R
+
+	fn a(x R) T(17)
+
+    a(1)(2) $in R
