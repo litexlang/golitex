@@ -26,6 +26,60 @@ func (ver *Verifier) GetFnTemplateSliceTheFnIsIn(fnName ast.Fc) ([]env.FnInFnTTM
 		return fnInFnTTMenItemSlice, true
 	}
 
+	return ver.fcHeadIsFcFn_InferItsFnTemplate(fnName)
+}
+
+func (ver *Verifier) paramsSatisfyFnTemplateParamReq(fcFn *ast.FcFn, fnInFnTTMemItem *env.FnInFnTTMemItem) (bool, error) {
+	if fnInFnTTMemItem.InFcFn != nil {
+		head, ok := fnInFnTTMemItem.InFcFn.FnHead.(*ast.FcFn)
+		if !ok {
+			return false, nil
+		}
+
+		for i, setWhereParamIsIn := range head.Params {
+			ok, err := ver.VerFactStmt(ast.NewInFactWithFc(fcFn.Params[i], setWhereParamIsIn), Round0NoMsg)
+			if err != nil {
+				return false, err
+			}
+			if !ok {
+				return false, nil
+			}
+		}
+
+		return true, nil
+
+	} else {
+		if len(fcFn.Params) != len(fnInFnTTMemItem.FnTemplateStmt.Params) {
+			return false, fmt.Errorf("parameters in %s must be %d, %s in %s is not valid", fcFn.FnHead, len(fnInFnTTMemItem.FnTemplateStmt.Params), fcFn, fcFn)
+		}
+
+		for i := range fcFn.Params {
+			inFact := ast.NewInFactWithFc(fcFn.Params[i], fnInFnTTMemItem.FnTemplateStmt.ParamSets[i])
+			ok, err := ver.VerFactStmt(inFact, Round0NoMsg)
+			if err != nil {
+				return false, err
+			}
+			if !ok {
+				return false, nil
+			}
+		}
+
+		for _, domFact := range fnInFnTTMemItem.FnTemplateStmt.DomFacts {
+			ok, err := ver.VerFactStmt(domFact, Round0NoMsg)
+			if err != nil {
+				return false, err
+			}
+			if !ok {
+				return false, nil
+			}
+		}
+
+		return true, nil
+	}
+
+}
+
+func (ver *Verifier) fcHeadIsFcFn_InferItsFnTemplate(fnName ast.Fc) ([]env.FnInFnTTMemItem, bool) {
 	fnNameAsFcFn, ok := fnName.(*ast.FcFn)
 	if !ok {
 		return nil, false
@@ -42,11 +96,12 @@ func (ver *Verifier) GetFnTemplateSliceTheFnIsIn(fnName ast.Fc) ([]env.FnInFnTTM
 	// if !ok {
 	// 	return nil, false
 	// }
-	fnInFnTTMemItemSlice, ok := ver.env.FnInFnTemplateFactsMem[head.String()]
+	// fnInFnTTMemItemSlice, ok := ver.env.FnInFnTemplateFactsMem[head.String()]
+	fnInFnTTMemItem, ok := ver.env.GetLatestFnTT_GivenNameIsIn(head.String())
 	if !ok {
 		return nil, false
 	}
-	fnInFnTTMemItem := fnInFnTTMemItemSlice[len(fnInFnTTMemItemSlice)-1]
+	// fnInFnTTMemItem := fnInFnTTMemItemSlice[len(fnInFnTTMemItemSlice)-1]
 	// var ret = env.FnInFnTTMemItem{nil, nil}
 	ret := env.MakeFnInFnTTMemItem(nil, nil)
 
@@ -124,54 +179,4 @@ func (ver *Verifier) GetFnTemplateSliceTheFnIsIn(fnName ast.Fc) ([]env.FnInFnTTM
 
 	// 代入到 retSet 里
 	return []env.FnInFnTTMemItem{ret}, true
-}
-
-func (ver *Verifier) paramsSatisfyFnTemplateParamReq(fcFn *ast.FcFn, fnInFnTTMemItem *env.FnInFnTTMemItem) (bool, error) {
-	if fnInFnTTMemItem.InFcFn != nil {
-		head, ok := fnInFnTTMemItem.InFcFn.FnHead.(*ast.FcFn)
-		if !ok {
-			return false, nil
-		}
-
-		for i, setWhereParamIsIn := range head.Params {
-			ok, err := ver.VerFactStmt(ast.NewInFactWithFc(fcFn.Params[i], setWhereParamIsIn), Round0NoMsg)
-			if err != nil {
-				return false, err
-			}
-			if !ok {
-				return false, nil
-			}
-		}
-
-		return true, nil
-
-	} else {
-		if len(fcFn.Params) != len(fnInFnTTMemItem.FnTemplateStmt.Params) {
-			return false, fmt.Errorf("parameters in %s must be %d, %s in %s is not valid", fcFn.FnHead, len(fnInFnTTMemItem.FnTemplateStmt.Params), fcFn, fcFn)
-		}
-
-		for i := range fcFn.Params {
-			inFact := ast.NewInFactWithFc(fcFn.Params[i], fnInFnTTMemItem.FnTemplateStmt.ParamSets[i])
-			ok, err := ver.VerFactStmt(inFact, Round0NoMsg)
-			if err != nil {
-				return false, err
-			}
-			if !ok {
-				return false, nil
-			}
-		}
-
-		for _, domFact := range fnInFnTTMemItem.FnTemplateStmt.DomFacts {
-			ok, err := ver.VerFactStmt(domFact, Round0NoMsg)
-			if err != nil {
-				return false, err
-			}
-			if !ok {
-				return false, nil
-			}
-		}
-
-		return true, nil
-	}
-
 }
