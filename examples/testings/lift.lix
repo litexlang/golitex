@@ -10,7 +10,7 @@ prove:
     fn g(x DOMAIN)g_RET
 
     let item DOMAIN
-    a(f,g) $in fn(DOMAIN)optRET
+
     a(f,g)(item) = opt(f(item),g(item))
 
 prove:
