@@ -20,20 +20,20 @@ import (
 	env "golitex/environment"
 )
 
-func (ver *Verifier) GetFnTemplateSliceTheFnIsIn(fnName ast.Fc) ([]env.FnInFnTTMemItem, bool) {
-	fnInFnTTMenItemSlice, ok := ver.env.GetFnTemplateSliceTheFnIsInFromEnv(fnName.String())
+func (ver *Verifier) GetFnTemplateSliceTheFnIsIn(fc ast.Fc) ([]env.FnInFnTMemItem, bool) {
+	fnInFnTTMenItemSlice, ok := ver.env.GetFnTemplateSliceTheFnIsInFromEnv(fc.String())
 	if ok {
 		return fnInFnTTMenItemSlice, true
 	}
 
-	fnNameAsFcFn, ok := fnName.(*ast.FcFn)
+	fcAsFcFn, ok := fc.(*ast.FcFn)
 	if !ok {
 		return nil, false
 	}
 
-	switch fnNameAsFcFn.FnHead.(type) {
+	switch fcAsFcFn.FnHead.(type) {
 	case ast.FcAtom:
-		return ver.fcHeadIsAtom_InferTOfFc(fnNameAsFcFn)
+		return ver.fcHeadIsAtom_InferTOfFc(fcAsFcFn)
 	case *ast.FcFn:
 		return nil, false
 	default:
@@ -42,7 +42,7 @@ func (ver *Verifier) GetFnTemplateSliceTheFnIsIn(fnName ast.Fc) ([]env.FnInFnTTM
 }
 
 // fc = a(params)，其中 a(params)本身是一个函数，它在 fn(..) fn(..)ret 或 fn(..) T(..) 中
-func (ver *Verifier) fcHeadIsAtom_InferTOfFc(fc *ast.FcFn) ([]env.FnInFnTTMemItem, bool) {
+func (ver *Verifier) fcHeadIsAtom_InferTOfFc(fc *ast.FcFn) ([]env.FnInFnTMemItem, bool) {
 	fcHeadAsAtom, ok := fc.FnHead.(ast.FcAtom)
 	if !ok {
 		return nil, false
@@ -52,40 +52,14 @@ func (ver *Verifier) fcHeadIsAtom_InferTOfFc(fc *ast.FcFn) ([]env.FnInFnTTMemIte
 	if !ok {
 		return nil, false
 	}
-	ret := env.MakeFnInFnTTMemItem(nil, nil)
 
-	templateFcIsIn := env.MakeFnInFnTTMemItem(nil, nil)
+	var templateFcHeadIsIn *env.FnInFnTMemItem
+	var templateFcIsIn *env.FnInFnTMemItem
+
 	var err error
 	if fnInFnTMemItem.InFcFn != nil {
-		// fc = a(params) 中的 a， 在 fn(..) fn(..)ret 或 fn(..) T(..) 中 (T是某template)
-
-		uniMap := map[string]ast.Fc{}
-		for i, param := range fnInFnTMemItem.InFcFn.Params {
-			uniMap[fnInFnTMemItem.FnTemplateStmt.Params[i]] = param
-		}
-
-		InFcFn, err := fnInFnTMemItem.InFcFn.Instantiate(uniMap)
-		if err != nil {
-			return nil, false
-		}
-
-		templateFcIsIn.InFcFn = InFcFn.(*ast.FcFn)
-
-		retFcFn, err := templateFcIsIn.InFcFn.Params[0].Instantiate(uniMap)
-		if err != nil {
-			return nil, false
-		}
-
-		retFcFnAsFcFn, ok := retFcFn.(*ast.FcFn)
+		templateFcHeadIsIn, templateFcIsIn, ok = ver.FcHead_In_FcFnTWhoseRetIsAlsoT(fc, fnInFnTMemItem)
 		if !ok {
-			return nil, false
-		}
-
-		if ast.IsFnTemplate_FcFn(retFcFnAsFcFn) {
-			// a(params) 中的 a， 在 fn(..) fn(..)ret
-			ret.InFcFn = retFcFn.(*ast.FcFn)
-		} else {
-			// a(params) 中的 a， 在 fn(..) T(..) 中 (T是某template)
 			return nil, false
 		}
 	} else {
@@ -101,9 +75,9 @@ func (ver *Verifier) fcHeadIsAtom_InferTOfFc(fc *ast.FcFn) ([]env.FnInFnTTMemIte
 			return nil, false
 		}
 
-		templateFcIsIn.FnTemplateStmt = template
+		templateFcHeadIsIn.FnTemplateStmt = template
 
-		retTemplate, err := templateFcIsIn.FnTemplateStmt.RetSet.Instantiate(uniMap)
+		retTemplate, err := templateFcHeadIsIn.FnTemplateStmt.RetSet.Instantiate(uniMap)
 		if err != nil {
 			return nil, false
 		}
@@ -114,7 +88,7 @@ func (ver *Verifier) fcHeadIsAtom_InferTOfFc(fc *ast.FcFn) ([]env.FnInFnTTMemIte
 		}
 
 		if ast.IsFnTemplate_FcFn(retTemplateFcFn) {
-			ret.InFcFn = retTemplateFcFn
+			templateFcIsIn.InFcFn = retTemplateFcFn
 		} else {
 			// 不知道如何处理返回值是 template 的情况
 			return nil, false
@@ -122,10 +96,10 @@ func (ver *Verifier) fcHeadIsAtom_InferTOfFc(fc *ast.FcFn) ([]env.FnInFnTTMemIte
 	}
 
 	// 参数满足 fnTemplateDef 的参数要求
-	if templateFcIsIn.InFcFn != nil {
-		ok, err = ver.paramsSatisfy_FcFnT_ParamsReq(fc, &templateFcIsIn)
+	if templateFcHeadIsIn.InFcFn != nil {
+		ok, err = ver.paramsSatisfy_FcFnT_ParamsReq(fc, templateFcHeadIsIn)
 	} else {
-		ok, err = ver.paramsSatisfy_UserDefinedTemplate_ParamsReq(fc, &templateFcIsIn)
+		ok, err = ver.paramsSatisfy_UserDefinedTemplate_ParamsReq(fc, templateFcHeadIsIn)
 	}
 
 	if err != nil {
@@ -136,10 +110,10 @@ func (ver *Verifier) fcHeadIsAtom_InferTOfFc(fc *ast.FcFn) ([]env.FnInFnTTMemIte
 	}
 
 	// 代入到 retSet 里
-	return []env.FnInFnTTMemItem{ret}, true
+	return []env.FnInFnTMemItem{*templateFcIsIn}, true
 }
 
-func (ver *Verifier) paramsSatisfy_FcFnT_ParamsReq(fcFn *ast.FcFn, fnInFnTTMemItem *env.FnInFnTTMemItem) (bool, error) {
+func (ver *Verifier) paramsSatisfy_FcFnT_ParamsReq(fcFn *ast.FcFn, fnInFnTTMemItem *env.FnInFnTMemItem) (bool, error) {
 	head, ok := fnInFnTTMemItem.InFcFn.FnHead.(*ast.FcFn)
 	if !ok {
 		return false, nil
@@ -159,7 +133,7 @@ func (ver *Verifier) paramsSatisfy_FcFnT_ParamsReq(fcFn *ast.FcFn, fnInFnTTMemIt
 
 }
 
-func (ver *Verifier) paramsSatisfy_UserDefinedTemplate_ParamsReq(fcFn *ast.FcFn, fnInFnTTMemItem *env.FnInFnTTMemItem) (bool, error) {
+func (ver *Verifier) paramsSatisfy_UserDefinedTemplate_ParamsReq(fcFn *ast.FcFn, fnInFnTTMemItem *env.FnInFnTMemItem) (bool, error) {
 	if len(fcFn.Params) != len(fnInFnTTMemItem.FnTemplateStmt.Params) {
 		return false, fmt.Errorf("parameters in %s must be %d, %s in %s is not valid", fcFn.FnHead, len(fnInFnTTMemItem.FnTemplateStmt.Params), fcFn, fcFn)
 	}
@@ -186,4 +160,41 @@ func (ver *Verifier) paramsSatisfy_UserDefinedTemplate_ParamsReq(fcFn *ast.FcFn,
 	}
 
 	return true, nil
+}
+
+func (ver *Verifier) FcHead_In_FcFnTWhoseRetIsAlsoT(fc *ast.FcFn, fnInFnTMemItem *env.FnInFnTMemItem) (*env.FnInFnTMemItem, *env.FnInFnTMemItem, bool) {
+	templateFcHeadIsIn := env.MakeFnInFnTTMemItem(nil, nil)
+	templateFcIsIn := env.MakeFnInFnTTMemItem(nil, nil)
+
+	uniMap := map[string]ast.Fc{}
+	for i, param := range fnInFnTMemItem.InFcFn.Params {
+		uniMap[fnInFnTMemItem.FnTemplateStmt.Params[i]] = param
+	}
+
+	InFcFn, err := fnInFnTMemItem.InFcFn.Instantiate(uniMap)
+	if err != nil {
+		return nil, nil, false
+	}
+
+	templateFcHeadIsIn.InFcFn = InFcFn.(*ast.FcFn)
+
+	retFcFn, err := templateFcHeadIsIn.InFcFn.Params[0].Instantiate(uniMap)
+	if err != nil {
+		return nil, nil, false
+	}
+
+	retFcFnAsFcFn, ok := retFcFn.(*ast.FcFn)
+	if !ok {
+		return nil, nil, false
+	}
+
+	if ast.IsFnTemplate_FcFn(retFcFnAsFcFn) {
+		// a(params) 中的 a， 在 fn(..) fn(..)ret
+		templateFcIsIn.InFcFn = retFcFn.(*ast.FcFn)
+	} else {
+		// a(params) 中的 a， 在 fn(..) T(..) 中 (T是某template)
+		return nil, nil, false
+	}
+
+	return &templateFcHeadIsIn, &templateFcIsIn, true
 }
