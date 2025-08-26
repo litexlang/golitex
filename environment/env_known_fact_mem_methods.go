@@ -263,7 +263,7 @@ func (e *Env) IsFnDeclared(fc ast.FcAtom) (*FnInFnTTMemItem, bool) {
 		return nil, true
 	}
 
-	fnDef, ok := e.GetLatestFnTT_GivenNameIsIn(string(fc))
+	fnDef, ok := e.GetLatestFnT_GivenNameIsIn(string(fc))
 	if !ok {
 		return nil, false
 	}

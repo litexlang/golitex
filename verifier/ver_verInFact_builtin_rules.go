@@ -150,7 +150,7 @@ func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactS
 	// 	return false // 这里不传error是有点道理的，因为+-*/的定义不在mem里
 	// }
 
-	fnDef, ok := ver.env.GetLatestFnTT_GivenNameIsIn(fcFn.FnHead.String())
+	fnDef, ok := ver.env.GetLatestFnT_GivenNameIsIn(fcFn.FnHead.String())
 	if !ok {
 		return false // 这里不传error是有点道理的，因为+-*/的定义不在mem里
 	}
@@ -316,7 +316,7 @@ func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state *VerState) (
 
 	if leftAsAtom, ok := stmt.Params[0].(ast.FcAtom); ok {
 		// _, ok := ver.env.GetFnTemplateDef(leftAsAtom)
-		_, ok := ver.env.GetLatestFnTT_GivenNameIsIn(leftAsAtom.String())
+		_, ok := ver.env.GetLatestFnT_GivenNameIsIn(leftAsAtom.String())
 		if ok {
 			return ver.processOkMsg(state, stmt.String(), "%s is a fn template and all fn templates are sets", leftAsAtom)
 		}
@@ -517,7 +517,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Fc, fnFcFn *ast.FcFn, state *Ve
 
 	// check when parameters satisfy given fnFcFn parameter requirements, then it satisfies the fn template template requirement
 
-	leftIsInWhichFnTT, ok := ver.env.GetLatestFnTT_GivenNameIsIn(left.String())
+	leftIsInWhichFnTT, ok := ver.env.GetLatestFnT_GivenNameIsIn(left.String())
 	if !ok {
 		return false, nil
 	}

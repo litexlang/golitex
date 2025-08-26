@@ -41,34 +41,37 @@ func (ver *Verifier) GetFnTemplateSliceTheFnIsIn(fnName ast.Fc) ([]env.FnInFnTTM
 	}
 }
 
-func (ver *Verifier) fcHeadIsAtom_InferTOfFc(fnNameAsFcFn *ast.FcFn) ([]env.FnInFnTTMemItem, bool) {
-	head, ok := fnNameAsFcFn.FnHead.(ast.FcAtom)
+// fc = a(params)，其中 a(params)本身是一个函数，它在 fn(..) fn(..)ret 或 fn(..) T(..) 中
+func (ver *Verifier) fcHeadIsAtom_InferTOfFc(fc *ast.FcFn) ([]env.FnInFnTTMemItem, bool) {
+	fcHeadAsAtom, ok := fc.FnHead.(ast.FcAtom)
 	if !ok {
 		return nil, false
 	}
 
-	fnInFnTTMemItem, ok := ver.env.GetLatestFnTT_GivenNameIsIn(head.String())
+	fnInFnTMemItem, ok := ver.env.GetLatestFnT_GivenNameIsIn(fcHeadAsAtom.String())
 	if !ok {
 		return nil, false
 	}
 	ret := env.MakeFnInFnTTMemItem(nil, nil)
 
-	templateFnIsIn := env.MakeFnInFnTTMemItem(nil, nil)
+	templateFcIsIn := env.MakeFnInFnTTMemItem(nil, nil)
 	var err error
-	if fnInFnTTMemItem.InFcFn != nil {
+	if fnInFnTMemItem.InFcFn != nil {
+		// fc = a(params) 中的 a， 在 fn(..) fn(..)ret 或 fn(..) T(..) 中 (T是某template)
+
 		uniMap := map[string]ast.Fc{}
-		for i, param := range fnInFnTTMemItem.InFcFn.Params {
-			uniMap[fnInFnTTMemItem.FnTemplateStmt.Params[i]] = param
+		for i, param := range fnInFnTMemItem.InFcFn.Params {
+			uniMap[fnInFnTMemItem.FnTemplateStmt.Params[i]] = param
 		}
 
-		InFcFn, err := fnInFnTTMemItem.InFcFn.Instantiate(uniMap)
+		InFcFn, err := fnInFnTMemItem.InFcFn.Instantiate(uniMap)
 		if err != nil {
 			return nil, false
 		}
 
-		templateFnIsIn.InFcFn = InFcFn.(*ast.FcFn)
+		templateFcIsIn.InFcFn = InFcFn.(*ast.FcFn)
 
-		retFcFn, err := templateFnIsIn.InFcFn.Params[0].Instantiate(uniMap)
+		retFcFn, err := templateFcIsIn.InFcFn.Params[0].Instantiate(uniMap)
 		if err != nil {
 			return nil, false
 		}
@@ -79,25 +82,28 @@ func (ver *Verifier) fcHeadIsAtom_InferTOfFc(fnNameAsFcFn *ast.FcFn) ([]env.FnIn
 		}
 
 		if ast.IsFnTemplate_FcFn(retFcFnAsFcFn) {
+			// a(params) 中的 a， 在 fn(..) fn(..)ret
 			ret.InFcFn = retFcFn.(*ast.FcFn)
 		} else {
-			// 不知道如何处理返回值是 template 的情况
+			// a(params) 中的 a， 在 fn(..) T(..) 中 (T是某template)
 			return nil, false
 		}
 	} else {
+		// a(params) 中的a，在 T(): fn() T2() 或 T(): fn() fn()Ret 中
+
 		uniMap := map[string]ast.Fc{}
-		for i, param := range fnInFnTTMemItem.FnTemplateStmt.Params {
-			uniMap[param] = fnNameAsFcFn.Params[i]
+		for i, param := range fnInFnTMemItem.FnTemplateStmt.Params {
+			uniMap[param] = fc.Params[i]
 		}
 
-		template, err := fnInFnTTMemItem.FnTemplateStmt.Instantiate(uniMap)
+		template, err := fnInFnTMemItem.FnTemplateStmt.Instantiate(uniMap)
 		if err != nil {
 			return nil, false
 		}
 
-		templateFnIsIn.FnTemplateStmt = template
+		templateFcIsIn.FnTemplateStmt = template
 
-		retTemplate, err := templateFnIsIn.FnTemplateStmt.RetSet.Instantiate(uniMap)
+		retTemplate, err := templateFcIsIn.FnTemplateStmt.RetSet.Instantiate(uniMap)
 		if err != nil {
 			return nil, false
 		}
@@ -116,10 +122,10 @@ func (ver *Verifier) fcHeadIsAtom_InferTOfFc(fnNameAsFcFn *ast.FcFn) ([]env.FnIn
 	}
 
 	// 参数满足 fnTemplateDef 的参数要求
-	if templateFnIsIn.InFcFn != nil {
-		ok, err = ver.paramsSatisfy_FcFnT_ParamsReq(fnNameAsFcFn, &templateFnIsIn)
+	if templateFcIsIn.InFcFn != nil {
+		ok, err = ver.paramsSatisfy_FcFnT_ParamsReq(fc, &templateFcIsIn)
 	} else {
-		ok, err = ver.paramsSatisfy_UserDefinedTemplate_ParamsReq(fnNameAsFcFn, &templateFnIsIn)
+		ok, err = ver.paramsSatisfy_UserDefinedTemplate_ParamsReq(fc, &templateFcIsIn)
 	}
 
 	if err != nil {
