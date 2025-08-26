@@ -293,31 +293,31 @@ func (ver *Verifier) fcHeadIsFcFn_InferTOfFc(fc *ast.FcFn) ([]env.FnInFnTMemItem
 		for i, param := range latestFnTFcHeadIsIn.AsFnTStruct.Params {
 			uniMap[param] = fc.Params[i]
 		}
-		inst_retTemplate, err := latestFnTFcHeadIsIn.AsFnTStruct.RetSet.Instantiate(uniMap)
+
+		inst_templateFcIsIn, err := latestFnTFcHeadIsIn.AsFnTStruct.Instantiate(uniMap)
 		if err != nil {
 			return nil, false
 		}
 
-		inst_retTemplateAsFcFn, ok := inst_retTemplate.(*ast.FcFn)
+		inst_templateFcIsIn_retSet, ok := inst_templateFcIsIn.RetSet.(*ast.FcFn)
 		if !ok {
 			return nil, false
 		}
 
-		inst_TFcIsInHeadAsAtom, ok := inst_retTemplateAsFcFn.FnHead.(ast.FcAtom)
-		if !ok {
-			return nil, false
-		}
+		if ast.IsFnTemplate_FcFn(inst_templateFcIsIn_retSet) {
+			return []env.FnInFnTMemItem{env.MakeFnInFnTTMemItem(inst_templateFcIsIn_retSet, nil)}, true
+		} else {
+			inst_templateFcIsIn_retSet_Name, ok := inst_templateFcIsIn_retSet.FnHead.(ast.FcAtom)
+			if !ok {
+				return nil, false
+			}
 
-		defOfT, ok := ver.env.GetFnTemplateDef(inst_TFcIsInHeadAsAtom)
-		if !ok {
-			return nil, false
-		}
+			def, ok := ver.env.GetFnTemplateDef(inst_templateFcIsIn_retSet_Name)
+			if !ok {
+				return nil, false
+			}
 
-		inst_templateFcIsIn, err := defOfT.Instantiate_GetFnTemplateNoName(inst_retTemplateAsFcFn)
-		if err != nil {
-			return nil, false
+			return []env.FnInFnTMemItem{env.MakeFnInFnTTMemItem(nil, &def.Fn)}, true
 		}
-
-		return []env.FnInFnTMemItem{env.MakeFnInFnTTMemItem(nil, inst_templateFcIsIn)}, true
 	}
 }
