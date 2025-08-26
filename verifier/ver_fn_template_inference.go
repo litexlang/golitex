@@ -20,7 +20,7 @@ import (
 	env "golitex/environment"
 )
 
-func (ver *Verifier) GetFnTemplateSliceTheFnIsIn(fc ast.Fc) ([]env.FnInFnTMemItem, bool) {
+func (ver *Verifier) GetFnTemplateSliceFcIsIn(fc ast.Fc) ([]env.FnInFnTMemItem, bool) {
 	fnInFnTTMenItemSlice, ok := ver.env.GetFnTemplateSliceTheFnIsInFromEnv(fc.String())
 	if ok {
 		return fnInFnTTMenItemSlice, true
@@ -35,7 +35,7 @@ func (ver *Verifier) GetFnTemplateSliceTheFnIsIn(fc ast.Fc) ([]env.FnInFnTMemIte
 	case ast.FcAtom:
 		return ver.fcHeadIsAtom_InferTOfFc(fcAsFcFn)
 	case *ast.FcFn:
-		return nil, false
+		return ver.fcHeadIsFcFn_InferTOfFc(fcAsFcFn)
 	default:
 		return nil, false
 	}
@@ -206,6 +206,10 @@ func (ver *Verifier) FcHeadIsAtom_AndIsInUserDefinedTemplateWhoseRetIsAlsoFnTemp
 	} else {
 		// a(params) 中的 a，在 T(): fn() T2(), retTemplateAsFcFn 是 T2()
 		uniMap := map[string]ast.Fc{}
+		if len(fc.Params) != len(fnInFnTMemItem.AsFnTStruct.Params) {
+			return nil, nil, false
+		}
+
 		for i, param := range fnInFnTMemItem.AsFnTStruct.Params {
 			uniMap[param] = fc.Params[i]
 		}
@@ -236,4 +240,53 @@ func (ver *Verifier) FcHeadIsAtom_AndIsInUserDefinedTemplateWhoseRetIsAlsoFnTemp
 	}
 
 	return &templateFcHeadIsIn, &templateFcIsIn, true
+}
+
+// 形如 a()()(), a()()()()... 这样的 fc
+func (ver *Verifier) fcHeadIsFcFn_InferTOfFc(fc *ast.FcFn) ([]env.FnInFnTMemItem, bool) {
+	fnTSlice_whereFcHeadIsIn, ok := ver.GetFnTemplateSliceFcIsIn(fc.FnHead)
+	if !ok {
+		return nil, false
+	}
+
+	latestFnTFcHeadIsIn := fnTSlice_whereFcHeadIsIn[len(fnTSlice_whereFcHeadIsIn)-1]
+
+	if latestFnTFcHeadIsIn.AsFcFn != nil {
+		return []env.FnInFnTMemItem{env.MakeFnInFnTTMemItem(latestFnTFcHeadIsIn.AsFcFn, nil)}, true
+	} else {
+		uniMap := map[string]ast.Fc{}
+		if len(fc.Params) != len(latestFnTFcHeadIsIn.AsFnTStruct.Params) {
+			return nil, false
+		}
+
+		for i, param := range latestFnTFcHeadIsIn.AsFnTStruct.Params {
+			uniMap[param] = fc.Params[i]
+		}
+		inst_retTemplate, err := latestFnTFcHeadIsIn.AsFnTStruct.RetSet.Instantiate(uniMap)
+		if err != nil {
+			return nil, false
+		}
+
+		inst_retTemplateAsFcFn, ok := inst_retTemplate.(*ast.FcFn)
+		if !ok {
+			return nil, false
+		}
+
+		inst_TFcIsInHeadAsAtom, ok := inst_retTemplateAsFcFn.FnHead.(ast.FcAtom)
+		if !ok {
+			return nil, false
+		}
+
+		defOfT, ok := ver.env.GetFnTemplateDef(inst_TFcIsInHeadAsAtom)
+		if !ok {
+			return nil, false
+		}
+
+		inst_templateFcIsIn, err := defOfT.Instantiate_GetFnTemplateNoName(inst_retTemplateAsFcFn)
+		if err != nil {
+			return nil, false
+		}
+
+		return []env.FnInFnTMemItem{env.MakeFnInFnTTMemItem(nil, inst_templateFcIsIn)}, true
+	}
 }
