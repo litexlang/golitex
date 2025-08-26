@@ -22,7 +22,7 @@ func (e *Env) InsertFnInFnTT(fc ast.Fc, templateWhereFcIs *ast.FcFn, fnTNoName *
 	memory := e.FnInFnTemplateFactsMem
 	fnDefs, ok := memory[fc.String()]
 	if !ok {
-		memory[fc.String()] = []FnInFnTTMemItem{
+		memory[fc.String()] = []FnInFnTMemItem{
 			{
 				InFcFn:         templateWhereFcIs,
 				FnTemplateStmt: fnTNoName,
@@ -30,7 +30,7 @@ func (e *Env) InsertFnInFnTT(fc ast.Fc, templateWhereFcIs *ast.FcFn, fnTNoName *
 		}
 		return nil
 	} else {
-		fnDefs = append(fnDefs, FnInFnTTMemItem{
+		fnDefs = append(fnDefs, FnInFnTMemItem{
 			InFcFn:         templateWhereFcIs,
 			FnTemplateStmt: fnTNoName,
 		})
