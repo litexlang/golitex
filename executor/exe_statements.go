@@ -612,18 +612,18 @@ func (exec *Executor) haveFnLiftStmt(stmt *ast.HaveFnLiftStmt) (glob.ExecState, 
 	// have a = lift(opt, DOMAIN_of_x, DOMAIN_of_y, ...)
 
 	// get definition of opt
-	optDef, ok := exec.env.GetLatestFnTT_GivenNameIsIn(stmt.Opt.String())
+	optDef, ok := exec.env.GetLatestFnT_GivenNameIsIn(stmt.Opt.String())
 	if !ok {
 		return glob.ExecState_Error, fmt.Errorf("opt is not defined")
 	}
 
 	FnTemplateOfFunctions := []ast.Fc{}
-	for i := range len(optDef.FnTemplateStmt.ParamSets) {
+	for i := range len(optDef.AsFnTStruct.ParamSets) {
 		head := ast.NewFcFn(ast.FcAtom(glob.KeywordFn), stmt.DomainOfEachParamOfGivenFn)
-		FnTemplateOfFunctions = append(FnTemplateOfFunctions, ast.NewFcFn(head, []ast.Fc{optDef.FnTemplateStmt.ParamSets[i]}))
+		FnTemplateOfFunctions = append(FnTemplateOfFunctions, ast.NewFcFn(head, []ast.Fc{optDef.AsFnTStruct.ParamSets[i]}))
 	}
 
-	retSet := ast.NewFcFn(ast.NewFcFn(ast.FcAtom(glob.KeywordFn), stmt.DomainOfEachParamOfGivenFn), []ast.Fc{optDef.FnTemplateStmt.RetSet})
+	retSet := ast.NewFcFn(ast.NewFcFn(ast.FcAtom(glob.KeywordFn), stmt.DomainOfEachParamOfGivenFn), []ast.Fc{optDef.AsFnTStruct.RetSet})
 
 	// randomly generate len different params
 	randomParams := glob.GenerateUniqueRandomStrings(len(FnTemplateOfFunctions))

@@ -28,17 +28,17 @@ type FnTemplateDefMem map[string]ast.FnTemplateDefStmt
 
 type ObjDefMem map[string]ast.FnTemplate_Or_DefObjStmtInterface // 因为很多的obj会共享一个def obj. 可能是 nil
 
-type FnInFnTemplateFactsMem map[string][]FnInFnTTMemItem
+type FnInFnTMem map[string][]FnInFnTMemItem
 
-type FnInFnTTMemItem struct {
-	InFcFn         *ast.FcFn // 可能是 fn(R)R 这种，或者 TName(params) 这样，或者是nil（比如 defFnStmt 声明出来的）
-	FnTemplateStmt *ast.FnTStruct
+type FnInFnTMemItem struct {
+	AsFcFn      *ast.FcFn // 可能是 fn(R)R 这种，或者 TName(params) 这样，或者是nil（比如 defFnStmt 声明出来的）
+	AsFnTStruct *ast.FnTStruct
 }
 
-func MakeFnInFnTTMemItem(inFcFn *ast.FcFn, fnTemplateStmt *ast.FnTStruct) FnInFnTTMemItem {
-	return FnInFnTTMemItem{
-		InFcFn:         inFcFn,
-		FnTemplateStmt: fnTemplateStmt,
+func MakeFnInFnTTMemItem(inFcFn *ast.FcFn, fnTemplateStmt *ast.FnTStruct) FnInFnTMemItem {
+	return FnInFnTMemItem{
+		AsFcFn:      inFcFn,
+		AsFnTStruct: fnTemplateStmt,
 	}
 }
 
@@ -60,7 +60,7 @@ type Env struct {
 	FnTemplateDefMem       FnTemplateDefMem
 	ExistPropDefMem        ExistPropDefMem
 	KnownFactsStruct       KnownFactsStruct
-	FnInFnTemplateFactsMem FnInFnTemplateFactsMem
+	FnInFnTemplateFactsMem FnInFnTMem
 	KnownFactInMatchEnv    map[string]KnownFactsStruct
 	EqualMem               map[string]shared_ptr_to_slice_of_fc
 	EnumFacts              map[string][]ast.Fc
@@ -81,7 +81,7 @@ func NewEnv(parent *Env) *Env {
 		ObjDefMem:              make(ObjDefMem),
 		PropDefMem:             make(PropDefMem),
 		FnTemplateDefMem:       make(FnTemplateDefMem),
-		FnInFnTemplateFactsMem: make(FnInFnTemplateFactsMem),
+		FnInFnTemplateFactsMem: make(FnInFnTMem),
 		ExistPropDefMem:        make(ExistPropDefMem),
 		KnownFactsStruct:       makeKnownFactsStruct(),
 		EqualMem:               make(map[string]shared_ptr_to_slice_of_fc),

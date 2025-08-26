@@ -1,4 +1,24 @@
-"""
+prove:
+    fn_template T(t Z):
+        fn (z N) fn(R)R
+
+    fn a(x R) T(17)
+
+#    know a(1)(2)(3) = 17
+
+    a(1)(2)(3) $in R
+
+prove:
+    fn_template T2(t Z):
+        fn (z N) R
+
+    fn_template T(t Z):
+        fn (z N) T2(t)
+
+    fn a(x R) T(17)
+
+    a(1)(2)(3) $in R
+
 prove:
     let DOMAIN set, f_RET set, g_RET set, optRET set
     fn opt(x f_RET, y g_RET) optRET
@@ -11,18 +31,14 @@ prove:
     fn g(x DOMAIN)g_RET
 
     let item DOMAIN
-#    a(f,g) $in fn(DOMAIN)optRET
+
     a(f,g)(item) = opt(f(item),g(item))
 
-"""
+prove:
+	fn_template T(t Z):
+		fn (z N) R
 
-have fn:
-	f(x R) R:
-        =>:
-            f(x) * f(x) < 1
-            f(x) > -1
-            f(x) < 1
-    prove:
-        0 < 1
-        0 * 0 < 1
-    have 0
+	fn a(x R) T(17)
+
+    a(1)(2) $in R
+
