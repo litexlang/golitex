@@ -20,7 +20,7 @@ import (
 )
 
 func (ver *Verifier) ver_In_FnTT(left ast.Fc, right *ast.FcFn, state *VerState) (bool, error) {
-	leftLatestFnT, ok := ver.env.GetLatestFnTT_GivenNameIsIn(left.String())
+	leftLatestFnT, ok := ver.env.GetLatestFnT_GivenNameIsIn(left.String())
 	if !ok {
 		return false, nil
 	}
@@ -51,7 +51,7 @@ func (ver *Verifier) ver_In_FnTT(left ast.Fc, right *ast.FcFn, state *VerState) 
 }
 
 // right dom is subset of left dom
-func (ver *Verifier) leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftFnTStruct *env.FnInFnTTMemItem, rightFnTDef *ast.FnTemplateDefStmt, left ast.Fc, rightFn *ast.FcFn, state *VerState) bool {
+func (ver *Verifier) leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftFnTStruct *env.FnInFnTMemItem, rightFnTDef *ast.FnTemplateDefStmt, left ast.Fc, rightFn *ast.FcFn, state *VerState) bool {
 	if len(rightFnTDef.TemplateDefHeader.Params) != len(rightFn.Params) {
 		return false
 	}
@@ -67,11 +67,11 @@ func (ver *Verifier) leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftFnTStruc
 	}
 
 	mapLeftParamsToRightParams := map[string]ast.Fc{}
-	for i, param := range leftFnTStruct.FnTemplateStmt.Params {
+	for i, param := range leftFnTStruct.AsFnTStruct.Params {
 		mapLeftParamsToRightParams[param] = ast.FcAtom(instRightFnT.Params[i])
 	}
 
-	leftDom, err := leftFnTStruct.FnTemplateStmt.DomFacts.Instantiate(mapLeftParamsToRightParams)
+	leftDom, err := leftFnTStruct.AsFnTStruct.DomFacts.Instantiate(mapLeftParamsToRightParams)
 	if err != nil {
 		return false
 	}
