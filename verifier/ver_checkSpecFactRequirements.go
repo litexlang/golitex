@@ -146,7 +146,7 @@ func (ver *Verifier) fcFnSatisfy_FnTemplate_Requirement(fc ast.Fc, state *VerSta
 		return false, fmt.Errorf("%s is not a function", fc)
 	}
 
-	fnTemplateSlice, ok := ver.GetFnTemplateSliceTheFnIsIn(asFcFn.FnHead)
+	fnTemplateSlice, ok := ver.GetFnTemplateSliceFcIsIn(asFcFn.FnHead)
 	if !ok {
 		return false, nil
 	}
