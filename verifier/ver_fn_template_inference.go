@@ -26,7 +26,19 @@ func (ver *Verifier) GetFnTemplateSliceTheFnIsIn(fnName ast.Fc) ([]env.FnInFnTTM
 		return fnInFnTTMenItemSlice, true
 	}
 
-	return ver.fcHeadIsFcFn_InferItsFnTemplate(fnName)
+	fnNameAsFcFn, ok := fnName.(*ast.FcFn)
+	if !ok {
+		return nil, false
+	}
+
+	switch fnNameAsFcFn.FnHead.(type) {
+	case ast.FcAtom:
+		return ver.fcHeadIsAtom_InferTOfFc(fnNameAsFcFn)
+	case *ast.FcFn:
+		return nil, false
+	default:
+		return nil, false
+	}
 }
 
 func (ver *Verifier) paramsSatisfyFnTemplateParamReq(fcFn *ast.FcFn, fnInFnTTMemItem *env.FnInFnTTMemItem) (bool, error) {
@@ -79,33 +91,19 @@ func (ver *Verifier) paramsSatisfyFnTemplateParamReq(fcFn *ast.FcFn, fnInFnTTMem
 
 }
 
-func (ver *Verifier) fcHeadIsFcFn_InferItsFnTemplate(fnName ast.Fc) ([]env.FnInFnTTMemItem, bool) {
-	fnNameAsFcFn, ok := fnName.(*ast.FcFn)
-	if !ok {
-		return nil, false
-	}
-
+func (ver *Verifier) fcHeadIsAtom_InferTOfFc(fnNameAsFcFn *ast.FcFn) ([]env.FnInFnTTMemItem, bool) {
 	// 先只考虑这个 fnNameAsFcFn 是 f() 形式，而不是 f()() 这种
 	head, ok := fnNameAsFcFn.FnHead.(ast.FcAtom)
 	if !ok {
 		return nil, false
 	}
 
-	// 得到 head 的定义
-	// templateFnIsIn, ok := ver.env.Parent.GetLatestFnTT_GivenNameIsIn(head.String())
-	// if !ok {
-	// 	return nil, false
-	// }
-	// fnInFnTTMemItemSlice, ok := ver.env.FnInFnTemplateFactsMem[head.String()]
 	fnInFnTTMemItem, ok := ver.env.GetLatestFnTT_GivenNameIsIn(head.String())
 	if !ok {
 		return nil, false
 	}
-	// fnInFnTTMemItem := fnInFnTTMemItemSlice[len(fnInFnTTMemItemSlice)-1]
-	// var ret = env.FnInFnTTMemItem{nil, nil}
 	ret := env.MakeFnInFnTTMemItem(nil, nil)
 
-	// var templateFnIsIn = &env.FnInFnTTMemItem{nil, nil}
 	templateFnIsIn := env.MakeFnInFnTTMemItem(nil, nil)
 	var err error
 	if fnInFnTTMemItem.InFcFn != nil {
