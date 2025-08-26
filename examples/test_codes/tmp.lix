@@ -1,0 +1,9 @@
+fn_template T2(x R):
+    fn (y R) R
+
+fn_template T(x R):
+    fn (y R) T2(x)
+
+fn a(x R) T(17)
+
+a(1)(2) $in R

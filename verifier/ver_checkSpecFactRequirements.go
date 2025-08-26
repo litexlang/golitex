@@ -152,8 +152,8 @@ func (ver *Verifier) fcFnSatisfy_FnTemplate_Requirement(fc ast.Fc, state *VerSta
 	}
 
 	for i := len(fnTemplateSlice) - 1; i >= 0; i-- {
-		if fnTemplateSlice[i].FnTemplateStmt != nil {
-			ok, err = ver.fcFnParamsSatisfyFnTemplateNoNameRequirement(asFcFn, fnTemplateSlice[i].FnTemplateStmt, state)
+		if fnTemplateSlice[i].FnTStruct != nil {
+			ok, err = ver.fcFnParamsSatisfyFnTemplateNoNameRequirement(asFcFn, fnTemplateSlice[i].FnTStruct, state)
 			if err != nil {
 				return false, err
 			}
