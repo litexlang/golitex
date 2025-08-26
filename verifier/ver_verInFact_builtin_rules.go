@@ -150,42 +150,55 @@ func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactS
 	// 	return false // 这里不传error是有点道理的，因为+-*/的定义不在mem里
 	// }
 
-	fnDef, ok := ver.env.GetLatestFnT_GivenNameIsIn(fcFn.FnHead.String())
+	// fnDef, ok := ver.env.GetLatestFnT_GivenNameIsIn(fcFn.FnHead.String())
+	fnT_TheFcIsIn, ok := ver.GetFnTemplateSliceFcIsIn(fcFn.FnHead)
 	if !ok {
 		return false // 这里不传error是有点道理的，因为+-*/的定义不在mem里
 	}
+	fnDef := fnT_TheFcIsIn[len(fnT_TheFcIsIn)-1]
 
 	uniMap := map[string]ast.Fc{}
 	// if len(fnDef.Params) != len(fcFn.Params) {
-	if len(fnDef.AsFnTStruct.Params) != len(fcFn.Params) {
-		return false
-	}
 
-	// for i, param := range fnDef.Params {
-	for i, param := range fnDef.AsFnTStruct.Params {
-		uniMap[param] = fcFn.Params[i]
-	}
+	if fnDef.AsFcFn != nil {
+		// TODO: 这里可以改成 stmt.Params[1] 是 fnDef.AsFcFn.Params[0] 母集
+		ver.VerFactStmt(ast.NewEqualFact(stmt.Params[1], fnDef.AsFcFn.Params[0]), state)
+		if state.WithMsg {
+			ver.successWithMsg(stmt.String(), "the return value of the user defined function is in the function return set")
+		}
+		return true
+	} else {
+		if len(fnDef.AsFnTStruct.Params) != len(fcFn.Params) {
+			return false
+		}
 
-	// instantiatedRetSet, err := fnDef.RetSet.Instantiate(uniMap)
-	instantiatedRetSet, err := fnDef.AsFnTStruct.RetSet.Instantiate(uniMap)
-	if err != nil {
-		return false
-	}
+		// for i, param := range fnDef.Params {
+		for i, param := range fnDef.AsFnTStruct.Params {
+			uniMap[param] = fcFn.Params[i]
+		}
 
-	// ok = cmp.CmpFcAsStr(stmt.Params[1], instantiatedRetSet) // left.String() == right.String()
-	ok, err = ver.VerFactStmt(ast.NewEqualFact(stmt.Params[1], instantiatedRetSet), state)
-	if err != nil {
-		return false
-	}
-	if !ok {
-		return false
-	}
+		// instantiatedRetSet, err := fnDef.RetSet.Instantiate(uniMap)
+		instantiatedRetSet, err := fnDef.AsFnTStruct.RetSet.Instantiate(uniMap)
+		if err != nil {
+			return false
+		}
 
-	if state.WithMsg {
-		ver.successWithMsg(stmt.String(), "the return value of the user defined function is in the function return set")
-	}
+		// ok = cmp.CmpFcAsStr(stmt.Params[1], instantiatedRetSet) // left.String() == right.String()
+		// TODO: 这里可以改成 stmt.Params[1] 是 fnDef.AsFcFn.Params[0] 母集
+		ok, err = ver.VerFactStmt(ast.NewEqualFact(stmt.Params[1], instantiatedRetSet), state)
+		if err != nil {
+			return false
+		}
+		if !ok {
+			return false
+		}
 
-	return true
+		if state.WithMsg {
+			ver.successWithMsg(stmt.String(), "the return value of the user defined function is in the function return set")
+		}
+
+		return true
+	}
 }
 
 func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state *VerState) bool {
