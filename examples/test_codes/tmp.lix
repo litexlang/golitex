@@ -3,6 +3,4 @@ fn_template T(t Z):
 
 fn a(x R) T(17)
 
-a(1) $in T(17)
-
 a(1)(2) $in R
