@@ -578,8 +578,17 @@ func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) (glob.ExecState
 		}()
 	}
 
-	newFnDefStmt := ast.NewDefFnStmt(string(stmt.DefHeader.Name), ast.NewFnTStruct(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, fnHeaderToReturnValueOfFn(&stmt.DefHeader), stmt.DomFacts, []ast.FactStmt{ast.NewEqualFact(fnHeaderToReturnValueOfFn(&stmt.DefHeader), stmt.EqualTo)}))
-	err := exec.defFnStmt(newFnDefStmt)
+	ver := verifier.NewVerifier(exec.env)
+	ok, err := ver.VerFactStmt(ast.NewInFactWithFc(stmt.EqualTo, stmt.RetSet), verifier.Round0Msg)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+	if !ok {
+		return glob.ExecState_Error, fmt.Errorf("%s is not in %s", stmt.EqualTo, stmt.RetSet)
+	}
+
+	newFnDefStmt := ast.NewDefFnStmt(string(stmt.DefHeader.Name), ast.NewFnTStruct(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, stmt.RetSet, []ast.FactStmt{}, []ast.FactStmt{ast.NewEqualFact(fnHeaderToReturnValueOfFn(&stmt.DefHeader), stmt.EqualTo)}))
+	err = exec.defFnStmt(newFnDefStmt)
 	if err != nil {
 		return glob.ExecState_Error, err
 	}
