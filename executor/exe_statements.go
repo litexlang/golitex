@@ -612,7 +612,7 @@ func (exec *Executor) haveFnLiftStmt(stmt *ast.HaveFnLiftStmt) (glob.ExecState, 
 	// have a = lift(opt, DOMAIN_of_x, DOMAIN_of_y, ...)
 
 	// get definition of opt
-	optDef, ok := exec.env.GetLatestFnTT_GivenNameIsIn(stmt.Opt.String())
+	optDef, ok := exec.env.GetLatestFnT_GivenNameIsIn(stmt.Opt.String())
 	if !ok {
 		return glob.ExecState_Error, fmt.Errorf("opt is not defined")
 	}
