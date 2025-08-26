@@ -24,15 +24,15 @@ func (e *Env) InsertFnInFnTT(fc ast.Fc, templateWhereFcIs *ast.FcFn, fnTNoName *
 	if !ok {
 		memory[fc.String()] = []FnInFnTMemItem{
 			{
-				InFcFn:         templateWhereFcIs,
-				FnTemplateStmt: fnTNoName,
+				InFcFn:    templateWhereFcIs,
+				FnTStruct: fnTNoName,
 			},
 		}
 		return nil
 	} else {
 		fnDefs = append(fnDefs, FnInFnTMemItem{
-			InFcFn:         templateWhereFcIs,
-			FnTemplateStmt: fnTNoName,
+			InFcFn:    templateWhereFcIs,
+			FnTStruct: fnTNoName,
 		})
 		memory[fc.String()] = fnDefs
 		return nil
