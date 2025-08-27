@@ -2,5 +2,5 @@ exist_prop x N st larger_than(y R):
     x < 3
     x > y
 
-exist 2.9 st $larger_than(2)
-$larger_than(2)
+exist 2 st $larger_than(0)
+$larger_than(0)
