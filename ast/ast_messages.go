@@ -789,6 +789,8 @@ func (stmt *HaveFnEqualStmt) String() string {
 	builder.WriteString(" ")
 	builder.WriteString(stmt.DefHeader.StringWithoutColonAtEnd())
 	builder.WriteString(" ")
+	builder.WriteString(stmt.RetSet.String())
+	builder.WriteString(" ")
 	builder.WriteString(glob.KeySymbolEqual)
 	builder.WriteString(" ")
 	builder.WriteString(stmt.EqualTo.String())
