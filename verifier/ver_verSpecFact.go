@@ -244,6 +244,25 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 		uniConMap[propDef.DefBody.DefHeader.Params[i]] = factParams[i]
 	}
 
+	// given objects are in their param sets
+	instParamSets, err := propDef.ExistParamSets.Instantiate(uniConMap)
+	if err != nil {
+		return false, err
+	}
+	for i := range instParamSets {
+		ok, err := ver.VerFactStmt(ast.NewInFactWithFc(existParams[i], instParamSets[i]), state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			if state.WithMsg {
+				msg := fmt.Sprintf("given object %s is not in its param set %s\n", existParams[i], instParamSets[i])
+				ver.env.Msgs = append(ver.env.Msgs, msg)
+			}
+			return false, nil
+		}
+	}
+
 	domFacts, err := propDef.DefBody.DomFacts.Instantiate(uniConMap)
 	if err != nil {
 		return false, err
