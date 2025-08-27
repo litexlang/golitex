@@ -2346,6 +2346,11 @@ func (tb *tokenBlock) haveFnEqualStmt() (*ast.HaveFnEqualStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
+	retSet, err := tb.RawFc()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
 	err = tb.header.skip(glob.KeySymbolEqual)
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -2356,39 +2361,7 @@ func (tb *tokenBlock) haveFnEqualStmt() (*ast.HaveFnEqualStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	if tb.header.is(glob.KeySymbolColon) {
-		err = tb.header.skip(glob.KeySymbolColon)
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-
-		domFacts := []ast.FactStmt{}
-		if tb.header.ExceedEnd() {
-			for _, block := range tb.body {
-				curStmt, err := block.factStmt(UniFactDepth1)
-				if err != nil {
-					return nil, tbErr(err, tb)
-				}
-				domFacts = append(domFacts, curStmt)
-			}
-
-			return ast.NewHaveFnEqualStmt(defHeader, equalTo, domFacts), nil
-		} else {
-			domFacts, err = tb.inlineFacts_untilEndOfInline()
-			if err != nil {
-				return nil, tbErr(err, tb)
-			}
-
-			return ast.NewHaveFnEqualStmt(defHeader, equalTo, domFacts), nil
-		}
-
-	} else {
-		if !tb.header.ExceedEnd() {
-			return nil, fmt.Errorf("expect end of line")
-		}
-
-		return ast.NewHaveFnEqualStmt(defHeader, equalTo, []ast.FactStmt{}), nil
-	}
+	return ast.NewHaveFnEqualStmt(defHeader, retSet, equalTo), nil
 }
 
 func (tb *tokenBlock) haveFnLiftStmt() (*ast.HaveFnLiftStmt, error) {
