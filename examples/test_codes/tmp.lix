@@ -6,3 +6,5 @@ have fn:
     prove:
         x > 0
     have x
+
+have fn f(x R) N = x
