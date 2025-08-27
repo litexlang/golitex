@@ -242,8 +242,8 @@ type HaveObjEqualStmt struct {
 
 type HaveFnEqualStmt struct {
 	DefHeader DefHeader
+	RetSet    Fc
 	EqualTo   Fc
-	DomFacts  FactStmtSlice
 }
 
 type HaveFnLiftStmt struct {
