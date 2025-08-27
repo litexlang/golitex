@@ -1,3 +1,6 @@
-have fn g(x R) R = x
-have fn s(x R) R = x^2
-have fn q(x R) R = x^2 + 1
+exist_prop x N st larger_than(y R):
+    x < 3
+    x > y
+
+exist 2.9 st $larger_than(2)
+$larger_than(2)
