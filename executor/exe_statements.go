@@ -515,7 +515,7 @@ func (exec *Executor) clearStmt() error {
 	curEnv := exec.env
 	for curEnv.Parent != nil {
 		curEnv = curEnv.Parent
-	}
+	} // 最顶层的env不删，因为最顶层的包含了热启动的代码
 	exec.NewEnv(curEnv)
 	if glob.RequireMsg() {
 		exec.newMsg("clear\n")
@@ -576,6 +576,16 @@ func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) (glob.ExecState
 		defer func() {
 			exec.newMsg(fmt.Sprintf("%s\n", stmt))
 		}()
+	}
+
+	exec.NewEnv(exec.env)
+	defer exec.deleteEnvAndRetainMsg()
+
+	for i := range len(stmt.DefHeader.Params) {
+		err := exec.defObjStmt(ast.NewDefObjStmt([]string{stmt.DefHeader.Params[i]}, []ast.Fc{stmt.DefHeader.ParamSets[i]}, []ast.FactStmt{}), false)
+		if err != nil {
+			return glob.ExecState_Error, err
+		}
 	}
 
 	ver := verifier.NewVerifier(exec.env)
@@ -692,6 +702,7 @@ func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) (glob.ExecState, error) {
 	}
 
 	exec.NewEnv(exec.env)
+	defer exec.deleteEnvAndRetainMsg()
 
 	defObjStmt := ast.NewDefObjStmt(stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets, stmt.DefFnStmt.FnTemplate.DomFacts)
 	err := exec.defObjStmt(defObjStmt, false)
