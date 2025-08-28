@@ -13,3 +13,4 @@ deploy_web
 /to_latex/
 /kernel_builtin_lib/
 update.sh
+release.sh

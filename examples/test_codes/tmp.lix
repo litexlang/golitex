@@ -1,0 +1,8 @@
+let x, a, b R:
+    a^2 - b >= 0
+    x + a + sqrt(a^2 - b) = 0
+
+know x = -a - sqrt(a^2 - b)
+or:
+    x = -a - sqrt(a^2 - b)
+    x = -a + sqrt(a^2 - b)

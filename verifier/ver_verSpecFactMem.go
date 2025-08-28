@@ -543,13 +543,28 @@ func (ver *Verifier) matchTwoSpecFacts(stmt *ast.SpecFactStmt, knownFact *ast.Sp
 		return false, nil
 	}
 
-	for i, knownParam := range knownFact.Params {
-		ok, err := ver.fcEqualSpec(knownParam, stmt.Params[i], state)
-		if err != nil {
-			return false, err
+	// 如果不区分 equal 和 其他事实的话，可能会出死循环
+	if stmt.PropName != glob.KeySymbolEqual {
+
+		for i, knownParam := range knownFact.Params {
+			ok, err := ver.fcEqualSpec(knownParam, stmt.Params[i], state)
+			if err != nil {
+				return false, err
+			}
+			if !ok {
+				return false, nil
+			}
 		}
-		if !ok {
-			return false, nil
+
+	} else {
+		for i, knownParam := range knownFact.Params {
+			ok, err := ver.cmpFc(knownParam, stmt.Params[i], state)
+			if err != nil {
+				return false, err
+			}
+			if !ok {
+				return false, nil
+			}
 		}
 	}
 
