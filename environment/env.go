@@ -30,6 +30,16 @@ type ObjDefMem map[string]ast.FnTemplate_Or_DefObjStmtInterface // 因为很多�
 
 type FnInFnTMem map[string][]FnInFnTMemItem
 
+type FnInFnTInterface interface {
+	fnInFnTInterface()
+}
+
+func (s *FnTInterface_AsFcFn) fnInFnTInterface()      {}
+func (s *FnTInterface_AsFnTStruct) fnInFnTInterface() {}
+
+type FnTInterface_AsFcFn ast.FcFn
+type FnTInterface_AsFnTStruct ast.FnTStruct // 比如 fn(R)R 这种
+
 type FnInFnTMemItem struct {
 	AsFcFn      *ast.FcFn // 可能是 fn(R)R 这种，或者 TName(params) 这样，或者是nil（比如 defFnStmt 声明出来的）
 	AsFnTStruct *ast.FnTStruct
