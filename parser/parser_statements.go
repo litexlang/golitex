@@ -177,7 +177,7 @@ func (tb *tokenBlock) orStmt() (*ast.OrStmt, error) {
 
 	if tb.header.ExceedEnd() {
 		for _, factToParse := range tb.body {
-			fact, err := factToParse.specFactStmt()
+			fact, err := factToParse.specFactStmt_ExceedEnd()
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}
@@ -213,6 +213,19 @@ func (tb *tokenBlock) SpecFactOrOrStmt() (ast.FactStmt, error) {
 	} else {
 		return tb.specFactStmt()
 	}
+}
+
+func (tb *tokenBlock) specFactStmt_ExceedEnd() (*ast.SpecFactStmt, error) {
+	ret, err := tb.specFactStmt()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	if !tb.header.ExceedEnd() {
+		return nil, fmt.Errorf("expect end of line")
+	}
+
+	return ret, nil
 }
 
 func (tb *tokenBlock) specFactStmt() (*ast.SpecFactStmt, error) {
