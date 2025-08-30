@@ -1,8 +1,10 @@
-let x, a, b R:
-    a^2 - b >= 0
-    x + a + sqrt(a^2 - b) = 0
+have x R
 
-know x = -a - sqrt(a^2 - b)
+know:
+	or:
+    	x = 1, x = 3
+        x = 2, x = 4
+
 or:
-    x = -a - sqrt(a^2 - b)
-    x = -a + sqrt(a^2 - b)
+	x = 1
+    x = 2

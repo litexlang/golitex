@@ -19,6 +19,25 @@ import (
 	env "golitex/environment"
 )
 
-func (ver *Verifier) inferFnInFnTInterface(fcFn *ast.FcFn) (env.FnInFnTInterface, bool) { // 返回值是 fn(..) fn(..)ret 或 fn(..) T(..) 中的 fn(..)
+func (ver *Verifier) inferFnInFnTInterface_FromRetSet(fcFn *ast.FcFn) (env.FnInFnTInterface, bool) { // 返回值是 fn(..) fn(..)ret 或 fn(..) T(..) 中的 fn(..)
 	panic("")
+}
+
+func getFnTInterface_RetSet(fnInFnTInterface env.FnInFnTInterface) ast.Fc {
+	switch fnInFnTInterface.(type) {
+	case *env.FnTInterface_AsFcFn:
+		return getFnTInterface_AsFcFn_Ret(fnInFnTInterface.(*env.FnTInterface_AsFcFn))
+	case *env.FnTInterface_AsFnTStruct:
+		return getFnTInterface_AsFnTStruct_Ret(fnInFnTInterface.(*env.FnTInterface_AsFnTStruct))
+	default:
+		panic("unexpected type")
+	}
+}
+
+func getFnTInterface_AsFcFn_Ret(fnInFnTInterface *env.FnTInterface_AsFcFn) ast.Fc {
+	return fnInFnTInterface.Params[0]
+}
+
+func getFnTInterface_AsFnTStruct_Ret(fnInFnTInterface *env.FnTInterface_AsFnTStruct) ast.Fc {
+	return fnInFnTInterface.RetSet
 }
