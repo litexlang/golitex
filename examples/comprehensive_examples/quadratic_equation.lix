@@ -18,9 +18,7 @@ claim:
             x ^ 2 + 2 * a * x + b
             0
         $product_is_0_then_at_least_one_factor_is_0(x + a - sqrt(a^2 - b), x + a + sqrt(a^2 - b))
-
-        know or(x = -a + sqrt(a^2 - b), x = -a - sqrt(a^2 - b))
-
+        
         prove_in_each_case:
             or:
                 x + a + sqrt(a^2 - b) = 0
