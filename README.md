@@ -7,12 +7,11 @@
 # Litex: Scale Formal Reasoning in AI Age
 
 **version v0.1.10-beta (not yet ready for production use)**  
-*Jiachen Shen and The Litex Team (Zhaoxuan Hong, et al.)*
-**Try Litex on [playground](https://litexlang.org/playground).**
+*Jiachen Shen and The Litex Team*
 
 [![Github](https://img.shields.io/badge/Github-grey?logo=github)](https://github.com/litexlang/golitex)
+[![Official Website](https://img.shields.io/badge/Official%20Website-blue?logo=website)](https://litexlang.org)
 [![Zulip Community](https://img.shields.io/badge/Zulip%20Community-purple?logo=zulip)](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
-[![Website](https://img.shields.io/badge/Website-blue?logo=website)](https://litexlang.org)
 [![Email](https://img.shields.io/badge/Email-red?logo=email)](mailto:litexlang@outlook.com)
 [![Online Playground](https://img.shields.io/badge/Online%20Playground-darkgreen?logo=playground)](https://litexlang.org/playground)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/litexlang/golitex)
@@ -21,7 +20,7 @@
 
 ## Litex: The Simplest Formal Language
 
-Visit [Official Website](https://litexlang.org/) to learn more about Litex. Visit [Tutorial](https://litexlang.org/doc/Tutorial/Introduction) to learn how to use Litex and try some examples. Visit [Start](https://litexlang.org/doc/Start) to start using Litex (online, locally, in Python, in Jupyter Notebook, etc.).
+*Visit [Official Website](https://litexlang.org/) to learn more about Litex. Visit [Tutorial](https://litexlang.org/doc/Tutorial/Introduction) to learn how to use Litex and try some examples. Visit [Start](https://litexlang.org/doc/Start) to start using Litex (online, locally, in Python, in Jupyter Notebook, etc.).*
 
 Litex is an intuitive and scalable formal language for coding reasoning. It ensures every step is correct, and can be learned by anyone in 1–2 hours, even without math or programming background.
 
