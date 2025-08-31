@@ -1,16 +1,6 @@
-fn_template finite_positive_sequence_with_at_least_10_items(length N_pos):
-    dom:
-        length >= 10
-    fn (n N_pos) R:
-        n <= length
-        =>:
-            finite_positive_sequence(n) > 0
+exist_prop k Z st divides(a, b Z): 
+    a != 0
+    <=>:  
+        b = a * k
 
-# length = 12, 12 >= 10 so everything is fine.
-let f finite_positive_sequence_with_at_least_10_items(12)
-
-f(9) > 0
-
-# f(-1) > 0 #Error: -1 $in N_pos is not true
-
-# f(17) > 0 #Error: 17 <= 12 is not true
+exist 3 st 1 $divides 3

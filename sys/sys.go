@@ -105,7 +105,6 @@ func RunFilesInRepo(repo string) error {
 			return fmt.Errorf("error in file: %s", file.Name())
 		}
 
-		fmt.Printf("%s done\n", file)
 	}
 	elapsed := time.Since(startTime)
 	fmt.Printf("All files in %s executed successfully\n", repo)
