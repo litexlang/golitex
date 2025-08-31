@@ -586,53 +586,115 @@ func divBigFloat(a, b string) (string, bool, error) {
 	return quotient, true, nil
 }
 
-// longDivision performs the actual division algorithm
+// 去掉前导 0
+func trimLeadingZeros(s string) string {
+	s = strings.TrimLeft(s, "0")
+	if s == "" {
+		return "0"
+	}
+	return s
+}
+
+// 比较两个数字字符串 (假设都是非负整数, 无前导 0)
+// 返回 -1 if a < b, 0 if a == b, 1 if a > b
+func cmpStrings(a, b string) int {
+	a = trimLeadingZeros(a)
+	b = trimLeadingZeros(b)
+	if len(a) < len(b) {
+		return -1
+	}
+	if len(a) > len(b) {
+		return 1
+	}
+	if a < b {
+		return -1
+	}
+	if a > b {
+		return 1
+	}
+	return 0
+}
+
+// 大整数减法: a - b (要求 a >= b)
+// 返回结果字符串
+func longDivision_subStrings(a, b string, allowNegative bool) (string, bool, error) {
+	a = trimLeadingZeros(a)
+	b = trimLeadingZeros(b)
+
+	if cmpStrings(a, b) < 0 {
+		if allowNegative {
+			res, _, _ := longDivision_subStrings(b, a, false)
+			return "-" + res, false, nil
+		}
+		return "", true, nil
+	}
+
+	// 从个位开始减
+	la := len(a)
+	lb := len(b)
+	carry := 0
+	res := make([]byte, la)
+
+	for i := 0; i < la; i++ {
+		da := int(a[la-1-i] - '0')
+		db := 0
+		if i < lb {
+			db = int(b[lb-1-i] - '0')
+		}
+		d := da - db - carry
+		if d < 0 {
+			d += 10
+			carry = 1
+		} else {
+			carry = 0
+		}
+		res[la-1-i] = byte(d) + '0'
+	}
+
+	return trimLeadingZeros(string(res)), false, nil
+}
+
+// 大整数除法: dividend ÷ divisor
 func longDivision(dividend, divisor string) (string, string, error) {
-	if len(dividend) < len(divisor) {
+	dividend = trimLeadingZeros(dividend)
+	divisor = trimLeadingZeros(divisor)
+
+	if divisor == "0" {
+		return "", "", fmt.Errorf("division by zero")
+	}
+	if cmpStrings(dividend, divisor) < 0 {
 		return "0", dividend, nil
 	}
 
 	var quotient strings.Builder
-	remainder := dividend[:len(divisor)]
-	dividend = dividend[len(divisor):]
+	remainder := ""
 
-	for {
-		// Find current digit (0-9)
+	for i := 0; i < len(dividend); i++ {
+		// 向余数加下一位
+		remainder += string(dividend[i])
+		remainder = trimLeadingZeros(remainder)
+
+		// 如果余数 < 除数, 商为 0
+		if cmpStrings(remainder, divisor) < 0 {
+			quotient.WriteByte('0')
+			continue
+		}
+
+		// 否则找到商的这一位
 		digit := 0
-		currentRem := remainder
-		for digit < 9 {
-			subRes, borrow, err := subStrings(currentRem, divisor, false)
-			if err != nil {
-				return "", "", err
-			}
+		for {
+			subRes, borrow, _ := longDivision_subStrings(remainder, divisor, false)
 			if borrow {
 				break
 			}
-			currentRem = subRes
+			remainder = subRes
 			digit++
 		}
-
 		quotient.WriteByte(byte(digit) + '0')
-		remainder = currentRem
-
-		if len(dividend) == 0 {
-			break
-		}
-
-		remainder += string(dividend[0])
-		dividend = dividend[1:]
 	}
 
-	// Clean up results
-	q := strings.TrimLeft(quotient.String(), "0")
-	if q == "" {
-		q = "0"
-	}
-	r := strings.TrimLeft(remainder, "0")
-	if r == "" {
-		r = "0"
-	}
-
+	q := trimLeadingZeros(quotient.String())
+	r := trimLeadingZeros(remainder)
 	return q, r, nil
 }
 
@@ -737,3 +799,52 @@ func modBigFloat(a, b string) (string, bool, error) {
 
 	return remainder, true, nil
 }
+
+// func longDivision(dividend, divisor string) (string, string, error) {
+// 	if len(dividend) < len(divisor) {
+// 		return "0", dividend, nil
+// 	}
+
+// 	var quotient strings.Builder
+// 	remainder := dividend[:len(divisor)]
+// 	dividend = dividend[len(divisor):]
+
+// 	for {
+// 		// Find current digit (0-9)
+// 		digit := 0
+// 		currentRem := remainder
+// 		for digit < 9 {
+// 			subRes, borrow, err := subStrings(currentRem, divisor, false)
+// 			if err != nil {
+// 				return "", "", err
+// 			}
+// 			if borrow {
+// 				break
+// 			}
+// 			currentRem = subRes
+// 			digit++
+// 		}
+
+// 		quotient.WriteByte(byte(digit) + '0')
+// 		remainder = currentRem
+
+// 		if len(dividend) == 0 {
+// 			break
+// 		}
+
+// 		remainder += string(dividend[0])
+// 		dividend = dividend[1:]
+// 	}
+
+// 	// Clean up results
+// 	q := strings.TrimLeft(quotient.String(), "0")
+// 	if q == "" {
+// 		q = "0"
+// 	}
+// 	r := strings.TrimLeft(remainder, "0")
+// 	if r == "" {
+// 		r = "0"
+// 	}
+
+// 	return q, r, nil
+// }

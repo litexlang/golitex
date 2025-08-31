@@ -1,3 +1,4 @@
+"""
 prove:
     fn_template T(t Z):
         fn (z N) fn(R)R
@@ -75,3 +76,4 @@ prove:
 
     w(b)(z)(d)(g)(s)(m)(m)(17) $in has_very_special_meanings
     # w(b)(z)(d)(g)(s)(m)(m)(16) $in has_very_special_meanings 不应该能通过
+    """
