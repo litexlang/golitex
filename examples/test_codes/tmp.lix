@@ -1,10 +1,16 @@
-have x R
+fn_template finite_positive_sequence_with_at_least_10_items(length N_pos):
+    dom:
+        length >= 10
+    fn (n N_pos) R:
+        n <= length
+        =>:
+            finite_positive_sequence(n) > 0
 
-know:
-	or:
-    	x = 1, x = 3
-        x = 2, x = 4
+# length = 12, 12 >= 10 so everything is fine.
+let f finite_positive_sequence_with_at_least_10_items(12)
 
-or:
-	x = 1
-    x = 2
+f(9) > 0
+
+# f(-1) > 0 #Error: -1 $in N_pos is not true
+
+# f(17) > 0 #Error: 17 <= 12 is not true

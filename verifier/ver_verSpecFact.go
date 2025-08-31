@@ -23,14 +23,14 @@ import (
 )
 
 func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+	var ok bool
+	var err error
+
 	if !state.ReqOk {
-		if ok, err := ver.checkSpecFactReq(stmt, state); err != nil || !ok {
+		if ok, state, err = ver.checkSpecFactReq(stmt, state); err != nil || !ok {
 			return false, err
 		}
 	}
-
-	var ok bool
-	var err error
 
 	if stmt.NameIs(glob.KeywordIn) && !ver.isProvingObjInSetUsingEqualObjs {
 		return ver.verInSet_OverAllObjsEqualToIt(stmt, state)
@@ -338,7 +338,7 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecFactStmt, st
 		return false, err
 	}
 	if areBothNumLit {
-		if !areEqual {
+		if !areEqual { // 这里是在证明两边不相等
 			return ver.processOkMsg(state, stmt.String(), "builtin rules")
 		}
 	}
