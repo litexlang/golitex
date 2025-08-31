@@ -24,9 +24,11 @@ import (
 
 // how equality is verified is different from other facts because 1. it is stored differently 2. its transitive and commutative property is automatically used by the verifier
 func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, checkRequirements bool) (bool, error) {
+	var ok bool
+	var err error
 	if checkRequirements && !state.ReqOk {
 		// if checkRequirements {
-		if ok, err := ver.checkSpecFactRequirements(stmt, state); err != nil {
+		if ok, state, err = ver.checkSpecFactRequirements(stmt, state); err != nil {
 			return false, err
 		} else if !ok {
 			return false, nil
@@ -37,7 +39,7 @@ func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, c
 		}
 	}
 
-	ok, err := ver.verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(stmt.Params[0], stmt.Params[1], state)
+	ok, err = ver.verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(stmt.Params[0], stmt.Params[1], state)
 	if err != nil {
 		return false, err
 	}

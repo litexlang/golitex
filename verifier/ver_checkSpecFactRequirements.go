@@ -21,15 +21,15 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) checkSpecFactReq(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) checkSpecFactReq(stmt *ast.SpecFactStmt, state *VerState) (bool, *VerState, error) {
 	if stmt.NameIs(glob.KeywordIn) {
 		ok, err := ver.checkSpecFactReq_InFact_UseBtRules(stmt)
 		if err != nil {
-			return false, err
+			return false, state, err
 		}
 
 		if ok {
-			return ok, nil
+			return ok, state, nil
 		}
 
 		return ver.checkSpecFactRequirements(stmt, state)
@@ -79,7 +79,7 @@ func (ver *Verifier) checkSpecFactReq_InFact_UseBtRules(stmt *ast.SpecFactStmt) 
 	}
 }
 
-func (ver *Verifier) checkSpecFactRequirements(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) checkSpecFactRequirements(stmt *ast.SpecFactStmt, state *VerState) (bool, *VerState, error) {
 
 	// 1. Check if all atoms in the parameters are declared
 	// REMARK
@@ -87,7 +87,7 @@ func (ver *Verifier) checkSpecFactRequirements(stmt *ast.SpecFactStmt, state *Ve
 	for _, param := range stmt.Params {
 		ok := ver.env.AreAtomsInFcAreDeclared(param, map[string]struct{}{})
 		if !ok {
-			return false, fmt.Errorf(env.AtomsInFcNotDeclaredMsg(param))
+			return false, state, fmt.Errorf(env.AtomsInFcNotDeclaredMsg(param))
 		}
 	}
 
@@ -98,18 +98,19 @@ func (ver *Verifier) checkSpecFactRequirements(stmt *ast.SpecFactStmt, state *Ve
 	for _, param := range stmt.Params {
 		ok, err := ver.fcSatisfyFnRequirement(param, stateNoMsg)
 		if err != nil {
-			return false, err
+			return false, state, err
 		}
 		if !ok {
-			return false, parametersDoNotSatisfyFnReq(param, param)
+			return false, state, parametersDoNotSatisfyFnReq(param, param)
 		}
 	}
 
 	// 所有的传入的参数符号 prop 的要求 以及 stmt name 确实是个 prop。这貌似不需要检查，因为每次你得到新的事实时候，已经检查过了
 	// 但是最好在这里警告一下用户，如果不满足prop的要求的话，可能出问题
 
-	state.ReqOk = true
-	return true, nil
+	// state.ReqOk = true
+	newState := VerState{state.Round, state.WithMsg, true}
+	return true, &newState, nil
 }
 
 func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state *VerState) (bool, error) {
