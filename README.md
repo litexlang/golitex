@@ -26,7 +26,7 @@ Litex is an intuitive and scalable formal language for coding reasoning. It ensu
 
 Formal language turns writing math into writing code, enabling automation, collaboration, and standardization. With AI generating reasoning and Litex verifying it, automated reasoning becomes a reality.
 
-Traditional formal languages are too complex. Litex lowers the barrier by 10x, making formalization as easy and fast as natural writing. Here is an comparison between Litex and Lean 4 about proving the irrationality of sqrt(2).
+Traditional formal languages are too complex. Litex lowers the barrier by 10x, making formalization as easy and fast as natural writing. Here is an comparison between Litex and Lean 4 (a traditional formal language) about proving the irrationality of sqrt(2).
 
 <table style="border-collapse: collapse; width: 100%; font-size: 12px">
   <tr>
@@ -100,3 +100,7 @@ Litex + AI – embedding Litex into AI workflows to make reasoning scalable, rel
 MAKE MONEY BY CONTRIBUTING! Visit [Task Board](https://litexlang.org/task-board) to earn by solving tasks, or [Collaboration](https://litexlang.org/collaboration) to discuss bigger projects.
 
 Contact me via [email](mailto:litexlang@outlook.com) or join the [Zulip community](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/).
+
+## Special Thanks
+
+Throughout this wonderful journey of designing, implementing, spreading Litex, I (Jiachen Shen, creator of Litex) received much help from my friends and colleagues. Without their support, Litex has no chance of succeeding. I have special thank to my coworker Zhaoxuan Hong, who developed official website and tool chains of Litex. The Litex project is also indebted to Siqi Sun, Wei Lin, Peng Sun, Jie Fu, Zeyu Zheng, Huajian Xin, Zijie Qiu, Sheng Xu. Moreover, I cannot fully express my gratitude to those who have contributed actively to the community. I am sure this special-thanks list will be longer in the future. Feel free to join us to build the future together!

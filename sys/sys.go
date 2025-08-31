@@ -89,6 +89,8 @@ func RunFilesInRepo(repo string) error {
 			continue
 		}
 
+		fmt.Printf("%s\n", file)
+
 		// 读出file的内容，然后执行
 		path := filepath.Join(repo, file.Name())
 		code, err := os.ReadFile(path)
@@ -102,6 +104,8 @@ func RunFilesInRepo(repo string) error {
 			fmt.Println("Error executing code:", err)
 			return fmt.Errorf("error in file: %s", file.Name())
 		}
+
+		fmt.Printf("%s done\n", file)
 	}
 	elapsed := time.Since(startTime)
 	fmt.Printf("All files in %s executed successfully\n", repo)

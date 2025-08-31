@@ -7,6 +7,9 @@ prop is_group(s set, mul fn(s, s)s, inv fn(s)s, e s):
     forall x s:
         mul(x, inv(x)) = e
         mul(inv(x), x) = e
+    forall x s:
+        mul(x, e) = x
+        mul(e, x) = x
 
 fn inverse(x R)R:
     inverse(x) + x = 0
