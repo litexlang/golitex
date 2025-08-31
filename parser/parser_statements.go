@@ -175,31 +175,12 @@ func (tb *tokenBlock) orStmt() (*ast.OrStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	if tb.header.ExceedEnd() {
-		for _, factToParse := range tb.body {
-			fact, err := factToParse.specFactStmt_ExceedEnd()
-			if err != nil {
-				return nil, tbErr(err, tb)
-			}
-			orFacts = append(orFacts, fact)
+	for _, factToParse := range tb.body {
+		fact, err := factToParse.specFactStmt_ExceedEnd()
+		if err != nil {
+			return nil, tbErr(err, tb)
 		}
-
-	} else {
-		for {
-			fact, err := tb.specFactStmt()
-			if err != nil {
-				return nil, tbErr(err, tb)
-			}
-			orFacts = append(orFacts, fact)
-
-			if tb.header.is(glob.KeySymbolComma) {
-				tb.header.skip(glob.KeySymbolComma)
-			} else if tb.header.ExceedEnd() {
-				break
-			} else {
-				return nil, fmt.Errorf("expect ',' or end of line")
-			}
-		}
+		orFacts = append(orFacts, fact)
 	}
 
 	return ast.NewOrStmt(orFacts), nil
@@ -2162,7 +2143,7 @@ func (tb *tokenBlock) clearStmt() (ast.Stmt, error) {
 }
 
 func (tb *tokenBlock) factsStmt() (ast.Stmt, error) {
-	if tb.GetEnd() != glob.KeySymbolColon {
+	if tb.GetEnd() != glob.KeySymbolColon { // 因为可能是 forall : 这样的
 		facts, err := tb.inlineFacts_checkUniDepth0()
 		if err != nil {
 			return nil, tbErr(err, tb)

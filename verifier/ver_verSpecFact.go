@@ -338,7 +338,7 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecFactStmt, st
 		return false, err
 	}
 	if areBothNumLit {
-		if !areEqual {
+		if !areEqual { // 这里是在证明两边不相等
 			return ver.processOkMsg(state, stmt.String(), "builtin rules")
 		}
 	}
