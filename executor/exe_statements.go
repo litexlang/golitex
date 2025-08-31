@@ -107,7 +107,8 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
 	}
 
 	curVerifier := verifier.NewVerifier(exec.env)
-	ok, err := curVerifier.VerFactStmt(stmt, verifier.Round0Msg)
+	state := verifier.Round0Msg
+	ok, err := curVerifier.VerFactStmt(stmt, state)
 	if err != nil {
 		return glob.ExecState_Error, err
 	}
