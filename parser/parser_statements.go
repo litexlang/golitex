@@ -220,26 +220,33 @@ func (tb *tokenBlock) specFactStmt() (*ast.SpecFactStmt, error) {
 		return tb.existFactStmt(isTrue)
 	}
 
+	ret, err := tb.ordinarySpecFact()
+
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	if isTrue {
+		return ret, nil
+	} else {
+		return ret.ReverseTrue(), nil
+	}
+
+}
+
+func (tb *tokenBlock) ordinarySpecFact() (*ast.SpecFactStmt, error) {
 	if tb.header.is(glob.FuncFactPrefix) {
 		ret, err := tb.pureFuncSpecFact()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
-		if isTrue {
-			return ret, nil
-		} else {
-			return ret.ReverseTrue(), nil
-		}
+		return ret, nil
 	} else {
 		ret, err := tb.relaFactStmt()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
-		if isTrue {
-			return ret, nil
-		} else {
-			return ret.ReverseTrue(), nil
-		}
+		return ret, nil
 	}
 }
 
@@ -618,7 +625,7 @@ func (tb *tokenBlock) existFactStmt(isTrue bool) (*ast.SpecFactStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	pureSpecFact, err := tb.pureFuncSpecFact()
+	pureSpecFact, err := tb.ordinarySpecFact()
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
