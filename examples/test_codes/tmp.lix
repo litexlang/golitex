@@ -11,6 +11,6 @@ let f finite_positive_sequence_with_at_least_10_items(12)
 
 f(9) > 0
 
-f(-1) > 0 #Error: -1 $in N_pos is not true
+# f(-1) > 0 #Error: -1 $in N_pos is not true
 
-f(17) > 0 #Error: 17 <= 12 is not true
+# f(17) > 0 #Error: 17 <= 12 is not true
