@@ -1,3 +1,4 @@
+"""
 prove:
     let DOMAIN set, f_RET set, g_RET set, optRET set
     fn opt(x f_RET, y g_RET) optRET
@@ -26,3 +27,4 @@ prove:
     (f \a g) $in fn(R, N) Q
 
     a(f, g)(1, 2) = opt(f(1, 2), g(1, 2))
+    """
