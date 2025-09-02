@@ -32,6 +32,31 @@ func (ver *Verifier) ProveOverFiniteSet(stmt *ast.ProveOverFiniteSetStmt) (glob.
 
 	cartesianProductOfFcs := glob.CartesianProduct(enums)
 
+	if len(cartesianProductOfFcs) == 0 {
+		return ver.verProveOverFiniteSet_ProveForall(stmt, cartesianProductOfFcs)
+	} else {
+		if len(cartesianProductOfFcs) != numberOfItemsOfCartesianProduct(cartesianProductOfFcs) {
+			return glob.ExecState_False, fmt.Errorf("prove over finite set statement error: cartesian product of fcs is not correct")
+		} else {
+
+		}
+		return ver.verProveOverFiniteSet_ProveForall(stmt, cartesianProductOfFcs)
+	}
+}
+
+func numberOfItemsOfCartesianProduct(cartesianProductOfFcs [][]ast.Fc) int {
+	numberSlice := make([]int, len(cartesianProductOfFcs))
+	for i, fcSlice := range cartesianProductOfFcs {
+		numberSlice[i] = len(fcSlice)
+	}
+	ret := 1
+	for _, number := range numberSlice {
+		ret *= number
+	}
+	return ret
+}
+
+func (ver *Verifier) verProveOverFiniteSet_ProveForall(stmt *ast.ProveOverFiniteSetStmt, cartesianProductOfFcs [][]ast.Fc) (glob.ExecState, error) {
 	for _, fcSlice := range cartesianProductOfFcs {
 		uniMap := map[string]ast.Fc{}
 		for i, param := range stmt.Fact.Params {

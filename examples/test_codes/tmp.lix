@@ -1,6 +1,7 @@
-exist_prop k Z st divides(a, b Z): 
-    a != 0
-    <=>:  
-        b = a * k
+have set s := {1, 2, 3}
 
-exist 3 st 1 $divides 3
+prove_over_finite_set:
+    forall x s:
+        x > 0
+    prove:
+        x > 100
