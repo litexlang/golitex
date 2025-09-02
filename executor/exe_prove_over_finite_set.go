@@ -33,7 +33,7 @@ func (exec *Executor) ProveOverFiniteSet(stmt *ast.ProveOverFiniteSetStmt) (glob
 	cartesianProductOfFcs := glob.CartesianProduct(enums)
 
 	if len(stmt.ProofsSlice) == 0 {
-		return exec.verProveOverFiniteSet_ProveForall(stmt, cartesianProductOfFcs)
+		return exec.verProveOverFiniteSet_NoProveSection(stmt, cartesianProductOfFcs)
 	} else {
 		if len(stmt.ProofsSlice) != len(cartesianProductOfFcs) {
 			return glob.ExecState_False, fmt.Errorf("there are %d kind(s) of cartesian product of parameters %s, but there are %d prove sections", len(cartesianProductOfFcs), stmt.Fact.Params, len(stmt.ProofsSlice))
@@ -59,6 +59,33 @@ func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.Prove
 	err := exec.defObjStmt(ast.NewDefObjStmt(stmt.Fact.Params, stmt.Fact.ParamSets, getParamEqualFcSlice(stmt.Fact.Params, cartesianProductAtI)), false)
 	if err != nil {
 		return false, err
+	}
+
+	hasFalseDomFact := false
+	for _, domFact := range stmt.Fact.DomFacts {
+		state, err := exec.factStmt(domFact)
+		if err != nil {
+			return false, err
+		}
+		if state != glob.ExecState_True {
+			domFactAs := domFact.(ast.Spec_OrFact)
+			for _, fact := range domFactAs.ReverseIsTrue() {
+				state, err := exec.factStmt(fact)
+				if err != nil {
+					return false, err
+				}
+				if state != glob.ExecState_True {
+					return false, fmt.Errorf("domain fact in universal fact in prove over finite set statement must be true or not true, it can not be unknown:\n%s", fact)
+				}
+			}
+
+			hasFalseDomFact = true
+			break
+		}
+	}
+
+	if hasFalseDomFact {
+		return true, nil
 	}
 
 	for _, fact := range stmt.ProofsSlice[i] {
@@ -92,11 +119,38 @@ func getParamEqualFcSlice(params []string, equalTo []ast.Fc) []ast.FactStmt {
 	return result
 }
 
-func (exec *Executor) verProveOverFiniteSet_ProveForall(stmt *ast.ProveOverFiniteSetStmt, cartesianProductOfFcs [][]ast.Fc) (glob.ExecState, error) {
+func (exec *Executor) verProveOverFiniteSet_NoProveSection(stmt *ast.ProveOverFiniteSetStmt, cartesianProductOfFcs [][]ast.Fc) (glob.ExecState, error) {
 	for _, fcSlice := range cartesianProductOfFcs {
 		uniMap := map[string]ast.Fc{}
 		for i, param := range stmt.Fact.Params {
 			uniMap[param] = fcSlice[i]
+		}
+
+		hasFalseDomFact := false
+		for _, domFact := range stmt.Fact.DomFacts {
+			state, err := exec.factStmt(domFact)
+			if err != nil {
+				return glob.ExecState_Error, err
+			}
+			if state != glob.ExecState_True {
+				domFactAs := domFact.(ast.Spec_OrFact)
+				for _, fact := range domFactAs.ReverseIsTrue() {
+					state, err := exec.factStmt(fact)
+					if err != nil {
+						return glob.ExecState_Error, err
+					}
+					if state != glob.ExecState_True {
+						return glob.ExecState_Error, fmt.Errorf("domain fact in universal fact in prove over finite set statement must be true or not true, it can not be unknown:\n%s", fact)
+					}
+				}
+
+				hasFalseDomFact = true
+				break
+			}
+		}
+
+		if hasFalseDomFact {
+			continue
 		}
 
 		instantiatedThenFacts := []ast.FactStmt{}
