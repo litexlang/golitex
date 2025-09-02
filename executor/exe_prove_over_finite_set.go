@@ -32,11 +32,11 @@ func (exec *Executor) ProveOverFiniteSet(stmt *ast.ProveOverFiniteSetStmt) (glob
 
 	cartesianProductOfFcs := glob.CartesianProduct(enums)
 
-	if len(cartesianProductOfFcs) == 0 {
+	if len(stmt.ProofsSlice) == 0 {
 		return exec.verProveOverFiniteSet_ProveForall(stmt, cartesianProductOfFcs)
 	} else {
-		if len(stmt.Proofs) != len(cartesianProductOfFcs) {
-			return glob.ExecState_False, fmt.Errorf("there are %d kind(s) of cartesian product of parameters %s, but there are %d prove sections", len(cartesianProductOfFcs), stmt.Fact.Params, len(stmt.Proofs))
+		if len(stmt.ProofsSlice) != len(cartesianProductOfFcs) {
+			return glob.ExecState_False, fmt.Errorf("there are %d kind(s) of cartesian product of parameters %s, but there are %d prove sections", len(cartesianProductOfFcs), stmt.Fact.Params, len(stmt.ProofsSlice))
 		} else {
 			for i := range len(cartesianProductOfFcs) {
 				ok, err := exec.verProveOverFiniteSet_ProveAtProveSectionI(stmt, cartesianProductOfFcs[i], i)
@@ -61,7 +61,7 @@ func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.Prove
 		return false, err
 	}
 
-	for _, fact := range stmt.Proofs[i] {
+	for _, fact := range stmt.ProofsSlice[i] {
 		state, err := exec.Stmt(fact)
 		if err != nil {
 			return false, err
