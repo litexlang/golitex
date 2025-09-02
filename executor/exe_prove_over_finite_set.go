@@ -61,21 +61,31 @@ func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.Prove
 		return false, err
 	}
 
+	uniMap := map[string]ast.Fc{}
+	for i, param := range stmt.Fact.Params {
+		uniMap[param] = cartesianProductAtI[i]
+	}
+
 	hasFalseDomFact := false
 	for _, domFact := range stmt.Fact.DomFacts {
-		state, err := exec.factStmt(domFact)
+		instantiatedDomFact, err := domFact.Instantiate(uniMap)
+		if err != nil {
+			return false, err
+		}
+
+		state, err := exec.factStmt(instantiatedDomFact)
 		if err != nil {
 			return false, err
 		}
 		if state != glob.ExecState_True {
-			domFactAs := domFact.(ast.Spec_OrFact)
+			domFactAs := instantiatedDomFact.(ast.Spec_OrFact)
 			for _, fact := range domFactAs.ReverseIsTrue() {
 				state, err := exec.factStmt(fact)
 				if err != nil {
 					return false, err
 				}
 				if state != glob.ExecState_True {
-					return false, fmt.Errorf("domain fact in universal fact in prove over finite set statement must be true or not true, it can not be unknown:\n%s", fact)
+					return false, fmt.Errorf("domain fact in universal fact in prove over finite set statement must be true or not true, it can not be unknown:\n%s", instantiatedDomFact)
 				}
 			}
 
@@ -128,19 +138,24 @@ func (exec *Executor) verProveOverFiniteSet_NoProveSection(stmt *ast.ProveOverFi
 
 		hasFalseDomFact := false
 		for _, domFact := range stmt.Fact.DomFacts {
-			state, err := exec.factStmt(domFact)
+			instantiatedDomFact, err := domFact.Instantiate(uniMap)
+			if err != nil {
+				return glob.ExecState_Error, err
+			}
+
+			state, err := exec.factStmt(instantiatedDomFact)
 			if err != nil {
 				return glob.ExecState_Error, err
 			}
 			if state != glob.ExecState_True {
-				domFactAs := domFact.(ast.Spec_OrFact)
+				domFactAs := instantiatedDomFact.(ast.Spec_OrFact)
 				for _, fact := range domFactAs.ReverseIsTrue() {
 					state, err := exec.factStmt(fact)
 					if err != nil {
 						return glob.ExecState_Error, err
 					}
 					if state != glob.ExecState_True {
-						return glob.ExecState_Error, fmt.Errorf("domain fact in universal fact in prove over finite set statement must be true or not true, it can not be unknown:\n%s", fact)
+						return glob.ExecState_Error, fmt.Errorf("domain fact in universal fact in prove over finite set statement must be true or not true, it can not be unknown:\n%s", instantiatedDomFact)
 					}
 				}
 
