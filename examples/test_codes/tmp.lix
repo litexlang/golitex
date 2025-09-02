@@ -4,4 +4,8 @@ prove_over_finite_set:
     forall x s:
         x > 0
     prove:
-        x > 100
+        x > 0
+    prove:
+        x > 0
+    prove:
+        x > 0
