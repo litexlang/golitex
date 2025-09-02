@@ -41,15 +41,51 @@ func (ver *Verifier) ProveOverFiniteSet(stmt *ast.ProveOverFiniteSetStmt) (glob.
 			for i := 0; i < numberOfItemsOfCartesianProduct(cartesianProductOfFcs); i++ {
 				cartesianProductAtI := cartesianAt(cartesianProductOfFcs, i)
 
-				_, _ = ver.verProveOverFiniteSet_ProveAtProveSectionI(stmt, cartesianProductAtI)
+				ok, err := ver.verProveOverFiniteSet_ProveAtProveSectionI(stmt, cartesianProductOfFcs, cartesianProductAtI)
+				if err != nil {
+					return glob.ExecState_Error, err
+				}
+				if !ok {
+					return glob.ExecState_False, fmt.Errorf("failed to prove at prove section %d", i)
+				}
 			}
 			return glob.ExecState_True, nil
 		}
 	}
 }
 
-func (ver *Verifier) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.ProveOverFiniteSetStmt, cartesianProductAtI []ast.Fc) (glob.ExecState, error) {
-	panic("not implemented")
+func (ver *Verifier) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.ProveOverFiniteSetStmt, cartesianProductOfFcs [][]ast.Fc, cartesianProductAtI []ast.Fc) (bool, error) {
+	ver.newEnv(ver.env)
+	defer ver.deleteEnvAndRetainMsg()
+
+	err := ver.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt(stmt.Fact.Params, stmt.Fact.ParamSets, getParamEqualFcSlice(stmt.Fact.Params, cartesianProductAtI)))
+	if err != nil {
+		return false, err
+	}
+
+	for _, domFact := range stmt.Fact.DomFacts {
+		err := ver.env.NewFact(domFact)
+		if err != nil {
+			return false, err
+		}
+	}
+
+	for _, fact := range stmt.Proofs {
+		_, err := ver.VerFactStmt(_, Round0NoMsg)
+		if err != nil {
+			return false, err
+		}
+	}
+
+	return true, nil
+}
+
+func getParamEqualFcSlice(params []string, equalTo []ast.Fc) []ast.FactStmt {
+	result := []ast.FactStmt{}
+	for i, param := range params {
+		result = append(result, ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{ast.FcAtom(param), equalTo[i]}))
+	}
+	return result
 }
 
 func numberOfItemsOfCartesianProduct(cartesianProductOfFcs [][]ast.Fc) int {
