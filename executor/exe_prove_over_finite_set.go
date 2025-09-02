@@ -12,7 +12,7 @@
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
-package litex_verifier
+package litex_executor
 
 import (
 	"fmt"
@@ -20,10 +20,10 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) ProveOverFiniteSet(stmt *ast.ProveOverFiniteSetStmt) (glob.ExecState, error) {
+func (exec *Executor) ProveOverFiniteSet(stmt *ast.ProveOverFiniteSetStmt) (glob.ExecState, error) {
 	enums := [][]ast.Fc{}
 	for _, paramSet := range stmt.Fact.ParamSets {
-		enumFacts, ok := ver.env.GetEnumFact(paramSet.String())
+		enumFacts, ok := exec.env.GetEnumFact(paramSet.String())
 		if !ok {
 			return glob.ExecState_Error, fmt.Errorf("prove over finite set statement error: enum not found")
 		}
@@ -33,7 +33,7 @@ func (ver *Verifier) ProveOverFiniteSet(stmt *ast.ProveOverFiniteSetStmt) (glob.
 	cartesianProductOfFcs := glob.CartesianProduct(enums)
 
 	if len(cartesianProductOfFcs) == 0 {
-		return ver.verProveOverFiniteSet_ProveForall(stmt, cartesianProductOfFcs)
+		return exec.verProveOverFiniteSet_ProveForall(stmt, cartesianProductOfFcs)
 	} else {
 		if len(cartesianProductOfFcs) != numberOfItemsOfCartesianProduct(cartesianProductOfFcs) {
 			return glob.ExecState_False, fmt.Errorf("prove over finite set statement error: cartesian product of fcs is not correct")
@@ -41,7 +41,7 @@ func (ver *Verifier) ProveOverFiniteSet(stmt *ast.ProveOverFiniteSetStmt) (glob.
 			for i := 0; i < numberOfItemsOfCartesianProduct(cartesianProductOfFcs); i++ {
 				cartesianProductAtI := cartesianAt(cartesianProductOfFcs, i)
 
-				ok, err := ver.verProveOverFiniteSet_ProveAtProveSectionI(stmt, cartesianProductOfFcs, cartesianProductAtI)
+				ok, err := exec.verProveOverFiniteSet_ProveAtProveSectionI(stmt, cartesianProductAtI)
 				if err != nil {
 					return glob.ExecState_Error, err
 				}
@@ -54,26 +54,39 @@ func (ver *Verifier) ProveOverFiniteSet(stmt *ast.ProveOverFiniteSetStmt) (glob.
 	}
 }
 
-func (ver *Verifier) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.ProveOverFiniteSetStmt, cartesianProductOfFcs [][]ast.Fc, cartesianProductAtI []ast.Fc) (bool, error) {
-	ver.newEnv(ver.env)
-	defer ver.deleteEnvAndRetainMsg()
+func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.ProveOverFiniteSetStmt, cartesianProductAtI []ast.Fc) (bool, error) {
+	exec.NewEnv(exec.env)
+	defer exec.deleteEnvAndRetainMsg()
 
-	err := ver.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt(stmt.Fact.Params, stmt.Fact.ParamSets, getParamEqualFcSlice(stmt.Fact.Params, cartesianProductAtI)))
+	err := exec.defObjStmt(ast.NewDefObjStmt(stmt.Fact.Params, stmt.Fact.ParamSets, getParamEqualFcSlice(stmt.Fact.Params, cartesianProductAtI)), false)
 	if err != nil {
 		return false, err
 	}
 
 	for _, domFact := range stmt.Fact.DomFacts {
-		err := ver.env.NewFact(domFact)
+		err := exec.env.NewFact(domFact)
 		if err != nil {
 			return false, err
 		}
 	}
 
 	for _, fact := range stmt.Proofs {
-		_, err := ver.VerFactStmt(_, Round0NoMsg)
+		state, err := exec.Stmt(fact)
 		if err != nil {
 			return false, err
+		}
+		if state != glob.ExecState_True {
+			return false, nil
+		}
+	}
+
+	for _, fact := range stmt.Fact.ThenFacts {
+		state, err := exec.factStmt(fact)
+		if err != nil {
+			return false, err
+		}
+		if state != glob.ExecState_True {
+			return false, nil
 		}
 	}
 
@@ -121,7 +134,7 @@ func cartesianAt(sets [][]ast.Fc, idx int) []ast.Fc {
 	return result
 }
 
-func (ver *Verifier) verProveOverFiniteSet_ProveForall(stmt *ast.ProveOverFiniteSetStmt, cartesianProductOfFcs [][]ast.Fc) (glob.ExecState, error) {
+func (exec *Executor) verProveOverFiniteSet_ProveForall(stmt *ast.ProveOverFiniteSetStmt, cartesianProductOfFcs [][]ast.Fc) (glob.ExecState, error) {
 	for _, fcSlice := range cartesianProductOfFcs {
 		uniMap := map[string]ast.Fc{}
 		for i, param := range stmt.Fact.Params {
@@ -139,11 +152,11 @@ func (ver *Verifier) verProveOverFiniteSet_ProveForall(stmt *ast.ProveOverFinite
 
 		// ver facts
 		for _, fact := range instantiatedThenFacts {
-			ok, err := ver.VerFactStmt(fact, Round0NoMsg)
+			state, err := exec.factStmt(fact)
 			if err != nil {
 				return glob.ExecState_Error, err
 			}
-			if !ok {
+			if state != glob.ExecState_True {
 				return glob.ExecState_False, fmt.Errorf("failed to prove instantiated then facts: %s", fact)
 			}
 		}
