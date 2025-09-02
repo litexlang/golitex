@@ -3,9 +3,3 @@ have set s := {1, 2, 3}
 prove_over_finite_set:
     forall x s:
         x > 0
-    prove:
-        x > 0
-    prove:
-        x > 0
-    prove:
-        x > 0
