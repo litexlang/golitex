@@ -35,13 +35,11 @@ func (exec *Executor) ProveOverFiniteSet(stmt *ast.ProveOverFiniteSetStmt) (glob
 	if len(cartesianProductOfFcs) == 0 {
 		return exec.verProveOverFiniteSet_ProveForall(stmt, cartesianProductOfFcs)
 	} else {
-		if len(cartesianProductOfFcs) != numberOfItemsOfCartesianProduct(cartesianProductOfFcs) {
-			return glob.ExecState_False, fmt.Errorf("prove over finite set statement error: cartesian product of fcs is not correct")
+		if len(stmt.Proofs) != len(cartesianProductOfFcs) {
+			return glob.ExecState_False, fmt.Errorf("there are %d kind(s) of cartesian product of parameters %s, but there are %d prove sections", len(cartesianProductOfFcs), stmt.Fact.Params, len(stmt.Proofs))
 		} else {
-			for i := 0; i < numberOfItemsOfCartesianProduct(cartesianProductOfFcs); i++ {
-				cartesianProductAtI := cartesianAt(cartesianProductOfFcs, i)
-
-				ok, err := exec.verProveOverFiniteSet_ProveAtProveSectionI(stmt, cartesianProductAtI)
+			for i := range len(cartesianProductOfFcs) {
+				ok, err := exec.verProveOverFiniteSet_ProveAtProveSectionI(stmt, cartesianProductOfFcs[i])
 				if err != nil {
 					return glob.ExecState_Error, err
 				}
@@ -61,13 +59,6 @@ func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.Prove
 	err := exec.defObjStmt(ast.NewDefObjStmt(stmt.Fact.Params, stmt.Fact.ParamSets, getParamEqualFcSlice(stmt.Fact.Params, cartesianProductAtI)), false)
 	if err != nil {
 		return false, err
-	}
-
-	for _, domFact := range stmt.Fact.DomFacts {
-		err := exec.env.NewFact(domFact)
-		if err != nil {
-			return false, err
-		}
 	}
 
 	for _, fact := range stmt.Proofs {
@@ -98,39 +89,6 @@ func getParamEqualFcSlice(params []string, equalTo []ast.Fc) []ast.FactStmt {
 	for i, param := range params {
 		result = append(result, ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{ast.FcAtom(param), equalTo[i]}))
 	}
-	return result
-}
-
-func numberOfItemsOfCartesianProduct(cartesianProductOfFcs [][]ast.Fc) int {
-	numberSlice := make([]int, len(cartesianProductOfFcs))
-	for i, fcSlice := range cartesianProductOfFcs {
-		numberSlice[i] = len(fcSlice)
-	}
-	ret := 1
-	for _, number := range numberSlice {
-		ret *= number
-	}
-	return ret
-}
-
-func cartesianAt(sets [][]ast.Fc, idx int) []ast.Fc {
-	n := len(sets)
-	result := make([]ast.Fc, n)
-
-	// 先算出每一维的 stride (步长)
-	strides := make([]int, n)
-	stride := 1
-	for i := n - 1; i >= 0; i-- {
-		strides[i] = stride
-		stride *= len(sets[i])
-	}
-
-	// 逐维展开 idx
-	for i := 0; i < n; i++ {
-		size := len(sets[i])
-		result[i] = sets[i][(idx/strides[i])%size]
-	}
-
 	return result
 }
 
