@@ -39,7 +39,7 @@ func (exec *Executor) ProveOverFiniteSet(stmt *ast.ProveOverFiniteSetStmt) (glob
 			return glob.ExecState_False, fmt.Errorf("there are %d kind(s) of cartesian product of parameters %s, but there are %d prove sections", len(cartesianProductOfFcs), stmt.Fact.Params, len(stmt.Proofs))
 		} else {
 			for i := range len(cartesianProductOfFcs) {
-				ok, err := exec.verProveOverFiniteSet_ProveAtProveSectionI(stmt, cartesianProductOfFcs[i])
+				ok, err := exec.verProveOverFiniteSet_ProveAtProveSectionI(stmt, cartesianProductOfFcs[i], i)
 				if err != nil {
 					return glob.ExecState_Error, err
 				}
@@ -52,7 +52,7 @@ func (exec *Executor) ProveOverFiniteSet(stmt *ast.ProveOverFiniteSetStmt) (glob
 	}
 }
 
-func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.ProveOverFiniteSetStmt, cartesianProductAtI []ast.Fc) (bool, error) {
+func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.ProveOverFiniteSetStmt, cartesianProductAtI []ast.Fc, i int) (bool, error) {
 	exec.NewEnv(exec.env)
 	defer exec.deleteEnvAndRetainMsg()
 
@@ -61,7 +61,7 @@ func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.Prove
 		return false, err
 	}
 
-	for _, fact := range stmt.Proofs {
+	for _, fact := range stmt.Proofs[i] {
 		state, err := exec.Stmt(fact)
 		if err != nil {
 			return false, err
