@@ -606,9 +606,11 @@ func (s *ProveOverFiniteSetStmt) ToLatexString() string {
 
 	builder.WriteString("\\begin{proof}\n")
 
-	proofStrSlice := make([]string, len(s.Proofs))
-	for i := range len(s.Proofs) {
-		proofStrSlice[i] = s.Proofs[i].ToLatexString()
+	proofStrSlice := make([]string, len(s.ProofsSlice))
+	for i := range len(s.ProofsSlice) {
+		for j := range s.ProofsSlice[i] {
+			proofStrSlice[i] += s.ProofsSlice[i][j].ToLatexString() + "\n"
+		}
 	}
 
 	if ShouldInSingleLineAsLatexString(proofStrSlice) {

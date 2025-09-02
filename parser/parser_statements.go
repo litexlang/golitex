@@ -220,26 +220,33 @@ func (tb *tokenBlock) specFactStmt() (*ast.SpecFactStmt, error) {
 		return tb.existFactStmt(isTrue)
 	}
 
+	ret, err := tb.ordinarySpecFact()
+
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	if isTrue {
+		return ret, nil
+	} else {
+		return ret.ReverseTrue(), nil
+	}
+
+}
+
+func (tb *tokenBlock) ordinarySpecFact() (*ast.SpecFactStmt, error) {
 	if tb.header.is(glob.FuncFactPrefix) {
 		ret, err := tb.pureFuncSpecFact()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
-		if isTrue {
-			return ret, nil
-		} else {
-			return ret.ReverseTrue(), nil
-		}
+		return ret, nil
 	} else {
 		ret, err := tb.relaFactStmt()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
-		if isTrue {
-			return ret, nil
-		} else {
-			return ret.ReverseTrue(), nil
-		}
+		return ret, nil
 	}
 }
 
@@ -618,7 +625,7 @@ func (tb *tokenBlock) existFactStmt(isTrue bool) (*ast.SpecFactStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	pureSpecFact, err := tb.pureFuncSpecFact()
+	pureSpecFact, err := tb.ordinarySpecFact()
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -1640,11 +1647,17 @@ func (tb *tokenBlock) proveOverFiniteSetStmt() (*ast.ProveOverFiniteSetStmt, err
 	}
 
 	if len(uniFactAsUniFactStmt.DomFacts) != 0 {
-		return nil, fmt.Errorf("%s expect universal fact without dom facts", glob.KeywordProveOverFiniteSet)
+		// 必须全部是 reversible 的domFact 否则就报错。因为 在执行的时候，如果dom是真的，那就检查；如果dom是否的，那就跳过这次检查；不允许是unknown
+		for _, domFact := range uniFactAsUniFactStmt.DomFacts {
+			_, ok := domFact.(ast.Spec_OrFact)
+			if !ok {
+				return nil, fmt.Errorf("dom facts of universal fact must be reversible")
+			}
+		}
 	}
 
 	if len(tb.body) == 1 {
-		return ast.NewProveOverFiniteSetStmt(uniFactAsUniFactStmt, []ast.Stmt{}), nil
+		return ast.NewProveOverFiniteSetStmt(uniFactAsUniFactStmt, []ast.StmtSlice{}), nil
 	}
 
 	err = tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
@@ -1652,13 +1665,17 @@ func (tb *tokenBlock) proveOverFiniteSetStmt() (*ast.ProveOverFiniteSetStmt, err
 		return nil, tbErr(err, tb)
 	}
 
-	proofs := []ast.Stmt{}
-	for _, stmt := range tb.body[1].body {
-		curStmt, err := stmt.Stmt()
-		if err != nil {
-			return nil, tbErr(err, tb)
+	proofs := []ast.StmtSlice{}
+	for i := 1; i < len(tb.body); i++ {
+		curProof := ast.StmtSlice{}
+		for _, stmt := range tb.body[i].body {
+			curStmt, err := stmt.Stmt()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			curProof = append(curProof, curStmt)
 		}
-		proofs = append(proofs, curStmt)
+		proofs = append(proofs, curProof)
 	}
 
 	return ast.NewProveOverFiniteSetStmt(uniFactAsUniFactStmt, proofs), nil

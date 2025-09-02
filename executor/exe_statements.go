@@ -403,8 +403,10 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 func (exec *Executor) proveOverFiniteSetStmt(stmt *ast.ProveOverFiniteSetStmt) (glob.ExecState, error) {
 	exec.newMsg(stmt.String())
 
-	ver := verifier.NewVerifier(exec.env)
-	execState, err := ver.ProveOverFiniteSet(stmt)
+	exec.NewEnv(exec.env)
+	defer exec.deleteEnvAndRetainMsg()
+
+	execState, err := exec.ProveOverFiniteSet(stmt)
 	if notOkExec(execState, err) {
 		return execState, err
 	}

@@ -629,16 +629,20 @@ func (stmt *ProveOverFiniteSetStmt) String() string {
 	builder.WriteByte('\n')
 	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Fact.String(), 1))
 	builder.WriteByte('\n')
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Fact.String(), 1))
-	builder.WriteByte('\n')
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve, 1))
-	builder.WriteString(glob.KeySymbolColon)
-	builder.WriteByte('\n')
-	proofStrSlice := make([]string, len(stmt.Proofs))
-	for i, proof := range stmt.Proofs {
-		proofStrSlice[i] = glob.SplitLinesAndAdd4NIndents(proof.String(), 2)
+	if len(stmt.ProofsSlice) > 0 {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve, 1))
+		builder.WriteString(glob.KeySymbolColon)
+		builder.WriteByte('\n')
+
+		proofStrSlice := make([]string, len(stmt.ProofsSlice))
+		for i, proof := range stmt.ProofsSlice {
+			for j := range proof {
+				proofStrSlice[i] += glob.SplitLinesAndAdd4NIndents(proof[j].String(), 2)
+				proofStrSlice[i] += "\n"
+			}
+		}
+		builder.WriteString(strings.Join(proofStrSlice, "\n"))
 	}
-	builder.WriteString(strings.Join(proofStrSlice, "\n"))
 	return builder.String()
 }
 

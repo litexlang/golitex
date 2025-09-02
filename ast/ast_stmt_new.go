@@ -118,7 +118,7 @@ func NewIntensionalSetStmt(curSet Fc, param string, parentSet Fc, proofs []*Spec
 	return &IntensionalSetStmt{curSet, param, parentSet, proofs}
 }
 
-func NewProveOverFiniteSetStmt(fact *UniFactStmt, proofs []Stmt) *ProveOverFiniteSetStmt {
+func NewProveOverFiniteSetStmt(fact *UniFactStmt, proofs []StmtSlice) *ProveOverFiniteSetStmt {
 	return &ProveOverFiniteSetStmt{*fact, proofs}
 }
 
