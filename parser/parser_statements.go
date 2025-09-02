@@ -1651,7 +1651,7 @@ func (tb *tokenBlock) proveOverFiniteSetStmt() (*ast.ProveOverFiniteSetStmt, err
 	}
 
 	if len(tb.body) == 1 {
-		return ast.NewProveOverFiniteSetStmt(uniFactAsUniFactStmt, []ast.Stmt{}), nil
+		return ast.NewProveOverFiniteSetStmt(uniFactAsUniFactStmt, []ast.StmtSlice{}), nil
 	}
 
 	err = tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
@@ -1659,13 +1659,17 @@ func (tb *tokenBlock) proveOverFiniteSetStmt() (*ast.ProveOverFiniteSetStmt, err
 		return nil, tbErr(err, tb)
 	}
 
-	proofs := []ast.Stmt{}
-	for _, stmt := range tb.body[1].body {
-		curStmt, err := stmt.Stmt()
-		if err != nil {
-			return nil, tbErr(err, tb)
+	proofs := []ast.StmtSlice{}
+	for i := 1; i < len(tb.body); i++ {
+		curProof := ast.StmtSlice{}
+		for _, stmt := range tb.body[i].body {
+			curStmt, err := stmt.Stmt()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			curProof = append(curProof, curStmt)
 		}
-		proofs = append(proofs, curStmt)
+		proofs = append(proofs, curProof)
 	}
 
 	return ast.NewProveOverFiniteSetStmt(uniFactAsUniFactStmt, proofs), nil
