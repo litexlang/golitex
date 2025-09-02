@@ -38,10 +38,18 @@ func (ver *Verifier) ProveOverFiniteSet(stmt *ast.ProveOverFiniteSetStmt) (glob.
 		if len(cartesianProductOfFcs) != numberOfItemsOfCartesianProduct(cartesianProductOfFcs) {
 			return glob.ExecState_False, fmt.Errorf("prove over finite set statement error: cartesian product of fcs is not correct")
 		} else {
+			for i := 0; i < numberOfItemsOfCartesianProduct(cartesianProductOfFcs); i++ {
+				cartesianProductAtI := cartesianAt(cartesianProductOfFcs, i)
 
+				_, _ = ver.verProveOverFiniteSet_ProveAtProveSectionI(stmt, cartesianProductAtI)
+			}
+			return glob.ExecState_True, nil
 		}
-		return ver.verProveOverFiniteSet_ProveForall(stmt, cartesianProductOfFcs)
 	}
+}
+
+func (ver *Verifier) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.ProveOverFiniteSetStmt, cartesianProductAtI []ast.Fc) (glob.ExecState, error) {
+	panic("not implemented")
 }
 
 func numberOfItemsOfCartesianProduct(cartesianProductOfFcs [][]ast.Fc) int {
@@ -54,6 +62,27 @@ func numberOfItemsOfCartesianProduct(cartesianProductOfFcs [][]ast.Fc) int {
 		ret *= number
 	}
 	return ret
+}
+
+func cartesianAt(sets [][]ast.Fc, idx int) []ast.Fc {
+	n := len(sets)
+	result := make([]ast.Fc, n)
+
+	// 先算出每一维的 stride (步长)
+	strides := make([]int, n)
+	stride := 1
+	for i := n - 1; i >= 0; i-- {
+		strides[i] = stride
+		stride *= len(sets[i])
+	}
+
+	// 逐维展开 idx
+	for i := 0; i < n; i++ {
+		size := len(sets[i])
+		result[i] = sets[i][(idx/strides[i])%size]
+	}
+
+	return result
 }
 
 func (ver *Verifier) verProveOverFiniteSet_ProveForall(stmt *ast.ProveOverFiniteSetStmt, cartesianProductOfFcs [][]ast.Fc) (glob.ExecState, error) {
