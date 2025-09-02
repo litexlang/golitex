@@ -636,7 +636,10 @@ func (stmt *ProveOverFiniteSetStmt) String() string {
 	builder.WriteByte('\n')
 	proofStrSlice := make([]string, len(stmt.Proofs))
 	for i, proof := range stmt.Proofs {
-		proofStrSlice[i] = glob.SplitLinesAndAdd4NIndents(proof.String(), 2)
+		for j := range proof {
+			proofStrSlice[i] += glob.SplitLinesAndAdd4NIndents(proof[j].String(), 2)
+			proofStrSlice[i] += "\n"
+		}
 	}
 	builder.WriteString(strings.Join(proofStrSlice, "\n"))
 	return builder.String()
