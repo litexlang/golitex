@@ -1647,7 +1647,13 @@ func (tb *tokenBlock) proveOverFiniteSetStmt() (*ast.ProveOverFiniteSetStmt, err
 	}
 
 	if len(uniFactAsUniFactStmt.DomFacts) != 0 {
-		return nil, fmt.Errorf("%s expect universal fact without dom facts", glob.KeywordProveOverFiniteSet)
+		// 必须全部是 reversible 的domFact 否则就报错。因为 在执行的时候，如果dom是真的，那就检查；如果dom是否的，那就跳过这次检查；不允许是unknown
+		for _, domFact := range uniFactAsUniFactStmt.DomFacts {
+			_, ok := domFact.(ast.Spec_OrFact)
+			if !ok {
+				return nil, fmt.Errorf("dom facts of universal fact must be reversible")
+			}
+		}
 	}
 
 	if len(tb.body) == 1 {
