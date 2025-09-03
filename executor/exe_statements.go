@@ -754,7 +754,7 @@ func (exec *Executor) knowStmt_PostProcess(fact ast.FactStmt) error {
 		propDef, ok := exec.env.GetPropDef(asSpecFact.PropName)
 		if ok {
 			if len(propDef.DomFacts) != 0 {
-				return fmt.Errorf("Warning: %s may not satisfy domain requirement of definition of %s", asSpecFact.Params, asSpecFact.PropName)
+				return fmt.Errorf("warning: %s may not satisfy domain requirement of definition of %s", asSpecFact.Params, asSpecFact.PropName)
 			}
 		} else {
 			return fmt.Errorf("unknown prop %s", asSpecFact.PropName)
