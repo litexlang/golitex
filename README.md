@@ -103,4 +103,10 @@ Contact me via [email](mailto:litexlang@outlook.com) or join the [Zulip communit
 
 ## Special Thanks
 
-Throughout this wonderful journey of designing, implementing, spreading Litex, I (Jiachen Shen, creator of Litex) received much help from my friends and colleagues. Without their support, Litex has no chance of succeeding. I have special thank to my coworker Zhaoxuan Hong, who developed official website and tool chains of Litex. The Litex project is also indebted to Siqi Sun, Wei Lin, Peng Sun, Jie Fu, Zeyu Zheng, Huajian Xin, Zijie Qiu, Sheng Xu, Siqi Guo. Moreover, I cannot fully express my gratitude to those who have contributed actively to the community. I am sure this special-thanks list will be longer in the future. Feel free to join us to build the future together!
+Throughout this journey of designing, implementing, and growing Litex into a community, I (Jiachen Shen, creator of Litex) have been fortunate to receive tremendous help from friends and colleagues. Without their support, Litex would not have had the chance to succeed.
+
+I owe special thanks to my coworker Zhaoxuan Hong, who built Litex’s powerful toolchains and has supported the project from the very beginning. The Litex project is also deeply grateful to Siqi Sun, Wei Lin, Peng Sun, Jie Fu, Zeyu Zheng, Huajian Xin, Zijie Qiu, Sheng Xu, Siqi Guo, Haoyang Shi, and Chengyang Zhu for their invaluable contributions.
+
+Moreover, I cannot fully express my gratitude to all those who have actively contributed to the Litex community. I am certain this list of special thanks will only grow longer in the future.
+
+We warmly invite you to join us. The best way to predict future is to create it. Let’s build the future together!
