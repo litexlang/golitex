@@ -145,6 +145,12 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) error {
 			if err != nil {
 				return err
 			}
+
+			err = exec.knowStmt_PostProcess(fact)
+			if err != nil {
+				return err
+			}
+
 		case *ast.KnowPropStmt:
 			err := exec.knowPropStmt(fact)
 			if err != nil {
@@ -741,4 +747,19 @@ func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) (glob.ExecState, error) {
 	}
 
 	return glob.ExecState_True, nil
+}
+
+func (exec *Executor) knowStmt_PostProcess(fact ast.FactStmt) error {
+	if asSpecFact, ok := fact.(*ast.SpecFactStmt); ok {
+		propDef, ok := exec.env.GetPropDef(asSpecFact.PropName)
+		if ok {
+			if len(propDef.DomFacts) != 0 {
+				return fmt.Errorf("Warning: %s may not satisfy domain requirement of definition of %s", asSpecFact.Params, asSpecFact.PropName)
+			}
+		} else {
+			return fmt.Errorf("unknown prop %s", asSpecFact.PropName)
+		}
+	}
+
+	return nil
 }
