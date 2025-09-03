@@ -66,6 +66,8 @@ const (
 
 	KeywordLift        = "lift"
 	KeywordNonEmptySet = "nonempty_set"
+
+	KeywordSafe = "safe" // safe 和 let, know, fn 配合，在定义的时候检查相关的参数是否真的能传到prop里，是否真的能传到一个fn里
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -118,6 +120,8 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 
 	KeywordLift:        {},
 	KeywordNonEmptySet: {},
+
+	KeywordSafe: {},
 }
 
 const (
