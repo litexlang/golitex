@@ -43,8 +43,6 @@ prove_over_finite_set:
             x = 4
             x = 5
             x = 6
-    prove:
-        1 = 1
     
 1 $in s2
 2 $in s2

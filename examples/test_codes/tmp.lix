@@ -1,22 +1,10 @@
-have set s := {1, 2, 3}
+prop p()
+prop q()
+prop A():
+    $p()
+    <=>:
+        $q()
 
-prove_over_finite_set:
-    forall x s:
-        x > 0
+know $A()
 
-prove_over_finite_set:
-    forall x s:
-        x = 2
-        =>:
-            x > 0
-
-prove_over_finite_set:
-    forall x s:
-        x = 2
-        =>:
-            x > 0
-    prove:
-    prove:
-        x >= 2
-        x > 0
-    prove:
+$q()
