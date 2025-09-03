@@ -130,10 +130,6 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
 
 // TODO: 再know时就检查，仅仅依赖写在dom里的事实，是否真的能让涉及到的函数和prop能真的满足条件。如果不满足条件，那就warning
 func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) error {
-	if glob.RequireMsg() {
-		defer exec.newMsg("\n")
-	}
-
 	for _, fact := range stmt.Facts {
 		switch fact := fact.(type) {
 		case ast.FactStmt:
@@ -145,6 +141,7 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) error {
 			if err != nil {
 				return err
 			}
+
 		case *ast.KnowPropStmt:
 			err := exec.knowPropStmt(fact)
 			if err != nil {
@@ -156,7 +153,9 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) error {
 	}
 
 	if glob.RequireMsg() {
+		exec.newMsg("\n")
 		exec.newMsg(stmt.String())
+		exec.newMsg("Warning: in know statement, Litex does not check whether the arguments in a fact can be passed into the corresponding functions and propositions.\n")
 	}
 	return nil
 }
