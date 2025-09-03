@@ -130,10 +130,6 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
 
 // TODO: 再know时就检查，仅仅依赖写在dom里的事实，是否真的能让涉及到的函数和prop能真的满足条件。如果不满足条件，那就warning
 func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) error {
-	if glob.RequireMsg() {
-		defer exec.newMsg("\n")
-	}
-
 	for _, fact := range stmt.Facts {
 		switch fact := fact.(type) {
 		case ast.FactStmt:
@@ -142,11 +138,6 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) error {
 			}
 
 			err := exec.env.NewFact(fact)
-			if err != nil {
-				return err
-			}
-
-			err = exec.knowStmt_PostProcess(fact)
 			if err != nil {
 				return err
 			}
@@ -162,7 +153,9 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) error {
 	}
 
 	if glob.RequireMsg() {
+		exec.newMsg("\n")
 		exec.newMsg(stmt.String())
+		exec.newMsg("Warning: in know statement, Litex does not check whether the arguments in a fact can be passed into the corresponding functions and propositions.\n")
 	}
 	return nil
 }
@@ -747,19 +740,4 @@ func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) (glob.ExecState, error) {
 	}
 
 	return glob.ExecState_True, nil
-}
-
-func (exec *Executor) knowStmt_PostProcess(fact ast.FactStmt) error {
-	if asSpecFact, ok := fact.(*ast.SpecFactStmt); ok {
-		propDef, ok := exec.env.GetPropDef(asSpecFact.PropName)
-		if ok {
-			if len(propDef.DomFacts) != 0 {
-				return fmt.Errorf("warning: %s may not satisfy domain requirement of definition of %s", asSpecFact.Params, asSpecFact.PropName)
-			}
-		} else {
-			return fmt.Errorf("unknown prop %s", asSpecFact.PropName)
-		}
-	}
-
-	return nil
 }
