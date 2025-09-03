@@ -66,6 +66,8 @@ const (
 
 	KeywordLift        = "lift"
 	KeywordNonEmptySet = "nonempty_set"
+
+	KeywordSafe = "safe"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -118,6 +120,8 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 
 	KeywordLift:        {},
 	KeywordNonEmptySet: {},
+
+	KeywordSafe: {},
 }
 
 const (
