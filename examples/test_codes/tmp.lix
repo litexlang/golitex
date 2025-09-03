@@ -1,9 +1,6 @@
 prop p()
 prop q()
-prop A():
-    $p()
-    <=>:
-        $q()
+prop A(): $p() <=> $q()
 
 know $A()
 
