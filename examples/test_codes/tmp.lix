@@ -4,4 +4,4 @@ prop A(): $p() <=> $q()
 
 know $A()
 
-$q()
+forall x,y N_pos => (x+y)%2=x%2+y%2
