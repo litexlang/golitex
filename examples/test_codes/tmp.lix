@@ -1,24 +1,12 @@
-claim:
-    forall a R => a^2 >= 0
-    prove:
-        prove_in_each_case:
-            or:
-                a > 0
-                a = 0
-                a < 0
-            =>:
-                a^2 >= 0
-            prove:
-                a * a = a ^ 2
-                a ^ 2 > 0
-                a ^ 2 >= 0
-            prove:
-                =(0, 0^2, a ^ 2, a * a)
-                0 >= 0
-                a^2 >= 0
-            prove:
-                a ^ 2 = (-a) ^ 2
-                -a > 0
-                (-a) ^ 2 > 0
-                (-a) ^ 2 >= 0
-    
+have a R
+
+if:
+    a > 0
+    =>:
+        a > 0
+
+if a > 0 => a > 0
+
+if a > 0 => a > 0 <=> a > 0
+
+forall a R: if a > 0 => a > 0; => a $in R, if a > 0 => a > 0; a $in R
