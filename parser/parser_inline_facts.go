@@ -79,6 +79,8 @@ func (tb *tokenBlock) inlineFact() (ast.FactStmt, error) {
 		return tb.inlineOrStmt()
 	case glob.KeySymbolEqual:
 		return tb.inlineEqualsFactStmt()
+	case glob.KeywordIf:
+		return tb.inlineIfInterface()
 	default:
 		// return tb.inlineSpecFactStmt()
 		return tb.inline_specFact_enum_intensional_fact()
@@ -297,6 +299,39 @@ func (tb *tokenBlock) inlineUniInterface() (ast.UniFactInterface, error) {
 		return nil, err
 	}
 	return ast.NewUniFactWithIff(ast.NewUniFact(params, setParams, domFact, thenFact), iffFacts), nil
+}
+
+func (tb *tokenBlock) inlineIfInterface() (ast.UniFactInterface, error) {
+	err := tb.header.skip(glob.KeywordIf)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	domFact, err := tb.domFactInUniFactInterface()
+	if err != nil {
+		return nil, err
+	}
+
+	tb.header.skip(glob.KeySymbolEqualLarger)
+	thenFact, isEnd, err := tb.thenFactsInUniFactInterface()
+	if err != nil {
+		return nil, err
+	}
+
+	if isEnd {
+		return ast.NewUniFact([]string{}, []ast.Fc{}, domFact, thenFact), nil
+	}
+
+	err = tb.header.skip(glob.KeySymbolEquivalent)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	iffFacts, err := tb.thenFacts_SkipEnd_Semicolon_or_EOL()
+	if err != nil {
+		return nil, err
+	}
+	return ast.NewUniFactWithIff(ast.NewUniFact([]string{}, []ast.Fc{}, domFact, thenFact), iffFacts), nil
 }
 
 func (tb *tokenBlock) thenFactsInUniFactInterface() ([]ast.FactStmt, bool, error) {
