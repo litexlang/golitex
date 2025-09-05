@@ -4,7 +4,7 @@
 
 <div align="center">
 
-# Litex: Scale Formal Reasoning By Making It Simple For Everyone
+# Litex: Scaling Formal Reasoning Through Simplicity
 
 **version v0.1.10-beta (not yet ready for production use)**  
 *Jiachen Shen and The Litex Team*
@@ -18,7 +18,7 @@
 
 </div>
 
-## Litex: The First Reasoning Formal Language That Everyone Can Learn In 1–2 Hours
+## Litex: Formal Reasoning, Learnable in Just Hours
 
 *Visit [Official Website](https://litexlang.org/) to learn more about Litex. Visit [Tutorial](https://litexlang.org/doc/Tutorial/Introduction) to learn how to use Litex and try some examples. Visit [Start](https://litexlang.org/doc/Start) to start using Litex (online, locally, in Python, in Jupyter Notebook, etc.).*
 
