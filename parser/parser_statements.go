@@ -112,6 +112,14 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 	return ret, nil
 }
 
+type uniFactHeaderEnum int8
+
+const (
+	uniFactHeaderEnumForall uniFactHeaderEnum = iota
+	uniFactHeaderEnumIf
+	uniFactHeaderEnumIfAndForall
+)
+
 func (tb *tokenBlock) factStmt(uniFactDepth uniFactEnum) (ast.FactStmt, error) {
 	cur, err := tb.header.currentToken()
 	if err != nil {
@@ -129,6 +137,12 @@ func (tb *tokenBlock) factStmt(uniFactDepth uniFactEnum) (ast.FactStmt, error) {
 		return tb.orStmt()
 	case glob.KeySymbolEqual:
 		return tb.equalsFactStmt()
+	case glob.KeywordIf:
+		if tb.GetEnd() == glob.KeySymbolColon {
+			return tb.ifStmt(uniFactDepth)
+		} else {
+			return tb.inlineIfInterface()
+		}
 	default:
 		return tb.fact()
 	}
@@ -271,6 +285,37 @@ func (tb *tokenBlock) uniFactInterface(uniFactDepth uniFactEnum) (ast.UniFactInt
 		return ast.NewUniFact(params, setParams, domainFacts, thenFacts), nil
 	} else {
 		ret := ast.NewUniFactWithIff(ast.NewUniFact(params, setParams, domainFacts, thenFacts), iffFacts)
+
+		if len(thenFacts) == 0 {
+			// return nil, fmt.Errorf("expect %s section to have at least one fact in %s", glob.KeywordThen, ret)
+			return nil, fmt.Errorf("expect %s section to have at least one fact in %s", glob.KeySymbolEqualLarger, ret)
+		}
+
+		return ret, nil
+	}
+
+}
+
+func (tb *tokenBlock) ifStmt(uniFactDepth uniFactEnum) (ast.UniFactInterface, error) {
+	err := tb.header.skip(glob.KeywordIf)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	domainFacts, thenFacts, iffFacts, err := tb.uniFactBodyFacts(uniFactDepth.addDepth(), glob.KeySymbolEqualLarger)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	if len(iffFacts) == 0 {
+		return ast.NewUniFact([]string{}, []ast.Fc{}, domainFacts, thenFacts), nil
+	} else {
+		ret := ast.NewUniFactWithIff(ast.NewUniFact([]string{}, []ast.Fc{}, domainFacts, thenFacts), iffFacts)
 
 		if len(thenFacts) == 0 {
 			// return nil, fmt.Errorf("expect %s section to have at least one fact in %s", glob.KeywordThen, ret)
