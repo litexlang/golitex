@@ -1,7 +1,12 @@
-prop p()
-prop q()
-prop A(): $p() <=> $q()
+have a R
 
-know $A()
+if:
+    a > 0
+    =>:
+        a > 0
 
-$q()
+if a > 0 => a > 0
+
+if a > 0 => a > 0 <=> a > 0
+
+forall a R: if a > 0 => a > 0; => a $in R, if a > 0 => a > 0; a $in R

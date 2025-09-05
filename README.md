@@ -4,7 +4,7 @@
 
 <div align="center">
 
-# Litex: Scale Formal Reasoning in AI Age
+# Litex: Scale Formal Reasoning By Making It Simple For Everyone
 
 **version v0.1.10-beta (not yet ready for production use)**  
 *Jiachen Shen and The Litex Team*
@@ -18,13 +18,11 @@
 
 </div>
 
-## Litex: The Simplest Formal Language
+## Litex: The First Reasoning Formal Language That Everyone Can Learn In 1–2 Hours
 
 *Visit [Official Website](https://litexlang.org/) to learn more about Litex. Visit [Tutorial](https://litexlang.org/doc/Tutorial/Introduction) to learn how to use Litex and try some examples. Visit [Start](https://litexlang.org/doc/Start) to start using Litex (online, locally, in Python, in Jupyter Notebook, etc.).*
 
-Litex is an intuitive and scalable formal language for coding reasoning. It ensures every step is correct, and can be learned by anyone in 1–2 hours, even without math or programming background.
-
-Formal language turns writing math into writing code, enabling automation, collaboration, and standardization. With AI generating reasoning and Litex verifying it, automated reasoning becomes a reality.
+Litex is an intuitive and scalable formal language for coding reasoning. It ensures every step of your reasoning is correct, and is actually the first reasoning formal language (or formal language for short) that can be learned by anyone in 1–2 hours, even without math or programming background.
 
 Traditional formal languages are too complex. Litex lowers the barrier by 10x, making formalization as easy and fast as natural writing. Here is an comparison between Litex and Lean 4 (a traditional formal language) about finding out the solution to a linear equation. Kids can solve it in Litex in 2 minutes, while it require an experienced expert hours of work in Lean 4.
 
@@ -77,6 +75,12 @@ Traditional formal languages are too complex. Litex lowers the barrier by 10x, m
 </table>
 
 The simplicity of Litex enables both the large-scale adoption of formal languages and their deep integration into AI systems. In Litex, there is no foreign keywords, twisted syntax, or complex semantics, just plain reasoning. Litex benefits both AI research and the math community. 
+
+Formal language turns writing math into writing code, enabling automation, collaboration, and standardization. With AI generating reasoning and Litex verifying it, automated reasoning becomes a reality.
+
+
+
+
 
 ## Contact & Contribute to Litex
 
