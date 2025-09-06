@@ -18,7 +18,7 @@
 
 </div>
 
-## Litex: Formal Reasoning, Learnable in Just Hours
+## Litex: Formal Reasoning Learnable in Just Hours
 
 *Visit [Official Website](https://litexlang.org/) to learn more about Litex. Visit [Tutorial](https://litexlang.org/doc/Tutorial/Introduction) to learn how to use Litex and try some examples. Visit [Start](https://litexlang.org/doc/Start) to start using Litex (online, locally, in Python, in Jupyter Notebook, etc.).*
 
@@ -76,11 +76,7 @@ Traditional formal languages are too complex. Litex lowers the barrier by 10x, m
 
 The simplicity of Litex enables both the large-scale adoption of formal languages and their deep integration into AI systems. In Litex, there is no foreign keywords, twisted syntax, or complex semantics, just plain reasoning. Litex benefits both AI research and the math community. 
 
-Formal language turns writing math into writing code, enabling automation, collaboration, and standardization. With AI generating reasoning and Litex verifying it, automated reasoning becomes a reality.
-
-
-
-
+Scaling formal reasoning has several meanings: 1. Scaling the number of people who can use formal reasoning; 2. Scaling the complexity of the problems that can be solved by formal reasoning. 3. Scaling AI to perform formal reasoning.
 
 ## Contact & Contribute to Litex
 
