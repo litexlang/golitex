@@ -82,7 +82,19 @@ Scaling formal reasoning has several meanings: 1. Scaling the number of people w
 
 ## Contact & Contribute to Litex
 
-Hi, I’m Jiachen Shen, creator of Litex. You’re warmly invited to join the Litex community and grow with us. Our key directions:
+_The best way to predict future is to create it._
+
+_-- Alan Kay_
+
+Hi, I’m Jiachen Shen, creator of Litex. You’re warmly invited to join the Litex community and grow with us. 
+
+Why should you joint us? The reason is simple—Litex is changing the future. There cannot be a reasoning language more concise than Litex, because it is already as close to mathematics as possible. It is both elegant and intellectually engaging. 
+
+For AI researchers, it addresses the most fundamental challenge of the AI era: enhancing reasoning ability while ensuring correctness. For mathematicians, what used to take a year of peer review can now be verified in a second. It may sound like magic, but this is exactly what the formal language Litex makes possible. 
+
+**Litex opens up limitless possibilities for scaling formal reasoning. We are creating the future.**
+
+Our key directions:
 
 Dataset – from elementary problems to IMO, textbooks, and research papers. This dataset powers AI training and reasoning.
 
