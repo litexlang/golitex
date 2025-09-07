@@ -88,6 +88,8 @@ Dataset – from elementary problems to IMO, textbooks, and research papers. Thi
 
 Litex + AI – embedding Litex into AI workflows to make reasoning scalable, reliable, and 10x more accessible.
 
+Our source code is on [Github](https://github.com/litexlang/golitex). The source code of the tutorial is on [Tutorial](https://github.com/litexlang/litex-tutorial). The Python package of Litex is [pylitex](https://github.com/litexlang/pylitex)
+
 MAKE MONEY BY CONTRIBUTING! Visit [Task Board](https://litexlang.org/task-board) to earn by solving tasks, or [Collaboration](https://litexlang.org/collaboration) to discuss bigger projects.
 
 Contact me via [email](mailto:litexlang@outlook.com) or join the [Zulip community](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/).
