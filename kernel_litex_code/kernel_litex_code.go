@@ -34,6 +34,7 @@ exist_prop x Z, y N_pos st rational_number_representation_in_fraction(q Q):
 		x / y = q
 		x = y * q
 		x = q * y
+		y > 0
 
 exist_prop x N_pos, y N_pos st rational_positive_number_representation_in_fraction(q Q):
 	q > 0
@@ -41,6 +42,8 @@ exist_prop x N_pos, y N_pos st rational_positive_number_representation_in_fracti
 		x / y = q
 		x = y * q
 		x = q * y
+		x > 0
+		y > 0
 
 exist_prop x Z, y N_pos st rational_negative_number_representation_in_fraction(q Q):
 	q < 0
@@ -459,4 +462,13 @@ know:
 
 know:
 	forall x R, y R: x > 0, y > 0 => x^y > 0
+
+fn log(x, y R) R:
+	x > 0
+	y > 0
+
+know:
+	forall x, y, z R: x > 0, y > 0, z > 0 => log(x, y^z) = z * log(x, y)
+	forall x, y, z R: x > 0, y > 0, z > 0 => log(x, y * z) = log(x, y) + log(x, z)
+	forall x R: x > 0 => log(x, x) = 1
 `
