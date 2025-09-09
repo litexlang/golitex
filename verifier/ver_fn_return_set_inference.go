@@ -19,26 +19,17 @@ import (
 	env "golitex/environment"
 )
 
-func (ver *Verifier) inferFnInFnTInterface_FromRetSet(fcFn *ast.FcFn) (env.FnInFnTInterface, bool) { // 返回值是 fn(..) fn(..)ret 或 fn(..) T(..) 中的 fn(..)
-	_, _ = fcFn.GetInvocationChain()
-	panic("")
-}
+func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn) (*env.FnInFnTMemItem, bool) { // 返回值是 fn(..) fn(..)ret 或 fn(..) T(..) 中的 fn(..)
+	fnHeadChain_AndItSelf := ast.GetFnHeadChain_AndItSelf(fcFn)
 
-func getFnTInterface_RetSet(fnInFnTInterface env.FnInFnTInterface) ast.Fc {
-	switch fnInFnTInterface.(type) {
-	case *env.FnTInterface_AsFcFn:
-		return getFnTInterface_AsFcFn_Ret(fnInFnTInterface.(*env.FnTInterface_AsFcFn))
-	case *env.FnTInterface_AsFnTStruct:
-		return getFnTInterface_AsFnTStruct_Ret(fnInFnTInterface.(*env.FnTInterface_AsFnTStruct))
-	default:
-		panic("unexpected type")
+	// 从后往前找，直到找到有个 fnHead 被已知在一个 fnInFnTInterface 中
+	// 比如 f(a)(b,c)(e,d,f) 我不知道 f(a)(b,c) 是哪个 fn_template 里的，但我发现 f(a) $in T 是知道的。那之后就是按T的返回值去套入b,c，然后再把e,d,f套入T的返回值的返回值
+	for i := len(fnHeadChain_AndItSelf) - 2; i >= 0; i-- {
+		fnHead := fnHeadChain_AndItSelf[i]
+		if fnInFnTMemItem, ok := ver.env.GetLatestFnT_GivenNameIsIn(fnHead.String()); ok {
+			return fnInFnTMemItem, true
+		}
 	}
-}
 
-func getFnTInterface_AsFcFn_Ret(fnInFnTInterface *env.FnTInterface_AsFcFn) ast.Fc {
-	return fnInFnTInterface.Params[0]
-}
-
-func getFnTInterface_AsFnTStruct_Ret(fnInFnTInterface *env.FnTInterface_AsFnTStruct) ast.Fc {
-	return fnInFnTInterface.RetSet
+	return nil, false
 }
