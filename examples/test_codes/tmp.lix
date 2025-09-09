@@ -1,12 +1,25 @@
-have a R
+fn_template self_seq(s set):
+    fn (n N_pos) s
 
-if:
-    a > 0
+fn self_sum(a self_seq(R), n N_pos, m N_pos) R:
+    n <= m
     =>:
-        a > 0
+        self_sum(a, n, m + 1) = self_sum(a, n, m) + a(m + 1)
 
-if a > 0 => a > 0
+know forall a self_seq(R), n N_pos => self_sum(a, n, n) = a(n)
 
-if a > 0 => a > 0 <=> a > 0
+claim:
+    forall a self_seq(R):
+        forall m N_pos: m > 1 => self_sum(a, 1, m) = a(1) + self_sum(a, 2, m)
+    prove:
+        self_sum(a, 1, 1) = a(1)
+        =:
+            self_sum(a, 1, 2)
+            self_sum(a, 1, 1) + a(2)
+            self_sum(a, 1, 1) + self_sum(a, 2, 2)
+            a(1) + self_sum(a, 2, 2)
+        self_sum(a, 1, 2) = a(1) + self_sum(a, 2, 2)
+        know forall m N_pos: m >= 2, self_sum(a, 1, m) = a(1) + self_sum(a, 2, m) => self_sum(a, 1, m + 1) = a(1) + self_sum(a, 2, m + 1)
+        prove_by_induction(self_sum(a, 1, m) = a(1) + self_sum(a, 2, m), m, 2)
+        know forall m N_pos: m > 1 => m >=2, self_sum(a, 1, m) = a(1) + self_sum(a, 2, m)
 
-forall a R: if a > 0 => a > 0; => a $in R, if a > 0 => a > 0; a $in R

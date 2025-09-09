@@ -20,6 +20,7 @@ import (
 )
 
 func (ver *Verifier) inferFnInFnTInterface_FromRetSet(fcFn *ast.FcFn) (env.FnInFnTInterface, bool) { // 返回值是 fn(..) fn(..)ret 或 fn(..) T(..) 中的 fn(..)
+	_, _ = fcFn.GetInvocationChain()
 	panic("")
 }
 
