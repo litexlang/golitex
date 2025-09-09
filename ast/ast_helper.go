@@ -258,14 +258,13 @@ func (fcAsFcFn *FcFn) FnTFc_ToFnTNoName() (*FnTStruct, error) {
 	return fnTNoName, nil
 }
 
-func (fcFn *FcFn) GetInvocationChain() (FcAtom, [][]Fc) {
-	switch fcFn.FnHead.(type) {
-	case FcAtom:
-		return fcFn.FnHead.(FcAtom), [][]Fc{fcFn.Params}
+func GetFnHeadChain_AndItSelf(fc Fc) []Fc {
+	switch fc.(type) {
 	case *FcFn:
-		head, params := fcFn.FnHead.(*FcFn).GetInvocationChain()
-		return head, append(params, fcFn.Params)
+		return append(GetFnHeadChain_AndItSelf(fc.(*FcFn).FnHead), fc)
+	case FcAtom:
+		return []Fc{fc}
 	default:
-		panic("expected FcAtom or *FcFn, but got " + fcFn.FnHead.String())
+		panic("expected FcFn or FcAtom, but got " + fc.String())
 	}
 }

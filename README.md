@@ -24,7 +24,7 @@
 
 Litex is a simple and intuitive formal language for coding reasoning. It ensures every step of your reasoning is correct, and is actually the first reasoning formal language (or formal language for short) that can be learned by anyone in 1–2 hours, even without math or programming background.
 
-Traditional formal languages are too complex. Litex lowers the barrier by 10x, making formalization as easy and fast as natural writing. Here is an comparison between Litex and Lean 4 (a traditional formal language) about finding out the solution to a linear equation. Kids can solve it in Litex in 2 minutes, while it require an experienced expert hours of work in Lean 4.
+Traditional formal languages are too complex. Litex lowers the entrance barrier by 10x, lowers the cost of constructing formalized proofs by 10x, making formalization as easy and fast as natural writing. Here is an comparison between Litex and Lean 4 (a traditional formal language) about finding out the solution to a linear equation. Kids can solve it in Litex in 2 minutes, while it require an experienced expert hours of work in Lean 4.
 
 <table style="border-collapse: collapse; width: 100%; font-size: 12px">
   <tr>
