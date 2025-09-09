@@ -258,17 +258,14 @@ func (fcAsFcFn *FcFn) FnTFc_ToFnTNoName() (*FnTStruct, error) {
 	return fnTNoName, nil
 }
 
-// func ReplaceFcWithFc(fc Fc, oldFc Fc, newFc Fc) Fc {
-// 	if asAtom, ok := fc.(FcAtom); ok {
-// 		if string(asAtom) == oldFc.String() {
-// 			return newFc
-// 		}
-// 		return fc
-// 	}
-
-// 	fcFn, ok := fc.(*FcFn)
-// 	if !ok {
-// 		return fc
-// 	}
-
-// }
+func (fcFn *FcFn) GetInvocationChain() (FcAtom, [][]Fc) {
+	switch fcFn.FnHead.(type) {
+	case FcAtom:
+		return fcFn.FnHead.(FcAtom), [][]Fc{fcFn.Params}
+	case *FcFn:
+		head, params := fcFn.FnHead.(*FcFn).GetInvocationChain()
+		return head, append(params, fcFn.Params)
+	default:
+		panic("expected FcAtom or *FcFn, but got " + fcFn.FnHead.String())
+	}
+}
