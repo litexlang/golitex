@@ -20,13 +20,11 @@
 
 ## Litex: The First Formal Language Learnable in 1–2 Hours
 
-*Visit [Official Website](https://litexlang.org/) to learn more about Litex. Visit [Tutorial](https://litexlang.org/doc/Tutorial/Introduction) to learn how to use Litex and try some examples. Visit [Start](https://litexlang.org/doc/Start) to start using Litex (online, locally, in Python, in Jupyter Notebook, etc.).*
+*Visit [Official Website](https://litexlang.org/) to learn more about Litex. Our community is on [Zulip](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/). Visit [Tutorial](https://litexlang.org/doc/Tutorial/Introduction) to learn how to use Litex and try some examples. Source code of Litex is on [Github](https://github.com/litexlang/golitex). Source of tutorial is on [Github](https://github.com/litexlang/litex-tutorial). Complete [challenges](https://litexlang.org/collaboration) on the Litex website, or collaborate on a partner project — earn impact rewards! Visit [Start](https://litexlang.org/doc/Start) to start using Litex (online, locally, in Python, in Jupyter Notebook, etc.).*
 
 Litex is a simple and intuitive formal language for coding reasoning. It ensures every step of your reasoning is correct, and is actually the first reasoning formal language (or formal language for short) that can be learned by anyone in 1–2 hours, even without math or programming background.
 
-Its goal is to scale formal reasoning in AI age. Scaling formal reasoning has several meanings: 1. Scaling the number of people who can use formal reasoning; 2. Scaling the complexity of the problems that can be solved by formal reasoning. 3. Scaling AI to perform formal reasoning.
-
-Traditional formal languages are too complex. Litex lowers the barrier by 10x, making formalization as easy and fast as natural writing. Here is an comparison between Litex and Lean 4 (a traditional formal language) about finding out the solution to a linear equation. Kids can solve it in Litex in 2 minutes, while it require an experienced expert hours of work in Lean 4.
+Traditional formal languages are too complex. Litex lowers the entrance barrier by 10x, lowers the cost of constructing formalized proofs by 10x, making formalization as easy and fast as natural writing. Here is an comparison between Litex and Lean 4 (a traditional formal language) about finding out the solution to a linear equation. Kids can solve it in Litex in 2 minutes, while it require an experienced expert hours of work in Lean 4.
 
 <table style="border-collapse: collapse; width: 100%; font-size: 12px">
   <tr>
@@ -82,11 +80,25 @@ Scaling formal reasoning has several meanings: 1. Scaling the number of people w
 
 ## Contact & Contribute to Litex
 
-Hi, I’m Jiachen Shen, creator of Litex. You’re warmly invited to join the Litex community and grow with us. Our key directions:
+_The best way to predict future is to create it._
+
+_-- Alan Kay_
+
+Hi, I’m Jiachen Shen, creator of Litex. You’re warmly invited to join the Litex community and grow with us. 
+
+Why should you joint us? The reason is simple—Litex is changing the future. There cannot be a reasoning language more concise than Litex, because it is already as close to mathematics as possible. It is both elegant and intellectually engaging. 
+
+For AI researchers, it addresses the most fundamental challenge of the AI era: enhancing reasoning ability while ensuring correctness. For mathematicians, what used to take a year of peer review can now be verified in a second. It may sound like magic, but this is exactly what the formal language Litex makes possible. 
+
+**Litex opens up limitless possibilities for scaling formal reasoning. We are creating the future.**
+
+Our key directions:
 
 Dataset – from elementary problems to IMO, textbooks, and research papers. This dataset powers AI training and reasoning.
 
 Litex + AI – embedding Litex into AI workflows to make reasoning scalable, reliable, and 10x more accessible.
+
+Our source code is on [Github](https://github.com/litexlang/golitex). The source code of the tutorial is on [Tutorial](https://github.com/litexlang/litex-tutorial). The Python package of Litex is [pylitex](https://github.com/litexlang/pylitex)
 
 MAKE MONEY BY CONTRIBUTING! Visit [Task Board](https://litexlang.org/task-board) to earn by solving tasks, or [Collaboration](https://litexlang.org/collaboration) to discuss bigger projects.
 
