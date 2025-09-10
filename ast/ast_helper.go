@@ -300,3 +300,15 @@ func MakeUniMap(freeParams []string, params []Fc) (map[string]Fc, error) {
 	}
 	return uniMap, nil
 }
+
+func InstFacts(facts []FactStmt, uniMap map[string]Fc) ([]FactStmt, error) {
+	newFacts := make([]FactStmt, len(facts))
+	for i, fact := range facts {
+		newFact, err := fact.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newFacts[i] = newFact
+	}
+	return newFacts, nil
+}
