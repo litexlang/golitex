@@ -14,6 +14,7 @@ integer for which x_k is in S, and in this case it is said to produce the output
 
 """
 
+
 # Definition of computational sequence
 fn comp_seq(D set, f fn(D)D) fn(D, N)D:
     forall x D, n N:
@@ -52,6 +53,7 @@ claim:
         exist 0 st $exist_end_of_comp_seq(R, x, comp_seq(R, f))
 
 $is_algorithm(R, R, f)
+
 
 """
 Here is a Litex for Curious Lean Users4 code.
