@@ -56,6 +56,44 @@ func (ver *Verifier) instContentOfFnTName(fnTName *ast.FcFn) (*ast.FnTStruct, er
 			return nil, fmt.Errorf("fnTNameHead is not an atom")
 		}
 
-		defOfT := ver.env.GetFnTemplateDef(fnTName.FnHead)
 	}
+}
+
+func (ver *Verifier) getFnTDef_InstFnTStructOfIt(fnTDefName ast.FcAtom, templateParams []ast.Fc) (*ast.FnTStruct, error) {
+	defOfT, ok := ver.env.GetFnTemplateDef(fnTDefName)
+	if !ok {
+		return nil, fmt.Errorf("fnTNameHead is not a fn template")
+	}
+
+	uniMap, err := ast.MakeUniMap(defOfT.TemplateDefHeader.Params, templateParams)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: check template params dom facts are true
+
+	return defOfT.Fn.Instantiate(uniMap)
+}
+
+func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreTrue(fnTDef *ast.FnTemplateDefStmt, uniMap map[string]ast.Fc) (bool, error) {
+	ver.newEnv(ver.env)
+	defer ver.deleteEnvAndRetainMsg()
+
+	for _, fact := range fnTDef.TemplateDomFacts {
+		newFact, err := fact.Instantiate(uniMap)
+		if err != nil {
+			return false, err
+		}
+
+		ok, err := ver.VerFactStmt(newFact, Round0NoMsg)
+		if err != nil {
+			return false, err
+		}
+
+		if !ok {
+			return false, nil
+		}
+	}
+
+	return true, nil
 }
