@@ -266,7 +266,7 @@ func GetFnHeadChain_AndItSelf(fc Fc) ([]Fc, [][]Fc) {
 		// return append(GetFnHeadChain_AndItSelf(fc.(*FcFn).FnHead), fc)
 		return append(left, fc), append(right, append([]Fc{}, fc.(*FcFn).Params...))
 	case FcAtom:
-		return []Fc{fc}, nil
+		return []Fc{fc}, [][]Fc{nil}
 	default:
 		panic("expected FcFn or FcAtom, but got " + fc.String())
 	}
