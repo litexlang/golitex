@@ -1,0 +1,9 @@
+fn_template T0():
+    fn (x R) R
+
+fn_template T1():
+    fn (x R) T0()
+
+let a T1()
+
+a(1)(2) $in R

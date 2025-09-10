@@ -32,9 +32,10 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact(stmt *ast.SpecFactStmt, s
 		}
 	}
 
-	if stmt.NameIs(glob.KeywordIn) && !ver.isProvingObjInSetUsingEqualObjs {
-		return ver.verInSet_OverAllObjsEqualToIt(stmt, state)
-	}
+	// 在证明 proj(0, add_product(1,2)) $in ... 的时候可能用到
+	// if stmt.NameIs(glob.KeywordIn) && !ver.isProvingObjInSetUsingEqualObjs {
+	// 	return ver.verInSet_OverAllObjsEqualToIt(stmt, state)
+	// }
 
 	ok, err = ver.isSpecFactCommutative(stmt)
 	if err != nil {
