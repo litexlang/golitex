@@ -21,7 +21,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn) (bool, error) {
+func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) (bool, error) {
 	// f(a)(b,c)(e,d,f) 返回 {f, f(a), f(a)(b,c), f(a)(b,c)(e,d,f)}, {nil, {a}, {b,c}, {e,d,f}}
 	fnHeadChain_AndItSelf, paramsChain := ast.GetFnHeadChain_AndItSelf(fcFn)
 
@@ -34,7 +34,7 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn) (bool, error) {
 
 	// TODO 得到当前的 fnTStruct， 验证其 paramsChain 是否满足
 	for curIndex < len(fnHeadChain_AndItSelf)-1 {
-		ok, err := ver.checkParamsSatisfyFnTStruct(paramsChain[curIndex], curFnTStruct)
+		ok, err := ver.checkParamsSatisfyFnTStruct(paramsChain[curIndex], curFnTStruct, state)
 		if err != nil || !ok {
 			return false, err
 		}
@@ -44,12 +44,17 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn) (bool, error) {
 			return false, fmt.Errorf("curRetSet is not an FcFn")
 		}
 
-		curFnTStruct, err = ver.instContentOfFnTName(curRetSet)
+		curFnTStruct, err = ver.GetFnStructFromFnTName(curRetSet)
 		if err != nil {
 			return false, err
 		}
 
 		curIndex++
+	}
+
+	ok, err := ver.checkParamsSatisfyFnTStruct(paramsChain[curIndex], curFnTStruct, state)
+	if err != nil || !ok {
+		return false, err
 	}
 
 	return true, nil
@@ -81,7 +86,7 @@ func (ver *Verifier) get_Index_Where_LatestFnTIsGot(fnHeadChain_AndItSelf []ast.
 	return indexWhereLatestFnTIsGot, latestFnT
 }
 
-func (ver *Verifier) instContentOfFnTName(fnTName *ast.FcFn) (*ast.FnTStruct, error) {
+func (ver *Verifier) GetFnStructFromFnTName(fnTName *ast.FcFn) (*ast.FnTStruct, error) {
 	if ok, paramSets, retSet := fnTName.IsFnT_FcFn_Ret_ParamSets_And_RetSet(fnTName); ok {
 		excelNames := glob.GenerateNamesLikeExcelColumnNames(len(paramSets))
 		return ast.NewFnTStruct(excelNames, paramSets, retSet, []ast.FactStmt{}, []ast.FactStmt{}), nil
@@ -140,7 +145,9 @@ func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreT
 	return true, nil
 }
 
-func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams []ast.Fc, fnTStruct *ast.FnTStruct) (bool, error) {
+func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams []ast.Fc, fnTStruct *ast.FnTStruct, state *VerState) (bool, error) {
+	curState := state.GetNoMsg()
+
 	uniMap, err := ast.MakeUniMap(fnTStruct.Params, concreteParams)
 	if err != nil {
 		return false, err
@@ -152,7 +159,7 @@ func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams []ast.Fc, fnTStr
 	}
 
 	for i := range concreteParams {
-		ok, err := ver.VerFactStmt(ast.NewInFactWithFc(concreteParams[i], instFnTStruct.ParamSets[i]), Round0NoMsg)
+		ok, err := ver.VerFactStmt(ast.NewInFactWithFc(concreteParams[i], instFnTStruct.ParamSets[i]), curState)
 		if err != nil {
 			return false, err
 		}
@@ -162,7 +169,7 @@ func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams []ast.Fc, fnTStr
 	}
 
 	for _, fact := range instFnTStruct.DomFacts {
-		ok, err := ver.VerFactStmt(fact, Round0NoMsg)
+		ok, err := ver.VerFactStmt(fact, curState)
 		if err != nil {
 			return false, err
 		}

@@ -135,7 +135,8 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state *VerState) (bool, e
 	} else if ast.IsFcAtomAndEqualToStr(fcAsFcFn.FnHead, glob.KeywordSetDefinedByReplacement) {
 		return ver.setDefinedByReplacementFnRequirement(fcAsFcFn, state)
 	} else {
-		return ver.fcFnSatisfy_FnTemplate_Requirement(fcAsFcFn, state)
+		// return ver.fcFnSatisfy_FnTemplate_Requirement(fcAsFcFn, state)
+		return ver.parasSatisfyFnReq(fcAsFcFn, state)
 	}
 }
 
