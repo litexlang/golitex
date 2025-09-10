@@ -45,7 +45,7 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) (bool, e
 			return false, fmt.Errorf("curRetSet is not an FcFn")
 		}
 
-		curFnTStruct, err = ver.GetFnStructFromFnTName(curRetSet)
+		curFnTStruct, err = ver.GetFnStructFromFnTName_CheckFnTParamsReq(curRetSet, state)
 		if err != nil {
 			return false, err
 		}
@@ -76,7 +76,7 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) (bool, e
 // 	return indexWhereLatestFnTIsGot, latestFnT
 // }
 
-func (ver *Verifier) GetFnStructFromFnTName(fnTName *ast.FcFn) (*ast.FnTStruct, error) {
+func (ver *Verifier) GetFnStructFromFnTName_CheckFnTParamsReq(fnTName *ast.FcFn, state *VerState) (*ast.FnTStruct, error) {
 	if ok, paramSets, retSet := fnTName.IsFnT_FcFn_Ret_ParamSets_And_RetSet(fnTName); ok {
 		excelNames := glob.GenerateNamesLikeExcelColumnNames(len(paramSets))
 		return ast.NewFnTStruct(excelNames, paramSets, retSet, []ast.FactStmt{}, []ast.FactStmt{}), nil
@@ -86,11 +86,11 @@ func (ver *Verifier) GetFnStructFromFnTName(fnTName *ast.FcFn) (*ast.FnTStruct, 
 			return nil, fmt.Errorf("fnTNameHead is not an atom")
 		}
 
-		return ver.getFnTDef_InstFnTStructOfIt(fnTNameHeadAsAtom, fnTName.Params)
+		return ver.getFnTDef_InstFnTStructOfIt(fnTNameHeadAsAtom, fnTName.Params, state)
 	}
 }
 
-func (ver *Verifier) getFnTDef_InstFnTStructOfIt(fnTDefName ast.FcAtom, templateParams []ast.Fc) (*ast.FnTStruct, error) {
+func (ver *Verifier) getFnTDef_InstFnTStructOfIt(fnTDefName ast.FcAtom, templateParams []ast.Fc, state *VerState) (*ast.FnTStruct, error) {
 	defOfT, ok := ver.env.GetFnTemplateDef(fnTDefName)
 	if !ok {
 		return nil, fmt.Errorf("fnTNameHead %s is not a fn template", fnTDefName)
@@ -101,7 +101,7 @@ func (ver *Verifier) getFnTDef_InstFnTStructOfIt(fnTDefName ast.FcAtom, template
 		return nil, err
 	}
 
-	ok, err = ver.getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreTrue(defOfT, uniMap)
+	ok, err = ver.getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreTrue(defOfT, uniMap, state)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func (ver *Verifier) getFnTDef_InstFnTStructOfIt(fnTDefName ast.FcAtom, template
 	return defOfT.Fn.Instantiate(uniMap)
 }
 
-func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreTrue(fnTDef *ast.FnTemplateDefStmt, uniMap map[string]ast.Fc) (bool, error) {
+func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreTrue(fnTDef *ast.FnTemplateDefStmt, uniMap map[string]ast.Fc, state *VerState) (bool, error) {
 	ver.newEnv(ver.env)
 	defer ver.deleteEnvAndRetainMsg()
 
@@ -122,7 +122,7 @@ func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreT
 			return false, err
 		}
 
-		ok, err := ver.VerFactStmt(newFact, Round0NoMsg)
+		ok, err := ver.VerFactStmt(newFact, state)
 		if err != nil {
 			return false, err
 		}
@@ -148,24 +148,14 @@ func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams []ast.Fc, fnTStr
 		return false, err
 	}
 
-	for i := range concreteParams {
-		ok, err := ver.VerFactStmt(ast.NewInFactWithFc(concreteParams[i], instFnTStruct.ParamSets[i]), curState)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, nil
-		}
+	ok, err := ver.paramsInSets(concreteParams, instFnTStruct.ParamSets, curState)
+	if err != nil || !ok {
+		return false, err
 	}
 
-	for _, fact := range instFnTStruct.DomFacts {
-		ok, err := ver.VerFactStmt(fact, curState)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, nil
-		}
+	ok, err = ver.factsAreTrue(instFnTStruct.DomFacts, curState)
+	if err != nil || !ok {
+		return false, err
 	}
 
 	return true, nil
