@@ -29,12 +29,13 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) (bool, e
 	// 比如 f(a)(b,c)(e,d,f) 我不知道 f(a)(b,c) 是哪个 fn_template 里的，但我发现 f(a) $in T 是知道的。那之后就是按T的返回值去套入b,c，然后再把e,d,f套入T的返回值的返回值
 	indexWhereLatestFnTIsGot, FnToFnItemWhereLatestFnTIsGot := ver.get_Index_Where_LatestFnTIsGot(fnHeadChain_AndItSelf)
 
+	// 比如 f(a)(b,c)(e,d,f) 我们现在得到了 f(a)(b,c) 的 fnTStruct，那 curParamsChainIndex 就是 3, 表示 f(a)(b,c) 对应的params就是 (e,d,f)
 	curFnTStruct := ver.getFnTStructOfFnInFnTMemItem(FnToFnItemWhereLatestFnTIsGot)
-	curIndex := indexWhereLatestFnTIsGot + 1
+	curParamsChainIndex := indexWhereLatestFnTIsGot + 1
 
-	// TODO 得到当前的 fnTStruct， 验证其 paramsChain 是否满足
-	for curIndex < len(fnHeadChain_AndItSelf)-1 {
-		ok, err := ver.checkParamsSatisfyFnTStruct(paramsChain[curIndex], curFnTStruct, state)
+	// 验证 paramsChain 是否满足 fnTStruct，比如 e,d,f 是否满足 f(a)(b,c) 的参数要求
+	for curParamsChainIndex < len(fnHeadChain_AndItSelf)-1 {
+		ok, err := ver.checkParamsSatisfyFnTStruct(paramsChain[curParamsChainIndex], curFnTStruct, state)
 		if err != nil || !ok {
 			return false, err
 		}
@@ -49,10 +50,10 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) (bool, e
 			return false, err
 		}
 
-		curIndex++
+		curParamsChainIndex++
 	}
 
-	ok, err := ver.checkParamsSatisfyFnTStruct(paramsChain[curIndex], curFnTStruct, state)
+	ok, err := ver.checkParamsSatisfyFnTStruct(paramsChain[curParamsChainIndex], curFnTStruct, state)
 	if err != nil || !ok {
 		return false, err
 	}

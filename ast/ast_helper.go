@@ -282,7 +282,7 @@ func (fcAsFcFn *FcFn) IsFnT_FcFn_Ret_ParamSets_And_RetSet(fc *FcFn) (bool, []Fc,
 		return false, nil, nil
 	}
 
-	paramSets := append(fcAsFcFnHeadAsFcFn.Params, fcAsFcFn.Params...)
+	paramSets := append([]Fc{}, fcAsFcFnHeadAsFcFn.Params...)
 
 	retSet := fcAsFcFn.Params[0]
 
