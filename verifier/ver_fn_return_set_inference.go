@@ -22,24 +22,35 @@ import (
 )
 
 func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn) (bool, error) {
-	// f(a)(b,c)(e,d,f) 返回 f, f(a), f(a)(b,c), f(a)(b,c)(e,d,f)
+	// f(a)(b,c)(e,d,f) 返回 {f, f(a), f(a)(b,c), f(a)(b,c)(e,d,f)}, {nil, {a}, {b,c}, {e,d,f}}
 	fnHeadChain_AndItSelf, paramsChain := ast.GetFnHeadChain_AndItSelf(fcFn)
 
 	// 从后往前找，直到找到有个 fnHead 被已知在一个 fnInFnTInterface 中
 	// 比如 f(a)(b,c)(e,d,f) 我不知道 f(a)(b,c) 是哪个 fn_template 里的，但我发现 f(a) $in T 是知道的。那之后就是按T的返回值去套入b,c，然后再把e,d,f套入T的返回值的返回值
-	indexWhereLatestFnTIsGot, latestFnTOfFnAtThatIndex := ver.get_Index_Where_LatestFnTIsGot(fnHeadChain_AndItSelf)
+	indexWhereLatestFnTIsGot, FnToFnItemWhereLatestFnTIsGot := ver.get_Index_Where_LatestFnTIsGot(fnHeadChain_AndItSelf)
 
-	fnTStructOfFnAtThatIndex := ver.getFnTStructOfFnInFnTMemItem(latestFnTOfFnAtThatIndex)
+	curFnTStruct := ver.getFnTStructOfFnInFnTMemItem(FnToFnItemWhereLatestFnTIsGot)
+	curIndex := indexWhereLatestFnTIsGot + 1
 
 	// TODO 得到当前的 fnTStruct， 验证其 paramsChain 是否满足
-	for i := indexWhereLatestFnTIsGot + 1; i < len(fnHeadChain_AndItSelf); i++ {
+	for curIndex < len(fnHeadChain_AndItSelf)-1 {
+		ok, err := ver.checkParamsSatisfyFnTStruct(paramsChain[curIndex], curFnTStruct)
+		if err != nil || !ok {
+			return false, err
+		}
 
+		curRetSet, ok := curFnTStruct.RetSet.(*ast.FcFn)
+		if !ok {
+			return false, fmt.Errorf("curRetSet is not an FcFn")
+		}
+
+		curFnTStruct, err = ver.instContentOfFnTName(curRetSet)
+		if err != nil {
+			return false, err
+		}
+
+		curIndex++
 	}
-
-	// TODO: 一级级地验证确实满足
-	_ = paramsChain
-	_ = fnTStructOfFnAtThatIndex
-	_ = latestFnTOfFnAtThatIndex
 
 	return true, nil
 }
@@ -121,6 +132,40 @@ func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreT
 			return false, err
 		}
 
+		if !ok {
+			return false, nil
+		}
+	}
+
+	return true, nil
+}
+
+func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams []ast.Fc, fnTStruct *ast.FnTStruct) (bool, error) {
+	uniMap, err := ast.MakeUniMap(fnTStruct.Params, concreteParams)
+	if err != nil {
+		return false, err
+	}
+
+	instFnTStruct, err := fnTStruct.Instantiate(uniMap)
+	if err != nil {
+		return false, err
+	}
+
+	for i := range concreteParams {
+		ok, err := ver.VerFactStmt(ast.NewInFactWithFc(concreteParams[i], instFnTStruct.ParamSets[i]), Round0NoMsg)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+	}
+
+	for _, fact := range instFnTStruct.DomFacts {
+		ok, err := ver.VerFactStmt(fact, Round0NoMsg)
+		if err != nil {
+			return false, err
+		}
 		if !ok {
 			return false, nil
 		}
