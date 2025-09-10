@@ -258,13 +258,57 @@ func (fcAsFcFn *FcFn) FnTFc_ToFnTNoName() (*FnTStruct, error) {
 	return fnTNoName, nil
 }
 
-func GetFnHeadChain_AndItSelf(fc Fc) []Fc {
+// 给定 f(a)(b,c)(e,d,f)，返回 {f, f(a), f(a)(b,c), f(a)(b,c)(e,d,f)}, {nil, {a}, {b,c}, {e,d,f}}
+func GetFnHeadChain_AndItSelf(fc Fc) ([]Fc, [][]Fc) {
 	switch fc.(type) {
 	case *FcFn:
-		return append(GetFnHeadChain_AndItSelf(fc.(*FcFn).FnHead), fc)
+		left, right := GetFnHeadChain_AndItSelf(fc.(*FcFn).FnHead)
+		// return append(GetFnHeadChain_AndItSelf(fc.(*FcFn).FnHead), fc)
+		return append(left, fc), append(right, append([]Fc{}, fc.(*FcFn).Params...))
 	case FcAtom:
-		return []Fc{fc}
+		return []Fc{fc}, [][]Fc{nil}
 	default:
 		panic("expected FcFn or FcAtom, but got " + fc.String())
 	}
+}
+
+func (fcAsFcFn *FcFn) IsFnT_FcFn_Ret_ParamSets_And_RetSet(fc *FcFn) (bool, []Fc, Fc) {
+	if !IsFnTemplate_FcFn(fcAsFcFn) {
+		return false, nil, nil
+	}
+
+	fcAsFcFnHeadAsFcFn, ok := fcAsFcFn.FnHead.(*FcFn)
+	if !ok {
+		return false, nil, nil
+	}
+
+	paramSets := append([]Fc{}, fcAsFcFnHeadAsFcFn.Params...)
+
+	retSet := fcAsFcFn.Params[0]
+
+	return true, paramSets, retSet
+}
+
+func MakeUniMap(freeParams []string, params []Fc) (map[string]Fc, error) {
+	if len(freeParams) != len(params) {
+		return nil, fmt.Errorf("free params length mismatch")
+	}
+
+	uniMap := map[string]Fc{}
+	for i := range len(freeParams) {
+		uniMap[freeParams[i]] = params[i]
+	}
+	return uniMap, nil
+}
+
+func InstFacts(facts []FactStmt, uniMap map[string]Fc) ([]FactStmt, error) {
+	newFacts := make([]FactStmt, len(facts))
+	for i, fact := range facts {
+		newFact, err := fact.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newFacts[i] = newFact
+	}
+	return newFacts, nil
 }

@@ -42,3 +42,34 @@ func (ver *Verifier) processOkMsg(state *VerState, msg string, verifiedBy string
 	}
 	return true, nil
 }
+
+func (ver *Verifier) paramsInSets(params []ast.Fc, sets []ast.Fc, state *VerState) (bool, error) {
+	if len(params) != len(sets) {
+		return false, fmt.Errorf("params and sets length mismatch")
+	}
+
+	for i := range params {
+		ok, err := ver.VerFactStmt(ast.NewInFactWithFc(params[i], sets[i]), state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
+func (ver *Verifier) factsAreTrue(facts []ast.FactStmt, state *VerState) (bool, error) {
+	for _, fact := range facts {
+		ok, err := ver.VerFactStmt(fact, state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+	}
+
+	return true, nil
+}

@@ -135,101 +135,102 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state *VerState) (bool, e
 	} else if ast.IsFcAtomAndEqualToStr(fcAsFcFn.FnHead, glob.KeywordSetDefinedByReplacement) {
 		return ver.setDefinedByReplacementFnRequirement(fcAsFcFn, state)
 	} else {
-		return ver.fcFnSatisfy_FnTemplate_Requirement(fcAsFcFn, state)
+		// return ver.fcFnSatisfy_FnTemplate_Requirement(fcAsFcFn, state)
+		return ver.parasSatisfyFnReq(fcAsFcFn, state)
 	}
 }
 
-func (ver *Verifier) fcFnSatisfy_FnTemplate_Requirement(fc ast.Fc, state *VerState) (bool, error) {
-	var err error
+// func (ver *Verifier) fcFnSatisfy_FnTemplate_Requirement(fc ast.Fc, state *VerState) (bool, error) {
+// 	var err error
 
-	asFcFn, ok := fc.(*ast.FcFn)
-	if !ok {
-		return false, fmt.Errorf("%s is not a function", fc)
-	}
+// 	asFcFn, ok := fc.(*ast.FcFn)
+// 	if !ok {
+// 		return false, fmt.Errorf("%s is not a function", fc)
+// 	}
 
-	fnTemplateSlice, ok := ver.GetFnTemplateSliceFcIsIn(asFcFn.FnHead)
-	if !ok {
-		return false, nil
-	}
+// 	fnTemplateSlice, ok := ver.GetFnTemplateSliceFcIsIn(asFcFn.FnHead)
+// 	if !ok {
+// 		return false, nil
+// 	}
 
-	for i := len(fnTemplateSlice) - 1; i >= 0; i-- {
-		if fnTemplateSlice[i].AsFnTStruct != nil {
-			ok, err = ver.fcFnParamsSatisfyFnTemplateNoNameRequirement(asFcFn, fnTemplateSlice[i].AsFnTStruct, state)
-			if err != nil {
-				return false, err
-			}
-			if ok {
-				return true, nil
-			}
-		} else {
-			if fnTemplateSlice[i].AsFcFn == nil {
-				return false, nil
-			}
+// 	for i := len(fnTemplateSlice) - 1; i >= 0; i-- {
+// 		if fnTemplateSlice[i].AsFnTStruct != nil {
+// 			ok, err = ver.fcFnParamsSatisfyFnTemplateNoNameRequirement(asFcFn, fnTemplateSlice[i].AsFnTStruct, state)
+// 			if err != nil {
+// 				return false, err
+// 			}
+// 			if ok {
+// 				return true, nil
+// 			}
+// 		} else {
+// 			if fnTemplateSlice[i].AsFcFn == nil {
+// 				return false, nil
+// 			}
 
-			everythingOK := true
+// 			everythingOK := true
 
-			if len(asFcFn.Params) != len(fnTemplateSlice[i].AsFcFn.Params) {
-				return false, nil
-			}
+// 			if len(asFcFn.Params) != len(fnTemplateSlice[i].AsFcFn.Params) {
+// 				return false, nil
+// 			}
 
-			for i := range asFcFn.Params {
-				ok, err = ver.VerFactStmt(ast.NewInFactWithFc(asFcFn.Params[i], fnTemplateSlice[i].AsFcFn.FnHead.(*ast.FcFn).Params[i]), state)
-				if err != nil {
-					return false, err
-				}
-				if !ok {
-					everythingOK = false
-					break
-				}
-			}
+// 			for i := range asFcFn.Params {
+// 				ok, err = ver.VerFactStmt(ast.NewInFactWithFc(asFcFn.Params[i], fnTemplateSlice[i].AsFcFn.FnHead.(*ast.FcFn).Params[i]), state)
+// 				if err != nil {
+// 					return false, err
+// 				}
+// 				if !ok {
+// 					everythingOK = false
+// 					break
+// 				}
+// 			}
 
-			if everythingOK {
-				return true, nil
-			}
+// 			if everythingOK {
+// 				return true, nil
+// 			}
 
-		}
-	}
+// 		}
+// 	}
 
-	return false, nil
-}
+// 	return false, nil
+// }
 
-func (ver *Verifier) fcFnParamsSatisfyFnTemplateNoNameRequirement(fcFn *ast.FcFn, templateOfFn *ast.FnTStruct, state *VerState) (bool, error) {
-	if len(fcFn.Params) != len(templateOfFn.Params) {
-		return false, fmt.Errorf("parameters in %s must be %d, %s in %s is not valid", fcFn.FnHead, len(templateOfFn.Params), fcFn, fcFn)
-	}
+// func (ver *Verifier) fcFnParamsSatisfyFnTemplateNoNameRequirement(fcFn *ast.FcFn, templateOfFn *ast.FnTStruct, state *VerState) (bool, error) {
+// 	if len(fcFn.Params) != len(templateOfFn.Params) {
+// 		return false, fmt.Errorf("parameters in %s must be %d, %s in %s is not valid", fcFn.FnHead, len(templateOfFn.Params), fcFn, fcFn)
+// 	}
 
-	uniMap := map[string]ast.Fc{}
-	for i, param := range fcFn.Params {
-		uniMap[templateOfFn.Params[i]] = param
-	}
+// 	uniMap := map[string]ast.Fc{}
+// 	for i, param := range fcFn.Params {
+// 		uniMap[templateOfFn.Params[i]] = param
+// 	}
 
-	paramSets, instantiatedDomFacts, _, _, err := templateOfFn.InstantiateFnTWithoutChangingTName(uniMap)
-	if err != nil {
-		return false, err
-	}
+// 	paramSets, instantiatedDomFacts, _, _, err := templateOfFn.InstantiateFnTWithoutChangingTName(uniMap)
+// 	if err != nil {
+// 		return false, err
+// 	}
 
-	for i, paramSet := range paramSets {
-		ok, err := ver.VerFactStmt(ast.NewInFactWithFc(fcFn.Params[i], paramSet), state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, nil
-		}
-	}
+// 	for i, paramSet := range paramSets {
+// 		ok, err := ver.VerFactStmt(ast.NewInFactWithFc(fcFn.Params[i], paramSet), state)
+// 		if err != nil {
+// 			return false, err
+// 		}
+// 		if !ok {
+// 			return false, nil
+// 		}
+// 	}
 
-	for _, domFact := range instantiatedDomFacts {
-		ok, err := ver.VerFactStmt(domFact, state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, nil
-		}
-	}
+// 	for _, domFact := range instantiatedDomFacts {
+// 		ok, err := ver.VerFactStmt(domFact, state)
+// 		if err != nil {
+// 			return false, err
+// 		}
+// 		if !ok {
+// 			return false, nil
+// 		}
+// 	}
 
-	return true, nil
-}
+// 	return true, nil
+// }
 
 // TODO: 这里需要检查！
 func (ver *Verifier) setDefinedByReplacementFnRequirement(fc *ast.FcFn, state *VerState) (bool, error) {
