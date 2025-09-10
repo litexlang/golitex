@@ -285,3 +285,15 @@ func (fcAsFcFn *FcFn) IsFnT_FcFn_Ret_ParamSets_And_RetSet(fc *FcFn) (bool, []Fc,
 
 	return true, paramSets, retSet
 }
+
+func MakeUniMap(freeParams []string, params []Fc) (map[string]Fc, error) {
+	if len(freeParams) != len(params) {
+		return nil, fmt.Errorf("free params length mismatch")
+	}
+
+	uniMap := map[string]Fc{}
+	for i := range len(freeParams) {
+		uniMap[freeParams[i]] = params[i]
+	}
+	return uniMap, nil
+}
