@@ -1,5 +1,9 @@
-let f fn(Z)Z
+fn_template T0():
+    fn (x R) R
 
-f(1) $in Z
+fn_template T1():
+    fn (x R) T0()
 
-f $in fn(Z)R
+let a T1()
+
+a(1)(2) $in R
