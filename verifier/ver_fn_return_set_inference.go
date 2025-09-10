@@ -21,7 +21,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn) (bool, error) { // 返回值是 fn(..) fn(..)ret 或 fn(..) T(..) 中的 fn(..)
+func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn) (bool, error) {
 	// f(a)(b,c)(e,d,f) 返回 f, f(a), f(a)(b,c), f(a)(b,c)(e,d,f)
 	fnHeadChain_AndItSelf, paramsChain := ast.GetFnHeadChain_AndItSelf(fcFn)
 
@@ -29,13 +29,16 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn) (bool, error) { // 返回
 	// 比如 f(a)(b,c)(e,d,f) 我不知道 f(a)(b,c) 是哪个 fn_template 里的，但我发现 f(a) $in T 是知道的。那之后就是按T的返回值去套入b,c，然后再把e,d,f套入T的返回值的返回值
 	indexWhereLatestFnTIsGot, latestFnTOfFnAtThatIndex := ver.get_Index_Where_LatestFnTIsGot(fnHeadChain_AndItSelf)
 
+	fnTStructOfFnAtThatIndex := ver.getFnTStructOfFnInFnTMemItem(latestFnTOfFnAtThatIndex)
+
 	// TODO 得到当前的 fnTStruct， 验证其 paramsChain 是否满足
 	for i := indexWhereLatestFnTIsGot + 1; i < len(fnHeadChain_AndItSelf); i++ {
-		_ = ver.getFnTStructOfFnInFnTMemItem(latestFnTOfFnAtThatIndex)
+
 	}
 
 	// TODO: 一级级地验证确实满足
 	_ = paramsChain
+	_ = fnTStructOfFnAtThatIndex
 	_ = latestFnTOfFnAtThatIndex
 
 	return true, nil
