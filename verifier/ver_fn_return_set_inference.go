@@ -15,8 +15,10 @@
 package litex_verifier
 
 import (
+	"fmt"
 	ast "golitex/ast"
 	env "golitex/environment"
+	glob "golitex/glob"
 )
 
 func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn) (*env.FnInFnTMemItem, bool) { // 返回值是 fn(..) fn(..)ret 或 fn(..) T(..) 中的 fn(..)
@@ -31,5 +33,29 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn) (*env.FnInFnTMemItem, boo
 		}
 	}
 
+	// TODO: 一级级地验证确实满足
+
 	return nil, false
+}
+
+func (ver *Verifier) getRetSetOfFnInFnTMemItem(fnInFnTMemItem *env.FnInFnTMemItem) (ast.Fc, bool) {
+	if fnInFnTMemItem.AsFcFn != nil {
+		return fnInFnTMemItem.AsFcFn.Params[0], true
+	}
+
+	return fnInFnTMemItem.AsFnTStruct.RetSet, true
+}
+
+func (ver *Verifier) instContentOfFnTName(fnTName *ast.FcFn) (*ast.FnTStruct, error) {
+	if ok, paramSets, retSet := fnTName.IsFnT_FcFn_Ret_ParamSets_And_RetSet(fnTName); ok {
+		excelNames := glob.GenerateNamesLikeExcelColumnNames(len(paramSets))
+		return ast.NewFnTStruct(excelNames, paramSets, retSet, []ast.FactStmt{}, []ast.FactStmt{}), nil
+	} else {
+		fnTNameHeadAsAtom, ok := fnTName.FnHead.(ast.FcAtom)
+		if !ok {
+			return nil, fmt.Errorf("fnTNameHead is not an atom")
+		}
+
+		defOfT := ver.env.GetFnTemplateDef(fnTName.FnHead)
+	}
 }

@@ -34,3 +34,21 @@ func CopySlice[T any](src []T) []T {
 	copy(dst, src)
 	return dst
 }
+
+func numberToLetters(num int) string {
+	result := ""
+	for num > 0 {
+		num-- // 调整为 0-based
+		result = string(rune('a'+(num%26))) + result
+		num /= 26
+	}
+	return result
+}
+
+func GenerateNamesLikeExcelColumnNames(n int) []string {
+	names := make([]string, n)
+	for i := 1; i <= n; i++ {
+		names[i-1] = numberToLetters(i)
+	}
+	return names
+}
