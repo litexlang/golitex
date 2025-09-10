@@ -1,0 +1,9 @@
+prop product_zero_implies_or(x, y R):
+    x * y = 0
+    <=>:
+        or(x = 0, y = 0)
+know forall x, y R: x * y = 0 => $product_zero_implies_or(x, y)
+
+let a,b R
+know a*b=0
+$product_zero_implies_or(a,b)
