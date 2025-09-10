@@ -21,36 +21,50 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn) (*env.FnInFnTMemItem, bool) { // 返回值是 fn(..) fn(..)ret 或 fn(..) T(..) 中的 fn(..)
+func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn) (bool, error) { // 返回值是 fn(..) fn(..)ret 或 fn(..) T(..) 中的 fn(..)
 	// f(a)(b,c)(e,d,f) 返回 f, f(a), f(a)(b,c), f(a)(b,c)(e,d,f)
 	fnHeadChain_AndItSelf, paramsChain := ast.GetFnHeadChain_AndItSelf(fcFn)
 
 	// 从后往前找，直到找到有个 fnHead 被已知在一个 fnInFnTInterface 中
 	// 比如 f(a)(b,c)(e,d,f) 我不知道 f(a)(b,c) 是哪个 fn_template 里的，但我发现 f(a) $in T 是知道的。那之后就是按T的返回值去套入b,c，然后再把e,d,f套入T的返回值的返回值
-	indexWhereLatestFnTIsGot := 0
-	for i := len(fnHeadChain_AndItSelf) - 2; i >= 0; i-- {
-		fnHead := fnHeadChain_AndItSelf[i]
-		if fnInFnTMemItem, ok := ver.env.GetLatestFnT_GivenNameIsIn(fnHead.String()); ok {
-			return fnInFnTMemItem, true
-		}
-		indexWhereLatestFnTIsGot = i
-	}
+	indexWhereLatestFnTIsGot, latestFnTOfFnAtThatIndex := ver.get_Index_Where_LatestFnTIsGot(fnHeadChain_AndItSelf)
 
+	// TODO 得到当前的 fnTStruct， 验证其 paramsChain 是否满足
 	for i := indexWhereLatestFnTIsGot + 1; i < len(fnHeadChain_AndItSelf); i++ {
-		fnHead := fnHeadChain_AndItSelf[i]
+		_ = ver.getFnTStructOfFnInFnTMemItem(latestFnTOfFnAtThatIndex)
 	}
 
 	// TODO: 一级级地验证确实满足
+	_ = paramsChain
+	_ = latestFnTOfFnAtThatIndex
 
-	return nil, false
+	return true, nil
 }
 
-func (ver *Verifier) getRetSetOfFnInFnTMemItem(fnInFnTMemItem *env.FnInFnTMemItem) (ast.Fc, bool) {
+func (ver *Verifier) getFnTStructOfFnInFnTMemItem(fnInFnTMemItem *env.FnInFnTMemItem) *ast.FnTStruct {
 	if fnInFnTMemItem.AsFcFn != nil {
-		return fnInFnTMemItem.AsFcFn.Params[0], true
+		if ok, paramSets, retSet := fnInFnTMemItem.AsFcFn.IsFnT_FcFn_Ret_ParamSets_And_RetSet(fnInFnTMemItem.AsFcFn); ok {
+			excelNames := glob.GenerateNamesLikeExcelColumnNames(len(paramSets))
+			return ast.NewFnTStruct(excelNames, paramSets, retSet, []ast.FactStmt{}, []ast.FactStmt{})
+		}
 	}
 
-	return fnInFnTMemItem.AsFnTStruct.RetSet, true
+	return fnInFnTMemItem.AsFnTStruct
+}
+
+func (ver *Verifier) get_Index_Where_LatestFnTIsGot(fnHeadChain_AndItSelf []ast.Fc) (int, *env.FnInFnTMemItem) {
+	indexWhereLatestFnTIsGot := 0
+	var latestFnT *env.FnInFnTMemItem = nil
+	for i := len(fnHeadChain_AndItSelf) - 2; i >= 0; i-- {
+		fnHead := fnHeadChain_AndItSelf[i]
+		if fnInFnTMemItem, ok := ver.env.GetLatestFnT_GivenNameIsIn(fnHead.String()); ok {
+			latestFnT = fnInFnTMemItem
+			indexWhereLatestFnTIsGot = i
+			break
+		}
+	}
+
+	return indexWhereLatestFnTIsGot, latestFnT
 }
 
 func (ver *Verifier) instContentOfFnTName(fnTName *ast.FcFn) (*ast.FnTStruct, error) {
