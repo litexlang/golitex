@@ -119,87 +119,87 @@ func (ver *Verifier) returnValueOfBuiltinArithmeticFnInReal(stmt *ast.SpecFactSt
 	}
 }
 
-func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactStmt, state *VerState) bool {
-	fcFn, ok := stmt.Params[0].(*ast.FcFn)
-	if !ok {
-		return false
-	}
+// func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactStmt, state *VerState) bool {
+// 	fcFn, ok := stmt.Params[0].(*ast.FcFn)
+// 	if !ok {
+// 		return false
+// 	}
 
-	if fcFn.HasHeadInSlice([]string{glob.KeySymbolPlus, glob.KeySymbolMinus, glob.KeySymbolStar, glob.KeySymbolSlash, glob.KeySymbolPower}) {
-		if stmt.Params[1] == ast.FcAtom(glob.KeywordReal) {
-			if state.WithMsg {
-				ver.successWithMsg(stmt.String(), "the return value of the builtin arithmetic function is in the real set")
-			}
-			return true
-		}
-		return false
-	}
+// 	if fcFn.HasHeadInSlice([]string{glob.KeySymbolPlus, glob.KeySymbolMinus, glob.KeySymbolStar, glob.KeySymbolSlash, glob.KeySymbolPower}) {
+// 		if stmt.Params[1] == ast.FcAtom(glob.KeywordReal) {
+// 			if state.WithMsg {
+// 				ver.successWithMsg(stmt.String(), "the return value of the builtin arithmetic function is in the real set")
+// 			}
+// 			return true
+// 		}
+// 		return false
+// 	}
 
-	if fcFn.HasHeadInSlice([]string{glob.KeywordLen, glob.KeySymbolPercent}) {
-		if stmt.Params[1] == ast.FcAtom(glob.KeywordNatural) {
-			if state.WithMsg {
-				ver.successWithMsg(stmt.String(), "the return value of the builtin arithmetic function is in the natural set")
-			}
-			return true
-		}
-		return false
-	}
+// 	if fcFn.HasHeadInSlice([]string{glob.KeywordLen, glob.KeySymbolPercent}) {
+// 		if stmt.Params[1] == ast.FcAtom(glob.KeywordNatural) {
+// 			if state.WithMsg {
+// 				ver.successWithMsg(stmt.String(), "the return value of the builtin arithmetic function is in the natural set")
+// 			}
+// 			return true
+// 		}
+// 		return false
+// 	}
 
-	// fnDef, ok := ver.env.GetLatestFnTemplate(fcFn.FnHead)
-	// if !ok {
-	// 	return false // 这里不传error是有点道理的，因为+-*/的定义不在mem里
-	// }
+// 	// fnDef, ok := ver.env.GetLatestFnTemplate(fcFn.FnHead)
+// 	// if !ok {
+// 	// 	return false // 这里不传error是有点道理的，因为+-*/的定义不在mem里
+// 	// }
 
-	// fnDef, ok := ver.env.GetLatestFnT_GivenNameIsIn(fcFn.FnHead.String())
-	fnT_TheFcIsIn, ok := ver.GetFnTemplateSliceFcIsIn(fcFn.FnHead)
-	if !ok {
-		return false // 这里不传error是有点道理的，因为+-*/的定义不在mem里
-	}
-	fnDef := fnT_TheFcIsIn[len(fnT_TheFcIsIn)-1]
+// 	// fnDef, ok := ver.env.GetLatestFnT_GivenNameIsIn(fcFn.FnHead.String())
+// 	fnT_TheFcIsIn, ok := ver.GetFnTemplateSliceFcIsIn(fcFn.FnHead)
+// 	if !ok {
+// 		return false // 这里不传error是有点道理的，因为+-*/的定义不在mem里
+// 	}
+// 	fnDef := fnT_TheFcIsIn[len(fnT_TheFcIsIn)-1]
 
-	uniMap := map[string]ast.Fc{}
-	// if len(fnDef.Params) != len(fcFn.Params) {
+// 	uniMap := map[string]ast.Fc{}
+// 	// if len(fnDef.Params) != len(fcFn.Params) {
 
-	if fnDef.AsFcFn != nil {
-		// TODO: 这里可以改成 stmt.Params[1] 是 fnDef.AsFcFn.Params[0] 母集
-		ver.VerFactStmt(ast.NewEqualFact(stmt.Params[1], fnDef.AsFcFn.Params[0]), state)
-		if state.WithMsg {
-			ver.successWithMsg(stmt.String(), "the return value of the user defined function is in the function return set")
-		}
-		return true
-	} else {
-		if len(fnDef.AsFnTStruct.Params) != len(fcFn.Params) {
-			return false
-		}
+// 	if fnDef.AsFcFn != nil {
+// 		// TODO: 这里可以改成 stmt.Params[1] 是 fnDef.AsFcFn.Params[0] 母集
+// 		ver.VerFactStmt(ast.NewEqualFact(stmt.Params[1], fnDef.AsFcFn.Params[0]), state)
+// 		if state.WithMsg {
+// 			ver.successWithMsg(stmt.String(), "the return value of the user defined function is in the function return set")
+// 		}
+// 		return true
+// 	} else {
+// 		if len(fnDef.AsFnTStruct.Params) != len(fcFn.Params) {
+// 			return false
+// 		}
 
-		// for i, param := range fnDef.Params {
-		for i, param := range fnDef.AsFnTStruct.Params {
-			uniMap[param] = fcFn.Params[i]
-		}
+// 		// for i, param := range fnDef.Params {
+// 		for i, param := range fnDef.AsFnTStruct.Params {
+// 			uniMap[param] = fcFn.Params[i]
+// 		}
 
-		// instantiatedRetSet, err := fnDef.RetSet.Instantiate(uniMap)
-		instantiatedRetSet, err := fnDef.AsFnTStruct.RetSet.Instantiate(uniMap)
-		if err != nil {
-			return false
-		}
+// 		// instantiatedRetSet, err := fnDef.RetSet.Instantiate(uniMap)
+// 		instantiatedRetSet, err := fnDef.AsFnTStruct.RetSet.Instantiate(uniMap)
+// 		if err != nil {
+// 			return false
+// 		}
 
-		// ok = cmp.CmpFcAsStr(stmt.Params[1], instantiatedRetSet) // left.String() == right.String()
-		// TODO: 这里可以改成 stmt.Params[1] 是 fnDef.AsFcFn.Params[0] 母集
-		ok, err = ver.VerFactStmt(ast.NewEqualFact(stmt.Params[1], instantiatedRetSet), state)
-		if err != nil {
-			return false
-		}
-		if !ok {
-			return false
-		}
+// 		// ok = cmp.CmpFcAsStr(stmt.Params[1], instantiatedRetSet) // left.String() == right.String()
+// 		// TODO: 这里可以改成 stmt.Params[1] 是 fnDef.AsFcFn.Params[0] 母集
+// 		ok, err = ver.VerFactStmt(ast.NewEqualFact(stmt.Params[1], instantiatedRetSet), state)
+// 		if err != nil {
+// 			return false
+// 		}
+// 		if !ok {
+// 			return false
+// 		}
 
-		if state.WithMsg {
-			ver.successWithMsg(stmt.String(), "the return value of the user defined function is in the function return set")
-		}
+// 		if state.WithMsg {
+// 			ver.successWithMsg(stmt.String(), "the return value of the user defined function is in the function return set")
+// 		}
 
-		return true
-	}
-}
+// 		return true
+// 	}
+// }
 
 func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state *VerState) bool {
 	ok := ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordSet)
@@ -256,37 +256,6 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state *VerState) (
 		// }
 	}
 
-	return false, nil
-}
-
-func (ver *Verifier) verInSet_OverAllObjsEqualToIt(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
-	ver.isProvingObjInSetUsingEqualObjs = true
-	defer func() {
-		ver.isProvingObjInSetUsingEqualObjs = false
-	}()
-
-	ok, err := ver.VerFactStmt(stmt, state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
-	}
-
-	objectsEqualToIt, ok := ver.env.GetEqualFcs(stmt.Params[0])
-	if !ok {
-		return false, nil
-	}
-
-	for _, obj := range *objectsEqualToIt {
-		ok, err := ver.VerFactStmt(ast.NewInFactWithFc(obj, stmt.Params[1]), state)
-		if err != nil {
-			return false, err
-		}
-		if ok {
-			return true, nil
-		}
-	}
 	return false, nil
 }
 
@@ -618,4 +587,77 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Fc, fnFcFn *ast.FcFn, state *Ve
 	}
 
 	return true, nil
+}
+
+func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactStmt, state *VerState) bool {
+	fcFn, ok := stmt.Params[0].(*ast.FcFn)
+	if !ok {
+		return false
+	}
+
+	if fcFn.HasHeadInSlice([]string{glob.KeySymbolPlus, glob.KeySymbolMinus, glob.KeySymbolStar, glob.KeySymbolSlash, glob.KeySymbolPower}) {
+		if stmt.Params[1] == ast.FcAtom(glob.KeywordReal) {
+			if state.WithMsg {
+				ver.successWithMsg(stmt.String(), "the return value of the builtin arithmetic function is in the real set")
+			}
+			return true
+		}
+		return false
+	}
+
+	if fcFn.HasHeadInSlice([]string{glob.KeywordLen, glob.KeySymbolPercent}) {
+		if stmt.Params[1] == ast.FcAtom(glob.KeywordNatural) {
+			if state.WithMsg {
+				ver.successWithMsg(stmt.String(), "the return value of the builtin arithmetic function is in the natural set")
+			}
+			return true
+		}
+		return false
+	}
+
+	setFcFnIsIn_ByItsFnT, err := ver.getRetSetOfFcFnByUsingItsFnT(fcFn)
+	if err != nil {
+		return false
+	}
+
+	ok, err = ver.VerFactStmt(ast.EqualFact(stmt.Params[1], setFcFnIsIn_ByItsFnT), state)
+	if err != nil {
+		return false
+	}
+	if ok {
+		return true
+	}
+	return false
+}
+
+func (ver *Verifier) getRetSetOfFcFnByUsingItsFnT(fcFn *ast.FcFn) (ast.Fc, error) {
+	// f(a)(b,c)(e,d,f) 返回 {f, f(a), f(a)(b,c), f(a)(b,c)(e,d,f)}, {nil, {a}, {b,c}, {e,d,f}}
+	fnHeadChain_AndItSelf, _ := ast.GetFnHeadChain_AndItSelf(fcFn)
+
+	// 从后往前找，直到找到有个 fnHead 被已知在一个 fnInFnTInterface 中
+	// 比如 f(a)(b,c)(e,d,f) 我不知道 f(a)(b,c) 是哪个 fn_template 里的，但我发现 f(a) $in T 是知道的。那之后就是按T的返回值去套入b,c，然后再把e,d,f套入T的返回值的返回值
+	// 此时 indexWhereLatestFnTIsGot 就是 1, FnToFnItemWhereLatestFnTIsGot 就是 f(a) 的 fnInFnTMemItem
+	indexWhereLatestFnTIsGot, FnToFnItemWhereLatestFnTIsGot := ver.get_Index_Where_LatestFnTIsGot(fnHeadChain_AndItSelf)
+
+	// 比如 f(a)(b,c)(e,d,f) 我们现在得到了 f(a) 的 fnTStruct，那 curParamsChainIndex 就是 2, 表示 f(a) 对应的params就是 (b,c)
+	curFnTStruct := ver.getFnTStructOfFnInFnTMemItem(FnToFnItemWhereLatestFnTIsGot)
+	curParamsChainIndex := indexWhereLatestFnTIsGot + 1
+
+	// 验证 paramsChain 是否满足 fnTStruct，比如 b,c 是否满足 f(a) 的参数要求
+	for curParamsChainIndex < len(fnHeadChain_AndItSelf)-1 {
+		curRetSet, ok := curFnTStruct.RetSet.(*ast.FcFn)
+		if !ok {
+			return nil, fmt.Errorf("curRetSet is not an FcFn")
+		}
+
+		var err error
+		curFnTStruct, err = ver.GetFnStructFromFnTName(curRetSet)
+		if err != nil {
+			return nil, err
+		}
+
+		curParamsChainIndex++
+	}
+
+	return curFnTStruct.RetSet, nil
 }

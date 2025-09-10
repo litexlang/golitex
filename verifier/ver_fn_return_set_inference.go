@@ -27,13 +27,14 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) (bool, e
 
 	// 从后往前找，直到找到有个 fnHead 被已知在一个 fnInFnTInterface 中
 	// 比如 f(a)(b,c)(e,d,f) 我不知道 f(a)(b,c) 是哪个 fn_template 里的，但我发现 f(a) $in T 是知道的。那之后就是按T的返回值去套入b,c，然后再把e,d,f套入T的返回值的返回值
+	// 此时 indexWhereLatestFnTIsGot 就是 1, FnToFnItemWhereLatestFnTIsGot 就是 f(a) 的 fnInFnTMemItem
 	indexWhereLatestFnTIsGot, FnToFnItemWhereLatestFnTIsGot := ver.get_Index_Where_LatestFnTIsGot(fnHeadChain_AndItSelf)
 
-	// 比如 f(a)(b,c)(e,d,f) 我们现在得到了 f(a)(b,c) 的 fnTStruct，那 curParamsChainIndex 就是 3, 表示 f(a)(b,c) 对应的params就是 (e,d,f)
+	// 比如 f(a)(b,c)(e,d,f) 我们现在得到了 f(a) 的 fnTStruct，那 curParamsChainIndex 就是 2, 表示 f(a) 对应的params就是 (b,c)
 	curFnTStruct := ver.getFnTStructOfFnInFnTMemItem(FnToFnItemWhereLatestFnTIsGot)
 	curParamsChainIndex := indexWhereLatestFnTIsGot + 1
 
-	// 验证 paramsChain 是否满足 fnTStruct，比如 e,d,f 是否满足 f(a)(b,c) 的参数要求
+	// 验证 paramsChain 是否满足 fnTStruct，比如 b,c 是否满足 f(a) 的参数要求
 	for curParamsChainIndex < len(fnHeadChain_AndItSelf)-1 {
 		ok, err := ver.checkParamsSatisfyFnTStruct(paramsChain[curParamsChainIndex], curFnTStruct, state)
 		if err != nil || !ok {
@@ -104,7 +105,7 @@ func (ver *Verifier) GetFnStructFromFnTName(fnTName *ast.FcFn) (*ast.FnTStruct, 
 func (ver *Verifier) getFnTDef_InstFnTStructOfIt(fnTDefName ast.FcAtom, templateParams []ast.Fc) (*ast.FnTStruct, error) {
 	defOfT, ok := ver.env.GetFnTemplateDef(fnTDefName)
 	if !ok {
-		return nil, fmt.Errorf("fnTNameHead is not a fn template")
+		return nil, fmt.Errorf("fnTNameHead %s is not a fn template", fnTDefName)
 	}
 
 	uniMap, err := ast.MakeUniMap(defOfT.TemplateDefHeader.Params, templateParams)
