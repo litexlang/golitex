@@ -75,7 +75,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 	case *ast.KnowExistPropStmt:
 		_, err = exec.knowExistPropStmt(stmt)
 	case *ast.FnTemplateDefStmt:
-		err = exec.fnTemplateStmt(stmt)
+		err = exec.DefFnTemplateStmt(stmt)
 	case *ast.ClearStmt:
 		exec.clearStmt()
 	case *ast.InlineFactsStmt:
@@ -500,7 +500,7 @@ func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) (glob.ExecS
 	return glob.ExecState_True, nil
 }
 
-func (exec *Executor) fnTemplateStmt(stmt *ast.FnTemplateDefStmt) error {
+func (exec *Executor) DefFnTemplateStmt(stmt *ast.FnTemplateDefStmt) error {
 	if glob.RequireMsg() {
 		defer exec.newMsg(fmt.Sprintf("%s\n", stmt))
 	}
