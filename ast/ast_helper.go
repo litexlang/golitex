@@ -268,3 +268,20 @@ func GetFnHeadChain_AndItSelf(fc Fc) []Fc {
 		panic("expected FcFn or FcAtom, but got " + fc.String())
 	}
 }
+
+func (fcAsFcFn *FcFn) IsFnT_FcFn_Ret_ParamSets_And_RetSet(fc *FcFn) (bool, []Fc, Fc) {
+	if !IsFnTemplate_FcFn(fcAsFcFn) {
+		return false, nil, nil
+	}
+
+	fcAsFcFnHeadAsFcFn, ok := fcAsFcFn.FnHead.(*FcFn)
+	if !ok {
+		return false, nil, nil
+	}
+
+	paramSets := append(fcAsFcFnHeadAsFcFn.Params, fcAsFcFn.Params...)
+
+	retSet := fcAsFcFn.Params[0]
+
+	return true, paramSets, retSet
+}
