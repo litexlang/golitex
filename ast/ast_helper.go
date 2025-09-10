@@ -259,12 +259,12 @@ func (fcAsFcFn *FcFn) FnTFc_ToFnTNoName() (*FnTStruct, error) {
 }
 
 // 给定 f(a)(b,c)(e,d,f)，返回 {f, f(a), f(a)(b,c), f(a)(b,c)(e,d,f)}, {nil, {a}, {b,c}, {e,d,f}}
-func GetFnHeadChain_AndItSelf(fc Fc) ([]Fc, []Fc) {
+func GetFnHeadChain_AndItSelf(fc Fc) ([]Fc, [][]Fc) {
 	switch fc.(type) {
 	case *FcFn:
 		left, right := GetFnHeadChain_AndItSelf(fc.(*FcFn).FnHead)
 		// return append(GetFnHeadChain_AndItSelf(fc.(*FcFn).FnHead), fc)
-		return append(left, fc), append(right, fc.(*FcFn).Params...)
+		return append(left, fc), append(right, append([]Fc{}, fc.(*FcFn).Params...))
 	case FcAtom:
 		return []Fc{fc}, nil
 	default:
