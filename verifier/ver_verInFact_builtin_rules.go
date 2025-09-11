@@ -640,7 +640,7 @@ func (ver *Verifier) getRetSetOfFcFnByUsingItsFnT(fcFn *ast.FcFn, state *VerStat
 	indexWhereLatestFnTIsGot, FnToFnItemWhereLatestFnTIsGot := ver.env.FindRightMostResolvedFn_Return_ResolvedIndexAndFnTMemItem(fnHeadChain_AndItSelf)
 
 	// 比如 f(a)(b,c)(e,d,f) 我们现在得到了 f(a) 的 fnTStruct，那 curParamsChainIndex 就是 2, 表示 f(a) 对应的params就是 (b,c)
-	curFnTStruct := ver.env.GetFnTStructOfFnInFnTMemItem(FnToFnItemWhereLatestFnTIsGot)
+	curFnTStruct := (FnToFnItemWhereLatestFnTIsGot.AsFnTStruct)
 	curParamsChainIndex := indexWhereLatestFnTIsGot + 1
 
 	// 验证 paramsChain 是否满足 fnTStruct，比如 b,c 是否满足 f(a) 的参数要求
