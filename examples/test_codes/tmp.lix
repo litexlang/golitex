@@ -30,5 +30,3 @@ fn w(x R) T0(1)
 have b, z, d, g, s, m R
 
 w(b)(z)(d)(g, s, m, m)(17) $in has_very_special_meanings
-
-w(b)(z)(d)(g, s, m, m) $in T3(1)
