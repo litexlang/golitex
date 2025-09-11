@@ -40,13 +40,13 @@ type FnInFnTMem map[string][]FnInFnTMemItem
 // type FnTInterface_AsFnTStruct ast.FnTStruct // 比如 fn(R)R 这种
 
 type FnInFnTMemItem struct {
-	AsFcFn      *ast.FcFn // 可能是 fn(R)R 这种，或者 TName(params) 这样，或者是nil（比如 defFnStmt 声明出来的）
+	// AsFcFn      *ast.FcFn // 可能是 fn(R)R 这种，或者 TName(params) 这样，或者是nil（比如 defFnStmt 声明出来的）
 	AsFnTStruct *ast.FnTStruct
 }
 
 func MakeFnInFnTTMemItem(inFcFn *ast.FcFn, fnTemplateStmt *ast.FnTStruct) FnInFnTMemItem {
 	return FnInFnTMemItem{
-		AsFcFn:      inFcFn,
+		// AsFcFn:      inFcFn,
 		AsFnTStruct: fnTemplateStmt,
 	}
 }
