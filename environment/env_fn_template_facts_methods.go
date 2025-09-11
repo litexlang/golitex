@@ -58,6 +58,7 @@ func (e *Env) FindRightMostResolvedFn_Return_ResolvedIndexAndFnTMemItem(fnHeadCh
 	return indexWhereLatestFnTIsGot, latestFnT
 }
 
+// 比如 f(a)(b,c)(e,d,f) 我们现在得到了 f(a) 的 fnTStruct，那 curParamsChainIndex 就是 2, 表示 f(a) 对应的params就是 (b,c)
 func (e *Env) GetFnTStructOfFnInFnTMemItem(fnInFnTMemItem *FnInFnTMemItem) *ast.FnTStruct {
 	if fnInFnTMemItem.AsFcFn != nil {
 		if ok, paramSets, retSet := fnInFnTMemItem.AsFcFn.IsFnT_FcFn_Ret_ParamSets_And_RetSet(fnInFnTMemItem.AsFcFn); ok {

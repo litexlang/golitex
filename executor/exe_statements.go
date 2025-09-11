@@ -299,7 +299,7 @@ func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEach
 	}
 
 	// verify thenFacts are true
-	execState, failedFact, err := verifier.ExecFactsAtCurEnv_retRailedFact(stmt.ThenFacts, exec.env)
+	execState, failedFact, err := verifier.ExecFactsAtCurEnv_retFailedFact(stmt.ThenFacts, exec.env)
 	if err != nil {
 		return execState, fmt.Errorf("prove in each case statement error: failed to verify then facts:\n%s\n%s", failedFact, err)
 	} else if execState != glob.ExecState_True {
