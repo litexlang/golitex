@@ -20,20 +20,26 @@ import (
 )
 
 func (e *Env) InsertFnInFnTT(fc ast.Fc, templateWhereFcIs *ast.FcFn, fnTNoName *ast.FnTStruct) error {
+	var fnTFcIsIn = fnTNoName
+
+	if templateWhereFcIs != nil {
+
+	}
+
 	memory := e.FnInFnTemplateFactsMem
 	fnDefs, ok := memory[fc.String()]
 	if !ok {
 		memory[fc.String()] = []FnInFnTMemItem{
 			{
 				AsFcFn:      templateWhereFcIs,
-				AsFnTStruct: fnTNoName,
+				AsFnTStruct: fnTFcIsIn,
 			},
 		}
 		return nil
 	} else {
 		fnDefs = append(fnDefs, FnInFnTMemItem{
 			AsFcFn:      templateWhereFcIs,
-			AsFnTStruct: fnTNoName,
+			AsFnTStruct: fnTFcIsIn,
 		})
 		memory[fc.String()] = fnDefs
 		return nil

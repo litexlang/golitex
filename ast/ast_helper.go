@@ -312,3 +312,13 @@ func InstFacts(facts []FactStmt, uniMap map[string]Fc) ([]FactStmt, error) {
 	}
 	return newFacts, nil
 }
+
+func FcFnTypeTToFnStruct(fcFnTypeT *FcFn) (*FnTStruct, bool) {
+	ok, paramSets, retSet := fcFnTypeT.IsFnT_FcFn_Ret_ParamSets_And_RetSet(fcFnTypeT)
+	if !ok {
+		return nil, false
+	}
+
+	excelNames := glob.GenerateNamesLikeExcelColumnNames(len(paramSets))
+	return NewFnTStruct(excelNames, paramSets, retSet, []FactStmt{}, []FactStmt{}), true
+}
