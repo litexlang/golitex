@@ -1,4 +1,3 @@
-"""
 prove:
     fn_template T(t Z):
         fn (z N) fn(R)R
@@ -44,36 +43,35 @@ prove:
     a(1)(2) $in R
 
 prove:
-    have has_very_special_meanings set
+    have has_very_special_meanings nonempty_set
+    prop very_special(x has_very_special_meanings)
 
-    fn_template T7(t R):
-        t >= 17
-        fn (z R) has_very_special_meanings:
-        	dom:
-                z >= t
+    fn_template T3(n R):
+        dom:
+            n < 10
+        fn (x R) has_very_special_meanings:
+            dom:
+                x > n
+            =>:
+                $very_special(T3(n)(x))
 
-    fn_template T6(t R):
-        fn (z R) T7(t)
+    fn_template T2(n R):
+        dom:
+            n $in N_pos
+        fn (x R, y R, z R, m R) T3(n)
 
-    fn_template T5(t R):
-        fn (z R) T6(t)
+    fn_template T1(n R):
+        dom:
+            n $in N
+        fn (x R) T2(n)
 
-    fn_template T4(t R):
-        fn (z R) T5(t)
+    fn_template T0(n R):
+        dom:
+            n >= 1
+        fn (x R) T1(n)
 
-    fn_template T3(t R):
-        fn (z R) T4(t)
-
-    fn_template T2(t R):
-        fn (z R) T3(t)
-
-    fn_template T(t R):
-        fn (z R) T2(t)
-
-    fn w(x R) T(17)
+    fn w(x R) T0(1)
 
     have b, z, d, g, s, m R
 
-    w(b)(z)(d)(g)(s)(m)(m)(17) $in has_very_special_meanings
-    # w(b)(z)(d)(g)(s)(m)(m)(16) $in has_very_special_meanings 不应该能通过
-    """
+    w(b)(z)(d)(g, s, m, m)(17) $in has_very_special_meanings

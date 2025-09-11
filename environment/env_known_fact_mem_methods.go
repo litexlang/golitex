@@ -288,12 +288,12 @@ func (e *Env) newUniFactWithIff(stmt *ast.UniFactWithIffStmt) error {
 
 func (e *Env) StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(fn ast.Fc, fnTemplateFcFn *ast.FcFn, fnTStruct *ast.FnTStruct) error {
 	if fnTemplateFcFn != nil {
-		curFnTStruct, ok := ast.FcFnTypeTToFnStruct(fnTemplateFcFn)
-		if !ok {
-			return fmt.Errorf("%s is not fcFn fn template", fnTemplateFcFn)
+		fnTStruct, err := e.GetFnStructFromFnTName(fnTemplateFcFn)
+		if err != nil {
+			return err
 		}
 
-		err := e.InsertFnInFnTT(fn, curFnTStruct)
+		err = e.InsertFnInFnTT(fn, fnTStruct)
 		if err != nil {
 			return err
 		}

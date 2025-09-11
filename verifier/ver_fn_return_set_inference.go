@@ -74,11 +74,11 @@ func (ver *Verifier) GetFnStructFromFnTName_CheckFnTParamsReq(fnTName *ast.FcFn,
 			return nil, fmt.Errorf("fnTNameHead is not an atom")
 		}
 
-		return ver.getFnTDef_InstFnTStructOfIt(fnTNameHeadAsAtom, fnTName.Params, state)
+		return ver.getFnTDef_InstFnTStructOfIt_CheckParamsSatisfyFnTReq(fnTNameHeadAsAtom, fnTName.Params, state)
 	}
 }
 
-func (ver *Verifier) getFnTDef_InstFnTStructOfIt(fnTDefName ast.FcAtom, templateParams []ast.Fc, state *VerState) (*ast.FnTStruct, error) {
+func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckParamsSatisfyFnTReq(fnTDefName ast.FcAtom, templateParams []ast.Fc, state *VerState) (*ast.FnTStruct, error) {
 	defOfT, ok := ver.env.GetFnTemplateDef(fnTDefName)
 	if !ok {
 		return nil, fmt.Errorf("fnTNameHead %s is not a fn template", fnTDefName)
