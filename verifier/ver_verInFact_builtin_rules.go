@@ -651,7 +651,8 @@ func (ver *Verifier) getRetSetOfFcFnByUsingItsFnT(fcFn *ast.FcFn, state *VerStat
 		}
 
 		var err error
-		curFnTStruct, err = ver.GetFnStructFromFnTName_CheckFnTParamsReq(curRetSet, state)
+		// curFnTStruct, err = ver.GetFnStructFromFnTName_CheckFnTParamsReq(curRetSet, state)
+		curFnTStruct, err = ver.env.GetFnStructFromFnTName(curRetSet)
 		if err != nil {
 			return nil, err
 		}
