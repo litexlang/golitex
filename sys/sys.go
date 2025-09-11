@@ -85,11 +85,13 @@ func RunFilesInRepo(repo string) error {
 	startTime := time.Now()
 	for _, file := range files {
 		// file 最后必须以.lix结尾
+		localStartTime := time.Now()
+
 		if !strings.HasSuffix(file.Name(), ".lix") {
 			continue
 		}
 
-		fmt.Printf("%s\n", file)
+		fmt.Printf("%s ", file)
 
 		// 读出file的内容，然后执行
 		path := filepath.Join(repo, file.Name())
@@ -105,6 +107,9 @@ func RunFilesInRepo(repo string) error {
 			return fmt.Errorf("error in file: %s", file.Name())
 		}
 
+		localElapsed := time.Since(localStartTime)
+
+		fmt.Printf("%s\n", localElapsed)
 	}
 	elapsed := time.Since(startTime)
 	fmt.Printf("All files in %s executed successfully\n", repo)
