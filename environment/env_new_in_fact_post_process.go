@@ -39,7 +39,7 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) error {
 		// 	return err
 		// }
 
-		fnTStruct, ok := ast.FcFnTypeTToFnStruct(fnFn)
+		fnTStruct, ok := ast.FcFnT_To_FnTStruct(fnFn)
 		if !ok {
 			return fmt.Errorf("%s is not fcFn type fn template", fnFn.String())
 		}
