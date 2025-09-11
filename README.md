@@ -24,7 +24,9 @@
 
 Litex is a simple and intuitive formal language for coding reasoning. It ensures every step of your reasoning is correct, and is actually the first reasoning formal language (or formal language for short) that can be learned by anyone in 1–2 hours, even without math or programming background.
 
-Traditional formal languages are too complex. Litex lowers the entrance barrier by 10x, lowers the cost of constructing formalized proofs by 10x, making formalization as easy and fast as natural writing. Here is an comparison between Litex and Lean 4 (a traditional formal language) about finding out the solution to a linear equation. Kids can solve it in Litex in 2 minutes, while it require an experienced expert hours of work in Lean 4.
+Scaling formal reasoning has several meanings: 1. Scaling the number of people who can use formal reasoning; 2. Scaling the complexity of the problems that can be solved by formal reasoning. 3. Scaling AI to perform formal reasoning.
+
+Here is a comparison between Litex and traditional formal language Lean. Kids can formalize the multivariate equation in Litex in 2 minutes, while it require an experienced expert hours of work in Lean 4.
 
 <table style="border-collapse: collapse; width: 100%; font-size: 12px">
   <tr>
@@ -74,9 +76,11 @@ Traditional formal languages are too complex. Litex lowers the entrance barrier 
   </tr>
 </table>
 
-The simplicity of Litex enables both the large-scale adoption of formal languages and their deep integration into AI systems. In Litex, there is no foreign keywords, twisted syntax, or complex semantics, just plain reasoning. Litex benefits both AI research and the math community. 
+As you can see, traditional formal languages are too complex. Litex lowers the entrance barrier by 10x, lowers the cost of constructing formalized proofs by 10x, making formalization as easy and fast as natural writing. In Litex, there is no foreign keywords, twisted syntax, or complex semantics, just plain reasoning.
 
-Scaling formal reasoning has several meanings: 1. Scaling the number of people who can use formal reasoning; 2. Scaling the complexity of the problems that can be solved by formal reasoning. 3. Scaling AI to perform formal reasoning.
+The Litex ecosystem is thriving. `pylitex` is the Python package that allows you to call Litex, and at the same time being able to use all the AI tools and scientific computation packages. The smooth integration of Litex into your existing workflow is also the strength of Litex.
+
+Litex is a language full of potential. Join us to build the future of reasoning together!
 
 ## Contact & Contribute to Litex
 

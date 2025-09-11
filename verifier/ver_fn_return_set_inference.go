@@ -61,21 +61,6 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) (bool, e
 	return true, nil
 }
 
-// func (ver *Verifier) get_Index_Where_LatestFnTIsGot(fnHeadChain_AndItSelf []ast.Fc) (int, *env.FnInFnTMemItem) {
-// 	indexWhereLatestFnTIsGot := 0
-// 	var latestFnT *env.FnInFnTMemItem = nil
-// 	for i := len(fnHeadChain_AndItSelf) - 2; i >= 0; i-- {
-// 		fnHead := fnHeadChain_AndItSelf[i]
-// 		if fnInFnTMemItem, ok := ver.env.GetLatestFnT_GivenNameIsIn(fnHead.String()); ok {
-// 			latestFnT = fnInFnTMemItem
-// 			indexWhereLatestFnTIsGot = i
-// 			break
-// 		}
-// 	}
-
-// 	return indexWhereLatestFnTIsGot, latestFnT
-// }
-
 func (ver *Verifier) GetFnStructFromFnTName_CheckFnTParamsReq(fnTName *ast.FcFn, state *VerState) (*ast.FnTStruct, error) {
 	if ok, paramSets, retSet := fnTName.IsFnT_FcFn_Ret_ParamSets_And_RetSet(fnTName); ok {
 		excelNames := glob.GenerateNamesLikeExcelColumnNames(len(paramSets))
