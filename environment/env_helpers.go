@@ -74,7 +74,7 @@ func (e *Env) GenerateUndeclaredRandomName_AndNotInMap(m map[string]struct{}) st
 }
 
 func (e *Env) GetFnStructFromFnTName(fnTName *ast.FcFn) (*ast.FnTStruct, error) {
-	if fcFnTypeToFnTStruct, ok := ast.FcFnTypeTToFnStruct(fnTName); ok {
+	if fcFnTypeToFnTStruct, ok := ast.FcFnT_To_FnTStruct(fnTName); ok {
 		return fcFnTypeToFnTStruct, nil
 	} else {
 		fnTNameHeadAsAtom, ok := fnTName.FnHead.(ast.FcAtom)
