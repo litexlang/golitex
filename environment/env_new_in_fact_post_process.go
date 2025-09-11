@@ -34,11 +34,18 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) error {
 	}
 
 	if fnFn, ok := fact.Params[1].(*ast.FcFn); ok && ast.IsFnTemplate_FcFn(fnFn) {
-		fnTNoName, err := fnFn.FnTFc_ToFnTNoName()
-		if err != nil {
-			return err
+		// fnTNoName, err := fnFn.FnTFc_ToFnTNoName()
+		// if err != nil {
+		// 	return err
+		// }
+
+		fnTStruct, ok := ast.FcFnTypeTToFnStruct(fnFn)
+		if !ok {
+			return fmt.Errorf("%s is not fcFn type fn template", fnFn.String())
 		}
-		err = e.InsertFnInFnTT(fact.Params[0], fnFn, fnTNoName)
+
+		// err = e.InsertFnInFnTT(fact.Params[0], fnFn, fnTNoName)
+		err := e.InsertFnInFnTT(fact.Params[0], fnTStruct)
 		if err != nil {
 			return err
 		}

@@ -44,13 +44,6 @@ type FnInFnTMemItem struct {
 	AsFnTStruct *ast.FnTStruct
 }
 
-func MakeFnInFnTTMemItem(inFcFn *ast.FcFn, fnTemplateStmt *ast.FnTStruct) FnInFnTMemItem {
-	return FnInFnTMemItem{
-		// AsFcFn:      inFcFn,
-		AsFnTStruct: fnTemplateStmt,
-	}
-}
-
 type HaveSetFnDefMem map[string]ast.HaveSetFnStmt
 
 type KnownFactsStruct struct {
