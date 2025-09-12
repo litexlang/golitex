@@ -1,32 +1,10 @@
-have has_very_special_meanings nonempty_set
-prop very_special(x has_very_special_meanings)
+know @product_zero_then_one_of_them_is_zero(x R, y R):
+    x * y = 0
+    =>:
+        or(x = 0, y = 0)
 
-fn_template T3(n R):
-    dom:
-        n < 10
-    fn (x R) has_very_special_meanings:
-        dom:
-            x > n
-        =>:
-            $very_special(T3(n)(x))
+let a, b R: a * b = 0
 
-fn_template T2(n R):
-    dom:
-        n $in N_pos
-    fn (x R, y R, z R, m R) T3(n)
+$product_zero_then_one_of_them_is_zero(a, b)
 
-fn_template T1(n R):
-    dom:
-        n $in N
-    fn (x R) T2(n)
-
-fn_template T0(n R):
-    dom:
-        n >= 1
-    fn (x R) T1(n)
-
-fn w(x R) T0(1)
-
-have b, z, d, g, s, m R
-
-w(b)(z)(d)(g, s, m, m)(17) $in has_very_special_meanings
+or(a = 0, b = 0)
