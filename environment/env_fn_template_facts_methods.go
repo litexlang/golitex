@@ -16,24 +16,34 @@ package litex_env
 
 import (
 	ast "golitex/ast"
-	glob "golitex/glob"
 )
 
-func (e *Env) InsertFnInFnTT(fc ast.Fc, templateWhereFcIs *ast.FcFn, fnTNoName *ast.FnTStruct) error {
+// func (e *Env) InsertFnInFnTT(fc ast.Fc, asFcFn *ast.FcFn, fnTNoName *ast.FnTStruct) error {
+func (e *Env) InsertFnInFnTT(fc ast.Fc, fnTNoName *ast.FnTStruct) error {
+	var fnTFcIsIn = fnTNoName
+	var ok bool
+
+	// if asFcFn != nil {
+	// 	fnTFcIsIn, ok = ast.FcFnTypeTToFnStruct(asFcFn)
+	// 	if !ok {
+	// 		return fmt.Errorf("%s is not fcFnT", asFcFn)
+	// 	}
+	// }
+
 	memory := e.FnInFnTemplateFactsMem
 	fnDefs, ok := memory[fc.String()]
 	if !ok {
 		memory[fc.String()] = []FnInFnTMemItem{
 			{
-				AsFcFn:      templateWhereFcIs,
-				AsFnTStruct: fnTNoName,
+				// AsFcFn:      asFcFn,
+				AsFnTStruct: fnTFcIsIn,
 			},
 		}
 		return nil
 	} else {
 		fnDefs = append(fnDefs, FnInFnTMemItem{
-			AsFcFn:      templateWhereFcIs,
-			AsFnTStruct: fnTNoName,
+			// AsFcFn:      asFcFn,
+			AsFnTStruct: fnTFcIsIn,
 		})
 		memory[fc.String()] = fnDefs
 		return nil
@@ -58,13 +68,14 @@ func (e *Env) FindRightMostResolvedFn_Return_ResolvedIndexAndFnTMemItem(fnHeadCh
 	return indexWhereLatestFnTIsGot, latestFnT
 }
 
-func (e *Env) GetFnTStructOfFnInFnTMemItem(fnInFnTMemItem *FnInFnTMemItem) *ast.FnTStruct {
-	if fnInFnTMemItem.AsFcFn != nil {
-		if ok, paramSets, retSet := fnInFnTMemItem.AsFcFn.IsFnT_FcFn_Ret_ParamSets_And_RetSet(fnInFnTMemItem.AsFcFn); ok {
-			excelNames := glob.GenerateNamesLikeExcelColumnNames(len(paramSets))
-			return ast.NewFnTStruct(excelNames, paramSets, retSet, []ast.FactStmt{}, []ast.FactStmt{})
-		}
-	}
+// 比如 f(a)(b,c)(e,d,f) 我们现在得到了 f(a) 的 fnTStruct，那 curParamsChainIndex 就是 2, 表示 f(a) 对应的params就是 (b,c)
+// func (e *Env) GetFnTStructOfFnInFnTMemItem(fnInFnTMemItem *FnInFnTMemItem) *ast.FnTStruct {
+// if fnInFnTMemItem.AsFcFn != nil {
+// 	if ok, paramSets, retSet := fnInFnTMemItem.AsFcFn.IsFnT_FcFn_Ret_ParamSets_And_RetSet(fnInFnTMemItem.AsFcFn); ok {
+// 		excelNames := glob.GenerateNamesLikeExcelColumnNames(len(paramSets))
+// 		return ast.NewFnTStruct(excelNames, paramSets, retSet, []ast.FactStmt{}, []ast.FactStmt{})
+// 	}
+// }
 
-	return fnInFnTMemItem.AsFnTStruct
-}
+// 	return fnInFnTMemItem.AsFnTStruct
+// }

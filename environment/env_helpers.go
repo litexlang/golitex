@@ -15,6 +15,7 @@
 package litex_env
 
 import (
+	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
 )
@@ -70,4 +71,31 @@ func (e *Env) GenerateUndeclaredRandomName_AndNotInMap(m map[string]struct{}) st
 		}
 		i++
 	}
+}
+
+func (e *Env) GetFnStructFromFnTName(fnTName *ast.FcFn) (*ast.FnTStruct, error) {
+	if fcFnTypeToFnTStruct, ok := ast.FcFnT_To_FnTStruct(fnTName); ok {
+		return fcFnTypeToFnTStruct, nil
+	} else {
+		fnTNameHeadAsAtom, ok := fnTName.FnHead.(ast.FcAtom)
+		if !ok {
+			return nil, fmt.Errorf("fnTNameHead is not an atom")
+		}
+
+		return e.getFnTDef_InstFnTStructOfIt(fnTNameHeadAsAtom, fnTName.Params)
+	}
+}
+
+func (e *Env) getFnTDef_InstFnTStructOfIt(fnTDefName ast.FcAtom, templateParams []ast.Fc) (*ast.FnTStruct, error) {
+	defOfT, ok := e.GetFnTemplateDef(fnTDefName)
+	if !ok {
+		return nil, fmt.Errorf("fnTNameHead %s is not a fn template", fnTDefName)
+	}
+
+	uniMap, err := ast.MakeUniMap(defOfT.TemplateDefHeader.Params, templateParams)
+	if err != nil {
+		return nil, err
+	}
+
+	return defOfT.Fn.Instantiate(uniMap)
 }

@@ -275,7 +275,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 
 	// TODO: 让claim能forall if
 	// if asUnivFact.IffFacts == nil || len(asUnivFact.IffFacts) == 0 {
-	execState, failedFact, err := verifier.ExecFactsAtCurEnv_retRailedFact(asUnivFact.ThenFacts, exec.env)
+	execState, failedFact, err := verifier.ExecFactsAtCurEnv_retFailedFact(asUnivFact.ThenFacts, exec.env)
 	if err != nil {
 		return false, fmt.Errorf("claim statement error: failed to verify fact:\n%s\n%s", failedFact, err)
 	} else if execState != glob.ExecState_True {

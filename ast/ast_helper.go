@@ -260,11 +260,11 @@ func (fcAsFcFn *FcFn) FnTFc_ToFnTNoName() (*FnTStruct, error) {
 
 // 给定 f(a)(b,c)(e,d,f)，返回 {f, f(a), f(a)(b,c), f(a)(b,c)(e,d,f)}, {nil, {a}, {b,c}, {e,d,f}}
 func GetFnHeadChain_AndItSelf(fc Fc) ([]Fc, [][]Fc) {
-	switch fc.(type) {
+	switch asFc := fc.(type) {
 	case *FcFn:
-		left, right := GetFnHeadChain_AndItSelf(fc.(*FcFn).FnHead)
+		left, right := GetFnHeadChain_AndItSelf(asFc.FnHead)
 		// return append(GetFnHeadChain_AndItSelf(fc.(*FcFn).FnHead), fc)
-		return append(left, fc), append(right, append([]Fc{}, fc.(*FcFn).Params...))
+		return append(left, fc), append(right, append([]Fc{}, asFc.Params...))
 	case FcAtom:
 		return []Fc{fc}, [][]Fc{nil}
 	default:
@@ -311,4 +311,14 @@ func InstFacts(facts []FactStmt, uniMap map[string]Fc) ([]FactStmt, error) {
 		newFacts[i] = newFact
 	}
 	return newFacts, nil
+}
+
+func FcFnT_To_FnTStruct(fcFnTypeT *FcFn) (*FnTStruct, bool) {
+	ok, paramSets, retSet := fcFnTypeT.IsFnT_FcFn_Ret_ParamSets_And_RetSet(fcFnTypeT)
+	if !ok {
+		return nil, false
+	}
+
+	excelNames := glob.GenerateNamesLikeExcelColumnNames(len(paramSets))
+	return NewFnTStruct(excelNames, paramSets, retSet, []FactStmt{}, []FactStmt{}), true
 }
