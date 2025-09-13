@@ -17,7 +17,6 @@ package litex_verifier
 import (
 	"fmt"
 	ast "golitex/ast"
-	glob "golitex/glob"
 )
 
 func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) (bool, error) {
@@ -30,7 +29,8 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) (bool, e
 	indexWhereLatestFnTIsGot, FnToFnItemWhereLatestFnTIsGot := ver.env.FindRightMostResolvedFn_Return_ResolvedIndexAndFnTMemItem(fnHeadChain_AndItSelf)
 
 	// 比如 f(a)(b,c)(e,d,f) 我们现在得到了 f(a) 的 fnTStruct，那 curParamsChainIndex 就是 2, 表示 f(a) 对应的params就是 (b,c)
-	curFnTStruct := ver.env.GetFnTStructOfFnInFnTMemItem(FnToFnItemWhereLatestFnTIsGot)
+	// curFnTStruct := ver.env.GetFnTStructOfFnInFnTMemItem(FnToFnItemWhereLatestFnTIsGot)
+	curFnTStruct := FnToFnItemWhereLatestFnTIsGot.AsFnTStruct
 	curParamsChainIndex := indexWhereLatestFnTIsGot + 1
 
 	// 验证 paramsChain 是否满足 fnTStruct，比如 b,c 是否满足 f(a) 的参数要求
@@ -61,36 +61,20 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) (bool, e
 	return true, nil
 }
 
-// func (ver *Verifier) get_Index_Where_LatestFnTIsGot(fnHeadChain_AndItSelf []ast.Fc) (int, *env.FnInFnTMemItem) {
-// 	indexWhereLatestFnTIsGot := 0
-// 	var latestFnT *env.FnInFnTMemItem = nil
-// 	for i := len(fnHeadChain_AndItSelf) - 2; i >= 0; i-- {
-// 		fnHead := fnHeadChain_AndItSelf[i]
-// 		if fnInFnTMemItem, ok := ver.env.GetLatestFnT_GivenNameIsIn(fnHead.String()); ok {
-// 			latestFnT = fnInFnTMemItem
-// 			indexWhereLatestFnTIsGot = i
-// 			break
-// 		}
-// 	}
-
-// 	return indexWhereLatestFnTIsGot, latestFnT
-// }
-
 func (ver *Verifier) GetFnStructFromFnTName_CheckFnTParamsReq(fnTName *ast.FcFn, state *VerState) (*ast.FnTStruct, error) {
-	if ok, paramSets, retSet := fnTName.IsFnT_FcFn_Ret_ParamSets_And_RetSet(fnTName); ok {
-		excelNames := glob.GenerateNamesLikeExcelColumnNames(len(paramSets))
-		return ast.NewFnTStruct(excelNames, paramSets, retSet, []ast.FactStmt{}, []ast.FactStmt{}), nil
+	if fcFnTypeToFnTStruct, ok := ast.FcFnT_To_FnTStruct(fnTName); ok {
+		return fcFnTypeToFnTStruct, nil
 	} else {
 		fnTNameHeadAsAtom, ok := fnTName.FnHead.(ast.FcAtom)
 		if !ok {
 			return nil, fmt.Errorf("fnTNameHead is not an atom")
 		}
 
-		return ver.getFnTDef_InstFnTStructOfIt(fnTNameHeadAsAtom, fnTName.Params, state)
+		return ver.getFnTDef_InstFnTStructOfIt_CheckParamsSatisfyFnTReq(fnTNameHeadAsAtom, fnTName.Params, state)
 	}
 }
 
-func (ver *Verifier) getFnTDef_InstFnTStructOfIt(fnTDefName ast.FcAtom, templateParams []ast.Fc, state *VerState) (*ast.FnTStruct, error) {
+func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckParamsSatisfyFnTReq(fnTDefName ast.FcAtom, templateParams []ast.Fc, state *VerState) (*ast.FnTStruct, error) {
 	defOfT, ok := ver.env.GetFnTemplateDef(fnTDefName)
 	if !ok {
 		return nil, fmt.Errorf("fnTNameHead %s is not a fn template", fnTDefName)

@@ -233,8 +233,17 @@ func (exec *Executor) haveEnumSetStmt(stmt *ast.EnumStmt) (glob.ExecState, error
 }
 
 func (exec *Executor) haveIntensionalSetStmt(stmt *ast.IntensionalSetStmt) (glob.ExecState, error) {
+	// very important: check whether the parent set is a set
+	ok, err := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.ParentSet, ast.FcAtom(glob.KeywordSet)}))
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+	if ok != glob.ExecState_True {
+		return glob.ExecState_Error, fmt.Errorf("parent set of intensional set must be a set, but `%s` is not", stmt.ParentSet)
+	}
+
 	defObjStmt := ast.NewDefObjStmt([]string{stmt.CurSet.String()}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}, []ast.FactStmt{stmt})
-	err := exec.defObjStmt(defObjStmt, false)
+	err = exec.defObjStmt(defObjStmt, false)
 	if err != nil {
 		return glob.ExecState_Error, err
 	}
