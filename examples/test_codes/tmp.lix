@@ -1,10 +1,2 @@
-know @product_zero_then_one_of_them_is_zero(x R, y R):
-    x * y = 0
-    =>:
-        or(x = 0, y = 0)
-
-let a, b R: a * b = 0
-
-$product_zero_then_one_of_them_is_zero(a, b)
-
-or(a = 0, b = 0)
+have set s := x set:
+    x = x
