@@ -1,2 +1,6 @@
-have set s := x set:
-    x = x
+fn f(x R) R:
+    x > 0
+    =>:
+        f(x) > 0
+
+f(-1) > 0
