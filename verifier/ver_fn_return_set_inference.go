@@ -119,26 +119,37 @@ func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreT
 	return true, nil
 }
 
-func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams []ast.Fc, fnTStruct *ast.FnTStruct, state *VerState) (bool, error) {
+func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.FcSlice, fnTStruct *ast.FnTStruct, state *VerState) (bool, error) {
+	failed := false
+
 	curState := state.GetNoMsg()
+	defer func() {
+		if failed {
+			ver.env.Msgs = append(ver.env.Msgs, fmt.Sprintf("failed to check param(s) %s satisfy domain of\n%s", concreteParams, fnTStruct))
+		}
+	}()
 
 	uniMap, err := ast.MakeUniMap(fnTStruct.Params, concreteParams)
 	if err != nil {
+		failed = true
 		return false, err
 	}
 
 	instFnTStruct, err := fnTStruct.Instantiate(uniMap)
 	if err != nil {
+		failed = true
 		return false, err
 	}
 
 	ok, err := ver.paramsInSets(concreteParams, instFnTStruct.ParamSets, curState)
 	if err != nil || !ok {
+		failed = true
 		return false, err
 	}
 
 	ok, err = ver.factsAreTrue(instFnTStruct.DomFacts, curState)
 	if err != nil || !ok {
+		failed = true
 		return false, err
 	}
 
