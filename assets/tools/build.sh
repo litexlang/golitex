@@ -8,7 +8,7 @@
 #
 # Original Author: Jiachen Shen <malloc_realloc_free@outlook.com>
 # Contact the development team: <litexlang@outlook.com>
-# Visit litexlang.org and https://github.com/litexlang/golitex for more info.
+# Visit litexlang.com and https://github.com/litexlang/golitex for more info.
 
 # Create binary directory if it doesn't exist; 如果存在的话，把里面的东西清理了
 rm -rf ./binary
