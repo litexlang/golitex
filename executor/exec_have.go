@@ -239,7 +239,7 @@ func (exec *Executor) haveIntensionalSetStmt(stmt *ast.IntensionalSetStmt) (glob
 		return glob.ExecState_Error, err
 	}
 	if ok != glob.ExecState_True {
-		return glob.ExecState_Error, fmt.Errorf("parent set of intensional set must be a set, but `%s` is not", stmt.ParentSet)
+		return glob.ExecState_Error, fmt.Errorf("parent set of intensional set must be a set, i.e. `%s in %s` is true, but `%s in %s` is not", stmt.ParentSet, ast.FcAtom(glob.KeywordSet), stmt.ParentSet, ast.FcAtom(glob.KeywordSet))
 	}
 
 	defObjStmt := ast.NewDefObjStmt([]string{stmt.CurSet.String()}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}, []ast.FactStmt{stmt})

@@ -839,3 +839,53 @@ func (stmt *HaveFnStmt) String() string {
 	builder.WriteString(glob.SplitLinesAndAdd4NIndents(fmt.Sprintf("%s %s", glob.KeywordHave, stmt.HaveObjSatisfyFn.String()), 1))
 	return builder.String()
 }
+
+func (fc FcSlice) String() string {
+	output := make([]string, len(fc))
+	for i, param := range fc {
+		output[i] = param.String()
+	}
+	return strings.Join(output, ", ")
+}
+
+func (params StrSlice) String() string {
+	output := make([]string, len(params))
+	for i, param := range params {
+		output[i] = param
+	}
+	return strings.Join(output, ", ")
+}
+
+func (fnTStruct *FnTStruct) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordFn)
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeySymbolLeftBrace)
+	pair := make([]string, len(fnTStruct.Params))
+	for i, param := range fnTStruct.Params {
+		pair[i] = fmt.Sprintf("%s %s", param, fnTStruct.ParamSets[i].String())
+	}
+	builder.WriteString(strings.Join(pair, ", "))
+	builder.WriteString(glob.KeySymbolRightBrace)
+	builder.WriteString(" ")
+	builder.WriteString(fnTStruct.RetSet.String())
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+	if len(fnTStruct.DomFacts) > 0 {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordDom, 1))
+		builder.WriteByte('\n')
+		for _, fact := range fnTStruct.DomFacts {
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 2))
+			builder.WriteByte('\n')
+		}
+	}
+	if len(fnTStruct.ThenFacts) > 0 {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeySymbolEqualLarger, 1))
+		builder.WriteByte('\n')
+		for _, fact := range fnTStruct.ThenFacts {
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 2))
+			builder.WriteByte('\n')
+		}
+	}
+	return builder.String()
+}
