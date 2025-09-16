@@ -1,23 +1,5 @@
-prop solution(x, a, b):
-    or:
-            x = -a + sqrt(a^2 - b)
-            x = -a - sqrt(a^2 - b)
-
-know forall a, b, x R:
-    x^2 + 2 * a * x + b = 0
-    a^2 - b >= 0
-    =>:
-        $solution(x, a, b)
-
-let x R:
-    x ^ 2 + 2 * 2 * x + 1 = 0
-
-2 ^ 2 - 1 = 3
-3 >= 0
-2 ^ 2 - 1 >= 0
-
-$solution(x, 2, 1)
-
-or:
-    x = -2 + sqrt(2 ^ 2 - 1)
-    x = -2 - sqrt(2 ^ 2 - 1)
+claim:
+    forall x R:
+        x > 0
+        =>:
+        	x > 0

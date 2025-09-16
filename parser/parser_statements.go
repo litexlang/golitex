@@ -479,7 +479,11 @@ func (tb *tokenBlock) claimStmt() (ast.ClaimInterface, error) {
 	isProve := true
 
 	if len(tb.body) != 2 {
-		return nil, fmt.Errorf("expect 'prove' or 'prove_by_contradiction' after claim")
+		if len(tb.body) != 1 {
+			return nil, fmt.Errorf("expect 'prove' or 'prove_by_contradiction' after claim")
+		} else {
+			return ast.NewClaimProveStmt(toCheck, []ast.Stmt{}), nil
+		}
 	}
 
 	if tb.body[1].header.is(glob.KeywordProveByContradiction) {
@@ -494,7 +498,7 @@ func (tb *tokenBlock) claimStmt() (ast.ClaimInterface, error) {
 			return nil, tbErr(err, tb)
 		}
 	} else {
-		return nil, fmt.Errorf("expect 'prove' or 'prove_by_contradiction'")
+		return nil, fmt.Errorf("expect 'prove' or 'prove_by_contradiction' after claim")
 	}
 
 	for _, block := range tb.body[1].body {
@@ -2261,7 +2265,7 @@ func (tb *tokenBlock) claimStmtInline() (ast.ClaimInterface, error) {
 			return nil, tbErr(err, tb)
 		}
 	} else {
-		return nil, fmt.Errorf("expect colon or 'prove_by_contradiction'")
+		return ast.NewClaimProveStmt(fact, []ast.Stmt{}), nil
 	}
 
 	proof := []ast.Stmt{}
