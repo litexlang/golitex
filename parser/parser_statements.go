@@ -1248,6 +1248,10 @@ func (tb *tokenBlock) proveStmt() (*ast.ProveStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
+	if len(tb.body) == 0 {
+		return nil, fmt.Errorf("expect proof")
+	}
+
 	proof := []ast.Stmt{}
 	for _, stmt := range tb.body {
 		curStmt, err := stmt.Stmt()
