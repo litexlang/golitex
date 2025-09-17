@@ -28,3 +28,29 @@ func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState
 	}
 	return true, nil
 }
+
+// func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState) (bool, error) {
+// 	if len(stmt.Params) < 2 {
+// 		return false, fmt.Errorf("equals fact must have at least 2 params")
+// 	}
+
+// 	for i := range len(stmt.Params) - 1 {
+// 		checked := false
+// 		for j := i - 1; j >= 0; j-- {
+// 			newFact := ast.NewEqualFact(stmt.Params[i], stmt.Params[j])
+// 			ok, err := ver.VerFactStmt(newFact, state)
+// 			if err != nil {
+// 				return false, err
+// 			}
+// 			if ok {
+// 				checked = true
+// 				break
+// 			}
+// 		}
+
+// 		if !checked {
+// 			return false, nil
+// 		}
+// 	}
+// 	return true, nil
+// }
