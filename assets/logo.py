@@ -133,6 +133,3 @@ def save_image(filename="LiTeXNewLogo.png"):
     image.save(filename)
     print(f"{filename} saved")
 
-
-save_image()
-screen.exitonclick()
