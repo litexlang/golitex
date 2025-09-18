@@ -17,7 +17,9 @@ package data_cleaner
 import (
 	"fmt"
 	ast "golitex/ast"
+	glob "golitex/glob"
 	parser "golitex/parser"
+	"strings"
 )
 
 type CleanData struct {
@@ -25,10 +27,25 @@ type CleanData struct {
 	ClaimData   CleanClaimData
 }
 
+func NewCleanData(assumptions string, claimData *CleanClaimData) *CleanData {
+	return &CleanData{
+		Assumptions: assumptions,
+		ClaimData:   *claimData,
+	}
+}
+
 type CleanClaimData struct {
 	ClaimAssumption string
 	ClaimResult     string
 	Proofs          string
+}
+
+func NewCleanClaimData(claimAssumption string, claimResult string, proofs string) *CleanClaimData {
+	return &CleanClaimData{
+		ClaimAssumption: claimAssumption,
+		ClaimResult:     claimResult,
+		Proofs:          proofs,
+	}
 }
 
 func CleanStmt(code string) (*CleanData, error) {
@@ -52,8 +69,60 @@ func CleanStmt(code string) (*CleanData, error) {
 }
 
 func cleanClaimProveStmt(claimProveStmt *ast.ClaimProveStmt) (*CleanData, error) {
+	claimAssumption := ""
+	claimResult := ""
+
+	switch asStmt := claimProveStmt.ToCheckFact.(type) {
+	case *ast.SpecFactStmt:
+		claimResult = asStmt.String()
+	case *ast.UniFactStmt:
+		claimAssumption = uniFactAssumptionToString(asStmt)
+		claimResult = uniFactResultToString(asStmt)
+	default:
+		return nil, fmt.Errorf("expect spec fact or know fact")
+	}
+
+	proofs := make([]string, len(claimProveStmt.Proofs))
+	for i := range len(claimProveStmt.Proofs) {
+		proofs[i] = (claimProveStmt.Proofs[i].String())
+	}
+	proofsStr := strings.Join(proofs, "\n")
+
+	return NewCleanData(claimAssumption, NewCleanClaimData(claimAssumption, claimResult, proofsStr)), nil
+}
+
+func uniFactAssumptionToString(uniFact *ast.UniFactStmt) string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordForall)
+	builder.WriteString(" ")
+	builder.WriteString(ast.StrFcSetPairs(uniFact.Params, uniFact.ParamSets))
+	if len(uniFact.DomFacts) > 0 {
+		builder.WriteString(glob.KeySymbolColon)
+		factStrSlice := make([]string, len(uniFact.DomFacts))
+		for i := range len(uniFact.DomFacts) {
+			factStrSlice[i] = glob.SplitLinesAndAdd4NIndents(uniFact.DomFacts[i].InlineString(), 1)
+		}
+		builder.WriteString(strings.Join(factStrSlice, "\n"))
+	}
+
+	return builder.String()
+}
+
+func uniFactResultToString(uniFact *ast.UniFactStmt) string {
+	var builder strings.Builder
+	factStrSlice := make([]string, len(uniFact.ThenFacts))
+	for i := range len(uniFact.ThenFacts) {
+		factStrSlice[i] = glob.SplitLinesAndAdd4NIndents(uniFact.ThenFacts[i].InlineString(), 1)
+	}
+	builder.WriteString(strings.Join(factStrSlice, "\n"))
+	return builder.String()
 }
 
 func cleanProveStmt(proveStmt *ast.ProveStmt) (*CleanData, error) {
-	return proveStmt.String(), nil
+	// 最后一个必须是 claim 形式
+	if _, ok := proveStmt.Proof[len(proveStmt.Proof)-1].(*ast.ClaimProveStmt); !ok {
+		return nil, fmt.Errorf("expect claim statement")
+	}
+
+	return cleanClaimProveStmt(proveStmt.Proof[len(proveStmt.Proof)-1].(*ast.ClaimProveStmt))
 }

@@ -23,7 +23,7 @@ func (stmt *DefObjStmt) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordLet)
 	builder.WriteString(" ")
-	builder.WriteString(strFcSetPairs(stmt.Objs, stmt.ObjSets))
+	builder.WriteString(StrFcSetPairs(stmt.Objs, stmt.ObjSets))
 	builder.WriteString(glob.KeySymbolColon)
 	builder.WriteString(inlineFactsString(stmt.Facts))
 	return builder.String()
@@ -69,7 +69,7 @@ func (l *UniFactStmt) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordForall)
 	builder.WriteString(" ")
-	builder.WriteString(strFcSetPairs(l.Params, l.ParamSets))
+	builder.WriteString(StrFcSetPairs(l.Params, l.ParamSets))
 	if len(l.DomFacts) > 0 {
 		builder.WriteString(glob.KeySymbolColon)
 		builder.WriteString(inlineFactsString(l.DomFacts))
@@ -100,7 +100,7 @@ func (s *DefExistPropStmt) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordExistProp)
 	builder.WriteString(" ")
-	builder.WriteString(strFcSetPairs(s.ExistParams, s.ExistParamSets))
+	builder.WriteString(StrFcSetPairs(s.ExistParams, s.ExistParamSets))
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeywordSt)
 	builder.WriteString(" ")
@@ -168,7 +168,7 @@ func (s *UniFactWithIffStmt) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordForall)
 	builder.WriteString(" ")
-	builder.WriteString(strFcSetPairs(s.UniFact.Params, s.UniFact.ParamSets))
+	builder.WriteString(StrFcSetPairs(s.UniFact.Params, s.UniFact.ParamSets))
 	builder.WriteString(glob.KeySymbolColon)
 	if len(s.UniFact.DomFacts) > 0 {
 		builder.WriteString(inlineFactsString(s.UniFact.DomFacts))
@@ -275,7 +275,7 @@ func (header *DefHeader) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(header.Name.String())
 	builder.WriteString("(")
-	builder.WriteString(strFcSetPairs(header.Params, header.ParamSets))
+	builder.WriteString(StrFcSetPairs(header.Params, header.ParamSets))
 	builder.WriteString(")")
 	return builder.String()
 }
