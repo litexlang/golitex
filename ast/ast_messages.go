@@ -106,7 +106,7 @@ func keySymbolRelaFactWithoutNotString(stmt *SpecFactStmt) string {
 	return builder.String()
 }
 
-func strFcSetPairs(objs []string, objSets []Fc) string {
+func StrFcSetPairs(objs []string, objSets []Fc) string {
 	pairStrSlice := make([]string, len(objs))
 	for i := range len(objs) {
 		pairStrSlice[i] = fmt.Sprintf("%s %s", objs[i], objSets[i])
@@ -140,7 +140,7 @@ func (stmt *DefObjStmt) String() string {
 
 	builder.WriteString(glob.KeywordLet)
 	builder.WriteString(" ")
-	builder.WriteString(strFcSetPairs(stmt.Objs, stmt.ObjSets))
+	builder.WriteString(StrFcSetPairs(stmt.Objs, stmt.ObjSets))
 
 	if len(stmt.Facts) > 0 {
 		builder.WriteString(glob.KeySymbolColon)
@@ -160,7 +160,7 @@ func (stmt *HaveObjInNonEmptySetStmt) String() string {
 
 	builder.WriteString(glob.KeywordHave)
 	builder.WriteString(" ")
-	builder.WriteString(strFcSetPairs(stmt.Objs, stmt.ObjSets))
+	builder.WriteString(StrFcSetPairs(stmt.Objs, stmt.ObjSets))
 
 	return builder.String()
 }
@@ -211,7 +211,7 @@ func fnDefStmtStringGivenKw(kw string, f *FnTStruct, name string) string {
 	builder.WriteString(" ")
 	builder.WriteString(name)
 	builder.WriteString("(")
-	builder.WriteString(strFcSetPairs(f.Params, f.ParamSets))
+	builder.WriteString(StrFcSetPairs(f.Params, f.ParamSets))
 	builder.WriteString(")")
 	builder.WriteString(" ")
 	builder.WriteString(f.RetSet.String())
@@ -321,7 +321,7 @@ func (l *UniFactStmt) String() string {
 	builder.WriteString(glob.KeywordForall)
 	builder.WriteString(" ")
 
-	builder.WriteString(strFcSetPairs(l.Params, l.ParamSets))
+	builder.WriteString(StrFcSetPairs(l.Params, l.ParamSets))
 
 	builder.WriteString(":\n")
 	if len(l.DomFacts) > 0 {
@@ -373,7 +373,7 @@ func (head DefHeader) StringWithoutColonAtEnd() string {
 	builder.WriteString(string(head.Name))
 	builder.WriteString("(")
 
-	builder.WriteString(strFcSetPairs(head.Params, head.ParamSets))
+	builder.WriteString(StrFcSetPairs(head.Params, head.ParamSets))
 
 	builder.WriteString(")")
 	return builder.String()
