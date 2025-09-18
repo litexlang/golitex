@@ -48,27 +48,39 @@ func NewCleanClaimData(claimAssumption string, claimResult string, proofs string
 	}
 }
 
-func CleanStmt(code string) (*CleanData, error) {
+func CleanStmtSlice(code string) ([]*CleanData, error) {
 	topStmtSlice, err := parser.ParseSourceCode(code)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(topStmtSlice) != 1 {
-		return nil, fmt.Errorf("expect exactly one statement")
+	ret := make([]*CleanData, len(topStmtSlice))
+	for i, stmt := range topStmtSlice {
+		cleanData, err := CleanStmt(stmt)
+		if err != nil {
+			return nil, err
+		}
+		ret[i] = cleanData
 	}
+	return ret, nil
+}
 
-	switch topStmtSlice[0].(type) {
+func CleanStmt(stmt ast.Stmt) (*CleanData, error) {
+	switch topStmt := stmt.(type) {
 	case *ast.ClaimProveStmt:
-		return cleanClaimProveStmt(topStmtSlice[0].(*ast.ClaimProveStmt))
+		cleanClaimData, err := cleanClaimProveStmt(topStmt)
+		if err != nil {
+			return nil, err
+		}
+		return NewCleanData("", cleanClaimData), nil
 	case *ast.ProveStmt:
-		return cleanProveStmt(topStmtSlice[0].(*ast.ProveStmt))
+		return cleanProveStmt(topStmt)
 	default:
 		return nil, fmt.Errorf("expect claim statement")
 	}
 }
 
-func cleanClaimProveStmt(claimProveStmt *ast.ClaimProveStmt) (*CleanData, error) {
+func cleanClaimProveStmt(claimProveStmt *ast.ClaimProveStmt) (*CleanClaimData, error) {
 	claimAssumption := ""
 	claimResult := ""
 
@@ -88,7 +100,7 @@ func cleanClaimProveStmt(claimProveStmt *ast.ClaimProveStmt) (*CleanData, error)
 	}
 	proofsStr := strings.Join(proofs, "\n")
 
-	return NewCleanData(claimAssumption, NewCleanClaimData(claimAssumption, claimResult, proofsStr)), nil
+	return NewCleanClaimData(claimAssumption, claimResult, proofsStr), nil
 }
 
 func uniFactAssumptionToString(uniFact *ast.UniFactStmt) string {
@@ -124,5 +136,15 @@ func cleanProveStmt(proveStmt *ast.ProveStmt) (*CleanData, error) {
 		return nil, fmt.Errorf("expect claim statement")
 	}
 
-	return cleanClaimProveStmt(proveStmt.Proof[len(proveStmt.Proof)-1].(*ast.ClaimProveStmt))
+	proofs := make([]string, len(proveStmt.Proof)-1)
+	for i := range len(proveStmt.Proof) - 1 {
+		proofs[i] = proveStmt.Proof[i].String()
+	}
+	proofStr := strings.Join(proofs, "\n")
+
+	cleanClaimData, err := cleanClaimProveStmt(proveStmt.Proof[len(proveStmt.Proof)-1].(*ast.ClaimProveStmt))
+	if err != nil {
+		return nil, err
+	}
+	return NewCleanData(proofStr, cleanClaimData), nil
 }
