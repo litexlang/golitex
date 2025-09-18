@@ -1,48 +1,28 @@
-prove:
-    fn square_root(x R) R:
-        x >= 0
-        =>:
-            square_root(x) >= 0
-            square_root(x) * square_root(x) = x
-
-    know forall a R => a ^ 2 >= 0
-
-    know forall a, b R: a >= 0, b >= 0 => a * b >= 0
-
-    know forall a, b, c R: a >= b => a + c >= b + c
-
-    know forall a, b R: a >= 0, b >= 0, a ^ 2 >= b ^ 2 => a >= b
-
-    know forall a, b R: a >= 0, b >= 0 => a + b >= 0
-
-    know forall a, b, c R: a >= b, c > 0 => a / c >= b / c
+congruence multiplication,"If a ≡ b mod m and c ≡ d mod m, then a*c ≡ b*d mod m","prove:
+    exist_prop k Z st mod(a, b Z, m N_pos):
+        a - b = k * m
 
     claim:
-        @AM_GM_inequality(a, b R):
-            a >= 0
-            b >= 0
+        foall a, b, c, d Z, m N_pos:
+            $mod(a, b, m)
+            $mod(c, d, m)
             =>:
-                (a + b) / 2 >= square_root(a * b)
+                $mod(a * c, b * d, m)
         prove:
-            (a - b) ^ 2 >= 0
-            a ^ 2 - 2 * a * b + b ^ 2 >= 0
-            a ^ 2 - 2 * a * b + b ^ 2 + 4 * a * b >= 0 + 4 * a * b
-            (a + b) ^ 2 >= 4 * a * b
-            (a + b) ^ 2 / 4 >= (4 * a * b) / 4
-            (a + b) ^ 2 / 4 >= a * b
-            let c R: c = (a + b) / 2
+            have k_1 st $mod(a, b, m)
+            have k_2 st $mod(c, d, m)
+            a - b = k_1 * m
+            c - d = k_2 * m
+            a - b + b = k_1 * m + b
+            c - d + d = k_2 * m + d
+            a = k_1 * m + b
+            c = k_2 * m + d
             =:
-                (a + b) ^ 2 / 4
-                ((a + b) / 2) * ((a + b) / 2)
-                c * c
-                c ^ 2
-                ((a + b) / 2) ^ 2
-            ((a + b) / 2) ^ 2 >= a * b
-            a * b >= 0
-            a * b = square_root(a * b) * square_root(a * b)
-            ((a + b) / 2) ^ 2 >= square_root(a * b) ^ 2
-            a + b >= 0
-            (a + b) / 2 >= 0 / 2
-            (a + b) / 2 >= 0
-            square_root(a * b) >= 0
-            (a + b) / 2 >= square_root(a * b)
+                a * c - b * d
+                (k_1 * m + b) * (k_2 * m + d) - b * d
+                k_1 * k_2 * m^2 + (k_1 * d + k_2 * b) * m
+                (k_1 * k_2 * m + k_1 * d + k_2 * b) * m
+            let k Z: k = k_1 * k_2 * m + k_1 * d + k_2 * b
+            exist k st $mod(a * c, b * d, m)
+            $mod(a * c, b * d, m)
+"

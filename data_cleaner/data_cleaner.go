@@ -75,9 +75,20 @@ func CleanStmt(stmt ast.Stmt) (*CleanData, error) {
 		return NewCleanData("", cleanClaimData), nil
 	case *ast.ProveStmt:
 		return cleanProveStmt(topStmt)
+	case *ast.ClaimPropStmt:
+		return cleanClaimPropStmt(topStmt)
 	default:
 		return nil, fmt.Errorf("expect claim statement")
 	}
+}
+
+func cleanClaimPropStmt(claimPropStmt *ast.ClaimPropStmt) (*CleanData, error) {
+	uniFact := ast.NewUniFact(claimPropStmt.Prop.DefHeader.Params, claimPropStmt.Prop.DefHeader.ParamSets, claimPropStmt.Prop.DomFacts, claimPropStmt.Prop.ThenFacts)
+	cleanClaimData, err := cleanClaimProveStmt(ast.NewClaimProveStmt(uniFact, claimPropStmt.Proofs))
+	if err != nil {
+		return nil, err
+	}
+	return NewCleanData("", cleanClaimData), nil
 }
 
 func cleanClaimProveStmt(claimProveStmt *ast.ClaimProveStmt) (*CleanClaimData, error) {
@@ -112,7 +123,7 @@ func uniFactAssumptionToString(uniFact *ast.UniFactStmt) string {
 		builder.WriteString(glob.KeySymbolColon)
 		factStrSlice := make([]string, len(uniFact.DomFacts))
 		for i := range len(uniFact.DomFacts) {
-			factStrSlice[i] = glob.SplitLinesAndAdd4NIndents(uniFact.DomFacts[i].InlineString(), 1)
+			factStrSlice[i] = glob.SplitLinesAndAdd4NIndents(uniFact.DomFacts[i].String(), 1)
 		}
 		builder.WriteString(strings.Join(factStrSlice, "\n"))
 	}
@@ -124,7 +135,7 @@ func uniFactResultToString(uniFact *ast.UniFactStmt) string {
 	var builder strings.Builder
 	factStrSlice := make([]string, len(uniFact.ThenFacts))
 	for i := range len(uniFact.ThenFacts) {
-		factStrSlice[i] = glob.SplitLinesAndAdd4NIndents(uniFact.ThenFacts[i].InlineString(), 1)
+		factStrSlice[i] = glob.SplitLinesAndAdd4NIndents(uniFact.ThenFacts[i].String(), 1)
 	}
 	builder.WriteString(strings.Join(factStrSlice, "\n"))
 	return builder.String()
@@ -133,7 +144,9 @@ func uniFactResultToString(uniFact *ast.UniFactStmt) string {
 func cleanProveStmt(proveStmt *ast.ProveStmt) (*CleanData, error) {
 	// 最后一个必须是 claim 形式
 	if _, ok := proveStmt.Proof[len(proveStmt.Proof)-1].(*ast.ClaimProveStmt); !ok {
-		return nil, fmt.Errorf("expect claim statement")
+		if _, ok := proveStmt.Proof[len(proveStmt.Proof)-1].(*ast.ClaimPropStmt); !ok {
+			return nil, fmt.Errorf("expect claim statement or claim prop statement")
+		}
 	}
 
 	proofs := make([]string, len(proveStmt.Proof)-1)
@@ -142,9 +155,21 @@ func cleanProveStmt(proveStmt *ast.ProveStmt) (*CleanData, error) {
 	}
 	proofStr := strings.Join(proofs, "\n")
 
-	cleanClaimData, err := cleanClaimProveStmt(proveStmt.Proof[len(proveStmt.Proof)-1].(*ast.ClaimProveStmt))
-	if err != nil {
-		return nil, err
+	if _, ok := proveStmt.Proof[len(proveStmt.Proof)-1].(*ast.ClaimProveStmt); ok {
+		cleanClaimData, err := cleanClaimProveStmt(proveStmt.Proof[len(proveStmt.Proof)-1].(*ast.ClaimProveStmt))
+		if err != nil {
+			return nil, err
+		}
+		return NewCleanData(proofStr, cleanClaimData), nil
+	} else {
+		claimProp, ok := proveStmt.Proof[len(proveStmt.Proof)-1].(*ast.ClaimPropStmt)
+		if !ok {
+			return nil, fmt.Errorf("expect claim prop statement")
+		}
+		cleanClaimPropStmt, err := cleanClaimPropStmt(claimProp)
+		if err != nil {
+			return nil, err
+		}
+		return NewCleanData(proofStr, &cleanClaimPropStmt.ClaimData), nil
 	}
-	return NewCleanData(proofStr, cleanClaimData), nil
 }
