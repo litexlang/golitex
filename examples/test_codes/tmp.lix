@@ -1,10 +1,25 @@
-let a, b, c, d, e, f R:
-    a = c
-    b = d
-    a + e = b + f
+claim:
+    forall a N:
+        a $in N
+    prove:
+        a $in N
 
-=:
-    a + e
-    b + f
-    c + e
-    d + f
+claim:
+    forall a, b, c N:
+        a + b = c
+        =>:
+            a + b = c
+    prove:
+        a + b = c
+
+claim:
+    1 = 1
+    prove:
+        1 $in N
+
+prove:
+    1 + 1 = 2
+    claim:
+        1 + 1 = 2
+        prove:
+            1 + 1 = 2
