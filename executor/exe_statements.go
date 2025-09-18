@@ -369,7 +369,7 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 		}()
 	}
 
-	err := exec.env.IsValidUserDefinedName_NoDuplicate(stmt.Name)
+	err := exec.env.IsValidIdentifierAvailable(stmt.Name)
 	if err != nil {
 		return err
 	}

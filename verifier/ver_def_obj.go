@@ -29,7 +29,7 @@ func (ver *Verifier) NewDefObj_InsideAtomsDeclared(stmt *ast.DefObjStmt) error {
 	extraAtomNames := map[string]struct{}{}
 
 	for _, objName := range stmt.Objs {
-		err := ver.env.IsValidUserDefinedName_NoDuplicate(objName)
+		err := ver.env.IsValidIdentifierAvailable(objName)
 		if err != nil {
 			return err
 		}
