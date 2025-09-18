@@ -70,10 +70,10 @@ prove:
 
 func TestRead_CSV_OutputCleanData(t *testing.T) {
 	fileSlices := []string{
-		// "../past_examples/minif2f.csv",
-		// "../past_examples/basic_math.csv",
+		"../past_examples/minif2f.csv",
+		"../past_examples/basic_math1.csv",
 		"../past_examples/basic_math2.csv",
-		// "../past_examples/gsm.csv",
+		"../past_examples/gsm.csv",
 	}
 
 	for _, filePath := range fileSlices {
@@ -102,6 +102,10 @@ func TestRead_CSV_OutputCleanData(t *testing.T) {
 			if err != nil {
 				t.Errorf("failed to clean data %s\n", code)
 			}
+			if len(cleanDataSlice) == 0 {
+				continue
+			}
+
 			cleanData := cleanDataSlice[len(cleanDataSlice)-1]
 
 			// 把这一行写入：record[0], record[1], record[2], cleanData.Assumptions, cleanData.ClaimData.ClaimAssumption, cleanData.ClaimData.ClaimResult, cleanData.ClaimData.Proofs
