@@ -1,25 +1,48 @@
-claim:
-    forall a N:
-        a $in N
-    prove:
-        a $in N
-
-claim:
-    forall a, b, c N:
-        a + b = c
-        =>:
-            a + b = c
-    prove:
-        a + b = c
-
-claim:
-    1 = 1
-    prove:
-        1 $in N
-
 prove:
-    1 + 1 = 2
+    fn square_root(x R) R:
+        x >= 0
+        =>:
+            square_root(x) >= 0
+            square_root(x) * square_root(x) = x
+
+    know forall a R => a ^ 2 >= 0
+
+    know forall a, b R: a >= 0, b >= 0 => a * b >= 0
+
+    know forall a, b, c R: a >= b => a + c >= b + c
+
+    know forall a, b R: a >= 0, b >= 0, a ^ 2 >= b ^ 2 => a >= b
+
+    know forall a, b R: a >= 0, b >= 0 => a + b >= 0
+
+    know forall a, b, c R: a >= b, c > 0 => a / c >= b / c
+
     claim:
-        1 + 1 = 2
+        @AM_GM_inequality(a, b R):
+            a >= 0
+            b >= 0
+            =>:
+                (a + b) / 2 >= square_root(a * b)
         prove:
-            1 + 1 = 2
+            (a - b) ^ 2 >= 0
+            a ^ 2 - 2 * a * b + b ^ 2 >= 0
+            a ^ 2 - 2 * a * b + b ^ 2 + 4 * a * b >= 0 + 4 * a * b
+            (a + b) ^ 2 >= 4 * a * b
+            (a + b) ^ 2 / 4 >= (4 * a * b) / 4
+            (a + b) ^ 2 / 4 >= a * b
+            let c R: c = (a + b) / 2
+            =:
+                (a + b) ^ 2 / 4
+                ((a + b) / 2) * ((a + b) / 2)
+                c * c
+                c ^ 2
+                ((a + b) / 2) ^ 2
+            ((a + b) / 2) ^ 2 >= a * b
+            a * b >= 0
+            a * b = square_root(a * b) * square_root(a * b)
+            ((a + b) / 2) ^ 2 >= square_root(a * b) ^ 2
+            a + b >= 0
+            (a + b) / 2 >= 0 / 2
+            (a + b) / 2 >= 0
+            square_root(a * b) >= 0
+            (a + b) / 2 >= square_root(a * b)
