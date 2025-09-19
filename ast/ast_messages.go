@@ -560,12 +560,37 @@ func (stmt *ImportFileStmt) String() string {
 	return builder.String()
 }
 
+func (stmt *DefPropStmt) ToNamedUniFactString() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeySymbolAt)
+	builder.WriteString(stmt.DefHeader.String())
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+
+	var iffFactStrSlice []string
+	for _, iffFact := range stmt.IffFacts {
+		iffFactStrSlice = append(iffFactStrSlice, glob.SplitLinesAndAdd4NIndents(iffFact.String(), 2))
+	}
+	builder.WriteString(strings.Join(iffFactStrSlice, "\n"))
+	builder.WriteByte('\n')
+
+	var thenFactStrSlice []string
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeySymbolEqualLarger, 1))
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+	for _, thenFact := range stmt.ThenFacts {
+		thenFactStrSlice = append(thenFactStrSlice, glob.SplitLinesAndAdd4NIndents(thenFact.String(), 2))
+	}
+	builder.WriteString(strings.Join(thenFactStrSlice, "\n"))
+	return builder.String()
+}
+
 func (stmt *ClaimPropStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordClaim)
 	builder.WriteString(glob.KeySymbolColon)
 	builder.WriteString("\n")
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Prop.String(), 1))
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Prop.ToNamedUniFactString(), 1))
 	builder.WriteByte('\n')
 	proofStrSlice := make([]string, len(stmt.Proofs))
 	for i, proof := range stmt.Proofs {
