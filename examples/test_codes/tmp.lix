@@ -1,28 +1,7 @@
-congruence multiplication,"If a ≡ b mod m and c ≡ d mod m, then a*c ≡ b*d mod m","prove:
-    exist_prop k Z st mod(a, b Z, m N_pos):
-        a - b = k * m
-
-    claim:
-        foall a, b, c, d Z, m N_pos:
-            $mod(a, b, m)
-            $mod(c, d, m)
-            =>:
-                $mod(a * c, b * d, m)
-        prove:
-            have k_1 st $mod(a, b, m)
-            have k_2 st $mod(c, d, m)
-            a - b = k_1 * m
-            c - d = k_2 * m
-            a - b + b = k_1 * m + b
-            c - d + d = k_2 * m + d
-            a = k_1 * m + b
-            c = k_2 * m + d
-            =:
-                a * c - b * d
-                (k_1 * m + b) * (k_2 * m + d) - b * d
-                k_1 * k_2 * m^2 + (k_1 * d + k_2 * b) * m
-                (k_1 * k_2 * m + k_1 * d + k_2 * b) * m
-            let k Z: k = k_1 * k_2 * m + k_1 * d + k_2 * b
-            exist k st $mod(a * c, b * d, m)
-            $mod(a * c, b * d, m)
-"
+claim:
+    @p(a R):
+        a = 1
+        =>:
+            a = 1
+    prove:
+        a = 1
