@@ -472,12 +472,13 @@ know:
 
 fn log(x, y R) R:
 	x > 0
+	x != 1
 	y > 0
 
 know:
-	forall x, y, z R: x > 0, y > 0, z > 0 => log(x, y^z) = z * log(x, y)
-	forall x, y, z R: x > 0, y > 0, z > 0 => log(x, y * z) = log(x, y) + log(x, z)
-	forall x R: x > 0 => log(x, x) = 1
+	forall x, y, z R: x > 0, x != 1, y > 0, z > 0 => log(x, y^z) = z * log(x, y)
+	forall x, y, z R: x > 0, x != 1, y > 0, z > 0 => log(x, y * z) = log(x, y) + log(x, z)
+	forall x R: x > 0, x != 1 => log(x, x) = 1
 
 
 `
