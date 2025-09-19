@@ -365,10 +365,9 @@ func (ver *Verifier) matchTwoSpecFacts(stmt *ast.SpecFactStmt, knownFact *ast.Sp
 	}
 
 	// 如果不区分 equal 和 其他事实的话，可能会出死循环
-	if stmt.PropName != glob.KeySymbolEqual {
-
+	if stmt.PropName == glob.KeySymbolEqual && stmt.IsTrue() {
 		for i, knownParam := range knownFact.Params {
-			ok, err := ver.fcEqualSpec(knownParam, stmt.Params[i], state)
+			ok, err := ver.cmpFc(knownParam, stmt.Params[i], state)
 			if err != nil {
 				return false, err
 			}
@@ -379,7 +378,7 @@ func (ver *Verifier) matchTwoSpecFacts(stmt *ast.SpecFactStmt, knownFact *ast.Sp
 
 	} else {
 		for i, knownParam := range knownFact.Params {
-			ok, err := ver.cmpFc(knownParam, stmt.Params[i], state)
+			ok, err := ver.fcEqualSpec(knownParam, stmt.Params[i], state)
 			if err != nil {
 				return false, err
 			}
