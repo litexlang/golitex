@@ -1017,18 +1017,6 @@ func (tb *tokenBlock) knowPropStmt() (*ast.KnowPropStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	// declHeader, err := tb.headerOfAtProp()
-	// if err != nil {
-	// 	return nil, tbErr(err, tb)
-	// }
-
-	// iffFacts, thenFacts, err := tb.bodyOfKnowProp()
-	// if err != nil {
-	// 	return nil, tbErr(err, tb)
-	// }
-
-	// return ast.NewKnowPropStmt(*ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts, thenFacts)), nil
-
 	namedUniFact, err := tb.namedUniFactStmt()
 	if err != nil {
 		return nil, tbErr(err, tb)

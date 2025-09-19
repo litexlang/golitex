@@ -1,7 +1,5 @@
-claim:
-    @p(a R):
-        a = 1
-        =>:
-            a = 1
-    prove:
-        a = 1
+let a, b R:
+    a = 1
+    
+1 != 0
+a != 0
