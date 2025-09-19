@@ -157,10 +157,6 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 	return glob.ExecState_True, nil
 }
 
-func (exec *Executor) claimStmt(stmt *ast.ClaimProveStmt) (glob.ExecState, error) {
-	return exec.execClaimStmtProve(stmt)
-}
-
 func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecState, error) {
 	state, err := exec.claimStmtProve(stmt)
 	if notOkExec(state, err) {
@@ -168,7 +164,11 @@ func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecSta
 	}
 
 	// 检查 stmt fact 中的所有元素已经定义过了
-	exec.knowStmt(ast.NewKnowStmt([]ast.CanBeKnownStmt{stmt.ToCheckFact}))
+	err = exec.env.NewFact(stmt.ToCheckFact)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+	// exec.knowStmt(ast.NewKnowStmt([]ast.CanBeKnownStmt{stmt.ToCheckFact}))
 
 	return glob.ExecState_True, nil
 }

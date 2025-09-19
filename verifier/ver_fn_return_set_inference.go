@@ -30,6 +30,10 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) (bool, e
 
 	// 比如 f(a)(b,c)(e,d,f) 我们现在得到了 f(a) 的 fnTStruct，那 curParamsChainIndex 就是 2, 表示 f(a) 对应的params就是 (b,c)
 	// curFnTStruct := ver.env.GetFnTStructOfFnInFnTMemItem(FnToFnItemWhereLatestFnTIsGot)
+	if FnToFnItemWhereLatestFnTIsGot == nil {
+		return false, fmt.Errorf("%s is not defined", fnHeadChain_AndItSelf[len(fnHeadChain_AndItSelf)-1])
+	}
+
 	curFnTStruct := FnToFnItemWhereLatestFnTIsGot.AsFnTStruct
 	curParamsChainIndex := indexWhereLatestFnTIsGot + 1
 
