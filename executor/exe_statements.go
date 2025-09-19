@@ -33,7 +33,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 	case *ast.KnowFactStmt:
 		err = exec.knowStmt(stmt)
 	case *ast.ClaimProveStmt:
-		execState, err = exec.claimStmt(stmt)
+		execState, err = exec.execClaimStmtProve(stmt)
 	case *ast.DefPropStmt:
 		err = exec.defPropStmt(stmt, true)
 	case *ast.DefObjStmt:
