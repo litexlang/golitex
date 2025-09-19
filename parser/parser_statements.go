@@ -8,7 +8,7 @@
 //
 // Original Author: Jiachen Shen <malloc_realloc_free@outlook.com>
 // Litex email: <litexlang@outlook.com>
-// Litex website: https://litexlang.org
+// Litex website: https://litexlang.com
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
@@ -479,7 +479,11 @@ func (tb *tokenBlock) claimStmt() (ast.ClaimInterface, error) {
 	isProve := true
 
 	if len(tb.body) != 2 {
-		return nil, fmt.Errorf("expect 'prove' or 'prove_by_contradiction' after claim")
+		if len(tb.body) != 1 {
+			return nil, fmt.Errorf("expect 'prove' or 'prove_by_contradiction' after claim")
+		} else {
+			return ast.NewClaimProveStmt(toCheck, []ast.Stmt{}), nil
+		}
 	}
 
 	if tb.body[1].header.is(glob.KeywordProveByContradiction) {
@@ -494,7 +498,7 @@ func (tb *tokenBlock) claimStmt() (ast.ClaimInterface, error) {
 			return nil, tbErr(err, tb)
 		}
 	} else {
-		return nil, fmt.Errorf("expect 'prove' or 'prove_by_contradiction'")
+		return nil, fmt.Errorf("expect 'prove' or 'prove_by_contradiction' after claim")
 	}
 
 	for _, block := range tb.body[1].body {
@@ -1242,6 +1246,10 @@ func (tb *tokenBlock) proveStmt() (*ast.ProveStmt, error) {
 	err := tb.header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
 	if err != nil {
 		return nil, tbErr(err, tb)
+	}
+
+	if len(tb.body) == 0 {
+		return nil, fmt.Errorf("expect proof")
 	}
 
 	proof := []ast.Stmt{}
@@ -2261,7 +2269,7 @@ func (tb *tokenBlock) claimStmtInline() (ast.ClaimInterface, error) {
 			return nil, tbErr(err, tb)
 		}
 	} else {
-		return nil, fmt.Errorf("expect colon or 'prove_by_contradiction'")
+		return ast.NewClaimProveStmt(fact, []ast.Stmt{}), nil
 	}
 
 	proof := []ast.Stmt{}

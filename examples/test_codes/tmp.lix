@@ -1,6 +1,7 @@
-fn f(x R) R:
-    x > 0
-    =>:
-        f(x) > 0
-
-f(-1) > 0
+claim:
+    @p(a R):
+        a = 1
+        =>:
+            a = 1
+    prove:
+        a = 1

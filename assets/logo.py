@@ -8,7 +8,7 @@
 #
 # Original Author: Jiachen Shen <malloc_realloc_free@outlook.com>
 # Litex email: <litexlang@outlook.com>
-# Litex website: https://litexlang.org
+# Litex website: https://litexlang.com
 # Litex github repository: https://github.com/litexlang/golitex
 # Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
@@ -133,6 +133,3 @@ def save_image(filename="LiTeXNewLogo.png"):
     image.save(filename)
     print(f"{filename} saved")
 
-
-save_image()
-screen.exitonclick()
