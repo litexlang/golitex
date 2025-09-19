@@ -369,6 +369,13 @@ know:
 	forall x R: x <= x => not x > x
 	forall x R: x != x => x > x, x < x
 
+# Logical operator equivalences
+know:
+	forall x, y R => not x < y <=> x >= y
+	forall x, y R => not x > y <=> x <= y
+	forall x, y R => not x <= y <=> x > y
+	forall x, y R => not x >= y <=> x < y
+
 prop mul_cancel_cond(a, b, c R):
     a * c = b * c
     c != 0
@@ -471,4 +478,6 @@ know:
 	forall x, y, z R: x > 0, y > 0, z > 0 => log(x, y^z) = z * log(x, y)
 	forall x, y, z R: x > 0, y > 0, z > 0 => log(x, y * z) = log(x, y) + log(x, z)
 	forall x R: x > 0 => log(x, x) = 1
+
+
 `
