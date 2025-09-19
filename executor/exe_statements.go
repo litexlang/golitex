@@ -8,7 +8,7 @@
 //
 // Original Author: Jiachen Shen <malloc_realloc_free@outlook.com>
 // Litex email: <litexlang@outlook.com>
-// Litex website: https://litexlang.org
+// Litex website: https://litexlang.com
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
@@ -369,7 +369,7 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 		}()
 	}
 
-	err := exec.env.IsValidUserDefinedName_NoDuplicate(stmt.Name)
+	err := exec.env.IsValidIdentifierAvailable(stmt.Name)
 	if err != nil {
 		return err
 	}

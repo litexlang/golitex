@@ -8,7 +8,7 @@
 //
 // Original Author: Jiachen Shen <malloc_realloc_free@outlook.com>
 // Litex email: <litexlang@outlook.com>
-// Litex website: https://litexlang.org
+// Litex website: https://litexlang.com
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
@@ -21,7 +21,7 @@ import (
 	"slices"
 )
 
-func (env *Env) IsValidUserDefinedName_NoDuplicate(name string) error {
+func (env *Env) IsValidIdentifierAvailable(name string) error {
 	err := glob.IsValidUseDefinedFcAtom(name)
 	if err != nil {
 		return err
@@ -75,7 +75,7 @@ func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) error {
 		return fmt.Errorf("prop name %s cannot be the same as parameter name %s", stmt.DefHeader.Name, stmt.DefHeader.Name)
 	}
 
-	err := env.IsValidUserDefinedName_NoDuplicate(string(stmt.DefHeader.Name))
+	err := env.IsValidIdentifierAvailable(string(stmt.DefHeader.Name))
 	if err != nil {
 		return err
 	}
@@ -194,7 +194,7 @@ func (env *Env) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) 
 		}
 	}
 
-	err = env.IsValidUserDefinedName_NoDuplicate(string(stmt.DefBody.DefHeader.Name))
+	err = env.IsValidIdentifierAvailable(string(stmt.DefBody.DefHeader.Name))
 	if err != nil {
 		return err
 	}
@@ -205,7 +205,7 @@ func (env *Env) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) 
 }
 
 func (e *Env) NewObj_NoDuplicate(name string, stmt ast.FnTemplate_Or_DefObjStmtInterface) error {
-	err := e.IsValidUserDefinedName_NoDuplicate(name)
+	err := e.IsValidIdentifierAvailable(name)
 	if err != nil {
 		return fmt.Errorf("invalid name: %s", name)
 	}

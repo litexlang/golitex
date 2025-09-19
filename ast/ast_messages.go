@@ -8,7 +8,7 @@
 //
 // Original Author: Jiachen Shen <malloc_realloc_free@outlook.com>
 // Litex email: <litexlang@outlook.com>
-// Litex website: https://litexlang.org
+// Litex website: https://litexlang.com
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
@@ -106,7 +106,7 @@ func keySymbolRelaFactWithoutNotString(stmt *SpecFactStmt) string {
 	return builder.String()
 }
 
-func strFcSetPairs(objs []string, objSets []Fc) string {
+func StrFcSetPairs(objs []string, objSets []Fc) string {
 	pairStrSlice := make([]string, len(objs))
 	for i := range len(objs) {
 		pairStrSlice[i] = fmt.Sprintf("%s %s", objs[i], objSets[i])
@@ -140,7 +140,7 @@ func (stmt *DefObjStmt) String() string {
 
 	builder.WriteString(glob.KeywordLet)
 	builder.WriteString(" ")
-	builder.WriteString(strFcSetPairs(stmt.Objs, stmt.ObjSets))
+	builder.WriteString(StrFcSetPairs(stmt.Objs, stmt.ObjSets))
 
 	if len(stmt.Facts) > 0 {
 		builder.WriteString(glob.KeySymbolColon)
@@ -160,7 +160,7 @@ func (stmt *HaveObjInNonEmptySetStmt) String() string {
 
 	builder.WriteString(glob.KeywordHave)
 	builder.WriteString(" ")
-	builder.WriteString(strFcSetPairs(stmt.Objs, stmt.ObjSets))
+	builder.WriteString(StrFcSetPairs(stmt.Objs, stmt.ObjSets))
 
 	return builder.String()
 }
@@ -211,7 +211,7 @@ func fnDefStmtStringGivenKw(kw string, f *FnTStruct, name string) string {
 	builder.WriteString(" ")
 	builder.WriteString(name)
 	builder.WriteString("(")
-	builder.WriteString(strFcSetPairs(f.Params, f.ParamSets))
+	builder.WriteString(StrFcSetPairs(f.Params, f.ParamSets))
 	builder.WriteString(")")
 	builder.WriteString(" ")
 	builder.WriteString(f.RetSet.String())
@@ -321,7 +321,7 @@ func (l *UniFactStmt) String() string {
 	builder.WriteString(glob.KeywordForall)
 	builder.WriteString(" ")
 
-	builder.WriteString(strFcSetPairs(l.Params, l.ParamSets))
+	builder.WriteString(StrFcSetPairs(l.Params, l.ParamSets))
 
 	builder.WriteString(":\n")
 	if len(l.DomFacts) > 0 {
@@ -373,7 +373,7 @@ func (head DefHeader) StringWithoutColonAtEnd() string {
 	builder.WriteString(string(head.Name))
 	builder.WriteString("(")
 
-	builder.WriteString(strFcSetPairs(head.Params, head.ParamSets))
+	builder.WriteString(StrFcSetPairs(head.Params, head.ParamSets))
 
 	builder.WriteString(")")
 	return builder.String()
@@ -560,12 +560,37 @@ func (stmt *ImportFileStmt) String() string {
 	return builder.String()
 }
 
+func (stmt *DefPropStmt) ToNamedUniFactString() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeySymbolAt)
+	builder.WriteString(stmt.DefHeader.String())
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+
+	var iffFactStrSlice []string
+	for _, iffFact := range stmt.IffFacts {
+		iffFactStrSlice = append(iffFactStrSlice, glob.SplitLinesAndAdd4NIndents(iffFact.String(), 2))
+	}
+	builder.WriteString(strings.Join(iffFactStrSlice, "\n"))
+	builder.WriteByte('\n')
+
+	var thenFactStrSlice []string
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeySymbolEqualLarger, 1))
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+	for _, thenFact := range stmt.ThenFacts {
+		thenFactStrSlice = append(thenFactStrSlice, glob.SplitLinesAndAdd4NIndents(thenFact.String(), 2))
+	}
+	builder.WriteString(strings.Join(thenFactStrSlice, "\n"))
+	return builder.String()
+}
+
 func (stmt *ClaimPropStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordClaim)
 	builder.WriteString(glob.KeySymbolColon)
 	builder.WriteString("\n")
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Prop.String(), 1))
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Prop.ToNamedUniFactString(), 1))
 	builder.WriteByte('\n')
 	proofStrSlice := make([]string, len(stmt.Proofs))
 	for i, proof := range stmt.Proofs {
