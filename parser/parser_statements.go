@@ -1946,11 +1946,6 @@ func (tb *tokenBlock) namedUniFactStmt() (*ast.NamedUniFactStmt, error) {
 
 		return ast.NewNamedUniFactStmt(ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts, thenFacts)), nil
 	} else {
-		// iffFacts, thenFacts, err := tb.bodyOfInlineDomAndThen(glob.KeySymbolEqualLarger)
-		// if err != nil {
-		// 	return nil, tbErr(err, tb)
-		// }
-
 		iffFact, err := tb.domFactInUniFactInterface()
 		if err != nil {
 			return nil, tbErr(err, tb)
