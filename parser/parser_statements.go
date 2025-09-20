@@ -918,10 +918,73 @@ func (tb *tokenBlock) uniFactBodyFacts(uniFactDepth uniFactEnum, defaultSectionN
 		}
 		// } else if tb.body[len(tb.body)-1].header.is(glob.KeywordIff) {
 	} else if tb.body[len(tb.body)-1].header.is(glob.KeySymbolEquivalent) {
-		thenFacts, err = tb.bodyBlockFacts(uniFactDepth, len(tb.body)-1)
-		if err != nil {
-			return nil, nil, nil, err
+		if len(tb.body) <= 1 {
+			return nil, nil, nil, fmt.Errorf("expect at least 2 body blocks")
 		}
+
+		if tb.body[0].header.is(glob.KeywordDom) {
+			err = tb.body[0].header.skipKwAndColon_ExceedEnd(glob.KeywordDom)
+			if err != nil {
+				return nil, nil, nil, err
+			}
+			domFacts, err = tb.body[0].bodyBlockFacts(uniFactDepth, len(tb.body[0].body))
+			if err != nil {
+				return nil, nil, nil, err
+			}
+
+			if len(tb.body) <= 2 {
+				return nil, nil, nil, fmt.Errorf("expect at least 2 body blocks")
+			}
+
+			err = tb.body[len(tb.body)-2].header.skipKwAndColon_ExceedEnd(glob.KeySymbolEqualLarger)
+			if err != nil {
+				return nil, nil, nil, err
+			}
+			thenFacts, err = tb.body[len(tb.body)-2].bodyBlockFacts(uniFactDepth, len(tb.body[len(tb.body)-2].body))
+			if err != nil {
+				return nil, nil, nil, err
+			}
+
+		} else if tb.body[0].header.is(glob.KeySymbolEqualLarger) {
+			err = tb.body[0].header.skipKwAndColon_ExceedEnd(glob.KeySymbolEqualLarger)
+			if err != nil {
+				return nil, nil, nil, err
+			}
+			thenFacts, err = tb.body[0].bodyBlockFacts(uniFactDepth, len(tb.body[0].body))
+			if err != nil {
+				return nil, nil, nil, err
+			}
+		} else {
+			if tb.body[len(tb.body)-2].header.is(glob.KeySymbolEqualLarger) {
+
+				domFacts, err = tb.bodyBlockFacts(uniFactDepth, len(tb.body)-2)
+				if err != nil {
+					return nil, nil, nil, err
+				}
+
+				// body[len(tb.body)-2] is =>:
+				err = tb.body[len(tb.body)-2].header.skipKwAndColon_ExceedEnd(glob.KeySymbolEqualLarger)
+				if err != nil {
+					return nil, nil, nil, err
+				}
+				thenFacts, err = tb.body[len(tb.body)-2].bodyBlockFacts(uniFactDepth, len(tb.body[len(tb.body)-2].body))
+				if err != nil {
+					return nil, nil, nil, err
+				}
+			} else {
+				// 全部是 then
+				thenFacts, err = tb.bodyBlockFacts(uniFactDepth, len(tb.body)-1)
+				if err != nil {
+					return nil, nil, nil, err
+				}
+			}
+
+		}
+
+		// thenFacts, err = tb.bodyBlockFacts(uniFactDepth, len(tb.body)-1)
+		// if err != nil {
+		// 	return nil, nil, nil, err
+		// }
 
 		// err = tb.body[len(tb.body)-1].header.skipKwAndColon_ExceedEnd(glob.KeywordIff)
 		err = tb.body[len(tb.body)-1].header.skipKwAndColon_ExceedEnd(glob.KeySymbolEquivalent)
