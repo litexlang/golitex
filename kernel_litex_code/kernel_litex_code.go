@@ -471,8 +471,10 @@ know:
 	forall x R, y R: x > 0, y > 0 => x^y > 0
 
 fn log(x, y R) R:
-	x > 0
-	y > 0
+	dom:
+		x > 0
+		x != 1
+		y > 0
 
 know:
 	forall x, y, z R: x > 0, y > 0, z > 0 => log(x, y^z) = z * log(x, y)
