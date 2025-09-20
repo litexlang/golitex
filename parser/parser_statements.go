@@ -1016,64 +1016,6 @@ func (tb *tokenBlock) uniFactBodyFacts(uniFactDepth uniFactEnum, defaultSectionN
 	return domFacts, thenFacts, iffFacts, nil
 }
 
-// func (tb *tokenBlock) supposePropMatchStmt() (*ast.SupposeStmt, error) {
-// 	err := tb.header.skip(glob.KeywordSuppose)
-// 	if err != nil {
-// 		return nil, tbErr(err, tb)
-// 	}
-
-// 	fact, err := tb.pureFuncSpecFact()
-// 	if err != nil {
-// 		return nil, tbErr(err, tb)
-// 	}
-
-// 	err = tb.header.skip(glob.KeySymbolColon)
-// 	if err != nil {
-// 		return nil, tbErr(err, tb)
-// 	}
-
-// 	body := []ast.Stmt{}
-// 	for _, stmt := range tb.body {
-// 		curStmt, err := stmt.stmt()
-// 		if err != nil {
-// 			return nil, tbErr(err, tb)
-// 		}
-
-// 		// TODO 暂时只能全是fact
-// 		body = append(body, curStmt)
-// 	}
-
-// 	return ast.NewWhenPropMatchStmt(*fact, body), nil
-// }
-
-// func (tb *tokenBlock) withPropMatchStmt() (*ast.WithStmt, error) {
-// 	err := tb.header.skip(glob.KeywordWith)
-// 	if err != nil {
-// 		return nil, tbErr(err, tb)
-// 	}
-
-// 	fact, err := tb.pureFuncSpecFact()
-// 	if err != nil {
-// 		return nil, tbErr(err, tb)
-// 	}
-
-// 	err = tb.header.skip(glob.KeySymbolColon)
-// 	if err != nil {
-// 		return nil, tbErr(err, tb)
-// 	}
-
-// 	body := []ast.Stmt{}
-// 	for _, stmt := range tb.body {
-// 		curStmt, err := stmt.stmt()
-// 		if err != nil {
-// 			return nil, tbErr(err, tb)
-// 		}
-// 		body = append(body, curStmt)
-// 	}
-
-// 	return ast.NewWithPropMatchStmt(*fact, body), nil
-// }
-
 func (tb *tokenBlock) knowPropStmt() (*ast.KnowPropStmt, error) {
 	err := tb.header.skip(glob.KeywordKnow)
 	if err != nil {
@@ -1275,24 +1217,6 @@ func (tb *tokenBlock) getStringInDoubleQuotes() (string, error) {
 	return builder.String(), nil
 }
 
-// func (tb *tokenBlock) pubStmt() (*ast.PubStmt, error) {
-// 	err := tb.header.skipKwAndColon_ExceedEnd(glob.KeywordPub)
-// 	if err != nil {
-// 		return nil, tbErr(err, tb)
-// 	}
-
-// 	stmts := []ast.Stmt{}
-// 	for _, stmt := range tb.body {
-// 		curStmt, err := stmt.stmt()
-// 		if err != nil {
-// 			return nil, tbErr(err, tb)
-// 		}
-// 		stmts = append(stmts, curStmt)
-// 	}
-
-// 	return ast.NewPubStmt(stmts), nil
-// }
-
 func (tb *tokenBlock) proveStmt() (*ast.ProveStmt, error) {
 	err := tb.header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
 	if err != nil {
@@ -1364,8 +1288,6 @@ func (tb *tokenBlock) defFnStmt(skipFn bool) (*ast.DefFnStmt, error) {
 	if tb.header.is(glob.KeySymbolColon) {
 		tb.header.skip("")
 		if tb.header.ExceedEnd() {
-			// domFacts, thenFacts, err = tb.dom_and_section(glob.KeywordThen, glob.KeywordIff)
-			// domFacts, thenFacts, err = tb.dom_and_section(glob.KeySymbolEqualLarger, glob.KeywordIff)
 			domFacts, thenFacts, err = tb.dom_and_section(glob.KeySymbolEqualLarger, glob.KeySymbolEquivalent)
 			if err != nil {
 				return nil, tbErr(err, tb)
@@ -1406,16 +1328,6 @@ func (tb *tokenBlock) defFnStmt(skipFn bool) (*ast.DefFnStmt, error) {
 }
 
 func (tb *tokenBlock) claimPropStmt() (*ast.ClaimPropStmt, error) {
-	// declHeader, err := tb.body[0].headerOfAtProp()
-	// if err != nil {
-	// 	return nil, tbErr(err, tb)
-	// }
-
-	// iffFacts, thenFacts, err := tb.body[0].bodyOfKnowProp()
-	// if err != nil {
-	// 	return nil, tbErr(err, tb)
-	// }
-
 	namedUniFact, err := tb.body[0].namedUniFactStmt()
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -1827,30 +1739,6 @@ func (tb *tokenBlock) bodyOfKnowProp() ([]ast.FactStmt, []ast.FactStmt, error) {
 		return iffFacts, thenFacts, nil
 	}
 }
-
-// func (tb *tokenBlock) headerOfAtProp() (*ast.DefHeader, error) {
-// 	var err error
-// 	err = tb.header.skip(glob.KeySymbolAt)
-// 	if err != nil {
-// 		return nil, tbErr(err, tb)
-// 	}
-
-// 	declHeader, err := tb.defHeaderWithoutParsingColonAtEnd()
-// 	if err != nil {
-// 		return nil, tbErr(err, tb)
-// 	}
-
-// 	err = tb.header.skip(glob.KeySymbolColon)
-// 	if err != nil {
-// 		return nil, tbErr(err, tb)
-// 	}
-
-// 	if !tb.header.ExceedEnd() {
-// 		return nil, fmt.Errorf("expect end of @ body, but got '%s'", tb.header.strAtCurIndexPlus(0))
-// 	}
-
-// 	return declHeader, nil
-// }
 
 func (tb *tokenBlock) haveObjInNonEmptySetStmt() (*ast.HaveObjInNonEmptySetStmt, error) {
 	err := tb.header.skip(glob.KeywordHave)
