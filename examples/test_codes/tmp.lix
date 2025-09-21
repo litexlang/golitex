@@ -1,4 +1,4 @@
-import "../../Std/Complex/main.lix"
+import "../../std/complex/main.lix"
 
 claim:
     cx(9,4) \cminus cx(-3,4) = cx(12,0)
