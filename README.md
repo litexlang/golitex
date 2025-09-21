@@ -24,7 +24,7 @@ _Simplicity is the ultimate sophistication._
 
 _– Leonardo da Vinci_
 
-[Litex](https://litexlang.com) is a simple and intuitive formal language for coding reasoning. It ensures every step of your reasoning is correct, and is actually the first reasoning formal language (or formal language for short) that can be learned by anyone in 1–2 hours, even without math or programming background.
+Litex([website](https://litexlang.com)) is a simple, intuitive, and open-source formal language for coding reasoning ([Star the repo!](https://github.com/litexlang/golitex)). It ensures every step of your reasoning is correct, and is actually the first reasoning formal language (or formal language for short) that can be learned by anyone in 1–2 hours, even without math or programming background.
 
 Scaling formal reasoning has several meanings: 1. Scaling the number of people who can use formal reasoning; 2. Scaling the complexity of the problems that can be solved by formal reasoning. 3. Scaling AI to perform formal reasoning.
 
@@ -78,9 +78,9 @@ Here is a comparison between Litex and traditional formal language Lean. Kids ca
   </tr>
 </table>
 
-As you can see, traditional formal languages are too complex. Litex lowers the entrance barrier by 10x, lowers the cost of constructing formalized proofs by 10x, making formalization as easy and fast as natural writing. In Litex, there is no foreign keywords, twisted syntax, or complex semantics, just plain reasoning.
+Litex lowers the entrance barrier by 10x, lowers the cost of constructing formalized proofs by 10x, making formalization as easy and fast as natural writing. In Litex, there is no foreign keywords, twisted syntax, or complex semantics, just plain reasoning.
 
-The Litex ecosystem is thriving. `pylitex` is the Python package that allows you to call Litex, and at the same time being able to use all the AI tools and scientific computation packages. The smooth integration of Litex into your existing workflow is also the strength of Litex.
+AI researchers love Litex. `pylitex` is the Python package that allows you to call Litex, and at the same time being able to use all the AI tools and scientific computation packages. Litex achieves 100% accuracy on gsm8k dataset without any training [Github](https://github.com/litexlang/litex-gsm8k-killer). Open-source community has also contributed to Litex by making a really powerful Litex Agent [Github](https://github.com/Zecyel/litex-stdlib-gen). We welcome you to join us to build the future of reasoning together!
 
 Litex is a language full of potential. Join us to build the future of reasoning together!
 
