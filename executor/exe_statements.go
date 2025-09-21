@@ -580,8 +580,25 @@ func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) (glob.ExecState
 		}()
 	}
 
+	execState, err := exec.checkFnEqualStmt(stmt)
+	if notOkExec(execState, err) {
+		return execState, err
+	}
+
+	newFnDefStmt := ast.NewDefFnStmt(string(stmt.DefHeader.Name), ast.NewFnTStruct(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, stmt.RetSet, []ast.FactStmt{}, []ast.FactStmt{ast.NewEqualFact(fnHeaderToReturnValueOfFn(&stmt.DefHeader), stmt.EqualTo)}))
+	err = exec.defFnStmt(newFnDefStmt)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+
+	return glob.ExecState_True, nil
+}
+
+func (exec *Executor) checkFnEqualStmt(stmt *ast.HaveFnEqualStmt) (glob.ExecState, error) {
 	exec.NewEnv(exec.env)
-	defer exec.deleteEnvAndRetainMsg()
+	defer func() {
+		exec.deleteEnvAndRetainMsg()
+	}()
 
 	for i := range len(stmt.DefHeader.Params) {
 		err := exec.defObjStmt(ast.NewDefObjStmt([]string{stmt.DefHeader.Params[i]}, []ast.Fc{stmt.DefHeader.ParamSets[i]}, []ast.FactStmt{}), false)
@@ -597,12 +614,6 @@ func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) (glob.ExecState
 	}
 	if !ok {
 		return glob.ExecState_Error, fmt.Errorf("according to the definition of %s, the returned value %s must be in %s, but\n%s is unknown", stmt, stmt.EqualTo, stmt.RetSet, ast.NewInFactWithFc(stmt.EqualTo, stmt.RetSet))
-	}
-
-	newFnDefStmt := ast.NewDefFnStmt(string(stmt.DefHeader.Name), ast.NewFnTStruct(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, stmt.RetSet, []ast.FactStmt{}, []ast.FactStmt{ast.NewEqualFact(fnHeaderToReturnValueOfFn(&stmt.DefHeader), stmt.EqualTo)}))
-	err = exec.defFnStmt(newFnDefStmt)
-	if err != nil {
-		return glob.ExecState_Error, err
 	}
 
 	return glob.ExecState_True, nil
