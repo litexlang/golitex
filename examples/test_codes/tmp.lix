@@ -1,12 +1,7 @@
-have fn f(x R) R = x
+import "../../Std/Complex/main.lix"
 
-forall x R:
-    f(x) = x
-    # This throws an error
-    # Error: execution error: the arguments passed to the f(x) do not satisfy the domain of definition of f(x)
-    # (the requirements for the parameters)
-
-1 $in R
-
-f(1) = 1
-# This also throws the same error
+claim:
+    cx(9,4) \cminus cx(-3,4) = cx(12,0)
+    prove:
+        cminus(cx(9,4), cx(-3,4)) = cx(9 - (-3), 4 - (4))
+        cx(9,4) \cminus cx(-3,4) = cx(12,0)
