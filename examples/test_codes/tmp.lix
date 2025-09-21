@@ -1,6 +1,12 @@
-forall x, y R:
-    x < y
-    =>:
-        x < y
-    <=>:
-        x  < y 
+have fn f(x R) R = x
+
+forall x R:
+    f(x) = x
+    # This throws an error
+    # Error: execution error: the arguments passed to the f(x) do not satisfy the domain of definition of f(x)
+    # (the requirements for the parameters)
+
+1 $in R
+
+f(1) = 1
+# This also throws the same error
