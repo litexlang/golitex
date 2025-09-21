@@ -1,0 +1,15 @@
+fn cx(a, b R) C
+fn cmul(a, b C) C
+know forall a, b, c, d R => cmul(cx(a, b), cx(c, d)) = cx(a*c-b*d, a*d+b*c)
+
+fn cminus(a, b C) C
+
+know forall a, b, c, d R => cminus(cx(a, b), cx(c, d)) = cx(a-c, b-d)
+fn cadd(a, b C) C
+
+know forall a, b, c, d R => cadd(cx(a, b), cx(c, d)) = cx(a+c, b+d)
+fn cdiv(a, b C) C:
+    dom:
+        b != 0
+
+know forall a, b, c, d R: or(c != 0, d != 0) => cdiv(cx(a, b), cx(c, d)) = cx(a*c+b*d, b*c-a*d) / (c^2+d^2)
