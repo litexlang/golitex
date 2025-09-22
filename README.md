@@ -30,7 +30,7 @@ Scaling formal reasoning has several meanings: 1. Scaling the number of people w
 
 Here is a comparison between Litex and traditional formal language Lean. Kids can formalize the multivariate equation in Litex in 2 minutes, while it require an experienced expert hours of work in Lean 4.
 
-<table style="border-collapse: collapse; width: 100%; font-size: 12px">
+<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
   <tr>
     <th style="border: 2px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
     <th style="border: 2px solid black; padding: 4px; text-align: left; width: 50%;">Lean 4</th>
