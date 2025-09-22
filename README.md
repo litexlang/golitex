@@ -26,11 +26,9 @@ _– Leonardo da Vinci_
 
 Litex([website](https://litexlang.com)) is a simple, intuitive, and open-source formal language for coding reasoning ([Star the repo!](https://github.com/litexlang/golitex)). It ensures every step of your reasoning is correct, and is actually the first reasoning formal language (or formal language for short) that can be learned by anyone in 1–2 hours, even without math or programming background.
 
-Scaling formal reasoning has several meanings: 1. Scaling the number of people who can use formal reasoning; 2. Scaling the complexity of the problems that can be solved by formal reasoning. 3. Scaling AI to perform formal reasoning.
+Making Litex intuitive to both human and AI is the mission of Litex. That is how Litex scales formal reasoning: making it accessible to more people, applicable to more complex problems, and usable by large-scale AI systems. Here is a comparison between Litex and traditional formal language Lean.
 
-Here is a comparison between Litex and traditional formal language Lean. Kids can formalize the multivariate equation in Litex in 2 minutes, while it require an experienced expert hours of work in Lean 4.
-
-<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
+<table style="border-collapse: collapse; width: 100%; font-size: 12px">
   <tr>
     <th style="border: 2px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
     <th style="border: 2px solid black; padding: 4px; text-align: left; width: 50%;">Lean 4</th>
@@ -72,41 +70,28 @@ Here is a comparison between Litex and traditional formal language Lean. Kids ca
   </tr>
 </table>
 
-Litex lowers the entrance barrier by 10x, lowers the cost of constructing formalized proofs by 10x, making formalization as easy and fast as natural writing. In Litex, there is no foreign keywords, twisted syntax, or complex semantics, just plain reasoning.
+Even Kids can formalize the multivariate equation in Litex in 2 minutes, while it require an experienced expert hours of work in Lean 4. It is a typical example of how Litex lowers the entrance barrier by 10x, lowers the cost of constructing formalized proofs by 10x, making formalization as easy and fast as natural writing. No foreign keywords, no twisted syntax, or complex semantics. Just plain reasoning.
 
-AI researchers love Litex. `pylitex` is the Python package that allows you to call Litex, and at the same time being able to use all the AI tools and scientific computation packages. Litex achieves 100% accuracy on gsm8k dataset without any training [Github](https://github.com/litexlang/litex-gsm8k-killer). Open-source community has also contributed to Litex by making a really powerful Litex Agent [Github](https://github.com/Zecyel/litex-stdlib-gen). We welcome you to join us to build the future of reasoning together!
-
-Litex is a language full of potential. Join us to build the future of reasoning together!
-
----
-
-*Visit [Official Website](https://litexlang.com/) to learn more about Litex. Our community is on [Zulip](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/). Visit [Tutorial](https://litexlang.com/doc/Tutorial/Introduction) to learn how to use Litex and try some examples. Source code of Litex is on [Github](https://github.com/litexlang/golitex). Source of tutorial is on [Github](https://github.com/litexlang/litex-tutorial). Complete [challenges](https://litexlang.com/collaboration) on the Litex website, or collaborate on a partner project — earn impact rewards! Visit [Start](https://litexlang.com/doc/Start) to start using Litex (online, locally, in Python, in Jupyter Notebook, etc.).*
-
-## Contact & Contribute to Litex
+## Resources And Community
 
 _The best way to predict future is to create it._
 
 _-- Alan Kay_
 
-Hi, I’m Jiachen Shen, creator of Litex. You’re warmly invited to join the Litex community and grow with us. 
+Litex is nothing without its community and technical ecosystem. Here is a list of resources and community for Litex:
 
-Why should you joint us? The reason is simple—Litex is changing the future. There cannot be a reasoning language more concise than Litex, because it is already as close to mathematics as possible. It is both elegant and intellectually engaging. 
+1. Our official [website](https://litexlang.com) contains tutorials, cheatsheets, examples, documentation, collaboration opportunities, and more for Litex. All documents on our [website](https://litexlang.com) are open-sourced [here](https://github.com/litexlang/litex-official-documents)
+2. Learn Litex [online](https://litexlang.com/doc/Tutorial/Introduction). A short list of major Litex statements and their usage are shown in the [cheat sheet](https://litexlang.com/doc/Litex_Cheatsheet).
+3. You can run litex on your own computer， start from [here](https://litexlang.com/doc/Start)
+4. [Litex standard library](https://github.com/litexlang/litex-stdlib) is under active development. **Contribute to it and earn impact rewards!**
+5. Use [pylitex](https://github.com/litexlang/pylitex) to call Litex in Python
+6. Litex achieves 100% accuracy on gsm8k dataset without any training [Github](https://github.com/litexlang/litex-gsm8k-killer)
+7. [Litex Dataset](https://huggingface.co/litexlang) is on Hugging Face. **Contribute to it and earn impact rewards!**
+8. Here is a really powerful Litex Agent [Github](https://github.com/litexlang/litex-agent). It is so powerful that much code in our standard library is generated by it!
+9. AI researchers interested in Litex might find [Litex LLM Dev](https://github.com/litexlang/litex-llm-dev) useful. Contact us if you are interested in collaborating on this project!
+10. Our Community is on [Zulip](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/). Email me [here](mailto:litexlang@outlook.com) if you are interested in joining!
 
-For AI researchers, it addresses the most fundamental challenge of the AI era: enhancing reasoning ability while ensuring correctness. For mathematicians, what used to take a year of peer review can now be verified in a second. It may sound like magic, but this is exactly what the formal language Litex makes possible. 
-
-**Litex opens up limitless possibilities for scaling formal reasoning. We are creating the future.**
-
-Our key directions:
-
-Dataset – from elementary problems to IMO, textbooks, and research papers. This dataset powers AI training and reasoning.
-
-Litex + AI – embedding Litex into AI workflows to make reasoning scalable, reliable, and 10x more accessible.
-
-Our source code is on [Github](https://github.com/litexlang/golitex). The source code of the tutorial is on [Tutorial](https://github.com/litexlang/litex-tutorial). The Python package of Litex is [pylitex](https://github.com/litexlang/pylitex)
-
-MAKE MONEY BY CONTRIBUTING! Visit [Task Board](https://litexlang.com/task-board) to earn by solving tasks, or [Collaboration](https://litexlang.com/collaboration) to discuss bigger projects.
-
-Contact me via [email](mailto:litexlang@outlook.com) or join the [Zulip community](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/).
+All of our [repositories](https://github.com/orgs/litexlang/repositories) are open-sourced. Just issue PRs and tell us any ideas about Litex! Maybe we can build the future together!
 
 ## Special Thanks
 
@@ -114,12 +99,6 @@ _Sometimes it is the very people who no one imagines anything of who do the thin
 
 _– Alan Turing_
 
-Throughout this journey of designing, implementing, and growing Litex into a community, I (Jiachen Shen, creator of Litex) have been fortunate to receive tremendous help from friends and colleagues. Without their support, Litex would not have had the chance to succeed.
+I, Jiachen Shen, creator of Litex, have been fortunate to receive tremendous help from friends and colleagues throughout this journey of designing, implementing, and growing Litex into a community. Without their support, Litex would not have had the chance to succeed.
 
-I owe special thanks to my coworker Zhaoxuan Hong, who built Litex’s powerful toolchains and has supported the project from the very beginning. 
-
-The Litex project is also deeply grateful to Siqi Sun, Wei Lin, Peng Sun, Jie Fu, Zeyu Zheng, Huajian Xin, Zijie Qiu, Sheng Xu, Siqi Guo, Haoyang Shi, Chengyang Zhu, Chenxuan Huang for their invaluable contributions.
-
-Moreover, I cannot fully express my gratitude to all those who have actively contributed to the Litex community. I am certain this list of special thanks will only grow longer in the future.
-
-We warmly invite you to join us. The best way to predict future is to create it. Let’s build the future together!
+I owe special thanks to my friend Zhaoxuan Hong, who built Litex’s powerful toolchains and has supported the project from the very beginning. I am also deeply grateful to Siqi Sun, Wei Lin, Peng Sun, Jie Fu, Zeyu Zheng, Huajian Xin, Zijie Qiu, Siqi Guo, Haoyang Shi, Chengyang Zhu, Chenxuan Huang for their invaluable contributions. I am certain this list of special thanks will only grow longer in the future.
