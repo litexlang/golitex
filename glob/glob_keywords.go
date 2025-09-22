@@ -42,7 +42,6 @@ const (
 	KeywordRational             = "Q"                // e.g. -1.1
 	KeywordReal                 = "R"                // e.g. pi
 	KeywordComplex              = "C"                // e.g. 1+i
-	KeywordImaginary            = "i"                // e.g. i
 	KeywordIn                   = "in"
 	// KeywordProveByMathInduction           = "prove_by_math_induction"
 	KeywordAs                             = "as" // 用在 import xxx as ??? 了
@@ -66,8 +65,6 @@ const (
 
 	KeywordLift        = "lift"
 	KeywordNonEmptySet = "nonempty_set"
-
-	KeywordSafe = "safe" // safe 和 let, know, fn 配合，在定义的时候检查相关的参数是否真的能传到prop里，是否真的能传到一个fn里
 
 	KeywordIf = "if"
 )
@@ -101,7 +98,6 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordIn:              {},
 	// KeywordProveByMathInduction:           {},
 	KeywordComplex:                        {},
-	KeywordImaginary:                      {},
 	KeywordAs:                             {},
 	KeywordLen:                            {},
 	KeywordFiniteSet:                      {},
@@ -122,8 +118,6 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 
 	KeywordLift:        {},
 	KeywordNonEmptySet: {},
-
-	KeywordSafe: {},
 
 	KeywordIf: {},
 }
@@ -210,7 +204,6 @@ var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]s
 	KeywordRational:                       {},
 	KeywordReal:                           {},
 	KeywordComplex:                        {},
-	KeywordImaginary:                      {},
 	KeywordAs:                             {},
 	KeywordIn:                             {},
 	KeySymbolEqual:                        {},
