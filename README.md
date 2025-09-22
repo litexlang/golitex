@@ -4,7 +4,7 @@
 
 <div align="center">
 
-# Litex: Simply Scale Formal Reasoning
+# Litex: Simply Scale Formal Reasoning In AI Era
 
 **version v0.1.10-beta (not yet ready for production use)**  
 *Jiachen Shen and The Litex Team*
@@ -30,7 +30,7 @@ Scaling formal reasoning has several meanings: 1. Scaling the number of people w
 
 Here is a comparison between Litex and traditional formal language Lean. Kids can formalize the multivariate equation in Litex in 2 minutes, while it require an experienced expert hours of work in Lean 4.
 
-<table style="border-collapse: collapse; width: 100%; font-size: 12px">
+<table style="border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px">
   <tr>
     <th style="border: 2px solid black; padding: 4px; text-align: left; width: 50%;">Litex</th>
     <th style="border: 2px solid black; padding: 4px; text-align: left; width: 50%;">Lean 4</th>
@@ -40,17 +40,11 @@ Here is a comparison between Litex and traditional formal language Lean. Kids ca
       <code>let x R, y R:</code><br>
       <code>&nbsp;&nbsp;2 * x + 3 * y = 10</code><br>
       <code>&nbsp;&nbsp;4 * x + 5 * y = 14</code><br><br>
-      <code>2 * (2 * x + 3 * y) = 2 * 10</code><br>
-      <code>4* x + 6 * y = 2 * 10</code><br>
-      <code>(4*x + 6 * y) - (4*x + 5 * y) = 2 * 10 - 14</code><br>
-      <code>(4*x + 6 * y) - (4*x + 5 * y) = y</code><br>
-      <code>y = 6</code><br>
+      <code>2 * (2 * x + 3 * y) = 2 * 10 = 4 * x + 6 * y</code><br>
+      <code>y = (4 * x + 6 * y) - (4 * x + 5 * y) = 2 * 10 - 14 = 6</code><br>
       <code>2 * x + 3 * 6 = 10</code><br>
-      <code>2 * x + 18 - 18 = 10 - 18</code><br>
-      <code>2 * x + 18 - 18 = -8</code><br>
-      <code>(2 * x) / 2 = -8 / 2</code><br>
-      <code>(2 * x) / 2 = x</code><br>
-      <code>x = -4</code>
+      <code>2 * x + 18 - 18 = 10 - 18 = -8</code><br>
+      <code>x = (2 * x) / 2 = -8 / 2 = -4</code><br>
     </td>
     <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
       <code>import Mathlib.Tactic</code><br><br>
