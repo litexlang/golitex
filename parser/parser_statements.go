@@ -224,6 +224,20 @@ func (tb *tokenBlock) specFactStmt_ExceedEnd() (*ast.SpecFactStmt, error) {
 }
 
 func (tb *tokenBlock) specFactStmt() (*ast.SpecFactStmt, error) {
+	stmt, err := tb.specFactStmt_OrOneLineEqualsFact()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	switch astStmt := stmt.(type) {
+	case *ast.SpecFactStmt:
+		return astStmt, nil
+	default:
+		return nil, fmt.Errorf("expect specific fact, get %s", astStmt.String())
+	}
+}
+
+func (tb *tokenBlock) specFactStmt_OrOneLineEqualsFact() (ast.FactStmt, error) {
 	isTrue := true
 	if tb.header.is(glob.KeywordNot) {
 		tb.header.skip("")
@@ -234,7 +248,7 @@ func (tb *tokenBlock) specFactStmt() (*ast.SpecFactStmt, error) {
 		return tb.existFactStmt(isTrue)
 	}
 
-	ret, err := tb.ordinarySpecFact()
+	ret, err := tb.specFactWithoutExist_WithoutNot()
 
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -248,7 +262,21 @@ func (tb *tokenBlock) specFactStmt() (*ast.SpecFactStmt, error) {
 
 }
 
-func (tb *tokenBlock) ordinarySpecFact() (*ast.SpecFactStmt, error) {
+func (tb *tokenBlock) specFactWithoutExist_WithoutNot() (*ast.SpecFactStmt, error) {
+	stmt, err := tb.specFactWithoutExist_WithoutNot_Or_EqualsFact()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	switch astStmt := stmt.(type) {
+	case *ast.SpecFactStmt:
+		return astStmt, nil
+	default:
+		return nil, fmt.Errorf("expect specific fact, get %s", astStmt.String())
+	}
+}
+
+func (tb *tokenBlock) specFactWithoutExist_WithoutNot_Or_EqualsFact() (ast.FactStmt, error) {
 	if tb.header.is(glob.FuncFactPrefix) {
 		ret, err := tb.pureFuncSpecFact()
 		if err != nil {
@@ -256,7 +284,7 @@ func (tb *tokenBlock) ordinarySpecFact() (*ast.SpecFactStmt, error) {
 		}
 		return ret, nil
 	} else {
-		ret, err := tb.relaFactStmt()
+		ret, err := tb.relaFactStmt_orRelaEquals()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -548,7 +576,7 @@ func (tb *tokenBlock) knowFactStmt() (*ast.KnowFactStmt, error) {
 }
 
 // relaFact 只支持2个参数的关系
-func (tb *tokenBlock) relaFactStmt() (*ast.SpecFactStmt, error) {
+func (tb *tokenBlock) relaFactStmt_orRelaEquals() (ast.FactStmt, error) {
 	var ret *ast.SpecFactStmt
 
 	fc, err := tb.RawFc()
@@ -589,7 +617,16 @@ func (tb *tokenBlock) relaFactStmt() (*ast.SpecFactStmt, error) {
 
 		params := []ast.Fc{fc, fc2}
 
-		ret = ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(opt), params)
+		if opt != glob.KeySymbolEqual {
+			ret = ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(opt), params)
+		} else {
+			// 循环地看下面一位是不是 = ，直到不是
+			if tb.header.is(glob.KeySymbolEqual) {
+				return tb.relaEqualsFactStmt(fc, fc2)
+			} else {
+				ret = ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(opt), params)
+			}
+		}
 	}
 
 	// 这里加入语法糖：!= 等价于 not =，好处是我 = 有 commutative的性质，我不用额外处理 != 了
@@ -674,7 +711,7 @@ func (tb *tokenBlock) existFactStmt(isTrue bool) (*ast.SpecFactStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	pureSpecFact, err := tb.ordinarySpecFact()
+	pureSpecFact, err := tb.specFactWithoutExist_WithoutNot()
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -1561,7 +1598,7 @@ func (tb *tokenBlock) fact() (ast.FactStmt, error) {
 		}
 		return ret, nil
 	} else {
-		ret, err := tb.relaFact_intensionalSetFact_enumStmt()
+		ret, err := tb.relaFact_intensionalSetFact_enumStmt_equals()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -1569,7 +1606,7 @@ func (tb *tokenBlock) fact() (ast.FactStmt, error) {
 	}
 }
 
-func (tb *tokenBlock) relaFact_intensionalSetFact_enumStmt() (ast.FactStmt, error) {
+func (tb *tokenBlock) relaFact_intensionalSetFact_enumStmt_equals() (ast.FactStmt, error) {
 	var ret *ast.SpecFactStmt
 
 	fc, err := tb.RawFc()
@@ -1606,6 +1643,13 @@ func (tb *tokenBlock) relaFact_intensionalSetFact_enumStmt() (ast.FactStmt, erro
 		fc2, err := tb.RawFc()
 		if err != nil {
 			return nil, tbErr(err, tb)
+		}
+
+		if opt == glob.KeySymbolEqual {
+			// 循环地看下面一位是不是 = ，直到不是
+			if tb.header.is(glob.KeySymbolEqual) {
+				return tb.relaEqualsFactStmt(fc, fc2)
+			}
 		}
 
 		// 必须到底了
@@ -2477,4 +2521,17 @@ func (tb *tokenBlock) claimHaveFnStmt() (*ast.HaveFnStmt, error) {
 	}
 
 	return ast.NewClaimHaveFnStmt(defFnStmt, proof, haveObjSatisfyFn), nil
+}
+
+func (tb *tokenBlock) relaEqualsFactStmt(fc, fc2 ast.Fc) (*ast.EqualsFactStmt, error) {
+	equalsItem := []ast.Fc{fc, fc2}
+	for tb.header.is(glob.KeySymbolEqual) {
+		tb.header.skip(glob.KeySymbolEqual)
+		fc3, err := tb.RawFc()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		equalsItem = append(equalsItem, fc3)
+	}
+	return ast.NewEqualsFactStmt(equalsItem), nil
 }

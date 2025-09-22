@@ -1,7 +1,4 @@
-import "../../std/complex/main.lix"
+let a, b, c R:
+    a + 1 = b + 2 = c + 3
 
-claim:
-    cx(9,4) \cminus cx(-3,4) = cx(12,0)
-    prove:
-        cminus(cx(9,4), cx(-3,4)) = cx(9 - (-3), 4 - (4))
-        cx(9,4) \cminus cx(-3,4) = cx(12,0)
+a + 1 = b + 2 = c + 3
