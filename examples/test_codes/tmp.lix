@@ -1,2 +1,4 @@
-let x R
-if: x > 0 => x > 0
+let a, b, c R:
+    a + 1 = b + 2 = c + 3
+
+a + 1 = b + 2 = c + 3

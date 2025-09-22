@@ -481,5 +481,5 @@ know:
 	forall x, y, z R: x > 0, y > 0, z > 0 => log(x, y * z) = log(x, y) + log(x, z)
 	forall x R: x > 0 => log(x, x) = 1
 
-
+let pi R # pi is the ratio of the circumference of a circle to its diameter
 `
