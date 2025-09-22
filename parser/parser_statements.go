@@ -112,14 +112,6 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 	return ret, nil
 }
 
-type uniFactHeaderEnum int8
-
-const (
-	uniFactHeaderEnumForall uniFactHeaderEnum = iota
-	uniFactHeaderEnumIf
-	uniFactHeaderEnumIfAndForall
-)
-
 func (tb *tokenBlock) factStmt(uniFactDepth uniFactEnum) (ast.FactStmt, error) {
 	cur, err := tb.header.currentToken()
 	if err != nil {
