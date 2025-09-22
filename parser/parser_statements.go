@@ -622,16 +622,7 @@ func (tb *tokenBlock) relaFactStmt_orRelaEquals() (ast.FactStmt, error) {
 		} else {
 			// 循环地看下面一位是不是 = ，直到不是
 			if tb.header.is(glob.KeySymbolEqual) {
-				equalsItem := []ast.Fc{fc, fc2}
-				for tb.header.is(glob.KeySymbolEqual) {
-					tb.header.skip(glob.KeySymbolEqual)
-					fc3, err := tb.RawFc()
-					if err != nil {
-						return nil, tbErr(err, tb)
-					}
-					equalsItem = append(equalsItem, fc3)
-				}
-				return ast.NewEqualsFactStmt(equalsItem), nil
+				return tb.relaEqualsFactStmt(fc, fc2)
 			} else {
 				ret = ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(opt), params)
 			}
@@ -1657,16 +1648,7 @@ func (tb *tokenBlock) relaFact_intensionalSetFact_enumStmt_equals() (ast.FactStm
 		if opt == glob.KeySymbolEqual {
 			// 循环地看下面一位是不是 = ，直到不是
 			if tb.header.is(glob.KeySymbolEqual) {
-				equalsItem := []ast.Fc{fc, fc2}
-				for tb.header.is(glob.KeySymbolEqual) {
-					tb.header.skip(glob.KeySymbolEqual)
-					fc3, err := tb.RawFc()
-					if err != nil {
-						return nil, tbErr(err, tb)
-					}
-					equalsItem = append(equalsItem, fc3)
-				}
-				return ast.NewEqualsFactStmt(equalsItem), nil
+				return tb.relaEqualsFactStmt(fc, fc2)
 			}
 		}
 
@@ -2539,4 +2521,17 @@ func (tb *tokenBlock) claimHaveFnStmt() (*ast.HaveFnStmt, error) {
 	}
 
 	return ast.NewClaimHaveFnStmt(defFnStmt, proof, haveObjSatisfyFn), nil
+}
+
+func (tb *tokenBlock) relaEqualsFactStmt(fc, fc2 ast.Fc) (*ast.EqualsFactStmt, error) {
+	equalsItem := []ast.Fc{fc, fc2}
+	for tb.header.is(glob.KeySymbolEqual) {
+		tb.header.skip(glob.KeySymbolEqual)
+		fc3, err := tb.RawFc()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		equalsItem = append(equalsItem, fc3)
+	}
+	return ast.NewEqualsFactStmt(equalsItem), nil
 }
