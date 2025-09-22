@@ -307,6 +307,11 @@ func (tb *tokenBlock) inlineIfInterface() (ast.UniFactInterface, error) {
 		return nil, tbErr(err, tb)
 	}
 
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
 	domFact, err := tb.domFactInUniFactInterface()
 	if err != nil {
 		return nil, err
