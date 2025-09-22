@@ -83,7 +83,7 @@ func (tb *tokenBlock) inlineFact() (ast.FactStmt, error) {
 		return tb.inlineIfInterface()
 	default:
 		// return tb.inlineSpecFactStmt()
-		return tb.inline_specFact_enum_intensional_fact()
+		return tb.inline_specFact_enum_intensional_Equals_fact()
 	}
 }
 
@@ -436,7 +436,7 @@ func (tb *tokenBlock) inlineEqualsFactStmt() (*ast.EqualsFactStmt, error) {
 	return ast.NewEqualsFactStmt(params), nil
 }
 
-func (tb *tokenBlock) inline_specFact_enum_intensional_fact() (ast.FactStmt, error) {
+func (tb *tokenBlock) inline_specFact_enum_intensional_Equals_fact() (ast.FactStmt, error) {
 	if tb.header.is(glob.FuncFactPrefix) || tb.header.is(glob.KeywordNot) || tb.header.is(glob.KeywordExist) {
 		return tb.inlineSpecFactStmt()
 	}
