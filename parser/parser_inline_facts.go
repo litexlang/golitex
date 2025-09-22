@@ -485,7 +485,15 @@ func (tb *tokenBlock) inline_specFact_enum_intensional_Equals_fact() (ast.FactSt
 
 		params := []ast.Fc{fc, fc2}
 
-		ret = ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(opt), params)
+		if opt != glob.KeySymbolEqual {
+			ret = ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(opt), params)
+		} else {
+			if tb.header.is(glob.KeySymbolEqual) {
+				return tb.relaEqualsFactStmt(fc, fc2)
+			} else {
+				ret = ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(opt), params)
+			}
+		}
 
 		// 这里加入语法糖：!= 等价于 not =，好处是我 = 有 commutative的性质，我不用额外处理 != 了
 		if asSpec, ok := ret.(*ast.SpecFactStmt); ok {
