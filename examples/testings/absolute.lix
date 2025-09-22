@@ -9,4 +9,4 @@ let a, b R: a < 0, b >= 0
 absolute(a) = -a 
 absolute(b) = b
 absolute(1) = 1
-=(absolute(-1), --1, 1)
+absolute(-1) = --1 = 1
