@@ -518,11 +518,19 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch_new(stmt *ast.SpecFa
 			return false, err
 		}
 
+		var nextState *VerState
+		if glob.FullMsg {
+			nextState = state.Copy()
+		} else {
+			nextState = state.GetNoMsg()
+			// nextState = state.Copy()
+		}
+
 		// TODO 要证明在paramSet里
 		paramInParamSetFacts := instantiatedUniFactWithoutThen.ParamInParamSetFacts(uniConMap)
 		setFactSatisfied := true
 		for _, paramInParamSetFact := range paramInParamSetFacts {
-			ok, err = ver.VerFactStmt(paramInParamSetFact, state)
+			ok, err = ver.VerFactStmt(paramInParamSetFact, nextState)
 			if err != nil {
 				return false, err
 			}
@@ -536,7 +544,7 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch_new(stmt *ast.SpecFa
 			continue
 		}
 
-		ok, err = ver.proveUniFactDomFacts(instantiatedUniFactWithoutThen.DomFacts, state)
+		ok, err = ver.proveUniFactDomFacts(instantiatedUniFactWithoutThen.DomFacts, nextState)
 		if err != nil {
 			continue
 		}
