@@ -108,9 +108,13 @@ func (ver *Verifier) verEqualBuiltin(left ast.Fc, right ast.Fc, state *VerState)
 	}
 
 	// 如果是 fn 那就层层盘剥
-	if ok, err := ver.decomposeFcFnsAndCheckEquality(left, right, state, ver.verEqualBuiltin); err != nil {
+	nextState := state.GetNoMsg()
+	if ok, err := ver.decomposeFcFnsAndCheckEquality(left, right, nextState, ver.verEqualBuiltin); err != nil {
 		return false, err
 	} else if ok {
+		if state.WithMsg {
+			ver.successWithMsg(fmt.Sprintf("%s = %s", left, right), "each item of %s and %s are equal correspondingly")
+		}
 		return true, nil
 	}
 
@@ -210,7 +214,7 @@ func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, rig
 	equalToLeftFcs, gotLeftEqualFcs = curEnv.GetEqualFcs(left)
 	equalToRightFcs, gotRightEqualFcs = curEnv.GetEqualFcs(right)
 
-	if ok, err := ver.cmpFc(left, right, state); err != nil {
+	if ok, err := ver.cmpFc_Builtin_Then_Decompose_Spec(left, right, state); err != nil {
 		return false, "", err
 	} else if ok {
 		return true, fmt.Sprintf("known fact:\n%s = %s", left, right), nil
@@ -224,7 +228,7 @@ func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, rig
 
 	if gotLeftEqualFcs {
 		for _, equalToLeftFc := range *equalToLeftFcs {
-			if ok, err := ver.cmpFc(equalToLeftFc, right, state); err != nil {
+			if ok, err := ver.cmpFc_Builtin_Then_Decompose_Spec(equalToLeftFc, right, state); err != nil {
 				return false, "", err
 			} else if ok {
 				return true, fmt.Sprintf("known fact:\n%s = %s", left, right), nil
@@ -234,7 +238,7 @@ func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, rig
 
 	if gotRightEqualFcs {
 		for _, equalToRightFc := range *equalToRightFcs {
-			if ok, err := ver.cmpFc(equalToRightFc, left, state); err != nil {
+			if ok, err := ver.cmpFc_Builtin_Then_Decompose_Spec(equalToRightFc, left, state); err != nil {
 				return false, "", err
 			} else if ok {
 				return true, fmt.Sprintf("known fact:\n%s = %s", left, right), nil
