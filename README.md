@@ -95,14 +95,16 @@ All of our [repositories](https://github.com/orgs/litexlang/repositories) are op
 
 ## Special Thanks
 
-<div align="center">
-<img src="./little_little_o.png" alt="The Litex Logo" width="300">
-</div>
-
 _Sometimes it is the very people who no one imagines anything of who do the things that no one can imagine._
 
 _– Alan Turing_
 
+<div align="center">
+  <img src="./Little_Little_O.png" alt="The Litex Logo" width="200">
+  <p><em>Litex Mascot: Little Little O, a curious baby bird full of wonder</em></p>
+</div>
+
 Hi, I’m Jiachen Shen, creator of Litex. It is so fortunate to receive tremendous help from friends and colleagues throughout this journey of designing, implementing, and growing Litex into a community. Without their support, Litex would not have had the chance to succeed.
 
 I owe special thanks to my friend Zhaoxuan Hong, who built Litex’s powerful toolchains and has supported the project from the very beginning. I am also deeply grateful to Siqi Sun, Wei Lin, Peng Sun, Jie Fu, Zeyu Zheng, Huajian Xin, Zijie Qiu, Siqi Guo, Haoyang Shi, Chengyang Zhu, Chenxuan Huang for their invaluable contributions. I am certain this list of special thanks will only grow longer in the future.
+
