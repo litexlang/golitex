@@ -247,6 +247,12 @@ func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, rig
 	equalToLeftFcs, gotLeftEqualFcs = curEnv.GetEqualFcs(left)
 	equalToRightFcs, gotRightEqualFcs = curEnv.GetEqualFcs(right)
 
+	if ok, err := ver.cmpFc(left, right, state); err != nil {
+		return false, err
+	} else if ok {
+		return ver.equalTrueAddSuccessMsg(left, right, state, fmt.Sprintf("known fact:\n%s = %s", left, right))
+	}
+
 	if gotLeftEqualFcs && gotRightEqualFcs {
 		if equalToLeftFcs == equalToRightFcs {
 			return ver.equalTrueAddSuccessMsg(left, right, state, fmt.Sprintf("known fact:\n%s = %s", left, right))
