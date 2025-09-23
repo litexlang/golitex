@@ -24,7 +24,7 @@ import (
 // SERIOUS BUG
 // WARNING
 // REMARK
-// TODO: cmpFc, fcFnEq, fcEqualSpec 大循环本质上是有问题的，会有循环论证的风险：know p(p(1,2), 0) = 1, 则现在问 p(1,2) =1 吗？我会比较 p(1,2) = p(p(1,2), 0)，那这时候就出问题了：我因为一位位地比，所以又回到了比较 1 = p(1,2)
+// TODO: cmpFc, fcEqualSpec 大循环本质上是有问题的，会有循环论证的风险：know p(p(1,2), 0) = 1, 则现在问 p(1,2) =1 吗？我会比较 p(1,2) = p(p(1,2), 0)，那这时候就出问题了：我因为一位位地比，所以又回到了比较 1 = p(1,2)
 func (ver *Verifier) cmpFc(left ast.Fc, right ast.Fc, state *VerState) (bool, error) {
 	ok, msg, err := cmp.Cmp_ByBIR(left, right) // 完全一样
 	if err != nil {
@@ -38,18 +38,23 @@ func (ver *Verifier) cmpFc(left ast.Fc, right ast.Fc, state *VerState) (bool, er
 		return true, nil
 	}
 
-	leftAsFn, ok := left.(*ast.FcFn)
-	if ok {
-		rightAsFn, ok := right.(*ast.FcFn)
-		if ok {
-			ok, err = ver.fcFnEq(leftAsFn, rightAsFn, state.GetFinalRound())
-			if err != nil {
-				return false, err
-			}
-			if ok {
-				return true, nil
-			}
-		}
+	// leftAsFn, ok := left.(*ast.FcFn)
+	// if ok {
+	// 	rightAsFn, ok := right.(*ast.FcFn)
+	// 	if ok {
+	// ok, err = ver.fcFnEq(leftAsFn, rightAsFn, state.GetFinalRound())
+	// 		if err != nil {
+	// 			return false, err
+	// 		}
+	// 		if ok {
+	// 			return true, nil
+	// 		}
+	// 	}
+	// }
+	if ok, err := ver.decomposeFcFnsAndCheckEquality(left, right, state, ver.fcEqualSpec); err != nil {
+		return false, err
+	} else if ok {
+		return true, nil
 	}
 
 	return false, nil
@@ -125,38 +130,25 @@ func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state *VerState) (bo
 	return false, nil
 }
 
-func (ver *Verifier) fcFnEq(left, right *ast.FcFn, state *VerState) (bool, error) {
-	var ok bool
-	var err error
-	state = state.GetAddRound()
+// func (ver *Verifier) fcFnEq(left, right *ast.FcFn, state *VerState) (bool, error) {
+// 	var ok bool
+// 	var err error
+// 	state = state.GetAddRound()
 
-	if len(left.Params) != len(right.Params) {
-		return false, nil
-	}
+// 	if len(left.Params) != len(right.Params) {
+// 		return false, nil
+// 	}
 
-	// REMARK: 必须先比头部，再比较params。否则 know (1,2)[0] = 1后，我要比较 (1,2) = 1，这时候会死循环：因为 1 = (1,2)[0]，所以 (1,2) 会被拿来和 (1,2)[0] 比较，然后因为是先比params再比头部，所以会先运行 1 和 (1,2) 比较，则死循环.
-	// 上述疑难杂症其实是在未来解决了死循环问题后能被解决的。但是先比head确实让运行速度快了100%
-	ok, err = ver.fcEqualSpec(left.FnHead, right.FnHead, state)
-	if err != nil {
-		return false, err
-	}
-	if !ok {
-		return false, nil
-	}
+// 	ok, err = ver.decomposeFcFnsAndCheckEquality(left, right, state, ver.fcEqualSpec)
+// 	if err != nil {
+// 		return false, err
+// 	}
+// 	if !ok {
+// 		return false, nil
+// 	}
 
-	for i := range left.Params {
-		ok, err := ver.fcEqualSpec(left.Params[i], right.Params[i], state)
-		// ok, err := ver.verTrueEqualFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{left.Params[i], right.Params[i]}), state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, nil
-		}
-	}
-
-	return true, nil
-}
+// 	return true, nil
+// }
 
 func (ver *Verifier) verTrueEqualFact_FcFnEqual_NoCheckRequirements(left, right *ast.FcFn, state *VerState) (bool, error) {
 	var ok bool
