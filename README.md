@@ -95,6 +95,10 @@ All of our [repositories](https://github.com/orgs/litexlang/repositories) are op
 
 ## Special Thanks
 
+<div align="center">
+<img src="./little_little_o.png" alt="The Litex Logo" width="300">
+</div>
+
 _Sometimes it is the very people who no one imagines anything of who do the things that no one can imagine._
 
 _– Alan Turing_
