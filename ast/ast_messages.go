@@ -720,14 +720,11 @@ func (stmt *NamedUniFactStmt) String() string {
 
 func (stmt *EqualsFactStmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeySymbolEqual)
-	builder.WriteString(glob.KeySymbolColon)
-	builder.WriteString("\n")
 	factStrSlice := make([]string, len(stmt.Params))
 	for i := range len(stmt.Params) {
-		factStrSlice[i] = glob.SplitLinesAndAdd4NIndents(stmt.Params[i].String(), 1)
+		factStrSlice[i] = stmt.Params[i].String()
 	}
-	builder.WriteString(strings.Join(factStrSlice, "\n"))
+	builder.WriteString(strings.Join(factStrSlice, " = "))
 	return builder.String()
 }
 
