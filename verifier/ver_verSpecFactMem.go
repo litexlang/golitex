@@ -19,7 +19,6 @@ import (
 	ast "golitex/ast"
 	env "golitex/environment"
 	glob "golitex/glob"
-	"strconv"
 	"strings"
 )
 
@@ -271,38 +270,6 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 	}
 
 	return true, nil
-}
-
-func (ver *Verifier) verEqual_LeftIsTupleAtIndex(left, right ast.Fc, checkReverse bool, verState *VerState) (bool, string, error) {
-	// if ast.IsFcFnWithHeadName(left, glob.TupleAtOp) {
-	if ast.IsFcFnWithHeadName(left, glob.KeywordProj) {
-		index, ok := left.(*ast.FcFn).Params[0].(ast.FcAtom)
-		if !ok {
-			return false, "", fmt.Errorf("index in %s is not a FcAtom", left)
-		}
-		indexAsInt, err := strconv.Atoi(string(index))
-		if err != nil {
-			return false, "", fmt.Errorf("index in %s is not a int", left)
-		}
-		if ast.IsFcFnWithHeadName(left.(*ast.FcFn).Params[1], glob.TupleFcFnHead) {
-			if indexAsInt < 0 || indexAsInt >= len(left.(*ast.FcFn).Params[1].(*ast.FcFn).Params) {
-				return false, "", fmt.Errorf("index in %s is out of range", left)
-			}
-			ok, err := ver.VerFactStmt(ast.NewEqualFact(left.(*ast.FcFn).Params[1].(*ast.FcFn).Params[indexAsInt], right), verState)
-			if err != nil {
-				return false, "", err
-			}
-			if ok {
-				return true, "", nil
-			}
-		}
-	}
-
-	if checkReverse {
-		return ver.verEqual_LeftIsTupleAtIndex(right, left, false, verState)
-	} else {
-		return false, "", nil
-	}
 }
 
 func (ver *Verifier) specFact_SpecMem_atEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
