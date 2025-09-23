@@ -107,12 +107,30 @@ func (ver *Verifier) verEqualBuiltin(left ast.Fc, right ast.Fc, state *VerState)
 		return ver.equalTrueAddSuccessMsg(left, right, state, msg)
 	}
 
-	ok, msg, err = ver.verEqual_LeftIsTupleAtIndex(left, right, true, state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return ver.equalTrueAddSuccessMsg(left, right, state, msg)
+	// 如果是 fn 那就层层盘剥
+	if leftAsFn, ok := left.(*ast.FcFn); ok {
+		if rightAsFn, ok := right.(*ast.FcFn); ok {
+			// 比较 head
+			ok, err := ver.verEqualBuiltin(leftAsFn.FnHead, rightAsFn.FnHead, state)
+			if err != nil {
+				return false, err
+			}
+			if !ok {
+				return false, nil
+			}
+			// 比较 一位位的 params
+			for i := range leftAsFn.Params {
+				ok, err := ver.verEqualBuiltin(leftAsFn.Params[i], rightAsFn.Params[i], state)
+				if err != nil {
+					return false, err
+				}
+				if !ok {
+					return false, nil
+				}
+			}
+
+			return true, nil
+		}
 	}
 
 	return false, nil
@@ -129,39 +147,39 @@ func (ver *Verifier) verEqualSpecMem(left ast.Fc, right ast.Fc, state *VerState)
 			return true, nil
 		}
 	}
+
 	return false, nil
 }
 
 func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right ast.Fc, state *VerState) (bool, error) {
-	var equalToLeftFcs, equalToRightFcs *[]ast.Fc
-	var gotLeftEqualFcs, gotRightEqualFcs bool
-
-	equalToLeftFcs, gotLeftEqualFcs = curEnv.GetEqualFcs(left)
-	equalToRightFcs, gotRightEqualFcs = curEnv.GetEqualFcs(right)
-
-	if gotLeftEqualFcs && gotRightEqualFcs {
-		if equalToLeftFcs == equalToRightFcs {
-			return ver.equalTrueAddSuccessMsg(left, right, state, fmt.Sprintf("known fact:\n%s = %s", left, right))
-		}
+	ok, err := ver.getEqualFcsAndCmpOneByOne(curEnv, left, right, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
 	}
 
-	if gotLeftEqualFcs {
-		for _, equalToLeftFc := range *equalToLeftFcs {
-			if ok, err := ver.cmpFc(equalToLeftFc, right, state); err != nil {
+	if leftAsFn, ok := left.(*ast.FcFn); ok {
+		if rightAsFn, ok := right.(*ast.FcFn); ok {
+			ok, err := ver.getEqualFcsAndCmpOneByOne(curEnv, leftAsFn.FnHead, rightAsFn.FnHead, state)
+			if err != nil {
 				return false, err
-			} else if ok {
-				return ver.equalTrueAddSuccessMsg(left, right, state, fmt.Sprintf("known fact:\n%s = %s", left, right))
 			}
-		}
-	}
+			if !ok {
+				return false, nil
+			}
+			for i := range leftAsFn.Params {
+				ok, err := ver.getEqualFcsAndCmpOneByOne(curEnv, leftAsFn.Params[i], rightAsFn.Params[i], state)
+				if err != nil {
+					return false, err
+				}
+				if !ok {
+					return false, nil
+				}
+			}
 
-	if gotRightEqualFcs {
-		for _, equalToRightFc := range *equalToRightFcs {
-			if ok, err := ver.cmpFc(equalToRightFc, left, state); err != nil {
-				return false, err
-			} else if ok {
-				return ver.equalTrueAddSuccessMsg(left, right, state, fmt.Sprintf("known fact:\n%s = %s", left, right))
-			}
+			return true, nil
 		}
 	}
 
@@ -219,5 +237,41 @@ func (ver *Verifier) verEqualUniMem(left ast.Fc, right ast.Fc, state *VerState) 
 	if ok {
 		return true, nil
 	}
+	return false, nil
+}
+
+func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, right ast.Fc, state *VerState) (bool, error) {
+	var equalToLeftFcs, equalToRightFcs *[]ast.Fc
+	var gotLeftEqualFcs, gotRightEqualFcs bool
+
+	equalToLeftFcs, gotLeftEqualFcs = curEnv.GetEqualFcs(left)
+	equalToRightFcs, gotRightEqualFcs = curEnv.GetEqualFcs(right)
+
+	if gotLeftEqualFcs && gotRightEqualFcs {
+		if equalToLeftFcs == equalToRightFcs {
+			return ver.equalTrueAddSuccessMsg(left, right, state, fmt.Sprintf("known fact:\n%s = %s", left, right))
+		}
+	}
+
+	if gotLeftEqualFcs {
+		for _, equalToLeftFc := range *equalToLeftFcs {
+			if ok, err := ver.cmpFc(equalToLeftFc, right, state); err != nil {
+				return false, err
+			} else if ok {
+				return ver.equalTrueAddSuccessMsg(left, right, state, fmt.Sprintf("known fact:\n%s = %s", left, right))
+			}
+		}
+	}
+
+	if gotRightEqualFcs {
+		for _, equalToRightFc := range *equalToRightFcs {
+			if ok, err := ver.cmpFc(equalToRightFc, left, state); err != nil {
+				return false, err
+			} else if ok {
+				return ver.equalTrueAddSuccessMsg(left, right, state, fmt.Sprintf("known fact:\n%s = %s", left, right))
+			}
+		}
+	}
+
 	return false, nil
 }
