@@ -214,16 +214,16 @@ func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, rig
 	equalToLeftFcs, gotLeftEqualFcs = curEnv.GetEqualFcs(left)
 	equalToRightFcs, gotRightEqualFcs = curEnv.GetEqualFcs(right)
 
+	if gotLeftEqualFcs && gotRightEqualFcs {
+		if equalToLeftFcs == equalToRightFcs {
+			return true, fmt.Sprintf("It's known %s and %s equal to one same object", left, right), nil
+		}
+	}
+
 	if ok, err := ver.cmpFc_Builtin_Then_Decompose_Spec(left, right, state); err != nil {
 		return false, "", err
 	} else if ok {
-		return true, fmt.Sprintf("known fact:\n%s = %s", left, right), nil
-	}
-
-	if gotLeftEqualFcs && gotRightEqualFcs {
-		if equalToLeftFcs == equalToRightFcs {
-			return true, fmt.Sprintf("known fact:\n%s = %s", left, right), nil
-		}
+		return true, fmt.Sprintf("headers and parameters of %s and %s are equal correspondingly", left, right), nil
 	}
 
 	if gotLeftEqualFcs {
@@ -231,7 +231,7 @@ func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, rig
 			if ok, err := ver.cmpFc_Builtin_Then_Decompose_Spec(equalToLeftFc, right, state); err != nil {
 				return false, "", err
 			} else if ok {
-				return true, fmt.Sprintf("known fact:\n%s = %s", left, right), nil
+				return true, fmt.Sprintf("It is true that:\n%s = %s and %s = %s", equalToLeftFc, right, equalToLeftFc, left), nil
 			}
 		}
 	}
@@ -241,7 +241,7 @@ func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, rig
 			if ok, err := ver.cmpFc_Builtin_Then_Decompose_Spec(equalToRightFc, left, state); err != nil {
 				return false, "", err
 			} else if ok {
-				return true, fmt.Sprintf("known fact:\n%s = %s", left, right), nil
+				return true, fmt.Sprintf("It is true that\n%s = %s and %s = %s", left, equalToRightFc, equalToRightFc, right), nil
 			}
 		}
 	}
