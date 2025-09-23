@@ -752,3 +752,26 @@ func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) (glob.ExecState, error) {
 
 	return glob.ExecState_True, nil
 }
+
+func (exec *Executor) openANewEnvAndCheck(fact ast.FactStmt, requireMsg bool) (glob.ExecState, error) {
+	exec.NewEnv(exec.env)
+	defer exec.deleteEnvAndRetainMsg()
+
+	ver := verifier.NewVerifier(exec.env)
+	var state *verifier.VerState
+	if requireMsg {
+		state = verifier.Round0Msg
+	} else {
+		state = verifier.Round0NoMsg
+	}
+
+	ok, err := ver.VerFactStmt(fact, state)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+	if !ok {
+		return glob.ExecState_Unknown, nil
+	}
+
+	return glob.ExecState_True, nil
+}
