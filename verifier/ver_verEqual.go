@@ -108,29 +108,10 @@ func (ver *Verifier) verEqualBuiltin(left ast.Fc, right ast.Fc, state *VerState)
 	}
 
 	// 如果是 fn 那就层层盘剥
-	if leftAsFn, ok := left.(*ast.FcFn); ok {
-		if rightAsFn, ok := right.(*ast.FcFn); ok {
-			// 比较 head
-			ok, err := ver.verEqualBuiltin(leftAsFn.FnHead, rightAsFn.FnHead, state)
-			if err != nil {
-				return false, err
-			}
-			if !ok {
-				return false, nil
-			}
-			// 比较 一位位的 params
-			for i := range leftAsFn.Params {
-				ok, err := ver.verEqualBuiltin(leftAsFn.Params[i], rightAsFn.Params[i], state)
-				if err != nil {
-					return false, err
-				}
-				if !ok {
-					return false, nil
-				}
-			}
-
-			return true, nil
-		}
+	if ok, err := ver.decomposeFcFnsAndCheckEquality(left, right, state, ver.verEqualBuiltin); err != nil {
+		return false, err
+	} else if ok {
+		return true, nil
 	}
 
 	return false, nil
@@ -163,33 +144,6 @@ func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right
 			ver.successWithMsg(fmt.Sprintf("%s = %s", left, right), msg)
 		}
 		return true, nil
-	}
-
-	if leftAsFn, ok := left.(*ast.FcFn); ok {
-		if rightAsFn, ok := right.(*ast.FcFn); ok {
-			ok, _, err := ver.getEqualFcsAndCmpOneByOne(curEnv, leftAsFn.FnHead, rightAsFn.FnHead, nextState)
-			if err != nil {
-				return false, err
-			}
-			if !ok {
-				return false, nil
-			}
-			for i := range leftAsFn.Params {
-				ok, _, err := ver.getEqualFcsAndCmpOneByOne(curEnv, leftAsFn.Params[i], rightAsFn.Params[i], nextState)
-				if err != nil {
-					return false, err
-				}
-				if !ok {
-					return false, nil
-				}
-			}
-
-			if state.WithMsg {
-				ver.successWithMsg(fmt.Sprintf("%s = %s\n %s = %s, each item of %s matches the corresponding item of %s", left, right, leftAsFn.FnHead, rightAsFn.FnHead, leftAsFn.Params, rightAsFn.Params), "")
-			}
-
-			return true, nil
-		}
 	}
 
 	return false, nil
@@ -289,4 +243,32 @@ func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, rig
 	}
 
 	return false, "", nil
+}
+
+func (ver *Verifier) decomposeFcFnsAndCheckEquality(left ast.Fc, right ast.Fc, state *VerState, verifyFunc func(left ast.Fc, right ast.Fc, state *VerState) (bool, error)) (bool, error) {
+	if leftAsFn, ok := left.(*ast.FcFn); ok {
+		if rightAsFn, ok := right.(*ast.FcFn); ok {
+			// compare head
+			ok, err := verifyFunc(leftAsFn.FnHead, rightAsFn.FnHead, state)
+			if err != nil {
+				return false, err
+			}
+			if !ok {
+				return false, nil
+			}
+			// compare params
+			for i := range leftAsFn.Params {
+				ok, err := verifyFunc(leftAsFn.Params[i], rightAsFn.Params[i], state)
+				if err != nil {
+					return false, err
+				}
+				if !ok {
+					return false, nil
+				}
+			}
+
+			return true, nil
+		}
+	}
+	return false, nil
 }
