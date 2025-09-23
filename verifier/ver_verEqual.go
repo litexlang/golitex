@@ -152,17 +152,22 @@ func (ver *Verifier) verEqualSpecMem(left ast.Fc, right ast.Fc, state *VerState)
 }
 
 func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right ast.Fc, state *VerState) (bool, error) {
-	ok, err := ver.getEqualFcsAndCmpOneByOne(curEnv, left, right, state)
+	nextState := state.GetNoMsg()
+
+	ok, msg, err := ver.getEqualFcsAndCmpOneByOne(curEnv, left, right, nextState)
 	if err != nil {
 		return false, err
 	}
 	if ok {
+		if state.WithMsg {
+			ver.successWithMsg(fmt.Sprintf("%s = %s", left, right), msg)
+		}
 		return true, nil
 	}
 
 	if leftAsFn, ok := left.(*ast.FcFn); ok {
 		if rightAsFn, ok := right.(*ast.FcFn); ok {
-			ok, err := ver.getEqualFcsAndCmpOneByOne(curEnv, leftAsFn.FnHead, rightAsFn.FnHead, state)
+			ok, _, err := ver.getEqualFcsAndCmpOneByOne(curEnv, leftAsFn.FnHead, rightAsFn.FnHead, nextState)
 			if err != nil {
 				return false, err
 			}
@@ -170,13 +175,17 @@ func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right
 				return false, nil
 			}
 			for i := range leftAsFn.Params {
-				ok, err := ver.getEqualFcsAndCmpOneByOne(curEnv, leftAsFn.Params[i], rightAsFn.Params[i], state)
+				ok, _, err := ver.getEqualFcsAndCmpOneByOne(curEnv, leftAsFn.Params[i], rightAsFn.Params[i], nextState)
 				if err != nil {
 					return false, err
 				}
 				if !ok {
 					return false, nil
 				}
+			}
+
+			if state.WithMsg {
+				ver.successWithMsg(fmt.Sprintf("%s = %s\n %s = %s, each item of %s matches the corresponding item of %s", left, right, leftAsFn.FnHead, rightAsFn.FnHead, leftAsFn.Params, rightAsFn.Params), "")
 			}
 
 			return true, nil
@@ -240,7 +249,7 @@ func (ver *Verifier) verEqualUniMem(left ast.Fc, right ast.Fc, state *VerState) 
 	return false, nil
 }
 
-func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, right ast.Fc, state *VerState) (bool, error) {
+func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, right ast.Fc, state *VerState) (bool, string, error) {
 	var equalToLeftFcs, equalToRightFcs *[]ast.Fc
 	var gotLeftEqualFcs, gotRightEqualFcs bool
 
@@ -248,23 +257,23 @@ func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, rig
 	equalToRightFcs, gotRightEqualFcs = curEnv.GetEqualFcs(right)
 
 	if ok, err := ver.cmpFc(left, right, state); err != nil {
-		return false, err
+		return false, "", err
 	} else if ok {
-		return ver.equalTrueAddSuccessMsg(left, right, state, fmt.Sprintf("known fact:\n%s = %s", left, right))
+		return true, fmt.Sprintf("known fact:\n%s = %s", left, right), nil
 	}
 
 	if gotLeftEqualFcs && gotRightEqualFcs {
 		if equalToLeftFcs == equalToRightFcs {
-			return ver.equalTrueAddSuccessMsg(left, right, state, fmt.Sprintf("known fact:\n%s = %s", left, right))
+			return true, fmt.Sprintf("known fact:\n%s = %s", left, right), nil
 		}
 	}
 
 	if gotLeftEqualFcs {
 		for _, equalToLeftFc := range *equalToLeftFcs {
 			if ok, err := ver.cmpFc(equalToLeftFc, right, state); err != nil {
-				return false, err
+				return false, "", err
 			} else if ok {
-				return ver.equalTrueAddSuccessMsg(left, right, state, fmt.Sprintf("known fact:\n%s = %s", left, right))
+				return true, fmt.Sprintf("known fact:\n%s = %s", left, right), nil
 			}
 		}
 	}
@@ -272,12 +281,12 @@ func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, rig
 	if gotRightEqualFcs {
 		for _, equalToRightFc := range *equalToRightFcs {
 			if ok, err := ver.cmpFc(equalToRightFc, left, state); err != nil {
-				return false, err
+				return false, "", err
 			} else if ok {
-				return ver.equalTrueAddSuccessMsg(left, right, state, fmt.Sprintf("known fact:\n%s = %s", left, right))
+				return true, fmt.Sprintf("known fact:\n%s = %s", left, right), nil
 			}
 		}
 	}
 
-	return false, nil
+	return false, "", nil
 }
