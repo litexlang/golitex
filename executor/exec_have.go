@@ -21,9 +21,9 @@ import (
 	verifier "golitex/verifier"
 )
 
-func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt) (glob.ExecState, error) {
+func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) (glob.ExecState, error) {
 	defer func() {
-		if glob.RequireMsg() {
+		if glob.RequireMsg() && requireMsg {
 			exec.newMsg(fmt.Sprintf("%s\n", stmt))
 		}
 	}()
@@ -157,14 +157,23 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt) (glob.ExecState, er
 }
 
 func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStmt) (glob.ExecState, error) {
+	failed := true
+	defer func() {
+		if glob.RequireMsg() && !failed {
+			exec.newMsg(fmt.Sprintf("%s\n", stmt))
+		}
+	}()
+
 	for i := range len(stmt.Objs) {
 		existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordExistIn), []ast.Fc{stmt.ObjSets[i]})
 		haveStmt := ast.NewHaveStmt([]string{stmt.Objs[i]}, *existInFact)
-		execState, err := exec.haveObjStStmt(haveStmt)
+		execState, err := exec.haveObjStStmt(haveStmt, false)
 		if notOkExec(execState, err) {
 			return execState, err
 		}
 	}
+
+	failed = false
 
 	return glob.ExecState_True, nil
 }
