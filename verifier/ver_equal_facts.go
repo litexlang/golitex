@@ -25,46 +25,33 @@ import (
 // WARNING
 // REMARK
 // TODO: cmpFc_Builtin_Then_Decompose_Spec, fcEqualSpec 大循环本质上是有问题的，会有循环论证的风险：know p(p(1,2), 0) = 1, 则现在问 p(1,2) =1 吗？我会比较 p(1,2) = p(p(1,2), 0)，那这时候就出问题了：我因为一位位地比，所以又回到了比较 1 = p(1,2)
-func (ver *Verifier) cmpFc_Builtin_Then_Decompose_Spec(left ast.Fc, right ast.Fc, state *VerState) (bool, error) {
+func (ver *Verifier) cmpFc_Builtin_Then_Decompose_Spec(left ast.Fc, right ast.Fc, state *VerState) (bool, string, error) {
 	ok, msg, err := cmp.Cmp_ByBIR(left, right) // 完全一样
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 	if ok {
-		return ver.equalTrueAddSuccessMsg(left, right, state, msg)
+		// return ver.equalTrueAddSuccessMsg(left, right, state, msg)
+		return true, msg, nil
 	}
 
-	if ok {
-		return true, nil
-	}
-
-	// leftAsFn, ok := left.(*ast.FcFn)
 	// if ok {
-	// 	rightAsFn, ok := right.(*ast.FcFn)
-	// 	if ok {
-	// ok, err = ver.fcFnEq(leftAsFn, rightAsFn, state.GetFinalRound())
-	// 		if err != nil {
-	// 			return false, err
-	// 		}
-	// 		if ok {
-	// 			return true, nil
-	// 		}
-	// 	}
+	// 	return true, nil
 	// }
 
 	// if ok, err := ver.decomposeFcFnsAndCheckEquality_WithoutState(left, right, cmp.Cmp_ByBIR); err != nil {
-	if ok, err := ver.decomposeFcFnsAndCheckEquality(left, right, state, ver.fcEqualSpec); err != nil {
-		return false, err
+	if ok, msg, err := ver.decomposeFcFnsAndCheckEquality(left, right, state, ver.fcEqualSpec); err != nil {
+		return false, "", err
 	} else if ok {
-		return true, nil
+		return true, msg, nil
 	}
 
-	return false, nil
+	return false, "", nil
 }
 
 // Iterate over all equal facts. On each equal fact, use commutative, associative, cmp rule to compare.
 func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state *VerState) (bool, error) {
-	if ok, err := ver.cmpFc_Builtin_Then_Decompose_Spec(left, right, state); err != nil {
+	if ok, _, err := ver.cmpFc_Builtin_Then_Decompose_Spec(left, right, state); err != nil {
 		return false, err
 	} else if ok {
 		return true, nil
@@ -93,7 +80,7 @@ func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state *VerState) (bo
 					continue
 				}
 
-				if ok, err := ver.cmpFc_Builtin_Then_Decompose_Spec(equalToLeftFc, right, state); err != nil {
+				if ok, _, err := ver.cmpFc_Builtin_Then_Decompose_Spec(equalToLeftFc, right, state); err != nil {
 					return false, err
 				} else if ok {
 					if state.WithMsg {
@@ -111,7 +98,7 @@ func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state *VerState) (bo
 					continue
 				}
 
-				if ok, err := ver.cmpFc_Builtin_Then_Decompose_Spec(equalToRightFc, left, state); err != nil {
+				if ok, _, err := ver.cmpFc_Builtin_Then_Decompose_Spec(equalToRightFc, left, state); err != nil {
 					return false, err
 				} else if ok {
 					if state.WithMsg {
