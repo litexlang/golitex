@@ -39,7 +39,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 	case *ast.DefObjStmt:
 		err = exec.defObjStmt(stmt, true)
 	case *ast.HaveObjStStmt:
-		execState, err = exec.haveObjStStmt(stmt)
+		execState, err = exec.haveObjStStmt(stmt, true)
 	case *ast.DefExistPropStmt:
 		err = exec.defExistPropStmt(stmt)
 	case *ast.DefFnStmt:
