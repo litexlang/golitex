@@ -248,6 +248,10 @@ func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, rig
 func (ver *Verifier) decomposeFcFnsAndCheckEquality(left ast.Fc, right ast.Fc, state *VerState, verifyFunc func(left ast.Fc, right ast.Fc, state *VerState) (bool, error)) (bool, error) {
 	if leftAsFn, ok := left.(*ast.FcFn); ok {
 		if rightAsFn, ok := right.(*ast.FcFn); ok {
+			if len(leftAsFn.Params) != len(rightAsFn.Params) {
+				return false, nil
+			}
+
 			// compare head
 			ok, err := verifyFunc(leftAsFn.FnHead, rightAsFn.FnHead, state)
 			if err != nil {
