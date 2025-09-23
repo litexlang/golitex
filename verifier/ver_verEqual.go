@@ -27,7 +27,7 @@ func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, c
 	var ok bool
 	var err error
 	if checkRequirements && !state.ReqOk {
-		// if checkRequirements {
+		// REMARK: 这里 state 更新了： ReqOk 更新到了 true
 		if ok, state, err = ver.checkSpecFactRequirements(stmt, state); err != nil {
 			return false, err
 		} else if !ok {
