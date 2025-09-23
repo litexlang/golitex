@@ -72,3 +72,11 @@ var (
 	Round1Msg_ReqOk       = &VerState{Round: 1, WithMsg: true, ReqOk: true}
 	Round1NoMsg_ReqOk     = &VerState{Round: 1, WithMsg: false, ReqOk: true}
 )
+
+func (s *VerState) Copy() *VerState {
+	return &VerState{
+		Round:   s.Round,
+		WithMsg: s.WithMsg,
+		ReqOk:   s.ReqOk,
+	}
+}
