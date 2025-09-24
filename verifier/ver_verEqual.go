@@ -104,7 +104,10 @@ func (ver *Verifier) verEqualBuiltin(left ast.Fc, right ast.Fc, state *VerState)
 		return false, err
 	}
 	if ok {
-		return ver.equalTrueAddSuccessMsg(left, right, state, msg)
+		if state.WithMsg {
+			ver.successWithMsg(fmt.Sprintf("%s = %s", left, right), msg)
+		}
+		return true, nil
 	}
 
 	// 如果是 fn 那就层层盘剥
@@ -214,34 +217,34 @@ func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, rig
 	equalToLeftFcs, gotLeftEqualFcs = curEnv.GetEqualFcs(left)
 	equalToRightFcs, gotRightEqualFcs = curEnv.GetEqualFcs(right)
 
-	if ok, err := ver.cmpFc_Builtin_Then_Decompose_Spec(left, right, state); err != nil {
-		return false, "", err
-	} else if ok {
-		return true, fmt.Sprintf("known fact:\n%s = %s", left, right), nil
-	}
-
 	if gotLeftEqualFcs && gotRightEqualFcs {
 		if equalToLeftFcs == equalToRightFcs {
-			return true, fmt.Sprintf("known fact:\n%s = %s", left, right), nil
+			return true, fmt.Sprintf("It's known %s and %s equal to one same object", left, right), nil
 		}
+	}
+
+	if ok, msg, err := ver.cmpFc_Builtin_Then_Decompose_Spec_WithMsg(left, right, state); err != nil {
+		return false, "", err
+	} else if ok {
+		return true, msg, nil
 	}
 
 	if gotLeftEqualFcs {
 		for _, equalToLeftFc := range *equalToLeftFcs {
-			if ok, err := ver.cmpFc_Builtin_Then_Decompose_Spec(equalToLeftFc, right, state); err != nil {
+			if ok, _, err := ver.cmpFc_Builtin_Then_Decompose_Spec_WithMsg(equalToLeftFc, right, state); err != nil {
 				return false, "", err
 			} else if ok {
-				return true, fmt.Sprintf("known fact:\n%s = %s", left, right), nil
+				return true, fmt.Sprintf("It is true that:\n%s = %s and %s = %s", equalToLeftFc, right, equalToLeftFc, left), nil
 			}
 		}
 	}
 
 	if gotRightEqualFcs {
 		for _, equalToRightFc := range *equalToRightFcs {
-			if ok, err := ver.cmpFc_Builtin_Then_Decompose_Spec(equalToRightFc, left, state); err != nil {
+			if ok, _, err := ver.cmpFc_Builtin_Then_Decompose_Spec_WithMsg(equalToRightFc, left, state); err != nil {
 				return false, "", err
 			} else if ok {
-				return true, fmt.Sprintf("known fact:\n%s = %s", left, right), nil
+				return true, fmt.Sprintf("It is true that\n%s = %s and %s = %s", left, equalToRightFc, equalToRightFc, right), nil
 			}
 		}
 	}

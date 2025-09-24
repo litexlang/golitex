@@ -37,7 +37,7 @@ func (ver *Verifier) successWithMsg(stmtStr, stmtVerifiedBy string) {
 		ver.env.Msgs = append(ver.env.Msgs, stmtStr)
 	}
 	if stmtVerifiedBy != "" {
-		message := fmt.Sprintf("is true. proved by\n%s", stmtVerifiedBy)
+		message := fmt.Sprintf("is true. proved by\n%s\n", stmtVerifiedBy)
 		ver.env.Msgs = append(ver.env.Msgs, message)
 	} else {
 		message := "is true."
@@ -58,4 +58,8 @@ func (ver *Verifier) newMsgAtParent(s string) error {
 
 func parametersDoNotSatisfyFnReq(param ast.Fc, fnName ast.Fc) error {
 	return fmt.Errorf("the arguments passed to the %s do not satisfy the domain of %s", param, fnName)
+}
+
+func (ver *Verifier) decomposedFcFnsAreEqualItemByItemMsg(left, right ast.Fc) string {
+	return fmt.Sprintf("headers and parameters of %s and %s are equal correspondingly", left, right)
 }

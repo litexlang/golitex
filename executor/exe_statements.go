@@ -102,10 +102,6 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 }
 
 func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
-	if glob.RequireMsg() {
-		defer exec.newMsg(fmt.Sprintf("%s\n", stmt))
-	}
-
 	curVerifier := verifier.NewVerifier(exec.env)
 	state := verifier.Round0Msg
 	ok, err := curVerifier.VerFactStmt(stmt, state)
@@ -114,18 +110,22 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
 	}
 
 	if ok {
+		if glob.RequireMsg() {
+			exec.newMsg(fmt.Sprintf("%s\nis true\n", stmt))
+		}
+
 		err := exec.env.NewFact(stmt)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
 		return glob.ExecState_True, nil
-	}
+	} else {
+		if glob.RequireMsg() {
+			exec.newMsg(fmt.Sprintf("%s\nis unknown\n", stmt))
+		}
 
-	if glob.RequireMsg() {
-		exec.newMsg(stmt.String() + "\nis unknown")
+		return glob.ExecState_Unknown, nil
 	}
-
-	return glob.ExecState_Unknown, nil
 }
 
 // TODO: 再know时就检查，仅仅依赖写在dom里的事实，是否真的能让涉及到的函数和prop能真的满足条件。如果不满足条件，那就warning
