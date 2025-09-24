@@ -21,9 +21,9 @@ import (
 	verifier "golitex/verifier"
 )
 
-func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt) (glob.ExecState, error) {
+func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) (glob.ExecState, error) {
 	defer func() {
-		if glob.RequireMsg() {
+		if glob.RequireMsg() && requireMsg {
 			exec.newMsg(fmt.Sprintf("%s\n", stmt))
 		}
 	}()
@@ -37,7 +37,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt) (glob.ExecState, er
 	}
 
 	// 检查 SpecFactStmt 是否满足了
-	execState, err := exec.factStmt(&stmt.Fact)
+	execState, err := exec.openANewEnvAndCheck(&stmt.Fact, false)
 
 	if stmt.Fact.PropName == glob.KeywordExistIn && execState != glob.ExecState_True && err == nil {
 		ok, err := exec.checkInFactInSet_SetIsNonEmpty(&stmt.Fact)
@@ -157,14 +157,23 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt) (glob.ExecState, er
 }
 
 func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStmt) (glob.ExecState, error) {
+	failed := true
+	defer func() {
+		if glob.RequireMsg() && !failed {
+			exec.newMsg(fmt.Sprintf("%s\n", stmt))
+		}
+	}()
+
 	for i := range len(stmt.Objs) {
 		existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordExistIn), []ast.Fc{stmt.ObjSets[i]})
 		haveStmt := ast.NewHaveStmt([]string{stmt.Objs[i]}, *existInFact)
-		execState, err := exec.haveObjStStmt(haveStmt)
+		execState, err := exec.haveObjStStmt(haveStmt, false)
 		if notOkExec(execState, err) {
 			return execState, err
 		}
 	}
+
+	failed = false
 
 	return glob.ExecState_True, nil
 }
@@ -175,7 +184,7 @@ func (exec *Executor) checkInFactInSet_SetIsNonEmpty(pureInFact *ast.SpecFactStm
 	}
 
 	isFiniteSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{pureInFact.Params[0], ast.FcAtom(glob.KeywordFiniteSet)})
-	ok, err := exec.factStmt(isFiniteSetFact)
+	ok, err := exec.openANewEnvAndCheck(isFiniteSetFact, false)
 	if err != nil {
 		return false, err
 	}
@@ -183,7 +192,7 @@ func (exec *Executor) checkInFactInSet_SetIsNonEmpty(pureInFact *ast.SpecFactStm
 		// 如果 len > 0 那就是可以
 		lenOverStmtName := ast.NewFcFn(ast.FcAtom(glob.KeywordLen), []ast.Fc{pureInFact.Params[0]})
 		largerThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolGreater), []ast.Fc{lenOverStmtName, ast.FcAtom("0")})
-		ok, err := exec.factStmt(largerThanZeroFact)
+		ok, err := exec.openANewEnvAndCheck(largerThanZeroFact, false)
 		if err != nil {
 			return false, err
 		}
@@ -212,7 +221,7 @@ func (exec *Executor) haveEnumSetStmt(stmt *ast.EnumStmt) (glob.ExecState, error
 	for i := range len(stmt.Items) {
 		for j := i + 1; j < len(stmt.Items); j++ {
 			notEqualFact := ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{stmt.Items[i], stmt.Items[j]})
-			ok, err := exec.factStmt(notEqualFact)
+			ok, err := exec.openANewEnvAndCheck(notEqualFact, false)
 			if err != nil {
 				return glob.ExecState_Error, err
 			}

@@ -39,7 +39,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 	case *ast.DefObjStmt:
 		err = exec.defObjStmt(stmt, true)
 	case *ast.HaveObjStStmt:
-		execState, err = exec.haveObjStStmt(stmt)
+		execState, err = exec.haveObjStStmt(stmt, true)
 	case *ast.DefExistPropStmt:
 		err = exec.defExistPropStmt(stmt)
 	case *ast.DefFnStmt:
@@ -153,9 +153,7 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) error {
 	}
 
 	if glob.RequireMsg() {
-		exec.newMsg("\n")
-		exec.newMsg(stmt.String())
-		// exec.newMsg("Warning: in know statement, Litex does not check whether the arguments in a fact can be passed into the corresponding functions and propositions.\n")
+		exec.newMsg(fmt.Sprintf("%s\n", stmt.String()))
 	}
 	return nil
 }
@@ -748,6 +746,29 @@ func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) (glob.ExecState, error) {
 		if notOkExec(execState, err) {
 			return execState, err
 		}
+	}
+
+	return glob.ExecState_True, nil
+}
+
+func (exec *Executor) openANewEnvAndCheck(fact ast.FactStmt, requireMsg bool) (glob.ExecState, error) {
+	exec.NewEnv(exec.env)
+	defer exec.deleteEnvAndRetainMsg()
+
+	ver := verifier.NewVerifier(exec.env)
+	var state *verifier.VerState
+	if requireMsg {
+		state = verifier.Round0Msg
+	} else {
+		state = verifier.Round0NoMsg
+	}
+
+	ok, err := ver.VerFactStmt(fact, state)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+	if !ok {
+		return glob.ExecState_Unknown, nil
 	}
 
 	return glob.ExecState_True, nil
