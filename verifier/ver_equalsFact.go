@@ -37,15 +37,19 @@ func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState
 		return false, fmt.Errorf("equals fact must have at least 2 params")
 	}
 
-	for i := 1; i < len(stmt.Params)-1; i++ {
+	for i := 1; i < len(stmt.Params); i++ {
 		checked := false
 		for j := i - 1; j >= 0; j-- {
-			newFact := ast.NewEqualFact(stmt.Params[i], stmt.Params[j])
+			newFact := ast.NewEqualFact(stmt.Params[j], stmt.Params[i])
 			ok, err := ver.VerFactStmt(newFact, state)
 			if err != nil {
 				return false, err
 			}
 			if ok {
+				err = ver.env.NewFact(newFact)
+				if err != nil {
+					return false, err
+				}
 				checked = true
 				break
 			}
