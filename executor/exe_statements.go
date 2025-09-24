@@ -153,9 +153,7 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) error {
 	}
 
 	if glob.RequireMsg() {
-		exec.newMsg("\n")
-		exec.newMsg(stmt.String())
-		// exec.newMsg("Warning: in know statement, Litex does not check whether the arguments in a fact can be passed into the corresponding functions and propositions.\n")
+		exec.newMsg(fmt.Sprintf("%s\n", stmt.String()))
 	}
 	return nil
 }
