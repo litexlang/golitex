@@ -112,7 +112,7 @@ func (ver *Verifier) verEqualBuiltin(left ast.Fc, right ast.Fc, state *VerState)
 
 	// 如果是 fn 那就层层盘剥
 	nextState := state.GetNoMsg()
-	if ok, err := ver.decomposeFcFnsAndCheckEquality(left, right, nextState, ver.verEqualBuiltin); err != nil {
+	if ok, _, err := ver.decomposeFcFnsAndCheckEquality(left, right, nextState, ver.verEqualBuiltin); err != nil {
 		return false, err
 	} else if ok {
 		if state.WithMsg {
@@ -223,7 +223,7 @@ func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, rig
 		}
 	}
 
-	if ok, msg, err := ver.cmpFc_Builtin_Then_Decompose_Spec_WithMsg(left, right, state); err != nil {
+	if ok, msg, err := ver.cmpFc_Builtin_Then_Decompose_Spec(left, right, state); err != nil {
 		return false, "", err
 	} else if ok {
 		return true, msg, nil
@@ -231,7 +231,7 @@ func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, rig
 
 	if gotLeftEqualFcs {
 		for _, equalToLeftFc := range *equalToLeftFcs {
-			if ok, _, err := ver.cmpFc_Builtin_Then_Decompose_Spec_WithMsg(equalToLeftFc, right, state); err != nil {
+			if ok, _, err := ver.cmpFc_Builtin_Then_Decompose_Spec(equalToLeftFc, right, state); err != nil {
 				return false, "", err
 			} else if ok {
 				return true, fmt.Sprintf("It is true that:\n%s = %s and %s = %s", equalToLeftFc, right, equalToLeftFc, left), nil
@@ -241,7 +241,7 @@ func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, rig
 
 	if gotRightEqualFcs {
 		for _, equalToRightFc := range *equalToRightFcs {
-			if ok, _, err := ver.cmpFc_Builtin_Then_Decompose_Spec_WithMsg(equalToRightFc, left, state); err != nil {
+			if ok, _, err := ver.cmpFc_Builtin_Then_Decompose_Spec(equalToRightFc, left, state); err != nil {
 				return false, "", err
 			} else if ok {
 				return true, fmt.Sprintf("It is true that\n%s = %s and %s = %s", left, equalToRightFc, equalToRightFc, right), nil
@@ -252,34 +252,34 @@ func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, rig
 	return false, "", nil
 }
 
-func (ver *Verifier) decomposeFcFnsAndCheckEquality(left ast.Fc, right ast.Fc, state *VerState, verifyFunc func(left ast.Fc, right ast.Fc, state *VerState) (bool, error)) (bool, error) {
+func (ver *Verifier) decomposeFcFnsAndCheckEquality(left ast.Fc, right ast.Fc, state *VerState, verifyFunc func(left ast.Fc, right ast.Fc, state *VerState) (bool, error)) (bool, string, error) {
 	if leftAsFn, ok := left.(*ast.FcFn); ok {
 		if rightAsFn, ok := right.(*ast.FcFn); ok {
 			if len(leftAsFn.Params) != len(rightAsFn.Params) {
-				return false, nil
+				return false, "", nil
 			}
 
 			// compare head
 			ok, err := verifyFunc(leftAsFn.FnHead, rightAsFn.FnHead, state)
 			if err != nil {
-				return false, err
+				return false, "", err
 			}
 			if !ok {
-				return false, nil
+				return false, "", nil
 			}
 			// compare params
 			for i := range leftAsFn.Params {
 				ok, err := verifyFunc(leftAsFn.Params[i], rightAsFn.Params[i], state)
 				if err != nil {
-					return false, err
+					return false, "", err
 				}
 				if !ok {
-					return false, nil
+					return false, "", nil
 				}
 			}
 
-			return true, nil
+			return true, fmt.Sprintf("headers and parameters of %s and %s are equal correspondingly", left, right), nil
 		}
 	}
-	return false, nil
+	return false, "", nil
 }
