@@ -104,7 +104,10 @@ func (ver *Verifier) verEqualBuiltin(left ast.Fc, right ast.Fc, state *VerState)
 		return false, err
 	}
 	if ok {
-		return ver.equalTrueAddSuccessMsg(left, right, state, msg)
+		if state.WithMsg {
+			ver.successWithMsg(fmt.Sprintf("%s = %s", left, right), msg)
+		}
+		return true, nil
 	}
 
 	// 如果是 fn 那就层层盘剥
@@ -220,10 +223,10 @@ func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, rig
 		}
 	}
 
-	if ok, _, err := ver.cmpFc_Builtin_Then_Decompose_Spec(left, right, state); err != nil {
+	if ok, msg, err := ver.cmpFc_Builtin_Then_Decompose_Spec(left, right, state); err != nil {
 		return false, "", err
 	} else if ok {
-		return true, fmt.Sprintf("headers and parameters of %s and %s are equal correspondingly", left, right), nil
+		return true, msg, nil
 	}
 
 	if gotLeftEqualFcs {
