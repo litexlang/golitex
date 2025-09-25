@@ -81,6 +81,10 @@ func (t *tokenizerWithScope) tokenizeLine(line string) ([]string, error) {
 	return tokens, nil
 }
 
+func lineNum(l int) int {
+	return l + 1
+}
+
 // skipCommentsAndEmptyLines 跳过注释和空行，返回是否应该继续处理当前行
 // 返回值：true 表示跳过当前行，false 表示继续处理当前行
 func (t *tokenizerWithScope) skipCommentsAndEmptyLines() (bool, error) {
@@ -99,7 +103,7 @@ func (t *tokenizerWithScope) skipCommentsAndEmptyLines() (bool, error) {
 		for t.currentLine < len(t.lines) {
 			t.currentLine++
 			if t.currentLine >= len(t.lines) {
-				return false, fmt.Errorf("unclosed triple quote comment starting at line %d", t.currentLine)
+				return false, fmt.Errorf("unclosed triple quote comment starting at line %d", lineNum(t.currentLine))
 			}
 			nextLine := t.lines[t.currentLine]
 			nextTrimmed := strings.TrimSpace(nextLine)
@@ -110,7 +114,7 @@ func (t *tokenizerWithScope) skipCommentsAndEmptyLines() (bool, error) {
 			}
 		}
 		if !found {
-			return false, fmt.Errorf("unclosed triple quote comment starting at line %d", t.currentLine)
+			return false, fmt.Errorf("unclosed triple quote comment starting at line %d", lineNum(t.currentLine))
 		}
 		return true, nil
 	}
@@ -159,7 +163,7 @@ func (t *tokenizerWithScope) findFirstNonCommentLine(currentIndent int) (string,
 			for t.currentLine < len(t.lines) {
 				t.currentLine++
 				if t.currentLine >= len(t.lines) {
-					return "", 0, fmt.Errorf("unclosed triple quote comment starting at line %d", t.currentLine)
+					return "", 0, fmt.Errorf("unclosed triple quote comment starting at line %d", lineNum(t.currentLine))
 				}
 				nextTrimmed := strings.TrimSpace(t.lines[t.currentLine])
 				if strings.HasPrefix(nextTrimmed, "\"\"\"") {
@@ -169,7 +173,7 @@ func (t *tokenizerWithScope) findFirstNonCommentLine(currentIndent int) (string,
 				}
 			}
 			if !found {
-				return "", 0, fmt.Errorf("unclosed triple quote comment starting at line %d", t.currentLine)
+				return "", 0, fmt.Errorf("unclosed triple quote comment starting at line %d", lineNum(t.currentLine))
 			}
 			continue
 		}
@@ -185,15 +189,13 @@ func (t *tokenizerWithScope) findFirstNonCommentLine(currentIndent int) (string,
 		return nextLine, nextIndent, nil
 	}
 
-	return "", 0, nil
+	return "", currentIndent, nil
 }
 
 func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]tokenBlock, error) {
 	blocks := []tokenBlock{}
 
 	for t.currentLine < len(t.lines) {
-		line := t.lines[t.currentLine]
-
 		// 处理注释和空行
 		shouldSkip, err := t.skipCommentsAndEmptyLines()
 		if err != nil {
@@ -204,7 +206,7 @@ func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]tokenBlock, error
 		}
 
 		// 重新获取当前行（因为可能已经跳过了注释行）
-		line = t.lines[t.currentLine]
+		line := t.lines[t.currentLine]
 
 		// 计算当前行的缩进
 		indent := len(line) - len(strings.TrimLeft(line, " "))
@@ -216,7 +218,7 @@ func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]tokenBlock, error
 
 		// 如果缩进大于当前缩进，说明缩进错误
 		if indent > currentIndent {
-			return nil, fmt.Errorf("incorrect indentation:\n\"%s\"\nMaybe the previous nonempty line should end with \":\" at line %d", line, t.currentLine+1)
+			return nil, fmt.Errorf("incorrect indentation:\n\"%s\"\nMaybe the previous nonempty line should end with \":\" at line %d", line, lineNum(t.currentLine))
 		}
 
 		// 处理行内注释：截断 # 后面的内容
