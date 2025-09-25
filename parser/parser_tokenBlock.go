@@ -23,6 +23,16 @@ import (
 type tokenBlock struct {
 	header strSliceCursor
 	body   []tokenBlock
+
+	line uint
+}
+
+func newTokenBlock(header strSliceCursor, body []tokenBlock, line uint) *tokenBlock {
+	return &tokenBlock{
+		header: header,
+		body:   body,
+		line:   line,
+	}
 }
 
 func (b *tokenBlock) String() string {
