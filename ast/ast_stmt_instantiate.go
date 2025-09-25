@@ -274,7 +274,7 @@ func (stmt *IntensionalSetStmt) Instantiate(uniMap map[string]Fc) (FactStmt, err
 		newProofs[i] = newProof.(*SpecFactStmt)
 	}
 
-	return NewIntensionalSetStmt(newCurSet, stmt.Param, newParentSet, newProofs), nil
+	return NewIntensionalSetStmt(newCurSet, stmt.Param, newParentSet, newProofs, stmt.Line), nil
 }
 
 func (stmt *EqualsFactStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
@@ -286,7 +286,7 @@ func (stmt *EqualsFactStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) 
 		}
 		newParams = append(newParams, newParam)
 	}
-	return NewEqualsFactStmt(newParams), nil
+	return NewEqualsFactStmt(newParams, stmt.Line), nil
 }
 
 func (fcSlice FcSlice) Instantiate(uniMap map[string]Fc) (FcSlice, error) {

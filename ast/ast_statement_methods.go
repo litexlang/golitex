@@ -339,7 +339,7 @@ func (stmt *IntensionalSetStmt) ToEquivalentUniFacts() (*UniFactStmt, *UniFactSt
 }
 
 func (stmt *HaveSetFnStmt) ToDefFnStmt() *DefFnStmt {
-	return NewDefFnStmt(string(stmt.DefHeader.Name), NewFnTStruct(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, FcAtom(glob.KeywordSet), []FactStmt{}, []FactStmt{stmt.ToIntensionalSetStmt()}), stmt.Line)
+	return NewDefFnStmt(string(stmt.DefHeader.Name), NewFnTStruct(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, FcAtom(glob.KeywordSet), []FactStmt{}, []FactStmt{stmt.ToIntensionalSetStmt()}, stmt.Line), stmt.Line)
 }
 
 func (stmt *HaveSetFnStmt) ToIntensionalSetStmt() *IntensionalSetStmt {
@@ -350,7 +350,7 @@ func (stmt *HaveSetFnStmt) ToIntensionalSetStmt() *IntensionalSetStmt {
 
 	fnName := FcAtom(stmt.DefHeader.Name)
 	curSet := NewFcFn(fnName, params)
-	intensionalSetStmt := NewIntensionalSetStmt(curSet, stmt.Param, stmt.ParentSet, stmt.Proofs)
+	intensionalSetStmt := NewIntensionalSetStmt(curSet, stmt.Param, stmt.ParentSet, stmt.Proofs, stmt.Line)
 
 	return intensionalSetStmt
 }

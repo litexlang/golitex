@@ -220,7 +220,7 @@ func (stmt *FnTemplateDefStmt) Instantiate_GetFnTemplateNoName(fc *FcFn) (*FnTSt
 		return nil, err
 	}
 
-	return NewFnTStruct(stmt.Fn.Params, instantiatedParamSets, instantiatedRetSet, instantiatedDomFacts, instantiatedThenFacts), nil
+	return NewFnTStruct(stmt.Fn.Params, instantiatedParamSets, instantiatedRetSet, instantiatedDomFacts, instantiatedThenFacts, stmt.Line), nil
 }
 
 func (fcFn *FcFn) HasHeadInSlice(headNames []string) bool {
@@ -253,7 +253,7 @@ func (fcAsFcFn *FcFn) FnTFc_ToFnTNoName() (*FnTStruct, error) {
 	paramSets := fcAsFcFnHeadAsFcFn.Params
 	retSet := fcAsFcFn.Params[0]
 
-	fnTNoName := NewFnTStruct(randomParams, paramSets, retSet, []FactStmt{}, []FactStmt{})
+	fnTNoName := NewFnTStruct(randomParams, paramSets, retSet, []FactStmt{}, []FactStmt{}, glob.InnerGenLine)
 
 	return fnTNoName, nil
 }
@@ -320,5 +320,5 @@ func FcFnT_To_FnTStruct(fcFnTypeT *FcFn) (*FnTStruct, bool) {
 	}
 
 	excelNames := glob.GenerateNamesLikeExcelColumnNames(len(paramSets))
-	return NewFnTStruct(excelNames, paramSets, retSet, []FactStmt{}, []FactStmt{}), true
+	return NewFnTStruct(excelNames, paramSets, retSet, []FactStmt{}, []FactStmt{}, glob.InnerGenLine), true
 }

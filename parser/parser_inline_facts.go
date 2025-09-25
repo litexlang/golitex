@@ -544,7 +544,7 @@ func (tb *tokenBlock) inline_enum_intensional_fact(left ast.Fc) (ast.FactStmt, e
 			}
 		}
 
-		return ast.NewIntensionalSetStmt(left, string(firstFcAsAtom), parentSet, facts), nil
+		return ast.NewIntensionalSetStmt(left, string(firstFcAsAtom), parentSet, facts, tb.line), nil
 	}
 }
 

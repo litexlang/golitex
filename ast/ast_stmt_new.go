@@ -94,90 +94,90 @@ func NewEnumStmt(enumName Fc, enumValues []Fc, line uint) *EnumStmt {
 	return &EnumStmt{enumName, enumValues, line}
 }
 
-func NewImportFileStmt(path string) *ImportFileStmt {
-	return &ImportFileStmt{path, 0}
+func NewImportFileStmt(path string, line uint) *ImportFileStmt {
+	return &ImportFileStmt{path, line}
 }
 
-func NewClaimPropStmt(prop *DefPropStmt, proofs []Stmt, isProve bool) *ClaimPropStmt {
-	return &ClaimPropStmt{*prop, proofs, isProve, 0}
+func NewClaimPropStmt(prop *DefPropStmt, proofs []Stmt, isProve bool, line uint) *ClaimPropStmt {
+	return &ClaimPropStmt{*prop, proofs, isProve, line}
 }
 
-func NewClaimExistPropStmt(existProp *DefExistPropStmt, proofs []Stmt) *ClaimExistPropStmt {
-	return &ClaimExistPropStmt{*existProp, proofs, 0}
+func NewClaimExistPropStmt(existProp *DefExistPropStmt, proofs []Stmt, line uint) *ClaimExistPropStmt {
+	return &ClaimExistPropStmt{*existProp, proofs, line}
 }
 
-func NewIntensionalSetStmt(curSet Fc, param string, parentSet Fc, proofs []*SpecFactStmt) *IntensionalSetStmt {
-	return &IntensionalSetStmt{curSet, param, parentSet, proofs, 0}
+func NewIntensionalSetStmt(curSet Fc, param string, parentSet Fc, proofs []*SpecFactStmt, line uint) *IntensionalSetStmt {
+	return &IntensionalSetStmt{curSet, param, parentSet, proofs, line}
 }
 
-func NewProveOverFiniteSetStmt(fact *UniFactStmt, proofs []StmtSlice) *ProveOverFiniteSetStmt {
-	return &ProveOverFiniteSetStmt{*fact, proofs, 0}
+func NewProveOverFiniteSetStmt(fact *UniFactStmt, proofs []StmtSlice, line uint) *ProveOverFiniteSetStmt {
+	return &ProveOverFiniteSetStmt{*fact, proofs, line}
 }
 
-func NewHaveObjInNonEmptySetStmt(objNames []string, objSets []Fc) *HaveObjInNonEmptySetStmt {
-	return &HaveObjInNonEmptySetStmt{objNames, objSets, 0}
+func NewHaveObjInNonEmptySetStmt(objNames []string, objSets []Fc, line uint) *HaveObjInNonEmptySetStmt {
+	return &HaveObjInNonEmptySetStmt{objNames, objSets, line}
 }
 
-func NewHaveSetStmt(fact EnumSet_IntensionalSet_EqualDom) *HaveSetStmt {
-	return &HaveSetStmt{fact, 0}
+func NewHaveSetStmt(fact EnumSet_IntensionalSet_EqualDom, line uint) *HaveSetStmt {
+	return &HaveSetStmt{fact, line}
 }
 
-func NewHaveSetFnStmt(declHeader *DefHeader, param string, parentSet Fc, proofs []*SpecFactStmt) *HaveSetFnStmt {
-	return &HaveSetFnStmt{*declHeader, param, parentSet, proofs, 0}
+func NewHaveSetFnStmt(declHeader *DefHeader, param string, parentSet Fc, proofs []*SpecFactStmt, line uint) *HaveSetFnStmt {
+	return &HaveSetFnStmt{*declHeader, param, parentSet, proofs, line}
 }
 
-func NewHaveSetDefinedByReplacementStmt(name string, domSet Fc, rangeSet Fc, propName FcAtom) *HaveSetDefinedByReplacementStmt {
-	return &HaveSetDefinedByReplacementStmt{name, domSet, rangeSet, propName, 0}
+func NewHaveSetDefinedByReplacementStmt(name string, domSet Fc, rangeSet Fc, propName FcAtom, line uint) *HaveSetDefinedByReplacementStmt {
+	return &HaveSetDefinedByReplacementStmt{name, domSet, rangeSet, propName, line}
 }
 
-func NewNamedUniFactStmt(defPropStmt *DefPropStmt) *NamedUniFactStmt {
-	return &NamedUniFactStmt{*defPropStmt, 0}
+func NewNamedUniFactStmt(defPropStmt *DefPropStmt, line uint) *NamedUniFactStmt {
+	return &NamedUniFactStmt{*defPropStmt, line}
 }
 
-func NewEqualsFactStmt(params FcSlice) *EqualsFactStmt {
-	return &EqualsFactStmt{params, 0}
+func NewEqualsFactStmt(params FcSlice, line uint) *EqualsFactStmt {
+	return &EqualsFactStmt{params, line}
 }
 
-func NewKnowExistPropStmt(existProp DefExistPropStmt) *KnowExistPropStmt {
-	return &KnowExistPropStmt{existProp, 0}
+func NewKnowExistPropStmt(existProp DefExistPropStmt, line uint) *KnowExistPropStmt {
+	return &KnowExistPropStmt{existProp, line}
 }
 
-func NewCommentStmt(comment string) *CommentStmt {
-	return &CommentStmt{comment, 0}
+func NewCommentStmt(comment string, line uint) *CommentStmt {
+	return &CommentStmt{comment, line}
 }
 
-func NewFnTemplateStmt(defHeader *DefHeader, templateDomFacts []FactStmt, fnParams []string, fnParamSets []Fc, fnRetSet Fc, fnDomFacts []FactStmt, fnThenFacts []FactStmt) *FnTemplateDefStmt {
-	return &FnTemplateDefStmt{*defHeader, templateDomFacts, *NewFnTStruct(fnParams, fnParamSets, fnRetSet, fnDomFacts, fnThenFacts), 0}
+func NewFnTemplateStmt(defHeader *DefHeader, templateDomFacts []FactStmt, fnTStruct *FnTStruct, line uint) *FnTemplateDefStmt {
+	return &FnTemplateDefStmt{*defHeader, templateDomFacts, *fnTStruct, line}
 }
 
-func NewFnTStruct(params []string, paramSets []Fc, retSet Fc, domFacts []FactStmt, thenFacts []FactStmt) *FnTStruct {
-	return &FnTStruct{params, paramSets, retSet, domFacts, thenFacts, 0}
+func NewFnTStruct(params []string, paramSets []Fc, retSet Fc, domFacts []FactStmt, thenFacts []FactStmt, line uint) *FnTStruct {
+	return &FnTStruct{params, paramSets, retSet, domFacts, thenFacts, line}
 }
 
-func NewClearStmt() *ClearStmt {
-	return &ClearStmt{0}
+func NewClearStmt(line uint) *ClearStmt {
+	return &ClearStmt{line}
 }
 
-func NewInlineFactsStmt(facts []FactStmt) *InlineFactsStmt {
-	return &InlineFactsStmt{facts, 0}
+func NewInlineFactsStmt(facts []FactStmt, line uint) *InlineFactsStmt {
+	return &InlineFactsStmt{facts, line}
 }
 
-func NewProveByInductionStmt(fact *SpecFactStmt, param string, start Fc) *ProveByInductionStmt {
-	return &ProveByInductionStmt{fact, param, start, 0}
+func NewProveByInductionStmt(fact *SpecFactStmt, param string, start Fc, line uint) *ProveByInductionStmt {
+	return &ProveByInductionStmt{fact, param, start, line}
 }
 
-func NewHaveObjEqualStmt(objNames []string, objEqualTos []Fc, objSets []Fc) *HaveObjEqualStmt {
-	return &HaveObjEqualStmt{objNames, objEqualTos, objSets, 0}
+func NewHaveObjEqualStmt(objNames []string, objEqualTos []Fc, objSets []Fc, line uint) *HaveObjEqualStmt {
+	return &HaveObjEqualStmt{objNames, objEqualTos, objSets, line}
 }
 
-func NewHaveFnEqualStmt(defHeader *DefHeader, retSet Fc, equalTo Fc) *HaveFnEqualStmt {
-	return &HaveFnEqualStmt{*defHeader, retSet, equalTo, 0}
+func NewHaveFnEqualStmt(defHeader *DefHeader, retSet Fc, equalTo Fc, line uint) *HaveFnEqualStmt {
+	return &HaveFnEqualStmt{*defHeader, retSet, equalTo, line}
 }
 
-func NewHaveFnLiftStmt(fnName string, opt Fc, domainOfEachParamOfGivenFn []Fc) *HaveFnLiftStmt {
-	return &HaveFnLiftStmt{fnName, opt, domainOfEachParamOfGivenFn, 0}
+func NewHaveFnLiftStmt(fnName string, opt Fc, domainOfEachParamOfGivenFn []Fc, line uint) *HaveFnLiftStmt {
+	return &HaveFnLiftStmt{fnName, opt, domainOfEachParamOfGivenFn, line}
 }
 
-func NewClaimHaveFnStmt(defFnStmt *DefFnStmt, proof []Stmt, haveObjSatisfyFn Fc) *HaveFnStmt {
-	return &HaveFnStmt{*defFnStmt, proof, haveObjSatisfyFn, 0}
+func NewClaimHaveFnStmt(defFnStmt *DefFnStmt, proof []Stmt, haveObjSatisfyFn Fc, line uint) *HaveFnStmt {
+	return &HaveFnStmt{*defFnStmt, proof, haveObjSatisfyFn, line}
 }
