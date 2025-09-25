@@ -30,28 +30,28 @@ func NewSpecFactStmt(typeEnum SpecFactEnum, propName FcAtom, params []Fc, line u
 	return &SpecFactStmt{typeEnum, propName, params, line}
 }
 
-func NewClaimProveByContradictionStmt(claim ClaimProveStmt) *ClaimProveByContradictionStmt {
-	return &ClaimProveByContradictionStmt{claim, 0}
+func NewClaimProveByContradictionStmt(claim ClaimProveStmt, line uint) *ClaimProveByContradictionStmt {
+	return &ClaimProveByContradictionStmt{claim, line}
 }
 
-func NewClaimProveStmt(toCheckFact FactStmt, proofs []Stmt) *ClaimProveStmt {
-	return &ClaimProveStmt{toCheckFact, proofs, 0}
+func NewClaimProveStmt(toCheckFact FactStmt, proofs []Stmt, line uint) *ClaimProveStmt {
+	return &ClaimProveStmt{toCheckFact, proofs, line}
 }
 
-func NewKnowStmt(facts CanBeKnownStmtSlice) *KnowFactStmt {
-	return &KnowFactStmt{facts, 0}
+func NewKnowStmt(facts CanBeKnownStmtSlice, line uint) *KnowFactStmt {
+	return &KnowFactStmt{facts, line}
 }
 
 func NewDefHeader(name FcAtom, params []string, setParams []Fc) *DefHeader {
-	return &DefHeader{name, params, setParams, 0}
+	return &DefHeader{name, params, setParams}
 }
 
-func NewHaveStmt(objNames []string, fact SpecFactStmt) *HaveObjStStmt {
-	return &HaveObjStStmt{objNames, fact, 0}
+func NewHaveStmt(objNames []string, fact SpecFactStmt, line uint) *HaveObjStStmt {
+	return &HaveObjStStmt{objNames, fact, line}
 }
 
-func NewExistPropDef(declHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt) *DefExistPropStmtBody {
-	return &DefExistPropStmtBody{*declHeader, domFacts, iffFacts, 0}
+func NewExistPropDef(declHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt, line uint) *DefExistPropStmtBody {
+	return &DefExistPropStmtBody{*declHeader, domFacts, iffFacts, line}
 }
 
 func NewUniFact(params []string, setParams []Fc, domFacts []FactStmt, thenFacts []FactStmt) *UniFactStmt {

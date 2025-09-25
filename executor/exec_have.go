@@ -166,7 +166,7 @@ func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStm
 
 	for i := range len(stmt.Objs) {
 		existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordExistIn), []ast.Fc{stmt.ObjSets[i]}, stmt.Line)
-		haveStmt := ast.NewHaveStmt([]string{stmt.Objs[i]}, *existInFact)
+		haveStmt := ast.NewHaveStmt([]string{stmt.Objs[i]}, *existInFact, stmt.Line)
 		execState, err := exec.haveObjStStmt(haveStmt, false)
 		if notOkExec(execState, err) {
 			return execState, err

@@ -32,8 +32,6 @@ type DefHeader struct {
 	Name      FcAtom
 	Params    StrSlice
 	ParamSets FcSlice
-
-	Line uint
 }
 
 type DefPropStmt struct {
