@@ -63,7 +63,7 @@ func (cursor *strSliceCursor) currentToken() (string, error) {
 
 func (cursor *strSliceCursor) testAndSkip(s string) error {
 	if cursor.index >= len(cursor.slice) {
-		return fmt.Errorf("unexpected end of slice %s", cursor.slice)
+		return fmt.Errorf("unexpected end of slice %s", strings.Join(cursor.slice, " "))
 	}
 	if cursor.slice[cursor.index] == s {
 		cursor.index++
@@ -74,7 +74,7 @@ func (cursor *strSliceCursor) testAndSkip(s string) error {
 
 func (cursor *strSliceCursor) next() (string, error) {
 	if cursor.index >= len(cursor.slice) {
-		return "", fmt.Errorf("unexpected end of slice %s", cursor.slice)
+		return "", fmt.Errorf("unexpected end of slice %s", strings.Join(cursor.slice, " "))
 	}
 	cursor.index++
 	return cursor.slice[cursor.index-1], nil
@@ -121,26 +121,6 @@ func (cursor *strSliceCursor) skip(expected string) error {
 
 	return nil
 }
-
-// func (cursor *strSliceCursor) getAndSkip(expected string) (string, error) {
-// 	if cursor.index >= len(cursor.slice) {
-// 		return "", fmt.Errorf("unexpected end of slice %s", cursor.slice)
-// 	}
-
-// 	curToken := cursor.slice[cursor.index]
-
-// 	if expected == "" {
-// 		cursor.index++
-// 		return curToken, nil
-// 	}
-
-// 	if cursor.slice[cursor.index] == expected {
-// 		cursor.index++
-// 		return curToken, nil
-// 	} else {
-// 		return "", fmt.Errorf("expected '%s', but got '%s'", expected, cursor.slice[cursor.index])
-// 	}
-// }
 
 func (cursor *strSliceCursor) curTokenBeginWithNumber() bool {
 	if cursor.index >= len(cursor.slice) {
