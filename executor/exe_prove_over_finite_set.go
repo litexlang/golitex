@@ -56,7 +56,7 @@ func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.Prove
 	exec.NewEnv(exec.env)
 	defer exec.deleteEnvAndRetainMsg()
 
-	err := exec.defObjStmt(ast.NewDefObjStmt(stmt.Fact.Params, stmt.Fact.ParamSets, getParamEqualFcSlice(stmt.Fact.Params, cartesianProductAtI)), false)
+	err := exec.defObjStmt(ast.NewDefObjStmt(stmt.Fact.Params, stmt.Fact.ParamSets, getParamEqualFcSlice(stmt.Fact.Params, cartesianProductAtI), stmt.Line), false)
 	if err != nil {
 		return false, err
 	}
