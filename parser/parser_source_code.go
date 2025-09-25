@@ -48,7 +48,7 @@ func ParseSourceCode(code string) ([]ast.Stmt, error) {
 func preprocessSourceCode(code string) ([]string, error) {
 	processedCode := strings.ReplaceAll(code, "\t", glob.Scope4Indents)
 	lines := strings.Split(processedCode, "\n")
-	lines = preprocessComments(lines)
+	// lines = preprocessComments(lines)
 	return lines, nil
 }
 

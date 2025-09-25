@@ -1,12 +1,6 @@
-# Multivariate linear equation example: Solve the equation 2x + 3y = 10 and 4x + 5y = 14.
-# 多元线性方程组：解方程 2x + 3y = 10 和 4x + 5y = 14。
-
-let x R, y R:
-  2 * x + 3 * y = 10
-  4 * x + 5 * y = 14
-
-2 * (2 * x + 3 * y) = 2 * 10 = 4 * x + 6 * y
-y = (4 * x + 6 * y) - (4 * x + 5 * y) = 2 * 10 - 14 = 6
-2 * x + 3 * 6 = 10
-2 * x + 18 - 18 = 10 - 18 = -8
-x = (2 * x) / 2 = -8 / 2 = -4
+know @exist r2 ray st exist_a_ray_with_the_same_angel_with_given_ray_and_half_plane(a point, r1 ray, p half_plane, ang angle):
+    dom:
+        $point_on_ray(a, r1)
+        $half_plane_to_ray(a, r1, p)
+    <=>:    
+        $angle_equal(angle_of_two_rays_with_the_same_start_point(a, r1, r2), ang)
