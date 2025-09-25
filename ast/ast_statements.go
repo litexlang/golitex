@@ -24,12 +24,16 @@ type DefObjStmt struct {
 	Objs    StrSlice
 	ObjSets FcSlice
 	Facts   FactStmtSlice
+
+	Line uint
 }
 
 type DefHeader struct {
 	Name      FcAtom
 	Params    StrSlice
 	ParamSets FcSlice
+
+	Line uint
 }
 
 type DefPropStmt struct {
@@ -37,6 +41,8 @@ type DefPropStmt struct {
 	DomFacts  FactStmtSlice
 	IffFacts  FactStmtSlice
 	ThenFacts FactStmtSlice
+
+	Line uint
 }
 
 // 虽然它和 defProp 一样，但不排除之后要让iffFacts只能是可逆的事实
@@ -44,6 +50,8 @@ type DefExistPropStmtBody struct {
 	DefHeader DefHeader
 	DomFacts  FactStmtSlice
 	IffFacts  FactStmtSlice
+
+	Line uint
 }
 
 // how to  use not exist to prove and store not forall in iff section of exist_prop: define a new exist_prop, give a name to that forall, and make this exist_prop equivalent to original exist_prop. Then use prove_by_contradiction to prove the new exist_prop is also false, then the not forall is proved.
@@ -51,11 +59,15 @@ type DefExistPropStmt struct {
 	DefBody        DefExistPropStmtBody
 	ExistParams    StrSlice
 	ExistParamSets FcSlice
+
+	Line uint
 }
 
 type DefFnStmt struct {
 	Name       string
 	FnTemplate FnTStruct
+
+	Line uint
 }
 
 type UniFactStmt struct {
@@ -63,70 +75,98 @@ type UniFactStmt struct {
 	ParamSets FcSlice
 	DomFacts  FactStmtSlice
 	ThenFacts FactStmtSlice
+
+	Line uint
 }
 
 type UniFactWithIffStmt struct {
 	UniFact  UniFactStmt
 	IffFacts FactStmtSlice
+
+	Line uint
 }
 
 type SpecFactStmt struct {
 	TypeEnum SpecFactEnum
 	PropName FcAtom
 	Params   FcSlice
+
+	Line uint
 }
 
 type ClaimProveStmt struct {
 	ToCheckFact FactStmt
 	Proofs      StmtSlice
+
+	Line uint
 }
 
 type ClaimProveByContradictionStmt struct {
 	ClaimProveStmt ClaimProveStmt
+
+	Line uint
 }
 
 type ClaimPropStmt struct {
 	Prop    DefPropStmt
 	Proofs  StmtSlice
 	IsProve bool
+
+	Line uint
 }
 
 type KnowFactStmt struct {
 	Facts CanBeKnownStmtSlice
+
+	Line uint
 }
 
 type KnowPropStmt struct {
 	Prop DefPropStmt
+
+	Line uint
 }
 
 // TODO: 这个的parser还没有像claim_prop那样改成用@
 type ClaimExistPropStmt struct {
 	ExistProp DefExistPropStmt
 	Proofs    StmtSlice
+
+	Line uint
 }
 
 type HaveObjStStmt struct {
 	ObjNames StrSlice
 	Fact     SpecFactStmt
+
+	Line uint
 }
 
 type ProveInEachCaseStmt struct {
 	OrFact    OrStmt
 	ThenFacts FactStmtSlice
 	Proofs    []StmtSlice
+
+	Line uint
 }
 
 type OrStmt struct {
 	Facts SpecFactPtrSlice
+
+	Line uint
 }
 
 type ImportDirStmt struct {
 	Path      string
 	AsPkgName string
+
+	Line uint
 }
 
 type ProveStmt struct {
 	Proof StmtSlice
+
+	Line uint
 }
 
 // type DefFnTemplateStmt struct {
@@ -138,10 +178,14 @@ type ProveStmt struct {
 type EnumStmt struct {
 	CurSet Fc
 	Items  FcSlice
+
+	Line uint
 }
 
 type ImportFileStmt struct {
 	Path string
+
+	Line uint
 }
 
 // Fact表示一个事实，paramIndex表示第n位是变化的n $in N(默认第0位是开始)，其他参数固定，start是递归从start开始(默认从0开始)
@@ -156,23 +200,31 @@ type IntensionalSetStmt struct {
 	Param     string
 	ParentSet Fc
 	Proofs    SpecFactPtrSlice
+
+	Line uint
 }
 
 // 某种程度上这个关键词是不必要的，因为如果我发现涉及到的uniFact里面的所有的 paramSet 都是有 enum 的，那我就默认迭代去证明这个forall。但是我还是引入这个关键词以突出我现在用的是iterative的情况
 type ProveOverFiniteSetStmt struct {
 	Fact        UniFactStmt
 	ProofsSlice []StmtSlice
+
+	Line uint
 }
 
 // have xxx st exist_in 的语法糖
 type HaveObjInNonEmptySetStmt struct {
 	Objs    StrSlice
 	ObjSets FcSlice
+
+	Line uint
 }
 
 // 由朴素集合论，枚举法定义集合，用specification的方式去定义集合，是可以的。这样定义出来的集合的存在性是直接得到保证的。这个功能必须写入内核，因为have是引入新东西的方式。
 type HaveSetStmt struct {
 	Fact EnumSet_IntensionalSet_EqualDom
+
+	Line uint
 }
 
 // 定义返回值是集合的函数；这个的好处是，fn的定义不能保证函数的存在性；而have可以保证函数的存在性
@@ -181,6 +233,8 @@ type HaveSetFnStmt struct {
 	Param     string
 	ParentSet Fc
 	Proofs    SpecFactPtrSlice
+
+	Line uint
 }
 
 // TODO: 这里需要变成factStmt, haveSetInterface，而不是只被用在声明的时候
@@ -190,28 +244,40 @@ type HaveSetDefinedByReplacementStmt struct {
 	DomSet   Fc
 	RangeSet Fc
 	PropName FcAtom
+
+	Line uint
 }
 
 type NamedUniFactStmt struct {
 	DefPropStmt DefPropStmt
+
+	Line uint
 }
 
 type EqualsFactStmt struct {
 	Params FcSlice
+
+	Line uint
 }
 
 type KnowExistPropStmt struct {
 	ExistProp DefExistPropStmt
+
+	Line uint
 }
 
 type CommentStmt struct {
 	Comment string
+
+	Line uint
 }
 
 type FnTemplateDefStmt struct {
 	TemplateDefHeader DefHeader
 	TemplateDomFacts  FactStmtSlice
 	Fn                FnTStruct
+
+	Line uint
 }
 
 type FnTStruct struct {
@@ -220,40 +286,56 @@ type FnTStruct struct {
 	RetSet    Fc
 	DomFacts  FactStmtSlice
 	ThenFacts FactStmtSlice
+
+	Line uint
 }
 
-type ClearStmt struct{}
+type ClearStmt struct {
+	Line uint
+}
 
 type InlineFactsStmt struct {
 	Facts FactStmtSlice
+
+	Line uint
 }
 
 type ProveByInductionStmt struct {
 	Fact  *SpecFactStmt
 	Param string
 	Start Fc
+
+	Line uint
 }
 
 type HaveObjEqualStmt struct {
 	ObjNames    StrSlice
 	ObjEqualTos FcSlice
 	ObjSets     FcSlice
+
+	Line uint
 }
 
 type HaveFnEqualStmt struct {
 	DefHeader DefHeader
 	RetSet    Fc
 	EqualTo   Fc
+
+	Line uint
 }
 
 type HaveFnLiftStmt struct {
 	FnName                     string
 	Opt                        Fc
 	DomainOfEachParamOfGivenFn FcSlice
+
+	Line uint
 }
 
 type HaveFnStmt struct {
 	DefFnStmt        DefFnStmt
 	Proofs           StmtSlice
 	HaveObjSatisfyFn Fc
+
+	Line uint
 }
