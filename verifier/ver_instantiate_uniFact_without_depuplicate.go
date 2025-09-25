@@ -51,7 +51,7 @@ func useRandomParamToReplaceOriginalParamInUniFactWithIff(oldStmt *ast.UniFactWi
 		}
 	}
 
-	newStmtPtr := ast.NewUniFactWithIff(ast.NewUniFact(newParams, instantiatedOldStmtAsUniFactIff.UniFact.ParamSets, instantiatedOldStmtAsUniFactIff.UniFact.DomFacts, instantiatedOldStmtAsUniFactIff.UniFact.ThenFacts), instantiatedOldStmtAsUniFactIff.IffFacts)
+	newStmtPtr := ast.NewUniFactWithIff(ast.NewUniFact(newParams, instantiatedOldStmtAsUniFactIff.UniFact.ParamSets, instantiatedOldStmtAsUniFactIff.UniFact.DomFacts, instantiatedOldStmtAsUniFactIff.UniFact.ThenFacts, instantiatedOldStmtAsUniFactIff.UniFact.Line), instantiatedOldStmtAsUniFactIff.IffFacts, instantiatedOldStmtAsUniFactIff.UniFact.Line)
 
 	return newStmtPtr, paramMap, nil
 }
@@ -75,7 +75,7 @@ func useRandomParamToReplaceOriginalParamInUniFact(oldStmt *ast.UniFactStmt, par
 		}
 	}
 
-	newStmtPtr := ast.NewUniFact(newParams, instantiatedOldStmt.ParamSets, instantiatedOldStmt.DomFacts, instantiatedOldStmt.ThenFacts)
+	newStmtPtr := ast.NewUniFact(newParams, instantiatedOldStmt.ParamSets, instantiatedOldStmt.DomFacts, instantiatedOldStmt.ThenFacts, instantiatedOldStmt.Line)
 
 	return newStmtPtr, paramMap, nil
 }

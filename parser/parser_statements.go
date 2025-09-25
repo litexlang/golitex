@@ -162,7 +162,7 @@ func (tb *tokenBlock) enumFactualStmt(setName ast.Fc) (*ast.EnumStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	return ast.NewEnumStmt(setName, enumFcs), nil
+	return ast.NewEnumStmt(setName, enumFcs, tb.line), nil
 }
 
 func (tb *tokenBlock) orStmt() (*ast.OrStmt, error) {
@@ -189,7 +189,7 @@ func (tb *tokenBlock) orStmt() (*ast.OrStmt, error) {
 		orFacts = append(orFacts, fact)
 	}
 
-	return ast.NewOrStmt(orFacts), nil
+	return ast.NewOrStmt(orFacts, tb.line), nil
 }
 
 func (tb *tokenBlock) SpecFactOrOrStmt() (ast.FactStmt, error) {
@@ -302,9 +302,9 @@ func (tb *tokenBlock) uniFactInterface(uniFactDepth uniFactEnum) (ast.UniFactInt
 	}
 
 	if len(iffFacts) == 0 {
-		return ast.NewUniFact(params, setParams, domainFacts, thenFacts), nil
+		return ast.NewUniFact(params, setParams, domainFacts, thenFacts, tb.line), nil
 	} else {
-		ret := ast.NewUniFactWithIff(ast.NewUniFact(params, setParams, domainFacts, thenFacts), iffFacts)
+		ret := ast.NewUniFactWithIff(ast.NewUniFact(params, setParams, domainFacts, thenFacts, tb.line), iffFacts, tb.line)
 
 		if len(thenFacts) == 0 {
 			// return nil, fmt.Errorf("expect %s section to have at least one fact in %s", glob.KeywordThen, ret)
@@ -333,9 +333,9 @@ func (tb *tokenBlock) ifStmt(uniFactDepth uniFactEnum) (ast.UniFactInterface, er
 	}
 
 	if len(iffFacts) == 0 {
-		return ast.NewUniFact([]string{}, []ast.Fc{}, domainFacts, thenFacts), nil
+		return ast.NewUniFact([]string{}, []ast.Fc{}, domainFacts, thenFacts, tb.line), nil
 	} else {
-		ret := ast.NewUniFactWithIff(ast.NewUniFact([]string{}, []ast.Fc{}, domainFacts, thenFacts), iffFacts)
+		ret := ast.NewUniFactWithIff(ast.NewUniFact([]string{}, []ast.Fc{}, domainFacts, thenFacts, tb.line), iffFacts, tb.line)
 
 		if len(thenFacts) == 0 {
 			// return nil, fmt.Errorf("expect %s section to have at least one fact in %s", glob.KeywordThen, ret)
@@ -1056,7 +1056,7 @@ func (tb *tokenBlock) knowPropStmt() (*ast.KnowPropStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	return ast.NewKnowPropStmt(namedUniFact.DefPropStmt), nil
+	return ast.NewKnowPropStmt(namedUniFact.DefPropStmt, tb.line), nil
 }
 
 func (tb *tokenBlock) proveInEachCaseStmt() (*ast.ProveInEachCaseStmt, error) {
@@ -1108,7 +1108,7 @@ func (tb *tokenBlock) proveInEachCaseStmt() (*ast.ProveInEachCaseStmt, error) {
 		return nil, tbErr(fmt.Errorf("prove in each case: expect %d proofs, but got %d. expect the number of proofs to be the same as the number of facts in the or fact", len(orFact.Facts), len(proofs)), tb)
 	}
 
-	return ast.NewProveInEachCaseStmt(*orFact, thenFacts, proofs), nil
+	return ast.NewProveInEachCaseStmt(*orFact, thenFacts, proofs, tb.line), nil
 }
 
 func (tb *tokenBlock) param_paramSet_paramInSetFacts(endWith string, allowExceedEnd bool) ([]string, []ast.Fc, error) {
@@ -1211,14 +1211,14 @@ func (tb *tokenBlock) importStmt() (ast.ImportStmtInterface, error) {
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
-		return ast.NewImportStmt(importPath, asPkgName), nil
+		return ast.NewImportStmt(importPath, asPkgName, tb.line), nil
 	} else {
 		if strings.HasSuffix(importPath, ".lix") {
 			return ast.NewImportFileStmt(importPath), nil
 		} else {
 			// 得到 path 的最后一位，默认是 repo 的 repo 名
 			lastPart := filepath.Base(importPath)
-			return ast.NewImportStmt(importPath, lastPart), nil
+			return ast.NewImportStmt(importPath, lastPart, tb.line), nil
 		}
 	}
 
@@ -1265,7 +1265,7 @@ func (tb *tokenBlock) proveStmt() (*ast.ProveStmt, error) {
 		proof = append(proof, curStmt)
 	}
 
-	return ast.NewProveStmt(proof), nil
+	return ast.NewProveStmt(proof, tb.line), nil
 }
 
 // called by exist_prop and prop def
@@ -1328,7 +1328,7 @@ func (tb *tokenBlock) defFnStmt(skipFn bool) (*ast.DefFnStmt, error) {
 			}
 
 			if !tb.header.is(glob.KeySymbolEqualLarger) {
-				return ast.NewDefFnStmt(string(decl.Name), ast.NewFnTStruct(decl.Params, decl.ParamSets, retSet, domFacts, thenFacts)), nil
+				return ast.NewDefFnStmt(string(decl.Name), ast.NewFnTStruct(decl.Params, decl.ParamSets, retSet, domFacts, thenFacts), tb.line), nil
 			}
 
 			err = tb.header.skip(glob.KeySymbolEqualLarger)
@@ -1353,7 +1353,7 @@ func (tb *tokenBlock) defFnStmt(skipFn bool) (*ast.DefFnStmt, error) {
 		thenFacts = append(thenFacts, unitFacts...)
 	}
 
-	return ast.NewDefFnStmt(string(decl.Name), ast.NewFnTStruct(decl.Params, decl.ParamSets, retSet, domFacts, thenFacts)), nil
+	return ast.NewDefFnStmt(string(decl.Name), ast.NewFnTStruct(decl.Params, decl.ParamSets, retSet, domFacts, thenFacts), tb.line), nil
 }
 
 func (tb *tokenBlock) claimPropStmt() (*ast.ClaimPropStmt, error) {
