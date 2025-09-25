@@ -25,7 +25,7 @@ func (fnTemplate *FnTStruct) DeriveUniFact_WithGivenFn(fc Fc) (*UniFactStmt, err
 	thenFacts := []FactStmt{NewInFactWithParamFc(NewFcFn(fc, paramAsFc), fnTemplate.RetSet)}
 	thenFacts = append(thenFacts, fnTemplate.ThenFacts...)
 
-	notInstantiated := NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, thenFacts)
+	notInstantiated := NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, thenFacts, fnTemplate.Line)
 
 	return notInstantiated, nil
 }
@@ -39,7 +39,7 @@ func (fnTemplate *FnTStruct) DeriveUniFact(defFnTemplateName string, fnFc Fc, te
 	thenFacts := []FactStmt{NewInFactWithParamFc(NewFcFn(fnFc, paramAsFc), fnTemplate.RetSet)}
 	thenFacts = append(thenFacts, fnTemplate.ThenFacts...)
 
-	notInstantiated := NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, thenFacts)
+	notInstantiated := NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, thenFacts, fnTemplate.Line)
 
 	uniMap := glob.CopyMap(templateParamUniMap)
 	uniMap[defFnTemplateName] = fnFc

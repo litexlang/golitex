@@ -25,19 +25,19 @@ func (stmt *SpecFactStmt) IsBuiltinInfixRelaProp() bool {
 }
 
 func (stmt *UniFactWithIffStmt) NewUniFactWithThenToIff() *UniFactStmt {
-	newUniFact := NewUniFact(stmt.UniFact.Params, stmt.UniFact.ParamSets, stmt.UniFact.DomFacts, stmt.IffFacts)
+	newUniFact := NewUniFact(stmt.UniFact.Params, stmt.UniFact.ParamSets, stmt.UniFact.DomFacts, stmt.IffFacts, stmt.UniFact.Line)
 	newUniFact.DomFacts = append(newUniFact.DomFacts, stmt.UniFact.ThenFacts...)
 	return newUniFact
 }
 
 func (stmt *UniFactWithIffStmt) NewUniFactWithIffToThen() *UniFactStmt {
-	newUniFact := NewUniFact(stmt.UniFact.Params, stmt.UniFact.ParamSets, stmt.UniFact.DomFacts, stmt.UniFact.ThenFacts)
+	newUniFact := NewUniFact(stmt.UniFact.Params, stmt.UniFact.ParamSets, stmt.UniFact.DomFacts, stmt.UniFact.ThenFacts, stmt.UniFact.Line)
 	newUniFact.DomFacts = append(newUniFact.DomFacts, stmt.IffFacts...)
 	return newUniFact
 }
 
 func MergeOuterInnerUniFacts(outer *UniFactStmt, inner *UniFactStmt) *UniFactStmt {
-	newOuter := NewUniFact(outer.Params, outer.ParamSets, outer.DomFacts, inner.ThenFacts)
+	newOuter := NewUniFact(outer.Params, outer.ParamSets, outer.DomFacts, inner.ThenFacts, outer.Line)
 
 	newOuter.Params = append(newOuter.Params, inner.Params...)
 	newOuter.ParamSets = append(newOuter.ParamSets, inner.ParamSets...)
@@ -62,14 +62,14 @@ func (defStmt *DefPropStmt) Make_PropToIff_IffToProp() (*UniFactStmt, *UniFactSt
 	propToIffDomFacts := []FactStmt{propSpecFact}
 	propToIffDomFacts = append(propToIffDomFacts, defStmt.DomFacts...)
 
-	propToIff := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.ParamSets, propToIffDomFacts, defStmt.IffFacts)
+	propToIff := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.ParamSets, propToIffDomFacts, defStmt.IffFacts, defStmt.Line)
 
 	// iff to prop
 	IffToPropDomFacts := []FactStmt{}
 	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.DomFacts...)
 	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.IffFacts...)
 
-	IffToProp := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.ParamSets, IffToPropDomFacts, []FactStmt{propSpecFact})
+	IffToProp := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.ParamSets, IffToPropDomFacts, []FactStmt{propSpecFact}, defStmt.Line)
 
 	return propToIff, IffToProp, nil
 }
@@ -86,7 +86,7 @@ func (defStmt *DefPropStmt) IffToPropUniFact() *UniFactStmt {
 	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.DomFacts...)
 	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.IffFacts...)
 
-	IffToProp := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.ParamSets, IffToPropDomFacts, []FactStmt{propSpecFact})
+	IffToProp := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.ParamSets, IffToPropDomFacts, []FactStmt{propSpecFact}, defStmt.Line)
 
 	return IffToProp
 }
@@ -314,8 +314,8 @@ func TransformEnumToUniFact(setName Fc, enumFcs []Fc) (*UniFactStmt, []*SpecFact
 		}
 	}
 
-	orFact := NewOrStmt(equalFactsInOrFact)
-	forallItemInSetEqualToOneOfGivenItems := NewUniFact([]string{string(freeObjName)}, []Fc{setName}, []FactStmt{}, []FactStmt{orFact})
+	orFact := NewOrStmt(equalFactsInOrFact, glob.InnerGenLine)
+	forallItemInSetEqualToOneOfGivenItems := NewUniFact([]string{string(freeObjName)}, []Fc{setName}, []FactStmt{}, []FactStmt{orFact}, glob.InnerGenLine)
 
 	return forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts
 }
@@ -326,20 +326,20 @@ func (stmt *IntensionalSetStmt) ToEquivalentUniFacts() (*UniFactStmt, *UniFactSt
 		leftDomFacts = append(leftDomFacts, proof)
 	}
 
-	leftUniFact := NewUniFact([]string{stmt.Param}, []Fc{stmt.ParentSet}, leftDomFacts, []FactStmt{NewInFact(stmt.Param, stmt.CurSet)})
+	leftUniFact := NewUniFact([]string{stmt.Param}, []Fc{stmt.ParentSet}, leftDomFacts, []FactStmt{NewInFact(stmt.Param, stmt.CurSet)}, glob.InnerGenLine)
 
 	rightThenFacts := []FactStmt{NewInFact(stmt.Param, stmt.ParentSet)}
 	for _, proof := range stmt.Proofs {
 		rightThenFacts = append(rightThenFacts, proof)
 	}
 
-	rightUniFact := NewUniFact([]string{stmt.Param}, []Fc{stmt.CurSet}, []FactStmt{}, rightThenFacts)
+	rightUniFact := NewUniFact([]string{stmt.Param}, []Fc{stmt.CurSet}, []FactStmt{}, rightThenFacts, glob.InnerGenLine)
 
 	return leftUniFact, rightUniFact, nil
 }
 
 func (stmt *HaveSetFnStmt) ToDefFnStmt() *DefFnStmt {
-	return NewDefFnStmt(string(stmt.DefHeader.Name), NewFnTStruct(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, FcAtom(glob.KeywordSet), []FactStmt{}, []FactStmt{stmt.ToIntensionalSetStmt()}))
+	return NewDefFnStmt(string(stmt.DefHeader.Name), NewFnTStruct(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, FcAtom(glob.KeywordSet), []FactStmt{}, []FactStmt{stmt.ToIntensionalSetStmt()}), stmt.Line)
 }
 
 func (stmt *HaveSetFnStmt) ToIntensionalSetStmt() *IntensionalSetStmt {

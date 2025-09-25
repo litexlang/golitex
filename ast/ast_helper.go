@@ -60,7 +60,7 @@ func ReverseSliceOfReversibleFacts(facts []Spec_OrFact) []Spec_OrFact {
 		reversedSpecFacts[i] = specFact.ReverseTrue()
 	}
 
-	orFact_GotBYReversedSpecFacts := NewOrStmt(reversedSpecFacts)
+	orFact_GotBYReversedSpecFacts := NewOrStmt(reversedSpecFacts, glob.InnerGenLine)
 	ret = append(ret, orFact_GotBYReversedSpecFacts)
 
 	specFacts_GotByReversedOrFacts := []*SpecFactStmt{}
@@ -165,7 +165,7 @@ func (head DefHeader) ToSpecFact() *SpecFactStmt {
 }
 
 func (stmt *DefPropStmt) ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue() *UniFactStmt {
-	return NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, []FactStmt{stmt.DefHeader.ToSpecFact()}, stmt.ThenFacts)
+	return NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, []FactStmt{stmt.DefHeader.ToSpecFact()}, stmt.ThenFacts, glob.InnerGenLine)
 }
 
 func (stmt *DefExistPropStmt) ToProp() *SpecFactStmt {
@@ -174,11 +174,11 @@ func (stmt *DefExistPropStmt) ToProp() *SpecFactStmt {
 }
 
 func (stmt *DefExistPropStmt) ToForallParamsSatisfyDomFacts_Then_ExistFactIsTrue() *UniFactStmt {
-	return NewUniFact(stmt.ExistParams, stmt.ExistParamSets, stmt.DefBody.DomFacts, []FactStmt{stmt.ToProp()})
+	return NewUniFact(stmt.ExistParams, stmt.ExistParamSets, stmt.DefBody.DomFacts, []FactStmt{stmt.ToProp()}, glob.InnerGenLine)
 }
 
 func (stmt *NamedUniFactStmt) ToUniFact() *UniFactStmt {
-	return NewUniFact(stmt.DefPropStmt.DefHeader.Params, stmt.DefPropStmt.DefHeader.ParamSets, stmt.DefPropStmt.IffFacts, stmt.DefPropStmt.ThenFacts)
+	return NewUniFact(stmt.DefPropStmt.DefHeader.Params, stmt.DefPropStmt.DefHeader.ParamSets, stmt.DefPropStmt.IffFacts, stmt.DefPropStmt.ThenFacts, glob.InnerGenLine)
 }
 
 func (fcFn *FcFn) IsFcFn_HasAtomHead_ReturnHead() (FcAtom, bool) {
