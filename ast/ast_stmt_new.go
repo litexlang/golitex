@@ -54,44 +54,44 @@ func NewExistPropDef(declHeader *DefHeader, domFacts []FactStmt, iffFacts []Fact
 	return &DefExistPropStmtBody{*declHeader, domFacts, iffFacts, line}
 }
 
-func NewUniFact(params []string, setParams []Fc, domFacts []FactStmt, thenFacts []FactStmt) *UniFactStmt {
-	return &UniFactStmt{params, setParams, domFacts, thenFacts, 0}
+func NewUniFact(params []string, setParams []Fc, domFacts []FactStmt, thenFacts []FactStmt, line uint) *UniFactStmt {
+	return &UniFactStmt{params, setParams, domFacts, thenFacts, line}
 }
 
-func NewUniFactWithIff(uniFact *UniFactStmt, iffFacts []FactStmt) *UniFactWithIffStmt {
-	return &UniFactWithIffStmt{*uniFact, iffFacts, 0}
+func NewUniFactWithIff(uniFact *UniFactStmt, iffFacts []FactStmt, line uint) *UniFactWithIffStmt {
+	return &UniFactWithIffStmt{*uniFact, iffFacts, line}
 }
 
-func NewProveInEachCaseStmt(orFact OrStmt, thenFacts []FactStmt, proofs []StmtSlice) *ProveInEachCaseStmt {
-	return &ProveInEachCaseStmt{orFact, thenFacts, proofs, 0}
+func NewProveInEachCaseStmt(orFact OrStmt, thenFacts []FactStmt, proofs []StmtSlice, line uint) *ProveInEachCaseStmt {
+	return &ProveInEachCaseStmt{orFact, thenFacts, proofs, line}
 }
 
-func NewKnowPropStmt(prop DefPropStmt) *KnowPropStmt {
-	return &KnowPropStmt{prop, 0}
+func NewKnowPropStmt(prop DefPropStmt, line uint) *KnowPropStmt {
+	return &KnowPropStmt{prop, line}
 }
 
-func NewDefExistPropBodyStmt(defHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt) *DefExistPropStmtBody {
-	return &DefExistPropStmtBody{*defHeader, domFacts, iffFacts, 0}
+func NewDefExistPropBodyStmt(defHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt, line uint) *DefExistPropStmtBody {
+	return &DefExistPropStmtBody{*defHeader, domFacts, iffFacts, line}
 }
 
-func NewOrStmt(orFacts []*SpecFactStmt) *OrStmt {
-	return &OrStmt{orFacts, 0}
+func NewOrStmt(orFacts []*SpecFactStmt, line uint) *OrStmt {
+	return &OrStmt{orFacts, line}
 }
 
-func NewImportStmt(path string, asPkgName string) *ImportDirStmt {
-	return &ImportDirStmt{path, asPkgName, 0}
+func NewImportStmt(path string, asPkgName string, line uint) *ImportDirStmt {
+	return &ImportDirStmt{path, asPkgName, line}
 }
 
-func NewProveStmt(proof []Stmt) *ProveStmt {
-	return &ProveStmt{proof, 0}
+func NewProveStmt(proof []Stmt, line uint) *ProveStmt {
+	return &ProveStmt{proof, line}
 }
 
-func NewDefFnStmt(name string, fnTemplate *FnTStruct) *DefFnStmt {
-	return &DefFnStmt{name, *fnTemplate, 0}
+func NewDefFnStmt(name string, fnTemplate *FnTStruct, line uint) *DefFnStmt {
+	return &DefFnStmt{name, *fnTemplate, line}
 }
 
-func NewEnumStmt(enumName Fc, enumValues []Fc) *EnumStmt {
-	return &EnumStmt{enumName, enumValues, 0}
+func NewEnumStmt(enumName Fc, enumValues []Fc, line uint) *EnumStmt {
+	return &EnumStmt{enumName, enumValues, line}
 }
 
 func NewImportFileStmt(path string) *ImportFileStmt {
@@ -105,10 +105,6 @@ func NewClaimPropStmt(prop *DefPropStmt, proofs []Stmt, isProve bool) *ClaimProp
 func NewClaimExistPropStmt(existProp *DefExistPropStmt, proofs []Stmt) *ClaimExistPropStmt {
 	return &ClaimExistPropStmt{*existProp, proofs, 0}
 }
-
-// func NewProveByMathInductionStmt(fact *SpecFactStmt, paramIndex int, start int) *ProveByMathInductionStmt {
-// 	return &ProveByMathInductionStmt{fact, paramIndex, start}
-// }
 
 func NewIntensionalSetStmt(curSet Fc, param string, parentSet Fc, proofs []*SpecFactStmt) *IntensionalSetStmt {
 	return &IntensionalSetStmt{curSet, param, parentSet, proofs, 0}

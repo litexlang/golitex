@@ -39,7 +39,7 @@ func (stmt *UniFactStmt) ReplaceFc(oldFc Fc, newFc Fc) FactStmt {
 		newThenFacts[i] = thenFact.ReplaceFc(oldFc, newFc)
 	}
 
-	return NewUniFact(stmt.Params, newParamSets, newDomFacts, newThenFacts)
+	return NewUniFact(stmt.Params, newParamSets, newDomFacts, newThenFacts, stmt.Line)
 }
 
 func (stmt *UniFactWithIffStmt) ReplaceFc(oldFc Fc, newFc Fc) FactStmt {

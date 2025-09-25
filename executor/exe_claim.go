@@ -293,7 +293,7 @@ func (exec *Executor) claimPropStmt(stmt *ast.ClaimPropStmt) (glob.ExecState, er
 	var execState glob.ExecState = glob.ExecState_Error
 
 	// prop all atoms declared
-	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.DomFacts, stmt.Prop.IffFacts)
+	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.DomFacts, stmt.Prop.IffFacts, stmt.Line)
 	if !exec.env.AreAtomsInFactAreDeclared(uniFact, map[string]struct{}{}) && !exec.env.IsFcAtomDeclaredByUser(ast.FcAtom(stmt.Prop.DefHeader.Name)) {
 		return glob.ExecState_Error, fmt.Errorf("claim prop statement error: atoms in fact are not declared")
 	}
@@ -312,7 +312,7 @@ func (exec *Executor) claimPropStmt(stmt *ast.ClaimPropStmt) (glob.ExecState, er
 	}
 
 	// know exec
-	err = exec.knowPropStmt(ast.NewKnowPropStmt(stmt.Prop))
+	err = exec.knowPropStmt(ast.NewKnowPropStmt(stmt.Prop, stmt.Line))
 	if notOkExec(execState, err) {
 		return execState, err
 	}
@@ -329,7 +329,7 @@ func (exec *Executor) checkClaimExistPropStmtProofs(stmt *ast.ClaimExistPropStmt
 }
 
 func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimPropStmt) (glob.ExecState, error) {
-	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFacts, stmt.Prop.ThenFacts)
+	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFacts, stmt.Prop.ThenFacts, stmt.Line)
 
 	exec.NewEnv(exec.env)
 	defer func() {

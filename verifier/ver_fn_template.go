@@ -81,7 +81,7 @@ func (ver *Verifier) leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftFnTStruc
 	uniParamSets := instRightFnT.ParamSets
 	uniDom := instRightFnT.DomFacts
 	uniThen := leftDom
-	uniFact := ast.NewUniFact(uniParams, uniParamSets, uniDom, uniThen)
+	uniFact := ast.NewUniFact(uniParams, uniParamSets, uniDom, uniThen, rightFnTDef.Line)
 
 	ok, err := ver.VerFactStmt(uniFact, state)
 	if err != nil {
