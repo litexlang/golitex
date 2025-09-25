@@ -108,7 +108,7 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
 	// postprocess
 	if fact.IsExist_St_Fact() {
 		if fact.PropName == glob.KeywordExistIn {
-			existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordExistIn), []ast.Fc{fact.Params[2]})
+			existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordExistIn), []ast.Fc{fact.Params[2]}, fact.Line)
 			err := env.storeSpecFactInMem(existInFact)
 			return err
 		}
@@ -277,7 +277,7 @@ func (env *Env) newFalseExistFact_EmitEquivalentUniFact(fact *ast.SpecFactStmt) 
 func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 	_, factParams := ast.GetExistFactExistParamsAndFactParams(fact)
 
-	existFact := ast.NewSpecFactStmt(ast.TruePure, fact.PropName, factParams)
+	existFact := ast.NewSpecFactStmt(ast.TruePure, fact.PropName, factParams, fact.Line)
 
 	// err := env.KnownFacts.SpecFactMem.NewFactInSpecFactMem(existFact, env.CurMatchEnv)
 	err := env.storeSpecFactInMem(existFact)
@@ -464,7 +464,7 @@ func (env *Env) ExecDefFnTemplate(stmt *ast.FnTemplateDefStmt) error {
 func (env *Env) newEnumFact(stmt *ast.EnumStmt) error {
 	forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts := ast.TransformEnumToUniFact(stmt.CurSet, stmt.Items)
 
-	err := env.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.CurSet, ast.FcAtom(glob.KeywordSet)}))
+	err := env.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.CurSet, ast.FcAtom(glob.KeywordSet)}, stmt.Line))
 	if err != nil {
 		return err
 	}
@@ -499,7 +499,7 @@ func (env *Env) newEnumFact(stmt *ast.EnumStmt) error {
 	lengthOfSet := strconv.Itoa(len(stmt.Items))
 	lengthOfSetAsFcAtom := ast.FcAtom(lengthOfSet)
 
-	lenFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{ast.NewFcFn(ast.FcAtom(glob.KeywordLen), []ast.Fc{stmt.CurSet}), lengthOfSetAsFcAtom})
+	lenFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{ast.NewFcFn(ast.FcAtom(glob.KeywordLen), []ast.Fc{stmt.CurSet}), lengthOfSetAsFcAtom}, stmt.Line)
 	err = env.NewFact(lenFact)
 	if err != nil {
 		return err

@@ -81,7 +81,7 @@ func (ver *Verifier) isSpecFactCommutative(stmt *ast.SpecFactStmt) (bool, error)
 		return true, nil
 	}
 
-	ok, err := ver.verSpecFact_BySpecMem(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordCommutativeProp), []ast.Fc{stmt.PropName}), Round0NoMsg)
+	ok, err := ver.verSpecFact_BySpecMem(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordCommutativeProp), []ast.Fc{stmt.PropName}, stmt.Line), Round0NoMsg)
 	if err != nil {
 		return false, err
 	}

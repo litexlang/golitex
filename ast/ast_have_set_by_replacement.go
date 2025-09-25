@@ -22,11 +22,11 @@ func GetForallXOnlyOneYSatisfyGivenProp(domSet, rangeSet Fc, propName FcAtom) *U
 	params := []string{"x", "y1", "y2"}
 	setParams := []Fc{domSet, rangeSet, rangeSet}
 	domFacts := []FactStmt{
-		NewSpecFactStmt(TruePure, propName, []Fc{FcAtom("x"), FcAtom("y1")}),
-		NewSpecFactStmt(TruePure, propName, []Fc{FcAtom("x"), FcAtom("y2")}),
+		NewSpecFactStmt(TruePure, propName, []Fc{FcAtom("x"), FcAtom("y1")}, glob.InnerGenLine),
+		NewSpecFactStmt(TruePure, propName, []Fc{FcAtom("x"), FcAtom("y2")}, glob.InnerGenLine),
 	}
 	thenFacts := []FactStmt{
-		NewSpecFactStmt(TruePure, FcAtom(glob.LastTwoObjectsAreEqual), []Fc{FcAtom("x"), FcAtom("y1"), FcAtom("y2")}),
+		NewSpecFactStmt(TruePure, FcAtom(glob.LastTwoObjectsAreEqual), []Fc{FcAtom("x"), FcAtom("y1"), FcAtom("y2")}, glob.InnerGenLine),
 	}
 	return NewUniFact(params, setParams, domFacts, thenFacts)
 }
@@ -35,7 +35,7 @@ func ForallYInSetDefinedByReplacementThereIsXSTProp_X_YIsTrue(setDefinedByReplac
 	params := []string{"x"}
 	setParams := []Fc{setDefinedByReplacement}
 
-	specFact := NewSpecFactStmt(TruePure, FcAtom(glob.KeywordExistPropPreImageByReplacement), []Fc{setDefinedByReplacement.Params[0], setDefinedByReplacement.Params[1], setDefinedByReplacement.Params[2], FcAtom("x")})
+	specFact := NewSpecFactStmt(TruePure, FcAtom(glob.KeywordExistPropPreImageByReplacement), []Fc{setDefinedByReplacement.Params[0], setDefinedByReplacement.Params[1], setDefinedByReplacement.Params[2], FcAtom("x")}, glob.InnerGenLine)
 
 	return NewUniFact(params, setParams, []FactStmt{}, []FactStmt{specFact})
 }

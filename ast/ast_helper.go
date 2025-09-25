@@ -21,7 +21,7 @@ import (
 )
 
 func EqualFact(left, right Fc) *SpecFactStmt {
-	return NewSpecFactStmt(TruePure, FcAtom(glob.KeySymbolEqual), []Fc{left, right})
+	return NewSpecFactStmt(TruePure, FcAtom(glob.KeySymbolEqual), []Fc{left, right}, glob.InnerGenLine)
 }
 
 func (stmt *UniFactStmt) ParamInParamSetFacts(uniConMap map[string]Fc) []*SpecFactStmt {
@@ -77,7 +77,7 @@ func ReverseSliceOfReversibleFacts(facts []Spec_OrFact) []Spec_OrFact {
 }
 
 func NewEqualFact(left, right Fc) *SpecFactStmt {
-	return NewSpecFactStmt(TruePure, FcAtom(glob.KeySymbolEqual), []Fc{left, right})
+	return NewSpecFactStmt(TruePure, FcAtom(glob.KeySymbolEqual), []Fc{left, right}, glob.InnerGenLine)
 }
 
 func IsFcFnWithHeadName(fc Fc, headName string) bool {
@@ -148,7 +148,7 @@ func (stmt *EqualsFactStmt) ToEqualFacts_PairwiseCombination() []*SpecFactStmt {
 }
 
 func (stmt *ClaimPropStmt) ToProp() *DefPropStmt {
-	return NewDefPropStmt(&stmt.Prop.DefHeader, stmt.Prop.DomFacts, stmt.Prop.IffFacts, []FactStmt{})
+	return NewDefPropStmt(&stmt.Prop.DefHeader, stmt.Prop.DomFacts, stmt.Prop.IffFacts, []FactStmt{}, stmt.GetLine())
 }
 
 func (strSlice StrSlice) ToFcSlice() []Fc {
@@ -161,7 +161,7 @@ func (strSlice StrSlice) ToFcSlice() []Fc {
 
 func (head DefHeader) ToSpecFact() *SpecFactStmt {
 	params := head.Params.ToFcSlice()
-	return NewSpecFactStmt(TruePure, FcAtom(head.Name), params)
+	return NewSpecFactStmt(TruePure, FcAtom(head.Name), params, glob.InnerGenLine)
 }
 
 func (stmt *DefPropStmt) ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue() *UniFactStmt {
@@ -170,7 +170,7 @@ func (stmt *DefPropStmt) ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue() *
 
 func (stmt *DefExistPropStmt) ToProp() *SpecFactStmt {
 	params := stmt.DefBody.DefHeader.Params.ToFcSlice()
-	return NewSpecFactStmt(TruePure, FcAtom(stmt.DefBody.DefHeader.Name), params)
+	return NewSpecFactStmt(TruePure, FcAtom(stmt.DefBody.DefHeader.Name), params, glob.InnerGenLine)
 }
 
 func (stmt *DefExistPropStmt) ToForallParamsSatisfyDomFacts_Then_ExistFactIsTrue() *UniFactStmt {

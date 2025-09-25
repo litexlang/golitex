@@ -18,20 +18,16 @@ func NewDefObjStmt(objs []string, objSets []Fc, facts []FactStmt, line uint) *De
 	return &DefObjStmt{objs, objSets, facts, line}
 }
 
-func NewDefPropStmt(defHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt, thenFacts []FactStmt) *DefPropStmt {
-	return &DefPropStmt{*defHeader, domFacts, iffFacts, thenFacts, 0}
+func NewDefPropStmt(defHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt, thenFacts []FactStmt, line uint) *DefPropStmt {
+	return &DefPropStmt{*defHeader, domFacts, iffFacts, thenFacts, line}
 }
 
-func NewDefExistPropStmt(def *DefExistPropStmtBody, existParams []string, existParamSets []Fc) *DefExistPropStmt {
-	return &DefExistPropStmt{*def, existParams, existParamSets, 0}
+func NewDefExistPropStmt(def *DefExistPropStmtBody, existParams []string, existParamSets []Fc, line uint) *DefExistPropStmt {
+	return &DefExistPropStmt{*def, existParams, existParamSets, line}
 }
 
-// func NewFnTemplateStmt(defHeader *DefHeader, domFacts []FactStmt, thenFacts []FactStmt, retSet Fc) *FnTemplateStmt {
-// 	return &FnTemplateStmt{*defHeader, domFacts, thenFacts, retSet}
-// }
-
-func NewSpecFactStmt(typeEnum SpecFactEnum, propName FcAtom, params []Fc) *SpecFactStmt {
-	return &SpecFactStmt{typeEnum, propName, params, 0}
+func NewSpecFactStmt(typeEnum SpecFactEnum, propName FcAtom, params []Fc, line uint) *SpecFactStmt {
+	return &SpecFactStmt{typeEnum, propName, params, line}
 }
 
 func NewClaimProveByContradictionStmt(claim ClaimProveStmt) *ClaimProveByContradictionStmt {
