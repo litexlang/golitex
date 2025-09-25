@@ -137,7 +137,7 @@ func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]tokenBlock, error
 
 		// 处理行内注释：截断 // 后面的内容
 		lineForTokenize := line
-		if idx := strings.Index(line, "//"); idx >= 0 {
+		if idx := strings.Index(line, "#"); idx >= 0 {
 			lineForTokenize = line[:idx]
 		}
 
@@ -152,7 +152,7 @@ func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]tokenBlock, error
 		t.currentLine++ // consume this line
 
 		// 如果当前行以 : 结尾，需要解析子块
-		if strings.HasSuffix(line, ":") {
+		if tokens[len(tokens)-1] == ":" {
 			// 找到第一个非空、非注释的子行来确定缩进
 			for t.currentLine < len(t.lines) {
 				nextLine := t.lines[t.currentLine]
