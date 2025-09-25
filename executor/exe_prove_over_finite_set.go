@@ -124,7 +124,7 @@ func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.Prove
 func getParamEqualFcSlice(params []string, equalTo []ast.Fc) []ast.FactStmt {
 	result := []ast.FactStmt{}
 	for i, param := range params {
-		result = append(result, ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{ast.FcAtom(param), equalTo[i]}))
+		result = append(result, ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{ast.FcAtom(param), equalTo[i]}, glob.InnerGenLine))
 	}
 	return result
 }

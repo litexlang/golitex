@@ -55,7 +55,7 @@ func executeCodeAndReturnMessageSlice(code string) ([]string, glob.SysSignal, er
 			return msgOfTopStatements, glob.SysSignalRuntimeError, err
 		}
 		if execState != glob.ExecState_True {
-			return msgOfTopStatements, glob.SysSignalRuntimeError, fmt.Errorf("execution failed")
+			return msgOfTopStatements, glob.SysSignalRuntimeError, fmt.Errorf("execution failed at line %d", topStmt.GetLine())
 		}
 	}
 
