@@ -211,7 +211,7 @@ func (s *EqualsFactStmt) InlineString() string {
 }
 
 func (s *KnowExistPropStmt) InlineString() string { panic("") }
-func (s *CommentStmt) InlineString() string       { panic("") }
+func (s *LatexStmt) InlineString() string         { panic("") }
 func (s *FnTemplateDefStmt) InlineString() string { panic("") }
 func (s *ClearStmt) InlineString() string         { return s.String() }
 func (s *InlineFactsStmt) InlineString() string   { return inlineFactsString(s.Facts) }
@@ -312,4 +312,8 @@ func (s *HaveFnLiftStmt) InlineString() string {
 
 func (s *HaveFnStmt) InlineString() string {
 	return "TODO"
+}
+
+func (s *MarkdownStmt) InlineString() string {
+	return s.Markdown
 }

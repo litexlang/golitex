@@ -142,8 +142,8 @@ func NewKnowExistPropStmt(existProp DefExistPropStmt, line uint) *KnowExistPropS
 	return &KnowExistPropStmt{existProp, line}
 }
 
-func NewCommentStmt(comment string, line uint) *CommentStmt {
-	return &CommentStmt{comment, line}
+func NewLatexStmt(comment string, line uint) *LatexStmt {
+	return &LatexStmt{comment, line}
 }
 
 func NewFnTemplateStmt(defHeader *DefHeader, templateDomFacts []FactStmt, fnTStruct *FnTStruct, line uint) *FnTemplateDefStmt {
@@ -180,4 +180,8 @@ func NewHaveFnLiftStmt(fnName string, opt Fc, domainOfEachParamOfGivenFn []Fc, l
 
 func NewClaimHaveFnStmt(defFnStmt *DefFnStmt, proof []Stmt, haveObjSatisfyFn Fc, line uint) *HaveFnStmt {
 	return &HaveFnStmt{*defFnStmt, proof, haveObjSatisfyFn, line}
+}
+
+func NewMarkdownStmt(comment string, line uint) *MarkdownStmt {
+	return &MarkdownStmt{comment, line}
 }
