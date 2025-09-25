@@ -26,7 +26,7 @@ func (exec *Executor) assumeStmtIsTrueRun(stmt ast.Stmt) (glob.ExecState, error)
 
 	switch stmt := (stmt).(type) {
 	case ast.FactStmt:
-		knowFact := ast.NewKnowStmt([]ast.CanBeKnownStmt{stmt})
+		knowFact := ast.NewKnowStmt([]ast.CanBeKnownStmt{stmt}, stmt.GetLine())
 		err = exec.knowStmt(knowFact)
 	case *ast.KnowFactStmt:
 		err = exec.knowStmt(stmt)

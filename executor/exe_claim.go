@@ -180,7 +180,7 @@ func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByCo
 	}
 
 	// 检查 stmt fact 中的所有元素已经定义过了
-	exec.knowStmt(ast.NewKnowStmt([]ast.CanBeKnownStmt{stmt.ClaimProveStmt.ToCheckFact}))
+	exec.knowStmt(ast.NewKnowStmt([]ast.CanBeKnownStmt{stmt.ClaimProveStmt.ToCheckFact}, stmt.ClaimProveStmt.Line))
 
 	return glob.ExecState_True, nil
 }
@@ -257,7 +257,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 	}
 
 	// know dom facts
-	err = exec.knowStmt(ast.NewKnowStmt(asUnivFact.DomFacts.ToCanBeKnownStmtSlice()))
+	err = exec.knowStmt(ast.NewKnowStmt(asUnivFact.DomFacts.ToCanBeKnownStmtSlice(), stmt.Line))
 	if err != nil {
 		return false, err
 	}
@@ -336,7 +336,7 @@ func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimPropStmt) (glob.Ex
 		exec.deleteEnvAndRetainMsg()
 	}()
 
-	ok, err := exec.claimStmtProveUniFact(ast.NewClaimProveStmt(uniFact, stmt.Proofs))
+	ok, err := exec.claimStmtProveUniFact(ast.NewClaimProveStmt(uniFact, stmt.Proofs, stmt.Line))
 	if err != nil {
 		return glob.ExecState_Error, err
 	}

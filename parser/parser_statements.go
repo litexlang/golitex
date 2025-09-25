@@ -502,7 +502,7 @@ func (tb *tokenBlock) claimStmt() (ast.ClaimInterface, error) {
 		if len(tb.body) != 1 {
 			return nil, fmt.Errorf("expect 'prove' or 'prove_by_contradiction' after claim")
 		} else {
-			return ast.NewClaimProveStmt(toCheck, []ast.Stmt{}), nil
+			return ast.NewClaimProveStmt(toCheck, []ast.Stmt{}, tb.line), nil
 		}
 	}
 
@@ -530,9 +530,9 @@ func (tb *tokenBlock) claimStmt() (ast.ClaimInterface, error) {
 	}
 
 	if isProve {
-		return ast.NewClaimProveStmt(toCheck, proof), nil
+		return ast.NewClaimProveStmt(toCheck, proof, tb.line), nil
 	} else {
-		return ast.NewClaimProveByContradictionStmt(*ast.NewClaimProveStmt(toCheck, proof)), nil
+		return ast.NewClaimProveByContradictionStmt(*ast.NewClaimProveStmt(toCheck, proof, tb.line), tb.line), nil
 	}
 }
 
@@ -550,7 +550,7 @@ func (tb *tokenBlock) knowFactStmt() (*ast.KnowFactStmt, error) {
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
-		return ast.NewKnowStmt(facts.ToCanBeKnownStmtSlice()), nil
+		return ast.NewKnowStmt(facts.ToCanBeKnownStmtSlice(), tb.line), nil
 	}
 
 	if err := tb.header.testAndSkip(glob.KeySymbolColon); err != nil {
@@ -564,7 +564,7 @@ func (tb *tokenBlock) knowFactStmt() (*ast.KnowFactStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	return ast.NewKnowStmt(facts.ToCanBeKnownStmtSlice()), nil
+	return ast.NewKnowStmt(facts.ToCanBeKnownStmtSlice(), tb.line), nil
 }
 
 // relaFact 只支持2个参数的关系
@@ -800,7 +800,7 @@ func (tb *tokenBlock) haveObjStStmt() (*ast.HaveObjStStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	return ast.NewHaveStmt(objNames, *fact), nil
+	return ast.NewHaveStmt(objNames, *fact, tb.line), nil
 }
 
 func (tb *tokenBlock) bodyBlockFacts(uniFactDepth uniFactEnum, parseBodyFactNum int) ([]ast.FactStmt, error) {
@@ -840,7 +840,7 @@ func (tb *tokenBlock) defExistPropStmtBody() (*ast.DefExistPropStmtBody, error) 
 	}
 
 	if tb.header.ExceedEnd() {
-		return ast.NewExistPropDef(declHeader, []ast.FactStmt{}, []ast.FactStmt{}), nil
+		return ast.NewExistPropDef(declHeader, []ast.FactStmt{}, []ast.FactStmt{}, tb.line), nil
 	}
 
 	if tb.header.is(glob.KeySymbolEquivalent) {
@@ -852,7 +852,7 @@ func (tb *tokenBlock) defExistPropStmtBody() (*ast.DefExistPropStmtBody, error) 
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
-		return ast.NewExistPropDef(declHeader, []ast.FactStmt{}, unitFacts), nil
+		return ast.NewExistPropDef(declHeader, []ast.FactStmt{}, unitFacts, tb.line), nil
 	}
 
 	err = tb.header.skip(glob.KeySymbolColon)
@@ -873,14 +873,14 @@ func (tb *tokenBlock) defExistPropStmtBody() (*ast.DefExistPropStmtBody, error) 
 			return nil, fmt.Errorf("expect 'iff' section in proposition definition has at least one fact")
 		}
 
-		return ast.NewExistPropDef(declHeader, domFacts, iffFactsAsFactStatements), nil
+		return ast.NewExistPropDef(declHeader, domFacts, iffFactsAsFactStatements, tb.line), nil
 	} else {
 		domFacts, iffFactsAsFactStatements, err := tb.bodyOfInlineDomAndThen(glob.KeySymbolEquivalent)
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
 
-		return ast.NewExistPropDef(declHeader, domFacts, iffFactsAsFactStatements), nil
+		return ast.NewExistPropDef(declHeader, domFacts, iffFactsAsFactStatements, tb.line), nil
 	}
 }
 
@@ -2239,7 +2239,7 @@ func (tb *tokenBlock) claimStmtInline() (ast.ClaimInterface, error) {
 			return nil, tbErr(err, tb)
 		}
 	} else {
-		return ast.NewClaimProveStmt(fact, []ast.Stmt{}), nil
+		return ast.NewClaimProveStmt(fact, []ast.Stmt{}, tb.line), nil
 	}
 
 	proof := []ast.Stmt{}
@@ -2254,9 +2254,9 @@ func (tb *tokenBlock) claimStmtInline() (ast.ClaimInterface, error) {
 	if namedUniFact != nil {
 		return ast.NewClaimPropStmt(&namedUniFact.DefPropStmt, proof, isProve), nil
 	} else if isProve {
-		return ast.NewClaimProveStmt(fact, proof), nil
+		return ast.NewClaimProveStmt(fact, proof, tb.line), nil
 	} else {
-		return ast.NewClaimProveByContradictionStmt(*ast.NewClaimProveStmt(fact, proof)), nil
+		return ast.NewClaimProveByContradictionStmt(*ast.NewClaimProveStmt(fact, proof, tb.line), tb.line), nil
 	}
 }
 

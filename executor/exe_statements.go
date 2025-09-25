@@ -258,7 +258,7 @@ func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) (glob.E
 	execState, err := exec.factStmt(&stmt.OrFact)
 	if notOkExec(execState, err) {
 		if glob.RequireMsg() {
-			exec.newMsg(fmt.Sprintf("%s is unknown", stmt.OrFact))
+			exec.newMsg(fmt.Sprintf("%s is unknown", stmt.OrFact.String()))
 		}
 		return execState, err
 	}
@@ -271,7 +271,7 @@ func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) (glob.E
 	}
 
 	// emit then fact
-	err = exec.knowStmt(ast.NewKnowStmt(stmt.ThenFacts.ToCanBeKnownStmtSlice()))
+	err = exec.knowStmt(ast.NewKnowStmt(stmt.ThenFacts.ToCanBeKnownStmtSlice(), stmt.Line))
 	if err != nil {
 		return glob.ExecState_Error, err
 	}
