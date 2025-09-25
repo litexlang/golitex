@@ -1,5 +1,5 @@
 <div align="center">
-<img src="./logo.png" alt="The Litex Logo" width="300">
+<img src="./assets/logo.png" alt="The Litex Logo" width="300">
 </div>
 
 <div align="center">
@@ -106,7 +106,7 @@ _Sometimes it is the very people who no one imagines anything of who do the thin
 _– Alan Turing_
 
 <div align="center">
-  <img src="./Little_Little_O.png" alt="The Litex Logo" width="200">
+  <img src="./assets/Little_Little_O.png" alt="The Litex Logo" width="200">
   <p><em>Litex Mascot: Little Little O, a curious baby bird full of wonder</em></p>
 </div>
 
