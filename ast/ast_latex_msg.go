@@ -740,7 +740,7 @@ func (s *KnowExistPropStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (s *CommentStmt) ToLatexString() string {
+func (s *LatexStmt) ToLatexString() string {
 	return s.Comment
 }
 
@@ -878,4 +878,8 @@ func (s *HaveFnLiftStmt) ToLatexString() string {
 
 func (s *HaveFnStmt) ToLatexString() string {
 	return "TODO"
+}
+
+func (s *MarkdownStmt) ToLatexString() string {
+	return s.Markdown
 }
