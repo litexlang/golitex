@@ -736,7 +736,7 @@ func (stmt *KnowExistPropStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *CommentStmt) String() string {
+func (stmt *LatexStmt) String() string {
 	return stmt.Comment
 }
 
@@ -910,4 +910,8 @@ func (fnTStruct *FnTStruct) String() string {
 		}
 	}
 	return builder.String()
+}
+
+func (stmt *MarkdownStmt) String() string {
+	return stmt.Markdown
 }

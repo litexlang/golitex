@@ -39,7 +39,7 @@ func newTokenizerWithScope(lines []string) *tokenizerWithScope {
 // nextToken 返回当前行的下一个 token
 func (t *tokenizerWithScope) nextToken(line string, start int) (string, int, error) {
 	// 跳过注释
-	if start+1 < len(line) && line[start:start+1] == glob.CommentSig {
+	if start+1 < len(line) && line[start:start+1] == glob.InlineCommentSig {
 		return "", len(line), nil
 	}
 
