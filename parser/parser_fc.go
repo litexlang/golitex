@@ -30,37 +30,37 @@ func (tb *tokenBlock) RawFc() (ast.Fc, error) {
 	return expr, nil
 }
 
-func (tb *tokenBlock) squareBracketExpr() (ast.Fc, error) {
-	fc, err := tb.fcAtomAndFcFn()
-	if err != nil {
-		return nil, err
-	}
+// func (tb *tokenBlock) squareBracketExpr() (ast.Fc, error) {
+// 	fc, err := tb.fcAtomAndFcFn()
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	if !tb.header.is(glob.KeySymbolLeftBracket) {
-		return fc, nil
-	}
+// if !tb.header.is(glob.KeySymbolLeftBracket) {
+// 	return fc, nil
+// }
 
-	tb.header.skip(glob.KeySymbolLeftBracket)
+// tb.header.skip(glob.KeySymbolLeftBracket)
 
-	if tb.header.ExceedEnd() {
-		return nil, fmt.Errorf("unexpected end of input after '['")
-	}
+// if tb.header.ExceedEnd() {
+// 	return nil, fmt.Errorf("unexpected end of input after '['")
+// }
 
-	fcInBracket, err := tb.RawFc()
-	if err != nil {
-		return nil, err
-	}
+// fcInBracket, err := tb.RawFc()
+// if err != nil {
+// 	return nil, err
+// }
 
-	if tb.header.ExceedEnd() {
-		return nil, fmt.Errorf("unexpected end of input after ']'")
-	}
+// if tb.header.ExceedEnd() {
+// 	return nil, fmt.Errorf("unexpected end of input after ']'")
+// }
 
-	if err := tb.header.skip(glob.KeySymbolRightBracket); err != nil {
-		return nil, fmt.Errorf("expected '%s': %s", glob.KeySymbolRightBracket, err)
-	}
+// if err := tb.header.skip(glob.KeySymbolRightBracket); err != nil {
+// 	return nil, fmt.Errorf("expected '%s': %s", glob.KeySymbolRightBracket, err)
+// }
 
-	return ast.NewFcFn(ast.FcAtom(glob.TupleAtOp), []ast.Fc{fc, fcInBracket}), nil
-}
+// return ast.NewFcFn(ast.FcAtom(glob.TupleAtOp), []ast.Fc{fc, fcInBracket}), nil
+// }
 
 // “数学”优先级越高，越是底层。所以把括号表达式放在这里处理
 func (tb *tokenBlock) fcAtomAndFcFn() (ast.Fc, error) {
@@ -200,7 +200,8 @@ func (tb *tokenBlock) unaryOptFc() (ast.Fc, error) {
 		return nil, err
 	}
 	if unaryOp != glob.KeySymbolMinus {
-		return tb.squareBracketExpr()
+		// return tb.squareBracketExpr()
+		return tb.fcAtomAndFcFn()
 	} else {
 		tb.header.skip(unaryOp)
 
