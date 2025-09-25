@@ -14,8 +14,8 @@
 
 package litex_ast
 
-func NewDefObjStmt(objs []string, objSets []Fc, facts []FactStmt) *DefObjStmt {
-	return &DefObjStmt{objs, objSets, facts, 0}
+func NewDefObjStmt(objs []string, objSets []Fc, facts []FactStmt, line uint) *DefObjStmt {
+	return &DefObjStmt{objs, objSets, facts, line}
 }
 
 func NewDefPropStmt(defHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt, thenFacts []FactStmt) *DefPropStmt {
