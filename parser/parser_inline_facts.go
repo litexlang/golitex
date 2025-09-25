@@ -420,7 +420,7 @@ func (tb *tokenBlock) inline_specFact_enum_intensional_Equals_fact() (ast.FactSt
 		}
 
 		if tb.header.ExceedEnd() {
-			ret = ast.NewSpecFactStmt(ast.TruePure, propName, []ast.Fc{fc})
+			ret = ast.NewSpecFactStmt(ast.TruePure, propName, []ast.Fc{fc}, tb.line)
 		} else {
 			fc2, err := tb.RawFc()
 			if err != nil {
@@ -429,7 +429,7 @@ func (tb *tokenBlock) inline_specFact_enum_intensional_Equals_fact() (ast.FactSt
 
 			params := []ast.Fc{fc, fc2}
 
-			ret = ast.NewSpecFactStmt(ast.TruePure, propName, params)
+			ret = ast.NewSpecFactStmt(ast.TruePure, propName, params, tb.line)
 		}
 	} else if opt == glob.KeySymbolColonEqual {
 		return tb.inline_enum_intensional_fact(fc)
@@ -446,12 +446,12 @@ func (tb *tokenBlock) inline_specFact_enum_intensional_Equals_fact() (ast.FactSt
 		params := []ast.Fc{fc, fc2}
 
 		if opt != glob.KeySymbolEqual {
-			ret = ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(opt), params)
+			ret = ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(opt), params, tb.line)
 		} else {
 			if tb.header.is(glob.KeySymbolEqual) {
 				return tb.relaEqualsFactStmt(fc, fc2)
 			} else {
-				ret = ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(opt), params)
+				ret = ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(opt), params, tb.line)
 			}
 		}
 
