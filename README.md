@@ -26,7 +26,9 @@ _– Leonardo da Vinci_
 
 Litex([website](https://litexlang.com)) is a simple, intuitive, and open-source formal language for coding reasoning ([Star the repo!](https://github.com/litexlang/golitex)). It ensures every step of your reasoning is correct, and is actually the first reasoning formal language (or formal language for short) that can be learned by anyone in 1–2 hours, even without math or programming background.
 
-Making Litex intuitive to both human and AI is the mission of Litex. That is how Litex scales formal reasoning: making it accessible to more people, applicable to more complex problems, and usable by large-scale AI systems. Here is a comparison between Litex and traditional formal language Lean.
+Making Litex intuitive to both humans and AI is Litex's core mission. This is how Litex scales formal reasoning: by making it accessible to more people, applicable to more complex problems, and usable by large-scale AI systems. These benefits stem from Litex's potential to lower the entrance barrier by 10x and reduce the cost of constructing formalized proofs by 10x, making formal reasoning as natural as writing.
+
+Here is a comparison between Litex and traditional formal language Lean.
 
 <table style="border-collapse: collapse; width: 100%; font-size: 12px">
   <tr>

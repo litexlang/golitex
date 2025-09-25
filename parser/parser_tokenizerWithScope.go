@@ -98,7 +98,7 @@ func (t *tokenizerWithScope) skipCommentsAndEmptyLines() (bool, error) {
 	}
 
 	// 跳过以 """ 开头的多行注释块
-	if strings.HasPrefix(trimmed, "\"\"\"") {
+	if strings.HasPrefix(trimmed, glob.MultiLinesCommentSig) {
 		found := false
 		for t.currentLine < len(t.lines) {
 			t.currentLine++
@@ -107,7 +107,7 @@ func (t *tokenizerWithScope) skipCommentsAndEmptyLines() (bool, error) {
 			}
 			nextLine := t.lines[t.currentLine]
 			nextTrimmed := strings.TrimSpace(nextLine)
-			if strings.HasPrefix(nextTrimmed, "\"\"\"") {
+			if strings.HasPrefix(nextTrimmed, glob.MultiLinesCommentSig) {
 				found = true
 				t.currentLine++
 				break
@@ -158,7 +158,7 @@ func (t *tokenizerWithScope) findFirstNonCommentLine(currentIndent int) (string,
 		}
 
 		// 跳过多行注释
-		if strings.HasPrefix(strings.TrimSpace(nextLine), "\"\"\"") {
+		if strings.HasPrefix(strings.TrimSpace(nextLine), glob.MultiLinesCommentSig) {
 			found := false
 			for t.currentLine < len(t.lines) {
 				t.currentLine++
@@ -166,7 +166,7 @@ func (t *tokenizerWithScope) findFirstNonCommentLine(currentIndent int) (string,
 					return "", 0, fmt.Errorf("unclosed triple quote comment starting at line %d", lineNum(t.currentLine))
 				}
 				nextTrimmed := strings.TrimSpace(t.lines[t.currentLine])
-				if strings.HasPrefix(nextTrimmed, "\"\"\"") {
+				if strings.HasPrefix(nextTrimmed, glob.MultiLinesCommentSig) {
 					found = true
 					t.currentLine++
 					break
