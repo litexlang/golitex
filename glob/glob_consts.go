@@ -28,3 +28,5 @@ const CheckFalse = false
 var AssumeImportFilesAreTrue bool = false
 
 const EndOfInlineForall string = ";"
+
+const InnerGenLine uint = 0

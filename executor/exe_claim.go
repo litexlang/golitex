@@ -246,7 +246,8 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 	}
 
 	// declare parameters in asUnivFact in the env
-	objDefStmt := ast.NewDefObjStmt(asUnivFact.Params, asUnivFact.ParamSets, []ast.FactStmt{})
+	objDefStmt := ast.NewDefObjStmt(asUnivFact.Params, asUnivFact.ParamSets, []ast.FactStmt{}, stmt.Line)
+
 	err := exec.defObjStmt(objDefStmt, false)
 	if err != nil {
 		if glob.RequireMsg() {
@@ -354,7 +355,7 @@ func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimProp
 
 	// declare parameters in prop
 
-	objDefStmt := ast.NewDefObjStmt(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFacts)
+	objDefStmt := ast.NewDefObjStmt(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFacts, stmt.Line)
 	err := exec.defObjStmt(objDefStmt, false)
 	if err != nil {
 		return glob.ExecState_Error, err
