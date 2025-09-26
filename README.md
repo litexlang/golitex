@@ -26,7 +26,9 @@ _– Leonardo da Vinci_
 
 Litex([website](https://litexlang.com)) is a simple, intuitive, and open-source formal language for coding reasoning ([Star the repo!](https://github.com/litexlang/golitex)). It ensures every step of your reasoning is correct, and is actually the first reasoning formal language (or formal language for short) that can be learned by anyone in 1–2 hours, even without math or programming background.
 
-Making Litex intuitive to both human and AI is the mission of Litex. That is how Litex scales formal reasoning: making it accessible to more people, applicable to more complex problems, and usable by large-scale AI systems. Here is a comparison between Litex and traditional formal language Lean.
+Making Litex intuitive to both humans and AI is Litex's core mission. This is how Litex scales formal reasoning: by making it accessible to more people, applicable to more complex problems, and usable by large-scale AI systems. These benefits stem from Litex's potential to lower the entrance barrier by 10x and reduce the cost of constructing formalized proofs by 10x, making formal reasoning as natural as writing.
+
+Here is a comparison between Litex and traditional formal language Lean.
 
 <table style="border-collapse: collapse; width: 100%; font-size: 12px">
   <tr>
@@ -82,7 +84,7 @@ Litex is nothing without its community and technical ecosystem.
 
 Resources for Litex users:
 
-1. Our official [website](https://litexlang.com) contains tutorials, cheatsheets, examples, documentation, collaboration opportunities, and more for Litex. All documents on our [website](https://litexlang.com) are open-sourced [here](https://github.com/litexlang/litex-official-documents)
+1. Our official [website](https://litexlang.com) contains tutorials, cheat sheets, examples, documentation, collaboration opportunities, and more for Litex. All documents on our [website](https://litexlang.com) are open-sourced [here](https://github.com/litexlang/litex-official-documents)
 2. Learn Litex [online](https://litexlang.com/doc/Tutorial/Introduction). A short list of major Litex statements and their usage are shown in the [cheat sheet](https://litexlang.com/doc/Litex_Cheatsheet).
 3. You can run litex on your own computer， start from [here](https://litexlang.com/doc/Start)
 4. [Litex standard library](https://github.com/litexlang/litex-stdlib) is under active development. **Contribute to it and earn impact rewards!**

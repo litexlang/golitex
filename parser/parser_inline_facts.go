@@ -117,7 +117,7 @@ func (tb *tokenBlock) inlineOrStmt() (*ast.OrStmt, error) {
 		tb.header.skip("")
 	}
 
-	return ast.NewOrStmt(facts), nil
+	return ast.NewOrStmt(facts, tb.line), nil
 }
 
 func (tb *tokenBlock) bodyOfInlineDomAndThen(word string) ([]ast.FactStmt, []ast.FactStmt, error) {
@@ -283,7 +283,7 @@ func (tb *tokenBlock) inlineUniInterface() (ast.UniFactInterface, error) {
 	}
 
 	if isEnd {
-		return ast.NewUniFact(params, setParams, domFact, thenFact), nil
+		return ast.NewUniFact(params, setParams, domFact, thenFact, tb.line), nil
 	}
 
 	err = tb.header.skip(glob.KeySymbolEquivalent)
@@ -295,7 +295,7 @@ func (tb *tokenBlock) inlineUniInterface() (ast.UniFactInterface, error) {
 	if err != nil {
 		return nil, err
 	}
-	return ast.NewUniFactWithIff(ast.NewUniFact(params, setParams, domFact, thenFact), iffFacts), nil
+	return ast.NewUniFactWithIff(ast.NewUniFact(params, setParams, domFact, thenFact, tb.line), iffFacts, tb.line), nil
 }
 
 func (tb *tokenBlock) inlineIfInterface() (ast.UniFactInterface, error) {
@@ -321,7 +321,7 @@ func (tb *tokenBlock) inlineIfInterface() (ast.UniFactInterface, error) {
 	}
 
 	if isEnd {
-		return ast.NewUniFact([]string{}, []ast.Fc{}, domFact, thenFact), nil
+		return ast.NewUniFact([]string{}, []ast.Fc{}, domFact, thenFact, tb.line), nil
 	}
 
 	err = tb.header.skip(glob.KeySymbolEquivalent)
@@ -333,7 +333,7 @@ func (tb *tokenBlock) inlineIfInterface() (ast.UniFactInterface, error) {
 	if err != nil {
 		return nil, err
 	}
-	return ast.NewUniFactWithIff(ast.NewUniFact([]string{}, []ast.Fc{}, domFact, thenFact), iffFacts), nil
+	return ast.NewUniFactWithIff(ast.NewUniFact([]string{}, []ast.Fc{}, domFact, thenFact, tb.line), iffFacts, tb.line), nil
 }
 
 func (tb *tokenBlock) thenFactsInUniFactInterface() ([]ast.FactStmt, bool, error) {
@@ -420,7 +420,7 @@ func (tb *tokenBlock) inline_specFact_enum_intensional_Equals_fact() (ast.FactSt
 		}
 
 		if tb.header.ExceedEnd() {
-			ret = ast.NewSpecFactStmt(ast.TruePure, propName, []ast.Fc{fc})
+			ret = ast.NewSpecFactStmt(ast.TruePure, propName, []ast.Fc{fc}, tb.line)
 		} else {
 			fc2, err := tb.RawFc()
 			if err != nil {
@@ -429,7 +429,7 @@ func (tb *tokenBlock) inline_specFact_enum_intensional_Equals_fact() (ast.FactSt
 
 			params := []ast.Fc{fc, fc2}
 
-			ret = ast.NewSpecFactStmt(ast.TruePure, propName, params)
+			ret = ast.NewSpecFactStmt(ast.TruePure, propName, params, tb.line)
 		}
 	} else if opt == glob.KeySymbolColonEqual {
 		return tb.inline_enum_intensional_fact(fc)
@@ -446,12 +446,12 @@ func (tb *tokenBlock) inline_specFact_enum_intensional_Equals_fact() (ast.FactSt
 		params := []ast.Fc{fc, fc2}
 
 		if opt != glob.KeySymbolEqual {
-			ret = ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(opt), params)
+			ret = ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(opt), params, tb.line)
 		} else {
 			if tb.header.is(glob.KeySymbolEqual) {
 				return tb.relaEqualsFactStmt(fc, fc2)
 			} else {
-				ret = ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(opt), params)
+				ret = ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(opt), params, tb.line)
 			}
 		}
 
@@ -493,7 +493,7 @@ func (tb *tokenBlock) inline_enum_intensional_fact(left ast.Fc) (ast.FactStmt, e
 		if tb.header.is(glob.KeySymbolComma) {
 			tb.header.skip(glob.KeySymbolComma)
 		} else {
-			return ast.NewEnumStmt(left, []ast.Fc{firstFc}), nil
+			return ast.NewEnumStmt(left, []ast.Fc{firstFc}, tb.line), nil
 		}
 
 		enumItems := []ast.Fc{firstFc}
@@ -513,7 +513,7 @@ func (tb *tokenBlock) inline_enum_intensional_fact(left ast.Fc) (ast.FactStmt, e
 			return nil, tbErr(err, tb)
 		}
 
-		return ast.NewEnumStmt(left, enumItems), nil
+		return ast.NewEnumStmt(left, enumItems, tb.line), nil
 	} else {
 		firstFcAsAtom := firstFc.(ast.FcAtom)
 		// 必须是纯的，不能是复合的
@@ -544,7 +544,7 @@ func (tb *tokenBlock) inline_enum_intensional_fact(left ast.Fc) (ast.FactStmt, e
 			}
 		}
 
-		return ast.NewIntensionalSetStmt(left, string(firstFcAsAtom), parentSet, facts), nil
+		return ast.NewIntensionalSetStmt(left, string(firstFcAsAtom), parentSet, facts, tb.line), nil
 	}
 }
 

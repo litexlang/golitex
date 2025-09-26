@@ -32,8 +32,6 @@ type DefHeader struct {
 	Name      FcAtom
 	Params    StrSlice
 	ParamSets FcSlice
-
-	Line uint
 }
 
 type DefPropStmt struct {
@@ -266,7 +264,7 @@ type KnowExistPropStmt struct {
 	Line uint
 }
 
-type CommentStmt struct {
+type LatexStmt struct {
 	Comment string
 
 	Line uint
@@ -336,6 +334,12 @@ type HaveFnStmt struct {
 	DefFnStmt        DefFnStmt
 	Proofs           StmtSlice
 	HaveObjSatisfyFn Fc
+
+	Line uint
+}
+
+type MarkdownStmt struct {
+	Markdown string
 
 	Line uint
 }
