@@ -32,4 +32,4 @@ const InnerGenLine uint = 0
 
 const LatexSig string = "##"
 
-const MarkdownSig string = "###"
+const LatexMultiLineSig string = "\"\""
