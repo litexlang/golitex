@@ -109,6 +109,10 @@ func (t *tokenizerWithScope) skipCommentsAndEmptyLines() (bool, *tokenBlock, err
 	// 跳过以 """ 开头的多行注释块
 	if strings.HasPrefix(trimmed, glob.MultiLinesCommentSig) {
 		found := false
+		lines := []string{}
+
+		isLatexMultiLine := strings.HasPrefix(trimmed, glob.LatexMultiLineSig)
+
 		for t.currentLine < len(t.lines) {
 			t.currentLine++
 			if t.currentLine >= len(t.lines) {
@@ -116,6 +120,7 @@ func (t *tokenizerWithScope) skipCommentsAndEmptyLines() (bool, *tokenBlock, err
 			}
 			nextLine := t.lines[t.currentLine]
 			nextTrimmed := strings.TrimSpace(nextLine)
+			lines = append(lines, nextLine)
 			if strings.HasPrefix(nextTrimmed, glob.MultiLinesCommentSig) {
 				found = true
 				t.currentLine++
@@ -125,7 +130,17 @@ func (t *tokenizerWithScope) skipCommentsAndEmptyLines() (bool, *tokenBlock, err
 		if !found {
 			return false, nil, fmt.Errorf("unclosed triple quote comment starting at line %d", lineNum(t.currentLine))
 		}
-		return true, nil, nil // TODO
+
+		comment := strings.Join(lines, "\n")
+
+		var ret *tokenBlock
+		if isLatexMultiLine {
+			ret = newTokenBlock(strSliceCursor{0, []string{glob.LatexMultiLineSig, comment}}, nil, uint(t.currentLine))
+		} else {
+			ret = newTokenBlock(strSliceCursor{0, []string{glob.MultiLinesCommentSig, comment}}, nil, uint(t.currentLine))
+		}
+
+		return true, ret, nil
 	}
 
 	// 跳过空行
