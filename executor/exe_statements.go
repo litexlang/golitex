@@ -90,6 +90,10 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		execState, err = exec.haveFnLiftStmt(stmt)
 	case *ast.HaveFnStmt:
 		execState, err = exec.haveFnStmt(stmt)
+	case *ast.MarkdownStmt:
+		execState, err = exec.markdownStmt(stmt)
+	case *ast.LatexStmt:
+		execState, err = exec.latexStmt(stmt)
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}
@@ -771,5 +775,15 @@ func (exec *Executor) openANewEnvAndCheck(fact ast.FactStmt, requireMsg bool) (g
 		return glob.ExecState_Unknown, nil
 	}
 
+	return glob.ExecState_True, nil
+}
+
+func (exec *Executor) markdownStmt(stmt *ast.MarkdownStmt) (glob.ExecState, error) {
+	_ = stmt
+	return glob.ExecState_True, nil
+}
+
+func (exec *Executor) latexStmt(stmt *ast.LatexStmt) (glob.ExecState, error) {
+	_ = stmt
 	return glob.ExecState_True, nil
 }
