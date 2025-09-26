@@ -93,7 +93,7 @@ func (e *Env) in_setDefinedByReplacement_postProcess(setDefinedByReplacement *as
 	}
 
 	// forall x set_defined_by_replacement(A, B, P), x is in B
-	forallXInSetDefinedByReplacement_ItIsInB := ast.NewUniFact([]string{"x"}, []ast.Fc{setDefinedByReplacement}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{ast.FcAtom("x"), setDefinedByReplacement.Params[1]})})
+	forallXInSetDefinedByReplacement_ItIsInB := ast.NewUniFact([]string{"x"}, []ast.Fc{setDefinedByReplacement}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{ast.FcAtom("x"), setDefinedByReplacement.Params[1]}, glob.InnerGenLine)}, glob.InnerGenLine)
 	err = e.NewFact(forallXInSetDefinedByReplacement_ItIsInB)
 	if err != nil {
 		return err
@@ -110,7 +110,7 @@ func (e *Env) SetEqualToSetDefinedByReplacement_PostProcess(setAtom ast.FcAtom, 
 		return err
 	}
 
-	forallXInSetDefinedByReplacement_ItIsInB := ast.NewUniFact([]string{"x"}, []ast.Fc{setAtom}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{ast.FcAtom("x"), setDefinedByReplacement.Params[1]})})
+	forallXInSetDefinedByReplacement_ItIsInB := ast.NewUniFact([]string{"x"}, []ast.Fc{setAtom}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{ast.FcAtom("x"), setDefinedByReplacement.Params[1]}, glob.InnerGenLine)}, glob.InnerGenLine)
 	err = e.NewFact(forallXInSetDefinedByReplacement_ItIsInB)
 	if err != nil {
 		return err

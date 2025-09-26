@@ -90,12 +90,16 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		execState, err = exec.haveFnLiftStmt(stmt)
 	case *ast.HaveFnStmt:
 		execState, err = exec.haveFnStmt(stmt)
+	case *ast.MarkdownStmt:
+		execState, err = exec.markdownStmt(stmt)
+	case *ast.LatexStmt:
+		execState, err = exec.latexStmt(stmt)
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}
 
 	if err != nil {
-		return glob.ExecState_Error, fmt.Errorf("execution error: %w", err)
+		return glob.ExecState_Error, fmt.Errorf("execution error at line %d:\n%w", stmt.GetLine(), err)
 	} else {
 		return execState, nil
 	}
@@ -258,7 +262,7 @@ func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) (glob.E
 	execState, err := exec.factStmt(&stmt.OrFact)
 	if notOkExec(execState, err) {
 		if glob.RequireMsg() {
-			exec.newMsg(fmt.Sprintf("%s is unknown", stmt.OrFact))
+			exec.newMsg(fmt.Sprintf("%s is unknown", stmt.OrFact.String()))
 		}
 		return execState, err
 	}
@@ -271,7 +275,7 @@ func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) (glob.E
 	}
 
 	// emit then fact
-	err = exec.knowStmt(ast.NewKnowStmt(stmt.ThenFacts.ToCanBeKnownStmtSlice()))
+	err = exec.knowStmt(ast.NewKnowStmt(stmt.ThenFacts.ToCanBeKnownStmtSlice(), stmt.Line))
 	if err != nil {
 		return glob.ExecState_Error, err
 	}
@@ -336,14 +340,14 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
 		paramsAsFc = append(paramsAsFc, ast.FcAtom(stmt.Prop.DefHeader.Params[i]))
 	}
 
-	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(stmt.Prop.DefHeader.Name), paramsAsFc)}, stmt.Prop.ThenFacts)
+	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(stmt.Prop.DefHeader.Name), paramsAsFc, stmt.Line)}, stmt.Prop.ThenFacts, stmt.Line)
 
 	err = exec.env.NewFact(uniFact)
 	if err != nil {
 		return err
 	}
 
-	uniFact2 := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFacts, stmt.Prop.ThenFacts)
+	uniFact2 := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFacts, stmt.Prop.ThenFacts, stmt.Line)
 	err = exec.env.NewFact(uniFact2)
 	if err != nil {
 		return err
@@ -438,7 +442,7 @@ func (exec *Executor) haveSetDefinedByReplacementStmt(stmt *ast.HaveSetDefinedBy
 
 	setDefinedByReplacement := ast.NewFcFn(ast.FcAtom(glob.KeywordSetDefinedByReplacement), []ast.Fc{stmt.DomSet, stmt.RangeSet, stmt.PropName})
 
-	defObjStmt := ast.NewDefObjStmt([]string{stmt.Name}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}, []ast.FactStmt{ast.NewEqualFact(ast.FcAtom(stmt.Name), setDefinedByReplacement)})
+	defObjStmt := ast.NewDefObjStmt([]string{stmt.Name}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}, []ast.FactStmt{ast.NewEqualFact(ast.FcAtom(stmt.Name), setDefinedByReplacement)}, stmt.Line)
 
 	err := exec.defObjStmt(defObjStmt, false)
 	if err != nil {
@@ -456,13 +460,13 @@ func (exec *Executor) haveSetDefinedByReplacementStmt(stmt *ast.HaveSetDefinedBy
 func (exec *Executor) namedUniFactStmt(stmt *ast.NamedUniFactStmt) (glob.ExecState, error) {
 	exec.newMsg(stmt.String())
 
-	uniFact := ast.NewUniFact(stmt.DefPropStmt.DefHeader.Params, stmt.DefPropStmt.DefHeader.ParamSets, stmt.DefPropStmt.IffFacts, stmt.DefPropStmt.ThenFacts)
+	uniFact := ast.NewUniFact(stmt.DefPropStmt.DefHeader.Params, stmt.DefPropStmt.DefHeader.ParamSets, stmt.DefPropStmt.IffFacts, stmt.DefPropStmt.ThenFacts, stmt.Line)
 	execState, err := exec.factStmt(uniFact)
 	if notOkExec(execState, err) {
 		return execState, err
 	}
 
-	err = exec.knowPropStmt(ast.NewKnowPropStmt(stmt.DefPropStmt))
+	err = exec.knowPropStmt(ast.NewKnowPropStmt(stmt.DefPropStmt, stmt.Line))
 	if notOkExec(execState, err) {
 		return execState, err
 	}
@@ -484,7 +488,7 @@ func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) (glob.ExecS
 	}
 
 	thenFacts := []ast.FactStmt{stmt.ExistProp.ToSpecFact()}
-	knownUniFact := ast.NewUniFact(stmt.ExistProp.DefBody.DefHeader.Params, stmt.ExistProp.DefBody.DefHeader.ParamSets, stmt.ExistProp.DefBody.DomFacts, thenFacts)
+	knownUniFact := ast.NewUniFact(stmt.ExistProp.DefBody.DefHeader.Params, stmt.ExistProp.DefBody.DefHeader.ParamSets, stmt.ExistProp.DefBody.DomFacts, thenFacts, stmt.Line)
 
 	err = exec.env.NewFact(knownUniFact)
 	if err != nil {
@@ -544,7 +548,7 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) (glob.ExecSta
 	ver := verifier.NewVerifier(exec.env)
 
 	for i := range len(stmt.ObjNames) {
-		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.ObjEqualTos[i], stmt.ObjSets[i]}), verifier.Round0Msg)
+		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.ObjEqualTos[i], stmt.ObjSets[i]}, stmt.Line), verifier.Round0Msg)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
@@ -552,7 +556,7 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) (glob.ExecSta
 			return glob.ExecState_Error, fmt.Errorf("%s is not in %s", stmt.ObjNames[i], stmt.ObjSets[i])
 		}
 
-		err = ver.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt([]string{stmt.ObjNames[i]}, []ast.Fc{ast.FcAtom(glob.KeywordObj)}, []ast.FactStmt{}))
+		err = ver.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt([]string{stmt.ObjNames[i]}, []ast.Fc{ast.FcAtom(glob.KeywordObj)}, []ast.FactStmt{}, stmt.Line))
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
@@ -583,7 +587,7 @@ func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) (glob.ExecState
 		return execState, err
 	}
 
-	newFnDefStmt := ast.NewDefFnStmt(string(stmt.DefHeader.Name), ast.NewFnTStruct(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, stmt.RetSet, []ast.FactStmt{}, []ast.FactStmt{ast.NewEqualFact(fnHeaderToReturnValueOfFn(&stmt.DefHeader), stmt.EqualTo)}))
+	newFnDefStmt := ast.NewDefFnStmt(string(stmt.DefHeader.Name), ast.NewFnTStruct(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, stmt.RetSet, []ast.FactStmt{}, []ast.FactStmt{ast.NewEqualFact(fnHeaderToReturnValueOfFn(&stmt.DefHeader), stmt.EqualTo)}, stmt.Line), stmt.Line)
 	err = exec.defFnStmt(newFnDefStmt)
 	if err != nil {
 		return glob.ExecState_Error, err
@@ -599,7 +603,7 @@ func (exec *Executor) checkFnEqualStmt(stmt *ast.HaveFnEqualStmt) (glob.ExecStat
 	}()
 
 	for i := range len(stmt.DefHeader.Params) {
-		err := exec.defObjStmt(ast.NewDefObjStmt([]string{stmt.DefHeader.Params[i]}, []ast.Fc{stmt.DefHeader.ParamSets[i]}, []ast.FactStmt{}), false)
+		err := exec.defObjStmt(ast.NewDefObjStmt([]string{stmt.DefHeader.Params[i]}, []ast.Fc{stmt.DefHeader.ParamSets[i]}, []ast.FactStmt{}, stmt.Line), false)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
@@ -660,7 +664,7 @@ func (exec *Executor) haveFnLiftStmt(stmt *ast.HaveFnLiftStmt) (glob.ExecState, 
 
 	knownUniFact := exec.haveFnLift_knowFact(stmt, randomParams)
 
-	fnDef := ast.NewDefFnStmt(stmt.FnName, ast.NewFnTStruct(randomParams, FnTemplateOfFunctions, retSet, []ast.FactStmt{}, []ast.FactStmt{knownUniFact}))
+	fnDef := ast.NewDefFnStmt(stmt.FnName, ast.NewFnTStruct(randomParams, FnTemplateOfFunctions, retSet, []ast.FactStmt{}, []ast.FactStmt{knownUniFact}, stmt.Line), stmt.Line)
 
 	err := exec.defFnStmt(fnDef)
 	if err != nil {
@@ -702,7 +706,7 @@ func (exec *Executor) haveFnLift_knowFact(stmt *ast.HaveFnLiftStmt, fnNames []st
 
 	rhs := ast.NewFcFn(stmt.Opt, rhsParams)
 
-	return ast.NewUniFact(uniFactParams, uniFactParamSets, []ast.FactStmt{}, []ast.FactStmt{ast.NewEqualFact(lhs, rhs)})
+	return ast.NewUniFact(uniFactParams, uniFactParamSets, []ast.FactStmt{}, []ast.FactStmt{ast.NewEqualFact(lhs, rhs)}, stmt.Line)
 }
 
 func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) (glob.ExecState, error) {
@@ -715,7 +719,7 @@ func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) (glob.ExecState, error) {
 	exec.NewEnv(exec.env)
 	defer exec.deleteEnvAndRetainMsg()
 
-	defObjStmt := ast.NewDefObjStmt(stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets, stmt.DefFnStmt.FnTemplate.DomFacts)
+	defObjStmt := ast.NewDefObjStmt(stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets, stmt.DefFnStmt.FnTemplate.DomFacts, stmt.Line)
 	err := exec.defObjStmt(defObjStmt, false)
 	if err != nil {
 		return glob.ExecState_Error, err
@@ -771,5 +775,15 @@ func (exec *Executor) openANewEnvAndCheck(fact ast.FactStmt, requireMsg bool) (g
 		return glob.ExecState_Unknown, nil
 	}
 
+	return glob.ExecState_True, nil
+}
+
+func (exec *Executor) markdownStmt(stmt *ast.MarkdownStmt) (glob.ExecState, error) {
+	_ = stmt
+	return glob.ExecState_True, nil
+}
+
+func (exec *Executor) latexStmt(stmt *ast.LatexStmt) (glob.ExecState, error) {
+	_ = stmt
 	return glob.ExecState_True, nil
 }

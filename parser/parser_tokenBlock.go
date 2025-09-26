@@ -31,7 +31,7 @@ func newTokenBlock(header strSliceCursor, body []tokenBlock, line uint) *tokenBl
 	return &tokenBlock{
 		header: header,
 		body:   body,
-		line:   line,
+		line:   line + 1,
 	}
 }
 

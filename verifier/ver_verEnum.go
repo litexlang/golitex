@@ -21,7 +21,7 @@ import (
 )
 
 func (ver *Verifier) verEnumStmt(stmt *ast.EnumStmt, state *VerState) (bool, error) {
-	if ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.CurSet, ast.FcAtom(glob.KeywordFiniteSet)}), state); err != nil || ok {
+	if ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.CurSet, ast.FcAtom(glob.KeywordFiniteSet)}, stmt.Line), state); err != nil || ok {
 		if err != nil {
 			return false, err
 		}
@@ -90,7 +90,7 @@ func (ver *Verifier) forallObjNotInSetThenTheSetIsEmpty(stmt *ast.EnumStmt, stat
 		return false, nil
 	}
 
-	allObjectsNotInSetThenSetIsEmpty := ast.NewUniFact([]string{"x"}, []ast.Fc{ast.FcAtom(glob.KeywordObj)}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{ast.FcAtom("x"), stmt.CurSet})})
+	allObjectsNotInSetThenSetIsEmpty := ast.NewUniFact([]string{"x"}, []ast.Fc{ast.FcAtom(glob.KeywordObj)}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{ast.FcAtom("x"), stmt.CurSet}, stmt.Line)}, stmt.Line)
 	ok, err := ver.VerFactStmt(allObjectsNotInSetThenSetIsEmpty, state)
 	if err != nil {
 		return false, err

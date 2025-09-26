@@ -56,7 +56,7 @@ func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.Prove
 	exec.NewEnv(exec.env)
 	defer exec.deleteEnvAndRetainMsg()
 
-	err := exec.defObjStmt(ast.NewDefObjStmt(stmt.Fact.Params, stmt.Fact.ParamSets, getParamEqualFcSlice(stmt.Fact.Params, cartesianProductAtI)), false)
+	err := exec.defObjStmt(ast.NewDefObjStmt(stmt.Fact.Params, stmt.Fact.ParamSets, getParamEqualFcSlice(stmt.Fact.Params, cartesianProductAtI), stmt.Line), false)
 	if err != nil {
 		return false, err
 	}
@@ -124,7 +124,7 @@ func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.Prove
 func getParamEqualFcSlice(params []string, equalTo []ast.Fc) []ast.FactStmt {
 	result := []ast.FactStmt{}
 	for i, param := range params {
-		result = append(result, ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{ast.FcAtom(param), equalTo[i]}))
+		result = append(result, ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{ast.FcAtom(param), equalTo[i]}, glob.InnerGenLine))
 	}
 	return result
 }

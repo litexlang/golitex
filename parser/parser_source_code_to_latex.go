@@ -56,9 +56,9 @@ func (t *tokenizerWithScope) parseBlocks_WhenCompileToLatex(currentIndent int) (
 	for t.currentLine < len(t.lines) {
 		line := t.lines[t.currentLine]
 
-		if strings.HasPrefix(line, glob.CommentSig) {
+		if strings.HasPrefix(line, glob.InlineCommentSig) {
 			blocks = append(blocks, tokenBlock{
-				header: strSliceCursor{0, []string{glob.CommentSig, strings.TrimSpace(strings.TrimPrefix(line, glob.CommentSig))}},
+				header: strSliceCursor{0, []string{glob.InlineCommentSig, strings.TrimSpace(strings.TrimPrefix(line, glob.InlineCommentSig))}},
 				body:   nil,
 			})
 			t.currentLine++
@@ -142,5 +142,5 @@ func preprocessSourceCodeWhenCompileToLatex(code string) ([]string, error) {
 	return lines, nil
 }
 
-const CommentSigPlusCommentSig = glob.CommentSig + glob.CommentSig
-const MultiLinesCommentSigPlusCommentSig = glob.MultiLinesCommentSig + glob.CommentSig
+const CommentSigPlusCommentSig = glob.InlineCommentSig + glob.InlineCommentSig
+const MultiLinesCommentSigPlusCommentSig = glob.MultiLinesCommentSig + glob.InlineCommentSig

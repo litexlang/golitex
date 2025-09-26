@@ -80,10 +80,6 @@ func hasBuiltinOptAndToString(f *FcFn) (bool, string) {
 		return false, ""
 	}
 
-	if string(ptr) == glob.TupleAtOp {
-		return true, fmt.Sprintf("%s[%s]", f.Params[0], f.Params[1])
-	}
-
 	if string(ptr) == glob.KeySymbolMinus {
 		return true, fmt.Sprintf("(%s %s %s)", f.Params[0], string(ptr), f.Params[1])
 	}
