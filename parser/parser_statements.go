@@ -89,9 +89,11 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.proveOverFiniteSetStmt()
 	case glob.KeySymbolAt:
 		ret, err = tb.namedUniFactStmt()
-	case glob.LatexSig:
+	case glob.LatexSig,
+		glob.LatexMultiLineSig:
 		ret, err = tb.latexStmt()
-	case glob.MarkdownSig:
+	case glob.InlineCommentSig,
+		glob.MultiLinesCommentSig:
 		ret, err = tb.markdownStmt()
 	case glob.KeywordFnTemplate:
 		ret, err = tb.fnTemplateStmt()
@@ -2059,7 +2061,8 @@ func (tb *tokenBlock) knowExistPropStmt() (*ast.KnowExistPropStmt, error) {
 
 func (tb *tokenBlock) latexStmt() (ast.Stmt, error) {
 	comment := tb.header.strAtCurIndexPlus(1)
-	tb.header.skip(glob.LatexSig)
+	tb.header.skip("")
+	tb.header.skip("")
 
 	return ast.NewLatexStmt(comment, tb.line), nil
 }
@@ -2537,7 +2540,8 @@ func (tb *tokenBlock) relaEqualsFactStmt(fc, fc2 ast.Fc) (*ast.EqualsFactStmt, e
 
 func (tb *tokenBlock) markdownStmt() (ast.Stmt, error) {
 	comment := tb.header.strAtCurIndexPlus(1)
-	tb.header.skip(glob.MarkdownSig)
+	tb.header.skip("")
+	tb.header.skip("")
 
 	return ast.NewMarkdownStmt(comment, tb.line), nil
 }
