@@ -58,7 +58,7 @@ func InstantiateSpecFact(stmt *SpecFactStmt, uniMap map[string]Fc) (*SpecFactStm
 		newParams = append(newParams, newParam)
 	}
 
-	return NewSpecFactStmt(stmt.TypeEnum, stmt.PropName, newParams), nil
+	return NewSpecFactStmt(stmt.TypeEnum, stmt.PropName, newParams, stmt.Line), nil
 }
 
 func (stmt *SpecFactStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
@@ -96,7 +96,7 @@ func InstantiateUniFact(stmt *UniFactStmt, uniMap map[string]Fc) (*UniFactStmt, 
 		newSetParams = append(newSetParams, newSetParam)
 	}
 
-	return NewUniFact(newParams, newSetParams, newDomFacts, newThenFacts), nil
+	return NewUniFact(newParams, newSetParams, newDomFacts, newThenFacts, stmt.Line), nil
 }
 
 func (stmt *UniFactStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
@@ -149,7 +149,7 @@ func (defPropStmt *DefPropStmt) Instantiate(uniMap map[string]Fc) (*DefPropStmt,
 		}
 		newThenFacts = append(newThenFacts, newFact)
 	}
-	return NewDefPropStmt(newDefHeader, newDomFacts, newIffFacts, newThenFacts), nil
+	return NewDefPropStmt(newDefHeader, newDomFacts, newIffFacts, newThenFacts, defPropStmt.Line), nil
 }
 
 func (stmt *DefExistPropStmtBody) Instantiate(uniMap map[string]Fc) (*DefExistPropStmtBody, error) {
@@ -176,7 +176,7 @@ func (stmt *DefExistPropStmtBody) Instantiate(uniMap map[string]Fc) (*DefExistPr
 		newIffFacts = append(newIffFacts, newFact)
 	}
 
-	return NewDefExistPropBodyStmt(newDefHeader, newDomFacts, newIffFacts), nil
+	return NewDefExistPropBodyStmt(newDefHeader, newDomFacts, newIffFacts, stmt.Line), nil
 }
 
 func (stmt *DefExistPropStmt) Instantiate(uniMap map[string]Fc) (*DefExistPropStmt, error) {
@@ -194,7 +194,7 @@ func (stmt *DefExistPropStmt) Instantiate(uniMap map[string]Fc) (*DefExistPropSt
 		newExistParamSets = append(newExistParamSets, newSetParam)
 	}
 
-	return NewDefExistPropStmt(newDefExistPropBody, stmt.ExistParams, newExistParamSets), nil
+	return NewDefExistPropStmt(newDefExistPropBody, stmt.ExistParams, newExistParamSets, stmt.Line), nil
 }
 
 func (stmt *DefExistPropStmt) ExistParamInSetsFacts() []FactStmt {
@@ -215,7 +215,7 @@ func (stmt *OrStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
 		newOrFacts[i] = newFact.(*SpecFactStmt)
 	}
 
-	return NewOrStmt(newOrFacts), nil
+	return NewOrStmt(newOrFacts, stmt.Line), nil
 }
 
 func (stmt *UniFactWithIffStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
@@ -233,7 +233,7 @@ func (stmt *UniFactWithIffStmt) Instantiate(uniMap map[string]Fc) (FactStmt, err
 		instantiatedIffFacts = append(instantiatedIffFacts, newFact)
 	}
 
-	return NewUniFactWithIff(newUniFact.(*UniFactStmt), instantiatedIffFacts), nil
+	return NewUniFactWithIff(newUniFact.(*UniFactStmt), instantiatedIffFacts, stmt.Line), nil
 }
 
 func (stmt *EnumStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
@@ -251,7 +251,7 @@ func (stmt *EnumStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
 		newEnumValues = append(newEnumValues, newValue)
 	}
 
-	return NewEnumStmt(enumName, newEnumValues), nil
+	return NewEnumStmt(enumName, newEnumValues, stmt.Line), nil
 }
 
 func (stmt *IntensionalSetStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
@@ -274,7 +274,7 @@ func (stmt *IntensionalSetStmt) Instantiate(uniMap map[string]Fc) (FactStmt, err
 		newProofs[i] = newProof.(*SpecFactStmt)
 	}
 
-	return NewIntensionalSetStmt(newCurSet, stmt.Param, newParentSet, newProofs), nil
+	return NewIntensionalSetStmt(newCurSet, stmt.Param, newParentSet, newProofs, stmt.Line), nil
 }
 
 func (stmt *EqualsFactStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
@@ -286,7 +286,7 @@ func (stmt *EqualsFactStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) 
 		}
 		newParams = append(newParams, newParam)
 	}
-	return NewEqualsFactStmt(newParams), nil
+	return NewEqualsFactStmt(newParams, stmt.Line), nil
 }
 
 func (fcSlice FcSlice) Instantiate(uniMap map[string]Fc) (FcSlice, error) {

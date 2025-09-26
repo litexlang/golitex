@@ -20,12 +20,8 @@ import (
 	"strings"
 )
 
-func duplicateDefError(pkgName string, name string, keyword string) error {
-	if pkgName == "" {
-		return fmt.Errorf("duplicate definition of %s, it is a %s", name, keyword)
-	} else {
-		return fmt.Errorf("duplicate definition of %s in %s package, it is a %s", name, pkgName, keyword)
-	}
+func duplicateDefError(name string) error {
+	return fmt.Errorf("duplicate definition of %s", name)
 }
 
 func (knownSpecFact *KnownSpecFact_InLogicExpr) String() string {

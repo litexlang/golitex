@@ -16,15 +16,20 @@ package litex_global
 
 const Scope4Indents string = "    "
 const EmptyPkg string = ""
-const MultiLinesCommentSig string = "\"\"\""
+const MultiLinesCommentSig string = "\""
 const MaxNameLen int = 255
 const FuncFactPrefix string = "$"
-const CommentSig string = "#"
+const InlineCommentSig string = "#"
 const ContinueExecutionIfExecUnknown bool = false
-const TupleAtOp string = "[]" // TODO 删了
 const TupleFcFnHead string = "()"
 const CheckFalse = false
 
 var AssumeImportFilesAreTrue bool = false
 
 const EndOfInlineForall string = ";"
+
+const InnerGenLine uint = 0
+
+const LatexSig string = "##"
+
+const MarkdownSig string = "###"

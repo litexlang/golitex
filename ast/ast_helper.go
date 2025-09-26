@@ -21,7 +21,7 @@ import (
 )
 
 func EqualFact(left, right Fc) *SpecFactStmt {
-	return NewSpecFactStmt(TruePure, FcAtom(glob.KeySymbolEqual), []Fc{left, right})
+	return NewSpecFactStmt(TruePure, FcAtom(glob.KeySymbolEqual), []Fc{left, right}, glob.InnerGenLine)
 }
 
 func (stmt *UniFactStmt) ParamInParamSetFacts(uniConMap map[string]Fc) []*SpecFactStmt {
@@ -60,7 +60,7 @@ func ReverseSliceOfReversibleFacts(facts []Spec_OrFact) []Spec_OrFact {
 		reversedSpecFacts[i] = specFact.ReverseTrue()
 	}
 
-	orFact_GotBYReversedSpecFacts := NewOrStmt(reversedSpecFacts)
+	orFact_GotBYReversedSpecFacts := NewOrStmt(reversedSpecFacts, glob.InnerGenLine)
 	ret = append(ret, orFact_GotBYReversedSpecFacts)
 
 	specFacts_GotByReversedOrFacts := []*SpecFactStmt{}
@@ -77,7 +77,7 @@ func ReverseSliceOfReversibleFacts(facts []Spec_OrFact) []Spec_OrFact {
 }
 
 func NewEqualFact(left, right Fc) *SpecFactStmt {
-	return NewSpecFactStmt(TruePure, FcAtom(glob.KeySymbolEqual), []Fc{left, right})
+	return NewSpecFactStmt(TruePure, FcAtom(glob.KeySymbolEqual), []Fc{left, right}, glob.InnerGenLine)
 }
 
 func IsFcFnWithHeadName(fc Fc, headName string) bool {
@@ -148,7 +148,7 @@ func (stmt *EqualsFactStmt) ToEqualFacts_PairwiseCombination() []*SpecFactStmt {
 }
 
 func (stmt *ClaimPropStmt) ToProp() *DefPropStmt {
-	return NewDefPropStmt(&stmt.Prop.DefHeader, stmt.Prop.DomFacts, stmt.Prop.IffFacts, []FactStmt{})
+	return NewDefPropStmt(&stmt.Prop.DefHeader, stmt.Prop.DomFacts, stmt.Prop.IffFacts, []FactStmt{}, stmt.GetLine())
 }
 
 func (strSlice StrSlice) ToFcSlice() []Fc {
@@ -161,24 +161,24 @@ func (strSlice StrSlice) ToFcSlice() []Fc {
 
 func (head DefHeader) ToSpecFact() *SpecFactStmt {
 	params := head.Params.ToFcSlice()
-	return NewSpecFactStmt(TruePure, FcAtom(head.Name), params)
+	return NewSpecFactStmt(TruePure, FcAtom(head.Name), params, glob.InnerGenLine)
 }
 
 func (stmt *DefPropStmt) ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue() *UniFactStmt {
-	return NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, []FactStmt{stmt.DefHeader.ToSpecFact()}, stmt.ThenFacts)
+	return NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, []FactStmt{stmt.DefHeader.ToSpecFact()}, stmt.ThenFacts, glob.InnerGenLine)
 }
 
 func (stmt *DefExistPropStmt) ToProp() *SpecFactStmt {
 	params := stmt.DefBody.DefHeader.Params.ToFcSlice()
-	return NewSpecFactStmt(TruePure, FcAtom(stmt.DefBody.DefHeader.Name), params)
+	return NewSpecFactStmt(TruePure, FcAtom(stmt.DefBody.DefHeader.Name), params, glob.InnerGenLine)
 }
 
 func (stmt *DefExistPropStmt) ToForallParamsSatisfyDomFacts_Then_ExistFactIsTrue() *UniFactStmt {
-	return NewUniFact(stmt.ExistParams, stmt.ExistParamSets, stmt.DefBody.DomFacts, []FactStmt{stmt.ToProp()})
+	return NewUniFact(stmt.ExistParams, stmt.ExistParamSets, stmt.DefBody.DomFacts, []FactStmt{stmt.ToProp()}, glob.InnerGenLine)
 }
 
 func (stmt *NamedUniFactStmt) ToUniFact() *UniFactStmt {
-	return NewUniFact(stmt.DefPropStmt.DefHeader.Params, stmt.DefPropStmt.DefHeader.ParamSets, stmt.DefPropStmt.IffFacts, stmt.DefPropStmt.ThenFacts)
+	return NewUniFact(stmt.DefPropStmt.DefHeader.Params, stmt.DefPropStmt.DefHeader.ParamSets, stmt.DefPropStmt.IffFacts, stmt.DefPropStmt.ThenFacts, glob.InnerGenLine)
 }
 
 func (fcFn *FcFn) IsFcFn_HasAtomHead_ReturnHead() (FcAtom, bool) {
@@ -220,7 +220,7 @@ func (stmt *FnTemplateDefStmt) Instantiate_GetFnTemplateNoName(fc *FcFn) (*FnTSt
 		return nil, err
 	}
 
-	return NewFnTStruct(stmt.Fn.Params, instantiatedParamSets, instantiatedRetSet, instantiatedDomFacts, instantiatedThenFacts), nil
+	return NewFnTStruct(stmt.Fn.Params, instantiatedParamSets, instantiatedRetSet, instantiatedDomFacts, instantiatedThenFacts, stmt.Line), nil
 }
 
 func (fcFn *FcFn) HasHeadInSlice(headNames []string) bool {
@@ -253,7 +253,7 @@ func (fcAsFcFn *FcFn) FnTFc_ToFnTNoName() (*FnTStruct, error) {
 	paramSets := fcAsFcFnHeadAsFcFn.Params
 	retSet := fcAsFcFn.Params[0]
 
-	fnTNoName := NewFnTStruct(randomParams, paramSets, retSet, []FactStmt{}, []FactStmt{})
+	fnTNoName := NewFnTStruct(randomParams, paramSets, retSet, []FactStmt{}, []FactStmt{}, glob.InnerGenLine)
 
 	return fnTNoName, nil
 }
@@ -320,5 +320,5 @@ func FcFnT_To_FnTStruct(fcFnTypeT *FcFn) (*FnTStruct, bool) {
 	}
 
 	excelNames := glob.GenerateNamesLikeExcelColumnNames(len(paramSets))
-	return NewFnTStruct(excelNames, paramSets, retSet, []FactStmt{}, []FactStmt{}), true
+	return NewFnTStruct(excelNames, paramSets, retSet, []FactStmt{}, []FactStmt{}, glob.InnerGenLine), true
 }

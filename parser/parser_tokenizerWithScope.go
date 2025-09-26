@@ -39,7 +39,7 @@ func newTokenizerWithScope(lines []string) *tokenizerWithScope {
 // nextToken 返回当前行的下一个 token
 func (t *tokenizerWithScope) nextToken(line string, start int) (string, int, error) {
 	// 跳过注释
-	if start+1 < len(line) && line[start:start+1] == glob.CommentSig {
+	if start+1 < len(line) && line[start:start+1] == glob.InlineCommentSig {
 		return "", len(line), nil
 	}
 
@@ -81,46 +81,132 @@ func (t *tokenizerWithScope) tokenizeLine(line string) ([]string, error) {
 	return tokens, nil
 }
 
-func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]tokenBlock, error) {
-	blocks := []tokenBlock{}
+func lineNum(l int) int {
+	return l + 1
+}
 
+// skipCommentsAndEmptyLines 跳过注释和空行，返回是否应该继续处理当前行
+// 返回值：true 表示跳过当前行，false 表示继续处理当前行
+func (t *tokenizerWithScope) skipCommentsAndEmptyLines() (bool, error) {
+	line := t.lines[t.currentLine]
+	trimmed := strings.TrimSpace(line)
+
+	// 跳过以 # 开头的行
+	if strings.HasPrefix(trimmed, "#") {
+		t.currentLine++
+		return true, nil
+	}
+
+	// 跳过以 """ 开头的多行注释块
+	if strings.HasPrefix(trimmed, glob.MultiLinesCommentSig) {
+		found := false
+		for t.currentLine < len(t.lines) {
+			t.currentLine++
+			if t.currentLine >= len(t.lines) {
+				return false, fmt.Errorf("unclosed triple quote comment starting at line %d", lineNum(t.currentLine))
+			}
+			nextLine := t.lines[t.currentLine]
+			nextTrimmed := strings.TrimSpace(nextLine)
+			if strings.HasPrefix(nextTrimmed, glob.MultiLinesCommentSig) {
+				found = true
+				t.currentLine++
+				break
+			}
+		}
+		if !found {
+			return false, fmt.Errorf("unclosed triple quote comment starting at line %d", lineNum(t.currentLine))
+		}
+		return true, nil
+	}
+
+	// 跳过空行
+	if trimmed == "" {
+		t.currentLine++
+		return true, nil
+	}
+
+	return false, nil
+}
+
+// removeInlineComment 移除行内注释（# 后面的内容）
+func (t *tokenizerWithScope) removeInlineComment(line string) string {
+	if idx := strings.Index(line, "#"); idx >= 0 {
+		return line[:idx]
+	}
+	return line
+}
+
+// findFirstNonCommentLine 找到第一个非注释、非空行，返回处理后的行和缩进
+// 用于确定子块的缩进级别
+func (t *tokenizerWithScope) findFirstNonCommentLine(currentIndent int) (string, int, error) {
 	for t.currentLine < len(t.lines) {
-		line := t.lines[t.currentLine]
+		nextLine := t.lines[t.currentLine]
 
-		// 处理注释：跳过以 # 开头的行
-		trimmed := strings.TrimSpace(line)
-		if strings.HasPrefix(trimmed, "#") {
+		// 处理行内注释
+		nextLine = t.removeInlineComment(nextLine)
+
+		// 跳过空行
+		if strings.TrimSpace(nextLine) == "" {
 			t.currentLine++
 			continue
 		}
 
-		// 处理多行注释：跳过以 """ 开头的多行注释块
-		if strings.HasPrefix(trimmed, "\"\"\"") {
+		// 跳过注释行
+		if strings.HasPrefix(strings.TrimSpace(nextLine), "#") {
+			t.currentLine++
+			continue
+		}
+
+		// 跳过多行注释
+		if strings.HasPrefix(strings.TrimSpace(nextLine), glob.MultiLinesCommentSig) {
 			found := false
 			for t.currentLine < len(t.lines) {
 				t.currentLine++
 				if t.currentLine >= len(t.lines) {
-					return nil, fmt.Errorf("unclosed triple quote comment starting at line %d", t.currentLine)
+					return "", 0, fmt.Errorf("unclosed triple quote comment starting at line %d", lineNum(t.currentLine))
 				}
-				nextLine := t.lines[t.currentLine]
-				nextTrimmed := strings.TrimSpace(nextLine)
-				if strings.HasPrefix(nextTrimmed, "\"\"\"") {
+				nextTrimmed := strings.TrimSpace(t.lines[t.currentLine])
+				if strings.HasPrefix(nextTrimmed, glob.MultiLinesCommentSig) {
 					found = true
 					t.currentLine++
 					break
 				}
 			}
 			if !found {
-				return nil, fmt.Errorf("unclosed triple quote comment starting at line %d", t.currentLine)
+				return "", 0, fmt.Errorf("unclosed triple quote comment starting at line %d", lineNum(t.currentLine))
 			}
 			continue
 		}
 
-		// 跳过空行
-		if trimmed == "" {
-			t.currentLine++
+		// 计算子行的缩进
+		nextIndent := len(nextLine) - len(strings.TrimLeft(nextLine, " "))
+
+		// 如果缩进没有更深，说明没有子块
+		if nextIndent <= currentIndent {
+			return "", 0, nil
+		}
+
+		return nextLine, nextIndent, nil
+	}
+
+	return "", currentIndent, nil
+}
+
+func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]tokenBlock, error) {
+	blocks := []tokenBlock{}
+
+	for t.currentLine < len(t.lines) {
+		// 处理注释和空行
+		shouldSkip, err := t.skipCommentsAndEmptyLines()
+		if err != nil {
+			return nil, err
+		}
+		if shouldSkip {
 			continue
 		}
+
+		// 重新获取当前行（因为可能已经跳过了注释行）
+		line := t.lines[t.currentLine]
 
 		// 计算当前行的缩进
 		indent := len(line) - len(strings.TrimLeft(line, " "))
@@ -132,14 +218,11 @@ func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]tokenBlock, error
 
 		// 如果缩进大于当前缩进，说明缩进错误
 		if indent > currentIndent {
-			return nil, fmt.Errorf("incorrect indentation:\n\"%s\"\nMaybe the previous nonempty line should end with \":\" at line %d", line, t.currentLine+1)
+			return nil, fmt.Errorf("incorrect indentation:\n\"%s\"\nMaybe the previous nonempty line should end with \":\" at line %d", line, lineNum(t.currentLine))
 		}
 
-		// 处理行内注释：截断 // 后面的内容
-		lineForTokenize := line
-		if idx := strings.Index(line, "#"); idx >= 0 {
-			lineForTokenize = line[:idx]
-		}
+		// 处理行内注释：截断 # 后面的内容
+		lineForTokenize := t.removeInlineComment(line)
 
 		// Tokenize 当前行
 		tokens, err := t.tokenizeLine(lineForTokenize)
@@ -154,62 +237,18 @@ func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]tokenBlock, error
 		// 如果当前行以 : 结尾，需要解析子块
 		if tokens[len(tokens)-1] == ":" {
 			// 找到第一个非空、非注释的子行来确定缩进
-			for t.currentLine < len(t.lines) {
-				nextLine := t.lines[t.currentLine]
+			_, nextIndent, err := t.findFirstNonCommentLine(currentIndent)
+			if err != nil {
+				return nil, err
+			}
 
-				// 处理行内注释
-				if idx := strings.Index(nextLine, "#"); idx >= 0 {
-					nextLine = nextLine[:idx]
-				}
-
-				// 跳过空行
-				if strings.TrimSpace(nextLine) == "" {
-					t.currentLine++
-					continue
-				}
-
-				// 跳过注释行
-				if strings.HasPrefix(strings.TrimSpace(nextLine), "#") {
-					t.currentLine++
-					continue
-				}
-
-				// 跳过多行注释
-				if strings.HasPrefix(strings.TrimSpace(nextLine), "\"\"\"") {
-					found := false
-					for t.currentLine < len(t.lines) {
-						t.currentLine++
-						if t.currentLine >= len(t.lines) {
-							return nil, fmt.Errorf("unclosed triple quote comment starting at line %d", t.currentLine)
-						}
-						nextTrimmed := strings.TrimSpace(t.lines[t.currentLine])
-						if strings.HasPrefix(nextTrimmed, "\"\"\"") {
-							found = true
-							t.currentLine++
-							break
-						}
-					}
-					if !found {
-						return nil, fmt.Errorf("unclosed triple quote comment starting at line %d", t.currentLine)
-					}
-					continue
-				}
-
-				// 计算子行的缩进
-				nextIndent := len(nextLine) - len(strings.TrimLeft(nextLine, " "))
-
-				// 如果缩进没有更深，说明没有子块
-				if nextIndent <= currentIndent {
-					break
-				}
-
-				// 递归解析子块
+			// 如果有更深的缩进，递归解析子块
+			if nextIndent > currentIndent {
 				subBlocks, err := t.parseBlocks(nextIndent)
 				if err != nil {
 					return nil, err
 				}
 				block.body = subBlocks
-				break
 			}
 		}
 
@@ -218,106 +257,3 @@ func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]tokenBlock, error
 
 	return blocks, nil
 }
-
-// func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]tokenBlock, error) {
-// 	blocks := []tokenBlock{}
-
-// 	for t.currentLine < len(t.lines) {
-// 		line := t.lines[t.currentLine]
-// 		// indent == currentIndent:
-// 		trimmed := strings.TrimSpace(line)
-
-// 		// 跳过以 # 开头的行（#前面可能有空格）
-// 		if strings.HasPrefix(trimmed, "#") {
-// 			t.currentLine++
-// 			continue
-// 		}
-
-// 		// 跳过以 """ 开头的多行注释块
-// 		if strings.HasPrefix(trimmed, "\"\"\"") {
-// 			// 找到对应的结束 """
-// 			found := false
-// 			for t.currentLine < len(t.lines) {
-// 				t.currentLine++
-// 				if t.currentLine >= len(t.lines) {
-// 					return nil, fmt.Errorf("unclosed triple quote comment starting at line %d", t.currentLine)
-// 				}
-// 				nextLine := t.lines[t.currentLine]
-// 				nextTrimmed := strings.TrimSpace(nextLine)
-// 				if strings.HasPrefix(nextTrimmed, "\"\"\"") {
-// 					found = true
-// 					t.currentLine++
-// 					break
-// 				}
-// 			}
-// 			if !found {
-// 				return nil, fmt.Errorf("unclosed triple quote comment starting at line %d", t.currentLine)
-// 			}
-// 			continue
-// 		}
-
-// 		// 计算当前行的缩进
-// 		indent := len(line) - len(strings.TrimLeft(line, " "))
-
-// 		if indent < currentIndent {
-// 			// 缩进减少，说明当前块结束
-// 			return blocks, nil
-// 		}
-
-// 		if indent > currentIndent {
-// 			return nil, fmt.Errorf("incorrect indentation:\n\"%s\"\nMaybe the previous nonempty line should end with \":\"", line)
-// 		}
-
-// 		// 判断是否为 header 行（是否以 : 结尾）
-// 		lineForTokenize := line
-// 		if strings.HasSuffix(line, ":") {
-// 			lineForTokenize = line
-// 		}
-
-// 		tokens, err := t.tokenizeLine(lineForTokenize)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-
-// 		block := newTokenBlock(strSliceCursor{0, tokens}, nil, uint(t.currentLine))
-
-// 		t.currentLine++ // consume this line
-
-// 		// 判断是否需要解析子 block
-// 		if strings.HasSuffix(line, ":") {
-// 			for t.currentLine < len(t.lines) {
-// 				nextLine := t.lines[t.currentLine]
-
-// 				// 同样先处理注释
-// 				if idx := strings.Index(nextLine, "//"); idx >= 0 {
-// 					nextLine = nextLine[:idx]
-// 				}
-// 				nextTrimmed := strings.TrimSpace(nextLine)
-
-// 				// 跳过空行
-// 				if nextTrimmed == "" {
-// 					t.currentLine++
-// 					continue
-// 				}
-
-// 				nextIndent := len(nextLine) - len(strings.TrimLeft(nextLine, " "))
-// 				if nextIndent <= currentIndent {
-// 					// 没有更深缩进，说明没有子块
-// 					break
-// 				}
-
-// 				// 有子 block
-// 				subBlocks, err := t.parseBlocks(nextIndent)
-// 				if err != nil {
-// 					return nil, err
-// 				}
-// 				block.body = subBlocks
-// 				break
-// 			}
-// 		}
-
-// 		blocks = append(blocks, *block)
-// 	}
-
-// 	return blocks, nil
-// }

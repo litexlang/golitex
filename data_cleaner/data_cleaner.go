@@ -83,8 +83,8 @@ func CleanStmt(stmt ast.Stmt) (*CleanData, error) {
 }
 
 func cleanClaimPropStmt(claimPropStmt *ast.ClaimPropStmt) (*CleanData, error) {
-	uniFact := ast.NewUniFact(claimPropStmt.Prop.DefHeader.Params, claimPropStmt.Prop.DefHeader.ParamSets, claimPropStmt.Prop.IffFacts, claimPropStmt.Prop.ThenFacts)
-	cleanClaimData, err := cleanClaimProveStmt(ast.NewClaimProveStmt(uniFact, claimPropStmt.Proofs))
+	uniFact := ast.NewUniFact(claimPropStmt.Prop.DefHeader.Params, claimPropStmt.Prop.DefHeader.ParamSets, claimPropStmt.Prop.IffFacts, claimPropStmt.Prop.ThenFacts, claimPropStmt.Line)
+	cleanClaimData, err := cleanClaimProveStmt(ast.NewClaimProveStmt(uniFact, claimPropStmt.Proofs, claimPropStmt.Line))
 	if err != nil {
 		return nil, err
 	}

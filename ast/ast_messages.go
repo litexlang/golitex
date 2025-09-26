@@ -130,7 +130,7 @@ func exist_st_FactString(stmt *SpecFactStmt) string {
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeywordSt)
 	builder.WriteString(" ")
-	builder.WriteString(NewSpecFactStmt(TruePure, stmt.PropName, factParams).String())
+	builder.WriteString(NewSpecFactStmt(TruePure, stmt.PropName, factParams, glob.InnerGenLine).String())
 
 	return builder.String()
 }
@@ -736,7 +736,7 @@ func (stmt *KnowExistPropStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *CommentStmt) String() string {
+func (stmt *LatexStmt) String() string {
 	return stmt.Comment
 }
 
@@ -759,7 +759,7 @@ func (stmt *FnTemplateDefStmt) String() string {
 		builder.WriteByte('\n')
 	}
 
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents(NewDefFnStmt("", NewFnTStruct(stmt.Fn.Params, stmt.Fn.ParamSets, stmt.Fn.RetSet, stmt.Fn.DomFacts, stmt.Fn.ThenFacts)).String(), 1))
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(NewDefFnStmt("", NewFnTStruct(stmt.Fn.Params, stmt.Fn.ParamSets, stmt.Fn.RetSet, stmt.Fn.DomFacts, stmt.Fn.ThenFacts, stmt.Line), stmt.Line).String(), 1))
 
 	return builder.String()
 }
@@ -910,4 +910,8 @@ func (fnTStruct *FnTStruct) String() string {
 		}
 	}
 	return builder.String()
+}
+
+func (stmt *MarkdownStmt) String() string {
+	return stmt.Markdown
 }
