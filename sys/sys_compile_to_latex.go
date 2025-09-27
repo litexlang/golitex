@@ -36,7 +36,11 @@ func CompileFileToLatex(path string) (string, glob.SysSignal, error) {
 		return "", glob.SysSignalParseError, err
 	}
 
-	latexStr, err := litex_to_latex_compiler.CompileStmtToLatexString(string(content))
+	return CompileCodeToLatex(string(content))
+}
+
+func CompileCodeToLatex(code string) (string, glob.SysSignal, error) {
+	latexStr, err := litex_to_latex_compiler.CompileStmtToLatexString(code)
 	if err != nil {
 		return "", glob.SysSignalParseError, err
 	}
