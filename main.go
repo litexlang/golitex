@@ -53,6 +53,19 @@ func main() {
 
 	// Handle execution flags
 	if *executeFlag != "" {
+		// Check if -latex flag is also provided
+		if *latexFlag != "" {
+			// Compile inline code to LaTeX
+			msg, signal, err := sys.CompileCodeToLatex(*executeFlag)
+			if err != nil || signal != glob.SysSignalTrue {
+				fmt.Printf("Error: %s\n", err)
+				os.Exit(1)
+			}
+			fmt.Println(msg)
+			return
+		}
+
+		// Normal execution
 		msg, signal, err := sys.ExecuteCodeAndReturnMessage(*executeFlag)
 		msg = strings.TrimSpace(msg)
 		fmt.Println(msg)
