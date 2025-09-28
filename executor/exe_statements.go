@@ -23,7 +23,7 @@ import (
 	"strings"
 )
 
-func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
+func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, string, error) {
 	var err error = nil
 	var execState glob.ExecState = glob.ExecState_True
 
@@ -99,9 +99,9 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, error) {
 	}
 
 	if err != nil {
-		return glob.ExecState_Error, fmt.Errorf("execution error at line %d:\n%w", stmt.GetLine(), err)
+		return glob.ExecState_Error, "", fmt.Errorf("execution error at line %d:\n%w", stmt.GetLine(), err)
 	} else {
-		return execState, nil
+		return execState, fmt.Sprintf("%s\nsuccess! :)\nat line %d", stmt, stmt.GetLine()), nil
 	}
 }
 
@@ -228,7 +228,7 @@ func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) error {
 
 func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) (glob.ExecState, error) {
 	for _, curStmt := range proof {
-		execState, err := exec.Stmt(curStmt)
+		execState, _, err := exec.Stmt(curStmt)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
@@ -726,7 +726,7 @@ func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) (glob.ExecState, error) {
 	}
 
 	for _, proof := range stmt.Proofs {
-		execState, err := exec.Stmt(proof)
+		execState, _, err := exec.Stmt(proof)
 		if notOkExec(execState, err) {
 			return execState, err
 		}

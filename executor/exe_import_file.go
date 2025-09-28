@@ -97,7 +97,7 @@ func (exec *Executor) importMainFileStmt(stmt *ast.ImportFileStmt) (glob.ExecSta
 	}
 
 	for _, stmt := range stmts {
-		execState, err := exec.Stmt(stmt)
+		execState, _, err := exec.Stmt(stmt)
 		if notOkExec(execState, err) {
 			return execState, err
 		}
