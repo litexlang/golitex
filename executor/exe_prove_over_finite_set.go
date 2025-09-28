@@ -25,7 +25,7 @@ func (exec *Executor) ProveOverFiniteSet(stmt *ast.ProveOverFiniteSetStmt) (glob
 	for _, paramSet := range stmt.Fact.ParamSets {
 		enumFacts, ok := exec.env.GetEnumFact(paramSet.String())
 		if !ok {
-			return glob.ExecState_Error, fmt.Errorf("prove over finite set statement error: enum not found")
+			return glob.ExecStateError, fmt.Errorf("prove over finite set statement error: enum not found")
 		}
 		enums = append(enums, enumFacts)
 	}
@@ -36,18 +36,18 @@ func (exec *Executor) ProveOverFiniteSet(stmt *ast.ProveOverFiniteSetStmt) (glob
 		return exec.verProveOverFiniteSet_NoProveSection(stmt, cartesianProductOfFcs)
 	} else {
 		if len(stmt.ProofsSlice) != len(cartesianProductOfFcs) {
-			return glob.ExecState_False, fmt.Errorf("there are %d kind(s) of cartesian product of parameters %s, but there are %d prove sections", len(cartesianProductOfFcs), stmt.Fact.Params, len(stmt.ProofsSlice))
+			return glob.ExecStateError, fmt.Errorf("there are %d kind(s) of cartesian product of parameters %s, but there are %d prove sections", len(cartesianProductOfFcs), stmt.Fact.Params, len(stmt.ProofsSlice))
 		} else {
 			for i := range len(cartesianProductOfFcs) {
 				ok, err := exec.verProveOverFiniteSet_ProveAtProveSectionI(stmt, cartesianProductOfFcs[i], i)
 				if err != nil {
-					return glob.ExecState_Error, err
+					return glob.ExecStateError, err
 				}
 				if !ok {
-					return glob.ExecState_False, fmt.Errorf("failed to prove at prove section %d", i)
+					return glob.ExecStateError, fmt.Errorf("failed to prove at prove section %d", i)
 				}
 			}
-			return glob.ExecState_True, nil
+			return glob.ExecStateTrue, nil
 		}
 	}
 }
@@ -77,14 +77,14 @@ func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.Prove
 		if err != nil {
 			return false, err
 		}
-		if state != glob.ExecState_True {
+		if state != glob.ExecStateTrue {
 			domFactAs := instantiatedDomFact.(ast.Spec_OrFact)
 			for _, fact := range domFactAs.ReverseIsTrue() {
 				state, err := exec.factStmt(fact)
 				if err != nil {
 					return false, err
 				}
-				if state != glob.ExecState_True {
+				if state != glob.ExecStateTrue {
 					return false, fmt.Errorf("domain fact in universal fact in prove over finite set statement must be true or not true, it can not be unknown:\n%s", instantiatedDomFact)
 				}
 			}
@@ -103,7 +103,7 @@ func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.Prove
 		if err != nil {
 			return false, err
 		}
-		if state != glob.ExecState_True {
+		if state != glob.ExecStateTrue {
 			return false, nil
 		}
 	}
@@ -113,7 +113,7 @@ func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.Prove
 		if err != nil {
 			return false, err
 		}
-		if state != glob.ExecState_True {
+		if state != glob.ExecStateTrue {
 			return false, nil
 		}
 	}
@@ -140,22 +140,22 @@ func (exec *Executor) verProveOverFiniteSet_NoProveSection(stmt *ast.ProveOverFi
 		for _, domFact := range stmt.Fact.DomFacts {
 			instantiatedDomFact, err := domFact.Instantiate(uniMap)
 			if err != nil {
-				return glob.ExecState_Error, err
+				return glob.ExecStateError, err
 			}
 
 			state, err := exec.factStmt(instantiatedDomFact)
 			if err != nil {
-				return glob.ExecState_Error, err
+				return glob.ExecStateError, err
 			}
-			if state != glob.ExecState_True {
+			if state != glob.ExecStateTrue {
 				domFactAs := instantiatedDomFact.(ast.Spec_OrFact)
 				for _, fact := range domFactAs.ReverseIsTrue() {
 					state, err := exec.factStmt(fact)
 					if err != nil {
-						return glob.ExecState_Error, err
+						return glob.ExecStateError, err
 					}
-					if state != glob.ExecState_True {
-						return glob.ExecState_Error, fmt.Errorf("domain fact in universal fact in prove over finite set statement must be true or not true, it can not be unknown:\n%s", instantiatedDomFact)
+					if state != glob.ExecStateTrue {
+						return glob.ExecStateError, fmt.Errorf("domain fact in universal fact in prove over finite set statement must be true or not true, it can not be unknown:\n%s", instantiatedDomFact)
 					}
 				}
 
@@ -172,7 +172,7 @@ func (exec *Executor) verProveOverFiniteSet_NoProveSection(stmt *ast.ProveOverFi
 		for _, thenFact := range stmt.Fact.ThenFacts {
 			instantiatedThenFact, err := thenFact.Instantiate(uniMap)
 			if err != nil {
-				return glob.ExecState_Error, err
+				return glob.ExecStateError, err
 			}
 			instantiatedThenFacts = append(instantiatedThenFacts, instantiatedThenFact)
 		}
@@ -181,13 +181,13 @@ func (exec *Executor) verProveOverFiniteSet_NoProveSection(stmt *ast.ProveOverFi
 		for _, fact := range instantiatedThenFacts {
 			state, err := exec.factStmt(fact)
 			if err != nil {
-				return glob.ExecState_Error, err
+				return glob.ExecStateError, err
 			}
-			if state != glob.ExecState_True {
-				return glob.ExecState_False, fmt.Errorf("failed to prove instantiated then facts: %s", fact)
+			if state != glob.ExecStateTrue {
+				return glob.ExecStateError, fmt.Errorf("failed to prove instantiated then facts: %s", fact)
 			}
 		}
 	}
 
-	return glob.ExecState_True, nil
+	return glob.ExecStateTrue, nil
 }

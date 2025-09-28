@@ -22,7 +22,7 @@ import (
 
 func (exec *Executor) assumeStmtIsTrueRun(stmt ast.Stmt) (glob.ExecState, error) {
 	var err error = nil
-	var execState glob.ExecState = glob.ExecState_True
+	var execState glob.ExecState = glob.ExecStateTrue
 
 	switch stmt := (stmt).(type) {
 	case ast.FactStmt:
@@ -47,7 +47,7 @@ func (exec *Executor) assumeStmtIsTrueRun(stmt ast.Stmt) (glob.ExecState, error)
 	case *ast.ProveInEachCaseStmt:
 		panic("implement me")
 	case *ast.ImportDirStmt:
-		return glob.ExecState_True, nil
+		return glob.ExecStateTrue, nil
 	case *ast.ProveStmt:
 		panic("implement me")
 	case *ast.ClaimProveByContradictionStmt:
@@ -55,7 +55,7 @@ func (exec *Executor) assumeStmtIsTrueRun(stmt ast.Stmt) (glob.ExecState, error)
 	// case *ast.DefFnTemplateStmt:
 	// 	err = exec.defFnTemplateStmt(stmt)
 	case *ast.ImportFileStmt:
-		return glob.ExecState_True, nil
+		return glob.ExecStateTrue, nil
 	case *ast.KnowExistPropStmt:
 		_, err = exec.knowExistPropStmt(stmt)
 	default:
