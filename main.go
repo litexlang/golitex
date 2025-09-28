@@ -34,7 +34,7 @@ func main() {
 	fileFlag := flag.String("f", "", "Execute the given file")
 	repoFlag := flag.String("r", "", "Execute the given repo")
 	latexFlag := flag.String("latex", "", "Compile the given file to latex")
-	latexFileFlag := flag.String("elatex", "", "Compile the given file to latex")
+	elatexFlag := flag.String("elatex", "", "Compile the given file to latex")
 
 	flag.Parse()
 
@@ -53,9 +53,9 @@ func main() {
 	}
 
 	// Handle combined -latex and -e
-	if *latexFileFlag != "" {
-		// 这里忽略 latexFlag 的值，只要有 -latex 就走 LaTeX 模式
-		msg, signal, err := sys.CompileCodeToLatex(*latexFileFlag)
+	if *elatexFlag != "" {
+		// 处理转义序列
+		msg, signal, err := sys.CompileCodeToLatex(processEscapeSequences(*elatexFlag))
 		if err != nil || signal != glob.SysSignalTrue {
 			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)
@@ -67,7 +67,7 @@ func main() {
 	// Handle execution flags
 	if *executeFlag != "" {
 		// Normal execution
-		msg, signal, err := sys.ExecuteCodeAndReturnMessage(*executeFlag)
+		msg, signal, err := sys.ExecuteCodeAndReturnMessage(processEscapeSequences(*executeFlag))
 		msg = strings.TrimSpace(msg)
 		fmt.Println(msg)
 		if err != nil {
@@ -87,7 +87,7 @@ func main() {
 		}
 
 		// Process file
-		msg, signal, err := sys.RunFile(*fileFlag)
+		msg, signal, err := sys.RunFile(processEscapeSequences(*fileFlag))
 		fmt.Println(msg)
 		if err != nil {
 			fmt.Printf("Error: %s\n", err)
@@ -105,7 +105,7 @@ func main() {
 			os.Exit(1)
 		}
 		// run the repo
-		msg, signal, err := sys.RunRepo(*repoFlag)
+		msg, signal, err := sys.RunRepo(processEscapeSequences(*repoFlag))
 		fmt.Println(msg)
 		if err != nil {
 			fmt.Printf("Error: %s\n", err)
@@ -118,7 +118,7 @@ func main() {
 	}
 
 	if *latexFlag != "" {
-		msg, signal, err := sys.CompileFileToLatex(*latexFlag)
+		msg, signal, err := sys.CompileFileToLatex(processEscapeSequences(*latexFlag))
 		if err != nil || signal != glob.SysSignalTrue {
 			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)
@@ -130,4 +130,8 @@ func main() {
 	// If no flags are provided, run REPL
 	sys.RunREPLInTerminal()
 
+}
+
+func processEscapeSequences(code string) string {
+	return strings.ReplaceAll(code, "\\r\\n", "\n")
 }
