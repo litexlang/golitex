@@ -482,4 +482,10 @@ know:
 	forall x R: x > 0 => log(x, x) = 1
 
 let pi R # pi is the ratio of the circumference of a circle to its diameter
+
+know:
+	forall x, y, z R: x + y = z => x = z - y, y = z - x
+	forall x, y, z R: x - y = z => x = z + y, y = x - z
+	forall x, y, z R: x = y + z => x - y = z, x - z = y
+	forall x, y, z R: x = y - z => x - y = -z, x + z = y
 `
