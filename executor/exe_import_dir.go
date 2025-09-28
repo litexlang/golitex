@@ -107,7 +107,7 @@ func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string, importS
 		return glob.ExecState_Error, err
 	}
 	for _, topStmt := range topStmtSlice {
-		execState, err = exec.Stmt(topStmt)
+		execState, _, err = exec.Stmt(topStmt)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
