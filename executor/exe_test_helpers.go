@@ -43,13 +43,13 @@ func execStmtTest(topStmt []ast.Stmt) []string {
 	isNotTrue := false
 
 	for _, topStmt := range topStmt {
-		execState, err := executor.Stmt(topStmt)
+		execState, _, err := executor.Stmt(topStmt)
 		if err != nil {
 			messages = append(messages, (err.Error()))
 			isNotTrue = true
 		}
 
-		if execState != glob.ExecState_True && !glob.ContinueExecutionIfExecUnknown {
+		if execState != glob.ExecStateTrue && !glob.ContinueExecutionIfExecUnknown {
 			isNotTrue = true
 		}
 
