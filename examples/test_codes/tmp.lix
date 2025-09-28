@@ -1,8 +1,10 @@
 claim:
-	forall a, b, c R:
-		a + c = b + c
-		=>:
-			a = b
-	prove:
-		a + c - c = b + c - c
-		a = b + c - c
+    forall x R:
+        3 * x - 4.8 = 4 * 0.3
+        =>:
+            x = 2
+    prove:
+        4 * 0.3 = 1.2
+        3 * x - 4.8 = 1.2
+        3 * x = 1.2 + 4.8 = 6.0
+        x = 6.0 / 3 = 2
