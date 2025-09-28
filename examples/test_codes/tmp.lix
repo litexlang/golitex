@@ -1,5 +1,8 @@
-1 + 1 =2
-
-fn f(x R) R
-
-know forall x R => f(x) = x
+claim:
+	forall a, b, c R:
+		a + c = b + c
+		=>:
+			a = b
+	prove:
+		a + c - c = b + c - c
+		a = b + c - c
