@@ -34,6 +34,7 @@ func main() {
 	fileFlag := flag.String("f", "", "Execute the given file")
 	repoFlag := flag.String("r", "", "Execute the given repo")
 	latexFlag := flag.String("latex", "", "Compile the given file to latex")
+	latexFileFlag := flag.String("elatex", "", "Compile the given file to latex")
 
 	flag.Parse()
 
@@ -51,8 +52,21 @@ func main() {
 		return
 	}
 
+	// Handle combined -latex and -e
+	if *latexFileFlag != "" {
+		// 这里忽略 latexFlag 的值，只要有 -latex 就走 LaTeX 模式
+		msg, signal, err := sys.CompileCodeToLatex(*latexFileFlag)
+		if err != nil || signal != glob.SysSignalTrue {
+			fmt.Printf("Error: %s\n", err)
+			os.Exit(1)
+		}
+		fmt.Println(msg)
+		return
+	}
+
 	// Handle execution flags
 	if *executeFlag != "" {
+		// Normal execution
 		msg, signal, err := sys.ExecuteCodeAndReturnMessage(*executeFlag)
 		msg = strings.TrimSpace(msg)
 		fmt.Println(msg)
