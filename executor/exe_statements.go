@@ -92,16 +92,22 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, string, error) {
 		execState, err = exec.haveFnStmt(stmt)
 	case *ast.MarkdownStmt:
 		execState, err = exec.markdownStmt(stmt)
+		return execState, "", err
 	case *ast.LatexStmt:
 		execState, err = exec.latexStmt(stmt)
+		return execState, "", err
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}
 
-	if err != nil {
+	if err != nil || execState == glob.ExecStateError {
 		return glob.ExecStateError, "", fmt.Errorf("failed :( line %d:\n%w", stmt.GetLine(), err)
-	} else {
+	} else if execState == glob.ExecStateTrue {
 		return execState, fmt.Sprintf("%s\nsuccess! :) line %d\n", stmt, stmt.GetLine()), nil
+	} else if execState == glob.ExecStateUnknown {
+		return execState, fmt.Sprintf("%s\nis unknown\n", stmt), nil
+	} else {
+		panic("unknown exec state")
 	}
 }
 
@@ -114,9 +120,9 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
 	}
 
 	if ok {
-		if glob.RequireMsg() {
-			exec.newMsg(fmt.Sprintf("%s\nis true\n", stmt))
-		}
+		// if glob.RequireMsg() {
+		// 	exec.newMsg(fmt.Sprintf("%s\nis true\n", stmt))
+		// }
 
 		err := exec.env.NewFact(stmt)
 		if err != nil {
@@ -124,9 +130,9 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
 		}
 		return glob.ExecStateTrue, nil
 	} else {
-		if glob.RequireMsg() {
-			exec.newMsg(fmt.Sprintf("%s\nis unknown\n", stmt))
-		}
+		// if glob.RequireMsg() {
+		// 	exec.newMsg(fmt.Sprintf("%s\nis unknown\n", stmt))
+		// }
 
 		return glob.ExecStateUnknown, nil
 	}
