@@ -32,7 +32,7 @@ func (exec *Executor) importFileStmt(stmt *ast.ImportFileStmt) (glob.ExecState, 
 	fileName := filepath.Base(codePath)
 	fileExt := filepath.Ext(fileName)
 	if fileExt != ".lix" {
-		return glob.ExecState_Error, fmt.Errorf("imported file should have .lix extension, get %s", stmt.Path)
+		return glob.ExecStateError, fmt.Errorf("imported file should have .lix extension, get %s", stmt.Path)
 	}
 
 	fileNameWithoutExt := strings.TrimSuffix(fileName, fileExt)
@@ -45,7 +45,7 @@ func (exec *Executor) importFileStmt(stmt *ast.ImportFileStmt) (glob.ExecState, 
 	exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("start importing file \"%s\"\n", stmt.Path))
 
 	if !glob.AllowImport {
-		return glob.ExecState_Error, fmt.Errorf("imported file should not contain import statement, get %s", stmt)
+		return glob.ExecStateError, fmt.Errorf("imported file should not contain import statement, get %s", stmt)
 	}
 
 	glob.AllowImport = false
@@ -55,28 +55,28 @@ func (exec *Executor) importFileStmt(stmt *ast.ImportFileStmt) (glob.ExecState, 
 
 	code, err := os.ReadFile(codePath)
 	if err != nil {
-		return glob.ExecState_Error, err
+		return glob.ExecStateError, err
 	}
 
 	// read the file
 	execState, err := exec.runSourceCode(false, string(code), stmt)
 	if err != nil {
-		return glob.ExecState_Error, err
+		return glob.ExecStateError, err
 	}
-	if execState != glob.ExecState_True {
-		return glob.ExecState_Error, fmt.Errorf("failed to execute import statement:\n%s\nSome statements in the imported file are not executed successfully", stmt)
+	if execState != glob.ExecStateTrue {
+		return glob.ExecStateError, fmt.Errorf("failed to execute import statement:\n%s\nSome statements in the imported file are not executed successfully", stmt)
 	}
 
 	exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("import file \"%s\" success\n", stmt.Path))
 
-	return glob.ExecState_True, nil
+	return glob.ExecStateTrue, nil
 }
 
 func (exec *Executor) importMainFileStmt(stmt *ast.ImportFileStmt) (glob.ExecState, error) {
 	exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("start importing file globally \"%s\"\n", stmt.Path))
 
 	if !glob.AllowImport {
-		return glob.ExecState_Error, fmt.Errorf("import globally is not allowed in imported file, get %s", stmt)
+		return glob.ExecStateError, fmt.Errorf("import globally is not allowed in imported file, get %s", stmt)
 	}
 
 	glob.AllowImport = false
@@ -87,13 +87,13 @@ func (exec *Executor) importMainFileStmt(stmt *ast.ImportFileStmt) (glob.ExecSta
 	codePath := filepath.Join(glob.CurrentTaskDirName, stmt.Path)
 	code, err := os.ReadFile(codePath)
 	if err != nil {
-		return glob.ExecState_Error, err
+		return glob.ExecStateError, err
 	}
 
 	//parse code
 	stmts, err := parser.ParseSourceCode(string(code))
 	if err != nil {
-		return glob.ExecState_Error, err
+		return glob.ExecStateError, err
 	}
 
 	for _, stmt := range stmts {
@@ -110,5 +110,5 @@ func (exec *Executor) importMainFileStmt(stmt *ast.ImportFileStmt) (glob.ExecSta
 
 	exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("import file globally \"%s\" success\n", stmt.Path))
 
-	return glob.ExecState_True, nil
+	return glob.ExecStateTrue, nil
 }

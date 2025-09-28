@@ -47,50 +47,50 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) (glob
 	startIsNPos := proveByInduction_Fact_Start_is_NPos(stmt)
 	ok, err := ver.VerFactStmt(startIsNPos, verifier.Round0NoMsg)
 	if err != nil {
-		return glob.ExecState_Error, err
+		return glob.ExecStateError, err
 	}
 	if !ok {
 		msg = fmt.Sprintf("%s\nis unknown", startIsNPos.String())
-		return glob.ExecState_Unknown, nil
+		return glob.ExecStateUnknown, nil
 	}
 
 	// 把start代入fact，得到的fact是true
 	startFact, err := proveByInduction_newStartFact(stmt)
 	if err != nil {
-		return glob.ExecState_Error, err
+		return glob.ExecStateError, err
 	}
 	ok, err = ver.VerFactStmt(startFact, verifier.Round0NoMsg)
 	if err != nil {
-		return glob.ExecState_Error, err
+		return glob.ExecStateError, err
 	}
 	if !ok {
 		msg = fmt.Sprintf("%s\nis unknown", startFact.String())
-		return glob.ExecState_Unknown, nil
+		return glob.ExecStateUnknown, nil
 	}
 
 	// 对于任意n对于fact成立，那么对于n+1也成立
 	uniFact_n_true_leads_n_plus_1_true, err := proveByInduction_newUniFact_n_true_leads_n_plus_1_true(stmt)
 	if err != nil {
-		return glob.ExecState_Error, err
+		return glob.ExecStateError, err
 	}
 	ok, err = ver.VerFactStmt(uniFact_n_true_leads_n_plus_1_true, verifier.Round0NoMsg)
 	if err != nil {
-		return glob.ExecState_Error, err
+		return glob.ExecStateError, err
 	}
 	if !ok {
 		msg = fmt.Sprintf("%s\nis unknown", uniFact_n_true_leads_n_plus_1_true.String())
-		return glob.ExecState_Unknown, nil
+		return glob.ExecStateUnknown, nil
 	}
 
 	// 对于任何 param >= start, fact 成立
 	uniFact_forall_param_geq_start_then_fact_is_true := proveByInduction_newUniFact_forall_param_geq_start_then_fact_is_true(stmt)
 	err = exec.env.NewFact(uniFact_forall_param_geq_start_then_fact_is_true)
 	if err != nil {
-		return glob.ExecState_Error, err
+		return glob.ExecStateError, err
 	}
 
 	isOk = true
-	return glob.ExecState_True, nil
+	return glob.ExecStateTrue, nil
 }
 
 func proveByInduction_Fact_Start_is_NPos(stmt *ast.ProveByInductionStmt) *ast.SpecFactStmt {
