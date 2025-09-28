@@ -47,7 +47,7 @@ func useHardcodedCodeToInit(executor *exe.Executor) error {
 	}
 	for _, statement := range statements {
 		execState, _, err := executor.Stmt(statement)
-		if err != nil || execState != glob.ExecState_True {
+		if err != nil || execState != glob.ExecStateTrue {
 			return fmt.Errorf("failed to init pipeline: %s", err)
 		}
 	}
