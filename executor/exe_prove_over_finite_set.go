@@ -99,7 +99,7 @@ func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.Prove
 	}
 
 	for _, fact := range stmt.ProofsSlice[i] {
-		state, err := exec.Stmt(fact)
+		state, _, err := exec.Stmt(fact)
 		if err != nil {
 			return false, err
 		}

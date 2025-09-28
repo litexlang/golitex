@@ -49,8 +49,9 @@ func executeCodeAndReturnMessageSlice(code string) ([]string, glob.SysSignal, er
 	msgOfTopStatements := []string{}
 
 	for _, topStmt := range topStmtSlice {
-		execState, err := executor.Stmt(topStmt)
+		execState, msg, err := executor.Stmt(topStmt)
 		msgOfTopStatements = append(msgOfTopStatements, executor.GetMsgAsStr0ToEnd())
+		msgOfTopStatements = append(msgOfTopStatements, msg)
 		if err != nil {
 			return msgOfTopStatements, glob.SysSignalRuntimeError, err
 		}
@@ -71,7 +72,7 @@ func ExecuteCodeAndReturnMessageSliceGivenSettings(code string, executor *exe.Ex
 	msgOfTopStatements := []string{}
 
 	for _, topStmt := range topStmtSlice {
-		execState, err := executor.Stmt(topStmt)
+		execState, _, err := executor.Stmt(topStmt)
 		if err != nil {
 			return nil, glob.SysSignalRuntimeError, err
 		}
