@@ -1,3 +1,5 @@
-let a R
+1 + 1 =2
 
-prop a()
+fn f(x R) R
+
+know forall x R => f(x) = x

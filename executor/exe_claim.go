@@ -46,7 +46,7 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContra
 	case *ast.UniFactStmt:
 		return exec.uniFactProveByContradiction(asStmt, stmt)
 	default:
-		return glob.ExecState_Error, fmt.Errorf("prove by contradiction only support reversible fact or uni fact")
+		return glob.ExecStateError, fmt.Errorf("prove by contradiction only support reversible fact or uni fact")
 	}
 }
 
@@ -56,7 +56,7 @@ func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.Spec_O
 	for _, curFact := range reversedFact {
 		err := exec.env.NewFact(curFact)
 		if err != nil {
-			return glob.ExecState_Error, err
+			return glob.ExecStateError, err
 		}
 	}
 
@@ -67,7 +67,7 @@ func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.Spec_O
 
 	lastStmtAsFact, ok := stmt.ClaimProveStmt.Proofs[len(stmt.ClaimProveStmt.Proofs)-1].(ast.Spec_OrFact)
 	if !ok {
-		return glob.ExecState_Error, fmt.Errorf("prove by contradiction only support fact as last statement")
+		return glob.ExecStateError, fmt.Errorf("prove by contradiction only support fact as last statement")
 	}
 
 	reversedLastFact := lastStmtAsFact.ReverseIsTrue()
@@ -89,21 +89,21 @@ func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.Spec_O
 
 	exec.newMsg(fmt.Sprintf("last statement of current claim statement:\n%s\nis true and false. Prove by contradiction is successful!", lastStmtAsFact))
 
-	return glob.ExecState_True, nil
+	return glob.ExecStateTrue, nil
 }
 
 func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt, stmt *ast.ClaimProveByContradictionStmt) (glob.ExecState, error) {
 	ver := verifier.NewVerifier(exec.env)
 	newStmtPtr, err := ver.PreprocessUniFactParams_DeclareParams(specFactStmt)
 	if err != nil {
-		return glob.ExecState_Error, err
+		return glob.ExecStateError, err
 	}
 
 	// know cond facts
 	for _, condFact := range newStmtPtr.DomFacts {
 		err := exec.env.NewFact(condFact)
 		if err != nil {
-			return glob.ExecState_Error, err
+			return glob.ExecStateError, err
 		}
 	}
 
@@ -113,14 +113,14 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 		if reversibleThenFact, ok := thenFact.(ast.Spec_OrFact); ok {
 			thenFactsAsReversibleFacts = append(thenFactsAsReversibleFacts, reversibleThenFact)
 		} else {
-			return glob.ExecState_Error, fmt.Errorf("then fact:\n%s\nis not reversible. Then section of universal fact prove by contradiction only support reversible fact", thenFact)
+			return glob.ExecStateError, fmt.Errorf("then fact:\n%s\nis not reversible. Then section of universal fact prove by contradiction only support reversible fact", thenFact)
 		}
 	}
 	reversedThenFacts := ast.ReverseSliceOfReversibleFacts(thenFactsAsReversibleFacts)
 	for _, reversedThenFact := range reversedThenFacts {
 		err := exec.env.NewFact(reversedThenFact)
 		if err != nil {
-			return glob.ExecState_Error, err
+			return glob.ExecStateError, err
 		}
 	}
 
@@ -133,7 +133,7 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 	// the reversed last statement of current claim statement is true
 	lastFact, ok := stmt.ClaimProveStmt.Proofs[len(stmt.ClaimProveStmt.Proofs)-1].(ast.Spec_OrFact)
 	if !ok {
-		return glob.ExecState_Error, fmt.Errorf("prove by contradiction only support fact")
+		return glob.ExecStateError, fmt.Errorf("prove by contradiction only support fact")
 	}
 
 	reversedLastFact := lastFact.ReverseIsTrue()
@@ -154,7 +154,7 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 
 	exec.newMsg(fmt.Sprintf("last statement of current claim statement:\n%s\nis true and false. Prove by contradiction is successful!", lastFact))
 
-	return glob.ExecState_True, nil
+	return glob.ExecStateTrue, nil
 }
 
 func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecState, error) {
@@ -166,11 +166,11 @@ func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecSta
 	// 检查 stmt fact 中的所有元素已经定义过了
 	err = exec.env.NewFact(stmt.ToCheckFact)
 	if err != nil {
-		return glob.ExecState_Error, err
+		return glob.ExecStateError, err
 	}
 	// exec.knowStmt(ast.NewKnowStmt([]ast.CanBeKnownStmt{stmt.ToCheckFact}))
 
-	return glob.ExecState_True, nil
+	return glob.ExecStateTrue, nil
 }
 
 func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) (glob.ExecState, error) {
@@ -182,7 +182,7 @@ func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByCo
 	// 检查 stmt fact 中的所有元素已经定义过了
 	exec.knowStmt(ast.NewKnowStmt([]ast.CanBeKnownStmt{stmt.ClaimProveStmt.ToCheckFact}, stmt.ClaimProveStmt.Line))
 
-	return glob.ExecState_True, nil
+	return glob.ExecStateTrue, nil
 }
 
 func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecState, error) {
@@ -206,35 +206,35 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecState, 
 	// 需要检查stmt.ToCheckFact里的东西都是在外部声明好了的
 	ok := exec.env.AreAtomsInFactAreDeclared(stmt.ToCheckFact, map[string]struct{}{})
 	if !ok {
-		return glob.ExecState_Error, fmt.Errorf(env.AtomsInFactNotDeclaredMsg(stmt.ToCheckFact))
+		return glob.ExecStateError, fmt.Errorf(env.AtomsInFactNotDeclaredMsg(stmt.ToCheckFact))
 	}
 
 	if _, ok := stmt.ToCheckFact.(*ast.UniFactStmt); ok {
 		isSuccess, err = exec.claimStmtProveUniFact(stmt)
 		if err != nil {
-			return glob.ExecState_Error, err
+			return glob.ExecStateError, err
 		}
 		if !isSuccess {
-			return glob.ExecState_Unknown, nil
+			return glob.ExecStateUnknown, nil
 		}
-		return glob.ExecState_True, nil
+		return glob.ExecStateTrue, nil
 	} else {
 		execState, err := exec.execStmtsAtCurEnv(stmt.Proofs)
 		if err != nil {
-			return glob.ExecState_Error, err
+			return glob.ExecStateError, err
 		}
-		if execState != glob.ExecState_True {
-			return glob.ExecState_Unknown, nil
+		if execState != glob.ExecStateTrue {
+			return glob.ExecStateUnknown, nil
 		}
 		// check claim
 		execState, err = exec.factStmt(stmt.ToCheckFact)
 		if err != nil {
-			return glob.ExecState_Error, err
+			return glob.ExecStateError, err
 		}
-		if execState != glob.ExecState_True {
-			return glob.ExecState_Unknown, nil
+		if execState != glob.ExecStateTrue {
+			return glob.ExecStateUnknown, nil
 		}
-		return glob.ExecState_True, nil
+		return glob.ExecStateTrue, nil
 	}
 }
 
@@ -270,7 +270,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 		}
 		return false, err
 	}
-	if execState != glob.ExecState_True {
+	if execState != glob.ExecStateTrue {
 		return false, nil
 	}
 
@@ -279,7 +279,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 	execState, failedFact, err := verifier.ExecFactsAtCurEnv_retFailedFact(asUnivFact.ThenFacts, exec.env)
 	if err != nil {
 		return false, fmt.Errorf("claim statement error: failed to verify fact:\n%s\n%s", failedFact, err)
-	} else if execState != glob.ExecState_True {
+	} else if execState != glob.ExecStateTrue {
 		return false, fmt.Errorf("claim statement error: failed to verify fact:\n%s", failedFact)
 	}
 
@@ -290,12 +290,12 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 // 也许我应该语义改成，先声明prop，然后再证明prop，而不是现在这个样子
 func (exec *Executor) claimPropStmt(stmt *ast.ClaimPropStmt) (glob.ExecState, error) {
 	var err error
-	var execState glob.ExecState = glob.ExecState_Error
+	var execState glob.ExecState = glob.ExecStateError
 
 	// prop all atoms declared
 	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.DomFacts, stmt.Prop.IffFacts, stmt.Line)
 	if !exec.env.AreAtomsInFactAreDeclared(uniFact, map[string]struct{}{}) && !exec.env.IsFcAtomDeclaredByUser(ast.FcAtom(stmt.Prop.DefHeader.Name)) {
-		return glob.ExecState_Error, fmt.Errorf("claim prop statement error: atoms in fact are not declared")
+		return glob.ExecStateError, fmt.Errorf("claim prop statement error: atoms in fact are not declared")
 	}
 
 	// check proofs
@@ -317,7 +317,7 @@ func (exec *Executor) claimPropStmt(stmt *ast.ClaimPropStmt) (glob.ExecState, er
 		return execState, err
 	}
 
-	return glob.ExecState_True, nil
+	return glob.ExecStateTrue, nil
 }
 
 func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) (glob.ExecState, error) {
@@ -338,13 +338,13 @@ func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimPropStmt) (glob.Ex
 
 	ok, err := exec.claimStmtProveUniFact(ast.NewClaimProveStmt(uniFact, stmt.Proofs, stmt.Line))
 	if err != nil {
-		return glob.ExecState_Error, err
+		return glob.ExecStateError, err
 	}
 	if !ok {
-		return glob.ExecState_False, nil
+		return glob.ExecStateUnknown, nil
 	}
 
-	return glob.ExecState_True, nil
+	return glob.ExecStateTrue, nil
 }
 
 func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimPropStmt) (glob.ExecState, error) {
@@ -358,14 +358,14 @@ func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimProp
 	objDefStmt := ast.NewDefObjStmt(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFacts, stmt.Line)
 	err := exec.defObjStmt(objDefStmt, false)
 	if err != nil {
-		return glob.ExecState_Error, err
+		return glob.ExecStateError, err
 	}
 
 	thenFactsAsReversible := []ast.Spec_OrFact{}
 	for _, fact := range stmt.Prop.ThenFacts {
 		asReversible, ok := fact.(ast.Spec_OrFact)
 		if !ok {
-			return glob.ExecState_Error, fmt.Errorf("claim prop statement error: then fact is not an or statement")
+			return glob.ExecStateError, fmt.Errorf("claim prop statement error: then fact is not an or statement")
 		}
 		thenFactsAsReversible = append(thenFactsAsReversible, asReversible)
 	}
@@ -375,7 +375,7 @@ func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimProp
 	for _, fact := range reversedThenFacts {
 		err := exec.env.NewFact(fact)
 		if err != nil {
-			return glob.ExecState_Error, err
+			return glob.ExecStateError, err
 		}
 	}
 
@@ -388,16 +388,16 @@ func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimProp
 	lastProof := stmt.Proofs[len(stmt.Proofs)-1]
 	lastProofAsReversible, ok := lastProof.(ast.Spec_OrFact)
 	if !ok {
-		return glob.ExecState_Error, fmt.Errorf("claim prop statement error: last proof is not an or statement")
+		return glob.ExecStateError, fmt.Errorf("claim prop statement error: last proof is not an or statement")
 	}
 
 	reverseLastProof := lastProofAsReversible.ReverseIsTrue()
 	execState, failedFact, err := verifier.ExecSpecFactsAtCurEnv_retRailedFact(reverseLastProof, exec.env)
 	if err != nil {
 		return execState, fmt.Errorf("claim prop statement error: failed to verify reverse of last proof:\n%s\n%s", failedFact, err)
-	} else if execState != glob.ExecState_True {
+	} else if execState != glob.ExecStateTrue {
 		return execState, fmt.Errorf("claim prop statement error: failed to verify reverse of last proof:\n%s", failedFact)
 	}
 
-	return glob.ExecState_True, nil
+	return glob.ExecStateTrue, nil
 }
