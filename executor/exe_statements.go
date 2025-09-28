@@ -99,9 +99,9 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, string, error) {
 	}
 
 	if err != nil {
-		return glob.ExecState_Error, "", fmt.Errorf("execution error at line %d:\n%w", stmt.GetLine(), err)
+		return glob.ExecState_Error, "", fmt.Errorf("execution error, line %d:\n%w", stmt.GetLine(), err)
 	} else {
-		return execState, fmt.Sprintf("%s\nsuccess! :)\nat line %d", stmt, stmt.GetLine()), nil
+		return execState, fmt.Sprintf("%s\nexecution success, line %d\n", stmt, stmt.GetLine()), nil
 	}
 }
 
@@ -365,11 +365,11 @@ func (exec *Executor) proveStmt(stmt *ast.ProveStmt) (glob.ExecState, error) {
 }
 
 func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
-	if glob.RequireMsg() {
-		defer func() {
-			exec.newMsg(fmt.Sprintf("%s\n", stmt))
-		}()
-	}
+	// if glob.RequireMsg() {
+	// 	defer func() {
+	// 		exec.newMsg(fmt.Sprintf("%s\n", stmt))
+	// 	}()
+	// }
 
 	err := exec.env.IsValidIdentifierAvailable(stmt.Name)
 	if err != nil {
@@ -392,10 +392,6 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 	err = exec.env.NewFact(derivedFact)
 	if err != nil {
 		return err
-	}
-
-	if glob.RequireMsg() {
-		exec.newMsg(fmt.Sprintf("%s\nis true by definition", derivedFact))
 	}
 
 	return nil

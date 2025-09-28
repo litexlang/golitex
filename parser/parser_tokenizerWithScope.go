@@ -116,7 +116,7 @@ func (t *tokenizerWithScope) skipCommentsAndEmptyLines() (bool, *tokenBlock, err
 		for t.currentLine < len(t.lines) {
 			t.currentLine++
 			if t.currentLine >= len(t.lines) {
-				return false, nil, fmt.Errorf("unclosed triple quote comment starting at line %d", lineNum(t.currentLine))
+				return false, nil, fmt.Errorf("unclosed triple quote comment starting, line %d", lineNum(t.currentLine))
 			}
 			nextLine := t.lines[t.currentLine]
 			nextTrimmed := strings.TrimSpace(nextLine)
@@ -128,7 +128,7 @@ func (t *tokenizerWithScope) skipCommentsAndEmptyLines() (bool, *tokenBlock, err
 			}
 		}
 		if !found {
-			return false, nil, fmt.Errorf("unclosed triple quote comment starting at line %d", lineNum(t.currentLine))
+			return false, nil, fmt.Errorf("unclosed triple quote comment starting, line %d", lineNum(t.currentLine))
 		}
 
 		comment := strings.Join(lines, "\n")
@@ -187,7 +187,7 @@ func (t *tokenizerWithScope) findFirstNonCommentLine(currentIndent int) (string,
 			for t.currentLine < len(t.lines) {
 				t.currentLine++
 				if t.currentLine >= len(t.lines) {
-					return "", 0, fmt.Errorf("unclosed triple quote comment starting at line %d", lineNum(t.currentLine))
+					return "", 0, fmt.Errorf("unclosed triple quote comment starting, line %d", lineNum(t.currentLine))
 				}
 				nextTrimmed := strings.TrimSpace(t.lines[t.currentLine])
 				if strings.HasPrefix(nextTrimmed, glob.MultiLinesCommentSig) {
@@ -197,7 +197,7 @@ func (t *tokenizerWithScope) findFirstNonCommentLine(currentIndent int) (string,
 				}
 			}
 			if !found {
-				return "", 0, fmt.Errorf("unclosed triple quote comment starting at line %d", lineNum(t.currentLine))
+				return "", 0, fmt.Errorf("unclosed triple quote comment starting, line %d", lineNum(t.currentLine))
 			}
 			continue
 		}
@@ -245,7 +245,7 @@ func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]tokenBlock, error
 
 		// 如果缩进大于当前缩进，说明缩进错误
 		if indent > currentIndent {
-			return nil, fmt.Errorf("incorrect indentation:\n\"%s\"\nMaybe the previous nonempty line should end with \":\" at line %d", line, lineNum(t.currentLine))
+			return nil, fmt.Errorf("incorrect indentation:\n\"%s\"\nMaybe the previous nonempty line should end with \":\", line %d", line, lineNum(t.currentLine))
 		}
 
 		// 处理行内注释：截断 # 后面的内容
