@@ -99,9 +99,9 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, string, error) {
 	}
 
 	if err != nil {
-		return glob.ExecStateError, "", fmt.Errorf("execution error, line %d:\n%w", stmt.GetLine(), err)
+		return glob.ExecStateError, "", fmt.Errorf("failed :( line %d:\n%w", stmt.GetLine(), err)
 	} else {
-		return execState, fmt.Sprintf("%s\nexecution success, line %d\n", stmt, stmt.GetLine()), nil
+		return execState, fmt.Sprintf("%s\nsuccess! :) line %d\n", stmt, stmt.GetLine()), nil
 	}
 }
 
