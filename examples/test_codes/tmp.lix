@@ -1,4 +1,5 @@
-let a R:
-    a = 5 -2 
+1 + 1 =2
 
-a = 5 -2 = 4
+fn f(x R) R
+
+know forall x R => f(x) = x
