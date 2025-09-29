@@ -876,9 +876,7 @@ func (fc FcSlice) String() string {
 
 func (params StrSlice) String() string {
 	output := make([]string, len(params))
-	for i, param := range params {
-		output[i] = param
-	}
+	copy(output, params)
 	return strings.Join(output, ", ")
 }
 
@@ -918,16 +916,4 @@ func (fnTStruct *FnTStruct) String() string {
 
 func (stmt *MarkdownStmt) String() string {
 	return stmt.Markdown
-}
-
-func (stmt *ClaimAtExistPropStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordClaim)
-	builder.WriteString(" ")
-	builder.WriteString(glob.KeySymbolAt)
-	builder.WriteString(" ")
-	builder.WriteString(glob.KeywordExist)
-	builder.WriteString(" ")
-	builder.WriteString(stmt.ExistProp.ToString(glob.KeywordExist))
-	return builder.String()
 }
