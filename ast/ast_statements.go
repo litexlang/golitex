@@ -127,9 +127,9 @@ type KnowPropStmt struct {
 
 // TODO: 这个的parser还没有像claim_prop那样改成用@
 type ClaimExistPropStmt struct {
-	ExistProp DefExistPropStmt
-	ThenFacts FactStmtSlice
-	Proofs    StmtSlice
+	ExistPropWithoutDom DefExistPropStmt
+	ThenFacts           FactStmtSlice
+	Proofs              StmtSlice
 
 	Line uint
 }

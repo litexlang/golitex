@@ -488,4 +488,7 @@ know:
 	forall x, y, z R: x - y = z => x = z + y, y = x - z
 	forall x, y, z R: x = y + z => x - y = z, x - z = y
 	forall x, y, z R: x = y - z => x - y = -z, x + z = y
+
+know:
+	forall a, b, c, d R: b != 0, d != 0, a / b = c / d => a * d = b * c
 `
