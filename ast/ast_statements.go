@@ -48,6 +48,7 @@ type DefExistPropStmtBody struct {
 	DefHeader DefHeader
 	DomFacts  FactStmtSlice
 	IffFacts  FactStmtSlice
+	ThenFacts FactStmtSlice
 
 	Line uint
 }
@@ -128,7 +129,6 @@ type KnowPropStmt struct {
 // TODO: 这个的parser还没有像claim_prop那样改成用@
 type ClaimExistPropStmt struct {
 	ExistPropWithoutDom DefExistPropStmt
-	ThenFacts           FactStmtSlice
 	Proofs              StmtSlice
 
 	Line uint
