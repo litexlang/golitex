@@ -102,8 +102,8 @@ func NewClaimPropStmt(prop *DefPropStmt, proofs []Stmt, isProve bool, line uint)
 	return &ClaimPropStmt{*prop, proofs, isProve, line}
 }
 
-func NewClaimExistPropStmt(existProp *DefExistPropStmt, proofs []Stmt, line uint) *ClaimExistPropStmt {
-	return &ClaimExistPropStmt{*existProp, proofs, line}
+func NewClaimExistPropStmt(existProp *DefExistPropStmt, thenFacts []FactStmt, proofs []Stmt, line uint) *ClaimExistPropStmt {
+	return &ClaimExistPropStmt{*existProp, thenFacts, proofs, line}
 }
 
 func NewIntensionalSetStmt(curSet Fc, param string, parentSet Fc, proofs []*SpecFactStmt, line uint) *IntensionalSetStmt {
