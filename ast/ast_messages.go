@@ -609,7 +609,7 @@ func (stmt *ClaimExistPropStmt) String() string {
 	builder.WriteString(glob.KeywordClaim)
 	builder.WriteString(glob.KeySymbolColon)
 	builder.WriteString("\n")
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.ExistProp.String(), 1))
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.ExistPropWithoutDom.String(), 1))
 	builder.WriteByte('\n')
 	proofStrSlice := make([]string, len(stmt.Proofs))
 	for i, proof := range stmt.Proofs {
