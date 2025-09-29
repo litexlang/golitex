@@ -844,7 +844,7 @@ func (tb *tokenBlock) defExistPropStmtBody() (*ast.DefExistPropStmtBody, error) 
 	}
 
 	if tb.header.ExceedEnd() {
-		return ast.NewExistPropDef(declHeader, []ast.FactStmt{}, []ast.FactStmt{}, tb.line), nil
+		return ast.NewExistPropDef(declHeader, []ast.FactStmt{}, []ast.FactStmt{}, []ast.FactStmt{}, tb.line), nil
 	}
 
 	if tb.header.is(glob.KeySymbolEquivalent) {
@@ -856,7 +856,7 @@ func (tb *tokenBlock) defExistPropStmtBody() (*ast.DefExistPropStmtBody, error) 
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
-		return ast.NewExistPropDef(declHeader, []ast.FactStmt{}, unitFacts, tb.line), nil
+		return ast.NewExistPropDef(declHeader, []ast.FactStmt{}, unitFacts, []ast.FactStmt{}, tb.line), nil
 	}
 
 	err = tb.header.skip(glob.KeySymbolColon)
@@ -877,14 +877,14 @@ func (tb *tokenBlock) defExistPropStmtBody() (*ast.DefExistPropStmtBody, error) 
 			return nil, fmt.Errorf("expect 'iff' section in proposition definition has at least one fact")
 		}
 
-		return ast.NewExistPropDef(declHeader, domFacts, iffFactsAsFactStatements, tb.line), nil
+		return ast.NewExistPropDef(declHeader, domFacts, iffFactsAsFactStatements, []ast.FactStmt{}, tb.line), nil
 	} else {
 		domFacts, iffFactsAsFactStatements, err := tb.bodyOfInlineDomAndThen(glob.KeySymbolEquivalent)
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
 
-		return ast.NewExistPropDef(declHeader, domFacts, iffFactsAsFactStatements, tb.line), nil
+		return ast.NewExistPropDef(declHeader, domFacts, iffFactsAsFactStatements, []ast.FactStmt{}, tb.line), nil
 	}
 }
 
@@ -1450,9 +1450,9 @@ func (tb *tokenBlock) claimExistPropStmt() (*ast.ClaimExistPropStmt, error) {
 		proofs = append(proofs, curStmt)
 	}
 
-	existProp := ast.NewDefExistPropStmt(ast.NewExistPropDef(header, []ast.FactStmt{}, existPropIffFacts, tb.line), params, paramSets, tb.line)
+	existProp := ast.NewDefExistPropStmt(ast.NewExistPropDef(header, []ast.FactStmt{}, existPropIffFacts, thenFacts, tb.line), params, paramSets, tb.line)
 
-	return ast.NewClaimExistPropStmt(existProp, thenFacts, proofs, tb.line), nil
+	return ast.NewClaimExistPropStmt(existProp, proofs, tb.line), nil
 }
 
 func (tb *tokenBlock) dom_and_section(kw string, kw_should_not_exist_in_body string) ([]ast.FactStmt, []ast.FactStmt, error) {

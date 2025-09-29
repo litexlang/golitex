@@ -50,8 +50,8 @@ func NewHaveStmt(objNames []string, fact SpecFactStmt, line uint) *HaveObjStStmt
 	return &HaveObjStStmt{objNames, fact, line}
 }
 
-func NewExistPropDef(declHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt, line uint) *DefExistPropStmtBody {
-	return &DefExistPropStmtBody{*declHeader, domFacts, iffFacts, line}
+func NewExistPropDef(declHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt, thenFacts []FactStmt, line uint) *DefExistPropStmtBody {
+	return &DefExistPropStmtBody{*declHeader, domFacts, iffFacts, thenFacts, line}
 }
 
 func NewUniFact(params []string, setParams []Fc, domFacts []FactStmt, thenFacts []FactStmt, line uint) *UniFactStmt {
@@ -70,8 +70,8 @@ func NewKnowPropStmt(prop DefPropStmt, line uint) *KnowPropStmt {
 	return &KnowPropStmt{prop, line}
 }
 
-func NewDefExistPropBodyStmt(defHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt, line uint) *DefExistPropStmtBody {
-	return &DefExistPropStmtBody{*defHeader, domFacts, iffFacts, line}
+func NewDefExistPropBodyStmt(defHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt, thenFacts []FactStmt, line uint) *DefExistPropStmtBody {
+	return &DefExistPropStmtBody{*defHeader, domFacts, iffFacts, thenFacts, line}
 }
 
 func NewOrStmt(orFacts []*SpecFactStmt, line uint) *OrStmt {
@@ -102,8 +102,8 @@ func NewClaimPropStmt(prop *DefPropStmt, proofs []Stmt, isProve bool, line uint)
 	return &ClaimPropStmt{*prop, proofs, isProve, line}
 }
 
-func NewClaimExistPropStmt(existProp *DefExistPropStmt, thenFacts []FactStmt, proofs []Stmt, line uint) *ClaimExistPropStmt {
-	return &ClaimExistPropStmt{*existProp, thenFacts, proofs, line}
+func NewClaimExistPropStmt(existProp *DefExistPropStmt, proofs []Stmt, line uint) *ClaimExistPropStmt {
+	return &ClaimExistPropStmt{*existProp, proofs, line}
 }
 
 func NewIntensionalSetStmt(curSet Fc, param string, parentSet Fc, proofs []*SpecFactStmt, line uint) *IntensionalSetStmt {
