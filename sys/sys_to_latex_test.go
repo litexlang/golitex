@@ -29,6 +29,8 @@ func Test_ToLatex(t *testing.T) {
 		t.Errorf("failed to run file %s\n", fileName)
 	}
 
+	fmt.Println(msg)
+
 	// 把msg写入到文件
 	writeTo := "../past_examples/test_to_latex.tex"
 	os.WriteFile(writeTo, []byte(msg), 0644)
