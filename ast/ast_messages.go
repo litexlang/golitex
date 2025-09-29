@@ -278,10 +278,10 @@ func ClaimProve_ClaimProveByContradiction(kw string, toCheckFact FactStmt, proof
 	return builder.String()
 }
 
-func (s *DefExistPropStmt) String() string {
+func (s *DefExistPropStmt) ToString(head string) string {
 	var builder strings.Builder
 
-	builder.WriteString(glob.KeywordExistProp)
+	builder.WriteString(head)
 	builder.WriteByte(' ')
 	if len(s.ExistParams) > 0 {
 		builder.WriteString(strings.Join(s.ExistParams, ", "))
@@ -313,6 +313,10 @@ func (s *DefExistPropStmt) String() string {
 	}
 
 	return builder.String()
+}
+
+func (s *DefExistPropStmt) String() string {
+	return s.ToString(glob.KeywordExistProp)
 }
 
 func (l *UniFactStmt) String() string {
@@ -605,7 +609,7 @@ func (stmt *ClaimExistPropStmt) String() string {
 	builder.WriteString(glob.KeywordClaim)
 	builder.WriteString(glob.KeySymbolColon)
 	builder.WriteString("\n")
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.ExistProp.String(), 1))
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.ExistPropWithoutDom.String(), 1))
 	builder.WriteByte('\n')
 	proofStrSlice := make([]string, len(stmt.Proofs))
 	for i, proof := range stmt.Proofs {
@@ -872,9 +876,7 @@ func (fc FcSlice) String() string {
 
 func (params StrSlice) String() string {
 	output := make([]string, len(params))
-	for i, param := range params {
-		output[i] = param
-	}
+	copy(output, params)
 	return strings.Join(output, ", ")
 }
 
