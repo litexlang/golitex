@@ -278,10 +278,10 @@ func ClaimProve_ClaimProveByContradiction(kw string, toCheckFact FactStmt, proof
 	return builder.String()
 }
 
-func (s *DefExistPropStmt) String() string {
+func (s *DefExistPropStmt) ToString(head string) string {
 	var builder strings.Builder
 
-	builder.WriteString(glob.KeywordExistProp)
+	builder.WriteString(head)
 	builder.WriteByte(' ')
 	if len(s.ExistParams) > 0 {
 		builder.WriteString(strings.Join(s.ExistParams, ", "))
@@ -313,6 +313,10 @@ func (s *DefExistPropStmt) String() string {
 	}
 
 	return builder.String()
+}
+
+func (s *DefExistPropStmt) String() string {
+	return s.ToString(glob.KeywordExistProp)
 }
 
 func (l *UniFactStmt) String() string {
@@ -914,4 +918,16 @@ func (fnTStruct *FnTStruct) String() string {
 
 func (stmt *MarkdownStmt) String() string {
 	return stmt.Markdown
+}
+
+func (stmt *ClaimAtExistPropStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordClaim)
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeySymbolAt)
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeywordExist)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.ExistProp.ToString(glob.KeywordExist))
+	return builder.String()
 }
