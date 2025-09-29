@@ -162,17 +162,18 @@ func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.FcSlice, fnT
 		}
 	}()
 
-	uniMap, err := ast.MakeUniMap(fnTStruct.Params, concreteParams)
-	if err != nil {
-		failed = true
-		return false, "", err
-	}
+	// uniMap, err := ast.MakeUniMap(fnTStruct.Params, concreteParams)
+	// if err != nil {
+	// 	failed = true
+	// 	return false, "", err
+	// }
 
-	instFnTStruct, err := fnTStruct.Instantiate(uniMap)
-	if err != nil {
-		failed = true
-		return false, "", err
-	}
+	// instFnTStruct, err := fnTStruct.Instantiate(uniMap)
+	// if err != nil {
+	// 	failed = true
+	// 	return false, "", err
+	// }
+	instFnTStruct := fnTStruct
 
 	// 检查里面的 param 是否符合 requirement
 	for _, param := range concreteParams {
@@ -213,7 +214,7 @@ func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.FcSlice, fnT
 				return false, "", err
 			}
 			if !ok {
-				return false, fmt.Sprintf("dom fact\n%s\nis not true", asFact), nil
+				return false, fmt.Sprintf("dom fact\n%s\nis unknown", asFact), nil
 			}
 		case *ast.OrStmt:
 			for _, fact := range asFact.Facts {
@@ -234,7 +235,7 @@ func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.FcSlice, fnT
 				return false, "", err
 			}
 			if !ok {
-				return false, fmt.Sprintf("dom fact\n%s\nis not true", asFact), nil
+				return false, fmt.Sprintf("dom fact\n%s\nis unknown", asFact), nil
 			}
 		default:
 			return false, fmt.Sprintf("for current Litex version, dom fact only supports SpecFactStmt, but got %s", asFact), nil
