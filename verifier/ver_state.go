@@ -22,6 +22,14 @@ type VerState struct {
 	ReqOk   bool
 }
 
+func (s *VerState) ToReqOk() *VerState {
+	return &VerState{
+		Round:   s.Round,
+		WithMsg: s.WithMsg,
+		ReqOk:   true,
+	}
+}
+
 func (s *VerState) GetAddRound() *VerState {
 	return &VerState{
 		Round:   s.Round + 1,
