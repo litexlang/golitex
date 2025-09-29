@@ -168,7 +168,8 @@ func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.FcSlice, fnT
 
 	// 检查里面的 param 是否符合 requirement
 	for _, param := range concreteParams {
-		ok, err := ver.fcSatisfyFnRequirement(param, curState)
+		curStateFinalRound := curState.GetFinalRound()
+		ok, err := ver.fcSatisfyFnRequirement(param, curStateFinalRound)
 		if err != nil {
 			return false, err
 		}
@@ -185,10 +186,12 @@ func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.FcSlice, fnT
 	}
 
 	for _, fact := range instFnTStruct.DomFacts {
-		if asFact, ok := fact.(*ast.SpecFactStmt); ok {
+		curStateFinalRound := curState.GetFinalRound()
+		switch asFact := fact.(type) {
+		case *ast.SpecFactStmt:
 			// 检查 fact 的 param 是否符合 requirement
 			for _, param := range asFact.Params {
-				ok, err := ver.fcSatisfyFnRequirement(param, curStateReqOk)
+				ok, err := ver.fcSatisfyFnRequirement(param, curStateFinalRound)
 				if err != nil {
 					return false, err
 				}
@@ -204,14 +207,74 @@ func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.FcSlice, fnT
 			if !ok {
 				return false, nil
 			}
+		case *ast.OrStmt:
+			for _, fact := range asFact.Facts {
+				// 证明所有的 参数符合要求
+				for _, param := range fact.Params {
+					ok, err := ver.fcSatisfyFnRequirement(param, curStateFinalRound)
+					if err != nil {
+						return false, err
+					}
+					if !ok {
+						return false, nil
+					}
+				}
+			}
+
+			ok, err := ver.VerFactStmt(asFact, curStateReqOk)
+			if err != nil {
+				return false, err
+			}
+			if !ok {
+				return false, nil
+			}
+		default:
+			return false, fmt.Errorf("for current Litex version, dom fact only supports SpecFactStmt, but got %s", asFact)
 		}
 	}
 
 	// ok, err = ver.factsAreTrue(instFnTStruct.DomFacts, curState)
-	if err != nil || !ok {
-		failed = true
-		return false, err
-	}
+	// if err != nil || !ok {
+	// 	failed = true
+	// 	return false, err
+	// }
 
 	return true, nil
 }
+
+// func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.FcSlice, fnTStruct *ast.FnTStruct, state *VerState) (bool, error) {
+// 	failed := false
+
+// 	curState := state.GetNoMsg()
+// 	defer func() {
+// 		if failed {
+// 			ver.env.Msgs = append(ver.env.Msgs, fmt.Sprintf("failed to check param(s) %s satisfy domain of\n%s", concreteParams, fnTStruct))
+// 		}
+// 	}()
+
+// 	uniMap, err := ast.MakeUniMap(fnTStruct.Params, concreteParams)
+// 	if err != nil {
+// 		failed = true
+// 		return false, err
+// 	}
+
+// 	instFnTStruct, err := fnTStruct.Instantiate(uniMap)
+// 	if err != nil {
+// 		failed = true
+// 		return false, err
+// 	}
+
+// 	ok, err := ver.paramsInSets(concreteParams, instFnTStruct.ParamSets, curState)
+// 	if err != nil || !ok {
+// 		failed = true
+// 		return false, err
+// 	}
+
+// 	ok, err = ver.factsAreTrue(instFnTStruct.DomFacts, curState)
+// 	if err != nil || !ok {
+// 		failed = true
+// 		return false, err
+// 	}
+
+// 	return true, nil
+// }
