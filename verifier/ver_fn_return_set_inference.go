@@ -49,9 +49,13 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) (bool, e
 			return false, err
 		}
 
-		ok, err := ver.checkParamsSatisfyFnTStruct(paramsChain[curParamsChainIndex], instCurFnTStruct, state)
-		if err != nil || !ok {
+		ok, msg, err := ver.checkParamsSatisfyFnTStruct(paramsChain[curParamsChainIndex], instCurFnTStruct, state)
+		if err != nil {
 			return false, err
+		}
+		if !ok {
+			ver.env.Msgs = append(ver.env.Msgs, msg)
+			return false, nil
 		}
 
 		curRetSet, ok := instCurFnTStruct.RetSet.(*ast.FcFn)
@@ -77,9 +81,13 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) (bool, e
 		return false, err
 	}
 
-	ok, err := ver.checkParamsSatisfyFnTStruct(paramsChain[curParamsChainIndex], instCurFnTStruct, state)
-	if err != nil || !ok {
+	ok, msg, err := ver.checkParamsSatisfyFnTStruct(paramsChain[curParamsChainIndex], instCurFnTStruct, state)
+	if err != nil {
 		return false, err
+	}
+	if !ok {
+		ver.env.Msgs = append(ver.env.Msgs, msg)
+		return false, nil
 	}
 
 	return true, nil
@@ -143,7 +151,7 @@ func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreT
 	return true, nil
 }
 
-func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.FcSlice, fnTStruct *ast.FnTStruct, state *VerState) (bool, error) {
+func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.FcSlice, fnTStruct *ast.FnTStruct, state *VerState) (bool, string, error) {
 	failed := false
 
 	// curState := state.GetNoMsg().ToReqOk()
@@ -157,13 +165,13 @@ func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.FcSlice, fnT
 	uniMap, err := ast.MakeUniMap(fnTStruct.Params, concreteParams)
 	if err != nil {
 		failed = true
-		return false, err
+		return false, "", err
 	}
 
 	instFnTStruct, err := fnTStruct.Instantiate(uniMap)
 	if err != nil {
 		failed = true
-		return false, err
+		return false, "", err
 	}
 
 	// 检查里面的 param 是否符合 requirement
@@ -171,10 +179,10 @@ func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.FcSlice, fnT
 		curStateFinalRound := curState.GetFinalRound()
 		ok, err := ver.fcSatisfyFnRequirement(param, curStateFinalRound)
 		if err != nil {
-			return false, err
+			return false, "", err
 		}
 		if !ok {
-			return false, nil
+			return false, fmt.Sprintf("%s does not satisfy its fn template requirement", param), nil
 		}
 	}
 
@@ -182,7 +190,7 @@ func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.FcSlice, fnT
 	ok, err := ver.paramsInSets(concreteParams, instFnTStruct.ParamSets, curStateReqOk)
 	if err != nil || !ok {
 		failed = true
-		return false, err
+		return false, "", err
 	}
 
 	for _, fact := range instFnTStruct.DomFacts {
@@ -193,19 +201,19 @@ func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.FcSlice, fnT
 			for _, param := range asFact.Params {
 				ok, err := ver.fcSatisfyFnRequirement(param, curStateFinalRound)
 				if err != nil {
-					return false, err
+					return false, "", err
 				}
 				if !ok {
-					return false, nil
+					return false, fmt.Sprintf("%s does not satisfy its dom fact requirement\n%s", param, asFact), nil
 				}
 			}
 
 			ok, err := ver.VerFactStmt(asFact, curStateReqOk)
 			if err != nil {
-				return false, err
+				return false, "", err
 			}
 			if !ok {
-				return false, nil
+				return false, fmt.Sprintf("dom fact\n%s\nis not true", asFact), nil
 			}
 		case *ast.OrStmt:
 			for _, fact := range asFact.Facts {
@@ -213,23 +221,23 @@ func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.FcSlice, fnT
 				for _, param := range fact.Params {
 					ok, err := ver.fcSatisfyFnRequirement(param, curStateFinalRound)
 					if err != nil {
-						return false, err
+						return false, "", err
 					}
 					if !ok {
-						return false, nil
+						return false, fmt.Sprintf("%s does not satisfy its dom fact requirement\n%s", param, asFact), nil
 					}
 				}
 			}
 
 			ok, err := ver.VerFactStmt(asFact, curStateReqOk)
 			if err != nil {
-				return false, err
+				return false, "", err
 			}
 			if !ok {
-				return false, nil
+				return false, fmt.Sprintf("dom fact\n%s\nis not true", asFact), nil
 			}
 		default:
-			return false, fmt.Errorf("for current Litex version, dom fact only supports SpecFactStmt, but got %s", asFact)
+			return false, fmt.Sprintf("for current Litex version, dom fact only supports SpecFactStmt, but got %s", asFact), nil
 		}
 	}
 
@@ -239,7 +247,7 @@ func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.FcSlice, fnT
 	// 	return false, err
 	// }
 
-	return true, nil
+	return true, "", nil
 }
 
 // func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.FcSlice, fnTStruct *ast.FnTStruct, state *VerState) (bool, error) {
