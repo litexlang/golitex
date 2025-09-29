@@ -48,6 +48,7 @@ type DefExistPropStmtBody struct {
 	DefHeader DefHeader
 	DomFacts  FactStmtSlice
 	IffFacts  FactStmtSlice
+	ThenFacts FactStmtSlice
 
 	Line uint
 }
@@ -340,13 +341,6 @@ type HaveFnStmt struct {
 
 type MarkdownStmt struct {
 	Markdown string
-
-	Line uint
-}
-
-type ClaimAtExistPropStmt struct {
-	ExistProp DefExistPropStmt
-	Proofs    StmtSlice
 
 	Line uint
 }
