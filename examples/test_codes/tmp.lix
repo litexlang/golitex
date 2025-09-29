@@ -1,12 +1,40 @@
-know @exist x R st forall_positive_number_there_is_larger_number(y R):
-	dom:
-        y > 0
-    <=>:
-        x > y
+# This file is translation of Lean4 code website https://leanprover-community.github.io/theories/naturals.html to Litex code.
 
-forall y R:
-    y > 0
+4 + 1 + 1 = 6
+4 - 3 =1
+5 -6 != 0
+1 != 0
+4 * 7 = 28
+
+forall m, n, p N:
+    m + p = n + p
     =>:
-        $forall_positive_number_there_is_larger_number(y)
+        m + p - p = n + p - p
+        # m = n
 
-        
+forall a, b, c N:
+    a * (b + c) = a * b + a * c
+
+# Basic facts like this will be implemented in standard library.
+know @less_is_preserved_by_addition(m N, n N, p N):
+    m + p < n + p
+    =>:
+        m < n
+
+know:
+    forall a, b, n N:
+        n > 0
+        a > b
+        =>:
+            a ^ n > b ^ n
+
+forall a, b N:
+    a + 1 < b + 1
+    =>:
+        $less_is_preserved_by_addition(a, b, 1)
+
+forall a, b, n N:
+    n > 0
+    a > b
+    =>:
+        a ^ n > b ^ n

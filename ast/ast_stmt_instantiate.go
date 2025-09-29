@@ -176,7 +176,16 @@ func (stmt *DefExistPropStmtBody) Instantiate(uniMap map[string]Fc) (*DefExistPr
 		newIffFacts = append(newIffFacts, newFact)
 	}
 
-	return NewDefExistPropBodyStmt(newDefHeader, newDomFacts, newIffFacts, stmt.Line), nil
+	newThenFacts := []FactStmt{}
+	for _, fact := range stmt.ThenFacts {
+		newFact, err := fact.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newIffFacts = append(newThenFacts, newFact)
+	}
+
+	return NewDefExistPropBodyStmt(newDefHeader, newDomFacts, newIffFacts, newThenFacts, stmt.Line), nil
 }
 
 func (stmt *DefExistPropStmt) Instantiate(uniMap map[string]Fc) (*DefExistPropStmt, error) {
