@@ -36,7 +36,7 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 	case glob.KeywordProp:
 		ret, err = tb.defPropStmt()
 	case glob.KeywordExistProp:
-		ret, err = tb.defExistPropStmt()
+		ret, err = tb.defExistPropStmt(glob.KeywordExistProp)
 	case glob.KeywordFn:
 		ret, err = tb.defFnStmt(true)
 	case glob.KeywordLet:
@@ -490,7 +490,7 @@ func (tb *tokenBlock) claimStmt() (ast.ClaimInterface, error) {
 
 	if tb.body[0].header.is(glob.KeySymbolAt) {
 		return tb.claimPropStmt()
-	} else if tb.body[0].header.is(glob.KeywordExistProp) {
+	} else if tb.body[0].header.is(glob.KeywordExist) {
 		return tb.claimExistPropStmt()
 	}
 
@@ -655,10 +655,10 @@ func (tb *tokenBlock) defHeaderWithoutParsingColonAtEnd() (*ast.DefHeader, error
 	return ast.NewDefHeader(ast.FcAtom(name), params, setParams), nil
 }
 
-func (tb *tokenBlock) defExistPropStmt() (*ast.DefExistPropStmt, error) {
+func (tb *tokenBlock) defExistPropStmt(head string) (*ast.DefExistPropStmt, error) {
 	var err error
 
-	err = tb.header.skip(glob.KeywordExistProp)
+	err = tb.header.skip(head)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -844,7 +844,7 @@ func (tb *tokenBlock) defExistPropStmtBody() (*ast.DefExistPropStmtBody, error) 
 	}
 
 	if tb.header.ExceedEnd() {
-		return ast.NewExistPropDef(declHeader, []ast.FactStmt{}, []ast.FactStmt{}, tb.line), nil
+		return ast.NewExistPropDef(declHeader, []ast.FactStmt{}, []ast.FactStmt{}, []ast.FactStmt{}, tb.line), nil
 	}
 
 	if tb.header.is(glob.KeySymbolEquivalent) {
@@ -856,7 +856,7 @@ func (tb *tokenBlock) defExistPropStmtBody() (*ast.DefExistPropStmtBody, error) 
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
-		return ast.NewExistPropDef(declHeader, []ast.FactStmt{}, unitFacts, tb.line), nil
+		return ast.NewExistPropDef(declHeader, []ast.FactStmt{}, unitFacts, []ast.FactStmt{}, tb.line), nil
 	}
 
 	err = tb.header.skip(glob.KeySymbolColon)
@@ -877,14 +877,14 @@ func (tb *tokenBlock) defExistPropStmtBody() (*ast.DefExistPropStmtBody, error) 
 			return nil, fmt.Errorf("expect 'iff' section in proposition definition has at least one fact")
 		}
 
-		return ast.NewExistPropDef(declHeader, domFacts, iffFactsAsFactStatements, tb.line), nil
+		return ast.NewExistPropDef(declHeader, domFacts, iffFactsAsFactStatements, []ast.FactStmt{}, tb.line), nil
 	} else {
 		domFacts, iffFactsAsFactStatements, err := tb.bodyOfInlineDomAndThen(glob.KeySymbolEquivalent)
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
 
-		return ast.NewExistPropDef(declHeader, domFacts, iffFactsAsFactStatements, tb.line), nil
+		return ast.NewExistPropDef(declHeader, domFacts, iffFactsAsFactStatements, []ast.FactStmt{}, tb.line), nil
 	}
 }
 
@@ -1394,7 +1394,7 @@ func (tb *tokenBlock) claimPropStmt() (*ast.ClaimPropStmt, error) {
 }
 
 func (tb *tokenBlock) claimExistPropStmt() (*ast.ClaimExistPropStmt, error) {
-	existProp, err := tb.body[0].defExistPropStmt()
+	existProp, err := tb.body[0].defExistPropStmt(glob.KeywordExist)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
