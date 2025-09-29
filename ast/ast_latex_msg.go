@@ -571,11 +571,11 @@ func (s *ClaimPropStmt) ToLatexString() string {
 func (s *ClaimExistPropStmt) ToLatexString() string {
 	var builder strings.Builder
 
-	builder.WriteString(s.ExistProp.ToLatexString())
+	builder.WriteString(s.ExistPropWithoutDom.ToLatexString())
 
 	builder.WriteString("\n\n")
 
-	builder.WriteString(claimProveBodyToLatexString(s.ExistProp.ToForallParamsSatisfyDomFacts_Then_ExistFactIsTrue(), s.Proofs, true))
+	builder.WriteString(claimProveBodyToLatexString(s.ExistPropWithoutDom.ToForallParamsSatisfyDomFacts_Then_ExistFactIsTrue(), s.Proofs, true))
 
 	return builder.String()
 }

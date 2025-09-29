@@ -36,7 +36,7 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 	case glob.KeywordProp:
 		ret, err = tb.defPropStmt()
 	case glob.KeywordExistProp:
-		ret, err = tb.defExistPropStmt()
+		ret, err = tb.defExistPropStmt(glob.KeywordExistProp)
 	case glob.KeywordFn:
 		ret, err = tb.defFnStmt(true)
 	case glob.KeywordLet:
@@ -490,7 +490,7 @@ func (tb *tokenBlock) claimStmt() (ast.ClaimInterface, error) {
 
 	if tb.body[0].header.is(glob.KeySymbolAt) {
 		return tb.claimPropStmt()
-	} else if tb.body[0].header.is(glob.KeywordExistProp) {
+	} else if tb.body[0].header.is(glob.KeywordExist) {
 		return tb.claimExistPropStmt()
 	}
 
@@ -655,10 +655,10 @@ func (tb *tokenBlock) defHeaderWithoutParsingColonAtEnd() (*ast.DefHeader, error
 	return ast.NewDefHeader(ast.FcAtom(name), params, setParams), nil
 }
 
-func (tb *tokenBlock) defExistPropStmt() (*ast.DefExistPropStmt, error) {
+func (tb *tokenBlock) defExistPropStmt(head string) (*ast.DefExistPropStmt, error) {
 	var err error
 
-	err = tb.header.skip(glob.KeywordExistProp)
+	err = tb.header.skip(head)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -1394,86 +1394,66 @@ func (tb *tokenBlock) claimPropStmt() (*ast.ClaimPropStmt, error) {
 }
 
 func (tb *tokenBlock) claimExistPropStmt() (*ast.ClaimExistPropStmt, error) {
-	existProp, err := tb.body[0].defExistPropStmt()
+	params, paramSets, err := tb.body[0].param_paramSet_paramInSetFacts(glob.KeySymbolColon, true)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.body[0].header.skip(glob.KeywordSt)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	header, err := tb.body[0].defHeaderWithoutParsingColonAtEnd()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.body[0].header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	existPropIffFacts := []ast.FactStmt{}
+	for i := range len(tb.body[0].body) - 1 {
+		curStmt, err := tb.body[0].body[i].factStmt(UniFactDepth1)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		existPropIffFacts = append(existPropIffFacts, curStmt)
+	}
+
+	err = tb.body[0].body[len(tb.body[0].body)-1].header.skip(glob.KeySymbolEqualLarger)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+	thenFacts := []ast.FactStmt{}
+	for _, stmt := range tb.body[0].body[len(tb.body[0].body)-1].body {
+		curStmt, err := stmt.factStmt(UniFactDepth1)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		thenFacts = append(thenFacts, curStmt)
+	}
+
+	err = tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
 
 	proofs := []ast.Stmt{}
-	if tb.body[1].header.is(glob.KeywordProve) {
-		err = tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
+	for _, stmt := range tb.body[1].body {
+		curStmt, err := stmt.Stmt()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
-
-		for _, stmt := range tb.body[1].body {
-			curStmt, err := stmt.Stmt()
-			if err != nil {
-				return nil, tbErr(err, tb)
-			}
-			proofs = append(proofs, curStmt)
-		}
-	} else {
-		return nil, fmt.Errorf("expect 'prove'")
+		proofs = append(proofs, curStmt)
 	}
 
-	return ast.NewClaimExistPropStmt(existProp, proofs, tb.line), nil
+	existProp := ast.NewDefExistPropStmt(ast.NewExistPropDef(header, []ast.FactStmt{}, existPropIffFacts, tb.line), params, paramSets, tb.line)
+
+	return ast.NewClaimExistPropStmt(existProp, thenFacts, proofs, tb.line), nil
 }
-
-// func (tb *tokenBlock) proveByMathInductionStmt() (*ast.ProveByMathInductionStmt, error) {
-// 	var err error
-// 	var paramIndex int = 0
-// 	var start int = 0
-
-// 	err = tb.header.skip(glob.KeywordProveByMathInduction)
-// 	if err != nil {
-// 		return nil, tbErr(err, tb)
-// 	}
-
-// 	err = tb.header.skip(glob.KeySymbolLeftBrace)
-// 	if err != nil {
-// 		return nil, tbErr(err, tb)
-// 	}
-
-// 	fact, err := tb.specFactStmt()
-// 	if err != nil {
-// 		return nil, tbErr(err, tb)
-// 	}
-
-// 	if tb.header.is(glob.KeySymbolComma) {
-// 		tb.header.skip(glob.KeySymbolComma)
-// 		paramIndexAsStr, err := tb.header.next()
-// 		if err != nil {
-// 			return nil, tbErr(err, tb)
-// 		}
-
-// 		paramIndex, err = strconv.Atoi(paramIndexAsStr)
-// 		if err != nil {
-// 			return nil, tbErr(err, tb)
-// 		}
-
-// 		if tb.header.is(glob.KeySymbolComma) {
-// 			tb.header.skip(glob.KeySymbolComma)
-// 			startAsStr, err := tb.header.next()
-// 			if err != nil {
-// 				return nil, tbErr(err, tb)
-// 			}
-// 			start, err = strconv.Atoi(startAsStr)
-// 			if err != nil {
-// 				return nil, tbErr(err, tb)
-// 			}
-// 		}
-// 	}
-
-// 	err = tb.header.skip(glob.KeySymbolRightBrace)
-// 	if err != nil {
-// 		return nil, tbErr(err, tb)
-// 	}
-
-// 	// 第ParamIndex个参数必须是atom
-
-// 	return ast.NewProveByMathInductionStmt(fact, paramIndex, start), nil
-// }
 
 func (tb *tokenBlock) dom_and_section(kw string, kw_should_not_exist_in_body string) ([]ast.FactStmt, []ast.FactStmt, error) {
 	if len(tb.body) == 0 {
