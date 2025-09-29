@@ -18,8 +18,8 @@ let x , y, b R:
 
 know x*y > 0
 let c R: c > 0
-b ^ self_log(b, c) = c
-b ^ self_log(b, x) = x
+know b ^ self_log(b, c) = c
+know b ^ self_log(b, x) = x
 b ^ self_log(b, y) = y
 b ^ self_log(b, x*y) = (b ^ self_log(b, x)) * (b ^ self_log(b, y))
 (b ^ self_log(b, x)) * (b ^ self_log(b, y)) = b ^ (self_log(b, x) + self_log(b, y))
