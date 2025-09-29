@@ -105,7 +105,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, string, error) {
 	} else if execState == glob.ExecStateTrue {
 		return execState, fmt.Sprintf("%s\nsuccess! :) line %d\n", stmt, stmt.GetLine()), nil
 	} else if execState == glob.ExecStateUnknown {
-		return execState, fmt.Sprintf("%s\nis unknown\n", stmt), nil
+		return execState, fmt.Sprintf("%s\nis unknown :(\n", stmt), nil
 	} else {
 		panic("unknown exec state")
 	}

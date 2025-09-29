@@ -1,10 +1,10 @@
-claim:
-    forall x R:
-        3 * x - 4.8 = 4 * 0.3
-        =>:
-            x = 2
-    prove:
-        4 * 0.3 = 1.2
-        3 * x - 4.8 = 1.2
-        3 * x = 1.2 + 4.8 = 6.0
-        x = 6.0 / 3 = 2
+know @exist x R st forall_positive_number_there_is_larger_number(y R):
+	dom:
+        y > 0
+    <=>:
+        x > y
+
+forall y R:
+    y > 0
+    =>:
+        $forall_positive_number_there_is_larger_number(y)

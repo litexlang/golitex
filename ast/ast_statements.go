@@ -343,3 +343,10 @@ type MarkdownStmt struct {
 
 	Line uint
 }
+
+type ClaimAtExistPropStmt struct {
+	ExistProp DefExistPropStmt
+	Proofs    StmtSlice
+
+	Line uint
+}
