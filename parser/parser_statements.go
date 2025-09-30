@@ -1217,7 +1217,7 @@ func (tb *tokenBlock) importStmt() (ast.ImportStmtInterface, error) {
 		}
 		return ast.NewImportStmt(importPath, asPkgName, tb.line), nil
 	} else {
-		if strings.HasSuffix(importPath, ".lix") {
+		if strings.HasSuffix(importPath, glob.LitexFileSuffix) {
 			return ast.NewImportFileStmt(importPath, tb.line), nil
 		} else {
 			// 得到 path 的最后一位，默认是 repo 的 repo 名

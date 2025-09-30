@@ -2,11 +2,11 @@
 Chapter 4
 """
 
-import "util.lix"
-import "basics.lix"
-import "chap1.lix"
-import "chap2.lix"
-import "chap3.lix"
+import "util.lit"
+import "basics.lit"
+import "chap1.lit"
+import "chap2.lit"
+import "chap3.lit"
 
 
 # Definition 4.1
