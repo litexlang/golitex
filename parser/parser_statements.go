@@ -54,7 +54,7 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 			}
 		} else if tb.header.strAtCurIndexPlus(1) == glob.KeywordFn {
 			if tb.header.strAtCurIndexPlus(2) == glob.KeySymbolColon {
-				ret, err = tb.claimHaveFnStmt()
+				ret, err = tb.haveFnStmt()
 			} else if tb.header.strAtCurIndexPlus(4) == glob.KeywordLift {
 				ret, err = tb.haveFnLiftStmt()
 			} else {
@@ -1394,6 +1394,10 @@ func (tb *tokenBlock) claimPropStmt() (*ast.ClaimPropStmt, error) {
 }
 
 func (tb *tokenBlock) claimExistPropStmt() (*ast.ClaimExistPropStmt, error) {
+	if len(tb.body) != 3 {
+		return nil, fmt.Errorf("expect 3 body blocks")
+	}
+
 	existProp, err := tb.body[0].atExistPropDefStmt()
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -1408,7 +1412,17 @@ func (tb *tokenBlock) claimExistPropStmt() (*ast.ClaimExistPropStmt, error) {
 		proofs = append(proofs, curStmt)
 	}
 
-	return ast.NewClaimExistPropStmt(existProp, proofs, tb.line), nil
+	err = tb.body[2].header.skip(glob.KeywordHave)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	haveObj, err := tb.body[2].RawFc()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	return ast.NewClaimExistPropStmt(existProp, proofs, haveObj, tb.line), nil
 }
 
 func (tb *tokenBlock) dom_and_section(kw string, kw_should_not_exist_in_body string) ([]ast.FactStmt, []ast.FactStmt, error) {
@@ -2387,7 +2401,7 @@ func (tb *tokenBlock) haveFnLiftStmt() (*ast.HaveFnLiftStmt, error) {
 	return ast.NewHaveFnLiftStmt(fnName, opt, domainOfEachParamOfGivenFn, tb.line), nil
 }
 
-func (tb *tokenBlock) claimHaveFnStmt() (*ast.HaveFnStmt, error) {
+func (tb *tokenBlock) haveFnStmt() (*ast.HaveFnStmt, error) {
 	var err error
 
 	if len(tb.body) != 3 {

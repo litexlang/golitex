@@ -130,6 +130,7 @@ type KnowPropStmt struct {
 type ClaimExistPropStmt struct {
 	ExistPropWithoutDom DefExistPropStmt
 	Proofs              StmtSlice
+	HaveObj             Fc
 
 	Line uint
 }
