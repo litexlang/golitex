@@ -1,10 +1,17 @@
+"
 claim:
-	@exist s R st larger_than_positive(x R):
-        s > x
+    forall original_rice R:
+        0.7 * original_rice + 90 = original_rice
+        =>:
+            original_rice = 300
     prove:
-        know x + 1 > x
-    have x + 1
+        know 0.7 * original_rice + 90 = original_rice
+        know 90 = original_rice - 0.7 * original_rice
+        90 = 0.3 * original_rice
+        0.3 * original_rice = 90
+        original_rice = 90 / 0.3 = 300
+"
 
-$larger_than_positive(1)
-
-have x st $larger_than_positive(1)
+let a R
+# a = 0.7 * a + 0.3 * a 
+a - 0.7 * a = 0.3 * a 
