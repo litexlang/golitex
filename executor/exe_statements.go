@@ -37,7 +37,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, string, error) {
 	case *ast.DefPropStmt:
 		err = exec.defPropStmt(stmt, true)
 	case *ast.DefObjStmt:
-		err = exec.defObjStmt(stmt, true)
+		err = exec.defObjStmt(stmt)
 	case *ast.HaveObjStStmt:
 		execState, err = exec.haveObjStStmt(stmt, true)
 	case *ast.DefExistPropStmt:
@@ -214,7 +214,7 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool
 	return nil
 }
 
-func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt, requireMsg bool) error {
+func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt) error {
 	// if glob.RequireMsg() && requireMsg {
 	// 	defer exec.newMsg(fmt.Sprintf("%s\n", stmt))
 	// }
@@ -446,7 +446,7 @@ func (exec *Executor) haveSetDefinedByReplacementStmt(stmt *ast.HaveSetDefinedBy
 
 	defObjStmt := ast.NewDefObjStmt([]string{stmt.Name}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}, []ast.FactStmt{ast.NewEqualFact(ast.FcAtom(stmt.Name), setDefinedByReplacement)}, stmt.Line)
 
-	err := exec.defObjStmt(defObjStmt, false)
+	err := exec.defObjStmt(defObjStmt)
 	if err != nil {
 		return glob.ExecStateError, err
 	}
@@ -605,7 +605,7 @@ func (exec *Executor) checkFnEqualStmt(stmt *ast.HaveFnEqualStmt) (glob.ExecStat
 	}()
 
 	for i := range len(stmt.DefHeader.Params) {
-		err := exec.defObjStmt(ast.NewDefObjStmt([]string{stmt.DefHeader.Params[i]}, []ast.Fc{stmt.DefHeader.ParamSets[i]}, []ast.FactStmt{}, stmt.Line), false)
+		err := exec.defObjStmt(ast.NewDefObjStmt([]string{stmt.DefHeader.Params[i]}, []ast.Fc{stmt.DefHeader.ParamSets[i]}, []ast.FactStmt{}, stmt.Line))
 		if err != nil {
 			return glob.ExecStateError, err
 		}
@@ -722,7 +722,7 @@ func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) (glob.ExecState, error) {
 	defer exec.deleteEnvAndRetainMsg()
 
 	defObjStmt := ast.NewDefObjStmt(stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets, stmt.DefFnStmt.FnTemplate.DomFacts, stmt.Line)
-	err := exec.defObjStmt(defObjStmt, false)
+	err := exec.defObjStmt(defObjStmt)
 	if err != nil {
 		return glob.ExecStateError, err
 	}
