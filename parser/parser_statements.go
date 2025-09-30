@@ -2525,3 +2525,60 @@ func (tb *tokenBlock) markdownStmt() (ast.Stmt, error) {
 
 	return ast.NewMarkdownStmt(comment, tb.line), nil
 }
+
+func (tb *tokenBlock) atExistPropDefStmt() (*ast.DefExistPropStmt, error) {
+	err := tb.header.skip(glob.KeySymbolAt)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeywordExist)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	existParams, existParamSets, err := tb.param_paramSet_paramInSetFacts(glob.KeywordSt, false)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeywordSt)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	header, err := tb.defHeaderWithoutParsingColonAtEnd()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	iffFacts := []ast.FactStmt{}
+	for _, block := range tb.body {
+		curStmt, err := block.factStmt(UniFactDepth1)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		iffFacts = append(iffFacts, curStmt)
+	}
+
+	err = tb.header.skip(glob.KeySymbolEqualLarger)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	thenFacts := []ast.FactStmt{}
+	for _, block := range tb.body {
+		curStmt, err := block.factStmt(UniFactDepth1)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		thenFacts = append(thenFacts, curStmt)
+	}
+
+	return ast.NewDefExistPropStmt(ast.NewExistPropDef(header, []ast.FactStmt{}, iffFacts, thenFacts, tb.line), existParams, existParamSets, tb.line), nil
+}
