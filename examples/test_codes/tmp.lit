@@ -6,3 +6,7 @@ claim:
     prove:
         know x + 1 > x
     have x + 1
+
+$larger_than_positive(1)
+
+have x st $larger_than_positive(x)
