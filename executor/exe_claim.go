@@ -248,7 +248,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 	// declare parameters in asUnivFact in the env
 	objDefStmt := ast.NewDefObjStmt(asUnivFact.Params, asUnivFact.ParamSets, []ast.FactStmt{}, stmt.Line)
 
-	err := exec.defObjStmt(objDefStmt, false)
+	err := exec.defObjStmt(objDefStmt)
 	if err != nil {
 		if glob.RequireMsg() {
 			exec.newMsg(fmt.Sprintf("Claim statement error: Failed to declare parameters in universal fact:\n%s\n", objDefStmt))
@@ -352,7 +352,7 @@ func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimProp
 	// declare parameters in prop
 
 	objDefStmt := ast.NewDefObjStmt(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFacts, stmt.Line)
-	err := exec.defObjStmt(objDefStmt, false)
+	err := exec.defObjStmt(objDefStmt)
 	if err != nil {
 		return glob.ExecStateError, err
 	}
