@@ -61,7 +61,7 @@ func (exec *Executor) importDirStmt(stmt *ast.ImportDirStmt) (glob.ExecState, er
 // Recursively 地找到所有的包和子包的main文件，把里面的东西都提取出来到全局里
 func (exec *Executor) importDirWithPkgName(stmt *ast.ImportDirStmt) (glob.ExecState, error) {
 	// glob.TaskDirName = filepath.Join(glob.TaskDirName, stmt.Path)
-	mainFilePath := filepath.Join(glob.CurrentTaskDirName, "main.lix")
+	mainFilePath := filepath.Join(glob.CurrentTaskDirName, glob.PkgEntranceFileName)
 
 	code, err := os.ReadFile(mainFilePath)
 	if err != nil {

@@ -23,7 +23,7 @@ import (
 )
 
 func TestExecuteCodeAndReturnMessage(t *testing.T) {
-	code := readFile("../examples/test_codes/tmp.lix")
+	code := readFile("../examples/test_codes/tmp.lit")
 	msg, signal, err := ExecuteCodeAndReturnMessage(code)
 	if err != nil {
 		t.Errorf("Error: %s", err)

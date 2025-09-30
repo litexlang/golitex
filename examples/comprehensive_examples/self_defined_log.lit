@@ -1,4 +1,3 @@
-"
 prove:
     fn self_log(b, x R) R: 
         dom:
@@ -31,6 +30,3 @@ prove:
             b ^ self_log(b, x*y) = b ^ (self_log(b, x) + self_log(b, y))
             $p(b, self_log(b, x*y), self_log(b, x) + self_log(b, y))
             self_log(b, x*y) = self_log(b, x) + self_log(b, y)
-"
-
-let a, b, c R: a = 1
