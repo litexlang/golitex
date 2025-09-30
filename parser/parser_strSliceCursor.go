@@ -134,7 +134,7 @@ func (cursor *strSliceCursor) curTokenBeginWithNumber() bool {
 	}
 }
 
-func (cursor *strSliceCursor) skipKwAndColonCheckEof(kw string) error {
+func (cursor *strSliceCursor) skipKwAndColonCheckEOL(kw string) error {
 	err := cursor.skip(kw)
 	if err != nil {
 		return err
