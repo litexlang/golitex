@@ -1,3 +1,19 @@
+// Copyright 2024 Jiachen Shen.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Original Author: Jiachen Shen <malloc_realloc_free@outlook.com>
+// Litex email: <litexlang@outlook.com>
+// Litex website: https://litexlang.com
+// Litex github repository: https://github.com/litexlang/golitex
+// Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
+
+// This file reads in two decimals represented as strings and returns a decimal as a string (in simplified format). The computation here is completely accurate.
+
 package litex_num
 
 import (
@@ -21,7 +37,7 @@ func stripZero(s string) string {
 }
 
 // 字符串大整数加法
-func addStrings(a, b string) string {
+func addIntStrings(a, b string) string {
 	i, j := len(a)-1, len(b)-1
 	carry := 0
 	var res []byte
@@ -47,7 +63,7 @@ func addStrings(a, b string) string {
 }
 
 // 字符串大整数减法 (假设 a>=b)
-func subStrings(a, b string) string {
+func subIntStrings(a, b string) string {
 	i, j := len(a)-1, len(b)-1
 	borrow := 0
 	var res []byte
@@ -75,7 +91,7 @@ func subStrings(a, b string) string {
 }
 
 // 字符串大整数乘法
-func mulStrings(a, b string) string {
+func mulIntStrings(a, b string) string {
 	m, n := len(a), len(b)
 	prod := make([]int, m+n)
 
@@ -142,7 +158,7 @@ func normalizeDecimal(s string) (string, int) {
 }
 
 // 加法 (支持小数)
-func AddDecimal(a, b string) string {
+func AddDecimalStr(a, b string) string {
 	// 处理负号
 	aNegative := strings.HasPrefix(a, "-")
 	bNegative := strings.HasPrefix(b, "-")
@@ -173,7 +189,7 @@ func AddDecimal(a, b string) string {
 	// 根据符号决定是加法还是减法
 	if aNegative == bNegative {
 		// 同号相加
-		sum := addStrings(ai, bi)
+		sum := addIntStrings(ai, bi)
 		if as > 0 {
 			pointPos := len(sum) - as
 			if pointPos <= 0 {
@@ -187,10 +203,10 @@ func AddDecimal(a, b string) string {
 	} else {
 		// 异号相减
 		if compareStrings(ai, bi) {
-			result = subStrings(ai, bi)
+			result = subIntStrings(ai, bi)
 			isNegative = aNegative
 		} else {
-			result = subStrings(bi, ai)
+			result = subIntStrings(bi, ai)
 			isNegative = bNegative
 		}
 
@@ -232,7 +248,7 @@ func compareStrings(a, b string) bool {
 }
 
 // 减法 (支持小数)
-func SubDecimal(a, b string) string {
+func SubDecimalStr(a, b string) string {
 	ai, as := normalizeDecimal(a)
 	bi, bs := normalizeDecimal(b)
 
@@ -250,10 +266,10 @@ func SubDecimal(a, b string) string {
 
 	// 比较大小决定符号
 	if compareStrings(ai, bi) {
-		result = subStrings(ai, bi)
+		result = subIntStrings(ai, bi)
 		isNegative = false
 	} else {
-		result = subStrings(bi, ai)
+		result = subIntStrings(bi, ai)
 		isNegative = true
 	}
 
@@ -281,7 +297,7 @@ func SubDecimal(a, b string) string {
 }
 
 // 乘法 (支持小数)
-func MulDecimal(a, b string) string {
+func MulDecimalStr(a, b string) string {
 	// 处理负号
 	aNegative := strings.HasPrefix(a, "-")
 	bNegative := strings.HasPrefix(b, "-")
@@ -297,7 +313,7 @@ func MulDecimal(a, b string) string {
 	ai, as := normalizeDecimal(a)
 	bi, bs := normalizeDecimal(b)
 
-	prod := mulStrings(ai, bi)
+	prod := mulIntStrings(ai, bi)
 	scale := as + bs
 	if scale > 0 {
 		pointPos := len(prod) - scale

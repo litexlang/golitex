@@ -1,3 +1,17 @@
+// Copyright 2024 Jiachen Shen.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Original Author: Jiachen Shen <malloc_realloc_free@outlook.com>
+// Litex email: <litexlang@outlook.com>
+// Litex website: https://litexlang.com
+// Litex github repository: https://github.com/litexlang/golitex
+// Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
+
 package litex_num
 
 import (
@@ -19,7 +33,7 @@ func TestAddDecimal(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := AddDecimal(test.a, test.b)
+		result := AddDecimalStr(test.a, test.b)
 		if result != test.expected {
 			t.Errorf("AddDecimal(%s, %s) = %s, expected %s", test.a, test.b, result, test.expected)
 		}
@@ -44,7 +58,7 @@ func TestSubDecimal(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := SubDecimal(test.a, test.b)
+		result := SubDecimalStr(test.a, test.b)
 		if result != test.expected {
 			t.Errorf("SubDecimal(%s, %s) = %s, expected %s", test.a, test.b, result, test.expected)
 		}
@@ -66,7 +80,7 @@ func TestMulDecimal(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := MulDecimal(test.a, test.b)
+		result := MulDecimalStr(test.a, test.b)
 		if result != test.expected {
 			t.Errorf("MulDecimal(%s, %s) = %s, expected %s", test.a, test.b, result, test.expected)
 		}
