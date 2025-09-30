@@ -17,13 +17,13 @@ package litex_num
 import (
 	"fmt"
 	"sort"
-	"strconv"
 	"strings"
 	"unicode"
 )
 
 type arithmeticTerm struct {
-	CoEff float64
+	// CoEff float64
+	CoEff string
 	Vars  []string // sorted variables, e.g. [x][x][y] => ["x", "x", "y"]
 }
 
@@ -33,17 +33,17 @@ func (t arithmeticTerm) Key() string {
 
 func (t arithmeticTerm) String() string {
 	if len(t.Vars) == 0 {
-		return fmt.Sprintf("%g", t.CoEff)
+		return t.CoEff
 	}
 	var varParts []string
 	for _, v := range t.Vars {
 		varParts = append(varParts, fmt.Sprintf("{%s}", v))
 	}
 	key := strings.Join(varParts, "*")
-	if t.CoEff == 1 {
+	if t.CoEff == "1" {
 		return key
 	}
-	return fmt.Sprintf("%g*%s", t.CoEff, key)
+	return fmt.Sprintf("%s*%s", t.CoEff, key)
 }
 
 type polynomial []arithmeticTerm
@@ -206,10 +206,15 @@ func (p *arithParser) prev() arithToken {
 func eval(ast *arithAST) polynomial {
 	switch ast.Type {
 	case N_NUM:
-		n, _ := strconv.ParseFloat(ast.Value, 64)
-		return polynomial{{CoEff: n}}
+		// 处理数字，包括负数
+		value := ast.Value
+		if value == "-1" {
+			value = "-1"
+		}
+		return polynomial{{CoEff: value}}
 	case N_VAR:
-		return polynomial{{CoEff: 1.0, Vars: []string{ast.Value}}}
+		// return polynomial{{CoEff: 1.0, Vars: []string{ast.Value}}}
+		return polynomial{{CoEff: "1", Vars: []string{ast.Value}}}
 	case N_ADD:
 		left := eval(ast.Children[0])
 		right := eval(ast.Children[1])
@@ -220,8 +225,10 @@ func eval(ast *arithAST) polynomial {
 		var result polynomial
 		for _, l := range left {
 			for _, r := range right {
+				coEff := MulDecimal(l.CoEff, r.CoEff)
 				combined := arithmeticTerm{
-					CoEff: l.CoEff * r.CoEff,
+					// CoEff: l.CoEff * r.CoEff,
+					CoEff: coEff,
 					Vars:  append([]string{}, l.Vars...),
 				}
 				combined.Vars = append(combined.Vars, r.Vars...)
@@ -263,14 +270,20 @@ func eval(ast *arithAST) polynomial {
 
 // This version of simplify makes x * x into x^2
 func simplify(poly polynomial) polynomial {
-	group := map[string]float64{}
+	// group := map[string]float64{}
+	group := map[string]string{}
 	for _, term := range poly {
 		key := term.Key()
-		group[key] += term.CoEff
+		// group[key] += term.CoEff
+		coEff := AddDecimal(group[key], term.CoEff)
+		group[key] = coEff
 	}
 	var result polynomial
 	for key, coEff := range group {
-		if coEff == 0 {
+		// if coEff == 0 {
+		// 	continue
+		// }
+		if coEff == "0" {
 			continue
 		}
 		vars := []string{}
