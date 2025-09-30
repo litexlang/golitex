@@ -489,9 +489,11 @@ func (tb *tokenBlock) claimStmt() (ast.ClaimInterface, error) {
 	}
 
 	if tb.body[0].header.is(glob.KeySymbolAt) {
-		return tb.claimPropStmt()
-	} else if tb.body[0].header.is(glob.KeywordExist) {
-		return tb.claimExistPropStmt()
+		if tb.body[0].header.strAtCurIndexPlus(1) == glob.KeywordExist {
+			return tb.claimExistPropStmt()
+		} else {
+			return tb.claimPropStmt()
+		}
 	}
 
 	toCheck, err := tb.body[0].factStmt(UniFactDepth0)

@@ -1,15 +1,8 @@
-know @exist s R st larger_than_positive(x R):
-    x > 0
-    =>:
-        s > x
-
-know forall x R: x > 0 => $larger_than_positive(x)
-
 claim:
 	@exist s R st larger_than_positive(x R):
         x > 0
         =>:
             s > x
     prove:
-
-    exist s
+        know x + 1 > x
+    have x + 1

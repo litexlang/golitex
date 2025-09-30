@@ -321,13 +321,28 @@ func (exec *Executor) claimPropStmt(stmt *ast.ClaimPropStmt) (glob.ExecState, er
 }
 
 func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) (glob.ExecState, error) {
+	execState, err := exec.claimExistPropStmtCheckProofs(stmt)
+	if notOkExec(execState, err) {
+		return execState, err
+	}
+
+	// declare exist prop
+	err = exec.defExistPropStmt(&stmt.ExistPropWithoutDom)
+	if err != nil {
+		return glob.ExecStateError, err
+	}
+
+	return glob.ExecStateTrue, nil
+}
+
+func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt) (glob.ExecState, error) {
 	exec.NewEnv(exec.env)
 	defer func() {
 		exec.deleteEnvAndRetainMsg()
 	}()
 
 	// declare parameters in exist prop
-	defObjStmt := ast.NewDefObjStmt(stmt.ExistPropWithoutDom.ExistParams, stmt.ExistPropWithoutDom.ExistParamSets, stmt.ExistPropWithoutDom.DefBody.IffFacts, stmt.Line)
+	defObjStmt := ast.NewDefObjStmt(stmt.ExistPropWithoutDom.DefBody.DefHeader.Params, stmt.ExistPropWithoutDom.DefBody.DefHeader.ParamSets, stmt.ExistPropWithoutDom.DefBody.IffFacts, stmt.Line)
 
 	err := exec.defObjStmt(defObjStmt)
 	if err != nil {
