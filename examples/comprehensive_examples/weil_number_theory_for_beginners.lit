@@ -48,11 +48,10 @@ exist_prop x obj st non_empty(s set):
     x $in s
 
 know @exist x N st exist_smallest_element_of(s set):
-    dom:
-        $non_empty(s)
-        forall y s:
-            y $in Z
-    <=>:
+    $non_empty(s)
+    forall y s:
+        y $in Z
+    =>:
         x $in s
         $is_smallest_element_of(x, s)
     
@@ -102,7 +101,7 @@ Chapter 2
 
 # TODO: THIS CLAIM CAN BE PROVED
 know @exist q Z st exist_largest_multiple_of(d Z, a Z):
-    <=>:
+    =>:
         a >= d * q
         d*(q+1) > a
 
@@ -110,11 +109,10 @@ know @exist q Z st exist_largest_multiple_of(d Z, a Z):
 
 # TODO: THIS CLAIM CAN BE PROVED
 know @exist m N st nonempty_set_of_integers_closed_under_addition_has_elements_divisible_by_a_common_divisor(s set):
-    dom:
-        $non_empty(s)
-        forall x s:
-            x $in Z
-    <=>:
+    $non_empty(s)
+    forall x s:
+        x $in Z
+    =>:
         forall x s:
             x $in Z
             $is_divisible_by(m, x)
