@@ -16,6 +16,7 @@ package litex_env
 
 import (
 	ast "golitex/ast"
+	glob "golitex/glob"
 )
 
 type shared_ptr_to_slice_of_fc = *[]ast.Fc
@@ -47,7 +48,7 @@ type KnownFactsStruct struct {
 // 因为 in 类型的事实很多，考虑把fcString为key保留一个map，记录它在什么集合里。比如 a $in N 就保存成 key:a values:[]{N}
 type Env struct {
 	Parent                 *Env
-	Msgs                   []string
+	Msgs                   glob.Msgs
 	ObjDefMem              ObjDefMem
 	PropDefMem             PropDefMem
 	FnTemplateDefMem       FnTemplateDefMem
@@ -70,7 +71,7 @@ func (env *Env) GetUpMostEnv() *Env {
 func NewEnv(parent *Env) *Env {
 	env := &Env{
 		Parent:                 parent,
-		Msgs:                   []string{},
+		Msgs:                   glob.Msgs{},
 		ObjDefMem:              make(ObjDefMem),
 		PropDefMem:             make(PropDefMem),
 		FnTemplateDefMem:       make(FnTemplateDefMem),

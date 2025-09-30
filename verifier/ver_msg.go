@@ -59,9 +59,3 @@ func (ver *Verifier) newMsgAtParent(s string) error {
 func parametersDoNotSatisfyFnReq(param ast.Fc, fnName ast.Fc) error {
 	return fmt.Errorf("the arguments passed to the %s do not satisfy the domain of %s", param, fnName)
 }
-
-type VerMsgs []string
-
-func (verMsgs VerMsgs) Merge(other VerMsgs) VerMsgs {
-	return append(verMsgs, other...)
-}

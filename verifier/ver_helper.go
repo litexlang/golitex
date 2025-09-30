@@ -18,6 +18,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	env "golitex/environment"
+	glob "golitex/glob"
 )
 
 func (ver *Verifier) todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt *ast.SpecFactStmt) *env.Env {
@@ -36,34 +37,34 @@ func (ver *Verifier) processOkMsg(state *VerState, msg string, verifiedBy string
 	return true, nil
 }
 
-func (ver *Verifier) paramsInSets(params []ast.Fc, sets []ast.Fc, state *VerState) (bool, VerMsgs, error) {
+func (ver *Verifier) paramsInSets(params []ast.Fc, sets []ast.Fc, state *VerState) (bool, glob.Msgs, error) {
 	if len(params) != len(sets) {
-		return false, VerMsgs{}, fmt.Errorf("params and sets length mismatch")
+		return false, glob.Msgs{}, fmt.Errorf("params and sets length mismatch")
 	}
 
 	for i := range params {
 		fact := ast.NewInFactWithFc(params[i], sets[i])
 		ok, err := ver.VerFactStmt(fact, state)
 		if err != nil {
-			return false, VerMsgs{}, err
+			return false, glob.Msgs{}, err
 		}
 		if !ok {
-			return false, VerMsgs{ast.UnknownFactMsg(fact)}, nil
+			return false, glob.Msgs{ast.UnknownFactMsg(fact)}, nil
 		}
 	}
-	return true, VerMsgs{}, nil
+	return true, glob.Msgs{}, nil
 }
 
-func (ver *Verifier) factsAreTrue(facts []ast.FactStmt, state *VerState) (bool, VerMsgs, error) {
+func (ver *Verifier) factsAreTrue(facts []ast.FactStmt, state *VerState) (bool, glob.Msgs, error) {
 	for _, fact := range facts {
 		ok, err := ver.VerFactStmt(fact, state)
 		if err != nil {
-			return false, VerMsgs{}, err
+			return false, glob.Msgs{}, err
 		}
 		if !ok {
-			return false, VerMsgs{ast.UnknownFactMsg(fact)}, nil
+			return false, glob.Msgs{ast.UnknownFactMsg(fact)}, nil
 		}
 	}
 
-	return true, VerMsgs{}, nil
+	return true, glob.Msgs{}, nil
 }

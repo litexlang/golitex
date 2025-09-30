@@ -67,3 +67,9 @@ func WarningMsg(s string, args ...any) string {
 func NotImplementedMsg(s string, args ...any) string {
 	return fmt.Sprintf("Feature Not Implemented (Will be implemented in the future):\n%s\n\n", fmt.Sprintf(s, args...))
 }
+
+type Msgs []string
+
+func (msgs Msgs) Merge(other Msgs) Msgs {
+	return append(msgs, other...)
+}

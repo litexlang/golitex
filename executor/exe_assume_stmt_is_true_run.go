@@ -35,7 +35,7 @@ func (exec *Executor) assumeStmtIsTrueRun(stmt ast.Stmt) (glob.ExecState, error)
 	case *ast.DefPropStmt:
 		err = exec.defPropStmt(stmt, true)
 	case *ast.DefObjStmt:
-		err = exec.defObjStmt(stmt, true)
+		err = exec.defObjStmt(stmt)
 	case *ast.HaveObjStStmt:
 		panic("implement me")
 	case *ast.DefExistPropStmt:
