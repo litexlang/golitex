@@ -321,7 +321,48 @@ func (exec *Executor) claimPropStmt(stmt *ast.ClaimPropStmt) (glob.ExecState, er
 }
 
 func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) (glob.ExecState, error) {
-	panic("not implemented")
+	exec.NewEnv(exec.env)
+	defer func() {
+		exec.deleteEnvAndRetainMsg()
+	}()
+
+	// declare parameters in exist prop
+	defObjStmt := ast.NewDefObjStmt(stmt.ExistPropWithoutDom.ExistParams, stmt.ExistPropWithoutDom.ExistParamSets, stmt.ExistPropWithoutDom.DefBody.IffFacts, stmt.Line)
+
+	err := exec.defObjStmt(defObjStmt)
+	if err != nil {
+		return glob.ExecStateError, err
+	}
+
+	for _, stmt := range stmt.Proofs {
+		execState, _, err := exec.Stmt(stmt)
+		if notOkExec(execState, err) {
+			return execState, err
+		}
+	}
+
+	// 把haveObj 代入 existParams 看看是否真的符合 then
+	if len(stmt.HaveObj) != len(stmt.ExistPropWithoutDom.ExistParams) {
+		return glob.ExecStateError, fmt.Errorf("claim exist prop statement error: have obj length is not equal to exist params length")
+	}
+
+	uniMap := make(map[string]ast.Fc)
+	for i, haveObj := range stmt.HaveObj {
+		uniMap[stmt.ExistPropWithoutDom.ExistParams[i]] = haveObj
+	}
+
+	for _, fact := range stmt.ExistPropWithoutDom.DefBody.ThenFacts {
+		instFact, err := fact.Instantiate(uniMap)
+		if err != nil {
+			return glob.ExecStateError, err
+		}
+		execState, err := exec.factStmt(instFact)
+		if notOkExec(execState, err) {
+			return execState, err
+		}
+	}
+
+	return glob.ExecStateTrue, nil
 }
 
 func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimPropStmt) (glob.ExecState, error) {
