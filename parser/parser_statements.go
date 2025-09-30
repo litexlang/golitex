@@ -1417,9 +1417,13 @@ func (tb *tokenBlock) claimExistPropStmt() (*ast.ClaimExistPropStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	haveObj, err := tb.body[2].RawFc()
-	if err != nil {
-		return nil, tbErr(err, tb)
+	haveObj := []ast.Fc{}
+	for !tb.body[2].header.ExceedEnd() {
+		curObj, err := tb.body[2].RawFc()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		haveObj = append(haveObj, curObj)
 	}
 
 	return ast.NewClaimExistPropStmt(existProp, proofs, haveObj, tb.line), nil
