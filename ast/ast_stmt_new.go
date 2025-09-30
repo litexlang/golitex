@@ -138,8 +138,8 @@ func NewEqualsFactStmt(params FcSlice, line uint) *EqualsFactStmt {
 	return &EqualsFactStmt{params, line}
 }
 
-func NewKnowExistPropStmt(existProp DefExistPropStmt, line uint) *KnowExistPropStmt {
-	return &KnowExistPropStmt{existProp, line}
+func NewKnowExistPropStmt(existProp *DefExistPropStmt, line uint) *KnowExistPropStmt {
+	return &KnowExistPropStmt{*existProp, line}
 }
 
 func NewLatexStmt(comment string, line uint) *LatexStmt {
