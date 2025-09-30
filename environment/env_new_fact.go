@@ -286,13 +286,20 @@ func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 	}
 
 	// iff facts
-	iffFacts, err := env.iffFactsInExistStFact(fact)
+	iffFacts, thenFacts, err := env.iffFactsInExistStFact(fact)
 	if err != nil {
 		return err
 	}
 
 	for _, iffFact := range iffFacts {
 		err := env.NewFact(iffFact)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, thenFact := range thenFacts {
+		err := env.NewFact(thenFact)
 		if err != nil {
 			return err
 		}
@@ -416,12 +423,12 @@ func (env *Env) GetEqualFcs(fc ast.Fc) (*[]ast.Fc, bool) {
 // 	return true, nil
 // }
 
-func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, error) {
+func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, []ast.FactStmt, error) {
 	existParams, factParams := ast.GetExistFactExistParamsAndFactParams(fact)
 
 	existPropDef, ok := env.GetExistPropDef(fact.PropName)
 	if !ok {
-		return nil, fmt.Errorf("exist fact %s has no definition", fact)
+		return nil, nil, fmt.Errorf("exist fact %s has no definition", fact)
 	}
 
 	uniMap := map[string]ast.Fc{}
@@ -438,12 +445,21 @@ func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, e
 	for _, iffFact := range existPropDef.DefBody.IffFacts {
 		instantiated, err := iffFact.Instantiate(uniMap)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		instantiatedIffFacts = append(instantiatedIffFacts, instantiated)
 	}
 
-	return instantiatedIffFacts, nil
+	instantiatedThenFacts := []ast.FactStmt{}
+	for _, thenFact := range existPropDef.DefBody.ThenFacts {
+		instantiated, err := thenFact.Instantiate(uniMap)
+		if err != nil {
+			return nil, nil, err
+		}
+		instantiatedThenFacts = append(instantiatedThenFacts, instantiated)
+	}
+
+	return instantiatedIffFacts, instantiatedThenFacts, nil
 }
 
 func (env *Env) ExecDefFnTemplate(stmt *ast.FnTemplateDefStmt) error {
