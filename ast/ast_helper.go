@@ -322,3 +322,7 @@ func FcFnT_To_FnTStruct(fcFnTypeT *FcFn) (*FnTStruct, bool) {
 	excelNames := glob.GenerateNamesLikeExcelColumnNames(len(paramSets))
 	return NewFnTStruct(excelNames, paramSets, retSet, []FactStmt{}, []FactStmt{}, glob.InnerGenLine), true
 }
+
+func UnknownFactMsg(fact FactStmt) string {
+	return fmt.Sprintf("%s\nis unknown\n", fact)
+}
