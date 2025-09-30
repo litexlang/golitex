@@ -1,7 +1,7 @@
 # Translation of the natural numbers example from Lean to Litex
 # Original Lean code is here https://leanprover-community.github.io/theories/naturals.html
 
-import "../../Std/Int/main.lix"
+import "../../Std/Int/main.lit"
 
 4 + 1 + 1 = 6
 4 - 3 = 1

@@ -21,7 +21,6 @@ import (
 	parser "golitex/parser"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 func (exec *Executor) importFileStmt(stmt *ast.ImportFileStmt) (glob.ExecState, error) {
@@ -31,16 +30,20 @@ func (exec *Executor) importFileStmt(stmt *ast.ImportFileStmt) (glob.ExecState, 
 
 	fileName := filepath.Base(codePath)
 	fileExt := filepath.Ext(fileName)
-	if fileExt != ".lix" {
-		return glob.ExecStateError, fmt.Errorf("imported file should have .lix extension, get %s", stmt.Path)
+	if fileExt != glob.LitexFileSuffix {
+		return glob.ExecStateError, fmt.Errorf("imported file should have .lit extension, get %s", stmt.Path)
 	}
 
-	fileNameWithoutExt := strings.TrimSuffix(fileName, fileExt)
-	if strings.HasPrefix(fileNameWithoutExt, "main") {
+	// fileNameWithoutExt := strings.TrimSuffix(fileName, fileExt)
+	// if strings.HasPrefix(fileNameWithoutExt, "main") {
+	// 	return exec.importMainFileStmt(stmt)
+	// }
+
+	if fileName == glob.PkgEntranceFileName {
 		return exec.importMainFileStmt(stmt)
 	}
 
-	exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("importing file \"%s\"", fileNameWithoutExt))
+	exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("importing file \"%s\"", fileName))
 
 	exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("start importing file \"%s\"\n", stmt.Path))
 
