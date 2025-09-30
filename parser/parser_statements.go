@@ -2509,27 +2509,37 @@ func (tb *tokenBlock) atExistPropDefStmt() (*ast.DefExistPropStmt, error) {
 	}
 
 	iffFacts := []ast.FactStmt{}
-	for i := range len(tb.body) - 1 {
-		block := tb.body[i]
-		curStmt, err := block.factStmt(UniFactDepth1)
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-		iffFacts = append(iffFacts, curStmt)
-	}
-
-	err = tb.body[len(tb.body)-1].header.skipKwAndColonCheckEof(glob.KeySymbolEqualLarger)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
 	thenFacts := []ast.FactStmt{}
-	for i := range tb.body[len(tb.body)-1].body {
-		curStmt, err := tb.body[len(tb.body)-1].body[i].factStmt(UniFactDepth1)
+	if tb.body[len(tb.body)-1].header.is(glob.KeySymbolEqualLarger) {
+		for i := range len(tb.body) - 1 {
+			block := tb.body[i]
+			curStmt, err := block.factStmt(UniFactDepth1)
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			iffFacts = append(iffFacts, curStmt)
+		}
+
+		err = tb.body[len(tb.body)-1].header.skipKwAndColonCheckEof(glob.KeySymbolEqualLarger)
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
-		thenFacts = append(thenFacts, curStmt)
+
+		for i := range tb.body[len(tb.body)-1].body {
+			curStmt, err := tb.body[len(tb.body)-1].body[i].factStmt(UniFactDepth1)
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			thenFacts = append(thenFacts, curStmt)
+		}
+	} else {
+		for i := range len(tb.body) {
+			curStmt, err := tb.body[i].factStmt(UniFactDepth1)
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			thenFacts = append(thenFacts, curStmt)
+		}
 	}
 
 	return ast.NewDefExistPropStmt(ast.NewExistPropDef(header, []ast.FactStmt{}, iffFacts, thenFacts, tb.line), existParams, existParamSets, tb.line), nil
