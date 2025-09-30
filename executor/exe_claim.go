@@ -333,7 +333,11 @@ func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) (glob.Exe
 	}
 
 	// know forall
-	// uniFact := ast.NewUniFact(stmt.ExistPropWithoutDom.DefBody.DefHeader.Params, stmt.ExistPropWithoutDom.DefBody.DefHeader.ParamSets, stmt.ExistPropWithoutDom.DefBody.IffFacts, []ast.FactStmt{stmt.}, stmt.Line)
+	uniFact := ast.NewUniFact(stmt.ExistPropWithoutDom.DefBody.DefHeader.Params, stmt.ExistPropWithoutDom.DefBody.DefHeader.ParamSets, stmt.ExistPropWithoutDom.DefBody.IffFacts, []ast.FactStmt{stmt.ExistPropWithoutDom.DefBody.DefHeader.ToSpecFact()}, stmt.Line)
+	err = exec.env.NewFact(uniFact)
+	if err != nil {
+		return glob.ExecStateError, err
+	}
 
 	return glob.ExecStateTrue, nil
 }
