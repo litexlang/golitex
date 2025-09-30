@@ -514,12 +514,12 @@ func (tb *tokenBlock) claimStmt() (ast.ClaimInterface, error) {
 
 	if tb.body[1].header.is(glob.KeywordProveByContradiction) {
 		isProve = false
-		err := tb.body[1].header.skipKwAndColonCheckEof(glob.KeywordProveByContradiction)
+		err := tb.body[1].header.skipKwAndColonCheckEOL(glob.KeywordProveByContradiction)
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
 	} else if tb.body[1].header.is(glob.KeywordProve) {
-		err := tb.body[1].header.skipKwAndColonCheckEof(glob.KeywordProve)
+		err := tb.body[1].header.skipKwAndColonCheckEOL(glob.KeywordProve)
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -943,7 +943,7 @@ func (tb *tokenBlock) uniFactBodyFacts(uniFactDepth uniFactEnum, defaultSectionN
 		}
 
 		// err = tb.body[len(tb.body)-1].header.skipKwAndColon_ExceedEnd(glob.KeywordThen)
-		err = tb.body[len(tb.body)-1].header.skipKwAndColonCheckEof(glob.KeySymbolEqualLarger)
+		err = tb.body[len(tb.body)-1].header.skipKwAndColonCheckEOL(glob.KeySymbolEqualLarger)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -958,7 +958,7 @@ func (tb *tokenBlock) uniFactBodyFacts(uniFactDepth uniFactEnum, defaultSectionN
 		}
 
 		if tb.body[0].header.is(glob.KeywordDom) {
-			err = tb.body[0].header.skipKwAndColonCheckEof(glob.KeywordDom)
+			err = tb.body[0].header.skipKwAndColonCheckEOL(glob.KeywordDom)
 			if err != nil {
 				return nil, nil, nil, err
 			}
@@ -971,7 +971,7 @@ func (tb *tokenBlock) uniFactBodyFacts(uniFactDepth uniFactEnum, defaultSectionN
 				return nil, nil, nil, fmt.Errorf("expect at least 2 body blocks")
 			}
 
-			err = tb.body[len(tb.body)-2].header.skipKwAndColonCheckEof(glob.KeySymbolEqualLarger)
+			err = tb.body[len(tb.body)-2].header.skipKwAndColonCheckEOL(glob.KeySymbolEqualLarger)
 			if err != nil {
 				return nil, nil, nil, err
 			}
@@ -981,7 +981,7 @@ func (tb *tokenBlock) uniFactBodyFacts(uniFactDepth uniFactEnum, defaultSectionN
 			}
 
 		} else if tb.body[0].header.is(glob.KeySymbolEqualLarger) {
-			err = tb.body[0].header.skipKwAndColonCheckEof(glob.KeySymbolEqualLarger)
+			err = tb.body[0].header.skipKwAndColonCheckEOL(glob.KeySymbolEqualLarger)
 			if err != nil {
 				return nil, nil, nil, err
 			}
@@ -998,7 +998,7 @@ func (tb *tokenBlock) uniFactBodyFacts(uniFactDepth uniFactEnum, defaultSectionN
 				}
 
 				// body[len(tb.body)-2] is =>:
-				err = tb.body[len(tb.body)-2].header.skipKwAndColonCheckEof(glob.KeySymbolEqualLarger)
+				err = tb.body[len(tb.body)-2].header.skipKwAndColonCheckEOL(glob.KeySymbolEqualLarger)
 				if err != nil {
 					return nil, nil, nil, err
 				}
@@ -1022,7 +1022,7 @@ func (tb *tokenBlock) uniFactBodyFacts(uniFactDepth uniFactEnum, defaultSectionN
 		// }
 
 		// err = tb.body[len(tb.body)-1].header.skipKwAndColon_ExceedEnd(glob.KeywordIff)
-		err = tb.body[len(tb.body)-1].header.skipKwAndColonCheckEof(glob.KeySymbolEquivalent)
+		err = tb.body[len(tb.body)-1].header.skipKwAndColonCheckEOL(glob.KeySymbolEquivalent)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -1066,7 +1066,7 @@ func (tb *tokenBlock) knowPropStmt() (*ast.KnowPropStmt, error) {
 }
 
 func (tb *tokenBlock) proveInEachCaseStmt() (*ast.ProveInEachCaseStmt, error) {
-	err := tb.header.skipKwAndColonCheckEof(glob.KeywordProveInEachCase)
+	err := tb.header.skipKwAndColonCheckEOL(glob.KeywordProveInEachCase)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -1078,7 +1078,7 @@ func (tb *tokenBlock) proveInEachCaseStmt() (*ast.ProveInEachCaseStmt, error) {
 
 	thenFacts := []ast.FactStmt{}
 	// err = tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordThen)
-	err = tb.body[1].header.skipKwAndColonCheckEof(glob.KeySymbolEqualLarger)
+	err = tb.body[1].header.skipKwAndColonCheckEOL(glob.KeySymbolEqualLarger)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -1095,7 +1095,7 @@ func (tb *tokenBlock) proveInEachCaseStmt() (*ast.ProveInEachCaseStmt, error) {
 	for i := 2; i < len(tb.body); i++ {
 		proof := ast.StmtSlice{}
 
-		err = tb.body[i].header.skipKwAndColonCheckEof(glob.KeywordProve)
+		err = tb.body[i].header.skipKwAndColonCheckEOL(glob.KeywordProve)
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -1253,7 +1253,7 @@ func (tb *tokenBlock) getStringInDoubleQuotes() (string, error) {
 }
 
 func (tb *tokenBlock) proveStmt() (*ast.ProveStmt, error) {
-	err := tb.header.skipKwAndColonCheckEof(glob.KeywordProve)
+	err := tb.header.skipKwAndColonCheckEOL(glob.KeywordProve)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -1277,7 +1277,7 @@ func (tb *tokenBlock) proveStmt() (*ast.ProveStmt, error) {
 // called by exist_prop and prop def
 
 func (tb *tokenBlock) parseFactBodyWithHeaderNameAndUniFactDepth(headerName string, uniFactDepth uniFactEnum) ([]ast.FactStmt, error) {
-	err := tb.header.skipKwAndColonCheckEof(headerName)
+	err := tb.header.skipKwAndColonCheckEOL(headerName)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -1371,9 +1371,9 @@ func (tb *tokenBlock) claimPropStmt() (*ast.ClaimPropStmt, error) {
 	isProve := false
 	if tb.body[1].header.is(glob.KeywordProve) {
 		isProve = true
-		err = tb.body[1].header.skipKwAndColonCheckEof(glob.KeywordProve)
+		err = tb.body[1].header.skipKwAndColonCheckEOL(glob.KeywordProve)
 	} else if tb.body[1].header.is(glob.KeywordProveByContradiction) {
-		err = tb.body[1].header.skipKwAndColonCheckEof(glob.KeywordProveByContradiction)
+		err = tb.body[1].header.skipKwAndColonCheckEOL(glob.KeywordProveByContradiction)
 	} else {
 		return nil, fmt.Errorf("expect 'prove' or 'prove_by_contradiction'")
 	}
@@ -1634,7 +1634,7 @@ func (tb *tokenBlock) enumStmt_or_intensionalSetStmt_or_DomOf(fc ast.Fc) (ast.En
 }
 
 func (tb *tokenBlock) proveOverFiniteSetStmt() (*ast.ProveOverFiniteSetStmt, error) {
-	err := tb.header.skipKwAndColonCheckEof(glob.KeywordProveOverFiniteSet)
+	err := tb.header.skipKwAndColonCheckEOL(glob.KeywordProveOverFiniteSet)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -1672,7 +1672,7 @@ func (tb *tokenBlock) proveOverFiniteSetStmt() (*ast.ProveOverFiniteSetStmt, err
 		return ast.NewProveOverFiniteSetStmt(uniFactAsUniFactStmt, []ast.StmtSlice{}, tb.line), nil
 	}
 
-	err = tb.body[1].header.skipKwAndColonCheckEof(glob.KeywordProve)
+	err = tb.body[1].header.skipKwAndColonCheckEOL(glob.KeywordProve)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -1709,7 +1709,7 @@ func (tb *tokenBlock) bodyOfKnowProp() ([]ast.FactStmt, []ast.FactStmt, error) {
 		}
 
 		// err = tb.body[len(tb.body)-1].header.skipKwAndColon_ExceedEnd(glob.KeywordThen)
-		err = tb.body[len(tb.body)-1].header.skipKwAndColonCheckEof(glob.KeySymbolEqualLarger)
+		err = tb.body[len(tb.body)-1].header.skipKwAndColonCheckEOL(glob.KeySymbolEqualLarger)
 		if err != nil {
 			return nil, nil, tbErr(err, tb)
 		}
@@ -2030,7 +2030,7 @@ func (tb *tokenBlock) fnTemplateStmt() (ast.Stmt, error) {
 		return ast.NewFnTemplateStmt(defHeader, []ast.FactStmt{}, newFnTStruct, tb.line), nil
 	} else if len(tb.body) >= 2 {
 		if tb.body[0].header.is(glob.KeywordDom) {
-			err = tb.body[0].header.skipKwAndColonCheckEof(glob.KeywordDom)
+			err = tb.body[0].header.skipKwAndColonCheckEOL(glob.KeywordDom)
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}
@@ -2174,13 +2174,13 @@ func (tb *tokenBlock) claimStmtInline() (ast.ClaimInterface, error) {
 		}
 
 	} else if tb.header.is(glob.KeywordProveByContradiction) {
-		err := tb.header.skipKwAndColonCheckEof(glob.KeywordProveByContradiction)
+		err := tb.header.skipKwAndColonCheckEOL(glob.KeywordProveByContradiction)
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
 		isProve = false
 	} else if tb.header.is(glob.KeywordProve) {
-		err := tb.header.skipKwAndColonCheckEof(glob.KeywordProve)
+		err := tb.header.skipKwAndColonCheckEOL(glob.KeywordProve)
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -2520,7 +2520,7 @@ func (tb *tokenBlock) atExistPropDefStmt() (*ast.DefExistPropStmt, error) {
 			iffFacts = append(iffFacts, curStmt)
 		}
 
-		err = tb.body[len(tb.body)-1].header.skipKwAndColonCheckEof(glob.KeySymbolEqualLarger)
+		err = tb.body[len(tb.body)-1].header.skipKwAndColonCheckEOL(glob.KeySymbolEqualLarger)
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
