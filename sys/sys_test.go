@@ -35,7 +35,7 @@ func TestRunRepo(t *testing.T) {
 
 func TestRunFileInRepo(t *testing.T) {
 	startTime := time.Now()
-	msg, signal, err := RunFile("../examples/test_codes/natural_numbers1.lix")
+	msg, signal, err := RunFile("../examples/test_codes/natural_numbers1.lit")
 	if err != nil {
 		t.Errorf(err.Error())
 	}

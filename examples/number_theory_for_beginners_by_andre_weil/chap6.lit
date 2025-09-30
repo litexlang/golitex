@@ -2,13 +2,13 @@
 Chapter 6
 """
 
-import "util.lix"
-import "basics.lix"
-import "chap1.lix"
-import "chap2.lix"
-import "chap3.lix"
-import "chap4.lix"
-import "chap5.lix"
+import "util.lit"
+import "basics.lit"
+import "chap1.lit"
+import "chap2.lit"
+import "chap3.lit"
+import "chap4.lit"
+import "chap5.lit"
 
 # Definition 6.1
 # Definition of ring

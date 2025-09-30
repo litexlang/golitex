@@ -54,7 +54,7 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 			}
 		} else if tb.header.strAtCurIndexPlus(1) == glob.KeywordFn {
 			if tb.header.strAtCurIndexPlus(2) == glob.KeySymbolColon {
-				ret, err = tb.claimHaveFnStmt()
+				ret, err = tb.haveFnStmt()
 			} else if tb.header.strAtCurIndexPlus(4) == glob.KeywordLift {
 				ret, err = tb.haveFnLiftStmt()
 			} else {
@@ -489,9 +489,11 @@ func (tb *tokenBlock) claimStmt() (ast.ClaimInterface, error) {
 	}
 
 	if tb.body[0].header.is(glob.KeySymbolAt) {
-		return tb.claimPropStmt()
-	} else if tb.body[0].header.is(glob.KeywordExist) {
-		return tb.claimExistPropStmt()
+		if tb.body[0].header.strAtCurIndexPlus(1) == glob.KeywordExist {
+			return tb.claimExistPropStmt()
+		} else {
+			return tb.claimPropStmt()
+		}
 	}
 
 	toCheck, err := tb.body[0].factStmt(UniFactDepth0)
@@ -512,12 +514,12 @@ func (tb *tokenBlock) claimStmt() (ast.ClaimInterface, error) {
 
 	if tb.body[1].header.is(glob.KeywordProveByContradiction) {
 		isProve = false
-		err := tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordProveByContradiction)
+		err := tb.body[1].header.skipKwAndColonCheckEof(glob.KeywordProveByContradiction)
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
 	} else if tb.body[1].header.is(glob.KeywordProve) {
-		err := tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
+		err := tb.body[1].header.skipKwAndColonCheckEof(glob.KeywordProve)
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -941,7 +943,7 @@ func (tb *tokenBlock) uniFactBodyFacts(uniFactDepth uniFactEnum, defaultSectionN
 		}
 
 		// err = tb.body[len(tb.body)-1].header.skipKwAndColon_ExceedEnd(glob.KeywordThen)
-		err = tb.body[len(tb.body)-1].header.skipKwAndColon_ExceedEnd(glob.KeySymbolEqualLarger)
+		err = tb.body[len(tb.body)-1].header.skipKwAndColonCheckEof(glob.KeySymbolEqualLarger)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -956,7 +958,7 @@ func (tb *tokenBlock) uniFactBodyFacts(uniFactDepth uniFactEnum, defaultSectionN
 		}
 
 		if tb.body[0].header.is(glob.KeywordDom) {
-			err = tb.body[0].header.skipKwAndColon_ExceedEnd(glob.KeywordDom)
+			err = tb.body[0].header.skipKwAndColonCheckEof(glob.KeywordDom)
 			if err != nil {
 				return nil, nil, nil, err
 			}
@@ -969,7 +971,7 @@ func (tb *tokenBlock) uniFactBodyFacts(uniFactDepth uniFactEnum, defaultSectionN
 				return nil, nil, nil, fmt.Errorf("expect at least 2 body blocks")
 			}
 
-			err = tb.body[len(tb.body)-2].header.skipKwAndColon_ExceedEnd(glob.KeySymbolEqualLarger)
+			err = tb.body[len(tb.body)-2].header.skipKwAndColonCheckEof(glob.KeySymbolEqualLarger)
 			if err != nil {
 				return nil, nil, nil, err
 			}
@@ -979,7 +981,7 @@ func (tb *tokenBlock) uniFactBodyFacts(uniFactDepth uniFactEnum, defaultSectionN
 			}
 
 		} else if tb.body[0].header.is(glob.KeySymbolEqualLarger) {
-			err = tb.body[0].header.skipKwAndColon_ExceedEnd(glob.KeySymbolEqualLarger)
+			err = tb.body[0].header.skipKwAndColonCheckEof(glob.KeySymbolEqualLarger)
 			if err != nil {
 				return nil, nil, nil, err
 			}
@@ -996,7 +998,7 @@ func (tb *tokenBlock) uniFactBodyFacts(uniFactDepth uniFactEnum, defaultSectionN
 				}
 
 				// body[len(tb.body)-2] is =>:
-				err = tb.body[len(tb.body)-2].header.skipKwAndColon_ExceedEnd(glob.KeySymbolEqualLarger)
+				err = tb.body[len(tb.body)-2].header.skipKwAndColonCheckEof(glob.KeySymbolEqualLarger)
 				if err != nil {
 					return nil, nil, nil, err
 				}
@@ -1020,7 +1022,7 @@ func (tb *tokenBlock) uniFactBodyFacts(uniFactDepth uniFactEnum, defaultSectionN
 		// }
 
 		// err = tb.body[len(tb.body)-1].header.skipKwAndColon_ExceedEnd(glob.KeywordIff)
-		err = tb.body[len(tb.body)-1].header.skipKwAndColon_ExceedEnd(glob.KeySymbolEquivalent)
+		err = tb.body[len(tb.body)-1].header.skipKwAndColonCheckEof(glob.KeySymbolEquivalent)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -1064,7 +1066,7 @@ func (tb *tokenBlock) knowPropStmt() (*ast.KnowPropStmt, error) {
 }
 
 func (tb *tokenBlock) proveInEachCaseStmt() (*ast.ProveInEachCaseStmt, error) {
-	err := tb.header.skipKwAndColon_ExceedEnd(glob.KeywordProveInEachCase)
+	err := tb.header.skipKwAndColonCheckEof(glob.KeywordProveInEachCase)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -1076,7 +1078,7 @@ func (tb *tokenBlock) proveInEachCaseStmt() (*ast.ProveInEachCaseStmt, error) {
 
 	thenFacts := []ast.FactStmt{}
 	// err = tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordThen)
-	err = tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeySymbolEqualLarger)
+	err = tb.body[1].header.skipKwAndColonCheckEof(glob.KeySymbolEqualLarger)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -1093,7 +1095,7 @@ func (tb *tokenBlock) proveInEachCaseStmt() (*ast.ProveInEachCaseStmt, error) {
 	for i := 2; i < len(tb.body); i++ {
 		proof := ast.StmtSlice{}
 
-		err = tb.body[i].header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
+		err = tb.body[i].header.skipKwAndColonCheckEof(glob.KeywordProve)
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -1217,7 +1219,7 @@ func (tb *tokenBlock) importStmt() (ast.ImportStmtInterface, error) {
 		}
 		return ast.NewImportStmt(importPath, asPkgName, tb.line), nil
 	} else {
-		if strings.HasSuffix(importPath, ".lix") {
+		if strings.HasSuffix(importPath, glob.LitexFileSuffix) {
 			return ast.NewImportFileStmt(importPath, tb.line), nil
 		} else {
 			// 得到 path 的最后一位，默认是 repo 的 repo 名
@@ -1251,7 +1253,7 @@ func (tb *tokenBlock) getStringInDoubleQuotes() (string, error) {
 }
 
 func (tb *tokenBlock) proveStmt() (*ast.ProveStmt, error) {
-	err := tb.header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
+	err := tb.header.skipKwAndColonCheckEof(glob.KeywordProve)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -1275,7 +1277,7 @@ func (tb *tokenBlock) proveStmt() (*ast.ProveStmt, error) {
 // called by exist_prop and prop def
 
 func (tb *tokenBlock) parseFactBodyWithHeaderNameAndUniFactDepth(headerName string, uniFactDepth uniFactEnum) ([]ast.FactStmt, error) {
-	err := tb.header.skipKwAndColon_ExceedEnd(headerName)
+	err := tb.header.skipKwAndColonCheckEof(headerName)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -1369,9 +1371,9 @@ func (tb *tokenBlock) claimPropStmt() (*ast.ClaimPropStmt, error) {
 	isProve := false
 	if tb.body[1].header.is(glob.KeywordProve) {
 		isProve = true
-		err = tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
+		err = tb.body[1].header.skipKwAndColonCheckEof(glob.KeywordProve)
 	} else if tb.body[1].header.is(glob.KeywordProveByContradiction) {
-		err = tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordProveByContradiction)
+		err = tb.body[1].header.skipKwAndColonCheckEof(glob.KeywordProveByContradiction)
 	} else {
 		return nil, fmt.Errorf("expect 'prove' or 'prove_by_contradiction'")
 	}
@@ -1394,49 +1396,11 @@ func (tb *tokenBlock) claimPropStmt() (*ast.ClaimPropStmt, error) {
 }
 
 func (tb *tokenBlock) claimExistPropStmt() (*ast.ClaimExistPropStmt, error) {
-	params, paramSets, err := tb.body[0].param_paramSet_paramInSetFacts(glob.KeySymbolColon, true)
-	if err != nil {
-		return nil, tbErr(err, tb)
+	if len(tb.body) != 3 {
+		return nil, fmt.Errorf("expect 3 body blocks")
 	}
 
-	err = tb.body[0].header.skip(glob.KeywordSt)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	header, err := tb.body[0].defHeaderWithoutParsingColonAtEnd()
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	err = tb.body[0].header.skip(glob.KeySymbolColon)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	existPropIffFacts := []ast.FactStmt{}
-	for i := range len(tb.body[0].body) - 1 {
-		curStmt, err := tb.body[0].body[i].factStmt(UniFactDepth1)
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-		existPropIffFacts = append(existPropIffFacts, curStmt)
-	}
-
-	err = tb.body[0].body[len(tb.body[0].body)-1].header.skip(glob.KeySymbolEqualLarger)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-	thenFacts := []ast.FactStmt{}
-	for _, stmt := range tb.body[0].body[len(tb.body[0].body)-1].body {
-		curStmt, err := stmt.factStmt(UniFactDepth1)
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-		thenFacts = append(thenFacts, curStmt)
-	}
-
-	err = tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
+	existProp, err := tb.body[0].atExistPropDefStmt()
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -1450,9 +1414,21 @@ func (tb *tokenBlock) claimExistPropStmt() (*ast.ClaimExistPropStmt, error) {
 		proofs = append(proofs, curStmt)
 	}
 
-	existProp := ast.NewDefExistPropStmt(ast.NewExistPropDef(header, []ast.FactStmt{}, existPropIffFacts, thenFacts, tb.line), params, paramSets, tb.line)
+	err = tb.body[2].header.skip(glob.KeywordHave)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
 
-	return ast.NewClaimExistPropStmt(existProp, proofs, tb.line), nil
+	haveObj := []ast.Fc{}
+	for !tb.body[2].header.ExceedEnd() {
+		curObj, err := tb.body[2].RawFc()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		haveObj = append(haveObj, curObj)
+	}
+
+	return ast.NewClaimExistPropStmt(existProp, proofs, haveObj, tb.line), nil
 }
 
 func (tb *tokenBlock) dom_and_section(kw string, kw_should_not_exist_in_body string) ([]ast.FactStmt, []ast.FactStmt, error) {
@@ -1658,7 +1634,7 @@ func (tb *tokenBlock) enumStmt_or_intensionalSetStmt_or_DomOf(fc ast.Fc) (ast.En
 }
 
 func (tb *tokenBlock) proveOverFiniteSetStmt() (*ast.ProveOverFiniteSetStmt, error) {
-	err := tb.header.skipKwAndColon_ExceedEnd(glob.KeywordProveOverFiniteSet)
+	err := tb.header.skipKwAndColonCheckEof(glob.KeywordProveOverFiniteSet)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -1696,7 +1672,7 @@ func (tb *tokenBlock) proveOverFiniteSetStmt() (*ast.ProveOverFiniteSetStmt, err
 		return ast.NewProveOverFiniteSetStmt(uniFactAsUniFactStmt, []ast.StmtSlice{}, tb.line), nil
 	}
 
-	err = tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
+	err = tb.body[1].header.skipKwAndColonCheckEof(glob.KeywordProve)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -1733,7 +1709,7 @@ func (tb *tokenBlock) bodyOfKnowProp() ([]ast.FactStmt, []ast.FactStmt, error) {
 		}
 
 		// err = tb.body[len(tb.body)-1].header.skipKwAndColon_ExceedEnd(glob.KeywordThen)
-		err = tb.body[len(tb.body)-1].header.skipKwAndColon_ExceedEnd(glob.KeySymbolEqualLarger)
+		err = tb.body[len(tb.body)-1].header.skipKwAndColonCheckEof(glob.KeySymbolEqualLarger)
 		if err != nil {
 			return nil, nil, tbErr(err, tb)
 		}
@@ -2011,32 +1987,12 @@ func (tb *tokenBlock) knowExistPropStmt() (*ast.KnowExistPropStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	err = tb.header.skip(glob.KeySymbolAt)
+	existProp, err := tb.atExistPropDefStmt()
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
 
-	err = tb.header.skip(glob.KeywordExist)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	existParams, existParamSets, err := tb.param_paramSet_paramInSetFacts(glob.KeywordSt, false)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	if len(existParams) == 0 {
-		return nil, fmt.Errorf("expect at least one parameter in exist prop definition")
-	}
-
-	def, err := tb.defExistPropStmtBody()
-
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	return ast.NewKnowExistPropStmt(*ast.NewDefExistPropStmt(def, existParams, existParamSets, tb.line), tb.line), nil
+	return ast.NewKnowExistPropStmt(existProp, tb.line), nil
 }
 
 func (tb *tokenBlock) latexStmt() (ast.Stmt, error) {
@@ -2074,7 +2030,7 @@ func (tb *tokenBlock) fnTemplateStmt() (ast.Stmt, error) {
 		return ast.NewFnTemplateStmt(defHeader, []ast.FactStmt{}, newFnTStruct, tb.line), nil
 	} else if len(tb.body) >= 2 {
 		if tb.body[0].header.is(glob.KeywordDom) {
-			err = tb.body[0].header.skipKwAndColon_ExceedEnd(glob.KeywordDom)
+			err = tb.body[0].header.skipKwAndColonCheckEof(glob.KeywordDom)
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}
@@ -2218,13 +2174,13 @@ func (tb *tokenBlock) claimStmtInline() (ast.ClaimInterface, error) {
 		}
 
 	} else if tb.header.is(glob.KeywordProveByContradiction) {
-		err := tb.header.skipKwAndColon_ExceedEnd(glob.KeywordProveByContradiction)
+		err := tb.header.skipKwAndColonCheckEof(glob.KeywordProveByContradiction)
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
 		isProve = false
 	} else if tb.header.is(glob.KeywordProve) {
-		err := tb.header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
+		err := tb.header.skipKwAndColonCheckEof(glob.KeywordProve)
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -2451,7 +2407,7 @@ func (tb *tokenBlock) haveFnLiftStmt() (*ast.HaveFnLiftStmt, error) {
 	return ast.NewHaveFnLiftStmt(fnName, opt, domainOfEachParamOfGivenFn, tb.line), nil
 }
 
-func (tb *tokenBlock) claimHaveFnStmt() (*ast.HaveFnStmt, error) {
+func (tb *tokenBlock) haveFnStmt() (*ast.HaveFnStmt, error) {
 	var err error
 
 	if len(tb.body) != 3 {
@@ -2524,4 +2480,57 @@ func (tb *tokenBlock) markdownStmt() (ast.Stmt, error) {
 	tb.header.skip("")
 
 	return ast.NewMarkdownStmt(comment, tb.line), nil
+}
+
+func (tb *tokenBlock) atExistPropDefStmt() (*ast.DefExistPropStmt, error) {
+	err := tb.header.skip(glob.KeySymbolAt)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeywordExist)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	existParams, existParamSets, err := tb.param_paramSet_paramInSetFacts(glob.KeywordSt, false)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	header, err := tb.defHeaderWithoutParsingColonAtEnd()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	iffFacts := []ast.FactStmt{}
+	for i := range len(tb.body) - 1 {
+		block := tb.body[i]
+		curStmt, err := block.factStmt(UniFactDepth1)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		iffFacts = append(iffFacts, curStmt)
+	}
+
+	err = tb.body[len(tb.body)-1].header.skipKwAndColonCheckEof(glob.KeySymbolEqualLarger)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	thenFacts := []ast.FactStmt{}
+	for i := range tb.body[len(tb.body)-1].body {
+		curStmt, err := tb.body[len(tb.body)-1].body[i].factStmt(UniFactDepth1)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		thenFacts = append(thenFacts, curStmt)
+	}
+
+	return ast.NewDefExistPropStmt(ast.NewExistPropDef(header, []ast.FactStmt{}, iffFacts, thenFacts, tb.line), existParams, existParamSets, tb.line), nil
 }
