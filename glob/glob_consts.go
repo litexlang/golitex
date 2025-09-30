@@ -33,3 +33,7 @@ const InnerGenLine uint = 0
 const LatexSig string = "##"
 
 const LatexMultiLineSig string = "\"\""
+
+const LitexFileSuffix string = ".lit"
+
+const PkgEntranceFileName string = "main" + LitexFileSuffix

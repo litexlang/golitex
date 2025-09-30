@@ -4,10 +4,10 @@
 
 # Since this is version 1, I do not prove anything. I just formalize all the propositions and definitions and "know" they are true.
 
-import "basics.lix"
-import "chap1.lix"
-import "chap2.lix"
-import "chap3.lix"
+import "basics.lit"
+import "chap1.lit"
+import "chap2.lit"
+import "chap3.lit"
 
 forall a Z, b Z, d Z:
     gcd(a, b) = 1

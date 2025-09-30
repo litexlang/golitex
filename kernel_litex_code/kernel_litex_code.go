@@ -71,20 +71,20 @@ know forall x, y, z R: z != 0, x / z = y => x = y * z, x = z * y
 
 know forall x, y, z R, n N: x = (y * z) => x^n = y^n * z^n
 
-# TODO: 已经放到 Std/Int/main.lix 中
+# TODO: 已经放到 Std/Int/main.lit 中
 know:
 	forall x, y Z, z N:
 		z != 0
 		=>:
 			(x + y) % z = (x % z + y % z) % z
 
-# TODO: 已经放到 Std/Int/main.lix 中
+# TODO: 已经放到 Std/Int/main.lit 中
 know forall x, y Z, z N: z !=0, x % z = 0 => (x * y) % z = 0
 
-# TODO: 已经放到 Std/Int/main.lix 中
+# TODO: 已经放到 Std/Int/main.lit 中
 know forall x, z N: z != 0, x < z => x % z = x
 
-# TODO: 已经放到 Std/Int/main.lix 中
+# TODO: 已经放到 Std/Int/main.lit 中
 know forall x, y N: y != 0, x < y => x % y = x
 
 know forall x, y, z R: z != 0, x * z = y => x = y / z
@@ -93,7 +93,7 @@ know forall x, y, z R: x + y = z => x = z - y
 
 know forall x,y R: x + y = 0 => x = -y
 
-# TODO: 已经放到 Std/Int/main.lix 中
+# TODO: 已经放到 Std/Int/main.lit 中
 know forall x,y Z => $in(x+y, Z), $in(x-y, Z), $in(x*y, Z)
 	
 know forall x, y, z R: x + y = z => y + x = z

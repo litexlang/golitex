@@ -25,7 +25,7 @@ import (
 
 func TestLastStmt(t *testing.T) {
 	start := time.Now()
-	allCode := readFile("../examples/test_codes/tmp.lix")
+	allCode := readFile("../examples/test_codes/tmp.lit")
 	code := extractFromLastProveLine(allCode)
 	readFileTime := time.Since(start)
 	start = time.Now()
