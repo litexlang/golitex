@@ -3,4 +3,4 @@ know @exist s R st larger_than_positive(x R):
     =>:
         s > 0
 
-know forall x R: x > 0 => larger_than_positive(x)
+know forall x R: x > 0 => $larger_than_positive(x)
