@@ -166,7 +166,7 @@ func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.FcSlice, fnT
 	}
 	if !ok {
 		failed = true
-		ver.env.Msgs = append(ver.env.Msgs, msg)
+		ver.env.Msgs = append(ver.env.Msgs, msg...)
 		return false, nil
 	}
 
@@ -177,7 +177,7 @@ func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.FcSlice, fnT
 	}
 	if !ok {
 		failed = true
-		ver.env.Msgs = append(ver.env.Msgs, msg)
+		ver.env.Msgs = append(ver.env.Msgs, msg...)
 		return false, nil
 	}
 
