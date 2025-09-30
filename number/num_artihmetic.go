@@ -225,7 +225,7 @@ func eval(ast *arithAST) polynomial {
 		var result polynomial
 		for _, l := range left {
 			for _, r := range right {
-				coEff := MulDecimal(l.CoEff, r.CoEff)
+				coEff := MulDecimalStr(l.CoEff, r.CoEff)
 				combined := arithmeticTerm{
 					// CoEff: l.CoEff * r.CoEff,
 					CoEff: coEff,
@@ -275,7 +275,7 @@ func simplify(poly polynomial) polynomial {
 	for _, term := range poly {
 		key := term.Key()
 		// group[key] += term.CoEff
-		coEff := AddDecimal(group[key], term.CoEff)
+		coEff := AddDecimalStr(group[key], term.CoEff)
 		group[key] = coEff
 	}
 	var result polynomial
