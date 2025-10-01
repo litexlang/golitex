@@ -491,4 +491,16 @@ know:
 
 know:
 	forall a, b, c, d R: b != 0, d != 0, a / b = c / d => a * d = b * c
+
+know:
+    forall a, b, c, d R:
+        b != 0
+		c != 0
+        d != 0
+        =>:
+            (a / b) / (c / d) = (a * d) / (b * c)
+
+know forall a, b, c, d R: c != 0, a = (b / c) * d => a * c = b * d
+know forall a, b, c, d R: c != 0, a = d * (b / c) => a * c = d * b
+know forall x, y, z R: z != 0, x = y / z => x * z = y
 `
