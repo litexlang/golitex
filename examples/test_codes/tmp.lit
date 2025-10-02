@@ -14,7 +14,7 @@ claim:
         (9/15)*total_people + (5/15)*total_people + 1 = total_people
         (14/15)*total_people + 1 = total_people
         1 = total_people - (14/15)*total_people
-        1 = (1/15)*total_people
+        (1/15)*total_people = 1
         1 * 15 = 1 * total_people = 15
         front_people = 3 / 5 * 15 = 9
         position_hua = front_people + 1 = 10
