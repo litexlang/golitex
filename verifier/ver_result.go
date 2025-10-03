@@ -17,13 +17,13 @@ package litex_verifier
 import "fmt"
 
 type VerRet struct {
-	Ok  bool
-	Msg []string
-	Err error
+	Ok   bool
+	Msgs []string
+	Err  error
 }
 
 func (ver *VerRet) newMsg(msg string) *VerRet {
-	ver.Msg = append(ver.Msg, msg)
+	ver.Msgs = append(ver.Msgs, msg)
 	return ver
 }
 
@@ -41,24 +41,24 @@ func (ver *VerRet) IsUnknown() bool {
 
 func newErrVerRet(msg string, args ...any) *VerRet {
 	return &VerRet{
-		Ok:  false,
-		Msg: []string{fmt.Sprintf(msg, args...)},
-		Err: fmt.Errorf(msg, args...),
+		Ok:   false,
+		Msgs: []string{fmt.Sprintf(msg, args...)},
+		Err:  fmt.Errorf(msg, args...),
 	}
 }
 
 func newTrueVerRet(msg string, args ...any) *VerRet {
 	return &VerRet{
-		Ok:  true,
-		Msg: []string{fmt.Sprintf(msg, args...)},
-		Err: nil,
+		Ok:   true,
+		Msgs: []string{fmt.Sprintf(msg, args...)},
+		Err:  nil,
 	}
 }
 
 func newUnknownVerRet(msg string, args ...any) *VerRet {
 	return &VerRet{
-		Ok:  false,
-		Msg: []string{fmt.Sprintf(msg, args...)},
-		Err: nil,
+		Ok:   false,
+		Msgs: []string{fmt.Sprintf(msg, args...)},
+		Err:  nil,
 	}
 }
