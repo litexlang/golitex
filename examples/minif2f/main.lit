@@ -1,0 +1,43 @@
+# amc12a_2015_p10
+know @factors_divide_product(a, b, c Z):
+	c != 0
+	a * b = c
+	=>:
+		c % a = 0
+		c % b = 0
+
+# amc12a_2008_p8
+know @odd_pow_eq_unique_root(a R, b N_pos, c R, solution R):
+    c > 0
+	a ^ b = c
+    solution^b = c
+	=>:
+		a = solution
+        a = c ^ (1 / b)
+
+# amc12a_2008_p8
+# Untested
+know @solve_quadratic_eqn(a R, b R, c R, x R):
+    b^2 - 4 * a * c >= 0
+    a * x^2 + b * x + c = 0
+    =>:
+        or:
+            x = (-b + (b^2 - 4 * a * c) ^ (1 / 2)) / (2 * a)
+            x = (-b - (b^2 - 4 * a * c) ^ (1 / 2)) / (2 * a)
+
+# amc12a_2008_p8
+# Untested
+know @are_two_different_quadratic_eqn_solutions(a R, b R, c R, x R, y R):
+    b ^ 2 - 4 * a * c > 0 
+    x != y
+    a * x^2 + b * x + c = 0
+    a * y^2 + b * y + c = 0
+    =>:
+        forall z R:
+            a * z^2 + b * z + c = 0
+            =>:
+                or(z = x, z = y)
+
+# amc12a_2008_p8
+# Should I add requirements of ^ as domain here???
+know forall x, y, z R => x ^ y ^ z = x ^ (y * z)
