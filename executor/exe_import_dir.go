@@ -124,7 +124,8 @@ func (exec *Executor) runStmtInUpmostEnv_AssumeTheyAreTrue(topStmtSlice []ast.St
 	newExec := NewExecutor(curEnv)
 
 	for _, topStmt := range topStmtSlice {
-		execState, err := newExec.assumeStmtIsTrueRun(topStmt)
+		// execState, err := newExec.assumeStmtIsTrueRun(topStmt)
+		execState, _, err := newExec.Stmt(topStmt)
 		if err != nil {
 			return glob.ExecStateError, err
 		}

@@ -103,9 +103,9 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, string, error) {
 	if err != nil || execState == glob.ExecStateError {
 		return glob.ExecStateError, "", fmt.Errorf("failed :( line %d:\n%w", stmt.GetLine(), err)
 	} else if execState == glob.ExecStateTrue {
-		return execState, fmt.Sprintf("%s\nsuccess! :) line %d\n", stmt, stmt.GetLine()), nil
+		return execState, fmt.Sprintf("success! :) line %d\n", stmt.GetLine()), nil
 	} else if execState == glob.ExecStateUnknown {
-		return execState, fmt.Sprintf("%s\nis unknown :(\n", stmt), nil
+		return execState, fmt.Sprintf("unknown :( line %d\n", stmt.GetLine()), nil
 	} else {
 		panic("unknown exec state")
 	}
@@ -236,15 +236,16 @@ func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) (glob.ExecState, error
 	for _, curStmt := range proof {
 		execState, _, err := exec.Stmt(curStmt)
 		if err != nil {
+			if glob.RequireMsg() {
+				exec.newMsg(fmt.Sprintf("failed :( line %d:\n%w", curStmt.GetLine(), err))
+			}
 			return glob.ExecStateError, err
 		}
-		if execState != glob.ExecStateTrue {
-			if execState == glob.ExecStateUnknown && glob.ContinueExecutionIfExecUnknown {
-				exec.appendWarningMsg(fmt.Sprintf("unknown fact:\n%s", curStmt))
-				return glob.ExecStateUnknown, nil
-			} else {
-				return execState, nil
+		if execState == glob.ExecStateUnknown {
+			if glob.RequireMsg() {
+				exec.newMsg(fmt.Sprintf("unknown :( line %d\n", curStmt.GetLine()))
 			}
+			return glob.ExecStateUnknown, nil
 		}
 	}
 	return glob.ExecStateTrue, nil
