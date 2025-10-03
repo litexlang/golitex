@@ -236,6 +236,7 @@ func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) error {
 	return exec.env.NewDefExistProp_InsideAtomsDeclared(stmt)
 }
 
+// TODO: 我认为打印一下 claim 里面的各个语句的输出还是有道理的
 func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) (glob.ExecState, error) {
 	for _, curStmt := range proof {
 		execState, _, err := exec.Stmt(curStmt)
