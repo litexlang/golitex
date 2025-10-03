@@ -4,4 +4,5 @@ claim:
         =>:
             x = 1
     prove:
-        x = 2
+        let y R
+        let y2 R
