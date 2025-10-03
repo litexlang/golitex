@@ -101,7 +101,11 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, string, error) {
 	}
 
 	if err != nil || execState == glob.ExecStateError {
-		return glob.ExecStateError, "", fmt.Errorf("failed :( line %d:\n%w", stmt.GetLine(), err)
+		if err.Error() != "" {
+			return glob.ExecStateError, "", fmt.Errorf("failed :( line %d:\n%w", stmt.GetLine(), err)
+		} else {
+			return glob.ExecStateError, "", fmt.Errorf("failed :( line %d", stmt.GetLine())
+		}
 	} else if execState == glob.ExecStateTrue {
 		return execState, fmt.Sprintf("success! :) line %d\n", stmt.GetLine()), nil
 	} else if execState == glob.ExecStateUnknown {
@@ -237,7 +241,7 @@ func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) (glob.ExecState, error
 		execState, _, err := exec.Stmt(curStmt)
 		if err != nil {
 			if glob.RequireMsg() {
-				exec.newMsg(fmt.Sprintf("%s\nis failed :( line %d:\n%w", curStmt.String(), curStmt.GetLine(), err))
+				exec.newMsg(fmt.Sprintf("%s\nfailed :( line %d\n", curStmt.String(), curStmt.GetLine()))
 			}
 			return glob.ExecStateError, err
 		}
@@ -308,7 +312,7 @@ func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEach
 	}
 
 	// verify thenFacts are true
-	execState, failedFact, err := verifier.ExecFactsAtCurEnv_retFailedFact(stmt.ThenFacts, exec.env)
+	execState, failedFact, err := verifier.ExecFactsAtCurEnv_retFailedFact(stmt.ThenFacts, exec.env, verifier.Round0NoMsg)
 	if err != nil {
 		return execState, fmt.Errorf("prove in each case statement error: failed to verify then facts:\n%s\n%s", failedFact, err)
 	} else if execState != glob.ExecStateTrue {
