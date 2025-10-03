@@ -1,44 +1,64 @@
-# This repo will be merged into other repos. I use this name to indicate that this repo is for making minif2f more compatible with Litex.
+"
+litex能证明1,3,9,27,81是81的因子，但不能它们是唯一的因子（因为litex暂时没for i in range(1, 82) 的遍历去证明的办法）解决办法包括
 
-fn floor(x R) Z:
-    forall y Z:
-        y <= x
+1. 调用py库来计算81的因子，默认我们调用的库是对的（好处：这样做任何题目就会很容易，而且打印出来的时候很好看，如果让ai做题就会让ai有严格性：它是碉调包的，用完包然后把输出的结果贴在原地，非常准确），这样哪怕是自然语言编程也会很准确
+
+2. 我内部引入对自然数上面的所有整数的遍历的证明，即引入for i in range(1, 82) 这样的遍历的办法
+
+3. lean的写法是 example : 81.divisors = [1,3,9,27,81] := by decide 这里 by decide 是去计算 Nat.divisors 81 的值，Nat.divisors 81 的值是 [d for d in range(1..n) if d | n] 这样的。本质上它也是内置了for循环和know（即知道从1到81的整数，可以和range(1,82)一一对应）
+"
+
+
+claim:
+    forall x N_pos, y N_pos:
+        x + y + (x * y) = 80
+        x > y
         =>:
-            y <= floor(x)
-know forall x R, y Z: x - y < 1 => floor(x) = y
+            x = 26
+    prove:
+        know forall x N_pos: 81 % x = 0 => or(x = 1, x = 3, x = 9, x = 27, x = 81)
+        x + y + (x * y) + 1 = (x + 1) * (y + 1) = 80 + 1 = 81
 
-fn ceil(x R) Z:
-    forall y Z:
-        y >= x
-        =>:
-            y >= ceil(x)
-know forall x R, y Z: y - x < 1 => ceil(x) = y
+        $factors_divide_product(x + 1, y + 1, 81)
 
-fn round(x R) Z:
-    if:
-        x - floor(x) < 0.5
-        =>:
-            round(x) = floor(x)
-    if:
-        x - floor(x) >= 0.5
-        =>:
-            round(x) = ceil(x)
-
-know forall x R, y Z: or(x - y < 0.5, y - x < 0.5) => round(x) = y
-know forall x R, y Z: x - y = 0.5, y >= x => round(x) = y
-
-prove:
-    floor(1) = 1
-    floor(1.2) = 1
-    floor(1.8) = 1
-    floor(1.5) = 1
-
-    ceil(1) = 1
-    ceil(1.2) = 2
-    ceil(1.8) = 2
-    ceil(1.5) = 2
-
-    round(1) = 1
-    round(1.2) = 1
-    round(1.8) = 2
-    round(1.5) = 2
+        claim:
+            x + 1 != 1
+            prove_by_contradiction:
+                x + 1 = 1
+                x = 1 - 1 = 0
+                1 * (y + 1) = 81 = y + 1
+                y = 81 - 1 = 80
+                80 >= 0
+                y >= x
+        claim:
+            x + 1 != 3
+            prove_by_contradiction:
+                x + 1 = 3
+                x = 3 - 1 = 2
+                3 * (y + 1) = 81 = 3 * y + 3
+                3 * y = 81 - 3 = 78
+                y = 78 / 3 = 26
+                26 >= 2
+                y >= x
+        claim:
+            x + 1 != 9
+            prove_by_contradiction:
+                x + 1 = 9
+                x = 9 - 1 = 8
+                9 * (y + 1) = 81 = 9 * y + 9
+                9 * y = 81 - 9 = 72
+                y = 72 / 9 = 8
+                8 >= 8
+                y >= x
+        claim:
+            x + 1 != 81
+            prove_by_contradiction:
+                x + 1 = 81
+                x = 81 - 1 = 80
+                81 * (y + 1) = 81
+                y + 1 = 81 / 81 = 1
+                y = 1 - 1 = 0
+                y $in N_pos
+        or(x + 1 = 1, x + 1 = 3, x + 1 = 9, x + 1 = 27, x + 1 = 81)
+        x + 1 = 27
+        x = 27 - 1 = 26
