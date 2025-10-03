@@ -94,3 +94,7 @@ func makeKnownFactsStruct() KnownFactsStruct {
 		SpecFact_InLogicExpr_InUniFactMem: *newSpecFact_InLogicExpr_InUniFactMem(),
 	}
 }
+
+func (e *Env) AddMsgToParent(msg string) {
+	e.Parent.Msgs = append(e.Parent.Msgs, msg)
+}
