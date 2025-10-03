@@ -505,11 +505,4 @@ know:
 know forall a, b, c, d R: c != 0, a = (b / c) * d => a * c = b * d
 know forall a, b, c, d R: c != 0, a = d * (b / c) => a * c = d * b
 know forall x, y, z R: z != 0, x = y / z => x * z = y
-
-know @factors_divide_product(a, b, c Z):
-	c != 0
-	a * b = c
-	=>:
-		c % a = 0
-		c % b = 0
 `

@@ -192,13 +192,6 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecState, 
 	exec.NewEnv(exec.env)
 	if glob.RequireMsg() {
 		defer func() {
-			exec.newMsg("\n")
-			if isSuccess {
-				exec.appendNewMsgAtBegin("is true\n\n")
-			} else {
-				exec.appendNewMsgAtBegin("is unknown\n\n")
-			}
-			exec.appendNewMsgAtBegin(stmt.String())
 			exec.deleteEnvAndRetainMsg()
 		}()
 	}
@@ -356,11 +349,15 @@ func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt
 		return glob.ExecStateError, err
 	}
 
-	for _, stmt := range stmt.Proofs {
-		execState, msg, err := exec.Stmt(stmt)
+	for _, curStmt := range stmt.Proofs {
+		execState, _, err := exec.Stmt(curStmt)
 		if notOkExec(execState, err) {
 			if glob.RequireMsg() {
-				exec.env.AddMsgToParent(msg)
+				if execState == glob.ExecStateUnknown {
+					exec.env.AddMsgToParent(fmt.Sprintf("unknown :( line %d\n", curStmt.GetLine()))
+				} else {
+					exec.env.AddMsgToParent(fmt.Sprintf("failed :( line %d:\n%w", curStmt.GetLine(), err))
+				}
 			}
 			return execState, err
 		}
