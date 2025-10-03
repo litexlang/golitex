@@ -237,13 +237,13 @@ func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) (glob.ExecState, error
 		execState, _, err := exec.Stmt(curStmt)
 		if err != nil {
 			if glob.RequireMsg() {
-				exec.newMsg(fmt.Sprintf("failed :( line %d:\n%w", curStmt.GetLine(), err))
+				exec.newMsg(fmt.Sprintf("%s\nis failed :( line %d:\n%w", curStmt.String(), curStmt.GetLine(), err))
 			}
 			return glob.ExecStateError, err
 		}
 		if execState == glob.ExecStateUnknown {
 			if glob.RequireMsg() {
-				exec.newMsg(fmt.Sprintf("unknown :( line %d\n", curStmt.GetLine()))
+				exec.newMsg(fmt.Sprintf("%s\nis unknown :( line %d\n", curStmt.String(), curStmt.GetLine()))
 			}
 			return glob.ExecStateUnknown, nil
 		}

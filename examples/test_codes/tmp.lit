@@ -1,0 +1,7 @@
+claim:
+    forall x R:
+        x = 1
+        =>:
+            x = 1
+    prove:
+        x = 2
