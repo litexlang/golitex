@@ -357,8 +357,11 @@ func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt
 	}
 
 	for _, stmt := range stmt.Proofs {
-		execState, _, err := exec.Stmt(stmt)
+		execState, msg, err := exec.Stmt(stmt)
 		if notOkExec(execState, err) {
+			if glob.RequireMsg() {
+				exec.env.AddMsgToParent(msg)
+			}
 			return execState, err
 		}
 	}
