@@ -1,8 +1,0 @@
-claim:
-    forall x R:
-        x = 1
-        =>:
-            x = 1
-    prove:
-        let y R
-        let y2 R
