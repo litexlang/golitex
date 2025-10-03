@@ -1,20 +1,44 @@
-claim:
-    forall total_people, front_people, back_people, position_hua R:
-        front_people = 3 / 5 * total_people
-        back_people = 1 / 3 * total_people
-        front_people + back_people + 1 = total_people
-        position_hua = front_people + 1
+# This repo will be merged into other repos. I use this name to indicate that this repo is for making minif2f more compatible with Litex.
+
+fn floor(x R) Z:
+    forall y Z:
+        y <= x
         =>:
-            position_hua = 10
-    prove:
-        front_people = 3 / 5 * total_people
-        back_people = 1 / 3 * total_people
-        front_people + back_people + 1 = total_people
-        (3/5)*total_people + (1/3)*total_people + 1 = total_people
-        (9/15)*total_people + (5/15)*total_people + 1 = total_people
-        (14/15)*total_people + 1 = total_people
-        1 = total_people - (14/15)*total_people
-        (1/15)*total_people = 1
-        1 * 15 = 1 * total_people = 15
-        front_people = 3 / 5 * 15 = 9
-        position_hua = front_people + 1 = 10
+            y <= floor(x)
+know forall x R, y Z: x - y < 1 => floor(x) = y
+
+fn ceil(x R) Z:
+    forall y Z:
+        y >= x
+        =>:
+            y >= ceil(x)
+know forall x R, y Z: y - x < 1 => ceil(x) = y
+
+fn round(x R) Z:
+    if:
+        x - floor(x) < 0.5
+        =>:
+            round(x) = floor(x)
+    if:
+        x - floor(x) >= 0.5
+        =>:
+            round(x) = ceil(x)
+
+know forall x R, y Z: or(x - y < 0.5, y - x < 0.5) => round(x) = y
+know forall x R, y Z: x - y = 0.5, y >= x => round(x) = y
+
+prove:
+    floor(1) = 1
+    floor(1.2) = 1
+    floor(1.8) = 1
+    floor(1.5) = 1
+
+    ceil(1) = 1
+    ceil(1.2) = 2
+    ceil(1.8) = 2
+    ceil(1.5) = 2
+
+    round(1) = 1
+    round(1.2) = 1
+    round(1.8) = 2
+    round(1.5) = 2
