@@ -16,7 +16,6 @@ prove_in_range(1, 10, x):
     prove:
         x >= 1
         x < 10
-        x % 2 = 0
 
 prove_in_range(1, 10, x):
     x % 2 = 0
