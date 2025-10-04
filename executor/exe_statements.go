@@ -800,21 +800,7 @@ func (exec *Executor) latexStmt(stmt *ast.LatexStmt) (glob.ExecState, error) {
 }
 
 func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) (glob.ExecState, error) {
-	startAsInt, ok := ast.ToInt(stmt.Start)
-	if !ok {
-		return glob.ExecStateError, fmt.Errorf("start is not an integer")
-	}
-
-	endAsInt, ok := ast.ToInt(stmt.End)
-	if !ok {
-		return glob.ExecStateError, fmt.Errorf("end is not an integer")
-	}
-
-	if startAsInt > endAsInt {
-		return glob.ExecStateError, fmt.Errorf("start is greater than end")
-	}
-
-	for i := startAsInt; i <= endAsInt; i++ {
+	for i := stmt.Start; i <= stmt.End; i++ {
 		_, err := exec.execInNewEnv(exec.env, []ast.Stmt{})
 		if err != nil {
 			return glob.ExecStateError, err
