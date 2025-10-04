@@ -798,29 +798,3 @@ func (exec *Executor) latexStmt(stmt *ast.LatexStmt) (glob.ExecState, error) {
 	_ = stmt
 	return glob.ExecStateTrue, nil
 }
-
-func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) (glob.ExecState, error) {
-	for i := stmt.Start; i <= stmt.End; i++ {
-		_, err := exec.execInNewEnv(exec.env, []ast.Stmt{})
-		if err != nil {
-			return glob.ExecStateError, err
-		}
-		panic("需要明确知道 是不是满足dom，要么true，要么false，不能是unknown")
-	}
-
-	return glob.ExecStateTrue, nil
-}
-
-func (exec *Executor) execInNewEnv(oldEnv *env.Env, stmts []ast.Stmt) (glob.ExecState, error) {
-	exec.NewEnv(oldEnv)
-	defer exec.deleteEnvAndGiveUpMsgs()
-
-	for _, stmt := range stmts {
-		execState, _, err := exec.Stmt(stmt)
-		if notOkExec(execState, err) {
-			return execState, err
-		}
-	}
-
-	return glob.ExecStateTrue, nil
-}
