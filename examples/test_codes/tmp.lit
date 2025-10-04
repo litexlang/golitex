@@ -1,3 +1,12 @@
-import "../minif2f"
+prove_in_range(1, 10, x):
+    x % 2 = 0
+    =>:
+        x >= 1
+        x < 10
+        x % 2 = 0
+    prove:
+        x >= 1
+        x < 10
+        x % 2 = 0
 
-log(2, 3) + log(2, 4) = log(2, 3 * 4) = log(2, 12)
+# emit: forall x Z: x >= 1, x < 10 => x $in Z
