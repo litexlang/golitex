@@ -19,6 +19,7 @@ type StmtSlice []Stmt
 type SpecFactPtrSlice []*SpecFactStmt
 type StrSlice []string
 type FcSlice []Fc
+type ReversibleFacts []Spec_OrFact
 
 type DefObjStmt struct {
 	Objs    StrSlice
@@ -350,7 +351,7 @@ type ProveInRangeStmt struct {
 	Start     int64
 	End       int64
 	Param     string
-	DomFacts  FactStmtSlice
+	DomFacts  ReversibleFacts
 	ThenFacts FactStmtSlice
 	Proofs    StmtSlice
 

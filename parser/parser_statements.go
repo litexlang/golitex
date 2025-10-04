@@ -2680,5 +2680,15 @@ func (tb *tokenBlock) proveInRangeStmt() (*ast.ProveInRangeStmt, error) {
 		}
 	}
 
-	return ast.NewProveInRangeStmt(startAsInt, endAsInt, param, domFacts, thenFacts, proofs, tb.line), nil
+	// 需要将 domFacts 转换为 ReversibleFacts
+	reversibleDomFacts := ast.ReversibleFacts{}
+	for _, fact := range domFacts {
+		reversibleFact, ok := fact.(ast.Spec_OrFact)
+		if !ok {
+			return nil, tbErr(fmt.Errorf("expect spec or fact, get %s", fact.String()), tb)
+		}
+		reversibleDomFacts = append(reversibleDomFacts, reversibleFact)
+	}
+
+	return ast.NewProveInRangeStmt(startAsInt, endAsInt, param, reversibleDomFacts, thenFacts, proofs, tb.line), nil
 }
