@@ -505,4 +505,14 @@ know:
 know forall a, b, c, d R: c != 0, a = (b / c) * d => a * c = b * d
 know forall a, b, c, d R: c != 0, a = d * (b / c) => a * c = d * b
 know forall x, y, z R: z != 0, x = y / z => x * z = y
+
+fn range(x Z, y Z) set:
+	dom:
+		x <= y 
+	=>:
+		forall i Z:
+			i >= x
+			i < y
+			=>:
+				i $in range(x, y)
 `
