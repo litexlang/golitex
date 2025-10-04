@@ -317,3 +317,7 @@ func (s *HaveFnStmt) InlineString() string {
 func (s *MarkdownStmt) InlineString() string {
 	return s.Markdown
 }
+
+func (s *ProveInRangeStmt) InlineString() string {
+	return "TODO"
+}

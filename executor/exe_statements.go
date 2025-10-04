@@ -96,6 +96,9 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, string, error) {
 	case *ast.LatexStmt:
 		execState, err = exec.latexStmt(stmt)
 		return execState, "", err
+	case *ast.ProveInRangeStmt:
+		execState, err = exec.proveInRangeStmt(stmt)
+		return execState, "", err
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}
@@ -792,6 +795,11 @@ func (exec *Executor) markdownStmt(stmt *ast.MarkdownStmt) (glob.ExecState, erro
 }
 
 func (exec *Executor) latexStmt(stmt *ast.LatexStmt) (glob.ExecState, error) {
+	_ = stmt
+	return glob.ExecStateTrue, nil
+}
+
+func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) (glob.ExecState, error) {
 	_ = stmt
 	return glob.ExecStateTrue, nil
 }
