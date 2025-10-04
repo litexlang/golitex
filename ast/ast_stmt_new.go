@@ -185,3 +185,7 @@ func NewClaimHaveFnStmt(defFnStmt *DefFnStmt, proof []Stmt, haveObjSatisfyFn Fc,
 func NewMarkdownStmt(comment string, line uint) *MarkdownStmt {
 	return &MarkdownStmt{comment, line}
 }
+
+func NewProveInRangeStmt(start Fc, end Fc, param string, domFacts []FactStmt, thenFacts []FactStmt, proofs []Stmt, line uint) *ProveInRangeStmt {
+	return &ProveInRangeStmt{start, end, param, domFacts, thenFacts, proofs, line}
+}
