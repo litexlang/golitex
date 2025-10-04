@@ -922,9 +922,9 @@ func (stmt *ProveInRangeStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordProveInRange)
 	builder.WriteString("(")
-	builder.WriteString(stmt.Start.String())
+	builder.WriteString(fmt.Sprintf("%d", stmt.Start))
 	builder.WriteString(", ")
-	builder.WriteString(stmt.End.String())
+	builder.WriteString(fmt.Sprintf("%d", stmt.End))
 	builder.WriteString(", ")
 	builder.WriteString(stmt.Param)
 	builder.WriteString(")")

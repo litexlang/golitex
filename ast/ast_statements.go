@@ -347,8 +347,8 @@ type MarkdownStmt struct {
 }
 
 type ProveInRangeStmt struct {
-	Start     Fc
-	End       Fc
+	Start     int64
+	End       int64
 	Param     string
 	DomFacts  FactStmtSlice
 	ThenFacts FactStmtSlice
