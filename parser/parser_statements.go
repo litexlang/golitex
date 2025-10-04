@@ -20,6 +20,7 @@ import (
 	glob "golitex/glob"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 )
 
@@ -2558,7 +2559,12 @@ func (tb *tokenBlock) proveInRangeStmt() (*ast.ProveInRangeStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	start, err := tb.RawFc()
+	start, err := tb.header.next()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	startAsInt, err := strconv.ParseInt(start, 10, 64)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -2568,7 +2574,12 @@ func (tb *tokenBlock) proveInRangeStmt() (*ast.ProveInRangeStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	end, err := tb.RawFc()
+	end, err := tb.header.next()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	endAsInt, err := strconv.ParseInt(end, 10, 64)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -2669,5 +2680,5 @@ func (tb *tokenBlock) proveInRangeStmt() (*ast.ProveInRangeStmt, error) {
 		}
 	}
 
-	return ast.NewProveInRangeStmt(start, end, param, domFacts, thenFacts, proofs, tb.line), nil
+	return ast.NewProveInRangeStmt(startAsInt, endAsInt, param, domFacts, thenFacts, proofs, tb.line), nil
 }
