@@ -1,3 +1,18 @@
+"""
+# sequence and finite sequence is defined in kernel_litex_code/kernel_litex_code.go
+fn_template seq(s set):
+	fn (n N_pos) s
+
+fn_template finite_seq(s set, n N_pos):
+    fn (x N_pos) s:
+    	dom:
+        	x <= n
+
+fn finite_seq_sum(n N_pos, a finite_seq(R, n), k N) R:
+    dom:
+        k <= n
+"""
+
 prove:
     let a finite_seq(R, 3):
         a(1) = 1
