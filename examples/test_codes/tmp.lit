@@ -1,20 +1,28 @@
-claim:
-    forall total_people, front_people, back_people, position_hua R:
-        front_people = 3 / 5 * total_people
-        back_people = 1 / 3 * total_people
-        front_people + back_people + 1 = total_people
-        position_hua = front_people + 1
-        =>:
-            position_hua = 10
+prove_in_range(1, 10, x):
+    x % 2 = 0
+    =>:
+        x >= 1
+        x < 10
+        x % 2 = 0
     prove:
-        front_people = 3 / 5 * total_people
-        back_people = 1 / 3 * total_people
-        front_people + back_people + 1 = total_people
-        (3/5)*total_people + (1/3)*total_people + 1 = total_people
-        (9/15)*total_people + (5/15)*total_people + 1 = total_people
-        (14/15)*total_people + 1 = total_people
-        1 = total_people - (14/15)*total_people
-        1 = (1/15)*total_people
-        1 * 15 = 1 * total_people = 15
-        front_people = 3 / 5 * 15 = 9
-        position_hua = front_people + 1 = 10
+        x >= 1
+        x < 10
+        x % 2 = 0
+
+
+prove_in_range(1, 10, x):
+    x >= 1
+    x < 10
+    prove:
+        x >= 1
+        x < 10
+
+prove_in_range(1, 10, x):
+    x % 2 = 0
+    =>:
+        x >= 1
+        x < 10
+        x % 2 = 0
+
+prove_in_range(1, 10, x):
+    x >= 1

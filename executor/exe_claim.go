@@ -192,13 +192,6 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecState, 
 	exec.NewEnv(exec.env)
 	if glob.RequireMsg() {
 		defer func() {
-			exec.newMsg("\n")
-			if isSuccess {
-				exec.appendNewMsgAtBegin("is true\n\n")
-			} else {
-				exec.appendNewMsgAtBegin("is unknown\n\n")
-			}
-			exec.appendNewMsgAtBegin(stmt.String())
 			exec.deleteEnvAndRetainMsg()
 		}()
 	}
@@ -257,17 +250,16 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 	}
 
 	// know dom facts
-	err = exec.knowStmt(ast.NewKnowStmt(asUnivFact.DomFacts.ToCanBeKnownStmtSlice(), stmt.Line))
-	if err != nil {
-		return false, err
+	for _, domFact := range asUnivFact.DomFacts {
+		err = exec.env.NewFact(domFact)
+		if err != nil {
+			return false, err
+		}
 	}
 
 	// exec proof block
 	execState, err := exec.execStmtsAtCurEnv(stmt.Proofs)
 	if err != nil {
-		if glob.RequireMsg() {
-			exec.newMsg(fmt.Sprintf("Claim statement error: Failed to execute proof block:\n%s\n", stmt))
-		}
 		return false, err
 	}
 	if execState != glob.ExecStateTrue {
@@ -276,7 +268,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 
 	// TODO: 让claim能forall if
 	// if asUnivFact.IffFacts == nil || len(asUnivFact.IffFacts) == 0 {
-	execState, failedFact, err := verifier.ExecFactsAtCurEnv_retFailedFact(asUnivFact.ThenFacts, exec.env)
+	execState, failedFact, err := verifier.ExecFactsAtCurEnv_retFailedFact(asUnivFact.ThenFacts, exec.env, verifier.Round0NoMsg)
 	if err != nil {
 		return false, fmt.Errorf("claim statement error: failed to verify fact:\n%s\n%s", failedFact, err)
 	} else if execState != glob.ExecStateTrue {
@@ -356,9 +348,16 @@ func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt
 		return glob.ExecStateError, err
 	}
 
-	for _, stmt := range stmt.Proofs {
-		execState, _, err := exec.Stmt(stmt)
+	for _, curStmt := range stmt.Proofs {
+		execState, _, err := exec.Stmt(curStmt)
 		if notOkExec(execState, err) {
+			if glob.RequireMsg() {
+				if execState == glob.ExecStateUnknown {
+					exec.env.AddMsgToParent(fmt.Sprintf("unknown :( line %d\n", curStmt.GetLine()))
+				} else {
+					exec.env.AddMsgToParent(fmt.Sprintf("failed :( line %d:\n%w", curStmt.GetLine(), err))
+				}
+			}
 			return execState, err
 		}
 	}

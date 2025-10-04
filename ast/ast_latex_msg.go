@@ -883,3 +883,7 @@ func (s *HaveFnStmt) ToLatexString() string {
 func (s *MarkdownStmt) ToLatexString() string {
 	return s.Markdown
 }
+
+func (s *ProveInRangeStmt) ToLatexString() string {
+	return "TODO"
+}

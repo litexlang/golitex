@@ -43,3 +43,7 @@ func (e *Executor) appendWarningMsg(msg string) {
 func (e *Executor) ClearMsgs() {
 	e.env.Msgs = []string{}
 }
+
+func (e *Executor) deleteEnvAndGiveUpMsgs() {
+	e.env = e.env.Parent
+}

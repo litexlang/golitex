@@ -68,3 +68,21 @@ func (ver *Verifier) factsAreTrue(facts []ast.FactStmt, state *VerState) (bool, 
 
 	return true, glob.Msgs{}, nil
 }
+
+func VerFactInNewEnv(oldEnv *env.Env, facts []ast.FactStmt, state *VerState) (bool, error) {
+	ver := NewVerifier(oldEnv)
+	ver.newEnv(oldEnv)
+	defer ver.deleteEnvAndRetainMsg()
+
+	for _, fact := range facts {
+		ok, err := ver.VerFactStmt(fact, state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+	}
+
+	return true, nil
+}

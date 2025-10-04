@@ -96,16 +96,22 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, string, error) {
 	case *ast.LatexStmt:
 		execState, err = exec.latexStmt(stmt)
 		return execState, "", err
+	case *ast.ProveInRangeStmt:
+		execState, err = exec.proveInRangeStmt(stmt)
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}
 
 	if err != nil || execState == glob.ExecStateError {
-		return glob.ExecStateError, "", fmt.Errorf("failed :( line %d:\n%w", stmt.GetLine(), err)
+		if err.Error() != "" {
+			return glob.ExecStateError, "", fmt.Errorf("failed :( line %d:\n%w", stmt.GetLine(), err)
+		} else {
+			return glob.ExecStateError, "", fmt.Errorf("failed :( line %d", stmt.GetLine())
+		}
 	} else if execState == glob.ExecStateTrue {
-		return execState, fmt.Sprintf("%s\nsuccess! :) line %d\n", stmt, stmt.GetLine()), nil
+		return execState, fmt.Sprintf("success! :) line %d\n", stmt.GetLine()), nil
 	} else if execState == glob.ExecStateUnknown {
-		return execState, fmt.Sprintf("%s\nis unknown :(\n", stmt), nil
+		return execState, fmt.Sprintf("unknown :( line %d\n", stmt.GetLine()), nil
 	} else {
 		panic("unknown exec state")
 	}
@@ -232,19 +238,21 @@ func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) error {
 	return exec.env.NewDefExistProp_InsideAtomsDeclared(stmt)
 }
 
+// TODO: 我认为打印一下 claim 里面的各个语句的输出还是有道理的
 func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) (glob.ExecState, error) {
 	for _, curStmt := range proof {
 		execState, _, err := exec.Stmt(curStmt)
 		if err != nil {
+			if glob.RequireMsg() {
+				exec.newMsg(fmt.Sprintf("%s\nfailed :( line %d\n", curStmt.String(), curStmt.GetLine()))
+			}
 			return glob.ExecStateError, err
 		}
-		if execState != glob.ExecStateTrue {
-			if execState == glob.ExecStateUnknown && glob.ContinueExecutionIfExecUnknown {
-				exec.appendWarningMsg(fmt.Sprintf("unknown fact:\n%s", curStmt))
-				return glob.ExecStateUnknown, nil
-			} else {
-				return execState, nil
+		if execState == glob.ExecStateUnknown {
+			if glob.RequireMsg() {
+				exec.newMsg(fmt.Sprintf("%s\nis unknown :( line %d\n", curStmt.String(), curStmt.GetLine()))
 			}
+			return glob.ExecStateUnknown, nil
 		}
 	}
 	return glob.ExecStateTrue, nil
@@ -307,7 +315,7 @@ func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEach
 	}
 
 	// verify thenFacts are true
-	execState, failedFact, err := verifier.ExecFactsAtCurEnv_retFailedFact(stmt.ThenFacts, exec.env)
+	execState, failedFact, err := verifier.ExecFactsAtCurEnv_retFailedFact(stmt.ThenFacts, exec.env, verifier.Round0NoMsg)
 	if err != nil {
 		return execState, fmt.Errorf("prove in each case statement error: failed to verify then facts:\n%s\n%s", failedFact, err)
 	} else if execState != glob.ExecStateTrue {
