@@ -320,9 +320,6 @@ know:
 	forall x N_pos:
 		x > 0
 
-have set fn range(x N) := y N:
-    y < x
-
 know forall m N_pos => m - 1 $in N
 
 know forall a, b R => abs(a * b) = abs(a) * abs(b)
