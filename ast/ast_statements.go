@@ -345,3 +345,14 @@ type MarkdownStmt struct {
 
 	Line uint
 }
+
+type ProveInRangeStmt struct {
+	Start     Fc
+	End       Fc
+	Param     string
+	DomFacts  FactStmtSlice
+	ThenFacts FactStmtSlice
+	Proofs    StmtSlice
+
+	Line uint
+}
