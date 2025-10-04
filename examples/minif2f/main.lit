@@ -41,3 +41,13 @@ know @are_two_different_quadratic_eqn_solutions(a R, b R, c R, x R, y R):
 # amc12a_2008_p8
 # Should I add requirements of ^ as domain here???
 know forall x, y, z R => x ^ y ^ z = x ^ (y * z)
+
+# aime_1984_p5
+know:
+    forall a, b, c R: a > 0, b > 0, c > 0, a != 1 => log(a ^ b, c) = (1/b) * log(a, c), log(a ^ b, c) = log(a, c) / b
+    forall a, b, c R: a > 0, b > 0, c > 0, a != 1 => log(a, b ^ c) = c * log(a, b)
+    forall a, b, c R => log(a, b * c) = log(a, b) + log(a, c)
+    forall a, b, c R: log(a, b) = c => b = a ^ c
+
+# aime_1984_p5
+know forall a, b, c, d R: c != 0, a = (b/c) * d => (a * c) / b = d
