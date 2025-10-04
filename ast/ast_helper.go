@@ -18,6 +18,7 @@ import (
 	"fmt"
 	glob "golitex/glob"
 	"slices"
+	"strconv"
 )
 
 func EqualFact(left, right Fc) *SpecFactStmt {
@@ -325,4 +326,18 @@ func FcFnT_To_FnTStruct(fcFnTypeT *FcFn) (*FnTStruct, bool) {
 
 func UnknownFactMsg(fact FactStmt) string {
 	return fmt.Sprintf("%s\nis unknown\n", fact)
+}
+
+func ToInt(fc Fc) (int, bool) {
+	fcAsFcInt, ok := fc.(FcAtom)
+	if !ok {
+		return 0, false
+	}
+
+	// string to int
+	num, err := strconv.Atoi(string(fcAsFcInt))
+	if err != nil {
+		return 0, false
+	}
+	return num, true
 }
