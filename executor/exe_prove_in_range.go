@@ -18,121 +18,92 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
-	verifier "golitex/verifier"
 )
 
 func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) (glob.ExecState, error) {
-	for i := stmt.Start; i <= stmt.End; i++ {
-		isT, err := exec.proveInRangeStmtCheckCurNumSatisfyDom(i, stmt)
+	for i := stmt.Start; i < stmt.End; i++ {
+		_, msg, err := exec.proveInRangeStmtWhenParamIsIndex(stmt, i)
 		if err != nil {
+			if msg != "" {
+				exec.newMsg(msg)
+			}
 			return glob.ExecStateError, err
 		}
-		if !isT {
-			continue
-		}
-
-		execState, unknownStmt, err := exec.proveInRangeStmtDeclareParamExecProofs(stmt, i)
-		if err != nil {
-			return glob.ExecStateError, err
-		}
-		if execState != glob.ExecStateTrue {
-			return execState, fmt.Errorf("when %s = %d, %s\nis unknown", stmt.Param, i, unknownStmt.String())
-		}
-		return glob.ExecStateTrue, nil
 	}
 
 	return glob.ExecStateTrue, nil
 }
 
-func (exec *Executor) proveInRangeStmtCheckCurNumSatisfyDom(i int64, stmt *ast.ProveInRangeStmt) (bool, error) {
+func (exec *Executor) proveInRangeStmtWhenParamIsIndex(stmt *ast.ProveInRangeStmt, i int64) (bool, string, error) {
 	indexAsFc := ast.FcAtom(fmt.Sprintf("%d", i))
 	uniMap := map[string]ast.Fc{stmt.Param: indexAsFc}
 	exec.NewEnv(exec.env)
 	defer exec.deleteEnvAndGiveUpMsgs()
 
-	ver := verifier.NewVerifier(exec.env)
+	defObjStmt := ast.NewDefObjStmt([]string{stmt.Param}, []ast.Fc{ast.FcAtom(glob.KeywordInteger)}, []ast.FactStmt{ast.NewEqualFact(ast.FcAtom(stmt.Param), indexAsFc)}, stmt.Line)
+	err := exec.defObjStmt(defObjStmt)
+	if err != nil {
+		return false, "", err
+	}
 
 	for _, domFact := range stmt.DomFacts {
 		instDomFact, err := domFact.Instantiate(uniMap)
 		if err != nil {
-			return false, err
+			return false, "", err
 		}
-		ok, err := ver.VerFactStmt(instDomFact, verifier.Round0NoMsg)
+		execState, err := exec.factStmt(instDomFact)
 		if err != nil {
-			return false, err
+			return false, "", err
 		}
 
-		if !ok {
+		if execState != glob.ExecStateTrue {
 			// 如果 不OK，那必须证明是 false，绝对不能是 unknown
 			revInstDomFact := domFact.ReverseIsTrue()
 			for _, fact := range revInstDomFact {
 				instFact, err := fact.Instantiate(uniMap)
 				if err != nil {
-					return false, err
+					return false, "", err
 				}
-				ok, err := ver.VerFactStmt(instFact, verifier.Round0NoMsg)
+				execState, err := exec.factStmt(instFact)
 				if err != nil {
-					return false, err
+					return false, "", err
 				}
-				if !ok {
-					return false, fmt.Errorf("dom facts in prove_in_range must be proved to be true or false, can not be unknown: %s", instFact.String())
+				if execState != glob.ExecStateTrue {
+					return false, "", fmt.Errorf("dom facts in prove_in_range must be proved to be true or false, can not be unknown: %s", instFact.String())
 				}
 			}
 
-			return false, nil
+			return false, "", nil
 		}
-	}
 
-	return true, nil
-}
-
-func (exec *Executor) execStmts(stmts []ast.Stmt) (glob.ExecState, ast.Stmt, error) {
-	for _, curStmt := range stmts {
-		execState, _, err := exec.Stmt(curStmt)
-		if notOkExec(execState, err) {
-			return execState, curStmt, err
+		err = exec.env.NewFact(domFact)
+		if err != nil {
+			return false, "", err
 		}
-	}
-	return glob.ExecStateTrue, nil, nil
-}
-
-func (exec *Executor) proveInRangeStmtDeclareParamExecProofs(stmt *ast.ProveInRangeStmt, i int64) (glob.ExecState, ast.Stmt, error) {
-	exec.NewEnv(exec.env)
-	defer exec.deleteEnvAndGiveUpMsgs()
-
-	defObjKnownFacts := make([]ast.FactStmt, len(stmt.DomFacts))
-	for i, domFact := range stmt.DomFacts {
-		defObjKnownFacts[i] = domFact
-	}
-
-	defObjStmt := ast.NewDefObjStmt([]string{stmt.Param}, []ast.Fc{ast.FcAtom(glob.KeywordInteger)}, defObjKnownFacts, stmt.Line)
-	err := exec.defObjStmt(defObjStmt)
-	if err != nil {
-		return glob.ExecStateError, nil, err
 	}
 
 	// exec proofs
 	for _, curStmt := range stmt.Proofs {
 		execState, _, err := exec.Stmt(curStmt)
 		if err != nil {
-			return glob.ExecStateError, nil, err
+			return false, "", err
 		}
 		if execState != glob.ExecStateTrue {
 			// 如果是 fact， 那把数字代入一下，会方便非常多，比如 x > 1 ，把 x = 2直接代入就能直接验证出来了
-			uniMap := map[string]ast.Fc{stmt.Param: ast.FcAtom(fmt.Sprintf("%d", i))}
 			curStmtAsFact, err := curStmt.(ast.FactStmt).Instantiate(uniMap)
 			if err != nil {
-				return glob.ExecStateError, nil, err
+				return false, "", err
 			}
 
 			execState, err := exec.factStmt(curStmtAsFact)
 			if err != nil {
-				return glob.ExecStateError, nil, err
+				return false, "", err
 			}
 			if execState != glob.ExecStateTrue {
-				return glob.ExecStateUnknown, curStmt, fmt.Errorf("proof in prove_in_range must be proved to be true or false, can not be unknown: %s", curStmtAsFact.String())
+				return false, "", fmt.Errorf("proof in prove_in_range must be proved to be true or false, can not be unknown: %s", curStmtAsFact.String())
 			}
 		}
 	}
-	return glob.ExecStateTrue, nil, nil
+
+	return true, "", nil
 }
