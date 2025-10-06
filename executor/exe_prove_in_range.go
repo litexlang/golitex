@@ -31,6 +31,12 @@ func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) (glob.ExecSta
 		}
 	}
 
+	uniFact := stmt.UniFact()
+	err := exec.env.NewFact(uniFact)
+	if err != nil {
+		return glob.ExecStateError, err
+	}
+
 	return glob.ExecStateTrue, nil
 }
 

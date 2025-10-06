@@ -1,28 +1,13 @@
 prove_in_range(1, 10, x):
     x % 2 = 0
     =>:
-        x >= 1
-        x < 10
-        x % 2 = 0
+        x != 7
     prove:
-        x >= 1
-        x < 10
-        x % 2 = 0
+        x != 7
 
-
-prove_in_range(1, 10, x):
+forall x Z:
     x >= 1
     x < 10
-    prove:
-        x >= 1
-        x < 10
-
-prove_in_range(1, 10, x):
     x % 2 = 0
     =>:
-        x >= 1
-        x < 10
-        x % 2 = 0
-
-prove_in_range(1, 10, x):
-    x >= 1
+        x != 7

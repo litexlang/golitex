@@ -2615,7 +2615,7 @@ func (tb *tokenBlock) proveInRangeStmt() (*ast.ProveInRangeStmt, error) {
 				if err != nil {
 					return nil, tbErr(err, tb)
 				}
-				thenFacts = append(thenFacts, curStmt)
+				domFacts = append(domFacts, curStmt)
 			}
 
 			err = tb.body[len(tb.body)-2].header.skipKwAndColonCheckEOL(glob.KeySymbolEqualLarger)
@@ -2628,7 +2628,7 @@ func (tb *tokenBlock) proveInRangeStmt() (*ast.ProveInRangeStmt, error) {
 				if err != nil {
 					return nil, tbErr(err, tb)
 				}
-				domFacts = append(domFacts, curStmt)
+				thenFacts = append(thenFacts, curStmt)
 			}
 		} else {
 			for i := range len(tb.body) - 2 {
