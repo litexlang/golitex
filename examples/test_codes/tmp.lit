@@ -1,13 +1,11 @@
-prove_in_range(1, 10, x):
-    x % 2 = 0
+prove_in_range(1, 82, x):
+    81 % x = 0
     =>:
-        x != 7
-    prove:
-        x != 7
+        or(x = 1, x = 3, x = 9, x = 27, x = 81)
 
 forall x Z:
     x >= 1
-    x < 10
-    x % 2 = 0
+    x < 82
+    81 % x = 0
     =>:
-        x != 7
+        or(x = 1, x = 3, x = 9, x = 27, x = 81)
