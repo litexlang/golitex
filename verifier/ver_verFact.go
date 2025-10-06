@@ -46,11 +46,11 @@ func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) (bool, erro
 	}
 }
 
-func ExecFactsAtCurEnv_retFailedFact(facts []ast.FactStmt, env *env.Env) (glob.ExecState, ast.FactStmt, error) {
+func ExecFactsAtCurEnv_retFailedFact(facts []ast.FactStmt, env *env.Env, state *VerState) (glob.ExecState, ast.FactStmt, error) {
 	ver := NewVerifier(env)
 
 	for _, fact := range facts {
-		ok, err := ver.VerFactStmt(fact, Round0Msg)
+		ok, err := ver.VerFactStmt(fact, state)
 		if err != nil {
 			return glob.ExecStateError, fact, err
 		}

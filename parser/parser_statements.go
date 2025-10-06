@@ -20,6 +20,7 @@ import (
 	glob "golitex/glob"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 )
 
@@ -101,6 +102,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.clearStmt()
 	case glob.KeywordProveByInduction:
 		ret, err = tb.proveByInductionStmt()
+	case glob.KeywordProveInRange:
+		ret, err = tb.proveInRangeStmt()
 	default:
 		ret, err = tb.factsStmt()
 	}
@@ -2543,4 +2546,149 @@ func (tb *tokenBlock) atExistPropDefStmt() (*ast.DefExistPropStmt, error) {
 	}
 
 	return ast.NewDefExistPropStmt(ast.NewExistPropDef(header, []ast.FactStmt{}, iffFacts, thenFacts, tb.line), existParams, existParamSets, tb.line), nil
+}
+
+func (tb *tokenBlock) proveInRangeStmt() (*ast.ProveInRangeStmt, error) {
+	err := tb.header.skip(glob.KeywordProveInRange)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	start, err := tb.header.next()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	startAsInt, err := strconv.ParseInt(start, 10, 64)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolComma)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	end, err := tb.header.next()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	endAsInt, err := strconv.ParseInt(end, 10, 64)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolComma)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	param, err := tb.header.next()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolRightBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	domFacts := []ast.FactStmt{}
+	thenFacts := []ast.FactStmt{}
+	proofs := []ast.Stmt{}
+
+	if tb.body[len(tb.body)-1].header.is(glob.KeywordProve) {
+		if tb.body[len(tb.body)-2].header.is(glob.KeySymbolEqualLarger) {
+			for i := range len(tb.body) - 2 {
+				curStmt, err := tb.body[i].factStmt(UniFactDepth1)
+				if err != nil {
+					return nil, tbErr(err, tb)
+				}
+				domFacts = append(domFacts, curStmt)
+			}
+
+			err = tb.body[len(tb.body)-2].header.skipKwAndColonCheckEOL(glob.KeySymbolEqualLarger)
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+
+			for i := range len(tb.body[len(tb.body)-2].body) {
+				curStmt, err := tb.body[len(tb.body)-2].body[i].factStmt(UniFactDepth1)
+				if err != nil {
+					return nil, tbErr(err, tb)
+				}
+				thenFacts = append(thenFacts, curStmt)
+			}
+		} else {
+			for i := range len(tb.body) - 2 {
+				curStmt, err := tb.body[i].factStmt(UniFactDepth1)
+				if err != nil {
+					return nil, tbErr(err, tb)
+				}
+				thenFacts = append(thenFacts, curStmt)
+			}
+		}
+
+		for i := range len(tb.body[len(tb.body)-1].body) {
+			curStmt, err := tb.body[len(tb.body)-1].body[i].Stmt()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			proofs = append(proofs, curStmt)
+		}
+	} else {
+		if tb.body[len(tb.body)-1].header.is(glob.KeySymbolEqualLarger) {
+			for i := range len(tb.body) - 1 {
+				curStmt, err := tb.body[i].factStmt(UniFactDepth1)
+				if err != nil {
+					return nil, tbErr(err, tb)
+				}
+				domFacts = append(domFacts, curStmt)
+			}
+
+			err = tb.body[len(tb.body)-1].header.skipKwAndColonCheckEOL(glob.KeySymbolEqualLarger)
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+
+			for i := range tb.body[len(tb.body)-1].body {
+				curStmt, err := tb.body[len(tb.body)-1].body[i].factStmt(UniFactDepth1)
+				if err != nil {
+					return nil, tbErr(err, tb)
+				}
+				thenFacts = append(thenFacts, curStmt)
+			}
+		} else {
+			for i := range len(tb.body) {
+				curStmt, err := tb.body[i].factStmt(UniFactDepth1)
+				if err != nil {
+					return nil, tbErr(err, tb)
+				}
+				thenFacts = append(thenFacts, curStmt)
+			}
+		}
+	}
+
+	// 需要将 domFacts 转换为 ReversibleFacts
+	reversibleDomFacts := ast.ReversibleFacts{}
+	for _, fact := range domFacts {
+		reversibleFact, ok := fact.(ast.Spec_OrFact)
+		if !ok {
+			return nil, tbErr(fmt.Errorf("expect spec or fact, get %s", fact.String()), tb)
+		}
+		reversibleDomFacts = append(reversibleDomFacts, reversibleFact)
+	}
+
+	return ast.NewProveInRangeStmt(startAsInt, endAsInt, param, reversibleDomFacts, thenFacts, proofs, tb.line), nil
 }

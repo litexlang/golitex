@@ -1,0 +1,67 @@
+"""
+# sequence and finite sequence is defined in kernel_litex_code/kernel_litex_code.go
+fn_template seq(s set):
+	fn (n N_pos) s
+
+fn_template finite_seq(s set, n N_pos):
+    fn (x N_pos) s:
+    	dom:
+        	x <= n
+
+fn finite_seq_sum(n N_pos, a finite_seq(R, n), k N) R:
+    dom:
+        k <= n
+"""
+
+prove:
+    let a finite_seq(R, 3):
+        a(1) = 1
+        a(2) = 2
+        a(3) = 3
+    finite_seq_sum(3, a, 3) = finite_seq_sum(3, a, 2) + a(3) = finite_seq_sum(3, a, 2) + a(3) = finite_seq_sum(3, a, 1) + a(2) + a(3) = a(1) + a(2) + a(3) = 1 + 2 + 3 = 6
+
+prove:
+    fn_template R_matrix(n N_pos, m N_pos):
+        fn (i N_pos, j N_pos) R:
+            dom:
+                i <= n
+                j <= m
+
+    fn row_col_product(n, m, p, i, j N_pos, a R_matrix(n, m), b R_matrix(m, p)) finite_seq(R, m):
+        i <= n
+        j <= p
+        =>:
+            forall k N_pos:
+                k <= m
+                =>:
+                    row_col_product(n, m, p, i, j, a, b)(k) = a(i, k) * b(k, j)
+
+    fn mat_mul(n, m, p N_pos, a R_matrix(n, m), b R_matrix(m, p)) R_matrix(n, p):
+        forall i, j N_pos:
+            i <= n
+            j <= p
+            =>:
+                mat_mul(n, m, p, a, b)(i, j) = finite_seq_sum(m, row_col_product(n, m, p, i, j, a, b), m)
+
+    let a R_matrix(3, 2), b R_matrix(2, 1):
+        a(1, 1) = 1
+        a(1, 2) = 2
+        a(2, 1) = 3
+        a(2, 2) = 4
+        a(3, 1) = 5
+        a(3, 2) = 6
+        b(1, 1) = 7
+        b(2, 1) = 8
+
+    row_col_product(3, 2, 1, 1, 1, a, b)(1) = a(1,1) * b(1,1) = 1 * 7 = 7
+    row_col_product(3, 2, 1, 1, 1, a, b)(2) = a(1,2) * b(2,1) = 2 * 8 = 16
+    mat_mul(3, 2, 1, a, b)(1, 1) = finite_seq_sum(2, row_col_product(3, 2, 1, 1, 1, a, b), 2) = finite_seq_sum(2, row_col_product(3, 2, 1, 1, 1, a, b), 1) + row_col_product(3, 2, 1, 1, 1, a, b)(2) = row_col_product(3, 2, 1, 1, 1, a, b)(1) + row_col_product(3, 2, 1, 1, 1, a, b)(2) = 7 + 16 = 23
+
+    row_col_product(3, 2, 1, 2, 1, a, b)(1) = a(2,1) * b(1,1) = 3 * 7 = 21
+    row_col_product(3, 2, 1, 2, 1, a, b)(2) = a(2,2) * b(2,1) = 4 * 8 = 32
+    mat_mul(3, 2, 1, a, b)(2, 1) = finite_seq_sum(2, row_col_product(3, 2, 1, 2, 1, a, b), 2) = finite_seq_sum(2, row_col_product(3, 2, 1, 2, 1, a, b), 1) + row_col_product(3, 2, 1, 2, 1, a, b)(2) = row_col_product(3, 2, 1, 2, 1, a, b)(1) + row_col_product(3, 2, 1, 2, 1, a, b)(2) = 21 + 32 = 53
+
+    row_col_product(3, 2, 1, 3, 1, a, b)(1) = a(3,1) * b(1,1) = 5 * 7 = 35
+    row_col_product(3, 2, 1, 3, 1, a, b)(2) = a(3,2) * b(2,1) = 6 * 8 = 48
+    mat_mul(3, 2, 1, a, b)(3, 1) = finite_seq_sum(2, row_col_product(3, 2, 1, 3, 1, a, b), 2) = finite_seq_sum(2, row_col_product(3, 2, 1, 3, 1, a, b), 1) + row_col_product(3, 2, 1, 3, 1, a, b)(2) = row_col_product(3, 2, 1, 3, 1, a, b)(1) + row_col_product(3, 2, 1, 3, 1, a, b)(2) = 35 + 48 = 83
+    

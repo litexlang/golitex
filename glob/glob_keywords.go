@@ -67,6 +67,8 @@ const (
 	KeywordNonEmptySet = "nonempty_set"
 
 	KeywordIf = "if"
+
+	KeywordProveInRange = "prove_in_range"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{

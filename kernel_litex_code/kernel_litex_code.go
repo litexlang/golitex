@@ -283,30 +283,32 @@ know forall x, y R: x > 0, y > 0 => x ^ y $in R, x ^ y > 0, x * y > 0
 know forall x Z => x $in Q, x $in R, x $in C
 
 know forall x N_pos => x $in N, x >= 1, x > 0, x $in Q, x $in R, x $in C
+know forall x Z: x >= 0 => x $in N_pos
+know forall x Z: x <= 0 => not x $in N_pos
 
 fn_template seq(s set):
-	fn (n N) s
+	fn (n N_pos) s
 
 fn_template finite_seq(s set, n N_pos):
-    fn (x N) s:
+    fn (x N_pos) s:
     	dom:
-        	x < n
+        	x <= n
 
 fn finite_seq_sum(n N_pos, a finite_seq(R, n), k N) R:
     dom:
-        k < n
+        k <= n
 
 know:
-    forall n N_pos, a finite_seq(R, n), k N: k < n - 1 => finite_seq_sum(n, a, k+1) = finite_seq_sum(n, a, k) + a(k+1)
-    forall n N_pos, a finite_seq(R, n) => finite_seq_sum(n, a, 0) = a(0)
+    forall n N_pos, a finite_seq(R, n), k N: k < n => finite_seq_sum(n, a, k+1) = finite_seq_sum(n, a, k) + a(k+1)
+    forall n N_pos, a finite_seq(R, n) => finite_seq_sum(n, a, 1) = a(1)
 
 fn finite_seq_product(n N_pos, a finite_seq(R, n), k N) R:
     dom:
         k < n
 
 know:
-    forall n N_pos, a finite_seq(R, n), k N: k < n - 1 => finite_seq_product(n, a, k+1) = finite_seq_product(n, a, k) * a(k+1)
-    forall n N_pos, a finite_seq(R, n) => finite_seq_product(n, a, 0) = a(0)
+    forall n N_pos, a finite_seq(R, n), k N: k < n => finite_seq_product(n, a, k+1) = finite_seq_product(n, a, k) * a(k+1)
+    forall n N_pos, a finite_seq(R, n) => finite_seq_product(n, a, 1) = a(1)
 
 know:
 	$exist_in(N)
@@ -317,9 +319,6 @@ know:
 	$exist_in(C)
 	forall x N_pos:
 		x > 0
-
-have set fn range(x N) := y N:
-    y < x
 
 know forall m N_pos => m - 1 $in N
 
@@ -503,4 +502,14 @@ know:
 know forall a, b, c, d R: c != 0, a = (b / c) * d => a * c = b * d
 know forall a, b, c, d R: c != 0, a = d * (b / c) => a * c = d * b
 know forall x, y, z R: z != 0, x = y / z => x * z = y
+
+fn range(x Z, y Z) set:
+	dom:
+		x <= y 
+	=>:
+		forall i Z:
+			i >= x
+			i < y
+			=>:
+				i $in range(x, y)
 `
