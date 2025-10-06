@@ -30,14 +30,14 @@ func (exec *Executor) importDirStmt(stmt *ast.ImportDirStmt) (glob.ExecState, er
 		return glob.ExecStateError, fmt.Errorf("imported file should not contain import statement, get %s", stmt)
 	}
 
-	err := glob.ImportDirStmtInit(stmt.AsPkgName, stmt.Path)
-	if err != nil {
-		return glob.ExecStateError, err
-	}
+	// err := glob.ImportDirStmtInit(stmt.AsPkgName, stmt.Path)
+	// if err != nil {
+	// 	return glob.ExecStateError, err
+	// }
 
 	execSuccess := false
 	defer func() {
-		glob.ImportDirStmtEnd()
+		// glob.ImportDirStmtEnd()
 		if !execSuccess {
 			if glob.RequireMsg() {
 				exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("Failed to execute import statement:\n%s\n", stmt))
@@ -124,7 +124,8 @@ func (exec *Executor) runStmtInUpmostEnv_AssumeTheyAreTrue(topStmtSlice []ast.St
 	newExec := NewExecutor(curEnv)
 
 	for _, topStmt := range topStmtSlice {
-		execState, err := newExec.assumeStmtIsTrueRun(topStmt)
+		// execState, err := newExec.assumeStmtIsTrueRun(topStmt)
+		execState, _, err := newExec.Stmt(topStmt)
 		if err != nil {
 			return glob.ExecStateError, err
 		}

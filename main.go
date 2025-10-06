@@ -133,5 +133,6 @@ func main() {
 }
 
 func processEscapeSequences(code string) string {
-	return strings.ReplaceAll(code, "\\r\\n", "\n")
+	// return strings.ReplaceAll(code, "\\r\\n", "\n")
+	return strings.ReplaceAll(code, "\\r", "")
 }

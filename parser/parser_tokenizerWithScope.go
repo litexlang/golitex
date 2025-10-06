@@ -134,6 +134,7 @@ func (t *tokenizerWithScope) skipCommentsAndEmptyLines() (bool, *tokenBlock, err
 		comment := strings.Join(lines, "\n")
 
 		var ret *tokenBlock
+		// 如果以 """ 开头，那还是markdown的语法
 		if isLatexMultiLine {
 			ret = newTokenBlock(strSliceCursor{0, []string{glob.LatexMultiLineSig, comment}}, nil, uint(t.currentLine))
 		} else {
