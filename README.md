@@ -4,7 +4,7 @@
 
 <div align="center">
 
-# Litex: Simply Scale Formal Reasoning In AI Era
+# Litex: Simplify & Scale Formal Reasoning In AI Era
 
 **version v0.1.10-beta (not yet ready for production use)**  
 *Jiachen Shen and The Litex Team*
@@ -121,5 +121,3 @@ _– Alan Turing_
 Hi, I’m Jiachen Shen, creator of Litex. It is so fortunate to receive tremendous help from friends and colleagues throughout this journey of designing, implementing, and growing Litex into a community. Without their support, Litex would not have had the chance to succeed.
 
 I owe special thanks to my friend Zhaoxuan Hong, who built Litex’s powerful toolchains and has supported the project from the very beginning. I am also deeply grateful to Siqi Sun, Wei Lin, Peng Sun, Jie Fu, Zeyu Zheng, Huajian Xin, Zijie Qiu, Siqi Guo, Haoyang Shi, Chengyang Zhu, Chenxuan Huang for their invaluable contributions. I am certain this list of special thanks will only grow longer in the future.
-
-Make formal reasoning simple, stupid!
