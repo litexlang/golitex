@@ -62,6 +62,7 @@ func (s *HaveFnLiftStmt) stmt()                  {}
 func (s *HaveFnStmt) stmt()                      {}
 func (s *MarkdownStmt) stmt()                    {}
 func (s *ProveInRangeStmt) stmt()                {}
+func (s *ClaimIffStmt) stmt()                    {}
 
 func (s *DefObjStmt) GetLine() uint                      { return s.Line }
 func (s *DefPropStmt) GetLine() uint                     { return s.Line }
@@ -103,6 +104,7 @@ func (s *HaveFnLiftStmt) GetLine() uint                  { return s.Line }
 func (s *HaveFnStmt) GetLine() uint                      { return s.Line }
 func (s *MarkdownStmt) GetLine() uint                    { return s.Line }
 func (s *ProveInRangeStmt) GetLine() uint                { return s.Line }
+func (s *ClaimIffStmt) GetLine() uint                    { return s.Line }
 
 type FactStmt interface {
 	factStmt()
@@ -198,6 +200,7 @@ func (stmt *ClaimProveStmt) claimStmt()                {}
 func (stmt *ClaimProveByContradictionStmt) claimStmt() {}
 func (stmt *ClaimPropStmt) claimStmt()                 {}
 func (stmt *ClaimExistPropStmt) claimStmt()            {}
+func (stmt *ClaimIffStmt) claimStmt()                  {}
 
 type ImportStmtInterface interface {
 	importStmt()

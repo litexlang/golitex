@@ -538,6 +538,28 @@ func (tb *tokenBlock) claimStmt() (ast.ClaimInterface, error) {
 		proof = append(proof, curStmt)
 	}
 
+	if asUniFactWithIffStmt, ok := toCheck.(*ast.UniFactWithIffStmt); ok {
+		if !isProve {
+			return nil, fmt.Errorf("prove_by_contradiction is not supported for iff statement")
+		} else {
+			err := tb.body[2].header.skipKwAndColonCheckEOL(glob.KeywordProve)
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+
+			proof2 := []ast.Stmt{}
+			for _, block := range tb.body[2].body {
+				curStmt, err := block.Stmt()
+				if err != nil {
+					return nil, tbErr(err, tb)
+				}
+				proof2 = append(proof2, curStmt)
+			}
+
+			return ast.NewClaimIffStmt(asUniFactWithIffStmt, proof, proof2, tb.line), nil
+		}
+	}
+
 	if isProve {
 		return ast.NewClaimProveStmt(toCheck, proof, tb.line), nil
 	} else {

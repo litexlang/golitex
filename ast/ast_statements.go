@@ -357,3 +357,11 @@ type ProveInRangeStmt struct {
 
 	Line uint
 }
+
+type ClaimIffStmt struct {
+	UniFactWithIffStmt UniFactWithIffStmt
+	ProofThenToIff     StmtSlice
+	ProofIffToThen     StmtSlice
+
+	Line uint
+}
