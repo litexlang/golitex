@@ -1,18 +1,18 @@
-prove:
-    fn c(a, b R) C
-    fn cmul(a, b C) C
-    know forall a, b, c, d R => cmul(c(a, b), c(c, d)) = c(a*c-b*d, a*d+b*c)
-    fn cminus(a, b C) C
-    know forall a, b, c, d R => cminus(c(a, b), c(c, d)) = c(a-c, b-d)
-    fn cadd(a, b C) C
-    know forall a, b, c, d R => cadd(c(a, b), c(c, d)) = c(a+c, b+d)
-    fn cdiv(a, b C) C:
+fn_template fn_with_three_args():
+    fn (i N_pos) obj:
         dom:
-            b != 0
-    know forall a, b, c, d R: or(c != 0, d != 0) => cdiv(c(a, b), c(c, d)) = c(a*c+b*d, b*c-a*d) / (c^2+d^2)
-    
-    claim:
-        c(9,4) \cminus c(-3,-4) = c(12,0)
-        prove:
-            cminus(c(9,4), c(3,4)) = c(9 - 3, 4 - 4)
-            c(9,4) \cminus c(3,4) = c(6,0)
+            i <= 3
+
+fn three_dim_tuple(x, y, z set) fn_with_three_args():
+    x <= 3
+    =>:
+        x(1) $in a
+        x(2) $in b
+        x(3) $in c
+
+let x fn_with_three_args():
+    x = three_dim_tuple(R, C, Q)
+
+x(1) $in R # x at dimension 1 is in R
+x(2) $in C # x at dimension 2 is in C
+x(3) $in Q # x at dimension 3 is in Q

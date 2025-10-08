@@ -202,7 +202,8 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecState, 
 		return glob.ExecStateError, fmt.Errorf(env.AtomsInFactNotDeclaredMsg(stmt.ToCheckFact))
 	}
 
-	if _, ok := stmt.ToCheckFact.(*ast.UniFactStmt); ok {
+	switch asStmt := stmt.ToCheckFact.(type) {
+	case *ast.UniFactStmt:
 		isSuccess, err = exec.claimStmtProveUniFact(stmt)
 		if err != nil {
 			return glob.ExecStateError, err
@@ -211,7 +212,21 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecState, 
 			return glob.ExecStateUnknown, nil
 		}
 		return glob.ExecStateTrue, nil
-	} else {
+	case *ast.UniFactWithIffStmt:
+		thenToIff := asStmt.NewUniFactWithIffToThen()
+		iffToThen := asStmt.NewUniFactWithIffToThen()
+		claimThenToIff := ast.NewClaimProveStmt(thenToIff, stmt.Proofs, stmt.Line)
+		claimIffToThen := ast.NewClaimProveStmt(iffToThen, stmt.Proofs, stmt.Line)
+		execState, err := exec.claimStmtProve(claimThenToIff)
+		if notOkExec(execState, err) {
+			return execState, err
+		}
+		execState, err = exec.claimStmtProve(claimIffToThen)
+		if notOkExec(execState, err) {
+			return execState, err
+		}
+		return glob.ExecStateTrue, nil
+	default:
 		execState, err := exec.execStmtsAtCurEnv(stmt.Proofs)
 		if err != nil {
 			return glob.ExecStateError, err
@@ -229,6 +244,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecState, 
 		}
 		return glob.ExecStateTrue, nil
 	}
+
 }
 
 // prove uniFact in claim at current env
