@@ -189,3 +189,7 @@ func NewMarkdownStmt(comment string, line uint) *MarkdownStmt {
 func NewProveInRangeStmt(start int64, end int64, param string, domFacts ReversibleFacts, thenFacts []FactStmt, proofs []Stmt, line uint) *ProveInRangeStmt {
 	return &ProveInRangeStmt{start, end, param, domFacts, thenFacts, proofs, line}
 }
+
+func NewClaimIffStmt(uniFactWithIffStmt *UniFactWithIffStmt, proofs []Stmt, proofs2 []Stmt, line uint) *ClaimIffStmt {
+	return &ClaimIffStmt{*uniFactWithIffStmt, proofs, proofs2, line}
+}
