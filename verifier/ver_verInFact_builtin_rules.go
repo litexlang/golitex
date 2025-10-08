@@ -428,10 +428,6 @@ func (ver *Verifier) verInSetProduct(stmt *ast.SpecFactStmt, state *VerState) (b
 	if !ok {
 		return false, nil
 	}
-	ok = ast.IsFcAtomAndEqualToStr(setProductFn.FnHead, glob.KeywordSetProduct)
-	if !ok {
-		return false, nil
-	}
 
 	if len(fcFn.Params) != len(setProductFn.Params) {
 		return false, nil
