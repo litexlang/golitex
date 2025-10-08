@@ -360,7 +360,8 @@ type ProveInRangeStmt struct {
 
 type ClaimIffStmt struct {
 	UniFactWithIffStmt UniFactWithIffStmt
-	Proofs             StmtSlice
+	ProofThenToIff     StmtSlice
+	ProofIffToThen     StmtSlice
 
 	Line uint
 }

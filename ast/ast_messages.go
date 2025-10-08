@@ -959,3 +959,27 @@ func (stmt *ProveInRangeStmt) String() string {
 	}
 	return builder.String()
 }
+
+func (stmt *ClaimIffStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordClaim)
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.UniFactWithIffStmt.String(), 1))
+	builder.WriteByte('\n')
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve, 1))
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeySymbolColon, 1))
+	builder.WriteByte('\n')
+	for _, proof := range stmt.ProofThenToIff {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 2))
+		builder.WriteByte('\n')
+	}
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve, 1))
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeySymbolColon, 1))
+	builder.WriteByte('\n')
+	for _, proof := range stmt.ProofIffToThen {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 2))
+		builder.WriteByte('\n')
+	}
+	return builder.String()
+}
