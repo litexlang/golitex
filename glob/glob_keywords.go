@@ -54,8 +54,7 @@ const (
 	KeywordExistFnPreImageByReplacement   = "obj_exist_as_preimage_of_fn"   // "exist_fn_preimage_by_replacement"
 	KeywordFnTemplate                     = "fn_template"
 
-	KeywordSetProduct = "set_product"
-	KeywordProj       = "proj"
+	KeywordProj = "proj"
 
 	KeywordNPos  = "N_pos"
 	KeywordLet   = "let"
@@ -109,7 +108,6 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordExistPropPreImageByReplacement: {},
 	KeywordExistFnPreImageByReplacement:   {},
 	KeywordFnTemplate:                     {},
-	KeywordSetProduct:                     {},
 	KeywordProj:                           {},
 	KeywordNPos:                           {},
 	KeywordLet:                            {},
@@ -231,7 +229,6 @@ var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]s
 	KeywordExistPropPreImageByReplacement: {},
 	KeywordExistFnPreImageByReplacement:   {},
 	TupleFcFnHead:                         {},
-	KeywordSetProduct:                     {},
 	KeywordLen:                            {},
 	KeywordProj:                           {},
 	KeywordNPos:                           {},
