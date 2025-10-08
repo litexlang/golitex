@@ -887,3 +887,7 @@ func (s *MarkdownStmt) ToLatexString() string {
 func (s *ProveInRangeStmt) ToLatexString() string {
 	return "TODO"
 }
+
+func (s *ClaimIffStmt) ToLatexString() string {
+	return s.String()
+}
