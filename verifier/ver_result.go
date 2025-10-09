@@ -22,11 +22,6 @@ type VerRet struct {
 	Err  error
 }
 
-func (ver *VerRet) newMsg(msg string) *VerRet {
-	ver.Msgs = append(ver.Msgs, msg)
-	return ver
-}
-
 func (ver *VerRet) IsErr() bool {
 	return ver.Err != nil
 }
