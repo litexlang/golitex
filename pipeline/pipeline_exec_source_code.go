@@ -108,7 +108,12 @@ func printMessagesToWriter(writer io.Writer, msg []string) {
 			}
 			builder.WriteString("\n")
 		}
-		fmt.Fprintln(writer, builder.String()[:len(builder.String())-1])
+
+		result := builder.String()
+		if len(result) > 0 {
+			// Remove the trailing newline
+			fmt.Fprintln(writer, result[:len(result)-1])
+		}
 	}
 }
 
@@ -155,36 +160,34 @@ func listenOneStatementFromTerminal(reader *bufio.Reader, writer io.Writer) (str
 	currentScopeDepth := 0
 
 	for {
+		currentLineStr, err := reader.ReadString('\n')
+		if err != nil {
+			return "", fmt.Errorf("error reading input: %s", err)
+		}
+
+		// Normalize line endings for cross-platform compatibility (Windows \r\n -> \n)
+		currentLineStr = strings.ReplaceAll(currentLineStr, "\r", "")
+		trimmedLine := strings.TrimRight(currentLineStr, " \t\n")
+
 		if currentScopeDepth > 0 {
-			fmt.Fprint(writer, "... ") // 末尾的+4是未来和">>> "对齐
-			input.WriteString("    ")
-
-			currentLineStr, err := reader.ReadString('\n')
-			trimmedLine := strings.TrimRight(currentLineStr, " \t\n\r")
-
 			if trimmedLine == "" {
 				break
 			}
 
-			if err != nil {
-				return "", fmt.Errorf("error reading input: %s", err)
-			}
+			input.WriteString("    ")
 			input.WriteString(currentLineStr)
 
+			fmt.Fprint(writer, "... ") // 为下一行准备提示符
+
 		} else {
-			currentLineStr, err := reader.ReadString('\n')
-			if err != nil {
-				return "", fmt.Errorf("error reading input: %s", err)
-			}
 			input.WriteString(currentLineStr)
 
 			// input 的非空白的最后一位 不是 :
-			trimmedLine := strings.TrimRight(currentLineStr, " \t\n\r")
 			if trimmedLine == "" || !strings.HasSuffix(trimmedLine, ":") {
 				break
 			} else {
 				currentScopeDepth = 1
-
+				fmt.Fprint(writer, "... ") // 为下一行准备提示符
 			}
 		}
 	}
