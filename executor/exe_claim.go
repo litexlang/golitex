@@ -463,7 +463,7 @@ func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimProp
 }
 
 func (exec *Executor) claimIffStmt(stmt *ast.ClaimIffStmt) (glob.ExecState, error) {
-	thenToIff := stmt.UniFactWithIffStmt.NewUniFactWithIffToThen()
+	thenToIff := stmt.UniFactWithIffStmt.NewUniFactWithThenToIff()
 	iffToThen := stmt.UniFactWithIffStmt.NewUniFactWithIffToThen()
 	claimThenToIff := ast.NewClaimProveStmt(thenToIff, stmt.ProofThenToIff, stmt.Line)
 	claimIffToThen := ast.NewClaimProveStmt(iffToThen, stmt.ProofIffToThen, stmt.Line)

@@ -507,14 +507,6 @@ func (tb *tokenBlock) claimStmt() (ast.ClaimInterface, error) {
 
 	isProve := true
 
-	if len(tb.body) != 2 {
-		if len(tb.body) != 1 {
-			return nil, fmt.Errorf("expect 'prove' or 'prove_by_contradiction' after claim")
-		} else {
-			return ast.NewClaimProveStmt(toCheck, []ast.Stmt{}, tb.line), nil
-		}
-	}
-
 	if tb.body[1].header.is(glob.KeywordProveByContradiction) {
 		isProve = false
 		err := tb.body[1].header.skipKwAndColonCheckEOL(glob.KeywordProveByContradiction)
