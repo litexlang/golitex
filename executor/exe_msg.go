@@ -15,7 +15,6 @@
 package litex_executor
 
 import (
-	"fmt"
 	glob "golitex/glob"
 )
 
@@ -34,10 +33,6 @@ func (e *Executor) newMsg(msg string) {
 
 func (e *Executor) appendNewMsgAtBegin(msg string) {
 	e.env.Msgs = append([]string{msg}, e.env.Msgs...)
-}
-
-func (e *Executor) appendWarningMsg(msg string) {
-	e.env.Msgs = append(e.env.Msgs, fmt.Sprintf(`warning: %s`, msg))
 }
 
 func (e *Executor) ClearMsgs() {

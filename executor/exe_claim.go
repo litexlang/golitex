@@ -202,7 +202,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecState, 
 		return glob.ExecStateError, fmt.Errorf(env.AtomsInFactNotDeclaredMsg(stmt.ToCheckFact))
 	}
 
-	switch asStmt := stmt.ToCheckFact.(type) {
+	switch stmt.ToCheckFact.(type) {
 	case *ast.UniFactStmt:
 		isSuccess, err = exec.claimStmtProveUniFact(stmt)
 		if err != nil {
@@ -210,20 +210,6 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecState, 
 		}
 		if !isSuccess {
 			return glob.ExecStateUnknown, nil
-		}
-		return glob.ExecStateTrue, nil
-	case *ast.UniFactWithIffStmt:
-		thenToIff := asStmt.NewUniFactWithIffToThen()
-		iffToThen := asStmt.NewUniFactWithIffToThen()
-		claimThenToIff := ast.NewClaimProveStmt(thenToIff, stmt.Proofs, stmt.Line)
-		claimIffToThen := ast.NewClaimProveStmt(iffToThen, stmt.Proofs, stmt.Line)
-		execState, err := exec.claimStmtProve(claimThenToIff)
-		if notOkExec(execState, err) {
-			return execState, err
-		}
-		execState, err = exec.claimStmtProve(claimIffToThen)
-		if notOkExec(execState, err) {
-			return execState, err
 		}
 		return glob.ExecStateTrue, nil
 	default:
@@ -371,7 +357,7 @@ func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt
 				if execState == glob.ExecStateUnknown {
 					exec.env.AddMsgToParent(fmt.Sprintf("unknown :( line %d\n", curStmt.GetLine()))
 				} else {
-					exec.env.AddMsgToParent(fmt.Sprintf("failed :( line %d:\n%w", curStmt.GetLine(), err))
+					exec.env.AddMsgToParent(fmt.Sprintf("failed :( line %d:\n", curStmt.GetLine()))
 				}
 			}
 			return execState, err
@@ -471,6 +457,32 @@ func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimProp
 		return execState, fmt.Errorf("claim prop statement error: failed to verify reverse of last proof:\n%s\n%s", failedFact, err)
 	} else if execState != glob.ExecStateTrue {
 		return execState, fmt.Errorf("claim prop statement error: failed to verify reverse of last proof:\n%s", failedFact)
+	}
+
+	return glob.ExecStateTrue, nil
+}
+
+func (exec *Executor) claimIffStmt(stmt *ast.ClaimIffStmt) (glob.ExecState, error) {
+	thenToIff := stmt.UniFactWithIffStmt.NewUniFactWithIffToThen()
+	iffToThen := stmt.UniFactWithIffStmt.NewUniFactWithIffToThen()
+	claimThenToIff := ast.NewClaimProveStmt(thenToIff, stmt.ProofThenToIff, stmt.Line)
+	claimIffToThen := ast.NewClaimProveStmt(iffToThen, stmt.ProofIffToThen, stmt.Line)
+	execState, err := exec.claimStmtProve(claimThenToIff)
+	if notOkExec(execState, err) {
+		return execState, err
+	}
+	execState, err = exec.claimStmtProve(claimIffToThen)
+	if notOkExec(execState, err) {
+		return execState, err
+	}
+
+	err = exec.env.NewFact(thenToIff)
+	if err != nil {
+		return glob.ExecStateError, err
+	}
+	err = exec.env.NewFact(iffToThen)
+	if err != nil {
+		return glob.ExecStateError, err
 	}
 
 	return glob.ExecStateTrue, nil
