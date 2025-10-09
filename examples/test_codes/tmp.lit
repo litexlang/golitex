@@ -11,7 +11,3 @@ prop is_pair(x set)
 fn pair(A, B, C set, x A, y B) Pair(A, B)
 "
 
-have x 某某集合
-$exist_in(某某集合)
-
-exist x st $exist_in(某集合)
