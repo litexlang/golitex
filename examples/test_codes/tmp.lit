@@ -11,3 +11,26 @@ prop is_pair(x set)
 fn pair(A, B, C set, x A, y B) Pair(A, B)
 "
 
+prop p(x, y R)
+prop q(x, y R)
+
+
+claim:
+    forall x, y R:
+        =>:
+            $p(x, y)
+        <=>:
+            $q(x, y)
+    prove:
+        know $q(x, y)
+    prove:
+        know $p(x, y)
+
+forall x, y R:
+    $p(x, y)
+    =>:
+        $q(x, y)
+forall x, y R:
+    $q(x, y)
+    =>:
+        $p(x, y)
