@@ -24,6 +24,10 @@ import (
 )
 
 func (exec *Executor) importDirStmt(stmt *ast.ImportDirStmt) (glob.ExecState, error) {
+	panic("TODO: not implemented")
+}
+
+func (exec *Executor) importDirStmt2(stmt *ast.ImportDirStmt) (glob.ExecState, error) {
 	exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("start importing directory \"%s\"\n", stmt.Path))
 
 	if !glob.AllowImport {
