@@ -22,7 +22,9 @@ import (
 	parser "golitex/parser"
 	"io"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 )
 
 // main function for running a single code and return the message
@@ -127,7 +129,9 @@ func RunREPLInTerminal() {
 	reader := bufio.NewReader(os.Stdin)
 	writer := os.Stdout
 
-	fmt.Println("Litex-beta - Type your code or 'exit' to quit\nWarning: not yet ready for production use.")
+	year := time.Now().Year()
+
+	fmt.Fprintln(writer, fmt.Sprintf("Litex %s Copyright (C) 2024-%s litexlang.com ", glob.VERSION, strconv.Itoa(year)))
 
 	for {
 		code, err := listenOneStatementFromTerminal(reader, writer)
