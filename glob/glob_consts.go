@@ -14,6 +14,8 @@
 
 package litex_global
 
+const VERSION = "0.1.11-beta"
+
 const Scope4Indents string = "    "
 const EmptyPkg string = ""
 const MultiLinesCommentSig string = "\""
