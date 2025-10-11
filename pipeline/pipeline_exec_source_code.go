@@ -98,7 +98,7 @@ func printMessagesToWriter(writer io.Writer, msg []string) {
 
 		for _, m := range msg {
 			// 让m的最后一位是换行符
-			m = strings.TrimRight(m, " \r\t\n")
+			m = strings.TrimRight(m, " \t\n")
 			if strings.TrimSpace(m) == "" {
 				if isConsecutiveEmptyLine {
 					continue
@@ -179,8 +179,7 @@ func listenOneStatementFromTerminal(reader *bufio.Reader, writer io.Writer) (str
 			return "", fmt.Errorf("error reading input: %s", err)
 		}
 
-		// Normalize line endings for cross-platform compatibility (Windows \r\n -> \n)
-		currentLineStr = strings.ReplaceAll(currentLineStr, "\r", "")
+		currentLineStr = glob.ProcessEscapeSequences(currentLineStr)
 		trimmedLine := strings.TrimRight(currentLineStr, " \t\n")
 
 		if currentScopeDepth > 0 {
