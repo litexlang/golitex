@@ -219,7 +219,7 @@ func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, rig
 
 	if gotLeftEqualFcs && gotRightEqualFcs {
 		if equalToLeftFcs == equalToRightFcs {
-			return true, fmt.Sprintf("It's known %s and %s equal to one same object", left, right), nil
+			return true, fmt.Sprintf("%s = %s, by either their equality is known, or it is ensured by transitivity of equality.", left, right), nil
 		}
 	}
 
