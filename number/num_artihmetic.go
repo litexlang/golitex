@@ -31,6 +31,11 @@ func (t arithmeticTerm) Key() string {
 	return strings.Join(t.Vars, "*")
 }
 
+// Degree returns the total degree of the term (sum of all exponents)
+func (t arithmeticTerm) Degree() int {
+	return len(t.Vars)
+}
+
 func (t arithmeticTerm) String() string {
 	if len(t.Vars) == 0 {
 		return t.CoEff
@@ -308,8 +313,34 @@ func simplify(poly polynomial) polynomial {
 		}
 		result = append(result, arithmeticTerm{CoEff: coEff, Vars: vars})
 	}
+	// Sort by: 1) degree (descending), 2) lexicographic order (ascending)
 	sort.Slice(result, func(i, j int) bool {
-		return result[i].Key() < result[j].Key()
+		degI := result[i].Degree()
+		degJ := result[j].Degree()
+		
+		// First compare by degree (higher degree first)
+		if degI != degJ {
+			return degI > degJ
+		}
+		
+		// If degrees are equal, compare lexicographically
+		// Compare variable by variable
+		varsI := result[i].Vars
+		varsJ := result[j].Vars
+		
+		minLen := len(varsI)
+		if len(varsJ) < minLen {
+			minLen = len(varsJ)
+		}
+		
+		for k := 0; k < minLen; k++ {
+			if varsI[k] != varsJ[k] {
+				return varsI[k] < varsJ[k]
+			}
+		}
+		
+		// If all compared vars are equal, shorter one comes first
+		return len(varsI) < len(varsJ)
 	})
 	return result
 }
