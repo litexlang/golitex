@@ -39,31 +39,31 @@ func (tb *tokenBlock) inlineFacts_untilEndOfInline() ([]ast.FactStmt, error) {
 	return facts, nil
 }
 
-func (tb *tokenBlock) inlineFacts_untilWord_SkipWord(word string) ([]*ast.SpecFactStmt, error) {
-	facts := []*ast.SpecFactStmt{}
-	for {
-		stmt, err := tb.specFactStmt()
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-		facts = append(facts, stmt)
+// func (tb *tokenBlock) inlineFacts_untilWord_SkipWord(word string) ([]*ast.SpecFactStmt, error) {
+// 	facts := []*ast.SpecFactStmt{}
+// 	for {
+// 		stmt, err := tb.specFactStmt()
+// 		if err != nil {
+// 			return nil, tbErr(err, tb)
+// 		}
+// 		facts = append(facts, stmt)
 
-		if tb.header.is(glob.KeySymbolComma) {
-			tb.header.skip(glob.KeySymbolComma)
-		} else if tb.header.is(word) {
-			break
-		} else {
-			return nil, fmt.Errorf("expect ',' or %s", word)
-		}
-	}
+// 		if tb.header.is(glob.KeySymbolComma) {
+// 			tb.header.skip(glob.KeySymbolComma)
+// 		} else if tb.header.is(word) {
+// 			break
+// 		} else {
+// 			return nil, fmt.Errorf("expect ',' or %s", word)
+// 		}
+// 	}
 
-	err := tb.header.skip(word)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+// 	err := tb.header.skip(word)
+// 	if err != nil {
+// 		return nil, tbErr(err, tb)
+// 	}
 
-	return facts, nil
-}
+// 	return facts, nil
+// }
 
 // fact, isEnd, err
 func (tb *tokenBlock) inlineFact() (ast.FactStmt, error) {
@@ -75,8 +75,8 @@ func (tb *tokenBlock) inlineFact() (ast.FactStmt, error) {
 	switch curToken {
 	case glob.KeywordForall:
 		return tb.inlineUniInterface()
-	case glob.KeywordOr:
-		return tb.inlineOrStmt()
+	// case glob.KeywordOr:
+	// 	return tb.inlineOrStmt()
 	case glob.KeywordIf:
 		return tb.inlineIfInterface()
 	default:
@@ -97,28 +97,28 @@ func (tb *tokenBlock) inlineSpecFactStmt() (*ast.SpecFactStmt, error) {
 	return stmt, nil
 }
 
-func (tb *tokenBlock) inlineOrStmt() (*ast.OrStmt, error) {
-	err := tb.header.skip(glob.KeywordOr)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+// func (tb *tokenBlock) inlineOrStmt() (*ast.OrStmt, error) {
+// 	err := tb.header.skip(glob.KeywordOr)
+// 	if err != nil {
+// 		return nil, tbErr(err, tb)
+// 	}
 
-	err = tb.header.skip(glob.KeySymbolLeftBrace)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+// 	err = tb.header.skip(glob.KeySymbolLeftBrace)
+// 	if err != nil {
+// 		return nil, tbErr(err, tb)
+// 	}
 
-	facts, err := tb.inlineFacts_untilWord_SkipWord(glob.KeySymbolRightBrace)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+// 	facts, err := tb.inlineFacts_untilWord_SkipWord(glob.KeySymbolRightBrace)
+// 	if err != nil {
+// 		return nil, tbErr(err, tb)
+// 	}
 
-	if tb.header.is(glob.KeySymbolComma) {
-		tb.header.skip("")
-	}
+// 	if tb.header.is(glob.KeySymbolComma) {
+// 		tb.header.skip("")
+// 	}
 
-	return ast.NewOrStmt(facts, tb.line), nil
-}
+// 	return ast.NewOrStmt(facts, tb.line), nil
+// }
 
 func (tb *tokenBlock) bodyOfInlineDomAndThen(word string) ([]ast.FactStmt, []ast.FactStmt, error) {
 	domFacts, err := tb.inlineFacts_untilWord(word)
@@ -418,7 +418,15 @@ func (tb *tokenBlock) inline_spec_or_fact() (ast.FactStmt, error) {
 	}
 }
 
-func (tb *tokenBlock) inline_or_fact(firstFact *ast.SpecFactStmt) (ast.FactStmt, error) {
+func (tb *tokenBlock) inlineOrFact() (*ast.OrStmt, error) {
+	firstFact, err := tb.specFactStmt()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+	return tb.inlineOrFactWithFirstFact(firstFact)
+}
+
+func (tb *tokenBlock) inlineOrFactWithFirstFact(firstFact *ast.SpecFactStmt) (*ast.OrStmt, error) {
 	orFacts := []*ast.SpecFactStmt{firstFact}
 	for tb.header.is(glob.KeywordOr) {
 		tb.header.skip(glob.KeywordOr)
@@ -473,7 +481,7 @@ func (tb *tokenBlock) inline_spec_or_enum_intensional_Equals_fact() (ast.FactStm
 			}
 
 			if tb.header.is(glob.KeywordOr) {
-				ret, err = tb.inline_or_fact(curFact)
+				ret, err = tb.inlineOrFactWithFirstFact(curFact)
 				if err != nil {
 					return nil, tbErr(err, tb)
 				}
@@ -514,7 +522,7 @@ func (tb *tokenBlock) inline_spec_or_enum_intensional_Equals_fact() (ast.FactStm
 			}
 
 			if tb.header.is(glob.KeywordOr) {
-				ret, err = tb.inline_or_fact(curFact)
+				ret, err = tb.inlineOrFactWithFirstFact(curFact)
 				if err != nil {
 					return nil, tbErr(err, tb)
 				}

@@ -22,7 +22,7 @@ fn self_round(x R) Z:
         =>:
             self_round(x) = self_ceil(x)
 
-know forall x R, y Z: or(x - y < 0.5, y - x < 0.5) => self_round(x) = y
+know forall x R, y Z: x - y < 0.5 or y - x < 0.5 => self_round(x) = y
 know forall x R, y Z: x - y = 0.5, y >= x => self_round(x) = y
 
 prove:

@@ -1,8 +1,8 @@
 claim:
-    forall x R: or(x = 2, x = -2) => x ^ 2 = 4
+    forall x R: x = 2 or x = -2 => x ^ 2 = 4
     prove:
         prove_in_each_case:
-            or(x = 2, x = -2)
+            x = 2 or x = -2
             =>:
                 x ^ 2 = 4
             prove:

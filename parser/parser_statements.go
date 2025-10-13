@@ -174,7 +174,7 @@ func (tb *tokenBlock) enumFactualStmt(setName ast.Fc) (*ast.EnumStmt, error) {
 
 func (tb *tokenBlock) orStmt() (*ast.OrStmt, error) {
 	if tb.GetEnd() != glob.KeySymbolColon {
-		return tb.inlineOrStmt()
+		return tb.inlineOrFact()
 	}
 
 	orFacts := []*ast.SpecFactStmt{}
