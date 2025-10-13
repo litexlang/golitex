@@ -130,7 +130,7 @@ func (tb *tokenBlock) factStmt(uniFactDepth uniFactEnum) (ast.FactStmt, error) {
 		if tb.GetEnd() == glob.KeySymbolColon {
 			return tb.uniFactInterface(uniFactDepth)
 		} else {
-			return tb.inlineUniInterface()
+			return tb.inlineUniInterfaceSkipTerminator()
 		}
 	case glob.KeywordOr:
 		return tb.orStmt()
@@ -140,7 +140,7 @@ func (tb *tokenBlock) factStmt(uniFactDepth uniFactEnum) (ast.FactStmt, error) {
 		if tb.GetEnd() == glob.KeySymbolColon {
 			return tb.ifStmt(uniFactDepth)
 		} else {
-			return tb.inlineIfInterface()
+			return tb.inlineIfInterfaceSkipTerminator()
 		}
 	default:
 		return tb.fact()
@@ -1664,7 +1664,7 @@ func (tb *tokenBlock) proveOverFiniteSetStmt() (*ast.ProveOverFiniteSetStmt, err
 		}
 	} else {
 		// uniFact, err = tb.body[0].inlineUniFact()
-		uniFact, err = tb.body[0].inlineUniInterface()
+		uniFact, err = tb.body[0].inlineUniInterfaceSkipTerminator()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -2174,7 +2174,7 @@ func (tb *tokenBlock) claimStmtInline() (ast.ClaimInterface, error) {
 			return nil, tbErr(err, tb)
 		}
 	} else {
-		fact, err = tb.inlineFact()
+		fact, err = tb.inlineFactSkipTerminator()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
