@@ -102,8 +102,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.clearStmt()
 	case glob.KeywordProveByInduction:
 		ret, err = tb.proveByInductionStmt()
-	case glob.KeywordProveInRange:
-		ret, err = tb.proveInRangeStmt()
+	case glob.KeywordProveInRange2:
+		ret, err = tb.proveInRangeStmt2()
 	default:
 		ret, err = tb.factsStmt()
 	}
@@ -2675,8 +2675,8 @@ func (tb *tokenBlock) atExistPropDefStmt() (*ast.DefExistPropStmt, error) {
 	return ast.NewDefExistPropStmt(ast.NewExistPropDef(header, []ast.FactStmt{}, iffFacts, thenFacts, tb.line), existParams, existParamSets, tb.line), nil
 }
 
-func (tb *tokenBlock) proveInRangeStmt() (*ast.ProveInRangeStmt, error) {
-	err := tb.header.skip(glob.KeywordProveInRange)
+func (tb *tokenBlock) proveInRangeStmt2() (ast.Stmt, error) {
+	err := tb.header.skip(glob.KeywordProveInRange2)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -2818,4 +2818,5 @@ func (tb *tokenBlock) proveInRangeStmt() (*ast.ProveInRangeStmt, error) {
 	}
 
 	return ast.NewProveInRangeStmt(startAsInt, endAsInt, param, reversibleDomFacts, thenFacts, proofs, tb.line), nil
+
 }

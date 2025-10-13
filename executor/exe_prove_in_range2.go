@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) (glob.ExecState, error) {
+func (exec *Executor) proveInRangeStmt2(stmt *ast.ProveInRange2tmt) (glob.ExecState, error) {
 	for i := stmt.Start; i < stmt.End; i++ {
 		_, msg, err := exec.proveInRangeStmtWhenParamIsIndex(stmt, i)
 		if err != nil {
@@ -40,7 +40,7 @@ func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) (glob.ExecSta
 	return glob.ExecStateTrue, nil
 }
 
-func (exec *Executor) proveInRangeStmtWhenParamIsIndex(stmt *ast.ProveInRangeStmt, i int64) (bool, string, error) {
+func (exec *Executor) proveInRangeStmtWhenParamIsIndex(stmt *ast.ProveInRange2tmt, i int64) (bool, string, error) {
 	indexAsFc := ast.FcAtom(fmt.Sprintf("%d", i))
 	uniMap := map[string]ast.Fc{stmt.Param: indexAsFc}
 	exec.NewEnv(exec.env)

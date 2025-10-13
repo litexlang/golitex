@@ -920,9 +920,9 @@ func (stmt *MarkdownStmt) String() string {
 	return stmt.Markdown
 }
 
-func (stmt *ProveInRangeStmt) String() string {
+func (stmt *ProveInRange2tmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordProveInRange)
+	builder.WriteString(glob.KeywordProveInRange2)
 	builder.WriteString("(")
 	builder.WriteString(fmt.Sprintf("%d", stmt.Start))
 	builder.WriteString(", ")
@@ -984,4 +984,8 @@ func (stmt *ClaimIffStmt) String() string {
 		builder.WriteByte('\n')
 	}
 	return builder.String()
+}
+
+func (stmt *ProveInRangeStmt) String() string {
+	return "TODO"
 }
