@@ -431,6 +431,7 @@ func (tb *tokenBlock) inline_or_fact(firstFact *ast.SpecFactStmt) (ast.FactStmt,
 	return ast.NewOrStmt(orFacts, tb.line), nil
 }
 
+// TODO: 这里是最糟糕的函数的写法了，相互耦合，乱七八糟
 func (tb *tokenBlock) inline_spec_or_enum_intensional_Equals_fact() (ast.FactStmt, error) {
 	var ret ast.FactStmt
 	var err error
