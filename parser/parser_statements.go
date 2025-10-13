@@ -104,6 +104,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.proveByInductionStmt()
 	case glob.KeywordProveInRange2:
 		ret, err = tb.proveInRangeStmt2()
+	case glob.KeywordProveInRange:
+		ret, err = tb.proveInRangeStmt()
 	default:
 		ret, err = tb.factsStmt()
 	}
@@ -2817,6 +2819,92 @@ func (tb *tokenBlock) proveInRangeStmt2() (ast.Stmt, error) {
 		reversibleDomFacts = append(reversibleDomFacts, reversibleFact)
 	}
 
-	return ast.NewProveInRangeStmt(startAsInt, endAsInt, param, reversibleDomFacts, thenFacts, proofs, tb.line), nil
+	return ast.NewProveInRange2Stmt(startAsInt, endAsInt, param, reversibleDomFacts, thenFacts, proofs, tb.line), nil
 
+}
+
+// parse prove_in_range(start, end, x S): then_fact prove:
+func (tb *tokenBlock) proveInRangeStmt() (ast.Stmt, error) {
+	err := tb.header.skip(glob.KeywordProveInRange)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	startAsInt, err := tb.skipInt()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolComma)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	endAsInt, err := tb.skipInt()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolComma)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	param, err := tb.header.next()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	paramSet, err := tb.RawFc()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolRightBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	thenFacts := []ast.FactStmt{}
+	for i := range len(tb.body) {
+		curStmt, err := tb.body[i].factStmt(UniFactDepth1)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		thenFacts = append(thenFacts, curStmt)
+	}
+
+	proofs := []ast.Stmt{}
+	err = tb.body[len(tb.body)-1].header.skipKwAndColonCheckEOL(glob.KeywordProve)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	for _, stmt := range tb.body[len(tb.body)-1].body {
+		curStmt, err := stmt.Stmt()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		proofs = append(proofs, curStmt)
+	}
+
+	return ast.NewProveInRangeStmt(startAsInt, endAsInt, param, paramSet, thenFacts, proofs, tb.line), nil
+}
+
+func (tb *tokenBlock) skipInt() (int64, error) {
+	intStr, err := tb.header.next()
+	if err != nil {
+		return 0, err
+	}
+	return strconv.ParseInt(intStr, 10, 64)
 }
