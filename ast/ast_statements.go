@@ -336,13 +336,24 @@ type MarkdownStmt struct {
 	Line uint
 }
 
-type ProveInRangeStmt struct {
+type ProveInRange2tmt struct {
 	Start     int64
 	End       int64
 	Param     string
 	DomFacts  ReversibleFacts
 	ThenFacts FactStmtSlice
 	Proofs    StmtSlice
+
+	Line uint
+}
+
+type ProveInRangeStmt struct {
+	Start          int64
+	End            int64
+	Param          string
+	IntensionalSet Fc
+	ThenFacts      FactStmtSlice
+	Proofs         StmtSlice
 
 	Line uint
 }

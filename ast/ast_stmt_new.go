@@ -186,8 +186,8 @@ func NewMarkdownStmt(comment string, line uint) *MarkdownStmt {
 	return &MarkdownStmt{comment, line}
 }
 
-func NewProveInRangeStmt(start int64, end int64, param string, domFacts ReversibleFacts, thenFacts []FactStmt, proofs []Stmt, line uint) *ProveInRangeStmt {
-	return &ProveInRangeStmt{start, end, param, domFacts, thenFacts, proofs, line}
+func NewProveInRangeStmt(start int64, end int64, param string, domFacts ReversibleFacts, thenFacts []FactStmt, proofs []Stmt, line uint) *ProveInRange2tmt {
+	return &ProveInRange2tmt{start, end, param, domFacts, thenFacts, proofs, line}
 }
 
 func NewClaimIffStmt(uniFactWithIffStmt *UniFactWithIffStmt, proofs []Stmt, proofs2 []Stmt, line uint) *ClaimIffStmt {

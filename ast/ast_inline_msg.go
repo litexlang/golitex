@@ -318,10 +318,14 @@ func (s *MarkdownStmt) InlineString() string {
 	return s.Markdown
 }
 
-func (s *ProveInRangeStmt) InlineString() string {
+func (s *ProveInRange2tmt) InlineString() string {
 	return "TODO"
 }
 
 func (s *ClaimIffStmt) InlineString() string {
+	return "TODO"
+}
+
+func (s *ProveInRangeStmt) InlineString() string {
 	return "TODO"
 }
