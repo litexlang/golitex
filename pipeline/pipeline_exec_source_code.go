@@ -124,7 +124,7 @@ exit: exit the REPL
 clear: refresh the whole environment
 `
 
-func RunREPLInTerminal() {
+func RunREPLInTerminal(version string) {
 	executor, err := pipelineExecutorInit()
 	if err != nil {
 		fmt.Println("Error initializing pipeline:", err)
@@ -136,7 +136,7 @@ func RunREPLInTerminal() {
 
 	year := time.Now().Year()
 
-	fmt.Fprintf(writer, "Litex %s Copyright (C) 2024-%s litexlang.com Type 'help' for help\n", glob.VERSION, strconv.Itoa(year))
+	fmt.Fprintf(writer, "Litex %s Copyright (C) 2024-%s litexlang.com Type 'help' for help\n", version, strconv.Itoa(year))
 
 	for {
 		code, err := listenOneStatementFromTerminal(reader, writer)
