@@ -96,8 +96,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, string, error) {
 	case *ast.LatexStmt:
 		execState, err = exec.latexStmt(stmt)
 		return execState, "", err
-	case *ast.ProveInRangeStmt:
-		execState, err = exec.proveInRangeStmt(stmt)
+	case *ast.ProveInRange2tmt:
+		execState, err = exec.proveInRangeStmt2(stmt)
 	case *ast.ClaimIffStmt:
 		execState, err = exec.claimIffStmt(stmt)
 	default:

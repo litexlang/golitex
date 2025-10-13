@@ -869,10 +869,14 @@ func (s *MarkdownStmt) ToLatexString() string {
 	return s.Markdown
 }
 
-func (s *ProveInRangeStmt) ToLatexString() string {
+func (s *ProveInRange2tmt) ToLatexString() string {
 	return "TODO"
 }
 
 func (s *ClaimIffStmt) ToLatexString() string {
 	return s.String()
+}
+
+func (s *ProveInRangeStmt) ToLatexString() string {
+	return "TODO"
 }

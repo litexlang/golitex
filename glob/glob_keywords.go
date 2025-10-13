@@ -65,9 +65,11 @@ const (
 
 	KeywordIf = "if"
 
-	KeywordProveInRange = "prove_in_range"
+	KeywordProveInRange2 = "prove_in_range2"
 
 	KeywordEval = "eval"
+
+	KeywordProveInRange = "prove_in_range"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
