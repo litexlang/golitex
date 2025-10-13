@@ -1,0 +1,9 @@
+# 向litex添加新的语句
+
+在ast/ast_statements.go中添加新的语句结构体
+在ast/ast_stmt_interfaces.go中添加新的语句的接口
+在ast/ast_messages.go中添加新的语句的to_string方法
+在ast/ast_latex_msg.go中添加新的语句的to_latex_string方法
+在ast/ast_inline_msg.go中添加新的语句的inline_string方法
+在parser/parser_statements.go中添加新的语句的解析方法, 参考给定的示例
+在executor/exe_statements.go中添加新的语句的执行方法
