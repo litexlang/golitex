@@ -1,3 +1,9 @@
-can_be_inductively_evaluated(a finite_seq(R, n), f, f(a, n + 1) = 一个可以被执行的东西(f(a, n), a(n+1)), a(1) = 可以被算成一个值的东西)
+prove:
+    have set fn exclude(s1, s2 set) := {x s1: not x $in s2}
 
-induc_eval(a, f, )
+    forall s1, s2 set:
+        exclude(s1, s2) $in set
+
+    forall s1, s2 set, x exclude(s1, s2):
+        x $in s1
+        not x $in s2

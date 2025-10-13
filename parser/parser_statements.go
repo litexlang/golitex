@@ -1543,6 +1543,11 @@ func (tb *tokenBlock) dom_and_section(kw string, kw_should_not_exist_in_body str
 // }
 
 func (tb *tokenBlock) intentionalSetBody() (string, ast.Fc, []*ast.SpecFactStmt, error) {
+	err := tb.header.skip(glob.KeySymbolLeftCurly)
+	if err != nil {
+		return "", nil, nil, tbErr(err, tb)
+	}
+
 	param, err := tb.header.next()
 	if err != nil {
 		return "", nil, nil, tbErr(err, tb)
@@ -1565,19 +1570,25 @@ func (tb *tokenBlock) intentionalSetBody() (string, ast.Fc, []*ast.SpecFactStmt,
 			return "", nil, nil, tbErr(err, tb)
 		}
 		proofs = append(proofs, curStmt)
+		tb.header.skipIfIs(glob.KeySymbolComma)
+	}
+
+	err = tb.header.skip(glob.KeySymbolRightCurly)
+	if err != nil {
+		return "", nil, nil, tbErr(err, tb)
 	}
 
 	return param, parentSet, proofs, nil
 }
 
-func (tb *tokenBlock) intensionalSetFactualStmt(curSet ast.Fc) (*ast.IntensionalSetStmt, error) {
-	param, parentSet, proofs, err := tb.intentionalSetBody()
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+// func (tb *tokenBlock) intensionalSetFactualStmt(curSet ast.Fc) (*ast.IntensionalSetStmt, error) {
+// 	param, parentSet, proofs, err := tb.intentionalSetBody()
+// 	if err != nil {
+// 		return nil, tbErr(err, tb)
+// 	}
 
-	return ast.NewIntensionalSetStmt(curSet, param, parentSet, proofs, tb.line), nil
-}
+// 	return ast.NewIntensionalSetStmt(curSet, param, parentSet, proofs, tb.line), nil
+// }
 
 func (tb *tokenBlock) fact() (ast.FactStmt, error) {
 	if tb.header.is(glob.KeywordNot) {
@@ -1682,6 +1693,15 @@ func (tb *tokenBlock) enumStmt_or_intensionalSetStmt_or_DomOf(fc ast.Fc) (ast.En
 		return nil, fmt.Errorf("")
 	}
 
+	if tb.header.is(glob.KeySymbolRightCurly) {
+		err = tb.header.skip(glob.KeySymbolRightCurly)
+		if err != nil {
+			return nil, fmt.Errorf("")
+		}
+
+		return ast.NewEnumStmt(fc, []ast.Fc{}, tb.line), nil
+	}
+
 	leftmost, err := tb.RawFc()
 	if err != nil {
 		return nil, fmt.Errorf("")
@@ -1696,6 +1716,12 @@ func (tb *tokenBlock) enumStmt_or_intensionalSetStmt_or_DomOf(fc ast.Fc) (ast.En
 				return nil, fmt.Errorf("")
 			}
 			enumItems = append(enumItems, curItem)
+			tb.header.skipIfIs(glob.KeySymbolComma)
+		}
+
+		err = tb.header.skip(glob.KeySymbolRightCurly)
+		if err != nil {
+			return nil, fmt.Errorf("")
 		}
 
 		return ast.NewEnumStmt(fc, enumItems, tb.line), nil
@@ -1725,6 +1751,12 @@ func (tb *tokenBlock) enumStmt_or_intensionalSetStmt_or_DomOf(fc ast.Fc) (ast.En
 				return nil, tbErr(err, tb)
 			}
 			proofs = append(proofs, curStmt)
+			tb.header.skipIfIs(glob.KeySymbolComma)
+		}
+
+		err = tb.header.skip(glob.KeySymbolRightCurly)
+		if err != nil {
+			return nil, fmt.Errorf("")
 		}
 
 		return ast.NewIntensionalSetStmt(fc, string(leftmost.(ast.FcAtom)), parentSet, proofs, tb.line), nil
