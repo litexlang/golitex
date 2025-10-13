@@ -100,6 +100,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, string, error) {
 		execState, err = exec.proveInRangeStmt2(stmt)
 	case *ast.ClaimIffStmt:
 		execState, err = exec.claimIffStmt(stmt)
+	case *ast.ProveInRangeStmt:
+		execState, err = exec.proveInRangeStmt(stmt)
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}
