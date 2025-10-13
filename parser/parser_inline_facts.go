@@ -80,7 +80,7 @@ func (tb *tokenBlock) inlineFact() (ast.FactStmt, error) {
 	case glob.KeywordIf:
 		return tb.inlineIfInterface()
 	default:
-		return tb.inline_specFact_enum_intensional_Equals_fact()
+		return tb.inline_spec_or_enum_intensional_Equals_fact()
 	}
 }
 
@@ -396,32 +396,97 @@ func (tb *tokenBlock) domFactInUniFactInterface() ([]ast.FactStmt, error) {
 	}
 }
 
-func (tb *tokenBlock) inline_specFact_enum_intensional_Equals_fact() (ast.FactStmt, error) {
-	if tb.header.is(glob.FuncFactPrefix) || tb.header.is(glob.KeywordNot) || tb.header.is(glob.KeywordExist) {
-		return tb.inlineSpecFactStmt()
+func (tb *tokenBlock) inline_spec_or_fact() (ast.FactStmt, error) {
+	specFact, err := tb.inlineSpecFactStmt()
+	if err != nil {
+		return nil, tbErr(err, tb)
 	}
 
+	if tb.header.is(glob.KeywordOr) {
+		orFacts := []*ast.SpecFactStmt{specFact}
+		for tb.header.is(glob.KeywordOr) {
+			tb.header.skip(glob.KeywordOr)
+			specFact, err := tb.inlineSpecFactStmt()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			orFacts = append(orFacts, specFact)
+		}
+		return ast.NewOrStmt(orFacts, tb.line), nil
+	} else {
+		return specFact, nil
+	}
+}
+
+func (tb *tokenBlock) inline_or_fact(firstFact *ast.SpecFactStmt) (ast.FactStmt, error) {
+	orFacts := []*ast.SpecFactStmt{firstFact}
+	for tb.header.is(glob.KeywordOr) {
+		tb.header.skip(glob.KeywordOr)
+		specFact, err := tb.inlineSpecFactStmt()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		orFacts = append(orFacts, specFact)
+	}
+	return ast.NewOrStmt(orFacts, tb.line), nil
+}
+
+func (tb *tokenBlock) inline_spec_or_enum_intensional_Equals_fact() (ast.FactStmt, error) {
 	var ret ast.FactStmt
+	var err error
 
-	fc, err := tb.RawFc()
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	opt, err := tb.header.next()
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	if opt == glob.FuncFactPrefix {
-		propName, err := tb.rawFcAtom()
+	if tb.header.is(glob.FuncFactPrefix) || tb.header.is(glob.KeywordNot) || tb.header.is(glob.KeywordExist) {
+		ret, err = tb.inline_spec_or_fact()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+	} else {
+		fc, err := tb.RawFc()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
 
-		if tb.header.ExceedEnd() {
-			ret = ast.NewSpecFactStmt(ast.TruePure, propName, []ast.Fc{fc}, tb.line)
+		opt, err := tb.header.next()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		if opt == glob.FuncFactPrefix {
+			var curFact *ast.SpecFactStmt
+			propName, err := tb.rawFcAtom()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+
+			if tb.header.ExceedEnd() {
+				curFact = ast.NewSpecFactStmt(ast.TruePure, propName, []ast.Fc{fc}, tb.line)
+			} else {
+				fc2, err := tb.RawFc()
+				if err != nil {
+					return nil, tbErr(err, tb)
+				}
+
+				params := []ast.Fc{fc, fc2}
+
+				curFact = ast.NewSpecFactStmt(ast.TruePure, propName, params, tb.line)
+			}
+
+			if tb.header.is(glob.KeywordOr) {
+				ret, err = tb.inline_or_fact(curFact)
+				if err != nil {
+					return nil, tbErr(err, tb)
+				}
+			} else {
+				ret = curFact
+			}
+
+		} else if opt == glob.KeySymbolColonEqual {
+			return tb.inline_enum_intensional_fact(fc)
 		} else {
+			if !glob.IsBuiltinInfixRelaPropSymbol(opt) {
+				return nil, fmt.Errorf("expect relation prop")
+			}
+
 			fc2, err := tb.RawFc()
 			if err != nil {
 				return nil, tbErr(err, tb)
@@ -429,38 +494,33 @@ func (tb *tokenBlock) inline_specFact_enum_intensional_Equals_fact() (ast.FactSt
 
 			params := []ast.Fc{fc, fc2}
 
-			ret = ast.NewSpecFactStmt(ast.TruePure, propName, params, tb.line)
-		}
-	} else if opt == glob.KeySymbolColonEqual {
-		return tb.inline_enum_intensional_fact(fc)
-	} else {
-		if !glob.IsBuiltinInfixRelaPropSymbol(opt) {
-			return nil, fmt.Errorf("expect relation prop")
-		}
+			var curFact *ast.SpecFactStmt
 
-		fc2, err := tb.RawFc()
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-
-		params := []ast.Fc{fc, fc2}
-
-		if opt != glob.KeySymbolEqual {
-			ret = ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(opt), params, tb.line)
-		} else {
-			if tb.header.is(glob.KeySymbolEqual) {
-				return tb.relaEqualsFactStmt(fc, fc2)
+			if opt != glob.KeySymbolEqual {
+				curFact = ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(opt), params, tb.line)
 			} else {
-				ret = ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(opt), params, tb.line)
+				if tb.header.is(glob.KeySymbolEqual) {
+					return tb.relaEqualsFactStmt(fc, fc2)
+				} else {
+					curFact = ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(opt), params, tb.line)
+				}
 			}
-		}
 
-		// 这里加入语法糖：!= 等价于 not =，好处是我 = 有 commutative的性质，我不用额外处理 != 了
-		if asSpec, ok := ret.(*ast.SpecFactStmt); ok {
-			if asSpec.NameIs(glob.KeySymbolNotEqual) {
-				asSpec.TypeEnum = ast.FalsePure
-				asSpec.PropName = ast.FcAtom(glob.KeySymbolEqual)
+			// 这里加入语法糖：!= 等价于 not =，好处是我 = 有 commutative的性质，我不用额外处理 != 了
+			if curFact != nil && curFact.NameIs(glob.KeySymbolNotEqual) {
+				curFact.TypeEnum = ast.FalsePure
+				curFact.PropName = ast.FcAtom(glob.KeySymbolEqual)
 			}
+
+			if tb.header.is(glob.KeywordOr) {
+				ret, err = tb.inline_or_fact(curFact)
+				if err != nil {
+					return nil, tbErr(err, tb)
+				}
+			} else {
+				ret = curFact
+			}
+
 		}
 
 	}

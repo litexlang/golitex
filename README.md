@@ -28,9 +28,7 @@ _– Leonardo da Vinci_
 
 Litex([website](https://litexlang.com)) is a simple, intuitive, and expressive open-source formal language for coding reasoning ([Star the repo!](https://github.com/litexlang/golitex)). It ensures every step of your reasoning is correct, and is actually the first reasoning formal language (or formal language for short) that can be learned by anyone in 2 hours, even without math or programming background.
 
-Making Litex intuitive to both humans and AI is Litex's core mission. This is how Litex scales formal reasoning: by making it accessible to more people, applicable to more complex problems, and usable by large-scale AI systems. These benefits stem from Litex's close-to-natural-language design to lower the entrance barrier by 10x compared with other formal languages.
-
-Here is a comparison between Litex and traditional formal language Lean.
+Making Litex intuitive to both humans and AI is Litex's core mission. This is how Litex scales formal reasoning: by making it accessible to more people, applicable to more complex problems, and usable by large-scale AI systems. These benefits stem from Litex's close-to-natural-language design to lower the entrance barrier by 10x compared with other formal languages. Here is a comparison between Litex and traditional formal language Lean.
 
 <table style="border-collapse: collapse; width: 100%; font-size: 12px">
   <tr>
@@ -76,9 +74,7 @@ Here is a comparison between Litex and traditional formal language Lean.
 
 Even Kids can formalize the multivariate equation in Litex in 2 minutes, while it require an experienced expert months of training and years of experience in Lean 4. The above example best demonstrates how productive using Litex is!
 
-- Reduced writing time: code is 2-10x simpler and more straightforward than Lean 4
-- Improved proof quality: code is extremely readable
-- Less training: language is so similar to natural language that it almost requires no training
+Our mission is to make Litex the most accessible and usable formal language for coding reasoning. We aim to solve the most challenging problems faced by the AI community, i.e. the challenge of efficient, scalable, and reliable coding reasoning. Let's build the future together!
 
 ## Resources And Community
 
