@@ -173,3 +173,8 @@ func IsFn_WithHeadNameInSlice(fc Fc, names []string) bool {
 
 	return slices.Contains(names, string(asFcFnHeadAsAtom))
 }
+
+func (atom FcAtom) HasPkgName() bool {
+	// 如果 atom 里有 :: 就是true
+	return strings.Contains(string(atom), glob.KeySymbolColonColon)
+}
