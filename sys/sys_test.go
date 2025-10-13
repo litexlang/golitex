@@ -21,7 +21,7 @@ import (
 )
 
 func TestRunREPLInTerminal(t *testing.T) {
-	RunREPLInTerminal()
+	RunREPLInTerminal("test_version")
 }
 
 func TestRunRepo(t *testing.T) {
