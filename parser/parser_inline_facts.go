@@ -25,7 +25,7 @@ import (
 func (tb *tokenBlock) inlineFacts_untilEndOfInline() ([]ast.FactStmt, error) {
 	facts := []ast.FactStmt{}
 	for {
-		fact, err := tb.inlineFact()
+		fact, err := tb.inlineFactSkipTerminator()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -66,7 +66,7 @@ func (tb *tokenBlock) inlineFacts_untilEndOfInline() ([]ast.FactStmt, error) {
 // }
 
 // fact, isEnd, err
-func (tb *tokenBlock) inlineFact() (ast.FactStmt, error) {
+func (tb *tokenBlock) inlineFactSkipTerminator() (ast.FactStmt, error) {
 	curToken, err := tb.header.currentToken()
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -74,26 +74,24 @@ func (tb *tokenBlock) inlineFact() (ast.FactStmt, error) {
 
 	switch curToken {
 	case glob.KeywordForall:
-		return tb.inlineUniInterface()
+		return tb.inlineUniInterfaceSkipTerminator()
 	// case glob.KeywordOr:
 	// 	return tb.inlineOrStmt()
 	case glob.KeywordIf:
-		return tb.inlineIfInterface()
+		return tb.inlineIfInterfaceSkipTerminator()
 	default:
-		return tb.inline_spec_or_enum_intensional_Equals_fact()
+		return tb.inline_spec_or_enum_intensional_Equals_fact_skip_terminator()
 	}
 }
 
-func (tb *tokenBlock) inlineSpecFactStmt() (*ast.SpecFactStmt, error) {
+// inlineSpecFactStmt_skip_terminator parses a spec fact and skips statement terminator (comma) if present
+func (tb *tokenBlock) inlineSpecFactStmt_skip_terminator() (*ast.SpecFactStmt, error) {
 	stmt, err := tb.specFactStmt()
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
 
-	if tb.header.is(glob.KeySymbolComma) {
-		tb.header.skip("")
-	}
-
+	tb.skipStmtTerminator()
 	return stmt, nil
 }
 
@@ -137,7 +135,7 @@ func (tb *tokenBlock) bodyOfInlineDomAndThen(word string) ([]ast.FactStmt, []ast
 func (tb *tokenBlock) inlineFacts_untilWord(word string) ([]ast.FactStmt, error) {
 	facts := []ast.FactStmt{}
 	for {
-		fact, err := tb.inlineFact()
+		fact, err := tb.inlineFactSkipTerminator()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -155,7 +153,7 @@ func (tb *tokenBlock) inlineFacts_untilWord(word string) ([]ast.FactStmt, error)
 func (tb *tokenBlock) inlineFacts_untilWord_or_exceedEnd_notSkipWord(word string) ([]ast.FactStmt, error) {
 	facts := []ast.FactStmt{}
 	for {
-		fact, err := tb.inlineFact()
+		fact, err := tb.inlineFactSkipTerminator()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -251,7 +249,7 @@ func (tb *tokenBlock) inlineUniFact_Param_ParamSet_ParamInSetFacts() ([]string, 
 	return params, setParams, nil
 }
 
-func (tb *tokenBlock) inlineUniInterface() (ast.UniFactInterface, error) {
+func (tb *tokenBlock) inlineUniInterfaceSkipTerminator() (ast.UniFactInterface, error) {
 	err := tb.header.skip(glob.KeywordForall)
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -298,7 +296,7 @@ func (tb *tokenBlock) inlineUniInterface() (ast.UniFactInterface, error) {
 	return ast.NewUniFactWithIff(ast.NewUniFact(params, setParams, domFact, thenFact, tb.line), iffFacts, tb.line), nil
 }
 
-func (tb *tokenBlock) inlineIfInterface() (ast.UniFactInterface, error) {
+func (tb *tokenBlock) inlineIfInterfaceSkipTerminator() (ast.UniFactInterface, error) {
 	err := tb.header.skip(glob.KeywordIf)
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -339,7 +337,7 @@ func (tb *tokenBlock) inlineIfInterface() (ast.UniFactInterface, error) {
 func (tb *tokenBlock) thenFactsInUniFactInterface() ([]ast.FactStmt, bool, error) {
 	facts := []ast.FactStmt{}
 	for {
-		specFact, err := tb.inlineFact()
+		specFact, err := tb.inlineFactSkipTerminator()
 		if err != nil {
 			return nil, false, tbErr(err, tb)
 		}
@@ -363,7 +361,7 @@ func (tb *tokenBlock) thenFactsInUniFactInterface() ([]ast.FactStmt, bool, error
 func (tb *tokenBlock) thenFacts_SkipEnd_Semicolon_or_EOL() ([]ast.FactStmt, error) {
 	facts := []ast.FactStmt{}
 	for {
-		specFact, err := tb.inlineFact()
+		specFact, err := tb.inlineFactSkipTerminator()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -384,7 +382,7 @@ func (tb *tokenBlock) thenFacts_SkipEnd_Semicolon_or_EOL() ([]ast.FactStmt, erro
 func (tb *tokenBlock) domFactInUniFactInterface() ([]ast.FactStmt, error) {
 	facts := []ast.FactStmt{}
 	for {
-		specFact, err := tb.inlineFact()
+		specFact, err := tb.inlineFactSkipTerminator()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -396,8 +394,9 @@ func (tb *tokenBlock) domFactInUniFactInterface() ([]ast.FactStmt, error) {
 	}
 }
 
-func (tb *tokenBlock) inline_spec_or_fact() (ast.FactStmt, error) {
-	specFact, err := tb.inlineSpecFactStmt()
+// inline_spec_or_fact_skip_terminator parses spec fact or or-fact and skips statement terminator
+func (tb *tokenBlock) inline_spec_or_fact_skip_terminator() (ast.FactStmt, error) {
+	specFact, err := tb.inlineSpecFactStmt_skip_terminator()
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -406,7 +405,7 @@ func (tb *tokenBlock) inline_spec_or_fact() (ast.FactStmt, error) {
 		orFacts := []*ast.SpecFactStmt{specFact}
 		for tb.header.is(glob.KeywordOr) {
 			tb.header.skip(glob.KeywordOr)
-			specFact, err := tb.inlineSpecFactStmt()
+			specFact, err := tb.inlineSpecFactStmt_skip_terminator()
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}
@@ -430,7 +429,7 @@ func (tb *tokenBlock) inlineOrFactWithFirstFact(firstFact *ast.SpecFactStmt) (*a
 	orFacts := []*ast.SpecFactStmt{firstFact}
 	for tb.header.is(glob.KeywordOr) {
 		tb.header.skip(glob.KeywordOr)
-		specFact, err := tb.inlineSpecFactStmt()
+		specFact, err := tb.inlineSpecFactStmt_skip_terminator()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -439,113 +438,150 @@ func (tb *tokenBlock) inlineOrFactWithFirstFact(firstFact *ast.SpecFactStmt) (*a
 	return ast.NewOrStmt(orFacts, tb.line), nil
 }
 
-// TODO: 这里是最糟糕的函数的写法了，相互耦合，乱七八糟
-func (tb *tokenBlock) inline_spec_or_enum_intensional_Equals_fact() (ast.FactStmt, error) {
-	var ret ast.FactStmt
-	var err error
-
-	if tb.header.is(glob.FuncFactPrefix) || tb.header.is(glob.KeywordNot) || tb.header.is(glob.KeywordExist) {
-		ret, err = tb.inline_spec_or_fact()
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-	} else {
-		fc, err := tb.RawFc()
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-
-		opt, err := tb.header.next()
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-
-		if opt == glob.FuncFactPrefix {
-			var curFact *ast.SpecFactStmt
-			propName, err := tb.rawFcAtom()
-			if err != nil {
-				return nil, tbErr(err, tb)
-			}
-
-			if tb.header.ExceedEnd() {
-				curFact = ast.NewSpecFactStmt(ast.TruePure, propName, []ast.Fc{fc}, tb.line)
-			} else {
-				fc2, err := tb.RawFc()
-				if err != nil {
-					return nil, tbErr(err, tb)
-				}
-
-				params := []ast.Fc{fc, fc2}
-
-				curFact = ast.NewSpecFactStmt(ast.TruePure, propName, params, tb.line)
-			}
-
-			if tb.header.is(glob.KeywordOr) {
-				ret, err = tb.inlineOrFactWithFirstFact(curFact)
-				if err != nil {
-					return nil, tbErr(err, tb)
-				}
-			} else {
-				ret = curFact
-			}
-
-		} else if opt == glob.KeySymbolColonEqual {
-			return tb.inline_enum_intensional_fact(fc)
-		} else {
-			if !glob.IsBuiltinInfixRelaPropSymbol(opt) {
-				return nil, fmt.Errorf("expect relation prop")
-			}
-
-			fc2, err := tb.RawFc()
-			if err != nil {
-				return nil, tbErr(err, tb)
-			}
-
-			params := []ast.Fc{fc, fc2}
-
-			var curFact *ast.SpecFactStmt
-
-			if opt != glob.KeySymbolEqual {
-				curFact = ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(opt), params, tb.line)
-			} else {
-				if tb.header.is(glob.KeySymbolEqual) {
-					return tb.relaEqualsFactStmt(fc, fc2)
-				} else {
-					curFact = ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(opt), params, tb.line)
-				}
-			}
-
-			// 这里加入语法糖：!= 等价于 not =，好处是我 = 有 commutative的性质，我不用额外处理 != 了
-			if curFact != nil && curFact.NameIs(glob.KeySymbolNotEqual) {
-				curFact.TypeEnum = ast.FalsePure
-				curFact.PropName = ast.FcAtom(glob.KeySymbolEqual)
-			}
-
-			if tb.header.is(glob.KeywordOr) {
-				ret, err = tb.inlineOrFactWithFirstFact(curFact)
-				if err != nil {
-					return nil, tbErr(err, tb)
-				}
-			} else {
-				ret = curFact
-			}
-
-		}
-
+// inline_spec_or_enum_intensional_Equals_fact_skip_terminator is the main entry point for parsing inline facts.
+// It handles four main cases:
+// 1. Facts starting with special prefixes ($, not, exist)
+// 2. Facts with function-like properties (x $prop y)
+// 3. Facts with infix relational operators (x = y, x > y, etc.)
+// 4. Enum intensional facts (x := {y | ...})
+// After parsing, it skips the statement terminator (comma) if present.
+func (tb *tokenBlock) inline_spec_or_enum_intensional_Equals_fact_skip_terminator() (ast.FactStmt, error) {
+	// Case 1: Handle facts starting with special prefixes
+	if tb.isCurTokenSpecFactPrefix() {
+		return tb.parseSpecialPrefixFact()
 	}
 
+	// Case 2-4: Handle facts starting with a first-class citizen (fc)
+	return tb.parseFactStartWithFc()
+}
+
+// isCurTokenSpecFactPrefix checks if the fact starts with a special prefix
+func (tb *tokenBlock) isCurTokenSpecFactPrefix() bool {
+	return tb.header.is(glob.FuncFactPrefix) ||
+		tb.header.is(glob.KeywordNot) ||
+		tb.header.is(glob.KeywordExist)
+}
+
+// parseSpecialPrefixFact parses facts that start with special prefixes ($, not, exist)
+func (tb *tokenBlock) parseSpecialPrefixFact() (ast.FactStmt, error) {
+	fact, err := tb.inline_spec_or_fact_skip_terminator()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	tb.skipStmtTerminator()
+	return fact, nil
+}
+
+// parseFactStartWithFc parses facts that start with a first-class citizen
+func (tb *tokenBlock) parseFactStartWithFc() (ast.FactStmt, error) {
+	// Parse the first fc
+	fc, err := tb.RawFc()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	// Get the operator/delimiter
+	operator, err := tb.header.next()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	// Dispatch based on operator type
+	var fact ast.FactStmt
+	if operator == glob.FuncFactPrefix {
+		fact, err = tb.parseFunctionPropertyFact(fc)
+	} else if operator == glob.KeySymbolColonEqual {
+		fact, err = tb.inline_enum_intensional_fact_skip_terminator(fc)
+	} else {
+		fact, err = tb.parseInfixRelationalFact(fc, operator)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	tb.skipStmtTerminator()
+	return fact, nil
+}
+
+// parseFunctionPropertyFact parses facts like "x $prop y" or "x $prop"
+func (tb *tokenBlock) parseFunctionPropertyFact(leftFc ast.Fc) (ast.FactStmt, error) {
+	propName, err := tb.rawFcAtom()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	// Determine parameters: one or two
+	params := []ast.Fc{leftFc}
+	if !tb.header.ExceedEnd() {
+		rightFc, err := tb.RawFc()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		params = append(params, rightFc)
+	}
+
+	curFact := ast.NewSpecFactStmt(ast.TruePure, propName, params, tb.line)
+	return tb.handleOrFactIfPresent(curFact)
+}
+
+// parseInfixRelationalFact parses facts like "x = y", "x > y", "x != y", etc.
+func (tb *tokenBlock) parseInfixRelationalFact(leftFc ast.Fc, operator string) (ast.FactStmt, error) {
+	if !glob.IsBuiltinInfixRelaPropSymbol(operator) {
+		return nil, fmt.Errorf("expect relation prop, got: %s", operator)
+	}
+
+	rightFc, err := tb.RawFc()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	// Handle special case: double equals (==)
+	if operator == glob.KeySymbolEqual && tb.header.is(glob.KeySymbolEqual) {
+		return tb.relaEqualsFactStmt(leftFc, rightFc)
+	}
+
+	// Create the fact
+	params := []ast.Fc{leftFc, rightFc}
+	curFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(operator), params, tb.line)
+
+	// Handle syntactic sugar: != is equivalent to "not ="
+	curFact = tb.normalizeNotEqualFact(curFact)
+
+	return tb.handleOrFactIfPresent(curFact)
+}
+
+// normalizeNotEqualFact converts != to "not =" for easier processing
+// This allows us to reuse the commutative property of =
+func (tb *tokenBlock) normalizeNotEqualFact(fact *ast.SpecFactStmt) *ast.SpecFactStmt {
+	if fact != nil && fact.NameIs(glob.KeySymbolNotEqual) {
+		fact.TypeEnum = ast.FalsePure
+		fact.PropName = ast.FcAtom(glob.KeySymbolEqual)
+	}
+	return fact
+}
+
+// handleOrFactIfPresent checks if there's an "or" keyword and handles it
+func (tb *tokenBlock) handleOrFactIfPresent(curFact *ast.SpecFactStmt) (ast.FactStmt, error) {
+	if tb.header.is(glob.KeywordOr) {
+		return tb.inlineOrFactWithFirstFact(curFact)
+	}
+	return curFact, nil
+}
+
+// skipStmtTerminator skips statement terminator (comma) if present
+func (tb *tokenBlock) skipStmtTerminator() {
 	if tb.header.is(glob.KeySymbolComma) {
 		tb.header.skip("")
 	}
-
-	return ret, nil
 }
 
-func (tb *tokenBlock) inline_enum_intensional_fact(left ast.Fc) (ast.FactStmt, error) {
+// inline_enum_intensional_fact_skip_terminator parses enum intensional fact (x := {items} or x := {y | ...})
+// and skips statement terminator (comma)
+func (tb *tokenBlock) inline_enum_intensional_fact_skip_terminator(left ast.Fc) (ast.FactStmt, error) {
 	defer func() {
-		if tb.header.is(glob.KeySymbolComma) {
-			tb.header.skip(glob.KeySymbolComma)
-		}
+		tb.skipStmtTerminator()
 	}()
 
 	err := tb.header.skip(glob.KeySymbolLeftCurly)
@@ -602,7 +638,7 @@ func (tb *tokenBlock) inline_enum_intensional_fact(left ast.Fc) (ast.FactStmt, e
 
 		facts := []*ast.SpecFactStmt{}
 		for {
-			fact, err := tb.inlineSpecFactStmt()
+			fact, err := tb.inlineSpecFactStmt_skip_terminator()
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}
