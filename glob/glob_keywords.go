@@ -47,7 +47,7 @@ const (
 	KeywordAs                             = "as" // 用在 import xxx as ??? 了
 	KeywordLen                            = "len"
 	KeywordFiniteSet                      = "finite_set"
-	KeywordProveOverFiniteSet             = "prove_over_finite_set" // syntax connecting forall and finite_set
+	KeywordProveOverFiniteSet             = "prove_by_enum" // syntax connecting forall and finite_set
 	KeywordExistIn                        = "exist_in"
 	KeywordSetDefinedByReplacement        = "set_defined_by_replacement"    // 这是一个函数，返回一个集合，而不是一个prop
 	KeywordExistPropPreImageByReplacement = "obj_exist_as_preimage_of_prop" //"exist_prop_preimage_by_replacement"
