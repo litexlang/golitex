@@ -61,8 +61,8 @@ func ExecuteCodeAndReturnMessage(code string) (string, glob.SysSignal, error) {
 	return msg, signal, nil
 }
 
-func RunREPLInTerminal() {
-	pipeline.RunREPLInTerminal()
+func RunREPLInTerminal(version string) {
+	pipeline.RunREPLInTerminal(version)
 }
 
 func RunMainMsg(signal glob.SysSignal) string {
