@@ -54,8 +54,6 @@ const (
 	KeywordExistFnPreImageByReplacement   = "obj_exist_as_preimage_of_fn"   // "exist_fn_preimage_by_replacement"
 	KeywordFnTemplate                     = "fn_template"
 
-	KeywordProj = "proj"
-
 	KeywordNPos  = "N_pos"
 	KeywordLet   = "let"
 	KeywordClear = "clear"
@@ -68,6 +66,8 @@ const (
 	KeywordIf = "if"
 
 	KeywordProveInRange = "prove_in_range"
+
+	KeywordEval = "eval"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -108,7 +108,6 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordExistPropPreImageByReplacement: {},
 	KeywordExistFnPreImageByReplacement:   {},
 	KeywordFnTemplate:                     {},
-	KeywordProj:                           {},
 	KeywordNPos:                           {},
 	KeywordLet:                            {},
 	KeywordClear:                          {},
@@ -120,6 +119,8 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordNonEmptySet: {},
 
 	KeywordIf: {},
+
+	KeywordEval: {},
 }
 
 const (
@@ -230,9 +231,9 @@ var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]s
 	KeywordExistFnPreImageByReplacement:   {},
 	TupleFcFnHead:                         {},
 	KeywordLen:                            {},
-	KeywordProj:                           {},
 	KeywordNPos:                           {},
 	KeywordNonEmptySet:                    {},
+	KeywordEval:                           {},
 }
 
 func IsBuiltinKeywordKeySymbolCanBeFcAtomName(name string) bool {
