@@ -99,7 +99,7 @@ func (ver *Verifier) verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Fc, r
 }
 
 func (ver *Verifier) verEqualBuiltin(left ast.Fc, right ast.Fc, state *VerState) (bool, error) {
-	ok, msg, err := cmp.Cmp_ByBIR(left, right) // 完全一样
+	ok, msg, err := cmp.CmpBy_Literally_NumLit_PolynomialArith(left, right) // 完全一样
 	if err != nil {
 		return false, err
 	}
@@ -219,7 +219,7 @@ func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, rig
 
 	if gotLeftEqualFcs && gotRightEqualFcs {
 		if equalToLeftFcs == equalToRightFcs {
-			return true, fmt.Sprintf("It's known %s and %s equal to one same object", left, right), nil
+			return true, fmt.Sprintf("%s = %s, by either their equality is known, or it is ensured by transitivity of equality.", left, right), nil
 		}
 	}
 

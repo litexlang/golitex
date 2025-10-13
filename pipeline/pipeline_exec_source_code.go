@@ -98,7 +98,7 @@ func printMessagesToWriter(writer io.Writer, msg []string) {
 
 		for _, m := range msg {
 			// 让m的最后一位是换行符
-			m = strings.TrimRight(m, " \r\t\n")
+			m = strings.TrimRight(m, " \t\n")
 			if strings.TrimSpace(m) == "" {
 				if isConsecutiveEmptyLine {
 					continue
@@ -119,6 +119,11 @@ func printMessagesToWriter(writer io.Writer, msg []string) {
 	}
 }
 
+const helpMessage = `help: show this help message
+exit: exit the REPL
+clear: refresh the whole environment
+`
+
 func RunREPLInTerminal() {
 	executor, err := pipelineExecutorInit()
 	if err != nil {
@@ -131,7 +136,7 @@ func RunREPLInTerminal() {
 
 	year := time.Now().Year()
 
-	fmt.Fprintln(writer, fmt.Sprintf("Litex %s Copyright (C) 2024-%s litexlang.com ", glob.VERSION, strconv.Itoa(year)))
+	fmt.Fprintf(writer, "Litex %s Copyright (C) 2024-%s litexlang.com Type 'help' for help\n", glob.VERSION, strconv.Itoa(year))
 
 	for {
 		code, err := listenOneStatementFromTerminal(reader, writer)
@@ -144,6 +149,11 @@ func RunREPLInTerminal() {
 		if strings.TrimSpace(code) == "exit" {
 			fmt.Fprintf(writer, glob.REPLGoodbyeMessage)
 			return
+		}
+
+		if strings.TrimSpace(code) == "help" {
+			fmt.Fprintf(writer, helpMessage)
+			continue
 		}
 
 		msg, signal, err := ExecuteCodeAndReturnMessageSliceGivenSettings(code, executor)
@@ -169,8 +179,7 @@ func listenOneStatementFromTerminal(reader *bufio.Reader, writer io.Writer) (str
 			return "", fmt.Errorf("error reading input: %s", err)
 		}
 
-		// Normalize line endings for cross-platform compatibility (Windows \r\n -> \n)
-		currentLineStr = strings.ReplaceAll(currentLineStr, "\r", "")
+		currentLineStr = glob.ProcessEscapeSequences(currentLineStr)
 		trimmedLine := strings.TrimRight(currentLineStr, " \t\n")
 
 		if currentScopeDepth > 0 {

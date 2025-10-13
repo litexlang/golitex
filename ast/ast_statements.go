@@ -170,10 +170,6 @@ type ProveStmt struct {
 	Line uint
 }
 
-// type DefFnTemplateStmt struct {
-// 	FnTemplateStmt FnTemplateStmt
-// }
-
 // s := {1,2,3} 是枚举语法糖，等价于 forall x s: x = 1 or x = 2 or x = 3; 1 $in s; 2 $in s; 3 $in s;
 // s := {} 表示 这是个空集
 type EnumStmt struct {
