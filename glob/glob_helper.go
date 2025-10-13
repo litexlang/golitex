@@ -14,6 +14,8 @@
 
 package litex_global
 
+import "strings"
+
 func CopyMap[T any](src map[string]T) map[string]T {
 	dst := make(map[string]T)
 	for k, v := range src {
@@ -51,4 +53,8 @@ func GenerateNamesLikeExcelColumnNames(n int) []string {
 		names[i-1] = numberToLetters(i)
 	}
 	return names
+}
+
+func ProcessEscapeSequences(code string) string {
+	return strings.ReplaceAll(code, "\\r", "")
 }

@@ -52,7 +52,7 @@ func cmpFcFnRule(left, right *ast.FcFn) (bool, error) {
 	}
 
 	for i := range len(left.Params) {
-		ok, _, err := Cmp_ByBIR(left.Params[i], right.Params[i])
+		ok, _, err := CmpBy_Literally_NumLit_PolynomialArith(left.Params[i], right.Params[i])
 		if err != nil {
 			return false, err
 		}
