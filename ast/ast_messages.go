@@ -638,16 +638,18 @@ func (stmt *IntensionalSetStmt) String() string {
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeySymbolColonEqual)
 	builder.WriteString(" ")
+	builder.WriteString(glob.KeySymbolLeftCurly)
 	builder.WriteString(stmt.Param)
 	builder.WriteString(" ")
 	builder.WriteString(stmt.ParentSet.String())
+	builder.WriteString(" ")
 	builder.WriteString(glob.KeySymbolColon)
-	builder.WriteByte('\n')
 	proofStrSlice := make([]string, len(stmt.Proofs))
-	for i, proof := range stmt.Proofs {
-		proofStrSlice[i] = glob.SplitLinesAndAdd4NIndents(proof.String(), 1)
+	for i := range len(stmt.Proofs) {
+		proofStrSlice[i] = stmt.Proofs[i].InlineString()
 	}
-	builder.WriteString(strings.Join(proofStrSlice, "\n"))
+	builder.WriteString(strings.Join(proofStrSlice, ", "))
+	builder.WriteString(glob.KeySymbolRightCurly)
 	return builder.String()
 }
 
