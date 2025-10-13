@@ -302,7 +302,7 @@ pkgName::x * pkgName2::y    →  pkgName2::y * pkgName::x  (按字典序)
 
 ## 实现细节
 
-当前实现位于 `number/num_artihmetic.go`，核心步骤：
+当前实现位于 `number/num_arithmetic.go`，核心步骤：
 1. **词法分析（Tokenization）**：将表达式分解为 token
 2. **语法分析（Parsing）**：构建 AST
 3. **求值（Evaluation）**：展开多项式

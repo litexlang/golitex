@@ -11,4 +11,4 @@ fn union(a, b set) set:
 have a, b set
 forall x a => x $in union(a, b)
 forall x b => x $in union(a, b)
-forall x union(a, b) => $in_a_or_b(x, a, b), or(x $in a, x $in b)
+forall x union(a, b) => $in_a_or_b(x, a, b), x $in a or x $in b
