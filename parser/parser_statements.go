@@ -1510,6 +1510,38 @@ func (tb *tokenBlock) dom_and_section(kw string, kw_should_not_exist_in_body str
 	}
 }
 
+// func (tb *tokenBlock) intentionalSetBody() (string, ast.Fc, []*ast.SpecFactStmt, error) {
+// 	param, err := tb.header.next()
+// 	if err != nil {
+// 		return "", nil, nil, tbErr(err, tb)
+// 	}
+
+// 	parentSet, err := tb.RawFc()
+// 	if err != nil {
+// 		return "", nil, nil, tbErr(err, tb)
+// 	}
+
+// 	err = tb.header.skip(glob.KeySymbolColon)
+// 	if err != nil {
+// 		return "", nil, nil, tbErr(err, tb)
+// 	}
+
+// 	if !tb.header.ExceedEnd() {
+// 		return "", nil, nil, fmt.Errorf("expect end of line")
+// 	}
+
+// 	proofs := []*ast.SpecFactStmt{}
+// 	for _, stmt := range tb.body {
+// 		curStmt, err := stmt.specFactStmt()
+// 		if err != nil {
+// 			return "", nil, nil, tbErr(err, tb)
+// 		}
+// 		proofs = append(proofs, curStmt)
+// 	}
+
+// 	return param, parentSet, proofs, nil
+// }
+
 func (tb *tokenBlock) intentionalSetBody() (string, ast.Fc, []*ast.SpecFactStmt, error) {
 	param, err := tb.header.next()
 	if err != nil {
@@ -1526,13 +1558,9 @@ func (tb *tokenBlock) intentionalSetBody() (string, ast.Fc, []*ast.SpecFactStmt,
 		return "", nil, nil, tbErr(err, tb)
 	}
 
-	if !tb.header.ExceedEnd() {
-		return "", nil, nil, fmt.Errorf("expect end of line")
-	}
-
 	proofs := []*ast.SpecFactStmt{}
-	for _, stmt := range tb.body {
-		curStmt, err := stmt.specFactStmt()
+	for !tb.header.is(glob.KeySymbolRightCurly) {
+		curStmt, err := tb.specFactStmt()
 		if err != nil {
 			return "", nil, nil, tbErr(err, tb)
 		}
@@ -1643,10 +1671,63 @@ func (tb *tokenBlock) relaFact_intensionalSetFact_enumStmt_equals() (ast.FactStm
 }
 
 func (tb *tokenBlock) enumStmt_or_intensionalSetStmt_or_DomOf(fc ast.Fc) (ast.EnumSet_IntensionalSet_EqualDom, error) {
-	if tb.header.is(glob.KeySymbolLeftCurly) {
-		return tb.enumFactualStmt(fc)
+	// if tb.header.is(glob.KeySymbolLeftCurly) {
+	// 	return tb.enumFactualStmt(fc)
+	// } else {
+	// 	return tb.intensionalSetFactualStmt(fc)
+	// }
+
+	err := tb.header.skip(glob.KeySymbolLeftCurly)
+	if err != nil {
+		return nil, fmt.Errorf("")
+	}
+
+	leftmost, err := tb.RawFc()
+	if err != nil {
+		return nil, fmt.Errorf("")
+	}
+
+	if tb.header.is(glob.KeySymbolComma) {
+		enumItems := []ast.Fc{leftmost}
+		tb.header.skip(glob.KeySymbolComma)
+		for !tb.header.is(glob.KeySymbolRightCurly) {
+			curItem, err := tb.RawFc()
+			if err != nil {
+				return nil, fmt.Errorf("")
+			}
+			enumItems = append(enumItems, curItem)
+		}
+
+		return ast.NewEnumStmt(fc, enumItems, tb.line), nil
 	} else {
-		return tb.intensionalSetFactualStmt(fc)
+		if _, ok := leftmost.(ast.FcAtom); !ok {
+			return nil, fmt.Errorf("expect fc atom")
+		} else {
+			if leftmost.(ast.FcAtom).HasPkgName() {
+				return nil, fmt.Errorf("expect fc atom without pkg name")
+			}
+		}
+
+		parentSet, err := tb.RawFc()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		err = tb.header.skip(glob.KeySymbolColon)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		proofs := []*ast.SpecFactStmt{}
+		for !tb.header.is(glob.KeySymbolRightCurly) {
+			curStmt, err := tb.specFactStmt()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			proofs = append(proofs, curStmt)
+		}
+
+		return ast.NewIntensionalSetStmt(fc, string(leftmost.(ast.FcAtom)), parentSet, proofs, tb.line), nil
 	}
 }
 
