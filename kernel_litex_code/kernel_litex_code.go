@@ -265,7 +265,7 @@ know:
 			abs(x) > 0
 	forall x R: x >= 0 => abs(x) = x
 
-know forall x R: or(x > 0, x < 0) => x != 0
+know forall x R: x > 0 or x < 0 => x != 0
 
 # 必须要有，否则不能说明有限集合的子集还是有限集合
 know @finite_set_subset_is_finite_set(s1 finite_set, s2 set):
