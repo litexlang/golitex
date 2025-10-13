@@ -95,29 +95,6 @@ func (tb *tokenBlock) inlineSpecFactStmt_skip_terminator() (*ast.SpecFactStmt, e
 	return stmt, nil
 }
 
-// func (tb *tokenBlock) inlineOrStmt() (*ast.OrStmt, error) {
-// 	err := tb.header.skip(glob.KeywordOr)
-// 	if err != nil {
-// 		return nil, tbErr(err, tb)
-// 	}
-
-// 	err = tb.header.skip(glob.KeySymbolLeftBrace)
-// 	if err != nil {
-// 		return nil, tbErr(err, tb)
-// 	}
-
-// 	facts, err := tb.inlineFacts_untilWord_SkipWord(glob.KeySymbolRightBrace)
-// 	if err != nil {
-// 		return nil, tbErr(err, tb)
-// 	}
-
-// 	if tb.header.is(glob.KeySymbolComma) {
-// 		tb.header.skip("")
-// 	}
-
-// 	return ast.NewOrStmt(facts, tb.line), nil
-// }
-
 func (tb *tokenBlock) bodyOfInlineDomAndThen(word string) ([]ast.FactStmt, []ast.FactStmt, error) {
 	domFacts, err := tb.inlineFacts_untilWord(word)
 	if err != nil {
