@@ -18,40 +18,44 @@ import (
 	ast "golitex/ast"
 )
 
-func (env *Env) ReplaceSymbolWithValue(fc ast.Fc) ast.Fc {
+func (env *Env) ReplaceSymbolWithValue(fc ast.Fc) (bool, ast.Fc) {
 	switch asFc := fc.(type) {
 	case ast.FcAtom:
 		return env.replaceFcAtomWithValue(asFc)
 	case *ast.FcFn:
 		return env.replaceFcFnWithValue(asFc)
 	}
-	return fc
+	panic("")
 }
 
-func (env *Env) replaceFcFnWithValue(fc *ast.FcFn) ast.Fc {
+func (env *Env) replaceFcFnWithValue(fc *ast.FcFn) (bool, ast.Fc) {
 	if symbolValue, ok := env.GetSymbolValue(fc); ok {
-		return symbolValue
+		return true, symbolValue
 	}
 
+	replaced := false
 	newParams := make([]ast.Fc, len(fc.Params))
 	for i, param := range fc.Params {
-		newParams[i] = env.ReplaceSymbolWithValue(param)
+		replaced, newParams[i] = env.ReplaceSymbolWithValue(param)
+		replaced = replaced || replaced
 	}
-	return ast.NewFcFn(fc.FnHead, newParams)
+	return replaced, ast.NewFcFn(fc.FnHead, newParams)
 }
 
-func (env *Env) replaceFcAtomWithValue(fc ast.FcAtom) ast.Fc {
+func (env *Env) replaceFcAtomWithValue(fc ast.FcAtom) (bool, ast.Fc) {
 	symbolValue, ok := env.GetSymbolValue(fc)
 	if !ok {
-		return fc
+		return false, fc
 	}
-	return symbolValue
+	return true, symbolValue
 }
 
-func (env *Env) ReplaceFcInEqualFact(fact *ast.SpecFactStmt) *ast.SpecFactStmt {
+func (env *Env) ReplaceFcInEqualFact(fact *ast.SpecFactStmt) (bool, *ast.SpecFactStmt) {
 	newParams := make([]ast.Fc, len(fact.Params))
+	replaced := false
 	for i, param := range fact.Params {
-		newParams[i] = env.ReplaceSymbolWithValue(param)
+		replaced, newParams[i] = env.ReplaceSymbolWithValue(param)
+		replaced = replaced || replaced
 	}
-	return ast.NewSpecFactStmt(fact.TypeEnum, fact.PropName, newParams, fact.Line)
+	return replaced, ast.NewSpecFactStmt(fact.TypeEnum, fact.PropName, newParams, fact.Line)
 }
