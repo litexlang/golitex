@@ -2875,30 +2875,43 @@ func (tb *tokenBlock) proveInRangeStmt() (ast.Stmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	thenFacts := []ast.FactStmt{}
-	for i := range len(tb.body) {
-		curStmt, err := tb.body[i].factStmt(UniFactDepth1)
+	if tb.body[len(tb.body)-1].header.is(glob.KeywordProve) {
+		thenFacts := []ast.FactStmt{}
+		for i := range len(tb.body) {
+			curStmt, err := tb.body[i].factStmt(UniFactDepth1)
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			thenFacts = append(thenFacts, curStmt)
+		}
+
+		proofs := []ast.Stmt{}
+		err = tb.body[len(tb.body)-1].header.skipKwAndColonCheckEOL(glob.KeywordProve)
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
-		thenFacts = append(thenFacts, curStmt)
-	}
 
-	proofs := []ast.Stmt{}
-	err = tb.body[len(tb.body)-1].header.skipKwAndColonCheckEOL(glob.KeywordProve)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	for _, stmt := range tb.body[len(tb.body)-1].body {
-		curStmt, err := stmt.Stmt()
-		if err != nil {
-			return nil, tbErr(err, tb)
+		for _, stmt := range tb.body[len(tb.body)-1].body {
+			curStmt, err := stmt.Stmt()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			proofs = append(proofs, curStmt)
 		}
-		proofs = append(proofs, curStmt)
-	}
 
-	return ast.NewProveInRangeStmt(startAsInt, endAsInt, param, paramSet, thenFacts, proofs, tb.line), nil
+		return ast.NewProveInRangeStmt(startAsInt, endAsInt, param, paramSet, thenFacts, proofs, tb.line), nil
+	} else {
+		thenFacts := []ast.FactStmt{}
+		for i := range len(tb.body) {
+			curStmt, err := tb.body[i].factStmt(UniFactDepth0)
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			thenFacts = append(thenFacts, curStmt)
+		}
+
+		return ast.NewProveInRangeStmt(startAsInt, endAsInt, param, paramSet, thenFacts, nil, tb.line), nil
+	}
 }
 
 func (tb *tokenBlock) skipInt() (int64, error) {
