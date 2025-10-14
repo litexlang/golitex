@@ -380,10 +380,10 @@ func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 
 func (env *Env) storeSymbolValue(left, right ast.Fc) {
 	if cmp.IsNumLitFc(left) {
-		env.SymbolValueMem[right.String()] = right
+		env.SymbolValueMem[right.String()] = left
 	}
 	if cmp.IsNumLitFc(right) {
-		env.SymbolValueMem[left.String()] = left
+		env.SymbolValueMem[left.String()] = right
 	}
 }
 
