@@ -130,20 +130,12 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
 	}
 
 	if ok {
-		// if glob.RequireMsg() {
-		// 	exec.newMsg(fmt.Sprintf("%s\nis true\n", stmt))
-		// }
-
 		err := exec.env.NewFact(stmt)
 		if err != nil {
 			return glob.ExecStateError, err
 		}
 		return glob.ExecStateTrue, nil
 	} else {
-		// if glob.RequireMsg() {
-		// 	exec.newMsg(fmt.Sprintf("%s\nis unknown\n", stmt))
-		// }
-
 		return glob.ExecStateUnknown, nil
 	}
 }

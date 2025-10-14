@@ -48,6 +48,14 @@ func CmpBy_Literally_NumLit_PolynomialArith(left, right ast.Fc) (bool, string, e
 	return false, "", nil
 }
 
+func IsNumLitFc(fc ast.Fc) bool {
+	_, ok, err := ast.MakeFcIntoNumLitExpr(fc)
+	if err != nil {
+		return false
+	}
+	return ok
+}
+
 func NumLitEqual_ByEval(left, right ast.Fc) (bool, bool, error) {
 	leftAsNumLitExpr, ok, err := ast.MakeFcIntoNumLitExpr(left)
 	if err != nil {
