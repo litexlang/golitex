@@ -189,7 +189,7 @@ type IntensionalSetStmt struct {
 	CurSet    Fc
 	Param     string
 	ParentSet Fc
-	Proofs    SpecFactPtrSlice
+	Facts     SpecFactPtrSlice
 
 	Line uint
 }

@@ -550,7 +550,7 @@ func (s *IntensionalSetStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString(s.CurSet.ToLatexString())
 
-	builder.WriteString(intentionalSetOrIntensionalSetToLatexString(s.Param, s.ParentSet, s.Proofs))
+	builder.WriteString(intentionalSetOrIntensionalSetToLatexString(s.Param, s.ParentSet, s.Facts))
 
 	return builder.String()
 }
