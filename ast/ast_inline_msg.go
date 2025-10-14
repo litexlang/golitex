@@ -190,7 +190,7 @@ func (s *ClaimPropStmt) InlineString() string                 { panic("") }
 func (s *ClaimExistPropStmt) InlineString() string            { panic("") }
 
 // func (s *ProveByMathInductionStmt) InlineString() string        { panic("") }
-func (s *ProveOverFiniteSetStmt) InlineString() string          { panic("") }
+func (s *ProveByEnumStmt) InlineString() string                 { panic("") }
 func (s *HaveObjInNonEmptySetStmt) InlineString() string        { panic("") }
 func (s *HaveSetStmt) InlineString() string                     { panic("") }
 func (s *HaveSetFnStmt) InlineString() string                   { panic("") }

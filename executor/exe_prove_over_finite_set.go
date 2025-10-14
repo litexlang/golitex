@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) ProveOverFiniteSet(stmt *ast.ProveOverFiniteSetStmt) (glob.ExecState, error) {
+func (exec *Executor) proveByEnumMainLogic(stmt *ast.ProveByEnumStmt) (glob.ExecState, error) {
 	enums := [][]ast.Fc{}
 	for _, paramSet := range stmt.Fact.ParamSets {
 		enumFacts, ok := exec.env.GetEnumFact(paramSet.String())
@@ -52,7 +52,7 @@ func (exec *Executor) ProveOverFiniteSet(stmt *ast.ProveOverFiniteSetStmt) (glob
 	}
 }
 
-func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.ProveOverFiniteSetStmt, cartesianProductAtI []ast.Fc, i int) (bool, error) {
+func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.ProveByEnumStmt, cartesianProductAtI []ast.Fc, i int) (bool, error) {
 	exec.NewEnv(exec.env)
 	defer exec.deleteEnvAndRetainMsg()
 
@@ -129,7 +129,7 @@ func getParamEqualFcSlice(params []string, equalTo []ast.Fc) []ast.FactStmt {
 	return result
 }
 
-func (exec *Executor) verProveOverFiniteSet_NoProveSection(stmt *ast.ProveOverFiniteSetStmt, cartesianProductOfFcs [][]ast.Fc) (glob.ExecState, error) {
+func (exec *Executor) verProveOverFiniteSet_NoProveSection(stmt *ast.ProveByEnumStmt, cartesianProductOfFcs [][]ast.Fc) (glob.ExecState, error) {
 	for _, fcSlice := range cartesianProductOfFcs {
 		uniMap := map[string]ast.Fc{}
 		for i, param := range stmt.Fact.Params {

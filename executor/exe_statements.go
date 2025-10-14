@@ -60,8 +60,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, string, error) {
 		execState, err = exec.proveStmt(stmt)
 	case *ast.ClaimProveByContradictionStmt:
 		execState, err = exec.execClaimStmtProveByContradiction(stmt)
-	case *ast.ProveOverFiniteSetStmt:
-		execState, err = exec.proveOverFiniteSetStmt(stmt)
+	case *ast.ProveByEnumStmt:
+		execState, err = exec.proveByEnumStmt(stmt)
 	case *ast.HaveObjInNonEmptySetStmt:
 		execState, err = exec.haveObjInNonEmptySetStmt(stmt)
 	case *ast.HaveSetStmt:
@@ -415,19 +415,19 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 	return nil
 }
 
-func (exec *Executor) proveOverFiniteSetStmt(stmt *ast.ProveOverFiniteSetStmt) (glob.ExecState, error) {
+func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) (glob.ExecState, error) {
 	// exec.newMsg(stmt.String())
 
 	exec.NewEnv(exec.env)
 	defer exec.deleteEnvAndRetainMsg()
 
-	execState, err := exec.ProveOverFiniteSet(stmt)
+	execState, err := exec.proveByEnumMainLogic(stmt)
 	if notOkExec(execState, err) {
 		return execState, err
 	}
 
 	// know uniFact
-	err = exec.env.NewFact(&stmt.Fact)
+	err = exec.env.Parent.NewFact(&stmt.Fact)
 	if err != nil {
 		return glob.ExecStateError, err
 	}

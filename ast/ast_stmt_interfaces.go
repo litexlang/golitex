@@ -43,7 +43,7 @@ func (s *EnumStmt) stmt()                        {}
 func (s *IntensionalSetStmt) stmt()              {}
 func (s *ClaimPropStmt) stmt()                   {}
 func (s *ClaimExistPropStmt) stmt()              {}
-func (s *ProveOverFiniteSetStmt) stmt()          {}
+func (s *ProveByEnumStmt) stmt()                 {}
 func (s *HaveObjInNonEmptySetStmt) stmt()        {}
 func (s *HaveSetStmt) stmt()                     {}
 func (s *HaveSetFnStmt) stmt()                   {}
@@ -86,7 +86,7 @@ func (s *EnumStmt) GetLine() uint                        { return s.Line }
 func (s *IntensionalSetStmt) GetLine() uint              { return s.Line }
 func (s *ClaimPropStmt) GetLine() uint                   { return s.Line }
 func (s *ClaimExistPropStmt) GetLine() uint              { return s.Line }
-func (s *ProveOverFiniteSetStmt) GetLine() uint          { return s.Line }
+func (s *ProveByEnumStmt) GetLine() uint                 { return s.Line }
 func (s *HaveObjInNonEmptySetStmt) GetLine() uint        { return s.Line }
 func (s *HaveSetStmt) GetLine() uint                     { return s.Line }
 func (s *HaveSetFnStmt) GetLine() uint                   { return s.Line }
