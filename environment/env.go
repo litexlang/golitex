@@ -60,6 +60,7 @@ type Env struct {
 	EnumFacts              map[string][]ast.Fc
 	HaveSetFnDefMem        HaveSetFnDefMem
 	IntensionalSetMem      map[string]ast.IntensionalSetStmt
+	SymbolValueMem         map[string]ast.Fc
 }
 
 func (env *Env) GetUpMostEnv() *Env {
@@ -84,6 +85,7 @@ func NewEnv(parent *Env) *Env {
 		EnumFacts:              make(map[string][]ast.Fc),
 		HaveSetFnDefMem:        make(HaveSetFnDefMem),
 		IntensionalSetMem:      make(map[string]ast.IntensionalSetStmt),
+		SymbolValueMem:         make(map[string]ast.Fc),
 	}
 	return env
 }
