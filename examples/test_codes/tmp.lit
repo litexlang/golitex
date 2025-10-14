@@ -5,8 +5,7 @@ claim:
         =>:
             1 = 1
     prove:
-        prove_by_enum:
-            forall x s2:
-                x $in s
+        prove_by_enum(x s2):
+            x $in s
         prove_in_range(1, 10, x s):
             x $in s2

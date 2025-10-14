@@ -86,7 +86,7 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		}
 	case glob.KeywordProveInEachCase:
 		ret, err = tb.proveInEachCaseStmt()
-	case glob.KeywordProveOverFiniteSet:
+	case glob.KeywordProveByEnum:
 		ret, err = tb.proveOverFiniteSetStmt()
 	case glob.KeySymbolAt:
 		ret, err = tb.namedUniFactStmt()
@@ -1766,64 +1766,108 @@ func (tb *tokenBlock) enumStmt_or_intensionalSetStmt_or_DomOf(fc ast.Fc) (ast.En
 }
 
 func (tb *tokenBlock) proveOverFiniteSetStmt() (*ast.ProveOverFiniteSetStmt, error) {
-	err := tb.header.skipKwAndColonCheckEOL(glob.KeywordProveOverFiniteSet)
+	err := tb.header.skip(glob.KeywordProveByEnum)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
 
-	var uniFact ast.UniFactInterface
-	if tb.body[0].GetEnd() == glob.KeySymbolColon {
-		uniFact, err = tb.body[0].uniFactInterface(UniFactDepth0)
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	// param paramSet pairs
+	params, paramSets, err := tb.param_paramSet_paramInSetFacts(glob.KeySymbolRightBrace, false)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	if tb.body[len(tb.body)-1].header.is(glob.KeywordProve) {
+		panic("not implemented")
 	} else {
-		// uniFact, err = tb.body[0].inlineUniFact()
-		uniFact, err = tb.body[0].inlineUniInterfaceSkipTerminator()
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-	}
-
-	uniFactAsUniFactStmt, ok := uniFact.(*ast.UniFactStmt)
-	if !ok {
-		return nil, fmt.Errorf("expect universal fact without iff")
-	}
-
-	if len(uniFactAsUniFactStmt.DomFacts) != 0 {
-		// 必须全部是 reversible 的domFact 否则就报错。因为 在执行的时候，如果dom是真的，那就检查；如果dom是否的，那就跳过这次检查；不允许是unknown
-		for _, domFact := range uniFactAsUniFactStmt.DomFacts {
-			_, ok := domFact.(ast.Spec_OrFact)
-			if !ok {
-				return nil, fmt.Errorf("dom facts of universal fact must be reversible")
+		if tb.body[len(tb.body)-1].header.is(glob.KeySymbolEqualLarger) {
+			panic("not implemented")
+		} else {
+			thenFacts := []ast.FactStmt{}
+			for _, stmt := range tb.body {
+				thenFact, err := stmt.factStmt(UniFactDepth1)
+				if err != nil {
+					return nil, tbErr(err, tb)
+				}
+				thenFacts = append(thenFacts, thenFact)
 			}
+
+			uniFact := ast.NewUniFact(params, paramSets, []ast.FactStmt{}, thenFacts, tb.line)
+
+			return ast.NewProveOverFiniteSetStmt(uniFact, []ast.StmtSlice{}, tb.line), nil
 		}
 	}
-
-	if len(tb.body) == 1 {
-		return ast.NewProveOverFiniteSetStmt(uniFactAsUniFactStmt, []ast.StmtSlice{}, tb.line), nil
-	}
-
-	err = tb.body[1].header.skipKwAndColonCheckEOL(glob.KeywordProve)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	proofs := []ast.StmtSlice{}
-	for i := 1; i < len(tb.body); i++ {
-		curProof := ast.StmtSlice{}
-		for _, stmt := range tb.body[i].body {
-			curStmt, err := stmt.Stmt()
-			if err != nil {
-				return nil, tbErr(err, tb)
-			}
-			curProof = append(curProof, curStmt)
-		}
-		proofs = append(proofs, curProof)
-	}
-
-	return ast.NewProveOverFiniteSetStmt(uniFactAsUniFactStmt, proofs, tb.line), nil
 }
+
+// func (tb *tokenBlock) proveOverFiniteSetStmt() (*ast.ProveOverFiniteSetStmt, error) {
+// 	err := tb.header.skipKwAndColonCheckEOL(glob.KeywordProveOverFiniteSet)
+// 	if err != nil {
+// 		return nil, tbErr(err, tb)
+// 	}
+
+// 	var uniFact ast.UniFactInterface
+// 	if tb.body[0].GetEnd() == glob.KeySymbolColon {
+// 		uniFact, err = tb.body[0].uniFactInterface(UniFactDepth0)
+// 		if err != nil {
+// 			return nil, tbErr(err, tb)
+// 		}
+// 	} else {
+// 		// uniFact, err = tb.body[0].inlineUniFact()
+// 		uniFact, err = tb.body[0].inlineUniInterfaceSkipTerminator()
+// 		if err != nil {
+// 			return nil, tbErr(err, tb)
+// 		}
+// 	}
+
+// 	uniFactAsUniFactStmt, ok := uniFact.(*ast.UniFactStmt)
+// 	if !ok {
+// 		return nil, fmt.Errorf("expect universal fact without iff")
+// 	}
+
+// 	if len(uniFactAsUniFactStmt.DomFacts) != 0 {
+// 		// 必须全部是 reversible 的domFact 否则就报错。因为 在执行的时候，如果dom是真的，那就检查；如果dom是否的，那就跳过这次检查；不允许是unknown
+// 		for _, domFact := range uniFactAsUniFactStmt.DomFacts {
+// 			_, ok := domFact.(ast.Spec_OrFact)
+// 			if !ok {
+// 				return nil, fmt.Errorf("dom facts of universal fact must be reversible")
+// 			}
+// 		}
+// 	}
+
+// 	if len(tb.body) == 1 {
+// 		return ast.NewProveOverFiniteSetStmt(uniFactAsUniFactStmt, []ast.StmtSlice{}, tb.line), nil
+// 	}
+
+// 	err = tb.body[1].header.skipKwAndColonCheckEOL(glob.KeywordProve)
+// 	if err != nil {
+// 		return nil, tbErr(err, tb)
+// 	}
+
+// 	proofs := []ast.StmtSlice{}
+// 	for i := 1; i < len(tb.body); i++ {
+// 		curProof := ast.StmtSlice{}
+// 		for _, stmt := range tb.body[i].body {
+// 			curStmt, err := stmt.Stmt()
+// 			if err != nil {
+// 				return nil, tbErr(err, tb)
+// 			}
+// 			curProof = append(curProof, curStmt)
+// 		}
+// 		proofs = append(proofs, curProof)
+// 	}
+
+// 	return ast.NewProveOverFiniteSetStmt(uniFactAsUniFactStmt, proofs, tb.line), nil
+// }
 
 func (tb *tokenBlock) bodyOfKnowProp() ([]ast.FactStmt, []ast.FactStmt, error) {
 	var err error
