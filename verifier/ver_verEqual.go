@@ -26,6 +26,26 @@ import (
 func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, checkRequirements bool) (bool, error) {
 	var ok bool
 	var err error
+
+	replaced, newStmt := ver.env.ReplaceFcInEqualFact(stmt)
+	if replaced {
+		ok, err = ver.verTrueEqualFactMainLogic(newStmt, state, true)
+		if err != nil {
+			return false, err
+		}
+
+		if ok {
+			return true, nil
+		}
+	}
+
+	return ver.verTrueEqualFactMainLogic(stmt, state, checkRequirements)
+}
+
+func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *VerState, checkRequirements bool) (bool, error) {
+	var ok bool
+	var err error
+
 	if checkRequirements && !state.ReqOk {
 		// REMARK: 这里 state 更新了： ReqOk 更新到了 true
 		if ok, state, err = ver.checkSpecFactRequirements(stmt, state); err != nil {
