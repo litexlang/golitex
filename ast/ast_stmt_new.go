@@ -110,8 +110,8 @@ func NewIntensionalSetStmt(curSet Fc, param string, parentSet Fc, proofs []*Spec
 	return &IntensionalSetStmt{curSet, param, parentSet, proofs, line}
 }
 
-func NewProveOverFiniteSetStmt(fact *UniFactStmt, proofs []StmtSlice, line uint) *ProveOverFiniteSetStmt {
-	return &ProveOverFiniteSetStmt{*fact, proofs, line}
+func NewProveByEnumStmt(fact *UniFactStmt, proofs []Stmt, line uint) *ProveByEnumStmt {
+	return &ProveByEnumStmt{*fact, proofs, line}
 }
 
 func NewHaveObjInNonEmptySetStmt(objNames []string, objSets []Fc, line uint) *HaveObjInNonEmptySetStmt {
@@ -186,10 +186,14 @@ func NewMarkdownStmt(comment string, line uint) *MarkdownStmt {
 	return &MarkdownStmt{comment, line}
 }
 
-func NewProveInRangeStmt(start int64, end int64, param string, domFacts ReversibleFacts, thenFacts []FactStmt, proofs []Stmt, line uint) *ProveInRangeStmt {
-	return &ProveInRangeStmt{start, end, param, domFacts, thenFacts, proofs, line}
+func NewProveInRange2Stmt(start int64, end int64, param string, domFacts ReversibleFacts, thenFacts []FactStmt, proofs []Stmt, line uint) *ProveInRange2tmt {
+	return &ProveInRange2tmt{start, end, param, domFacts, thenFacts, proofs, line}
 }
 
 func NewClaimIffStmt(uniFactWithIffStmt *UniFactWithIffStmt, proofs []Stmt, proofs2 []Stmt, line uint) *ClaimIffStmt {
 	return &ClaimIffStmt{*uniFactWithIffStmt, proofs, proofs2, line}
+}
+
+func NewProveInRangeStmt(start int64, end int64, param string, intensionalSet Fc, thenFacts []FactStmt, proofs []Stmt, line uint) *ProveInRangeStmt {
+	return &ProveInRangeStmt{start, end, param, intensionalSet, thenFacts, proofs, line}
 }

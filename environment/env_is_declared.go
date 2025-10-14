@@ -83,26 +83,57 @@ func (e *Env) AreAtomsInFcAreDeclared(fc ast.Fc, extraAtomNames map[string]struc
 
 // TODO 来自上层的时候，有时候如果fact是uniFact，那传来的extraAtomNames里已经有uniParam了，这其实是浪费计算了
 func (e *Env) AreAtomsInFactAreDeclared(fact ast.FactStmt, extraAtomNames map[string]struct{}) bool {
-	atoms := fact.GetAtoms()
-
 	switch asStmt := fact.(type) {
 	case *ast.UniFactStmt:
 		for _, param := range asStmt.Params {
 			extraAtomNames[param] = struct{}{}
 		}
+		for _, dom := range asStmt.DomFacts {
+			ok := e.AreAtomsInFactAreDeclared(dom, extraAtomNames)
+			if !ok {
+				return false
+			}
+		}
+		for _, then := range asStmt.ThenFacts {
+			ok := e.AreAtomsInFactAreDeclared(then, extraAtomNames)
+			if !ok {
+				return false
+			}
+		}
+		return true
 	case *ast.UniFactWithIffStmt:
 		for _, param := range asStmt.UniFact.Params {
 			extraAtomNames[param] = struct{}{}
 		}
-	case *ast.IntensionalSetStmt:
-		extraAtomNames[asStmt.Param] = struct{}{}
-	}
+		for _, dom := range asStmt.UniFact.DomFacts {
+			ok := e.AreAtomsInFactAreDeclared(dom, extraAtomNames)
+			if !ok {
+				return false
+			}
+		}
 
-	ok := e.AreAtomsDeclared(atoms, extraAtomNames)
-	if !ok {
-		return false
+		for _, then := range asStmt.UniFact.ThenFacts {
+			ok := e.AreAtomsInFactAreDeclared(then, extraAtomNames)
+			if !ok {
+				return false
+			}
+		}
+
+		for _, iff := range asStmt.IffFacts {
+			ok := e.AreAtomsInFactAreDeclared(iff, extraAtomNames)
+			if !ok {
+				return false
+			}
+		}
+		return true
+	case *ast.IntensionalSetStmt:
+		atoms := fact.GetAtoms()
+		extraAtomNames[asStmt.Param] = struct{}{}
+		return e.AreAtomsDeclared(atoms, extraAtomNames)
+	default:
+		atoms := fact.GetAtoms()
+		return e.AreAtomsDeclared(atoms, extraAtomNames)
 	}
-	return ok
 }
 
 func (e *Env) AreAtomsDeclared(atoms []ast.FcAtom, extraAtomNames map[string]struct{}) bool {

@@ -18,27 +18,11 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
-	"strconv"
 )
 
-func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) (glob.ExecState, error) {
-	intensionalSetGivenSetIsIn, ok := exec.env.GetIntensionalSet(stmt.IntensionalSet)
-	if !ok {
-		return glob.ExecStateError, fmt.Errorf("intensional set %s not found", stmt.IntensionalSet)
-	}
-
-	startStr := strconv.FormatInt(stmt.Start, 10)
-	endStr := strconv.FormatInt(stmt.End, 10)
-
-	forallXInIntensionalSetTheyAreFromStartToEnd := ast.NewUniFact([]string{stmt.Param}, []ast.Fc{stmt.IntensionalSet}, []ast.FactStmt{}, []ast.FactStmt{ast.NewInFact(stmt.Param, ast.FcAtom(glob.KeywordInteger)), ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolLessEqual), []ast.Fc{ast.FcAtom(startStr), ast.FcAtom(stmt.Param)}, stmt.Line), ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolLess), []ast.Fc{ast.FcAtom(stmt.Param), ast.FcAtom(endStr)}, stmt.Line)}, stmt.Line)
-
-	state, err := exec.factStmt(forallXInIntensionalSetTheyAreFromStartToEnd)
-	if notOkExec(state, err) {
-		return state, err
-	}
-
+func (exec *Executor) proveInRangeStmt2(stmt *ast.ProveInRange2tmt) (glob.ExecState, error) {
 	for i := stmt.Start; i < stmt.End; i++ {
-		_, msg, err := exec.proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsIn, stmt, i)
+		_, msg, err := exec.proveInRangeStmtWhenParamIsIndex2(stmt, i)
 		if err != nil {
 			if msg != "" {
 				exec.newMsg(msg)
@@ -48,7 +32,7 @@ func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) (glob.ExecSta
 	}
 
 	uniFact := stmt.UniFact()
-	err = exec.env.NewFact(uniFact)
+	err := exec.env.NewFact(uniFact)
 	if err != nil {
 		return glob.ExecStateError, err
 	}
@@ -56,7 +40,7 @@ func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) (glob.ExecSta
 	return glob.ExecStateTrue, nil
 }
 
-func (exec *Executor) proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsIn *ast.IntensionalSetStmt, stmt *ast.ProveInRangeStmt, i int64) (bool, string, error) {
+func (exec *Executor) proveInRangeStmtWhenParamIsIndex2(stmt *ast.ProveInRange2tmt, i int64) (bool, string, error) {
 	indexAsFc := ast.FcAtom(fmt.Sprintf("%d", i))
 	uniMap := map[string]ast.Fc{stmt.Param: indexAsFc}
 	exec.NewEnv(exec.env)
@@ -68,7 +52,7 @@ func (exec *Executor) proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsI
 		return false, "", err
 	}
 
-	for _, domFact := range intensionalSetGivenSetIsIn.Proofs {
+	for _, domFact := range stmt.DomFacts {
 		instDomFact, err := domFact.Instantiate(uniMap)
 		if err != nil {
 			return false, "", err
