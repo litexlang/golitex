@@ -500,6 +500,8 @@ func (env *Env) newIntensionalSetFact(stmt *ast.IntensionalSetStmt) error {
 		return err
 	}
 
+	env.IntensionalSetMem[stmt.CurSet.String()] = *stmt
+
 	return nil
 }
 

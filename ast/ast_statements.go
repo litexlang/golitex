@@ -195,9 +195,9 @@ type IntensionalSetStmt struct {
 }
 
 // 某种程度上这个关键词是不必要的，因为如果我发现涉及到的uniFact里面的所有的 paramSet 都是有 enum 的，那我就默认迭代去证明这个forall。但是我还是引入这个关键词以突出我现在用的是iterative的情况
-type ProveOverFiniteSetStmt struct {
-	Fact        UniFactStmt
-	ProofsSlice []StmtSlice
+type ProveByEnumStmt struct {
+	Fact  UniFactStmt
+	Proof []Stmt
 
 	Line uint
 }
@@ -336,13 +336,24 @@ type MarkdownStmt struct {
 	Line uint
 }
 
-type ProveInRangeStmt struct {
+type ProveInRange2tmt struct {
 	Start     int64
 	End       int64
 	Param     string
 	DomFacts  ReversibleFacts
 	ThenFacts FactStmtSlice
 	Proofs    StmtSlice
+
+	Line uint
+}
+
+type ProveInRangeStmt struct {
+	Start          int64
+	End            int64
+	Param          string
+	IntensionalSet Fc
+	ThenFacts      FactStmtSlice
+	Proofs         StmtSlice
 
 	Line uint
 }

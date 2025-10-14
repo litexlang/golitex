@@ -580,7 +580,7 @@ func (s *ClaimExistPropStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (s *ProveOverFiniteSetStmt) ToLatexString() string {
+func (s *ProveByEnumStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("\\begin{proveOverFiniteSet}\n")
 	builder.WriteString("We prove that by iterating over the elements of the finite set(s): ")
@@ -591,11 +591,9 @@ func (s *ProveOverFiniteSetStmt) ToLatexString() string {
 
 	builder.WriteString("\\begin{proof}\n")
 
-	proofStrSlice := make([]string, len(s.ProofsSlice))
-	for i := range len(s.ProofsSlice) {
-		for j := range s.ProofsSlice[i] {
-			proofStrSlice[i] += s.ProofsSlice[i][j].ToLatexString() + "\n"
-		}
+	proofStrSlice := make([]string, len(s.Proof))
+	for i := range len(s.Proof) {
+		proofStrSlice[i] = s.Proof[i].ToLatexString()
 	}
 
 	if ShouldInSingleLineAsLatexString(proofStrSlice) {
@@ -869,10 +867,14 @@ func (s *MarkdownStmt) ToLatexString() string {
 	return s.Markdown
 }
 
-func (s *ProveInRangeStmt) ToLatexString() string {
+func (s *ProveInRange2tmt) ToLatexString() string {
 	return "TODO"
 }
 
 func (s *ClaimIffStmt) ToLatexString() string {
 	return s.String()
+}
+
+func (s *ProveInRangeStmt) ToLatexString() string {
+	return "TODO"
 }

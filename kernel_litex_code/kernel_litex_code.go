@@ -512,4 +512,14 @@ fn range(x Z, y Z) set:
 			i < y
 			=>:
 				i $in range(x, y)
+
+know:
+	forall x, y set:
+		=>:
+			x = y
+		<=>:
+			forall t x:
+				t $in y
+			forall t y:
+				t $in x
 `

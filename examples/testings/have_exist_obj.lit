@@ -56,8 +56,7 @@ prove:
 
 prove:
     have set s := {1, 2, 3}
-    have set s2 := x N:
-        x > 5
+    have set s2 := {x N: x > 5}
 
     s := {3, 2, 1}
 
@@ -92,9 +91,9 @@ prove:
     b $in s
 
 # have set fn
+"""
 prove:
-    have set fn exclude(s1, s2 set) := x s1:
-        not x $in s2
+    have set fn exclude(s1, s2 set) := {x s1: not x $in s2}
 
     forall s1, s2 set:
         exclude(s1, s2) $in set
@@ -102,3 +101,4 @@ prove:
     forall s1, s2 set, x exclude(s1, s2):
         x $in s1
         not x $in s2
+"""
