@@ -110,7 +110,7 @@ func NewIntensionalSetStmt(curSet Fc, param string, parentSet Fc, proofs []*Spec
 	return &IntensionalSetStmt{curSet, param, parentSet, proofs, line}
 }
 
-func NewProveByEnumStmt(fact *UniFactStmt, proofs []StmtSlice, line uint) *ProveByEnumStmt {
+func NewProveByEnumStmt(fact *UniFactStmt, proofs []Stmt, line uint) *ProveByEnumStmt {
 	return &ProveByEnumStmt{*fact, proofs, line}
 }
 
