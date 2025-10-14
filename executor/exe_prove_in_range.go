@@ -97,7 +97,7 @@ func (exec *Executor) proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsI
 		return false, "", fmt.Errorf("index in param set fact must be proved to be true or false, can not be unknown: %s", instIndexInParamSetFact.String())
 	}
 
-	for _, domFact := range intensionalSetGivenSetIsIn.Proofs {
+	for _, domFact := range intensionalSetGivenSetIsIn.Facts {
 		instDomFact, err := domFact.Instantiate(uniMap)
 		if err != nil {
 			return false, "", err
@@ -153,6 +153,19 @@ func (exec *Executor) proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsI
 			if execState != glob.ExecStateTrue {
 				return false, "", fmt.Errorf("proof in prove_in_range must be proved to be true or false, can not be unknown: %s", curStmtAsFact.String())
 			}
+		}
+	}
+
+	// 满足 then
+	for _, thenFact := range stmt.ThenFacts {
+		instThenFact, err := thenFact.Instantiate(uniMap)
+		if err != nil {
+			return false, "", err
+		}
+
+		execState, err := exec.factStmt(instThenFact)
+		if notOkExec(execState, err) {
+			return false, "", fmt.Errorf("then fact in prove_in_range must be proved to be true or false, can not be unknown: %s", instThenFact.String())
 		}
 	}
 

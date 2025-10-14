@@ -644,9 +644,9 @@ func (stmt *IntensionalSetStmt) String() string {
 	builder.WriteString(stmt.ParentSet.String())
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeySymbolColon)
-	proofStrSlice := make([]string, len(stmt.Proofs))
-	for i := range len(stmt.Proofs) {
-		proofStrSlice[i] = stmt.Proofs[i].InlineString()
+	proofStrSlice := make([]string, len(stmt.Facts))
+	for i := range len(stmt.Facts) {
+		proofStrSlice[i] = stmt.Facts[i].InlineString()
 	}
 	builder.WriteString(strings.Join(proofStrSlice, ", "))
 	builder.WriteString(glob.KeySymbolRightCurly)
