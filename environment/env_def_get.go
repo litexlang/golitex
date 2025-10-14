@@ -86,3 +86,13 @@ func (e *Env) GetIntensionalSet(fc ast.Fc) (*ast.IntensionalSetStmt, bool) {
 	}
 	return nil, false
 }
+
+func (e *Env) GetSymbolValue(fc ast.Fc) (ast.Fc, bool) {
+	for env := e; env != nil; env = env.Parent {
+		symbolValue, ok := env.SymbolValueMem[fc.String()]
+		if ok {
+			return symbolValue, true
+		}
+	}
+	return nil, false
+}

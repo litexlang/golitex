@@ -644,9 +644,9 @@ func (stmt *IntensionalSetStmt) String() string {
 	builder.WriteString(stmt.ParentSet.String())
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeySymbolColon)
-	proofStrSlice := make([]string, len(stmt.Proofs))
-	for i := range len(stmt.Proofs) {
-		proofStrSlice[i] = stmt.Proofs[i].InlineString()
+	proofStrSlice := make([]string, len(stmt.Facts))
+	for i := range len(stmt.Facts) {
+		proofStrSlice[i] = stmt.Facts[i].InlineString()
 	}
 	builder.WriteString(strings.Join(proofStrSlice, ", "))
 	builder.WriteString(glob.KeySymbolRightCurly)
@@ -985,5 +985,31 @@ func (stmt *ClaimIffStmt) String() string {
 }
 
 func (stmt *ProveInRangeStmt) String() string {
-	return "TODO"
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordProveInRange)
+	builder.WriteString("(")
+	builder.WriteString(fmt.Sprintf("%d", stmt.Start))
+	builder.WriteString(", ")
+	builder.WriteString(fmt.Sprintf("%d", stmt.End))
+	builder.WriteString(", ")
+	builder.WriteString(stmt.Param)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.IntensionalSet.String())
+	builder.WriteString(")")
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+	for _, fact := range stmt.ThenFacts {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 1))
+		builder.WriteByte('\n')
+	}
+	if len(stmt.Proofs) > 0 {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve, 1))
+		builder.WriteString(glob.KeySymbolColon)
+		builder.WriteByte('\n')
+		for _, proof := range stmt.Proofs {
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 2))
+			builder.WriteByte('\n')
+		}
+	}
+	return builder.String()
 }
