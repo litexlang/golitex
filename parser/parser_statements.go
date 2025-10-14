@@ -86,8 +86,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		}
 	case glob.KeywordProveInEachCase:
 		ret, err = tb.proveInEachCaseStmt()
-	case glob.KeywordProveOverFiniteSet:
-		ret, err = tb.proveOverFiniteSetStmt()
+	case glob.KeywordProveByEnum:
+		ret, err = tb.proveByEnum()
 	case glob.KeySymbolAt:
 		ret, err = tb.namedUniFactStmt()
 	case glob.LatexSig,
@@ -102,6 +102,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.clearStmt()
 	case glob.KeywordProveByInduction:
 		ret, err = tb.proveByInductionStmt()
+	case glob.KeywordProveInRange2:
+		ret, err = tb.proveInRangeStmt2()
 	case glob.KeywordProveInRange:
 		ret, err = tb.proveInRangeStmt()
 	default:
@@ -146,30 +148,6 @@ func (tb *tokenBlock) factStmt(uniFactDepth uniFactEnum) (ast.FactStmt, error) {
 		return tb.fact()
 	}
 
-}
-
-func (tb *tokenBlock) enumFactualStmt(setName ast.Fc) (*ast.EnumStmt, error) {
-	// skip colon and get end
-	err := tb.header.skip(glob.KeySymbolLeftCurly)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	enumFcs := []ast.Fc{}
-	for !tb.CurrentTokenIs(glob.KeySymbolRightCurly) {
-		fc, err := tb.RawFc()
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-		enumFcs = append(enumFcs, fc)
-		tb.header.skipIfIs(glob.KeySymbolComma)
-	}
-	err = tb.header.skip(glob.KeySymbolRightCurly)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	return ast.NewEnumStmt(setName, enumFcs, tb.line), nil
 }
 
 func (tb *tokenBlock) orStmt() (*ast.OrStmt, error) {
@@ -1511,6 +1489,11 @@ func (tb *tokenBlock) dom_and_section(kw string, kw_should_not_exist_in_body str
 }
 
 func (tb *tokenBlock) intentionalSetBody() (string, ast.Fc, []*ast.SpecFactStmt, error) {
+	err := tb.header.skip(glob.KeySymbolLeftCurly)
+	if err != nil {
+		return "", nil, nil, tbErr(err, tb)
+	}
+
 	param, err := tb.header.next()
 	if err != nil {
 		return "", nil, nil, tbErr(err, tb)
@@ -1526,29 +1509,22 @@ func (tb *tokenBlock) intentionalSetBody() (string, ast.Fc, []*ast.SpecFactStmt,
 		return "", nil, nil, tbErr(err, tb)
 	}
 
-	if !tb.header.ExceedEnd() {
-		return "", nil, nil, fmt.Errorf("expect end of line")
-	}
-
 	proofs := []*ast.SpecFactStmt{}
-	for _, stmt := range tb.body {
-		curStmt, err := stmt.specFactStmt()
+	for !tb.header.is(glob.KeySymbolRightCurly) {
+		curStmt, err := tb.specFactStmt()
 		if err != nil {
 			return "", nil, nil, tbErr(err, tb)
 		}
 		proofs = append(proofs, curStmt)
+		tb.header.skipIfIs(glob.KeySymbolComma)
+	}
+
+	err = tb.header.skip(glob.KeySymbolRightCurly)
+	if err != nil {
+		return "", nil, nil, tbErr(err, tb)
 	}
 
 	return param, parentSet, proofs, nil
-}
-
-func (tb *tokenBlock) intensionalSetFactualStmt(curSet ast.Fc) (*ast.IntensionalSetStmt, error) {
-	param, parentSet, proofs, err := tb.intentionalSetBody()
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	return ast.NewIntensionalSetStmt(curSet, param, parentSet, proofs, tb.line), nil
 }
 
 func (tb *tokenBlock) fact() (ast.FactStmt, error) {
@@ -1643,71 +1619,140 @@ func (tb *tokenBlock) relaFact_intensionalSetFact_enumStmt_equals() (ast.FactStm
 }
 
 func (tb *tokenBlock) enumStmt_or_intensionalSetStmt_or_DomOf(fc ast.Fc) (ast.EnumSet_IntensionalSet_EqualDom, error) {
-	if tb.header.is(glob.KeySymbolLeftCurly) {
-		return tb.enumFactualStmt(fc)
+	// if tb.header.is(glob.KeySymbolLeftCurly) {
+	// 	return tb.enumFactualStmt(fc)
+	// } else {
+	// 	return tb.intensionalSetFactualStmt(fc)
+	// }
+
+	err := tb.header.skip(glob.KeySymbolLeftCurly)
+	if err != nil {
+		return nil, fmt.Errorf("")
+	}
+
+	if tb.header.is(glob.KeySymbolRightCurly) {
+		err = tb.header.skip(glob.KeySymbolRightCurly)
+		if err != nil {
+			return nil, fmt.Errorf("")
+		}
+
+		return ast.NewEnumStmt(fc, []ast.Fc{}, tb.line), nil
+	}
+
+	leftmost, err := tb.RawFc()
+	if err != nil {
+		return nil, fmt.Errorf("")
+	}
+
+	if tb.header.is(glob.KeySymbolComma) {
+		enumItems := []ast.Fc{leftmost}
+		tb.header.skip(glob.KeySymbolComma)
+		for !tb.header.is(glob.KeySymbolRightCurly) {
+			curItem, err := tb.RawFc()
+			if err != nil {
+				return nil, fmt.Errorf("")
+			}
+			enumItems = append(enumItems, curItem)
+			tb.header.skipIfIs(glob.KeySymbolComma)
+		}
+
+		err = tb.header.skip(glob.KeySymbolRightCurly)
+		if err != nil {
+			return nil, fmt.Errorf("")
+		}
+
+		return ast.NewEnumStmt(fc, enumItems, tb.line), nil
 	} else {
-		return tb.intensionalSetFactualStmt(fc)
+		if _, ok := leftmost.(ast.FcAtom); !ok {
+			return nil, fmt.Errorf("expect fc atom")
+		} else {
+			if leftmost.(ast.FcAtom).HasPkgName() {
+				return nil, fmt.Errorf("expect fc atom without pkg name")
+			}
+		}
+
+		parentSet, err := tb.RawFc()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		err = tb.header.skip(glob.KeySymbolColon)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		proofs := []*ast.SpecFactStmt{}
+		for !tb.header.is(glob.KeySymbolRightCurly) {
+			curStmt, err := tb.specFactStmt()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			proofs = append(proofs, curStmt)
+			tb.header.skipIfIs(glob.KeySymbolComma)
+		}
+
+		err = tb.header.skip(glob.KeySymbolRightCurly)
+		if err != nil {
+			return nil, fmt.Errorf("")
+		}
+
+		return ast.NewIntensionalSetStmt(fc, string(leftmost.(ast.FcAtom)), parentSet, proofs, tb.line), nil
 	}
 }
 
-func (tb *tokenBlock) proveOverFiniteSetStmt() (*ast.ProveOverFiniteSetStmt, error) {
-	err := tb.header.skipKwAndColonCheckEOL(glob.KeywordProveOverFiniteSet)
+func (tb *tokenBlock) proveByEnum() (*ast.ProveByEnumStmt, error) {
+	err := tb.header.skip(glob.KeywordProveByEnum)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
 
-	var uniFact ast.UniFactInterface
-	if tb.body[0].GetEnd() == glob.KeySymbolColon {
-		uniFact, err = tb.body[0].uniFactInterface(UniFactDepth0)
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-	} else {
-		// uniFact, err = tb.body[0].inlineUniFact()
-		uniFact, err = tb.body[0].inlineUniInterfaceSkipTerminator()
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-	}
-
-	uniFactAsUniFactStmt, ok := uniFact.(*ast.UniFactStmt)
-	if !ok {
-		return nil, fmt.Errorf("expect universal fact without iff")
-	}
-
-	if len(uniFactAsUniFactStmt.DomFacts) != 0 {
-		// 必须全部是 reversible 的domFact 否则就报错。因为 在执行的时候，如果dom是真的，那就检查；如果dom是否的，那就跳过这次检查；不允许是unknown
-		for _, domFact := range uniFactAsUniFactStmt.DomFacts {
-			_, ok := domFact.(ast.Spec_OrFact)
-			if !ok {
-				return nil, fmt.Errorf("dom facts of universal fact must be reversible")
-			}
-		}
-	}
-
-	if len(tb.body) == 1 {
-		return ast.NewProveOverFiniteSetStmt(uniFactAsUniFactStmt, []ast.StmtSlice{}, tb.line), nil
-	}
-
-	err = tb.body[1].header.skipKwAndColonCheckEOL(glob.KeywordProve)
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
 
-	proofs := []ast.StmtSlice{}
-	for i := 1; i < len(tb.body); i++ {
-		curProof := ast.StmtSlice{}
-		for _, stmt := range tb.body[i].body {
+	// param paramSet pairs
+	params, paramSets, err := tb.param_paramSet_paramInSetFacts(glob.KeySymbolRightBrace, false)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	if tb.body[len(tb.body)-1].header.is(glob.KeywordProve) {
+		domFacts, thenFacts, err := parseDomThenOfProveByEnum(tb.body[:len(tb.body)-1])
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		err = tb.body[len(tb.body)-1].header.skipKwAndColonCheckEOL(glob.KeywordProve)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		proofs := []ast.Stmt{}
+		for _, stmt := range tb.body[len(tb.body)-1].body {
 			curStmt, err := stmt.Stmt()
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}
-			curProof = append(curProof, curStmt)
+			proofs = append(proofs, curStmt)
 		}
-		proofs = append(proofs, curProof)
-	}
 
-	return ast.NewProveOverFiniteSetStmt(uniFactAsUniFactStmt, proofs, tb.line), nil
+		uniFact := ast.NewUniFact(params, paramSets, domFacts, thenFacts, tb.line)
+		return ast.NewProveByEnumStmt(uniFact, proofs, tb.line), nil
+	} else {
+		domFacts, thenFacts, err := parseDomThenOfProveByEnum(tb.body)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		uniFact := ast.NewUniFact(params, paramSets, domFacts, thenFacts, tb.line)
+		return ast.NewProveByEnumStmt(uniFact, []ast.Stmt{}, tb.line), nil
+	}
 }
 
 func (tb *tokenBlock) bodyOfKnowProp() ([]ast.FactStmt, []ast.FactStmt, error) {
@@ -2562,8 +2607,8 @@ func (tb *tokenBlock) atExistPropDefStmt() (*ast.DefExistPropStmt, error) {
 	return ast.NewDefExistPropStmt(ast.NewExistPropDef(header, []ast.FactStmt{}, iffFacts, thenFacts, tb.line), existParams, existParamSets, tb.line), nil
 }
 
-func (tb *tokenBlock) proveInRangeStmt() (*ast.ProveInRangeStmt, error) {
-	err := tb.header.skip(glob.KeywordProveInRange)
+func (tb *tokenBlock) proveInRangeStmt2() (ast.Stmt, error) {
+	err := tb.header.skip(glob.KeywordProveInRange2)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -2704,5 +2749,143 @@ func (tb *tokenBlock) proveInRangeStmt() (*ast.ProveInRangeStmt, error) {
 		reversibleDomFacts = append(reversibleDomFacts, reversibleFact)
 	}
 
-	return ast.NewProveInRangeStmt(startAsInt, endAsInt, param, reversibleDomFacts, thenFacts, proofs, tb.line), nil
+	return ast.NewProveInRange2Stmt(startAsInt, endAsInt, param, reversibleDomFacts, thenFacts, proofs, tb.line), nil
+
+}
+
+// parse prove_in_range(start, end, x S): then_fact prove:
+func (tb *tokenBlock) proveInRangeStmt() (ast.Stmt, error) {
+	err := tb.header.skip(glob.KeywordProveInRange)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	startAsInt, err := tb.skipInt()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolComma)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	endAsInt, err := tb.skipInt()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolComma)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	param, err := tb.header.next()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	paramSet, err := tb.RawFc()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolRightBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	if tb.body[len(tb.body)-1].header.is(glob.KeywordProve) {
+		thenFacts := []ast.FactStmt{}
+		for i := range len(tb.body) {
+			curStmt, err := tb.body[i].factStmt(UniFactDepth1)
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			thenFacts = append(thenFacts, curStmt)
+		}
+
+		proofs := []ast.Stmt{}
+		err = tb.body[len(tb.body)-1].header.skipKwAndColonCheckEOL(glob.KeywordProve)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		for _, stmt := range tb.body[len(tb.body)-1].body {
+			curStmt, err := stmt.Stmt()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			proofs = append(proofs, curStmt)
+		}
+
+		return ast.NewProveInRangeStmt(startAsInt, endAsInt, param, paramSet, thenFacts, proofs, tb.line), nil
+	} else {
+		thenFacts := []ast.FactStmt{}
+		for i := range len(tb.body) {
+			curStmt, err := tb.body[i].factStmt(UniFactDepth0)
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			thenFacts = append(thenFacts, curStmt)
+		}
+
+		return ast.NewProveInRangeStmt(startAsInt, endAsInt, param, paramSet, thenFacts, nil, tb.line), nil
+	}
+}
+
+func (tb *tokenBlock) skipInt() (int64, error) {
+	intStr, err := tb.header.next()
+	if err != nil {
+		return 0, err
+	}
+	return strconv.ParseInt(intStr, 10, 64)
+}
+
+func parseDomThenOfProveByEnum(tbSlice []tokenBlock) ([]ast.FactStmt, []ast.FactStmt, error) {
+	domFacts := []ast.FactStmt{}
+	thenFacts := []ast.FactStmt{}
+
+	if tbSlice[len(tbSlice)-1].header.is(glob.KeySymbolEqualLarger) {
+		for i := range len(tbSlice) - 1 {
+			curStmt, err := tbSlice[i].factStmt(UniFactDepth1)
+			if err != nil {
+				return nil, nil, tbErr(err, &tbSlice[i])
+			}
+			domFacts = append(domFacts, curStmt)
+		}
+
+		err := tbSlice[len(tbSlice)-1].header.skipKwAndColonCheckEOL(glob.KeySymbolEqualLarger)
+		if err != nil {
+			return nil, nil, tbErr(err, &tbSlice[len(tbSlice)-1])
+		}
+
+		for i := range len(tbSlice[len(tbSlice)-1].body) {
+			curStmt, err := tbSlice[len(tbSlice)-1].body[i].factStmt(UniFactDepth1)
+			if err != nil {
+				return nil, nil, tbErr(err, &tbSlice[len(tbSlice)-1])
+			}
+			thenFacts = append(thenFacts, curStmt)
+		}
+	} else {
+		for i := range len(tbSlice) {
+			curStmt, err := tbSlice[i].factStmt(UniFactDepth1)
+			if err != nil {
+				return nil, nil, tbErr(err, &tbSlice[i])
+			}
+			thenFacts = append(thenFacts, curStmt)
+		}
+	}
+
+	return domFacts, thenFacts, nil
 }

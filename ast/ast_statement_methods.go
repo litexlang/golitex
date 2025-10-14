@@ -354,3 +354,7 @@ func (stmt *HaveSetFnStmt) ToIntensionalSetStmt() *IntensionalSetStmt {
 
 	return intensionalSetStmt
 }
+
+func (stmt *ProveInRangeStmt) UniFact() *UniFactStmt {
+	return NewUniFact([]string{stmt.Param}, []Fc{stmt.IntensionalSet}, []FactStmt{}, stmt.ThenFacts, stmt.Line)
+}

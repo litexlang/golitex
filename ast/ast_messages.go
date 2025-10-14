@@ -638,37 +638,37 @@ func (stmt *IntensionalSetStmt) String() string {
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeySymbolColonEqual)
 	builder.WriteString(" ")
+	builder.WriteString(glob.KeySymbolLeftCurly)
 	builder.WriteString(stmt.Param)
 	builder.WriteString(" ")
 	builder.WriteString(stmt.ParentSet.String())
+	builder.WriteString(" ")
 	builder.WriteString(glob.KeySymbolColon)
-	builder.WriteByte('\n')
 	proofStrSlice := make([]string, len(stmt.Proofs))
-	for i, proof := range stmt.Proofs {
-		proofStrSlice[i] = glob.SplitLinesAndAdd4NIndents(proof.String(), 1)
+	for i := range len(stmt.Proofs) {
+		proofStrSlice[i] = stmt.Proofs[i].InlineString()
 	}
-	builder.WriteString(strings.Join(proofStrSlice, "\n"))
+	builder.WriteString(strings.Join(proofStrSlice, ", "))
+	builder.WriteString(glob.KeySymbolRightCurly)
 	return builder.String()
 }
 
-func (stmt *ProveOverFiniteSetStmt) String() string {
+func (stmt *ProveByEnumStmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordProveOverFiniteSet)
+	builder.WriteString(glob.KeywordProveByEnum)
 	builder.WriteString(glob.KeySymbolColon)
 	builder.WriteByte('\n')
 	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Fact.String(), 1))
 	builder.WriteByte('\n')
-	if len(stmt.ProofsSlice) > 0 {
+	if len(stmt.Proof) > 0 {
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve, 1))
 		builder.WriteString(glob.KeySymbolColon)
 		builder.WriteByte('\n')
 
-		proofStrSlice := make([]string, len(stmt.ProofsSlice))
-		for i, proof := range stmt.ProofsSlice {
-			for j := range proof {
-				proofStrSlice[i] += glob.SplitLinesAndAdd4NIndents(proof[j].String(), 2)
-				proofStrSlice[i] += "\n"
-			}
+		proofStrSlice := make([]string, len(stmt.Proof))
+		for i, proof := range stmt.Proof {
+			proofStrSlice[i] += glob.SplitLinesAndAdd4NIndents(proof.String(), 2)
+			proofStrSlice[i] += "\n"
 		}
 		builder.WriteString(strings.Join(proofStrSlice, "\n"))
 	}
@@ -918,9 +918,9 @@ func (stmt *MarkdownStmt) String() string {
 	return stmt.Markdown
 }
 
-func (stmt *ProveInRangeStmt) String() string {
+func (stmt *ProveInRange2tmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordProveInRange)
+	builder.WriteString(glob.KeywordProveInRange2)
 	builder.WriteString("(")
 	builder.WriteString(fmt.Sprintf("%d", stmt.Start))
 	builder.WriteString(", ")
@@ -982,4 +982,8 @@ func (stmt *ClaimIffStmt) String() string {
 		builder.WriteByte('\n')
 	}
 	return builder.String()
+}
+
+func (stmt *ProveInRangeStmt) String() string {
+	return "TODO"
 }

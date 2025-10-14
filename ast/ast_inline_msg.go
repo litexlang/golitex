@@ -190,7 +190,7 @@ func (s *ClaimPropStmt) InlineString() string                 { panic("") }
 func (s *ClaimExistPropStmt) InlineString() string            { panic("") }
 
 // func (s *ProveByMathInductionStmt) InlineString() string        { panic("") }
-func (s *ProveOverFiniteSetStmt) InlineString() string          { panic("") }
+func (s *ProveByEnumStmt) InlineString() string                 { panic("") }
 func (s *HaveObjInNonEmptySetStmt) InlineString() string        { panic("") }
 func (s *HaveSetStmt) InlineString() string                     { panic("") }
 func (s *HaveSetFnStmt) InlineString() string                   { panic("") }
@@ -318,10 +318,14 @@ func (s *MarkdownStmt) InlineString() string {
 	return s.Markdown
 }
 
-func (s *ProveInRangeStmt) InlineString() string {
+func (s *ProveInRange2tmt) InlineString() string {
 	return "TODO"
 }
 
 func (s *ClaimIffStmt) InlineString() string {
+	return "TODO"
+}
+
+func (s *ProveInRangeStmt) InlineString() string {
 	return "TODO"
 }

@@ -43,7 +43,7 @@ func (s *EnumStmt) stmt()                        {}
 func (s *IntensionalSetStmt) stmt()              {}
 func (s *ClaimPropStmt) stmt()                   {}
 func (s *ClaimExistPropStmt) stmt()              {}
-func (s *ProveOverFiniteSetStmt) stmt()          {}
+func (s *ProveByEnumStmt) stmt()                 {}
 func (s *HaveObjInNonEmptySetStmt) stmt()        {}
 func (s *HaveSetStmt) stmt()                     {}
 func (s *HaveSetFnStmt) stmt()                   {}
@@ -61,8 +61,9 @@ func (s *HaveFnEqualStmt) stmt()                 {}
 func (s *HaveFnLiftStmt) stmt()                  {}
 func (s *HaveFnStmt) stmt()                      {}
 func (s *MarkdownStmt) stmt()                    {}
-func (s *ProveInRangeStmt) stmt()                {}
+func (s *ProveInRange2tmt) stmt()                {}
 func (s *ClaimIffStmt) stmt()                    {}
+func (s *ProveInRangeStmt) stmt()                {}
 
 func (s *DefObjStmt) GetLine() uint                      { return s.Line }
 func (s *DefPropStmt) GetLine() uint                     { return s.Line }
@@ -85,7 +86,7 @@ func (s *EnumStmt) GetLine() uint                        { return s.Line }
 func (s *IntensionalSetStmt) GetLine() uint              { return s.Line }
 func (s *ClaimPropStmt) GetLine() uint                   { return s.Line }
 func (s *ClaimExistPropStmt) GetLine() uint              { return s.Line }
-func (s *ProveOverFiniteSetStmt) GetLine() uint          { return s.Line }
+func (s *ProveByEnumStmt) GetLine() uint                 { return s.Line }
 func (s *HaveObjInNonEmptySetStmt) GetLine() uint        { return s.Line }
 func (s *HaveSetStmt) GetLine() uint                     { return s.Line }
 func (s *HaveSetFnStmt) GetLine() uint                   { return s.Line }
@@ -105,6 +106,7 @@ func (s *HaveFnStmt) GetLine() uint                      { return s.Line }
 func (s *MarkdownStmt) GetLine() uint                    { return s.Line }
 func (s *ProveInRangeStmt) GetLine() uint                { return s.Line }
 func (s *ClaimIffStmt) GetLine() uint                    { return s.Line }
+func (s *ProveInRange2tmt) GetLine() uint                { return s.Line }
 
 type FactStmt interface {
 	factStmt()
