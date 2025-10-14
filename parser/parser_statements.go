@@ -150,30 +150,6 @@ func (tb *tokenBlock) factStmt(uniFactDepth uniFactEnum) (ast.FactStmt, error) {
 
 }
 
-func (tb *tokenBlock) enumFactualStmt(setName ast.Fc) (*ast.EnumStmt, error) {
-	// skip colon and get end
-	err := tb.header.skip(glob.KeySymbolLeftCurly)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	enumFcs := []ast.Fc{}
-	for !tb.CurrentTokenIs(glob.KeySymbolRightCurly) {
-		fc, err := tb.RawFc()
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-		enumFcs = append(enumFcs, fc)
-		tb.header.skipIfIs(glob.KeySymbolComma)
-	}
-	err = tb.header.skip(glob.KeySymbolRightCurly)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	return ast.NewEnumStmt(setName, enumFcs, tb.line), nil
-}
-
 func (tb *tokenBlock) orStmt() (*ast.OrStmt, error) {
 	if tb.GetEnd() != glob.KeySymbolColon {
 		return tb.inlineOrFact()
@@ -1512,38 +1488,6 @@ func (tb *tokenBlock) dom_and_section(kw string, kw_should_not_exist_in_body str
 	}
 }
 
-// func (tb *tokenBlock) intentionalSetBody() (string, ast.Fc, []*ast.SpecFactStmt, error) {
-// 	param, err := tb.header.next()
-// 	if err != nil {
-// 		return "", nil, nil, tbErr(err, tb)
-// 	}
-
-// 	parentSet, err := tb.RawFc()
-// 	if err != nil {
-// 		return "", nil, nil, tbErr(err, tb)
-// 	}
-
-// 	err = tb.header.skip(glob.KeySymbolColon)
-// 	if err != nil {
-// 		return "", nil, nil, tbErr(err, tb)
-// 	}
-
-// 	if !tb.header.ExceedEnd() {
-// 		return "", nil, nil, fmt.Errorf("expect end of line")
-// 	}
-
-// 	proofs := []*ast.SpecFactStmt{}
-// 	for _, stmt := range tb.body {
-// 		curStmt, err := stmt.specFactStmt()
-// 		if err != nil {
-// 			return "", nil, nil, tbErr(err, tb)
-// 		}
-// 		proofs = append(proofs, curStmt)
-// 	}
-
-// 	return param, parentSet, proofs, nil
-// }
-
 func (tb *tokenBlock) intentionalSetBody() (string, ast.Fc, []*ast.SpecFactStmt, error) {
 	err := tb.header.skip(glob.KeySymbolLeftCurly)
 	if err != nil {
@@ -1582,15 +1526,6 @@ func (tb *tokenBlock) intentionalSetBody() (string, ast.Fc, []*ast.SpecFactStmt,
 
 	return param, parentSet, proofs, nil
 }
-
-// func (tb *tokenBlock) intensionalSetFactualStmt(curSet ast.Fc) (*ast.IntensionalSetStmt, error) {
-// 	param, parentSet, proofs, err := tb.intentionalSetBody()
-// 	if err != nil {
-// 		return nil, tbErr(err, tb)
-// 	}
-
-// 	return ast.NewIntensionalSetStmt(curSet, param, parentSet, proofs, tb.line), nil
-// }
 
 func (tb *tokenBlock) fact() (ast.FactStmt, error) {
 	if tb.header.is(glob.KeywordNot) {
@@ -1819,66 +1754,6 @@ func (tb *tokenBlock) proveByEnum() (*ast.ProveByEnumStmt, error) {
 		return ast.NewProveByEnumStmt(uniFact, []ast.Stmt{}, tb.line), nil
 	}
 }
-
-// func (tb *tokenBlock) proveOverFiniteSetStmt() (*ast.ProveOverFiniteSetStmt, error) {
-// 	err := tb.header.skipKwAndColonCheckEOL(glob.KeywordProveOverFiniteSet)
-// 	if err != nil {
-// 		return nil, tbErr(err, tb)
-// 	}
-
-// 	var uniFact ast.UniFactInterface
-// 	if tb.body[0].GetEnd() == glob.KeySymbolColon {
-// 		uniFact, err = tb.body[0].uniFactInterface(UniFactDepth0)
-// 		if err != nil {
-// 			return nil, tbErr(err, tb)
-// 		}
-// 	} else {
-// 		// uniFact, err = tb.body[0].inlineUniFact()
-// 		uniFact, err = tb.body[0].inlineUniInterfaceSkipTerminator()
-// 		if err != nil {
-// 			return nil, tbErr(err, tb)
-// 		}
-// 	}
-
-// 	uniFactAsUniFactStmt, ok := uniFact.(*ast.UniFactStmt)
-// 	if !ok {
-// 		return nil, fmt.Errorf("expect universal fact without iff")
-// 	}
-
-// 	if len(uniFactAsUniFactStmt.DomFacts) != 0 {
-// 		// 必须全部是 reversible 的domFact 否则就报错。因为 在执行的时候，如果dom是真的，那就检查；如果dom是否的，那就跳过这次检查；不允许是unknown
-// 		for _, domFact := range uniFactAsUniFactStmt.DomFacts {
-// 			_, ok := domFact.(ast.Spec_OrFact)
-// 			if !ok {
-// 				return nil, fmt.Errorf("dom facts of universal fact must be reversible")
-// 			}
-// 		}
-// 	}
-
-// 	if len(tb.body) == 1 {
-// 		return ast.NewProveOverFiniteSetStmt(uniFactAsUniFactStmt, []ast.StmtSlice{}, tb.line), nil
-// 	}
-
-// 	err = tb.body[1].header.skipKwAndColonCheckEOL(glob.KeywordProve)
-// 	if err != nil {
-// 		return nil, tbErr(err, tb)
-// 	}
-
-// 	proofs := []ast.StmtSlice{}
-// 	for i := 1; i < len(tb.body); i++ {
-// 		curProof := ast.StmtSlice{}
-// 		for _, stmt := range tb.body[i].body {
-// 			curStmt, err := stmt.Stmt()
-// 			if err != nil {
-// 				return nil, tbErr(err, tb)
-// 			}
-// 			curProof = append(curProof, curStmt)
-// 		}
-// 		proofs = append(proofs, curProof)
-// 	}
-
-// 	return ast.NewProveOverFiniteSetStmt(uniFactAsUniFactStmt, proofs, tb.line), nil
-// }
 
 func (tb *tokenBlock) bodyOfKnowProp() ([]ast.FactStmt, []ast.FactStmt, error) {
 	var err error
