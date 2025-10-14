@@ -580,7 +580,7 @@ func (s *ClaimExistPropStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (s *ProveOverFiniteSetStmt) ToLatexString() string {
+func (s *ProveByEnumStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("\\begin{proveOverFiniteSet}\n")
 	builder.WriteString("We prove that by iterating over the elements of the finite set(s): ")

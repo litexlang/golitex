@@ -653,7 +653,7 @@ func (stmt *IntensionalSetStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *ProveOverFiniteSetStmt) String() string {
+func (stmt *ProveByEnumStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordProveByEnum)
 	builder.WriteString(glob.KeySymbolColon)
