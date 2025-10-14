@@ -1804,7 +1804,7 @@ func (tb *tokenBlock) proveByEnum() (*ast.ProveByEnumStmt, error) {
 
 			uniFact := ast.NewUniFact(params, paramSets, []ast.FactStmt{}, thenFacts, tb.line)
 
-			return ast.NewProveByEnumStmt(uniFact, []ast.StmtSlice{}, tb.line), nil
+			return ast.NewProveByEnumStmt(uniFact, []ast.Stmt{}, tb.line), nil
 		}
 	}
 }

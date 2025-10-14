@@ -660,17 +660,15 @@ func (stmt *ProveByEnumStmt) String() string {
 	builder.WriteByte('\n')
 	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Fact.String(), 1))
 	builder.WriteByte('\n')
-	if len(stmt.ProofsSlice) > 0 {
+	if len(stmt.Proof) > 0 {
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve, 1))
 		builder.WriteString(glob.KeySymbolColon)
 		builder.WriteByte('\n')
 
-		proofStrSlice := make([]string, len(stmt.ProofsSlice))
-		for i, proof := range stmt.ProofsSlice {
-			for j := range proof {
-				proofStrSlice[i] += glob.SplitLinesAndAdd4NIndents(proof[j].String(), 2)
-				proofStrSlice[i] += "\n"
-			}
+		proofStrSlice := make([]string, len(stmt.Proof))
+		for i, proof := range stmt.Proof {
+			proofStrSlice[i] += glob.SplitLinesAndAdd4NIndents(proof.String(), 2)
+			proofStrSlice[i] += "\n"
 		}
 		builder.WriteString(strings.Join(proofStrSlice, "\n"))
 	}
