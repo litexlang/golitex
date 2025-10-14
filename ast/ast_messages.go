@@ -655,7 +655,7 @@ func (stmt *IntensionalSetStmt) String() string {
 
 func (stmt *ProveOverFiniteSetStmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordProveOverFiniteSet)
+	builder.WriteString(glob.KeywordProveByEnum)
 	builder.WriteString(glob.KeySymbolColon)
 	builder.WriteByte('\n')
 	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Fact.String(), 1))
