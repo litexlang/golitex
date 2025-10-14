@@ -29,13 +29,16 @@ func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) (bool, erro
 			var ok bool
 			var err error
 
-			ok, err = ver.verTrueEqualFact(ver.env.ReplaceFcInEqualFact(asStmt), state, true)
-			if err != nil {
-				return false, err
-			}
+			replaced, newStmt := ver.env.ReplaceFcInEqualFact(asStmt)
+			if replaced {
+				ok, err = ver.verTrueEqualFact(newStmt, state, true)
+				if err != nil {
+					return false, err
+				}
 
-			if ok {
-				return true, nil
+				if ok {
+					return true, nil
+				}
 			}
 
 			ok, err = ver.verTrueEqualFact(asStmt, state, true)
