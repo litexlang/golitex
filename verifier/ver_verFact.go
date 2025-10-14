@@ -26,7 +26,24 @@ func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) (bool, erro
 	switch asStmt := stmt.(type) {
 	case *ast.SpecFactStmt:
 		if asStmt.NameIs(glob.KeySymbolEqual) && asStmt.TypeEnum == ast.TruePure {
-			return ver.verTrueEqualFact(asStmt, state, true)
+			var ok bool
+			var err error
+
+			replaced, newStmt := ver.env.ReplaceFcInEqualFact(asStmt)
+			if replaced {
+				ok, err = ver.verTrueEqualFact(newStmt, state, true)
+				if err != nil {
+					return false, err
+				}
+
+				if ok {
+					return true, nil
+				}
+			}
+
+			ok, err = ver.verTrueEqualFact(asStmt, state, true)
+
+			return ok, err
 		}
 		return ver.verSpecFactThatIsNotTrueEqualFact(asStmt, state)
 	case *ast.OrStmt:
