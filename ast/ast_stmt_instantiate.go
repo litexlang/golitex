@@ -274,8 +274,8 @@ func (stmt *IntensionalSetStmt) Instantiate(uniMap map[string]Fc) (FactStmt, err
 		return nil, err
 	}
 
-	newProofs := make([]*SpecFactStmt, len(stmt.Proofs))
-	for i, proof := range stmt.Proofs {
+	newProofs := make([]*SpecFactStmt, len(stmt.Facts))
+	for i, proof := range stmt.Facts {
 		newProof, err := proof.Instantiate(uniMap)
 		if err != nil {
 			return nil, err
