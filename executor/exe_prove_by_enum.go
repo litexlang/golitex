@@ -81,12 +81,12 @@ func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.Prove
 		}
 	}
 
-	// for _, stmt := range stmt.ProofsSlice {
-	// 	state, _, err := exec.Stmt(stmt)
-	// 	if notOkExec(state, err) {
-	// 		return false, err
-	// 	}
-	// }
+	for _, stmt := range stmt.Proof {
+		state, _, err := exec.Stmt(stmt)
+		if notOkExec(state, err) {
+			return false, err
+		}
+	}
 
 	for _, fact := range stmt.Fact.ThenFacts {
 		instFact, err := fact.Instantiate(uniMap)
