@@ -1788,24 +1788,35 @@ func (tb *tokenBlock) proveByEnum() (*ast.ProveByEnumStmt, error) {
 	}
 
 	if tb.body[len(tb.body)-1].header.is(glob.KeywordProve) {
-		panic("not implemented")
-	} else {
-		if tb.body[len(tb.body)-1].header.is(glob.KeySymbolEqualLarger) {
-			panic("not implemented")
-		} else {
-			thenFacts := []ast.FactStmt{}
-			for _, stmt := range tb.body {
-				thenFact, err := stmt.factStmt(UniFactDepth1)
-				if err != nil {
-					return nil, tbErr(err, tb)
-				}
-				thenFacts = append(thenFacts, thenFact)
-			}
-
-			uniFact := ast.NewUniFact(params, paramSets, []ast.FactStmt{}, thenFacts, tb.line)
-
-			return ast.NewProveByEnumStmt(uniFact, []ast.Stmt{}, tb.line), nil
+		domFacts, thenFacts, err := parseDomThenOfProveByEnum(tb.body[:len(tb.body)-1])
+		if err != nil {
+			return nil, tbErr(err, tb)
 		}
+
+		err = tb.body[len(tb.body)-1].header.skipKwAndColonCheckEOL(glob.KeywordProve)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		proofs := []ast.Stmt{}
+		for _, stmt := range tb.body[len(tb.body)-1].body {
+			curStmt, err := stmt.Stmt()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			proofs = append(proofs, curStmt)
+		}
+
+		uniFact := ast.NewUniFact(params, paramSets, domFacts, thenFacts, tb.line)
+		return ast.NewProveByEnumStmt(uniFact, proofs, tb.line), nil
+	} else {
+		domFacts, thenFacts, err := parseDomThenOfProveByEnum(tb.body)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		uniFact := ast.NewUniFact(params, paramSets, domFacts, thenFacts, tb.line)
+		return ast.NewProveByEnumStmt(uniFact, []ast.Stmt{}, tb.line), nil
 	}
 }
 
@@ -2964,4 +2975,42 @@ func (tb *tokenBlock) skipInt() (int64, error) {
 		return 0, err
 	}
 	return strconv.ParseInt(intStr, 10, 64)
+}
+
+func parseDomThenOfProveByEnum(tbSlice []tokenBlock) ([]ast.FactStmt, []ast.FactStmt, error) {
+	domFacts := []ast.FactStmt{}
+	thenFacts := []ast.FactStmt{}
+
+	if tbSlice[len(tbSlice)-1].header.is(glob.KeySymbolEqualLarger) {
+		for i := range len(tbSlice) - 1 {
+			curStmt, err := tbSlice[i].factStmt(UniFactDepth1)
+			if err != nil {
+				return nil, nil, tbErr(err, &tbSlice[i])
+			}
+			domFacts = append(domFacts, curStmt)
+		}
+
+		err := tbSlice[len(tbSlice)-1].header.skipKwAndColonCheckEOL(glob.KeySymbolEqualLarger)
+		if err != nil {
+			return nil, nil, tbErr(err, &tbSlice[len(tbSlice)-1])
+		}
+
+		for i := range len(tbSlice[len(tbSlice)-1].body) {
+			curStmt, err := tbSlice[len(tbSlice)-1].body[i].factStmt(UniFactDepth1)
+			if err != nil {
+				return nil, nil, tbErr(err, &tbSlice[len(tbSlice)-1])
+			}
+			thenFacts = append(thenFacts, curStmt)
+		}
+	} else {
+		for i := range len(tbSlice) {
+			curStmt, err := tbSlice[i].factStmt(UniFactDepth1)
+			if err != nil {
+				return nil, nil, tbErr(err, &tbSlice[i])
+			}
+			thenFacts = append(thenFacts, curStmt)
+		}
+	}
+
+	return domFacts, thenFacts, nil
 }
