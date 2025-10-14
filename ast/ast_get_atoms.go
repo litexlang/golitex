@@ -80,7 +80,7 @@ func (stmt *IntensionalSetStmt) GetAtoms() []FcAtom {
 	atoms := []FcAtom{}
 	atoms = append(atoms, GetAtomsInFc(stmt.CurSet)...)
 	atoms = append(atoms, GetAtomsInFc(stmt.ParentSet)...)
-	for _, proof := range stmt.Proofs {
+	for _, proof := range stmt.Facts {
 		atoms = append(atoms, proof.GetAtoms()...)
 	}
 	return atoms

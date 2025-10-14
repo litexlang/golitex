@@ -322,14 +322,14 @@ func TransformEnumToUniFact(setName Fc, enumFcs []Fc) (*UniFactStmt, []*SpecFact
 
 func (stmt *IntensionalSetStmt) ToEquivalentUniFacts() (*UniFactStmt, *UniFactStmt, error) {
 	leftDomFacts := []FactStmt{}
-	for _, proof := range stmt.Proofs {
+	for _, proof := range stmt.Facts {
 		leftDomFacts = append(leftDomFacts, proof)
 	}
 
 	leftUniFact := NewUniFact([]string{stmt.Param}, []Fc{stmt.ParentSet}, leftDomFacts, []FactStmt{NewInFact(stmt.Param, stmt.CurSet)}, glob.InnerGenLine)
 
 	rightThenFacts := []FactStmt{NewInFact(stmt.Param, stmt.ParentSet)}
-	for _, proof := range stmt.Proofs {
+	for _, proof := range stmt.Facts {
 		rightThenFacts = append(rightThenFacts, proof)
 	}
 

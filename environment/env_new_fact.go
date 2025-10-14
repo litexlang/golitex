@@ -17,6 +17,7 @@ package litex_env
 import (
 	"fmt"
 	ast "golitex/ast"
+	cmp "golitex/cmp"
 	glob "golitex/glob"
 	"strconv"
 )
@@ -371,7 +372,19 @@ func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 		return false, err
 	}
 
+	// 如果 a = b 中，某一项是 数值型，那就算出来这个数值，卷后把它保留在equalMem中
+	env.storeSymbolValue(fact.Params[0], fact.Params[1])
+
 	return true, nil
+}
+
+func (env *Env) storeSymbolValue(left, right ast.Fc) {
+	if cmp.IsNumLitFc(left) {
+		env.SymbolValueMem[right.String()] = left
+	}
+	if cmp.IsNumLitFc(right) {
+		env.SymbolValueMem[left.String()] = right
+	}
 }
 
 func (env *Env) GetEqualFcs(fc ast.Fc) (*[]ast.Fc, bool) {
