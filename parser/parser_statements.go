@@ -87,7 +87,7 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 	case glob.KeywordProveInEachCase:
 		ret, err = tb.proveInEachCaseStmt()
 	case glob.KeywordProveByEnum:
-		ret, err = tb.proveOverFiniteSetStmt()
+		ret, err = tb.proveByEnum()
 	case glob.KeySymbolAt:
 		ret, err = tb.namedUniFactStmt()
 	case glob.LatexSig,
@@ -1765,7 +1765,7 @@ func (tb *tokenBlock) enumStmt_or_intensionalSetStmt_or_DomOf(fc ast.Fc) (ast.En
 	}
 }
 
-func (tb *tokenBlock) proveOverFiniteSetStmt() (*ast.ProveOverFiniteSetStmt, error) {
+func (tb *tokenBlock) proveByEnum() (*ast.ProveByEnumStmt, error) {
 	err := tb.header.skip(glob.KeywordProveByEnum)
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -1804,7 +1804,7 @@ func (tb *tokenBlock) proveOverFiniteSetStmt() (*ast.ProveOverFiniteSetStmt, err
 
 			uniFact := ast.NewUniFact(params, paramSets, []ast.FactStmt{}, thenFacts, tb.line)
 
-			return ast.NewProveOverFiniteSetStmt(uniFact, []ast.StmtSlice{}, tb.line), nil
+			return ast.NewProveByEnumStmt(uniFact, []ast.StmtSlice{}, tb.line), nil
 		}
 	}
 }

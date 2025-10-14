@@ -3,7 +3,7 @@ claim:
         s := {x Z: 1 <= x, x < 10}
         s2 := {2, 4, 6, 8}
         =>:
-            1 = 1
+            s = s2
     prove:
         prove_by_enum(x s2):
             x $in s

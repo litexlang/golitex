@@ -110,8 +110,8 @@ func NewIntensionalSetStmt(curSet Fc, param string, parentSet Fc, proofs []*Spec
 	return &IntensionalSetStmt{curSet, param, parentSet, proofs, line}
 }
 
-func NewProveOverFiniteSetStmt(fact *UniFactStmt, proofs []StmtSlice, line uint) *ProveOverFiniteSetStmt {
-	return &ProveOverFiniteSetStmt{*fact, proofs, line}
+func NewProveByEnumStmt(fact *UniFactStmt, proofs []StmtSlice, line uint) *ProveByEnumStmt {
+	return &ProveByEnumStmt{*fact, proofs, line}
 }
 
 func NewHaveObjInNonEmptySetStmt(objNames []string, objSets []Fc, line uint) *HaveObjInNonEmptySetStmt {
