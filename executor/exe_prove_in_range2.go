@@ -22,7 +22,7 @@ import (
 
 func (exec *Executor) proveInRangeStmt2(stmt *ast.ProveInRange2tmt) (glob.ExecState, error) {
 	for i := stmt.Start; i < stmt.End; i++ {
-		_, msg, err := exec.proveInRangeStmtWhenParamIsIndex(stmt, i)
+		_, msg, err := exec.proveInRangeStmtWhenParamIsIndex2(stmt, i)
 		if err != nil {
 			if msg != "" {
 				exec.newMsg(msg)
@@ -40,7 +40,7 @@ func (exec *Executor) proveInRangeStmt2(stmt *ast.ProveInRange2tmt) (glob.ExecSt
 	return glob.ExecStateTrue, nil
 }
 
-func (exec *Executor) proveInRangeStmtWhenParamIsIndex(stmt *ast.ProveInRange2tmt, i int64) (bool, string, error) {
+func (exec *Executor) proveInRangeStmtWhenParamIsIndex2(stmt *ast.ProveInRange2tmt, i int64) (bool, string, error) {
 	indexAsFc := ast.FcAtom(fmt.Sprintf("%d", i))
 	uniMap := map[string]ast.Fc{stmt.Param: indexAsFc}
 	exec.NewEnv(exec.env)
