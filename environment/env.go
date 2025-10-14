@@ -59,6 +59,7 @@ type Env struct {
 	EqualMem               map[string]shared_ptr_to_slice_of_fc
 	EnumFacts              map[string][]ast.Fc
 	HaveSetFnDefMem        HaveSetFnDefMem
+	IntensionalSetMem      map[string]ast.IntensionalSetStmt
 }
 
 func (env *Env) GetUpMostEnv() *Env {
@@ -82,6 +83,7 @@ func NewEnv(parent *Env) *Env {
 		KnownFactInMatchEnv:    make(map[string]KnownFactsStruct),
 		EnumFacts:              make(map[string][]ast.Fc),
 		HaveSetFnDefMem:        make(HaveSetFnDefMem),
+		IntensionalSetMem:      make(map[string]ast.IntensionalSetStmt),
 	}
 	return env
 }
