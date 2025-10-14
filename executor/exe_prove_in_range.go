@@ -17,13 +17,39 @@ package litex_executor
 import (
 	ast "golitex/ast"
 	glob "golitex/glob"
+	"strconv"
 )
 
 func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) (glob.ExecState, error) {
-	// 变成str
-	// startStr := strconv.FormatInt(stmt.Start, 10)
-	// endStr := strconv.FormatInt(stmt.End, 10)
+	startStr := strconv.FormatInt(stmt.Start, 10)
+	endStr := strconv.FormatInt(stmt.End, 10)
 
-	// forallXInIntensionalSetTheyAreFromStartToEnd := ast.NewUniFact([]string{stmt.Param}, []ast.Fc{stmt.IntensionalSet}, []ast.FactStmt{}, []ast.FactStmt{ast.NewInFact(stmt.Param, stmt.IntensionalSet)}, stmt.Line)
+	forallXInIntensionalSetTheyAreFromStartToEnd := ast.NewUniFact([]string{stmt.Param}, []ast.Fc{stmt.IntensionalSet}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolLessEqual), []ast.Fc{ast.FcAtom(startStr), ast.FcAtom(stmt.Param)}, stmt.Line), ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolLess), []ast.Fc{ast.FcAtom(stmt.Param), ast.FcAtom(endStr)}, stmt.Line)}, stmt.Line)
+
+	state, err := exec.factStmt(forallXInIntensionalSetTheyAreFromStartToEnd)
+	if notOkExec(state, err) {
+		return state, err
+	}
+
+	for i := stmt.Start; i < stmt.End; i++ {
+		_, msg, err := exec.proveInRangeStmtWhenParamIsIndex(stmt, i)
+		if err != nil {
+			if msg != "" {
+				exec.newMsg(msg)
+			}
+			return glob.ExecStateError, err
+		}
+	}
+
+	uniFact := stmt.UniFact()
+	err = exec.env.NewFact(uniFact)
+	if err != nil {
+		return glob.ExecStateError, err
+	}
+
+	return glob.ExecStateTrue, nil
+}
+
+func (exec *Executor) proveInRangeStmtWhenParamIsIndex(stmt *ast.ProveInRangeStmt, i int64) (bool, string, error) {
 	panic("")
 }
