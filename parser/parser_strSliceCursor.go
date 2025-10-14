@@ -54,9 +54,9 @@ func (cursor *strSliceCursor) getSlice() []string {
 	return cursor.slice
 }
 
-func (cursor *strSliceCursor) endWith(s string) bool {
-	return cursor.slice[len(cursor.slice)-1] == s
-}
+// func (cursor *strSliceCursor) endWith(s string) bool {
+// 	return cursor.slice[len(cursor.slice)-1] == s
+// }
 
 func (cursor *strSliceCursor) currentToken() (string, error) {
 	if cursor.index >= len(cursor.slice) {
