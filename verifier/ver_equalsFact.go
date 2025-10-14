@@ -19,19 +19,6 @@ import (
 	ast "golitex/ast"
 )
 
-// func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState) (bool, error) {
-// 	equalFacts := stmt.ToEqualFacts()
-// 	for _, equalFact := range equalFacts {
-// 		ok, err := ver.VerFactStmt(equalFact, state)
-// 		if err != nil {
-// 			return false, err
-// 		} else if !ok {
-// 			return false, nil
-// 		}
-// 	}
-// 	return true, nil
-// }
-
 func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState) (bool, error) {
 	if len(stmt.Params) < 2 {
 		return false, fmt.Errorf("equals fact must have at least 2 params")
