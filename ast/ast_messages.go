@@ -235,7 +235,7 @@ func fnDefStmtStringGivenKw(kw string, f *FnTStruct, name string) string {
 	}
 	if len(f.ThenFacts) > 0 {
 		// builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordThen, 1))
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeySymbolEqualLarger, 1))
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeySymbolRightArrow, 1))
 		builder.WriteString(glob.KeySymbolColon)
 		builder.WriteByte('\n')
 
@@ -448,7 +448,7 @@ func (stmt *ProveInEachCaseStmt) String() string {
 	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.OrFact.String(), 1))
 	builder.WriteByte('\n')
 	// builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordThen, 1))
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeySymbolEqualLarger, 1))
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeySymbolRightArrow, 1))
 	builder.WriteString(glob.KeySymbolColon)
 	builder.WriteByte('\n')
 	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.ThenFacts[0].String(), 2))
@@ -579,7 +579,7 @@ func (stmt *DefPropStmt) ToNamedUniFactString() string {
 	builder.WriteByte('\n')
 
 	var thenFactStrSlice []string
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeySymbolEqualLarger, 1))
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeySymbolRightArrow, 1))
 	builder.WriteString(glob.KeySymbolColon)
 	builder.WriteByte('\n')
 	for _, thenFact := range stmt.ThenFacts {
@@ -904,7 +904,7 @@ func (fnTStruct *FnTStruct) String() string {
 		}
 	}
 	if len(fnTStruct.ThenFacts) > 0 {
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeySymbolEqualLarger, 1))
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeySymbolRightArrow, 1))
 		builder.WriteByte('\n')
 		for _, fact := range fnTStruct.ThenFacts {
 			builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 2))

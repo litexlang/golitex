@@ -158,7 +158,7 @@ const (
 	KeySymbolLeftCurly    = "{"
 	KeySymbolRightCurly   = "}"
 	KeySymbolAt           = "@"
-	KeySymbolEqualLarger  = "=>"
+	KeySymbolRightArrow   = "=>"
 
 	KeySymbolSemiColon  = ";"
 	KeySymbolEquivalent = "<=>"
@@ -196,7 +196,7 @@ var symbolSet map[string]struct{} = map[string]struct{}{
 	KeySymbolLeftCurly:    {}, // "{"
 	KeySymbolRightCurly:   {}, // "}"
 	KeySymbolAt:           {}, // "@"
-	KeySymbolEqualLarger:  {}, // "=>"
+	KeySymbolRightArrow:   {}, // "=>"
 	KeySymbolSemiColon:    {}, // ";"
 	KeySymbolEquivalent:   {}, // "<=>"
 	KeySymbolBackSlash:    {},
