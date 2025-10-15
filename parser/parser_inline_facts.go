@@ -157,7 +157,7 @@ func (tb *tokenBlock) inlineUniFact_Param_ParamSet_ParamInSetFacts() ([]string, 
 		return params, setParams, nil
 	}
 
-	if !tb.header.is(glob.KeySymbolEqualLarger) || !tb.header.is(glob.KeySymbolColon) {
+	if !tb.header.is(glob.KeySymbolRightArrow) || !tb.header.is(glob.KeySymbolColon) {
 		for {
 			param, err := tb.header.next()
 			if err != nil {
@@ -191,7 +191,7 @@ func (tb *tokenBlock) inlineUniFact_Param_ParamSet_ParamInSetFacts() ([]string, 
 				continue
 			}
 
-			if tb.header.is(glob.KeySymbolEqualLarger) || tb.header.is(glob.KeySymbolColon) {
+			if tb.header.is(glob.KeySymbolRightArrow) || tb.header.is(glob.KeySymbolColon) {
 				break
 			}
 
@@ -236,7 +236,7 @@ func (tb *tokenBlock) inlineUniInterfaceSkipTerminator() (ast.UniFactInterface, 
 	setParams := []ast.Fc{}
 	domFact := []ast.FactStmt{}
 
-	if !tb.header.is(glob.KeySymbolEqualLarger) {
+	if !tb.header.is(glob.KeySymbolRightArrow) {
 		params, setParams, err = tb.inlineUniFact_Param_ParamSet_ParamInSetFacts()
 		if err != nil {
 			return nil, tbErr(err, tb)
@@ -251,7 +251,7 @@ func (tb *tokenBlock) inlineUniInterfaceSkipTerminator() (ast.UniFactInterface, 
 		}
 	}
 
-	tb.header.skip(glob.KeySymbolEqualLarger)
+	tb.header.skip(glob.KeySymbolRightArrow)
 	thenFact, isEnd, err := tb.thenFactsInUniFactInterface()
 	if err != nil {
 		return nil, err
@@ -289,7 +289,7 @@ func (tb *tokenBlock) inlineIfInterfaceSkipTerminator() (ast.UniFactInterface, e
 		return nil, err
 	}
 
-	tb.header.skip(glob.KeySymbolEqualLarger)
+	tb.header.skip(glob.KeySymbolRightArrow)
 	thenFact, isEnd, err := tb.thenFactsInUniFactInterface()
 	if err != nil {
 		return nil, err
@@ -364,8 +364,8 @@ func (tb *tokenBlock) domFactInUniFactInterface() ([]ast.FactStmt, error) {
 			return nil, tbErr(err, tb)
 		}
 		facts = append(facts, specFact)
-		if tb.header.is(glob.KeySymbolEqualLarger) {
-			tb.header.skip(glob.KeySymbolEqualLarger)
+		if tb.header.is(glob.KeySymbolRightArrow) {
+			tb.header.skip(glob.KeySymbolRightArrow)
 			return facts, nil
 		}
 	}
