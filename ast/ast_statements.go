@@ -202,7 +202,6 @@ type ProveByEnumStmt struct {
 	Line uint
 }
 
-// have xxx st exist_in 的语法糖
 type HaveObjInNonEmptySetStmt struct {
 	Objs    StrSlice
 	ObjSets FcSlice
@@ -336,16 +335,16 @@ type MarkdownStmt struct {
 	Line uint
 }
 
-type ProveInRange2tmt struct {
-	Start     int64
-	End       int64
-	Param     string
-	DomFacts  ReversibleFacts
-	ThenFacts FactStmtSlice
-	Proofs    StmtSlice
+// type ProveInRange2tmt struct {
+// 	Start     int64
+// 	End       int64
+// 	Param     string
+// 	DomFacts  ReversibleFacts
+// 	ThenFacts FactStmtSlice
+// 	Proofs    StmtSlice
 
-	Line uint
-}
+// 	Line uint
+// }
 
 type ProveInRangeStmt struct {
 	Start          int64
