@@ -318,9 +318,9 @@ func (s *MarkdownStmt) InlineString() string {
 	return s.Markdown
 }
 
-func (s *ProveInRange2tmt) InlineString() string {
-	return "TODO"
-}
+// func (s *ProveInRange2tmt) InlineString() string {
+// 	return "TODO"
+// }
 
 func (s *ClaimIffStmt) InlineString() string {
 	return "TODO"

@@ -44,15 +44,19 @@ const (
 	KeywordComplex              = "C"                // e.g. 1+i
 	KeywordIn                   = "in"
 	// KeywordProveByMathInduction           = "prove_by_math_induction"
-	KeywordAs                             = "as" // 用在 import xxx as ??? 了
-	KeywordLen                            = "len"
-	KeywordFiniteSet                      = "finite_set"
-	KeywordProveByEnum                    = "prove_by_enum" // syntax connecting forall and finite_set
-	KeywordExistIn                        = "exist_in"
+	KeywordAs          = "as" // 用在 import xxx as ??? 了
+	KeywordLen         = "len"
+	KeywordFiniteSet   = "finite_set"
+	KeywordProveByEnum = "prove_by_enum" // syntax connecting forall and finite_set
+	KeywordExistItemIn = "exist_item_in"
+
+	// WARNING: TODO 我不知道这三个集合是什么用途
+	// TODO: 需要有他们的对应关系
 	KeywordSetDefinedByReplacement        = "set_defined_by_replacement"    // 这是一个函数，返回一个集合，而不是一个prop
 	KeywordExistPropPreImageByReplacement = "obj_exist_as_preimage_of_prop" //"exist_prop_preimage_by_replacement"
 	KeywordExistFnPreImageByReplacement   = "obj_exist_as_preimage_of_fn"   // "exist_fn_preimage_by_replacement"
-	KeywordFnTemplate                     = "fn_template"
+
+	KeywordFnTemplate = "fn_template"
 
 	KeywordNPos  = "N_pos"
 	KeywordLet   = "let"
@@ -65,7 +69,7 @@ const (
 
 	KeywordIf = "if"
 
-	KeywordProveInRange2 = "prove_in_range2"
+	// KeywordProveInRange2 = "prove_in_range2"
 
 	KeywordEval = "eval"
 
@@ -105,7 +109,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordLen:                            {},
 	KeywordFiniteSet:                      {},
 	KeywordProveByEnum:                    {},
-	KeywordExistIn:                        {},
+	KeywordExistItemIn:                    {},
 	KeywordSetDefinedByReplacement:        {},
 	KeywordExistPropPreImageByReplacement: {},
 	KeywordExistFnPreImageByReplacement:   {},
@@ -227,7 +231,7 @@ var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]s
 	KeySymbolRightBracket:                 {},
 	KeywordCommutativeProp:                {},
 	KeywordFiniteSet:                      {},
-	KeywordExistIn:                        {},
+	KeywordExistItemIn:                    {},
 	KeywordSetDefinedByReplacement:        {},
 	KeywordExistPropPreImageByReplacement: {},
 	KeywordExistFnPreImageByReplacement:   {},
