@@ -6,7 +6,7 @@ The followings are main tasks that we sincerely welcome contributions for. We wi
 
 ## 1. Improve the Litex kernel
 
-The Litex kernel is for the time being developed by ONE MAN, Jiachen Shen, the founder of Litex. This is a big challenge for him. We are recruiting contributors with good taste of math and great skills of programming to help him.
+The Litex [kernel](https://github.com/litexlang/golitex) is for the time being developed by ONE MAN, Jiachen Shen, the founder of Litex. This is a big challenge for him. We are recruiting contributors with good taste of math and great skills of programming to help him.
 
 Currently, Litex is not fully open-sourced. If you want to contribute to the Litex kernel, please contact us through email: litexlang@outlook.com.
 
