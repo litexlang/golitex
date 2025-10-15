@@ -918,48 +918,6 @@ func (stmt *MarkdownStmt) String() string {
 	return stmt.Markdown
 }
 
-// func (stmt *ProveInRange2tmt) String() string {
-// 	var builder strings.Builder
-// 	builder.WriteString(glob.KeywordProveInRange2)
-// 	builder.WriteString("(")
-// 	builder.WriteString(fmt.Sprintf("%d", stmt.Start))
-// 	builder.WriteString(", ")
-// 	builder.WriteString(fmt.Sprintf("%d", stmt.End))
-// 	builder.WriteString(", ")
-// 	builder.WriteString(stmt.Param)
-// 	builder.WriteString(")")
-// 	builder.WriteString(glob.KeySymbolColon)
-// 	builder.WriteByte('\n')
-// 	if len(stmt.DomFacts) > 0 {
-// 		for _, fact := range stmt.DomFacts {
-// 			builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 1))
-// 			builder.WriteByte('\n')
-// 		}
-// 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeySymbolEqualLarger, 1))
-// 		builder.WriteString(glob.KeySymbolColon)
-// 		builder.WriteByte('\n')
-// 		for _, fact := range stmt.ThenFacts {
-// 			builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 2))
-// 			builder.WriteString("\n")
-// 		}
-// 	} else {
-// 		for _, fact := range stmt.ThenFacts {
-// 			builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 1))
-// 			builder.WriteByte('\n')
-// 		}
-// 	}
-// 	if len(stmt.Proofs) > 0 {
-// 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve, 1))
-// 		builder.WriteString(glob.KeySymbolColon)
-// 		builder.WriteByte('\n')
-// 		for _, proof := range stmt.Proofs {
-// 			builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 2))
-// 			builder.WriteByte('\n')
-// 		}
-// 	}
-// 	return builder.String()
-// }
-
 func (stmt *ClaimIffStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordClaim)

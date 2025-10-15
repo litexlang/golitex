@@ -1,2 +1,31 @@
-let x R: x >= 0
-0 <= x
+exist_prop x Z st exist_divisor_of(a, b, c Z):
+    b != 0
+    a % b = c
+    <=>:
+        a = b * x + c
+
+know forall a, b, c Z => $exist_divisor_of(a, b, c)
+
+know forall a, b, c Z: a % c = 0 => a * b % c = 0
+know forall a, b, c Z => (a + b + c) % c = a % c + b % c + c % c
+
+claim:
+    forall a Z:
+        a^2 % 4 = 0 or a^2 % 4 = 1
+    prove:
+        prove_in_each_case:
+            or:
+                a % 2 = 1
+                a % 2 = 0
+            =>:
+                a^2 % 4 = 0 or a^2 % 4 = 1
+            prove:
+                have x st $exist_divisor_of(a, 2, 1)
+                a = 2 * x + 1
+                a^2 = (2 * x + 1)^2 = 4 * x^2 + 4 * x + 1
+                a^2 % 4 = (4 * x^2 + 4 * x + 1) % 4 = (4 * x^2) % 4 + (4 * x) % 4 + 1 % 4 = 0 + 0 + 1 = 1
+            prove:
+                have x st $exist_divisor_of(a, 2, 0)
+                a = 2 * x
+                a^2 = (2 * x)^2 = 4 * x^2
+                a^2 % 4 = (4 * x^2) % 4 = 0
