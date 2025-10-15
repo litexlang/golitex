@@ -351,22 +351,41 @@ know @subtraction_preserves_inequality_with_positive_term(a R, b R, c R):
     =>:
         a < b
 
-know forall x , y R: y > 0 => x + y > x
+know:
+	forall x, y R: y > 0 => x + y > x
+	forall x, y R: y > 0 => x - y < x
+	forall x, y R: y < 0 => x + y < x
+	forall x, y R: y < 0 => x - y > x
 
-know forall x, y R: not x > y => x <= y
-know forall x, y R: not x < y => x >= y
-know forall x, y R: not x >= y => x < y
-know forall x, y R: not x <= y => x > y
-know forall x, y R: not x = y, not x > y => x < y
-know forall x, y R: not x = y, not x < y => x > y
+	forall x, y R: x > 0 => x + y > y
+	forall x, y R: x < 0 => x + y < y
+	forall x, y R: x >= 0 => x + y >= y
+	forall x, y R: x <= 0 => x + y <= y
+
+	forall x, y R: y >= 0 => x + y >= x
+	forall x, y R: y >= 0 => x - y <= x
+	forall x, y R: y <= 0 => x + y <= x
+	forall x, y R: y <= 0 => x - y >= x
 
 know:
-	forall x R: x = x => not x > x, not x < x
-	forall x R: x > x => not x = x, not x < x
-	forall x R: x < x => not x = x, not x > x
-	forall x R: x >= x => not x < x
-	forall x R: x <= x => not x > x
-	forall x R: x != x => x > x, x < x
+	forall x, y R => x >= y <=> y <= x
+	forall x, y R => x > y <=> y < x
+
+	forall x, y R: not x > y => x <= y
+	forall x, y R: not x < y => x >= y
+	forall x, y R: not x >= y => x < y
+	forall x, y R: not x <= y => x > y
+	forall x, y R: not x = y, not x > y => x < y
+	forall x, y R: not x = y, not x < y => x > y
+
+
+know:
+	forall x, y R => x = y <=> not x > y, not x < y
+	forall x, y R => x > y <=> not x <= y
+	forall x, y R => x < y <=> not x >= y
+	forall x, y R => x != y <=> x > y or x < y
+	forall x, y R => x >= y <=> x = y or x > y
+	forall x, y R => x <= y <=> x = y or x < y
 
 # Logical operator equivalences
 know:
