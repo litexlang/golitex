@@ -176,12 +176,6 @@ func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right
 	return false, nil
 }
 
-// func (ver *Verifier) equalFact_MatchEnv_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right ast.Fc, state *VerState) (bool, error) {
-// 	// panic("equalFact_MatchEnv_SpecMem_atEnv: not implemented")
-// 	equalFact := ver.makeEqualFact(left, right)
-// 	return ver.specFact_MatchEnv_SpecMem(curEnv, equalFact, state)
-// }
-
 func (ver *Verifier) verLogicMem_leftToRight_RightToLeft(left ast.Fc, right ast.Fc, state *VerState) (bool, error) {
 	equalFact := ast.NewEqualFact(left, right)
 	ok, err := ver.verSpecFactLogicMem(equalFact, state)
