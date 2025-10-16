@@ -860,21 +860,21 @@ func (s *HaveFnLiftStmt) ToLatexString() string {
 }
 
 func (s *HaveFnStmt) ToLatexString() string {
-	return "TODO"
+	return s.String()
 }
 
 func (s *MarkdownStmt) ToLatexString() string {
 	return s.Markdown
 }
 
-func (s *ProveInRange2tmt) ToLatexString() string {
-	return "TODO"
-}
+// func (s *ProveInRange2tmt) ToLatexString() string {
+// 	return "TODO"
+// }
 
 func (s *ClaimIffStmt) ToLatexString() string {
 	return s.String()
 }
 
 func (s *ProveInRangeStmt) ToLatexString() string {
-	return "TODO"
+	return s.String()
 }
