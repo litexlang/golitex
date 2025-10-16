@@ -16,9 +16,14 @@ package litex_env
 
 import (
 	ast "golitex/ast"
+	cmp "golitex/cmp"
 )
 
 func (env *Env) ReplaceSymbolWithValue(fc ast.Fc) (bool, ast.Fc) {
+	if cmp.IsNumLitFc(fc) {
+		return false, fc
+	}
+
 	switch asFc := fc.(type) {
 	case ast.FcAtom:
 		return env.replaceFcAtomWithValue(asFc)
@@ -36,8 +41,9 @@ func (env *Env) replaceFcFnWithValue(fc *ast.FcFn) (bool, ast.Fc) {
 	replaced := false
 	newParams := make([]ast.Fc, len(fc.Params))
 	for i, param := range fc.Params {
-		replaced, newParams[i] = env.ReplaceSymbolWithValue(param)
-		replaced = replaced || replaced
+		var newReplaced bool
+		newReplaced, newParams[i] = env.ReplaceSymbolWithValue(param)
+		replaced = replaced || newReplaced
 	}
 	return replaced, ast.NewFcFn(fc.FnHead, newParams)
 }
@@ -47,15 +53,17 @@ func (env *Env) replaceFcAtomWithValue(fc ast.FcAtom) (bool, ast.Fc) {
 	if !ok {
 		return false, fc
 	}
+
 	return true, symbolValue
 }
 
-func (env *Env) ReplaceFcInEqualFact(fact *ast.SpecFactStmt) (bool, *ast.SpecFactStmt) {
+func (env *Env) ReplaceFcInSpecFact(fact *ast.SpecFactStmt) (bool, *ast.SpecFactStmt) {
 	newParams := make([]ast.Fc, len(fact.Params))
 	replaced := false
 	for i, param := range fact.Params {
-		replaced, newParams[i] = env.ReplaceSymbolWithValue(param)
-		replaced = replaced || replaced
+		var newReplaced bool
+		newReplaced, newParams[i] = env.ReplaceSymbolWithValue(param)
+		replaced = replaced || newReplaced
 	}
 	return replaced, ast.NewSpecFactStmt(fact.TypeEnum, fact.PropName, newParams, fact.Line)
 }
