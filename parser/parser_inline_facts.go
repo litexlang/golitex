@@ -25,7 +25,7 @@ import (
 func (tb *tokenBlock) inlineFacts_untilEndOfInline() ([]ast.FactStmt, error) {
 	facts := []ast.FactStmt{}
 	for {
-		fact, err := tb.inlineFactSkipTerminator()
+		fact, err := tb.inlineFactSkipStmtTerminator()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -66,7 +66,7 @@ func (tb *tokenBlock) inlineFacts_untilEndOfInline() ([]ast.FactStmt, error) {
 // }
 
 // fact, isEnd, err
-func (tb *tokenBlock) inlineFactSkipTerminator() (ast.FactStmt, error) {
+func (tb *tokenBlock) inlineFactSkipStmtTerminator() (ast.FactStmt, error) {
 	curToken, err := tb.header.currentToken()
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -112,7 +112,7 @@ func (tb *tokenBlock) bodyOfInlineDomAndThen(word string) ([]ast.FactStmt, []ast
 func (tb *tokenBlock) inlineFacts_untilWord(word string) ([]ast.FactStmt, error) {
 	facts := []ast.FactStmt{}
 	for {
-		fact, err := tb.inlineFactSkipTerminator()
+		fact, err := tb.inlineFactSkipStmtTerminator()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -130,7 +130,7 @@ func (tb *tokenBlock) inlineFacts_untilWord(word string) ([]ast.FactStmt, error)
 func (tb *tokenBlock) inlineFacts_untilWord_or_exceedEnd_notSkipWord(word string) ([]ast.FactStmt, error) {
 	facts := []ast.FactStmt{}
 	for {
-		fact, err := tb.inlineFactSkipTerminator()
+		fact, err := tb.inlineFactSkipStmtTerminator()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -157,7 +157,7 @@ func (tb *tokenBlock) inlineUniFact_Param_ParamSet_ParamInSetFacts() ([]string, 
 		return params, setParams, nil
 	}
 
-	if !tb.header.is(glob.KeySymbolEqualLarger) || !tb.header.is(glob.KeySymbolColon) {
+	if !tb.header.is(glob.KeySymbolRightArrow) || !tb.header.is(glob.KeySymbolColon) {
 		for {
 			param, err := tb.header.next()
 			if err != nil {
@@ -191,7 +191,7 @@ func (tb *tokenBlock) inlineUniFact_Param_ParamSet_ParamInSetFacts() ([]string, 
 				continue
 			}
 
-			if tb.header.is(glob.KeySymbolEqualLarger) || tb.header.is(glob.KeySymbolColon) {
+			if tb.header.is(glob.KeySymbolRightArrow) || tb.header.is(glob.KeySymbolColon) {
 				break
 			}
 
@@ -236,7 +236,7 @@ func (tb *tokenBlock) inlineUniInterfaceSkipTerminator() (ast.UniFactInterface, 
 	setParams := []ast.Fc{}
 	domFact := []ast.FactStmt{}
 
-	if !tb.header.is(glob.KeySymbolEqualLarger) {
+	if !tb.header.is(glob.KeySymbolRightArrow) {
 		params, setParams, err = tb.inlineUniFact_Param_ParamSet_ParamInSetFacts()
 		if err != nil {
 			return nil, tbErr(err, tb)
@@ -251,7 +251,7 @@ func (tb *tokenBlock) inlineUniInterfaceSkipTerminator() (ast.UniFactInterface, 
 		}
 	}
 
-	tb.header.skip(glob.KeySymbolEqualLarger)
+	tb.header.skip(glob.KeySymbolRightArrow)
 	thenFact, isEnd, err := tb.thenFactsInUniFactInterface()
 	if err != nil {
 		return nil, err
@@ -289,7 +289,7 @@ func (tb *tokenBlock) inlineIfInterfaceSkipTerminator() (ast.UniFactInterface, e
 		return nil, err
 	}
 
-	tb.header.skip(glob.KeySymbolEqualLarger)
+	tb.header.skip(glob.KeySymbolRightArrow)
 	thenFact, isEnd, err := tb.thenFactsInUniFactInterface()
 	if err != nil {
 		return nil, err
@@ -314,7 +314,7 @@ func (tb *tokenBlock) inlineIfInterfaceSkipTerminator() (ast.UniFactInterface, e
 func (tb *tokenBlock) thenFactsInUniFactInterface() ([]ast.FactStmt, bool, error) {
 	facts := []ast.FactStmt{}
 	for {
-		specFact, err := tb.inlineFactSkipTerminator()
+		specFact, err := tb.inlineFactSkipStmtTerminator()
 		if err != nil {
 			return nil, false, tbErr(err, tb)
 		}
@@ -338,7 +338,7 @@ func (tb *tokenBlock) thenFactsInUniFactInterface() ([]ast.FactStmt, bool, error
 func (tb *tokenBlock) thenFacts_SkipEnd_Semicolon_or_EOL() ([]ast.FactStmt, error) {
 	facts := []ast.FactStmt{}
 	for {
-		specFact, err := tb.inlineFactSkipTerminator()
+		specFact, err := tb.inlineFactSkipStmtTerminator()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -359,13 +359,13 @@ func (tb *tokenBlock) thenFacts_SkipEnd_Semicolon_or_EOL() ([]ast.FactStmt, erro
 func (tb *tokenBlock) domFactInUniFactInterface() ([]ast.FactStmt, error) {
 	facts := []ast.FactStmt{}
 	for {
-		specFact, err := tb.inlineFactSkipTerminator()
+		specFact, err := tb.inlineFactSkipStmtTerminator()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
 		facts = append(facts, specFact)
-		if tb.header.is(glob.KeySymbolEqualLarger) {
-			tb.header.skip(glob.KeySymbolEqualLarger)
+		if tb.header.is(glob.KeySymbolRightArrow) {
+			tb.header.skip(glob.KeySymbolRightArrow)
 			return facts, nil
 		}
 	}

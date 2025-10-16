@@ -179,7 +179,7 @@ func listenOneStatementFromTerminal(reader *bufio.Reader, writer io.Writer) (str
 			return "", fmt.Errorf("error reading input: %s", err)
 		}
 
-		currentLineStr = glob.ProcessEscapeSequences(currentLineStr)
+		currentLineStr = glob.ProcessWindowsCompatibility(currentLineStr)
 		trimmedLine := strings.TrimRight(currentLineStr, " \t\n")
 
 		if currentScopeDepth > 0 {

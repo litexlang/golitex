@@ -311,12 +311,12 @@ know:
     forall n N_pos, a finite_seq(R, n) => finite_seq_product(n, a, 1) = a(1)
 
 know:
-	$exist_in(N)
-	$exist_in(N_pos)
-	$exist_in(Z)
-	$exist_in(Q)
-	$exist_in(R)
-	$exist_in(C)
+	$exist_item_in(N)
+	$exist_item_in(N_pos)
+	$exist_item_in(Z)
+	$exist_item_in(Q)
+	$exist_item_in(R)
+	$exist_item_in(C)
 	forall x N_pos:
 		x > 0
 
@@ -351,22 +351,41 @@ know @subtraction_preserves_inequality_with_positive_term(a R, b R, c R):
     =>:
         a < b
 
-know forall x , y R: y > 0 => x + y > x
+know:
+	forall x, y R: y > 0 => x + y > x
+	forall x, y R: y > 0 => x - y < x
+	forall x, y R: y < 0 => x + y < x
+	forall x, y R: y < 0 => x - y > x
 
-know forall x, y R: not x > y => x <= y
-know forall x, y R: not x < y => x >= y
-know forall x, y R: not x >= y => x < y
-know forall x, y R: not x <= y => x > y
-know forall x, y R: not x = y, not x > y => x < y
-know forall x, y R: not x = y, not x < y => x > y
+	forall x, y R: x > 0 => x + y > y
+	forall x, y R: x < 0 => x + y < y
+	forall x, y R: x >= 0 => x + y >= y
+	forall x, y R: x <= 0 => x + y <= y
+
+	forall x, y R: y >= 0 => x + y >= x
+	forall x, y R: y >= 0 => x - y <= x
+	forall x, y R: y <= 0 => x + y <= x
+	forall x, y R: y <= 0 => x - y >= x
 
 know:
-	forall x R: x = x => not x > x, not x < x
-	forall x R: x > x => not x = x, not x < x
-	forall x R: x < x => not x = x, not x > x
-	forall x R: x >= x => not x < x
-	forall x R: x <= x => not x > x
-	forall x R: x != x => x > x, x < x
+	forall x, y R => x >= y <=> y <= x
+	forall x, y R => x > y <=> y < x
+
+	forall x, y R: not x > y => x <= y
+	forall x, y R: not x < y => x >= y
+	forall x, y R: not x >= y => x < y
+	forall x, y R: not x <= y => x > y
+	forall x, y R: not x = y, not x > y => x < y
+	forall x, y R: not x = y, not x < y => x > y
+
+
+know:
+	forall x, y R => x = y <=> not x > y, not x < y
+	forall x, y R => x > y <=> not x <= y
+	forall x, y R => x < y <=> not x >= y
+	forall x, y R => x != y <=> x > y or x < y
+	forall x, y R => x >= y <=> x = y or x > y
+	forall x, y R => x <= y <=> x = y or x < y
 
 # Logical operator equivalences
 know:
@@ -413,10 +432,10 @@ know @cancel_general(a, b, c, d R):
 
 # TODO: 之后把这个移除kernel_lib而是做成像set一样内置的东西
 know:
-	$exist_in(nonempty_set)
+	$exist_item_in(nonempty_set)
 	forall x nonempty_set:
 		x $in set
-		$exist_in(x)
+		$exist_item_in(x)
 
 know @product_is_0_then_at_least_one_factor_is_0(a, b R):
 	a * b = 0
