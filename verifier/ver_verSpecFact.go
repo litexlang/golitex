@@ -23,6 +23,33 @@ import (
 )
 
 func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+	// replace the params with the values
+	replaced, newStmt := ver.env.ReplaceFcInSpecFact(stmt)
+	if replaced {
+		ok, err := ver.verSpecFactThatIsNotTrueEqualFactMainLogic(newStmt, state)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			if state.WithMsg {
+				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
+			}
+			return true, nil
+		}
+	}
+
+	ok, err := ver.verSpecFactThatIsNotTrueEqualFactMainLogic(stmt, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (ver *Verifier) verSpecFactThatIsNotTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	var ok bool
 	var err error
 
@@ -31,11 +58,6 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact(stmt *ast.SpecFactStmt, s
 			return false, err
 		}
 	}
-
-	// 在证明 proj(0, add_product(1,2)) $in ... 的时候可能用到
-	// if stmt.NameIs(glob.KeywordIn) && !ver.isProvingObjInSetUsingEqualObjs {
-	// 	return ver.verInSet_OverAllObjsEqualToIt(stmt, state)
-	// }
 
 	ok, err = ver.isSpecFactCommutative(stmt)
 	if err != nil {
