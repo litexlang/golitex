@@ -33,10 +33,3 @@ func Test_File(t *testing.T) {
 	executionTime := time.Since(startTime)
 	fmt.Printf("execution time: %s\n", executionTime)
 }
-
-func Test_E() {
-	code := `prop can_form_a triangle(x, y z R):\r\n domr\r\n
-x>0Vny0nz>0n<=>nxty>n xtz>n ytz>xn"`
-	_ = code
-	return
-}
