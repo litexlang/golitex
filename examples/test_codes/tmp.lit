@@ -1,4 +1,2 @@
- prop P(x R)
-
-have set s := x R:
-    $P(x)
+let a R: a = 1
+a > 0

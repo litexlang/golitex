@@ -27,7 +27,7 @@ func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, c
 	var ok bool
 	var err error
 
-	replaced, newStmt := ver.env.ReplaceFcInEqualFact(stmt)
+	replaced, newStmt := ver.env.ReplaceFcInSpecFact(stmt)
 	if replaced {
 		ok, err = ver.verTrueEqualFactMainLogic(newStmt, state, true)
 		if err != nil {
