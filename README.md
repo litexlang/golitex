@@ -4,7 +4,7 @@
 
 <div align="center">
 
-# Litex: The First Formal Language Learnable in 2 Hrs
+# Litex: A Simple & Elegant Formal Language Learnable in 2 Hours
 
 **version v0.1.10-beta (not yet ready for production use)**  
 *Jiachen Shen and The Litex Team*
@@ -18,7 +18,7 @@
 
 </div>
 
-## Simple, Intuitive, Expressive — For Humans & AI 
+## Simple, Intuitive, Expressive — Learnable For Humans & AI 
 
 _Simplicity is the ultimate sophistication._
 

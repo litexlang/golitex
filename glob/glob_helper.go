@@ -14,7 +14,10 @@
 
 package litex_global
 
-import "strings"
+import (
+	"regexp"
+	"strings"
+)
 
 func CopyMap[T any](src map[string]T) map[string]T {
 	dst := make(map[string]T)
@@ -55,6 +58,9 @@ func GenerateNamesLikeExcelColumnNames(n int) []string {
 	return names
 }
 
-func ProcessEscapeSequences(code string) string {
+func ProcessWindowsCompatibility(code string) string {
+	// Replace various Unicode whitespace characters with regular space
+	re := regexp.MustCompile(`[\x{00A0}\x{2000}-\x{200B}\x{3000}\x{FEFF}]`)
+	code = re.ReplaceAllString(code, " ")
 	return strings.ReplaceAll(code, "\\r", "")
 }

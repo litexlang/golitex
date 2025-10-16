@@ -55,7 +55,7 @@ func main() {
 	// Handle combined -latex and -e
 	if *elatexFlag != "" {
 		// 处理转义序列
-		msg, signal, err := sys.CompileCodeToLatex(glob.ProcessEscapeSequences(*elatexFlag))
+		msg, signal, err := sys.CompileCodeToLatex(glob.ProcessWindowsCompatibility(*elatexFlag))
 		if err != nil || signal != glob.SysSignalTrue {
 			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)
@@ -67,7 +67,7 @@ func main() {
 	// Handle execution flags
 	if *executeFlag != "" {
 		// Normal execution
-		msg, signal, err := sys.ExecuteCodeAndReturnMessage(glob.ProcessEscapeSequences(*executeFlag))
+		msg, signal, err := sys.ExecuteCodeAndReturnMessage(glob.ProcessWindowsCompatibility(*executeFlag))
 		msg = strings.TrimSpace(msg)
 		fmt.Println(msg)
 		if err != nil {
@@ -87,7 +87,7 @@ func main() {
 		}
 
 		// Process file
-		msg, signal, err := sys.RunFile(glob.ProcessEscapeSequences(*fileFlag))
+		msg, signal, err := sys.RunFile(glob.ProcessWindowsCompatibility(*fileFlag))
 		fmt.Println(msg)
 		if err != nil {
 			fmt.Printf("Error: %s\n", err)
@@ -105,7 +105,7 @@ func main() {
 			os.Exit(1)
 		}
 		// run the repo
-		msg, signal, err := sys.RunRepo(glob.ProcessEscapeSequences(*repoFlag))
+		msg, signal, err := sys.RunRepo(glob.ProcessWindowsCompatibility(*repoFlag))
 		fmt.Println(msg)
 		if err != nil {
 			fmt.Printf("Error: %s\n", err)
@@ -118,7 +118,7 @@ func main() {
 	}
 
 	if *latexFlag != "" {
-		msg, signal, err := sys.CompileFileToLatex(glob.ProcessEscapeSequences(*latexFlag))
+		msg, signal, err := sys.CompileFileToLatex(glob.ProcessWindowsCompatibility(*latexFlag))
 		if err != nil || signal != glob.SysSignalTrue {
 			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)
