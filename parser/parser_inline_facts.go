@@ -25,7 +25,7 @@ import (
 func (tb *tokenBlock) inlineFacts_untilEndOfInline() ([]ast.FactStmt, error) {
 	facts := []ast.FactStmt{}
 	for {
-		fact, err := tb.inlineFactSkipTerminator()
+		fact, err := tb.inlineFactSkipStmtTerminator()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -66,7 +66,7 @@ func (tb *tokenBlock) inlineFacts_untilEndOfInline() ([]ast.FactStmt, error) {
 // }
 
 // fact, isEnd, err
-func (tb *tokenBlock) inlineFactSkipTerminator() (ast.FactStmt, error) {
+func (tb *tokenBlock) inlineFactSkipStmtTerminator() (ast.FactStmt, error) {
 	curToken, err := tb.header.currentToken()
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -112,7 +112,7 @@ func (tb *tokenBlock) bodyOfInlineDomAndThen(word string) ([]ast.FactStmt, []ast
 func (tb *tokenBlock) inlineFacts_untilWord(word string) ([]ast.FactStmt, error) {
 	facts := []ast.FactStmt{}
 	for {
-		fact, err := tb.inlineFactSkipTerminator()
+		fact, err := tb.inlineFactSkipStmtTerminator()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -130,7 +130,7 @@ func (tb *tokenBlock) inlineFacts_untilWord(word string) ([]ast.FactStmt, error)
 func (tb *tokenBlock) inlineFacts_untilWord_or_exceedEnd_notSkipWord(word string) ([]ast.FactStmt, error) {
 	facts := []ast.FactStmt{}
 	for {
-		fact, err := tb.inlineFactSkipTerminator()
+		fact, err := tb.inlineFactSkipStmtTerminator()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -314,7 +314,7 @@ func (tb *tokenBlock) inlineIfInterfaceSkipTerminator() (ast.UniFactInterface, e
 func (tb *tokenBlock) thenFactsInUniFactInterface() ([]ast.FactStmt, bool, error) {
 	facts := []ast.FactStmt{}
 	for {
-		specFact, err := tb.inlineFactSkipTerminator()
+		specFact, err := tb.inlineFactSkipStmtTerminator()
 		if err != nil {
 			return nil, false, tbErr(err, tb)
 		}
@@ -338,7 +338,7 @@ func (tb *tokenBlock) thenFactsInUniFactInterface() ([]ast.FactStmt, bool, error
 func (tb *tokenBlock) thenFacts_SkipEnd_Semicolon_or_EOL() ([]ast.FactStmt, error) {
 	facts := []ast.FactStmt{}
 	for {
-		specFact, err := tb.inlineFactSkipTerminator()
+		specFact, err := tb.inlineFactSkipStmtTerminator()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -359,7 +359,7 @@ func (tb *tokenBlock) thenFacts_SkipEnd_Semicolon_or_EOL() ([]ast.FactStmt, erro
 func (tb *tokenBlock) domFactInUniFactInterface() ([]ast.FactStmt, error) {
 	facts := []ast.FactStmt{}
 	for {
-		specFact, err := tb.inlineFactSkipTerminator()
+		specFact, err := tb.inlineFactSkipStmtTerminator()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
