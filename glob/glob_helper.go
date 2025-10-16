@@ -58,9 +58,10 @@ func GenerateNamesLikeExcelColumnNames(n int) []string {
 	return names
 }
 
+var invalidSpaceRe = regexp.MustCompile("[\u00A0\u2000-\u200B\u3000\uFEFF]")
+
 func ProcessWindowsCompatibility(code string) string {
-	// Replace various Unicode whitespace characters with regular space
-	re := regexp.MustCompile(`[\x{00A0}\x{2000}-\x{200B}\x{3000}\x{FEFF}]`)
-	code = re.ReplaceAllString(code, " ")
-	return strings.ReplaceAll(code, "\\r", "")
+	code = invalidSpaceRe.ReplaceAllString(code, " ")
+	code = strings.ReplaceAll(code, "\\r", "")
+	return code
 }
