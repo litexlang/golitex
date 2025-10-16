@@ -1,2 +1,4 @@
-if 1 = 1:
-    1 = 1
+ prop P(x R)
+
+have set s := x R:
+    $P(x)
