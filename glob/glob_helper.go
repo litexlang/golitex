@@ -62,6 +62,6 @@ var invalidSpaceRe = regexp.MustCompile("[\u00A0\u2000-\u200B\u3000\uFEFF]")
 
 func ProcessWindowsCompatibility(code string) string {
 	code = invalidSpaceRe.ReplaceAllString(code, " ")
-	code = strings.ReplaceAll(code, "\\r", "")
+	code = strings.ReplaceAll(code, "\r", "")
 	return code
 }
