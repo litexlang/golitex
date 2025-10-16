@@ -16,6 +16,7 @@ package litex_global
 
 import (
 	"regexp"
+	"strings"
 )
 
 func CopyMap[T any](src map[string]T) map[string]T {
@@ -57,8 +58,10 @@ func GenerateNamesLikeExcelColumnNames(n int) []string {
 	return names
 }
 
-var invalidSpaceRe = regexp.MustCompile("[\u00A0\u2000-\u200B\u3000\uFEFF\r]")
+var invalidSpaceRe = regexp.MustCompile("[\u00A0\u2000-\u200B\u3000\uFEFF]")
 
 func ProcessWindowsCompatibility(code string) string {
-	return invalidSpaceRe.ReplaceAllString(code, " ")
+	code = invalidSpaceRe.ReplaceAllString(code, " ")
+	code = strings.ReplaceAll(code, "\\r", "")
+	return code
 }
