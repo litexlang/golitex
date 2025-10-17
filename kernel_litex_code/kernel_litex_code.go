@@ -18,12 +18,6 @@ var PipelineInitCode = `
 prop last_two_objects_are_equal(x, y, y2 obj):
 	y = y2
 
-know @larger_is_transitive(x, y, z R):
-	x > y
-	y > z
-	=>:
-		x > z
-
 exist_prop a in_set st exist_obj_not_in_left_set_but_in_right_set(not_in_set, in_set set):
 	not a $in not_in_set
 
@@ -100,154 +94,6 @@ know forall x, y, z R: x + y = z => y + x = z
 
 know forall x, y, z R: x * y = z => y * x = z
 
-know @less_equal_add_cancel(x, y, z R):
-	x + z <= y + z
-	=>:
-		x <= y
-
-know @less_equal_minus_cancel(x, y, z R):
-	x - z <= y - z
-	=>:
-		x <= y
-
-know @less_add_cancel(x, y, z R):
-	x + z < y + z
-	=>:
-		x < y
-
-know @less_minus_cancel(x, y, z R):
-	x - z < y - z
-	=>:
-		x < y
-
-know @greater_add_cancel(x, y, z R):
-	x + z > y + z
-	=>:
-		x > y
-
-know @greater_minus_cancel(x, y, z R):
-	x - z > y - z
-	=>:
-		x > y
-
-know @greater_equal_add_cancel(x, y, z R):
-	x + z >= y + z
-	=>:
-		x >= y
-
-know @greater_equal_minus_cancel(x, y, z R):
-	x - z >= y - z
-	=>:
-		x >= y
-
-know @greater_equal_mul_pos_cancel(x, y, z R):
-	z > 0
-	x * z >= y * z
-	=>:
-		x >= y
-
-know @greater_equal_div_pos_cancel(x, y, z R):
-	z > 0
-	x / z >= y / z
-	=>:
-		x >= y
-
-know @greater_div_pos_cancel(x, y, z R):
-	z > 0
-	x / z > y / z
-	=>:
-		x > y
-
-know @less_div_pos_cancel(x, y, z R):
-	z > 0
-	x / z < y / z
-	=>:
-		x < y
-
-know @less_equal_div_pos_cancel(x, y, z R):
-	z > 0
-	x / z <= y / z
-	=>:
-		x <= y
-
-know @less_div_neg_cancel(x, y, z R):
-	z < 0
-	x / z < y / z
-	=>:
-		x > y
-
-know @less_equal_div_neg_cancel(x, y, z R):
-	z < 0
-	x / z <= y / z
-	=>:
-		x >= y
-
-know @greater_equal_mul_neg_cancel(x, y, z R):
-	z < 0
-	x / z >= y / z
-	=>:
-		x <= y
-
-know @greater_equal_div_neg_cancel(x, y, z R):
-	z < 0
-	x / z > y / z
-	=>:
-		x < y
-
-know @less_equal_mul_neg_cancel(x, y, z R):
-	z < 0
-	x * z <= y * z
-	=>:
-		x >= y
-
-know @larger_equal_mul_neg_cancel(x, y, z R):
-	z < 0
-	x * z >= y * z
-	=>:
-		x <= y
-
-know @less_mul_neg_cancel(x, y, z R):
-	z < 0
-	x * z < y * z
-	=>:
-		x > y
-
-know @greater_mul_neg_cancel(x, y, z R):
-	z < 0
-	x * z > y * z
-	=>:
-		x < y
-
-know @greater_than_pow_cancel(x, y, z R):
-	z > 0
-	x > 0
-	y > 0
-	x ^ z > y ^ z
-	=>:
-		x > y
-
-know @greater_equal_pow_cancel(x, y, z R):
-	z > 0
-	x > 0
-	y > 0
-	x ^ z >= y ^ z
-	=>:
-		x >= y
-
-know @less_pow_cancel(x, y, z R):
-	z > 0
-	x > 0
-	y > 0
-	x ^ z < y ^ z
-	=>:
-		x < y
-
-know @less_equal_pow_cancel(x, y, z R):
-	z > 0
-	x > 0
-	y > 0
-	x ^ z <= y ^ z
-
 fn abs(x R) R
 know:
 	forall x R:
@@ -275,8 +121,6 @@ know @finite_set_subset_is_finite_set(s1 finite_set, s2 set):
 		s2 $in finite_set
 
 know forall x N: x != 0 => x > 0
-
-know forall x, y R: x > 0, y > 0 => x * y > 0
 
 know forall x, y R: x > 0, y > 0 => x ^ y $in R, x ^ y > 0, x * y > 0
 
@@ -541,15 +385,7 @@ know:
 				t $in y
 			forall t y:
 				t $in x
-
-know:
-	forall x, y R: x < y => x - y < 0
-	forall x, y R: x > y => x - y > 0
-	forall x, y R: x <= y => x - y <= 0
-	forall x, y R: x >= y => x - y >= 0
-	forall x, y R: x = y => x - y = 0
-	forall x, y R: x != y => x - y != 0
-`
+` + InequalityFacts
 
 var InequalityFacts = `
 know:
@@ -559,4 +395,168 @@ know:
 	forall x, y R: x >= y => x - y >= 0
 	forall x, y R: x = y => x - y = 0
 	forall x, y R: x != y => x - y != 0
+
+know @larger_is_transitive(x, y, z R):
+	x > y
+	y > z
+	=>:
+		x > z
+
+know @less_equal_add_cancel(x, y, z R):
+	x + z <= y + z
+	=>:
+		x <= y
+
+know @less_equal_minus_cancel(x, y, z R):
+	x - z <= y - z
+	=>:
+		x <= y
+
+know @less_add_cancel(x, y, z R):
+	x + z < y + z
+	=>:
+		x < y
+
+know @less_minus_cancel(x, y, z R):
+	x - z < y - z
+	=>:
+		x < y
+
+know @greater_add_cancel(x, y, z R):
+	x + z > y + z
+	=>:
+		x > y
+
+know @greater_minus_cancel(x, y, z R):
+	x - z > y - z
+	=>:
+		x > y
+
+know @greater_equal_add_cancel(x, y, z R):
+	x + z >= y + z
+	=>:
+		x >= y
+
+know @greater_equal_minus_cancel(x, y, z R):
+	x - z >= y - z
+	=>:
+		x >= y
+
+know @greater_equal_mul_pos_cancel(x, y, z R):
+	z > 0
+	x * z >= y * z
+	=>:
+		x >= y
+
+know @greater_equal_div_pos_cancel(x, y, z R):
+	z > 0
+	x / z >= y / z
+	=>:
+		x >= y
+
+know @greater_div_pos_cancel(x, y, z R):
+	z > 0
+	x / z > y / z
+	=>:
+		x > y
+
+know @less_div_pos_cancel(x, y, z R):
+	z > 0
+	x / z < y / z
+	=>:
+		x < y
+
+know @less_equal_div_pos_cancel(x, y, z R):
+	z > 0
+	x / z <= y / z
+	=>:
+		x <= y
+
+know @less_div_neg_cancel(x, y, z R):
+	z < 0
+	x / z < y / z
+	=>:
+		x > y
+
+know @less_equal_div_neg_cancel(x, y, z R):
+	z < 0
+	x / z <= y / z
+	=>:
+		x >= y
+
+know @greater_equal_mul_neg_cancel(x, y, z R):
+	z < 0
+	x / z >= y / z
+	=>:
+		x <= y
+
+know @greater_equal_div_neg_cancel(x, y, z R):
+	z < 0
+	x / z > y / z
+	=>:
+		x < y
+
+know @less_equal_mul_neg_cancel(x, y, z R):
+	z < 0
+	x * z <= y * z
+	=>:
+		x >= y
+
+know @larger_equal_mul_neg_cancel(x, y, z R):
+	z < 0
+	x * z >= y * z
+	=>:
+		x <= y
+
+know @less_mul_neg_cancel(x, y, z R):
+	z < 0
+	x * z < y * z
+	=>:
+		x > y
+
+know @greater_mul_neg_cancel(x, y, z R):
+	z < 0
+	x * z > y * z
+	=>:
+		x < y
+
+know @greater_than_pow_cancel(x, y, z R):
+	z > 0
+	x > 0
+	y > 0
+	x ^ z > y ^ z
+	=>:
+		x > y
+
+know @greater_equal_pow_cancel(x, y, z R):
+	z > 0
+	x > 0
+	y > 0
+	x ^ z >= y ^ z
+	=>:
+		x >= y
+
+know @less_pow_cancel(x, y, z R):
+	z > 0
+	x > 0
+	y > 0
+	x ^ z < y ^ z
+	=>:
+		x < y
+
+know @less_equal_pow_cancel(x, y, z R):
+	z > 0
+	x > 0
+	y > 0
+	x ^ z <= y ^ z
+
+know:
+	forall x, y R: x > 0, y > 0 => x * y > 0
+	forall x, y R: x > 0, y < 0 => x * y < 0
+	forall x, y R: x < 0, y < 0 => x * y > 0
+	forall x, y R: x < 0, y > 0 => x * y < 0
+	forall x, y R: x >= 0, y >= 0 => x * y >= 0
+	forall x, y R: x >= 0, y <= 0 => x * y <= 0
+	forall x, y R: x <= 0, y <= 0 => x * y >= 0
+	forall x, y R: x <= 0, y >= 0 => x * y <= 0
 `
