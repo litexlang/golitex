@@ -72,7 +72,7 @@ Making Litex intuitive to both humans and AI is Litex's core mission. Just like 
   </tr>
 </table>
 
-Even Kids can formalize the multivariate equation in Litex in 2 minutes, while it require an experienced expert months of training and years of experience in Lean 4. The above example best demonstrates how productive using Litex is!
+While Lean 4 is a powerful and rigorous proof assistant ideal, it requires months of training and years of experience to master. Litex takes a different approach: prioritizing accessibility and ease of use, enabling even beginners to formalize naive tasks like multivariate equations in minutes. For many everyday reasoning tasks, especially when rapid prototyping and intuitive syntax matter most, Litex offers a more approachable path. Each tool has its place — choose the one that best fits your needs and experience level!
 
 Our mission is to make Litex the most accessible and usable formal language for coding reasoning. We aim to solve the most challenging problems faced by the AI community, i.e. the challenge of efficient, scalable, and reliable coding reasoning. Let's build the future together!
 
