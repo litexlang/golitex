@@ -1,2 +1,5 @@
-let a R: a = 1
-a != 0 # no longer needs to write 1 > 0, a > 0
+let a set:
+    a = {1, 2, 3}
+
+prove_by_enum(x a):
+    x = 1 or x = 2 or x = 3
