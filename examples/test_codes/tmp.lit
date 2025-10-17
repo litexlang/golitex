@@ -1,2 +1,2 @@
 let a R: a = 1
-a > 0
+a != 0 # no longer needs to write 1 > 0, a > 0
