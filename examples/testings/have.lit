@@ -31,10 +31,10 @@ prove:
 
 # have sets by naive set theory
 prove:
-    have set s := {1, 2, 3}
-    have set s2 := {x N : x > 5}
+    have set s = {1, 2, 3}
+    have set s2 = {x N : x > 5}
 
-    s := {3, 2, 1}
+    s = {3, 2, 1}
 
     forall x s2:
         x > 5

@@ -22,7 +22,6 @@ import (
 
 func Test_File(t *testing.T) {
 	startTime := time.Now()
-	// fileName := "../examples/test_codes/solve_order_two_equation.lit"
 	fileName := "../examples/test_codes/tmp.lit"
 	msg, signal, err := RunFile(fileName)
 	if err != nil {
