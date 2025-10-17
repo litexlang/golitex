@@ -120,6 +120,10 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 }
 
 func (tb *tokenBlock) factStmt(uniFactDepth uniFactEnum) (ast.FactStmt, error) {
+	if !tb.EndWith(glob.KeySymbolColon) {
+		return tb.inlineFactSkipStmtTerminator()
+	}
+
 	cur, err := tb.header.currentToken()
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -1607,7 +1611,8 @@ func (tb *tokenBlock) relaFact_intensionalSetFact_enumStmt_equals() (ast.FactStm
 
 			ret = ast.NewSpecFactStmt(ast.TruePure, propName, params, tb.line)
 		}
-	} else if opt == glob.KeySymbolColonEqual {
+		// } else if opt == glob.KeySymbolColonEqual {
+	} else if opt == glob.KeySymbolEqual && tb.header.is(glob.KeySymbolLeftCurly) {
 		return tb.enumStmt_or_intensionalSetStmt_or_DomOf(fc)
 	} else if glob.IsBuiltinInfixRelaPropSymbol(opt) {
 		fc2, err := tb.RawFc()
@@ -1862,7 +1867,8 @@ func (tb *tokenBlock) haveSetStmt() (ast.Stmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	err = tb.header.skip(glob.KeySymbolColonEqual)
+	// err = tb.header.skip(glob.KeySymbolColonEqual)
+	err = tb.header.skip(glob.KeySymbolEqual)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -1885,7 +1891,8 @@ func (tb *tokenBlock) haveSetFnStmt() (ast.Stmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	err = tb.header.skip(glob.KeySymbolColonEqual)
+	// err = tb.header.skip(glob.KeySymbolColonEqual)
+	err = tb.header.skip(glob.KeySymbolEqual)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}

@@ -27,10 +27,10 @@ prove:
             x = 5
             x = 6
 
-s := {1,2,3,4,5,6}
+s = {1,2,3,4,5,6}
 
 let s2 set
-know s2 := {1,2,3,4,5,6}
+know s2 = {1,2,3,4,5,6}
 s2 $in finite_set
 len(s2) = 6
 

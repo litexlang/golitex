@@ -55,10 +55,10 @@ prove:
             not 1 >= x
 
 prove:
-    have set s := {1, 2, 3}
-    have set s2 := {x N: x > 5}
+    have set s = {1, 2, 3}
+    have set s2 = {x N: x > 5}
 
-    s := {3, 2, 1}
+    s = {3, 2, 1}
 
     forall x s2:
         x > 5
@@ -93,7 +93,7 @@ prove:
 # have set fn
 """
 prove:
-    have set fn exclude(s1, s2 set) := {x s1: not x $in s2}
+    have set fn exclude(s1, s2 set) = {x s1: not x $in s2}
 
     forall s1, s2 set:
         exclude(s1, s2) $in set
