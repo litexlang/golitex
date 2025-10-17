@@ -541,4 +541,12 @@ know:
 				t $in y
 			forall t y:
 				t $in x
+
+know:
+	forall x, y R: x < y => x - y < 0
+	forall x, y R: x > y => x - y > 0
+	forall x, y R: x <= y => x - y <= 0
+	forall x, y R: x >= y => x - y >= 0
+	forall x, y R: x = y => x - y = 0
+	forall x, y R: x != y => x - y != 0
 `
