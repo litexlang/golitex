@@ -91,7 +91,7 @@ func (tb *tokenBlock) inlineSpecFactStmt_skip_terminator() (*ast.SpecFactStmt, e
 		return nil, tbErr(err, tb)
 	}
 
-	tb.skipStmtTerminator()
+	tb.skipStmtComma()
 	return stmt, nil
 }
 
@@ -446,7 +446,7 @@ func (tb *tokenBlock) parseSpecialPrefixFact() (ast.FactStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	tb.skipStmtTerminator()
+	tb.skipStmtComma()
 	return fact, nil
 }
 
@@ -479,7 +479,7 @@ func (tb *tokenBlock) parseFactStartWithFc() (ast.FactStmt, error) {
 		return nil, err
 	}
 
-	tb.skipStmtTerminator()
+	tb.skipStmtComma()
 	return fact, nil
 }
 
@@ -548,8 +548,8 @@ func (tb *tokenBlock) handleOrFactIfPresent(curFact *ast.SpecFactStmt) (ast.Fact
 	return curFact, nil
 }
 
-// skipStmtTerminator skips statement terminator (comma) if present
-func (tb *tokenBlock) skipStmtTerminator() {
+// skipStmtComma skips statement terminator (comma) if present
+func (tb *tokenBlock) skipStmtComma() {
 	if tb.header.is(glob.KeySymbolComma) {
 		tb.header.skip("")
 	}
@@ -559,7 +559,7 @@ func (tb *tokenBlock) skipStmtTerminator() {
 // and skips statement terminator (comma)
 func (tb *tokenBlock) inline_enum_intensional_fact_skip_terminator(left ast.Fc) (ast.FactStmt, error) {
 	defer func() {
-		tb.skipStmtTerminator()
+		tb.skipStmtComma()
 	}()
 
 	err := tb.header.skip(glob.KeySymbolLeftCurly)
@@ -615,16 +615,18 @@ func (tb *tokenBlock) inline_enum_intensional_fact_skip_terminator(left ast.Fc) 
 		}
 
 		facts := []*ast.SpecFactStmt{}
-		for {
+		for !tb.header.is(glob.KeySymbolRightCurly) {
 			fact, err := tb.inlineSpecFactStmt_skip_terminator()
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}
-			facts = append(facts, fact)
 
-			if tb.header.ExceedEnd() {
-				break
-			}
+			facts = append(facts, fact)
+		}
+
+		err = tb.header.skip(glob.KeySymbolRightCurly)
+		if err != nil {
+			return nil, tbErr(err, tb)
 		}
 
 		return ast.NewIntensionalSetStmt(left, string(firstFcAsAtom), parentSet, facts, tb.line), nil
