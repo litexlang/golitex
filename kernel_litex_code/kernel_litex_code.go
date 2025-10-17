@@ -550,3 +550,13 @@ know:
 	forall x, y R: x = y => x - y = 0
 	forall x, y R: x != y => x - y != 0
 `
+
+var InequalityFacts = `
+know:
+	forall x, y R: x < y => x - y < 0
+	forall x, y R: x > y => x - y > 0
+	forall x, y R: x <= y => x - y <= 0
+	forall x, y R: x >= y => x - y >= 0
+	forall x, y R: x = y => x - y = 0
+	forall x, y R: x != y => x - y != 0
+`
