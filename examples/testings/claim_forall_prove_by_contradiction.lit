@@ -16,7 +16,7 @@ prop self_is_empty_set(x set):
         not a $in x
 
 # There is a builtin-in empty set in Litex
-have set self_builtin_empty_set := {}
+have set self_builtin_empty_set = {}
 forall x obj:
     not x $in self_builtin_empty_set
 

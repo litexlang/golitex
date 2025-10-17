@@ -468,7 +468,8 @@ func (tb *tokenBlock) parseFactStartWithFc() (ast.FactStmt, error) {
 	var fact ast.FactStmt
 	if operator == glob.FuncFactPrefix {
 		fact, err = tb.parseFunctionPropertyFact(fc)
-	} else if operator == glob.KeySymbolColonEqual {
+		// } else if operator == glob.KeySymbolColonEqual {
+	} else if operator == glob.KeySymbolEqual && tb.header.is(glob.KeySymbolLeftCurly) {
 		fact, err = tb.inline_enum_intensional_fact_skip_terminator(fc)
 	} else {
 		fact, err = tb.parseInfixRelationalFact(fc, operator)

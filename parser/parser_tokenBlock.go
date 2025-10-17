@@ -76,3 +76,7 @@ func (tb *tokenBlock) GetEnd() string {
 	}
 	return tb.header.slice[len(tb.header.slice)-1]
 }
+
+func (tb *tokenBlock) EndWith(s string) bool {
+	return tb.GetEnd() == s
+}
