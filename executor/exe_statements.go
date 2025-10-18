@@ -800,12 +800,18 @@ func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropS
 		return glob.ExecStateError, err
 	}
 
+	exec.env.TransitivePropMem[string(stmt.Prop)] = struct{}{}
+
 	return glob.ExecStateTrue, nil
 }
 
 func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitivePropStmt) error {
 	exec.NewEnv(exec.env)
 	defer exec.deleteEnvAndRetainMsg()
+
+	if exec.env.IsTransitiveProp(string(stmt.Prop)) {
+		return nil
+	}
 
 	def, ok := exec.env.GetPropDef(stmt.Prop)
 	if !ok {
@@ -826,7 +832,7 @@ func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitiveP
 	}
 
 	// 这里最好检查一下，是不是 Param set 依赖了 Param，如果依赖了，那其实是要报错了，不过暂时不管了
-	err = exec.defObjStmt(ast.NewDefObjStmt(stmt.Params, def.DefHeader.ParamSets, def.DomFacts, stmt.Line))
+	err = exec.defObjStmt(ast.NewDefObjStmt(stmt.Params, []ast.Fc{def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[0]}, def.DomFacts, stmt.Line))
 	if err != nil {
 		return err
 	}

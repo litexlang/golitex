@@ -69,7 +69,7 @@ const (
 
 	KeywordIf = "if"
 
-	KeywordProveIsTransitiveProp = "is_transitive_prop"
+	KeywordProveIsTransitiveProp = "prove_is_transitive_prop"
 
 	KeywordProveInRange = "prove_in_range"
 
