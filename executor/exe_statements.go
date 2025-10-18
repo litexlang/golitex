@@ -798,6 +798,35 @@ func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropS
 	exec.NewEnv(exec.env)
 	defer exec.deleteEnvAndRetainMsg()
 
+	def, ok := exec.env.GetPropDef(stmt.Prop)
+	if !ok {
+		return glob.ExecStateError, fmt.Errorf("prop %s is not defined", stmt.Prop)
+	}
+
+	if len(def.DefHeader.Params) != 2 {
+		return glob.ExecStateError, fmt.Errorf("prop %s has %d params, but 2 params are expected", stmt.Prop, len(def.DefHeader.Params))
+	}
+
+	// def 的 paramSet 必须相等
+	state, err := exec.factStmt(ast.NewEqualFact(def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[1]))
+	if err != nil {
+		return glob.ExecStateError, err
+	}
+	if state != glob.ExecStateTrue {
+		return glob.ExecStateError, fmt.Errorf("prop in %s must have equal parameter sets, but parameter sets %s and %s of %s are not equal", glob.KeywordProveIsTransitiveProp, def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[1], def.DefHeader.Name)
+	}
+
+	// 这里最好检查一下，是不是 Param set 依赖了 Param，如果依赖了，那其实是要报错了，不过暂时不管了
+	err = exec.defObjStmt(ast.NewDefObjStmt(stmt.Params, def.DefHeader.ParamSets, def.DomFacts, stmt.Line))
+	if err != nil {
+		return glob.ExecStateError, err
+	}
+
+	// TODO: 暂时不允许 dom facts 存在，因为我不知道传递性这个prop的性质本身有什么性质
+	if len(def.DomFacts) > 0 {
+		return glob.ExecStateError, fmt.Errorf("dom facts are not allowed in %s", glob.KeywordProveIsTransitiveProp)
+	}
+
 	for _, proof := range stmt.Proofs {
 		execState, _, err := exec.Stmt(proof)
 		if notOkExec(execState, err) {
