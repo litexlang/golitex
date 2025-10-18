@@ -878,3 +878,7 @@ func (s *ClaimIffStmt) ToLatexString() string {
 func (s *ProveInRangeStmt) ToLatexString() string {
 	return s.String()
 }
+
+func (s *ProveIsTransitivePropStmt) ToLatexString() string {
+	return s.String()
+}
