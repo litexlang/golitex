@@ -198,6 +198,6 @@ func NewProveInRangeStmt(start int64, end int64, param string, intensionalSet Fc
 	return &ProveInRangeStmt{start, end, param, intensionalSet, thenFacts, proofs, line}
 }
 
-func NewProveIsTransitivePropStmt(prop FcAtom, proofs []Stmt, line uint) *ProveIsTransitivePropStmt {
-	return &ProveIsTransitivePropStmt{prop, proofs, line}
+func NewProveIsTransitivePropStmt(prop FcAtom, params []string, proofs []Stmt, line uint) *ProveIsTransitivePropStmt {
+	return &ProveIsTransitivePropStmt{prop, params, proofs, line}
 }
