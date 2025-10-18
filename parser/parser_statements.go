@@ -104,6 +104,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.proveByInductionStmt()
 	case glob.KeywordProveInRange:
 		ret, err = tb.proveInRangeStmt()
+	case glob.KeywordProveIsTransitiveProp:
+		ret, err = tb.proveIsTransitivePropStmt()
 	default:
 		ret, err = tb.factsStmt()
 	}
@@ -2779,4 +2781,42 @@ func parseDomThenOfProveByEnum(tbSlice []tokenBlock) ([]ast.FactStmt, []ast.Fact
 	}
 
 	return domFacts, thenFacts, nil
+}
+
+func (tb *tokenBlock) proveIsTransitivePropStmt() (ast.Stmt, error) {
+	err := tb.header.skip(glob.KeywordProveIsTransitiveProp)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	prop, err := tb.rawFcAtom()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolRightBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	proofs := []ast.Stmt{}
+	for _, block := range tb.body {
+		curStmt, err := block.Stmt()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		proofs = append(proofs, curStmt)
+	}
+
+	return ast.NewProveIsTransitivePropStmt(prop, proofs, tb.line), nil
 }

@@ -197,3 +197,7 @@ func NewClaimIffStmt(uniFactWithIffStmt *UniFactWithIffStmt, proofs []Stmt, proo
 func NewProveInRangeStmt(start int64, end int64, param string, intensionalSet Fc, thenFacts []FactStmt, proofs []Stmt, line uint) *ProveInRangeStmt {
 	return &ProveInRangeStmt{start, end, param, intensionalSet, thenFacts, proofs, line}
 }
+
+func NewProveIsTransitivePropStmt(prop FcAtom, proofs []Stmt, line uint) *ProveIsTransitivePropStmt {
+	return &ProveIsTransitivePropStmt{prop, proofs, line}
+}
