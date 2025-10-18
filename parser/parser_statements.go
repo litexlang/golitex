@@ -2794,9 +2794,33 @@ func (tb *tokenBlock) proveIsTransitivePropStmt() (ast.Stmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	prop, err := tb.rawFcAtom()
+	prop, err := tb.RawFc()
 	if err != nil {
 		return nil, tbErr(err, tb)
+	}
+	propAtom, ok := prop.(ast.FcAtom)
+	if !ok {
+		return nil, tbErr(fmt.Errorf("expect fc atom, but got %T", prop), tb)
+	}
+
+	if tb.header.skip(glob.KeySymbolComma) != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	params := []string{}
+	for !tb.header.is(glob.KeySymbolRightBrace) {
+		param, err := tb.header.next()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		params = append(params, param)
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+		}
+	}
+
+	if len(params) != 3 {
+		return nil, tbErr(fmt.Errorf("expect 3 params, but got %d", len(params)), tb)
 	}
 
 	err = tb.header.skip(glob.KeySymbolRightBrace)
@@ -2818,5 +2842,5 @@ func (tb *tokenBlock) proveIsTransitivePropStmt() (ast.Stmt, error) {
 		proofs = append(proofs, curStmt)
 	}
 
-	return ast.NewProveIsTransitivePropStmt(prop, proofs, tb.line), nil
+	return ast.NewProveIsTransitivePropStmt(propAtom, params, proofs, tb.line), nil
 }

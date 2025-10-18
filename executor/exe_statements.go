@@ -100,6 +100,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, string, error) {
 		execState, err = exec.claimIffStmt(stmt)
 	case *ast.ProveInRangeStmt:
 		execState, err = exec.proveInRangeStmt(stmt)
+	case *ast.ProveIsTransitivePropStmt:
+		execState, err = exec.proveIsTransitivePropStmt(stmt)
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}
@@ -789,5 +791,19 @@ func (exec *Executor) markdownStmt(stmt *ast.MarkdownStmt) (glob.ExecState, erro
 
 func (exec *Executor) latexStmt(stmt *ast.LatexStmt) (glob.ExecState, error) {
 	_ = stmt
+	return glob.ExecStateTrue, nil
+}
+
+func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropStmt) (glob.ExecState, error) {
+	exec.NewEnv(exec.env)
+	defer exec.deleteEnvAndRetainMsg()
+
+	for _, proof := range stmt.Proofs {
+		execState, _, err := exec.Stmt(proof)
+		if notOkExec(execState, err) {
+			return execState, err
+		}
+	}
+
 	return glob.ExecStateTrue, nil
 }
