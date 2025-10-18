@@ -805,6 +805,7 @@ func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropS
 	return glob.ExecStateTrue, nil
 }
 
+// TODO 这里的msg系统太冗杂了，需要优化
 func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitivePropStmt) error {
 	exec.NewEnv(exec.env)
 	defer exec.deleteEnvAndRetainMsg()
@@ -867,4 +868,8 @@ func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitiveP
 	}
 
 	return nil
+}
+
+func (exec *Executor) NewTransitiveProp(name string) {
+	exec.env.TransitivePropMem[name] = struct{}{}
 }

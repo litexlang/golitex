@@ -23,6 +23,32 @@ import (
 )
 
 func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+	ok, err := ver.verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
+	if ver.env.IsTransitiveProp(string(stmt.PropName)) {
+		newStmt, err := stmt.ReverseSpecFactParamsOrder()
+		if err != nil {
+			return false, err
+		}
+		ok, err := ver.verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(newStmt, state)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	// replace the params with the values
 	replaced, newStmt := ver.env.ReplaceFcInSpecFact(stmt)
 	if replaced {

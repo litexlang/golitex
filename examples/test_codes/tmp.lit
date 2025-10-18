@@ -1,10 +1,2 @@
-prop p(x R, y R)
-
-know @p_is_transitive(x, y, z R):
-    $p(x, y)
-    $p(y ,z)
-    =>:
-        $p(x, z)
-
-prove_is_transitive_prop(p, x, y, z):
-    $p_is_transitive(x, y, z)
+let a R: a > 1, 1 > 0
+a > 0
