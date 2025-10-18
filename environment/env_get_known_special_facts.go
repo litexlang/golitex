@@ -52,3 +52,13 @@ func (e *Env) GetFnTemplateSliceTheFnIsInFromEnv(fnName string) ([]FnInFnTMemIte
 
 	return ret, true
 }
+
+func (e *Env) IsTransitiveProp(propName string) bool {
+	for env := e; env != nil; env = env.Parent {
+		_, ok := env.TransitivePropMem[propName]
+		if ok {
+			return true
+		}
+	}
+	return false
+}
