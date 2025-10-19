@@ -800,7 +800,7 @@ func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropS
 		return glob.ExecStateError, err
 	}
 
-	exec.env.TransitivePropMem[string(stmt.Prop)] = struct{}{}
+	exec.env.TransitivePropMem[string(stmt.Prop)] = make(map[string][]ast.Fc)
 
 	return glob.ExecStateTrue, nil
 }
@@ -871,5 +871,5 @@ func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitiveP
 }
 
 func (exec *Executor) NewTransitiveProp(name string) {
-	exec.env.TransitivePropMem[name] = struct{}{}
+	exec.env.TransitivePropMem[name] = make(map[string][]ast.Fc)
 }
