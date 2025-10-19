@@ -838,7 +838,15 @@ func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitiveP
 		return err
 	}
 
-	// TODO: 暂时不允许 dom facts 存在，因为我不知道传递性这个prop的性质本身有什么性质
+	ok = exec.env.AreAtomsInFcAreDeclared(def.DefHeader.ParamSets[0], map[string]struct{}{})
+	if !ok {
+		return fmt.Errorf("param %s is not declared", def.DefHeader.ParamSets[0])
+	}
+	ok = exec.env.AreAtomsInFcAreDeclared(def.DefHeader.ParamSets[1], map[string]struct{}{})
+	if !ok {
+		return fmt.Errorf("param %s is not declared", def.DefHeader.ParamSets[1])
+	}
+
 	if len(def.DomFacts) > 0 {
 		return fmt.Errorf("dom facts are not allowed in %s", glob.KeywordProveIsTransitiveProp)
 	}
