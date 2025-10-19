@@ -166,6 +166,14 @@ func storeCommutativeTransitiveFact(mem map[string]*[]ast.Fc, fact *ast.SpecFact
 }
 
 func (env *Env) newPureFactPostProcess(fact *ast.SpecFactStmt) error {
+	// 如果是 transitive prop，那么需要更新 transitive prop mem
+	if fact.TypeEnum == ast.TruePure && env.IsTransitiveProp(string(fact.PropName)) {
+		if env.TransitivePropMem[string(fact.PropName)] == nil {
+			env.TransitivePropMem[string(fact.PropName)] = make(map[string][]ast.Fc)
+		}
+		env.TransitivePropMem[string(fact.PropName)][fact.Params[0].String()] = append(env.TransitivePropMem[string(fact.PropName)][fact.Params[0].String()], fact.Params[1])
+	}
+
 	if glob.IsBuiltinKeywordKeySymbolCanBeFcAtomName(string(fact.PropName)) {
 		if fact.PropName == glob.KeywordIn {
 			return env.inFactPostProcess(fact)
