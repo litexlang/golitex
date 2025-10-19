@@ -329,3 +329,7 @@ func (s *ClaimIffStmt) InlineString() string {
 func (s *ProveInRangeStmt) InlineString() string {
 	return "TODO"
 }
+
+func (s *ProveIsTransitivePropStmt) InlineString() string {
+	return "TODO"
+}

@@ -364,3 +364,11 @@ type ClaimIffStmt struct {
 
 	Line uint
 }
+
+type ProveIsTransitivePropStmt struct {
+	Prop   FcAtom
+	Params StrSlice
+	Proofs StmtSlice
+
+	Line uint
+}

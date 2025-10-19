@@ -69,7 +69,7 @@ const (
 
 	KeywordIf = "if"
 
-	// KeywordProveInRange2 = "prove_in_range2"
+	KeywordProveIsTransitiveProp = "prove_is_transitive_prop"
 
 	KeywordProveInRange = "prove_in_range"
 
@@ -120,6 +120,8 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordLet:                            {},
 	KeywordClear:                          {},
 	// KeywordExistSetByAxiomOfReplacement:   {},
+
+	KeywordProveIsTransitiveProp: {},
 
 	KeywordProveByInduction: {},
 

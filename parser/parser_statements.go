@@ -104,6 +104,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.proveByInductionStmt()
 	case glob.KeywordProveInRange:
 		ret, err = tb.proveInRangeStmt()
+	case glob.KeywordProveIsTransitiveProp:
+		ret, err = tb.proveIsTransitivePropStmt()
 	default:
 		ret, err = tb.factsStmt()
 	}
@@ -2779,4 +2781,66 @@ func parseDomThenOfProveByEnum(tbSlice []tokenBlock) ([]ast.FactStmt, []ast.Fact
 	}
 
 	return domFacts, thenFacts, nil
+}
+
+func (tb *tokenBlock) proveIsTransitivePropStmt() (ast.Stmt, error) {
+	err := tb.header.skip(glob.KeywordProveIsTransitiveProp)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	prop, err := tb.RawFc()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+	propAtom, ok := prop.(ast.FcAtom)
+	if !ok {
+		return nil, tbErr(fmt.Errorf("expect fc atom, but got %T", prop), tb)
+	}
+
+	if tb.header.skip(glob.KeySymbolComma) != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	params := []string{}
+	for !tb.header.is(glob.KeySymbolRightBrace) {
+		param, err := tb.header.next()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		params = append(params, param)
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+		}
+	}
+
+	if len(params) != 3 {
+		return nil, tbErr(fmt.Errorf("expect 3 params, but got %d", len(params)), tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolRightBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	proofs := []ast.Stmt{}
+	for _, block := range tb.body {
+		curStmt, err := block.Stmt()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		proofs = append(proofs, curStmt)
+	}
+
+	return ast.NewProveIsTransitivePropStmt(propAtom, params, proofs, tb.line), nil
 }

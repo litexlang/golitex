@@ -100,6 +100,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, string, error) {
 		execState, err = exec.claimIffStmt(stmt)
 	case *ast.ProveInRangeStmt:
 		execState, err = exec.proveInRangeStmt(stmt)
+	case *ast.ProveIsTransitivePropStmt:
+		execState, err = exec.proveIsTransitivePropStmt(stmt)
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}
@@ -790,4 +792,84 @@ func (exec *Executor) markdownStmt(stmt *ast.MarkdownStmt) (glob.ExecState, erro
 func (exec *Executor) latexStmt(stmt *ast.LatexStmt) (glob.ExecState, error) {
 	_ = stmt
 	return glob.ExecStateTrue, nil
+}
+
+func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropStmt) (glob.ExecState, error) {
+	err := exec.proveIsTransitivePropStmtBody(stmt)
+	if err != nil {
+		return glob.ExecStateError, err
+	}
+
+	exec.env.TransitivePropMem[string(stmt.Prop)] = make(map[string][]ast.Fc)
+
+	return glob.ExecStateTrue, nil
+}
+
+// TODO 这里的msg系统太冗杂了，需要优化
+func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitivePropStmt) error {
+	exec.NewEnv(exec.env)
+	defer exec.deleteEnvAndRetainMsg()
+
+	if exec.env.IsTransitiveProp(string(stmt.Prop)) {
+		return nil
+	}
+
+	def, ok := exec.env.GetPropDef(stmt.Prop)
+	if !ok {
+		return fmt.Errorf("prop %s is not defined", stmt.Prop)
+	}
+
+	if len(def.DefHeader.Params) != 2 {
+		return fmt.Errorf("prop %s has %d params, but 2 params are expected", stmt.Prop, len(def.DefHeader.Params))
+	}
+
+	// def 的 paramSet 必须相等
+	state, err := exec.factStmt(ast.NewEqualFact(def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[1]))
+	if err != nil {
+		return err
+	}
+	if state != glob.ExecStateTrue {
+		return fmt.Errorf("prop in %s must have equal parameter sets, but parameter sets %s and %s of %s are not equal", glob.KeywordProveIsTransitiveProp, def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[1], def.DefHeader.Name)
+	}
+
+	// 这里最好检查一下，是不是 Param set 依赖了 Param，如果依赖了，那其实是要报错了，不过暂时不管了
+	err = exec.defObjStmt(ast.NewDefObjStmt(stmt.Params, []ast.Fc{def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[0]}, def.DomFacts, stmt.Line))
+	if err != nil {
+		return err
+	}
+
+	// TODO: 暂时不允许 dom facts 存在，因为我不知道传递性这个prop的性质本身有什么性质
+	if len(def.DomFacts) > 0 {
+		return fmt.Errorf("dom facts are not allowed in %s", glob.KeywordProveIsTransitiveProp)
+	}
+
+	err = exec.env.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(stmt.Prop), []ast.Fc{ast.FcAtom(stmt.Params[0]), ast.FcAtom(stmt.Params[1])}, stmt.Line))
+	if err != nil {
+		return err
+	}
+
+	err = exec.env.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(stmt.Prop), []ast.Fc{ast.FcAtom(stmt.Params[1]), ast.FcAtom(stmt.Params[2])}, stmt.Line))
+	if err != nil {
+		return err
+	}
+
+	for _, proof := range stmt.Proofs {
+		execState, _, err := exec.Stmt(proof)
+		if notOkExec(execState, err) {
+			return err
+		}
+	}
+
+	// check
+	finalCheckStmt := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(stmt.Prop), []ast.Fc{ast.FcAtom(stmt.Params[0]), ast.FcAtom(stmt.Params[2])}, stmt.Line)
+	state, err = exec.factStmt(finalCheckStmt)
+	if notOkExec(state, err) {
+		return fmt.Errorf("failed to prove %s is transitive: %s failed", stmt.Prop, finalCheckStmt)
+	}
+
+	return nil
+}
+
+func (exec *Executor) NewTransitiveProp(name string) {
+	exec.env.TransitivePropMem[name] = make(map[string][]ast.Fc)
 }
