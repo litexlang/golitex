@@ -974,3 +974,18 @@ func (stmt *ProveInRangeStmt) String() string {
 	}
 	return builder.String()
 }
+
+func (stmt *ProveIsTransitivePropStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordProveIsTransitiveProp)
+	builder.WriteString("(")
+	builder.WriteString(stmt.Prop.String())
+	builder.WriteString(")")
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+	for _, proof := range stmt.Proofs {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 1))
+		builder.WriteByte('\n')
+	}
+	return builder.String()
+}
