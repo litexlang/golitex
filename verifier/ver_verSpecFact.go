@@ -32,17 +32,6 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact(stmt *ast.SpecFactStmt, s
 	}
 
 	if ver.env.IsTransitiveProp(string(stmt.PropName)) {
-		newStmt, err := stmt.ReverseSpecFactParamsOrder()
-		if err != nil {
-			return false, err
-		}
-		ok, err := ver.verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(newStmt, state)
-		if err != nil {
-			return false, err
-		}
-		if ok {
-			return true, nil
-		}
 	}
 
 	return false, nil
