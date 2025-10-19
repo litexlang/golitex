@@ -62,3 +62,19 @@ func (e *Env) IsTransitiveProp(propName string) bool {
 	}
 	return false
 }
+
+func (e *Env) GetRelatedFcSliceOfTransitiveProp(propName string, fc ast.Fc) ([]ast.Fc, bool) {
+	ret := []ast.Fc{}
+	for env := e; env != nil; env = env.Parent {
+		relatedFcSlice, ok := env.TransitivePropMem[propName]
+		if ok {
+			if relatedFcSlice, ok := relatedFcSlice[fc.String()]; ok {
+				ret = append(ret, relatedFcSlice...)
+			}
+		}
+	}
+	if len(ret) == 0 {
+		return nil, false
+	}
+	return ret, true
+}

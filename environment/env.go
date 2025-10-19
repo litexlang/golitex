@@ -61,7 +61,7 @@ type Env struct {
 	HaveSetFnDefMem        HaveSetFnDefMem
 	IntensionalSetMem      map[string]ast.IntensionalSetStmt
 	SymbolValueMem         map[string]ast.Fc
-	TransitivePropMem      map[string]struct{}
+	TransitivePropMem      map[string]map[string][]ast.Fc
 }
 
 func (env *Env) GetUpMostEnv() *Env {
@@ -87,7 +87,7 @@ func NewEnv(parent *Env) *Env {
 		HaveSetFnDefMem:        make(HaveSetFnDefMem),
 		IntensionalSetMem:      make(map[string]ast.IntensionalSetStmt),
 		SymbolValueMem:         make(map[string]ast.Fc),
-		TransitivePropMem:      make(map[string]struct{}),
+		TransitivePropMem:      make(map[string]map[string][]ast.Fc),
 	}
 	return env
 }
