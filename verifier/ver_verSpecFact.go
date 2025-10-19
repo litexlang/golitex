@@ -31,7 +31,25 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact(stmt *ast.SpecFactStmt, s
 		return true, nil
 	}
 
-	if ver.env.IsTransitiveProp(string(stmt.PropName)) {
+	if stmt.TypeEnum == ast.TruePure && ver.env.IsTransitiveProp(string(stmt.PropName)) {
+		relatedFcSlice, ok := ver.env.GetRelatedFcSliceOfTransitiveProp(string(stmt.PropName), stmt.Params[0])
+		if !ok {
+			return false, nil
+		}
+
+		for _, relatedFc := range relatedFcSlice {
+			relatedFcStmt := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(stmt.PropName), []ast.Fc{relatedFc, stmt.Params[1]}, stmt.Line)
+			ok, err := ver.verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(relatedFcStmt, state)
+			if err != nil {
+				return false, err
+			}
+			if ok {
+				if state.WithMsg {
+					ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is true by %s is a transitive prop and %s is true", stmt.String(), string(stmt.PropName), relatedFcStmt.String()))
+				}
+				return true, nil
+			}
+		}
 	}
 
 	return false, nil
