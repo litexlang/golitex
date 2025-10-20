@@ -1,7 +1,6 @@
 """
 1. 过程：N_pos 是正整数
 2. 如果对于 fn(N_pos)N_pos 即从正整数到正整数的函数，我用数归法来证明如果 forall x <= n + 1, f(x) <= n 那么存在 a, b 让 f(a) = f(b)， a != b, a,b <= n + 1
-"""
 
 exist_prop a, b N_pos st exist_items_in_the_same_box(f fn(N_pos)N_pos, n N_pos):
     f(a) = f(b)
@@ -9,6 +8,7 @@ exist_prop a, b N_pos st exist_items_in_the_same_box(f fn(N_pos)N_pos, n N_pos):
     a <= n + 1
     b <= n + 1
 
+# 条件错了。
 claim:
     forall f fn(N_pos) N_pos:
         forall x N_pos, n N_pos: x <= n + 1 => f(x) <= n
@@ -35,8 +35,14 @@ claim:
         =>:
             forall m N_pos: $exist_items_in_the_same_box(f, m) => $exist_items_in_the_same_box(f, m+1)
     prove:
-        know:
+        claim:
             forall m N_pos: $exist_items_in_the_same_box(f, m) => $exist_items_in_the_same_box(f, m+1)
+            prove:
+                claim:
+                    not $exist_items_in_the_same_box(f, m+1)
+                    prove_by_contradiction:
+                        know not $exist_items_in_the_same_box(f, m)
+                        $exist_items_in_the_same_box(f, m)
 
 claim:
     forall f fn(N_pos) N_pos:
@@ -46,3 +52,5 @@ claim:
     prove:
         $exist_items_in_the_same_box(f, 1)
         prove_by_induction($exist_items_in_the_same_box(f, n), n, 1)
+
+"""
