@@ -16,6 +16,7 @@ package litex_env
 
 import (
 	ast "golitex/ast"
+	glob "golitex/glob"
 )
 
 type shared_ptr_to_slice_of_fc = *[]ast.Fc
@@ -47,7 +48,7 @@ type KnownFactsStruct struct {
 // 因为 in 类型的事实很多，考虑把fcString为key保留一个map，记录它在什么集合里。比如 a $in N 就保存成 key:a values:[]{N}
 type Env struct {
 	Parent                 *Env
-	Msgs                   []string
+	Msgs                   glob.Msgs
 	ObjDefMem              ObjDefMem
 	PropDefMem             PropDefMem
 	FnTemplateDefMem       FnTemplateDefMem
@@ -58,6 +59,9 @@ type Env struct {
 	EqualMem               map[string]shared_ptr_to_slice_of_fc
 	EnumFacts              map[string][]ast.Fc
 	HaveSetFnDefMem        HaveSetFnDefMem
+	IntensionalSetMem      map[string]ast.IntensionalSetStmt
+	SymbolValueMem         map[string]ast.Fc
+	TransitivePropMem      map[string]map[string][]ast.Fc
 }
 
 func (env *Env) GetUpMostEnv() *Env {
@@ -70,7 +74,7 @@ func (env *Env) GetUpMostEnv() *Env {
 func NewEnv(parent *Env) *Env {
 	env := &Env{
 		Parent:                 parent,
-		Msgs:                   []string{},
+		Msgs:                   glob.Msgs{},
 		ObjDefMem:              make(ObjDefMem),
 		PropDefMem:             make(PropDefMem),
 		FnTemplateDefMem:       make(FnTemplateDefMem),
@@ -81,6 +85,9 @@ func NewEnv(parent *Env) *Env {
 		KnownFactInMatchEnv:    make(map[string]KnownFactsStruct),
 		EnumFacts:              make(map[string][]ast.Fc),
 		HaveSetFnDefMem:        make(HaveSetFnDefMem),
+		IntensionalSetMem:      make(map[string]ast.IntensionalSetStmt),
+		SymbolValueMem:         make(map[string]ast.Fc),
+		TransitivePropMem:      make(map[string]map[string][]ast.Fc),
 	}
 	return env
 }
@@ -92,4 +99,8 @@ func makeKnownFactsStruct() KnownFactsStruct {
 		SpecFactInUniFactMem:              *newSpecFactInUniFact(),
 		SpecFact_InLogicExpr_InUniFactMem: *newSpecFact_InLogicExpr_InUniFactMem(),
 	}
+}
+
+func (e *Env) AddMsgToParent(msg string) {
+	e.Parent.Msgs = append(e.Parent.Msgs, msg)
 }

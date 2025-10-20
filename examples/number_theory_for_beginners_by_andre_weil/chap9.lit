@@ -1,0 +1,60 @@
+"""
+Chapter 9
+"""
+
+# Define polynomial on a field
+fn_set K_polynomial(K field) fn(x K) item K
+
+fn K_polynomial_parameters(K field, f K_polynomial(K)) finite_set:
+    forall x K_polynomial_parameters(K, f):
+        x $in K
+
+know:
+    forall K field, f K_polynomial(K):
+        forall x K:
+            f(x) = accumulation_of_finite_set(K_polynomial_parameters(K, f), K_add(K))(x)
+
+fn degree_of_K_polynomial(K field, f K_polynomial(K)) N:
+    len(K_polynomial_parameters(K, f)) - 1 = degree_of_K_polynomial(K, f)
+
+prop is_0_K_polynomial(K field, f K_polynomial(K)):
+    forall x K:
+        f(x) = 0
+
+know @exist Q K_polynomial(K) st there_is_a_unique_K_polynomial_with_A_minus_BQ_is_0_or_order_smaller_than_degree_of_B(K field, A K_polynomial(K), B K_polynomial(K)):
+    not $is_0_K_polynomial(K, B)
+    =>:
+        or:
+            degree_of_K_polynomial(K, A \K_minus(K) K_mul(B, Q)) < degree_of_K_polynomial(K, B)
+            not degree_of_K_polynomial(K, A \K_minus(K) K_mul(B, Q)) $is_0_K_polynomial(K)
+
+// 多项式的余数
+fn K_polynomial_remainder(K field, A K_polynomial(K), B K_polynomial(K)) K_polynomial(K):
+    dom:
+        not $is_0_K_polynomial(K, B)
+    =>:
+        A \K_minus(K) K_mul(B, Q) = K_polynomial_remainder(K, A, B)
+
+prop is_nonempty_set_of_K_polynomial_closed_under_K_add(K field, s finite_set):
+    forall k s:
+        k $in K_polynomial(K)
+    forall f g s:
+        f \k.add g $in K_polynomial(K)
+
+# 这里D是生成元，s是生成元生成的集合
+exist_prop D K_polynomial(K) st exist_d_generate_nonempty_set_of_K_polynomial(K field, s finite_set):
+	dom:
+        $is_nonempty_set_of_K_polynomial_closed_under_K_add(K, s)
+    <=>:
+
+fn K_polynomial_0(K field) K_polynomial(K):
+    forall x K:
+        K_polynomial_0(K)(x) = K.e
+    	
+prop generate_nonempty_set_of_K_polynomial(K field, s finite_set, D K_polynomial(K)):
+	dom:
+		$is_nonempty_set_of_K_polynomial_closed_under_K_add(K, s)
+	=>:
+    	forall x s:
+            K_polynomial_remainder(K, x, D) = K_polynomial_0(K)
+

@@ -23,11 +23,13 @@ import (
 
 func Test_ToLatex(t *testing.T) {
 	startTime := time.Now()
-	fileName := "../examples/test_codes/tmp.lix"
+	fileName := "../examples/test_codes/tmp.lit"
 	msg, signal, err := CompileFileToLatex(fileName)
 	if err != nil {
 		t.Errorf("failed to run file %s\n", fileName)
 	}
+
+	fmt.Println(msg)
 
 	// 把msg写入到文件
 	writeTo := "../past_examples/test_to_latex.tex"

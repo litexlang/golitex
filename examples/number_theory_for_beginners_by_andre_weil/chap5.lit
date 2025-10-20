@@ -1,0 +1,128 @@
+"""
+Chapter 5
+"""
+
+import "util.lit"
+import "basics.lit"
+import "chap1.lit"
+import "chap2.lit"
+import "chap3.lit"
+import "chap4.lit"
+
+# Definition 5.1
+
+prop is_commutative_group(G set, op fn(G, G)G, inv fn(G)G, e G):
+    forall a G, b G:
+        op(a, b) = op(b, a)
+
+    forall a G:
+        op(a, e) = a
+        op(e, a) = a
+        op(a, inv(a)) = e
+        op(inv(a), a) = e
+
+    forall a G, b G, c G:
+        op(a, op(b, c)) = op(op(a, b), c)
+
+# Definition 5.2
+
+prop is_congruent_modulo(a Z, b Z, n Z):
+    dom:
+        n != 0
+    =>:
+        a - b $is_divisible_by n
+
+prop congruent_modulo_is_transitive(a Z, b Z, c Z, n Z):
+    $is_congruent_modulo(a, b, n)
+    $is_congruent_modulo(b, c, n)
+    =>:
+        $is_congruent_modulo(a, c, n)
+
+know:
+    # Reflexive
+    forall x Z, m Z:
+    	$is_congruent_modulo(x, x, m)
+
+    # Transitive
+    forall x Z, y Z, z Z, m Z:
+    	$congruent_modulo_is_transitive(x, y, z, m)
+
+    # Symmetric
+    forall x Z, y Z, m Z:
+    	$is_congruent_modulo(x, y, m)
+        =>:
+        	$is_congruent_modulo(y, x, m)
+
+    forall x Z, y Z, x2 Z, y2 Z, m Z:
+    	$is_congruent_modulo(x, y, m)
+        $is_congruent_modulo(x2, y2, m)
+        =>:
+            $is_congruent_modulo(x + x2, y + y2, m)
+            $is_congruent_modulo(x - x2, y - y2, m)
+            $is_congruent_modulo(x * x2, y * y2, m)
+
+    forall x Z, y Z, m Z, d Z:
+        dom:
+            d != 0
+            x $is_divisible_by d
+            y $is_divisible_by d
+            m $is_divisible_by d
+        =>:
+        	$is_congruent_modulo(x, y, m)
+        <=>:
+            $is_congruent_modulo(x / d, y / d, m / d)
+
+# Definition 5.3
+fn cc(d Z, m Z) set:
+    dom:
+        m != 0
+    <=>:
+        forall x cc(d, m):
+            $is_congruent_modulo(x, d, m)
+        forall x Z:
+            $is_congruent_modulo(x, d, m)
+            =>:
+                x $in cc(d, m)
+
+
+# Theorem 5.1
+# For any integer m > 0, the set {cc(0, m), cc(1, m), ..., cc(m-1, m)} is a commutative group under addition modulo m
+# ?? Fundamentally, you have to prove cc(0, m) != cc(1, m) != ... != cc(m-1, m), but the book has not done this and by default it is assumed that they are all different.
+fn cc_mod(m Z) finite_set:
+    m > 0
+    =>:
+        len(cc_mod(m)) = m
+        forall i N:
+            i < m
+            =>:
+                cc(i, m) = cc_mod(m)[i]
+        forall d Z:
+            cc(d, m) $in cc_mod(m)
+
+fn cc_add(m Z) fn(cc_mod(m), cc_mod(m))cc_mod(m):
+    m > 0
+    =>:
+        forall x N, y N:
+            x < m
+            y < m
+            =>:
+                cc(x, m) \cc_add(m) cc(y, m) = cc(x + y, m)
+
+fn cc_inv(m Z) fn(cc_mod(m))cc_mod(m):
+    m > 0
+    =>:
+        forall x N:
+            x < m
+            =>:
+                cc_inv(m)(cc(x, m)) = cc(-x, m)
+
+know:
+    forall m Z:
+        m > 0
+        =>:
+            cc_add(m) $is_commutative_group(cc_mod(m), cc_add(m), cc_inv(m), cc(0, m))
+
+prop is_cc_prime_to_modulo(m Z, s cc_mod(m)):
+    forall x s:
+        gcd(x, m) = 1
+    # gcd(cc_mod(m)[[x]],m) = 1 works too

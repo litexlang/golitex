@@ -1,0 +1,7 @@
+$in(+, fn(R, R)R)
+
+import pkg1 "pkg1.lit"
+
+have opt st $pkg1::exist_f_always_equal_to_add()
+
+opt(1,2)=1+2

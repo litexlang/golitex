@@ -43,7 +43,7 @@ func (s *EnumStmt) stmt()                        {}
 func (s *IntensionalSetStmt) stmt()              {}
 func (s *ClaimPropStmt) stmt()                   {}
 func (s *ClaimExistPropStmt) stmt()              {}
-func (s *ProveOverFiniteSetStmt) stmt()          {}
+func (s *ProveByEnumStmt) stmt()                 {}
 func (s *HaveObjInNonEmptySetStmt) stmt()        {}
 func (s *HaveSetStmt) stmt()                     {}
 func (s *HaveSetFnStmt) stmt()                   {}
@@ -51,7 +51,7 @@ func (s *HaveSetDefinedByReplacementStmt) stmt() {}
 func (s *NamedUniFactStmt) stmt()                {}
 func (s *EqualsFactStmt) stmt()                  {}
 func (s *KnowExistPropStmt) stmt()               {}
-func (s *CommentStmt) stmt()                     {}
+func (s *LatexStmt) stmt()                       {}
 func (s *FnTemplateDefStmt) stmt()               {}
 func (s *ClearStmt) stmt()                       {}
 func (s *InlineFactsStmt) stmt()                 {}
@@ -60,6 +60,12 @@ func (s *HaveObjEqualStmt) stmt()                {}
 func (s *HaveFnEqualStmt) stmt()                 {}
 func (s *HaveFnLiftStmt) stmt()                  {}
 func (s *HaveFnStmt) stmt()                      {}
+func (s *MarkdownStmt) stmt()                    {}
+
+// func (s *ProveInRange2tmt) stmt()                {}
+func (s *ClaimIffStmt) stmt()              {}
+func (s *ProveInRangeStmt) stmt()          {}
+func (s *ProveIsTransitivePropStmt) stmt() {}
 
 func (s *DefObjStmt) GetLine() uint                      { return s.Line }
 func (s *DefPropStmt) GetLine() uint                     { return s.Line }
@@ -82,7 +88,7 @@ func (s *EnumStmt) GetLine() uint                        { return s.Line }
 func (s *IntensionalSetStmt) GetLine() uint              { return s.Line }
 func (s *ClaimPropStmt) GetLine() uint                   { return s.Line }
 func (s *ClaimExistPropStmt) GetLine() uint              { return s.Line }
-func (s *ProveOverFiniteSetStmt) GetLine() uint          { return s.Line }
+func (s *ProveByEnumStmt) GetLine() uint                 { return s.Line }
 func (s *HaveObjInNonEmptySetStmt) GetLine() uint        { return s.Line }
 func (s *HaveSetStmt) GetLine() uint                     { return s.Line }
 func (s *HaveSetFnStmt) GetLine() uint                   { return s.Line }
@@ -90,7 +96,7 @@ func (s *HaveSetDefinedByReplacementStmt) GetLine() uint { return s.Line }
 func (s *NamedUniFactStmt) GetLine() uint                { return s.Line }
 func (s *EqualsFactStmt) GetLine() uint                  { return s.Line }
 func (s *KnowExistPropStmt) GetLine() uint               { return s.Line }
-func (s *CommentStmt) GetLine() uint                     { return s.Line }
+func (s *LatexStmt) GetLine() uint                       { return s.Line }
 func (s *FnTemplateDefStmt) GetLine() uint               { return s.Line }
 func (s *ClearStmt) GetLine() uint                       { return s.Line }
 func (s *InlineFactsStmt) GetLine() uint                 { return s.Line }
@@ -99,6 +105,10 @@ func (s *HaveObjEqualStmt) GetLine() uint                { return s.Line }
 func (s *HaveFnEqualStmt) GetLine() uint                 { return s.Line }
 func (s *HaveFnLiftStmt) GetLine() uint                  { return s.Line }
 func (s *HaveFnStmt) GetLine() uint                      { return s.Line }
+func (s *MarkdownStmt) GetLine() uint                    { return s.Line }
+func (s *ProveInRangeStmt) GetLine() uint                { return s.Line }
+func (s *ClaimIffStmt) GetLine() uint                    { return s.Line }
+func (s *ProveIsTransitivePropStmt) GetLine() uint       { return s.Line }
 
 type FactStmt interface {
 	factStmt()
@@ -194,6 +204,7 @@ func (stmt *ClaimProveStmt) claimStmt()                {}
 func (stmt *ClaimProveByContradictionStmt) claimStmt() {}
 func (stmt *ClaimPropStmt) claimStmt()                 {}
 func (stmt *ClaimExistPropStmt) claimStmt()            {}
+func (stmt *ClaimIffStmt) claimStmt()                  {}
 
 type ImportStmtInterface interface {
 	importStmt()

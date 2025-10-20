@@ -550,7 +550,7 @@ func (s *IntensionalSetStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString(s.CurSet.ToLatexString())
 
-	builder.WriteString(intentionalSetOrIntensionalSetToLatexString(s.Param, s.ParentSet, s.Proofs))
+	builder.WriteString(intentionalSetOrIntensionalSetToLatexString(s.Param, s.ParentSet, s.Facts))
 
 	return builder.String()
 }
@@ -571,31 +571,16 @@ func (s *ClaimPropStmt) ToLatexString() string {
 func (s *ClaimExistPropStmt) ToLatexString() string {
 	var builder strings.Builder
 
-	builder.WriteString(s.ExistProp.ToLatexString())
+	builder.WriteString(s.ExistPropWithoutDom.ToLatexString())
 
 	builder.WriteString("\n\n")
 
-	builder.WriteString(claimProveBodyToLatexString(s.ExistProp.ToForallParamsSatisfyDomFacts_Then_ExistFactIsTrue(), s.Proofs, true))
+	builder.WriteString(claimProveBodyToLatexString(s.ExistPropWithoutDom.ToForallParamsSatisfyDomFacts_Then_ExistFactIsTrue(), s.Proofs, true))
 
 	return builder.String()
 }
 
-// func (s *ProveByMathInductionStmt) ToLatexString() string {
-// 	var builder strings.Builder
-// 	builder.WriteString("\\begin{proveByMathInduction}\n")
-// 	builder.WriteString("By mathematical induction, we have ")
-// 	builder.WriteString(s.Fact.ToLatexString())
-
-// 	indexFc := s.Fact.Params[s.ParamIndex]
-
-// 	builder.WriteString(fmt.Sprintf(" is true $\\forall$ %s $\\geq$ $%d$", indexFc.ToLatexString(), s.Start))
-// 	builder.WriteString(".")
-
-// 	builder.WriteString("\n\\end{proveByMathInduction}")
-// 	return builder.String()
-// }
-
-func (s *ProveOverFiniteSetStmt) ToLatexString() string {
+func (s *ProveByEnumStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("\\begin{proveOverFiniteSet}\n")
 	builder.WriteString("We prove that by iterating over the elements of the finite set(s): ")
@@ -606,11 +591,9 @@ func (s *ProveOverFiniteSetStmt) ToLatexString() string {
 
 	builder.WriteString("\\begin{proof}\n")
 
-	proofStrSlice := make([]string, len(s.ProofsSlice))
-	for i := range len(s.ProofsSlice) {
-		for j := range s.ProofsSlice[i] {
-			proofStrSlice[i] += s.ProofsSlice[i][j].ToLatexString() + "\n"
-		}
+	proofStrSlice := make([]string, len(s.Proof))
+	for i := range len(s.Proof) {
+		proofStrSlice[i] = s.Proof[i].ToLatexString()
 	}
 
 	if ShouldInSingleLineAsLatexString(proofStrSlice) {
@@ -731,7 +714,7 @@ func (s *EqualsFactStmt) ToLatexString() string {
 
 func (s *KnowExistPropStmt) ToLatexString() string {
 	var builder strings.Builder
-	defExistProp := NewDefExistPropStmt(&s.ExistProp.DefBody, s.ExistProp.ExistParams, s.ExistProp.ExistParamSets)
+	defExistProp := NewDefExistPropStmt(&s.ExistProp.DefBody, s.ExistProp.ExistParams, s.ExistProp.ExistParamSets, glob.InnerGenLine)
 	builder.WriteString(defExistProp.ToLatexString())
 
 	builder.WriteString("\n\n")
@@ -740,7 +723,7 @@ func (s *KnowExistPropStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (s *CommentStmt) ToLatexString() string {
+func (s *LatexStmt) ToLatexString() string {
 	return s.Comment
 }
 
@@ -877,5 +860,25 @@ func (s *HaveFnLiftStmt) ToLatexString() string {
 }
 
 func (s *HaveFnStmt) ToLatexString() string {
-	return "TODO"
+	return s.String()
+}
+
+func (s *MarkdownStmt) ToLatexString() string {
+	return s.Markdown
+}
+
+// func (s *ProveInRange2tmt) ToLatexString() string {
+// 	return "TODO"
+// }
+
+func (s *ClaimIffStmt) ToLatexString() string {
+	return s.String()
+}
+
+func (s *ProveInRangeStmt) ToLatexString() string {
+	return s.String()
+}
+
+func (s *ProveIsTransitivePropStmt) ToLatexString() string {
+	return s.String()
 }

@@ -31,7 +31,7 @@ func newTokenBlock(header strSliceCursor, body []tokenBlock, line uint) *tokenBl
 	return &tokenBlock{
 		header: header,
 		body:   body,
-		line:   line,
+		line:   line + 1,
 	}
 }
 
@@ -75,4 +75,8 @@ func (tb *tokenBlock) GetEnd() string {
 		return ""
 	}
 	return tb.header.slice[len(tb.header.slice)-1]
+}
+
+func (tb *tokenBlock) EndWith(s string) bool {
+	return tb.GetEnd() == s
 }

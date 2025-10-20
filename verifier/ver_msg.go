@@ -59,7 +59,3 @@ func (ver *Verifier) newMsgAtParent(s string) error {
 func parametersDoNotSatisfyFnReq(param ast.Fc, fnName ast.Fc) error {
 	return fmt.Errorf("the arguments passed to the %s do not satisfy the domain of %s", param, fnName)
 }
-
-func (ver *Verifier) decomposedFcFnsAreEqualItemByItemMsg(left, right ast.Fc) string {
-	return fmt.Sprintf("headers and parameters of %s and %s are equal correspondingly", left, right)
-}

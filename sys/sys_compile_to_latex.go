@@ -24,9 +24,9 @@ import (
 )
 
 func CompileFileToLatex(path string) (string, glob.SysSignal, error) {
-	// 需要先确定这个path是以.lix结尾的
-	if !strings.HasSuffix(path, ".lix") {
-		return "", glob.SysSignalParseError, errors.New("the path is not a .lix file")
+	// 需要先确定这个path是以.lit结尾的
+	if !strings.HasSuffix(path, glob.LitexFileSuffix) {
+		return "", glob.SysSignalParseError, errors.New("the path is not a .lit file")
 	}
 
 	repoName := filepath.Dir(path)
@@ -36,7 +36,11 @@ func CompileFileToLatex(path string) (string, glob.SysSignal, error) {
 		return "", glob.SysSignalParseError, err
 	}
 
-	latexStr, err := litex_to_latex_compiler.CompileStmtToLatexString(string(content))
+	return CompileCodeToLatex(string(content))
+}
+
+func CompileCodeToLatex(code string) (string, glob.SysSignal, error) {
+	latexStr, err := litex_to_latex_compiler.CompileStmtToLatexString(code)
 	if err != nil {
 		return "", glob.SysSignalParseError, err
 	}

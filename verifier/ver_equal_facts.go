@@ -26,7 +26,7 @@ import (
 // REMARK
 // TODO: cmpFc_Builtin_Then_Decompose_Spec, fcEqualSpec 大循环本质上是有问题的，会有循环论证的风险：know p(p(1,2), 0) = 1, 则现在问 p(1,2) =1 吗？我会比较 p(1,2) = p(p(1,2), 0)，那这时候就出问题了：我因为一位位地比，所以又回到了比较 1 = p(1,2)
 func (ver *Verifier) cmpFc_Builtin_Then_Decompose_Spec(left ast.Fc, right ast.Fc, state *VerState) (bool, string, error) {
-	ok, msg, err := cmp.Cmp_ByBIR(left, right) // 完全一样
+	ok, msg, err := cmp.CmpBy_Literally_NumLit_PolynomialArith(left, right) // 完全一样
 	if err != nil {
 		return false, "", err
 	}
@@ -110,63 +110,37 @@ func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state *VerState) (bo
 		}
 	}
 
-	// if ok, err := ver.verEqualBuiltin(left, right, state); err != nil {
-	// 	return false, err
-	// } else if ok {
-	// 	return true, nil
-	// }
-
 	return false, nil
 }
 
-// func (ver *Verifier) fcFnEq(left, right *ast.FcFn, state *VerState) (bool, error) {
-// 	var ok bool
-// 	var err error
-// 	state = state.GetAddRound()
-
-// 	if len(left.Params) != len(right.Params) {
-// 		return false, nil
-// 	}
-
-// 	ok, err = ver.decomposeFcFnsAndCheckEquality(left, right, state, ver.fcEqualSpec)
-// 	if err != nil {
-// 		return false, err
-// 	}
-// 	if !ok {
-// 		return false, nil
-// 	}
-
-// 	return true, nil
-// }
-
-func (ver *Verifier) verTrueEqualFact_FcFnEqual_NoCheckRequirements(left, right *ast.FcFn, state *VerState) (bool, error) {
+func (ver *Verifier) verTrueEqualFact_FcFnEqual_NoCheckRequirements(left, right *ast.FcFn, state *VerState) *VerRet {
 	var ok bool
 	var err error
 
 	if len(left.Params) != len(right.Params) {
-		return false, nil
+		return newUnknownVerRet("")
 	}
 
 	// ok, err = ver.fcEqualSpec(left.FnHead, right.FnHead, state)
-	ok, err = ver.verTrueEqualFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{left.FnHead, right.FnHead}), state, false)
+	ok, err = ver.verTrueEqualFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{left.FnHead, right.FnHead}, glob.InnerGenLine), state, false)
 	if err != nil {
-		return false, err
+		return newErrVerRet(err.Error())
 	}
 	if !ok {
-		return false, nil
+		return newUnknownVerRet("")
 	}
 
 	for i := range left.Params {
 		// ok, err := ver.fcEqualSpec(left.Params[i], right.Params[i], state)
 
-		ok, err := ver.verTrueEqualFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{left.Params[i], right.Params[i]}), state, false)
+		ok, err := ver.verTrueEqualFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{left.Params[i], right.Params[i]}, glob.InnerGenLine), state, false)
 		if err != nil {
-			return false, err
+			return newErrVerRet(err.Error())
 		}
 		if !ok {
-			return false, nil
+			return newUnknownVerRet("")
 		}
 	}
 
-	return true, nil
+	return newTrueVerRet("")
 }

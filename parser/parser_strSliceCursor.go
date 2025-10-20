@@ -54,6 +54,10 @@ func (cursor *strSliceCursor) getSlice() []string {
 	return cursor.slice
 }
 
+// func (cursor *strSliceCursor) endWith(s string) bool {
+// 	return cursor.slice[len(cursor.slice)-1] == s
+// }
+
 func (cursor *strSliceCursor) currentToken() (string, error) {
 	if cursor.index >= len(cursor.slice) {
 		return "", fmt.Errorf("unexpected end of slice %s", strings.Join(cursor.slice, " "))
@@ -63,7 +67,7 @@ func (cursor *strSliceCursor) currentToken() (string, error) {
 
 func (cursor *strSliceCursor) testAndSkip(s string) error {
 	if cursor.index >= len(cursor.slice) {
-		return fmt.Errorf("unexpected end of slice %s", cursor.slice)
+		return fmt.Errorf("unexpected end of slice %s", strings.Join(cursor.slice, " "))
 	}
 	if cursor.slice[cursor.index] == s {
 		cursor.index++
@@ -74,7 +78,7 @@ func (cursor *strSliceCursor) testAndSkip(s string) error {
 
 func (cursor *strSliceCursor) next() (string, error) {
 	if cursor.index >= len(cursor.slice) {
-		return "", fmt.Errorf("unexpected end of slice %s", cursor.slice)
+		return "", fmt.Errorf("unexpected end of slice %s", strings.Join(cursor.slice, " "))
 	}
 	cursor.index++
 	return cursor.slice[cursor.index-1], nil
@@ -122,26 +126,6 @@ func (cursor *strSliceCursor) skip(expected string) error {
 	return nil
 }
 
-// func (cursor *strSliceCursor) getAndSkip(expected string) (string, error) {
-// 	if cursor.index >= len(cursor.slice) {
-// 		return "", fmt.Errorf("unexpected end of slice %s", cursor.slice)
-// 	}
-
-// 	curToken := cursor.slice[cursor.index]
-
-// 	if expected == "" {
-// 		cursor.index++
-// 		return curToken, nil
-// 	}
-
-// 	if cursor.slice[cursor.index] == expected {
-// 		cursor.index++
-// 		return curToken, nil
-// 	} else {
-// 		return "", fmt.Errorf("expected '%s', but got '%s'", expected, cursor.slice[cursor.index])
-// 	}
-// }
-
 func (cursor *strSliceCursor) curTokenBeginWithNumber() bool {
 	if cursor.index >= len(cursor.slice) {
 		return false
@@ -154,7 +138,7 @@ func (cursor *strSliceCursor) curTokenBeginWithNumber() bool {
 	}
 }
 
-func (cursor *strSliceCursor) skipKwAndColon_ExceedEnd(kw string) error {
+func (cursor *strSliceCursor) skipKwAndColonCheckEOL(kw string) error {
 	err := cursor.skip(kw)
 	if err != nil {
 		return err

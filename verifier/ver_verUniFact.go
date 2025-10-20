@@ -83,7 +83,7 @@ func (ver *Verifier) PreprocessUniFactParams_DeclareParams(oldStmt *ast.UniFactS
 	}
 
 	// declare
-	err = ver.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt(newStmtPtr.Params, newStmtPtr.ParamSets, []ast.FactStmt{}))
+	err = ver.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt(newStmtPtr.Params, newStmtPtr.ParamSets, []ast.FactStmt{}, oldStmt.Line))
 	if err != nil {
 		return nil, err
 	}

@@ -23,6 +23,66 @@ import (
 )
 
 func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+	ok, err := ver.verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
+	if stmt.TypeEnum == ast.TruePure && ver.env.IsTransitiveProp(string(stmt.PropName)) {
+		relatedFcSlice, ok := ver.env.GetRelatedFcSliceOfTransitiveProp(string(stmt.PropName), stmt.Params[0])
+		if !ok {
+			return false, nil
+		}
+
+		for _, relatedFc := range relatedFcSlice {
+			relatedFcStmt := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(stmt.PropName), []ast.Fc{relatedFc, stmt.Params[1]}, stmt.Line)
+			ok, err := ver.verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(relatedFcStmt, state)
+			if err != nil {
+				return false, err
+			}
+			if ok {
+				if state.WithMsg {
+					ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is true by %s is a transitive prop and %s is true", stmt.String(), string(stmt.PropName), relatedFcStmt.String()))
+				}
+				return true, nil
+			}
+		}
+	}
+
+	return false, nil
+}
+
+func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+	// replace the params with the values
+	replaced, newStmt := ver.env.ReplaceFcInSpecFact(stmt)
+	if replaced {
+		ok, err := ver.verSpecFactThatIsNotTrueEqualFactMainLogic(newStmt, state)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			if state.WithMsg {
+				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
+			}
+			return true, nil
+		}
+	}
+
+	ok, err := ver.verSpecFactThatIsNotTrueEqualFactMainLogic(stmt, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (ver *Verifier) verSpecFactThatIsNotTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	var ok bool
 	var err error
 
@@ -31,11 +91,6 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact(stmt *ast.SpecFactStmt, s
 			return false, err
 		}
 	}
-
-	// 在证明 proj(0, add_product(1,2)) $in ... 的时候可能用到
-	// if stmt.NameIs(glob.KeywordIn) && !ver.isProvingObjInSetUsingEqualObjs {
-	// 	return ver.verInSet_OverAllObjsEqualToIt(stmt, state)
-	// }
 
 	ok, err = ver.isSpecFactCommutative(stmt)
 	if err != nil {
@@ -81,7 +136,7 @@ func (ver *Verifier) isSpecFactCommutative(stmt *ast.SpecFactStmt) (bool, error)
 		return true, nil
 	}
 
-	ok, err := ver.verSpecFact_BySpecMem(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordCommutativeProp), []ast.Fc{stmt.PropName}), Round0NoMsg)
+	ok, err := ver.verSpecFact_BySpecMem(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordCommutativeProp), []ast.Fc{stmt.PropName}, stmt.Line), Round0NoMsg)
 	if err != nil {
 		return false, err
 	}
@@ -131,7 +186,7 @@ func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state *VerSta
 func (ver *Verifier) verSpecialSpecFact_ByBIR(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	if stmt.NameIs(glob.KeywordIn) {
 		return ver.inFactBuiltinRules(stmt, state)
-	} else if stmt.NameIs(glob.KeywordExistIn) && stmt.TypeEnum == ast.TrueExist_St {
+	} else if stmt.NameIs(glob.KeywordItemExistsIn) && stmt.TypeEnum == ast.TrueExist_St {
 		return ver.trueExistInSt(stmt, state)
 	}
 

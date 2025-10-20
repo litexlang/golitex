@@ -1,10 +1,10 @@
 <div align="center">
-<img src="./assets/logo.png" alt="The Litex Logo" width="300">
+<img src="https://publisher.litexlang.org/logo.PNG" alt="The Litex Logo" width="300">
 </div>
 
 <div align="center">
 
-# Litex: Simply Scale Formal Reasoning In AI Era
+# Litex: A Simple & Elegant Formal Language Learnable in 2 Hours
 
 **version v0.1.10-beta (not yet ready for production use)**  
 *Jiachen Shen and The Litex Team*
@@ -18,15 +18,17 @@
 
 </div>
 
-## Litex: The First Formal Language Learnable in 1–2 Hours
+## Simple, Intuitive, Expressive — Learnable For Humans & AI 
 
 _Simplicity is the ultimate sophistication._
 
 _– Leonardo da Vinci_
 
-Litex([website](https://litexlang.com)) is a simple, intuitive, and open-source formal language for coding reasoning ([Star the repo!](https://github.com/litexlang/golitex)). It ensures every step of your reasoning is correct, and is actually the first reasoning formal language (or formal language for short) that can be learned by anyone in 1–2 hours, even without math or programming background.
+[Congratulations! Litex achieves top 10 on Hacker News on 2025-09-27!!](https://news.ycombinator.com/item?id=45369629)
 
-Making Litex intuitive to both human and AI is the mission of Litex. That is how Litex scales formal reasoning: making it accessible to more people, applicable to more complex problems, and usable by large-scale AI systems. Here is a comparison between Litex and traditional formal language Lean.
+Litex([website](https://litexlang.com)) is a simple, intuitive, and expressive open-source formal language for coding reasoning ([Star the repo!](https://github.com/litexlang/golitex)). It ensures every step of your reasoning is correct, and is actually the first formal language that can be learned by anyone in 2 hours. In fact, Litex is so close to natural language that sometimes it makes you forget you are using a formal language!
+
+Making Litex intuitive to both humans and AI is Litex's core mission. Just like how Python lowers the barrier of programming by 10x compared with C/C++, Litex lowers the barrier of formal reasoning by 10x compared with previous formal languages like Lean. This is how Litex scales formal reasoning: by making it accessible to more people, applicable to more complex problems, and usable by large-scale AI systems. Here is an example:
 
 <table style="border-collapse: collapse; width: 100%; font-size: 12px">
   <tr>
@@ -70,7 +72,9 @@ Making Litex intuitive to both human and AI is the mission of Litex. That is how
   </tr>
 </table>
 
-Even Kids can formalize the multivariate equation in Litex in 2 minutes, while it require an experienced expert hours of work in Lean 4. It is a typical example of how Litex lowers the entrance barrier by 10x, lowers the cost of constructing formalized proofs by 10x, making formalization as easy and fast as natural writing. No foreign keywords, no twisted syntax, or complex semantics. Just plain reasoning.
+While Lean 4 is a powerful and rigorous proof assistant ideal, it requires months of training and years of experience to master. Litex takes a different approach: prioritizing accessibility and ease of use, enabling even beginners to formalize naive tasks like multivariate equations in minutes. For many everyday reasoning tasks, especially when rapid prototyping and intuitive syntax matter most, Litex offers a more approachable path. Each tool has its place — choose the one that best fits your needs and experience level!
+
+Our mission is to make Litex the most accessible and usable formal language for coding reasoning. We aim to solve the most challenging problems faced by the AI community, i.e. the challenge of efficient, scalable, and reliable coding reasoning. Let's build the future together!
 
 ## Resources And Community
 
@@ -82,9 +86,9 @@ Litex is nothing without its community and technical ecosystem.
 
 Resources for Litex users:
 
-1. Our official [website](https://litexlang.com) contains tutorials, cheatsheets, examples, documentation, collaboration opportunities, and more for Litex. All documents on our [website](https://litexlang.com) are open-sourced [here](https://github.com/litexlang/litex-official-documents)
+1. Our official [website](https://litexlang.com) contains tutorials, cheat sheets, examples, documentation, collaboration opportunities, and more for Litex. All documents on our [website](https://litexlang.com) are open-sourced [here](https://github.com/litexlang/litex-official-documents)
 2. Learn Litex [online](https://litexlang.com/doc/Tutorial/Introduction). A short list of major Litex statements and their usage are shown in the [cheat sheet](https://litexlang.com/doc/Litex_Cheatsheet).
-3. You can run litex on your own computer， start from [here](https://litexlang.com/doc/Start)
+3. You can run litex on your own computer， start from [here](https://litexlang.com/doc/Quick_Start)
 4. [Litex standard library](https://github.com/litexlang/litex-stdlib) is under active development. **Contribute to it and earn impact rewards!**
 5. Use [pylitex](https://github.com/litexlang/pylitex) to call Litex in Python
 6. Our Community is on [Zulip](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)!
@@ -106,11 +110,10 @@ _Sometimes it is the very people who no one imagines anything of who do the thin
 _– Alan Turing_
 
 <div align="center">
-  <img src="./assets/Little_Little_O.png" alt="The Litex Logo" width="200">
+  <img src="https://publisher.litexlang.org/Little_Little_O.PNG" alt="The Litex Logo" width="200">
   <p><em>Litex Mascot: Little Little O, a curious baby bird full of wonder</em></p>
 </div>
 
 Hi, I’m Jiachen Shen, creator of Litex. It is so fortunate to receive tremendous help from friends and colleagues throughout this journey of designing, implementing, and growing Litex into a community. Without their support, Litex would not have had the chance to succeed.
 
 I owe special thanks to my friend Zhaoxuan Hong, who built Litex’s powerful toolchains and has supported the project from the very beginning. I am also deeply grateful to Siqi Sun, Wei Lin, Peng Sun, Jie Fu, Zeyu Zheng, Huajian Xin, Zijie Qiu, Siqi Guo, Haoyang Shi, Chengyang Zhu, Chenxuan Huang for their invaluable contributions. I am certain this list of special thanks will only grow longer in the future.
-

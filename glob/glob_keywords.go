@@ -44,18 +44,19 @@ const (
 	KeywordComplex              = "C"                // e.g. 1+i
 	KeywordIn                   = "in"
 	// KeywordProveByMathInduction           = "prove_by_math_induction"
-	KeywordAs                             = "as" // 用在 import xxx as ??? 了
-	KeywordLen                            = "len"
-	KeywordFiniteSet                      = "finite_set"
-	KeywordProveOverFiniteSet             = "prove_over_finite_set" // syntax connecting forall and finite_set
-	KeywordExistIn                        = "exist_in"
+	KeywordAs           = "as" // 用在 import xxx as ??? 了
+	KeywordLen          = "len"
+	KeywordFiniteSet    = "finite_set"
+	KeywordProveByEnum  = "prove_by_enum" // syntax connecting forall and finite_set
+	KeywordItemExistsIn = "item_exists_in"
+
+	// WARNING: TODO 我不知道这三个集合是什么用途
+	// TODO: 需要有他们的对应关系
 	KeywordSetDefinedByReplacement        = "set_defined_by_replacement"    // 这是一个函数，返回一个集合，而不是一个prop
 	KeywordExistPropPreImageByReplacement = "obj_exist_as_preimage_of_prop" //"exist_prop_preimage_by_replacement"
 	KeywordExistFnPreImageByReplacement   = "obj_exist_as_preimage_of_fn"   // "exist_fn_preimage_by_replacement"
-	KeywordFnTemplate                     = "fn_template"
 
-	KeywordSetProduct = "set_product"
-	KeywordProj       = "proj"
+	KeywordFnTemplate = "fn_template"
 
 	KeywordNPos  = "N_pos"
 	KeywordLet   = "let"
@@ -67,6 +68,14 @@ const (
 	KeywordNonEmptySet = "nonempty_set"
 
 	KeywordIf = "if"
+
+	KeywordProveIsTransitiveProp = "prove_is_transitive_prop"
+
+	KeywordProveInRange = "prove_in_range"
+
+	KeywordEval   = "eval"
+	KeywordEvalFn = "eval_fn"
+	KeywordReturn = "return"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -101,18 +110,18 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordAs:                             {},
 	KeywordLen:                            {},
 	KeywordFiniteSet:                      {},
-	KeywordProveOverFiniteSet:             {},
-	KeywordExistIn:                        {},
+	KeywordProveByEnum:                    {},
+	KeywordItemExistsIn:                   {},
 	KeywordSetDefinedByReplacement:        {},
 	KeywordExistPropPreImageByReplacement: {},
 	KeywordExistFnPreImageByReplacement:   {},
 	KeywordFnTemplate:                     {},
-	KeywordSetProduct:                     {},
-	KeywordProj:                           {},
 	KeywordNPos:                           {},
 	KeywordLet:                            {},
 	KeywordClear:                          {},
 	// KeywordExistSetByAxiomOfReplacement:   {},
+
+	KeywordProveIsTransitiveProp: {},
 
 	KeywordProveByInduction: {},
 
@@ -120,6 +129,8 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordNonEmptySet: {},
 
 	KeywordIf: {},
+
+	KeywordEval: {},
 }
 
 const (
@@ -147,11 +158,11 @@ const (
 	KeySymbolPercent      = "%"  // prove: 2 % 2 = 0 的时候打印有问题，不知道为什么
 	KeySymbolLeftBracket  = "["
 	KeySymbolRightBracket = "]"
-	KeySymbolColonEqual   = ":="
-	KeySymbolLeftCurly    = "{"
-	KeySymbolRightCurly   = "}"
-	KeySymbolAt           = "@"
-	KeySymbolEqualLarger  = "=>"
+	// KeySymbolColonEqual   = ":="
+	KeySymbolLeftCurly  = "{"
+	KeySymbolRightCurly = "}"
+	KeySymbolAt         = "@"
+	KeySymbolRightArrow = "=>"
 
 	KeySymbolSemiColon  = ";"
 	KeySymbolEquivalent = "<=>"
@@ -161,12 +172,12 @@ const (
 
 // 最多双字符，或者单字符，否则parser的逻辑 GetKeySymbol 有问题
 var symbolSet map[string]struct{} = map[string]struct{}{
-	KeySymbolEqualEqual:   {}, // "=="
-	KeySymbolLargerEqual:  {}, // ">="
-	KeySymbolLessEqual:    {}, // "<="
-	KeySymbolNotEqual:     {}, // "!="
-	KeySymbolColonColon:   {}, // "::"
-	KeySymbolColonEqual:   {}, // ":="
+	KeySymbolEqualEqual:  {}, // "=="
+	KeySymbolLargerEqual: {}, // ">="
+	KeySymbolLessEqual:   {}, // "<="
+	KeySymbolNotEqual:    {}, // "!="
+	KeySymbolColonColon:  {}, // "::"
+	// KeySymbolColonEqual:   {}, // ":="
 	KeySymbolPower:        {}, // "^"
 	KeySymbolColon:        {}, // ":"
 	KeySymbolComma:        {}, // ","
@@ -189,7 +200,7 @@ var symbolSet map[string]struct{} = map[string]struct{}{
 	KeySymbolLeftCurly:    {}, // "{"
 	KeySymbolRightCurly:   {}, // "}"
 	KeySymbolAt:           {}, // "@"
-	KeySymbolEqualLarger:  {}, // "=>"
+	KeySymbolRightArrow:   {}, // "=>"
 	KeySymbolSemiColon:    {}, // ";"
 	KeySymbolEquivalent:   {}, // "<=>"
 	KeySymbolBackSlash:    {},
@@ -197,43 +208,42 @@ var symbolSet map[string]struct{} = map[string]struct{}{
 }
 
 var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]struct{}{
-	KeywordObj:                            {},
-	KeywordSet:                            {},
-	KeywordNatural:                        {},
-	KeywordInteger:                        {},
-	KeywordRational:                       {},
-	KeywordReal:                           {},
-	KeywordComplex:                        {},
-	KeywordAs:                             {},
-	KeywordIn:                             {},
-	KeySymbolEqual:                        {},
-	KeySymbolSlash:                        {},
-	KeySymbolPlus:                         {},
-	KeySymbolMinus:                        {},
-	KeySymbolStar:                         {},
-	KeySymbolPower:                        {},
-	KeySymbolLess:                         {},
-	KeySymbolGreater:                      {},
-	KeySymbolLargerEqual:                  {},
-	KeySymbolLessEqual:                    {},
-	KeySymbolNotEqual:                     {},
-	KeySymbolColonEqual:                   {},
+	KeywordObj:           {},
+	KeywordSet:           {},
+	KeywordNatural:       {},
+	KeywordInteger:       {},
+	KeywordRational:      {},
+	KeywordReal:          {},
+	KeywordComplex:       {},
+	KeywordAs:            {},
+	KeywordIn:            {},
+	KeySymbolEqual:       {},
+	KeySymbolSlash:       {},
+	KeySymbolPlus:        {},
+	KeySymbolMinus:       {},
+	KeySymbolStar:        {},
+	KeySymbolPower:       {},
+	KeySymbolLess:        {},
+	KeySymbolGreater:     {},
+	KeySymbolLargerEqual: {},
+	KeySymbolLessEqual:   {},
+	KeySymbolNotEqual:    {},
+	// KeySymbolColonEqual:                   {},
 	KeySymbolEqualEqual:                   {},
 	KeySymbolPercent:                      {}, // prove: 2 % 2 = 0 的时候打印有问题，不知道为什么
 	KeySymbolLeftBracket:                  {},
 	KeySymbolRightBracket:                 {},
 	KeywordCommutativeProp:                {},
 	KeywordFiniteSet:                      {},
-	KeywordExistIn:                        {},
+	KeywordItemExistsIn:                   {},
 	KeywordSetDefinedByReplacement:        {},
 	KeywordExistPropPreImageByReplacement: {},
 	KeywordExistFnPreImageByReplacement:   {},
 	TupleFcFnHead:                         {},
-	KeywordSetProduct:                     {},
 	KeywordLen:                            {},
-	KeywordProj:                           {},
 	KeywordNPos:                           {},
 	KeywordNonEmptySet:                    {},
+	KeywordEval:                           {},
 }
 
 func IsBuiltinKeywordKeySymbolCanBeFcAtomName(name string) bool {
