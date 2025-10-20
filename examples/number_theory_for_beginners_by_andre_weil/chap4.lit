@@ -1,0 +1,44 @@
+"""
+Chapter 4
+"""
+
+import "util.lit"
+import "basics.lit"
+import "chap1.lit"
+import "chap2.lit"
+import "chap3.lit"
+
+
+# Definition 4.1
+prop is_prime(p Z):
+    p > 1
+    forall x Z:
+        dom:
+            x > 1
+            p $is_divisible_by x
+        =>:
+            x = p
+
+# Theorem 4.1
+know @a_prime_divides_a_product_of_two_integers_if_it_divides_one_of_the_factors(p Z, a Z, b Z):
+    p $is_prime
+    p $is_divisible_by a * b
+    =>:
+        or:
+            p $is_divisible_by a
+            p $is_divisible_by b
+
+
+know @exist primes finite_set st exist_primes_whose_equal_to_integer(a Z):
+    a > 1
+    =>:
+        forall x primes:
+            x $is_prime
+            a $is_divisible_by x
+        a = product_of_int_finite_set(primes)
+
+# Theorem 4.3
+know @exist p Z st exist_prime_greater_than_any_integer(x Z):
+    =>:
+        p > x
+        p $is_prime

@@ -29,7 +29,7 @@ func (env *Env) IsValidIdentifierAvailable(name string) error {
 
 	ok := env.IsFcAtomDeclaredByUser(ast.FcAtom(name))
 	if ok {
-		return duplicateDefError(glob.EmptyPkg, name, "")
+		return duplicateDefError(name)
 	}
 
 	return nil

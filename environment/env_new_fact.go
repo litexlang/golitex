@@ -17,6 +17,7 @@ package litex_env
 import (
 	"fmt"
 	ast "golitex/ast"
+	cmp "golitex/cmp"
 	glob "golitex/glob"
 	"strconv"
 )
@@ -107,8 +108,8 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
 
 	// postprocess
 	if fact.IsExist_St_Fact() {
-		if fact.PropName == glob.KeywordExistIn {
-			existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordExistIn), []ast.Fc{fact.Params[2]})
+		if fact.PropName == glob.KeywordItemExistsIn {
+			existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordItemExistsIn), []ast.Fc{fact.Params[2]}, fact.Line)
 			err := env.storeSpecFactInMem(existInFact)
 			return err
 		}
@@ -165,6 +166,14 @@ func storeCommutativeTransitiveFact(mem map[string]*[]ast.Fc, fact *ast.SpecFact
 }
 
 func (env *Env) newPureFactPostProcess(fact *ast.SpecFactStmt) error {
+	// 如果是 transitive prop，那么需要更新 transitive prop mem
+	if fact.TypeEnum == ast.TruePure && env.IsTransitiveProp(string(fact.PropName)) {
+		if env.TransitivePropMem[string(fact.PropName)] == nil {
+			env.TransitivePropMem[string(fact.PropName)] = make(map[string][]ast.Fc)
+		}
+		env.TransitivePropMem[string(fact.PropName)][fact.Params[0].String()] = append(env.TransitivePropMem[string(fact.PropName)][fact.Params[0].String()], fact.Params[1])
+	}
+
 	if glob.IsBuiltinKeywordKeySymbolCanBeFcAtomName(string(fact.PropName)) {
 		if fact.PropName == glob.KeywordIn {
 			return env.inFactPostProcess(fact)
@@ -277,7 +286,7 @@ func (env *Env) newFalseExistFact_EmitEquivalentUniFact(fact *ast.SpecFactStmt) 
 func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 	_, factParams := ast.GetExistFactExistParamsAndFactParams(fact)
 
-	existFact := ast.NewSpecFactStmt(ast.TruePure, fact.PropName, factParams)
+	existFact := ast.NewSpecFactStmt(ast.TruePure, fact.PropName, factParams, fact.Line)
 
 	// err := env.KnownFacts.SpecFactMem.NewFactInSpecFactMem(existFact, env.CurMatchEnv)
 	err := env.storeSpecFactInMem(existFact)
@@ -286,13 +295,20 @@ func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 	}
 
 	// iff facts
-	iffFacts, err := env.iffFactsInExistStFact(fact)
+	iffFacts, thenFacts, err := env.iffFactsInExistStFact(fact)
 	if err != nil {
 		return err
 	}
 
 	for _, iffFact := range iffFacts {
 		err := env.NewFact(iffFact)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, thenFact := range thenFacts {
+		err := env.NewFact(thenFact)
 		if err != nil {
 			return err
 		}
@@ -343,7 +359,7 @@ func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, erro
 		thenFacts = append(thenFacts, specThenFact)
 	}
 
-	return ast.NewUniFact(existPropDef.ExistParams, existPropDef.ExistParamSets, domFacts, thenFacts), nil
+	return ast.NewUniFact(existPropDef.ExistParams, existPropDef.ExistParamSets, domFacts, thenFacts, existPropDef.Line), nil
 }
 
 func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
@@ -364,7 +380,19 @@ func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 		return false, err
 	}
 
+	// 如果 a = b 中，某一项是 数值型，那就算出来这个数值，卷后把它保留在equalMem中
+	env.storeSymbolValue(fact.Params[0], fact.Params[1])
+
 	return true, nil
+}
+
+func (env *Env) storeSymbolValue(left, right ast.Fc) {
+	if cmp.IsNumLitFc(left) {
+		env.SymbolValueMem[right.String()] = left
+	}
+	if cmp.IsNumLitFc(right) {
+		env.SymbolValueMem[left.String()] = right
+	}
 }
 
 func (env *Env) GetEqualFcs(fc ast.Fc) (*[]ast.Fc, bool) {
@@ -373,55 +401,12 @@ func (env *Env) GetEqualFcs(fc ast.Fc) (*[]ast.Fc, bool) {
 	return facts, ok
 }
 
-// func (env *Env) isMathInductionPropName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
-// 	if !fact.IsTrue() {
-// 		return false, nil
-// 	}
-
-// 	if fact.PropName != glob.KeywordProveByMathInduction {
-// 		return false, nil
-// 	}
-
-// 	if len(fact.Params) != 1 {
-// 		return true, fmt.Errorf("math induction prop is supposed to have one parameter, but %s has %d parameters", fact.PropName, len(fact.Params))
-// 	}
-
-// 	propNameAsAtom, ok := fact.Params[0].(ast.FcAtom)
-// 	if !ok {
-// 		return false, fmt.Errorf("math induction fact %s should have a prop name as parameter, got: %s", fact, fact.Params[0])
-// 	}
-
-// 	_, ok = env.GetPropDef(propNameAsAtom)
-// 	if !ok {
-// 		return false, fmt.Errorf("math induction fact %s should have a prop name that is defined, got: %s", fact, propNameAsAtom)
-// 	}
-
-// 	knownUniFactParams := []string{"n"}
-// 	knownUniFactDomFacts := []ast.FactStmt{}
-// 	knownUniFactThenFacts := []ast.FactStmt{
-// 		ast.NewSpecFactStmt(
-// 			ast.TruePure,
-// 			propNameAsAtom,
-// 			[]ast.Fc{ast.FcAtom("n")},
-// 		),
-// 	}
-
-// 	knownUniFact := ast.NewUniFact(knownUniFactParams, []ast.Fc{ast.FcAtom(glob.KeywordNatural)}, knownUniFactDomFacts, knownUniFactThenFacts)
-
-// 	err := env.NewFact(knownUniFact)
-// 	if err != nil {
-// 		return false, err
-// 	}
-
-// 	return true, nil
-// }
-
-func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, error) {
+func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, []ast.FactStmt, error) {
 	existParams, factParams := ast.GetExistFactExistParamsAndFactParams(fact)
 
 	existPropDef, ok := env.GetExistPropDef(fact.PropName)
 	if !ok {
-		return nil, fmt.Errorf("exist fact %s has no definition", fact)
+		return nil, nil, fmt.Errorf("exist fact %s has no definition", fact)
 	}
 
 	uniMap := map[string]ast.Fc{}
@@ -438,12 +423,21 @@ func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, e
 	for _, iffFact := range existPropDef.DefBody.IffFacts {
 		instantiated, err := iffFact.Instantiate(uniMap)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		instantiatedIffFacts = append(instantiatedIffFacts, instantiated)
 	}
 
-	return instantiatedIffFacts, nil
+	instantiatedThenFacts := []ast.FactStmt{}
+	for _, thenFact := range existPropDef.DefBody.ThenFacts {
+		instantiated, err := thenFact.Instantiate(uniMap)
+		if err != nil {
+			return nil, nil, err
+		}
+		instantiatedThenFacts = append(instantiatedThenFacts, instantiated)
+	}
+
+	return instantiatedIffFacts, instantiatedThenFacts, nil
 }
 
 func (env *Env) ExecDefFnTemplate(stmt *ast.FnTemplateDefStmt) error {
@@ -464,7 +458,7 @@ func (env *Env) ExecDefFnTemplate(stmt *ast.FnTemplateDefStmt) error {
 func (env *Env) newEnumFact(stmt *ast.EnumStmt) error {
 	forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts := ast.TransformEnumToUniFact(stmt.CurSet, stmt.Items)
 
-	err := env.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.CurSet, ast.FcAtom(glob.KeywordSet)}))
+	err := env.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.CurSet, ast.FcAtom(glob.KeywordSet)}, stmt.Line))
 	if err != nil {
 		return err
 	}
@@ -499,7 +493,7 @@ func (env *Env) newEnumFact(stmt *ast.EnumStmt) error {
 	lengthOfSet := strconv.Itoa(len(stmt.Items))
 	lengthOfSetAsFcAtom := ast.FcAtom(lengthOfSet)
 
-	lenFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{ast.NewFcFn(ast.FcAtom(glob.KeywordLen), []ast.Fc{stmt.CurSet}), lengthOfSetAsFcAtom})
+	lenFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{ast.NewFcFn(ast.FcAtom(glob.KeywordLen), []ast.Fc{stmt.CurSet}), lengthOfSetAsFcAtom}, stmt.Line)
 	err = env.NewFact(lenFact)
 	if err != nil {
 		return err
@@ -526,6 +520,8 @@ func (env *Env) newIntensionalSetFact(stmt *ast.IntensionalSetStmt) error {
 	if err = env.NewFact(rightUniFact); err != nil {
 		return err
 	}
+
+	env.IntensionalSetMem[stmt.CurSet.String()] = *stmt
 
 	return nil
 }

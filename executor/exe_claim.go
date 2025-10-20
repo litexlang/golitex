@@ -46,7 +46,7 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContra
 	case *ast.UniFactStmt:
 		return exec.uniFactProveByContradiction(asStmt, stmt)
 	default:
-		return glob.ExecState_Error, fmt.Errorf("prove by contradiction only support reversible fact or uni fact")
+		return glob.ExecStateError, fmt.Errorf("prove by contradiction only support reversible fact or uni fact")
 	}
 }
 
@@ -56,7 +56,7 @@ func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.Spec_O
 	for _, curFact := range reversedFact {
 		err := exec.env.NewFact(curFact)
 		if err != nil {
-			return glob.ExecState_Error, err
+			return glob.ExecStateError, err
 		}
 	}
 
@@ -67,7 +67,7 @@ func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.Spec_O
 
 	lastStmtAsFact, ok := stmt.ClaimProveStmt.Proofs[len(stmt.ClaimProveStmt.Proofs)-1].(ast.Spec_OrFact)
 	if !ok {
-		return glob.ExecState_Error, fmt.Errorf("prove by contradiction only support fact as last statement")
+		return glob.ExecStateError, fmt.Errorf("prove by contradiction only support fact as last statement")
 	}
 
 	reversedLastFact := lastStmtAsFact.ReverseIsTrue()
@@ -89,21 +89,21 @@ func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.Spec_O
 
 	exec.newMsg(fmt.Sprintf("last statement of current claim statement:\n%s\nis true and false. Prove by contradiction is successful!", lastStmtAsFact))
 
-	return glob.ExecState_True, nil
+	return glob.ExecStateTrue, nil
 }
 
 func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt, stmt *ast.ClaimProveByContradictionStmt) (glob.ExecState, error) {
 	ver := verifier.NewVerifier(exec.env)
 	newStmtPtr, err := ver.PreprocessUniFactParams_DeclareParams(specFactStmt)
 	if err != nil {
-		return glob.ExecState_Error, err
+		return glob.ExecStateError, err
 	}
 
 	// know cond facts
 	for _, condFact := range newStmtPtr.DomFacts {
 		err := exec.env.NewFact(condFact)
 		if err != nil {
-			return glob.ExecState_Error, err
+			return glob.ExecStateError, err
 		}
 	}
 
@@ -113,14 +113,14 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 		if reversibleThenFact, ok := thenFact.(ast.Spec_OrFact); ok {
 			thenFactsAsReversibleFacts = append(thenFactsAsReversibleFacts, reversibleThenFact)
 		} else {
-			return glob.ExecState_Error, fmt.Errorf("then fact:\n%s\nis not reversible. Then section of universal fact prove by contradiction only support reversible fact", thenFact)
+			return glob.ExecStateError, fmt.Errorf("then fact:\n%s\nis not reversible. Then section of universal fact prove by contradiction only support reversible fact", thenFact)
 		}
 	}
 	reversedThenFacts := ast.ReverseSliceOfReversibleFacts(thenFactsAsReversibleFacts)
 	for _, reversedThenFact := range reversedThenFacts {
 		err := exec.env.NewFact(reversedThenFact)
 		if err != nil {
-			return glob.ExecState_Error, err
+			return glob.ExecStateError, err
 		}
 	}
 
@@ -133,7 +133,7 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 	// the reversed last statement of current claim statement is true
 	lastFact, ok := stmt.ClaimProveStmt.Proofs[len(stmt.ClaimProveStmt.Proofs)-1].(ast.Spec_OrFact)
 	if !ok {
-		return glob.ExecState_Error, fmt.Errorf("prove by contradiction only support fact")
+		return glob.ExecStateError, fmt.Errorf("prove by contradiction only support fact")
 	}
 
 	reversedLastFact := lastFact.ReverseIsTrue()
@@ -154,7 +154,7 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 
 	exec.newMsg(fmt.Sprintf("last statement of current claim statement:\n%s\nis true and false. Prove by contradiction is successful!", lastFact))
 
-	return glob.ExecState_True, nil
+	return glob.ExecStateTrue, nil
 }
 
 func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecState, error) {
@@ -166,11 +166,11 @@ func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecSta
 	// 检查 stmt fact 中的所有元素已经定义过了
 	err = exec.env.NewFact(stmt.ToCheckFact)
 	if err != nil {
-		return glob.ExecState_Error, err
+		return glob.ExecStateError, err
 	}
 	// exec.knowStmt(ast.NewKnowStmt([]ast.CanBeKnownStmt{stmt.ToCheckFact}))
 
-	return glob.ExecState_True, nil
+	return glob.ExecStateTrue, nil
 }
 
 func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) (glob.ExecState, error) {
@@ -180,9 +180,9 @@ func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByCo
 	}
 
 	// 检查 stmt fact 中的所有元素已经定义过了
-	exec.knowStmt(ast.NewKnowStmt([]ast.CanBeKnownStmt{stmt.ClaimProveStmt.ToCheckFact}))
+	exec.knowStmt(ast.NewKnowStmt([]ast.CanBeKnownStmt{stmt.ClaimProveStmt.ToCheckFact}, stmt.ClaimProveStmt.Line))
 
-	return glob.ExecState_True, nil
+	return glob.ExecStateTrue, nil
 }
 
 func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecState, error) {
@@ -192,13 +192,6 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecState, 
 	exec.NewEnv(exec.env)
 	if glob.RequireMsg() {
 		defer func() {
-			exec.newMsg("\n")
-			if isSuccess {
-				exec.appendNewMsgAtBegin("is true\n\n")
-			} else {
-				exec.appendNewMsgAtBegin("is unknown\n\n")
-			}
-			exec.appendNewMsgAtBegin(stmt.String())
 			exec.deleteEnvAndRetainMsg()
 		}()
 	}
@@ -206,36 +199,38 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecState, 
 	// 需要检查stmt.ToCheckFact里的东西都是在外部声明好了的
 	ok := exec.env.AreAtomsInFactAreDeclared(stmt.ToCheckFact, map[string]struct{}{})
 	if !ok {
-		return glob.ExecState_Error, fmt.Errorf(env.AtomsInFactNotDeclaredMsg(stmt.ToCheckFact))
+		return glob.ExecStateError, fmt.Errorf(env.AtomsInFactNotDeclaredMsg(stmt.ToCheckFact))
 	}
 
-	if _, ok := stmt.ToCheckFact.(*ast.UniFactStmt); ok {
+	switch stmt.ToCheckFact.(type) {
+	case *ast.UniFactStmt:
 		isSuccess, err = exec.claimStmtProveUniFact(stmt)
 		if err != nil {
-			return glob.ExecState_Error, err
+			return glob.ExecStateError, err
 		}
 		if !isSuccess {
-			return glob.ExecState_Unknown, nil
+			return glob.ExecStateUnknown, nil
 		}
-		return glob.ExecState_True, nil
-	} else {
+		return glob.ExecStateTrue, nil
+	default:
 		execState, err := exec.execStmtsAtCurEnv(stmt.Proofs)
 		if err != nil {
-			return glob.ExecState_Error, err
+			return glob.ExecStateError, err
 		}
-		if execState != glob.ExecState_True {
-			return glob.ExecState_Unknown, nil
+		if execState != glob.ExecStateTrue {
+			return glob.ExecStateUnknown, nil
 		}
 		// check claim
 		execState, err = exec.factStmt(stmt.ToCheckFact)
 		if err != nil {
-			return glob.ExecState_Error, err
+			return glob.ExecStateError, err
 		}
-		if execState != glob.ExecState_True {
-			return glob.ExecState_Unknown, nil
+		if execState != glob.ExecStateTrue {
+			return glob.ExecStateUnknown, nil
 		}
-		return glob.ExecState_True, nil
+		return glob.ExecStateTrue, nil
 	}
+
 }
 
 // prove uniFact in claim at current env
@@ -246,8 +241,9 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 	}
 
 	// declare parameters in asUnivFact in the env
-	objDefStmt := ast.NewDefObjStmt(asUnivFact.Params, asUnivFact.ParamSets, []ast.FactStmt{})
-	err := exec.defObjStmt(objDefStmt, false)
+	objDefStmt := ast.NewDefObjStmt(asUnivFact.Params, asUnivFact.ParamSets, []ast.FactStmt{}, stmt.Line)
+
+	err := exec.defObjStmt(objDefStmt)
 	if err != nil {
 		if glob.RequireMsg() {
 			exec.newMsg(fmt.Sprintf("Claim statement error: Failed to declare parameters in universal fact:\n%s\n", objDefStmt))
@@ -256,29 +252,28 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 	}
 
 	// know dom facts
-	err = exec.knowStmt(ast.NewKnowStmt(asUnivFact.DomFacts.ToCanBeKnownStmtSlice()))
-	if err != nil {
-		return false, err
+	for _, domFact := range asUnivFact.DomFacts {
+		err = exec.env.NewFact(domFact)
+		if err != nil {
+			return false, err
+		}
 	}
 
 	// exec proof block
 	execState, err := exec.execStmtsAtCurEnv(stmt.Proofs)
 	if err != nil {
-		if glob.RequireMsg() {
-			exec.newMsg(fmt.Sprintf("Claim statement error: Failed to execute proof block:\n%s\n", stmt))
-		}
 		return false, err
 	}
-	if execState != glob.ExecState_True {
+	if execState != glob.ExecStateTrue {
 		return false, nil
 	}
 
 	// TODO: 让claim能forall if
 	// if asUnivFact.IffFacts == nil || len(asUnivFact.IffFacts) == 0 {
-	execState, failedFact, err := verifier.ExecFactsAtCurEnv_retFailedFact(asUnivFact.ThenFacts, exec.env)
+	execState, failedFact, err := verifier.ExecFactsAtCurEnv_retFailedFact(asUnivFact.ThenFacts, exec.env, verifier.Round0NoMsg)
 	if err != nil {
 		return false, fmt.Errorf("claim statement error: failed to verify fact:\n%s\n%s", failedFact, err)
-	} else if execState != glob.ExecState_True {
+	} else if execState != glob.ExecStateTrue {
 		return false, fmt.Errorf("claim statement error: failed to verify fact:\n%s", failedFact)
 	}
 
@@ -289,12 +284,12 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 // 也许我应该语义改成，先声明prop，然后再证明prop，而不是现在这个样子
 func (exec *Executor) claimPropStmt(stmt *ast.ClaimPropStmt) (glob.ExecState, error) {
 	var err error
-	var execState glob.ExecState = glob.ExecState_Error
+	var execState glob.ExecState = glob.ExecStateError
 
 	// prop all atoms declared
-	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.DomFacts, stmt.Prop.IffFacts)
+	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.DomFacts, stmt.Prop.IffFacts, stmt.Line)
 	if !exec.env.AreAtomsInFactAreDeclared(uniFact, map[string]struct{}{}) && !exec.env.IsFcAtomDeclaredByUser(ast.FcAtom(stmt.Prop.DefHeader.Name)) {
-		return glob.ExecState_Error, fmt.Errorf("claim prop statement error: atoms in fact are not declared")
+		return glob.ExecStateError, fmt.Errorf("claim prop statement error: atoms in fact are not declared")
 	}
 
 	// check proofs
@@ -311,39 +306,105 @@ func (exec *Executor) claimPropStmt(stmt *ast.ClaimPropStmt) (glob.ExecState, er
 	}
 
 	// know exec
-	err = exec.knowPropStmt(ast.NewKnowPropStmt(stmt.Prop))
+	err = exec.knowPropStmt(ast.NewKnowPropStmt(stmt.Prop, stmt.Line))
 	if notOkExec(execState, err) {
 		return execState, err
 	}
 
-	return glob.ExecState_True, nil
+	return glob.ExecStateTrue, nil
 }
 
 func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) (glob.ExecState, error) {
-	return exec.checkClaimExistPropStmtProofs(stmt)
+	execState, err := exec.claimExistPropStmtCheckProofs(stmt)
+	if notOkExec(execState, err) {
+		return execState, err
+	}
+
+	// declare exist prop
+	err = exec.defExistPropStmt(&stmt.ExistPropWithoutDom)
+	if err != nil {
+		return glob.ExecStateError, err
+	}
+
+	// know forall
+	uniFact := ast.NewUniFact(stmt.ExistPropWithoutDom.DefBody.DefHeader.Params, stmt.ExistPropWithoutDom.DefBody.DefHeader.ParamSets, stmt.ExistPropWithoutDom.DefBody.IffFacts, []ast.FactStmt{stmt.ExistPropWithoutDom.DefBody.DefHeader.ToSpecFact()}, stmt.Line)
+	err = exec.env.NewFact(uniFact)
+	if err != nil {
+		return glob.ExecStateError, err
+	}
+
+	return glob.ExecStateTrue, nil
 }
 
-func (exec *Executor) checkClaimExistPropStmtProofs(stmt *ast.ClaimExistPropStmt) (glob.ExecState, error) {
-	panic("not implemented")
+func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt) (glob.ExecState, error) {
+	exec.NewEnv(exec.env)
+	defer func() {
+		exec.deleteEnvAndRetainMsg()
+	}()
+
+	// declare parameters in exist prop
+	defObjStmt := ast.NewDefObjStmt(stmt.ExistPropWithoutDom.DefBody.DefHeader.Params, stmt.ExistPropWithoutDom.DefBody.DefHeader.ParamSets, stmt.ExistPropWithoutDom.DefBody.IffFacts, stmt.Line)
+
+	err := exec.defObjStmt(defObjStmt)
+	if err != nil {
+		return glob.ExecStateError, err
+	}
+
+	for _, curStmt := range stmt.Proofs {
+		execState, _, err := exec.Stmt(curStmt)
+		if notOkExec(execState, err) {
+			if glob.RequireMsg() {
+				if execState == glob.ExecStateUnknown {
+					exec.env.AddMsgToParent(fmt.Sprintf("unknown :( line %d\n", curStmt.GetLine()))
+				} else {
+					exec.env.AddMsgToParent(fmt.Sprintf("failed :( line %d:\n", curStmt.GetLine()))
+				}
+			}
+			return execState, err
+		}
+	}
+
+	// 把haveObj 代入 existParams 看看是否真的符合 then
+	if len(stmt.HaveObj) != len(stmt.ExistPropWithoutDom.ExistParams) {
+		return glob.ExecStateError, fmt.Errorf("claim exist prop statement error: have obj length is not equal to exist params length")
+	}
+
+	uniMap := make(map[string]ast.Fc)
+	for i, haveObj := range stmt.HaveObj {
+		uniMap[stmt.ExistPropWithoutDom.ExistParams[i]] = haveObj
+	}
+
+	for _, fact := range stmt.ExistPropWithoutDom.DefBody.ThenFacts {
+		instFact, err := fact.Instantiate(uniMap)
+		if err != nil {
+			return glob.ExecStateError, err
+		}
+		execState, err := exec.factStmt(instFact)
+		if notOkExec(execState, err) {
+			return execState, err
+		}
+	}
+
+	return glob.ExecStateTrue, nil
 }
 
 func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimPropStmt) (glob.ExecState, error) {
-	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFacts, stmt.Prop.ThenFacts)
+	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFacts, stmt.Prop.ThenFacts, stmt.Line)
 
 	exec.NewEnv(exec.env)
 	defer func() {
 		exec.deleteEnvAndRetainMsg()
 	}()
 
-	ok, err := exec.claimStmtProveUniFact(ast.NewClaimProveStmt(uniFact, stmt.Proofs))
+	ok, err := exec.claimStmtProveUniFact(ast.NewClaimProveStmt(uniFact, stmt.Proofs, stmt.Line))
 	if err != nil {
-		return glob.ExecState_Error, err
+		return glob.ExecStateError, err
 	}
 	if !ok {
-		return glob.ExecState_False, nil
+		return glob.ExecStateUnknown, nil
 	}
 
-	return glob.ExecState_True, nil
+	return glob.ExecStateTrue, nil
 }
 
 func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimPropStmt) (glob.ExecState, error) {
@@ -354,17 +415,17 @@ func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimProp
 
 	// declare parameters in prop
 
-	objDefStmt := ast.NewDefObjStmt(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFacts)
-	err := exec.defObjStmt(objDefStmt, false)
+	objDefStmt := ast.NewDefObjStmt(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFacts, stmt.Line)
+	err := exec.defObjStmt(objDefStmt)
 	if err != nil {
-		return glob.ExecState_Error, err
+		return glob.ExecStateError, err
 	}
 
 	thenFactsAsReversible := []ast.Spec_OrFact{}
 	for _, fact := range stmt.Prop.ThenFacts {
 		asReversible, ok := fact.(ast.Spec_OrFact)
 		if !ok {
-			return glob.ExecState_Error, fmt.Errorf("claim prop statement error: then fact is not an or statement")
+			return glob.ExecStateError, fmt.Errorf("claim prop statement error: then fact is not an or statement")
 		}
 		thenFactsAsReversible = append(thenFactsAsReversible, asReversible)
 	}
@@ -374,7 +435,7 @@ func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimProp
 	for _, fact := range reversedThenFacts {
 		err := exec.env.NewFact(fact)
 		if err != nil {
-			return glob.ExecState_Error, err
+			return glob.ExecStateError, err
 		}
 	}
 
@@ -387,16 +448,42 @@ func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimProp
 	lastProof := stmt.Proofs[len(stmt.Proofs)-1]
 	lastProofAsReversible, ok := lastProof.(ast.Spec_OrFact)
 	if !ok {
-		return glob.ExecState_Error, fmt.Errorf("claim prop statement error: last proof is not an or statement")
+		return glob.ExecStateError, fmt.Errorf("claim prop statement error: last proof is not an or statement")
 	}
 
 	reverseLastProof := lastProofAsReversible.ReverseIsTrue()
 	execState, failedFact, err := verifier.ExecSpecFactsAtCurEnv_retRailedFact(reverseLastProof, exec.env)
 	if err != nil {
 		return execState, fmt.Errorf("claim prop statement error: failed to verify reverse of last proof:\n%s\n%s", failedFact, err)
-	} else if execState != glob.ExecState_True {
+	} else if execState != glob.ExecStateTrue {
 		return execState, fmt.Errorf("claim prop statement error: failed to verify reverse of last proof:\n%s", failedFact)
 	}
 
-	return glob.ExecState_True, nil
+	return glob.ExecStateTrue, nil
+}
+
+func (exec *Executor) claimIffStmt(stmt *ast.ClaimIffStmt) (glob.ExecState, error) {
+	thenToIff := stmt.UniFactWithIffStmt.NewUniFactWithThenToIff()
+	iffToThen := stmt.UniFactWithIffStmt.NewUniFactWithIffToThen()
+	claimThenToIff := ast.NewClaimProveStmt(thenToIff, stmt.ProofThenToIff, stmt.Line)
+	claimIffToThen := ast.NewClaimProveStmt(iffToThen, stmt.ProofIffToThen, stmt.Line)
+	execState, err := exec.claimStmtProve(claimThenToIff)
+	if notOkExec(execState, err) {
+		return execState, err
+	}
+	execState, err = exec.claimStmtProve(claimIffToThen)
+	if notOkExec(execState, err) {
+		return execState, err
+	}
+
+	err = exec.env.NewFact(thenToIff)
+	if err != nil {
+		return glob.ExecStateError, err
+	}
+	err = exec.env.NewFact(iffToThen)
+	if err != nil {
+		return glob.ExecStateError, err
+	}
+
+	return glob.ExecStateTrue, nil
 }

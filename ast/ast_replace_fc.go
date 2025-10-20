@@ -20,7 +20,7 @@ func (stmt *SpecFactStmt) ReplaceFc(oldFc Fc, newFc Fc) FactStmt {
 		newParams[i] = param.ReplaceFc(oldFc, newFc)
 	}
 
-	return NewSpecFactStmt(stmt.TypeEnum, stmt.PropName, newParams)
+	return NewSpecFactStmt(stmt.TypeEnum, stmt.PropName, newParams, stmt.GetLine())
 }
 
 func (stmt *UniFactStmt) ReplaceFc(oldFc Fc, newFc Fc) FactStmt {
@@ -39,7 +39,7 @@ func (stmt *UniFactStmt) ReplaceFc(oldFc Fc, newFc Fc) FactStmt {
 		newThenFacts[i] = thenFact.ReplaceFc(oldFc, newFc)
 	}
 
-	return NewUniFact(stmt.Params, newParamSets, newDomFacts, newThenFacts)
+	return NewUniFact(stmt.Params, newParamSets, newDomFacts, newThenFacts, stmt.Line)
 }
 
 func (stmt *UniFactWithIffStmt) ReplaceFc(oldFc Fc, newFc Fc) FactStmt {

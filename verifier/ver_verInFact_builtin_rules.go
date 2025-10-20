@@ -18,7 +18,6 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
-	"strconv"
 )
 
 func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
@@ -90,13 +89,13 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 		return true, nil
 	}
 
-	ok, err = ver.atTupleIndex(stmt, state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
-	}
+	// ok, err = ver.atTupleIndex(stmt, state)
+	// if err != nil {
+	// 	return false, err
+	// }
+	// if ok {
+	// 	return true, nil
+	// }
 
 	return false, nil
 }
@@ -351,7 +350,7 @@ func (ver *Verifier) falseInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerS
 
 // TODO 需要先证明一下它是finite set 去开始验证 len(n) = 0
 func (ver *Verifier) nothingIsInEmptySet(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
-	if ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.Params[1], ast.FcAtom(glob.KeywordFiniteSet)}), state); err != nil || !ok {
+	if ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.Params[1], ast.FcAtom(glob.KeywordFiniteSet)}, stmt.Line), state); err != nil || !ok {
 		return ok, err
 	}
 
@@ -369,7 +368,7 @@ func (ver *Verifier) nothingIsInEmptySet(stmt *ast.SpecFactStmt, state *VerState
 }
 
 func (ver *Verifier) trueExistInSt(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
-	pureInFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.Params[1], stmt.Params[2]})
+	pureInFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.Params[1], stmt.Params[2]}, stmt.Line)
 	ok, err := ver.VerFactStmt(pureInFact, state)
 	if err != nil {
 		return false, err
@@ -401,7 +400,7 @@ func (ver *Verifier) objNotInSetWhenAllItemsInThatSetAreNotEqualToIt(stmt *ast.S
 		return false, nil
 	}
 
-	notAllItemsInThatSetAreNotEqualToIt := ast.NewUniFact([]string{"x"}, []ast.Fc{stmt.Params[1]}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{ast.FcAtom("x"), stmt.Params[0]})})
+	notAllItemsInThatSetAreNotEqualToIt := ast.NewUniFact([]string{"x"}, []ast.Fc{stmt.Params[1]}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{ast.FcAtom("x"), stmt.Params[0]}, stmt.Line)}, stmt.Line)
 
 	ok, err := ver.VerFactStmt(notAllItemsInThatSetAreNotEqualToIt, state)
 	if err != nil {
@@ -428,10 +427,6 @@ func (ver *Verifier) verInSetProduct(stmt *ast.SpecFactStmt, state *VerState) (b
 	if !ok {
 		return false, nil
 	}
-	ok = ast.IsFcAtomAndEqualToStr(setProductFn.FnHead, glob.KeywordSetProduct)
-	if !ok {
-		return false, nil
-	}
 
 	if len(fcFn.Params) != len(setProductFn.Params) {
 		return false, nil
@@ -455,43 +450,43 @@ func (ver *Verifier) verInSetProduct(stmt *ast.SpecFactStmt, state *VerState) (b
 	return true, nil
 }
 
-func (ver *Verifier) atTupleIndex(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
-	// if !ast.IsFcFnWithHeadName(stmt.Params[0], glob.TupleAtOp) {
-	if !ast.IsFcFnWithHeadName(stmt.Params[0], glob.KeywordProj) {
-		return false, nil
-	}
+// func (ver *Verifier) atTupleIndex(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+// 	// if !ast.IsFcFnWithHeadName(stmt.Params[0], glob.TupleAtOp) {
+// 	if !ast.IsFcFnWithHeadName(stmt.Params[0], glob.KeywordProj) {
+// 		return false, nil
+// 	}
 
-	if !ast.IsFcFnWithHeadName(stmt.Params[0].(*ast.FcFn).Params[0], glob.TupleFcFnHead) {
-		return false, nil
-	}
+// 	if !ast.IsFcFnWithHeadName(stmt.Params[0].(*ast.FcFn).Params[0], glob.TupleFcFnHead) {
+// 		return false, nil
+// 	}
 
-	asIndex, ok := stmt.Params[0].(*ast.FcFn).Params[1].(ast.FcAtom)
-	if !ok {
-		return false, nil
-	}
+// 	asIndex, ok := stmt.Params[0].(*ast.FcFn).Params[1].(ast.FcAtom)
+// 	if !ok {
+// 		return false, nil
+// 	}
 
-	asIndexAsInt, err := strconv.Atoi(string(asIndex))
-	if err != nil {
-		return false, nil
-	}
+// 	asIndexAsInt, err := strconv.Atoi(string(asIndex))
+// 	if err != nil {
+// 		return false, nil
+// 	}
 
-	if asIndexAsInt < 0 || asIndexAsInt >= len(stmt.Params[0].(*ast.FcFn).Params[0].(*ast.FcFn).Params) {
-		return false, nil
-	}
+// 	if asIndexAsInt < 0 || asIndexAsInt >= len(stmt.Params[0].(*ast.FcFn).Params[0].(*ast.FcFn).Params) {
+// 		return false, nil
+// 	}
 
-	tupleAtIndex := stmt.Params[0].(*ast.FcFn).Params[0].(*ast.FcFn).Params[asIndexAsInt]
+// 	tupleAtIndex := stmt.Params[0].(*ast.FcFn).Params[0].(*ast.FcFn).Params[asIndexAsInt]
 
-	equalFact := ast.NewInFactWithFc(tupleAtIndex, stmt.Params[1])
-	ok, err = ver.VerFactStmt(equalFact, state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
-	}
+// 	equalFact := ast.NewInFactWithFc(tupleAtIndex, stmt.Params[1])
+// 	ok, err = ver.VerFactStmt(equalFact, state)
+// 	if err != nil {
+// 		return false, err
+// 	}
+// 	if ok {
+// 		return true, nil
+// 	}
 
-	return false, nil
-}
+// 	return false, nil
+// }
 
 func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Fc, fnFcFn *ast.FcFn, state *VerState) (bool, error) {
 	ver.newEnv(ver.env)
@@ -615,7 +610,7 @@ func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactS
 		return false
 	}
 
-	setFcFnIsIn_ByItsFnT, err := ver.getRetSetOfFcFnByUsingItsFnT(fcFn, state)
+	setFcFnIsIn_ByItsFnT, err := ver.getRetSetOfFcFnByUsingItsFnT(fcFn)
 	if err != nil {
 		return false
 	}
@@ -630,7 +625,7 @@ func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactS
 	return false
 }
 
-func (ver *Verifier) getRetSetOfFcFnByUsingItsFnT(fcFn *ast.FcFn, state *VerState) (ast.Fc, error) {
+func (ver *Verifier) getRetSetOfFcFnByUsingItsFnT(fcFn *ast.FcFn) (ast.Fc, error) {
 	// f(a)(b,c)(e,d,f) 返回 {f, f(a), f(a)(b,c), f(a)(b,c)(e,d,f)}, {nil, {a}, {b,c}, {e,d,f}}
 	fnHeadChain_AndItSelf, _ := ast.GetFnHeadChain_AndItSelf(fcFn)
 
