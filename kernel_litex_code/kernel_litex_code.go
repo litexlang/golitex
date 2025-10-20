@@ -155,12 +155,12 @@ know:
     forall n N_pos, a finite_seq(R, n) => finite_seq_product(n, a, 1) = a(1)
 
 know:
-	$exist_item_in(N)
-	$exist_item_in(N_pos)
-	$exist_item_in(Z)
-	$exist_item_in(Q)
-	$exist_item_in(R)
-	$exist_item_in(C)
+	$item_exists_in(N)
+	$item_exists_in(N_pos)
+	$item_exists_in(Z)
+	$item_exists_in(Q)
+	$item_exists_in(R)
+	$item_exists_in(C)
 	forall x N_pos:
 		x > 0
 
@@ -276,10 +276,10 @@ know @cancel_general(a, b, c, d R):
 
 # TODO: 之后把这个移除kernel_lib而是做成像set一样内置的东西
 know:
-	$exist_item_in(nonempty_set)
+	$item_exists_in(nonempty_set)
 	forall x nonempty_set:
 		x $in set
-		$exist_item_in(x)
+		$item_exists_in(x)
 
 know @product_is_0_then_at_least_one_factor_is_0(a, b R):
 	a * b = 0
