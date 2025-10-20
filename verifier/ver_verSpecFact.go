@@ -186,7 +186,7 @@ func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state *VerSta
 func (ver *Verifier) verSpecialSpecFact_ByBIR(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	if stmt.NameIs(glob.KeywordIn) {
 		return ver.inFactBuiltinRules(stmt, state)
-	} else if stmt.NameIs(glob.KeywordExistItemIn) && stmt.TypeEnum == ast.TrueExist_St {
+	} else if stmt.NameIs(glob.KeywordItemExistsIn) && stmt.TypeEnum == ast.TrueExist_St {
 		return ver.trueExistInSt(stmt, state)
 	}
 
