@@ -44,11 +44,11 @@ const (
 	KeywordComplex              = "C"                // e.g. 1+i
 	KeywordIn                   = "in"
 	// KeywordProveByMathInduction           = "prove_by_math_induction"
-	KeywordAs          = "as" // 用在 import xxx as ??? 了
-	KeywordLen         = "len"
-	KeywordFiniteSet   = "finite_set"
-	KeywordProveByEnum = "prove_by_enum" // syntax connecting forall and finite_set
-	KeywordExistItemIn = "exist_item_in"
+	KeywordAs           = "as" // 用在 import xxx as ??? 了
+	KeywordLen          = "len"
+	KeywordFiniteSet    = "finite_set"
+	KeywordProveByEnum  = "prove_by_enum" // syntax connecting forall and finite_set
+	KeywordItemExistsIn = "item_exists_in"
 
 	// WARNING: TODO 我不知道这三个集合是什么用途
 	// TODO: 需要有他们的对应关系
@@ -111,7 +111,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordLen:                            {},
 	KeywordFiniteSet:                      {},
 	KeywordProveByEnum:                    {},
-	KeywordExistItemIn:                    {},
+	KeywordItemExistsIn:                   {},
 	KeywordSetDefinedByReplacement:        {},
 	KeywordExistPropPreImageByReplacement: {},
 	KeywordExistFnPreImageByReplacement:   {},
@@ -235,7 +235,7 @@ var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]s
 	KeySymbolRightBracket:                 {},
 	KeywordCommutativeProp:                {},
 	KeywordFiniteSet:                      {},
-	KeywordExistItemIn:                    {},
+	KeywordItemExistsIn:                   {},
 	KeywordSetDefinedByReplacement:        {},
 	KeywordExistPropPreImageByReplacement: {},
 	KeywordExistFnPreImageByReplacement:   {},

@@ -52,17 +52,17 @@ prove:
         len(s) = 1
     1 > 0
     len(s) > 0
-    have a st $exist_item_in(s)
+    have a st $item_exists_in(s)
     a $in s
 
 
-# have objectName st exist_item_in(setName)
+# have objectName st item_exists_in(setName)
 # it has syntax sugar: have objectName setName
 prove:
     let s set, a obj
     know a $in s
-    exist a st $exist_item_in(s)
-    $exist_item_in(s)
-    have b st $exist_item_in(s)
+    exist a st $item_exists_in(s)
+    $item_exists_in(s)
+    have b st $item_exists_in(s)
     b $in s
 
