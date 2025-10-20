@@ -11,7 +11,7 @@ exist_prop a, b N_pos st exist_items_in_the_same_box(f fn(N_pos)N_pos, n N_pos):
 
 claim:
     forall f fn(N_pos) N_pos:
-        forall x N_pos, n N_pos: x <= n + 1=> f(x) <= n
+        forall x N_pos, n N_pos: x <= n + 1 => f(x) <= n
         =>:
             $exist_items_in_the_same_box(f, 1)
     prove:
@@ -30,21 +30,19 @@ claim:
         exist 1, 2 st $exist_items_in_the_same_box(f, 1)
 
 claim:
-    forall f fn(N_pos) N_pos, m N_pos:
+    forall f fn(N_pos) N_pos:
     	forall x N_pos, n N_pos: x <= n + 1 => f(x) <= n 
-        $exist_items_in_the_same_box(f, m)            
         =>:
-            $exist_items_in_the_same_box(f, m+1)
+            forall m N_pos: $exist_items_in_the_same_box(f, m) => $exist_items_in_the_same_box(f, m+1)
     prove:
-        know $exist_items_in_the_same_box(f, m+1)
+        know:
+            forall m N_pos: $exist_items_in_the_same_box(f, m) => $exist_items_in_the_same_box(f, m+1)
 
-"""
 claim:
-    forall f fn(N_pos) N_pos, n N_pos:
-        forall x N_pos: x <= n + 1 => f(x) <= n
+    forall f fn(N_pos) N_pos:
+        forall x N_pos, n N_pos: x <= n + 1 => f(x) <= n
         =>:
-            $exist_items_in_the_same_box(f, n)
+            forall n N_pos => $exist_items_in_the_same_box(f, n)
     prove:
         $exist_items_in_the_same_box(f, 1)
         prove_by_induction($exist_items_in_the_same_box(f, n), n, 1)
-"""
