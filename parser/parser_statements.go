@@ -1998,7 +1998,7 @@ func (tb *tokenBlock) namedUniFactStmt() (*ast.NamedUniFactStmt, error) {
 
 		return ast.NewNamedUniFactStmt(ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts, thenFacts, tb.line), tb.line), nil
 	} else {
-		iffFact, err := tb.domFactInUniFactInterface()
+		iffFact, err := tb.inlineDomFactInUniFactInterface()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
