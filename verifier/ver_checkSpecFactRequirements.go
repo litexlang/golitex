@@ -253,8 +253,7 @@ func (ver *Verifier) setDefinedByReplacementFnRequirement(fc *ast.FcFn, state *V
 }
 
 var builtinFunctionNameSetAndCanTakeInAnyObj = map[string]struct{}{
-	glob.TupleFcFnHead:     {},
-	glob.KeywordSetProduct: {},
+	glob.TupleFcFnHead: {},
 	// glob.TupleAtOp:         {}, // 之后改成必须要是 $in 某个set_product才行，暂时先这样；同时传入的index需要是int
 	// glob.KeywordProj: {},
 }

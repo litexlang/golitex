@@ -48,7 +48,7 @@ func (stmt *FnTStruct) Instantiate(uniMap map[string]Fc) (*FnTStruct, error) {
 		return nil, err
 	}
 
-	return NewFnTStruct(stmt.Params, newParamSets, newRetSet, newDomFacts, newThenFacts), nil
+	return NewFnTStruct(stmt.Params, newParamSets, newRetSet, newDomFacts, newThenFacts, stmt.Line), nil
 }
 
 func (stmt *FnTStruct) Instantiate_FnTDefParams(templateParams []string, params []Fc) (*FnTStruct, error) {

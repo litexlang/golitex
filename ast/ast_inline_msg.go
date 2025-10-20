@@ -42,7 +42,7 @@ func (c *DefPropStmt) InlineString() string {
 		builder.WriteString(inlineFactsString(c.IffFacts))
 	}
 	if len(c.ThenFacts) > 0 {
-		builder.WriteString(glob.KeySymbolEqualLarger)
+		builder.WriteString(glob.KeySymbolRightArrow)
 		builder.WriteString(inlineFactsString(c.ThenFacts))
 	}
 	return builder.String()
@@ -59,7 +59,7 @@ func (l *DefFnStmt) InlineString() string {
 		builder.WriteString(inlineFactsString(l.FnTemplate.DomFacts))
 	}
 	if len(l.FnTemplate.ThenFacts) > 0 {
-		builder.WriteString(glob.KeySymbolEqualLarger)
+		builder.WriteString(glob.KeySymbolRightArrow)
 		builder.WriteString(inlineFactsString(l.FnTemplate.ThenFacts))
 	}
 
@@ -75,7 +75,7 @@ func (l *UniFactStmt) InlineString() string {
 		builder.WriteString(inlineFactsString(l.DomFacts))
 	}
 	if len(l.ThenFacts) > 0 {
-		builder.WriteString(glob.KeySymbolEqualLarger)
+		builder.WriteString(glob.KeySymbolRightArrow)
 		builder.WriteString(inlineFactsString(l.ThenFacts))
 	}
 	return builder.String()
@@ -174,7 +174,7 @@ func (s *UniFactWithIffStmt) InlineString() string {
 		builder.WriteString(inlineFactsString(s.UniFact.DomFacts))
 	}
 	if len(s.UniFact.ThenFacts) > 0 {
-		builder.WriteString(glob.KeySymbolEqualLarger)
+		builder.WriteString(glob.KeySymbolRightArrow)
 		builder.WriteString(inlineFactsString(s.UniFact.ThenFacts))
 	}
 	if len(s.IffFacts) > 0 {
@@ -190,7 +190,7 @@ func (s *ClaimPropStmt) InlineString() string                 { panic("") }
 func (s *ClaimExistPropStmt) InlineString() string            { panic("") }
 
 // func (s *ProveByMathInductionStmt) InlineString() string        { panic("") }
-func (s *ProveOverFiniteSetStmt) InlineString() string          { panic("") }
+func (s *ProveByEnumStmt) InlineString() string                 { panic("") }
 func (s *HaveObjInNonEmptySetStmt) InlineString() string        { panic("") }
 func (s *HaveSetStmt) InlineString() string                     { panic("") }
 func (s *HaveSetFnStmt) InlineString() string                   { panic("") }
@@ -211,7 +211,7 @@ func (s *EqualsFactStmt) InlineString() string {
 }
 
 func (s *KnowExistPropStmt) InlineString() string { panic("") }
-func (s *CommentStmt) InlineString() string       { panic("") }
+func (s *LatexStmt) InlineString() string         { panic("") }
 func (s *FnTemplateDefStmt) InlineString() string { panic("") }
 func (s *ClearStmt) InlineString() string         { return s.String() }
 func (s *InlineFactsStmt) InlineString() string   { return inlineFactsString(s.Facts) }
@@ -311,5 +311,25 @@ func (s *HaveFnLiftStmt) InlineString() string {
 }
 
 func (s *HaveFnStmt) InlineString() string {
+	return "TODO"
+}
+
+func (s *MarkdownStmt) InlineString() string {
+	return s.Markdown
+}
+
+// func (s *ProveInRange2tmt) InlineString() string {
+// 	return "TODO"
+// }
+
+func (s *ClaimIffStmt) InlineString() string {
+	return "TODO"
+}
+
+func (s *ProveInRangeStmt) InlineString() string {
+	return "TODO"
+}
+
+func (s *ProveIsTransitivePropStmt) InlineString() string {
 	return "TODO"
 }

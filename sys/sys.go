@@ -41,8 +41,8 @@ func RunFile(path string) (string, glob.SysSignal, error) {
 
 func RunRepo(path string) (string, glob.SysSignal, error) {
 	glob.CurrentTaskDirName = path
-	// 运行里面的main.lix
-	content, err := os.ReadFile(filepath.Join(path, "main.lix"))
+	// 运行里面的main.lit
+	content, err := os.ReadFile(filepath.Join(path, glob.PkgEntranceFileName))
 	if err != nil {
 		return "", glob.SysSignalSystemError, err
 	}
@@ -61,8 +61,8 @@ func ExecuteCodeAndReturnMessage(code string) (string, glob.SysSignal, error) {
 	return msg, signal, nil
 }
 
-func RunREPLInTerminal() {
-	pipeline.RunREPLInTerminal()
+func RunREPLInTerminal(version string) {
+	pipeline.RunREPLInTerminal(version)
 }
 
 func RunMainMsg(signal glob.SysSignal) string {
@@ -84,10 +84,10 @@ func RunFilesInRepo(repo string) error {
 
 	startTime := time.Now()
 	for _, file := range files {
-		// file 最后必须以.lix结尾
+		// file 最后必须以.lit结尾
 		localStartTime := time.Now()
 
-		if !strings.HasSuffix(file.Name(), ".lix") {
+		if !strings.HasSuffix(file.Name(), glob.LitexFileSuffix) {
 			continue
 		}
 

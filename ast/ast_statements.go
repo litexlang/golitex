@@ -19,6 +19,7 @@ type StmtSlice []Stmt
 type SpecFactPtrSlice []*SpecFactStmt
 type StrSlice []string
 type FcSlice []Fc
+type ReversibleFacts []Spec_OrFact
 
 type DefObjStmt struct {
 	Objs    StrSlice
@@ -32,8 +33,6 @@ type DefHeader struct {
 	Name      FcAtom
 	Params    StrSlice
 	ParamSets FcSlice
-
-	Line uint
 }
 
 type DefPropStmt struct {
@@ -50,6 +49,7 @@ type DefExistPropStmtBody struct {
 	DefHeader DefHeader
 	DomFacts  FactStmtSlice
 	IffFacts  FactStmtSlice
+	ThenFacts FactStmtSlice
 
 	Line uint
 }
@@ -129,8 +129,9 @@ type KnowPropStmt struct {
 
 // TODO: 这个的parser还没有像claim_prop那样改成用@
 type ClaimExistPropStmt struct {
-	ExistProp DefExistPropStmt
-	Proofs    StmtSlice
+	ExistPropWithoutDom DefExistPropStmt
+	Proofs              StmtSlice
+	HaveObj             []Fc
 
 	Line uint
 }
@@ -169,10 +170,6 @@ type ProveStmt struct {
 	Line uint
 }
 
-// type DefFnTemplateStmt struct {
-// 	FnTemplateStmt FnTemplateStmt
-// }
-
 // s := {1,2,3} 是枚举语法糖，等价于 forall x s: x = 1 or x = 2 or x = 3; 1 $in s; 2 $in s; 3 $in s;
 // s := {} 表示 这是个空集
 type EnumStmt struct {
@@ -188,31 +185,23 @@ type ImportFileStmt struct {
 	Line uint
 }
 
-// Fact表示一个事实，paramIndex表示第n位是变化的n $in N(默认第0位是开始)，其他参数固定，start是递归从start开始(默认从0开始)
-// type ProveByMathInductionStmt struct {
-// 	Fact       *SpecFactStmt
-// 	ParamIndex int
-// 	Start      int
-// }
-
 type IntensionalSetStmt struct {
 	CurSet    Fc
 	Param     string
 	ParentSet Fc
-	Proofs    SpecFactPtrSlice
+	Facts     SpecFactPtrSlice
 
 	Line uint
 }
 
 // 某种程度上这个关键词是不必要的，因为如果我发现涉及到的uniFact里面的所有的 paramSet 都是有 enum 的，那我就默认迭代去证明这个forall。但是我还是引入这个关键词以突出我现在用的是iterative的情况
-type ProveOverFiniteSetStmt struct {
-	Fact        UniFactStmt
-	ProofsSlice []StmtSlice
+type ProveByEnumStmt struct {
+	Fact  UniFactStmt
+	Proof []Stmt
 
 	Line uint
 }
 
-// have xxx st exist_in 的语法糖
 type HaveObjInNonEmptySetStmt struct {
 	Objs    StrSlice
 	ObjSets FcSlice
@@ -266,7 +255,7 @@ type KnowExistPropStmt struct {
 	Line uint
 }
 
-type CommentStmt struct {
+type LatexStmt struct {
 	Comment string
 
 	Line uint
@@ -336,6 +325,50 @@ type HaveFnStmt struct {
 	DefFnStmt        DefFnStmt
 	Proofs           StmtSlice
 	HaveObjSatisfyFn Fc
+
+	Line uint
+}
+
+type MarkdownStmt struct {
+	Markdown string
+
+	Line uint
+}
+
+// type ProveInRange2tmt struct {
+// 	Start     int64
+// 	End       int64
+// 	Param     string
+// 	DomFacts  ReversibleFacts
+// 	ThenFacts FactStmtSlice
+// 	Proofs    StmtSlice
+
+// 	Line uint
+// }
+
+type ProveInRangeStmt struct {
+	Start          int64
+	End            int64
+	Param          string
+	IntensionalSet Fc
+	ThenFacts      FactStmtSlice
+	Proofs         StmtSlice
+
+	Line uint
+}
+
+type ClaimIffStmt struct {
+	UniFactWithIffStmt UniFactWithIffStmt
+	ProofThenToIff     StmtSlice
+	ProofIffToThen     StmtSlice
+
+	Line uint
+}
+
+type ProveIsTransitivePropStmt struct {
+	Prop   FcAtom
+	Params StrSlice
+	Proofs StmtSlice
 
 	Line uint
 }

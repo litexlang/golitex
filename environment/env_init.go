@@ -49,7 +49,5 @@ func (e *Env) Init() {
 
 	e.InsertFnInFnTT(kernel_lib.PowerAtom, kernel_lib.PowerTemplateR)
 
-	e.InsertFnInFnTT(kernel_lib.ProjAtom, kernel_lib.ProjTemplate)
-
-	e.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordExistIn), []ast.Fc{ast.FcAtom(glob.KeywordSet)}))
+	e.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordItemExistsIn), []ast.Fc{ast.FcAtom(glob.KeywordSet)}, glob.InnerGenLine))
 }

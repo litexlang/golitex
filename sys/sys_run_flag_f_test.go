@@ -22,7 +22,7 @@ import (
 )
 
 func TestRunFileInTerminalFlagF(t *testing.T) {
-	path := "../examples/test_codes/tmp.lix"
+	path := "../examples/test_codes/tmp.lit"
 
 	cmd := exec.Command("go", "run", "../main.go", "-f", path)
 

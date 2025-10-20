@@ -22,7 +22,9 @@ import (
 	parser "golitex/parser"
 	"io"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 )
 
 // main function for running a single code and return the message
@@ -49,13 +51,14 @@ func executeCodeAndReturnMessageSlice(code string) ([]string, glob.SysSignal, er
 	msgOfTopStatements := []string{}
 
 	for _, topStmt := range topStmtSlice {
-		execState, err := executor.Stmt(topStmt)
+		execState, msg, err := executor.Stmt(topStmt)
 		msgOfTopStatements = append(msgOfTopStatements, executor.GetMsgAsStr0ToEnd())
+		msgOfTopStatements = append(msgOfTopStatements, msg)
 		if err != nil {
 			return msgOfTopStatements, glob.SysSignalRuntimeError, err
 		}
-		if execState != glob.ExecState_True {
-			return msgOfTopStatements, glob.SysSignalRuntimeError, fmt.Errorf("execution failed")
+		if execState != glob.ExecStateTrue {
+			return msgOfTopStatements, glob.SysSignalRuntimeError, fmt.Errorf("execution failed, line %d", topStmt.GetLine())
 		}
 	}
 
@@ -71,14 +74,14 @@ func ExecuteCodeAndReturnMessageSliceGivenSettings(code string, executor *exe.Ex
 	msgOfTopStatements := []string{}
 
 	for _, topStmt := range topStmtSlice {
-		execState, err := executor.Stmt(topStmt)
+		execState, _, err := executor.Stmt(topStmt)
 		if err != nil {
 			return nil, glob.SysSignalRuntimeError, err
 		}
 
 		msgOfTopStatements = append(msgOfTopStatements, executor.GetMsgAsStr0ToEnd())
 
-		if execState != glob.ExecState_True {
+		if execState != glob.ExecStateTrue {
 			return msgOfTopStatements, glob.SysSignalRuntimeError, fmt.Errorf("execution failed")
 		}
 	}
@@ -95,7 +98,7 @@ func printMessagesToWriter(writer io.Writer, msg []string) {
 
 		for _, m := range msg {
 			// 让m的最后一位是换行符
-			m = strings.TrimRight(m, " \r\t\n")
+			m = strings.TrimRight(m, " \t\n")
 			if strings.TrimSpace(m) == "" {
 				if isConsecutiveEmptyLine {
 					continue
@@ -107,11 +110,21 @@ func printMessagesToWriter(writer io.Writer, msg []string) {
 			}
 			builder.WriteString("\n")
 		}
-		fmt.Fprintln(writer, builder.String()[:len(builder.String())-1])
+
+		result := builder.String()
+		if len(result) > 0 {
+			// Remove the trailing newline
+			fmt.Fprintln(writer, result[:len(result)-1])
+		}
 	}
 }
 
-func RunREPLInTerminal() {
+const helpMessage = `help: show this help message
+exit: exit the REPL
+clear: refresh the whole environment
+`
+
+func RunREPLInTerminal(version string) {
 	executor, err := pipelineExecutorInit()
 	if err != nil {
 		fmt.Println("Error initializing pipeline:", err)
@@ -121,7 +134,9 @@ func RunREPLInTerminal() {
 	reader := bufio.NewReader(os.Stdin)
 	writer := os.Stdout
 
-	fmt.Println("Litex-beta - Type your code or 'exit' to quit\nWarning: not yet ready for production use.")
+	year := time.Now().Year()
+
+	fmt.Fprintf(writer, "Litex %s Copyright (C) 2024-%s litexlang.com Type 'help' for help\n", version, strconv.Itoa(year))
 
 	for {
 		code, err := listenOneStatementFromTerminal(reader, writer)
@@ -134,6 +149,11 @@ func RunREPLInTerminal() {
 		if strings.TrimSpace(code) == "exit" {
 			fmt.Fprintf(writer, glob.REPLGoodbyeMessage)
 			return
+		}
+
+		if strings.TrimSpace(code) == "help" {
+			fmt.Fprintf(writer, helpMessage)
+			continue
 		}
 
 		msg, signal, err := ExecuteCodeAndReturnMessageSliceGivenSettings(code, executor)
@@ -154,36 +174,33 @@ func listenOneStatementFromTerminal(reader *bufio.Reader, writer io.Writer) (str
 	currentScopeDepth := 0
 
 	for {
+		currentLineStr, err := reader.ReadString('\n')
+		if err != nil {
+			return "", fmt.Errorf("error reading input: %s", err)
+		}
+
+		currentLineStr = glob.ProcessWindowsCompatibility(currentLineStr)
+		trimmedLine := strings.TrimRight(currentLineStr, " \t\n")
+
 		if currentScopeDepth > 0 {
-			fmt.Fprint(writer, "... ") // 末尾的+4是未来和">>> "对齐
-			input.WriteString("    ")
-
-			currentLineStr, err := reader.ReadString('\n')
-			trimmedLine := strings.TrimRight(currentLineStr, " \t\n\r")
-
 			if trimmedLine == "" {
 				break
 			}
 
-			if err != nil {
-				return "", fmt.Errorf("error reading input: %s", err)
-			}
+			input.WriteString("    ")
 			input.WriteString(currentLineStr)
 
+			fmt.Fprint(writer, "... ") // 为下一行准备提示符
+
 		} else {
-			currentLineStr, err := reader.ReadString('\n')
-			if err != nil {
-				return "", fmt.Errorf("error reading input: %s", err)
-			}
 			input.WriteString(currentLineStr)
 
 			// input 的非空白的最后一位 不是 :
-			trimmedLine := strings.TrimRight(currentLineStr, " \t\n\r")
 			if trimmedLine == "" || !strings.HasSuffix(trimmedLine, ":") {
 				break
 			} else {
 				currentScopeDepth = 1
-
+				fmt.Fprint(writer, "... ") // 为下一行准备提示符
 			}
 		}
 	}

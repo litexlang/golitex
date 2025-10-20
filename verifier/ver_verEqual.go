@@ -26,6 +26,29 @@ import (
 func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, checkRequirements bool) (bool, error) {
 	var ok bool
 	var err error
+
+	replaced, newStmt := ver.env.ReplaceFcInSpecFact(stmt)
+	if replaced {
+		ok, err = ver.verTrueEqualFactMainLogic(newStmt, state, true)
+		if err != nil {
+			return false, err
+		}
+
+		if ok {
+			if state.WithMsg {
+				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
+			}
+			return true, nil
+		}
+	}
+
+	return ver.verTrueEqualFactMainLogic(stmt, state, checkRequirements)
+}
+
+func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *VerState, checkRequirements bool) (bool, error) {
+	var ok bool
+	var err error
+
 	if checkRequirements && !state.ReqOk {
 		// REMARK: 这里 state 更新了： ReqOk 更新到了 true
 		if ok, state, err = ver.checkSpecFactRequirements(stmt, state); err != nil {
@@ -49,11 +72,11 @@ func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, c
 
 	if leftAsFn, ok := stmt.Params[0].(*ast.FcFn); ok {
 		if rightAsFn, ok := stmt.Params[1].(*ast.FcFn); ok {
-			ok, err := ver.verTrueEqualFact_FcFnEqual_NoCheckRequirements(leftAsFn, rightAsFn, state)
-			if err != nil {
-				return false, err
+			ret := ver.verTrueEqualFact_FcFnEqual_NoCheckRequirements(leftAsFn, rightAsFn, state)
+			if ret.IsErr() {
+				return false, ret.Err
 			}
-			if ok {
+			if ret.IsOk() {
 				return true, nil
 			}
 		}
@@ -99,7 +122,7 @@ func (ver *Verifier) verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Fc, r
 }
 
 func (ver *Verifier) verEqualBuiltin(left ast.Fc, right ast.Fc, state *VerState) (bool, error) {
-	ok, msg, err := cmp.Cmp_ByBIR(left, right) // 完全一样
+	ok, msg, err := cmp.CmpBy_Literally_NumLit_PolynomialArith(left, right) // 完全一样
 	if err != nil {
 		return false, err
 	}
@@ -155,12 +178,6 @@ func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right
 
 	return false, nil
 }
-
-// func (ver *Verifier) equalFact_MatchEnv_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right ast.Fc, state *VerState) (bool, error) {
-// 	// panic("equalFact_MatchEnv_SpecMem_atEnv: not implemented")
-// 	equalFact := ver.makeEqualFact(left, right)
-// 	return ver.specFact_MatchEnv_SpecMem(curEnv, equalFact, state)
-// }
 
 func (ver *Verifier) verLogicMem_leftToRight_RightToLeft(left ast.Fc, right ast.Fc, state *VerState) (bool, error) {
 	equalFact := ast.NewEqualFact(left, right)
@@ -219,7 +236,7 @@ func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, rig
 
 	if gotLeftEqualFcs && gotRightEqualFcs {
 		if equalToLeftFcs == equalToRightFcs {
-			return true, fmt.Sprintf("It's known %s and %s equal to one same object", left, right), nil
+			return true, fmt.Sprintf("%s = %s, by either their equality is known, or it is ensured by transitivity of equality.", left, right), nil
 		}
 	}
 

@@ -17,24 +17,19 @@ package litex_global
 type ExecState uint8
 
 const (
-	ExecState_Unknown ExecState = iota
-	ExecState_True
-	ExecState_Error
-	ExecState_False
+	ExecStateUnknown ExecState = iota
+	ExecStateTrue
+	ExecStateError
 )
 
 func (e *ExecState) IsTrue() ExecState {
-	return ExecState_True
+	return ExecStateTrue
 }
 
 func (e *ExecState) IsUnknown() ExecState {
-	return ExecState_Unknown
+	return ExecStateUnknown
 }
 
 func (e *ExecState) IsError() ExecState {
-	return ExecState_Error
-}
-
-func (e *ExecState) IsFalse() ExecState {
-	return ExecState_False
+	return ExecStateError
 }

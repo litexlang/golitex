@@ -34,6 +34,7 @@ func main() {
 	fileFlag := flag.String("f", "", "Execute the given file")
 	repoFlag := flag.String("r", "", "Execute the given repo")
 	latexFlag := flag.String("latex", "", "Compile the given file to latex")
+	elatexFlag := flag.String("elatex", "", "Compile the given file to latex")
 
 	flag.Parse()
 
@@ -51,9 +52,22 @@ func main() {
 		return
 	}
 
+	// Handle combined -latex and -e
+	if *elatexFlag != "" {
+		// 处理转义序列
+		msg, signal, err := sys.CompileCodeToLatex(glob.ProcessWindowsCompatibility(*elatexFlag))
+		if err != nil || signal != glob.SysSignalTrue {
+			fmt.Printf("Error: %s\n", err)
+			os.Exit(1)
+		}
+		fmt.Println(msg)
+		return
+	}
+
 	// Handle execution flags
 	if *executeFlag != "" {
-		msg, signal, err := sys.ExecuteCodeAndReturnMessage(*executeFlag)
+		// Normal execution
+		msg, signal, err := sys.ExecuteCodeAndReturnMessage(glob.ProcessWindowsCompatibility(*executeFlag))
 		msg = strings.TrimSpace(msg)
 		fmt.Println(msg)
 		if err != nil {
@@ -73,7 +87,7 @@ func main() {
 		}
 
 		// Process file
-		msg, signal, err := sys.RunFile(*fileFlag)
+		msg, signal, err := sys.RunFile(glob.ProcessWindowsCompatibility(*fileFlag))
 		fmt.Println(msg)
 		if err != nil {
 			fmt.Printf("Error: %s\n", err)
@@ -91,7 +105,7 @@ func main() {
 			os.Exit(1)
 		}
 		// run the repo
-		msg, signal, err := sys.RunRepo(*repoFlag)
+		msg, signal, err := sys.RunRepo(glob.ProcessWindowsCompatibility(*repoFlag))
 		fmt.Println(msg)
 		if err != nil {
 			fmt.Printf("Error: %s\n", err)
@@ -104,7 +118,7 @@ func main() {
 	}
 
 	if *latexFlag != "" {
-		msg, signal, err := sys.CompileFileToLatex(*latexFlag)
+		msg, signal, err := sys.CompileFileToLatex(glob.ProcessWindowsCompatibility(*latexFlag))
 		if err != nil || signal != glob.SysSignalTrue {
 			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)
@@ -114,6 +128,5 @@ func main() {
 	}
 
 	// If no flags are provided, run REPL
-	sys.RunREPLInTerminal()
-
+	sys.RunREPLInTerminal(VERSION)
 }

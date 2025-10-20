@@ -15,20 +15,16 @@
 package litex_parser
 
 import (
-	"fmt"
 	ast "golitex/ast"
-	glob "golitex/glob"
-	"strings"
 )
 
-func ParseSourceCode_WhenCompileToLatex(code string) ([]ast.Stmt, error) {
-	// code, err := preprocessSourceCode(code)
-	preprocessedCodeLines, err := preprocessSourceCodeWhenCompileToLatex(code)
+func ParseSourceCode_WhenCompileToLatex2(code string) ([]ast.Stmt, error) {
+	preprocessedCodeLines, err := preprocessSourceCode(code)
 	if err != nil {
 		return []ast.Stmt{}, err
 	}
 
-	blocks, err := makeTokenBlocks_WhenCompileToLatex(preprocessedCodeLines)
+	blocks, err := makeTokenBlocks(preprocessedCodeLines)
 	if err != nil {
 		return nil, err
 	}
@@ -45,102 +41,126 @@ func ParseSourceCode_WhenCompileToLatex(code string) ([]ast.Stmt, error) {
 	return ret, nil
 }
 
-func makeTokenBlocks_WhenCompileToLatex(lines []string) ([]tokenBlock, error) {
-	t := newTokenizerWithScope(lines)
-	return t.parseBlocks_WhenCompileToLatex(0)
-}
+// func ParseSourceCode_WhenCompileToLatex(code string) ([]ast.Stmt, error) {
+// 	// code, err := preprocessSourceCode(code)
+// 	preprocessedCodeLines, err := preprocessSourceCodeWhenCompileToLatex(code)
+// 	if err != nil {
+// 		return []ast.Stmt{}, err
+// 	}
 
-func (t *tokenizerWithScope) parseBlocks_WhenCompileToLatex(currentIndent int) ([]tokenBlock, error) {
-	blocks := []tokenBlock{}
+// 	blocks, err := makeTokenBlocks_WhenCompileToLatex(preprocessedCodeLines)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	for t.currentLine < len(t.lines) {
-		line := t.lines[t.currentLine]
+// 	ret := []ast.Stmt{}
+// 	for _, block := range blocks {
+// 		cur, err := block.Stmt()
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		ret = append(ret, cur)
+// 	}
 
-		if strings.HasPrefix(line, glob.CommentSig) {
-			blocks = append(blocks, tokenBlock{
-				header: strSliceCursor{0, []string{glob.CommentSig, strings.TrimSpace(strings.TrimPrefix(line, glob.CommentSig))}},
-				body:   nil,
-			})
-			t.currentLine++
-			continue
-		}
+// 	return ret, nil
+// }
 
-		// 计算当前行的缩进
-		indent := len(line) - len(strings.TrimLeft(line, " "))
+// func makeTokenBlocks_WhenCompileToLatex(lines []string) ([]tokenBlock, error) {
+// 	t := newTokenizerWithScope(lines)
+// 	return t.parseBlocks_WhenCompileToLatex(0)
+// }
 
-		if indent < currentIndent {
-			// 缩进减少，说明当前块结束
-			return blocks, nil
-		}
+// func (t *tokenizerWithScope) parseBlocks_WhenCompileToLatex(currentIndent int) ([]tokenBlock, error) {
+// 	blocks := []tokenBlock{}
 
-		if indent > currentIndent {
-			return nil, fmt.Errorf("incorrect indentation:\n\"%s\"\nMaybe the previous nonempty line should end with \":\"", line)
-		}
+// 	for t.currentLine < len(t.lines) {
+// 		line := t.lines[t.currentLine]
 
-		// indent == currentIndent:
-		// 判断是否为 header 行（是否以 : 结尾）
-		lineForTokenize := line
-		if strings.HasSuffix(line, ":") {
-			lineForTokenize = line
-		}
+// 		if strings.HasPrefix(line, glob.InlineCommentSig) {
+// 			blocks = append(blocks, tokenBlock{
+// 				header: strSliceCursor{0, []string{glob.InlineCommentSig, strings.TrimSpace(strings.TrimPrefix(line, glob.InlineCommentSig))}},
+// 				body:   nil,
+// 			})
+// 			t.currentLine++
+// 			continue
+// 		}
 
-		tokens, err := t.tokenizeLine(lineForTokenize)
-		if err != nil {
-			return nil, err
-		}
+// 		// 计算当前行的缩进
+// 		indent := len(line) - len(strings.TrimLeft(line, " "))
 
-		block := tokenBlock{
-			header: strSliceCursor{0, tokens},
-			body:   nil,
-		}
+// 		if indent < currentIndent {
+// 			// 缩进减少，说明当前块结束
+// 			return blocks, nil
+// 		}
 
-		t.currentLine++ // consume this line
+// 		if indent > currentIndent {
+// 			return nil, fmt.Errorf("incorrect indentation:\n\"%s\"\nMaybe the previous nonempty line should end with \":\"", line)
+// 		}
 
-		// 判断是否需要解析子 block
-		if strings.HasSuffix(line, ":") {
-			for t.currentLine < len(t.lines) {
-				nextLine := t.lines[t.currentLine]
+// 		// indent == currentIndent:
+// 		// 判断是否为 header 行（是否以 : 结尾）
+// 		lineForTokenize := line
+// 		if strings.HasSuffix(line, ":") {
+// 			lineForTokenize = line
+// 		}
 
-				// 同样先处理注释
-				if idx := strings.Index(nextLine, "//"); idx >= 0 {
-					nextLine = nextLine[:idx]
-				}
-				nextTrimmed := strings.TrimSpace(nextLine)
+// 		tokens, err := t.tokenizeLine(lineForTokenize)
+// 		if err != nil {
+// 			return nil, err
+// 		}
 
-				// 跳过空行
-				if nextTrimmed == "" {
-					t.currentLine++
-					continue
-				}
+// 		block := tokenBlock{
+// 			header: strSliceCursor{0, tokens},
+// 			body:   nil,
+// 		}
 
-				nextIndent := len(nextLine) - len(strings.TrimLeft(nextLine, " "))
-				if nextIndent <= currentIndent {
-					// 没有更深缩进，说明没有子块
-					break
-				}
+// 		t.currentLine++ // consume this line
 
-				// 有子 block
-				subBlocks, err := t.parseBlocks(nextIndent)
-				if err != nil {
-					return nil, err
-				}
-				block.body = subBlocks
-				break
-			}
-		}
+// 		// 判断是否需要解析子 block
+// 		if strings.HasSuffix(line, ":") {
+// 			for t.currentLine < len(t.lines) {
+// 				nextLine := t.lines[t.currentLine]
 
-		blocks = append(blocks, block)
-	}
+// 				// 同样先处理注释
+// 				if idx := strings.Index(nextLine, "//"); idx >= 0 {
+// 					nextLine = nextLine[:idx]
+// 				}
+// 				nextTrimmed := strings.TrimSpace(nextLine)
 
-	return blocks, nil
-}
+// 				// 跳过空行
+// 				if nextTrimmed == "" {
+// 					t.currentLine++
+// 					continue
+// 				}
 
-func preprocessSourceCodeWhenCompileToLatex(code string) ([]string, error) {
-	processedCode := strings.ReplaceAll(code, "\t", glob.Scope4Indents)
-	lines := strings.Split(processedCode, "\n")
-	// lines = preprocessCommentsWhenCompileToLatex(lines)
-	return lines, nil
-}
+// 				nextIndent := len(nextLine) - len(strings.TrimLeft(nextLine, " "))
+// 				if nextIndent <= currentIndent {
+// 					// 没有更深缩进，说明没有子块
+// 					break
+// 				}
 
-const CommentSigPlusCommentSig = glob.CommentSig + glob.CommentSig
-const MultiLinesCommentSigPlusCommentSig = glob.MultiLinesCommentSig + glob.CommentSig
+// 				// 有子 block
+// 				subBlocks, err := t.parseBlocks(nextIndent)
+// 				if err != nil {
+// 					return nil, err
+// 				}
+// 				block.body = subBlocks
+// 				break
+// 			}
+// 		}
+
+// 		blocks = append(blocks, block)
+// 	}
+
+// 	return blocks, nil
+// }
+
+// func preprocessSourceCodeWhenCompileToLatex(code string) ([]string, error) {
+// 	processedCode := strings.ReplaceAll(code, "\t", glob.Scope4Indents)
+// 	lines := strings.Split(processedCode, "\n")
+// 	// lines = preprocessCommentsWhenCompileToLatex(lines)
+// 	return lines, nil
+// }
+
+// const CommentSigPlusCommentSig = glob.InlineCommentSig + glob.InlineCommentSig
+// const MultiLinesCommentSigPlusCommentSig = glob.MultiLinesCommentSig + glob.InlineCommentSig

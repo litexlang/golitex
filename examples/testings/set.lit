@@ -1,0 +1,23 @@
+prove:
+    # Counting is hard to implement in Litex because even in set theory books, they are "known by default". I as language implementer have to implement basic properties of counting by myself.
+
+    prop is_subset_of(x, y set):
+        forall z x:
+            z $in x
+            =>:
+                z $in y
+        forall:
+            y $in finite_set
+            =>:
+                x $in finite_set
+                len(x) <= len(y)
+
+    have set y = {1, 2, 3}
+
+    have x set
+
+    know $is_subset_of(x, y)
+
+    prove:
+        x $in finite_set
+        len(x) <= len(y)

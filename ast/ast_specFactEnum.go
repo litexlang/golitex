@@ -29,13 +29,13 @@ const (
 
 func (stmt *SpecFactStmt) ReverseTrue() *SpecFactStmt {
 	if stmt.TypeEnum == TruePure {
-		return NewSpecFactStmt(FalsePure, stmt.PropName, stmt.Params)
+		return NewSpecFactStmt(FalsePure, stmt.PropName, stmt.Params, stmt.Line)
 	} else if stmt.TypeEnum == FalsePure {
-		return NewSpecFactStmt(TruePure, stmt.PropName, stmt.Params)
+		return NewSpecFactStmt(TruePure, stmt.PropName, stmt.Params, stmt.Line)
 	} else if stmt.TypeEnum == TrueExist_St {
-		return NewSpecFactStmt(FalseExist_St, stmt.PropName, stmt.Params)
+		return NewSpecFactStmt(FalseExist_St, stmt.PropName, stmt.Params, stmt.Line)
 	} else if stmt.TypeEnum == FalseExist_St {
-		return NewSpecFactStmt(TrueExist_St, stmt.PropName, stmt.Params)
+		return NewSpecFactStmt(TrueExist_St, stmt.PropName, stmt.Params, stmt.Line)
 	}
 	return nil
 }

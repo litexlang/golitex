@@ -81,13 +81,5 @@ func isSpecialLatexSymbol_Process(f *FcFn) (bool, string) {
 		}
 	}
 
-	if fHead == glob.KeywordSetProduct {
-		slice := make([]string, len(f.Params))
-		for i, param := range f.Params {
-			slice[i] = param.ToLatexString()
-		}
-		return true, strings.Join(slice, " $\\times$ ")
-	}
-
 	return false, ""
 }

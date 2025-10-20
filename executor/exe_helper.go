@@ -20,7 +20,7 @@ func notOkExec(state glob.ExecState, err error) bool {
 	if err != nil {
 		return true
 	}
-	if state != glob.ExecState_True {
+	if state != glob.ExecStateTrue {
 		return true
 	}
 	return false

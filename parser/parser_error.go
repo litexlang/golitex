@@ -18,10 +18,17 @@ import (
 	"fmt"
 )
 
+// TODO 最好能把函数名传过来，因为常常出现的消息的格式是
+// parse error at end of line, line 1:
+// a
+// parse error at end of line, line 1:
+// a
+// parse error at end of line, line 1:
+// a
 func tbErr(previousErr error, stmt *tokenBlock) error {
 	if curTok, err := stmt.header.currentToken(); err == nil {
-		return fmt.Errorf("parse error:\nline \"%s\", error at \"%s\"\nerror block:\n%s\n%w", &stmt.header, curTok, stmt, previousErr)
+		return fmt.Errorf("parse error at \"%s\", line %d:\n%s\n%w", curTok, stmt.line, &stmt.header, previousErr)
 	} else {
-		return fmt.Errorf("parse error:\nline \"%s\", error at end of statement\nerror block:\n%s\n%w", &stmt.header, stmt, previousErr)
+		return fmt.Errorf("parse error at end of line, line %d:\n%s\n%w", stmt.line, &stmt.header, previousErr)
 	}
 }
