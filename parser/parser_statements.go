@@ -508,6 +508,10 @@ func (tb *tokenBlock) claimStmt() (ast.ClaimInterface, error) {
 		}
 	}
 
+	if len(tb.body) != 2 {
+		return nil, fmt.Errorf("expect 2 body blocks after claim")
+	}
+
 	toCheck, err := tb.body[0].factStmt(UniFactDepth0)
 	if err != nil {
 		return nil, tbErr(err, tb)
