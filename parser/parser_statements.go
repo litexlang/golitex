@@ -508,6 +508,10 @@ func (tb *tokenBlock) claimStmt() (ast.ClaimInterface, error) {
 		}
 	}
 
+	if len(tb.body) != 2 {
+		return nil, fmt.Errorf("expect 2 body blocks after claim")
+	}
+
 	toCheck, err := tb.body[0].factStmt(UniFactDepth0)
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -564,7 +568,7 @@ func (tb *tokenBlock) claimStmt() (ast.ClaimInterface, error) {
 	if isProve {
 		return ast.NewClaimProveStmt(toCheck, proof, tb.line), nil
 	} else {
-		return ast.NewClaimProveByContradictionStmt(*ast.NewClaimProveStmt(toCheck, proof, tb.line), tb.line), nil
+		return ast.NewClaimProveByContradictionStmt(ast.NewClaimProveStmt(toCheck, proof, tb.line), tb.line), nil
 	}
 }
 
@@ -832,7 +836,7 @@ func (tb *tokenBlock) haveObjStStmt() (*ast.HaveObjStStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	return ast.NewHaveStmt(objNames, *fact, tb.line), nil
+	return ast.NewHaveStmt(objNames, fact, tb.line), nil
 }
 
 func (tb *tokenBlock) bodyBlockFacts(uniFactDepth uniFactEnum, parseBodyFactNum int) ([]ast.FactStmt, error) {
@@ -1140,7 +1144,7 @@ func (tb *tokenBlock) proveInEachCaseStmt() (*ast.ProveInEachCaseStmt, error) {
 		return nil, tbErr(fmt.Errorf("prove in each case: expect %d proofs, but got %d. expect the number of proofs to be the same as the number of facts in the or fact", len(orFact.Facts), len(proofs)), tb)
 	}
 
-	return ast.NewProveInEachCaseStmt(*orFact, thenFacts, proofs, tb.line), nil
+	return ast.NewProveInEachCaseStmt(orFact, thenFacts, proofs, tb.line), nil
 }
 
 func (tb *tokenBlock) param_paramSet_paramInSetFacts(endWith string, allowExceedEnd bool) ([]string, []ast.Fc, error) {
@@ -1418,7 +1422,7 @@ func (tb *tokenBlock) claimPropStmt() (*ast.ClaimPropStmt, error) {
 	}
 
 	// return ast.NewClaimPropStmt(ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts, thenFacts), proofs, isProve), nil
-	return ast.NewClaimPropStmt(ast.NewDefPropStmt(&namedUniFact.DefPropStmt.DefHeader, namedUniFact.DefPropStmt.DomFacts, namedUniFact.DefPropStmt.IffFacts, namedUniFact.DefPropStmt.ThenFacts, tb.line), proofs, isProve, tb.line), nil
+	return ast.NewClaimPropStmt(ast.NewDefPropStmt(namedUniFact.DefPropStmt.DefHeader, namedUniFact.DefPropStmt.DomFacts, namedUniFact.DefPropStmt.IffFacts, namedUniFact.DefPropStmt.ThenFacts, tb.line), proofs, isProve, tb.line), nil
 }
 
 func (tb *tokenBlock) claimExistPropStmt() (*ast.ClaimExistPropStmt, error) {
@@ -1655,7 +1659,7 @@ func (tb *tokenBlock) relaFact_intensionalSetFact_enumStmt_equals() (ast.FactStm
 	return ret, nil
 }
 
-func (tb *tokenBlock) enumStmt_or_intensionalSetStmt_or_DomOf(fc ast.Fc) (ast.EnumSet_IntensionalSet_EqualDom, error) {
+func (tb *tokenBlock) enumStmt_or_intensionalSetStmt_or_DomOf(fc ast.Fc) (ast.EnumSet_IntensionalSet_EqualDom_Interface, error) {
 	// if tb.header.is(glob.KeySymbolLeftCurly) {
 	// 	return tb.enumFactualStmt(fc)
 	// } else {
@@ -1994,7 +1998,7 @@ func (tb *tokenBlock) namedUniFactStmt() (*ast.NamedUniFactStmt, error) {
 
 		return ast.NewNamedUniFactStmt(ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts, thenFacts, tb.line), tb.line), nil
 	} else {
-		iffFact, err := tb.domFactInUniFactInterface()
+		iffFact, err := tb.inlineDomFactInUniFactInterface()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -2299,11 +2303,11 @@ func (tb *tokenBlock) claimStmtInline() (ast.ClaimInterface, error) {
 	}
 
 	if namedUniFact != nil {
-		return ast.NewClaimPropStmt(&namedUniFact.DefPropStmt, proof, isProve, tb.line), nil
+		return ast.NewClaimPropStmt(namedUniFact.DefPropStmt, proof, isProve, tb.line), nil
 	} else if isProve {
 		return ast.NewClaimProveStmt(fact, proof, tb.line), nil
 	} else {
-		return ast.NewClaimProveByContradictionStmt(*ast.NewClaimProveStmt(fact, proof, tb.line), tb.line), nil
+		return ast.NewClaimProveByContradictionStmt(ast.NewClaimProveStmt(fact, proof, tb.line), tb.line), nil
 	}
 }
 
