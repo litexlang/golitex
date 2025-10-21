@@ -1,2 +1,2 @@
-forall x N_pos: x >= 1;
-forall x N_pos: x >= 1 <=> x >= 0;
+forall x N_pos: x >= 1
+forall x N_pos: x >= 1 <=> x >= 0; 1 = 1
