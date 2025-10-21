@@ -74,54 +74,6 @@ func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state *Ver
 	return false, nil
 }
 
-func (ver *Verifier) varCommutativeProp_BuiltinRules(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
-	if stmt.PropName != glob.KeywordCommutativeProp {
-		return false, nil
-	}
-
-	propNameAsAtom, ok := stmt.Params[0].(ast.FcAtom)
-	if !ok {
-		return false, nil
-	}
-
-	// if ast.IsFcAtomEqualToGivenString(propNameAsAtom, glob.KeySymbolEqual) {
-	if propNameAsAtom == glob.KeySymbolEqual {
-		return true, nil
-	}
-
-	propDef, ok := ver.env.GetPropDef(propNameAsAtom)
-	if !ok {
-		return false, nil
-	}
-
-	if len(propDef.DefHeader.Params) != 2 {
-		return false, nil
-	}
-
-	uniFactParams := propDef.DefHeader.Params
-	domFacts := propDef.DomFacts
-	ThenFact := propDef.ToSpecFact()
-	IffFact, err := ThenFact.ReverseParameterOrder()
-	if err != nil {
-		return false, err
-	}
-
-	uniFact := ast.NewUniFactWithIff(ast.NewUniFact(uniFactParams, propDef.DefHeader.ParamSets, domFacts, []ast.FactStmt{ThenFact}, stmt.Line), []ast.FactStmt{IffFact}, stmt.Line)
-
-	ok, err = ver.VerFactStmt(uniFact, state.GetNoMsg())
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		if state.WithMsg {
-			ver.successWithMsg(stmt.String(), fmt.Sprintf("the definition of commutative property: %s is true iff\n%s", stmt, uniFact))
-		}
-		return true, nil
-	}
-
-	return false, nil
-}
-
 func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	if stmt.PropName != glob.KeywordIn {
 		return false, nil

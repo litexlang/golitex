@@ -33,16 +33,16 @@ const (
 	KeywordImport    = "import"
 	KeywordNot       = "not"
 	// KeywordIff                  = "iff"
-	KeywordProveByContradiction = "prove_by_contradiction"
-	KeywordProveInEachCase      = "prove_in_each_case" // 必要：和or一起使用
-	KeywordOr                   = "or"
-	KeywordCommutativeProp      = "commutative_prop" // 这个 keyword是真的在工作的
-	KeywordNatural              = "N"                // e.g. 0
-	KeywordInteger              = "Z"                // e.g. -1
-	KeywordRational             = "Q"                // e.g. -1.1
-	KeywordReal                 = "R"                // e.g. pi
-	KeywordComplex              = "C"                // e.g. 1+i
-	KeywordIn                   = "in"
+	KeywordProveByContradiction   = "prove_by_contradiction"
+	KeywordProveInEachCase        = "prove_in_each_case" // 必要：和or一起使用
+	KeywordOr                     = "or"
+	KeywordProveIsCommutativeProp = "prove_is_commutative_prop" // 这个 keyword是真的在工作的
+	KeywordNatural                = "N"                         // e.g. 0
+	KeywordInteger                = "Z"                         // e.g. -1
+	KeywordRational               = "Q"                         // e.g. -1.1
+	KeywordReal                   = "R"                         // e.g. pi
+	KeywordComplex                = "C"                         // e.g. 1+i
+	KeywordIn                     = "in"
 	// KeywordProveByMathInduction           = "prove_by_math_induction"
 	KeywordAs           = "as" // 用在 import xxx as ??? 了
 	KeywordLen          = "len"
@@ -97,14 +97,14 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordProveByContradiction: {},
 	KeywordProveInEachCase:      {},
 	// KeywordIff:                  {},
-	KeywordExist:           {},
-	KeywordCommutativeProp: {},
-	KeywordOr:              {},
-	KeywordNatural:         {},
-	KeywordInteger:         {},
-	KeywordRational:        {},
-	KeywordReal:            {},
-	KeywordIn:              {},
+	KeywordExist:                  {},
+	KeywordProveIsCommutativeProp: {},
+	KeywordOr:                     {},
+	KeywordNatural:                {},
+	KeywordInteger:                {},
+	KeywordRational:               {},
+	KeywordReal:                   {},
+	KeywordIn:                     {},
 	// KeywordProveByMathInduction:           {},
 	KeywordComplex:                        {},
 	KeywordAs:                             {},
@@ -233,7 +233,6 @@ var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]s
 	KeySymbolPercent:                      {}, // prove: 2 % 2 = 0 的时候打印有问题，不知道为什么
 	KeySymbolLeftBracket:                  {},
 	KeySymbolRightBracket:                 {},
-	KeywordCommutativeProp:                {},
 	KeywordFiniteSet:                      {},
 	KeywordItemExistsIn:                   {},
 	KeywordSetDefinedByReplacement:        {},
