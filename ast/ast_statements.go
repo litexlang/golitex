@@ -36,7 +36,7 @@ type DefHeader struct {
 }
 
 type DefPropStmt struct {
-	DefHeader DefHeader
+	DefHeader *DefHeader
 	DomFacts  FactStmtSlice
 	IffFacts  FactStmtSlice
 	ThenFacts FactStmtSlice
@@ -46,7 +46,7 @@ type DefPropStmt struct {
 
 // 虽然它和 defProp 一样，但不排除之后要让iffFacts只能是可逆的事实
 type DefExistPropStmtBody struct {
-	DefHeader DefHeader
+	DefHeader *DefHeader
 	DomFacts  FactStmtSlice
 	IffFacts  FactStmtSlice
 	ThenFacts FactStmtSlice
@@ -56,7 +56,7 @@ type DefExistPropStmtBody struct {
 
 // how to  use not exist to prove and store not forall in iff section of exist_prop: define a new exist_prop, give a name to that forall, and make this exist_prop equivalent to original exist_prop. Then use prove_by_contradiction to prove the new exist_prop is also false, then the not forall is proved.
 type DefExistPropStmt struct {
-	DefBody        DefExistPropStmtBody
+	DefBody        *DefExistPropStmtBody
 	ExistParams    StrSlice
 	ExistParamSets FcSlice
 
@@ -65,7 +65,7 @@ type DefExistPropStmt struct {
 
 type DefFnStmt struct {
 	Name       string
-	FnTemplate FnTStruct
+	FnTemplate *FnTStruct
 
 	Line uint
 }
@@ -80,7 +80,7 @@ type UniFactStmt struct {
 }
 
 type UniFactWithIffStmt struct {
-	UniFact  UniFactStmt
+	UniFact  *UniFactStmt
 	IffFacts FactStmtSlice
 
 	Line uint
@@ -102,13 +102,13 @@ type ClaimProveStmt struct {
 }
 
 type ClaimProveByContradictionStmt struct {
-	ClaimProveStmt ClaimProveStmt
+	ClaimProveStmt *ClaimProveStmt
 
 	Line uint
 }
 
 type ClaimPropStmt struct {
-	Prop    DefPropStmt
+	Prop    *DefPropStmt
 	Proofs  StmtSlice
 	IsProve bool
 
@@ -122,14 +122,14 @@ type KnowFactStmt struct {
 }
 
 type KnowPropStmt struct {
-	Prop DefPropStmt
+	Prop *DefPropStmt
 
 	Line uint
 }
 
 // TODO: 这个的parser还没有像claim_prop那样改成用@
 type ClaimExistPropStmt struct {
-	ExistPropWithoutDom DefExistPropStmt
+	ExistPropWithoutDom *DefExistPropStmt
 	Proofs              StmtSlice
 	HaveObj             []Fc
 
@@ -138,13 +138,13 @@ type ClaimExistPropStmt struct {
 
 type HaveObjStStmt struct {
 	ObjNames StrSlice
-	Fact     SpecFactStmt
+	Fact     *SpecFactStmt
 
 	Line uint
 }
 
 type ProveInEachCaseStmt struct {
-	OrFact    OrStmt
+	OrFact    *OrStmt
 	ThenFacts FactStmtSlice
 	Proofs    []StmtSlice
 
@@ -196,8 +196,8 @@ type IntensionalSetStmt struct {
 
 // 某种程度上这个关键词是不必要的，因为如果我发现涉及到的uniFact里面的所有的 paramSet 都是有 enum 的，那我就默认迭代去证明这个forall。但是我还是引入这个关键词以突出我现在用的是iterative的情况
 type ProveByEnumStmt struct {
-	Fact  UniFactStmt
-	Proof []Stmt
+	Fact  *UniFactStmt
+	Proof StmtSlice
 
 	Line uint
 }
@@ -211,14 +211,14 @@ type HaveObjInNonEmptySetStmt struct {
 
 // 由朴素集合论，枚举法定义集合，用specification的方式去定义集合，是可以的。这样定义出来的集合的存在性是直接得到保证的。这个功能必须写入内核，因为have是引入新东西的方式。
 type HaveSetStmt struct {
-	Fact EnumSet_IntensionalSet_EqualDom
+	Fact EnumSet_IntensionalSet_EqualDom_Interface
 
 	Line uint
 }
 
 // 定义返回值是集合的函数；这个的好处是，fn的定义不能保证函数的存在性；而have可以保证函数的存在性
 type HaveSetFnStmt struct {
-	DefHeader DefHeader
+	DefHeader *DefHeader
 	Param     string
 	ParentSet Fc
 	Proofs    SpecFactPtrSlice
@@ -238,7 +238,7 @@ type HaveSetDefinedByReplacementStmt struct {
 }
 
 type NamedUniFactStmt struct {
-	DefPropStmt DefPropStmt
+	DefPropStmt *DefPropStmt
 
 	Line uint
 }
@@ -250,7 +250,7 @@ type EqualsFactStmt struct {
 }
 
 type KnowExistPropStmt struct {
-	ExistProp DefExistPropStmt
+	ExistProp *DefExistPropStmt
 
 	Line uint
 }
@@ -262,9 +262,9 @@ type LatexStmt struct {
 }
 
 type FnTemplateDefStmt struct {
-	TemplateDefHeader DefHeader
+	TemplateDefHeader *DefHeader
 	TemplateDomFacts  FactStmtSlice
-	Fn                FnTStruct
+	Fn                *FnTStruct
 
 	Line uint
 }
@@ -306,7 +306,7 @@ type HaveObjEqualStmt struct {
 }
 
 type HaveFnEqualStmt struct {
-	DefHeader DefHeader
+	DefHeader *DefHeader
 	RetSet    Fc
 	EqualTo   Fc
 
@@ -322,7 +322,7 @@ type HaveFnLiftStmt struct {
 }
 
 type HaveFnStmt struct {
-	DefFnStmt        DefFnStmt
+	DefFnStmt        *DefFnStmt
 	Proofs           StmtSlice
 	HaveObjSatisfyFn Fc
 
@@ -334,17 +334,6 @@ type MarkdownStmt struct {
 
 	Line uint
 }
-
-// type ProveInRange2tmt struct {
-// 	Start     int64
-// 	End       int64
-// 	Param     string
-// 	DomFacts  ReversibleFacts
-// 	ThenFacts FactStmtSlice
-// 	Proofs    StmtSlice
-
-// 	Line uint
-// }
 
 type ProveInRangeStmt struct {
 	Start          int64
@@ -358,7 +347,7 @@ type ProveInRangeStmt struct {
 }
 
 type ClaimIffStmt struct {
-	UniFactWithIffStmt UniFactWithIffStmt
+	UniFactWithIffStmt *UniFactWithIffStmt
 	ProofThenToIff     StmtSlice
 	ProofIffToThen     StmtSlice
 
