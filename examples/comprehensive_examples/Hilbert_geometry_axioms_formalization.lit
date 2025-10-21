@@ -328,6 +328,12 @@ prove:
 # We can state the above axiom briefly by saying that every segment can be laid off upon a given side of a given point of a given straight line in at least one way.
 
 prop finite_line_equal(l1 finite_line, l2 finite_line)
+know:
+    forall l1 finite_line, l2 finite_line:
+        =>:
+            $finite_line_equal(l1, l2)
+        <=>:
+            $finite_line_equal(l2, l1)
 
 # TODO: I am not sure if this formalization is exactly what the axiom means. May $point_on_line(b, l) be removed?
 prop point_left_to_point_on_one_line(a point, b point, l line):
@@ -384,7 +390,6 @@ know:
         $exist_point_left_to_point_with_finite_line_equal_to_given_finite_line(b, l)
 
 know:
-    $commutative_prop(finite_line_equal)
     forall a point, b point:
         a != b
         =>:
@@ -401,8 +406,6 @@ prove:
 
 
 # TODO: The user can add relationships between $between, $point_left_to_point_on_one_line, $point_left_point_on_one_line, by himself. 
-
-# Tip: There are 2 builtin keywords for commutative properties: $commutative_prop and $commutative_fn. The verifier will automatically prove a given commutatively if commutative property is true.
 
 # 2. If a segment AB is congruent to the segment A′B′ and also to the segment A″B″, then the segment A′B′ is congruent to the segment A″B″; that is, if AB ≅ A′B′ and AB ≅ A″B″, then A′B′ ≅ A″B″.
 
@@ -522,8 +525,13 @@ know @angle_equal_transitive(ang1 angle, ang2 angle, ang3 angle):
     =>:
         $angle_equal(ang1, ang3)
 
+
 know:
-    $commutative_prop(angle_equal)
+    forall ang1 angle, ang2 angle:
+        =>:
+            $angle_equal(ang1, ang2)
+        <=>:
+            $angle_equal(ang2, ang1)
 
 prove:
     let ang1 angle, ang2 angle, ang3 angle:
