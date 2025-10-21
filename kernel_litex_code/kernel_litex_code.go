@@ -559,5 +559,8 @@ know:
 	forall x, y R: x >= 0, y <= 0 => x * y <= 0
 	forall x, y R: x <= 0, y <= 0 => x * y >= 0
 	forall x, y R: x <= 0, y >= 0 => x * y <= 0
-
+	forall x, y R => x > y <=> not x <= y
+	forall x, y R => x < y <=> not x >= y
+	forall x, y R => x <= y <=> not x > y
+	forall x, y R => x >= y <=> not x < y
 `

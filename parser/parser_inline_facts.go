@@ -236,7 +236,7 @@ func (tb *tokenBlock) inlineUniInterfaceSkipTerminator() (ast.UniFactInterface, 
 	setParams := []ast.Fc{}
 	domFact := []ast.FactStmt{}
 
-	if !tb.header.is(glob.KeySymbolRightArrow) {
+	if !tb.header.is(glob.KeySymbolRightArrow) { // 没有 参数
 		params, setParams, err = tb.inlineUniFact_Param_ParamSet_ParamInSetFacts()
 		if err != nil {
 			return nil, tbErr(err, tb)
@@ -244,9 +244,28 @@ func (tb *tokenBlock) inlineUniInterfaceSkipTerminator() (ast.UniFactInterface, 
 
 		if tb.header.is(glob.KeySymbolColon) {
 			tb.header.skip(glob.KeySymbolColon)
-			domFact, err = tb.domFactInUniFactInterface()
+			domFact, err = tb.inlineDomFactInUniFactInterface_WithoutSkippingEnd()
 			if err != nil {
 				return nil, err
+			}
+
+			if tb.header.is(glob.KeySymbolSemiColon) {
+				tb.header.skip(glob.KeySymbolSemiColon)
+				return ast.NewUniFact(params, setParams, []ast.FactStmt{}, domFact, tb.line), nil
+			} else if tb.header.ExceedEnd() {
+				return ast.NewUniFact(params, setParams, []ast.FactStmt{}, domFact, tb.line), nil
+			} else if tb.header.is(glob.KeySymbolEquivalent) {
+				err = tb.header.skip(glob.KeySymbolEquivalent)
+				if err != nil {
+					return nil, tbErr(err, tb)
+				}
+
+				iffFacts, err := tb.thenFacts_SkipEnd_Semicolon_or_EOL()
+				if err != nil {
+					return nil, err
+				}
+
+				return ast.NewUniFactWithIff(ast.NewUniFact(params, setParams, []ast.FactStmt{}, domFact, tb.line), iffFacts, tb.line), nil
 			}
 		}
 	}
@@ -284,7 +303,7 @@ func (tb *tokenBlock) inlineIfInterfaceSkipTerminator() (ast.UniFactInterface, e
 		return nil, tbErr(err, tb)
 	}
 
-	domFact, err := tb.domFactInUniFactInterface()
+	domFact, err := tb.inlineDomFactInUniFactInterface()
 	if err != nil {
 		return nil, err
 	}
@@ -356,7 +375,7 @@ func (tb *tokenBlock) thenFacts_SkipEnd_Semicolon_or_EOL() ([]ast.FactStmt, erro
 	}
 }
 
-func (tb *tokenBlock) domFactInUniFactInterface() ([]ast.FactStmt, error) {
+func (tb *tokenBlock) inlineDomFactInUniFactInterface() ([]ast.FactStmt, error) {
 	facts := []ast.FactStmt{}
 	for {
 		specFact, err := tb.inlineFactSkipStmtTerminator()
@@ -366,6 +385,23 @@ func (tb *tokenBlock) domFactInUniFactInterface() ([]ast.FactStmt, error) {
 		facts = append(facts, specFact)
 		if tb.header.is(glob.KeySymbolRightArrow) {
 			tb.header.skip(glob.KeySymbolRightArrow)
+			return facts, nil
+		}
+	}
+}
+
+func (tb *tokenBlock) inlineDomFactInUniFactInterface_WithoutSkippingEnd() ([]ast.FactStmt, error) {
+	facts := []ast.FactStmt{}
+	for {
+		specFact, err := tb.inlineFactSkipStmtTerminator()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		facts = append(facts, specFact)
+		if tb.header.is(glob.KeySymbolRightArrow) || tb.header.is(glob.KeySymbolSemiColon) || tb.header.is(glob.KeySymbolEquivalent) {
+			return facts, nil
+		}
+		if tb.header.ExceedEnd() {
 			return facts, nil
 		}
 	}
