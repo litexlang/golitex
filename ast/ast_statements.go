@@ -361,3 +361,11 @@ type ProveIsTransitivePropStmt struct {
 
 	Line uint
 }
+
+type ProveIsCommutativePropStmt struct {
+	Prop   FcAtom
+	Params StrSlice
+	Proofs StmtSlice
+
+	Line uint
+}
