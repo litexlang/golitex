@@ -61,6 +61,7 @@ func (s *HaveFnEqualStmt) stmt()                 {}
 func (s *HaveFnLiftStmt) stmt()                  {}
 func (s *HaveFnStmt) stmt()                      {}
 func (s *MarkdownStmt) stmt()                    {}
+func (s *ProveIsCommutativePropStmt) stmt()      {}
 
 // func (s *ProveInRange2tmt) stmt()                {}
 func (s *ClaimIffStmt) stmt()              {}
@@ -109,6 +110,7 @@ func (s *MarkdownStmt) GetLine() uint                    { return s.Line }
 func (s *ProveInRangeStmt) GetLine() uint                { return s.Line }
 func (s *ClaimIffStmt) GetLine() uint                    { return s.Line }
 func (s *ProveIsTransitivePropStmt) GetLine() uint       { return s.Line }
+func (s *ProveIsCommutativePropStmt) GetLine() uint      { return s.Line }
 
 type FactStmt interface {
 	factStmt()
