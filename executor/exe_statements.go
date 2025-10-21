@@ -269,7 +269,7 @@ func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) (glob.E
 	}()
 
 	// prove orFact is true
-	execState, err := exec.factStmt(&stmt.OrFact)
+	execState, err := exec.factStmt(stmt.OrFact)
 	if notOkExec(execState, err) {
 		if glob.RequireMsg() {
 			exec.newMsg(fmt.Sprintf("%s is unknown", stmt.OrFact.String()))
@@ -329,7 +329,7 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
 	// 	}()
 	// }
 
-	err := exec.defPropStmt(&stmt.Prop, false)
+	err := exec.defPropStmt(stmt.Prop, false)
 	if err != nil {
 		return err
 	}
@@ -389,7 +389,7 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 	// 在 objMem 里记录一下
 	exec.env.ObjDefMem[stmt.Name] = nil
 
-	err = exec.env.StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(ast.FcAtom(stmt.Name), nil, &stmt.FnTemplate)
+	err = exec.env.StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(ast.FcAtom(stmt.Name), nil, stmt.FnTemplate)
 	if err != nil {
 		return err
 	}
@@ -419,7 +419,7 @@ func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) (glob.ExecState
 	}
 
 	// know uniFact
-	err = exec.env.Parent.NewFact(&stmt.Fact)
+	err = exec.env.Parent.NewFact(stmt.Fact)
 	if err != nil {
 		return glob.ExecStateError, err
 	}
@@ -488,7 +488,7 @@ func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) (glob.ExecS
 	// 	}()
 	// }
 
-	err := exec.defExistPropStmt(&stmt.ExistProp)
+	err := exec.defExistPropStmt(stmt.ExistProp)
 	if err != nil {
 		return glob.ExecStateError, err
 	}
@@ -593,7 +593,7 @@ func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) (glob.ExecState
 		return execState, err
 	}
 
-	newFnDefStmt := ast.NewDefFnStmt(string(stmt.DefHeader.Name), ast.NewFnTStruct(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, stmt.RetSet, []ast.FactStmt{}, []ast.FactStmt{ast.NewEqualFact(fnHeaderToReturnValueOfFn(&stmt.DefHeader), stmt.EqualTo)}, stmt.Line), stmt.Line)
+	newFnDefStmt := ast.NewDefFnStmt(string(stmt.DefHeader.Name), ast.NewFnTStruct(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, stmt.RetSet, []ast.FactStmt{}, []ast.FactStmt{ast.NewEqualFact(fnHeaderToReturnValueOfFn(stmt.DefHeader), stmt.EqualTo)}, stmt.Line), stmt.Line)
 	err = exec.defFnStmt(newFnDefStmt)
 	if err != nil {
 		return glob.ExecStateError, err

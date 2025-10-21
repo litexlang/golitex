@@ -321,7 +321,7 @@ func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) (glob.Exe
 	}
 
 	// declare exist prop
-	err = exec.defExistPropStmt(&stmt.ExistPropWithoutDom)
+	err = exec.defExistPropStmt(stmt.ExistPropWithoutDom)
 	if err != nil {
 		return glob.ExecStateError, err
 	}

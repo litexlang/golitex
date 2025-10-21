@@ -149,7 +149,7 @@ func (stmt *EqualsFactStmt) ToEqualFacts_PairwiseCombination() []*SpecFactStmt {
 }
 
 func (stmt *ClaimPropStmt) ToProp() *DefPropStmt {
-	return NewDefPropStmt(&stmt.Prop.DefHeader, stmt.Prop.DomFacts, stmt.Prop.IffFacts, []FactStmt{}, stmt.GetLine())
+	return NewDefPropStmt(stmt.Prop.DefHeader, stmt.Prop.DomFacts, stmt.Prop.IffFacts, []FactStmt{}, stmt.GetLine())
 }
 
 func (strSlice StrSlice) ToFcSlice() []Fc {
