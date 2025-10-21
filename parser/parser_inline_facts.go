@@ -244,7 +244,7 @@ func (tb *tokenBlock) inlineUniInterfaceSkipTerminator() (ast.UniFactInterface, 
 
 		if tb.header.is(glob.KeySymbolColon) {
 			tb.header.skip(glob.KeySymbolColon)
-			domFact, err = tb.inlineDomFactInUniFactInterface_KeepEnd()
+			domFact, err = tb.inlineDomFactInUniFactInterface_WithoutSkippingEnd()
 			if err != nil {
 				return nil, err
 			}
@@ -390,7 +390,7 @@ func (tb *tokenBlock) inlineDomFactInUniFactInterface() ([]ast.FactStmt, error) 
 	}
 }
 
-func (tb *tokenBlock) inlineDomFactInUniFactInterface_KeepEnd() ([]ast.FactStmt, error) {
+func (tb *tokenBlock) inlineDomFactInUniFactInterface_WithoutSkippingEnd() ([]ast.FactStmt, error) {
 	facts := []ast.FactStmt{}
 	for {
 		specFact, err := tb.inlineFactSkipStmtTerminator()
@@ -399,6 +399,9 @@ func (tb *tokenBlock) inlineDomFactInUniFactInterface_KeepEnd() ([]ast.FactStmt,
 		}
 		facts = append(facts, specFact)
 		if tb.header.is(glob.KeySymbolRightArrow) || tb.header.is(glob.KeySymbolSemiColon) || tb.header.is(glob.KeySymbolEquivalent) {
+			return facts, nil
+		}
+		if tb.header.ExceedEnd() {
 			return facts, nil
 		}
 	}
