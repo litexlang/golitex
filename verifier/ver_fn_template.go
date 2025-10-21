@@ -42,7 +42,7 @@ func (ver *Verifier) ver_In_FnTT(left ast.Fc, right *ast.FcFn, state *VerState) 
 		templateParamUniMap[param] = right.Params[i]
 	}
 
-	ok = ver.f_satisfy_FnT_ThenFacts_On_FnT_Dom(left, string(rightDefT.TemplateDefHeader.Name), templateParamUniMap, &rightDefT.Fn, state)
+	ok = ver.f_satisfy_FnT_ThenFacts_On_FnT_Dom(left, string(rightDefT.TemplateDefHeader.Name), templateParamUniMap, rightDefT.Fn, state)
 	if !ok {
 		return false, nil
 	}

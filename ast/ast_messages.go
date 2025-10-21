@@ -535,7 +535,7 @@ func (stmt *ProveStmt) String() string {
 }
 
 func (stmt *DefFnStmt) String() string {
-	return fnDefStmtStringGivenKw(glob.KeywordFn, &stmt.FnTemplate, stmt.Name)
+	return fnDefStmtStringGivenKw(glob.KeywordFn, stmt.FnTemplate, stmt.Name)
 }
 
 func (stmt *EnumStmt) String() string {
