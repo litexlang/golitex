@@ -58,6 +58,7 @@ fn sqrt(z R) R:
 		sqrt(z) >= 0
 
 know forall z R: z > 0 => sqrt(z) > 0
+know sqrt(0) = 0
 
 know forall x, y R, z N => (x * y)^z = x^z * y^z
 
