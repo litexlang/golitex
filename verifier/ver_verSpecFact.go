@@ -82,6 +82,9 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *a
 	return false, nil
 }
 
+// TODO: 其实 specFact 是等号的时候，还是会访问到这个函数。
+// WARNING: 其实 specFact 是等号的时候，还是会访问到这个函数。所以这个函数的命名是有问题的
+// WARNING: 需要重构整个架构，把验证的逻辑屡屡顺。Litex是ATP的话，那就必须要告诉用户我Auto的过程是什么样的
 func (ver *Verifier) verSpecFactThatIsNotTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	var ok bool
 	var err error
@@ -96,6 +99,8 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFactMainLogic(stmt *ast.SpecFa
 	// if err != nil {
 	// 	return false, err
 	// }
+
+	ok = stmt.IsPropNameEqual()
 
 	if !ok {
 		return ver.verSpecFactStepByStepNotCommutatively(stmt, state)
