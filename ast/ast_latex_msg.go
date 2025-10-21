@@ -882,3 +882,7 @@ func (s *ProveInRangeStmt) ToLatexString() string {
 func (s *ProveIsTransitivePropStmt) ToLatexString() string {
 	return s.String()
 }
+
+func (s *ProveIsCommutativePropStmt) ToLatexString() string {
+	return s.String()
+}

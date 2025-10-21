@@ -105,7 +105,9 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 	case glob.KeywordProveInRange:
 		ret, err = tb.proveInRangeStmt()
 	case glob.KeywordProveIsTransitiveProp:
-		ret, err = tb.proveIsTransitivePropStmt()
+		ret, err = tb.proveIsCertainPropStmt(glob.KeywordProveIsTransitiveProp)
+	case glob.KeywordProveIsCommutativeProp:
+		ret, err = tb.proveIsCertainPropStmt(glob.KeywordProveIsCommutativeProp)
 	default:
 		ret, err = tb.factsStmt()
 	}
@@ -2787,8 +2789,8 @@ func parseDomThenOfProveByEnum(tbSlice []tokenBlock) ([]ast.FactStmt, []ast.Fact
 	return domFacts, thenFacts, nil
 }
 
-func (tb *tokenBlock) proveIsTransitivePropStmt() (ast.Stmt, error) {
-	err := tb.header.skip(glob.KeywordProveIsTransitiveProp)
+func (tb *tokenBlock) proveIsCertainPropStmt(kw string) (ast.Stmt, error) {
+	err := tb.header.skip(kw)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -2846,5 +2848,13 @@ func (tb *tokenBlock) proveIsTransitivePropStmt() (ast.Stmt, error) {
 		proofs = append(proofs, curStmt)
 	}
 
-	return ast.NewProveIsTransitivePropStmt(propAtom, params, proofs, tb.line), nil
+	switch kw {
+	case glob.KeywordProveIsTransitiveProp:
+		return ast.NewProveIsTransitivePropStmt(propAtom, params, proofs, tb.line), nil
+	case glob.KeywordProveIsCommutativeProp:
+		return ast.NewProveIsCommutativePropStmt(propAtom, params, proofs, tb.line), nil
+	default:
+		return nil, tbErr(fmt.Errorf("expect %s or %s, but got %s", glob.KeywordProveIsTransitiveProp, glob.KeywordProveIsCommutativeProp, kw), tb)
+	}
+
 }
