@@ -52,7 +52,7 @@ func (c *DefPropStmt) ToLatexString() string {
 	var builder strings.Builder
 
 	builder.WriteString("\\begin{definition}[Proposition]\n")
-	builder.WriteString(prop_fn_bodyToLatexString(&c.DefHeader, c.DomFacts, c.IffFacts, false))
+	builder.WriteString(prop_fn_bodyToLatexString(c.DefHeader, c.DomFacts, c.IffFacts, false))
 	builder.WriteString("\n\\end{definition}")
 	return builder.String()
 }
@@ -364,7 +364,7 @@ func (s *DefExistPropStmt) ToLatexString() string {
 	var builder strings.Builder
 
 	builder.WriteString("\\begin{definition}[Existential Proposition]\n")
-	builder.WriteString(prop_fn_bodyToLatexString(&s.DefBody.DefHeader, s.DefBody.DomFacts, s.DefBody.IffFacts, true))
+	builder.WriteString(prop_fn_bodyToLatexString(s.DefBody.DefHeader, s.DefBody.DomFacts, s.DefBody.IffFacts, true))
 	builder.WriteString("\n\\end{definition}")
 	return builder.String()
 }
@@ -714,7 +714,7 @@ func (s *EqualsFactStmt) ToLatexString() string {
 
 func (s *KnowExistPropStmt) ToLatexString() string {
 	var builder strings.Builder
-	defExistProp := NewDefExistPropStmt(&s.ExistProp.DefBody, s.ExistProp.ExistParams, s.ExistProp.ExistParamSets, glob.InnerGenLine)
+	defExistProp := NewDefExistPropStmt(s.ExistProp.DefBody, s.ExistProp.ExistParams, s.ExistProp.ExistParamSets, glob.InnerGenLine)
 	builder.WriteString(defExistProp.ToLatexString())
 
 	builder.WriteString("\n\n")

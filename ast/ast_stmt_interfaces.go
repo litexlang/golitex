@@ -218,7 +218,7 @@ type ImportStmtInterface interface {
 func (stmt *ImportDirStmt) importStmt()  {}
 func (stmt *ImportFileStmt) importStmt() {}
 
-type EnumSet_IntensionalSet_EqualDom interface {
+type EnumSet_IntensionalSet_EqualDom_Interface interface {
 	setDeclarationStmt()
 	String() string
 	GetPropName() Fc

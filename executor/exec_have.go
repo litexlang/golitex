@@ -37,10 +37,10 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) (g
 	}
 
 	// 检查 SpecFactStmt 是否满足了
-	execState, err := exec.openANewEnvAndCheck(&stmt.Fact, false)
+	execState, err := exec.openANewEnvAndCheck(stmt.Fact, false)
 
 	if stmt.Fact.PropName == glob.KeywordItemExistsIn && execState != glob.ExecStateTrue && err == nil {
-		ok, err := exec.checkInFactInSet_SetIsNonEmpty(&stmt.Fact)
+		ok, err := exec.checkInFactInSet_SetIsNonEmpty(stmt.Fact)
 		if err != nil {
 			return glob.ExecStateError, err
 		}
@@ -166,7 +166,7 @@ func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStm
 
 	for i := range len(stmt.Objs) {
 		existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordItemExistsIn), []ast.Fc{stmt.ObjSets[i]}, stmt.Line)
-		haveStmt := ast.NewHaveStmt([]string{stmt.Objs[i]}, *existInFact, stmt.Line)
+		haveStmt := ast.NewHaveStmt([]string{stmt.Objs[i]}, existInFact, stmt.Line)
 		execState, err := exec.haveObjStStmt(haveStmt, false)
 		if notOkExec(execState, err) {
 			return execState, err
