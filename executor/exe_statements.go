@@ -102,6 +102,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, string, error) {
 		execState, err = exec.proveInRangeStmt(stmt)
 	case *ast.ProveIsTransitivePropStmt:
 		execState, err = exec.proveIsTransitivePropStmt(stmt)
+	case *ast.ProveIsCommutativePropStmt:
+		execState, err = exec.proveIsCommutativePropStmt(stmt)
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}
