@@ -92,10 +92,10 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFactMainLogic(stmt *ast.SpecFa
 		}
 	}
 
-	ok, err = ver.isSpecFactCommutative(stmt)
-	if err != nil {
-		return false, err
-	}
+	// ok, err = ver.isSpecFactCommutative(stmt)
+	// if err != nil {
+	// 	return false, err
+	// }
 
 	if !ok {
 		return ver.verSpecFactStepByStepNotCommutatively(stmt, state)
@@ -131,21 +131,21 @@ func (ver *Verifier) verSpecFactStepByStepNotCommutatively(stmt *ast.SpecFactStm
 	return ver.verSpecFactStepByStep(stmt, state)
 }
 
-func (ver *Verifier) isSpecFactCommutative(stmt *ast.SpecFactStmt) (bool, error) {
-	if stmt.NameIs(glob.KeySymbolEqual) {
-		return true, nil
-	}
+// func (ver *Verifier) isSpecFactCommutative(stmt *ast.SpecFactStmt) (bool, error) {
+// 	if stmt.NameIs(glob.KeySymbolEqual) {
+// 		return true, nil
+// 	}
 
-	ok, err := ver.verSpecFact_BySpecMem(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordCommutativeProp), []ast.Fc{stmt.PropName}, stmt.Line), Round0NoMsg)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
-	}
+// 	ok, err := ver.verSpecFact_BySpecMem(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordProveIsCommutativeProp), []ast.Fc{stmt.PropName}, stmt.Line), Round0NoMsg)
+// 	if err != nil {
+// 		return false, err
+// 	}
+// 	if ok {
+// 		return true, nil
+// 	}
 
-	return false, nil
-}
+// 	return false, nil
+// }
 
 func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	if ok, err := ver.verSpecialSpecFact_ByBIR(stmt, state); err != nil {
@@ -200,9 +200,9 @@ func (ver *Verifier) verSpecialSpecFact_ByBIR(stmt *ast.SpecFactStmt, state *Ver
 		return ver.verNotTrueEqualFact_BuiltinRules(stmt, state)
 	}
 
-	if stmt.NameIs(glob.KeywordCommutativeProp) {
-		return ver.varCommutativeProp_BuiltinRules(stmt, state)
-	}
+	// if stmt.NameIs(glob.KeywordProveIsCommutativeProp) {
+	// 	return ver.varCommutativeProp_BuiltinRules(stmt, state)
+	// }
 
 	return false, nil
 }
