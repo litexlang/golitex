@@ -995,5 +995,26 @@ func (stmt *ProveIsTransitivePropStmt) String() string {
 }
 
 func (stmt *ProveIsCommutativePropStmt) String() string {
-	return ProveIsCertainPropStmtString(glob.KeywordProveIsCommutativeProp, stmt.Prop, stmt.Params, stmt.Proofs)
+	var builder strings.Builder
+	builder.WriteString(stmt.SpecFact.String())
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve, 1))
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+	for _, proof := range stmt.Proofs {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 2))
+		builder.WriteByte('\n')
+	}
+
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve, 1))
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+	for _, proof := range stmt.ProofsRightToLeft {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 2))
+		builder.WriteByte('\n')
+	}
+
+	return builder.String()
 }

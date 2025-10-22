@@ -26,7 +26,7 @@ func (exec *Executor) proveIsCommutativePropStmt(stmt *ast.ProveIsCommutativePro
 		return glob.ExecStateError, err
 	}
 
-	exec.env.CommutativePropMem[string(stmt.Prop)] = struct{}{}
+	exec.NewCommutativeProp(stmt.SpecFact)
 
 	return glob.ExecStateTrue, nil
 }
@@ -35,17 +35,17 @@ func (exec *Executor) proveIsCommutativePropStmtMainLogic(stmt *ast.ProveIsCommu
 	exec.NewEnv(exec.env)
 	defer exec.deleteEnvAndRetainMsg()
 
-	if exec.env.IsCommutativeProp(stmt.Prop) {
+	if exec.env.IsCommutativeProp(stmt.SpecFact) {
 		return true, nil
 	}
 
-	def, ok := exec.env.GetPropDef(stmt.Prop)
+	def, ok := exec.env.GetPropDef(stmt.SpecFact.PropName)
 	if !ok {
-		return false, fmt.Errorf("prop %s is not defined", stmt.Prop)
+		return false, fmt.Errorf("prop %s is not defined", stmt.SpecFact.PropName)
 	}
 
 	if len(def.DefHeader.Params) != 2 {
-		return false, fmt.Errorf("prop %s has %d params, but 2 params are expected", stmt.Prop, len(def.DefHeader.Params))
+		return false, fmt.Errorf("prop %s has %d params, but 2 params are expected", stmt.SpecFact.PropName, len(def.DefHeader.Params))
 	}
 
 	// // def 的 paramSet 必须相等
@@ -67,7 +67,17 @@ func (exec *Executor) proveIsCommutativePropStmtMainLogic(stmt *ast.ProveIsCommu
 	}
 
 	// 这里最好检查一下，是不是 Param set 依赖了 Param，如果依赖了，那其实是要报错了，不过暂时不管了
-	err := exec.defObjStmt(ast.NewDefObjStmt(stmt.Params, []ast.Fc{def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[1]}, []ast.FactStmt{}, stmt.Line))
+
+	params := []string{}
+	for _, param := range stmt.SpecFact.Params {
+		asFcAtom, ok := param.(ast.FcAtom)
+		if !ok {
+			return false, fmt.Errorf("param %s is not an atom", param)
+		}
+		params = append(params, string(asFcAtom))
+	}
+
+	err := exec.defObjStmt(ast.NewDefObjStmt(params, []ast.Fc{def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[1]}, []ast.FactStmt{}, stmt.Line))
 	if err != nil {
 		return false, err
 	}
@@ -76,18 +86,18 @@ func (exec *Executor) proveIsCommutativePropStmtMainLogic(stmt *ast.ProveIsCommu
 	// 	return false, fmt.Errorf("dom facts are not allowed in %s", glob.KeywordProveIsCommutativeProp)
 	// }
 
-	leftToRightFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(stmt.Prop), []ast.Fc{ast.FcAtom(stmt.Params[0]), ast.FcAtom(stmt.Params[1])}, stmt.Line)
+	leftToRightFact := stmt.SpecFact
 	rightToLeftFact, err := leftToRightFact.ReverseParameterOrder()
 	if err != nil {
 		return false, err
 	}
 
-	ok, err = exec.proveIsCommutativePropStmtBody(stmt, leftToRightFact, rightToLeftFact)
+	ok, err = exec.proveIsCommutativePropStmtBody(stmt.Proofs, leftToRightFact, rightToLeftFact)
 	if !ok || err != nil {
 		return false, err
 	}
 
-	ok, err = exec.proveIsCommutativePropStmtBody(stmt, rightToLeftFact, leftToRightFact)
+	ok, err = exec.proveIsCommutativePropStmtBody(stmt.ProofsRightToLeft, rightToLeftFact, leftToRightFact)
 	if !ok || err != nil {
 		return false, err
 	}
@@ -95,7 +105,7 @@ func (exec *Executor) proveIsCommutativePropStmtMainLogic(stmt *ast.ProveIsCommu
 	return true, nil
 }
 
-func (exec *Executor) proveIsCommutativePropStmtBody(stmt *ast.ProveIsCommutativePropStmt, fact *ast.SpecFactStmt, rightToLeft *ast.SpecFactStmt) (bool, error) {
+func (exec *Executor) proveIsCommutativePropStmtBody(proofs []ast.Stmt, fact *ast.SpecFactStmt, rightToLeft *ast.SpecFactStmt) (bool, error) {
 	exec.NewEnv(exec.env)
 	defer exec.deleteEnvAndRetainMsg()
 
@@ -104,7 +114,7 @@ func (exec *Executor) proveIsCommutativePropStmtBody(stmt *ast.ProveIsCommutativ
 		return false, err
 	}
 
-	for _, proof := range stmt.Proofs {
+	for _, proof := range proofs {
 		execState, _, err := exec.Stmt(proof)
 		if notOkExec(execState, err) {
 			return false, err

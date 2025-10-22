@@ -16,6 +16,7 @@ package litex_executor
 
 import (
 	ast "golitex/ast"
+	env "golitex/environment"
 	glob "golitex/glob"
 )
 
@@ -29,8 +30,20 @@ func notOkExec(state glob.ExecState, err error) bool {
 	return false
 }
 
-func (exec *Executor) NewCommutativeProp(propName string) {
-	exec.env.CommutativePropMem[propName] = struct{}{}
+func (exec *Executor) NewCommutativeProp(specFact *ast.SpecFactStmt) {
+	if _, ok := exec.env.CommutativePropMem[string(specFact.PropName)]; !ok {
+		exec.env.CommutativePropMem[string(specFact.PropName)] = env.NewCommutativePropMemItemStruct()
+	}
+
+	if specFact.TypeEnum == ast.TruePure {
+		exec.env.CommutativePropMem[string(specFact.PropName)].TruePureIsCommutative = true
+		return
+	} else if specFact.TypeEnum == ast.FalsePure {
+		exec.env.CommutativePropMem[string(specFact.PropName)].FalsePureIsCommutative = true
+		return
+	}
+
+	panic("not implemented: not commutative prop")
 }
 
 func (exec *Executor) NewTransitiveProp(name string) {

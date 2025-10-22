@@ -1,19 +1,16 @@
-"""
-prop p(x, y N):
-    x = y
+prop p(x, y N)
+know forall x, y N: not $p(x, y) <=> x = y
 
-prove_is_commutative_prop(p, x, y):
+prove_is_commutative_prop(not $p(x, y)):
     prove:
-        $p(x, y)
+        not $p(x, y)
         x = y
         y = x
-        $p(y, x)
+        not $p(y, x)
     prove:
-        $p(y, x)
+        not $p(y, x)
         y = x
         x = y
-        $p(x, y)
-"""
+        not $p(x, y)
 
-let a, b R: a != b
-b != a
+forall x, y N: not $p(x, y) <=> not $p(y, x)
