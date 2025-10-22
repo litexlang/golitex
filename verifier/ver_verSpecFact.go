@@ -35,7 +35,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt *as
 		return true, nil
 	}
 
-	if ver.env.IsCommutativeProp(stmt.PropName) || (stmt.NameIs(glob.KeySymbolEqual) && stmt.TypeEnum == ast.FalsePure) {
+	if ver.env.IsCommutativeProp(stmt) || (stmt.NameIs(glob.KeySymbolEqual) && stmt.TypeEnum == ast.FalsePure) {
 		reverseParamsOrderStmt, err := stmt.ReverseParameterOrder()
 		if err != nil {
 			return false, err

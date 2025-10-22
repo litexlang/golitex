@@ -2862,33 +2862,13 @@ func (tb *tokenBlock) proveCommutativePropStmt() (ast.Stmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	prop, err := tb.RawFc()
+	specFact, err := tb.specFactStmt()
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
-	propAtom, ok := prop.(ast.FcAtom)
-	if !ok {
-		return nil, tbErr(fmt.Errorf("expect fc atom, but got %T", prop), tb)
-	}
 
-	if tb.header.skip(glob.KeySymbolComma) != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	params := []string{}
-	for !tb.header.is(glob.KeySymbolRightBrace) {
-		param, err := tb.header.next()
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-		params = append(params, param)
-		if tb.header.is(glob.KeySymbolComma) {
-			tb.header.skip(glob.KeySymbolComma)
-		}
-	}
-
-	if len(params) != 2 {
-		return nil, tbErr(fmt.Errorf("expect 3 params, but got %d", len(params)), tb)
+	if len(specFact.Params) != 2 {
+		return nil, tbErr(fmt.Errorf("expect 2 params, but got %d", len(specFact.Params)), tb)
 	}
 
 	err = tb.header.skip(glob.KeySymbolRightBrace)
@@ -2933,6 +2913,6 @@ func (tb *tokenBlock) proveCommutativePropStmt() (ast.Stmt, error) {
 		proofsRightToLeft = append(proofsRightToLeft, curStmt)
 	}
 
-	return ast.NewProveIsCommutativePropStmt(propAtom, params, proofs, proofsRightToLeft, tb.line), nil
+	return ast.NewProveIsCommutativePropStmt(specFact, proofs, proofsRightToLeft, tb.line), nil
 
 }
