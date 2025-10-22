@@ -107,7 +107,7 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 	case glob.KeywordProveIsTransitiveProp:
 		ret, err = tb.proveIsCertainPropStmt(glob.KeywordProveIsTransitiveProp)
 	case glob.KeywordProveIsCommutativeProp:
-		ret, err = tb.proveIsCertainPropStmt(glob.KeywordProveIsCommutativeProp)
+		ret, err = tb.proveCommutativePropStmt(glob.KeywordProveIsCommutativeProp)
 	default:
 		ret, err = tb.factsStmt()
 	}
@@ -2877,5 +2877,91 @@ func (tb *tokenBlock) proveIsCertainPropStmt(kw string) (ast.Stmt, error) {
 	default:
 		return nil, tbErr(fmt.Errorf("expect %s or %s, but got %s", glob.KeywordProveIsTransitiveProp, glob.KeywordProveIsCommutativeProp, kw), tb)
 	}
+
+}
+
+func (tb *tokenBlock) proveCommutativePropStmt(kw string) (ast.Stmt, error) {
+	err := tb.header.skip(kw)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	prop, err := tb.RawFc()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+	propAtom, ok := prop.(ast.FcAtom)
+	if !ok {
+		return nil, tbErr(fmt.Errorf("expect fc atom, but got %T", prop), tb)
+	}
+
+	if tb.header.skip(glob.KeySymbolComma) != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	params := []string{}
+	for !tb.header.is(glob.KeySymbolRightBrace) {
+		param, err := tb.header.next()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		params = append(params, param)
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+		}
+	}
+
+	if len(params) != 2 {
+		return nil, tbErr(fmt.Errorf("expect 3 params, but got %d", len(params)), tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolRightBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	if len(tb.body) != 2 {
+		return nil, tbErr(fmt.Errorf("expect 2 body blocks, but got %d", len(tb.body)), tb)
+	}
+
+	proofs := []ast.Stmt{}
+	err = tb.body[0].header.skipKwAndColonCheckEOL(glob.KeywordProve)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	for _, block := range tb.body[0].body {
+		curStmt, err := block.Stmt()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		proofs = append(proofs, curStmt)
+	}
+
+	proofsRightToLeft := []ast.Stmt{}
+	err = tb.body[1].header.skipKwAndColonCheckEOL(glob.KeywordProve)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	for _, block := range tb.body[1].body {
+		curStmt, err := block.Stmt()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		proofsRightToLeft = append(proofsRightToLeft, curStmt)
+	}
+
+	return ast.NewProveIsCommutativePropStmt(propAtom, params, proofs, proofsRightToLeft, tb.line), nil
 
 }
