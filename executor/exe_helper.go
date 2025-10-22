@@ -14,7 +14,10 @@
 
 package litex_executor
 
-import glob "golitex/glob"
+import (
+	ast "golitex/ast"
+	glob "golitex/glob"
+)
 
 func notOkExec(state glob.ExecState, err error) bool {
 	if err != nil {
@@ -24,4 +27,12 @@ func notOkExec(state glob.ExecState, err error) bool {
 		return true
 	}
 	return false
+}
+
+func (exec *Executor) NewCommutativeProp(propName string) {
+	exec.env.CommutativePropMem[propName] = struct{}{}
+}
+
+func (exec *Executor) NewTransitiveProp(name string) {
+	exec.env.TransitivePropMem[name] = make(map[string][]ast.Fc)
 }

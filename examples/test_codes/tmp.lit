@@ -1,3 +1,4 @@
+"""
 prop p(x, y N):
     x = y
 
@@ -12,3 +13,7 @@ prove_is_commutative_prop(p, x, y):
         y = x
         x = y
         $p(x, y)
+"""
+
+let a, b R: a != b
+b != a
