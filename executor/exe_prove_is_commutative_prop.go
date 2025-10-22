@@ -48,14 +48,14 @@ func (exec *Executor) proveIsCommutativePropStmtMainLogic(stmt *ast.ProveIsCommu
 		return false, fmt.Errorf("prop %s has %d params, but 2 params are expected", stmt.Prop, len(def.DefHeader.Params))
 	}
 
-	// def 的 paramSet 必须相等
-	state, err := exec.factStmt(ast.NewEqualFact(def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[1]))
-	if err != nil {
-		return false, err
-	}
-	if state != glob.ExecStateTrue {
-		return false, fmt.Errorf("prop in %s must have equal parameter sets, but parameter sets %s and %s of %s are not equal", glob.KeywordProveIsTransitiveProp, def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[1], def.DefHeader.Name)
-	}
+	// // def 的 paramSet 必须相等
+	// state, err := exec.factStmt(ast.NewEqualFact(def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[1]))
+	// if err != nil {
+	// 	return false, err
+	// }
+	// if state != glob.ExecStateTrue {
+	// 	return false, fmt.Errorf("prop in %s must have equal parameter sets, but parameter sets %s and %s of %s are not equal", glob.KeywordProveIsTransitiveProp, def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[1], def.DefHeader.Name)
+	// }
 
 	ok = exec.env.AreAtomsInFcAreDeclared(def.DefHeader.ParamSets[0], map[string]struct{}{})
 	if !ok {
@@ -67,7 +67,7 @@ func (exec *Executor) proveIsCommutativePropStmtMainLogic(stmt *ast.ProveIsCommu
 	}
 
 	// 这里最好检查一下，是不是 Param set 依赖了 Param，如果依赖了，那其实是要报错了，不过暂时不管了
-	err = exec.defObjStmt(ast.NewDefObjStmt(stmt.Params, []ast.Fc{def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[1]}, []ast.FactStmt{}, stmt.Line))
+	err := exec.defObjStmt(ast.NewDefObjStmt(stmt.Params, []ast.Fc{def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[1]}, []ast.FactStmt{}, stmt.Line))
 	if err != nil {
 		return false, err
 	}
@@ -77,14 +77,17 @@ func (exec *Executor) proveIsCommutativePropStmtMainLogic(stmt *ast.ProveIsCommu
 	// }
 
 	leftToRightFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(stmt.Prop), []ast.Fc{ast.FcAtom(stmt.Params[0]), ast.FcAtom(stmt.Params[1])}, stmt.Line)
-	rightToLeftFact := leftToRightFact.ReverseTrue()
+	rightToLeftFact, err := leftToRightFact.ReverseParameterOrder()
+	if err != nil {
+		return false, err
+	}
 
-	ok, err = exec.proveIsCommutativePropStmtBody(stmt, leftToRightFact)
+	ok, err = exec.proveIsCommutativePropStmtBody(stmt, leftToRightFact, rightToLeftFact)
 	if !ok || err != nil {
 		return false, err
 	}
 
-	ok, err = exec.proveIsCommutativePropStmtBody(stmt, rightToLeftFact)
+	ok, err = exec.proveIsCommutativePropStmtBody(stmt, rightToLeftFact, leftToRightFact)
 	if !ok || err != nil {
 		return false, err
 	}
@@ -92,7 +95,7 @@ func (exec *Executor) proveIsCommutativePropStmtMainLogic(stmt *ast.ProveIsCommu
 	return true, nil
 }
 
-func (exec *Executor) proveIsCommutativePropStmtBody(stmt *ast.ProveIsCommutativePropStmt, fact *ast.SpecFactStmt) (bool, error) {
+func (exec *Executor) proveIsCommutativePropStmtBody(stmt *ast.ProveIsCommutativePropStmt, fact *ast.SpecFactStmt, rightToLeft *ast.SpecFactStmt) (bool, error) {
 	exec.NewEnv(exec.env)
 	defer exec.deleteEnvAndRetainMsg()
 
@@ -108,12 +111,12 @@ func (exec *Executor) proveIsCommutativePropStmtBody(stmt *ast.ProveIsCommutativ
 		}
 	}
 
-	state, err := exec.factStmt(fact.ReverseTrue())
+	state, err := exec.factStmt(rightToLeft)
 	if notOkExec(state, err) {
 		return false, err
 	}
 	if state != glob.ExecStateTrue {
-		return false, fmt.Errorf("proof in %s must be proved to be true, but %s is not true", glob.KeywordProveIsCommutativeProp, fact)
+		return false, fmt.Errorf("proof in %s must be proved to be true, but %s is not true", glob.KeywordProveIsCommutativeProp, rightToLeft)
 	}
 
 	return true, nil
