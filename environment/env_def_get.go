@@ -96,3 +96,13 @@ func (e *Env) GetSymbolValue(fc ast.Fc) (ast.Fc, bool) {
 	}
 	return nil, false
 }
+
+func (e *Env) IsCommutativeProp(propName ast.FcAtom) bool {
+	for env := e; env != nil; env = env.Parent {
+		_, ok := env.CommutativePropMem[string(propName)]
+		if ok {
+			return true
+		}
+	}
+	return false
+}

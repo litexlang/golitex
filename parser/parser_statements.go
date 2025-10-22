@@ -2839,20 +2839,41 @@ func (tb *tokenBlock) proveIsCertainPropStmt(kw string) (ast.Stmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	proofs := []ast.Stmt{}
-	for _, block := range tb.body {
-		curStmt, err := block.Stmt()
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-		proofs = append(proofs, curStmt)
-	}
-
 	switch kw {
 	case glob.KeywordProveIsTransitiveProp:
+		proofs := []ast.Stmt{}
+		for _, block := range tb.body {
+			curStmt, err := block.Stmt()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			proofs = append(proofs, curStmt)
+		}
 		return ast.NewProveIsTransitivePropStmt(propAtom, params, proofs, tb.line), nil
 	case glob.KeywordProveIsCommutativeProp:
-		return ast.NewProveIsCommutativePropStmt(propAtom, params, proofs, tb.line), nil
+		if len(tb.body) != 2 {
+			return nil, tbErr(fmt.Errorf("expect 2 body blocks, but got %d", len(tb.body)), tb)
+		}
+
+		proofs := []ast.Stmt{}
+		for _, block := range tb.body[0].body {
+			curStmt, err := block.Stmt()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			proofs = append(proofs, curStmt)
+		}
+
+		proofsRightToLeft := []ast.Stmt{}
+		for _, block := range tb.body[1].body {
+			curStmt, err := block.Stmt()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			proofsRightToLeft = append(proofsRightToLeft, curStmt)
+		}
+
+		return ast.NewProveIsCommutativePropStmt(propAtom, params, proofs, proofsRightToLeft, tb.line), nil
 	default:
 		return nil, tbErr(fmt.Errorf("expect %s or %s, but got %s", glob.KeywordProveIsTransitiveProp, glob.KeywordProveIsCommutativeProp, kw), tb)
 	}
