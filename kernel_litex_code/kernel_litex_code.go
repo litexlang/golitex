@@ -564,4 +564,6 @@ know:
 	forall x, y R => x < y <=> not x >= y
 	forall x, y R => x <= y <=> not x > y
 	forall x, y R => x >= y <=> not x < y
+
+know $item_exists_in(finite_set)
 `

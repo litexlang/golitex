@@ -879,7 +879,3 @@ func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitiveP
 
 	return nil
 }
-
-func (exec *Executor) NewTransitiveProp(name string) {
-	exec.env.TransitivePropMem[name] = make(map[string][]ast.Fc)
-}
