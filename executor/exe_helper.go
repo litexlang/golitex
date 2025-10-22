@@ -35,15 +35,14 @@ func (exec *Executor) NewCommutativeProp(specFact *ast.SpecFactStmt) {
 		exec.env.CommutativePropMem[string(specFact.PropName)] = env.NewCommutativePropMemItemStruct()
 	}
 
-	if specFact.TypeEnum == ast.TruePure {
+	switch specFact.TypeEnum {
+	case ast.TruePure:
 		exec.env.CommutativePropMem[string(specFact.PropName)].TruePureIsCommutative = true
-		return
-	} else if specFact.TypeEnum == ast.FalsePure {
+	case ast.FalsePure:
 		exec.env.CommutativePropMem[string(specFact.PropName)].FalsePureIsCommutative = true
-		return
+	default:
+		panic("not implemented: not commutative prop")
 	}
-
-	panic("not implemented: not commutative prop")
 }
 
 func (exec *Executor) NewTransitiveProp(name string) {
