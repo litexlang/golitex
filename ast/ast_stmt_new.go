@@ -202,6 +202,6 @@ func NewProveIsTransitivePropStmt(prop FcAtom, params []string, proofs []Stmt, l
 	return &ProveIsTransitivePropStmt{prop, params, proofs, line}
 }
 
-func NewProveIsCommutativePropStmt(prop FcAtom, params []string, proofs []Stmt, proofsRightToLeft []Stmt, line uint) *ProveIsCommutativePropStmt {
-	return &ProveIsCommutativePropStmt{prop, params, proofs, proofsRightToLeft, line}
+func NewProveIsCommutativePropStmt(specFact *SpecFactStmt, proofs []Stmt, proofsRightToLeft []Stmt, line uint) *ProveIsCommutativePropStmt {
+	return &ProveIsCommutativePropStmt{specFact, proofs, proofsRightToLeft, line}
 }

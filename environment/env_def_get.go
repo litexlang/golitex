@@ -97,11 +97,15 @@ func (e *Env) GetSymbolValue(fc ast.Fc) (ast.Fc, bool) {
 	return nil, false
 }
 
-func (e *Env) IsCommutativeProp(propName ast.FcAtom) bool {
+func (e *Env) IsCommutativeProp(specFact *ast.SpecFactStmt) bool {
 	for env := e; env != nil; env = env.Parent {
-		_, ok := env.CommutativePropMem[string(propName)]
+		item, ok := env.CommutativePropMem[string(specFact.PropName)]
 		if ok {
-			return true
+			if specFact.TypeEnum == ast.TruePure {
+				return item.TruePureIsCommutative
+			} else if specFact.TypeEnum == ast.FalsePure {
+				return item.FalsePureIsCommutative
+			}
 		}
 	}
 	return false
