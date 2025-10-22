@@ -28,7 +28,7 @@ func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) (bool, erro
 		if asStmt.NameIs(glob.KeySymbolEqual) && asStmt.TypeEnum == ast.TruePure {
 			return ver.verTrueEqualFact(asStmt, state, true)
 		}
-		return ver.verSpecFactThatIsNotTrueEqualFact(asStmt, state)
+		return ver.verSpecFactThatIsNotTrueEqualFact_UseCommutativity(asStmt, state)
 	case *ast.OrStmt:
 		return ver.verOrStmt(asStmt, state)
 	case *ast.UniFactStmt:
