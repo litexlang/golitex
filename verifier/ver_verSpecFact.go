@@ -19,7 +19,6 @@ import (
 	ast "golitex/ast"
 	cmp "golitex/cmp"
 	glob "golitex/glob"
-	num "golitex/number"
 )
 
 func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
@@ -156,14 +155,14 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFactMainLogic(stmt *ast.SpecFa
 	// }
 }
 
-func (ver *Verifier) verSpecFactStepByStepNotCommutatively(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
-	if (stmt.NameIs(glob.KeySymbolLargerEqual) || stmt.NameIs(glob.KeySymbolLessEqual) || stmt.NameIs(glob.KeySymbolGreater) || stmt.NameIs(glob.KeySymbolLess)) && stmt.IsTrue() {
-		// TODO: 本质上这个逻辑应该放在BIR里
-		return ver.verBtCmpSpecFact(stmt, state)
-	}
+// func (ver *Verifier) verSpecFactStepByStepNotCommutatively(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+// 	if (stmt.NameIs(glob.KeySymbolLargerEqual) || stmt.NameIs(glob.KeySymbolLessEqual) || stmt.NameIs(glob.KeySymbolGreater) || stmt.NameIs(glob.KeySymbolLess)) && stmt.IsTrue() {
+// 		// TODO: 本质上这个逻辑应该放在BIR里
+// 		return ver.verBtCmpSpecFact(stmt, state)
+// 	}
 
-	return ver.verSpecFactStepByStep(stmt, state)
-}
+// 	return ver.verSpecFactStepByStep(stmt, state)
+// }
 
 // func (ver *Verifier) isSpecFactCommutative(stmt *ast.SpecFactStmt) (bool, error) {
 // 	if stmt.NameIs(glob.KeySymbolEqual) {
@@ -436,136 +435,136 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecFactStmt, st
 	return false, nil
 }
 
-var reverseCmpFcAtomMap = map[string]ast.FcAtom{
-	glob.KeySymbolLargerEqual: ast.FcAtom(glob.KeySymbolLessEqual),
-	glob.KeySymbolLessEqual:   ast.FcAtom(glob.KeySymbolLargerEqual),
-	glob.KeySymbolGreater:     ast.FcAtom(glob.KeySymbolLess),
-	glob.KeySymbolLess:        ast.FcAtom(glob.KeySymbolGreater),
-}
+// var reverseCmpFcAtomMap = map[string]ast.FcAtom{
+// 	glob.KeySymbolLargerEqual: ast.FcAtom(glob.KeySymbolLessEqual),
+// 	glob.KeySymbolLessEqual:   ast.FcAtom(glob.KeySymbolLargerEqual),
+// 	glob.KeySymbolGreater:     ast.FcAtom(glob.KeySymbolLess),
+// 	glob.KeySymbolLess:        ast.FcAtom(glob.KeySymbolGreater),
+// }
 
 // 只是证明 a >= b 和 b <= a 是等价的，没有用到 a = b => a >=b, a > b => a >= b，因为我觉得后者应该
 // 其实也可以写入标准库而不是放在kernel，但我还是送给用户得了
 // 传递性，就写在标准库吧
-func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
-	verBtCmp_ParamsAreLiteralNum, err := ver.verBtCmp_ParamsAreLiteralNum(stmt)
-	if err != nil {
-		return false, err
-	}
-	if verBtCmp_ParamsAreLiteralNum {
-		if state.WithMsg {
-			ver.successWithMsg(stmt.String(), "builtin rules")
-		}
-		return true, nil
-	}
+// func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+// 	verBtCmp_ParamsAreLiteralNum, err := ver.verBtCmp_ParamsAreLiteralNum(stmt)
+// 	if err != nil {
+// 		return false, err
+// 	}
+// 	if verBtCmp_ParamsAreLiteralNum {
+// 		if state.WithMsg {
+// 			ver.successWithMsg(stmt.String(), "builtin rules")
+// 		}
+// 		return true, nil
+// 	}
 
-	propName := string(stmt.PropName)
+// 	propName := string(stmt.PropName)
 
-	reversePropName := reverseCmpFcAtomMap[propName]
+// 	reversePropName := reverseCmpFcAtomMap[propName]
 
-	ok, err := ver.verSpecFactStepByStep(stmt, state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
-	}
+// 	ok, err := ver.verSpecFactStepByStep(stmt, state)
+// 	if err != nil {
+// 		return false, err
+// 	}
+// 	if ok {
+// 		return true, nil
+// 	}
 
-	// 如果是 >= 操作符，尝试证明 > 或 = 是否成立
-	if propName == glob.KeySymbolLargerEqual {
-		// 尝试证明 >
-		greaterStmt := *stmt
-		greaterStmt.PropName = ast.FcAtom(glob.KeySymbolGreater)
-		ok, err = ver.verSpecFactStepByStep(&greaterStmt, state)
-		if err != nil {
-			return false, err
-		}
-		if ok {
-			return ver.processOkMsg(state, stmt.String(), fmt.Sprintf("%s is true", greaterStmt.String()))
-		}
+// 	// 如果是 >= 操作符，尝试证明 > 或 = 是否成立
+// 	if propName == glob.KeySymbolLargerEqual {
+// 		// 尝试证明 >
+// 		greaterStmt := *stmt
+// 		greaterStmt.PropName = ast.FcAtom(glob.KeySymbolGreater)
+// 		ok, err = ver.verSpecFactStepByStep(&greaterStmt, state)
+// 		if err != nil {
+// 			return false, err
+// 		}
+// 		if ok {
+// 			return ver.processOkMsg(state, stmt.String(), fmt.Sprintf("%s is true", greaterStmt.String()))
+// 		}
 
-		// 尝试证明 =
-		equalStmt := *stmt
-		equalStmt.PropName = ast.FcAtom(glob.KeySymbolEqual)
-		ok, err = ver.verTrueEqualFact(&equalStmt, state, true)
-		if err != nil {
-			return false, err
-		}
-		if ok {
-			return ver.processOkMsg(state, stmt.String(), fmt.Sprintf("%s is true", equalStmt.String()))
-		}
-	}
+// 		// 尝试证明 =
+// 		equalStmt := *stmt
+// 		equalStmt.PropName = ast.FcAtom(glob.KeySymbolEqual)
+// 		ok, err = ver.verTrueEqualFact(&equalStmt, state, true)
+// 		if err != nil {
+// 			return false, err
+// 		}
+// 		if ok {
+// 			return ver.processOkMsg(state, stmt.String(), fmt.Sprintf("%s is true", equalStmt.String()))
+// 		}
+// 	}
 
-	// 如果 <= 操作符，尝试证明 < 或 = 是否成立
-	if propName == glob.KeySymbolLessEqual {
-		// 尝试证明 <
-		lessStmt := *stmt
-		lessStmt.PropName = ast.FcAtom(glob.KeySymbolLess)
-		ok, err = ver.verSpecFactStepByStep(&lessStmt, state)
-		if isErrOrOk(ok, err) {
-			return ok, err
-		}
+// 	// 如果 <= 操作符，尝试证明 < 或 = 是否成立
+// 	if propName == glob.KeySymbolLessEqual {
+// 		// 尝试证明 <
+// 		lessStmt := *stmt
+// 		lessStmt.PropName = ast.FcAtom(glob.KeySymbolLess)
+// 		ok, err = ver.verSpecFactStepByStep(&lessStmt, state)
+// 		if isErrOrOk(ok, err) {
+// 			return ok, err
+// 		}
 
-		// 尝试证明 =
-		equalStmt := *stmt
-		equalStmt.PropName = ast.FcAtom(glob.KeySymbolEqual)
-		ok, err = ver.verTrueEqualFact(&equalStmt, state, true)
-		if isErrOrOk(ok, err) {
-			return ok, err
-		}
-	}
+// 		// 尝试证明 =
+// 		equalStmt := *stmt
+// 		equalStmt.PropName = ast.FcAtom(glob.KeySymbolEqual)
+// 		ok, err = ver.verTrueEqualFact(&equalStmt, state, true)
+// 		if isErrOrOk(ok, err) {
+// 			return ok, err
+// 		}
+// 	}
 
-	if propName == glob.KeySymbolGreater || propName == glob.KeySymbolLess {
-		reversedStmt, err := stmt.ReverseSpecFactParamsOrder()
-		if err != nil {
-			return false, err
-		}
-		reversedStmt.PropName = reversePropName
-		ok, err = ver.verSpecFactStepByStep(reversedStmt, state)
-		if err != nil {
-			return false, err
-		}
-		if ok {
-			return ver.processOkMsg(state, stmt.String(), fmt.Sprintf("%s is true", reversedStmt))
-		}
-		return false, nil
-	}
+// 	if propName == glob.KeySymbolGreater || propName == glob.KeySymbolLess {
+// 		reversedStmt, err := stmt.ReverseSpecFactParamsOrder()
+// 		if err != nil {
+// 			return false, err
+// 		}
+// 		reversedStmt.PropName = reversePropName
+// 		ok, err = ver.verSpecFactStepByStep(reversedStmt, state)
+// 		if err != nil {
+// 			return false, err
+// 		}
+// 		if ok {
+// 			return ver.processOkMsg(state, stmt.String(), fmt.Sprintf("%s is true", reversedStmt))
+// 		}
+// 		return false, nil
+// 	}
 
-	return false, nil
-}
+// 	return false, nil
+// }
 
-func (ver *Verifier) verBtCmp_ParamsAreLiteralNum(stmt *ast.SpecFactStmt) (bool, error) {
-	// 用 glob 里的 NumLitExpr 去比较
-	_, ok, err := ast.MakeFcIntoNumLitExpr(stmt.Params[0])
-	if err != nil || !ok {
-		return false, nil
-	}
-	_, ok, err = ast.MakeFcIntoNumLitExpr(stmt.Params[1])
-	if err != nil || !ok {
-		return false, nil
-	}
+// func (ver *Verifier) verBtCmp_ParamsAreLiteralNum(stmt *ast.SpecFactStmt) (bool, error) {
+// 	// 用 glob 里的 NumLitExpr 去比较
+// 	_, ok, err := ast.MakeFcIntoNumLitExpr(stmt.Params[0])
+// 	if err != nil || !ok {
+// 		return false, nil
+// 	}
+// 	_, ok, err = ast.MakeFcIntoNumLitExpr(stmt.Params[1])
+// 	if err != nil || !ok {
+// 		return false, nil
+// 	}
 
-	left, err := num.CalculatorEval(stmt.Params[0].String())
-	if err != nil {
-		return false, nil
-	}
-	right, err := num.CalculatorEval(stmt.Params[1].String())
-	if err != nil {
-		return false, nil
-	}
+// 	left, err := num.CalculatorEval(stmt.Params[0].String())
+// 	if err != nil {
+// 		return false, nil
+// 	}
+// 	right, err := num.CalculatorEval(stmt.Params[1].String())
+// 	if err != nil {
+// 		return false, nil
+// 	}
 
-	switch stmt.PropName {
-	case glob.KeySymbolLargerEqual:
-		return left >= right, nil
-	case glob.KeySymbolLessEqual:
-		return left <= right, nil
-	case glob.KeySymbolGreater:
-		return left > right, nil
-	case glob.KeySymbolLess:
-		return left < right, nil
-	}
+// 	switch stmt.PropName {
+// 	case glob.KeySymbolLargerEqual:
+// 		return left >= right, nil
+// 	case glob.KeySymbolLessEqual:
+// 		return left <= right, nil
+// 	case glob.KeySymbolGreater:
+// 		return left > right, nil
+// 	case glob.KeySymbolLess:
+// 		return left < right, nil
+// 	}
 
-	return false, nil
-}
+// 	return false, nil
+// }
 
 func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	nextState := state.GetAddRound()
