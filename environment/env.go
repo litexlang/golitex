@@ -62,6 +62,27 @@ type Env struct {
 	IntensionalSetMem      map[string]ast.IntensionalSetStmt
 	SymbolValueMem         map[string]ast.Fc
 	TransitivePropMem      map[string]map[string][]ast.Fc
+	CommutativePropMem     map[string]*CommutativePropMemItemStruct
+}
+
+type CommutativePropMemItemStruct struct {
+	TruePureIsCommutative  bool
+	FalsePureIsCommutative bool
+}
+
+func (item *CommutativePropMemItemStruct) SetTruePureIsCommutative(isCommutative bool) {
+	item.TruePureIsCommutative = isCommutative
+}
+
+func (item *CommutativePropMemItemStruct) SetFalsePureIsCommutative(isCommutative bool) {
+	item.FalsePureIsCommutative = isCommutative
+}
+
+func NewCommutativePropMemItemStruct() *CommutativePropMemItemStruct {
+	return &CommutativePropMemItemStruct{
+		TruePureIsCommutative:  false,
+		FalsePureIsCommutative: false,
+	}
 }
 
 func (env *Env) GetUpMostEnv() *Env {
@@ -88,6 +109,7 @@ func NewEnv(parent *Env) *Env {
 		IntensionalSetMem:      make(map[string]ast.IntensionalSetStmt),
 		SymbolValueMem:         make(map[string]ast.Fc),
 		TransitivePropMem:      make(map[string]map[string][]ast.Fc),
+		CommutativePropMem:     make(map[string]*CommutativePropMemItemStruct),
 	}
 	return env
 }

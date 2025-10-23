@@ -975,17 +975,46 @@ func (stmt *ProveInRangeStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *ProveIsTransitivePropStmt) String() string {
+func ProveIsCertainPropStmtString(kw string, prop FcAtom, params []string, proofs []Stmt) string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordProveIsTransitiveProp)
+	builder.WriteString(kw)
 	builder.WriteString("(")
-	builder.WriteString(stmt.Prop.String())
+	builder.WriteString(prop.String())
 	builder.WriteString(")")
 	builder.WriteString(glob.KeySymbolColon)
 	builder.WriteByte('\n')
-	for _, proof := range stmt.Proofs {
+	for _, proof := range proofs {
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 1))
 		builder.WriteByte('\n')
 	}
+	return builder.String()
+}
+
+func (stmt *ProveIsTransitivePropStmt) String() string {
+	return ProveIsCertainPropStmtString(glob.KeywordProveIsTransitiveProp, stmt.Prop, stmt.Params, stmt.Proofs)
+}
+
+func (stmt *ProveIsCommutativePropStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(stmt.SpecFact.String())
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve, 1))
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+	for _, proof := range stmt.Proofs {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 2))
+		builder.WriteByte('\n')
+	}
+
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve, 1))
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+	for _, proof := range stmt.ProofsRightToLeft {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 2))
+		builder.WriteByte('\n')
+	}
+
 	return builder.String()
 }
