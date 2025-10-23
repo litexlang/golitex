@@ -333,3 +333,7 @@ func (s *ProveInRangeStmt) InlineString() string {
 func (s *ProveIsTransitivePropStmt) InlineString() string {
 	return "TODO"
 }
+
+func (s *ProveIsCommutativePropStmt) InlineString() string {
+	return "TODO"
+}

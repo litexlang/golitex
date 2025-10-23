@@ -22,7 +22,35 @@ import (
 	num "golitex/number"
 )
 
-func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+	if stmt.NameIs(glob.KeySymbolEqual) && stmt.TypeEnum == ast.TruePure {
+		return ver.verTrueEqualFact(stmt, state, true)
+	}
+
+	ok, err := ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
+	if ver.env.IsCommutativeProp(stmt) || (stmt.NameIs(glob.KeySymbolEqual) && stmt.TypeEnum == ast.FalsePure) {
+		reverseParamsOrderStmt, err := stmt.ReverseParameterOrder()
+		if err != nil {
+			return false, err
+		}
+		ok, err := ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(reverseParamsOrderStmt, state)
+		if err != nil {
+			return false, err
+		}
+		return ok, nil
+	}
+
+	return false, nil
+}
+
+func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	ok, err := ver.verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt, state)
 	if err != nil {
 		return false, err
@@ -94,37 +122,38 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFactMainLogic(stmt *ast.SpecFa
 			return false, err
 		}
 	}
+	return ver.verSpecFactStepByStep(stmt, state)
 
 	// ok, err = ver.isSpecFactCommutative(stmt)
 	// if err != nil {
 	// 	return false, err
 	// }
 
-	ok = stmt.IsPropNameEqual()
+	// ok = stmt.IsPropNameEqual()
 
-	if !ok {
-		return ver.verSpecFactStepByStepNotCommutatively(stmt, state)
-	} else {
-		ok, err := ver.verSpecFactStepByStepNotCommutatively(stmt, state)
-		if err != nil {
-			return false, err
-		}
-		if ok {
-			return true, nil
-		}
-		reversedStmt, err := stmt.ReverseSpecFactParamsOrder()
-		if err != nil {
-			return false, err
-		}
-		ok, err = ver.verSpecFactStepByStepNotCommutatively(reversedStmt, state)
-		if err != nil {
-			return false, err
-		}
-		if ok {
-			return true, nil
-		}
-		return false, nil
-	}
+	// if !ok {
+	// 	return ver.verSpecFactStepByStepNotCommutatively(stmt, state)
+	// } else {
+	// 	ok, err := ver.verSpecFactStepByStepNotCommutatively(stmt, state)
+	// 	if err != nil {
+	// 		return false, err
+	// 	}
+	// 	if ok {
+	// 		return true, nil
+	// 	}
+	// 	reversedStmt, err := stmt.ReverseSpecFactParamsOrder()
+	// 	if err != nil {
+	// 		return false, err
+	// 	}
+	// 	ok, err = ver.verSpecFactStepByStepNotCommutatively(reversedStmt, state)
+	// 	if err != nil {
+	// 		return false, err
+	// 	}
+	// 	if ok {
+	// 		return true, nil
+	// 	}
+	// 	return false, nil
+	// }
 }
 
 func (ver *Verifier) verSpecFactStepByStepNotCommutatively(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {

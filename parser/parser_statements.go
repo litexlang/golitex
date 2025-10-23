@@ -106,6 +106,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.proveInRangeStmt()
 	case glob.KeywordProveIsTransitiveProp:
 		ret, err = tb.proveIsTransitivePropStmt()
+	case glob.KeywordProveIsCommutativeProp:
+		ret, err = tb.proveCommutativePropStmt()
 	default:
 		ret, err = tb.factsStmt()
 	}
@@ -2845,6 +2847,72 @@ func (tb *tokenBlock) proveIsTransitivePropStmt() (ast.Stmt, error) {
 		}
 		proofs = append(proofs, curStmt)
 	}
-
 	return ast.NewProveIsTransitivePropStmt(propAtom, params, proofs, tb.line), nil
+
+}
+
+func (tb *tokenBlock) proveCommutativePropStmt() (ast.Stmt, error) {
+	err := tb.header.skip(glob.KeywordProveIsCommutativeProp)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	specFact, err := tb.specFactStmt()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	if len(specFact.Params) != 2 {
+		return nil, tbErr(fmt.Errorf("expect 2 params, but got %d", len(specFact.Params)), tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolRightBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	if len(tb.body) != 2 {
+		return nil, tbErr(fmt.Errorf("expect 2 body blocks, but got %d", len(tb.body)), tb)
+	}
+
+	proofs := []ast.Stmt{}
+	err = tb.body[0].header.skipKwAndColonCheckEOL(glob.KeywordProve)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	for _, block := range tb.body[0].body {
+		curStmt, err := block.Stmt()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		proofs = append(proofs, curStmt)
+	}
+
+	proofsRightToLeft := []ast.Stmt{}
+	err = tb.body[1].header.skipKwAndColonCheckEOL(glob.KeywordProve)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	for _, block := range tb.body[1].body {
+		curStmt, err := block.Stmt()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		proofsRightToLeft = append(proofsRightToLeft, curStmt)
+	}
+
+	return ast.NewProveIsCommutativePropStmt(specFact, proofs, proofsRightToLeft, tb.line), nil
+
 }
