@@ -2350,6 +2350,11 @@ func (tb *tokenBlock) claimStmtInline() (ast.ClaimInterface, error) {
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
+	} else if tb.header.is(glob.KeySymbolColon) {
+		err := tb.header.skip(glob.KeySymbolColon)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
 	} else {
 		return ast.NewClaimProveStmt(fact, []ast.Stmt{}, tb.line), nil
 	}
