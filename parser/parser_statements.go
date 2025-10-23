@@ -125,7 +125,7 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 
 func (tb *tokenBlock) factStmt(uniFactDepth uniFactEnum) (ast.FactStmt, error) {
 	if !tb.EndWith(glob.KeySymbolColon) {
-		return tb.inlineFactSkipStmtTerminator()
+		return tb.inlineFactSkipStmtTerminator([]string{})
 	}
 
 	cur, err := tb.header.currentToken()
@@ -138,7 +138,7 @@ func (tb *tokenBlock) factStmt(uniFactDepth uniFactEnum) (ast.FactStmt, error) {
 		if tb.GetEnd() == glob.KeySymbolColon {
 			return tb.uniFactInterface(uniFactDepth)
 		} else {
-			return tb.inlineUniInterfaceSkipTerminator()
+			return tb.inlineUniInterfaceSkipTerminator([]string{})
 		}
 	case glob.KeywordOr:
 		return tb.orStmt()
@@ -148,7 +148,7 @@ func (tb *tokenBlock) factStmt(uniFactDepth uniFactEnum) (ast.FactStmt, error) {
 		if tb.GetEnd() == glob.KeySymbolColon {
 			return tb.ifStmtMultiLines(uniFactDepth)
 		} else {
-			return tb.inlineIfInterfaceSkipTerminator()
+			return tb.inlineIfInterfaceSkipTerminator([]string{})
 		}
 	default:
 		return tb.fact()
@@ -339,7 +339,7 @@ func (tb *tokenBlock) ifStmtMultiLines(uniFactDepth uniFactEnum) (ast.UniFactInt
 	} else {
 		domainFacts := []ast.FactStmt{}
 		for !tb.header.is(glob.KeySymbolColon) {
-			fact, err := tb.inlineFactSkipStmtTerminator()
+			fact, err := tb.inlineFactSkipStmtTerminator([]string{})
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}
@@ -397,7 +397,7 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}
-			unitFacts, err := tb.inlineFacts_checkUniDepth1()
+			unitFacts, err := tb.inlineFacts_checkUniDepth1([]string{})
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}
@@ -439,7 +439,7 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 
 		return ast.NewDefPropStmt(declHeader, domFacts, iffFacts, []ast.FactStmt{}, tb.line), nil
 	} else {
-		domFacts, iffFacts, err := tb.bodyOfInlineDomAndThen(glob.KeySymbolEquivalent)
+		domFacts, iffFacts, err := tb.bodyOfInlineDomAndThen(glob.KeySymbolEquivalent, []string{})
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -473,7 +473,7 @@ func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 		}
 		return ast.NewDefObjStmt(objNames, objSets, facts, tb.line), nil
 	} else {
-		facts, err := tb.inlineFacts_checkUniDepth0()
+		facts, err := tb.inlineFacts_checkUniDepth0([]string{})
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -580,7 +580,7 @@ func (tb *tokenBlock) knowFactStmt() (*ast.KnowFactStmt, error) {
 	if !tb.header.is(glob.KeySymbolColon) {
 		var facts ast.FactStmtSlice = ast.FactStmtSlice{}
 		var err error
-		facts, err = tb.inlineFacts_checkUniDepth0()
+		facts, err = tb.inlineFacts_checkUniDepth0([]string{})
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -886,7 +886,7 @@ func (tb *tokenBlock) defExistPropStmtBody() (*ast.DefExistPropStmtBody, error) 
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
-		unitFacts, err := tb.inlineFacts_checkUniDepth1()
+		unitFacts, err := tb.inlineFacts_checkUniDepth1([]string{})
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -913,7 +913,7 @@ func (tb *tokenBlock) defExistPropStmtBody() (*ast.DefExistPropStmtBody, error) 
 
 		return ast.NewExistPropDef(declHeader, domFacts, iffFactsAsFactStatements, []ast.FactStmt{}, tb.line), nil
 	} else {
-		domFacts, iffFactsAsFactStatements, err := tb.bodyOfInlineDomAndThen(glob.KeySymbolEquivalent)
+		domFacts, iffFactsAsFactStatements, err := tb.bodyOfInlineDomAndThen(glob.KeySymbolEquivalent, []string{})
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -1169,7 +1169,7 @@ func (tb *tokenBlock) proveInEachCaseStmt() (*ast.ProveInEachCaseStmt, error) {
 
 		thenFacts := []ast.FactStmt{}
 		for !tb.header.is(glob.KeySymbolColon) {
-			fact, err := tb.inlineFactSkipStmtTerminator()
+			fact, err := tb.inlineFactSkipStmtTerminator([]string{})
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}
@@ -1419,7 +1419,7 @@ func (tb *tokenBlock) defFnStmt(skipFn bool) (*ast.DefFnStmt, error) {
 				return nil, tbErr(err, tb)
 			}
 		} else {
-			domFacts, err = tb.inlineFacts_untilWord_or_exceedEnd_notSkipWord(glob.KeySymbolRightArrow)
+			domFacts, err = tb.inlineFacts_untilWord_or_exceedEnd_notSkipWord(glob.KeySymbolRightArrow, []string{})
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}
@@ -1433,7 +1433,7 @@ func (tb *tokenBlock) defFnStmt(skipFn bool) (*ast.DefFnStmt, error) {
 				return nil, tbErr(err, tb)
 			}
 
-			thenFacts, err = tb.inlineFacts_untilEndOfInline()
+			thenFacts, err = tb.inlineFacts_untilEndOfInline([]string{})
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}
@@ -1443,7 +1443,7 @@ func (tb *tokenBlock) defFnStmt(skipFn bool) (*ast.DefFnStmt, error) {
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
-		unitFacts, err := tb.inlineFacts_checkUniDepth1()
+		unitFacts, err := tb.inlineFacts_checkUniDepth1([]string{})
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -2059,11 +2059,11 @@ func (tb *tokenBlock) namedUniFactStmt() (*ast.NamedUniFactStmt, error) {
 
 		return ast.NewNamedUniFactStmt(ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts, thenFacts, tb.line), tb.line), nil
 	} else {
-		iffFact, err := tb.inlineDomFactInUniFactInterface()
+		iffFact, err := tb.inlineDomFactInUniFactInterface([]string{})
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
-		thenFact, err := tb.thenFacts_SkipEnd_Semicolon_or_EOL()
+		thenFact, err := tb.thenFacts_SkipEnd_Semicolon_or_EOL([]string{})
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -2296,7 +2296,7 @@ func (tb *tokenBlock) clearStmt() (ast.Stmt, error) {
 
 func (tb *tokenBlock) factsStmt() (ast.Stmt, error) {
 	if tb.GetEnd() != glob.KeySymbolColon { // 因为可能是 forall : 这样的
-		facts, err := tb.inlineFacts_checkUniDepth0()
+		facts, err := tb.inlineFacts_checkUniDepth0([]string{})
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -2323,7 +2323,7 @@ func (tb *tokenBlock) claimStmtInline() (ast.ClaimInterface, error) {
 			return nil, tbErr(err, tb)
 		}
 	} else {
-		fact, err = tb.inlineFactSkipStmtTerminator()
+		fact, err = tb.inlineFactSkipStmtTerminator([]string{})
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
