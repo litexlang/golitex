@@ -5,3 +5,6 @@ prove_in_each_case x = 11 or x = 2 => x = 11:
     	x = 11
     prove:
     	x = 11
+
+claim forall y R: y $in R;:
+    y $in R
