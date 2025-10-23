@@ -566,4 +566,13 @@ know:
 	forall x, y R => x >= y <=> not x < y
 
 know $item_exists_in(finite_set)
+
+fn pow(x R, y R) R:
+	dom:
+		x >= 0
+		or:
+			x != 0
+			y != 0
+
+know forall b N: b >= 0
 `
