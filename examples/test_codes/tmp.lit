@@ -1,2 +1,8 @@
-let a R: a > 0
-a > -1
+forall a, b, n N:
+    n > 0
+    a > b
+    =>:
+        n != 0
+        a ^ n > b ^ n
+
+forall b R: b > 0 => b != 0

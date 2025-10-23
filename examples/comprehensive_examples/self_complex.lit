@@ -16,7 +16,7 @@ know:
     forall x, y R:
         sc_neg(sc(x, y)) = sc(-x, -y)
         sc_conj(sc(x, y)) = sc(x, -y)
-        sc_abs(sc(x, y)) = (x * x + y * y) ^ (1/2)
+        sc_abs(sc(x, y)) = (x * x + y * y)  \pow  (1/2)
     forall x, y, a, b R:
         or:
             a != 0
@@ -33,5 +33,5 @@ prove:
     sc(1, 2) \sc_sub sc(3, 4) = sc(-2, -2)
     sc_neg(sc(1, 2)) = sc(-1, -2)
     sc_conj(sc(1, 2)) = sc(1, -2)
-    sc_abs(sc(1, 2)) = (1 * 1 + 2 * 2) ^ (1/2)
-    sc_abs(sc(1, 2)) = 5 ^ (1/2)
+    sc_abs(sc(1, 2)) = (1 * 1 + 2 * 2)  \pow  (1/2)
+    sc_abs(sc(1, 2)) = 5  \pow  (1/2)
