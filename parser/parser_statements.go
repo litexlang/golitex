@@ -2323,7 +2323,7 @@ func (tb *tokenBlock) claimStmtInline() (ast.ClaimInterface, error) {
 			return nil, tbErr(err, tb)
 		}
 	} else {
-		fact, err = tb.inlineFactSkipStmtTerminator([]string{glob.KeySymbolColon})
+		fact, err = tb.inlineFactSkipStmtTerminator([]string{glob.KeySymbolColon, glob.KeywordProveByContradiction})
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -2345,11 +2345,6 @@ func (tb *tokenBlock) claimStmtInline() (ast.ClaimInterface, error) {
 			return nil, tbErr(err, tb)
 		}
 		isProve = false
-	} else if tb.header.is(glob.KeywordProve) {
-		err := tb.header.skipKwAndColonCheckEOL(glob.KeywordProve)
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
 	} else if tb.header.is(glob.KeySymbolColon) {
 		err := tb.header.skip(glob.KeySymbolColon)
 		if err != nil {
