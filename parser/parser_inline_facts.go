@@ -152,7 +152,7 @@ func (tb *tokenBlock) inlineFacts_untilWord_or_exceedEnd_notSkipWord(word string
 			break
 		}
 
-		if tb.header.ExceedEnd() {
+		if tb.IsEnding(ends) {
 			break
 		}
 	}
@@ -264,7 +264,7 @@ func (tb *tokenBlock) inlineUniInterfaceSkipTerminator(ends []string) (ast.UniFa
 			if tb.header.is(glob.KeySymbolSemiColon) {
 				tb.header.skip(glob.KeySymbolSemiColon)
 				return ast.NewUniFact(params, setParams, []ast.FactStmt{}, domFact, tb.line), nil
-			} else if tb.header.ExceedEnd() {
+			} else if tb.IsEnding(ends) {
 				return ast.NewUniFact(params, setParams, []ast.FactStmt{}, domFact, tb.line), nil
 			} else if tb.header.is(glob.KeySymbolEquivalent) {
 				err = tb.header.skip(glob.KeySymbolEquivalent)
@@ -354,7 +354,7 @@ func (tb *tokenBlock) thenFactsInUniFactInterface(ends []string) ([]ast.FactStmt
 			return facts, false, nil
 		}
 
-		if tb.header.ExceedEnd() {
+		if tb.IsEnding(ends) {
 			return facts, true, nil
 		}
 
@@ -375,7 +375,7 @@ func (tb *tokenBlock) thenFacts_SkipEnd_Semicolon_or_EOL(ends []string) ([]ast.F
 		}
 		facts = append(facts, specFact)
 
-		if tb.header.ExceedEnd() {
+		if tb.IsEnding(ends) {
 			return facts, nil
 		}
 
@@ -413,7 +413,7 @@ func (tb *tokenBlock) inlineDomFactInUniFactInterface_WithoutSkippingEnd(ends []
 		if tb.header.is(glob.KeySymbolRightArrow) || tb.header.is(glob.KeySymbolSemiColon) || tb.header.is(glob.KeySymbolEquivalent) {
 			return facts, nil
 		}
-		if tb.header.ExceedEnd() {
+		if tb.IsEnding(ends) {
 			return facts, nil
 		}
 	}
