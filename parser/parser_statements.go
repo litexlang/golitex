@@ -1169,7 +1169,7 @@ func (tb *tokenBlock) proveInEachCaseStmt() (*ast.ProveInEachCaseStmt, error) {
 
 		thenFacts := []ast.FactStmt{}
 		for !tb.header.is(glob.KeySymbolColon) {
-			fact, err := tb.inlineFactSkipStmtTerminator([]string{})
+			fact, err := tb.inlineFactSkipStmtTerminator([]string{glob.KeySymbolColon})
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}
@@ -2323,7 +2323,7 @@ func (tb *tokenBlock) claimStmtInline() (ast.ClaimInterface, error) {
 			return nil, tbErr(err, tb)
 		}
 	} else {
-		fact, err = tb.inlineFactSkipStmtTerminator([]string{})
+		fact, err = tb.inlineFactSkipStmtTerminator([]string{glob.KeySymbolColon})
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
