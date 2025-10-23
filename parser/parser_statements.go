@@ -1098,55 +1098,114 @@ func (tb *tokenBlock) knowPropStmt() (*ast.KnowPropStmt, error) {
 }
 
 func (tb *tokenBlock) proveInEachCaseStmt() (*ast.ProveInEachCaseStmt, error) {
-	err := tb.header.skipKwAndColonCheckEOL(glob.KeywordProveInEachCase)
+	err := tb.header.skip(glob.KeywordProveInEachCase)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
 
-	orFact, err := tb.body[0].orStmt()
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	thenFacts := []ast.FactStmt{}
-	// err = tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordThen)
-	err = tb.body[1].header.skipKwAndColonCheckEOL(glob.KeySymbolRightArrow)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	for _, stmt := range tb.body[1].body {
-		curStmt, err := stmt.factStmt(UniFactDepth0)
+	if tb.header.is(glob.KeySymbolColon) {
+		err := tb.header.skip(glob.KeySymbolColon)
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
-		thenFacts = append(thenFacts, curStmt)
-	}
+		if !tb.header.ExceedEnd() {
+			return nil, fmt.Errorf("expect end of line")
+		}
 
-	proofs := []ast.StmtSlice{}
-	for i := 2; i < len(tb.body); i++ {
-		proof := ast.StmtSlice{}
-
-		err = tb.body[i].header.skipKwAndColonCheckEOL(glob.KeywordProve)
+		orFact, err := tb.body[0].orStmt()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
 
-		for _, stmt := range tb.body[i].body {
-			curStmt, err := stmt.Stmt()
+		thenFacts := []ast.FactStmt{}
+		// err = tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordThen)
+		err = tb.body[1].header.skipKwAndColonCheckEOL(glob.KeySymbolRightArrow)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		for _, stmt := range tb.body[1].body {
+			curStmt, err := stmt.factStmt(UniFactDepth0)
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}
-			proof = append(proof, curStmt)
+			thenFacts = append(thenFacts, curStmt)
 		}
-		proofs = append(proofs, proof)
-	}
 
-	if len(proofs) != len(orFact.Facts) {
-		return nil, tbErr(fmt.Errorf("prove in each case: expect %d proofs, but got %d. expect the number of proofs to be the same as the number of facts in the or fact", len(orFact.Facts), len(proofs)), tb)
-	}
+		proofs := []ast.StmtSlice{}
+		for i := 2; i < len(tb.body); i++ {
+			proof := ast.StmtSlice{}
 
-	return ast.NewProveInEachCaseStmt(orFact, thenFacts, proofs, tb.line), nil
+			err = tb.body[i].header.skipKwAndColonCheckEOL(glob.KeywordProve)
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+
+			for _, stmt := range tb.body[i].body {
+				curStmt, err := stmt.Stmt()
+				if err != nil {
+					return nil, tbErr(err, tb)
+				}
+				proof = append(proof, curStmt)
+			}
+			proofs = append(proofs, proof)
+		}
+
+		if len(proofs) != len(orFact.Facts) {
+			return nil, tbErr(fmt.Errorf("prove in each case: expect %d proofs, but got %d. expect the number of proofs to be the same as the number of facts in the or fact", len(orFact.Facts), len(proofs)), tb)
+		}
+
+		return ast.NewProveInEachCaseStmt(orFact, thenFacts, proofs, tb.line), nil
+	} else {
+		orFact, err := tb.inlineOrFact()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		err = tb.header.skip(glob.KeySymbolRightArrow)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		thenFacts := []ast.FactStmt{}
+		for !tb.header.is(glob.KeySymbolColon) {
+			fact, err := tb.inlineFactSkipStmtTerminator()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			thenFacts = append(thenFacts, fact)
+		}
+
+		err = tb.header.skip(glob.KeySymbolColon)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		proofs := []ast.StmtSlice{}
+		for i := range len(tb.body) {
+			proof := ast.StmtSlice{}
+
+			err = tb.body[i].header.skipKwAndColonCheckEOL(glob.KeywordProve)
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+
+			for _, stmt := range tb.body[i].body {
+				curStmt, err := stmt.Stmt()
+				if err != nil {
+					return nil, tbErr(err, tb)
+				}
+				proof = append(proof, curStmt)
+			}
+			proofs = append(proofs, proof)
+		}
+
+		if len(proofs) != len(orFact.Facts) {
+			return nil, tbErr(fmt.Errorf("prove in each case: expect %d proofs, but got %d. expect the number of proofs to be the same as the number of facts in the or fact", len(orFact.Facts), len(proofs)), tb)
+		}
+
+		return ast.NewProveInEachCaseStmt(orFact, thenFacts, proofs, tb.line), nil
+	}
 }
 
 func (tb *tokenBlock) param_paramSet_paramInSetFacts(endWith string, allowExceedEnd bool) ([]string, []ast.Fc, error) {
