@@ -67,7 +67,7 @@ const (
 	KeywordLift        = "lift"
 	KeywordNonEmptySet = "nonempty_set"
 
-	KeywordIf = "if"
+	KeywordWhen = "when"
 
 	KeywordProveIsTransitiveProp = "prove_is_transitive_prop"
 
@@ -128,7 +128,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordLift:        {},
 	KeywordNonEmptySet: {},
 
-	KeywordIf: {},
+	KeywordWhen: {},
 
 	KeywordEval: {},
 }

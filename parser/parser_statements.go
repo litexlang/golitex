@@ -144,7 +144,7 @@ func (tb *tokenBlock) factStmt(uniFactDepth uniFactEnum) (ast.FactStmt, error) {
 		return tb.orStmt()
 	case glob.KeySymbolEqual:
 		return tb.equalsFactStmt()
-	case glob.KeywordIf:
+	case glob.KeywordWhen:
 		if tb.GetEnd() == glob.KeySymbolColon {
 			return tb.ifStmtMultiLines(uniFactDepth)
 		} else {
@@ -308,7 +308,7 @@ func (tb *tokenBlock) uniFactInterface(uniFactDepth uniFactEnum) (ast.UniFactInt
 }
 
 func (tb *tokenBlock) ifStmtMultiLines(uniFactDepth uniFactEnum) (ast.UniFactInterface, error) {
-	err := tb.header.skip(glob.KeywordIf)
+	err := tb.header.skip(glob.KeywordWhen)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
