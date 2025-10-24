@@ -52,11 +52,6 @@ func useHardcodedCodeToInit(executor *exe.Executor) error {
 		}
 	}
 
-	executor.NewTransitiveProp(">")
-	executor.NewTransitiveProp(">=")
-	executor.NewTransitiveProp("<")
-	executor.NewTransitiveProp("<=")
-
 	executor.ClearMsgs()
 
 	return nil

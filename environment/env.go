@@ -128,3 +128,12 @@ func makeKnownFactsStruct() KnownFactsStruct {
 func (e *Env) AddMsgToParent(msg string) {
 	e.Parent.Msgs = append(e.Parent.Msgs, msg)
 }
+
+func (e *Env) NotEqualIsCommutative() {
+	e.CommutativePropMem[glob.KeySymbolEqual] = NewCommutativePropMemItemStruct()
+	e.CommutativePropMem[glob.KeySymbolEqual].FalsePureIsCommutative = true
+}
+
+func (e *Env) NewTransitiveProp(name string) {
+	e.TransitivePropMem[name] = make(map[string][]ast.Fc)
+}

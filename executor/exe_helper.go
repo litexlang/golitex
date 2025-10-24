@@ -44,7 +44,3 @@ func (exec *Executor) NewCommutativeProp(specFact *ast.SpecFactStmt) {
 		panic("not implemented: not commutative prop")
 	}
 }
-
-func (exec *Executor) NewTransitiveProp(name string) {
-	exec.env.TransitivePropMem[name] = make(map[string][]ast.Fc)
-}
