@@ -1018,3 +1018,15 @@ func (stmt *ProveIsCommutativePropStmt) String() string {
 
 	return builder.String()
 }
+
+func (stmt *AlgoIfStmt) String() string {
+	return "TODO"
+}
+
+func (stmt *AlgoReturnStmt) String() string {
+	return "TODO"
+}
+
+func (stmt *AlgoDefStmt) String() string {
+	return "TODO"
+}

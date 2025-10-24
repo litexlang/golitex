@@ -337,3 +337,15 @@ func (s *ProveIsTransitivePropStmt) InlineString() string {
 func (s *ProveIsCommutativePropStmt) InlineString() string {
 	return "TODO"
 }
+
+func (s *AlgoIfStmt) InlineString() string {
+	return "TODO"
+}
+
+func (s *AlgoReturnStmt) InlineString() string {
+	return "TODO"
+}
+
+func (s *AlgoDefStmt) InlineString() string {
+	return "TODO"
+}

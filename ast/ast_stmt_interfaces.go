@@ -66,6 +66,7 @@ func (s *ProveIsCommutativePropStmt) stmt()      {}
 func (s *ClaimIffStmt) stmt()                    {}
 func (s *ProveInRangeStmt) stmt()                {}
 func (s *ProveIsTransitivePropStmt) stmt()       {}
+func (s *AlgoDefStmt) stmt()                     {}
 
 func (s *DefObjStmt) algoStmt()                      {}
 func (s *DefPropStmt) algoStmt()                     {}
@@ -112,6 +113,7 @@ func (s *ProveIsCommutativePropStmt) algoStmt()      {}
 func (s *ClaimIffStmt) algoStmt()              {}
 func (s *ProveInRangeStmt) algoStmt()          {}
 func (s *ProveIsTransitivePropStmt) algoStmt() {}
+func (s *AlgoDefStmt) algoStmt()               {}
 
 func (s *DefObjStmt) GetLine() uint                      { return s.Line }
 func (s *DefPropStmt) GetLine() uint                     { return s.Line }
@@ -156,6 +158,7 @@ func (s *ProveInRangeStmt) GetLine() uint                { return s.Line }
 func (s *ClaimIffStmt) GetLine() uint                    { return s.Line }
 func (s *ProveIsTransitivePropStmt) GetLine() uint       { return s.Line }
 func (s *ProveIsCommutativePropStmt) GetLine() uint      { return s.Line }
+func (s *AlgoDefStmt) GetLine() uint                     { return s.Line }
 
 type FactStmt interface {
 	factStmt()
@@ -328,3 +331,17 @@ func (s FactStmtSlice) ToCanBeKnownStmtSlice() CanBeKnownStmtSlice {
 	}
 	return ret
 }
+
+// AlgoStmt 不一定是 Stmt
+type AlgoStmt interface {
+	algoStmt()
+	String() string
+	ToLatexString() string
+	InlineString() string
+	GetLine() uint
+}
+
+func (s *AlgoIfStmt) algoStmt()         {}
+func (s *AlgoReturnStmt) algoStmt()     {}
+func (s *AlgoIfStmt) GetLine() uint     { return s.Line }
+func (s *AlgoReturnStmt) GetLine() uint { return s.Line }
