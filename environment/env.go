@@ -47,39 +47,49 @@ type KnownFactsStruct struct {
 
 // 因为 in 类型的事实很多，考虑把fcString为key保留一个map，记录它在什么集合里。比如 a $in N 就保存成 key:a values:[]{N}
 type Env struct {
-	Parent                 *Env
-	Msgs                   glob.Msgs
-	ObjDefMem              ObjDefMem
-	PropDefMem             PropDefMem
-	FnTemplateDefMem       FnTemplateDefMem
-	ExistPropDefMem        ExistPropDefMem
-	KnownFactsStruct       KnownFactsStruct
+	Parent *Env
+	Msgs   glob.Msgs
+
+	ObjDefMem        ObjDefMem
+	PropDefMem       PropDefMem
+	FnTemplateDefMem FnTemplateDefMem
+	ExistPropDefMem  ExistPropDefMem
+
+	KnownFactsStruct KnownFactsStruct
+
 	FnInFnTemplateFactsMem FnInFnTMem
-	KnownFactInMatchEnv    map[string]KnownFactsStruct
-	EqualMem               map[string]shared_ptr_to_slice_of_fc
-	EnumFacts              map[string][]ast.Fc
-	HaveSetFnDefMem        HaveSetFnDefMem
-	IntensionalSetMem      map[string]ast.IntensionalSetStmt
-	SymbolValueMem         map[string]ast.Fc
-	TransitivePropMem      map[string]map[string][]ast.Fc
-	CommutativePropMem     map[string]*CommutativePropMemItemStruct
+
+	EqualMem map[string]shared_ptr_to_slice_of_fc
+
+	EnumFacts map[string][]ast.Fc
+
+	HaveSetFnDefMem HaveSetFnDefMem
+
+	IntensionalSetMem map[string]ast.IntensionalSetStmt
+
+	SymbolValueMem map[string]ast.Fc
+
+	TransitivePropMem  map[string]map[string][]ast.Fc
+	CommutativePropMem map[string]*PropCommutativeCase
+
+	AlgoDefMem map[string]*ast.AlgoDefStmt
 }
 
-type CommutativePropMemItemStruct struct {
+type PropCommutativeCase struct {
 	TruePureIsCommutative  bool
 	FalsePureIsCommutative bool
 }
 
-func (item *CommutativePropMemItemStruct) SetTruePureIsCommutative(isCommutative bool) {
+func (item *PropCommutativeCase) SetTruePureIsCommutative(isCommutative bool) {
 	item.TruePureIsCommutative = isCommutative
 }
 
-func (item *CommutativePropMemItemStruct) SetFalsePureIsCommutative(isCommutative bool) {
+func (item *PropCommutativeCase) SetFalsePureIsCommutative(isCommutative bool) {
 	item.FalsePureIsCommutative = isCommutative
 }
 
-func NewCommutativePropMemItemStruct() *CommutativePropMemItemStruct {
-	return &CommutativePropMemItemStruct{
+func NewCommutativePropMemItemStruct() *PropCommutativeCase {
+	return &PropCommutativeCase{
 		TruePureIsCommutative:  false,
 		FalsePureIsCommutative: false,
 	}
@@ -103,13 +113,13 @@ func NewEnv(parent *Env) *Env {
 		ExistPropDefMem:        make(ExistPropDefMem),
 		KnownFactsStruct:       makeKnownFactsStruct(),
 		EqualMem:               make(map[string]shared_ptr_to_slice_of_fc),
-		KnownFactInMatchEnv:    make(map[string]KnownFactsStruct),
 		EnumFacts:              make(map[string][]ast.Fc),
 		HaveSetFnDefMem:        make(HaveSetFnDefMem),
 		IntensionalSetMem:      make(map[string]ast.IntensionalSetStmt),
 		SymbolValueMem:         make(map[string]ast.Fc),
 		TransitivePropMem:      make(map[string]map[string][]ast.Fc),
-		CommutativePropMem:     make(map[string]*CommutativePropMemItemStruct),
+		CommutativePropMem:     make(map[string]*PropCommutativeCase),
+		AlgoDefMem:             make(map[string]*ast.AlgoDefStmt),
 	}
 	return env
 }
