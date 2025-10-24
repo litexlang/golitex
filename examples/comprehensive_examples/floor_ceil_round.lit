@@ -13,11 +13,11 @@ fn self_ceil(x R) Z:
 know forall x R, y Z: y - x < 1 => self_ceil(x) = y
 
 fn self_round(x R) Z:
-    if:
+    when:
         x - self_floor(x) < 0.5
         =>:
             self_round(x) = self_floor(x)
-    if:
+    when:
         x - self_floor(x) >= 0.5
         =>:
             self_round(x) = self_ceil(x)
