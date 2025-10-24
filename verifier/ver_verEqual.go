@@ -18,6 +18,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	cmp "golitex/cmp"
+	computer "golitex/computer"
 	env "golitex/environment"
 	glob "golitex/glob"
 )
@@ -42,7 +43,32 @@ func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, c
 		}
 	}
 
-	if ast.IsFcFnWithHeadName(stmt.Params[0], glob.KeywordComp) {
+	if ok, toCompute := ast.IsFcFnWithCompHeadAndReturnFcSide(stmt.Params[0]); ok {
+		computedFc, ok, err := computer.ComputeFcWithCompHeader(ver.env, toCompute)
+		if err != nil || !ok {
+			return false, fmt.Errorf("error computing: %s", stmt.Params[0])
+		}
+
+		ok, err = ver.verTrueEqualFactMainLogic(ast.NewEqualFact(computedFc, stmt.Params[1]), state, checkRequirements)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			return true, nil
+		}
+	} else if ok, toCompute2 := ast.IsFcFnWithCompHeadAndReturnFcSide(stmt.Params[1]); ok {
+		computedFc2, ok, err := computer.ComputeFcWithCompHeader(ver.env, toCompute2)
+		if err != nil || !ok {
+			return false, fmt.Errorf("error computing: %s", stmt.Params[1])
+		}
+
+		ok, err = ver.verTrueEqualFactMainLogic(ast.NewEqualFact(stmt.Params[0], computedFc2), state, checkRequirements)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			return true, nil
+		}
 	}
 
 	return ver.verTrueEqualFactMainLogic(stmt, state, checkRequirements)
