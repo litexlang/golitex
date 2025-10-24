@@ -27,7 +27,7 @@ func newComputer(env *env.Env) *computer {
 	return &computer{env: env}
 }
 
-func ComputeFcWithCompHeader(env *env.Env, fc ast.Fc) (ast.Fc, bool, error) {
+func Compute(env *env.Env, fc ast.Fc) (ast.Fc, bool, error) {
 	newComputer := newComputer(env)
 	return newComputer.compute(fc)
 }
