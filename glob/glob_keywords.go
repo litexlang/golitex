@@ -76,8 +76,6 @@ const (
 	KeywordAlgo   = "algo"
 	KeywordReturn = "return"
 	KeywordIf     = "if"
-
-	KeywordComp = "comp"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
