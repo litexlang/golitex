@@ -80,14 +80,6 @@ type PropCommutativeCase struct {
 	FalsePureIsCommutative bool
 }
 
-func (item *PropCommutativeCase) SetTruePureIsCommutative(isCommutative bool) {
-	item.TruePureIsCommutative = isCommutative
-}
-
-func (item *PropCommutativeCase) SetFalsePureIsCommutative(isCommutative bool) {
-	item.FalsePureIsCommutative = isCommutative
-}
-
 func NewCommutativePropMemItemStruct() *PropCommutativeCase {
 	return &PropCommutativeCase{
 		TruePureIsCommutative:  false,
