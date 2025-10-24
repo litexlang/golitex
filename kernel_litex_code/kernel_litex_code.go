@@ -578,4 +578,6 @@ know forall b N: b >= 0
 
 know forall a, b R: a ^ 2 = b => a = sqrt(b) or a = -sqrt(b), a = pow(b, 1/2) or a = -pow(b, 1/2)
 know forall a, b R: a ^ 2 = b, a >= 0 => a = sqrt(b), a = pow(b, 1/2)
+
+know forall x, y, z Z: z != 0 => (x + y) % z = (x % z + y % z) % z, (x * y) % z = (x % z * y % z) % z, (x - y) % z = (x % z - y % z) % z
 `

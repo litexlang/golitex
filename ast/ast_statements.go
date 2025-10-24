@@ -371,3 +371,22 @@ type ProveIsCommutativePropStmt struct {
 
 	Line uint
 }
+
+type AlgoDefStmt struct {
+	Stmts []AlgoStmt
+
+	Line uint
+}
+
+type AlgoIfStmt struct {
+	Condition []FactStmt
+	ThenFacts []AlgoStmt
+
+	Line uint
+}
+
+type ReturnStmt struct {
+	Value Fc
+
+	Line uint
+}
