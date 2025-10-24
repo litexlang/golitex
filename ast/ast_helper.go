@@ -362,3 +362,16 @@ func IsKeywordComp(fc Fc) bool {
 	}
 	return string(fcAsFcAtom) == glob.KeywordComp
 }
+
+func IsFcFnWithCompHeadAndReturnFcSide(fc Fc) (bool, Fc) {
+	fcAsFcFn, ok := fc.(*FcFn)
+	if !ok {
+		return false, nil
+	}
+
+	if !IsFcFnWithHeadName(fcAsFcFn, glob.KeywordComp) {
+		return false, nil
+	}
+
+	return true, fcAsFcFn.Params[0]
+}
