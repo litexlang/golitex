@@ -17,7 +17,6 @@ package litex_env
 import (
 	"fmt"
 	ast "golitex/ast"
-	cmp "golitex/cmp"
 	glob "golitex/glob"
 	"strconv"
 )
@@ -381,18 +380,35 @@ func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 	}
 
 	// 如果 a = b 中，某一项是 数值型，那就算出来这个数值，卷后把它保留在equalMem中
-	env.storeSymbolValue(fact.Params[0], fact.Params[1])
+	err = env.storeSymbolValue(fact.Params[0], fact.Params[1])
+	if err != nil {
+		return false, err
+	}
 
 	return true, nil
 }
 
-func (env *Env) storeSymbolValue(left, right ast.Fc) {
-	if cmp.IsNumLitFc(left) {
-		env.SymbolValueMem[right.String()] = left
+func (env *Env) storeSymbolValue(left, right ast.Fc) error {
+	// if cmp.IsNumLitFc(left) {
+	// 	env.SymbolValueMem[right.String()] = left
+	// }
+	// if cmp.IsNumLitFc(right) {
+	// 	env.SymbolValueMem[left.String()] = right
+	// }
+
+	if computedFc, ok, err := env.CanBeComputed(left); err != nil {
+		return err
+	} else if ok {
+		env.SymbolValueMem[right.String()] = computedFc
 	}
-	if cmp.IsNumLitFc(right) {
-		env.SymbolValueMem[left.String()] = right
+
+	if computedFc, ok, err := env.CanBeComputed(right); err != nil {
+		return err
+	} else if ok {
+		env.SymbolValueMem[left.String()] = computedFc
 	}
+
+	return nil
 }
 
 func (env *Env) GetEqualFcs(fc ast.Fc) (*[]ast.Fc, bool) {

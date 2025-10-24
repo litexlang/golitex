@@ -355,15 +355,15 @@ func ToInt(fc Fc) (int, bool) {
 // 	return NewUniFact(params, paramSets, domFacts, thenFacts, stmt.Line)
 // }
 
-func IsFcFnWithCompHeadAndReturnFcToCompute(fc Fc) (bool, Fc) {
+func IsFcFnWithCompHeadAndReturnFcToCompute(fc Fc) (Fc, bool) {
 	fcAsFcFn, ok := fc.(*FcFn)
 	if !ok {
-		return false, nil
+		return nil, false
 	}
 
 	if !IsFcFnWithHeadName(fcAsFcFn, glob.KeywordComp) {
-		return false, nil
+		return nil, false
 	}
 
-	return true, fcAsFcFn.Params[0]
+	return fcAsFcFn.Params[0], true
 }
