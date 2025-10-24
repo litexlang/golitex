@@ -42,42 +42,6 @@ func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, c
 		}
 	}
 
-	if ok, toCompute := ast.IsFcFnWithCompHeadAndReturnFcToCompute(stmt.Params[0]); ok {
-		computedFc, ok, err := env.Compute(ver.env, toCompute)
-		if err != nil || !ok {
-			return false, fmt.Errorf("error computing: %s", stmt.Params[0])
-		}
-
-		ok, err = ver.verTrueEqualFactMainLogic(ast.NewEqualFact(computedFc, stmt.Params[1]), state, checkRequirements)
-		if err != nil {
-			return false, err
-		}
-		if ok {
-			if state.WithMsg {
-				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s by %s = %s", stmt, toCompute, computedFc))
-			}
-			return true, nil
-		}
-	}
-
-	if ok, toCompute2 := ast.IsFcFnWithCompHeadAndReturnFcToCompute(stmt.Params[1]); ok {
-		computedFc2, ok, err := env.Compute(ver.env, toCompute2)
-		if err != nil || !ok {
-			return false, fmt.Errorf("error computing: %s", stmt.Params[1])
-		}
-
-		ok, err = ver.verTrueEqualFactMainLogic(ast.NewEqualFact(stmt.Params[0], computedFc2), state, checkRequirements)
-		if err != nil {
-			return false, err
-		}
-		if ok {
-			if state.WithMsg {
-				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s by %s = %s", stmt, toCompute2, computedFc2))
-			}
-			return true, nil
-		}
-	}
-
 	return ver.verTrueEqualFactMainLogic(stmt, state, checkRequirements)
 }
 
