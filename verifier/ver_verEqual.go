@@ -42,6 +42,9 @@ func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, c
 		}
 	}
 
+	if ast.IsFcFnWithHeadName(stmt.Params[0], glob.KeywordComp) {
+	}
+
 	return ver.verTrueEqualFactMainLogic(stmt, state, checkRequirements)
 }
 

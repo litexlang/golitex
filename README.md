@@ -4,7 +4,7 @@
 
 <div align="center">
 
-# Litex: A Simple Formal Language Learnable in 2 Hours, Not 1 Year
+# Litex: A Simple Formal Language Learnable in 2 Hours, Not 1 Year. Designed for AI era.
 
 **version v0.1.10-beta (not yet ready for production use)**  
 *Jiachen Shen and The Litex Team*
