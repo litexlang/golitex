@@ -31,8 +31,9 @@ func (env *Env) ReplaceSymbolWithValueAndCompute(fc ast.Fc) (bool, ast.Fc, error
 		return env.replaceFcAtomWithValueAndCompute(asFc)
 	case *ast.FcFn:
 		return env.replaceFcFnWithValueAndCompute(asFc)
+	default:
+		panic(fmt.Sprintf("unexpected type: %T", fc))
 	}
-	panic("")
 }
 
 func (env *Env) replaceFcFnWithValueAndCompute(fc *ast.FcFn) (bool, ast.Fc, error) {
