@@ -354,3 +354,11 @@ func ToInt(fc Fc) (int, bool) {
 // 	thenFacts := stmt.ThenFacts
 // 	return NewUniFact(params, paramSets, domFacts, thenFacts, stmt.Line)
 // }
+
+func IsKeywordComp(fc Fc) bool {
+	fcAsFcAtom, ok := fc.(FcAtom)
+	if !ok {
+		return false
+	}
+	return string(fcAsFcAtom) == glob.KeywordComp
+}
