@@ -18,7 +18,6 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	cmp "golitex/cmp"
-	computer "golitex/computer"
 	env "golitex/environment"
 	glob "golitex/glob"
 )
@@ -44,7 +43,7 @@ func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, c
 	}
 
 	if ok, toCompute := ast.IsFcFnWithCompHeadAndReturnFcToCompute(stmt.Params[0]); ok {
-		computedFc, ok, err := computer.Compute(ver.env, toCompute)
+		computedFc, ok, err := env.Compute(ver.env, toCompute)
 		if err != nil || !ok {
 			return false, fmt.Errorf("error computing: %s", stmt.Params[0])
 		}
@@ -62,7 +61,7 @@ func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, c
 	}
 
 	if ok, toCompute2 := ast.IsFcFnWithCompHeadAndReturnFcToCompute(stmt.Params[1]); ok {
-		computedFc2, ok, err := computer.Compute(ver.env, toCompute2)
+		computedFc2, ok, err := env.Compute(ver.env, toCompute2)
 		if err != nil || !ok {
 			return false, fmt.Errorf("error computing: %s", stmt.Params[1])
 		}
