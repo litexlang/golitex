@@ -355,15 +355,7 @@ func ToInt(fc Fc) (int, bool) {
 // 	return NewUniFact(params, paramSets, domFacts, thenFacts, stmt.Line)
 // }
 
-func IsKeywordComp(fc Fc) bool {
-	fcAsFcAtom, ok := fc.(FcAtom)
-	if !ok {
-		return false
-	}
-	return string(fcAsFcAtom) == glob.KeywordComp
-}
-
-func IsFcFnWithCompHeadAndReturnFcSide(fc Fc) (bool, Fc) {
+func IsFcFnWithCompHeadAndReturnFcToCompute(fc Fc) (bool, Fc) {
 	fcAsFcFn, ok := fc.(*FcFn)
 	if !ok {
 		return false, nil
