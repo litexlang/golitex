@@ -20,14 +20,6 @@ import (
 	glob "golitex/glob"
 )
 
-func (e *Env) GetFactsFromKnownFactInMatchEnv(envFact *ast.SpecFactStmt) (*KnownFactsStruct, bool) {
-	knownFacts, ok := e.KnownFactInMatchEnv[string(envFact.PropName)]
-	if !ok {
-		return nil, false
-	}
-	return &knownFacts, true
-}
-
 func (e *Env) isSetFnRetValue(fc ast.Fc) (*ast.HaveSetFnStmt, bool) {
 	asFn, ok := fc.(*ast.FcFn)
 	if !ok {

@@ -78,3 +78,13 @@ func (e *Env) GetRelatedFcSliceOfTransitiveProp(propName string, fc ast.Fc) ([]a
 	}
 	return ret, true
 }
+
+func (e *Env) GetAlgoDef(funcName string) (*ast.AlgoDefStmt, bool) {
+	for env := e; env != nil; env = env.Parent {
+		algoDef, ok := env.AlgoDefMem[funcName]
+		if ok {
+			return algoDef, true
+		}
+	}
+	return nil, false
+}
