@@ -1020,13 +1020,82 @@ func (stmt *ProveIsCommutativePropStmt) String() string {
 }
 
 func (stmt *AlgoIfStmt) String() string {
-	return "TODO"
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordIf)
+	builder.WriteString(" ")
+	conditionStrSlice := make([]string, len(stmt.Conditions))
+	for i, fact := range stmt.Conditions {
+		conditionStrSlice[i] = fact.String()
+	}
+	builder.WriteString(strings.Join(conditionStrSlice, ", "))
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+	for _, fact := range stmt.ThenStmts {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 1))
+		builder.WriteByte('\n')
+	}
+	return builder.String()
 }
 
 func (stmt *AlgoReturnStmt) String() string {
-	return "TODO"
+	return fmt.Sprintf("%s %s", glob.KeywordReturn, stmt.Value.String())
 }
 
 func (stmt *AlgoDefStmt) String() string {
-	return "TODO"
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordAlgo)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.FuncName)
+	builder.WriteString("(")
+	builder.WriteString(strings.Join(stmt.Params, ", "))
+	builder.WriteString(")")
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+	strSlice := make([]string, len(stmt.Stmts))
+	for i, stmt := range stmt.Stmts {
+		strSlice[i] = stmt.String()
+	}
+	builder.WriteString(strings.Join(strSlice, "\n"))
+	return builder.String()
+}
+
+func StmtStrSliceJoin(stmts []Stmt, joinWith string) string {
+	var builder strings.Builder
+	strSlice := make([]string, len(stmts))
+	for i, stmt := range stmts {
+		strSlice[i] = stmt.String()
+	}
+	builder.WriteString(strings.Join(strSlice, joinWith))
+	return builder.String()
+}
+
+func StmtStrSliceJoinWithNewlineWithIndents(stmts []Stmt, indents uint32) string {
+	var builder strings.Builder
+	strSlice := make([]string, len(stmts))
+	for i, stmt := range stmts {
+		strSlice[i] = glob.SplitLinesAndAdd4NIndents(stmt.String(), indents)
+	}
+	builder.WriteString(strings.Join(strSlice, "\n"))
+	return builder.String()
+}
+
+func FactStmtStrSliceJoinWithNewlineWithIndents(stmts []FactStmt, indents uint32) string {
+	var builder strings.Builder
+	strSlice := make([]string, len(stmts))
+	for i, stmt := range stmts {
+		strSlice[i] = glob.SplitLinesAndAdd4NIndents(stmt.String(), indents)
+	}
+	builder.WriteString(strings.Join(strSlice, "\n"))
+	return builder.String()
+}
+
+func AlgoStmtStrSliceJoinWithNewlineWithIndents(stmts []AlgoStmt, indents uint32) string {
+	var builder strings.Builder
+	strSlice := make([]string, len(stmts))
+	for i, stmt := range stmts {
+		strSlice[i] = glob.SplitLinesAndAdd4NIndents(stmt.String(), indents)
+	}
+	builder.WriteString(strings.Join(strSlice, "\n"))
+	return builder.String()
 }

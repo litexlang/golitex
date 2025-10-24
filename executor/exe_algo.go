@@ -21,6 +21,6 @@ import (
 
 func (exec *Executor) algoDefStmt(stmt *ast.AlgoDefStmt) (glob.ExecState, error) {
 	exec.env.AlgoDefMem[stmt.FuncName] = stmt
-
+	exec.newMsg(stmt.String())
 	return glob.ExecStateTrue, nil
 }
