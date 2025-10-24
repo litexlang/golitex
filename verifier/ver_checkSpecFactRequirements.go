@@ -134,22 +134,13 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state *VerState) (bool, e
 		return ver.isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj_CheckRequirement(fcAsFcFn, state)
 	} else if ast.IsFcAtomAndEqualToStr(fcAsFcFn.FnHead, glob.KeywordSetDefinedByReplacement) {
 		return ver.setDefinedByReplacementFnRequirement(fcAsFcFn, state)
-		// } else if ast.IsKeywordComp(fcAsFcFn.FnHead) {
-		// 	return ver.compFnParamsSatisfyRequirement(fcAsFcFn, state)
-		// }
+	} else if ok, toCompute := ast.IsFcFnWithCompHeadAndReturnFcToCompute(fcAsFcFn); ok {
+		return ver.fcSatisfyFnRequirement(toCompute, state)
 	} else {
 		// return ver.fcFnSatisfy_FnTemplate_Requirement(fcAsFcFn, state)
 		return ver.parasSatisfyFnReq(fcAsFcFn, state)
 	}
 }
-
-// func (ver *Verifier) compFnParamsSatisfyRequirement(fc *ast.FcFn, state *VerState) (bool, error) {
-// 	if len(fc.Params) != 1 {
-// 		return false, fmt.Errorf("parameters in %s must be 1, %s in %s is not valid", fc.FnHead, fc, fc)
-// 	}
-
-// 	return ver.fcSatisfyFnRequirement(fc.Params[0], state)
-// }
 
 // func (ver *Verifier) fcFnSatisfy_FnTemplate_Requirement(fc ast.Fc, state *VerState) (bool, error) {
 // 	var err error
