@@ -134,8 +134,9 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state *VerState) (bool, e
 		return ver.isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj_CheckRequirement(fcAsFcFn, state)
 	} else if ast.IsFcAtomAndEqualToStr(fcAsFcFn.FnHead, glob.KeywordSetDefinedByReplacement) {
 		return ver.setDefinedByReplacementFnRequirement(fcAsFcFn, state)
-	} else if toCompute, ok := ast.IsFcFnWithCompHeadAndReturnFcToCompute(fcAsFcFn); ok {
-		return ver.fcSatisfyFnRequirement(toCompute, state)
+		// }
+		// else if toCompute, ok := ast.IsFcFnWithCompHeadAndReturnFcToCompute(fcAsFcFn); ok {
+		// 	return ver.fcSatisfyFnRequirement(toCompute, state)
 	} else {
 		// return ver.fcFnSatisfy_FnTemplate_Requirement(fcAsFcFn, state)
 		return ver.parasSatisfyFnReq(fcAsFcFn, state)

@@ -24,12 +24,7 @@ func (env *Env) CanBeComputed(fc ast.Fc) (ast.Fc, bool, error) {
 		return fc, true, nil
 	}
 
-	toCompute, ok := ast.IsFcFnWithCompHeadAndReturnFcToCompute(fc)
-	if !ok {
-		return nil, false, nil
-	}
-
-	return env.Compute(toCompute)
+	return nil, false, nil
 }
 
 func (comp *computer) compute(toCompute ast.Fc) (ast.Fc, bool, error) {
