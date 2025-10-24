@@ -20,6 +20,7 @@ import (
 	cmp "golitex/cmp"
 )
 
+// 这里 bool 表示，是否启动过 用algo 计算；如果仅仅是用 algo 来计算，那是不会返回true的
 func (env *Env) ReplaceSymbolWithValueAndCompute(fc ast.Fc) (bool, ast.Fc, error) {
 	if cmp.IsNumLitFc(fc) {
 		return false, fc, nil
@@ -35,8 +36,32 @@ func (env *Env) ReplaceSymbolWithValueAndCompute(fc ast.Fc) (bool, ast.Fc, error
 }
 
 func (env *Env) replaceFcFnWithValueAndCompute(fc *ast.FcFn) (bool, ast.Fc, error) {
+	if symbolValue, ok := env.GetSymbolValue(fc); ok {
+		return false, symbolValue, nil
+	}
+
+	newParams := make([]ast.Fc, len(fc.Params))
+	replaced := false
+	for i, param := range fc.Params {
+		var err error
+		newReplaced := false
+		newReplaced, newParams[i], err = env.ReplaceSymbolWithValueAndCompute(param)
+		if err != nil {
+			return false, nil, fmt.Errorf("error replacing symbol with value: %s", param)
+		}
+		replaced = replaced || newReplaced
+	}
+
+	ret := ast.NewFcFn(fc.FnHead, newParams)
+
 	if ok := env.IsFnWithDefinedAlgo(fc); ok {
-		computed, ok, err := env.Compute(fc) // 哪怕没算出来，也是可能的
+		for i := range len(newParams) {
+			if !cmp.IsNumLitFc(newParams[i]) {
+				return replaced, ret, nil
+			}
+		}
+
+		computed, ok, err := env.Compute(ret) // 哪怕没算出来，也是可能的
 		if err != nil {
 			return false, nil, fmt.Errorf("error computing: %s", fc)
 		}
@@ -45,23 +70,7 @@ func (env *Env) replaceFcFnWithValueAndCompute(fc *ast.FcFn) (bool, ast.Fc, erro
 		}
 	}
 
-	if symbolValue, ok := env.GetSymbolValue(fc); ok {
-		return true, symbolValue, nil
-	}
-
-	replaced := false
-	newParams := make([]ast.Fc, len(fc.Params))
-	for i, param := range fc.Params {
-		var newReplaced bool
-		var err error
-		newReplaced, newParams[i], err = env.ReplaceSymbolWithValueAndCompute(param)
-		if err != nil {
-			return false, nil, fmt.Errorf("error replacing symbol with value: %s", param)
-		}
-
-		replaced = replaced || newReplaced
-	}
-	return replaced, ast.NewFcFn(fc.FnHead, newParams), nil
+	return replaced, ret, nil
 }
 
 func (env *Env) replaceFcAtomWithValueAndCompute(fc ast.FcAtom) (bool, ast.Fc, error) {
@@ -70,7 +79,7 @@ func (env *Env) replaceFcAtomWithValueAndCompute(fc ast.FcAtom) (bool, ast.Fc, e
 		return false, fc, nil
 	}
 
-	return true, symbolValue, nil
+	return false, symbolValue, nil
 }
 
 // TODO: 未来有一天，会被用来替换 SpecFactStmt 中的 Fc 为 计算后的 Fc
