@@ -20,6 +20,14 @@ import (
 )
 
 func (env *Env) ReplaceSymbolWithValue(fc ast.Fc) (bool, ast.Fc) {
+	if toCompute, ok := ast.IsFcFnWithCompHeadAndReturnFcToCompute(fc); ok {
+		computed, ok, err := env.Compute(toCompute)
+		if err != nil || !ok {
+			panic(err)
+		}
+		return true, computed
+	}
+
 	if cmp.IsNumLitFc(fc) {
 		return false, fc
 	}
