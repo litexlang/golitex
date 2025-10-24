@@ -35,13 +35,15 @@ func (env *Env) ReplaceSymbolWithValueAndCompute(fc ast.Fc) (bool, ast.Fc, error
 }
 
 func (env *Env) replaceFcFnWithValueAndCompute(fc *ast.FcFn) (bool, ast.Fc, error) {
-	// if toCompute, ok := ast.IsFcFnWithCompHeadAndReturnFcToCompute(fc); ok {
-	// 	computed, ok, err := env.Compute(toCompute)
-	// 	if err != nil || !ok {
-	// 		return false, nil, fmt.Errorf("error computing: %s", toCompute)
-	// 	}
-	// 	return true, computed, nil
-	// }
+	if ok := env.IsFnWithDefinedAlgo(fc); ok {
+		computed, ok, err := env.Compute(fc) // 哪怕没算出来，也是可能的
+		if err != nil {
+			return false, nil, fmt.Errorf("error computing: %s", fc)
+		}
+		if ok {
+			return true, computed, nil
+		}
+	}
 
 	if symbolValue, ok := env.GetSymbolValue(fc); ok {
 		return true, symbolValue, nil
