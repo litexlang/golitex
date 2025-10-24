@@ -86,3 +86,11 @@ func VerFactInNewEnv(oldEnv *env.Env, facts []ast.FactStmt, state *VerState) (bo
 
 	return true, nil
 }
+
+func IsTrueOrErr(ok bool, err error) bool {
+	return ok || err != nil
+}
+
+func IsFalseOrErr(ok bool, err error) bool {
+	return !ok || err != nil
+}

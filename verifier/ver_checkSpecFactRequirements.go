@@ -32,10 +32,10 @@ func (ver *Verifier) checkSpecFactReq(stmt *ast.SpecFactStmt, state *VerState) (
 			return ok, state, nil
 		}
 
-		return ver.checkSpecFactRequirements(stmt, state)
+		return ver.checkFnsReqAndUpdateReqState(stmt, state)
 	}
 
-	return ver.checkSpecFactRequirements(stmt, state)
+	return ver.checkFnsReqAndUpdateReqState(stmt, state)
 }
 
 // 只验证 1. params都声明了 2. 确实是fn template
@@ -79,7 +79,7 @@ func (ver *Verifier) checkSpecFactReq_InFact_UseBtRules(stmt *ast.SpecFactStmt) 
 	}
 }
 
-func (ver *Verifier) checkSpecFactRequirements(stmt *ast.SpecFactStmt, state *VerState) (bool, *VerState, error) {
+func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state *VerState) (bool, *VerState, error) {
 
 	// 1. Check if all atoms in the parameters are declared
 	// REMARK
