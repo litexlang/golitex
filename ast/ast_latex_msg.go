@@ -886,3 +886,15 @@ func (s *ProveIsTransitivePropStmt) ToLatexString() string {
 func (s *ProveIsCommutativePropStmt) ToLatexString() string {
 	return s.String()
 }
+
+func (s *AlgoIfStmt) ToLatexString() string {
+	return s.String()
+}
+
+func (s *AlgoReturnStmt) ToLatexString() string {
+	return s.String()
+}
+
+func (s *AlgoDefStmt) ToLatexString() string {
+	return s.String()
+}

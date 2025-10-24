@@ -205,3 +205,15 @@ func NewProveIsTransitivePropStmt(prop FcAtom, params []string, proofs []Stmt, l
 func NewProveIsCommutativePropStmt(specFact *SpecFactStmt, proofs []Stmt, proofsRightToLeft []Stmt, line uint) *ProveIsCommutativePropStmt {
 	return &ProveIsCommutativePropStmt{specFact, proofs, proofsRightToLeft, line}
 }
+
+func NewAlgoDefStmt(funcName string, params []string, stmts []AlgoStmt, line uint) *AlgoDefStmt {
+	return &AlgoDefStmt{funcName, params, stmts, line}
+}
+
+func NewAlgoIfStmt(condition []FactStmt, thenFacts []AlgoStmt, line uint) *AlgoIfStmt {
+	return &AlgoIfStmt{condition, thenFacts, line}
+}
+
+func NewAlgoReturnStmt(value Fc, line uint) *AlgoReturnStmt {
+	return &AlgoReturnStmt{value, line}
+}
