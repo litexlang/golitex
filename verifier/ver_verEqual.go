@@ -44,7 +44,7 @@ func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, c
 	}
 
 	if ok, toCompute := ast.IsFcFnWithCompHeadAndReturnFcSide(stmt.Params[0]); ok {
-		computedFc, ok, err := computer.ComputeFcWithCompHeader(ver.env, toCompute)
+		computedFc, ok, err := computer.Compute(ver.env, toCompute)
 		if err != nil || !ok {
 			return false, fmt.Errorf("error computing: %s", stmt.Params[0])
 		}
@@ -54,10 +54,15 @@ func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, c
 			return false, err
 		}
 		if ok {
+			if state.WithMsg {
+				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s by %s = %s", stmt, toCompute, computedFc))
+			}
 			return true, nil
 		}
-	} else if ok, toCompute2 := ast.IsFcFnWithCompHeadAndReturnFcSide(stmt.Params[1]); ok {
-		computedFc2, ok, err := computer.ComputeFcWithCompHeader(ver.env, toCompute2)
+	}
+
+	if ok, toCompute2 := ast.IsFcFnWithCompHeadAndReturnFcSide(stmt.Params[1]); ok {
+		computedFc2, ok, err := computer.Compute(ver.env, toCompute2)
 		if err != nil || !ok {
 			return false, fmt.Errorf("error computing: %s", stmt.Params[1])
 		}
@@ -67,6 +72,9 @@ func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, c
 			return false, err
 		}
 		if ok {
+			if state.WithMsg {
+				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s by %s = %s", stmt, toCompute2, computedFc2))
+			}
 			return true, nil
 		}
 	}
