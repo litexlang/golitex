@@ -84,10 +84,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast
 
 func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	// replace the params with the values
-	replaced, newStmt, err := ver.env.ReplaceFcInSpecFact(stmt)
-	if err != nil {
-		return false, err
-	}
+	replaced, newStmt := ver.env.ReplaceFcInSpecFactWithValue(stmt)
 	if replaced {
 		ok, err := ver.verSpecFactThatIsNotTrueEqualFactMainLogic(newStmt, state)
 		if err != nil {

@@ -354,16 +354,3 @@ func ToInt(fc Fc) (int, bool) {
 // 	thenFacts := stmt.ThenFacts
 // 	return NewUniFact(params, paramSets, domFacts, thenFacts, stmt.Line)
 // }
-
-func IsFcFnWithCompHeadAndReturnFcToCompute(fc Fc) (Fc, bool) {
-	fcAsFcFn, ok := fc.(*FcFn)
-	if !ok {
-		return nil, false
-	}
-
-	if !IsFcFnWithHeadName(fcAsFcFn, glob.KeywordComp) {
-		return nil, false
-	}
-
-	return fcAsFcFn.Params[0], true
-}
