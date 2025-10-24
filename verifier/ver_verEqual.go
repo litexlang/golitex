@@ -45,7 +45,30 @@ func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, c
 		}
 	}
 
-	return ver.verTrueEqualFactMainLogic(stmt, state, checkRequirements)
+	if ok, err := ver.verTrueEqualFactMainLogic(stmt, state, checkRequirements); err != nil {
+		return false, err
+	} else if ok {
+		return true, nil
+	}
+
+	replaced, newStmt, err = ver.env.ReplaceFcInSpecFactWithValueAndCompute(stmt)
+	if err != nil {
+		return false, err
+	}
+	if replaced {
+		ok, err = ver.verTrueEqualFactMainLogic(newStmt, state, true)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			if state.WithMsg {
+				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values and computing", stmt.String(), newStmt.String()))
+			}
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *VerState, checkRequirements bool) (bool, error) {
