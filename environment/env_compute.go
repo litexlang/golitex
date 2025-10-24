@@ -13,19 +13,23 @@ func newComputer(env *Env) *computer {
 	return &computer{env: env}
 }
 
-func Compute(env *Env, fc ast.Fc) (ast.Fc, bool, error) {
+func (env *Env) Compute(fc ast.Fc) (ast.Fc, bool, error) {
 	newComputer := newComputer(env)
 	return newComputer.compute(fc)
 }
 
-func CanBeComputed(fc ast.Fc) bool {
+func (env *Env) CanBeComputed(fc ast.Fc) (ast.Fc, bool, error) {
 	ok := cmp.IsNumLitFc(fc)
 	if ok {
-		return true
+		return fc, true, nil
 	}
 
-	ok, _ = ast.IsFcFnWithCompHeadAndReturnFcToCompute(fc)
-	return ok
+	toCompute, ok := ast.IsFcFnWithCompHeadAndReturnFcToCompute(fc)
+	if !ok {
+		return nil, false, nil
+	}
+
+	return env.Compute(toCompute)
 }
 
 func (comp *computer) compute(toCompute ast.Fc) (ast.Fc, bool, error) {
