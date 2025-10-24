@@ -26,24 +26,19 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt *as
 		return ver.verTrueEqualFact(stmt, state, true)
 	}
 
-	ok, err := ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt, state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
+	if ok, err := ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt, state); IsTrueOrErr(ok, err) {
+		return ok, err
 	}
 
-	if ver.env.IsCommutativeProp(stmt) || (stmt.NameIs(glob.KeySymbolEqual) && stmt.TypeEnum == ast.FalsePure) {
+	// if ver.env.IsCommutativeProp(stmt) || (stmt.NameIs(glob.KeySymbolEqual) && stmt.TypeEnum == ast.FalsePure) {
+	if ver.env.IsCommutativeProp(stmt) {
 		reverseParamsOrderStmt, err := stmt.ReverseParameterOrder()
 		if err != nil {
 			return false, err
 		}
-		ok, err := ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(reverseParamsOrderStmt, state)
-		if err != nil {
-			return false, err
+		if ok, err := ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(reverseParamsOrderStmt, state); IsTrueOrErr(ok, err) {
+			return ok, err
 		}
-		return ok, nil
 	}
 
 	return false, nil
