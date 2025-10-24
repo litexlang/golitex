@@ -22,18 +22,6 @@ type VerRet struct {
 	Err  error
 }
 
-func (ver *VerRet) IsErr() bool {
-	return ver.Err != nil
-}
-
-func (ver *VerRet) IsOk() bool {
-	return ver.Ok
-}
-
-func (ver *VerRet) IsUnknown() bool {
-	return !ver.Ok && ver.Err == nil
-}
-
 func newErrVerRet(msg string, args ...any) *VerRet {
 	return &VerRet{
 		Ok:   false,
@@ -56,4 +44,16 @@ func newUnknownVerRet(msg string, args ...any) *VerRet {
 		Msgs: []string{fmt.Sprintf(msg, args...)},
 		Err:  nil,
 	}
+}
+
+func (ver *VerRet) TrueOrErr(ok bool, err error) bool {
+	return ver.Ok || ver.Err != nil
+}
+
+func (ver *VerRet) Unknown(ok bool, err error) bool {
+	return !ver.Ok || ver.Err == nil
+}
+
+func (ver *VerRet) FalseOrErr(ok bool, err error) bool {
+	return !ver.Ok || ver.Err != nil
 }

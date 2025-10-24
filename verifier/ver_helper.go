@@ -76,11 +76,8 @@ func VerFactInNewEnv(oldEnv *env.Env, facts []ast.FactStmt, state *VerState) (bo
 
 	for _, fact := range facts {
 		ok, err := ver.VerFactStmt(fact, state)
-		if err != nil {
+		if IsFalseOrErr(ok, err) {
 			return false, err
-		}
-		if !ok {
-			return false, nil
 		}
 	}
 
