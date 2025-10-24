@@ -108,6 +108,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.proveIsTransitivePropStmt()
 	case glob.KeywordProveIsCommutativeProp:
 		ret, err = tb.proveCommutativePropStmt()
+	case glob.KeywordAlgo:
+		ret, err = tb.algoDefStmt()
 	default:
 		ret, err = tb.factsStmt()
 	}
@@ -148,7 +150,7 @@ func (tb *tokenBlock) factStmt(uniFactDepth uniFactEnum) (ast.FactStmt, error) {
 		if tb.GetEnd() == glob.KeySymbolColon {
 			return tb.ifStmtMultiLines(uniFactDepth)
 		} else {
-			return tb.inlineIfInterfaceSkipTerminator([]string{})
+			return tb.inlineWhenFactSkipTerminator([]string{})
 		}
 	default:
 		return tb.fact()
@@ -2974,4 +2976,51 @@ func (tb *tokenBlock) proveCommutativePropStmt() (ast.Stmt, error) {
 
 	return ast.NewProveIsCommutativePropStmt(specFact, proofs, proofsRightToLeft, tb.line), nil
 
+}
+
+func (tb *tokenBlock) algoDefStmt() (*ast.AlgoDefStmt, error) {
+	err := tb.header.skip(glob.KeywordAlgo)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	funcName, err := tb.header.next()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	params := []string{}
+	for !tb.header.is(glob.KeySymbolRightBrace) {
+		param, err := tb.header.next()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		params = append(params, param)
+	}
+
+	err = tb.header.skip(glob.KeySymbolRightBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	stmts := []ast.AlgoStmt{}
+	for _, block := range tb.body {
+		curStmt, err := block.algoStmt()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		stmts = append(stmts, curStmt)
+	}
+
+	return ast.NewAlgoDefStmt(funcName, params, stmts, tb.line), nil
 }

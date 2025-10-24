@@ -73,9 +73,9 @@ const (
 
 	KeywordProveInRange = "prove_in_range"
 
-	KeywordEval   = "eval"
-	KeywordEvalFn = "eval_fn"
+	KeywordAlgo   = "algo"
 	KeywordReturn = "return"
+	KeywordIf     = "if"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -130,7 +130,9 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 
 	KeywordWhen: {},
 
-	KeywordEval: {},
+	KeywordAlgo:   {},
+	KeywordReturn: {},
+	KeywordIf:     {},
 }
 
 const (
@@ -242,7 +244,6 @@ var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]s
 	KeywordLen:                            {},
 	KeywordNPos:                           {},
 	KeywordNonEmptySet:                    {},
-	KeywordEval:                           {},
 }
 
 func IsBuiltinKeywordKeySymbolCanBeFcAtomName(name string) bool {
