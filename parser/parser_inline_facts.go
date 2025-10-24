@@ -89,7 +89,7 @@ func (tb *tokenBlock) inlineFactSkipStmtTerminator(ends []string) (ast.FactStmt,
 	switch curToken {
 	case glob.KeywordForall:
 		return tb.inlineUniInterfaceSkipTerminator(ends)
-	case glob.KeywordIf:
+	case glob.KeywordWhen:
 		return tb.inlineIfInterfaceSkipTerminator(ends)
 	default:
 		return tb.inline_spec_or_enum_intensional_Equals_fact_skip_terminator()
@@ -305,7 +305,7 @@ func (tb *tokenBlock) inlineUniInterfaceSkipTerminator(ends []string) (ast.UniFa
 }
 
 func (tb *tokenBlock) inlineIfInterfaceSkipTerminator(ends []string) (ast.UniFactInterface, error) {
-	err := tb.header.skip(glob.KeywordIf)
+	err := tb.header.skip(glob.KeywordWhen)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}

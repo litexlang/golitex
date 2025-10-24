@@ -328,7 +328,3 @@ func (s FactStmtSlice) ToCanBeKnownStmtSlice() CanBeKnownStmtSlice {
 	}
 	return ret
 }
-
-type AlgoStmt interface {
-	algoStmt()
-}
