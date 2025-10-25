@@ -129,8 +129,8 @@ func (e *Env) inFactPostProcess_InFnTemplate(fact *ast.SpecFactStmt) (bool, erro
 		return false, nil
 	}
 
-	def, ok := e.GetFnTemplateDef_KeyIsFcHead(fact.Params[1].(*ast.FcFn))
-	if !ok {
+	def := e.GetFnTemplateDef_KeyIsFcHead(fact.Params[1].(*ast.FcFn))
+	if def == nil {
 		return false, nil
 	}
 
