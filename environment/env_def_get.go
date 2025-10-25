@@ -87,14 +87,14 @@ func (e *Env) GetIntensionalSet(fc ast.Fc) *ast.IntensionalSetStmt {
 	return nil
 }
 
-func (e *Env) GetSymbolValue(fc ast.Fc) (ast.Fc, bool) {
+func (e *Env) GetSymbolValue(fc ast.Fc) ast.Fc {
 	for env := e; env != nil; env = env.Parent {
 		symbolValue, ok := env.SymbolValueMem[fc.String()]
 		if ok {
-			return symbolValue, true
+			return symbolValue
 		}
 	}
-	return nil, false
+	return nil
 }
 
 func (e *Env) IsCommutativeProp(specFact *ast.SpecFactStmt) bool {
