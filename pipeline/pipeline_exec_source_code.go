@@ -43,7 +43,7 @@ func executeCodeAndReturnMessageSlice(code string) ([]string, glob.SysSignal, er
 		return nil, glob.SysSignalParseError, err
 	}
 
-	executor, err := PipelineExecutorInit()
+	executor, err := InitPipelineExecutor()
 	if err != nil {
 		return nil, glob.SysSignalRuntimeError, err
 	}
@@ -125,7 +125,7 @@ clear: refresh the whole environment
 `
 
 func RunREPLInTerminal(version string) {
-	executor, err := PipelineExecutorInit()
+	executor, err := InitPipelineExecutor()
 	if err != nil {
 		fmt.Println("Error initializing pipeline:", err)
 		return
