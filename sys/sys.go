@@ -51,7 +51,7 @@ func RunFileWithPipelineRunner(path string) (string, glob.SysSignal, time.Durati
 	start := time.Now()
 	msg, signal, err := pipelineRunner.Run(string(content))
 	if err != nil {
-		return fmt.Sprintf("failed to execute code %s: %s", path, err.Error()), glob.SysSignalSystemError, 0, err
+		return fmt.Sprintf("%s\n%s", msg, err.Error()), glob.SysSignalSystemError, 0, err
 	}
 	return msg, signal, time.Since(start), nil
 }
@@ -165,9 +165,9 @@ func RunFilesInRepoWithPipelineRunner(repo string) error {
 		}
 
 		start := time.Now()
-		_, signal, err := pipelineRunner.Run(string(content))
+		msg, signal, err := pipelineRunner.Run(string(content))
 		if err != nil || signal != glob.SysSignalTrue {
-			return fmt.Errorf("failed to execute code %s: %s", path, err.Error())
+			return fmt.Errorf("%s\n%s", msg, err.Error())
 		}
 
 		elapsed := time.Since(start)

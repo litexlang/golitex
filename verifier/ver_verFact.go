@@ -57,8 +57,10 @@ func ExecFactsAtCurEnv_retFailedFact(facts []ast.FactStmt, env *env.Env, state *
 
 	for _, fact := range facts {
 		verRet := ver.VerFactStmt(fact, state)
-		if verRet.IsErr() || verRet.IsUnknown() {
+		if verRet.IsErr() {
 			return glob.ExecStateError, fact, fmt.Errorf(verRet.String())
+		} else if verRet.IsUnknown() {
+			return glob.ExecStateUnknown, fact, nil
 		}
 		err := env.NewFact(fact)
 		if err != nil {
@@ -73,8 +75,10 @@ func ExecSpecFactsAtCurEnv_retRailedFact(facts []*ast.SpecFactStmt, env *env.Env
 
 	for _, fact := range facts {
 		verRet := ver.VerFactStmt(fact, Round0Msg)
-		if verRet.IsErr() || verRet.IsUnknown() {
+		if verRet.IsErr() {
 			return glob.ExecStateError, fact, fmt.Errorf(verRet.String())
+		} else if verRet.IsUnknown() {
+			return glob.ExecStateUnknown, fact, nil
 		}
 		err := env.NewFact(fact)
 		if err != nil {

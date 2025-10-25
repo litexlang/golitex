@@ -1,4 +1,1 @@
-fn f(x R) R
-know f(1) = 1
-let y R : y = 1
-f(y) > 0
+1 = 2
