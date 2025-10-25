@@ -27,30 +27,15 @@ func (e *Env) GetEnumFact(enumName string) ([]ast.Fc, bool) {
 	return nil, false
 }
 
-func (e *Env) GetLatestFnT_GivenNameIsIn(fnName string) (*FnInFnTMemItem, bool) {
+func (e *Env) GetLatestFnT_GivenNameIsIn(fnName string) *FnInFnTMemItem {
 	for env := e; env != nil; env = env.Parent {
 		fnInFnTemplateFacts, ok := env.FnInFnTemplateFactsMem[fnName]
 		if ok {
-			return &fnInFnTemplateFacts[len(fnInFnTemplateFacts)-1], true
+			return &fnInFnTemplateFacts[len(fnInFnTemplateFacts)-1]
 		}
 	}
 
-	return nil, false
-}
-
-func (e *Env) GetFnTemplateSliceTheFnIsInFromEnv(fnName string) ([]FnInFnTMemItem, bool) {
-	ret := []FnInFnTMemItem{}
-	for env := e; env != nil; env = env.Parent {
-		fnInFnTemplateFacts, ok := env.FnInFnTemplateFactsMem[fnName]
-		if ok {
-			ret = append(ret, fnInFnTemplateFacts...)
-		}
-	}
-	if len(ret) == 0 {
-		return nil, false
-	}
-
-	return ret, true
+	return nil
 }
 
 func (e *Env) IsTransitiveProp(propName string) bool {
@@ -63,7 +48,7 @@ func (e *Env) IsTransitiveProp(propName string) bool {
 	return false
 }
 
-func (e *Env) GetRelatedFcSliceOfTransitiveProp(propName string, fc ast.Fc) ([]ast.Fc, bool) {
+func (e *Env) GetRelatedFcSliceOfTransitiveProp(propName string, fc ast.Fc) []ast.Fc {
 	ret := []ast.Fc{}
 	for env := e; env != nil; env = env.Parent {
 		relatedFcSlice, ok := env.TransitivePropMem[propName]
@@ -74,17 +59,17 @@ func (e *Env) GetRelatedFcSliceOfTransitiveProp(propName string, fc ast.Fc) ([]a
 		}
 	}
 	if len(ret) == 0 {
-		return nil, false
+		return nil
 	}
-	return ret, true
+	return ret
 }
 
-func (e *Env) GetAlgoDef(funcName string) (*ast.AlgoDefStmt, bool) {
+func (e *Env) GetAlgoDef(funcName string) []*ast.AlgoDefStmt {
 	for env := e; env != nil; env = env.Parent {
 		algoDef, ok := env.AlgoDefMem[funcName]
 		if ok {
-			return algoDef, true
+			return algoDef
 		}
 	}
-	return nil, false
+	return nil
 }

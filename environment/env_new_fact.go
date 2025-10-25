@@ -396,15 +396,15 @@ func (env *Env) storeSymbolValue(left, right ast.Fc) error {
 	// 	env.SymbolValueMem[left.String()] = right
 	// }
 
-	if computedFc, ok, err := env.CanBeComputed(left); err != nil {
+	if computedFc, err := env.CanBeComputed(left); err != nil {
 		return err
-	} else if ok {
+	} else if computedFc != nil {
 		env.SymbolValueMem[right.String()] = computedFc
 	}
 
-	if computedFc, ok, err := env.CanBeComputed(right); err != nil {
+	if computedFc, err := env.CanBeComputed(right); err != nil {
 		return err
-	} else if ok {
+	} else if computedFc != nil {
 		env.SymbolValueMem[left.String()] = computedFc
 	}
 

@@ -14,35 +14,43 @@ func newComputer(env *Env) *computer {
 	return &computer{env: env}
 }
 
-func (env *Env) Compute(fc ast.Fc) (ast.Fc, bool, error) {
+func (env *Env) Compute(fc ast.Fc) (ast.Fc, error) {
 	newComputer := newComputer(env)
 	return newComputer.compute(fc)
 }
 
-func (env *Env) CanBeComputed(fc ast.Fc) (ast.Fc, bool, error) {
+func (env *Env) CanBeComputed(fc ast.Fc) (ast.Fc, error) {
 	ok := cmp.IsNumLitFc(fc)
 	if ok {
-		return fc, true, nil
+		return fc, nil
 	}
 
 	if env.IsFnWithDefinedAlgo(fc) {
-		computed, ok, err := env.Compute(fc)
+		computed, err := env.Compute(fc)
 		if err != nil {
-			return nil, false, fmt.Errorf("error computing: %s", fc)
+			return nil, fmt.Errorf("error computing: %s", fc)
 		}
 		if ok {
-			return computed, true, nil
+			return computed, nil
 		}
 	}
 
-	return nil, false, nil
+	return nil, nil
 }
 
 // 算出的数值；是不是真的算出来了（因为可能没算出来，里面涉及到的符号没value什么的），出错
-func (comp *computer) compute(toCompute ast.Fc) (ast.Fc, bool, error) {
-	return nil, false, nil
+func (comp *computer) compute(toCompute ast.Fc) (ast.Fc, error) {
+	return nil, nil
 }
 
 func (env *Env) IsFnWithDefinedAlgo(fc ast.Fc) bool {
-	return false
+	fcAsFcFn, ok := fc.(*ast.FcFn)
+	if !ok {
+		return false
+	}
+	fcAsFcFnHeadAsAtom, ok := fcAsFcFn.FnHead.(ast.FcAtom)
+	if !ok {
+		return false
+	}
+	return env.GetAlgoDef(fcAsFcFnHeadAsAtom.String()) != nil
 }
