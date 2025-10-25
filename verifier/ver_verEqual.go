@@ -60,11 +60,11 @@ func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *Ve
 
 	if leftAsFn, ok := stmt.Params[0].(*ast.FcFn); ok {
 		if rightAsFn, ok := stmt.Params[1].(*ast.FcFn); ok {
-			ret := ver.verTrueEqualFact_FcFnEqual_NoCheckRequirements(leftAsFn, rightAsFn, state)
-			if ret.Err != nil {
-				return false, ret.Err
+			checked, _, err := ver.verTrueEqualFact_FcFnEqual_NoCheckRequirements(leftAsFn, rightAsFn, state)
+			if err != nil {
+				return false, err
 			}
-			if ret.Ok {
+			if checked {
 				return true, nil
 			}
 		}
