@@ -297,8 +297,8 @@ func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state *VerState) (
 
 	if leftAsAtom, ok := stmt.Params[0].(ast.FcAtom); ok {
 		// _, ok := ver.env.GetFnTemplateDef(leftAsAtom)
-		_, ok := ver.env.GetLatestFnT_GivenNameIsIn(leftAsAtom.String())
-		if ok {
+		fnDef := ver.env.GetLatestFnT_GivenNameIsIn(leftAsAtom.String())
+		if fnDef != nil {
 			return ver.processOkMsg(state, stmt.String(), "%s is a fn template and all fn templates are sets", leftAsAtom)
 		}
 	}
@@ -494,8 +494,8 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Fc, fnFcFn *ast.FcFn, state *Ve
 
 	// check when parameters satisfy given fnFcFn parameter requirements, then it satisfies the fn template template requirement
 
-	leftIsInWhichFnTT, ok := ver.env.GetLatestFnT_GivenNameIsIn(left.String())
-	if !ok {
+	leftIsInWhichFnTT := ver.env.GetLatestFnT_GivenNameIsIn(left.String())
+	if leftIsInWhichFnTT == nil {
 		return false, nil
 	}
 

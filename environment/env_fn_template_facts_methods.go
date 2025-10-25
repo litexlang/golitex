@@ -58,7 +58,7 @@ func (e *Env) FindRightMostResolvedFn_Return_ResolvedIndexAndFnTMemItem(fnHeadCh
 	var latestFnT *FnInFnTMemItem = nil
 	for i := len(fnHeadChain_AndItSelf) - 2; i >= 0; i-- {
 		fnHead := fnHeadChain_AndItSelf[i]
-		if fnInFnTMemItem, ok := e.GetLatestFnT_GivenNameIsIn(fnHead.String()); ok {
+		if fnInFnTMemItem := e.GetLatestFnT_GivenNameIsIn(fnHead.String()); fnInFnTMemItem != nil {
 			latestFnT = fnInFnTMemItem
 			indexWhereLatestFnTIsGot = i
 			break
