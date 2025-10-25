@@ -137,13 +137,9 @@ func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreT
 			return false, err
 		}
 
-		ok, err := ver.VerFactStmt(newFact, state)
-		if err != nil {
-			return false, err
-		}
-
-		if !ok {
-			return false, nil
+		verRet := ver.VerFactStmt(newFact, state)
+		if verRet.IsErr() || verRet.IsUnknown() {
+			return verRet.ToBoolErr()
 		}
 	}
 
