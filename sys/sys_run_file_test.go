@@ -17,18 +17,16 @@ package litex_sys
 import (
 	"fmt"
 	"testing"
-	"time"
 )
 
 func Test_File(t *testing.T) {
-	startTime := time.Now()
 	fileName := "../examples/test_codes/tmp.lit"
-	msg, signal, err := RunFile(fileName)
+	// msg, signal, err := RunFile(fileName)
+	msg, signal, elapsed, err := RunFileWithPipelineRunner(fileName)
 	if err != nil {
 		t.Errorf("failed to run file %s\n", fileName)
 	}
 	fmt.Println(msg)
 	fmt.Println(signal)
-	executionTime := time.Since(startTime)
-	fmt.Printf("execution time: %s\n", executionTime)
+	fmt.Printf("elapsed time: %s\n", elapsed)
 }
