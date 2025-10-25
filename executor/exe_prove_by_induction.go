@@ -45,11 +45,11 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) (glob
 
 	// 输入的 Start 必须是 N_pos
 	startIsNPos := proveByInduction_Fact_Start_is_NPos(stmt)
-	ok, err := ver.VerFactStmt(startIsNPos, verifier.Round0NoMsg)
-	if err != nil {
-		return glob.ExecStateError, err
+	verRet := ver.VerFactStmt(startIsNPos, verifier.Round0NoMsg)
+	if verRet.IsErr() {
+		return glob.ExecStateError, fmt.Errorf(verRet.String())
 	}
-	if !ok {
+	if verRet.IsUnknown() {
 		msg = fmt.Sprintf("%s\nis unknown", startIsNPos.String())
 		return glob.ExecStateUnknown, nil
 	}
@@ -59,11 +59,11 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) (glob
 	if err != nil {
 		return glob.ExecStateError, err
 	}
-	ok, err = ver.VerFactStmt(startFact, verifier.Round0NoMsg)
-	if err != nil {
-		return glob.ExecStateError, err
+	verRet = ver.VerFactStmt(startFact, verifier.Round0NoMsg)
+	if verRet.IsErr() {
+		return glob.ExecStateError, fmt.Errorf(verRet.String())
 	}
-	if !ok {
+	if verRet.IsUnknown() {
 		msg = fmt.Sprintf("%s\nis unknown", startFact.String())
 		return glob.ExecStateUnknown, nil
 	}
@@ -73,11 +73,11 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) (glob
 	if err != nil {
 		return glob.ExecStateError, err
 	}
-	ok, err = ver.VerFactStmt(uniFact_n_true_leads_n_plus_1_true, verifier.Round0NoMsg)
-	if err != nil {
-		return glob.ExecStateError, err
+	verRet = ver.VerFactStmt(uniFact_n_true_leads_n_plus_1_true, verifier.Round0NoMsg)
+	if verRet.IsErr() {
+		return glob.ExecStateError, fmt.Errorf(verRet.String())
 	}
-	if !ok {
+	if verRet.IsUnknown() {
 		msg = fmt.Sprintf("%s\nis unknown", uniFact_n_true_leads_n_plus_1_true.String())
 		return glob.ExecStateUnknown, nil
 	}

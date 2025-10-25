@@ -278,12 +278,9 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 	}
 
 	for _, paramSetFact := range paramSetFacts {
-		ok, err := ver.VerFactStmt(paramSetFact, state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, nil
+		verRet := ver.VerFactStmt(paramSetFact, state)
+		if verRet.IsErr() || verRet.IsUnknown() {
+			return verRet.ToBoolErr()
 		}
 	}
 
@@ -294,12 +291,9 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 	}
 	// prove all domFacts are true
 	for _, domFact := range instantiatedIffToProp.DomFacts {
-		ok, err := ver.VerFactStmt(domFact, nextState)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, nil
+		verRet := ver.VerFactStmt(domFact, nextState)
+		if verRet.IsErr() || verRet.IsUnknown() {
+			return verRet.ToBoolErr()
 		}
 	}
 
@@ -334,11 +328,11 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 		return false, err
 	}
 	for i := range instParamSets {
-		ok, err := ver.VerFactStmt(ast.NewInFactWithFc(existParams[i], instParamSets[i]), state)
-		if err != nil {
-			return false, err
+		verRet := ver.VerFactStmt(ast.NewInFactWithFc(existParams[i], instParamSets[i]), state)
+		if verRet.IsErr() {
+			return false, fmt.Errorf(verRet.String())
 		}
-		if !ok {
+		if verRet.IsUnknown() {
 			if state.WithMsg {
 				msg := fmt.Sprintf("given object %s is not in its param set %s\n", existParams[i], instParamSets[i])
 				ver.env.Msgs = append(ver.env.Msgs, msg)
@@ -358,11 +352,11 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 	}
 
 	for _, domFact := range domFacts {
-		ok, err := ver.VerFactStmt(domFact, state)
-		if err != nil {
-			return false, err
+		verRet := ver.VerFactStmt(domFact, state)
+		if verRet.IsErr() {
+			return false, fmt.Errorf(verRet.String())
 		}
-		if !ok {
+		if verRet.IsUnknown() {
 			if state.WithMsg {
 				msg := fmt.Sprintf("dom fact %s is unknown\n", domFact)
 				ver.env.Msgs = append(ver.env.Msgs, msg)
@@ -372,11 +366,11 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 	}
 
 	for _, iffFact := range iffFacts {
-		ok, err := ver.VerFactStmt(iffFact, state)
-		if err != nil {
-			return false, err
+		verRet := ver.VerFactStmt(iffFact, state)
+		if verRet.IsErr() {
+			return false, fmt.Errorf(verRet.String())
 		}
-		if !ok {
+		if verRet.IsUnknown() {
 			return false, nil
 		}
 	}
@@ -588,12 +582,9 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *Ver
 	}
 
 	for _, paramSetFact := range paramSetFacts {
-		ok, err := ver.VerFactStmt(paramSetFact, state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, nil
+		verRet := ver.VerFactStmt(paramSetFact, state)
+		if verRet.IsErr() || verRet.IsUnknown() {
+			return verRet.ToBoolErr()
 		}
 	}
 
@@ -611,11 +602,11 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *Ver
 		}
 		reversedDomFact := domFactAsSpecFact.ReverseTrue()
 
-		ok, err := ver.VerFactStmt(reversedDomFact, nextState)
-		if err != nil {
-			return false, err
+		verRet := ver.VerFactStmt(reversedDomFact, nextState)
+		if verRet.IsErr() {
+			return false, fmt.Errorf(verRet.String())
 		}
-		if ok {
+		if verRet.IsTrue() {
 			if state.WithMsg {
 				ver.successWithMsg(stmt.String(), defStmt.String())
 			}
