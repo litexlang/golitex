@@ -15,7 +15,11 @@
 package litex_pipeline
 
 import (
+	"fmt"
 	exe "golitex/executor"
+	glob "golitex/glob"
+	parser "golitex/parser"
+	"strings"
 )
 
 type PipelineRunner struct {
@@ -23,7 +27,7 @@ type PipelineRunner struct {
 }
 
 func NewPipelineRunner() *PipelineRunner {
-	initExec, _ := PipelineExecutorInit()
+	initExec, _ := InitPipelineExecutor()
 
 	return &PipelineRunner{
 		executor: initExec,
@@ -32,4 +36,27 @@ func NewPipelineRunner() *PipelineRunner {
 
 func (p *PipelineRunner) Clear() {
 	p.executor.ClearStmt()
+}
+
+func (p *PipelineRunner) Run(code string) (string, glob.SysSignal, error) {
+	topStmtSlice, err := parser.ParseSourceCode(code)
+	if err != nil {
+		return "", glob.SysSignalParseError, err
+	}
+
+	msgOfTopStatements := []string{}
+
+	for _, topStmt := range topStmtSlice {
+		execState, msg, err := p.executor.Stmt(topStmt)
+		msgOfTopStatements = append(msgOfTopStatements, p.executor.GetMsgAsStr0ToEnd())
+		msgOfTopStatements = append(msgOfTopStatements, msg)
+		if err != nil {
+			return strings.Join(msgOfTopStatements, "\n"), glob.SysSignalRuntimeError, err
+		}
+		if execState != glob.ExecStateTrue {
+			return strings.Join(msgOfTopStatements, "\n"), glob.SysSignalRuntimeError, fmt.Errorf("execution failed, line %d", topStmt.GetLine())
+		}
+	}
+
+	return strings.Join(msgOfTopStatements, "\n"), glob.SysSignalTrue, nil
 }
