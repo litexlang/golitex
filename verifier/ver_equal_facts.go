@@ -113,21 +113,23 @@ func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state *VerState) (bo
 	return false, nil
 }
 
-func (ver *Verifier) verTrueEqualFact_FcFnEqual_NoCheckRequirements(left, right *ast.FcFn, state *VerState) *VerRet {
+func (ver *Verifier) verTrueEqualFact_FcFnEqual_NoCheckRequirements(left, right *ast.FcFn, state *VerState) (bool, string, error) {
 	var ok bool
 	var err error
 
 	if len(left.Params) != len(right.Params) {
-		return newUnknownVerRet("")
+		return false, "", nil
 	}
 
 	// ok, err = ver.fcEqualSpec(left.FnHead, right.FnHead, state)
 	ok, err = ver.verTrueEqualFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{left.FnHead, right.FnHead}, glob.InnerGenLine), state, false)
 	if err != nil {
-		return newErrVerRet(err.Error())
+		// return newErrVerRet(err.Error())
+		return false, "", err
 	}
 	if !ok {
-		return newUnknownVerRet("")
+		// return newUnknownVerRet("")
+		return false, "", nil
 	}
 
 	for i := range left.Params {
@@ -135,12 +137,15 @@ func (ver *Verifier) verTrueEqualFact_FcFnEqual_NoCheckRequirements(left, right 
 
 		ok, err := ver.verTrueEqualFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{left.Params[i], right.Params[i]}, glob.InnerGenLine), state, false)
 		if err != nil {
-			return newErrVerRet(err.Error())
+			// return newErrVerRet(err.Error())
+			return false, "", err
 		}
 		if !ok {
-			return newUnknownVerRet("")
+			// return newUnknownVerRet("")
+			return false, "", nil
 		}
 	}
 
-	return newTrueVerRet("")
+	// return newTrueVerRet("")
+	return true, "", nil
 }
