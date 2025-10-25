@@ -19,11 +19,11 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) algoDefStmt(stmt *ast.AlgoDefStmt) (glob.ExecState, error) {
+func (exec *Executor) algoDefStmt(stmt *ast.AlgoDefStmt) (glob.ExecRet, error) {
 	if _, ok := exec.env.AlgoDefMem[stmt.FuncName]; !ok {
 		exec.env.AlgoDefMem[stmt.FuncName] = []*ast.AlgoDefStmt{}
 	}
 	exec.env.AlgoDefMem[stmt.FuncName] = append(exec.env.AlgoDefMem[stmt.FuncName], stmt)
 	exec.newMsg(stmt.String())
-	return glob.ExecStateTrue, nil
+	return glob.ExecTrue, nil
 }

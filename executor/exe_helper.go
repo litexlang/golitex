@@ -20,11 +20,11 @@ import (
 	glob "golitex/glob"
 )
 
-func notOkExec(state glob.ExecState, err error) bool {
+func notOkExec(state glob.ExecRet, err error) bool {
 	if err != nil {
 		return true
 	}
-	if state != glob.ExecStateTrue {
+	if state != glob.ExecTrue {
 		return true
 	}
 	return false

@@ -14,22 +14,10 @@
 
 package litex_global
 
-type ExecState uint8
+type ExecRet uint8
 
 const (
-	ExecStateUnknown ExecState = iota
-	ExecStateTrue
-	ExecStateError
+	ExecUnknown ExecRet = iota
+	ExecTrue
+	ExecError
 )
-
-func (e *ExecState) IsTrue() ExecState {
-	return ExecStateTrue
-}
-
-func (e *ExecState) IsUnknown() ExecState {
-	return ExecStateUnknown
-}
-
-func (e *ExecState) IsError() ExecState {
-	return ExecStateError
-}
