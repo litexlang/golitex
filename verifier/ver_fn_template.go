@@ -20,8 +20,8 @@ import (
 )
 
 func (ver *Verifier) ver_In_FnTT(left ast.Fc, right *ast.FcFn, state *VerState) (bool, error) {
-	leftLatestFnT, ok := ver.env.GetLatestFnT_GivenNameIsIn(left.String())
-	if !ok {
+	leftLatestFnT := ver.env.GetLatestFnT_GivenNameIsIn(left.String())
+	if leftLatestFnT == nil {
 		return false, nil
 	}
 

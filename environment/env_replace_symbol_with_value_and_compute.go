@@ -62,11 +62,11 @@ func (env *Env) replaceFcFnWithValueAndCompute(fc *ast.FcFn) (bool, ast.Fc, erro
 			}
 		}
 
-		computed, ok, err := env.Compute(ret) // 哪怕没算出来，也是可能的
+		computed, err := env.Compute(ret) // 哪怕没算出来，也是可能的
 		if err != nil {
 			return false, nil, fmt.Errorf("error computing: %s", fc)
 		}
-		if ok {
+		if computed != nil {
 			return true, computed, nil
 		}
 	}
