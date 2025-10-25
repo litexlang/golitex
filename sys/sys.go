@@ -144,6 +144,8 @@ func RunFilesInRepoWithPipelineRunner(repo string) error {
 
 	pipelineRunner := pipeline.NewPipelineRunner()
 
+	allFilesStartTime := time.Now()
+
 	for _, file := range files {
 		// file 最后必须以.lit结尾
 
@@ -174,6 +176,8 @@ func RunFilesInRepoWithPipelineRunner(repo string) error {
 
 		pipelineRunner.Clear()
 	}
+
+	fmt.Printf("All Files Take %s\n", time.Since(allFilesStartTime))
 
 	return nil
 }

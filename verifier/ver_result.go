@@ -14,46 +14,36 @@
 
 package litex_verifier
 
-import "fmt"
-
-type VerRet struct {
-	Ok   bool
-	Msgs []string
-	Err  error
+type VerRet interface {
+	verRet()
+	isTrue() bool
+	isUnknown() bool
+	isErr() bool
 }
 
-func newErrVerRet(msg string, args ...any) *VerRet {
-	return &VerRet{
-		Ok:   false,
-		Msgs: []string{fmt.Sprintf(msg, args...)},
-		Err:  fmt.Errorf(msg, args...),
-	}
+func (v *VerTrue) verRet()
+func (v *VerTrue) isTrue() bool    { return true }
+func (v *VerTrue) isUnknown() bool { return false }
+func (v *VerTrue) isErr() bool     { return false }
+
+func (v *VerErr) verRet()
+func (v *VerErr) isTrue() bool    { return false }
+func (v *VerErr) isUnknown() bool { return false }
+func (v *VerErr) isErr() bool     { return true }
+
+func (v *VerUnknown) verRet()
+func (v *VerUnknown) isTrue() bool    { return false }
+func (v *VerUnknown) isUnknown() bool { return true }
+func (v *VerUnknown) isErr() bool     { return false }
+
+type VerTrue struct {
+	Msg []string
 }
 
-func newTrueVerRet(msg string, args ...any) *VerRet {
-	return &VerRet{
-		Ok:   true,
-		Msgs: []string{fmt.Sprintf(msg, args...)},
-		Err:  nil,
-	}
+type VerUnknown struct {
+	Msg []string
 }
 
-func newUnknownVerRet(msg string, args ...any) *VerRet {
-	return &VerRet{
-		Ok:   false,
-		Msgs: []string{fmt.Sprintf(msg, args...)},
-		Err:  nil,
-	}
-}
-
-func (ver *VerRet) TrueOrErr(ok bool, err error) bool {
-	return ver.Ok || ver.Err != nil
-}
-
-func (ver *VerRet) Unknown(ok bool, err error) bool {
-	return !ver.Ok || ver.Err == nil
-}
-
-func (ver *VerRet) FalseOrErr(ok bool, err error) bool {
-	return !ver.Ok || ver.Err != nil
+type VerErr struct {
+	Msg []string
 }
