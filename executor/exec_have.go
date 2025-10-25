@@ -68,8 +68,8 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) (g
 	// 这个 warning 不合时宜了，因为fn的定义其实和obj一样了，就是额外多个满足特定的template
 
 	// TODO 把 exist prop def 里的东西释放出来
-	existPropDef, ok := exec.env.GetExistPropDef(stmt.Fact.PropName)
-	if !ok {
+	existPropDef := exec.env.GetExistPropDef(stmt.Fact.PropName)
+	if existPropDef == nil {
 		return glob.ExecStateUnknown, nil
 	}
 

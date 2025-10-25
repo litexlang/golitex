@@ -20,20 +20,20 @@ import (
 	glob "golitex/glob"
 )
 
-func (e *Env) isSetFnRetValue(fc ast.Fc) (*ast.HaveSetFnStmt, bool) {
+func (e *Env) GetSetFnRetValue(fc ast.Fc) *ast.HaveSetFnStmt {
 	asFn, ok := fc.(*ast.FcFn)
 	if !ok {
-		return nil, false
+		return nil
 	}
 
 	// name
 	fnName := asFn.FnHead
 	fnNameAsAtom, ok := fnName.(ast.FcAtom)
 	if !ok {
-		return nil, false
+		return nil
 	}
-	haveSetFn, ok := e.GetHaveSetFnDef(fnNameAsAtom)
-	return haveSetFn, ok
+	haveSetFn := e.GetHaveSetFnDef(fnNameAsAtom)
+	return haveSetFn
 }
 
 func (e *Env) GenerateUndeclaredRandomName() string {

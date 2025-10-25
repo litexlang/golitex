@@ -25,7 +25,7 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) error {
 		return fmt.Errorf("in fact expect 2 parameters, get %d in %s", len(fact.Params), fact)
 	}
 
-	if def, ok := e.isSetFnRetValue(fact.Params[1]); ok {
+	if def := e.GetSetFnRetValue(fact.Params[1]); def != nil {
 		return e.inFactPostProcess_InSetFnRetValue(fact, def)
 	}
 
