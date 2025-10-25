@@ -23,7 +23,7 @@ import (
 	parser "golitex/parser"
 )
 
-func PipelineExecutorInit() (*exe.Executor, error) {
+func InitPipelineExecutor() (*exe.Executor, error) {
 	glob.IsRunningPipelineInit = true
 	defer func() {
 		glob.IsRunningPipelineInit = false

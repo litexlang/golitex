@@ -39,6 +39,14 @@ func RunFile(path string) (string, glob.SysSignal, error) {
 	return msg, signal, nil
 }
 
+func RunFileWithPipelineRunner(path string) (string, glob.SysSignal, error) {
+	panic("not implemented")
+}
+
+func RunRepoWithPipelineRunner(path string) (string, glob.SysSignal, error) {
+	panic("not implemented")
+}
+
 func RunRepo(path string) (string, glob.SysSignal, error) {
 	glob.CurrentTaskDirName = path
 	// 运行里面的main.lit
