@@ -21,7 +21,7 @@ import (
 	parser "golitex/parser"
 )
 
-func (exec *Executor) importDirStmt(stmt *ast.ImportDirStmt) (glob.ExecState, error) {
+func (exec *Executor) importDirStmt(stmt *ast.ImportDirStmt) (glob.ExecRet, error) {
 	panic("TODO: not implemented")
 }
 
@@ -95,7 +95,7 @@ func (exec *Executor) importDirStmt(stmt *ast.ImportDirStmt) (glob.ExecState, er
 // 	return execState, nil
 // }
 
-func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string, importStmt ast.ImportStmtInterface) (glob.ExecState, error) {
+func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string, importStmt ast.ImportStmtInterface) (glob.ExecRet, error) {
 	if runInNewEnv {
 		exec.NewEnv(exec.env)
 		defer func() {
@@ -104,24 +104,24 @@ func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string, importS
 	}
 
 	topStmtSlice, err := parser.ParseSourceCode(sourceCode)
-	var execState glob.ExecState = glob.ExecStateTrue
+	var execState glob.ExecRet = glob.ExecTrue
 	if err != nil {
-		return glob.ExecStateError, err
+		return glob.ExecError, err
 	}
 	for _, topStmt := range topStmtSlice {
 		execState, _, err = exec.Stmt(topStmt)
 		if err != nil {
-			return glob.ExecStateError, err
+			return glob.ExecError, err
 		}
-		if execState != glob.ExecStateTrue {
-			return glob.ExecStateError, fmt.Errorf("failed to execute source code when executing '%s':\n%s", importStmt, topStmt)
+		if execState != glob.ExecTrue {
+			return glob.ExecError, fmt.Errorf("failed to execute source code when executing '%s':\n%s", importStmt, topStmt)
 		}
 	}
 
 	return execState, nil
 }
 
-func (exec *Executor) runStmtInUpmostEnv_AssumeTheyAreTrue(topStmtSlice []ast.Stmt) (glob.ExecState, error) {
+func (exec *Executor) runStmtInUpmostEnv_AssumeTheyAreTrue(topStmtSlice []ast.Stmt) (glob.ExecRet, error) {
 	curEnv := exec.env.GetUpMostEnv()
 	newExec := NewExecutor(curEnv)
 
@@ -129,13 +129,13 @@ func (exec *Executor) runStmtInUpmostEnv_AssumeTheyAreTrue(topStmtSlice []ast.St
 		// execState, err := newExec.assumeStmtIsTrueRun(topStmt)
 		execState, _, err := newExec.Stmt(topStmt)
 		if err != nil {
-			return glob.ExecStateError, err
+			return glob.ExecError, err
 		}
-		if execState != glob.ExecStateTrue {
-			return glob.ExecStateError, fmt.Errorf("failed to execute source code:\n%s\nSome statements in the source code are not executed successfully", topStmt)
+		if execState != glob.ExecTrue {
+			return glob.ExecError, fmt.Errorf("failed to execute source code:\n%s\nSome statements in the source code are not executed successfully", topStmt)
 		}
 	}
-	return glob.ExecStateTrue, nil
+	return glob.ExecTrue, nil
 }
 
 // func getGloballyImportedStmtSlice(code string) ([]ast.Stmt, error) {

@@ -52,38 +52,38 @@ func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) VerRet {
 	return BoolErrToVerRet(ok, err)
 }
 
-func ExecFactsAtCurEnv_retFailedFact(facts []ast.FactStmt, env *env.Env, state *VerState) (glob.ExecState, ast.FactStmt, error) {
+func ExecFactsAtCurEnv_retFailedFact(facts []ast.FactStmt, env *env.Env, state *VerState) (glob.ExecRet, ast.FactStmt, error) {
 	ver := NewVerifier(env)
 
 	for _, fact := range facts {
 		verRet := ver.VerFactStmt(fact, state)
 		if verRet.IsErr() {
-			return glob.ExecStateError, fact, fmt.Errorf(verRet.String())
+			return glob.ExecError, fact, fmt.Errorf(verRet.String())
 		} else if verRet.IsUnknown() {
-			return glob.ExecStateUnknown, fact, nil
+			return glob.ExecUnknown, fact, nil
 		}
 		err := env.NewFact(fact)
 		if err != nil {
-			return glob.ExecStateError, fact, err
+			return glob.ExecError, fact, err
 		}
 	}
-	return glob.ExecStateTrue, nil, nil
+	return glob.ExecTrue, nil, nil
 }
 
-func ExecSpecFactsAtCurEnv_retRailedFact(facts []*ast.SpecFactStmt, env *env.Env) (glob.ExecState, *ast.SpecFactStmt, error) {
+func ExecSpecFactsAtCurEnv_retRailedFact(facts []*ast.SpecFactStmt, env *env.Env) (glob.ExecRet, *ast.SpecFactStmt, error) {
 	ver := NewVerifier(env)
 
 	for _, fact := range facts {
 		verRet := ver.VerFactStmt(fact, Round0Msg)
 		if verRet.IsErr() {
-			return glob.ExecStateError, fact, fmt.Errorf(verRet.String())
+			return glob.ExecError, fact, fmt.Errorf(verRet.String())
 		} else if verRet.IsUnknown() {
-			return glob.ExecStateUnknown, fact, nil
+			return glob.ExecUnknown, fact, nil
 		}
 		err := env.NewFact(fact)
 		if err != nil {
-			return glob.ExecStateError, fact, err
+			return glob.ExecError, fact, err
 		}
 	}
-	return glob.ExecStateTrue, nil, nil
+	return glob.ExecTrue, nil, nil
 }
