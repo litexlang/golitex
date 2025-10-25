@@ -23,7 +23,7 @@ import (
 )
 
 func (ver *Verifier) specFactOrEqualFact_SpecMode(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
-	return ver.VerFactStmt(stmt, state.GetFinalRound())
+	return ver.VerFactStmt(stmt, state.GetFinalRound()).ToBoolErr()
 }
 
 func (ver *Verifier) verSpecFact_BySpecMem(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
@@ -136,11 +136,11 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch_new(stmt *ast.Spe
 		paramInParamSetFacts := instantiatedUniFactWithoutThen.ParamInParamSetFacts(uniConMap)
 		setFactSatisfied := true
 		for _, paramInParamSetFact := range paramInParamSetFacts {
-			ok, err = ver.VerFactStmt(paramInParamSetFact, state)
-			if err != nil {
-				return false, err
+			verRet := ver.VerFactStmt(paramInParamSetFact, state)
+			if verRet.IsErr() {
+				return false, fmt.Errorf(verRet.String())
 			}
-			if !ok {
+			if verRet.IsUnknown() {
 				setFactSatisfied = false
 				break
 			}
@@ -250,12 +250,9 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 		if i == int(knownFact.Index) {
 			continue
 		}
-		ok, err := ver.VerFactStmt(fact.ReverseTrue(), state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, nil
+		verRet := ver.VerFactStmt(fact.ReverseTrue(), state)
+		if verRet.IsErr() || verRet.IsUnknown() {
+			return verRet.ToBoolErr()
 		}
 	}
 
@@ -377,12 +374,9 @@ func (ver *Verifier) useKnownOrFactToProveSpecFact(knownFact *env.KnownSpecFact_
 		}
 		reversedFact := fact.ReverseTrue()
 		// TODO: WARNING: 这里有问题，可能无限循环
-		ok, err := ver.VerFactStmt(reversedFact, nextState)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, nil
+		verRet := ver.VerFactStmt(reversedFact, nextState)
+		if verRet.IsErr() || verRet.IsUnknown() {
+			return verRet.ToBoolErr()
 		}
 	}
 
@@ -402,12 +396,9 @@ func (ver *Verifier) proveUniFactDomFacts(domFacts []ast.FactStmt, state *VerSta
 					return false, nil
 				}
 			} else {
-				ok, err := ver.VerFactStmt(fact, state)
-				if err != nil {
-					return false, err
-				}
-				if !ok {
-					return false, nil
+				verRet := ver.VerFactStmt(fact, state)
+				if verRet.IsErr() || verRet.IsUnknown() {
+					return verRet.ToBoolErr()
 				}
 			}
 		}
@@ -439,12 +430,9 @@ func (ver *Verifier) verify_specFact_when_given_orStmt_is_true(stmt *ast.SpecFac
 		if i == index {
 			continue
 		}
-		ok, err := ver.VerFactStmt(orStmt.Facts[i].ReverseTrue(), state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, nil
+		verRet := ver.VerFactStmt(orStmt.Facts[i].ReverseTrue(), state)
+		if verRet.IsErr() || verRet.IsUnknown() {
+			return verRet.ToBoolErr()
 		}
 	}
 
@@ -497,11 +485,11 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch_new(stmt *ast.SpecFa
 		paramInParamSetFacts := instantiatedUniFactWithoutThen.ParamInParamSetFacts(uniConMap)
 		setFactSatisfied := true
 		for _, paramInParamSetFact := range paramInParamSetFacts {
-			ok, err = ver.VerFactStmt(paramInParamSetFact, nextState)
-			if err != nil {
+			verRet := ver.VerFactStmt(paramInParamSetFact, nextState)
+			if verRet.IsErr() {
 				return false, err
 			}
-			if !ok {
+			if verRet.IsUnknown() {
 				setFactSatisfied = false
 				break
 			}

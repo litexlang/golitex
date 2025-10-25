@@ -247,12 +247,9 @@ func (ver *Verifier) setDefinedByReplacementFnRequirement(fc *ast.FcFn, state *V
 	}
 
 	forallXOnlyOneYSatisfyGivenProp := ast.GetForallXOnlyOneYSatisfyGivenProp(fc.Params[0], fc.Params[1], propName)
-	ok, err := ver.VerFactStmt(forallXOnlyOneYSatisfyGivenProp, state)
-	if err != nil {
-		return false, err
-	}
 
-	return ok, nil
+	verRet := ver.VerFactStmt(forallXOnlyOneYSatisfyGivenProp, state)
+	return verRet.ToBoolErr()
 }
 
 var builtinFunctionNameSetAndCanTakeInAnyObj = map[string]struct{}{
@@ -288,13 +285,6 @@ func (ver *Verifier) lenFnRequirement(fc *ast.FcFn, state *VerState) (bool, erro
 		return false, fmt.Errorf("parameters in %s must be 1, %s in %s is not valid", fc.FnHead, fc, fc)
 	}
 
-	ok, err := ver.VerFactStmt(ast.NewInFactWithFc(fc.Params[0], ast.FcAtom(glob.KeywordFiniteSet)), state)
-	if err != nil {
-		return false, err
-	}
-	if !ok {
-		return false, fmt.Errorf("parameters in %s must be in set %s, %s in %s is not valid", fc.FnHead, glob.KeywordFiniteSet, fc.Params[0], fc)
-	}
-
-	return true, nil
+	verRet := ver.VerFactStmt(ast.NewInFactWithFc(fc.Params[0], ast.FcAtom(glob.KeywordFiniteSet)), state)
+	return verRet.ToBoolErr()
 }

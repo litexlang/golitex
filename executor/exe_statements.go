@@ -128,19 +128,20 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, string, error) {
 func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
 	curVerifier := verifier.NewVerifier(exec.env)
 	state := verifier.Round0Msg
-	ok, err := curVerifier.VerFactStmt(stmt, state)
-	if err != nil {
-		return glob.ExecStateError, err
-	}
+	verRet := curVerifier.VerFactStmt(stmt, state)
 
-	if ok {
+	if verRet.IsErr() {
+		return glob.ExecStateError, fmt.Errorf(verRet.String())
+	} else if verRet.IsTrue() {
 		err := exec.env.NewFact(stmt)
 		if err != nil {
 			return glob.ExecStateError, err
 		}
 		return glob.ExecStateTrue, nil
-	} else {
+	} else if verRet.IsUnknown() {
 		return glob.ExecStateUnknown, nil
+	} else {
+		panic("unknown ver ret")
 	}
 }
 
@@ -558,20 +559,20 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) (glob.ExecSta
 	ver := verifier.NewVerifier(exec.env)
 
 	for i := range len(stmt.ObjNames) {
-		ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.ObjEqualTos[i], stmt.ObjSets[i]}, stmt.Line), verifier.Round0Msg)
-		if err != nil {
-			return glob.ExecStateError, err
+		verRet := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.ObjEqualTos[i], stmt.ObjSets[i]}, stmt.Line), verifier.Round0Msg)
+		if verRet.IsErr() {
+			return glob.ExecStateError, fmt.Errorf(verRet.String())
 		}
-		if !ok {
+		if verRet.IsUnknown() {
 			return glob.ExecStateError, fmt.Errorf("%s is not in %s", stmt.ObjNames[i], stmt.ObjSets[i])
 		}
 
-		err = ver.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt([]string{stmt.ObjNames[i]}, []ast.Fc{ast.FcAtom(glob.KeywordObj)}, []ast.FactStmt{}, stmt.Line))
+		err := ver.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt([]string{stmt.ObjNames[i]}, []ast.Fc{ast.FcAtom(glob.KeywordObj)}, []ast.FactStmt{}, stmt.Line))
 		if err != nil {
 			return glob.ExecStateError, err
 		}
 		// 检查 等号右边的东西是否存在
-		ok = exec.env.AreAtomsInFcAreDeclared(stmt.ObjEqualTos[i], map[string]struct{}{})
+		ok := exec.env.AreAtomsInFcAreDeclared(stmt.ObjEqualTos[i], map[string]struct{}{})
 		if !ok {
 			return glob.ExecStateError, fmt.Errorf("%s is not declared", stmt.ObjEqualTos[i])
 		}
@@ -620,11 +621,11 @@ func (exec *Executor) checkFnEqualStmt(stmt *ast.HaveFnEqualStmt) (glob.ExecStat
 	}
 
 	ver := verifier.NewVerifier(exec.env)
-	ok, err := ver.VerFactStmt(ast.NewInFactWithFc(stmt.EqualTo, stmt.RetSet), verifier.Round0Msg)
-	if err != nil {
-		return glob.ExecStateError, err
+	verRet := ver.VerFactStmt(ast.NewInFactWithFc(stmt.EqualTo, stmt.RetSet), verifier.Round0Msg)
+	if verRet.IsErr() {
+		return glob.ExecStateError, fmt.Errorf(verRet.String())
 	}
-	if !ok {
+	if verRet.IsUnknown() {
 		return glob.ExecStateError, fmt.Errorf("according to the definition of %s, the returned value %s must be in %s, but\n%s is unknown", stmt, stmt.EqualTo, stmt.RetSet, ast.NewInFactWithFc(stmt.EqualTo, stmt.RetSet))
 	}
 
@@ -777,11 +778,11 @@ func (exec *Executor) openANewEnvAndCheck(fact ast.FactStmt, requireMsg bool) (g
 		state = verifier.Round0NoMsg
 	}
 
-	ok, err := ver.VerFactStmt(fact, state)
-	if err != nil {
-		return glob.ExecStateError, err
+	verRet := ver.VerFactStmt(fact, state)
+	if verRet.IsErr() {
+		return glob.ExecStateError, fmt.Errorf(verRet.String())
 	}
-	if !ok {
+	if verRet.IsUnknown() {
 		return glob.ExecStateUnknown, nil
 	}
 
