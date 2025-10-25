@@ -23,7 +23,7 @@ import (
 	parser "golitex/parser"
 )
 
-func pipelineExecutorInit() (*exe.Executor, error) {
+func PipelineExecutorInit() (*exe.Executor, error) {
 	glob.IsRunningPipelineInit = true
 	defer func() {
 		glob.IsRunningPipelineInit = false
@@ -35,7 +35,7 @@ func pipelineExecutorInit() (*exe.Executor, error) {
 	err := useHardcodedCodeToInit(executor)
 	executor.NewEnv(curEnv)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 	return executor, nil
 }

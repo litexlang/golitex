@@ -77,7 +77,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, string, error) {
 	case *ast.FnTemplateDefStmt:
 		err = exec.DefFnTemplateStmt(stmt)
 	case *ast.ClearStmt:
-		exec.clearStmt()
+		exec.ClearStmt()
 	case *ast.InlineFactsStmt:
 		execState, err = exec.inlineFactsStmt(stmt)
 	case *ast.ProveByInductionStmt:
@@ -525,7 +525,7 @@ func (exec *Executor) DefFnTemplateStmt(stmt *ast.FnTemplateDefStmt) error {
 	return nil
 }
 
-func (exec *Executor) clearStmt() error {
+func (exec *Executor) ClearStmt() error {
 	curEnv := exec.env
 	for curEnv.Parent != nil {
 		curEnv = curEnv.Parent
