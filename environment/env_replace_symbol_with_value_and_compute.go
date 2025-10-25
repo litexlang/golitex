@@ -37,7 +37,7 @@ func (env *Env) ReplaceSymbolWithValueAndCompute(fc ast.Fc) (bool, ast.Fc, error
 }
 
 func (env *Env) replaceFcFnWithValueAndCompute(fc *ast.FcFn) (bool, ast.Fc, error) {
-	if symbolValue, ok := env.GetSymbolValue(fc); ok {
+	if symbolValue := env.GetSymbolValue(fc); symbolValue != nil {
 		return false, symbolValue, nil
 	}
 
@@ -75,8 +75,8 @@ func (env *Env) replaceFcFnWithValueAndCompute(fc *ast.FcFn) (bool, ast.Fc, erro
 }
 
 func (env *Env) replaceFcAtomWithValueAndCompute(fc ast.FcAtom) (bool, ast.Fc, error) {
-	symbolValue, ok := env.GetSymbolValue(fc)
-	if !ok {
+	symbolValue := env.GetSymbolValue(fc)
+	if symbolValue == nil {
 		return false, fc, nil
 	}
 
