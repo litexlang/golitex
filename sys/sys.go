@@ -39,12 +39,21 @@ func RunFile(path string) (string, glob.SysSignal, error) {
 	return msg, signal, nil
 }
 
-func RunFileWithPipelineRunner(path string) (string, glob.SysSignal, error) {
-	panic("not implemented")
-}
+func RunFileWithPipelineRunner(path string) (string, glob.SysSignal, time.Duration, error) {
+	repoName := filepath.Dir(path)
+	glob.CurrentTaskDirName = repoName
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return fmt.Sprintf("failed to read file %s: %s", path, err.Error()), glob.SysSignalSystemError, 0, err
+	}
+	pipelineRunner := pipeline.NewPipelineRunner()
 
-func RunRepoWithPipelineRunner(path string) (string, glob.SysSignal, error) {
-	panic("not implemented")
+	start := time.Now()
+	msg, signal, err := pipelineRunner.Run(string(content))
+	if err != nil {
+		return fmt.Sprintf("failed to execute code %s: %s", path, err.Error()), glob.SysSignalSystemError, 0, err
+	}
+	return msg, signal, time.Since(start), nil
 }
 
 func RunRepo(path string) (string, glob.SysSignal, error) {
@@ -122,6 +131,48 @@ func RunFilesInRepo(repo string) error {
 	elapsed := time.Since(startTime)
 	fmt.Printf("All files in %s executed successfully\n", repo)
 	fmt.Println("Time taken:", elapsed)
+
+	return nil
+}
+
+func RunFilesInRepoWithPipelineRunner(repo string) error {
+	files, err := os.ReadDir(repo)
+	if err != nil {
+		fmt.Println("Error reading directory:", err)
+		return err
+	}
+
+	pipelineRunner := pipeline.NewPipelineRunner()
+
+	for _, file := range files {
+		// file 最后必须以.lit结尾
+
+		if !strings.HasSuffix(file.Name(), glob.LitexFileSuffix) {
+			continue
+		}
+
+		fmt.Printf("%s ", file)
+
+		// 读出file的内容，然后执行
+		path := filepath.Join(repo, file.Name())
+
+		content, err := os.ReadFile(path)
+		if err != nil {
+			fmt.Println("Error reading file:", err)
+			return err
+		}
+
+		start := time.Now()
+		_, signal, err := pipelineRunner.Run(string(content))
+		if err != nil || signal != glob.SysSignalTrue {
+			return fmt.Errorf("failed to execute code %s: %s", path, err.Error())
+		}
+
+		elapsed := time.Since(start)
+
+		fmt.Printf("%s\n", elapsed)
+		pipelineRunner.Clear()
+	}
 
 	return nil
 }
