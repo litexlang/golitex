@@ -37,34 +37,34 @@ func (e *Env) GetFnTemplateDef_KeyIsFcHead(fc *ast.FcFn) *ast.FnTemplateDefStmt 
 	return fnTemplateDef
 }
 
-func (e *Env) GetExistPropDef(propName ast.FcAtom) (*ast.DefExistPropStmt, bool) {
+func (e *Env) GetExistPropDef(propName ast.FcAtom) *ast.DefExistPropStmt {
 	for env := e; env != nil; env = env.Parent {
 		existProp, ok := env.ExistPropDefMem[string(propName)]
 		if ok {
-			return &existProp, true
+			return &existProp
 		}
 	}
-	return nil, false
+	return nil
 }
 
-func (e *Env) GetPropDef(propName ast.FcAtom) (*ast.DefPropStmt, bool) {
+func (e *Env) GetPropDef(propName ast.FcAtom) *ast.DefPropStmt {
 	for env := e; env != nil; env = env.Parent {
 		prop, ok := env.PropDefMem[string(propName)]
 		if ok {
-			return &prop, true
+			return &prop
 		}
 	}
-	return nil, false
+	return nil
 }
 
-func (e *Env) GetHaveSetFnDef(fnName ast.FcAtom) (*ast.HaveSetFnStmt, bool) {
+func (e *Env) GetHaveSetFnDef(fnName ast.FcAtom) *ast.HaveSetFnStmt {
 	for env := e; env != nil; env = env.Parent {
 		haveSetFn, ok := env.HaveSetFnDefMem[fnName.String()]
 		if ok {
-			return &haveSetFn, true
+			return &haveSetFn
 		}
 	}
-	return nil, false
+	return nil
 }
 
 func (e *Env) isUserDefinedObj(atom ast.FcAtom) bool {
@@ -77,14 +77,14 @@ func (e *Env) isUserDefinedObj(atom ast.FcAtom) bool {
 	return false
 }
 
-func (e *Env) GetIntensionalSet(fc ast.Fc) (*ast.IntensionalSetStmt, bool) {
+func (e *Env) GetIntensionalSet(fc ast.Fc) *ast.IntensionalSetStmt {
 	for env := e; env != nil; env = env.Parent {
 		intensionalSet, ok := env.IntensionalSetMem[fc.String()]
 		if ok {
-			return &intensionalSet, true
+			return &intensionalSet
 		}
 	}
-	return nil, false
+	return nil
 }
 
 func (e *Env) GetSymbolValue(fc ast.Fc) (ast.Fc, bool) {

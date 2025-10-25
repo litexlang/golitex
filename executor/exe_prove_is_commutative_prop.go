@@ -39,8 +39,8 @@ func (exec *Executor) proveIsCommutativePropStmtMainLogic(stmt *ast.ProveIsCommu
 		return true, nil
 	}
 
-	def, ok := exec.env.GetPropDef(stmt.SpecFact.PropName)
-	if !ok {
+	def := exec.env.GetPropDef(stmt.SpecFact.PropName)
+	if def == nil {
 		return false, fmt.Errorf("prop %s is not defined", stmt.SpecFact.PropName)
 	}
 
@@ -57,7 +57,7 @@ func (exec *Executor) proveIsCommutativePropStmtMainLogic(stmt *ast.ProveIsCommu
 	// 	return false, fmt.Errorf("prop in %s must have equal parameter sets, but parameter sets %s and %s of %s are not equal", glob.KeywordProveIsTransitiveProp, def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[1], def.DefHeader.Name)
 	// }
 
-	ok = exec.env.AreAtomsInFcAreDeclared(def.DefHeader.ParamSets[0], map[string]struct{}{})
+	ok := exec.env.AreAtomsInFcAreDeclared(def.DefHeader.ParamSets[0], map[string]struct{}{})
 	if !ok {
 		return false, fmt.Errorf("param %s is not declared", def.DefHeader.ParamSets[0])
 	}

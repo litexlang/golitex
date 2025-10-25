@@ -818,8 +818,8 @@ func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitiveP
 		return nil
 	}
 
-	def, ok := exec.env.GetPropDef(stmt.Prop)
-	if !ok {
+	def := exec.env.GetPropDef(stmt.Prop)
+	if def == nil {
 		return fmt.Errorf("prop %s is not defined", stmt.Prop)
 	}
 
@@ -842,7 +842,7 @@ func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitiveP
 		return err
 	}
 
-	ok = exec.env.AreAtomsInFcAreDeclared(def.DefHeader.ParamSets[0], map[string]struct{}{})
+	ok := exec.env.AreAtomsInFcAreDeclared(def.DefHeader.ParamSets[0], map[string]struct{}{})
 	if !ok {
 		return fmt.Errorf("param %s is not declared", def.DefHeader.ParamSets[0])
 	}
