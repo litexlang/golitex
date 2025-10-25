@@ -22,8 +22,8 @@ import (
 )
 
 func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) (glob.ExecState, error) {
-	intensionalSetGivenSetIsIn, ok := exec.env.GetIntensionalSet(stmt.IntensionalSet)
-	if !ok {
+	intensionalSetGivenSetIsIn := exec.env.GetIntensionalSet(stmt.IntensionalSet)
+	if intensionalSetGivenSetIsIn == nil {
 		return glob.ExecStateError, fmt.Errorf("intensional set %s not found", stmt.IntensionalSet)
 	}
 

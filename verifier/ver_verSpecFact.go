@@ -254,8 +254,8 @@ func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecFactStmt, state *VerState) 
 func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	nextState := state.GetAddRound()
 
-	defStmt, ok := ver.env.GetPropDef(stmt.PropName)
-	if !ok {
+	defStmt := ver.env.GetPropDef(stmt.PropName)
+	if defStmt == nil {
 		// 这里可能是因为这个propName是exist prop，所以没有定义
 		return false, nil
 	}
@@ -313,8 +313,8 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	existParams, factParams := ast.GetExistFactExistParamsAndFactParams(stmt)
 
-	propDef, ok := ver.env.GetExistPropDef(stmt.PropName)
-	if !ok {
+	propDef := ver.env.GetExistPropDef(stmt.PropName)
+	if propDef == nil {
 		// TODO: 如果没声明，应该报错
 		return false, fmt.Errorf("%s has no definition", stmt)
 	}
@@ -564,8 +564,8 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecFactStmt, st
 func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	nextState := state.GetAddRound()
 
-	defStmt, ok := ver.env.GetPropDef(stmt.PropName)
-	if !ok {
+	defStmt := ver.env.GetPropDef(stmt.PropName)
+	if defStmt == nil {
 		// 这里可能是因为这个propName是exist prop，所以没有定义
 		return false, nil
 	}
