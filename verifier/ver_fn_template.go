@@ -26,12 +26,12 @@ func (ver *Verifier) ver_In_FnTT(left ast.Fc, right *ast.FcFn, state *VerState) 
 	}
 
 	// right dom <= left dom. on right dom left has all those then facts
-	rightDefT, ok := ver.env.GetFnTemplateDef_KeyIsFcHead(right)
-	if !ok {
+	rightDefT := ver.env.GetFnTemplateDef_KeyIsFcHead(right)
+	if rightDefT == nil {
 		return false, nil
 	}
 
-	ok = ver.leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftLatestFnT, rightDefT, left, right, state)
+	ok := ver.leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftLatestFnT, rightDefT, left, right, state)
 
 	if !ok {
 		return false, nil

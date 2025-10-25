@@ -318,8 +318,8 @@ func (e *Env) getInstantiatedFnTTOfFcFn(fcFn *ast.FcFn) (*ast.FnTStruct, bool, e
 		return fnTNoName, true, nil
 	}
 
-	def, ok := e.GetFnTemplateDef(fcFn.FnHead.(ast.FcAtom))
-	if !ok {
+	def := e.GetFnTemplateDef(fcFn.FnHead.(ast.FcAtom))
+	if def == nil {
 		return nil, false, nil
 	}
 

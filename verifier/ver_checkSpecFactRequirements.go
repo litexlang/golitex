@@ -53,8 +53,8 @@ func (ver *Verifier) checkSpecFactReq_InFact_UseBtRules(stmt *ast.SpecFactStmt) 
 	head, ok := stmt.Params[1].(*ast.FcFn).IsFcFn_HasAtomHead_ReturnHead() // WARNING: 这里有问题，因为可能不是fn template，而是 fn(R)R 这种
 	// 需要处理 fn(R)R 这种；现在 fn_template 本质上也写成函数形式了
 	if ok {
-		_, ok := ver.env.GetFnTemplateDef(head)
-		if ok {
+		def := ver.env.GetFnTemplateDef(head)
+		if def != nil {
 			for _, param := range stmt.Params[1].(*ast.FcFn).Params {
 				ok := ver.env.AreAtomsInFcAreDeclared(param, map[string]struct{}{})
 				if !ok {
