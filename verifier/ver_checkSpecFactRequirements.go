@@ -286,5 +286,11 @@ func (ver *Verifier) lenFnRequirement(fc *ast.FcFn, state *VerState) (bool, erro
 	}
 
 	verRet := ver.VerFactStmt(ast.NewInFactWithFc(fc.Params[0], ast.FcAtom(glob.KeywordFiniteSet)), state)
-	return verRet.ToBoolErr()
+	if verRet.IsErr() {
+		return false, fmt.Errorf(verRet.String())
+	}
+	if verRet.IsUnknown() {
+		return false, fmt.Errorf("parameters in %s must be in set %s, %s in %s is not valid", fc.FnHead, glob.KeywordFiniteSet, fc.Params[0], fc)
+	}
+	return true, nil
 }

@@ -29,6 +29,18 @@ type VerRet interface {
 	ToBoolErr() (bool, error)
 }
 
+type VerTrue struct {
+	Msg []string
+}
+
+type VerUnknown struct {
+	Msg []string
+}
+
+type VerErr struct {
+	Msg []string
+}
+
 func (v *VerTrue) verRet()                     {}
 func (v *VerTrue) IsTrue() bool                { return true }
 func (v *VerTrue) IsUnknown() bool             { return false }
@@ -50,18 +62,6 @@ func (v *VerUnknown) IsErr() bool              { return false }
 func (v *VerUnknown) AddMsg(msg string)        { v.Msg = append(v.Msg, msg) }
 func (v *VerUnknown) String() string           { return strings.Join(v.Msg, "\n") }
 func (v *VerUnknown) ToBoolErr() (bool, error) { return false, nil }
-
-type VerTrue struct {
-	Msg []string
-}
-
-type VerUnknown struct {
-	Msg []string
-}
-
-type VerErr struct {
-	Msg []string
-}
 
 func newVerErr(s string) *VerErr {
 	if s != "" {
