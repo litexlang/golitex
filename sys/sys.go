@@ -168,11 +168,11 @@ func RunFilesInRepoWithPipelineRunner(repo string) error {
 			return fmt.Errorf("failed to execute code %s: %s", path, err.Error())
 		}
 
-		pipelineRunner.Clear()
-
 		elapsed := time.Since(start)
 
 		fmt.Printf("%s\n", elapsed)
+
+		pipelineRunner.Clear()
 	}
 
 	return nil
