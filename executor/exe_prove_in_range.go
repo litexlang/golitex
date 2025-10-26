@@ -21,7 +21,7 @@ import (
 	"strconv"
 )
 
-func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) (glob.ExecState, error) {
+func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) (glob.ExecRet, error) {
 	intensionalSetGivenSetIsIn := exec.env.GetIntensionalSet(stmt.IntensionalSet)
 	if intensionalSetGivenSetIsIn == nil {
 		return glob.NewExecErr(""), fmt.Errorf("intensional set %s not found", stmt.IntensionalSet)
@@ -75,11 +75,14 @@ func (exec *Executor) proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsI
 	}
 
 	execState, err := exec.factStmt(instIndexInParamSetFact)
-	if notOkExec(execState, err) {
+	if err != nil {
 		return false, "", err
 	}
+	// if notOkExec(execState, err) {
+	// 	return false, "", err
+	// }
 
-	if execState.IsUnknown() || execState.IsErr() {
+	if execState.IsUnknown() {
 		revInstDomFact := instIndexInParamSetFact.(*ast.SpecFactStmt).ReverseIsTrue()
 		for _, fact := range revInstDomFact {
 			instFact, err := fact.Instantiate(uniMap)
@@ -139,7 +142,7 @@ func (exec *Executor) proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsI
 		if err != nil {
 			return false, "", err
 		}
-		if execState.IsUnknown() || execState.IsErr() {
+		if execState.IsUnknown() {
 			// 如果是 fact， 那把数字代入一下，会方便非常多，比如 x > 1 ，把 x = 2直接代入就能直接验证出来了
 			curStmtAsFact, err := curStmt.(ast.FactStmt).Instantiate(uniMap)
 			if err != nil {
