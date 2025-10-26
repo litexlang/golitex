@@ -17,69 +17,72 @@ package litex_verifier
 import (
 	"fmt"
 	ast "golitex/ast"
-	env "golitex/environment"
 	glob "golitex/glob"
 )
 
 // 所有verifier的方法里，只有它和switch里的三大函数可能读入anyState
-func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) VerRet {
+	var ok bool
+	var err error
+
 	switch asStmt := stmt.(type) {
 	case *ast.SpecFactStmt:
 		if asStmt.NameIs(glob.KeySymbolEqual) && asStmt.TypeEnum == ast.TruePure {
-			return ver.verTrueEqualFact(asStmt, state, true)
+			ok, err = ver.verTrueEqualFact(asStmt, state, true)
+		} else {
+			ok, err = ver.verSpecFactThatIsNotTrueEqualFact_UseCommutativity(asStmt, state)
 		}
-		return ver.verSpecFactThatIsNotTrueEqualFact_UseCommutativity(asStmt, state)
 	case *ast.OrStmt:
-		return ver.verOrStmt(asStmt, state)
+		ok, err = ver.verOrStmt(asStmt, state)
 	case *ast.UniFactStmt:
-		return ver.verUniFact(asStmt, state)
+		ok, err = ver.verUniFact(asStmt, state)
 	case *ast.UniFactWithIffStmt:
-		return ver.verUniFactWithIff(asStmt, state)
+		ok, err = ver.verUniFactWithIff(asStmt, state)
 	case *ast.EqualsFactStmt:
-		return ver.verEqualsFactStmt(asStmt, state)
+		ok, err = ver.verEqualsFactStmt(asStmt, state)
 	case *ast.IntensionalSetStmt:
-		return ver.verIntensionalSetStmt(asStmt, state)
+		ok, err = ver.verIntensionalSetStmt(asStmt, state)
 	case *ast.EnumStmt:
-		return ver.verEnumStmt(asStmt, state)
+		ok, err = ver.verEnumStmt(asStmt, state)
 	default:
-		return false, fmt.Errorf("unexpected fact statement: %s", asStmt)
+		return newVerErr(fmt.Sprintf("unexpected fact statement: %s", asStmt))
 	}
+
+	return BoolErrToVerRet(ok, err)
 }
 
-func ExecFactsAtCurEnv_retFailedFact(facts []ast.FactStmt, env *env.Env, state *VerState) (glob.ExecState, ast.FactStmt, error) {
-	ver := NewVerifier(env)
+// func ExecFactsAtCurEnv_retFailedFact(facts []ast.FactStmt, env *env.Env, state *VerState) (ExecRet, ast.FactStmt, error) {
+// 	ver := NewVerifier(env)
 
-	for _, fact := range facts {
-		ok, err := ver.VerFactStmt(fact, state)
-		if err != nil {
-			return glob.ExecStateError, fact, err
-		}
-		if !ok {
-			return glob.ExecStateUnknown, fact, nil
-		}
-		err = env.NewFact(fact)
-		if err != nil {
-			return glob.ExecStateError, fact, err
-		}
-	}
-	return glob.ExecStateTrue, nil, nil
-}
+// 	for _, fact := range facts {
+// 		verRet := ver.VerFactStmt(fact, state)
+// 		if verRet.IsErr() {
+// 			return NewExecErr(""), fact, fmt.Errorf(verRet.String())
+// 		} else if verRet.IsUnknown() {
+// 			return NewExecUnknown(""), fact, nil
+// 		}
+// 		err := env.NewFact(fact)
+// 		if err != nil {
+// 			return NewExecErr(""), fact, err
+// 		}
+// 	}
+// 	return NewExecTrue(""), nil, nil
+// }
 
-func ExecSpecFactsAtCurEnv_retRailedFact(facts []*ast.SpecFactStmt, env *env.Env) (glob.ExecState, *ast.SpecFactStmt, error) {
-	ver := NewVerifier(env)
+// func ExecSpecFactsAtCurEnv_retRailedFact(facts []*ast.SpecFactStmt, env *env.Env) (ExecRet, *ast.SpecFactStmt, error) {
+// 	ver := NewVerifier(env)
 
-	for _, fact := range facts {
-		ok, err := ver.VerFactStmt(fact, Round0Msg)
-		if err != nil {
-			return glob.ExecStateError, fact, err
-		}
-		if !ok {
-			return glob.ExecStateUnknown, fact, nil
-		}
-		err = env.NewFact(fact)
-		if err != nil {
-			return glob.ExecStateError, fact, err
-		}
-	}
-	return glob.ExecStateTrue, nil, nil
-}
+// 	for _, fact := range facts {
+// 		verRet := ver.VerFactStmt(fact, Round0Msg)
+// 		if verRet.IsErr() {
+// 			return NewExecErr(""), fact, fmt.Errorf(verRet.String())
+// 		} else if verRet.IsUnknown() {
+// 			return NewExecUnknown(""), fact, nil
+// 		}
+// 		err := env.NewFact(fact)
+// 		if err != nil {
+// 			return NewExecErr(""), fact, err
+// 		}
+// 	}
+// 	return NewExecTrue(""), nil, nil
+// }

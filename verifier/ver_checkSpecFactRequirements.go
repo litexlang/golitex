@@ -32,10 +32,10 @@ func (ver *Verifier) checkSpecFactReq(stmt *ast.SpecFactStmt, state *VerState) (
 			return ok, state, nil
 		}
 
-		return ver.checkSpecFactRequirements(stmt, state)
+		return ver.checkFnsReqAndUpdateReqState(stmt, state)
 	}
 
-	return ver.checkSpecFactRequirements(stmt, state)
+	return ver.checkFnsReqAndUpdateReqState(stmt, state)
 }
 
 // 只验证 1. params都声明了 2. 确实是fn template
@@ -53,8 +53,8 @@ func (ver *Verifier) checkSpecFactReq_InFact_UseBtRules(stmt *ast.SpecFactStmt) 
 	head, ok := stmt.Params[1].(*ast.FcFn).IsFcFn_HasAtomHead_ReturnHead() // WARNING: 这里有问题，因为可能不是fn template，而是 fn(R)R 这种
 	// 需要处理 fn(R)R 这种；现在 fn_template 本质上也写成函数形式了
 	if ok {
-		_, ok := ver.env.GetFnTemplateDef(head)
-		if ok {
+		def := ver.env.GetFnTemplateDef(head)
+		if def != nil {
 			for _, param := range stmt.Params[1].(*ast.FcFn).Params {
 				ok := ver.env.AreAtomsInFcAreDeclared(param, map[string]struct{}{})
 				if !ok {
@@ -79,7 +79,7 @@ func (ver *Verifier) checkSpecFactReq_InFact_UseBtRules(stmt *ast.SpecFactStmt) 
 	}
 }
 
-func (ver *Verifier) checkSpecFactRequirements(stmt *ast.SpecFactStmt, state *VerState) (bool, *VerState, error) {
+func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state *VerState) (bool, *VerState, error) {
 
 	// 1. Check if all atoms in the parameters are declared
 	// REMARK
@@ -247,12 +247,9 @@ func (ver *Verifier) setDefinedByReplacementFnRequirement(fc *ast.FcFn, state *V
 	}
 
 	forallXOnlyOneYSatisfyGivenProp := ast.GetForallXOnlyOneYSatisfyGivenProp(fc.Params[0], fc.Params[1], propName)
-	ok, err := ver.VerFactStmt(forallXOnlyOneYSatisfyGivenProp, state)
-	if err != nil {
-		return false, err
-	}
 
-	return ok, nil
+	verRet := ver.VerFactStmt(forallXOnlyOneYSatisfyGivenProp, state)
+	return verRet.ToBoolErr()
 }
 
 var builtinFunctionNameSetAndCanTakeInAnyObj = map[string]struct{}{
@@ -288,13 +285,12 @@ func (ver *Verifier) lenFnRequirement(fc *ast.FcFn, state *VerState) (bool, erro
 		return false, fmt.Errorf("parameters in %s must be 1, %s in %s is not valid", fc.FnHead, fc, fc)
 	}
 
-	ok, err := ver.VerFactStmt(ast.NewInFactWithFc(fc.Params[0], ast.FcAtom(glob.KeywordFiniteSet)), state)
-	if err != nil {
-		return false, err
+	verRet := ver.VerFactStmt(ast.NewInFactWithFc(fc.Params[0], ast.FcAtom(glob.KeywordFiniteSet)), state)
+	if verRet.IsErr() {
+		return false, fmt.Errorf(verRet.String())
 	}
-	if !ok {
+	if verRet.IsUnknown() {
 		return false, fmt.Errorf("parameters in %s must be in set %s, %s in %s is not valid", fc.FnHead, glob.KeywordFiniteSet, fc.Params[0], fc)
 	}
-
 	return true, nil
 }

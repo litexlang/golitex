@@ -44,11 +44,11 @@ func (ver *Verifier) paramsInSets(params []ast.Fc, sets []ast.Fc, state *VerStat
 
 	for i := range params {
 		fact := ast.NewInFactWithFc(params[i], sets[i])
-		ok, err := ver.VerFactStmt(fact, state)
-		if err != nil {
-			return false, glob.Msgs{}, err
+		verRet := ver.VerFactStmt(fact, state)
+		if verRet.IsErr() {
+			return false, glob.Msgs{}, fmt.Errorf(verRet.String())
 		}
-		if !ok {
+		if verRet.IsUnknown() {
 			return false, glob.Msgs{ast.UnknownFactMsg(fact)}, nil
 		}
 	}
@@ -57,11 +57,11 @@ func (ver *Verifier) paramsInSets(params []ast.Fc, sets []ast.Fc, state *VerStat
 
 func (ver *Verifier) factsAreTrue(facts []ast.FactStmt, state *VerState) (bool, glob.Msgs, error) {
 	for _, fact := range facts {
-		ok, err := ver.VerFactStmt(fact, state)
-		if err != nil {
-			return false, glob.Msgs{}, err
+		verRet := ver.VerFactStmt(fact, state)
+		if verRet.IsErr() {
+			return false, glob.Msgs{}, fmt.Errorf(verRet.String())
 		}
-		if !ok {
+		if verRet.IsUnknown() {
 			return false, glob.Msgs{ast.UnknownFactMsg(fact)}, nil
 		}
 	}
@@ -75,14 +75,19 @@ func VerFactInNewEnv(oldEnv *env.Env, facts []ast.FactStmt, state *VerState) (bo
 	defer ver.deleteEnvAndRetainMsg()
 
 	for _, fact := range facts {
-		ok, err := ver.VerFactStmt(fact, state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, nil
+		verRet := ver.VerFactStmt(fact, state)
+		if verRet.IsErr() || verRet.IsUnknown() {
+			return verRet.ToBoolErr()
 		}
 	}
 
 	return true, nil
+}
+
+func IsTrueOrErr(ok bool, err error) bool {
+	return ok || err != nil
+}
+
+func IsFalseOrErr(ok bool, err error) bool {
+	return !ok || err != nil
 }

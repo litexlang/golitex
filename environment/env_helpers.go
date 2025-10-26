@@ -20,20 +20,20 @@ import (
 	glob "golitex/glob"
 )
 
-func (e *Env) isSetFnRetValue(fc ast.Fc) (*ast.HaveSetFnStmt, bool) {
+func (e *Env) GetSetFnRetValue(fc ast.Fc) *ast.HaveSetFnStmt {
 	asFn, ok := fc.(*ast.FcFn)
 	if !ok {
-		return nil, false
+		return nil
 	}
 
 	// name
 	fnName := asFn.FnHead
 	fnNameAsAtom, ok := fnName.(ast.FcAtom)
 	if !ok {
-		return nil, false
+		return nil
 	}
-	haveSetFn, ok := e.GetHaveSetFnDef(fnNameAsAtom)
-	return haveSetFn, ok
+	haveSetFn := e.GetHaveSetFnDef(fnNameAsAtom)
+	return haveSetFn
 }
 
 func (e *Env) GenerateUndeclaredRandomName() string {
@@ -79,8 +79,8 @@ func (e *Env) GetFnStructFromFnTName(fnTName *ast.FcFn) (*ast.FnTStruct, error) 
 }
 
 func (e *Env) getFnTDef_InstFnTStructOfIt(fnTDefName ast.FcAtom, templateParams []ast.Fc) (*ast.FnTStruct, error) {
-	defOfT, ok := e.GetFnTemplateDef(fnTDefName)
-	if !ok {
+	defOfT := e.GetFnTemplateDef(fnTDefName)
+	if defOfT == nil {
 		return nil, fmt.Errorf("fnTNameHead %s is not a fn template", fnTDefName)
 	}
 

@@ -72,7 +72,7 @@ type Env struct {
 	TransitivePropMem  map[string]map[string][]ast.Fc
 	CommutativePropMem map[string]*PropCommutativeCase
 
-	AlgoDefMem map[string]*ast.AlgoDefStmt
+	AlgoDefMem map[string][]*ast.AlgoDefStmt
 }
 
 type PropCommutativeCase struct {
@@ -111,7 +111,7 @@ func NewEnv(parent *Env) *Env {
 		SymbolValueMem:         make(map[string]ast.Fc),
 		TransitivePropMem:      make(map[string]map[string][]ast.Fc),
 		CommutativePropMem:     make(map[string]*PropCommutativeCase),
-		AlgoDefMem:             make(map[string]*ast.AlgoDefStmt),
+		AlgoDefMem:             make(map[string][]*ast.AlgoDefStmt),
 	}
 	return env
 }
@@ -127,4 +127,13 @@ func makeKnownFactsStruct() KnownFactsStruct {
 
 func (e *Env) AddMsgToParent(msg string) {
 	e.Parent.Msgs = append(e.Parent.Msgs, msg)
+}
+
+func (e *Env) NotEqualIsCommutative() {
+	e.CommutativePropMem[glob.KeySymbolEqual] = NewCommutativePropMemItemStruct()
+	e.CommutativePropMem[glob.KeySymbolEqual].FalsePureIsCommutative = true
+}
+
+func (e *Env) NewTransitiveProp(name string) {
+	e.TransitivePropMem[name] = make(map[string][]ast.Fc)
 }

@@ -24,48 +24,16 @@ import (
 
 // how equality is verified is different from other facts because 1. it is stored differently 2. its transitive and commutative property is automatically used by the verifier
 func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, checkRequirements bool) (bool, error) {
-	var ok bool
-	var err error
-
-	replaced, newStmt := ver.env.ReplaceFcInSpecFactWithValue(stmt)
-	if err != nil {
-		return false, err
-	}
-	if replaced {
-		ok, err = ver.verTrueEqualFactMainLogic(newStmt, state, true)
-		if err != nil {
-			return false, err
-		}
-
-		if ok {
-			if state.WithMsg {
-				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
-			}
-			return true, nil
-		}
+	if ok, err := (ver.verByReplaceFcInSpecFactWithValue(stmt, state)); IsTrueOrErr(ok, err) {
+		return ok, err
 	}
 
-	if ok, err := ver.verTrueEqualFactMainLogic(stmt, state, checkRequirements); err != nil {
-		return false, err
-	} else if ok {
-		return true, nil
+	if ok, err := ver.verTrueEqualFactMainLogic(stmt, state, checkRequirements); IsTrueOrErr(ok, err) {
+		return ok, err
 	}
 
-	replaced, newStmt, err = ver.env.ReplaceFcInSpecFactWithValueAndCompute(stmt)
-	if err != nil {
-		return false, err
-	}
-	if replaced {
-		ok, err = ver.verTrueEqualFactMainLogic(newStmt, state, true)
-		if err != nil {
-			return false, err
-		}
-		if ok {
-			if state.WithMsg {
-				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values and computing", stmt.String(), newStmt.String()))
-			}
-			return true, nil
-		}
+	if ok, err := ver.verByReplaceFcInSpecFactWithValueAndCompute(stmt, state); IsTrueOrErr(ok, err) {
+		return ok, err
 	}
 
 	return false, nil
@@ -77,10 +45,8 @@ func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *Ve
 
 	if checkRequirements && !state.ReqOk {
 		// REMARK: 这里 state 更新了： ReqOk 更新到了 true
-		if ok, state, err = ver.checkSpecFactRequirements(stmt, state); err != nil {
-			return false, err
-		} else if !ok {
-			return false, nil
+		if ok, state, err = ver.checkFnsReqAndUpdateReqState(stmt, state); IsFalseOrErr(ok, err) {
+			return ok, err
 		}
 
 		if !isValidEqualFact(stmt) {
@@ -88,21 +54,17 @@ func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *Ve
 		}
 	}
 
-	ok, err = ver.verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(stmt.Params[0], stmt.Params[1], state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
+	if ok, err := ver.verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(stmt.Params[0], stmt.Params[1], state); IsTrueOrErr(ok, err) {
+		return ok, err
 	}
 
 	if leftAsFn, ok := stmt.Params[0].(*ast.FcFn); ok {
 		if rightAsFn, ok := stmt.Params[1].(*ast.FcFn); ok {
-			ret := ver.verTrueEqualFact_FcFnEqual_NoCheckRequirements(leftAsFn, rightAsFn, state)
-			if ret.IsErr() {
-				return false, ret.Err
+			checked, _, err := ver.verTrueEqualFact_FcFnEqual_NoCheckRequirements(leftAsFn, rightAsFn, state)
+			if err != nil {
+				return false, err
 			}
-			if ret.IsOk() {
+			if checked {
 				return true, nil
 			}
 		}

@@ -16,11 +16,13 @@ package litex_executor
 
 import (
 	ast "golitex/ast"
-	glob "golitex/glob"
 )
 
-func (exec *Executor) algoDefStmt(stmt *ast.AlgoDefStmt) (glob.ExecState, error) {
-	exec.env.AlgoDefMem[stmt.FuncName] = stmt
+func (exec *Executor) algoDefStmt(stmt *ast.AlgoDefStmt) (ExecRet, error) {
+	if _, ok := exec.env.AlgoDefMem[stmt.FuncName]; !ok {
+		exec.env.AlgoDefMem[stmt.FuncName] = []*ast.AlgoDefStmt{}
+	}
+	exec.env.AlgoDefMem[stmt.FuncName] = append(exec.env.AlgoDefMem[stmt.FuncName], stmt)
 	exec.newMsg(stmt.String())
-	return glob.ExecStateTrue, nil
+	return NewExecTrue(""), nil
 }

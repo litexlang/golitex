@@ -105,8 +105,8 @@ func (ver *Verifier) GetFnStructFromFnTName_CheckFnTParamsReq(fnTName *ast.FcFn,
 }
 
 func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckParamsSatisfyFnTReq(fnTDefName ast.FcAtom, templateParams []ast.Fc, state *VerState) (*ast.FnTStruct, error) {
-	defOfT, ok := ver.env.GetFnTemplateDef(fnTDefName)
-	if !ok {
+	defOfT := ver.env.GetFnTemplateDef(fnTDefName)
+	if defOfT == nil {
 		return nil, fmt.Errorf("fnTNameHead %s is not a fn template", fnTDefName)
 	}
 
@@ -115,6 +115,7 @@ func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckParamsSatisfyFnTReq(fnTDef
 		return nil, err
 	}
 
+	var ok bool
 	ok, err = ver.getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreTrue(defOfT, uniMap, state)
 	if err != nil {
 		return nil, err
@@ -136,13 +137,9 @@ func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreT
 			return false, err
 		}
 
-		ok, err := ver.VerFactStmt(newFact, state)
-		if err != nil {
-			return false, err
-		}
-
-		if !ok {
-			return false, nil
+		verRet := ver.VerFactStmt(newFact, state)
+		if verRet.IsErr() || verRet.IsUnknown() {
+			return verRet.ToBoolErr()
 		}
 	}
 
