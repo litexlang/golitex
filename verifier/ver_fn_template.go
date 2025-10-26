@@ -20,18 +20,18 @@ import (
 )
 
 func (ver *Verifier) ver_In_FnTT(left ast.Fc, right *ast.FcFn, state *VerState) (bool, error) {
-	leftLatestFnT, ok := ver.env.GetLatestFnT_GivenNameIsIn(left.String())
-	if !ok {
+	leftLatestFnT := ver.env.GetLatestFnT_GivenNameIsIn(left.String())
+	if leftLatestFnT == nil {
 		return false, nil
 	}
 
 	// right dom <= left dom. on right dom left has all those then facts
-	rightDefT, ok := ver.env.GetFnTemplateDef_KeyIsFcHead(right)
-	if !ok {
+	rightDefT := ver.env.GetFnTemplateDef_KeyIsFcHead(right)
+	if rightDefT == nil {
 		return false, nil
 	}
 
-	ok = ver.leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftLatestFnT, rightDefT, left, right, state)
+	ok := ver.leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftLatestFnT, rightDefT, left, right, state)
 
 	if !ok {
 		return false, nil
@@ -83,10 +83,8 @@ func (ver *Verifier) leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftFnTStruc
 	uniThen := leftDom
 	uniFact := ast.NewUniFact(uniParams, uniParamSets, uniDom, uniThen, rightFnTDef.Line)
 
-	ok, err := ver.VerFactStmt(uniFact, state)
-	if err != nil {
-		return false
-	}
+	verRet := ver.VerFactStmt(uniFact, state)
+	ok, _ := verRet.ToBoolErr()
 	return ok
 }
 
@@ -97,10 +95,7 @@ func (ver *Verifier) f_satisfy_FnT_ThenFacts_On_FnT_Dom(f ast.Fc, fnTDefName str
 		return false
 	}
 
-	ok, err := ver.VerFactStmt(derivedUniFact, state)
-	if err != nil {
-		return false
-	}
-
+	verRet := ver.VerFactStmt(derivedUniFact, state)
+	ok, _ := verRet.ToBoolErr()
 	return ok
 }

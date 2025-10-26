@@ -21,10 +21,9 @@ import (
 )
 
 func (ver *Verifier) verEnumStmt(stmt *ast.EnumStmt, state *VerState) (bool, error) {
-	if ok, err := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.CurSet, ast.FcAtom(glob.KeywordFiniteSet)}, stmt.Line), state); err != nil || ok {
-		if err != nil {
-			return false, err
-		}
+	if verRet := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.CurSet, ast.FcAtom(glob.KeywordFiniteSet)}, stmt.Line), state); verRet.IsErr() {
+		return verRet.ToBoolErr()
+	} else if verRet.IsTrue() {
 		if ok, _ := ver.lenIsZeroThenEnumIsEmpty(stmt, state); ok {
 			return true, nil
 		}
@@ -36,31 +35,22 @@ func (ver *Verifier) verEnumStmt(stmt *ast.EnumStmt, state *VerState) (bool, err
 
 	forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts := ast.TransformEnumToUniFact(stmt.CurSet, stmt.Items)
 
-	ok, err := ver.VerFactStmt(forallItemInSetEqualToOneOfGivenItems, state)
-	if err != nil {
-		return false, err
-	}
-	if !ok {
-		return false, nil
+	verRet := ver.VerFactStmt(forallItemInSetEqualToOneOfGivenItems, state)
+	if verRet.IsErr() || verRet.IsUnknown() {
+		return verRet.ToBoolErr()
 	}
 
 	for _, domFact := range pairwiseNotEqualFacts {
-		ok, err := ver.VerFactStmt(domFact, state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, nil
+		verRet := ver.VerFactStmt(domFact, state)
+		if verRet.IsErr() || verRet.IsUnknown() {
+			return verRet.ToBoolErr()
 		}
 	}
 
 	for _, equalFact := range itemsInSetFacts {
-		ok, err := ver.VerFactStmt(equalFact, state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, nil
+		verRet := ver.VerFactStmt(equalFact, state)
+		if verRet.IsErr() || verRet.IsUnknown() {
+			return verRet.ToBoolErr()
 		}
 	}
 
@@ -70,12 +60,9 @@ func (ver *Verifier) verEnumStmt(stmt *ast.EnumStmt, state *VerState) (bool, err
 func (ver *Verifier) lenIsZeroThenEnumIsEmpty(stmt *ast.EnumStmt, state *VerState) (bool, error) {
 	lenOverStmtName := ast.NewFcFn(ast.FcAtom(glob.KeywordLen), []ast.Fc{stmt.CurSet})
 	equalFact := ast.EqualFact(lenOverStmtName, ast.FcAtom("0"))
-	ok, err := ver.VerFactStmt(equalFact, state)
-	if err != nil {
-		return false, err
-	}
-	if !ok {
-		return false, nil
+	verRet := ver.VerFactStmt(equalFact, state)
+	if verRet.IsErr() || verRet.IsUnknown() {
+		return verRet.ToBoolErr()
 	}
 
 	if state.WithMsg {
@@ -91,12 +78,9 @@ func (ver *Verifier) forallObjNotInSetThenTheSetIsEmpty(stmt *ast.EnumStmt, stat
 	}
 
 	allObjectsNotInSetThenSetIsEmpty := ast.NewUniFact([]string{"x"}, []ast.Fc{ast.FcAtom(glob.KeywordObj)}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{ast.FcAtom("x"), stmt.CurSet}, stmt.Line)}, stmt.Line)
-	ok, err := ver.VerFactStmt(allObjectsNotInSetThenSetIsEmpty, state)
-	if err != nil {
-		return false, err
-	}
-	if !ok {
-		return false, nil
+	verRet := ver.VerFactStmt(allObjectsNotInSetThenSetIsEmpty, state)
+	if verRet.IsErr() || verRet.IsUnknown() {
+		return verRet.ToBoolErr()
 	}
 
 	if state.WithMsg {

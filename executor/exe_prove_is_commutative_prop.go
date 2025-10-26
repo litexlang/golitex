@@ -20,15 +20,15 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) proveIsCommutativePropStmt(stmt *ast.ProveIsCommutativePropStmt) (glob.ExecState, error) {
+func (exec *Executor) proveIsCommutativePropStmt(stmt *ast.ProveIsCommutativePropStmt) (ExecRet, error) {
 	ok, err := exec.proveIsCommutativePropStmtMainLogic(stmt)
 	if !ok || err != nil {
-		return glob.ExecStateError, err
+		return NewExecErr(""), err
 	}
 
 	exec.NewCommutativeProp(stmt.SpecFact)
 
-	return glob.ExecStateTrue, nil
+	return NewExecTrue(""), nil
 }
 
 func (exec *Executor) proveIsCommutativePropStmtMainLogic(stmt *ast.ProveIsCommutativePropStmt) (bool, error) {
@@ -39,8 +39,8 @@ func (exec *Executor) proveIsCommutativePropStmtMainLogic(stmt *ast.ProveIsCommu
 		return true, nil
 	}
 
-	def, ok := exec.env.GetPropDef(stmt.SpecFact.PropName)
-	if !ok {
+	def := exec.env.GetPropDef(stmt.SpecFact.PropName)
+	if def == nil {
 		return false, fmt.Errorf("prop %s is not defined", stmt.SpecFact.PropName)
 	}
 
@@ -48,16 +48,7 @@ func (exec *Executor) proveIsCommutativePropStmtMainLogic(stmt *ast.ProveIsCommu
 		return false, fmt.Errorf("prop %s has %d params, but 2 params are expected", stmt.SpecFact.PropName, len(def.DefHeader.Params))
 	}
 
-	// // def 的 paramSet 必须相等
-	// state, err := exec.factStmt(ast.NewEqualFact(def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[1]))
-	// if err != nil {
-	// 	return false, err
-	// }
-	// if state != glob.ExecStateTrue {
-	// 	return false, fmt.Errorf("prop in %s must have equal parameter sets, but parameter sets %s and %s of %s are not equal", glob.KeywordProveIsTransitiveProp, def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[1], def.DefHeader.Name)
-	// }
-
-	ok = exec.env.AreAtomsInFcAreDeclared(def.DefHeader.ParamSets[0], map[string]struct{}{})
+	ok := exec.env.AreAtomsInFcAreDeclared(def.DefHeader.ParamSets[0], map[string]struct{}{})
 	if !ok {
 		return false, fmt.Errorf("param %s is not declared", def.DefHeader.ParamSets[0])
 	}
@@ -122,10 +113,10 @@ func (exec *Executor) proveIsCommutativePropStmtBody(proofs []ast.Stmt, fact *as
 	}
 
 	state, err := exec.factStmt(rightToLeft)
-	if notOkExec(state, err) {
+	if err != nil {
 		return false, err
 	}
-	if state != glob.ExecStateTrue {
+	if state.IsUnknown() {
 		return false, fmt.Errorf("proof in %s must be proved to be true, but %s is not true", glob.KeywordProveIsCommutativeProp, rightToLeft)
 	}
 

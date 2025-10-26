@@ -20,7 +20,6 @@ const MultiLinesCommentSig string = "\""
 const MaxNameLen int = 255
 const FuncFactPrefix string = "$"
 const InlineCommentSig string = "#"
-const ContinueExecutionIfExecUnknown bool = false
 const TupleFcFnHead string = "()"
 const CheckFalse = false
 

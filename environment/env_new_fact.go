@@ -181,17 +181,17 @@ func (env *Env) newPureFactPostProcess(fact *ast.SpecFactStmt) error {
 		}
 	}
 
-	_, ok := env.GetPropDef(fact.PropName)
+	propDef := env.GetPropDef(fact.PropName)
 
-	if ok {
+	if propDef != nil {
 		if fact.TypeEnum == ast.TruePure {
 			return env.newTruePureFact_EmitFactsKnownByDef(fact)
 		}
 		return nil
 	}
 
-	existPropDef, ok := env.GetExistPropDef(fact.PropName)
-	if ok {
+	existPropDef := env.GetExistPropDef(fact.PropName)
+	if existPropDef != nil {
 		if fact.TypeEnum == ast.TruePure {
 			return nil
 		} else {
@@ -209,8 +209,8 @@ func (env *Env) newPureFactPostProcess(fact *ast.SpecFactStmt) error {
 }
 
 func (env *Env) newTruePureFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) error {
-	propDef, ok := env.GetPropDef(fact.PropName)
-	if !ok {
+	propDef := env.GetPropDef(fact.PropName)
+	if propDef == nil {
 		// TODO 这里需要考虑prop的定义是否在当前包中。当然这里有点复杂，因为如果是内置的prop，那么可能需要到builtin包中去找
 		return nil
 	}
@@ -317,8 +317,8 @@ func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 }
 
 func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, error) {
-	existPropDef, ok := env.GetExistPropDef(fact.PropName)
-	if !ok {
+	existPropDef := env.GetExistPropDef(fact.PropName)
+	if existPropDef == nil {
 		return nil, fmt.Errorf("exist fact %s has no definition", fact)
 	}
 
@@ -396,15 +396,15 @@ func (env *Env) storeSymbolValue(left, right ast.Fc) error {
 	// 	env.SymbolValueMem[left.String()] = right
 	// }
 
-	if computedFc, ok, err := env.CanBeComputed(left); err != nil {
+	if computedFc, err := env.CanBeComputed(left); err != nil {
 		return err
-	} else if ok {
+	} else if computedFc != nil {
 		env.SymbolValueMem[right.String()] = computedFc
 	}
 
-	if computedFc, ok, err := env.CanBeComputed(right); err != nil {
+	if computedFc, err := env.CanBeComputed(right); err != nil {
 		return err
-	} else if ok {
+	} else if computedFc != nil {
 		env.SymbolValueMem[left.String()] = computedFc
 	}
 
@@ -420,8 +420,8 @@ func (env *Env) GetEqualFcs(fc ast.Fc) (*[]ast.Fc, bool) {
 func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, []ast.FactStmt, error) {
 	existParams, factParams := ast.GetExistFactExistParamsAndFactParams(fact)
 
-	existPropDef, ok := env.GetExistPropDef(fact.PropName)
-	if !ok {
+	existPropDef := env.GetExistPropDef(fact.PropName)
+	if existPropDef == nil {
 		return nil, nil, fmt.Errorf("exist fact %s has no definition", fact)
 	}
 

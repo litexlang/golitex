@@ -14,46 +14,68 @@
 
 package litex_verifier
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
-type VerRet struct {
-	Ok   bool
-	Msgs []string
-	Err  error
+type VerRet interface {
+	verRet()
+	IsTrue() bool
+	IsUnknown() bool
+	IsErr() bool
+	AddMsg(msg string)
+	String() string
+	ToBoolErr() (bool, error)
 }
 
-func (ver *VerRet) IsErr() bool {
-	return ver.Err != nil
+type VerTrue struct {
+	Msg []string
 }
 
-func (ver *VerRet) IsOk() bool {
-	return ver.Ok
+type VerUnknown struct {
+	Msg []string
 }
 
-func (ver *VerRet) IsUnknown() bool {
-	return !ver.Ok && ver.Err == nil
+type VerErr struct {
+	Msg []string
 }
 
-func newErrVerRet(msg string, args ...any) *VerRet {
-	return &VerRet{
-		Ok:   false,
-		Msgs: []string{fmt.Sprintf(msg, args...)},
-		Err:  fmt.Errorf(msg, args...),
+func (v *VerTrue) verRet()                     {}
+func (v *VerTrue) IsTrue() bool                { return true }
+func (v *VerTrue) IsUnknown() bool             { return false }
+func (v *VerTrue) IsErr() bool                 { return false }
+func (v *VerTrue) AddMsg(msg string)           { v.Msg = append(v.Msg, msg) }
+func (v *VerTrue) String() string              { return strings.Join(v.Msg, "\n") }
+func (v *VerTrue) ToBoolErr() (bool, error)    { return true, nil }
+func (v *VerErr) verRet()                      {}
+func (v *VerErr) IsTrue() bool                 { return false }
+func (v *VerErr) IsUnknown() bool              { return false }
+func (v *VerErr) IsErr() bool                  { return true }
+func (v *VerErr) AddMsg(msg string)            { v.Msg = append(v.Msg, msg) }
+func (v *VerErr) String() string               { return strings.Join(v.Msg, "\n") }
+func (v *VerErr) ToBoolErr() (bool, error)     { return false, fmt.Errorf(v.String()) }
+func (v *VerUnknown) verRet()                  {}
+func (v *VerUnknown) IsTrue() bool             { return false }
+func (v *VerUnknown) IsUnknown() bool          { return true }
+func (v *VerUnknown) IsErr() bool              { return false }
+func (v *VerUnknown) AddMsg(msg string)        { v.Msg = append(v.Msg, msg) }
+func (v *VerUnknown) String() string           { return strings.Join(v.Msg, "\n") }
+func (v *VerUnknown) ToBoolErr() (bool, error) { return false, nil }
+
+func newVerErr(s string) *VerErr {
+	if s != "" {
+		return &VerErr{Msg: []string{s}}
 	}
+	return &VerErr{Msg: []string{}}
 }
 
-func newTrueVerRet(msg string, args ...any) *VerRet {
-	return &VerRet{
-		Ok:   true,
-		Msgs: []string{fmt.Sprintf(msg, args...)},
-		Err:  nil,
+func BoolErrToVerRet(ok bool, err error) VerRet {
+	if err != nil {
+		return &VerErr{Msg: []string{err.Error()}}
 	}
-}
-
-func newUnknownVerRet(msg string, args ...any) *VerRet {
-	return &VerRet{
-		Ok:   false,
-		Msgs: []string{fmt.Sprintf(msg, args...)},
-		Err:  nil,
+	if ok {
+		return &VerTrue{Msg: []string{}}
 	}
+	return &VerUnknown{Msg: []string{}}
 }

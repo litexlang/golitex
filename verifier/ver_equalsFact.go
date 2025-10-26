@@ -28,12 +28,12 @@ func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState
 		checked := false
 		for j := i - 1; j >= 0; j-- {
 			newFact := ast.NewEqualFact(stmt.Params[j], stmt.Params[i])
-			ok, err := ver.VerFactStmt(newFact, state)
-			if err != nil {
-				return false, err
+			verRet := ver.VerFactStmt(newFact, state)
+			if verRet.IsErr() {
+				return false, fmt.Errorf(verRet.String())
 			}
-			if ok {
-				err = ver.env.NewFact(newFact)
+			if verRet.IsTrue() {
+				err := ver.env.NewFact(newFact)
 				if err != nil {
 					return false, err
 				}
