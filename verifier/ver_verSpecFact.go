@@ -21,27 +21,27 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	if stmt.NameIs(glob.KeySymbolEqual) && stmt.TypeEnum == ast.TruePure {
-		return ver.verTrueEqualFact(stmt, state, true)
+		return BoolErrToVerRet(ver.verTrueEqualFact(stmt, state, true))
 	}
 
 	if ok, err := ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt, state); IsTrueOrErr(ok, err) {
-		return ok, err
+		return BoolErrToVerRet(ok, err)
 	}
 
 	// if ver.env.IsCommutativeProp(stmt) || (stmt.NameIs(glob.KeySymbolEqual) && stmt.TypeEnum == ast.FalsePure) {
 	if ver.env.IsCommutativeProp(stmt) {
 		reverseParamsOrderStmt, err := stmt.ReverseParameterOrder()
 		if err != nil {
-			return false, err
+			return BoolErrToVerRet(false, err)
 		}
 		if ok, err := ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(reverseParamsOrderStmt, state); IsTrueOrErr(ok, err) {
-			return ok, err
+			return BoolErrToVerRet(ok, err)
 		}
 	}
 
-	return false, nil
+	return BoolErrToVerRet(false, nil)
 }
 
 func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
