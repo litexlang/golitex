@@ -17,15 +17,14 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
-	glob "golitex/glob"
 	parser "golitex/parser"
 )
 
-func (exec *Executor) importDirStmt(stmt *ast.ImportDirStmt) (glob.ExecRet, error) {
+func (exec *Executor) importDirStmt(stmt *ast.ImportDirStmt) (ExecRet, error) {
 	panic("TODO: not implemented")
 }
 
-func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string, importStmt ast.ImportStmtInterface) (glob.ExecRet, error) {
+func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string, importStmt ast.ImportStmtInterface) (ExecRet, error) {
 	if runInNewEnv {
 		exec.NewEnv(exec.env)
 		defer func() {
@@ -34,24 +33,24 @@ func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string, importS
 	}
 
 	topStmtSlice, err := parser.ParseSourceCode(sourceCode)
-	var execState glob.ExecRet = glob.NewExecTrue("")
+	var execState ExecRet = NewExecTrue("")
 	if err != nil {
-		return glob.NewExecErr(""), err
+		return NewExecErr(""), err
 	}
 	for _, topStmt := range topStmtSlice {
 		execState, _, err = exec.Stmt(topStmt)
 		if err != nil {
-			return glob.NewExecErr(""), err
+			return NewExecErr(""), err
 		}
 		if execState.IsUnknown() {
-			return glob.NewExecErr(""), fmt.Errorf("failed to execute source code when executing '%s':\n%s", importStmt, topStmt)
+			return NewExecErr(""), fmt.Errorf("failed to execute source code when executing '%s':\n%s", importStmt, topStmt)
 		}
 	}
 
 	return execState, nil
 }
 
-func (exec *Executor) runStmtInUpmostEnv_AssumeTheyAreTrue(topStmtSlice []ast.Stmt) (glob.ExecRet, error) {
+func (exec *Executor) runStmtInUpmostEnv_AssumeTheyAreTrue(topStmtSlice []ast.Stmt) (ExecRet, error) {
 	curEnv := exec.env.GetUpMostEnv()
 	newExec := NewExecutor(curEnv)
 
@@ -59,11 +58,11 @@ func (exec *Executor) runStmtInUpmostEnv_AssumeTheyAreTrue(topStmtSlice []ast.St
 		// execState, err := newExec.assumeStmtIsTrueRun(topStmt)
 		execState, _, err := newExec.Stmt(topStmt)
 		if err != nil {
-			return glob.NewExecErr(""), err
+			return NewExecErr(""), err
 		}
 		if execState.IsUnknown() {
-			return glob.NewExecErr(""), fmt.Errorf("failed to execute source code:\n%s\nSome statements in the source code are not executed successfully", topStmt)
+			return NewExecErr(""), fmt.Errorf("failed to execute source code:\n%s\nSome statements in the source code are not executed successfully", topStmt)
 		}
 	}
-	return glob.NewExecTrue(""), nil
+	return NewExecTrue(""), nil
 }

@@ -20,12 +20,12 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) proveByEnumMainLogic(stmt *ast.ProveByEnumStmt) (glob.ExecRet, error) {
+func (exec *Executor) proveByEnumMainLogic(stmt *ast.ProveByEnumStmt) (ExecRet, error) {
 	enums := [][]ast.Fc{}
 	for _, paramSet := range stmt.Fact.ParamSets {
 		enumFacts, ok := exec.env.GetEnumFact(paramSet.String())
 		if !ok {
-			return glob.NewExecErr(""), fmt.Errorf("prove over finite set statement error: enum not found")
+			return NewExecErr(""), fmt.Errorf("prove over finite set statement error: enum not found")
 		}
 		enums = append(enums, enumFacts)
 	}
@@ -38,13 +38,13 @@ func (exec *Executor) proveByEnumMainLogic(stmt *ast.ProveByEnumStmt) (glob.Exec
 		for i := range len(cartesianProductOfFcs) {
 			ok, err := exec.verProveOverFiniteSet_ProveAtProveSectionI(stmt, cartesianProductOfFcs[i])
 			if err != nil {
-				return glob.NewExecErr(""), err
+				return NewExecErr(""), err
 			}
 			if !ok {
-				return glob.NewExecErr(""), fmt.Errorf("failed to prove at prove section %d", i)
+				return NewExecErr(""), fmt.Errorf("failed to prove at prove section %d", i)
 			}
 		}
-		return glob.NewExecTrue(""), nil
+		return NewExecTrue(""), nil
 	}
 }
 
@@ -110,7 +110,7 @@ func getParamEqualFcSlice(params []string, equalTo []ast.Fc) []ast.FactStmt {
 	return result
 }
 
-func (exec *Executor) verProveOverFiniteSet_NoProveSection(stmt *ast.ProveByEnumStmt, cartesianProductOfFcs [][]ast.Fc) (glob.ExecRet, error) {
+func (exec *Executor) verProveOverFiniteSet_NoProveSection(stmt *ast.ProveByEnumStmt, cartesianProductOfFcs [][]ast.Fc) (ExecRet, error) {
 	for _, fcSlice := range cartesianProductOfFcs {
 		uniMap := map[string]ast.Fc{}
 		for i, param := range stmt.Fact.Params {
@@ -121,22 +121,22 @@ func (exec *Executor) verProveOverFiniteSet_NoProveSection(stmt *ast.ProveByEnum
 		for _, domFact := range stmt.Fact.DomFacts {
 			instantiatedDomFact, err := domFact.Instantiate(uniMap)
 			if err != nil {
-				return glob.NewExecErr(""), err
+				return NewExecErr(""), err
 			}
 
 			state, err := exec.factStmt(instantiatedDomFact)
 			if err != nil {
-				return glob.NewExecErr(""), err
+				return NewExecErr(""), err
 			}
 			if state.IsUnknown() {
 				domFactAs := instantiatedDomFact.(ast.Spec_OrFact)
 				for _, fact := range domFactAs.ReverseIsTrue() {
 					state, err := exec.factStmt(fact)
 					if err != nil {
-						return glob.NewExecErr(""), err
+						return NewExecErr(""), err
 					}
 					if state.IsUnknown() {
-						return glob.NewExecErr(""), fmt.Errorf("domain fact in universal fact in prove over finite set statement must be true or not true, it can not be unknown:\n%s", instantiatedDomFact)
+						return NewExecErr(""), fmt.Errorf("domain fact in universal fact in prove over finite set statement must be true or not true, it can not be unknown:\n%s", instantiatedDomFact)
 					}
 				}
 
@@ -153,7 +153,7 @@ func (exec *Executor) verProveOverFiniteSet_NoProveSection(stmt *ast.ProveByEnum
 		for _, thenFact := range stmt.Fact.ThenFacts {
 			instantiatedThenFact, err := thenFact.Instantiate(uniMap)
 			if err != nil {
-				return glob.NewExecErr(""), err
+				return NewExecErr(""), err
 			}
 			instantiatedThenFacts = append(instantiatedThenFacts, instantiatedThenFact)
 		}
@@ -162,13 +162,13 @@ func (exec *Executor) verProveOverFiniteSet_NoProveSection(stmt *ast.ProveByEnum
 		for _, fact := range instantiatedThenFacts {
 			state, err := exec.factStmt(fact)
 			if err != nil {
-				return glob.NewExecErr(""), err
+				return NewExecErr(""), err
 			}
 			if state.IsUnknown() {
-				return glob.NewExecErr(""), fmt.Errorf("failed to prove instantiated then facts: %s", fact)
+				return NewExecErr(""), fmt.Errorf("failed to prove instantiated then facts: %s", fact)
 			}
 		}
 	}
 
-	return glob.NewExecTrue(""), nil
+	return NewExecTrue(""), nil
 }
