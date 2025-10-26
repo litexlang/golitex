@@ -24,7 +24,7 @@ func notOkExec(state glob.ExecState, err error) bool {
 	if err != nil {
 		return true
 	}
-	if state != glob.ExecStateTrue {
+	if state.IsUnknown() || state.IsErr() {
 		return true
 	}
 	return false

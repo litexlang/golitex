@@ -58,16 +58,16 @@ func ExecFactsAtCurEnv_retFailedFact(facts []ast.FactStmt, env *env.Env, state *
 	for _, fact := range facts {
 		verRet := ver.VerFactStmt(fact, state)
 		if verRet.IsErr() {
-			return glob.ExecStateError, fact, fmt.Errorf(verRet.String())
+			return glob.NewExecErr(""), fact, fmt.Errorf(verRet.String())
 		} else if verRet.IsUnknown() {
-			return glob.ExecStateUnknown, fact, nil
+			return glob.NewExecUnknown(""), fact, nil
 		}
 		err := env.NewFact(fact)
 		if err != nil {
-			return glob.ExecStateError, fact, err
+			return glob.NewExecErr(""), fact, err
 		}
 	}
-	return glob.ExecStateTrue, nil, nil
+	return glob.NewExecTrue(""), nil, nil
 }
 
 func ExecSpecFactsAtCurEnv_retRailedFact(facts []*ast.SpecFactStmt, env *env.Env) (glob.ExecState, *ast.SpecFactStmt, error) {
@@ -76,14 +76,14 @@ func ExecSpecFactsAtCurEnv_retRailedFact(facts []*ast.SpecFactStmt, env *env.Env
 	for _, fact := range facts {
 		verRet := ver.VerFactStmt(fact, Round0Msg)
 		if verRet.IsErr() {
-			return glob.ExecStateError, fact, fmt.Errorf(verRet.String())
+			return glob.NewExecErr(""), fact, fmt.Errorf(verRet.String())
 		} else if verRet.IsUnknown() {
-			return glob.ExecStateUnknown, fact, nil
+			return glob.NewExecUnknown(""), fact, nil
 		}
 		err := env.NewFact(fact)
 		if err != nil {
-			return glob.ExecStateError, fact, err
+			return glob.NewExecErr(""), fact, err
 		}
 	}
-	return glob.ExecStateTrue, nil, nil
+	return glob.NewExecTrue(""), nil, nil
 }
