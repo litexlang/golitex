@@ -17,7 +17,6 @@ package litex_verifier
 import (
 	"fmt"
 	ast "golitex/ast"
-	env "golitex/environment"
 	glob "golitex/glob"
 )
 
@@ -52,38 +51,38 @@ func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) VerRet {
 	return BoolErrToVerRet(ok, err)
 }
 
-func ExecFactsAtCurEnv_retFailedFact(facts []ast.FactStmt, env *env.Env, state *VerState) (glob.ExecRet, ast.FactStmt, error) {
-	ver := NewVerifier(env)
+// func ExecFactsAtCurEnv_retFailedFact(facts []ast.FactStmt, env *env.Env, state *VerState) (ExecRet, ast.FactStmt, error) {
+// 	ver := NewVerifier(env)
 
-	for _, fact := range facts {
-		verRet := ver.VerFactStmt(fact, state)
-		if verRet.IsErr() {
-			return glob.NewExecErr(""), fact, fmt.Errorf(verRet.String())
-		} else if verRet.IsUnknown() {
-			return glob.NewExecUnknown(""), fact, nil
-		}
-		err := env.NewFact(fact)
-		if err != nil {
-			return glob.NewExecErr(""), fact, err
-		}
-	}
-	return glob.NewExecTrue(""), nil, nil
-}
+// 	for _, fact := range facts {
+// 		verRet := ver.VerFactStmt(fact, state)
+// 		if verRet.IsErr() {
+// 			return NewExecErr(""), fact, fmt.Errorf(verRet.String())
+// 		} else if verRet.IsUnknown() {
+// 			return NewExecUnknown(""), fact, nil
+// 		}
+// 		err := env.NewFact(fact)
+// 		if err != nil {
+// 			return NewExecErr(""), fact, err
+// 		}
+// 	}
+// 	return NewExecTrue(""), nil, nil
+// }
 
-func ExecSpecFactsAtCurEnv_retRailedFact(facts []*ast.SpecFactStmt, env *env.Env) (glob.ExecRet, *ast.SpecFactStmt, error) {
-	ver := NewVerifier(env)
+// func ExecSpecFactsAtCurEnv_retRailedFact(facts []*ast.SpecFactStmt, env *env.Env) (ExecRet, *ast.SpecFactStmt, error) {
+// 	ver := NewVerifier(env)
 
-	for _, fact := range facts {
-		verRet := ver.VerFactStmt(fact, Round0Msg)
-		if verRet.IsErr() {
-			return glob.NewExecErr(""), fact, fmt.Errorf(verRet.String())
-		} else if verRet.IsUnknown() {
-			return glob.NewExecUnknown(""), fact, nil
-		}
-		err := env.NewFact(fact)
-		if err != nil {
-			return glob.NewExecErr(""), fact, err
-		}
-	}
-	return glob.NewExecTrue(""), nil, nil
-}
+// 	for _, fact := range facts {
+// 		verRet := ver.VerFactStmt(fact, Round0Msg)
+// 		if verRet.IsErr() {
+// 			return NewExecErr(""), fact, fmt.Errorf(verRet.String())
+// 		} else if verRet.IsUnknown() {
+// 			return NewExecUnknown(""), fact, nil
+// 		}
+// 		err := env.NewFact(fact)
+// 		if err != nil {
+// 			return NewExecErr(""), fact, err
+// 		}
+// 	}
+// 	return NewExecTrue(""), nil, nil
+// }
