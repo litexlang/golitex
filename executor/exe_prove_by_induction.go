@@ -21,7 +21,7 @@ import (
 	verifier "golitex/verifier"
 )
 
-func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) (glob.ExecState, error) {
+func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) (glob.ExecRet, error) {
 	var err error
 	ver := verifier.NewVerifier(exec.env)
 	isOk := false

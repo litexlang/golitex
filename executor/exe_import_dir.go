@@ -21,11 +21,11 @@ import (
 	parser "golitex/parser"
 )
 
-func (exec *Executor) importDirStmt(stmt *ast.ImportDirStmt) (glob.ExecState, error) {
+func (exec *Executor) importDirStmt(stmt *ast.ImportDirStmt) (glob.ExecRet, error) {
 	panic("TODO: not implemented")
 }
 
-func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string, importStmt ast.ImportStmtInterface) (glob.ExecState, error) {
+func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string, importStmt ast.ImportStmtInterface) (glob.ExecRet, error) {
 	if runInNewEnv {
 		exec.NewEnv(exec.env)
 		defer func() {
@@ -34,7 +34,7 @@ func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string, importS
 	}
 
 	topStmtSlice, err := parser.ParseSourceCode(sourceCode)
-	var execState glob.ExecState = glob.NewExecTrue("")
+	var execState glob.ExecRet = glob.NewExecTrue("")
 	if err != nil {
 		return glob.NewExecErr(""), err
 	}
@@ -51,7 +51,7 @@ func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string, importS
 	return execState, nil
 }
 
-func (exec *Executor) runStmtInUpmostEnv_AssumeTheyAreTrue(topStmtSlice []ast.Stmt) (glob.ExecState, error) {
+func (exec *Executor) runStmtInUpmostEnv_AssumeTheyAreTrue(topStmtSlice []ast.Stmt) (glob.ExecRet, error) {
 	curEnv := exec.env.GetUpMostEnv()
 	newExec := NewExecutor(curEnv)
 

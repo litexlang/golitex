@@ -52,7 +52,7 @@ func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) VerRet {
 	return BoolErrToVerRet(ok, err)
 }
 
-func ExecFactsAtCurEnv_retFailedFact(facts []ast.FactStmt, env *env.Env, state *VerState) (glob.ExecState, ast.FactStmt, error) {
+func ExecFactsAtCurEnv_retFailedFact(facts []ast.FactStmt, env *env.Env, state *VerState) (glob.ExecRet, ast.FactStmt, error) {
 	ver := NewVerifier(env)
 
 	for _, fact := range facts {
@@ -70,7 +70,7 @@ func ExecFactsAtCurEnv_retFailedFact(facts []ast.FactStmt, env *env.Env, state *
 	return glob.NewExecTrue(""), nil, nil
 }
 
-func ExecSpecFactsAtCurEnv_retRailedFact(facts []*ast.SpecFactStmt, env *env.Env) (glob.ExecState, *ast.SpecFactStmt, error) {
+func ExecSpecFactsAtCurEnv_retRailedFact(facts []*ast.SpecFactStmt, env *env.Env) (glob.ExecRet, *ast.SpecFactStmt, error) {
 	ver := NewVerifier(env)
 
 	for _, fact := range facts {

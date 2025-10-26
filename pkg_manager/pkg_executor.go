@@ -34,7 +34,7 @@ func NewPackageExecutor(pm *PackageManager) *PackageExecutor {
 }
 
 // ExecuteImportStmt executes an import statement
-func (pe *PackageExecutor) ExecuteImportStmt(stmt ast.ImportStmtInterface) (glob.ExecState, error) {
+func (pe *PackageExecutor) ExecuteImportStmt(stmt ast.ImportStmtInterface) (glob.ExecRet, error) {
 	// TODO: Implement import statement execution
 	return glob.NewExecTrue(""), fmt.Errorf("import statement execution not yet implemented")
 }

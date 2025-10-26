@@ -23,7 +23,7 @@ import (
 	"strings"
 )
 
-func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) (glob.ExecState, error) {
+func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) (glob.ExecRet, error) {
 	isSuccess := false
 
 	exec.NewEnv(exec.env)
@@ -50,7 +50,7 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContra
 	}
 }
 
-func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.Spec_OrFact, stmt *ast.ClaimProveByContradictionStmt) (glob.ExecState, error) {
+func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.Spec_OrFact, stmt *ast.ClaimProveByContradictionStmt) (glob.ExecRet, error) {
 	reversedFact := specFactStmt.ReverseIsTrue()
 
 	for _, curFact := range reversedFact {
@@ -92,7 +92,7 @@ func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.Spec_O
 	return glob.NewExecTrue(""), nil
 }
 
-func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt, stmt *ast.ClaimProveByContradictionStmt) (glob.ExecState, error) {
+func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt, stmt *ast.ClaimProveByContradictionStmt) (glob.ExecRet, error) {
 	ver := verifier.NewVerifier(exec.env)
 	newStmtPtr, err := ver.PreprocessUniFactParams_DeclareParams(specFactStmt)
 	if err != nil {
@@ -157,7 +157,7 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 	return glob.NewExecTrue(""), nil
 }
 
-func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecState, error) {
+func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecRet, error) {
 	state, err := exec.claimStmtProve(stmt)
 	if notOkExec(state, err) {
 		return state, err
@@ -173,7 +173,7 @@ func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecSta
 	return glob.NewExecTrue(""), nil
 }
 
-func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) (glob.ExecState, error) {
+func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) (glob.ExecRet, error) {
 	state, err := exec.claimStmtProveByContradiction(stmt)
 	if notOkExec(state, err) {
 		return state, err
@@ -185,7 +185,7 @@ func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByCo
 	return glob.NewExecTrue(""), nil
 }
 
-func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecState, error) {
+func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) (glob.ExecRet, error) {
 	err := error(nil)
 	isSuccess := false
 
@@ -282,9 +282,9 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 }
 
 // 也许我应该语义改成，先声明prop，然后再证明prop，而不是现在这个样子
-func (exec *Executor) claimPropStmt(stmt *ast.ClaimPropStmt) (glob.ExecState, error) {
+func (exec *Executor) claimPropStmt(stmt *ast.ClaimPropStmt) (glob.ExecRet, error) {
 	var err error
-	var execState glob.ExecState = glob.NewExecErr("")
+	var execState glob.ExecRet = glob.NewExecErr("")
 
 	// prop all atoms declared
 	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.DomFacts, stmt.Prop.IffFacts, stmt.Line)
@@ -314,7 +314,7 @@ func (exec *Executor) claimPropStmt(stmt *ast.ClaimPropStmt) (glob.ExecState, er
 	return glob.NewExecTrue(""), nil
 }
 
-func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) (glob.ExecState, error) {
+func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) (glob.ExecRet, error) {
 	execState, err := exec.claimExistPropStmtCheckProofs(stmt)
 	if notOkExec(execState, err) {
 		return execState, err
@@ -336,7 +336,7 @@ func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) (glob.Exe
 	return glob.NewExecTrue(""), nil
 }
 
-func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt) (glob.ExecState, error) {
+func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt) (glob.ExecRet, error) {
 	exec.NewEnv(exec.env)
 	defer func() {
 		exec.deleteEnvAndRetainMsg()
@@ -354,7 +354,7 @@ func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt
 		execState, _, err := exec.Stmt(curStmt)
 		if notOkExec(execState, err) {
 			if glob.RequireMsg() {
-				if execState.IsUnknown() || execState.IsErr() {
+				if execState.IsUnknown() {
 					exec.env.AddMsgToParent(fmt.Sprintf("unknown :( line %d\n", curStmt.GetLine()))
 				} else {
 					exec.env.AddMsgToParent(fmt.Sprintf("failed :( line %d:\n", curStmt.GetLine()))
@@ -388,7 +388,7 @@ func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt
 	return glob.NewExecTrue(""), nil
 }
 
-func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimPropStmt) (glob.ExecState, error) {
+func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimPropStmt) (glob.ExecRet, error) {
 	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFacts, stmt.Prop.ThenFacts, stmt.Line)
 
 	exec.NewEnv(exec.env)
@@ -407,7 +407,7 @@ func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimPropStmt) (glob.Ex
 	return glob.NewExecTrue(""), nil
 }
 
-func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimPropStmt) (glob.ExecState, error) {
+func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimPropStmt) (glob.ExecRet, error) {
 	exec.NewEnv(exec.env)
 	defer func() {
 		exec.deleteEnvAndRetainMsg()
@@ -462,7 +462,7 @@ func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimProp
 	return glob.NewExecTrue(""), nil
 }
 
-func (exec *Executor) claimIffStmt(stmt *ast.ClaimIffStmt) (glob.ExecState, error) {
+func (exec *Executor) claimIffStmt(stmt *ast.ClaimIffStmt) (glob.ExecRet, error) {
 	thenToIff := stmt.UniFactWithIffStmt.NewUniFactWithThenToIff()
 	iffToThen := stmt.UniFactWithIffStmt.NewUniFactWithIffToThen()
 	claimThenToIff := ast.NewClaimProveStmt(thenToIff, stmt.ProofThenToIff, stmt.Line)
