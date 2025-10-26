@@ -14,10 +14,31 @@
 
 package litex_global
 
-type ExecRet uint8
+type ExecState uint8
 
 const (
-	ExecUnknown ExecRet = iota
-	ExecTrue
-	ExecError
+	ExecStateUnknown ExecState = iota
+	ExecStateTrue
+	ExecStateError
 )
+
+type ExecRet interface {
+	execRet()
+	IsTrue() bool
+	IsUnknown() bool
+	IsError() bool
+	AddMsg(msg string)
+	String() string
+}
+
+type ExecTrue struct {
+	Msg []string
+}
+
+type ExecUnknown struct {
+	Msg []string
+}
+
+type ExecErr struct {
+	Msg []string
+}
