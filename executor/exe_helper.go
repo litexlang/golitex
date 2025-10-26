@@ -15,12 +15,13 @@
 package litex_executor
 
 import (
+	"fmt"
 	ast "golitex/ast"
 	env "golitex/environment"
-	glob "golitex/glob"
+	verifier "golitex/verifier"
 )
 
-func notOkExec(state glob.ExecRet, err error) bool {
+func notOkExec(state ExecRet, err error) bool {
 	if err != nil {
 		return true
 	}
@@ -43,4 +44,22 @@ func (exec *Executor) NewCommutativeProp(specFact *ast.SpecFactStmt) {
 	default:
 		panic("not implemented: not commutative prop")
 	}
+}
+
+func (exec *Executor) verifyFactsAtCurEnv(proofs []ast.FactStmt) (ExecRet, ast.Stmt, error) {
+	ver := verifier.NewVerifier(exec.env)
+	for _, proof := range proofs {
+		verRet := ver.VerFactStmt(proof, verifier.Round0Msg)
+		if verRet.IsErr() {
+			return NewExecErr(""), proof, fmt.Errorf(verRet.String())
+		} else if verRet.IsUnknown() {
+			return NewExecUnknown(""), proof, nil
+		}
+
+		err := exec.env.NewFact(proof)
+		if err != nil {
+			return NewExecErr(""), proof, err
+		}
+	}
+	return NewExecTrue(""), nil, nil
 }

@@ -21,7 +21,7 @@ import (
 	verifier "golitex/verifier"
 )
 
-func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) (glob.ExecRet, error) {
+func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) (ExecRet, error) {
 	var err error
 	ver := verifier.NewVerifier(exec.env)
 	isOk := false
@@ -47,50 +47,50 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) (glob
 	startIsNPos := proveByInduction_Fact_Start_is_NPos(stmt)
 	verRet := ver.VerFactStmt(startIsNPos, verifier.Round0NoMsg)
 	if verRet.IsErr() {
-		return glob.NewExecErr(""), fmt.Errorf(verRet.String())
+		return NewExecErr(""), fmt.Errorf(verRet.String())
 	}
 	if verRet.IsUnknown() {
 		msg = fmt.Sprintf("%s\nis unknown", startIsNPos.String())
-		return glob.NewExecUnknown(""), nil
+		return NewExecUnknown(""), nil
 	}
 
 	// 把start代入fact，得到的fact是true
 	startFact, err := proveByInduction_newStartFact(stmt)
 	if err != nil {
-		return glob.NewExecErr(""), err
+		return NewExecErr(""), err
 	}
 	verRet = ver.VerFactStmt(startFact, verifier.Round0NoMsg)
 	if verRet.IsErr() {
-		return glob.NewExecErr(""), fmt.Errorf(verRet.String())
+		return NewExecErr(""), fmt.Errorf(verRet.String())
 	}
 	if verRet.IsUnknown() {
 		msg = fmt.Sprintf("%s\nis unknown", startFact.String())
-		return glob.NewExecUnknown(""), nil
+		return NewExecUnknown(""), nil
 	}
 
 	// 对于任意n对于fact成立，那么对于n+1也成立
 	uniFact_n_true_leads_n_plus_1_true, err := proveByInduction_newUniFact_n_true_leads_n_plus_1_true(stmt)
 	if err != nil {
-		return glob.NewExecErr(""), err
+		return NewExecErr(""), err
 	}
 	verRet = ver.VerFactStmt(uniFact_n_true_leads_n_plus_1_true, verifier.Round0NoMsg)
 	if verRet.IsErr() {
-		return glob.NewExecErr(""), fmt.Errorf(verRet.String())
+		return NewExecErr(""), fmt.Errorf(verRet.String())
 	}
 	if verRet.IsUnknown() {
 		msg = fmt.Sprintf("%s\nis unknown", uniFact_n_true_leads_n_plus_1_true.String())
-		return glob.NewExecUnknown(""), nil
+		return NewExecUnknown(""), nil
 	}
 
 	// 对于任何 param >= start, fact 成立
 	uniFact_forall_param_geq_start_then_fact_is_true := proveByInduction_newUniFact_forall_param_geq_start_then_fact_is_true(stmt)
 	err = exec.env.NewFact(uniFact_forall_param_geq_start_then_fact_is_true)
 	if err != nil {
-		return glob.NewExecErr(""), err
+		return NewExecErr(""), err
 	}
 
 	isOk = true
-	return glob.NewExecTrue(""), nil
+	return NewExecTrue(""), nil
 }
 
 func proveByInduction_Fact_Start_is_NPos(stmt *ast.ProveByInductionStmt) *ast.SpecFactStmt {

@@ -17,7 +17,7 @@ package litex_pkg_manager
 import (
 	"fmt"
 	ast "golitex/ast"
-	glob "golitex/glob"
+	exec "golitex/executor"
 )
 
 // PackageExecutor handles execution of package-related statements
@@ -34,9 +34,9 @@ func NewPackageExecutor(pm *PackageManager) *PackageExecutor {
 }
 
 // ExecuteImportStmt executes an import statement
-func (pe *PackageExecutor) ExecuteImportStmt(stmt ast.ImportStmtInterface) (glob.ExecRet, error) {
+func (pe *PackageExecutor) ExecuteImportStmt(stmt ast.ImportStmtInterface) (exec.ExecRet, error) {
 	// TODO: Implement import statement execution
-	return glob.NewExecTrue(""), fmt.Errorf("import statement execution not yet implemented")
+	return exec.NewExecTrue(""), fmt.Errorf("import statement execution not yet implemented")
 }
 
 // ExecutePackageStmt executes a package declaration statement
