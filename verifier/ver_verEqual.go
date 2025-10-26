@@ -193,24 +193,18 @@ func (ver *Verifier) verLogicMem_leftToRight_RightToLeft(left ast.Fc, right ast.
 
 func (ver *Verifier) verEqualUniMem(left ast.Fc, right ast.Fc, state *VerState) (bool, error) {
 	equalFact := ast.NewEqualFact(left, right)
-	ok, err := ver.verSpecFact_UniMem(equalFact, state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
+	verRet := ver.verSpecFact_UniMem(equalFact, state)
+	if verRet.IsErr() || verRet.IsTrue() {
+		return verRet.ToBoolErr()
 	}
 
 	equalFactParamReversed, err := equalFact.ReverseSpecFactParamsOrder()
 	if err != nil {
 		return false, err
 	}
-	ok, err = ver.verSpecFact_UniMem(equalFactParamReversed, state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
+	verRet = ver.verSpecFact_UniMem(equalFactParamReversed, state)
+	if verRet.IsErr() || verRet.IsTrue() {
+		return verRet.ToBoolErr()
 	}
 	return false, nil
 }
