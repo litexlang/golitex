@@ -113,123 +113,59 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFactMainLogic(stmt *ast.SpecFa
 			return BoolErrToVerRet(false, err)
 		}
 	}
-	return BoolErrToVerRet(ver.verSpecFactStepByStep(stmt, state))
-
-	// ok, err = ver.isSpecFactCommutative(stmt)
-	// if err != nil {
-	// 	return false, err
-	// }
-
-	// ok = stmt.IsPropNameEqual()
-
-	// if !ok {
-	// 	return ver.verSpecFactStepByStepNotCommutatively(stmt, state)
-	// } else {
-	// 	ok, err := ver.verSpecFactStepByStepNotCommutatively(stmt, state)
-	// 	if err != nil {
-	// 		return false, err
-	// 	}
-	// 	if ok {
-	// 		return true, nil
-	// 	}
-	// 	reversedStmt, err := stmt.ReverseSpecFactParamsOrder()
-	// 	if err != nil {
-	// 		return false, err
-	// 	}
-	// 	ok, err = ver.verSpecFactStepByStepNotCommutatively(reversedStmt, state)
-	// 	if err != nil {
-	// 		return false, err
-	// 	}
-	// 	if ok {
-	// 		return true, nil
-	// 	}
-	// 	return false, nil
-	// }
+	return ver.verSpecFactStepByStep(stmt, state)
 }
 
-// func (ver *Verifier) verSpecFactStepByStepNotCommutatively(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
-// 	if (stmt.NameIs(glob.KeySymbolLargerEqual) || stmt.NameIs(glob.KeySymbolLessEqual) || stmt.NameIs(glob.KeySymbolGreater) || stmt.NameIs(glob.KeySymbolLess)) && stmt.IsTrue() {
-// 		// TODO: 本质上这个逻辑应该放在BIR里
-// 		return ver.verBtCmpSpecFact(stmt, state)
-// 	}
-
-// 	return ver.verSpecFactStepByStep(stmt, state)
-// }
-
-// func (ver *Verifier) isSpecFactCommutative(stmt *ast.SpecFactStmt) (bool, error) {
-// 	if stmt.NameIs(glob.KeySymbolEqual) {
-// 		return true, nil
-// 	}
-
-// 	ok, err := ver.verSpecFact_BySpecMem(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordProveIsCommutativeProp), []ast.Fc{stmt.PropName}, stmt.Line), Round0NoMsg)
-// 	if err != nil {
-// 		return false, err
-// 	}
-// 	if ok {
-// 		return true, nil
-// 	}
-
-// 	return false, nil
-// }
-
-func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
-	if ok, err := ver.verSpecialSpecFact_ByBIR(stmt, state); err != nil {
-		return false, err
-	} else if ok {
-		return true, nil
+func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state *VerState) VerRet {
+	if verRet := ver.verSpecialSpecFact_ByBIR(stmt, state); verRet.IsErr() || verRet.IsTrue() {
+		return verRet
 	}
 
-	if ok, err := ver.verSpecFact_BySpecMem(stmt, state); err != nil {
-		return false, err
-	} else if ok {
-		return true, nil
+	if verRet := ver.verSpecFact_BySpecMem(stmt, state); verRet.IsErr() || verRet.IsTrue() {
+		return verRet
 	}
 
 	if ok, err := ver.verSpecFact_ByDEF(stmt, state); err != nil {
-		return false, err
+		return BoolErrToVerRet(false, err)
 	} else if ok {
-		return true, nil
+		return NewTrueVerRet("")
 	}
 
 	if !state.isFinalRound() {
 		if ok, err := ver.verSpecFact_ByLogicMem(stmt, state); err != nil {
-			return false, err
+			return BoolErrToVerRet(false, err)
 		} else if ok {
-			return true, nil
+			return NewTrueVerRet("")
 		}
 
 		if ok, err := ver.verSpecFact_UniMem(stmt, state); err != nil {
-			return false, err
+			return BoolErrToVerRet(false, err)
 		} else if ok {
-			return true, nil
+			return NewTrueVerRet("")
 		}
 	}
 
-	return false, nil
+	return NewUnknownVerRet("")
 }
 
-func (ver *Verifier) verSpecialSpecFact_ByBIR(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) verSpecialSpecFact_ByBIR(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	if stmt.NameIs(glob.KeywordIn) {
-		return ver.inFactBuiltinRules(stmt, state)
+		return BoolErrToVerRet(ver.inFactBuiltinRules(stmt, state))
 	} else if stmt.NameIs(glob.KeywordItemExistsIn) && stmt.TypeEnum == ast.TrueExist_St {
-		return ver.trueExistInSt(stmt, state)
+		return BoolErrToVerRet(ver.trueExistInSt(stmt, state))
 	}
 
 	if ok, err := ver.verNumberLogicRelaOpt_BuiltinRules(stmt, state); err != nil {
-		return false, err
+		return BoolErrToVerRet(false, err)
 	} else if ok {
-		return true, nil
+		return NewTrueVerRet("")
 	}
 
 	if stmt.NameIs(glob.KeySymbolEqual) && stmt.TypeEnum == ast.FalsePure {
-		return ver.verNotTrueEqualFact_BuiltinRules(stmt, state)
+		return BoolErrToVerRet(ver.verNotTrueEqualFact_BuiltinRules(stmt, state))
 	}
 
-	// if stmt.NameIs(glob.KeywordProveIsCommutativeProp) {
-	// 	return ver.varCommutativeProp_BuiltinRules(stmt, state)
-	// }
-
-	return false, nil
+	return NewUnknownVerRet("")
 }
 
 func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
