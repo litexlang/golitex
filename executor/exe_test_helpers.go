@@ -49,7 +49,7 @@ func execStmtTest(topStmt []ast.Stmt) []string {
 			isNotTrue = true
 		}
 
-		if execState != glob.ExecTrue && !glob.ContinueExecutionIfExecUnknown {
+		if execState != glob.ExecStateTrue && !glob.ContinueExecutionIfExecUnknown {
 			isNotTrue = true
 		}
 
