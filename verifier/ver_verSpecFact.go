@@ -167,28 +167,28 @@ func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecFactStmt, state *VerState) 
 			return BoolErrToVerRet(ver.verNotPureSpecFact_ByDef(stmt, state))
 		}
 
-		return BoolErrToVerRet(ver.verPureSpecFact_ByDefinition(stmt, state))
+		return ver.verPureSpecFact_ByDefinition(stmt, state)
 	}
 
 	if stmt.IsExist_St_Fact() {
-		return BoolErrToVerRet(ver.verExistSpecFact_ByDefinition(stmt, state))
+		return ver.verExistSpecFact_ByDefinition(stmt, state)
 	}
 
 	return NewUnknownVerRet("")
 }
 
-func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	nextState := state.GetAddRound()
 
 	defStmt := ver.env.GetPropDef(stmt.PropName)
 	if defStmt == nil {
 		// 这里可能是因为这个propName是exist prop，所以没有定义
-		return false, nil
+		return NewUnknownVerRet("")
 	}
 
 	if len(defStmt.IffFacts) == 0 {
 		// REMARK: 如果IFFFacts不存在，那我们认为是 没有iff能验证prop，而不是prop自动成立
-		return false, nil
+		return NewUnknownVerRet("")
 	}
 
 	iffToProp := defStmt.IffToPropUniFact()
@@ -200,26 +200,26 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 	// TODO: ? 这里还需要检查吗？或者说是在这里检查吗？难道prop的关于参数的检查不应该在更顶层的函数里？
 	paramSetFacts, err := defStmt.DefHeader.GetInstantiatedParamInParamSetFact(paramArrMap)
 	if err != nil {
-		return false, err
+		return BoolErrToVerRet(false, err)
 	}
 
 	for _, paramSetFact := range paramSetFacts {
 		verRet := ver.VerFactStmt(paramSetFact, state)
 		if verRet.IsErr() || verRet.IsUnknown() {
-			return verRet.ToBoolErr()
+			return verRet
 		}
 	}
 
 	// 本质上不需要把所有的参数都instantiate，只需要instantiate在dom里的就行
 	instantiatedIffToProp, err := ast.InstantiateUniFact(iffToProp, paramArrMap)
 	if err != nil {
-		return false, err
+		return BoolErrToVerRet(false, err)
 	}
 	// prove all domFacts are true
 	for _, domFact := range instantiatedIffToProp.DomFacts {
 		verRet := ver.VerFactStmt(domFact, nextState)
 		if verRet.IsErr() || verRet.IsUnknown() {
-			return verRet.ToBoolErr()
+			return verRet
 		}
 	}
 
@@ -227,16 +227,16 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 		ver.successWithMsg(stmt.String(), defStmt.String())
 	}
 
-	return true, nil
+	return NewTrueVerRet("")
 }
 
-func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	existParams, factParams := ast.GetExistFactExistParamsAndFactParams(stmt)
 
 	propDef := ver.env.GetExistPropDef(stmt.PropName)
 	if propDef == nil {
 		// TODO: 如果没声明，应该报错
-		return false, fmt.Errorf("%s has no definition", stmt)
+		return BoolErrToVerRet(false, fmt.Errorf("%s has no definition", stmt))
 	}
 
 	uniConMap := map[string]ast.Fc{}
@@ -251,53 +251,50 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 	// given objects are in their param sets
 	instParamSets, err := propDef.ExistParamSets.Instantiate(uniConMap)
 	if err != nil {
-		return false, err
+		return BoolErrToVerRet(false, err)
 	}
 	for i := range instParamSets {
 		verRet := ver.VerFactStmt(ast.NewInFactWithFc(existParams[i], instParamSets[i]), state)
 		if verRet.IsErr() {
-			return false, fmt.Errorf(verRet.String())
+			return verRet
 		}
 		if verRet.IsUnknown() {
 			if state.WithMsg {
 				msg := fmt.Sprintf("given object %s is not in its param set %s\n", existParams[i], instParamSets[i])
 				ver.env.Msgs = append(ver.env.Msgs, msg)
 			}
-			return false, nil
+			return NewUnknownVerRet("")
 		}
 	}
 
 	domFacts, err := propDef.DefBody.DomFacts.Instantiate(uniConMap)
 	if err != nil {
-		return false, err
+		return BoolErrToVerRet(false, err)
 	}
 
 	iffFacts, err := propDef.DefBody.IffFacts.Instantiate(uniConMap)
 	if err != nil {
-		return false, err
+		return BoolErrToVerRet(false, err)
 	}
 
 	for _, domFact := range domFacts {
 		verRet := ver.VerFactStmt(domFact, state)
 		if verRet.IsErr() {
-			return false, fmt.Errorf(verRet.String())
+			return verRet
 		}
 		if verRet.IsUnknown() {
 			if state.WithMsg {
 				msg := fmt.Sprintf("dom fact %s is unknown\n", domFact)
 				ver.env.Msgs = append(ver.env.Msgs, msg)
 			}
-			return false, nil
+			return NewUnknownVerRet("")
 		}
 	}
 
 	for _, iffFact := range iffFacts {
 		verRet := ver.VerFactStmt(iffFact, state)
-		if verRet.IsErr() {
-			return false, fmt.Errorf(verRet.String())
-		}
-		if verRet.IsUnknown() {
-			return false, nil
+		if verRet.IsErr() || verRet.IsUnknown() {
+			return verRet
 		}
 	}
 
@@ -305,7 +302,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 		ver.successWithMsg(stmt.String(), "by definition")
 	}
 
-	return true, nil
+	return NewTrueVerRet("")
 }
 
 func (ver *Verifier) verSpecFactLogicMem(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
