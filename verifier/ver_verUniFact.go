@@ -48,11 +48,11 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) (bool
 func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerState) (bool, error) {
 	// check then facts
 	for _, thenFact := range stmt.ThenFacts {
-		ok, err := ver.VerFactStmt(thenFact, state) // 这个地方有点tricky，这里是可能读入state是any的，而且我要允许读入any
-		if err != nil {
-			return false, err
+		verRet := ver.VerFactStmt(thenFact, state) // 这个地方有点tricky，这里是可能读入state是any的，而且我要允许读入any
+		if verRet.IsErr() {
+			return false, fmt.Errorf(verRet.String())
 		}
-		if !ok {
+		if verRet.IsUnknown() {
 			if state.WithMsg {
 				ver.env.Msgs = append(ver.env.Msgs, fmt.Sprintf("%s is unknown", thenFact))
 			}
@@ -60,7 +60,7 @@ func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerSta
 		}
 
 		// if true, store it
-		err = ver.env.NewFact(thenFact)
+		err := ver.env.NewFact(thenFact)
 		if err != nil {
 			return false, err
 		}

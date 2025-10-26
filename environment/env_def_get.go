@@ -16,55 +16,55 @@ package litex_env
 
 import ast "golitex/ast"
 
-func (e *Env) GetFnTemplateDef(fcAtomName ast.FcAtom) (*ast.FnTemplateDefStmt, bool) {
+func (e *Env) GetFnTemplateDef(fcAtomName ast.FcAtom) *ast.FnTemplateDefStmt {
 	for env := e; env != nil; env = env.Parent {
 		fnTemplateDef, ok := env.FnTemplateDefMem[string(fcAtomName)]
 		if ok {
-			return &fnTemplateDef, true
+			return &fnTemplateDef
 		}
 	}
 
-	return nil, false
+	return nil
 }
 
-func (e *Env) GetFnTemplateDef_KeyIsFcHead(fc *ast.FcFn) (*ast.FnTemplateDefStmt, bool) {
+func (e *Env) GetFnTemplateDef_KeyIsFcHead(fc *ast.FcFn) *ast.FnTemplateDefStmt {
 	fnHeadAsAtom, ok := fc.FnHead.(ast.FcAtom)
 	if !ok {
-		return nil, false
+		return nil
 	}
 
-	fnTemplateDef, ok := e.GetFnTemplateDef(fnHeadAsAtom)
-	return fnTemplateDef, ok
+	fnTemplateDef := e.GetFnTemplateDef(fnHeadAsAtom)
+	return fnTemplateDef
 }
 
-func (e *Env) GetExistPropDef(propName ast.FcAtom) (*ast.DefExistPropStmt, bool) {
+func (e *Env) GetExistPropDef(propName ast.FcAtom) *ast.DefExistPropStmt {
 	for env := e; env != nil; env = env.Parent {
 		existProp, ok := env.ExistPropDefMem[string(propName)]
 		if ok {
-			return &existProp, true
+			return &existProp
 		}
 	}
-	return nil, false
+	return nil
 }
 
-func (e *Env) GetPropDef(propName ast.FcAtom) (*ast.DefPropStmt, bool) {
+func (e *Env) GetPropDef(propName ast.FcAtom) *ast.DefPropStmt {
 	for env := e; env != nil; env = env.Parent {
 		prop, ok := env.PropDefMem[string(propName)]
 		if ok {
-			return &prop, true
+			return &prop
 		}
 	}
-	return nil, false
+	return nil
 }
 
-func (e *Env) GetHaveSetFnDef(fnName ast.FcAtom) (*ast.HaveSetFnStmt, bool) {
+func (e *Env) GetHaveSetFnDef(fnName ast.FcAtom) *ast.HaveSetFnStmt {
 	for env := e; env != nil; env = env.Parent {
 		haveSetFn, ok := env.HaveSetFnDefMem[fnName.String()]
 		if ok {
-			return &haveSetFn, true
+			return &haveSetFn
 		}
 	}
-	return nil, false
+	return nil
 }
 
 func (e *Env) isUserDefinedObj(atom ast.FcAtom) bool {
@@ -77,24 +77,24 @@ func (e *Env) isUserDefinedObj(atom ast.FcAtom) bool {
 	return false
 }
 
-func (e *Env) GetIntensionalSet(fc ast.Fc) (*ast.IntensionalSetStmt, bool) {
+func (e *Env) GetIntensionalSet(fc ast.Fc) *ast.IntensionalSetStmt {
 	for env := e; env != nil; env = env.Parent {
 		intensionalSet, ok := env.IntensionalSetMem[fc.String()]
 		if ok {
-			return &intensionalSet, true
+			return &intensionalSet
 		}
 	}
-	return nil, false
+	return nil
 }
 
-func (e *Env) GetSymbolValue(fc ast.Fc) (ast.Fc, bool) {
+func (e *Env) GetSymbolValue(fc ast.Fc) ast.Fc {
 	for env := e; env != nil; env = env.Parent {
 		symbolValue, ok := env.SymbolValueMem[fc.String()]
 		if ok {
-			return symbolValue, true
+			return symbolValue
 		}
 	}
-	return nil, false
+	return nil
 }
 
 func (e *Env) IsCommutativeProp(specFact *ast.SpecFactStmt) bool {

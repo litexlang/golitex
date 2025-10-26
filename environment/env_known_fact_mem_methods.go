@@ -263,8 +263,8 @@ func (e *Env) IsFnDeclared(fc ast.FcAtom) (*FnInFnTMemItem, bool) {
 		return nil, true
 	}
 
-	fnDef, ok := e.GetLatestFnT_GivenNameIsIn(string(fc))
-	if !ok {
+	fnDef := e.GetLatestFnT_GivenNameIsIn(string(fc))
+	if fnDef == nil {
 		return nil, false
 	}
 	return fnDef, true
@@ -318,8 +318,8 @@ func (e *Env) getInstantiatedFnTTOfFcFn(fcFn *ast.FcFn) (*ast.FnTStruct, bool, e
 		return fnTNoName, true, nil
 	}
 
-	def, ok := e.GetFnTemplateDef(fcFn.FnHead.(ast.FcAtom))
-	if !ok {
+	def := e.GetFnTemplateDef(fcFn.FnHead.(ast.FcAtom))
+	if def == nil {
 		return nil, false, nil
 	}
 

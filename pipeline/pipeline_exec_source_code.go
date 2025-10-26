@@ -43,7 +43,7 @@ func executeCodeAndReturnMessageSlice(code string) ([]string, glob.SysSignal, er
 		return nil, glob.SysSignalParseError, err
 	}
 
-	executor, err := pipelineExecutorInit()
+	executor, err := InitPipelineExecutor()
 	if err != nil {
 		return nil, glob.SysSignalRuntimeError, err
 	}
@@ -54,10 +54,11 @@ func executeCodeAndReturnMessageSlice(code string) ([]string, glob.SysSignal, er
 		execState, msg, err := executor.Stmt(topStmt)
 		msgOfTopStatements = append(msgOfTopStatements, executor.GetMsgAsStr0ToEnd())
 		msgOfTopStatements = append(msgOfTopStatements, msg)
+
 		if err != nil {
 			return msgOfTopStatements, glob.SysSignalRuntimeError, err
 		}
-		if execState != glob.ExecStateTrue {
+		if execState.IsUnknown() {
 			return msgOfTopStatements, glob.SysSignalRuntimeError, fmt.Errorf("execution failed, line %d", topStmt.GetLine())
 		}
 	}
@@ -81,7 +82,7 @@ func ExecuteCodeAndReturnMessageSliceGivenSettings(code string, executor *exe.Ex
 
 		msgOfTopStatements = append(msgOfTopStatements, executor.GetMsgAsStr0ToEnd())
 
-		if execState != glob.ExecStateTrue {
+		if execState.IsUnknown() || execState.IsErr() {
 			return msgOfTopStatements, glob.SysSignalRuntimeError, fmt.Errorf("execution failed")
 		}
 	}
@@ -125,7 +126,7 @@ clear: refresh the whole environment
 `
 
 func RunREPLInTerminal(version string) {
-	executor, err := pipelineExecutorInit()
+	executor, err := InitPipelineExecutor()
 	if err != nil {
 		fmt.Println("Error initializing pipeline:", err)
 		return

@@ -23,7 +23,7 @@ import (
 	parser "golitex/parser"
 )
 
-func pipelineExecutorInit() (*exe.Executor, error) {
+func InitPipelineExecutor() (*exe.Executor, error) {
 	glob.IsRunningPipelineInit = true
 	defer func() {
 		glob.IsRunningPipelineInit = false
@@ -35,7 +35,7 @@ func pipelineExecutorInit() (*exe.Executor, error) {
 	err := useHardcodedCodeToInit(executor)
 	executor.NewEnv(curEnv)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 	return executor, nil
 }
@@ -47,15 +47,10 @@ func useHardcodedCodeToInit(executor *exe.Executor) error {
 	}
 	for _, statement := range statements {
 		execState, _, err := executor.Stmt(statement)
-		if err != nil || execState != glob.ExecStateTrue {
+		if execState.IsUnknown() || execState.IsErr() {
 			return fmt.Errorf("failed to init pipeline: %s", err)
 		}
 	}
-
-	executor.NewTransitiveProp(">")
-	executor.NewTransitiveProp(">=")
-	executor.NewTransitiveProp("<")
-	executor.NewTransitiveProp("<=")
 
 	executor.ClearMsgs()
 

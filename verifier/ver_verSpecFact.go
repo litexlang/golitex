@@ -26,24 +26,19 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt *as
 		return ver.verTrueEqualFact(stmt, state, true)
 	}
 
-	ok, err := ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt, state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
+	if ok, err := ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt, state); IsTrueOrErr(ok, err) {
+		return ok, err
 	}
 
-	if ver.env.IsCommutativeProp(stmt) || (stmt.NameIs(glob.KeySymbolEqual) && stmt.TypeEnum == ast.FalsePure) {
+	// if ver.env.IsCommutativeProp(stmt) || (stmt.NameIs(glob.KeySymbolEqual) && stmt.TypeEnum == ast.FalsePure) {
+	if ver.env.IsCommutativeProp(stmt) {
 		reverseParamsOrderStmt, err := stmt.ReverseParameterOrder()
 		if err != nil {
 			return false, err
 		}
-		ok, err := ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(reverseParamsOrderStmt, state)
-		if err != nil {
-			return false, err
+		if ok, err := ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(reverseParamsOrderStmt, state); IsTrueOrErr(ok, err) {
+			return ok, err
 		}
-		return ok, nil
 	}
 
 	return false, nil
@@ -59,8 +54,8 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast
 	}
 
 	if stmt.TypeEnum == ast.TruePure && ver.env.IsTransitiveProp(string(stmt.PropName)) {
-		relatedFcSlice, ok := ver.env.GetRelatedFcSliceOfTransitiveProp(string(stmt.PropName), stmt.Params[0])
-		if !ok {
+		relatedFcSlice := ver.env.GetRelatedFcSliceOfTransitiveProp(string(stmt.PropName), stmt.Params[0])
+		if len(relatedFcSlice) == 0 {
 			return false, nil
 		}
 
@@ -259,8 +254,8 @@ func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecFactStmt, state *VerState) 
 func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	nextState := state.GetAddRound()
 
-	defStmt, ok := ver.env.GetPropDef(stmt.PropName)
-	if !ok {
+	defStmt := ver.env.GetPropDef(stmt.PropName)
+	if defStmt == nil {
 		// 这里可能是因为这个propName是exist prop，所以没有定义
 		return false, nil
 	}
@@ -283,12 +278,9 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 	}
 
 	for _, paramSetFact := range paramSetFacts {
-		ok, err := ver.VerFactStmt(paramSetFact, state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, nil
+		verRet := ver.VerFactStmt(paramSetFact, state)
+		if verRet.IsErr() || verRet.IsUnknown() {
+			return verRet.ToBoolErr()
 		}
 	}
 
@@ -299,12 +291,9 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 	}
 	// prove all domFacts are true
 	for _, domFact := range instantiatedIffToProp.DomFacts {
-		ok, err := ver.VerFactStmt(domFact, nextState)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, nil
+		verRet := ver.VerFactStmt(domFact, nextState)
+		if verRet.IsErr() || verRet.IsUnknown() {
+			return verRet.ToBoolErr()
 		}
 	}
 
@@ -318,8 +307,8 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	existParams, factParams := ast.GetExistFactExistParamsAndFactParams(stmt)
 
-	propDef, ok := ver.env.GetExistPropDef(stmt.PropName)
-	if !ok {
+	propDef := ver.env.GetExistPropDef(stmt.PropName)
+	if propDef == nil {
 		// TODO: 如果没声明，应该报错
 		return false, fmt.Errorf("%s has no definition", stmt)
 	}
@@ -339,11 +328,11 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 		return false, err
 	}
 	for i := range instParamSets {
-		ok, err := ver.VerFactStmt(ast.NewInFactWithFc(existParams[i], instParamSets[i]), state)
-		if err != nil {
-			return false, err
+		verRet := ver.VerFactStmt(ast.NewInFactWithFc(existParams[i], instParamSets[i]), state)
+		if verRet.IsErr() {
+			return false, fmt.Errorf(verRet.String())
 		}
-		if !ok {
+		if verRet.IsUnknown() {
 			if state.WithMsg {
 				msg := fmt.Sprintf("given object %s is not in its param set %s\n", existParams[i], instParamSets[i])
 				ver.env.Msgs = append(ver.env.Msgs, msg)
@@ -363,11 +352,11 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 	}
 
 	for _, domFact := range domFacts {
-		ok, err := ver.VerFactStmt(domFact, state)
-		if err != nil {
-			return false, err
+		verRet := ver.VerFactStmt(domFact, state)
+		if verRet.IsErr() {
+			return false, fmt.Errorf(verRet.String())
 		}
-		if !ok {
+		if verRet.IsUnknown() {
 			if state.WithMsg {
 				msg := fmt.Sprintf("dom fact %s is unknown\n", domFact)
 				ver.env.Msgs = append(ver.env.Msgs, msg)
@@ -377,11 +366,11 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 	}
 
 	for _, iffFact := range iffFacts {
-		ok, err := ver.VerFactStmt(iffFact, state)
-		if err != nil {
-			return false, err
+		verRet := ver.VerFactStmt(iffFact, state)
+		if verRet.IsErr() {
+			return false, fmt.Errorf(verRet.String())
 		}
-		if !ok {
+		if verRet.IsUnknown() {
 			return false, nil
 		}
 	}
@@ -569,8 +558,8 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecFactStmt, st
 func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	nextState := state.GetAddRound()
 
-	defStmt, ok := ver.env.GetPropDef(stmt.PropName)
-	if !ok {
+	defStmt := ver.env.GetPropDef(stmt.PropName)
+	if defStmt == nil {
 		// 这里可能是因为这个propName是exist prop，所以没有定义
 		return false, nil
 	}
@@ -593,12 +582,9 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *Ver
 	}
 
 	for _, paramSetFact := range paramSetFacts {
-		ok, err := ver.VerFactStmt(paramSetFact, state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, nil
+		verRet := ver.VerFactStmt(paramSetFact, state)
+		if verRet.IsErr() || verRet.IsUnknown() {
+			return verRet.ToBoolErr()
 		}
 	}
 
@@ -616,11 +602,11 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *Ver
 		}
 		reversedDomFact := domFactAsSpecFact.ReverseTrue()
 
-		ok, err := ver.VerFactStmt(reversedDomFact, nextState)
-		if err != nil {
-			return false, err
+		verRet := ver.VerFactStmt(reversedDomFact, nextState)
+		if verRet.IsErr() {
+			return false, fmt.Errorf(verRet.String())
 		}
-		if ok {
+		if verRet.IsTrue() {
 			if state.WithMsg {
 				ver.successWithMsg(stmt.String(), defStmt.String())
 			}
