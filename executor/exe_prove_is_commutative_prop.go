@@ -20,15 +20,15 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) proveIsCommutativePropStmt(stmt *ast.ProveIsCommutativePropStmt) (glob.ExecRet, error) {
+func (exec *Executor) proveIsCommutativePropStmt(stmt *ast.ProveIsCommutativePropStmt) (glob.ExecState, error) {
 	ok, err := exec.proveIsCommutativePropStmtMainLogic(stmt)
 	if !ok || err != nil {
-		return glob.ExecError, err
+		return glob.ExecStateError, err
 	}
 
 	exec.NewCommutativeProp(stmt.SpecFact)
 
-	return glob.ExecTrue, nil
+	return glob.ExecStateTrue, nil
 }
 
 func (exec *Executor) proveIsCommutativePropStmtMainLogic(stmt *ast.ProveIsCommutativePropStmt) (bool, error) {
@@ -125,7 +125,7 @@ func (exec *Executor) proveIsCommutativePropStmtBody(proofs []ast.Stmt, fact *as
 	if notOkExec(state, err) {
 		return false, err
 	}
-	if state != glob.ExecTrue {
+	if state != glob.ExecStateTrue {
 		return false, fmt.Errorf("proof in %s must be proved to be true, but %s is not true", glob.KeywordProveIsCommutativeProp, rightToLeft)
 	}
 
