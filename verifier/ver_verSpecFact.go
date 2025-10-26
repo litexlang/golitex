@@ -26,8 +26,8 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt *as
 		return BoolErrToVerRet(ver.verTrueEqualFact(stmt, state, true))
 	}
 
-	if ok, err := ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt, state); IsTrueOrErr(ok, err) {
-		return BoolErrToVerRet(ok, err)
+	if verRet := ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt, state); verRet.IsTrue() || verRet.IsErr() {
+		return verRet
 	}
 
 	// if ver.env.IsCommutativeProp(stmt) || (stmt.NameIs(glob.KeySymbolEqual) && stmt.TypeEnum == ast.FalsePure) {
@@ -36,87 +36,84 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt *as
 		if err != nil {
 			return BoolErrToVerRet(false, err)
 		}
-		if ok, err := ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(reverseParamsOrderStmt, state); IsTrueOrErr(ok, err) {
-			return BoolErrToVerRet(ok, err)
+		if verRet := ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(reverseParamsOrderStmt, state); verRet.IsTrue() || verRet.IsErr() {
+			return verRet
 		}
 	}
 
 	return BoolErrToVerRet(false, nil)
 }
 
-func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
-	ok, err := ver.verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt, state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
+func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast.SpecFactStmt, state *VerState) VerRet {
+	verRet := ver.verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt, state)
+	if verRet.IsTrue() || verRet.IsErr() {
+		return verRet
 	}
 
 	if stmt.TypeEnum == ast.TruePure && ver.env.IsTransitiveProp(string(stmt.PropName)) {
 		relatedFcSlice := ver.env.GetRelatedFcSliceOfTransitiveProp(string(stmt.PropName), stmt.Params[0])
 		if len(relatedFcSlice) == 0 {
-			return false, nil
+			return BoolErrToVerRet(false, nil)
 		}
 
 		for _, relatedFc := range relatedFcSlice {
 			relatedFcStmt := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(stmt.PropName), []ast.Fc{relatedFc, stmt.Params[1]}, stmt.Line)
-			ok, err := ver.verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(relatedFcStmt, state)
-			if err != nil {
-				return false, err
+			verRet := ver.verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(relatedFcStmt, state)
+			if verRet.IsErr() {
+				return verRet
 			}
-			if ok {
+			if verRet.IsTrue() {
 				if state.WithMsg {
 					ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is true by %s is a transitive prop and %s is true", stmt.String(), string(stmt.PropName), relatedFcStmt.String()))
 				}
-				return true, nil
+				return NewTrueVerRet(fmt.Sprintf("%s is true by %s is a transitive prop and %s is true", stmt.String(), string(stmt.PropName), relatedFcStmt.String()))
 			}
 		}
 	}
 
-	return false, nil
+	return BoolErrToVerRet(false, nil)
 }
 
-func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	// replace the params with the values
 	replaced, newStmt := ver.env.ReplaceFcInSpecFactWithValue(stmt)
 	if replaced {
-		ok, err := ver.verSpecFactThatIsNotTrueEqualFactMainLogic(newStmt, state)
-		if err != nil {
-			return false, err
+		verRet := ver.verSpecFactThatIsNotTrueEqualFactMainLogic(newStmt, state)
+		if verRet.IsErr() {
+			return verRet
 		}
-		if ok {
+		if verRet.IsTrue() {
 			if state.WithMsg {
 				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
 			}
-			return true, nil
+			return NewTrueVerRet(fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
 		}
 	}
 
-	ok, err := ver.verSpecFactThatIsNotTrueEqualFactMainLogic(stmt, state)
-	if err != nil {
-		return false, err
+	verRet := ver.verSpecFactThatIsNotTrueEqualFactMainLogic(stmt, state)
+	if verRet.IsErr() {
+		return verRet
 	}
-	if ok {
-		return true, nil
+	if verRet.IsTrue() {
+		return NewTrueVerRet("")
 	}
 
-	return false, nil
+	return NewUnknownVerRet("")
 }
 
 // TODO: 其实 specFact 是等号的时候，还是会访问到这个函数。
 // WARNING: 其实 specFact 是等号的时候，还是会访问到这个函数。所以这个函数的命名是有问题的
 // WARNING: 需要重构整个架构，把验证的逻辑屡屡顺。Litex是ATP的话，那就必须要告诉用户我Auto的过程是什么样的
-func (ver *Verifier) verSpecFactThatIsNotTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) verSpecFactThatIsNotTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	var ok bool
 	var err error
 
 	if !state.ReqOk {
 		if ok, state, err = ver.checkSpecFactReq(stmt, state); err != nil || !ok {
-			return false, err
+			return BoolErrToVerRet(false, err)
 		}
 	}
-	return ver.verSpecFactStepByStep(stmt, state)
+	return BoolErrToVerRet(ver.verSpecFactStepByStep(stmt, state))
 
 	// ok, err = ver.isSpecFactCommutative(stmt)
 	// if err != nil {

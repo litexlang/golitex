@@ -54,6 +54,7 @@ func (env *Env) CanBeComputed(fc ast.Fc) (ast.Fc, error) {
 
 // 算出的数值；是不是真的算出来了（因为可能没算出来，里面涉及到的符号没value什么的），出错
 func (comp *computer) compute(toCompute ast.Fc) (ast.Fc, error) {
+	_ = toCompute
 	return nil, nil
 }
 
