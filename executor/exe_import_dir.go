@@ -25,76 +25,6 @@ func (exec *Executor) importDirStmt(stmt *ast.ImportDirStmt) (glob.ExecState, er
 	panic("TODO: not implemented")
 }
 
-// func (exec *Executor) importDirStmt2(stmt *ast.ImportDirStmt) (glob.ExecState, error) {
-// 	exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("start importing directory \"%s\"\n", stmt.Path))
-
-// 	if !glob.AllowImport {
-// 		return glob.ExecStateError, fmt.Errorf("imported file should not contain import statement, get %s", stmt)
-// 	}
-
-// 	// err := glob.ImportDirStmtInit(stmt.AsPkgName, stmt.Path)
-// 	// if err != nil {
-// 	// 	return glob.ExecStateError, err
-// 	// }
-
-// 	execSuccess := false
-// 	defer func() {
-// 		// glob.ImportDirStmtEnd()
-// 		if !execSuccess {
-// 			if glob.RequireMsg() {
-// 				exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("Failed to execute import statement:\n%s\n", stmt))
-// 			}
-// 		} else {
-// 			if glob.RequireMsg() {
-// 				exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("import directory \"%s\" success\n", stmt.Path))
-// 			}
-// 		}
-// 	}()
-
-// 	execState, err := exec.importDirWithPkgName(stmt)
-// 	if err != nil {
-// 		return glob.ExecStateError, err
-// 	}
-// 	execSuccess = execState == glob.ExecStateTrue
-
-// 	return execState, nil
-// }
-
-// // Recursively 地找到所有的包和子包的main文件，把里面的东西都提取出来到全局里
-// func (exec *Executor) importDirWithPkgName(stmt *ast.ImportDirStmt) (glob.ExecState, error) {
-// 	// glob.TaskDirName = filepath.Join(glob.TaskDirName, stmt.Path)
-// 	mainFilePath := filepath.Join(glob.CurrentTaskDirName, glob.PkgEntranceFileName)
-
-// 	code, err := os.ReadFile(mainFilePath)
-// 	if err != nil {
-// 		return glob.ExecStateError, err
-// 	}
-
-// 	// TODO 这里有问题，即使我不运行，我也应该能把stmt传出去
-// 	var execState glob.ExecState = glob.ExecStateTrue
-// 	topStmtSlice, err := getGloballyImportedStmtSlice(string(code))
-// 	if err != nil {
-// 		return glob.ExecStateError, err
-// 	}
-
-// 	if !glob.AssumeImportFilesAreTrue {
-// 		execState, err = exec.runSourceCode(true, string(code), stmt)
-// 		if err != nil {
-// 			return glob.ExecStateError, err
-// 		}
-// 		if execState != glob.ExecStateTrue {
-// 			return glob.ExecStateError, fmt.Errorf("failed to execute import statement")
-// 		}
-// 	}
-
-// 	execState, err = exec.runStmtInUpmostEnv_AssumeTheyAreTrue(topStmtSlice)
-// 	if err != nil {
-// 		return glob.ExecStateError, err
-// 	}
-
-// 	return execState, nil
-// }
-
 func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string, importStmt ast.ImportStmtInterface) (glob.ExecState, error) {
 	if runInNewEnv {
 		exec.NewEnv(exec.env)
@@ -104,17 +34,17 @@ func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string, importS
 	}
 
 	topStmtSlice, err := parser.ParseSourceCode(sourceCode)
-	var execState glob.ExecState = glob.ExecStateTrue
+	var execState glob.ExecState = glob.NewExecTrue("")
 	if err != nil {
-		return glob.ExecStateError, err
+		return glob.NewExecErr(""), err
 	}
 	for _, topStmt := range topStmtSlice {
 		execState, _, err = exec.Stmt(topStmt)
 		if err != nil {
-			return glob.ExecStateError, err
+			return glob.NewExecErr(""), err
 		}
-		if execState != glob.ExecStateTrue {
-			return glob.ExecStateError, fmt.Errorf("failed to execute source code when executing '%s':\n%s", importStmt, topStmt)
+		if execState.IsUnknown() {
+			return glob.NewExecErr(""), fmt.Errorf("failed to execute source code when executing '%s':\n%s", importStmt, topStmt)
 		}
 	}
 
@@ -129,29 +59,11 @@ func (exec *Executor) runStmtInUpmostEnv_AssumeTheyAreTrue(topStmtSlice []ast.St
 		// execState, err := newExec.assumeStmtIsTrueRun(topStmt)
 		execState, _, err := newExec.Stmt(topStmt)
 		if err != nil {
-			return glob.ExecStateError, err
+			return glob.NewExecErr(""), err
 		}
-		if execState != glob.ExecStateTrue {
-			return glob.ExecStateError, fmt.Errorf("failed to execute source code:\n%s\nSome statements in the source code are not executed successfully", topStmt)
+		if execState.IsUnknown() {
+			return glob.NewExecErr(""), fmt.Errorf("failed to execute source code:\n%s\nSome statements in the source code are not executed successfully", topStmt)
 		}
 	}
-	return glob.ExecStateTrue, nil
+	return glob.NewExecTrue(""), nil
 }
-
-// func getGloballyImportedStmtSlice(code string) ([]ast.Stmt, error) {
-// 	topStmtSlice, err := parser.ParseSourceCode(code)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	ret := []ast.Stmt{}
-// 	for _, topStmt := range topStmtSlice {
-// 		if _, ok := topStmt.(*ast.ImportDirStmt); ok {
-// 			continue
-// 		} else {
-// 			ret = append(ret, topStmt)
-// 		}
-// 	}
-
-// 	return ret, nil
-// }
