@@ -53,7 +53,7 @@ func (p *PipelineRunner) Run(code string) (string, glob.SysSignal, error) {
 		if err != nil {
 			return strings.Join(msgOfTopStatements, "\n"), glob.SysSignalRuntimeError, err
 		}
-		if execState != glob.ExecStateTrue {
+		if execState.IsUnknown() {
 			return strings.Join(msgOfTopStatements, "\n"), glob.SysSignalRuntimeError, fmt.Errorf("execution failed, line %d", topStmt.GetLine())
 		}
 	}

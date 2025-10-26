@@ -23,12 +23,12 @@ import (
 func (exec *Executor) proveIsCommutativePropStmt(stmt *ast.ProveIsCommutativePropStmt) (glob.ExecState, error) {
 	ok, err := exec.proveIsCommutativePropStmtMainLogic(stmt)
 	if !ok || err != nil {
-		return glob.ExecStateError, err
+		return glob.NewExecErr(""), err
 	}
 
 	exec.NewCommutativeProp(stmt.SpecFact)
 
-	return glob.ExecStateTrue, nil
+	return glob.NewExecTrue(""), nil
 }
 
 func (exec *Executor) proveIsCommutativePropStmtMainLogic(stmt *ast.ProveIsCommutativePropStmt) (bool, error) {
@@ -47,15 +47,6 @@ func (exec *Executor) proveIsCommutativePropStmtMainLogic(stmt *ast.ProveIsCommu
 	if len(def.DefHeader.Params) != 2 {
 		return false, fmt.Errorf("prop %s has %d params, but 2 params are expected", stmt.SpecFact.PropName, len(def.DefHeader.Params))
 	}
-
-	// // def 的 paramSet 必须相等
-	// state, err := exec.factStmt(ast.NewEqualFact(def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[1]))
-	// if err != nil {
-	// 	return false, err
-	// }
-	// if state != glob.ExecStateTrue {
-	// 	return false, fmt.Errorf("prop in %s must have equal parameter sets, but parameter sets %s and %s of %s are not equal", glob.KeywordProveIsTransitiveProp, def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[1], def.DefHeader.Name)
-	// }
 
 	ok := exec.env.AreAtomsInFcAreDeclared(def.DefHeader.ParamSets[0], map[string]struct{}{})
 	if !ok {
@@ -125,7 +116,7 @@ func (exec *Executor) proveIsCommutativePropStmtBody(proofs []ast.Stmt, fact *as
 	if notOkExec(state, err) {
 		return false, err
 	}
-	if state != glob.ExecStateTrue {
+	if state.IsUnknown() || state.IsErr() {
 		return false, fmt.Errorf("proof in %s must be proved to be true, but %s is not true", glob.KeywordProveIsCommutativeProp, rightToLeft)
 	}
 
