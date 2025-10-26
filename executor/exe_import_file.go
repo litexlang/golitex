@@ -23,7 +23,7 @@ import (
 	"path/filepath"
 )
 
-func (exec *Executor) importFileStmt(stmt *ast.ImportFileStmt) (glob.ExecState, error) {
+func (exec *Executor) importFileStmt(stmt *ast.ImportFileStmt) (glob.ExecRet, error) {
 	currentTaskDir := glob.CurrentTaskDirName
 	codePath := glob.ResolvePath(currentTaskDir, stmt.Path)
 	// codePath := filepath.Join(currentTaskDir, stmt.Path)
@@ -75,7 +75,7 @@ func (exec *Executor) importFileStmt(stmt *ast.ImportFileStmt) (glob.ExecState, 
 	return glob.NewExecTrue(""), nil
 }
 
-func (exec *Executor) importMainFileStmt(stmt *ast.ImportFileStmt) (glob.ExecState, error) {
+func (exec *Executor) importMainFileStmt(stmt *ast.ImportFileStmt) (glob.ExecRet, error) {
 	exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("start importing file globally \"%s\"\n", stmt.Path))
 
 	if !glob.AllowImport {

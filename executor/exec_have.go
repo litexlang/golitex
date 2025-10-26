@@ -21,7 +21,7 @@ import (
 	verifier "golitex/verifier"
 )
 
-func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) (glob.ExecState, error) {
+func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) (glob.ExecRet, error) {
 	defer func() {
 		if glob.RequireMsg() && requireMsg {
 			exec.newMsg(fmt.Sprintf("%s\n", stmt))
@@ -160,7 +160,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) (g
 	return glob.NewExecTrue(""), nil
 }
 
-func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStmt) (glob.ExecState, error) {
+func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStmt) (glob.ExecRet, error) {
 	failed := true
 	defer func() {
 		if glob.RequireMsg() && !failed {
@@ -208,7 +208,7 @@ func (exec *Executor) checkInFactInSet_SetIsNonEmpty(pureInFact *ast.SpecFactStm
 	return false, nil
 }
 
-func (exec *Executor) haveSetStmt(stmt *ast.HaveSetStmt) (glob.ExecState, error) {
+func (exec *Executor) haveSetStmt(stmt *ast.HaveSetStmt) (glob.ExecRet, error) {
 	exec.newMsg(stmt.String())
 	switch asStmt := stmt.Fact.(type) {
 	case *ast.EnumStmt:
@@ -220,7 +220,7 @@ func (exec *Executor) haveSetStmt(stmt *ast.HaveSetStmt) (glob.ExecState, error)
 	return glob.NewExecErr(""), fmt.Errorf("unknown set statement type: %T", stmt.Fact)
 }
 
-func (exec *Executor) haveEnumSetStmt(stmt *ast.EnumStmt) (glob.ExecState, error) {
+func (exec *Executor) haveEnumSetStmt(stmt *ast.EnumStmt) (glob.ExecRet, error) {
 	// 验证里面的各个元素不相等
 	for i := range len(stmt.Items) {
 		for j := i + 1; j < len(stmt.Items); j++ {
@@ -245,7 +245,7 @@ func (exec *Executor) haveEnumSetStmt(stmt *ast.EnumStmt) (glob.ExecState, error
 	return glob.NewExecTrue(""), nil
 }
 
-func (exec *Executor) haveIntensionalSetStmt(stmt *ast.IntensionalSetStmt) (glob.ExecState, error) {
+func (exec *Executor) haveIntensionalSetStmt(stmt *ast.IntensionalSetStmt) (glob.ExecRet, error) {
 	// very important: check whether the parent set is a set
 	ok, err := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.ParentSet, ast.FcAtom(glob.KeywordSet)}, stmt.Line))
 	if err != nil {
@@ -264,7 +264,7 @@ func (exec *Executor) haveIntensionalSetStmt(stmt *ast.IntensionalSetStmt) (glob
 	return glob.NewExecTrue(""), nil
 }
 
-func (exec *Executor) haveExistByReplacementStmt(stmt *ast.HaveObjStStmt) (glob.ExecState, error) {
+func (exec *Executor) haveExistByReplacementStmt(stmt *ast.HaveObjStStmt) (glob.ExecRet, error) {
 	if len(stmt.Fact.Params) != 4 {
 		return glob.NewExecErr(""), fmt.Errorf("set defined by replacement must have 3 parameters, but %s has %d", stmt.Fact.String(), len(stmt.Fact.Params))
 	}

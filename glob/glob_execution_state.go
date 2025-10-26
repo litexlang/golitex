@@ -16,15 +16,7 @@ package litex_global
 
 import "strings"
 
-// type ExecState uint8
-
-// const (
-// 	ExecStateUnknown ExecState = iota
-// 	ExecStateTrue
-// 	ExecStateError
-// )
-
-type ExecState interface {
+type ExecRet interface {
 	execRet()
 	IsTrue() bool
 	IsUnknown() bool

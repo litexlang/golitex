@@ -23,9 +23,9 @@ import (
 	"strings"
 )
 
-func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, string, error) {
+func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecRet, string, error) {
 	var err error = nil
-	var execState glob.ExecState = glob.NewExecTrue("")
+	var execState glob.ExecRet = glob.NewExecTrue("")
 
 	switch stmt := (stmt).(type) {
 	case ast.FactStmt:
@@ -125,7 +125,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (glob.ExecState, string, error) {
 	}
 }
 
-func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
+func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecRet, error) {
 	curVerifier := verifier.NewVerifier(exec.env)
 	state := verifier.Round0Msg
 	verRet := curVerifier.VerFactStmt(stmt, state)
@@ -240,7 +240,7 @@ func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) error {
 }
 
 // TODO: 我认为打印一下 claim 里面的各个语句的输出还是有道理的
-func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) (glob.ExecState, error) {
+func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) (glob.ExecRet, error) {
 	for _, curStmt := range proof {
 		execState, _, err := exec.Stmt(curStmt)
 		if err != nil {
@@ -249,7 +249,7 @@ func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) (glob.ExecState, error
 			}
 			return glob.NewExecErr(""), err
 		}
-		if execState.IsUnknown() || execState.IsErr() {
+		if execState.IsUnknown() {
 			if glob.RequireMsg() {
 				exec.newMsg(fmt.Sprintf("%s\nis unknown :( line %d\n", curStmt.String(), curStmt.GetLine()))
 			}
@@ -259,7 +259,7 @@ func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) (glob.ExecState, error
 	return glob.NewExecTrue(""), nil
 }
 
-func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) (glob.ExecState, error) {
+func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) (glob.ExecRet, error) {
 	isSuccess := false
 	defer func() {
 		if glob.RequireMsg() {
@@ -299,7 +299,7 @@ func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) (glob.E
 	return glob.NewExecTrue(""), nil
 }
 
-func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEachCaseStmt) (glob.ExecState, error) {
+func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEachCaseStmt) (glob.ExecRet, error) {
 	exec.NewEnv(exec.env)
 	defer exec.deleteEnvAndRetainMsg()
 
@@ -371,7 +371,7 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
 	return nil
 }
 
-func (exec *Executor) proveStmt(stmt *ast.ProveStmt) (glob.ExecState, error) {
+func (exec *Executor) proveStmt(stmt *ast.ProveStmt) (glob.ExecRet, error) {
 	// new env
 	exec.NewEnv(exec.env)
 	defer exec.deleteEnvAndRetainMsg()
@@ -412,7 +412,7 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 	return nil
 }
 
-func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) (glob.ExecState, error) {
+func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) (glob.ExecRet, error) {
 	// exec.newMsg(stmt.String())
 
 	exec.NewEnv(exec.env)
@@ -432,7 +432,7 @@ func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) (glob.ExecState
 	return glob.NewExecTrue(""), nil
 }
 
-func (exec *Executor) haveSetFnStmt(stmt *ast.HaveSetFnStmt) (glob.ExecState, error) {
+func (exec *Executor) haveSetFnStmt(stmt *ast.HaveSetFnStmt) (glob.ExecRet, error) {
 	// exec.newMsg(stmt.String())
 
 	// declare related fn
@@ -448,7 +448,7 @@ func (exec *Executor) haveSetFnStmt(stmt *ast.HaveSetFnStmt) (glob.ExecState, er
 	return glob.NewExecTrue(""), nil
 }
 
-func (exec *Executor) haveSetDefinedByReplacementStmt(stmt *ast.HaveSetDefinedByReplacementStmt) (glob.ExecState, error) {
+func (exec *Executor) haveSetDefinedByReplacementStmt(stmt *ast.HaveSetDefinedByReplacementStmt) (glob.ExecRet, error) {
 	// exec.newMsg(stmt.String())
 
 	setDefinedByReplacement := ast.NewFcFn(ast.FcAtom(glob.KeywordSetDefinedByReplacement), []ast.Fc{stmt.DomSet, stmt.RangeSet, stmt.PropName})
@@ -468,7 +468,7 @@ func (exec *Executor) haveSetDefinedByReplacementStmt(stmt *ast.HaveSetDefinedBy
 	return glob.NewExecTrue(""), nil
 }
 
-func (exec *Executor) namedUniFactStmt(stmt *ast.NamedUniFactStmt) (glob.ExecState, error) {
+func (exec *Executor) namedUniFactStmt(stmt *ast.NamedUniFactStmt) (glob.ExecRet, error) {
 	// exec.newMsg(stmt.String())
 
 	uniFact := ast.NewUniFact(stmt.DefPropStmt.DefHeader.Params, stmt.DefPropStmt.DefHeader.ParamSets, stmt.DefPropStmt.IffFacts, stmt.DefPropStmt.ThenFacts, stmt.Line)
@@ -486,7 +486,7 @@ func (exec *Executor) namedUniFactStmt(stmt *ast.NamedUniFactStmt) (glob.ExecSta
 }
 
 // 只要 dom 成立，那prop成立，进而prop的iff成立
-func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) (glob.ExecState, error) {
+func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) (glob.ExecRet, error) {
 	// if glob.RequireMsg() {
 	// 	defer func() {
 	// 		exec.newMsg(fmt.Sprintf("%s\n", stmt))
@@ -538,7 +538,7 @@ func (exec *Executor) ClearStmt() error {
 	return nil
 }
 
-func (exec *Executor) inlineFactsStmt(stmt *ast.InlineFactsStmt) (glob.ExecState, error) {
+func (exec *Executor) inlineFactsStmt(stmt *ast.InlineFactsStmt) (glob.ExecRet, error) {
 	for _, fact := range stmt.Facts {
 		execState, err := exec.factStmt(fact)
 		if notOkExec(execState, err) {
@@ -549,7 +549,7 @@ func (exec *Executor) inlineFactsStmt(stmt *ast.InlineFactsStmt) (glob.ExecState
 	return glob.NewExecTrue(""), nil
 }
 
-func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) (glob.ExecState, error) {
+func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) (glob.ExecRet, error) {
 	// if glob.RequireMsg() {
 	// 	defer func() {
 	// 		exec.newMsg(fmt.Sprintf("%s\n", stmt))
@@ -586,7 +586,7 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) (glob.ExecSta
 	return glob.NewExecTrue(""), nil
 }
 
-func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) (glob.ExecState, error) {
+func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) (glob.ExecRet, error) {
 	// if glob.RequireMsg() {
 	// 	defer func() {
 	// 		exec.newMsg(fmt.Sprintf("%s\n", stmt))
@@ -607,7 +607,7 @@ func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) (glob.ExecState
 	return glob.NewExecTrue(""), nil
 }
 
-func (exec *Executor) checkFnEqualStmt(stmt *ast.HaveFnEqualStmt) (glob.ExecState, error) {
+func (exec *Executor) checkFnEqualStmt(stmt *ast.HaveFnEqualStmt) (glob.ExecRet, error) {
 	exec.NewEnv(exec.env)
 	defer func() {
 		exec.deleteEnvAndRetainMsg()
@@ -643,7 +643,7 @@ func fnHeaderToReturnValueOfFn(head *ast.DefHeader) ast.Fc {
 	return ast.NewFcFn(fnName, params)
 }
 
-func (exec *Executor) haveFnLiftStmt(stmt *ast.HaveFnLiftStmt) (glob.ExecState, error) {
+func (exec *Executor) haveFnLiftStmt(stmt *ast.HaveFnLiftStmt) (glob.ExecRet, error) {
 	// if glob.RequireMsg() {
 	// 	defer func() {
 	// 		exec.newMsg(fmt.Sprintf("%s\n", stmt))
@@ -720,7 +720,7 @@ func (exec *Executor) haveFnLift_knowFact(stmt *ast.HaveFnLiftStmt, fnNames []st
 	return ast.NewUniFact(uniFactParams, uniFactParamSets, []ast.FactStmt{}, []ast.FactStmt{ast.NewEqualFact(lhs, rhs)}, stmt.Line)
 }
 
-func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) (glob.ExecState, error) {
+func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) (glob.ExecRet, error) {
 	// if glob.RequireMsg() {
 	// 	defer func() {
 	// 		exec.newMsg(fmt.Sprintf("%s\n", stmt))
@@ -766,7 +766,7 @@ func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) (glob.ExecState, error) {
 	return glob.NewExecTrue(""), nil
 }
 
-func (exec *Executor) openANewEnvAndCheck(fact ast.FactStmt, requireMsg bool) (glob.ExecState, error) {
+func (exec *Executor) openANewEnvAndCheck(fact ast.FactStmt, requireMsg bool) (glob.ExecRet, error) {
 	exec.NewEnv(exec.env)
 	defer exec.deleteEnvAndRetainMsg()
 
@@ -789,17 +789,17 @@ func (exec *Executor) openANewEnvAndCheck(fact ast.FactStmt, requireMsg bool) (g
 	return glob.NewExecTrue(""), nil
 }
 
-func (exec *Executor) markdownStmt(stmt *ast.MarkdownStmt) (glob.ExecState, error) {
+func (exec *Executor) markdownStmt(stmt *ast.MarkdownStmt) (glob.ExecRet, error) {
 	_ = stmt
 	return glob.NewExecTrue(""), nil
 }
 
-func (exec *Executor) latexStmt(stmt *ast.LatexStmt) (glob.ExecState, error) {
+func (exec *Executor) latexStmt(stmt *ast.LatexStmt) (glob.ExecRet, error) {
 	_ = stmt
 	return glob.NewExecTrue(""), nil
 }
 
-func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropStmt) (glob.ExecState, error) {
+func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropStmt) (glob.ExecRet, error) {
 	err := exec.proveIsTransitivePropStmtBody(stmt)
 	if err != nil {
 		return glob.NewExecErr(""), err
