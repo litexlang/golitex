@@ -40,7 +40,7 @@ func (ver *Verifier) verSpecFact_BySpecMem(stmt *ast.SpecFactStmt, state *VerSta
 	return NewUnknownVerRet("")
 }
 
-func (ver *Verifier) verSpecFact_ByLogicMem(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) verSpecFact_ByLogicMem(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	nextState := state.GetAddRound()
 
 	upMostEnv := ver.todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
@@ -49,11 +49,11 @@ func (ver *Verifier) verSpecFact_ByLogicMem(stmt *ast.SpecFactStmt, state *VerSt
 	for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
 		ok, err := ver.specFact_LogicMem(curEnv, stmt, nextState)
 		if err != nil || ok {
-			return ok, err
+			return BoolErrToVerRet(ok, err)
 		}
 	}
 
-	return false, nil
+	return NewUnknownVerRet("")
 }
 
 func (ver *Verifier) verSpecFact_InSpecFact_UniMem(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {

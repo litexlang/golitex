@@ -105,12 +105,11 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *a
 // WARNING: 其实 specFact 是等号的时候，还是会访问到这个函数。所以这个函数的命名是有问题的
 // WARNING: 需要重构整个架构，把验证的逻辑屡屡顺。Litex是ATP的话，那就必须要告诉用户我Auto的过程是什么样的
 func (ver *Verifier) verSpecFactThatIsNotTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *VerState) VerRet {
-	var ok bool
-	var err error
+	var verRet VerRet
 
 	if !state.ReqOk {
-		if ok, state, err = ver.checkSpecFactReq(stmt, state); err != nil || !ok {
-			return BoolErrToVerRet(false, err)
+		if verRet, state = ver.checkSpecFactReq(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
+			return verRet
 		}
 	}
 	return ver.verSpecFactStepByStep(stmt, state)
@@ -125,23 +124,17 @@ func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state *VerSta
 		return verRet
 	}
 
-	if ok, err := ver.verSpecFact_ByDEF(stmt, state); err != nil {
-		return BoolErrToVerRet(false, err)
-	} else if ok {
-		return NewTrueVerRet("")
+	if verRet := ver.verSpecFact_ByDEF(stmt, state); verRet.IsErr() || verRet.IsTrue() {
+		return verRet
 	}
 
 	if !state.isFinalRound() {
-		if ok, err := ver.verSpecFact_ByLogicMem(stmt, state); err != nil {
-			return BoolErrToVerRet(false, err)
-		} else if ok {
-			return NewTrueVerRet("")
+		if verRet := ver.verSpecFact_ByLogicMem(stmt, state); verRet.IsErr() || verRet.IsTrue() {
+			return verRet
 		}
 
-		if ok, err := ver.verSpecFact_UniMem(stmt, state); err != nil {
-			return BoolErrToVerRet(false, err)
-		} else if ok {
-			return NewTrueVerRet("")
+		if verRet := ver.verSpecFact_UniMem(stmt, state); verRet.IsErr() || verRet.IsTrue() {
+			return verRet
 		}
 	}
 
@@ -168,20 +161,20 @@ func (ver *Verifier) verSpecialSpecFact_ByBIR(stmt *ast.SpecFactStmt, state *Ver
 	return NewUnknownVerRet("")
 }
 
-func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	if stmt.IsPureFact() {
 		if !stmt.IsTrue() {
-			return ver.verNotPureSpecFact_ByDef(stmt, state)
+			return BoolErrToVerRet(ver.verNotPureSpecFact_ByDef(stmt, state))
 		}
 
-		return ver.verPureSpecFact_ByDefinition(stmt, state)
+		return BoolErrToVerRet(ver.verPureSpecFact_ByDefinition(stmt, state))
 	}
 
 	if stmt.IsExist_St_Fact() {
-		return ver.verExistSpecFact_ByDefinition(stmt, state)
+		return BoolErrToVerRet(ver.verExistSpecFact_ByDefinition(stmt, state))
 	}
 
-	return false, nil
+	return NewUnknownVerRet("")
 }
 
 func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
@@ -316,26 +309,22 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 }
 
 func (ver *Verifier) verSpecFactLogicMem(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
-	var ok bool
-	var err error
-
-	ok, err = ver.verSpecFact_ByLogicMem(stmt, state)
-	if isErrOrOk(ok, err) {
-		return ok, err
+	verRet := ver.verSpecFact_ByLogicMem(stmt, state)
+	if verRet.IsErr() || verRet.IsTrue() {
+		return verRet.ToBoolErr()
 	}
-
 	return false, nil
 }
 
-func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	nextState := state.GetAddRound()
 
 	ok, err := ver.verSpecFact_InSpecFact_UniMem(stmt, nextState)
 	if isErrOrOk(ok, err) {
-		return ok, err
+		return BoolErrToVerRet(ok, err)
 	}
 
-	return ver.verSpecFact_InLogicExpr_InUniFactMem(stmt, nextState)
+	return BoolErrToVerRet(ver.verSpecFact_InLogicExpr_InUniFactMem(stmt, nextState))
 }
 
 func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
