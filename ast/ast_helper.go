@@ -19,6 +19,7 @@ import (
 	glob "golitex/glob"
 	"slices"
 	"strconv"
+	"strings"
 )
 
 func EqualFact(left, right Fc) *SpecFactStmt {
@@ -364,4 +365,17 @@ func ExtractParamsFromFact(fact FactStmt) []string {
 	default:
 		return []string{}
 	}
+}
+
+func HeaderWithParamsAndParamSetsString(header *DefHeader) string {
+	var builder strings.Builder
+	builder.WriteString(string(header.Name))
+	builder.WriteString("(")
+	paramParamSetsPairs := make([]string, len(header.Params))
+	for i, param := range header.Params {
+		paramParamSetsPairs[i] = fmt.Sprintf("%s %s", param, header.ParamSets[i].String())
+	}
+	builder.WriteString(strings.Join(paramParamSetsPairs, ", "))
+	builder.WriteString(")")
+	return builder.String()
 }
