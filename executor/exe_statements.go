@@ -182,13 +182,30 @@ func (exec *Executor) GetMsgAsStr0ToEnd() string {
 }
 
 func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool) error {
-	// if glob.RequireMsg() {
-	// 	defer exec.newMsg(stmt.String() + "\n")
-	// }
-
 	err := exec.env.NewDefProp_InsideAtomsDeclared(stmt)
 	if err != nil {
 		return err
+	}
+
+	paramMap := make(map[string]struct{})
+	for _, param := range stmt.DefHeader.Params {
+		paramMap[param] = struct{}{}
+	}
+
+	params := []string{}
+	for _, fact := range stmt.DomFacts {
+		params = append(params, ast.ExtractParamsFromFact(fact)...)
+	}
+	for _, fact := range stmt.IffFacts {
+		params = append(params, ast.ExtractParamsFromFact(fact)...)
+	}
+	for _, fact := range stmt.ThenFacts {
+		params = append(params, ast.ExtractParamsFromFact(fact)...)
+	}
+	for _, param := range params {
+		if _, ok := paramMap[param]; ok {
+			return fmt.Errorf("param %s is declared in def header and in dom facts", param)
+		}
 	}
 
 	if len(stmt.IffFacts) == 0 {
@@ -317,7 +334,7 @@ func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEach
 
 	// verify thenFacts are true
 	// execState, failedFact, err := verifier.ExecFactsAtCurEnv_retFailedFact(stmt.ThenFacts, exec.env, verifier.Round0NoMsg)
-	execState, failedFact, err := exec.verifyFactsAtCurEnv(stmt.ThenFacts)
+	execState, failedFact, err := exec.verifyFactsAtCurEnv(stmt.ThenFacts, verifier.Round0NoMsg)
 	if err != nil {
 		return execState, fmt.Errorf("prove in each case statement error: failed to verify then facts:\n%s\n%s", failedFact, err)
 	} else if execState.IsUnknown() {
@@ -381,12 +398,6 @@ func (exec *Executor) proveStmt(stmt *ast.ProveStmt) (ExecRet, error) {
 }
 
 func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
-	// if glob.RequireMsg() {
-	// 	defer func() {
-	// 		exec.newMsg(fmt.Sprintf("%s\n", stmt))
-	// 	}()
-	// }
-
 	err := exec.env.IsValidIdentifierAvailable(stmt.Name)
 	if err != nil {
 		return err

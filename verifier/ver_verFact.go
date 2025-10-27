@@ -22,67 +22,29 @@ import (
 
 // 所有verifier的方法里，只有它和switch里的三大函数可能读入anyState
 func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) VerRet {
-	var ok bool
-	var err error
+	var verRet VerRet = newVerErr(fmt.Sprintf("unexpected fact statement: %s", stmt))
 
 	switch asStmt := stmt.(type) {
 	case *ast.SpecFactStmt:
 		if asStmt.NameIs(glob.KeySymbolEqual) && asStmt.TypeEnum == ast.TruePure {
-			ok, err = ver.verTrueEqualFact(asStmt, state, true)
+			verRet = BoolErrToVerRet(ver.verTrueEqualFact(asStmt, state, true))
 		} else {
-			ok, err = ver.verSpecFactThatIsNotTrueEqualFact_UseCommutativity(asStmt, state)
+			verRet = ver.verSpecFactThatIsNotTrueEqualFact_UseCommutativity(asStmt, state)
 		}
 	case *ast.OrStmt:
-		ok, err = ver.verOrStmt(asStmt, state)
+		verRet = BoolErrToVerRet(ver.verOrStmt(asStmt, state))
 	case *ast.UniFactStmt:
-		ok, err = ver.verUniFact(asStmt, state)
+		verRet = BoolErrToVerRet(ver.verUniFact(asStmt, state))
 	case *ast.UniFactWithIffStmt:
-		ok, err = ver.verUniFactWithIff(asStmt, state)
+		verRet = BoolErrToVerRet(ver.verUniFactWithIff(asStmt, state))
 	case *ast.EqualsFactStmt:
-		ok, err = ver.verEqualsFactStmt(asStmt, state)
+		verRet = BoolErrToVerRet(ver.verEqualsFactStmt(asStmt, state))
 	case *ast.IntensionalSetStmt:
-		ok, err = ver.verIntensionalSetStmt(asStmt, state)
+		verRet = BoolErrToVerRet(ver.verIntensionalSetStmt(asStmt, state))
 	case *ast.EnumStmt:
-		ok, err = ver.verEnumStmt(asStmt, state)
+		verRet = BoolErrToVerRet(ver.verEnumStmt(asStmt, state))
 	default:
 		return newVerErr(fmt.Sprintf("unexpected fact statement: %s", asStmt))
 	}
-
-	return BoolErrToVerRet(ok, err)
+	return verRet
 }
-
-// func ExecFactsAtCurEnv_retFailedFact(facts []ast.FactStmt, env *env.Env, state *VerState) (ExecRet, ast.FactStmt, error) {
-// 	ver := NewVerifier(env)
-
-// 	for _, fact := range facts {
-// 		verRet := ver.VerFactStmt(fact, state)
-// 		if verRet.IsErr() {
-// 			return NewExecErr(""), fact, fmt.Errorf(verRet.String())
-// 		} else if verRet.IsUnknown() {
-// 			return NewExecUnknown(""), fact, nil
-// 		}
-// 		err := env.NewFact(fact)
-// 		if err != nil {
-// 			return NewExecErr(""), fact, err
-// 		}
-// 	}
-// 	return NewExecTrue(""), nil, nil
-// }
-
-// func ExecSpecFactsAtCurEnv_retRailedFact(facts []*ast.SpecFactStmt, env *env.Env) (ExecRet, *ast.SpecFactStmt, error) {
-// 	ver := NewVerifier(env)
-
-// 	for _, fact := range facts {
-// 		verRet := ver.VerFactStmt(fact, Round0Msg)
-// 		if verRet.IsErr() {
-// 			return NewExecErr(""), fact, fmt.Errorf(verRet.String())
-// 		} else if verRet.IsUnknown() {
-// 			return NewExecUnknown(""), fact, nil
-// 		}
-// 		err := env.NewFact(fact)
-// 		if err != nil {
-// 			return NewExecErr(""), fact, err
-// 		}
-// 	}
-// 	return NewExecTrue(""), nil, nil
-// }

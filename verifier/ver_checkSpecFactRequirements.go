@@ -21,21 +21,23 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) checkSpecFactReq(stmt *ast.SpecFactStmt, state *VerState) (bool, *VerState, error) {
+func (ver *Verifier) checkSpecFactReq(stmt *ast.SpecFactStmt, state *VerState) (VerRet, *VerState) {
 	if stmt.NameIs(glob.KeywordIn) {
 		ok, err := ver.checkSpecFactReq_InFact_UseBtRules(stmt)
 		if err != nil {
-			return false, state, err
+			return BoolErrToVerRet(false, err), state
 		}
 
 		if ok {
-			return ok, state, nil
+			return BoolErrToVerRet(ok, nil), state
 		}
 
-		return ver.checkFnsReqAndUpdateReqState(stmt, state)
+		ok, state, err := ver.checkFnsReqAndUpdateReqState(stmt, state)
+		return BoolErrToVerRet(ok, err), state
 	}
 
-	return ver.checkFnsReqAndUpdateReqState(stmt, state)
+	ok, state, err := ver.checkFnsReqAndUpdateReqState(stmt, state)
+	return BoolErrToVerRet(ok, err), state
 }
 
 // 只验证 1. params都声明了 2. 确实是fn template
