@@ -271,7 +271,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 	// TODO: 让claim能forall if
 	// if asUnivFact.IffFacts == nil || len(asUnivFact.IffFacts) == 0 {
 	// execState, failedFact, err := verifier.ExecFactsAtCurEnv_retFailedFact(asUnivFact.ThenFacts, exec.env, verifier.Round0NoMsg)
-	execState, failedFact, err := exec.verifyFactsAtCurEnv(asUnivFact.ThenFacts)
+	execState, failedFact, err := exec.verifyFactsAtCurEnv(asUnivFact.ThenFacts, verifier.Round0NoMsg)
 	if err != nil {
 		return false, fmt.Errorf("claim statement error: failed to verify fact:\n%s\n%s", failedFact, err)
 	} else if execState.IsUnknown() {
@@ -458,7 +458,7 @@ func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimProp
 		reverseLastProofAsFacts = append(reverseLastProofAsFacts, fact)
 	}
 	// execState, failedFact, err := verifier.(reverseLastProof, exec.env)
-	execState, failedFact, err := exec.verifyFactsAtCurEnv(reverseLastProofAsFacts)
+	execState, failedFact, err := exec.verifyFactsAtCurEnv(reverseLastProofAsFacts, verifier.Round0NoMsg)
 	if err != nil {
 		return execState, fmt.Errorf("claim prop statement error: failed to verify reverse of last proof:\n%s\n%s", failedFact, err)
 	} else if execState.IsUnknown() {

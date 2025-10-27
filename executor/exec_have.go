@@ -43,7 +43,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) (E
 		return execState, err
 	}
 
-	if stmt.Fact.PropName == glob.KeywordItemExistsIn && execState.IsUnknown() && err == nil {
+	if stmt.Fact.PropName == glob.KeywordItemExistsIn && execState.IsUnknown() {
 		ok, err := exec.checkInFactInSet_SetIsNonEmpty(stmt.Fact)
 		if err != nil {
 			return NewExecErr(""), err
