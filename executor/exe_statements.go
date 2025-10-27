@@ -195,21 +195,21 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool
 	for _, fact := range stmt.DomFacts {
 		for _, param := range ast.ExtractParamsFromFact(fact) {
 			if _, ok := paramMap[param]; ok {
-				return fmt.Errorf("param %s in %s\nshould not be declared in def header", param, fact.String())
+				return fmt.Errorf("param %s in %s\n is already declared in def header %s and should not be redeclared", param, fact.String(), ast.HeaderWithParamsAndParamSetsString(stmt.DefHeader))
 			}
 		}
 	}
 	for _, fact := range stmt.IffFacts {
 		for _, param := range ast.ExtractParamsFromFact(fact) {
 			if _, ok := paramMap[param]; ok {
-				return fmt.Errorf("param %s in %s\nshould not be declared in def header", param, fact.String())
+				return fmt.Errorf("param %s in %s\nshould not be redeclared in def header %s", param, fact.String(), ast.HeaderWithParamsAndParamSetsString(stmt.DefHeader))
 			}
 		}
 	}
 	for _, fact := range stmt.ThenFacts {
 		for _, param := range ast.ExtractParamsFromFact(fact) {
 			if _, ok := paramMap[param]; ok {
-				return fmt.Errorf("param %s in %s\nshould not be declared in def header", param, fact.String())
+				return fmt.Errorf("param %s in %s\nshould not be redeclared in def header %s", param, fact.String(), ast.HeaderWithParamsAndParamSetsString(stmt.DefHeader))
 			}
 		}
 	}
