@@ -354,3 +354,32 @@ func ToInt(fc Fc) (int, bool) {
 // 	thenFacts := stmt.ThenFacts
 // 	return NewUniFact(params, paramSets, domFacts, thenFacts, stmt.Line)
 // }
+
+func ExtractParamsFromForallFacts(facts *UniFactStmt) []string {
+	params := []string{}
+	for _, param := range facts.Params {
+		params = append(params, string(param))
+	}
+
+	return params
+}
+
+func ExtractParamsFromForallIfFacts(facts *UniFactWithIffStmt) []string {
+	params := []string{}
+	for _, param := range facts.UniFact.Params {
+		params = append(params, string(param))
+	}
+
+	return params
+}
+
+func ExtractParamsFromFact(fact FactStmt) []string {
+	switch asFact := fact.(type) {
+	case *UniFactStmt:
+		return ExtractParamsFromForallFacts(asFact)
+	case *UniFactWithIffStmt:
+		return ExtractParamsFromForallIfFacts(asFact)
+	default:
+		return []string{}
+	}
+}

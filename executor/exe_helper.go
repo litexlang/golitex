@@ -46,10 +46,10 @@ func (exec *Executor) NewCommutativeProp(specFact *ast.SpecFactStmt) {
 	}
 }
 
-func (exec *Executor) verifyFactsAtCurEnv(proofs []ast.FactStmt) (ExecRet, ast.Stmt, error) {
+func (exec *Executor) verifyFactsAtCurEnv(proofs []ast.FactStmt, verState *verifier.VerState) (ExecRet, ast.Stmt, error) {
 	ver := verifier.NewVerifier(exec.env)
 	for _, proof := range proofs {
-		verRet := ver.VerFactStmt(proof, verifier.Round0Msg)
+		verRet := ver.VerFactStmt(proof, verState)
 		if verRet.IsErr() {
 			return NewExecErr(""), proof, fmt.Errorf(verRet.String())
 		} else if verRet.IsUnknown() {

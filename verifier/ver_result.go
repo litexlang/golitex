@@ -79,3 +79,17 @@ func BoolErrToVerRet(ok bool, err error) VerRet {
 	}
 	return &VerUnknown{Msg: []string{}}
 }
+
+func NewTrueVerRet(s string) VerRet {
+	if s != "" {
+		return &VerTrue{Msg: []string{s}}
+	}
+	return &VerTrue{Msg: []string{}}
+}
+
+func NewUnknownVerRet(s string) VerRet {
+	if s != "" {
+		return &VerUnknown{Msg: []string{s}}
+	}
+	return &VerUnknown{Msg: []string{}}
+}
