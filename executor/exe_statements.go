@@ -192,19 +192,25 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool
 		paramMap[param] = struct{}{}
 	}
 
-	params := []string{}
 	for _, fact := range stmt.DomFacts {
-		params = append(params, ast.ExtractParamsFromFact(fact)...)
+		for _, param := range ast.ExtractParamsFromFact(fact) {
+			if _, ok := paramMap[param]; ok {
+				return fmt.Errorf("param %s in %s\nshould not be declared in def header", param, fact.String())
+			}
+		}
 	}
 	for _, fact := range stmt.IffFacts {
-		params = append(params, ast.ExtractParamsFromFact(fact)...)
+		for _, param := range ast.ExtractParamsFromFact(fact) {
+			if _, ok := paramMap[param]; ok {
+				return fmt.Errorf("param %s in %s\nshould not be declared in def header", param, fact.String())
+			}
+		}
 	}
 	for _, fact := range stmt.ThenFacts {
-		params = append(params, ast.ExtractParamsFromFact(fact)...)
-	}
-	for _, param := range params {
-		if _, ok := paramMap[param]; ok {
-			return fmt.Errorf("param %s is declared in def header and in dom facts", param)
+		for _, param := range ast.ExtractParamsFromFact(fact) {
+			if _, ok := paramMap[param]; ok {
+				return fmt.Errorf("param %s in %s\nshould not be declared in def header", param, fact.String())
+			}
 		}
 	}
 
