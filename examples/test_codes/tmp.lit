@@ -1,1 +1,5 @@
-1 = 2
+prop f(x R) <=> forall x R: x = 1
+
+claim:
+    $f(1)
+    prove:
