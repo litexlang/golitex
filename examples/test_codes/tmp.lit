@@ -1,5 +1,6 @@
-prop f(x R) <=> forall x R: x = 1
+prop f(x R) <=> forall y R => y = x
 
 claim:
-    $f(1)
+    forall y R => $f(y)
     prove:
+        1 = 1
