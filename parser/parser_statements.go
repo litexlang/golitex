@@ -565,8 +565,16 @@ func (tb *tokenBlock) claimStmt() (ast.ClaimInterface, error) {
 				proof2 = append(proof2, curStmt)
 			}
 
+			if len(proof2) == 0 || len(proof) == 0 {
+				return nil, fmt.Errorf("expect proof after claim")
+			}
+
 			return ast.NewClaimIffStmt(asUniFactWithIffStmt, proof, proof2, tb.line), nil
 		}
+	}
+
+	if len(proof) == 0 {
+		return nil, fmt.Errorf("expect proof after claim")
 	}
 
 	if isProve {
@@ -1484,6 +1492,10 @@ func (tb *tokenBlock) claimPropStmt() (*ast.ClaimPropStmt, error) {
 		proofs = append(proofs, curStmt)
 	}
 
+	if len(proofs) == 0 {
+		return nil, fmt.Errorf("expect proof after claim")
+	}
+
 	// return ast.NewClaimPropStmt(ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts, thenFacts), proofs, isProve), nil
 	return ast.NewClaimPropStmt(ast.NewDefPropStmt(namedUniFact.DefPropStmt.DefHeader, namedUniFact.DefPropStmt.DomFacts, namedUniFact.DefPropStmt.IffFacts, namedUniFact.DefPropStmt.ThenFacts, tb.line), proofs, isProve, tb.line), nil
 }
@@ -1519,6 +1531,10 @@ func (tb *tokenBlock) claimExistPropStmt() (*ast.ClaimExistPropStmt, error) {
 			return nil, tbErr(err, tb)
 		}
 		haveObj = append(haveObj, curObj)
+	}
+
+	if len(proofs) == 0 {
+		return nil, fmt.Errorf("expect proof after claim")
 	}
 
 	return ast.NewClaimExistPropStmt(existProp, proofs, haveObj, tb.line), nil
@@ -2353,7 +2369,8 @@ func (tb *tokenBlock) claimStmtInline() (ast.ClaimInterface, error) {
 			return nil, tbErr(err, tb)
 		}
 	} else {
-		return ast.NewClaimProveStmt(fact, []ast.Stmt{}, tb.line), nil
+		// return ast.NewClaimProveStmt(fact, []ast.Stmt{}, tb.line), nil
+		return nil, fmt.Errorf("expect proof after claim")
 	}
 
 	proof := []ast.Stmt{}
@@ -2363,6 +2380,10 @@ func (tb *tokenBlock) claimStmtInline() (ast.ClaimInterface, error) {
 			return nil, tbErr(err, tb)
 		}
 		proof = append(proof, curStmt)
+	}
+
+	if len(proof) == 0 {
+		return nil, fmt.Errorf("expect proof after claim")
 	}
 
 	if namedUniFact != nil {
