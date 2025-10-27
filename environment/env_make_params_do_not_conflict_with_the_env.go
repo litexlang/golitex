@@ -1,3 +1,17 @@
+// Copyright 2024 Jiachen Shen.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Original Author: Jiachen Shen <malloc_realloc_free@outlook.com>
+// Litex email: <litexlang@outlook.com>
+// Litex website: https://litexlang.com
+// Litex github repository: https://github.com/litexlang/golitex
+// Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
+
 package litex_env
 
 import (
@@ -28,7 +42,7 @@ func (env *Env) makeUniFactParamsInThisFactDoNotConflictWithEnv(fact ast.FactStm
 	case *ast.UniFactStmt:
 		return env.makeUniFactParamsInThisUniFactDoNotConflictWithEnv(asFact)
 	case *ast.UniFactWithIffStmt:
-		return env.makeUniFactParamsInThisUniFactDoNotConflictWithEnv(asFact.UniFact)
+		panic("makeUniFactParamsInThisFactDoNotConflictWithEnv: UniFactWithIffStmt is not supported")
 	default:
 		return fact
 	}
@@ -49,17 +63,52 @@ func (env *Env) makeUniFactParamsInThisUniFactDoNotConflictWithEnv(uniFact *ast.
 	// get non conflicting params
 	newParams := []string{}
 	newParamsMap := map[string]struct{}{}
-	for _, param := range uniFact.Params {
+	newParamSets := []ast.Fc{}
+
+	formerParamToNewParamMap := map[string]ast.Fc{}
+	for i, param := range uniFact.Params {
+		// inst param sets
+		if i > 0 {
+			curSet := uniFact.ParamSets[i]
+			instantiatedCurSet, err := curSet.Instantiate(formerParamToNewParamMap)
+			if err != nil {
+				panic(err)
+			}
+			newParamSets = append(newParamSets, instantiatedCurSet)
+		} else {
+			newParamSets = append(newParamSets, uniFact.ParamSets[i])
+		}
+
 		if _, ok := conflictingParams[param]; !ok {
 			newParams = append(newParams, param)
 			newParamsMap[param] = struct{}{}
+			formerParamToNewParamMap[param] = ast.FcAtom(param)
+		} else {
+			newParam := env.GenerateUndeclaredRandomName_AndNotInMap(newParamsMap)
+			newParams = append(newParams, newParam)
+			newParamsMap[newParam] = struct{}{}
+			formerParamToNewParamMap[param] = ast.FcAtom(newParam)
 		}
-		newParam := env.GenerateUndeclaredRandomName_AndNotInMap(newParamsMap)
-		newParams = append(newParams, newParam)
-		newParamsMap[newParam] = struct{}{}
 	}
 
-	// replace params of facts of this uniFact with new params
+	newDomFacts := []ast.FactStmt{}
+	for _, domFact := range uniFact.DomFacts {
+		instantiatedDomFact, err := domFact.Instantiate(formerParamToNewParamMap)
+		if err != nil {
+			panic(err)
+		}
+		newDomFacts = append(newDomFacts, instantiatedDomFact)
+	}
 
-	return ast.NewUniFact(newParams, uniFact.ParamSets, uniFact.DomFacts, uniFact.ThenFacts, uniFact.Line)
+	// inst then facts
+	newThenFacts := []ast.FactStmt{}
+	for _, thenFact := range uniFact.ThenFacts {
+		instantiatedThenFact, err := thenFact.Instantiate(formerParamToNewParamMap)
+		if err != nil {
+			panic(err)
+		}
+		newThenFacts = append(newThenFacts, instantiatedThenFact)
+	}
+
+	return ast.NewUniFact(newParams, newParamSets, newDomFacts, newThenFacts, uniFact.Line)
 }
