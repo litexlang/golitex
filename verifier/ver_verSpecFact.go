@@ -180,16 +180,19 @@ func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecFactStmt, state *VerState) 
 func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	nextState := state.GetAddRound()
 
-	defStmt := ver.env.GetPropDef(stmt.PropName)
-	if defStmt == nil {
+	curDefStmt := ver.env.GetPropDef(stmt.PropName)
+	// defStmt := curDefStmt
+	if curDefStmt == nil {
 		// 这里可能是因为这个propName是exist prop，所以没有定义
 		return NewUnknownVerRet("")
 	}
 
-	if len(defStmt.IffFacts) == 0 {
+	if len(curDefStmt.IffFacts) == 0 {
 		// REMARK: 如果IFFFacts不存在，那我们认为是 没有iff能验证prop，而不是prop自动成立
 		return NewUnknownVerRet("")
 	}
+
+	defStmt := ver.env.MakeUniFactParamsInThisDefPropDoNotConflictWithEnv(curDefStmt)
 
 	iffToProp := defStmt.IffToPropUniFact()
 	paramArrMap := map[string]ast.Fc{}
