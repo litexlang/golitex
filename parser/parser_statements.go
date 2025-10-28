@@ -460,7 +460,7 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 
 }
 
-func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
+func (tb *tokenBlock) defObjStmt() (*ast.DefLetStmt, error) {
 	err := tb.header.skip("")
 	if err != nil {
 		return nil, tbErr(err, tb)

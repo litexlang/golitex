@@ -61,7 +61,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) (E
 	}
 
 	if stmt.Fact.PropName == glob.KeywordItemExistsIn && execState.IsTrue() {
-		err := exec.defObjStmt(ast.NewDefObjStmt([]string{stmt.ObjNames[0]}, []ast.Fc{stmt.Fact.Params[0]}, []ast.FactStmt{}, stmt.Line))
+		err := exec.defLetStmt(ast.NewDefObjStmt([]string{stmt.ObjNames[0]}, []ast.Fc{stmt.Fact.Params[0]}, []ast.FactStmt{}, stmt.Line))
 		if err != nil {
 			return NewExecErr(""), err
 		}
@@ -237,7 +237,7 @@ func (exec *Executor) haveEnumSetStmt(stmt *ast.EnumStmt) (ExecRet, error) {
 
 	// 定义这个新的集合
 	defObjStmt := ast.NewDefObjStmt([]string{stmt.CurSet.String()}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}, []ast.FactStmt{stmt}, stmt.Line)
-	err := exec.defObjStmt(defObjStmt)
+	err := exec.defLetStmt(defObjStmt)
 	if err != nil {
 		return NewExecErr(""), err
 	}
@@ -256,7 +256,7 @@ func (exec *Executor) haveIntensionalSetStmt(stmt *ast.IntensionalSetStmt) (Exec
 	}
 
 	defObjStmt := ast.NewDefObjStmt([]string{stmt.CurSet.String()}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}, []ast.FactStmt{stmt}, stmt.Line)
-	err = exec.defObjStmt(defObjStmt)
+	err = exec.defLetStmt(defObjStmt)
 	if err != nil {
 		return NewExecErr(""), err
 	}
@@ -288,7 +288,7 @@ func (exec *Executor) haveExistByReplacementStmt(stmt *ast.HaveObjStStmt) (ExecR
 	}
 
 	defObjStmt := ast.NewDefObjStmt([]string{stmt.ObjNames[0]}, []ast.Fc{stmt.Fact.Params[0]}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, propName, []ast.Fc{ast.FcAtom(stmt.ObjNames[0]), stmt.Fact.Params[3]}, stmt.Line)}, stmt.Line)
-	err = exec.defObjStmt(defObjStmt)
+	err = exec.defLetStmt(defObjStmt)
 	if err != nil {
 		return NewExecErr(""), err
 	}
