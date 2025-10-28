@@ -363,7 +363,7 @@ func ExtractParamsFromFact(fact FactStmt) []string {
 	case *UniFactWithIffStmt:
 		return asFact.UniFact.Params
 	default:
-		return []string{}
+		return nil
 	}
 }
 
