@@ -1,6 +1,9 @@
-prop f(x R) <=> forall x R => x = 1
+prop q(x, y R)
+prop p(x R)
 
-claim:
-    $f(1)
-    prove:
-        1 = 1
+know:
+	forall x R:
+        $p(x)
+        =>:
+        	forall x R:
+                $q(x,x)

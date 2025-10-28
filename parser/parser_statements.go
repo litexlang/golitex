@@ -41,7 +41,12 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 	case glob.KeywordFn:
 		ret, err = tb.defFnStmt(true)
 	case glob.KeywordLet:
-		ret, err = tb.defObjStmt()
+		if tb.header.strAtCurIndexPlus(1) == glob.KeywordFn {
+			tb.header.skip(glob.KeywordLet)
+			ret, err = tb.defFnStmt(true)
+		} else {
+			ret, err = tb.defObjStmt()
+		}
 	case glob.KeywordHave:
 		if tb.header.strAtCurIndexPlus(1) == glob.KeywordSet {
 			if tb.header.strAtCurIndexPlus(2) == glob.KeywordFn {
@@ -295,6 +300,10 @@ func (tb *tokenBlock) uniFactInterface(uniFactDepth uniFactEnum) (ast.UniFactInt
 	}
 
 	if len(iffFacts) == 0 {
+		if len(thenFacts) == 0 {
+			return nil, fmt.Errorf("expect %s section to have at least one fact in %s", glob.KeySymbolRightArrow, ast.NewUniFact(params, setParams, domainFacts, thenFacts, tb.line))
+		}
+
 		return ast.NewUniFact(params, setParams, domainFacts, thenFacts, tb.line), nil
 	} else {
 		ret := ast.NewUniFactWithIff(ast.NewUniFact(params, setParams, domainFacts, thenFacts, tb.line), iffFacts, tb.line)
