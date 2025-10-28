@@ -137,7 +137,7 @@ func RunREPLInTerminal(version string) {
 
 	year := time.Now().Year()
 
-	fmt.Fprintf(writer, "Litex %s Copyright (C) 2024-%s litexlang.com Type 'help' for help\n", version, strconv.Itoa(year))
+	fmt.Fprintf(writer, "Litex %s Copyright (C) 2024-%s litexlang.com Type 'help' for help\nNOT READY FOR PRODUCTION USE\n", version, strconv.Itoa(year))
 
 	for {
 		code, err := listenOneStatementFromTerminal(reader, writer)
