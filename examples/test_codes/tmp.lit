@@ -14,8 +14,12 @@ prop is_group(s set, mul fn(s, s)s, inv fn(s)s, e s):
 # function negate is defined to be the negation of a real number, i.e. negate(x) = -x is always true. The existence of negation function is by common sense.
 # The reason why The inverse (negation) operator, when applied to an integer argument, returns another integer. This follows directly from the definition of integers, so it is built into Litex.
 # The proof cannot be carried out in ℕ because the following statement does not remain valid in the following line.
+# The following statement is does not work: 
+# forall x N: negate(x) = -x, -x $in N, negate(x) $in N
 forall x Z: negate(x) = -x, -x $in Z, negate(x) $in Z
 
+# The difference between `have fn` and `fn` is that `have fn` checks the existence of the function, while `fn` does not.
+# When using `fn`, Keep in mind that the function is not guaranteed to exist!
 have fn inverse(x Z) Z = negate(x)
 
 forall x Z:
