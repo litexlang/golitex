@@ -63,7 +63,7 @@ func (exec *Executor) proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsI
 	defer exec.deleteEnvAndGiveUpMsgs()
 
 	defObjStmt := ast.NewDefObjStmt([]string{stmt.Param}, []ast.Fc{ast.FcAtom(glob.KeywordInteger)}, []ast.FactStmt{ast.NewEqualFact(ast.FcAtom(stmt.Param), indexAsFc)}, stmt.Line)
-	err := exec.defObjStmt(defObjStmt)
+	err := exec.defLetStmt(defObjStmt)
 	if err != nil {
 		return false, "", err
 	}

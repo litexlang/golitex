@@ -68,7 +68,7 @@ func (exec *Executor) proveIsCommutativePropStmtMainLogic(stmt *ast.ProveIsCommu
 		params = append(params, string(asFcAtom))
 	}
 
-	err := exec.defObjStmt(ast.NewDefObjStmt(params, []ast.Fc{def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[1]}, []ast.FactStmt{}, stmt.Line))
+	err := exec.defLetStmt(ast.NewDefObjStmt(params, []ast.Fc{def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[1]}, []ast.FactStmt{}, stmt.Line))
 	if err != nil {
 		return false, err
 	}

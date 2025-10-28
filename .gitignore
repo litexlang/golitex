@@ -20,3 +20,4 @@ tutorial.sh
 /tools/
 git_add_commit.sh
 safe_push.sh
+process_tmp.py
