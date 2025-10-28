@@ -31,14 +31,14 @@ Resolves package-qualified symbols:
 pm := NewPackageManager()
 
 // Register a package
-pm.RegisterPackage("mypackage", "1.0.0", "/path/to/package")
+pm.RegisterPackage("my_package", "1.0.0", "/path/to/package")
 
 // Create executors
 executor := NewPackageExecutor(pm)
 resolver := NewPackageResolver(pm)
 
 // Resolve a symbol
-pkgName, symbolName, err := resolver.ResolveSymbol("mypackage::myfunction")
+pkgName, symbolName, err := resolver.ResolveSymbol("my_package::my_function")
 ```
 
 ## TODO
@@ -50,5 +50,5 @@ pkgName, symbolName, err := resolver.ResolveSymbol("mypackage::myfunction")
 - [ ] Integrate with main executor
 - [ ] Add caching for loaded packages
 - [ ] Add package search paths
-- [ ] Implement package namespacing
+- [ ] Implement package namespace
 
