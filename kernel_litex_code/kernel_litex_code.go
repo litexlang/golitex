@@ -580,4 +580,13 @@ know forall a, b R: a ^ 2 = b => a = sqrt(b) or a = -sqrt(b), a = pow(b, 1/2) or
 know forall a, b R: a ^ 2 = b, a >= 0 => a = sqrt(b), a = pow(b, 1/2)
 
 know forall x, y, z Z: z != 0 => (x + y) % z = (x % z + y % z) % z, (x * y) % z = (x % z * y % z) % z, (x - y) % z = (x % z - y % z) % z
+
+exist_prop s set st there_exists_infinite_set() :
+    <=>:
+        not s $in finite_set
+
+know $there_exists_infinite_set()
+
+fn negate(x R) R:
+	negate(x) = -x
 `

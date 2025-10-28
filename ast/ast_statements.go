@@ -21,7 +21,7 @@ type StrSlice []string
 type FcSlice []Fc
 type ReversibleFacts []Spec_OrFact
 
-type DefObjStmt struct {
+type DefLetStmt struct {
 	Objs    StrSlice
 	ObjSets FcSlice
 	Facts   FactStmtSlice

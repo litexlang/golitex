@@ -179,7 +179,7 @@ func (stmt *SpecFactStmt) ReverseSpecFactParamsOrder() (*SpecFactStmt, error) {
 	return NewSpecFactStmt(stmt.TypeEnum, stmt.PropName, newParams, stmt.Line), nil
 }
 
-func (stmt *DefObjStmt) NewInFacts() []*SpecFactStmt {
+func (stmt *DefLetStmt) NewInFacts() []*SpecFactStmt {
 	facts := []*SpecFactStmt{}
 
 	if len(stmt.Objs) != len(stmt.ObjSets) {
