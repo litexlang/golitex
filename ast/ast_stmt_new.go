@@ -14,6 +14,12 @@
 
 package litex_ast
 
+import (
+	"fmt"
+	glob "golitex/glob"
+	"slices"
+)
+
 func NewDefObjStmt(objs []string, objSets []Fc, facts []FactStmt, line uint) *DefObjStmt {
 	return &DefObjStmt{objs, objSets, facts, line}
 }
@@ -216,4 +222,64 @@ func NewAlgoIfStmt(condition []FactStmt, thenFacts []AlgoStmt, line uint) *AlgoI
 
 func NewAlgoReturnStmt(value Fc, line uint) *AlgoReturnStmt {
 	return &AlgoReturnStmt{value, line}
+}
+
+func NewUniFactWithSafeGuard(params []string, setParams []Fc, domFacts []FactStmt, thenFacts []FactStmt, line uint) (*UniFactStmt, error) {
+	if len(thenFacts) == 0 {
+		return nil, fmt.Errorf("expect %s section to have at least one fact in %s", glob.KeySymbolRightArrow, NewUniFact(params, setParams, domFacts, thenFacts, line))
+	}
+
+	for _, fact := range domFacts {
+		params := ExtractParamsFromFact(fact)
+		if params == nil {
+			continue
+		} else {
+			for _, param := range params {
+				if slices.Contains(params, param) {
+					return nil, fmt.Errorf("parameter %s is duplicated in %s", param, fact.String())
+				}
+			}
+		}
+	}
+
+	for _, fact := range thenFacts {
+		params := ExtractParamsFromFact(fact)
+		if params == nil {
+			continue
+		} else {
+			for _, param := range params {
+				if slices.Contains(params, param) {
+					return nil, fmt.Errorf("parameter %s is duplicated in %s", param, fact.String())
+				}
+			}
+		}
+	}
+
+	return NewUniFact(params, setParams, domFacts, thenFacts, line), nil
+}
+
+func NewUniFactWithIffWithSafeGuard(params []string, setParams []Fc, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt, line uint) (*UniFactWithIffStmt, error) {
+	uniFact, err := NewUniFactWithSafeGuard(params, setParams, domFacts, thenFacts, line)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(iffFacts) == 0 {
+		return nil, fmt.Errorf("expect %s section to have at least one fact in %s", glob.KeySymbolRightArrow, NewUniFactWithIff(NewUniFact(params, setParams, domFacts, thenFacts, line), iffFacts, line))
+	}
+
+	for _, fact := range iffFacts {
+		params := ExtractParamsFromFact(fact)
+		if params == nil {
+			continue
+		} else {
+			for _, param := range params {
+				if slices.Contains(params, param) {
+					return nil, fmt.Errorf("parameter %s is duplicated in %s", param, fact.String())
+				}
+			}
+		}
+	}
+
+	return NewUniFactWithIff(uniFact, iffFacts, line), nil
 }

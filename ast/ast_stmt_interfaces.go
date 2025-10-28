@@ -240,10 +240,13 @@ type UniFactInterface interface {
 	ReplaceFc(oldFc Fc, newFc Fc) FactStmt
 	GetLine() uint
 	algoStmt()
+	GetParams() StrSlice
 }
 
-func (stmt *UniFactStmt) uniFact()        {}
-func (stmt *UniFactWithIffStmt) uniFact() {}
+func (stmt *UniFactStmt) uniFact()                   {}
+func (stmt *UniFactWithIffStmt) uniFact()            {}
+func (stmt *UniFactStmt) GetParams() StrSlice        { return stmt.Params }
+func (stmt *UniFactWithIffStmt) GetParams() StrSlice { return stmt.UniFact.Params }
 
 type ClaimInterface interface {
 	claimStmt()
