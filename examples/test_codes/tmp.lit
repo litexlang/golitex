@@ -1,9 +1,1 @@
-prop q(x, y R)
-prop p(x R)
-
-know:
-	forall x R:
-        $p(x)
-        =>:
-        	forall x R:
-                $q(x,x)
+have a, b, c set

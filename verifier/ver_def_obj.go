@@ -20,7 +20,7 @@ import (
 	env "golitex/environment"
 )
 
-func (ver *Verifier) NewDefObj_InsideAtomsDeclared(stmt *ast.DefObjStmt) error {
+func (ver *Verifier) NewDefObj_InsideAtomsDeclared(stmt *ast.DefLetStmt) error {
 	err := ver.env.NonDuplicateParam_NoUndeclaredParamSet(stmt.Objs, stmt.ObjSets, true)
 	if err != nil {
 		return err
