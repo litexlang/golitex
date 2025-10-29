@@ -22,8 +22,6 @@ forall x Z: negate(x) = -x, -x $in Z, negate(x) $in Z
 # When using `fn`, Keep in mind that the function is not guaranteed to exist!
 have fn inverse(x Z) Z = negate(x)
 
-have fn inverse(x Z) Z = negate(x)
-
 forall x Z:
     negate(x) = -x = inverse(x)
     x + inverse(x) = x + (-x) = 0
