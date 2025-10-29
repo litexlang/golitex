@@ -20,8 +20,8 @@ import (
 	"slices"
 )
 
-func NewDefObjStmt(objs []string, objSets []Fc, facts []FactStmt, line uint) *DefObjStmt {
-	return &DefObjStmt{objs, objSets, facts, line}
+func NewDefObjStmt(objs []string, objSets []Fc, facts []FactStmt, line uint) *DefLetStmt {
+	return &DefLetStmt{objs, objSets, facts, line}
 }
 
 func NewDefPropStmt(defHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt, thenFacts []FactStmt, line uint) *DefPropStmt {

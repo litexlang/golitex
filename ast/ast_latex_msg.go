@@ -20,7 +20,7 @@ import (
 	"strings"
 )
 
-func (s *DefObjStmt) ToLatexString() string {
+func (s *DefLetStmt) ToLatexString() string {
 	var builder strings.Builder
 
 	builder.WriteString("\\begin{definition}[Object(s)]\n")
