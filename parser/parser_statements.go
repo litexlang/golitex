@@ -1773,7 +1773,7 @@ func (tb *tokenBlock) enumStmt_or_intensionalSetStmt_or_DomOf(fc ast.Fc) (ast.En
 		return nil, fmt.Errorf("")
 	}
 
-	if tb.header.is(glob.KeySymbolComma) {
+	if tb.header.is(glob.KeySymbolComma) || tb.header.is(glob.KeySymbolRightCurly) {
 		enumItems := []ast.Fc{leftmost}
 		tb.header.skip(glob.KeySymbolComma)
 		for !tb.header.is(glob.KeySymbolRightCurly) {
