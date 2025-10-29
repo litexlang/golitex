@@ -107,6 +107,16 @@ Resources for AI researchers who want to develop Litex-based AI systems, mostly 
 
 All of our [repositories](https://github.com/orgs/litexlang/repositories) are open-sourced. Just issue PRs and tell us any ideas about Litex! Maybe we can build the future together!
 
+## References
+
+Mathematics references:
+
+1. Avigad Jeremy: Foundations https://arxiv.org/abs/2009.09541
+2. Terence Tao: Analysis I Fourth edition, 2022. https://terrytao.wordpress.com/books/analysis-i/
+3. Weyl Hermann: Philosophy of Mathematics and Natural Science https://www.jstor.org/stable/j.ctv1t1kftd
+4. Bertrand Russell: Introduction to Mathematical Philosophy https://people.umass.edu/klement/imp/imp.pdf
+5. David Hilbert: Foundations of Geometry https://math.berkeley.edu/~wodzicki/160/Hilbert.pdf
+
 ## Special Thanks
 
 _Sometimes it is the very people who no one imagines anything of who do the things that no one can imagine._

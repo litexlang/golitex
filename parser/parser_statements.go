@@ -1775,7 +1775,7 @@ func (tb *tokenBlock) enumStmt_or_intensionalSetStmt_or_DomOf(fc ast.Fc) (ast.En
 
 	if tb.header.is(glob.KeySymbolComma) || tb.header.is(glob.KeySymbolRightCurly) {
 		enumItems := []ast.Fc{leftmost}
-		tb.header.skip(glob.KeySymbolComma)
+		tb.header.skipIfIs(glob.KeySymbolComma) // 不能是 err = tb.header.skip(glob.KeySymbolComma) 因为这样会跳过 right curly
 		for !tb.header.is(glob.KeySymbolRightCurly) {
 			curItem, err := tb.RawFc()
 			if err != nil {
