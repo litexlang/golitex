@@ -1,1 +1,31 @@
-have set a = {1}
+prop is_inter_item(A, B set, x obj):
+    x $in A
+    x $in B
+
+fn inter(A, B set) set:
+    forall x obj:
+        x $in inter(A, B)
+        <=>:
+            $is_inter_item(A, B, x)
+
+prop is_equal(A, B set):
+    forall x A:
+        x $in B
+    forall x B:
+        x $in A
+
+claim:
+    forall A, B, D set:
+        $is_equal(inter(A, inter(B, D)), inter(inter(A, B), D))
+    prove:
+        forall x inter(A, inter(B, D)):
+            $is_inter_item(A, inter(B, D), x)
+            x $in A
+            x $in inter(B, D)
+            $is_inter_item(B, D, x)
+            x $in B
+            x $in D
+            $is_inter_item(A, B, x)
+            x $in inter(A, B)
+            $is_inter_item(inter(A, B), x) // missing argument, causes server error
+            x $in inter(inter(A, B), D)
