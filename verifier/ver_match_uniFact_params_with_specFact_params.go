@@ -15,6 +15,7 @@
 package litex_verifier
 
 import (
+	"fmt"
 	ast "golitex/ast"
 	env "golitex/environment"
 )
@@ -28,7 +29,7 @@ func (ver *Verifier) matchUniFactParamsWithSpecFactParams(knownSpecFactInUniFact
 		freeVarsMap[freeVar] = struct{}{}
 	}
 
-	matchedMaps, unmatchedFcPairs, err := ver.matchFcsInKnownSpecFactAndGivenFc(knownFcs, givenFcs, freeVarsMap)
+	matchedMaps, unmatchedFcPairs, err := ver.matchFcsInKnownSpecFactAndGivenFc(knownFcs, givenFcs, freeVarsMap, string(specFact.PropName))
 	if err != nil {
 		return false, nil, err
 	}
@@ -84,7 +85,7 @@ type fcPair struct {
 }
 
 // return map{freeVar: instVar}, unMatched fcPairs, matched?, err
-func (ver *Verifier) matchFcInKnownSpecFactAndGivenFc(knownFc ast.Fc, givenFc ast.Fc, freeVars map[string]struct{}) (map[string][]ast.Fc, []fcPair, error) {
+func (ver *Verifier) matchFcInKnownSpecFactAndGivenFc(knownFc ast.Fc, givenFc ast.Fc, freeVars map[string]struct{}, specFactName string) (map[string][]ast.Fc, []fcPair, error) {
 	switch asKnownFc := knownFc.(type) {
 	case ast.FcAtom:
 		if _, ok := freeVars[string(asKnownFc)]; ok {
@@ -114,13 +115,13 @@ func (ver *Verifier) matchFcInKnownSpecFactAndGivenFc(knownFc ast.Fc, givenFc as
 				return nil, []fcPair{{knownFc: knownFc, givenFc: givenFc}}, nil
 			}
 
-			headMatchedMap, headMatchedFcPairs, err := ver.matchFcInKnownSpecFactAndGivenFc(asKnownFc.FnHead, asGivenFc.FnHead, freeVars)
+			headMatchedMap, headMatchedFcPairs, err := ver.matchFcInKnownSpecFactAndGivenFc(asKnownFc.FnHead, asGivenFc.FnHead, freeVars, specFactName)
 			if err != nil {
 				return nil, []fcPair{}, err
 			}
 			retMap, retFcPairs = ver.mergeSingleMatchedMapAndUnMatchedFcPairs(headMatchedMap, headMatchedFcPairs, retMap, retFcPairs)
 
-			paramsMatchedMap, paramsMatchedFcPairs, err := ver.matchFcsInKnownSpecFactAndGivenFc(asKnownFc.Params, asGivenFc.Params, freeVars)
+			paramsMatchedMap, paramsMatchedFcPairs, err := ver.matchFcsInKnownSpecFactAndGivenFc(asKnownFc.Params, asGivenFc.Params, freeVars, specFactName)
 			if err != nil {
 				return nil, []fcPair{}, err
 			}
@@ -132,11 +133,15 @@ func (ver *Verifier) matchFcInKnownSpecFactAndGivenFc(knownFc ast.Fc, givenFc as
 	return nil, []fcPair{}, nil
 }
 
-func (ver *Verifier) matchFcsInKnownSpecFactAndGivenFc(knownFcs []ast.Fc, givenFcs []ast.Fc, freeVars map[string]struct{}) ([]map[string][]ast.Fc, [][]fcPair, error) {
+func (ver *Verifier) matchFcsInKnownSpecFactAndGivenFc(knownFcs []ast.Fc, givenFcs []ast.Fc, freeVars map[string]struct{}, specFactName string) ([]map[string][]ast.Fc, [][]fcPair, error) {
+	if len(knownFcs) != len(givenFcs) {
+		return nil, [][]fcPair{}, fmt.Errorf("required parameters number of fact %s is %d, get %d", specFactName, len(knownFcs), len(givenFcs))
+	}
+
 	matchedMaps := []map[string][]ast.Fc{}
 	unmatchedFcPairs := [][]fcPair{}
 	for i := range knownFcs {
-		matchedMap, matchedFcPairs, err := ver.matchFcInKnownSpecFactAndGivenFc(knownFcs[i], givenFcs[i], freeVars)
+		matchedMap, matchedFcPairs, err := ver.matchFcInKnownSpecFactAndGivenFc(knownFcs[i], givenFcs[i], freeVars, specFactName)
 		if err != nil {
 			return nil, [][]fcPair{}, err
 		}
