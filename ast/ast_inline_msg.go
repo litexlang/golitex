@@ -19,7 +19,7 @@ import (
 	"strings"
 )
 
-func (stmt *DefObjStmt) InlineString() string {
+func (stmt *DefLetStmt) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordLet)
 	builder.WriteString(" ")

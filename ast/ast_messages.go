@@ -135,7 +135,7 @@ func exist_st_FactString(stmt *SpecFactStmt) string {
 	return builder.String()
 }
 
-func (stmt *DefObjStmt) String() string {
+func (stmt *DefLetStmt) String() string {
 	var builder strings.Builder
 
 	builder.WriteString(glob.KeywordLet)

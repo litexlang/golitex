@@ -23,7 +23,7 @@ type Stmt interface {
 	algoStmt()
 }
 
-func (s *DefObjStmt) stmt()                      {}
+func (s *DefLetStmt) stmt()                      {}
 func (s *DefPropStmt) stmt()                     {}
 func (s *DefFnStmt) stmt()                       {}
 func (s *UniFactStmt) stmt()                     {}
@@ -68,7 +68,7 @@ func (s *ProveInRangeStmt) stmt()                {}
 func (s *ProveIsTransitivePropStmt) stmt()       {}
 func (s *AlgoDefStmt) stmt()                     {}
 
-func (s *DefObjStmt) algoStmt()                      {}
+func (s *DefLetStmt) algoStmt()                      {}
 func (s *DefPropStmt) algoStmt()                     {}
 func (s *DefFnStmt) algoStmt()                       {}
 func (s *UniFactStmt) algoStmt()                     {}
@@ -115,7 +115,7 @@ func (s *ProveInRangeStmt) algoStmt()          {}
 func (s *ProveIsTransitivePropStmt) algoStmt() {}
 func (s *AlgoDefStmt) algoStmt()               {}
 
-func (s *DefObjStmt) GetLine() uint                      { return s.Line }
+func (s *DefLetStmt) GetLine() uint                      { return s.Line }
 func (s *DefPropStmt) GetLine() uint                     { return s.Line }
 func (s *DefFnStmt) GetLine() uint                       { return s.Line }
 func (s *UniFactStmt) GetLine() uint                     { return s.Line }
@@ -222,7 +222,7 @@ type DefStmtInterface interface {
 	algoStmt()
 }
 
-func (s *DefObjStmt) defStmt()       {}
+func (s *DefLetStmt) defStmt()       {}
 func (s *DefPropStmt) defStmt()      {}
 func (s *DefExistPropStmt) defStmt() {}
 func (s *DefFnStmt) defStmt()        {}
@@ -305,7 +305,7 @@ type FnTemplate_Or_DefObjStmtInterface interface {
 	algoStmt()
 }
 
-func (stmt *DefObjStmt) fnTemplate_Or_DefObjStmt() {}
+func (stmt *DefLetStmt) fnTemplate_Or_DefObjStmt() {}
 
 type CanBeKnownStmt interface {
 	stmt()
