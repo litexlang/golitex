@@ -42,7 +42,7 @@ func CmpBy_Literally_NumLit_PolynomialArith(left, right ast.Fc) (bool, string, e
 
 	cmp := cmpArith_ByBIR(leftStr, rightStr)
 	if cmp {
-		return true, "builtin rules for *, +, -, /", nil
+		return true, "The two polynomials become the same after simplification.", nil
 	}
 
 	return false, "", nil
