@@ -507,7 +507,7 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch_new(stmt *ast.SpecFa
 
 		if ok {
 			if state.WithMsg {
-				ver.successWithMsg(stmt.String(), knownFact_paramProcessed.String())
+				ver.successWithMsg(stmt.String(), knownFact_paramProcessed.UniFact.StringWithLine())
 			}
 			return true, nil
 		}

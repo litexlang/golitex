@@ -1,9 +1,2 @@
-have human nonempty_set
-
-prop is_mortal(x human)
-
-know forall x human => $is_mortal(x)
-
-have socrates human
-
-$is_mortal(socrates)
+let a, b R: a > b
+a > b

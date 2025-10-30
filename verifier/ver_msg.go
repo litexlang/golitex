@@ -24,10 +24,12 @@ import (
 func (ver *Verifier) specFactSpecMemTrueMsg(stmt *ast.SpecFactStmt, knownFact ast.SpecFactStmt) {
 	var verifiedBy strings.Builder
 
-	for i, knownParam := range knownFact.Params {
-		verifiedBy.WriteString(fmt.Sprintf("%s = %s\n", knownParam, stmt.Params[i]))
-	}
-	verifiedBy.WriteString(knownFact.String())
+	// ? 我需要加params怎么match的吗？
+	// for i, knownParam := range knownFact.Params {
+	// 	verifiedBy.WriteString(fmt.Sprintf("%s = %s\n", knownParam, stmt.Params[i]))
+	// }
+
+	verifiedBy.WriteString(knownFact.StringWithLine())
 	verifiedBy.WriteString("\n")
 	ver.successWithMsg(stmt.String(), verifiedBy.String())
 }
