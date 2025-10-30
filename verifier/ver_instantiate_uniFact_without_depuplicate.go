@@ -22,7 +22,7 @@ import (
 )
 
 // 在用uniFact来验证specFact时，这个已知的uniFact 可能形如 forall a x: $p(a,x)。然后我代入的x刚好是a。于是整个forall被instantiate成 forall a a: $p(a,a)。然后我要验证这个 forall a a: $p(a,a) 我发现a已经在外面定义go了，于是把它替换成了乱码ABCD, 然后变成验证 forall ABCD ABCD: $p(ABCD,ABCD)。总之就错了。避免这个的办法是，让knownUniFact先把param先随机化啦，然后再代入
-func (ver *Verifier) instantiateUniFactWithoutDuplicate(oldStmt *ast.UniFactStmt) (*ast.UniFactStmt, map[string]ast.Fc, error) {
+func (ver *Verifier) instantiateUniFactWithoutDuplicate(oldStmt *ast.ForallFactStmt) (*ast.ForallFactStmt, map[string]ast.Fc, error) {
 	paramMap, paramMapStrToStr := processUniFactParamsDuplicateDeclared(ver.env, oldStmt.Params)
 
 	return useRandomParamToReplaceOriginalParamInUniFact(oldStmt, paramMap, paramMapStrToStr)
@@ -56,7 +56,7 @@ func useRandomParamToReplaceOriginalParamInUniFactWithIff(oldStmt *ast.UniFactWi
 	return newStmtPtr, paramMap, nil
 }
 
-func useRandomParamToReplaceOriginalParamInUniFact(oldStmt *ast.UniFactStmt, paramMap map[string]ast.Fc, paramMapStrToStr map[string]string) (*ast.UniFactStmt, map[string]ast.Fc, error) {
+func useRandomParamToReplaceOriginalParamInUniFact(oldStmt *ast.ForallFactStmt, paramMap map[string]ast.Fc, paramMapStrToStr map[string]string) (*ast.ForallFactStmt, map[string]ast.Fc, error) {
 	if len(paramMap) == 0 {
 		return oldStmt, nil, nil
 	}
@@ -125,7 +125,7 @@ func processUniFactParamsDuplicateDeclared_notInGivenMap(env *env.Env, params []
 	return paramMap, paramMapStrToStr
 }
 
-func (ver *Verifier) preprocessUniFactParamsWithoutThenFacts_OrStmt(knownUniFact *ast.UniFactStmt, orStmt *ast.OrStmt) (*uniFactWithoutThenFacts, map[string]ast.Fc, map[string]string, *ast.OrStmt, error) {
+func (ver *Verifier) preprocessUniFactParamsWithoutThenFacts_OrStmt(knownUniFact *ast.ForallFactStmt, orStmt *ast.OrStmt) (*uniFactWithoutThenFacts, map[string]ast.Fc, map[string]string, *ast.OrStmt, error) {
 	uniFactWithoutThen, paramMap, paramMapStrToStr, err := ver.preprocessUniFactParamsWithoutThenFacts(knownUniFact)
 	if err != nil {
 		return nil, nil, nil, nil, err
@@ -139,14 +139,14 @@ func (ver *Verifier) preprocessUniFactParamsWithoutThenFacts_OrStmt(knownUniFact
 	return uniFactWithoutThen, paramMap, paramMapStrToStr, instantiatedOrStmt.(*ast.OrStmt), nil
 }
 
-func (ver *Verifier) preprocessUniFactParamsWithoutThenFacts(knownUniFact *ast.UniFactStmt) (*uniFactWithoutThenFacts, map[string]ast.Fc, map[string]string, error) {
+func (ver *Verifier) preprocessUniFactParamsWithoutThenFacts(knownUniFact *ast.ForallFactStmt) (*uniFactWithoutThenFacts, map[string]ast.Fc, map[string]string, error) {
 	paramMap, paramMapStrToStr := processUniFactParamsDuplicateDeclared(ver.env, knownUniFact.Params)
 
 	domFacts_paramRandomized := []ast.FactStmt{}
 
 	for _, domFact := range knownUniFact.DomFacts {
 		switch asStmt := domFact.(type) {
-		case *ast.UniFactStmt:
+		case *ast.ForallFactStmt:
 			copiedParamMap, copiedMapStrToStr := glob.CopyMap(paramMap), glob.CopyMap(paramMapStrToStr)
 
 			curParamMap, curParamMapStrToStr := processUniFactParamsDuplicateDeclared_notInGivenMap(ver.env, asStmt.Params, copiedMapStrToStr)
@@ -248,8 +248,8 @@ func instantiateUniFactWithoutThenFacts(u *uniFactWithoutThenFacts, paramMap map
 	return newUniFactWithoutThenFacts(u.Params, instantiatedParamSets, instantiatedDomFacts), nil
 }
 
-func (u *uniFactWithoutThenFacts) ParamInParamSetFacts(paramMap map[string]ast.Fc) []*ast.SpecFactStmt {
-	paramSetFacts := make([]*ast.SpecFactStmt, len(u.Params))
+func (u *uniFactWithoutThenFacts) ParamInParamSetFacts(paramMap map[string]ast.Fc) []*ast.SpecificFactStmt {
+	paramSetFacts := make([]*ast.SpecificFactStmt, len(u.Params))
 	for i, param := range u.Params {
 		paramSetFacts[i] = ast.NewInFactWithParamFc(paramMap[param], u.ParamSets[i])
 	}

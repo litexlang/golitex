@@ -97,7 +97,7 @@ func (tb *tokenBlock) inlineFactSkipStmtTerminator(ends []string) (ast.FactStmt,
 }
 
 // inlineSpecFactStmt_skip_terminator parses a spec fact and skips statement terminator (comma) if present
-func (tb *tokenBlock) inlineSpecFactStmt_skip_terminator() (*ast.SpecFactStmt, error) {
+func (tb *tokenBlock) inlineSpecFactStmt_skip_terminator() (*ast.SpecificFactStmt, error) {
 	stmt, err := tb.specFactStmt()
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -430,7 +430,7 @@ func (tb *tokenBlock) inline_spec_or_fact_skip_terminator() (ast.FactStmt, error
 	}
 
 	if tb.header.is(glob.KeywordOr) {
-		orFacts := []*ast.SpecFactStmt{specFact}
+		orFacts := []*ast.SpecificFactStmt{specFact}
 		for tb.header.is(glob.KeywordOr) {
 			tb.header.skip(glob.KeywordOr)
 			specFact, err := tb.inlineSpecFactStmt_skip_terminator()
@@ -453,8 +453,8 @@ func (tb *tokenBlock) inlineOrFact() (*ast.OrStmt, error) {
 	return tb.inlineOrFactWithFirstFact(firstFact)
 }
 
-func (tb *tokenBlock) inlineOrFactWithFirstFact(firstFact *ast.SpecFactStmt) (*ast.OrStmt, error) {
-	orFacts := []*ast.SpecFactStmt{firstFact}
+func (tb *tokenBlock) inlineOrFactWithFirstFact(firstFact *ast.SpecificFactStmt) (*ast.OrStmt, error) {
+	orFacts := []*ast.SpecificFactStmt{firstFact}
 	for tb.header.is(glob.KeywordOr) {
 		tb.header.skip(glob.KeywordOr)
 		specFact, err := tb.inlineSpecFactStmt_skip_terminator()
@@ -583,7 +583,7 @@ func (tb *tokenBlock) parseInfixRelationalFact(leftFc ast.Fc, operator string) (
 
 // normalizeNotEqualFact converts != to "not =" for easier processing
 // This allows us to reuse the commutative property of =
-func (tb *tokenBlock) normalizeNotEqualFact(fact *ast.SpecFactStmt) *ast.SpecFactStmt {
+func (tb *tokenBlock) normalizeNotEqualFact(fact *ast.SpecificFactStmt) *ast.SpecificFactStmt {
 	if fact != nil && fact.NameIs(glob.KeySymbolNotEqual) {
 		fact.TypeEnum = ast.FalsePure
 		fact.PropName = ast.FcAtom(glob.KeySymbolEqual)
@@ -592,7 +592,7 @@ func (tb *tokenBlock) normalizeNotEqualFact(fact *ast.SpecFactStmt) *ast.SpecFac
 }
 
 // handleOrFactIfPresent checks if there's an "or" keyword and handles it
-func (tb *tokenBlock) handleOrFactIfPresent(curFact *ast.SpecFactStmt) (ast.FactStmt, error) {
+func (tb *tokenBlock) handleOrFactIfPresent(curFact *ast.SpecificFactStmt) (ast.FactStmt, error) {
 	if tb.header.is(glob.KeywordOr) {
 		return tb.inlineOrFactWithFirstFact(curFact)
 	}
@@ -665,7 +665,7 @@ func (tb *tokenBlock) inline_enum_intensional_fact_skip_terminator(left ast.Fc) 
 			return nil, tbErr(err, tb)
 		}
 
-		facts := []*ast.SpecFactStmt{}
+		facts := []*ast.SpecificFactStmt{}
 		for !tb.header.is(glob.KeySymbolRightCurly) {
 			fact, err := tb.inlineSpecFactStmt_skip_terminator()
 			if err != nil {

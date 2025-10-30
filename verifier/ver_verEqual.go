@@ -23,7 +23,7 @@ import (
 )
 
 // how equality is verified is different from other facts because 1. it is stored differently 2. its transitive and commutative property is automatically used by the verifier
-func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, checkRequirements bool) (bool, error) {
+func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecificFactStmt, state *VerState, checkRequirements bool) (bool, error) {
 	if ok, err := (ver.verByReplaceFcInSpecFactWithValue(stmt, state)); IsTrueOrErr(ok, err) {
 		return ok, err
 	}
@@ -39,7 +39,7 @@ func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, c
 	return false, nil
 }
 
-func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *VerState, checkRequirements bool) (bool, error) {
+func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecificFactStmt, state *VerState, checkRequirements bool) (bool, error) {
 	var ok bool
 	var err error
 
@@ -75,7 +75,7 @@ func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *Ve
 	return false, nil
 }
 
-func isValidEqualFact(stmt *ast.SpecFactStmt) bool {
+func isValidEqualFact(stmt *ast.SpecificFactStmt) bool {
 	return len(stmt.Params) == 2 && string(stmt.PropName) == glob.KeySymbolEqual
 }
 

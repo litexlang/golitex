@@ -97,7 +97,7 @@ func (e *Env) GetSymbolValue(fc ast.Fc) ast.Fc {
 	return nil
 }
 
-func (e *Env) IsCommutativeProp(specFact *ast.SpecFactStmt) bool {
+func (e *Env) IsCommutativeProp(specFact *ast.SpecificFactStmt) bool {
 	for env := e; env != nil; env = env.Parent {
 		item, ok := env.CommutativePropMem[string(specFact.PropName)]
 		if ok {

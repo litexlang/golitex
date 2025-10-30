@@ -23,11 +23,11 @@ import (
 
 func (env *Env) NewFact(stmt ast.FactStmt) error {
 	switch f := stmt.(type) {
-	case *ast.SpecFactStmt:
+	case *ast.SpecificFactStmt:
 		return env.newSpecFact(f)
 	case *ast.OrStmt:
 		return env.newLogicExprFact(f)
-	case *ast.UniFactStmt:
+	case *ast.ForallFactStmt:
 		return env.newUniFact(f)
 	case *ast.UniFactWithIffStmt:
 		return env.newUniFactWithIff(f)
@@ -42,7 +42,7 @@ func (env *Env) NewFact(stmt ast.FactStmt) error {
 	}
 }
 
-func (env *Env) newSpecFactNoPostProcess(fact *ast.SpecFactStmt) error {
+func (env *Env) newSpecFactNoPostProcess(fact *ast.SpecificFactStmt) error {
 	// if env.CurMatchProp == nil {
 	if isEqualFact, err := env.isTrueEqualFact_StoreIt(fact); err != nil {
 		return err
@@ -70,11 +70,11 @@ func (env *Env) newSpecFactNoPostProcess(fact *ast.SpecFactStmt) error {
 // ? 总觉得这里的 除了 spec fact 以外，其他fact 的定义中推导出p，p的定义中推导出其他fact，也可能导致循环
 func (env *Env) newFactNoPostProcess(stmt ast.FactStmt) error {
 	switch f := stmt.(type) {
-	case *ast.SpecFactStmt:
+	case *ast.SpecificFactStmt:
 		return env.newSpecFactNoPostProcess(f)
 	case *ast.OrStmt:
 		return env.newLogicExprFact(f)
-	case *ast.UniFactStmt:
+	case *ast.ForallFactStmt:
 		return env.newUniFact(f)
 	case *ast.IntensionalSetStmt:
 		return env.newIntensionalSetFact(f)
@@ -93,7 +93,7 @@ func (env *Env) newLogicExprFact(fact *ast.OrStmt) error {
 	return env.storeLogicFact(fact)
 }
 
-func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
+func (env *Env) newSpecFact(fact *ast.SpecificFactStmt) error {
 	if isEqualFact, err := env.isTrueEqualFact_StoreIt(fact); err != nil {
 		return err
 	} else if isEqualFact {
@@ -118,7 +118,7 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
 	return env.newPureFactPostProcess(fact)
 }
 
-func storeCommutativeTransitiveFact(mem map[string]*[]ast.Fc, fact *ast.SpecFactStmt) error {
+func storeCommutativeTransitiveFact(mem map[string]*[]ast.Fc, fact *ast.SpecificFactStmt) error {
 	if len(fact.Params) != 2 {
 		return fmt.Errorf("commutative transitive fact expect 2 parameters, get %d in %s", len(fact.Params), fact)
 	}
@@ -164,7 +164,7 @@ func storeCommutativeTransitiveFact(mem map[string]*[]ast.Fc, fact *ast.SpecFact
 	return nil
 }
 
-func (env *Env) newPureFactPostProcess(fact *ast.SpecFactStmt) error {
+func (env *Env) newPureFactPostProcess(fact *ast.SpecificFactStmt) error {
 	// 如果是 transitive prop，那么需要更新 transitive prop mem
 	if fact.TypeEnum == ast.TruePure && env.IsTransitiveProp(string(fact.PropName)) {
 		if env.TransitivePropMem[string(fact.PropName)] == nil {
@@ -196,7 +196,7 @@ func (env *Env) newPureFactPostProcess(fact *ast.SpecFactStmt) error {
 			return nil
 		} else {
 			for _, thenFact := range existPropDef.DefBody.IffFacts {
-				_, ok := thenFact.(*ast.SpecFactStmt)
+				_, ok := thenFact.(*ast.SpecificFactStmt)
 				if !ok {
 					return nil
 				}
@@ -208,7 +208,7 @@ func (env *Env) newPureFactPostProcess(fact *ast.SpecFactStmt) error {
 	return fmt.Errorf("unknown prop %s", fact.PropName)
 }
 
-func (env *Env) newTruePureFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) error {
+func (env *Env) newTruePureFact_EmitFactsKnownByDef(fact *ast.SpecificFactStmt) error {
 	propDef := env.GetPropDef(fact.PropName)
 	if propDef == nil {
 		// TODO 这里需要考虑prop的定义是否在当前包中。当然这里有点复杂，因为如果是内置的prop，那么可能需要到builtin包中去找
@@ -257,7 +257,7 @@ func (env *Env) newTruePureFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) erro
 	return nil
 }
 
-func (env *Env) newExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
+func (env *Env) newExist_St_FactPostProcess(fact *ast.SpecificFactStmt) error {
 	if fact.TypeEnum == ast.TrueExist_St {
 		return env.newTrueExist_St_FactPostProcess(fact)
 	} else {
@@ -266,7 +266,7 @@ func (env *Env) newExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 }
 
 // not exist => forall not
-func (env *Env) newFalseExistFact_EmitEquivalentUniFact(fact *ast.SpecFactStmt) error {
+func (env *Env) newFalseExistFact_EmitEquivalentUniFact(fact *ast.SpecificFactStmt) error {
 	uniFact, err := env.NotExistToForall(fact)
 	if err != nil {
 		return err
@@ -282,7 +282,7 @@ func (env *Env) newFalseExistFact_EmitEquivalentUniFact(fact *ast.SpecFactStmt) 
 }
 
 // have(exist ... st ...) => exist
-func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
+func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecificFactStmt) error {
 	_, factParams := ast.GetExistFactExistParamsAndFactParams(fact)
 
 	existFact := ast.NewSpecFactStmt(ast.TruePure, fact.PropName, factParams, fact.Line)
@@ -316,7 +316,7 @@ func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 	return nil
 }
 
-func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, error) {
+func (env *Env) NotExistToForall(fact *ast.SpecificFactStmt) (*ast.ForallFactStmt, error) {
 	existPropDef := env.GetExistPropDef(fact.PropName)
 	if existPropDef == nil {
 		return nil, fmt.Errorf("exist fact %s has no definition", fact)
@@ -336,9 +336,9 @@ func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, erro
 		domFacts = append(domFacts, instantiated)
 	}
 
-	specThenFacts := []*ast.SpecFactStmt{}
+	specThenFacts := []*ast.SpecificFactStmt{}
 	for _, thenFact := range existPropDef.DefBody.IffFacts {
-		asSpecFactStmt, ok := thenFact.(*ast.SpecFactStmt)
+		asSpecFactStmt, ok := thenFact.(*ast.SpecificFactStmt)
 		if !ok {
 			return nil, fmt.Errorf("exist fact %s has no definition", fact)
 		}
@@ -349,7 +349,7 @@ func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, erro
 			if err != nil {
 				return nil, err
 			}
-			specThenFacts = append(specThenFacts, instantiated.(*ast.SpecFactStmt))
+			specThenFacts = append(specThenFacts, instantiated.(*ast.SpecificFactStmt))
 		}
 	}
 
@@ -361,7 +361,7 @@ func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, erro
 	return ast.NewUniFact(existPropDef.ExistParams, existPropDef.ExistParamSets, domFacts, thenFacts, existPropDef.Line), nil
 }
 
-func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
+func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecificFactStmt) (bool, error) {
 	if !fact.IsTrue() {
 		return false, nil
 	}
@@ -417,7 +417,7 @@ func (env *Env) GetEqualFcs(fc ast.Fc) (*[]ast.Fc, bool) {
 	return facts, ok
 }
 
-func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, []ast.FactStmt, error) {
+func (env *Env) iffFactsInExistStFact(fact *ast.SpecificFactStmt) ([]ast.FactStmt, []ast.FactStmt, error) {
 	existParams, factParams := ast.GetExistFactExistParamsAndFactParams(fact)
 
 	existPropDef := env.GetExistPropDef(fact.PropName)
@@ -542,15 +542,15 @@ func (env *Env) newIntensionalSetFact(stmt *ast.IntensionalSetStmt) error {
 	return nil
 }
 
-func (env *Env) newUniFact_ThenFactIsSpecFact(stmt *ast.UniFactStmt, thenFact *ast.SpecFactStmt) error {
+func (env *Env) newUniFact_ThenFactIsSpecFact(stmt *ast.ForallFactStmt, thenFact *ast.SpecificFactStmt) error {
 	return env.storeUniFact(thenFact, stmt)
 }
 
-func (env *Env) newUniFact_ThenFactIsOrStmt(stmt *ast.UniFactStmt, thenFact *ast.OrStmt) error {
+func (env *Env) newUniFact_ThenFactIsOrStmt(stmt *ast.ForallFactStmt, thenFact *ast.OrStmt) error {
 	return env.KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem.NewFact(stmt, thenFact)
 }
 
-func (env *Env) newUniFact_ThenFactIsEnumStmt(stmt *ast.UniFactStmt, thenFact *ast.EnumStmt) error {
+func (env *Env) newUniFact_ThenFactIsEnumStmt(stmt *ast.ForallFactStmt, thenFact *ast.EnumStmt) error {
 	forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts := ast.TransformEnumToUniFact(thenFact.CurSet, thenFact.Items)
 	mergedUniFact := ast.MergeOuterInnerUniFacts(stmt, forallItemInSetEqualToOneOfGivenItems)
 	err := env.newUniFact(mergedUniFact)
@@ -573,7 +573,7 @@ func (env *Env) newUniFact_ThenFactIsEnumStmt(stmt *ast.UniFactStmt, thenFact *a
 	return nil
 }
 
-func (env *Env) newUniFact_ThenFactIsIntensionalSetStmt(stmt *ast.UniFactStmt, thenFact *ast.IntensionalSetStmt) error {
+func (env *Env) newUniFact_ThenFactIsIntensionalSetStmt(stmt *ast.ForallFactStmt, thenFact *ast.IntensionalSetStmt) error {
 	leftUniFact, rightUniFact, err := thenFact.ToEquivalentUniFacts()
 	if err != nil {
 		return err
@@ -592,7 +592,7 @@ func (env *Env) newUniFact_ThenFactIsIntensionalSetStmt(stmt *ast.UniFactStmt, t
 	return nil
 }
 
-func (env *Env) newUniFact_ThenFactIsIffStmt(stmt *ast.UniFactStmt, thenFact *ast.UniFactWithIffStmt) error {
+func (env *Env) newUniFact_ThenFactIsIffStmt(stmt *ast.ForallFactStmt, thenFact *ast.UniFactWithIffStmt) error {
 	thenToIff := thenFact.NewUniFactWithThenToIff()
 	iffToThen := thenFact.NewUniFactWithIffToThen()
 
@@ -609,12 +609,12 @@ func (env *Env) newUniFact_ThenFactIsIffStmt(stmt *ast.UniFactStmt, thenFact *as
 	return nil
 }
 
-func (env *Env) newUniFact_ThenFactIsUniFactStmt(stmt *ast.UniFactStmt, thenFact *ast.UniFactStmt) error {
+func (env *Env) newUniFact_ThenFactIsUniFactStmt(stmt *ast.ForallFactStmt, thenFact *ast.ForallFactStmt) error {
 	mergedUniFact := ast.MergeOuterInnerUniFacts(stmt, thenFact)
 	return env.newUniFact(mergedUniFact)
 }
 
-func (env *Env) newUniFact_ThenFactIsEqualsFactStmt(stmt *ast.UniFactStmt, thenFact *ast.EqualsFactStmt) error {
+func (env *Env) newUniFact_ThenFactIsEqualsFactStmt(stmt *ast.ForallFactStmt, thenFact *ast.EqualsFactStmt) error {
 	equalFacts := thenFact.ToEqualFacts_PairwiseCombination()
 	for _, equalFact := range equalFacts {
 		err := env.newUniFact_ThenFactIsSpecFact(stmt, equalFact)
@@ -630,7 +630,7 @@ func (env *Env) storeFactInEnumMem(stmt *ast.EnumStmt) error {
 	return nil
 }
 
-func (env *Env) storeSpecFactInMem(stmt *ast.SpecFactStmt) error {
+func (env *Env) storeSpecFactInMem(stmt *ast.SpecificFactStmt) error {
 	err := env.KnownFactsStruct.SpecFactMem.newFact(stmt)
 	if err != nil {
 		return err
@@ -648,7 +648,7 @@ func (env *Env) storeLogicFact(stmt *ast.OrStmt) error {
 	return nil
 }
 
-func (env *Env) storeUniFact(specFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt) error {
+func (env *Env) storeUniFact(specFact *ast.SpecificFactStmt, uniFact *ast.ForallFactStmt) error {
 	err := env.KnownFactsStruct.SpecFactInUniFactMem.newFact(specFact, uniFact)
 	if err != nil {
 		return err

@@ -32,8 +32,8 @@ func NewDefExistPropStmt(def *DefExistPropStmtBody, existParams []string, existP
 	return &DefExistPropStmt{def, existParams, existParamSets, line}
 }
 
-func NewSpecFactStmt(typeEnum SpecFactEnum, propName FcAtom, params []Fc, line uint) *SpecFactStmt {
-	return &SpecFactStmt{typeEnum, propName, params, line}
+func NewSpecFactStmt(typeEnum SpecFactEnum, propName FcAtom, params []Fc, line uint) *SpecificFactStmt {
+	return &SpecificFactStmt{typeEnum, propName, params, line}
 }
 
 func NewClaimProveByContradictionStmt(claim *ClaimProveStmt, line uint) *ClaimProveByContradictionStmt {
@@ -52,7 +52,7 @@ func NewDefHeader(name FcAtom, params []string, setParams []Fc) *DefHeader {
 	return &DefHeader{name, params, setParams}
 }
 
-func NewHaveStmt(objNames []string, fact *SpecFactStmt, line uint) *HaveObjStStmt {
+func NewHaveStmt(objNames []string, fact *SpecificFactStmt, line uint) *HaveObjStStmt {
 	return &HaveObjStStmt{objNames, fact, line}
 }
 
@@ -60,11 +60,11 @@ func NewExistPropDef(declHeader *DefHeader, domFacts []FactStmt, iffFacts []Fact
 	return &DefExistPropStmtBody{declHeader, domFacts, iffFacts, thenFacts, line}
 }
 
-func NewUniFact(params []string, setParams []Fc, domFacts []FactStmt, thenFacts []FactStmt, line uint) *UniFactStmt {
-	return &UniFactStmt{params, setParams, domFacts, thenFacts, line}
+func NewUniFact(params []string, setParams []Fc, domFacts []FactStmt, thenFacts []FactStmt, line uint) *ForallFactStmt {
+	return &ForallFactStmt{params, setParams, domFacts, thenFacts, line}
 }
 
-func NewUniFactWithIff(uniFact *UniFactStmt, iffFacts []FactStmt, line uint) *UniFactWithIffStmt {
+func NewUniFactWithIff(uniFact *ForallFactStmt, iffFacts []FactStmt, line uint) *UniFactWithIffStmt {
 	return &UniFactWithIffStmt{uniFact, iffFacts, line}
 }
 
@@ -80,7 +80,7 @@ func NewDefExistPropBodyStmt(defHeader *DefHeader, domFacts []FactStmt, iffFacts
 	return &DefExistPropStmtBody{defHeader, domFacts, iffFacts, thenFacts, line}
 }
 
-func NewOrStmt(orFacts []*SpecFactStmt, line uint) *OrStmt {
+func NewOrStmt(orFacts []*SpecificFactStmt, line uint) *OrStmt {
 	return &OrStmt{orFacts, line}
 }
 
@@ -112,11 +112,11 @@ func NewClaimExistPropStmt(existProp *DefExistPropStmt, proofs []Stmt, haveObj [
 	return &ClaimExistPropStmt{existProp, proofs, haveObj, line}
 }
 
-func NewIntensionalSetStmt(curSet Fc, param string, parentSet Fc, proofs []*SpecFactStmt, line uint) *IntensionalSetStmt {
+func NewIntensionalSetStmt(curSet Fc, param string, parentSet Fc, proofs []*SpecificFactStmt, line uint) *IntensionalSetStmt {
 	return &IntensionalSetStmt{curSet, param, parentSet, proofs, line}
 }
 
-func NewProveByEnumStmt(fact *UniFactStmt, proofs []Stmt, line uint) *ProveByEnumStmt {
+func NewProveByEnumStmt(fact *ForallFactStmt, proofs []Stmt, line uint) *ProveByEnumStmt {
 	return &ProveByEnumStmt{fact, proofs, line}
 }
 
@@ -128,7 +128,7 @@ func NewHaveSetStmt(fact EnumSet_IntensionalSet_EqualDom_Interface, line uint) *
 	return &HaveSetStmt{fact, line}
 }
 
-func NewHaveSetFnStmt(declHeader *DefHeader, param string, parentSet Fc, proofs []*SpecFactStmt, line uint) *HaveSetFnStmt {
+func NewHaveSetFnStmt(declHeader *DefHeader, param string, parentSet Fc, proofs []*SpecificFactStmt, line uint) *HaveSetFnStmt {
 	return &HaveSetFnStmt{declHeader, param, parentSet, proofs, line}
 }
 
@@ -168,7 +168,7 @@ func NewInlineFactsStmt(facts []FactStmt, line uint) *InlineFactsStmt {
 	return &InlineFactsStmt{facts, line}
 }
 
-func NewProveByInductionStmt(fact *SpecFactStmt, param string, start Fc, line uint) *ProveByInductionStmt {
+func NewProveByInductionStmt(fact *SpecificFactStmt, param string, start Fc, line uint) *ProveByInductionStmt {
 	return &ProveByInductionStmt{fact, param, start, line}
 }
 
@@ -208,7 +208,7 @@ func NewProveIsTransitivePropStmt(prop FcAtom, params []string, proofs []Stmt, l
 	return &ProveIsTransitivePropStmt{prop, params, proofs, line}
 }
 
-func NewProveIsCommutativePropStmt(specFact *SpecFactStmt, proofs []Stmt, proofsRightToLeft []Stmt, line uint) *ProveIsCommutativePropStmt {
+func NewProveIsCommutativePropStmt(specFact *SpecificFactStmt, proofs []Stmt, proofsRightToLeft []Stmt, line uint) *ProveIsCommutativePropStmt {
 	return &ProveIsCommutativePropStmt{specFact, proofs, proofsRightToLeft, line}
 }
 
@@ -224,7 +224,7 @@ func NewAlgoReturnStmt(value Fc, line uint) *AlgoReturnStmt {
 	return &AlgoReturnStmt{value, line}
 }
 
-func NewUniFactWithSafeGuard(params []string, setParams []Fc, domFacts []FactStmt, thenFacts []FactStmt, line uint) (*UniFactStmt, error) {
+func NewUniFactWithSafeGuard(params []string, setParams []Fc, domFacts []FactStmt, thenFacts []FactStmt, line uint) (*ForallFactStmt, error) {
 	if len(thenFacts) == 0 {
 		return nil, fmt.Errorf("expect %s section to have at least one fact in %s", glob.KeySymbolRightArrow, NewUniFact(params, setParams, domFacts, thenFacts, line))
 	}
