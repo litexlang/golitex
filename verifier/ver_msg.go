@@ -24,11 +24,13 @@ import (
 func (ver *Verifier) specFactSpecMemTrueMsg(stmt *ast.SpecFactStmt, knownFact ast.SpecFactStmt) {
 	var verifiedBy strings.Builder
 
-	verifiedBy.WriteString(knownFact.String())
+	// ? 我需要加params怎么match的吗？
+	// for i, knownParam := range knownFact.Params {
+	// 	verifiedBy.WriteString(fmt.Sprintf("%s = %s\n", knownParam, stmt.Params[i]))
+	// }
+
+	verifiedBy.WriteString(knownFact.StringWithLine())
 	verifiedBy.WriteString("\n")
-	for i, knownParam := range knownFact.Params {
-		verifiedBy.WriteString(fmt.Sprintf("%s matches %s\n", knownParam, stmt.Params[i]))
-	}
 	ver.successWithMsg(stmt.String(), verifiedBy.String())
 }
 
@@ -37,7 +39,7 @@ func (ver *Verifier) successWithMsg(stmtStr, stmtVerifiedBy string) {
 		ver.env.Msgs = append(ver.env.Msgs, stmtStr)
 	}
 	if stmtVerifiedBy != "" {
-		message := fmt.Sprintf("is true. proved by\n%s\n", stmtVerifiedBy)
+		message := fmt.Sprintf("is true. proved by\n%s", stmtVerifiedBy)
 		ver.env.Msgs = append(ver.env.Msgs, message)
 	} else {
 		message := "is true."
