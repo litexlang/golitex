@@ -46,6 +46,10 @@ func (stmt *KnowFactStmt) String() string {
 	}
 }
 
+func (stmt *SpecFactStmt) StringWithLine() string {
+	return fmt.Sprintf("%s on line %d", stmt.String(), stmt.GetLine())
+}
+
 func (stmt *SpecFactStmt) String() string {
 	if stmt.IsExist_St_Fact() {
 		return exist_st_FactString(stmt)
@@ -317,6 +321,10 @@ func (s *DefExistPropStmt) ToString(head string) string {
 
 func (s *DefExistPropStmt) String() string {
 	return s.ToString(glob.KeywordExistProp)
+}
+
+func (l *UniFactStmt) StringWithLine() string {
+	return fmt.Sprintf("%s\non line %d", l.String(), l.GetLine())
 }
 
 func (l *UniFactStmt) String() string {
