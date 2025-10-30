@@ -46,7 +46,7 @@ func (stmt *KnowFactStmt) String() string {
 	}
 }
 
-func (stmt *SpecFactStmt) StringWithLine() string {
+func (stmt *SpecificFactStmt) StringWithLine() string {
 	if stmt.GetLine() == 0 {
 		return fmt.Sprintf("%s\na builtin fact", stmt.String())
 	} else {
@@ -54,7 +54,7 @@ func (stmt *SpecFactStmt) StringWithLine() string {
 	}
 }
 
-func (stmt *SpecFactStmt) String() string {
+func (stmt *SpecificFactStmt) String() string {
 	if stmt.IsExist_St_Fact() {
 		return exist_st_FactString(stmt)
 	} else {
@@ -66,7 +66,7 @@ var relaPropSet map[string]struct{} = map[string]struct{}{
 	glob.KeywordIn: {},
 }
 
-func pureSpecFactString(stmt *SpecFactStmt) string {
+func pureSpecFactString(stmt *SpecificFactStmt) string {
 	var builder strings.Builder
 
 	if stmt.TypeEnum == FalsePure {
@@ -89,7 +89,7 @@ func pureSpecFactString(stmt *SpecFactStmt) string {
 	return builder.String()
 }
 
-func keywordRelaFactWithoutNotString(stmt *SpecFactStmt) string {
+func keywordRelaFactWithoutNotString(stmt *SpecificFactStmt) string {
 	var builder strings.Builder
 
 	builder.WriteString(stmt.Params[0].String())
@@ -102,7 +102,7 @@ func keywordRelaFactWithoutNotString(stmt *SpecFactStmt) string {
 	return builder.String()
 }
 
-func keySymbolRelaFactWithoutNotString(stmt *SpecFactStmt) string {
+func keySymbolRelaFactWithoutNotString(stmt *SpecificFactStmt) string {
 	var builder strings.Builder
 
 	builder.WriteString(stmt.Params[0].String())
@@ -122,7 +122,7 @@ func StrFcSetPairs(objs []string, objSets []Fc) string {
 	return strings.Join(pairStrSlice, ", ")
 }
 
-func exist_st_FactString(stmt *SpecFactStmt) string {
+func exist_st_FactString(stmt *SpecificFactStmt) string {
 	var builder strings.Builder
 	if stmt.TypeEnum == FalseExist_St {
 		builder.WriteString(glob.KeywordNot)
@@ -327,7 +327,7 @@ func (s *DefExistPropStmt) String() string {
 	return s.ToString(glob.KeywordExistProp)
 }
 
-func (l *UniFactStmt) StringWithLine() string {
+func (l *ForallFactStmt) StringWithLine() string {
 	if l.GetLine() == 0 {
 		return fmt.Sprintf("%s\na builtin fact", l.String())
 	} else {
@@ -335,7 +335,7 @@ func (l *UniFactStmt) StringWithLine() string {
 	}
 }
 
-func (l *UniFactStmt) String() string {
+func (l *ForallFactStmt) String() string {
 	var builder strings.Builder
 
 	builder.WriteString(glob.KeywordForall)

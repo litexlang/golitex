@@ -21,7 +21,7 @@ import (
 	"strings"
 )
 
-func (ver *Verifier) specFactSpecMemTrueMsg(stmt *ast.SpecFactStmt, knownFact ast.SpecFactStmt) {
+func (ver *Verifier) specFactSpecMemTrueMsg(stmt *ast.SpecificFactStmt, knownFact ast.SpecificFactStmt) {
 	var verifiedBy strings.Builder
 
 	// ? 我需要加params怎么match的吗？

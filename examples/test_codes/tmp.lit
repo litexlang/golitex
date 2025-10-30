@@ -1,2 +1,5 @@
-have a set
-not a $in a
+let a, b, c R
+
+fn f(x R) R
+
+f(a, )

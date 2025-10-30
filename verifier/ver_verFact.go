@@ -25,7 +25,7 @@ func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) VerRet {
 	var verRet VerRet = newVerErr(fmt.Sprintf("unexpected fact statement: %s", stmt))
 
 	switch asStmt := stmt.(type) {
-	case *ast.SpecFactStmt:
+	case *ast.SpecificFactStmt:
 		if asStmt.NameIs(glob.KeySymbolEqual) && asStmt.TypeEnum == ast.TruePure {
 			verRet = BoolErrToVerRet(ver.verTrueEqualFact(asStmt, state, true))
 		} else {
@@ -33,7 +33,7 @@ func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) VerRet {
 		}
 	case *ast.OrStmt:
 		verRet = BoolErrToVerRet(ver.verOrStmt(asStmt, state))
-	case *ast.UniFactStmt:
+	case *ast.ForallFactStmt:
 		verRet = BoolErrToVerRet(ver.verUniFact(asStmt, state))
 	case *ast.UniFactWithIffStmt:
 		verRet = BoolErrToVerRet(ver.verUniFactWithIff(asStmt, state))

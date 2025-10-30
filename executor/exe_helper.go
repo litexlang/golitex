@@ -31,7 +31,7 @@ func notOkExec(state ExecRet, err error) bool {
 	return false
 }
 
-func (exec *Executor) NewCommutativeProp(specFact *ast.SpecFactStmt) {
+func (exec *Executor) NewCommutativeProp(specFact *ast.SpecificFactStmt) {
 	if _, ok := exec.env.CommutativePropMem[string(specFact.PropName)]; !ok {
 		exec.env.CommutativePropMem[string(specFact.PropName)] = env.NewCommutativePropMemItemStruct()
 	}

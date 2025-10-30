@@ -16,7 +16,7 @@ package litex_ast
 
 import "slices"
 
-func (stmt *SpecFactStmt) GetAtoms() []FcAtom {
+func (stmt *SpecificFactStmt) GetAtoms() []FcAtom {
 	atoms := []FcAtom{stmt.PropName}
 	for _, param := range stmt.Params {
 		atoms = append(atoms, GetAtomsInFc(param)...)
@@ -35,7 +35,7 @@ func (stmt *EnumStmt) GetAtoms() []FcAtom {
 	return atoms
 }
 
-func (stmt *UniFactStmt) GetAtoms() []FcAtom {
+func (stmt *ForallFactStmt) GetAtoms() []FcAtom {
 	atoms := []FcAtom{}
 	for _, param := range stmt.ParamSets {
 		atoms = append(atoms, GetAtomsInFc(param)...)
