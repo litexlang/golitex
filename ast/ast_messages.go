@@ -47,7 +47,11 @@ func (stmt *KnowFactStmt) String() string {
 }
 
 func (stmt *SpecFactStmt) StringWithLine() string {
-	return fmt.Sprintf("%s on line %d", stmt.String(), stmt.GetLine())
+	if stmt.GetLine() == 0 {
+		return fmt.Sprintf("%s\na builtin fact", stmt.String())
+	} else {
+		return fmt.Sprintf("%s on line %d", stmt.String(), stmt.GetLine())
+	}
 }
 
 func (stmt *SpecFactStmt) String() string {
@@ -324,7 +328,11 @@ func (s *DefExistPropStmt) String() string {
 }
 
 func (l *UniFactStmt) StringWithLine() string {
-	return fmt.Sprintf("%s\non line %d", l.String(), l.GetLine())
+	if l.GetLine() == 0 {
+		return fmt.Sprintf("%s\na builtin fact", l.String())
+	} else {
+		return fmt.Sprintf("%s\non line %d", l.String(), l.GetLine())
+	}
 }
 
 func (l *UniFactStmt) String() string {
