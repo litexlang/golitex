@@ -341,8 +341,9 @@ func (ver *Verifier) matchTwoSpecFacts(stmt *ast.SpecFactStmt, knownFact *ast.Sp
 		}
 
 	} else {
+		newState := state.GetNoMsg()
 		for i, knownParam := range knownFact.Params {
-			ok, err := ver.fcEqualSpec(knownParam, stmt.Params[i], state)
+			ok, err := ver.fcEqualSpec(knownParam, stmt.Params[i], newState)
 			if err != nil {
 				return false, err
 			}
