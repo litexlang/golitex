@@ -84,7 +84,7 @@ func (env *Env) replaceFcAtomWithValueAndCompute(fc ast.FcAtom) (bool, ast.Fc, e
 }
 
 // TODO: 未来有一天，会被用来替换 SpecFactStmt 中的 Fc 为 计算后的 Fc
-func (env *Env) ReplaceFcInSpecFactWithValueAndCompute(fact *ast.SpecFactStmt) (bool, *ast.SpecFactStmt, error) {
+func (env *Env) ReplaceFcInSpecFactWithValueAndCompute(fact *ast.SpecificFactStmt) (bool, *ast.SpecificFactStmt, error) {
 	newParams := make([]ast.Fc, len(fact.Params))
 	replaced := false
 	for i, param := range fact.Params {

@@ -43,7 +43,7 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContra
 	switch asStmt := stmt.ClaimProveStmt.ToCheckFact.(type) {
 	case ast.Spec_OrFact:
 		return exec.reversibleFactProveByContradiction(asStmt, stmt)
-	case *ast.UniFactStmt:
+	case *ast.ForallFactStmt:
 		return exec.uniFactProveByContradiction(asStmt, stmt)
 	default:
 		return NewExecErr(""), fmt.Errorf("prove by contradiction only support reversible fact or uni fact")
@@ -92,7 +92,7 @@ func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.Spec_O
 	return NewExecTrue(""), nil
 }
 
-func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt, stmt *ast.ClaimProveByContradictionStmt) (ExecRet, error) {
+func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.ForallFactStmt, stmt *ast.ClaimProveByContradictionStmt) (ExecRet, error) {
 	ver := verifier.NewVerifier(exec.env)
 	newStmtPtr, err := ver.PreprocessUniFactParams_DeclareParams(specFactStmt)
 	if err != nil {
@@ -203,7 +203,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) (ExecRet, error) 
 	}
 
 	switch stmt.ToCheckFact.(type) {
-	case *ast.UniFactStmt:
+	case *ast.ForallFactStmt:
 		isSuccess, err = exec.claimStmtProveUniFact(stmt)
 		if err != nil {
 			return NewExecErr(""), err
@@ -235,7 +235,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) (ExecRet, error) 
 
 // prove uniFact in claim at current env
 func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, error) {
-	asUnivFact, ok := stmt.ToCheckFact.(*ast.UniFactStmt)
+	asUnivFact, ok := stmt.ToCheckFact.(*ast.ForallFactStmt)
 	if !ok {
 		return false, fmt.Errorf("claim stmt prove uni fact only support uni fact")
 	}

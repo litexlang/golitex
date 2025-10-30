@@ -20,23 +20,23 @@ import (
 	"strconv"
 )
 
-func (stmt *SpecFactStmt) IsBuiltinInfixRelaProp() bool {
+func (stmt *SpecificFactStmt) IsBuiltinInfixRelaProp() bool {
 	return glob.IsBuiltinInfixRelaPropSymbol(string(stmt.PropName))
 }
 
-func (stmt *UniFactWithIffStmt) NewUniFactWithThenToIff() *UniFactStmt {
+func (stmt *UniFactWithIffStmt) NewUniFactWithThenToIff() *ForallFactStmt {
 	newUniFact := NewUniFact(stmt.UniFact.Params, stmt.UniFact.ParamSets, stmt.UniFact.DomFacts, stmt.IffFacts, stmt.UniFact.Line)
 	newUniFact.DomFacts = append(newUniFact.DomFacts, stmt.UniFact.ThenFacts...)
 	return newUniFact
 }
 
-func (stmt *UniFactWithIffStmt) NewUniFactWithIffToThen() *UniFactStmt {
+func (stmt *UniFactWithIffStmt) NewUniFactWithIffToThen() *ForallFactStmt {
 	newUniFact := NewUniFact(stmt.UniFact.Params, stmt.UniFact.ParamSets, stmt.UniFact.DomFacts, stmt.UniFact.ThenFacts, stmt.UniFact.Line)
 	newUniFact.DomFacts = append(newUniFact.DomFacts, stmt.IffFacts...)
 	return newUniFact
 }
 
-func MergeOuterInnerUniFacts(outer *UniFactStmt, inner *UniFactStmt) *UniFactStmt {
+func MergeOuterInnerUniFacts(outer *ForallFactStmt, inner *ForallFactStmt) *ForallFactStmt {
 	newOuter := NewUniFact(outer.Params, outer.ParamSets, outer.DomFacts, inner.ThenFacts, outer.Line)
 
 	newOuter.Params = append(newOuter.Params, inner.Params...)
@@ -50,7 +50,7 @@ func MergeOuterInnerUniFacts(outer *UniFactStmt, inner *UniFactStmt) *UniFactStm
 	return newOuter
 }
 
-func (defStmt *DefPropStmt) Make_PropToIff_IffToProp() (*UniFactStmt, *UniFactStmt, error) {
+func (defStmt *DefPropStmt) Make_PropToIff_IffToProp() (*ForallFactStmt, *ForallFactStmt, error) {
 	propSpecFactParams := []Fc{}
 	for _, param := range defStmt.DefHeader.Params {
 		propSpecFactParams = append(propSpecFactParams, FcAtom(param))
@@ -74,7 +74,7 @@ func (defStmt *DefPropStmt) Make_PropToIff_IffToProp() (*UniFactStmt, *UniFactSt
 	return propToIff, IffToProp, nil
 }
 
-func (defStmt *DefPropStmt) IffToPropUniFact() *UniFactStmt {
+func (defStmt *DefPropStmt) IffToPropUniFact() *ForallFactStmt {
 	propSpecFactParams := []Fc{}
 	for _, param := range defStmt.DefHeader.Params {
 		propSpecFactParams = append(propSpecFactParams, FcAtom(param))
@@ -91,7 +91,7 @@ func (defStmt *DefPropStmt) IffToPropUniFact() *UniFactStmt {
 	return IffToProp
 }
 
-func (defStmt *DefPropStmt) ToSpecFact() *SpecFactStmt {
+func (defStmt *DefPropStmt) ToSpecFact() *SpecificFactStmt {
 	propSpecFactParams := []Fc{}
 	for _, param := range defStmt.DefHeader.Params {
 		// propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.EmptyPkg, param))
@@ -103,7 +103,7 @@ func (defStmt *DefPropStmt) ToSpecFact() *SpecFactStmt {
 	return propSpecFact
 }
 
-func (defStmt *DefExistPropStmt) ToSpecFact() *SpecFactStmt {
+func (defStmt *DefExistPropStmt) ToSpecFact() *SpecificFactStmt {
 	propSpecFactParams := []Fc{}
 	for _, param := range defStmt.DefBody.DefHeader.Params {
 		propSpecFactParams = append(propSpecFactParams, FcAtom(param))
@@ -114,7 +114,7 @@ func (defStmt *DefExistPropStmt) ToSpecFact() *SpecFactStmt {
 	return propSpecFact
 }
 
-func (stmt *SpecFactStmt) ReverseParameterOrder() (*SpecFactStmt, error) {
+func (stmt *SpecificFactStmt) ReverseParameterOrder() (*SpecificFactStmt, error) {
 	if len(stmt.Params) != 2 {
 		return nil, fmt.Errorf("reverseParameterOrder: expected 2 params, but got %d", len(stmt.Params))
 	}
@@ -124,7 +124,7 @@ func (stmt *SpecFactStmt) ReverseParameterOrder() (*SpecFactStmt, error) {
 	return NewSpecFactStmt(stmt.TypeEnum, stmt.PropName, newParams, stmt.Line), nil
 }
 
-func (stmt *SpecFactStmt) IsValidEqualFact() (bool, error) {
+func (stmt *SpecificFactStmt) IsValidEqualFact() (bool, error) {
 	if stmt.NameIs(glob.KeySymbolEqual) {
 		if len(stmt.Params) == 2 {
 			return true, nil
@@ -136,7 +136,7 @@ func (stmt *SpecFactStmt) IsValidEqualFact() (bool, error) {
 	}
 }
 
-func (stmt *SpecFactStmt) IsBuiltinProp_ExceptEqual() bool {
+func (stmt *SpecificFactStmt) IsBuiltinProp_ExceptEqual() bool {
 	return glob.IsBuiltinInfixRelaPropSymbol(string(stmt.PropName)) && !stmt.NameIs(glob.KeySymbolEqual)
 }
 
@@ -144,15 +144,15 @@ func (stmt *SpecFactStmt) IsBuiltinProp_ExceptEqual() bool {
 // 	return string(stmt.PropName) == glob.KeywordProveByMathInduction
 // }
 
-func NewInFact(param string, paramSet Fc) *SpecFactStmt {
+func NewInFact(param string, paramSet Fc) *SpecificFactStmt {
 	return NewSpecFactStmt(TruePure, FcAtom(glob.KeywordIn), []Fc{FcAtom(param), paramSet}, glob.InnerGenLine)
 }
 
-func NewInFactWithParamFc(param Fc, paramSet Fc) *SpecFactStmt {
+func NewInFactWithParamFc(param Fc, paramSet Fc) *SpecificFactStmt {
 	return NewSpecFactStmt(TruePure, FcAtom(glob.KeywordIn), []Fc{param, paramSet}, glob.InnerGenLine)
 }
 
-func NewInFactWithFc(param Fc, paramSet Fc) *SpecFactStmt {
+func NewInFactWithFc(param Fc, paramSet Fc) *SpecificFactStmt {
 	return NewSpecFactStmt(TruePure, FcAtom(glob.KeywordIn), []Fc{param, paramSet}, glob.InnerGenLine)
 }
 
@@ -170,7 +170,7 @@ func IsFnSet(fc Fc) bool {
 	return IsFcAtomAndEqualToStr(fcHeadAsFcFn.FnHead, glob.KeywordFn)
 }
 
-func (stmt *SpecFactStmt) ReverseSpecFactParamsOrder() (*SpecFactStmt, error) {
+func (stmt *SpecificFactStmt) ReverseSpecFactParamsOrder() (*SpecificFactStmt, error) {
 	if len(stmt.Params) != 2 {
 		return nil, fmt.Errorf("ReverseSpecFactParamsOrder: expected 2 params, but got %d", len(stmt.Params))
 	}
@@ -179,8 +179,8 @@ func (stmt *SpecFactStmt) ReverseSpecFactParamsOrder() (*SpecFactStmt, error) {
 	return NewSpecFactStmt(stmt.TypeEnum, stmt.PropName, newParams, stmt.Line), nil
 }
 
-func (stmt *DefLetStmt) NewInFacts() []*SpecFactStmt {
-	facts := []*SpecFactStmt{}
+func (stmt *DefLetStmt) NewInFacts() []*SpecificFactStmt {
+	facts := []*SpecificFactStmt{}
 
 	if len(stmt.Objs) != len(stmt.ObjSets) {
 		panic("NewInFacts: len(stmt.Objs) != len(stmt.ObjSets)")
@@ -194,8 +194,8 @@ func (stmt *DefLetStmt) NewInFacts() []*SpecFactStmt {
 	return facts
 }
 
-func (defHeader *DefHeader) NewInFacts() []*SpecFactStmt {
-	facts := []*SpecFactStmt{}
+func (defHeader *DefHeader) NewInFacts() []*SpecificFactStmt {
+	facts := []*SpecificFactStmt{}
 	for i, param := range defHeader.Params {
 		facts = append(facts, NewInFact(param, defHeader.ParamSets[i]))
 	}
@@ -240,7 +240,7 @@ func MakeExistFactParamsSlice(existParams []Fc, paramsInFact []Fc) []Fc {
 	return factParams
 }
 
-func GetExistFactExistParamsAndFactParams(stmt *SpecFactStmt) ([]Fc, []Fc) {
+func GetExistFactExistParamsAndFactParams(stmt *SpecificFactStmt) ([]Fc, []Fc) {
 	lengthOfExistParams, _ := strconv.Atoi(string(stmt.Params[0].(FcAtom)))
 
 	existParams := []Fc{}
@@ -295,16 +295,16 @@ func IsFcAtomEqualToGivenString(fc Fc, name string) bool {
 	return string(fcAtom) == name
 }
 
-func TransformEnumToUniFact(setName Fc, enumFcs []Fc) (*UniFactStmt, []*SpecFactStmt, []*SpecFactStmt) {
+func TransformEnumToUniFact(setName Fc, enumFcs []Fc) (*ForallFactStmt, []*SpecificFactStmt, []*SpecificFactStmt) {
 	freeObjName := FcAtom(glob.RandomString(4))
-	equalFactsInOrFact := []*SpecFactStmt{}
-	itemsInSetFacts := []*SpecFactStmt{}
+	equalFactsInOrFact := []*SpecificFactStmt{}
+	itemsInSetFacts := []*SpecificFactStmt{}
 	for _, fc := range enumFcs {
 		equalFactsInOrFact = append(equalFactsInOrFact, NewSpecFactStmt(TruePure, FcAtom(glob.KeySymbolEqual), []Fc{freeObjName, fc}, glob.InnerGenLine))
 		itemsInSetFacts = append(itemsInSetFacts, NewSpecFactStmt(TruePure, FcAtom(glob.KeywordIn), []Fc{fc, setName}, glob.InnerGenLine))
 	}
 
-	pairwiseNotEqualFacts := []*SpecFactStmt{}
+	pairwiseNotEqualFacts := []*SpecificFactStmt{}
 	for i := range len(enumFcs) {
 		for j := range len(enumFcs) {
 			if i == j {
@@ -320,7 +320,7 @@ func TransformEnumToUniFact(setName Fc, enumFcs []Fc) (*UniFactStmt, []*SpecFact
 	return forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts
 }
 
-func (stmt *IntensionalSetStmt) ToEquivalentUniFacts() (*UniFactStmt, *UniFactStmt, error) {
+func (stmt *IntensionalSetStmt) ToEquivalentUniFacts() (*ForallFactStmt, *ForallFactStmt, error) {
 	leftDomFacts := []FactStmt{}
 	for _, proof := range stmt.Facts {
 		leftDomFacts = append(leftDomFacts, proof)
@@ -355,6 +355,6 @@ func (stmt *HaveSetFnStmt) ToIntensionalSetStmt() *IntensionalSetStmt {
 	return intensionalSetStmt
 }
 
-func (stmt *ProveInRangeStmt) UniFact() *UniFactStmt {
+func (stmt *ProveInRangeStmt) UniFact() *ForallFactStmt {
 	return NewUniFact([]string{stmt.Param}, []Fc{stmt.IntensionalSet}, []FactStmt{}, stmt.ThenFacts, stmt.Line)
 }

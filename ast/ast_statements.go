@@ -16,7 +16,7 @@ package litex_ast
 
 type FactStmtSlice []FactStmt
 type StmtSlice []Stmt
-type SpecFactPtrSlice []*SpecFactStmt
+type SpecFactPtrSlice []*SpecificFactStmt
 type StrSlice []string
 type FcSlice []Fc
 type ReversibleFacts []Spec_OrFact
@@ -70,7 +70,7 @@ type DefFnStmt struct {
 	Line uint
 }
 
-type UniFactStmt struct {
+type ForallFactStmt struct {
 	Params    StrSlice
 	ParamSets FcSlice
 	DomFacts  FactStmtSlice
@@ -80,13 +80,13 @@ type UniFactStmt struct {
 }
 
 type UniFactWithIffStmt struct {
-	UniFact  *UniFactStmt
+	UniFact  *ForallFactStmt
 	IffFacts FactStmtSlice
 
 	Line uint
 }
 
-type SpecFactStmt struct {
+type SpecificFactStmt struct {
 	TypeEnum SpecFactEnum
 	PropName FcAtom
 	Params   FcSlice
@@ -138,7 +138,7 @@ type ClaimExistPropStmt struct {
 
 type HaveObjStStmt struct {
 	ObjNames StrSlice
-	Fact     *SpecFactStmt
+	Fact     *SpecificFactStmt
 
 	Line uint
 }
@@ -196,7 +196,7 @@ type IntensionalSetStmt struct {
 
 // 某种程度上这个关键词是不必要的，因为如果我发现涉及到的uniFact里面的所有的 paramSet 都是有 enum 的，那我就默认迭代去证明这个forall。但是我还是引入这个关键词以突出我现在用的是iterative的情况
 type ProveByEnumStmt struct {
-	Fact  *UniFactStmt
+	Fact  *ForallFactStmt
 	Proof StmtSlice
 
 	Line uint
@@ -290,7 +290,7 @@ type InlineFactsStmt struct {
 }
 
 type ProveByInductionStmt struct {
-	Fact  *SpecFactStmt
+	Fact  *SpecificFactStmt
 	Param string
 	Start Fc
 
@@ -365,7 +365,7 @@ type ProveIsTransitivePropStmt struct {
 type ProveIsCommutativePropStmt struct {
 	// Prop              FcAtom
 	// Params            StrSlice
-	SpecFact          *SpecFactStmt
+	SpecFact          *SpecificFactStmt
 	Proofs            StmtSlice
 	ProofsRightToLeft StmtSlice
 

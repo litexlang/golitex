@@ -26,8 +26,8 @@ type Stmt interface {
 func (s *DefLetStmt) stmt()                      {}
 func (s *DefPropStmt) stmt()                     {}
 func (s *DefFnStmt) stmt()                       {}
-func (s *UniFactStmt) stmt()                     {}
-func (s *SpecFactStmt) stmt()                    {}
+func (s *ForallFactStmt) stmt()                  {}
+func (s *SpecificFactStmt) stmt()                {}
 func (s *ClaimProveStmt) stmt()                  {}
 func (s *KnowFactStmt) stmt()                    {}
 func (s *DefExistPropStmt) stmt()                {}
@@ -71,8 +71,8 @@ func (s *AlgoDefStmt) stmt()                     {}
 func (s *DefLetStmt) algoStmt()                      {}
 func (s *DefPropStmt) algoStmt()                     {}
 func (s *DefFnStmt) algoStmt()                       {}
-func (s *UniFactStmt) algoStmt()                     {}
-func (s *SpecFactStmt) algoStmt()                    {}
+func (s *ForallFactStmt) algoStmt()                  {}
+func (s *SpecificFactStmt) algoStmt()                {}
 func (s *ClaimProveStmt) algoStmt()                  {}
 func (s *KnowFactStmt) algoStmt()                    {}
 func (s *DefExistPropStmt) algoStmt()                {}
@@ -118,8 +118,8 @@ func (s *AlgoDefStmt) algoStmt()               {}
 func (s *DefLetStmt) GetLine() uint                      { return s.Line }
 func (s *DefPropStmt) GetLine() uint                     { return s.Line }
 func (s *DefFnStmt) GetLine() uint                       { return s.Line }
-func (s *UniFactStmt) GetLine() uint                     { return s.Line }
-func (s *SpecFactStmt) GetLine() uint                    { return s.Line }
+func (s *ForallFactStmt) GetLine() uint                  { return s.Line }
+func (s *SpecificFactStmt) GetLine() uint                { return s.Line }
 func (s *ClaimProveStmt) GetLine() uint                  { return s.Line }
 func (s *KnowFactStmt) GetLine() uint                    { return s.Line }
 func (s *DefExistPropStmt) GetLine() uint                { return s.Line }
@@ -174,8 +174,8 @@ type FactStmt interface {
 	algoStmt()
 }
 
-func (p *SpecFactStmt) factStmt()       {}
-func (l *UniFactStmt) factStmt()        {}
+func (p *SpecificFactStmt) factStmt()   {}
+func (l *ForallFactStmt) factStmt()     {}
 func (l *UniFactWithIffStmt) factStmt() {}
 func (s *OrStmt) factStmt()             {}
 func (s *EnumStmt) factStmt()           {}
@@ -188,7 +188,7 @@ type Spec_OrFact interface {
 	stmt()
 	String() string
 	Instantiate(uniConMap map[string]Fc) (FactStmt, error)
-	ReverseIsTrue() []*SpecFactStmt
+	ReverseIsTrue() []*SpecificFactStmt
 	GetAtoms() []FcAtom
 	ToLatexString() string
 	canBeKnown()
@@ -198,15 +198,15 @@ type Spec_OrFact interface {
 	algoStmt()
 }
 
-func (s *SpecFactStmt) reversibleFact() {}
-func (s *OrStmt) reversibleFact()       {}
+func (s *SpecificFactStmt) reversibleFact() {}
+func (s *OrStmt) reversibleFact()           {}
 
-func (stmt *SpecFactStmt) ReverseIsTrue() []*SpecFactStmt {
-	return []*SpecFactStmt{stmt.ReverseTrue()}
+func (stmt *SpecificFactStmt) ReverseIsTrue() []*SpecificFactStmt {
+	return []*SpecificFactStmt{stmt.ReverseTrue()}
 }
 
-func (stmt *OrStmt) ReverseIsTrue() []*SpecFactStmt {
-	reversedFacts := make([]*SpecFactStmt, len(stmt.Facts))
+func (stmt *OrStmt) ReverseIsTrue() []*SpecificFactStmt {
+	reversedFacts := make([]*SpecificFactStmt, len(stmt.Facts))
 	for i, fact := range stmt.Facts {
 		reversedFacts[i] = fact.ReverseTrue()
 	}
@@ -243,9 +243,9 @@ type UniFactInterface interface {
 	GetParams() StrSlice
 }
 
-func (stmt *UniFactStmt) uniFact()                   {}
+func (stmt *ForallFactStmt) uniFact()                {}
 func (stmt *UniFactWithIffStmt) uniFact()            {}
-func (stmt *UniFactStmt) GetParams() StrSlice        { return stmt.Params }
+func (stmt *ForallFactStmt) GetParams() StrSlice     { return stmt.Params }
 func (stmt *UniFactWithIffStmt) GetParams() StrSlice { return stmt.UniFact.Params }
 
 type ClaimInterface interface {
@@ -316,8 +316,8 @@ type CanBeKnownStmt interface {
 	GetLine() uint
 }
 
-func (s *SpecFactStmt) canBeKnown()       {}
-func (s *UniFactStmt) canBeKnown()        {}
+func (s *SpecificFactStmt) canBeKnown()   {}
+func (s *ForallFactStmt) canBeKnown()     {}
 func (s *UniFactWithIffStmt) canBeKnown() {}
 func (s *OrStmt) canBeKnown()             {}
 func (s *EnumStmt) canBeKnown()           {}

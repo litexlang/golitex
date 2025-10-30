@@ -39,7 +39,7 @@ func (env *Env) MakeUniFactParamsInThisDefPropDoNotConflictWithEnv(defPropStmt *
 
 func (env *Env) makeUniFactParamsInThisFactDoNotConflictWithEnv(fact ast.FactStmt) ast.FactStmt {
 	switch asFact := fact.(type) {
-	case *ast.UniFactStmt:
+	case *ast.ForallFactStmt:
 		return env.makeUniFactParamsInThisUniFactDoNotConflictWithEnv(asFact)
 	case *ast.UniFactWithIffStmt:
 		return env.makeUniFactWithIffParamsInThisUniFactDoNotConflictWithEnv(asFact)
@@ -94,7 +94,7 @@ func (env *Env) makeUniFactParamsInThisUniFactDoNotConflictWithEnv_getNewParamsA
 	return newParams, newParamSlice, formerParamToNewParamMap
 }
 
-func (env *Env) makeUniFactParamsInThisUniFactDoNotConflictWithEnv(uniFact *ast.UniFactStmt) *ast.UniFactStmt {
+func (env *Env) makeUniFactParamsInThisUniFactDoNotConflictWithEnv(uniFact *ast.ForallFactStmt) *ast.ForallFactStmt {
 	newParams, newParamSets, formerParamToNewParamMap := env.makeUniFactParamsInThisUniFactDoNotConflictWithEnv_getNewParamsAndParamSets(uniFact.Params, uniFact.ParamSets)
 
 	if len(formerParamToNewParamMap) == 0 {

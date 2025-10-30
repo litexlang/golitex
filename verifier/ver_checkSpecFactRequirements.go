@@ -21,7 +21,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) checkSpecFactReq(stmt *ast.SpecFactStmt, state *VerState) (VerRet, *VerState) {
+func (ver *Verifier) checkSpecFactReq(stmt *ast.SpecificFactStmt, state *VerState) (VerRet, *VerState) {
 	if stmt.NameIs(glob.KeywordIn) {
 		ok, err := ver.checkSpecFactReq_InFact_UseBtRules(stmt)
 		if err != nil {
@@ -42,7 +42,7 @@ func (ver *Verifier) checkSpecFactReq(stmt *ast.SpecFactStmt, state *VerState) (
 
 // 只验证 1. params都声明了 2. 确实是fn template
 // WARNING: 这个函数有严重的问题
-func (ver *Verifier) checkSpecFactReq_InFact_UseBtRules(stmt *ast.SpecFactStmt) (bool, error) {
+func (ver *Verifier) checkSpecFactReq_InFact_UseBtRules(stmt *ast.SpecificFactStmt) (bool, error) {
 	ok := ver.env.AreAtomsInFcAreDeclared(stmt.Params[0], map[string]struct{}{})
 	if !ok {
 		return false, fmt.Errorf(env.AtomsInFcNotDeclaredMsg(stmt.Params[0]))
@@ -81,7 +81,7 @@ func (ver *Verifier) checkSpecFactReq_InFact_UseBtRules(stmt *ast.SpecFactStmt) 
 	}
 }
 
-func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state *VerState) (bool, *VerState, error) {
+func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecificFactStmt, state *VerState) (bool, *VerState, error) {
 
 	// 1. Check if all atoms in the parameters are declared
 	// REMARK

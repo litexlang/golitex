@@ -65,7 +65,7 @@ func (l *DefFnStmt) InlineString() string {
 
 	return builder.String()
 }
-func (l *UniFactStmt) InlineString() string {
+func (l *ForallFactStmt) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordForall)
 	builder.WriteString(" ")
@@ -81,7 +81,7 @@ func (l *UniFactStmt) InlineString() string {
 	return builder.String()
 }
 
-func (p *SpecFactStmt) InlineString() string {
+func (p *SpecificFactStmt) InlineString() string {
 	return p.String()
 }
 
@@ -231,7 +231,7 @@ func inlineFactsString(facts FactStmtSlice) string {
 	var builder strings.Builder
 	for i := range len(facts) - 1 {
 		switch asFact := facts[i].(type) {
-		case *UniFactStmt:
+		case *ForallFactStmt:
 			builder.WriteString(asFact.InlineString())
 			builder.WriteString("; ")
 		default:
@@ -240,7 +240,7 @@ func inlineFactsString(facts FactStmtSlice) string {
 		}
 	}
 	switch asFact := facts[len(facts)-1].(type) {
-	case *UniFactStmt:
+	case *ForallFactStmt:
 		builder.WriteString(asFact.InlineString())
 		builder.WriteString(";")
 	default:
@@ -253,7 +253,7 @@ func inlineCanBeKnownFactsString(facts CanBeKnownStmtSlice) string {
 	var builder strings.Builder
 	for i := range len(facts) - 1 {
 		switch asFact := facts[i].(type) {
-		case *UniFactStmt:
+		case *ForallFactStmt:
 			builder.WriteString(asFact.InlineString())
 			builder.WriteString("; ")
 		default:
@@ -262,7 +262,7 @@ func inlineCanBeKnownFactsString(facts CanBeKnownStmtSlice) string {
 		}
 	}
 	switch asFact := facts[len(facts)-1].(type) {
-	case *UniFactStmt:
+	case *ForallFactStmt:
 		builder.WriteString(asFact.InlineString())
 		builder.WriteString(";")
 	default:
