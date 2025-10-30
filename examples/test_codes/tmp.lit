@@ -1,2 +1,2 @@
-let a, b R: a > b
-a > b
+have a set
+not a $in a
