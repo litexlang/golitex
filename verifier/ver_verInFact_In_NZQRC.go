@@ -21,7 +21,7 @@ import (
 )
 
 // 这是必要的，因为 2 $in N 是这个检查的
-func (ver *Verifier) verIn_N_Z_Q_R_C(stmt *ast.SpecificFactStmt, state *VerState) bool {
+func (ver *Verifier) verIn_N_Z_Q_R_C(stmt *ast.SpecFactStmt, state *VerState) bool {
 	inSet, ok := stmt.Params[1].(ast.FcAtom)
 	if !ok {
 		return false
@@ -56,7 +56,7 @@ func (ver *Verifier) verIn_N_Z_Q_R_C(stmt *ast.SpecificFactStmt, state *VerState
 	return false
 }
 
-func (ver *Verifier) verInNPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecificFactStmt, state *VerState) (bool, string) {
+func (ver *Verifier) verInNPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactStmt, state *VerState) (bool, string) {
 	if ast.IsFcLiterallyNPosNumber(stmt.Params[0]) {
 		return true, stmt.String()
 	}
@@ -90,7 +90,7 @@ func (ver *Verifier) verInNPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet
 	return false, ""
 }
 
-func (ver *Verifier) verInN_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecificFactStmt, state *VerState) (bool, string) {
+func (ver *Verifier) verInN_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactStmt, state *VerState) (bool, string) {
 	if ast.IsFcLiterallyNatNumber(stmt.Params[0]) {
 		return true, stmt.String()
 	}
@@ -125,7 +125,7 @@ func (ver *Verifier) verInN_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(st
 	return ver.verInNPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(newStmt, state)
 }
 
-func (ver *Verifier) verInZ_BySpecMem__ReturnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecificFactStmt, state *VerState) (bool, string) {
+func (ver *Verifier) verInZ_BySpecMem__ReturnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactStmt, state *VerState) (bool, string) {
 	if ast.IsFcLiterallyIntNumber(stmt.Params[0]) {
 		return true, stmt.String()
 	}
@@ -160,7 +160,7 @@ func (ver *Verifier) verInZ_BySpecMem__ReturnValueOfUserDefinedFnInFnReturnSet(s
 	return ver.verInN_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(newStmt, state)
 }
 
-func (ver *Verifier) verInQ_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecificFactStmt, state *VerState) (bool, string) {
+func (ver *Verifier) verInQ_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactStmt, state *VerState) (bool, string) {
 	if ast.IsFcLiterallyRationalNumber(stmt.Params[0]) {
 		return true, stmt.String()
 	}
@@ -196,7 +196,7 @@ func (ver *Verifier) verInQ_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(st
 	return ver.verInZ_BySpecMem__ReturnValueOfUserDefinedFnInFnReturnSet(newStmt, state)
 }
 
-func (ver *Verifier) verInR_BySpecMem(stmt *ast.SpecificFactStmt, state *VerState) (bool, string) {
+func (ver *Verifier) verInR_BySpecMem(stmt *ast.SpecFactStmt, state *VerState) (bool, string) {
 	verRet := ver.verSpecFact_BySpecMem(stmt, state)
 	if verRet.IsErr() {
 		return false, ""
@@ -228,7 +228,7 @@ func (ver *Verifier) verInR_BySpecMem(stmt *ast.SpecificFactStmt, state *VerStat
 	return ver.verInQ_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(newStmt, state)
 }
 
-func (ver *Verifier) verInC_BySpecMem(stmt *ast.SpecificFactStmt, state *VerState) (bool, string) {
+func (ver *Verifier) verInC_BySpecMem(stmt *ast.SpecFactStmt, state *VerState) (bool, string) {
 	verRet := ver.verSpecFact_BySpecMem(stmt, state)
 	if verRet.IsErr() {
 		return false, ""

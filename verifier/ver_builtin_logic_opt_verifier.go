@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verNumberLogicRelaOpt_BuiltinRules(stmt *ast.SpecificFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) verNumberLogicRelaOpt_BuiltinRules(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	if !stmt.IsTrue() {
 		return false, nil
 	}
@@ -34,7 +34,7 @@ func (ver *Verifier) verNumberLogicRelaOpt_BuiltinRules(stmt *ast.SpecificFactSt
 	return false, nil
 }
 
-func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecificFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	if !glob.IsBuiltinNumberInfixRelaProp(string(stmt.PropName)) {
 		return false, nil
 	}
@@ -74,7 +74,7 @@ func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecificFactStmt, state 
 	return false, nil
 }
 
-func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecificFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	if stmt.PropName != glob.KeywordIn {
 		return false, nil
 	}

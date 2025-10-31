@@ -83,7 +83,7 @@ func (exec *Executor) proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsI
 	// }
 
 	if execState.IsUnknown() {
-		revInstDomFact := instIndexInParamSetFact.(*ast.SpecificFactStmt).ReverseIsTrue()
+		revInstDomFact := instIndexInParamSetFact.(*ast.SpecFactStmt).ReverseIsTrue()
 		for _, fact := range revInstDomFact {
 			instFact, err := fact.Instantiate(uniMap)
 			if err != nil {

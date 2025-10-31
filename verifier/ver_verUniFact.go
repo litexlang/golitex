@@ -20,7 +20,7 @@ import (
 	env "golitex/environment"
 )
 
-func (ver *Verifier) verUniFact(oldStmt *ast.ForallFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) (bool, error) {
 	if state.isFinalRound() {
 		return false, nil
 	}
@@ -45,7 +45,7 @@ func (ver *Verifier) verUniFact(oldStmt *ast.ForallFactStmt, state *VerState) (b
 	return ver.uniFact_checkThenFacts(newStmtPtr, state)
 }
 
-func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.ForallFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerState) (bool, error) {
 	// check then facts
 	for _, thenFact := range stmt.ThenFacts {
 		verRet := ver.VerFactStmt(thenFact, state) // 这个地方有点tricky，这里是可能读入state是any的，而且我要允许读入any
@@ -76,7 +76,7 @@ func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.ForallFactStmt, state *Ver
 	return true, nil
 }
 
-func (ver *Verifier) PreprocessUniFactParams_DeclareParams(oldStmt *ast.ForallFactStmt) (*ast.ForallFactStmt, error) {
+func (ver *Verifier) PreprocessUniFactParams_DeclareParams(oldStmt *ast.UniFactStmt) (*ast.UniFactStmt, error) {
 	newStmtPtr, _, err := ver.instantiateUniFactWithoutDuplicate(oldStmt)
 	if err != nil {
 		return nil, err

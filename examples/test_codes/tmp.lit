@@ -1,5 +1,9 @@
-let a, b, c R
+fn fib(x N_pos) N_pos:
+    fib(x + 2) = fib(x + 1) + fib(x)
+know fib(1) = 1, fib(2) = 1
+fib(3) = fib(2) + fib(1) = 1 + 1 = 2
 
-fn f(x R) R
-
-f(a, )
+fn factorial(x N_pos) N_pos:
+    factorial(x + 1) = factorial(x) * (x + 1)
+know factorial(1) = 1
+factorial(3) = factorial(2) * 3 = factorial(1) * 2 * 3 = 1 * 2 * 3 = 6
