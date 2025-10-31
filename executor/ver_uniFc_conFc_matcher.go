@@ -12,7 +12,7 @@
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
-package litex_verifier
+package litex_executor
 
 // REMARK: 2025.6.4 这个文件很本质，需要未来检查一下里面逻辑有没有问题
 

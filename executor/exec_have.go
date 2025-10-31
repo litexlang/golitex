@@ -18,7 +18,6 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
-	verifier "golitex/verifier"
 )
 
 func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) (ExecRet, error) {
@@ -98,7 +97,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) (E
 		return NewExecErr(""), err
 	}
 
-	ver := verifier.NewVerifier(exec.env)
+	ver := NewVerifier(exec.env)
 
 	// 把 obj 放入环境
 	for i, objName := range stmt.ObjNames {
