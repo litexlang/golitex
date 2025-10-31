@@ -394,21 +394,6 @@ func (env *Env) StoreTrueEqualValues(key, value ast.Fc) {
 }
 
 func (env *Env) storeSymbolValue(left, right ast.Fc) error {
-	// if cmp.IsNumLitFc(left) {
-	// 	env.SymbolValueMem[right.String()] = left
-	// }
-	// if cmp.IsNumLitFc(right) {
-	// 	env.SymbolValueMem[left.String()] = right
-	// }
-
-	// if ok := cmp.IsNumLitFc(left); ok {
-	// 	env.StoreTrueEqualValues(right, left)
-	// }
-
-	// if ok := cmp.IsNumLitFc(right); ok {
-	// 	env.StoreTrueEqualValues(left, right)
-	// }
-
 	_, newLeft := env.ReplaceSymbolWithValue(left)
 	if cmp.IsNumLitFc(newLeft) {
 		env.StoreTrueEqualValues(right, newLeft)
