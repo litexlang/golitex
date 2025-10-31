@@ -390,6 +390,20 @@ func (tb *tokenBlock) bodyFacts(uniFactDepth uniFactEnum) ([]ast.FactStmt, error
 }
 
 func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
+	body, err := tb.defPropStmtWithoutSelfReferCheck()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = NoSelfReferenceInPropDef(string(body.DefHeader.Name), append(append(body.DomFacts, body.IffFacts...), body.ThenFacts...))
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	return body, nil
+}
+
+func (tb *tokenBlock) defPropStmtWithoutSelfReferCheck() (*ast.DefPropStmt, error) {
 	err := tb.header.skip(glob.KeywordProp)
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -709,6 +723,20 @@ func (tb *tokenBlock) defHeaderWithoutParsingColonAtEnd() (*ast.DefHeader, error
 }
 
 func (tb *tokenBlock) defExistPropStmt(head string) (*ast.DefExistPropStmt, error) {
+	body, err := tb.defExistPropStmtBodyWithoutSelfReferCheck(head)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = NoSelfReferenceInPropDef(string(body.DefBody.DefHeader.Name), append(append(body.DefBody.DomFacts, body.DefBody.IffFacts...), body.DefBody.ThenFacts...))
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	return body, nil
+}
+
+func (tb *tokenBlock) defExistPropStmtBodyWithoutSelfReferCheck(head string) (*ast.DefExistPropStmt, error) {
 	var err error
 
 	err = tb.header.skip(head)
