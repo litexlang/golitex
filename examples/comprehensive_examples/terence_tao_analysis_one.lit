@@ -161,10 +161,6 @@ fn union(A, B set) set:
             x $in A
             x $in B
 
-# Definition of subset.
-prop is_subset_of(A, B set):
-    forall x A:
-        x $in B
 
 # Axiom 3.5: Axiom of specification. If A is a set and P is a property, then there exists a set B such that B contains and only contains the elements of A that satisfy P.
 # In Litex you can specify a set very flexibly.
