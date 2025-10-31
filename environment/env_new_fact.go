@@ -401,12 +401,22 @@ func (env *Env) storeSymbolValue(left, right ast.Fc) error {
 	// 	env.SymbolValueMem[left.String()] = right
 	// }
 
-	if ok := cmp.IsNumLitFc(left); ok {
-		env.StoreTrueEqualValues(right, left)
+	// if ok := cmp.IsNumLitFc(left); ok {
+	// 	env.StoreTrueEqualValues(right, left)
+	// }
+
+	// if ok := cmp.IsNumLitFc(right); ok {
+	// 	env.StoreTrueEqualValues(left, right)
+	// }
+
+	_, newLeft := env.ReplaceSymbolWithValue(left)
+	if cmp.IsNumLitFc(newLeft) {
+		env.StoreTrueEqualValues(right, newLeft)
 	}
 
-	if ok := cmp.IsNumLitFc(right); ok {
-		env.StoreTrueEqualValues(left, right)
+	_, newRight := env.ReplaceSymbolWithValue(right)
+	if cmp.IsNumLitFc(newRight) {
+		env.StoreTrueEqualValues(left, newRight)
 	}
 
 	return nil
