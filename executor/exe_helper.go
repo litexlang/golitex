@@ -18,7 +18,6 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	env "golitex/environment"
-	verifier "golitex/verifier"
 )
 
 func notOkExec(state ExecRet, err error) bool {
@@ -46,8 +45,8 @@ func (exec *Executor) NewCommutativeProp(specFact *ast.SpecFactStmt) {
 	}
 }
 
-func (exec *Executor) verifyFactsAtCurEnv(proofs []ast.FactStmt, verState *verifier.VerState) (ExecRet, ast.Stmt, error) {
-	ver := verifier.NewVerifier(exec.env)
+func (exec *Executor) verifyFactsAtCurEnv(proofs []ast.FactStmt, verState *VerState) (ExecRet, ast.Stmt, error) {
+	ver := NewVerifier(exec.env)
 	for _, proof := range proofs {
 		verRet := ver.VerFactStmt(proof, verState)
 		if verRet.IsErr() {
