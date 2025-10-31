@@ -17,27 +17,46 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
+	cmp "golitex/cmp"
 )
 
-func (ver *Verifier) verByReplaceFcInSpecFactWithValue(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) verByReplaceFcInSpecFactWithValue(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	var ok bool
 	var err error
 	replaced, newStmt := ver.env.ReplaceFcInSpecFactWithValue(stmt)
 	if replaced {
 		ok, err = ver.verTrueEqualFactMainLogic(newStmt, state, true)
 		if err != nil {
-			return false, err
+			return newVerErr("failed to verify true equal fact: " + err.Error())
 		}
 
 		if ok {
 			if state.WithMsg {
 				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
 			}
-			return true, nil
+
+			values := []ast.Fc{}
+			if cmp.IsNumLitFc(newStmt.Params[0]) {
+				values = append(values, newStmt.Params[0])
+			} else {
+				values = append(values, nil)
+			}
+
+			if cmp.IsNumLitFc(newStmt.Params[1]) {
+				values = append(values, newStmt.Params[1])
+			} else {
+				values = append(values, nil)
+			}
+
+			if values[0] == nil && values[1] == nil {
+				return NewTrueVerRet(fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
+			} else {
+				return NewTrueVerRetWithValues(fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()), values)
+			}
 		}
 	}
 
-	return false, nil
+	return NewUnknownVerRet(fmt.Sprintf("%s is not equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
 }
 
 func (ver *Verifier) verByReplaceFcInSpecFactWithValueAndCompute(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
