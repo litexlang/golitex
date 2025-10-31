@@ -16,6 +16,7 @@ package litex_executor
 
 import (
 	"fmt"
+	ast "golitex/ast"
 	"strings"
 )
 
@@ -30,7 +31,8 @@ type VerRet interface {
 }
 
 type VerTrue struct {
-	Msg []string
+	Msg             []string
+	TrueEqualValues []ast.Fc
 }
 
 type VerUnknown struct {
@@ -84,7 +86,7 @@ func NewTrueVerRet(s string) VerRet {
 	if s != "" {
 		return &VerTrue{Msg: []string{s}}
 	}
-	return &VerTrue{Msg: []string{}}
+	return &VerTrue{Msg: []string{}, TrueEqualValues: nil}
 }
 
 func NewUnknownVerRet(s string) VerRet {
@@ -92,4 +94,14 @@ func NewUnknownVerRet(s string) VerRet {
 		return &VerUnknown{Msg: []string{s}}
 	}
 	return &VerUnknown{Msg: []string{}}
+}
+
+func NewTrueVerRetWithValues(s string, equalValue []ast.Fc) VerRet {
+	if s != "" {
+		return &VerTrue{Msg: []string{s}, TrueEqualValues: equalValue}
+	}
+	if len(equalValue) != 2 {
+		panic("equal value length must be 2")
+	}
+	return &VerTrue{Msg: []string{}, TrueEqualValues: []ast.Fc{equalValue[0], equalValue[1]}}
 }
