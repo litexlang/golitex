@@ -388,6 +388,10 @@ func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 	return true, nil
 }
 
+func (env *Env) StoreTrueEqualValues(key, value ast.Fc) {
+	env.SymbolValueMem[key.String()] = value
+}
+
 func (env *Env) storeSymbolValue(left, right ast.Fc) error {
 	// if cmp.IsNumLitFc(left) {
 	// 	env.SymbolValueMem[right.String()] = left
