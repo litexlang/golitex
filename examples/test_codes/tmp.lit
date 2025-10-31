@@ -1,3 +1,4 @@
-fn p(x, y R) R
-know p(p(1,2), 0) = 1
-p(1, 2) = 1
+exist_prop f N st fib(n N):
+    exist n st $fib(n)
+
+exist 1 st $fib(1)
