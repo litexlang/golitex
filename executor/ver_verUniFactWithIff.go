@@ -12,4 +12,30 @@
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
-package litex_env
+package litex_executor
+
+import (
+	ast "golitex/ast"
+)
+
+func (ver *Verifier) verUniFactWithIff(stmt *ast.UniFactWithIffStmt, state *VerState) (bool, error) {
+	thenToIff := stmt.NewUniFactWithThenToIff()
+	ok, err := ver.verUniFact(thenToIff, state)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
+
+	iffToThen := stmt.NewUniFactWithIffToThen()
+	ok, err = ver.verUniFact(iffToThen, state)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
+
+	return true, nil
+}

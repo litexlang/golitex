@@ -18,12 +18,11 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
-	verifier "golitex/verifier"
 )
 
 func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) (ExecRet, error) {
 	var err error
-	ver := verifier.NewVerifier(exec.env)
+	ver := NewVerifier(exec.env)
 	isOk := false
 	msg := ""
 
@@ -45,7 +44,7 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) (Exec
 
 	// 输入的 Start 必须是 N_pos
 	startIsNPos := proveByInduction_Fact_Start_is_NPos(stmt)
-	verRet := ver.VerFactStmt(startIsNPos, verifier.Round0NoMsg)
+	verRet := ver.VerFactStmt(startIsNPos, Round0NoMsg)
 	if verRet.IsErr() {
 		return NewExecErr(""), fmt.Errorf(verRet.String())
 	}
@@ -59,7 +58,7 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) (Exec
 	if err != nil {
 		return NewExecErr(""), err
 	}
-	verRet = ver.VerFactStmt(startFact, verifier.Round0NoMsg)
+	verRet = ver.VerFactStmt(startFact, Round0NoMsg)
 	if verRet.IsErr() {
 		return NewExecErr(""), fmt.Errorf(verRet.String())
 	}
@@ -73,7 +72,7 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) (Exec
 	if err != nil {
 		return NewExecErr(""), err
 	}
-	verRet = ver.VerFactStmt(uniFact_n_true_leads_n_plus_1_true, verifier.Round0NoMsg)
+	verRet = ver.VerFactStmt(uniFact_n_true_leads_n_plus_1_true, Round0NoMsg)
 	if verRet.IsErr() {
 		return NewExecErr(""), fmt.Errorf(verRet.String())
 	}
