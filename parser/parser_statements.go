@@ -2462,29 +2462,9 @@ func (tb *tokenBlock) haveObjEqualStmt() (*ast.HaveObjEqualStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	objectNames := []string{}
 	objectEqualTos := []ast.Fc{}
-	setSlice := []ast.Fc{}
 
-	for !tb.header.is(glob.KeySymbolEqual) {
-		objectName, err := tb.header.next()
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-		objectNames = append(objectNames, objectName)
-
-		set, err := tb.RawFc()
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-		setSlice = append(setSlice, set)
-
-		if tb.header.is(glob.KeySymbolComma) {
-			tb.header.skip(glob.KeySymbolComma)
-		}
-	}
-
-	err = tb.header.skip(glob.KeySymbolEqual)
+	objectNames, setSlice, err := tb.param_paramSet_paramInSetFacts(glob.KeySymbolEqual, false)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
