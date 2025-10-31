@@ -1,2 +1,2 @@
 let a, b, c R: a = 2, b = 3, c = a + b
-a + b = 5
+c = 2 + 3
