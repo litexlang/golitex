@@ -251,7 +251,7 @@ func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, rig
 	return false, "", nil
 }
 
-func (ver *Verifier) decomposeFcFnsAndCheckEquality(left ast.Fc, right ast.Fc, state *VerState, verifyFunc func(left ast.Fc, right ast.Fc, state *VerState) (bool, error)) (bool, string, error) {
+func (ver *Verifier) decomposeFcFnsAndCheckEquality(left ast.Fc, right ast.Fc, state *VerState, areEqualFcs func(left ast.Fc, right ast.Fc, state *VerState) (bool, error)) (bool, string, error) {
 	if leftAsFn, ok := left.(*ast.FcFn); ok {
 		if rightAsFn, ok := right.(*ast.FcFn); ok {
 			if len(leftAsFn.Params) != len(rightAsFn.Params) {
@@ -259,7 +259,7 @@ func (ver *Verifier) decomposeFcFnsAndCheckEquality(left ast.Fc, right ast.Fc, s
 			}
 
 			// compare head
-			ok, err := verifyFunc(leftAsFn.FnHead, rightAsFn.FnHead, state)
+			ok, err := areEqualFcs(leftAsFn.FnHead, rightAsFn.FnHead, state)
 			if err != nil {
 				return false, "", err
 			}
@@ -268,7 +268,7 @@ func (ver *Verifier) decomposeFcFnsAndCheckEquality(left ast.Fc, right ast.Fc, s
 			}
 			// compare params
 			for i := range leftAsFn.Params {
-				ok, err := verifyFunc(leftAsFn.Params[i], rightAsFn.Params[i], state)
+				ok, err := areEqualFcs(leftAsFn.Params[i], rightAsFn.Params[i], state)
 				if err != nil {
 					return false, "", err
 				}
