@@ -68,10 +68,14 @@ func (ver *Verifier) matchUniFactParamsWithSpecFactParams(knownSpecFactInUniFact
 			return false, nil, err
 		}
 		ok, err := ver.verTrueEqualFact(ast.NewEqualFact(instKnownFreeVar, fcPair.givenFc), FinalRoundNoMsg, false)
-		if err != nil {
-			return false, nil, err
-		}
-		if !ok {
+
+		// if err != nil {
+		// 	return false, nil, err
+		// }
+
+		// REMARK
+		// 注：这里err != nil 也是返回 false, 因为有可能会把 sqrt(x) ^ 2 = x 拿来证明 y = z，但是 匹配的时候，可能会导致 x 是 -1 之类的。如果error了，其实就是说明没证明通过
+		if !ok || err != nil {
 			return false, nil, nil
 		}
 	}
