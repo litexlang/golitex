@@ -43,10 +43,8 @@ func (ver *Verifier) verByReplaceFcInSpecFactWithValue(stmt *ast.SpecFactStmt, s
 func (ver *Verifier) verByReplaceFcInSpecFactWithValueAndCompute(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	var ok bool
 	var err error
-	replaced, newStmt, err := ver.env.ReplaceFcInSpecFactWithValueAndCompute(stmt)
-	if err != nil {
-		return false, err
-	}
+	replaced, newStmt := ver.env.ReplaceFcInSpecFactWithValue(stmt)
+
 	if replaced {
 		ok, err = ver.verTrueEqualFactMainLogic(newStmt, state, true)
 		if err != nil {
