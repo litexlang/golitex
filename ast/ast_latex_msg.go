@@ -101,7 +101,7 @@ func (l *DefFnStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (l *ForallFactStmt) ToLatexString() string {
+func (l *UniFactStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("$\\forall$ ")
 	builder.WriteString(strFcSetPairsLatexString(l.Params, l.ParamSets))
@@ -145,7 +145,7 @@ func (l *ForallFactStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (p *SpecificFactStmt) ToLatexString() string {
+func (p *SpecFactStmt) ToLatexString() string {
 	if p.IsExist_St_Fact() {
 		return exist_st_FactString(p)
 	} else {
@@ -153,7 +153,7 @@ func (p *SpecificFactStmt) ToLatexString() string {
 	}
 }
 
-func pureSpecFactLatexString(stmt *SpecificFactStmt) string {
+func pureSpecFactLatexString(stmt *SpecFactStmt) string {
 	var builder strings.Builder
 
 	if glob.IsKeySymbol(string(stmt.PropName)) {
@@ -181,7 +181,7 @@ func pureSpecFactLatexString(stmt *SpecificFactStmt) string {
 	}
 }
 
-func keySymbolRelaFactWithoutNotLatexString(stmt *SpecificFactStmt) string {
+func keySymbolRelaFactWithoutNotLatexString(stmt *SpecFactStmt) string {
 	var builder strings.Builder
 
 	builder.WriteString(stmt.Params[0].ToLatexString())
@@ -215,7 +215,7 @@ func keySymbolRelaFactWithoutNotLatexString(stmt *SpecificFactStmt) string {
 	return builder.String()
 }
 
-func keywordRelaFactWithoutNotLatexString(stmt *SpecificFactStmt) string {
+func keywordRelaFactWithoutNotLatexString(stmt *SpecFactStmt) string {
 	var builder strings.Builder
 
 	builder.WriteString(stmt.Params[0].ToLatexString())

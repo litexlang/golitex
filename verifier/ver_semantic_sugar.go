@@ -19,7 +19,7 @@ import (
 	ast "golitex/ast"
 )
 
-func (ver *Verifier) verByReplaceFcInSpecFactWithValue(stmt *ast.SpecificFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) verByReplaceFcInSpecFactWithValue(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	var ok bool
 	var err error
 	replaced, newStmt := ver.env.ReplaceFcInSpecFactWithValue(stmt)
@@ -40,7 +40,7 @@ func (ver *Verifier) verByReplaceFcInSpecFactWithValue(stmt *ast.SpecificFactStm
 	return false, nil
 }
 
-func (ver *Verifier) verByReplaceFcInSpecFactWithValueAndCompute(stmt *ast.SpecificFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) verByReplaceFcInSpecFactWithValueAndCompute(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	var ok bool
 	var err error
 	replaced, newStmt, err := ver.env.ReplaceFcInSpecFactWithValueAndCompute(stmt)

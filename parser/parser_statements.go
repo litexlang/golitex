@@ -168,7 +168,7 @@ func (tb *tokenBlock) orStmt() (*ast.OrStmt, error) {
 		return tb.inlineOrFact()
 	}
 
-	orFacts := []*ast.SpecificFactStmt{}
+	orFacts := []*ast.SpecFactStmt{}
 	isOr := tb.header.isAndSkip(glob.KeywordOr)
 	if !isOr {
 		return nil, fmt.Errorf("expect 'or'")
@@ -200,7 +200,7 @@ func (tb *tokenBlock) SpecFactOrOrStmt() (ast.FactStmt, error) {
 	}
 }
 
-func (tb *tokenBlock) specFactStmt_ExceedEnd() (*ast.SpecificFactStmt, error) {
+func (tb *tokenBlock) specFactStmt_ExceedEnd() (*ast.SpecFactStmt, error) {
 	ret, err := tb.specFactStmt()
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -213,14 +213,14 @@ func (tb *tokenBlock) specFactStmt_ExceedEnd() (*ast.SpecificFactStmt, error) {
 	return ret, nil
 }
 
-func (tb *tokenBlock) specFactStmt() (*ast.SpecificFactStmt, error) {
+func (tb *tokenBlock) specFactStmt() (*ast.SpecFactStmt, error) {
 	stmt, err := tb.specFactStmt_OrOneLineEqualsFact()
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
 
 	switch astStmt := stmt.(type) {
-	case *ast.SpecificFactStmt:
+	case *ast.SpecFactStmt:
 		return astStmt, nil
 	default:
 		return nil, fmt.Errorf("expect specific fact, get %s", astStmt.String())
@@ -252,14 +252,14 @@ func (tb *tokenBlock) specFactStmt_OrOneLineEqualsFact() (ast.FactStmt, error) {
 
 }
 
-func (tb *tokenBlock) specFactWithoutExist_WithoutNot() (*ast.SpecificFactStmt, error) {
+func (tb *tokenBlock) specFactWithoutExist_WithoutNot() (*ast.SpecFactStmt, error) {
 	stmt, err := tb.specFactWithoutExist_WithoutNot_Or_EqualsFact()
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
 
 	switch astStmt := stmt.(type) {
-	case *ast.SpecificFactStmt:
+	case *ast.SpecFactStmt:
 		return astStmt, nil
 	default:
 		return nil, fmt.Errorf("expect specific fact, get %s", astStmt.String())
@@ -433,7 +433,7 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 
 		// iff, dom 里不能出现和被定义的prop同名的prop，否则用def做验证的时候会出问题
 		for _, fact := range iffFacts {
-			if factAsSpecFact, ok := fact.(*ast.SpecificFactStmt); ok {
+			if factAsSpecFact, ok := fact.(*ast.SpecFactStmt); ok {
 				if string(factAsSpecFact.PropName) == string(declHeader.Name) {
 					return nil, fmt.Errorf("iff or dom fact cannot be the same as the prop being defined")
 				}
@@ -441,7 +441,7 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 		}
 
 		for _, fact := range domFacts {
-			if factAsSpecFact, ok := fact.(*ast.SpecificFactStmt); ok {
+			if factAsSpecFact, ok := fact.(*ast.SpecFactStmt); ok {
 				if string(factAsSpecFact.PropName) == string(declHeader.Name) {
 					return nil, fmt.Errorf("iff or dom fact cannot be the same as the prop being defined")
 				}
@@ -626,7 +626,7 @@ func (tb *tokenBlock) knowFactStmt() (*ast.KnowFactStmt, error) {
 
 // relaFact 只支持2个参数的关系
 func (tb *tokenBlock) relaFactStmt_orRelaEquals() (ast.FactStmt, error) {
-	var ret *ast.SpecificFactStmt
+	var ret *ast.SpecFactStmt
 
 	fc, err := tb.RawFc()
 	if err != nil {
@@ -735,7 +735,7 @@ func (tb *tokenBlock) defExistPropStmt(head string) (*ast.DefExistPropStmt, erro
 }
 
 // 本质上这个设计是有问题的。exist把 sep 这个奇怪的东西混进param 来了
-func (tb *tokenBlock) existFactStmt(isTrue bool) (*ast.SpecificFactStmt, error) {
+func (tb *tokenBlock) existFactStmt(isTrue bool) (*ast.SpecFactStmt, error) {
 	err := tb.header.skip(glob.KeywordExist)
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -774,7 +774,7 @@ func (tb *tokenBlock) existFactStmt(isTrue bool) (*ast.SpecificFactStmt, error) 
 	}
 }
 
-func (tb *tokenBlock) pureFuncSpecFact() (*ast.SpecificFactStmt, error) {
+func (tb *tokenBlock) pureFuncSpecFact() (*ast.SpecFactStmt, error) {
 	if tb.header.is(glob.FuncFactPrefix) {
 		tb.header.skip(glob.FuncFactPrefix)
 	}
@@ -1611,7 +1611,7 @@ func (tb *tokenBlock) dom_and_section(kw string, kw_should_not_exist_in_body str
 	}
 }
 
-func (tb *tokenBlock) intentionalSetBody() (string, ast.Fc, []*ast.SpecificFactStmt, error) {
+func (tb *tokenBlock) intentionalSetBody() (string, ast.Fc, []*ast.SpecFactStmt, error) {
 	err := tb.header.skip(glob.KeySymbolLeftCurly)
 	if err != nil {
 		return "", nil, nil, tbErr(err, tb)
@@ -1632,7 +1632,7 @@ func (tb *tokenBlock) intentionalSetBody() (string, ast.Fc, []*ast.SpecificFactS
 		return "", nil, nil, tbErr(err, tb)
 	}
 
-	proofs := []*ast.SpecificFactStmt{}
+	proofs := []*ast.SpecFactStmt{}
 	for !tb.header.is(glob.KeySymbolRightCurly) {
 		curStmt, err := tb.specFactStmt()
 		if err != nil {
@@ -1675,7 +1675,7 @@ func (tb *tokenBlock) fact() (ast.FactStmt, error) {
 }
 
 func (tb *tokenBlock) relaFact_intensionalSetFact_enumStmt_equals() (ast.FactStmt, error) {
-	var ret *ast.SpecificFactStmt
+	var ret *ast.SpecFactStmt
 
 	fc, err := tb.RawFc()
 	if err != nil {
@@ -1810,7 +1810,7 @@ func (tb *tokenBlock) enumStmt_or_intensionalSetStmt_or_DomOf(fc ast.Fc) (ast.En
 			return nil, tbErr(err, tb)
 		}
 
-		proofs := []*ast.SpecificFactStmt{}
+		proofs := []*ast.SpecFactStmt{}
 		for !tb.header.is(glob.KeySymbolRightCurly) {
 			curStmt, err := tb.specFactStmt()
 			if err != nil {

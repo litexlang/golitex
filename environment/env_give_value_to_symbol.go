@@ -58,7 +58,7 @@ func (env *Env) replaceFcAtomWithValue(fc ast.FcAtom) (bool, ast.Fc) {
 	return true, symbolValue
 }
 
-func (env *Env) ReplaceFcInSpecFactWithValue(fact *ast.SpecificFactStmt) (bool, *ast.SpecificFactStmt) {
+func (env *Env) ReplaceFcInSpecFactWithValue(fact *ast.SpecFactStmt) (bool, *ast.SpecFactStmt) {
 	newParams := make([]ast.Fc, len(fact.Params))
 	replaced := false
 	for i, param := range fact.Params {

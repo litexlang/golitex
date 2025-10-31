@@ -40,7 +40,7 @@ func (ver *Verifier) verOrStmt(stmt *ast.OrStmt, state *VerState) (bool, error) 
 	return false, nil
 }
 
-func (ver *Verifier) verFactAtIndex_WhenOthersAreFalse(facts []*ast.SpecificFactStmt, i int, state *VerState) (bool, error) {
+func (ver *Verifier) verFactAtIndex_WhenOthersAreFalse(facts []*ast.SpecFactStmt, i int, state *VerState) (bool, error) {
 	ver.newEnv(ver.env)
 	defer ver.deleteEnvAndRetainMsg()
 

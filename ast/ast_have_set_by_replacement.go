@@ -18,7 +18,7 @@ import (
 	glob "golitex/glob"
 )
 
-func GetForallXOnlyOneYSatisfyGivenProp(domSet, rangeSet Fc, propName FcAtom) *ForallFactStmt {
+func GetForallXOnlyOneYSatisfyGivenProp(domSet, rangeSet Fc, propName FcAtom) *UniFactStmt {
 	params := []string{"x", "y1", "y2"}
 	setParams := []Fc{domSet, rangeSet, rangeSet}
 	domFacts := []FactStmt{
@@ -31,7 +31,7 @@ func GetForallXOnlyOneYSatisfyGivenProp(domSet, rangeSet Fc, propName FcAtom) *F
 	return NewUniFact(params, setParams, domFacts, thenFacts, glob.InnerGenLine)
 }
 
-func ForallYInSetDefinedByReplacementThereIsXSTProp_X_YIsTrue(setDefinedByReplacement *FcFn) *ForallFactStmt {
+func ForallYInSetDefinedByReplacementThereIsXSTProp_X_YIsTrue(setDefinedByReplacement *FcFn) *UniFactStmt {
 	params := []string{"x"}
 	setParams := []Fc{setDefinedByReplacement}
 

@@ -20,7 +20,7 @@ import (
 	env "golitex/environment"
 )
 
-func (ver *Verifier) matchUniFactParamsWithSpecFactParams(knownSpecFactInUniFact *env.KnownSpecFact_InUniFact, specFact *ast.SpecificFactStmt) (bool, map[string]ast.Fc, error) {
+func (ver *Verifier) matchUniFactParamsWithSpecFactParams(knownSpecFactInUniFact *env.KnownSpecFact_InUniFact, specFact *ast.SpecFactStmt) (bool, map[string]ast.Fc, error) {
 	knownFcs := knownSpecFactInUniFact.SpecFact.Params
 	givenFcs := specFact.Params
 	freeVars := knownSpecFactInUniFact.UniFact.Params

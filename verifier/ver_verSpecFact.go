@@ -21,7 +21,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt *ast.SpecificFactStmt, state *VerState) VerRet {
+func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	if stmt.NameIs(glob.KeySymbolEqual) && stmt.TypeEnum == ast.TruePure {
 		return BoolErrToVerRet(ver.verTrueEqualFact(stmt, state, true))
 	}
@@ -44,7 +44,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt *as
 	return BoolErrToVerRet(false, nil)
 }
 
-func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast.SpecificFactStmt, state *VerState) VerRet {
+func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	verRet := ver.verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt, state)
 	if verRet.IsTrue() || verRet.IsErr() {
 		return verRet
@@ -74,7 +74,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast
 	return BoolErrToVerRet(false, nil)
 }
 
-func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *ast.SpecificFactStmt, state *VerState) VerRet {
+func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	// replace the params with the values
 	replaced, newStmt := ver.env.ReplaceFcInSpecFactWithValue(stmt)
 	if replaced {
@@ -104,7 +104,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *a
 // TODO: 其实 specFact 是等号的时候，还是会访问到这个函数。
 // WARNING: 其实 specFact 是等号的时候，还是会访问到这个函数。所以这个函数的命名是有问题的
 // WARNING: 需要重构整个架构，把验证的逻辑屡屡顺。Litex是ATP的话，那就必须要告诉用户我Auto的过程是什么样的
-func (ver *Verifier) verSpecFactThatIsNotTrueEqualFactMainLogic(stmt *ast.SpecificFactStmt, state *VerState) VerRet {
+func (ver *Verifier) verSpecFactThatIsNotTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	var verRet VerRet
 
 	if !state.ReqOk {
@@ -115,7 +115,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFactMainLogic(stmt *ast.Specif
 	return ver.verSpecFactStepByStep(stmt, state)
 }
 
-func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecificFactStmt, state *VerState) VerRet {
+func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	if verRet := ver.verSpecialSpecFact_ByBIR(stmt, state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
@@ -141,7 +141,7 @@ func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecificFactStmt, state *Ve
 	return NewUnknownVerRet("")
 }
 
-func (ver *Verifier) verSpecialSpecFact_ByBIR(stmt *ast.SpecificFactStmt, state *VerState) VerRet {
+func (ver *Verifier) verSpecialSpecFact_ByBIR(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	if stmt.NameIs(glob.KeywordIn) {
 		return BoolErrToVerRet(ver.inFactBuiltinRules(stmt, state))
 	} else if stmt.NameIs(glob.KeywordItemExistsIn) && stmt.TypeEnum == ast.TrueExist_St {
@@ -161,7 +161,7 @@ func (ver *Verifier) verSpecialSpecFact_ByBIR(stmt *ast.SpecificFactStmt, state 
 	return NewUnknownVerRet("")
 }
 
-func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecificFactStmt, state *VerState) VerRet {
+func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	if stmt.IsPureFact() {
 		if !stmt.IsTrue() {
 			return BoolErrToVerRet(ver.verNotPureSpecFact_ByDef(stmt, state))
@@ -177,7 +177,7 @@ func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecificFactStmt, state *VerSta
 	return NewUnknownVerRet("")
 }
 
-func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecificFactStmt, state *VerState) VerRet {
+func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	nextState := state.GetAddRound()
 
 	curDefStmt := ver.env.GetPropDef(stmt.PropName)
@@ -233,7 +233,7 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecificFactStmt, st
 	return NewTrueVerRet("")
 }
 
-func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecificFactStmt, state *VerState) VerRet {
+func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	existParams, factParams := ast.GetExistFactExistParamsAndFactParams(stmt)
 
 	propDef := ver.env.GetExistPropDef(stmt.PropName)
@@ -308,7 +308,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecificFactStmt, s
 	return NewTrueVerRet("")
 }
 
-func (ver *Verifier) verSpecFactLogicMem(stmt *ast.SpecificFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) verSpecFactLogicMem(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	verRet := ver.verSpecFact_ByLogicMem(stmt, state)
 	if verRet.IsErr() || verRet.IsTrue() {
 		return verRet.ToBoolErr()
@@ -316,7 +316,7 @@ func (ver *Verifier) verSpecFactLogicMem(stmt *ast.SpecificFactStmt, state *VerS
 	return false, nil
 }
 
-func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecificFactStmt, state *VerState) VerRet {
+func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	nextState := state.GetAddRound()
 
 	ok, err := ver.verSpecFact_InSpecFact_UniMem(stmt, nextState)
@@ -327,7 +327,7 @@ func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecificFactStmt, state *VerSt
 	return BoolErrToVerRet(ver.verSpecFact_InLogicExpr_InUniFactMem(stmt, nextState))
 }
 
-func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecificFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	if stmt.IsTrue() {
 		return false, nil
 	}
@@ -477,7 +477,7 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecificFactStmt
 // 	return false, nil
 // }
 
-func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecificFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
 	nextState := state.GetAddRound()
 
 	defStmt := ver.env.GetPropDef(stmt.PropName)
@@ -518,7 +518,7 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecificFactStmt, state 
 
 	// 某个fact是false的，那就OK了
 	for _, domFact := range instantiatedIffToProp.DomFacts {
-		domFactAsSpecFact, ok := domFact.(*ast.SpecificFactStmt)
+		domFactAsSpecFact, ok := domFact.(*ast.SpecFactStmt)
 		if !ok {
 			continue
 		}
