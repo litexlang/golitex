@@ -592,9 +592,19 @@ fn negate(x R) R:
 
 know forall x set: not x $in x
 
-prop is_subset_of(A, B set):
-	forall x A: x $in B
+prop is_subset_of(x, y set):
+	forall z x:
+		z $in x
+		=>:
+			z $in y
+	forall:
+		y $in finite_set
+		=>:
+			x $in finite_set
+			len(x) <= len(y)
+
 
 prop is_superset_of(A, B set):
 	forall x B: x $in A
+
 `

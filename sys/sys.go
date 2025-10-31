@@ -167,7 +167,7 @@ func RunFilesInRepoWithPipelineRunner(repo string) error {
 		start := time.Now()
 		msg, signal, err := pipelineRunner.Run(string(content))
 		if err != nil || signal != glob.SysSignalTrue {
-			return fmt.Errorf("%s\n%s", msg, err.Error())
+			return fmt.Errorf("%s\n%s\nerror in file: %s", msg, err.Error(), file.Name())
 		}
 
 		elapsed := time.Since(start)
