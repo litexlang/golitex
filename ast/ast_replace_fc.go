@@ -14,7 +14,7 @@
 
 package litex_ast
 
-func (stmt *SpecificFactStmt) ReplaceFc(oldFc Fc, newFc Fc) FactStmt {
+func (stmt *SpecFactStmt) ReplaceFc(oldFc Fc, newFc Fc) FactStmt {
 	newParams := make([]Fc, len(stmt.Params))
 	for i, param := range stmt.Params {
 		newParams[i] = param.ReplaceFc(oldFc, newFc)
@@ -23,7 +23,7 @@ func (stmt *SpecificFactStmt) ReplaceFc(oldFc Fc, newFc Fc) FactStmt {
 	return NewSpecFactStmt(stmt.TypeEnum, stmt.PropName, newParams, stmt.GetLine())
 }
 
-func (stmt *ForallFactStmt) ReplaceFc(oldFc Fc, newFc Fc) FactStmt {
+func (stmt *UniFactStmt) ReplaceFc(oldFc Fc, newFc Fc) FactStmt {
 	newParamSets := make([]Fc, len(stmt.ParamSets))
 	for i, paramSet := range stmt.ParamSets {
 		newParamSets[i] = paramSet.ReplaceFc(oldFc, newFc)

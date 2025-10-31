@@ -27,7 +27,7 @@ const (
 	FalseExist_St
 )
 
-func (stmt *SpecificFactStmt) ReverseTrue() *SpecificFactStmt {
+func (stmt *SpecFactStmt) ReverseTrue() *SpecFactStmt {
 	if stmt.TypeEnum == TruePure {
 		return NewSpecFactStmt(FalsePure, stmt.PropName, stmt.Params, stmt.Line)
 	} else if stmt.TypeEnum == FalsePure {
@@ -40,22 +40,22 @@ func (stmt *SpecificFactStmt) ReverseTrue() *SpecificFactStmt {
 	return nil
 }
 
-func (f *SpecificFactStmt) IsPropNameEqual() bool {
+func (f *SpecFactStmt) IsPropNameEqual() bool {
 	return string(f.PropName) == glob.KeySymbolEqual
 }
 
-func (f *SpecificFactStmt) IsPureFact() bool {
+func (f *SpecFactStmt) IsPureFact() bool {
 	return f.TypeEnum == TruePure || f.TypeEnum == FalsePure
 }
 
-func (f *SpecificFactStmt) IsExist_St_Fact() bool {
+func (f *SpecFactStmt) IsExist_St_Fact() bool {
 	return f.TypeEnum == TrueExist_St || f.TypeEnum == FalseExist_St
 }
 
-func (f *SpecificFactStmt) IsTrue() bool {
+func (f *SpecFactStmt) IsTrue() bool {
 	return f.TypeEnum == TruePure || f.TypeEnum == TrueExist_St
 }
 
-func (f *SpecificFactStmt) NameIs(givenName string) bool {
+func (f *SpecFactStmt) NameIs(givenName string) bool {
 	return string(f.PropName) == givenName
 }

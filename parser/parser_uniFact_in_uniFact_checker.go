@@ -22,7 +22,7 @@ import (
 func checkFactsUniDepth0(facts []ast.FactStmt) error {
 	for _, fact := range facts {
 		switch asFact := fact.(type) {
-		case *ast.ForallFactStmt:
+		case *ast.UniFactStmt:
 			err := checkUniFactDepth0(asFact)
 			if err != nil {
 				return err
@@ -36,7 +36,7 @@ func checkFactsUniDepth0(facts []ast.FactStmt) error {
 func checkFactsUniDepth1(facts []ast.FactStmt) error {
 	for _, fact := range facts {
 		switch asFact := fact.(type) {
-		case *ast.ForallFactStmt:
+		case *ast.UniFactStmt:
 			ok := checkUniFactDepth1(asFact)
 			if !ok {
 				return fmt.Errorf("too many levels of universal fact in universal fact:\n%s\nthere must be at most two levels of universal fact", asFact.String())
@@ -47,10 +47,10 @@ func checkFactsUniDepth1(facts []ast.FactStmt) error {
 	return nil
 }
 
-func checkUniFactDepth0(uniFact *ast.ForallFactStmt) error {
+func checkUniFactDepth0(uniFact *ast.UniFactStmt) error {
 	for _, fact := range uniFact.DomFacts {
 		switch asFact := fact.(type) {
-		case *ast.ForallFactStmt:
+		case *ast.UniFactStmt:
 			if !checkUniFactDepth1(asFact) {
 				return fmt.Errorf("too many levels of universal fact in universal fact:\n%s\nthere must be at most two levels of universal fact", uniFact.String())
 			}
@@ -59,7 +59,7 @@ func checkUniFactDepth0(uniFact *ast.ForallFactStmt) error {
 
 	for _, fact := range uniFact.ThenFacts {
 		switch asFact := fact.(type) {
-		case *ast.ForallFactStmt:
+		case *ast.UniFactStmt:
 			if !checkUniFactDepth1(asFact) {
 				return fmt.Errorf("too many levels of universal fact in universal fact:\n%s\nthere must be at most two levels of universal fact", uniFact.String())
 			}
@@ -69,17 +69,17 @@ func checkUniFactDepth0(uniFact *ast.ForallFactStmt) error {
 	return nil
 }
 
-func checkUniFactDepth1(uniFact *ast.ForallFactStmt) bool {
+func checkUniFactDepth1(uniFact *ast.UniFactStmt) bool {
 	for _, fact := range uniFact.DomFacts {
 		switch fact.(type) {
-		case *ast.ForallFactStmt:
+		case *ast.UniFactStmt:
 			return false
 		}
 	}
 
 	for _, fact := range uniFact.ThenFacts {
 		switch fact.(type) {
-		case *ast.ForallFactStmt:
+		case *ast.UniFactStmt:
 			return false
 		}
 	}

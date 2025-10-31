@@ -84,7 +84,7 @@ func (e *Env) AreAtomsInFcAreDeclared(fc ast.Fc, extraAtomNames map[string]struc
 // TODO 来自上层的时候，有时候如果fact是uniFact，那传来的extraAtomNames里已经有uniParam了，这其实是浪费计算了
 func (e *Env) AreAtomsInFactAreDeclared(fact ast.FactStmt, extraAtomNames map[string]struct{}) bool {
 	switch asStmt := fact.(type) {
-	case *ast.ForallFactStmt:
+	case *ast.UniFactStmt:
 		for _, param := range asStmt.Params {
 			extraAtomNames[param] = struct{}{}
 		}

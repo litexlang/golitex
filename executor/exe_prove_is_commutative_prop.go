@@ -96,7 +96,7 @@ func (exec *Executor) proveIsCommutativePropStmtMainLogic(stmt *ast.ProveIsCommu
 	return true, nil
 }
 
-func (exec *Executor) proveIsCommutativePropStmtBody(proofs []ast.Stmt, fact *ast.SpecificFactStmt, rightToLeft *ast.SpecificFactStmt) (bool, error) {
+func (exec *Executor) proveIsCommutativePropStmtBody(proofs []ast.Stmt, fact *ast.SpecFactStmt, rightToLeft *ast.SpecFactStmt) (bool, error) {
 	exec.NewEnv(exec.env)
 	defer exec.deleteEnvAndRetainMsg()
 

@@ -93,7 +93,7 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) (Exec
 	return NewExecTrue(""), nil
 }
 
-func proveByInduction_Fact_Start_is_NPos(stmt *ast.ProveByInductionStmt) *ast.SpecificFactStmt {
+func proveByInduction_Fact_Start_is_NPos(stmt *ast.ProveByInductionStmt) *ast.SpecFactStmt {
 	startIsNPos := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.Start, ast.FcAtom(glob.KeywordNPos)}, stmt.Line)
 	return startIsNPos
 }

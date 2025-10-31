@@ -182,7 +182,7 @@ func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStm
 	return NewExecTrue(""), nil
 }
 
-func (exec *Executor) checkInFactInSet_SetIsNonEmpty(pureInFact *ast.SpecificFactStmt) (bool, error) {
+func (exec *Executor) checkInFactInSet_SetIsNonEmpty(pureInFact *ast.SpecFactStmt) (bool, error) {
 	if _, ok := glob.BuiltinObjKeywordSet[pureInFact.Params[0].String()]; ok {
 		return true, nil
 	}

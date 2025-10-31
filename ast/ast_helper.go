@@ -22,12 +22,12 @@ import (
 	"strings"
 )
 
-func EqualFact(left, right Fc) *SpecificFactStmt {
+func EqualFact(left, right Fc) *SpecFactStmt {
 	return NewSpecFactStmt(TruePure, FcAtom(glob.KeySymbolEqual), []Fc{left, right}, glob.InnerGenLine)
 }
 
-func (stmt *ForallFactStmt) ParamInParamSetFacts(uniConMap map[string]Fc) []*SpecificFactStmt {
-	paramSetFacts := make([]*SpecificFactStmt, len(stmt.Params))
+func (stmt *UniFactStmt) ParamInParamSetFacts(uniConMap map[string]Fc) []*SpecFactStmt {
+	paramSetFacts := make([]*SpecFactStmt, len(stmt.Params))
 	for i, param := range stmt.Params {
 		paramSetFacts[i] = NewInFactWithParamFc(uniConMap[param], stmt.ParamSets[i])
 	}
@@ -44,11 +44,11 @@ func ReverseSliceOfReversibleFacts(facts []Spec_OrFact) []Spec_OrFact {
 		return ret
 	}
 
-	specFactsInFacts := []*SpecificFactStmt{}
+	specFactsInFacts := []*SpecFactStmt{}
 	orFactsInFacts := []*OrStmt{}
 	for _, fact := range facts {
 		switch asFact := fact.(type) {
-		case *SpecificFactStmt:
+		case *SpecFactStmt:
 			specFactsInFacts = append(specFactsInFacts, asFact)
 		case *OrStmt:
 			orFactsInFacts = append(orFactsInFacts, asFact)
@@ -57,7 +57,7 @@ func ReverseSliceOfReversibleFacts(facts []Spec_OrFact) []Spec_OrFact {
 		}
 	}
 
-	reversedSpecFacts := make([]*SpecificFactStmt, len(specFactsInFacts))
+	reversedSpecFacts := make([]*SpecFactStmt, len(specFactsInFacts))
 	for i, specFact := range specFactsInFacts {
 		reversedSpecFacts[i] = specFact.ReverseTrue()
 	}
@@ -65,7 +65,7 @@ func ReverseSliceOfReversibleFacts(facts []Spec_OrFact) []Spec_OrFact {
 	orFact_GotBYReversedSpecFacts := NewOrStmt(reversedSpecFacts, glob.InnerGenLine)
 	ret = append(ret, orFact_GotBYReversedSpecFacts)
 
-	specFacts_GotByReversedOrFacts := []*SpecificFactStmt{}
+	specFacts_GotByReversedOrFacts := []*SpecFactStmt{}
 	for _, orFact := range orFactsInFacts {
 		reversedOrFact := orFact.ReverseIsTrue()
 		specFacts_GotByReversedOrFacts = append(specFacts_GotByReversedOrFacts, reversedOrFact...)
@@ -78,7 +78,7 @@ func ReverseSliceOfReversibleFacts(facts []Spec_OrFact) []Spec_OrFact {
 	return ret
 }
 
-func NewEqualFact(left, right Fc) *SpecificFactStmt {
+func NewEqualFact(left, right Fc) *SpecFactStmt {
 	return NewSpecFactStmt(TruePure, FcAtom(glob.KeySymbolEqual), []Fc{left, right}, glob.InnerGenLine)
 }
 
@@ -111,8 +111,8 @@ func IsFcFnWithHeadNameInSlice(fc Fc, headNames map[string]struct{}) bool {
 	return ok
 }
 
-func (defHeader *DefHeader) GetInstantiatedParamInParamSetFact(uniMap map[string]Fc) ([]*SpecificFactStmt, error) {
-	paramSetFacts := make([]*SpecificFactStmt, len(defHeader.Params))
+func (defHeader *DefHeader) GetInstantiatedParamInParamSetFact(uniMap map[string]Fc) ([]*SpecFactStmt, error) {
+	paramSetFacts := make([]*SpecFactStmt, len(defHeader.Params))
 	for i, param := range defHeader.Params {
 		instantiatedSet, err := defHeader.ParamSets[i].Instantiate(uniMap)
 		if err != nil {
@@ -123,24 +123,24 @@ func (defHeader *DefHeader) GetInstantiatedParamInParamSetFact(uniMap map[string
 	return paramSetFacts, nil
 }
 
-func (stmt *ForallFactStmt) ParamInParamSet() []*SpecificFactStmt {
-	paramSetFacts := make([]*SpecificFactStmt, len(stmt.Params))
+func (stmt *UniFactStmt) ParamInParamSet() []*SpecFactStmt {
+	paramSetFacts := make([]*SpecFactStmt, len(stmt.Params))
 	for i, param := range stmt.Params {
 		paramSetFacts[i] = NewInFactWithParamFc(FcAtom(param), stmt.ParamSets[i])
 	}
 	return paramSetFacts
 }
 
-func (stmt *EqualsFactStmt) ToEqualFacts() []*SpecificFactStmt {
-	ret := make([]*SpecificFactStmt, len(stmt.Params)-1)
+func (stmt *EqualsFactStmt) ToEqualFacts() []*SpecFactStmt {
+	ret := make([]*SpecFactStmt, len(stmt.Params)-1)
 	for i := range len(stmt.Params) - 1 {
 		ret[i] = NewEqualFact(stmt.Params[i], stmt.Params[i+1])
 	}
 	return ret
 }
 
-func (stmt *EqualsFactStmt) ToEqualFacts_PairwiseCombination() []*SpecificFactStmt {
-	ret := []*SpecificFactStmt{}
+func (stmt *EqualsFactStmt) ToEqualFacts_PairwiseCombination() []*SpecFactStmt {
+	ret := []*SpecFactStmt{}
 	for i := range len(stmt.Params) - 1 {
 		for j := i + 1; j < len(stmt.Params); j++ {
 			ret = append(ret, NewEqualFact(stmt.Params[i], stmt.Params[j]))
@@ -161,25 +161,25 @@ func (strSlice StrSlice) ToFcSlice() []Fc {
 	return ret
 }
 
-func (head DefHeader) ToSpecFact() *SpecificFactStmt {
+func (head DefHeader) ToSpecFact() *SpecFactStmt {
 	params := head.Params.ToFcSlice()
 	return NewSpecFactStmt(TruePure, FcAtom(head.Name), params, glob.InnerGenLine)
 }
 
-func (stmt *DefPropStmt) ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue() *ForallFactStmt {
+func (stmt *DefPropStmt) ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue() *UniFactStmt {
 	return NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, []FactStmt{stmt.DefHeader.ToSpecFact()}, stmt.ThenFacts, glob.InnerGenLine)
 }
 
-func (stmt *DefExistPropStmt) ToProp() *SpecificFactStmt {
+func (stmt *DefExistPropStmt) ToProp() *SpecFactStmt {
 	params := stmt.DefBody.DefHeader.Params.ToFcSlice()
 	return NewSpecFactStmt(TruePure, FcAtom(stmt.DefBody.DefHeader.Name), params, glob.InnerGenLine)
 }
 
-func (stmt *DefExistPropStmt) ToForallParamsSatisfyDomFacts_Then_ExistFactIsTrue() *ForallFactStmt {
+func (stmt *DefExistPropStmt) ToForallParamsSatisfyDomFacts_Then_ExistFactIsTrue() *UniFactStmt {
 	return NewUniFact(stmt.ExistParams, stmt.ExistParamSets, stmt.DefBody.DomFacts, []FactStmt{stmt.ToProp()}, glob.InnerGenLine)
 }
 
-func (stmt *NamedUniFactStmt) ToUniFact() *ForallFactStmt {
+func (stmt *NamedUniFactStmt) ToUniFact() *UniFactStmt {
 	return NewUniFact(stmt.DefPropStmt.DefHeader.Params, stmt.DefPropStmt.DefHeader.ParamSets, stmt.DefPropStmt.IffFacts, stmt.DefPropStmt.ThenFacts, glob.InnerGenLine)
 }
 
@@ -358,7 +358,7 @@ func ToInt(fc Fc) (int, bool) {
 
 func ExtractParamsFromFact(fact FactStmt) []string {
 	switch asFact := fact.(type) {
-	case *ForallFactStmt:
+	case *UniFactStmt:
 		return asFact.Params
 	case *UniFactWithIffStmt:
 		return asFact.UniFact.Params

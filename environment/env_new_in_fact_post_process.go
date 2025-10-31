@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (e *Env) inFactPostProcess(fact *ast.SpecificFactStmt) error {
+func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) error {
 	if len(fact.Params) != 2 {
 		return fmt.Errorf("in fact expect 2 parameters, get %d in %s", len(fact.Params), fact)
 	}
@@ -60,7 +60,7 @@ func (e *Env) inFactPostProcess(fact *ast.SpecificFactStmt) error {
 	return nil
 }
 
-func (e *Env) inFactPostProcess_InSetFnRetValue(fact *ast.SpecificFactStmt, def *ast.HaveSetFnStmt) error {
+func (e *Env) inFactPostProcess_InSetFnRetValue(fact *ast.SpecFactStmt, def *ast.HaveSetFnStmt) error {
 	inFactRightParamAsFcFnPt, ok := fact.Params[1].(*ast.FcFn)
 	if !ok {
 		return fmt.Errorf("in fact expect 2 parameters, get %d in %s", len(fact.Params), fact)
@@ -119,7 +119,7 @@ func (e *Env) SetEqualToSetDefinedByReplacement_PostProcess(setAtom ast.FcAtom, 
 	return nil
 }
 
-func (e *Env) inFactPostProcess_InFnTemplate(fact *ast.SpecificFactStmt) (bool, error) {
+func (e *Env) inFactPostProcess_InFnTemplate(fact *ast.SpecFactStmt) (bool, error) {
 	if _, ok := fact.Params[1].(*ast.FcFn); !ok {
 		return false, nil
 	}

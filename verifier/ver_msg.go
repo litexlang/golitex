@@ -21,13 +21,8 @@ import (
 	"strings"
 )
 
-func (ver *Verifier) specFactSpecMemTrueMsg(stmt *ast.SpecificFactStmt, knownFact ast.SpecificFactStmt) {
+func (ver *Verifier) specFactSpecMemTrueMsg(stmt *ast.SpecFactStmt, knownFact ast.SpecFactStmt) {
 	var verifiedBy strings.Builder
-
-	// ? 我需要加params怎么match的吗？
-	// for i, knownParam := range knownFact.Params {
-	// 	verifiedBy.WriteString(fmt.Sprintf("%s = %s\n", knownParam, stmt.Params[i]))
-	// }
 
 	verifiedBy.WriteString(knownFact.StringWithLine())
 	verifiedBy.WriteString("\n")
