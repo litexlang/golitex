@@ -17,6 +17,7 @@ package litex_env
 import (
 	"fmt"
 	ast "golitex/ast"
+	cmp "golitex/cmp"
 	glob "golitex/glob"
 	"strconv"
 )
@@ -400,16 +401,12 @@ func (env *Env) storeSymbolValue(left, right ast.Fc) error {
 	// 	env.SymbolValueMem[left.String()] = right
 	// }
 
-	if computedFc, err := env.CanBeComputed(left); err != nil {
-		return err
-	} else if computedFc != nil {
-		env.SymbolValueMem[right.String()] = computedFc
+	if ok := cmp.IsNumLitFc(left); ok {
+		env.StoreTrueEqualValues(right, left)
 	}
 
-	if computedFc, err := env.CanBeComputed(right); err != nil {
-		return err
-	} else if computedFc != nil {
-		env.SymbolValueMem[left.String()] = computedFc
+	if ok := cmp.IsNumLitFc(right); ok {
+		env.StoreTrueEqualValues(left, right)
 	}
 
 	return nil
