@@ -16,21 +16,21 @@ package litex_executor
 
 import ast "golitex/ast"
 
-func (ver *Verifier) verIntensionalSetStmt(stmt *ast.IntensionalSetStmt, state *VerState) (bool, error) {
+func (ver *Verifier) verIntensionalSetStmt(stmt *ast.IntensionalSetStmt, state *VerState) VerRet {
 	leftUniFact, rightUniFact, err := stmt.ToEquivalentUniFacts()
 	if err != nil {
-		return false, err
+		return NewVerErr(err.Error())
 	}
 
 	verRet := ver.verUniFact(leftUniFact, state)
 	if verRet.IsErr() || verRet.IsUnknown() {
-		return verRet.ToBoolErr()
+		return verRet
 	}
 
 	verRet = ver.verUniFact(rightUniFact, state)
 	if verRet.IsErr() || verRet.IsUnknown() {
-		return verRet.ToBoolErr()
+		return verRet
 	}
 
-	return verRet.ToBoolErr()
+	return verRet
 }

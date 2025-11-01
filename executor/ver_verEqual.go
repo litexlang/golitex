@@ -23,20 +23,20 @@ import (
 )
 
 // how equality is verified is different from other facts because 1. it is stored differently 2. its transitive and commutative property is automatically used by the verifier
-func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, checkRequirements bool) (bool, error) {
+func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, checkRequirements bool) VerRet {
 	if verRet := ver.verByReplaceFcInSpecFactWithValue(stmt, state); verRet.IsTrue() || verRet.IsErr() {
-		return verRet.ToBoolErr()
+		return verRet
 	}
 
 	if ok, err := ver.verTrueEqualFactMainLogic(stmt, state, checkRequirements); IsTrueOrErr(ok, err) {
-		return ok, err
+		return BoolErrToVerRet(ok, err)
 	}
 
 	if ok, err := ver.verByReplaceFcInSpecFactWithValueAndCompute(stmt, state); IsTrueOrErr(ok, err) {
-		return ok, err
+		return BoolErrToVerRet(ok, err)
 	}
 
-	return false, nil
+	return NewVerUnknown("")
 }
 
 func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *VerState, checkRequirements bool) (bool, error) {
