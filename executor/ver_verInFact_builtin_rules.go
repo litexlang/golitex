@@ -30,7 +30,6 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 	}
 
 	var verRet VerRet
-	var err error
 	var ok bool
 
 	verRet = ver.verInSet_btRules(stmt, state)
@@ -41,12 +40,12 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 		return verRet
 	}
 
-	ok, err = ver.btLitNumInNatOrIntOrRatOrRealOrComplex(stmt, state)
-	if err != nil {
-		return NewVerErr(err.Error())
+	verRet = ver.btLitNumInNatOrIntOrRatOrRealOrComplex(stmt, state)
+	if verRet.IsErr() {
+		return verRet
 	}
-	if ok {
-		return NewVerTrue("")
+	if verRet.IsTrue() {
+		return verRet
 	}
 
 	ok = ver.builtinSetsInSetSet(stmt, state)
@@ -154,11 +153,11 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state *VerState) V
 			}
 		} else {
 			// return false, nil
-			ok, err := ver.ver_In_FnTT(stmt.Params[0], asFcFn, state)
-			if err != nil {
-				return NewVerErr(err.Error())
+			verRet := ver.ver_In_FnTT(stmt.Params[0], asFcFn, state)
+			if verRet.IsErr() {
+				return verRet
 			}
-			if ok {
+			if verRet.IsTrue() {
 				if state.WithMsg {
 					ver.successWithMsg(stmt.String(), fmt.Sprintf("dom of template %s is in the domain of the template where function %s is in. Also, the return value of the function is in the return set of the template where function %s is in", stmt.Params[1], stmt.Params[0], stmt.Params[1]))
 				}

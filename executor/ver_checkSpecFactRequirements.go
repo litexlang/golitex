@@ -23,13 +23,12 @@ import (
 
 func (ver *Verifier) checkSpecFactReq(stmt *ast.SpecFactStmt, state *VerState) (VerRet, *VerState) {
 	if stmt.NameIs(glob.KeywordIn) {
-		ok, err := ver.checkSpecFactReq_InFact_UseBtRules(stmt)
-		if err != nil {
-			return BoolErrToVerRet(false, err), state
+		verRet := ver.checkSpecFactReq_InFact_UseBtRules(stmt)
+		if verRet.IsErr() {
+			return verRet, state
 		}
-
-		if ok {
-			return BoolErrToVerRet(ok, nil), state
+		if verRet.IsTrue() {
+			return verRet, state
 		}
 
 		state, verRet := ver.checkFnsReqAndUpdateReqState(stmt, state)
@@ -42,14 +41,14 @@ func (ver *Verifier) checkSpecFactReq(stmt *ast.SpecFactStmt, state *VerState) (
 
 // 只验证 1. params都声明了 2. 确实是fn template
 // WARNING: 这个函数有严重的问题
-func (ver *Verifier) checkSpecFactReq_InFact_UseBtRules(stmt *ast.SpecFactStmt) (bool, error) {
+func (ver *Verifier) checkSpecFactReq_InFact_UseBtRules(stmt *ast.SpecFactStmt) VerRet {
 	ok := ver.env.AreAtomsInFcAreDeclared(stmt.Params[0], map[string]struct{}{})
 	if !ok {
-		return false, fmt.Errorf(env.AtomsInFcNotDeclaredMsg(stmt.Params[0]))
+		return NewVerErr(env.AtomsInFcNotDeclaredMsg(stmt.Params[0]))
 	}
 
 	if _, ok := stmt.Params[1].(*ast.FcFn); !ok {
-		return false, nil
+		return NewVerUnknown("")
 	}
 
 	head, ok := stmt.Params[1].(*ast.FcFn).IsFcFn_HasAtomHead_ReturnHead() // WARNING: 这里有问题，因为可能不是fn template，而是 fn(R)R 这种
@@ -60,24 +59,24 @@ func (ver *Verifier) checkSpecFactReq_InFact_UseBtRules(stmt *ast.SpecFactStmt) 
 			for _, param := range stmt.Params[1].(*ast.FcFn).Params {
 				ok := ver.env.AreAtomsInFcAreDeclared(param, map[string]struct{}{})
 				if !ok {
-					return false, fmt.Errorf(env.AtomsInFcNotDeclaredMsg(param))
+					return NewVerErr(env.AtomsInFcNotDeclaredMsg(param))
 				}
 			}
-			return true, nil
+			return NewVerTrue("")
 		} else {
 			ok = ver.env.AreAtomsInFcAreDeclared(stmt.Params[1], map[string]struct{}{})
 			if !ok {
-				return false, fmt.Errorf(env.AtomsInFcNotDeclaredMsg(stmt.Params[1]))
+				return NewVerErr(env.AtomsInFcNotDeclaredMsg(stmt.Params[1]))
 			}
-			return true, nil
+			return NewVerTrue("")
 		}
 	} else {
 		ok = ver.env.AreAtomsInFcAreDeclared(stmt.Params[1], map[string]struct{}{})
 		if !ok {
-			return false, fmt.Errorf(env.AtomsInFcNotDeclaredMsg(stmt.Params[1]))
+			return NewVerErr(env.AtomsInFcNotDeclaredMsg(stmt.Params[1]))
 		}
 
-		return true, nil
+		return NewVerTrue("")
 	}
 }
 

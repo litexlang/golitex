@@ -141,14 +141,14 @@ func (ver *Verifier) verTrueEqualFact_FcFnEqual_NoCheckRequirements(left, right 
 	return NewVerTrue("")
 }
 
-func (ver *Verifier) FcsEqualBy_Eval_ShareKnownEqualMem(left, right ast.Fc, state *VerState) (bool, error) {
+func (ver *Verifier) FcsEqualBy_Eval_ShareKnownEqualMem(left, right ast.Fc, state *VerState) VerRet {
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
 		leftEqualFcs, ok := curEnv.EqualMem[left.String()]
 		if ok {
 			rightEqualFcs, ok := curEnv.EqualMem[right.String()]
 			if ok {
 				if leftEqualFcs == rightEqualFcs {
-					return true, nil
+					return NewVerTrue("")
 				}
 			}
 		}
@@ -156,29 +156,29 @@ func (ver *Verifier) FcsEqualBy_Eval_ShareKnownEqualMem(left, right ast.Fc, stat
 
 	leftEqualFcs, ok := ver.env.GetEqualFcs(left)
 	if !ok {
-		return false, nil
+		return NewVerUnknown("")
 	}
 
 	rightEqualFcs, ok := ver.env.GetEqualFcs(right)
 	if !ok {
-		return false, nil
+		return NewVerUnknown("")
 	}
 
 	for _, leftEqualFc := range *leftEqualFcs {
 		for _, rightEqualFc := range *rightEqualFcs {
 			if leftEqualFc.String() == rightEqualFc.String() {
-				return true, nil
+				return NewVerTrue("")
 			} else {
 				_, newLeft := ver.env.ReplaceSymbolWithValue(leftEqualFc)
 				if cmp.IsNumLitFc(newLeft) {
 					_, newRight := ver.env.ReplaceSymbolWithValue(rightEqualFc)
 					if ok, _, _ := cmp.CmpBy_Literally_NumLit_PolynomialArith(newLeft, newRight); ok {
-						return true, nil
+						return NewVerTrue("")
 					}
 				}
 			}
 		}
 	}
 
-	return false, nil
+	return NewVerUnknown("")
 }
