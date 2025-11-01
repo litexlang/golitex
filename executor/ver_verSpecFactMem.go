@@ -151,7 +151,7 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch_new(stmt *ast.Spe
 		if verRet.IsErr() {
 			return verRet
 		}
-		if !verRet.IsTrue() {
+		if verRet.IsUnknown() {
 			continue
 		}
 

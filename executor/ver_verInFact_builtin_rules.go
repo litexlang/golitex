@@ -20,84 +20,76 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	if len(stmt.Params) != 2 {
-		return false, fmt.Errorf("invalid number of parameters for in fact")
+		return NewVerErr(fmt.Sprintf("invalid number of parameters for in fact: %d", len(stmt.Params)))
 	}
 
 	if stmt.TypeEnum == ast.FalsePure {
-		return ver.falseInFactBuiltinRules(stmt, state)
+		return BoolErrToVerRet(ver.falseInFactBuiltinRules(stmt, state))
 	}
 
 	ok, err := ver.verInSet_btRules(stmt, state)
 	if err != nil {
-		return false, err
+		return NewVerErr(err.Error())
 	}
 	if ok {
-		return true, nil
+		return NewVerTrue("")
 	}
 
 	ok, err = ver.btLitNumInNatOrIntOrRatOrRealOrComplex(stmt, state)
 	if err != nil {
-		return false, err
+		return NewVerErr(err.Error())
 	}
 	if ok {
-		return true, nil
+		return NewVerTrue("")
 	}
 
 	ok = ver.builtinSetsInSetSet(stmt, state)
 	if ok {
-		return true, nil
+		return NewVerTrue("")
 	}
 
 	ok = ver.returnValueOfBuiltinArithmeticFnInReal(stmt, state)
 	if ok {
-		return true, nil
+		return NewVerTrue("")
 	}
 
 	ok = ver.returnValueOfUserDefinedFnInFnReturnSet(stmt, state)
 	if ok {
-		return true, nil
+		return NewVerTrue("")
 	}
 
 	ok = ver.verIn_N_Z_Q_R_C(stmt, state)
 	if ok {
-		return true, nil
+		return NewVerTrue("")
 	}
 
-	ok, err = ver.inFnTemplateFact(stmt, state)
-	if err != nil {
-		return false, err
+	verRet := ver.inFnTemplateFact(stmt, state)
+	if verRet.IsErr() {
+		return NewVerErr(verRet.String())
 	}
-	if ok {
-		return true, nil
+	if verRet.IsTrue() {
+		return verRet
 	}
 
 	ok, err = ver.inObjFact(stmt, state)
 	if err != nil {
-		return false, err
+		return NewVerErr(err.Error())
 	}
 	if ok {
-		return true, nil
+		return NewVerTrue("")
 	}
 
-	ok, err = ver.verInSetProduct(stmt, state)
-	if err != nil {
-		return false, err
+	verRet = ver.verInSetProduct(stmt, state)
+	if verRet.IsErr() {
+		return NewVerErr(verRet.String())
 	}
-	if ok {
-		return true, nil
+	if verRet.IsTrue() {
+		return verRet
 	}
 
-	// ok, err = ver.atTupleIndex(stmt, state)
-	// if err != nil {
-	// 	return false, err
-	// }
-	// if ok {
-	// 	return true, nil
-	// }
-
-	return false, nil
+	return NewVerUnknown("")
 }
 
 func (ver *Verifier) returnValueOfBuiltinArithmeticFnInReal(stmt *ast.SpecFactStmt, state *VerState) bool {
@@ -117,88 +109,6 @@ func (ver *Verifier) returnValueOfBuiltinArithmeticFnInReal(stmt *ast.SpecFactSt
 		return false
 	}
 }
-
-// func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactStmt, state *VerState) bool {
-// 	fcFn, ok := stmt.Params[0].(*ast.FcFn)
-// 	if !ok {
-// 		return false
-// 	}
-
-// 	if fcFn.HasHeadInSlice([]string{glob.KeySymbolPlus, glob.KeySymbolMinus, glob.KeySymbolStar, glob.KeySymbolSlash, glob.KeySymbolPower}) {
-// 		if stmt.Params[1] == ast.FcAtom(glob.KeywordReal) {
-// 			if state.WithMsg {
-// 				ver.successWithMsg(stmt.String(), "the return value of the builtin arithmetic function is in the real set")
-// 			}
-// 			return true
-// 		}
-// 		return false
-// 	}
-
-// 	if fcFn.HasHeadInSlice([]string{glob.KeywordLen, glob.KeySymbolPercent}) {
-// 		if stmt.Params[1] == ast.FcAtom(glob.KeywordNatural) {
-// 			if state.WithMsg {
-// 				ver.successWithMsg(stmt.String(), "the return value of the builtin arithmetic function is in the natural set")
-// 			}
-// 			return true
-// 		}
-// 		return false
-// 	}
-
-// 	// fnDef, ok := ver.env.GetLatestFnTemplate(fcFn.FnHead)
-// 	// if !ok {
-// 	// 	return false // 这里不传error是有点道理的，因为+-*/的定义不在mem里
-// 	// }
-
-// 	// fnDef, ok := ver.env.GetLatestFnT_GivenNameIsIn(fcFn.FnHead.String())
-// 	fnT_TheFcIsIn, ok := ver.GetFnTemplateSliceFcIsIn(fcFn.FnHead)
-// 	if !ok {
-// 		return false // 这里不传error是有点道理的，因为+-*/的定义不在mem里
-// 	}
-// 	fnDef := fnT_TheFcIsIn[len(fnT_TheFcIsIn)-1]
-
-// 	uniMap := map[string]ast.Fc{}
-// 	// if len(fnDef.Params) != len(fcFn.Params) {
-
-// 	if fnDef.AsFcFn != nil {
-// 		// TODO: 这里可以改成 stmt.Params[1] 是 fnDef.AsFcFn.Params[0] 母集
-// 		ver.VerFactStmt(ast.NewEqualFact(stmt.Params[1], fnDef.AsFcFn.Params[0]), state)
-// 		if state.WithMsg {
-// 			ver.successWithMsg(stmt.String(), "the return value of the user defined function is in the function return set")
-// 		}
-// 		return true
-// 	} else {
-// 		if len(fnDef.AsFnTStruct.Params) != len(fcFn.Params) {
-// 			return false
-// 		}
-
-// 		// for i, param := range fnDef.Params {
-// 		for i, param := range fnDef.AsFnTStruct.Params {
-// 			uniMap[param] = fcFn.Params[i]
-// 		}
-
-// 		// instantiatedRetSet, err := fnDef.RetSet.Instantiate(uniMap)
-// 		instantiatedRetSet, err := fnDef.AsFnTStruct.RetSet.Instantiate(uniMap)
-// 		if err != nil {
-// 			return false
-// 		}
-
-// 		// ok = cmp.CmpFcAsStr(stmt.Params[1], instantiatedRetSet) // left.String() == right.String()
-// 		// TODO: 这里可以改成 stmt.Params[1] 是 fnDef.AsFcFn.Params[0] 母集
-// 		ok, err = ver.VerFactStmt(ast.NewEqualFact(stmt.Params[1], instantiatedRetSet), state)
-// 		if err != nil {
-// 			return false
-// 		}
-// 		if !ok {
-// 			return false
-// 		}
-
-// 		if state.WithMsg {
-// 			ver.successWithMsg(stmt.String(), "the return value of the user defined function is in the function return set")
-// 		}
-
-// 		return true
-// 	}
-// }
 
 func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state *VerState) bool {
 	ok := ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordSet)
@@ -225,37 +135,37 @@ func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state *VerState
 	return false
 }
 
-func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	if asFcFn, ok := stmt.Params[1].(*ast.FcFn); ok {
 		if ast.IsFnTemplate_FcFn(asFcFn) {
-			ok, err := ver.ver_In_FnFcFn_FnTT(stmt.Params[0], asFcFn, state)
-			if err != nil {
-				return false, err
+			verRet := ver.ver_In_FnFcFn_FnTT(stmt.Params[0], asFcFn, state)
+			if verRet.IsErr() {
+				return verRet
 			}
-			if ok {
+			if verRet.IsTrue() {
 				if state.WithMsg {
 					ver.successWithMsg(stmt.String(), fmt.Sprintf("dom of template %s is in the domain of the template where function %s is in. Also, the return value of the function is in the return set of the template where function %s is in", stmt.Params[1], stmt.Params[0], stmt.Params[1]))
 				}
-				return true, nil
+				return NewVerTrue("")
 			}
 		} else {
 			// return false, nil
 			ok, err := ver.ver_In_FnTT(stmt.Params[0], asFcFn, state)
 			if err != nil {
-				return false, err
+				return NewVerErr(err.Error())
 			}
 			if ok {
 				if state.WithMsg {
 					ver.successWithMsg(stmt.String(), fmt.Sprintf("dom of template %s is in the domain of the template where function %s is in. Also, the return value of the function is in the return set of the template where function %s is in", stmt.Params[1], stmt.Params[0], stmt.Params[1]))
 				}
-				return true, nil
+				return NewVerTrue("")
 			}
 		}
-		return false, nil
+		return NewVerUnknown("")
 		// }
 	}
 
-	return false, nil
+	return NewVerUnknown("")
 }
 
 func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
@@ -387,31 +297,31 @@ func (ver *Verifier) objNotInSetWhenAllItemsInThatSetAreNotEqualToIt(stmt *ast.S
 	return verRet.ToBoolErr()
 }
 
-func (ver *Verifier) verInSetProduct(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) verInSetProduct(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	// left must be (x, y, ...) right must be product(xSet, ySet, ...)
 	fcFn, ok := stmt.Params[0].(*ast.FcFn)
 	if !ok {
-		return false, nil
+		return NewVerUnknown("")
 	}
 	ok = ast.IsFcAtomAndEqualToStr(fcFn.FnHead, glob.TupleFcFnHead)
 	if !ok {
-		return false, nil
+		return NewVerUnknown("")
 	}
 
 	setProductFn, ok := stmt.Params[1].(*ast.FcFn)
 	if !ok {
-		return false, nil
+		return NewVerUnknown("")
 	}
 
 	if len(fcFn.Params) != len(setProductFn.Params) {
-		return false, nil
+		return NewVerUnknown("")
 	}
 
 	for i := range len(fcFn.Params) {
 		inFact := ast.NewInFactWithParamFc(fcFn.Params[i], setProductFn.Params[i])
 		verRet := ver.VerFactStmt(inFact, state)
 		if verRet.IsErr() || verRet.IsUnknown() {
-			return verRet.ToBoolErr()
+			return verRet
 		}
 	}
 
@@ -419,48 +329,10 @@ func (ver *Verifier) verInSetProduct(stmt *ast.SpecFactStmt, state *VerState) (b
 		ver.successWithMsg(stmt.String(), fmt.Sprintf("each item in tuple %s is in corresponding set %s", stmt.Params[0], stmt.Params[1]))
 	}
 
-	return true, nil
+	return NewVerTrue("")
 }
 
-// func (ver *Verifier) atTupleIndex(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
-// 	// if !ast.IsFcFnWithHeadName(stmt.Params[0], glob.TupleAtOp) {
-// 	if !ast.IsFcFnWithHeadName(stmt.Params[0], glob.KeywordProj) {
-// 		return false, nil
-// 	}
-
-// 	if !ast.IsFcFnWithHeadName(stmt.Params[0].(*ast.FcFn).Params[0], glob.TupleFcFnHead) {
-// 		return false, nil
-// 	}
-
-// 	asIndex, ok := stmt.Params[0].(*ast.FcFn).Params[1].(ast.FcAtom)
-// 	if !ok {
-// 		return false, nil
-// 	}
-
-// 	asIndexAsInt, err := strconv.Atoi(string(asIndex))
-// 	if err != nil {
-// 		return false, nil
-// 	}
-
-// 	if asIndexAsInt < 0 || asIndexAsInt >= len(stmt.Params[0].(*ast.FcFn).Params[0].(*ast.FcFn).Params) {
-// 		return false, nil
-// 	}
-
-// 	tupleAtIndex := stmt.Params[0].(*ast.FcFn).Params[0].(*ast.FcFn).Params[asIndexAsInt]
-
-// 	equalFact := ast.NewInFactWithFc(tupleAtIndex, stmt.Params[1])
-// 	ok, err = ver.VerFactStmt(equalFact, state)
-// 	if err != nil {
-// 		return false, err
-// 	}
-// 	if ok {
-// 		return true, nil
-// 	}
-
-// 	return false, nil
-// }
-
-func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Fc, fnFcFn *ast.FcFn, state *VerState) (bool, error) {
+func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Fc, fnFcFn *ast.FcFn, state *VerState) VerRet {
 	ver.newEnv(ver.env)
 	defer ver.deleteEnv_DeleteMsg()
 
@@ -468,7 +340,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Fc, fnFcFn *ast.FcFn, state *Ve
 
 	leftIsInWhichFnTT := ver.env.GetLatestFnT_GivenNameIsIn(left.String())
 	if leftIsInWhichFnTT == nil {
-		return false, nil
+		return NewVerUnknown("")
 	}
 
 	randomNames := []string{}
@@ -489,38 +361,38 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Fc, fnFcFn *ast.FcFn, state *Ve
 	for i, randomName := range randomNames {
 		err := ver.env.NewObj_NoDuplicate(randomName, nil)
 		if err != nil {
-			return false, err
+			return NewVerErr(err.Error())
 		}
 		err = ver.env.NewFact(ast.NewInFactWithParamFc(ast.FcAtom(randomName), (fnFcFn.FnHead).(*ast.FcFn).Params[i]))
 		if err != nil {
-			return false, err
+			return NewVerErr(err.Error())
 		}
 	}
 
 	leftToUniFact, err := leftIsInWhichFnTT.AsFnTStruct.DeriveUniFact_WithGivenFn(left)
 	if err != nil {
-		return false, err
+		return NewVerErr(err.Error())
 	}
 
 	instantiatedLeftToUniFact, err := leftToUniFact.InstantiateFact(uniMap)
 	if err != nil {
-		return false, err
+		return NewVerErr(err.Error())
 	}
 	instLeftUniFactAsUniFactStmt, ok := instantiatedLeftToUniFact.(*ast.UniFactStmt)
 	if !ok {
-		return false, nil
+		return NewVerUnknown("")
 	}
 
 	for i := range instLeftUniFactAsUniFactStmt.Params {
 		fact := ast.NewInFactWithParamFc(ast.FcAtom(randomNames[i]), leftIsInWhichFnTT.AsFnTStruct.ParamSets[i])
 		verRet := ver.VerFactStmt(fact, state)
 		if verRet.IsErr() || verRet.IsUnknown() {
-			return verRet.ToBoolErr()
+			return verRet
 		}
 
 		err := ver.env.NewFact(fact)
 		if err != nil {
-			return false, err
+			return NewVerErr(err.Error())
 		}
 	}
 
@@ -528,19 +400,19 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Fc, fnFcFn *ast.FcFn, state *Ve
 		fact := leftIsInWhichFnTT.AsFnTStruct.DomFacts[i]
 		verRet := ver.VerFactStmt(fact, state)
 		if verRet.IsErr() || verRet.IsUnknown() {
-			return verRet.ToBoolErr()
+			return verRet
 		}
 
 		err = ver.env.NewFact(fact)
 		if err != nil {
-			return false, err
+			return NewVerErr(err.Error())
 		}
 	}
 
 	// whether return value is in ret set of fnFcFn
 	fn := ast.NewFcFn(left, randomAtoms)
 	verRet := ver.VerFactStmt(ast.NewInFactWithParamFc(fn, fnFcFn.Params[0]), state)
-	return verRet.ToBoolErr()
+	return verRet
 }
 
 func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactStmt, state *VerState) bool {
