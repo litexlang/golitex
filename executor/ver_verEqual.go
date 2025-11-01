@@ -76,16 +76,12 @@ func isValidEqualFact(stmt *ast.SpecFactStmt) bool {
 }
 
 func (ver *Verifier) verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Fc, right ast.Fc, state *VerState) VerRet {
-	if ok, err := ver.verEqualBuiltin(left, right, state); err != nil {
-		return BoolErrToVerRet(ok, err)
-	} else if ok {
-		return NewVerTrue("")
+	if verRet := ver.verEqualBuiltin(left, right, state); verRet.IsErr() || verRet.IsTrue() {
+		return verRet
 	}
 
-	if ok, err := ver.verEqualSpecMem(left, right, state); err != nil {
-		return BoolErrToVerRet(ok, err)
-	} else if ok {
-		return NewVerTrue("")
+	if verRet := ver.verEqualSpecMem(left, right, state); verRet.IsErr() || verRet.IsTrue() {
+		return verRet
 	}
 
 	if !state.isFinalRound() {
@@ -105,62 +101,59 @@ func (ver *Verifier) verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Fc, r
 	return NewVerUnknown("")
 }
 
-func (ver *Verifier) verEqualBuiltin(left ast.Fc, right ast.Fc, state *VerState) (bool, error) {
+func (ver *Verifier) verEqualBuiltin(left ast.Fc, right ast.Fc, state *VerState) VerRet {
 	ok, msg, err := cmp.CmpBy_Literally_NumLit_PolynomialArith(left, right) // 完全一样
 	if err != nil {
-		return false, err
+		return NewVerErr(err.Error())
 	}
 	if ok {
 		if state.WithMsg {
 			ver.successWithMsg(fmt.Sprintf("%s = %s", left, right), msg)
 		}
-		return true, nil
+		return NewVerTrue("")
 	}
 
 	// 如果是 fn 那就层层盘剥
 	nextState := state.GetNoMsg()
-	if ok, _, err := ver.decomposeFcFnsAndCheckEquality(left, right, nextState, ver.verEqualBuiltin); err != nil {
-		return false, err
-	} else if ok {
+	if verRet := ver.decomposeFcFnsAndCheckEquality(left, right, nextState, ver.verEqualBuiltin); verRet.IsErr() {
+		return verRet
+	} else if verRet.IsTrue() {
 		if state.WithMsg {
 			ver.successWithMsg(fmt.Sprintf("%s = %s", left, right), "each item of %s and %s are equal correspondingly")
 		}
-		return true, nil
+		return verRet
 	}
 
-	return false, nil
+	return NewVerUnknown("")
 }
 
-func (ver *Verifier) verEqualSpecMem(left ast.Fc, right ast.Fc, state *VerState) (bool, error) {
+func (ver *Verifier) verEqualSpecMem(left ast.Fc, right ast.Fc, state *VerState) VerRet {
 	// if ver.env.CurMatchProp == nil {
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
-		ok, err := ver.equalFact_SpecMem_atEnv(curEnv, left, right, state)
-		if err != nil {
-			return false, err
-		}
-		if ok {
-			return true, nil
+		verRet := ver.equalFact_SpecMem_atEnv(curEnv, left, right, state)
+		if verRet.IsErr() || verRet.IsTrue() {
+			return NewVerTrue("")
 		}
 	}
 
-	return false, nil
+	return NewVerUnknown("")
 }
 
-func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right ast.Fc, state *VerState) (bool, error) {
+func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right ast.Fc, state *VerState) VerRet {
 	nextState := state.GetNoMsg()
 
-	ok, msg, err := ver.getEqualFcsAndCmpOneByOne(curEnv, left, right, nextState)
-	if err != nil {
-		return false, err
+	verRet := ver.getEqualFcsAndCmpOneByOne(curEnv, left, right, nextState)
+	if verRet.IsErr() {
+		return verRet
 	}
-	if ok {
+	if verRet.IsTrue() {
 		if state.WithMsg {
-			ver.successWithMsg(fmt.Sprintf("%s = %s", left, right), msg)
+			ver.successWithMsg(fmt.Sprintf("%s = %s", left, right), verRet.String())
 		}
-		return true, nil
+		return verRet
 	}
 
-	return false, nil
+	return NewVerUnknown("")
 }
 
 func (ver *Verifier) verLogicMem_leftToRight_RightToLeft(left ast.Fc, right ast.Fc, state *VerState) VerRet {
@@ -199,7 +192,7 @@ func (ver *Verifier) verEqualUniMem(left ast.Fc, right ast.Fc, state *VerState) 
 	return NewVerUnknown("")
 }
 
-func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, right ast.Fc, state *VerState) (bool, string, error) {
+func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, right ast.Fc, state *VerState) VerRet {
 	var equalToLeftFcs, equalToRightFcs *[]ast.Fc
 	var gotLeftEqualFcs, gotRightEqualFcs bool
 
@@ -208,67 +201,59 @@ func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, rig
 
 	if gotLeftEqualFcs && gotRightEqualFcs {
 		if equalToLeftFcs == equalToRightFcs {
-			return true, fmt.Sprintf("%s = %s, by either their equality is known, or it is ensured by transitivity of equality.", left, right), nil
+			return NewVerTrue(fmt.Sprintf("%s = %s, by either their equality is known, or it is ensured by transitivity of equality.", left, right))
 		}
 	}
 
-	if ok, msg, err := ver.cmpFc_Builtin_Then_Decompose_Spec(left, right, state); err != nil {
-		return false, "", err
-	} else if ok {
-		return true, msg, nil
+	if verRet := ver.cmpFc_Builtin_Then_Decompose_Spec(left, right, state); verRet.IsErr() || verRet.IsTrue() {
+		return verRet
 	}
 
 	if gotLeftEqualFcs {
 		for _, equalToLeftFc := range *equalToLeftFcs {
-			if ok, _, err := ver.cmpFc_Builtin_Then_Decompose_Spec(equalToLeftFc, right, state); err != nil {
-				return false, "", err
-			} else if ok {
-				return true, fmt.Sprintf("It is true that:\n%s = %s and %s = %s", equalToLeftFc, right, equalToLeftFc, left), nil
+			if verRet := ver.cmpFc_Builtin_Then_Decompose_Spec(equalToLeftFc, right, state); verRet.IsErr() {
+				return verRet
+			} else if verRet.IsTrue() {
+				return NewVerTrue(fmt.Sprintf("It is true that:\n%s = %s and %s = %s", equalToLeftFc, right, equalToLeftFc, left))
 			}
 		}
 	}
 
 	if gotRightEqualFcs {
 		for _, equalToRightFc := range *equalToRightFcs {
-			if ok, _, err := ver.cmpFc_Builtin_Then_Decompose_Spec(equalToRightFc, left, state); err != nil {
-				return false, "", err
-			} else if ok {
-				return true, fmt.Sprintf("It is true that\n%s = %s and %s = %s", left, equalToRightFc, equalToRightFc, right), nil
+			if verRet := ver.cmpFc_Builtin_Then_Decompose_Spec(equalToRightFc, left, state); verRet.IsErr() {
+				return verRet
+			} else if verRet.IsTrue() {
+				return NewVerTrue(fmt.Sprintf("It is true that\n%s = %s and %s = %s", left, equalToRightFc, equalToRightFc, right))
 			}
 		}
 	}
 
-	return false, "", nil
+	return NewVerUnknown("")
 }
 
-func (ver *Verifier) decomposeFcFnsAndCheckEquality(left ast.Fc, right ast.Fc, state *VerState, areEqualFcs func(left ast.Fc, right ast.Fc, state *VerState) (bool, error)) (bool, string, error) {
+func (ver *Verifier) decomposeFcFnsAndCheckEquality(left ast.Fc, right ast.Fc, state *VerState, areEqualFcs func(left ast.Fc, right ast.Fc, state *VerState) VerRet) VerRet {
 	if leftAsFn, ok := left.(*ast.FcFn); ok {
 		if rightAsFn, ok := right.(*ast.FcFn); ok {
 			if len(leftAsFn.Params) != len(rightAsFn.Params) {
-				return false, "", nil
+				return NewVerUnknown("")
 			}
 
 			// compare head
-			ok, err := areEqualFcs(leftAsFn.FnHead, rightAsFn.FnHead, state)
-			if err != nil {
-				return false, "", err
-			}
-			if !ok {
-				return false, "", nil
+			verRet := areEqualFcs(leftAsFn.FnHead, rightAsFn.FnHead, state)
+			if verRet.IsErr() || verRet.IsUnknown() {
+				return verRet
 			}
 			// compare params
 			for i := range leftAsFn.Params {
-				ok, err := areEqualFcs(leftAsFn.Params[i], rightAsFn.Params[i], state)
-				if err != nil {
-					return false, "", err
-				}
-				if !ok {
-					return false, "", nil
+				verRet := areEqualFcs(leftAsFn.Params[i], rightAsFn.Params[i], state)
+				if verRet.IsErr() || verRet.IsUnknown() {
+					return verRet
 				}
 			}
 
-			return true, fmt.Sprintf("headers and parameters of %s and %s are equal correspondingly", left, right), nil
+			return NewVerTrue(fmt.Sprintf("headers and parameters of %s and %s are equal correspondingly", left, right))
 		}
 	}
-	return false, "", nil
+	return NewVerUnknown("")
 }

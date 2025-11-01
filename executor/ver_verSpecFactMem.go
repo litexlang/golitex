@@ -204,12 +204,9 @@ func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]
 		}
 
 		for i := 1; i < len(value); i++ {
-			ok, err := ver.fcEqualSpec(value[0], value[i], state)
-			if err != nil {
-				return nil, NewVerErr(err.Error())
-			}
-			if !ok {
-				return nil, NewVerUnknown("")
+			verRet := ver.fcEqualSpec(value[0], value[i], state)
+			if verRet.IsErr() || verRet.IsUnknown() {
+				return nil, verRet
 			}
 		}
 
@@ -225,17 +222,14 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 	}
 
 	for i, knownParam := range knownFact.SpecFact.Params {
-		ok, err := ver.verEqualBuiltin(knownParam, stmt.Params[i], state)
-		if err != nil {
-			return NewVerErr(err.Error())
+		verRet := ver.verEqualBuiltin(knownParam, stmt.Params[i], state)
+		if verRet.IsErr() {
+			return verRet
 		}
-		if !ok {
-			ok, err := ver.fcEqualSpec(knownParam, stmt.Params[i], state)
-			if err != nil {
-				return NewVerErr(err.Error())
-			}
-			if !ok {
-				return NewVerUnknown("")
+		if verRet.IsUnknown() {
+			verRet := ver.fcEqualSpec(knownParam, stmt.Params[i], state)
+			if verRet.IsErr() || verRet.IsUnknown() {
+				return verRet
 			}
 		}
 	}
@@ -327,24 +321,18 @@ func (ver *Verifier) matchTwoSpecFacts(stmt *ast.SpecFactStmt, knownFact *ast.Sp
 	// 如果不区分 equal 和 其他事实的话，可能会出死循环
 	if stmt.PropName == glob.KeySymbolEqual && stmt.IsTrue() {
 		for i, knownParam := range knownFact.Params {
-			ok, _, err := ver.cmpFc_Builtin_Then_Decompose_Spec(knownParam, stmt.Params[i], state)
-			if err != nil {
-				return NewVerErr(err.Error())
-			}
-			if !ok {
-				return NewVerUnknown("")
+			verRet := ver.cmpFc_Builtin_Then_Decompose_Spec(knownParam, stmt.Params[i], state)
+			if verRet.IsErr() || verRet.IsUnknown() {
+				return verRet
 			}
 		}
 
 	} else {
 		newState := state.GetNoMsg()
 		for i, knownParam := range knownFact.Params {
-			ok, err := ver.fcEqualSpec(knownParam, stmt.Params[i], newState)
-			if err != nil {
-				return NewVerErr(err.Error())
-			}
-			if !ok {
-				return NewVerUnknown("")
+			verRet := ver.fcEqualSpec(knownParam, stmt.Params[i], newState)
+			if verRet.IsErr() || verRet.IsUnknown() {
+				return verRet
 			}
 		}
 	}

@@ -25,14 +25,14 @@ import (
 // WARNING
 // REMARK
 // TODO: cmpFc_Builtin_Then_Decompose_Spec, fcEqualSpec 大循环本质上是有问题的，会有循环论证的风险：know p(p(1,2), 0) = 1, 则现在问 p(1,2) =1 吗？我会比较 p(1,2) = p(p(1,2), 0)，那这时候就出问题了：我因为一位位地比，所以又回到了比较 1 = p(1,2)
-func (ver *Verifier) cmpFc_Builtin_Then_Decompose_Spec(left ast.Fc, right ast.Fc, state *VerState) (bool, string, error) {
+func (ver *Verifier) cmpFc_Builtin_Then_Decompose_Spec(left ast.Fc, right ast.Fc, state *VerState) VerRet {
 	ok, msg, err := cmp.CmpBy_Literally_NumLit_PolynomialArith(left, right) // 完全一样
 	if err != nil {
-		return false, "", err
+		return NewVerErr(err.Error())
 	}
 	if ok {
 		// return ver.equalTrueAddSuccessMsg(left, right, state, msg)
-		return true, msg, nil
+		return NewVerTrue(msg)
 	}
 
 	// if ok {
@@ -41,22 +41,18 @@ func (ver *Verifier) cmpFc_Builtin_Then_Decompose_Spec(left ast.Fc, right ast.Fc
 
 	// if ok, err := ver.decomposeFcFnsAndCheckEquality_WithoutState(left, right, cmp.Cmp_ByBIR); err != nil {
 
-	if ok, msg, err := ver.decomposeFcFnsAndCheckEquality(left, right, state, ver.fcEqualSpec); err != nil {
+	if verRet := ver.decomposeFcFnsAndCheckEquality(left, right, state, ver.fcEqualSpec); verRet.IsErr() || verRet.IsTrue() {
 		// if ok, msg, err := ver.decomposeFcFnsAndCheckEquality(left, right, state, ver.FcsEqualBy_Eval_ShareKnownEqualMem); err != nil {
-		return false, "", err
-	} else if ok {
-		return true, msg, nil
+		return verRet
 	}
 
-	return false, "", nil
+	return NewVerUnknown("")
 }
 
 // Iterate over all equal facts. On each equal fact, use commutative, associative, cmp rule to compare.
-func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state *VerState) (bool, error) {
-	if ok, _, err := ver.cmpFc_Builtin_Then_Decompose_Spec(left, right, state); err != nil {
-		return false, err
-	} else if ok {
-		return true, nil
+func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state *VerState) VerRet {
+	if verRet := ver.cmpFc_Builtin_Then_Decompose_Spec(left, right, state); verRet.IsErr() || verRet.IsTrue() {
+		return verRet
 	}
 
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
@@ -71,7 +67,7 @@ func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state *VerState) (bo
 				if state.WithMsg {
 					ver.successWithMsg(fmt.Sprintf("known %s = %s", left, right), "")
 				}
-				return true, nil
+				return NewVerTrue("")
 			}
 		}
 
@@ -82,13 +78,13 @@ func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state *VerState) (bo
 					continue
 				}
 
-				if ok, _, err := ver.cmpFc_Builtin_Then_Decompose_Spec(equalToLeftFc, right, state); err != nil {
-					return false, err
-				} else if ok {
+				if verRet := ver.cmpFc_Builtin_Then_Decompose_Spec(equalToLeftFc, right, state); verRet.IsErr() {
+					return verRet
+				} else if verRet.IsTrue() {
 					if state.WithMsg {
 						ver.successWithMsg(fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToLeftFc, right, equalToLeftFc, left), "")
 					}
-					return true, nil
+					return verRet
 				}
 			}
 		}
@@ -100,19 +96,19 @@ func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state *VerState) (bo
 					continue
 				}
 
-				if ok, _, err := ver.cmpFc_Builtin_Then_Decompose_Spec(equalToRightFc, left, state); err != nil {
-					return false, err
-				} else if ok {
+				if verRet := ver.cmpFc_Builtin_Then_Decompose_Spec(equalToRightFc, left, state); verRet.IsErr() {
+					return verRet
+				} else if verRet.IsTrue() {
 					if state.WithMsg {
 						ver.successWithMsg(fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToRightFc, left, equalToRightFc, right), "")
 					}
-					return true, nil
+					return verRet
 				}
 			}
 		}
 	}
 
-	return false, nil
+	return NewVerUnknown("")
 }
 
 func (ver *Verifier) verTrueEqualFact_FcFnEqual_NoCheckRequirements(left, right *ast.FcFn, state *VerState) VerRet {
