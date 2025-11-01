@@ -196,7 +196,7 @@ func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state *VerState) V
 		ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordComplex) ||
 		ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordNPos)
 	if ok {
-		return BoolErrToVerRet(ver.processOkMsg(state, stmt.String(), "%s is a builtin set", stmt.Params[0]))
+		return ver.processOkMsg(state, stmt.String(), "%s is a builtin set", stmt.Params[0])
 	}
 
 	// 如果是被定义好了的fn_template，则直接返回true
@@ -206,14 +206,14 @@ func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state *VerState) V
 	}
 	ok = ast.IsFnTemplate_FcFn(asFcFn)
 	if ok {
-		return BoolErrToVerRet(ver.processOkMsg(state, stmt.String(), "%s is a fn template and all fn templates are sets", stmt.Params[0]))
+		return ver.processOkMsg(state, stmt.String(), "%s is a fn template and all fn templates are sets", stmt.Params[0])
 	}
 
 	if leftAsAtom, ok := stmt.Params[0].(ast.FcAtom); ok {
 		// _, ok := ver.env.GetFnTemplateDef(leftAsAtom)
 		fnDef := ver.env.GetLatestFnT_GivenNameIsIn(leftAsAtom.String())
 		if fnDef != nil {
-			return BoolErrToVerRet(ver.processOkMsg(state, stmt.String(), "%s is a fn template and all fn templates are sets", leftAsAtom))
+			return ver.processOkMsg(state, stmt.String(), "%s is a fn template and all fn templates are sets", leftAsAtom)
 		}
 	}
 
