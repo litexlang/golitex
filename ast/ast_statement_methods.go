@@ -256,10 +256,10 @@ func GetExistFactExistParamsAndFactParams(stmt *SpecFactStmt) ([]Fc, []Fc) {
 	return existParams, factParams
 }
 
-func (factStmtSlice FactStmtSlice) Instantiate(uniMap map[string]Fc) (FactStmtSlice, error) {
+func (factStmtSlice FactStmtSlice) InstantiateFact(uniMap map[string]Fc) (FactStmtSlice, error) {
 	instantiatedFacts := FactStmtSlice{}
 	for _, fact := range factStmtSlice {
-		instantiatedFact, err := fact.Instantiate(uniMap)
+		instantiatedFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, err
 		}

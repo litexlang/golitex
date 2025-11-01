@@ -12,16 +12,15 @@
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
-package litex_verifier
+package litex_executor
 
 import (
-	"fmt"
 	ast "golitex/ast"
 )
 
-func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState) VerRet {
 	if len(stmt.Params) < 2 {
-		return false, fmt.Errorf("equals fact must have at least 2 params")
+		return NewVerErr("equals fact must have at least 2 params")
 	}
 
 	for i := 1; i < len(stmt.Params); i++ {
@@ -30,12 +29,12 @@ func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState
 			newFact := ast.NewEqualFact(stmt.Params[j], stmt.Params[i])
 			verRet := ver.VerFactStmt(newFact, state)
 			if verRet.IsErr() {
-				return false, fmt.Errorf(verRet.String())
+				return verRet
 			}
 			if verRet.IsTrue() {
 				err := ver.env.NewFact(newFact)
 				if err != nil {
-					return false, err
+					return NewVerErr(err.Error())
 				}
 				checked = true
 				break
@@ -43,8 +42,8 @@ func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState
 		}
 
 		if !checked {
-			return false, nil
+			return NewVerUnknown("")
 		}
 	}
-	return true, nil
+	return NewVerTrue("")
 }

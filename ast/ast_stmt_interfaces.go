@@ -46,7 +46,8 @@ func (s *ClaimPropStmt) stmt()                   {}
 func (s *ClaimExistPropStmt) stmt()              {}
 func (s *ProveByEnumStmt) stmt()                 {}
 func (s *HaveObjInNonEmptySetStmt) stmt()        {}
-func (s *HaveSetStmt) stmt()                     {}
+func (s *HaveEnumSetStmt) stmt()                 {}
+func (s *HaveIntensionalSetStmt) stmt()          {}
 func (s *HaveSetFnStmt) stmt()                   {}
 func (s *HaveSetDefinedByReplacementStmt) stmt() {}
 func (s *NamedUniFactStmt) stmt()                {}
@@ -91,7 +92,8 @@ func (s *ClaimPropStmt) algoStmt()                   {}
 func (s *ClaimExistPropStmt) algoStmt()              {}
 func (s *ProveByEnumStmt) algoStmt()                 {}
 func (s *HaveObjInNonEmptySetStmt) algoStmt()        {}
-func (s *HaveSetStmt) algoStmt()                     {}
+func (s *HaveEnumSetStmt) algoStmt()                 {}
+func (s *HaveIntensionalSetStmt) algoStmt()          {}
 func (s *HaveSetFnStmt) algoStmt()                   {}
 func (s *HaveSetDefinedByReplacementStmt) algoStmt() {}
 func (s *NamedUniFactStmt) algoStmt()                {}
@@ -138,7 +140,8 @@ func (s *ClaimPropStmt) GetLine() uint                   { return s.Line }
 func (s *ClaimExistPropStmt) GetLine() uint              { return s.Line }
 func (s *ProveByEnumStmt) GetLine() uint                 { return s.Line }
 func (s *HaveObjInNonEmptySetStmt) GetLine() uint        { return s.Line }
-func (s *HaveSetStmt) GetLine() uint                     { return s.Line }
+func (s *HaveEnumSetStmt) GetLine() uint                 { return s.Line }
+func (s *HaveIntensionalSetStmt) GetLine() uint          { return s.Line }
 func (s *HaveSetFnStmt) GetLine() uint                   { return s.Line }
 func (s *HaveSetDefinedByReplacementStmt) GetLine() uint { return s.Line }
 func (s *NamedUniFactStmt) GetLine() uint                { return s.Line }
@@ -164,7 +167,7 @@ type FactStmt interface {
 	factStmt()
 	stmt()
 	String() string
-	Instantiate(map[string]Fc) (FactStmt, error)
+	InstantiateFact(map[string]Fc) (FactStmt, error)
 	GetAtoms() []FcAtom
 	ToLatexString() string
 	canBeKnown()
@@ -187,7 +190,7 @@ type Spec_OrFact interface {
 	factStmt()
 	stmt()
 	String() string
-	Instantiate(uniConMap map[string]Fc) (FactStmt, error)
+	InstantiateFact(uniConMap map[string]Fc) (FactStmt, error)
 	ReverseIsTrue() []*SpecFactStmt
 	GetAtoms() []FcAtom
 	ToLatexString() string
@@ -231,7 +234,7 @@ type UniFactInterface interface {
 	factStmt()
 	stmt()
 	String() string
-	Instantiate(map[string]Fc) (FactStmt, error)
+	InstantiateFact(map[string]Fc) (FactStmt, error)
 	GetAtoms() []FcAtom
 	uniFact()
 	ToLatexString() string
@@ -276,27 +279,6 @@ type ImportStmtInterface interface {
 
 func (stmt *ImportDirStmt) importStmt()  {}
 func (stmt *ImportFileStmt) importStmt() {}
-
-type EnumSet_IntensionalSet_EqualDom_Interface interface {
-	setDeclarationStmt()
-	String() string
-	GetPropName() Fc
-	factStmt()
-	stmt()
-	Instantiate(map[string]Fc) (FactStmt, error)
-	GetAtoms() []FcAtom
-	ToLatexString() string
-	canBeKnown()
-	InlineString() string
-	ReplaceFc(oldFc Fc, newFc Fc) FactStmt
-	GetLine() uint
-	algoStmt()
-}
-
-func (stmt *EnumStmt) setDeclarationStmt()           {}
-func (stmt *IntensionalSetStmt) setDeclarationStmt() {}
-func (stmt *EnumStmt) GetPropName() Fc               { return stmt.CurSet }
-func (stmt *IntensionalSetStmt) GetPropName() Fc     { return stmt.CurSet }
 
 type FnTemplate_Or_DefObjStmtInterface interface {
 	fnTemplate_Or_DefObjStmt()

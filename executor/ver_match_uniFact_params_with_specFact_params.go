@@ -12,7 +12,7 @@
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
-package litex_verifier
+package litex_executor
 
 import (
 	"fmt"
@@ -46,11 +46,11 @@ func (ver *Verifier) matchUniFactParamsWithSpecFactParams(knownSpecFactInUniFact
 	for _, instVars := range matchedMap {
 		firstVar := instVars[0]
 		for j := 1; j < len(instVars); j++ {
-			ok, err := ver.verTrueEqualFact(ast.NewEqualFact(firstVar, instVars[j]), FinalRoundNoMsg, false)
-			if err != nil {
+			verRet := ver.verTrueEqualFact(ast.NewEqualFact(firstVar, instVars[j]), FinalRoundNoMsg, false)
+			if verRet.IsErr() {
 				return false, nil, err
 			}
-			if !ok {
+			if verRet.IsUnknown() {
 				return false, nil, nil
 			}
 		}
@@ -67,11 +67,11 @@ func (ver *Verifier) matchUniFactParamsWithSpecFactParams(knownSpecFactInUniFact
 		if err != nil {
 			return false, nil, err
 		}
-		ok, err := ver.verTrueEqualFact(ast.NewEqualFact(instKnownFreeVar, fcPair.givenFc), FinalRoundNoMsg, false)
-		if err != nil {
-			return false, nil, err
-		}
-		if !ok {
+		verRet := ver.verTrueEqualFact(ast.NewEqualFact(instKnownFreeVar, fcPair.givenFc), FinalRoundNoMsg, false)
+
+		// REMARK
+		// 注：这里err != nil 也是返回 false, 因为有可能会把 sqrt(x) ^ 2 = x 拿来证明 y = z，但是 匹配的时候，可能会导致 x 是 -1 之类的。如果error了，其实就是说明没证明通过
+		if verRet.IsErr() || verRet.IsUnknown() {
 			return false, nil, nil
 		}
 	}
@@ -94,11 +94,11 @@ func (ver *Verifier) matchFcInKnownSpecFactAndGivenFc(knownFc ast.Fc, givenFc as
 			}
 			return retMap, []fcPair{}, nil
 		} else {
-			ok, err := ver.verTrueEqualFact(ast.NewEqualFact(knownFc, givenFc), FinalRoundNoMsg, false)
-			if err != nil {
-				return nil, []fcPair{}, err
+			verRet := ver.verTrueEqualFact(ast.NewEqualFact(knownFc, givenFc), FinalRoundNoMsg, false)
+			if verRet.IsErr() {
+				return nil, []fcPair{}, fmt.Errorf(verRet.String())
 			}
-			if !ok {
+			if verRet.IsUnknown() {
 				return nil, []fcPair{{knownFc: knownFc, givenFc: givenFc}}, nil
 			}
 			return nil, []fcPair{}, nil

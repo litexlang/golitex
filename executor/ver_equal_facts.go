@@ -12,7 +12,7 @@
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
-package litex_verifier
+package litex_executor
 
 import (
 	"fmt"
@@ -25,14 +25,14 @@ import (
 // WARNING
 // REMARK
 // TODO: cmpFc_Builtin_Then_Decompose_Spec, fcEqualSpec 大循环本质上是有问题的，会有循环论证的风险：know p(p(1,2), 0) = 1, 则现在问 p(1,2) =1 吗？我会比较 p(1,2) = p(p(1,2), 0)，那这时候就出问题了：我因为一位位地比，所以又回到了比较 1 = p(1,2)
-func (ver *Verifier) cmpFc_Builtin_Then_Decompose_Spec(left ast.Fc, right ast.Fc, state *VerState) (bool, string, error) {
+func (ver *Verifier) cmpFc_Builtin_Then_Decompose_Spec(left ast.Fc, right ast.Fc, state *VerState) VerRet {
 	ok, msg, err := cmp.CmpBy_Literally_NumLit_PolynomialArith(left, right) // 完全一样
 	if err != nil {
-		return false, "", err
+		return NewVerErr(err.Error())
 	}
 	if ok {
 		// return ver.equalTrueAddSuccessMsg(left, right, state, msg)
-		return true, msg, nil
+		return NewVerTrue(msg)
 	}
 
 	// if ok {
@@ -40,21 +40,19 @@ func (ver *Verifier) cmpFc_Builtin_Then_Decompose_Spec(left ast.Fc, right ast.Fc
 	// }
 
 	// if ok, err := ver.decomposeFcFnsAndCheckEquality_WithoutState(left, right, cmp.Cmp_ByBIR); err != nil {
-	if ok, msg, err := ver.decomposeFcFnsAndCheckEquality(left, right, state, ver.fcEqualSpec); err != nil {
-		return false, "", err
-	} else if ok {
-		return true, msg, nil
+
+	if verRet := ver.decomposeFcFnsAndCheckEquality(left, right, state, ver.fcEqualSpec); verRet.IsErr() || verRet.IsTrue() {
+		// if ok, msg, err := ver.decomposeFcFnsAndCheckEquality(left, right, state, ver.FcsEqualBy_Eval_ShareKnownEqualMem); err != nil {
+		return verRet
 	}
 
-	return false, "", nil
+	return NewVerUnknown("")
 }
 
 // Iterate over all equal facts. On each equal fact, use commutative, associative, cmp rule to compare.
-func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state *VerState) (bool, error) {
-	if ok, _, err := ver.cmpFc_Builtin_Then_Decompose_Spec(left, right, state); err != nil {
-		return false, err
-	} else if ok {
-		return true, nil
+func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state *VerState) VerRet {
+	if verRet := ver.cmpFc_Builtin_Then_Decompose_Spec(left, right, state); verRet.IsErr() || verRet.IsTrue() {
+		return verRet
 	}
 
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
@@ -69,7 +67,7 @@ func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state *VerState) (bo
 				if state.WithMsg {
 					ver.successWithMsg(fmt.Sprintf("known %s = %s", left, right), "")
 				}
-				return true, nil
+				return NewVerTrue("")
 			}
 		}
 
@@ -80,13 +78,13 @@ func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state *VerState) (bo
 					continue
 				}
 
-				if ok, _, err := ver.cmpFc_Builtin_Then_Decompose_Spec(equalToLeftFc, right, state); err != nil {
-					return false, err
-				} else if ok {
+				if verRet := ver.cmpFc_Builtin_Then_Decompose_Spec(equalToLeftFc, right, state); verRet.IsErr() {
+					return verRet
+				} else if verRet.IsTrue() {
 					if state.WithMsg {
 						ver.successWithMsg(fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToLeftFc, right, equalToLeftFc, left), "")
 					}
-					return true, nil
+					return verRet
 				}
 			}
 		}
@@ -98,54 +96,89 @@ func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state *VerState) (bo
 					continue
 				}
 
-				if ok, _, err := ver.cmpFc_Builtin_Then_Decompose_Spec(equalToRightFc, left, state); err != nil {
-					return false, err
-				} else if ok {
+				if verRet := ver.cmpFc_Builtin_Then_Decompose_Spec(equalToRightFc, left, state); verRet.IsErr() {
+					return verRet
+				} else if verRet.IsTrue() {
 					if state.WithMsg {
 						ver.successWithMsg(fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToRightFc, left, equalToRightFc, right), "")
 					}
-					return true, nil
+					return verRet
 				}
 			}
 		}
 	}
 
-	return false, nil
+	return NewVerUnknown("")
 }
 
-func (ver *Verifier) verTrueEqualFact_FcFnEqual_NoCheckRequirements(left, right *ast.FcFn, state *VerState) (bool, string, error) {
-	var ok bool
-	var err error
-
+func (ver *Verifier) verTrueEqualFact_FcFnEqual_NoCheckRequirements(left, right *ast.FcFn, state *VerState) VerRet {
 	if len(left.Params) != len(right.Params) {
-		return false, "", nil
+		return NewVerUnknown("")
 	}
 
 	// ok, err = ver.fcEqualSpec(left.FnHead, right.FnHead, state)
-	ok, err = ver.verTrueEqualFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{left.FnHead, right.FnHead}, glob.InnerGenLine), state, false)
-	if err != nil {
-		// return newErrVerRet(err.Error())
-		return false, "", err
+	verRet := ver.verTrueEqualFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{left.FnHead, right.FnHead}, glob.InnerGenLine), state, false)
+	if verRet.IsErr() {
+		return verRet
 	}
-	if !ok {
-		// return newUnknownVerRet("")
-		return false, "", nil
+	if verRet.IsUnknown() {
+		return NewVerUnknown("")
 	}
 
 	for i := range left.Params {
 		// ok, err := ver.fcEqualSpec(left.Params[i], right.Params[i], state)
 
-		ok, err := ver.verTrueEqualFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{left.Params[i], right.Params[i]}, glob.InnerGenLine), state, false)
-		if err != nil {
-			// return newErrVerRet(err.Error())
-			return false, "", err
+		verRet := ver.verTrueEqualFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{left.Params[i], right.Params[i]}, glob.InnerGenLine), state, false)
+		if verRet.IsErr() {
+			return verRet
 		}
-		if !ok {
-			// return newUnknownVerRet("")
-			return false, "", nil
+		if verRet.IsUnknown() {
+			return verRet
 		}
 	}
 
 	// return newTrueVerRet("")
-	return true, "", nil
+	return NewVerTrue("")
+}
+
+func (ver *Verifier) FcsEqualBy_Eval_ShareKnownEqualMem(left, right ast.Fc, state *VerState) VerRet {
+	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
+		leftEqualFcs, ok := curEnv.EqualMem[left.String()]
+		if ok {
+			rightEqualFcs, ok := curEnv.EqualMem[right.String()]
+			if ok {
+				if leftEqualFcs == rightEqualFcs {
+					return NewVerTrue("")
+				}
+			}
+		}
+	}
+
+	leftEqualFcs, ok := ver.env.GetEqualFcs(left)
+	if !ok {
+		return NewVerUnknown("")
+	}
+
+	rightEqualFcs, ok := ver.env.GetEqualFcs(right)
+	if !ok {
+		return NewVerUnknown("")
+	}
+
+	for _, leftEqualFc := range *leftEqualFcs {
+		for _, rightEqualFc := range *rightEqualFcs {
+			if leftEqualFc.String() == rightEqualFc.String() {
+				return NewVerTrue("")
+			} else {
+				_, newLeft := ver.env.ReplaceSymbolWithValue(leftEqualFc)
+				if cmp.IsNumLitFc(newLeft) {
+					_, newRight := ver.env.ReplaceSymbolWithValue(rightEqualFc)
+					if ok, _, _ := cmp.CmpBy_Literally_NumLit_PolynomialArith(newLeft, newRight); ok {
+						return NewVerTrue("")
+					}
+				}
+			}
+		}
+	}
+
+	return NewVerUnknown("")
 }

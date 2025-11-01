@@ -12,7 +12,7 @@
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
-package litex_verifier
+package litex_executor
 
 import (
 	"fmt"
@@ -20,63 +20,58 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verNumberLogicRelaOpt_BuiltinRules(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) verNumberLogicRelaOpt_BuiltinRules(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	if !stmt.IsTrue() {
-		return false, nil
+		return NewVerUnknown("")
 	}
 
-	if ok, err := ver.btNumberInfixCompareProp(stmt, state); err != nil {
-		return false, err
-	} else if ok {
-		return true, nil
-	}
-
-	return false, nil
+	verRet := ver.btNumberInfixCompareProp(stmt, state)
+	return verRet
 }
 
-func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	if !glob.IsBuiltinNumberInfixRelaProp(string(stmt.PropName)) {
-		return false, nil
+		return NewVerUnknown("")
 	}
 
 	if len(stmt.Params) != 2 {
-		return false, fmt.Errorf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params))
+		return NewVerErr(fmt.Sprintf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params)))
 	}
 
 	leftNumLitExpr, ok, err := ast.MakeFcIntoNumLitExpr(stmt.Params[0])
 	if err != nil {
-		return false, err
+		return NewVerErr(err.Error())
 	}
 	if !ok {
-		return false, nil
+		return NewVerUnknown("")
 	}
 
 	rightNumLitExpr, ok, err := ast.MakeFcIntoNumLitExpr(stmt.Params[1])
 	if err != nil {
-		return false, err
+		return NewVerErr(err.Error())
 	}
 	if !ok {
-		return false, nil
+		return NewVerUnknown("")
 	}
 
 	ok, err = glob.NumLitExprCompareOpt(leftNumLitExpr, rightNumLitExpr, string(stmt.PropName))
 
 	if err != nil {
-		return false, err
+		return NewVerErr(err.Error())
 	}
 	if ok {
 		if state.WithMsg {
 			ver.successWithMsg(stmt.String(), "builtin rules")
 		}
-		return true, nil
+		return NewVerTrue("")
 	}
 
-	return false, nil
+	return NewVerUnknown("")
 }
 
-func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	if stmt.PropName != glob.KeywordIn {
-		return false, nil
+		return NewVerUnknown("")
 	}
 
 	isSuccess := false
@@ -89,44 +84,68 @@ func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactSt
 	}()
 
 	if len(stmt.Params) != 2 {
-		return false, fmt.Errorf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params))
+		return NewVerErr(fmt.Sprintf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params)))
 	}
 
 	leftFc, ok, err := ast.MakeFcIntoNumLitExpr(stmt.Params[0])
 	if err != nil {
-		return false, err
+		return NewVerErr(err.Error())
 	}
 	if ok {
 		if ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordReal) {
 			isSuccess = glob.IsRealNumLitExpr(leftFc)
-			return isSuccess, nil
+			if isSuccess {
+				return NewVerTrue("")
+			} else {
+				return NewVerUnknown("")
+			}
 		}
 
 		if ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordNatural) {
 			isSuccess = glob.IsNatNumLitExpr(leftFc)
-			return isSuccess, nil
+			if isSuccess {
+				return NewVerTrue("")
+			} else {
+				return NewVerUnknown("")
+			}
 		}
 
 		if ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordInteger) {
 			isSuccess = glob.IsIntegerNumLitExpr(leftFc)
-			return isSuccess, nil
+			if isSuccess {
+				return NewVerTrue("")
+			} else {
+				return NewVerUnknown("")
+			}
 		}
 
 		if ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordRational) {
 			isSuccess = glob.IsRationalNumLitExpr(leftFc)
-			return isSuccess, nil
+			if isSuccess {
+				return NewVerTrue("")
+			} else {
+				return NewVerUnknown("")
+			}
 		}
 
 		if ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordComplex) {
 			isSuccess = glob.IsComplexNumLitExpr(leftFc)
-			return isSuccess, nil
+			if isSuccess {
+				return NewVerTrue("")
+			} else {
+				return NewVerUnknown("")
+			}
 		}
 
 		if ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordNPos) {
 			isSuccess = glob.IsNPosNumLitExpr(leftFc)
-			return isSuccess, nil
+			if isSuccess {
+				return NewVerTrue("")
+			} else {
+				return NewVerUnknown("")
+			}
 		}
 	}
 
-	return false, nil
+	return NewVerUnknown("")
 }

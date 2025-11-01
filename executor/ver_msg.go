@@ -12,7 +12,7 @@
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
-package litex_verifier
+package litex_executor
 
 import (
 	"fmt"
@@ -24,27 +24,26 @@ import (
 func (ver *Verifier) specFactSpecMemTrueMsg(stmt *ast.SpecFactStmt, knownFact ast.SpecFactStmt) {
 	var verifiedBy strings.Builder
 
-	// ? 我需要加params怎么match的吗？
-	// for i, knownParam := range knownFact.Params {
-	// 	verifiedBy.WriteString(fmt.Sprintf("%s = %s\n", knownParam, stmt.Params[i]))
-	// }
-
 	verifiedBy.WriteString(knownFact.StringWithLine())
 	verifiedBy.WriteString("\n")
 	ver.successWithMsg(stmt.String(), verifiedBy.String())
 }
 
 func (ver *Verifier) successWithMsg(stmtStr, stmtVerifiedBy string) {
+	ver.env.Msgs = append(ver.env.Msgs, successVerString(stmtStr, stmtVerifiedBy))
+}
+
+func successVerString(stmtStr, stmtVerifiedBy string) string {
+	var successVerString strings.Builder
 	if stmtStr != "" {
-		ver.env.Msgs = append(ver.env.Msgs, stmtStr)
+		successVerString.WriteString(stmtStr)
 	}
 	if stmtVerifiedBy != "" {
-		message := fmt.Sprintf("is true. proved by\n%s", stmtVerifiedBy)
-		ver.env.Msgs = append(ver.env.Msgs, message)
+		successVerString.WriteString(fmt.Sprintf("is true. proved by\n%s", stmtVerifiedBy))
 	} else {
-		message := "is true."
-		ver.env.Msgs = append(ver.env.Msgs, message)
+		successVerString.WriteString("is true.")
 	}
+	return successVerString.String()
 }
 
 func (ver *Verifier) newMsgAtParent(s string) error {

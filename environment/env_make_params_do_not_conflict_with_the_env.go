@@ -101,13 +101,13 @@ func (env *Env) makeUniFactParamsInThisUniFactDoNotConflictWithEnv(uniFact *ast.
 		return uniFact
 	}
 
-	newDomFacts, err := uniFact.DomFacts.Instantiate(formerParamToNewParamMap)
+	newDomFacts, err := uniFact.DomFacts.InstantiateFact(formerParamToNewParamMap)
 	if err != nil {
 		panic(err)
 	}
 
 	// inst then facts
-	newThenFacts, err := uniFact.ThenFacts.Instantiate(formerParamToNewParamMap)
+	newThenFacts, err := uniFact.ThenFacts.InstantiateFact(formerParamToNewParamMap)
 	if err != nil {
 		panic(err)
 	}
@@ -122,17 +122,17 @@ func (env *Env) makeUniFactWithIffParamsInThisUniFactDoNotConflictWithEnv(uniFac
 		return uniFact
 	}
 
-	newDomFacts, err := uniFact.UniFact.DomFacts.Instantiate(formerParamToNewParamMap)
+	newDomFacts, err := uniFact.UniFact.DomFacts.InstantiateFact(formerParamToNewParamMap)
 	if err != nil {
 		panic(err)
 	}
 
-	newThenFacts, err := uniFact.UniFact.ThenFacts.Instantiate(formerParamToNewParamMap)
+	newThenFacts, err := uniFact.UniFact.ThenFacts.InstantiateFact(formerParamToNewParamMap)
 	if err != nil {
 		panic(err)
 	}
 
-	newIffFacts, err := uniFact.IffFacts.Instantiate(formerParamToNewParamMap)
+	newIffFacts, err := uniFact.IffFacts.InstantiateFact(formerParamToNewParamMap)
 	if err != nil {
 		panic(err)
 	}

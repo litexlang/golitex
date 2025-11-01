@@ -12,10 +12,11 @@
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
-package litex_verifier
+package litex_executor
 
 import (
 	"fmt"
+	ast "golitex/ast"
 	"strings"
 )
 
@@ -30,7 +31,8 @@ type VerRet interface {
 }
 
 type VerTrue struct {
-	Msg []string
+	Msg             []string
+	TrueEqualValues []ast.Fc
 }
 
 type VerUnknown struct {
@@ -63,7 +65,7 @@ func (v *VerUnknown) AddMsg(msg string)        { v.Msg = append(v.Msg, msg) }
 func (v *VerUnknown) String() string           { return strings.Join(v.Msg, "\n") }
 func (v *VerUnknown) ToBoolErr() (bool, error) { return false, nil }
 
-func newVerErr(s string) *VerErr {
+func NewVerErr(s string) *VerErr {
 	if s != "" {
 		return &VerErr{Msg: []string{s}}
 	}
@@ -80,16 +82,26 @@ func BoolErrToVerRet(ok bool, err error) VerRet {
 	return &VerUnknown{Msg: []string{}}
 }
 
-func NewTrueVerRet(s string) VerRet {
+func NewVerTrue(s string) VerRet {
 	if s != "" {
 		return &VerTrue{Msg: []string{s}}
 	}
-	return &VerTrue{Msg: []string{}}
+	return &VerTrue{Msg: []string{}, TrueEqualValues: nil}
 }
 
-func NewUnknownVerRet(s string) VerRet {
+func NewVerUnknown(s string) VerRet {
 	if s != "" {
 		return &VerUnknown{Msg: []string{s}}
 	}
 	return &VerUnknown{Msg: []string{}}
+}
+
+func NewVerTrueWithValues(s string, equalValue []ast.Fc) VerRet {
+	if s != "" {
+		return &VerTrue{Msg: []string{s}, TrueEqualValues: equalValue}
+	}
+	if len(equalValue) != 2 {
+		panic("equal value length must be 2")
+	}
+	return &VerTrue{Msg: []string{}, TrueEqualValues: []ast.Fc{equalValue[0], equalValue[1]}}
 }

@@ -620,7 +620,7 @@ func (s *HaveObjInNonEmptySetStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (s *HaveSetStmt) ToLatexString() string {
+func (s *HaveEnumSetStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("\\begin{definition}[Set Exist By Axioms of Set Theory]")
 
@@ -630,6 +630,16 @@ func (s *HaveSetStmt) ToLatexString() string {
 
 	builder.WriteString(".\n")
 
+	builder.WriteString("\\end{definition}")
+	return builder.String()
+}
+
+func (s *HaveIntensionalSetStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("\\begin{definition}[Set Exist By Axioms of Set Theory]")
+	builder.WriteString("We have a set: ")
+	builder.WriteString(s.Fact.ToLatexString())
+	builder.WriteString(".\n")
 	builder.WriteString("\\end{definition}")
 	return builder.String()
 }

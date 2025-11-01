@@ -12,25 +12,25 @@
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
-package litex_verifier
+package litex_executor
 
 import ast "golitex/ast"
 
-func (ver *Verifier) verIntensionalSetStmt(stmt *ast.IntensionalSetStmt, state *VerState) (bool, error) {
+func (ver *Verifier) verIntensionalSetStmt(stmt *ast.IntensionalSetStmt, state *VerState) VerRet {
 	leftUniFact, rightUniFact, err := stmt.ToEquivalentUniFacts()
 	if err != nil {
-		return false, err
+		return NewVerErr(err.Error())
 	}
 
-	ok, err := ver.verUniFact(leftUniFact, state)
-	if err != nil || !ok {
-		return false, err
+	verRet := ver.verUniFact(leftUniFact, state)
+	if verRet.IsErr() || verRet.IsUnknown() {
+		return verRet
 	}
 
-	ok, err = ver.verUniFact(rightUniFact, state)
-	if err != nil || !ok {
-		return false, err
+	verRet = ver.verUniFact(rightUniFact, state)
+	if verRet.IsErr() || verRet.IsUnknown() {
+		return verRet
 	}
 
-	return true, nil
+	return verRet
 }
