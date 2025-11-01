@@ -141,7 +141,7 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state *VerState) (bool, e
 		// 	return ver.fcSatisfyFnRequirement(toCompute, state)
 	} else {
 		// return ver.fcFnSatisfy_FnTemplate_Requirement(fcAsFcFn, state)
-		return ver.parasSatisfyFnReq(fcAsFcFn, state)
+		return ver.parasSatisfyFnReq(fcAsFcFn, state).ToBoolErr()
 	}
 }
 

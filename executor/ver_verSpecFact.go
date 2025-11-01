@@ -324,7 +324,7 @@ func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecFactStmt, state *VerState)
 		return BoolErrToVerRet(ok, err)
 	}
 
-	return BoolErrToVerRet(ver.verSpecFact_InLogicExpr_InUniFactMem(stmt, nextState))
+	return ver.verSpecFact_InLogicExpr_InUniFactMem(stmt, nextState)
 }
 
 func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
