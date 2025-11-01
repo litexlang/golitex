@@ -20,9 +20,9 @@ import (
 	env "golitex/environment"
 )
 
-func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) VerRet {
 	if state.isFinalRound() {
-		return false, nil
+		return NewVerUnknown("")
 	}
 
 	// 在局部环境声明新变量
@@ -31,49 +31,49 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) (bool
 
 	newStmtPtr, err := ver.PreprocessUniFactParams_DeclareParams(oldStmt)
 	if err != nil {
-		return false, err
+		return NewVerErr(err.Error())
 	}
 
 	// know cond facts
 	for _, condFact := range newStmtPtr.DomFacts {
 		err := ver.env.NewFact(condFact)
 		if err != nil {
-			return false, err
+			return NewVerErr(err.Error())
 		}
 	}
 
 	return ver.uniFact_checkThenFacts(newStmtPtr, state)
 }
 
-func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerState) VerRet {
 	// check then facts
 	for _, thenFact := range stmt.ThenFacts {
 		verRet := ver.VerFactStmt(thenFact, state) // 这个地方有点tricky，这里是可能读入state是any的，而且我要允许读入any
 		if verRet.IsErr() {
-			return false, fmt.Errorf(verRet.String())
+			return NewVerErr(verRet.String())
 		}
 		if verRet.IsUnknown() {
 			if state.WithMsg {
 				ver.env.Msgs = append(ver.env.Msgs, fmt.Sprintf("%s is unknown", thenFact))
 			}
-			return false, nil
+			return NewVerUnknown("")
 		}
 
 		// if true, store it
 		err := ver.env.NewFact(thenFact)
 		if err != nil {
-			return false, err
+			return NewVerErr(err.Error())
 		}
 	}
 
 	if state.WithMsg {
 		err := ver.newMsgAtParent(fmt.Sprintf("%s\nis true", stmt))
 		if err != nil {
-			return false, err
+			return NewVerErr(err.Error())
 		}
 	}
 
-	return true, nil
+	return NewVerTrue("")
 }
 
 func (ver *Verifier) PreprocessUniFactParams_DeclareParams(oldStmt *ast.UniFactStmt) (*ast.UniFactStmt, error) {

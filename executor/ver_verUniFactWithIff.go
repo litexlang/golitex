@@ -20,22 +20,16 @@ import (
 
 func (ver *Verifier) verUniFactWithIff(stmt *ast.UniFactWithIffStmt, state *VerState) (bool, error) {
 	thenToIff := stmt.NewUniFactWithThenToIff()
-	ok, err := ver.verUniFact(thenToIff, state)
-	if err != nil {
-		return false, err
-	}
-	if !ok {
-		return false, nil
+	verRet := ver.verUniFact(thenToIff, state)
+	if verRet.IsErr() || verRet.IsUnknown() {
+		return verRet.ToBoolErr()
 	}
 
 	iffToThen := stmt.NewUniFactWithIffToThen()
-	ok, err = ver.verUniFact(iffToThen, state)
-	if err != nil {
-		return false, err
-	}
-	if !ok {
-		return false, nil
+	verRet = ver.verUniFact(iffToThen, state)
+	if verRet.IsErr() || verRet.IsUnknown() {
+		return verRet.ToBoolErr()
 	}
 
-	return true, nil
+	return verRet.ToBoolErr()
 }
