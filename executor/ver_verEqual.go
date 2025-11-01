@@ -54,8 +54,8 @@ func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *Ve
 		}
 	}
 
-	if ok, err := ver.verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(stmt.Params[0], stmt.Params[1], state); IsTrueOrErr(ok, err) {
-		return ok, err
+	if verRet := ver.verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(stmt.Params[0], stmt.Params[1], state); verRet.IsErr() || verRet.IsTrue() {
+		return verRet.ToBoolErr()
 	}
 
 	if leftAsFn, ok := stmt.Params[0].(*ast.FcFn); ok {
@@ -79,34 +79,34 @@ func isValidEqualFact(stmt *ast.SpecFactStmt) bool {
 	return len(stmt.Params) == 2 && string(stmt.PropName) == glob.KeySymbolEqual
 }
 
-func (ver *Verifier) verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Fc, right ast.Fc, state *VerState) (bool, error) {
+func (ver *Verifier) verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Fc, right ast.Fc, state *VerState) VerRet {
 	if ok, err := ver.verEqualBuiltin(left, right, state); err != nil {
-		return false, err
+		return BoolErrToVerRet(ok, err)
 	} else if ok {
-		return true, nil
+		return NewVerTrue("")
 	}
 
 	if ok, err := ver.verEqualSpecMem(left, right, state); err != nil {
-		return false, err
+		return BoolErrToVerRet(ok, err)
 	} else if ok {
-		return true, nil
+		return NewVerTrue("")
 	}
 
 	if !state.isFinalRound() {
-		if ok, err := ver.verLogicMem_leftToRight_RightToLeft(left, right, state); err != nil {
-			return false, err
-		} else if ok {
-			return true, nil
+		if verRet := ver.verLogicMem_leftToRight_RightToLeft(left, right, state); verRet.IsErr() {
+			return verRet
+		} else if verRet.IsTrue() {
+			return verRet
 		}
 
-		if ok, err := ver.verEqualUniMem(left, right, state); err != nil {
-			return false, err
-		} else if ok {
-			return true, nil
+		if verRet := ver.verEqualUniMem(left, right, state); verRet.IsErr() {
+			return verRet
+		} else if verRet.IsTrue() {
+			return verRet
 		}
 	}
 
-	return false, nil
+	return NewVerUnknown("")
 }
 
 func (ver *Verifier) verEqualBuiltin(left ast.Fc, right ast.Fc, state *VerState) (bool, error) {
@@ -167,40 +167,40 @@ func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right
 	return false, nil
 }
 
-func (ver *Verifier) verLogicMem_leftToRight_RightToLeft(left ast.Fc, right ast.Fc, state *VerState) (bool, error) {
+func (ver *Verifier) verLogicMem_leftToRight_RightToLeft(left ast.Fc, right ast.Fc, state *VerState) VerRet {
 	equalFact := ast.NewEqualFact(left, right)
 	verRet := ver.verSpecFact_ByLogicMem(equalFact, state)
 	if verRet.IsErr() || verRet.IsTrue() {
-		return verRet.ToBoolErr()
+		return verRet
 	}
 
 	equalFactParamReversed, err := equalFact.ReverseSpecFactParamsOrder()
 	if err != nil {
-		return false, err
+		return NewVerErr(err.Error())
 	}
 	verRet = ver.verSpecFact_ByLogicMem(equalFactParamReversed, state)
 	if verRet.IsErr() || verRet.IsTrue() {
-		return verRet.ToBoolErr()
+		return verRet
 	}
-	return false, nil
+	return NewVerUnknown("")
 }
 
-func (ver *Verifier) verEqualUniMem(left ast.Fc, right ast.Fc, state *VerState) (bool, error) {
+func (ver *Verifier) verEqualUniMem(left ast.Fc, right ast.Fc, state *VerState) VerRet {
 	equalFact := ast.NewEqualFact(left, right)
 	verRet := ver.verSpecFact_UniMem(equalFact, state)
 	if verRet.IsErr() || verRet.IsTrue() {
-		return verRet.ToBoolErr()
+		return verRet
 	}
 
 	equalFactParamReversed, err := equalFact.ReverseSpecFactParamsOrder()
 	if err != nil {
-		return false, err
+		return NewVerErr(err.Error())
 	}
 	verRet = ver.verSpecFact_UniMem(equalFactParamReversed, state)
 	if verRet.IsErr() || verRet.IsTrue() {
-		return verRet.ToBoolErr()
+		return verRet
 	}
-	return false, nil
+	return NewVerUnknown("")
 }
 
 func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, right ast.Fc, state *VerState) (bool, string, error) {

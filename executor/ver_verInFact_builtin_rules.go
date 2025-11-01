@@ -173,18 +173,18 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state *VerState) V
 }
 
 func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state *VerState) VerRet {
-	var err error
+	var verRet VerRet
 	ok := ast.IsFcAtomEqualToGivenString(stmt.Params[1], glob.KeywordSet)
 	if !ok {
 		return NewVerUnknown("")
 	}
 
 	// 如果它是finite_set，则直接返回true
-	ok, err = ver.fcIsFiniteSet(stmt, state)
-	if err != nil {
-		return NewVerErr(err.Error())
+	verRet = ver.fcIsFiniteSet(stmt, state)
+	if verRet.IsErr() {
+		return verRet
 	}
-	if ok {
+	if verRet.IsTrue() {
 		return NewVerTrue("")
 	}
 
@@ -243,62 +243,62 @@ func (ver *Verifier) inObjFact(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 
 func (ver *Verifier) falseInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	// 任何东西不在空集里
-	ok, err := ver.nothingIsInEmptySet(stmt, state)
-	if err != nil {
-		return NewVerErr(err.Error())
+	verRet := ver.nothingIsInEmptySet(stmt, state)
+	if verRet.IsErr() {
+		return verRet
 	}
-	if ok {
-		return NewVerTrue("")
+	if verRet.IsTrue() {
+		return verRet
 	}
 
-	ok, err = ver.objNotInSetWhenAllItemsInThatSetAreNotEqualToIt(stmt, state)
-	if err != nil {
-		return NewVerErr(err.Error())
+	verRet = ver.objNotInSetWhenAllItemsInThatSetAreNotEqualToIt(stmt, state)
+	if verRet.IsErr() {
+		return verRet
 	}
-	if ok {
-		return NewVerTrue("")
+	if verRet.IsTrue() {
+		return verRet
 	}
 
 	return NewVerUnknown("")
 }
 
 // TODO 需要先证明一下它是finite set 去开始验证 len(n) = 0
-func (ver *Verifier) nothingIsInEmptySet(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) nothingIsInEmptySet(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	verRet := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.Params[1], ast.FcAtom(glob.KeywordFiniteSet)}, stmt.Line), state)
 	if verRet.IsErr() || verRet.IsUnknown() {
-		return verRet.ToBoolErr()
+		return verRet
 	}
 
 	lenOverStmtName := ast.NewFcFn(ast.FcAtom(glob.KeywordLen), []ast.Fc{stmt.Params[1]})
 	equalFact := ast.EqualFact(lenOverStmtName, ast.FcAtom("0"))
 	verRet = ver.VerFactStmt(equalFact, state)
-	return verRet.ToBoolErr()
+	return verRet
 }
 
-func (ver *Verifier) trueExistInSt(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) trueExistInSt(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	pureInFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.Params[1], stmt.Params[2]}, stmt.Line)
 	verRet := ver.VerFactStmt(pureInFact, state)
-	return verRet.ToBoolErr()
+	return verRet
 }
 
-func (ver *Verifier) fcIsFiniteSet(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) fcIsFiniteSet(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	// TODO: not sure whether I should add this nextState
 	nextState := state.GetAddRound()
 
 	finiteSetFact := ast.NewInFactWithFc(stmt.Params[0], ast.FcAtom(glob.KeywordFiniteSet))
 	verRet := ver.VerFactStmt(finiteSetFact, nextState)
-	return verRet.ToBoolErr()
+	return verRet
 }
 
-func (ver *Verifier) objNotInSetWhenAllItemsInThatSetAreNotEqualToIt(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) objNotInSetWhenAllItemsInThatSetAreNotEqualToIt(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	if stmt.TypeEnum != ast.FalsePure {
-		return false, nil
+		return NewVerUnknown("")
 	}
 
 	notAllItemsInThatSetAreNotEqualToIt := ast.NewUniFact([]string{"x"}, []ast.Fc{stmt.Params[1]}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{ast.FcAtom("x"), stmt.Params[0]}, stmt.Line)}, stmt.Line)
 
 	verRet := ver.VerFactStmt(notAllItemsInThatSetAreNotEqualToIt, state)
-	return verRet.ToBoolErr()
+	return verRet
 }
 
 func (ver *Verifier) verInSetProduct(stmt *ast.SpecFactStmt, state *VerState) VerRet {
