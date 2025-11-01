@@ -270,12 +270,12 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 		}
 	}
 
-	domFacts, err := propDef.DefBody.DomFacts.Instantiate(uniConMap)
+	domFacts, err := propDef.DefBody.DomFacts.InstantiateFact(uniConMap)
 	if err != nil {
 		return BoolErrToVerRet(false, err)
 	}
 
-	iffFacts, err := propDef.DefBody.IffFacts.Instantiate(uniConMap)
+	iffFacts, err := propDef.DefBody.IffFacts.InstantiateFact(uniConMap)
 	if err != nil {
 		return BoolErrToVerRet(false, err)
 	}

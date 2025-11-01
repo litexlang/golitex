@@ -375,7 +375,7 @@ func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt
 	}
 
 	for _, fact := range stmt.ExistPropWithoutDom.DefBody.ThenFacts {
-		instFact, err := fact.Instantiate(uniMap)
+		instFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return NewExecErr(""), err
 		}

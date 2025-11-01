@@ -71,7 +71,7 @@ func (ver *Verifier) leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftFnTStruc
 		mapLeftParamsToRightParams[param] = ast.FcAtom(instRightFnT.Params[i])
 	}
 
-	leftDom, err := leftFnTStruct.AsFnTStruct.DomFacts.Instantiate(mapLeftParamsToRightParams)
+	leftDom, err := leftFnTStruct.AsFnTStruct.DomFacts.InstantiateFact(mapLeftParamsToRightParams)
 	if err != nil {
 		return false
 	}

@@ -159,7 +159,7 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch_new(stmt *ast.Spe
 			continue
 		}
 
-		instantiatedLogicExpr, err := randomizedOrStmt.Instantiate(uniConMap)
+		instantiatedLogicExpr, err := randomizedOrStmt.InstantiateFact(uniConMap)
 		if err != nil {
 			return false, err
 		}

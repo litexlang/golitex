@@ -98,7 +98,7 @@ func proveByInduction_Fact_Start_is_NPos(stmt *ast.ProveByInductionStmt) *ast.Sp
 }
 
 func proveByInduction_newStartFact(stmt *ast.ProveByInductionStmt) (ast.FactStmt, error) {
-	startFact, err := stmt.Fact.Instantiate(map[string]ast.Fc{stmt.Param: stmt.Start})
+	startFact, err := stmt.Fact.InstantiateFact(map[string]ast.Fc{stmt.Param: stmt.Start})
 	return startFact, err
 }
 
@@ -110,7 +110,7 @@ func proveByInduction_newUniFact_n_true_leads_n_plus_1_true(stmt *ast.ProveByInd
 		stmt.Fact,
 	}
 
-	retUniFactThen, err := stmt.Fact.Instantiate(uniMap)
+	retUniFactThen, err := stmt.Fact.InstantiateFact(uniMap)
 	if err != nil {
 		return nil, err
 	}

@@ -693,7 +693,15 @@ func (stmt *ProveByEnumStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *HaveSetStmt) String() string {
+func (stmt *HaveEnumSetStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordHave)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.Fact.String())
+	return builder.String()
+}
+
+func (stmt *HaveIntensionalSetStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordHave)
 	builder.WriteString(" ")

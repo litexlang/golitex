@@ -44,7 +44,7 @@ func (fnTemplate *FnTStruct) DeriveUniFact(defFnTemplateName string, fnFc Fc, te
 	uniMap := glob.CopyMap(templateParamUniMap)
 	uniMap[defFnTemplateName] = fnFc
 
-	instantiated, err := notInstantiated.Instantiate(uniMap)
+	instantiated, err := notInstantiated.InstantiateFact(uniMap)
 	if err != nil {
 		return nil, err
 	}
@@ -64,13 +64,13 @@ func (stmt *FnTStruct) InstantiateFnTWithoutChangingTName(uniMap map[string]Fc) 
 	}
 
 	// 2. instantiate dom facts
-	instantiatedDomFacts, err := stmt.DomFacts.Instantiate(uniMap)
+	instantiatedDomFacts, err := stmt.DomFacts.InstantiateFact(uniMap)
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
 
 	// 3. instantiate then facts
-	instantiatedThenFacts, err := stmt.ThenFacts.Instantiate(uniMap)
+	instantiatedThenFacts, err := stmt.ThenFacts.InstantiateFact(uniMap)
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
