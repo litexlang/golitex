@@ -143,7 +143,7 @@ func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state *VerSta
 
 func (ver *Verifier) verSpecialSpecFact_ByBIR(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	if stmt.NameIs(glob.KeywordIn) {
-		return BoolErrToVerRet(ver.inFactBuiltinRules(stmt, state))
+		return ver.inFactBuiltinRules(stmt, state)
 	} else if stmt.NameIs(glob.KeywordItemExistsIn) && stmt.TypeEnum == ast.TrueExist_St {
 		return BoolErrToVerRet(ver.trueExistInSt(stmt, state))
 	}
@@ -164,7 +164,7 @@ func (ver *Verifier) verSpecialSpecFact_ByBIR(stmt *ast.SpecFactStmt, state *Ver
 func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	if stmt.IsPureFact() {
 		if !stmt.IsTrue() {
-			return BoolErrToVerRet(ver.verNotPureSpecFact_ByDef(stmt, state))
+			return ver.verNotPureSpecFact_ByDef(stmt, state)
 		}
 
 		return ver.verPureSpecFact_ByDefinition(stmt, state)
@@ -347,149 +347,18 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecFactStmt, st
 	return NewVerUnknown("")
 }
 
-// var reverseCmpFcAtomMap = map[string]ast.FcAtom{
-// 	glob.KeySymbolLargerEqual: ast.FcAtom(glob.KeySymbolLessEqual),
-// 	glob.KeySymbolLessEqual:   ast.FcAtom(glob.KeySymbolLargerEqual),
-// 	glob.KeySymbolGreater:     ast.FcAtom(glob.KeySymbolLess),
-// 	glob.KeySymbolLess:        ast.FcAtom(glob.KeySymbolGreater),
-// }
-
-// 只是证明 a >= b 和 b <= a 是等价的，没有用到 a = b => a >=b, a > b => a >= b，因为我觉得后者应该
-// 其实也可以写入标准库而不是放在kernel，但我还是送给用户得了
-// 传递性，就写在标准库吧
-// func (ver *Verifier) verBtCmpSpecFact(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
-// 	verBtCmp_ParamsAreLiteralNum, err := ver.verBtCmp_ParamsAreLiteralNum(stmt)
-// 	if err != nil {
-// 		return false, err
-// 	}
-// 	if verBtCmp_ParamsAreLiteralNum {
-// 		if state.WithMsg {
-// 			ver.successWithMsg(stmt.String(), "builtin rules")
-// 		}
-// 		return true, nil
-// 	}
-
-// 	propName := string(stmt.PropName)
-
-// 	reversePropName := reverseCmpFcAtomMap[propName]
-
-// 	ok, err := ver.verSpecFactStepByStep(stmt, state)
-// 	if err != nil {
-// 		return false, err
-// 	}
-// 	if ok {
-// 		return true, nil
-// 	}
-
-// 	// 如果是 >= 操作符，尝试证明 > 或 = 是否成立
-// 	if propName == glob.KeySymbolLargerEqual {
-// 		// 尝试证明 >
-// 		greaterStmt := *stmt
-// 		greaterStmt.PropName = ast.FcAtom(glob.KeySymbolGreater)
-// 		ok, err = ver.verSpecFactStepByStep(&greaterStmt, state)
-// 		if err != nil {
-// 			return false, err
-// 		}
-// 		if ok {
-// 			return ver.processOkMsg(state, stmt.String(), fmt.Sprintf("%s is true", greaterStmt.String()))
-// 		}
-
-// 		// 尝试证明 =
-// 		equalStmt := *stmt
-// 		equalStmt.PropName = ast.FcAtom(glob.KeySymbolEqual)
-// 		ok, err = ver.verTrueEqualFact(&equalStmt, state, true)
-// 		if err != nil {
-// 			return false, err
-// 		}
-// 		if ok {
-// 			return ver.processOkMsg(state, stmt.String(), fmt.Sprintf("%s is true", equalStmt.String()))
-// 		}
-// 	}
-
-// 	// 如果 <= 操作符，尝试证明 < 或 = 是否成立
-// 	if propName == glob.KeySymbolLessEqual {
-// 		// 尝试证明 <
-// 		lessStmt := *stmt
-// 		lessStmt.PropName = ast.FcAtom(glob.KeySymbolLess)
-// 		ok, err = ver.verSpecFactStepByStep(&lessStmt, state)
-// 		if isErrOrOk(ok, err) {
-// 			return ok, err
-// 		}
-
-// 		// 尝试证明 =
-// 		equalStmt := *stmt
-// 		equalStmt.PropName = ast.FcAtom(glob.KeySymbolEqual)
-// 		ok, err = ver.verTrueEqualFact(&equalStmt, state, true)
-// 		if isErrOrOk(ok, err) {
-// 			return ok, err
-// 		}
-// 	}
-
-// 	if propName == glob.KeySymbolGreater || propName == glob.KeySymbolLess {
-// 		reversedStmt, err := stmt.ReverseSpecFactParamsOrder()
-// 		if err != nil {
-// 			return false, err
-// 		}
-// 		reversedStmt.PropName = reversePropName
-// 		ok, err = ver.verSpecFactStepByStep(reversedStmt, state)
-// 		if err != nil {
-// 			return false, err
-// 		}
-// 		if ok {
-// 			return ver.processOkMsg(state, stmt.String(), fmt.Sprintf("%s is true", reversedStmt))
-// 		}
-// 		return false, nil
-// 	}
-
-// 	return false, nil
-// }
-
-// func (ver *Verifier) verBtCmp_ParamsAreLiteralNum(stmt *ast.SpecFactStmt) (bool, error) {
-// 	// 用 glob 里的 NumLitExpr 去比较
-// 	_, ok, err := ast.MakeFcIntoNumLitExpr(stmt.Params[0])
-// 	if err != nil || !ok {
-// 		return false, nil
-// 	}
-// 	_, ok, err = ast.MakeFcIntoNumLitExpr(stmt.Params[1])
-// 	if err != nil || !ok {
-// 		return false, nil
-// 	}
-
-// 	left, err := num.CalculatorEval(stmt.Params[0].String())
-// 	if err != nil {
-// 		return false, nil
-// 	}
-// 	right, err := num.CalculatorEval(stmt.Params[1].String())
-// 	if err != nil {
-// 		return false, nil
-// 	}
-
-// 	switch stmt.PropName {
-// 	case glob.KeySymbolLargerEqual:
-// 		return left >= right, nil
-// 	case glob.KeySymbolLessEqual:
-// 		return left <= right, nil
-// 	case glob.KeySymbolGreater:
-// 		return left > right, nil
-// 	case glob.KeySymbolLess:
-// 		return left < right, nil
-// 	}
-
-// 	return false, nil
-// }
-
-func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	nextState := state.GetAddRound()
 
 	defStmt := ver.env.GetPropDef(stmt.PropName)
 	if defStmt == nil {
 		// 这里可能是因为这个propName是exist prop，所以没有定义
-		return false, nil
+		return NewVerUnknown("")
 	}
 
 	if len(defStmt.IffFacts) == 0 {
 		// REMARK: 如果IFFFacts不存在，那我们认为是 没有iff能验证prop，而不是prop自动成立
-		return false, nil
+		return NewVerUnknown("")
 	}
 
 	iffToProp := defStmt.IffToPropUniFact()
@@ -501,20 +370,20 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *Ver
 	// TODO: ? 这里还需要检查吗？或者说是在这里检查吗？难道prop的关于参数的检查不应该在更顶层的函数里？
 	paramSetFacts, err := defStmt.DefHeader.GetInstantiatedParamInParamSetFact(paramArrMap)
 	if err != nil {
-		return false, err
+		return NewVerErr(err.Error())
 	}
 
 	for _, paramSetFact := range paramSetFacts {
 		verRet := ver.VerFactStmt(paramSetFact, state)
 		if verRet.IsErr() || verRet.IsUnknown() {
-			return verRet.ToBoolErr()
+			return verRet
 		}
 	}
 
 	// 本质上不需要把所有的参数都instantiate，只需要instantiate在dom里的就行
 	instantiatedIffToProp, err := ast.InstantiateUniFact(iffToProp, paramArrMap)
 	if err != nil {
-		return false, err
+		return NewVerErr(err.Error())
 	}
 
 	// 某个fact是false的，那就OK了
@@ -527,16 +396,16 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *Ver
 
 		verRet := ver.VerFactStmt(reversedDomFact, nextState)
 		if verRet.IsErr() {
-			return false, fmt.Errorf(verRet.String())
+			return verRet
 		}
 		if verRet.IsTrue() {
 			if state.WithMsg {
 				ver.successWithMsg(stmt.String(), defStmt.String())
 			}
 
-			return true, nil
+			return NewVerTrue("")
 		}
 	}
 
-	return false, nil
+	return NewVerUnknown("")
 }
