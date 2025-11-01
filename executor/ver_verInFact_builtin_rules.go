@@ -92,6 +92,43 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 		return verRet
 	}
 
+	// fn(R)R $in set
+	verRet = ver.FnTemplateIsASet(stmt, state)
+	if verRet.IsErr() || verRet.IsTrue() {
+		return verRet
+	}
+
+	return NewVerUnknown("")
+}
+
+func (ver *Verifier) FnTemplateIsASet(stmt *ast.SpecFactStmt, state *VerState) VerRet {
+	if asAtom, ok := stmt.Params[1].(ast.FcAtom); ok {
+		if asAtom != glob.KeywordSet {
+			return NewVerUnknown("")
+		}
+	}
+
+	if asFcFn, ok := stmt.Params[0].(*ast.FcFn); ok {
+		if ast.IsFnTemplate_FcFn(asFcFn) {
+			// 所有参数还都真是集合
+			for i := range asFcFn.FnHead.(*ast.FcFn).Params {
+				verRet := ver.VerFactStmt(ast.NewInFactWithParamFc(asFcFn.FnHead.(*ast.FcFn).Params[i], ast.FcAtom(glob.KeywordSet)), state)
+				if verRet.IsErr() || verRet.IsUnknown() {
+					return NewVerUnknown("")
+				}
+			}
+
+			for i := range asFcFn.Params {
+				if verRet := ver.VerFactStmt(ast.NewInFactWithParamFc(asFcFn.Params[i], ast.FcAtom(glob.KeywordSet)), state); verRet.IsErr() || verRet.IsUnknown() {
+					return NewVerUnknown("")
+				}
+			}
+			return NewVerTrue("")
+		}
+	}
+
+	// TODO 如果fnTemplate 里面的涉及到的 paramSet 也都是集合，那就返回true
+
 	return NewVerUnknown("")
 }
 
@@ -178,15 +215,6 @@ func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state *VerState) V
 		return NewVerUnknown("")
 	}
 
-	// 如果它是finite_set，则直接返回true
-	verRet = ver.fcIsFiniteSet(stmt, state)
-	if verRet.IsErr() {
-		return verRet
-	}
-	if verRet.IsTrue() {
-		return NewVerTrue("")
-	}
-
 	// 如果它是N, Z, Q, R, C, 则直接返回true
 	ok = ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordNatural) ||
 		ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordInteger) ||
@@ -196,6 +224,17 @@ func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state *VerState) V
 		ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordNPos)
 	if ok {
 		return ver.processOkMsg(state, stmt.String(), "%s is a builtin set", stmt.Params[0])
+	}
+
+	verRet = ver.FnTemplateIsASet(stmt, state.GetNoMsg())
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsTrue() {
+		if state.WithMsg {
+			ver.successWithMsg(stmt.String(), "When parameter sets of a fn template are all sets, then the fn template is a set")
+		}
+		return NewVerTrue("When parameter sets of a fn template are all sets, then the fn template is a set")
 	}
 
 	// 如果是被定义好了的fn_template，则直接返回true
