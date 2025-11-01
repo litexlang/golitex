@@ -129,13 +129,13 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state *VerState) VerRet {
 	// 	return ver.arithmeticFnRequirement(fcAsFcFn, state)
 	// } else
 	if ast.IsFcFnWithHeadName(fcAsFcFn, glob.KeywordLen) {
-		return BoolErrToVerRet(ver.lenFnRequirement(fcAsFcFn, state))
+		return ver.lenFnRequirement(fcAsFcFn, state)
 	} else if ast.IsFnTemplate_FcFn(fcAsFcFn) {
 		return NewVerTrue("")
 	} else if ver.isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj(fcAsFcFn) {
-		return BoolErrToVerRet(ver.isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj_CheckRequirement(fcAsFcFn, state))
+		return ver.isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj_CheckRequirement(fcAsFcFn, state)
 	} else if ast.IsFcAtomAndEqualToStr(fcAsFcFn.FnHead, glob.KeywordSetDefinedByReplacement) {
-		return BoolErrToVerRet(ver.setDefinedByReplacementFnRequirement(fcAsFcFn, state))
+		return ver.setDefinedByReplacementFnRequirement(fcAsFcFn, state)
 		// }
 		// else if toCompute, ok := ast.IsFcFnWithCompHeadAndReturnFcToCompute(fcAsFcFn); ok {
 		// 	return ver.fcSatisfyFnRequirement(toCompute, state)
@@ -238,20 +238,20 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state *VerState) VerRet {
 // }
 
 // TODO: 这里需要检查！
-func (ver *Verifier) setDefinedByReplacementFnRequirement(fc *ast.FcFn, state *VerState) (bool, error) {
+func (ver *Verifier) setDefinedByReplacementFnRequirement(fc *ast.FcFn, state *VerState) VerRet {
 	if len(fc.Params) != 3 {
-		return false, fmt.Errorf("parameters in %s must be 3, %s in %s is not valid", fc.FnHead, fc, fc)
+		return NewVerErr(fmt.Sprintf("parameters in %s must be 3, %s in %s is not valid", fc.FnHead, fc, fc))
 	}
 
 	propName, ok := fc.Params[2].(ast.FcAtom)
 	if !ok {
-		return false, fmt.Errorf("parameters in %s must be 3, %s in %s is not valid", fc.FnHead, fc, fc)
+		return NewVerErr(fmt.Sprintf("parameters in %s must be 3, %s in %s is not valid", fc.FnHead, fc, fc))
 	}
 
 	forallXOnlyOneYSatisfyGivenProp := ast.GetForallXOnlyOneYSatisfyGivenProp(fc.Params[0], fc.Params[1], propName)
 
 	verRet := ver.VerFactStmt(forallXOnlyOneYSatisfyGivenProp, state)
-	return verRet.ToBoolErr()
+	return verRet
 }
 
 var builtinFunctionNameSetAndCanTakeInAnyObj = map[string]struct{}{
@@ -271,28 +271,28 @@ func (ver *Verifier) isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj(fc *ast.FcFn) b
 	return ok
 }
 
-func (ver *Verifier) isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj_CheckRequirement(fc *ast.FcFn, state *VerState) (bool, error) {
+func (ver *Verifier) isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj_CheckRequirement(fc *ast.FcFn, state *VerState) VerRet {
 	for _, param := range fc.Params {
 		verRet := ver.fcSatisfyFnRequirement(param, state)
 		if verRet.IsErr() || verRet.IsUnknown() {
-			return false, parametersDoNotSatisfyFnReq(param, fc)
+			return BoolErrToVerRet(false, parametersDoNotSatisfyFnReq(param, fc))
 		}
 	}
 
-	return true, nil
+	return NewVerTrue("")
 }
 
-func (ver *Verifier) lenFnRequirement(fc *ast.FcFn, state *VerState) (bool, error) {
+func (ver *Verifier) lenFnRequirement(fc *ast.FcFn, state *VerState) VerRet {
 	if len(fc.Params) != 1 {
-		return false, fmt.Errorf("parameters in %s must be 1, %s in %s is not valid", fc.FnHead, fc, fc)
+		return NewVerErr(fmt.Sprintf("parameters in %s must be 1, %s in %s is not valid", fc.FnHead, fc, fc))
 	}
 
 	verRet := ver.VerFactStmt(ast.NewInFactWithFc(fc.Params[0], ast.FcAtom(glob.KeywordFiniteSet)), state)
 	if verRet.IsErr() {
-		return false, fmt.Errorf(verRet.String())
+		return NewVerErr(verRet.String())
 	}
 	if verRet.IsUnknown() {
-		return false, fmt.Errorf("parameters in %s must be in set %s, %s in %s is not valid", fc.FnHead, glob.KeywordFiniteSet, fc.Params[0], fc)
+		return NewVerErr(fmt.Sprintf("parameters in %s must be in set %s, %s in %s is not valid", fc.FnHead, glob.KeywordFiniteSet, fc.Params[0], fc))
 	}
-	return true, nil
+	return NewVerTrue("")
 }
