@@ -169,24 +169,18 @@ func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right
 
 func (ver *Verifier) verLogicMem_leftToRight_RightToLeft(left ast.Fc, right ast.Fc, state *VerState) (bool, error) {
 	equalFact := ast.NewEqualFact(left, right)
-	ok, err := ver.verSpecFactLogicMem(equalFact, state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
+	verRet := ver.verSpecFact_ByLogicMem(equalFact, state)
+	if verRet.IsErr() || verRet.IsTrue() {
+		return verRet.ToBoolErr()
 	}
 
 	equalFactParamReversed, err := equalFact.ReverseSpecFactParamsOrder()
 	if err != nil {
 		return false, err
 	}
-	ok, err = ver.verSpecFactLogicMem(equalFactParamReversed, state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
+	verRet = ver.verSpecFact_ByLogicMem(equalFactParamReversed, state)
+	if verRet.IsErr() || verRet.IsTrue() {
+		return verRet.ToBoolErr()
 	}
 	return false, nil
 }

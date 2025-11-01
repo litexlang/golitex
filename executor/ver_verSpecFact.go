@@ -155,7 +155,7 @@ func (ver *Verifier) verSpecialSpecFact_ByBIR(stmt *ast.SpecFactStmt, state *Ver
 	}
 
 	if stmt.NameIs(glob.KeySymbolEqual) && stmt.TypeEnum == ast.FalsePure {
-		return BoolErrToVerRet(ver.verNotTrueEqualFact_BuiltinRules(stmt, state))
+		return ver.verNotTrueEqualFact_BuiltinRules(stmt, state)
 	}
 
 	return NewVerUnknown("")
@@ -308,42 +308,43 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 	return NewVerTrue("")
 }
 
-func (ver *Verifier) verSpecFactLogicMem(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
-	verRet := ver.verSpecFact_ByLogicMem(stmt, state)
-	if verRet.IsErr() || verRet.IsTrue() {
-		return verRet.ToBoolErr()
-	}
-	return false, nil
-}
+// func (ver *Verifier) verSpecFactLogicMem(stmt *ast.SpecFactStmt, state *VerState) VerRet {
+// 	verRet := ver.verSpecFact_ByLogicMem(stmt, state)
+// 	if verRet.IsErr() || verRet.IsTrue() {
+// 		return verRet.ToBoolErr()
+// 	}
+// 	return false, nil
+// }
 
 func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	nextState := state.GetAddRound()
 
-	ok, err := ver.verSpecFact_InSpecFact_UniMem(stmt, nextState)
-	if isErrOrOk(ok, err) {
-		return BoolErrToVerRet(ok, err)
+	verRet := ver.verSpecFact_InSpecFact_UniMem(stmt, nextState)
+	if verRet.IsErr() || verRet.IsTrue() {
+		return verRet
 	}
 
 	return ver.verSpecFact_InLogicExpr_InUniFactMem(stmt, nextState)
 }
 
-func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	if stmt.IsTrue() {
-		return false, nil
+		return NewVerUnknown("")
 	}
 
 	// 如果左右两边能是能被处理的数字
 	areBothNumLit, areEqual, err := cmp.NumLitEqual_ByEval(stmt.Params[0], stmt.Params[1])
 	if err != nil {
-		return false, err
+		return NewVerErr(err.Error())
 	}
 	if areBothNumLit {
 		if !areEqual { // 这里是在证明两边不相等
-			return ver.processOkMsg(state, stmt.String(), "builtin rules")
+			ver.processOkMsg(state, stmt.String(), "builtin rules")
+			return NewVerTrue("")
 		}
 	}
 
-	return false, nil
+	return NewVerUnknown("")
 }
 
 // var reverseCmpFcAtomMap = map[string]ast.FcAtom{
