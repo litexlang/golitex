@@ -22,10 +22,6 @@ import (
 	"strings"
 )
 
-func (ver *Verifier) specFactOrEqualFact_SpecMode(stmt *ast.SpecFactStmt, state *VerState) VerRet {
-	return ver.VerFactStmt(stmt, state.GetFinalRound())
-}
-
 func (ver *Verifier) verSpecFact_BySpecMem(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	upMostEnv := ver.todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
@@ -56,17 +52,17 @@ func (ver *Verifier) verSpecFact_ByLogicMem(stmt *ast.SpecFactStmt, state *VerSt
 	return NewVerUnknown("")
 }
 
-func (ver *Verifier) verSpecFact_InSpecFact_UniMem(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) verSpecFact_InSpecFact_UniMem(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	upMostEnv := ver.todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
 	// if ver.env.CurMatchProp == nil {
 	for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
-		ok, err := ver.specFact_UniMem_atCurEnv(curEnv, stmt, state).ToBoolErr()
-		if err != nil || ok {
-			return ok, err
+		verRet := ver.specFact_UniMem_atCurEnv(curEnv, stmt, state)
+		if verRet.IsErr() || verRet.IsTrue() {
+			return verRet
 		}
 	}
-	return false, nil
+	return NewVerUnknown("")
 }
 
 func (ver *Verifier) verSpecFact_InLogicExpr_InUniFactMem(stmt *ast.SpecFactStmt, state *VerState) VerRet {
@@ -165,7 +161,7 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch_new(stmt *ast.Spe
 		}
 		instantiatedLogicExprAsKnownSpecFact, ok := instantiatedLogicExpr.(*ast.OrStmt)
 		if !ok {
-			return NewVerErr(fmt.Sprintf("instantiatedLogicExpr is not a KnownSpecFact_InLogicExpr"))
+			return NewVerErr("instantiatedLogicExpr is not a KnownSpecFact_InLogicExpr")
 		}
 
 		ok, err = ver.verify_specFact_when_given_orStmt_is_true(stmt, instantiatedLogicExprAsKnownSpecFact, knownFactUnderLogicExpr.Index, state).ToBoolErr()
@@ -389,7 +385,7 @@ func (ver *Verifier) proveUniFactDomFacts(domFacts []ast.FactStmt, state *VerSta
 		for _, fact := range domFacts {
 			asSpecFact, ok := fact.(*ast.SpecFactStmt)
 			if ok {
-				verRet := ver.specFactOrEqualFact_SpecMode(asSpecFact, state)
+				verRet := BoolErrToVerRet(ver.VerFactStmt(asSpecFact, state.GetFinalRound()).ToBoolErr())
 				if verRet.IsErr() || verRet.IsUnknown() {
 					return verRet.ToBoolErr()
 				}
@@ -407,7 +403,7 @@ func (ver *Verifier) proveUniFactDomFacts(domFacts []ast.FactStmt, state *VerSta
 			if !ok {
 				return false, nil
 			}
-			verRet := ver.specFactOrEqualFact_SpecMode(asSpecFact, state)
+			verRet := BoolErrToVerRet(ver.VerFactStmt(asSpecFact, state.GetFinalRound()).ToBoolErr())
 			if verRet.IsErr() || verRet.IsUnknown() {
 				return verRet.ToBoolErr()
 			}

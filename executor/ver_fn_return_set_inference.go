@@ -59,7 +59,7 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) VerRet {
 
 		curRetSet, ok := instCurFnTStruct.RetSet.(*ast.FcFn)
 		if !ok {
-			return NewVerErr(fmt.Sprintf("curRetSet is not an FcFn"))
+			return NewVerErr("curRetSet is not an FcFn")
 		}
 
 		curFnTStruct, err = ver.GetFnStructFromFnTName_CheckFnTParamsReq(curRetSet, state)
