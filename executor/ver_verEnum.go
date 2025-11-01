@@ -20,41 +20,41 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verEnumStmt(stmt *ast.EnumStmt, state *VerState) (bool, error) {
+func (ver *Verifier) verEnumStmt(stmt *ast.EnumStmt, state *VerState) VerRet {
 	if verRet := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.CurSet, ast.FcAtom(glob.KeywordFiniteSet)}, stmt.Line), state); verRet.IsErr() {
-		return verRet.ToBoolErr()
+		return verRet
 	} else if verRet.IsTrue() {
 		if ok, _ := ver.lenIsZeroThenEnumIsEmpty(stmt, state); ok {
-			return true, nil
+			return NewVerTrue("")
 		}
 	}
 
 	if ok, _ := ver.forallObjNotInSetThenTheSetIsEmpty(stmt, state); ok {
-		return true, nil
+		return NewVerTrue("")
 	}
 
 	forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts := ast.TransformEnumToUniFact(stmt.CurSet, stmt.Items)
 
 	verRet := ver.VerFactStmt(forallItemInSetEqualToOneOfGivenItems, state)
 	if verRet.IsErr() || verRet.IsUnknown() {
-		return verRet.ToBoolErr()
+		return verRet
 	}
 
 	for _, domFact := range pairwiseNotEqualFacts {
 		verRet := ver.VerFactStmt(domFact, state)
 		if verRet.IsErr() || verRet.IsUnknown() {
-			return verRet.ToBoolErr()
+			return verRet
 		}
 	}
 
 	for _, equalFact := range itemsInSetFacts {
 		verRet := ver.VerFactStmt(equalFact, state)
 		if verRet.IsErr() || verRet.IsUnknown() {
-			return verRet.ToBoolErr()
+			return verRet
 		}
 	}
 
-	return true, nil
+	return NewVerTrue("")
 }
 
 func (ver *Verifier) lenIsZeroThenEnumIsEmpty(stmt *ast.EnumStmt, state *VerState) (bool, error) {
