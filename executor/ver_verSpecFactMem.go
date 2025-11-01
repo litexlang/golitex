@@ -147,11 +147,11 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch_new(stmt *ast.Spe
 		}
 
 		// ok, err = ver.proveUniFactDomFacts(insKnownUniFact.DomFacts, state)
-		ok, err = ver.proveUniFactDomFacts(instantiatedUniFactWithoutThen.DomFacts, state)
-		if err != nil {
-			return NewVerErr(err.Error())
+		verRet := ver.proveUniFactDomFacts(instantiatedUniFactWithoutThen.DomFacts, state)
+		if verRet.IsErr() {
+			return verRet
 		}
-		if !ok {
+		if !verRet.IsTrue() {
 			continue
 		}
 
@@ -164,12 +164,12 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch_new(stmt *ast.Spe
 			return NewVerErr("instantiatedLogicExpr is not a KnownSpecFact_InLogicExpr")
 		}
 
-		ok, err = ver.verify_specFact_when_given_orStmt_is_true(stmt, instantiatedLogicExprAsKnownSpecFact, knownFactUnderLogicExpr.Index, state).ToBoolErr()
-		if err != nil {
-			return NewVerErr(err.Error())
+		verRet = ver.verify_specFact_when_given_orStmt_is_true(stmt, instantiatedLogicExprAsKnownSpecFact, knownFactUnderLogicExpr.Index, state)
+		if verRet.IsErr() {
+			return verRet
 		}
 
-		if ok {
+		if verRet.IsTrue() {
 			if state.WithMsg {
 				ver.successWithMsg(stmt.String(), knownFactUnderLogicExpr.String())
 			}
@@ -377,35 +377,35 @@ func (ver *Verifier) useKnownOrFactToProveSpecFact(knownFact *env.KnownSpecFact_
 	return NewVerTrue("")
 }
 
-func (ver *Verifier) proveUniFactDomFacts(domFacts []ast.FactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) proveUniFactDomFacts(domFacts []ast.FactStmt, state *VerState) VerRet {
 	if !state.isFinalRound() {
 		for _, fact := range domFacts {
 			asSpecFact, ok := fact.(*ast.SpecFactStmt)
 			if ok {
 				verRet := BoolErrToVerRet(ver.VerFactStmt(asSpecFact, state.GetFinalRound()).ToBoolErr())
 				if verRet.IsErr() || verRet.IsUnknown() {
-					return verRet.ToBoolErr()
+					return verRet
 				}
 			} else {
 				verRet := ver.VerFactStmt(fact, state)
 				if verRet.IsErr() || verRet.IsUnknown() {
-					return verRet.ToBoolErr()
+					return verRet
 				}
 			}
 		}
-		return true, nil
+		return NewVerTrue("")
 	} else {
 		for _, fact := range domFacts {
 			asSpecFact, ok := fact.(*ast.SpecFactStmt)
 			if !ok {
-				return false, nil
+				return NewVerUnknown("")
 			}
 			verRet := BoolErrToVerRet(ver.VerFactStmt(asSpecFact, state.GetFinalRound()).ToBoolErr())
 			if verRet.IsErr() || verRet.IsUnknown() {
-				return verRet.ToBoolErr()
+				return verRet
 			}
 		}
-		return true, nil
+		return NewVerTrue("")
 	}
 }
 
@@ -487,12 +487,12 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch_new(stmt *ast.SpecFa
 			continue
 		}
 
-		ok, err = ver.proveUniFactDomFacts(instantiatedUniFactWithoutThen.DomFacts, nextState)
-		if err != nil {
-			continue
+		verRet := ver.proveUniFactDomFacts(instantiatedUniFactWithoutThen.DomFacts, nextState)
+		if verRet.IsErr() {
+			return verRet
 		}
 
-		if ok {
+		if verRet.IsTrue() {
 			if state.WithMsg {
 				ver.successWithMsg(stmt.String(), knownFact_paramProcessed.UniFact.StringWithLine())
 			}
