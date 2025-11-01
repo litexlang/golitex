@@ -27,9 +27,9 @@ func (ver *Verifier) verSpecFact_BySpecMem(stmt *ast.SpecFactStmt, state *VerSta
 
 	// if ver.env.CurMatchProp == nil {
 	for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
-		ok, err := ver.specFact_SpecMem_atEnv(curEnv, stmt, state)
-		if err != nil || ok {
-			return BoolErrToVerRet(ok, err)
+		verRet := ver.specFact_SpecMem_atEnv(curEnv, stmt, state)
+		if verRet.IsErr() || verRet.IsTrue() {
+			return verRet
 		}
 	}
 
@@ -195,7 +195,7 @@ func (ver *Verifier) specFact_UniMem_atCurEnv(curEnv *env.Env, stmt *ast.SpecFac
 	return BoolErrToVerRet(ver.iterate_KnownSpecInUniFacts_applyMatch_new(stmt, searchedSpecFacts, state).ToBoolErr())
 }
 
-func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]ast.Fc, state *VerState) (map[string]ast.Fc, bool, error) {
+func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]ast.Fc, state *VerState) (map[string]ast.Fc, VerRet) {
 	newMap := map[string]ast.Fc{}
 	for key, value := range paramArrMap {
 		if len(value) == 1 {
@@ -206,36 +206,36 @@ func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]
 		for i := 1; i < len(value); i++ {
 			ok, err := ver.fcEqualSpec(value[0], value[i], state)
 			if err != nil {
-				return nil, false, err
+				return nil, NewVerErr(err.Error())
 			}
 			if !ok {
-				return nil, false, nil
+				return nil, NewVerUnknown("")
 			}
 		}
 
 		newMap[key] = value[0]
 	}
 
-	return newMap, true, nil
+	return newMap, NewVerTrue("")
 }
 
-func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_InLogicExpr, stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_InLogicExpr, stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	if len(knownFact.SpecFact.Params) != len(stmt.Params) {
-		return false, nil
+		return NewVerUnknown("")
 	}
 
 	for i, knownParam := range knownFact.SpecFact.Params {
 		ok, err := ver.verEqualBuiltin(knownParam, stmt.Params[i], state)
 		if err != nil {
-			return false, err
+			return NewVerErr(err.Error())
 		}
 		if !ok {
 			ok, err := ver.fcEqualSpec(knownParam, stmt.Params[i], state)
 			if err != nil {
-				return false, err
+				return NewVerErr(err.Error())
 			}
 			if !ok {
-				return false, nil
+				return NewVerUnknown("")
 			}
 		}
 	}
@@ -248,7 +248,7 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 		}
 		verRet := ver.VerFactStmt(fact.ReverseTrue(), state)
 		if verRet.IsErr() || verRet.IsUnknown() {
-			return verRet.ToBoolErr()
+			return verRet
 		}
 	}
 
@@ -262,17 +262,17 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 		ver.successWithMsg(stmt.String(), verifiedBy.String())
 	}
 
-	return true, nil
+	return NewVerTrue("")
 }
 
-func (ver *Verifier) specFact_SpecMem_atEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) specFact_SpecMem_atEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	knownFacts, got := curEnv.KnownFactsStruct.SpecFactMem.GetSameEnumPkgPropFacts(stmt)
 
 	if !got {
-		return false, nil
+		return NewVerUnknown("")
 	}
 
-	return ver.iterateKnownSpecFacts_applyFcEqualSpec(stmt, knownFacts, state).ToBoolErr()
+	return ver.iterateKnownSpecFacts_applyFcEqualSpec(stmt, knownFacts, state)
 }
 
 func (ver *Verifier) specFact_LogicMem(curEnv *env.Env, stmt *ast.SpecFactStmt, state *VerState) VerRet {
@@ -301,11 +301,11 @@ func (ver *Verifier) specFact_LogicMem(curEnv *env.Env, stmt *ast.SpecFactStmt, 
 func (ver *Verifier) iterateKnownSpecFacts_applyFcEqualSpec(stmt *ast.SpecFactStmt, knownFacts []ast.SpecFactStmt, state *VerState) VerRet {
 LoopOverFacts:
 	for _, knownFact := range knownFacts {
-		ok, err := ver.matchTwoSpecFacts(stmt, &knownFact, state)
-		if err != nil {
-			return NewVerErr(err.Error())
+		verRet := ver.matchTwoSpecFacts(stmt, &knownFact, state)
+		if verRet.IsErr() {
+			return verRet
 		}
-		if !ok {
+		if verRet.IsUnknown() {
 			continue LoopOverFacts
 		}
 
@@ -319,9 +319,9 @@ LoopOverFacts:
 	return NewVerUnknown("")
 }
 
-func (ver *Verifier) matchTwoSpecFacts(stmt *ast.SpecFactStmt, knownFact *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) matchTwoSpecFacts(stmt *ast.SpecFactStmt, knownFact *ast.SpecFactStmt, state *VerState) VerRet {
 	if len(knownFact.Params) != len(stmt.Params) || knownFact.TypeEnum != stmt.TypeEnum {
-		return false, nil
+		return NewVerUnknown("")
 	}
 
 	// 如果不区分 equal 和 其他事实的话，可能会出死循环
@@ -329,10 +329,10 @@ func (ver *Verifier) matchTwoSpecFacts(stmt *ast.SpecFactStmt, knownFact *ast.Sp
 		for i, knownParam := range knownFact.Params {
 			ok, _, err := ver.cmpFc_Builtin_Then_Decompose_Spec(knownParam, stmt.Params[i], state)
 			if err != nil {
-				return false, err
+				return NewVerErr(err.Error())
 			}
 			if !ok {
-				return false, nil
+				return NewVerUnknown("")
 			}
 		}
 
@@ -341,27 +341,24 @@ func (ver *Verifier) matchTwoSpecFacts(stmt *ast.SpecFactStmt, knownFact *ast.Sp
 		for i, knownParam := range knownFact.Params {
 			ok, err := ver.fcEqualSpec(knownParam, stmt.Params[i], newState)
 			if err != nil {
-				return false, err
+				return NewVerErr(err.Error())
 			}
 			if !ok {
-				return false, nil
+				return NewVerUnknown("")
 			}
 		}
 	}
 
-	return true, nil
+	return NewVerTrue("")
 }
 
 func (ver *Verifier) useKnownOrFactToProveSpecFact(knownFact *env.KnownSpecFact_InLogicExpr, stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	ver.newEnv(ver.env)
 	defer ver.deleteEnvAndRetainMsg()
 
-	ok, err := ver.matchTwoSpecFacts(stmt, knownFact.SpecFact, state)
-	if err != nil {
-		return NewVerErr(err.Error())
-	}
-	if !ok {
-		return NewVerUnknown("")
+	verRet := ver.matchTwoSpecFacts(stmt, knownFact.SpecFact, state)
+	if verRet.IsErr() || verRet.IsUnknown() {
+		return verRet
 	}
 
 	nextState := state.GetAddRound()
