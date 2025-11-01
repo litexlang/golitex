@@ -132,7 +132,7 @@ func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreT
 	defer ver.deleteEnvAndRetainMsg()
 
 	for _, fact := range fnTDef.TemplateDomFacts {
-		newFact, err := fact.Instantiate(uniMap)
+		newFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return false, err
 		}

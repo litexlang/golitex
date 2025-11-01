@@ -222,7 +222,7 @@ func (env *Env) newTruePureFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) erro
 	}
 
 	for _, thenFact := range propDef.IffFacts {
-		instantiated, err := thenFact.Instantiate(uniMap)
+		instantiated, err := thenFact.InstantiateFact(uniMap)
 		if err != nil {
 			return err
 		}
@@ -239,7 +239,7 @@ func (env *Env) newTruePureFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) erro
 	}
 
 	for _, thenFact := range propDef.ThenFacts {
-		instantiated, err := thenFact.Instantiate(uniMap)
+		instantiated, err := thenFact.InstantiateFact(uniMap)
 		if err != nil {
 			return err
 		}
@@ -330,7 +330,7 @@ func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, erro
 
 	domFacts := []ast.FactStmt{}
 	for _, domFact := range existPropDef.DefBody.DomFacts {
-		instantiated, err := domFact.Instantiate(uniMap)
+		instantiated, err := domFact.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, err
 		}
@@ -346,7 +346,7 @@ func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, erro
 
 		reversedFacts := asSpecFactStmt.ReverseIsTrue()
 		for _, reversedFact := range reversedFacts {
-			instantiated, err := reversedFact.Instantiate(uniMap)
+			instantiated, err := reversedFact.InstantiateFact(uniMap)
 			if err != nil {
 				return nil, err
 			}
@@ -433,7 +433,7 @@ func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, [
 	instantiatedIffFacts := []ast.FactStmt{}
 	// instantiate iff facts
 	for _, iffFact := range existPropDef.DefBody.IffFacts {
-		instantiated, err := iffFact.Instantiate(uniMap)
+		instantiated, err := iffFact.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -442,7 +442,7 @@ func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, [
 
 	instantiatedThenFacts := []ast.FactStmt{}
 	for _, thenFact := range existPropDef.DefBody.ThenFacts {
-		instantiated, err := thenFact.Instantiate(uniMap)
+		instantiated, err := thenFact.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, nil, err
 		}

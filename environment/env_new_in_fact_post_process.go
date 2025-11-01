@@ -72,7 +72,7 @@ func (e *Env) inFactPostProcess_InSetFnRetValue(fact *ast.SpecFactStmt, def *ast
 	}
 
 	defToIntensionalSetStmt := def.ToIntensionalSetStmt()
-	instantiated, err := defToIntensionalSetStmt.Instantiate(uniMap)
+	instantiated, err := defToIntensionalSetStmt.InstantiateFact(uniMap)
 	if err != nil {
 		return err
 	}

@@ -502,7 +502,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Fc, fnFcFn *ast.FcFn, state *Ve
 		return false, err
 	}
 
-	instantiatedLeftToUniFact, err := leftToUniFact.Instantiate(uniMap)
+	instantiatedLeftToUniFact, err := leftToUniFact.InstantiateFact(uniMap)
 	if err != nil {
 		return false, err
 	}

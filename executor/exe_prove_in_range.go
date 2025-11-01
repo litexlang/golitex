@@ -69,7 +69,7 @@ func (exec *Executor) proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsI
 	}
 
 	indexInParamSetFact := ast.NewInFact(stmt.Param, intensionalSetGivenSetIsIn.ParentSet)
-	instIndexInParamSetFact, err := indexInParamSetFact.Instantiate(uniMap)
+	instIndexInParamSetFact, err := indexInParamSetFact.InstantiateFact(uniMap)
 	if err != nil {
 		return false, "", err
 	}
@@ -85,7 +85,7 @@ func (exec *Executor) proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsI
 	if execState.IsUnknown() {
 		revInstDomFact := instIndexInParamSetFact.(*ast.SpecFactStmt).ReverseIsTrue()
 		for _, fact := range revInstDomFact {
-			instFact, err := fact.Instantiate(uniMap)
+			instFact, err := fact.InstantiateFact(uniMap)
 			if err != nil {
 				return false, "", err
 			}
@@ -101,7 +101,7 @@ func (exec *Executor) proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsI
 	}
 
 	for _, domFact := range intensionalSetGivenSetIsIn.Facts {
-		instDomFact, err := domFact.Instantiate(uniMap)
+		instDomFact, err := domFact.InstantiateFact(uniMap)
 		if err != nil {
 			return false, "", err
 		}
@@ -114,7 +114,7 @@ func (exec *Executor) proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsI
 			// 如果 不OK，那必须证明是 false，绝对不能是 unknown
 			revInstDomFact := domFact.ReverseIsTrue()
 			for _, fact := range revInstDomFact {
-				instFact, err := fact.Instantiate(uniMap)
+				instFact, err := fact.InstantiateFact(uniMap)
 				if err != nil {
 					return false, "", err
 				}
@@ -144,7 +144,7 @@ func (exec *Executor) proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsI
 		}
 		if execState.IsUnknown() {
 			// 如果是 fact， 那把数字代入一下，会方便非常多，比如 x > 1 ，把 x = 2直接代入就能直接验证出来了
-			curStmtAsFact, err := curStmt.(ast.FactStmt).Instantiate(uniMap)
+			curStmtAsFact, err := curStmt.(ast.FactStmt).InstantiateFact(uniMap)
 			if err != nil {
 				return false, "", err
 			}
@@ -161,7 +161,7 @@ func (exec *Executor) proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsI
 
 	// 满足 then
 	for _, thenFact := range stmt.ThenFacts {
-		instThenFact, err := thenFact.Instantiate(uniMap)
+		instThenFact, err := thenFact.InstantiateFact(uniMap)
 		if err != nil {
 			return false, "", err
 		}

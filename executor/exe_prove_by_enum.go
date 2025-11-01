@@ -64,7 +64,7 @@ func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.Prove
 	}
 
 	for _, fact := range stmt.Fact.DomFacts {
-		instFact, err := fact.Instantiate(uniMap)
+		instFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return false, err
 		}
@@ -89,7 +89,7 @@ func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.Prove
 	}
 
 	for _, fact := range stmt.Fact.ThenFacts {
-		instFact, err := fact.Instantiate(uniMap)
+		instFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return false, err
 		}
@@ -119,7 +119,7 @@ func (exec *Executor) verProveOverFiniteSet_NoProveSection(stmt *ast.ProveByEnum
 
 		hasFalseDomFact := false
 		for _, domFact := range stmt.Fact.DomFacts {
-			instantiatedDomFact, err := domFact.Instantiate(uniMap)
+			instantiatedDomFact, err := domFact.InstantiateFact(uniMap)
 			if err != nil {
 				return NewExecErr(""), err
 			}
@@ -151,7 +151,7 @@ func (exec *Executor) verProveOverFiniteSet_NoProveSection(stmt *ast.ProveByEnum
 
 		instantiatedThenFacts := []ast.FactStmt{}
 		for _, thenFact := range stmt.Fact.ThenFacts {
-			instantiatedThenFact, err := thenFact.Instantiate(uniMap)
+			instantiatedThenFact, err := thenFact.InstantiateFact(uniMap)
 			if err != nil {
 				return NewExecErr(""), err
 			}
