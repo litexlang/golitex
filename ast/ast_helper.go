@@ -207,12 +207,12 @@ func (stmt *FnTemplateDefStmt) Instantiate_GetFnTemplateNoName(fc *FcFn) (*FnTSt
 		return nil, err
 	}
 
-	instantiatedDomFacts, err := stmt.Fn.DomFacts.Instantiate(uniMap)
+	instantiatedDomFacts, err := stmt.Fn.DomFacts.InstantiateFact(uniMap)
 	if err != nil {
 		return nil, err
 	}
 
-	instantiatedThenFacts, err := stmt.Fn.ThenFacts.Instantiate(uniMap)
+	instantiatedThenFacts, err := stmt.Fn.ThenFacts.InstantiateFact(uniMap)
 	if err != nil {
 		return nil, err
 	}
@@ -306,7 +306,7 @@ func MakeUniMap(freeParams []string, params []Fc) (map[string]Fc, error) {
 func InstFacts(facts []FactStmt, uniMap map[string]Fc) ([]FactStmt, error) {
 	newFacts := make([]FactStmt, len(facts))
 	for i, fact := range facts {
-		newFact, err := fact.Instantiate(uniMap)
+		newFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, err
 		}

@@ -124,8 +124,12 @@ func NewHaveObjInNonEmptySetStmt(objNames []string, objSets []Fc, line uint) *Ha
 	return &HaveObjInNonEmptySetStmt{objNames, objSets, line}
 }
 
-func NewHaveSetStmt(fact EnumSet_IntensionalSet_EqualDom_Interface, line uint) *HaveSetStmt {
-	return &HaveSetStmt{fact, line}
+func NewHaveEnumSetStmt(fact *EnumStmt, line uint) *HaveEnumSetStmt {
+	return &HaveEnumSetStmt{fact, line}
+}
+
+func NewHaveIntensionalSetStmt(fact *IntensionalSetStmt, line uint) *HaveIntensionalSetStmt {
+	return &HaveIntensionalSetStmt{fact, line}
 }
 
 func NewHaveSetFnStmt(declHeader *DefHeader, param string, parentSet Fc, proofs []*SpecFactStmt, line uint) *HaveSetFnStmt {

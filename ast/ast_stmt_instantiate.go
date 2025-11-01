@@ -61,7 +61,7 @@ func InstantiateSpecFact(stmt *SpecFactStmt, uniMap map[string]Fc) (*SpecFactStm
 	return NewSpecFactStmt(stmt.TypeEnum, stmt.PropName, newParams, stmt.Line), nil
 }
 
-func (stmt *SpecFactStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
+func (stmt *SpecFactStmt) InstantiateFact(uniMap map[string]Fc) (FactStmt, error) {
 	return InstantiateSpecFact(stmt, uniMap)
 }
 
@@ -71,7 +71,7 @@ func InstantiateUniFact(stmt *UniFactStmt, uniMap map[string]Fc) (*UniFactStmt, 
 
 	newDomFacts := []FactStmt{}
 	for _, fact := range stmt.DomFacts {
-		newFact, err := fact.Instantiate(uniMap)
+		newFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, err
 		}
@@ -80,7 +80,7 @@ func InstantiateUniFact(stmt *UniFactStmt, uniMap map[string]Fc) (*UniFactStmt, 
 
 	newThenFacts := []FactStmt{}
 	for _, fact := range stmt.ThenFacts {
-		newFact, err := fact.Instantiate(uniMap)
+		newFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, err
 		}
@@ -99,7 +99,7 @@ func InstantiateUniFact(stmt *UniFactStmt, uniMap map[string]Fc) (*UniFactStmt, 
 	return NewUniFact(newParams, newSetParams, newDomFacts, newThenFacts, stmt.Line), nil
 }
 
-func (stmt *UniFactStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
+func (stmt *UniFactStmt) InstantiateFact(uniMap map[string]Fc) (FactStmt, error) {
 	return InstantiateUniFact(stmt, uniMap)
 }
 
@@ -125,7 +125,7 @@ func (defPropStmt *DefPropStmt) Instantiate(uniMap map[string]Fc) (*DefPropStmt,
 
 	newDomFacts := []FactStmt{}
 	for _, fact := range defPropStmt.DomFacts {
-		newFact, err := fact.Instantiate(uniMap)
+		newFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, err
 		}
@@ -134,7 +134,7 @@ func (defPropStmt *DefPropStmt) Instantiate(uniMap map[string]Fc) (*DefPropStmt,
 
 	newIffFacts := []FactStmt{}
 	for _, fact := range defPropStmt.IffFacts {
-		newFact, err := fact.Instantiate(uniMap)
+		newFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, err
 		}
@@ -143,7 +143,7 @@ func (defPropStmt *DefPropStmt) Instantiate(uniMap map[string]Fc) (*DefPropStmt,
 
 	newThenFacts := []FactStmt{}
 	for _, fact := range defPropStmt.ThenFacts {
-		newFact, err := fact.Instantiate(uniMap)
+		newFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, err
 		}
@@ -160,7 +160,7 @@ func (stmt *DefExistPropStmtBody) Instantiate(uniMap map[string]Fc) (*DefExistPr
 
 	newDomFacts := []FactStmt{}
 	for _, fact := range stmt.DomFacts {
-		newFact, err := fact.Instantiate(uniMap)
+		newFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, err
 		}
@@ -169,7 +169,7 @@ func (stmt *DefExistPropStmtBody) Instantiate(uniMap map[string]Fc) (*DefExistPr
 
 	newIffFacts := []FactStmt{}
 	for _, fact := range stmt.IffFacts {
-		newFact, err := fact.Instantiate(uniMap)
+		newFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, err
 		}
@@ -178,7 +178,7 @@ func (stmt *DefExistPropStmtBody) Instantiate(uniMap map[string]Fc) (*DefExistPr
 
 	newThenFacts := []FactStmt{}
 	for _, fact := range stmt.ThenFacts {
-		newFact, err := fact.Instantiate(uniMap)
+		newFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, err
 		}
@@ -214,10 +214,10 @@ func (stmt *DefExistPropStmt) ExistParamInSetsFacts() []FactStmt {
 	return facts
 }
 
-func (stmt *OrStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
+func (stmt *OrStmt) InstantiateFact(uniMap map[string]Fc) (FactStmt, error) {
 	newOrFacts := make([]*SpecFactStmt, len(stmt.Facts))
 	for i, fact := range stmt.Facts {
-		newFact, err := fact.Instantiate(uniMap)
+		newFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, err
 		}
@@ -227,15 +227,15 @@ func (stmt *OrStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
 	return NewOrStmt(newOrFacts, stmt.Line), nil
 }
 
-func (stmt *UniFactWithIffStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
-	newUniFact, err := stmt.UniFact.Instantiate(uniMap)
+func (stmt *UniFactWithIffStmt) InstantiateFact(uniMap map[string]Fc) (FactStmt, error) {
+	newUniFact, err := stmt.UniFact.InstantiateFact(uniMap)
 	if err != nil {
 		return nil, err
 	}
 
 	instantiatedIffFacts := []FactStmt{}
 	for _, fact := range stmt.IffFacts {
-		newFact, err := fact.Instantiate(uniMap)
+		newFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, err
 		}
@@ -245,7 +245,7 @@ func (stmt *UniFactWithIffStmt) Instantiate(uniMap map[string]Fc) (FactStmt, err
 	return NewUniFactWithIff(newUniFact.(*UniFactStmt), instantiatedIffFacts, stmt.Line), nil
 }
 
-func (stmt *EnumStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
+func (stmt *EnumStmt) InstantiateFact(uniMap map[string]Fc) (FactStmt, error) {
 	enumName, err := stmt.CurSet.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
@@ -263,7 +263,7 @@ func (stmt *EnumStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
 	return NewEnumStmt(enumName, newEnumValues, stmt.Line), nil
 }
 
-func (stmt *IntensionalSetStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
+func (stmt *IntensionalSetStmt) InstantiateFact(uniMap map[string]Fc) (FactStmt, error) {
 	newCurSet, err := stmt.CurSet.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
@@ -276,7 +276,7 @@ func (stmt *IntensionalSetStmt) Instantiate(uniMap map[string]Fc) (FactStmt, err
 
 	newProofs := make([]*SpecFactStmt, len(stmt.Facts))
 	for i, proof := range stmt.Facts {
-		newProof, err := proof.Instantiate(uniMap)
+		newProof, err := proof.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, err
 		}
@@ -286,7 +286,7 @@ func (stmt *IntensionalSetStmt) Instantiate(uniMap map[string]Fc) (FactStmt, err
 	return NewIntensionalSetStmt(newCurSet, stmt.Param, newParentSet, newProofs, stmt.Line), nil
 }
 
-func (stmt *EqualsFactStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
+func (stmt *EqualsFactStmt) InstantiateFact(uniMap map[string]Fc) (FactStmt, error) {
 	newParams := []Fc{}
 	for _, param := range stmt.Params {
 		newParam, err := param.Instantiate(uniMap)
@@ -313,7 +313,7 @@ func (fcSlice FcSlice) Instantiate(uniMap map[string]Fc) (FcSlice, error) {
 func (s SpecFactPtrSlice) Instantiate(uniMap map[string]Fc) (SpecFactPtrSlice, error) {
 	newSpecFactPtrSlice := make([]*SpecFactStmt, len(s))
 	for i, specFactPtr := range s {
-		newSpecFactPtr, err := specFactPtr.Instantiate(uniMap)
+		newSpecFactPtr, err := specFactPtr.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, err
 		}

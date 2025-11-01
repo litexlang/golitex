@@ -33,7 +33,7 @@ func useRandomParamToReplaceOriginalParamInUniFactWithIff(oldStmt *ast.UniFactWi
 		return oldStmt, nil, nil
 	}
 
-	instantiatedOldStmt, err := oldStmt.Instantiate(paramMap)
+	instantiatedOldStmt, err := oldStmt.InstantiateFact(paramMap)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -131,7 +131,7 @@ func (ver *Verifier) preprocessUniFactParamsWithoutThenFacts_OrStmt(knownUniFact
 		return nil, nil, nil, nil, err
 	}
 
-	instantiatedOrStmt, err := orStmt.Instantiate(paramMap)
+	instantiatedOrStmt, err := orStmt.InstantiateFact(paramMap)
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
@@ -200,7 +200,7 @@ func (ver *Verifier) preprocessUniFactParamsWithoutThenFacts(knownUniFact *ast.U
 
 	newDomFacts := []ast.FactStmt{}
 	for _, domFact := range domFacts_paramRandomized {
-		inst, err := domFact.Instantiate(paramMap)
+		inst, err := domFact.InstantiateFact(paramMap)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -238,7 +238,7 @@ func instantiateUniFactWithoutThenFacts(u *uniFactWithoutThenFacts, paramMap map
 
 	instantiatedDomFacts := []ast.FactStmt{}
 	for _, domFact := range u.DomFacts {
-		instantiatedDomFact, err := domFact.Instantiate(paramMap)
+		instantiatedDomFact, err := domFact.InstantiateFact(paramMap)
 		if err != nil {
 			return nil, err
 		}

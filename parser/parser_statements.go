@@ -1775,7 +1775,7 @@ func (tb *tokenBlock) relaFact_intensionalSetFact_enumStmt_equals() (ast.FactStm
 	return ret, nil
 }
 
-func (tb *tokenBlock) enumStmt_or_intensionalSetStmt_or_DomOf(fc ast.Fc) (ast.EnumSet_IntensionalSet_EqualDom_Interface, error) {
+func (tb *tokenBlock) enumStmt_or_intensionalSetStmt_or_DomOf(fc ast.Fc) (ast.FactStmt, error) {
 	// if tb.header.is(glob.KeySymbolLeftCurly) {
 	// 	return tb.enumFactualStmt(fc)
 	// } else {
@@ -2000,7 +2000,13 @@ func (tb *tokenBlock) haveSetStmt() (ast.Stmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	return ast.NewHaveSetStmt(fact, tb.line), nil
+	if enumFact, ok := fact.(*ast.EnumStmt); ok {
+		return ast.NewHaveEnumSetStmt(enumFact, tb.line), nil
+	} else if intensionalSetFact, ok := fact.(*ast.IntensionalSetStmt); ok {
+		return ast.NewHaveIntensionalSetStmt(intensionalSetFact, tb.line), nil
+	} else {
+		return nil, fmt.Errorf("expect enum or intensional set")
+	}
 }
 
 func (tb *tokenBlock) haveSetFnStmt() (ast.Stmt, error) {

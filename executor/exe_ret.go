@@ -78,3 +78,11 @@ func NewExecErr(s string) *ExecErr {
 	}
 	return &ExecErr{Msg: []string{s}}
 }
+
+func NewExecRetFromExecRetErr(ret ExecRet, err error) ExecRet {
+	if err != nil {
+		ret.AddMsg(err.Error())
+		return ret
+	}
+	return ret
+}

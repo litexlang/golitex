@@ -207,29 +207,19 @@ func (exec *Executor) checkInFactInSet_SetIsNonEmpty(pureInFact *ast.SpecFactStm
 	return false, nil
 }
 
-func (exec *Executor) haveSetStmt(stmt *ast.HaveSetStmt) (ExecRet, error) {
+func (exec *Executor) haveEnumSetStmt(stmt *ast.EnumStmt) ExecRet {
 	exec.newMsg(stmt.String())
-	switch asStmt := stmt.Fact.(type) {
-	case *ast.EnumStmt:
-		return exec.haveEnumSetStmt(asStmt)
-	case *ast.IntensionalSetStmt:
-		return exec.haveIntensionalSetStmt(asStmt)
-	}
 
-	return NewExecErr(""), fmt.Errorf("unknown set statement type: %T", stmt.Fact)
-}
-
-func (exec *Executor) haveEnumSetStmt(stmt *ast.EnumStmt) (ExecRet, error) {
 	// 验证里面的各个元素不相等
 	for i := range len(stmt.Items) {
 		for j := i + 1; j < len(stmt.Items); j++ {
 			notEqualFact := ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{stmt.Items[i], stmt.Items[j]}, stmt.Line)
 			ok, err := exec.openANewEnvAndCheck(notEqualFact, false)
 			if err != nil {
-				return NewExecErr(""), err
+				return NewExecErr(err.Error())
 			}
 			if ok.IsUnknown() {
-				return NewExecErr(""), fmt.Errorf("enumeration set items must be distinct, but %s is unknown", notEqualFact)
+				return NewExecErr("enumeration set items must be distinct, but " + notEqualFact.String() + " is unknown")
 			}
 		}
 	}
@@ -238,29 +228,30 @@ func (exec *Executor) haveEnumSetStmt(stmt *ast.EnumStmt) (ExecRet, error) {
 	defObjStmt := ast.NewDefObjStmt([]string{stmt.CurSet.String()}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}, []ast.FactStmt{stmt}, stmt.Line)
 	err := exec.defLetStmt(defObjStmt)
 	if err != nil {
-		return NewExecErr(""), err
+		return NewExecErr(err.Error())
 	}
 
-	return NewExecTrue(""), nil
+	return NewExecTrue("")
 }
 
-func (exec *Executor) haveIntensionalSetStmt(stmt *ast.IntensionalSetStmt) (ExecRet, error) {
+func (exec *Executor) haveIntensionalSetStmt(stmt *ast.IntensionalSetStmt) ExecRet {
+	exec.newMsg(stmt.String())
 	// very important: check whether the parent set is a set
 	ok, err := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.ParentSet, ast.FcAtom(glob.KeywordSet)}, stmt.Line))
 	if err != nil {
-		return NewExecErr(""), err
+		return NewExecErr(err.Error())
 	}
 	if ok.IsUnknown() {
-		return NewExecErr(""), fmt.Errorf("parent set of intensional set must be a set, i.e. `%s in %s` is true, but `%s in %s` is not", stmt.ParentSet, ast.FcAtom(glob.KeywordSet), stmt.ParentSet, ast.FcAtom(glob.KeywordSet))
+		return NewExecErr("parent set of intensional set must be a set, i.e. `" + stmt.ParentSet.String() + " in " + ast.FcAtom(glob.KeywordSet).String() + "` is true, but `" + stmt.ParentSet.String() + " in " + ast.FcAtom(glob.KeywordSet).String() + "` is not")
 	}
 
 	defObjStmt := ast.NewDefObjStmt([]string{stmt.CurSet.String()}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}, []ast.FactStmt{stmt}, stmt.Line)
 	err = exec.defLetStmt(defObjStmt)
 	if err != nil {
-		return NewExecErr(""), err
+		return NewExecErr(err.Error())
 	}
 
-	return NewExecTrue(""), nil
+	return NewExecTrue("")
 }
 
 func (exec *Executor) haveExistByReplacementStmt(stmt *ast.HaveObjStStmt) (ExecRet, error) {
