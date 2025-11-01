@@ -12,14 +12,14 @@
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
-package litex_verifier
+package litex_executor
 
 import (
 	"fmt"
 	ast "golitex/ast"
 )
 
-func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) (bool, error) {
+func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) VerRet {
 	// f(a)(b,c)(e,d,f) 返回 {f, f(a), f(a)(b,c), f(a)(b,c)(e,d,f)}, {nil, {a}, {b,c}, {e,d,f}}
 	fnHeadChain_AndItSelf, paramsChain := ast.GetFnHeadChain_AndItSelf(fcFn)
 
@@ -31,7 +31,7 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) (bool, e
 	// 比如 f(a)(b,c)(e,d,f) 我们现在得到了 f(a) 的 fnTStruct，那 curParamsChainIndex 就是 2, 表示 f(a) 对应的params就是 (b,c)
 	// curFnTStruct := ver.env.GetFnTStructOfFnInFnTMemItem(FnToFnItemWhereLatestFnTIsGot)
 	if FnToFnItemWhereLatestFnTIsGot == nil {
-		return false, fmt.Errorf("%s is not defined", fnHeadChain_AndItSelf[len(fnHeadChain_AndItSelf)-1])
+		return NewVerErr(fmt.Sprintf("%s is not defined", fnHeadChain_AndItSelf[len(fnHeadChain_AndItSelf)-1]))
 	}
 
 	curFnTStruct := FnToFnItemWhereLatestFnTIsGot.AsFnTStruct
@@ -41,30 +41,30 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) (bool, e
 	for curParamsChainIndex < len(fnHeadChain_AndItSelf)-1 {
 		uniMap, err := ast.MakeUniMap(curFnTStruct.Params, paramsChain[curParamsChainIndex])
 		if err != nil {
-			return false, err
+			return NewVerErr(err.Error())
 		}
 
 		instCurFnTStruct, err := curFnTStruct.Instantiate(uniMap)
 		if err != nil {
-			return false, err
+			return NewVerErr(err.Error())
 		}
 
-		ok, err := ver.checkParamsSatisfyFnTStruct(paramsChain[curParamsChainIndex], instCurFnTStruct, state)
-		if err != nil {
-			return false, err
+		verRet := ver.checkParamsSatisfyFnTStruct(paramsChain[curParamsChainIndex], instCurFnTStruct, state)
+		if verRet.IsErr() {
+			return verRet
 		}
-		if !ok {
-			return false, nil
+		if verRet.IsUnknown() {
+			return verRet
 		}
 
 		curRetSet, ok := instCurFnTStruct.RetSet.(*ast.FcFn)
 		if !ok {
-			return false, fmt.Errorf("curRetSet is not an FcFn")
+			return NewVerErr("curRetSet is not an FcFn")
 		}
 
 		curFnTStruct, err = ver.GetFnStructFromFnTName_CheckFnTParamsReq(curRetSet, state)
 		if err != nil {
-			return false, err
+			return NewVerErr(err.Error())
 		}
 
 		curParamsChainIndex++
@@ -72,23 +72,23 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) (bool, e
 
 	uniMap, err := ast.MakeUniMap(curFnTStruct.Params, paramsChain[curParamsChainIndex])
 	if err != nil {
-		return false, err
+		return NewVerErr(err.Error())
 	}
 
 	instCurFnTStruct, err := curFnTStruct.Instantiate(uniMap)
 	if err != nil {
-		return false, err
+		return NewVerErr(err.Error())
 	}
 
-	ok, err := ver.checkParamsSatisfyFnTStruct(paramsChain[curParamsChainIndex], instCurFnTStruct, state)
-	if err != nil {
-		return false, err
+	verRet := ver.checkParamsSatisfyFnTStruct(paramsChain[curParamsChainIndex], instCurFnTStruct, state)
+	if verRet.IsErr() {
+		return verRet
 	}
-	if !ok {
-		return false, nil
+	if verRet.IsUnknown() {
+		return verRet
 	}
 
-	return true, nil
+	return NewVerTrue("")
 }
 
 func (ver *Verifier) GetFnStructFromFnTName_CheckFnTParamsReq(fnTName *ast.FcFn, state *VerState) (*ast.FnTStruct, error) {
@@ -115,38 +115,37 @@ func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckParamsSatisfyFnTReq(fnTDef
 		return nil, err
 	}
 
-	var ok bool
-	ok, err = ver.getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreTrue(defOfT, uniMap, state)
-	if err != nil {
+	verRet := ver.getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreTrue(defOfT, uniMap, state)
+	if verRet.IsErr() {
 		return nil, err
 	}
-	if !ok {
+	if verRet.IsUnknown() {
 		return nil, fmt.Errorf("template params dom facts are not true")
 	}
 
 	return defOfT.Fn.Instantiate(uniMap)
 }
 
-func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreTrue(fnTDef *ast.FnTemplateDefStmt, uniMap map[string]ast.Fc, state *VerState) (bool, error) {
+func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreTrue(fnTDef *ast.FnTemplateDefStmt, uniMap map[string]ast.Fc, state *VerState) VerRet {
 	ver.newEnv(ver.env)
 	defer ver.deleteEnvAndRetainMsg()
 
 	for _, fact := range fnTDef.TemplateDomFacts {
-		newFact, err := fact.Instantiate(uniMap)
+		newFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
-			return false, err
+			return NewVerErr(err.Error())
 		}
 
 		verRet := ver.VerFactStmt(newFact, state)
 		if verRet.IsErr() || verRet.IsUnknown() {
-			return verRet.ToBoolErr()
+			return verRet
 		}
 	}
 
-	return true, nil
+	return NewVerTrue("")
 }
 
-func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.FcSlice, fnTStruct *ast.FnTStruct, state *VerState) (bool, error) {
+func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.FcSlice, fnTStruct *ast.FnTStruct, state *VerState) VerRet {
 	failed := false
 
 	curState := state.GetNoMsg()
@@ -156,27 +155,27 @@ func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.FcSlice, fnT
 		}
 	}()
 
-	ok, msg, err := ver.paramsInSets(concreteParams, fnTStruct.ParamSets, curState)
-	if err != nil {
+	verRet := ver.paramsInSets(concreteParams, fnTStruct.ParamSets, curState)
+	if verRet.IsErr() {
 		failed = true
-		return false, err
+		return verRet
 	}
-	if !ok {
+	if verRet.IsUnknown() {
 		failed = true
-		ver.env.Msgs = append(ver.env.Msgs, msg...)
-		return false, nil
-	}
-
-	ok, msg, err = ver.factsAreTrue(fnTStruct.DomFacts, curState)
-	if err != nil {
-		failed = true
-		return false, err
-	}
-	if !ok {
-		failed = true
-		ver.env.Msgs = append(ver.env.Msgs, msg...)
-		return false, nil
+		ver.env.Msgs = append(ver.env.Msgs, verRet.String())
+		return verRet
 	}
 
-	return true, nil
+	verRet = ver.factsAreTrue(fnTStruct.DomFacts, curState)
+	if verRet.IsErr() {
+		failed = true
+		return verRet
+	}
+	if verRet.IsUnknown() {
+		failed = true
+		ver.env.Msgs = append(ver.env.Msgs, verRet.String())
+		return NewVerUnknown("")
+	}
+
+	return NewVerTrue("")
 }

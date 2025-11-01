@@ -19,7 +19,6 @@ import (
 	ast "golitex/ast"
 	env "golitex/environment"
 	glob "golitex/glob"
-	verifier "golitex/verifier"
 	"strings"
 )
 
@@ -68,8 +67,10 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (ExecRet, string, error) {
 		execState, err = exec.proveByEnumStmt(stmt)
 	case *ast.HaveObjInNonEmptySetStmt:
 		execState, err = exec.haveObjInNonEmptySetStmt(stmt)
-	case *ast.HaveSetStmt:
-		execState, err = exec.haveSetStmt(stmt)
+	case *ast.HaveEnumSetStmt:
+		execState = exec.haveEnumSetStmt(stmt)
+	case *ast.HaveIntensionalSetStmt:
+		execState = exec.haveIntensionalSetStmt(stmt)
 	case *ast.HaveSetFnStmt:
 		execState, err = exec.haveSetFnStmt(stmt)
 	case *ast.HaveSetDefinedByReplacementStmt:
@@ -131,8 +132,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (ExecRet, string, error) {
 }
 
 func (exec *Executor) factStmt(stmt ast.FactStmt) (ExecRet, error) {
-	curVerifier := verifier.NewVerifier(exec.env)
-	state := verifier.Round0Msg
+	curVerifier := NewVerifier(exec.env)
+	state := Round0Msg
 	verRet := curVerifier.VerFactStmt(stmt, state)
 
 	if verRet.IsErr() {
@@ -141,6 +142,14 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) (ExecRet, error) {
 		err := exec.env.NewFact(stmt)
 		if err != nil {
 			return NewExecErr(""), err
+		}
+		if verRet.(*VerTrue).TrueEqualValues != nil {
+			if verRet.(*VerTrue).TrueEqualValues[0] != nil {
+				exec.env.StoreTrueEqualValues(stmt.(*ast.SpecFactStmt).Params[1], verRet.(*VerTrue).TrueEqualValues[0])
+			}
+			if verRet.(*VerTrue).TrueEqualValues[1] != nil {
+				exec.env.StoreTrueEqualValues(stmt.(*ast.SpecFactStmt).Params[0], verRet.(*VerTrue).TrueEqualValues[1])
+			}
 		}
 		return NewExecTrue(""), nil
 	} else if verRet.IsUnknown() {
@@ -254,7 +263,7 @@ func (exec *Executor) defLetStmt(stmt *ast.DefLetStmt) error {
 	// 	defer exec.newMsg(fmt.Sprintf("%s\n", stmt))
 	// }
 
-	ver := verifier.NewVerifier(exec.env)
+	ver := NewVerifier(exec.env)
 	return ver.NewDefObj_InsideAtomsDeclared(stmt)
 }
 
@@ -345,7 +354,7 @@ func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEach
 
 	// verify thenFacts are true
 	// execState, failedFact, err := verifier.ExecFactsAtCurEnv_retFailedFact(stmt.ThenFacts, exec.env, verifier.Round0NoMsg)
-	execState, failedFact, err := exec.verifyFactsAtCurEnv(stmt.ThenFacts, verifier.Round0NoMsg)
+	execState, failedFact, err := exec.verifyFactsAtCurEnv(stmt.ThenFacts, Round0NoMsg)
 	if err != nil {
 		return execState, fmt.Errorf("prove in each case statement error: failed to verify then facts:\n%s\n%s", failedFact, err)
 	} else if execState.IsUnknown() {
@@ -579,10 +588,10 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) (ExecRet, err
 	// 	}()
 	// }
 
-	ver := verifier.NewVerifier(exec.env)
+	ver := NewVerifier(exec.env)
 
 	for i := range len(stmt.ObjNames) {
-		verRet := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.ObjEqualTos[i], stmt.ObjSets[i]}, stmt.Line), verifier.Round0Msg)
+		verRet := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.ObjEqualTos[i], stmt.ObjSets[i]}, stmt.Line), Round0Msg)
 		if verRet.IsErr() {
 			return NewExecErr(""), fmt.Errorf(verRet.String())
 		}
@@ -643,8 +652,8 @@ func (exec *Executor) checkFnEqualStmt(stmt *ast.HaveFnEqualStmt) (ExecRet, erro
 		}
 	}
 
-	ver := verifier.NewVerifier(exec.env)
-	verRet := ver.VerFactStmt(ast.NewInFactWithFc(stmt.EqualTo, stmt.RetSet), verifier.Round0Msg)
+	ver := NewVerifier(exec.env)
+	verRet := ver.VerFactStmt(ast.NewInFactWithFc(stmt.EqualTo, stmt.RetSet), Round0Msg)
 	if verRet.IsErr() {
 		return NewExecErr(""), fmt.Errorf(verRet.String())
 	}
@@ -793,12 +802,12 @@ func (exec *Executor) openANewEnvAndCheck(fact ast.FactStmt, requireMsg bool) (E
 	exec.NewEnv(exec.env)
 	defer exec.deleteEnvAndRetainMsg()
 
-	ver := verifier.NewVerifier(exec.env)
-	var state *verifier.VerState
+	ver := NewVerifier(exec.env)
+	var state *VerState
 	if requireMsg {
-		state = verifier.Round0Msg
+		state = Round0Msg
 	} else {
-		state = verifier.Round0NoMsg
+		state = Round0NoMsg
 	}
 
 	verRet := ver.VerFactStmt(fact, state)

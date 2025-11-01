@@ -390,6 +390,20 @@ func (tb *tokenBlock) bodyFacts(uniFactDepth uniFactEnum) ([]ast.FactStmt, error
 }
 
 func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
+	body, err := tb.defPropStmtWithoutSelfReferCheck()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = NoSelfReferenceInPropDef(string(body.DefHeader.Name), append(append(body.DomFacts, body.IffFacts...), body.ThenFacts...))
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	return body, nil
+}
+
+func (tb *tokenBlock) defPropStmtWithoutSelfReferCheck() (*ast.DefPropStmt, error) {
 	err := tb.header.skip(glob.KeywordProp)
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -709,6 +723,20 @@ func (tb *tokenBlock) defHeaderWithoutParsingColonAtEnd() (*ast.DefHeader, error
 }
 
 func (tb *tokenBlock) defExistPropStmt(head string) (*ast.DefExistPropStmt, error) {
+	body, err := tb.defExistPropStmtBodyWithoutSelfReferCheck(head)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = NoSelfReferenceInPropDef(string(body.DefBody.DefHeader.Name), append(append(body.DefBody.DomFacts, body.DefBody.IffFacts...), body.DefBody.ThenFacts...))
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	return body, nil
+}
+
+func (tb *tokenBlock) defExistPropStmtBodyWithoutSelfReferCheck(head string) (*ast.DefExistPropStmt, error) {
 	var err error
 
 	err = tb.header.skip(head)
@@ -1747,7 +1775,7 @@ func (tb *tokenBlock) relaFact_intensionalSetFact_enumStmt_equals() (ast.FactStm
 	return ret, nil
 }
 
-func (tb *tokenBlock) enumStmt_or_intensionalSetStmt_or_DomOf(fc ast.Fc) (ast.EnumSet_IntensionalSet_EqualDom_Interface, error) {
+func (tb *tokenBlock) enumStmt_or_intensionalSetStmt_or_DomOf(fc ast.Fc) (ast.FactStmt, error) {
 	// if tb.header.is(glob.KeySymbolLeftCurly) {
 	// 	return tb.enumFactualStmt(fc)
 	// } else {
@@ -1972,7 +2000,13 @@ func (tb *tokenBlock) haveSetStmt() (ast.Stmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	return ast.NewHaveSetStmt(fact, tb.line), nil
+	if enumFact, ok := fact.(*ast.EnumStmt); ok {
+		return ast.NewHaveEnumSetStmt(enumFact, tb.line), nil
+	} else if intensionalSetFact, ok := fact.(*ast.IntensionalSetStmt); ok {
+		return ast.NewHaveIntensionalSetStmt(intensionalSetFact, tb.line), nil
+	} else {
+		return nil, fmt.Errorf("expect enum or intensional set")
+	}
 }
 
 func (tb *tokenBlock) haveSetFnStmt() (ast.Stmt, error) {
@@ -2462,29 +2496,9 @@ func (tb *tokenBlock) haveObjEqualStmt() (*ast.HaveObjEqualStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	objectNames := []string{}
 	objectEqualTos := []ast.Fc{}
-	setSlice := []ast.Fc{}
 
-	for !tb.header.is(glob.KeySymbolEqual) {
-		objectName, err := tb.header.next()
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-		objectNames = append(objectNames, objectName)
-
-		set, err := tb.RawFc()
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-		setSlice = append(setSlice, set)
-
-		if tb.header.is(glob.KeySymbolComma) {
-			tb.header.skip(glob.KeySymbolComma)
-		}
-	}
-
-	err = tb.header.skip(glob.KeySymbolEqual)
+	objectNames, setSlice, err := tb.param_paramSet_paramInSetFacts(glob.KeySymbolEqual, false)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}

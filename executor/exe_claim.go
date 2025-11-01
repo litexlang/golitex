@@ -19,7 +19,6 @@ import (
 	ast "golitex/ast"
 	env "golitex/environment"
 	glob "golitex/glob"
-	verifier "golitex/verifier"
 	"strings"
 )
 
@@ -93,7 +92,7 @@ func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.Spec_O
 }
 
 func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt, stmt *ast.ClaimProveByContradictionStmt) (ExecRet, error) {
-	ver := verifier.NewVerifier(exec.env)
+	ver := NewVerifier(exec.env)
 	newStmtPtr, err := ver.PreprocessUniFactParams_DeclareParams(specFactStmt)
 	if err != nil {
 		return NewExecErr(""), err
@@ -271,7 +270,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 	// TODO: 让claim能forall if
 	// if asUnivFact.IffFacts == nil || len(asUnivFact.IffFacts) == 0 {
 	// execState, failedFact, err := verifier.ExecFactsAtCurEnv_retFailedFact(asUnivFact.ThenFacts, exec.env, verifier.Round0NoMsg)
-	execState, failedFact, err := exec.verifyFactsAtCurEnv(asUnivFact.ThenFacts, verifier.Round0NoMsg)
+	execState, failedFact, err := exec.verifyFactsAtCurEnv(asUnivFact.ThenFacts, Round0NoMsg)
 	if err != nil {
 		return false, fmt.Errorf("claim statement error: failed to verify fact:\n%s\n%s", failedFact, err)
 	} else if execState.IsUnknown() {
@@ -376,7 +375,7 @@ func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt
 	}
 
 	for _, fact := range stmt.ExistPropWithoutDom.DefBody.ThenFacts {
-		instFact, err := fact.Instantiate(uniMap)
+		instFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return NewExecErr(""), err
 		}
@@ -458,7 +457,7 @@ func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimProp
 		reverseLastProofAsFacts = append(reverseLastProofAsFacts, fact)
 	}
 	// execState, failedFact, err := verifier.(reverseLastProof, exec.env)
-	execState, failedFact, err := exec.verifyFactsAtCurEnv(reverseLastProofAsFacts, verifier.Round0NoMsg)
+	execState, failedFact, err := exec.verifyFactsAtCurEnv(reverseLastProofAsFacts, Round0NoMsg)
 	if err != nil {
 		return execState, fmt.Errorf("claim prop statement error: failed to verify reverse of last proof:\n%s\n%s", failedFact, err)
 	} else if execState.IsUnknown() {

@@ -29,7 +29,7 @@ func (stmt *FnTStruct) Instantiate(uniMap map[string]Fc) (*FnTStruct, error) {
 
 	newDomFacts := make(FactStmtSlice, len(stmt.DomFacts))
 	for i := range stmt.DomFacts {
-		newDomFacts[i], err = stmt.DomFacts[i].Instantiate(uniMap)
+		newDomFacts[i], err = stmt.DomFacts[i].InstantiateFact(uniMap)
 		if err != nil {
 			return nil, err
 		}
@@ -37,7 +37,7 @@ func (stmt *FnTStruct) Instantiate(uniMap map[string]Fc) (*FnTStruct, error) {
 
 	newThenFacts := make(FactStmtSlice, len(stmt.ThenFacts))
 	for i := range stmt.ThenFacts {
-		newThenFacts[i], err = stmt.ThenFacts[i].Instantiate(uniMap)
+		newThenFacts[i], err = stmt.ThenFacts[i].InstantiateFact(uniMap)
 		if err != nil {
 			return nil, err
 		}

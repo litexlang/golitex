@@ -12,13 +12,12 @@
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
-package litex_verifier
+package litex_executor
 
 import (
 	"fmt"
 	ast "golitex/ast"
 	env "golitex/environment"
-	glob "golitex/glob"
 )
 
 func (ver *Verifier) todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt *ast.SpecFactStmt) *env.Env {
@@ -26,62 +25,43 @@ func (ver *Verifier) todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt *ast.Sp
 	return nil
 }
 
-func isErrOrOk(ok bool, err error) bool {
-	return err != nil || ok
-}
-
-func (ver *Verifier) processOkMsg(state *VerState, msg string, verifiedBy string, args ...any) (bool, error) {
+func (ver *Verifier) processOkMsg(state *VerState, msg string, verifiedBy string, args ...any) VerRet {
 	if state.WithMsg {
 		ver.successWithMsg(msg, fmt.Sprintf(verifiedBy, args...))
 	}
-	return true, nil
+	return NewVerTrue(successVerString(msg, fmt.Sprintf(verifiedBy, args...)))
 }
 
-func (ver *Verifier) paramsInSets(params []ast.Fc, sets []ast.Fc, state *VerState) (bool, glob.Msgs, error) {
+func (ver *Verifier) paramsInSets(params []ast.Fc, sets []ast.Fc, state *VerState) VerRet {
 	if len(params) != len(sets) {
-		return false, glob.Msgs{}, fmt.Errorf("params and sets length mismatch")
+		return NewVerErr("params and sets length mismatch")
 	}
 
 	for i := range params {
 		fact := ast.NewInFactWithFc(params[i], sets[i])
 		verRet := ver.VerFactStmt(fact, state)
 		if verRet.IsErr() {
-			return false, glob.Msgs{}, fmt.Errorf(verRet.String())
+			return verRet
 		}
 		if verRet.IsUnknown() {
-			return false, glob.Msgs{ast.UnknownFactMsg(fact)}, nil
+			return NewVerUnknown(ast.UnknownFactMsg(fact))
 		}
 	}
-	return true, glob.Msgs{}, nil
+	return NewVerTrue("")
 }
 
-func (ver *Verifier) factsAreTrue(facts []ast.FactStmt, state *VerState) (bool, glob.Msgs, error) {
+func (ver *Verifier) factsAreTrue(facts []ast.FactStmt, state *VerState) VerRet {
 	for _, fact := range facts {
 		verRet := ver.VerFactStmt(fact, state)
 		if verRet.IsErr() {
-			return false, glob.Msgs{}, fmt.Errorf(verRet.String())
+			return verRet
 		}
 		if verRet.IsUnknown() {
-			return false, glob.Msgs{ast.UnknownFactMsg(fact)}, nil
+			return NewVerUnknown(ast.UnknownFactMsg(fact))
 		}
 	}
 
-	return true, glob.Msgs{}, nil
-}
-
-func VerFactInNewEnv(oldEnv *env.Env, facts []ast.FactStmt, state *VerState) (bool, error) {
-	ver := NewVerifier(oldEnv)
-	ver.newEnv(oldEnv)
-	defer ver.deleteEnvAndRetainMsg()
-
-	for _, fact := range facts {
-		verRet := ver.VerFactStmt(fact, state)
-		if verRet.IsErr() || verRet.IsUnknown() {
-			return verRet.ToBoolErr()
-		}
-	}
-
-	return true, nil
+	return NewVerTrue("")
 }
 
 func IsTrueOrErr(ok bool, err error) bool {
