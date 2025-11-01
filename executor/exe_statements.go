@@ -68,9 +68,9 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (ExecRet, string, error) {
 	case *ast.HaveObjInNonEmptySetStmt:
 		execState, err = exec.haveObjInNonEmptySetStmt(stmt)
 	case *ast.HaveEnumSetStmt:
-		execState = exec.haveEnumSetStmt(stmt.Fact)
+		execState = exec.haveEnumSetStmt(stmt)
 	case *ast.HaveIntensionalSetStmt:
-		execState = exec.haveIntensionalSetStmt(stmt.Fact)
+		execState = exec.haveIntensionalSetStmt(stmt)
 	case *ast.HaveSetFnStmt:
 		execState, err = exec.haveSetFnStmt(stmt)
 	case *ast.HaveSetDefinedByReplacementStmt:

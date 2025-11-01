@@ -65,7 +65,7 @@ func (v *VerUnknown) AddMsg(msg string)        { v.Msg = append(v.Msg, msg) }
 func (v *VerUnknown) String() string           { return strings.Join(v.Msg, "\n") }
 func (v *VerUnknown) ToBoolErr() (bool, error) { return false, nil }
 
-func newVerErr(s string) *VerErr {
+func NewVerErr(s string) *VerErr {
 	if s != "" {
 		return &VerErr{Msg: []string{s}}
 	}
@@ -82,21 +82,21 @@ func BoolErrToVerRet(ok bool, err error) VerRet {
 	return &VerUnknown{Msg: []string{}}
 }
 
-func NewTrueVerRet(s string) VerRet {
+func NewVerTrue(s string) VerRet {
 	if s != "" {
 		return &VerTrue{Msg: []string{s}}
 	}
 	return &VerTrue{Msg: []string{}, TrueEqualValues: nil}
 }
 
-func NewUnknownVerRet(s string) VerRet {
+func NewVerUnknown(s string) VerRet {
 	if s != "" {
 		return &VerUnknown{Msg: []string{s}}
 	}
 	return &VerUnknown{Msg: []string{}}
 }
 
-func NewTrueVerRetWithValues(s string, equalValue []ast.Fc) VerRet {
+func NewVerTrueWithValues(s string, equalValue []ast.Fc) VerRet {
 	if s != "" {
 		return &VerTrue{Msg: []string{s}, TrueEqualValues: equalValue}
 	}

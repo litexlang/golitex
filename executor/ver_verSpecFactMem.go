@@ -37,7 +37,7 @@ func (ver *Verifier) verSpecFact_BySpecMem(stmt *ast.SpecFactStmt, state *VerSta
 		}
 	}
 
-	return NewUnknownVerRet("")
+	return NewVerUnknown("")
 }
 
 func (ver *Verifier) verSpecFact_ByLogicMem(stmt *ast.SpecFactStmt, state *VerState) VerRet {
@@ -53,7 +53,7 @@ func (ver *Verifier) verSpecFact_ByLogicMem(stmt *ast.SpecFactStmt, state *VerSt
 		}
 	}
 
-	return NewUnknownVerRet("")
+	return NewVerUnknown("")
 }
 
 func (ver *Verifier) verSpecFact_InSpecFact_UniMem(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {

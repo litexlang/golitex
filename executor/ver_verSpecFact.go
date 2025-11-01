@@ -66,7 +66,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast
 				if state.WithMsg {
 					ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is true by %s is a transitive prop and %s is true", stmt.String(), string(stmt.PropName), relatedFcStmt.String()))
 				}
-				return NewTrueVerRet(fmt.Sprintf("%s is true by %s is a transitive prop and %s is true", stmt.String(), string(stmt.PropName), relatedFcStmt.String()))
+				return NewVerTrue(fmt.Sprintf("%s is true by %s is a transitive prop and %s is true", stmt.String(), string(stmt.PropName), relatedFcStmt.String()))
 			}
 		}
 	}
@@ -86,7 +86,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *a
 			if state.WithMsg {
 				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
 			}
-			return NewTrueVerRet(fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
+			return NewVerTrue(fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
 		}
 	}
 
@@ -95,10 +95,10 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *a
 		return verRet
 	}
 	if verRet.IsTrue() {
-		return NewTrueVerRet("")
+		return NewVerTrue("")
 	}
 
-	return NewUnknownVerRet("")
+	return NewVerUnknown("")
 }
 
 // TODO: 其实 specFact 是等号的时候，还是会访问到这个函数。
@@ -138,7 +138,7 @@ func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state *VerSta
 		}
 	}
 
-	return NewUnknownVerRet("")
+	return NewVerUnknown("")
 }
 
 func (ver *Verifier) verSpecialSpecFact_ByBIR(stmt *ast.SpecFactStmt, state *VerState) VerRet {
@@ -151,14 +151,14 @@ func (ver *Verifier) verSpecialSpecFact_ByBIR(stmt *ast.SpecFactStmt, state *Ver
 	if ok, err := ver.verNumberLogicRelaOpt_BuiltinRules(stmt, state); err != nil {
 		return BoolErrToVerRet(false, err)
 	} else if ok {
-		return NewTrueVerRet("")
+		return NewVerTrue("")
 	}
 
 	if stmt.NameIs(glob.KeySymbolEqual) && stmt.TypeEnum == ast.FalsePure {
 		return BoolErrToVerRet(ver.verNotTrueEqualFact_BuiltinRules(stmt, state))
 	}
 
-	return NewUnknownVerRet("")
+	return NewVerUnknown("")
 }
 
 func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecFactStmt, state *VerState) VerRet {
@@ -174,7 +174,7 @@ func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecFactStmt, state *VerState) 
 		return ver.verExistSpecFact_ByDefinition(stmt, state)
 	}
 
-	return NewUnknownVerRet("")
+	return NewVerUnknown("")
 }
 
 func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) VerRet {
@@ -184,12 +184,12 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 	// defStmt := curDefStmt
 	if curDefStmt == nil {
 		// 这里可能是因为这个propName是exist prop，所以没有定义
-		return NewUnknownVerRet("")
+		return NewVerUnknown("")
 	}
 
 	if len(curDefStmt.IffFacts) == 0 {
 		// REMARK: 如果IFFFacts不存在，那我们认为是 没有iff能验证prop，而不是prop自动成立
-		return NewUnknownVerRet("")
+		return NewVerUnknown("")
 	}
 
 	defStmt := ver.env.MakeUniFactParamsInThisDefPropDoNotConflictWithEnv(curDefStmt)
@@ -230,7 +230,7 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 		ver.successWithMsg(stmt.String(), defStmt.String())
 	}
 
-	return NewTrueVerRet("")
+	return NewVerTrue("")
 }
 
 func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) VerRet {
@@ -266,7 +266,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 				msg := fmt.Sprintf("given object %s is not in its param set %s\n", existParams[i], instParamSets[i])
 				ver.env.Msgs = append(ver.env.Msgs, msg)
 			}
-			return NewUnknownVerRet("")
+			return NewVerUnknown("")
 		}
 	}
 
@@ -290,7 +290,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 				msg := fmt.Sprintf("dom fact %s is unknown\n", domFact)
 				ver.env.Msgs = append(ver.env.Msgs, msg)
 			}
-			return NewUnknownVerRet("")
+			return NewVerUnknown("")
 		}
 	}
 
@@ -305,7 +305,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 		ver.successWithMsg(stmt.String(), "by definition")
 	}
 
-	return NewTrueVerRet("")
+	return NewVerTrue("")
 }
 
 func (ver *Verifier) verSpecFactLogicMem(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
