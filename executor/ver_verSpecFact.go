@@ -148,10 +148,10 @@ func (ver *Verifier) verSpecialSpecFact_ByBIR(stmt *ast.SpecFactStmt, state *Ver
 		return ver.trueExistInSt(stmt, state)
 	}
 
-	if ok, err := ver.verNumberLogicRelaOpt_BuiltinRules(stmt, state); err != nil {
-		return BoolErrToVerRet(false, err)
-	} else if ok {
-		return NewVerTrue("")
+	if verRet := ver.verNumberLogicRelaOpt_BuiltinRules(stmt, state); verRet.IsErr() {
+		return verRet
+	} else if verRet.IsTrue() {
+		return verRet
 	}
 
 	if stmt.NameIs(glob.KeySymbolEqual) && stmt.TypeEnum == ast.FalsePure {
