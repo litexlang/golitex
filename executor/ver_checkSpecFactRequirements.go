@@ -32,12 +32,12 @@ func (ver *Verifier) checkSpecFactReq(stmt *ast.SpecFactStmt, state *VerState) (
 			return BoolErrToVerRet(ok, nil), state
 		}
 
-		ok, state, err := ver.checkFnsReqAndUpdateReqState(stmt, state)
-		return BoolErrToVerRet(ok, err), state
+		state, verRet := ver.checkFnsReqAndUpdateReqState(stmt, state)
+		return verRet, state
 	}
 
-	ok, state, err := ver.checkFnsReqAndUpdateReqState(stmt, state)
-	return BoolErrToVerRet(ok, err), state
+	state, verRet := ver.checkFnsReqAndUpdateReqState(stmt, state)
+	return verRet, state
 }
 
 // 只验证 1. params都声明了 2. 确实是fn template
@@ -81,7 +81,7 @@ func (ver *Verifier) checkSpecFactReq_InFact_UseBtRules(stmt *ast.SpecFactStmt) 
 	}
 }
 
-func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state *VerState) (bool, *VerState, error) {
+func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state *VerState) (*VerState, VerRet) {
 
 	// 1. Check if all atoms in the parameters are declared
 	// REMARK
@@ -89,7 +89,7 @@ func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state 
 	for _, param := range stmt.Params {
 		ok := ver.env.AreAtomsInFcAreDeclared(param, map[string]struct{}{})
 		if !ok {
-			return false, state, fmt.Errorf(env.AtomsInFcNotDeclaredMsg(param))
+			return state, NewVerErr(env.AtomsInFcNotDeclaredMsg(param))
 		}
 	}
 
@@ -100,10 +100,10 @@ func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state 
 	for _, param := range stmt.Params {
 		verRet := ver.fcSatisfyFnRequirement(param, stateNoMsg)
 		if verRet.IsErr() {
-			return false, state, fmt.Errorf(verRet.String())
+			return state, verRet
 		}
 		if verRet.IsUnknown() {
-			return false, state, parametersDoNotSatisfyFnReq(param, param)
+			return state, BoolErrToVerRet(false, parametersDoNotSatisfyFnReq(param, param))
 		}
 	}
 
@@ -112,7 +112,7 @@ func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state 
 
 	// state.ReqOk = true
 	newState := VerState{state.Round, state.WithMsg, true}
-	return true, &newState, nil
+	return &newState, NewVerTrue("")
 }
 
 func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state *VerState) VerRet {

@@ -115,18 +115,18 @@ func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state *VerState) (bo
 	return false, nil
 }
 
-func (ver *Verifier) verTrueEqualFact_FcFnEqual_NoCheckRequirements(left, right *ast.FcFn, state *VerState) (bool, string, error) {
+func (ver *Verifier) verTrueEqualFact_FcFnEqual_NoCheckRequirements(left, right *ast.FcFn, state *VerState) VerRet {
 	if len(left.Params) != len(right.Params) {
-		return false, "", nil
+		return NewVerUnknown("")
 	}
 
 	// ok, err = ver.fcEqualSpec(left.FnHead, right.FnHead, state)
 	verRet := ver.verTrueEqualFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{left.FnHead, right.FnHead}, glob.InnerGenLine), state, false)
 	if verRet.IsErr() {
-		return false, "", fmt.Errorf(verRet.String())
+		return verRet
 	}
 	if verRet.IsUnknown() {
-		return false, "", nil
+		return NewVerUnknown("")
 	}
 
 	for i := range left.Params {
@@ -134,15 +134,15 @@ func (ver *Verifier) verTrueEqualFact_FcFnEqual_NoCheckRequirements(left, right 
 
 		verRet := ver.verTrueEqualFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{left.Params[i], right.Params[i]}, glob.InnerGenLine), state, false)
 		if verRet.IsErr() {
-			return false, "", fmt.Errorf(verRet.String())
+			return verRet
 		}
 		if verRet.IsUnknown() {
-			return false, "", nil
+			return verRet
 		}
 	}
 
 	// return newTrueVerRet("")
-	return true, "", nil
+	return NewVerTrue("")
 }
 
 func (ver *Verifier) FcsEqualBy_Eval_ShareKnownEqualMem(left, right ast.Fc, state *VerState) (bool, error) {

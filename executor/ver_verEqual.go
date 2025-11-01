@@ -40,13 +40,12 @@ func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, c
 }
 
 func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *VerState, checkRequirements bool) VerRet {
-	var ok bool
-	var err error
+	var verRet VerRet
 
 	if checkRequirements && !state.ReqOk {
 		// REMARK: 这里 state 更新了： ReqOk 更新到了 true
-		if ok, state, err = ver.checkFnsReqAndUpdateReqState(stmt, state); IsFalseOrErr(ok, err) {
-			return BoolErrToVerRet(ok, err)
+		if state, verRet = ver.checkFnsReqAndUpdateReqState(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
+			return verRet
 		}
 
 		if !isValidEqualFact(stmt) {
@@ -60,12 +59,9 @@ func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *Ve
 
 	if leftAsFn, ok := stmt.Params[0].(*ast.FcFn); ok {
 		if rightAsFn, ok := stmt.Params[1].(*ast.FcFn); ok {
-			checked, _, err := ver.verTrueEqualFact_FcFnEqual_NoCheckRequirements(leftAsFn, rightAsFn, state)
-			if err != nil {
-				return BoolErrToVerRet(ok, err)
-			}
-			if checked {
-				return NewVerTrue("")
+			verRet := ver.verTrueEqualFact_FcFnEqual_NoCheckRequirements(leftAsFn, rightAsFn, state)
+			if verRet.IsErr() || verRet.IsTrue() {
+				return verRet
 			}
 		}
 	} else {
