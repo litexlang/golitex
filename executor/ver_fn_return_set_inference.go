@@ -19,7 +19,7 @@ import (
 	ast "golitex/ast"
 )
 
-func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) (bool, error) {
+func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) VerRet {
 	// f(a)(b,c)(e,d,f) 返回 {f, f(a), f(a)(b,c), f(a)(b,c)(e,d,f)}, {nil, {a}, {b,c}, {e,d,f}}
 	fnHeadChain_AndItSelf, paramsChain := ast.GetFnHeadChain_AndItSelf(fcFn)
 
@@ -31,7 +31,7 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) (bool, e
 	// 比如 f(a)(b,c)(e,d,f) 我们现在得到了 f(a) 的 fnTStruct，那 curParamsChainIndex 就是 2, 表示 f(a) 对应的params就是 (b,c)
 	// curFnTStruct := ver.env.GetFnTStructOfFnInFnTMemItem(FnToFnItemWhereLatestFnTIsGot)
 	if FnToFnItemWhereLatestFnTIsGot == nil {
-		return false, fmt.Errorf("%s is not defined", fnHeadChain_AndItSelf[len(fnHeadChain_AndItSelf)-1])
+		return NewVerErr(fmt.Sprintf("%s is not defined", fnHeadChain_AndItSelf[len(fnHeadChain_AndItSelf)-1]))
 	}
 
 	curFnTStruct := FnToFnItemWhereLatestFnTIsGot.AsFnTStruct
@@ -41,30 +41,30 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) (bool, e
 	for curParamsChainIndex < len(fnHeadChain_AndItSelf)-1 {
 		uniMap, err := ast.MakeUniMap(curFnTStruct.Params, paramsChain[curParamsChainIndex])
 		if err != nil {
-			return false, err
+			return NewVerErr(err.Error())
 		}
 
 		instCurFnTStruct, err := curFnTStruct.Instantiate(uniMap)
 		if err != nil {
-			return false, err
+			return NewVerErr(err.Error())
 		}
 
 		ok, err := ver.checkParamsSatisfyFnTStruct(paramsChain[curParamsChainIndex], instCurFnTStruct, state)
 		if err != nil {
-			return false, err
+			return NewVerErr(err.Error())
 		}
 		if !ok {
-			return false, nil
+			return NewVerUnknown("")
 		}
 
 		curRetSet, ok := instCurFnTStruct.RetSet.(*ast.FcFn)
 		if !ok {
-			return false, fmt.Errorf("curRetSet is not an FcFn")
+			return NewVerErr(fmt.Sprintf("curRetSet is not an FcFn"))
 		}
 
 		curFnTStruct, err = ver.GetFnStructFromFnTName_CheckFnTParamsReq(curRetSet, state)
 		if err != nil {
-			return false, err
+			return NewVerErr(err.Error())
 		}
 
 		curParamsChainIndex++
@@ -72,23 +72,23 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) (bool, e
 
 	uniMap, err := ast.MakeUniMap(curFnTStruct.Params, paramsChain[curParamsChainIndex])
 	if err != nil {
-		return false, err
+		return NewVerErr(err.Error())
 	}
 
 	instCurFnTStruct, err := curFnTStruct.Instantiate(uniMap)
 	if err != nil {
-		return false, err
+		return NewVerErr(err.Error())
 	}
 
 	ok, err := ver.checkParamsSatisfyFnTStruct(paramsChain[curParamsChainIndex], instCurFnTStruct, state)
 	if err != nil {
-		return false, err
+		return NewVerErr(err.Error())
 	}
 	if !ok {
-		return false, nil
+		return NewVerUnknown("")
 	}
 
-	return true, nil
+	return NewVerTrue("")
 }
 
 func (ver *Verifier) GetFnStructFromFnTName_CheckFnTParamsReq(fnTName *ast.FcFn, state *VerState) (*ast.FnTStruct, error) {
