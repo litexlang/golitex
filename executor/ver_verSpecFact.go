@@ -23,7 +23,7 @@ import (
 
 func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	if stmt.NameIs(glob.KeySymbolEqual) && stmt.TypeEnum == ast.TruePure {
-		return BoolErrToVerRet(ver.verTrueEqualFact(stmt, state, true))
+		return ver.verTrueEqualFact(stmt, state, true)
 	}
 
 	if verRet := ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt, state); verRet.IsTrue() || verRet.IsErr() {
