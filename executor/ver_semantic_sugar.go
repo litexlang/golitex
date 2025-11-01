@@ -21,16 +21,14 @@ import (
 )
 
 func (ver *Verifier) verByReplaceFcInSpecFactWithValue(stmt *ast.SpecFactStmt, state *VerState) VerRet {
-	var ok bool
-	var err error
 	replaced, newStmt := ver.env.ReplaceFcInSpecFactWithValue(stmt)
 	if replaced {
-		ok, err = ver.verTrueEqualFactMainLogic(newStmt, state, true)
-		if err != nil {
-			return NewVerErr("failed to verify true equal fact: " + err.Error())
+		verRet := ver.verTrueEqualFactMainLogic(newStmt, state, true)
+		if verRet.IsErr() {
+			return NewVerErr("failed to verify true equal fact: " + verRet.String())
 		}
 
-		if ok {
+		if verRet.IsTrue() {
 			if state.WithMsg {
 				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
 			}
@@ -59,23 +57,21 @@ func (ver *Verifier) verByReplaceFcInSpecFactWithValue(stmt *ast.SpecFactStmt, s
 	return NewVerUnknown(fmt.Sprintf("%s is not equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
 }
 
-func (ver *Verifier) verByReplaceFcInSpecFactWithValueAndCompute(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
-	var ok bool
-	var err error
+func (ver *Verifier) verByReplaceFcInSpecFactWithValueAndCompute(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	replaced, newStmt := ver.env.ReplaceFcInSpecFactWithValue(stmt)
 
 	if replaced {
-		ok, err = ver.verTrueEqualFactMainLogic(newStmt, state, true)
-		if err != nil {
-			return false, err
+		verRet := ver.verTrueEqualFactMainLogic(newStmt, state, true)
+		if verRet.IsErr() {
+			return verRet
 		}
-		if ok {
+		if verRet.IsTrue() {
 			if state.WithMsg {
 				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values and computing", stmt.String(), newStmt.String()))
 			}
-			return true, nil
+			return NewVerTrue("")
 		}
 	}
 
-	return false, nil
+	return NewVerUnknown("")
 }

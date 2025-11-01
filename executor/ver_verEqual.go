@@ -28,51 +28,51 @@ func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, c
 		return verRet
 	}
 
-	if ok, err := ver.verTrueEqualFactMainLogic(stmt, state, checkRequirements); IsTrueOrErr(ok, err) {
-		return BoolErrToVerRet(ok, err)
+	if verRet := ver.verTrueEqualFactMainLogic(stmt, state, checkRequirements); verRet.IsTrue() || verRet.IsErr() {
+		return verRet
 	}
 
-	if ok, err := ver.verByReplaceFcInSpecFactWithValueAndCompute(stmt, state); IsTrueOrErr(ok, err) {
-		return BoolErrToVerRet(ok, err)
+	if verRet := ver.verByReplaceFcInSpecFactWithValueAndCompute(stmt, state); verRet.IsTrue() || verRet.IsErr() {
+		return verRet
 	}
 
 	return NewVerUnknown("")
 }
 
-func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *VerState, checkRequirements bool) (bool, error) {
+func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *VerState, checkRequirements bool) VerRet {
 	var ok bool
 	var err error
 
 	if checkRequirements && !state.ReqOk {
 		// REMARK: 这里 state 更新了： ReqOk 更新到了 true
 		if ok, state, err = ver.checkFnsReqAndUpdateReqState(stmt, state); IsFalseOrErr(ok, err) {
-			return ok, err
+			return BoolErrToVerRet(ok, err)
 		}
 
 		if !isValidEqualFact(stmt) {
-			return false, fmt.Errorf("invalid equal fact: %s", stmt)
+			return NewVerErr(fmt.Sprintf("invalid equal fact: %s", stmt))
 		}
 	}
 
 	if verRet := ver.verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(stmt.Params[0], stmt.Params[1], state); verRet.IsErr() || verRet.IsTrue() {
-		return verRet.ToBoolErr()
+		return verRet
 	}
 
 	if leftAsFn, ok := stmt.Params[0].(*ast.FcFn); ok {
 		if rightAsFn, ok := stmt.Params[1].(*ast.FcFn); ok {
 			checked, _, err := ver.verTrueEqualFact_FcFnEqual_NoCheckRequirements(leftAsFn, rightAsFn, state)
 			if err != nil {
-				return false, err
+				return BoolErrToVerRet(ok, err)
 			}
 			if checked {
-				return true, nil
+				return NewVerTrue("")
 			}
 		}
 	} else {
-		return false, nil
+		return NewVerUnknown("")
 	}
 
-	return false, nil
+	return NewVerUnknown("")
 }
 
 func isValidEqualFact(stmt *ast.SpecFactStmt) bool {
