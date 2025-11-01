@@ -209,9 +209,14 @@ type HaveObjInNonEmptySetStmt struct {
 	Line uint
 }
 
-// 由朴素集合论，枚举法定义集合，用specification的方式去定义集合，是可以的。这样定义出来的集合的存在性是直接得到保证的。这个功能必须写入内核，因为have是引入新东西的方式。
-type HaveSetStmt struct {
-	Fact EnumSet_IntensionalSet_EqualDom_Interface
+type HaveEnumSetStmt struct {
+	Fact *EnumStmt
+
+	Line uint
+}
+
+type HaveIntensionalSetStmt struct {
+	Fact *IntensionalSetStmt
 
 	Line uint
 }
