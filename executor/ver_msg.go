@@ -30,16 +30,20 @@ func (ver *Verifier) specFactSpecMemTrueMsg(stmt *ast.SpecFactStmt, knownFact as
 }
 
 func (ver *Verifier) successWithMsg(stmtStr, stmtVerifiedBy string) {
+	ver.env.Msgs = append(ver.env.Msgs, successVerString(stmtStr, stmtVerifiedBy))
+}
+
+func successVerString(stmtStr, stmtVerifiedBy string) string {
+	var successVerString strings.Builder
 	if stmtStr != "" {
-		ver.env.Msgs = append(ver.env.Msgs, stmtStr)
+		successVerString.WriteString(stmtStr)
 	}
 	if stmtVerifiedBy != "" {
-		message := fmt.Sprintf("is true. proved by\n%s", stmtVerifiedBy)
-		ver.env.Msgs = append(ver.env.Msgs, message)
+		successVerString.WriteString(fmt.Sprintf("is true. proved by\n%s", stmtVerifiedBy))
 	} else {
-		message := "is true."
-		ver.env.Msgs = append(ver.env.Msgs, message)
+		successVerString.WriteString("is true.")
 	}
+	return successVerString.String()
 }
 
 func (ver *Verifier) newMsgAtParent(s string) error {

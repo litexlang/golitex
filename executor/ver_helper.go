@@ -26,11 +26,11 @@ func (ver *Verifier) todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt *ast.Sp
 	return nil
 }
 
-func (ver *Verifier) processOkMsg(state *VerState, msg string, verifiedBy string, args ...any) (bool, error) {
+func (ver *Verifier) processOkMsg(state *VerState, msg string, verifiedBy string, args ...any) VerRet {
 	if state.WithMsg {
 		ver.successWithMsg(msg, fmt.Sprintf(verifiedBy, args...))
 	}
-	return true, nil
+	return NewVerTrue(successVerString(msg, fmt.Sprintf(verifiedBy, args...)))
 }
 
 func (ver *Verifier) paramsInSets(params []ast.Fc, sets []ast.Fc, state *VerState) (bool, glob.Msgs, error) {
@@ -63,21 +63,6 @@ func (ver *Verifier) factsAreTrue(facts []ast.FactStmt, state *VerState) (bool, 
 	}
 
 	return true, glob.Msgs{}, nil
-}
-
-func VerFactInNewEnv(oldEnv *env.Env, facts []ast.FactStmt, state *VerState) (bool, error) {
-	ver := NewVerifier(oldEnv)
-	ver.newEnv(oldEnv)
-	defer ver.deleteEnvAndRetainMsg()
-
-	for _, fact := range facts {
-		verRet := ver.VerFactStmt(fact, state)
-		if verRet.IsErr() || verRet.IsUnknown() {
-			return verRet.ToBoolErr()
-		}
-	}
-
-	return true, nil
 }
 
 func IsTrueOrErr(ok bool, err error) bool {
