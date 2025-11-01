@@ -43,9 +43,9 @@ func (ver *Verifier) verSpecFact_ByLogicMem(stmt *ast.SpecFactStmt, state *VerSt
 
 	// if ver.env.CurMatchProp == nil {
 	for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
-		ok, err := ver.specFact_LogicMem(curEnv, stmt, nextState)
-		if err != nil || ok {
-			return BoolErrToVerRet(ok, err)
+		verRet := ver.specFact_LogicMem(curEnv, stmt, nextState)
+		if verRet.IsErr() || verRet.IsTrue() {
+			return verRet
 		}
 	}
 
@@ -272,38 +272,38 @@ func (ver *Verifier) specFact_SpecMem_atEnv(curEnv *env.Env, stmt *ast.SpecFactS
 		return false, nil
 	}
 
-	return ver.iterateKnownSpecFacts_applyFcEqualSpec(stmt, knownFacts, state)
+	return ver.iterateKnownSpecFacts_applyFcEqualSpec(stmt, knownFacts, state).ToBoolErr()
 }
 
-func (ver *Verifier) specFact_LogicMem(curEnv *env.Env, stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) specFact_LogicMem(curEnv *env.Env, stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	knownFacts, got := curEnv.KnownFactsStruct.SpecFactInLogicExprMem.GetSameEnumPkgPropFacts(stmt)
 
 	if !got {
-		return false, nil
+		return NewVerUnknown("")
 	}
 
 	if got {
 		for _, knownFact := range knownFacts {
-			ok, err := ver.useKnownOrFactToProveSpecFact(&knownFact, stmt, state)
-			if err != nil {
-				return false, err
+			verRet := ver.useKnownOrFactToProveSpecFact(&knownFact, stmt, state)
+			if verRet.IsErr() {
+				return NewVerErr(verRet.String())
 			}
-			if ok {
-				return true, nil
+			if verRet.IsTrue() {
+				return NewVerTrue("")
 			}
 		}
 
 	}
 
-	return false, nil
+	return NewVerUnknown("")
 }
 
-func (ver *Verifier) iterateKnownSpecFacts_applyFcEqualSpec(stmt *ast.SpecFactStmt, knownFacts []ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) iterateKnownSpecFacts_applyFcEqualSpec(stmt *ast.SpecFactStmt, knownFacts []ast.SpecFactStmt, state *VerState) VerRet {
 LoopOverFacts:
 	for _, knownFact := range knownFacts {
 		ok, err := ver.matchTwoSpecFacts(stmt, &knownFact, state)
 		if err != nil {
-			return false, err
+			return NewVerErr(err.Error())
 		}
 		if !ok {
 			continue LoopOverFacts
@@ -313,10 +313,10 @@ LoopOverFacts:
 			ver.specFactSpecMemTrueMsg(stmt, knownFact)
 		}
 
-		return true, nil
+		return NewVerTrue("")
 	}
 
-	return false, nil
+	return NewVerUnknown("")
 }
 
 func (ver *Verifier) matchTwoSpecFacts(stmt *ast.SpecFactStmt, knownFact *ast.SpecFactStmt, state *VerState) (bool, error) {
@@ -352,16 +352,16 @@ func (ver *Verifier) matchTwoSpecFacts(stmt *ast.SpecFactStmt, knownFact *ast.Sp
 	return true, nil
 }
 
-func (ver *Verifier) useKnownOrFactToProveSpecFact(knownFact *env.KnownSpecFact_InLogicExpr, stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) useKnownOrFactToProveSpecFact(knownFact *env.KnownSpecFact_InLogicExpr, stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	ver.newEnv(ver.env)
 	defer ver.deleteEnvAndRetainMsg()
 
 	ok, err := ver.matchTwoSpecFacts(stmt, knownFact.SpecFact, state)
 	if err != nil {
-		return false, err
+		return NewVerErr(err.Error())
 	}
 	if !ok {
-		return false, nil
+		return NewVerUnknown("")
 	}
 
 	nextState := state.GetAddRound()
@@ -373,11 +373,11 @@ func (ver *Verifier) useKnownOrFactToProveSpecFact(knownFact *env.KnownSpecFact_
 		// TODO: WARNING: 这里有问题，可能无限循环
 		verRet := ver.VerFactStmt(reversedFact, nextState)
 		if verRet.IsErr() || verRet.IsUnknown() {
-			return verRet.ToBoolErr()
+			return verRet
 		}
 	}
 
-	return true, nil
+	return NewVerTrue("")
 }
 
 func (ver *Verifier) proveUniFactDomFacts(domFacts []ast.FactStmt, state *VerState) (bool, error) {
