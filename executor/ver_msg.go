@@ -39,9 +39,9 @@ func successVerString(stmtStr, stmtVerifiedBy string) string {
 		successVerString.WriteString(stmtStr)
 	}
 	if stmtVerifiedBy != "" {
-		successVerString.WriteString(fmt.Sprintf("is true. proved by\n%s", stmtVerifiedBy))
+		successVerString.WriteString(fmt.Sprintf("\nis true. proved by\n%s", stmtVerifiedBy))
 	} else {
-		successVerString.WriteString("is true.")
+		successVerString.WriteString("\nis true.")
 	}
 	return successVerString.String()
 }
