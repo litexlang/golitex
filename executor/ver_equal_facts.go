@@ -40,13 +40,9 @@ func (ver *Verifier) cmpFc_Builtin_Then_Decompose_Spec(left ast.Fc, right ast.Fc
 	// }
 
 	// if ok, err := ver.decomposeFcFnsAndCheckEquality_WithoutState(left, right, cmp.Cmp_ByBIR); err != nil {
+	// if ok, msg, err := ver.decomposeFcFnsAndCheckEquality(left, right, state, ver.FcsEqualBy_Eval_ShareKnownEqualMem); err != nil {
+	return ver.decomposeFcFnsAndCheckEquality(left, right, state, ver.fcEqualSpec)
 
-	if verRet := ver.decomposeFcFnsAndCheckEquality(left, right, state, ver.fcEqualSpec); verRet.IsErr() || verRet.IsTrue() {
-		// if ok, msg, err := ver.decomposeFcFnsAndCheckEquality(left, right, state, ver.FcsEqualBy_Eval_ShareKnownEqualMem); err != nil {
-		return verRet
-	}
-
-	return NewVerUnknown("")
 }
 
 // Iterate over all equal facts. On each equal fact, use commutative, associative, cmp rule to compare.
