@@ -26,10 +26,6 @@ func (ver *Verifier) todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt *ast.Sp
 	return nil
 }
 
-func isErrOrOk(ok bool, err error) bool {
-	return err != nil || ok
-}
-
 func (ver *Verifier) processOkMsg(state *VerState, msg string, verifiedBy string, args ...any) (bool, error) {
 	if state.WithMsg {
 		ver.successWithMsg(msg, fmt.Sprintf(verifiedBy, args...))
