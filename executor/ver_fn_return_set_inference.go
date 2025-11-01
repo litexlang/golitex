@@ -49,12 +49,12 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) VerRet {
 			return NewVerErr(err.Error())
 		}
 
-		ok, err := ver.checkParamsSatisfyFnTStruct(paramsChain[curParamsChainIndex], instCurFnTStruct, state)
-		if err != nil {
-			return NewVerErr(err.Error())
+		verRet := ver.checkParamsSatisfyFnTStruct(paramsChain[curParamsChainIndex], instCurFnTStruct, state)
+		if verRet.IsErr() {
+			return verRet
 		}
-		if !ok {
-			return NewVerUnknown("")
+		if verRet.IsUnknown() {
+			return verRet
 		}
 
 		curRetSet, ok := instCurFnTStruct.RetSet.(*ast.FcFn)
@@ -80,12 +80,12 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) VerRet {
 		return NewVerErr(err.Error())
 	}
 
-	ok, err := ver.checkParamsSatisfyFnTStruct(paramsChain[curParamsChainIndex], instCurFnTStruct, state)
-	if err != nil {
-		return NewVerErr(err.Error())
+	verRet := ver.checkParamsSatisfyFnTStruct(paramsChain[curParamsChainIndex], instCurFnTStruct, state)
+	if verRet.IsErr() {
+		return verRet
 	}
-	if !ok {
-		return NewVerUnknown("")
+	if verRet.IsUnknown() {
+		return verRet
 	}
 
 	return NewVerTrue("")
@@ -115,38 +115,37 @@ func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckParamsSatisfyFnTReq(fnTDef
 		return nil, err
 	}
 
-	var ok bool
-	ok, err = ver.getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreTrue(defOfT, uniMap, state)
-	if err != nil {
+	verRet := ver.getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreTrue(defOfT, uniMap, state)
+	if verRet.IsErr() {
 		return nil, err
 	}
-	if !ok {
+	if verRet.IsUnknown() {
 		return nil, fmt.Errorf("template params dom facts are not true")
 	}
 
 	return defOfT.Fn.Instantiate(uniMap)
 }
 
-func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreTrue(fnTDef *ast.FnTemplateDefStmt, uniMap map[string]ast.Fc, state *VerState) (bool, error) {
+func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreTrue(fnTDef *ast.FnTemplateDefStmt, uniMap map[string]ast.Fc, state *VerState) VerRet {
 	ver.newEnv(ver.env)
 	defer ver.deleteEnvAndRetainMsg()
 
 	for _, fact := range fnTDef.TemplateDomFacts {
 		newFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
-			return false, err
+			return NewVerErr(err.Error())
 		}
 
 		verRet := ver.VerFactStmt(newFact, state)
 		if verRet.IsErr() || verRet.IsUnknown() {
-			return verRet.ToBoolErr()
+			return verRet
 		}
 	}
 
-	return true, nil
+	return NewVerTrue("")
 }
 
-func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.FcSlice, fnTStruct *ast.FnTStruct, state *VerState) (bool, error) {
+func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.FcSlice, fnTStruct *ast.FnTStruct, state *VerState) VerRet {
 	failed := false
 
 	curState := state.GetNoMsg()
@@ -159,24 +158,24 @@ func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.FcSlice, fnT
 	ok, msg, err := ver.paramsInSets(concreteParams, fnTStruct.ParamSets, curState)
 	if err != nil {
 		failed = true
-		return false, err
+		return NewVerErr(err.Error())
 	}
 	if !ok {
 		failed = true
 		ver.env.Msgs = append(ver.env.Msgs, msg...)
-		return false, nil
+		return NewVerUnknown("")
 	}
 
 	ok, msg, err = ver.factsAreTrue(fnTStruct.DomFacts, curState)
 	if err != nil {
 		failed = true
-		return false, err
+		return NewVerErr(err.Error())
 	}
 	if !ok {
 		failed = true
 		ver.env.Msgs = append(ver.env.Msgs, msg...)
-		return false, nil
+		return NewVerUnknown("")
 	}
 
-	return true, nil
+	return NewVerTrue("")
 }
