@@ -155,25 +155,25 @@ func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.FcSlice, fnT
 		}
 	}()
 
-	ok, msg, err := ver.paramsInSets(concreteParams, fnTStruct.ParamSets, curState)
-	if err != nil {
+	verRet := ver.paramsInSets(concreteParams, fnTStruct.ParamSets, curState)
+	if verRet.IsErr() {
 		failed = true
-		return NewVerErr(err.Error())
+		return verRet
 	}
-	if !ok {
+	if verRet.IsUnknown() {
 		failed = true
-		ver.env.Msgs = append(ver.env.Msgs, msg...)
-		return NewVerUnknown("")
+		ver.env.Msgs = append(ver.env.Msgs, verRet.String())
+		return verRet
 	}
 
-	ok, msg, err = ver.factsAreTrue(fnTStruct.DomFacts, curState)
-	if err != nil {
+	verRet = ver.factsAreTrue(fnTStruct.DomFacts, curState)
+	if verRet.IsErr() {
 		failed = true
-		return NewVerErr(err.Error())
+		return verRet
 	}
-	if !ok {
+	if verRet.IsUnknown() {
 		failed = true
-		ver.env.Msgs = append(ver.env.Msgs, msg...)
+		ver.env.Msgs = append(ver.env.Msgs, verRet.String())
 		return NewVerUnknown("")
 	}
 
