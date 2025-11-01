@@ -27,7 +27,7 @@ func (ver *Verifier) verByReplaceFcInSpecFactWithValue(stmt *ast.SpecFactStmt, s
 	if replaced {
 		ok, err = ver.verTrueEqualFactMainLogic(newStmt, state, true)
 		if err != nil {
-			return newVerErr("failed to verify true equal fact: " + err.Error())
+			return NewVerErr("failed to verify true equal fact: " + err.Error())
 		}
 
 		if ok {
@@ -49,14 +49,14 @@ func (ver *Verifier) verByReplaceFcInSpecFactWithValue(stmt *ast.SpecFactStmt, s
 			}
 
 			if values[0] == nil && values[1] == nil {
-				return NewTrueVerRet(fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
+				return NewVerTrue(fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
 			} else {
-				return NewTrueVerRetWithValues(fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()), values)
+				return NewVerTrueWithValues(fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()), values)
 			}
 		}
 	}
 
-	return NewUnknownVerRet(fmt.Sprintf("%s is not equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
+	return NewVerUnknown(fmt.Sprintf("%s is not equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
 }
 
 func (ver *Verifier) verByReplaceFcInSpecFactWithValueAndCompute(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {

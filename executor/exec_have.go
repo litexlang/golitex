@@ -207,13 +207,15 @@ func (exec *Executor) checkInFactInSet_SetIsNonEmpty(pureInFact *ast.SpecFactStm
 	return false, nil
 }
 
-func (exec *Executor) haveEnumSetStmt(stmt *ast.EnumStmt) ExecRet {
+func (exec *Executor) haveEnumSetStmt(stmt *ast.HaveEnumSetStmt) ExecRet {
 	exec.newMsg(stmt.String())
 
+	enumFact := stmt.Fact
+
 	// 验证里面的各个元素不相等
-	for i := range len(stmt.Items) {
-		for j := i + 1; j < len(stmt.Items); j++ {
-			notEqualFact := ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{stmt.Items[i], stmt.Items[j]}, stmt.Line)
+	for i := range len(enumFact.Items) {
+		for j := i + 1; j < len(enumFact.Items); j++ {
+			notEqualFact := ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{enumFact.Items[i], enumFact.Items[j]}, stmt.Line)
 			ok, err := exec.openANewEnvAndCheck(notEqualFact, false)
 			if err != nil {
 				return NewExecErr(err.Error())
@@ -225,7 +227,7 @@ func (exec *Executor) haveEnumSetStmt(stmt *ast.EnumStmt) ExecRet {
 	}
 
 	// 定义这个新的集合
-	defObjStmt := ast.NewDefObjStmt([]string{stmt.CurSet.String()}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}, []ast.FactStmt{stmt}, stmt.Line)
+	defObjStmt := ast.NewDefObjStmt([]string{enumFact.CurSet.String()}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}, []ast.FactStmt{enumFact}, stmt.Line)
 	err := exec.defLetStmt(defObjStmt)
 	if err != nil {
 		return NewExecErr(err.Error())
@@ -234,18 +236,21 @@ func (exec *Executor) haveEnumSetStmt(stmt *ast.EnumStmt) ExecRet {
 	return NewExecTrue("")
 }
 
-func (exec *Executor) haveIntensionalSetStmt(stmt *ast.IntensionalSetStmt) ExecRet {
+func (exec *Executor) haveIntensionalSetStmt(stmt *ast.HaveIntensionalSetStmt) ExecRet {
 	exec.newMsg(stmt.String())
+
+	intensionalSetFact := stmt.Fact
+
 	// very important: check whether the parent set is a set
-	ok, err := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.ParentSet, ast.FcAtom(glob.KeywordSet)}, stmt.Line))
+	ok, err := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{intensionalSetFact.ParentSet, ast.FcAtom(glob.KeywordSet)}, stmt.Line))
 	if err != nil {
 		return NewExecErr(err.Error())
 	}
 	if ok.IsUnknown() {
-		return NewExecErr("parent set of intensional set must be a set, i.e. `" + stmt.ParentSet.String() + " in " + ast.FcAtom(glob.KeywordSet).String() + "` is true, but `" + stmt.ParentSet.String() + " in " + ast.FcAtom(glob.KeywordSet).String() + "` is not")
+		return NewExecErr("parent set of intensional set must be a set, i.e. `" + intensionalSetFact.ParentSet.String() + " in " + ast.FcAtom(glob.KeywordSet).String() + "` is true, but `" + intensionalSetFact.ParentSet.String() + " in " + ast.FcAtom(glob.KeywordSet).String() + "` is not")
 	}
 
-	defObjStmt := ast.NewDefObjStmt([]string{stmt.CurSet.String()}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}, []ast.FactStmt{stmt}, stmt.Line)
+	defObjStmt := ast.NewDefObjStmt([]string{intensionalSetFact.CurSet.String()}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}, []ast.FactStmt{intensionalSetFact}, stmt.Line)
 	err = exec.defLetStmt(defObjStmt)
 	if err != nil {
 		return NewExecErr(err.Error())

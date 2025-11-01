@@ -22,15 +22,15 @@ func (ver *Verifier) verIntensionalSetStmt(stmt *ast.IntensionalSetStmt, state *
 		return false, err
 	}
 
-	ok, err := ver.verUniFact(leftUniFact, state)
-	if err != nil || !ok {
-		return false, err
+	verRet := ver.verUniFact(leftUniFact, state)
+	if verRet.IsErr() || verRet.IsUnknown() {
+		return verRet.ToBoolErr()
 	}
 
-	ok, err = ver.verUniFact(rightUniFact, state)
-	if err != nil || !ok {
-		return false, err
+	verRet = ver.verUniFact(rightUniFact, state)
+	if verRet.IsErr() || verRet.IsUnknown() {
+		return verRet.ToBoolErr()
 	}
 
-	return true, nil
+	return verRet.ToBoolErr()
 }

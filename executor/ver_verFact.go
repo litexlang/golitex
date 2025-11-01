@@ -22,7 +22,7 @@ import (
 
 // 所有verifier的方法里，只有它和switch里的三大函数可能读入anyState
 func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) VerRet {
-	var verRet VerRet = newVerErr(fmt.Sprintf("unexpected fact statement: %s", stmt))
+	var verRet VerRet = NewVerErr(fmt.Sprintf("unexpected fact statement: %s", stmt))
 
 	switch asStmt := stmt.(type) {
 	case *ast.SpecFactStmt:
@@ -32,9 +32,9 @@ func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) VerRet {
 			verRet = ver.verSpecFactThatIsNotTrueEqualFact_UseCommutativity(asStmt, state)
 		}
 	case *ast.OrStmt:
-		verRet = BoolErrToVerRet(ver.verOrStmt(asStmt, state))
+		verRet = ver.verOrStmt(asStmt, state)
 	case *ast.UniFactStmt:
-		verRet = BoolErrToVerRet(ver.verUniFact(asStmt, state))
+		verRet = ver.verUniFact(asStmt, state)
 	case *ast.UniFactWithIffStmt:
 		verRet = BoolErrToVerRet(ver.verUniFactWithIff(asStmt, state))
 	case *ast.EqualsFactStmt:
@@ -44,7 +44,7 @@ func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) VerRet {
 	case *ast.EnumStmt:
 		verRet = BoolErrToVerRet(ver.verEnumStmt(asStmt, state))
 	default:
-		return newVerErr(fmt.Sprintf("unexpected fact statement: %s", asStmt))
+		return NewVerErr(fmt.Sprintf("unexpected fact statement: %s", asStmt))
 	}
 	return verRet
 }
