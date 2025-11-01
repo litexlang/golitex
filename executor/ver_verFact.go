@@ -36,9 +36,9 @@ func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) VerRet {
 	case *ast.UniFactStmt:
 		verRet = ver.verUniFact(asStmt, state)
 	case *ast.UniFactWithIffStmt:
-		verRet = BoolErrToVerRet(ver.verUniFactWithIff(asStmt, state))
+		verRet = ver.verUniFactWithIff(asStmt, state)
 	case *ast.EqualsFactStmt:
-		verRet = BoolErrToVerRet(ver.verEqualsFactStmt(asStmt, state))
+		verRet = ver.verEqualsFactStmt(asStmt, state)
 	case *ast.IntensionalSetStmt:
 		verRet = BoolErrToVerRet(ver.verIntensionalSetStmt(asStmt, state))
 	case *ast.EnumStmt:

@@ -98,3 +98,15 @@ func (ver *Verifier) PreprocessUniFactParams_DeclareParams(oldStmt *ast.UniFactS
 
 	return newStmtPtr, nil
 }
+
+func (ver *Verifier) verUniFactWithIff(stmt *ast.UniFactWithIffStmt, state *VerState) VerRet {
+	thenToIff := stmt.NewUniFactWithThenToIff()
+	verRet := ver.verUniFact(thenToIff, state)
+	if verRet.IsErr() || verRet.IsUnknown() {
+		return verRet
+	}
+
+	iffToThen := stmt.NewUniFactWithIffToThen()
+	verRet = ver.verUniFact(iffToThen, state)
+	return verRet
+}
