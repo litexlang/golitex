@@ -1,4 +1,1 @@
-exist_prop f N st fib(n N):
-    exist n st $fib(n)
-
-exist 1 st $fib(1)
+1 + 1 =2 
