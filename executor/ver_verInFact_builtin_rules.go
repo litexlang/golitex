@@ -26,15 +26,19 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 	}
 
 	if stmt.TypeEnum == ast.FalsePure {
-		return BoolErrToVerRet(ver.falseInFactBuiltinRules(stmt, state))
+		return ver.falseInFactBuiltinRules(stmt, state)
 	}
 
-	ok, err := ver.verInSet_btRules(stmt, state)
-	if err != nil {
-		return NewVerErr(err.Error())
+	var verRet VerRet
+	var err error
+	var ok bool
+
+	verRet = ver.verInSet_btRules(stmt, state)
+	if verRet.IsErr() {
+		return verRet
 	}
-	if ok {
-		return NewVerTrue("")
+	if verRet.IsTrue() {
+		return verRet
 	}
 
 	ok, err = ver.btLitNumInNatOrIntOrRatOrRealOrComplex(stmt, state)
@@ -65,7 +69,7 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 		return NewVerTrue("")
 	}
 
-	verRet := ver.inFnTemplateFact(stmt, state)
+	verRet = ver.inFnTemplateFact(stmt, state)
 	if verRet.IsErr() {
 		return NewVerErr(verRet.String())
 	}
@@ -73,12 +77,12 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 		return verRet
 	}
 
-	ok, err = ver.inObjFact(stmt, state)
-	if err != nil {
-		return NewVerErr(err.Error())
+	verRet = ver.inObjFact(stmt, state)
+	if verRet.IsErr() {
+		return verRet
 	}
-	if ok {
-		return NewVerTrue("")
+	if verRet.IsTrue() {
+		return verRet
 	}
 
 	verRet = ver.verInSetProduct(stmt, state)
@@ -168,20 +172,20 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state *VerState) V
 	return NewVerUnknown("")
 }
 
-func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	var err error
 	ok := ast.IsFcAtomEqualToGivenString(stmt.Params[1], glob.KeywordSet)
 	if !ok {
-		return false, nil
+		return NewVerUnknown("")
 	}
 
 	// 如果它是finite_set，则直接返回true
 	ok, err = ver.fcIsFiniteSet(stmt, state)
 	if err != nil {
-		return false, err
+		return NewVerErr(err.Error())
 	}
 	if ok {
-		return true, nil
+		return NewVerTrue("")
 	}
 
 	// 如果它是N, Z, Q, R, C, 则直接返回true
@@ -192,70 +196,70 @@ func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state *VerState) (
 		ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordComplex) ||
 		ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordNPos)
 	if ok {
-		return ver.processOkMsg(state, stmt.String(), "%s is a builtin set", stmt.Params[0])
+		return BoolErrToVerRet(ver.processOkMsg(state, stmt.String(), "%s is a builtin set", stmt.Params[0]))
 	}
 
 	// 如果是被定义好了的fn_template，则直接返回true
 	asFcFn, ok := stmt.Params[1].(*ast.FcFn)
 	if !ok {
-		return false, nil
+		return NewVerUnknown("")
 	}
 	ok = ast.IsFnTemplate_FcFn(asFcFn)
 	if ok {
-		return ver.processOkMsg(state, stmt.String(), "%s is a fn template and all fn templates are sets", stmt.Params[0])
+		return BoolErrToVerRet(ver.processOkMsg(state, stmt.String(), "%s is a fn template and all fn templates are sets", stmt.Params[0]))
 	}
 
 	if leftAsAtom, ok := stmt.Params[0].(ast.FcAtom); ok {
 		// _, ok := ver.env.GetFnTemplateDef(leftAsAtom)
 		fnDef := ver.env.GetLatestFnT_GivenNameIsIn(leftAsAtom.String())
 		if fnDef != nil {
-			return ver.processOkMsg(state, stmt.String(), "%s is a fn template and all fn templates are sets", leftAsAtom)
+			return BoolErrToVerRet(ver.processOkMsg(state, stmt.String(), "%s is a fn template and all fn templates are sets", leftAsAtom))
 		}
 	}
 
-	return false, nil
+	return NewVerUnknown("")
 }
 
-func (ver *Verifier) inObjFact(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) inObjFact(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	// right param is obj
 	ok := ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordObj)
 	if !ok {
-		return false, nil
+		return NewVerUnknown("")
 	}
 
 	atoms := ast.GetAtomsInFc(stmt.Params[0])
 	// 这里有点问题，N,Q,C 这种没算进去，要重新写一下。这里不能直接用 declared, 因为一方面 isDeclared会包含 prop, 一方面 obj isDeclared，会导致罗素悖论
 	ok = ver.env.AtomsAreObj(atoms)
 	if !ok {
-		return false, nil
+		return NewVerUnknown("")
 	}
 
 	if state.WithMsg {
 		ver.successWithMsg(stmt.String(), fmt.Sprintf("all atoms in %s are declared as obj or literal number", stmt.Params[0]))
 	}
 
-	return true, nil
+	return NewVerTrue("")
 }
 
-func (ver *Verifier) falseInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) (bool, error) {
+func (ver *Verifier) falseInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 	// 任何东西不在空集里
 	ok, err := ver.nothingIsInEmptySet(stmt, state)
 	if err != nil {
-		return false, err
+		return NewVerErr(err.Error())
 	}
 	if ok {
-		return true, nil
+		return NewVerTrue("")
 	}
 
 	ok, err = ver.objNotInSetWhenAllItemsInThatSetAreNotEqualToIt(stmt, state)
 	if err != nil {
-		return false, err
+		return NewVerErr(err.Error())
 	}
 	if ok {
-		return true, nil
+		return NewVerTrue("")
 	}
 
-	return false, nil
+	return NewVerUnknown("")
 }
 
 // TODO 需要先证明一下它是finite set 去开始验证 len(n) = 0
