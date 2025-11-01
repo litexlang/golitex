@@ -28,7 +28,7 @@ func (ver *Verifier) verOrStmt(stmt *ast.OrStmt, state *VerState) VerRet {
 	for i := range stmt.Facts {
 		ok, err := ver.verFactAtIndex_WhenOthersAreFalse(stmt.Facts, i, nextState)
 		if err != nil {
-			return NewVerUnknown(err.Error())
+			return NewVerErr(err.Error())
 		}
 		if ok {
 			if state.WithMsg {
