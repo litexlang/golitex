@@ -98,11 +98,11 @@ func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state 
 	// 2. Check if the parameters satisfy the requirement of the function requirements
 	stateNoMsg := state.GetNoMsg()
 	for _, param := range stmt.Params {
-		ok, err := ver.fcSatisfyFnRequirement(param, stateNoMsg)
-		if err != nil {
-			return false, state, err
+		verRet := ver.fcSatisfyFnRequirement(param, stateNoMsg)
+		if verRet.IsErr() {
+			return false, state, fmt.Errorf(verRet.String())
 		}
-		if !ok {
+		if verRet.IsUnknown() {
 			return false, state, parametersDoNotSatisfyFnReq(param, param)
 		}
 	}
@@ -115,13 +115,13 @@ func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state 
 	return true, &newState, nil
 }
 
-func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state *VerState) (bool, error) {
+func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state *VerState) VerRet {
 	if _, ok := fc.(ast.FcAtom); ok {
-		return true, nil
+		return NewVerTrue("")
 	}
 	fcAsFcFn, ok := fc.(*ast.FcFn)
 	if !ok {
-		return false, fmt.Errorf("%s is not a function", fc)
+		return NewVerErr(fmt.Sprintf("%s is not a function", fc))
 	}
 
 	// 单独处理特殊的内置prop
@@ -129,19 +129,19 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state *VerState) (bool, e
 	// 	return ver.arithmeticFnRequirement(fcAsFcFn, state)
 	// } else
 	if ast.IsFcFnWithHeadName(fcAsFcFn, glob.KeywordLen) {
-		return ver.lenFnRequirement(fcAsFcFn, state)
+		return BoolErrToVerRet(ver.lenFnRequirement(fcAsFcFn, state))
 	} else if ast.IsFnTemplate_FcFn(fcAsFcFn) {
-		return true, nil
+		return NewVerTrue("")
 	} else if ver.isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj(fcAsFcFn) {
-		return ver.isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj_CheckRequirement(fcAsFcFn, state)
+		return BoolErrToVerRet(ver.isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj_CheckRequirement(fcAsFcFn, state))
 	} else if ast.IsFcAtomAndEqualToStr(fcAsFcFn.FnHead, glob.KeywordSetDefinedByReplacement) {
-		return ver.setDefinedByReplacementFnRequirement(fcAsFcFn, state)
+		return BoolErrToVerRet(ver.setDefinedByReplacementFnRequirement(fcAsFcFn, state))
 		// }
 		// else if toCompute, ok := ast.IsFcFnWithCompHeadAndReturnFcToCompute(fcAsFcFn); ok {
 		// 	return ver.fcSatisfyFnRequirement(toCompute, state)
 	} else {
 		// return ver.fcFnSatisfy_FnTemplate_Requirement(fcAsFcFn, state)
-		return ver.parasSatisfyFnReq(fcAsFcFn, state).ToBoolErr()
+		return ver.parasSatisfyFnReq(fcAsFcFn, state)
 	}
 }
 
@@ -273,8 +273,8 @@ func (ver *Verifier) isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj(fc *ast.FcFn) b
 
 func (ver *Verifier) isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj_CheckRequirement(fc *ast.FcFn, state *VerState) (bool, error) {
 	for _, param := range fc.Params {
-		ok, err := ver.fcSatisfyFnRequirement(param, state)
-		if err != nil || !ok {
+		verRet := ver.fcSatisfyFnRequirement(param, state)
+		if verRet.IsErr() || verRet.IsUnknown() {
 			return false, parametersDoNotSatisfyFnReq(param, fc)
 		}
 	}
