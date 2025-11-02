@@ -20,7 +20,7 @@ import (
 	"strings"
 )
 
-type VerRet interface {
+type ExecRet interface {
 	verRet()
 	IsTrue() bool
 	IsUnknown() bool
@@ -30,78 +30,78 @@ type VerRet interface {
 	ToBoolErr() (bool, error)
 }
 
-type VerTrue struct {
+type ExecTrue struct {
 	Msg             []string
 	TrueEqualValues []ast.Fc
 }
 
-type VerUnknown struct {
+type ExecUnknown struct {
 	Msg []string
 }
 
-type VerErr struct {
+type ExecErr struct {
 	Msg []string
 }
 
-func (v *VerTrue) verRet()                     {}
-func (v *VerTrue) IsTrue() bool                { return true }
-func (v *VerTrue) IsUnknown() bool             { return false }
-func (v *VerTrue) IsErr() bool                 { return false }
-func (v *VerTrue) AddMsg(msg string)           { v.Msg = append(v.Msg, msg) }
-func (v *VerTrue) String() string              { return strings.Join(v.Msg, "\n") }
-func (v *VerTrue) ToBoolErr() (bool, error)    { return true, nil }
-func (v *VerErr) verRet()                      {}
-func (v *VerErr) IsTrue() bool                 { return false }
-func (v *VerErr) IsUnknown() bool              { return false }
-func (v *VerErr) IsErr() bool                  { return true }
-func (v *VerErr) AddMsg(msg string)            { v.Msg = append(v.Msg, msg) }
-func (v *VerErr) String() string               { return strings.Join(v.Msg, "\n") }
-func (v *VerErr) ToBoolErr() (bool, error)     { return false, fmt.Errorf(v.String()) }
-func (v *VerUnknown) verRet()                  {}
-func (v *VerUnknown) IsTrue() bool             { return false }
-func (v *VerUnknown) IsUnknown() bool          { return true }
-func (v *VerUnknown) IsErr() bool              { return false }
-func (v *VerUnknown) AddMsg(msg string)        { v.Msg = append(v.Msg, msg) }
-func (v *VerUnknown) String() string           { return strings.Join(v.Msg, "\n") }
-func (v *VerUnknown) ToBoolErr() (bool, error) { return false, nil }
+func (v *ExecTrue) verRet()                     {}
+func (v *ExecTrue) IsTrue() bool                { return true }
+func (v *ExecTrue) IsUnknown() bool             { return false }
+func (v *ExecTrue) IsErr() bool                 { return false }
+func (v *ExecTrue) AddMsg(msg string)           { v.Msg = append(v.Msg, msg) }
+func (v *ExecTrue) String() string              { return strings.Join(v.Msg, "\n") }
+func (v *ExecTrue) ToBoolErr() (bool, error)    { return true, nil }
+func (v *ExecErr) verRet()                      {}
+func (v *ExecErr) IsTrue() bool                 { return false }
+func (v *ExecErr) IsUnknown() bool              { return false }
+func (v *ExecErr) IsErr() bool                  { return true }
+func (v *ExecErr) AddMsg(msg string)            { v.Msg = append(v.Msg, msg) }
+func (v *ExecErr) String() string               { return strings.Join(v.Msg, "\n") }
+func (v *ExecErr) ToBoolErr() (bool, error)     { return false, fmt.Errorf(v.String()) }
+func (v *ExecUnknown) verRet()                  {}
+func (v *ExecUnknown) IsTrue() bool             { return false }
+func (v *ExecUnknown) IsUnknown() bool          { return true }
+func (v *ExecUnknown) IsErr() bool              { return false }
+func (v *ExecUnknown) AddMsg(msg string)        { v.Msg = append(v.Msg, msg) }
+func (v *ExecUnknown) String() string           { return strings.Join(v.Msg, "\n") }
+func (v *ExecUnknown) ToBoolErr() (bool, error) { return false, nil }
 
-func NewVerErr(s string) *VerErr {
+func NewExecErr(s string) *ExecErr {
 	if s != "" {
-		return &VerErr{Msg: []string{s}}
+		return &ExecErr{Msg: []string{s}}
 	}
-	return &VerErr{Msg: []string{}}
+	return &ExecErr{Msg: []string{}}
 }
 
-func BoolErrToVerRet(ok bool, err error) VerRet {
+func BoolErrToExecRet(ok bool, err error) ExecRet {
 	if err != nil {
-		return &VerErr{Msg: []string{err.Error()}}
+		return &ExecErr{Msg: []string{err.Error()}}
 	}
 	if ok {
-		return &VerTrue{Msg: []string{}}
+		return &ExecTrue{Msg: []string{}}
 	}
-	return &VerUnknown{Msg: []string{}}
+	return &ExecUnknown{Msg: []string{}}
 }
 
-func NewVerTrue(s string) VerRet {
+func NewExecTrue(s string) ExecRet {
 	if s != "" {
-		return &VerTrue{Msg: []string{s}}
+		return &ExecTrue{Msg: []string{s}}
 	}
-	return &VerTrue{Msg: []string{}, TrueEqualValues: nil}
+	return &ExecTrue{Msg: []string{}, TrueEqualValues: nil}
 }
 
-func NewVerUnknown(s string) VerRet {
+func NewExecUnknown(s string) ExecRet {
 	if s != "" {
-		return &VerUnknown{Msg: []string{s}}
+		return &ExecUnknown{Msg: []string{s}}
 	}
-	return &VerUnknown{Msg: []string{}}
+	return &ExecUnknown{Msg: []string{}}
 }
 
-func NewVerTrueWithValues(s string, equalValue []ast.Fc) VerRet {
+func NewExecTrueWithValues(s string, equalValue []ast.Fc) ExecRet {
 	if s != "" {
-		return &VerTrue{Msg: []string{s}, TrueEqualValues: equalValue}
+		return &ExecTrue{Msg: []string{s}, TrueEqualValues: equalValue}
 	}
 	if len(equalValue) != 2 {
 		panic("equal value length must be 2")
 	}
-	return &VerTrue{Msg: []string{}, TrueEqualValues: []ast.Fc{equalValue[0], equalValue[1]}}
+	return &ExecTrue{Msg: []string{}, TrueEqualValues: []ast.Fc{equalValue[0], equalValue[1]}}
 }
