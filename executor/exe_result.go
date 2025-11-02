@@ -21,11 +21,11 @@ import (
 )
 
 type ExecRet interface {
-	verRet()
+	execRet()
 	IsTrue() bool
 	IsUnknown() bool
 	IsErr() bool
-	AddMsg(msg string)
+	NewVerMsg(verState VerState, msg string) ExecRet
 	String() string
 	ToBoolErr() (bool, error)
 }
@@ -43,25 +43,40 @@ type ExecErr struct {
 	Msg []string
 }
 
-func (v *ExecTrue) verRet()                     {}
-func (v *ExecTrue) IsTrue() bool                { return true }
-func (v *ExecTrue) IsUnknown() bool             { return false }
-func (v *ExecTrue) IsErr() bool                 { return false }
-func (v *ExecTrue) AddMsg(msg string)           { v.Msg = append(v.Msg, msg) }
-func (v *ExecTrue) String() string              { return strings.Join(v.Msg, "\n") }
-func (v *ExecTrue) ToBoolErr() (bool, error)    { return true, nil }
-func (v *ExecErr) verRet()                      {}
-func (v *ExecErr) IsTrue() bool                 { return false }
-func (v *ExecErr) IsUnknown() bool              { return false }
-func (v *ExecErr) IsErr() bool                  { return true }
-func (v *ExecErr) AddMsg(msg string)            { v.Msg = append(v.Msg, msg) }
-func (v *ExecErr) String() string               { return strings.Join(v.Msg, "\n") }
-func (v *ExecErr) ToBoolErr() (bool, error)     { return false, fmt.Errorf(v.String()) }
-func (v *ExecUnknown) verRet()                  {}
-func (v *ExecUnknown) IsTrue() bool             { return false }
-func (v *ExecUnknown) IsUnknown() bool          { return true }
-func (v *ExecUnknown) IsErr() bool              { return false }
-func (v *ExecUnknown) AddMsg(msg string)        { v.Msg = append(v.Msg, msg) }
+func (v *ExecTrue) execRet()        {}
+func (v *ExecTrue) IsTrue() bool    { return true }
+func (v *ExecTrue) IsUnknown() bool { return false }
+func (v *ExecTrue) IsErr() bool     { return false }
+func (v *ExecTrue) NewVerMsg(verState VerState, msg string) ExecRet {
+	if verState.IsWithMsg() {
+		v.Msg = append(v.Msg, msg)
+	}
+	return v
+}
+func (v *ExecTrue) String() string           { return strings.Join(v.Msg, "\n") }
+func (v *ExecTrue) ToBoolErr() (bool, error) { return true, nil }
+func (v *ExecErr) execRet()                  {}
+func (v *ExecErr) IsTrue() bool              { return false }
+func (v *ExecErr) IsUnknown() bool           { return false }
+func (v *ExecErr) IsErr() bool               { return true }
+func (v *ExecErr) NewVerMsg(verState VerState, msg string) ExecRet {
+	if verState.IsWithMsg() {
+		v.Msg = append(v.Msg, msg)
+	}
+	return v
+}
+func (v *ExecErr) String() string           { return strings.Join(v.Msg, "\n") }
+func (v *ExecErr) ToBoolErr() (bool, error) { return false, fmt.Errorf(v.String()) }
+func (v *ExecUnknown) execRet()             {}
+func (v *ExecUnknown) IsTrue() bool         { return false }
+func (v *ExecUnknown) IsUnknown() bool      { return true }
+func (v *ExecUnknown) IsErr() bool          { return false }
+func (v *ExecUnknown) NewVerMsg(verState VerState, msg string) ExecRet {
+	if verState.IsWithMsg() {
+		v.Msg = append(v.Msg, msg)
+	}
+	return v
+}
 func (v *ExecUnknown) String() string           { return strings.Join(v.Msg, "\n") }
 func (v *ExecUnknown) ToBoolErr() (bool, error) { return false, nil }
 
