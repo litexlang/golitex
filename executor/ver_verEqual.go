@@ -23,7 +23,7 @@ import (
 )
 
 // how equality is verified is different from other facts because 1. it is stored differently 2. its transitive and commutative property is automatically used by the verifier
-func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, checkRequirements bool) VerRet {
+func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, checkRequirements bool) ExecRet {
 	if verRet := ver.verByReplaceFcInSpecFactWithValue(stmt, state); verRet.IsTrue() || verRet.IsErr() {
 		return verRet
 	}
@@ -36,11 +36,11 @@ func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, c
 		return verRet
 	}
 
-	return NewVerUnknown("")
+	return NewExecUnknown("")
 }
 
-func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *VerState, checkRequirements bool) VerRet {
-	var verRet VerRet
+func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *VerState, checkRequirements bool) ExecRet {
+	var verRet ExecRet
 
 	if checkRequirements && !state.ReqOk {
 		// REMARK: 这里 state 更新了： ReqOk 更新到了 true
@@ -49,7 +49,7 @@ func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *Ve
 		}
 
 		if !isValidEqualFact(stmt) {
-			return NewVerErr(fmt.Sprintf("invalid equal fact: %s", stmt))
+			return NewExecErr(fmt.Sprintf("invalid equal fact: %s", stmt))
 		}
 	}
 
@@ -65,17 +65,17 @@ func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *Ve
 			}
 		}
 	} else {
-		return NewVerUnknown("")
+		return NewExecUnknown("")
 	}
 
-	return NewVerUnknown("")
+	return NewExecUnknown("")
 }
 
 func isValidEqualFact(stmt *ast.SpecFactStmt) bool {
 	return len(stmt.Params) == 2 && string(stmt.PropName) == glob.KeySymbolEqual
 }
 
-func (ver *Verifier) verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Fc, right ast.Fc, state *VerState) VerRet {
+func (ver *Verifier) verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Fc, right ast.Fc, state *VerState) ExecRet {
 	if verRet := ver.verEqualBuiltin(left, right, state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
@@ -98,19 +98,19 @@ func (ver *Verifier) verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Fc, r
 		}
 	}
 
-	return NewVerUnknown("")
+	return NewExecUnknown("")
 }
 
-func (ver *Verifier) verEqualBuiltin(left ast.Fc, right ast.Fc, state *VerState) VerRet {
+func (ver *Verifier) verEqualBuiltin(left ast.Fc, right ast.Fc, state *VerState) ExecRet {
 	ok, msg, err := cmp.CmpBy_Literally_NumLit_PolynomialArith(left, right) // 完全一样
 	if err != nil {
-		return NewVerErr(err.Error())
+		return NewExecErr(err.Error())
 	}
 	if ok {
 		if state.WithMsg {
 			ver.successWithMsg(fmt.Sprintf("%s = %s", left, right), msg)
 		}
-		return NewVerTrue("")
+		return NewExecTrue("")
 	}
 
 	// 如果是 fn 那就层层盘剥
@@ -124,22 +124,22 @@ func (ver *Verifier) verEqualBuiltin(left ast.Fc, right ast.Fc, state *VerState)
 		return verRet
 	}
 
-	return NewVerUnknown("")
+	return NewExecUnknown("")
 }
 
-func (ver *Verifier) verEqualSpecMem(left ast.Fc, right ast.Fc, state *VerState) VerRet {
+func (ver *Verifier) verEqualSpecMem(left ast.Fc, right ast.Fc, state *VerState) ExecRet {
 	// if ver.env.CurMatchProp == nil {
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
 		verRet := ver.equalFact_SpecMem_atEnv(curEnv, left, right, state)
 		if verRet.IsErr() || verRet.IsTrue() {
-			return NewVerTrue("")
+			return NewExecTrue("")
 		}
 	}
 
-	return NewVerUnknown("")
+	return NewExecUnknown("")
 }
 
-func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right ast.Fc, state *VerState) VerRet {
+func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right ast.Fc, state *VerState) ExecRet {
 	nextState := state.GetNoMsg()
 
 	verRet := ver.getEqualFcsAndCmpOneByOne(curEnv, left, right, nextState)
@@ -153,10 +153,10 @@ func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right
 		return verRet
 	}
 
-	return NewVerUnknown("")
+	return NewExecUnknown("")
 }
 
-func (ver *Verifier) verLogicMem_leftToRight_RightToLeft(left ast.Fc, right ast.Fc, state *VerState) VerRet {
+func (ver *Verifier) verLogicMem_leftToRight_RightToLeft(left ast.Fc, right ast.Fc, state *VerState) ExecRet {
 	equalFact := ast.NewEqualFact(left, right)
 	verRet := ver.verSpecFact_ByLogicMem(equalFact, state)
 	if verRet.IsErr() || verRet.IsTrue() {
@@ -165,16 +165,16 @@ func (ver *Verifier) verLogicMem_leftToRight_RightToLeft(left ast.Fc, right ast.
 
 	equalFactParamReversed, err := equalFact.ReverseSpecFactParamsOrder()
 	if err != nil {
-		return NewVerErr(err.Error())
+		return NewExecErr(err.Error())
 	}
 	verRet = ver.verSpecFact_ByLogicMem(equalFactParamReversed, state)
 	if verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
-	return NewVerUnknown("")
+	return NewExecUnknown("")
 }
 
-func (ver *Verifier) verEqualUniMem(left ast.Fc, right ast.Fc, state *VerState) VerRet {
+func (ver *Verifier) verEqualUniMem(left ast.Fc, right ast.Fc, state *VerState) ExecRet {
 	equalFact := ast.NewEqualFact(left, right)
 	verRet := ver.verSpecFact_UniMem(equalFact, state)
 	if verRet.IsErr() || verRet.IsTrue() {
@@ -183,16 +183,16 @@ func (ver *Verifier) verEqualUniMem(left ast.Fc, right ast.Fc, state *VerState) 
 
 	equalFactParamReversed, err := equalFact.ReverseSpecFactParamsOrder()
 	if err != nil {
-		return NewVerErr(err.Error())
+		return NewExecErr(err.Error())
 	}
 	verRet = ver.verSpecFact_UniMem(equalFactParamReversed, state)
 	if verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
-	return NewVerUnknown("")
+	return NewExecUnknown("")
 }
 
-func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, right ast.Fc, state *VerState) VerRet {
+func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, right ast.Fc, state *VerState) ExecRet {
 	var equalToLeftFcs, equalToRightFcs *[]ast.Fc
 	var gotLeftEqualFcs, gotRightEqualFcs bool
 
@@ -201,7 +201,7 @@ func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, rig
 
 	if gotLeftEqualFcs && gotRightEqualFcs {
 		if equalToLeftFcs == equalToRightFcs {
-			return NewVerTrue(fmt.Sprintf("%s = %s, by either their equality is known, or it is ensured by transitivity of equality.", left, right))
+			return NewExecTrue(fmt.Sprintf("%s = %s, by either their equality is known, or it is ensured by transitivity of equality.", left, right))
 		}
 	}
 
@@ -214,7 +214,7 @@ func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, rig
 			if verRet := ver.cmpFc_Builtin_Then_Decompose_Spec(equalToLeftFc, right, state); verRet.IsErr() {
 				return verRet
 			} else if verRet.IsTrue() {
-				return NewVerTrue(fmt.Sprintf("It is true that:\n%s = %s and %s = %s", equalToLeftFc, right, equalToLeftFc, left))
+				return NewExecTrue(fmt.Sprintf("It is true that:\n%s = %s and %s = %s", equalToLeftFc, right, equalToLeftFc, left))
 			}
 		}
 	}
@@ -224,19 +224,19 @@ func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, rig
 			if verRet := ver.cmpFc_Builtin_Then_Decompose_Spec(equalToRightFc, left, state); verRet.IsErr() {
 				return verRet
 			} else if verRet.IsTrue() {
-				return NewVerTrue(fmt.Sprintf("It is true that\n%s = %s and %s = %s", left, equalToRightFc, equalToRightFc, right))
+				return NewExecTrue(fmt.Sprintf("It is true that\n%s = %s and %s = %s", left, equalToRightFc, equalToRightFc, right))
 			}
 		}
 	}
 
-	return NewVerUnknown("")
+	return NewExecUnknown("")
 }
 
-func (ver *Verifier) decomposeFcFnsAndCheckEquality(left ast.Fc, right ast.Fc, state *VerState, areEqualFcs func(left ast.Fc, right ast.Fc, state *VerState) VerRet) VerRet {
+func (ver *Verifier) decomposeFcFnsAndCheckEquality(left ast.Fc, right ast.Fc, state *VerState, areEqualFcs func(left ast.Fc, right ast.Fc, state *VerState) ExecRet) ExecRet {
 	if leftAsFn, ok := left.(*ast.FcFn); ok {
 		if rightAsFn, ok := right.(*ast.FcFn); ok {
 			if len(leftAsFn.Params) != len(rightAsFn.Params) {
-				return NewVerUnknown("")
+				return NewExecUnknown("")
 			}
 
 			// compare head
@@ -252,8 +252,8 @@ func (ver *Verifier) decomposeFcFnsAndCheckEquality(left ast.Fc, right ast.Fc, s
 				}
 			}
 
-			return NewVerTrue(fmt.Sprintf("headers and parameters of %s and %s are equal correspondingly", left, right))
+			return NewExecTrue(fmt.Sprintf("headers and parameters of %s and %s are equal correspondingly", left, right))
 		}
 	}
-	return NewVerUnknown("")
+	return NewExecUnknown("")
 }

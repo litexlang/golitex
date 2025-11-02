@@ -20,58 +20,58 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verNumberLogicRelaOpt_BuiltinRules(stmt *ast.SpecFactStmt, state *VerState) VerRet {
+func (ver *Verifier) verNumberLogicRelaOpt_BuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	if !stmt.IsTrue() {
-		return NewVerUnknown("")
+		return NewExecUnknown("")
 	}
 
 	verRet := ver.btNumberInfixCompareProp(stmt, state)
 	return verRet
 }
 
-func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state *VerState) VerRet {
+func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	if !glob.IsBuiltinNumberInfixRelaProp(string(stmt.PropName)) {
-		return NewVerUnknown("")
+		return NewExecUnknown("")
 	}
 
 	if len(stmt.Params) != 2 {
-		return NewVerErr(fmt.Sprintf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params)))
+		return NewExecErr(fmt.Sprintf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params)))
 	}
 
 	leftNumLitExpr, ok, err := ast.MakeFcIntoNumLitExpr(stmt.Params[0])
 	if err != nil {
-		return NewVerErr(err.Error())
+		return NewExecErr(err.Error())
 	}
 	if !ok {
-		return NewVerUnknown("")
+		return NewExecUnknown("")
 	}
 
 	rightNumLitExpr, ok, err := ast.MakeFcIntoNumLitExpr(stmt.Params[1])
 	if err != nil {
-		return NewVerErr(err.Error())
+		return NewExecErr(err.Error())
 	}
 	if !ok {
-		return NewVerUnknown("")
+		return NewExecUnknown("")
 	}
 
 	ok, err = glob.NumLitExprCompareOpt(leftNumLitExpr, rightNumLitExpr, string(stmt.PropName))
 
 	if err != nil {
-		return NewVerErr(err.Error())
+		return NewExecErr(err.Error())
 	}
 	if ok {
 		if state.WithMsg {
 			ver.successWithMsg(stmt.String(), "builtin rules")
 		}
-		return NewVerTrue("")
+		return NewExecTrue("")
 	}
 
-	return NewVerUnknown("")
+	return NewExecUnknown("")
 }
 
-func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactStmt, state *VerState) VerRet {
+func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	if stmt.PropName != glob.KeywordIn {
-		return NewVerUnknown("")
+		return NewExecUnknown("")
 	}
 
 	isSuccess := false
@@ -84,68 +84,68 @@ func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactSt
 	}()
 
 	if len(stmt.Params) != 2 {
-		return NewVerErr(fmt.Sprintf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params)))
+		return NewExecErr(fmt.Sprintf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params)))
 	}
 
 	leftFc, ok, err := ast.MakeFcIntoNumLitExpr(stmt.Params[0])
 	if err != nil {
-		return NewVerErr(err.Error())
+		return NewExecErr(err.Error())
 	}
 	if ok {
 		if ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordReal) {
 			isSuccess = glob.IsRealNumLitExpr(leftFc)
 			if isSuccess {
-				return NewVerTrue("")
+				return NewExecTrue("")
 			} else {
-				return NewVerUnknown("")
+				return NewExecUnknown("")
 			}
 		}
 
 		if ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordNatural) {
 			isSuccess = glob.IsNatNumLitExpr(leftFc)
 			if isSuccess {
-				return NewVerTrue("")
+				return NewExecTrue("")
 			} else {
-				return NewVerUnknown("")
+				return NewExecUnknown("")
 			}
 		}
 
 		if ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordInteger) {
 			isSuccess = glob.IsIntegerNumLitExpr(leftFc)
 			if isSuccess {
-				return NewVerTrue("")
+				return NewExecTrue("")
 			} else {
-				return NewVerUnknown("")
+				return NewExecUnknown("")
 			}
 		}
 
 		if ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordRational) {
 			isSuccess = glob.IsRationalNumLitExpr(leftFc)
 			if isSuccess {
-				return NewVerTrue("")
+				return NewExecTrue("")
 			} else {
-				return NewVerUnknown("")
+				return NewExecUnknown("")
 			}
 		}
 
 		if ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordComplex) {
 			isSuccess = glob.IsComplexNumLitExpr(leftFc)
 			if isSuccess {
-				return NewVerTrue("")
+				return NewExecTrue("")
 			} else {
-				return NewVerUnknown("")
+				return NewExecUnknown("")
 			}
 		}
 
 		if ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordNPos) {
 			isSuccess = glob.IsNPosNumLitExpr(leftFc)
 			if isSuccess {
-				return NewVerTrue("")
+				return NewExecTrue("")
 			} else {
-				return NewVerUnknown("")
+				return NewExecUnknown("")
 			}
 		}
 	}
 
-	return NewVerUnknown("")
+	return NewExecUnknown("")
 }
