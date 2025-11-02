@@ -18,9 +18,9 @@ import (
 	ast "golitex/ast"
 )
 
-func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState) VerRet {
+func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState) ExecRet {
 	if len(stmt.Params) < 2 {
-		return NewVerErr("equals fact must have at least 2 params")
+		return NewExecErr("equals fact must have at least 2 params")
 	}
 
 	for i := 1; i < len(stmt.Params); i++ {
@@ -34,7 +34,7 @@ func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState
 			if verRet.IsTrue() {
 				err := ver.env.NewFact(newFact)
 				if err != nil {
-					return NewVerErr(err.Error())
+					return NewExecErr(err.Error())
 				}
 				checked = true
 				break
@@ -42,8 +42,8 @@ func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState
 		}
 
 		if !checked {
-			return NewVerUnknown("")
+			return NewExecUnknown("")
 		}
 	}
-	return NewVerTrue("")
+	return NewExecTrue("")
 }

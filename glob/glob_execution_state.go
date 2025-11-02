@@ -18,8 +18,8 @@ package litex_global
 
 // import "strings"
 
-// type ExecRet interface {
-// 	execRet()
+// type VerRet interface {
+// 	VerRet()
 // 	IsTrue() bool
 // 	IsUnknown() bool
 // 	IsErr() bool
@@ -39,42 +39,42 @@ package litex_global
 // 	Msg []string
 // }
 
-// func (e *ExecTrue) execRet()          {}
+// func (e *ExecTrue) VerRet()          {}
 // func (e *ExecTrue) IsTrue() bool      { return true }
 // func (e *ExecTrue) IsUnknown() bool   { return false }
 // func (e *ExecTrue) IsErr() bool       { return false }
 // func (e *ExecTrue) AddMsg(msg string) { e.Msg = append(e.Msg, msg) }
 // func (e *ExecTrue) String() string    { return strings.Join(e.Msg, "\n") }
 
-// func (e *ExecUnknown) execRet()          {}
+// func (e *ExecUnknown) VerRet()          {}
 // func (e *ExecUnknown) IsTrue() bool      { return false }
 // func (e *ExecUnknown) IsUnknown() bool   { return true }
 // func (e *ExecUnknown) IsErr() bool       { return false }
 // func (e *ExecUnknown) AddMsg(msg string) { e.Msg = append(e.Msg, msg) }
 // func (e *ExecUnknown) String() string    { return strings.Join(e.Msg, "\n") }
 
-// func (e *ExecErr) execRet()          {}
+// func (e *ExecErr) VerRet()          {}
 // func (e *ExecErr) IsTrue() bool      { return false }
 // func (e *ExecErr) IsUnknown() bool   { return false }
 // func (e *ExecErr) IsErr() bool       { return true }
 // func (e *ExecErr) AddMsg(msg string) { e.Msg = append(e.Msg, msg) }
 // func (e *ExecErr) String() string    { return strings.Join(e.Msg, "\n") }
 
-// func NewExecTrue(s string) *ExecTrue {
+// func NewVerTrue(s string) *ExecTrue {
 // 	if s == "" {
 // 		return &ExecTrue{Msg: []string{}}
 // 	}
 // 	return &ExecTrue{Msg: []string{s}}
 // }
 
-// func NewExecUnknown(s string) *ExecUnknown {
+// func NewVerUnknown(s string) *ExecUnknown {
 // 	if s == "" {
 // 		return &ExecUnknown{Msg: []string{}}
 // 	}
 // 	return &ExecUnknown{Msg: []string{s}}
 // }
 
-// func NewExecErr(s string) *ExecErr {
+// func NewVerErr(s string) *ExecErr {
 // 	if s == "" {
 // 		return &ExecErr{Msg: []string{}}
 // 	}

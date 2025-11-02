@@ -21,7 +21,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) checkSpecFactReq(stmt *ast.SpecFactStmt, state *VerState) (VerRet, *VerState) {
+func (ver *Verifier) checkSpecFactReq(stmt *ast.SpecFactStmt, state *VerState) (ExecRet, *VerState) {
 	if stmt.NameIs(glob.KeywordIn) {
 		verRet := ver.checkSpecFactReq_InFact_UseBtRules(stmt)
 		if verRet.IsErr() {
@@ -41,14 +41,14 @@ func (ver *Verifier) checkSpecFactReq(stmt *ast.SpecFactStmt, state *VerState) (
 
 // 只验证 1. params都声明了 2. 确实是fn template
 // WARNING: 这个函数有严重的问题
-func (ver *Verifier) checkSpecFactReq_InFact_UseBtRules(stmt *ast.SpecFactStmt) VerRet {
+func (ver *Verifier) checkSpecFactReq_InFact_UseBtRules(stmt *ast.SpecFactStmt) ExecRet {
 	ok := ver.env.AreAtomsInFcAreDeclared(stmt.Params[0], map[string]struct{}{})
 	if !ok {
-		return NewVerErr(env.AtomsInFcNotDeclaredMsg(stmt.Params[0]))
+		return NewExecErr(env.AtomsInFcNotDeclaredMsg(stmt.Params[0]))
 	}
 
 	if _, ok := stmt.Params[1].(*ast.FcFn); !ok {
-		return NewVerUnknown("")
+		return NewExecUnknown("")
 	}
 
 	head, ok := stmt.Params[1].(*ast.FcFn).IsFcFn_HasAtomHead_ReturnHead() // WARNING: 这里有问题，因为可能不是fn template，而是 fn(R)R 这种
@@ -59,28 +59,28 @@ func (ver *Verifier) checkSpecFactReq_InFact_UseBtRules(stmt *ast.SpecFactStmt) 
 			for _, param := range stmt.Params[1].(*ast.FcFn).Params {
 				ok := ver.env.AreAtomsInFcAreDeclared(param, map[string]struct{}{})
 				if !ok {
-					return NewVerErr(env.AtomsInFcNotDeclaredMsg(param))
+					return NewExecErr(env.AtomsInFcNotDeclaredMsg(param))
 				}
 			}
-			return NewVerTrue("")
+			return NewExecTrue("")
 		} else {
 			ok = ver.env.AreAtomsInFcAreDeclared(stmt.Params[1], map[string]struct{}{})
 			if !ok {
-				return NewVerErr(env.AtomsInFcNotDeclaredMsg(stmt.Params[1]))
+				return NewExecErr(env.AtomsInFcNotDeclaredMsg(stmt.Params[1]))
 			}
-			return NewVerTrue("")
+			return NewExecTrue("")
 		}
 	} else {
 		ok = ver.env.AreAtomsInFcAreDeclared(stmt.Params[1], map[string]struct{}{})
 		if !ok {
-			return NewVerErr(env.AtomsInFcNotDeclaredMsg(stmt.Params[1]))
+			return NewExecErr(env.AtomsInFcNotDeclaredMsg(stmt.Params[1]))
 		}
 
-		return NewVerTrue("")
+		return NewExecTrue("")
 	}
 }
 
-func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state *VerState) (*VerState, VerRet) {
+func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state *VerState) (*VerState, ExecRet) {
 
 	// 1. Check if all atoms in the parameters are declared
 	// REMARK
@@ -88,7 +88,7 @@ func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state 
 	for _, param := range stmt.Params {
 		ok := ver.env.AreAtomsInFcAreDeclared(param, map[string]struct{}{})
 		if !ok {
-			return state, NewVerErr(env.AtomsInFcNotDeclaredMsg(param))
+			return state, NewExecErr(env.AtomsInFcNotDeclaredMsg(param))
 		}
 	}
 
@@ -102,7 +102,7 @@ func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state 
 			return state, verRet
 		}
 		if verRet.IsUnknown() {
-			return state, BoolErrToVerRet(false, parametersDoNotSatisfyFnReq(param, param))
+			return state, BoolErrToExecRet(false, parametersDoNotSatisfyFnReq(param, param))
 		}
 	}
 
@@ -111,16 +111,16 @@ func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state 
 
 	// state.ReqOk = true
 	newState := VerState{state.Round, state.WithMsg, true}
-	return &newState, NewVerTrue("")
+	return &newState, NewExecTrue("")
 }
 
-func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state *VerState) VerRet {
+func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state *VerState) ExecRet {
 	if _, ok := fc.(ast.FcAtom); ok {
-		return NewVerTrue("")
+		return NewExecTrue("")
 	}
 	fcAsFcFn, ok := fc.(*ast.FcFn)
 	if !ok {
-		return NewVerErr(fmt.Sprintf("%s is not a function", fc))
+		return NewExecErr(fmt.Sprintf("%s is not a function", fc))
 	}
 
 	// 单独处理特殊的内置prop
@@ -130,7 +130,7 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state *VerState) VerRet {
 	if ast.IsFcFnWithHeadName(fcAsFcFn, glob.KeywordLen) {
 		return ver.lenFnRequirement(fcAsFcFn, state)
 	} else if ast.IsFnTemplate_FcFn(fcAsFcFn) {
-		return NewVerTrue("")
+		return NewExecTrue("")
 	} else if ver.isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj(fcAsFcFn) {
 		return ver.isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj_CheckRequirement(fcAsFcFn, state)
 	} else if ast.IsFcAtomAndEqualToStr(fcAsFcFn.FnHead, glob.KeywordSetDefinedByReplacement) {
@@ -145,14 +145,14 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state *VerState) VerRet {
 }
 
 // TODO: 这里需要检查！
-func (ver *Verifier) setDefinedByReplacementFnRequirement(fc *ast.FcFn, state *VerState) VerRet {
+func (ver *Verifier) setDefinedByReplacementFnRequirement(fc *ast.FcFn, state *VerState) ExecRet {
 	if len(fc.Params) != 3 {
-		return NewVerErr(fmt.Sprintf("parameters in %s must be 3, %s in %s is not valid", fc.FnHead, fc, fc))
+		return NewExecErr(fmt.Sprintf("parameters in %s must be 3, %s in %s is not valid", fc.FnHead, fc, fc))
 	}
 
 	propName, ok := fc.Params[2].(ast.FcAtom)
 	if !ok {
-		return NewVerErr(fmt.Sprintf("parameters in %s must be 3, %s in %s is not valid", fc.FnHead, fc, fc))
+		return NewExecErr(fmt.Sprintf("parameters in %s must be 3, %s in %s is not valid", fc.FnHead, fc, fc))
 	}
 
 	forallXOnlyOneYSatisfyGivenProp := ast.GetForallXOnlyOneYSatisfyGivenProp(fc.Params[0], fc.Params[1], propName)
@@ -176,28 +176,28 @@ func (ver *Verifier) isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj(fc *ast.FcFn) b
 	return ok
 }
 
-func (ver *Verifier) isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj_CheckRequirement(fc *ast.FcFn, state *VerState) VerRet {
+func (ver *Verifier) isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj_CheckRequirement(fc *ast.FcFn, state *VerState) ExecRet {
 	for _, param := range fc.Params {
 		verRet := ver.fcSatisfyFnRequirement(param, state)
 		if verRet.IsErr() || verRet.IsUnknown() {
-			return BoolErrToVerRet(false, parametersDoNotSatisfyFnReq(param, fc))
+			return BoolErrToExecRet(false, parametersDoNotSatisfyFnReq(param, fc))
 		}
 	}
 
-	return NewVerTrue("")
+	return NewExecTrue("")
 }
 
-func (ver *Verifier) lenFnRequirement(fc *ast.FcFn, state *VerState) VerRet {
+func (ver *Verifier) lenFnRequirement(fc *ast.FcFn, state *VerState) ExecRet {
 	if len(fc.Params) != 1 {
-		return NewVerErr(fmt.Sprintf("parameters in %s must be 1, %s in %s is not valid", fc.FnHead, fc, fc))
+		return NewExecErr(fmt.Sprintf("parameters in %s must be 1, %s in %s is not valid", fc.FnHead, fc, fc))
 	}
 
 	verRet := ver.VerFactStmt(ast.NewInFactWithFc(fc.Params[0], ast.FcAtom(glob.KeywordFiniteSet)), state)
 	if verRet.IsErr() {
-		return NewVerErr(verRet.String())
+		return NewExecErr(verRet.String())
 	}
 	if verRet.IsUnknown() {
-		return NewVerErr(fmt.Sprintf("parameters in %s must be in set %s, %s in %s is not valid", fc.FnHead, glob.KeywordFiniteSet, fc.Params[0], fc))
+		return NewExecErr(fmt.Sprintf("parameters in %s must be in set %s, %s in %s is not valid", fc.FnHead, glob.KeywordFiniteSet, fc.Params[0], fc))
 	}
-	return NewVerTrue("")
+	return NewExecTrue("")
 }

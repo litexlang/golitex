@@ -20,12 +20,12 @@ import (
 	cmp "golitex/cmp"
 )
 
-func (ver *Verifier) verByReplaceFcInSpecFactWithValue(stmt *ast.SpecFactStmt, state *VerState) VerRet {
+func (ver *Verifier) verByReplaceFcInSpecFactWithValue(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	replaced, newStmt := ver.env.ReplaceFcInSpecFactWithValue(stmt)
 	if replaced {
 		verRet := ver.verTrueEqualFactMainLogic(newStmt, state, true)
 		if verRet.IsErr() {
-			return NewVerErr("failed to verify true equal fact: " + verRet.String())
+			return NewExecErr("failed to verify true equal fact: " + verRet.String())
 		}
 
 		if verRet.IsTrue() {
@@ -47,17 +47,17 @@ func (ver *Verifier) verByReplaceFcInSpecFactWithValue(stmt *ast.SpecFactStmt, s
 			}
 
 			if values[0] == nil && values[1] == nil {
-				return NewVerTrue(fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
+				return NewExecTrue(fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
 			} else {
-				return NewVerTrueWithValues(fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()), values)
+				return NewExecTrueWithValues(fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()), values)
 			}
 		}
 	}
 
-	return NewVerUnknown(fmt.Sprintf("%s is not equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
+	return NewExecUnknown(fmt.Sprintf("%s is not equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
 }
 
-func (ver *Verifier) verByReplaceFcInSpecFactWithValueAndCompute(stmt *ast.SpecFactStmt, state *VerState) VerRet {
+func (ver *Verifier) verByReplaceFcInSpecFactWithValueAndCompute(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	replaced, newStmt := ver.env.ReplaceFcInSpecFactWithValue(stmt)
 
 	if replaced {
@@ -69,9 +69,9 @@ func (ver *Verifier) verByReplaceFcInSpecFactWithValueAndCompute(stmt *ast.SpecF
 			if state.WithMsg {
 				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values and computing", stmt.String(), newStmt.String()))
 			}
-			return NewVerTrue("")
+			return NewExecTrue("")
 		}
 	}
 
-	return NewVerUnknown("")
+	return NewExecUnknown("")
 }
