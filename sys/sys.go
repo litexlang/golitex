@@ -32,7 +32,7 @@ func RunFile(path string) (string, glob.SysSignal, error) {
 	if err != nil {
 		return fmt.Sprintf("failed to read file %s: %s", path, err.Error()), glob.SysSignalSystemError, err
 	}
-	msg, signal, err := pipeline.ExecuteCodeAndReturnMessage(string(content))
+	msg, signal, err := pipeline.PipelineRunSourceCode(string(content))
 	if err != nil {
 		return msg, signal, err
 	}
@@ -63,7 +63,7 @@ func RunRepo(path string) (string, glob.SysSignal, error) {
 	if err != nil {
 		return "", glob.SysSignalSystemError, err
 	}
-	msg, signal, err := pipeline.ExecuteCodeAndReturnMessage(string(content))
+	msg, signal, err := pipeline.PipelineRunSourceCode(string(content))
 	if err != nil {
 		return msg, signal, err
 	}
@@ -71,7 +71,7 @@ func RunRepo(path string) (string, glob.SysSignal, error) {
 }
 
 func ExecuteCodeAndReturnMessage(code string) (string, glob.SysSignal, error) {
-	msg, signal, err := pipeline.ExecuteCodeAndReturnMessage(code)
+	msg, signal, err := pipeline.PipelineRunSourceCode(code)
 	if err != nil {
 		return msg, signal, err
 	}
