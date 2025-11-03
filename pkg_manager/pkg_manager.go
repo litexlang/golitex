@@ -15,57 +15,17 @@
 package litex_pkg_manager
 
 import (
-	"fmt"
+	env "golitex/environment"
 )
 
-// PackageManager handles package operations for Litex
 type PackageManager struct {
-	// TODO: Add fields for package management
-	packages map[string]*Package
+	pkgEnv              *env.Env
+	ImportPathAsPkgName map[string]string
 }
 
-// Package represents a Litex package
-type Package struct {
-	Name    string
-	Version string
-	Path    string
-	// TODO: Add more fields as needed
-}
-
-// NewPackageManager creates a new package manager instance
-func NewPackageManager() *PackageManager {
+func NewPackageManager(pkgEnv *env.Env) *PackageManager {
 	return &PackageManager{
-		packages: make(map[string]*Package),
+		pkgEnv:              pkgEnv,
+		ImportPathAsPkgName: make(map[string]string),
 	}
-}
-
-// RegisterPackage registers a package with the manager
-func (pm *PackageManager) RegisterPackage(name, version, path string) error {
-	if name == "" {
-		return fmt.Errorf("package name cannot be empty")
-	}
-
-	pkg := &Package{
-		Name:    name,
-		Version: version,
-		Path:    path,
-	}
-
-	pm.packages[name] = pkg
-	return nil
-}
-
-// GetPackage retrieves a package by name
-func (pm *PackageManager) GetPackage(name string) (*Package, bool) {
-	pkg, exists := pm.packages[name]
-	return pkg, exists
-}
-
-// ListPackages returns all registered packages
-func (pm *PackageManager) ListPackages() []*Package {
-	packages := make([]*Package, 0, len(pm.packages))
-	for _, pkg := range pm.packages {
-		packages = append(packages, pkg)
-	}
-	return packages
 }

@@ -24,7 +24,7 @@ import (
 
 func TestExecuteCodeAndReturnMessage(t *testing.T) {
 	code := readFile("../examples/test_codes/tmp.lit")
-	msg, signal, err := ExecuteCodeAndReturnMessage(code)
+	msg, signal, err := PipelineRunSourceCode(code)
 	if err != nil {
 		t.Errorf("Error: %s", err)
 	}

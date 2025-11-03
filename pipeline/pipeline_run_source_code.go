@@ -17,6 +17,7 @@ package litex_pipeline
 import (
 	"bufio"
 	"fmt"
+	ast "golitex/ast"
 	exe "golitex/executor"
 	glob "golitex/glob"
 	parser "golitex/parser"
@@ -27,43 +28,47 @@ import (
 	"time"
 )
 
-// main function for running a single code and return the message
-func ExecuteCodeAndReturnMessage(code string) (string, glob.SysSignal, error) {
-	msgOfTopStatements, signal, err := executeCodeAndReturnMessageSlice(code)
-	if err != nil {
-		msgOfTopStatements = append(msgOfTopStatements, err.Error())
-	}
-	ret := strings.TrimSpace(strings.Join(msgOfTopStatements, "\n"))
-	return ret, signal, err
-}
-
-func executeCodeAndReturnMessageSlice(code string) ([]string, glob.SysSignal, error) {
+func PipelineRunSourceCode(code string) (string, glob.SysSignal, error) {
 	topStmtSlice, err := parser.ParseSourceCode(code)
 	if err != nil {
-		return nil, glob.SysSignalParseError, err
+		return "", glob.SysSignalParseError, err
 	}
 
 	executor, err := InitPipelineExecutor()
 	if err != nil {
-		return nil, glob.SysSignalRuntimeError, err
+		return "", glob.SysSignalRuntimeError, err
 	}
 
 	msgOfTopStatements := []string{}
 
+	// maintain a dict of paths that have been imported
+	packagePaths := map[string]struct{}{}
+
 	for _, topStmt := range topStmtSlice {
-		execState, msg, err := executor.Stmt(topStmt)
+		var execState exe.ExecRet = exe.NewExecErr("")
+		var msg string
+		var err error
+
+		switch topStmt.(type) {
+		case *ast.ImportDirStmt:
+			packagePaths[topStmt.(*ast.ImportDirStmt).Path] = struct{}{}
+			panic("not implemented")
+		default:
+			execState, msg, err = executor.Stmt(topStmt)
+		}
+
 		msgOfTopStatements = append(msgOfTopStatements, executor.GetMsgAsStr0ToEnd())
 		msgOfTopStatements = append(msgOfTopStatements, msg)
 
-		if err != nil {
-			return msgOfTopStatements, glob.SysSignalRuntimeError, err
+		if err != nil || execState.IsErr() {
+			return strings.TrimSpace(strings.Join(msgOfTopStatements, "\n")), glob.SysSignalRuntimeError, err
 		}
 		if execState.IsUnknown() {
-			return msgOfTopStatements, glob.SysSignalRuntimeError, fmt.Errorf("execution failed, line %d", topStmt.GetLine())
+			return strings.TrimSpace(strings.Join(msgOfTopStatements, "\n")), glob.SysSignalRuntimeError, fmt.Errorf("execution failed, line %d", topStmt.GetLine())
 		}
 	}
 
-	return msgOfTopStatements, glob.SysSignalTrue, nil
+	return strings.TrimSpace(strings.Join(msgOfTopStatements, "\n")), glob.SysSignalTrue, nil
 }
 
 func ExecuteCodeAndReturnMessageSliceGivenSettings(code string, executor *exe.Executor) ([]string, glob.SysSignal, error) {
