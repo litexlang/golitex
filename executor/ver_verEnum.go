@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verEnumStmt(stmt *ast.EnumStmt, state *VerState) VerRet {
+func (ver *Verifier) verEnumStmt(stmt *ast.EnumStmt, state *VerState) ExecRet {
 	if verRet := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.CurSet, ast.FcAtom(glob.KeywordFiniteSet)}, stmt.Line), state); verRet.IsErr() {
 		return verRet
 	} else if verRet.IsTrue() {
@@ -54,10 +54,10 @@ func (ver *Verifier) verEnumStmt(stmt *ast.EnumStmt, state *VerState) VerRet {
 		}
 	}
 
-	return NewVerTrue("")
+	return NewExecTrue("")
 }
 
-func (ver *Verifier) lenIsZeroThenEnumIsEmpty(stmt *ast.EnumStmt, state *VerState) VerRet {
+func (ver *Verifier) lenIsZeroThenEnumIsEmpty(stmt *ast.EnumStmt, state *VerState) ExecRet {
 	lenOverStmtName := ast.NewFcFn(ast.FcAtom(glob.KeywordLen), []ast.Fc{stmt.CurSet})
 	equalFact := ast.EqualFact(lenOverStmtName, ast.FcAtom("0"))
 	verRet := ver.VerFactStmt(equalFact, state)
@@ -69,12 +69,12 @@ func (ver *Verifier) lenIsZeroThenEnumIsEmpty(stmt *ast.EnumStmt, state *VerStat
 		ver.successWithMsg(stmt.String(), fmt.Sprintf("len(%s) = 0 is equivalent to %s", stmt.CurSet, stmt))
 	}
 
-	return NewVerTrue("")
+	return NewExecTrue("")
 }
 
-func (ver *Verifier) forallObjNotInSetThenTheSetIsEmpty(stmt *ast.EnumStmt, state *VerState) VerRet {
+func (ver *Verifier) forallObjNotInSetThenTheSetIsEmpty(stmt *ast.EnumStmt, state *VerState) ExecRet {
 	if len(stmt.Items) != 0 {
-		return NewVerUnknown("")
+		return NewExecUnknown("")
 	}
 
 	allObjectsNotInSetThenSetIsEmpty := ast.NewUniFact([]string{"x"}, []ast.Fc{ast.FcAtom(glob.KeywordObj)}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{ast.FcAtom("x"), stmt.CurSet}, stmt.Line)}, stmt.Line)
@@ -87,5 +87,5 @@ func (ver *Verifier) forallObjNotInSetThenTheSetIsEmpty(stmt *ast.EnumStmt, stat
 		ver.successWithMsg(stmt.String(), fmt.Sprintf("builtin rule:\n%s\nis equivalent to\n%s", allObjectsNotInSetThenSetIsEmpty, stmt))
 	}
 
-	return NewVerTrue("")
+	return NewExecTrue("")
 }

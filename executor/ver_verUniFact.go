@@ -20,9 +20,9 @@ import (
 	env "golitex/environment"
 )
 
-func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) VerRet {
+func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) ExecRet {
 	if state.isFinalRound() {
-		return NewVerUnknown("")
+		return NewExecUnknown("")
 	}
 
 	// 在局部环境声明新变量
@@ -31,49 +31,49 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) VerRe
 
 	newStmtPtr, err := ver.PreprocessUniFactParams_DeclareParams(oldStmt)
 	if err != nil {
-		return NewVerErr(err.Error())
+		return NewExecErr(err.Error())
 	}
 
 	// know cond facts
 	for _, condFact := range newStmtPtr.DomFacts {
 		err := ver.env.NewFact(condFact)
 		if err != nil {
-			return NewVerErr(err.Error())
+			return NewExecErr(err.Error())
 		}
 	}
 
 	return ver.uniFact_checkThenFacts(newStmtPtr, state)
 }
 
-func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerState) VerRet {
+func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerState) ExecRet {
 	// check then facts
 	for _, thenFact := range stmt.ThenFacts {
 		verRet := ver.VerFactStmt(thenFact, state) // 这个地方有点tricky，这里是可能读入state是any的，而且我要允许读入any
 		if verRet.IsErr() {
-			return NewVerErr(verRet.String())
+			return NewExecErr(verRet.String())
 		}
 		if verRet.IsUnknown() {
 			if state.WithMsg {
 				ver.env.Msgs = append(ver.env.Msgs, fmt.Sprintf("%s is unknown", thenFact))
 			}
-			return NewVerUnknown("")
+			return NewExecUnknown("")
 		}
 
 		// if true, store it
 		err := ver.env.NewFact(thenFact)
 		if err != nil {
-			return NewVerErr(err.Error())
+			return NewExecErr(err.Error())
 		}
 	}
 
 	if state.WithMsg {
 		err := ver.newMsgAtParent(fmt.Sprintf("%s\nis true", stmt))
 		if err != nil {
-			return NewVerErr(err.Error())
+			return NewExecErr(err.Error())
 		}
 	}
 
-	return NewVerTrue("")
+	return NewExecTrue("")
 }
 
 func (ver *Verifier) PreprocessUniFactParams_DeclareParams(oldStmt *ast.UniFactStmt) (*ast.UniFactStmt, error) {
@@ -99,7 +99,7 @@ func (ver *Verifier) PreprocessUniFactParams_DeclareParams(oldStmt *ast.UniFactS
 	return newStmtPtr, nil
 }
 
-func (ver *Verifier) verUniFactWithIff(stmt *ast.UniFactWithIffStmt, state *VerState) VerRet {
+func (ver *Verifier) verUniFactWithIff(stmt *ast.UniFactWithIffStmt, state *VerState) ExecRet {
 	thenToIff := stmt.NewUniFactWithThenToIff()
 	verRet := ver.verUniFact(thenToIff, state)
 	if verRet.IsErr() || verRet.IsUnknown() {

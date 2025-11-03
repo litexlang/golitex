@@ -25,14 +25,14 @@ import (
 // WARNING
 // REMARK
 // TODO: cmpFc_Builtin_Then_Decompose_Spec, fcEqualSpec 大循环本质上是有问题的，会有循环论证的风险：know p(p(1,2), 0) = 1, 则现在问 p(1,2) =1 吗？我会比较 p(1,2) = p(p(1,2), 0)，那这时候就出问题了：我因为一位位地比，所以又回到了比较 1 = p(1,2)
-func (ver *Verifier) cmpFc_Builtin_Then_Decompose_Spec(left ast.Fc, right ast.Fc, state *VerState) VerRet {
+func (ver *Verifier) cmpFc_Builtin_Then_Decompose_Spec(left ast.Fc, right ast.Fc, state *VerState) ExecRet {
 	ok, msg, err := cmp.CmpBy_Literally_NumLit_PolynomialArith(left, right) // 完全一样
 	if err != nil {
-		return NewVerErr(err.Error())
+		return NewExecErr(err.Error())
 	}
 	if ok {
 		// return ver.equalTrueAddSuccessMsg(left, right, state, msg)
-		return NewVerTrue(msg)
+		return NewExecTrue(msg)
 	}
 
 	// if ok {
@@ -46,7 +46,7 @@ func (ver *Verifier) cmpFc_Builtin_Then_Decompose_Spec(left ast.Fc, right ast.Fc
 }
 
 // Iterate over all equal facts. On each equal fact, use commutative, associative, cmp rule to compare.
-func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state *VerState) VerRet {
+func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state *VerState) ExecRet {
 	if verRet := ver.cmpFc_Builtin_Then_Decompose_Spec(left, right, state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
@@ -63,7 +63,7 @@ func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state *VerState) Ver
 				if state.WithMsg {
 					ver.successWithMsg(fmt.Sprintf("known %s = %s", left, right), "")
 				}
-				return NewVerTrue("")
+				return NewExecTrue("")
 			}
 		}
 
@@ -104,12 +104,12 @@ func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state *VerState) Ver
 		}
 	}
 
-	return NewVerUnknown("")
+	return NewExecUnknown("")
 }
 
-func (ver *Verifier) verTrueEqualFact_FcFnEqual_NoCheckRequirements(left, right *ast.FcFn, state *VerState) VerRet {
+func (ver *Verifier) verTrueEqualFact_FcFnEqual_NoCheckRequirements(left, right *ast.FcFn, state *VerState) ExecRet {
 	if len(left.Params) != len(right.Params) {
-		return NewVerUnknown("")
+		return NewExecUnknown("")
 	}
 
 	// ok, err = ver.fcEqualSpec(left.FnHead, right.FnHead, state)
@@ -118,7 +118,7 @@ func (ver *Verifier) verTrueEqualFact_FcFnEqual_NoCheckRequirements(left, right 
 		return verRet
 	}
 	if verRet.IsUnknown() {
-		return NewVerUnknown("")
+		return NewExecUnknown("")
 	}
 
 	for i := range left.Params {
@@ -134,17 +134,17 @@ func (ver *Verifier) verTrueEqualFact_FcFnEqual_NoCheckRequirements(left, right 
 	}
 
 	// return newTrueVerRet("")
-	return NewVerTrue("")
+	return NewExecTrue("")
 }
 
-func (ver *Verifier) FcsEqualBy_Eval_ShareKnownEqualMem(left, right ast.Fc, state *VerState) VerRet {
+func (ver *Verifier) FcsEqualBy_Eval_ShareKnownEqualMem(left, right ast.Fc, state *VerState) ExecRet {
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
 		leftEqualFcs, ok := curEnv.EqualMem[left.String()]
 		if ok {
 			rightEqualFcs, ok := curEnv.EqualMem[right.String()]
 			if ok {
 				if leftEqualFcs == rightEqualFcs {
-					return NewVerTrue("")
+					return NewExecTrue("")
 				}
 			}
 		}
@@ -152,29 +152,29 @@ func (ver *Verifier) FcsEqualBy_Eval_ShareKnownEqualMem(left, right ast.Fc, stat
 
 	leftEqualFcs, ok := ver.env.GetEqualFcs(left)
 	if !ok {
-		return NewVerUnknown("")
+		return NewExecUnknown("")
 	}
 
 	rightEqualFcs, ok := ver.env.GetEqualFcs(right)
 	if !ok {
-		return NewVerUnknown("")
+		return NewExecUnknown("")
 	}
 
 	for _, leftEqualFc := range *leftEqualFcs {
 		for _, rightEqualFc := range *rightEqualFcs {
 			if leftEqualFc.String() == rightEqualFc.String() {
-				return NewVerTrue("")
+				return NewExecTrue("")
 			} else {
 				_, newLeft := ver.env.ReplaceSymbolWithValue(leftEqualFc)
 				if cmp.IsNumLitFc(newLeft) {
 					_, newRight := ver.env.ReplaceSymbolWithValue(rightEqualFc)
 					if ok, _, _ := cmp.CmpBy_Literally_NumLit_PolynomialArith(newLeft, newRight); ok {
-						return NewVerTrue("")
+						return NewExecTrue("")
 					}
 				}
 			}
 		}
 	}
 
-	return NewVerUnknown("")
+	return NewExecUnknown("")
 }

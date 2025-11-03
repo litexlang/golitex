@@ -19,7 +19,7 @@ import (
 	ast "golitex/ast"
 )
 
-func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) VerRet {
+func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) ExecRet {
 	// f(a)(b,c)(e,d,f) 返回 {f, f(a), f(a)(b,c), f(a)(b,c)(e,d,f)}, {nil, {a}, {b,c}, {e,d,f}}
 	fnHeadChain_AndItSelf, paramsChain := ast.GetFnHeadChain_AndItSelf(fcFn)
 
@@ -31,7 +31,7 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) VerRet {
 	// 比如 f(a)(b,c)(e,d,f) 我们现在得到了 f(a) 的 fnTStruct，那 curParamsChainIndex 就是 2, 表示 f(a) 对应的params就是 (b,c)
 	// curFnTStruct := ver.env.GetFnTStructOfFnInFnTMemItem(FnToFnItemWhereLatestFnTIsGot)
 	if FnToFnItemWhereLatestFnTIsGot == nil {
-		return NewVerErr(fmt.Sprintf("%s is not defined", fnHeadChain_AndItSelf[len(fnHeadChain_AndItSelf)-1]))
+		return NewExecErr(fmt.Sprintf("%s is not defined", fnHeadChain_AndItSelf[len(fnHeadChain_AndItSelf)-1]))
 	}
 
 	curFnTStruct := FnToFnItemWhereLatestFnTIsGot.AsFnTStruct
@@ -41,12 +41,12 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) VerRet {
 	for curParamsChainIndex < len(fnHeadChain_AndItSelf)-1 {
 		uniMap, err := ast.MakeUniMap(curFnTStruct.Params, paramsChain[curParamsChainIndex])
 		if err != nil {
-			return NewVerErr(err.Error())
+			return NewExecErr(err.Error())
 		}
 
 		instCurFnTStruct, err := curFnTStruct.Instantiate(uniMap)
 		if err != nil {
-			return NewVerErr(err.Error())
+			return NewExecErr(err.Error())
 		}
 
 		verRet := ver.checkParamsSatisfyFnTStruct(paramsChain[curParamsChainIndex], instCurFnTStruct, state)
@@ -59,12 +59,12 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) VerRet {
 
 		curRetSet, ok := instCurFnTStruct.RetSet.(*ast.FcFn)
 		if !ok {
-			return NewVerErr("curRetSet is not an FcFn")
+			return NewExecErr("curRetSet is not an FcFn")
 		}
 
 		curFnTStruct, err = ver.GetFnStructFromFnTName_CheckFnTParamsReq(curRetSet, state)
 		if err != nil {
-			return NewVerErr(err.Error())
+			return NewExecErr(err.Error())
 		}
 
 		curParamsChainIndex++
@@ -72,12 +72,12 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) VerRet {
 
 	uniMap, err := ast.MakeUniMap(curFnTStruct.Params, paramsChain[curParamsChainIndex])
 	if err != nil {
-		return NewVerErr(err.Error())
+		return NewExecErr(err.Error())
 	}
 
 	instCurFnTStruct, err := curFnTStruct.Instantiate(uniMap)
 	if err != nil {
-		return NewVerErr(err.Error())
+		return NewExecErr(err.Error())
 	}
 
 	verRet := ver.checkParamsSatisfyFnTStruct(paramsChain[curParamsChainIndex], instCurFnTStruct, state)
@@ -88,7 +88,7 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) VerRet {
 		return verRet
 	}
 
-	return NewVerTrue("")
+	return NewExecTrue("")
 }
 
 func (ver *Verifier) GetFnStructFromFnTName_CheckFnTParamsReq(fnTName *ast.FcFn, state *VerState) (*ast.FnTStruct, error) {
@@ -126,14 +126,14 @@ func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckParamsSatisfyFnTReq(fnTDef
 	return defOfT.Fn.Instantiate(uniMap)
 }
 
-func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreTrue(fnTDef *ast.FnTemplateDefStmt, uniMap map[string]ast.Fc, state *VerState) VerRet {
+func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreTrue(fnTDef *ast.FnTemplateDefStmt, uniMap map[string]ast.Fc, state *VerState) ExecRet {
 	ver.newEnv(ver.env)
 	defer ver.deleteEnvAndRetainMsg()
 
 	for _, fact := range fnTDef.TemplateDomFacts {
 		newFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
-			return NewVerErr(err.Error())
+			return NewExecErr(err.Error())
 		}
 
 		verRet := ver.VerFactStmt(newFact, state)
@@ -142,10 +142,10 @@ func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreT
 		}
 	}
 
-	return NewVerTrue("")
+	return NewExecTrue("")
 }
 
-func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.FcSlice, fnTStruct *ast.FnTStruct, state *VerState) VerRet {
+func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.FcSlice, fnTStruct *ast.FnTStruct, state *VerState) ExecRet {
 	failed := false
 
 	curState := state.GetNoMsg()
@@ -174,8 +174,8 @@ func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.FcSlice, fnT
 	if verRet.IsUnknown() {
 		failed = true
 		ver.env.Msgs = append(ver.env.Msgs, verRet.String())
-		return NewVerUnknown("")
+		return NewExecUnknown("")
 	}
 
-	return NewVerTrue("")
+	return NewExecTrue("")
 }

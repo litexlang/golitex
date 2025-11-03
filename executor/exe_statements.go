@@ -143,12 +143,12 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) (ExecRet, error) {
 		if err != nil {
 			return NewExecErr(""), err
 		}
-		if verRet.(*VerTrue).TrueEqualValues != nil {
-			if verRet.(*VerTrue).TrueEqualValues[0] != nil {
-				exec.env.StoreTrueEqualValues(stmt.(*ast.SpecFactStmt).Params[1], verRet.(*VerTrue).TrueEqualValues[0])
+		if verRet.(*ExecTrue).TrueEqualValues != nil {
+			if verRet.(*ExecTrue).TrueEqualValues[0] != nil {
+				exec.env.StoreTrueEqualValues(stmt.(*ast.SpecFactStmt).Params[1], verRet.(*ExecTrue).TrueEqualValues[0])
 			}
-			if verRet.(*VerTrue).TrueEqualValues[1] != nil {
-				exec.env.StoreTrueEqualValues(stmt.(*ast.SpecFactStmt).Params[0], verRet.(*VerTrue).TrueEqualValues[1])
+			if verRet.(*ExecTrue).TrueEqualValues[1] != nil {
+				exec.env.StoreTrueEqualValues(stmt.(*ast.SpecFactStmt).Params[0], verRet.(*ExecTrue).TrueEqualValues[1])
 			}
 		}
 		return NewExecTrue(""), nil

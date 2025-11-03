@@ -19,22 +19,22 @@ import (
 	env "golitex/environment"
 )
 
-func (ver *Verifier) ver_In_FnTT(left ast.Fc, right *ast.FcFn, state *VerState) VerRet {
+func (ver *Verifier) ver_In_FnTT(left ast.Fc, right *ast.FcFn, state *VerState) ExecRet {
 	leftLatestFnT := ver.env.GetLatestFnT_GivenNameIsIn(left.String())
 	if leftLatestFnT == nil {
-		return NewVerUnknown("")
+		return NewExecUnknown("")
 	}
 
 	// right dom <= left dom. on right dom left has all those then facts
 	rightDefT := ver.env.GetFnTemplateDef_KeyIsFcHead(right)
 	if rightDefT == nil {
-		return NewVerUnknown("")
+		return NewExecUnknown("")
 	}
 
 	ok := ver.leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftLatestFnT, rightDefT, left, right, state)
 
 	if !ok {
-		return NewVerUnknown("")
+		return NewExecUnknown("")
 	}
 
 	templateParamUniMap := map[string]ast.Fc{}
@@ -44,10 +44,10 @@ func (ver *Verifier) ver_In_FnTT(left ast.Fc, right *ast.FcFn, state *VerState) 
 
 	ok = ver.f_satisfy_FnT_ThenFacts_On_FnT_Dom(left, string(rightDefT.TemplateDefHeader.Name), templateParamUniMap, rightDefT.Fn, state)
 	if !ok {
-		return NewVerUnknown("")
+		return NewExecUnknown("")
 	}
 
-	return NewVerTrue("")
+	return NewExecTrue("")
 }
 
 // right dom is subset of left dom
