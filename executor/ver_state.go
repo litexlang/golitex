@@ -22,6 +22,10 @@ type VerState struct {
 	ReqOk   bool
 }
 
+func (s *VerState) IsWithMsg() bool {
+	return s.WithMsg
+}
+
 func (s *VerState) ToReqOk() *VerState {
 	return &VerState{
 		Round:   s.Round,

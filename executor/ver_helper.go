@@ -25,16 +25,16 @@ func (ver *Verifier) todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt *ast.Sp
 	return nil
 }
 
-func (ver *Verifier) processOkMsg(state *VerState, msg string, verifiedBy string, args ...any) VerRet {
+func (ver *Verifier) processOkMsg(state *VerState, msg string, verifiedBy string, args ...any) ExecRet {
 	if state.WithMsg {
 		ver.successWithMsg(msg, fmt.Sprintf(verifiedBy, args...))
 	}
-	return NewVerTrue(successVerString(msg, fmt.Sprintf(verifiedBy, args...)))
+	return NewExecTrue(successVerString(msg, fmt.Sprintf(verifiedBy, args...)))
 }
 
-func (ver *Verifier) paramsInSets(params []ast.Fc, sets []ast.Fc, state *VerState) VerRet {
+func (ver *Verifier) paramsInSets(params []ast.Fc, sets []ast.Fc, state *VerState) ExecRet {
 	if len(params) != len(sets) {
-		return NewVerErr("params and sets length mismatch")
+		return NewExecErr("params and sets length mismatch")
 	}
 
 	for i := range params {
@@ -44,24 +44,24 @@ func (ver *Verifier) paramsInSets(params []ast.Fc, sets []ast.Fc, state *VerStat
 			return verRet
 		}
 		if verRet.IsUnknown() {
-			return NewVerUnknown(ast.UnknownFactMsg(fact))
+			return NewExecUnknown(ast.UnknownFactMsg(fact))
 		}
 	}
-	return NewVerTrue("")
+	return NewExecTrue("")
 }
 
-func (ver *Verifier) factsAreTrue(facts []ast.FactStmt, state *VerState) VerRet {
+func (ver *Verifier) factsAreTrue(facts []ast.FactStmt, state *VerState) ExecRet {
 	for _, fact := range facts {
 		verRet := ver.VerFactStmt(fact, state)
 		if verRet.IsErr() {
 			return verRet
 		}
 		if verRet.IsUnknown() {
-			return NewVerUnknown(ast.UnknownFactMsg(fact))
+			return NewExecUnknown(ast.UnknownFactMsg(fact))
 		}
 	}
 
-	return NewVerTrue("")
+	return NewExecTrue("")
 }
 
 func IsTrueOrErr(ok bool, err error) bool {

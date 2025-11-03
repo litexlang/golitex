@@ -94,6 +94,13 @@ func (env *Env) GetUpMostEnv() *Env {
 	return env.Parent.GetUpMostEnv()
 }
 
+func (env *Env) GetSecondUpMostEnv() *Env {
+	if env.Parent != nil && env.Parent.Parent == nil {
+		return env
+	}
+	return env.Parent.GetSecondUpMostEnv()
+}
+
 func NewEnv(parent *Env) *Env {
 	env := &Env{
 		Parent:                 parent,
