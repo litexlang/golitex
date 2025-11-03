@@ -30,9 +30,9 @@ _– Leonardo da Vinci_
 
 **Warning: Litex is still in beta. The syntax and semantics are subject to change. There might be some bugs and inconsistencies. You should not use Litex in any production environments yet.**
 
-Litex([website](https://litexlang.com)) is a simple, intuitive, and expressive open-source formal language for coding reasoning ([Star the repo!](https://github.com/litexlang/golitex)). It ensures every step of your reasoning is correct, and is actually the first formal language that can be learned by anyone in 2 hours. In fact, Litex is so close to natural language that sometimes it makes you forget you are using a formal language! This can be really helpful for AI and human alike in mathematical exploration and problem-solving.
+Litex([website](https://litexlang.com)) is a simple, intuitive, and expressive open-source formal language for coding reasoning ([Star the repo!](https://github.com/litexlang/golitex)). It is such a simple language that can be learned by anyone in 2 hours. The closeness of Litex to natural language can be really helpful for AI and human alike in mathematical exploration and problem-solving. The best Litex experience is: you forget that you are using a formal language to write mathematics!
 
-Making Litex intuitive to both humans and AI is Litex's core mission. Just like how Python lowers the barrier of programming by 10x compared with C/C++, Litex lowers the barrier of formal reasoning by 10x compared with previous formal languages like Lean. This is how Litex scales formal reasoning: by making it accessible to more people, applicable to more complex problems, and usable by large-scale AI systems. Here is an example:
+Making Litex intuitive to both humans and AI is Litex's core mission. Just like how Python lowers the barrier of programming by 10x compared with C/C++, Litex lowers the barrier of formal reasoning by 10x compared with previous formal languages like Lean. This is how Litex scales formal reasoning: by making it accessible to more people, and usable by large-scale AI systems. Here is an example:
 
 <table style="border-collapse: collapse; width: 100%; font-size: 12px">
   <tr>
@@ -76,9 +76,9 @@ Making Litex intuitive to both humans and AI is Litex's core mission. Just like 
   </tr>
 </table>
 
-While Lean 4 is a powerful and rigorous proof assistant ideal, it requires months of training and years of experience to master. Litex takes a different approach: prioritizing accessibility and ease of use, enabling even beginners to formalize naive tasks like multivariate equations in minutes. For many everyday reasoning tasks, especially when rapid prototyping and intuitive syntax matter most, Litex offers a more approachable path. Each tool has its place — choose the one that best fits your needs and experience level!
+While Lean 4 is a powerful and rigorous proof assistant ideal, it requires months of training and years of experience to master. Litex takes a different approach: prioritizing accessibility and ease of use, enabling even beginners to formalize naive tasks like multivariate equations in minutes. For many everyday reasoning tasks, Litex offers a more approachable path. 
 
-Our mission is to make Litex the most accessible and usable formal language for coding reasoning. We aim to solve the most challenging problems faced by the AI community, i.e. the challenge of efficient, scalable, and reliable coding reasoning. Let's build the future together!
+Our mission is to make Litex the most intuitive and simple formal language for coding reasoning. We aim to solve the most challenging problems faced by the AI community, i.e. the challenge of efficient, scalable, and reliable coding reasoning. Let's build the future together!
 
 ## Resources And Community
 
