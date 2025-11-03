@@ -109,6 +109,12 @@ All of our [repositories](https://github.com/orgs/litexlang/repositories) are op
 
 ## References
 
+_You must run before you can walk._
+
+_-- Bjarne Stroustrup_
+
+Although Litex is a very pragmatic language which contains and only contains the proof methods, axioms, keywords, etc. that people need in their daily mathematical work—things that are often so taken for granted that people usually don't even notice them —- it is equally important to note that Litex indeed has gained great conceptual inspiration from the masters.
+
 Mathematics references:
 
 1. Avigad Jeremy: Foundations https://arxiv.org/abs/2009.09541
@@ -116,6 +122,12 @@ Mathematics references:
 3. Weyl Hermann: Philosophy of Mathematics and Natural Science https://www.jstor.org/stable/j.ctv1t1kftd
 4. Bertrand Russell: Introduction to Mathematical Philosophy https://people.umass.edu/klement/imp/imp.pdf
 5. David Hilbert: Foundations of Geometry https://math.berkeley.edu/~wodzicki/160/Hilbert.pdf
+
+AI references:
+
+1. DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning
+2. AlphaGeometry: An Olympiad-level AI system for geometry 
+3. Seed-Prover: Deep and Broad Reasoning for Automated Theorem Proving
 
 ## Special Thanks
 
