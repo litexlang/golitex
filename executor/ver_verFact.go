@@ -21,7 +21,7 @@ import (
 )
 
 // 所有verifier的方法里，只有它和switch里的三大函数可能读入anyState
-func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) VerRet {
+func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) ExecRet {
 	switch asStmt := stmt.(type) {
 	case *ast.SpecFactStmt:
 		if asStmt.NameIs(glob.KeySymbolEqual) && asStmt.TypeEnum == ast.TruePure {
@@ -42,6 +42,6 @@ func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) VerRet {
 	case *ast.EnumStmt:
 		return ver.verEnumStmt(asStmt, state)
 	default:
-		return NewVerErr(fmt.Sprintf("unexpected fact statement: %s", asStmt))
+		return NewExecErr(fmt.Sprintf("unexpected fact statement: %s", asStmt))
 	}
 }

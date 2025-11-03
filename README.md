@@ -30,7 +30,7 @@ _– Leonardo da Vinci_
 
 **Warning: Litex is still in beta. The syntax and semantics are subject to change. There might be some bugs and inconsistencies. You should not use Litex in any production environments yet.**
 
-Litex([website](https://litexlang.com)) is a simple, intuitive, and expressive open-source formal language for coding reasoning ([Star the repo!](https://github.com/litexlang/golitex)). It ensures every step of your reasoning is correct, and is actually the first formal language that can be learned by anyone in 2 hours. In fact, Litex is so close to natural language that sometimes it makes you forget you are using a formal language!
+Litex([website](https://litexlang.com)) is a simple, intuitive, and expressive open-source formal language for coding reasoning ([Star the repo!](https://github.com/litexlang/golitex)). It ensures every step of your reasoning is correct, and is actually the first formal language that can be learned by anyone in 2 hours. In fact, Litex is so close to natural language that sometimes it makes you forget you are using a formal language! This can be really helpful for AI and human alike in mathematical exploration and problem-solving.
 
 Making Litex intuitive to both humans and AI is Litex's core mission. Just like how Python lowers the barrier of programming by 10x compared with C/C++, Litex lowers the barrier of formal reasoning by 10x compared with previous formal languages like Lean. This is how Litex scales formal reasoning: by making it accessible to more people, applicable to more complex problems, and usable by large-scale AI systems. Here is an example:
 
@@ -109,6 +109,12 @@ All of our [repositories](https://github.com/orgs/litexlang/repositories) are op
 
 ## References
 
+_You must run before you can walk._
+
+_-- Bjarne Stroustrup_
+
+Although Litex is a very pragmatic language which contains and only contains the proof methods, axioms, keywords, etc. that people need in their daily mathematical work—things that are often so taken for granted that people usually don't even notice them —- it is equally important to note that Litex indeed has gained great conceptual inspiration from the masters.
+
 Mathematics references:
 
 1. Avigad Jeremy: Foundations https://arxiv.org/abs/2009.09541
@@ -116,6 +122,12 @@ Mathematics references:
 3. Weyl Hermann: Philosophy of Mathematics and Natural Science https://www.jstor.org/stable/j.ctv1t1kftd
 4. Bertrand Russell: Introduction to Mathematical Philosophy https://people.umass.edu/klement/imp/imp.pdf
 5. David Hilbert: Foundations of Geometry https://math.berkeley.edu/~wodzicki/160/Hilbert.pdf
+
+AI references:
+
+1. DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning
+2. AlphaGeometry: An Olympiad-level AI system for geometry 
+3. Seed-Prover: Deep and Broad Reasoning for Automated Theorem Proving
 
 ## Special Thanks
 

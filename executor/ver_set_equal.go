@@ -16,10 +16,10 @@ package litex_executor
 
 import ast "golitex/ast"
 
-func (ver *Verifier) verIntensionalSetStmt(stmt *ast.IntensionalSetStmt, state *VerState) VerRet {
+func (ver *Verifier) verIntensionalSetStmt(stmt *ast.IntensionalSetStmt, state *VerState) ExecRet {
 	leftUniFact, rightUniFact, err := stmt.ToEquivalentUniFacts()
 	if err != nil {
-		return NewVerErr(err.Error())
+		return NewExecErr(err.Error())
 	}
 
 	verRet := ver.verUniFact(leftUniFact, state)

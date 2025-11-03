@@ -17,6 +17,8 @@ package litex_pipeline
 import (
 	"bufio"
 	"fmt"
+	ast "golitex/ast"
+	env "golitex/environment"
 	exe "golitex/executor"
 	glob "golitex/glob"
 	parser "golitex/parser"
@@ -27,43 +29,60 @@ import (
 	"time"
 )
 
-// main function for running a single code and return the message
-func ExecuteCodeAndReturnMessage(code string) (string, glob.SysSignal, error) {
-	msgOfTopStatements, signal, err := executeCodeAndReturnMessageSlice(code)
-	if err != nil {
-		msgOfTopStatements = append(msgOfTopStatements, err.Error())
-	}
-	ret := strings.TrimSpace(strings.Join(msgOfTopStatements, "\n"))
-	return ret, signal, err
-}
-
-func executeCodeAndReturnMessageSlice(code string) ([]string, glob.SysSignal, error) {
+func RunSourceCode(builtinEnv *env.Env, code string) (string, glob.SysSignal, *env.Env, error) {
 	topStmtSlice, err := parser.ParseSourceCode(code)
 	if err != nil {
-		return nil, glob.SysSignalParseError, err
+		return "", glob.SysSignalParseError, nil, err
 	}
 
-	executor, err := InitPipelineExecutor()
+	var executor *exe.Executor
+
+	if builtinEnv == nil {
+		executor, err = InitPipelineExecutor()
+		builtinEnv = executor.GetBuiltinEnv()
+	} else {
+		executor = exe.NewExecutor(builtinEnv)
+	}
+
 	if err != nil {
-		return nil, glob.SysSignalRuntimeError, err
+		return "", glob.SysSignalRuntimeError, nil, err
 	}
 
 	msgOfTopStatements := []string{}
 
-	for _, topStmt := range topStmtSlice {
-		execState, msg, err := executor.Stmt(topStmt)
-		msgOfTopStatements = append(msgOfTopStatements, executor.GetMsgAsStr0ToEnd())
-		msgOfTopStatements = append(msgOfTopStatements, msg)
+	// maintain a dict of paths that have been imported
+	pkgMgr := NewPackageManager()
+	_ = pkgMgr
 
-		if err != nil {
-			return msgOfTopStatements, glob.SysSignalRuntimeError, err
-		}
-		if execState.IsUnknown() {
-			return msgOfTopStatements, glob.SysSignalRuntimeError, fmt.Errorf("execution failed, line %d", topStmt.GetLine())
+	for _, topStmt := range topStmtSlice {
+		var execRet exe.ExecRet = exe.NewExecErr("")
+		var msg string
+		var err error
+
+		switch topStmt.(type) {
+		case *ast.ImportDirStmt:
+			msg, signal, err := pkgMgr.NewPkg(builtinEnv, topStmt.(*ast.ImportDirStmt).Path)
+			if err != nil || signal != glob.SysSignalTrue {
+				return msg, signal, nil, err
+			}
+		default:
+			execRet, msg, err = executor.Stmt(topStmt)
+
+			msgOfTopStatements = append(msgOfTopStatements, executor.GetMsgAsStr0ToEnd())
+			msgOfTopStatements = append(msgOfTopStatements, msg)
+
+			if err != nil || execRet.IsErr() {
+				return strings.TrimSpace(strings.Join(msgOfTopStatements, "\n")), glob.SysSignalRuntimeError, nil, err
+			}
+			if execRet.IsUnknown() {
+				return strings.TrimSpace(strings.Join(msgOfTopStatements, "\n")), glob.SysSignalRuntimeError, nil, fmt.Errorf("execution failed, line %d", topStmt.GetLine())
+			}
 		}
 	}
 
-	return msgOfTopStatements, glob.SysSignalTrue, nil
+	UpmostWorkingEnv := executor.GetSecondUpMostEnv()
+
+	return strings.TrimSpace(strings.Join(msgOfTopStatements, "\n")), glob.SysSignalTrue, UpmostWorkingEnv, nil
 }
 
 func ExecuteCodeAndReturnMessageSliceGivenSettings(code string, executor *exe.Executor) ([]string, glob.SysSignal, error) {
