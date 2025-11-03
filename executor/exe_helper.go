@@ -62,3 +62,11 @@ func (exec *Executor) verifyFactsAtCurEnv(proofs []ast.FactStmt, verState *VerSt
 	}
 	return NewExecTrue(""), nil, nil
 }
+
+func (exec *Executor) GetBuiltinEnv() *env.Env {
+	return exec.env.GetUpMostEnv()
+}
+
+func (exec *Executor) GetSecondUpMostEnv() *env.Env {
+	return exec.env.GetSecondUpMostEnv()
+}
