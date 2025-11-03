@@ -18,6 +18,7 @@ import (
 	"bufio"
 	"fmt"
 	ast "golitex/ast"
+	env "golitex/environment"
 	exe "golitex/executor"
 	glob "golitex/glob"
 	parser "golitex/parser"
@@ -28,47 +29,60 @@ import (
 	"time"
 )
 
-func PipelineRunSourceCode(code string) (string, glob.SysSignal, error) {
+func RunSourceCode(builtinEnv *env.Env, code string) (string, glob.SysSignal, *env.Env, error) {
 	topStmtSlice, err := parser.ParseSourceCode(code)
 	if err != nil {
-		return "", glob.SysSignalParseError, err
+		return "", glob.SysSignalParseError, nil, err
 	}
 
-	executor, err := InitPipelineExecutor()
+	var executor *exe.Executor
+
+	if builtinEnv == nil {
+		executor, err = InitPipelineExecutor()
+		builtinEnv = executor.GetBuiltinEnv()
+	} else {
+		executor = exe.NewExecutor(builtinEnv)
+	}
+
 	if err != nil {
-		return "", glob.SysSignalRuntimeError, err
+		return "", glob.SysSignalRuntimeError, nil, err
 	}
 
 	msgOfTopStatements := []string{}
 
 	// maintain a dict of paths that have been imported
-	packagePaths := map[string]struct{}{}
+	pkgMgr := NewPackageManager()
+	_ = pkgMgr
 
 	for _, topStmt := range topStmtSlice {
-		var execState exe.ExecRet = exe.NewExecErr("")
+		var execRet exe.ExecRet = exe.NewExecErr("")
 		var msg string
 		var err error
 
 		switch topStmt.(type) {
 		case *ast.ImportDirStmt:
-			packagePaths[topStmt.(*ast.ImportDirStmt).Path] = struct{}{}
-			panic("not implemented")
+			msg, signal, err := pkgMgr.NewPkg(builtinEnv, topStmt.(*ast.ImportDirStmt).Path)
+			if err != nil || signal != glob.SysSignalTrue {
+				return msg, signal, nil, err
+			}
 		default:
-			execState, msg, err = executor.Stmt(topStmt)
-		}
+			execRet, msg, err = executor.Stmt(topStmt)
 
-		msgOfTopStatements = append(msgOfTopStatements, executor.GetMsgAsStr0ToEnd())
-		msgOfTopStatements = append(msgOfTopStatements, msg)
+			msgOfTopStatements = append(msgOfTopStatements, executor.GetMsgAsStr0ToEnd())
+			msgOfTopStatements = append(msgOfTopStatements, msg)
 
-		if err != nil || execState.IsErr() {
-			return strings.TrimSpace(strings.Join(msgOfTopStatements, "\n")), glob.SysSignalRuntimeError, err
-		}
-		if execState.IsUnknown() {
-			return strings.TrimSpace(strings.Join(msgOfTopStatements, "\n")), glob.SysSignalRuntimeError, fmt.Errorf("execution failed, line %d", topStmt.GetLine())
+			if err != nil || execRet.IsErr() {
+				return strings.TrimSpace(strings.Join(msgOfTopStatements, "\n")), glob.SysSignalRuntimeError, nil, err
+			}
+			if execRet.IsUnknown() {
+				return strings.TrimSpace(strings.Join(msgOfTopStatements, "\n")), glob.SysSignalRuntimeError, nil, fmt.Errorf("execution failed, line %d", topStmt.GetLine())
+			}
 		}
 	}
 
-	return strings.TrimSpace(strings.Join(msgOfTopStatements, "\n")), glob.SysSignalTrue, nil
+	UpmostWorkingEnv := executor.GetSecondUpMostEnv()
+
+	return strings.TrimSpace(strings.Join(msgOfTopStatements, "\n")), glob.SysSignalTrue, UpmostWorkingEnv, nil
 }
 
 func ExecuteCodeAndReturnMessageSliceGivenSettings(code string, executor *exe.Executor) ([]string, glob.SysSignal, error) {
