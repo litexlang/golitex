@@ -66,7 +66,7 @@ func RunSourceCode(curEnv *env.Env, code string) (string, glob.SysSignal, *env.E
 				return msg, signal, nil, err
 			}
 		case *ast.ImportFileStmt:
-			msg, signal, err := RunFile(executor, topStmt.(*ast.ImportFileStmt))
+			msg, signal, err := RunImportFileStmt(executor.Env, topStmt.(*ast.ImportFileStmt))
 
 			msgOfTopStatements = append(msgOfTopStatements, executor.GetMsgAsStr0ToEnd())
 			msgOfTopStatements = append(msgOfTopStatements, msg)
@@ -95,12 +95,12 @@ func RunSourceCode(curEnv *env.Env, code string) (string, glob.SysSignal, *env.E
 	return strings.TrimSpace(strings.Join(msgOfTopStatements, "\n")), glob.SysSignalTrue, UpmostWorkingEnv, nil
 }
 
-func RunFile(exec *exe.Executor, importFileStmt *ast.ImportFileStmt) (string, glob.SysSignal, error) {
+func RunImportFileStmt(curEnv *env.Env, importFileStmt *ast.ImportFileStmt) (string, glob.SysSignal, error) {
 	content, err := os.ReadFile(importFileStmt.Path)
 	if err != nil {
 		return fmt.Sprintf("failed to read file %s: %s", importFileStmt.Path, err.Error()), glob.SysSignalSystemError, err
 	}
-	msg, signal, _, err := RunSourceCode(exec.Env, string(content))
+	msg, signal, _, err := RunSourceCode(curEnv, string(content))
 	return msg, signal, err
 }
 
