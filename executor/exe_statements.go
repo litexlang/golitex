@@ -51,8 +51,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (ExecRet, string, error) {
 		err = exec.defFnStmt(stmt)
 	case *ast.ProveInEachCaseStmt:
 		execState, err = exec.proveInEachCaseStmt(stmt)
-	case *ast.ImportDirStmt:
-		execState, err = exec.importDirStmt(stmt)
+	// case *ast.ImportDirStmt:
+	// 	execState, err = exec.importDirStmt(stmt)
 	case *ast.ImportFileStmt:
 		execState, err = exec.importFileStmt(stmt)
 	case *ast.ClaimPropStmt:
