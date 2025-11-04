@@ -432,13 +432,13 @@ func (f *FcFn) String() string {
 		return fmt.Sprintf("%s.%s", f.Params[0], f.Params[1])
 	}
 
-	if IsFcAtomAndEqualToStr(f.FnHead, glob.TupleFcFnHead) {
-		paramStrSlice := make([]string, len(f.Params))
-		for i := range len(f.Params) {
-			paramStrSlice[i] = f.Params[i].String()
-		}
-		return fmt.Sprintf("(%s)", strings.Join(paramStrSlice, ", "))
-	}
+	// if IsFcAtomAndEqualToStr(f.FnHead, glob.TupleFcFnHead) {
+	// 	paramStrSlice := make([]string, len(f.Params))
+	// 	for i := range len(f.Params) {
+	// 		paramStrSlice[i] = f.Params[i].String()
+	// 	}
+	// 	return fmt.Sprintf("(%s)", strings.Join(paramStrSlice, ", "))
+	// }
 
 	if ok, str := hasBuiltinOptAndToString(f); ok {
 		return str

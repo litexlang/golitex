@@ -127,7 +127,7 @@ Mathematics references:
 
 AI references:
 
-1. DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning
+1. DeepSeek-R1: Boosting Reasoning Capability in LLMs via Reinforcement Learning
 2. AlphaGeometry: An Olympiad-level AI system for geometry 
 3. Seed-Prover: Deep and Broad Reasoning for Automated Theorem Proving
 

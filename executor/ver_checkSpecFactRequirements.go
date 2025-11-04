@@ -131,8 +131,9 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state *VerState) ExecRet 
 		return ver.lenFnRequirement(fcAsFcFn, state)
 	} else if ast.IsFnTemplate_FcFn(fcAsFcFn) {
 		return NewExecTrue("")
-	} else if ver.isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj(fcAsFcFn) {
-		return ver.isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj_CheckRequirement(fcAsFcFn, state)
+		// }
+		// else if ver.isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj(fcAsFcFn) {
+		// 	return ver.isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj_CheckRequirement(fcAsFcFn, state)
 	} else if ast.IsFcAtomAndEqualToStr(fcAsFcFn.FnHead, glob.KeywordSetDefinedByReplacement) {
 		return ver.setDefinedByReplacementFnRequirement(fcAsFcFn, state)
 		// }
@@ -161,31 +162,31 @@ func (ver *Verifier) setDefinedByReplacementFnRequirement(fc *ast.FcFn, state *V
 	return verRet
 }
 
-var builtinFunctionNameSetAndCanTakeInAnyObj = map[string]struct{}{
-	glob.TupleFcFnHead: {},
-}
+// var builtinFunctionNameSetAndCanTakeInAnyObj = map[string]struct{}{
+// 	glob.TupleFcFnHead: {},
+// }
 
-func (ver *Verifier) isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj(fc *ast.FcFn) bool {
-	fcHeadAsAtom, ok := fc.FnHead.(ast.FcAtom)
-	if !ok {
-		return false
-	}
+// func (ver *Verifier) isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj(fc *ast.FcFn) bool {
+// 	_, ok := fc.FnHead.(ast.FcAtom)
+// 	if !ok {
+// 		return false
+// 	}
 
-	_, ok = builtinFunctionNameSetAndCanTakeInAnyObj[string(fcHeadAsAtom)]
+// _, ok = builtinFunctionNameSetAndCanTakeInAnyObj[string(fcHeadAsAtom)]
 
-	return ok
-}
+// 	return ok
+// }
 
-func (ver *Verifier) isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj_CheckRequirement(fc *ast.FcFn, state *VerState) ExecRet {
-	for _, param := range fc.Params {
-		verRet := ver.fcSatisfyFnRequirement(param, state)
-		if verRet.IsErr() || verRet.IsUnknown() {
-			return BoolErrToExecRet(false, parametersDoNotSatisfyFnReq(param, fc))
-		}
-	}
+// func (ver *Verifier) isFcFnWithHeadNameBuiltinAndCanTakeInAnyObj_CheckRequirement(fc *ast.FcFn, state *VerState) ExecRet {
+// 	for _, param := range fc.Params {
+// 		verRet := ver.fcSatisfyFnRequirement(param, state)
+// 		if verRet.IsErr() || verRet.IsUnknown() {
+// 			return BoolErrToExecRet(false, parametersDoNotSatisfyFnReq(param, fc))
+// 		}
+// 	}
 
-	return NewExecTrue("")
-}
+// 	return NewExecTrue("")
+// }
 
 func (ver *Verifier) lenFnRequirement(fc *ast.FcFn, state *VerState) ExecRet {
 	if len(fc.Params) != 1 {
