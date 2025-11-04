@@ -29,7 +29,7 @@ import (
 	"time"
 )
 
-func RunSourceCode(builtinEnv *env.Env, code string) (string, glob.SysSignal, *env.Env, error) {
+func RunSourceCode(curEnv *env.Env, code string) (string, glob.SysSignal, *env.Env, error) {
 	topStmtSlice, err := parser.ParseSourceCode(code)
 	if err != nil {
 		return "", glob.SysSignalParseError, nil, err
@@ -37,11 +37,11 @@ func RunSourceCode(builtinEnv *env.Env, code string) (string, glob.SysSignal, *e
 
 	var executor *exe.Executor
 
-	if builtinEnv == nil {
+	if curEnv == nil {
 		executor, err = InitPipelineExecutor()
-		builtinEnv = executor.GetBuiltinEnv()
+		curEnv = executor.GetBuiltinEnv()
 	} else {
-		executor = exe.NewExecutor(builtinEnv)
+		executor = exe.NewExecutor(curEnv)
 	}
 
 	if err != nil {
@@ -61,9 +61,19 @@ func RunSourceCode(builtinEnv *env.Env, code string) (string, glob.SysSignal, *e
 
 		switch topStmt.(type) {
 		case *ast.ImportDirStmt:
-			msg, signal, err := pkgMgr.NewPkg(builtinEnv, topStmt.(*ast.ImportDirStmt).Path)
+			msg, signal, err := pkgMgr.NewPkg(curEnv, topStmt.(*ast.ImportDirStmt).Path)
 			if err != nil || signal != glob.SysSignalTrue {
 				return msg, signal, nil, err
+			}
+		case *ast.ImportFileStmt:
+			msg, signal, err := RunFile(executor, topStmt.(*ast.ImportFileStmt))
+
+			msgOfTopStatements = append(msgOfTopStatements, executor.GetMsgAsStr0ToEnd())
+			msgOfTopStatements = append(msgOfTopStatements, msg)
+
+			if err != nil || signal != glob.SysSignalTrue {
+				msgOfTopStatements = append(msgOfTopStatements, fmt.Sprintf("import file error: %s", topStmt.String()))
+				return strings.TrimSpace(strings.Join(msgOfTopStatements, "\n")), glob.SysSignalRuntimeError, nil, err
 			}
 		default:
 			execRet, msg, err = executor.Stmt(topStmt)
@@ -83,6 +93,15 @@ func RunSourceCode(builtinEnv *env.Env, code string) (string, glob.SysSignal, *e
 	UpmostWorkingEnv := executor.GetSecondUpMostEnv()
 
 	return strings.TrimSpace(strings.Join(msgOfTopStatements, "\n")), glob.SysSignalTrue, UpmostWorkingEnv, nil
+}
+
+func RunFile(exec *exe.Executor, importFileStmt *ast.ImportFileStmt) (string, glob.SysSignal, error) {
+	content, err := os.ReadFile(importFileStmt.Path)
+	if err != nil {
+		return fmt.Sprintf("failed to read file %s: %s", importFileStmt.Path, err.Error()), glob.SysSignalSystemError, err
+	}
+	msg, signal, _, err := RunSourceCode(exec.Env, string(content))
+	return msg, signal, err
 }
 
 func ExecuteCodeAndReturnMessageSliceGivenSettings(code string, executor *exe.Executor) ([]string, glob.SysSignal, error) {

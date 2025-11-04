@@ -22,7 +22,7 @@ import (
 
 func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) (ExecRet, error) {
 	var err error
-	ver := NewVerifier(exec.env)
+	ver := NewVerifier(exec.Env)
 	isOk := false
 	msg := ""
 
@@ -83,7 +83,7 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) (Exec
 
 	// 对于任何 param >= start, fact 成立
 	uniFact_forall_param_geq_start_then_fact_is_true := proveByInduction_newUniFact_forall_param_geq_start_then_fact_is_true(stmt)
-	err = exec.env.NewFact(uniFact_forall_param_geq_start_then_fact_is_true)
+	err = exec.Env.NewFact(uniFact_forall_param_geq_start_then_fact_is_true)
 	if err != nil {
 		return NewExecErr(""), err
 	}

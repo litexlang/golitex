@@ -22,7 +22,7 @@ import (
 )
 
 func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) (ExecRet, error) {
-	intensionalSetGivenSetIsIn := exec.env.GetIntensionalSet(stmt.IntensionalSet)
+	intensionalSetGivenSetIsIn := exec.Env.GetIntensionalSet(stmt.IntensionalSet)
 	if intensionalSetGivenSetIsIn == nil {
 		return NewExecErr(""), fmt.Errorf("intensional set %s not found", stmt.IntensionalSet)
 	}
@@ -48,7 +48,7 @@ func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) (ExecRet, err
 	}
 
 	uniFact := stmt.UniFact()
-	err = exec.env.NewFact(uniFact)
+	err = exec.Env.NewFact(uniFact)
 	if err != nil {
 		return NewExecErr(""), err
 	}
@@ -59,7 +59,7 @@ func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) (ExecRet, err
 func (exec *Executor) proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsIn *ast.IntensionalSetStmt, stmt *ast.ProveInRangeStmt, i int64) (bool, string, error) {
 	indexAsFc := ast.FcAtom(fmt.Sprintf("%d", i))
 	uniMap := map[string]ast.Fc{stmt.Param: indexAsFc}
-	exec.NewEnv(exec.env)
+	exec.NewEnv(exec.Env)
 	defer exec.deleteEnvAndGiveUpMsgs()
 
 	defObjStmt := ast.NewDefObjStmt([]string{stmt.Param}, []ast.Fc{ast.FcAtom(glob.KeywordInteger)}, []ast.FactStmt{ast.NewEqualFact(ast.FcAtom(stmt.Param), indexAsFc)}, stmt.Line)
@@ -130,7 +130,7 @@ func (exec *Executor) proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsI
 			return false, "", nil
 		}
 
-		err = exec.env.NewFact(domFact)
+		err = exec.Env.NewFact(domFact)
 		if err != nil {
 			return false, "", err
 		}
