@@ -20,11 +20,11 @@ import (
 	parser "golitex/parser"
 )
 
-func (exec *Executor) importDirStmt(stmt *ast.ImportDirStmt) (ExecRet, error) {
-	panic("TODO: not implemented")
-}
+// func (exec *Executor) importDirStmt(stmt *ast.ImportDirStmt) (ExecRet, error) {
+// 	panic("TODO: not implemented")
+// }
 
-func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string, importStmt ast.ImportStmtInterface) (ExecRet, error) {
+func (exec *Executor) runSourceCode(runInNewEnv bool, sourceCode string, importStmt *ast.ImportFileStmt) (ExecRet, error) {
 	if runInNewEnv {
 		exec.NewEnv(exec.env)
 		defer func() {
