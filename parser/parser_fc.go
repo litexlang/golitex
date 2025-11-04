@@ -321,30 +321,30 @@ func (tb *tokenBlock) bracedExpr_orTuple() (ast.Fc, error) {
 	}
 
 	// Check if it's a tuple: look for comma
-	if tb.header.is(glob.KeySymbolComma) {
-		// It's a tuple — collect all expressions until ')'
-		exprs := []ast.Fc{firstExpr}
-		for tb.header.is(glob.KeySymbolComma) {
-			tb.header.skip(glob.KeySymbolComma)
+	// if tb.header.is(glob.KeySymbolComma) {
+	// 	// It's a tuple — collect all expressions until ')'
+	// 	exprs := []ast.Fc{firstExpr}
+	// 	for tb.header.is(glob.KeySymbolComma) {
+	// 		tb.header.skip(glob.KeySymbolComma)
 
-			if tb.header.is(glob.KeySymbolRightBrace) {
-				// Allow trailing comma: (1, 2, 3,)
-				break
-			}
+	// 		if tb.header.is(glob.KeySymbolRightBrace) {
+	// 			// Allow trailing comma: (1, 2, 3,)
+	// 			break
+	// 		}
 
-			nextExpr, err := tb.RawFc()
-			if err != nil {
-				return nil, err
-			}
-			exprs = append(exprs, nextExpr)
-		}
+	// 		nextExpr, err := tb.RawFc()
+	// 		if err != nil {
+	// 			return nil, err
+	// 		}
+	// 		exprs = append(exprs, nextExpr)
+	// 	}
 
-		if err := tb.header.skip(glob.KeySymbolRightBrace); err != nil {
-			return nil, fmt.Errorf("expected ')': %s", err)
-		}
+	// 	if err := tb.header.skip(glob.KeySymbolRightBrace); err != nil {
+	// 		return nil, fmt.Errorf("expected ')': %s", err)
+	// 	}
 
-		return ast.NewFcFn(ast.FcAtom(glob.TupleFcFnHead), exprs), nil
-	}
+	// 	return ast.NewFcFn(ast.FcAtom(glob.TupleFcFnHead), exprs), nil
+	// }
 
 	// If no comma, expect a single expression followed by ')'
 	if err := tb.header.skip(glob.KeySymbolRightBrace); err != nil {
