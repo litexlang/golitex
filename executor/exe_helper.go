@@ -31,22 +31,22 @@ func notOkExec(state ExecRet, err error) bool {
 }
 
 func (exec *Executor) NewCommutativeProp(specFact *ast.SpecFactStmt) {
-	if _, ok := exec.env.CommutativePropMem[string(specFact.PropName)]; !ok {
-		exec.env.CommutativePropMem[string(specFact.PropName)] = env.NewCommutativePropMemItemStruct()
+	if _, ok := exec.Env.CommutativePropMem[string(specFact.PropName)]; !ok {
+		exec.Env.CommutativePropMem[string(specFact.PropName)] = env.NewCommutativePropMemItemStruct()
 	}
 
 	switch specFact.TypeEnum {
 	case ast.TruePure:
-		exec.env.CommutativePropMem[string(specFact.PropName)].TruePureIsCommutative = true
+		exec.Env.CommutativePropMem[string(specFact.PropName)].TruePureIsCommutative = true
 	case ast.FalsePure:
-		exec.env.CommutativePropMem[string(specFact.PropName)].FalsePureIsCommutative = true
+		exec.Env.CommutativePropMem[string(specFact.PropName)].FalsePureIsCommutative = true
 	default:
 		panic("not implemented: not commutative prop")
 	}
 }
 
 func (exec *Executor) verifyFactsAtCurEnv(proofs []ast.FactStmt, verState *VerState) (ExecRet, ast.Stmt, error) {
-	ver := NewVerifier(exec.env)
+	ver := NewVerifier(exec.Env)
 	for _, proof := range proofs {
 		verRet := ver.VerFactStmt(proof, verState)
 		if verRet.IsErr() {
@@ -55,7 +55,7 @@ func (exec *Executor) verifyFactsAtCurEnv(proofs []ast.FactStmt, verState *VerSt
 			return NewExecUnknown(""), proof, nil
 		}
 
-		err := exec.env.NewFact(proof)
+		err := exec.Env.NewFact(proof)
 		if err != nil {
 			return NewExecErr(""), proof, err
 		}
@@ -64,9 +64,9 @@ func (exec *Executor) verifyFactsAtCurEnv(proofs []ast.FactStmt, verState *VerSt
 }
 
 func (exec *Executor) GetBuiltinEnv() *env.Env {
-	return exec.env.GetUpMostEnv()
+	return exec.Env.GetUpMostEnv()
 }
 
 func (exec *Executor) GetSecondUpMostEnv() *env.Env {
-	return exec.env.GetSecondUpMostEnv()
+	return exec.Env.GetSecondUpMostEnv()
 }

@@ -33,10 +33,7 @@ func RunFile(path string) (string, glob.SysSignal, error) {
 		return fmt.Sprintf("failed to read file %s: %s", path, err.Error()), glob.SysSignalSystemError, err
 	}
 	msg, signal, _, err := pipeline.RunSourceCode(nil, string(content))
-	if err != nil {
-		return msg, signal, err
-	}
-	return msg, signal, nil
+	return msg, signal, err
 }
 
 func RunFileWithPipelineRunner(path string) (string, glob.SysSignal, time.Duration, error) {

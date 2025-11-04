@@ -21,10 +21,10 @@ import (
 )
 
 func (exec *Executor) algoDefStmt(stmt *ast.AlgoDefStmt) (ExecRet, error) {
-	if _, ok := exec.env.AlgoDefMem[stmt.FuncName]; !ok {
-		exec.env.AlgoDefMem[stmt.FuncName] = []*ast.AlgoDefStmt{}
+	if _, ok := exec.Env.AlgoDefMem[stmt.FuncName]; !ok {
+		exec.Env.AlgoDefMem[stmt.FuncName] = []*ast.AlgoDefStmt{}
 	}
-	exec.env.AlgoDefMem[stmt.FuncName] = append(exec.env.AlgoDefMem[stmt.FuncName], stmt)
+	exec.Env.AlgoDefMem[stmt.FuncName] = append(exec.Env.AlgoDefMem[stmt.FuncName], stmt)
 	exec.newMsg(stmt.String())
 	return NewExecTrue(""), nil
 }
@@ -46,7 +46,7 @@ func (exec *Executor) ReplaceSymbolWithValueAndCompute(fc ast.Fc) (bool, ast.Fc,
 }
 
 func (exec *Executor) replaceFcFnWithValueAndCompute(fc *ast.FcFn) (bool, ast.Fc, error) {
-	if symbolValue := exec.env.GetSymbolValue(fc); symbolValue != nil {
+	if symbolValue := exec.Env.GetSymbolValue(fc); symbolValue != nil {
 		return false, symbolValue, nil
 	}
 
@@ -64,14 +64,14 @@ func (exec *Executor) replaceFcFnWithValueAndCompute(fc *ast.FcFn) (bool, ast.Fc
 
 	ret := ast.NewFcFn(fc.FnHead, newParams)
 
-	if ok := exec.env.IsFnWithDefinedAlgo(fc); ok {
+	if ok := exec.Env.IsFnWithDefinedAlgo(fc); ok {
 		for i := range len(newParams) {
 			if !cmp.IsNumLitFc(newParams[i]) {
 				return replaced, ret, nil
 			}
 		}
 
-		computed, err := exec.env.Compute(ret) // 哪怕没算出来，也是可能的
+		computed, err := exec.Env.Compute(ret) // 哪怕没算出来，也是可能的
 		if err != nil {
 			return false, nil, fmt.Errorf("error computing: %s", fc)
 		}
@@ -84,7 +84,7 @@ func (exec *Executor) replaceFcFnWithValueAndCompute(fc *ast.FcFn) (bool, ast.Fc
 }
 
 func (exec *Executor) replaceFcAtomWithValueAndCompute(fc ast.FcAtom) (bool, ast.Fc, error) {
-	symbolValue := exec.env.GetSymbolValue(fc)
+	symbolValue := exec.Env.GetSymbolValue(fc)
 	if symbolValue == nil {
 		return false, fc, nil
 	}

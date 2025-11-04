@@ -55,22 +55,22 @@ func execStmtTest(topStmt []ast.Stmt) []string {
 
 		// 如果连续两个 \n 则删除一个
 		var newMsgs []string
-		for i := 0; i < len(executor.env.Msgs); i++ {
-			curMsg := executor.env.Msgs[i]
-			if i < len(executor.env.Msgs)-1 && curMsg == "\n" && executor.env.Msgs[i+1] == "\n" {
+		for i := 0; i < len(executor.Env.Msgs); i++ {
+			curMsg := executor.Env.Msgs[i]
+			if i < len(executor.Env.Msgs)-1 && curMsg == "\n" && executor.Env.Msgs[i+1] == "\n" {
 				newMsgs = append(newMsgs, curMsg)
 				i++
 			} else {
 				newMsgs = append(newMsgs, curMsg)
 			}
 		}
-		executor.env.Msgs = newMsgs
+		executor.Env.Msgs = newMsgs
 
 		if isNotTrue {
 			messages = append(messages, fmt.Sprintf("execution failed at:\n%s", topStmt))
 			break
 		} else {
-			messages = append(messages, strings.Join(executor.env.Msgs, "\n"))
+			messages = append(messages, strings.Join(executor.Env.Msgs, "\n"))
 		}
 	}
 
