@@ -20,7 +20,7 @@
 
 </div>
 
-## Simple, Intuitive, Expressive — Learnable For Humans & AI 
+## What is Litex?
 
 _Simplicity is the ultimate sophistication._
 
@@ -32,7 +32,17 @@ _– Leonardo da Vinci_
 
 Litex([website](https://litexlang.com)) is a simple open-source formal language, learnable in 2 hours by anyone. It expresses mathematics in the form of code, ensuring that every step of the reasoning process is rigorously correct. The closeness of Litex to natural language can be really helpful for AI and human alike in mathematical exploration and problem-solving. I hope you will forget that you are using a formal language to write mathematics using Litex!([Star the repo!](https://github.com/litexlang/golitex)). 
 
-Making Litex intuitive to both humans and AI is Litex's core mission. Just like how Python lowers the barrier of programming by 10x compared with C/C++, Litex lowers the barrier of formal reasoning by 10x compared with previous formal languages like Lean. This is how Litex scales formal reasoning: by making it accessible to more people, and usable by large-scale AI systems. Here is an example:
+Euclid showed us over 2000 years ago how 5 axioms could derive such a wonderful geometric world. Simple starting points often lead us into infinitely complex worlds. The same is true for mathematics. The foundation of modern mathematics is naive set theory, which doesn't have many axioms, and we even encountered the concept of sets in middle school. But it is precisely these simple and understandable rules that form the foundation of all mathematics. Before we move on, think about how powerful the idea is: with just very few absolutely accurate inference rules, plus a few axioms, we can derive a rich and diverse mathematical world! That is what math is all about.
+
+By implementing those simple axioms and deduction rules in a software like Litex, we can write math in the form of code. That is what Litex is about. Easy to understand, right?
+
+## Why Litex?
+
+_Our intent was to create a pleasant computing environment (Unix) for ourselves and our hope was that others liked it._
+
+_- Dennis Ritchie_
+
+Making Litex intuitive to both humans and AI is Litex's core mission. We want people feel happy using Litex. Just like how Python lowers the barrier of programming by 10x compared with C/C++, Litex lowers the barrier of formal reasoning by 10x compared with previous formal languages like Lean. This is how Litex scales formal reasoning: by making it accessible to more people, and usable by large-scale AI systems. Here is an example:
 
 <table style="border-collapse: collapse; width: 100%; font-size: 12px">
   <tr>
