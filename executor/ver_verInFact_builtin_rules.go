@@ -319,14 +319,14 @@ func (ver *Verifier) trueExistInSt(stmt *ast.SpecFactStmt, state *VerState) Exec
 	return verRet
 }
 
-func (ver *Verifier) fcIsFiniteSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	// TODO: not sure whether I should add this nextState
-	nextState := state.GetAddRound()
+// func (ver *Verifier) fcIsFiniteSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+// 	// TODO: not sure whether I should add this nextState
+// 	nextState := state.GetAddRound()
 
-	finiteSetFact := ast.NewInFactWithFc(stmt.Params[0], ast.FcAtom(glob.KeywordFiniteSet))
-	verRet := ver.VerFactStmt(finiteSetFact, nextState)
-	return verRet
-}
+// 	finiteSetFact := ast.NewInFactWithFc(stmt.Params[0], ast.FcAtom(glob.KeywordFiniteSet))
+// 	verRet := ver.VerFactStmt(finiteSetFact, nextState)
+// 	return verRet
+// }
 
 func (ver *Verifier) objNotInSetWhenAllItemsInThatSetAreNotEqualToIt(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	if stmt.TypeEnum != ast.FalsePure {
@@ -345,10 +345,10 @@ func (ver *Verifier) verInSetProduct(stmt *ast.SpecFactStmt, state *VerState) Ex
 	if !ok {
 		return NewExecUnknown("")
 	}
-	ok = ast.IsFcAtomAndEqualToStr(fcFn.FnHead, glob.TupleFcFnHead)
-	if !ok {
-		return NewExecUnknown("")
-	}
+	// ok = ast.IsFcAtomAndEqualToStr(fcFn.FnHead, glob.TupleFcFnHead)
+	// if !ok {
+	// 	return NewExecUnknown("")
+	// }
 
 	setProductFn, ok := stmt.Params[1].(*ast.FcFn)
 	if !ok {
