@@ -937,5 +937,5 @@ func (exec *Executor) evalStmt(stmt *ast.EvalStmt) ExecRet {
 		return NewExecErrWithErr(err)
 	}
 
-	return NewExecTrue(fmt.Sprintf("%s\n%s = %s", stmt.String(), stmt.Value.String(), value.String()))
+	return NewExecTrue(fmt.Sprintf("By evaluation: %s\nWe get %s = %s", stmt.String(), stmt.Value.String(), value.String()))
 }
