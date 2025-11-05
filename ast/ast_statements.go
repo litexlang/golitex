@@ -131,7 +131,7 @@ type KnowPropStmt struct {
 type ClaimExistPropStmt struct {
 	ExistPropWithoutDom *DefExistPropStmt
 	Proofs              StmtSlice
-	HaveObj             []Fc
+	HaveObj             FcSlice
 
 	Line uint
 }
@@ -380,9 +380,11 @@ type ProveIsCommutativePropStmt struct {
 	Line uint
 }
 
+type AlgoSlice []AlgoStmt
+
 type AlgoIfStmt struct {
-	Conditions []FactStmt
-	ThenStmts  []AlgoStmt
+	Conditions FactStmtSlice
+	ThenStmts  AlgoSlice
 
 	Line uint
 }
@@ -396,7 +398,7 @@ type AlgoReturnStmt struct {
 type AlgoDefStmt struct {
 	FuncName string
 	Params   []string
-	Stmts    []AlgoStmt
+	Stmts    AlgoSlice
 
 	Line uint
 }

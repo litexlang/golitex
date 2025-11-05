@@ -21,6 +21,7 @@ type Stmt interface {
 	InlineString() string
 	GetLine() uint
 	algoStmt()
+	Instantiate(map[string]Fc) (Stmt, error)
 }
 
 func (s *DefLetStmt) stmt()                      {}
@@ -177,6 +178,7 @@ type FactStmt interface {
 	ReplaceFc(oldFc Fc, newFc Fc) FactStmt
 	GetLine() uint
 	algoStmt()
+	Instantiate(map[string]Fc) (Stmt, error)
 }
 
 func (p *SpecFactStmt) factStmt()       {}
@@ -201,6 +203,7 @@ type Spec_OrFact interface {
 	ReplaceFc(oldFc Fc, newFc Fc) FactStmt
 	GetLine() uint
 	algoStmt()
+	Instantiate(map[string]Fc) (Stmt, error)
 }
 
 func (s *SpecFactStmt) reversibleFact() {}
@@ -225,6 +228,7 @@ type DefStmtInterface interface {
 	ToLatexString() string
 	InlineString() string
 	algoStmt()
+	Instantiate(map[string]Fc) (Stmt, error)
 }
 
 func (s *DefLetStmt) defStmt()       {}
@@ -246,6 +250,7 @@ type UniFactInterface interface {
 	GetLine() uint
 	algoStmt()
 	GetParams() StrSlice
+	Instantiate(map[string]Fc) (Stmt, error)
 }
 
 func (stmt *UniFactStmt) uniFact()                   {}
@@ -261,6 +266,7 @@ type ClaimInterface interface {
 	InlineString() string
 	GetLine() uint
 	algoStmt()
+	Instantiate(map[string]Fc) (Stmt, error)
 }
 
 func (stmt *ClaimProveStmt) claimStmt()                {}
@@ -277,6 +283,7 @@ type ImportStmtInterface interface {
 	InlineString() string
 	GetLine() uint
 	algoStmt()
+	Instantiate(map[string]Fc) (Stmt, error)
 }
 
 func (stmt *ImportDirStmt) importStmt()  {}
@@ -287,6 +294,7 @@ type FnTemplate_Or_DefObjStmtInterface interface {
 	ToLatexString() string
 	InlineString() string
 	algoStmt()
+	Instantiate(map[string]Fc) (Stmt, error)
 }
 
 func (stmt *DefLetStmt) fnTemplate_Or_DefObjStmt() {}
@@ -298,6 +306,7 @@ type CanBeKnownStmt interface {
 	canBeKnown()
 	InlineString() string
 	GetLine() uint
+	Instantiate(map[string]Fc) (Stmt, error)
 }
 
 func (s *SpecFactStmt) canBeKnown()       {}
@@ -314,7 +323,7 @@ type CanBeKnownStmtSlice []CanBeKnownStmt
 func (s FactStmtSlice) ToCanBeKnownStmtSlice() CanBeKnownStmtSlice {
 	ret := make(CanBeKnownStmtSlice, len(s))
 	for i, fact := range s {
-		ret[i] = fact
+		ret[i] = fact.(CanBeKnownStmt)
 	}
 	return ret
 }
@@ -326,7 +335,7 @@ type AlgoStmt interface {
 	ToLatexString() string
 	InlineString() string
 	GetLine() uint
-	Instantiate(map[string]Fc) (AlgoStmt, error)
+	// InstantiateAlgo(map[string]Fc) (AlgoStmt, error)
 }
 
 func (s *AlgoIfStmt) algoStmt()         {}
