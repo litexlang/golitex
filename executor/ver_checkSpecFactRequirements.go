@@ -42,7 +42,7 @@ func (ver *Verifier) checkSpecFactReq(stmt *ast.SpecFactStmt, state *VerState) (
 // 只验证 1. params都声明了 2. 确实是fn template
 // WARNING: 这个函数有严重的问题
 func (ver *Verifier) checkSpecFactReq_InFact_UseBtRules(stmt *ast.SpecFactStmt) ExecRet {
-	ok := ver.env.AreAtomsInFcAreDeclared(stmt.Params[0], map[string]struct{}{})
+	ok := ver.Env.AreAtomsInFcAreDeclared(stmt.Params[0], map[string]struct{}{})
 	if !ok {
 		return NewExecErr(env.AtomsInFcNotDeclaredMsg(stmt.Params[0]))
 	}
@@ -54,24 +54,24 @@ func (ver *Verifier) checkSpecFactReq_InFact_UseBtRules(stmt *ast.SpecFactStmt) 
 	head, ok := stmt.Params[1].(*ast.FcFn).IsFcFn_HasAtomHead_ReturnHead() // WARNING: 这里有问题，因为可能不是fn template，而是 fn(R)R 这种
 	// 需要处理 fn(R)R 这种；现在 fn_template 本质上也写成函数形式了
 	if ok {
-		def := ver.env.GetFnTemplateDef(head)
+		def := ver.Env.GetFnTemplateDef(head)
 		if def != nil {
 			for _, param := range stmt.Params[1].(*ast.FcFn).Params {
-				ok := ver.env.AreAtomsInFcAreDeclared(param, map[string]struct{}{})
+				ok := ver.Env.AreAtomsInFcAreDeclared(param, map[string]struct{}{})
 				if !ok {
 					return NewExecErr(env.AtomsInFcNotDeclaredMsg(param))
 				}
 			}
 			return NewExecTrue("")
 		} else {
-			ok = ver.env.AreAtomsInFcAreDeclared(stmt.Params[1], map[string]struct{}{})
+			ok = ver.Env.AreAtomsInFcAreDeclared(stmt.Params[1], map[string]struct{}{})
 			if !ok {
 				return NewExecErr(env.AtomsInFcNotDeclaredMsg(stmt.Params[1]))
 			}
 			return NewExecTrue("")
 		}
 	} else {
-		ok = ver.env.AreAtomsInFcAreDeclared(stmt.Params[1], map[string]struct{}{})
+		ok = ver.Env.AreAtomsInFcAreDeclared(stmt.Params[1], map[string]struct{}{})
 		if !ok {
 			return NewExecErr(env.AtomsInFcNotDeclaredMsg(stmt.Params[1]))
 		}
@@ -86,7 +86,7 @@ func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state 
 	// REMARK
 	// TODO： 一层层搜索的时候，会重复检查是否存在，可以优化。比如我要检查 a * f(b) $in R 的时候，我要查 a, f(b) 是否满足条件，就要查 f(b) $in R 是否成立，这时候又查了一遍 f, b 是否存在
 	for _, param := range stmt.Params {
-		ok := ver.env.AreAtomsInFcAreDeclared(param, map[string]struct{}{})
+		ok := ver.Env.AreAtomsInFcAreDeclared(param, map[string]struct{}{})
 		if !ok {
 			return state, NewExecErr(env.AtomsInFcNotDeclaredMsg(param))
 		}

@@ -51,7 +51,7 @@ func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state *VerState) Exe
 		return verRet
 	}
 
-	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
+	for curEnv := ver.Env; curEnv != nil; curEnv = curEnv.Parent {
 		var equalToLeftFcs, equalToRightFcs *[]ast.Fc
 		var gotLeftEqualFcs, gotRightEqualFcs bool
 
@@ -138,7 +138,7 @@ func (ver *Verifier) verTrueEqualFact_FcFnEqual_NoCheckRequirements(left, right 
 }
 
 func (ver *Verifier) FcsEqualBy_Eval_ShareKnownEqualMem(left, right ast.Fc, state *VerState) ExecRet {
-	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
+	for curEnv := ver.Env; curEnv != nil; curEnv = curEnv.Parent {
 		leftEqualFcs, ok := curEnv.EqualMem[left.String()]
 		if ok {
 			rightEqualFcs, ok := curEnv.EqualMem[right.String()]
@@ -150,12 +150,12 @@ func (ver *Verifier) FcsEqualBy_Eval_ShareKnownEqualMem(left, right ast.Fc, stat
 		}
 	}
 
-	leftEqualFcs, ok := ver.env.GetEqualFcs(left)
+	leftEqualFcs, ok := ver.Env.GetEqualFcs(left)
 	if !ok {
 		return NewExecUnknown("")
 	}
 
-	rightEqualFcs, ok := ver.env.GetEqualFcs(right)
+	rightEqualFcs, ok := ver.Env.GetEqualFcs(right)
 	if !ok {
 		return NewExecUnknown("")
 	}
@@ -165,9 +165,9 @@ func (ver *Verifier) FcsEqualBy_Eval_ShareKnownEqualMem(left, right ast.Fc, stat
 			if leftEqualFc.String() == rightEqualFc.String() {
 				return NewExecTrue("")
 			} else {
-				_, newLeft := ver.env.ReplaceSymbolWithValue(leftEqualFc)
+				_, newLeft := ver.Env.ReplaceSymbolWithValue(leftEqualFc)
 				if cmp.IsNumLitFc(newLeft) {
-					_, newRight := ver.env.ReplaceSymbolWithValue(rightEqualFc)
+					_, newRight := ver.Env.ReplaceSymbolWithValue(rightEqualFc)
 					if ok, _, _ := cmp.CmpBy_Literally_NumLit_PolynomialArith(newLeft, newRight); ok {
 						return NewExecTrue("")
 					}
