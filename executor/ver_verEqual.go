@@ -129,7 +129,7 @@ func (ver *Verifier) verEqualBuiltin(left ast.Fc, right ast.Fc, state *VerState)
 
 func (ver *Verifier) verEqualSpecMem(left ast.Fc, right ast.Fc, state *VerState) ExecRet {
 	// if ver.env.CurMatchProp == nil {
-	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
+	for curEnv := ver.Env; curEnv != nil; curEnv = curEnv.Parent {
 		verRet := ver.equalFact_SpecMem_atEnv(curEnv, left, right, state)
 		if verRet.IsErr() || verRet.IsTrue() {
 			return NewExecTrue("")

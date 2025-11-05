@@ -249,7 +249,7 @@ func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state *VerState) E
 
 	if leftAsAtom, ok := stmt.Params[0].(ast.FcAtom); ok {
 		// _, ok := ver.env.GetFnTemplateDef(leftAsAtom)
-		fnDef := ver.env.GetLatestFnT_GivenNameIsIn(leftAsAtom.String())
+		fnDef := ver.Env.GetLatestFnT_GivenNameIsIn(leftAsAtom.String())
 		if fnDef != nil {
 			return ver.processOkMsg(state, stmt.String(), "%s is a fn template and all fn templates are sets", leftAsAtom)
 		}
@@ -267,7 +267,7 @@ func (ver *Verifier) inObjFact(stmt *ast.SpecFactStmt, state *VerState) ExecRet 
 
 	atoms := ast.GetAtomsInFc(stmt.Params[0])
 	// 这里有点问题，N,Q,C 这种没算进去，要重新写一下。这里不能直接用 declared, 因为一方面 isDeclared会包含 prop, 一方面 obj isDeclared，会导致罗素悖论
-	ok = ver.env.AtomsAreObj(atoms)
+	ok = ver.Env.AtomsAreObj(atoms)
 	if !ok {
 		return NewExecUnknown("")
 	}
@@ -375,19 +375,19 @@ func (ver *Verifier) verInSetProduct(stmt *ast.SpecFactStmt, state *VerState) Ex
 }
 
 func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Fc, fnFcFn *ast.FcFn, state *VerState) ExecRet {
-	ver.newEnv(ver.env)
+	ver.newEnv(ver.Env)
 	defer ver.deleteEnv_DeleteMsg()
 
 	// check when parameters satisfy given fnFcFn parameter requirements, then it satisfies the fn template template requirement
 
-	leftIsInWhichFnTT := ver.env.GetLatestFnT_GivenNameIsIn(left.String())
+	leftIsInWhichFnTT := ver.Env.GetLatestFnT_GivenNameIsIn(left.String())
 	if leftIsInWhichFnTT == nil {
 		return NewExecUnknown("")
 	}
 
 	randomNames := []string{}
 	for i := 0; i < len(leftIsInWhichFnTT.AsFnTStruct.Params); i++ {
-		randomNames = append(randomNames, ver.env.GenerateUndeclaredRandomName())
+		randomNames = append(randomNames, ver.Env.GenerateUndeclaredRandomName())
 	}
 	randomAtoms := []ast.Fc{}
 	for i := 0; i < len(leftIsInWhichFnTT.AsFnTStruct.Params); i++ {
@@ -401,11 +401,11 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Fc, fnFcFn *ast.FcFn, state *Ve
 
 	// check parameters of the left satisfies the fn template template requirement
 	for i, randomName := range randomNames {
-		err := ver.env.NewObj_NoDuplicate(randomName, nil)
+		err := ver.Env.NewObj_NoDuplicate(randomName, nil)
 		if err != nil {
 			return NewExecErr(err.Error())
 		}
-		err = ver.env.NewFact(ast.NewInFactWithParamFc(ast.FcAtom(randomName), (fnFcFn.FnHead).(*ast.FcFn).Params[i]))
+		err = ver.Env.NewFact(ast.NewInFactWithParamFc(ast.FcAtom(randomName), (fnFcFn.FnHead).(*ast.FcFn).Params[i]))
 		if err != nil {
 			return NewExecErr(err.Error())
 		}
@@ -432,7 +432,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Fc, fnFcFn *ast.FcFn, state *Ve
 			return verRet
 		}
 
-		err := ver.env.NewFact(fact)
+		err := ver.Env.NewFact(fact)
 		if err != nil {
 			return NewExecErr(err.Error())
 		}
@@ -445,7 +445,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Fc, fnFcFn *ast.FcFn, state *Ve
 			return verRet
 		}
 
-		err = ver.env.NewFact(fact)
+		err = ver.Env.NewFact(fact)
 		if err != nil {
 			return NewExecErr(err.Error())
 		}
@@ -500,7 +500,7 @@ func (ver *Verifier) getRetSetOfFcFnByUsingItsFnT(fcFn *ast.FcFn) (ast.Fc, error
 	// 从后往前找，直到找到有个 fnHead 被已知在一个 fnInFnTInterface 中
 	// 比如 f(a)(b,c)(e,d,f) 我不知道 f(a)(b,c) 是哪个 fn_template 里的，但我发现 f(a) $in T 是知道的。那之后就是按T的返回值去套入b,c，然后再把e,d,f套入T的返回值的返回值
 	// 此时 indexWhereLatestFnTIsGot 就是 1, FnToFnItemWhereLatestFnTIsGot 就是 f(a) 的 fnInFnTMemItem
-	indexWhereLatestFnTIsGot, FnToFnItemWhereLatestFnTIsGot := ver.env.FindRightMostResolvedFn_Return_ResolvedIndexAndFnTMemItem(fnHeadChain_AndItSelf)
+	indexWhereLatestFnTIsGot, FnToFnItemWhereLatestFnTIsGot := ver.Env.FindRightMostResolvedFn_Return_ResolvedIndexAndFnTMemItem(fnHeadChain_AndItSelf)
 
 	// 比如 f(a)(b,c)(e,d,f) 我们现在得到了 f(a) 的 fnTStruct，那 curParamsChainIndex 就是 2, 表示 f(a) 对应的params就是 (b,c)
 	curFnTStruct := (FnToFnItemWhereLatestFnTIsGot.AsFnTStruct)
@@ -515,7 +515,7 @@ func (ver *Verifier) getRetSetOfFcFnByUsingItsFnT(fcFn *ast.FcFn) (ast.Fc, error
 
 		var err error
 		// curFnTStruct, err = ver.GetFnStructFromFnTName_CheckFnTParamsReq(curRetSet, state)
-		curFnTStruct, err = ver.env.GetFnStructFromFnTName(curRetSet)
+		curFnTStruct, err = ver.Env.GetFnStructFromFnTName(curRetSet)
 		if err != nil {
 			return nil, err
 		}

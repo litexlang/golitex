@@ -31,7 +31,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt *as
 	}
 
 	// if ver.env.IsCommutativeProp(stmt) || (stmt.NameIs(glob.KeySymbolEqual) && stmt.TypeEnum == ast.FalsePure) {
-	if ver.env.IsCommutativeProp(stmt) {
+	if ver.Env.IsCommutativeProp(stmt) {
 		reverseParamsOrderStmt, err := stmt.ReverseParameterOrder()
 		if err != nil {
 			return BoolErrToExecRet(false, err)
@@ -50,8 +50,8 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast
 		return verRet
 	}
 
-	if stmt.TypeEnum == ast.TruePure && ver.env.IsTransitiveProp(string(stmt.PropName)) {
-		relatedFcSlice := ver.env.GetRelatedFcSliceOfTransitiveProp(string(stmt.PropName), stmt.Params[0])
+	if stmt.TypeEnum == ast.TruePure && ver.Env.IsTransitiveProp(string(stmt.PropName)) {
+		relatedFcSlice := ver.Env.GetRelatedFcSliceOfTransitiveProp(string(stmt.PropName), stmt.Params[0])
 		if len(relatedFcSlice) == 0 {
 			return BoolErrToExecRet(false, nil)
 		}
@@ -76,7 +76,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast
 
 func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	// replace the params with the values
-	replaced, newStmt := ver.env.ReplaceFcInSpecFactWithValue(stmt)
+	replaced, newStmt := ver.Env.ReplaceFcInSpecFactWithValue(stmt)
 	if replaced {
 		verRet := ver.verSpecFactThatIsNotTrueEqualFactMainLogic(newStmt, state)
 		if verRet.IsErr() {
@@ -180,7 +180,7 @@ func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecFactStmt, state *VerState) 
 func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	nextState := state.GetAddRound()
 
-	curDefStmt := ver.env.GetPropDef(stmt.PropName)
+	curDefStmt := ver.Env.GetPropDef(stmt.PropName)
 	// defStmt := curDefStmt
 	if curDefStmt == nil {
 		// 这里可能是因为这个propName是exist prop，所以没有定义
@@ -192,7 +192,7 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 		return NewExecUnknown("")
 	}
 
-	defStmt := ver.env.MakeUniFactParamsInThisDefPropDoNotConflictWithEnv(curDefStmt)
+	defStmt := ver.Env.MakeUniFactParamsInThisDefPropDoNotConflictWithEnv(curDefStmt)
 
 	iffToProp := defStmt.IffToPropUniFact()
 	paramArrMap := map[string]ast.Fc{}
@@ -236,7 +236,7 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	existParams, factParams := ast.GetExistFactExistParamsAndFactParams(stmt)
 
-	propDef := ver.env.GetExistPropDef(stmt.PropName)
+	propDef := ver.Env.GetExistPropDef(stmt.PropName)
 	if propDef == nil {
 		// TODO: 如果没声明，应该报错
 		return BoolErrToExecRet(false, fmt.Errorf("%s has no definition", stmt))
@@ -264,7 +264,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 		if verRet.IsUnknown() {
 			if state.WithMsg {
 				msg := fmt.Sprintf("given object %s is not in its param set %s\n", existParams[i], instParamSets[i])
-				ver.env.Msgs = append(ver.env.Msgs, msg)
+				ver.Env.Msgs = append(ver.Env.Msgs, msg)
 			}
 			return NewExecUnknown("")
 		}
@@ -288,7 +288,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 		if verRet.IsUnknown() {
 			if state.WithMsg {
 				msg := fmt.Sprintf("dom fact %s is unknown\n", domFact)
-				ver.env.Msgs = append(ver.env.Msgs, msg)
+				ver.Env.Msgs = append(ver.Env.Msgs, msg)
 			}
 			return NewExecUnknown("")
 		}
@@ -350,7 +350,7 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecFactStmt, st
 func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	nextState := state.GetAddRound()
 
-	defStmt := ver.env.GetPropDef(stmt.PropName)
+	defStmt := ver.Env.GetPropDef(stmt.PropName)
 	if defStmt == nil {
 		// 这里可能是因为这个propName是exist prop，所以没有定义
 		return NewExecUnknown("")
