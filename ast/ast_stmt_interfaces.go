@@ -326,6 +326,7 @@ type AlgoStmt interface {
 	ToLatexString() string
 	InlineString() string
 	GetLine() uint
+	Instantiate(map[string]Fc) (AlgoStmt, error)
 }
 
 func (s *AlgoIfStmt) algoStmt()         {}

@@ -321,3 +321,33 @@ func (s SpecFactPtrSlice) Instantiate(uniMap map[string]Fc) (SpecFactPtrSlice, e
 	}
 	return newSpecFactPtrSlice, nil
 }
+
+func (s *AlgoIfStmt) Instantiate(uniMap map[string]Fc) (AlgoStmt, error) {
+	newConditions := []FactStmt{}
+	for _, condition := range s.Conditions {
+		newCondition, err := condition.InstantiateFact(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newConditions = append(newConditions, newCondition)
+	}
+
+	newThenStmts := []AlgoStmt{}
+	for _, thenStmt := range s.ThenStmts {
+		newThenStmt, err := thenStmt.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newThenStmts = append(newThenStmts, newThenStmt)
+	}
+
+	return NewAlgoIfStmt(newConditions, newThenStmts, s.Line), nil
+}
+
+func (s *AlgoReturnStmt) Instantiate(uniMap map[string]Fc) (AlgoStmt, error) {
+	newValue, err := s.Value.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewAlgoReturnStmt(newValue, s.Line), nil
+}
