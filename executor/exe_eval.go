@@ -20,56 +20,47 @@ import (
 	cmp "golitex/cmp"
 )
 
-func (exec *Executor) algoDefStmt(stmt *ast.AlgoDefStmt) (ExecRet, error) {
-	if _, ok := exec.Env.AlgoDefMem[stmt.FuncName]; !ok {
-		exec.Env.AlgoDefMem[stmt.FuncName] = []*ast.AlgoDefStmt{}
-	}
-	exec.Env.AlgoDefMem[stmt.FuncName] = append(exec.Env.AlgoDefMem[stmt.FuncName], stmt)
-	exec.newMsg(stmt.String())
-	return NewExecTrue(""), nil
-}
-
 // 这里 bool 表示，是否启动过 用algo 计算；如果仅仅是用 algo 来计算，那是不会返回true的
-func (exec *Executor) computeFc(fc ast.Fc) (ast.Fc, error) {
+func (exec *Executor) evalFc(fc ast.Fc) (ast.Fc, error) {
 	if cmp.IsNumLitFc(fc) {
 		return fc, nil
 	}
 
 	switch asFc := fc.(type) {
 	case ast.FcAtom:
-		return exec.computeFcAtom(asFc)
+		return exec.evalFcAtom(asFc)
 	case *ast.FcFn:
-		return exec.computeFcFn(asFc)
+		return exec.evalFcFn(asFc)
 	default:
 		panic(fmt.Sprintf("unexpected type: %T", fc))
 	}
 }
 
-func (exec *Executor) computeFcFn(fc *ast.FcFn) (ast.Fc, error) {
+func (exec *Executor) evalFcFn(fc *ast.FcFn) (ast.Fc, error) {
 	if symbolValue := exec.Env.GetSymbolValue(fc); symbolValue != nil {
 		return symbolValue, nil
 	}
 
 	if ok := exec.Env.IsFnWithDefinedAlgo(fc); ok {
-		// TODO
 		newParams := make([]ast.Fc, len(fc.Params))
 		for i, param := range fc.Params {
 			var err error
 
-			newParams[i], err = exec.computeFc(param)
+			newParams[i], err = exec.evalFc(param)
 			if err != nil {
 				return nil, err
 			} else if newParams[i] == nil {
 				return nil, nil
 			}
 		}
+
 		return ast.NewFcFn(fc.FnHead, newParams), nil
 	}
 
 	return nil, nil
 }
 
-func (exec *Executor) computeFcAtom(fc ast.FcAtom) (ast.Fc, error) {
+func (exec *Executor) evalFcAtom(fc ast.FcAtom) (ast.Fc, error) {
 	symbolValue := exec.Env.GetSymbolValue(fc)
 	if symbolValue == nil {
 		return nil, nil
@@ -78,17 +69,6 @@ func (exec *Executor) computeFcAtom(fc ast.FcAtom) (ast.Fc, error) {
 	return symbolValue, nil
 }
 
-// TODO: 未来有一天，会被用来替换 SpecFactStmt 中的 Fc 为 计算后的 Fc
-func (exec *Executor) computeSpecFactParams(fact *ast.SpecFactStmt) (*ast.SpecFactStmt, error) {
-	newParams := make([]ast.Fc, len(fact.Params))
-	for i, param := range fact.Params {
-		var err error
-		newParams[i], err = exec.computeFc(param)
-		if err != nil {
-			return nil, fmt.Errorf("error replacing symbol with value: %s", param)
-		} else if newParams[i] == nil {
-			return nil, nil
-		}
-	}
-	return ast.NewSpecFactStmt(fact.TypeEnum, fact.PropName, newParams, fact.Line), nil
+func (exec *Executor) useAlgoToEvalFcFn(fcFn *ast.FcFn) (ast.Fc, error) {
+	return nil, nil
 }

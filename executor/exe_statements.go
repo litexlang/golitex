@@ -914,3 +914,9 @@ func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitiveP
 
 	return nil
 }
+
+func (exec *Executor) algoDefStmt(stmt *ast.AlgoDefStmt) (ExecRet, error) {
+	exec.Env.AlgoDefMem[stmt.FuncName] = stmt
+	exec.newMsg(stmt.String())
+	return NewExecTrue(""), nil
+}
