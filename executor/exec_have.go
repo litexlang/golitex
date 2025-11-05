@@ -101,7 +101,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) (E
 
 	// 把 obj 放入环境
 	for i, objName := range stmt.ObjNames {
-		err := ver.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt([]string{objName}, []ast.Fc{instantiatedExistPropDefStmt.ExistParamSets[i]}, []ast.FactStmt{}, stmt.Line))
+		err := ver.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt([]string{objName}, []ast.Fc{instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).ExistParamSets[i]}, []ast.FactStmt{}, stmt.Line))
 		if err != nil {
 			return NewExecErr(""), err
 		}
@@ -115,7 +115,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) (E
 	// 	}
 	// }
 
-	for i, existParamSet := range instantiatedExistPropDefStmt.ExistParamSets {
+	for i, existParamSet := range instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).ExistParamSets {
 		err := exec.Env.NewFact(ast.NewInFact(stmt.ObjNames[i], existParamSet))
 		if err != nil {
 			return NewExecErr(""), err
@@ -123,7 +123,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) (E
 	}
 
 	// dom of def exist prop is true
-	for _, domFact := range instantiatedExistPropDefStmt.DefBody.DomFacts {
+	for _, domFact := range instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).DefBody.DomFacts {
 		err := exec.Env.NewFact(domFact)
 		if err != nil {
 			return NewExecErr(""), err
@@ -134,7 +134,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) (E
 	}
 
 	// iff of def exist prop is true
-	for _, iffFact := range instantiatedExistPropDefStmt.DefBody.IffFacts {
+	for _, iffFact := range instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).DefBody.IffFacts {
 		err := exec.Env.NewFact(iffFact)
 		if err != nil {
 			return NewExecErr(""), err

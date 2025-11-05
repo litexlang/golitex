@@ -14,6 +14,8 @@
 
 package litex_ast
 
+import "fmt"
+
 func InstantiateFcAtom(fc FcAtom, uniMap map[string]Fc) (Fc, error) {
 	instance, ok := uniMap[string(fc)]
 	if ok {
@@ -117,7 +119,7 @@ func (defHeader *DefHeader) Instantiate(uniMap map[string]Fc) (*DefHeader, error
 	return newDefHeader, nil
 }
 
-func (defPropStmt *DefPropStmt) Instantiate(uniMap map[string]Fc) (*DefPropStmt, error) {
+func (defPropStmt *DefPropStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
 	newDefHeader, err := defPropStmt.DefHeader.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
@@ -188,7 +190,7 @@ func (stmt *DefExistPropStmtBody) Instantiate(uniMap map[string]Fc) (*DefExistPr
 	return NewDefExistPropBodyStmt(newDefHeader, newDomFacts, newIffFacts, newThenFacts, stmt.Line), nil
 }
 
-func (stmt *DefExistPropStmt) Instantiate(uniMap map[string]Fc) (*DefExistPropStmt, error) {
+func (stmt *DefExistPropStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
 	newDefExistPropBody, err := stmt.DefBody.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
@@ -322,32 +324,472 @@ func (s SpecFactPtrSlice) Instantiate(uniMap map[string]Fc) (SpecFactPtrSlice, e
 	return newSpecFactPtrSlice, nil
 }
 
-func (s *AlgoIfStmt) Instantiate(uniMap map[string]Fc) (AlgoStmt, error) {
-	newConditions := []FactStmt{}
-	for _, condition := range s.Conditions {
-		newCondition, err := condition.InstantiateFact(uniMap)
+func (stmt *DefLetStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	newObjSets := []Fc{}
+	for _, objSet := range stmt.ObjSets {
+		newObjSet, err := objSet.Instantiate(uniMap)
 		if err != nil {
 			return nil, err
 		}
-		newConditions = append(newConditions, newCondition)
+		newObjSets = append(newObjSets, newObjSet)
 	}
-
-	newThenStmts := []AlgoStmt{}
-	for _, thenStmt := range s.ThenStmts {
-		newThenStmt, err := thenStmt.Instantiate(uniMap)
-		if err != nil {
-			return nil, err
-		}
-		newThenStmts = append(newThenStmts, newThenStmt)
-	}
-
-	return NewAlgoIfStmt(newConditions, newThenStmts, s.Line), nil
+	return NewDefObjStmt(stmt.Objs, newObjSets, stmt.Facts, stmt.Line), nil
 }
 
-func (s *AlgoReturnStmt) Instantiate(uniMap map[string]Fc) (AlgoStmt, error) {
-	newValue, err := s.Value.Instantiate(uniMap)
+func (stmt *DefFnStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	fnTemplateInstantiated, err := stmt.FnTemplate.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}
-	return NewAlgoReturnStmt(newValue, s.Line), nil
+	return NewDefFnStmt(stmt.Name, fnTemplateInstantiated, stmt.Line), nil
+}
+
+func (s StmtSlice) Instantiate(uniMap map[string]Fc) (StmtSlice, error) {
+	newStmts := make([]Stmt, len(s))
+	for i, stmt := range s {
+		newStmt, err := stmt.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newStmts[i] = newStmt
+	}
+	return newStmts, nil
+}
+
+func (stmt *ClaimProveStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	newToCheckFact, err := stmt.ToCheckFact.InstantiateFact(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newProofs, err := stmt.Proofs.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewClaimProveStmt(newToCheckFact, newProofs, stmt.Line), nil
+}
+
+func (stmt *ClaimProveByContradictionStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	newClaimProveStmt, err := stmt.ClaimProveStmt.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewClaimProveByContradictionStmt(newClaimProveStmt.(*ClaimProveStmt), stmt.Line), nil
+}
+
+func (stmt *ClaimPropStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	newProp, err := stmt.Prop.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newProofs, err := stmt.Proofs.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewClaimPropStmt(newProp.(*DefPropStmt), newProofs, stmt.IsProve, stmt.Line), nil
+}
+
+func (stmt CanBeKnownStmtSlice) Instantiate(uniMap map[string]Fc) (CanBeKnownStmtSlice, error) {
+	newFacts := []CanBeKnownStmt{}
+	for _, fact := range stmt {
+		newFact, err := fact.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newFacts = append(newFacts, newFact.(CanBeKnownStmt))
+	}
+	return newFacts, nil
+}
+
+func (stmt *KnowFactStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	newFacts, err := stmt.Facts.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewKnowStmt(newFacts, stmt.Line), nil
+}
+
+func (stmt *KnowPropStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	newProp, err := stmt.Prop.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewKnowPropStmt(newProp.(*DefPropStmt), stmt.Line), nil
+}
+
+func (stmt *ClaimExistPropStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	newExistProp, err := stmt.ExistPropWithoutDom.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newProofs, err := stmt.Proofs.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	haveObjInstantiated, err := stmt.HaveObj.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewClaimExistPropStmt(newExistProp.(*DefExistPropStmt), newProofs, haveObjInstantiated, stmt.Line), nil
+}
+
+func (stmt *HaveObjStStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	newFact, err := stmt.Fact.InstantiateFact(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewHaveStmt(stmt.ObjNames, newFact.(*SpecFactStmt), stmt.Line), nil
+}
+
+func (stmt *ProveInEachCaseStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	newOrFact, err := stmt.OrFact.InstantiateFact(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newThenFacts, err := stmt.ThenFacts.InstantiateFact(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newProofs := []StmtSlice{}
+	for _, proof := range stmt.Proofs {
+		newProof, err := proof.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newProofs = append(newProofs, newProof)
+	}
+	return NewProveInEachCaseStmt(newOrFact.(*OrStmt), newThenFacts, newProofs, stmt.Line), nil
+}
+
+func (stmt *ImportDirStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	return stmt, nil
+}
+
+func (stmt *ImportFileStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	return stmt, nil
+}
+
+func (stmt *ProveStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	newProofs, err := stmt.Proof.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewProveStmt(newProofs, stmt.Line), nil
+}
+
+func (stmt *ProveByEnumStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	newFact, err := stmt.Fact.InstantiateFact(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newProofs, err := stmt.Proof.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewProveByEnumStmt(newFact.(*UniFactStmt), newProofs, stmt.Line), nil
+}
+
+func (stmt *HaveObjInNonEmptySetStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	newObjSets, err := stmt.ObjSets.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewHaveObjInNonEmptySetStmt(stmt.Objs, newObjSets, stmt.Line), nil
+}
+
+func (stmt *HaveEnumSetStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	newFact, err := stmt.Fact.InstantiateFact(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewHaveEnumSetStmt(newFact.(*EnumStmt), stmt.Line), nil
+}
+
+func (stmt *HaveIntensionalSetStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	newFact, err := stmt.Fact.InstantiateFact(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewHaveIntensionalSetStmt(newFact.(*IntensionalSetStmt), stmt.Line), nil
+}
+
+func (stmt *HaveSetFnStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	newDefHeader, err := stmt.DefHeader.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewHaveSetFnStmt(newDefHeader, stmt.Param, stmt.ParentSet, stmt.Proofs, stmt.Line), nil
+}
+
+func (stmt *HaveSetDefinedByReplacementStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	newDomSet, err := stmt.DomSet.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newRangeSet, err := stmt.RangeSet.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewHaveSetDefinedByReplacementStmt(stmt.Name, newDomSet, newRangeSet, stmt.PropName, stmt.Line), nil
+}
+
+func (stmt *NamedUniFactStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	newProp, err := stmt.DefPropStmt.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewNamedUniFactStmt(newProp.(*DefPropStmt), stmt.Line), nil
+}
+
+func (stmt *EqualsFactStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	newParams, err := stmt.Params.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewEqualsFactStmt(newParams, stmt.Line), nil
+}
+
+func (stmt *KnowExistPropStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	newExistProp, err := stmt.ExistProp.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewKnowExistPropStmt(newExistProp.(*DefExistPropStmt), stmt.Line), nil
+}
+
+func (stmt *LatexStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	return stmt, nil
+}
+
+func (stmt *FnTemplateDefStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	newTemplateDefHeader, err := stmt.TemplateDefHeader.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newTemplateDomFacts, err := stmt.TemplateDomFacts.InstantiateFact(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newFn, err := stmt.Fn.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewFnTemplateStmt(newTemplateDefHeader, newTemplateDomFacts, newFn, stmt.Line), nil
+}
+
+func (stmt *ClearStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	return stmt, nil
+}
+
+func (stmt *InlineFactsStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	newFacts, err := stmt.Facts.InstantiateFact(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewInlineFactsStmt(newFacts, stmt.Line), nil
+}
+
+func (stmt *ProveByInductionStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	newFact, err := stmt.Fact.InstantiateFact(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newStart, err := stmt.Start.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewProveByInductionStmt(newFact.(*SpecFactStmt), stmt.Param, newStart, stmt.Line), nil
+}
+
+func (stmt *HaveObjEqualStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	newObjEqualTos, err := stmt.ObjEqualTos.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newObjSets, err := stmt.ObjSets.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewHaveObjEqualStmt(stmt.ObjNames, newObjEqualTos, newObjSets, stmt.Line), nil
+}
+
+func (stmt *HaveFnEqualStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	newDefHeader, err := stmt.DefHeader.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newRetSet, err := stmt.RetSet.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newEqualTo, err := stmt.EqualTo.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewHaveFnEqualStmt(newDefHeader, newRetSet, newEqualTo, stmt.Line), nil
+}
+
+func (stmt *HaveFnLiftStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	newOpt, err := stmt.Opt.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newDomainOfEachParamOfGivenFn, err := stmt.DomainOfEachParamOfGivenFn.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewHaveFnLiftStmt(stmt.FnName, newOpt, newDomainOfEachParamOfGivenFn, stmt.Line), nil
+}
+
+func (stmt *HaveFnStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	newDefFnStmt, err := stmt.DefFnStmt.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newProofs, err := stmt.Proofs.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newHaveObjSatisfyFn, err := stmt.HaveObjSatisfyFn.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewClaimHaveFnStmt(newDefFnStmt.(*DefFnStmt), newProofs, newHaveObjSatisfyFn, stmt.Line), nil
+}
+
+func (stmt *MarkdownStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	return stmt, nil
+}
+
+func (stmt *ProveInRangeStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	newIntensionalSet, err := stmt.IntensionalSet.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newThenFacts, err := stmt.ThenFacts.InstantiateFact(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newProofs, err := stmt.Proofs.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewProveInRangeStmt(stmt.Start, stmt.End, stmt.Param, newIntensionalSet, newThenFacts, newProofs, stmt.Line), nil
+}
+
+func (stmt *ClaimIffStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	newUniFactWithIffStmt, err := stmt.UniFactWithIffStmt.InstantiateFact(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newProofThenToIff, err := stmt.ProofThenToIff.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newProofIffToThen, err := stmt.ProofIffToThen.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewClaimIffStmt(newUniFactWithIffStmt.(*UniFactWithIffStmt), newProofThenToIff, newProofIffToThen, stmt.Line), nil
+}
+
+func (stmt *ProveIsTransitivePropStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	newProofs, err := stmt.Proofs.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewProveIsTransitivePropStmt(stmt.Prop, stmt.Params, newProofs, stmt.Line), nil
+}
+
+func (stmt *ProveIsCommutativePropStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	newProofs, err := stmt.Proofs.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newProofsRightToLeft, err := stmt.ProofsRightToLeft.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewProveIsCommutativePropStmt(stmt.SpecFact, newProofs, newProofsRightToLeft, stmt.Line), nil
+}
+
+func InstantiateAlgoStmt(stmt AlgoStmt, uniMap map[string]Fc) (AlgoStmt, error) {
+	switch stmt := stmt.(type) {
+	case *AlgoIfStmt:
+		return stmt.InstantiateAlgo(uniMap)
+	case *AlgoReturnStmt:
+		return stmt.InstantiateAlgo(uniMap)
+	}
+	return nil, fmt.Errorf("unknown algo statement type: %T", stmt)
+}
+
+func (s AlgoSlice) Instantiate(uniMap map[string]Fc) (AlgoSlice, error) {
+	newStmts := make([]AlgoStmt, len(s))
+	for i, stmt := range s {
+		newStmt, err := InstantiateAlgoStmt(stmt, uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newStmts[i] = newStmt
+	}
+	return newStmts, nil
+}
+
+func (stmt *AlgoIfStmt) InstantiateAlgo(uniMap map[string]Fc) (AlgoStmt, error) {
+	newConditions, err := stmt.Conditions.InstantiateFact(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newThenStmts, err := stmt.ThenStmts.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewAlgoIfStmt(newConditions, newThenStmts, stmt.Line), nil
+}
+
+func (stmt *AlgoReturnStmt) InstantiateAlgo(uniMap map[string]Fc) (AlgoStmt, error) {
+	newValue, err := stmt.Value.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewAlgoReturnStmt(newValue, stmt.Line), nil
+}
+
+func (stmt *AlgoDefStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	newStmts, err := stmt.Stmts.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewAlgoDefStmt(stmt.FuncName, stmt.Params, newStmts, stmt.Line), nil
+}
+
+func (stmt *EvalStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	newValue, err := stmt.Value.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewEvalStmt(newValue, stmt.Line), nil
+}
+
+func (stmt *SpecFactStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	return stmt.InstantiateFact(uniMap)
+}
+
+func (stmt *UniFactStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	return stmt.InstantiateFact(uniMap)
+}
+
+func (stmt *UniFactWithIffStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	return stmt.InstantiateFact(uniMap)
+}
+
+func (stmt *OrStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	return stmt.InstantiateFact(uniMap)
+}
+
+func (stmt *EnumStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	return stmt.InstantiateFact(uniMap)
+}
+
+func (stmt *IntensionalSetStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	return stmt.InstantiateFact(uniMap)
 }
