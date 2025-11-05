@@ -606,5 +606,4 @@ prop is_subset_of(x, y set):
 
 prop is_superset_of(A, B set):
 	forall x B: x $in A
-
 `

@@ -69,6 +69,6 @@ func (ver *Verifier) evalFcAtom(fc ast.FcAtom) (ast.Fc, error) {
 	return symbolValue, nil
 }
 
-func useAlgoToEvalFcFn(fcFn *ast.FcFn) (ast.Fc, error) {
+func (ver *Verifier) useAlgoToEvalFcFn(algoDef *ast.AlgoDefStmt, fcFn *ast.FcFn) (ast.Fc, error) {
 	return nil, nil
 }

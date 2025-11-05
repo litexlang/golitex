@@ -34,7 +34,7 @@ Litex([website](https://litexlang.com)) is a simple open-source formal language,
 
 Euclid showed us over 2000 years ago how 5 axioms could derive such a wonderful geometric world. Simple starting points often lead us into infinitely complex worlds. The same is true for mathematics. The foundation of modern mathematics is naive set theory, which doesn't have many axioms, and we even encountered the concept of sets in middle school. But it is precisely these simple and understandable rules that form the foundation of all mathematics. Before we move on, think about how powerful the idea is: with just very few absolutely accurate inference rules, plus a few axioms, we can derive a rich and diverse mathematical world! That is what math is all about.
 
-By implementing those simple axioms and deduction rules in a software like Litex, we can write math in the form of code. That is what Litex is about. Easy to understand, right?
+By implementing those simple axioms and deduction rules in a software like Litex, we can write math in the form of code. The learning curve of Litex will not be higher than learning LaTeX. Let's explore the fascinating math world with Litex!
 
 ## Why Litex?
 
