@@ -115,6 +115,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.proveCommutativePropStmt()
 	case glob.KeywordAlgo:
 		ret, err = tb.algoDefStmt()
+	case glob.KeywordEval:
+		ret, err = tb.evalStmt()
 	default:
 		ret, err = tb.factsStmt()
 	}
@@ -3067,4 +3069,17 @@ func (tb *tokenBlock) algoDefStmt() (*ast.AlgoDefStmt, error) {
 	}
 
 	return ast.NewAlgoDefStmt(funcName, params, stmts, tb.line), nil
+}
+
+func (tb *tokenBlock) evalStmt() (ast.Stmt, error) {
+	err := tb.header.skip(glob.KeywordEval)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	value, err := tb.RawFc()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+	return ast.NewEvalStmt(value, tb.line), nil
 }

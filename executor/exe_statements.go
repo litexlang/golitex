@@ -112,6 +112,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (ExecRet, string, error) {
 		execState, err = exec.proveIsCommutativePropStmt(stmt)
 	case *ast.AlgoDefStmt:
 		execState, err = exec.algoDefStmt(stmt)
+	case *ast.EvalStmt:
+		execState = exec.evalStmt(stmt)
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}
@@ -123,6 +125,9 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (ExecRet, string, error) {
 			return NewExecErr(""), "", fmt.Errorf("failed: line %d", stmt.GetLine())
 		}
 	} else if execState.IsTrue() {
+		if glob.RequireMsg() {
+			exec.newMsg(fmt.Sprintf("%s\n", execState.String()))
+		}
 		return execState, fmt.Sprintf("Success! line %d\n", stmt.GetLine()), nil
 	} else if execState.IsUnknown() {
 		return execState, fmt.Sprintf("Unknown: line %d\n", stmt.GetLine()), nil
@@ -919,4 +924,13 @@ func (exec *Executor) algoDefStmt(stmt *ast.AlgoDefStmt) (ExecRet, error) {
 	exec.Env.AlgoDefMem[stmt.FuncName] = stmt
 	exec.newMsg(stmt.String())
 	return NewExecTrue(""), nil
+}
+
+func (exec *Executor) evalStmt(stmt *ast.EvalStmt) ExecRet {
+	verifier := NewVerifier(exec.Env)
+	value, err := verifier.evalFc(stmt.Value)
+	if err != nil {
+		return NewExecErrWithErr(err)
+	}
+	return NewExecTrue(fmt.Sprintf("%s\n%s = %s", stmt.String(), stmt.Value.String(), value.String()))
 }

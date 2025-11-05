@@ -287,3 +287,7 @@ func NewUniFactWithIffWithSafeGuard(params []string, setParams []Fc, domFacts []
 
 	return NewUniFactWithIff(uniFact, iffFacts, line), nil
 }
+
+func NewEvalStmt(value Fc, line uint) *EvalStmt {
+	return &EvalStmt{value, line}
+}
