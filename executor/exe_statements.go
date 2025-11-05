@@ -927,8 +927,7 @@ func (exec *Executor) algoDefStmt(stmt *ast.AlgoDefStmt) (ExecRet, error) {
 }
 
 func (exec *Executor) evalStmt(stmt *ast.EvalStmt) ExecRet {
-	verifier := NewVerifier(exec.Env)
-	value, err := verifier.evalFc(stmt.Value)
+	value, err := exec.evalFc(stmt.Value)
 	if err != nil {
 		return NewExecErrWithErr(err)
 	}
