@@ -931,5 +931,11 @@ func (exec *Executor) evalStmt(stmt *ast.EvalStmt) ExecRet {
 	if err != nil {
 		return NewExecErrWithErr(err)
 	}
+
+	err = exec.Env.NewFact(ast.NewEqualFact(stmt.Value, value))
+	if err != nil {
+		return NewExecErrWithErr(err)
+	}
+
 	return NewExecTrue(fmt.Sprintf("%s\n%s = %s", stmt.String(), stmt.Value.String(), value.String()))
 }
