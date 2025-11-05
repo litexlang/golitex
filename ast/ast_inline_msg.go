@@ -15,6 +15,7 @@
 package litex_ast
 
 import (
+	"fmt"
 	glob "golitex/glob"
 	"strings"
 )
@@ -345,4 +346,8 @@ func (s *AlgoReturnStmt) InlineString() string {
 
 func (s *AlgoDefStmt) InlineString() string {
 	return "TODO"
+}
+
+func (s *EvalStmt) InlineString() string {
+	return fmt.Sprintf("%s %s", glob.KeywordEval, s.Value.String())
 }
