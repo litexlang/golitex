@@ -42,19 +42,8 @@ func (exec *Executor) evalFcFn(fc *ast.FcFn) (ast.Fc, error) {
 	}
 
 	if ok := exec.Env.IsFnWithDefinedAlgo(fc); ok {
-		newParams := make([]ast.Fc, len(fc.Params))
-		for i, param := range fc.Params {
-			var err error
-
-			newParams[i], err = exec.evalFc(param)
-			if err != nil {
-				return nil, err
-			} else if newParams[i] == nil {
-				return nil, nil
-			}
-		}
-
-		return ast.NewFcFn(fc.FnHead, newParams), nil
+		algoDef := exec.Env.GetAlgoDef(fc.FnHead.String())
+		return exec.useAlgoToEvalFcFn(algoDef, fc)
 	}
 
 	return nil, nil
