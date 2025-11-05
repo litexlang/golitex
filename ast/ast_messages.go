@@ -1114,7 +1114,7 @@ func FactStmtStrSliceJoinWithNewlineWithIndents(stmts []FactStmt, indents uint32
 	return builder.String()
 }
 
-func AlgoStmtStrSliceJoinWithNewlineWithIndents(stmts []AlgoStmt, indents uint32) string {
+func AlgoStmtStrSliceJoinWithNewlineWithIndents(stmts []Stmt, indents uint32) string {
 	var builder strings.Builder
 	strSlice := make([]string, len(stmts))
 	for i, stmt := range stmts {
