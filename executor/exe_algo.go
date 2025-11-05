@@ -30,81 +30,65 @@ func (exec *Executor) algoDefStmt(stmt *ast.AlgoDefStmt) (ExecRet, error) {
 }
 
 // 这里 bool 表示，是否启动过 用algo 计算；如果仅仅是用 algo 来计算，那是不会返回true的
-func (exec *Executor) ReplaceSymbolWithValueAndCompute(fc ast.Fc) (bool, ast.Fc, error) {
+func (exec *Executor) computeFc(fc ast.Fc) (ast.Fc, error) {
 	if cmp.IsNumLitFc(fc) {
-		return false, fc, nil
+		return fc, nil
 	}
 
 	switch asFc := fc.(type) {
 	case ast.FcAtom:
-		return exec.replaceFcAtomWithValueAndCompute(asFc)
+		return exec.computeFcAtom(asFc)
 	case *ast.FcFn:
-		return exec.replaceFcFnWithValueAndCompute(asFc)
+		return exec.computeFcFn(asFc)
 	default:
 		panic(fmt.Sprintf("unexpected type: %T", fc))
 	}
 }
 
-func (exec *Executor) replaceFcFnWithValueAndCompute(fc *ast.FcFn) (bool, ast.Fc, error) {
+func (exec *Executor) computeFcFn(fc *ast.FcFn) (ast.Fc, error) {
 	if symbolValue := exec.Env.GetSymbolValue(fc); symbolValue != nil {
-		return false, symbolValue, nil
+		return symbolValue, nil
 	}
-
-	newParams := make([]ast.Fc, len(fc.Params))
-	replaced := false
-	for i, param := range fc.Params {
-		var err error
-		newReplaced := false
-		newReplaced, newParams[i], err = exec.ReplaceSymbolWithValueAndCompute(param)
-		if err != nil {
-			return false, nil, fmt.Errorf("error replacing symbol with value: %s", param)
-		}
-		replaced = replaced || newReplaced
-	}
-
-	ret := ast.NewFcFn(fc.FnHead, newParams)
 
 	if ok := exec.Env.IsFnWithDefinedAlgo(fc); ok {
-		for i := range len(newParams) {
-			if !cmp.IsNumLitFc(newParams[i]) {
-				return replaced, ret, nil
+		// TODO
+		newParams := make([]ast.Fc, len(fc.Params))
+		for i, param := range fc.Params {
+			var err error
+
+			newParams[i], err = exec.computeFc(param)
+			if err != nil {
+				return nil, err
+			} else if newParams[i] == nil {
+				return nil, nil
 			}
 		}
-
-		computed, err := exec.Env.Compute(ret) // 哪怕没算出来，也是可能的
-		if err != nil {
-			return false, nil, fmt.Errorf("error computing: %s", fc)
-		}
-		if computed != nil {
-			return true, computed, nil
-		}
+		return ast.NewFcFn(fc.FnHead, newParams), nil
 	}
 
-	return replaced, ret, nil
+	return nil, nil
 }
 
-func (exec *Executor) replaceFcAtomWithValueAndCompute(fc ast.FcAtom) (bool, ast.Fc, error) {
+func (exec *Executor) computeFcAtom(fc ast.FcAtom) (ast.Fc, error) {
 	symbolValue := exec.Env.GetSymbolValue(fc)
 	if symbolValue == nil {
-		return false, fc, nil
+		return nil, nil
 	}
 
-	return false, symbolValue, nil
+	return symbolValue, nil
 }
 
 // TODO: 未来有一天，会被用来替换 SpecFactStmt 中的 Fc 为 计算后的 Fc
-func (exec *Executor) ReplaceFcInSpecFactWithValueAndCompute(fact *ast.SpecFactStmt) (bool, *ast.SpecFactStmt, error) {
+func (exec *Executor) computeSpecFactParams(fact *ast.SpecFactStmt) (*ast.SpecFactStmt, error) {
 	newParams := make([]ast.Fc, len(fact.Params))
-	replaced := false
 	for i, param := range fact.Params {
-		var newReplaced bool
 		var err error
-		newReplaced, newParams[i], err = exec.ReplaceSymbolWithValueAndCompute(param)
+		newParams[i], err = exec.computeFc(param)
 		if err != nil {
-			return false, nil, fmt.Errorf("error replacing symbol with value: %s", param)
+			return nil, fmt.Errorf("error replacing symbol with value: %s", param)
+		} else if newParams[i] == nil {
+			return nil, nil
 		}
-
-		replaced = replaced || newReplaced
 	}
-	return replaced, ast.NewSpecFactStmt(fact.TypeEnum, fact.PropName, newParams, fact.Line), nil
+	return ast.NewSpecFactStmt(fact.TypeEnum, fact.PropName, newParams, fact.Line), nil
 }

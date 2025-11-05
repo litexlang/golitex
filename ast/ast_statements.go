@@ -221,6 +221,7 @@ type HaveIntensionalSetStmt struct {
 	Line uint
 }
 
+// TODO: 我不知道这是做什么的
 // 定义返回值是集合的函数；这个的好处是，fn的定义不能保证函数的存在性；而have可以保证函数的存在性
 type HaveSetFnStmt struct {
 	DefHeader *DefHeader
@@ -310,6 +311,8 @@ type HaveObjEqualStmt struct {
 	Line uint
 }
 
+// 不知道这个有什么用
+// TODO 删去
 type HaveFnEqualStmt struct {
 	DefHeader *DefHeader
 	RetSet    Fc
