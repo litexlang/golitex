@@ -41,14 +41,14 @@ func (ver *Verifier) verOrStmt(stmt *ast.OrStmt, state *VerState) ExecRet {
 }
 
 func (ver *Verifier) verFactAtIndex_WhenOthersAreFalse(facts []*ast.SpecFactStmt, i int, state *VerState) ExecRet {
-	ver.newEnv(ver.env)
+	ver.newEnv(ver.Env)
 	defer ver.deleteEnvAndRetainMsg()
 
 	for j := range facts {
 		if j == i {
 			continue
 		}
-		err := ver.env.NewFact(facts[j].ReverseTrue())
+		err := ver.Env.NewFact(facts[j].ReverseTrue())
 		if err != nil {
 			return NewExecErr(err.Error())
 		}

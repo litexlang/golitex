@@ -32,7 +32,7 @@ func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState
 				return verRet
 			}
 			if verRet.IsTrue() {
-				err := ver.env.NewFact(newFact)
+				err := ver.Env.NewFact(newFact)
 				if err != nil {
 					return NewExecErr(err.Error())
 				}

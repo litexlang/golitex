@@ -23,7 +23,7 @@ import (
 
 // 在用uniFact来验证specFact时，这个已知的uniFact 可能形如 forall a x: $p(a,x)。然后我代入的x刚好是a。于是整个forall被instantiate成 forall a a: $p(a,a)。然后我要验证这个 forall a a: $p(a,a) 我发现a已经在外面定义go了，于是把它替换成了乱码ABCD, 然后变成验证 forall ABCD ABCD: $p(ABCD,ABCD)。总之就错了。避免这个的办法是，让knownUniFact先把param先随机化啦，然后再代入
 func (ver *Verifier) instantiateUniFactWithoutDuplicate(oldStmt *ast.UniFactStmt) (*ast.UniFactStmt, map[string]ast.Fc, error) {
-	paramMap, paramMapStrToStr := processUniFactParamsDuplicateDeclared(ver.env, oldStmt.Params)
+	paramMap, paramMapStrToStr := processUniFactParamsDuplicateDeclared(ver.Env, oldStmt.Params)
 
 	return useRandomParamToReplaceOriginalParamInUniFact(oldStmt, paramMap, paramMapStrToStr)
 }
@@ -140,7 +140,7 @@ func (ver *Verifier) preprocessUniFactParamsWithoutThenFacts_OrStmt(knownUniFact
 }
 
 func (ver *Verifier) preprocessUniFactParamsWithoutThenFacts(knownUniFact *ast.UniFactStmt) (*uniFactWithoutThenFacts, map[string]ast.Fc, map[string]string, error) {
-	paramMap, paramMapStrToStr := processUniFactParamsDuplicateDeclared(ver.env, knownUniFact.Params)
+	paramMap, paramMapStrToStr := processUniFactParamsDuplicateDeclared(ver.Env, knownUniFact.Params)
 
 	domFacts_paramRandomized := []ast.FactStmt{}
 
@@ -149,7 +149,7 @@ func (ver *Verifier) preprocessUniFactParamsWithoutThenFacts(knownUniFact *ast.U
 		case *ast.UniFactStmt:
 			copiedParamMap, copiedMapStrToStr := glob.CopyMap(paramMap), glob.CopyMap(paramMapStrToStr)
 
-			curParamMap, curParamMapStrToStr := processUniFactParamsDuplicateDeclared_notInGivenMap(ver.env, asStmt.Params, copiedMapStrToStr)
+			curParamMap, curParamMapStrToStr := processUniFactParamsDuplicateDeclared_notInGivenMap(ver.Env, asStmt.Params, copiedMapStrToStr)
 
 			// merge curParamMap and paramMap
 			copiedParamMap = glob.MergeMap(curParamMap, copiedParamMap)
@@ -163,7 +163,7 @@ func (ver *Verifier) preprocessUniFactParamsWithoutThenFacts(knownUniFact *ast.U
 		case *ast.UniFactWithIffStmt:
 			copiedParamMap, copiedMapStrToStr := glob.CopyMap(paramMap), glob.CopyMap(paramMapStrToStr)
 
-			curParamMap, curParamMapStrToStr := processUniFactParamsDuplicateDeclared_notInGivenMap(ver.env, asStmt.UniFact.Params, copiedMapStrToStr)
+			curParamMap, curParamMapStrToStr := processUniFactParamsDuplicateDeclared_notInGivenMap(ver.Env, asStmt.UniFact.Params, copiedMapStrToStr)
 
 			copiedParamMap = glob.MergeMap(curParamMap, copiedParamMap)
 			copiedMapStrToStr = glob.MergeMap(curParamMapStrToStr, copiedMapStrToStr)

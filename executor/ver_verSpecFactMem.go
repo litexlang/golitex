@@ -26,7 +26,7 @@ func (ver *Verifier) verSpecFact_BySpecMem(stmt *ast.SpecFactStmt, state *VerSta
 	upMostEnv := ver.todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
 	// if ver.env.CurMatchProp == nil {
-	for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
+	for curEnv := ver.Env; curEnv != upMostEnv; curEnv = curEnv.Parent {
 		verRet := ver.specFact_SpecMem_atEnv(curEnv, stmt, state)
 		if verRet.IsErr() || verRet.IsTrue() {
 			return verRet
@@ -42,7 +42,7 @@ func (ver *Verifier) verSpecFact_ByLogicMem(stmt *ast.SpecFactStmt, state *VerSt
 	upMostEnv := ver.todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
 	// if ver.env.CurMatchProp == nil {
-	for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
+	for curEnv := ver.Env; curEnv != upMostEnv; curEnv = curEnv.Parent {
 		verRet := ver.specFact_LogicMem(curEnv, stmt, nextState)
 		if verRet.IsErr() || verRet.IsTrue() {
 			return verRet
@@ -56,7 +56,7 @@ func (ver *Verifier) verSpecFact_InSpecFact_UniMem(stmt *ast.SpecFactStmt, state
 	upMostEnv := ver.todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
 	// if ver.env.CurMatchProp == nil {
-	for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
+	for curEnv := ver.Env; curEnv != upMostEnv; curEnv = curEnv.Parent {
 		verRet := ver.specFact_UniMem_atCurEnv(curEnv, stmt, state)
 		if verRet.IsErr() || verRet.IsTrue() {
 			return verRet
@@ -69,7 +69,7 @@ func (ver *Verifier) verSpecFact_InLogicExpr_InUniFactMem(stmt *ast.SpecFactStmt
 	upMostEnv := ver.todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
 	// if ver.env.CurMatchProp == nil {
-	for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
+	for curEnv := ver.Env; curEnv != upMostEnv; curEnv = curEnv.Parent {
 		verRet := ver.specFact_inLogicExpr_inUniFactMem_atEnv(curEnv, stmt, state)
 		if verRet.IsErr() || verRet.IsTrue() {
 			return verRet
@@ -341,7 +341,7 @@ func (ver *Verifier) matchTwoSpecFacts(stmt *ast.SpecFactStmt, knownFact *ast.Sp
 }
 
 func (ver *Verifier) useKnownOrFactToProveSpecFact(knownFact *env.KnownSpecFact_InLogicExpr, stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	ver.newEnv(ver.env)
+	ver.newEnv(ver.Env)
 	defer ver.deleteEnvAndRetainMsg()
 
 	verRet := ver.matchTwoSpecFacts(stmt, knownFact.SpecFact, state)
@@ -398,7 +398,7 @@ func (ver *Verifier) proveUniFactDomFacts(domFacts []ast.FactStmt, state *VerSta
 }
 
 func (ver *Verifier) verify_specFact_when_given_orStmt_is_true(stmt *ast.SpecFactStmt, orStmt *ast.OrStmt, index int, state *VerState) ExecRet {
-	ver.newEnv(ver.env)
+	ver.newEnv(ver.Env)
 	defer ver.deleteEnvAndRetainMsg()
 
 	// 其他是否都错

@@ -30,7 +30,7 @@ func (ver *Verifier) specFactSpecMemTrueMsg(stmt *ast.SpecFactStmt, knownFact as
 }
 
 func (ver *Verifier) successWithMsg(stmtStr, stmtVerifiedBy string) {
-	ver.env.Msgs = append(ver.env.Msgs, successVerString(stmtStr, stmtVerifiedBy))
+	ver.Env.Msgs = append(ver.Env.Msgs, successVerString(stmtStr, stmtVerifiedBy))
 }
 
 func successVerString(stmtStr, stmtVerifiedBy string) string {
@@ -47,11 +47,11 @@ func successVerString(stmtStr, stmtVerifiedBy string) string {
 }
 
 func (ver *Verifier) newMsgAtParent(s string) error {
-	if ver.env.Parent == nil {
+	if ver.Env.Parent == nil {
 		return fmt.Errorf("no parent env")
 	} else {
 		if glob.RequireMsg() {
-			ver.env.Parent.Msgs = append(ver.env.Parent.Msgs, s)
+			ver.Env.Parent.Msgs = append(ver.Env.Parent.Msgs, s)
 		}
 		return nil
 	}

@@ -21,32 +21,32 @@ import (
 )
 
 // 这里 bool 表示，是否启动过 用algo 计算；如果仅仅是用 algo 来计算，那是不会返回true的
-func (exec *Executor) evalFc(fc ast.Fc) (ast.Fc, error) {
+func (ver *Verifier) evalFc(fc ast.Fc) (ast.Fc, error) {
 	if cmp.IsNumLitFc(fc) {
 		return fc, nil
 	}
 
 	switch asFc := fc.(type) {
 	case ast.FcAtom:
-		return exec.evalFcAtom(asFc)
+		return ver.evalFcAtom(asFc)
 	case *ast.FcFn:
-		return exec.evalFcFn(asFc)
+		return ver.evalFcFn(asFc)
 	default:
 		panic(fmt.Sprintf("unexpected type: %T", fc))
 	}
 }
 
-func (exec *Executor) evalFcFn(fc *ast.FcFn) (ast.Fc, error) {
-	if symbolValue := exec.Env.GetSymbolValue(fc); symbolValue != nil {
+func (ver *Verifier) evalFcFn(fc *ast.FcFn) (ast.Fc, error) {
+	if symbolValue := ver.Env.GetSymbolValue(fc); symbolValue != nil {
 		return symbolValue, nil
 	}
 
-	if ok := exec.Env.IsFnWithDefinedAlgo(fc); ok {
+	if ok := ver.Env.IsFnWithDefinedAlgo(fc); ok {
 		newParams := make([]ast.Fc, len(fc.Params))
 		for i, param := range fc.Params {
 			var err error
 
-			newParams[i], err = exec.evalFc(param)
+			newParams[i], err = ver.evalFc(param)
 			if err != nil {
 				return nil, err
 			} else if newParams[i] == nil {
@@ -60,8 +60,8 @@ func (exec *Executor) evalFcFn(fc *ast.FcFn) (ast.Fc, error) {
 	return nil, nil
 }
 
-func (exec *Executor) evalFcAtom(fc ast.FcAtom) (ast.Fc, error) {
-	symbolValue := exec.Env.GetSymbolValue(fc)
+func (ver *Verifier) evalFcAtom(fc ast.FcAtom) (ast.Fc, error) {
+	symbolValue := ver.Env.GetSymbolValue(fc)
 	if symbolValue == nil {
 		return nil, nil
 	}
@@ -69,6 +69,6 @@ func (exec *Executor) evalFcAtom(fc ast.FcAtom) (ast.Fc, error) {
 	return symbolValue, nil
 }
 
-func (exec *Executor) useAlgoToEvalFcFn(fcFn *ast.FcFn) (ast.Fc, error) {
+func useAlgoToEvalFcFn(fcFn *ast.FcFn) (ast.Fc, error) {
 	return nil, nil
 }
