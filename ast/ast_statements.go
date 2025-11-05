@@ -400,3 +400,9 @@ type AlgoDefStmt struct {
 
 	Line uint
 }
+
+type EvalStmt struct {
+	Value Fc
+
+	Line uint
+}

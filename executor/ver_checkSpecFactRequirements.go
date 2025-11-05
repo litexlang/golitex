@@ -139,12 +139,12 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state *VerState) ExecRet 
 		// }
 		// else if toCompute, ok := ast.IsFcFnWithCompHeadAndReturnFcToCompute(fcAsFcFn); ok {
 		// 	return ver.fcSatisfyFnRequirement(toCompute, state)
-	} else if ast.IsFcAtomAndEqualToStr(fcAsFcFn.FnHead, glob.KeywordEval) {
-		if len(fcAsFcFn.Params) != 1 {
-			return NewExecErr(fmt.Sprintf("%s expect one parameter", glob.KeywordEval))
-		}
+		// } else if ast.IsFcAtomAndEqualToStr(fcAsFcFn.FnHead, glob.KeywordEval) {
+		// 	if len(fcAsFcFn.Params) != 1 {
+		// 		return NewExecErr(fmt.Sprintf("%s expect one parameter", glob.KeywordEval))
+		// 	}
 
-		return ver.fcSatisfyFnRequirement(fcAsFcFn.Params[0], state)
+		// 	return ver.fcSatisfyFnRequirement(fcAsFcFn.Params[0], state)
 	} else {
 		// return ver.fcFnSatisfy_FnTemplate_Requirement(fcAsFcFn, state)
 		return ver.parasSatisfyFnReq(fcAsFcFn, state)

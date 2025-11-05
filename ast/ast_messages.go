@@ -1123,3 +1123,7 @@ func AlgoStmtStrSliceJoinWithNewlineWithIndents(stmts []AlgoStmt, indents uint32
 	builder.WriteString(strings.Join(strSlice, "\n"))
 	return builder.String()
 }
+
+func (stmt *EvalStmt) String() string {
+	return fmt.Sprintf("%s %s", glob.KeywordEval, stmt.Value.String())
+}
