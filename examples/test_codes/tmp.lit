@@ -1,1 +1,2 @@
-eval 1
+algo f(x):
+    return x + 1
