@@ -62,13 +62,18 @@ func (exec *Executor) evalFcFn(fc *ast.FcFn) (ast.Fc, ExecRet) {
 			return nil, execRet
 		}
 
-		numericFc := ast.NewFcFn(fc.FnHead, []ast.Fc{left, right})
-		execRet = exec.fcfnParamsInFnDomain(numericFc)
+		numExprFc := ast.NewFcFn(fc.FnHead, []ast.Fc{left, right})
+		execRet = exec.fcfnParamsInFnDomain(numExprFc)
 		if execRet.IsNotTrue() {
-			return nil, NewExecErr(fmt.Sprintf("%s = %s is invalid", fc, numericFc))
+			return nil, NewExecErr(fmt.Sprintf("%s = %s is invalid", fc, numExprFc))
 		}
 
-		return numericFc, NewExecTrue("")
+		simplifiedNumExprFc := cmp.IsNumExprFc_SimplifyIt(numExprFc)
+		if simplifiedNumExprFc == nil {
+			return nil, NewExecErr("")
+		}
+
+		return simplifiedNumExprFc, NewExecTrue("")
 	}
 
 	if ok := exec.Env.IsFnWithDefinedAlgo(fc); ok {
