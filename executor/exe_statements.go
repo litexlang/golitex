@@ -928,7 +928,7 @@ func (exec *Executor) algoDefStmt(stmt *ast.AlgoDefStmt) (ExecRet, error) {
 
 func (exec *Executor) evalStmt(stmt *ast.EvalStmt) ExecRet {
 	value, execRet := exec.evalFc(stmt.Value)
-	if execRet.IsErr() {
+	if !execRet.IsTrue() {
 		return execRet
 	}
 
