@@ -19,6 +19,48 @@ import (
 	glob "golitex/glob"
 )
 
+func NumLitExprToFc(numLitExpr *glob.NumLitExpr) ast.Fc {
+	if numLitExpr.IsPositive {
+		if numLitExpr.Left == nil && numLitExpr.Right == nil {
+			return ast.FcAtom(numLitExpr.OptOrNumber)
+		} else {
+			_, got := glob.SymbolSet[numLitExpr.OptOrNumber]
+			if got {
+				leftAsFc := NumLitExprToFc(numLitExpr.Left)
+				if leftAsFc == nil {
+					return nil
+				}
+
+				rightAsFc := NumLitExprToFc(numLitExpr.Right)
+				if rightAsFc == nil {
+					return nil
+				}
+
+				return ast.NewFcFn(ast.FcAtom(numLitExpr.OptOrNumber), []ast.Fc{leftAsFc, rightAsFc})
+			} else {
+				return nil
+			}
+		}
+	} else {
+		positiveNumLitExpr := glob.NewNumLitExpr(true, numLitExpr.Left, numLitExpr.OptOrNumber, numLitExpr.Right)
+		positiveNumLitExprAsFc := NumLitExprToFc(positiveNumLitExpr)
+		if positiveNumLitExprAsFc == nil {
+			return nil
+		} else {
+			return ast.NewFcFn(ast.FcAtom(glob.KeySymbolStar), []ast.Fc{ast.FcAtom("-1"), positiveNumLitExprAsFc})
+		}
+	}
+}
+
+func IsNumExprFc_SimplifyIt(fc ast.Fc) ast.Fc {
+	numLitExpr, ok, err := ast.MakeFcIntoNumLitExpr(fc)
+	if err != nil || !ok {
+		return nil
+	}
+
+	return NumLitExprToFc(numLitExpr)
+}
+
 func CmpBy_Literally_NumLit_PolynomialArith(left, right ast.Fc) (bool, string, error) {
 	// case 0: 按字面量来比较。这必须在比较div和比较polynomial之前，因为可能比较的是 * 和 *，即比较两个函数是不是一样。这种函数的比较，跑到div和polynomial就会出问题，因为在那些地方*都会被当成有参数的东西
 	ok, err := cmpFcLiterally(left, right)

@@ -54,11 +54,11 @@ func (exec *Executor) evalFcFn(fc *ast.FcFn) (ast.Fc, ExecRet) {
 
 	if ast.IsFcFnWithHeadNameInSlice(fc, basicArithOptMap) {
 		left, execRet := exec.evalFc(fc.Params[0])
-		if !execRet.IsTrue() {
+		if execRet.IsNotTrue() {
 			return nil, execRet
 		}
 		right, execRet := exec.evalFc(fc.Params[1])
-		if !execRet.IsTrue() {
+		if execRet.IsNotTrue() {
 			return nil, execRet
 		}
 
