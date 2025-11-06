@@ -18,6 +18,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	cmp "golitex/cmp"
+	glob "golitex/glob"
 )
 
 // 这里 bool 表示，是否启动过 用algo 计算；如果仅仅是用 algo 来计算，那是不会返回true的
@@ -66,6 +67,19 @@ func (exec *Executor) useAlgoToEvalFcFn(algoDef *ast.AlgoDefStmt, fcFn *ast.FcFn
 		return nil, fmt.Errorf("algorithm %s requires %d parameters, get %d instead", algoDef.FuncName, len(algoDef.Params), len(fcFn.Params))
 	}
 
+	// 传入的参数真的在fn的domain里
+	execRet := exec.fcfnParamsInFnDomain(fcFn)
+	if !execRet.IsTrue() {
+		return nil, fmt.Errorf("parameters of %s are not in domain of %s", fcFn, fcFn.FnHead)
+	}
+
+	// 为了防止proof中又声明了同名的对象，我们保证环境里已经申明了algoDef的param：1. 如果同名的东西已经在大环境里了，那OK 2. 如果不在，那就申明一下
+	for _, param := range algoDef.Params {
+		if !exec.Env.IsAtomDeclared(ast.FcAtom(param), map[string]struct{}{}) {
+			exec.defLetStmt(ast.NewDefObjStmt([]string{param}, []ast.Fc{ast.FcAtom(glob.KeywordObj)}, []ast.FactStmt{}, algoDef.GetLine()))
+		}
+	}
+
 	fcFnParamsValue := []ast.Fc{}
 	for _, param := range fcFn.Params {
 		_, value := exec.Env.ReplaceSymbolWithValue(param)
@@ -92,4 +106,9 @@ func (exec *Executor) useAlgoToEvalFcFn(algoDef *ast.AlgoDefStmt, fcFn *ast.FcFn
 	}
 
 	return nil, fmt.Errorf(fmt.Sprintf("There is no return value of %s", fcFn.String()))
+}
+
+func (exec *Executor) fcfnParamsInFnDomain(fcFn *ast.FcFn) ExecRet {
+	ver := NewVerifier(exec.Env)
+	return ver.fcSatisfyFnRequirement(fcFn, Round0NoMsg)
 }
