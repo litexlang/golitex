@@ -350,7 +350,7 @@ know:
 	forall x, y, z R: x + y = z => x = z - y, y = z - x
 	forall x, y, z R: x - y = z => x = z + y, y = x - z
 	forall x, y, z R: x = y + z => x - y = z, x - z = y
-	forall x, y, z R: x = y - z => x - y = -z, x + z = y
+	forall x, y, z R: x = y - z => x - y = -z, x + z = y, z + x = y
 
 know:
 	forall a, b, c, d R: b != 0, d != 0, a / b = c / d => a * d = b * c
