@@ -20,3 +20,10 @@ f(-1) = -2
 
 eval f(0) # Invoke x = 0
 f(0) = 0
+
+have a R = 2
+eval f(a) # replace a with its value 2, eval f(2)
+f(a) = 3
+
+eval f(f(a))
+f(f(a)) = 4
