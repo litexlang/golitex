@@ -28,6 +28,7 @@ type ExecRet interface {
 	NewVerMsg(verState VerState, msg string) ExecRet
 	String() string
 	ToBoolErr() (bool, error)
+	IsNotTrue() bool
 }
 
 type ExecTrue struct {
@@ -53,6 +54,7 @@ func (v *ExecTrue) NewVerMsg(verState VerState, msg string) ExecRet {
 	}
 	return v
 }
+func (v *ExecTrue) IsNotTrue() bool          { return false }
 func (v *ExecTrue) String() string           { return strings.Join(v.Msg, "\n") }
 func (v *ExecTrue) ToBoolErr() (bool, error) { return true, nil }
 func (v *ExecErr) execRet()                  {}
@@ -67,6 +69,7 @@ func (v *ExecErr) NewVerMsg(verState VerState, msg string) ExecRet {
 }
 func (v *ExecErr) String() string           { return strings.Join(v.Msg, "\n") }
 func (v *ExecErr) ToBoolErr() (bool, error) { return false, fmt.Errorf(v.String()) }
+func (v *ExecErr) IsNotTrue() bool          { return true }
 func (v *ExecUnknown) execRet()             {}
 func (v *ExecUnknown) IsTrue() bool         { return false }
 func (v *ExecUnknown) IsUnknown() bool      { return true }
@@ -79,6 +82,7 @@ func (v *ExecUnknown) NewVerMsg(verState VerState, msg string) ExecRet {
 }
 func (v *ExecUnknown) String() string           { return strings.Join(v.Msg, "\n") }
 func (v *ExecUnknown) ToBoolErr() (bool, error) { return false, nil }
+func (v *ExecUnknown) IsNotTrue() bool          { return true }
 
 func NewExecErr(s string) *ExecErr {
 	if s != "" {
