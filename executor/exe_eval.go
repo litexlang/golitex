@@ -40,11 +40,8 @@ func (exec *Executor) evalFc(fc ast.Fc) (ast.Fc, ExecRet) {
 
 	switch asFc := fc.(type) {
 	case ast.FcAtom:
-		value, execRet := exec.evalFcAtom(asFc)
-		if execRet.IsNotTrue() {
-			return nil, execRet
-		}
-		return exec.simplifyNumExprFc(value)
+		value, execRet := exec.evalFcAtom_SimplifyIt(asFc)
+		return value, execRet
 	case *ast.FcFn:
 		value, execRet := exec.evalFcFn(asFc)
 		if execRet.IsNotTrue() {
@@ -106,13 +103,8 @@ func (exec *Executor) evalFcFn(fc *ast.FcFn) (ast.Fc, ExecRet) {
 	return nil, NewExecUnknown("")
 }
 
-func (exec *Executor) evalFcAtom(fc ast.FcAtom) (ast.Fc, ExecRet) {
+func (exec *Executor) evalFcAtom_SimplifyIt(fc ast.FcAtom) (ast.Fc, ExecRet) {
 	symbolValue := exec.Env.GetSymbolValue(fc)
-	if symbolValue == nil {
-		return nil, NewExecUnknown("")
-	}
-
-	// return exec.simplifyNumExprFc(symbolValue)
 	return symbolValue, NewExecTrue("")
 }
 
@@ -139,6 +131,7 @@ func (exec *Executor) useAlgoToEvalFcFn(algoDef *ast.AlgoDefStmt, fcFn *ast.FcFn
 	fcFnParamsValues := []ast.Fc{}
 	for _, param := range fcFn.Params {
 		_, value := exec.Env.ReplaceSymbolWithValue(param)
+		// simplifiedValue := value
 		simplifiedValue, execRet := exec.simplifyNumExprFc(value)
 		if execRet.IsNotTrue() {
 			return nil, NewExecErr(fmt.Sprintf("value of %s of %s is unknown.", param, fcFn))
@@ -170,13 +163,8 @@ func (exec *Executor) runAlgoStmts(algoStmts ast.AlgoSlice, fcFnWithValueParams 
 			if err != nil || !execRet.IsTrue() {
 				return nil, execRet
 			}
-			// fmt.Println(asStmt.Value)
 			numExprFc, execRet := exec.evalFc(asStmt.Value)
 			return numExprFc, execRet
-			// if execRet.IsNotTrue() {
-			// 	return nil, execRet
-			// }
-			// return exec.simplifyNumExprFc(numExprFc)
 		case *ast.AlgoIfStmt:
 			if conditionIsTrue, execRet := exec.IsAlgoIfConditionTrue(asStmt); !execRet.IsTrue() {
 				return nil, execRet
