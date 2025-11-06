@@ -18,6 +18,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	cmp "golitex/cmp"
+	glob "golitex/glob"
 )
 
 // 这里 bool 表示，是否启动过 用algo 计算；如果仅仅是用 algo 来计算，那是不会返回true的
@@ -36,9 +37,27 @@ func (exec *Executor) evalFc(fc ast.Fc) (ast.Fc, ExecRet) {
 	}
 }
 
+// 可能返回数值的时候需要检查一下会不会除以0这种情况
 func (exec *Executor) evalFcFn(fc *ast.FcFn) (ast.Fc, ExecRet) {
 	if symbolValue := exec.Env.GetSymbolValue(fc); symbolValue != nil {
 		return symbolValue, NewExecTrue("")
+	}
+
+	basicArithOptMap := map[string]struct{}{}
+	basicArithOptMap[glob.KeySymbolPlus] = struct{}{}
+	basicArithOptMap[glob.KeySymbolMinus] = struct{}{}
+	basicArithOptMap[glob.KeySymbolStar] = struct{}{}
+
+	if ast.IsFcFnWithHeadNameInSlice(fc, basicArithOptMap) {
+		left, execRet := exec.evalFc(fc.Params[0])
+		if !execRet.IsTrue() {
+			return nil, execRet
+		}
+		right, execRet := exec.evalFc(fc.Params[1])
+		if !execRet.IsTrue() {
+			return nil, execRet
+		}
+		return ast.NewFcFn(fc.FnHead, []ast.Fc{left, right}), NewExecTrue("")
 	}
 
 	if ok := exec.Env.IsFnWithDefinedAlgo(fc); ok {
