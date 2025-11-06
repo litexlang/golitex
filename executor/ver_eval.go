@@ -127,7 +127,7 @@ func (exec *Executor) runAlgoStmts(algoStmts ast.AlgoSlice, fcFnWithValueParams 
 		}
 	}
 
-	return nil, NewExecErr(fmt.Sprintf("There is no return value."))
+	return nil, NewExecErr(fmt.Sprintf("There is no return value of %s", fcFnWithValueParams))
 }
 
 func (exec *Executor) fcfnParamsInFnDomain(fcFn *ast.FcFn) ExecRet {
