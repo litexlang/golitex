@@ -78,7 +78,16 @@ func (exec *Executor) evalFcFn(fc *ast.FcFn) (ast.Fc, ExecRet) {
 
 	if ok := exec.Env.IsFnWithDefinedAlgo(fc); ok {
 		algoDef := exec.Env.GetAlgoDef(fc.FnHead.String())
-		return exec.useAlgoToEvalFcFn(algoDef, fc)
+		numExprFc, execRet := exec.useAlgoToEvalFcFn(algoDef, fc)
+		if execRet.IsNotTrue() {
+			return nil, execRet
+		}
+		simplifiedNumExprFc := cmp.IsNumExprFc_SimplifyIt(numExprFc)
+		if simplifiedNumExprFc == nil {
+			return nil, NewExecErr("")
+		}
+
+		return simplifiedNumExprFc, NewExecTrue("")
 	}
 
 	return nil, NewExecUnknown("")
@@ -147,6 +156,7 @@ func (exec *Executor) runAlgoStmts(algoStmts ast.AlgoSlice, fcFnWithValueParams 
 			if err != nil || !execRet.IsTrue() {
 				return nil, execRet
 			}
+			fmt.Println(asStmt.Value)
 			return exec.evalFc(asStmt.Value)
 		case *ast.AlgoIfStmt:
 			if conditionIsTrue, execRet := exec.IsAlgoIfConditionTrue(asStmt); !execRet.IsTrue() {
