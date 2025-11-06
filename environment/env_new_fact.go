@@ -381,7 +381,7 @@ func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 	}
 
 	// 如果 a = b 中，某一项是 数值型，那就算出来这个数值，卷后把它保留在equalMem中
-	err = env.storeSymbolValue(fact.Params[0], fact.Params[1])
+	err = env.storeSymbolSimplifiedValue(fact.Params[0], fact.Params[1])
 	if err != nil {
 		return false, err
 	}
@@ -398,7 +398,7 @@ func simplifyNumExprFc(fc ast.Fc) ast.Fc {
 	return simplifiedNumExprFc
 }
 
-func (env *Env) storeSymbolValue(left, right ast.Fc) error {
+func (env *Env) storeSymbolSimplifiedValue(left, right ast.Fc) error {
 	_, newLeft := env.ReplaceSymbolWithValue(left)
 	if cmp.IsNumLitFc(newLeft) {
 		simplifiedNewLeft := simplifyNumExprFc(newLeft)
