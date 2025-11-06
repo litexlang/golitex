@@ -101,7 +101,11 @@ func (exec *Executor) useAlgoToEvalFcFn(algoDef *ast.AlgoDefStmt, fcFn *ast.FcFn
 		case *ast.AlgoReturnStmt:
 			return exec.evalFc(asStmt.Value)
 		case *ast.AlgoIfStmt:
-			return exec.evalAlgoIf(asStmt)
+			if conditionIsTrue, execRet := exec.IsAlgoIfConditionTrue(asStmt); !execRet.IsTrue() {
+				return nil, execRet
+			} else if conditionIsTrue {
+				return exec.evalAlgoIf(asStmt)
+			}
 		default:
 			execRet, _, err := exec.Stmt(stmt.(ast.Stmt))
 			if err != nil || !execRet.IsTrue() {
@@ -116,6 +120,42 @@ func (exec *Executor) useAlgoToEvalFcFn(algoDef *ast.AlgoDefStmt, fcFn *ast.FcFn
 func (exec *Executor) fcfnParamsInFnDomain(fcFn *ast.FcFn) ExecRet {
 	ver := NewVerifier(exec.Env)
 	return ver.fcSatisfyFnRequirement(fcFn, Round0NoMsg)
+}
+
+func (exec *Executor) IsAlgoIfConditionTrue(stmt *ast.AlgoIfStmt) (bool, ExecRet) {
+	exec.NewEnv(exec.Env)
+	defer exec.deleteEnvAndGiveUpMsgs()
+
+	for _, fact := range stmt.Conditions {
+		execRet, err := exec.factStmt(fact)
+		if err != nil || execRet.IsErr() {
+			return false, NewExecErrWithErr(err)
+		}
+
+		if execRet.IsTrue() {
+			continue
+		}
+
+		factAsReversibleFact, reversed := fact.(ast.Spec_OrFact)
+		if !reversed {
+			return false, NewExecErr(fmt.Sprintf("%s The condition %s in\n%s\nis unknown, and it can not be negated. Failed", fact, stmt))
+		}
+
+		for _, reversedFact := range factAsReversibleFact.ReverseIsTrue() {
+			execRet, err := exec.factStmt(reversedFact)
+			if err != nil || execRet.IsErr() {
+				return false, NewExecErrWithErr(err)
+			}
+
+			if !execRet.IsTrue() {
+				return false, NewExecErr(fmt.Sprintf("%s is unknown. Negation of it is also unknown. Fail to verify condition of if statement:\n%s", fact, stmt))
+			}
+		}
+
+		return false, NewExecTrue("")
+	}
+
+	return true, NewExecTrue("")
 }
 
 func (exec *Executor) evalAlgoIf(stmt *ast.AlgoIfStmt) (ast.Fc, ExecRet) {
