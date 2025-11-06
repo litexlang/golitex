@@ -195,8 +195,6 @@ func keySymbolRelaFactWithoutNotLatexString(stmt *SpecFactStmt) string {
 		builder.WriteString("$\\leq$")
 	case glob.KeySymbolGreater:
 		builder.WriteString("$\\geq$")
-	case glob.KeySymbolEqualEqual:
-		builder.WriteString("==")
 	case glob.KeySymbolNotEqual:
 		builder.WriteString("\\neq")
 	case glob.KeywordIn:

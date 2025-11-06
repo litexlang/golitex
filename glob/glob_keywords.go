@@ -158,8 +158,7 @@ const (
 	KeySymbolHash         = "#"
 	KeySymbolLargerEqual  = ">="
 	KeySymbolLessEqual    = "<="
-	KeySymbolEqualEqual   = "==" // check fn equal. TODO: 要调整语义
-	KeySymbolPercent      = "%"  // prove: 2 % 2 = 0 的时候打印有问题，不知道为什么
+	KeySymbolPercent      = "%" // prove: 2 % 2 = 0 的时候打印有问题，不知道为什么
 	KeySymbolLeftBracket  = "["
 	KeySymbolRightBracket = "]"
 	// KeySymbolColonEqual   = ":="
@@ -176,7 +175,6 @@ const (
 
 // 最多双字符，或者单字符，否则parser的逻辑 GetKeySymbol 有问题
 var symbolSet map[string]struct{} = map[string]struct{}{
-	KeySymbolEqualEqual:  {}, // "=="
 	KeySymbolLargerEqual: {}, // ">="
 	KeySymbolLessEqual:   {}, // "<="
 	KeySymbolNotEqual:    {}, // "!="
@@ -233,7 +231,6 @@ var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]s
 	KeySymbolLessEqual:   {},
 	KeySymbolNotEqual:    {},
 	// KeySymbolColonEqual:                   {},
-	KeySymbolEqualEqual:                   {},
 	KeySymbolPercent:                      {}, // prove: 2 % 2 = 0 的时候打印有问题，不知道为什么
 	KeySymbolLeftBracket:                  {},
 	KeySymbolRightBracket:                 {},
