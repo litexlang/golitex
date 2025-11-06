@@ -129,9 +129,9 @@ All of our [repositories](https://github.com/orgs/litexlang/repositories) are op
 
 ## References
 
-_You must run before you can walk._
+_If I have seen further [than others], it is by standing on the shoulders of giants._
 
-_-- Bjarne Stroustrup_
+_- Isaac Newton_
 
 Although Litex is a very pragmatic language which contains and only contains the proof methods, axioms, keywords, etc. that people need in their daily mathematical work—things that are often so taken for granted that people usually don't even notice them —- it is equally important to note that Litex indeed has gained great conceptual inspiration from the masters.
 

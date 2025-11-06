@@ -119,7 +119,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (ExecRet, string, error) {
 	}
 
 	if err != nil || execState.IsErr() {
-		if err.Error() != "" {
+		if err != nil && err.Error() != "" {
 			return NewExecErr(""), "", fmt.Errorf("failed: line %d:\n%w", stmt.GetLine(), err)
 		} else {
 			return NewExecErr(""), "", fmt.Errorf("failed: line %d", stmt.GetLine())
