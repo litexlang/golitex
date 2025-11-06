@@ -21,17 +21,34 @@ import (
 	glob "golitex/glob"
 )
 
+func (exec *Executor) simplifyNumExprFc(fc ast.Fc) (ast.Fc, ExecRet) {
+	simplifiedNumExprFc := cmp.IsNumExprFc_SimplifyIt(fc)
+	if simplifiedNumExprFc == nil {
+		return nil, NewExecErr("")
+	}
+
+	return simplifiedNumExprFc, NewExecTrue("")
+}
+
 // 这里 bool 表示，是否启动过 用algo 计算；如果仅仅是用 algo 来计算，那是不会返回true的
 func (exec *Executor) evalFc(fc ast.Fc) (ast.Fc, ExecRet) {
 	if cmp.IsNumLitFc(fc) {
-		return fc, NewExecTrue("")
+		return exec.simplifyNumExprFc(fc)
 	}
 
 	switch asFc := fc.(type) {
 	case ast.FcAtom:
-		return exec.evalFcAtom(asFc)
+		value, execRet := exec.evalFcAtom(asFc)
+		if execRet.IsNotTrue() {
+			return nil, execRet
+		}
+		return exec.simplifyNumExprFc(value)
 	case *ast.FcFn:
-		return exec.evalFcFn(asFc)
+		value, execRet := exec.evalFcFn(asFc)
+		if execRet.IsNotTrue() {
+			return nil, execRet
+		}
+		return exec.simplifyNumExprFc(value)
 	default:
 		panic(fmt.Sprintf("unexpected type: %T", fc))
 	}
@@ -49,7 +66,7 @@ var basicArithOptMap = map[string]struct{}{
 // 可能返回数值的时候需要检查一下会不会除以0这种情况
 func (exec *Executor) evalFcFn(fc *ast.FcFn) (ast.Fc, ExecRet) {
 	if symbolValue := exec.Env.GetSymbolValue(fc); symbolValue != nil {
-		return symbolValue, NewExecTrue("")
+		return exec.simplifyNumExprFc(symbolValue)
 	}
 
 	if ast.IsFcFnWithHeadNameInSlice(fc, basicArithOptMap) {
@@ -68,12 +85,7 @@ func (exec *Executor) evalFcFn(fc *ast.FcFn) (ast.Fc, ExecRet) {
 			return nil, NewExecErr(fmt.Sprintf("%s = %s is invalid", fc, numExprFc))
 		}
 
-		simplifiedNumExprFc := cmp.IsNumExprFc_SimplifyIt(numExprFc)
-		if simplifiedNumExprFc == nil {
-			return nil, NewExecErr("")
-		}
-
-		return simplifiedNumExprFc, NewExecTrue("")
+		return exec.simplifyNumExprFc(numExprFc)
 	}
 
 	if ok := exec.Env.IsFnWithDefinedAlgo(fc); ok {
@@ -82,12 +94,8 @@ func (exec *Executor) evalFcFn(fc *ast.FcFn) (ast.Fc, ExecRet) {
 		if execRet.IsNotTrue() {
 			return nil, execRet
 		}
-		simplifiedNumExprFc := cmp.IsNumExprFc_SimplifyIt(numExprFc)
-		if simplifiedNumExprFc == nil {
-			return nil, NewExecErr("")
-		}
 
-		return simplifiedNumExprFc, NewExecTrue("")
+		return exec.simplifyNumExprFc(numExprFc)
 	}
 
 	return nil, NewExecUnknown("")
@@ -99,7 +107,7 @@ func (exec *Executor) evalFcAtom(fc ast.FcAtom) (ast.Fc, ExecRet) {
 		return nil, NewExecUnknown("")
 	}
 
-	return symbolValue, NewExecTrue("")
+	return exec.simplifyNumExprFc(symbolValue)
 }
 
 func (exec *Executor) useAlgoToEvalFcFn(algoDef *ast.AlgoDefStmt, fcFn *ast.FcFn) (ast.Fc, ExecRet) {
@@ -125,11 +133,11 @@ func (exec *Executor) useAlgoToEvalFcFn(algoDef *ast.AlgoDefStmt, fcFn *ast.FcFn
 	fcFnParamsValues := []ast.Fc{}
 	for _, param := range fcFn.Params {
 		_, value := exec.Env.ReplaceSymbolWithValue(param)
-		if cmp.IsNumLitFc(value) {
-			fcFnParamsValues = append(fcFnParamsValues, value)
-		} else {
+		simplifiedValue, execRet := exec.simplifyNumExprFc(value)
+		if execRet.IsNotTrue() {
 			return nil, NewExecErr(fmt.Sprintf("value of %s of %s is unknown.", param, fcFn))
 		}
+		fcFnParamsValues = append(fcFnParamsValues, simplifiedValue)
 	}
 
 	fcFnWithValueParams := ast.NewFcFn(fcFn.FnHead, fcFnParamsValues)
@@ -157,7 +165,11 @@ func (exec *Executor) runAlgoStmts(algoStmts ast.AlgoSlice, fcFnWithValueParams 
 				return nil, execRet
 			}
 			fmt.Println(asStmt.Value)
-			return exec.evalFc(asStmt.Value)
+			numExprFc, execRet := exec.evalFc(asStmt.Value)
+			if execRet.IsNotTrue() {
+				return nil, execRet
+			}
+			return exec.simplifyNumExprFc(numExprFc)
 		case *ast.AlgoIfStmt:
 			if conditionIsTrue, execRet := exec.IsAlgoIfConditionTrue(asStmt); !execRet.IsTrue() {
 				return nil, execRet
