@@ -19,18 +19,18 @@ import (
 )
 
 type Executor struct {
-	env *env.Env
+	Env *env.Env
 }
 
 func NewExecutor(curEnv *env.Env) *Executor {
 	if curEnv == nil {
-		return &Executor{env: env.NewEnv(nil)}
+		return &Executor{Env: env.NewEnv(nil)}
 	} else {
-		return &Executor{env: curEnv}
+		return &Executor{Env: curEnv}
 	}
 }
 
 func (e *Executor) NewEnv(parent *env.Env) *env.Env {
-	e.env = env.NewEnv(parent)
-	return e.env
+	e.Env = env.NewEnv(parent)
+	return e.Env
 }

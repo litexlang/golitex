@@ -87,6 +87,10 @@ func NewExecErr(s string) *ExecErr {
 	return &ExecErr{Msg: []string{}}
 }
 
+func NewExecErrWithErr(err error) *ExecErr {
+	return &ExecErr{Msg: []string{err.Error()}}
+}
+
 func BoolErrToExecRet(ok bool, err error) ExecRet {
 	if err != nil {
 		return &ExecErr{Msg: []string{err.Error()}}

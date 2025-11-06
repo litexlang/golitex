@@ -432,13 +432,13 @@ func (f *FcFn) String() string {
 		return fmt.Sprintf("%s.%s", f.Params[0], f.Params[1])
 	}
 
-	if IsFcAtomAndEqualToStr(f.FnHead, glob.TupleFcFnHead) {
-		paramStrSlice := make([]string, len(f.Params))
-		for i := range len(f.Params) {
-			paramStrSlice[i] = f.Params[i].String()
-		}
-		return fmt.Sprintf("(%s)", strings.Join(paramStrSlice, ", "))
-	}
+	// if IsFcAtomAndEqualToStr(f.FnHead, glob.TupleFcFnHead) {
+	// 	paramStrSlice := make([]string, len(f.Params))
+	// 	for i := range len(f.Params) {
+	// 		paramStrSlice[i] = f.Params[i].String()
+	// 	}
+	// 	return fmt.Sprintf("(%s)", strings.Join(paramStrSlice, ", "))
+	// }
 
 	if ok, str := hasBuiltinOptAndToString(f); ok {
 		return str
@@ -1114,7 +1114,7 @@ func FactStmtStrSliceJoinWithNewlineWithIndents(stmts []FactStmt, indents uint32
 	return builder.String()
 }
 
-func AlgoStmtStrSliceJoinWithNewlineWithIndents(stmts []AlgoStmt, indents uint32) string {
+func AlgoStmtStrSliceJoinWithNewlineWithIndents(stmts []Stmt, indents uint32) string {
 	var builder strings.Builder
 	strSlice := make([]string, len(stmts))
 	for i, stmt := range stmts {
@@ -1122,4 +1122,8 @@ func AlgoStmtStrSliceJoinWithNewlineWithIndents(stmts []AlgoStmt, indents uint32
 	}
 	builder.WriteString(strings.Join(strSlice, "\n"))
 	return builder.String()
+}
+
+func (stmt *EvalStmt) String() string {
+	return fmt.Sprintf("%s %s", glob.KeywordEval, stmt.Value.String())
 }

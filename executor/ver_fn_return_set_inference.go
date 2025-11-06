@@ -26,7 +26,7 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) ExecRet 
 	// 从后往前找，直到找到有个 fnHead 被已知在一个 fnInFnTInterface 中
 	// 比如 f(a)(b,c)(e,d,f) 我不知道 f(a)(b,c) 是哪个 fn_template 里的，但我发现 f(a) $in T 是知道的。那之后就是按T的返回值去套入b,c，然后再把e,d,f套入T的返回值的返回值
 	// 此时 indexWhereLatestFnTIsGot 就是 1, FnToFnItemWhereLatestFnTIsGot 就是 f(a) 的 fnInFnTMemItem
-	indexWhereLatestFnTIsGot, FnToFnItemWhereLatestFnTIsGot := ver.env.FindRightMostResolvedFn_Return_ResolvedIndexAndFnTMemItem(fnHeadChain_AndItSelf)
+	indexWhereLatestFnTIsGot, FnToFnItemWhereLatestFnTIsGot := ver.Env.FindRightMostResolvedFn_Return_ResolvedIndexAndFnTMemItem(fnHeadChain_AndItSelf)
 
 	// 比如 f(a)(b,c)(e,d,f) 我们现在得到了 f(a) 的 fnTStruct，那 curParamsChainIndex 就是 2, 表示 f(a) 对应的params就是 (b,c)
 	// curFnTStruct := ver.env.GetFnTStructOfFnInFnTMemItem(FnToFnItemWhereLatestFnTIsGot)
@@ -105,7 +105,7 @@ func (ver *Verifier) GetFnStructFromFnTName_CheckFnTParamsReq(fnTName *ast.FcFn,
 }
 
 func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckParamsSatisfyFnTReq(fnTDefName ast.FcAtom, templateParams []ast.Fc, state *VerState) (*ast.FnTStruct, error) {
-	defOfT := ver.env.GetFnTemplateDef(fnTDefName)
+	defOfT := ver.Env.GetFnTemplateDef(fnTDefName)
 	if defOfT == nil {
 		return nil, fmt.Errorf("fnTNameHead %s is not a fn template", fnTDefName)
 	}
@@ -127,7 +127,7 @@ func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckParamsSatisfyFnTReq(fnTDef
 }
 
 func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreTrue(fnTDef *ast.FnTemplateDefStmt, uniMap map[string]ast.Fc, state *VerState) ExecRet {
-	ver.newEnv(ver.env)
+	ver.newEnv(ver.Env)
 	defer ver.deleteEnvAndRetainMsg()
 
 	for _, fact := range fnTDef.TemplateDomFacts {
@@ -151,7 +151,7 @@ func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.FcSlice, fnT
 	curState := state.GetNoMsg()
 	defer func() {
 		if failed {
-			ver.env.Msgs = append(ver.env.Msgs, fmt.Sprintf("failed to check param(s) %s satisfy domain of\n%s", concreteParams, fnTStruct))
+			ver.Env.Msgs = append(ver.Env.Msgs, fmt.Sprintf("failed to check param(s) %s satisfy domain of\n%s", concreteParams, fnTStruct))
 		}
 	}()
 
@@ -162,7 +162,7 @@ func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.FcSlice, fnT
 	}
 	if verRet.IsUnknown() {
 		failed = true
-		ver.env.Msgs = append(ver.env.Msgs, verRet.String())
+		ver.Env.Msgs = append(ver.Env.Msgs, verRet.String())
 		return verRet
 	}
 
@@ -173,7 +173,7 @@ func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.FcSlice, fnT
 	}
 	if verRet.IsUnknown() {
 		failed = true
-		ver.env.Msgs = append(ver.env.Msgs, verRet.String())
+		ver.Env.Msgs = append(ver.Env.Msgs, verRet.String())
 		return NewExecUnknown("")
 	}
 

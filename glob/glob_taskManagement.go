@@ -15,7 +15,6 @@
 package litex_global
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -24,7 +23,7 @@ import (
 var AllowImport bool = true
 
 // 存储当前的传入的repo的repo名
-var CurrentTaskDirName string = ""
+// var CurrentTaskDirName string = ""
 var PreviousTaskDirNameSlice []string = []string{}
 
 var CurrentPkg string = ""
@@ -32,37 +31,37 @@ var PreviousPkgSlice []string = []string{}
 var DeclaredPkgNames = map[string]struct{}{"": {}}
 var IsRunningPipelineInit bool = false
 
-func ImportDirStmtInit(newPkg string, path string) error {
-	PreviousTaskDirNameSlice = append(PreviousTaskDirNameSlice, CurrentTaskDirName)
-	CurrentTaskDirName = ResolvePath(CurrentTaskDirName, path)
-	// CurrentTaskDirName = filepath.Join(CurrentTaskDirName, path)
+// func ImportDirStmtInit(newPkg string, path string) error {
+// 	PreviousTaskDirNameSlice = append(PreviousTaskDirNameSlice, CurrentTaskDirName)
+// 	CurrentTaskDirName = ResolvePath(CurrentTaskDirName, path)
+// 	// CurrentTaskDirName = filepath.Join(CurrentTaskDirName, path)
 
-	PreviousPkgSlice = append(PreviousPkgSlice, CurrentPkg)
-	if CurrentPkg == "" {
-		CurrentPkg = newPkg
-	} else {
-		CurrentPkg = strings.Join([]string{CurrentPkg, newPkg}, KeySymbolColonColon)
-	}
-	// import name should be valid
-	err := IsValidUseDefinedFcAtom(newPkg)
-	if err != nil {
-		return err
-	}
+// 	PreviousPkgSlice = append(PreviousPkgSlice, CurrentPkg)
+// 	if CurrentPkg == "" {
+// 		CurrentPkg = newPkg
+// 	} else {
+// 		CurrentPkg = strings.Join([]string{CurrentPkg, newPkg}, KeySymbolColonColon)
+// 	}
+// 	// import name should be valid
+// 	err := IsValidUseDefinedFcAtom(newPkg)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	if _, ok := DeclaredPkgNames[CurrentPkg]; !ok {
-		DeclaredPkgNames[CurrentPkg] = struct{}{}
-	} else {
-		return fmt.Errorf("duplicate package name: '%s'", CurrentPkg)
-	}
-	return nil
-}
+// 	if _, ok := DeclaredPkgNames[CurrentPkg]; !ok {
+// 		DeclaredPkgNames[CurrentPkg] = struct{}{}
+// 	} else {
+// 		return fmt.Errorf("duplicate package name: '%s'", CurrentPkg)
+// 	}
+// 	return nil
+// }
 
-func ImportDirStmtEnd() {
-	CurrentPkg = PreviousPkgSlice[len(PreviousPkgSlice)-1]
-	PreviousPkgSlice = PreviousPkgSlice[:len(PreviousPkgSlice)-1]
-	CurrentTaskDirName = PreviousTaskDirNameSlice[len(PreviousTaskDirNameSlice)-1]
-	PreviousTaskDirNameSlice = PreviousTaskDirNameSlice[:len(PreviousTaskDirNameSlice)-1]
-}
+// func ImportDirStmtEnd() {
+// 	CurrentPkg = PreviousPkgSlice[len(PreviousPkgSlice)-1]
+// 	PreviousPkgSlice = PreviousPkgSlice[:len(PreviousPkgSlice)-1]
+// 	CurrentTaskDirName = PreviousTaskDirNameSlice[len(PreviousTaskDirNameSlice)-1]
+// 	PreviousTaskDirNameSlice = PreviousTaskDirNameSlice[:len(PreviousTaskDirNameSlice)-1]
+// }
 
 func RequireMsg() bool {
 	return len(PreviousPkgSlice) == 0 && !IsRunningPipelineInit

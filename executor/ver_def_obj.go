@@ -21,7 +21,7 @@ import (
 )
 
 func (ver *Verifier) NewDefObj_InsideAtomsDeclared(stmt *ast.DefLetStmt) error {
-	err := ver.env.NonDuplicateParam_NoUndeclaredParamSet(stmt.Objs, stmt.ObjSets, true)
+	err := ver.Env.NonDuplicateParam_NoUndeclaredParamSet(stmt.Objs, stmt.ObjSets, true)
 	if err != nil {
 		return err
 	}
@@ -29,7 +29,7 @@ func (ver *Verifier) NewDefObj_InsideAtomsDeclared(stmt *ast.DefLetStmt) error {
 	extraAtomNames := map[string]struct{}{}
 
 	for _, objName := range stmt.Objs {
-		err := ver.env.IsValidIdentifierAvailable(objName)
+		err := ver.Env.IsValidIdentifierAvailable(objName)
 		if err != nil {
 			return err
 		}
@@ -37,27 +37,27 @@ func (ver *Verifier) NewDefObj_InsideAtomsDeclared(stmt *ast.DefLetStmt) error {
 
 	// 如果这个obj是fn，那么要插入到fn def mem中
 	for _, objName := range stmt.Objs {
-		err = ver.env.NewObj_NoDuplicate(objName, stmt)
+		err = ver.Env.NewObj_NoDuplicate(objName, stmt)
 		if err != nil {
 			return err
 		}
 	}
 
 	for _, fact := range stmt.NewInFacts() {
-		if !ver.env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
+		if !ver.Env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
 			return fmt.Errorf(env.AtomsInFactNotDeclaredMsg(fact))
 		}
-		err := ver.env.NewFact(fact)
+		err := ver.Env.NewFact(fact)
 		if err != nil {
 			return err
 		}
 	}
 
 	for _, fact := range stmt.Facts {
-		if !ver.env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
+		if !ver.Env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
 			return fmt.Errorf(env.AtomsInFactNotDeclaredMsg(fact))
 		}
-		err := ver.env.NewFact(fact)
+		err := ver.Env.NewFact(fact)
 		if err != nil {
 			return err
 		}

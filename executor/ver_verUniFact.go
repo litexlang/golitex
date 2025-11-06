@@ -26,7 +26,7 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) ExecR
 	}
 
 	// 在局部环境声明新变量
-	ver.newEnv(ver.env)
+	ver.newEnv(ver.Env)
 	defer ver.deleteEnvAndRetainMsg()
 
 	newStmtPtr, err := ver.PreprocessUniFactParams_DeclareParams(oldStmt)
@@ -36,7 +36,7 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) ExecR
 
 	// know cond facts
 	for _, condFact := range newStmtPtr.DomFacts {
-		err := ver.env.NewFact(condFact)
+		err := ver.Env.NewFact(condFact)
 		if err != nil {
 			return NewExecErr(err.Error())
 		}
@@ -54,13 +54,13 @@ func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerSta
 		}
 		if verRet.IsUnknown() {
 			if state.WithMsg {
-				ver.env.Msgs = append(ver.env.Msgs, fmt.Sprintf("%s is unknown", thenFact))
+				ver.Env.Msgs = append(ver.Env.Msgs, fmt.Sprintf("%s is unknown", thenFact))
 			}
 			return NewExecUnknown("")
 		}
 
 		// if true, store it
-		err := ver.env.NewFact(thenFact)
+		err := ver.Env.NewFact(thenFact)
 		if err != nil {
 			return NewExecErr(err.Error())
 		}
@@ -90,7 +90,7 @@ func (ver *Verifier) PreprocessUniFactParams_DeclareParams(oldStmt *ast.UniFactS
 
 	// 查看param set 是否已经声明
 	for _, paramSet := range newStmtPtr.ParamSets {
-		ok := ver.env.AreAtomsInFcAreDeclared(paramSet, map[string]struct{}{})
+		ok := ver.Env.AreAtomsInFcAreDeclared(paramSet, map[string]struct{}{})
 		if !ok {
 			return nil, fmt.Errorf(env.AtomsInFcNotDeclaredMsg(paramSet))
 		}

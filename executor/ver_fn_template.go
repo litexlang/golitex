@@ -20,13 +20,13 @@ import (
 )
 
 func (ver *Verifier) ver_In_FnTT(left ast.Fc, right *ast.FcFn, state *VerState) ExecRet {
-	leftLatestFnT := ver.env.GetLatestFnT_GivenNameIsIn(left.String())
+	leftLatestFnT := ver.Env.GetLatestFnT_GivenNameIsIn(left.String())
 	if leftLatestFnT == nil {
 		return NewExecUnknown("")
 	}
 
 	// right dom <= left dom. on right dom left has all those then facts
-	rightDefT := ver.env.GetFnTemplateDef_KeyIsFcHead(right)
+	rightDefT := ver.Env.GetFnTemplateDef_KeyIsFcHead(right)
 	if rightDefT == nil {
 		return NewExecUnknown("")
 	}
