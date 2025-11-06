@@ -23,7 +23,7 @@ import (
 func (exec *Executor) proveByEnumMainLogic(stmt *ast.ProveByEnumStmt) (ExecRet, error) {
 	enums := [][]ast.Fc{}
 	for _, paramSet := range stmt.Fact.ParamSets {
-		enumFacts, ok := exec.env.GetEnumFact(paramSet.String())
+		enumFacts, ok := exec.Env.GetEnumFact(paramSet.String())
 		if !ok {
 			return NewExecErr(""), fmt.Errorf("prove over finite set statement error: enum not found")
 		}
@@ -49,7 +49,7 @@ func (exec *Executor) proveByEnumMainLogic(stmt *ast.ProveByEnumStmt) (ExecRet, 
 }
 
 func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.ProveByEnumStmt, cartesianProductAtI []ast.Fc) (bool, error) {
-	exec.NewEnv(exec.env)
+	exec.NewEnv(exec.Env)
 	defer exec.deleteEnvAndRetainMsg()
 
 	defObjStmt := ast.NewDefObjStmt(stmt.Fact.Params, stmt.Fact.ParamSets, getParamEqualFcSlice(stmt.Fact.Params, cartesianProductAtI), stmt.Line)

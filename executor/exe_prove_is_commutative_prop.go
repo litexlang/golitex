@@ -32,14 +32,14 @@ func (exec *Executor) proveIsCommutativePropStmt(stmt *ast.ProveIsCommutativePro
 }
 
 func (exec *Executor) proveIsCommutativePropStmtMainLogic(stmt *ast.ProveIsCommutativePropStmt) (bool, error) {
-	exec.NewEnv(exec.env)
+	exec.NewEnv(exec.Env)
 	defer exec.deleteEnvAndRetainMsg()
 
-	if exec.env.IsCommutativeProp(stmt.SpecFact) {
+	if exec.Env.IsCommutativeProp(stmt.SpecFact) {
 		return true, nil
 	}
 
-	def := exec.env.GetPropDef(stmt.SpecFact.PropName)
+	def := exec.Env.GetPropDef(stmt.SpecFact.PropName)
 	if def == nil {
 		return false, fmt.Errorf("prop %s is not defined", stmt.SpecFact.PropName)
 	}
@@ -48,11 +48,11 @@ func (exec *Executor) proveIsCommutativePropStmtMainLogic(stmt *ast.ProveIsCommu
 		return false, fmt.Errorf("prop %s has %d params, but 2 params are expected", stmt.SpecFact.PropName, len(def.DefHeader.Params))
 	}
 
-	ok := exec.env.AreAtomsInFcAreDeclared(def.DefHeader.ParamSets[0], map[string]struct{}{})
+	ok := exec.Env.AreAtomsInFcAreDeclared(def.DefHeader.ParamSets[0], map[string]struct{}{})
 	if !ok {
 		return false, fmt.Errorf("param %s is not declared", def.DefHeader.ParamSets[0])
 	}
-	ok = exec.env.AreAtomsInFcAreDeclared(def.DefHeader.ParamSets[1], map[string]struct{}{})
+	ok = exec.Env.AreAtomsInFcAreDeclared(def.DefHeader.ParamSets[1], map[string]struct{}{})
 	if !ok {
 		return false, fmt.Errorf("param %s is not declared", def.DefHeader.ParamSets[1])
 	}
@@ -97,10 +97,10 @@ func (exec *Executor) proveIsCommutativePropStmtMainLogic(stmt *ast.ProveIsCommu
 }
 
 func (exec *Executor) proveIsCommutativePropStmtBody(proofs []ast.Stmt, fact *ast.SpecFactStmt, rightToLeft *ast.SpecFactStmt) (bool, error) {
-	exec.NewEnv(exec.env)
+	exec.NewEnv(exec.Env)
 	defer exec.deleteEnvAndRetainMsg()
 
-	err := exec.env.NewFact(fact)
+	err := exec.Env.NewFact(fact)
 	if err != nil {
 		return false, err
 	}

@@ -76,6 +76,7 @@ const (
 	KeywordAlgo   = "algo"
 	KeywordReturn = "return"
 	KeywordIf     = "if"
+	KeywordEval   = "eval"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -133,6 +134,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordAlgo:   {},
 	KeywordReturn: {},
 	KeywordIf:     {},
+	KeywordEval:   {},
 }
 
 const (
@@ -240,10 +242,11 @@ var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]s
 	KeywordSetDefinedByReplacement:        {},
 	KeywordExistPropPreImageByReplacement: {},
 	KeywordExistFnPreImageByReplacement:   {},
-	TupleFcFnHead:                         {},
-	KeywordLen:                            {},
-	KeywordNPos:                           {},
-	KeywordNonEmptySet:                    {},
+	// TupleFcFnHead:                         {},
+	KeywordLen:         {},
+	KeywordNPos:        {},
+	KeywordNonEmptySet: {},
+	KeywordEval:        {},
 }
 
 func IsBuiltinKeywordKeySymbolCanBeFcAtomName(name string) bool {

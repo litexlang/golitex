@@ -216,11 +216,11 @@ func NewProveIsCommutativePropStmt(specFact *SpecFactStmt, proofs []Stmt, proofs
 	return &ProveIsCommutativePropStmt{specFact, proofs, proofsRightToLeft, line}
 }
 
-func NewAlgoDefStmt(funcName string, params []string, stmts []AlgoStmt, line uint) *AlgoDefStmt {
+func NewAlgoDefStmt(funcName string, params []string, stmts AlgoSlice, line uint) *AlgoDefStmt {
 	return &AlgoDefStmt{funcName, params, stmts, line}
 }
 
-func NewAlgoIfStmt(condition []FactStmt, thenFacts []AlgoStmt, line uint) *AlgoIfStmt {
+func NewAlgoIfStmt(condition []FactStmt, thenFacts AlgoSlice, line uint) *AlgoIfStmt {
 	return &AlgoIfStmt{condition, thenFacts, line}
 }
 
@@ -286,4 +286,8 @@ func NewUniFactWithIffWithSafeGuard(params []string, setParams []Fc, domFacts []
 	}
 
 	return NewUniFactWithIff(uniFact, iffFacts, line), nil
+}
+
+func NewEvalStmt(value Fc, line uint) *EvalStmt {
+	return &EvalStmt{value, line}
 }

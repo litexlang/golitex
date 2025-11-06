@@ -26,22 +26,19 @@ import (
 
 func RunFile(path string) (string, glob.SysSignal, error) {
 	// 得到path的repo名所在的绝对路径
-	repoName := filepath.Dir(path)
-	glob.CurrentTaskDirName = repoName
+	// repoName := filepath.Dir(path)
+	// glob.CurrentTaskDirName = repoName
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return fmt.Sprintf("failed to read file %s: %s", path, err.Error()), glob.SysSignalSystemError, err
 	}
 	msg, signal, _, err := pipeline.RunSourceCode(nil, string(content))
-	if err != nil {
-		return msg, signal, err
-	}
-	return msg, signal, nil
+	return msg, signal, err
 }
 
 func RunFileWithPipelineRunner(path string) (string, glob.SysSignal, time.Duration, error) {
-	repoName := filepath.Dir(path)
-	glob.CurrentTaskDirName = repoName
+	// repoName := filepath.Dir(path)
+	// glob.CurrentTaskDirName = repoName
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return fmt.Sprintf("failed to read file %s: %s", path, err.Error()), glob.SysSignalSystemError, 0, err
@@ -57,7 +54,7 @@ func RunFileWithPipelineRunner(path string) (string, glob.SysSignal, time.Durati
 }
 
 func RunRepo(path string) (string, glob.SysSignal, error) {
-	glob.CurrentTaskDirName = path
+	// glob.CurrentTaskDirName = path
 	// 运行里面的main.lit
 	content, err := os.ReadFile(filepath.Join(path, glob.PkgEntranceFileName))
 	if err != nil {
