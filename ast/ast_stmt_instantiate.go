@@ -718,6 +718,8 @@ func InstantiateAlgoStmt(stmt AlgoStmt, uniMap map[string]Fc) (AlgoStmt, error) 
 		return stmt.InstantiateAlgo(uniMap)
 	case *AlgoReturnStmt:
 		return stmt.InstantiateAlgo(uniMap)
+	case Stmt:
+		return stmt.Instantiate(uniMap)
 	}
 	return nil, fmt.Errorf("unknown algo statement type: %T", stmt)
 }
