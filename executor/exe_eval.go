@@ -32,6 +32,8 @@ func (exec *Executor) simplifyNumExprFc(fc ast.Fc) (ast.Fc, ExecRet) {
 
 // 这里 bool 表示，是否启动过 用algo 计算；如果仅仅是用 algo 来计算，那是不会返回true的
 func (exec *Executor) evalFc(fc ast.Fc) (ast.Fc, ExecRet) {
+	fmt.Println(fc)
+
 	if cmp.IsNumLitFc(fc) {
 		return exec.simplifyNumExprFc(fc)
 	}
@@ -66,7 +68,8 @@ var basicArithOptMap = map[string]struct{}{
 // 可能返回数值的时候需要检查一下会不会除以0这种情况
 func (exec *Executor) evalFcFn(fc *ast.FcFn) (ast.Fc, ExecRet) {
 	if symbolValue := exec.Env.GetSymbolValue(fc); symbolValue != nil {
-		return exec.simplifyNumExprFc(symbolValue)
+		// return exec.simplifyNumExprFc(symbolValue)
+		return symbolValue, NewExecTrue("")
 	}
 
 	if ast.IsFcFnWithHeadNameInSlice(fc, basicArithOptMap) {
@@ -85,7 +88,8 @@ func (exec *Executor) evalFcFn(fc *ast.FcFn) (ast.Fc, ExecRet) {
 			return nil, NewExecErr(fmt.Sprintf("%s = %s is invalid", fc, numExprFc))
 		}
 
-		return exec.simplifyNumExprFc(numExprFc)
+		// return exec.simplifyNumExprFc(numExprFc)
+		return numExprFc, NewExecTrue("")
 	}
 
 	if ok := exec.Env.IsFnWithDefinedAlgo(fc); ok {
@@ -95,7 +99,8 @@ func (exec *Executor) evalFcFn(fc *ast.FcFn) (ast.Fc, ExecRet) {
 			return nil, execRet
 		}
 
-		return exec.simplifyNumExprFc(numExprFc)
+		// return exec.simplifyNumExprFc(numExprFc)
+		return numExprFc, NewExecTrue("")
 	}
 
 	return nil, NewExecUnknown("")
@@ -107,7 +112,8 @@ func (exec *Executor) evalFcAtom(fc ast.FcAtom) (ast.Fc, ExecRet) {
 		return nil, NewExecUnknown("")
 	}
 
-	return exec.simplifyNumExprFc(symbolValue)
+	// return exec.simplifyNumExprFc(symbolValue)
+	return symbolValue, NewExecTrue("")
 }
 
 func (exec *Executor) useAlgoToEvalFcFn(algoDef *ast.AlgoDefStmt, fcFn *ast.FcFn) (ast.Fc, ExecRet) {
@@ -164,12 +170,13 @@ func (exec *Executor) runAlgoStmts(algoStmts ast.AlgoSlice, fcFnWithValueParams 
 			if err != nil || !execRet.IsTrue() {
 				return nil, execRet
 			}
-			fmt.Println(asStmt.Value)
+			// fmt.Println(asStmt.Value)
 			numExprFc, execRet := exec.evalFc(asStmt.Value)
-			if execRet.IsNotTrue() {
-				return nil, execRet
-			}
-			return exec.simplifyNumExprFc(numExprFc)
+			return numExprFc, execRet
+			// if execRet.IsNotTrue() {
+			// 	return nil, execRet
+			// }
+			// return exec.simplifyNumExprFc(numExprFc)
 		case *ast.AlgoIfStmt:
 			if conditionIsTrue, execRet := exec.IsAlgoIfConditionTrue(asStmt); !execRet.IsTrue() {
 				return nil, execRet
