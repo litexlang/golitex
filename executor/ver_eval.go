@@ -18,7 +18,6 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	cmp "golitex/cmp"
-	glob "golitex/glob"
 )
 
 // 这里 bool 表示，是否启动过 用algo 计算；如果仅仅是用 algo 来计算，那是不会返回true的
@@ -73,22 +72,27 @@ func (exec *Executor) useAlgoToEvalFcFn(algoDef *ast.AlgoDefStmt, fcFn *ast.FcFn
 		return nil, NewExecErr(fmt.Sprintf("parameters of %s are not in domain of %s", fcFn, fcFn.FnHead))
 	}
 
-	// 为了防止proof中又声明了同名的对象，我们保证环境里已经申明了algoDef的param：1. 如果同名的东西已经在大环境里了，那OK 2. 如果不在，那就申明一下
 	for _, param := range algoDef.Params {
-		if !exec.Env.IsAtomDeclared(ast.FcAtom(param), map[string]struct{}{}) {
-			exec.defLetStmt(ast.NewDefObjStmt([]string{param}, []ast.Fc{ast.FcAtom(glob.KeywordObj)}, []ast.FactStmt{}, algoDef.GetLine()))
+		if exec.Env.IsAtomDeclared(ast.FcAtom(param), map[string]struct{}{}) {
+			panic("TODO: 之后如果外面已经弄过了，那就遍历地变成无重复的随机符号")
 		}
 	}
 
-	fcFnParamsValue := []ast.Fc{}
+	fcFnParamsValues := []ast.Fc{}
 	for _, param := range fcFn.Params {
 		_, value := exec.Env.ReplaceSymbolWithValue(param)
-		fcFnParamsValue = append(fcFnParamsValue, value)
+		if cmp.IsNumLitFc(value) {
+			fcFnParamsValues = append(fcFnParamsValues, value)
+		} else {
+			return nil, NewExecErr(fmt.Sprintf("value of %s of %s is unknown.", param, fcFn))
+		}
 	}
+
+	fcFnWithValueParams := ast.NewFcFn(fcFn.FnHead, fcFnParamsValues)
 
 	uniMap := map[string]ast.Fc{}
 	for i, param := range algoDef.Params {
-		uniMap[param] = fcFnParamsValue[i]
+		uniMap[param] = fcFnParamsValues[i]
 	}
 
 	instAlgoDef, err := algoDef.Instantiate(uniMap)
@@ -96,15 +100,24 @@ func (exec *Executor) useAlgoToEvalFcFn(algoDef *ast.AlgoDefStmt, fcFn *ast.FcFn
 		return nil, NewExecErrWithErr(err)
 	}
 
-	for _, stmt := range instAlgoDef.(*ast.AlgoDefStmt).Stmts {
+	value, execRet := exec.runAlgoStmts(instAlgoDef.(*ast.AlgoDefStmt).Stmts, fcFnWithValueParams)
+	return value, execRet
+}
+
+func (exec *Executor) runAlgoStmts(algoStmts ast.AlgoSlice, fcFnWithValueParams *ast.FcFn) (ast.Fc, ExecRet) {
+	for _, stmt := range algoStmts {
 		switch asStmt := stmt.(type) {
 		case *ast.AlgoReturnStmt:
+			execRet, err := exec.factStmt(ast.EqualFact(fcFnWithValueParams, asStmt.Value))
+			if err != nil || !execRet.IsTrue() {
+				return nil, execRet
+			}
 			return exec.evalFc(asStmt.Value)
 		case *ast.AlgoIfStmt:
 			if conditionIsTrue, execRet := exec.IsAlgoIfConditionTrue(asStmt); !execRet.IsTrue() {
 				return nil, execRet
 			} else if conditionIsTrue {
-				return exec.evalAlgoIf(asStmt)
+				return exec.evalAlgoIf(asStmt, fcFnWithValueParams)
 			}
 		default:
 			execRet, _, err := exec.Stmt(stmt.(ast.Stmt))
@@ -114,7 +127,7 @@ func (exec *Executor) useAlgoToEvalFcFn(algoDef *ast.AlgoDefStmt, fcFn *ast.FcFn
 		}
 	}
 
-	return nil, NewExecErr(fmt.Sprintf("There is no return value of %s", fcFn.String()))
+	return nil, NewExecErr(fmt.Sprintf("There is no return value."))
 }
 
 func (exec *Executor) fcfnParamsInFnDomain(fcFn *ast.FcFn) ExecRet {
@@ -138,7 +151,7 @@ func (exec *Executor) IsAlgoIfConditionTrue(stmt *ast.AlgoIfStmt) (bool, ExecRet
 
 		factAsReversibleFact, reversed := fact.(ast.Spec_OrFact)
 		if !reversed {
-			return false, NewExecErr(fmt.Sprintf("%s The condition %s in\n%s\nis unknown, and it can not be negated. Failed", fact, stmt))
+			return false, NewExecErr(fmt.Sprintf("The condition %s in\n%s\nis unknown, and it can not be negated. Failed", fact, stmt))
 		}
 
 		for _, reversedFact := range factAsReversibleFact.ReverseIsTrue() {
@@ -158,6 +171,17 @@ func (exec *Executor) IsAlgoIfConditionTrue(stmt *ast.AlgoIfStmt) (bool, ExecRet
 	return true, NewExecTrue("")
 }
 
-func (exec *Executor) evalAlgoIf(stmt *ast.AlgoIfStmt) (ast.Fc, ExecRet) {
-	panic("")
+func (exec *Executor) evalAlgoIf(stmt *ast.AlgoIfStmt, fcFnWithValueParams *ast.FcFn) (ast.Fc, ExecRet) {
+	exec.NewEnv(exec.Env)
+	defer exec.deleteEnvAndGiveUpMsgs()
+
+	// all conditions are true
+	knowStmt := ast.NewKnowStmt(stmt.Conditions.ToCanBeKnownStmtSlice(), stmt.GetLine())
+	err := exec.knowStmt(knowStmt)
+	if err != nil {
+		return nil, NewExecErrWithErr(err)
+	}
+
+	value, execRet := exec.runAlgoStmts(stmt.ThenStmts, fcFnWithValueParams)
+	return value, execRet
 }

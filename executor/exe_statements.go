@@ -927,12 +927,12 @@ func (exec *Executor) algoDefStmt(stmt *ast.AlgoDefStmt) (ExecRet, error) {
 }
 
 func (exec *Executor) evalStmt(stmt *ast.EvalStmt) ExecRet {
-	value, err := exec.evalFc(stmt.Value)
-	if err != nil {
-		return NewExecErrWithErr(err)
+	value, execRet := exec.evalFc(stmt.Value)
+	if execRet.IsErr() {
+		return execRet
 	}
 
-	err = exec.Env.NewFact(ast.NewEqualFact(stmt.Value, value))
+	err := exec.Env.NewFact(ast.NewEqualFact(stmt.Value, value))
 	if err != nil {
 		return NewExecErrWithErr(err)
 	}
