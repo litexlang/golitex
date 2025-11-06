@@ -22,9 +22,9 @@ import (
 )
 
 // 这里 bool 表示，是否启动过 用algo 计算；如果仅仅是用 algo 来计算，那是不会返回true的
-func (exec *Executor) evalFc(fc ast.Fc) (ast.Fc, error) {
+func (exec *Executor) evalFc(fc ast.Fc) (ast.Fc, ExecRet) {
 	if cmp.IsNumLitFc(fc) {
-		return fc, nil
+		return fc, NewExecTrue("")
 	}
 
 	switch asFc := fc.(type) {
@@ -37,9 +37,9 @@ func (exec *Executor) evalFc(fc ast.Fc) (ast.Fc, error) {
 	}
 }
 
-func (exec *Executor) evalFcFn(fc *ast.FcFn) (ast.Fc, error) {
+func (exec *Executor) evalFcFn(fc *ast.FcFn) (ast.Fc, ExecRet) {
 	if symbolValue := exec.Env.GetSymbolValue(fc); symbolValue != nil {
-		return symbolValue, nil
+		return symbolValue, NewExecTrue("")
 	}
 
 	if ok := exec.Env.IsFnWithDefinedAlgo(fc); ok {
@@ -47,30 +47,30 @@ func (exec *Executor) evalFcFn(fc *ast.FcFn) (ast.Fc, error) {
 		return exec.useAlgoToEvalFcFn(algoDef, fc)
 	}
 
-	return nil, nil
+	return nil, NewExecUnknown("")
 }
 
-func (exec *Executor) evalFcAtom(fc ast.FcAtom) (ast.Fc, error) {
+func (exec *Executor) evalFcAtom(fc ast.FcAtom) (ast.Fc, ExecRet) {
 	symbolValue := exec.Env.GetSymbolValue(fc)
 	if symbolValue == nil {
-		return nil, nil
+		return nil, NewExecUnknown("")
 	}
 
-	return symbolValue, nil
+	return symbolValue, NewExecTrue("")
 }
 
-func (exec *Executor) useAlgoToEvalFcFn(algoDef *ast.AlgoDefStmt, fcFn *ast.FcFn) (ast.Fc, error) {
+func (exec *Executor) useAlgoToEvalFcFn(algoDef *ast.AlgoDefStmt, fcFn *ast.FcFn) (ast.Fc, ExecRet) {
 	exec.NewEnv(exec.Env)
 	defer exec.deleteEnvAndGiveUpMsgs()
 
 	if len(fcFn.Params) != len(algoDef.Params) {
-		return nil, fmt.Errorf("algorithm %s requires %d parameters, get %d instead", algoDef.FuncName, len(algoDef.Params), len(fcFn.Params))
+		return nil, NewExecErr(fmt.Sprintf("algorithm %s requires %d parameters, get %d instead", algoDef.FuncName, len(algoDef.Params), len(fcFn.Params)))
 	}
 
 	// 传入的参数真的在fn的domain里
 	execRet := exec.fcfnParamsInFnDomain(fcFn)
 	if !execRet.IsTrue() {
-		return nil, fmt.Errorf("parameters of %s are not in domain of %s", fcFn, fcFn.FnHead)
+		return nil, NewExecErr(fmt.Sprintf("parameters of %s are not in domain of %s", fcFn, fcFn.FnHead))
 	}
 
 	// 为了防止proof中又声明了同名的对象，我们保证环境里已经申明了algoDef的param：1. 如果同名的东西已经在大环境里了，那OK 2. 如果不在，那就申明一下
@@ -93,22 +93,31 @@ func (exec *Executor) useAlgoToEvalFcFn(algoDef *ast.AlgoDefStmt, fcFn *ast.FcFn
 
 	instAlgoDef, err := algoDef.Instantiate(uniMap)
 	if err != nil {
-		return nil, err
+		return nil, NewExecErrWithErr(err)
 	}
 
 	for _, stmt := range instAlgoDef.(*ast.AlgoDefStmt).Stmts {
 		switch asStmt := stmt.(type) {
 		case *ast.AlgoReturnStmt:
 			return exec.evalFc(asStmt.Value)
+		case *ast.AlgoIfStmt:
+			return exec.evalAlgoIf(asStmt)
 		default:
-			panic("")
+			execRet, _, err := exec.Stmt(stmt.(ast.Stmt))
+			if err != nil || !execRet.IsTrue() {
+				return nil, execRet
+			}
 		}
 	}
 
-	return nil, fmt.Errorf(fmt.Sprintf("There is no return value of %s", fcFn.String()))
+	return nil, NewExecErr(fmt.Sprintf("There is no return value of %s", fcFn.String()))
 }
 
 func (exec *Executor) fcfnParamsInFnDomain(fcFn *ast.FcFn) ExecRet {
 	ver := NewVerifier(exec.Env)
 	return ver.fcSatisfyFnRequirement(fcFn, Round0NoMsg)
+}
+
+func (exec *Executor) evalAlgoIf(stmt *ast.AlgoIfStmt) (ast.Fc, ExecRet) {
+	panic("")
 }
