@@ -15,7 +15,7 @@
 package litex_global
 
 func IsKeySymbol(name string) bool {
-	_, ok := symbolSet[name]
+	_, ok := SymbolSet[name]
 	return ok
 }
 
@@ -74,7 +74,7 @@ func GetKeySymbol(inputString string, start int) string {
 	// 检查3字符号
 	if start+3 <= len(inputString) {
 		candidate := inputString[start : start+3]
-		if _, ok := symbolSet[candidate]; ok {
+		if _, ok := SymbolSet[candidate]; ok {
 			return candidate
 		}
 	}
@@ -82,7 +82,7 @@ func GetKeySymbol(inputString string, start int) string {
 	// 再检查 2 字符符号
 	if start+2 <= len(inputString) {
 		candidate := inputString[start : start+2]
-		if _, ok := symbolSet[candidate]; ok {
+		if _, ok := SymbolSet[candidate]; ok {
 			return candidate
 		}
 	}
@@ -90,7 +90,7 @@ func GetKeySymbol(inputString string, start int) string {
 	// 再检查 1 字符符号
 	if start+1 <= len(inputString) {
 		candidate := inputString[start : start+1]
-		if _, ok := symbolSet[candidate]; ok {
+		if _, ok := SymbolSet[candidate]; ok {
 			return candidate
 		}
 	}

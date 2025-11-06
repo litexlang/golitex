@@ -26,6 +26,10 @@ type NumLitExpr struct {
 	Right       *NumLitExpr
 }
 
+func NewNumLitExpr(isPositive bool, left *NumLitExpr, optOrNumber string, right *NumLitExpr) *NumLitExpr {
+	return &NumLitExpr{IsPositive: isPositive, Left: left, OptOrNumber: optOrNumber, Right: right}
+}
+
 // evalNumLitExpr 计算表达式树，返回字符串形式的结果。如果发现不符合规定，返回错误
 // bool 表示基于现有的litex-rule，虽然说我不能说你对不对，但你至少没犯错，error表示你犯错了，比如1/0
 func (node *NumLitExpr) evalNumLitExpr() (string, bool, error) {
