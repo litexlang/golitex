@@ -37,16 +37,20 @@ func (exec *Executor) evalFc(fc ast.Fc) (ast.Fc, ExecRet) {
 	}
 }
 
+var basicArithOptMap = map[string]struct{}{
+	glob.KeySymbolPlus:    {},
+	glob.KeySymbolMinus:   {},
+	glob.KeySymbolStar:    {},
+	glob.KeySymbolSlash:   {},
+	glob.KeySymbolPower:   {},
+	glob.KeySymbolPercent: {},
+}
+
 // 可能返回数值的时候需要检查一下会不会除以0这种情况
 func (exec *Executor) evalFcFn(fc *ast.FcFn) (ast.Fc, ExecRet) {
 	if symbolValue := exec.Env.GetSymbolValue(fc); symbolValue != nil {
 		return symbolValue, NewExecTrue("")
 	}
-
-	basicArithOptMap := map[string]struct{}{}
-	basicArithOptMap[glob.KeySymbolPlus] = struct{}{}
-	basicArithOptMap[glob.KeySymbolMinus] = struct{}{}
-	basicArithOptMap[glob.KeySymbolStar] = struct{}{}
 
 	if ast.IsFcFnWithHeadNameInSlice(fc, basicArithOptMap) {
 		left, execRet := exec.evalFc(fc.Params[0])
@@ -57,7 +61,14 @@ func (exec *Executor) evalFcFn(fc *ast.FcFn) (ast.Fc, ExecRet) {
 		if !execRet.IsTrue() {
 			return nil, execRet
 		}
-		return ast.NewFcFn(fc.FnHead, []ast.Fc{left, right}), NewExecTrue("")
+
+		numericFc := ast.NewFcFn(fc.FnHead, []ast.Fc{left, right})
+		execRet = exec.fcfnParamsInFnDomain(numericFc)
+		if execRet.IsNotTrue() {
+			return nil, NewExecErr(fmt.Sprintf("%s = %s is invalid", fc, numericFc))
+		}
+
+		return numericFc, NewExecTrue("")
 	}
 
 	if ok := exec.Env.IsFnWithDefinedAlgo(fc); ok {
