@@ -17,48 +17,11 @@ package litex_comparator
 import (
 	ast "golitex/ast"
 	glob "golitex/glob"
+	parser "golitex/parser"
 )
 
-func NumLitExprToFc(numLitExpr *glob.NumLitExpr) ast.Fc {
-	if numLitExpr.IsPositive {
-		if numLitExpr.Left == nil && numLitExpr.Right == nil {
-			return ast.FcAtom(numLitExpr.OptOrNumber)
-		} else {
-			_, got := glob.SymbolSet[numLitExpr.OptOrNumber]
-			if got {
-				leftAsFc := NumLitExprToFc(numLitExpr.Left)
-				if leftAsFc == nil {
-					return nil
-				}
-
-				rightAsFc := NumLitExprToFc(numLitExpr.Right)
-				if rightAsFc == nil {
-					return nil
-				}
-
-				return ast.NewFcFn(ast.FcAtom(numLitExpr.OptOrNumber), []ast.Fc{leftAsFc, rightAsFc})
-			} else {
-				return nil
-			}
-		}
-	} else {
-		positiveNumLitExpr := glob.NewNumLitExpr(true, numLitExpr.Left, numLitExpr.OptOrNumber, numLitExpr.Right)
-		positiveNumLitExprAsFc := NumLitExprToFc(positiveNumLitExpr)
-		if positiveNumLitExprAsFc == nil {
-			return nil
-		} else {
-			return ast.NewFcFn(ast.FcAtom(glob.KeySymbolStar), []ast.Fc{ast.FcAtom("-1"), positiveNumLitExprAsFc})
-		}
-	}
-}
-
 func IsNumExprFc_SimplifyIt(fc ast.Fc) ast.Fc {
-	numLitExpr, ok, err := ast.MakeFcIntoNumLitExpr(fc)
-	if err != nil || !ok {
-		return nil
-	}
-
-	return NumLitExprToFc(numLitExpr)
+	return parser.IsNumExprFc_SimplifyIt(fc)
 }
 
 func CmpBy_Literally_NumLit_PolynomialArith(left, right ast.Fc) (bool, string, error) {

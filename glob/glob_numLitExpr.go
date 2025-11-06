@@ -30,9 +30,9 @@ func NewNumLitExpr(isPositive bool, left *NumLitExpr, optOrNumber string, right 
 	return &NumLitExpr{IsPositive: isPositive, Left: left, OptOrNumber: optOrNumber, Right: right}
 }
 
-// evalNumLitExpr 计算表达式树，返回字符串形式的结果。如果发现不符合规定，返回错误
+// EvalNumLitExpr 计算表达式树，返回字符串形式的结果。如果发现不符合规定，返回错误
 // bool 表示基于现有的litex-rule，虽然说我不能说你对不对，但你至少没犯错，error表示你犯错了，比如1/0
-func (node *NumLitExpr) evalNumLitExpr() (string, bool, error) {
+func (node *NumLitExpr) EvalNumLitExpr() (string, bool, error) {
 	// Leaf node
 	if node.Left == nil && node.Right == nil {
 		value := node.OptOrNumber
@@ -46,7 +46,7 @@ func (node *NumLitExpr) evalNumLitExpr() (string, bool, error) {
 		return value, true, nil
 	}
 
-	leftVal, ok, err := (node.Left).evalNumLitExpr()
+	leftVal, ok, err := (node.Left).EvalNumLitExpr()
 	if err != nil {
 		return "", false, err
 	}
@@ -54,7 +54,7 @@ func (node *NumLitExpr) evalNumLitExpr() (string, bool, error) {
 		return "", false, nil
 	}
 
-	rightVal, ok, err := (node.Right).evalNumLitExpr()
+	rightVal, ok, err := (node.Right).EvalNumLitExpr()
 	if err != nil {
 		return "", false, err
 	}
@@ -121,7 +121,7 @@ func (node *NumLitExpr) evalNumLitExpr() (string, bool, error) {
 }
 
 func NumLitExprEqual_ByEval(leftAsNumLitExpr *NumLitExpr, rightAsNumLitExpr *NumLitExpr) (bool, error) {
-	leftAsStr, ok, err := (leftAsNumLitExpr).evalNumLitExpr()
+	leftAsStr, ok, err := (leftAsNumLitExpr).EvalNumLitExpr()
 	if err != nil {
 		return false, err
 	}
@@ -129,7 +129,7 @@ func NumLitExprEqual_ByEval(leftAsNumLitExpr *NumLitExpr, rightAsNumLitExpr *Num
 		return false, nil
 	}
 
-	rightAsStr, ok, err := (rightAsNumLitExpr).evalNumLitExpr()
+	rightAsStr, ok, err := (rightAsNumLitExpr).EvalNumLitExpr()
 	if err != nil {
 		return false, err
 	}
@@ -145,7 +145,7 @@ func NumLitExprEqual_ByEval(leftAsNumLitExpr *NumLitExpr, rightAsNumLitExpr *Num
 }
 
 func NumLitExprCompareOpt(left *NumLitExpr, right *NumLitExpr, builtinLogicOpt string) (bool, error) {
-	leftEvaluated, ok, err := (left).evalNumLitExpr()
+	leftEvaluated, ok, err := (left).EvalNumLitExpr()
 	if err != nil {
 		return false, err
 	}
@@ -153,7 +153,7 @@ func NumLitExprCompareOpt(left *NumLitExpr, right *NumLitExpr, builtinLogicOpt s
 		return false, nil
 	}
 
-	rightEvaluated, ok, err := (right).evalNumLitExpr()
+	rightEvaluated, ok, err := (right).EvalNumLitExpr()
 	if err != nil {
 		return false, err
 	}
@@ -191,7 +191,7 @@ func NumLitExprCompareOpt(left *NumLitExpr, right *NumLitExpr, builtinLogicOpt s
 
 // 不能是小数，不能有负号
 func IsNatNumLitExpr(numLitExpr *NumLitExpr) bool {
-	str, ok, err := numLitExpr.evalNumLitExpr()
+	str, ok, err := numLitExpr.EvalNumLitExpr()
 	if err != nil {
 		return false
 	}
@@ -211,7 +211,7 @@ func IsNatNumLitExpr(numLitExpr *NumLitExpr) bool {
 }
 
 func IsNPosNumLitExpr(numLitExpr *NumLitExpr) bool {
-	str, ok, err := numLitExpr.evalNumLitExpr()
+	str, ok, err := numLitExpr.EvalNumLitExpr()
 	if err != nil {
 		return false
 	}
@@ -235,7 +235,7 @@ func IsNPosNumLitExpr(numLitExpr *NumLitExpr) bool {
 }
 
 func IsIntegerNumLitExpr(numLitExpr *NumLitExpr) bool {
-	str, ok, err := numLitExpr.evalNumLitExpr()
+	str, ok, err := numLitExpr.EvalNumLitExpr()
 	if err != nil {
 		return false
 	}
