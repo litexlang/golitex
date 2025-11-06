@@ -393,15 +393,22 @@ func (env *Env) StoreTrueEqualValues(key, value ast.Fc) {
 	env.SymbolValueMem[key.String()] = value
 }
 
+func simplifyNumExprFc(fc ast.Fc) ast.Fc {
+	simplifiedNumExprFc := cmp.IsNumExprFc_SimplifyIt(fc)
+	return simplifiedNumExprFc
+}
+
 func (env *Env) storeSymbolValue(left, right ast.Fc) error {
 	_, newLeft := env.ReplaceSymbolWithValue(left)
 	if cmp.IsNumLitFc(newLeft) {
-		env.StoreTrueEqualValues(right, newLeft)
+		simplifiedNewLeft := simplifyNumExprFc(newLeft)
+		env.StoreTrueEqualValues(right, simplifiedNewLeft)
 	}
 
 	_, newRight := env.ReplaceSymbolWithValue(right)
 	if cmp.IsNumLitFc(newRight) {
-		env.StoreTrueEqualValues(left, newRight)
+		simplifiedNewRight := simplifyNumExprFc(newRight)
+		env.StoreTrueEqualValues(left, simplifiedNewRight)
 	}
 
 	return nil
