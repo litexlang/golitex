@@ -22,30 +22,30 @@ import (
 )
 
 type Verifier struct {
-	env *env.Env
+	Env *env.Env
 }
 
 func NewVerifier(curEnv *env.Env) *Verifier {
 	if curEnv == nil {
-		return &Verifier{env: env.NewEnv(nil)}
+		return &Verifier{Env: env.NewEnv(nil)}
 	} else {
-		return &Verifier{env: curEnv}
+		return &Verifier{Env: curEnv}
 	}
 }
 
 func (ver *Verifier) newEnv(parent *env.Env) {
 	newEnv := env.NewEnv(parent)
-	ver.env = newEnv
+	ver.Env = newEnv
 }
 
 func (ver *Verifier) deleteEnvAndRetainMsg() error {
-	if ver.env.Parent != nil {
-		for _, msg := range ver.env.Msgs {
+	if ver.Env.Parent != nil {
+		for _, msg := range ver.Env.Msgs {
 			if glob.RequireMsg() {
-				ver.env.Parent.Msgs = append(ver.env.Parent.Msgs, msg)
+				ver.Env.Parent.Msgs = append(ver.Env.Parent.Msgs, msg)
 			}
 		}
-		ver.env = ver.env.Parent
+		ver.Env = ver.Env.Parent
 		return nil
 	} else {
 		return fmt.Errorf("parent env does not exist")
@@ -53,8 +53,8 @@ func (ver *Verifier) deleteEnvAndRetainMsg() error {
 }
 
 func (ver *Verifier) deleteEnv_DeleteMsg() error {
-	if ver.env.Parent != nil {
-		ver.env = ver.env.Parent
+	if ver.Env.Parent != nil {
+		ver.Env = ver.Env.Parent
 		return nil
 	} else {
 		return fmt.Errorf("parent env does not exist")

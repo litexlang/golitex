@@ -21,7 +21,7 @@ import (
 )
 
 func (ver *Verifier) verByReplaceFcInSpecFactWithValue(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	replaced, newStmt := ver.env.ReplaceFcInSpecFactWithValue(stmt)
+	replaced, newStmt := ver.Env.ReplaceFcInSpecFactWithValue(stmt)
 	if replaced {
 		verRet := ver.verTrueEqualFactMainLogic(newStmt, state, true)
 		if verRet.IsErr() {
@@ -58,7 +58,7 @@ func (ver *Verifier) verByReplaceFcInSpecFactWithValue(stmt *ast.SpecFactStmt, s
 }
 
 func (ver *Verifier) verByReplaceFcInSpecFactWithValueAndCompute(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	replaced, newStmt := ver.env.ReplaceFcInSpecFactWithValue(stmt)
+	replaced, newStmt := ver.Env.ReplaceFcInSpecFactWithValue(stmt)
 
 	if replaced {
 		verRet := ver.verTrueEqualFactMainLogic(newStmt, state, true)

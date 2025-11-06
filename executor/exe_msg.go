@@ -19,26 +19,26 @@ import (
 )
 
 func (e *Executor) deleteEnvAndRetainMsg() {
-	for _, msg := range e.env.Msgs {
+	for _, msg := range e.Env.Msgs {
 		if glob.RequireMsg() {
-			e.env.Parent.Msgs = append(e.env.Parent.Msgs, msg)
+			e.Env.Parent.Msgs = append(e.Env.Parent.Msgs, msg)
 		}
 	}
-	e.env = e.env.Parent
+	e.Env = e.Env.Parent
 }
 
 func (e *Executor) newMsg(msg string) {
-	e.env.Msgs = append(e.env.Msgs, msg)
+	e.Env.Msgs = append(e.Env.Msgs, msg)
 }
 
 func (e *Executor) appendNewMsgAtBegin(msg string) {
-	e.env.Msgs = append([]string{msg}, e.env.Msgs...)
+	e.Env.Msgs = append([]string{msg}, e.Env.Msgs...)
 }
 
 func (e *Executor) ClearMsgs() {
-	e.env.Msgs = []string{}
+	e.Env.Msgs = []string{}
 }
 
 func (e *Executor) deleteEnvAndGiveUpMsgs() {
-	e.env = e.env.Parent
+	e.Env = e.Env.Parent
 }

@@ -908,3 +908,7 @@ func (s *AlgoReturnStmt) ToLatexString() string {
 func (s *AlgoDefStmt) ToLatexString() string {
 	return s.String()
 }
+
+func (s *EvalStmt) ToLatexString() string {
+	return fmt.Sprintf("%s %s", glob.KeywordEval, s.Value.ToLatexString())
+}
