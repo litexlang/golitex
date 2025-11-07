@@ -903,7 +903,7 @@ func (s *AlgoReturnStmt) ToLatexString() string {
 	return s.String()
 }
 
-func (s *AlgoDefStmt) ToLatexString() string {
+func (s *DefAlgoStmt) ToLatexString() string {
 	return s.String()
 }
 

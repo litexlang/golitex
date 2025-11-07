@@ -72,7 +72,7 @@ type Env struct {
 	TransitivePropMem  map[string]map[string][]ast.Fc
 	CommutativePropMem map[string]*PropCommutativeCase
 
-	AlgoDefMem map[string]*ast.AlgoDefStmt
+	AlgoDefMem map[string]*ast.DefAlgoStmt
 }
 
 type PropCommutativeCase struct {
@@ -118,7 +118,7 @@ func NewEnv(parent *Env) *Env {
 		SymbolSimplifiedValueMem: make(map[string]ast.Fc),
 		TransitivePropMem:        make(map[string]map[string][]ast.Fc),
 		CommutativePropMem:       make(map[string]*PropCommutativeCase),
-		AlgoDefMem:               make(map[string]*ast.AlgoDefStmt),
+		AlgoDefMem:               make(map[string]*ast.DefAlgoStmt),
 	}
 	return env
 }

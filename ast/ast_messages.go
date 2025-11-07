@@ -1068,7 +1068,7 @@ func (stmt *AlgoReturnStmt) String() string {
 	return fmt.Sprintf("%s %s", glob.KeywordReturn, stmt.Value.String())
 }
 
-func (stmt *AlgoDefStmt) String() string {
+func (stmt *DefAlgoStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordAlgo)
 	builder.WriteString(" ")
@@ -1135,9 +1135,36 @@ func (stmt *EvalStmt) String() string {
 }
 
 func (stmt *DefProveAlgoStmt) String() string {
-	panic("not implemented")
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordProveAlgo)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.ProveAlgoName)
+	builder.WriteString("(")
+	builder.WriteString(stmt.Params.String())
+	builder.WriteString(")")
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+	strSlice := make([]string, len(stmt.Stmts))
+	for i, stmt := range stmt.Stmts {
+		strSlice[i] = stmt.String()
+	}
+	builder.WriteString(strings.Join(strSlice, "\n"))
+	return builder.String()
 }
 
 func (stmt *ByStmt) String() string {
-	panic("not implemented")
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordBy)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.ProveAlgoName)
+	builder.WriteString("(")
+	builder.WriteString(stmt.ProveAlgoParams.String())
+	builder.WriteString(")")
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+	for _, fact := range stmt.ThenFacts {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 1))
+		builder.WriteByte('\n')
+	}
+	return builder.String()
 }

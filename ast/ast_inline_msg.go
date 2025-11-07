@@ -344,7 +344,7 @@ func (s *AlgoReturnStmt) InlineString() string {
 	return "TODO"
 }
 
-func (s *AlgoDefStmt) InlineString() string {
+func (s *DefAlgoStmt) InlineString() string {
 	return "TODO"
 }
 
