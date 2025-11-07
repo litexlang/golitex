@@ -20,7 +20,7 @@ import (
 	parser "golitex/parser"
 )
 
-func IsNumExprFc_SimplifyIt(fc ast.Fc) ast.Fc {
+func IsNumExprFcThenSimplify(fc ast.Fc) ast.Fc {
 	return parser.IsNumExprFc_SimplifyIt(fc)
 }
 

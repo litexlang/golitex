@@ -390,11 +390,11 @@ func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 }
 
 func (env *Env) StoreTrueEqualValues(key, value ast.Fc) {
-	env.SymbolValueMem[key.String()] = value
+	env.SymbolSimplifiedValueMem[key.String()] = value
 }
 
 func simplifyNumExprFc(fc ast.Fc) ast.Fc {
-	simplifiedNumExprFc := cmp.IsNumExprFc_SimplifyIt(fc)
+	simplifiedNumExprFc := cmp.IsNumExprFcThenSimplify(fc)
 	return simplifiedNumExprFc
 }
 
