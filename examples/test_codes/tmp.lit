@@ -1,13 +1,11 @@
-exist_prop z st exist_z(f fn(R) R, x R, y R):
-    <=>:
-        f((x + z)) = y
+exist_prop z R st exist_z(f fn(R) R, x R, y R):
+    f(x + z) = y
 
-exist_prop f st exist_f(x R):
-    <=>:
-        forall y R:
-            $exist_z(f, x, y)
+exist_prop f fn(R) R st exist_f(x R):
+    forall y R:
+        $exist_z(f, x, y)
 
-have f(x R) R = x
+have fn f(x R) R = x
 
 claim:
     forall x R:
@@ -17,5 +15,5 @@ claim:
             forall y R:
                 $exist_z(f, x, y)
             prove:
-                exist (y - x) st $exist_z(f, x, y)
+                exist y - x st $exist_z(f, x, y)
         exist f st $exist_f(x)
