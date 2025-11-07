@@ -1168,3 +1168,16 @@ func (stmt *ByStmt) String() string {
 	}
 	return builder.String()
 }
+
+func (stmt *ProveAlgoReturnStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordReturn)
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeywordBy)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.ProveAlgoName)
+	builder.WriteString(glob.KeySymbolLeftBrace)
+	builder.WriteString(stmt.Params.String())
+	builder.WriteString(glob.KeySymbolRightBrace)
+	return builder.String()
+}

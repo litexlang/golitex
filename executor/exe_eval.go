@@ -165,8 +165,10 @@ func (exec *Executor) runAlgoStmtsWhenEval(algoStmts ast.AlgoStmtSlice, fcFnWith
 			if conditionIsTrue, execRet := exec.IsAlgoIfConditionTrue(asStmt); execRet.IsNotTrue() {
 				return nil, execRet
 			} else if conditionIsTrue {
-				return exec.evalAlgoIf(asStmt, fcFnWithValueParams)
+				return exec.runAlgoIf(asStmt, fcFnWithValueParams)
 			}
+		case *ast.ProveAlgoReturnStmt:
+			return nil, NewExecErr(fmt.Sprintf("There can not be return by statements in algo, get %s", asStmt.String()))
 		default:
 			execRet, _, err := exec.Stmt(stmt.(ast.Stmt))
 			if err != nil || execRet.IsNotTrue() {
@@ -219,7 +221,7 @@ func (exec *Executor) IsAlgoIfConditionTrue(stmt *ast.AlgoIfStmt) (bool, ExecRet
 	return true, NewExecTrue("")
 }
 
-func (exec *Executor) evalAlgoIf(stmt *ast.AlgoIfStmt, fcFnWithValueParams *ast.FcFn) (ast.Fc, ExecRet) {
+func (exec *Executor) runAlgoIf(stmt *ast.AlgoIfStmt, fcFnWithValueParams *ast.FcFn) (ast.Fc, ExecRet) {
 	exec.NewEnv(exec.Env)
 	defer exec.deleteEnvAndGiveUpMsgs()
 

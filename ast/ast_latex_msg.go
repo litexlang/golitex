@@ -922,3 +922,7 @@ func (s *DefProveAlgoStmt) ToLatexString() string {
 func (s *ByStmt) ToLatexString() string {
 	return s.String()
 }
+
+func (s *ProveAlgoReturnStmt) ToLatexString() string {
+	return s.String()
+}
