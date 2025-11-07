@@ -143,7 +143,7 @@ func (exec *Executor) useAlgoToEvalFcFnThenSimplify(fcFn *ast.FcFn) (ast.Fc, Exe
 		return nil, NewExecErrWithErr(err)
 	}
 
-	value, execRet := exec.runAlgoStmts(instAlgoDef.(*ast.DefAlgoStmt).Stmts, fcFnWithValueParams)
+	value, execRet := exec.runAlgoStmtsWhenEval(instAlgoDef.(*ast.DefAlgoStmt).Stmts, fcFnWithValueParams)
 	if execRet.IsNotTrue() {
 		return nil, execRet
 	}
@@ -151,7 +151,7 @@ func (exec *Executor) useAlgoToEvalFcFnThenSimplify(fcFn *ast.FcFn) (ast.Fc, Exe
 	return exec.simplifyNumExprFc(value)
 }
 
-func (exec *Executor) runAlgoStmts(algoStmts ast.AlgoStmtSlice, fcFnWithValueParams *ast.FcFn) (ast.Fc, ExecRet) {
+func (exec *Executor) runAlgoStmtsWhenEval(algoStmts ast.AlgoStmtSlice, fcFnWithValueParams *ast.FcFn) (ast.Fc, ExecRet) {
 	for _, stmt := range algoStmts {
 		switch asStmt := stmt.(type) {
 		case *ast.AlgoReturnStmt:
@@ -230,6 +230,6 @@ func (exec *Executor) evalAlgoIf(stmt *ast.AlgoIfStmt, fcFnWithValueParams *ast.
 		return nil, NewExecErrWithErr(err)
 	}
 
-	value, execRet := exec.runAlgoStmts(stmt.ThenStmts, fcFnWithValueParams)
+	value, execRet := exec.runAlgoStmtsWhenEval(stmt.ThenStmts, fcFnWithValueParams)
 	return value, execRet
 }

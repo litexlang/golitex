@@ -1158,7 +1158,7 @@ func (stmt *ByStmt) String() string {
 	builder.WriteString(" ")
 	builder.WriteString(stmt.ProveAlgoName)
 	builder.WriteString("(")
-	builder.WriteString(stmt.ProveAlgoParams.String())
+	builder.WriteString(stmt.Params.String())
 	builder.WriteString(")")
 	builder.WriteString(glob.KeySymbolColon)
 	builder.WriteByte('\n')
