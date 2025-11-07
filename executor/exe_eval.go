@@ -40,7 +40,11 @@ func (exec *Executor) evalFcThenSimplify(fc ast.Fc) (ast.Fc, ExecRet) {
 
 	switch asFc := fc.(type) {
 	case ast.FcAtom:
-		return exec.evalFcAtomThenSimplify(asFc)
+		symbolValue := exec.Env.GetSymbolSimplifiedValue(fc)
+		if symbolValue == nil {
+			return nil, NewExecErr(fmt.Sprintf("symbol %s has no value", fc.String()))
+		}
+		return symbolValue, NewExecTrue("")
 	case *ast.FcFn:
 		return exec.evalFcFnThenSimplify(asFc)
 	default:
@@ -94,13 +98,11 @@ func (exec *Executor) evalFcFnThenSimplify(fc *ast.FcFn) (ast.Fc, ExecRet) {
 	return nil, NewExecUnknown("")
 }
 
-func (exec *Executor) evalFcAtomThenSimplify(fc ast.FcAtom) (ast.Fc, ExecRet) {
-	symbolValue := exec.Env.GetSymbolSimplifiedValue(fc)
-	return symbolValue, NewExecTrue("")
-}
-
 func (exec *Executor) useAlgoToEvalFcFnThenSimplify(fcFn *ast.FcFn) (ast.Fc, ExecRet) {
 	algoDef := exec.Env.GetAlgoDef(fcFn.FnHead.String())
+	if algoDef == nil {
+		return nil, NewExecErr(fmt.Sprintf("algo %s is not found", fcFn.FnHead.String()))
+	}
 
 	if len(fcFn.Params) != len(algoDef.Params) {
 		return nil, NewExecErr(fmt.Sprintf("algorithm %s requires %d parameters, get %d instead", algoDef.FuncName, len(algoDef.Params), len(fcFn.Params)))
@@ -114,7 +116,7 @@ func (exec *Executor) useAlgoToEvalFcFnThenSimplify(fcFn *ast.FcFn) (ast.Fc, Exe
 
 	for _, param := range algoDef.Params {
 		if exec.Env.IsAtomDeclared(ast.FcAtom(param), map[string]struct{}{}) {
-			panic("TODO: 之后如果外面已经弄过了，那就遍历地变成无重复的随机符号")
+			panic("TODO: 之后如果外面已经弄过了，那就遍历地变成无重复的随机符号。之所以这里要panic是因为，可能用户在algo def 里面声明了和外面同名的符号")
 		}
 	}
 
