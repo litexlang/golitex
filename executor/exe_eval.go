@@ -83,8 +83,7 @@ func (exec *Executor) evalFcFnThenSimplify(fc *ast.FcFn) (ast.Fc, ExecRet) {
 	}
 
 	if ok := exec.Env.IsFnWithDefinedAlgo(fc); ok {
-		algoDef := exec.Env.GetAlgoDef(fc.FnHead.String())
-		numExprFc, execRet := exec.useAlgoToEvalFcFnThenSimplify(algoDef, fc)
+		numExprFc, execRet := exec.useAlgoToEvalFcFnThenSimplify(fc)
 		if execRet.IsNotTrue() {
 			return nil, execRet
 		}
@@ -100,7 +99,9 @@ func (exec *Executor) evalFcAtomThenSimplify(fc ast.FcAtom) (ast.Fc, ExecRet) {
 	return symbolValue, NewExecTrue("")
 }
 
-func (exec *Executor) useAlgoToEvalFcFnThenSimplify(algoDef *ast.DefAlgoStmt, fcFn *ast.FcFn) (ast.Fc, ExecRet) {
+func (exec *Executor) useAlgoToEvalFcFnThenSimplify(fcFn *ast.FcFn) (ast.Fc, ExecRet) {
+	algoDef := exec.Env.GetAlgoDef(fcFn.FnHead.String())
+
 	if len(fcFn.Params) != len(algoDef.Params) {
 		return nil, NewExecErr(fmt.Sprintf("algorithm %s requires %d parameters, get %d instead", algoDef.FuncName, len(algoDef.Params), len(fcFn.Params)))
 	}
