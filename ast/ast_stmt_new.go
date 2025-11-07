@@ -300,6 +300,6 @@ func NewByStmt(proveAlgoName string, proveAlgoParams FcSlice, thenFacts FactStmt
 	return &ByStmt{proveAlgoName, proveAlgoParams, thenFacts, line}
 }
 
-func NewProveAlgoReturnStmt(proveAlgoName string, params FcSlice) *ProveAlgoReturnStmt {
-	return &ProveAlgoReturnStmt{ProveAlgoName: proveAlgoName, Params: params}
+func NewProveAlgoReturnStmt(proveAlgoName string, params FcSlice, line uint) *ProveAlgoReturnStmt {
+	return &ProveAlgoReturnStmt{proveAlgoName, params, line}
 }

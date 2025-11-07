@@ -718,6 +718,8 @@ func InstantiateAlgoStmt(stmt AlgoStmt, uniMap map[string]Fc) (AlgoStmt, error) 
 		return stmt.InstantiateAlgo(uniMap)
 	case *AlgoReturnStmt:
 		return stmt.InstantiateAlgo(uniMap)
+	case *ProveAlgoReturnStmt:
+		return stmt.InstantiateAlgo(uniMap)
 	case Stmt:
 		return stmt.Instantiate(uniMap)
 	}
@@ -819,4 +821,12 @@ func (stmt *ByStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
 		return nil, err
 	}
 	return NewByStmt(stmt.ProveAlgoName, newProveAlgoParams, newThenFacts, stmt.Line), nil
+}
+
+func (stmt *ProveAlgoReturnStmt) InstantiateAlgo(uniMap map[string]Fc) (AlgoStmt, error) {
+	newProveAlgoParams, err := stmt.Params.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewProveAlgoReturnStmt(stmt.ProveAlgoName, newProveAlgoParams, stmt.Line), nil
 }
