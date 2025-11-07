@@ -914,3 +914,11 @@ func (s *EvalStmt) ToLatexString() string {
 	}
 	return fmt.Sprintf("%s %s", glob.KeywordEval, strings.Join(strSlice, ", "))
 }
+
+func (s *DefProveAlgoStmt) ToLatexString() string {
+	return s.String()
+}
+
+func (s *ByStmt) ToLatexString() string {
+	return s.String()
+}

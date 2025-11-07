@@ -355,3 +355,11 @@ func (s *EvalStmt) InlineString() string {
 	}
 	return fmt.Sprintf("%s %s", glob.KeywordEval, strings.Join(strSlice, ", "))
 }
+
+func (s *DefProveAlgoStmt) InlineString() string {
+	return "TODO"
+}
+
+func (s *ByStmt) InlineString() string {
+	return "TODO"
+}
