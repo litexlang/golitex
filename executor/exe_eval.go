@@ -107,7 +107,7 @@ func (exec *Executor) useAlgoToEvalFcFnThenSimplify(algoDef *ast.AlgoDefStmt, fc
 
 	// 传入的参数真的在fn的domain里
 	execRet := exec.fcfnParamsInFnDomain(fcFn)
-	if !execRet.IsTrue() {
+	if execRet.IsNotTrue() {
 		return nil, NewExecErr(fmt.Sprintf("parameters of %s are not in domain of %s", fcFn, fcFn.FnHead))
 	}
 
@@ -153,20 +153,20 @@ func (exec *Executor) runAlgoStmts(algoStmts ast.AlgoSlice, fcFnWithValueParams 
 		switch asStmt := stmt.(type) {
 		case *ast.AlgoReturnStmt:
 			execRet, err := exec.factStmt(ast.EqualFact(fcFnWithValueParams, asStmt.Value))
-			if err != nil || !execRet.IsTrue() {
+			if err != nil || execRet.IsNotTrue() {
 				return nil, execRet
 			}
 			numExprFc, execRet := exec.evalFcThenSimplify(asStmt.Value)
 			return numExprFc, execRet
 		case *ast.AlgoIfStmt:
-			if conditionIsTrue, execRet := exec.IsAlgoIfConditionTrue(asStmt); !execRet.IsTrue() {
+			if conditionIsTrue, execRet := exec.IsAlgoIfConditionTrue(asStmt); execRet.IsNotTrue() {
 				return nil, execRet
 			} else if conditionIsTrue {
 				return exec.evalAlgoIf(asStmt, fcFnWithValueParams)
 			}
 		default:
 			execRet, _, err := exec.Stmt(stmt.(ast.Stmt))
-			if err != nil || !execRet.IsTrue() {
+			if err != nil || execRet.IsNotTrue() {
 				return nil, execRet
 			}
 		}
@@ -205,7 +205,7 @@ func (exec *Executor) IsAlgoIfConditionTrue(stmt *ast.AlgoIfStmt) (bool, ExecRet
 				return false, NewExecErrWithErr(err)
 			}
 
-			if !execRet.IsTrue() {
+			if execRet.IsNotTrue() {
 				return false, NewExecErr(fmt.Sprintf("%s is unknown. Negation of it is also unknown. Fail to verify condition of if statement:\n%s", fact, stmt))
 			}
 		}
