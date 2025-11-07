@@ -418,9 +418,9 @@ type DefProveAlgoStmt struct {
 }
 
 type ByStmt struct {
-	ProveAlgoName   string
-	ProveAlgoParams FcSlice
-	ThenFacts       FactStmtSlice
+	ProveAlgoName string
+	Params        FcSlice
+	ThenFacts     FactStmtSlice
 
 	Line uint
 }

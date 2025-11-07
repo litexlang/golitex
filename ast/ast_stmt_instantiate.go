@@ -810,7 +810,7 @@ func (stmt *DefProveAlgoStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
 }
 
 func (stmt *ByStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
-	newProveAlgoParams, err := stmt.ProveAlgoParams.Instantiate(uniMap)
+	newProveAlgoParams, err := stmt.Params.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}
