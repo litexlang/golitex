@@ -927,15 +927,31 @@ func (exec *Executor) algoDefStmt(stmt *ast.AlgoDefStmt) (ExecRet, error) {
 }
 
 func (exec *Executor) evalStmt(stmt *ast.EvalStmt) ExecRet {
-	value, execRet := exec.evalFcThenSimplify(stmt.Value)
+	trueEvalRet := NewExecTrue("")
+
+	for _, fcToEval := range stmt.FcsToEval {
+		value, execRet := exec.evalFcInLocalEnv(fcToEval)
+		if execRet.IsNotTrue() {
+			return execRet
+		}
+		err := exec.Env.NewFact(ast.NewEqualFact(fcToEval, value))
+		if err != nil {
+			return NewExecErrWithErr(err)
+		}
+		trueEvalRet.Inherit(execRet)
+	}
+
+	return trueEvalRet.NewVerMsgAtBegin(Round0Msg, stmt.String())
+}
+
+func (exec *Executor) evalFcInLocalEnv(fcToEval ast.Fc) (ast.Fc, ExecRet) {
+	exec.NewEnv(exec.Env)
+	defer exec.deleteEnvAndRetainMsg()
+
+	value, execRet := exec.evalFcThenSimplify(fcToEval)
 	if execRet.IsNotTrue() {
-		return execRet
+		return nil, execRet
 	}
 
-	err := exec.Env.NewFact(ast.NewEqualFact(stmt.Value, value))
-	if err != nil {
-		return NewExecErrWithErr(err)
-	}
-
-	return NewExecTrue(fmt.Sprintf("By evaluation: %s\nWe get %s = %s", stmt.String(), stmt.Value.String(), value.String()))
+	return value, NewExecTrue(fmt.Sprintf("By evaluation of algo %s\nWe get %s = %s\n", fcToEval.(*ast.FcFn).FnHead.String(), fcToEval.String(), value.String()))
 }
