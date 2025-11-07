@@ -32,7 +32,7 @@ func (exec *Executor) simplifyNumExprFc(fc ast.Fc) (ast.Fc, ExecRet) {
 
 // 这里 bool 表示，是否启动过 用algo 计算；如果仅仅是用 algo 来计算，那是不会返回true的
 func (exec *Executor) evalFcThenSimplify(fc ast.Fc) (ast.Fc, ExecRet) {
-	fmt.Println(fc)
+	// fmt.Println(fc)
 
 	if cmp.IsNumLitFc(fc) {
 		return exec.simplifyNumExprFc(fc)

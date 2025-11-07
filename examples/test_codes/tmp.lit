@@ -1,20 +1,21 @@
-fn f(x R) R
-know:
-    f(0) = 0
-    forall n R: f(n) = f(n - 1) + 1
+exist_prop z st exist_z(f fn(R) R, x R, y R):
+    <=>:
+        f((x + z)) = y
 
-algo f(x):
-    if x = 0:
-        return 0
-    if x > 0:
-        return f(x - 1) + 1 
-    if x < 0:
-        f(x+1) = f(x+1-1) + 1 = f(x) + 1
-        f(x) = f(x+1) - 1
-        return f(x+1) - 1
+exist_prop f st exist_f(x R):
+    <=>:
+        forall y R:
+            $exist_z(f, x, y)
 
-have a, b R = 3, -1
+have f(x R) R = x
 
-
-eval f(100)
-f(100) =100
+claim:
+    forall x R:
+        $exist_f(x)
+    prove:
+        claim:
+            forall y R:
+                $exist_z(f, x, y)
+            prove:
+                exist (y - x) st $exist_z(f, x, y)
+        exist f st $exist_f(x)
