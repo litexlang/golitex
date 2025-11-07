@@ -324,9 +324,9 @@ func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) (ExecRet,
 	}
 
 	// declare exist prop
-	err = exec.defExistPropStmt(stmt.ExistPropWithoutDom)
-	if err != nil {
-		return NewExecErr(""), err
+	execState = exec.defExistPropStmt(stmt.ExistPropWithoutDom)
+	if execState.IsNotTrue() {
+		return execState, fmt.Errorf("failed to declare exist prop: %s", stmt.ExistPropWithoutDom.String())
 	}
 
 	// know forall
