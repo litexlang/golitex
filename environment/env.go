@@ -67,7 +67,7 @@ type Env struct {
 
 	IntensionalSetMem map[string]ast.IntensionalSetStmt
 
-	SymbolValueMem map[string]ast.Fc
+	SymbolSimplifiedValueMem map[string]ast.Fc
 
 	TransitivePropMem  map[string]map[string][]ast.Fc
 	CommutativePropMem map[string]*PropCommutativeCase
@@ -103,22 +103,22 @@ func (env *Env) GetSecondUpMostEnv() *Env {
 
 func NewEnv(parent *Env) *Env {
 	env := &Env{
-		Parent:                 parent,
-		Msgs:                   glob.Msgs{},
-		ObjDefMem:              make(ObjDefMem),
-		PropDefMem:             make(PropDefMem),
-		FnTemplateDefMem:       make(FnTemplateDefMem),
-		FnInFnTemplateFactsMem: make(FnInFnTMem),
-		ExistPropDefMem:        make(ExistPropDefMem),
-		KnownFactsStruct:       makeKnownFactsStruct(),
-		EqualMem:               make(map[string]shared_ptr_to_slice_of_fc),
-		EnumFacts:              make(map[string][]ast.Fc),
-		HaveSetFnDefMem:        make(HaveSetFnDefMem),
-		IntensionalSetMem:      make(map[string]ast.IntensionalSetStmt),
-		SymbolValueMem:         make(map[string]ast.Fc),
-		TransitivePropMem:      make(map[string]map[string][]ast.Fc),
-		CommutativePropMem:     make(map[string]*PropCommutativeCase),
-		AlgoDefMem:             make(map[string]*ast.AlgoDefStmt),
+		Parent:                   parent,
+		Msgs:                     glob.Msgs{},
+		ObjDefMem:                make(ObjDefMem),
+		PropDefMem:               make(PropDefMem),
+		FnTemplateDefMem:         make(FnTemplateDefMem),
+		FnInFnTemplateFactsMem:   make(FnInFnTMem),
+		ExistPropDefMem:          make(ExistPropDefMem),
+		KnownFactsStruct:         makeKnownFactsStruct(),
+		EqualMem:                 make(map[string]shared_ptr_to_slice_of_fc),
+		EnumFacts:                make(map[string][]ast.Fc),
+		HaveSetFnDefMem:          make(HaveSetFnDefMem),
+		IntensionalSetMem:        make(map[string]ast.IntensionalSetStmt),
+		SymbolSimplifiedValueMem: make(map[string]ast.Fc),
+		TransitivePropMem:        make(map[string]map[string][]ast.Fc),
+		CommutativePropMem:       make(map[string]*PropCommutativeCase),
+		AlgoDefMem:               make(map[string]*ast.AlgoDefStmt),
 	}
 	return env
 }
