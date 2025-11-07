@@ -133,9 +133,9 @@ func (exec *Executor) algoIfStmtWhenBy(stmt *ast.AlgoIfStmt, paramsValues []ast.
 	defer exec.deleteEnvAndGiveUpMsgs()
 
 	knowStmt := ast.NewKnowStmt(stmt.Conditions.ToCanBeKnownStmtSlice(), stmt.GetLine())
-	err := exec.knowStmt(knowStmt)
-	if err != nil {
-		return NewExecErrWithErr(err)
+	execRet := exec.knowStmt(knowStmt)
+	if execRet.IsNotTrue() {
+		return execRet
 	}
 
 	return exec.runAlgoStmtsWhenBy(stmt.ThenStmts, paramsValues)

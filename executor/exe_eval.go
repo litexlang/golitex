@@ -227,9 +227,9 @@ func (exec *Executor) algoIfStmtWhenEval(stmt *ast.AlgoIfStmt, fcFnWithValuePara
 
 	// all conditions are true
 	knowStmt := ast.NewKnowStmt(stmt.Conditions.ToCanBeKnownStmtSlice(), stmt.GetLine())
-	err := exec.knowStmt(knowStmt)
-	if err != nil {
-		return nil, NewExecErrWithErr(err)
+	execRet := exec.knowStmt(knowStmt)
+	if execRet.IsNotTrue() {
+		return nil, execRet
 	}
 
 	value, execRet := exec.runAlgoStmtsWhenEval(stmt.ThenStmts, fcFnWithValueParams)

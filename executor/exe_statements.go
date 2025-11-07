@@ -31,7 +31,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (ExecRet, string, error) {
 		execState, err = exec.factStmt(stmt)
 	case *ast.KnowFactStmt:
 		exec.newMsg("Warning: `know` is design in such a way that it is possible to introduce invalid facts without verification If you want to introduce default facts, then use it; otherwise, use it carefully.")
-		err = exec.knowStmt(stmt)
+		execState = exec.knowStmt(stmt)
 	case *ast.KnowPropStmt:
 		exec.newMsg("Warning: `know @` is design in such a way that it is possible to introduce invalid facts without verification If you want to introduce default facts, then use it; otherwise, use it carefully.")
 		err = exec.knowPropStmt(stmt)
@@ -169,33 +169,33 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) (ExecRet, error) {
 }
 
 // TODO: 再know时就检查，仅仅依赖写在dom里的事实，是否真的能让涉及到的函数和prop能真的满足条件。如果不满足条件，那就warning
-func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) error {
+func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) ExecRet {
 	for _, fact := range stmt.Facts {
 		switch fact := fact.(type) {
 		case ast.FactStmt:
 			if !exec.Env.AreAtomsInFactAreDeclared(fact, map[string]struct{}{}) {
-				return fmt.Errorf(env.AtomsInFactNotDeclaredMsg(fact))
+				return NewExecErr(env.AtomsInFactNotDeclaredMsg(fact))
 			}
 
 			err := exec.Env.NewFact(fact)
 			if err != nil {
-				return err
+				return NewExecErr(err.Error())
 			}
 
 		case *ast.KnowPropStmt:
 			err := exec.knowPropStmt(fact)
 			if err != nil {
-				return err
+				return NewExecErr(err.Error())
 			}
 		default:
-			return fmt.Errorf("unknown fact type: %T", fact)
+			return NewExecErr(fmt.Sprintf("unknown fact type: %T", fact))
 		}
 	}
 
 	if glob.RequireMsg() {
 		exec.newMsg(fmt.Sprintf("%s\n", stmt.String()))
 	}
-	return nil
+	return NewExecTrue(fmt.Sprintf("%s\n", stmt.String()))
 }
 
 func (exec *Executor) GetMsgAsStr0ToEnd() string {
@@ -336,9 +336,9 @@ func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) (ExecRe
 	}
 
 	// emit then fact
-	err = exec.knowStmt(ast.NewKnowStmt(stmt.ThenFacts.ToCanBeKnownStmtSlice(), stmt.Line))
-	if err != nil {
-		return NewExecErr(""), err
+	execState = exec.knowStmt(ast.NewKnowStmt(stmt.ThenFacts.ToCanBeKnownStmtSlice(), stmt.Line))
+	if execState.IsNotTrue() {
+		return execState, fmt.Errorf("failed to know statement: %s", stmt.String())
 	}
 
 	isSuccess = true
