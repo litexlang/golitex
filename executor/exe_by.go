@@ -118,12 +118,12 @@ func (exec *Executor) runAlgoStmtsWhenProveByProveAlgo(algoStmts ast.AlgoStmtSli
 	for _, stmt := range algoStmts {
 		switch asStmt := stmt.(type) {
 		case *ast.ProveAlgoReturnStmt:
-			panic("")
+			return exec.runProveAlgoReturnStmt(asStmt)
 		case *ast.AlgoIfStmt:
 			if conditionIsTrue, execRet := exec.IsAlgoIfConditionTrue(asStmt); execRet.IsNotTrue() {
 				return execRet
 			} else if conditionIsTrue {
-				return exec.runProveAlgoIf(asStmt, paramsValues)
+				return exec.algoIfStmtWhenBy(asStmt, paramsValues)
 			}
 		case *ast.AlgoReturnStmt:
 			return NewExecErr(fmt.Sprintf("There can not be return value statements in algo. Use return eval instead .Get %s", asStmt.String()))
@@ -138,7 +138,7 @@ func (exec *Executor) runAlgoStmtsWhenProveByProveAlgo(algoStmts ast.AlgoStmtSli
 	return NewExecErr("There is no return of prove algo")
 }
 
-func (exec *Executor) runProveAlgoIf(stmt *ast.AlgoIfStmt, paramsValues []ast.Fc) ExecRet {
+func (exec *Executor) algoIfStmtWhenBy(stmt *ast.AlgoIfStmt, paramsValues []ast.Fc) ExecRet {
 	exec.NewEnv(exec.Env)
 	defer exec.deleteEnvAndGiveUpMsgs()
 
@@ -149,4 +149,13 @@ func (exec *Executor) runProveAlgoIf(stmt *ast.AlgoIfStmt, paramsValues []ast.Fc
 	}
 
 	return exec.runAlgoStmtsWhenProveByProveAlgo(stmt.ThenStmts, paramsValues)
+}
+
+func (exec *Executor) runProveAlgoReturnStmt(stmt *ast.ProveAlgoReturnStmt) ExecRet {
+	execState := exec.callProveAlgo(ast.NewByStmt(stmt.ProveAlgoName, stmt.Params, []ast.FactStmt{}, stmt.Line))
+	if execState.IsNotTrue() {
+		return execState
+	}
+
+	return NewExecTrue("")
 }

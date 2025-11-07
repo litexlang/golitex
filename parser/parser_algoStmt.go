@@ -90,7 +90,7 @@ func (tb *tokenBlock) proveAlgoReturnStmt() (*ast.ProveAlgoReturnStmt, error) {
 	}
 
 	if tb.header.ExceedEnd() {
-		return ast.NewProveAlgoReturnStmt("", []ast.Fc{}), nil
+		return ast.NewProveAlgoReturnStmt("", []ast.Fc{}, tb.line), nil
 	}
 
 	err = tb.header.skip(glob.KeySymbolLeftBrace)
@@ -115,5 +115,5 @@ func (tb *tokenBlock) proveAlgoReturnStmt() (*ast.ProveAlgoReturnStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	return ast.NewProveAlgoReturnStmt(proveAlgoName, proveAlgoParams), nil
+	return ast.NewProveAlgoReturnStmt(proveAlgoName, proveAlgoParams, tb.line), nil
 }
