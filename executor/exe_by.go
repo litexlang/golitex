@@ -49,7 +49,7 @@ func (exec *Executor) byStmt(stmt *ast.ByStmt) ExecRet {
 func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) ExecRet {
 	// params of stmt must be numeric literals
 	numExprFcs := []ast.Fc{}
-	for _, param := range stmt.ProveAlgoParams {
+	for _, param := range stmt.Params {
 		value, execRet := exec.verifyIsNumExprFcOrHasValueThenSimplify(param)
 		if execRet.IsNotTrue() {
 			return execRet
@@ -62,19 +62,40 @@ func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) ExecRet {
 		return NewExecErr(fmt.Sprintf("prove algo %s not found", stmt.ProveAlgoName))
 	}
 
-	if len(proveAlgoDef.Params) != len(stmt.ProveAlgoParams) {
-		return NewExecErr(fmt.Sprintf("prove algo %s requires %d params, get %d instead", stmt.ProveAlgoName, len(proveAlgoDef.Params), len(stmt.ProveAlgoParams)))
-	}
-
-	uniMap := map[string]ast.Fc{}
-	for i, param := range stmt.ProveAlgoParams {
-		uniMap[proveAlgoDef.Params[i]] = param
+	if len(proveAlgoDef.Params) != len(stmt.Params) {
+		return NewExecErr(fmt.Sprintf("prove algo %s requires %d params, get %d instead", stmt.ProveAlgoName, len(proveAlgoDef.Params), len(stmt.Params)))
 	}
 
 	for _, param := range proveAlgoDef.Params {
 		if exec.Env.IsAtomDeclared(ast.FcAtom(param), map[string]struct{}{}) {
 			panic("TODO: 之后如果外面已经弄过了，那就遍历地变成无重复的随机符号。之所以这里要panic是因为，可能用户在algo def 里面声明了和外面同名的符号")
 		}
+	}
+
+	paramsValues := []ast.Fc{}
+	for _, param := range stmt.Params {
+		_, value := exec.Env.ReplaceSymbolWithValue(param)
+		// simplifiedValue := value
+		simplifiedValue, execRet := exec.simplifyNumExprFc(value)
+		if execRet.IsNotTrue() {
+			return NewExecErr(fmt.Sprintf("value of %s of %s is unknown.", param, stmt.ProveAlgoName))
+		}
+		paramsValues = append(paramsValues, simplifiedValue)
+	}
+
+	uniMap := map[string]ast.Fc{}
+	for i, param := range proveAlgoDef.Params {
+		uniMap[param] = paramsValues[i]
+	}
+
+	instProveAlgoDef, err := proveAlgoDef.Instantiate(uniMap)
+	if err != nil {
+		return NewExecErrWithErr(err)
+	}
+
+	execRet := exec.runAlgoStmtsWhenProveByProveAlgo(instProveAlgoDef.(*ast.DefProveAlgoStmt), paramsValues)
+	if execRet.IsNotTrue() {
+		return execRet
 	}
 
 	return NewExecTrue("")
@@ -91,4 +112,8 @@ func (exec *Executor) verifyIsNumExprFcOrHasValueThenSimplify(fc ast.Fc) (ast.Fc
 	}
 
 	return value, NewExecTrue("")
+}
+
+func (exec *Executor) runAlgoStmtsWhenProveByProveAlgo(instProveAlgoDef *ast.DefProveAlgoStmt, paramsValues []ast.Fc) ExecRet {
+	panic("")
 }
