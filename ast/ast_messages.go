@@ -439,8 +439,8 @@ func (f *FcFn) String() string {
 
 	if ok, str := hasBuiltinOptAndToString(f); ok {
 		// 如果最左和最右是两边是 ()，那remove掉括号
-		str = strings.TrimPrefix(str, "(")
-		str = strings.TrimSuffix(str, ")")
+		// str = strings.TrimPrefix(str, "(")
+		// str = strings.TrimSuffix(str, ")")
 		return str
 	}
 
