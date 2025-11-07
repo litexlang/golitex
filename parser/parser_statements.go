@@ -117,6 +117,10 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.algoDefStmt()
 	case glob.KeywordEval:
 		ret, err = tb.evalStmt()
+	case glob.KeywordProveAlgo:
+		ret, err = tb.defProveAlgoStmt()
+	case glob.KeywordBy:
+		ret, err = tb.byStmt()
 	default:
 		ret, err = tb.factsStmt()
 	}
@@ -3089,4 +3093,12 @@ func (tb *tokenBlock) evalStmt() (ast.Stmt, error) {
 		}
 	}
 	return ast.NewEvalStmt(fcsToEval, tb.line), nil
+}
+
+func (tb *tokenBlock) defProveAlgoStmt() (*ast.DefProveAlgoStmt, error) {
+	panic("not implemented")
+}
+
+func (tb *tokenBlock) byStmt() (*ast.ByStmt, error) {
+	panic("not implemented")
 }

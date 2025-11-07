@@ -408,3 +408,19 @@ type EvalStmt struct {
 
 	Line uint
 }
+
+type DefProveAlgoStmt struct {
+	FuncName string
+	Params   []string
+	Stmts    AlgoSlice
+
+	Line uint
+}
+
+type ByStmt struct {
+	ProveAlgoName   string
+	ProveAlgoParams []Fc
+	ThenFacts       FactStmtSlice
+
+	Line uint
+}

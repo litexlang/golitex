@@ -800,3 +800,11 @@ func (stmt *EnumStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
 func (stmt *IntensionalSetStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
 	return stmt.InstantiateFact(uniMap)
 }
+
+func (stmt *DefProveAlgoStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	panic("not implemented")
+}
+
+func (stmt *ByStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	panic("not implemented")
+}
