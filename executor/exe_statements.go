@@ -62,28 +62,28 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (ExecRet, string, error) {
 	case *ast.ProveByEnumStmt:
 		execState = exec.proveByEnumStmt(stmt)
 	case *ast.HaveObjInNonEmptySetStmt:
-		execState, err = exec.haveObjInNonEmptySetStmt(stmt)
+		execState = exec.haveObjInNonEmptySetStmt(stmt)
 	case *ast.HaveEnumSetStmt:
 		execState = exec.haveEnumSetStmt(stmt)
 	case *ast.HaveIntensionalSetStmt:
 		execState = exec.haveIntensionalSetStmt(stmt)
 	case *ast.HaveSetFnStmt:
-		execState, err = exec.haveSetFnStmt(stmt)
+		execState = exec.haveSetFnStmt(stmt)
 	case *ast.HaveSetDefinedByReplacementStmt:
-		execState, err = exec.haveSetDefinedByReplacementStmt(stmt)
+		execState = exec.haveSetDefinedByReplacementStmt(stmt)
 	case *ast.NamedUniFactStmt:
-		execState, err = exec.namedUniFactStmt(stmt)
+		execState = exec.namedUniFactStmt(stmt)
 	case *ast.KnowExistPropStmt:
 		exec.newMsg("Warning: `know exist` is design in such a way that it is possible to introduce invalid facts without verification If you want to introduce default facts, then use it; otherwise, use it carefully.")
 		execState = exec.knowExistPropStmt(stmt)
 	case *ast.FnTemplateDefStmt:
-		err = exec.DefFnTemplateStmt(stmt)
+		execState = exec.DefFnTemplateStmt(stmt)
 	case *ast.ClearStmt:
 		exec.ClearStmt()
 	case *ast.InlineFactsStmt:
-		execState, err = exec.inlineFactsStmt(stmt)
+		execState = exec.inlineFactsStmt(stmt)
 	case *ast.ProveByInductionStmt:
-		execState, err = exec.proveByInductionStmt(stmt)
+		execState = exec.proveByInductionStmt(stmt)
 	case *ast.HaveObjEqualStmt:
 		execState, err = exec.haveObjEqualStmt(stmt)
 	case *ast.HaveFnEqualStmt:
@@ -478,23 +478,23 @@ func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) ExecRet {
 	return NewExecTrue("")
 }
 
-func (exec *Executor) haveSetFnStmt(stmt *ast.HaveSetFnStmt) (ExecRet, error) {
+func (exec *Executor) haveSetFnStmt(stmt *ast.HaveSetFnStmt) ExecRet {
 	// exec.newMsg(stmt.String())
 
 	// declare related fn
 	fnDefStmt := stmt.ToDefFnStmt()
 	execState := exec.defFnStmt(fnDefStmt)
 	if execState.IsNotTrue() {
-		return execState, fmt.Errorf("failed to declare fn: %s", fnDefStmt.String())
+		return execState
 	}
 
 	// have set fn
 	exec.Env.HaveSetFnDefMem[string(stmt.DefHeader.Name)] = *stmt
 
-	return NewExecTrue(""), nil
+	return NewExecTrue("")
 }
 
-func (exec *Executor) haveSetDefinedByReplacementStmt(stmt *ast.HaveSetDefinedByReplacementStmt) (ExecRet, error) {
+func (exec *Executor) haveSetDefinedByReplacementStmt(stmt *ast.HaveSetDefinedByReplacementStmt) ExecRet {
 	// exec.newMsg(stmt.String())
 
 	setDefinedByReplacement := ast.NewFcFn(ast.FcAtom(glob.KeywordSetDefinedByReplacement), []ast.Fc{stmt.DomSet, stmt.RangeSet, stmt.PropName})
@@ -503,32 +503,32 @@ func (exec *Executor) haveSetDefinedByReplacementStmt(stmt *ast.HaveSetDefinedBy
 
 	err := exec.defLetStmt(defObjStmt)
 	if err != nil {
-		return NewExecErr(""), err
+		return NewExecErr(err.Error())
 	}
 
 	err = exec.Env.SetEqualToSetDefinedByReplacement_PostProcess(ast.FcAtom(stmt.Name), setDefinedByReplacement)
 	if err != nil {
-		return NewExecErr(""), err
+		return NewExecErr(err.Error())
 	}
 
-	return NewExecTrue(""), nil
+	return NewExecTrue("")
 }
 
-func (exec *Executor) namedUniFactStmt(stmt *ast.NamedUniFactStmt) (ExecRet, error) {
+func (exec *Executor) namedUniFactStmt(stmt *ast.NamedUniFactStmt) ExecRet {
 	// exec.newMsg(stmt.String())
 
 	uniFact := ast.NewUniFact(stmt.DefPropStmt.DefHeader.Params, stmt.DefPropStmt.DefHeader.ParamSets, stmt.DefPropStmt.IffFacts, stmt.DefPropStmt.ThenFacts, stmt.Line)
 	execState, err := exec.factStmt(uniFact)
 	if notOkExec(execState, err) {
-		return execState, err
+		return execState
 	}
 
 	execRet := exec.knowPropStmt(ast.NewKnowPropStmt(stmt.DefPropStmt, stmt.Line))
 	if execRet.IsNotTrue() {
-		return execRet, fmt.Errorf("know prop statement failed")
+		return execRet
 	}
 
-	return execRet, nil
+	return execRet
 }
 
 // 只要 dom 成立，那prop成立，进而prop的iff成立
@@ -553,17 +553,17 @@ func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) ExecRet {
 	return NewExecTrue("")
 }
 
-func (exec *Executor) DefFnTemplateStmt(stmt *ast.FnTemplateDefStmt) error {
+func (exec *Executor) DefFnTemplateStmt(stmt *ast.FnTemplateDefStmt) ExecRet {
 	// if glob.RequireMsg() {
 	// 	defer exec.newMsg(fmt.Sprintf("%s\n", stmt))
 	// }
 
 	err := exec.Env.ExecDefFnTemplate(stmt)
 	if err != nil {
-		return err
+		return NewExecErr(err.Error())
 	}
 
-	return nil
+	return NewExecTrue("")
 }
 
 func (exec *Executor) ClearStmt() error {
@@ -578,15 +578,15 @@ func (exec *Executor) ClearStmt() error {
 	return nil
 }
 
-func (exec *Executor) inlineFactsStmt(stmt *ast.InlineFactsStmt) (ExecRet, error) {
+func (exec *Executor) inlineFactsStmt(stmt *ast.InlineFactsStmt) ExecRet {
 	for _, fact := range stmt.Facts {
 		execState, err := exec.factStmt(fact)
 		if notOkExec(execState, err) {
-			return execState, err
+			return execState
 		}
 	}
 
-	return NewExecTrue(""), nil
+	return NewExecTrue("")
 }
 
 func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) (ExecRet, error) {
