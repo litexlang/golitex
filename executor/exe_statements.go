@@ -34,11 +34,11 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (ExecRet, string, error) {
 		execState = exec.knowStmt(stmt)
 	case *ast.KnowPropStmt:
 		exec.newMsg("Warning: `know @` is design in such a way that it is possible to introduce invalid facts without verification If you want to introduce default facts, then use it; otherwise, use it carefully.")
-		err = exec.knowPropStmt(stmt)
+		execState = exec.knowPropStmt(stmt)
 	case *ast.ClaimProveStmt:
-		execState, err = exec.execClaimStmtProve(stmt)
+		execState = exec.execClaimStmtProve(stmt)
 	case *ast.DefPropStmt:
-		err = exec.defPropStmt(stmt, true)
+		execState = exec.defPropStmt(stmt, true)
 	case *ast.DefLetStmt:
 		exec.newMsg("Warning: `let` is design in such a way that it is possible to introduce non-existent objects. If you want to ensure the existence of this object, use `have` instead.")
 		err = exec.defLetStmt(stmt)
@@ -183,9 +183,9 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) ExecRet {
 			}
 
 		case *ast.KnowPropStmt:
-			err := exec.knowPropStmt(fact)
-			if err != nil {
-				return NewExecErr(err.Error())
+			execRet := exec.knowPropStmt(fact)
+			if execRet.IsNotTrue() {
+				return execRet
 			}
 		default:
 			return NewExecErr(fmt.Sprintf("unknown fact type: %T", fact))
@@ -204,10 +204,10 @@ func (exec *Executor) GetMsgAsStr0ToEnd() string {
 	return ret
 }
 
-func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool) error {
+func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool) ExecRet {
 	err := exec.Env.NewDefProp_InsideAtomsDeclared(stmt)
 	if err != nil {
-		return err
+		return NewExecErr(err.Error())
 	}
 
 	paramMap := make(map[string]struct{})
@@ -218,39 +218,39 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool
 	for _, fact := range stmt.DomFacts {
 		for _, param := range ast.ExtractParamsFromFact(fact) {
 			if _, ok := paramMap[param]; ok {
-				return fmt.Errorf("param %s in %s\n is already declared in def header %s and should not be redeclared", param, fact.String(), ast.HeaderWithParamsAndParamSetsString(stmt.DefHeader))
+				return NewExecErr(fmt.Sprintf("param %s in %s\n is already declared in def header %s and should not be redeclared", param, fact.String(), ast.HeaderWithParamsAndParamSetsString(stmt.DefHeader)))
 			}
 		}
 	}
 	for _, fact := range stmt.IffFacts {
 		for _, param := range ast.ExtractParamsFromFact(fact) {
 			if _, ok := paramMap[param]; ok {
-				return fmt.Errorf("param %s in %s\nshould not be redeclared in def header %s", param, fact.String(), ast.HeaderWithParamsAndParamSetsString(stmt.DefHeader))
+				return NewExecErr(fmt.Sprintf("param %s in %s\nshould not be redeclared in def header %s", param, fact.String(), ast.HeaderWithParamsAndParamSetsString(stmt.DefHeader)))
 			}
 		}
 	}
 	for _, fact := range stmt.ThenFacts {
 		for _, param := range ast.ExtractParamsFromFact(fact) {
 			if _, ok := paramMap[param]; ok {
-				return fmt.Errorf("param %s in %s\nshould not be redeclared in def header %s", param, fact.String(), ast.HeaderWithParamsAndParamSetsString(stmt.DefHeader))
+				return NewExecErr(fmt.Sprintf("param %s in %s\nshould not be redeclared in def header %s", param, fact.String(), ast.HeaderWithParamsAndParamSetsString(stmt.DefHeader)))
 			}
 		}
 	}
 
 	if len(stmt.IffFacts) == 0 {
-		return nil
+		return NewExecTrue("")
 	}
 
 	if generateIffUniFact {
 		// prop leads to iff
 		propToIff, iffToProp, err := stmt.Make_PropToIff_IffToProp()
 		if err != nil {
-			return err
+			return NewExecErr(err.Error())
 		}
 
 		err = exec.Env.NewFact(propToIff)
 		if err != nil {
-			return err
+			return NewExecErr(err.Error())
 		}
 		if glob.RequireMsg() {
 			exec.newMsg(fmt.Sprintf("%s\nis true by definition", propToIff))
@@ -258,13 +258,13 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool
 
 		err = exec.Env.NewFact(iffToProp)
 		if err != nil {
-			return err
+			return NewExecErr(err.Error())
 		}
 		if glob.RequireMsg() {
 			exec.newMsg(fmt.Sprintf("%s\nis true by definition", iffToProp))
 		}
 	}
-	return nil
+	return NewExecTrue("")
 }
 
 func (exec *Executor) defLetStmt(stmt *ast.DefLetStmt) error {
@@ -374,26 +374,26 @@ func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEach
 }
 
 // 只要 dom 成立，那prop成立，进而prop的iff成立
-func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
+func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) ExecRet {
 	// if glob.RequireMsg() {
 	// 	defer func() {
 	// 		exec.newMsg(fmt.Sprintf("%s\n", stmt))
 	// 	}()
 	// }
 
-	err := exec.defPropStmt(stmt.Prop, false)
-	if err != nil {
-		return err
+	execRet := exec.defPropStmt(stmt.Prop, false)
+	if execRet.IsNotTrue() {
+		return execRet
 	}
 
 	if len(stmt.Prop.IffFacts) == 0 {
 		_, iffToProp, err := stmt.Prop.Make_PropToIff_IffToProp()
 		if err != nil {
-			return err
+			return NewExecErr(err.Error())
 		}
 		err = exec.Env.NewFact(iffToProp)
 		if err != nil {
-			return err
+			return NewExecErr(err.Error())
 		}
 	}
 
@@ -404,18 +404,18 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
 
 	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(stmt.Prop.DefHeader.Name), paramsAsFc, stmt.Line)}, stmt.Prop.ThenFacts, stmt.Line)
 
-	err = exec.Env.NewFact(uniFact)
+	err := exec.Env.NewFact(uniFact)
 	if err != nil {
-		return err
+		return NewExecErr(err.Error())
 	}
 
 	uniFact2 := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFacts, stmt.Prop.ThenFacts, stmt.Line)
 	err = exec.Env.NewFact(uniFact2)
 	if err != nil {
-		return err
+		return NewExecErr(err.Error())
 	}
 
-	return nil
+	return NewExecTrue(fmt.Sprintf("%s\n", stmt.String()))
 }
 
 func (exec *Executor) proveStmt(stmt *ast.ProveStmt) (ExecRet, error) {
@@ -518,12 +518,12 @@ func (exec *Executor) namedUniFactStmt(stmt *ast.NamedUniFactStmt) (ExecRet, err
 		return execState, err
 	}
 
-	err = exec.knowPropStmt(ast.NewKnowPropStmt(stmt.DefPropStmt, stmt.Line))
-	if notOkExec(execState, err) {
-		return execState, err
+	execRet := exec.knowPropStmt(ast.NewKnowPropStmt(stmt.DefPropStmt, stmt.Line))
+	if execRet.IsNotTrue() {
+		return execRet, fmt.Errorf("know prop statement failed")
 	}
 
-	return NewExecTrue(""), nil
+	return execRet, nil
 }
 
 // 只要 dom 成立，那prop成立，进而prop的iff成立
