@@ -50,17 +50,37 @@ func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) ExecRet {
 	// params of stmt must be numeric literals
 	numExprFcs := []ast.Fc{}
 	for _, param := range stmt.ProveAlgoParams {
-		value, execRet := exec.eitherIsNumExprFcOrHasValueThenSimplify(param)
+		value, execRet := exec.verifyIsNumExprFcOrHasValueThenSimplify(param)
 		if execRet.IsNotTrue() {
 			return execRet
 		}
 		numExprFcs = append(numExprFcs, value)
 	}
 
+	proveAlgoDef := exec.Env.GetAlgoDef(stmt.ProveAlgoName)
+	if proveAlgoDef == nil {
+		return NewExecErr(fmt.Sprintf("prove algo %s not found", stmt.ProveAlgoName))
+	}
+
+	if len(proveAlgoDef.Params) != len(stmt.ProveAlgoParams) {
+		return NewExecErr(fmt.Sprintf("prove algo %s requires %d params, get %d instead", stmt.ProveAlgoName, len(proveAlgoDef.Params), len(stmt.ProveAlgoParams)))
+	}
+
+	uniMap := map[string]ast.Fc{}
+	for i, param := range stmt.ProveAlgoParams {
+		uniMap[proveAlgoDef.Params[i]] = param
+	}
+
+	for _, param := range proveAlgoDef.Params {
+		if exec.Env.IsAtomDeclared(ast.FcAtom(param), map[string]struct{}{}) {
+			panic("TODO: 之后如果外面已经弄过了，那就遍历地变成无重复的随机符号。之所以这里要panic是因为，可能用户在algo def 里面声明了和外面同名的符号")
+		}
+	}
+
 	return NewExecTrue("")
 }
 
-func (exec *Executor) eitherIsNumExprFcOrHasValueThenSimplify(fc ast.Fc) (ast.Fc, ExecRet) {
+func (exec *Executor) verifyIsNumExprFcOrHasValueThenSimplify(fc ast.Fc) (ast.Fc, ExecRet) {
 	if cmp.IsNumLitFc(fc) {
 		return exec.simplifyNumExprFc(fc)
 	}
