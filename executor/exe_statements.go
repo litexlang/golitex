@@ -50,17 +50,17 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (ExecRet, string, error) {
 		exec.newMsg("Warning: `fn` is design in such a way that it is possible to introduce non-existent objects. If you want to ensure the existence of this function, use `have fn` instead.")
 		execState = exec.defFnStmt(stmt)
 	case *ast.ProveInEachCaseStmt:
-		execState, err = exec.proveInEachCaseStmt(stmt)
+		execState = exec.proveInEachCaseStmt(stmt)
 	case *ast.ClaimPropStmt:
-		execState, err = exec.claimPropStmt(stmt)
+		execState = exec.claimPropStmt(stmt)
 	case *ast.ClaimExistPropStmt:
-		execState, err = exec.claimExistPropStmt(stmt)
+		execState = exec.claimExistPropStmt(stmt)
 	case *ast.ProveStmt:
-		execState, err = exec.proveStmt(stmt)
+		execState = exec.proveStmt(stmt)
 	case *ast.ClaimProveByContradictionStmt:
-		execState, err = exec.execClaimStmtProveByContradiction(stmt)
+		execState = exec.execClaimStmtProveByContradiction(stmt)
 	case *ast.ProveByEnumStmt:
-		execState, err = exec.proveByEnumStmt(stmt)
+		execState = exec.proveByEnumStmt(stmt)
 	case *ast.HaveObjInNonEmptySetStmt:
 		execState, err = exec.haveObjInNonEmptySetStmt(stmt)
 	case *ast.HaveEnumSetStmt:
@@ -305,7 +305,7 @@ func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) (ExecRet, error) {
 	return NewExecTrue(""), nil
 }
 
-func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) (ExecRet, error) {
+func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) ExecRet {
 	isSuccess := false
 	defer func() {
 		if glob.RequireMsg() {
@@ -325,24 +325,24 @@ func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) (ExecRe
 		if glob.RequireMsg() {
 			exec.newMsg(fmt.Sprintf("%s is unknown", stmt.OrFact.String()))
 		}
-		return execState, err
+		return execState
 	}
 
 	for i := range stmt.OrFact.Facts {
 		execState, err := exec.execProofBlockForEachCase(i, stmt)
 		if notOkExec(execState, err) {
-			return execState, err
+			return execState
 		}
 	}
 
 	// emit then fact
 	execState = exec.knowStmt(ast.NewKnowStmt(stmt.ThenFacts.ToCanBeKnownStmtSlice(), stmt.Line))
 	if execState.IsNotTrue() {
-		return execState, fmt.Errorf("failed to know statement: %s", stmt.String())
+		return execState
 	}
 
 	isSuccess = true
-	return NewExecTrue(""), nil
+	return NewExecTrue("")
 }
 
 func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEachCaseStmt) (ExecRet, error) {
@@ -418,12 +418,17 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) ExecRet {
 	return NewExecTrue(fmt.Sprintf("%s\n", stmt.String()))
 }
 
-func (exec *Executor) proveStmt(stmt *ast.ProveStmt) (ExecRet, error) {
+func (exec *Executor) proveStmt(stmt *ast.ProveStmt) ExecRet {
 	// new env
 	exec.NewEnv(exec.Env)
 	defer exec.deleteEnvAndRetainMsg()
 
-	return exec.execStmtsAtCurEnv(stmt.Proof)
+	execState, err := exec.execStmtsAtCurEnv(stmt.Proof)
+	if notOkExec(execState, err) {
+		return execState
+	}
+
+	return execState
 }
 
 func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) ExecRet {
@@ -453,7 +458,7 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) ExecRet {
 	return NewExecTrue("")
 }
 
-func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) (ExecRet, error) {
+func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) ExecRet {
 	// exec.newMsg(stmt.String())
 
 	exec.NewEnv(exec.Env)
@@ -461,16 +466,16 @@ func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) (ExecRet, error
 
 	execState, err := exec.proveByEnumMainLogic(stmt)
 	if notOkExec(execState, err) {
-		return execState, err
+		return execState
 	}
 
 	// know uniFact
 	err = exec.Env.Parent.NewFact(stmt.Fact)
 	if err != nil {
-		return NewExecErr(""), err
+		return NewExecErr(err.Error())
 	}
 
-	return NewExecTrue(""), nil
+	return NewExecTrue("")
 }
 
 func (exec *Executor) haveSetFnStmt(stmt *ast.HaveSetFnStmt) (ExecRet, error) {
