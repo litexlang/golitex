@@ -47,15 +47,6 @@ func (exec *Executor) byStmt(stmt *ast.ByStmt) ExecRet {
 }
 
 func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) ExecRet {
-	// params of stmt must be numeric literals
-	numExprFcs := []ast.Fc{}
-	for _, param := range stmt.Params {
-		value, execRet := exec.verifyIsNumExprFcOrHasValueThenSimplify(param)
-		if execRet.IsNotTrue() {
-			return execRet
-		}
-		numExprFcs = append(numExprFcs, value)
-	}
 
 	proveAlgoDef := exec.Env.GetAlgoDef(stmt.ProveAlgoName)
 	if proveAlgoDef == nil {
@@ -72,15 +63,14 @@ func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) ExecRet {
 		}
 	}
 
+	// params of stmt must be numeric literals
 	paramsValues := []ast.Fc{}
 	for _, param := range stmt.Params {
-		_, value := exec.Env.ReplaceSymbolWithValue(param)
-		// simplifiedValue := value
-		simplifiedValue, execRet := exec.simplifyNumExprFc(value)
+		value, execRet := exec.verifyIsNumExprFcOrHasValueThenSimplify(param)
 		if execRet.IsNotTrue() {
-			return NewExecErr(fmt.Sprintf("value of %s of %s is unknown.", param, stmt.ProveAlgoName))
+			return execRet
 		}
-		paramsValues = append(paramsValues, simplifiedValue)
+		paramsValues = append(paramsValues, value)
 	}
 
 	uniMap := map[string]ast.Fc{}
@@ -93,7 +83,7 @@ func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) ExecRet {
 		return NewExecErrWithErr(err)
 	}
 
-	execRet := exec.runAlgoStmtsWhenProveByProveAlgo(instProveAlgoDef.(*ast.DefProveAlgoStmt).Stmts, paramsValues)
+	execRet := exec.runAlgoStmtsWhenBy(instProveAlgoDef.(*ast.DefProveAlgoStmt).Stmts, paramsValues)
 	if execRet.IsNotTrue() {
 		return execRet
 	}
@@ -114,7 +104,7 @@ func (exec *Executor) verifyIsNumExprFcOrHasValueThenSimplify(fc ast.Fc) (ast.Fc
 	return value, NewExecTrue("")
 }
 
-func (exec *Executor) runAlgoStmtsWhenProveByProveAlgo(algoStmts ast.AlgoStmtSlice, paramsValues []ast.Fc) ExecRet {
+func (exec *Executor) runAlgoStmtsWhenBy(algoStmts ast.AlgoStmtSlice, paramsValues []ast.Fc) ExecRet {
 	for _, stmt := range algoStmts {
 		switch asStmt := stmt.(type) {
 		case *ast.ProveAlgoReturnStmt:
@@ -148,11 +138,15 @@ func (exec *Executor) algoIfStmtWhenBy(stmt *ast.AlgoIfStmt, paramsValues []ast.
 		return NewExecErrWithErr(err)
 	}
 
-	return exec.runAlgoStmtsWhenProveByProveAlgo(stmt.ThenStmts, paramsValues)
+	return exec.runAlgoStmtsWhenBy(stmt.ThenStmts, paramsValues)
 }
 
 func (exec *Executor) runProveAlgoReturnStmt(stmt *ast.ProveAlgoReturnStmt) ExecRet {
-	execState := exec.callProveAlgo(ast.NewByStmt(stmt.ProveAlgoName, stmt.Params, []ast.FactStmt{}, stmt.Line))
+	if stmt.By == nil {
+		return NewExecTrue("")
+	}
+
+	execState := exec.callProveAlgo(ast.NewByStmt(stmt.By.ProveAlgoName, stmt.By.Params, stmt.By.ThenFacts, stmt.Line))
 	if execState.IsNotTrue() {
 		return execState
 	}

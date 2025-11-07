@@ -426,8 +426,7 @@ type ByStmt struct {
 }
 
 type ProveAlgoReturnStmt struct {
-	ProveAlgoName string
-	Params        FcSlice
+	By *ByStmt
 
 	Line uint
 }
