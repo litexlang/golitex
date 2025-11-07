@@ -20,7 +20,7 @@
 
 </div>
 
-## Simple, Intuitive, Expressive — Learnable For Humans & AI 
+## What is Litex?
 
 _Simplicity is the ultimate sophistication._
 
@@ -30,9 +30,19 @@ _– Leonardo da Vinci_
 
 **Warning: Litex is still in beta. The syntax and semantics are subject to change. There might be some bugs and inconsistencies. You should not use Litex in any production environments yet.**
 
-Litex([website](https://litexlang.com)) is a simple, intuitive, and expressive open-source formal language for coding reasoning ([Star the repo!](https://github.com/litexlang/golitex)). It ensures every step of your reasoning is correct, and is actually the first formal language that can be learned by anyone in 2 hours. In fact, Litex is so close to natural language that sometimes it makes you forget you are using a formal language!
+Litex([website](https://litexlang.com)) is a simple open-source formal language, learnable in 2 hours by anyone. It expresses mathematics in the form of code, ensuring that every step of the reasoning process is rigorously correct. The closeness of Litex to natural language can be really helpful for AI and human alike in mathematical exploration and problem-solving. I hope you will forget that you are using a formal language to write mathematics using Litex!([Star the repo!](https://github.com/litexlang/golitex)). 
 
-Making Litex intuitive to both humans and AI is Litex's core mission. Just like how Python lowers the barrier of programming by 10x compared with C/C++, Litex lowers the barrier of formal reasoning by 10x compared with previous formal languages like Lean. This is how Litex scales formal reasoning: by making it accessible to more people, applicable to more complex problems, and usable by large-scale AI systems. Here is an example:
+Euclid showed us over 2000 years ago how 5 axioms could derive such a wonderful geometric world. Simple starting points often lead us into infinitely complex worlds. The same is true for mathematics. The foundation of modern mathematics is naive set theory, which doesn't have many axioms, and we even encountered the concept of sets in middle school. But it is precisely these simple and understandable rules that form the foundation of all mathematics. Before we move on, think about how powerful the idea is: with just very few absolutely accurate inference rules, plus a few axioms, we can derive a rich and diverse mathematical world! That is what math is all about.
+
+By implementing those simple axioms and deduction rules in a software like Litex, we can write math in the form of code. The learning curve of Litex will not be higher than learning LaTeX. Let's explore the fascinating math world with Litex!
+
+## Why Litex?
+
+_Our intent was to create a pleasant computing environment (Unix) for ourselves and our hope was that others liked it._
+
+_- Dennis Ritchie_
+
+Making Litex intuitive to both humans and AI is Litex's core mission. We want people feel happy using Litex. Just like how Python lowers the barrier of programming by 10x compared with C/C++, Litex lowers the barrier of formal reasoning by 10x compared with previous formal languages like Lean. This is how Litex scales formal reasoning: by making it accessible to more people, and usable by large-scale AI systems. Here is an example:
 
 <table style="border-collapse: collapse; width: 100%; font-size: 12px">
   <tr>
@@ -76,9 +86,19 @@ Making Litex intuitive to both humans and AI is Litex's core mission. Just like 
   </tr>
 </table>
 
-While Lean 4 is a powerful and rigorous proof assistant ideal, it requires months of training and years of experience to master. Litex takes a different approach: prioritizing accessibility and ease of use, enabling even beginners to formalize naive tasks like multivariate equations in minutes. For many everyday reasoning tasks, especially when rapid prototyping and intuitive syntax matter most, Litex offers a more approachable path. Each tool has its place — choose the one that best fits your needs and experience level!
+While Lean 4 is a powerful and rigorous proof assistant ideal, it requires months of training and years of experience to master. Litex takes a different approach: prioritizing accessibility and ease of use, enabling even beginners to formalize naive tasks like multivariate equations in minutes.
 
-Our mission is to make Litex the most accessible and usable formal language for coding reasoning. We aim to solve the most challenging problems faced by the AI community, i.e. the challenge of efficient, scalable, and reliable coding reasoning. Let's build the future together!
+Since each Litex sentence corresponds directly to an expression in everyday mathematical language, and since it is supported by set theory (ZFC) and basic logic (not, forall, exist, or), Litex does not sacrifice any rigor. So please do not think about Litex using the mindset of traditional formal languages. Instead, imagine yourself as a college student or even a high school student who has a basic understanding of set theory — regardless of whether you like Litex or are skeptical of it.
+
+## Our Mission
+
+_The value of an idea lies in the using of it._
+
+_- Thomas Edison_
+
+Our mission is to make Litex the most intuitive and simple formal language for coding reasoning. We aim to solve the most challenging problems faced by the AI community, i.e. the challenge of efficient, scalable, and reliable coding reasoning. Let's build the future together!
+
+For mathematical research, a well-designed formal language can clarify the dependency structure among complex theorems and lay the foundation for large-scale collaborative “Big Mathematics.” For AI, such a formal language enables reasoning models to form a self-reinforcing cycle of automatic problem generation → automatic solving → automatic verification. Combined with the reinforcement-learning-based post-training approach demonstrated by DeepSeek-R1, this may lead to a breakthrough moment comparable to AlphaGo.
 
 ## Resources And Community
 
@@ -107,6 +127,28 @@ Resources for AI researchers who want to develop Litex-based AI systems, mostly 
 
 All of our [repositories](https://github.com/orgs/litexlang/repositories) are open-sourced. Just issue PRs and tell us any ideas about Litex! Maybe we can build the future together!
 
+## References
+
+_If I have seen further [than others], it is by standing on the shoulders of giants._
+
+_- Isaac Newton_
+
+Although Litex is a very pragmatic language which contains and only contains the proof methods, axioms, keywords, etc. that people need in their daily mathematical work—things that are often so taken for granted that people usually don't even notice them —- it is equally important to note that Litex indeed has gained great conceptual inspiration from the masters.
+
+Mathematics references:
+
+1. Avigad Jeremy: Foundations https://arxiv.org/abs/2009.09541
+2. Terence Tao: Analysis I Fourth edition, 2022. https://terrytao.wordpress.com/books/analysis-i/
+3. Weyl Hermann: Philosophy of Mathematics and Natural Science https://www.jstor.org/stable/j.ctv1t1kftd
+4. Bertrand Russell: Introduction to Mathematical Philosophy https://people.umass.edu/klement/imp/imp.pdf
+5. David Hilbert: Foundations of Geometry https://math.berkeley.edu/~wodzicki/160/Hilbert.pdf
+
+AI references:
+
+1. DeepSeek-R1: Boosting Reasoning Capability in LLMs via Reinforcement Learning
+2. AlphaGeometry: An Olympiad-level AI system for geometry 
+3. Seed-Prover: Deep and Broad Reasoning for Automated Theorem Proving
+
 ## Special Thanks
 
 _Sometimes it is the very people who no one imagines anything of who do the things that no one can imagine._
@@ -120,4 +162,4 @@ _– Alan Turing_
 
 Hi, I’m Jiachen Shen, creator of Litex. It is so fortunate to receive tremendous help from friends and colleagues throughout this journey of designing, implementing, and growing Litex into a community. Without their support, Litex would not have had the chance to succeed.
 
-I am deeply grateful to Zhaoxuan Hong, Siqi Sun, Wei Lin, Peng Sun, Jie Fu, Zeyu Zheng, Huajian Xin, Zijie Qiu, Siqi Guo, Haoyang Shi, Chengyang Zhu, Chenxuan Huang, Yan Lu for their invaluable contributions. I am certain this list of special thanks will only grow longer in the future.
+I am deeply grateful to Zhaoxuan Hong, Siqi Sun, Wei Lin, Peng Sun, Jie Fu, Zeyu Zheng, Huajian Xin, Zijie Qiu, Siqi Guo, Haoyang Shi, Chengyang Zhu, Chenxuan Huang, Yan Lu, Sheng Xu for their invaluable contributions. I am certain this list of special thanks will only grow longer in the future.

@@ -23,7 +23,7 @@ import (
 func (exec *Executor) proveByEnumMainLogic(stmt *ast.ProveByEnumStmt) (ExecRet, error) {
 	enums := [][]ast.Fc{}
 	for _, paramSet := range stmt.Fact.ParamSets {
-		enumFacts, ok := exec.env.GetEnumFact(paramSet.String())
+		enumFacts, ok := exec.Env.GetEnumFact(paramSet.String())
 		if !ok {
 			return NewExecErr(""), fmt.Errorf("prove over finite set statement error: enum not found")
 		}
@@ -49,7 +49,7 @@ func (exec *Executor) proveByEnumMainLogic(stmt *ast.ProveByEnumStmt) (ExecRet, 
 }
 
 func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.ProveByEnumStmt, cartesianProductAtI []ast.Fc) (bool, error) {
-	exec.NewEnv(exec.env)
+	exec.NewEnv(exec.Env)
 	defer exec.deleteEnvAndRetainMsg()
 
 	defObjStmt := ast.NewDefObjStmt(stmt.Fact.Params, stmt.Fact.ParamSets, getParamEqualFcSlice(stmt.Fact.Params, cartesianProductAtI), stmt.Line)
@@ -64,7 +64,7 @@ func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.Prove
 	}
 
 	for _, fact := range stmt.Fact.DomFacts {
-		instFact, err := fact.Instantiate(uniMap)
+		instFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return false, err
 		}
@@ -89,7 +89,7 @@ func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.Prove
 	}
 
 	for _, fact := range stmt.Fact.ThenFacts {
-		instFact, err := fact.Instantiate(uniMap)
+		instFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return false, err
 		}
@@ -119,7 +119,7 @@ func (exec *Executor) verProveOverFiniteSet_NoProveSection(stmt *ast.ProveByEnum
 
 		hasFalseDomFact := false
 		for _, domFact := range stmt.Fact.DomFacts {
-			instantiatedDomFact, err := domFact.Instantiate(uniMap)
+			instantiatedDomFact, err := domFact.InstantiateFact(uniMap)
 			if err != nil {
 				return NewExecErr(""), err
 			}
@@ -151,7 +151,7 @@ func (exec *Executor) verProveOverFiniteSet_NoProveSection(stmt *ast.ProveByEnum
 
 		instantiatedThenFacts := []ast.FactStmt{}
 		for _, thenFact := range stmt.Fact.ThenFacts {
-			instantiatedThenFact, err := thenFact.Instantiate(uniMap)
+			instantiatedThenFact, err := thenFact.InstantiateFact(uniMap)
 			if err != nil {
 				return NewExecErr(""), err
 			}

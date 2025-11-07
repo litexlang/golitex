@@ -17,6 +17,7 @@ package litex_env
 import (
 	"fmt"
 	ast "golitex/ast"
+	cmp "golitex/cmp"
 	glob "golitex/glob"
 	"strconv"
 )
@@ -221,7 +222,7 @@ func (env *Env) newTruePureFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) erro
 	}
 
 	for _, thenFact := range propDef.IffFacts {
-		instantiated, err := thenFact.Instantiate(uniMap)
+		instantiated, err := thenFact.InstantiateFact(uniMap)
 		if err != nil {
 			return err
 		}
@@ -238,7 +239,7 @@ func (env *Env) newTruePureFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) erro
 	}
 
 	for _, thenFact := range propDef.ThenFacts {
-		instantiated, err := thenFact.Instantiate(uniMap)
+		instantiated, err := thenFact.InstantiateFact(uniMap)
 		if err != nil {
 			return err
 		}
@@ -329,7 +330,7 @@ func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, erro
 
 	domFacts := []ast.FactStmt{}
 	for _, domFact := range existPropDef.DefBody.DomFacts {
-		instantiated, err := domFact.Instantiate(uniMap)
+		instantiated, err := domFact.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, err
 		}
@@ -345,7 +346,7 @@ func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, erro
 
 		reversedFacts := asSpecFactStmt.ReverseIsTrue()
 		for _, reversedFact := range reversedFacts {
-			instantiated, err := reversedFact.Instantiate(uniMap)
+			instantiated, err := reversedFact.InstantiateFact(uniMap)
 			if err != nil {
 				return nil, err
 			}
@@ -380,7 +381,7 @@ func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 	}
 
 	// 如果 a = b 中，某一项是 数值型，那就算出来这个数值，卷后把它保留在equalMem中
-	err = env.storeSymbolValue(fact.Params[0], fact.Params[1])
+	err = env.storeSymbolSimplifiedValue(fact.Params[0], fact.Params[1])
 	if err != nil {
 		return false, err
 	}
@@ -388,24 +389,26 @@ func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 	return true, nil
 }
 
-func (env *Env) storeSymbolValue(left, right ast.Fc) error {
-	// if cmp.IsNumLitFc(left) {
-	// 	env.SymbolValueMem[right.String()] = left
-	// }
-	// if cmp.IsNumLitFc(right) {
-	// 	env.SymbolValueMem[left.String()] = right
-	// }
+func (env *Env) StoreTrueEqualValues(key, value ast.Fc) {
+	env.SymbolSimplifiedValueMem[key.String()] = value
+}
 
-	if computedFc, err := env.CanBeComputed(left); err != nil {
-		return err
-	} else if computedFc != nil {
-		env.SymbolValueMem[right.String()] = computedFc
+func simplifyNumExprFc(fc ast.Fc) ast.Fc {
+	simplifiedNumExprFc := cmp.IsNumExprFcThenSimplify(fc)
+	return simplifiedNumExprFc
+}
+
+func (env *Env) storeSymbolSimplifiedValue(left, right ast.Fc) error {
+	_, newLeft := env.ReplaceSymbolWithValue(left)
+	if cmp.IsNumLitFc(newLeft) {
+		simplifiedNewLeft := simplifyNumExprFc(newLeft)
+		env.StoreTrueEqualValues(right, simplifiedNewLeft)
 	}
 
-	if computedFc, err := env.CanBeComputed(right); err != nil {
-		return err
-	} else if computedFc != nil {
-		env.SymbolValueMem[left.String()] = computedFc
+	_, newRight := env.ReplaceSymbolWithValue(right)
+	if cmp.IsNumLitFc(newRight) {
+		simplifiedNewRight := simplifyNumExprFc(newRight)
+		env.StoreTrueEqualValues(left, simplifiedNewRight)
 	}
 
 	return nil
@@ -437,7 +440,7 @@ func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, [
 	instantiatedIffFacts := []ast.FactStmt{}
 	// instantiate iff facts
 	for _, iffFact := range existPropDef.DefBody.IffFacts {
-		instantiated, err := iffFact.Instantiate(uniMap)
+		instantiated, err := iffFact.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -446,7 +449,7 @@ func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, [
 
 	instantiatedThenFacts := []ast.FactStmt{}
 	for _, thenFact := range existPropDef.DefBody.ThenFacts {
-		instantiated, err := thenFact.Instantiate(uniMap)
+		instantiated, err := thenFact.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, nil, err
 		}

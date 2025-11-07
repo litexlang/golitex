@@ -131,7 +131,7 @@ type KnowPropStmt struct {
 type ClaimExistPropStmt struct {
 	ExistPropWithoutDom *DefExistPropStmt
 	Proofs              StmtSlice
-	HaveObj             []Fc
+	HaveObj             FcSlice
 
 	Line uint
 }
@@ -209,13 +209,19 @@ type HaveObjInNonEmptySetStmt struct {
 	Line uint
 }
 
-// 由朴素集合论，枚举法定义集合，用specification的方式去定义集合，是可以的。这样定义出来的集合的存在性是直接得到保证的。这个功能必须写入内核，因为have是引入新东西的方式。
-type HaveSetStmt struct {
-	Fact EnumSet_IntensionalSet_EqualDom_Interface
+type HaveEnumSetStmt struct {
+	Fact *EnumStmt
 
 	Line uint
 }
 
+type HaveIntensionalSetStmt struct {
+	Fact *IntensionalSetStmt
+
+	Line uint
+}
+
+// TODO: 我不知道这是做什么的
 // 定义返回值是集合的函数；这个的好处是，fn的定义不能保证函数的存在性；而have可以保证函数的存在性
 type HaveSetFnStmt struct {
 	DefHeader *DefHeader
@@ -305,6 +311,8 @@ type HaveObjEqualStmt struct {
 	Line uint
 }
 
+// 不知道这个有什么用
+// TODO 删去
 type HaveFnEqualStmt struct {
 	DefHeader *DefHeader
 	RetSet    Fc
@@ -372,9 +380,11 @@ type ProveIsCommutativePropStmt struct {
 	Line uint
 }
 
+type AlgoSlice []AlgoStmt
+
 type AlgoIfStmt struct {
-	Conditions []FactStmt
-	ThenStmts  []AlgoStmt
+	Conditions FactStmtSlice
+	ThenStmts  AlgoSlice
 
 	Line uint
 }
@@ -388,7 +398,13 @@ type AlgoReturnStmt struct {
 type AlgoDefStmt struct {
 	FuncName string
 	Params   []string
-	Stmts    []AlgoStmt
+	Stmts    AlgoSlice
+
+	Line uint
+}
+
+type EvalStmt struct {
+	Value Fc
 
 	Line uint
 }

@@ -15,6 +15,7 @@
 package litex_ast
 
 import (
+	"fmt"
 	glob "golitex/glob"
 	"strings"
 )
@@ -192,7 +193,8 @@ func (s *ClaimExistPropStmt) InlineString() string            { panic("") }
 // func (s *ProveByMathInductionStmt) InlineString() string        { panic("") }
 func (s *ProveByEnumStmt) InlineString() string                 { panic("") }
 func (s *HaveObjInNonEmptySetStmt) InlineString() string        { panic("") }
-func (s *HaveSetStmt) InlineString() string                     { panic("") }
+func (s *HaveEnumSetStmt) InlineString() string                 { panic("") }
+func (s *HaveIntensionalSetStmt) InlineString() string          { panic("") }
 func (s *HaveSetFnStmt) InlineString() string                   { panic("") }
 func (s *HaveSetDefinedByReplacementStmt) InlineString() string { panic("") }
 func (s *NamedUniFactStmt) InlineString() string                { panic("") }
@@ -318,10 +320,6 @@ func (s *MarkdownStmt) InlineString() string {
 	return s.Markdown
 }
 
-// func (s *ProveInRange2tmt) InlineString() string {
-// 	return "TODO"
-// }
-
 func (s *ClaimIffStmt) InlineString() string {
 	return "TODO"
 }
@@ -348,4 +346,8 @@ func (s *AlgoReturnStmt) InlineString() string {
 
 func (s *AlgoDefStmt) InlineString() string {
 	return "TODO"
+}
+
+func (s *EvalStmt) InlineString() string {
+	return fmt.Sprintf("%s %s", glob.KeywordEval, s.Value.String())
 }

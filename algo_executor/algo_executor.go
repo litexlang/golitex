@@ -15,7 +15,6 @@
 package litex_env
 
 import (
-	"fmt"
 	ast "golitex/ast"
 	cmp "golitex/cmp"
 	litenv "golitex/environment"
@@ -39,32 +38,10 @@ func (algoExec *AlgoExecutor) CanBeComputed(fc ast.Fc) (ast.Fc, error) {
 		return fc, nil
 	}
 
-	if algoExec.IsFnWithDefinedAlgo(fc) {
-		computed, err := algoExec.Compute(fc)
-		if err != nil {
-			return nil, fmt.Errorf("error computing: %s", fc)
-		}
-		if ok {
-			return computed, nil
-		}
-	}
-
 	return nil, nil
 }
 
 func (algoExec *AlgoExecutor) Compute(toCompute ast.Fc) (ast.Fc, error) {
 	_ = toCompute
 	return nil, nil
-}
-
-func (algoExec *AlgoExecutor) IsFnWithDefinedAlgo(fc ast.Fc) bool {
-	fcAsFcFn, ok := fc.(*ast.FcFn)
-	if !ok {
-		return false
-	}
-	fcAsFcFnHeadAsAtom, ok := fcAsFcFn.FnHead.(ast.FcAtom)
-	if !ok {
-		return false
-	}
-	return algoExec.Env().GetAlgoDef(fcAsFcFnHeadAsAtom.String()) != nil
 }

@@ -1,0 +1,29 @@
+fn f(x R) R
+know:
+    forall x R: x > 0 => f(x) = x + 1
+    forall x R: x < 0 => f(x) = x - 1
+    f(0) = 0
+
+algo f(x):
+    if x = 0:
+        return 0
+    if x > 0:
+        return x + 1 # it's ok to write `x + 2` here, but when you eval f(1), it is impossible to verify f(1) = 1 + 2, and the evaluation fails.
+    if x < 0:
+        return x - 1
+
+eval f(1) # Invoke condition if x > 1
+f(1) = 2
+
+eval f(-1) # Invoke condition if x > 0
+f(-1) = -2
+
+eval f(0) # Invoke x = 0
+f(0) = 0
+
+have a R = 2
+eval f(a) # replace a with its value 2, eval f(2)
+f(a) = 3
+
+eval f(f(a))
+f(f(a)) = 4
