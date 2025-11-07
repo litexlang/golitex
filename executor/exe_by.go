@@ -1,0 +1,74 @@
+// Copyright 2024 Jiachen Shen.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Original Author: Jiachen Shen <malloc_realloc_free@outlook.com>
+// Litex email: <litexlang@outlook.com>
+// Litex website: https://litexlang.com
+// Litex github repository: https://github.com/litexlang/golitex
+// Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
+
+package litex_executor
+
+import (
+	"fmt"
+	ast "golitex/ast"
+	cmp "golitex/cmp"
+)
+
+func (exec *Executor) byStmt(stmt *ast.ByStmt) ExecRet {
+	if len(stmt.ThenFacts) > 0 {
+		exec.NewEnv(exec.Env)
+		defer exec.deleteEnvAndGiveUpMsgs()
+	}
+
+	execState := exec.callProveAlgo(stmt)
+	if execState.IsNotTrue() {
+		return execState
+	}
+
+	if len(stmt.ThenFacts) > 0 {
+		for _, fact := range stmt.ThenFacts {
+			execState, err := exec.factStmt(fact)
+			if err != nil {
+				return NewExecErr("")
+			}
+			if execState.IsNotTrue() {
+				return execState
+			}
+		}
+	}
+
+	return NewExecTrue("")
+}
+
+func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) ExecRet {
+	// params of stmt must be numeric literals
+	numExprFcs := []ast.Fc{}
+	for _, param := range stmt.ProveAlgoParams {
+		value, execRet := exec.eitherIsNumExprFcOrHasValueThenSimplify(param)
+		if execRet.IsNotTrue() {
+			return execRet
+		}
+		numExprFcs = append(numExprFcs, value)
+	}
+
+	return NewExecTrue("")
+}
+
+func (exec *Executor) eitherIsNumExprFcOrHasValueThenSimplify(fc ast.Fc) (ast.Fc, ExecRet) {
+	if cmp.IsNumLitFc(fc) {
+		return exec.simplifyNumExprFc(fc)
+	}
+
+	value := exec.Env.GetSymbolSimplifiedValue(fc)
+	if value == nil {
+		return nil, NewExecErr(fmt.Sprintf("symbol %s has no value", fc.String()))
+	}
+
+	return value, NewExecTrue("")
+}

@@ -111,9 +111,13 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (ExecRet, string, error) {
 	case *ast.ProveIsCommutativePropStmt:
 		execState, err = exec.proveIsCommutativePropStmt(stmt)
 	case *ast.DefAlgoStmt:
-		execState, err = exec.algoDefStmt(stmt)
+		execState, err = exec.defAlgoStmt(stmt)
 	case *ast.EvalStmt:
 		execState = exec.evalStmt(stmt)
+	case *ast.DefProveAlgoStmt:
+		execState, err = exec.defProveAlgoStmt(stmt)
+	case *ast.ByStmt:
+		execState = exec.byStmt(stmt)
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
 	}
@@ -920,7 +924,7 @@ func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitiveP
 	return nil
 }
 
-func (exec *Executor) algoDefStmt(stmt *ast.DefAlgoStmt) (ExecRet, error) {
+func (exec *Executor) defAlgoStmt(stmt *ast.DefAlgoStmt) (ExecRet, error) {
 	exec.Env.AlgoDefMem[stmt.FuncName] = stmt
 	exec.newMsg(stmt.String())
 	return NewExecTrue(""), nil
@@ -954,4 +958,10 @@ func (exec *Executor) evalFcInLocalEnv(fcToEval ast.Fc) (ast.Fc, ExecRet) {
 	}
 
 	return value, NewExecTrue(fmt.Sprintf("By evaluation of algo %s\nWe get %s = %s\n", fcToEval.(*ast.FcFn).FnHead.String(), fcToEval.String(), value.String()))
+}
+
+func (exec *Executor) defProveAlgoStmt(stmt *ast.DefProveAlgoStmt) (ExecRet, error) {
+	exec.Env.DefProveAlgoMem[stmt.ProveAlgoName] = stmt
+	exec.newMsg(stmt.String())
+	return NewExecTrue(""), nil
 }
