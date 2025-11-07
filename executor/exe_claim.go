@@ -172,19 +172,19 @@ func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) ExecRet {
 	return NewExecTrue("")
 }
 
-func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) (ExecRet, error) {
+func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) ExecRet {
 	state, err := exec.claimStmtProveByContradiction(stmt)
 	if notOkExec(state, err) {
-		return state, err
+		return state
 	}
 
 	// 检查 stmt fact 中的所有元素已经定义过了
 	execRet := exec.knowStmt(ast.NewKnowStmt([]ast.CanBeKnownStmt{stmt.ClaimProveStmt.ToCheckFact.(ast.CanBeKnownStmt)}, stmt.ClaimProveStmt.Line))
 	if execRet.IsNotTrue() {
-		return execRet, fmt.Errorf("prove by contradiction failed")
+		return execRet
 	}
 
-	return execRet, nil
+	return execRet
 }
 
 func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) (ExecRet, error) {
@@ -285,58 +285,58 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 }
 
 // 也许我应该语义改成，先声明prop，然后再证明prop，而不是现在这个样子
-func (exec *Executor) claimPropStmt(stmt *ast.ClaimPropStmt) (ExecRet, error) {
+func (exec *Executor) claimPropStmt(stmt *ast.ClaimPropStmt) ExecRet {
 	var err error
 	var execState ExecRet = NewExecErr("")
 
 	// prop all atoms declared
 	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.DomFacts, stmt.Prop.IffFacts, stmt.Line)
 	if !exec.Env.AreAtomsInFactAreDeclared(uniFact, map[string]struct{}{}) && !exec.Env.IsFcAtomDeclaredByUser(ast.FcAtom(stmt.Prop.DefHeader.Name)) {
-		return NewExecErr(""), fmt.Errorf("claim prop statement error: atoms in fact are not declared")
+		return NewExecErr(fmt.Errorf("claim prop statement error: atoms in fact are not declared").Error())
 	}
 
 	// check proofs
 	if stmt.IsProve {
 		execState, err = exec.checkClaimPropStmtProofs(stmt)
 		if notOkExec(execState, err) {
-			return execState, err
+			return execState
 		}
 	} else {
 		execState, err = exec.checkClaimPropStmtProveByContradiction(stmt)
 		if notOkExec(execState, err) {
-			return execState, err
+			return execState
 		}
 	}
 
 	// know exec
 	execRet := exec.knowPropStmt(ast.NewKnowPropStmt(stmt.Prop, stmt.Line))
 	if execRet.IsNotTrue() {
-		return execRet, fmt.Errorf("know prop statement failed")
+		return execRet
 	}
 
-	return execRet, nil
+	return execRet
 }
 
-func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) (ExecRet, error) {
+func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) ExecRet {
 	execState, err := exec.claimExistPropStmtCheckProofs(stmt)
 	if notOkExec(execState, err) {
-		return execState, err
+		return execState
 	}
 
 	// declare exist prop
 	execState = exec.defExistPropStmt(stmt.ExistPropWithoutDom)
 	if execState.IsNotTrue() {
-		return execState, fmt.Errorf("failed to declare exist prop: %s", stmt.ExistPropWithoutDom.String())
+		return execState
 	}
 
 	// know forall
 	uniFact := ast.NewUniFact(stmt.ExistPropWithoutDom.DefBody.DefHeader.Params, stmt.ExistPropWithoutDom.DefBody.DefHeader.ParamSets, stmt.ExistPropWithoutDom.DefBody.IffFacts, []ast.FactStmt{stmt.ExistPropWithoutDom.DefBody.DefHeader.ToSpecFact()}, stmt.Line)
 	err = exec.Env.NewFact(uniFact)
 	if err != nil {
-		return NewExecErr(""), err
+		return NewExecErr(err.Error())
 	}
 
-	return NewExecTrue(""), nil
+	return NewExecTrue("")
 }
 
 func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt) (ExecRet, error) {
