@@ -100,7 +100,7 @@ func (exec *Executor) evalFcAtomThenSimplify(fc ast.FcAtom) (ast.Fc, ExecRet) {
 	return symbolValue, NewExecTrue("")
 }
 
-func (exec *Executor) useAlgoToEvalFcFnThenSimplify(algoDef *ast.AlgoDefStmt, fcFn *ast.FcFn) (ast.Fc, ExecRet) {
+func (exec *Executor) useAlgoToEvalFcFnThenSimplify(algoDef *ast.DefAlgoStmt, fcFn *ast.FcFn) (ast.Fc, ExecRet) {
 	if len(fcFn.Params) != len(algoDef.Params) {
 		return nil, NewExecErr(fmt.Sprintf("algorithm %s requires %d parameters, get %d instead", algoDef.FuncName, len(algoDef.Params), len(fcFn.Params)))
 	}
@@ -140,7 +140,7 @@ func (exec *Executor) useAlgoToEvalFcFnThenSimplify(algoDef *ast.AlgoDefStmt, fc
 		return nil, NewExecErrWithErr(err)
 	}
 
-	value, execRet := exec.runAlgoStmts(instAlgoDef.(*ast.AlgoDefStmt).Stmts, fcFnWithValueParams)
+	value, execRet := exec.runAlgoStmts(instAlgoDef.(*ast.DefAlgoStmt).Stmts, fcFnWithValueParams)
 	if execRet.IsNotTrue() {
 		return nil, execRet
 	}
@@ -148,7 +148,7 @@ func (exec *Executor) useAlgoToEvalFcFnThenSimplify(algoDef *ast.AlgoDefStmt, fc
 	return exec.simplifyNumExprFc(value)
 }
 
-func (exec *Executor) runAlgoStmts(algoStmts ast.AlgoSlice, fcFnWithValueParams *ast.FcFn) (ast.Fc, ExecRet) {
+func (exec *Executor) runAlgoStmts(algoStmts ast.AlgoStmtSlice, fcFnWithValueParams *ast.FcFn) (ast.Fc, ExecRet) {
 	for _, stmt := range algoStmts {
 		switch asStmt := stmt.(type) {
 		case *ast.AlgoReturnStmt:

@@ -110,7 +110,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (ExecRet, string, error) {
 		execState, err = exec.proveIsTransitivePropStmt(stmt)
 	case *ast.ProveIsCommutativePropStmt:
 		execState, err = exec.proveIsCommutativePropStmt(stmt)
-	case *ast.AlgoDefStmt:
+	case *ast.DefAlgoStmt:
 		execState, err = exec.algoDefStmt(stmt)
 	case *ast.EvalStmt:
 		execState = exec.evalStmt(stmt)
@@ -920,7 +920,7 @@ func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitiveP
 	return nil
 }
 
-func (exec *Executor) algoDefStmt(stmt *ast.AlgoDefStmt) (ExecRet, error) {
+func (exec *Executor) algoDefStmt(stmt *ast.DefAlgoStmt) (ExecRet, error) {
 	exec.Env.AlgoDefMem[stmt.FuncName] = stmt
 	exec.newMsg(stmt.String())
 	return NewExecTrue(""), nil
