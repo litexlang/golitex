@@ -162,7 +162,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 	return NewExecTrue("")
 }
 
-func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStmt) (ExecRet, error) {
+func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStmt) ExecRet {
 	failed := true
 	defer func() {
 		if glob.RequireMsg() && !failed {
@@ -175,13 +175,13 @@ func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStm
 		haveStmt := ast.NewHaveStmt([]string{stmt.Objs[i]}, existInFact, stmt.Line)
 		execState := exec.haveObjStStmt(haveStmt, false)
 		if execState.IsNotTrue() {
-			return execState, fmt.Errorf("failed to have obj in non empty set: %s", stmt.String())
+			return execState
 		}
 	}
 
 	failed = false
 
-	return NewExecTrue(""), nil
+	return NewExecTrue("")
 }
 
 func (exec *Executor) checkInFactInSet_SetIsNonEmpty(pureInFact *ast.SpecFactStmt) (bool, error) {
