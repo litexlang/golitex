@@ -29,5 +29,5 @@ func FormatCode(path string) (string, glob.SysSignal, error) {
 	if err != nil {
 		return fmt.Sprintf("failed to write file %s: %s", path, err.Error()), glob.SysSignalSystemError, err
 	}
-	return "success", glob.SysSignalTrue, nil
+	return fmt.Sprintf("formatted code written to %s", path), glob.SysSignalTrue, nil
 }

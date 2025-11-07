@@ -292,7 +292,7 @@ func (s *DefExistPropStmt) ToString(head string) string {
 	builder.WriteString(head)
 	builder.WriteByte(' ')
 	if len(s.ExistParams) > 0 {
-		builder.WriteString(strings.Join(s.ExistParams, ", "))
+		builder.WriteString(StrFcSetPairs(s.ExistParams, s.ExistParamSets))
 	}
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeywordSt)
@@ -310,12 +310,17 @@ func (s *DefExistPropStmt) ToString(head string) string {
 	}
 
 	if len(s.DefBody.IffFacts) > 0 {
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents("<=>:", 1))
-		builder.WriteString("\n")
+		indentNum := 1
+
+		if len(s.DefBody.DomFacts) > 0 || len(s.DefBody.ThenFacts) > 0 {
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents("<=>:", 1))
+			builder.WriteString("\n")
+			indentNum = 2
+		}
 
 		iffFactStrSlice := make([]string, len(s.DefBody.IffFacts))
 		for i := range len(s.DefBody.IffFacts) {
-			iffFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(s.DefBody.IffFacts[i].String(), 2)
+			iffFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(s.DefBody.IffFacts[i].String(), uint32(indentNum))
 		}
 		builder.WriteString(strings.Join(iffFactStrSlice, "\n"))
 	}
@@ -432,15 +437,10 @@ func (f *FcFn) String() string {
 		return fmt.Sprintf("%s.%s", f.Params[0], f.Params[1])
 	}
 
-	// if IsFcAtomAndEqualToStr(f.FnHead, glob.TupleFcFnHead) {
-	// 	paramStrSlice := make([]string, len(f.Params))
-	// 	for i := range len(f.Params) {
-	// 		paramStrSlice[i] = f.Params[i].String()
-	// 	}
-	// 	return fmt.Sprintf("(%s)", strings.Join(paramStrSlice, ", "))
-	// }
-
 	if ok, str := hasBuiltinOptAndToString(f); ok {
+		// 如果最左和最右是两边是 ()，那remove掉括号
+		str = strings.TrimPrefix(str, "(")
+		str = strings.TrimSuffix(str, ")")
 		return str
 	}
 
@@ -843,6 +843,8 @@ func (stmt *HaveObjEqualStmt) String() string {
 func (stmt *HaveFnEqualStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordHave)
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeywordFn)
 	builder.WriteString(" ")
 	builder.WriteString(stmt.DefHeader.StringWithoutColonAtEnd())
 	builder.WriteString(" ")
