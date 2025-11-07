@@ -29,6 +29,7 @@ func (tb *tokenBlock) algoStmt() (ast.AlgoStmt, error) {
 	}
 
 	return tb.Stmt()
+	// panic("not implemented")
 }
 
 func (tb *tokenBlock) algoIfStmt() (*ast.AlgoIfStmt, error) {

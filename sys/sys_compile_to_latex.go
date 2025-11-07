@@ -19,7 +19,6 @@ import (
 	glob "golitex/glob"
 	litex_to_latex_compiler "golitex/to_latex"
 	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -29,8 +28,8 @@ func CompileFileToLatex(path string) (string, glob.SysSignal, error) {
 		return "", glob.SysSignalParseError, errors.New("the path is not a .lit file")
 	}
 
-	repoName := filepath.Dir(path)
-	glob.CurrentTaskDirName = repoName
+	// repoName := filepath.Dir(path)
+	// glob.CurrentTaskDirName = repoName
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return "", glob.SysSignalParseError, err

@@ -350,7 +350,7 @@ know:
 	forall x, y, z R: x + y = z => x = z - y, y = z - x
 	forall x, y, z R: x - y = z => x = z + y, y = x - z
 	forall x, y, z R: x = y + z => x - y = z, x - z = y
-	forall x, y, z R: x = y - z => x - y = -z, x + z = y
+	forall x, y, z R: x = y - z => x - y = -z, x + z = y, z + x = y
 
 know:
 	forall a, b, c, d R: b != 0, d != 0, a / b = c / d => a * d = b * c
@@ -589,4 +589,21 @@ know $there_exists_infinite_set()
 
 fn negate(x R) R:
 	negate(x) = -x
+
+know forall x set: not x $in x
+
+prop is_subset_of(x, y set):
+	forall z x:
+		z $in x
+		=>:
+			z $in y
+	forall:
+		y $in finite_set
+		=>:
+			x $in finite_set
+			len(x) <= len(y)
+
+
+prop is_superset_of(A, B set):
+	forall x B: x $in A
 `

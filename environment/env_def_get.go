@@ -87,9 +87,9 @@ func (e *Env) GetIntensionalSet(fc ast.Fc) *ast.IntensionalSetStmt {
 	return nil
 }
 
-func (e *Env) GetSymbolValue(fc ast.Fc) ast.Fc {
+func (e *Env) GetSymbolSimplifiedValue(fc ast.Fc) ast.Fc {
 	for env := e; env != nil; env = env.Parent {
-		symbolValue, ok := env.SymbolValueMem[fc.String()]
+		symbolValue, ok := env.SymbolSimplifiedValueMem[fc.String()]
 		if ok {
 			return symbolValue
 		}

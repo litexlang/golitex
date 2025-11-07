@@ -18,7 +18,6 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	env "golitex/environment"
-	verifier "golitex/verifier"
 )
 
 func notOkExec(state ExecRet, err error) bool {
@@ -32,22 +31,22 @@ func notOkExec(state ExecRet, err error) bool {
 }
 
 func (exec *Executor) NewCommutativeProp(specFact *ast.SpecFactStmt) {
-	if _, ok := exec.env.CommutativePropMem[string(specFact.PropName)]; !ok {
-		exec.env.CommutativePropMem[string(specFact.PropName)] = env.NewCommutativePropMemItemStruct()
+	if _, ok := exec.Env.CommutativePropMem[string(specFact.PropName)]; !ok {
+		exec.Env.CommutativePropMem[string(specFact.PropName)] = env.NewCommutativePropMemItemStruct()
 	}
 
 	switch specFact.TypeEnum {
 	case ast.TruePure:
-		exec.env.CommutativePropMem[string(specFact.PropName)].TruePureIsCommutative = true
+		exec.Env.CommutativePropMem[string(specFact.PropName)].TruePureIsCommutative = true
 	case ast.FalsePure:
-		exec.env.CommutativePropMem[string(specFact.PropName)].FalsePureIsCommutative = true
+		exec.Env.CommutativePropMem[string(specFact.PropName)].FalsePureIsCommutative = true
 	default:
 		panic("not implemented: not commutative prop")
 	}
 }
 
-func (exec *Executor) verifyFactsAtCurEnv(proofs []ast.FactStmt, verState *verifier.VerState) (ExecRet, ast.Stmt, error) {
-	ver := verifier.NewVerifier(exec.env)
+func (exec *Executor) verifyFactsAtCurEnv(proofs []ast.FactStmt, verState *VerState) (ExecRet, ast.Stmt, error) {
+	ver := NewVerifier(exec.Env)
 	for _, proof := range proofs {
 		verRet := ver.VerFactStmt(proof, verState)
 		if verRet.IsErr() {
@@ -56,10 +55,18 @@ func (exec *Executor) verifyFactsAtCurEnv(proofs []ast.FactStmt, verState *verif
 			return NewExecUnknown(""), proof, nil
 		}
 
-		err := exec.env.NewFact(proof)
+		err := exec.Env.NewFact(proof)
 		if err != nil {
 			return NewExecErr(""), proof, err
 		}
 	}
 	return NewExecTrue(""), nil, nil
+}
+
+func (exec *Executor) GetBuiltinEnv() *env.Env {
+	return exec.Env.GetUpMostEnv()
+}
+
+func (exec *Executor) GetSecondUpMostEnv() *env.Env {
+	return exec.Env.GetSecondUpMostEnv()
 }

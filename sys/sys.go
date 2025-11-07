@@ -26,22 +26,19 @@ import (
 
 func RunFile(path string) (string, glob.SysSignal, error) {
 	// 得到path的repo名所在的绝对路径
-	repoName := filepath.Dir(path)
-	glob.CurrentTaskDirName = repoName
+	// repoName := filepath.Dir(path)
+	// glob.CurrentTaskDirName = repoName
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return fmt.Sprintf("failed to read file %s: %s", path, err.Error()), glob.SysSignalSystemError, err
 	}
-	msg, signal, err := pipeline.ExecuteCodeAndReturnMessage(string(content))
-	if err != nil {
-		return msg, signal, err
-	}
-	return msg, signal, nil
+	msg, signal, _, err := pipeline.RunSourceCode(nil, string(content))
+	return msg, signal, err
 }
 
 func RunFileWithPipelineRunner(path string) (string, glob.SysSignal, time.Duration, error) {
-	repoName := filepath.Dir(path)
-	glob.CurrentTaskDirName = repoName
+	// repoName := filepath.Dir(path)
+	// glob.CurrentTaskDirName = repoName
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return fmt.Sprintf("failed to read file %s: %s", path, err.Error()), glob.SysSignalSystemError, 0, err
@@ -57,13 +54,13 @@ func RunFileWithPipelineRunner(path string) (string, glob.SysSignal, time.Durati
 }
 
 func RunRepo(path string) (string, glob.SysSignal, error) {
-	glob.CurrentTaskDirName = path
+	// glob.CurrentTaskDirName = path
 	// 运行里面的main.lit
 	content, err := os.ReadFile(filepath.Join(path, glob.PkgEntranceFileName))
 	if err != nil {
 		return "", glob.SysSignalSystemError, err
 	}
-	msg, signal, err := pipeline.ExecuteCodeAndReturnMessage(string(content))
+	msg, signal, _, err := pipeline.RunSourceCode(nil, string(content))
 	if err != nil {
 		return msg, signal, err
 	}
@@ -71,7 +68,7 @@ func RunRepo(path string) (string, glob.SysSignal, error) {
 }
 
 func ExecuteCodeAndReturnMessage(code string) (string, glob.SysSignal, error) {
-	msg, signal, err := pipeline.ExecuteCodeAndReturnMessage(code)
+	msg, signal, _, err := pipeline.RunSourceCode(nil, code)
 	if err != nil {
 		return msg, signal, err
 	}
@@ -167,7 +164,7 @@ func RunFilesInRepoWithPipelineRunner(repo string) error {
 		start := time.Now()
 		msg, signal, err := pipelineRunner.Run(string(content))
 		if err != nil || signal != glob.SysSignalTrue {
-			return fmt.Errorf("%s\n%s", msg, err.Error())
+			return fmt.Errorf("%s\n%s\nerror in file: %s", msg, err.Error(), file.Name())
 		}
 
 		elapsed := time.Since(start)
