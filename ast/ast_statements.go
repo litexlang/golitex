@@ -424,3 +424,10 @@ type ByStmt struct {
 
 	Line uint
 }
+
+type ProveAlgoReturnStmt struct {
+	ProveAlgoName string
+	Params        FcSlice
+
+	Line uint
+}

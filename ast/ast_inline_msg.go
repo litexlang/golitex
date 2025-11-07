@@ -363,3 +363,7 @@ func (s *DefProveAlgoStmt) InlineString() string {
 func (s *ByStmt) InlineString() string {
 	return "TODO"
 }
+
+func (s *ProveAlgoReturnStmt) InlineString() string {
+	return s.String()
+}
