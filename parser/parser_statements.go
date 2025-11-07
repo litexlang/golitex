@@ -3028,7 +3028,7 @@ func (tb *tokenBlock) proveCommutativePropStmt() (ast.Stmt, error) {
 
 }
 
-func (tb *tokenBlock) algoDefStmt() (*ast.AlgoDefStmt, error) {
+func (tb *tokenBlock) algoDefStmt() (*ast.DefAlgoStmt, error) {
 	err := tb.header.skip(glob.KeywordAlgo)
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -3096,9 +3096,99 @@ func (tb *tokenBlock) evalStmt() (ast.Stmt, error) {
 }
 
 func (tb *tokenBlock) defProveAlgoStmt() (*ast.DefProveAlgoStmt, error) {
-	panic("not implemented")
+	err := tb.header.skip(glob.KeywordProveAlgo)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	funcName, err := tb.header.next()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	params := []string{}
+	for !tb.header.is(glob.KeySymbolRightBrace) {
+		param, err := tb.header.next()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		params = append(params, param)
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+		}
+	}
+
+	err = tb.header.skip(glob.KeySymbolRightBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	stmts := []ast.AlgoStmt{}
+	for _, block := range tb.body {
+		curStmt, err := block.algoStmt()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		stmts = append(stmts, curStmt)
+	}
+	return ast.NewDefProveAlgoStmt(funcName, params, stmts, tb.line), nil
 }
 
 func (tb *tokenBlock) byStmt() (*ast.ByStmt, error) {
-	panic("not implemented")
+	err := tb.header.skip(glob.KeywordBy)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	proveAlgoName, err := tb.header.next()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	proveAlgoParams := []ast.Fc{}
+	for !tb.header.is(glob.KeySymbolRightBrace) {
+		param, err := tb.RawFc()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		proveAlgoParams = append(proveAlgoParams, param)
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+		}
+	}
+
+	err = tb.header.skip(glob.KeySymbolRightBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	thenFacts := []ast.FactStmt{}
+	for _, block := range tb.body {
+		curStmt, err := block.factStmt(UniFactDepth0)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		thenFacts = append(thenFacts, curStmt)
+	}
+	return ast.NewByStmt(proveAlgoName, proveAlgoParams, thenFacts, tb.line), nil
 }

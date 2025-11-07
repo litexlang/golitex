@@ -724,7 +724,7 @@ func InstantiateAlgoStmt(stmt AlgoStmt, uniMap map[string]Fc) (AlgoStmt, error) 
 	return nil, fmt.Errorf("unknown algo statement type: %T", stmt)
 }
 
-func (s AlgoSlice) Instantiate(uniMap map[string]Fc) (AlgoSlice, error) {
+func (s AlgoStmtSlice) Instantiate(uniMap map[string]Fc) (AlgoStmtSlice, error) {
 	newStmts := make([]AlgoStmt, len(s))
 	for i, stmt := range s {
 		newStmt, err := InstantiateAlgoStmt(stmt, uniMap)
@@ -756,7 +756,7 @@ func (stmt *AlgoReturnStmt) InstantiateAlgo(uniMap map[string]Fc) (AlgoStmt, err
 	return NewAlgoReturnStmt(newValue, stmt.Line), nil
 }
 
-func (stmt *AlgoDefStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+func (stmt *DefAlgoStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
 	newStmts, err := stmt.Stmts.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
@@ -802,9 +802,21 @@ func (stmt *IntensionalSetStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) 
 }
 
 func (stmt *DefProveAlgoStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
-	panic("not implemented")
+	newStmts, err := stmt.Stmts.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewDefProveAlgoStmt(stmt.ProveAlgoName, stmt.Params, newStmts, stmt.Line), nil
 }
 
 func (stmt *ByStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
-	panic("not implemented")
+	newProveAlgoParams, err := stmt.ProveAlgoParams.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newThenFacts, err := stmt.ThenFacts.InstantiateFact(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewByStmt(stmt.ProveAlgoName, newProveAlgoParams, newThenFacts, stmt.Line), nil
 }
