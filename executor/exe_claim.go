@@ -156,20 +156,20 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 	return NewExecTrue(""), nil
 }
 
-func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) (ExecRet, error) {
+func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) ExecRet {
 	state, err := exec.claimStmtProve(stmt)
 	if notOkExec(state, err) {
-		return state, err
+		return state
 	}
 
 	// 检查 stmt fact 中的所有元素已经定义过了
 	err = exec.Env.NewFact(stmt.ToCheckFact)
 	if err != nil {
-		return NewExecErr(""), err
+		return NewExecErr(err.Error())
 	}
 	// exec.knowStmt(ast.NewKnowStmt([]ast.CanBeKnownStmt{stmt.ToCheckFact}))
 
-	return NewExecTrue(""), nil
+	return NewExecTrue("")
 }
 
 func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) (ExecRet, error) {
@@ -309,12 +309,12 @@ func (exec *Executor) claimPropStmt(stmt *ast.ClaimPropStmt) (ExecRet, error) {
 	}
 
 	// know exec
-	err = exec.knowPropStmt(ast.NewKnowPropStmt(stmt.Prop, stmt.Line))
-	if notOkExec(execState, err) {
-		return execState, err
+	execRet := exec.knowPropStmt(ast.NewKnowPropStmt(stmt.Prop, stmt.Line))
+	if execRet.IsNotTrue() {
+		return execRet, fmt.Errorf("know prop statement failed")
 	}
 
-	return NewExecTrue(""), nil
+	return execRet, nil
 }
 
 func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) (ExecRet, error) {
