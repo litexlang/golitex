@@ -25,7 +25,11 @@ func (tb *tokenBlock) algoStmt() (ast.AlgoStmt, error) {
 	}
 
 	if tb.header.is(glob.KeywordReturn) {
-		return tb.algoReturnStmt()
+		if tb.header.strAtCurIndexPlus(1) == glob.KeywordBy {
+			return tb.proveAlgoReturnStmt()
+		} else {
+			return tb.algoReturnStmt()
+		}
 	}
 
 	return tb.Stmt()
@@ -67,4 +71,49 @@ func (tb *tokenBlock) algoReturnStmt() (*ast.AlgoReturnStmt, error) {
 	}
 
 	return ast.NewAlgoReturnStmt(fc, tb.line), nil
+}
+
+func (tb *tokenBlock) proveAlgoReturnStmt() (*ast.ProveAlgoReturnStmt, error) {
+	err := tb.header.skip(glob.KeywordReturn)
+	if err != nil {
+		return nil, err
+	}
+
+	err = tb.header.skip(glob.KeywordBy)
+	if err != nil {
+		return nil, err
+	}
+
+	proveAlgoName, err := tb.header.next()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	if tb.header.ExceedEnd() {
+		return ast.NewProveAlgoReturnStmt("", []ast.Fc{}), nil
+	}
+
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	proveAlgoParams := []ast.Fc{}
+	for !tb.header.is(glob.KeySymbolRightBrace) {
+		param, err := tb.RawFc()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		proveAlgoParams = append(proveAlgoParams, param)
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+		}
+	}
+
+	err = tb.header.skip(glob.KeySymbolRightBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	return ast.NewProveAlgoReturnStmt(proveAlgoName, proveAlgoParams), nil
 }

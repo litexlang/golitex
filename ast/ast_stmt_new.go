@@ -299,3 +299,7 @@ func NewDefProveAlgoStmt(algoName string, params []string, thenFacts AlgoStmtSli
 func NewByStmt(proveAlgoName string, proveAlgoParams FcSlice, thenFacts FactStmtSlice, line uint) *ByStmt {
 	return &ByStmt{proveAlgoName, proveAlgoParams, thenFacts, line}
 }
+
+func NewProveAlgoReturnStmt(proveAlgoName string, params FcSlice) *ProveAlgoReturnStmt {
+	return &ProveAlgoReturnStmt{ProveAlgoName: proveAlgoName, Params: params}
+}
