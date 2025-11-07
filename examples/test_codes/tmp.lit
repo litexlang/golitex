@@ -1,0 +1,18 @@
+prop p(x R):
+    x = 1
+
+prove_algo A(x):
+    if x = 1:
+        $p(x)
+        return
+    if x != 2:
+        claim:
+            not $p(x)
+            prove:
+                $p(x)
+                x = 1
+        return
+
+have x R = 3
+by A(x):
+    not $p(x)

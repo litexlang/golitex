@@ -1175,9 +1175,6 @@ func (stmt *ProveAlgoReturnStmt) String() string {
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeywordBy)
 	builder.WriteString(" ")
-	builder.WriteString(stmt.ProveAlgoName)
-	builder.WriteString(glob.KeySymbolLeftBrace)
-	builder.WriteString(stmt.Params.String())
-	builder.WriteString(glob.KeySymbolRightBrace)
+	builder.WriteString(stmt.By.String())
 	return builder.String()
 }
