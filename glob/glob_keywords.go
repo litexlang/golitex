@@ -77,6 +77,9 @@ const (
 	KeywordReturn = "return"
 	KeywordIf     = "if"
 	KeywordEval   = "eval"
+
+	KeywordProveAlgo = "prove_algo"
+	KeywordBy        = "by"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -135,6 +138,9 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordReturn: {},
 	KeywordIf:     {},
 	KeywordEval:   {},
+
+	KeywordProveAlgo: {},
+	KeywordBy:        {},
 }
 
 const (

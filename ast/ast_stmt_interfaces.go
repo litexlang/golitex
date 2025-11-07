@@ -70,6 +70,8 @@ func (s *ProveInRangeStmt) stmt()                {}
 func (s *ProveIsTransitivePropStmt) stmt()       {}
 func (s *AlgoDefStmt) stmt()                     {}
 func (s *EvalStmt) stmt()                        {}
+func (s *DefProveAlgoStmt) stmt()                {}
+func (s *ByStmt) stmt()                          {}
 
 func (s *DefLetStmt) algoStmt()                      {}
 func (s *DefPropStmt) algoStmt()                     {}
@@ -112,8 +114,9 @@ func (s *HaveFnLiftStmt) algoStmt()                  {}
 func (s *HaveFnStmt) algoStmt()                      {}
 func (s *MarkdownStmt) algoStmt()                    {}
 func (s *ProveIsCommutativePropStmt) algoStmt()      {}
+func (s *DefProveAlgoStmt) algoStmt()                {}
+func (s *ByStmt) algoStmt()                          {}
 
-// func (s *ProveInRange2tmt) algoStmt()                {}
 func (s *ClaimIffStmt) algoStmt()                        {}
 func (s *ProveInRangeStmt) algoStmt()                    {}
 func (s *ProveIsTransitivePropStmt) algoStmt()           {}
@@ -165,6 +168,8 @@ func (s *ProveIsTransitivePropStmt) GetLine() uint       { return s.Line }
 func (s *ProveIsCommutativePropStmt) GetLine() uint      { return s.Line }
 func (s *AlgoDefStmt) GetLine() uint                     { return s.Line }
 func (s *EvalStmt) GetLine() uint                        { return s.Line }
+func (s *DefProveAlgoStmt) GetLine() uint                { return s.Line }
+func (s *ByStmt) GetLine() uint                          { return s.Line }
 
 type FactStmt interface {
 	factStmt()

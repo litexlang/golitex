@@ -1133,3 +1133,11 @@ func (stmt *EvalStmt) String() string {
 	}
 	return fmt.Sprintf("%s %s", glob.KeywordEval, strings.Join(strSlice, ", "))
 }
+
+func (stmt *DefProveAlgoStmt) String() string {
+	panic("not implemented")
+}
+
+func (stmt *ByStmt) String() string {
+	panic("not implemented")
+}
