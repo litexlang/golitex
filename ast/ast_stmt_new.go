@@ -124,8 +124,12 @@ func NewHaveObjInNonEmptySetStmt(objNames []string, objSets []Fc, line uint) *Ha
 	return &HaveObjInNonEmptySetStmt{objNames, objSets, line}
 }
 
-func NewHaveSetStmt(fact EnumSet_IntensionalSet_EqualDom_Interface, line uint) *HaveSetStmt {
-	return &HaveSetStmt{fact, line}
+func NewHaveEnumSetStmt(fact *EnumStmt, line uint) *HaveEnumSetStmt {
+	return &HaveEnumSetStmt{fact, line}
+}
+
+func NewHaveIntensionalSetStmt(fact *IntensionalSetStmt, line uint) *HaveIntensionalSetStmt {
+	return &HaveIntensionalSetStmt{fact, line}
 }
 
 func NewHaveSetFnStmt(declHeader *DefHeader, param string, parentSet Fc, proofs []*SpecFactStmt, line uint) *HaveSetFnStmt {
@@ -212,11 +216,11 @@ func NewProveIsCommutativePropStmt(specFact *SpecFactStmt, proofs []Stmt, proofs
 	return &ProveIsCommutativePropStmt{specFact, proofs, proofsRightToLeft, line}
 }
 
-func NewAlgoDefStmt(funcName string, params []string, stmts []AlgoStmt, line uint) *AlgoDefStmt {
+func NewAlgoDefStmt(funcName string, params []string, stmts AlgoSlice, line uint) *AlgoDefStmt {
 	return &AlgoDefStmt{funcName, params, stmts, line}
 }
 
-func NewAlgoIfStmt(condition []FactStmt, thenFacts []AlgoStmt, line uint) *AlgoIfStmt {
+func NewAlgoIfStmt(condition []FactStmt, thenFacts AlgoSlice, line uint) *AlgoIfStmt {
 	return &AlgoIfStmt{condition, thenFacts, line}
 }
 
@@ -282,4 +286,8 @@ func NewUniFactWithIffWithSafeGuard(params []string, setParams []Fc, domFacts []
 	}
 
 	return NewUniFactWithIff(uniFact, iffFacts, line), nil
+}
+
+func NewEvalStmt(value Fc, line uint) *EvalStmt {
+	return &EvalStmt{value, line}
 }

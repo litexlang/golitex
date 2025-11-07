@@ -195,8 +195,6 @@ func keySymbolRelaFactWithoutNotLatexString(stmt *SpecFactStmt) string {
 		builder.WriteString("$\\leq$")
 	case glob.KeySymbolGreater:
 		builder.WriteString("$\\geq$")
-	case glob.KeySymbolEqualEqual:
-		builder.WriteString("==")
 	case glob.KeySymbolNotEqual:
 		builder.WriteString("\\neq")
 	case glob.KeywordIn:
@@ -620,7 +618,7 @@ func (s *HaveObjInNonEmptySetStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (s *HaveSetStmt) ToLatexString() string {
+func (s *HaveEnumSetStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("\\begin{definition}[Set Exist By Axioms of Set Theory]")
 
@@ -630,6 +628,16 @@ func (s *HaveSetStmt) ToLatexString() string {
 
 	builder.WriteString(".\n")
 
+	builder.WriteString("\\end{definition}")
+	return builder.String()
+}
+
+func (s *HaveIntensionalSetStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("\\begin{definition}[Set Exist By Axioms of Set Theory]")
+	builder.WriteString("We have a set: ")
+	builder.WriteString(s.Fact.ToLatexString())
+	builder.WriteString(".\n")
 	builder.WriteString("\\end{definition}")
 	return builder.String()
 }
@@ -897,4 +905,8 @@ func (s *AlgoReturnStmt) ToLatexString() string {
 
 func (s *AlgoDefStmt) ToLatexString() string {
 	return s.String()
+}
+
+func (s *EvalStmt) ToLatexString() string {
+	return fmt.Sprintf("%s %s", glob.KeywordEval, s.Value.ToLatexString())
 }
