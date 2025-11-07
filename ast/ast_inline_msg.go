@@ -349,5 +349,9 @@ func (s *AlgoDefStmt) InlineString() string {
 }
 
 func (s *EvalStmt) InlineString() string {
-	return fmt.Sprintf("%s %s", glob.KeywordEval, s.Value.String())
+	strSlice := make([]string, len(s.FcsToEval))
+	for i, fc := range s.FcsToEval {
+		strSlice[i] = fc.String()
+	}
+	return fmt.Sprintf("%s %s", glob.KeywordEval, strings.Join(strSlice, ", "))
 }

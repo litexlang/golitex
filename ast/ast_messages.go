@@ -1127,5 +1127,9 @@ func AlgoStmtStrSliceJoinWithNewlineWithIndents(stmts []Stmt, indents uint32) st
 }
 
 func (stmt *EvalStmt) String() string {
-	return fmt.Sprintf("%s %s", glob.KeywordEval, stmt.Value.String())
+	strSlice := make([]string, len(stmt.FcsToEval))
+	for i, fc := range stmt.FcsToEval {
+		strSlice[i] = fc.String()
+	}
+	return fmt.Sprintf("%s %s", glob.KeywordEval, strings.Join(strSlice, ", "))
 }
