@@ -289,7 +289,7 @@ func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) ExecRet {
 func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) (ExecRet, error) {
 	for _, curStmt := range proof {
 		execState, _, err := exec.Stmt(curStmt)
-		if err != nil {
+		if err != nil || execState.IsErr() {
 			if glob.RequireMsg() {
 				exec.newMsg(fmt.Sprintf("%s\nfailed :( line %d\n", curStmt.String(), curStmt.GetLine()))
 			}
