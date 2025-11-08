@@ -48,7 +48,7 @@ func (exec *Executor) evalFcThenSimplify(fc ast.Fc) (ast.Fc, ExecRet) {
 	case *ast.FcFn:
 		return exec.evalFcFnThenSimplify(asFc)
 	default:
-		panic(fmt.Sprintf("unexpected type: %T", fc))
+		return nil, NewExecErr(fmt.Sprintf("unexpected type: %T", fc))
 	}
 }
 
@@ -116,7 +116,7 @@ func (exec *Executor) useAlgoToEvalFcFnThenSimplify(fcFn *ast.FcFn) (ast.Fc, Exe
 
 	for _, param := range algoDef.Params {
 		if exec.Env.IsAtomDeclared(ast.FcAtom(param), map[string]struct{}{}) {
-			panic("TODO: 之后如果外面已经弄过了，那就遍历地变成无重复的随机符号。之所以这里要panic是因为，可能用户在algo def 里面声明了和外面同名的符号")
+			return nil, NewExecErr("TODO: 之后如果外面已经弄过了，那就遍历地变成无重复的随机符号。之所以这里要panic是因为，可能用户在algo def 里面声明了和外面同名的符号")
 		}
 	}
 
