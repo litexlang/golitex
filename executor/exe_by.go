@@ -21,7 +21,7 @@ import (
 )
 
 func (exec *Executor) byStmt(stmt *ast.ByStmt) ExecRet {
-	if len(stmt.ThenFacts) > 0 {
+	if len(stmt.ThenFactsOrNil) > 0 {
 		exec.NewEnv(exec.Env)
 		defer exec.deleteEnvAndGiveUpMsgs()
 	}
@@ -31,8 +31,8 @@ func (exec *Executor) byStmt(stmt *ast.ByStmt) ExecRet {
 		return execState
 	}
 
-	if len(stmt.ThenFacts) > 0 {
-		for _, fact := range stmt.ThenFacts {
+	if len(stmt.ThenFactsOrNil) > 0 {
+		for _, fact := range stmt.ThenFactsOrNil {
 			execState, err := exec.factStmt(fact)
 			if err != nil {
 				return NewExecErr("")
@@ -129,8 +129,7 @@ func (exec *Executor) runAlgoStmtsWhenBy(algoStmts ast.AlgoStmtSlice, paramsValu
 			}
 		}
 	}
-
-	return NewExecErr("There is no return of prove algo")
+	return NewExecTrue("")
 }
 
 func (exec *Executor) algoIfStmtWhenBy(stmt *ast.AlgoIfStmt, paramsValues []ast.Fc) ExecRet {
@@ -147,11 +146,11 @@ func (exec *Executor) algoIfStmtWhenBy(stmt *ast.AlgoIfStmt, paramsValues []ast.
 }
 
 func (exec *Executor) runProveAlgoReturnStmt(stmt *ast.ProveAlgoReturnStmt) ExecRet {
-	if stmt.By == nil {
+	if stmt.ByStmtOrNil == nil {
 		return NewExecTrue("")
 	}
 
-	execState := exec.callProveAlgo(ast.NewByStmt(stmt.By.ProveAlgoName, stmt.By.Params, stmt.By.ThenFacts, stmt.Line))
+	execState := exec.callProveAlgo(ast.NewByStmt(stmt.ByStmtOrNil.ProveAlgoName, stmt.ByStmtOrNil.Params, stmt.ByStmtOrNil.ThenFactsOrNil, stmt.Line))
 	if execState.IsNotTrue() {
 		return execState
 	}
