@@ -381,7 +381,7 @@ func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 	}
 
 	// 如果 a = b 中，某一项是 数值型，那就算出来这个数值，卷后把它保留在equalMem中
-	err = env.storeSymbolValue(fact.Params[0], fact.Params[1])
+	err = env.storeSymbolSimplifiedValue(fact.Params[0], fact.Params[1])
 	if err != nil {
 		return false, err
 	}
@@ -390,18 +390,29 @@ func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 }
 
 func (env *Env) StoreTrueEqualValues(key, value ast.Fc) {
-	env.SymbolValueMem[key.String()] = value
+	// 如果已经知道它的值了，那不能存了；否则比如我在外部环境里知道了a = 3，内部环境在反证法证明 a != 1，那我 a = 1就把a = 3覆盖掉了，a = 3这个取值貌似就不work了。某种程度上就是弄了个const
+	if v := env.GetSymbolSimplifiedValue(key); v != nil {
+		return
+	}
+	env.SymbolSimplifiedValueMem[key.String()] = value
 }
 
-func (env *Env) storeSymbolValue(left, right ast.Fc) error {
+func simplifyNumExprFc(fc ast.Fc) ast.Fc {
+	simplifiedNumExprFc := cmp.IsNumExprFcThenSimplify(fc)
+	return simplifiedNumExprFc
+}
+
+func (env *Env) storeSymbolSimplifiedValue(left, right ast.Fc) error {
 	_, newLeft := env.ReplaceSymbolWithValue(left)
 	if cmp.IsNumLitFc(newLeft) {
-		env.StoreTrueEqualValues(right, newLeft)
+		simplifiedNewLeft := simplifyNumExprFc(newLeft)
+		env.StoreTrueEqualValues(right, simplifiedNewLeft)
 	}
 
 	_, newRight := env.ReplaceSymbolWithValue(right)
 	if cmp.IsNumLitFc(newRight) {
-		env.StoreTrueEqualValues(left, newRight)
+		simplifiedNewRight := simplifyNumExprFc(newRight)
+		env.StoreTrueEqualValues(left, simplifiedNewRight)
 	}
 
 	return nil

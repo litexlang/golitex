@@ -79,3 +79,22 @@ func NoSelfReferenceInPropDef(propName string, facts []ast.FactStmt) error {
 
 	return nil
 }
+
+func IsNumExprFc_SimplifyIt(fc ast.Fc) ast.Fc {
+	numLitExpr, ok, err := ast.MakeFcIntoNumLitExpr(fc)
+	if err != nil || !ok {
+		return nil
+	}
+
+	evaluatedStr, evaluated, err := numLitExpr.EvalNumLitExpr()
+	if err != nil || !evaluated {
+		return nil
+	}
+
+	newFc, err := ParseSourceCodeGetFc(evaluatedStr)
+	if err != nil {
+		return nil
+	}
+
+	return newFc
+}

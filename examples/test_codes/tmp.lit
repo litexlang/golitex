@@ -1,22 +1,27 @@
-fn f(x R) R
-know:
-    f(0) = 0
-    forall n R: f(n) = f(n - 1) + 1
+prove_algo solve_linear_equation(a, b, c, d, e, f, x ,y):
+    # check if the equation is solvable, condition of the algorithm
+    a * e - b * d != 0
+    a * x + b * y = c
+    d * x + e * y = f
 
-algo f(x):
-    if x = 0:
-        return 0
-    if x > 0:
-        return f(x - 1) + 1 
-    if x < 0:
-        f(x+1) = f(x+1-1) + 1 = f(x) + 1
-        f(x) = f(x+1) - 1
-        return f(x+1) - 1
+    # solve for y
+    d * (a * x + b * y) = d * a * x + d * b * y = d * c
+    a * (d * x + e * y) = d * a * x + a * e * y = a * f
+    d * c - a * f = d * a * x + d * b * y - (d * a * x + a * e * y) = (d * b - a * e) * y
+    y = (d * c - a * f) / (d * b - a * e)
+    
+    # solve for x
+    e * (a * x + b * y) = e * a * x + e * b * y = e * c
+    b * (d * x + e * y) = b * d * x + b * e * y = b * f
+    e * c - b * f = e * a * x + e * b * y - (b * d * x + b * e * y) = (e * a - b * d) * x
+    x = (e * c - b * f) / (e * a - b * d)
 
-have a, b R = 3, -1
+    return
 
-eval f(-1)
-f(-1) = -1
+let x, y R:
+    2 * x + 3 * y = 10
+    4 * x + 5 * y = 14
 
-eval f(3)
-f(3) = 3
+by solve_linear_equation(2, 3, 10, 4, 5, 14, x, y):
+    x = -4
+    y = 6

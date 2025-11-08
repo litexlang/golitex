@@ -333,7 +333,7 @@ func (stmt *DefLetStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
 		}
 		newObjSets = append(newObjSets, newObjSet)
 	}
-	return NewDefObjStmt(stmt.Objs, newObjSets, stmt.Facts, stmt.Line), nil
+	return NewDefLetStmt(stmt.Objs, newObjSets, stmt.Facts, stmt.Line), nil
 }
 
 func (stmt *DefFnStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
@@ -718,13 +718,15 @@ func InstantiateAlgoStmt(stmt AlgoStmt, uniMap map[string]Fc) (AlgoStmt, error) 
 		return stmt.InstantiateAlgo(uniMap)
 	case *AlgoReturnStmt:
 		return stmt.InstantiateAlgo(uniMap)
+	case *ProveAlgoReturnStmt:
+		return stmt.InstantiateAlgo(uniMap)
 	case Stmt:
 		return stmt.Instantiate(uniMap)
 	}
 	return nil, fmt.Errorf("unknown algo statement type: %T", stmt)
 }
 
-func (s AlgoSlice) Instantiate(uniMap map[string]Fc) (AlgoSlice, error) {
+func (s AlgoStmtSlice) Instantiate(uniMap map[string]Fc) (AlgoStmtSlice, error) {
 	newStmts := make([]AlgoStmt, len(s))
 	for i, stmt := range s {
 		newStmt, err := InstantiateAlgoStmt(stmt, uniMap)
@@ -756,7 +758,7 @@ func (stmt *AlgoReturnStmt) InstantiateAlgo(uniMap map[string]Fc) (AlgoStmt, err
 	return NewAlgoReturnStmt(newValue, stmt.Line), nil
 }
 
-func (stmt *AlgoDefStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+func (stmt *DefAlgoStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
 	newStmts, err := stmt.Stmts.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
@@ -765,11 +767,16 @@ func (stmt *AlgoDefStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
 }
 
 func (stmt *EvalStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
-	newValue, err := stmt.Value.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
+	newFcsToEval := []Fc{}
+	for _, fc := range stmt.FcsToEval {
+		newFc, err := fc.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newFcsToEval = append(newFcsToEval, newFc)
 	}
-	return NewEvalStmt(newValue, stmt.Line), nil
+
+	return NewEvalStmt(newFcsToEval, stmt.Line), nil
 }
 
 func (stmt *SpecFactStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
@@ -794,4 +801,35 @@ func (stmt *EnumStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
 
 func (stmt *IntensionalSetStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
 	return stmt.InstantiateFact(uniMap)
+}
+
+func (stmt *DefProveAlgoStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	newStmts, err := stmt.Stmts.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewDefProveAlgoStmt(stmt.ProveAlgoName, stmt.Params, newStmts, stmt.Line), nil
+}
+
+func (stmt *ByStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
+	newProveAlgoParams, err := stmt.Params.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newThenFacts, err := stmt.ThenFactsOrNil.InstantiateFact(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewByStmt(stmt.ProveAlgoName, newProveAlgoParams, newThenFacts, stmt.Line), nil
+}
+
+func (stmt *ProveAlgoReturnStmt) InstantiateAlgo(uniMap map[string]Fc) (AlgoStmt, error) {
+	if stmt.ByStmtOrNil != nil {
+		instBy, err := stmt.ByStmtOrNil.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		return NewProveAlgoReturnStmt(instBy.(*ByStmt), stmt.GetLine()), nil
+	}
+	return stmt, nil
 }

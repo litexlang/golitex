@@ -40,17 +40,17 @@ func execStmtTest(topStmt []ast.Stmt) []string {
 
 	messages := []string{}
 
-	isNotTrue := false
+	notTrue := false
 
 	for _, topStmt := range topStmt {
 		execState, _, err := executor.Stmt(topStmt)
 		if err != nil {
 			messages = append(messages, (err.Error()))
-			isNotTrue = true
+			notTrue = true
 		}
 
 		if execState.IsUnknown() {
-			isNotTrue = true
+			notTrue = true
 		}
 
 		// 如果连续两个 \n 则删除一个
@@ -66,7 +66,7 @@ func execStmtTest(topStmt []ast.Stmt) []string {
 		}
 		executor.Env.Msgs = newMsgs
 
-		if isNotTrue {
+		if notTrue {
 			messages = append(messages, fmt.Sprintf("execution failed at:\n%s", topStmt))
 			break
 		} else {
@@ -74,7 +74,7 @@ func execStmtTest(topStmt []ast.Stmt) []string {
 		}
 	}
 
-	if isNotTrue {
+	if notTrue {
 		messages = append(messages, glob.REPLFailedMessage)
 	} else {
 		messages = append(messages, glob.REPLSuccessMessage)
