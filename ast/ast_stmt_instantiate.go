@@ -824,10 +824,12 @@ func (stmt *ByStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
 }
 
 func (stmt *ProveAlgoReturnStmt) InstantiateAlgo(uniMap map[string]Fc) (AlgoStmt, error) {
-	instBy, err := stmt.By.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
+	if stmt.By != nil {
+		instBy, err := stmt.By.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		return NewProveAlgoReturnStmt(instBy.(*ByStmt), stmt.GetLine()), nil
 	}
-
-	return NewProveAlgoReturnStmt(instBy.(*ByStmt), stmt.GetLine()), nil
+	return stmt, nil
 }

@@ -344,6 +344,22 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecFactStmt, st
 		}
 	}
 
+	// 如果这个symbol是有值的，那就比较值是否相等
+	leftValue := ver.Env.GetSymbolSimplifiedValue(stmt.Params[0])
+	if leftValue != nil {
+		rightValue := ver.Env.GetSymbolSimplifiedValue(stmt.Params[1])
+		if rightValue != nil {
+			_, areEqual, err := cmp.NumLitEqual_ByEval(leftValue, rightValue)
+			if err != nil {
+				return NewExecErr(err.Error())
+			}
+			if !areEqual {
+				ver.processOkMsg(state, stmt.String(), fmt.Sprintf("%s = %s, %s = %s, %s != %s by builtin rules", stmt.Params[0], leftValue, stmt.Params[1], rightValue, leftValue, rightValue))
+				return NewExecTrue(fmt.Sprintf("%s = %s, %s = %s, %s != %s by builtin rules", stmt.Params[0], leftValue, stmt.Params[1], rightValue, leftValue, rightValue))
+			}
+		}
+	}
+
 	return NewExecUnknown("")
 }
 

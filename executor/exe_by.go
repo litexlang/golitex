@@ -17,7 +17,6 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
-	cmp "golitex/cmp"
 )
 
 func (exec *Executor) byStmt(stmt *ast.ByStmt) ExecRet {
@@ -47,8 +46,7 @@ func (exec *Executor) byStmt(stmt *ast.ByStmt) ExecRet {
 }
 
 func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) ExecRet {
-
-	proveAlgoDef := exec.Env.GetAlgoDef(stmt.ProveAlgoName)
+	proveAlgoDef := exec.Env.GetProveAlgoDef(stmt.ProveAlgoName)
 	if proveAlgoDef == nil {
 		return NewExecErr(fmt.Sprintf("prove algo %s not found", stmt.ProveAlgoName))
 	}
@@ -59,23 +57,23 @@ func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) ExecRet {
 
 	for _, param := range proveAlgoDef.Params {
 		if exec.Env.IsAtomDeclared(ast.FcAtom(param), map[string]struct{}{}) {
-			panic("TODO: 之后如果外面已经弄过了，那就遍历地变成无重复的随机符号。之所以这里要panic是因为，可能用户在algo def 里面声明了和外面同名的符号")
+			return NewExecErr("TODO: 之后如果外面已经弄过了，那就遍历地变成无重复的随机符号。之所以这里不通过是因为，可能用户在prove_algo def 里面声明了和外面同名的符号。之后会处理这个问题")
 		}
 	}
 
 	// params of stmt must be numeric literals
-	paramsValues := []ast.Fc{}
-	for _, param := range stmt.Params {
-		value, execRet := exec.verifyIsNumExprFcOrHasValueThenSimplify(param)
-		if execRet.IsNotTrue() {
-			return execRet
-		}
-		paramsValues = append(paramsValues, value)
-	}
+	// paramsValues := []ast.Fc{}
+	// for _, param := range stmt.Params {
+	// 	value, execRet := exec.verifyIsNumExprFcOrHasValueThenSimplify(param)
+	// 	if execRet.IsNotTrue() {
+	// 		return execRet
+	// 	}
+	// 	paramsValues = append(paramsValues, value)
+	// }
 
 	uniMap := map[string]ast.Fc{}
 	for i, param := range proveAlgoDef.Params {
-		uniMap[param] = paramsValues[i]
+		uniMap[param] = stmt.Params[i]
 	}
 
 	instProveAlgoDef, err := proveAlgoDef.Instantiate(uniMap)
@@ -83,7 +81,7 @@ func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) ExecRet {
 		return NewExecErrWithErr(err)
 	}
 
-	execRet := exec.runAlgoStmtsWhenBy(instProveAlgoDef.(*ast.DefProveAlgoStmt).Stmts, paramsValues)
+	execRet := exec.runAlgoStmtsWhenBy(instProveAlgoDef.(*ast.DefProveAlgoStmt).Stmts, stmt.Params)
 	if execRet.IsNotTrue() {
 		return execRet
 	}
@@ -91,18 +89,18 @@ func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) ExecRet {
 	return NewExecTrue("")
 }
 
-func (exec *Executor) verifyIsNumExprFcOrHasValueThenSimplify(fc ast.Fc) (ast.Fc, ExecRet) {
-	if cmp.IsNumLitFc(fc) {
-		return exec.simplifyNumExprFc(fc)
-	}
+// func (exec *Executor) verifyIsNumExprFcOrHasValueThenSimplify(fc ast.Fc) (ast.Fc, ExecRet) {
+// 	if cmp.IsNumLitFc(fc) {
+// 		return exec.simplifyNumExprFc(fc)
+// 	}
 
-	value := exec.Env.GetSymbolSimplifiedValue(fc)
-	if value == nil {
-		return nil, NewExecErr(fmt.Sprintf("symbol %s has no value", fc.String()))
-	}
+// 	value := exec.Env.GetSymbolSimplifiedValue(fc)
+// 	if value == nil {
+// 		return nil, NewExecErr(fmt.Sprintf("symbol %s has no value", fc.String()))
+// 	}
 
-	return value, NewExecTrue("")
-}
+// 	return value, NewExecTrue("")
+// }
 
 func (exec *Executor) runAlgoStmtsWhenBy(algoStmts ast.AlgoStmtSlice, paramsValues []ast.Fc) ExecRet {
 	for _, stmt := range algoStmts {
