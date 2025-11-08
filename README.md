@@ -4,9 +4,9 @@
 
 <div align="center">
 
-# Litex: Scale Formal Reasoning in AI Era
+# Litex: From Formal Language to Verifiable Discovery in AI Era
 
-## A Simple Formal Language Learnable in 2 Hours, Not 1 Year.
+## A Simple Formal Language Learnable in 2 Hours
 
 **version v0.1.10-beta (not yet ready for production use)**  
 *Jiachen Shen and The Litex Team*
@@ -30,7 +30,7 @@ _– Leonardo da Vinci_
 
 **Warning: Litex is still in beta. The syntax and semantics are subject to change. There might be some bugs and inconsistencies. You should not use Litex in any production environments yet.**
 
-Litex([website](https://litexlang.com)) is a simple open-source formal language, learnable in 2 hours by anyone. It expresses mathematics in the form of code, ensuring that every step of the reasoning process is rigorously correct. The closeness of Litex to natural language can be really helpful for AI and human alike in mathematical exploration and problem-solving. I hope you will forget that you are using a formal language to write mathematics using Litex!([Star the repo!](https://github.com/litexlang/golitex)). 
+Litex([website](https://litexlang.com)) is a simple open-source formal language, learnable in 2 hours by anyone. It expresses mathematics in the form of code, ensuring that every step of the reasoning process is rigorously correct. The closeness of Litex to natural language, or more profoundly how people think, can be really helpful for AI and human alike in mathematical exploration and problem-solving. I hope you will forget that you are using a formal language to write mathematics using Litex!([Star the repo!](https://github.com/litexlang/golitex)). 
 
 Euclid showed us over 2000 years ago how 5 axioms could derive such a wonderful geometric world. Simple starting points often lead us into infinitely complex worlds. The same is true for mathematics. The foundation of modern mathematics is naive set theory, which doesn't have many axioms, and we even encountered the concept of sets in middle school. But it is precisely these simple and understandable rules that form the foundation of all mathematics. Before we move on, think about how powerful the idea is: with just very few absolutely accurate inference rules, plus a few axioms, we can derive a rich and diverse mathematical world! That is what math is all about.
 
