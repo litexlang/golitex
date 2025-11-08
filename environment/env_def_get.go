@@ -110,3 +110,13 @@ func (e *Env) IsCommutativeProp(specFact *ast.SpecFactStmt) bool {
 	}
 	return false
 }
+
+func (e *Env) GetProveAlgoDef(proveAlgoName string) *ast.DefProveAlgoStmt {
+	for env := e; env != nil; env = env.Parent {
+		proveAlgoDef, ok := env.DefProveAlgoMem[proveAlgoName]
+		if ok {
+			return proveAlgoDef
+		}
+	}
+	return nil
+}

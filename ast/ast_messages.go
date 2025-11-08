@@ -1172,9 +1172,11 @@ func (stmt *ByStmt) String() string {
 func (stmt *ProveAlgoReturnStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordReturn)
-	builder.WriteString(" ")
-	builder.WriteString(glob.KeywordBy)
-	builder.WriteString(" ")
-	builder.WriteString(stmt.By.String())
+	if stmt.By != nil {
+		builder.WriteString(" ")
+		builder.WriteString(glob.KeywordBy)
+		builder.WriteString(" ")
+		builder.WriteString(stmt.By.String())
+	}
 	return builder.String()
 }
