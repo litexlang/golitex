@@ -816,7 +816,7 @@ func (stmt *ByStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	newThenFacts, err := stmt.ThenFacts.InstantiateFact(uniMap)
+	newThenFacts, err := stmt.ThenFactsOrNil.InstantiateFact(uniMap)
 	if err != nil {
 		return nil, err
 	}
@@ -824,8 +824,8 @@ func (stmt *ByStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
 }
 
 func (stmt *ProveAlgoReturnStmt) InstantiateAlgo(uniMap map[string]Fc) (AlgoStmt, error) {
-	if stmt.By != nil {
-		instBy, err := stmt.By.Instantiate(uniMap)
+	if stmt.ByStmtOrNil != nil {
+		instBy, err := stmt.ByStmtOrNil.Instantiate(uniMap)
 		if err != nil {
 			return nil, err
 		}

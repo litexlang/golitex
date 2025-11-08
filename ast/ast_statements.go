@@ -418,15 +418,15 @@ type DefProveAlgoStmt struct {
 }
 
 type ByStmt struct {
-	ProveAlgoName string
-	Params        FcSlice
-	ThenFacts     FactStmtSlice
+	ProveAlgoName  string
+	Params         FcSlice
+	ThenFactsOrNil FactStmtSlice
 
 	Line uint
 }
 
 type ProveAlgoReturnStmt struct {
-	By *ByStmt
+	ByStmtOrNil *ByStmt
 
 	Line uint
 }

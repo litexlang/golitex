@@ -1,22 +1,27 @@
-prop p(x R):
-    x = 1
+prove_algo solve_linear_equation(a, b, c, d, e, f, x ,y):
+    # check if the equation is solvable, condition of the algorithm
+    a * e - b * d != 0
+    a * x + b * y = c
+    d * x + e * y = f
 
-prove_algo A(x):
-    if x = 1:
-        $p(x)
-        return
-    if x != 1:
-        claim:
-            not $p(x)
-            prove_by_contradiction:
-                $p(x)
-                x = 1
-        return
+    # solve for y
+    d * (a * x + b * y) = d * a * x + d * b * y = d * c
+    a * (d * x + e * y) = d * a * x + a * e * y = a * f
+    d * c - a * f = d * a * x + d * b * y - (d * a * x + a * e * y) = (d * b - a * e) * y
+    y = (d * c - a * f) / (d * b - a * e)
+    
+    # solve for x
+    e * (a * x + b * y) = e * a * x + e * b * y = e * c
+    b * (d * x + e * y) = b * d * x + b * e * y = b * f
+    e * c - b * f = e * a * x + e * b * y - (b * d * x + b * e * y) = (e * a - b * d) * x
+    x = (e * c - b * f) / (e * a - b * d)
 
-have x R = 3
-by A(x):
-    not $p(x)
+    return
 
-have a R = 1
-by A(a):
-    $p(a)
+let x, y R:
+    2 * x + 3 * y = 10
+    4 * x + 5 * y = 14
+
+by solve_linear_equation(2, 3, 10, 4, 5, 14, x, y):
+    x = -4
+    y = 6
