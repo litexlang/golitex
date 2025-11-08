@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) (ExecRet, error) {
+func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) ExecRet {
 	defer func() {
 		if glob.RequireMsg() && requireMsg {
 			exec.newMsg(fmt.Sprintf("%s\n", stmt))
@@ -29,42 +29,45 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) (E
 
 	if string(stmt.Fact.PropName) == glob.KeywordExistPropPreImageByReplacement {
 		execState, err := exec.haveExistByReplacementStmt(stmt)
-		if notOkExec(execState, err) {
-			return execState, err
+		if err != nil {
+			return NewExecErr(err.Error())
 		}
-		return NewExecTrue(""), nil
+		if execState.IsNotTrue() {
+			return execState
+		}
+		return NewExecTrue("")
 	}
 
 	// 检查 SpecFactStmt 是否满足了
 	execState, err := exec.openANewEnvAndCheck(stmt.Fact, false)
 
 	if err != nil {
-		return execState, err
+		return NewExecErr(err.Error())
 	}
 
 	if stmt.Fact.PropName == glob.KeywordItemExistsIn && execState.IsUnknown() {
 		ok, err := exec.checkInFactInSet_SetIsNonEmpty(stmt.Fact)
 		if err != nil {
-			return NewExecErr(""), err
+			return NewExecErr(err.Error())
 		}
 		if ok {
 			execState = NewExecTrue("")
 		}
 	}
 
-	if notOkExec(execState, err) {
+	if execState.IsNotTrue() {
 		if glob.RequireMsg() {
 			exec.newMsg(fmt.Sprintf("%s is unknown", stmt.Fact.String()))
 		}
-		return execState, err
+		return execState
 	}
 
 	if stmt.Fact.PropName == glob.KeywordItemExistsIn && execState.IsTrue() {
-		err := exec.defLetStmt(ast.NewDefObjStmt([]string{stmt.ObjNames[0]}, []ast.Fc{stmt.Fact.Params[0]}, []ast.FactStmt{}, stmt.Line))
+		err := exec.defLetStmt(ast.NewDefLetStmt([]string{stmt.ObjNames[0]}, []ast.Fc{stmt.Fact.Params[0]}, []ast.FactStmt{}, stmt.Line))
 		if err != nil {
-			return NewExecErr(""), err
+			return NewExecErr(err.Error())
 		}
-		return NewExecTrue(""), nil
+		return NewExecTrue("")
 	}
 
 	// TODO： have 可能会引入3种不同的东西：set,obj,fn都可能；每种情况，处理起来不一样：比如如果你是fn和set，那可能就要把你放到 setMem 和 fnMem 里了
@@ -73,11 +76,11 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) (E
 	// TODO 把 exist prop def 里的东西释放出来
 	existPropDef := exec.Env.GetExistPropDef(stmt.Fact.PropName)
 	if existPropDef == nil {
-		return NewExecUnknown(""), nil
+		return NewExecUnknown("")
 	}
 
 	if len(existPropDef.ExistParams) != len(stmt.ObjNames) {
-		return NewExecErr(""), fmt.Errorf("exist prop def params number not equal to have stmt obj names number. expect %d, but got %d", len(existPropDef.ExistParams), len(stmt.ObjNames))
+		return NewExecErr(fmt.Sprintf("exist prop def params number not equal to have stmt obj names number. expect %d, but got %d", len(existPropDef.ExistParams), len(stmt.ObjNames)))
 	}
 
 	uniMap := map[string]ast.Fc{}
@@ -94,16 +97,16 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) (E
 
 	instantiatedExistPropDefStmt, err := existPropDef.Instantiate(uniMap)
 	if err != nil {
-		return NewExecErr(""), err
+		return NewExecErr(err.Error())
 	}
 
 	ver := NewVerifier(exec.Env)
 
 	// 把 obj 放入环境
 	for i, objName := range stmt.ObjNames {
-		err := ver.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt([]string{objName}, []ast.Fc{instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).ExistParamSets[i]}, []ast.FactStmt{}, stmt.Line))
+		err := ver.NewDefObj_InsideAtomsDeclared(ast.NewDefLetStmt([]string{objName}, []ast.Fc{instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).ExistParamSets[i]}, []ast.FactStmt{}, stmt.Line))
 		if err != nil {
-			return NewExecErr(""), err
+			return NewExecErr(err.Error())
 		}
 	}
 
@@ -118,7 +121,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) (E
 	for i, existParamSet := range instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).ExistParamSets {
 		err := exec.Env.NewFact(ast.NewInFact(stmt.ObjNames[i], existParamSet))
 		if err != nil {
-			return NewExecErr(""), err
+			return NewExecErr(err.Error())
 		}
 	}
 
@@ -126,7 +129,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) (E
 	for _, domFact := range instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).DefBody.DomFacts {
 		err := exec.Env.NewFact(domFact)
 		if err != nil {
-			return NewExecErr(""), err
+			return NewExecErr(err.Error())
 		}
 		if glob.RequireMsg() {
 			exec.newMsg(fmt.Sprintf("%s\nis true by definition", domFact))
@@ -137,7 +140,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) (E
 	for _, iffFact := range instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).DefBody.IffFacts {
 		err := exec.Env.NewFact(iffFact)
 		if err != nil {
-			return NewExecErr(""), err
+			return NewExecErr(err.Error())
 		}
 		if glob.RequireMsg() {
 			exec.newMsg(fmt.Sprintf("%s\nis true by definition", iffFact))
@@ -150,16 +153,16 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) (E
 	newExistStFact := ast.NewSpecFactStmt(ast.TrueExist_St, ast.FcAtom(string(stmt.Fact.PropName)), existStFactParams, stmt.Line)
 	err = exec.Env.NewFact(newExistStFact)
 	if err != nil {
-		return NewExecErr(""), err
+		return NewExecErr(err.Error())
 	}
 	if glob.RequireMsg() {
 		exec.newMsg(fmt.Sprintf("%s\nis true by definition", newExistStFact))
 	}
 
-	return NewExecTrue(""), nil
+	return NewExecTrue("")
 }
 
-func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStmt) (ExecRet, error) {
+func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStmt) ExecRet {
 	failed := true
 	defer func() {
 		if glob.RequireMsg() && !failed {
@@ -170,15 +173,15 @@ func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStm
 	for i := range len(stmt.Objs) {
 		existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordItemExistsIn), []ast.Fc{stmt.ObjSets[i]}, stmt.Line)
 		haveStmt := ast.NewHaveStmt([]string{stmt.Objs[i]}, existInFact, stmt.Line)
-		execState, err := exec.haveObjStStmt(haveStmt, false)
-		if notOkExec(execState, err) {
-			return execState, err
+		execState := exec.haveObjStStmt(haveStmt, false)
+		if execState.IsNotTrue() {
+			return execState
 		}
 	}
 
 	failed = false
 
-	return NewExecTrue(""), nil
+	return NewExecTrue("")
 }
 
 func (exec *Executor) checkInFactInSet_SetIsNonEmpty(pureInFact *ast.SpecFactStmt) (bool, error) {
@@ -227,7 +230,7 @@ func (exec *Executor) haveEnumSetStmt(stmt *ast.HaveEnumSetStmt) ExecRet {
 	}
 
 	// 定义这个新的集合
-	defObjStmt := ast.NewDefObjStmt([]string{enumFact.CurSet.String()}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}, []ast.FactStmt{enumFact}, stmt.Line)
+	defObjStmt := ast.NewDefLetStmt([]string{enumFact.CurSet.String()}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}, []ast.FactStmt{enumFact}, stmt.Line)
 	err := exec.defLetStmt(defObjStmt)
 	if err != nil {
 		return NewExecErr(err.Error())
@@ -250,7 +253,7 @@ func (exec *Executor) haveIntensionalSetStmt(stmt *ast.HaveIntensionalSetStmt) E
 		return NewExecErr("parent set of intensional set must be a set, i.e. `" + intensionalSetFact.ParentSet.String() + " in " + ast.FcAtom(glob.KeywordSet).String() + "` is true, but `" + intensionalSetFact.ParentSet.String() + " in " + ast.FcAtom(glob.KeywordSet).String() + "` is not")
 	}
 
-	defObjStmt := ast.NewDefObjStmt([]string{intensionalSetFact.CurSet.String()}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}, []ast.FactStmt{intensionalSetFact}, stmt.Line)
+	defObjStmt := ast.NewDefLetStmt([]string{intensionalSetFact.CurSet.String()}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}, []ast.FactStmt{intensionalSetFact}, stmt.Line)
 	err = exec.defLetStmt(defObjStmt)
 	if err != nil {
 		return NewExecErr(err.Error())
@@ -282,7 +285,7 @@ func (exec *Executor) haveExistByReplacementStmt(stmt *ast.HaveObjStStmt) (ExecR
 		return execState, err
 	}
 
-	defObjStmt := ast.NewDefObjStmt([]string{stmt.ObjNames[0]}, []ast.Fc{stmt.Fact.Params[0]}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, propName, []ast.Fc{ast.FcAtom(stmt.ObjNames[0]), stmt.Fact.Params[3]}, stmt.Line)}, stmt.Line)
+	defObjStmt := ast.NewDefLetStmt([]string{stmt.ObjNames[0]}, []ast.Fc{stmt.Fact.Params[0]}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, propName, []ast.Fc{ast.FcAtom(stmt.ObjNames[0]), stmt.Fact.Params[3]}, stmt.Line)}, stmt.Line)
 	err = exec.defLetStmt(defObjStmt)
 	if err != nil {
 		return NewExecErr(""), err

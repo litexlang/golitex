@@ -71,7 +71,7 @@ func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.Spec_O
 
 	reversedLastFact := lastStmtAsFact.ReverseIsTrue()
 
-	reversedLastFactStr := []string{"and:"}
+	reversedLastFactStr := []string{}
 	for _, curFact := range reversedLastFact {
 		reversedLastFactStr = append(reversedLastFactStr, curFact.String())
 	}
@@ -156,32 +156,35 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 	return NewExecTrue(""), nil
 }
 
-func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) (ExecRet, error) {
+func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) ExecRet {
 	state, err := exec.claimStmtProve(stmt)
 	if notOkExec(state, err) {
-		return state, err
+		return state
 	}
 
 	// 检查 stmt fact 中的所有元素已经定义过了
 	err = exec.Env.NewFact(stmt.ToCheckFact)
 	if err != nil {
-		return NewExecErr(""), err
+		return NewExecErr(err.Error())
 	}
 	// exec.knowStmt(ast.NewKnowStmt([]ast.CanBeKnownStmt{stmt.ToCheckFact}))
 
-	return NewExecTrue(""), nil
+	return NewExecTrue("")
 }
 
-func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) (ExecRet, error) {
+func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) ExecRet {
 	state, err := exec.claimStmtProveByContradiction(stmt)
 	if notOkExec(state, err) {
-		return state, err
+		return state
 	}
 
 	// 检查 stmt fact 中的所有元素已经定义过了
-	exec.knowStmt(ast.NewKnowStmt([]ast.CanBeKnownStmt{stmt.ClaimProveStmt.ToCheckFact.(ast.CanBeKnownStmt)}, stmt.ClaimProveStmt.Line))
+	execRet := exec.knowStmt(ast.NewKnowStmt([]ast.CanBeKnownStmt{stmt.ClaimProveStmt.ToCheckFact.(ast.CanBeKnownStmt)}, stmt.ClaimProveStmt.Line))
+	if execRet.IsNotTrue() {
+		return execRet
+	}
 
-	return NewExecTrue(""), nil
+	return execRet
 }
 
 func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) (ExecRet, error) {
@@ -240,7 +243,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 	}
 
 	// declare parameters in asUnivFact in the env
-	objDefStmt := ast.NewDefObjStmt(asUnivFact.Params, asUnivFact.ParamSets, []ast.FactStmt{}, stmt.Line)
+	objDefStmt := ast.NewDefLetStmt(asUnivFact.Params, asUnivFact.ParamSets, []ast.FactStmt{}, stmt.Line)
 
 	err := exec.defLetStmt(objDefStmt)
 	if err != nil {
@@ -282,58 +285,58 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 }
 
 // 也许我应该语义改成，先声明prop，然后再证明prop，而不是现在这个样子
-func (exec *Executor) claimPropStmt(stmt *ast.ClaimPropStmt) (ExecRet, error) {
+func (exec *Executor) claimPropStmt(stmt *ast.ClaimPropStmt) ExecRet {
 	var err error
 	var execState ExecRet = NewExecErr("")
 
 	// prop all atoms declared
 	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.DomFacts, stmt.Prop.IffFacts, stmt.Line)
 	if !exec.Env.AreAtomsInFactAreDeclared(uniFact, map[string]struct{}{}) && !exec.Env.IsFcAtomDeclaredByUser(ast.FcAtom(stmt.Prop.DefHeader.Name)) {
-		return NewExecErr(""), fmt.Errorf("claim prop statement error: atoms in fact are not declared")
+		return NewExecErr(fmt.Errorf("claim prop statement error: atoms in fact are not declared").Error())
 	}
 
 	// check proofs
 	if stmt.IsProve {
 		execState, err = exec.checkClaimPropStmtProofs(stmt)
 		if notOkExec(execState, err) {
-			return execState, err
+			return execState
 		}
 	} else {
 		execState, err = exec.checkClaimPropStmtProveByContradiction(stmt)
 		if notOkExec(execState, err) {
-			return execState, err
+			return execState
 		}
 	}
 
 	// know exec
-	err = exec.knowPropStmt(ast.NewKnowPropStmt(stmt.Prop, stmt.Line))
-	if notOkExec(execState, err) {
-		return execState, err
+	execRet := exec.knowPropStmt(ast.NewKnowPropStmt(stmt.Prop, stmt.Line))
+	if execRet.IsNotTrue() {
+		return execRet
 	}
 
-	return NewExecTrue(""), nil
+	return execRet
 }
 
-func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) (ExecRet, error) {
+func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) ExecRet {
 	execState, err := exec.claimExistPropStmtCheckProofs(stmt)
 	if notOkExec(execState, err) {
-		return execState, err
+		return execState
 	}
 
 	// declare exist prop
-	err = exec.defExistPropStmt(stmt.ExistPropWithoutDom)
-	if err != nil {
-		return NewExecErr(""), err
+	execState = exec.defExistPropStmt(stmt.ExistPropWithoutDom)
+	if execState.IsNotTrue() {
+		return execState
 	}
 
 	// know forall
 	uniFact := ast.NewUniFact(stmt.ExistPropWithoutDom.DefBody.DefHeader.Params, stmt.ExistPropWithoutDom.DefBody.DefHeader.ParamSets, stmt.ExistPropWithoutDom.DefBody.IffFacts, []ast.FactStmt{stmt.ExistPropWithoutDom.DefBody.DefHeader.ToSpecFact()}, stmt.Line)
 	err = exec.Env.NewFact(uniFact)
 	if err != nil {
-		return NewExecErr(""), err
+		return NewExecErr(err.Error())
 	}
 
-	return NewExecTrue(""), nil
+	return NewExecTrue("")
 }
 
 func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt) (ExecRet, error) {
@@ -343,7 +346,7 @@ func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt
 	}()
 
 	// declare parameters in exist prop
-	defObjStmt := ast.NewDefObjStmt(stmt.ExistPropWithoutDom.DefBody.DefHeader.Params, stmt.ExistPropWithoutDom.DefBody.DefHeader.ParamSets, stmt.ExistPropWithoutDom.DefBody.IffFacts, stmt.Line)
+	defObjStmt := ast.NewDefLetStmt(stmt.ExistPropWithoutDom.DefBody.DefHeader.Params, stmt.ExistPropWithoutDom.DefBody.DefHeader.ParamSets, stmt.ExistPropWithoutDom.DefBody.IffFacts, stmt.Line)
 
 	err := exec.defLetStmt(defObjStmt)
 	if err != nil {
@@ -415,7 +418,7 @@ func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimProp
 
 	// declare parameters in prop
 
-	objDefStmt := ast.NewDefObjStmt(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFacts, stmt.Line)
+	objDefStmt := ast.NewDefLetStmt(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFacts, stmt.Line)
 	err := exec.defLetStmt(objDefStmt)
 	if err != nil {
 		return NewExecErr(""), err

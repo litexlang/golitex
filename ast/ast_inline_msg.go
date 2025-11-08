@@ -344,10 +344,26 @@ func (s *AlgoReturnStmt) InlineString() string {
 	return "TODO"
 }
 
-func (s *AlgoDefStmt) InlineString() string {
+func (s *DefAlgoStmt) InlineString() string {
 	return "TODO"
 }
 
 func (s *EvalStmt) InlineString() string {
-	return fmt.Sprintf("%s %s", glob.KeywordEval, s.Value.String())
+	strSlice := make([]string, len(s.FcsToEval))
+	for i, fc := range s.FcsToEval {
+		strSlice[i] = fc.String()
+	}
+	return fmt.Sprintf("%s %s", glob.KeywordEval, strings.Join(strSlice, ", "))
+}
+
+func (s *DefProveAlgoStmt) InlineString() string {
+	return "TODO"
+}
+
+func (s *ByStmt) InlineString() string {
+	return "TODO"
+}
+
+func (s *ProveAlgoReturnStmt) InlineString() string {
+	return s.String()
 }

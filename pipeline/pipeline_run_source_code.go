@@ -218,7 +218,7 @@ func listenOneStatementFromTerminal(reader *bufio.Reader, writer io.Writer) (str
 			return "", fmt.Errorf("error reading input: %s", err)
 		}
 
-		currentLineStr = glob.ProcessWindowsCompatibility(currentLineStr)
+		currentLineStr = glob.RemoveWindowsCarriageReturn(currentLineStr)
 		trimmedLine := strings.TrimRight(currentLineStr, " \t\n")
 
 		if currentScopeDepth > 0 {

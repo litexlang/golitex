@@ -25,7 +25,11 @@ func (tb *tokenBlock) algoStmt() (ast.AlgoStmt, error) {
 	}
 
 	if tb.header.is(glob.KeywordReturn) {
-		return tb.algoReturnStmt()
+		if tb.header.strAtCurIndexPlus(1) == glob.KeywordBy || tb.header.strAtCurIndexPlus(1) == "" {
+			return tb.proveAlgoReturnStmt()
+		} else {
+			return tb.algoReturnStmt()
+		}
 	}
 
 	return tb.Stmt()
@@ -67,4 +71,22 @@ func (tb *tokenBlock) algoReturnStmt() (*ast.AlgoReturnStmt, error) {
 	}
 
 	return ast.NewAlgoReturnStmt(fc, tb.line), nil
+}
+
+func (tb *tokenBlock) proveAlgoReturnStmt() (*ast.ProveAlgoReturnStmt, error) {
+	err := tb.header.skip(glob.KeywordReturn)
+	if err != nil {
+		return nil, err
+	}
+
+	if tb.header.ExceedEnd() {
+		return ast.NewProveAlgoReturnStmt(nil, tb.line), nil
+	}
+
+	by, err := tb.byStmt()
+	if err != nil {
+		return nil, err
+	}
+
+	return ast.NewProveAlgoReturnStmt(by, tb.line), nil
 }
