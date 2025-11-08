@@ -1162,7 +1162,7 @@ func (stmt *ByStmt) String() string {
 	builder.WriteString(")")
 	builder.WriteString(glob.KeySymbolColon)
 	builder.WriteByte('\n')
-	for _, fact := range stmt.ThenFacts {
+	for _, fact := range stmt.ThenFactsOrNil {
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 1))
 		builder.WriteByte('\n')
 	}
@@ -1172,11 +1172,11 @@ func (stmt *ByStmt) String() string {
 func (stmt *ProveAlgoReturnStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordReturn)
-	if stmt.By != nil {
+	if stmt.ByStmtOrNil != nil {
 		builder.WriteString(" ")
 		builder.WriteString(glob.KeywordBy)
 		builder.WriteString(" ")
-		builder.WriteString(stmt.By.String())
+		builder.WriteString(stmt.ByStmtOrNil.String())
 	}
 	return builder.String()
 }
