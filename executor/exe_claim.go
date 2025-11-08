@@ -71,7 +71,7 @@ func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.Spec_O
 
 	reversedLastFact := lastStmtAsFact.ReverseIsTrue()
 
-	reversedLastFactStr := []string{"and:"}
+	reversedLastFactStr := []string{}
 	for _, curFact := range reversedLastFact {
 		reversedLastFactStr = append(reversedLastFactStr, curFact.String())
 	}

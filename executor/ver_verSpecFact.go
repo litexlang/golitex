@@ -332,33 +332,43 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecFactStmt, st
 		return NewExecUnknown("")
 	}
 
-	// 如果左右两边能是能被处理的数字
-	areBothNumLit, areEqual, err := cmp.NumLitEqual_ByEval(stmt.Params[0], stmt.Params[1])
-	if err != nil {
-		return NewExecErr(err.Error())
+	var leftValue, rightValue ast.Fc
+	if cmp.IsNumLitFc(stmt.Params[0]) {
+		leftValue = stmt.Params[0]
+	} else {
+		leftValue = ver.Env.GetSymbolSimplifiedValue(stmt.Params[0])
+		if leftValue == nil {
+			return NewExecUnknown("")
+		}
 	}
-	if areBothNumLit {
-		if !areEqual { // 这里是在证明两边不相等
-			ver.processOkMsg(state, stmt.String(), "builtin rules")
-			return NewExecTrue("")
+	if cmp.IsNumLitFc(stmt.Params[1]) {
+		rightValue = stmt.Params[1]
+	} else {
+		rightValue = ver.Env.GetSymbolSimplifiedValue(stmt.Params[1])
+		if rightValue == nil {
+			return NewExecUnknown("")
 		}
 	}
 
-	// 如果这个symbol是有值的，那就比较值是否相等
-	leftValue := ver.Env.GetSymbolSimplifiedValue(stmt.Params[0])
-	if leftValue != nil {
-		rightValue := ver.Env.GetSymbolSimplifiedValue(stmt.Params[1])
-		if rightValue != nil {
-			_, areEqual, err := cmp.NumLitEqual_ByEval(leftValue, rightValue)
-			if err != nil {
-				return NewExecErr(err.Error())
-			}
-			if !areEqual {
-				ver.processOkMsg(state, stmt.String(), fmt.Sprintf("%s = %s, %s = %s, %s != %s by builtin rules", stmt.Params[0], leftValue, stmt.Params[1], rightValue, leftValue, rightValue))
-				return NewExecTrue(fmt.Sprintf("%s = %s, %s = %s, %s != %s by builtin rules", stmt.Params[0], leftValue, stmt.Params[1], rightValue, leftValue, rightValue))
-			}
-		}
+	_, areEqual, err := cmp.NumLitEqual_ByEval(leftValue, rightValue)
+	if err != nil {
+		return NewExecErr(err.Error())
 	}
+	if !areEqual {
+		return NewExecTrue("")
+	}
+
+	// // 如果左右两边能是能被处理的数字
+	// areBothNumLit, areEqual, err := cmp.NumLitEqual_ByEval(stmt.Params[0], stmt.Params[1])
+	// if err != nil {
+	// 	return NewExecErr(err.Error())
+	// }
+	// if areBothNumLit {
+	// 	if !areEqual { // 这里是在证明两边不相等
+	// 		ver.processOkMsg(state, stmt.String(), "builtin rules")
+	// 		return NewExecTrue("")
+	// 	}
+	// }
 
 	return NewExecUnknown("")
 }
