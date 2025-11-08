@@ -87,9 +87,9 @@ func (e *Env) GetIntensionalSet(fc ast.Fc) *ast.IntensionalSetStmt {
 	return nil
 }
 
-func (e *Env) GetSymbolValue(fc ast.Fc) ast.Fc {
+func (e *Env) GetSymbolSimplifiedValue(fc ast.Fc) ast.Fc {
 	for env := e; env != nil; env = env.Parent {
-		symbolValue, ok := env.SymbolValueMem[fc.String()]
+		symbolValue, ok := env.SymbolSimplifiedValueMem[fc.String()]
 		if ok {
 			return symbolValue
 		}
@@ -109,4 +109,14 @@ func (e *Env) IsCommutativeProp(specFact *ast.SpecFactStmt) bool {
 		}
 	}
 	return false
+}
+
+func (e *Env) GetProveAlgoDef(proveAlgoName string) *ast.DefProveAlgoStmt {
+	for env := e; env != nil; env = env.Parent {
+		proveAlgoDef, ok := env.DefProveAlgoMem[proveAlgoName]
+		if ok {
+			return proveAlgoDef
+		}
+	}
+	return nil
 }

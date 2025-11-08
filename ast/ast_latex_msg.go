@@ -195,8 +195,6 @@ func keySymbolRelaFactWithoutNotLatexString(stmt *SpecFactStmt) string {
 		builder.WriteString("$\\leq$")
 	case glob.KeySymbolGreater:
 		builder.WriteString("$\\geq$")
-	case glob.KeySymbolEqualEqual:
-		builder.WriteString("==")
 	case glob.KeySymbolNotEqual:
 		builder.WriteString("\\neq")
 	case glob.KeywordIn:
@@ -905,10 +903,26 @@ func (s *AlgoReturnStmt) ToLatexString() string {
 	return s.String()
 }
 
-func (s *AlgoDefStmt) ToLatexString() string {
+func (s *DefAlgoStmt) ToLatexString() string {
 	return s.String()
 }
 
 func (s *EvalStmt) ToLatexString() string {
-	return fmt.Sprintf("%s %s", glob.KeywordEval, s.Value.ToLatexString())
+	strSlice := make([]string, len(s.FcsToEval))
+	for i, fc := range s.FcsToEval {
+		strSlice[i] = fc.ToLatexString()
+	}
+	return fmt.Sprintf("%s %s", glob.KeywordEval, strings.Join(strSlice, ", "))
+}
+
+func (s *DefProveAlgoStmt) ToLatexString() string {
+	return s.String()
+}
+
+func (s *ByStmt) ToLatexString() string {
+	return s.String()
+}
+
+func (s *ProveAlgoReturnStmt) ToLatexString() string {
+	return s.String()
 }
