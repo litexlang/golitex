@@ -390,6 +390,10 @@ func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 }
 
 func (env *Env) StoreTrueEqualValues(key, value ast.Fc) {
+	// 如果已经知道它的值了，那不能存了；否则比如我在外部环境里知道了a = 3，内部环境在反证法证明 a != 1，那我 a = 1就把a = 3覆盖掉了，a = 3这个取值貌似就不work了。某种程度上就是弄了个const
+	if v := env.GetSymbolSimplifiedValue(key); v != nil {
+		return
+	}
 	env.SymbolSimplifiedValueMem[key.String()] = value
 }
 
