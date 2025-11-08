@@ -114,9 +114,14 @@ func (exec *Executor) useAlgoToEvalFcFnThenSimplify(fcFn *ast.FcFn) (ast.Fc, Exe
 		return nil, NewExecErr(fmt.Sprintf("parameters of %s are not in domain of %s", fcFn, fcFn.FnHead))
 	}
 
-	for _, param := range algoDef.Params {
+	for i, param := range algoDef.Params {
 		if exec.Env.IsAtomDeclared(ast.FcAtom(param), map[string]struct{}{}) {
-			return nil, NewExecErr("TODO: 之后如果外面已经弄过了，那就遍历地变成无重复的随机符号。之所以这里要panic是因为，可能用户在algo def 里面声明了和外面同名的符号")
+			continue
+		} else {
+			err := exec.defLetStmt(ast.NewDefLetStmt([]string{param}, []ast.Fc{ast.FcAtom(glob.KeywordObj)}, []ast.FactStmt{ast.NewEqualFact(ast.FcAtom(param), fcFn.Params[i])}, glob.InnerGenLine))
+			if err != nil {
+				return nil, NewExecErr(err.Error())
+			}
 		}
 	}
 

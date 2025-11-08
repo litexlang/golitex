@@ -496,13 +496,13 @@ func (tb *tokenBlock) defObjStmt() (*ast.DefLetStmt, error) {
 	}
 
 	if tb.header.ExceedEnd() && len(tb.body) == 0 {
-		return ast.NewDefObjStmt(objNames, objSets, []ast.FactStmt{}, tb.line), nil
+		return ast.NewDefLetStmt(objNames, objSets, []ast.FactStmt{}, tb.line), nil
 	} else if tb.header.ExceedEnd() && len(tb.body) != 0 {
 		facts, err := tb.bodyFacts(UniFactDepth0)
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
-		return ast.NewDefObjStmt(objNames, objSets, facts, tb.line), nil
+		return ast.NewDefLetStmt(objNames, objSets, facts, tb.line), nil
 	} else {
 		facts, err := tb.inlineFacts_checkUniDepth0([]string{})
 		if err != nil {
@@ -514,7 +514,7 @@ func (tb *tokenBlock) defObjStmt() (*ast.DefLetStmt, error) {
 			return nil, tbErr(err, tb)
 		}
 
-		return ast.NewDefObjStmt(objNames, objSets, facts, tb.line), nil
+		return ast.NewDefLetStmt(objNames, objSets, facts, tb.line), nil
 	}
 }
 

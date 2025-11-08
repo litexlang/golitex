@@ -13,6 +13,10 @@ prove_algo A(x):
                 x = 1
         return
 
-have a R = 3
+have x R = 3
+by A(x):
+    not $p(x)
+
+have a R = 1
 by A(a):
-    not $p(a)
+    $p(a)
