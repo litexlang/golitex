@@ -20,7 +20,7 @@ import (
 	"slices"
 )
 
-func NewDefObjStmt(objs []string, objSets []Fc, facts []FactStmt, line uint) *DefLetStmt {
+func NewDefLetStmt(objs []string, objSets []Fc, facts []FactStmt, line uint) *DefLetStmt {
 	return &DefLetStmt{objs, objSets, facts, line}
 }
 

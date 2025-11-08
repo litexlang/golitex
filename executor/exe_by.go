@@ -17,6 +17,7 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
+	glob "golitex/glob"
 )
 
 func (exec *Executor) byStmt(stmt *ast.ByStmt) ExecRet {
@@ -45,6 +46,7 @@ func (exec *Executor) byStmt(stmt *ast.ByStmt) ExecRet {
 	return NewExecTrue("")
 }
 
+// 工作原理是吧ProveAlgoDef的params都变成传入的obj，然后instantiate，然后run
 func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) ExecRet {
 	proveAlgoDef := exec.Env.GetProveAlgoDef(stmt.ProveAlgoName)
 	if proveAlgoDef == nil {
@@ -55,9 +57,14 @@ func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) ExecRet {
 		return NewExecErr(fmt.Sprintf("prove algo %s requires %d params, get %d instead", stmt.ProveAlgoName, len(proveAlgoDef.Params), len(stmt.Params)))
 	}
 
-	for _, param := range proveAlgoDef.Params {
+	for i, param := range proveAlgoDef.Params {
 		if exec.Env.IsAtomDeclared(ast.FcAtom(param), map[string]struct{}{}) {
-			return NewExecErr("TODO: 之后如果外面已经弄过了，那就遍历地变成无重复的随机符号。之所以这里不通过是因为，可能用户在prove_algo def 里面声明了和外面同名的符号。之后会处理这个问题")
+			continue
+		} else {
+			err := exec.defLetStmt(ast.NewDefLetStmt([]string{param}, []ast.Fc{ast.FcAtom(glob.KeywordObj)}, []ast.FactStmt{ast.NewEqualFact(ast.FcAtom(param), stmt.Params[i])}, stmt.Line))
+			if err != nil {
+				return NewExecErr(err.Error())
+			}
 		}
 	}
 

@@ -333,7 +333,7 @@ func (stmt *DefLetStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
 		}
 		newObjSets = append(newObjSets, newObjSet)
 	}
-	return NewDefObjStmt(stmt.Objs, newObjSets, stmt.Facts, stmt.Line), nil
+	return NewDefLetStmt(stmt.Objs, newObjSets, stmt.Facts, stmt.Line), nil
 }
 
 func (stmt *DefFnStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {

@@ -499,7 +499,7 @@ func (exec *Executor) haveSetDefinedByReplacementStmt(stmt *ast.HaveSetDefinedBy
 
 	setDefinedByReplacement := ast.NewFcFn(ast.FcAtom(glob.KeywordSetDefinedByReplacement), []ast.Fc{stmt.DomSet, stmt.RangeSet, stmt.PropName})
 
-	defObjStmt := ast.NewDefObjStmt([]string{stmt.Name}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}, []ast.FactStmt{ast.NewEqualFact(ast.FcAtom(stmt.Name), setDefinedByReplacement)}, stmt.Line)
+	defObjStmt := ast.NewDefLetStmt([]string{stmt.Name}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}, []ast.FactStmt{ast.NewEqualFact(ast.FcAtom(stmt.Name), setDefinedByReplacement)}, stmt.Line)
 
 	err := exec.defLetStmt(defObjStmt)
 	if err != nil {
@@ -607,7 +607,7 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) (ExecRet, err
 			return NewExecErr(""), fmt.Errorf("%s is not in %s", stmt.ObjNames[i], stmt.ObjSets[i])
 		}
 
-		err := ver.NewDefObj_InsideAtomsDeclared(ast.NewDefObjStmt([]string{stmt.ObjNames[i]}, []ast.Fc{ast.FcAtom(glob.KeywordObj)}, []ast.FactStmt{}, stmt.Line))
+		err := ver.NewDefObj_InsideAtomsDeclared(ast.NewDefLetStmt([]string{stmt.ObjNames[i]}, []ast.Fc{ast.FcAtom(glob.KeywordObj)}, []ast.FactStmt{}, stmt.Line))
 		if err != nil {
 			return NewExecErr(""), err
 		}
@@ -654,7 +654,7 @@ func (exec *Executor) checkFnEqualStmt(stmt *ast.HaveFnEqualStmt) (ExecRet, erro
 	}()
 
 	for i := range len(stmt.DefHeader.Params) {
-		err := exec.defLetStmt(ast.NewDefObjStmt([]string{stmt.DefHeader.Params[i]}, []ast.Fc{stmt.DefHeader.ParamSets[i]}, []ast.FactStmt{}, stmt.Line))
+		err := exec.defLetStmt(ast.NewDefLetStmt([]string{stmt.DefHeader.Params[i]}, []ast.Fc{stmt.DefHeader.ParamSets[i]}, []ast.FactStmt{}, stmt.Line))
 		if err != nil {
 			return NewExecErr(""), err
 		}
@@ -770,7 +770,7 @@ func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) (ExecRet, error) {
 	exec.NewEnv(exec.Env)
 	defer exec.deleteEnvAndRetainMsg()
 
-	defObjStmt := ast.NewDefObjStmt(stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets, stmt.DefFnStmt.FnTemplate.DomFacts, stmt.Line)
+	defObjStmt := ast.NewDefLetStmt(stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets, stmt.DefFnStmt.FnTemplate.DomFacts, stmt.Line)
 	err := exec.defLetStmt(defObjStmt)
 	if err != nil {
 		return NewExecErr(""), err
@@ -878,7 +878,7 @@ func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitiveP
 	}
 
 	// 这里最好检查一下，是不是 Param set 依赖了 Param，如果依赖了，那其实是要报错了，不过暂时不管了
-	err = exec.defLetStmt(ast.NewDefObjStmt(stmt.Params, []ast.Fc{def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[0]}, def.DomFacts, stmt.Line))
+	err = exec.defLetStmt(ast.NewDefLetStmt(stmt.Params, []ast.Fc{def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[0]}, def.DomFacts, stmt.Line))
 	if err != nil {
 		return err
 	}
