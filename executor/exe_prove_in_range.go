@@ -21,10 +21,10 @@ import (
 	"strconv"
 )
 
-func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) (ExecRet, error) {
+func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) ExecRet {
 	intensionalSetGivenSetIsIn := exec.Env.GetIntensionalSet(stmt.IntensionalSet)
 	if intensionalSetGivenSetIsIn == nil {
-		return NewExecErr(""), fmt.Errorf("intensional set %s not found", stmt.IntensionalSet)
+		return NewExecErr(fmt.Sprintf("intensional set %s not found", stmt.IntensionalSet))
 	}
 
 	startStr := strconv.FormatInt(stmt.Start, 10)
@@ -34,7 +34,7 @@ func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) (ExecRet, err
 
 	state, err := exec.factStmt(forallXInIntensionalSetTheyAreFromStartToEnd)
 	if notOkExec(state, err) {
-		return state, err
+		return state
 	}
 
 	for i := stmt.Start; i < stmt.End; i++ {
@@ -43,17 +43,17 @@ func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) (ExecRet, err
 			if msg != "" {
 				exec.newMsg(msg)
 			}
-			return NewExecErr(""), err
+			return NewExecErr(err.Error())
 		}
 	}
 
 	uniFact := stmt.UniFact()
 	err = exec.Env.NewFact(uniFact)
 	if err != nil {
-		return NewExecErr(""), err
+		return NewExecErr(err.Error())
 	}
 
-	return NewExecTrue(""), nil
+	return NewExecTrue("")
 }
 
 func (exec *Executor) proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsIn *ast.IntensionalSetStmt, stmt *ast.ProveInRangeStmt, i int64) (bool, string, error) {
