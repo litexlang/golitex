@@ -39,7 +39,7 @@ func FormatCode(path string) (string, glob.SysSignal, error) {
 	}
 
 	// 把 code 写到 path 里
-	err = os.WriteFile(path, []byte(glob.AddWindowsCarriageReturn(strings.Join(stmtStrSlice, "\n\n"))), 0644)
+	err = os.WriteFile(path, []byte((strings.Join(stmtStrSlice, "\n\n"))), 0644)
 	if err != nil {
 		return fmt.Sprintf("failed to write file %s: %s", path, err.Error()), glob.SysSignalSystemError, err
 	}
