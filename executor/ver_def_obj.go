@@ -19,7 +19,9 @@ import (
 	env "golitex/environment"
 )
 
-func (ver *Verifier) NewDefObj_InsideAtomsDeclared(stmt *ast.DefLetStmt) ExecRet {
+func NewDefObj_InsideAtomsDeclared(curEnv *env.Env, stmt *ast.DefLetStmt) ExecRet {
+	ver := NewVerifier(curEnv)
+
 	err := ver.Env.NonDuplicateParam_NoUndeclaredParamSet(stmt.Objs, stmt.ObjSets, true)
 	if err != nil {
 		return NewExecErr(err.Error())

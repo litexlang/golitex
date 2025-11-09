@@ -100,11 +100,9 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 		return NewExecErr(err.Error())
 	}
 
-	ver := NewVerifier(exec.Env)
-
 	// 把 obj 放入环境
 	for i, objName := range stmt.ObjNames {
-		execState := ver.NewDefObj_InsideAtomsDeclared(ast.NewDefLetStmt([]string{objName}, []ast.Fc{instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).ExistParamSets[i]}, []ast.FactStmt{}, stmt.Line))
+		execState := NewDefObj_InsideAtomsDeclared(exec.Env, ast.NewDefLetStmt([]string{objName}, []ast.Fc{instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).ExistParamSets[i]}, []ast.FactStmt{}, stmt.Line))
 		if execState.IsNotTrue() {
 			return execState
 		}

@@ -73,7 +73,7 @@ func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.Spec_O
 
 	lastStmtAsFact, ok := stmt.ClaimProveStmt.Proofs[len(stmt.ClaimProveStmt.Proofs)-1].(ast.Spec_OrFact)
 	if !ok {
-		return NewExecErr(fmt.Sprintf("prove by contradiction only support fact as last statement"))
+		return NewExecErr("prove by contradiction only support fact as last statement")
 	}
 
 	reversedLastFact := lastStmtAsFact.ReverseIsTrue()
