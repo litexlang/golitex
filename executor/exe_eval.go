@@ -178,8 +178,8 @@ func (exec *Executor) runAlgoStmtsWhenEval(algoStmts ast.AlgoStmtSlice, fcFnWith
 		case *ast.ProveAlgoReturnStmt:
 			return nil, NewExecErr(fmt.Sprintf("There can not be return by statements in algo, get %s", asStmt.String()))
 		default:
-			execRet, _, err := exec.Stmt(stmt.(ast.Stmt))
-			if err != nil || execRet.IsNotTrue() {
+			execRet := exec.Stmt(stmt.(ast.Stmt))
+			if execRet.IsNotTrue() {
 				return nil, execRet
 			}
 		}

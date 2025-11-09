@@ -31,7 +31,7 @@ func CmpBy_Literally_NumLit_PolynomialArith(left, right ast.Fc) (bool, string, e
 		return false, "", err
 	}
 	if ok {
-		return true, "literally the same", nil
+		return true, "the same", nil
 	}
 
 	areNumLit, areEqual, err := NumLitEqual_ByEval(left, right)

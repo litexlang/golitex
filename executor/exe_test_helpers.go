@@ -43,9 +43,9 @@ func execStmtTest(topStmt []ast.Stmt) []string {
 	notTrue := false
 
 	for _, topStmt := range topStmt {
-		execState, _, err := executor.Stmt(topStmt)
-		if err != nil {
-			messages = append(messages, (err.Error()))
+		execState := executor.Stmt(topStmt)
+		if execState.IsErr() {
+			messages = append(messages, execState.String())
 			notTrue = true
 		}
 

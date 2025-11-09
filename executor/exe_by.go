@@ -123,8 +123,8 @@ func (exec *Executor) runAlgoStmtsWhenBy(algoStmts ast.AlgoStmtSlice, paramsValu
 		case *ast.AlgoReturnStmt:
 			return NewExecErr(fmt.Sprintf("There can not be return value statements in algo. Use return eval instead .Get %s", asStmt.String()))
 		default:
-			execRet, _, err := exec.Stmt(stmt.(ast.Stmt))
-			if err != nil || execRet.IsNotTrue() {
+			execRet := exec.Stmt(stmt.(ast.Stmt))
+			if execRet.IsNotTrue() {
 				return execRet
 			}
 		}
