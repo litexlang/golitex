@@ -85,9 +85,9 @@ func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.Prove
 	}
 
 	for _, stmt := range stmt.Proof {
-		state, _, err := exec.Stmt(stmt)
-		if notOkExec(state, err) {
-			return false, err
+		state := exec.Stmt(stmt)
+		if state.IsNotTrue() {
+			return false, fmt.Errorf(state.String())
 		}
 	}
 

@@ -138,9 +138,9 @@ func (exec *Executor) proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsI
 
 	// exec proofs
 	for _, curStmt := range stmt.Proofs {
-		execState, _, err := exec.Stmt(curStmt)
-		if err != nil {
-			return false, "", err
+		execState := exec.Stmt(curStmt)
+		if execState.IsNotTrue() {
+			return false, "", fmt.Errorf(execState.String())
 		}
 		if execState.IsUnknown() {
 			// 如果是 fact， 那把数字代入一下，会方便非常多，比如 x > 1 ，把 x = 2直接代入就能直接验证出来了

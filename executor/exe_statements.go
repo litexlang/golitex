@@ -22,7 +22,7 @@ import (
 	"strings"
 )
 
-func (exec *Executor) Stmt(stmt ast.Stmt) (ExecRet, string, error) {
+func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 	// var err error = nil
 	var execState ExecRet = NewExecTrue("")
 
@@ -94,10 +94,10 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (ExecRet, string, error) {
 		execState = exec.haveFnStmt(stmt)
 	case *ast.MarkdownStmt:
 		execState = exec.markdownStmt(stmt)
-		return execState, "", nil
+		return execState
 	case *ast.LatexStmt:
 		execState = exec.latexStmt(stmt)
-		return execState, "", nil
+		return execState
 	case *ast.ClaimIffStmt:
 		execState = exec.claimIffStmt(stmt)
 	case *ast.ProveInRangeStmt:
@@ -129,9 +129,9 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (ExecRet, string, error) {
 		if glob.RequireMsg() {
 			exec.newMsg(fmt.Sprintf("%s\n", execState.String()))
 		}
-		return execState, fmt.Sprintf("Success! line %d\n", stmt.GetLine()), nil
+		return NewExecTrue(fmt.Sprintf("Success! line %d\n", stmt.GetLine()))
 	} else if execState.IsUnknown() {
-		return execState, fmt.Sprintf("Unknown: line %d\n", stmt.GetLine()), nil
+		return NewExecUnknown(fmt.Sprintf("Unknown: line %d\n", stmt.GetLine()))
 	} else {
 		panic("unknown exec state")
 	}
@@ -288,12 +288,12 @@ func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) ExecRet {
 // TODO: 我认为打印一下 claim 里面的各个语句的输出还是有道理的
 func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) (ExecRet, error) {
 	for _, curStmt := range proof {
-		execState, _, err := exec.Stmt(curStmt)
-		if err != nil || execState.IsErr() {
+		execState := exec.Stmt(curStmt)
+		if execState.IsErr() {
 			if glob.RequireMsg() {
 				exec.newMsg(fmt.Sprintf("%s\nfailed :( line %d\n", curStmt.String(), curStmt.GetLine()))
 			}
-			return NewExecErr(""), err
+			return NewExecErr(""), fmt.Errorf(execState.String())
 		}
 		if execState.IsUnknown() {
 			if glob.RequireMsg() {
@@ -753,8 +753,8 @@ func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) ExecRet {
 	}
 
 	for _, proof := range stmt.Proofs {
-		execState, _, err := exec.Stmt(proof)
-		if notOkExec(execState, err) {
+		execState := exec.Stmt(proof)
+		if execState.IsNotTrue() {
 			return execState
 		}
 	}
@@ -883,9 +883,9 @@ func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitiveP
 	}
 
 	for _, proof := range stmt.Proofs {
-		execState, _, err := exec.Stmt(proof)
+		execState := exec.Stmt(proof)
 		if notOkExec(execState, err) {
-			return err
+			return fmt.Errorf(execState.String())
 		}
 	}
 

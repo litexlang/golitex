@@ -106,9 +106,9 @@ func (exec *Executor) proveIsCommutativePropStmtBody(proofs []ast.Stmt, fact *as
 	}
 
 	for _, proof := range proofs {
-		execState, _, err := exec.Stmt(proof)
-		if notOkExec(execState, err) {
-			return false, err
+		execState := exec.Stmt(proof)
+		if execState.IsNotTrue() {
+			return false, fmt.Errorf(execState.String())
 		}
 	}
 
