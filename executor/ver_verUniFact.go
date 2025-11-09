@@ -83,9 +83,9 @@ func (ver *Verifier) PreprocessUniFactParams_DeclareParams(oldStmt *ast.UniFactS
 	}
 
 	// declare
-	err = ver.NewDefObj_InsideAtomsDeclared(ast.NewDefLetStmt(newStmtPtr.Params, newStmtPtr.ParamSets, []ast.FactStmt{}, oldStmt.Line))
-	if err != nil {
-		return nil, err
+	execState := ver.NewDefObj_InsideAtomsDeclared(ast.NewDefLetStmt(newStmtPtr.Params, newStmtPtr.ParamSets, []ast.FactStmt{}, oldStmt.Line))
+	if execState.IsNotTrue() {
+		return nil, fmt.Errorf(execState.String())
 	}
 
 	// 查看param set 是否已经声明

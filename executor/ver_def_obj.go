@@ -15,15 +15,14 @@
 package litex_executor
 
 import (
-	"fmt"
 	ast "golitex/ast"
 	env "golitex/environment"
 )
 
-func (ver *Verifier) NewDefObj_InsideAtomsDeclared(stmt *ast.DefLetStmt) error {
+func (ver *Verifier) NewDefObj_InsideAtomsDeclared(stmt *ast.DefLetStmt) ExecRet {
 	err := ver.Env.NonDuplicateParam_NoUndeclaredParamSet(stmt.Objs, stmt.ObjSets, true)
 	if err != nil {
-		return err
+		return NewExecErr(err.Error())
 	}
 
 	extraAtomNames := map[string]struct{}{}
@@ -31,7 +30,7 @@ func (ver *Verifier) NewDefObj_InsideAtomsDeclared(stmt *ast.DefLetStmt) error {
 	for _, objName := range stmt.Objs {
 		err := ver.Env.IsValidIdentifierAvailable(objName)
 		if err != nil {
-			return err
+			return NewExecErr(err.Error())
 		}
 	}
 
@@ -39,29 +38,29 @@ func (ver *Verifier) NewDefObj_InsideAtomsDeclared(stmt *ast.DefLetStmt) error {
 	for _, objName := range stmt.Objs {
 		err = ver.Env.NewObj_NoDuplicate(objName, stmt)
 		if err != nil {
-			return err
+			return NewExecErr(err.Error())
 		}
 	}
 
 	for _, fact := range stmt.NewInFacts() {
 		if !ver.Env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
-			return fmt.Errorf(env.AtomsInFactNotDeclaredMsg(fact))
+			return NewExecErr(env.AtomsInFactNotDeclaredMsg(fact))
 		}
 		err := ver.Env.NewFact(fact)
 		if err != nil {
-			return err
+			return NewExecErr(err.Error())
 		}
 	}
 
 	for _, fact := range stmt.Facts {
 		if !ver.Env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
-			return fmt.Errorf(env.AtomsInFactNotDeclaredMsg(fact))
+			return NewExecErr(env.AtomsInFactNotDeclaredMsg(fact))
 		}
 		err := ver.Env.NewFact(fact)
 		if err != nil {
-			return err
+			return NewExecErr(err.Error())
 		}
 	}
 
-	return nil
+	return NewExecTrue("")
 }

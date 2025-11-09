@@ -53,9 +53,9 @@ func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.Prove
 	defer exec.deleteEnvAndRetainMsg()
 
 	defObjStmt := ast.NewDefLetStmt(stmt.Fact.Params, stmt.Fact.ParamSets, getParamEqualFcSlice(stmt.Fact.Params, cartesianProductAtI), stmt.Line)
-	err := exec.defLetStmt(defObjStmt)
-	if err != nil {
-		return false, err
+	execState := exec.defLetStmt(defObjStmt)
+	if execState.IsNotTrue() {
+		return false, fmt.Errorf(execState.String())
 	}
 
 	uniMap := map[string]ast.Fc{}

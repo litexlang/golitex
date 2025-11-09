@@ -63,9 +63,9 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 	}
 
 	if stmt.Fact.PropName == glob.KeywordItemExistsIn && execState.IsTrue() {
-		err := exec.defLetStmt(ast.NewDefLetStmt([]string{stmt.ObjNames[0]}, []ast.Fc{stmt.Fact.Params[0]}, []ast.FactStmt{}, stmt.Line))
-		if err != nil {
-			return NewExecErr(err.Error())
+		execState := exec.defLetStmt(ast.NewDefLetStmt([]string{stmt.ObjNames[0]}, []ast.Fc{stmt.Fact.Params[0]}, []ast.FactStmt{}, stmt.Line))
+		if execState.IsNotTrue() {
+			return execState
 		}
 		return NewExecTrue("")
 	}
@@ -104,9 +104,9 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 
 	// 把 obj 放入环境
 	for i, objName := range stmt.ObjNames {
-		err := ver.NewDefObj_InsideAtomsDeclared(ast.NewDefLetStmt([]string{objName}, []ast.Fc{instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).ExistParamSets[i]}, []ast.FactStmt{}, stmt.Line))
-		if err != nil {
-			return NewExecErr(err.Error())
+		execState := ver.NewDefObj_InsideAtomsDeclared(ast.NewDefLetStmt([]string{objName}, []ast.Fc{instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).ExistParamSets[i]}, []ast.FactStmt{}, stmt.Line))
+		if execState.IsNotTrue() {
+			return execState
 		}
 	}
 
@@ -231,9 +231,9 @@ func (exec *Executor) haveEnumSetStmt(stmt *ast.HaveEnumSetStmt) ExecRet {
 
 	// 定义这个新的集合
 	defObjStmt := ast.NewDefLetStmt([]string{enumFact.CurSet.String()}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}, []ast.FactStmt{enumFact}, stmt.Line)
-	err := exec.defLetStmt(defObjStmt)
-	if err != nil {
-		return NewExecErr(err.Error())
+	execState := exec.defLetStmt(defObjStmt)
+	if execState.IsNotTrue() {
+		return execState
 	}
 
 	return NewExecTrue("")
@@ -254,9 +254,9 @@ func (exec *Executor) haveIntensionalSetStmt(stmt *ast.HaveIntensionalSetStmt) E
 	}
 
 	defObjStmt := ast.NewDefLetStmt([]string{intensionalSetFact.CurSet.String()}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}, []ast.FactStmt{intensionalSetFact}, stmt.Line)
-	err := exec.defLetStmt(defObjStmt)
-	if err != nil {
-		return NewExecErr(err.Error())
+	execState := exec.defLetStmt(defObjStmt)
+	if execState.IsNotTrue() {
+		return execState
 	}
 
 	return NewExecTrue("")
@@ -286,9 +286,9 @@ func (exec *Executor) haveExistByReplacementStmt(stmt *ast.HaveObjStStmt) (ExecR
 	}
 
 	defObjStmt := ast.NewDefLetStmt([]string{stmt.ObjNames[0]}, []ast.Fc{stmt.Fact.Params[0]}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, propName, []ast.Fc{ast.FcAtom(stmt.ObjNames[0]), stmt.Fact.Params[3]}, stmt.Line)}, stmt.Line)
-	err := exec.defLetStmt(defObjStmt)
-	if err != nil {
-		return NewExecErr(""), fmt.Errorf(err.Error())
+	execState = exec.defLetStmt(defObjStmt)
+	if execState.IsNotTrue() {
+		return execState, fmt.Errorf(execState.String())
 	}
 
 	return NewExecTrue(""), nil
