@@ -33,8 +33,8 @@ func (exec *Executor) byStmt(stmt *ast.ByStmt) ExecRet {
 
 	if len(stmt.ThenFactsOrNil) > 0 {
 		for _, fact := range stmt.ThenFactsOrNil {
-			execState, err := exec.factStmt(fact)
-			if err != nil {
+			execState := exec.factStmt(fact)
+			if execState.IsErr() {
 				return NewExecErr("")
 			}
 			if execState.IsNotTrue() {
