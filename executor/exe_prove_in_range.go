@@ -63,9 +63,9 @@ func (exec *Executor) proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsI
 	defer exec.deleteEnvAndGiveUpMsgs()
 
 	defObjStmt := ast.NewDefLetStmt([]string{stmt.Param}, []ast.Fc{ast.FcAtom(glob.KeywordInteger)}, []ast.FactStmt{ast.NewEqualFact(ast.FcAtom(stmt.Param), indexAsFc)}, stmt.Line)
-	err := exec.defLetStmt(defObjStmt)
-	if err != nil {
-		return false, "", err
+	execState := exec.defLetStmt(defObjStmt)
+	if execState.IsNotTrue() {
+		return false, "", fmt.Errorf(execState.String())
 	}
 
 	indexInParamSetFact := ast.NewInFact(stmt.Param, intensionalSetGivenSetIsIn.ParentSet)
@@ -74,7 +74,7 @@ func (exec *Executor) proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsI
 		return false, "", err
 	}
 
-	execState := exec.factStmt(instIndexInParamSetFact)
+	execState = exec.factStmt(instIndexInParamSetFact)
 	if execState.IsErr() {
 		return false, "", err
 	}
@@ -89,7 +89,7 @@ func (exec *Executor) proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsI
 			if err != nil {
 				return false, "", err
 			}
-			execState := exec.factStmt(instFact)
+			execState = exec.factStmt(instFact)
 			if execState.IsErr() {
 				return false, "", fmt.Errorf(execState.String())
 			}
@@ -118,7 +118,7 @@ func (exec *Executor) proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsI
 				if err != nil {
 					return false, "", err
 				}
-				execState := exec.factStmt(instFact)
+				execState = exec.factStmt(instFact)
 				if execState.IsErr() {
 					return false, "", fmt.Errorf(execState.String())
 				}
@@ -149,7 +149,7 @@ func (exec *Executor) proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsI
 				return false, "", err
 			}
 
-			execState := exec.factStmt(curStmtAsFact)
+			execState = exec.factStmt(curStmtAsFact)
 			if execState.IsErr() {
 				return false, "", fmt.Errorf(execState.String())
 			}
@@ -166,7 +166,7 @@ func (exec *Executor) proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsI
 			return false, "", err
 		}
 
-		execState := exec.factStmt(instThenFact)
+		execState = exec.factStmt(instThenFact)
 		if execState.IsErr() {
 			return false, "", fmt.Errorf(execState.String())
 		}
