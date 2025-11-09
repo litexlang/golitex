@@ -101,17 +101,17 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (ExecRet, string, error) {
 	case *ast.ClaimIffStmt:
 		execState = exec.claimIffStmt(stmt)
 	case *ast.ProveInRangeStmt:
-		execState, err = exec.proveInRangeStmt(stmt)
+		execState = exec.proveInRangeStmt(stmt)
 	case *ast.ProveIsTransitivePropStmt:
-		execState, err = exec.proveIsTransitivePropStmt(stmt)
+		execState = exec.proveIsTransitivePropStmt(stmt)
 	case *ast.ProveIsCommutativePropStmt:
-		execState, err = exec.proveIsCommutativePropStmt(stmt)
+		execState = exec.proveIsCommutativePropStmt(stmt)
 	case *ast.DefAlgoStmt:
-		execState, err = exec.defAlgoStmt(stmt)
+		execState = exec.defAlgoStmt(stmt)
 	case *ast.EvalStmt:
 		execState = exec.evalStmt(stmt)
 	case *ast.DefProveAlgoStmt:
-		execState, err = exec.defProveAlgoStmt(stmt)
+		execState = exec.defProveAlgoStmt(stmt)
 	case *ast.ByStmt:
 		execState = exec.byStmt(stmt)
 	default:
@@ -815,15 +815,15 @@ func (exec *Executor) latexStmt(stmt *ast.LatexStmt) ExecRet {
 	return NewExecTrue("")
 }
 
-func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropStmt) (ExecRet, error) {
+func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropStmt) ExecRet {
 	err := exec.proveIsTransitivePropStmtBody(stmt)
 	if err != nil {
-		return NewExecErr(""), err
+		return NewExecErr(err.Error())
 	}
 
 	exec.Env.TransitivePropMem[string(stmt.Prop)] = make(map[string][]ast.Fc)
 
-	return NewExecTrue(""), nil
+	return NewExecTrue("")
 }
 
 // TODO 这里的msg系统太冗杂了，需要优化
@@ -899,10 +899,10 @@ func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitiveP
 	return nil
 }
 
-func (exec *Executor) defAlgoStmt(stmt *ast.DefAlgoStmt) (ExecRet, error) {
+func (exec *Executor) defAlgoStmt(stmt *ast.DefAlgoStmt) ExecRet {
 	exec.Env.AlgoDefMem[stmt.FuncName] = stmt
 	exec.newMsg(stmt.String())
-	return NewExecTrue(""), nil
+	return NewExecTrue("")
 }
 
 func (exec *Executor) evalStmt(stmt *ast.EvalStmt) ExecRet {
@@ -935,8 +935,8 @@ func (exec *Executor) evalFcInLocalEnv(fcToEval ast.Fc) (ast.Fc, ExecRet) {
 	return value, NewExecTrue(fmt.Sprintf("By evaluation of algo %s\nWe get %s = %s\n", fcToEval.(*ast.FcFn).FnHead.String(), fcToEval.String(), value.String()))
 }
 
-func (exec *Executor) defProveAlgoStmt(stmt *ast.DefProveAlgoStmt) (ExecRet, error) {
+func (exec *Executor) defProveAlgoStmt(stmt *ast.DefProveAlgoStmt) ExecRet {
 	exec.Env.DefProveAlgoMem[stmt.ProveAlgoName] = stmt
 	exec.newMsg(stmt.String())
-	return NewExecTrue(""), nil
+	return NewExecTrue("")
 }
