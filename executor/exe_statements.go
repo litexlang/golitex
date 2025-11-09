@@ -269,8 +269,7 @@ func (exec *Executor) defLetStmt(stmt *ast.DefLetStmt) ExecRet {
 	// 	defer exec.newMsg(fmt.Sprintf("%s\n", stmt))
 	// }
 
-	ver := NewVerifier(exec.Env)
-	return ver.NewDefObj_InsideAtomsDeclared(stmt)
+	return NewDefObj_InsideAtomsDeclared(exec.Env, stmt)
 }
 
 func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) ExecRet {
@@ -602,7 +601,7 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ExecRet {
 			return NewExecErr(fmt.Sprintf("%s is not in %s", stmt.ObjNames[i], stmt.ObjSets[i]))
 		}
 
-		execState := ver.NewDefObj_InsideAtomsDeclared(ast.NewDefLetStmt([]string{stmt.ObjNames[i]}, []ast.Fc{ast.FcAtom(glob.KeywordObj)}, []ast.FactStmt{}, stmt.Line))
+		execState := NewDefObj_InsideAtomsDeclared(exec.Env, ast.NewDefLetStmt([]string{stmt.ObjNames[i]}, []ast.Fc{ast.FcAtom(glob.KeywordObj)}, []ast.FactStmt{}, stmt.Line))
 		if execState.IsNotTrue() {
 			return execState
 		}
@@ -682,7 +681,7 @@ func (exec *Executor) haveFnLiftStmt(stmt *ast.HaveFnLiftStmt) ExecRet {
 	// get definition of opt
 	optDef := exec.Env.GetLatestFnT_GivenNameIsIn(stmt.Opt.String())
 	if optDef == nil {
-		return NewExecErr(fmt.Sprintf("opt is not defined"))
+		return NewExecErr(fmt.Sprintf("%s is not defined", stmt.Opt.String()))
 	}
 
 	FnTemplateOfFunctions := []ast.Fc{}
