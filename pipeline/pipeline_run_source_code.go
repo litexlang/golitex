@@ -76,12 +76,12 @@ func RunSourceCode(curEnv *env.Env, code string) (string, glob.SysSignal, *env.E
 				return strings.TrimSpace(strings.Join(msgOfTopStatements, "\n")), glob.SysSignalRuntimeError, nil, err
 			}
 		default:
-			execRet, msg, err = executor.Stmt(topStmt)
+			execRet = executor.Stmt(topStmt)
 
 			msgOfTopStatements = append(msgOfTopStatements, executor.GetMsgAsStr0ToEnd())
 			msgOfTopStatements = append(msgOfTopStatements, msg)
 
-			if err != nil || execRet.IsErr() {
+			if execRet.IsErr() {
 				return strings.TrimSpace(strings.Join(msgOfTopStatements, "\n")), glob.SysSignalRuntimeError, nil, err
 			}
 			if execRet.IsUnknown() {
@@ -113,9 +113,9 @@ func ExecuteCodeAndReturnMessageSliceGivenSettings(code string, executor *exe.Ex
 	msgOfTopStatements := []string{}
 
 	for _, topStmt := range topStmtSlice {
-		execState, _, err := executor.Stmt(topStmt)
-		if err != nil {
-			return nil, glob.SysSignalRuntimeError, err
+		execState := executor.Stmt(topStmt)
+		if execState.IsErr() {
+			return nil, glob.SysSignalRuntimeError, fmt.Errorf(execState.String())
 		}
 
 		msgOfTopStatements = append(msgOfTopStatements, executor.GetMsgAsStr0ToEnd())

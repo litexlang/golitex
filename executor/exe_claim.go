@@ -364,8 +364,8 @@ func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt
 	}
 
 	for _, curStmt := range stmt.Proofs {
-		execState, _, err := exec.Stmt(curStmt)
-		if notOkExec(execState, err) {
+		execState := exec.Stmt(curStmt)
+		if execState.IsNotTrue() {
 			if glob.RequireMsg() {
 				if execState.IsUnknown() {
 					exec.Env.AddMsgToParent(fmt.Sprintf("unknown :( line %d\n", curStmt.GetLine()))
@@ -373,7 +373,7 @@ func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt
 					exec.Env.AddMsgToParent(fmt.Sprintf("failed :( line %d:\n", curStmt.GetLine()))
 				}
 			}
-			return execState, err
+			return execState, nil
 		}
 	}
 

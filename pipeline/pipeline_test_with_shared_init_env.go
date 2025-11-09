@@ -47,11 +47,11 @@ func (p *PipelineRunner) Run(code string) (string, glob.SysSignal, error) {
 	msgOfTopStatements := []string{}
 
 	for _, topStmt := range topStmtSlice {
-		execState, msg, err := p.executor.Stmt(topStmt)
+		execState := p.executor.Stmt(topStmt)
 		msgOfTopStatements = append(msgOfTopStatements, p.executor.GetMsgAsStr0ToEnd())
-		msgOfTopStatements = append(msgOfTopStatements, msg)
-		if err != nil {
-			return strings.Join(msgOfTopStatements, "\n"), glob.SysSignalRuntimeError, err
+		msgOfTopStatements = append(msgOfTopStatements, execState.String())
+		if execState.IsErr() {
+			return strings.Join(msgOfTopStatements, "\n"), glob.SysSignalRuntimeError, fmt.Errorf(execState.String())
 		}
 		if execState.IsUnknown() {
 			return strings.Join(msgOfTopStatements, "\n"), glob.SysSignalRuntimeError, fmt.Errorf("execution failed, line %d", topStmt.GetLine())
