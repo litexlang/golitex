@@ -15,7 +15,6 @@
 package litex_global
 
 import (
-	"runtime"
 	"strings"
 )
 
@@ -67,9 +66,9 @@ func RemoveWindowsCarriageReturn(code string) string {
 	// return code
 }
 
-func AddWindowsCarriageReturn(code string) string {
-	if runtime.GOOS == "windows" {
-		return strings.ReplaceAll(code, "\n", "\r\n")
-	}
-	return code
-}
+// func AddWindowsCarriageReturn(code string) string {
+// 	if runtime.GOOS == "windows" {
+// 		return strings.ReplaceAll(code, "\n", "\r\n")
+// 	}
+// 	return code
+// }
