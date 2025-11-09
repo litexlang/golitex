@@ -470,28 +470,28 @@ func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimProp
 	return NewExecTrue(""), nil
 }
 
-func (exec *Executor) claimIffStmt(stmt *ast.ClaimIffStmt) (ExecRet, error) {
+func (exec *Executor) claimIffStmt(stmt *ast.ClaimIffStmt) ExecRet {
 	thenToIff := stmt.UniFactWithIffStmt.NewUniFactWithThenToIff()
 	iffToThen := stmt.UniFactWithIffStmt.NewUniFactWithIffToThen()
 	claimThenToIff := ast.NewClaimProveStmt(thenToIff, stmt.ProofThenToIff, stmt.Line)
 	claimIffToThen := ast.NewClaimProveStmt(iffToThen, stmt.ProofIffToThen, stmt.Line)
 	execState, err := exec.claimStmtProve(claimThenToIff)
 	if notOkExec(execState, err) {
-		return execState, err
+		return execState
 	}
 	execState, err = exec.claimStmtProve(claimIffToThen)
 	if notOkExec(execState, err) {
-		return execState, err
+		return execState
 	}
 
 	err = exec.Env.NewFact(thenToIff)
 	if err != nil {
-		return NewExecErr(""), err
+		return NewExecErr(err.Error())
 	}
 	err = exec.Env.NewFact(iffToThen)
 	if err != nil {
-		return NewExecErr(""), err
+		return NewExecErr(err.Error())
 	}
 
-	return NewExecTrue(""), nil
+	return NewExecTrue("")
 }

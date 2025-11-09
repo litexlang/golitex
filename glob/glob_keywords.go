@@ -80,6 +80,8 @@ const (
 
 	KeywordProveAlgo = "prove_algo"
 	KeywordBy        = "by"
+
+	KeywordImplication = "implication"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -141,6 +143,8 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 
 	KeywordProveAlgo: {},
 	KeywordBy:        {},
+
+	KeywordImplication: {},
 }
 
 const (
