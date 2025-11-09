@@ -32,8 +32,8 @@ func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) ExecRet {
 
 	forallXInIntensionalSetTheyAreFromStartToEnd := ast.NewUniFact([]string{stmt.Param}, []ast.Fc{stmt.IntensionalSet}, []ast.FactStmt{}, []ast.FactStmt{ast.NewInFact(stmt.Param, ast.FcAtom(glob.KeywordInteger)), ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolLessEqual), []ast.Fc{ast.FcAtom(startStr), ast.FcAtom(stmt.Param)}, stmt.Line), ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolLess), []ast.Fc{ast.FcAtom(stmt.Param), ast.FcAtom(endStr)}, stmt.Line)}, stmt.Line)
 
-	state, err := exec.factStmt(forallXInIntensionalSetTheyAreFromStartToEnd)
-	if notOkExec(state, err) {
+	state := exec.factStmt(forallXInIntensionalSetTheyAreFromStartToEnd)
+	if state.IsNotTrue() {
 		return state
 	}
 
@@ -48,7 +48,7 @@ func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) ExecRet {
 	}
 
 	uniFact := stmt.UniFact()
-	err = exec.Env.NewFact(uniFact)
+	err := exec.Env.NewFact(uniFact)
 	if err != nil {
 		return NewExecErr(err.Error())
 	}
@@ -74,8 +74,8 @@ func (exec *Executor) proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsI
 		return false, "", err
 	}
 
-	execState, err := exec.factStmt(instIndexInParamSetFact)
-	if err != nil {
+	execState := exec.factStmt(instIndexInParamSetFact)
+	if execState.IsErr() {
 		return false, "", err
 	}
 	// if notOkExec(execState, err) {
@@ -89,9 +89,9 @@ func (exec *Executor) proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsI
 			if err != nil {
 				return false, "", err
 			}
-			execState, err := exec.factStmt(instFact)
-			if err != nil {
-				return false, "", err
+			execState := exec.factStmt(instFact)
+			if execState.IsErr() {
+				return false, "", fmt.Errorf(execState.String())
 			}
 			if execState.IsUnknown() {
 				return false, "", fmt.Errorf("index in param set fact must be proved to be true or false, can not be unknown: %s", instFact.String())
@@ -105,9 +105,9 @@ func (exec *Executor) proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsI
 		if err != nil {
 			return false, "", err
 		}
-		execState, err := exec.factStmt(instDomFact)
-		if err != nil {
-			return false, "", err
+		execState := exec.factStmt(instDomFact)
+		if execState.IsErr() {
+			return false, "", fmt.Errorf(execState.String())
 		}
 
 		if execState.IsUnknown() {
@@ -118,9 +118,9 @@ func (exec *Executor) proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsI
 				if err != nil {
 					return false, "", err
 				}
-				execState, err := exec.factStmt(instFact)
-				if err != nil {
-					return false, "", err
+				execState := exec.factStmt(instFact)
+				if execState.IsErr() {
+					return false, "", fmt.Errorf(execState.String())
 				}
 				if execState.IsUnknown() {
 					return false, "", fmt.Errorf("dom facts in prove_in_range must be proved to be true or false, can not be unknown: %s", instFact.String())
@@ -149,9 +149,9 @@ func (exec *Executor) proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsI
 				return false, "", err
 			}
 
-			execState, err := exec.factStmt(curStmtAsFact)
-			if err != nil {
-				return false, "", err
+			execState := exec.factStmt(curStmtAsFact)
+			if execState.IsErr() {
+				return false, "", fmt.Errorf(execState.String())
 			}
 			if execState.IsUnknown() {
 				return false, "", fmt.Errorf("proof in prove_in_range must be proved to be true or false, can not be unknown: %s", curStmtAsFact.String())
@@ -166,8 +166,11 @@ func (exec *Executor) proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsI
 			return false, "", err
 		}
 
-		execState, err := exec.factStmt(instThenFact)
-		if notOkExec(execState, err) {
+		execState := exec.factStmt(instThenFact)
+		if execState.IsErr() {
+			return false, "", fmt.Errorf(execState.String())
+		}
+		if execState.IsUnknown() {
 			return false, "", fmt.Errorf("then fact in prove_in_range must be proved to be true or false, can not be unknown: %s", instThenFact.String())
 		}
 	}

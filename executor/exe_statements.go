@@ -28,7 +28,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (ExecRet, string, error) {
 
 	switch stmt := (stmt).(type) {
 	case ast.FactStmt:
-		execState, err = exec.factStmt(stmt)
+		execState = exec.factStmt(stmt)
 	case *ast.KnowFactStmt:
 		exec.newMsg("Warning: `know` is design in such a way that it is possible to introduce invalid facts without verification If you want to introduce default facts, then use it; otherwise, use it carefully.")
 		execState = exec.knowStmt(stmt)
@@ -136,17 +136,17 @@ func (exec *Executor) Stmt(stmt ast.Stmt) (ExecRet, string, error) {
 	}
 }
 
-func (exec *Executor) factStmt(stmt ast.FactStmt) (ExecRet, error) {
+func (exec *Executor) factStmt(stmt ast.FactStmt) ExecRet {
 	curVerifier := NewVerifier(exec.Env)
 	state := Round0Msg
 	verRet := curVerifier.VerFactStmt(stmt, state)
 
 	if verRet.IsErr() {
-		return NewExecErr(""), fmt.Errorf(verRet.String())
+		return NewExecErr(verRet.String())
 	} else if verRet.IsTrue() {
 		err := exec.Env.NewFact(stmt)
 		if err != nil {
-			return NewExecErr(""), err
+			return NewExecErr(err.Error())
 		}
 		if verRet.(*ExecTrue).TrueEqualValues != nil {
 			if verRet.(*ExecTrue).TrueEqualValues[0] != nil {
@@ -156,9 +156,9 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) (ExecRet, error) {
 				exec.Env.StoreTrueEqualValues(stmt.(*ast.SpecFactStmt).Params[0], verRet.(*ExecTrue).TrueEqualValues[1])
 			}
 		}
-		return NewExecTrue(""), nil
+		return NewExecTrue("")
 	} else if verRet.IsUnknown() {
-		return NewExecUnknown(""), nil
+		return NewExecUnknown("")
 	} else {
 		panic("unknown ver ret")
 	}
@@ -320,8 +320,8 @@ func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) ExecRet
 	}()
 
 	// prove orFact is true
-	execState, err := exec.factStmt(stmt.OrFact)
-	if notOkExec(execState, err) {
+	execState := exec.factStmt(stmt.OrFact)
+	if execState.IsNotTrue() {
 		if glob.RequireMsg() {
 			exec.newMsg(fmt.Sprintf("%s is unknown", stmt.OrFact.String()))
 		}
@@ -518,8 +518,8 @@ func (exec *Executor) namedUniFactStmt(stmt *ast.NamedUniFactStmt) ExecRet {
 	// exec.newMsg(stmt.String())
 
 	uniFact := ast.NewUniFact(stmt.DefPropStmt.DefHeader.Params, stmt.DefPropStmt.DefHeader.ParamSets, stmt.DefPropStmt.IffFacts, stmt.DefPropStmt.ThenFacts, stmt.Line)
-	execState, err := exec.factStmt(uniFact)
-	if notOkExec(execState, err) {
+	execState := exec.factStmt(uniFact)
+	if execState.IsNotTrue() {
 		return execState
 	}
 
@@ -580,8 +580,8 @@ func (exec *Executor) ClearStmt() error {
 
 func (exec *Executor) inlineFactsStmt(stmt *ast.InlineFactsStmt) ExecRet {
 	for _, fact := range stmt.Facts {
-		execState, err := exec.factStmt(fact)
-		if notOkExec(execState, err) {
+		execState := exec.factStmt(fact)
+		if execState.IsNotTrue() {
 			return execState
 		}
 	}
@@ -762,8 +762,8 @@ func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) ExecRet {
 	fcDerivedFromFnName := ast.NewFcFn(ast.FcAtom(stmt.DefFnStmt.Name), stmt.DefFnStmt.FnTemplate.Params.ToFcSlice())
 
 	// prove return value in newRetFc
-	execState, err := exec.factStmt(ast.NewInFactWithFc(stmt.HaveObjSatisfyFn, stmt.DefFnStmt.FnTemplate.RetSet))
-	if notOkExec(execState, err) {
+	execState := exec.factStmt(ast.NewInFactWithFc(stmt.HaveObjSatisfyFn, stmt.DefFnStmt.FnTemplate.RetSet))
+	if execState.IsNotTrue() {
 		return execState
 	}
 
@@ -773,8 +773,8 @@ func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) ExecRet {
 	}
 
 	for _, thenFact := range newThenFacts {
-		execState, err := exec.factStmt(thenFact)
-		if notOkExec(execState, err) {
+		execState := exec.factStmt(thenFact)
+		if execState.IsNotTrue() {
 			return execState
 		}
 	}
@@ -796,7 +796,7 @@ func (exec *Executor) openANewEnvAndCheck(fact ast.FactStmt, requireMsg bool) (E
 
 	verRet := ver.VerFactStmt(fact, state)
 	if verRet.IsErr() {
-		return NewExecErr(""), fmt.Errorf(verRet.String())
+		return NewExecErr(verRet.String()), fmt.Errorf(verRet.String())
 	}
 	if verRet.IsUnknown() {
 		return NewExecUnknown(""), nil
@@ -845,18 +845,18 @@ func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitiveP
 	}
 
 	// def 的 paramSet 必须相等
-	state, err := exec.factStmt(ast.NewEqualFact(def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[1]))
-	if err != nil {
-		return err
+	state := exec.factStmt(ast.NewEqualFact(def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[1]))
+	if state.IsErr() {
+		return fmt.Errorf(state.String())
 	}
 	if state.IsUnknown() {
 		return fmt.Errorf("prop in %s must have equal parameter sets, but parameter sets %s and %s of %s are not equal", glob.KeywordProveIsTransitiveProp, def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[1], def.DefHeader.Name)
 	}
 
 	// 这里最好检查一下，是不是 Param set 依赖了 Param，如果依赖了，那其实是要报错了，不过暂时不管了
-	err = exec.defLetStmt(ast.NewDefLetStmt(stmt.Params, []ast.Fc{def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[0]}, def.DomFacts, stmt.Line))
+	err := exec.defLetStmt(ast.NewDefLetStmt(stmt.Params, []ast.Fc{def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[0]}, def.DomFacts, stmt.Line))
 	if err != nil {
-		return err
+		return fmt.Errorf(err.Error())
 	}
 
 	ok := exec.Env.AreAtomsInFcAreDeclared(def.DefHeader.ParamSets[0], map[string]struct{}{})
@@ -891,8 +891,8 @@ func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitiveP
 
 	// check
 	finalCheckStmt := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(stmt.Prop), []ast.Fc{ast.FcAtom(stmt.Params[0]), ast.FcAtom(stmt.Params[2])}, stmt.Line)
-	state, err = exec.factStmt(finalCheckStmt)
-	if notOkExec(state, err) {
+	state = exec.factStmt(finalCheckStmt)
+	if state.IsNotTrue() {
 		return fmt.Errorf("failed to prove %s is transitive: %s failed", stmt.Prop, finalCheckStmt)
 	}
 

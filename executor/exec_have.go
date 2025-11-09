@@ -245,16 +245,16 @@ func (exec *Executor) haveIntensionalSetStmt(stmt *ast.HaveIntensionalSetStmt) E
 	intensionalSetFact := stmt.Fact
 
 	// very important: check whether the parent set is a set
-	ok, err := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{intensionalSetFact.ParentSet, ast.FcAtom(glob.KeywordSet)}, stmt.Line))
-	if err != nil {
-		return NewExecErr(err.Error())
+	state := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{intensionalSetFact.ParentSet, ast.FcAtom(glob.KeywordSet)}, stmt.Line))
+	if state.IsErr() {
+		return NewExecErr(state.String())
 	}
-	if ok.IsUnknown() {
+	if state.IsUnknown() {
 		return NewExecErr("parent set of intensional set must be a set, i.e. `" + intensionalSetFact.ParentSet.String() + " in " + ast.FcAtom(glob.KeywordSet).String() + "` is true, but `" + intensionalSetFact.ParentSet.String() + " in " + ast.FcAtom(glob.KeywordSet).String() + "` is not")
 	}
 
 	defObjStmt := ast.NewDefLetStmt([]string{intensionalSetFact.CurSet.String()}, []ast.Fc{ast.FcAtom(glob.KeywordSet)}, []ast.FactStmt{intensionalSetFact}, stmt.Line)
-	err = exec.defLetStmt(defObjStmt)
+	err := exec.defLetStmt(defObjStmt)
 	if err != nil {
 		return NewExecErr(err.Error())
 	}
@@ -274,21 +274,21 @@ func (exec *Executor) haveExistByReplacementStmt(stmt *ast.HaveObjStStmt) (ExecR
 
 	uniFact := ast.GetForallXOnlyOneYSatisfyGivenProp(stmt.Fact.Params[0], stmt.Fact.Params[1], propName)
 
-	execState, err := exec.factStmt(uniFact)
-	if notOkExec(execState, err) {
-		return execState, err
+	execState := exec.factStmt(uniFact)
+	if execState.IsNotTrue() {
+		return execState, fmt.Errorf(execState.String())
 	}
 
 	fourthObjInSetDefinedByReplacement := ast.NewInFactWithFc(stmt.Fact.Params[3], ast.NewFcFn(ast.FcAtom(glob.KeywordSetDefinedByReplacement), []ast.Fc{stmt.Fact.Params[0], stmt.Fact.Params[1], propName}))
-	execState, err = exec.factStmt(fourthObjInSetDefinedByReplacement)
-	if notOkExec(execState, err) {
-		return execState, err
+	execState = exec.factStmt(fourthObjInSetDefinedByReplacement)
+	if execState.IsNotTrue() {
+		return execState, fmt.Errorf(execState.String())
 	}
 
 	defObjStmt := ast.NewDefLetStmt([]string{stmt.ObjNames[0]}, []ast.Fc{stmt.Fact.Params[0]}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, propName, []ast.Fc{ast.FcAtom(stmt.ObjNames[0]), stmt.Fact.Params[3]}, stmt.Line)}, stmt.Line)
-	err = exec.defLetStmt(defObjStmt)
+	err := exec.defLetStmt(defObjStmt)
 	if err != nil {
-		return NewExecErr(""), err
+		return NewExecErr(""), fmt.Errorf(err.Error())
 	}
 
 	return NewExecTrue(""), nil
