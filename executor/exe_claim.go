@@ -255,17 +255,17 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 	// declare parameters in asUnivFact in the env
 	objDefStmt := ast.NewDefLetStmt(asUnivFact.Params, asUnivFact.ParamSets, []ast.FactStmt{}, stmt.Line)
 
-	err := exec.defLetStmt(objDefStmt)
-	if err != nil {
+	execState := exec.defLetStmt(objDefStmt)
+	if execState.IsNotTrue() {
 		if glob.RequireMsg() {
 			exec.newMsg(fmt.Sprintf("Claim statement error: Failed to declare parameters in universal fact:\n%s\n", objDefStmt))
 		}
-		return false, err
+		return false, fmt.Errorf(execState.String())
 	}
 
 	// know dom facts
 	for _, domFact := range asUnivFact.DomFacts {
-		err = exec.Env.NewFact(domFact)
+		err := exec.Env.NewFact(domFact)
 		if err != nil {
 			return false, err
 		}
@@ -358,9 +358,9 @@ func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt
 	// declare parameters in exist prop
 	defObjStmt := ast.NewDefLetStmt(stmt.ExistPropWithoutDom.DefBody.DefHeader.Params, stmt.ExistPropWithoutDom.DefBody.DefHeader.ParamSets, stmt.ExistPropWithoutDom.DefBody.IffFacts, stmt.Line)
 
-	err := exec.defLetStmt(defObjStmt)
-	if err != nil {
-		return NewExecErr(""), err
+	execState := exec.defLetStmt(defObjStmt)
+	if execState.IsNotTrue() {
+		return execState, fmt.Errorf(execState.String())
 	}
 
 	for _, curStmt := range stmt.Proofs {
@@ -432,9 +432,9 @@ func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimProp
 	// declare parameters in prop
 
 	objDefStmt := ast.NewDefLetStmt(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFacts, stmt.Line)
-	err := exec.defLetStmt(objDefStmt)
-	if err != nil {
-		return NewExecErr(""), err
+	execState := exec.defLetStmt(objDefStmt)
+	if execState.IsNotTrue() {
+		return execState, fmt.Errorf(execState.String())
 	}
 
 	thenFactsAsReversible := []ast.Spec_OrFact{}

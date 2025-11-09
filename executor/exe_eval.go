@@ -118,9 +118,9 @@ func (exec *Executor) useAlgoToEvalFcFnThenSimplify(fcFn *ast.FcFn) (ast.Fc, Exe
 		if exec.Env.IsAtomDeclared(ast.FcAtom(param), map[string]struct{}{}) {
 			continue
 		} else {
-			err := exec.defLetStmt(ast.NewDefLetStmt([]string{param}, []ast.Fc{ast.FcAtom(glob.KeywordObj)}, []ast.FactStmt{ast.NewEqualFact(ast.FcAtom(param), fcFn.Params[i])}, glob.InnerGenLine))
-			if err != nil {
-				return nil, NewExecErr(err.Error())
+			execState := exec.defLetStmt(ast.NewDefLetStmt([]string{param}, []ast.Fc{ast.FcAtom(glob.KeywordObj)}, []ast.FactStmt{ast.NewEqualFact(ast.FcAtom(param), fcFn.Params[i])}, glob.InnerGenLine))
+			if execState.IsNotTrue() {
+				return nil, NewExecErr(execState.String())
 			}
 		}
 	}
