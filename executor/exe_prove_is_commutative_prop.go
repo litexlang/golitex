@@ -112,9 +112,9 @@ func (exec *Executor) proveIsCommutativePropStmtBody(proofs []ast.Stmt, fact *as
 		}
 	}
 
-	state, err := exec.factStmt(rightToLeft)
-	if err != nil {
-		return false, err
+	state := exec.factStmt(rightToLeft)
+	if state.IsErr() {
+		return false, fmt.Errorf(state.String())
 	}
 	if state.IsUnknown() {
 		return false, fmt.Errorf("proof in %s must be proved to be true, but %s is not true", glob.KeywordProveIsCommutativeProp, rightToLeft)

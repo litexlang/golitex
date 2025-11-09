@@ -68,12 +68,15 @@ func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.Prove
 		if err != nil {
 			return false, err
 		}
-		state, err := exec.factStmt(instFact)
-		if notOkExec(state, err) {
+		state := exec.factStmt(instFact)
+		if state.IsErr() {
+			return false, fmt.Errorf(state.String())
+		}
+		if state.IsNotTrue() {
 			revFacts := instFact.(ast.Spec_OrFact).ReverseIsTrue()
 			for _, revFact := range revFacts {
-				state, err := exec.factStmt(revFact)
-				if notOkExec(state, err) {
+				state := exec.factStmt(revFact)
+				if state.IsNotTrue() {
 					return false, fmt.Errorf("domain fact in universal fact in prove over finite set statement must be true or not true, it can not be unknown:\n%s", instFact)
 				}
 			}
@@ -93,8 +96,8 @@ func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.Prove
 		if err != nil {
 			return false, err
 		}
-		state, err := exec.factStmt(instFact)
-		if notOkExec(state, err) {
+		state := exec.factStmt(instFact)
+		if state.IsNotTrue() {
 			return false, fmt.Errorf("failed to prove instantiated then facts: %s", instFact)
 		}
 	}
@@ -124,15 +127,15 @@ func (exec *Executor) verProveOverFiniteSet_NoProveSection(stmt *ast.ProveByEnum
 				return NewExecErr(""), err
 			}
 
-			state, err := exec.factStmt(instantiatedDomFact)
-			if err != nil {
+			state := exec.factStmt(instantiatedDomFact)
+			if state.IsErr() {
 				return NewExecErr(""), err
 			}
 			if state.IsUnknown() {
 				domFactAs := instantiatedDomFact.(ast.Spec_OrFact)
 				for _, fact := range domFactAs.ReverseIsTrue() {
-					state, err := exec.factStmt(fact)
-					if err != nil {
+					state := exec.factStmt(fact)
+					if state.IsErr() {
 						return NewExecErr(""), err
 					}
 					if state.IsUnknown() {
@@ -160,9 +163,9 @@ func (exec *Executor) verProveOverFiniteSet_NoProveSection(stmt *ast.ProveByEnum
 
 		// ver facts
 		for _, fact := range instantiatedThenFacts {
-			state, err := exec.factStmt(fact)
-			if err != nil {
-				return NewExecErr(""), err
+			state := exec.factStmt(fact)
+			if state.IsErr() {
+				return NewExecErr(""), fmt.Errorf(state.String())
 			}
 			if state.IsUnknown() {
 				return NewExecErr(""), fmt.Errorf("failed to prove instantiated then facts: %s", fact)

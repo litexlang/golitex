@@ -160,8 +160,11 @@ func (exec *Executor) runAlgoStmtsWhenEval(algoStmts ast.AlgoStmtSlice, fcFnWith
 	for _, stmt := range algoStmts {
 		switch asStmt := stmt.(type) {
 		case *ast.AlgoReturnStmt:
-			execRet, err := exec.factStmt(ast.EqualFact(fcFnWithValueParams, asStmt.Value))
-			if err != nil || execRet.IsNotTrue() {
+			execRet := exec.factStmt(ast.EqualFact(fcFnWithValueParams, asStmt.Value))
+			if execRet.IsErr() {
+				return nil, execRet
+			}
+			if execRet.IsNotTrue() {
 				return nil, execRet
 			}
 			numExprFc, execRet := exec.evalFcThenSimplify(asStmt.Value)
@@ -195,9 +198,9 @@ func (exec *Executor) IsAlgoIfConditionTrue(stmt *ast.AlgoIfStmt) (bool, ExecRet
 	defer exec.deleteEnvAndGiveUpMsgs()
 
 	for _, fact := range stmt.Conditions {
-		execRet, err := exec.factStmt(fact)
-		if err != nil || execRet.IsErr() {
-			return false, NewExecErrWithErr(err)
+		execRet := exec.factStmt(fact)
+		if execRet.IsErr() {
+			return false, execRet
 		}
 
 		if execRet.IsTrue() {
@@ -210,9 +213,9 @@ func (exec *Executor) IsAlgoIfConditionTrue(stmt *ast.AlgoIfStmt) (bool, ExecRet
 		}
 
 		for _, reversedFact := range factAsReversibleFact.ReverseIsTrue() {
-			execRet, err := exec.factStmt(reversedFact)
-			if err != nil || execRet.IsErr() {
-				return false, NewExecErrWithErr(err)
+			execRet := exec.factStmt(reversedFact)
+			if execRet.IsErr() {
+				return false, execRet
 			}
 
 			if execRet.IsNotTrue() {
