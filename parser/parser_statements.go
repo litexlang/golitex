@@ -140,7 +140,7 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 
 func (tb *tokenBlock) factStmt(uniFactDepth uniFactEnum) (ast.FactStmt, error) {
 	if !tb.EndWith(glob.KeySymbolColon) {
-		return tb.inlineFactSkipStmtTerminator([]string{})
+		return tb.inlineFactThenSkipStmtTerminatorUntilEndSignals([]string{})
 	}
 
 	cur, err := tb.header.currentToken()
@@ -358,7 +358,7 @@ func (tb *tokenBlock) ifStmtMultiLines(uniFactDepth uniFactEnum) (ast.UniFactInt
 	} else {
 		domainFacts := []ast.FactStmt{}
 		for !tb.header.is(glob.KeySymbolColon) {
-			fact, err := tb.inlineFactSkipStmtTerminator([]string{})
+			fact, err := tb.inlineFactThenSkipStmtTerminatorUntilEndSignals([]string{})
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}
@@ -1225,7 +1225,7 @@ func (tb *tokenBlock) proveInEachCaseStmt() (*ast.ProveInEachCaseStmt, error) {
 
 		thenFacts := []ast.FactStmt{}
 		for !tb.header.is(glob.KeySymbolColon) {
-			fact, err := tb.inlineFactSkipStmtTerminator([]string{glob.KeySymbolColon})
+			fact, err := tb.inlineFactThenSkipStmtTerminatorUntilEndSignals([]string{glob.KeySymbolColon})
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}
@@ -2393,7 +2393,7 @@ func (tb *tokenBlock) claimStmtInline() (ast.ClaimInterface, error) {
 			return nil, tbErr(err, tb)
 		}
 	} else {
-		fact, err = tb.inlineFactSkipStmtTerminator([]string{glob.KeySymbolColon, glob.KeywordProveByContradiction})
+		fact, err = tb.inlineFactThenSkipStmtTerminatorUntilEndSignals([]string{glob.KeySymbolColon, glob.KeywordProveByContradiction})
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -2409,17 +2409,6 @@ func (tb *tokenBlock) claimStmtInline() (ast.ClaimInterface, error) {
 			return nil, fmt.Errorf("expect end of line")
 		}
 
-	} else if tb.header.is(glob.KeywordProveByContradiction) {
-		err := tb.header.skipKwAndColonCheckEOL(glob.KeywordProveByContradiction)
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-		isProve = false
-	} else if tb.header.is(glob.KeySymbolColon) {
-		err := tb.header.skip(glob.KeySymbolColon)
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
 	} else {
 		// return ast.NewClaimProveStmt(fact, []ast.Stmt{}, tb.line), nil
 		return nil, fmt.Errorf("expect proof after claim")
@@ -3201,7 +3190,7 @@ func (tb *tokenBlock) byStmt() (*ast.ByStmt, error) {
 	} else {
 		// parse inline facts
 		for !tb.header.ExceedEnd() {
-			curStmt, err := tb.inlineFactSkipStmtTerminator([]string{glob.KeySymbolColon})
+			curStmt, err := tb.inlineFactThenSkipStmtTerminatorUntilEndSignals([]string{glob.KeySymbolColon})
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}
@@ -3217,7 +3206,12 @@ func (tb *tokenBlock) proveByContradictionStmt() (ast.Stmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	toCheck, err := tb.inlineFactSkipStmtTerminator([]string{glob.KeySymbolColon})
+	toCheck, err := tb.inlineFactThenSkipStmtTerminatorUntilEndSignals([]string{glob.KeySymbolColon})
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolColon)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
