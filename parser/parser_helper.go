@@ -17,15 +17,14 @@ package litex_parser
 import (
 	"fmt"
 	ast "golitex/ast"
-	glob "golitex/glob"
 )
 
-func addPkgNameToString(name string) string {
-	if glob.CurrentPkg == "" {
-		return name
-	}
-	return fmt.Sprintf("%s%s%s", glob.CurrentPkg, glob.KeySymbolColonColon, name)
-}
+// func addPkgNameToString(name string) string {
+// 	if glob.CurrentPkg == "" {
+// 		return name
+// 	}
+// 	return fmt.Sprintf("%s%s%s", glob.CurrentPkg, glob.KeySymbolColonColon, name)
+// }
 
 func NoSelfReferenceInPropDef(propName string, facts []ast.FactStmt) error {
 	for _, fact := range facts {

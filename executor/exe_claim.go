@@ -18,7 +18,6 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	env "golitex/environment"
-	glob "golitex/glob"
 	"strings"
 )
 
@@ -26,18 +25,16 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContra
 	isSuccess := false
 
 	exec.NewEnv(exec.Env)
-	if glob.RequireMsg() {
-		defer func() {
-			exec.newMsg("\n")
-			if isSuccess {
-				exec.appendNewMsgAtBegin("is true\n")
-			} else {
-				exec.appendNewMsgAtBegin("is unknown\n")
-			}
-			exec.appendNewMsgAtBegin(stmt.ClaimProveStmt.String())
-			exec.deleteEnvAndRetainMsg()
-		}()
-	}
+	defer func() {
+		exec.newMsg("\n")
+		if isSuccess {
+			exec.appendNewMsgAtBegin("is true\n")
+		} else {
+			exec.appendNewMsgAtBegin("is unknown\n")
+		}
+		exec.appendNewMsgAtBegin(stmt.ClaimProveStmt.String())
+		exec.deleteEnvAndRetainMsg()
+	}()
 
 	switch asStmt := stmt.ClaimProveStmt.ToCheckFact.(type) {
 	case ast.Spec_OrFact:
@@ -63,10 +60,7 @@ func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.Spec_O
 		}
 	}
 
-	execState, err := exec.execStmtsAtCurEnv(stmt.ClaimProveStmt.Proofs)
-	if err != nil {
-		return NewExecErr(err.Error())
-	}
+	execState := exec.execStmtsAtCurEnv(stmt.ClaimProveStmt.Proofs)
 	if execState.IsNotTrue() {
 		return execState
 	}
@@ -131,8 +125,8 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 	}
 
 	// run proof block
-	execState, err := exec.execStmtsAtCurEnv(stmt.ClaimProveStmt.Proofs)
-	if notOkExec(execState, err) {
+	execState := exec.execStmtsAtCurEnv(stmt.ClaimProveStmt.Proofs)
+	if execState.IsNotTrue() {
 		return execState
 	}
 
@@ -195,15 +189,10 @@ func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByCo
 }
 
 func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) ExecRet {
-	err := error(nil)
-	isSuccess := false
-
 	exec.NewEnv(exec.Env)
-	if glob.RequireMsg() {
-		defer func() {
-			exec.deleteEnvAndRetainMsg()
-		}()
-	}
+	defer func() {
+		exec.deleteEnvAndRetainMsg()
+	}()
 
 	// 需要检查stmt.ToCheckFact里的东西都是在外部声明好了的
 	ok := exec.Env.AreAtomsInFactAreDeclared(stmt.ToCheckFact, map[string]struct{}{})
@@ -213,19 +202,13 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) ExecRet {
 
 	switch stmt.ToCheckFact.(type) {
 	case *ast.UniFactStmt:
-		isSuccess, err = exec.claimStmtProveUniFact(stmt)
-		if err != nil {
-			return NewExecErr(err.Error())
-		}
-		if !isSuccess {
-			return NewExecUnknown("")
+		isSuccess := exec.claimStmtProveUniFact(stmt)
+		if isSuccess.IsNotTrue() {
+			return isSuccess
 		}
 		return NewExecTrue("")
 	default:
-		execState, err := exec.execStmtsAtCurEnv(stmt.Proofs)
-		if err != nil {
-			return NewExecErr(err.Error())
-		}
+		execState := exec.execStmtsAtCurEnv(stmt.Proofs)
 		if execState.IsNotTrue() {
 			return execState
 		}
@@ -240,10 +223,10 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) ExecRet {
 }
 
 // prove uniFact in claim at current env
-func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, error) {
+func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) ExecRet {
 	asUnivFact, ok := stmt.ToCheckFact.(*ast.UniFactStmt)
 	if !ok {
-		return false, fmt.Errorf("claim stmt prove uni fact only support uni fact")
+		return NewExecErr(fmt.Errorf("claim stmt prove uni fact only support uni fact").Error())
 	}
 
 	// declare parameters in asUnivFact in the env
@@ -251,27 +234,22 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 
 	execState := exec.defLetStmt(objDefStmt)
 	if execState.IsNotTrue() {
-		if glob.RequireMsg() {
-			exec.newMsg(fmt.Sprintf("Claim statement error: Failed to declare parameters in universal fact:\n%s\n", objDefStmt))
-		}
-		return false, fmt.Errorf(execState.String())
+		exec.newMsg(fmt.Sprintf("Claim statement error: Failed to declare parameters in universal fact:\n%s\n", objDefStmt))
+		return execState
 	}
 
 	// know dom facts
 	for _, domFact := range asUnivFact.DomFacts {
 		err := exec.Env.NewFact(domFact)
 		if err != nil {
-			return false, err
+			return NewExecErr(err.Error())
 		}
 	}
 
 	// exec proof block
-	execState, err := exec.execStmtsAtCurEnv(stmt.Proofs)
-	if err != nil {
-		return false, err
-	}
-	if execState.IsUnknown() {
-		return false, nil
+	execState = exec.execStmtsAtCurEnv(stmt.Proofs)
+	if execState.IsNotTrue() {
+		return execState
 	}
 
 	// TODO: 让claim能forall if
@@ -279,12 +257,12 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) (bool, err
 	// execState, failedFact, err := verifier.ExecFactsAtCurEnv_retFailedFact(asUnivFact.ThenFacts, exec.env, verifier.Round0NoMsg)
 	execState, failedFact, err := exec.verifyFactsAtCurEnv(asUnivFact.ThenFacts, Round0NoMsg)
 	if err != nil {
-		return false, fmt.Errorf("claim statement error: failed to verify fact:\n%s\n%s", failedFact, err)
+		return NewExecErr(fmt.Errorf("claim statement error: failed to verify fact:\n%s\n%s", failedFact, err).Error())
 	} else if execState.IsUnknown() {
-		return false, fmt.Errorf("claim statement error: failed to verify fact:\n%s", failedFact)
+		return NewExecErr(fmt.Errorf("claim statement error: failed to verify fact:\n%s", failedFact).Error())
 	}
 
-	return true, nil
+	return NewExecTrue("")
 
 }
 
@@ -357,12 +335,10 @@ func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt
 	for _, curStmt := range stmt.Proofs {
 		execState := exec.Stmt(curStmt)
 		if execState.IsNotTrue() {
-			if glob.RequireMsg() {
-				if execState.IsUnknown() {
-					exec.Env.AddMsgToParent(fmt.Sprintf("unknown :( line %d\n", curStmt.GetLine()))
-				} else {
-					exec.Env.AddMsgToParent(fmt.Sprintf("failed :( line %d:\n", curStmt.GetLine()))
-				}
+			if execState.IsUnknown() {
+				exec.Env.AddMsgToParent(fmt.Sprintf("unknown :( line %d\n", curStmt.GetLine()))
+			} else {
+				exec.Env.AddMsgToParent(fmt.Sprintf("failed :( line %d:\n", curStmt.GetLine()))
 			}
 			return execState
 		}
@@ -403,12 +379,9 @@ func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimPropStmt) ExecRet 
 		exec.deleteEnvAndRetainMsg()
 	}()
 
-	ok, err := exec.claimStmtProveUniFact(ast.NewClaimProveStmt(uniFact, stmt.Proofs, stmt.Line))
-	if err != nil {
-		return NewExecErr(err.Error())
-	}
-	if !ok {
-		return NewExecUnknown("")
+	execRet := exec.claimStmtProveUniFact(ast.NewClaimProveStmt(uniFact, stmt.Proofs, stmt.Line))
+	if execRet.IsNotTrue() {
+		return execRet
 	}
 
 	return NewExecTrue("")
@@ -446,8 +419,8 @@ func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimProp
 		}
 	}
 
-	execState, err := exec.execStmtsAtCurEnv(stmt.Proofs)
-	if notOkExec(execState, err) {
+	execState = exec.execStmtsAtCurEnv(stmt.Proofs)
+	if execState.IsNotTrue() {
 		return execState
 	}
 

@@ -713,7 +713,7 @@ func (tb *tokenBlock) defHeaderWithoutParsingColonAtEnd() (*ast.DefHeader, error
 	if err != nil {
 		return nil, err
 	}
-	name = addPkgNameToString(name)
+	// name = addPkgNameToString(name)
 
 	err = tb.header.skip(glob.KeySymbolLeftBrace)
 	if err != nil {
@@ -870,7 +870,8 @@ func (tb *tokenBlock) haveObjStStmt() (*ast.HaveObjStStmt, error) {
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
-		objNames = append(objNames, addPkgNameToString(objName))
+		// objNames = append(objNames, addPkgNameToString(objName))
+		objNames = append(objNames, objName)
 		if tb.header.is(glob.KeySymbolComma) {
 			tb.header.skip(glob.KeySymbolComma)
 			continue
@@ -1273,7 +1274,8 @@ func (tb *tokenBlock) param_paramSet_paramInSetFacts(endWith string, allowExceed
 				return nil, nil, err
 			}
 
-			params = append(params, addPkgNameToString(param))
+			// params = append(params, addPkgNameToString(param))
+			params = append(params, param)
 
 			if tb.header.is(glob.KeySymbolComma) {
 				tb.header.skip(glob.KeySymbolComma)

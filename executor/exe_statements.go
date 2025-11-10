@@ -126,9 +126,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 	// 	}
 	// } else
 	if execState.IsTrue() {
-		if glob.RequireMsg() {
-			exec.newMsg(fmt.Sprintf("%s\n", execState.String()))
-		}
+		exec.newMsg(fmt.Sprintf("%s\n", execState.String()))
 		return NewExecTrue(fmt.Sprintf("Success! line %d\n", stmt.GetLine()))
 	} else if execState.IsUnknown() {
 		return NewExecUnknown(fmt.Sprintf("Unknown: line %d\n", stmt.GetLine()))
@@ -189,9 +187,7 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) ExecRet {
 		}
 	}
 
-	if glob.RequireMsg() {
-		exec.newMsg(fmt.Sprintf("%s\n", stmt.String()))
-	}
+	exec.newMsg(fmt.Sprintf("%s\n", stmt.String()))
 	return NewExecTrue(fmt.Sprintf("%s\n", stmt.String()))
 }
 
@@ -249,17 +245,13 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool
 		if err != nil {
 			return NewExecErr(err.Error())
 		}
-		if glob.RequireMsg() {
-			exec.newMsg(fmt.Sprintf("%s\nis true by definition", propToIff))
-		}
+		exec.newMsg(fmt.Sprintf("%s\nis true by definition", propToIff))
 
 		err = exec.Env.NewFact(iffToProp)
 		if err != nil {
 			return NewExecErr(err.Error())
 		}
-		if glob.RequireMsg() {
-			exec.newMsg(fmt.Sprintf("%s\nis true by definition", iffToProp))
-		}
+		exec.newMsg(fmt.Sprintf("%s\nis true by definition", iffToProp))
 	}
 	return NewExecTrue("")
 }
@@ -286,31 +278,21 @@ func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) ExecRet {
 }
 
 // TODO: 我认为打印一下 claim 里面的各个语句的输出还是有道理的
-func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) (ExecRet, error) {
+func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) ExecRet {
 	for _, curStmt := range proof {
 		execState := exec.Stmt(curStmt)
-		if execState.IsErr() {
-			if glob.RequireMsg() {
-				exec.newMsg(fmt.Sprintf("%s\nfailed :( line %d\n", curStmt.String(), curStmt.GetLine()))
-			}
-			return NewExecErr(""), fmt.Errorf(execState.String())
-		}
-		if execState.IsUnknown() {
-			if glob.RequireMsg() {
-				exec.newMsg(fmt.Sprintf("%s\nis unknown :( line %d\n", curStmt.String(), curStmt.GetLine()))
-			}
-			return NewExecUnknown(""), nil
+		if execState.IsNotTrue() {
+			exec.newMsg(fmt.Sprintf("%s\nfailed :( line %d\n", curStmt.String(), curStmt.GetLine()))
+			return execState
 		}
 	}
-	return NewExecTrue(""), nil
+	return NewExecTrue("")
 }
 
 func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) ExecRet {
 	isSuccess := false
 	defer func() {
-		if glob.RequireMsg() {
-			exec.newMsg("\n")
-		}
+		exec.newMsg("\n")
 		if isSuccess {
 			exec.appendNewMsgAtBegin("is true\n")
 		} else {
@@ -322,9 +304,7 @@ func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) ExecRet
 	// prove orFact is true
 	execState := exec.factStmt(stmt.OrFact)
 	if execState.IsNotTrue() {
-		if glob.RequireMsg() {
-			exec.newMsg(fmt.Sprintf("%s is unknown", stmt.OrFact.String()))
-		}
+		exec.newMsg(fmt.Sprintf("%s is unknown", stmt.OrFact.String()))
 		return execState
 	}
 
@@ -356,9 +336,9 @@ func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEach
 		return NewExecErr(""), err
 	}
 
-	execState, err := exec.execStmtsAtCurEnv(stmt.Proofs[index])
-	if notOkExec(execState, err) {
-		return execState, err
+	execState := exec.execStmtsAtCurEnv(stmt.Proofs[index])
+	if execState.IsNotTrue() {
+		return execState, fmt.Errorf(execState.String())
 	}
 
 	// verify thenFacts are true
@@ -423,11 +403,10 @@ func (exec *Executor) proveStmt(stmt *ast.ProveStmt) ExecRet {
 	exec.NewEnv(exec.Env)
 	defer exec.deleteEnvAndRetainMsg()
 
-	execState, err := exec.execStmtsAtCurEnv(stmt.Proof)
-	if notOkExec(execState, err) {
+	execState := exec.execStmtsAtCurEnv(stmt.Proof)
+	if execState.IsNotTrue() {
 		return execState
 	}
-
 	return execState
 }
 
@@ -546,9 +525,7 @@ func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) ExecRet {
 		return NewExecErr(err.Error())
 	}
 
-	if glob.RequireMsg() {
-		exec.newMsg(fmt.Sprintf("%s\nis true by definition", knownUniFact))
-	}
+	exec.newMsg(fmt.Sprintf("%s\nis true by definition", knownUniFact))
 
 	return NewExecTrue("")
 }
@@ -572,9 +549,7 @@ func (exec *Executor) ClearStmt() error {
 		curEnv = curEnv.Parent
 	} // 最顶层的env不删，因为最顶层的包含了热启动的代码
 	exec.NewEnv(curEnv)
-	if glob.RequireMsg() {
-		exec.newMsg("clear\n")
-	}
+	exec.newMsg("clear\n")
 	return nil
 }
 
@@ -704,9 +679,7 @@ func (exec *Executor) haveFnLiftStmt(stmt *ast.HaveFnLiftStmt) ExecRet {
 		return NewExecErr(fmt.Sprintf("failed to declare fn: %s", fnDef.String()))
 	}
 
-	if glob.RequireMsg() {
-		exec.newMsg(fmt.Sprintf("Declare Function by lifting:\n%s\n", fnDef))
-	}
+	exec.newMsg(fmt.Sprintf("Declare Function by lifting:\n%s\n", fnDef))
 
 	return NewExecTrue("")
 }

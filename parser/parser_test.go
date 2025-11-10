@@ -17,7 +17,6 @@ package litex_parser
 import (
 	"fmt"
 	ast "golitex/ast"
-	glob "golitex/glob"
 	num "golitex/number"
 	"strings"
 	"testing"
@@ -91,22 +90,22 @@ func TestFcDot(t *testing.T) {
 	}
 }
 
-func TestColonColon(t *testing.T) {
-	sourceCode := []string{
-		"a::b",
-		"a::b::c::d",
-		"+",
-		"=",
-		"1",
-	}
-	glob.CurrentPkg = "pkg1"
-	for _, code := range sourceCode {
-		fc, err := ParseSourceCodeGetFc(code)
-		if err != nil {
-			t.Fatal(err)
-		}
-		fmt.Println(fc.String())
-		// fmt.Println(fc.(ast.FcAtom).PkgName)
-		fmt.Println(fc.(ast.FcAtom))
-	}
-}
+// func TestColonColon(t *testing.T) {
+// 	sourceCode := []string{
+// 		"a::b",
+// 		"a::b::c::d",
+// 		"+",
+// 		"=",
+// 		"1",
+// 	}
+// 	glob.CurrentPkg = "pkg1"
+// 	for _, code := range sourceCode {
+// 		fc, err := ParseSourceCodeGetFc(code)
+// 		if err != nil {
+// 			t.Fatal(err)
+// 		}
+// 		fmt.Println(fc.String())
+// 		// fmt.Println(fc.(ast.FcAtom).PkgName)
+// 		fmt.Println(fc.(ast.FcAtom))
+// 	}
+// }

@@ -176,7 +176,8 @@ func (tb *tokenBlock) inlineUniFact_Param_ParamSet_ParamInSetFacts() ([]string, 
 				return nil, nil, err
 			}
 
-			params = append(params, addPkgNameToString(param))
+			// params = append(params, addPkgNameToString(param))
+			params = append(params, param)
 
 			if tb.header.is(glob.KeySymbolComma) {
 				tb.header.skip(glob.KeySymbolComma)

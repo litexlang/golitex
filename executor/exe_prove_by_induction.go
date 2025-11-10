@@ -27,18 +27,16 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) ExecR
 	msg := ""
 
 	defer func() {
-		if glob.RequireMsg() {
-			if err != nil {
-				exec.newMsg(fmt.Sprintf("%s\nerror\n", stmt.String()))
-				exec.newMsg(err.Error())
-			} else if !isOk {
-				exec.newMsg(fmt.Sprintf("%s\nfailed\n", stmt.String()))
-				if msg != "" {
-					exec.newMsg(msg)
-				}
-			} else {
-				exec.newMsg(fmt.Sprintf("%s\nsuccess\n", stmt.String()))
+		if err != nil {
+			exec.newMsg(fmt.Sprintf("%s\nerror\n", stmt.String()))
+			exec.newMsg(err.Error())
+		} else if !isOk {
+			exec.newMsg(fmt.Sprintf("%s\nfailed\n", stmt.String()))
+			if msg != "" {
+				exec.newMsg(msg)
 			}
+		} else {
+			exec.newMsg(fmt.Sprintf("%s\nsuccess\n", stmt.String()))
 		}
 	}()
 

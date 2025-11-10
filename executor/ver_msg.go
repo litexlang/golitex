@@ -17,7 +17,6 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
-	glob "golitex/glob"
 	"strings"
 )
 
@@ -50,9 +49,7 @@ func (ver *Verifier) newMsgAtParent(s string) error {
 	if ver.Env.Parent == nil {
 		return fmt.Errorf("no parent env")
 	} else {
-		if glob.RequireMsg() {
-			ver.Env.Parent.Msgs = append(ver.Env.Parent.Msgs, s)
-		}
+		ver.Env.Parent.Msgs = append(ver.Env.Parent.Msgs, s)
 		return nil
 	}
 }
