@@ -37,6 +37,10 @@ func main() {
 	latexFlag := flag.String("latex", "", "Compile the given file to latex")
 	elatexFlag := flag.String("elatex", "", "Compile the given file to latex")
 	fmtCodeFlag := flag.String("fmt", "", "Format the given code")
+	installFlag := flag.String("install", "", "Install the given package")
+	uninstallFlag := flag.String("uninstall", "", "Uninstall the given package")
+	listFlag := flag.Bool("list", false, "List all installed packages")
+	updateFlag := flag.String("update", "", "Update the given package")
 
 	flag.Parse()
 
@@ -136,6 +140,26 @@ func main() {
 			os.Exit(1)
 		}
 		fmt.Println(msg)
+		return
+	}
+
+	if *installFlag != "" {
+		fmt.Printf("Installing package: %s\n", *installFlag)
+		return
+	}
+
+	if *uninstallFlag != "" {
+		fmt.Printf("Uninstalling package: %s\n", *uninstallFlag)
+		return
+	}
+
+	if *listFlag {
+		fmt.Println("Listing all installed packages")
+		return
+	}
+
+	if *updateFlag != "" {
+		fmt.Printf("Updating package: %s\n", *updateFlag)
 		return
 	}
 
