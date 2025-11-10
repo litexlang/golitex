@@ -98,6 +98,8 @@ _The value of an idea lies in the using of it._
 
 _- Thomas Edison_
 
+Physics boils down to a few fundamental laws, and chemistry to the logic behind the periodic table. Biology, too, is structured around core principles like evolution, heredity, and molecular mechanisms. Mathematics is no different — beneath all the complexity lie just a handful of basic rules of reasoning. Once you truly grasp those few principles, everything else follows naturally. The key is seeing the underlying structure, and then one insight unlocks many. Litex is such a language that helps you see the underlying structure of mathematics.
+
 Our mission is to make Litex the most intuitive and simple formal language for coding reasoning. We aim to solve the most challenging problems faced by the AI community, i.e. the challenge of efficient, scalable, and reliable coding reasoning. Let's build the future together!
 
 For mathematical research, a well-designed formal language can clarify the dependency structure among complex theorems and lay the foundation for large-scale collaborative “Big Mathematics.” For AI, such a formal language enables reasoning models to form a self-reinforcing cycle of automatic problem generation → automatic solving → automatic verification. Combined with the reinforcement-learning-based post-training approach demonstrated by DeepSeek-R1, this may lead to a breakthrough moment comparable to AlphaGo.
