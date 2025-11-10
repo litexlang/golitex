@@ -633,4 +633,20 @@ know @item_in_union(z obj, x, y set):
 	z $in union(x, y)
 	=>:
 		z $in x or z $in y
+
+fn complement(x, y set) set:
+	dom:
+		x $is_subset_of y
+	=>:
+		forall z y:
+			not z $in x
+			=>:
+				z $in complement(x, y)
+
+know @item_in_complement(z obj, x, y set):
+	x $is_subset_of y
+	z $in complement(x, y)
+	=>:
+		z $in y
+		not z $in x
 `

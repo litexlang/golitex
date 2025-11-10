@@ -121,6 +121,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.defProveAlgoStmt()
 	case glob.KeywordBy:
 		ret, err = tb.byStmt()
+	case glob.KeywordProveByContradiction:
+		ret, err = tb.proveByContradictionStmt()
 	default:
 		ret, err = tb.factsStmt()
 	}
@@ -1514,11 +1516,10 @@ func (tb *tokenBlock) claimPropStmt() (*ast.ClaimPropStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	isProve := false
 	if tb.body[1].header.is(glob.KeywordProve) {
-		isProve = true
 		err = tb.body[1].header.skipKwAndColonCheckEOL(glob.KeywordProve)
 	} else if tb.body[1].header.is(glob.KeywordProveByContradiction) {
+		panic("prove_by_contradiction is not supported for prop statement")
 		err = tb.body[1].header.skipKwAndColonCheckEOL(glob.KeywordProveByContradiction)
 	} else {
 		return nil, fmt.Errorf("expect 'prove' or 'prove_by_contradiction'")
@@ -1542,7 +1543,7 @@ func (tb *tokenBlock) claimPropStmt() (*ast.ClaimPropStmt, error) {
 	}
 
 	// return ast.NewClaimPropStmt(ast.NewDefPropStmt(declHeader, []ast.FactStmt{}, iffFacts, thenFacts), proofs, isProve), nil
-	return ast.NewClaimPropStmt(ast.NewDefPropStmt(namedUniFact.DefPropStmt.DefHeader, namedUniFact.DefPropStmt.DomFacts, namedUniFact.DefPropStmt.IffFacts, namedUniFact.DefPropStmt.ThenFacts, tb.line), proofs, isProve, tb.line), nil
+	return ast.NewClaimPropStmt(ast.NewDefPropStmt(namedUniFact.DefPropStmt.DefHeader, namedUniFact.DefPropStmt.DomFacts, namedUniFact.DefPropStmt.IffFacts, namedUniFact.DefPropStmt.ThenFacts, tb.line), proofs, tb.line), nil
 }
 
 func (tb *tokenBlock) claimExistPropStmt() (*ast.ClaimExistPropStmt, error) {
@@ -2438,7 +2439,7 @@ func (tb *tokenBlock) claimStmtInline() (ast.ClaimInterface, error) {
 	}
 
 	if namedUniFact != nil {
-		return ast.NewClaimPropStmt(namedUniFact.DefPropStmt, proof, isProve, tb.line), nil
+		return ast.NewClaimPropStmt(namedUniFact.DefPropStmt, proof, tb.line), nil
 	} else if isProve {
 		return ast.NewClaimProveStmt(fact, proof, tb.line), nil
 	} else {
@@ -3208,4 +3209,26 @@ func (tb *tokenBlock) byStmt() (*ast.ByStmt, error) {
 		}
 	}
 	return ast.NewByStmt(proveAlgoName, proveAlgoParams, thenFacts, tb.line), nil
+}
+
+func (tb *tokenBlock) proveByContradictionStmt() (ast.Stmt, error) {
+	err := tb.header.skip(glob.KeywordProveByContradiction)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	toCheck, err := tb.inlineFactSkipStmtTerminator([]string{glob.KeySymbolColon})
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	proofs := []ast.Stmt{}
+	for _, block := range tb.body {
+		curStmt, err := block.Stmt()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		proofs = append(proofs, curStmt)
+	}
+	return ast.NewClaimProveByContradictionStmt(ast.NewClaimProveStmt(toCheck, proofs, tb.line), tb.line), nil
 }
