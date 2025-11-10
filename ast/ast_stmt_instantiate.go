@@ -385,7 +385,7 @@ func (stmt *ClaimPropStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewClaimPropStmt(newProp.(*DefPropStmt), newProofs, stmt.IsProve, stmt.Line), nil
+	return NewClaimPropStmt(newProp.(*DefPropStmt), newProofs, stmt.Line), nil
 }
 
 func (stmt CanBeKnownStmtSlice) Instantiate(uniMap map[string]Fc) (CanBeKnownStmtSlice, error) {

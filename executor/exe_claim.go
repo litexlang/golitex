@@ -275,17 +275,17 @@ func (exec *Executor) claimPropStmt(stmt *ast.ClaimPropStmt) ExecRet {
 	}
 
 	// check proofs
-	if stmt.IsProve {
-		execState := exec.checkClaimPropStmtProofs(stmt)
-		if execState.IsNotTrue() {
-			return execState
-		}
-	} else {
-		execState := exec.checkClaimPropStmtProveByContradiction(stmt)
-		if execState.IsNotTrue() {
-			return execState
-		}
+	// if stmt.IsProve {
+	execState := exec.checkClaimPropStmtProofs(stmt)
+	if execState.IsNotTrue() {
+		return execState
 	}
+	// } else {
+	// 	execState := exec.checkClaimPropStmtProveByContradiction(stmt)
+	// 	if execState.IsNotTrue() {
+	// 		return execState
+	// 	}
+	// }
 
 	// know exec
 	execRet := exec.knowPropStmt(ast.NewKnowPropStmt(stmt.Prop, stmt.Line))
