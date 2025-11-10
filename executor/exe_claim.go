@@ -164,13 +164,13 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 }
 
 func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) ExecRet {
-	state, err := exec.claimStmtProve(stmt)
-	if notOkExec(state, err) {
+	state := exec.claimStmtProve(stmt)
+	if state.IsNotTrue() {
 		return state
 	}
 
 	// 检查 stmt fact 中的所有元素已经定义过了
-	err = exec.Env.NewFact(stmt.ToCheckFact)
+	err := exec.Env.NewFact(stmt.ToCheckFact)
 	if err != nil {
 		return NewExecErr(err.Error())
 	}
@@ -194,7 +194,7 @@ func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByCo
 	return execRet
 }
 
-func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) (ExecRet, error) {
+func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) ExecRet {
 	err := error(nil)
 	isSuccess := false
 
@@ -208,36 +208,33 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) (ExecRet, error) 
 	// 需要检查stmt.ToCheckFact里的东西都是在外部声明好了的
 	ok := exec.Env.AreAtomsInFactAreDeclared(stmt.ToCheckFact, map[string]struct{}{})
 	if !ok {
-		return NewExecErr(""), fmt.Errorf(env.AtomsInFactNotDeclaredMsg(stmt.ToCheckFact))
+		return NewExecErr(fmt.Errorf(env.AtomsInFactNotDeclaredMsg(stmt.ToCheckFact)).Error())
 	}
 
 	switch stmt.ToCheckFact.(type) {
 	case *ast.UniFactStmt:
 		isSuccess, err = exec.claimStmtProveUniFact(stmt)
 		if err != nil {
-			return NewExecErr(""), err
+			return NewExecErr(err.Error())
 		}
 		if !isSuccess {
-			return NewExecUnknown(""), nil
+			return NewExecUnknown("")
 		}
-		return NewExecTrue(""), nil
+		return NewExecTrue("")
 	default:
 		execState, err := exec.execStmtsAtCurEnv(stmt.Proofs)
 		if err != nil {
-			return NewExecErr(""), err
+			return NewExecErr(err.Error())
 		}
-		if execState.IsUnknown() {
-			return NewExecUnknown(""), nil
+		if execState.IsNotTrue() {
+			return execState
 		}
 		// check claim
 		execState = exec.factStmt(stmt.ToCheckFact)
-		if execState.IsErr() {
-			return NewExecErr(""), err
+		if execState.IsNotTrue() {
+			return execState
 		}
-		if execState.IsUnknown() {
-			return NewExecUnknown(""), nil
-		}
-		return NewExecTrue(""), nil
+		return NewExecTrue("")
 	}
 
 }
@@ -482,16 +479,16 @@ func (exec *Executor) claimIffStmt(stmt *ast.ClaimIffStmt) ExecRet {
 	iffToThen := stmt.UniFactWithIffStmt.NewUniFactWithIffToThen()
 	claimThenToIff := ast.NewClaimProveStmt(thenToIff, stmt.ProofThenToIff, stmt.Line)
 	claimIffToThen := ast.NewClaimProveStmt(iffToThen, stmt.ProofIffToThen, stmt.Line)
-	execState, err := exec.claimStmtProve(claimThenToIff)
-	if notOkExec(execState, err) {
+	execState := exec.claimStmtProve(claimThenToIff)
+	if execState.IsNotTrue() {
 		return execState
 	}
-	execState, err = exec.claimStmtProve(claimIffToThen)
-	if notOkExec(execState, err) {
+	execState = exec.claimStmtProve(claimIffToThen)
+	if execState.IsNotTrue() {
 		return execState
 	}
 
-	err = exec.Env.NewFact(thenToIff)
+	err := exec.Env.NewFact(thenToIff)
 	if err != nil {
 		return NewExecErr(err.Error())
 	}
