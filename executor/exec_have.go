@@ -22,7 +22,7 @@ import (
 
 func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) ExecRet {
 	defer func() {
-		if glob.RequireMsg() && requireMsg {
+		if requireMsg {
 			exec.newMsg(fmt.Sprintf("%s\n", stmt))
 		}
 	}()
@@ -56,9 +56,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 	}
 
 	if execState.IsNotTrue() {
-		if glob.RequireMsg() {
-			exec.newMsg(fmt.Sprintf("%s is unknown", stmt.Fact.String()))
-		}
+		exec.newMsg(fmt.Sprintf("%s is unknown", stmt.Fact.String()))
 		return execState
 	}
 
@@ -129,9 +127,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 		if err != nil {
 			return NewExecErr(err.Error())
 		}
-		if glob.RequireMsg() {
-			exec.newMsg(fmt.Sprintf("%s\nis true by definition", domFact))
-		}
+		exec.newMsg(fmt.Sprintf("%s\nis true by definition", domFact))
 	}
 
 	// iff of def exist prop is true
@@ -140,9 +136,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 		if err != nil {
 			return NewExecErr(err.Error())
 		}
-		if glob.RequireMsg() {
-			exec.newMsg(fmt.Sprintf("%s\nis true by definition", iffFact))
-		}
+		exec.newMsg(fmt.Sprintf("%s\nis true by definition", iffFact))
 	}
 
 	// 相关的 exist st 事实也成立
@@ -153,9 +147,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 	if err != nil {
 		return NewExecErr(err.Error())
 	}
-	if glob.RequireMsg() {
-		exec.newMsg(fmt.Sprintf("%s\nis true by definition", newExistStFact))
-	}
+	exec.newMsg(fmt.Sprintf("%s\nis true by definition", newExistStFact))
 
 	return NewExecTrue("")
 }
@@ -163,7 +155,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStmt) ExecRet {
 	failed := true
 	defer func() {
-		if glob.RequireMsg() && !failed {
+		if !failed {
 			exec.newMsg(fmt.Sprintf("%s\n", stmt))
 		}
 	}()

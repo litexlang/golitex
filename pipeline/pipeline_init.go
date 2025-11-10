@@ -18,16 +18,15 @@ import (
 	"fmt"
 	env "golitex/environment"
 	exe "golitex/executor"
-	glob "golitex/glob"
 	kernelLibLitexCode "golitex/kernel_litex_code"
 	parser "golitex/parser"
 )
 
 func InitPipelineExecutor() (*exe.Executor, error) {
-	glob.IsRunningPipelineInit = true
-	defer func() {
-		glob.IsRunningPipelineInit = false
-	}()
+	// glob.IsRunningPipelineInit = true
+	// defer func() {
+	// 	glob.IsRunningPipelineInit = false
+	// }()
 
 	curEnv := env.NewEnv(nil)
 	curEnv.Init()

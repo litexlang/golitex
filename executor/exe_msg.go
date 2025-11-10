@@ -14,15 +14,9 @@
 
 package litex_executor
 
-import (
-	glob "golitex/glob"
-)
-
 func (e *Executor) deleteEnvAndRetainMsg() {
 	for _, msg := range e.Env.Msgs {
-		if glob.RequireMsg() {
-			e.Env.Parent.Msgs = append(e.Env.Parent.Msgs, msg)
-		}
+		e.Env.Parent.Msgs = append(e.Env.Parent.Msgs, msg)
 	}
 	e.Env = e.Env.Parent
 }

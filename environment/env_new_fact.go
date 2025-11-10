@@ -229,9 +229,7 @@ func (env *Env) newTruePureFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) erro
 
 		err = env.newFactNoPostProcess(instantiated)
 
-		if glob.RequireMsg() {
-			env.Msgs = append(env.Msgs, fmt.Sprintf("%s\nis true by definition", instantiated))
-		}
+		env.Msgs = append(env.Msgs, fmt.Sprintf("%s\nis true by definition", instantiated))
 
 		if err != nil {
 			return err
@@ -246,9 +244,7 @@ func (env *Env) newTruePureFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) erro
 
 		err = env.newFactNoPostProcess(instantiated)
 
-		if glob.RequireMsg() {
-			env.Msgs = append(env.Msgs, fmt.Sprintf("%s\nis true by definition", instantiated))
-		}
+		env.Msgs = append(env.Msgs, fmt.Sprintf("%s\nis true by definition", instantiated))
 
 		if err != nil {
 			return err
