@@ -606,4 +606,31 @@ prop is_subset_of(x, y set):
 
 prop is_superset_of(A, B set):
 	forall x B: x $in A
+
+fn intersect(x, y set) set:
+	forall z x:
+		z $in y
+		=>:
+			z $in intersect(x, y)
+	forall z y:
+		z $in x
+		=>:
+			z $in intersect(x, y)
+
+know @item_in_intersect(z obj, x, y set):
+	z $in intersect(x, y)
+	=>:
+		z $in x
+		z $in y
+
+fn union(x, y set) set:
+	forall z x:
+		z $in union(x, y)
+	forall z y:
+		z $in union(x, y)
+
+know @item_in_union(z obj, x, y set):
+	z $in union(x, y)
+	=>:
+		z $in x or z $in y
 `
