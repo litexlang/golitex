@@ -649,4 +649,12 @@ know @item_in_complement(z obj, x, y set):
 	=>:
 		z $in y
 		not z $in x
+
+have set empty_set = {}
+
+prop sets_are_equal(x, y set):
+	forall a x => a $in y
+	forall a y => a $in x
+know:
+	forall x, y set: x = y <=> x $sets_are_equal y
 `

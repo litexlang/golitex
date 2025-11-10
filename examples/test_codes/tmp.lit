@@ -1,5 +1,4 @@
-prove_by_contradiction 1 != 0:
-    1 = 0
-
-prove 1 + 1 = 2:
-    1 + 1 = 2
+let C, D set: C = D
+$sets_are_equal(C, D)
+forall a C: a $in D
+forall a D: a $in C
