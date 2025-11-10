@@ -560,7 +560,7 @@ func (s *ClaimPropStmt) ToLatexString() string {
 
 	builder.WriteString("\n\n")
 
-	builder.WriteString(claimProveBodyToLatexString(s.Prop.ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue(), s.Proofs, s.IsProve))
+	builder.WriteString(claimProveBodyToLatexString(s.Prop.ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue(), s.Proofs, true))
 
 	return builder.String()
 }

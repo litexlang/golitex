@@ -1,3 +1,4 @@
+"""
 prop p(x, y N)
 prop q(x, y N)
 
@@ -15,3 +16,4 @@ claim:
     prove_by_contradiction:
         $p(x, y)
         $q(x, y)
+"""
