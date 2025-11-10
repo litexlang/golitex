@@ -65,10 +65,9 @@ func IsValidUseDefinedFcAtom(name string) error {
 	}
 
 	// pkgName 必须声明过啦, 前n-1位join起来
+	// TODO: 需要检查 pkgName 确实是某个pkg
 	pkgName := strings.Join(values[:len(values)-1], KeySymbolColonColon)
-	if _, ok := DeclaredPkgNames[pkgName]; !ok {
-		return fmt.Errorf("package %s is not declared", pkgName)
-	}
+	_ = pkgName
 
 	return nil
 }

@@ -18,7 +18,6 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
-	"strings"
 )
 
 func (tb *tokenBlock) RawFc() (ast.Fc, error) {
@@ -67,29 +66,41 @@ func (tb *tokenBlock) fcAtomAndFcFn() (ast.Fc, error) {
 }
 
 func (tb *tokenBlock) rawFcAtom() (ast.FcAtom, error) {
-	values := []string{}
+	// values := []string{}
 
 	value, err := tb.header.next()
 	if err != nil {
 		return ast.FcAtom(""), err
 	}
 
-	for tb.header.is(glob.KeySymbolColonColon) {
+	// 只允许至多有一层::
+	if tb.header.is(glob.KeySymbolColonColon) {
 		tb.header.skip(glob.KeySymbolColonColon)
-		values = append(values, value)
-		value, err = tb.header.next()
+		rightValue, err := tb.header.next()
 		if err != nil {
-			return ast.FcAtom(""), err
+			return "", tbErr(err, tb)
 		}
+		return ast.FcAtom(fmt.Sprintf("%s%s%s", value, glob.KeySymbolColonColon, rightValue)), nil
+	} else {
+		return ast.FcAtom(value), nil
 	}
 
-	if glob.CurrentPkg != "" && !glob.IsBuiltinKeywordOrBuiltinSymbolOrNumber(value) {
-		values = append([]string{glob.CurrentPkg}, values...)
-	}
+	// for tb.header.is(glob.KeySymbolColonColon) {
+	// 	tb.header.skip(glob.KeySymbolColonColon)
+	// 	values = append(values, value)
+	// 	value, err = tb.header.next()
+	// 	if err != nil {
+	// 		return ast.FcAtom(""), err
+	// 	}
+	// }
 
-	values = append(values, value)
+	// if !glob.IsBuiltinKeywordOrBuiltinSymbolOrNumber(value) {
+	// 	values = append([]string{glob.CurrentPkg}, values...)
+	// }
 
-	return ast.FcAtom(strings.Join(values, glob.KeySymbolColonColon)), nil
+	// values = append(values, value)
+
+	// return ast.FcAtom(strings.Join(values, glob.KeySymbolColonColon)), nil
 }
 
 func (tb *tokenBlock) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence) (ast.Fc, error) {
