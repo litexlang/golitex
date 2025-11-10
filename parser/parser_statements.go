@@ -1400,8 +1400,8 @@ func (tb *tokenBlock) getStringInDoubleQuotes() (string, error) {
 	return builder.String(), nil
 }
 
-func (tb *tokenBlock) proveStmt() (*ast.ProveStmt, error) {
-	err := tb.header.skipKwAndColonCheckEOL(glob.KeywordProve)
+func (tb *tokenBlock) proveStmt() (ast.Stmt, error) {
+	err := tb.header.skip(glob.KeywordProve)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -1410,16 +1410,40 @@ func (tb *tokenBlock) proveStmt() (*ast.ProveStmt, error) {
 		return nil, fmt.Errorf("expect proof")
 	}
 
-	proof := []ast.Stmt{}
-	for _, stmt := range tb.body {
-		curStmt, err := stmt.Stmt()
+	if tb.header.is(glob.KeySymbolColon) {
+		tb.header.skip(glob.KeySymbolColon)
+		proof := []ast.Stmt{}
+		for _, stmt := range tb.body {
+			curStmt, err := stmt.Stmt()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			proof = append(proof, curStmt)
+		}
+
+		return ast.NewProveStmt(proof, tb.line), nil
+	} else {
+		factToCheck, err := tb.inlineFactThenSkipStmtTerminatorUntilEndSignals([]string{glob.KeySymbolColon})
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
-		proof = append(proof, curStmt)
-	}
 
-	return ast.NewProveStmt(proof, tb.line), nil
+		err = tb.header.skip(glob.KeySymbolColon)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		proofs := []ast.Stmt{}
+		for _, stmt := range tb.body {
+			curStmt, err := stmt.Stmt()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			proofs = append(proofs, curStmt)
+		}
+
+		return ast.NewClaimProveStmt(factToCheck, proofs, tb.line), nil
+	}
 }
 
 // called by exist_prop and prop def
