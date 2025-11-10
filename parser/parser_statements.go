@@ -527,7 +527,7 @@ func (tb *tokenBlock) claimStmt() (ast.ClaimInterface, error) {
 	}
 
 	if !tb.header.is(glob.KeySymbolColon) {
-		return tb.claimStmtInline()
+		return tb.claimNamedUniFactInline()
 	}
 
 	err = tb.header.skip(glob.KeySymbolColon)
@@ -2405,8 +2405,7 @@ func (tb *tokenBlock) factsStmt() (ast.Stmt, error) {
 	}
 }
 
-func (tb *tokenBlock) claimStmtInline() (ast.ClaimInterface, error) {
-	var fact ast.FactStmt
+func (tb *tokenBlock) claimNamedUniFactInline() (ast.ClaimInterface, error) {
 	var err error
 	var namedUniFact *ast.NamedUniFactStmt
 
@@ -2416,14 +2415,8 @@ func (tb *tokenBlock) claimStmtInline() (ast.ClaimInterface, error) {
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
-	} else {
-		fact, err = tb.inlineFactThenSkipStmtTerminatorUntilEndSignals([]string{glob.KeySymbolColon, glob.KeywordProveByContradiction})
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
 	}
 
-	isProve := true
 	if tb.header.is(glob.KeySymbolColon) {
 		err := tb.header.skip(glob.KeySymbolColon)
 		if err != nil {
@@ -2451,13 +2444,7 @@ func (tb *tokenBlock) claimStmtInline() (ast.ClaimInterface, error) {
 		return nil, fmt.Errorf("expect proof after claim")
 	}
 
-	if namedUniFact != nil {
-		return ast.NewClaimPropStmt(namedUniFact.DefPropStmt, proof, tb.line), nil
-	} else if isProve {
-		return ast.NewClaimProveStmt(fact, proof, tb.line), nil
-	} else {
-		return ast.NewClaimProveByContradictionStmt(ast.NewClaimProveStmt(fact, proof, tb.line), tb.line), nil
-	}
+	return ast.NewClaimPropStmt(namedUniFact.DefPropStmt, proof, tb.line), nil
 }
 
 func (tb *tokenBlock) proveByInductionStmt() (*ast.ProveByInductionStmt, error) {
