@@ -1,3 +1,4 @@
-prove_by_contradiction ... :
-    ...
-    ...
+prove_by_contradiction 1 != 0:
+    1 = 0
+
+claim xxx:
