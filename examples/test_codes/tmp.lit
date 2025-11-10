@@ -1,1 +1,13 @@
-let pii R
+have A, B set
+let x A: x $in B
+x $in intersect(A, B)
+let y B: y $in A
+y $in intersect(A, B)
+
+forall z intersect(A, B):
+    $item_in_intersect(z, A, B)
+    z $in A
+    z $in B
+"""
+have A, B set\nlet x A: x $in B\nx $in intersect(A, B)\nlet y B: y $in A\ny $in intersect(A, B)\n\nforall z intersect(A, B):\n    $item_in_intersect(z, A, B)\n    z $in A\n    z $in B\n
+"""
