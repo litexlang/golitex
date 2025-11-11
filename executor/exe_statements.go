@@ -131,7 +131,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 	} else if execState.IsUnknown() {
 		return NewExecUnknown(fmt.Sprintf("Unknown: line %d\n", stmt.GetLine()))
 	} else {
-		panic("unknown exec state")
+		return NewExecErr(fmt.Sprintf("Execution Error: line %d\n%s", stmt.GetLine(), execState.String()))
 	}
 }
 
