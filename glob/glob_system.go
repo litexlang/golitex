@@ -14,20 +14,22 @@
 
 package litex_global
 
-const Scope4Indents string = "    "
-const MultiLinesCommentSig string = "\""
-const MaxNameLen int = 255
-const FuncFactPrefix string = "$"
-const InlineCommentSig string = "#"
+import (
+	"os"
+	"path/filepath"
+	"runtime"
+)
 
-// const TupleFcFnHead string = "()"
+func GetCorePkgPath() string {
+	if runtime.GOOS == "windows" {
+		return filepath.Join(os.Getenv("USERPROFILE"), "litex", "core_packages")
+	}
+	return filepath.Join(os.Getenv("HOME"), "litex", "core_packages")
+}
 
-const InnerGenLine uint = 0
-
-const LatexSig string = "##"
-
-const LatexMultiLineSig string = "\"\""
-
-const LitexFileSuffix string = ".lit"
-
-const PkgEntranceFileNameMainDotLit string = "main" + LitexFileSuffix
+func GetUserPkgPath() string {
+	if runtime.GOOS == "windows" {
+		return filepath.Join(os.Getenv("USERPROFILE"), "litex", "user_packages")
+	}
+	return filepath.Join(os.Getenv("HOME"), "litex", "user_packages")
+}

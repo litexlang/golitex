@@ -56,7 +56,7 @@ func RunFileWithPipelineRunner(path string) (string, glob.SysSignal, time.Durati
 func RunRepo(path string) (string, glob.SysSignal, error) {
 	// glob.CurrentTaskDirName = path
 	// 运行里面的main.lit
-	content, err := os.ReadFile(filepath.Join(path, glob.PkgEntranceFileName))
+	content, err := os.ReadFile(filepath.Join(path, glob.PkgEntranceFileNameMainDotLit))
 	if err != nil {
 		return "", glob.SysSignalSystemError, err
 	}
