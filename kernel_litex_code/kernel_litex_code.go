@@ -657,4 +657,8 @@ prop sets_are_equal(x, y set):
 	forall a y => a $in x
 know:
 	forall x, y set: x = y <=> x $sets_are_equal y
+
+know forall a, x, b, y R: a != 0, a * x + b = y => x = (y - b) / a
+
+know forall x R, y Z: x != 0, y % 2 = 0 => x ^ y > 0
 `
