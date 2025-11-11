@@ -19,6 +19,7 @@ import (
 	env "golitex/environment"
 	glob "golitex/glob"
 	"os"
+	"path/filepath"
 )
 
 type PackagesManager struct {
@@ -36,8 +37,13 @@ func (pkgMgr *PackagesManager) NewPkg(builtinEnv *env.Env, path string) (string,
 		return fmt.Sprintf("%s is already imported", path), glob.SysSignalTrue, nil
 	}
 
-	// run pkg
-	pkgContent, err := os.ReadFile(path)
+	// run pkg, 先得到 包的绝对路径，然后读取文件内容
+	pkgMainFileAbsolutePath, err := getPkgMainFileAbsolutePath(path)
+	if err != nil {
+		return fmt.Sprintf("failed to get package main file absolute path: %s", err.Error()), glob.SysSignalSystemError, err
+	}
+
+	pkgContent, err := os.ReadFile(pkgMainFileAbsolutePath)
 	if err != nil {
 		return fmt.Sprintf("failed to read file %s: %s", path, err.Error()), glob.SysSignalSystemError, err
 	}
@@ -50,4 +56,23 @@ func (pkgMgr *PackagesManager) NewPkg(builtinEnv *env.Env, path string) (string,
 	pkgMgr.pkgEnv[path] = newEnv
 
 	return msg, signal, err
+}
+
+func getPkgMainFileAbsolutePath(path string) (string, error) {
+	corePkgPath := glob.GetCorePkgPath()
+	pkgName := filepath.Base(path)
+	pkgMainFile := filepath.Join(corePkgPath, pkgName, glob.PkgEntranceFileNameMainDotLit)
+	if _, err := os.Stat(pkgMainFile); os.IsNotExist(err) {
+		userPkgPath := glob.GetUserPkgPath()
+		pkgName := filepath.Base(path)
+		pkgVersion := filepath.Base(filepath.Dir(path))
+		pkgMainFile := filepath.Join(userPkgPath, pkgName, pkgVersion, glob.PkgEntranceFileNameMainDotLit)
+		if _, err := os.Stat(pkgMainFile); os.IsNotExist(err) {
+			return "", fmt.Errorf("package main file not found: %s", pkgMainFile)
+		} else {
+			return pkgMainFile, nil
+		}
+	} else {
+		return pkgMainFile, nil
+	}
 }
