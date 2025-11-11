@@ -90,9 +90,9 @@ func RunSourceCode(curEnv *env.Env, code string) (string, glob.SysSignal, *env.E
 		}
 	}
 
-	UpmostWorkingEnv := executor.GetSecondUpMostEnv()
+	secondUpMostEnv := executor.GetSecondUpMostEnv()
 
-	return strings.TrimSpace(strings.Join(msgOfTopStatements, "\n")), glob.SysSignalTrue, UpmostWorkingEnv, nil
+	return strings.TrimSpace(strings.Join(msgOfTopStatements, "\n")), glob.SysSignalTrue, secondUpMostEnv, nil
 }
 
 func RunImportFileStmt(curEnv *env.Env, importFileStmt *ast.ImportFileStmt) (string, glob.SysSignal, error) {
