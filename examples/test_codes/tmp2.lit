@@ -1,25 +1,29 @@
-# definition of a group, and prove R and Z are groups
-# 定义一个群，并证明 R 和 Z 是群
+have set R_pos = {x R: x > 0}
+forall x R_pos, y R_pos: x > 0, y > 0, x * y > 0, x * y >= 0, sqrt(x * y) > 0, sqrt(x * y) $in R_pos
+have fn geometric_mean(a, b R_pos) R_pos = sqrt(a * b)
+have fn arithmetic_mean(a, b R) R = (a + b) / 2
 
-prop is_group(s set, mul fn(s, s)s, inv fn(s)s, e s):
-    forall x s, y s, z s:
-        mul(mul(x, y), z) = mul(x, mul(y, z))
-    forall x s:
-        mul(x, inv(x)) = e
-        mul(inv(x), x) = e
-    forall x s:
-        mul(x, e) = x
-        mul(e, x) = x
+# 正数之间的序关系，能被指数保持
+prop positive_order_preserved_by_exponent(x, y R, z N_pos):
+    x ^ z >= y ^ z
+    x >= 0
+    y >= 0
+    <=>:
+        x >= y
 
-forall x R:
-    inverse(x) + x = 0
-    x + inverse(x) = 0
+know forall x, y R, z N_pos: x ^ z >= y ^ z, x >= 0, y >= 0 => $positive_order_preserved_by_exponent(x, y, z)
 
-forall x Z:
-    x + inverse(x) = 0
-    inverse(x) = -x
-    -x $in Z
-    inverse(x) $in Z
+forall x, y R: x >= 0, y >= 0, x ^ 2 >= y ^ 2 => $positive_order_preserved_by_exponent(x, y, 2)
 
-$is_group(R, +, inverse, 0)
-$is_group(Z, +, inverse, 0)
+prove forall a, b R_pos: geometric_mean(a, b) <= arithmetic_mean(a, b):
+    geometric_mean(a, b) ^ 2 = (sqrt(a * b)) ^ 2
+    a * b >= 0
+    (sqrt(a * b)) ^ 2 = a * b
+    arithmetic_mean(a, b) ^ 2 = ((a + b) / 2) ^ 2
+    forall x R: x ^ 2 = x * x
+    ((a + b) / 2) ^ 2 = ((a + b) / 2) * ((a + b) / 2)
+    ((a + b) / 2) * ((a + b) / 2) = (a ^ 2 + 2 * a * b + b ^ 2) / 4
+    arithmetic_mean(a, b) ^ 2 - geometric_mean(a, b) ^ 2 = (a ^ 2 + 2 * a * b + b ^ 2) / 4 - a * b = (a ^ 2 - 2 * a * b + b ^ 2) / 4 = (a - b) ^ 2 / 4
+    (a - b) ^ 2 / 4 >= 0
+    arithmetic_mean(a, b) ^ 2 - geometric_mean(a, b) ^ 2 >= 0
+    
