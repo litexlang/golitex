@@ -660,5 +660,24 @@ know:
 
 know forall a, x, b, y R: a != 0, a * x + b = y => x = (y - b) / a
 
-know forall x R, y Z: x != 0, y % 2 = 0 => x ^ y > 0
+know:
+	forall x R, y Z: x != 0, y % 2 = 0 => x ^ y > 0
+	forall x R, y Z: y % 2 = 0, y != 0 => x ^ y >= 0
+
+know:
+	forall x, y, z R: x <= y => x + z <= y + z, x - z <= y - z, z + x <= z + y
+	forall x, y, z R: x <= y, z > 0 => x * z <= y * z, x / z <= y / z, z * x <= z * y
+	forall x, y, z R: x >= y => x + z >= y + z, x - z >= y - z, z + x >= z + y
+	forall x, y, z R: x >= y, z > 0 => x * z >= y * z, x / z >= y / z, z * x >= z * y
+	forall x, y, z R: x > y => x + z > y + z, x - z > y - z, z + x > z + y
+	forall x, y, z R: x > y, z > 0 => x * z > y * z, x / z > y / z, z * x > z * y
+	forall x, y, z R: x < y => x + z < y + z, x - z < y - z, z + x < z + y
+	forall x, y, z R: x < y, z > 0 => x * z < y * z, x / z < y / z, z * x < z * y
+
+know forall x, y R: y > 0, x >= 0 => x / y >= 0
+know:
+	forall x, y R: x >= y <=> x - y >= 0
+	forall x, y R: x > y <=> x - y > 0
+	forall x, y R: x <= y <=> x - y <= 0
+	forall x, y R: x < y <=> x - y < 0
 `
