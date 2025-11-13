@@ -1544,7 +1544,6 @@ func (tb *tokenBlock) claimPropStmt() (*ast.ClaimPropStmt, error) {
 		err = tb.body[1].header.skipKwAndColonCheckEOL(glob.KeywordProve)
 	} else if tb.body[1].header.is(glob.KeywordProveByContradiction) {
 		panic("prove_by_contradiction is not supported for prop statement")
-		err = tb.body[1].header.skipKwAndColonCheckEOL(glob.KeywordProveByContradiction)
 	} else {
 		return nil, fmt.Errorf("expect 'prove' or 'prove_by_contradiction'")
 	}

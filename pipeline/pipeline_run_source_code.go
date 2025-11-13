@@ -245,3 +245,34 @@ func listenOneStatementFromTerminal(reader *bufio.Reader, writer io.Writer) (str
 	}
 	return input.String(), nil
 }
+
+func RunSourceCodeInExecutor(curExec *exe.Executor, code string) glob.GlobRet {
+	topStmtSlice, err := parser.ParseSourceCode(code)
+	if err != nil {
+		return glob.NewGlobErr(err.Error())
+	}
+
+	for _, topStmt := range topStmtSlice {
+		ret := RunTopStmtInPipeline(curExec, topStmt)
+		if ret.IsNotTrue() {
+			return ret
+		}
+	}
+
+	return glob.NewGlobTrue("")
+}
+
+func RunTopStmtInPipeline(curExec *exe.Executor, topStmt ast.Stmt) glob.GlobRet {
+	switch topStmt.(type) {
+	case *ast.ImportDirStmt:
+		return glob.NewGlobTrue("")
+	case *ast.ImportFileStmt:
+		return glob.NewGlobTrue("")
+	default:
+		execRet := curExec.Stmt(topStmt)
+		if execRet.IsNotTrue() {
+			return execRet.ToGlobRet()
+		}
+		return glob.NewGlobTrue("")
+	}
+}
