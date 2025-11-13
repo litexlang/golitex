@@ -276,9 +276,18 @@ func RunTopStmtInPipeline(curExec *exe.Executor, topStmt ast.Stmt) glob.GlobRet 
 }
 
 func RunImportDirStmtInPipeline(curExec *exe.Executor, importDirStmt *ast.ImportDirStmt) glob.GlobRet {
+	// 如果已经存在asPkgName，则直接返回
+	if path, ok := curExec.PkgMgr.PkgNamePkgPathPairs[importDirStmt.AsPkgName]; ok {
+		if path != importDirStmt.Path {
+			return glob.NewGlobErr(fmt.Sprintf("package name %s already exists, and it refers to package %s, not %s", importDirStmt.AsPkgName, path, importDirStmt.Path))
+		}
+		return glob.NewGlobTrue(fmt.Sprintf("package %s already imported as %s", importDirStmt.Path, importDirStmt.AsPkgName))
+	}
+
 	// 如果已经在curExec.PkgMgr.PkgEnvPairs中，则直接返回
 	if _, ok := curExec.PkgMgr.PkgPathEnvPairs[importDirStmt.Path]; ok {
-		return glob.NewGlobTrue("")
+		curExec.PkgMgr.PkgNamePkgPathPairs[importDirStmt.AsPkgName] = importDirStmt.Path
+		return glob.NewGlobTrue(fmt.Sprintf("package %s already imported. Now it has name %s", importDirStmt.Path, importDirStmt.AsPkgName))
 	}
 
 	mainFileContent, err := os.ReadFile(filepath.Join(importDirStmt.Path, glob.PkgEntranceFileNameMainDotLit))

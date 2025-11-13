@@ -25,6 +25,7 @@ type PackageManager struct {
 	PkgNamePkgPathPairs map[string]string
 }
 
+// 为了确保实现上的简单性，不允许用重复的asPkgName
 func (pkgMgr *PackageManager) MergeGivenExecPkgMgr(importDirStmt *ast.ImportDirStmt, curExec *Executor) error {
 	if _, ok := pkgMgr.PkgPathEnvPairs[importDirStmt.Path]; ok {
 		return fmt.Errorf("package already exists: %s", importDirStmt.Path)
@@ -39,13 +40,15 @@ func (pkgMgr *PackageManager) MergeGivenExecPkgMgr(importDirStmt *ast.ImportDirS
 	// 把 curExec 的 pkgMgr 合并到现在的 pkgMgr 中
 	for pkgPath, pkgEnv := range curExec.PkgMgr.PkgPathEnvPairs {
 		if _, ok := pkgMgr.PkgPathEnvPairs[pkgPath]; ok {
-			return fmt.Errorf("package path already exists: %s", pkgPath)
+			continue
 		}
 		pkgMgr.PkgPathEnvPairs[pkgPath] = pkgEnv
 	}
 	for pkgName, pkgPath := range curExec.PkgMgr.PkgNamePkgPathPairs {
-		if _, ok := pkgMgr.PkgNamePkgPathPairs[pkgName]; ok {
-			return fmt.Errorf("package name already exists: %s", pkgName)
+		if path, ok := pkgMgr.PkgNamePkgPathPairs[pkgName]; ok {
+			if path != pkgPath {
+				return fmt.Errorf("package name %s refer to package %s, and package %s", pkgName, pkgPath, path)
+			}
 		}
 		curExec.PkgMgr.PkgNamePkgPathPairs[pkgName] = pkgPath
 	}
