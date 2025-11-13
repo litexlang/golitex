@@ -61,7 +61,7 @@ func main() {
 	// Handle combined -latex and -e
 	if *elatexFlag != "" {
 		// 处理转义序列
-		msg, signal, err := sys.CompileCodeToLatex(glob.RemoveWindowsCarriageReturn(*elatexFlag))
+		msg, signal, err := sys.CompileCodeToLatex(glob.RemoveWindowsCarriage(*elatexFlag))
 		if err != nil || signal != glob.SysSignalTrue {
 			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)
@@ -73,7 +73,7 @@ func main() {
 	// Handle execution flags
 	if *executeFlag != "" {
 		// Normal execution
-		ret := pipeline.RunSourceCode(glob.RemoveWindowsCarriageReturn(*executeFlag))
+		ret := pipeline.RunSourceCode(glob.RemoveWindowsCarriage(*executeFlag))
 		msg := strings.TrimSpace(ret.String())
 		fmt.Println(msg)
 		fmt.Println(ret.GetREPLMsg())
@@ -88,14 +88,10 @@ func main() {
 		}
 
 		// Process file
-		msg, signal, err := sys.RunFile(glob.RemoveWindowsCarriageReturn(*fileFlag))
-		fmt.Println(msg)
-		if err != nil {
-			fmt.Printf("Error: %s\n", err)
-		} else {
-			msg := sys.RunMainMsg(signal)
-			fmt.Println(msg)
-		}
+		// msg, signal, err := sys.RunFile(glob.RemoveWindowsCarriageReturn(*fileFlag))
+		ret := pipeline.RunFile(glob.RemoveWindowsCarriage(*fileFlag))
+		fmt.Println(ret.String())
+		fmt.Println(ret.GetREPLMsg())
 		return
 	}
 
@@ -106,7 +102,7 @@ func main() {
 			os.Exit(1)
 		}
 		// run the repo
-		msg, signal, err := sys.RunRepo(glob.RemoveWindowsCarriageReturn(*repoFlag))
+		msg, signal, err := sys.RunRepo(glob.RemoveWindowsCarriage(*repoFlag))
 		fmt.Println(msg)
 		if err != nil {
 			fmt.Printf("Error: %s\n", err)
@@ -119,7 +115,7 @@ func main() {
 	}
 
 	if *latexFlag != "" {
-		msg, signal, err := sys.CompileFileToLatex(glob.RemoveWindowsCarriageReturn(*latexFlag))
+		msg, signal, err := sys.CompileFileToLatex(glob.RemoveWindowsCarriage(*latexFlag))
 		if err != nil || signal != glob.SysSignalTrue {
 			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)
@@ -129,7 +125,7 @@ func main() {
 	}
 
 	if *fmtCodeFlag != "" {
-		msg, signal, err := pipeline.FormatCode(glob.RemoveWindowsCarriageReturn(*fmtCodeFlag))
+		msg, signal, err := pipeline.FormatCode(glob.RemoveWindowsCarriage(*fmtCodeFlag))
 		if err != nil || signal != glob.SysSignalTrue {
 			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)
