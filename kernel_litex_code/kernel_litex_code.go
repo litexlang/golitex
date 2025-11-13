@@ -684,4 +684,8 @@ know:
 know:
 	forall x, y R: y >= 0 => x + y >= x, y + x >= x, x <= x + y, x <= y + x
 	forall x, y R: abs(x + y) <= abs(x) + abs(y)
+	forall x, y R: x > 0, y > 1 => x * y > x, y * x > x
+	forall x, y, z R: x > y, z < 0 => x * z < y * z
+	forall x, y R: x > y => not x <= y, not x = y, not x < y
+	forall x, y R: x < y => not x >= y, not x = y, not x > y
 `
