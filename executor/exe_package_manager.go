@@ -16,23 +16,27 @@ package litex_executor
 
 import (
 	"fmt"
+	ast "golitex/ast"
 	env "golitex/environment"
 )
 
 type PackageManager struct {
-	PkgEnvMap map[string]*env.Env
+	PkgEnvPairs         map[string]*env.Env
+	PkgNamePkgPathPairs map[string]string
 }
 
-func (pkgMgr *PackageManager) NewPkgEnvPair(pkgName string, pkgEnv *env.Env) error {
-	if _, ok := pkgMgr.PkgEnvMap[pkgName]; ok {
-		return fmt.Errorf("package name already exists: %s", pkgName)
+func (pkgMgr *PackageManager) NewPkgEnvPair(importDirStmt *ast.ImportDirStmt, pkgEnv *env.Env) error {
+	if _, ok := pkgMgr.PkgEnvPairs[importDirStmt.Path]; ok {
+		return fmt.Errorf("package already exists: %s", importDirStmt.Path)
 	}
-	pkgMgr.PkgEnvMap[pkgName] = pkgEnv
+	pkgMgr.PkgEnvPairs[importDirStmt.Path] = pkgEnv
+	pkgMgr.PkgNamePkgPathPairs[importDirStmt.AsPkgName] = importDirStmt.Path
 	return nil
 }
 
 func NewPackageManager() *PackageManager {
 	return &PackageManager{
-		PkgEnvMap: make(map[string]*env.Env),
+		PkgEnvPairs:         make(map[string]*env.Env),
+		PkgNamePkgPathPairs: make(map[string]string),
 	}
 }
