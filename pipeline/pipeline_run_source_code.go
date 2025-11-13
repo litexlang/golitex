@@ -18,7 +18,6 @@ import (
 	"bufio"
 	"fmt"
 	ast "golitex/ast"
-	env "golitex/environment"
 	exe "golitex/executor"
 	glob "golitex/glob"
 	parser "golitex/parser"
@@ -30,81 +29,81 @@ import (
 	"time"
 )
 
-func RunSourceCode(curEnv *env.Env, code string) (string, glob.SysSignal, *env.Env, error) {
-	topStmtSlice, err := parser.ParseSourceCode(code)
-	if err != nil {
-		return "", glob.SysSignalParseError, nil, err
-	}
+// func RunSourceCode(curEnv *env.Env, code string) (string, glob.SysSignal, *env.Env, error) {
+// 	topStmtSlice, err := parser.ParseSourceCode(code)
+// 	if err != nil {
+// 		return "", glob.SysSignalParseError, nil, err
+// 	}
 
-	var executor *exe.Executor
+// 	var executor *exe.Executor
 
-	if curEnv == nil {
-		executor, err = InitPipelineExecutor()
-		curEnv = executor.GetBuiltinEnv()
-	} else {
-		// 其实是有问题的
-		executor = exe.NewExecutor(curEnv, exe.NewPackageManager())
-	}
+// 	if curEnv == nil {
+// 		executor, err = InitPipelineExecutor()
+// 		curEnv = executor.GetBuiltinEnv()
+// 	} else {
+// 		// 其实是有问题的
+// 		executor = exe.NewExecutor(curEnv, exe.NewPackageManager())
+// 	}
 
-	if err != nil {
-		return "", glob.SysSignalRuntimeError, nil, err
-	}
+// 	if err != nil {
+// 		return "", glob.SysSignalRuntimeError, nil, err
+// 	}
 
-	msgOfTopStatements := []string{}
+// 	msgOfTopStatements := []string{}
 
-	// maintain a dict of paths that have been imported
-	pkgMgr := NewPackageManager()
-	_ = pkgMgr
+// 	// maintain a dict of paths that have been imported
+// 	pkgMgr := NewPackageManager()
+// 	_ = pkgMgr
 
-	for _, topStmt := range topStmtSlice {
-		var execRet exe.ExecRet = exe.NewExecErr("")
-		var msg string
-		var err error
+// 	for _, topStmt := range topStmtSlice {
+// 		var execRet exe.ExecRet = exe.NewExecErr("")
+// 		var msg string
+// 		var err error
 
-		switch topStmt.(type) {
-		case *ast.ImportDirStmt:
-			msg, signal, err := pkgMgr.NewPkg(curEnv, topStmt.(*ast.ImportDirStmt).Path)
-			if err != nil || signal != glob.SysSignalTrue {
-				return msg, signal, nil, err
-			}
-		case *ast.ImportFileStmt:
-			msg, signal, err := RunImportFileStmt(executor.Env, topStmt.(*ast.ImportFileStmt))
+// 		switch topStmt.(type) {
+// 		case *ast.ImportDirStmt:
+// 			msg, signal, err := pkgMgr.NewPkg(curEnv, topStmt.(*ast.ImportDirStmt).Path)
+// 			if err != nil || signal != glob.SysSignalTrue {
+// 				return msg, signal, nil, err
+// 			}
+// 		case *ast.ImportFileStmt:
+// 			msg, signal, err := RunImportFileStmt(executor.Env, topStmt.(*ast.ImportFileStmt))
 
-			msgOfTopStatements = append(msgOfTopStatements, executor.GetMsgAsStr0ToEnd())
-			msgOfTopStatements = append(msgOfTopStatements, msg)
+// 			msgOfTopStatements = append(msgOfTopStatements, executor.GetMsgAsStr0ToEnd())
+// 			msgOfTopStatements = append(msgOfTopStatements, msg)
 
-			if err != nil || signal != glob.SysSignalTrue {
-				msgOfTopStatements = append(msgOfTopStatements, fmt.Sprintf("import file error: %s", topStmt.String()))
-				return strings.TrimSpace(strings.Join(msgOfTopStatements, "\n")), glob.SysSignalRuntimeError, nil, err
-			}
-		default:
-			execRet = executor.Stmt(topStmt)
+// 			if err != nil || signal != glob.SysSignalTrue {
+// 				msgOfTopStatements = append(msgOfTopStatements, fmt.Sprintf("import file error: %s", topStmt.String()))
+// 				return strings.TrimSpace(strings.Join(msgOfTopStatements, "\n")), glob.SysSignalRuntimeError, nil, err
+// 			}
+// 		default:
+// 			execRet = executor.Stmt(topStmt)
 
-			msgOfTopStatements = append(msgOfTopStatements, executor.GetMsgAsStr0ToEnd())
-			msgOfTopStatements = append(msgOfTopStatements, msg)
+// 			msgOfTopStatements = append(msgOfTopStatements, executor.GetMsgAsStr0ToEnd())
+// 			msgOfTopStatements = append(msgOfTopStatements, msg)
 
-			if execRet.IsErr() {
-				return strings.TrimSpace(strings.Join(msgOfTopStatements, "\n")), glob.SysSignalRuntimeError, nil, err
-			}
-			if execRet.IsUnknown() {
-				return strings.TrimSpace(strings.Join(msgOfTopStatements, "\n")), glob.SysSignalRuntimeError, nil, fmt.Errorf("execution failed, line %d", topStmt.GetLine())
-			}
-		}
-	}
+// 			if execRet.IsErr() {
+// 				return strings.TrimSpace(strings.Join(msgOfTopStatements, "\n")), glob.SysSignalRuntimeError, nil, err
+// 			}
+// 			if execRet.IsUnknown() {
+// 				return strings.TrimSpace(strings.Join(msgOfTopStatements, "\n")), glob.SysSignalRuntimeError, nil, fmt.Errorf("execution failed, line %d", topStmt.GetLine())
+// 			}
+// 		}
+// 	}
 
-	secondUpMostEnv := executor.GetSecondUpMostEnv()
+// 	secondUpMostEnv := executor.GetSecondUpMostEnv()
 
-	return strings.TrimSpace(strings.Join(msgOfTopStatements, "\n")), glob.SysSignalTrue, secondUpMostEnv, nil
-}
+// 	return strings.TrimSpace(strings.Join(msgOfTopStatements, "\n")), glob.SysSignalTrue, secondUpMostEnv, nil
+// }
 
-func RunImportFileStmt(curEnv *env.Env, importFileStmt *ast.ImportFileStmt) (string, glob.SysSignal, error) {
-	content, err := os.ReadFile(importFileStmt.Path)
-	if err != nil {
-		return fmt.Sprintf("failed to read file %s: %s", importFileStmt.Path, err.Error()), glob.SysSignalSystemError, err
-	}
-	msg, signal, _, err := RunSourceCode(curEnv, string(content))
-	return msg, signal, err
-}
+// func RunImportFileStmt(curEnv *env.Env, importFileStmt *ast.ImportFileStmt) (string, glob.SysSignal, error) {
+// 	content, err := os.ReadFile(importFileStmt.Path)
+// 	if err != nil {
+// 		return fmt.Sprintf("failed to read file %s: %s", importFileStmt.Path, err.Error()), glob.SysSignalSystemError, err
+// 	}
+// 	msg, signal, _, err := RunSourceCode(curEnv, string(content))
+// 	return msg, signal, err
+// }
 
 func ExecuteCodeAndReturnMessageSliceGivenSettings(code string, executor *exe.Executor) ([]string, glob.SysSignal, error) {
 	topStmtSlice, err := parser.ParseSourceCode(code)
@@ -302,7 +301,10 @@ func RunImportDirStmtInPipeline(curExec *exe.Executor, importDirStmt *ast.Import
 		return ret
 	}
 
-	curExec.PkgMgr.MergeGivenExecPkgMgr(importDirStmt, executorToRunDir)
+	err = curExec.PkgMgr.MergeGivenExecPkgMgr(importDirStmt, executorToRunDir)
+	if err != nil {
+		return glob.NewGlobErr(err.Error())
+	}
 	return glob.NewGlobTrue(fmt.Sprintf("imported package %s as %s", importDirStmt.Path, importDirStmt.AsPkgName))
 }
 
@@ -312,4 +314,12 @@ func RunImportFileStmtInPipeline(curExec *exe.Executor, importFileStmt *ast.Impo
 		return glob.NewGlobErr(err.Error())
 	}
 	return RunSourceCodeInExecutor(curExec, string(content))
+}
+
+func RunSourceCode(code string) glob.GlobRet {
+	executor, err := InitPipelineExecutor()
+	if err != nil {
+		return glob.NewGlobErr(err.Error())
+	}
+	return RunSourceCodeInExecutor(executor, code)
 }

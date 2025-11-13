@@ -73,15 +73,10 @@ func main() {
 	// Handle execution flags
 	if *executeFlag != "" {
 		// Normal execution
-		msg, signal, err := sys.ExecuteCodeAndReturnMessage(glob.RemoveWindowsCarriageReturn(*executeFlag))
-		msg = strings.TrimSpace(msg)
+		ret := pipeline.RunSourceCode(glob.RemoveWindowsCarriageReturn(*executeFlag))
+		msg := strings.TrimSpace(ret.String())
 		fmt.Println(msg)
-		if err != nil {
-			fmt.Printf("Error: %s\n", err)
-		} else {
-			msg := sys.RunMainMsg(signal)
-			fmt.Println(msg)
-		}
+		fmt.Println(ret.GetREPLMsg())
 		return
 	}
 

@@ -30,6 +30,9 @@ type GlobRet interface {
 	IsNotUnknown() bool
 	IsNotErr() bool
 	Inherit(globRet GlobRet)
+	SysSignal() SysSignal
+	Error() error
+	GetREPLMsg() string
 }
 
 type GlobTrue struct {
@@ -117,4 +120,40 @@ func (v *GlobUnknown) Inherit(globRet GlobRet) {
 
 func (v *GlobErr) Inherit(globRet GlobRet) {
 	v.Msg = append(v.Msg, globRet.String())
+}
+
+func (v *GlobTrue) SysSignal() SysSignal {
+	return SysSignalTrue
+}
+
+func (v *GlobUnknown) SysSignal() SysSignal {
+	return SysSignalUnknown
+}
+
+func (v *GlobErr) SysSignal() SysSignal {
+	return SysSignalSystemError
+}
+
+func (v *GlobTrue) Error() error {
+	return nil
+}
+
+func (v *GlobUnknown) Error() error {
+	return nil
+}
+
+func (v *GlobErr) Error() error {
+	return fmt.Errorf(v.String())
+}
+
+func (v *GlobTrue) GetREPLMsg() string {
+	return REPLSuccessMessage
+}
+
+func (v *GlobUnknown) GetREPLMsg() string {
+	return REPLUnknownMessage
+}
+
+func (v *GlobErr) GetREPLMsg() string {
+	return REPLFailedMessage
 }

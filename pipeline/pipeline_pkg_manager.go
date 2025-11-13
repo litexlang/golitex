@@ -16,47 +16,46 @@ package litex_pipeline
 
 import (
 	"fmt"
-	env "golitex/environment"
 	glob "golitex/glob"
 	"os"
 	"path/filepath"
 )
 
-type PackagesManager struct {
-	PkgEnv map[string]*env.Env
-}
+// type PackagesManager struct {
+// 	PkgEnv map[string]*env.Env
+// }
 
-func NewPackageManager() *PackagesManager {
-	return &PackagesManager{
-		PkgEnv: make(map[string]*env.Env),
-	}
-}
+// func NewPackageManager() *PackagesManager {
+// 	return &PackagesManager{
+// 		PkgEnv: make(map[string]*env.Env),
+// 	}
+// }
 
-func (pkgMgr *PackagesManager) NewPkg(builtinEnv *env.Env, path string) (string, glob.SysSignal, error) {
-	if _, ok := pkgMgr.PkgEnv[path]; ok {
-		return fmt.Sprintf("%s is already imported", path), glob.SysSignalTrue, nil
-	}
+// func (pkgMgr *PackagesManager) NewPkg(builtinEnv *env.Env, path string) (string, glob.SysSignal, error) {
+// 	if _, ok := pkgMgr.PkgEnv[path]; ok {
+// 		return fmt.Sprintf("%s is already imported", path), glob.SysSignalTrue, nil
+// 	}
 
-	// run pkg, 先得到 包的绝对路径，然后读取文件内容
-	pkgMainFileAbsolutePath, err := getPkgMainFileAbsolutePath(path)
-	if err != nil {
-		return fmt.Sprintf("failed to get package main file absolute path: %s", err.Error()), glob.SysSignalSystemError, err
-	}
+// 	// run pkg, 先得到 包的绝对路径，然后读取文件内容
+// 	pkgMainFileAbsolutePath, err := getPkgMainFileAbsolutePath(path)
+// 	if err != nil {
+// 		return fmt.Sprintf("failed to get package main file absolute path: %s", err.Error()), glob.SysSignalSystemError, err
+// 	}
 
-	pkgContent, err := os.ReadFile(pkgMainFileAbsolutePath)
-	if err != nil {
-		return fmt.Sprintf("failed to read file %s: %s", path, err.Error()), glob.SysSignalSystemError, err
-	}
+// 	pkgContent, err := os.ReadFile(pkgMainFileAbsolutePath)
+// 	if err != nil {
+// 		return fmt.Sprintf("failed to read file %s: %s", path, err.Error()), glob.SysSignalSystemError, err
+// 	}
 
-	msg, signal, newEnv, err := RunSourceCode(builtinEnv, string(pkgContent))
-	if err != nil || signal != glob.SysSignalTrue {
-		return msg, signal, err
-	}
+// 	msg, signal, newEnv, err := RunSourceCode(builtinEnv, string(pkgContent))
+// 	if err != nil || signal != glob.SysSignalTrue {
+// 		return msg, signal, err
+// 	}
 
-	pkgMgr.PkgEnv[path] = newEnv
+// 	pkgMgr.PkgEnv[path] = newEnv
 
-	return msg, signal, err
-}
+// 	return msg, signal, err
+// }
 
 func getPkgMainFileAbsolutePath(path string) (string, error) {
 	corePkgPath := glob.GetCorePkgPath()

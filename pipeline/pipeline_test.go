@@ -18,20 +18,19 @@ import (
 	"fmt"
 	"os"
 	"testing"
-
-	glob "golitex/glob"
 )
 
 func TestExecuteCodeAndReturnMessage(t *testing.T) {
 	code := readFile("../examples/test_codes/tmp.lit")
-	msg, signal, _, err := RunSourceCode(nil, code)
+	executor, err := InitPipelineExecutor()
 	if err != nil {
 		t.Errorf("Error: %s", err)
 	}
-	if signal != glob.SysSignalTrue {
-		t.Errorf("Expected signal to be true, got %s", signal)
+	ret := RunSourceCodeInExecutor(executor, code)
+	if ret.IsNotTrue() {
+		t.Errorf("Error: %s", ret.String())
 	}
-	fmt.Println(msg)
+	fmt.Println(ret.String())
 }
 
 func readFile(filePath string) string {
