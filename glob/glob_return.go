@@ -32,89 +32,89 @@ type GlobRet interface {
 	Inherit(globRet GlobRet)
 }
 
-type ExecTrue struct {
+type GlobTrue struct {
 	Msg []string
 }
 
-type ExecUnknown struct {
+type GlobUnknown struct {
 	Msg []string
 }
 
-type ExecErr struct {
+type GlobErr struct {
 	Msg []string
 }
 
-func (v *ExecTrue) globRet()                    {}
-func (v *ExecTrue) IsTrue() bool                { return true }
-func (v *ExecTrue) IsUnknown() bool             { return false }
-func (v *ExecTrue) IsErr() bool                 { return false }
-func (v *ExecTrue) String() string              { return strings.Join(v.Msg, "\n") }
-func (v *ExecTrue) ToBoolErr() (bool, error)    { return true, nil }
-func (v *ExecTrue) IsNotTrue() bool             { return false }
-func (v *ExecTrue) IsNotUnknown() bool          { return true }
-func (v *ExecTrue) IsNotErr() bool              { return true }
-func (v *ExecErr) globRet()                     {}
-func (v *ExecErr) IsTrue() bool                 { return false }
-func (v *ExecErr) IsUnknown() bool              { return false }
-func (v *ExecErr) IsErr() bool                  { return true }
-func (v *ExecErr) String() string               { return strings.Join(v.Msg, "\n") }
-func (v *ExecErr) ToBoolErr() (bool, error)     { return false, fmt.Errorf(v.String()) }
-func (v *ExecErr) IsNotTrue() bool              { return true }
-func (v *ExecErr) IsNotUnknown() bool           { return true }
-func (v *ExecErr) IsNotErr() bool               { return false }
-func (v *ExecUnknown) globRet()                 {}
-func (v *ExecUnknown) IsTrue() bool             { return false }
-func (v *ExecUnknown) IsUnknown() bool          { return true }
-func (v *ExecUnknown) IsErr() bool              { return false }
-func (v *ExecUnknown) String() string           { return strings.Join(v.Msg, "\n") }
-func (v *ExecUnknown) ToBoolErr() (bool, error) { return false, nil }
-func (v *ExecUnknown) IsNotTrue() bool          { return true }
-func (v *ExecUnknown) IsNotUnknown() bool       { return false }
-func (v *ExecUnknown) IsNotErr() bool           { return true }
+func (v *GlobTrue) globRet()                    {}
+func (v *GlobTrue) IsTrue() bool                { return true }
+func (v *GlobTrue) IsUnknown() bool             { return false }
+func (v *GlobTrue) IsErr() bool                 { return false }
+func (v *GlobTrue) String() string              { return strings.Join(v.Msg, "\n") }
+func (v *GlobTrue) ToBoolErr() (bool, error)    { return true, nil }
+func (v *GlobTrue) IsNotTrue() bool             { return false }
+func (v *GlobTrue) IsNotUnknown() bool          { return true }
+func (v *GlobTrue) IsNotErr() bool              { return true }
+func (v *GlobErr) globRet()                     {}
+func (v *GlobErr) IsTrue() bool                 { return false }
+func (v *GlobErr) IsUnknown() bool              { return false }
+func (v *GlobErr) IsErr() bool                  { return true }
+func (v *GlobErr) String() string               { return strings.Join(v.Msg, "\n") }
+func (v *GlobErr) ToBoolErr() (bool, error)     { return false, fmt.Errorf(v.String()) }
+func (v *GlobErr) IsNotTrue() bool              { return true }
+func (v *GlobErr) IsNotUnknown() bool           { return true }
+func (v *GlobErr) IsNotErr() bool               { return false }
+func (v *GlobUnknown) globRet()                 {}
+func (v *GlobUnknown) IsTrue() bool             { return false }
+func (v *GlobUnknown) IsUnknown() bool          { return true }
+func (v *GlobUnknown) IsErr() bool              { return false }
+func (v *GlobUnknown) String() string           { return strings.Join(v.Msg, "\n") }
+func (v *GlobUnknown) ToBoolErr() (bool, error) { return false, nil }
+func (v *GlobUnknown) IsNotTrue() bool          { return true }
+func (v *GlobUnknown) IsNotUnknown() bool       { return false }
+func (v *GlobUnknown) IsNotErr() bool           { return true }
 
-func NewExecErr(s string) *ExecErr {
+func NewGlobErr(s string) *GlobErr {
 	if s != "" {
-		return &ExecErr{Msg: []string{s}}
+		return &GlobErr{Msg: []string{s}}
 	}
-	return &ExecErr{Msg: []string{}}
+	return &GlobErr{Msg: []string{}}
 }
 
-func NewExecErrWithErr(err error) *ExecErr {
-	return &ExecErr{Msg: []string{err.Error()}}
+func NewGlobErrWithErr(err error) *GlobErr {
+	return &GlobErr{Msg: []string{err.Error()}}
 }
 
-func BoolErrToExecRet(ok bool, err error) GlobRet {
+func BoolErrToGlobRet(ok bool, err error) GlobRet {
 	if err != nil {
-		return &ExecErr{Msg: []string{err.Error()}}
+		return &GlobErr{Msg: []string{err.Error()}}
 	}
 	if ok {
-		return &ExecTrue{Msg: []string{}}
+		return &GlobTrue{Msg: []string{}}
 	}
-	return &ExecUnknown{Msg: []string{}}
+	return &GlobUnknown{Msg: []string{}}
 }
 
-func NewExecTrue(s string) GlobRet {
+func NewGlobTrue(s string) GlobRet {
 	if s != "" {
-		return &ExecTrue{Msg: []string{s}}
+		return &GlobTrue{Msg: []string{s}}
 	}
-	return &ExecTrue{Msg: []string{}}
+	return &GlobTrue{Msg: []string{}}
 }
 
-func NewExecUnknown(s string) GlobRet {
+func NewGlobUnknown(s string) GlobRet {
 	if s != "" {
-		return &ExecUnknown{Msg: []string{s}}
+		return &GlobUnknown{Msg: []string{s}}
 	}
-	return &ExecUnknown{Msg: []string{}}
+	return &GlobUnknown{Msg: []string{}}
 }
 
-func (v *ExecTrue) Inherit(globRet GlobRet) {
+func (v *GlobTrue) Inherit(globRet GlobRet) {
 	v.Msg = append(v.Msg, globRet.String())
 }
 
-func (v *ExecUnknown) Inherit(globRet GlobRet) {
+func (v *GlobUnknown) Inherit(globRet GlobRet) {
 	v.Msg = append(v.Msg, globRet.String())
 }
 
-func (v *ExecErr) Inherit(globRet GlobRet) {
+func (v *GlobErr) Inherit(globRet GlobRet) {
 	v.Msg = append(v.Msg, globRet.String())
 }

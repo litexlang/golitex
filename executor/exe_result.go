@@ -17,6 +17,7 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
+	glob "golitex/glob"
 	"strings"
 )
 
@@ -33,6 +34,7 @@ type ExecRet interface {
 	IsNotErr() bool
 	Inherit(execRet ExecRet)
 	NewVerMsgAtBegin(verState *VerState, msg string) ExecRet
+	ToGlobRet() glob.GlobRet
 }
 
 type ExecTrue struct {
@@ -184,4 +186,16 @@ func (v *ExecUnknown) NewVerMsgAtEnd(verState *VerState, msg string) ExecRet {
 		v.Msg = append(v.Msg, msg)
 	}
 	return v
+}
+
+func (v *ExecTrue) ToGlobRet() glob.GlobRet {
+	return glob.NewGlobTrue(v.String())
+}
+
+func (v *ExecUnknown) ToGlobRet() glob.GlobRet {
+	return glob.NewGlobUnknown(v.String())
+}
+
+func (v *ExecErr) ToGlobRet() glob.GlobRet {
+	return glob.NewGlobErr(v.String())
 }
