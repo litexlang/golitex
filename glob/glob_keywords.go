@@ -82,6 +82,7 @@ const (
 	KeywordBy        = "by"
 
 	KeywordImplication = "implication"
+	KeywordValue       = "value"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{

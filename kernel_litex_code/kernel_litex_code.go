@@ -680,4 +680,8 @@ know:
 	forall x, y R: x > y <=> x - y > 0
 	forall x, y R: x <= y <=> x - y <= 0
 	forall x, y R: x < y <=> x - y < 0
+
+know:
+	forall x, y R: y >= 0 => x + y >= x, y + x >= x, x <= x + y, x <= y + x
+	forall x, y R: abs(x + y) <= abs(x) + abs(y)
 `
