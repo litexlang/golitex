@@ -24,14 +24,14 @@ import (
 	"time"
 )
 
-func RunFile(path string) (string, glob.SysSignal, error) {
-	content, err := os.ReadFile(path)
-	if err != nil {
-		return fmt.Sprintf("failed to read file %s: %s", path, err.Error()), glob.SysSignalSystemError, err
-	}
-	ret := pipeline.RunSourceCode(string(content))
-	return ret.String(), ret.SysSignal(), ret.Error()
-}
+// func RunFile(path string) (string, glob.SysSignal, error) {
+// 	content, err := os.ReadFile(path)
+// 	if err != nil {
+// 		return fmt.Sprintf("failed to read file %s: %s", path, err.Error()), glob.SysSignalSystemError, err
+// 	}
+// 	ret := pipeline.RunSourceCode(string(content))
+// 	return ret.String(), ret.SysSignal(), ret.Error()
+// }
 
 func RunFileWithPipelineRunner(path string) (string, glob.SysSignal, time.Duration, error) {
 	// repoName := filepath.Dir(path)
