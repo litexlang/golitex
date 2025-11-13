@@ -22,6 +22,17 @@ import (
 	parser "golitex/parser"
 )
 
+func GetBuiltinEnv() *env.Env {
+	curEnv := env.NewEnv(nil)
+	curEnv.Init()
+	executor := exe.NewExecutor(curEnv, exe.NewPackageManager())
+	err := useHardcodedCodeToInit(executor)
+	if err != nil {
+		panic(err)
+	}
+	return executor.Env
+}
+
 func InitPipelineExecutor() (*exe.Executor, error) {
 	curEnv := env.NewEnv(nil)
 	curEnv.Init()
