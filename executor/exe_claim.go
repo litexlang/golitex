@@ -40,7 +40,7 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContra
 	case ast.Spec_OrFact:
 		execState := exec.reversibleFactProveByContradiction(asStmt, stmt)
 		if execState.IsNotTrue() {
-			return NewExecErr(fmt.Errorf("prove by contradiction only support reversible fact").Error())
+			return execState
 		}
 		return NewExecTrue("")
 	case *ast.UniFactStmt:
