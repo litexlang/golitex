@@ -24,6 +24,7 @@ import (
 	parser "golitex/parser"
 	"io"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -264,16 +265,30 @@ func RunSourceCodeInExecutor(curExec *exe.Executor, code string) glob.GlobRet {
 }
 
 func RunTopStmtInPipeline(curExec *exe.Executor, topStmt ast.Stmt) glob.GlobRet {
-	switch topStmt.(type) {
+	switch topStmt := topStmt.(type) {
 	case *ast.ImportDirStmt:
-		return glob.NewGlobTrue("")
+		return RunImportDirStmtInPipeline(curExec, topStmt)
 	case *ast.ImportFileStmt:
-		return glob.NewGlobTrue("")
+		return RunImportFileStmtInPipeline(curExec, topStmt)
 	default:
-		execRet := curExec.Stmt(topStmt)
-		if execRet.IsNotTrue() {
-			return execRet.ToGlobRet()
-		}
-		return glob.NewGlobTrue("")
+		return curExec.Stmt(topStmt).ToGlobRet()
 	}
+}
+
+func RunImportDirStmtInPipeline(curExec *exe.Executor, importDirStmt *ast.ImportDirStmt) glob.GlobRet {
+	builtinEnv := GetBuiltinEnv()
+	executorToRunDir := exe.NewExecutor(builtinEnv, exe.NewPackageManager())
+	mainFileContent, err := os.ReadFile(filepath.Join(importDirStmt.Path, glob.PkgEntranceFileNameMainDotLit))
+	if err != nil {
+		return glob.NewGlobErr(err.Error())
+	}
+	return RunSourceCodeInExecutor(executorToRunDir, string(mainFileContent))
+}
+
+func RunImportFileStmtInPipeline(curExec *exe.Executor, importFileStmt *ast.ImportFileStmt) glob.GlobRet {
+	content, err := os.ReadFile(importFileStmt.Path)
+	if err != nil {
+		return glob.NewGlobErr(err.Error())
+	}
+	return RunSourceCodeInExecutor(curExec, string(content))
 }
