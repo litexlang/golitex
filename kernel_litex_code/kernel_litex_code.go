@@ -339,10 +339,11 @@ fn log(x, y R) R:
 		x != 1
 		y > 0
 
+# TODO: 这里的 y ^ z 可能不满足^的定义域的要求
 know:
-	forall x, y, z R: x > 0, y > 0, z > 0 => log(x, y^z) = z * log(x, y)
-	forall x, y, z R: x > 0, y > 0, z > 0 => log(x, y * z) = log(x, y) + log(x, z)
-	forall x R: x > 0 => log(x, x) = 1
+	forall x, y, z R: x > 0, x != 1, y > 0, z > 0 => log(x, y^z) = z * log(x, y)
+	forall x, y, z R: x > 0, x != 1, y > 0, z > 0 => log(x, y * z) = log(x, y) + log(x, z)
+	forall x R: x > 0, x != 1 => log(x, x) = 1
 
 let pi R # pi is the ratio of the circumference of a circle to its diameter
 
