@@ -276,16 +276,25 @@ func RunTopStmtInPipeline(curExec *exe.Executor, topStmt ast.Stmt) glob.GlobRet 
 }
 
 func RunImportDirStmtInPipeline(curExec *exe.Executor, importDirStmt *ast.ImportDirStmt) glob.GlobRet {
-	builtinEnv := GetBuiltinEnv()
-	executorToRunDir := exe.NewExecutor(builtinEnv, exe.NewPackageManager())
+	// 如果已经在curExec.PkgMgr.PkgEnvPairs中，则直接返回
+	if _, ok := curExec.PkgMgr.PkgPathEnvPairs[importDirStmt.Path]; ok {
+		return glob.NewGlobTrue("")
+	}
+
 	mainFileContent, err := os.ReadFile(filepath.Join(importDirStmt.Path, glob.PkgEntranceFileNameMainDotLit))
 	if err != nil {
 		return glob.NewGlobErr(err.Error())
 	}
+
+	builtinEnv := GetBuiltinEnv()
+	executorToRunDir := exe.NewExecutor(builtinEnv, exe.NewPackageManager())
 	ret := RunSourceCodeInExecutor(executorToRunDir, string(mainFileContent))
 	if ret.IsNotTrue() {
 		return ret
 	}
+
+	curExec.PkgMgr.MergeGivenExecPkgMgr(importDirStmt, executorToRunDir)
+	return glob.NewGlobTrue(fmt.Sprintf("imported package %s as %s", importDirStmt.Path, importDirStmt.AsPkgName))
 }
 
 func RunImportFileStmtInPipeline(curExec *exe.Executor, importFileStmt *ast.ImportFileStmt) glob.GlobRet {

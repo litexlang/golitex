@@ -15,28 +15,31 @@
 package litex_executor
 
 import (
-	"fmt"
 	ast "golitex/ast"
 	env "golitex/environment"
 )
 
 type PackageManager struct {
-	PkgEnvPairs         map[string]*env.Env
+	PkgPathEnvPairs     map[string]*env.Env
 	PkgNamePkgPathPairs map[string]string
 }
 
-func (pkgMgr *PackageManager) NewPkgEnvPair(importDirStmt *ast.ImportDirStmt, pkgEnv *env.Env) error {
-	if _, ok := pkgMgr.PkgEnvPairs[importDirStmt.Path]; ok {
-		return fmt.Errorf("package already exists: %s", importDirStmt.Path)
-	}
-	pkgMgr.PkgEnvPairs[importDirStmt.Path] = pkgEnv
+func (pkgMgr *PackageManager) MergeGivenExecPkgMgr(importDirStmt *ast.ImportDirStmt, curExec *Executor) {
+	pkgMgr.PkgPathEnvPairs[importDirStmt.Path] = curExec.Env
 	pkgMgr.PkgNamePkgPathPairs[importDirStmt.AsPkgName] = importDirStmt.Path
-	return nil
+
+	// 把 curExec 的 pkgMgr 合并到现在的 pkgMgr 中
+	for pkgPath, pkgEnv := range curExec.PkgMgr.PkgPathEnvPairs {
+		pkgMgr.PkgPathEnvPairs[pkgPath] = pkgEnv
+	}
+	for pkgName, pkgPath := range curExec.PkgMgr.PkgNamePkgPathPairs {
+		curExec.PkgMgr.PkgNamePkgPathPairs[pkgName] = pkgPath
+	}
 }
 
 func NewPackageManager() *PackageManager {
 	return &PackageManager{
-		PkgEnvPairs:         make(map[string]*env.Env),
+		PkgPathEnvPairs:     make(map[string]*env.Env),
 		PkgNamePkgPathPairs: make(map[string]string),
 	}
 }
