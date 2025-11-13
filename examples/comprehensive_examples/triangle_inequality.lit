@@ -1,0 +1,109 @@
+claim:
+    forall x, y R:
+        abs(x + y) <= abs(x) + abs(y)
+    prove:
+        prove_in_each_case:
+            or:
+                x >= 0
+                x < 0
+            =>:
+                abs(x + y) <= abs(x) + abs(y)
+            prove:
+                x >= 0
+                prove_in_each_case:
+                    or:
+                        y >= 0
+                        y < 0
+                    =>:
+                        abs(x + y) <= abs(x) + abs(y)
+                    prove:
+                        y >= 0
+                        abs(x) = x
+                        abs(y) = y
+                        x + y >= 0
+                        abs(x + y) = x + y
+                        abs(x + y) = abs(x) + abs(y)
+                        abs(x + y) <= abs(x) + abs(y)
+                    prove:
+                        y < 0
+                        abs(x) = x
+                        abs(y) = -y
+                        prove_in_each_case:
+                            or:
+                                x + y >= 0
+                                x + y < 0
+                            =>:
+                                abs(x + y) <= abs(x) + abs(y)
+                            prove:
+                                x + y >= 0
+                                abs(x + y) = x + y
+                                y < 0
+                                x + y < x
+                                x + y <= x
+                                -y > 0
+                                y < 0
+                                x + (-y) > x
+                                x < x + (-y)
+                                x + y < x
+                                x + y <= x + (-y)
+                                abs(x + y) <= abs(x) + abs(y)
+                            prove:
+                                x + y < 0
+                                abs(x + y) = -(x + y) = -x - y
+                                x >= 0
+                                -x <= 0
+                                -x - y <= 0 -y
+                                -x - y <= -y
+                                -y <= x + (-y)
+                                -x - y <= x + (-y)
+                                abs(x + y) <= abs(x) + abs(y)
+            prove:
+                x < 0
+                prove_in_each_case:
+                    or:
+                        y >= 0
+                        y < 0
+                    =>:
+                        abs(x + y) <= abs(x) + abs(y)
+                    prove:
+                        y >= 0
+                        abs(x) = -x
+                        abs(y) = y
+                        prove_in_each_case:
+                            or:
+                                x + y >= 0
+                                x + y < 0
+                            =>:
+                                abs(x + y) <= abs(x) + abs(y)
+                            prove:
+                                x + y >= 0
+                                abs(x + y) = x + y
+                                x < 0
+                                x + y < y
+                                x + y <= y
+                                -x > 0
+                                -x >= 0
+                                (-x) + y > y
+                                x + y < y
+                                x + y <= y
+                                x + y <= (-x) + y
+                                abs(x + y) <= abs(x) + abs(y)
+                            prove:
+                                x + y < 0
+                                abs(x + y) = -(x + y) = -x - y
+                                y >= 0
+                                -y <= 0
+                                -x - y <= -x
+                                -x - y <= (-x) + y
+                                abs(x + y) <= abs(x) + abs(y)
+                    prove:
+                        y < 0
+                        abs(x) = -x
+                        abs(y) = -y
+                        x + y < y
+                        y < 0
+                        x + y < 0
+                        abs(x + y) = -(x + y) = -x - y
+                        abs(x + y) = -x + (-y) = abs(x) + abs(y)
+                        abs(x + y) <= abs(x) + abs(y)
+
