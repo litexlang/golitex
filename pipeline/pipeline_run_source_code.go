@@ -41,7 +41,8 @@ func RunSourceCode(curEnv *env.Env, code string) (string, glob.SysSignal, *env.E
 		executor, err = InitPipelineExecutor()
 		curEnv = executor.GetBuiltinEnv()
 	} else {
-		executor = exe.NewExecutor(curEnv)
+		// 其实是有问题的
+		executor = exe.NewExecutor(curEnv, exe.NewPackageManager())
 	}
 
 	if err != nil {

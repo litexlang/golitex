@@ -15,23 +15,24 @@
 package litex_executor
 
 import (
+	"fmt"
 	env "golitex/environment"
 )
 
-type Executor struct {
-	Env    *env.Env
-	PkgMgr *PackageManager
+type PackageManager struct {
+	PkgEnvMap map[string]*env.Env
 }
 
-func NewExecutor(curEnv *env.Env, pkgMgr *PackageManager) *Executor {
-	if curEnv == nil {
-		return &Executor{Env: env.NewEnv(nil), PkgMgr: pkgMgr}
-	} else {
-		return &Executor{Env: curEnv, PkgMgr: pkgMgr}
+func (pkgMgr *PackageManager) NewPkgEnvPair(pkgName string, pkgEnv *env.Env) error {
+	if _, ok := pkgMgr.PkgEnvMap[pkgName]; ok {
+		return fmt.Errorf("package name already exists: %s", pkgName)
 	}
+	pkgMgr.PkgEnvMap[pkgName] = pkgEnv
+	return nil
 }
 
-func (e *Executor) NewEnv(parent *env.Env) *env.Env {
-	e.Env = env.NewEnv(parent)
-	return e.Env
+func NewPackageManager() *PackageManager {
+	return &PackageManager{
+		PkgEnvMap: make(map[string]*env.Env),
+	}
 }

@@ -1,9 +1,0 @@
-fn self_defined_log(x, y R) R:
-    dom:
-        x > 0
-        x != 1
-        y > 0
-    =>:
-        x ^ self_defined_log(x, y) = y
-
-know forall x, y R: 

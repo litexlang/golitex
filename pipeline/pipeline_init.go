@@ -25,7 +25,7 @@ import (
 func InitPipelineExecutor() (*exe.Executor, error) {
 	curEnv := env.NewEnv(nil)
 	curEnv.Init()
-	executor := exe.NewExecutor(curEnv)
+	executor := exe.NewExecutor(curEnv, exe.NewPackageManager())
 	err := useHardcodedCodeToInit(executor)
 	executor.NewEnv(curEnv)
 	if err != nil {
