@@ -282,7 +282,10 @@ func RunImportDirStmtInPipeline(curExec *exe.Executor, importDirStmt *ast.Import
 	if err != nil {
 		return glob.NewGlobErr(err.Error())
 	}
-	return RunSourceCodeInExecutor(executorToRunDir, string(mainFileContent))
+	ret := RunSourceCodeInExecutor(executorToRunDir, string(mainFileContent))
+	if ret.IsNotTrue() {
+		return ret
+	}
 }
 
 func RunImportFileStmtInPipeline(curExec *exe.Executor, importFileStmt *ast.ImportFileStmt) glob.GlobRet {
