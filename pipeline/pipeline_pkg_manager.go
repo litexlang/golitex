@@ -23,17 +23,17 @@ import (
 )
 
 type PackagesManager struct {
-	pkgEnv map[string]*env.Env
+	PkgEnv map[string]*env.Env
 }
 
 func NewPackageManager() *PackagesManager {
 	return &PackagesManager{
-		pkgEnv: make(map[string]*env.Env),
+		PkgEnv: make(map[string]*env.Env),
 	}
 }
 
 func (pkgMgr *PackagesManager) NewPkg(builtinEnv *env.Env, path string) (string, glob.SysSignal, error) {
-	if _, ok := pkgMgr.pkgEnv[path]; ok {
+	if _, ok := pkgMgr.PkgEnv[path]; ok {
 		return fmt.Sprintf("%s is already imported", path), glob.SysSignalTrue, nil
 	}
 
@@ -53,7 +53,7 @@ func (pkgMgr *PackagesManager) NewPkg(builtinEnv *env.Env, path string) (string,
 		return msg, signal, err
 	}
 
-	pkgMgr.pkgEnv[path] = newEnv
+	pkgMgr.PkgEnv[path] = newEnv
 
 	return msg, signal, err
 }
