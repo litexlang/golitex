@@ -57,9 +57,9 @@ func GenerateNamesLikeExcelColumnNames(n int) []string {
 	return names
 }
 
-// RemoveWindowsCarriageReturn 移除 Windows 换行符中的回车符(\r)，将 CRLF 转换为 LF
+// RemoveWindowsCarriage 移除 Windows 换行符中的回车符(\r)，将 CRLF 转换为 LF
 // 这样可以让 Windows 格式的代码在 Unix/Linux 系统上也能正常处理
-func RemoveWindowsCarriageReturn(code string) string {
+func RemoveWindowsCarriage(code string) string {
 	// if runtime.GOOS == "windows" {
 	return strings.ReplaceAll(code, "\r", "")
 	// }
