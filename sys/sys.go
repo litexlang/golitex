@@ -25,15 +25,12 @@ import (
 )
 
 func RunFile(path string) (string, glob.SysSignal, error) {
-	// 得到path的repo名所在的绝对路径
-	// repoName := filepath.Dir(path)
-	// glob.CurrentTaskDirName = repoName
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return fmt.Sprintf("failed to read file %s: %s", path, err.Error()), glob.SysSignalSystemError, err
 	}
-	msg, signal, _, err := pipeline.RunSourceCode(nil, string(content))
-	return msg, signal, err
+	ret := pipeline.RunSourceCode(string(content))
+	return ret.String(), ret.SysSignal(), ret.Error()
 }
 
 func RunFileWithPipelineRunner(path string) (string, glob.SysSignal, time.Duration, error) {
@@ -60,20 +57,14 @@ func RunRepo(path string) (string, glob.SysSignal, error) {
 	if err != nil {
 		return "", glob.SysSignalSystemError, err
 	}
-	msg, signal, _, err := pipeline.RunSourceCode(nil, string(content))
-	if err != nil {
-		return msg, signal, err
-	}
-	return msg, signal, nil
+	ret := pipeline.RunSourceCode(string(content))
+	return ret.String(), ret.SysSignal(), ret.Error()
 }
 
-func ExecuteCodeAndReturnMessage(code string) (string, glob.SysSignal, error) {
-	msg, signal, _, err := pipeline.RunSourceCode(nil, code)
-	if err != nil {
-		return msg, signal, err
-	}
-	return msg, signal, nil
-}
+// func ExecuteCodeAndReturnMessage(code string) (string, glob.SysSignal, error) {
+// 	ret := pipeline.RunSourceCode(code)
+// 	return ret.String(), ret.SysSignal(), ret.Error()
+// }
 
 func RunREPLInTerminal(version string) {
 	pipeline.RunREPLInTerminal(version)
@@ -89,48 +80,48 @@ func RunMainMsg(signal glob.SysSignal) string {
 	}
 }
 
-func RunFilesInRepo(repo string) error {
-	files, err := os.ReadDir(repo)
-	if err != nil {
-		fmt.Println("Error reading directory:", err)
-		return err
-	}
+// func RunFilesInRepo(repo string) error {
+// 	files, err := os.ReadDir(repo)
+// 	if err != nil {
+// 		fmt.Println("Error reading directory:", err)
+// 		return err
+// 	}
 
-	startTime := time.Now()
-	for _, file := range files {
-		// file 最后必须以.lit结尾
-		localStartTime := time.Now()
+// 	startTime := time.Now()
+// 	for _, file := range files {
+// 		// file 最后必须以.lit结尾
+// 		localStartTime := time.Now()
 
-		if !strings.HasSuffix(file.Name(), glob.LitexFileSuffix) {
-			continue
-		}
+// 		if !strings.HasSuffix(file.Name(), glob.LitexFileSuffix) {
+// 			continue
+// 		}
 
-		fmt.Printf("%s ", file)
+// 		fmt.Printf("%s ", file)
 
-		// 读出file的内容，然后执行
-		path := filepath.Join(repo, file.Name())
-		code, err := os.ReadFile(path)
-		if err != nil {
-			fmt.Println("Error reading file:", err)
-			return err
-		}
-		msg, signal, err := ExecuteCodeAndReturnMessage(string(code))
-		if err != nil || signal != glob.SysSignalTrue {
-			fmt.Println(msg)
-			fmt.Println("Error executing code:", err)
-			return fmt.Errorf("error in file: %s", file.Name())
-		}
+// 		// 读出file的内容，然后执行
+// 		path := filepath.Join(repo, file.Name())
+// 		code, err := os.ReadFile(path)
+// 		if err != nil {
+// 			fmt.Println("Error reading file:", err)
+// 			return err
+// 		}
+// 		msg, signal, err := ExecuteCodeAndReturnMessage(string(code))
+// 		if err != nil || signal != glob.SysSignalTrue {
+// 			fmt.Println(msg)
+// 			fmt.Println("Error executing code:", err)
+// 			return fmt.Errorf("error in file: %s", file.Name())
+// 		}
 
-		localElapsed := time.Since(localStartTime)
+// 		localElapsed := time.Since(localStartTime)
 
-		fmt.Printf("%s\n", localElapsed)
-	}
-	elapsed := time.Since(startTime)
-	fmt.Printf("All files in %s executed successfully\n", repo)
-	fmt.Println("Time taken:", elapsed)
+// 		fmt.Printf("%s\n", localElapsed)
+// 	}
+// 	elapsed := time.Since(startTime)
+// 	fmt.Printf("All files in %s executed successfully\n", repo)
+// 	fmt.Println("Time taken:", elapsed)
 
-	return nil
-}
+// 	return nil
+// }
 
 func RunFilesInRepoWithPipelineRunner(repo string) error {
 	files, err := os.ReadDir(repo)

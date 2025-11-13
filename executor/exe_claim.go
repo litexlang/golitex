@@ -387,65 +387,65 @@ func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimPropStmt) ExecRet 
 	return NewExecTrue("")
 }
 
-func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimPropStmt) ExecRet {
-	exec.NewEnv(exec.Env)
-	defer func() {
-		exec.deleteEnvAndRetainMsg()
-	}()
+// func (exec *Executor) checkClaimPropStmtProveByContradiction(stmt *ast.ClaimPropStmt) ExecRet {
+// 	exec.NewEnv(exec.Env)
+// 	defer func() {
+// 		exec.deleteEnvAndRetainMsg()
+// 	}()
 
-	// declare parameters in prop
+// 	// declare parameters in prop
 
-	objDefStmt := ast.NewDefLetStmt(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFacts, stmt.Line)
-	execState := exec.defLetStmt(objDefStmt)
-	if execState.IsNotTrue() {
-		return execState
-	}
+// 	objDefStmt := ast.NewDefLetStmt(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFacts, stmt.Line)
+// 	execState := exec.defLetStmt(objDefStmt)
+// 	if execState.IsNotTrue() {
+// 		return execState
+// 	}
 
-	thenFactsAsReversible := []ast.Spec_OrFact{}
-	for _, fact := range stmt.Prop.ThenFacts {
-		asReversible, ok := fact.(ast.Spec_OrFact)
-		if !ok {
-			return NewExecErr(fmt.Errorf("claim prop statement error: then fact is not an or statement").Error())
-		}
-		thenFactsAsReversible = append(thenFactsAsReversible, asReversible)
-	}
+// 	thenFactsAsReversible := []ast.Spec_OrFact{}
+// 	for _, fact := range stmt.Prop.ThenFacts {
+// 		asReversible, ok := fact.(ast.Spec_OrFact)
+// 		if !ok {
+// 			return NewExecErr(fmt.Errorf("claim prop statement error: then fact is not an or statement").Error())
+// 		}
+// 		thenFactsAsReversible = append(thenFactsAsReversible, asReversible)
+// 	}
 
-	// assume reverse of all then facts in prop or true
-	reversedThenFacts := ast.ReverseSliceOfReversibleFacts(thenFactsAsReversible)
-	for _, fact := range reversedThenFacts {
-		err := exec.Env.NewFact(fact)
-		if err != nil {
-			return NewExecErr(err.Error())
-		}
-	}
+// 	// assume reverse of all then facts in prop or true
+// 	reversedThenFacts := ast.ReverseSliceOfReversibleFacts(thenFactsAsReversible)
+// 	for _, fact := range reversedThenFacts {
+// 		err := exec.Env.NewFact(fact)
+// 		if err != nil {
+// 			return NewExecErr(err.Error())
+// 		}
+// 	}
 
-	execState = exec.execStmtsAtCurEnv(stmt.Proofs)
-	if execState.IsNotTrue() {
-		return execState
-	}
+// 	execState = exec.execStmtsAtCurEnv(stmt.Proofs)
+// 	if execState.IsNotTrue() {
+// 		return execState
+// 	}
 
-	// 最后一项的逆也对
-	lastProof := stmt.Proofs[len(stmt.Proofs)-1]
-	lastProofAsReversible, ok := lastProof.(ast.Spec_OrFact)
-	if !ok {
-		return NewExecErr(fmt.Errorf("claim prop statement error: last proof is not an or statement").Error())
-	}
+// 	// 最后一项的逆也对
+// 	lastProof := stmt.Proofs[len(stmt.Proofs)-1]
+// 	lastProofAsReversible, ok := lastProof.(ast.Spec_OrFact)
+// 	if !ok {
+// 		return NewExecErr(fmt.Errorf("claim prop statement error: last proof is not an or statement").Error())
+// 	}
 
-	reverseLastProof := lastProofAsReversible.ReverseIsTrue()
-	reverseLastProofAsFacts := []ast.FactStmt{}
-	for _, fact := range reverseLastProof {
-		reverseLastProofAsFacts = append(reverseLastProofAsFacts, fact)
-	}
-	// execState, failedFact, err := verifier.(reverseLastProof, exec.env)
-	execState, failedFact, err := exec.verifyFactsAtCurEnv(reverseLastProofAsFacts, Round0NoMsg)
-	if err != nil {
-		return NewExecErr(fmt.Errorf("claim prop statement error: failed to verify reverse of last proof:\n%s\n%s", failedFact, err).Error())
-	} else if execState.IsUnknown() {
-		return NewExecErr(fmt.Errorf("claim prop statement error: failed to verify reverse of last proof:\n%s", failedFact).Error())
-	}
+// 	reverseLastProof := lastProofAsReversible.ReverseIsTrue()
+// 	reverseLastProofAsFacts := []ast.FactStmt{}
+// 	for _, fact := range reverseLastProof {
+// 		reverseLastProofAsFacts = append(reverseLastProofAsFacts, fact)
+// 	}
+// 	// execState, failedFact, err := verifier.(reverseLastProof, exec.env)
+// 	execState, failedFact, err := exec.verifyFactsAtCurEnv(reverseLastProofAsFacts, Round0NoMsg)
+// 	if err != nil {
+// 		return NewExecErr(fmt.Errorf("claim prop statement error: failed to verify reverse of last proof:\n%s\n%s", failedFact, err).Error())
+// 	} else if execState.IsUnknown() {
+// 		return NewExecErr(fmt.Errorf("claim prop statement error: failed to verify reverse of last proof:\n%s", failedFact).Error())
+// 	}
 
-	return NewExecTrue("")
-}
+// 	return NewExecTrue("")
+// }
 
 func (exec *Executor) claimIffStmt(stmt *ast.ClaimIffStmt) ExecRet {
 	thenToIff := stmt.UniFactWithIffStmt.NewUniFactWithThenToIff()
