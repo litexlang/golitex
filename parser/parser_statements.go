@@ -2650,13 +2650,18 @@ func (tb *tokenBlock) haveFnEqualStmt() (ast.Stmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	if !tb.header.ExceedEnd() {
+	if tb.header.is(glob.KeySymbolEqual) {
 		equalTo, err := tb.RawFc()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
 		return ast.NewHaveFnEqualStmt(defHeader, retSet, equalTo, tb.line), nil
 	} else {
+		err = tb.header.skip(glob.KeySymbolColon)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
 		caseByCaseFacts := []*ast.SpecFactStmt{}
 		caseByCaseEqualTo := []ast.Obj{}
 		for _, block := range tb.body {
