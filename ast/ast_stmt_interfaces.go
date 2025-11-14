@@ -24,56 +24,56 @@ type Stmt interface {
 	Instantiate(map[string]Obj) (Stmt, error)
 }
 
-func (s *DefLetStmt) stmt()                      {}
-func (s *DefPropStmt) stmt()                     {}
-func (s *DefFnStmt) stmt()                       {}
-func (s *UniFactStmt) stmt()                     {}
-func (s *SpecFactStmt) stmt()                    {}
-func (s *ClaimProveStmt) stmt()                  {}
-func (s *KnowFactStmt) stmt()                    {}
-func (s *DefExistPropStmt) stmt()                {}
-func (s *HaveObjStStmt) stmt()                   {}
-func (s *ProveInEachCaseStmt) stmt()             {}
-func (s *KnowPropStmt) stmt()                    {}
-func (s *OrStmt) stmt()                          {}
-func (s *ImportDirStmt) stmt()                   {}
-func (s *ImportFileStmt) stmt()                  {}
-func (s *ProveStmt) stmt()                       {}
-func (s *UniFactWithIffStmt) stmt()              {}
-func (s *ClaimProveByContradictionStmt) stmt()   {}
-func (s *EnumStmt) stmt()                        {}
-func (s *IntensionalSetStmt) stmt()              {}
-func (s *ClaimPropStmt) stmt()                   {}
-func (s *ClaimExistPropStmt) stmt()              {}
-func (s *ProveByEnumStmt) stmt()                 {}
-func (s *HaveObjInNonEmptySetStmt) stmt()        {}
-func (s *HaveEnumSetStmt) stmt()                 {}
-func (s *HaveIntensionalSetStmt) stmt()          {}
-func (s *HaveSetFnStmt) stmt()                   {}
-func (s *HaveSetDefinedByReplacementStmt) stmt() {}
-func (s *NamedUniFactStmt) stmt()                {}
-func (s *EqualsFactStmt) stmt()                  {}
-func (s *KnowExistPropStmt) stmt()               {}
-func (s *LatexStmt) stmt()                       {}
-func (s *FnTemplateDefStmt) stmt()               {}
-func (s *ClearStmt) stmt()                       {}
-func (s *InlineFactsStmt) stmt()                 {}
-func (s *ProveByInductionStmt) stmt()            {}
-func (s *HaveObjEqualStmt) stmt()                {}
-func (s *HaveFnEqualStmt) stmt()                 {}
-func (s *HaveFnLiftStmt) stmt()                  {}
-func (s *HaveFnStmt) stmt()                      {}
-func (s *MarkdownStmt) stmt()                    {}
-func (s *ProveIsCommutativePropStmt) stmt()      {}
-func (s *ClaimIffStmt) stmt()                    {}
-func (s *ProveInRangeStmt) stmt()                {}
-func (s *ProveIsTransitivePropStmt) stmt()       {}
-func (s *DefAlgoStmt) stmt()                     {}
-func (s *EvalStmt) stmt()                        {}
-func (s *DefProveAlgoStmt) stmt()                {}
-func (s *ByStmt) stmt()                          {}
-func (s *PrintStmt) stmt()                       {}
-
+func (s *DefLetStmt) stmt()                              {}
+func (s *DefPropStmt) stmt()                             {}
+func (s *DefFnStmt) stmt()                               {}
+func (s *UniFactStmt) stmt()                             {}
+func (s *SpecFactStmt) stmt()                            {}
+func (s *ClaimProveStmt) stmt()                          {}
+func (s *KnowFactStmt) stmt()                            {}
+func (s *DefExistPropStmt) stmt()                        {}
+func (s *HaveObjStStmt) stmt()                           {}
+func (s *ProveInEachCaseStmt) stmt()                     {}
+func (s *KnowPropStmt) stmt()                            {}
+func (s *OrStmt) stmt()                                  {}
+func (s *ImportDirStmt) stmt()                           {}
+func (s *ImportFileStmt) stmt()                          {}
+func (s *ProveStmt) stmt()                               {}
+func (s *UniFactWithIffStmt) stmt()                      {}
+func (s *ClaimProveByContradictionStmt) stmt()           {}
+func (s *EnumStmt) stmt()                                {}
+func (s *IntensionalSetStmt) stmt()                      {}
+func (s *ClaimPropStmt) stmt()                           {}
+func (s *ClaimExistPropStmt) stmt()                      {}
+func (s *ProveByEnumStmt) stmt()                         {}
+func (s *HaveObjInNonEmptySetStmt) stmt()                {}
+func (s *HaveEnumSetStmt) stmt()                         {}
+func (s *HaveIntensionalSetStmt) stmt()                  {}
+func (s *HaveSetFnStmt) stmt()                           {}
+func (s *HaveSetDefinedByReplacementStmt) stmt()         {}
+func (s *NamedUniFactStmt) stmt()                        {}
+func (s *EqualsFactStmt) stmt()                          {}
+func (s *KnowExistPropStmt) stmt()                       {}
+func (s *LatexStmt) stmt()                               {}
+func (s *FnTemplateDefStmt) stmt()                       {}
+func (s *ClearStmt) stmt()                               {}
+func (s *InlineFactsStmt) stmt()                         {}
+func (s *ProveByInductionStmt) stmt()                    {}
+func (s *HaveObjEqualStmt) stmt()                        {}
+func (s *HaveFnEqualStmt) stmt()                         {}
+func (s *HaveFnLiftStmt) stmt()                          {}
+func (s *HaveFnStmt) stmt()                              {}
+func (s *MarkdownStmt) stmt()                            {}
+func (s *ProveIsCommutativePropStmt) stmt()              {}
+func (s *ClaimIffStmt) stmt()                            {}
+func (s *ProveInRangeStmt) stmt()                        {}
+func (s *ProveIsTransitivePropStmt) stmt()               {}
+func (s *DefAlgoStmt) stmt()                             {}
+func (s *EvalStmt) stmt()                                {}
+func (s *DefProveAlgoStmt) stmt()                        {}
+func (s *ByStmt) stmt()                                  {}
+func (s *PrintStmt) stmt()                               {}
+func (s *HaveFnEqualCaseByCaseStmt) stmt()               {}
 func (s *DefLetStmt) algoStmt()                          {}
 func (s *DefPropStmt) algoStmt()                         {}
 func (s *DefFnStmt) algoStmt()                           {}
@@ -123,6 +123,7 @@ func (s *ProveIsTransitivePropStmt) algoStmt()           {}
 func (s *DefAlgoStmt) algoStmt()                         {}
 func (s *EvalStmt) algoStmt()                            {}
 func (s *PrintStmt) algoStmt()                           {}
+func (s *HaveFnEqualCaseByCaseStmt) algoStmt()           {}
 func (s *DefLetStmt) GetLine() uint                      { return s.Line }
 func (s *DefPropStmt) GetLine() uint                     { return s.Line }
 func (s *DefFnStmt) GetLine() uint                       { return s.Line }
@@ -172,6 +173,7 @@ func (s *EvalStmt) GetLine() uint                        { return s.Line }
 func (s *DefProveAlgoStmt) GetLine() uint                { return s.Line }
 func (s *ByStmt) GetLine() uint                          { return s.Line }
 func (s *PrintStmt) GetLine() uint                       { return s.Line }
+func (s *HaveFnEqualCaseByCaseStmt) GetLine() uint       { return s.Line }
 
 type FactStmt interface {
 	factStmt()

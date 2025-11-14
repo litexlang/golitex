@@ -145,7 +145,7 @@ func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreT
 	return NewExecTrue("")
 }
 
-func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.FcSlice, fnTStruct *ast.FnTStruct, state *VerState) ExecRet {
+func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.ObjSlice, fnTStruct *ast.FnTStruct, state *VerState) ExecRet {
 	failed := false
 
 	curState := state.GetNoMsg()

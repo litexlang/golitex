@@ -300,7 +300,7 @@ func (stmt *EqualsFactStmt) InstantiateFact(uniMap map[string]Obj) (FactStmt, er
 	return NewEqualsFactStmt(newParams, stmt.Line), nil
 }
 
-func (fcSlice FcSlice) Instantiate(uniMap map[string]Obj) (FcSlice, error) {
+func (fcSlice ObjSlice) Instantiate(uniMap map[string]Obj) (ObjSlice, error) {
 	newFcSlice := make([]Obj, len(fcSlice))
 	for i, fc := range fcSlice {
 		newFc, err := fc.Instantiate(uniMap)
@@ -829,7 +829,39 @@ func (stmt *ProveAlgoReturnStmt) InstantiateAlgo(uniMap map[string]Obj) (AlgoStm
 	return stmt, nil
 }
 
+func (specFactPtrSlice SpecFactPtrSlice) InstantiateFact(uniMap map[string]Obj) (SpecFactPtrSlice, error) {
+	newSpecFactPtrSlice := make([]*SpecFactStmt, len(specFactPtrSlice))
+	for i, specFactPtr := range specFactPtrSlice {
+		newSpecFactPtr, err := specFactPtr.InstantiateFact(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newSpecFactPtrSlice[i] = newSpecFactPtr.(*SpecFactStmt)
+	}
+	return newSpecFactPtrSlice, nil
+}
+
 // TODO: 在eval时，这里的token可能因为没有实例化而有问题
 func (stmt *PrintStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return stmt, nil
+}
+
+func (stmt *HaveFnEqualCaseByCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+	newDefHeader, err := stmt.DefHeader.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newRetSet, err := stmt.RetSet.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newCaseByCaseFacts, err := stmt.CaseByCaseFacts.InstantiateFact(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newCaseByCaseEqualTo, err := stmt.CaseByCaseEqualTo.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewHaveFnCaseByCaseStmt(newDefHeader, newRetSet, newCaseByCaseFacts, newCaseByCaseEqualTo, stmt.Line), nil
 }

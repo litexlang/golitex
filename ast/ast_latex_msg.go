@@ -926,3 +926,7 @@ func (s *ProveAlgoReturnStmt) ToLatexString() string {
 func (s *PrintStmt) ToLatexString() string {
 	return s.String()
 }
+
+func (s *HaveFnEqualCaseByCaseStmt) ToLatexString() string {
+	return s.String()
+}
