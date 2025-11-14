@@ -151,6 +151,14 @@ type ProveInEachCaseStmt struct {
 	Line uint
 }
 
+type ProveCaseByCaseStmt struct {
+	CaseFacts SpecFactPtrSlice
+	ThenFacts FactStmtSlice
+	Proofs    []StmtSlice
+
+	Line uint
+}
+
 type OrStmt struct {
 	Facts SpecFactPtrSlice
 

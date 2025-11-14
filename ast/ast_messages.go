@@ -489,6 +489,10 @@ func (stmt *ProveInEachCaseStmt) String() string {
 	return strings.TrimSuffix(builder.String(), "\n")
 }
 
+func (stmt *ProveCaseByCaseStmt) String() string {
+	panic("not implemented")
+}
+
 func (stmt *KnowPropStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordKnow)

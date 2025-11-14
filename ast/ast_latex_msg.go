@@ -404,6 +404,10 @@ func (s *ProveInEachCaseStmt) ToLatexString() string {
 	return builder.String()
 }
 
+func (s *ProveCaseByCaseStmt) ToLatexString() string {
+	return s.String()
+}
+
 func (s *KnowPropStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString(s.Prop.ToLatexString())
