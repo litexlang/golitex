@@ -369,6 +369,10 @@ func (s *PrintStmt) InlineString() string {
 	return s.String()
 }
 
+func (s *HelpStmt) InlineString() string {
+	return s.String()
+}
+
 func (s *HaveFnEqualCaseByCaseStmt) InlineString() string {
 	return s.String()
 }

@@ -116,6 +116,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 		execState = exec.byStmt(stmt)
 	case *ast.PrintStmt:
 		execState = exec.printStmt(stmt)
+	case *ast.HelpStmt:
+		execState = exec.helpStmt(stmt)
 	case *ast.HaveFnEqualCaseByCaseStmt:
 		execState = exec.haveFnEqualCaseByCaseStmt(stmt)
 	case *ast.ProveCaseByCaseStmt:
@@ -990,6 +992,20 @@ func (exec *Executor) printStmt(stmt *ast.PrintStmt) ExecRet {
 		fmt.Println(stmt.Value)
 	} else {
 		fmt.Println(stmt.Value)
+	}
+	return NewExecTrue("")
+}
+
+func (exec *Executor) helpStmt(stmt *ast.HelpStmt) ExecRet {
+	helpMsg, ok := glob.KeywordHelpMap[stmt.Keyword]
+	if !ok {
+		exec.newMsg(fmt.Sprintf("Unknown keyword: %s", stmt.Keyword))
+		return NewExecTrue("")
+	}
+	if helpMsg == "" {
+		exec.newMsg(fmt.Sprintf("Help for '%s': (description not yet available)", stmt.Keyword))
+	} else {
+		exec.newMsg(fmt.Sprintf("Help for '%s': %s", stmt.Keyword, helpMsg))
 	}
 	return NewExecTrue("")
 }
