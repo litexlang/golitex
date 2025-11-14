@@ -349,11 +349,7 @@ func (s *DefAlgoStmt) InlineString() string {
 }
 
 func (s *EvalStmt) InlineString() string {
-	strSlice := make([]string, len(s.FcsToEval))
-	for i, fc := range s.FcsToEval {
-		strSlice[i] = fc.String()
-	}
-	return fmt.Sprintf("%s %s", glob.KeywordEval, strings.Join(strSlice, ", "))
+	return fmt.Sprintf("%s(%s)", glob.KeywordEval, s.FcsToEval.String())
 }
 
 func (s *DefProveAlgoStmt) InlineString() string {

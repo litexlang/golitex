@@ -908,11 +908,7 @@ func (s *DefAlgoStmt) ToLatexString() string {
 }
 
 func (s *EvalStmt) ToLatexString() string {
-	strSlice := make([]string, len(s.FcsToEval))
-	for i, fc := range s.FcsToEval {
-		strSlice[i] = fc.ToLatexString()
-	}
-	return fmt.Sprintf("%s %s", glob.KeywordEval, strings.Join(strSlice, ", "))
+	return fmt.Sprintf("%s(%s)", glob.KeywordEval, s.FcsToEval.ToLatexString())
 }
 
 func (s *DefProveAlgoStmt) ToLatexString() string {

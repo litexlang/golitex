@@ -767,16 +767,11 @@ func (stmt *DefAlgoStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
 }
 
 func (stmt *EvalStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
-	newFcsToEval := []Fc{}
-	for _, fc := range stmt.FcsToEval {
-		newFc, err := fc.Instantiate(uniMap)
-		if err != nil {
-			return nil, err
-		}
-		newFcsToEval = append(newFcsToEval, newFc)
+	fc, err := stmt.FcsToEval.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
 	}
-
-	return NewEvalStmt(newFcsToEval, stmt.Line), nil
+	return NewEvalStmt(fc, stmt.Line), nil
 }
 
 func (stmt *SpecFactStmt) Instantiate(uniMap map[string]Fc) (Stmt, error) {
