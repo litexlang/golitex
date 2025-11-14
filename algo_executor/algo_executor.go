@@ -32,7 +32,7 @@ func NewAlgoExecutor(execEnv *litenv.Env) *AlgoExecutor {
 	return &AlgoExecutor{ExecEnv: execEnv}
 }
 
-func (algoExec *AlgoExecutor) CanBeComputed(fc ast.Fc) (ast.Fc, error) {
+func (algoExec *AlgoExecutor) CanBeComputed(fc ast.Obj) (ast.Obj, error) {
 	ok := cmp.IsNumLitFc(fc)
 	if ok {
 		return fc, nil
@@ -41,7 +41,7 @@ func (algoExec *AlgoExecutor) CanBeComputed(fc ast.Fc) (ast.Fc, error) {
 	return nil, nil
 }
 
-func (algoExec *AlgoExecutor) Compute(toCompute ast.Fc) (ast.Fc, error) {
+func (algoExec *AlgoExecutor) Compute(toCompute ast.Obj) (ast.Obj, error) {
 	_ = toCompute
 	return nil, nil
 }

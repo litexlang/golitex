@@ -21,32 +21,32 @@ import (
 	"strings"
 )
 
-type Fc interface {
+type Obj interface {
 	fc()
 	String() string
-	Instantiate(map[string]Fc) (Fc, error)
+	Instantiate(map[string]Obj) (Obj, error)
 	ToLatexString() string
-	ReplaceFc(oldFc Fc, newFc Fc) Fc // 这是必要的，因为 have fn 的 proof 里可能出现 replace fc 的情况
+	ReplaceFc(oldFc Obj, newFc Obj) Obj // 这是必要的，因为 have fn 的 proof 里可能出现 replace fc 的情况
 }
 
 func (f FcAtom) fc() {}
 func (f *FcFn) fc()  {}
 
-func (f FcAtom) ReplaceFc(oldFc Fc, newFc Fc) Fc {
+func (f FcAtom) ReplaceFc(oldFc Obj, newFc Obj) Obj {
 	if f.String() == oldFc.String() {
 		return newFc
 	}
 	return f
 }
 
-func (f *FcFn) ReplaceFc(oldFc Fc, newFc Fc) Fc {
+func (f *FcFn) ReplaceFc(oldFc Obj, newFc Obj) Obj {
 	if f.String() == oldFc.String() {
 		return newFc
 	}
 
 	var newFcFnHead = f.FnHead.ReplaceFc(oldFc, newFc)
 
-	newFcParams := make([]Fc, len(f.Params))
+	newFcParams := make([]Obj, len(f.Params))
 	for i, param := range f.Params {
 		newFcParams[i] = param.ReplaceFc(oldFc, newFc)
 	}
@@ -58,15 +58,15 @@ func (f *FcFn) ReplaceFc(oldFc Fc, newFc Fc) Fc {
 type FcAtom string
 
 type FcFn struct {
-	FnHead Fc
-	Params []Fc
+	FnHead Obj
+	Params []Obj
 }
 
-func NewFcFn(fnHead Fc, callPipe []Fc) *FcFn {
+func NewFcFn(fnHead Obj, callPipe []Obj) *FcFn {
 	return &FcFn{fnHead, callPipe}
 }
 
-func fcSliceString(params []Fc) string {
+func fcSliceString(params []Obj) string {
 	output := make([]string, len(params))
 	for i, param := range params {
 		output[i] = param.String()
@@ -92,7 +92,7 @@ func hasBuiltinOptAndToString(f *FcFn) (bool, string) {
 	return false, ""
 }
 
-func IsNumLitFcAtom(f Fc) (string, bool) {
+func IsNumLitFcAtom(f Obj) (string, bool) {
 	ptr, ok := f.(FcAtom)
 	if !ok || string(ptr) == "" {
 		return "", false
@@ -126,7 +126,7 @@ func (f FcAtom) IsBuiltinUnaryOpt() bool {
 	return (string(f)) == glob.KeySymbolMinus
 }
 
-func IsFcAtomAndHasBuiltinPropName(fc Fc) bool {
+func IsFcAtomAndHasBuiltinPropName(fc Obj) bool {
 	fcAtom, ok := fc.(FcAtom)
 	if !ok {
 		return false
@@ -135,7 +135,7 @@ func IsFcAtomAndHasBuiltinPropName(fc Fc) bool {
 	return glob.IsBuiltinInfixRelaPropSymbol(string(fcAtom))
 }
 
-func IsFcAtomAndEqualToStr(fc Fc, name string) bool {
+func IsFcAtomAndEqualToStr(fc Obj, name string) bool {
 	fcAsFcAtom, ok := fc.(FcAtom)
 	if !ok {
 		return false
@@ -144,7 +144,7 @@ func IsFcAtomAndEqualToStr(fc Fc, name string) bool {
 	return string(fcAsFcAtom) == name
 }
 
-func GetAtomsInFc(fc Fc) []FcAtom {
+func GetAtomsInFc(fc Obj) []FcAtom {
 	ret := []FcAtom{}
 
 	switch asFc := fc.(type) {
@@ -160,7 +160,7 @@ func GetAtomsInFc(fc Fc) []FcAtom {
 }
 
 // Return the name of the function if it is in the slice, otherwise return empty string
-func IsFn_WithHeadNameInSlice(fc Fc, names []string) bool {
+func IsFn_WithHeadNameInSlice(fc Obj, names []string) bool {
 	asFcFn, ok := fc.(*FcFn)
 	if !ok {
 		return false

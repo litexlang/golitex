@@ -27,7 +27,7 @@ const (
 	FcFnEnum   FcEnum = 1
 )
 
-func CmpFcType(left, right ast.Fc) (int, FcEnum, error) {
+func CmpFcType(left, right ast.Obj) (int, FcEnum, error) {
 	var knownEnum FcEnum
 	switch left.(type) {
 	case ast.FcAtom:
@@ -52,7 +52,7 @@ func CmpFcType(left, right ast.Fc) (int, FcEnum, error) {
 }
 
 // 注：像1+1=2这种字面量的比较，我在这里不比。我是比完完全全一样的
-func cmpFcLit(left, right ast.Fc) (int, error) {
+func cmpFcLit(left, right ast.Obj) (int, error) {
 	typeComp, fcEnum, err := CmpFcType(left, right)
 	if typeComp != 0 || err != nil {
 		return typeComp, err

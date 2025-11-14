@@ -363,3 +363,7 @@ func (s *ByStmt) InlineString() string {
 func (s *ProveAlgoReturnStmt) InlineString() string {
 	return s.String()
 }
+
+func (s *PrintStmt) InlineString() string {
+	return s.String()
+}

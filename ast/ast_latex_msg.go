@@ -528,7 +528,7 @@ func (s *EnumStmt) ToLatexString() string {
 	return fmt.Sprintf("$%s$", strings.ReplaceAll(builder.String(), "$", ""))
 }
 
-func intentionalSetOrIntensionalSetToLatexString(param string, parentSet Fc, proofs SpecFactPtrSlice) string {
+func intentionalSetOrIntensionalSetToLatexString(param string, parentSet Obj, proofs SpecFactPtrSlice) string {
 	var builder strings.Builder
 	builder.WriteString(" = \\{")
 	builder.WriteString(param)
@@ -920,5 +920,9 @@ func (s *ByStmt) ToLatexString() string {
 }
 
 func (s *ProveAlgoReturnStmt) ToLatexString() string {
+	return s.String()
+}
+
+func (s *PrintStmt) ToLatexString() string {
 	return s.String()
 }

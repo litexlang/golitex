@@ -77,7 +77,7 @@ func (e *Env) isUserDefinedObj(atom ast.FcAtom) bool {
 	return false
 }
 
-func (e *Env) GetIntensionalSet(fc ast.Fc) *ast.IntensionalSetStmt {
+func (e *Env) GetIntensionalSet(fc ast.Obj) *ast.IntensionalSetStmt {
 	for env := e; env != nil; env = env.Parent {
 		intensionalSet, ok := env.IntensionalSetMem[fc.String()]
 		if ok {
@@ -87,7 +87,7 @@ func (e *Env) GetIntensionalSet(fc ast.Fc) *ast.IntensionalSetStmt {
 	return nil
 }
 
-func (e *Env) GetSymbolSimplifiedValue(fc ast.Fc) ast.Fc {
+func (e *Env) GetSymbolSimplifiedValue(fc ast.Obj) ast.Obj {
 	for env := e; env != nil; env = env.Parent {
 		symbolValue, ok := env.SymbolSimplifiedValueMem[fc.String()]
 		if ok {

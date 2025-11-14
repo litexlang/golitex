@@ -18,7 +18,7 @@ import (
 	glob "golitex/glob"
 )
 
-func MakeFcIntoNumLitExpr(fc Fc) (*glob.NumLitExpr, bool, error) {
+func MakeFcIntoNumLitExpr(fc Obj) (*glob.NumLitExpr, bool, error) {
 	// fc is fcAtom
 	asStr, ok := IsNumLitFcAtom(fc)
 	if ok {

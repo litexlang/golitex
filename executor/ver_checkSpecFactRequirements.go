@@ -114,7 +114,7 @@ func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state 
 	return &newState, NewExecTrue("")
 }
 
-func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Fc, state *VerState) ExecRet {
+func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Obj, state *VerState) ExecRet {
 	if _, ok := fc.(ast.FcAtom); ok {
 		return NewExecTrue("")
 	}

@@ -20,11 +20,11 @@ import (
 	parser "golitex/parser"
 )
 
-func IsNumExprFcThenSimplify(fc ast.Fc) ast.Fc {
+func IsNumExprFcThenSimplify(fc ast.Obj) ast.Obj {
 	return parser.IsNumExprFc_SimplifyIt(fc)
 }
 
-func CmpBy_Literally_NumLit_PolynomialArith(left, right ast.Fc) (bool, string, error) {
+func CmpBy_Literally_NumLit_PolynomialArith(left, right ast.Obj) (bool, string, error) {
 	// case 0: 按字面量来比较。这必须在比较div和比较polynomial之前，因为可能比较的是 * 和 *，即比较两个函数是不是一样。这种函数的比较，跑到div和polynomial就会出问题，因为在那些地方*都会被当成有参数的东西
 	ok, err := cmpFcLiterally(left, right)
 	if err != nil {
@@ -53,7 +53,7 @@ func CmpBy_Literally_NumLit_PolynomialArith(left, right ast.Fc) (bool, string, e
 	return false, "", nil
 }
 
-func IsNumLitFc(fc ast.Fc) bool {
+func IsNumLitFc(fc ast.Obj) bool {
 	_, ok, err := ast.MakeFcIntoNumLitExpr(fc)
 	if err != nil {
 		return false
@@ -61,7 +61,7 @@ func IsNumLitFc(fc ast.Fc) bool {
 	return ok
 }
 
-func NumLitEqual_ByEval(left, right ast.Fc) (bool, bool, error) {
+func NumLitEqual_ByEval(left, right ast.Obj) (bool, bool, error) {
 	leftAsNumLitExpr, ok, err := ast.MakeFcIntoNumLitExpr(left)
 	if err != nil {
 		return false, false, err
@@ -82,7 +82,7 @@ func NumLitEqual_ByEval(left, right ast.Fc) (bool, bool, error) {
 	return true, areEqual, err
 }
 
-func SliceFcAllEqualToGivenFcBuiltinRule(valuesToBeComped *[]ast.Fc, fcToComp ast.Fc) (bool, error) {
+func SliceFcAllEqualToGivenFcBuiltinRule(valuesToBeComped *[]ast.Obj, fcToComp ast.Obj) (bool, error) {
 	for _, equalFc := range *valuesToBeComped {
 		ok, _, err := CmpBy_Literally_NumLit_PolynomialArith(equalFc, fcToComp)
 		if err != nil {

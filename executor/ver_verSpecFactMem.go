@@ -195,8 +195,8 @@ func (ver *Verifier) specFact_UniMem_atCurEnv(curEnv *env.Env, stmt *ast.SpecFac
 	return BoolErrToExecRet(ver.iterate_KnownSpecInUniFacts_applyMatch_new(stmt, searchedSpecFacts, state).ToBoolErr())
 }
 
-func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]ast.Fc, state *VerState) (map[string]ast.Fc, ExecRet) {
-	newMap := map[string]ast.Fc{}
+func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]ast.Obj, state *VerState) (map[string]ast.Obj, ExecRet) {
+	newMap := map[string]ast.Obj{}
 	for key, value := range paramArrMap {
 		if len(value) == 1 {
 			newMap[key] = value[0]

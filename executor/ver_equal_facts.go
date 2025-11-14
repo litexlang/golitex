@@ -25,7 +25,7 @@ import (
 // WARNING
 // REMARK
 // TODO: cmpFc_Builtin_Then_Decompose_Spec, fcEqualSpec 大循环本质上是有问题的，会有循环论证的风险：know p(p(1,2), 0) = 1, 则现在问 p(1,2) =1 吗？我会比较 p(1,2) = p(p(1,2), 0)，那这时候就出问题了：我因为一位位地比，所以又回到了比较 1 = p(1,2)
-func (ver *Verifier) cmpFc_Builtin_Then_Decompose_Spec(left ast.Fc, right ast.Fc, state *VerState) ExecRet {
+func (ver *Verifier) cmpFc_Builtin_Then_Decompose_Spec(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
 	ok, msg, err := cmp.CmpBy_Literally_NumLit_PolynomialArith(left, right) // 完全一样
 	if err != nil {
 		return NewExecErr(err.Error())
@@ -46,13 +46,13 @@ func (ver *Verifier) cmpFc_Builtin_Then_Decompose_Spec(left ast.Fc, right ast.Fc
 }
 
 // Iterate over all equal facts. On each equal fact, use commutative, associative, cmp rule to compare.
-func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state *VerState) ExecRet {
+func (ver *Verifier) fcEqualSpec(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
 	if verRet := ver.cmpFc_Builtin_Then_Decompose_Spec(left, right, state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
 
 	for curEnv := ver.Env; curEnv != nil; curEnv = curEnv.Parent {
-		var equalToLeftFcs, equalToRightFcs *[]ast.Fc
+		var equalToLeftFcs, equalToRightFcs *[]ast.Obj
 		var gotLeftEqualFcs, gotRightEqualFcs bool
 
 		equalToLeftFcs, gotLeftEqualFcs = curEnv.GetEqualFcs(left)
@@ -113,7 +113,7 @@ func (ver *Verifier) verTrueEqualFact_FcFnEqual_NoCheckRequirements(left, right 
 	}
 
 	// ok, err = ver.fcEqualSpec(left.FnHead, right.FnHead, state)
-	verRet := ver.verTrueEqualFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{left.FnHead, right.FnHead}, glob.InnerGenLine), state, false)
+	verRet := ver.verTrueEqualFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Obj{left.FnHead, right.FnHead}, glob.InnerGenLine), state, false)
 	if verRet.IsErr() {
 		return verRet
 	}
@@ -124,7 +124,7 @@ func (ver *Verifier) verTrueEqualFact_FcFnEqual_NoCheckRequirements(left, right 
 	for i := range left.Params {
 		// ok, err := ver.fcEqualSpec(left.Params[i], right.Params[i], state)
 
-		verRet := ver.verTrueEqualFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{left.Params[i], right.Params[i]}, glob.InnerGenLine), state, false)
+		verRet := ver.verTrueEqualFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Obj{left.Params[i], right.Params[i]}, glob.InnerGenLine), state, false)
 		if verRet.IsErr() {
 			return verRet
 		}
@@ -137,7 +137,7 @@ func (ver *Verifier) verTrueEqualFact_FcFnEqual_NoCheckRequirements(left, right 
 	return NewExecTrue("")
 }
 
-func (ver *Verifier) FcsEqualBy_Eval_ShareKnownEqualMem(left, right ast.Fc, state *VerState) ExecRet {
+func (ver *Verifier) FcsEqualBy_Eval_ShareKnownEqualMem(left, right ast.Obj, state *VerState) ExecRet {
 	for curEnv := ver.Env; curEnv != nil; curEnv = curEnv.Parent {
 		leftEqualFcs, ok := curEnv.EqualMem[left.String()]
 		if ok {

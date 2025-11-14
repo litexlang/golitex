@@ -19,7 +19,7 @@ import (
 	env "golitex/environment"
 )
 
-func (ver *Verifier) ver_In_FnTT(left ast.Fc, right *ast.FcFn, state *VerState) ExecRet {
+func (ver *Verifier) ver_In_FnTT(left ast.Obj, right *ast.FcFn, state *VerState) ExecRet {
 	leftLatestFnT := ver.Env.GetLatestFnT_GivenNameIsIn(left.String())
 	if leftLatestFnT == nil {
 		return NewExecUnknown("")
@@ -37,7 +37,7 @@ func (ver *Verifier) ver_In_FnTT(left ast.Fc, right *ast.FcFn, state *VerState) 
 		return NewExecUnknown("")
 	}
 
-	templateParamUniMap := map[string]ast.Fc{}
+	templateParamUniMap := map[string]ast.Obj{}
 	for i, param := range rightDefT.TemplateDefHeader.Params {
 		templateParamUniMap[param] = right.Params[i]
 	}
@@ -51,7 +51,7 @@ func (ver *Verifier) ver_In_FnTT(left ast.Fc, right *ast.FcFn, state *VerState) 
 }
 
 // right dom is subset of left dom
-func (ver *Verifier) leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftFnTStruct *env.FnInFnTMemItem, rightFnTDef *ast.FnTemplateDefStmt, left ast.Fc, rightFn *ast.FcFn, state *VerState) bool {
+func (ver *Verifier) leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftFnTStruct *env.FnInFnTMemItem, rightFnTDef *ast.FnTemplateDefStmt, left ast.Obj, rightFn *ast.FcFn, state *VerState) bool {
 	if len(rightFnTDef.TemplateDefHeader.Params) != len(rightFn.Params) {
 		return false
 	}
@@ -66,7 +66,7 @@ func (ver *Verifier) leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftFnTStruc
 		return false
 	}
 
-	mapLeftParamsToRightParams := map[string]ast.Fc{}
+	mapLeftParamsToRightParams := map[string]ast.Obj{}
 	for i, param := range leftFnTStruct.AsFnTStruct.Params {
 		mapLeftParamsToRightParams[param] = ast.FcAtom(instRightFnT.Params[i])
 	}
@@ -89,7 +89,7 @@ func (ver *Verifier) leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftFnTStruc
 }
 
 // all right in left
-func (ver *Verifier) f_satisfy_FnT_ThenFacts_On_FnT_Dom(f ast.Fc, fnTDefName string, templateParamUniMap map[string]ast.Fc, fnT *ast.FnTStruct, state *VerState) bool {
+func (ver *Verifier) f_satisfy_FnT_ThenFacts_On_FnT_Dom(f ast.Obj, fnTDefName string, templateParamUniMap map[string]ast.Obj, fnT *ast.FnTStruct, state *VerState) bool {
 	derivedUniFact, err := fnT.DeriveUniFact(fnTDefName, f, templateParamUniMap)
 	if err != nil {
 		return false

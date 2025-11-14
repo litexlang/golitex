@@ -310,19 +310,19 @@ func (ver *Verifier) falseInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerS
 
 // TODO 需要先证明一下它是finite set 去开始验证 len(n) = 0
 func (ver *Verifier) nothingIsInEmptySet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	verRet := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.Params[1], ast.FcAtom(glob.KeywordFiniteSet)}, stmt.Line), state)
+	verRet := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Obj{stmt.Params[1], ast.FcAtom(glob.KeywordFiniteSet)}, stmt.Line), state)
 	if verRet.IsErr() || verRet.IsUnknown() {
 		return verRet
 	}
 
-	lenOverStmtName := ast.NewFcFn(ast.FcAtom(glob.KeywordLen), []ast.Fc{stmt.Params[1]})
+	lenOverStmtName := ast.NewFcFn(ast.FcAtom(glob.KeywordLen), []ast.Obj{stmt.Params[1]})
 	equalFact := ast.EqualFact(lenOverStmtName, ast.FcAtom("0"))
 	verRet = ver.VerFactStmt(equalFact, state)
 	return verRet
 }
 
 func (ver *Verifier) trueExistInSt(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	pureInFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.Params[1], stmt.Params[2]}, stmt.Line)
+	pureInFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Obj{stmt.Params[1], stmt.Params[2]}, stmt.Line)
 	verRet := ver.VerFactStmt(pureInFact, state)
 	return verRet
 }
@@ -341,7 +341,7 @@ func (ver *Verifier) objNotInSetWhenAllItemsInThatSetAreNotEqualToIt(stmt *ast.S
 		return NewExecUnknown("")
 	}
 
-	notAllItemsInThatSetAreNotEqualToIt := ast.NewUniFact([]string{"x"}, []ast.Fc{stmt.Params[1]}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{ast.FcAtom("x"), stmt.Params[0]}, stmt.Line)}, stmt.Line)
+	notAllItemsInThatSetAreNotEqualToIt := ast.NewUniFact([]string{"x"}, []ast.Obj{stmt.Params[1]}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Obj{ast.FcAtom("x"), stmt.Params[0]}, stmt.Line)}, stmt.Line)
 
 	verRet := ver.VerFactStmt(notAllItemsInThatSetAreNotEqualToIt, state)
 	return verRet
@@ -382,7 +382,7 @@ func (ver *Verifier) verInSetProduct(stmt *ast.SpecFactStmt, state *VerState) Ex
 	return NewExecTrue("")
 }
 
-func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Fc, fnFcFn *ast.FcFn, state *VerState) ExecRet {
+func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FcFn, state *VerState) ExecRet {
 	ver.newEnv(ver.Env)
 	defer ver.deleteEnv_DeleteMsg()
 
@@ -397,12 +397,12 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Fc, fnFcFn *ast.FcFn, state *Ve
 	for i := 0; i < len(leftIsInWhichFnTT.AsFnTStruct.Params); i++ {
 		randomNames = append(randomNames, ver.Env.GenerateUndeclaredRandomName())
 	}
-	randomAtoms := []ast.Fc{}
+	randomAtoms := []ast.Obj{}
 	for i := 0; i < len(leftIsInWhichFnTT.AsFnTStruct.Params); i++ {
 		randomAtoms = append(randomAtoms, ast.FcAtom(randomNames[i]))
 	}
 
-	uniMap := map[string]ast.Fc{}
+	uniMap := map[string]ast.Obj{}
 	for i := 0; i < len(leftIsInWhichFnTT.AsFnTStruct.Params); i++ {
 		uniMap[leftIsInWhichFnTT.AsFnTStruct.Params[i]] = ast.FcAtom(randomNames[i])
 	}
@@ -501,7 +501,7 @@ func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactS
 	return ok
 }
 
-func (ver *Verifier) getRetSetOfFcFnByUsingItsFnT(fcFn *ast.FcFn) (ast.Fc, error) {
+func (ver *Verifier) getRetSetOfFcFnByUsingItsFnT(fcFn *ast.FcFn) (ast.Obj, error) {
 	// f(a)(b,c)(e,d,f) 返回 {f, f(a), f(a)(b,c), f(a)(b,c)(e,d,f)}, {nil, {a}, {b,c}, {e,d,f}}
 	fnHeadChain_AndItSelf, _ := ast.GetFnHeadChain_AndItSelf(fcFn)
 

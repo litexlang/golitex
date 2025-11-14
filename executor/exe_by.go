@@ -61,7 +61,7 @@ func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) ExecRet {
 		if exec.Env.IsAtomDeclared(ast.FcAtom(param), map[string]struct{}{}) {
 			continue
 		} else {
-			execState := exec.defLetStmt(ast.NewDefLetStmt([]string{param}, []ast.Fc{ast.FcAtom(glob.KeywordObj)}, []ast.FactStmt{ast.NewEqualFact(ast.FcAtom(param), stmt.Params[i])}, stmt.Line))
+			execState := exec.defLetStmt(ast.NewDefLetStmt([]string{param}, []ast.Obj{ast.FcAtom(glob.KeywordObj)}, []ast.FactStmt{ast.NewEqualFact(ast.FcAtom(param), stmt.Params[i])}, stmt.Line))
 			if execState.IsNotTrue() {
 				return execState
 			}
@@ -78,7 +78,7 @@ func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) ExecRet {
 	// 	paramsValues = append(paramsValues, value)
 	// }
 
-	uniMap := map[string]ast.Fc{}
+	uniMap := map[string]ast.Obj{}
 	for i, param := range proveAlgoDef.Params {
 		uniMap[param] = stmt.Params[i]
 	}
@@ -109,7 +109,7 @@ func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) ExecRet {
 // 	return value, NewExecTrue("")
 // }
 
-func (exec *Executor) runAlgoStmtsWhenBy(algoStmts ast.AlgoStmtSlice, paramsValues []ast.Fc) ExecRet {
+func (exec *Executor) runAlgoStmtsWhenBy(algoStmts ast.AlgoStmtSlice, paramsValues []ast.Obj) ExecRet {
 	for _, stmt := range algoStmts {
 		switch asStmt := stmt.(type) {
 		case *ast.ProveAlgoReturnStmt:
@@ -132,7 +132,7 @@ func (exec *Executor) runAlgoStmtsWhenBy(algoStmts ast.AlgoStmtSlice, paramsValu
 	return NewExecTrue("")
 }
 
-func (exec *Executor) algoIfStmtWhenBy(stmt *ast.AlgoIfStmt, paramsValues []ast.Fc) ExecRet {
+func (exec *Executor) algoIfStmtWhenBy(stmt *ast.AlgoIfStmt, paramsValues []ast.Obj) ExecRet {
 	exec.NewEnv(exec.Env)
 	defer exec.deleteEnvAndGiveUpMsgs()
 
