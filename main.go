@@ -19,7 +19,6 @@ import (
 	"fmt"
 	glob "golitex/glob"
 	pipeline "golitex/pipeline"
-	sys "golitex/sys"
 	"os"
 	"path/filepath"
 	"strings"
@@ -62,7 +61,7 @@ func main() {
 	// Handle combined -latex and -e
 	if *elatexFlag != "" {
 		// 处理转义序列
-		ret, err := sys.CompileCodeToLatex(glob.RemoveWindowsCarriage(*elatexFlag))
+		ret, err := pipeline.CompileCodeToLatex(glob.RemoveWindowsCarriage(*elatexFlag))
 		if err != nil || ret.IsNotTrue() {
 			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)
@@ -92,7 +91,7 @@ func main() {
 	}
 
 	if *latexFlag != "" {
-		ret, err := sys.CompileFileToLatex(glob.RemoveWindowsCarriage(*latexFlag))
+		ret, err := pipeline.CompileFileToLatex(glob.RemoveWindowsCarriage(*latexFlag))
 		if err != nil || ret.IsNotTrue() {
 			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)

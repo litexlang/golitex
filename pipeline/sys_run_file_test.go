@@ -12,17 +12,16 @@
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
-package litex_sys
+package litex_pipeline
 
 import (
 	"fmt"
-	pipeline "golitex/pipeline"
 	"testing"
 )
 
 func Test_File(t *testing.T) {
 	fileName := "../examples/test_codes/tmp.lit"
-	ret := pipeline.RunFile(fileName)
+	ret := RunFile(fileName)
 	if ret.IsNotTrue() {
 		t.Errorf("failed to run file %s\n", fileName)
 	}
