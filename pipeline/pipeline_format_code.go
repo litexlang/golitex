@@ -22,15 +22,15 @@ import (
 	"strings"
 )
 
-func FormatCode(path string) (string, glob.SysSignal, error) {
+func FormatCode(path string) (glob.GlobRet, error) {
 	content, err := os.ReadFile(path)
 	if err != nil {
-		return fmt.Sprintf("failed to read file %s: %s", path, err.Error()), glob.SysSignalSystemError, err
+		return glob.NewGlobErr(fmt.Sprintf("failed to read file %s: %s", path, err.Error())), err
 	}
 
 	topStmtSlice, err := parser.ParseSourceCode(string(content))
 	if err != nil {
-		return "", glob.SysSignalParseError, err
+		return glob.NewGlobErr(err.Error()), err
 	}
 
 	stmtStrSlice := []string{}
@@ -41,7 +41,7 @@ func FormatCode(path string) (string, glob.SysSignal, error) {
 	// 把 code 写到 path 里
 	err = os.WriteFile(path, []byte((strings.Join(stmtStrSlice, "\n\n"))), 0644)
 	if err != nil {
-		return fmt.Sprintf("failed to write file %s: %s", path, err.Error()), glob.SysSignalSystemError, err
+		return glob.NewGlobErr(fmt.Sprintf("failed to write file %s: %s", path, err.Error())), err
 	}
-	return fmt.Sprintf("formatted code written to %s", path), glob.SysSignalTrue, nil
+	return glob.NewGlobTrue(fmt.Sprintf("formatted code written to %s", path)), nil
 }
