@@ -2178,7 +2178,7 @@ func (tb *tokenBlock) equalsFactStmt() (*ast.EqualsFactStmt, error) {
 		}
 
 		if tb.header.ExceedEnd() {
-			params := make(ast.FcSlice, 0, len(tb.body))
+			params := make(ast.ObjSlice, 0, len(tb.body))
 			for _, param := range tb.body {
 				param, err := param.RawFc()
 				if err != nil {
@@ -2532,7 +2532,7 @@ func (tb *tokenBlock) haveObjEqualStmt() (*ast.HaveObjEqualStmt, error) {
 	return ast.NewHaveObjEqualStmt(objectNames, objectEqualTos, setSlice, tb.line), nil
 }
 
-func (tb *tokenBlock) haveFnEqualStmt() (*ast.HaveFnEqualStmt, error) {
+func (tb *tokenBlock) haveFnEqualStmt() (ast.Stmt, error) {
 	err := tb.header.skip(glob.KeywordHave)
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -2558,12 +2558,38 @@ func (tb *tokenBlock) haveFnEqualStmt() (*ast.HaveFnEqualStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	equalTo, err := tb.RawFc()
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+	if tb.header.ExceedEnd() {
+		equalTo, err := tb.RawFc()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		return ast.NewHaveFnEqualStmt(defHeader, retSet, equalTo, tb.line), nil
+	} else {
+		caseByCaseFacts := []*ast.SpecFactStmt{}
+		caseByCaseEqualTo := []ast.Obj{}
+		for _, block := range tb.body {
+			err := block.header.skip(glob.KeywordCase)
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			curStmt, err := block.specFactStmt()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			err = block.header.skip(glob.KeySymbolColon)
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			obj, err := block.RawFc()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			caseByCaseEqualTo = append(caseByCaseEqualTo, obj)
+			caseByCaseFacts = append(caseByCaseFacts, curStmt)
+		}
 
-	return ast.NewHaveFnEqualStmt(defHeader, retSet, equalTo, tb.line), nil
+		return ast.NewHaveFnCaseByCaseStmt(defHeader, retSet, caseByCaseFacts, caseByCaseEqualTo, tb.line), nil
+	}
 }
 
 func (tb *tokenBlock) haveFnLiftStmt() (*ast.HaveFnLiftStmt, error) {

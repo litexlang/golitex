@@ -19,7 +19,7 @@ import "fmt"
 func (stmt *FnTStruct) Instantiate(uniMap map[string]Obj) (*FnTStruct, error) {
 	var err error
 
-	newParamSets := make(FcSlice, len(stmt.ParamSets))
+	newParamSets := make(ObjSlice, len(stmt.ParamSets))
 	for i := range stmt.ParamSets {
 		newParamSets[i], err = stmt.ParamSets[i].Instantiate(uniMap)
 		if err != nil {

@@ -895,7 +895,7 @@ func (stmt *HaveFnStmt) String() string {
 	return builder.String()
 }
 
-func (fc FcSlice) String() string {
+func (fc ObjSlice) String() string {
 	output := make([]string, len(fc))
 	for i, param := range fc {
 		output[i] = param.String()
@@ -1187,5 +1187,27 @@ func (stmt *PrintStmt) String() string {
 	builder.WriteString(stmt.Value)
 	builder.WriteString(glob.KeySymbolDoubleQuote)
 	builder.WriteString(glob.KeySymbolRightBrace)
+	return builder.String()
+}
+
+func (stmt *HaveFnEqualCaseByCaseStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordHave)
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeywordFn)
+	builder.WriteString(stmt.DefHeader.StringWithoutColonAtEnd())
+	builder.WriteString(" ")
+	builder.WriteString(stmt.RetSet.String())
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeySymbolEqual)
+	builder.WriteByte('\n')
+	for i, fact := range stmt.CaseByCaseFacts {
+		builder.WriteString(glob.KeywordCase)
+		builder.WriteString(" ")
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 1))
+		builder.WriteString(glob.KeySymbolColon)
+		builder.WriteString(stmt.CaseByCaseEqualTo[i].String())
+		builder.WriteByte('\n')
+	}
 	return builder.String()
 }

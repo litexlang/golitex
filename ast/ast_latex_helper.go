@@ -89,7 +89,7 @@ func fcParamsLatexString(params []Obj) string {
 	return strings.Join(paramStrSlice, ", ")
 }
 
-func (s FcSlice) fcSliceToLatexStringSlice() []string {
+func (s ObjSlice) fcSliceToLatexStringSlice() []string {
 	fcStrSlice := make([]string, len(s))
 	for i := range len(s) {
 		fcStrSlice[i] = s[i].ToLatexString()

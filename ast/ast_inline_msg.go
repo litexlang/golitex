@@ -367,3 +367,7 @@ func (s *ProveAlgoReturnStmt) InlineString() string {
 func (s *PrintStmt) InlineString() string {
 	return s.String()
 }
+
+func (s *HaveFnEqualCaseByCaseStmt) InlineString() string {
+	return s.String()
+}

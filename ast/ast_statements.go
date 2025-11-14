@@ -18,12 +18,12 @@ type FactStmtSlice []FactStmt
 type StmtSlice []Stmt
 type SpecFactPtrSlice []*SpecFactStmt
 type StrSlice []string
-type FcSlice []Obj
+type ObjSlice []Obj
 type ReversibleFacts []Spec_OrFact
 
 type DefLetStmt struct {
 	Objs    StrSlice
-	ObjSets FcSlice
+	ObjSets ObjSlice
 	Facts   FactStmtSlice
 
 	Line uint
@@ -32,7 +32,7 @@ type DefLetStmt struct {
 type DefHeader struct {
 	Name      FcAtom
 	Params    StrSlice
-	ParamSets FcSlice
+	ParamSets ObjSlice
 }
 
 type DefPropStmt struct {
@@ -58,7 +58,7 @@ type DefExistPropStmtBody struct {
 type DefExistPropStmt struct {
 	DefBody        *DefExistPropStmtBody
 	ExistParams    StrSlice
-	ExistParamSets FcSlice
+	ExistParamSets ObjSlice
 
 	Line uint
 }
@@ -72,7 +72,7 @@ type DefFnStmt struct {
 
 type UniFactStmt struct {
 	Params    StrSlice
-	ParamSets FcSlice
+	ParamSets ObjSlice
 	DomFacts  FactStmtSlice
 	ThenFacts FactStmtSlice
 
@@ -89,7 +89,7 @@ type UniFactWithIffStmt struct {
 type SpecFactStmt struct {
 	TypeEnum SpecFactEnum
 	PropName FcAtom
-	Params   FcSlice
+	Params   ObjSlice
 
 	Line uint
 }
@@ -131,7 +131,7 @@ type KnowPropStmt struct {
 type ClaimExistPropStmt struct {
 	ExistPropWithoutDom *DefExistPropStmt
 	Proofs              StmtSlice
-	HaveObj             FcSlice
+	HaveObj             ObjSlice
 
 	Line uint
 }
@@ -174,7 +174,7 @@ type ProveStmt struct {
 // s := {} 表示 这是个空集
 type EnumStmt struct {
 	CurSet Obj
-	Items  FcSlice
+	Items  ObjSlice
 
 	Line uint
 }
@@ -204,7 +204,7 @@ type ProveByEnumStmt struct {
 
 type HaveObjInNonEmptySetStmt struct {
 	Objs    StrSlice
-	ObjSets FcSlice
+	ObjSets ObjSlice
 
 	Line uint
 }
@@ -250,7 +250,7 @@ type NamedUniFactStmt struct {
 }
 
 type EqualsFactStmt struct {
-	Params FcSlice
+	Params ObjSlice
 
 	Line uint
 }
@@ -277,7 +277,7 @@ type FnTemplateDefStmt struct {
 
 type FnTStruct struct {
 	Params    StrSlice
-	ParamSets FcSlice
+	ParamSets ObjSlice
 	RetSet    Obj
 	DomFacts  FactStmtSlice
 	ThenFacts FactStmtSlice
@@ -305,8 +305,8 @@ type ProveByInductionStmt struct {
 
 type HaveObjEqualStmt struct {
 	ObjNames    StrSlice
-	ObjEqualTos FcSlice
-	ObjSets     FcSlice
+	ObjEqualTos ObjSlice
+	ObjSets     ObjSlice
 
 	Line uint
 }
@@ -321,11 +321,11 @@ type HaveFnEqualStmt struct {
 	Line uint
 }
 
-type HaveFnCaseByCaseStmt struct {
+type HaveFnEqualCaseByCaseStmt struct {
 	DefHeader         *DefHeader
 	RetSet            Obj
-	CaseByCaseFacts   []FactStmtSlice
-	CaseByCaseEqualTo []Obj
+	CaseByCaseFacts   SpecFactPtrSlice
+	CaseByCaseEqualTo ObjSlice
 
 	Line uint
 }
@@ -333,7 +333,7 @@ type HaveFnCaseByCaseStmt struct {
 type HaveFnLiftStmt struct {
 	FnName                     string
 	Opt                        Obj
-	DomainOfEachParamOfGivenFn FcSlice
+	DomainOfEachParamOfGivenFn ObjSlice
 
 	Line uint
 }
@@ -428,7 +428,7 @@ type DefProveAlgoStmt struct {
 
 type ByStmt struct {
 	ProveAlgoName  string
-	Params         FcSlice
+	Params         ObjSlice
 	ThenFactsOrNil FactStmtSlice
 
 	Line uint
