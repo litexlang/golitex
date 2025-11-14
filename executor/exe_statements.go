@@ -118,6 +118,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 		execState = exec.printStmt(stmt)
 	case *ast.HaveFnEqualCaseByCaseStmt:
 		execState = exec.haveFnEqualCaseByCaseStmt(stmt)
+	case *ast.ProveCaseByCaseStmt:
+		execState = exec.proveCaseByCaseStmt(stmt)
 	default:
 		panic(fmt.Sprintf("unknown statement type: %T", stmt))
 	}
@@ -352,6 +354,73 @@ func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEach
 		return execState, fmt.Errorf("prove in each case statement error: failed to verify then facts:\n%s\n%s", failedFact, err)
 	} else if execState.IsUnknown() {
 		return execState, fmt.Errorf("prove in each case statement error: failed to verify then facts:\n%s", failedFact)
+	}
+
+	return NewExecTrue(""), nil
+}
+
+func (exec *Executor) proveCaseByCaseStmt(stmt *ast.ProveCaseByCaseStmt) ExecRet {
+	isSuccess := false
+	defer func() {
+		exec.newMsg("\n")
+		if isSuccess {
+			exec.appendNewMsgAtBegin("is true\n")
+		} else {
+			exec.appendNewMsgAtBegin("is unknown\n")
+		}
+		exec.appendNewMsgAtBegin(stmt.String())
+	}()
+
+	// Create OrStmt from CaseFacts
+	orFact := ast.NewOrStmt(stmt.CaseFacts, stmt.Line)
+
+	// Verify that the OR fact is true (fact1 or fact2 ... is true)
+	execState := exec.factStmt(orFact)
+	if execState.IsNotTrue() {
+		exec.newMsg(fmt.Sprintf("%s is unknown", orFact.String()))
+		return execState
+	}
+
+	// Prove each case
+	for i := range stmt.CaseFacts {
+		execState, err := exec.execProofBlockForCaseByCase(i, stmt)
+		if notOkExec(execState, err) {
+			return execState
+		}
+	}
+
+	// emit then fact
+	execState = exec.knowStmt(ast.NewKnowStmt(stmt.ThenFacts.ToCanBeKnownStmtSlice(), stmt.Line))
+	if execState.IsNotTrue() {
+		return execState
+	}
+
+	isSuccess = true
+	return NewExecTrue("")
+}
+
+func (exec *Executor) execProofBlockForCaseByCase(index int, stmt *ast.ProveCaseByCaseStmt) (ExecRet, error) {
+	exec.NewEnv(exec.Env)
+	defer exec.deleteEnvAndRetainMsg()
+
+	caseStmt := stmt.CaseFacts[index]
+
+	err := exec.Env.NewFact(caseStmt)
+	if err != nil {
+		return NewExecErr(""), err
+	}
+
+	execState := exec.execStmtsAtCurEnv(stmt.Proofs[index])
+	if execState.IsNotTrue() {
+		return execState, fmt.Errorf(execState.String())
+	}
+
+	// verify thenFacts are true
+	execState, failedFact, err := exec.verifyFactsAtCurEnv(stmt.ThenFacts, Round0NoMsg)
+	if err != nil {
+		return execState, fmt.Errorf("prove case by case statement error: failed to verify then facts:\n%s\n%s", failedFact, err)
+	} else if execState.IsUnknown() {
+		return execState, fmt.Errorf("prove case by case statement error: failed to verify then facts:\n%s", failedFact)
 	}
 
 	return NewExecTrue(""), nil
