@@ -111,7 +111,7 @@ func RunREPLInTerminal(version string) {
 
 		// Have to trim space because there is \n at the end of code
 		if strings.TrimSpace(code) == glob.KeywordExit {
-			fmt.Fprintf(writer, glob.REPLGoodbyeMessage)
+			fmt.Fprintf(writer, "---\nGoodbye! :)\n")
 			return
 		}
 
@@ -181,7 +181,7 @@ func RunSourceCodeInExecutor(curExec *exe.Executor, code string) glob.GlobRet {
 	msgOfTopStatements := []string{}
 
 	for _, topStmt := range topStmtSlice {
-		ret := RunTopStmtInPipelineAsExecRet(curExec, topStmt)
+		ret := RunTopStmtInPipeline(curExec, topStmt)
 		msgOfTopStatements = append(msgOfTopStatements, curExec.GetMsgAsStr0ToEnd())
 		msgOfTopStatements = append(msgOfTopStatements, ret.GetMsgs()...)
 
@@ -200,25 +200,13 @@ func RunSourceCodeInExecutor(curExec *exe.Executor, code string) glob.GlobRet {
 }
 
 func RunTopStmtInPipeline(curExec *exe.Executor, topStmt ast.Stmt) glob.GlobRet {
-	return RunTopStmtInPipelineAsExecRet(curExec, topStmt)
-}
-
-func RunTopStmtInPipelineAsExecRet(curExec *exe.Executor, topStmt ast.Stmt) glob.GlobRet {
 	switch topStmt := topStmt.(type) {
 	case *ast.ImportDirStmt:
 		return RunImportDirStmtInExec(curExec, topStmt)
 	case *ast.ImportFileStmt:
 		return RunImportFileStmtInExec(curExec, topStmt)
 	default:
-		execRet := curExec.Stmt(topStmt)
-		msgs := execRet.GetMsgs()
-		if execRet.IsErr() {
-			return glob.NewGlobErrWithMsgs(msgs)
-		}
-		if execRet.IsUnknown() {
-			return glob.NewGlobUnknownWithMsgs(msgs)
-		}
-		return glob.NewGlobTrueWithMsgs(msgs)
+		return curExec.Stmt(topStmt).ToGlobRet()
 	}
 }
 

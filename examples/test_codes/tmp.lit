@@ -1,1 +1,22 @@
-(1 + 1) = 2
+exist_prop x s1 st exist_preimage(s1, s2 set, f fn(x s1) s2, y s2):
+    f(x) = y
+
+fn range_of_fn(s1 set, s2 set, f fn(x s1) s2) set:
+    forall y range_of_fn(s1, s2, f):
+        $exist_preimage(s1, s2, f, y)
+    forall y s2:
+        $exist_preimage(s1, s2, f, y)
+        =>:
+            y $in range_of_fn(s1, s2, f)
+
+know:
+    forall s1 set, s2 set, f fn(x s1) s2, y s2:
+        $exist_preimage(s1, s2, f, y)
+        =>:
+            y $in range_of_fn(s1, s2, f)
+
+have fn id_R(x R) R = x
+exist 10 st $exist_preimage(R, R, id_R, 10)
+R $in set, R $in set, id_R $in fn(R) R, 10 $in R
+$exist_preimage(R, R, id_R, 10)
+$tmp(R, R, id_R, 10)
