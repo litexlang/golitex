@@ -16,17 +16,16 @@ package litex_sys
 
 import (
 	"fmt"
+	pipeline "golitex/pipeline"
 	"testing"
 )
 
 func Test_File(t *testing.T) {
 	fileName := "../examples/test_codes/tmp.lit"
-	// msg, signal, err := RunFile(fileName)
-	ret, elapsed, err := RunFileWithPipelineRunner(fileName)
-	if err != nil {
+	ret := pipeline.RunFile(fileName)
+	if ret.IsNotTrue() {
 		t.Errorf("failed to run file %s\n", fileName)
 	}
 	fmt.Println(ret.String())
 	fmt.Println(ret.GetREPLMsg())
-	fmt.Printf("elapsed time: %s\n", elapsed)
 }
