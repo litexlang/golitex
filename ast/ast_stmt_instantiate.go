@@ -460,6 +460,40 @@ func (stmt *ProveInEachCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt, error
 	return NewProveInEachCaseStmt(newOrFact.(*OrStmt), newThenFacts, newProofs, stmt.Line), nil
 }
 
+func (stmt *ProveCaseByCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+	newCaseFacts := []*SpecFactStmt{}
+	for _, caseFact := range stmt.CaseFacts {
+		newCaseFact, err := caseFact.InstantiateFact(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newCaseFacts = append(newCaseFacts, newCaseFact.(*SpecFactStmt))
+	}
+
+	newThenFacts := []FactStmt{}
+	for _, thenFact := range stmt.ThenFacts {
+		newThenFact, err := thenFact.InstantiateFact(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newThenFacts = append(newThenFacts, newThenFact)
+	}
+
+	newProofs := []StmtSlice{}
+	for _, proof := range stmt.Proofs {
+		newProof := StmtSlice{}
+		for _, stmt := range proof {
+			newStmt, err := stmt.Instantiate(uniMap)
+			if err != nil {
+				return nil, err
+			}
+			newProof = append(newProof, newStmt)
+		}
+		newProofs = append(newProofs, newProof)
+	}
+	return NewProveCaseByCaseStmt(newCaseFacts, newThenFacts, newProofs, stmt.Line), nil
+}
+
 func (stmt *ImportDirStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return stmt, nil
 }

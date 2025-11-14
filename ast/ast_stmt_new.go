@@ -72,6 +72,10 @@ func NewProveInEachCaseStmt(orFact *OrStmt, thenFacts []FactStmt, proofs []StmtS
 	return &ProveInEachCaseStmt{orFact, thenFacts, proofs, line}
 }
 
+func NewProveCaseByCaseStmt(caseFacts []*SpecFactStmt, thenFacts []FactStmt, proofs []StmtSlice, line uint) *ProveCaseByCaseStmt {
+	return &ProveCaseByCaseStmt{caseFacts, thenFacts, proofs, line}
+}
+
 func NewKnowPropStmt(prop *DefPropStmt, line uint) *KnowPropStmt {
 	return &KnowPropStmt{prop, line}
 }

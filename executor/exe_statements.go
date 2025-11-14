@@ -116,6 +116,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 		execState = exec.byStmt(stmt)
 	case *ast.PrintStmt:
 		execState = exec.printStmt(stmt)
+	case *ast.HaveFnEqualCaseByCaseStmt:
+		execState = exec.haveFnEqualCaseByCaseStmt(stmt)
 	default:
 		panic(fmt.Sprintf("unknown statement type: %T", stmt))
 	}
@@ -921,4 +923,14 @@ func (exec *Executor) printStmt(stmt *ast.PrintStmt) ExecRet {
 		fmt.Println(stmt.Value)
 	}
 	return NewExecTrue("")
+}
+
+func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseStmt) ExecRet {
+	// 所有的case覆盖了整个domain
+
+	// 每个case没有overlap
+
+	// 每个case的返回值都符合fn的retSet
+
+	panic("not implemented")
 }

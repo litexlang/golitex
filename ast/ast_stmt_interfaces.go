@@ -34,6 +34,7 @@ func (s *KnowFactStmt) stmt()                            {}
 func (s *DefExistPropStmt) stmt()                        {}
 func (s *HaveObjStStmt) stmt()                           {}
 func (s *ProveInEachCaseStmt) stmt()                     {}
+func (s *ProveCaseByCaseStmt) stmt()                     {}
 func (s *KnowPropStmt) stmt()                            {}
 func (s *OrStmt) stmt()                                  {}
 func (s *ImportDirStmt) stmt()                           {}
@@ -84,6 +85,7 @@ func (s *KnowFactStmt) algoStmt()                        {}
 func (s *DefExistPropStmt) algoStmt()                    {}
 func (s *HaveObjStStmt) algoStmt()                       {}
 func (s *ProveInEachCaseStmt) algoStmt()                 {}
+func (s *ProveCaseByCaseStmt) algoStmt()                 {}
 func (s *KnowPropStmt) algoStmt()                        {}
 func (s *OrStmt) algoStmt()                              {}
 func (s *ImportDirStmt) algoStmt()                       {}
@@ -134,6 +136,7 @@ func (s *KnowFactStmt) GetLine() uint                    { return s.Line }
 func (s *DefExistPropStmt) GetLine() uint                { return s.Line }
 func (s *HaveObjStStmt) GetLine() uint                   { return s.Line }
 func (s *ProveInEachCaseStmt) GetLine() uint             { return s.Line }
+func (s *ProveCaseByCaseStmt) GetLine() uint             { return s.Line }
 func (s *KnowPropStmt) GetLine() uint                    { return s.Line }
 func (s *OrStmt) GetLine() uint                          { return s.Line }
 func (s *ImportDirStmt) GetLine() uint                   { return s.Line }
