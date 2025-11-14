@@ -53,7 +53,7 @@ import (
 func RunRepo(path string) (glob.GlobRet, error) {
 	// glob.CurrentTaskDirName = path
 	// 运行里面的main.lit
-	content, err := os.ReadFile(filepath.Join(path, glob.PkgEntranceFileNameMainDotLit))
+	content, err := os.ReadFile(filepath.Join(path, glob.MainDotLit))
 	if err != nil {
 		return glob.NewGlobErr(err.Error()), err
 	}
@@ -66,16 +66,13 @@ func RunRepo(path string) (glob.GlobRet, error) {
 // 	return ret.String(), ret.SysSignal(), ret.Error()
 // }
 
-func RunREPLInTerminal(version string) {
-	pipeline.RunREPLInTerminal(version)
-}
+// func RunREPLInTerminal(version string) {
+// 	pipeline.RunREPLInTerminal(version)
+// }
 
-func RunMainMsg(ret glob.GlobRet) string {
-	if ret.IsTrue() {
-		return glob.REPLSuccessMessage
-	}
-	return glob.REPLFailedMessage
-}
+// func RunMainMsg(ret glob.GlobRet) string {
+
+// }
 
 // func RunFilesInRepo(repo string) error {
 // 	files, err := os.ReadDir(repo)
