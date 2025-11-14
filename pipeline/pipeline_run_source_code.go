@@ -15,161 +15,29 @@
 package litex_pipeline
 
 import (
-	"bufio"
 	"fmt"
 	ast "golitex/ast"
 	exe "golitex/executor"
 	glob "golitex/glob"
 	parser "golitex/parser"
-	"io"
 	"os"
 	"path/filepath"
-	"strconv"
-	"strings"
-	"time"
 )
 
-func ExecuteCodeAndReturnMessageSliceGivenSettings(code string, executor *exe.Executor) glob.GlobRet {
-	topStmtSlice, err := parser.ParseSourceCode(code)
+func RunFile(path string) glob.GlobRet {
+	content, err := os.ReadFile(path)
 	if err != nil {
 		return glob.NewGlobErr(err.Error())
 	}
-
-	msgOfTopStatements := []string{}
-
-	for _, topStmt := range topStmtSlice {
-		execState := executor.Stmt(topStmt)
-		msgOfTopStatements = append(msgOfTopStatements, executor.GetMsgAsStr0ToEnd())
-
-		if execState.IsErr() {
-			// 将消息添加到 globRet 中
-			allMsgs := append(msgOfTopStatements, execState.GetMsgs()...)
-			return glob.NewGlobErrWithMsgs(allMsgs)
-		}
-
-		if execState.IsUnknown() {
-			// 将消息添加到 globRet 中，并转换为错误
-			allMsgs := append(msgOfTopStatements, execState.GetMsgs()...)
-			allMsgs = append(allMsgs, "execution failed: unknown factual statement")
-			return glob.NewGlobErrWithMsgs(allMsgs)
-		}
-	}
-
-	return glob.NewGlobTrueWithMsgs(msgOfTopStatements)
+	return RunSourceCode(string(content))
 }
 
-func printMessagesToWriter(writer io.Writer, msg []string) {
-	if len(msg) > 0 {
-		// fmt.Printf("\n")
-		// 如果有连续两行是空白的换行那不允许多个空行出现
-		isConsecutiveEmptyLine := true
-		var builder strings.Builder
-
-		for _, m := range msg {
-			// 让m的最后一位是换行符
-			m = strings.TrimRight(m, " \t\n")
-			if strings.TrimSpace(m) == "" {
-				if isConsecutiveEmptyLine {
-					continue
-				}
-				isConsecutiveEmptyLine = true
-			} else {
-				isConsecutiveEmptyLine = false
-				builder.WriteString(m)
-			}
-			builder.WriteString("\n")
-		}
-
-		result := builder.String()
-		if len(result) > 0 {
-			// Remove the trailing newline
-			fmt.Fprintln(writer, result[:len(result)-1])
-		}
-	}
-}
-
-func RunREPLInTerminal(version string) {
+func RunSourceCode(code string) glob.GlobRet {
 	executor, err := InitPipelineExecutor()
 	if err != nil {
-		fmt.Println("Error initializing pipeline:", err)
-		return
+		return glob.NewGlobErr(err.Error())
 	}
-
-	reader := bufio.NewReader(os.Stdin)
-	writer := os.Stdout
-
-	year := time.Now().Year()
-
-	fmt.Fprintf(writer, "Litex %s Copyright (C) 2024-%s litexlang.com Type 'help' for help\nNOT READY FOR PRODUCTION USE\n", version, strconv.Itoa(year))
-
-	for {
-		code, err := listenOneStatementFromTerminal(reader, writer)
-		if err != nil {
-			fmt.Fprintf(writer, "[Error] %s\n", err)
-			continue
-		}
-
-		// Have to trim space because there is \n at the end of code
-		if strings.TrimSpace(code) == glob.KeywordExit {
-			fmt.Fprintf(writer, "---\nGoodbye! :)\n")
-			return
-		}
-
-		ret := ExecuteCodeAndReturnMessageSliceGivenSettings(code, executor)
-		if ret.IsNotTrue() {
-			msgStr := ret.String()
-			if msgStr != "" {
-				printMessagesToWriter(writer, strings.Split(msgStr, "\n"))
-			}
-			fmt.Fprintf(writer, glob.REPLFailedMessage)
-			continue
-		}
-
-		msgStr := ret.String()
-		if msgStr != "" {
-			printMessagesToWriter(writer, strings.Split(msgStr, "\n"))
-		}
-		fmt.Fprintf(writer, glob.REPLSuccessMessage)
-	}
-}
-
-func listenOneStatementFromTerminal(reader *bufio.Reader, writer io.Writer) (string, error) {
-	var input strings.Builder
-	fmt.Fprint(writer, ">>> ")
-	currentScopeDepth := 0
-
-	for {
-		currentLineStr, err := reader.ReadString('\n')
-		if err != nil {
-			return "", fmt.Errorf("error reading input: %s", err)
-		}
-
-		currentLineStr = glob.RemoveWindowsCarriage(currentLineStr)
-		trimmedLine := strings.TrimRight(currentLineStr, " \t\n")
-
-		if currentScopeDepth > 0 {
-			if trimmedLine == "" {
-				break
-			}
-
-			input.WriteString("    ")
-			input.WriteString(currentLineStr)
-
-			fmt.Fprint(writer, "... ") // 为下一行准备提示符
-
-		} else {
-			input.WriteString(currentLineStr)
-
-			// input 的非空白的最后一位 不是 :
-			if trimmedLine == "" || !strings.HasSuffix(trimmedLine, ":") {
-				break
-			} else {
-				currentScopeDepth = 1
-				fmt.Fprint(writer, "... ") // 为下一行准备提示符
-			}
-		}
-	}
-	return input.String(), nil
+	return RunSourceCodeInExecutor(executor, code)
 }
 
 func RunSourceCodeInExecutor(curExec *exe.Executor, code string) glob.GlobRet {
@@ -226,7 +94,7 @@ func RunImportDirStmtInExec(curExec *exe.Executor, importDirStmt *ast.ImportDirS
 		return glob.NewGlobTrue(fmt.Sprintf("package %s already imported. Now it has another name: %s", importDirStmt.Path, importDirStmt.AsPkgName))
 	}
 
-	mainFileContent, err := os.ReadFile(filepath.Join(importDirStmt.Path, glob.PkgEntranceFileNameMainDotLit))
+	mainFileContent, err := os.ReadFile(filepath.Join(importDirStmt.Path, glob.MainDotLit))
 	if err != nil {
 		return glob.NewGlobErr(err.Error())
 	}
@@ -251,20 +119,4 @@ func RunImportFileStmtInExec(curExec *exe.Executor, importFileStmt *ast.ImportFi
 		return glob.NewGlobErr(err.Error())
 	}
 	return RunSourceCodeInExecutor(curExec, string(content))
-}
-
-func RunSourceCode(code string) glob.GlobRet {
-	executor, err := InitPipelineExecutor()
-	if err != nil {
-		return glob.NewGlobErr(err.Error())
-	}
-	return RunSourceCodeInExecutor(executor, code)
-}
-
-func RunFile(path string) glob.GlobRet {
-	content, err := os.ReadFile(path)
-	if err != nil {
-		return glob.NewGlobErr(err.Error())
-	}
-	return RunSourceCode(string(content))
 }
