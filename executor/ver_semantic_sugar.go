@@ -33,7 +33,7 @@ func (ver *Verifier) verByReplaceFcInSpecFactWithValue(stmt *ast.SpecFactStmt, s
 				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
 			}
 
-			values := []ast.Fc{}
+			values := []ast.Obj{}
 			if cmp.IsNumLitFc(newStmt.Params[0]) {
 				values = append(values, newStmt.Params[0])
 			} else {

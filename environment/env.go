@@ -19,7 +19,7 @@ import (
 	glob "golitex/glob"
 )
 
-type shared_ptr_to_slice_of_fc = *[]ast.Fc
+type shared_ptr_to_slice_of_fc = *[]ast.Obj
 
 type PropDefMem map[string]ast.DefPropStmt
 
@@ -61,15 +61,15 @@ type Env struct {
 
 	EqualMem map[string]shared_ptr_to_slice_of_fc
 
-	EnumFacts map[string][]ast.Fc
+	EnumFacts map[string][]ast.Obj
 
 	HaveSetFnDefMem HaveSetFnDefMem
 
 	IntensionalSetMem map[string]ast.IntensionalSetStmt
 
-	SymbolSimplifiedValueMem map[string]ast.Fc
+	SymbolSimplifiedValueMem map[string]ast.Obj
 
-	TransitivePropMem  map[string]map[string][]ast.Fc
+	TransitivePropMem  map[string]map[string][]ast.Obj
 	CommutativePropMem map[string]*PropCommutativeCase
 
 	AlgoDefMem map[string]*ast.DefAlgoStmt
@@ -114,11 +114,11 @@ func NewEnv(parent *Env) *Env {
 		ExistPropDefMem:          make(ExistPropDefMem),
 		KnownFactsStruct:         makeKnownFactsStruct(),
 		EqualMem:                 make(map[string]shared_ptr_to_slice_of_fc),
-		EnumFacts:                make(map[string][]ast.Fc),
+		EnumFacts:                make(map[string][]ast.Obj),
 		HaveSetFnDefMem:          make(HaveSetFnDefMem),
 		IntensionalSetMem:        make(map[string]ast.IntensionalSetStmt),
-		SymbolSimplifiedValueMem: make(map[string]ast.Fc),
-		TransitivePropMem:        make(map[string]map[string][]ast.Fc),
+		SymbolSimplifiedValueMem: make(map[string]ast.Obj),
+		TransitivePropMem:        make(map[string]map[string][]ast.Obj),
 		CommutativePropMem:       make(map[string]*PropCommutativeCase),
 		AlgoDefMem:               make(map[string]*ast.DefAlgoStmt),
 		DefProveAlgoMem:          make(map[string]*ast.DefProveAlgoStmt),
@@ -145,5 +145,5 @@ func (e *Env) NotEqualIsCommutative() {
 }
 
 func (e *Env) NewTransitiveProp(name string) {
-	e.TransitivePropMem[name] = make(map[string][]ast.Fc)
+	e.TransitivePropMem[name] = make(map[string][]ast.Obj)
 }

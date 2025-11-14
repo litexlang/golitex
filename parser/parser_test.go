@@ -22,13 +22,13 @@ import (
 	"testing"
 )
 
-func sourceCodeToFc(sourceCode ...string) ([]ast.Fc, error) {
+func sourceCodeToFc(sourceCode ...string) ([]ast.Obj, error) {
 	blocks, err := makeTokenBlocks(sourceCode)
 	if err != nil {
 		return nil, err
 	}
 
-	ret := []ast.Fc{}
+	ret := []ast.Obj{}
 	for _, block := range blocks {
 		cur, err := block.RawFc()
 		if err != nil {
@@ -46,7 +46,7 @@ func TestOrder(t *testing.T) {
 		"x + x",
 		"2*x",
 	}
-	fcSlice := []ast.Fc{}
+	fcSlice := []ast.Obj{}
 	for _, code := range sourceCode {
 		fc, err := sourceCodeToFc(code)
 		if err != nil {
@@ -76,7 +76,7 @@ func TestFcDot(t *testing.T) {
 		"f(x.y).z (a.b)", // 这里不报错，其实是有问题的
 		"f(1.2).z",
 	}
-	fcSlice := []ast.Fc{}
+	fcSlice := []ast.Obj{}
 	for _, code := range sourceCode {
 		fc, err := sourceCodeToFc(code)
 		if err != nil {

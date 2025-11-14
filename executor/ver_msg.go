@@ -54,6 +54,6 @@ func (ver *Verifier) newMsgAtParent(s string) error {
 	}
 }
 
-func parametersDoNotSatisfyFnReq(param ast.Fc, fnName ast.Fc) error {
+func parametersDoNotSatisfyFnReq(param ast.Obj, fnName ast.Obj) error {
 	return fmt.Errorf("the arguments passed to the %s do not satisfy the domain of %s", param, fnName)
 }

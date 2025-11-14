@@ -66,7 +66,7 @@ func (e *Env) inFactPostProcess_InSetFnRetValue(fact *ast.SpecFactStmt, def *ast
 		return fmt.Errorf("in fact expect 2 parameters, get %d in %s", len(fact.Params), fact)
 	}
 
-	uniMap := map[string]ast.Fc{}
+	uniMap := map[string]ast.Obj{}
 	for i, param := range def.DefHeader.Params {
 		uniMap[param] = inFactRightParamAsFcFnPt.Params[i]
 	}
@@ -93,7 +93,7 @@ func (e *Env) in_setDefinedByReplacement_postProcess(setDefinedByReplacement *as
 	}
 
 	// forall x set_defined_by_replacement(A, B, P), x is in B
-	forallXInSetDefinedByReplacement_ItIsInB := ast.NewUniFact([]string{"x"}, []ast.Fc{setDefinedByReplacement}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{ast.FcAtom("x"), setDefinedByReplacement.Params[1]}, glob.InnerGenLine)}, glob.InnerGenLine)
+	forallXInSetDefinedByReplacement_ItIsInB := ast.NewUniFact([]string{"x"}, []ast.Obj{setDefinedByReplacement}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Obj{ast.FcAtom("x"), setDefinedByReplacement.Params[1]}, glob.InnerGenLine)}, glob.InnerGenLine)
 	err = e.NewFact(forallXInSetDefinedByReplacement_ItIsInB)
 	if err != nil {
 		return err
@@ -110,7 +110,7 @@ func (e *Env) SetEqualToSetDefinedByReplacement_PostProcess(setAtom ast.FcAtom, 
 		return err
 	}
 
-	forallXInSetDefinedByReplacement_ItIsInB := ast.NewUniFact([]string{"x"}, []ast.Fc{setAtom}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{ast.FcAtom("x"), setDefinedByReplacement.Params[1]}, glob.InnerGenLine)}, glob.InnerGenLine)
+	forallXInSetDefinedByReplacement_ItIsInB := ast.NewUniFact([]string{"x"}, []ast.Obj{setAtom}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Obj{ast.FcAtom("x"), setDefinedByReplacement.Params[1]}, glob.InnerGenLine)}, glob.InnerGenLine)
 	err = e.NewFact(forallXInSetDefinedByReplacement_ItIsInB)
 	if err != nil {
 		return err
@@ -142,7 +142,7 @@ func (e *Env) inFactPostProcess_InFnTemplate(fact *ast.SpecFactStmt) (bool, erro
 		return false, nil
 	}
 
-	templateParamUniMap := map[string]ast.Fc{}
+	templateParamUniMap := map[string]ast.Obj{}
 	for i, param := range def.TemplateDefHeader.Params {
 		templateParamUniMap[param] = fact.Params[1].(*ast.FcFn).Params[i]
 	}

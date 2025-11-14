@@ -114,7 +114,7 @@ func keySymbolRelaFactWithoutNotString(stmt *SpecFactStmt) string {
 	return builder.String()
 }
 
-func StrFcSetPairs(objs []string, objSets []Fc) string {
+func StrFcSetPairs(objs []string, objSets []Obj) string {
 	pairStrSlice := make([]string, len(objs))
 	for i := range len(objs) {
 		pairStrSlice[i] = fmt.Sprintf("%s %s", objs[i], objSets[i])
@@ -737,7 +737,7 @@ func (stmt *HaveSetDefinedByReplacementStmt) String() string {
 	builder.WriteString(" ")
 	builder.WriteString(stmt.Name)
 	builder.WriteString(" ")
-	builder.WriteString(NewFcFn(FcAtom(glob.KeywordSetDefinedByReplacement), []Fc{stmt.DomSet, stmt.RangeSet, stmt.PropName}).String())
+	builder.WriteString(NewFcFn(FcAtom(glob.KeywordSetDefinedByReplacement), []Obj{stmt.DomSet, stmt.RangeSet, stmt.PropName}).String())
 	return builder.String()
 }
 
@@ -1174,5 +1174,18 @@ func (stmt *ProveAlgoReturnStmt) String() string {
 		builder.WriteString(" ")
 		builder.WriteString(stmt.ByStmtOrNil.String())
 	}
+	return builder.String()
+}
+
+func (stmt *PrintStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordPrint)
+	builder.WriteString(glob.KeySymbolLeftBrace)
+	if stmt.IsFString {
+		builder.WriteString("f")
+	}
+	builder.WriteString(stmt.Value)
+	builder.WriteString(glob.KeySymbolDoubleQuote)
+	builder.WriteString(glob.KeySymbolRightBrace)
 	return builder.String()
 }

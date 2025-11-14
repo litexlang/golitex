@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (tb *tokenBlock) RawFc() (ast.Fc, error) {
+func (tb *tokenBlock) RawFc() (ast.Obj, error) {
 	expr, err := tb.fcInfixExpr(glob.PrecLowest)
 	if err != nil {
 		return nil, err
@@ -30,8 +30,8 @@ func (tb *tokenBlock) RawFc() (ast.Fc, error) {
 }
 
 // “数学”优先级越高，越是底层。所以把括号表达式放在这里处理
-func (tb *tokenBlock) fcAtomAndFcFn() (ast.Fc, error) {
-	var expr ast.Fc
+func (tb *tokenBlock) fcAtomAndFcFn() (ast.Obj, error) {
+	var expr ast.Obj
 	var err error
 
 	if tb.header.is(glob.KeywordFn) {
@@ -103,7 +103,7 @@ func (tb *tokenBlock) rawFcAtom() (ast.FcAtom, error) {
 	// return ast.FcAtom(strings.Join(values, glob.KeySymbolColonColon)), nil
 }
 
-func (tb *tokenBlock) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence) (ast.Fc, error) {
+func (tb *tokenBlock) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence) (ast.Obj, error) {
 	left, err := tb.unaryOptFc()
 	if err != nil {
 		return nil, err
@@ -140,7 +140,7 @@ func (tb *tokenBlock) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence) (ast.Fc
 				return nil, err
 			}
 
-			left = ast.NewFcFn(fn, []ast.Fc{left, right})
+			left = ast.NewFcFn(fn, []ast.Obj{left, right})
 
 			break
 		}
@@ -165,7 +165,7 @@ func (tb *tokenBlock) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence) (ast.Fc
 		leftHead := ast.FcAtom(curToken)
 		left = ast.NewFcFn(
 			leftHead,
-			[]ast.Fc{left, right},
+			[]ast.Obj{left, right},
 		)
 	}
 
@@ -173,7 +173,7 @@ func (tb *tokenBlock) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence) (ast.Fc
 }
 
 // TODO： 现在只有 - 是单目运算符，其他都是双目运算符。以后可能会添加其他单目运算符
-func (tb *tokenBlock) unaryOptFc() (ast.Fc, error) {
+func (tb *tokenBlock) unaryOptFc() (ast.Obj, error) {
 	unaryOp, err := tb.header.currentToken()
 	if err != nil {
 		return nil, err
@@ -195,7 +195,7 @@ func (tb *tokenBlock) unaryOptFc() (ast.Fc, error) {
 		}
 
 		// 方法1： 返回 -1 * right，好处： -a 可以直接和 -5 对应，因为 -5 其实是 -1 * 5, -n是 -1 * n；缺点是，如果是 -1 * 5
-		return ast.NewFcFn(ast.FcAtom(glob.KeySymbolStar), []ast.Fc{ast.FcAtom("-1"), right}), nil
+		return ast.NewFcFn(ast.FcAtom(glob.KeySymbolStar), []ast.Obj{ast.FcAtom("-1"), right}), nil
 
 		// 方法2： 如果right是数字，那返回 - right，否则是 -1 * right
 		// if rightAtom, ok := right.(ast.FcAtom); ok && glob.IsNumLitStr(string(rightAtom)) {
@@ -256,8 +256,8 @@ func (tb *tokenBlock) numberStr() (ast.FcAtom, error) {
 	}
 }
 
-func (tb *tokenBlock) bracedFcSlice() ([]ast.Fc, error) {
-	params := []ast.Fc{}
+func (tb *tokenBlock) bracedFcSlice() ([]ast.Obj, error) {
+	params := []ast.Obj{}
 	tb.header.skip(glob.KeySymbolLeftBrace)
 
 	if !tb.header.is(glob.KeySymbolRightBrace) {
@@ -316,7 +316,7 @@ func (tb *tokenBlock) bracedFcSlice() ([]ast.Fc, error) {
 
 // }
 
-func (tb *tokenBlock) bracedExpr_orTuple() (ast.Fc, error) {
+func (tb *tokenBlock) bracedExpr_orTuple() (ast.Obj, error) {
 	if err := tb.header.skip(glob.KeySymbolLeftBrace); err != nil {
 		return nil, fmt.Errorf("expected '(': %s", err)
 	}
@@ -365,7 +365,7 @@ func (tb *tokenBlock) bracedExpr_orTuple() (ast.Fc, error) {
 	return firstExpr, nil
 }
 
-func (tb *tokenBlock) whenTheNextTokIsLeftBrace_MakeFcFn(head ast.Fc) (ast.Fc, error) {
+func (tb *tokenBlock) whenTheNextTokIsLeftBrace_MakeFcFn(head ast.Obj) (ast.Obj, error) {
 	for !tb.header.ExceedEnd() && (tb.header.is(glob.KeySymbolLeftBrace)) {
 		objParamsPtr, err := tb.bracedFcSlice()
 		if err != nil {
@@ -377,12 +377,12 @@ func (tb *tokenBlock) whenTheNextTokIsLeftBrace_MakeFcFn(head ast.Fc) (ast.Fc, e
 	return head, nil
 }
 
-func (tb *tokenBlock) fnSet() (ast.Fc, error) {
+func (tb *tokenBlock) fnSet() (ast.Obj, error) {
 	tb.header.skip(glob.KeywordFn)
 	tb.header.skip(glob.KeySymbolLeftBrace)
 
-	fnSets := []ast.Fc{}
-	var retSet ast.Fc
+	fnSets := []ast.Obj{}
+	var retSet ast.Obj
 	for !tb.header.ExceedEnd() && !(tb.header.is(glob.KeySymbolRightBrace)) {
 		fnSet, err := tb.RawFc()
 		if err != nil {
@@ -405,12 +405,12 @@ func (tb *tokenBlock) fnSet() (ast.Fc, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	ret := ast.NewFcFn(ast.NewFcFn(ast.FcAtom(glob.KeywordFn), fnSets), []ast.Fc{retSet})
+	ret := ast.NewFcFn(ast.NewFcFn(ast.FcAtom(glob.KeywordFn), fnSets), []ast.Obj{retSet})
 
 	return ret, nil
 }
 
-func ParseSourceCodeGetFc(s string) (ast.Fc, error) {
+func ParseSourceCodeGetFc(s string) (ast.Obj, error) {
 	blocks, err := makeTokenBlocks([]string{s})
 	if err != nil {
 		return nil, err
@@ -424,7 +424,7 @@ func ParseSourceCodeGetFc(s string) (ast.Fc, error) {
 	return fc, nil
 }
 
-func (tb *tokenBlock) backSlashExpr() (ast.Fc, error) {
+func (tb *tokenBlock) backSlashExpr() (ast.Obj, error) {
 	err := tb.header.skip(glob.KeySymbolBackSlash)
 	if err != nil {
 		return nil, err

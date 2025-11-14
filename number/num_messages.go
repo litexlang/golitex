@@ -22,7 +22,7 @@ import (
 	"strings"
 )
 
-func FcStringForParseAndExpandPolynomial(fc ast.Fc) string {
+func FcStringForParseAndExpandPolynomial(fc ast.Obj) string {
 	if asAtom, ok := fc.(ast.FcAtom); ok {
 		return fcAtomString(asAtom)
 	}

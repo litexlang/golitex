@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (e *Env) GetSetFnRetValue(fc ast.Fc) *ast.HaveSetFnStmt {
+func (e *Env) GetSetFnRetValue(fc ast.Obj) *ast.HaveSetFnStmt {
 	asFn, ok := fc.(*ast.FcFn)
 	if !ok {
 		return nil
@@ -78,7 +78,7 @@ func (e *Env) GetFnStructFromFnTName(fnTName *ast.FcFn) (*ast.FnTStruct, error) 
 	}
 }
 
-func (e *Env) getFnTDef_InstFnTStructOfIt(fnTDefName ast.FcAtom, templateParams []ast.Fc) (*ast.FnTStruct, error) {
+func (e *Env) getFnTDef_InstFnTStructOfIt(fnTDefName ast.FcAtom, templateParams []ast.Obj) (*ast.FnTStruct, error) {
 	defOfT := e.GetFnTemplateDef(fnTDefName)
 	if defOfT == nil {
 		return nil, fmt.Errorf("fnTNameHead %s is not a fn template", fnTDefName)

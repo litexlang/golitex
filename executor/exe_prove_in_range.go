@@ -30,7 +30,7 @@ func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) ExecRet {
 	startStr := strconv.FormatInt(stmt.Start, 10)
 	endStr := strconv.FormatInt(stmt.End, 10)
 
-	forallXInIntensionalSetTheyAreFromStartToEnd := ast.NewUniFact([]string{stmt.Param}, []ast.Fc{stmt.IntensionalSet}, []ast.FactStmt{}, []ast.FactStmt{ast.NewInFact(stmt.Param, ast.FcAtom(glob.KeywordInteger)), ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolLessEqual), []ast.Fc{ast.FcAtom(startStr), ast.FcAtom(stmt.Param)}, stmt.Line), ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolLess), []ast.Fc{ast.FcAtom(stmt.Param), ast.FcAtom(endStr)}, stmt.Line)}, stmt.Line)
+	forallXInIntensionalSetTheyAreFromStartToEnd := ast.NewUniFact([]string{stmt.Param}, []ast.Obj{stmt.IntensionalSet}, []ast.FactStmt{}, []ast.FactStmt{ast.NewInFact(stmt.Param, ast.FcAtom(glob.KeywordInteger)), ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolLessEqual), []ast.Obj{ast.FcAtom(startStr), ast.FcAtom(stmt.Param)}, stmt.Line), ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolLess), []ast.Obj{ast.FcAtom(stmt.Param), ast.FcAtom(endStr)}, stmt.Line)}, stmt.Line)
 
 	state := exec.factStmt(forallXInIntensionalSetTheyAreFromStartToEnd)
 	if state.IsNotTrue() {
@@ -58,11 +58,11 @@ func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) ExecRet {
 
 func (exec *Executor) proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsIn *ast.IntensionalSetStmt, stmt *ast.ProveInRangeStmt, i int64) (bool, string, error) {
 	indexAsFc := ast.FcAtom(fmt.Sprintf("%d", i))
-	uniMap := map[string]ast.Fc{stmt.Param: indexAsFc}
+	uniMap := map[string]ast.Obj{stmt.Param: indexAsFc}
 	exec.NewEnv(exec.Env)
 	defer exec.deleteEnvAndGiveUpMsgs()
 
-	defObjStmt := ast.NewDefLetStmt([]string{stmt.Param}, []ast.Fc{ast.FcAtom(glob.KeywordInteger)}, []ast.FactStmt{ast.NewEqualFact(ast.FcAtom(stmt.Param), indexAsFc)}, stmt.Line)
+	defObjStmt := ast.NewDefLetStmt([]string{stmt.Param}, []ast.Obj{ast.FcAtom(glob.KeywordInteger)}, []ast.FactStmt{ast.NewEqualFact(ast.FcAtom(stmt.Param), indexAsFc)}, stmt.Line)
 	execState := exec.defLetStmt(defObjStmt)
 	if execState.IsNotTrue() {
 		return false, "", fmt.Errorf(execState.String())

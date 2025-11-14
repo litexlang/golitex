@@ -160,9 +160,9 @@ func (tb *tokenBlock) inlineFacts_untilWord_or_exceedEnd_notSkipWord(word string
 	return facts, nil
 }
 
-func (tb *tokenBlock) inlineUniFact_Param_ParamSet_ParamInSetFacts() ([]string, []ast.Fc, error) {
+func (tb *tokenBlock) inlineUniFact_Param_ParamSet_ParamInSetFacts() ([]string, []ast.Obj, error) {
 	params := []string{}
-	setParams := []ast.Fc{}
+	setParams := []ast.Obj{}
 	paramWithoutSetCount := 0
 
 	if tb.header.is(glob.KeySymbolColon) {
@@ -246,7 +246,7 @@ func (tb *tokenBlock) inlineUniInterfaceSkipTerminator(ends []string) (ast.UniFa
 	}
 
 	params := []string{}
-	setParams := []ast.Fc{}
+	setParams := []ast.Obj{}
 	domFact := []ast.FactStmt{}
 
 	if !tb.header.is(glob.KeySymbolRightArrow) { // 没有 参数
@@ -331,7 +331,7 @@ func (tb *tokenBlock) inlineWhenFactSkipTerminator(ends []string) (ast.UniFactIn
 	}
 
 	if isEnd {
-		return ast.NewUniFact([]string{}, []ast.Fc{}, domFact, thenFact, tb.line), nil
+		return ast.NewUniFact([]string{}, []ast.Obj{}, domFact, thenFact, tb.line), nil
 	}
 
 	err = tb.header.skip(glob.KeySymbolEquivalent)
@@ -343,7 +343,7 @@ func (tb *tokenBlock) inlineWhenFactSkipTerminator(ends []string) (ast.UniFactIn
 	if err != nil {
 		return nil, err
 	}
-	return ast.NewUniFactWithIff(ast.NewUniFact([]string{}, []ast.Fc{}, domFact, thenFact, tb.line), iffFacts, tb.line), nil
+	return ast.NewUniFactWithIff(ast.NewUniFact([]string{}, []ast.Obj{}, domFact, thenFact, tb.line), iffFacts, tb.line), nil
 }
 
 func (tb *tokenBlock) thenFactsInUniFactInterface(ends []string) ([]ast.FactStmt, bool, error) {
@@ -536,14 +536,14 @@ func (tb *tokenBlock) parseFactStartWithFc() (ast.FactStmt, error) {
 }
 
 // parseFunctionPropertyFact parses facts like "x $prop y" or "x $prop"
-func (tb *tokenBlock) parseFunctionPropertyFact(leftFc ast.Fc) (ast.FactStmt, error) {
+func (tb *tokenBlock) parseFunctionPropertyFact(leftFc ast.Obj) (ast.FactStmt, error) {
 	propName, err := tb.rawFcAtom()
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
 
 	// Determine parameters: one or two
-	params := []ast.Fc{leftFc}
+	params := []ast.Obj{leftFc}
 	if !tb.header.ExceedEnd() {
 		rightFc, err := tb.RawFc()
 		if err != nil {
@@ -557,7 +557,7 @@ func (tb *tokenBlock) parseFunctionPropertyFact(leftFc ast.Fc) (ast.FactStmt, er
 }
 
 // parseInfixRelationalFact parses facts like "x = y", "x > y", "x != y", etc.
-func (tb *tokenBlock) parseInfixRelationalFact(leftFc ast.Fc, operator string) (ast.FactStmt, error) {
+func (tb *tokenBlock) parseInfixRelationalFact(leftFc ast.Obj, operator string) (ast.FactStmt, error) {
 	if !glob.IsBuiltinInfixRelaPropSymbol(operator) {
 		return nil, fmt.Errorf("expect relation prop, got: %s", operator)
 	}
@@ -573,7 +573,7 @@ func (tb *tokenBlock) parseInfixRelationalFact(leftFc ast.Fc, operator string) (
 	}
 
 	// Create the fact
-	params := []ast.Fc{leftFc, rightFc}
+	params := []ast.Obj{leftFc, rightFc}
 	curFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(operator), params, tb.line)
 
 	// Handle syntactic sugar: != is equivalent to "not ="
@@ -609,7 +609,7 @@ func (tb *tokenBlock) skipStmtComma() {
 
 // inline_enum_intensional_fact_skip_terminator parses enum intensional fact (x := {items} or x := {y | ...})
 // and skips statement terminator (comma)
-func (tb *tokenBlock) inline_enum_intensional_fact_skip_terminator(left ast.Fc) (ast.FactStmt, error) {
+func (tb *tokenBlock) inline_enum_intensional_fact_skip_terminator(left ast.Obj) (ast.FactStmt, error) {
 	defer func() {
 		tb.skipStmtComma()
 	}()
@@ -628,10 +628,10 @@ func (tb *tokenBlock) inline_enum_intensional_fact_skip_terminator(left ast.Fc) 
 		if tb.header.is(glob.KeySymbolComma) {
 			tb.header.skip(glob.KeySymbolComma)
 		} else {
-			return ast.NewEnumStmt(left, []ast.Fc{firstFc}, tb.line), nil
+			return ast.NewEnumStmt(left, []ast.Obj{firstFc}, tb.line), nil
 		}
 
-		enumItems := []ast.Fc{firstFc}
+		enumItems := []ast.Obj{firstFc}
 		for !tb.header.is(glob.KeySymbolRightCurly) {
 			fc, err := tb.RawFc()
 			if err != nil {

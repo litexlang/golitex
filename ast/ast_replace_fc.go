@@ -14,8 +14,8 @@
 
 package litex_ast
 
-func (stmt *SpecFactStmt) ReplaceFc(oldFc Fc, newFc Fc) FactStmt {
-	newParams := make([]Fc, len(stmt.Params))
+func (stmt *SpecFactStmt) ReplaceFc(oldFc Obj, newFc Obj) FactStmt {
+	newParams := make([]Obj, len(stmt.Params))
 	for i, param := range stmt.Params {
 		newParams[i] = param.ReplaceFc(oldFc, newFc)
 	}
@@ -23,8 +23,8 @@ func (stmt *SpecFactStmt) ReplaceFc(oldFc Fc, newFc Fc) FactStmt {
 	return NewSpecFactStmt(stmt.TypeEnum, stmt.PropName, newParams, stmt.GetLine())
 }
 
-func (stmt *UniFactStmt) ReplaceFc(oldFc Fc, newFc Fc) FactStmt {
-	newParamSets := make([]Fc, len(stmt.ParamSets))
+func (stmt *UniFactStmt) ReplaceFc(oldFc Obj, newFc Obj) FactStmt {
+	newParamSets := make([]Obj, len(stmt.ParamSets))
 	for i, paramSet := range stmt.ParamSets {
 		newParamSets[i] = paramSet.ReplaceFc(oldFc, newFc)
 	}
@@ -42,22 +42,22 @@ func (stmt *UniFactStmt) ReplaceFc(oldFc Fc, newFc Fc) FactStmt {
 	return NewUniFact(stmt.Params, newParamSets, newDomFacts, newThenFacts, stmt.Line)
 }
 
-func (stmt *UniFactWithIffStmt) ReplaceFc(oldFc Fc, newFc Fc) FactStmt {
+func (stmt *UniFactWithIffStmt) ReplaceFc(oldFc Obj, newFc Obj) FactStmt {
 	panic("")
 }
 
-func (stmt *OrStmt) ReplaceFc(oldFc Fc, newFc Fc) FactStmt {
+func (stmt *OrStmt) ReplaceFc(oldFc Obj, newFc Obj) FactStmt {
 	panic("")
 }
 
-func (stmt *EnumStmt) ReplaceFc(oldFc Fc, newFc Fc) FactStmt {
+func (stmt *EnumStmt) ReplaceFc(oldFc Obj, newFc Obj) FactStmt {
 	panic("")
 }
 
-func (stmt *IntensionalSetStmt) ReplaceFc(oldFc Fc, newFc Fc) FactStmt {
+func (stmt *IntensionalSetStmt) ReplaceFc(oldFc Obj, newFc Obj) FactStmt {
 	panic("")
 }
 
-func (stmt *EqualsFactStmt) ReplaceFc(oldFc Fc, newFc Fc) FactStmt {
+func (stmt *EqualsFactStmt) ReplaceFc(oldFc Obj, newFc Obj) FactStmt {
 	panic("")
 }

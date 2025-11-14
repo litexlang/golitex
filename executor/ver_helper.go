@@ -32,7 +32,7 @@ func (ver *Verifier) processOkMsg(state *VerState, msg string, verifiedBy string
 	return NewExecTrue(successVerString(msg, fmt.Sprintf(verifiedBy, args...)))
 }
 
-func (ver *Verifier) paramsInSets(params []ast.Fc, sets []ast.Fc, state *VerState) ExecRet {
+func (ver *Verifier) paramsInSets(params []ast.Obj, sets []ast.Obj, state *VerState) ExecRet {
 	if len(params) != len(sets) {
 		return NewExecErr("params and sets length mismatch")
 	}

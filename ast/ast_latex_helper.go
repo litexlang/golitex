@@ -31,7 +31,7 @@ func toLatexString(s string) string {
 	return fmt.Sprintf("$%s$", strings.ReplaceAll(s, "_", "\\_"))
 }
 
-func strFcSetPairsLatexString(objs []string, objSets []Fc) string {
+func strFcSetPairsLatexString(objs []string, objSets []Obj) string {
 	pairStrSlice := make([]string, len(objs))
 	for i := range len(objs) {
 		pairStrSlice[i] = fmt.Sprintf("%s $\\in$ %s", toLatexString(objs[i]), objSets[i].ToLatexString())
@@ -60,7 +60,7 @@ func (s FactStmtSlice) factStmtSliceToLatexStringSlice() []string {
 	return factStrSlice
 }
 
-func paramInParamSetInFactLatexStringSlice(paramNames []string, paramSets []Fc) []string {
+func paramInParamSetInFactLatexStringSlice(paramNames []string, paramSets []Obj) []string {
 	strSlice := make([]string, len(paramSets))
 	for i, paramSet := range paramSets {
 		strSlice[i] = fmt.Sprintf("%s $\\in$ %s", toLatexString(paramNames[i]), paramSet.ToLatexString())
@@ -68,7 +68,7 @@ func paramInParamSetInFactLatexStringSlice(paramNames []string, paramSets []Fc) 
 	return strSlice
 }
 
-func propNameParamsLatexString(propName FcAtom, params []Fc) string {
+func propNameParamsLatexString(propName FcAtom, params []Obj) string {
 	var builder strings.Builder
 	builder.WriteString(propName.String())
 	builder.WriteString("(")
@@ -81,7 +81,7 @@ func propNameParamsLatexString(propName FcAtom, params []Fc) string {
 	return builder.String()
 }
 
-func fcParamsLatexString(params []Fc) string {
+func fcParamsLatexString(params []Obj) string {
 	paramStrSlice := make([]string, len(params))
 	for i := range len(params) {
 		paramStrSlice[i] = params[i].ToLatexString()

@@ -75,7 +75,7 @@ func isValidEqualFact(stmt *ast.SpecFactStmt) bool {
 	return len(stmt.Params) == 2 && string(stmt.PropName) == glob.KeySymbolEqual
 }
 
-func (ver *Verifier) verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Fc, right ast.Fc, state *VerState) ExecRet {
+func (ver *Verifier) verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
 	if verRet := ver.verEqualBuiltin(left, right, state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
@@ -101,7 +101,7 @@ func (ver *Verifier) verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Fc, r
 	return NewExecUnknown("")
 }
 
-func (ver *Verifier) verEqualBuiltin(left ast.Fc, right ast.Fc, state *VerState) ExecRet {
+func (ver *Verifier) verEqualBuiltin(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
 	ok, msg, err := cmp.CmpBy_Literally_NumLit_PolynomialArith(left, right) // 完全一样
 	if err != nil {
 		return NewExecErr(err.Error())
@@ -127,7 +127,7 @@ func (ver *Verifier) verEqualBuiltin(left ast.Fc, right ast.Fc, state *VerState)
 	return NewExecUnknown("")
 }
 
-func (ver *Verifier) verEqualSpecMem(left ast.Fc, right ast.Fc, state *VerState) ExecRet {
+func (ver *Verifier) verEqualSpecMem(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
 	// if ver.env.CurMatchProp == nil {
 	for curEnv := ver.Env; curEnv != nil; curEnv = curEnv.Parent {
 		verRet := ver.equalFact_SpecMem_atEnv(curEnv, left, right, state)
@@ -139,7 +139,7 @@ func (ver *Verifier) verEqualSpecMem(left ast.Fc, right ast.Fc, state *VerState)
 	return NewExecUnknown("")
 }
 
-func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right ast.Fc, state *VerState) ExecRet {
+func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Obj, right ast.Obj, state *VerState) ExecRet {
 	nextState := state.GetNoMsg()
 
 	verRet := ver.getEqualFcsAndCmpOneByOne(curEnv, left, right, nextState)
@@ -156,7 +156,7 @@ func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right
 	return NewExecUnknown("")
 }
 
-func (ver *Verifier) verLogicMem_leftToRight_RightToLeft(left ast.Fc, right ast.Fc, state *VerState) ExecRet {
+func (ver *Verifier) verLogicMem_leftToRight_RightToLeft(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
 	equalFact := ast.NewEqualFact(left, right)
 	verRet := ver.verSpecFact_ByLogicMem(equalFact, state)
 	if verRet.IsErr() || verRet.IsTrue() {
@@ -174,7 +174,7 @@ func (ver *Verifier) verLogicMem_leftToRight_RightToLeft(left ast.Fc, right ast.
 	return NewExecUnknown("")
 }
 
-func (ver *Verifier) verEqualUniMem(left ast.Fc, right ast.Fc, state *VerState) ExecRet {
+func (ver *Verifier) verEqualUniMem(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
 	equalFact := ast.NewEqualFact(left, right)
 	verRet := ver.verSpecFact_UniMem(equalFact, state)
 	if verRet.IsErr() || verRet.IsTrue() {
@@ -192,8 +192,8 @@ func (ver *Verifier) verEqualUniMem(left ast.Fc, right ast.Fc, state *VerState) 
 	return NewExecUnknown("")
 }
 
-func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, right ast.Fc, state *VerState) ExecRet {
-	var equalToLeftFcs, equalToRightFcs *[]ast.Fc
+func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Obj, right ast.Obj, state *VerState) ExecRet {
+	var equalToLeftFcs, equalToRightFcs *[]ast.Obj
 	var gotLeftEqualFcs, gotRightEqualFcs bool
 
 	equalToLeftFcs, gotLeftEqualFcs = curEnv.GetEqualFcs(left)
@@ -232,7 +232,7 @@ func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, rig
 	return NewExecUnknown("")
 }
 
-func (ver *Verifier) decomposeFcFnsAndCheckEquality(left ast.Fc, right ast.Fc, state *VerState, areEqualFcs func(left ast.Fc, right ast.Fc, state *VerState) ExecRet) ExecRet {
+func (ver *Verifier) decomposeFcFnsAndCheckEquality(left ast.Obj, right ast.Obj, state *VerState, areEqualFcs func(left ast.Obj, right ast.Obj, state *VerState) ExecRet) ExecRet {
 	if leftAsFn, ok := left.(*ast.FcFn); ok {
 		if rightAsFn, ok := right.(*ast.FcFn); ok {
 			if len(leftAsFn.Params) != len(rightAsFn.Params) {

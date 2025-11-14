@@ -57,7 +57,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast
 		}
 
 		for _, relatedFc := range relatedFcSlice {
-			relatedFcStmt := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(stmt.PropName), []ast.Fc{relatedFc, stmt.Params[1]}, stmt.Line)
+			relatedFcStmt := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(stmt.PropName), []ast.Obj{relatedFc, stmt.Params[1]}, stmt.Line)
 			verRet := ver.verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(relatedFcStmt, state)
 			if verRet.IsErr() {
 				return verRet
@@ -195,7 +195,7 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 	defStmt := ver.Env.MakeUniFactParamsInThisDefPropDoNotConflictWithEnv(curDefStmt)
 
 	iffToProp := defStmt.IffToPropUniFact()
-	paramArrMap := map[string]ast.Fc{}
+	paramArrMap := map[string]ast.Obj{}
 	for i, param := range stmt.Params {
 		paramArrMap[defStmt.DefHeader.Params[i]] = param
 	}
@@ -242,7 +242,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 		return BoolErrToExecRet(false, fmt.Errorf("%s has no definition", stmt))
 	}
 
-	uniConMap := map[string]ast.Fc{}
+	uniConMap := map[string]ast.Obj{}
 	for i := range existParams {
 		uniConMap[propDef.ExistParams[i]] = existParams[i]
 	}
@@ -332,7 +332,7 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecFactStmt) Ex
 		return NewExecUnknown("")
 	}
 
-	var leftValue, rightValue ast.Fc
+	var leftValue, rightValue ast.Obj
 	if cmp.IsNumLitFc(stmt.Params[0]) {
 		leftValue = stmt.Params[0]
 	} else {
@@ -388,7 +388,7 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *Ver
 	}
 
 	iffToProp := defStmt.IffToPropUniFact()
-	paramArrMap := map[string]ast.Fc{}
+	paramArrMap := map[string]ast.Obj{}
 	for i, param := range stmt.Params {
 		paramArrMap[defStmt.DefHeader.Params[i]] = param
 	}
