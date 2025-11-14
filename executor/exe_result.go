@@ -113,12 +113,12 @@ func NewExecErrWithErr(err error) *ExecErr {
 
 func BoolErrToExecRet(ok bool, err error) ExecRet {
 	if err != nil {
-		return &ExecErr{Msg: []string{err.Error()}}
+		return NewExecErrWithMsgs([]string{err.Error()})
 	}
 	if ok {
-		return &ExecTrue{Msg: []string{}}
+		return NewExecTrueWithMsgs([]string{})
 	}
-	return &ExecUnknown{Msg: []string{}}
+	return NewExecUnknownWithMsgs([]string{})
 }
 
 func NewExecTrue(s string) ExecRet {
@@ -143,6 +143,18 @@ func NewExecTrueWithValues(s string, equalValue []ast.Obj) ExecRet {
 		panic("equal value length must be 2")
 	}
 	return &ExecTrue{Msg: []string{}, TrueEqualValues: []ast.Obj{equalValue[0], equalValue[1]}}
+}
+
+func NewExecTrueWithMsgs(msgs []string) ExecRet {
+	return &ExecTrue{Msg: msgs}
+}
+
+func NewExecErrWithMsgs(msgs []string) ExecRet {
+	return &ExecErr{Msg: msgs}
+}
+
+func NewExecUnknownWithMsgs(msgs []string) ExecRet {
+	return &ExecUnknown{Msg: msgs}
 }
 
 func (v *ExecTrue) Inherit(execRet ExecRet) {

@@ -178,24 +178,47 @@ func RunSourceCodeInExecutor(curExec *exe.Executor, code string) glob.GlobRet {
 		return glob.NewGlobErr(err.Error())
 	}
 
+	msgOfTopStatements := []string{}
+
 	for _, topStmt := range topStmtSlice {
-		ret := RunTopStmtInPipeline(curExec, topStmt)
+		ret := RunTopStmtInPipelineAsExecRet(curExec, topStmt)
+		msgOfTopStatements = append(msgOfTopStatements, curExec.GetMsgAsStr0ToEnd())
+		msgOfTopStatements = append(msgOfTopStatements, ret.GetMsgs()...)
+
 		if ret.IsNotTrue() {
-			return ret
+			// 将消息添加到 globRet 中
+			if ret.IsErr() {
+				return glob.NewGlobErrWithMsgs(msgOfTopStatements)
+			}
+			// IsUnknown
+			allMsgs := append(msgOfTopStatements, "execution failed: unknown factual statement\n")
+			return glob.NewGlobErrWithMsgs(allMsgs)
 		}
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewGlobTrueWithMsgs(msgOfTopStatements)
 }
 
 func RunTopStmtInPipeline(curExec *exe.Executor, topStmt ast.Stmt) glob.GlobRet {
+	return RunTopStmtInPipelineAsExecRet(curExec, topStmt)
+}
+
+func RunTopStmtInPipelineAsExecRet(curExec *exe.Executor, topStmt ast.Stmt) glob.GlobRet {
 	switch topStmt := topStmt.(type) {
 	case *ast.ImportDirStmt:
 		return RunImportDirStmtInExec(curExec, topStmt)
 	case *ast.ImportFileStmt:
 		return RunImportFileStmtInExec(curExec, topStmt)
 	default:
-		return curExec.Stmt(topStmt).ToGlobRet()
+		execRet := curExec.Stmt(topStmt)
+		msgs := execRet.GetMsgs()
+		if execRet.IsErr() {
+			return glob.NewGlobErrWithMsgs(msgs)
+		}
+		if execRet.IsUnknown() {
+			return glob.NewGlobUnknownWithMsgs(msgs)
+		}
+		return glob.NewGlobTrueWithMsgs(msgs)
 	}
 }
 

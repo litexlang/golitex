@@ -32,6 +32,7 @@ type GlobRet interface {
 	Inherit(globRet GlobRet)
 	Error() error
 	GetREPLMsg() string
+	GetMsgs() []string
 }
 
 type GlobTrue struct {
@@ -155,4 +156,16 @@ func (v *GlobUnknown) GetREPLMsg() string {
 
 func (v *GlobErr) GetREPLMsg() string {
 	return REPLFailedMessage
+}
+
+func (v *GlobTrue) GetMsgs() []string {
+	return v.Msg
+}
+
+func (v *GlobUnknown) GetMsgs() []string {
+	return v.Msg
+}
+
+func (v *GlobErr) GetMsgs() []string {
+	return v.Msg
 }
