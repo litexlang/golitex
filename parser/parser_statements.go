@@ -1348,6 +1348,11 @@ func (tb *tokenBlock) proveCaseByCaseStmt() (*ast.ProveCaseByCaseStmt, error) {
 		return nil, tbErr(fmt.Errorf("prove_case_by_case: at least one case block is required"), tb)
 	}
 
+	// Verify that the number of proofs matches the number of cases
+	if len(proofs) != len(caseFacts) {
+		return nil, tbErr(fmt.Errorf("prove_case_by_case: expect %d proofs, but got %d. expect the number of proofs to be the same as the number of case facts", len(caseFacts), len(proofs)), tb)
+	}
+
 	return ast.NewProveCaseByCaseStmt(caseFacts, thenFacts, proofs, tb.line), nil
 }
 
