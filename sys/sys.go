@@ -33,32 +33,32 @@ import (
 // 	return ret.String(), ret.SysSignal(), ret.Error()
 // }
 
-func RunFileWithPipelineRunner(path string) (string, glob.SysSignal, time.Duration, error) {
+func RunFileWithPipelineRunner(path string) (glob.GlobRet, time.Duration, error) {
 	// repoName := filepath.Dir(path)
 	// glob.CurrentTaskDirName = repoName
 	content, err := os.ReadFile(path)
 	if err != nil {
-		return fmt.Sprintf("failed to read file %s: %s", path, err.Error()), glob.SysSignalSystemError, 0, err
+		return glob.NewGlobErr(fmt.Sprintf("failed to read file %s: %s", path, err.Error())), 0, err
 	}
 	pipelineRunner := pipeline.NewPipelineRunner()
 
 	start := time.Now()
-	msg, signal, err := pipelineRunner.Run(string(content))
-	if err != nil {
-		return fmt.Sprintf("%s\n%s", msg, err.Error()), glob.SysSignalSystemError, 0, err
+	ret := pipelineRunner.Run(string(content))
+	if ret.IsErr() {
+		return ret, 0, ret.Error()
 	}
-	return msg, signal, time.Since(start), nil
+	return ret, time.Since(start), nil
 }
 
-func RunRepo(path string) (string, glob.SysSignal, error) {
+func RunRepo(path string) (glob.GlobRet, error) {
 	// glob.CurrentTaskDirName = path
 	// 运行里面的main.lit
 	content, err := os.ReadFile(filepath.Join(path, glob.PkgEntranceFileNameMainDotLit))
 	if err != nil {
-		return "", glob.SysSignalSystemError, err
+		return glob.NewGlobErr(err.Error()), err
 	}
 	ret := pipeline.RunSourceCode(string(content))
-	return ret.String(), ret.SysSignal(), ret.Error()
+	return ret, ret.Error()
 }
 
 // func ExecuteCodeAndReturnMessage(code string) (string, glob.SysSignal, error) {
@@ -70,14 +70,11 @@ func RunREPLInTerminal(version string) {
 	pipeline.RunREPLInTerminal(version)
 }
 
-func RunMainMsg(signal glob.SysSignal) string {
-	if signal == glob.SysSignalTrue {
+func RunMainMsg(ret glob.GlobRet) string {
+	if ret.IsTrue() {
 		return glob.REPLSuccessMessage
-	} else if signal == glob.SysSignalFalse {
-		return glob.REPLFailedMessage
-	} else {
-		return glob.REPLFailedMessage
 	}
+	return glob.REPLFailedMessage
 }
 
 // func RunFilesInRepo(repo string) error {
@@ -153,9 +150,13 @@ func RunFilesInRepoWithPipelineRunner(repo string) error {
 		}
 
 		start := time.Now()
-		msg, signal, err := pipelineRunner.Run(string(content))
-		if err != nil || signal != glob.SysSignalTrue {
-			return fmt.Errorf("%s\n%s\nerror in file: %s", msg, err.Error(), file.Name())
+		ret := pipelineRunner.Run(string(content))
+		if ret.IsNotTrue() {
+			err := ret.Error()
+			if err == nil {
+				err = fmt.Errorf("execution failed")
+			}
+			return fmt.Errorf("%s\n%s\nerror in file: %s", ret.String(), err.Error(), file.Name())
 		}
 
 		elapsed := time.Since(start)

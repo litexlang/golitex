@@ -2648,7 +2648,7 @@ func (tb *tokenBlock) haveFnEqualStmt() (ast.Stmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	if tb.header.ExceedEnd() {
+	if !tb.header.ExceedEnd() {
 		equalTo, err := tb.RawFc()
 		if err != nil {
 			return nil, tbErr(err, tb)
