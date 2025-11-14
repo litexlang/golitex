@@ -127,6 +127,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.proveByContradictionStmt()
 	case glob.KeywordPrint:
 		ret, err = tb.printStmt()
+	case glob.KeywordHelp:
+		ret, err = tb.helpStmt()
 	default:
 		ret, err = tb.factsStmt()
 	}
@@ -3388,4 +3390,28 @@ func (tb *tokenBlock) printStmt() (ast.Stmt, error) {
 	}
 
 	return ast.NewPrintStmt(isFString, value, tb.line), nil
+}
+
+func (tb *tokenBlock) helpStmt() (ast.Stmt, error) {
+	err := tb.header.skip(glob.KeywordHelp)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	keyword, err := tb.header.next()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolRightBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	return ast.NewHelpStmt(keyword, tb.line), nil
 }

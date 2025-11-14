@@ -74,6 +74,7 @@ func (s *EvalStmt) stmt()                                {}
 func (s *DefProveAlgoStmt) stmt()                        {}
 func (s *ByStmt) stmt()                                  {}
 func (s *PrintStmt) stmt()                               {}
+func (s *HelpStmt) stmt()                                {}
 func (s *HaveFnEqualCaseByCaseStmt) stmt()               {}
 func (s *DefLetStmt) algoStmt()                          {}
 func (s *DefPropStmt) algoStmt()                         {}
@@ -125,6 +126,7 @@ func (s *ProveIsTransitivePropStmt) algoStmt()           {}
 func (s *DefAlgoStmt) algoStmt()                         {}
 func (s *EvalStmt) algoStmt()                            {}
 func (s *PrintStmt) algoStmt()                           {}
+func (s *HelpStmt) algoStmt()                            {}
 func (s *HaveFnEqualCaseByCaseStmt) algoStmt()           {}
 func (s *DefLetStmt) GetLine() uint                      { return s.Line }
 func (s *DefPropStmt) GetLine() uint                     { return s.Line }
@@ -176,6 +178,7 @@ func (s *EvalStmt) GetLine() uint                        { return s.Line }
 func (s *DefProveAlgoStmt) GetLine() uint                { return s.Line }
 func (s *ByStmt) GetLine() uint                          { return s.Line }
 func (s *PrintStmt) GetLine() uint                       { return s.Line }
+func (s *HelpStmt) GetLine() uint                        { return s.Line }
 func (s *HaveFnEqualCaseByCaseStmt) GetLine() uint       { return s.Line }
 
 type FactStmt interface {

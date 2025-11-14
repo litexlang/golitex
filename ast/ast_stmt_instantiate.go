@@ -880,6 +880,10 @@ func (stmt *PrintStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return stmt, nil
 }
 
+func (stmt *HelpStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+	return stmt, nil
+}
+
 func (stmt *HaveFnEqualCaseByCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newDefHeader, err := stmt.DefHeader.Instantiate(uniMap)
 	if err != nil {

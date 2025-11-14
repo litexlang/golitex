@@ -454,3 +454,9 @@ type PrintStmt struct {
 
 	Line uint
 }
+
+type HelpStmt struct {
+	Keyword string
+
+	Line uint
+}

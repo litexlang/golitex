@@ -1194,6 +1194,15 @@ func (stmt *PrintStmt) String() string {
 	return builder.String()
 }
 
+func (stmt *HelpStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordHelp)
+	builder.WriteString(glob.KeySymbolLeftBrace)
+	builder.WriteString(stmt.Keyword)
+	builder.WriteString(glob.KeySymbolRightBrace)
+	return builder.String()
+}
+
 func (stmt *HaveFnEqualCaseByCaseStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordHave)

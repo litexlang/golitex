@@ -88,11 +88,6 @@ func printMessagesToWriter(writer io.Writer, msg []string) {
 	}
 }
 
-const helpMessage = `help: show this help message
-exit: exit the REPL
-clear: refresh the whole environment
-`
-
 func RunREPLInTerminal(version string) {
 	executor, err := InitPipelineExecutor()
 	if err != nil {
@@ -115,14 +110,9 @@ func RunREPLInTerminal(version string) {
 		}
 
 		// Have to trim space because there is \n at the end of code
-		if strings.TrimSpace(code) == "exit" {
+		if strings.TrimSpace(code) == glob.KeywordExit {
 			fmt.Fprintf(writer, glob.REPLGoodbyeMessage)
 			return
-		}
-
-		if strings.TrimSpace(code) == "help" {
-			fmt.Fprintf(writer, helpMessage)
-			continue
 		}
 
 		ret := ExecuteCodeAndReturnMessageSliceGivenSettings(code, executor)

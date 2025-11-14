@@ -312,6 +312,10 @@ func NewPrintStmt(isFString bool, value string, line uint) *PrintStmt {
 	return &PrintStmt{isFString, value, line}
 }
 
+func NewHelpStmt(keyword string, line uint) *HelpStmt {
+	return &HelpStmt{keyword, line}
+}
+
 func NewHaveFnCaseByCaseStmt(defHeader *DefHeader, retSet Obj, caseByCaseFacts []*SpecFactStmt, caseByCaseEqualTo ObjSlice, line uint) *HaveFnEqualCaseByCaseStmt {
 	return &HaveFnEqualCaseByCaseStmt{defHeader, retSet, caseByCaseFacts, caseByCaseEqualTo, line}
 }

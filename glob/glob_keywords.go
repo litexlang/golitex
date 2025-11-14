@@ -89,6 +89,8 @@ const (
 	KeywordCase = "case"
 
 	KeywordProveCaseByCase = "prove_case_by_case"
+	KeywordExit            = "exit"
+	KeywordHelp            = "help"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -158,6 +160,8 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordCase: {},
 
 	KeywordProveCaseByCase: {},
+	KeywordExit:            {},
+	KeywordHelp:            {},
 }
 
 const (
@@ -306,4 +310,64 @@ var builtinPropObjNames = map[string]struct{}{
 	LeftIsEqual0RightIsPositive:  {},
 	LeftIsNegativeRightIsInteger: {},
 	LastTwoObjectsAreEqual:       {},
+}
+
+// KeywordHelpMap stores help messages for each keyword
+var KeywordHelpMap = map[string]string{
+	KeywordSet:                            "",
+	KeywordForall:                         "",
+	KeywordDom:                            "",
+	KeywordObj:                            "",
+	KeywordHave:                           "",
+	KeywordFn:                             "",
+	KeywordProp:                           "",
+	KeywordKnow:                           "",
+	KeywordExist:                          "",
+	KeywordSt:                             "",
+	KeywordExistProp:                      "",
+	KeywordClaim:                          "",
+	KeywordProve:                          "",
+	KeywordImport:                         "",
+	KeywordNot:                            "",
+	KeywordProveByContradiction:           "",
+	KeywordProveInEachCase:                "",
+	KeywordOr:                             "",
+	KeywordProveIsCommutativeProp:         "",
+	KeywordNatural:                        "",
+	KeywordInteger:                        "",
+	KeywordRational:                       "",
+	KeywordReal:                           "",
+	KeywordComplex:                        "",
+	KeywordIn:                             "",
+	KeywordAs:                             "",
+	KeywordLen:                            "",
+	KeywordFiniteSet:                      "",
+	KeywordProveByEnum:                    "",
+	KeywordItemExistsIn:                   "",
+	KeywordSetDefinedByReplacement:        "",
+	KeywordExistPropPreImageByReplacement: "",
+	KeywordExistFnPreImageByReplacement:   "",
+	KeywordFnTemplate:                     "",
+	KeywordNPos:                           "",
+	KeywordLet:                            "",
+	KeywordClear:                          "",
+	KeywordProveByInduction:               "",
+	KeywordLift:                           "",
+	KeywordNonEmptySet:                    "",
+	KeywordWhen:                           "",
+	KeywordProveIsTransitiveProp:          "",
+	KeywordProveInRange:                   "",
+	KeywordAlgo:                           "",
+	KeywordReturn:                         "",
+	KeywordIf:                             "",
+	KeywordEval:                           "",
+	KeywordProveAlgo:                      "",
+	KeywordBy:                             "",
+	KeywordImplication:                    "",
+	KeywordValue:                          "",
+	KeywordPrint:                          "",
+	KeywordCase:                           "",
+	KeywordProveCaseByCase:                "",
+	KeywordExit:                           "exit current REPL session",
+	KeywordHelp:                           "show this help message",
 }
