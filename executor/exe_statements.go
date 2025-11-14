@@ -1011,11 +1011,101 @@ func (exec *Executor) helpStmt(stmt *ast.HelpStmt) ExecRet {
 }
 
 func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseStmt) ExecRet {
-	// 所有的case覆盖了整个domain
+	// 验证每个case的返回值都符合fn的retSet
+	execState, err := exec.checkHaveFnEqualCaseByCaseStmt(stmt)
+	if notOkExec(execState, err) {
+		return execState
+	}
 
-	// 每个case没有overlap
+	// 构建 thenFacts：对于每个 case，如果条件满足，则函数值等于对应的返回值
+	thenFacts := []ast.FactStmt{}
+	for i, caseFact := range stmt.CaseByCaseFacts {
+		// 在 caseFact 的条件下，函数值等于对应的返回值
+		// 需要将 caseFact 作为条件，然后添加等式
+		fnCall := fnHeaderToReturnValueOfFn(stmt.DefHeader)
+		equalFact := ast.NewEqualFact(fnCall, stmt.CaseByCaseEqualTo[i])
 
-	// 每个case的返回值都符合fn的retSet
+		// 创建一个条件事实：如果 caseFact 为真，则 equalFact 为真
+		// 这里我们需要使用 implication 或者直接在 thenFacts 中添加条件
+		// 由于 caseFact 是 SpecFactStmt，我们需要创建一个 UniFact 来表示这个条件
+		// 但是更简单的方式是：创建一个 UniFact，其中 DomFacts 包含 caseFact，ThenFacts 包含 equalFact
+		uniFact := ast.NewUniFact(
+			stmt.DefHeader.Params,
+			stmt.DefHeader.ParamSets,
+			[]ast.FactStmt{caseFact},
+			[]ast.FactStmt{equalFact},
+			stmt.Line,
+		)
+		thenFacts = append(thenFacts, uniFact)
+	}
 
-	panic("not implemented")
+	// 定义函数
+	newFnDefStmt := ast.NewDefFnStmt(
+		string(stmt.DefHeader.Name),
+		ast.NewFnTStruct(
+			stmt.DefHeader.Params,
+			stmt.DefHeader.ParamSets,
+			stmt.RetSet,
+			[]ast.FactStmt{},
+			thenFacts,
+			stmt.Line,
+		),
+		stmt.Line,
+	)
+	execState = exec.defFnStmt(newFnDefStmt)
+	if execState.IsNotTrue() {
+		return NewExecErr(fmt.Sprintf("failed to declare fn: %s", newFnDefStmt.String()))
+	}
+
+	return NewExecTrue("")
+}
+
+func (exec *Executor) checkHaveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseStmt) (ExecRet, error) {
+	// 验证每个case的返回值都符合fn的retSet（在case成立的条件下）
+	for i := range len(stmt.CaseByCaseFacts) {
+		execState, err := exec.checkCaseReturnValueInRetSet(stmt, i)
+		if notOkExec(execState, err) {
+			return execState, err
+		}
+	}
+
+	// TODO: 验证所有的case覆盖了整个domain
+	// TODO: 验证每个case没有overlap
+
+	return NewExecTrue(""), nil
+}
+
+func (exec *Executor) checkCaseReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCaseStmt, caseIndex int) (ExecRet, error) {
+	exec.NewEnv(exec.Env)
+	defer func() {
+		exec.deleteEnvAndRetainMsg()
+	}()
+
+	// 为每个参数定义变量
+	for i := range len(stmt.DefHeader.Params) {
+		execState := exec.defLetStmt(ast.NewDefLetStmt([]string{stmt.DefHeader.Params[i]}, []ast.Obj{stmt.DefHeader.ParamSets[i]}, []ast.FactStmt{}, stmt.Line))
+		if execState.IsNotTrue() {
+			return execState, fmt.Errorf(execState.String())
+		}
+	}
+
+	// 假设case的条件成立
+	caseFact := stmt.CaseByCaseFacts[caseIndex]
+	err := exec.Env.NewFact(caseFact)
+	if err != nil {
+		return NewExecErr(""), fmt.Errorf("case %d: failed to add case fact: %s", caseIndex, err.Error())
+	}
+
+	// 在case成立的条件下，验证返回值在retSet中
+	equalTo := stmt.CaseByCaseEqualTo[caseIndex]
+	ver := NewVerifier(exec.Env)
+	verRet := ver.VerFactStmt(ast.NewInFactWithFc(equalTo, stmt.RetSet), Round0Msg)
+	if verRet.IsErr() {
+		return NewExecErr(""), fmt.Errorf("case %d: %s", caseIndex, verRet.String())
+	}
+	if verRet.IsUnknown() {
+		return NewExecErr(""), fmt.Errorf("case %d: according to the definition of %s, when %s is true, the returned value %s must be in %s, but\n%s is unknown", caseIndex, stmt, caseFact, equalTo, stmt.RetSet, ast.NewInFactWithFc(equalTo, stmt.RetSet))
+	}
+
+	return NewExecTrue(""), nil
 }
