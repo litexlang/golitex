@@ -1127,11 +1127,7 @@ func AlgoStmtStrSliceJoinWithNewlineWithIndents(stmts []Stmt, indents uint32) st
 }
 
 func (stmt *EvalStmt) String() string {
-	strSlice := make([]string, len(stmt.FcsToEval))
-	for i, fc := range stmt.FcsToEval {
-		strSlice[i] = fc.String()
-	}
-	return fmt.Sprintf("%s %s", glob.KeywordEval, strings.Join(strSlice, ", "))
+	return fmt.Sprintf("%s(%s)", glob.KeywordEval, stmt.FcsToEval.String())
 }
 
 func (stmt *DefProveAlgoStmt) String() string {

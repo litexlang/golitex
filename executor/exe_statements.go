@@ -881,17 +881,15 @@ func (exec *Executor) defAlgoStmt(stmt *ast.DefAlgoStmt) ExecRet {
 func (exec *Executor) evalStmt(stmt *ast.EvalStmt) ExecRet {
 	trueEvalRet := NewExecTrue("")
 
-	for _, fcToEval := range stmt.FcsToEval {
-		value, execRet := exec.evalFcInLocalEnv(fcToEval)
-		if execRet.IsNotTrue() {
-			return execRet
-		}
-		err := exec.Env.NewFact(ast.NewEqualFact(fcToEval, value))
-		if err != nil {
-			return NewExecErrWithErr(err)
-		}
-		trueEvalRet.Inherit(execRet)
+	value, execRet := exec.evalFcInLocalEnv(stmt.FcsToEval)
+	if execRet.IsNotTrue() {
+		return execRet
 	}
+	err := exec.Env.NewFact(ast.NewEqualFact(stmt.FcsToEval, value))
+	if err != nil {
+		return NewExecErrWithErr(err)
+	}
+	trueEvalRet.Inherit(execRet)
 
 	return trueEvalRet.NewVerMsgAtBegin(Round0Msg, stmt.String())
 }

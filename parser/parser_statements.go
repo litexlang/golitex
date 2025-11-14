@@ -3083,17 +3083,21 @@ func (tb *tokenBlock) evalStmt() (ast.Stmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	fcsToEval := []ast.Fc{}
-	for !tb.header.ExceedEnd() {
-		fc, err := tb.RawFc()
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-		fcsToEval = append(fcsToEval, fc)
-		if tb.header.is(glob.KeySymbolComma) {
-			tb.header.skip(glob.KeySymbolComma)
-		}
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
 	}
+
+	fcsToEval, err := tb.RawFc()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolRightBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
 	return ast.NewEvalStmt(fcsToEval, tb.line), nil
 }
 

@@ -288,8 +288,8 @@ func NewUniFactWithIffWithSafeGuard(params []string, setParams []Fc, domFacts []
 	return NewUniFactWithIff(uniFact, iffFacts, line), nil
 }
 
-func NewEvalStmt(values []Fc, line uint) *EvalStmt {
-	return &EvalStmt{values, line}
+func NewEvalStmt(value Fc, line uint) *EvalStmt {
+	return &EvalStmt{value, line}
 }
 
 func NewDefProveAlgoStmt(algoName string, params []string, thenFacts AlgoStmtSlice, line uint) *DefProveAlgoStmt {
