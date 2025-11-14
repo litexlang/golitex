@@ -404,7 +404,7 @@ type DefAlgoStmt struct {
 }
 
 type EvalStmt struct {
-	FcsToEval []Fc
+	FcsToEval Fc
 
 	Line uint
 }
