@@ -2650,7 +2650,7 @@ func (tb *tokenBlock) haveFnEqualStmt() (ast.Stmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	if tb.header.is(glob.KeySymbolEqual) {
+	if !tb.header.is(glob.KeySymbolColon) {
 		equalTo, err := tb.RawFc()
 		if err != nil {
 			return nil, tbErr(err, tb)
