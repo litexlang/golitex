@@ -61,12 +61,12 @@ func main() {
 	// Handle combined -latex and -e
 	if *elatexFlag != "" {
 		// 处理转义序列
-		msg, signal, err := sys.CompileCodeToLatex(glob.RemoveWindowsCarriage(*elatexFlag))
-		if err != nil || signal != glob.SysSignalTrue {
+		ret, err := sys.CompileCodeToLatex(glob.RemoveWindowsCarriage(*elatexFlag))
+		if err != nil || ret.IsNotTrue() {
 			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)
 		}
-		fmt.Println(msg)
+		fmt.Println(ret.String())
 		return
 	}
 
@@ -102,35 +102,35 @@ func main() {
 			os.Exit(1)
 		}
 		// run the repo
-		msg, signal, err := sys.RunRepo(glob.RemoveWindowsCarriage(*repoFlag))
-		fmt.Println(msg)
+		ret, err := sys.RunRepo(glob.RemoveWindowsCarriage(*repoFlag))
+		fmt.Println(ret.String())
 		if err != nil {
 			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)
 		} else {
-			msg := sys.RunMainMsg(signal)
+			msg := sys.RunMainMsg(ret)
 			fmt.Println(msg)
 		}
 		return
 	}
 
 	if *latexFlag != "" {
-		msg, signal, err := sys.CompileFileToLatex(glob.RemoveWindowsCarriage(*latexFlag))
-		if err != nil || signal != glob.SysSignalTrue {
+		ret, err := sys.CompileFileToLatex(glob.RemoveWindowsCarriage(*latexFlag))
+		if err != nil || ret.IsNotTrue() {
 			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)
 		}
-		fmt.Println(msg)
+		fmt.Println(ret.String())
 		return
 	}
 
 	if *fmtCodeFlag != "" {
-		msg, signal, err := pipeline.FormatCode(glob.RemoveWindowsCarriage(*fmtCodeFlag))
-		if err != nil || signal != glob.SysSignalTrue {
+		ret, err := pipeline.FormatCode(glob.RemoveWindowsCarriage(*fmtCodeFlag))
+		if err != nil || ret.IsNotTrue() {
 			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)
 		}
-		fmt.Println(msg)
+		fmt.Println(ret.String())
 		return
 	}
 

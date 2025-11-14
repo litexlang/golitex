@@ -30,7 +30,6 @@ type GlobRet interface {
 	IsNotUnknown() bool
 	IsNotErr() bool
 	Inherit(globRet GlobRet)
-	SysSignal() SysSignal
 	Error() error
 	GetREPLMsg() string
 }
@@ -120,18 +119,6 @@ func (v *GlobUnknown) Inherit(globRet GlobRet) {
 
 func (v *GlobErr) Inherit(globRet GlobRet) {
 	v.Msg = append(v.Msg, globRet.String())
-}
-
-func (v *GlobTrue) SysSignal() SysSignal {
-	return SysSignalTrue
-}
-
-func (v *GlobUnknown) SysSignal() SysSignal {
-	return SysSignalUnknown
-}
-
-func (v *GlobErr) SysSignal() SysSignal {
-	return SysSignalSystemError
 }
 
 func (v *GlobTrue) Error() error {

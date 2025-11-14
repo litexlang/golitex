@@ -29,10 +29,10 @@ import (
 	"time"
 )
 
-func ExecuteCodeAndReturnMessageSliceGivenSettings(code string, executor *exe.Executor) ([]string, glob.SysSignal, error) {
+func ExecuteCodeAndReturnMessageSliceGivenSettings(code string, executor *exe.Executor) ([]string, glob.GlobRet) {
 	topStmtSlice, err := parser.ParseSourceCode(code)
 	if err != nil {
-		return nil, glob.SysSignalParseError, err
+		return nil, glob.NewGlobErr(err.Error())
 	}
 
 	msgOfTopStatements := []string{}
@@ -40,17 +40,17 @@ func ExecuteCodeAndReturnMessageSliceGivenSettings(code string, executor *exe.Ex
 	for _, topStmt := range topStmtSlice {
 		execState := executor.Stmt(topStmt)
 		if execState.IsErr() {
-			return nil, glob.SysSignalRuntimeError, fmt.Errorf(execState.String())
+			return nil, glob.NewGlobErr(execState.String())
 		}
 
 		msgOfTopStatements = append(msgOfTopStatements, executor.GetMsgAsStr0ToEnd())
 
 		if execState.IsUnknown() || execState.IsErr() {
-			return msgOfTopStatements, glob.SysSignalRuntimeError, fmt.Errorf("execution failed")
+			return msgOfTopStatements, glob.NewGlobErr("execution failed")
 		}
 	}
 
-	return msgOfTopStatements, glob.SysSignalTrue, nil
+	return msgOfTopStatements, glob.NewGlobTrue("")
 }
 
 func printMessagesToWriter(writer io.Writer, msg []string) {
@@ -120,8 +120,8 @@ func RunREPLInTerminal(version string) {
 			continue
 		}
 
-		msg, signal, err := ExecuteCodeAndReturnMessageSliceGivenSettings(code, executor)
-		if err != nil || signal != glob.SysSignalTrue {
+		msg, ret := ExecuteCodeAndReturnMessageSliceGivenSettings(code, executor)
+		if ret.IsNotTrue() {
 			printMessagesToWriter(writer, msg)
 			fmt.Fprintf(writer, glob.REPLFailedMessage)
 			continue
