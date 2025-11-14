@@ -29,28 +29,33 @@ import (
 	"time"
 )
 
-func ExecuteCodeAndReturnMessageSliceGivenSettings(code string, executor *exe.Executor) ([]string, glob.GlobRet) {
+func ExecuteCodeAndReturnMessageSliceGivenSettings(code string, executor *exe.Executor) glob.GlobRet {
 	topStmtSlice, err := parser.ParseSourceCode(code)
 	if err != nil {
-		return nil, glob.NewGlobErr(err.Error())
+		return glob.NewGlobErr(err.Error())
 	}
 
 	msgOfTopStatements := []string{}
 
 	for _, topStmt := range topStmtSlice {
 		execState := executor.Stmt(topStmt)
-		if execState.IsErr() {
-			return nil, glob.NewGlobErr(execState.String())
-		}
-
 		msgOfTopStatements = append(msgOfTopStatements, executor.GetMsgAsStr0ToEnd())
 
-		if execState.IsUnknown() || execState.IsErr() {
-			return msgOfTopStatements, glob.NewGlobErr("execution failed")
+		if execState.IsErr() {
+			// 将消息添加到 globRet 中
+			allMsgs := append(msgOfTopStatements, execState.GetMsgs()...)
+			return glob.NewGlobErrWithMsgs(allMsgs)
+		}
+
+		if execState.IsUnknown() {
+			// 将消息添加到 globRet 中，并转换为错误
+			allMsgs := append(msgOfTopStatements, execState.GetMsgs()...)
+			allMsgs = append(allMsgs, "execution failed: unknown factual statement")
+			return glob.NewGlobErrWithMsgs(allMsgs)
 		}
 	}
 
-	return msgOfTopStatements, glob.NewGlobTrue("")
+	return glob.NewGlobTrueWithMsgs(msgOfTopStatements)
 }
 
 func printMessagesToWriter(writer io.Writer, msg []string) {
@@ -120,14 +125,20 @@ func RunREPLInTerminal(version string) {
 			continue
 		}
 
-		msg, ret := ExecuteCodeAndReturnMessageSliceGivenSettings(code, executor)
+		ret := ExecuteCodeAndReturnMessageSliceGivenSettings(code, executor)
 		if ret.IsNotTrue() {
-			printMessagesToWriter(writer, msg)
+			msgStr := ret.String()
+			if msgStr != "" {
+				printMessagesToWriter(writer, strings.Split(msgStr, "\n"))
+			}
 			fmt.Fprintf(writer, glob.REPLFailedMessage)
 			continue
 		}
 
-		printMessagesToWriter(writer, msg)
+		msgStr := ret.String()
+		if msgStr != "" {
+			printMessagesToWriter(writer, strings.Split(msgStr, "\n"))
+		}
 		fmt.Fprintf(writer, glob.REPLSuccessMessage)
 	}
 }

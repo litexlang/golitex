@@ -87,12 +87,12 @@ func NewGlobErrWithErr(err error) *GlobErr {
 
 func BoolErrToGlobRet(ok bool, err error) GlobRet {
 	if err != nil {
-		return &GlobErr{Msg: []string{err.Error()}}
+		return NewGlobErrWithMsgs([]string{err.Error()})
 	}
 	if ok {
-		return &GlobTrue{Msg: []string{}}
+		return NewGlobTrueWithMsgs([]string{})
 	}
-	return &GlobUnknown{Msg: []string{}}
+	return NewGlobUnknownWithMsgs([]string{})
 }
 
 func NewGlobTrue(s string) GlobRet {
@@ -107,6 +107,18 @@ func NewGlobUnknown(s string) GlobRet {
 		return &GlobUnknown{Msg: []string{s}}
 	}
 	return &GlobUnknown{Msg: []string{}}
+}
+
+func NewGlobTrueWithMsgs(msgs []string) GlobRet {
+	return &GlobTrue{Msg: msgs}
+}
+
+func NewGlobErrWithMsgs(msgs []string) GlobRet {
+	return &GlobErr{Msg: msgs}
+}
+
+func NewGlobUnknownWithMsgs(msgs []string) GlobRet {
+	return &GlobUnknown{Msg: msgs}
 }
 
 func (v *GlobTrue) Inherit(globRet GlobRet) {
