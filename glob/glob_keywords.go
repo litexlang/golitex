@@ -85,6 +85,8 @@ const (
 	KeywordValue       = "value"
 
 	KeywordPrint = "print"
+
+	KeywordCase = "case"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -150,6 +152,8 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordImplication: {},
 
 	KeywordPrint: {},
+
+	KeywordCase: {},
 }
 
 const (

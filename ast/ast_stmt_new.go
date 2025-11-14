@@ -144,7 +144,7 @@ func NewNamedUniFactStmt(defPropStmt *DefPropStmt, line uint) *NamedUniFactStmt 
 	return &NamedUniFactStmt{defPropStmt, line}
 }
 
-func NewEqualsFactStmt(params FcSlice, line uint) *EqualsFactStmt {
+func NewEqualsFactStmt(params ObjSlice, line uint) *EqualsFactStmt {
 	return &EqualsFactStmt{params, line}
 }
 
@@ -296,7 +296,7 @@ func NewDefProveAlgoStmt(algoName string, params []string, thenFacts AlgoStmtSli
 	return &DefProveAlgoStmt{algoName, params, thenFacts, line}
 }
 
-func NewByStmt(proveAlgoName string, proveAlgoParams FcSlice, thenFacts FactStmtSlice, line uint) *ByStmt {
+func NewByStmt(proveAlgoName string, proveAlgoParams ObjSlice, thenFacts FactStmtSlice, line uint) *ByStmt {
 	return &ByStmt{proveAlgoName, proveAlgoParams, thenFacts, line}
 }
 
@@ -306,4 +306,8 @@ func NewProveAlgoReturnStmt(by *ByStmt, line uint) *ProveAlgoReturnStmt {
 
 func NewPrintStmt(isFString bool, value string, line uint) *PrintStmt {
 	return &PrintStmt{isFString, value, line}
+}
+
+func NewHaveFnCaseByCaseStmt(defHeader *DefHeader, retSet Obj, caseByCaseFacts []*SpecFactStmt, caseByCaseEqualTo ObjSlice, line uint) *HaveFnEqualCaseByCaseStmt {
+	return &HaveFnEqualCaseByCaseStmt{defHeader, retSet, caseByCaseFacts, caseByCaseEqualTo, line}
 }
