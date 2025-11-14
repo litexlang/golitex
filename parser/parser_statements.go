@@ -1269,51 +1269,33 @@ func (tb *tokenBlock) proveInEachCaseStmt() (*ast.ProveInEachCaseStmt, error) {
 }
 
 func (tb *tokenBlock) proveCaseByCaseStmt() (*ast.ProveCaseByCaseStmt, error) {
-	err := tb.header.skip(glob.KeywordProveCaseByCase)
+	err := tb.header.skipKwAndColonCheckEOL(glob.KeywordProveCaseByCase)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
 
-	if tb.header.is(glob.KeySymbolColon) {
-		err := tb.header.skip(glob.KeySymbolColon)
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-		if !tb.header.ExceedEnd() {
-			return nil, fmt.Errorf("expect end of line")
-		}
+	caseFacts := []*ast.SpecFactStmt{}
+	thenFacts := ast.FactStmtSlice{}
+	proofs := []ast.StmtSlice{}
+	hasEncounteredCase := false
 
-		caseFacts := []*ast.SpecFactStmt{}
-		thenFacts := []ast.FactStmt{}
-		proofs := []ast.StmtSlice{}
+	for _, block := range tb.body {
+		if block.header.is(glob.KeywordCase) {
+			hasEncounteredCase = true
 
-		// Check if there's a "=>" section for thenFacts
-		thenFactsStartIdx := -1
-		for i, block := range tb.body {
-			if block.header.is(glob.KeySymbolRightArrow) {
-				thenFactsStartIdx = i
-				break
-			}
-		}
-
-		// Parse case statements
-		caseEndIdx := len(tb.body)
-		if thenFactsStartIdx >= 0 {
-			caseEndIdx = thenFactsStartIdx
-		}
-
-		for i := 0; i < caseEndIdx; i++ {
-			block := tb.body[i]
+			// Skip "case" keyword
 			err := block.header.skip(glob.KeywordCase)
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}
 
+			// Parse the specFact (condition)
 			curStmt, err := block.specFactStmt()
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}
 
+			// Skip the colon after specFact
 			err = block.header.skip(glob.KeySymbolColon)
 			if err != nil {
 				return nil, tbErr(err, tb)
@@ -1331,52 +1313,42 @@ func (tb *tokenBlock) proveCaseByCaseStmt() (*ast.ProveCaseByCaseStmt, error) {
 				proof = append(proof, curStmt)
 			}
 			proofs = append(proofs, proof)
-		}
-
-		// Parse thenFacts if present
-		if thenFactsStartIdx >= 0 {
-			err = tb.body[thenFactsStartIdx].header.skipKwAndColonCheckEOL(glob.KeySymbolRightArrow)
-			if err != nil {
-				return nil, tbErr(err, tb)
+		} else {
+			// This is a thenFacts block
+			if hasEncounteredCase {
+				return nil, tbErr(fmt.Errorf("prove_case_by_case: thenFacts can only appear before case blocks"), tb)
 			}
 
-			for _, stmt := range tb.body[thenFactsStartIdx].body {
-				curStmt, err := stmt.factStmt(UniFactDepth0)
+			// Parse thenFacts (could be =>: section or inline facts)
+			if block.header.is(glob.KeySymbolRightArrow) {
+				err = block.header.skipKwAndColonCheckEOL(glob.KeySymbolRightArrow)
+				if err != nil {
+					return nil, tbErr(err, tb)
+				}
+
+				for _, stmt := range block.body {
+					curStmt, err := stmt.factStmt(UniFactDepth0)
+					if err != nil {
+						return nil, tbErr(err, tb)
+					}
+					thenFacts = append(thenFacts, curStmt)
+				}
+			} else {
+				// Parse inline fact
+				curStmt, err := block.factStmt(UniFactDepth0)
 				if err != nil {
 					return nil, tbErr(err, tb)
 				}
 				thenFacts = append(thenFacts, curStmt)
 			}
-
-			// Parse additional prove blocks after thenFacts if any
-			for i := thenFactsStartIdx + 1; i < len(tb.body); i++ {
-				proof := ast.StmtSlice{}
-
-				err = tb.body[i].header.skipKwAndColonCheckEOL(glob.KeywordProve)
-				if err != nil {
-					return nil, tbErr(err, tb)
-				}
-
-				for _, stmt := range tb.body[i].body {
-					curStmt, err := stmt.Stmt()
-					if err != nil {
-						return nil, tbErr(err, tb)
-					}
-					proof = append(proof, curStmt)
-				}
-				proofs = append(proofs, proof)
-			}
 		}
-
-		if len(proofs) != len(caseFacts) && thenFactsStartIdx < 0 {
-			return nil, tbErr(fmt.Errorf("prove case by case: expect %d proofs, but got %d. expect the number of proofs to be the same as the number of case facts", len(caseFacts), len(proofs)), tb)
-		}
-
-		return ast.NewProveCaseByCaseStmt(caseFacts, thenFacts, proofs, tb.line), nil
-	} else {
-		// Inline format not supported for prove_case_by_case
-		return nil, fmt.Errorf("prove_case_by_case must use multi-line format with ':'")
 	}
+
+	if len(caseFacts) == 0 {
+		return nil, tbErr(fmt.Errorf("prove_case_by_case: at least one case block is required"), tb)
+	}
+
+	return ast.NewProveCaseByCaseStmt(caseFacts, thenFacts, proofs, tb.line), nil
 }
 
 func (tb *tokenBlock) param_paramSet_paramInSetFacts(endWith string, allowExceedEnd bool) ([]string, []ast.Obj, error) {
