@@ -28,6 +28,7 @@ type ExecRet interface {
 	IsErr() bool
 	NewVerMsg(verState *VerState, msg string) ExecRet
 	String() string
+	GetMsgs() []string
 	ToBoolErr() (bool, error)
 	IsNotTrue() bool
 	IsNotUnknown() bool
@@ -61,6 +62,7 @@ func (v *ExecTrue) NewVerMsg(verState *VerState, msg string) ExecRet {
 	return v
 }
 func (v *ExecTrue) String() string           { return strings.Join(v.Msg, "\n") }
+func (v *ExecTrue) GetMsgs() []string        { return v.Msg }
 func (v *ExecTrue) ToBoolErr() (bool, error) { return true, nil }
 func (v *ExecTrue) IsNotTrue() bool          { return false }
 func (v *ExecTrue) IsNotUnknown() bool       { return true }
@@ -76,6 +78,7 @@ func (v *ExecErr) NewVerMsg(verState *VerState, msg string) ExecRet {
 	return v
 }
 func (v *ExecErr) String() string           { return strings.Join(v.Msg, "\n") }
+func (v *ExecErr) GetMsgs() []string        { return v.Msg }
 func (v *ExecErr) ToBoolErr() (bool, error) { return false, fmt.Errorf(v.String()) }
 func (v *ExecErr) IsNotTrue() bool          { return true }
 func (v *ExecErr) IsNotUnknown() bool       { return true }
@@ -91,6 +94,7 @@ func (v *ExecUnknown) NewVerMsg(verState *VerState, msg string) ExecRet {
 	return v
 }
 func (v *ExecUnknown) String() string           { return strings.Join(v.Msg, "\n") }
+func (v *ExecUnknown) GetMsgs() []string        { return v.Msg }
 func (v *ExecUnknown) ToBoolErr() (bool, error) { return false, nil }
 func (v *ExecUnknown) IsNotTrue() bool          { return true }
 func (v *ExecUnknown) IsNotUnknown() bool       { return false }
