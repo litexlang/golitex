@@ -33,22 +33,22 @@ import (
 // 	return ret.String(), ret.SysSignal(), ret.Error()
 // }
 
-func RunFileWithPipelineRunner(path string) (glob.GlobRet, time.Duration, error) {
-	// repoName := filepath.Dir(path)
-	// glob.CurrentTaskDirName = repoName
-	content, err := os.ReadFile(path)
-	if err != nil {
-		return glob.NewGlobErr(fmt.Sprintf("failed to read file %s: %s", path, err.Error())), 0, err
-	}
-	pipelineRunner := pipeline.NewPipelineRunner()
+// func RunFileWithPipelineRunner(path string) (glob.GlobRet, time.Duration, error) {
+// 	// repoName := filepath.Dir(path)
+// 	// glob.CurrentTaskDirName = repoName
+// 	content, err := os.ReadFile(path)
+// 	if err != nil {
+// 		return glob.NewGlobErr(fmt.Sprintf("failed to read file %s: %s", path, err.Error())), 0, err
+// 	}
+// 	pipelineRunner := pipeline.NewPipelineRunner()
 
-	start := time.Now()
-	ret := pipelineRunner.Run(string(content))
-	if ret.IsErr() {
-		return ret, 0, ret.Error()
-	}
-	return ret, time.Since(start), nil
-}
+// 	start := time.Now()
+// 	ret := pipelineRunner.Run(string(content))
+// 	if ret.IsErr() {
+// 		return ret, 0, ret.Error()
+// 	}
+// 	return ret, time.Since(start), nil
+// }
 
 func RunRepo(path string) (glob.GlobRet, error) {
 	// glob.CurrentTaskDirName = path
