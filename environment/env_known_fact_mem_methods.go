@@ -286,7 +286,7 @@ func (e *Env) newUniFactWithIff(stmt *ast.UniFactWithIffStmt) error {
 	return nil
 }
 
-func (e *Env) StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(fn ast.Fc, fnTemplateFcFn *ast.FcFn, fnTStruct *ast.FnTStruct) error {
+func (e *Env) StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(fn ast.Obj, fnTemplateFcFn *ast.FcFn, fnTStruct *ast.FnTStruct) error {
 	if fnTemplateFcFn != nil {
 		fnTStruct, err := e.GetFnStructFromFnTName(fnTemplateFcFn)
 		if err != nil {

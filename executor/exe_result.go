@@ -39,7 +39,7 @@ type ExecRet interface {
 
 type ExecTrue struct {
 	Msg             []string
-	TrueEqualValues []ast.Fc
+	TrueEqualValues []ast.Obj
 }
 
 type ExecUnknown struct {
@@ -131,14 +131,14 @@ func NewExecUnknown(s string) ExecRet {
 	return &ExecUnknown{Msg: []string{}}
 }
 
-func NewExecTrueWithValues(s string, equalValue []ast.Fc) ExecRet {
+func NewExecTrueWithValues(s string, equalValue []ast.Obj) ExecRet {
 	if s != "" {
 		return &ExecTrue{Msg: []string{s}, TrueEqualValues: equalValue}
 	}
 	if len(equalValue) != 2 {
 		panic("equal value length must be 2")
 	}
-	return &ExecTrue{Msg: []string{}, TrueEqualValues: []ast.Fc{equalValue[0], equalValue[1]}}
+	return &ExecTrue{Msg: []string{}, TrueEqualValues: []ast.Obj{equalValue[0], equalValue[1]}}
 }
 
 func (v *ExecTrue) Inherit(execRet ExecRet) {

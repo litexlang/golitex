@@ -20,7 +20,7 @@ import (
 	"slices"
 )
 
-func NewDefLetStmt(objs []string, objSets []Fc, facts []FactStmt, line uint) *DefLetStmt {
+func NewDefLetStmt(objs []string, objSets []Obj, facts []FactStmt, line uint) *DefLetStmt {
 	return &DefLetStmt{objs, objSets, facts, line}
 }
 
@@ -28,11 +28,11 @@ func NewDefPropStmt(defHeader *DefHeader, domFacts []FactStmt, iffFacts []FactSt
 	return &DefPropStmt{defHeader, domFacts, iffFacts, thenFacts, line}
 }
 
-func NewDefExistPropStmt(def *DefExistPropStmtBody, existParams []string, existParamSets []Fc, line uint) *DefExistPropStmt {
+func NewDefExistPropStmt(def *DefExistPropStmtBody, existParams []string, existParamSets []Obj, line uint) *DefExistPropStmt {
 	return &DefExistPropStmt{def, existParams, existParamSets, line}
 }
 
-func NewSpecFactStmt(typeEnum SpecFactEnum, propName FcAtom, params []Fc, line uint) *SpecFactStmt {
+func NewSpecFactStmt(typeEnum SpecFactEnum, propName FcAtom, params []Obj, line uint) *SpecFactStmt {
 	return &SpecFactStmt{typeEnum, propName, params, line}
 }
 
@@ -48,7 +48,7 @@ func NewKnowStmt(facts CanBeKnownStmtSlice, line uint) *KnowFactStmt {
 	return &KnowFactStmt{facts, line}
 }
 
-func NewDefHeader(name FcAtom, params []string, setParams []Fc) *DefHeader {
+func NewDefHeader(name FcAtom, params []string, setParams []Obj) *DefHeader {
 	return &DefHeader{name, params, setParams}
 }
 
@@ -60,7 +60,7 @@ func NewExistPropDef(declHeader *DefHeader, domFacts []FactStmt, iffFacts []Fact
 	return &DefExistPropStmtBody{declHeader, domFacts, iffFacts, thenFacts, line}
 }
 
-func NewUniFact(params []string, setParams []Fc, domFacts []FactStmt, thenFacts []FactStmt, line uint) *UniFactStmt {
+func NewUniFact(params []string, setParams []Obj, domFacts []FactStmt, thenFacts []FactStmt, line uint) *UniFactStmt {
 	return &UniFactStmt{params, setParams, domFacts, thenFacts, line}
 }
 
@@ -96,7 +96,7 @@ func NewDefFnStmt(name string, fnTemplate *FnTStruct, line uint) *DefFnStmt {
 	return &DefFnStmt{name, fnTemplate, line}
 }
 
-func NewEnumStmt(enumName Fc, enumValues []Fc, line uint) *EnumStmt {
+func NewEnumStmt(enumName Obj, enumValues []Obj, line uint) *EnumStmt {
 	return &EnumStmt{enumName, enumValues, line}
 }
 
@@ -108,11 +108,11 @@ func NewClaimPropStmt(prop *DefPropStmt, proofs []Stmt, line uint) *ClaimPropStm
 	return &ClaimPropStmt{prop, proofs, line}
 }
 
-func NewClaimExistPropStmt(existProp *DefExistPropStmt, proofs []Stmt, haveObj []Fc, line uint) *ClaimExistPropStmt {
+func NewClaimExistPropStmt(existProp *DefExistPropStmt, proofs []Stmt, haveObj []Obj, line uint) *ClaimExistPropStmt {
 	return &ClaimExistPropStmt{existProp, proofs, haveObj, line}
 }
 
-func NewIntensionalSetStmt(curSet Fc, param string, parentSet Fc, proofs []*SpecFactStmt, line uint) *IntensionalSetStmt {
+func NewIntensionalSetStmt(curSet Obj, param string, parentSet Obj, proofs []*SpecFactStmt, line uint) *IntensionalSetStmt {
 	return &IntensionalSetStmt{curSet, param, parentSet, proofs, line}
 }
 
@@ -120,7 +120,7 @@ func NewProveByEnumStmt(fact *UniFactStmt, proofs []Stmt, line uint) *ProveByEnu
 	return &ProveByEnumStmt{fact, proofs, line}
 }
 
-func NewHaveObjInNonEmptySetStmt(objNames []string, objSets []Fc, line uint) *HaveObjInNonEmptySetStmt {
+func NewHaveObjInNonEmptySetStmt(objNames []string, objSets []Obj, line uint) *HaveObjInNonEmptySetStmt {
 	return &HaveObjInNonEmptySetStmt{objNames, objSets, line}
 }
 
@@ -132,11 +132,11 @@ func NewHaveIntensionalSetStmt(fact *IntensionalSetStmt, line uint) *HaveIntensi
 	return &HaveIntensionalSetStmt{fact, line}
 }
 
-func NewHaveSetFnStmt(declHeader *DefHeader, param string, parentSet Fc, proofs []*SpecFactStmt, line uint) *HaveSetFnStmt {
+func NewHaveSetFnStmt(declHeader *DefHeader, param string, parentSet Obj, proofs []*SpecFactStmt, line uint) *HaveSetFnStmt {
 	return &HaveSetFnStmt{declHeader, param, parentSet, proofs, line}
 }
 
-func NewHaveSetDefinedByReplacementStmt(name string, domSet Fc, rangeSet Fc, propName FcAtom, line uint) *HaveSetDefinedByReplacementStmt {
+func NewHaveSetDefinedByReplacementStmt(name string, domSet Obj, rangeSet Obj, propName FcAtom, line uint) *HaveSetDefinedByReplacementStmt {
 	return &HaveSetDefinedByReplacementStmt{name, domSet, rangeSet, propName, line}
 }
 
@@ -160,7 +160,7 @@ func NewFnTemplateStmt(defHeader *DefHeader, templateDomFacts []FactStmt, fnTStr
 	return &FnTemplateDefStmt{defHeader, templateDomFacts, fnTStruct, line}
 }
 
-func NewFnTStruct(params []string, paramSets []Fc, retSet Fc, domFacts []FactStmt, thenFacts []FactStmt, line uint) *FnTStruct {
+func NewFnTStruct(params []string, paramSets []Obj, retSet Obj, domFacts []FactStmt, thenFacts []FactStmt, line uint) *FnTStruct {
 	return &FnTStruct{params, paramSets, retSet, domFacts, thenFacts, line}
 }
 
@@ -172,23 +172,23 @@ func NewInlineFactsStmt(facts []FactStmt, line uint) *InlineFactsStmt {
 	return &InlineFactsStmt{facts, line}
 }
 
-func NewProveByInductionStmt(fact *SpecFactStmt, param string, start Fc, line uint) *ProveByInductionStmt {
+func NewProveByInductionStmt(fact *SpecFactStmt, param string, start Obj, line uint) *ProveByInductionStmt {
 	return &ProveByInductionStmt{fact, param, start, line}
 }
 
-func NewHaveObjEqualStmt(objNames []string, objEqualTos []Fc, objSets []Fc, line uint) *HaveObjEqualStmt {
+func NewHaveObjEqualStmt(objNames []string, objEqualTos []Obj, objSets []Obj, line uint) *HaveObjEqualStmt {
 	return &HaveObjEqualStmt{objNames, objEqualTos, objSets, line}
 }
 
-func NewHaveFnEqualStmt(defHeader *DefHeader, retSet Fc, equalTo Fc, line uint) *HaveFnEqualStmt {
+func NewHaveFnEqualStmt(defHeader *DefHeader, retSet Obj, equalTo Obj, line uint) *HaveFnEqualStmt {
 	return &HaveFnEqualStmt{defHeader, retSet, equalTo, line}
 }
 
-func NewHaveFnLiftStmt(fnName string, opt Fc, domainOfEachParamOfGivenFn []Fc, line uint) *HaveFnLiftStmt {
+func NewHaveFnLiftStmt(fnName string, opt Obj, domainOfEachParamOfGivenFn []Obj, line uint) *HaveFnLiftStmt {
 	return &HaveFnLiftStmt{fnName, opt, domainOfEachParamOfGivenFn, line}
 }
 
-func NewClaimHaveFnStmt(defFnStmt *DefFnStmt, proof []Stmt, haveObjSatisfyFn Fc, line uint) *HaveFnStmt {
+func NewClaimHaveFnStmt(defFnStmt *DefFnStmt, proof []Stmt, haveObjSatisfyFn Obj, line uint) *HaveFnStmt {
 	return &HaveFnStmt{defFnStmt, proof, haveObjSatisfyFn, line}
 }
 
@@ -204,7 +204,7 @@ func NewClaimIffStmt(uniFactWithIffStmt *UniFactWithIffStmt, proofs []Stmt, proo
 	return &ClaimIffStmt{uniFactWithIffStmt, proofs, proofs2, line}
 }
 
-func NewProveInRangeStmt(start int64, end int64, param string, intensionalSet Fc, thenFacts []FactStmt, proofs []Stmt, line uint) *ProveInRangeStmt {
+func NewProveInRangeStmt(start int64, end int64, param string, intensionalSet Obj, thenFacts []FactStmt, proofs []Stmt, line uint) *ProveInRangeStmt {
 	return &ProveInRangeStmt{start, end, param, intensionalSet, thenFacts, proofs, line}
 }
 
@@ -224,11 +224,11 @@ func NewAlgoIfStmt(condition []FactStmt, thenFacts AlgoStmtSlice, line uint) *Al
 	return &AlgoIfStmt{condition, thenFacts, line}
 }
 
-func NewAlgoReturnStmt(value Fc, line uint) *AlgoReturnStmt {
+func NewAlgoReturnStmt(value Obj, line uint) *AlgoReturnStmt {
 	return &AlgoReturnStmt{value, line}
 }
 
-func NewUniFactWithSafeGuard(params []string, setParams []Fc, domFacts []FactStmt, thenFacts []FactStmt, line uint) (*UniFactStmt, error) {
+func NewUniFactWithSafeGuard(params []string, setParams []Obj, domFacts []FactStmt, thenFacts []FactStmt, line uint) (*UniFactStmt, error) {
 	if len(thenFacts) == 0 {
 		return nil, fmt.Errorf("expect %s section to have at least one fact in %s", glob.KeySymbolRightArrow, NewUniFact(params, setParams, domFacts, thenFacts, line))
 	}
@@ -262,7 +262,7 @@ func NewUniFactWithSafeGuard(params []string, setParams []Fc, domFacts []FactStm
 	return NewUniFact(params, setParams, domFacts, thenFacts, line), nil
 }
 
-func NewUniFactWithIffWithSafeGuard(params []string, setParams []Fc, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt, line uint) (*UniFactWithIffStmt, error) {
+func NewUniFactWithIffWithSafeGuard(params []string, setParams []Obj, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt, line uint) (*UniFactWithIffStmt, error) {
 	uniFact, err := NewUniFactWithSafeGuard(params, setParams, domFacts, thenFacts, line)
 	if err != nil {
 		return nil, err
@@ -288,7 +288,7 @@ func NewUniFactWithIffWithSafeGuard(params []string, setParams []Fc, domFacts []
 	return NewUniFactWithIff(uniFact, iffFacts, line), nil
 }
 
-func NewEvalStmt(value Fc, line uint) *EvalStmt {
+func NewEvalStmt(value Obj, line uint) *EvalStmt {
 	return &EvalStmt{value, line}
 }
 
@@ -302,4 +302,8 @@ func NewByStmt(proveAlgoName string, proveAlgoParams FcSlice, thenFacts FactStmt
 
 func NewProveAlgoReturnStmt(by *ByStmt, line uint) *ProveAlgoReturnStmt {
 	return &ProveAlgoReturnStmt{by, line}
+}
+
+func NewPrintStmt(isFString bool, value string, line uint) *PrintStmt {
+	return &PrintStmt{isFString, value, line}
 }

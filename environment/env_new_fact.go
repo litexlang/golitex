@@ -109,7 +109,7 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
 	// postprocess
 	if fact.IsExist_St_Fact() {
 		if fact.PropName == glob.KeywordItemExistsIn {
-			existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordItemExistsIn), []ast.Fc{fact.Params[2]}, fact.Line)
+			existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordItemExistsIn), []ast.Obj{fact.Params[2]}, fact.Line)
 			err := env.storeSpecFactInMem(existInFact)
 			return err
 		}
@@ -119,7 +119,7 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
 	return env.newPureFactPostProcess(fact)
 }
 
-func storeCommutativeTransitiveFact(mem map[string]*[]ast.Fc, fact *ast.SpecFactStmt) error {
+func storeCommutativeTransitiveFact(mem map[string]*[]ast.Obj, fact *ast.SpecFactStmt) error {
 	if len(fact.Params) != 2 {
 		return fmt.Errorf("commutative transitive fact expect 2 parameters, get %d in %s", len(fact.Params), fact)
 	}
@@ -134,7 +134,7 @@ func storeCommutativeTransitiveFact(mem map[string]*[]ast.Fc, fact *ast.SpecFact
 		if storedEqualLeftFcs == storedEqualRightFcs {
 			return nil
 		} else {
-			newEqualFcs := []ast.Fc{}
+			newEqualFcs := []ast.Obj{}
 			newEqualFcs = append(newEqualFcs, *storedEqualLeftFcs...)
 			newEqualFcs = append(newEqualFcs, *storedEqualRightFcs...)
 			*storedEqualLeftFcs = newEqualFcs
@@ -156,7 +156,7 @@ func storeCommutativeTransitiveFact(mem map[string]*[]ast.Fc, fact *ast.SpecFact
 	}
 
 	if !leftGot && !rightGot {
-		newEqualFcs := []ast.Fc{fact.Params[0], fact.Params[1]}
+		newEqualFcs := []ast.Obj{fact.Params[0], fact.Params[1]}
 		mem[leftAsStr] = &newEqualFcs
 		mem[rightAsStr] = &newEqualFcs
 		return nil
@@ -169,7 +169,7 @@ func (env *Env) newPureFactPostProcess(fact *ast.SpecFactStmt) error {
 	// 如果是 transitive prop，那么需要更新 transitive prop mem
 	if fact.TypeEnum == ast.TruePure && env.IsTransitiveProp(string(fact.PropName)) {
 		if env.TransitivePropMem[string(fact.PropName)] == nil {
-			env.TransitivePropMem[string(fact.PropName)] = make(map[string][]ast.Fc)
+			env.TransitivePropMem[string(fact.PropName)] = make(map[string][]ast.Obj)
 		}
 		env.TransitivePropMem[string(fact.PropName)][fact.Params[0].String()] = append(env.TransitivePropMem[string(fact.PropName)][fact.Params[0].String()], fact.Params[1])
 	}
@@ -216,7 +216,7 @@ func (env *Env) newTruePureFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) erro
 		return nil
 	}
 
-	uniMap := map[string]ast.Fc{}
+	uniMap := map[string]ast.Obj{}
 	for i, propParam := range propDef.DefHeader.Params {
 		uniMap[propParam] = fact.Params[i]
 	}
@@ -319,7 +319,7 @@ func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, erro
 		return nil, fmt.Errorf("exist fact %s has no definition", fact)
 	}
 
-	uniMap := map[string]ast.Fc{}
+	uniMap := map[string]ast.Obj{}
 	for i, propParam := range existPropDef.DefBody.DefHeader.Params {
 		uniMap[propParam] = fact.Params[i]
 	}
@@ -385,7 +385,7 @@ func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 	return true, nil
 }
 
-func (env *Env) StoreTrueEqualValues(key, value ast.Fc) {
+func (env *Env) StoreTrueEqualValues(key, value ast.Obj) {
 	// 如果已经知道它的值了，那不能存了；否则比如我在外部环境里知道了a = 3，内部环境在反证法证明 a != 1，那我 a = 1就把a = 3覆盖掉了，a = 3这个取值貌似就不work了。某种程度上就是弄了个const
 	if v := env.GetSymbolSimplifiedValue(key); v != nil {
 		return
@@ -393,12 +393,12 @@ func (env *Env) StoreTrueEqualValues(key, value ast.Fc) {
 	env.SymbolSimplifiedValueMem[key.String()] = value
 }
 
-func simplifyNumExprFc(fc ast.Fc) ast.Fc {
+func simplifyNumExprFc(fc ast.Obj) ast.Obj {
 	simplifiedNumExprFc := cmp.IsNumExprFcThenSimplify(fc)
 	return simplifiedNumExprFc
 }
 
-func (env *Env) storeSymbolSimplifiedValue(left, right ast.Fc) error {
+func (env *Env) storeSymbolSimplifiedValue(left, right ast.Obj) error {
 	_, newLeft := env.ReplaceSymbolWithValue(left)
 	if cmp.IsNumLitFc(newLeft) {
 		simplifiedNewLeft := simplifyNumExprFc(newLeft)
@@ -414,7 +414,7 @@ func (env *Env) storeSymbolSimplifiedValue(left, right ast.Fc) error {
 	return nil
 }
 
-func (env *Env) GetEqualFcs(fc ast.Fc) (*[]ast.Fc, bool) {
+func (env *Env) GetEqualFcs(fc ast.Obj) (*[]ast.Obj, bool) {
 	fcAsStr := fc.String()
 	facts, ok := env.EqualMem[fcAsStr]
 	return facts, ok
@@ -428,7 +428,7 @@ func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, [
 		return nil, nil, fmt.Errorf("exist fact %s has no definition", fact)
 	}
 
-	uniMap := map[string]ast.Fc{}
+	uniMap := map[string]ast.Obj{}
 	for i := range existParams {
 		uniMap[existPropDef.ExistParams[i]] = existParams[i]
 	}
@@ -477,7 +477,7 @@ func (env *Env) ExecDefFnTemplate(stmt *ast.FnTemplateDefStmt) error {
 func (env *Env) newEnumFact(stmt *ast.EnumStmt) error {
 	forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts := ast.TransformEnumToUniFact(stmt.CurSet, stmt.Items)
 
-	err := env.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Fc{stmt.CurSet, ast.FcAtom(glob.KeywordSet)}, stmt.Line))
+	err := env.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Obj{stmt.CurSet, ast.FcAtom(glob.KeywordSet)}, stmt.Line))
 	if err != nil {
 		return err
 	}
@@ -512,7 +512,7 @@ func (env *Env) newEnumFact(stmt *ast.EnumStmt) error {
 	lengthOfSet := strconv.Itoa(len(stmt.Items))
 	lengthOfSetAsFcAtom := ast.FcAtom(lengthOfSet)
 
-	lenFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{ast.NewFcFn(ast.FcAtom(glob.KeywordLen), []ast.Fc{stmt.CurSet}), lengthOfSetAsFcAtom}, stmt.Line)
+	lenFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Obj{ast.NewFcFn(ast.FcAtom(glob.KeywordLen), []ast.Obj{stmt.CurSet}), lengthOfSetAsFcAtom}, stmt.Line)
 	err = env.NewFact(lenFact)
 	if err != nil {
 		return err

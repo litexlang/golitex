@@ -21,7 +21,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) simplifyNumExprFc(fc ast.Fc) (ast.Fc, ExecRet) {
+func (exec *Executor) simplifyNumExprFc(fc ast.Obj) (ast.Obj, ExecRet) {
 	simplifiedNumExprFc := cmp.IsNumExprFcThenSimplify(fc)
 	if simplifiedNumExprFc == nil {
 		return nil, NewExecErr("")
@@ -31,7 +31,7 @@ func (exec *Executor) simplifyNumExprFc(fc ast.Fc) (ast.Fc, ExecRet) {
 }
 
 // 这里 bool 表示，是否启动过 用algo 计算；如果仅仅是用 algo 来计算，那是不会返回true的
-func (exec *Executor) evalFcThenSimplify(fc ast.Fc) (ast.Fc, ExecRet) {
+func (exec *Executor) evalFcThenSimplify(fc ast.Obj) (ast.Obj, ExecRet) {
 	// fmt.Println(fc)
 
 	if cmp.IsNumLitFc(fc) {
@@ -62,7 +62,7 @@ var basicArithOptMap = map[string]struct{}{
 }
 
 // 可能返回数值的时候需要检查一下会不会除以0这种情况
-func (exec *Executor) evalFcFnThenSimplify(fc *ast.FcFn) (ast.Fc, ExecRet) {
+func (exec *Executor) evalFcFnThenSimplify(fc *ast.FcFn) (ast.Obj, ExecRet) {
 	if symbolValue := exec.Env.GetSymbolSimplifiedValue(fc); symbolValue != nil {
 		return symbolValue, NewExecTrue("")
 	}
@@ -77,7 +77,7 @@ func (exec *Executor) evalFcFnThenSimplify(fc *ast.FcFn) (ast.Fc, ExecRet) {
 			return nil, execRet
 		}
 
-		numExprFc := ast.NewFcFn(fc.FnHead, []ast.Fc{left, right})
+		numExprFc := ast.NewFcFn(fc.FnHead, []ast.Obj{left, right})
 		execRet = exec.fcfnParamsInFnDomain(numExprFc)
 		if execRet.IsNotTrue() {
 			return nil, NewExecErr(fmt.Sprintf("%s = %s is invalid", fc, numExprFc))
@@ -98,7 +98,7 @@ func (exec *Executor) evalFcFnThenSimplify(fc *ast.FcFn) (ast.Fc, ExecRet) {
 	return nil, NewExecUnknown("")
 }
 
-func (exec *Executor) useAlgoToEvalFcFnThenSimplify(fcFn *ast.FcFn) (ast.Fc, ExecRet) {
+func (exec *Executor) useAlgoToEvalFcFnThenSimplify(fcFn *ast.FcFn) (ast.Obj, ExecRet) {
 	algoDef := exec.Env.GetAlgoDef(fcFn.FnHead.String())
 	if algoDef == nil {
 		return nil, NewExecErr(fmt.Sprintf("algo %s is not found", fcFn.FnHead.String()))
@@ -118,14 +118,14 @@ func (exec *Executor) useAlgoToEvalFcFnThenSimplify(fcFn *ast.FcFn) (ast.Fc, Exe
 		if exec.Env.IsAtomDeclared(ast.FcAtom(param), map[string]struct{}{}) {
 			continue
 		} else {
-			execState := exec.defLetStmt(ast.NewDefLetStmt([]string{param}, []ast.Fc{ast.FcAtom(glob.KeywordObj)}, []ast.FactStmt{ast.NewEqualFact(ast.FcAtom(param), fcFn.Params[i])}, glob.InnerGenLine))
+			execState := exec.defLetStmt(ast.NewDefLetStmt([]string{param}, []ast.Obj{ast.FcAtom(glob.KeywordObj)}, []ast.FactStmt{ast.NewEqualFact(ast.FcAtom(param), fcFn.Params[i])}, glob.InnerGenLine))
 			if execState.IsNotTrue() {
 				return nil, NewExecErr(execState.String())
 			}
 		}
 	}
 
-	fcFnParamsValues := []ast.Fc{}
+	fcFnParamsValues := []ast.Obj{}
 	for _, param := range fcFn.Params {
 		_, value := exec.Env.ReplaceSymbolWithValue(param)
 		// simplifiedValue := value
@@ -138,7 +138,7 @@ func (exec *Executor) useAlgoToEvalFcFnThenSimplify(fcFn *ast.FcFn) (ast.Fc, Exe
 
 	fcFnWithValueParams := ast.NewFcFn(fcFn.FnHead, fcFnParamsValues)
 
-	uniMap := map[string]ast.Fc{}
+	uniMap := map[string]ast.Obj{}
 	for i, param := range algoDef.Params {
 		uniMap[param] = fcFnParamsValues[i]
 	}
@@ -156,7 +156,7 @@ func (exec *Executor) useAlgoToEvalFcFnThenSimplify(fcFn *ast.FcFn) (ast.Fc, Exe
 	return exec.simplifyNumExprFc(value)
 }
 
-func (exec *Executor) runAlgoStmtsWhenEval(algoStmts ast.AlgoStmtSlice, fcFnWithValueParams *ast.FcFn) (ast.Fc, ExecRet) {
+func (exec *Executor) runAlgoStmtsWhenEval(algoStmts ast.AlgoStmtSlice, fcFnWithValueParams *ast.FcFn) (ast.Obj, ExecRet) {
 	for _, stmt := range algoStmts {
 		switch asStmt := stmt.(type) {
 		case *ast.AlgoReturnStmt:
@@ -229,7 +229,7 @@ func (exec *Executor) IsAlgoIfConditionTrue(stmt *ast.AlgoIfStmt) (bool, ExecRet
 	return true, NewExecTrue("")
 }
 
-func (exec *Executor) algoIfStmtWhenEval(stmt *ast.AlgoIfStmt, fcFnWithValueParams *ast.FcFn) (ast.Fc, ExecRet) {
+func (exec *Executor) algoIfStmtWhenEval(stmt *ast.AlgoIfStmt, fcFnWithValueParams *ast.FcFn) (ast.Obj, ExecRet) {
 	exec.NewEnv(exec.Env)
 	defer exec.deleteEnvAndGiveUpMsgs()
 

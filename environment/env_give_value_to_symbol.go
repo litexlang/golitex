@@ -19,7 +19,7 @@ import (
 	cmp "golitex/cmp"
 )
 
-func (env *Env) ReplaceSymbolWithValue(fc ast.Fc) (bool, ast.Fc) {
+func (env *Env) ReplaceSymbolWithValue(fc ast.Obj) (bool, ast.Obj) {
 	if cmp.IsNumLitFc(fc) {
 		return false, fc
 	}
@@ -33,13 +33,13 @@ func (env *Env) ReplaceSymbolWithValue(fc ast.Fc) (bool, ast.Fc) {
 	panic("")
 }
 
-func (env *Env) replaceFcFnWithValue(fc *ast.FcFn) (bool, ast.Fc) {
+func (env *Env) replaceFcFnWithValue(fc *ast.FcFn) (bool, ast.Obj) {
 	if symbolValue := env.GetSymbolSimplifiedValue(fc); symbolValue != nil {
 		return true, symbolValue
 	}
 
 	replaced := false
-	newParams := make([]ast.Fc, len(fc.Params))
+	newParams := make([]ast.Obj, len(fc.Params))
 	for i, param := range fc.Params {
 		var newReplaced bool
 		newReplaced, newParams[i] = env.ReplaceSymbolWithValue(param)
@@ -49,7 +49,7 @@ func (env *Env) replaceFcFnWithValue(fc *ast.FcFn) (bool, ast.Fc) {
 	return replaced, ast.NewFcFn(fc.FnHead, newParams)
 }
 
-func (env *Env) replaceFcAtomWithValue(fc ast.FcAtom) (bool, ast.Fc) {
+func (env *Env) replaceFcAtomWithValue(fc ast.FcAtom) (bool, ast.Obj) {
 	symbolValue := env.GetSymbolSimplifiedValue(fc)
 	if symbolValue == nil {
 		return false, fc
@@ -59,7 +59,7 @@ func (env *Env) replaceFcAtomWithValue(fc ast.FcAtom) (bool, ast.Fc) {
 }
 
 func (env *Env) ReplaceFcInSpecFactWithValue(fact *ast.SpecFactStmt) (bool, *ast.SpecFactStmt) {
-	newParams := make([]ast.Fc, len(fact.Params))
+	newParams := make([]ast.Obj, len(fact.Params))
 	replaced := false
 	for i, param := range fact.Params {
 		var newReplaced bool

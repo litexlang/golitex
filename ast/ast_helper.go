@@ -22,11 +22,11 @@ import (
 	"strings"
 )
 
-func EqualFact(left, right Fc) *SpecFactStmt {
-	return NewSpecFactStmt(TruePure, FcAtom(glob.KeySymbolEqual), []Fc{left, right}, glob.InnerGenLine)
+func EqualFact(left, right Obj) *SpecFactStmt {
+	return NewSpecFactStmt(TruePure, FcAtom(glob.KeySymbolEqual), []Obj{left, right}, glob.InnerGenLine)
 }
 
-func (stmt *UniFactStmt) ParamInParamSetFacts(uniConMap map[string]Fc) []*SpecFactStmt {
+func (stmt *UniFactStmt) ParamInParamSetFacts(uniConMap map[string]Obj) []*SpecFactStmt {
 	paramSetFacts := make([]*SpecFactStmt, len(stmt.Params))
 	for i, param := range stmt.Params {
 		paramSetFacts[i] = NewInFactWithParamFc(uniConMap[param], stmt.ParamSets[i])
@@ -78,11 +78,11 @@ func ReverseSliceOfReversibleFacts(facts []Spec_OrFact) []Spec_OrFact {
 	return ret
 }
 
-func NewEqualFact(left, right Fc) *SpecFactStmt {
-	return NewSpecFactStmt(TruePure, FcAtom(glob.KeySymbolEqual), []Fc{left, right}, glob.InnerGenLine)
+func NewEqualFact(left, right Obj) *SpecFactStmt {
+	return NewSpecFactStmt(TruePure, FcAtom(glob.KeySymbolEqual), []Obj{left, right}, glob.InnerGenLine)
 }
 
-func IsFcFnWithHeadName(fc Fc, headName string) bool {
+func IsFcFnWithHeadName(fc Obj, headName string) bool {
 	fcFn, ok := fc.(*FcFn)
 	if !ok {
 		return false
@@ -96,7 +96,7 @@ func IsFcFnWithHeadName(fc Fc, headName string) bool {
 	return string(headAtom) == headName
 }
 
-func IsFcFnWithHeadNameInSlice(fc Fc, headNames map[string]struct{}) bool {
+func IsFcFnWithHeadNameInSlice(fc Obj, headNames map[string]struct{}) bool {
 	fcFn, ok := fc.(*FcFn)
 	if !ok {
 		return false
@@ -111,7 +111,7 @@ func IsFcFnWithHeadNameInSlice(fc Fc, headNames map[string]struct{}) bool {
 	return ok
 }
 
-func (defHeader *DefHeader) GetInstantiatedParamInParamSetFact(uniMap map[string]Fc) ([]*SpecFactStmt, error) {
+func (defHeader *DefHeader) GetInstantiatedParamInParamSetFact(uniMap map[string]Obj) ([]*SpecFactStmt, error) {
 	paramSetFacts := make([]*SpecFactStmt, len(defHeader.Params))
 	for i, param := range defHeader.Params {
 		instantiatedSet, err := defHeader.ParamSets[i].Instantiate(uniMap)
@@ -153,8 +153,8 @@ func (stmt *ClaimPropStmt) ToProp() *DefPropStmt {
 	return NewDefPropStmt(stmt.Prop.DefHeader, stmt.Prop.DomFacts, stmt.Prop.IffFacts, []FactStmt{}, stmt.GetLine())
 }
 
-func (strSlice StrSlice) ToFcSlice() []Fc {
-	ret := make([]Fc, len(strSlice))
+func (strSlice StrSlice) ToFcSlice() []Obj {
+	ret := make([]Obj, len(strSlice))
 	for i, str := range strSlice {
 		ret[i] = FcAtom(str)
 	}
@@ -192,7 +192,7 @@ func (fcFn *FcFn) IsFcFn_HasAtomHead_ReturnHead() (FcAtom, bool) {
 }
 
 func (stmt *FnTemplateDefStmt) Instantiate_GetFnTemplateNoName(fc *FcFn) (*FnTStruct, error) {
-	uniMap := map[string]Fc{}
+	uniMap := map[string]Obj{}
 	templateParams := stmt.TemplateDefHeader.Params
 	if len(templateParams) != len(fc.Params) {
 		return nil, fmt.Errorf("template params and fc params must have the same length")
@@ -261,20 +261,20 @@ func (fcAsFcFn *FcFn) FnTFc_ToFnTNoName() (*FnTStruct, error) {
 }
 
 // 给定 f(a)(b,c)(e,d,f)，返回 {f, f(a), f(a)(b,c), f(a)(b,c)(e,d,f)}, {nil, {a}, {b,c}, {e,d,f}}
-func GetFnHeadChain_AndItSelf(fc Fc) ([]Fc, [][]Fc) {
+func GetFnHeadChain_AndItSelf(fc Obj) ([]Obj, [][]Obj) {
 	switch asFc := fc.(type) {
 	case *FcFn:
 		left, right := GetFnHeadChain_AndItSelf(asFc.FnHead)
 		// return append(GetFnHeadChain_AndItSelf(fc.(*FcFn).FnHead), fc)
-		return append(left, fc), append(right, append([]Fc{}, asFc.Params...))
+		return append(left, fc), append(right, append([]Obj{}, asFc.Params...))
 	case FcAtom:
-		return []Fc{fc}, [][]Fc{nil}
+		return []Obj{fc}, [][]Obj{nil}
 	default:
 		panic("expected FcFn or FcAtom, but got " + fc.String())
 	}
 }
 
-func (fcAsFcFn *FcFn) IsFnT_FcFn_Ret_ParamSets_And_RetSet(fc *FcFn) (bool, []Fc, Fc) {
+func (fcAsFcFn *FcFn) IsFnT_FcFn_Ret_ParamSets_And_RetSet(fc *FcFn) (bool, []Obj, Obj) {
 	if !IsFnTemplate_FcFn(fcAsFcFn) {
 		return false, nil, nil
 	}
@@ -284,26 +284,26 @@ func (fcAsFcFn *FcFn) IsFnT_FcFn_Ret_ParamSets_And_RetSet(fc *FcFn) (bool, []Fc,
 		return false, nil, nil
 	}
 
-	paramSets := append([]Fc{}, fcAsFcFnHeadAsFcFn.Params...)
+	paramSets := append([]Obj{}, fcAsFcFnHeadAsFcFn.Params...)
 
 	retSet := fcAsFcFn.Params[0]
 
 	return true, paramSets, retSet
 }
 
-func MakeUniMap(freeParams []string, params []Fc) (map[string]Fc, error) {
+func MakeUniMap(freeParams []string, params []Obj) (map[string]Obj, error) {
 	if len(freeParams) != len(params) {
 		return nil, fmt.Errorf("free params length mismatch")
 	}
 
-	uniMap := map[string]Fc{}
+	uniMap := map[string]Obj{}
 	for i := range len(freeParams) {
 		uniMap[freeParams[i]] = params[i]
 	}
 	return uniMap, nil
 }
 
-func InstFacts(facts []FactStmt, uniMap map[string]Fc) ([]FactStmt, error) {
+func InstFacts(facts []FactStmt, uniMap map[string]Obj) ([]FactStmt, error) {
 	newFacts := make([]FactStmt, len(facts))
 	for i, fact := range facts {
 		newFact, err := fact.InstantiateFact(uniMap)
@@ -329,7 +329,7 @@ func UnknownFactMsg(fact FactStmt) string {
 	return fmt.Sprintf("%s\nis unknown\n", fact)
 }
 
-func ToInt(fc Fc) (int, bool) {
+func ToInt(fc Obj) (int, bool) {
 	fcAsFcInt, ok := fc.(FcAtom)
 	if !ok {
 		return 0, false

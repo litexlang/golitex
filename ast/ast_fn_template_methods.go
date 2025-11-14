@@ -16,8 +16,8 @@ package litex_ast
 
 import glob "golitex/glob"
 
-func (fnTemplate *FnTStruct) DeriveUniFact_WithGivenFn(fc Fc) (*UniFactStmt, error) {
-	paramAsFc := []Fc{}
+func (fnTemplate *FnTStruct) DeriveUniFact_WithGivenFn(fc Obj) (*UniFactStmt, error) {
+	paramAsFc := []Obj{}
 	for _, param := range fnTemplate.Params {
 		paramAsFc = append(paramAsFc, FcAtom(param))
 	}
@@ -30,8 +30,8 @@ func (fnTemplate *FnTStruct) DeriveUniFact_WithGivenFn(fc Fc) (*UniFactStmt, err
 	return notInstantiated, nil
 }
 
-func (fnTemplate *FnTStruct) DeriveUniFact(defFnTemplateName string, fnFc Fc, templateParamUniMap map[string]Fc) (*UniFactStmt, error) {
-	paramAsFc := []Fc{}
+func (fnTemplate *FnTStruct) DeriveUniFact(defFnTemplateName string, fnFc Obj, templateParamUniMap map[string]Obj) (*UniFactStmt, error) {
+	paramAsFc := []Obj{}
 	for _, param := range fnTemplate.Params {
 		paramAsFc = append(paramAsFc, FcAtom(param))
 	}
@@ -52,9 +52,9 @@ func (fnTemplate *FnTStruct) DeriveUniFact(defFnTemplateName string, fnFc Fc, te
 	return instantiated.(*UniFactStmt), nil
 }
 
-func (stmt *FnTStruct) InstantiateFnTWithoutChangingTName(uniMap map[string]Fc) ([]Fc, FactStmtSlice, FactStmtSlice, Fc, error) {
+func (stmt *FnTStruct) InstantiateFnTWithoutChangingTName(uniMap map[string]Obj) ([]Obj, FactStmtSlice, FactStmtSlice, Obj, error) {
 	// 1. instantiate set params in facts
-	newSetParams := []Fc{}
+	newSetParams := []Obj{}
 	for _, setParam := range stmt.ParamSets {
 		instantiatedParam, err := setParam.Instantiate(uniMap)
 		if err != nil {

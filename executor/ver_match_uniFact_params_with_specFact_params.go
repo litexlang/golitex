@@ -20,7 +20,7 @@ import (
 	env "golitex/environment"
 )
 
-func (ver *Verifier) matchUniFactParamsWithSpecFactParams(knownSpecFactInUniFact *env.KnownSpecFact_InUniFact, specFact *ast.SpecFactStmt) (bool, map[string]ast.Fc, error) {
+func (ver *Verifier) matchUniFactParamsWithSpecFactParams(knownSpecFactInUniFact *env.KnownSpecFact_InUniFact, specFact *ast.SpecFactStmt) (bool, map[string]ast.Obj, error) {
 	knownFcs := knownSpecFactInUniFact.SpecFact.Params
 	givenFcs := specFact.Params
 	freeVars := knownSpecFactInUniFact.UniFact.Params
@@ -33,7 +33,7 @@ func (ver *Verifier) matchUniFactParamsWithSpecFactParams(knownSpecFactInUniFact
 	if err != nil {
 		return false, nil, err
 	}
-	matchedMap, unMatchedFcPairs := ver.mergeMultipleMatchedMapAndUnMatchedFcPairs(matchedMaps, unmatchedFcPairs, map[string][]ast.Fc{}, []fcPair{})
+	matchedMap, unMatchedFcPairs := ver.mergeMultipleMatchedMapAndUnMatchedFcPairs(matchedMaps, unmatchedFcPairs, map[string][]ast.Obj{}, []fcPair{})
 
 	// 所有的自由变量必须被匹配到了
 	for freeVar := range freeVarsMap {
@@ -56,7 +56,7 @@ func (ver *Verifier) matchUniFactParamsWithSpecFactParams(knownSpecFactInUniFact
 		}
 	}
 
-	freeVarToInstVar := map[string]ast.Fc{}
+	freeVarToInstVar := map[string]ast.Obj{}
 	for freeVar, instVars := range matchedMap {
 		freeVarToInstVar[freeVar] = instVars[0]
 	}
@@ -80,16 +80,16 @@ func (ver *Verifier) matchUniFactParamsWithSpecFactParams(knownSpecFactInUniFact
 }
 
 type fcPair struct {
-	knownFc ast.Fc
-	givenFc ast.Fc
+	knownFc ast.Obj
+	givenFc ast.Obj
 }
 
 // return map{freeVar: instVar}, unMatched fcPairs, matched?, err
-func (ver *Verifier) matchFcInKnownSpecFactAndGivenFc(knownFc ast.Fc, givenFc ast.Fc, freeVars map[string]struct{}, specFactName string) (map[string][]ast.Fc, []fcPair, error) {
+func (ver *Verifier) matchFcInKnownSpecFactAndGivenFc(knownFc ast.Obj, givenFc ast.Obj, freeVars map[string]struct{}, specFactName string) (map[string][]ast.Obj, []fcPair, error) {
 	switch asKnownFc := knownFc.(type) {
 	case ast.FcAtom:
 		if _, ok := freeVars[string(asKnownFc)]; ok {
-			retMap := map[string][]ast.Fc{
+			retMap := map[string][]ast.Obj{
 				string(asKnownFc): {givenFc},
 			}
 			return retMap, []fcPair{}, nil
@@ -108,7 +108,7 @@ func (ver *Verifier) matchFcInKnownSpecFactAndGivenFc(knownFc ast.Fc, givenFc as
 		case ast.FcAtom:
 			return nil, []fcPair{{knownFc: knownFc, givenFc: givenFc}}, nil
 		case *ast.FcFn:
-			retMap := map[string][]ast.Fc{}
+			retMap := map[string][]ast.Obj{}
 			retFcPairs := []fcPair{}
 
 			if len(asKnownFc.Params) != len(asGivenFc.Params) {
@@ -133,12 +133,12 @@ func (ver *Verifier) matchFcInKnownSpecFactAndGivenFc(knownFc ast.Fc, givenFc as
 	return nil, []fcPair{}, nil
 }
 
-func (ver *Verifier) matchFcsInKnownSpecFactAndGivenFc(knownFcs []ast.Fc, givenFcs []ast.Fc, freeVars map[string]struct{}, specFactName string) ([]map[string][]ast.Fc, [][]fcPair, error) {
+func (ver *Verifier) matchFcsInKnownSpecFactAndGivenFc(knownFcs []ast.Obj, givenFcs []ast.Obj, freeVars map[string]struct{}, specFactName string) ([]map[string][]ast.Obj, [][]fcPair, error) {
 	if len(knownFcs) != len(givenFcs) {
 		return nil, [][]fcPair{}, fmt.Errorf("required parameters number of fact %s is %d, get %d", specFactName, len(knownFcs), len(givenFcs))
 	}
 
-	matchedMaps := []map[string][]ast.Fc{}
+	matchedMaps := []map[string][]ast.Obj{}
 	unmatchedFcPairs := [][]fcPair{}
 	for i := range knownFcs {
 		matchedMap, matchedFcPairs, err := ver.matchFcInKnownSpecFactAndGivenFc(knownFcs[i], givenFcs[i], freeVars, specFactName)
@@ -151,7 +151,7 @@ func (ver *Verifier) matchFcsInKnownSpecFactAndGivenFc(knownFcs []ast.Fc, givenF
 	return matchedMaps, unmatchedFcPairs, nil
 }
 
-func (ver *Verifier) mergeMultipleMatchedMapAndUnMatchedFcPairs(matchedMaps []map[string][]ast.Fc, matchedFcPairs [][]fcPair, putTo map[string][]ast.Fc, putToFcPairs []fcPair) (map[string][]ast.Fc, []fcPair) {
+func (ver *Verifier) mergeMultipleMatchedMapAndUnMatchedFcPairs(matchedMaps []map[string][]ast.Obj, matchedFcPairs [][]fcPair, putTo map[string][]ast.Obj, putToFcPairs []fcPair) (map[string][]ast.Obj, []fcPair) {
 	for _, matchedMap := range matchedMaps {
 		for freeVar, instVars := range matchedMap {
 			if _, ok := putTo[freeVar]; ok {
@@ -167,7 +167,7 @@ func (ver *Verifier) mergeMultipleMatchedMapAndUnMatchedFcPairs(matchedMaps []ma
 	return putTo, putToFcPairs
 }
 
-func (ver *Verifier) mergeSingleMatchedMapAndUnMatchedFcPairs(matchedMap map[string][]ast.Fc, matchedFcPairs []fcPair, putTo map[string][]ast.Fc, putToFcPairs []fcPair) (map[string][]ast.Fc, []fcPair) {
+func (ver *Verifier) mergeSingleMatchedMapAndUnMatchedFcPairs(matchedMap map[string][]ast.Obj, matchedFcPairs []fcPair, putTo map[string][]ast.Obj, putToFcPairs []fcPair) (map[string][]ast.Obj, []fcPair) {
 	for freeVar, instVars := range matchedMap {
 		if _, ok := putTo[freeVar]; ok {
 			putTo[freeVar] = append(putTo[freeVar], instVars...)

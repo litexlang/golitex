@@ -349,7 +349,7 @@ func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt
 		return NewExecErr(fmt.Errorf("claim exist prop statement error: have obj length is not equal to exist params length").Error())
 	}
 
-	uniMap := make(map[string]ast.Fc)
+	uniMap := make(map[string]ast.Obj)
 	for i, haveObj := range stmt.HaveObj {
 		uniMap[stmt.ExistPropWithoutDom.ExistParams[i]] = haveObj
 	}

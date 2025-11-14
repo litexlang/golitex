@@ -46,6 +46,6 @@ func AtomsInFactNotDeclaredMsg(fact ast.FactStmt) string {
 	return fmt.Sprintf("some atoms in the following fact are undeclared:\n%s", fact)
 }
 
-func AtomsInFcNotDeclaredMsg(fc ast.Fc) string {
+func AtomsInFcNotDeclaredMsg(fc ast.Obj) string {
 	return fmt.Sprintf("some atoms in %s are undeclared", fc)
 }

@@ -21,7 +21,7 @@ import (
 )
 
 func (exec *Executor) proveByEnumMainLogic(stmt *ast.ProveByEnumStmt) (ExecRet, error) {
-	enums := [][]ast.Fc{}
+	enums := [][]ast.Obj{}
 	for _, paramSet := range stmt.Fact.ParamSets {
 		enumFacts, ok := exec.Env.GetEnumFact(paramSet.String())
 		if !ok {
@@ -48,7 +48,7 @@ func (exec *Executor) proveByEnumMainLogic(stmt *ast.ProveByEnumStmt) (ExecRet, 
 	}
 }
 
-func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.ProveByEnumStmt, cartesianProductAtI []ast.Fc) (bool, error) {
+func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.ProveByEnumStmt, cartesianProductAtI []ast.Obj) (bool, error) {
 	exec.NewEnv(exec.Env)
 	defer exec.deleteEnvAndRetainMsg()
 
@@ -58,7 +58,7 @@ func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.Prove
 		return false, fmt.Errorf(execState.String())
 	}
 
-	uniMap := map[string]ast.Fc{}
+	uniMap := map[string]ast.Obj{}
 	for i, param := range stmt.Fact.Params {
 		uniMap[param] = cartesianProductAtI[i]
 	}
@@ -105,17 +105,17 @@ func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.Prove
 	return true, nil
 }
 
-func getParamEqualFcSlice(params []string, equalTo []ast.Fc) []ast.FactStmt {
+func getParamEqualFcSlice(params []string, equalTo []ast.Obj) []ast.FactStmt {
 	result := []ast.FactStmt{}
 	for i, param := range params {
-		result = append(result, ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{ast.FcAtom(param), equalTo[i]}, glob.InnerGenLine))
+		result = append(result, ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Obj{ast.FcAtom(param), equalTo[i]}, glob.InnerGenLine))
 	}
 	return result
 }
 
-func (exec *Executor) verProveOverFiniteSet_NoProveSection(stmt *ast.ProveByEnumStmt, cartesianProductOfFcs [][]ast.Fc) (ExecRet, error) {
+func (exec *Executor) verProveOverFiniteSet_NoProveSection(stmt *ast.ProveByEnumStmt, cartesianProductOfFcs [][]ast.Obj) (ExecRet, error) {
 	for _, fcSlice := range cartesianProductOfFcs {
-		uniMap := map[string]ast.Fc{}
+		uniMap := map[string]ast.Obj{}
 		for i, param := range stmt.Fact.Params {
 			uniMap[param] = fcSlice[i]
 		}

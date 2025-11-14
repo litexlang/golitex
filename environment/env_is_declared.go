@@ -76,7 +76,7 @@ func (e *Env) AtomsAreObj(atomSlice []ast.FcAtom) bool {
 	return true
 }
 
-func (e *Env) AreAtomsInFcAreDeclared(fc ast.Fc, extraAtomNames map[string]struct{}) bool {
+func (e *Env) AreAtomsInFcAreDeclared(fc ast.Obj, extraAtomNames map[string]struct{}) bool {
 	atoms := ast.GetAtomsInFc(fc)
 	return e.AreAtomsDeclared(atoms, extraAtomNames)
 }
@@ -171,7 +171,7 @@ func (e *Env) IsAtomDeclared(atom ast.FcAtom, extraAtomNames map[string]struct{}
 	return ok
 }
 
-func (e *Env) NonDuplicateParam_NoUndeclaredParamSet(params []string, setParams []ast.Fc, checkDeclared bool) error {
+func (e *Env) NonDuplicateParam_NoUndeclaredParamSet(params []string, setParams []ast.Obj, checkDeclared bool) error {
 	if len(params) != len(setParams) {
 		return fmt.Errorf("number of params and set params are not the same")
 	}
@@ -195,7 +195,7 @@ func (e *Env) NonDuplicateParam_NoUndeclaredParamSet(params []string, setParams 
 	return nil
 }
 
-func (e *Env) NonDuplicateParam_NoUndeclaredParamSet_ExtraAtomNames(params []string, setParams []ast.Fc, extraAtomNames map[string]struct{}, checkDeclared bool) error {
+func (e *Env) NonDuplicateParam_NoUndeclaredParamSet_ExtraAtomNames(params []string, setParams []ast.Obj, extraAtomNames map[string]struct{}, checkDeclared bool) error {
 	if len(params) != len(setParams) {
 		return fmt.Errorf("number of params and set params are not the same")
 	}

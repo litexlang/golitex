@@ -19,7 +19,7 @@ import (
 )
 
 // func (e *Env) InsertFnInFnTT(fc ast.Fc, asFcFn *ast.FcFn, fnTNoName *ast.FnTStruct) error {
-func (e *Env) InsertFnInFnTT(fc ast.Fc, fnTNoName *ast.FnTStruct) error {
+func (e *Env) InsertFnInFnTT(fc ast.Obj, fnTNoName *ast.FnTStruct) error {
 	var fnTFcIsIn = fnTNoName
 	var ok bool
 
@@ -53,7 +53,7 @@ func (e *Env) InsertFnInFnTT(fc ast.Fc, fnTNoName *ast.FnTStruct) error {
 // 从后往前找，直到找到有个 fnHead 被已知在一个 fnInFnTInterface 中
 // 比如 f(a)(b,c)(e,d,f) 我不知道 f(a)(b,c) 是哪个 fn_template 里的，但我发现 f(a) $in T 是知道的。那之后就是按T的返回值去套入b,c，然后再把e,d,f套入T的返回值的返回值
 // 此时 indexWhereLatestFnTIsGot 就是 1, FnToFnItemWhereLatestFnTIsGot 就是 f(a) 的 fnInFnTMemItem
-func (e *Env) FindRightMostResolvedFn_Return_ResolvedIndexAndFnTMemItem(fnHeadChain_AndItSelf []ast.Fc) (int, *FnInFnTMemItem) {
+func (e *Env) FindRightMostResolvedFn_Return_ResolvedIndexAndFnTMemItem(fnHeadChain_AndItSelf []ast.Obj) (int, *FnInFnTMemItem) {
 	indexWhereLatestFnTIsGot := 0
 	var latestFnT *FnInFnTMemItem = nil
 	for i := len(fnHeadChain_AndItSelf) - 2; i >= 0; i-- {
