@@ -21,6 +21,7 @@ import (
 	pipeline "golitex/pipeline"
 	sys "golitex/sys"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -81,36 +82,12 @@ func main() {
 	}
 
 	if *fileFlag != "" {
-		// Verify file exists
-		if _, err := os.Stat(*fileFlag); os.IsNotExist(err) {
-			fmt.Printf("Error: File '%s' does not exist\n", *fileFlag)
-			os.Exit(1)
-		}
-
-		// Process file
-		// msg, signal, err := sys.RunFile(glob.RemoveWindowsCarriageReturn(*fileFlag))
-		ret := pipeline.RunFile(glob.RemoveWindowsCarriage(*fileFlag))
-		fmt.Println(ret.String())
-		fmt.Println(ret.GetREPLMsg())
+		MainFlagFile(*fileFlag)
 		return
 	}
 
 	if *repoFlag != "" {
-		// verify the repo exists
-		if _, err := os.Stat(*repoFlag); os.IsNotExist(err) {
-			fmt.Printf("Error: Repo '%s' does not exist\n", *repoFlag)
-			os.Exit(1)
-		}
-		// run the repo
-		ret, err := sys.RunRepo(glob.RemoveWindowsCarriage(*repoFlag))
-		fmt.Println(ret.String())
-		if err != nil {
-			fmt.Printf("Error: %s\n", err)
-			os.Exit(1)
-		} else {
-			msg := sys.RunMainMsg(ret)
-			fmt.Println(msg)
-		}
+		MainFlagFile(filepath.Join(*repoFlag, glob.MainDotLit))
 		return
 	}
 
@@ -155,5 +132,11 @@ func main() {
 	}
 
 	// If no flags are provided, run REPL
-	sys.RunREPLInTerminal(VERSION)
+	pipeline.RunREPL(VERSION)
+}
+
+func MainFlagFile(fileFlag string) {
+	ret := pipeline.RunFile(glob.RemoveWindowsCarriage(fileFlag))
+	fmt.Println(ret.String())
+	fmt.Println(ret.GetREPLMsg())
 }

@@ -17,6 +17,5 @@ know:
 
 have fn id_R(x R) R = x
 exist 10 st $exist_preimage(R, R, id_R, 10)
-R $in set, R $in set, id_R $in fn(R) R, 10 $in R
 $exist_preimage(R, R, id_R, 10)
-$tmp(R, R, id_R, 10)
+10 $in range_of_fn(R, R, id_R)

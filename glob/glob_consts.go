@@ -30,4 +30,4 @@ const LatexMultiLineSig string = "\"\""
 
 const LitexFileSuffix string = ".lit"
 
-const PkgEntranceFileNameMainDotLit string = "main" + LitexFileSuffix
+const MainDotLit string = "main" + LitexFileSuffix
