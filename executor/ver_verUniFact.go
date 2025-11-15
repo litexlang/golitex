@@ -69,7 +69,7 @@ func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerSta
 
 	execRet := NewExecTrue("")
 	if state.WithMsg {
-		execRet = ver.newMsgAtParent(fmt.Sprintf("%s\nis true", stmt), execRet)
+		execRet = execRet.AddMsg(fmt.Sprintf("%s\nis true", stmt))
 	}
 	return execRet
 }

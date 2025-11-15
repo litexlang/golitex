@@ -158,13 +158,6 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 }
 
 func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStmt) ExecRet {
-	failed := true
-	defer func() {
-		if !failed {
-			exec.newMsg(fmt.Sprintf("%s\n", stmt))
-		}
-	}()
-
 	for i := range len(stmt.Objs) {
 		existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordItemExistsIn), []ast.Obj{stmt.ObjSets[i]}, stmt.Line)
 		haveStmt := ast.NewHaveStmt([]string{stmt.Objs[i]}, existInFact, stmt.Line)
@@ -174,9 +167,7 @@ func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStm
 		}
 	}
 
-	failed = false
-
-	return NewExecTrue("")
+	return NewExecTrue("").AddMsg(fmt.Sprintf("%s\n", stmt))
 }
 
 func (exec *Executor) checkInFactInSet_SetIsNonEmpty(pureInFact *ast.SpecFactStmt) (bool, error) {

@@ -48,7 +48,6 @@ func (p *PipelineRunner) Run(code string) glob.GlobRet {
 
 	for _, topStmt := range topStmtSlice {
 		execState := p.executor.Stmt(topStmt)
-		msgOfTopStatements = append(msgOfTopStatements, p.executor.GetMsgAsStr0ToEnd())
 		msgOfTopStatements = append(msgOfTopStatements, execState.String())
 		if execState.IsErr() {
 			return glob.NewGlobErr(execState.String())
