@@ -177,30 +177,37 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) ExecRet {
 
 // TODO: 再know时就检查，仅仅依赖写在dom里的事实，是否真的能让涉及到的函数和prop能真的满足条件。如果不满足条件，那就warning
 func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) ExecRet {
+	var execRet ExecRet = NewExecErr("")
+	defer func() {
+		execRet = execRet.AddMsg(fmt.Sprintf("%s\n", stmt.String()))
+	}()
+
 	for _, fact := range stmt.Facts {
 		switch fact := fact.(type) {
 		case ast.FactStmt:
 			if !exec.Env.AreAtomsInFactAreDeclared(fact, map[string]struct{}{}) {
-				return NewExecErr(env.AtomsInFactNotDeclaredMsg(fact))
+				execRet = NewExecErr(env.AtomsInFactNotDeclaredMsg(fact))
+				return execRet
 			}
 
 			err := exec.Env.NewFact(fact)
 			if err != nil {
-				return NewExecErr(err.Error())
+				execRet = NewExecErr(err.Error())
+				return execRet
 			}
 
 		case *ast.KnowPropStmt:
-			execRet := exec.knowPropStmt(fact)
+			execRet = exec.knowPropStmt(fact)
 			if execRet.IsNotTrue() {
 				return execRet
 			}
 		default:
-			return NewExecErr(fmt.Sprintf("unknown fact type: %T", fact))
+			execRet = NewExecErr(fmt.Sprintf("unknown fact type: %T", fact))
+			return execRet
 		}
 	}
 
-	execRet := NewExecTrue(fmt.Sprintf("%s\n", stmt.String()))
-	execRet.AddMsg(fmt.Sprintf("%s\n", stmt.String()))
+	execRet = NewExecTrue("")
 	return execRet
 }
 
@@ -662,18 +669,25 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ExecRet {
 }
 
 func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) ExecRet {
-	execState, err := exec.checkFnEqualStmt(stmt)
-	if notOkExec(execState, err) {
-		return execState
+	var execRet ExecRet = NewExecErr("")
+	defer func() {
+		execRet = execRet.AddMsg(fmt.Sprintf("%s\n", stmt.String()))
+	}()
+
+	var err error
+	execRet, err = exec.checkFnEqualStmt(stmt)
+	if notOkExec(execRet, err) {
+		return execRet
 	}
 
 	newFnDefStmt := ast.NewDefFnStmt(string(stmt.DefHeader.Name), ast.NewFnTStruct(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, stmt.RetSet, []ast.FactStmt{}, []ast.FactStmt{ast.NewEqualFact(fnHeaderToReturnValueOfFn(stmt.DefHeader), stmt.EqualTo)}, stmt.Line), stmt.Line)
-	execState = exec.defFnStmt(newFnDefStmt)
-	if execState.IsNotTrue() {
-		return NewExecErr(fmt.Sprintf("failed to declare fn: %s", newFnDefStmt.String()))
+	execRet = exec.defFnStmt(newFnDefStmt)
+	if execRet.IsNotTrue() {
+		execRet = execRet.AddMsg(fmt.Sprintf("failed to declare fn: %s", newFnDefStmt.String()))
+		return execRet
 	}
 
-	return NewExecTrue("")
+	return execRet
 }
 
 func (exec *Executor) checkFnEqualStmt(stmt *ast.HaveFnEqualStmt) (ExecRet, error) {
