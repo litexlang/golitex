@@ -21,11 +21,6 @@ import (
 )
 
 func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) ExecRet {
-	defer func() {
-		if requireMsg {
-			exec.newMsg(fmt.Sprintf("%s\n", stmt))
-		}
-	}()
 
 	if string(stmt.Fact.PropName) == glob.KeywordExistPropPreImageByReplacement {
 		execState, err := exec.haveExistByReplacementStmt(stmt)
@@ -35,7 +30,11 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 		if execState.IsNotTrue() {
 			return execState
 		}
-		return NewExecTrue("")
+		result := NewExecTrue("")
+		if requireMsg {
+			result = result.AddMsg(fmt.Sprintf("%s\n", stmt))
+		}
+		return result
 	}
 
 	// 检查 SpecFactStmt 是否满足了
@@ -56,8 +55,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 	}
 
 	if execState.IsNotTrue() {
-		exec.newMsg(fmt.Sprintf("%s is unknown", stmt.Fact.String()))
-		return execState
+		return execState.AddMsg(fmt.Sprintf("%s is unknown", stmt.Fact.String()))
 	}
 
 	if stmt.Fact.PropName == glob.KeywordItemExistsIn && execState.IsTrue() {
@@ -65,7 +63,11 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 		if execState.IsNotTrue() {
 			return execState
 		}
-		return NewExecTrue("")
+		result := NewExecTrue("")
+		if requireMsg {
+			result = result.AddMsg(fmt.Sprintf("%s\n", stmt))
+		}
+		return result
 	}
 
 	// TODO： have 可能会引入3种不同的东西：set,obj,fn都可能；每种情况，处理起来不一样：比如如果你是fn和set，那可能就要把你放到 setMem 和 fnMem 里了
@@ -132,7 +134,6 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 		if err != nil {
 			return NewExecErr(err.Error())
 		}
-		exec.newMsg(fmt.Sprintf("%s\nis true by definition", domFact))
 	}
 
 	// iff of def exist prop is true
@@ -141,7 +142,6 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 		if err != nil {
 			return NewExecErr(err.Error())
 		}
-		exec.newMsg(fmt.Sprintf("%s\nis true by definition", iffFact))
 	}
 
 	// 相关的 exist st 事实也成立
@@ -152,9 +152,13 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 	if err != nil {
 		return NewExecErr(err.Error())
 	}
-	exec.newMsg(fmt.Sprintf("%s\nis true by definition", newExistStFact))
 
-	return NewExecTrue("")
+	result := NewExecTrue("")
+	if requireMsg {
+		result = result.AddMsg(fmt.Sprintf("%s\n", stmt))
+	}
+	// Note: Messages about "is true by definition" are now handled in the verifier
+	return result
 }
 
 func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStmt) ExecRet {
@@ -197,7 +201,6 @@ func (exec *Executor) checkInFactInSet_SetIsNonEmpty(pureInFact *ast.SpecFactStm
 }
 
 func (exec *Executor) haveEnumSetStmt(stmt *ast.HaveEnumSetStmt) ExecRet {
-	exec.newMsg(stmt.String())
 
 	enumFact := stmt.Fact
 
@@ -222,11 +225,10 @@ func (exec *Executor) haveEnumSetStmt(stmt *ast.HaveEnumSetStmt) ExecRet {
 		return execState
 	}
 
-	return NewExecTrue("")
+	return NewExecTrue("").AddMsg(stmt.String())
 }
 
 func (exec *Executor) haveIntensionalSetStmt(stmt *ast.HaveIntensionalSetStmt) ExecRet {
-	exec.newMsg(stmt.String())
 
 	intensionalSetFact := stmt.Fact
 
@@ -245,7 +247,7 @@ func (exec *Executor) haveIntensionalSetStmt(stmt *ast.HaveIntensionalSetStmt) E
 		return execState
 	}
 
-	return NewExecTrue("")
+	return NewExecTrue("").AddMsg(stmt.String())
 }
 
 func (exec *Executor) haveExistByReplacementStmt(stmt *ast.HaveObjStStmt) (ExecRet, error) {

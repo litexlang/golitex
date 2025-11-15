@@ -43,6 +43,15 @@ func (env *Env) NewFact(stmt ast.FactStmt) error {
 	}
 }
 
+// NewFactWithDeclarationCheck checks if all atoms in the fact are declared, and if so, calls NewFact.
+// Returns an error if any atoms are undeclared or if NewFact fails.
+func (env *Env) NewFactWithDeclarationCheck(fact ast.FactStmt) error {
+	if !env.AreAtomsInFactAreDeclared(fact, map[string]struct{}{}) {
+		return fmt.Errorf(AtomsInFactNotDeclaredMsg(fact))
+	}
+	return env.NewFact(fact)
+}
+
 func (env *Env) newSpecFactNoPostProcess(fact *ast.SpecFactStmt) error {
 	// if env.CurMatchProp == nil {
 	if isEqualFact, err := env.isTrueEqualFact_StoreIt(fact); err != nil {

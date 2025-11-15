@@ -25,29 +25,36 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContra
 	isSuccess := false
 
 	exec.NewEnv(exec.Env)
-	defer func() {
-		exec.newMsg("\n")
-		if isSuccess {
-			exec.appendNewMsgAtBegin("is true\n")
-		} else {
-			exec.appendNewMsgAtBegin("is unknown\n")
-		}
-		exec.appendNewMsgAtBegin(stmt.ClaimProveStmt.String())
-		exec.deleteEnvAndRetainMsg()
-	}()
+	defer exec.deleteEnv()
 
+	var result ExecRet
 	switch asStmt := stmt.ClaimProveStmt.ToCheckFact.(type) {
 	case ast.Spec_OrFact:
 		execState := exec.reversibleFactProveByContradiction(asStmt, stmt)
 		if execState.IsNotTrue() {
 			return execState
 		}
-		return NewExecTrue("")
+		result = NewExecTrue("")
 	case *ast.UniFactStmt:
-		return exec.uniFactProveByContradiction(asStmt, stmt)
+		execState := exec.uniFactProveByContradiction(asStmt, stmt)
+		if execState.IsNotTrue() {
+			return execState
+		}
+		result = NewExecTrue("")
+		isSuccess = true
 	default:
 		return NewExecErr(fmt.Errorf("prove by contradiction only support reversible fact or uni fact").Error())
 	}
+
+	// Add messages in correct order
+	result = result.AddMsg("\n")
+	if isSuccess {
+		result = result.AddMsgAtBegin("is true\n")
+	} else {
+		result = result.AddMsgAtBegin("is unknown\n")
+	}
+	result = result.AddMsgAtBegin(stmt.ClaimProveStmt.String())
+	return result
 }
 
 func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.Spec_OrFact, stmt *ast.ClaimProveByContradictionStmt) ExecRet {
@@ -78,8 +85,6 @@ func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.Spec_O
 	}
 	reversedLastFactStrStr := strings.Join(reversedLastFactStr, "\n\t")
 
-	exec.newMsg(fmt.Sprintf("the reversed last statement of current claim statement is:\n%s\nwe prove it(them)\n", reversedLastFactStrStr))
-
 	for _, curFact := range reversedLastFact {
 		execState := exec.factStmt(curFact)
 		if execState.IsNotTrue() {
@@ -87,9 +92,10 @@ func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.Spec_O
 		}
 	}
 
-	exec.newMsg(fmt.Sprintf("last statement of current claim statement:\n%s\nis true and false. Prove by contradiction is successful!", lastStmtAsFact))
-
-	return NewExecTrue("")
+	result := NewExecTrue("")
+	result = result.AddMsg(fmt.Sprintf("the reversed last statement of current claim statement is:\n%s\nwe prove it(them)\n", reversedLastFactStrStr))
+	result = result.AddMsg(fmt.Sprintf("last statement of current claim statement:\n%s\nis true and false. Prove by contradiction is successful!", lastStmtAsFact))
+	return result
 }
 
 func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt, stmt *ast.ClaimProveByContradictionStmt) ExecRet {
@@ -143,7 +149,6 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 		reversedLastFactStr = append(reversedLastFactStr, curFact.String())
 	}
 	reversedLastFactStrStr := strings.Join(reversedLastFactStr, "\n\t")
-	exec.newMsg(fmt.Sprintf("the reversed last statement of current claim statement is(are):\n\n%s\n\nwe prove it(them)\n", reversedLastFactStrStr))
 
 	for _, curFact := range reversedLastFact {
 		execState = exec.factStmt(curFact)
@@ -152,9 +157,10 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 		}
 	}
 
-	exec.newMsg(fmt.Sprintf("last statement of current claim statement:\n%s\nis true and false. Prove by contradiction is successful!", lastFact))
-
-	return NewExecTrue("")
+	result := NewExecTrue("")
+	result = result.AddMsg(fmt.Sprintf("the reversed last statement of current claim statement is(are):\n\n%s\n\nwe prove it(them)\n", reversedLastFactStrStr))
+	result = result.AddMsg(fmt.Sprintf("last statement of current claim statement:\n%s\nis true and false. Prove by contradiction is successful!", lastFact))
+	return result
 }
 
 func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) ExecRet {
@@ -191,7 +197,7 @@ func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByCo
 func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) ExecRet {
 	exec.NewEnv(exec.Env)
 	defer func() {
-		exec.deleteEnvAndRetainMsg()
+		exec.deleteEnv()
 	}()
 
 	// 需要检查stmt.ToCheckFact里的东西都是在外部声明好了的
@@ -234,8 +240,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) ExecRet {
 
 	execState := exec.defLetStmt(objDefStmt)
 	if execState.IsNotTrue() {
-		exec.newMsg(fmt.Sprintf("Claim statement error: Failed to declare parameters in universal fact:\n%s\n", objDefStmt))
-		return execState
+		return execState.AddMsg(fmt.Sprintf("Claim statement error: Failed to declare parameters in universal fact:\n%s\n", objDefStmt))
 	}
 
 	// know dom facts
@@ -321,7 +326,7 @@ func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) ExecRet {
 func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt) ExecRet {
 	exec.NewEnv(exec.Env)
 	defer func() {
-		exec.deleteEnvAndRetainMsg()
+		exec.deleteEnv()
 	}()
 
 	// declare parameters in exist prop
@@ -375,7 +380,7 @@ func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimPropStmt) ExecRet 
 
 	exec.NewEnv(exec.Env)
 	defer func() {
-		exec.deleteEnvAndRetainMsg()
+		exec.deleteEnv()
 	}()
 
 	execRet := exec.claimStmtProveUniFact(ast.NewClaimProveStmt(uniFact, stmt.Proofs, stmt.Line))
