@@ -490,7 +490,24 @@ func (stmt *ProveInEachCaseStmt) String() string {
 }
 
 func (stmt *ProveCaseByCaseStmt) String() string {
-	panic("not implemented")
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordProveCaseByCase)
+	builder.WriteString(":\n")
+	for _, thenFact := range stmt.ThenFacts {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(thenFact.String(), 1))
+		builder.WriteByte('\n')
+	}
+	for _, proof := range stmt.Proofs {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordCase, 1))
+		builder.WriteString(glob.KeySymbolColon)
+		builder.WriteByte('\n')
+		for _, fact := range proof {
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 2))
+			builder.WriteByte('\n')
+		}
+		builder.WriteByte('\n')
+	}
+	return strings.TrimSuffix(builder.String(), "\n")
 }
 
 func (stmt *KnowPropStmt) String() string {

@@ -20,7 +20,7 @@ import (
 )
 
 var REPLSuccessMessage = "---\nSuccess! :)\n"
-var REPLFailedMessage = "---\nError :(\n"
+var REPLErrorMessage = "---\nError :(\n"
 var REPLUnknownMessage = "---\nUnknown :(\n"
 
 func SplitLinesAndAdd4NIndents(line string, n uint32) string {

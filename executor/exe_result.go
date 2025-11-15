@@ -36,6 +36,7 @@ type ExecRet interface {
 	Inherit(execRet ExecRet)
 	NewVerMsgAtBegin(verState *VerState, msg string) ExecRet
 	ToGlobRet() glob.GlobRet
+	AddMsg(msg string) ExecRet
 }
 
 type ExecTrue struct {
@@ -214,4 +215,19 @@ func (v *ExecUnknown) ToGlobRet() glob.GlobRet {
 
 func (v *ExecErr) ToGlobRet() glob.GlobRet {
 	return glob.NewGlobErr(v.String())
+}
+
+func (v *ExecTrue) AddMsg(msg string) ExecRet {
+	v.Msg = append(v.Msg, msg)
+	return v
+}
+
+func (v *ExecUnknown) AddMsg(msg string) ExecRet {
+	v.Msg = append(v.Msg, msg)
+	return v
+}
+
+func (v *ExecErr) AddMsg(msg string) ExecRet {
+	v.Msg = append(v.Msg, msg)
+	return v
 }

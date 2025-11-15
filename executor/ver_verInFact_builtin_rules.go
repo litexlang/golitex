@@ -149,9 +149,7 @@ func (ver *Verifier) returnValueOfBuiltinArithmeticFnInReal(stmt *ast.SpecFactSt
 	ok = ast.IsFn_WithHeadNameInSlice(stmt.Params[0], []string{glob.KeySymbolPlus, glob.KeySymbolMinus, glob.KeySymbolStar, glob.KeySymbolSlash, glob.KeySymbolPower})
 
 	if ok {
-		if state.WithMsg {
-			ver.successWithMsg(stmt.String(), "the return value of the builtin arithmetic function is in the real set")
-		}
+		// Note: Messages should be handled by the caller, not in functions that return bool
 		return true
 	} else {
 		return false
@@ -174,9 +172,7 @@ func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state *VerState
 	// }
 
 	if string(asAtom) == glob.KeywordNatural || string(asAtom) == glob.KeywordInteger || string(asAtom) == glob.KeywordReal || string(asAtom) == glob.KeywordComplex || string(asAtom) == glob.KeywordRational || string(asAtom) == glob.KeywordNPos {
-		if state.WithMsg {
-			ver.successWithMsg(stmt.String(), "the builtin rules")
-		}
+		// Note: Messages should be handled by the caller, not in functions that return bool
 		return true
 	}
 
@@ -191,10 +187,11 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state *VerState) E
 				return verRet
 			}
 			if verRet.IsTrue() {
+				execRet := NewExecTrue("")
 				if state.WithMsg {
-					ver.successWithMsg(stmt.String(), fmt.Sprintf("dom of template %s is in the domain of the template where function %s is in. Also, the return value of the function is in the return set of the template where function %s is in", stmt.Params[1], stmt.Params[0], stmt.Params[1]))
+					execRet = ver.successWithMsg(stmt.String(), fmt.Sprintf("dom of template %s is in the domain of the template where function %s is in. Also, the return value of the function is in the return set of the template where function %s is in", stmt.Params[1], stmt.Params[0], stmt.Params[1]), execRet)
 				}
-				return NewExecTrue("")
+				return execRet
 			}
 		} else {
 			// return false, nil
@@ -203,10 +200,11 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state *VerState) E
 				return verRet
 			}
 			if verRet.IsTrue() {
+				execRet := NewExecTrue("")
 				if state.WithMsg {
-					ver.successWithMsg(stmt.String(), fmt.Sprintf("dom of template %s is in the domain of the template where function %s is in. Also, the return value of the function is in the return set of the template where function %s is in", stmt.Params[1], stmt.Params[0], stmt.Params[1]))
+					execRet = ver.successWithMsg(stmt.String(), fmt.Sprintf("dom of template %s is in the domain of the template where function %s is in. Also, the return value of the function is in the return set of the template where function %s is in", stmt.Params[1], stmt.Params[0], stmt.Params[1]), execRet)
 				}
-				return NewExecTrue("")
+				return execRet
 			}
 		}
 		return NewExecUnknown("")
@@ -239,10 +237,11 @@ func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state *VerState) E
 		return verRet
 	}
 	if verRet.IsTrue() {
+		execRet := NewExecTrue("When parameter sets of a fn template are all sets, then the fn template is a set")
 		if state.WithMsg {
-			ver.successWithMsg(stmt.String(), "When parameter sets of a fn template are all sets, then the fn template is a set")
+			execRet = ver.successWithMsg(stmt.String(), "When parameter sets of a fn template are all sets, then the fn template is a set", execRet)
 		}
-		return NewExecTrue("When parameter sets of a fn template are all sets, then the fn template is a set")
+		return execRet
 	}
 
 	// 如果是被定义好了的fn_template，则直接返回true
@@ -280,11 +279,11 @@ func (ver *Verifier) inObjFact(stmt *ast.SpecFactStmt, state *VerState) ExecRet 
 		return NewExecUnknown("")
 	}
 
+	execRet := NewExecTrue("")
 	if state.WithMsg {
-		ver.successWithMsg(stmt.String(), fmt.Sprintf("all atoms in %s are declared as obj or literal number", stmt.Params[0]))
+		execRet = ver.successWithMsg(stmt.String(), fmt.Sprintf("all atoms in %s are declared as obj or literal number", stmt.Params[0]), execRet)
 	}
-
-	return NewExecTrue("")
+	return execRet
 }
 
 func (ver *Verifier) falseInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
@@ -375,11 +374,11 @@ func (ver *Verifier) verInSetProduct(stmt *ast.SpecFactStmt, state *VerState) Ex
 		}
 	}
 
+	execRet := NewExecTrue("")
 	if state.WithMsg {
-		ver.successWithMsg(stmt.String(), fmt.Sprintf("each item in tuple %s is in corresponding set %s", stmt.Params[0], stmt.Params[1]))
+		execRet = ver.successWithMsg(stmt.String(), fmt.Sprintf("each item in tuple %s is in corresponding set %s", stmt.Params[0], stmt.Params[1]), execRet)
 	}
-
-	return NewExecTrue("")
+	return execRet
 }
 
 func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FcFn, state *VerState) ExecRet {
@@ -473,9 +472,7 @@ func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactS
 
 	if fcFn.HasHeadInSlice([]string{glob.KeySymbolPlus, glob.KeySymbolMinus, glob.KeySymbolStar, glob.KeySymbolSlash, glob.KeySymbolPower}) {
 		if stmt.Params[1] == ast.FcAtom(glob.KeywordReal) {
-			if state.WithMsg {
-				ver.successWithMsg(stmt.String(), "the return value of the builtin arithmetic function is in the real set")
-			}
+			// Note: Messages should be handled by the caller, not in functions that return bool
 			return true
 		}
 		return false
@@ -483,9 +480,7 @@ func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactS
 
 	if fcFn.HasHeadInSlice([]string{glob.KeywordLen, glob.KeySymbolPercent}) {
 		if stmt.Params[1] == ast.FcAtom(glob.KeywordNatural) {
-			if state.WithMsg {
-				ver.successWithMsg(stmt.String(), "the return value of the builtin arithmetic function is in the natural set")
-			}
+			// Note: Messages should be handled by the caller, not in functions that return bool
 			return true
 		}
 		return false

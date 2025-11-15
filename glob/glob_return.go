@@ -16,8 +16,11 @@ package litex_global
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 )
+
+var newlineRegex = regexp.MustCompile(`\n{3,}`)
 
 type GlobRet interface {
 	globRet()
@@ -31,8 +34,9 @@ type GlobRet interface {
 	IsNotErr() bool
 	Inherit(globRet GlobRet)
 	Error() error
-	GetREPLMsg() string
 	GetMsgs() []string
+	StringWithOptimizedNewline() string
+	GetREPLMsg() string
 }
 
 type GlobTrue struct {
@@ -155,7 +159,7 @@ func (v *GlobUnknown) GetREPLMsg() string {
 }
 
 func (v *GlobErr) GetREPLMsg() string {
-	return REPLFailedMessage
+	return REPLErrorMessage
 }
 
 func (v *GlobTrue) GetMsgs() []string {
@@ -168,4 +172,26 @@ func (v *GlobUnknown) GetMsgs() []string {
 
 func (v *GlobErr) GetMsgs() []string {
 	return v.Msg
+}
+
+func (v *GlobTrue) StringWithOptimizedNewline() string {
+	// 把末尾的空
+	s := strings.Trim(v.String(), "\n\t ")
+	// 将3个或更多连续的\n替换成\n\n
+	s = newlineRegex.ReplaceAllString(s, "\n\n")
+	return fmt.Sprintf("%s\n", s)
+}
+
+func (v *GlobUnknown) StringWithOptimizedNewline() string {
+	s := strings.Trim(v.String(), "\n\t ")
+	// 将3个或更多连续的\n替换成\n\n
+	s = newlineRegex.ReplaceAllString(s, "\n\n")
+	return fmt.Sprintf("%s\n", s)
+}
+
+func (v *GlobErr) StringWithOptimizedNewline() string {
+	s := strings.Trim(v.String(), "\n\t ")
+	// 将3个或更多连续的\n替换成\n\n
+	s = newlineRegex.ReplaceAllString(s, "\n\n")
+	return fmt.Sprintf("%s\n", s)
 }

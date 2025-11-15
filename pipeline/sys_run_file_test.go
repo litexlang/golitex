@@ -25,6 +25,5 @@ func Test_File(t *testing.T) {
 	if ret.IsNotTrue() {
 		t.Errorf("failed to run file %s\n", fileName)
 	}
-	fmt.Println(ret.String())
-	fmt.Println(ret.GetREPLMsg())
+	fmt.Println(ret.StringWithOptimizedNewline())
 }

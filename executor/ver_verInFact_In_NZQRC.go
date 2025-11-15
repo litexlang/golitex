@@ -28,29 +28,25 @@ func (ver *Verifier) verIn_N_Z_Q_R_C(stmt *ast.SpecFactStmt, state *VerState) bo
 	}
 
 	nextState := state.GetFinalRound().GetNoMsg()
-	var msg string
 	switch string(inSet) {
 	case glob.KeywordNatural:
-		ok, msg = ver.verInN_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
+		ok, _ = ver.verInN_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
 	case glob.KeywordInteger:
-		ok, msg = ver.verInZ_BySpecMem__ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
+		ok, _ = ver.verInZ_BySpecMem__ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
 	case glob.KeywordRational:
-		ok, msg = ver.verInQ_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
+		ok, _ = ver.verInQ_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
 	case glob.KeywordNPos:
-		ok, msg = ver.verInNPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
+		ok, _ = ver.verInNPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
 	case glob.KeywordReal:
-		ok, msg = ver.verInR_BySpecMem(stmt, nextState)
+		ok, _ = ver.verInR_BySpecMem(stmt, nextState)
 	case glob.KeywordComplex:
-		ok, msg = ver.verInC_BySpecMem(stmt, nextState)
+		ok, _ = ver.verInC_BySpecMem(stmt, nextState)
 	default:
 		ok = false
-		msg = ""
 	}
 
 	if ok {
-		if state.WithMsg {
-			ver.successWithMsg(stmt.String(), msg)
-		}
+		// Note: Messages should be handled by the caller, not in functions that return bool
 		return true
 	}
 	return false

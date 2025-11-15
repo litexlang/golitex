@@ -146,35 +146,22 @@ func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreT
 }
 
 func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.ObjSlice, fnTStruct *ast.FnTStruct, state *VerState) ExecRet {
-	failed := false
-
-	curState := state.GetNoMsg()
-	defer func() {
-		if failed {
-			ver.Env.Msgs = append(ver.Env.Msgs, fmt.Sprintf("failed to check param(s) %s satisfy domain of\n%s", concreteParams, fnTStruct))
-		}
-	}()
-
-	verRet := ver.paramsInSets(concreteParams, fnTStruct.ParamSets, curState)
+	verRet := ver.paramsInSets(concreteParams, fnTStruct.ParamSets, state.GetNoMsg())
 	if verRet.IsErr() {
-		failed = true
 		return verRet
 	}
 	if verRet.IsUnknown() {
-		failed = true
-		ver.Env.Msgs = append(ver.Env.Msgs, verRet.String())
+		verRet.AddMsg(verRet.String())
 		return verRet
 	}
 
-	verRet = ver.factsAreTrue(fnTStruct.DomFacts, curState)
+	verRet = ver.factsAreTrue(fnTStruct.DomFacts, state.GetNoMsg())
 	if verRet.IsErr() {
-		failed = true
 		return verRet
 	}
 	if verRet.IsUnknown() {
-		failed = true
-		ver.Env.Msgs = append(ver.Env.Msgs, verRet.String())
-		return NewExecUnknown("")
+		verRet.AddMsg(verRet.String())
+		return verRet
 	}
 
 	return NewExecTrue("")
