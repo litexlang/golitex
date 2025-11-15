@@ -392,12 +392,12 @@ func (tb *tokenBlock) fnSet() (ast.Obj, error) {
 		if tb.header.is(glob.KeySymbolComma) {
 			tb.header.skip(glob.KeySymbolComma)
 			continue
+		}
+		// If not comma and not right brace, it's an error
+		if !tb.header.is(glob.KeySymbolRightBrace) {
+			return nil, fmt.Errorf("expected '%s' but got '%s'", glob.KeySymbolRightBrace, tb.header.strAtCurIndexPlus(0))
 		} else {
-			if tb.header.is(glob.KeySymbolRightBrace) {
-				break
-			} else {
-				return nil, fmt.Errorf("expected '%s' but got '%s'", glob.KeySymbolRightBrace, tb.header.strAtCurIndexPlus(0))
-			}
+			break
 		}
 	}
 
