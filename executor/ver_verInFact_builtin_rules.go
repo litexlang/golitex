@@ -38,7 +38,6 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 	}
 
 	var verRet ExecRet
-	var ok bool
 
 	verRet = ver.verInSet_btRules(stmt, state)
 	if verRet.IsErr() {
@@ -56,24 +55,36 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 		return verRet
 	}
 
-	ok = ver.builtinSetsInSetSet(stmt, state)
-	if ok {
-		return NewExecTrue("")
+	verRet = ver.builtinSetsInSetSet(stmt, state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsTrue() {
+		return verRet
 	}
 
-	ok = ver.returnValueOfBuiltinArithmeticFnInReal(stmt, state)
-	if ok {
-		return NewExecTrue("")
+	verRet = ver.returnValueOfBuiltinArithmeticFnInReal(stmt, state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsTrue() {
+		return verRet
 	}
 
-	ok = ver.returnValueOfUserDefinedFnInFnReturnSet(stmt, state)
-	if ok {
-		return NewExecTrue("")
+	verRet = ver.returnValueOfUserDefinedFnInFnReturnSet(stmt, state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsTrue() {
+		return verRet
 	}
 
-	ok = ver.verIn_N_Z_Q_R_C(stmt, state)
-	if ok {
-		return NewExecTrue("")
+	verRet = ver.verIn_N_Z_Q_R_C(stmt, state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsTrue() {
+		return verRet
 	}
 
 	verRet = ver.inFnTemplateFact(stmt, state)
@@ -140,43 +151,42 @@ func (ver *Verifier) FnTemplateIsASet(stmt *ast.SpecFactStmt, state *VerState) E
 	return NewExecUnknown("")
 }
 
-func (ver *Verifier) returnValueOfBuiltinArithmeticFnInReal(stmt *ast.SpecFactStmt, state *VerState) bool {
+func (ver *Verifier) returnValueOfBuiltinArithmeticFnInReal(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	ok := ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordReal)
 	if !ok {
-		return false
+		return NewExecUnknown("")
 	}
 
 	ok = ast.IsFn_WithHeadNameInSlice(stmt.Params[0], []string{glob.KeySymbolPlus, glob.KeySymbolMinus, glob.KeySymbolStar, glob.KeySymbolSlash, glob.KeySymbolPower})
 
 	if ok {
-		// Note: Messages should be handled by the caller, not in functions that return bool
-		return true
-	} else {
-		return false
+		msg := fmt.Sprintf("return value of builtin arithmetic function %s is in Real", stmt.Params[0])
+		return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
 	}
+	return NewExecUnknown("")
 }
 
-func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state *VerState) bool {
+func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	ok := ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordSet)
 	if !ok {
-		return false
+		return NewExecUnknown("")
 	}
 
 	asAtom, ok := stmt.Params[0].(ast.FcAtom)
 	if !ok {
-		return false
+		return NewExecUnknown("")
 	}
 
 	// if asAtom.PkgName != glob.EmptyPkg {
-	// 	return false
+	// 	return NewExecUnknown("")
 	// }
 
 	if string(asAtom) == glob.KeywordNatural || string(asAtom) == glob.KeywordInteger || string(asAtom) == glob.KeywordReal || string(asAtom) == glob.KeywordComplex || string(asAtom) == glob.KeywordRational || string(asAtom) == glob.KeywordNPos {
-		// Note: Messages should be handled by the caller, not in functions that return bool
-		return true
+		msg := fmt.Sprintf("%s is a builtin set", asAtom)
+		return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
 	}
 
-	return false
+	return NewExecUnknown("")
 }
 
 func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
@@ -449,36 +459,42 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FcFn, state *V
 	return verRet
 }
 
-func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactStmt, state *VerState) bool {
+func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	fcFn, ok := stmt.Params[0].(*ast.FcFn)
 	if !ok {
-		return false
+		return NewExecUnknown("")
 	}
 
 	if fcFn.HasHeadInSlice([]string{glob.KeySymbolPlus, glob.KeySymbolMinus, glob.KeySymbolStar, glob.KeySymbolSlash, glob.KeySymbolPower}) {
 		if stmt.Params[1] == ast.FcAtom(glob.KeywordReal) {
-			// Note: Messages should be handled by the caller, not in functions that return bool
-			return true
+			msg := fmt.Sprintf("return value of builtin arithmetic function %s is in Real", fcFn)
+			return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
 		}
-		return false
+		return NewExecUnknown("")
 	}
 
 	if fcFn.HasHeadInSlice([]string{glob.KeywordLen, glob.KeySymbolPercent}) {
 		if stmt.Params[1] == ast.FcAtom(glob.KeywordNatural) {
-			// Note: Messages should be handled by the caller, not in functions that return bool
-			return true
+			msg := fmt.Sprintf("return value of builtin function %s is in Natural", fcFn)
+			return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
 		}
-		return false
+		return NewExecUnknown("")
 	}
 
 	setFcFnIsIn_ByItsFnT, err := ver.getRetSetOfFcFnByUsingItsFnT(fcFn)
 	if err != nil {
-		return false
+		return NewExecUnknown("")
 	}
 
 	verRet := ver.VerFactStmt(ast.EqualFact(stmt.Params[1], setFcFnIsIn_ByItsFnT), state)
-	ok, _ = verRet.ToBoolErr()
-	return ok
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsTrue() {
+		msg := fmt.Sprintf("return value of function %s is in its function template return set %s", fcFn, setFcFnIsIn_ByItsFnT)
+		return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
+	}
+	return NewExecUnknown("")
 }
 
 func (ver *Verifier) getRetSetOfFcFnByUsingItsFnT(fcFn *ast.FcFn) (ast.Obj, error) {

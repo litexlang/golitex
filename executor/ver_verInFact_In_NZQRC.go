@@ -21,35 +21,39 @@ import (
 )
 
 // 这是必要的，因为 2 $in N 是这个检查的
-func (ver *Verifier) verIn_N_Z_Q_R_C(stmt *ast.SpecFactStmt, state *VerState) bool {
+func (ver *Verifier) verIn_N_Z_Q_R_C(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	inSet, ok := stmt.Params[1].(ast.FcAtom)
 	if !ok {
-		return false
+		return NewExecUnknown("")
 	}
 
 	nextState := state.GetFinalRound().GetNoMsg()
+	var verifiedBy string
+	var success bool
 	switch string(inSet) {
 	case glob.KeywordNatural:
-		ok, _ = ver.verInN_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
+		success, verifiedBy = ver.verInN_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
 	case glob.KeywordInteger:
-		ok, _ = ver.verInZ_BySpecMem__ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
+		success, verifiedBy = ver.verInZ_BySpecMem__ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
 	case glob.KeywordRational:
-		ok, _ = ver.verInQ_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
+		success, verifiedBy = ver.verInQ_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
 	case glob.KeywordNPos:
-		ok, _ = ver.verInNPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
+		success, verifiedBy = ver.verInNPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
 	case glob.KeywordReal:
-		ok, _ = ver.verInR_BySpecMem(stmt, nextState)
+		success, verifiedBy = ver.verInR_BySpecMem(stmt, nextState)
 	case glob.KeywordComplex:
-		ok, _ = ver.verInC_BySpecMem(stmt, nextState)
+		success, verifiedBy = ver.verInC_BySpecMem(stmt, nextState)
 	default:
-		ok = false
+		success = false
 	}
 
-	if ok {
-		// Note: Messages should be handled by the caller, not in functions that return bool
-		return true
+	if success {
+		if verifiedBy == "" {
+			verifiedBy = fmt.Sprintf("%s is in %s", stmt.Params[0], inSet)
+		}
+		return ver.maybeAddSuccessMsg(state, stmt.String(), verifiedBy, NewExecTrue(""))
 	}
-	return false
+	return NewExecUnknown("")
 }
 
 func (ver *Verifier) verInNPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactStmt, state *VerState) (bool, string) {
@@ -65,8 +69,8 @@ func (ver *Verifier) verInNPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet
 		return true, stmt.String()
 	}
 
-	ok := ver.returnValueOfUserDefinedFnInFnReturnSet(stmt, state)
-	if ok {
+	verRet = ver.returnValueOfUserDefinedFnInFnReturnSet(stmt, state)
+	if verRet.IsTrue() {
 		return true, stmt.String()
 	}
 
@@ -99,8 +103,8 @@ func (ver *Verifier) verInN_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(st
 		return true, stmt.String()
 	}
 
-	ok := ver.returnValueOfUserDefinedFnInFnReturnSet(stmt, state)
-	if ok {
+	verRet = ver.returnValueOfUserDefinedFnInFnReturnSet(stmt, state)
+	if verRet.IsTrue() {
 		return true, stmt.String()
 	}
 
@@ -134,8 +138,8 @@ func (ver *Verifier) verInZ_BySpecMem__ReturnValueOfUserDefinedFnInFnReturnSet(s
 		return true, stmt.String()
 	}
 
-	ok := ver.returnValueOfUserDefinedFnInFnReturnSet(stmt, state)
-	if ok {
+	verRet = ver.returnValueOfUserDefinedFnInFnReturnSet(stmt, state)
+	if verRet.IsTrue() {
 		return true, stmt.String()
 	}
 
@@ -170,8 +174,8 @@ func (ver *Verifier) verInQ_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(st
 		return true, stmt.String()
 	}
 
-	ok := ver.returnValueOfUserDefinedFnInFnReturnSet(stmt, state)
-	if ok {
+	verRet = ver.returnValueOfUserDefinedFnInFnReturnSet(stmt, state)
+	if verRet.IsTrue() {
 		return true, stmt.String()
 	}
 
@@ -202,8 +206,8 @@ func (ver *Verifier) verInR_BySpecMem(stmt *ast.SpecFactStmt, state *VerState) (
 		return true, stmt.String()
 	}
 
-	ok := ver.returnValueOfUserDefinedFnInFnReturnSet(stmt, state)
-	if ok {
+	verRet = ver.returnValueOfUserDefinedFnInFnReturnSet(stmt, state)
+	if verRet.IsTrue() {
 		return true, stmt.String()
 	}
 
