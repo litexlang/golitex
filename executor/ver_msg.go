@@ -20,14 +20,6 @@ import (
 	"strings"
 )
 
-func (ver *Verifier) specFactSpecMemTrueMsg(stmt *ast.SpecFactStmt, knownFact ast.SpecFactStmt, execRet ExecRet) ExecRet {
-	var verifiedBy strings.Builder
-
-	verifiedBy.WriteString(knownFact.StringWithLine())
-	verifiedBy.WriteString("\n")
-	return ver.successWithMsg(stmt.String(), verifiedBy.String(), execRet)
-}
-
 func (ver *Verifier) successWithMsg(stmtStr, stmtVerifiedBy string, execRet ExecRet) ExecRet {
 	execRet.AddMsg(successVerString(stmtStr, stmtVerifiedBy))
 	return execRet
@@ -44,10 +36,6 @@ func successVerString(stmtStr, stmtVerifiedBy string) string {
 		successVerString.WriteString("\nis true.")
 	}
 	return successVerString.String()
-}
-
-func (ver *Verifier) newMsgAtParent(s string, execRet ExecRet) ExecRet {
-	return execRet.AddMsg(s)
 }
 
 func parametersDoNotSatisfyFnReq(param ast.Obj, fnName ast.Obj) error {
