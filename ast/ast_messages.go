@@ -160,6 +160,7 @@ func (stmt *DefLetStmt) String() string {
 		builder.WriteString(strings.Join(factStrSlice, "\n"))
 	}
 
+	builder.WriteByte('\n')
 	return builder.String()
 }
 
