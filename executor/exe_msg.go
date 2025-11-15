@@ -14,28 +14,10 @@
 
 package litex_executor
 
-func (e *Executor) deleteEnvAndRetainMsg() {
+func (e *Executor) deleteEnv() {
 	// Note: Messages are now stored in ExecRet, not in env.Msgs
 	// This function is kept for compatibility but does nothing
 	e.Env = e.Env.Parent
-}
-
-// newMsg is deprecated. Use execRet.AddMsg() instead
-func (e *Executor) newMsg(msg string) {
-	// Note: Messages are now stored in ExecRet, not in env.Msgs
-	// This function is kept for compatibility but does nothing
-}
-
-// appendNewMsgAtBegin is deprecated. Use execRet.AddMsg() instead
-func (e *Executor) appendNewMsgAtBegin(msg string) {
-	// Note: Messages are now stored in ExecRet, not in env.Msgs
-	// This function is kept for compatibility but does nothing
-}
-
-// ClearMsgs is deprecated. Messages are now stored in ExecRet, not in env.Msgs
-func (e *Executor) ClearMsgs() {
-	// Note: Messages are now stored in ExecRet, not in env.Msgs
-	// This function is kept for compatibility but does nothing
 }
 
 func (e *Executor) deleteEnvAndGiveUpMsgs() {

@@ -50,7 +50,7 @@ func (exec *Executor) proveByEnumMainLogic(stmt *ast.ProveByEnumStmt) (ExecRet, 
 
 func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.ProveByEnumStmt, cartesianProductAtI []ast.Obj) (bool, error) {
 	exec.NewEnv(exec.Env)
-	defer exec.deleteEnvAndRetainMsg()
+	defer exec.deleteEnv()
 
 	defObjStmt := ast.NewDefLetStmt(stmt.Fact.Params, stmt.Fact.ParamSets, getParamEqualFcSlice(stmt.Fact.Params, cartesianProductAtI), stmt.Line)
 	execState := exec.defLetStmt(defObjStmt)

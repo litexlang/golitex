@@ -23,71 +23,90 @@ import (
 func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) ExecRet {
 	var err error
 	ver := NewVerifier(exec.Env)
-	isOk := false
 	msg := ""
-
-	defer func() {
-		if err != nil {
-			exec.newMsg(fmt.Sprintf("%s\nerror\n", stmt.String()))
-			exec.newMsg(err.Error())
-		} else if !isOk {
-			exec.newMsg(fmt.Sprintf("%s\nfailed\n", stmt.String()))
-			if msg != "" {
-				exec.newMsg(msg)
-			}
-		} else {
-			exec.newMsg(fmt.Sprintf("%s\nsuccess\n", stmt.String()))
-		}
-	}()
 
 	// 输入的 Start 必须是 N_pos
 	startIsNPos := proveByInduction_Fact_Start_is_NPos(stmt)
 	verRet := ver.VerFactStmt(startIsNPos, Round0NoMsg)
 	if verRet.IsErr() {
-		return NewExecErr(fmt.Errorf(verRet.String()).Error())
+		var result ExecRet = NewExecErr(fmt.Errorf(verRet.String()).Error())
+		result = result.AddMsg(fmt.Sprintf("%s\nerror\n", stmt.String()))
+		result = result.AddMsg(verRet.String())
+		return result
 	}
 	if verRet.IsUnknown() {
 		msg = fmt.Sprintf("%s\nis unknown", startIsNPos.String())
-		return NewExecUnknown("")
+		var result ExecRet = NewExecUnknown("")
+		result = result.AddMsg(fmt.Sprintf("%s\nfailed\n", stmt.String()))
+		if msg != "" {
+			result = result.AddMsg(msg)
+		}
+		return result
 	}
 
 	// 把start代入fact，得到的fact是true
 	startFact, err := proveByInduction_newStartFact(stmt)
 	if err != nil {
-		return NewExecErr(err.Error())
+		var result ExecRet = NewExecErr(err.Error())
+		result = result.AddMsg(fmt.Sprintf("%s\nerror\n", stmt.String()))
+		result = result.AddMsg(err.Error())
+		return result
 	}
 	verRet = ver.VerFactStmt(startFact, Round0NoMsg)
 	if verRet.IsErr() {
-		return verRet
+		result := verRet
+		result = result.AddMsg(fmt.Sprintf("%s\nerror\n", stmt.String()))
+		result = result.AddMsg(verRet.String())
+		return result
 	}
 	if verRet.IsUnknown() {
 		msg = fmt.Sprintf("%s\nis unknown", startFact.String())
-		return NewExecUnknown("")
+		var result ExecRet = NewExecUnknown("")
+		result = result.AddMsg(fmt.Sprintf("%s\nfailed\n", stmt.String()))
+		if msg != "" {
+			result = result.AddMsg(msg)
+		}
+		return result
 	}
 
 	// 对于任意n对于fact成立，那么对于n+1也成立
 	uniFact_n_true_leads_n_plus_1_true, err := proveByInduction_newUniFact_n_true_leads_n_plus_1_true(stmt)
 	if err != nil {
-		return NewExecErr(err.Error())
+		var result ExecRet = NewExecErr(err.Error())
+		result = result.AddMsg(fmt.Sprintf("%s\nerror\n", stmt.String()))
+		result = result.AddMsg(err.Error())
+		return result
 	}
 	verRet = ver.VerFactStmt(uniFact_n_true_leads_n_plus_1_true, Round0NoMsg)
 	if verRet.IsErr() {
-		return NewExecErr(fmt.Errorf(verRet.String()).Error())
+		var result ExecRet = NewExecErr(fmt.Errorf(verRet.String()).Error())
+		result = result.AddMsg(fmt.Sprintf("%s\nerror\n", stmt.String()))
+		result = result.AddMsg(verRet.String())
+		return result
 	}
 	if verRet.IsUnknown() {
 		msg = fmt.Sprintf("%s\nis unknown", uniFact_n_true_leads_n_plus_1_true.String())
-		return NewExecUnknown("")
+		var result ExecRet = NewExecUnknown("")
+		result = result.AddMsg(fmt.Sprintf("%s\nfailed\n", stmt.String()))
+		if msg != "" {
+			result = result.AddMsg(msg)
+		}
+		return result
 	}
 
 	// 对于任何 param >= start, fact 成立
 	uniFact_forall_param_geq_start_then_fact_is_true := proveByInduction_newUniFact_forall_param_geq_start_then_fact_is_true(stmt)
 	err = exec.Env.NewFact(uniFact_forall_param_geq_start_then_fact_is_true)
 	if err != nil {
-		return NewExecErr(err.Error())
+		var result ExecRet = NewExecErr(err.Error())
+		result = result.AddMsg(fmt.Sprintf("%s\nerror\n", stmt.String()))
+		result = result.AddMsg(err.Error())
+		return result
 	}
 
-	isOk = true
-	return NewExecTrue("")
+	var result ExecRet = NewExecTrue("")
+	result = result.AddMsg(fmt.Sprintf("%s\nsuccess\n", stmt.String()))
+	return result
 }
 
 func proveByInduction_Fact_Start_is_NPos(stmt *ast.ProveByInductionStmt) *ast.SpecFactStmt {

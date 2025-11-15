@@ -17,7 +17,6 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
-	env "golitex/environment"
 	glob "golitex/glob"
 )
 
@@ -150,12 +149,11 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) ExecRet {
 	verRet := curVerifier.VerFactStmt(stmt, state)
 
 	if verRet.IsErr() {
-		// 保留 verRet 中的消息
-		return verRet
+		return verRet.AddMsg(fmt.Sprintf("%s\n", stmt.String()))
 	} else if verRet.IsTrue() {
 		err := exec.Env.NewFact(stmt)
 		if err != nil {
-			return NewExecErr(err.Error())
+			return NewExecErr(err.Error()).AddMsg(fmt.Sprintf("%s\n", stmt.String()))
 		}
 		if verRet.(*ExecTrue).TrueEqualValues != nil {
 			if verRet.(*ExecTrue).TrueEqualValues[0] != nil {
@@ -165,50 +163,36 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) ExecRet {
 				exec.Env.StoreTrueEqualValues(stmt.(*ast.SpecFactStmt).Params[0], verRet.(*ExecTrue).TrueEqualValues[1])
 			}
 		}
-		// 保留 verRet 中的消息，直接返回
-		return verRet
+		return verRet.AddMsg(fmt.Sprintf("%s\n", stmt.String()))
 	} else if verRet.IsUnknown() {
-		// 保留 verRet 中的消息
-		return verRet
+		return verRet.AddMsg(fmt.Sprintf("%s\n", stmt.String()))
 	} else {
-		panic("unknown ver ret")
+		execRet := NewExecErr("unknown ver ret")
+		return execRet.AddMsg(fmt.Sprintf("%s\n", stmt.String()))
 	}
 }
 
 // TODO: 再know时就检查，仅仅依赖写在dom里的事实，是否真的能让涉及到的函数和prop能真的满足条件。如果不满足条件，那就warning
 func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) ExecRet {
-	var execRet ExecRet = NewExecErr("")
-	defer func() {
-		execRet = execRet.AddMsg(fmt.Sprintf("%s\n", stmt.String()))
-	}()
-
 	for _, fact := range stmt.Facts {
 		switch fact := fact.(type) {
 		case ast.FactStmt:
-			if !exec.Env.AreAtomsInFactAreDeclared(fact, map[string]struct{}{}) {
-				execRet = NewExecErr(env.AtomsInFactNotDeclaredMsg(fact))
-				return execRet
-			}
-
-			err := exec.Env.NewFact(fact)
+			err := exec.Env.NewFactWithDeclarationCheck(fact)
 			if err != nil {
-				execRet = NewExecErr(err.Error())
-				return execRet
+				return NewExecErr(err.Error()).AddMsg(fmt.Sprintf("%s\n", stmt.String()))
 			}
 
 		case *ast.KnowPropStmt:
-			execRet = exec.knowPropStmt(fact)
+			execRet := exec.knowPropStmt(fact)
 			if execRet.IsNotTrue() {
-				return execRet
+				return execRet.AddMsg(fmt.Sprintf("%s\n", stmt.String()))
 			}
 		default:
-			execRet = NewExecErr(fmt.Sprintf("unknown fact type: %T", fact))
-			return execRet
+			return NewExecErr(fmt.Sprintf("unknown fact type: %T", fact)).AddMsg(fmt.Sprintf("%s\n", stmt.String()))
 		}
 	}
 
-	execRet = NewExecTrue("")
-	return execRet
+	return NewExecTrue(fmt.Sprintf("%s\n", stmt.String()))
 }
 
 func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool) ExecRet {
@@ -296,8 +280,7 @@ func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) ExecRet {
 	for _, curStmt := range proof {
 		execState := exec.Stmt(curStmt)
 		if execState.IsNotTrue() {
-			exec.newMsg(fmt.Sprintf("%s\nfailed :( line %d\n", curStmt.String(), curStmt.GetLine()))
-			return execState
+			return execState.AddMsg(fmt.Sprintf("%s\nfailed :( line %d\n", curStmt.String(), curStmt.GetLine()))
 		}
 	}
 	return NewExecTrue("")
@@ -305,21 +288,11 @@ func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) ExecRet {
 
 func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) ExecRet {
 	isSuccess := false
-	defer func() {
-		exec.newMsg("\n")
-		if isSuccess {
-			exec.appendNewMsgAtBegin("is true\n")
-		} else {
-			exec.appendNewMsgAtBegin("is unknown\n")
-		}
-		exec.appendNewMsgAtBegin(stmt.String())
-	}()
 
 	// prove orFact is true
 	execState := exec.factStmt(stmt.OrFact)
 	if execState.IsNotTrue() {
-		exec.newMsg(fmt.Sprintf("%s is unknown", stmt.OrFact.String()))
-		return execState
+		return execState.AddMsg(fmt.Sprintf("%s is unknown", stmt.OrFact.String()))
 	}
 
 	for i := range stmt.OrFact.Facts {
@@ -336,12 +309,20 @@ func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) ExecRet
 	}
 
 	isSuccess = true
-	return NewExecTrue("")
+	result := NewExecTrue("")
+	result = result.AddMsg("\n")
+	if isSuccess {
+		result = result.AddMsgAtBegin("is true\n")
+	} else {
+		result = result.AddMsgAtBegin("is unknown\n")
+	}
+	result = result.AddMsgAtBegin(stmt.String())
+	return result
 }
 
 func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEachCaseStmt) (ExecRet, error) {
 	exec.NewEnv(exec.Env)
-	defer exec.deleteEnvAndRetainMsg()
+	defer exec.deleteEnv()
 
 	caseStmt := stmt.OrFact.Facts[index]
 
@@ -396,7 +377,7 @@ func (exec *Executor) proveCaseByCaseStmt(stmt *ast.ProveCaseByCaseStmt) ExecRet
 
 func (exec *Executor) execProofBlockForCaseByCase(index int, stmt *ast.ProveCaseByCaseStmt) (ExecRet, error) {
 	exec.NewEnv(exec.Env)
-	defer exec.deleteEnvAndRetainMsg()
+	defer exec.deleteEnv()
 
 	caseStmt := stmt.CaseFacts[index]
 
@@ -469,7 +450,7 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) ExecRet {
 func (exec *Executor) proveStmt(stmt *ast.ProveStmt) ExecRet {
 	// new env
 	exec.NewEnv(exec.Env)
-	defer exec.deleteEnvAndRetainMsg()
+	defer exec.deleteEnv()
 
 	execState := exec.execStmtsAtCurEnv(stmt.Proof)
 	if execState.IsNotTrue() {
@@ -509,7 +490,7 @@ func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) ExecRet {
 	// exec.newMsg(stmt.String())
 
 	exec.NewEnv(exec.Env)
-	defer exec.deleteEnvAndRetainMsg()
+	defer exec.deleteEnv()
 
 	execState, err := exec.proveByEnumMainLogic(stmt)
 	if notOkExec(execState, err) {
@@ -593,9 +574,7 @@ func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) ExecRet {
 		return NewExecErr(err.Error())
 	}
 
-	exec.newMsg(fmt.Sprintf("%s\nis true by definition", knownUniFact))
-
-	return NewExecTrue("")
+	return NewExecTrue("").AddMsg(fmt.Sprintf("%s\nis true by definition", knownUniFact))
 }
 
 func (exec *Executor) DefFnTemplateStmt(stmt *ast.FnTemplateDefStmt) ExecRet {
@@ -669,31 +648,25 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ExecRet {
 }
 
 func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) ExecRet {
-	var execRet ExecRet = NewExecErr("")
-	defer func() {
-		execRet = execRet.AddMsg(fmt.Sprintf("%s\n", stmt.String()))
-	}()
-
 	var err error
-	execRet, err = exec.checkFnEqualStmt(stmt)
+	execRet, err := exec.checkFnEqualStmt(stmt)
 	if notOkExec(execRet, err) {
-		return execRet
+		return execRet.AddMsg(fmt.Sprintf("%s\n", stmt.String()))
 	}
 
 	newFnDefStmt := ast.NewDefFnStmt(string(stmt.DefHeader.Name), ast.NewFnTStruct(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, stmt.RetSet, []ast.FactStmt{}, []ast.FactStmt{ast.NewEqualFact(fnHeaderToReturnValueOfFn(stmt.DefHeader), stmt.EqualTo)}, stmt.Line), stmt.Line)
 	execRet = exec.defFnStmt(newFnDefStmt)
 	if execRet.IsNotTrue() {
-		execRet = execRet.AddMsg(fmt.Sprintf("failed to declare fn: %s", newFnDefStmt.String()))
-		return execRet
+		return execRet.AddMsg(fmt.Sprintf("failed to declare fn: %s", newFnDefStmt.String())).AddMsg(fmt.Sprintf("%s\n", stmt.String()))
 	}
 
-	return execRet
+	return execRet.AddMsg(fmt.Sprintf("%s\n", stmt.String()))
 }
 
 func (exec *Executor) checkFnEqualStmt(stmt *ast.HaveFnEqualStmt) (ExecRet, error) {
 	exec.NewEnv(exec.Env)
 	defer func() {
-		exec.deleteEnvAndRetainMsg()
+		exec.deleteEnv()
 	}()
 
 	for i := range len(stmt.DefHeader.Params) {
@@ -797,7 +770,7 @@ func (exec *Executor) haveFnLift_knowFact(stmt *ast.HaveFnLiftStmt, fnNames []st
 
 func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) ExecRet {
 	exec.NewEnv(exec.Env)
-	defer exec.deleteEnvAndRetainMsg()
+	defer exec.deleteEnv()
 
 	defObjStmt := ast.NewDefLetStmt(stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets, stmt.DefFnStmt.FnTemplate.DomFacts, stmt.Line)
 	execState := exec.defLetStmt(defObjStmt)
@@ -837,7 +810,7 @@ func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) ExecRet {
 
 func (exec *Executor) openANewEnvAndCheck(fact ast.FactStmt, requireMsg bool) (ExecRet, error) {
 	exec.NewEnv(exec.Env)
-	defer exec.deleteEnvAndRetainMsg()
+	defer exec.deleteEnv()
 
 	ver := NewVerifier(exec.Env)
 	var state *VerState
@@ -882,7 +855,7 @@ func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropS
 // TODO 这里的msg系统太冗杂了，需要优化
 func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitivePropStmt) error {
 	exec.NewEnv(exec.Env)
-	defer exec.deleteEnvAndRetainMsg()
+	defer exec.deleteEnv()
 
 	if exec.Env.IsTransitiveProp(string(stmt.Prop)) {
 		return nil
@@ -954,8 +927,7 @@ func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitiveP
 
 func (exec *Executor) defAlgoStmt(stmt *ast.DefAlgoStmt) ExecRet {
 	exec.Env.AlgoDefMem[stmt.FuncName] = stmt
-	exec.newMsg(stmt.String())
-	return NewExecTrue("")
+	return NewExecTrue("").AddMsg(stmt.String())
 }
 
 func (exec *Executor) evalStmt(stmt *ast.EvalStmt) ExecRet {
@@ -976,7 +948,7 @@ func (exec *Executor) evalStmt(stmt *ast.EvalStmt) ExecRet {
 
 func (exec *Executor) evalFcInLocalEnv(fcToEval ast.Obj) (ast.Obj, ExecRet) {
 	exec.NewEnv(exec.Env)
-	defer exec.deleteEnvAndRetainMsg()
+	defer exec.deleteEnv()
 
 	value, execRet := exec.evalFcThenSimplify(fcToEval)
 	if execRet.IsNotTrue() {
@@ -988,8 +960,7 @@ func (exec *Executor) evalFcInLocalEnv(fcToEval ast.Obj) (ast.Obj, ExecRet) {
 
 func (exec *Executor) defProveAlgoStmt(stmt *ast.DefProveAlgoStmt) ExecRet {
 	exec.Env.DefProveAlgoMem[stmt.ProveAlgoName] = stmt
-	exec.newMsg(stmt.String())
-	return NewExecTrue("")
+	return NewExecTrue("").AddMsg(stmt.String())
 }
 
 func (exec *Executor) printStmt(stmt *ast.PrintStmt) ExecRet {
@@ -1003,16 +974,15 @@ func (exec *Executor) printStmt(stmt *ast.PrintStmt) ExecRet {
 
 func (exec *Executor) helpStmt(stmt *ast.HelpStmt) ExecRet {
 	helpMsg, ok := glob.KeywordHelpMap[stmt.Keyword]
+	result := NewExecTrue("")
 	if !ok {
-		exec.newMsg(fmt.Sprintf("Unknown keyword: %s", stmt.Keyword))
-		return NewExecTrue("")
+		return result.AddMsg(fmt.Sprintf("Unknown keyword: %s", stmt.Keyword))
 	}
 	if helpMsg == "" {
-		exec.newMsg(fmt.Sprintf("Help for '%s': (description not yet available)", stmt.Keyword))
+		return result.AddMsg(fmt.Sprintf("Help for '%s': (description not yet available)", stmt.Keyword))
 	} else {
-		exec.newMsg(fmt.Sprintf("Help for '%s': %s", stmt.Keyword, helpMsg))
+		return result.AddMsg(fmt.Sprintf("Help for '%s': %s", stmt.Keyword, helpMsg))
 	}
-	return NewExecTrue("")
 }
 
 func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseStmt) ExecRet {
@@ -1092,7 +1062,7 @@ func (exec *Executor) checkHaveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseBy
 func (exec *Executor) checkCaseReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCaseStmt, caseIndex int) (ExecRet, error) {
 	exec.NewEnv(exec.Env)
 	defer func() {
-		exec.deleteEnvAndRetainMsg()
+		exec.deleteEnv()
 	}()
 
 	// 为每个参数定义变量
@@ -1127,7 +1097,7 @@ func (exec *Executor) checkCaseReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCa
 func (exec *Executor) checkAtLeastOneCaseHolds(stmt *ast.HaveFnEqualCaseByCaseStmt) (ExecRet, error) {
 	exec.NewEnv(exec.Env)
 	defer func() {
-		exec.deleteEnvAndRetainMsg()
+		exec.deleteEnv()
 	}()
 
 	// 为每个参数定义变量
@@ -1169,7 +1139,7 @@ func (exec *Executor) checkCasesNoOverlap(stmt *ast.HaveFnEqualCaseByCaseStmt) (
 func (exec *Executor) checkCaseNoOverlapWithOthers(stmt *ast.HaveFnEqualCaseByCaseStmt, caseIndex int) (ExecRet, error) {
 	exec.NewEnv(exec.Env)
 	defer func() {
-		exec.deleteEnvAndRetainMsg()
+		exec.deleteEnv()
 	}()
 
 	// 为每个参数定义变量

@@ -57,7 +57,8 @@ func useHardcodedCodeToInit(executor *exe.Executor) error {
 		}
 	}
 
-	executor.ClearMsgs()
+	// Note: Messages are now stored in ExecRet, not in executor.Env.Msgs
+	// No need to clear messages anymore
 
 	return nil
 }

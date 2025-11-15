@@ -37,6 +37,7 @@ type ExecRet interface {
 	NewVerMsgAtBegin(verState *VerState, msg string) ExecRet
 	ToGlobRet() glob.GlobRet
 	AddMsg(msg string) ExecRet
+	AddMsgAtBegin(msg string) ExecRet
 }
 
 type ExecTrue struct {
@@ -206,15 +207,18 @@ func (v *ExecUnknown) NewVerMsgAtEnd(verState *VerState, msg string) ExecRet {
 }
 
 func (v *ExecTrue) ToGlobRet() glob.GlobRet {
-	return glob.NewGlobTrue(v.String())
+	msgs := v.GetMsgs()
+	return glob.NewGlobTrueWithMsgs(msgs)
 }
 
 func (v *ExecUnknown) ToGlobRet() glob.GlobRet {
-	return glob.NewGlobUnknown(v.String())
+	msgs := v.GetMsgs()
+	return glob.NewGlobUnknownWithMsgs(msgs)
 }
 
 func (v *ExecErr) ToGlobRet() glob.GlobRet {
-	return glob.NewGlobErr(v.String())
+	msgs := v.GetMsgs()
+	return glob.NewGlobErrWithMsgs(msgs)
 }
 
 func (v *ExecTrue) AddMsg(msg string) ExecRet {
@@ -229,5 +233,20 @@ func (v *ExecUnknown) AddMsg(msg string) ExecRet {
 
 func (v *ExecErr) AddMsg(msg string) ExecRet {
 	v.Msg = append(v.Msg, msg)
+	return v
+}
+
+func (v *ExecTrue) AddMsgAtBegin(msg string) ExecRet {
+	v.Msg = append([]string{msg}, v.Msg...)
+	return v
+}
+
+func (v *ExecUnknown) AddMsgAtBegin(msg string) ExecRet {
+	v.Msg = append([]string{msg}, v.Msg...)
+	return v
+}
+
+func (v *ExecErr) AddMsgAtBegin(msg string) ExecRet {
+	v.Msg = append([]string{msg}, v.Msg...)
 	return v
 }
