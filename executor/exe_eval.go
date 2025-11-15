@@ -195,7 +195,7 @@ func (exec *Executor) fcfnParamsInFnDomain(fcFn *ast.FcFn) ExecRet {
 
 func (exec *Executor) IsAlgoIfConditionTrue(stmt *ast.AlgoIfStmt) (bool, ExecRet) {
 	exec.NewEnv(exec.Env)
-	defer exec.deleteEnvAndGiveUpMsgs()
+	defer exec.deleteEnv()
 
 	for _, fact := range stmt.Conditions {
 		execRet := exec.factStmt(fact)
@@ -231,7 +231,7 @@ func (exec *Executor) IsAlgoIfConditionTrue(stmt *ast.AlgoIfStmt) (bool, ExecRet
 
 func (exec *Executor) algoIfStmtWhenEval(stmt *ast.AlgoIfStmt, fcFnWithValueParams *ast.FcFn) (ast.Obj, ExecRet) {
 	exec.NewEnv(exec.Env)
-	defer exec.deleteEnvAndGiveUpMsgs()
+	defer exec.deleteEnv()
 
 	// all conditions are true
 	knowStmt := ast.NewKnowStmt(stmt.Conditions.ToCanBeKnownStmtSlice(), stmt.GetLine())

@@ -61,7 +61,7 @@ func (exec *Executor) proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsI
 	indexAsFc := ast.FcAtom(fmt.Sprintf("%d", i))
 	uniMap := map[string]ast.Obj{stmt.Param: indexAsFc}
 	exec.NewEnv(exec.Env)
-	defer exec.deleteEnvAndGiveUpMsgs()
+	defer exec.deleteEnv()
 
 	defObjStmt := ast.NewDefLetStmt([]string{stmt.Param}, []ast.Obj{ast.FcAtom(glob.KeywordInteger)}, []ast.FactStmt{ast.NewEqualFact(ast.FcAtom(stmt.Param), indexAsFc)}, stmt.Line)
 	execState := exec.defLetStmt(defObjStmt)
