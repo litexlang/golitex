@@ -383,7 +383,7 @@ func (tb *tokenBlock) fnSet() (ast.Obj, error) {
 
 	fnSets := []ast.Obj{}
 	var retSet ast.Obj
-	for !tb.header.ExceedEnd() && !(tb.header.is(glob.KeySymbolRightBrace)) {
+	for !(tb.header.is(glob.KeySymbolRightBrace)) {
 		fnSet, err := tb.RawFc()
 		if err != nil {
 			return nil, tbErr(err, tb)
@@ -392,6 +392,12 @@ func (tb *tokenBlock) fnSet() (ast.Obj, error) {
 		if tb.header.is(glob.KeySymbolComma) {
 			tb.header.skip(glob.KeySymbolComma)
 			continue
+		} else {
+			if tb.header.is(glob.KeySymbolRightBrace) {
+				break
+			} else {
+				return nil, fmt.Errorf("expected '%s' but got '%s'", glob.KeySymbolRightBrace, tb.header.strAtCurIndexPlus(0))
+			}
 		}
 	}
 
