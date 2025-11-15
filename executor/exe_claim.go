@@ -336,11 +336,10 @@ func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt
 		execState := exec.Stmt(curStmt)
 		if execState.IsNotTrue() {
 			if execState.IsUnknown() {
-				exec.Env.AddMsgToParent(fmt.Sprintf("unknown :( line %d\n", curStmt.GetLine()))
+				return execState.AddMsg(fmt.Sprintf("unknown :( line %d\n", curStmt.GetLine()))
 			} else {
-				exec.Env.AddMsgToParent(fmt.Sprintf("failed :( line %d:\n", curStmt.GetLine()))
+				return execState.AddMsg(fmt.Sprintf("failed :( line %d:\n", curStmt.GetLine()))
 			}
-			return execState
 		}
 	}
 

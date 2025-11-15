@@ -31,11 +31,8 @@ func (ver *Verifier) verOrStmt(stmt *ast.OrStmt, state *VerState) ExecRet {
 			return verRet
 		}
 		if verRet.IsTrue() {
-			execRet := NewExecTrue("")
-			if state.WithMsg {
-				execRet = ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is true when all others facts in the or statement are false", stmt.Facts[i]), execRet)
-			}
-			return execRet
+			msg := fmt.Sprintf("%s is true when all others facts in the or statement are false", stmt.Facts[i])
+			return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
 		}
 	}
 	return NewExecUnknown("")

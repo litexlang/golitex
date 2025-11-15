@@ -60,11 +60,7 @@ func (ver *Verifier) fcEqualSpec(left ast.Obj, right ast.Obj, state *VerState) E
 
 		if gotLeftEqualFcs && gotRightEqualFcs {
 			if equalToLeftFcs == equalToRightFcs {
-				execRet := NewExecTrue("")
-				if state.WithMsg {
-					execRet = ver.successWithMsg(fmt.Sprintf("known %s = %s", left, right), "", execRet)
-				}
-				return execRet
+				return ver.maybeAddSuccessMsg(state, fmt.Sprintf("known %s = %s", left, right), "", NewExecTrue(""))
 			}
 		}
 
@@ -78,10 +74,7 @@ func (ver *Verifier) fcEqualSpec(left ast.Obj, right ast.Obj, state *VerState) E
 				if verRet := ver.cmpFc_Builtin_Then_Decompose_Spec(equalToLeftFc, right, state); verRet.IsErr() {
 					return verRet
 				} else if verRet.IsTrue() {
-					if state.WithMsg {
-						verRet = ver.successWithMsg(fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToLeftFc, right, equalToLeftFc, left), "", verRet)
-					}
-					return verRet
+					return ver.maybeAddSuccessMsg(state, fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToLeftFc, right, equalToLeftFc, left), "", verRet)
 				}
 			}
 		}
@@ -96,10 +89,7 @@ func (ver *Verifier) fcEqualSpec(left ast.Obj, right ast.Obj, state *VerState) E
 				if verRet := ver.cmpFc_Builtin_Then_Decompose_Spec(equalToRightFc, left, state); verRet.IsErr() {
 					return verRet
 				} else if verRet.IsTrue() {
-					if state.WithMsg {
-						verRet = ver.successWithMsg(fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToRightFc, left, equalToRightFc, right), "", verRet)
-					}
-					return verRet
+					return ver.maybeAddSuccessMsg(state, fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToRightFc, left, equalToRightFc, right), "", verRet)
 				}
 			}
 		}
