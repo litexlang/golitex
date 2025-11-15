@@ -45,7 +45,7 @@ func RunREPL(version string) {
 			if msgStr != "" {
 				fmt.Fprint(writer, msgStr)
 			}
-			fmt.Fprintf(writer, glob.REPLFailedMessage)
+			fmt.Fprintf(writer, glob.REPLErrorMessage)
 			continue
 		}
 

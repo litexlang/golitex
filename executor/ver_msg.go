@@ -20,16 +20,17 @@ import (
 	"strings"
 )
 
-func (ver *Verifier) specFactSpecMemTrueMsg(stmt *ast.SpecFactStmt, knownFact ast.SpecFactStmt) {
+func (ver *Verifier) specFactSpecMemTrueMsg(stmt *ast.SpecFactStmt, knownFact ast.SpecFactStmt, execRet ExecRet) ExecRet {
 	var verifiedBy strings.Builder
 
 	verifiedBy.WriteString(knownFact.StringWithLine())
 	verifiedBy.WriteString("\n")
-	ver.successWithMsg(stmt.String(), verifiedBy.String())
+	return ver.successWithMsg(stmt.String(), verifiedBy.String(), execRet)
 }
 
-func (ver *Verifier) successWithMsg(stmtStr, stmtVerifiedBy string) {
-	ver.Env.Msgs = append(ver.Env.Msgs, successVerString(stmtStr, stmtVerifiedBy))
+func (ver *Verifier) successWithMsg(stmtStr, stmtVerifiedBy string, execRet ExecRet) ExecRet {
+	execRet.AddMsg(successVerString(stmtStr, stmtVerifiedBy))
+	return execRet
 }
 
 func successVerString(stmtStr, stmtVerifiedBy string) string {
@@ -45,13 +46,8 @@ func successVerString(stmtStr, stmtVerifiedBy string) string {
 	return successVerString.String()
 }
 
-func (ver *Verifier) newMsgAtParent(s string) error {
-	if ver.Env.Parent == nil {
-		return fmt.Errorf("no parent env")
-	} else {
-		ver.Env.Parent.Msgs = append(ver.Env.Parent.Msgs, s)
-		return nil
-	}
+func (ver *Verifier) newMsgAtParent(s string, execRet ExecRet) ExecRet {
+	return execRet.AddMsg(s)
 }
 
 func parametersDoNotSatisfyFnReq(param ast.Obj, fnName ast.Obj) error {

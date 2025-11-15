@@ -229,7 +229,7 @@ func (env *Env) newTruePureFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) erro
 
 		err = env.newFactNoPostProcess(instantiated)
 
-		env.Msgs = append(env.Msgs, fmt.Sprintf("%s\nis true by definition", instantiated))
+		// Note: Messages are now added to ExecRet in the caller, not to env.Msgs
 
 		if err != nil {
 			return err
@@ -244,7 +244,7 @@ func (env *Env) newTruePureFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) erro
 
 		err = env.newFactNoPostProcess(instantiated)
 
-		env.Msgs = append(env.Msgs, fmt.Sprintf("%s\nis true by definition", instantiated))
+		// Note: Messages are now added to ExecRet in the caller, not to env.Msgs
 
 		if err != nil {
 			return err

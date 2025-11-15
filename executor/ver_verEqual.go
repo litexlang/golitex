@@ -107,10 +107,11 @@ func (ver *Verifier) verEqualBuiltin(left ast.Obj, right ast.Obj, state *VerStat
 		return NewExecErr(err.Error())
 	}
 	if ok {
+		execRet := NewExecTrue("")
 		if state.WithMsg {
-			ver.successWithMsg(fmt.Sprintf("%s = %s", left, right), msg)
+			execRet = ver.successWithMsg(fmt.Sprintf("%s = %s", left, right), msg, execRet)
 		}
-		return NewExecTrue("")
+		return execRet
 	}
 
 	// 如果是 fn 那就层层盘剥
@@ -119,7 +120,7 @@ func (ver *Verifier) verEqualBuiltin(left ast.Obj, right ast.Obj, state *VerStat
 		return verRet
 	} else if verRet.IsTrue() {
 		if state.WithMsg {
-			ver.successWithMsg(fmt.Sprintf("%s = %s", left, right), "each item of %s and %s are equal correspondingly")
+			verRet = ver.successWithMsg(fmt.Sprintf("%s = %s", left, right), "each item of %s and %s are equal correspondingly", verRet)
 		}
 		return verRet
 	}
@@ -148,7 +149,7 @@ func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Obj, righ
 	}
 	if verRet.IsTrue() {
 		if state.WithMsg {
-			ver.successWithMsg(fmt.Sprintf("%s = %s", left, right), verRet.String())
+			verRet = ver.successWithMsg(fmt.Sprintf("%s = %s", left, right), verRet.String(), verRet)
 		}
 		return verRet
 	}

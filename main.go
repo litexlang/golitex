@@ -76,7 +76,6 @@ func main() {
 		ret := pipeline.RunSourceCode(glob.RemoveWindowsCarriage(*executeFlag))
 		msg := strings.TrimSpace(ret.String())
 		fmt.Println(msg)
-		fmt.Println(ret.GetREPLMsg())
 		return
 	}
 
@@ -136,6 +135,5 @@ func main() {
 
 func MainFlagFile(fileFlag string) {
 	ret := pipeline.RunFile(glob.RemoveWindowsCarriage(fileFlag))
-	fmt.Println(ret.String())
-	fmt.Println(ret.GetREPLMsg())
+	fmt.Println(ret.StringWithOptimizedNewline())
 }

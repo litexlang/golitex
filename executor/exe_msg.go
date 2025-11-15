@@ -15,22 +15,27 @@
 package litex_executor
 
 func (e *Executor) deleteEnvAndRetainMsg() {
-	for _, msg := range e.Env.Msgs {
-		e.Env.Parent.Msgs = append(e.Env.Parent.Msgs, msg)
-	}
+	// Note: Messages are now stored in ExecRet, not in env.Msgs
+	// This function is kept for compatibility but does nothing
 	e.Env = e.Env.Parent
 }
 
+// newMsg is deprecated. Use execRet.AddMsg() instead
 func (e *Executor) newMsg(msg string) {
-	e.Env.Msgs = append(e.Env.Msgs, msg)
+	// Note: Messages are now stored in ExecRet, not in env.Msgs
+	// This function is kept for compatibility but does nothing
 }
 
+// appendNewMsgAtBegin is deprecated. Use execRet.AddMsg() instead
 func (e *Executor) appendNewMsgAtBegin(msg string) {
-	e.Env.Msgs = append([]string{msg}, e.Env.Msgs...)
+	// Note: Messages are now stored in ExecRet, not in env.Msgs
+	// This function is kept for compatibility but does nothing
 }
 
+// ClearMsgs is deprecated. Messages are now stored in ExecRet, not in env.Msgs
 func (e *Executor) ClearMsgs() {
-	e.Env.Msgs = []string{}
+	// Note: Messages are now stored in ExecRet, not in env.Msgs
+	// This function is kept for compatibility but does nothing
 }
 
 func (e *Executor) deleteEnvAndGiveUpMsgs() {
