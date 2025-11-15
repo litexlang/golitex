@@ -63,11 +63,8 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast
 				return verRet
 			}
 			if verRet.IsTrue() {
-				execRet := NewExecTrue(fmt.Sprintf("%s is true by %s is a transitive prop and %s is true", stmt.String(), string(stmt.PropName), relatedFcStmt.String()))
-				if state.WithMsg {
-					execRet = ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is true by %s is a transitive prop and %s is true", stmt.String(), string(stmt.PropName), relatedFcStmt.String()), execRet)
-				}
-				return execRet
+				msg := fmt.Sprintf("%s is true by %s is a transitive prop and %s is true", stmt.String(), string(stmt.PropName), relatedFcStmt.String())
+				return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(msg))
 			}
 		}
 	}
@@ -84,11 +81,8 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *a
 			return verRet
 		}
 		if verRet.IsTrue() {
-			execRet := NewExecTrue(fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
-			if state.WithMsg {
-				execRet = ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()), execRet)
-			}
-			return execRet
+			msg := fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String())
+			return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(msg))
 		}
 	}
 
@@ -228,11 +222,7 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 		}
 	}
 
-	execRet := NewExecTrue("")
-	if state.WithMsg {
-		execRet = ver.successWithMsg(stmt.String(), defStmt.String(), execRet)
-	}
-	return execRet
+	return ver.maybeAddSuccessMsg(state, stmt.String(), defStmt.String(), NewExecTrue(""))
 }
 
 func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
@@ -305,11 +295,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 		}
 	}
 
-	execRet := NewExecTrue("")
-	if state.WithMsg {
-		execRet = ver.successWithMsg(stmt.String(), "by definition", execRet)
-	}
-	return execRet
+	return ver.maybeAddSuccessMsg(state, stmt.String(), "by definition", NewExecTrue(""))
 }
 
 // func (ver *Verifier) verSpecFactLogicMem(stmt *ast.SpecFactStmt, state *VerState) VerRet {
@@ -429,11 +415,7 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *Ver
 			return verRet
 		}
 		if verRet.IsTrue() {
-			execRet := NewExecTrue("")
-			if state.WithMsg {
-				execRet = ver.successWithMsg(stmt.String(), defStmt.String(), execRet)
-			}
-			return execRet
+			return ver.maybeAddSuccessMsg(state, stmt.String(), defStmt.String(), NewExecTrue(""))
 		}
 	}
 

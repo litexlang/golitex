@@ -33,6 +33,14 @@ func (ver *Verifier) processOkMsg(state *VerState, msg string, verifiedBy string
 	return execRet
 }
 
+// maybeAddSuccessMsg adds a success message to execRet if state.WithMsg is true
+func (ver *Verifier) maybeAddSuccessMsg(state *VerState, stmtStr, verifiedBy string, execRet ExecRet) ExecRet {
+	if state.WithMsg {
+		return ver.successWithMsg(stmtStr, verifiedBy, execRet)
+	}
+	return execRet
+}
+
 func (ver *Verifier) paramsInSets(params []ast.Obj, sets []ast.Obj, state *VerState) ExecRet {
 	if len(params) != len(sets) {
 		return NewExecErr("params and sets length mismatch")

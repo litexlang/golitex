@@ -170,11 +170,7 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch_new(stmt *ast.Spe
 		}
 
 		if verRet.IsTrue() {
-			execRet := NewExecTrue("")
-			if state.WithMsg {
-				execRet = ver.successWithMsg(stmt.String(), knownFactUnderLogicExpr.String(), execRet)
-			}
-			return execRet
+			return ver.maybeAddSuccessMsg(state, stmt.String(), knownFactUnderLogicExpr.String(), NewExecTrue(""))
 		}
 	}
 
@@ -254,9 +250,7 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 		for i, knownParam := range knownFact.SpecFact.Params {
 			verifiedBy.WriteString(fmt.Sprintf("%s = %s\n", knownParam, stmt.Params[i]))
 		}
-		execRet := NewExecTrue("")
-		execRet = ver.successWithMsg(stmt.String(), verifiedBy.String(), execRet)
-		return execRet
+		return ver.maybeAddSuccessMsg(state, stmt.String(), verifiedBy.String(), NewExecTrue(""))
 	}
 
 	return NewExecTrue("")
@@ -306,11 +300,10 @@ LoopOverFacts:
 			continue LoopOverFacts
 		}
 
-		execRet := NewExecTrue("")
 		if state.WithMsg {
-			execRet = ver.specFactSpecMemTrueMsg(stmt, knownFact, execRet)
+			return ver.specFactSpecMemTrueMsg(stmt, knownFact, NewExecTrue(""))
 		}
-		return execRet
+		return NewExecTrue("")
 	}
 
 	return NewExecUnknown("")
@@ -415,11 +408,7 @@ func (ver *Verifier) verify_specFact_when_given_orStmt_is_true(stmt *ast.SpecFac
 		}
 	}
 
-	execRet := NewExecTrue("")
-	if state.WithMsg {
-		execRet = ver.successWithMsg(stmt.String(), orStmt.String(), execRet)
-	}
-	return execRet
+	return ver.maybeAddSuccessMsg(state, stmt.String(), orStmt.String(), NewExecTrue(""))
 }
 
 func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch_new(stmt *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InUniFact, state *VerState) ExecRet {
@@ -484,11 +473,7 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch_new(stmt *ast.SpecFa
 		}
 
 		if verRet.IsTrue() {
-			execRet := NewExecTrue("")
-			if state.WithMsg {
-				execRet = ver.successWithMsg(stmt.String(), knownFact_paramProcessed.UniFact.StringWithLine(), execRet)
-			}
-			return execRet
+			return ver.maybeAddSuccessMsg(state, stmt.String(), knownFact_paramProcessed.UniFact.StringWithLine(), NewExecTrue(""))
 		}
 	}
 
