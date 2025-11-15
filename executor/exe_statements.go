@@ -204,12 +204,6 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) ExecRet {
 	return execRet
 }
 
-// GetMsgAsStr0ToEnd is deprecated. Messages are now stored in ExecRet, not in env.Msgs
-// Use execState.GetMsgs() instead
-func (exec *Executor) GetMsgAsStr0ToEnd() string {
-	return ""
-}
-
 func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool) ExecRet {
 	err := exec.Env.NewDefProp_InsideAtomsDeclared(stmt)
 	if err != nil {
@@ -367,25 +361,13 @@ func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEach
 }
 
 func (exec *Executor) proveCaseByCaseStmt(stmt *ast.ProveCaseByCaseStmt) ExecRet {
-	isSuccess := false
-	defer func() {
-		exec.newMsg("\n")
-		if isSuccess {
-			exec.appendNewMsgAtBegin("is true\n")
-		} else {
-			exec.appendNewMsgAtBegin("is unknown\n")
-		}
-		exec.appendNewMsgAtBegin(stmt.String())
-	}()
-
 	// Create OrStmt from CaseFacts
 	orFact := ast.NewOrStmt(stmt.CaseFacts, stmt.Line)
 
 	// Verify that the OR fact is true (fact1 or fact2 ... is true)
 	execState := exec.factStmt(orFact)
 	if execState.IsNotTrue() {
-		exec.newMsg(fmt.Sprintf("%s is unknown", orFact.String()))
-		return execState
+		return execState.AddMsg(fmt.Sprintf("%s is unknown\n", orFact.String()))
 	}
 
 	// Prove each case
@@ -402,8 +384,7 @@ func (exec *Executor) proveCaseByCaseStmt(stmt *ast.ProveCaseByCaseStmt) ExecRet
 		return execState
 	}
 
-	isSuccess = true
-	return NewExecTrue("")
+	return NewExecTrue(fmt.Sprintf("%s\n", stmt.String()))
 }
 
 func (exec *Executor) execProofBlockForCaseByCase(index int, stmt *ast.ProveCaseByCaseStmt) (ExecRet, error) {

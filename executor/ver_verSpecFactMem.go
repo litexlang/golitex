@@ -301,7 +301,8 @@ LoopOverFacts:
 		}
 
 		if state.WithMsg {
-			return ver.specFactSpecMemTrueMsg(stmt, knownFact, NewExecTrue(""))
+			verifiedBy := knownFact.StringWithLine() + "\n"
+			return ver.successWithMsg(stmt.String(), verifiedBy, NewExecTrue(""))
 		}
 		return NewExecTrue("")
 	}

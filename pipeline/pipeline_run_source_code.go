@@ -50,7 +50,6 @@ func RunSourceCodeInExecutor(curExec *exe.Executor, code string) glob.GlobRet {
 
 	for _, topStmt := range stmtSlice {
 		ret := RunStmtAndImportStmtInExecutor(curExec, topStmt)
-		stmtMsgs = append(stmtMsgs, curExec.GetMsgAsStr0ToEnd())
 		stmtMsgs = append(stmtMsgs, ret.GetMsgs()...)
 
 		if ret.IsNotTrue() {
