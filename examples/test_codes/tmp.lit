@@ -1,3 +1,5 @@
+let y R
+
 have x R
 
 prove_case_by_case:

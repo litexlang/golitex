@@ -15,7 +15,6 @@
 package litex_executor
 
 import (
-	"errors"
 	"fmt"
 	ast "golitex/ast"
 	env "golitex/environment"
@@ -82,9 +81,10 @@ func (ver *Verifier) PreprocessUniFactParams_DeclareParams(oldStmt *ast.UniFactS
 	}
 
 	// declare
-	execState := NewDefObj_InsideAtomsDeclared(ver.Env, ast.NewDefLetStmt(newStmtPtr.Params, newStmtPtr.ParamSets, []ast.FactStmt{}, oldStmt.Line))
-	if execState.IsNotTrue() {
-		return nil, errors.New(execState.String())
+	stmtForDef := ast.NewDefLetStmt(newStmtPtr.Params, newStmtPtr.ParamSets, []ast.FactStmt{}, oldStmt.Line)
+	err = ver.Env.DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmtForDef)
+	if err != nil {
+		return nil, err
 	}
 
 	// 查看param set 是否已经声明

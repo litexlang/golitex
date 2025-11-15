@@ -41,7 +41,7 @@ func (env *Env) NewDefProp_BuiltinProp(stmt *ast.DefPropStmt) error {
 		return fmt.Errorf("prop name %s cannot be the same as parameter name %s", stmt.DefHeader.Name, stmt.DefHeader.Name)
 	}
 
-	err := env.NonDuplicateParam_NoUndeclaredParamSet(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, true)
+	err := env.ThereIsNoDuplicateObjNamesAndAllAtomsInParamSetsAreDefined(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, true)
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) error {
 		return err
 	}
 
-	err = env.NonDuplicateParam_NoUndeclaredParamSet(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, true)
+	err = env.ThereIsNoDuplicateObjNamesAndAllAtomsInParamSetsAreDefined(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, true)
 	if err != nil {
 		return err
 	}
@@ -114,7 +114,7 @@ func (env *Env) AtomsInFnTemplateFnTemplateDeclared(name ast.FcAtom, stmt *ast.F
 		return fmt.Errorf("fn name %s cannot be the same as parameter name %s", name, name)
 	}
 
-	err := env.NonDuplicateParam_NoUndeclaredParamSet(stmt.TemplateDefHeader.Params, stmt.TemplateDefHeader.ParamSets, false)
+	err := env.ThereIsNoDuplicateObjNamesAndAllAtomsInParamSetsAreDefined(stmt.TemplateDefHeader.Params, stmt.TemplateDefHeader.ParamSets, false)
 	if err != nil {
 		return err
 	}
@@ -167,7 +167,7 @@ func (env *Env) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) 
 		return fmt.Errorf("prop name %s cannot be the same as parameter name %s", stmt.DefBody.DefHeader.Name, stmt.DefBody.DefHeader.Name)
 	}
 
-	err := env.NonDuplicateParam_NoUndeclaredParamSet(append(stmt.DefBody.DefHeader.Params, stmt.ExistParams...), append(stmt.DefBody.DefHeader.ParamSets, stmt.ExistParamSets...), true)
+	err := env.ThereIsNoDuplicateObjNamesAndAllAtomsInParamSetsAreDefined(append(stmt.DefBody.DefHeader.Params, stmt.ExistParams...), append(stmt.DefBody.DefHeader.ParamSets, stmt.ExistParamSets...), true)
 	if err != nil {
 		return err
 	}
@@ -211,6 +211,55 @@ func (e *Env) NewObj_NoDuplicate(name string, stmt ast.FnTemplate_Or_DefObjStmtI
 	}
 
 	e.ObjDefMem[name] = stmt
+
+	return nil
+}
+
+// DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined defines new objects in the environment
+// and checks that all atoms inside the facts are declared.
+// If the obj is a function, it will be inserted into the function definition memory.
+func (env *Env) DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmt *ast.DefLetStmt) error {
+	err := env.ThereIsNoDuplicateObjNamesAndAllAtomsInParamSetsAreDefined(stmt.Objs, stmt.ObjSets, true)
+	if err != nil {
+		return err
+	}
+
+	extraAtomNames := map[string]struct{}{}
+
+	for _, objName := range stmt.Objs {
+		err := env.IsValidIdentifierAvailable(objName)
+		if err != nil {
+			return err
+		}
+	}
+
+	// If this obj is a function, it will be inserted into the function definition memory
+	for _, objName := range stmt.Objs {
+		err = env.NewObj_NoDuplicate(objName, stmt)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, fact := range stmt.NewInFacts() {
+		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
+			return fmt.Errorf(AtomsInFactNotDeclaredMsg(fact))
+		}
+		err := env.NewFact(fact)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, fact := range stmt.Facts {
+		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
+			return fmt.Errorf(AtomsInFactNotDeclaredMsg(fact))
+		}
+		err := env.NewFact(fact)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

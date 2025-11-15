@@ -31,12 +31,12 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 	case *ast.KnowFactStmt:
 		execRet = exec.knowStmt(stmt)
 		if execRet.IsTrue() {
-			execRet = execRet.AddMsg("Warning: `know` is design in such a way that it is possible to introduce invalid facts without verification If you want to introduce default facts, then use it; otherwise, use it carefully.")
+			execRet = execRet.AddMsg("Warning: `know` saves the facts you write without verification. Users may inadvertently introduce incorrect facts. Use it with great caution.\n")
 		}
 	case *ast.KnowPropStmt:
 		execRet = exec.knowPropStmt(stmt)
 		if execRet.IsTrue() {
-			execRet = execRet.AddMsg("Warning: `know @` is design in such a way that it is possible to introduce invalid facts without verification If you want to introduce default facts, then use it; otherwise, use it carefully.")
+			execRet = execRet.AddMsg("Warning: `know @` saves the facts you write without verification. Users may inadvertently introduce incorrect facts. Use it with great caution.\n")
 		}
 	case *ast.ClaimProveStmt:
 		execRet = exec.execClaimStmtProve(stmt)
@@ -45,7 +45,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 	case *ast.DefLetStmt:
 		execRet = exec.defLetStmt(stmt)
 		if execRet.IsTrue() {
-			execRet = execRet.AddMsg("Warning: `let` is design in such a way that it is possible to introduce non-existent objects. If you want to ensure the existence of this object, use `have` instead.")
+			execRet = execRet.AddMsg("Warning: `let` may introduce non-existent objects. If you want to ensure the object exists, please use `have` instead.\n")
 		}
 	case *ast.HaveObjStStmt:
 		execRet = exec.haveObjStStmt(stmt, true)
@@ -54,7 +54,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 	case *ast.DefFnStmt:
 		execRet = exec.defFnStmt(stmt)
 		if execRet.IsTrue() {
-			execRet = execRet.AddMsg("Warning: `fn` is design in such a way that it is possible to introduce non-existent objects. If you want to ensure the existence of this function, use `have fn` instead.")
+			execRet = execRet.AddMsg("Warning: `fn` may introduce non-existent functions. If you want to ensure the function exists, please use `have fn` instead.\n")
 		}
 	case *ast.ProveInEachCaseStmt:
 		execRet = exec.proveInEachCaseStmt(stmt)
@@ -83,7 +83,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 	case *ast.KnowExistPropStmt:
 		execRet = exec.knowExistPropStmt(stmt)
 		if execRet.IsTrue() {
-			execRet = execRet.AddMsg("Warning: `know exist` is design in such a way that it is possible to introduce invalid facts without verification If you want to introduce default facts, then use it; otherwise, use it carefully.")
+			execRet = execRet.AddMsg("Warning: `know exist` saves the facts you write without verification. Users may inadvertently introduce incorrect facts. Use it with great caution.\n")
 		}
 	case *ast.FnTemplateDefStmt:
 		execRet = exec.DefFnTemplateStmt(stmt)
@@ -270,11 +270,11 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool
 }
 
 func (exec *Executor) defLetStmt(stmt *ast.DefLetStmt) ExecRet {
-	// if glob.RequireMsg() && requireMsg {
-	// 	defer exec.newMsg(fmt.Sprintf("%s\n", stmt))
-	// }
-
-	return NewDefObj_InsideAtomsDeclared(exec.Env, stmt)
+	err := exec.Env.DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmt)
+	if err != nil {
+		return NewExecErr(err.Error())
+	}
+	return NewExecTrue(stmt.String())
 }
 
 func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) ExecRet {
@@ -656,7 +656,12 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ExecRet {
 			return NewExecErr(fmt.Sprintf("%s is not in %s", stmt.ObjNames[i], stmt.ObjSets[i]))
 		}
 
-		execState := NewDefObj_InsideAtomsDeclared(exec.Env, ast.NewDefLetStmt([]string{stmt.ObjNames[i]}, []ast.Obj{ast.FcAtom(glob.KeywordObj)}, []ast.FactStmt{}, stmt.Line))
+		stmtForDef := ast.NewDefLetStmt([]string{stmt.ObjNames[i]}, []ast.Obj{ast.FcAtom(glob.KeywordObj)}, []ast.FactStmt{}, stmt.Line)
+		err := exec.Env.DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmtForDef)
+		if err != nil {
+			return NewExecErr(err.Error())
+		}
+		execState := NewExecTrue(stmtForDef.String())
 		if execState.IsNotTrue() {
 			return execState
 		}
@@ -666,7 +671,7 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ExecRet {
 			return NewExecErr(fmt.Sprintf("%s is not declared", stmt.ObjEqualTos[i]))
 		}
 		// new fact: obj = obj
-		err := exec.Env.NewFact(ast.NewEqualFact(ast.FcAtom(stmt.ObjNames[i]), stmt.ObjEqualTos[i]))
+		err = exec.Env.NewFact(ast.NewEqualFact(ast.FcAtom(stmt.ObjNames[i]), stmt.ObjEqualTos[i]))
 		if err != nil {
 			return NewExecErr(err.Error())
 		}
