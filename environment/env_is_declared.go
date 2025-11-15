@@ -171,7 +171,7 @@ func (e *Env) IsAtomDeclared(atom ast.FcAtom, extraAtomNames map[string]struct{}
 	return ok
 }
 
-func (e *Env) NonDuplicateParam_NoUndeclaredParamSet(params []string, setParams []ast.Obj, checkDeclared bool) error {
+func (e *Env) ThereIsNoDuplicateObjNamesAndAllAtomsInParamSetsAreDefined(params []string, setParams []ast.Obj, checkDeclared bool) error {
 	if len(params) != len(setParams) {
 		return fmt.Errorf("number of params and set params are not the same")
 	}
