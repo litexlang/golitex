@@ -35,3 +35,7 @@ func (e *Executor) NewEnv(parent *env.Env) *env.Env {
 	e.Env = env.NewEnv(parent)
 	return e.Env
 }
+
+func (e *Executor) deleteEnv() {
+	e.Env = e.Env.Parent
+}
