@@ -23,7 +23,7 @@ import (
 func (exec *Executor) byStmt(stmt *ast.ByStmt) ExecRet {
 	if len(stmt.ThenFactsOrNil) > 0 {
 		exec.NewEnv(exec.Env)
-		defer exec.deleteEnvAndGiveUpMsgs()
+		defer exec.deleteEnv()
 	}
 
 	execState := exec.callProveAlgo(stmt)
@@ -134,7 +134,7 @@ func (exec *Executor) runAlgoStmtsWhenBy(algoStmts ast.AlgoStmtSlice, paramsValu
 
 func (exec *Executor) algoIfStmtWhenBy(stmt *ast.AlgoIfStmt, paramsValues []ast.Obj) ExecRet {
 	exec.NewEnv(exec.Env)
-	defer exec.deleteEnvAndGiveUpMsgs()
+	defer exec.deleteEnv()
 
 	knowStmt := ast.NewKnowStmt(stmt.Conditions.ToCanBeKnownStmtSlice(), stmt.GetLine())
 	execRet := exec.knowStmt(knowStmt)
