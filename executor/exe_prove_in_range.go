@@ -40,10 +40,11 @@ func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) ExecRet {
 	for i := stmt.Start; i < stmt.End; i++ {
 		_, msg, err := exec.proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsIn, stmt, i)
 		if err != nil {
+			var result ExecRet = NewExecErr(err.Error())
 			if msg != "" {
-				exec.newMsg(msg)
+				result = result.AddMsg(msg)
 			}
-			return NewExecErr(err.Error())
+			return result
 		}
 	}
 
