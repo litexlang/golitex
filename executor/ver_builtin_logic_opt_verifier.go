@@ -60,11 +60,7 @@ func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state *Ver
 		return NewExecErr(err.Error())
 	}
 	if ok {
-		execRet := NewExecTrue("")
-		if state.WithMsg {
-			execRet = ver.successWithMsg(stmt.String(), "builtin rules", execRet)
-		}
-		return execRet
+		return ver.maybeAddSuccessMsg(state, stmt.String(), "builtin rules", NewExecTrue(""))
 	}
 
 	return NewExecUnknown("")

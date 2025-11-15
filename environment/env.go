@@ -133,13 +133,6 @@ func makeKnownFactsStruct() KnownFactsStruct {
 	}
 }
 
-// AddMsgToParent is deprecated. Messages are now stored in ExecRet, not in env.Msgs
-// Use execRet.AddMsg() instead
-func (e *Env) AddMsgToParent(msg string) {
-	// Note: Messages are now stored in ExecRet, not in env.Msgs
-	// This function is kept for compatibility but does nothing
-}
-
 func (e *Env) NotEqualIsCommutative() {
 	e.CommutativePropMem[glob.KeySymbolEqual] = NewCommutativePropMemItemStruct()
 	e.CommutativePropMem[glob.KeySymbolEqual].FalsePureIsCommutative = true
