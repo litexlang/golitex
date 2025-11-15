@@ -26,10 +26,11 @@ func (ver *Verifier) todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt *ast.Sp
 }
 
 func (ver *Verifier) processOkMsg(state *VerState, msg string, verifiedBy string, args ...any) ExecRet {
+	execRet := NewExecTrue(successVerString(msg, fmt.Sprintf(verifiedBy, args...)))
 	if state.WithMsg {
-		ver.successWithMsg(msg, fmt.Sprintf(verifiedBy, args...))
+		execRet = ver.successWithMsg(msg, fmt.Sprintf(verifiedBy, args...), execRet)
 	}
-	return NewExecTrue(successVerString(msg, fmt.Sprintf(verifiedBy, args...)))
+	return execRet
 }
 
 func (ver *Verifier) paramsInSets(params []ast.Obj, sets []ast.Obj, state *VerState) ExecRet {

@@ -36,7 +36,6 @@ func Test_ToLatex(t *testing.T) {
 	os.WriteFile(writeTo, []byte(ret.String()), 0644)
 	fmt.Printf("write to %s\n", writeTo)
 
-	fmt.Println(ret.GetREPLMsg())
 	executionTime := time.Since(startTime)
 	fmt.Printf("execution time: %s\n", executionTime)
 }

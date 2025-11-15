@@ -19,7 +19,6 @@ import (
 	ast "golitex/ast"
 	env "golitex/environment"
 	glob "golitex/glob"
-	"strings"
 )
 
 func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
@@ -134,8 +133,9 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 	// 	}
 	// } else
 	if execState.IsTrue() {
-		exec.newMsg(fmt.Sprintf("%s\n", execState.String()))
-		return NewExecTrue(fmt.Sprintf("Success! line %d\n", stmt.GetLine()))
+		execRet := NewExecTrue(fmt.Sprintf("Success! line %d\n", stmt.GetLine()))
+		execRet.AddMsg(fmt.Sprintf("%s\n", execState.String()))
+		return execRet
 	} else if execState.IsUnknown() {
 		return NewExecUnknown(fmt.Sprintf("Unknown: line %d\n", stmt.GetLine()))
 	} else {
@@ -195,14 +195,15 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) ExecRet {
 		}
 	}
 
-	exec.newMsg(fmt.Sprintf("%s\n", stmt.String()))
-	return NewExecTrue(fmt.Sprintf("%s\n", stmt.String()))
+	execRet := NewExecTrue(fmt.Sprintf("%s\n", stmt.String()))
+	execRet.AddMsg(fmt.Sprintf("%s\n", stmt.String()))
+	return execRet
 }
 
+// GetMsgAsStr0ToEnd is deprecated. Messages are now stored in ExecRet, not in env.Msgs
+// Use execState.GetMsgs() instead
 func (exec *Executor) GetMsgAsStr0ToEnd() string {
-	ret := strings.Join(exec.Env.Msgs, "\n")
-	exec.Env.Msgs = []string{}
-	return ret
+	return ""
 }
 
 func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool) ExecRet {
@@ -253,15 +254,15 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool
 		if err != nil {
 			return NewExecErr(err.Error())
 		}
-		exec.newMsg(fmt.Sprintf("%s\nis true by definition", propToIff))
 
 		err = exec.Env.NewFact(iffToProp)
 		if err != nil {
 			return NewExecErr(err.Error())
 		}
-		exec.newMsg(fmt.Sprintf("%s\nis true by definition", iffToProp))
 	}
-	return NewExecTrue("")
+	execRet := NewExecTrue("")
+	// Note: Messages about "is true by definition" are now handled in the verifier
+	return execRet
 }
 
 func (exec *Executor) defLetStmt(stmt *ast.DefLetStmt) ExecRet {
@@ -624,7 +625,7 @@ func (exec *Executor) ClearStmt() error {
 		curEnv = curEnv.Parent
 	} // 最顶层的env不删，因为最顶层的包含了热启动的代码
 	exec.NewEnv(curEnv)
-	exec.newMsg("clear\n")
+	// Note: Clear message should be added to ExecRet in the caller if needed
 	return nil
 }
 
@@ -754,9 +755,9 @@ func (exec *Executor) haveFnLiftStmt(stmt *ast.HaveFnLiftStmt) ExecRet {
 		return NewExecErr(fmt.Sprintf("failed to declare fn: %s", fnDef.String()))
 	}
 
-	exec.newMsg(fmt.Sprintf("Declare Function by lifting:\n%s\n", fnDef))
-
-	return NewExecTrue("")
+	execRet := NewExecTrue("")
+	execRet.AddMsg(fmt.Sprintf("Declare Function by lifting:\n%s\n", fnDef))
+	return execRet
 }
 
 func (exec *Executor) haveFnLift_knowFact(stmt *ast.HaveFnLiftStmt, fnNames []string) *ast.UniFactStmt {

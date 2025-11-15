@@ -60,10 +60,11 @@ func (ver *Verifier) fcEqualSpec(left ast.Obj, right ast.Obj, state *VerState) E
 
 		if gotLeftEqualFcs && gotRightEqualFcs {
 			if equalToLeftFcs == equalToRightFcs {
+				execRet := NewExecTrue("")
 				if state.WithMsg {
-					ver.successWithMsg(fmt.Sprintf("known %s = %s", left, right), "")
+					execRet = ver.successWithMsg(fmt.Sprintf("known %s = %s", left, right), "", execRet)
 				}
-				return NewExecTrue("")
+				return execRet
 			}
 		}
 
@@ -78,7 +79,7 @@ func (ver *Verifier) fcEqualSpec(left ast.Obj, right ast.Obj, state *VerState) E
 					return verRet
 				} else if verRet.IsTrue() {
 					if state.WithMsg {
-						ver.successWithMsg(fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToLeftFc, right, equalToLeftFc, left), "")
+						verRet = ver.successWithMsg(fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToLeftFc, right, equalToLeftFc, left), "", verRet)
 					}
 					return verRet
 				}
@@ -96,7 +97,7 @@ func (ver *Verifier) fcEqualSpec(left ast.Obj, right ast.Obj, state *VerState) E
 					return verRet
 				} else if verRet.IsTrue() {
 					if state.WithMsg {
-						ver.successWithMsg(fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToRightFc, left, equalToRightFc, right), "")
+						verRet = ver.successWithMsg(fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToRightFc, left, equalToRightFc, right), "", verRet)
 					}
 					return verRet
 				}

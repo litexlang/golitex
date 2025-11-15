@@ -63,10 +63,11 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast
 				return verRet
 			}
 			if verRet.IsTrue() {
+				execRet := NewExecTrue(fmt.Sprintf("%s is true by %s is a transitive prop and %s is true", stmt.String(), string(stmt.PropName), relatedFcStmt.String()))
 				if state.WithMsg {
-					ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is true by %s is a transitive prop and %s is true", stmt.String(), string(stmt.PropName), relatedFcStmt.String()))
+					execRet = ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is true by %s is a transitive prop and %s is true", stmt.String(), string(stmt.PropName), relatedFcStmt.String()), execRet)
 				}
-				return NewExecTrue(fmt.Sprintf("%s is true by %s is a transitive prop and %s is true", stmt.String(), string(stmt.PropName), relatedFcStmt.String()))
+				return execRet
 			}
 		}
 	}
@@ -83,10 +84,11 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *a
 			return verRet
 		}
 		if verRet.IsTrue() {
+			execRet := NewExecTrue(fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
 			if state.WithMsg {
-				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
+				execRet = ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()), execRet)
 			}
-			return NewExecTrue(fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
+			return execRet
 		}
 	}
 
@@ -226,11 +228,11 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 		}
 	}
 
+	execRet := NewExecTrue("")
 	if state.WithMsg {
-		ver.successWithMsg(stmt.String(), defStmt.String())
+		execRet = ver.successWithMsg(stmt.String(), defStmt.String(), execRet)
 	}
-
-	return NewExecTrue("")
+	return execRet
 }
 
 func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
@@ -262,11 +264,12 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 			return verRet
 		}
 		if verRet.IsUnknown() {
+			execRet := NewExecUnknown("")
 			if state.WithMsg {
 				msg := fmt.Sprintf("given object %s is not in its param set %s\n", existParams[i], instParamSets[i])
-				ver.Env.Msgs = append(ver.Env.Msgs, msg)
+				execRet.AddMsg(msg)
 			}
-			return NewExecUnknown("")
+			return execRet
 		}
 	}
 
@@ -286,11 +289,12 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 			return verRet
 		}
 		if verRet.IsUnknown() {
+			execRet := NewExecUnknown("")
 			if state.WithMsg {
 				msg := fmt.Sprintf("dom fact %s is unknown\n", domFact)
-				ver.Env.Msgs = append(ver.Env.Msgs, msg)
+				execRet.AddMsg(msg)
 			}
-			return NewExecUnknown("")
+			return execRet
 		}
 	}
 
@@ -301,11 +305,11 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 		}
 	}
 
+	execRet := NewExecTrue("")
 	if state.WithMsg {
-		ver.successWithMsg(stmt.String(), "by definition")
+		execRet = ver.successWithMsg(stmt.String(), "by definition", execRet)
 	}
-
-	return NewExecTrue("")
+	return execRet
 }
 
 // func (ver *Verifier) verSpecFactLogicMem(stmt *ast.SpecFactStmt, state *VerState) VerRet {
@@ -425,11 +429,11 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *Ver
 			return verRet
 		}
 		if verRet.IsTrue() {
+			execRet := NewExecTrue("")
 			if state.WithMsg {
-				ver.successWithMsg(stmt.String(), defStmt.String())
+				execRet = ver.successWithMsg(stmt.String(), defStmt.String(), execRet)
 			}
-
-			return NewExecTrue("")
+			return execRet
 		}
 	}
 

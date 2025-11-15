@@ -48,7 +48,6 @@ type KnownFactsStruct struct {
 // 因为 in 类型的事实很多，考虑把fcString为key保留一个map，记录它在什么集合里。比如 a $in N 就保存成 key:a values:[]{N}
 type Env struct {
 	Parent *Env
-	Msgs   glob.Msgs
 
 	ObjDefMem        ObjDefMem
 	PropDefMem       PropDefMem
@@ -106,7 +105,6 @@ func (env *Env) GetSecondUpMostEnv() *Env {
 func NewEnv(parent *Env) *Env {
 	env := &Env{
 		Parent:                   parent,
-		Msgs:                     glob.Msgs{},
 		ObjDefMem:                make(ObjDefMem),
 		PropDefMem:               make(PropDefMem),
 		FnTemplateDefMem:         make(FnTemplateDefMem),
@@ -135,8 +133,11 @@ func makeKnownFactsStruct() KnownFactsStruct {
 	}
 }
 
+// AddMsgToParent is deprecated. Messages are now stored in ExecRet, not in env.Msgs
+// Use execRet.AddMsg() instead
 func (e *Env) AddMsgToParent(msg string) {
-	e.Parent.Msgs = append(e.Parent.Msgs, msg)
+	// Note: Messages are now stored in ExecRet, not in env.Msgs
+	// This function is kept for compatibility but does nothing
 }
 
 func (e *Env) NotEqualIsCommutative() {

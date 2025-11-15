@@ -29,10 +29,6 @@ func (ver *Verifier) verByReplaceFcInSpecFactWithValue(stmt *ast.SpecFactStmt, s
 		}
 
 		if verRet.IsTrue() {
-			if state.WithMsg {
-				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
-			}
-
 			values := []ast.Obj{}
 			if cmp.IsNumLitFc(newStmt.Params[0]) {
 				values = append(values, newStmt.Params[0])
@@ -46,11 +42,16 @@ func (ver *Verifier) verByReplaceFcInSpecFactWithValue(stmt *ast.SpecFactStmt, s
 				values = append(values, nil)
 			}
 
+			var execRet ExecRet
 			if values[0] == nil && values[1] == nil {
-				return NewExecTrue(fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
+				execRet = NewExecTrue(fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
 			} else {
-				return NewExecTrueWithValues(fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()), values)
+				execRet = NewExecTrueWithValues(fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()), values)
 			}
+			if state.WithMsg {
+				execRet = ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()), execRet)
+			}
+			return execRet
 		}
 	}
 
@@ -66,10 +67,11 @@ func (ver *Verifier) verByReplaceFcInSpecFactWithValueAndCompute(stmt *ast.SpecF
 			return verRet
 		}
 		if verRet.IsTrue() {
+			execRet := NewExecTrue("")
 			if state.WithMsg {
-				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values and computing", stmt.String(), newStmt.String()))
+				execRet = ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values and computing", stmt.String(), newStmt.String()), execRet)
 			}
-			return NewExecTrue("")
+			return execRet
 		}
 	}
 

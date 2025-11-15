@@ -170,10 +170,11 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch_new(stmt *ast.Spe
 		}
 
 		if verRet.IsTrue() {
+			execRet := NewExecTrue("")
 			if state.WithMsg {
-				ver.successWithMsg(stmt.String(), knownFactUnderLogicExpr.String())
+				execRet = ver.successWithMsg(stmt.String(), knownFactUnderLogicExpr.String(), execRet)
 			}
-			return NewExecTrue("")
+			return execRet
 		}
 	}
 
@@ -253,7 +254,9 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 		for i, knownParam := range knownFact.SpecFact.Params {
 			verifiedBy.WriteString(fmt.Sprintf("%s = %s\n", knownParam, stmt.Params[i]))
 		}
-		ver.successWithMsg(stmt.String(), verifiedBy.String())
+		execRet := NewExecTrue("")
+		execRet = ver.successWithMsg(stmt.String(), verifiedBy.String(), execRet)
+		return execRet
 	}
 
 	return NewExecTrue("")
@@ -303,11 +306,11 @@ LoopOverFacts:
 			continue LoopOverFacts
 		}
 
+		execRet := NewExecTrue("")
 		if state.WithMsg {
-			ver.specFactSpecMemTrueMsg(stmt, knownFact)
+			execRet = ver.specFactSpecMemTrueMsg(stmt, knownFact, execRet)
 		}
-
-		return NewExecTrue("")
+		return execRet
 	}
 
 	return NewExecUnknown("")
@@ -412,11 +415,11 @@ func (ver *Verifier) verify_specFact_when_given_orStmt_is_true(stmt *ast.SpecFac
 		}
 	}
 
+	execRet := NewExecTrue("")
 	if state.WithMsg {
-		ver.successWithMsg(stmt.String(), orStmt.String())
+		execRet = ver.successWithMsg(stmt.String(), orStmt.String(), execRet)
 	}
-
-	return NewExecTrue("")
+	return execRet
 }
 
 func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch_new(stmt *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InUniFact, state *VerState) ExecRet {
@@ -481,10 +484,11 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch_new(stmt *ast.SpecFa
 		}
 
 		if verRet.IsTrue() {
+			execRet := NewExecTrue("")
 			if state.WithMsg {
-				ver.successWithMsg(stmt.String(), knownFact_paramProcessed.UniFact.StringWithLine())
+				execRet = ver.successWithMsg(stmt.String(), knownFact_paramProcessed.UniFact.StringWithLine(), execRet)
 			}
-			return NewExecTrue("")
+			return execRet
 		}
 	}
 

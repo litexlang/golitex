@@ -54,10 +54,11 @@ func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerSta
 			return NewExecErr(verRet.String())
 		}
 		if verRet.IsUnknown() {
+			execRet := NewExecUnknown("")
 			if state.WithMsg {
-				ver.Env.Msgs = append(ver.Env.Msgs, fmt.Sprintf("%s is unknown", thenFact))
+				execRet.AddMsg(fmt.Sprintf("%s is unknown", thenFact))
 			}
-			return NewExecUnknown("")
+			return execRet
 		}
 
 		// if true, store it
@@ -67,14 +68,11 @@ func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerSta
 		}
 	}
 
+	execRet := NewExecTrue("")
 	if state.WithMsg {
-		err := ver.newMsgAtParent(fmt.Sprintf("%s\nis true", stmt))
-		if err != nil {
-			return NewExecErr(err.Error())
-		}
+		execRet = ver.newMsgAtParent(fmt.Sprintf("%s\nis true", stmt), execRet)
 	}
-
-	return NewExecTrue("")
+	return execRet
 }
 
 func (ver *Verifier) PreprocessUniFactParams_DeclareParams(oldStmt *ast.UniFactStmt) (*ast.UniFactStmt, error) {

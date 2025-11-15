@@ -60,10 +60,11 @@ func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state *Ver
 		return NewExecErr(err.Error())
 	}
 	if ok {
+		execRet := NewExecTrue("")
 		if state.WithMsg {
-			ver.successWithMsg(stmt.String(), "builtin rules")
+			execRet = ver.successWithMsg(stmt.String(), "builtin rules", execRet)
 		}
-		return NewExecTrue("")
+		return execRet
 	}
 
 	return NewExecUnknown("")
@@ -74,13 +75,10 @@ func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactSt
 		return NewExecUnknown("")
 	}
 
+	// Note: Messages should be handled by the caller, not in defer functions
 	isSuccess := false
 	defer func() {
-		if isSuccess {
-			if state.WithMsg {
-				ver.successWithMsg(stmt.String(), "builtin rules")
-			}
-		}
+		_ = isSuccess
 	}()
 
 	if len(stmt.Params) != 2 {

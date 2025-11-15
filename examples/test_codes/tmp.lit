@@ -1,21 +1,8 @@
-exist_prop x s1 st exist_preimage(s1, s2 set, f fn(x s1) s2, y s2):
-    f(x) = y
+have x R
 
-fn range_of_fn(s1 set, s2 set, f fn(x s1) s2) set:
-    forall y range_of_fn(s1, s2, f):
-        $exist_preimage(s1, s2, f, y)
-    forall y s2:
-        $exist_preimage(s1, s2, f, y)
-        =>:
-            y $in range_of_fn(s1, s2, f)
-
-know:
-    forall s1 set, s2 set, f fn(x s1) s2, y s2:
-        $exist_preimage(s1, s2, f, y)
-        =>:
-            y $in range_of_fn(s1, s2, f)
-
-have fn id_R(x R) R = x
-exist 10 st $exist_preimage(R, R, id_R, 10)
-$exist_preimage(R, R, id_R, 10)
-10 $in range_of_fn(R, R, id_R)
+prove_case_by_case:
+    1 > 0
+    case x > 0:
+        1 > 0 
+    case x <= 0:
+        1 > 0

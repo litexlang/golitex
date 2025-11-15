@@ -41,40 +41,40 @@ func RunSourceCode(code string) glob.GlobRet {
 }
 
 func RunSourceCodeInExecutor(curExec *exe.Executor, code string) glob.GlobRet {
-	topStmtSlice, err := parser.ParseSourceCode(code)
+	stmtSlice, err := parser.ParseSourceCode(code)
 	if err != nil {
 		return glob.NewGlobErr(err.Error())
 	}
 
-	msgOfTopStatements := []string{}
+	stmtMsgs := []string{}
 
-	for _, topStmt := range topStmtSlice {
-		ret := RunTopStmtInPipeline(curExec, topStmt)
-		msgOfTopStatements = append(msgOfTopStatements, curExec.GetMsgAsStr0ToEnd())
-		msgOfTopStatements = append(msgOfTopStatements, ret.GetMsgs()...)
+	for _, topStmt := range stmtSlice {
+		ret := RunStmtAndImportStmtInExecutor(curExec, topStmt)
+		stmtMsgs = append(stmtMsgs, curExec.GetMsgAsStr0ToEnd())
+		stmtMsgs = append(stmtMsgs, ret.GetMsgs()...)
 
 		if ret.IsNotTrue() {
-			// 将消息添加到 globRet 中
 			if ret.IsErr() {
-				return glob.NewGlobErrWithMsgs(msgOfTopStatements)
+				stmtMsgs = append(stmtMsgs, ret.GetREPLMsg())
+				return glob.NewGlobErrWithMsgs(stmtMsgs)
 			}
-			// IsUnknown
-			allMsgs := append(msgOfTopStatements, "execution failed: unknown factual statement\n")
+			allMsgs := append(stmtMsgs, ret.GetREPLMsg())
 			return glob.NewGlobErrWithMsgs(allMsgs)
 		}
 	}
 
-	return glob.NewGlobTrueWithMsgs(msgOfTopStatements)
+	stmtMsgs = append(stmtMsgs, glob.REPLSuccessMessage)
+	return glob.NewGlobTrueWithMsgs(stmtMsgs)
 }
 
-func RunTopStmtInPipeline(curExec *exe.Executor, topStmt ast.Stmt) glob.GlobRet {
-	switch topStmt := topStmt.(type) {
+func RunStmtAndImportStmtInExecutor(curExec *exe.Executor, stmt ast.Stmt) glob.GlobRet {
+	switch asStmt := stmt.(type) {
 	case *ast.ImportDirStmt:
-		return RunImportDirStmtInExec(curExec, topStmt)
+		return RunImportDirStmtInExec(curExec, asStmt)
 	case *ast.ImportFileStmt:
-		return RunImportFileStmtInExec(curExec, topStmt)
+		return RunImportFileStmtInExec(curExec, asStmt)
 	default:
-		return curExec.Stmt(topStmt).ToGlobRet()
+		return curExec.Stmt(asStmt).ToGlobRet()
 	}
 }
 
