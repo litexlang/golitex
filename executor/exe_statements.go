@@ -23,123 +23,124 @@ import (
 
 func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 	// var err error = nil
-	var execState ExecRet = NewExecTrue("")
+	var execRet ExecRet = NewExecTrue("")
 
 	switch stmt := (stmt).(type) {
 	case ast.FactStmt:
-		execState = exec.factStmt(stmt)
+		execRet = exec.factStmt(stmt)
 	case *ast.KnowFactStmt:
-		exec.newMsg("Warning: `know` is design in such a way that it is possible to introduce invalid facts without verification If you want to introduce default facts, then use it; otherwise, use it carefully.")
-		execState = exec.knowStmt(stmt)
+		execRet = exec.knowStmt(stmt)
+		if execRet.IsTrue() {
+			execRet = execRet.AddMsg("Warning: `know` is design in such a way that it is possible to introduce invalid facts without verification If you want to introduce default facts, then use it; otherwise, use it carefully.")
+		}
 	case *ast.KnowPropStmt:
-		exec.newMsg("Warning: `know @` is design in such a way that it is possible to introduce invalid facts without verification If you want to introduce default facts, then use it; otherwise, use it carefully.")
-		execState = exec.knowPropStmt(stmt)
+		execRet = exec.knowPropStmt(stmt)
+		if execRet.IsTrue() {
+			execRet = execRet.AddMsg("Warning: `know @` is design in such a way that it is possible to introduce invalid facts without verification If you want to introduce default facts, then use it; otherwise, use it carefully.")
+		}
 	case *ast.ClaimProveStmt:
-		execState = exec.execClaimStmtProve(stmt)
+		execRet = exec.execClaimStmtProve(stmt)
 	case *ast.DefPropStmt:
-		execState = exec.defPropStmt(stmt, true)
+		execRet = exec.defPropStmt(stmt, true)
 	case *ast.DefLetStmt:
-		exec.newMsg("Warning: `let` is design in such a way that it is possible to introduce non-existent objects. If you want to ensure the existence of this object, use `have` instead.")
-		execState = exec.defLetStmt(stmt)
+		execRet = exec.defLetStmt(stmt)
+		if execRet.IsTrue() {
+			execRet = execRet.AddMsg("Warning: `let` is design in such a way that it is possible to introduce non-existent objects. If you want to ensure the existence of this object, use `have` instead.")
+		}
 	case *ast.HaveObjStStmt:
-		execState = exec.haveObjStStmt(stmt, true)
+		execRet = exec.haveObjStStmt(stmt, true)
 	case *ast.DefExistPropStmt:
-		execState = exec.defExistPropStmt(stmt)
+		execRet = exec.defExistPropStmt(stmt)
 	case *ast.DefFnStmt:
-		exec.newMsg("Warning: `fn` is design in such a way that it is possible to introduce non-existent objects. If you want to ensure the existence of this function, use `have fn` instead.")
-		execState = exec.defFnStmt(stmt)
+		execRet = exec.defFnStmt(stmt)
+		if execRet.IsTrue() {
+			execRet = execRet.AddMsg("Warning: `fn` is design in such a way that it is possible to introduce non-existent objects. If you want to ensure the existence of this function, use `have fn` instead.")
+		}
 	case *ast.ProveInEachCaseStmt:
-		execState = exec.proveInEachCaseStmt(stmt)
+		execRet = exec.proveInEachCaseStmt(stmt)
 	case *ast.ClaimPropStmt:
-		execState = exec.claimPropStmt(stmt)
+		execRet = exec.claimPropStmt(stmt)
 	case *ast.ClaimExistPropStmt:
-		execState = exec.claimExistPropStmt(stmt)
+		execRet = exec.claimExistPropStmt(stmt)
 	case *ast.ProveStmt:
-		execState = exec.proveStmt(stmt)
+		execRet = exec.proveStmt(stmt)
 	case *ast.ClaimProveByContradictionStmt:
-		execState = exec.execClaimStmtProveByContradiction(stmt)
+		execRet = exec.execClaimStmtProveByContradiction(stmt)
 	case *ast.ProveByEnumStmt:
-		execState = exec.proveByEnumStmt(stmt)
+		execRet = exec.proveByEnumStmt(stmt)
 	case *ast.HaveObjInNonEmptySetStmt:
-		execState = exec.haveObjInNonEmptySetStmt(stmt)
+		execRet = exec.haveObjInNonEmptySetStmt(stmt)
 	case *ast.HaveEnumSetStmt:
-		execState = exec.haveEnumSetStmt(stmt)
+		execRet = exec.haveEnumSetStmt(stmt)
 	case *ast.HaveIntensionalSetStmt:
-		execState = exec.haveIntensionalSetStmt(stmt)
+		execRet = exec.haveIntensionalSetStmt(stmt)
 	case *ast.HaveSetFnStmt:
-		execState = exec.haveSetFnStmt(stmt)
+		execRet = exec.haveSetFnStmt(stmt)
 	case *ast.HaveSetDefinedByReplacementStmt:
-		execState = exec.haveSetDefinedByReplacementStmt(stmt)
+		execRet = exec.haveSetDefinedByReplacementStmt(stmt)
 	case *ast.NamedUniFactStmt:
-		execState = exec.namedUniFactStmt(stmt)
+		execRet = exec.namedUniFactStmt(stmt)
 	case *ast.KnowExistPropStmt:
-		exec.newMsg("Warning: `know exist` is design in such a way that it is possible to introduce invalid facts without verification If you want to introduce default facts, then use it; otherwise, use it carefully.")
-		execState = exec.knowExistPropStmt(stmt)
+		execRet = exec.knowExistPropStmt(stmt)
+		if execRet.IsTrue() {
+			execRet = execRet.AddMsg("Warning: `know exist` is design in such a way that it is possible to introduce invalid facts without verification If you want to introduce default facts, then use it; otherwise, use it carefully.")
+		}
 	case *ast.FnTemplateDefStmt:
-		execState = exec.DefFnTemplateStmt(stmt)
+		execRet = exec.DefFnTemplateStmt(stmt)
 	case *ast.ClearStmt:
 		exec.ClearStmt()
 	case *ast.InlineFactsStmt:
-		execState = exec.inlineFactsStmt(stmt)
+		execRet = exec.inlineFactsStmt(stmt)
 	case *ast.ProveByInductionStmt:
-		execState = exec.proveByInductionStmt(stmt)
+		execRet = exec.proveByInductionStmt(stmt)
 	case *ast.HaveObjEqualStmt:
-		execState = exec.haveObjEqualStmt(stmt)
+		execRet = exec.haveObjEqualStmt(stmt)
 	case *ast.HaveFnEqualStmt:
-		execState = exec.haveFnEqualStmt(stmt)
+		execRet = exec.haveFnEqualStmt(stmt)
 	case *ast.HaveFnLiftStmt:
-		execState = exec.haveFnLiftStmt(stmt)
+		execRet = exec.haveFnLiftStmt(stmt)
 	case *ast.HaveFnStmt:
-		execState = exec.haveFnStmt(stmt)
+		execRet = exec.haveFnStmt(stmt)
 	case *ast.MarkdownStmt:
-		execState = exec.markdownStmt(stmt)
-		return execState
+		execRet = exec.markdownStmt(stmt)
+		return execRet
 	case *ast.LatexStmt:
-		execState = exec.latexStmt(stmt)
-		return execState
+		execRet = exec.latexStmt(stmt)
+		return execRet
 	case *ast.ClaimIffStmt:
-		execState = exec.claimIffStmt(stmt)
+		execRet = exec.claimIffStmt(stmt)
 	case *ast.ProveInRangeStmt:
-		execState = exec.proveInRangeStmt(stmt)
+		execRet = exec.proveInRangeStmt(stmt)
 	case *ast.ProveIsTransitivePropStmt:
-		execState = exec.proveIsTransitivePropStmt(stmt)
+		execRet = exec.proveIsTransitivePropStmt(stmt)
 	case *ast.ProveIsCommutativePropStmt:
-		execState = exec.proveIsCommutativePropStmt(stmt)
+		execRet = exec.proveIsCommutativePropStmt(stmt)
 	case *ast.DefAlgoStmt:
-		execState = exec.defAlgoStmt(stmt)
+		execRet = exec.defAlgoStmt(stmt)
 	case *ast.EvalStmt:
-		execState = exec.evalStmt(stmt)
+		execRet = exec.evalStmt(stmt)
 	case *ast.DefProveAlgoStmt:
-		execState = exec.defProveAlgoStmt(stmt)
+		execRet = exec.defProveAlgoStmt(stmt)
 	case *ast.ByStmt:
-		execState = exec.byStmt(stmt)
+		execRet = exec.byStmt(stmt)
 	case *ast.PrintStmt:
-		execState = exec.printStmt(stmt)
+		execRet = exec.printStmt(stmt)
 	case *ast.HelpStmt:
-		execState = exec.helpStmt(stmt)
+		execRet = exec.helpStmt(stmt)
 	case *ast.HaveFnEqualCaseByCaseStmt:
-		execState = exec.haveFnEqualCaseByCaseStmt(stmt)
+		execRet = exec.haveFnEqualCaseByCaseStmt(stmt)
 	case *ast.ProveCaseByCaseStmt:
-		execState = exec.proveCaseByCaseStmt(stmt)
+		execRet = exec.proveCaseByCaseStmt(stmt)
 	default:
 		panic(fmt.Sprintf("unknown statement type: %T", stmt))
 	}
 
-	// if err != nil || execState.IsErr() {
-	// 	if err != nil && err.Error() != "" {
-	// 		return NewExecErr(""), "", fmt.Errorf("failed: line %d:\n%w", stmt.GetLine(), err)
-	// 	} else {
-	// 		return NewExecErr(""), "", fmt.Errorf("failed: line %d", stmt.GetLine())
-	// 	}
-	// } else
-	if execState.IsTrue() {
-		execRet := NewExecTrue(fmt.Sprintf("Success! line %d\n", stmt.GetLine()))
-		execRet.AddMsg(fmt.Sprintf("%s\n", execState.String()))
-		return execRet
-	} else if execState.IsUnknown() {
-		return NewExecUnknown(fmt.Sprintf("Unknown: line %d\n", stmt.GetLine()))
+	if execRet.IsTrue() {
+		return execRet.AddMsg(fmt.Sprintf("Success! line %d\n", stmt.GetLine()))
+	} else if execRet.IsUnknown() {
+		return execRet.AddMsg(fmt.Sprintf("Unknown: line %d\n", stmt.GetLine()))
 	} else {
-		return NewExecErr(fmt.Sprintf("Execution Error: line %d\n%s", stmt.GetLine(), execState.String()))
+		return execRet.AddMsg(fmt.Sprintf("Execution Error: line %d\n%s", stmt.GetLine(), execRet.String()))
 	}
 }
 
@@ -149,7 +150,8 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) ExecRet {
 	verRet := curVerifier.VerFactStmt(stmt, state)
 
 	if verRet.IsErr() {
-		return NewExecErr(verRet.String())
+		// 保留 verRet 中的消息
+		return verRet
 	} else if verRet.IsTrue() {
 		err := exec.Env.NewFact(stmt)
 		if err != nil {
@@ -163,9 +165,11 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) ExecRet {
 				exec.Env.StoreTrueEqualValues(stmt.(*ast.SpecFactStmt).Params[0], verRet.(*ExecTrue).TrueEqualValues[1])
 			}
 		}
-		return NewExecTrue("")
+		// 保留 verRet 中的消息，直接返回
+		return verRet
 	} else if verRet.IsUnknown() {
-		return NewExecUnknown("")
+		// 保留 verRet 中的消息
+		return verRet
 	} else {
 		panic("unknown ver ret")
 	}
