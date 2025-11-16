@@ -1859,7 +1859,6 @@ func (tb *tokenBlock) relaFact_intensionalSetFact_enumStmt_equals() (ast.FactStm
 
 			ret = ast.NewSpecFactStmt(ast.TruePure, propName, params, tb.line)
 		}
-		// } else if opt == glob.KeySymbolColonEqual {
 	} else if opt == glob.KeySymbolEqual && tb.header.is(glob.KeySymbolLeftCurly) {
 		return tb.enumStmt_or_intensionalSetStmt_or_DomOf(fc)
 	} else if glob.IsBuiltinInfixRelaPropSymbol(opt) {
@@ -2737,11 +2736,15 @@ func (tb *tokenBlock) haveFnLiftStmt() (*ast.HaveFnLiftStmt, error) {
 			return nil, tbErr(err, tb)
 		}
 
-		if tb.header.is(glob.KeySymbolComma) {
-			tb.header.skip(glob.KeySymbolComma)
-		}
-
 		domainOfEachParamOfGivenFn = append(domainOfEachParamOfGivenFn, curDomain)
+
+		done, err := tb.expectAndSkipCommaOr(glob.KeySymbolRightBrace)
+		if err != nil {
+			return nil, err
+		}
+		if done {
+			break
+		}
 	}
 
 	err = tb.header.skip(glob.KeySymbolRightBrace)

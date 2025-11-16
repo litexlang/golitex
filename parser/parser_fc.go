@@ -263,23 +263,18 @@ func (tb *tokenBlock) bracedFcSlice() ([]ast.Obj, error) {
 	if !tb.header.is(glob.KeySymbolRightBrace) {
 		for {
 			fc, err := tb.RawFc()
-
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}
-
 			params = append(params, fc)
 
-			if tb.header.is(glob.KeySymbolComma) {
-				tb.header.skip(glob.KeySymbolComma)
-				continue
+			done, err := tb.expectAndSkipCommaOr(glob.KeySymbolRightBrace)
+			if err != nil {
+				return nil, err
 			}
-
-			if tb.header.is(glob.KeySymbolRightBrace) {
+			if done {
 				break
 			}
-
-			return nil, tbErr(fmt.Errorf("expected ',' or '%s' but got '%s'", glob.KeySymbolRightBrace, tb.header.strAtCurIndexPlus(0)), tb)
 		}
 	}
 
@@ -389,14 +384,12 @@ func (tb *tokenBlock) fnSet() (ast.Obj, error) {
 			return nil, tbErr(err, tb)
 		}
 		fnSets = append(fnSets, fnSet)
-		if tb.header.is(glob.KeySymbolComma) {
-			tb.header.skip(glob.KeySymbolComma)
-			continue
+
+		done, err := tb.expectAndSkipCommaOr(glob.KeySymbolRightBrace)
+		if err != nil {
+			return nil, err
 		}
-		// If not comma and not right brace, it's an error
-		if !tb.header.is(glob.KeySymbolRightBrace) {
-			return nil, fmt.Errorf("expected '%s' but got '%s'", glob.KeySymbolRightBrace, tb.header.strAtCurIndexPlus(0))
-		} else {
+		if done {
 			break
 		}
 	}

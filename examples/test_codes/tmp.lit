@@ -1,3 +1,5 @@
-have fn id_R(x R) R = x
-
-id_R $in fn(x R)R
+let set A = {1, 2, 3}
+have fn f(x A) R =:
+    case x = 1: 10
+    case x = 2: 20
+    case x = 3: 30
