@@ -483,7 +483,7 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) ExecRet {
 		return NewExecErr(err.Error())
 	}
 
-	return NewExecTrue("")
+	return NewExecTrue(fmt.Sprintf("%s\n", stmt.String()))
 }
 
 func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) ExecRet {
@@ -989,7 +989,7 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseS
 	// 验证每个case的返回值都符合fn的retSet
 	execState, err := exec.checkHaveFnEqualCaseByCaseStmt(stmt)
 	if notOkExec(execState, err) {
-		return execState
+		return execState.AddMsg(fmt.Sprintf("%s\n", stmt.String()))
 	}
 
 	// 构建 thenFacts：对于每个 case，如果条件满足，则函数值等于对应的返回值
@@ -1029,10 +1029,10 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseS
 	)
 	execState = exec.defFnStmt(newFnDefStmt)
 	if execState.IsNotTrue() {
-		return NewExecErr(fmt.Sprintf("failed to declare fn: %s", newFnDefStmt.String()))
+		return NewExecErr(fmt.Sprintf("failed to declare fn: %s", newFnDefStmt.String())).AddMsg(fmt.Sprintf("%s\n", stmt.String()))
 	}
 
-	return NewExecTrue("")
+	return NewExecTrue(fmt.Sprintf("%s\n", stmt.String()))
 }
 
 func (exec *Executor) checkHaveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseStmt) (ExecRet, error) {

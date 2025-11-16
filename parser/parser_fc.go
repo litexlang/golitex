@@ -283,34 +283,6 @@ func (tb *tokenBlock) bracedFcSlice() ([]ast.Obj, error) {
 	return params, nil
 }
 
-// func (tb *tokenBlock) bracedExpr_orTuple() (ast.Fc, error) {
-// 	tb.header.skip(glob.KeySymbolLeftBrace)
-// 	if tb.header.ExceedEnd() {
-// 		return nil, fmt.Errorf("unexpected end of input after '('")
-// 	}
-
-// 	// head, err := tb.fcInfixExpr(glob.PrecLowest)
-// 	head, err := tb.RawFc()
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	if tb.header.ExceedEnd() {
-// 		return nil, fmt.Errorf("unexpected end of input, expected ')'")
-// 	}
-
-// 	if err := tb.header.skip(glob.KeySymbolRightBrace); err != nil {
-// 		return nil, fmt.Errorf("expected '%s': %s", glob.KeySymbolRightBrace, err)
-// 	}
-
-// 	if !tb.header.is(glob.KeySymbolLeftBrace) {
-// 		return head, nil
-// 	}
-
-// 	return head, nil
-
-// }
-
 func (tb *tokenBlock) bracedExpr_orTuple() (ast.Obj, error) {
 	if err := tb.header.skip(glob.KeySymbolLeftBrace); err != nil {
 		return nil, fmt.Errorf("expected '(': %s", err)
@@ -325,32 +297,6 @@ func (tb *tokenBlock) bracedExpr_orTuple() (ast.Obj, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	// Check if it's a tuple: look for comma
-	// if tb.header.is(glob.KeySymbolComma) {
-	// 	// It's a tuple — collect all expressions until ')'
-	// 	exprs := []ast.Fc{firstExpr}
-	// 	for tb.header.is(glob.KeySymbolComma) {
-	// 		tb.header.skip(glob.KeySymbolComma)
-
-	// 		if tb.header.is(glob.KeySymbolRightBrace) {
-	// 			// Allow trailing comma: (1, 2, 3,)
-	// 			break
-	// 		}
-
-	// 		nextExpr, err := tb.RawFc()
-	// 		if err != nil {
-	// 			return nil, err
-	// 		}
-	// 		exprs = append(exprs, nextExpr)
-	// 	}
-
-	// 	if err := tb.header.skip(glob.KeySymbolRightBrace); err != nil {
-	// 		return nil, fmt.Errorf("expected ')': %s", err)
-	// 	}
-
-	// 	return ast.NewFcFn(ast.FcAtom(glob.TupleFcFnHead), exprs), nil
-	// }
 
 	// If no comma, expect a single expression followed by ')'
 	if err := tb.header.skip(glob.KeySymbolRightBrace); err != nil {
@@ -433,16 +379,6 @@ func (tb *tokenBlock) backSlashExpr() (ast.Obj, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	// fc, err := tb.unaryOptFc()
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// err = tb.header.skip(glob.KeySymbolBackSlash)
-	// if err != nil {
-	// 	return nil, err
-	// }
 
 	return ast.FcAtom(fc), nil
 }
