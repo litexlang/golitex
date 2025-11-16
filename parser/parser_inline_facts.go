@@ -204,6 +204,7 @@ func (tb *tokenBlock) inlineUniFact_Param_ParamSet_ParamInSetFacts() ([]string, 
 				continue
 			}
 
+			// Expect either '=>' or ':'
 			if tb.header.is(glob.KeySymbolRightArrow) || tb.header.is(glob.KeySymbolColon) {
 				break
 			}
