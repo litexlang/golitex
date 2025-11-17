@@ -1,22 +1,4 @@
-prop is_max_element_of(S set, m R):
-    $is_subset_of(S, R)
-    m $in S
-    forall x S:
-        x <= m
-
-prop is_min_element_of(S set, m R):
-    $is_subset_of(S, R)
-    m $in S
-    forall x S:
-        m <= x
-
-"""
-prop is_max_element_of(S set, m R):\n    $is_subset_of(S, R)\n    m $in S\n    forall x S:\n        x <= m\n\nprop is_min_element_of(S set, m R):\n    $is_subset_of(S, R)\n    m $in S\n    forall x S:\n        m <= x\n
-"""
-
-prop is_extreme_element_of(S set, m R):
-    $is_max_element_of(S, m) or $is_min_element_of(S, m)
-
-"""
-prop is_extreme_element_of(S set, m R):\n    $is_max_element_of(S, m) or $is_min_element_of(S, m)\n
-"""
+implication p(x R):
+    x > 0
+    =>:
+        x > 0

@@ -487,7 +487,6 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) ExecRet {
 }
 
 func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) ExecRet {
-	// exec.newMsg(stmt.String())
 
 	exec.NewEnv(exec.Env)
 	defer exec.deleteEnv()
@@ -507,7 +506,6 @@ func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) ExecRet {
 }
 
 func (exec *Executor) haveSetFnStmt(stmt *ast.HaveSetFnStmt) ExecRet {
-	// exec.newMsg(stmt.String())
 
 	// declare related fn
 	fnDefStmt := stmt.ToDefFnStmt()
@@ -523,7 +521,6 @@ func (exec *Executor) haveSetFnStmt(stmt *ast.HaveSetFnStmt) ExecRet {
 }
 
 func (exec *Executor) haveSetDefinedByReplacementStmt(stmt *ast.HaveSetDefinedByReplacementStmt) ExecRet {
-	// exec.newMsg(stmt.String())
 
 	setDefinedByReplacement := ast.NewFcFn(ast.FcAtom(glob.KeywordSetDefinedByReplacement), []ast.Obj{stmt.DomSet, stmt.RangeSet, stmt.PropName})
 
@@ -543,7 +540,6 @@ func (exec *Executor) haveSetDefinedByReplacementStmt(stmt *ast.HaveSetDefinedBy
 }
 
 func (exec *Executor) namedUniFactStmt(stmt *ast.NamedUniFactStmt) ExecRet {
-	// exec.newMsg(stmt.String())
 
 	uniFact := ast.NewUniFact(stmt.DefPropStmt.DefHeader.Params, stmt.DefPropStmt.DefHeader.ParamSets, stmt.DefPropStmt.IffFacts, stmt.DefPropStmt.ThenFacts, stmt.Line)
 	execState := exec.factStmt(uniFact)

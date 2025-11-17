@@ -376,6 +376,43 @@ func (l *UniFactStmt) String() string {
 	return builder.String()
 }
 
+func (i *ImplicationStmt) String() string {
+	var builder strings.Builder
+
+	builder.WriteString(glob.KeywordImplication)
+	builder.WriteString(" ")
+	builder.WriteString(string(i.Name))
+	builder.WriteString("(")
+	builder.WriteString(StrFcSetPairs(i.Params, i.ParamSets))
+	builder.WriteString(")")
+
+	builder.WriteString(":\n")
+	if len(i.DomFacts) > 0 {
+		domFactStrSlice := make([]string, len(i.DomFacts))
+		for j := range len(i.DomFacts) {
+			domFactStrSlice[j] = glob.SplitLinesAndAdd4NIndents(i.DomFacts[j].String(), 1)
+		}
+		builder.WriteString(strings.Join(domFactStrSlice, "\n"))
+
+		builder.WriteByte('\n')
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents("=>:", 1))
+		builder.WriteByte('\n')
+		thenFactStrSlice := make([]string, len(i.ThenFacts))
+		for j := range len(i.ThenFacts) {
+			thenFactStrSlice[j] = glob.SplitLinesAndAdd4NIndents(i.ThenFacts[j].String(), 2)
+		}
+		builder.WriteString(strings.Join(thenFactStrSlice, "\n"))
+	} else {
+		thenFactStrSlice := make([]string, len(i.ThenFacts))
+		for j := range len(i.ThenFacts) {
+			thenFactStrSlice[j] = glob.SplitLinesAndAdd4NIndents(i.ThenFacts[j].String(), 1)
+		}
+		builder.WriteString(strings.Join(thenFactStrSlice, "\n"))
+	}
+
+	return builder.String()
+}
+
 func (l *UniFactWithIffStmt) String() string {
 	var builder strings.Builder
 
