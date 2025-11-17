@@ -48,6 +48,7 @@ func (s *ClaimPropStmt) stmt()                           {}
 func (s *ClaimExistPropStmt) stmt()                      {}
 func (s *ProveByEnumStmt) stmt()                         {}
 func (s *HaveObjInNonEmptySetStmt) stmt()                {}
+func (s *ImplicationStmt) stmt()                         {}
 func (s *HaveEnumSetStmt) stmt()                         {}
 func (s *HaveIntensionalSetStmt) stmt()                  {}
 func (s *HaveSetFnStmt) stmt()                           {}
@@ -100,6 +101,7 @@ func (s *ClaimPropStmt) algoStmt()                       {}
 func (s *ClaimExistPropStmt) algoStmt()                  {}
 func (s *ProveByEnumStmt) algoStmt()                     {}
 func (s *HaveObjInNonEmptySetStmt) algoStmt()            {}
+func (s *ImplicationStmt) algoStmt()                     {}
 func (s *HaveEnumSetStmt) algoStmt()                     {}
 func (s *HaveIntensionalSetStmt) algoStmt()              {}
 func (s *HaveSetFnStmt) algoStmt()                       {}
@@ -180,6 +182,7 @@ func (s *ByStmt) GetLine() uint                          { return s.Line }
 func (s *PrintStmt) GetLine() uint                       { return s.Line }
 func (s *HelpStmt) GetLine() uint                        { return s.Line }
 func (s *HaveFnEqualCaseByCaseStmt) GetLine() uint       { return s.Line }
+func (s *ImplicationStmt) GetLine() uint                 { return s.Line }
 
 type FactStmt interface {
 	factStmt()
