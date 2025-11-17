@@ -129,6 +129,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.printStmt()
 	case glob.KeywordHelp:
 		ret, err = tb.helpStmt()
+	case glob.KeywordImplication:
+		ret, err = tb.implicationStmt()
 	default:
 		ret, err = tb.factsStmt()
 	}
@@ -2478,6 +2480,57 @@ func (tb *tokenBlock) clearStmt() (ast.Stmt, error) {
 	}
 
 	return ast.NewClearStmt(tb.line), nil
+}
+
+func (tb *tokenBlock) implicationStmt() (*ast.ImplicationStmt, error) {
+	err := tb.header.skip(glob.KeywordImplication)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	// Parse name
+	name, err := tb.header.next()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	// Parse parameters: (x R)
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	params, setParams, err := tb.param_paramSet_paramInSetFacts(glob.KeySymbolRightBrace, false)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	// Expect colon
+	if !tb.header.is(glob.KeySymbolColon) {
+		return nil, fmt.Errorf("expect ':' after implication header")
+	}
+
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	// Parse body: domFacts and thenFacts (separated by =>:)
+	if tb.header.ExceedEnd() {
+		// Multi-line format with body blocks
+		domFacts, thenFacts, err := tb.dom_and_section(glob.KeySymbolRightArrow, glob.KeySymbolEquivalent)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		return ast.NewImplicationStmt(ast.FcAtom(name), params, setParams, domFacts, thenFacts, tb.line), nil
+	} else {
+		// Inline format
+		domFacts, thenFacts, err := tb.bodyOfInlineDomAndThen(glob.KeySymbolRightArrow, []string{})
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		return ast.NewImplicationStmt(ast.FcAtom(name), params, setParams, domFacts, thenFacts, tb.line), nil
+	}
 }
 
 func (tb *tokenBlock) factsStmt() (ast.Stmt, error) {
