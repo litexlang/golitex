@@ -319,7 +319,3 @@ func NewHelpStmt(keyword string, line uint) *HelpStmt {
 func NewHaveFnCaseByCaseStmt(defHeader *DefHeader, retSet Obj, caseByCaseFacts []*SpecFactStmt, caseByCaseEqualTo ObjSlice, line uint) *HaveFnEqualCaseByCaseStmt {
 	return &HaveFnEqualCaseByCaseStmt{defHeader, retSet, caseByCaseFacts, caseByCaseEqualTo, line}
 }
-
-func NewImplicationStmt(name string, params []string, paramSets []Obj, domFacts []FactStmt, thenFacts []FactStmt, line uint) *ImplicationStmt {
-	return &ImplicationStmt{name, params, paramSets, domFacts, thenFacts, line}
-}

@@ -82,25 +82,6 @@ func (l *UniFactStmt) InlineString() string {
 	return builder.String()
 }
 
-func (i *ImplicationStmt) InlineString() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordImplication)
-	builder.WriteString(" ")
-	builder.WriteString(string(i.Name))
-	builder.WriteString("(")
-	builder.WriteString(StrFcSetPairs(i.Params, i.ParamSets))
-	builder.WriteString(")")
-	if len(i.DomFacts) > 0 {
-		builder.WriteString(glob.KeySymbolColon)
-		builder.WriteString(inlineFactsString(i.DomFacts))
-	}
-	if len(i.ThenFacts) > 0 {
-		builder.WriteString(glob.KeySymbolRightArrow)
-		builder.WriteString(inlineFactsString(i.ThenFacts))
-	}
-	return builder.String()
-}
-
 func (p *SpecFactStmt) InlineString() string {
 	return p.String()
 }

@@ -79,16 +79,6 @@ type UniFactStmt struct {
 	Line uint
 }
 
-type ImplicationStmt struct {
-	Name      string
-	Params    StrSlice
-	ParamSets ObjSlice
-	DomFacts  FactStmtSlice
-	ThenFacts FactStmtSlice
-
-	Line uint
-}
-
 type UniFactWithIffStmt struct {
 	UniFact  *UniFactStmt
 	IffFacts FactStmtSlice
