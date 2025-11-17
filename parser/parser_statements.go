@@ -2673,7 +2673,7 @@ func (tb *tokenBlock) haveFnEqualStmt() (ast.Stmt, error) {
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}
-			err = block.header.skip(glob.KeySymbolColon)
+			err = block.header.skip(glob.KeySymbolEqual)
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}
@@ -2685,7 +2685,13 @@ func (tb *tokenBlock) haveFnEqualStmt() (ast.Stmt, error) {
 			caseByCaseFacts = append(caseByCaseFacts, curStmt)
 		}
 
-		return ast.NewHaveFnCaseByCaseStmt(defHeader, retSet, caseByCaseFacts, caseByCaseEqualTo, tb.line), nil
+		return &ast.HaveFnEqualCaseByCaseStmt{
+			DefHeader:         defHeader,
+			RetSet:            retSet,
+			CaseByCaseFacts:   caseByCaseFacts,
+			CaseByCaseEqualTo: caseByCaseEqualTo,
+			Line:              tb.line,
+		}, nil
 	}
 }
 
@@ -2756,7 +2762,7 @@ func (tb *tokenBlock) haveFnLiftStmt() (*ast.HaveFnLiftStmt, error) {
 	return ast.NewHaveFnLiftStmt(fnName, opt, domainOfEachParamOfGivenFn, tb.line), nil
 }
 
-func (tb *tokenBlock) haveFnStmt() (*ast.HaveFnStmt, error) {
+func (tb *tokenBlock) haveFnStmt() (ast.Stmt, error) {
 	var err error
 
 	if len(tb.body) != 3 {
@@ -2783,31 +2789,79 @@ func (tb *tokenBlock) haveFnStmt() (*ast.HaveFnStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	err = tb.body[1].header.skip(glob.KeywordProve)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	proof := []ast.Stmt{}
-	for _, block := range tb.body[1].body {
-		curStmt, err := block.Stmt()
+	if tb.body[1].header.is(glob.KeywordProve) {
+		err = tb.body[1].header.skip(glob.KeywordProve)
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
-		proof = append(proof, curStmt)
-	}
 
-	err = tb.body[2].header.skip(glob.KeywordHave)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+		proof := []ast.Stmt{}
+		for _, block := range tb.body[1].body {
+			curStmt, err := block.Stmt()
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			proof = append(proof, curStmt)
+		}
 
-	haveObjSatisfyFn, err := tb.body[2].RawFc()
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
+		err = tb.body[2].header.skip(glob.KeywordHave)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
 
-	return ast.NewClaimHaveFnStmt(defFnStmt, proof, haveObjSatisfyFn, tb.line), nil
+		haveObjSatisfyFn, err := tb.body[2].RawFc()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		return ast.NewClaimHaveFnStmt(defFnStmt, proof, haveObjSatisfyFn, tb.line), nil
+	} else {
+		if len(tb.body)%2 != 0 {
+			return nil, fmt.Errorf("expect even number of body blocks")
+		}
+
+		cases := []*ast.SpecFactStmt{}
+		proofs := []ast.StmtSlice{}
+		EqualTo := []ast.Obj{}
+		for i := range len(tb.body) {
+			if i%2 == 0 {
+				err := tb.body[i].header.skip(glob.KeywordCase)
+				if err != nil {
+					return nil, tbErr(err, tb)
+				}
+				curStmt, err := tb.body[i].specFactStmt()
+				if err != nil {
+					return nil, tbErr(err, tb)
+				}
+				cases = append(cases, curStmt)
+				err = tb.body[i].header.skip(glob.KeySymbolColon)
+				if err != nil {
+					return nil, tbErr(err, tb)
+				}
+				curProof := ast.StmtSlice{}
+				for _, block := range tb.body[i].body {
+					curStmt, err := block.Stmt()
+					if err != nil {
+						return nil, tbErr(err, tb)
+					}
+					curProof = append(curProof, curStmt)
+				}
+				proofs = append(proofs, curProof)
+			} else {
+				err := tb.body[i].header.skip(glob.KeywordHave)
+				if err != nil {
+					return nil, tbErr(err, tb)
+				}
+				curHaveObj, err := tb.body[i].RawFc()
+				if err != nil {
+					return nil, tbErr(err, tb)
+				}
+				EqualTo = append(EqualTo, curHaveObj)
+			}
+		}
+
+		return ast.NewHaveFnCaseByCaseStmt(defFnStmt, cases, proofs, EqualTo, tb.line), nil
+	}
 }
 
 func (tb *tokenBlock) relaEqualsFactStmt(fc, fc2 ast.Obj) (*ast.EqualsFactStmt, error) {

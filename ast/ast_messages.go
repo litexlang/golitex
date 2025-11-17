@@ -917,6 +917,37 @@ func (stmt *HaveFnStmt) String() string {
 	return builder.String()
 }
 
+func (stmt *HaveFnCaseByCaseStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordHave)
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeywordFn)
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteString("\n")
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.DefFnStmt.String(), 1))
+	builder.WriteString("\n")
+	for i := range len(stmt.CaseByCaseFacts) {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordCase, 1))
+		builder.WriteString(" ")
+		builder.WriteString(stmt.CaseByCaseFacts[i].String())
+		builder.WriteString(glob.KeySymbolColon)
+		builder.WriteByte('\n')
+		if i < len(stmt.Proofs) {
+			for _, proofStmt := range stmt.Proofs[i] {
+				builder.WriteString(glob.SplitLinesAndAdd4NIndents(proofStmt.String(), 2))
+				builder.WriteByte('\n')
+			}
+		}
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordHave, 1))
+		builder.WriteString(" ")
+		if i < len(stmt.EqualToObjs) {
+			builder.WriteString(stmt.EqualToObjs[i].String())
+		}
+		builder.WriteByte('\n')
+	}
+	return strings.TrimSuffix(builder.String(), "\n")
+}
+
 func (fc ObjSlice) String() string {
 	output := make([]string, len(fc))
 	for i, param := range fc {
@@ -1236,7 +1267,7 @@ func (stmt *HaveFnEqualCaseByCaseStmt) String() string {
 		builder.WriteString(glob.KeywordCase)
 		builder.WriteString(" ")
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 1))
-		builder.WriteString(glob.KeySymbolColon)
+		builder.WriteString(glob.KeySymbolEqual)
 		builder.WriteString(stmt.CaseByCaseEqualTo[i].String())
 		builder.WriteByte('\n')
 	}

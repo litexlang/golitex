@@ -316,6 +316,6 @@ func NewHelpStmt(keyword string, line uint) *HelpStmt {
 	return &HelpStmt{keyword, line}
 }
 
-func NewHaveFnCaseByCaseStmt(defHeader *DefHeader, retSet Obj, caseByCaseFacts []*SpecFactStmt, caseByCaseEqualTo ObjSlice, line uint) *HaveFnEqualCaseByCaseStmt {
-	return &HaveFnEqualCaseByCaseStmt{defHeader, retSet, caseByCaseFacts, caseByCaseEqualTo, line}
+func NewHaveFnCaseByCaseStmt(defFnStmt *DefFnStmt, caseByCaseFacts SpecFactPtrSlice, proofs []StmtSlice, haveObjSatisfyFn []Obj, line uint) *HaveFnCaseByCaseStmt {
+	return &HaveFnCaseByCaseStmt{defFnStmt, caseByCaseFacts, proofs, haveObjSatisfyFn, line}
 }
