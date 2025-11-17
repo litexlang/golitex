@@ -99,6 +99,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 		execRet = exec.haveFnLiftStmt(stmt)
 	case *ast.HaveFnStmt:
 		execRet = exec.haveFnStmt(stmt)
+	case *ast.HaveFnCaseByCaseStmt:
+		execRet = exec.haveFnCaseByCaseStmt(stmt)
 	case *ast.MarkdownStmt:
 		execRet = exec.markdownStmt(stmt)
 		return execRet
@@ -802,6 +804,10 @@ func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) ExecRet {
 	}
 
 	return NewExecTrue("")
+}
+
+func (exec *Executor) haveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) ExecRet {
+	panic("")
 }
 
 func (exec *Executor) openANewEnvAndCheck(fact ast.FactStmt, requireMsg bool) (ExecRet, error) {
