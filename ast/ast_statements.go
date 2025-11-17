@@ -354,6 +354,15 @@ type HaveFnStmt struct {
 	Line uint
 }
 
+type HaveFnCaseByCaseStmt struct {
+	DefFnStmt       *DefFnStmt
+	CaseByCaseFacts SpecFactPtrSlice
+	Proofs          []StmtSlice
+	EqualToObjs     []Obj
+
+	Line uint
+}
+
 type MarkdownStmt struct {
 	Markdown string
 
