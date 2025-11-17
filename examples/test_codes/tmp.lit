@@ -1,4 +1,0 @@
-implication p(x R):
-    x > 0
-    =>:
-        x > 0
