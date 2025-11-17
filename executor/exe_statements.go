@@ -21,8 +21,7 @@ import (
 )
 
 func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
-	// var err error = nil
-	var execRet ExecRet = NewExecTrue("")
+	var execRet ExecRet = NewExecErr("")
 
 	switch stmt := (stmt).(type) {
 	case ast.FactStmt:
@@ -87,7 +86,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 	case *ast.FnTemplateDefStmt:
 		execRet = exec.DefFnTemplateStmt(stmt)
 	case *ast.ClearStmt:
-		exec.ClearStmt()
+		execRet = exec.ClearStmt()
 	case *ast.InlineFactsStmt:
 		execRet = exec.inlineFactsStmt(stmt)
 	case *ast.ProveByInductionStmt:
@@ -586,14 +585,14 @@ func (exec *Executor) DefFnTemplateStmt(stmt *ast.FnTemplateDefStmt) ExecRet {
 	return NewExecTrue("")
 }
 
-func (exec *Executor) ClearStmt() error {
+func (exec *Executor) ClearStmt() ExecRet {
 	curEnv := exec.Env
 	for curEnv.Parent != nil {
 		curEnv = curEnv.Parent
 	} // 最顶层的env不删，因为最顶层的包含了热启动的代码
 	exec.NewEnv(curEnv)
 	// Note: Clear message should be added to ExecRet in the caller if needed
-	return nil
+	return NewExecTrue("")
 }
 
 func (exec *Executor) inlineFactsStmt(stmt *ast.InlineFactsStmt) ExecRet {
@@ -673,6 +672,7 @@ func (exec *Executor) checkFnEqualStmt(stmt *ast.HaveFnEqualStmt) (ExecRet, erro
 	}
 
 	ver := NewVerifier(exec.Env)
+
 	verRet := ver.VerFactStmt(ast.NewInFactWithFc(stmt.EqualTo, stmt.RetSet), Round0Msg)
 	if verRet.IsErr() {
 		return NewExecErr(""), fmt.Errorf(verRet.String())

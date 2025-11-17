@@ -105,40 +105,6 @@ func (stmt *UniFactStmt) InstantiateFact(uniMap map[string]Obj) (FactStmt, error
 	return InstantiateUniFact(stmt, uniMap)
 }
 
-func (stmt *ImplicationStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	newParams := []string{}
-	newParams = append(newParams, stmt.Params...)
-
-	newDomFacts := []FactStmt{}
-	for _, fact := range stmt.DomFacts {
-		newFact, err := fact.InstantiateFact(uniMap)
-		if err != nil {
-			return nil, err
-		}
-		newDomFacts = append(newDomFacts, newFact)
-	}
-
-	newThenFacts := []FactStmt{}
-	for _, fact := range stmt.ThenFacts {
-		newFact, err := fact.InstantiateFact(uniMap)
-		if err != nil {
-			return nil, err
-		}
-		newThenFacts = append(newThenFacts, newFact)
-	}
-
-	newSetParams := []Obj{}
-	for _, setParam := range stmt.ParamSets {
-		newSetParam, err := setParam.Instantiate(uniMap)
-		if err != nil {
-			return nil, err
-		}
-		newSetParams = append(newSetParams, newSetParam)
-	}
-
-	return NewImplicationStmt(stmt.Name, newParams, newSetParams, newDomFacts, newThenFacts, stmt.Line), nil
-}
-
 func (defHeader *DefHeader) Instantiate(uniMap map[string]Obj) (*DefHeader, error) {
 	newDefHeader := NewDefHeader(defHeader.Name, defHeader.Params, make([]Obj, len(defHeader.ParamSets)))
 

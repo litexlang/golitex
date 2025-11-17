@@ -145,52 +145,6 @@ func (l *UniFactStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (i *ImplicationStmt) ToLatexString() string {
-	var builder strings.Builder
-	builder.WriteString("$")
-	builder.WriteString(string(i.Name))
-	builder.WriteString("(")
-	builder.WriteString(strFcSetPairsLatexString(i.Params, i.ParamSets))
-	builder.WriteString(")$: ")
-
-	if len(i.DomFacts) > 0 {
-		domFactStrSlice := make([]string, len(i.DomFacts))
-		for j := range len(i.DomFacts) {
-			domFactStrSlice[j] = i.DomFacts[j].ToLatexString()
-		}
-
-		if ShouldInSingleLineAsLatexString(domFactStrSlice) {
-			builder.WriteString(" ")
-			builder.WriteString(strings.Join(domFactStrSlice, ", "))
-			builder.WriteString(" ")
-		} else {
-			builder.WriteString("\n\n")
-			builder.WriteString(strings.Join(domFactStrSlice, "\n\n"))
-			builder.WriteString("\n\n")
-		}
-	} else {
-		builder.WriteString(" ")
-	}
-
-	builder.WriteString("$\\Rightarrow$")
-	thenFactStrSlice := make([]string, len(i.ThenFacts))
-	for j := range len(i.ThenFacts) {
-		thenFactStrSlice[j] = i.ThenFacts[j].ToLatexString()
-	}
-
-	if ShouldInSingleLineAsLatexString(thenFactStrSlice) {
-		builder.WriteString(" ")
-		builder.WriteString(strings.Join(thenFactStrSlice, ", "))
-		builder.WriteString(" $\\rule{0.5ex}{0.5ex}$")
-	} else {
-		builder.WriteString("\n\n")
-		builder.WriteString(strings.Join(thenFactStrSlice, "\n\n"))
-		builder.WriteString("\n\n$\\rule{0.5ex}{0.5ex}$")
-	}
-
-	return builder.String()
-}
-
 func (p *SpecFactStmt) ToLatexString() string {
 	if p.IsExist_St_Fact() {
 		return exist_st_FactString(p)
