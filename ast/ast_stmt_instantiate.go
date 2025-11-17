@@ -690,6 +690,34 @@ func (stmt *HaveFnStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return NewClaimHaveFnStmt(newDefFnStmt.(*DefFnStmt), newProofs, newHaveObjSatisfyFn, stmt.Line), nil
 }
 
+func (stmt *HaveFnCaseByCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+	newDefFnStmt, err := stmt.DefFnStmt.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newCaseByCaseFacts, err := stmt.CaseByCaseFacts.InstantiateFact(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newProofs := make([]StmtSlice, len(stmt.Proofs))
+	for i, proof := range stmt.Proofs {
+		newProof, err := proof.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newProofs[i] = newProof
+	}
+	newHaveObjSatisfyFn := make([]Obj, len(stmt.EqualToObjs))
+	for i, obj := range stmt.EqualToObjs {
+		newObj, err := obj.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newHaveObjSatisfyFn[i] = newObj
+	}
+	return NewHaveFnCaseByCaseStmt(newDefFnStmt.(*DefFnStmt), newCaseByCaseFacts, newProofs, newHaveObjSatisfyFn, stmt.Line), nil
+}
+
 func (stmt *MarkdownStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return stmt, nil
 }
@@ -901,5 +929,5 @@ func (stmt *HaveFnEqualCaseByCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt,
 	if err != nil {
 		return nil, err
 	}
-	return NewHaveFnCaseByCaseStmt(newDefHeader, newRetSet, newCaseByCaseFacts, newCaseByCaseEqualTo, stmt.Line), nil
+	return &HaveFnEqualCaseByCaseStmt{newDefHeader, newRetSet, newCaseByCaseFacts, newCaseByCaseEqualTo, stmt.Line}, nil
 }

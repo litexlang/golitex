@@ -317,6 +317,10 @@ func (s *HaveFnStmt) InlineString() string {
 	return "TODO"
 }
 
+func (s *HaveFnCaseByCaseStmt) InlineString() string {
+	return s.String()
+}
+
 func (s *MarkdownStmt) InlineString() string {
 	return s.Markdown
 }

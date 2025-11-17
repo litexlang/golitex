@@ -1,0 +1,9 @@
+have fn:
+    a(x R) R:
+        x > 0
+        =>:
+            a(x) > 2
+    case x <= 0:
+        
+    case x > 2:
+        a(x) = 0

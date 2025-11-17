@@ -875,6 +875,10 @@ func (s *HaveFnStmt) ToLatexString() string {
 	return s.String()
 }
 
+func (s *HaveFnCaseByCaseStmt) ToLatexString() string {
+	return s.String()
+}
+
 func (s *MarkdownStmt) ToLatexString() string {
 	return s.Markdown
 }
