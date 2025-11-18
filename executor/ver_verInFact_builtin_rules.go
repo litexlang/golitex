@@ -506,6 +506,10 @@ func (ver *Verifier) getRetSetOfFcFnByUsingItsFnT(fcFn *ast.FnObj) (ast.Obj, err
 	// 此时 indexWhereLatestFnTIsGot 就是 1, FnToFnItemWhereLatestFnTIsGot 就是 f(a) 的 fnInFnTMemItem
 	indexWhereLatestFnTIsGot, FnToFnItemWhereLatestFnTIsGot := ver.Env.FindRightMostResolvedFn_Return_ResolvedIndexAndFnTMemItem(fnHeadChain_AndItSelf)
 
+	if FnToFnItemWhereLatestFnTIsGot == nil {
+		return nil, fmt.Errorf("no fn template found for %s", fcFn)
+	}
+
 	// 比如 f(a)(b,c)(e,d,f) 我们现在得到了 f(a) 的 fnTStruct，那 curParamsChainIndex 就是 2, 表示 f(a) 对应的params就是 (b,c)
 	curFnTStruct := (FnToFnItemWhereLatestFnTIsGot.AsFnTStruct)
 	curParamsChainIndex := indexWhereLatestFnTIsGot + 1

@@ -371,7 +371,7 @@ type MarkdownStmt struct {
 	Line uint
 }
 
-type ProveInRangeStmt struct {
+type ProveInRangeSetStmt struct {
 	Start          int64
 	End            int64
 	Param          string
@@ -468,6 +468,17 @@ type PrintStmt struct {
 
 type HelpStmt struct {
 	Keyword string
+
+	Line uint
+}
+
+type ProveInRangeStmt struct {
+	param         string
+	start         Obj
+	end           Obj
+	DomFactsOrNil FactStmtSlice
+	ThenFacts     FactStmtSlice
+	ProofsOrNil   StmtSlice
 
 	Line uint
 }

@@ -1,4 +1,22 @@
-let complex cart(R, R)
-proj(complex, 1) = R
-R $in nonempty_set
-proj(complex, 1) $in nonempty_set
+prove_in_range_set(a, 1, 3):
+    a > 0
+
+prove_in_range(a, 1, 3):
+    dom:
+        ...
+    =>:
+        ...
+    prove:
+        ...
+
+prove_in_range(a, 1, 3):
+    dom:
+        ...
+    =>:
+        ...
+
+prove_in_range_set(a, 1, 3):
+    ...
+    prove:
+        ...
+
