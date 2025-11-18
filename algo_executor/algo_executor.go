@@ -33,7 +33,7 @@ func NewAlgoExecutor(execEnv *litenv.Env) *AlgoExecutor {
 }
 
 func (algoExec *AlgoExecutor) CanBeComputed(fc ast.Obj) (ast.Obj, error) {
-	ok := cmp.IsNumLitFc(fc)
+	ok := cmp.IsNumLitObj(fc)
 	if ok {
 		return fc, nil
 	}

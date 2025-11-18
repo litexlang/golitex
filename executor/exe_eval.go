@@ -21,34 +21,34 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) simplifyNumExprFc(fc ast.Obj) (ast.Obj, ExecRet) {
-	simplifiedNumExprFc := cmp.IsNumExprFcThenSimplify(fc)
-	if simplifiedNumExprFc == nil {
+func (exec *Executor) simplifyNumExprObj(obj ast.Obj) (ast.Obj, ExecRet) {
+	simplifiedNumExprObj := cmp.IsNumExprObjThenSimplify(obj)
+	if simplifiedNumExprObj == nil {
 		return nil, NewExecErr("")
 	}
 
-	return simplifiedNumExprFc, NewExecTrue("")
+	return simplifiedNumExprObj, NewExecTrue("")
 }
 
 // 这里 bool 表示，是否启动过 用algo 计算；如果仅仅是用 algo 来计算，那是不会返回true的
-func (exec *Executor) evalFcThenSimplify(fc ast.Obj) (ast.Obj, ExecRet) {
-	// fmt.Println(fc)
+func (exec *Executor) evalObjThenSimplify(obj ast.Obj) (ast.Obj, ExecRet) {
+	// fmt.Println(obj)
 
-	if cmp.IsNumLitFc(fc) {
-		return exec.simplifyNumExprFc(fc)
+	if cmp.IsNumLitObj(obj) {
+		return exec.simplifyNumExprObj(obj)
 	}
 
-	switch asFc := fc.(type) {
+	switch asObj := obj.(type) {
 	case ast.AtomObj:
-		symbolValue := exec.Env.GetSymbolSimplifiedValue(fc)
+		symbolValue := exec.Env.GetSymbolSimplifiedValue(obj)
 		if symbolValue == nil {
-			return nil, NewExecErr(fmt.Sprintf("symbol %s has no value", fc.String()))
+			return nil, NewExecErr(fmt.Sprintf("symbol %s has no value", obj.String()))
 		}
 		return symbolValue, NewExecTrue("")
 	case *ast.FnObj:
-		return exec.evalFcFnThenSimplify(asFc)
+		return exec.evalObjFnThenSimplify(asObj)
 	default:
-		return nil, NewExecErr(fmt.Sprintf("unexpected type: %T", fc))
+		return nil, NewExecErr(fmt.Sprintf("unexpected type: %T", obj))
 	}
 }
 
@@ -62,85 +62,85 @@ var basicArithOptMap = map[string]struct{}{
 }
 
 // 可能返回数值的时候需要检查一下会不会除以0这种情况
-func (exec *Executor) evalFcFnThenSimplify(fc *ast.FnObj) (ast.Obj, ExecRet) {
-	if symbolValue := exec.Env.GetSymbolSimplifiedValue(fc); symbolValue != nil {
+func (exec *Executor) evalObjFnThenSimplify(objFn *ast.FnObj) (ast.Obj, ExecRet) {
+	if symbolValue := exec.Env.GetSymbolSimplifiedValue(objFn); symbolValue != nil {
 		return symbolValue, NewExecTrue("")
 	}
 
-	if ast.IsFcFnWithHeadNameInSlice(fc, basicArithOptMap) {
-		left, execRet := exec.evalFcThenSimplify(fc.Params[0])
+	if ast.IsFn_WithHeadNameInSlice(objFn, basicArithOptMap) {
+		left, execRet := exec.evalObjThenSimplify(objFn.Params[0])
 		if execRet.IsNotTrue() {
 			return nil, execRet
 		}
-		right, execRet := exec.evalFcThenSimplify(fc.Params[1])
+		right, execRet := exec.evalObjThenSimplify(objFn.Params[1])
 		if execRet.IsNotTrue() {
 			return nil, execRet
 		}
 
-		numExprFc := ast.NewFcFn(fc.FnHead, []ast.Obj{left, right})
-		execRet = exec.fcfnParamsInFnDomain(numExprFc)
+		numExprObj := ast.NewFnObj(objFn.FnHead, []ast.Obj{left, right})
+		execRet = exec.objFnParamsInFnDomain(numExprObj)
 		if execRet.IsNotTrue() {
-			return nil, NewExecErr(fmt.Sprintf("%s = %s is invalid", fc, numExprFc))
+			return nil, NewExecErr(fmt.Sprintf("%s = %s is invalid", objFn, numExprObj))
 		}
 
-		return exec.simplifyNumExprFc(numExprFc)
+		return exec.simplifyNumExprObj(numExprObj)
 	}
 
-	if ok := exec.Env.IsFnWithDefinedAlgo(fc); ok {
-		numExprFc, execRet := exec.useAlgoToEvalFcFnThenSimplify(fc)
+	if ok := exec.Env.IsFnWithDefinedAlgo(objFn); ok {
+		numExprObj, execRet := exec.useAlgoToEvalObjFnThenSimplify(objFn)
 		if execRet.IsNotTrue() {
 			return nil, execRet
 		}
 
-		return numExprFc, NewExecTrue("")
+		return numExprObj, NewExecTrue("")
 	}
 
 	return nil, NewExecUnknown("")
 }
 
-func (exec *Executor) useAlgoToEvalFcFnThenSimplify(fcFn *ast.FnObj) (ast.Obj, ExecRet) {
-	algoDef := exec.Env.GetAlgoDef(fcFn.FnHead.String())
+func (exec *Executor) useAlgoToEvalObjFnThenSimplify(objFn *ast.FnObj) (ast.Obj, ExecRet) {
+	algoDef := exec.Env.GetAlgoDef(objFn.FnHead.String())
 	if algoDef == nil {
-		return nil, NewExecErr(fmt.Sprintf("algo %s is not found", fcFn.FnHead.String()))
+		return nil, NewExecErr(fmt.Sprintf("algo %s is not found", objFn.FnHead.String()))
 	}
 
-	if len(fcFn.Params) != len(algoDef.Params) {
-		return nil, NewExecErr(fmt.Sprintf("algorithm %s requires %d parameters, get %d instead", algoDef.FuncName, len(algoDef.Params), len(fcFn.Params)))
+	if len(objFn.Params) != len(algoDef.Params) {
+		return nil, NewExecErr(fmt.Sprintf("algorithm %s requires %d parameters, get %d instead", algoDef.FuncName, len(algoDef.Params), len(objFn.Params)))
 	}
 
 	// 传入的参数真的在fn的domain里
-	execRet := exec.fcfnParamsInFnDomain(fcFn)
+	execRet := exec.objFnParamsInFnDomain(objFn)
 	if execRet.IsNotTrue() {
-		return nil, NewExecErr(fmt.Sprintf("parameters of %s are not in domain of %s", fcFn, fcFn.FnHead))
+		return nil, NewExecErr(fmt.Sprintf("parameters of %s are not in domain of %s", objFn, objFn.FnHead))
 	}
 
 	for i, param := range algoDef.Params {
 		if exec.Env.IsAtomDeclared(ast.AtomObj(param), map[string]struct{}{}) {
 			continue
 		} else {
-			execState := exec.defLetStmt(ast.NewDefLetStmt([]string{param}, []ast.Obj{ast.AtomObj(glob.KeywordObj)}, []ast.FactStmt{ast.NewEqualFact(ast.AtomObj(param), fcFn.Params[i])}, glob.InnerGenLine))
+			execState := exec.defLetStmt(ast.NewDefLetStmt([]string{param}, []ast.Obj{ast.AtomObj(glob.KeywordObj)}, []ast.FactStmt{ast.NewEqualFact(ast.AtomObj(param), objFn.Params[i])}, glob.InnerGenLine))
 			if execState.IsNotTrue() {
 				return nil, NewExecErr(execState.String())
 			}
 		}
 	}
 
-	fcFnParamsValues := []ast.Obj{}
-	for _, param := range fcFn.Params {
+	objFnParamsValues := []ast.Obj{}
+	for _, param := range objFn.Params {
 		_, value := exec.Env.ReplaceSymbolWithValue(param)
 		// simplifiedValue := value
-		simplifiedValue, execRet := exec.simplifyNumExprFc(value)
+		simplifiedValue, execRet := exec.simplifyNumExprObj(value)
 		if execRet.IsNotTrue() {
-			return nil, NewExecErr(fmt.Sprintf("value of %s of %s is unknown.", param, fcFn))
+			return nil, NewExecErr(fmt.Sprintf("value of %s of %s is unknown.", param, objFn))
 		}
-		fcFnParamsValues = append(fcFnParamsValues, simplifiedValue)
+		objFnParamsValues = append(objFnParamsValues, simplifiedValue)
 	}
 
-	fcFnWithValueParams := ast.NewFcFn(fcFn.FnHead, fcFnParamsValues)
+	objFnWithValueParams := ast.NewFnObj(objFn.FnHead, objFnParamsValues)
 
 	uniMap := map[string]ast.Obj{}
 	for i, param := range algoDef.Params {
-		uniMap[param] = fcFnParamsValues[i]
+		uniMap[param] = objFnParamsValues[i]
 	}
 
 	instAlgoDef, err := algoDef.Instantiate(uniMap)
@@ -148,32 +148,32 @@ func (exec *Executor) useAlgoToEvalFcFnThenSimplify(fcFn *ast.FnObj) (ast.Obj, E
 		return nil, NewExecErrWithErr(err)
 	}
 
-	value, execRet := exec.runAlgoStmtsWhenEval(instAlgoDef.(*ast.DefAlgoStmt).Stmts, fcFnWithValueParams)
+	value, execRet := exec.runAlgoStmtsWhenEval(instAlgoDef.(*ast.DefAlgoStmt).Stmts, objFnWithValueParams)
 	if execRet.IsNotTrue() {
 		return nil, execRet
 	}
 
-	return exec.simplifyNumExprFc(value)
+	return exec.simplifyNumExprObj(value)
 }
 
-func (exec *Executor) runAlgoStmtsWhenEval(algoStmts ast.AlgoStmtSlice, fcFnWithValueParams *ast.FnObj) (ast.Obj, ExecRet) {
+func (exec *Executor) runAlgoStmtsWhenEval(algoStmts ast.AlgoStmtSlice, objFnWithValueParams *ast.FnObj) (ast.Obj, ExecRet) {
 	for _, stmt := range algoStmts {
 		switch asStmt := stmt.(type) {
 		case *ast.AlgoReturnStmt:
-			execRet := exec.factStmt(ast.EqualFact(fcFnWithValueParams, asStmt.Value))
+			execRet := exec.factStmt(ast.EqualFact(objFnWithValueParams, asStmt.Value))
 			if execRet.IsErr() {
 				return nil, execRet
 			}
 			if execRet.IsNotTrue() {
 				return nil, execRet
 			}
-			numExprFc, execRet := exec.evalFcThenSimplify(asStmt.Value)
-			return numExprFc, execRet
+			numExprObj, execRet := exec.evalObjThenSimplify(asStmt.Value)
+			return numExprObj, execRet
 		case *ast.AlgoIfStmt:
 			if conditionIsTrue, execRet := exec.IsAlgoIfConditionTrue(asStmt); execRet.IsNotTrue() {
 				return nil, execRet
 			} else if conditionIsTrue {
-				return exec.algoIfStmtWhenEval(asStmt, fcFnWithValueParams)
+				return exec.algoIfStmtWhenEval(asStmt, objFnWithValueParams)
 			}
 		case *ast.ProveAlgoReturnStmt:
 			return nil, NewExecErr(fmt.Sprintf("There can not be return by statements in algo, get %s", asStmt.String()))
@@ -185,12 +185,12 @@ func (exec *Executor) runAlgoStmtsWhenEval(algoStmts ast.AlgoStmtSlice, fcFnWith
 		}
 	}
 
-	return nil, NewExecErr(fmt.Sprintf("There is no return value of %s", fcFnWithValueParams))
+	return nil, NewExecErr(fmt.Sprintf("There is no return value of %s", objFnWithValueParams))
 }
 
-func (exec *Executor) fcfnParamsInFnDomain(fcFn *ast.FnObj) ExecRet {
+func (exec *Executor) objFnParamsInFnDomain(objFn *ast.FnObj) ExecRet {
 	ver := NewVerifier(exec.Env)
-	return ver.fcSatisfyFnRequirement(fcFn, Round0NoMsg)
+	return ver.objSatisfyFnRequirement(objFn, Round0NoMsg)
 }
 
 func (exec *Executor) IsAlgoIfConditionTrue(stmt *ast.AlgoIfStmt) (bool, ExecRet) {
@@ -229,7 +229,7 @@ func (exec *Executor) IsAlgoIfConditionTrue(stmt *ast.AlgoIfStmt) (bool, ExecRet
 	return true, NewExecTrue("")
 }
 
-func (exec *Executor) algoIfStmtWhenEval(stmt *ast.AlgoIfStmt, fcFnWithValueParams *ast.FnObj) (ast.Obj, ExecRet) {
+func (exec *Executor) algoIfStmtWhenEval(stmt *ast.AlgoIfStmt, objFnWithValueParams *ast.FnObj) (ast.Obj, ExecRet) {
 	exec.NewEnv(exec.Env)
 	defer exec.deleteEnv()
 
@@ -240,6 +240,6 @@ func (exec *Executor) algoIfStmtWhenEval(stmt *ast.AlgoIfStmt, fcFnWithValuePara
 		return nil, execRet
 	}
 
-	value, execRet := exec.runAlgoStmtsWhenEval(stmt.ThenStmts, fcFnWithValueParams)
+	value, execRet := exec.runAlgoStmtsWhenEval(stmt.ThenStmts, objFnWithValueParams)
 	return value, execRet
 }

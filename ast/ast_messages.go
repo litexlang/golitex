@@ -83,7 +83,7 @@ func pureSpecFactString(stmt *SpecFactStmt) string {
 		builder.WriteString(stmt.PropName.String())
 		builder.WriteByte('(')
 
-		builder.WriteString(fcSliceString(stmt.Params))
+		builder.WriteString(objSliceString(stmt.Params))
 		builder.WriteByte(')')
 	}
 	return builder.String()
@@ -134,7 +134,7 @@ func exist_st_FactString(stmt *SpecFactStmt) string {
 
 	existParams, factParams := GetExistFactExistParamsAndFactParams(stmt)
 
-	builder.WriteString(fcSliceString(existParams))
+	builder.WriteString(objSliceString(existParams))
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeywordSt)
 	builder.WriteString(" ")
@@ -434,7 +434,7 @@ func (f *FnObj) String() string {
 		return fnSetString(f)
 	}
 
-	if IsFcAtomAndEqualToStr(f.FnHead, glob.KeySymbolDot) {
+	if IsAtomObjAndEqualToStr(f.FnHead, glob.KeySymbolDot) {
 		return fmt.Sprintf("%s.%s", f.Params[0], f.Params[1])
 	}
 
@@ -759,7 +759,7 @@ func (stmt *HaveSetDefinedByReplacementStmt) String() string {
 	builder.WriteString(" ")
 	builder.WriteString(stmt.Name)
 	builder.WriteString(" ")
-	builder.WriteString(NewFcFn(AtomObj(glob.KeywordSetDefinedByReplacement), []Obj{stmt.DomSet, stmt.RangeSet, stmt.PropName}).String())
+	builder.WriteString(NewFnObj(AtomObj(glob.KeywordSetDefinedByReplacement), []Obj{stmt.DomSet, stmt.RangeSet, stmt.PropName}).String())
 	return builder.String()
 }
 

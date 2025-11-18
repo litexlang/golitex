@@ -58,7 +58,7 @@ func (ver *Verifier) verEnumStmt(stmt *ast.EnumStmt, state *VerState) ExecRet {
 }
 
 func (ver *Verifier) lenIsZeroThenEnumIsEmpty(stmt *ast.EnumStmt, state *VerState) ExecRet {
-	lenOverStmtName := ast.NewFcFn(ast.AtomObj(glob.KeywordLen), []ast.Obj{stmt.CurSet})
+	lenOverStmtName := ast.NewFnObj(ast.AtomObj(glob.KeywordLen), []ast.Obj{stmt.CurSet})
 	equalFact := ast.EqualFact(lenOverStmtName, ast.AtomObj("0"))
 	verRet := ver.VerFactStmt(equalFact, state)
 	if verRet.IsErr() || verRet.IsUnknown() {
