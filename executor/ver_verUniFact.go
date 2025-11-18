@@ -36,9 +36,9 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) ExecR
 
 	// know cond facts
 	for _, condFact := range newStmtPtr.DomFacts {
-		err := ver.Env.NewFact(condFact)
-		if err != nil {
-			return NewExecErr(err.Error())
+		ret := ver.Env.NewFact(condFact)
+		if ret.IsErr() {
+			return NewExecErr(ret.String())
 		}
 	}
 
@@ -61,9 +61,9 @@ func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerSta
 		}
 
 		// if true, store it
-		err := ver.Env.NewFact(thenFact)
-		if err != nil {
-			return NewExecErr(err.Error())
+		ret := ver.Env.NewFact(thenFact)
+		if ret.IsErr() {
+			return NewExecErr(ret.String())
 		}
 	}
 
@@ -82,9 +82,9 @@ func (ver *Verifier) PreprocessUniFactParams_DeclareParams(oldStmt *ast.UniFactS
 
 	// declare
 	stmtForDef := ast.NewDefLetStmt(newStmtPtr.Params, newStmtPtr.ParamSets, []ast.FactStmt{}, oldStmt.Line)
-	err = ver.Env.DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmtForDef)
-	if err != nil {
-		return nil, err
+	ret := ver.Env.DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmtForDef)
+	if ret.IsErr() {
+		return nil, fmt.Errorf(ret.String())
 	}
 
 	// 查看param set 是否已经声明

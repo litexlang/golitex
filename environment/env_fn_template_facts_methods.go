@@ -16,10 +16,11 @@ package litex_env
 
 import (
 	ast "golitex/ast"
+	glob "golitex/glob"
 )
 
 // func (e *Env) InsertFnInFnTT(fc ast.Fc, asFcFn *ast.FcFn, fnTNoName *ast.FnTStruct) error {
-func (e *Env) InsertFnInFnTT(fc ast.Obj, fnTNoName *ast.FnTStruct) error {
+func (e *Env) InsertFnInFnTT(fc ast.Obj, fnTNoName *ast.FnTStruct) glob.GlobRet {
 	var fnTFcIsIn = fnTNoName
 	var ok bool
 
@@ -39,14 +40,14 @@ func (e *Env) InsertFnInFnTT(fc ast.Obj, fnTNoName *ast.FnTStruct) error {
 				AsFnTStruct: fnTFcIsIn,
 			},
 		}
-		return nil
+		return glob.TrueRet("")
 	} else {
 		fnDefs = append(fnDefs, FnInFnTMemItem{
 			// AsFcFn:      asFcFn,
 			AsFnTStruct: fnTFcIsIn,
 		})
 		memory[fc.String()] = fnDefs
-		return nil
+		return glob.TrueRet("")
 	}
 }
 

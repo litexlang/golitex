@@ -152,9 +152,9 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) ExecRet {
 	if verRet.IsErr() {
 		return verRet.AddMsg(fmt.Sprintf("%s\n", stmt.String()))
 	} else if verRet.IsTrue() {
-		err := exec.Env.NewFact(stmt)
-		if err != nil {
-			return NewExecErr(err.Error()).AddMsg(fmt.Sprintf("%s\n", stmt.String()))
+		ret := exec.Env.NewFact(stmt)
+		if ret.IsErr() {
+			return NewExecErr(ret.String()).AddMsg(fmt.Sprintf("%s\n", stmt.String()))
 		}
 		if verRet.(*ExecTrue).TrueEqualValues != nil {
 			if verRet.(*ExecTrue).TrueEqualValues[0] != nil {
@@ -178,9 +178,9 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) ExecRet {
 	for _, fact := range stmt.Facts {
 		switch fact := fact.(type) {
 		case ast.FactStmt:
-			err := exec.Env.NewFactWithDeclarationCheck(fact)
-			if err != nil {
-				return NewExecErr(err.Error()).AddMsg(fmt.Sprintf("%s\n", stmt.String()))
+			ret := exec.Env.NewFactWithDeclarationCheck(fact)
+			if ret.IsErr() {
+				return NewExecErr(ret.String()).AddMsg(fmt.Sprintf("%s\n", stmt.String()))
 			}
 
 		case *ast.KnowPropStmt:
@@ -197,9 +197,9 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) ExecRet {
 }
 
 func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool) ExecRet {
-	err := exec.Env.NewDefProp_InsideAtomsDeclared(stmt)
-	if err != nil {
-		return NewExecErr(err.Error())
+	ret := exec.Env.NewDefProp_InsideAtomsDeclared(stmt)
+	if ret.IsErr() {
+		return NewExecErr(ret.String())
 	}
 
 	paramMap := make(map[string]struct{})
@@ -240,14 +240,14 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool
 			return NewExecErr(err.Error())
 		}
 
-		err = exec.Env.NewFact(propToIff)
-		if err != nil {
-			return NewExecErr(err.Error())
+		ret = exec.Env.NewFact(propToIff)
+		if ret.IsErr() {
+			return NewExecErr(ret.String())
 		}
 
-		err = exec.Env.NewFact(iffToProp)
-		if err != nil {
-			return NewExecErr(err.Error())
+		ret = exec.Env.NewFact(iffToProp)
+		if ret.IsErr() {
+			return NewExecErr(ret.String())
 		}
 	}
 	execRet := NewExecTrue("")
@@ -256,9 +256,9 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool
 }
 
 func (exec *Executor) defLetStmt(stmt *ast.DefLetStmt) ExecRet {
-	err := exec.Env.DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmt)
-	if err != nil {
-		return NewExecErr(err.Error())
+	ret := exec.Env.DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmt)
+	if ret.IsErr() {
+		return NewExecErr(ret.String())
 	}
 	return NewExecTrue(stmt.String())
 }
@@ -269,9 +269,9 @@ func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) ExecRet {
 	// 	defer exec.newMsg(fmt.Sprintf("%s\n", stmt))
 	// }
 
-	err := exec.Env.NewDefExistProp_InsideAtomsDeclared(stmt)
-	if err != nil {
-		return NewExecErr(err.Error())
+	ret := exec.Env.NewDefExistProp_InsideAtomsDeclared(stmt)
+	if ret.IsErr() {
+		return NewExecErr(ret.String())
 	}
 	return NewExecTrue("")
 }
@@ -327,9 +327,9 @@ func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEach
 
 	caseStmt := stmt.OrFact.Facts[index]
 
-	err := exec.Env.NewFact(caseStmt)
-	if err != nil {
-		return NewExecErr(""), err
+	ret := exec.Env.NewFact(caseStmt)
+	if ret.IsErr() {
+		return NewExecErr(ret.String()), fmt.Errorf(ret.String())
 	}
 
 	execState := exec.execStmtsAtCurEnv(stmt.Proofs[index])
@@ -382,9 +382,9 @@ func (exec *Executor) execProofBlockForCaseByCase(index int, stmt *ast.ProveCase
 
 	caseStmt := stmt.CaseFacts[index]
 
-	err := exec.Env.NewFact(caseStmt)
-	if err != nil {
-		return NewExecErr(""), err
+	ret := exec.Env.NewFact(caseStmt)
+	if ret.IsErr() {
+		return NewExecErr(ret.String()), fmt.Errorf(ret.String())
 	}
 
 	execState := exec.execStmtsAtCurEnv(stmt.Proofs[index])
@@ -421,9 +421,9 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) ExecRet {
 		if err != nil {
 			return NewExecErr(err.Error())
 		}
-		err = exec.Env.NewFact(iffToProp)
-		if err != nil {
-			return NewExecErr(err.Error())
+		ret := exec.Env.NewFact(iffToProp)
+		if ret.IsErr() {
+			return NewExecErr(ret.String())
 		}
 	}
 
@@ -434,15 +434,15 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) ExecRet {
 
 	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(stmt.Prop.DefHeader.Name), paramsAsFc, stmt.Line)}, stmt.Prop.ThenFacts, stmt.Line)
 
-	err := exec.Env.NewFact(uniFact)
-	if err != nil {
-		return NewExecErr(err.Error())
+	ret := exec.Env.NewFact(uniFact)
+	if ret.IsErr() {
+		return NewExecErr(ret.String())
 	}
 
 	uniFact2 := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFacts, stmt.Prop.ThenFacts, stmt.Line)
-	err = exec.Env.NewFact(uniFact2)
-	if err != nil {
-		return NewExecErr(err.Error())
+	ret = exec.Env.NewFact(uniFact2)
+	if ret.IsErr() {
+		return NewExecErr(ret.String())
 	}
 
 	return NewExecTrue(fmt.Sprintf("%s\n", stmt.String()))
@@ -461,17 +461,17 @@ func (exec *Executor) proveStmt(stmt *ast.ProveStmt) ExecRet {
 }
 
 func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) ExecRet {
-	err := exec.Env.IsValidIdentifierAvailable(stmt.Name)
-	if err != nil {
-		return NewExecErr(err.Error())
+	ret := exec.Env.IsValidIdentifierAvailable(stmt.Name)
+	if ret.IsErr() {
+		return NewExecErr(ret.String())
 	}
 
 	// 在 objMem 里记录一下
 	exec.Env.ObjDefMem[stmt.Name] = nil
 
-	err = exec.Env.StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(ast.AtomObj(stmt.Name), nil, stmt.FnTemplate)
-	if err != nil {
-		return NewExecErr(err.Error())
+	ret = exec.Env.StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(ast.AtomObj(stmt.Name), nil, stmt.FnTemplate)
+	if ret.IsErr() {
+		return NewExecErr(ret.String())
 	}
 
 	derivedFact, err := stmt.FnTemplate.DeriveUniFact_WithGivenFn(ast.AtomObj(stmt.Name))
@@ -479,9 +479,9 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) ExecRet {
 		return NewExecErr(err.Error())
 	}
 
-	err = exec.Env.NewFact(derivedFact)
-	if err != nil {
-		return NewExecErr(err.Error())
+	ret = exec.Env.NewFact(derivedFact)
+	if ret.IsErr() {
+		return NewExecErr(ret.String())
 	}
 
 	return NewExecTrue(fmt.Sprintf("%s\n", stmt.String()))
@@ -498,9 +498,9 @@ func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) ExecRet {
 	}
 
 	// know uniFact
-	err = exec.Env.Parent.NewFact(stmt.Fact)
-	if err != nil {
-		return NewExecErr(err.Error())
+	ret := exec.Env.Parent.NewFact(stmt.Fact)
+	if ret.IsErr() {
+		return NewExecErr(ret.String())
 	}
 
 	return NewExecTrue("")
@@ -532,9 +532,9 @@ func (exec *Executor) haveSetDefinedByReplacementStmt(stmt *ast.HaveSetDefinedBy
 		return execState
 	}
 
-	err := exec.Env.SetEqualToSetDefinedByReplacement_PostProcess(ast.AtomObj(stmt.Name), setDefinedByReplacement)
-	if err != nil {
-		return NewExecErr(err.Error())
+	ret := exec.Env.SetEqualToSetDefinedByReplacement_PostProcess(ast.AtomObj(stmt.Name), setDefinedByReplacement)
+	if ret.IsErr() {
+		return NewExecErr(ret.String())
 	}
 
 	return NewExecTrue("")
@@ -566,9 +566,9 @@ func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) ExecRet {
 	thenFacts := []ast.FactStmt{stmt.ExistProp.ToSpecFact()}
 	knownUniFact := ast.NewUniFact(stmt.ExistProp.DefBody.DefHeader.Params, stmt.ExistProp.DefBody.DefHeader.ParamSets, stmt.ExistProp.DefBody.IffFacts, thenFacts, stmt.Line)
 
-	err := exec.Env.NewFact(knownUniFact)
-	if err != nil {
-		return NewExecErr(err.Error())
+	ret := exec.Env.NewFact(knownUniFact)
+	if ret.IsErr() {
+		return NewExecErr(ret.String())
 	}
 
 	return NewExecTrue("").AddMsg(fmt.Sprintf("%s\nis true by definition", knownUniFact))
@@ -579,9 +579,9 @@ func (exec *Executor) DefFnTemplateStmt(stmt *ast.FnTemplateDefStmt) ExecRet {
 	// 	defer exec.newMsg(fmt.Sprintf("%s\n", stmt))
 	// }
 
-	err := exec.Env.ExecDefFnTemplate(stmt)
-	if err != nil {
-		return NewExecErr(err.Error())
+	ret := exec.Env.ExecDefFnTemplate(stmt)
+	if ret.IsErr() {
+		return NewExecErr(ret.String())
 	}
 
 	return NewExecTrue("")
@@ -621,9 +621,9 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ExecRet {
 		}
 
 		stmtForDef := ast.NewDefLetStmt([]string{stmt.ObjNames[i]}, []ast.Obj{ast.AtomObj(glob.KeywordObj)}, []ast.FactStmt{}, stmt.Line)
-		err := exec.Env.DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmtForDef)
-		if err != nil {
-			return NewExecErr(err.Error())
+		ret := exec.Env.DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmtForDef)
+		if ret.IsErr() {
+			return NewExecErr(ret.String())
 		}
 		execState := NewExecTrue(stmtForDef.String())
 		if execState.IsNotTrue() {
@@ -635,9 +635,9 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ExecRet {
 			return NewExecErr(fmt.Sprintf("%s is not declared", stmt.ObjEqualTos[i]))
 		}
 		// new fact: obj = obj
-		err = exec.Env.NewFact(ast.NewEqualFact(ast.AtomObj(stmt.ObjNames[i]), stmt.ObjEqualTos[i]))
-		if err != nil {
-			return NewExecErr(err.Error())
+		ret = exec.Env.NewFact(ast.NewEqualFact(ast.AtomObj(stmt.ObjNames[i]), stmt.ObjEqualTos[i]))
+		if ret.IsErr() {
+			return NewExecErr(ret.String())
 		}
 	}
 
@@ -904,19 +904,19 @@ func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitiveP
 		return fmt.Errorf("dom facts are not allowed in %s", glob.KeywordProveIsTransitiveProp)
 	}
 
-	err := exec.Env.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(stmt.Prop), []ast.Obj{ast.AtomObj(stmt.Params[0]), ast.AtomObj(stmt.Params[1])}, stmt.Line))
-	if err != nil {
-		return err
+	ret := exec.Env.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(stmt.Prop), []ast.Obj{ast.AtomObj(stmt.Params[0]), ast.AtomObj(stmt.Params[1])}, stmt.Line))
+	if ret.IsErr() {
+		return fmt.Errorf(ret.String())
 	}
 
-	err = exec.Env.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(stmt.Prop), []ast.Obj{ast.AtomObj(stmt.Params[1]), ast.AtomObj(stmt.Params[2])}, stmt.Line))
-	if err != nil {
-		return err
+	ret = exec.Env.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(stmt.Prop), []ast.Obj{ast.AtomObj(stmt.Params[1]), ast.AtomObj(stmt.Params[2])}, stmt.Line))
+	if ret.IsErr() {
+		return fmt.Errorf(ret.String())
 	}
 
 	for _, proof := range stmt.Proofs {
 		execState := exec.Stmt(proof)
-		if notOkExec(execState, err) {
+		if execState.IsNotTrue() {
 			return fmt.Errorf(execState.String())
 		}
 	}
@@ -943,9 +943,9 @@ func (exec *Executor) evalStmt(stmt *ast.EvalStmt) ExecRet {
 	if execRet.IsNotTrue() {
 		return execRet
 	}
-	err := exec.Env.NewFact(ast.NewEqualFact(stmt.FcsToEval, value))
-	if err != nil {
-		return NewExecErrWithErr(err)
+	ret := exec.Env.NewFact(ast.NewEqualFact(stmt.FcsToEval, value))
+	if ret.IsErr() {
+		return NewExecErr(ret.String())
 	}
 	trueEvalRet.Inherit(execRet)
 
@@ -1081,9 +1081,9 @@ func (exec *Executor) checkCaseReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCa
 
 	// 假设case的条件成立
 	caseFact := stmt.CaseByCaseFacts[caseIndex]
-	err := exec.Env.NewFact(caseFact)
-	if err != nil {
-		return NewExecErr(""), fmt.Errorf("case %d: failed to add case fact: %s", caseIndex, err.Error())
+	ret := exec.Env.NewFact(caseFact)
+	if ret.IsErr() {
+		return NewExecErr(ret.String()), fmt.Errorf("case %d: failed to add case fact: %s", caseIndex, ret.String())
 	}
 
 	// 在case成立的条件下，验证返回值在retSet中
@@ -1158,9 +1158,9 @@ func (exec *Executor) checkCaseNoOverlapWithOthers(stmt *ast.HaveFnEqualCaseByCa
 
 	// 假设当前 case 的条件成立
 	caseFact := stmt.CaseByCaseFacts[caseIndex]
-	err := exec.Env.NewFact(caseFact)
-	if err != nil {
-		return NewExecErr(""), fmt.Errorf("case %d: failed to add case fact: %s", caseIndex, err.Error())
+	ret := exec.Env.NewFact(caseFact)
+	if ret.IsErr() {
+		return NewExecErr(ret.String()), fmt.Errorf("case %d: failed to add case fact: %s", caseIndex, ret.String())
 	}
 
 	// 验证其他所有 case 都不成立
