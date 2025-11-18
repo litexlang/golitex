@@ -20,59 +20,59 @@ import (
 	"strings"
 )
 
-type FcEnum uint8
+type ObjEnum uint8
 
 const (
-	FcAtomEnum FcEnum = 0
-	FcFnEnum   FcEnum = 1
+	ObjAtomEnum ObjEnum = 0
+	ObjFnEnum   ObjEnum = 1
 )
 
-func CmpFcType(left, right ast.Obj) (int, FcEnum, error) {
-	var knownEnum FcEnum
+func CmpObjType(left, right ast.Obj) (int, ObjEnum, error) {
+	var knownEnum ObjEnum
 	switch left.(type) {
 	case ast.AtomObj:
-		knownEnum = FcAtomEnum
+		knownEnum = ObjAtomEnum
 	case *ast.FnObj:
-		knownEnum = FcFnEnum
+		knownEnum = ObjFnEnum
 	default:
-		return 0, FcAtomEnum, fmt.Errorf("unknown Fc type: %T", left)
+		return 0, ObjAtomEnum, fmt.Errorf("unknown Obj type: %T", left)
 	}
 
-	var givenEnum FcEnum
+	var givenEnum ObjEnum
 	switch right.(type) {
 	case ast.AtomObj:
-		givenEnum = FcAtomEnum
+		givenEnum = ObjAtomEnum
 	case *ast.FnObj:
-		givenEnum = FcFnEnum
+		givenEnum = ObjFnEnum
 	default:
-		return 0, FcAtomEnum, fmt.Errorf("unknown Fc type: %T", right)
+		return 0, ObjAtomEnum, fmt.Errorf("unknown Obj type: %T", right)
 	}
 
 	return int(knownEnum - givenEnum), knownEnum, nil
 }
 
 // 注：像1+1=2这种字面量的比较，我在这里不比。我是比完完全全一样的
-func cmpFcLit(left, right ast.Obj) (int, error) {
-	typeComp, fcEnum, err := CmpFcType(left, right)
+func cmpObjLit(left, right ast.Obj) (int, error) {
+	typeComp, objEnum, err := CmpObjType(left, right)
 	if typeComp != 0 || err != nil {
 		return typeComp, err
 	}
 
-	if fcEnum == FcAtomEnum {
-		return cmpFcAtomLit(left.(ast.AtomObj), right.(ast.AtomObj))
-	} else if fcEnum == FcFnEnum {
-		return cmpFcFnLit(left.(*ast.FnObj), right.(*ast.FnObj))
+	if objEnum == ObjAtomEnum {
+		return cmpObjAtomLit(left.(ast.AtomObj), right.(ast.AtomObj))
+	} else if objEnum == ObjFnEnum {
+		return cmpObjFnLit(left.(*ast.FnObj), right.(*ast.FnObj))
 	}
 
 	return -1, fmt.Errorf("")
 }
 
-func cmpFcAtomLit(left, right ast.AtomObj) (int, error) {
+func cmpObjAtomLit(left, right ast.AtomObj) (int, error) {
 	return strings.Compare(string(left), string(right)), nil // 直接对两个string相减得了
 }
 
-func cmpFcFnLit(left, right *ast.FnObj) (int, error) {
-	if comp, err := cmpFcLit(left.FnHead, right.FnHead); comp != 0 || err != nil {
+func cmpObjFnLit(left, right *ast.FnObj) (int, error) {
+	if comp, err := cmpObjLit(left.FnHead, right.FnHead); comp != 0 || err != nil {
 		return comp, err
 	}
 
@@ -81,7 +81,7 @@ func cmpFcFnLit(left, right *ast.FnObj) (int, error) {
 	}
 
 	for i := 0; i < len(left.Params); i++ {
-		if comp, err := cmpFcLit(left.Params[i], right.Params[i]); comp != 0 || err != nil {
+		if comp, err := cmpObjLit(left.Params[i], right.Params[i]); comp != 0 || err != nil {
 			return comp, err
 		}
 	}

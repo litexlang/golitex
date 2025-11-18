@@ -167,7 +167,7 @@ func IsFnSet(fc Obj) bool {
 		return false
 	}
 
-	return IsFcAtomAndEqualToStr(fcHeadAsFcFn.FnHead, glob.KeywordFn)
+	return IsAtomObjAndEqualToStr(fcHeadAsFcFn.FnHead, glob.KeywordFn)
 }
 
 func (stmt *SpecFactStmt) ReverseSpecFactParamsOrder() (*SpecFactStmt, error) {
@@ -219,7 +219,7 @@ func Get_FnTemplate_InFcForm_ParamSetsAndRetSet(fc Obj) ([]Obj, Obj, bool) {
 		return nil, nil, false
 	}
 
-	if !IsFcAtomAndEqualToStr(fcAsFcFnHeadAsFcFn.FnHead, glob.KeywordFn) {
+	if !IsAtomObjAndEqualToStr(fcAsFcFnHeadAsFcFn.FnHead, glob.KeywordFn) {
 		return nil, nil, false
 	}
 
@@ -279,7 +279,7 @@ func isFcWithFcFnHeadWithName(fc Obj, name string) bool {
 		return false
 	}
 
-	return IsFcAtomAndEqualToStr(fcAsFcFnHeadAsFcFn.FnHead, name)
+	return IsAtomObjAndEqualToStr(fcAsFcFnHeadAsFcFn.FnHead, name)
 }
 
 func IsFnTemplate_FcFn(fcFn *FnObj) bool {
@@ -349,7 +349,7 @@ func (stmt *HaveSetFnStmt) ToIntensionalSetStmt() *IntensionalSetStmt {
 	}
 
 	fnName := AtomObj(stmt.DefHeader.Name)
-	curSet := NewFcFn(fnName, params)
+	curSet := NewFnObj(fnName, params)
 	intensionalSetStmt := NewIntensionalSetStmt(curSet, stmt.Param, stmt.ParentSet, stmt.Proofs, stmt.Line)
 
 	return intensionalSetStmt

@@ -402,21 +402,21 @@ func (env *Env) StoreTrueEqualValues(key, value ast.Obj) {
 	env.SymbolSimplifiedValueMem[key.String()] = value
 }
 
-func simplifyNumExprFc(fc ast.Obj) ast.Obj {
-	simplifiedNumExprFc := cmp.IsNumExprFcThenSimplify(fc)
-	return simplifiedNumExprFc
+func simplifyNumExprObj(obj ast.Obj) ast.Obj {
+	simplifiedNumExprObj := cmp.IsNumExprObjThenSimplify(obj)
+	return simplifiedNumExprObj
 }
 
 func (env *Env) storeSymbolSimplifiedValue(left, right ast.Obj) error {
 	_, newLeft := env.ReplaceSymbolWithValue(left)
-	if cmp.IsNumLitFc(newLeft) {
-		simplifiedNewLeft := simplifyNumExprFc(newLeft)
+	if cmp.IsNumLitObj(newLeft) {
+		simplifiedNewLeft := simplifyNumExprObj(newLeft)
 		env.StoreTrueEqualValues(right, simplifiedNewLeft)
 	}
 
 	_, newRight := env.ReplaceSymbolWithValue(right)
-	if cmp.IsNumLitFc(newRight) {
-		simplifiedNewRight := simplifyNumExprFc(newRight)
+	if cmp.IsNumLitObj(newRight) {
+		simplifiedNewRight := simplifyNumExprObj(newRight)
 		env.StoreTrueEqualValues(left, simplifiedNewRight)
 	}
 
@@ -521,7 +521,7 @@ func (env *Env) newEnumFact(stmt *ast.EnumStmt) error {
 	lengthOfSet := strconv.Itoa(len(stmt.Items))
 	lengthOfSetAsFcAtom := ast.AtomObj(lengthOfSet)
 
-	lenFact := ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeySymbolEqual), []ast.Obj{ast.NewFcFn(ast.AtomObj(glob.KeywordLen), []ast.Obj{stmt.CurSet}), lengthOfSetAsFcAtom}, stmt.Line)
+	lenFact := ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeySymbolEqual), []ast.Obj{ast.NewFnObj(ast.AtomObj(glob.KeywordLen), []ast.Obj{stmt.CurSet}), lengthOfSetAsFcAtom}, stmt.Line)
 	err = env.NewFact(lenFact)
 	if err != nil {
 		return err

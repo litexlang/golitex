@@ -20,7 +20,7 @@ import (
 )
 
 func (env *Env) ReplaceSymbolWithValue(fc ast.Obj) (bool, ast.Obj) {
-	if cmp.IsNumLitFc(fc) {
+	if cmp.IsNumLitObj(fc) {
 		return false, fc
 	}
 
@@ -46,7 +46,7 @@ func (env *Env) replaceFcFnWithValue(fc *ast.FnObj) (bool, ast.Obj) {
 
 		replaced = replaced || newReplaced
 	}
-	return replaced, ast.NewFcFn(fc.FnHead, newParams)
+	return replaced, ast.NewFnObj(fc.FnHead, newParams)
 }
 
 func (env *Env) replaceFcAtomWithValue(fc ast.AtomObj) (bool, ast.Obj) {

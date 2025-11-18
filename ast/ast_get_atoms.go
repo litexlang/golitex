@@ -19,18 +19,18 @@ import "slices"
 func (stmt *SpecFactStmt) GetAtoms() []AtomObj {
 	atoms := []AtomObj{stmt.PropName}
 	for _, param := range stmt.Params {
-		atoms = append(atoms, GetAtomsInFc(param)...)
+		atoms = append(atoms, GetAtomsInObj(param)...)
 	}
 	return atoms
 }
 
 func (stmt *EnumStmt) GetAtoms() []AtomObj {
-	atomsOfName := GetAtomsInFc(stmt.CurSet)
+	atomsOfName := GetAtomsInObj(stmt.CurSet)
 
 	atoms := []AtomObj{}
 	atoms = append(atoms, atomsOfName...)
 	for _, value := range stmt.Items {
-		atoms = append(atoms, GetAtomsInFc(value)...)
+		atoms = append(atoms, GetAtomsInObj(value)...)
 	}
 	return atoms
 }
@@ -38,7 +38,7 @@ func (stmt *EnumStmt) GetAtoms() []AtomObj {
 func (stmt *UniFactStmt) GetAtoms() []AtomObj {
 	atoms := []AtomObj{}
 	for _, param := range stmt.ParamSets {
-		atoms = append(atoms, GetAtomsInFc(param)...)
+		atoms = append(atoms, GetAtomsInObj(param)...)
 	}
 	for _, fact := range stmt.DomFacts {
 		atoms = append(atoms, fact.GetAtoms()...)
@@ -78,8 +78,8 @@ func (stmt *OrStmt) GetAtoms() []AtomObj {
 
 func (stmt *IntensionalSetStmt) GetAtoms() []AtomObj {
 	atoms := []AtomObj{}
-	atoms = append(atoms, GetAtomsInFc(stmt.CurSet)...)
-	atoms = append(atoms, GetAtomsInFc(stmt.ParentSet)...)
+	atoms = append(atoms, GetAtomsInObj(stmt.CurSet)...)
+	atoms = append(atoms, GetAtomsInObj(stmt.ParentSet)...)
 	for _, proof := range stmt.Facts {
 		atoms = append(atoms, proof.GetAtoms()...)
 	}
@@ -89,7 +89,7 @@ func (stmt *IntensionalSetStmt) GetAtoms() []AtomObj {
 func (stmt *EqualsFactStmt) GetAtoms() []AtomObj {
 	atoms := []AtomObj{}
 	for _, param := range stmt.Params {
-		atoms = append(atoms, GetAtomsInFc(param)...)
+		atoms = append(atoms, GetAtomsInObj(param)...)
 	}
 	return atoms
 }

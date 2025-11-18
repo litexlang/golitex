@@ -38,7 +38,7 @@ func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state *Ver
 		return NewExecErr(fmt.Sprintf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params)))
 	}
 
-	leftNumLitExpr, ok, err := ast.MakeFcIntoNumLitExpr(stmt.Params[0])
+	leftNumLitExpr, ok, err := ast.MakeObjIntoNumLitExpr(stmt.Params[0])
 	if err != nil {
 		return NewExecErr(err.Error())
 	}
@@ -46,7 +46,7 @@ func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state *Ver
 		return NewExecUnknown("")
 	}
 
-	rightNumLitExpr, ok, err := ast.MakeFcIntoNumLitExpr(stmt.Params[1])
+	rightNumLitExpr, ok, err := ast.MakeObjIntoNumLitExpr(stmt.Params[1])
 	if err != nil {
 		return NewExecErr(err.Error())
 	}
@@ -81,12 +81,12 @@ func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactSt
 		return NewExecErr(fmt.Sprintf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params)))
 	}
 
-	leftFc, ok, err := ast.MakeFcIntoNumLitExpr(stmt.Params[0])
+	leftFc, ok, err := ast.MakeObjIntoNumLitExpr(stmt.Params[0])
 	if err != nil {
 		return NewExecErr(err.Error())
 	}
 	if ok {
-		if ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordReal) {
+		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordReal) {
 			isSuccess = glob.IsRealNumLitExpr(leftFc)
 			if isSuccess {
 				return NewExecTrue("")
@@ -95,7 +95,7 @@ func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactSt
 			}
 		}
 
-		if ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordNatural) {
+		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordNatural) {
 			isSuccess = glob.IsNatNumLitExpr(leftFc)
 			if isSuccess {
 				return NewExecTrue("")
@@ -104,7 +104,7 @@ func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactSt
 			}
 		}
 
-		if ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordInteger) {
+		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordInteger) {
 			isSuccess = glob.IsIntegerNumLitExpr(leftFc)
 			if isSuccess {
 				return NewExecTrue("")
@@ -113,7 +113,7 @@ func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactSt
 			}
 		}
 
-		if ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordRational) {
+		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordRational) {
 			isSuccess = glob.IsRationalNumLitExpr(leftFc)
 			if isSuccess {
 				return NewExecTrue("")
@@ -122,7 +122,7 @@ func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactSt
 			}
 		}
 
-		if ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordComplex) {
+		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordComplex) {
 			isSuccess = glob.IsComplexNumLitExpr(leftFc)
 			if isSuccess {
 				return NewExecTrue("")
@@ -131,7 +131,7 @@ func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactSt
 			}
 		}
 
-		if ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordNPos) {
+		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordNPos) {
 			isSuccess = glob.IsNPosNumLitExpr(leftFc)
 			if isSuccess {
 				return NewExecTrue("")

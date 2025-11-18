@@ -54,7 +54,7 @@ func (e *Env) isFcAtomDeclaredAtCurEnv(fcAtomName ast.AtomObj) bool {
 }
 
 func (e *Env) isAtomObj(atom ast.AtomObj) bool {
-	_, ok := ast.IsNumLitFcAtom(atom)
+	_, ok := ast.IsNumLitAtomObj(atom)
 	if ok {
 		return true
 	}
@@ -77,7 +77,7 @@ func (e *Env) AtomsAreObj(atomSlice []ast.AtomObj) bool {
 }
 
 func (e *Env) AreAtomsInFcAreDeclared(fc ast.Obj, extraAtomNames map[string]struct{}) bool {
-	atoms := ast.GetAtomsInFc(fc)
+	atoms := ast.GetAtomsInObj(fc)
 	return e.AreAtomsDeclared(atoms, extraAtomNames)
 }
 
@@ -152,7 +152,7 @@ func (e *Env) IsAtomDeclared(atom ast.AtomObj, extraAtomNames map[string]struct{
 	}
 
 	// 如果是数字，那就声明了
-	if _, ok := ast.IsNumLitFcAtom(atom); ok {
+	if _, ok := ast.IsNumLitAtomObj(atom); ok {
 		return true
 	}
 

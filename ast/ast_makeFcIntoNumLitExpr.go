@@ -18,29 +18,29 @@ import (
 	glob "golitex/glob"
 )
 
-func MakeFcIntoNumLitExpr(fc Obj) (*glob.NumLitExpr, bool, error) {
-	// fc is fcAtom
-	asStr, ok := IsNumLitFcAtom(fc)
+func MakeObjIntoNumLitExpr(obj Obj) (*glob.NumLitExpr, bool, error) {
+	// obj is atomObj
+	asStr, ok := IsNumLitAtomObj(obj)
 	if ok {
 		return &glob.NumLitExpr{IsPositive: true, Left: nil, OptOrNumber: asStr, Right: nil}, true, nil
 	}
 
-	// fc is fcFn
+	// obj is fnObj
 
-	asFcFn, ok := fc.(*FnObj)
+	asObjFn, ok := obj.(*FnObj)
 	if !ok {
 		// is atom
 		return nil, false, nil
 	}
 
-	if IsFcBuiltinUnaryFn(*asFcFn) {
-		ptr, ok := asFcFn.FnHead.(AtomObj)
+	if IsObjBuiltinUnaryFn(*asObjFn) {
+		ptr, ok := asObjFn.FnHead.(AtomObj)
 		if !ok {
 			return nil, false, nil
 		}
 
 		if string(ptr) == glob.KeySymbolMinus {
-			left, ok, err := MakeFcIntoNumLitExpr(asFcFn.Params[0])
+			left, ok, err := MakeObjIntoNumLitExpr(asObjFn.Params[0])
 			if err != nil {
 				return nil, false, err
 			}
@@ -52,15 +52,15 @@ func MakeFcIntoNumLitExpr(fc Obj) (*glob.NumLitExpr, bool, error) {
 		}
 	}
 
-	if !IsFcBuiltinInfixOpt(*asFcFn) {
+	if !IsObjBuiltinInfixOpt(*asObjFn) {
 		return nil, false, nil
 	}
 
-	if len(asFcFn.Params) != 2 {
+	if len(asObjFn.Params) != 2 {
 		return nil, false, nil
 	}
 
-	left, ok, err := MakeFcIntoNumLitExpr(asFcFn.Params[0])
+	left, ok, err := MakeObjIntoNumLitExpr(asObjFn.Params[0])
 
 	if err != nil {
 		return nil, false, err
@@ -69,7 +69,7 @@ func MakeFcIntoNumLitExpr(fc Obj) (*glob.NumLitExpr, bool, error) {
 		return nil, false, nil
 	}
 
-	right, ok, err := MakeFcIntoNumLitExpr(asFcFn.Params[1])
+	right, ok, err := MakeObjIntoNumLitExpr(asObjFn.Params[1])
 	if err != nil {
 		return nil, false, err
 	}
@@ -77,7 +77,7 @@ func MakeFcIntoNumLitExpr(fc Obj) (*glob.NumLitExpr, bool, error) {
 		return nil, false, nil
 	}
 
-	ptr, ok := asFcFn.FnHead.(AtomObj)
+	ptr, ok := asObjFn.FnHead.(AtomObj)
 	if !ok {
 		return nil, false, nil
 	}

@@ -30,13 +30,13 @@ func (ver *Verifier) verByReplaceFcInSpecFactWithValue(stmt *ast.SpecFactStmt, s
 
 		if verRet.IsTrue() {
 			values := []ast.Obj{}
-			if cmp.IsNumLitFc(newStmt.Params[0]) {
+			if cmp.IsNumLitObj(newStmt.Params[0]) {
 				values = append(values, newStmt.Params[0])
 			} else {
 				values = append(values, nil)
 			}
 
-			if cmp.IsNumLitFc(newStmt.Params[1]) {
+			if cmp.IsNumLitObj(newStmt.Params[1]) {
 				values = append(values, newStmt.Params[1])
 			} else {
 				values = append(values, nil)

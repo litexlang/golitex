@@ -186,7 +186,7 @@ func (exec *Executor) checkInFactInSet_SetIsNonEmpty(pureInFact *ast.SpecFactStm
 	}
 	if ok.IsTrue() {
 		// 如果 len > 0 那就是可以
-		lenOverStmtName := ast.NewFcFn(ast.AtomObj(glob.KeywordLen), []ast.Obj{pureInFact.Params[0]})
+		lenOverStmtName := ast.NewFnObj(ast.AtomObj(glob.KeywordLen), []ast.Obj{pureInFact.Params[0]})
 		largerThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeySymbolGreater), []ast.Obj{lenOverStmtName, ast.AtomObj("0")}, pureInFact.Line)
 		ok, err := exec.openANewEnvAndCheck(largerThanZeroFact, false)
 		if err != nil {
@@ -267,7 +267,7 @@ func (exec *Executor) haveExistByReplacementStmt(stmt *ast.HaveObjStStmt) (ExecR
 		return execState, fmt.Errorf(execState.String())
 	}
 
-	fourthObjInSetDefinedByReplacement := ast.NewInFactWithFc(stmt.Fact.Params[3], ast.NewFcFn(ast.AtomObj(glob.KeywordSetDefinedByReplacement), []ast.Obj{stmt.Fact.Params[0], stmt.Fact.Params[1], propName}))
+	fourthObjInSetDefinedByReplacement := ast.NewInFactWithFc(stmt.Fact.Params[3], ast.NewFnObj(ast.AtomObj(glob.KeywordSetDefinedByReplacement), []ast.Obj{stmt.Fact.Params[0], stmt.Fact.Params[1], propName}))
 	execState = exec.factStmt(fourthObjInSetDefinedByReplacement)
 	if execState.IsNotTrue() {
 		return execState, fmt.Errorf(execState.String())
