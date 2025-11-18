@@ -93,7 +93,9 @@ func RunImportDirStmtInExec(curExec *exe.Executor, importDirStmt *ast.ImportDirS
 		return glob.NewGlobTrue(fmt.Sprintf("package %s already imported. Now it has another name: %s", importDirStmt.Path, importDirStmt.AsPkgName))
 	}
 
-	mainFileContent, err := os.ReadFile(filepath.Join(importDirStmt.Path, glob.MainDotLit))
+	// Resolve package path: if not absolute, resolve from system root directory (~/litexlang)
+	resolvedPath := glob.ResolvePackagePath(importDirStmt.Path)
+	mainFileContent, err := os.ReadFile(filepath.Join(resolvedPath, glob.MainDotLit))
 	if err != nil {
 		return glob.NewGlobErr(err.Error())
 	}
