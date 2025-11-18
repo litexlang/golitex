@@ -28,7 +28,8 @@ func (ver *Verifier) todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt *ast.Sp
 func (ver *Verifier) processOkMsg(state *VerState, msg string, verifiedBy string, args ...any) ExecRet {
 	execRet := NewExecTrue(successVerString(msg, fmt.Sprintf(verifiedBy, args...)))
 	if state.WithMsg {
-		execRet = ver.successWithMsg(msg, fmt.Sprintf(verifiedBy, args...), execRet)
+		execRet.AddMsg(successVerString(msg, fmt.Sprintf(verifiedBy, args...)))
+		return execRet
 	}
 	return execRet
 }
@@ -36,7 +37,8 @@ func (ver *Verifier) processOkMsg(state *VerState, msg string, verifiedBy string
 // maybeAddSuccessMsg adds a success message to execRet if state.WithMsg is true
 func (ver *Verifier) maybeAddSuccessMsg(state *VerState, stmtStr, verifiedBy string, execRet ExecRet) ExecRet {
 	if state.WithMsg {
-		return ver.successWithMsg(stmtStr, verifiedBy, execRet)
+		execRet.AddMsg(successVerString(stmtStr, verifiedBy))
+		return execRet
 	}
 	return execRet
 }
