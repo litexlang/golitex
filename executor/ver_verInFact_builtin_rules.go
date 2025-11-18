@@ -312,7 +312,7 @@ func (ver *Verifier) nothingIsInEmptySet(stmt *ast.SpecFactStmt, state *VerState
 		return verRet
 	}
 
-	lenOverStmtName := ast.NewFnObj(ast.AtomObj(glob.KeywordLen), []ast.Obj{stmt.Params[1]})
+	lenOverStmtName := ast.NewFnObj(ast.AtomObj(glob.KeywordCount), []ast.Obj{stmt.Params[1]})
 	equalFact := ast.EqualFact(lenOverStmtName, ast.AtomObj("0"))
 	verRet = ver.VerFactStmt(equalFact, state)
 	return verRet
@@ -473,7 +473,7 @@ func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactS
 		return NewExecUnknown("")
 	}
 
-	if fcFn.HasHeadInSlice([]string{glob.KeywordLen, glob.KeySymbolPercent}) {
+	if fcFn.HasHeadInSlice([]string{glob.KeywordCount, glob.KeySymbolPercent}) {
 		if stmt.Params[1] == ast.AtomObj(glob.KeywordNatural) {
 			msg := fmt.Sprintf("return value of builtin function %s is in Natural", fcFn)
 			return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
