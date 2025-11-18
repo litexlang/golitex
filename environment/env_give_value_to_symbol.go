@@ -25,15 +25,15 @@ func (env *Env) ReplaceSymbolWithValue(fc ast.Obj) (bool, ast.Obj) {
 	}
 
 	switch asFc := fc.(type) {
-	case ast.FcAtom:
+	case ast.AtomObj:
 		return env.replaceFcAtomWithValue(asFc)
-	case *ast.FcFn:
+	case *ast.FnObj:
 		return env.replaceFcFnWithValue(asFc)
 	}
 	panic("")
 }
 
-func (env *Env) replaceFcFnWithValue(fc *ast.FcFn) (bool, ast.Obj) {
+func (env *Env) replaceFcFnWithValue(fc *ast.FnObj) (bool, ast.Obj) {
 	if symbolValue := env.GetSymbolSimplifiedValue(fc); symbolValue != nil {
 		return true, symbolValue
 	}
@@ -49,7 +49,7 @@ func (env *Env) replaceFcFnWithValue(fc *ast.FcFn) (bool, ast.Obj) {
 	return replaced, ast.NewFcFn(fc.FnHead, newParams)
 }
 
-func (env *Env) replaceFcAtomWithValue(fc ast.FcAtom) (bool, ast.Obj) {
+func (env *Env) replaceFcAtomWithValue(fc ast.AtomObj) (bool, ast.Obj) {
 	symbolValue := env.GetSymbolSimplifiedValue(fc)
 	if symbolValue == nil {
 		return false, fc

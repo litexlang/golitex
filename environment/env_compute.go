@@ -57,11 +57,11 @@ func (comp *computer) compute(toCompute ast.Obj) (ast.Obj, error) {
 }
 
 func (env *Env) IsFnWithDefinedAlgo(fc ast.Obj) bool {
-	fcAsFcFn, ok := fc.(*ast.FcFn)
+	fcAsFcFn, ok := fc.(*ast.FnObj)
 	if !ok {
 		return false
 	}
-	fcAsFcFnHeadAsAtom, ok := fcAsFcFn.FnHead.(ast.FcAtom)
+	fcAsFcFnHeadAsAtom, ok := fcAsFcFn.FnHead.(ast.AtomObj)
 	if !ok {
 		return false
 	}

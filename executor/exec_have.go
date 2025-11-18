@@ -86,7 +86,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 	uniMap := map[string]ast.Obj{}
 	ExistParamsAtoms := []ast.Obj{}
 	for i, param := range existPropDef.ExistParams {
-		paramAsAtom := ast.FcAtom(stmt.ObjNames[i])
+		paramAsAtom := ast.AtomObj(stmt.ObjNames[i])
 		uniMap[param] = paramAsAtom
 		ExistParamsAtoms = append(ExistParamsAtoms, paramAsAtom)
 	}
@@ -147,7 +147,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 	// 相关的 exist st 事实也成立
 	existStFactParams := ast.MakeExistFactParamsSlice(ExistParamsAtoms, stmt.Fact.Params)
 
-	newExistStFact := ast.NewSpecFactStmt(ast.TrueExist_St, ast.FcAtom(string(stmt.Fact.PropName)), existStFactParams, stmt.Line)
+	newExistStFact := ast.NewSpecFactStmt(ast.TrueExist_St, ast.AtomObj(string(stmt.Fact.PropName)), existStFactParams, stmt.Line)
 	err = exec.Env.NewFact(newExistStFact)
 	if err != nil {
 		return NewExecErr(err.Error())
@@ -163,7 +163,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 
 func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStmt) ExecRet {
 	for i := range len(stmt.Objs) {
-		existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordItemExistsIn), []ast.Obj{stmt.ObjSets[i]}, stmt.Line)
+		existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeywordItemExistsIn), []ast.Obj{stmt.ObjSets[i]}, stmt.Line)
 		haveStmt := ast.NewHaveStmt([]string{stmt.Objs[i]}, existInFact, stmt.Line)
 		execState := exec.haveObjStStmt(haveStmt, false)
 		if execState.IsNotTrue() {
@@ -179,15 +179,15 @@ func (exec *Executor) checkInFactInSet_SetIsNonEmpty(pureInFact *ast.SpecFactStm
 		return true, nil
 	}
 
-	isFiniteSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Obj{pureInFact.Params[0], ast.FcAtom(glob.KeywordFiniteSet)}, pureInFact.Line)
+	isFiniteSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeywordIn), []ast.Obj{pureInFact.Params[0], ast.AtomObj(glob.KeywordFiniteSet)}, pureInFact.Line)
 	ok, err := exec.openANewEnvAndCheck(isFiniteSetFact, false)
 	if err != nil {
 		return false, err
 	}
 	if ok.IsTrue() {
 		// 如果 len > 0 那就是可以
-		lenOverStmtName := ast.NewFcFn(ast.FcAtom(glob.KeywordLen), []ast.Obj{pureInFact.Params[0]})
-		largerThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolGreater), []ast.Obj{lenOverStmtName, ast.FcAtom("0")}, pureInFact.Line)
+		lenOverStmtName := ast.NewFcFn(ast.AtomObj(glob.KeywordLen), []ast.Obj{pureInFact.Params[0]})
+		largerThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeySymbolGreater), []ast.Obj{lenOverStmtName, ast.AtomObj("0")}, pureInFact.Line)
 		ok, err := exec.openANewEnvAndCheck(largerThanZeroFact, false)
 		if err != nil {
 			return false, err
@@ -207,7 +207,7 @@ func (exec *Executor) haveEnumSetStmt(stmt *ast.HaveEnumSetStmt) ExecRet {
 	// 验证里面的各个元素不相等
 	for i := range len(enumFact.Items) {
 		for j := i + 1; j < len(enumFact.Items); j++ {
-			notEqualFact := ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Obj{enumFact.Items[i], enumFact.Items[j]}, stmt.Line)
+			notEqualFact := ast.NewSpecFactStmt(ast.FalsePure, ast.AtomObj(glob.KeySymbolEqual), []ast.Obj{enumFact.Items[i], enumFact.Items[j]}, stmt.Line)
 			ok, err := exec.openANewEnvAndCheck(notEqualFact, false)
 			if err != nil {
 				return NewExecErr(err.Error())
@@ -219,7 +219,7 @@ func (exec *Executor) haveEnumSetStmt(stmt *ast.HaveEnumSetStmt) ExecRet {
 	}
 
 	// 定义这个新的集合
-	defObjStmt := ast.NewDefLetStmt([]string{enumFact.CurSet.String()}, []ast.Obj{ast.FcAtom(glob.KeywordSet)}, []ast.FactStmt{enumFact}, stmt.Line)
+	defObjStmt := ast.NewDefLetStmt([]string{enumFact.CurSet.String()}, []ast.Obj{ast.AtomObj(glob.KeywordSet)}, []ast.FactStmt{enumFact}, stmt.Line)
 	execState := exec.defLetStmt(defObjStmt)
 	if execState.IsNotTrue() {
 		return execState
@@ -233,15 +233,15 @@ func (exec *Executor) haveIntensionalSetStmt(stmt *ast.HaveIntensionalSetStmt) E
 	intensionalSetFact := stmt.Fact
 
 	// very important: check whether the parent set is a set
-	state := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Obj{intensionalSetFact.ParentSet, ast.FcAtom(glob.KeywordSet)}, stmt.Line))
+	state := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeywordIn), []ast.Obj{intensionalSetFact.ParentSet, ast.AtomObj(glob.KeywordSet)}, stmt.Line))
 	if state.IsErr() {
 		return NewExecErr(state.String())
 	}
 	if state.IsUnknown() {
-		return NewExecErr("parent set of intensional set must be a set, i.e. `" + intensionalSetFact.ParentSet.String() + " in " + ast.FcAtom(glob.KeywordSet).String() + "` is true, but `" + intensionalSetFact.ParentSet.String() + " in " + ast.FcAtom(glob.KeywordSet).String() + "` is not")
+		return NewExecErr("parent set of intensional set must be a set, i.e. `" + intensionalSetFact.ParentSet.String() + " in " + ast.AtomObj(glob.KeywordSet).String() + "` is true, but `" + intensionalSetFact.ParentSet.String() + " in " + ast.AtomObj(glob.KeywordSet).String() + "` is not")
 	}
 
-	defObjStmt := ast.NewDefLetStmt([]string{intensionalSetFact.CurSet.String()}, []ast.Obj{ast.FcAtom(glob.KeywordSet)}, []ast.FactStmt{intensionalSetFact}, stmt.Line)
+	defObjStmt := ast.NewDefLetStmt([]string{intensionalSetFact.CurSet.String()}, []ast.Obj{ast.AtomObj(glob.KeywordSet)}, []ast.FactStmt{intensionalSetFact}, stmt.Line)
 	execState := exec.defLetStmt(defObjStmt)
 	if execState.IsNotTrue() {
 		return execState
@@ -255,7 +255,7 @@ func (exec *Executor) haveExistByReplacementStmt(stmt *ast.HaveObjStStmt) (ExecR
 		return NewExecErr(""), fmt.Errorf("set defined by replacement must have 3 parameters, but %s has %d", stmt.Fact.String(), len(stmt.Fact.Params))
 	}
 
-	propName, ok := stmt.Fact.Params[2].(ast.FcAtom)
+	propName, ok := stmt.Fact.Params[2].(ast.AtomObj)
 	if !ok {
 		return NewExecErr(""), fmt.Errorf("third parameter of set defined by replacement must be a prop name, but %s is not", stmt.Fact.String())
 	}
@@ -267,13 +267,13 @@ func (exec *Executor) haveExistByReplacementStmt(stmt *ast.HaveObjStStmt) (ExecR
 		return execState, fmt.Errorf(execState.String())
 	}
 
-	fourthObjInSetDefinedByReplacement := ast.NewInFactWithFc(stmt.Fact.Params[3], ast.NewFcFn(ast.FcAtom(glob.KeywordSetDefinedByReplacement), []ast.Obj{stmt.Fact.Params[0], stmt.Fact.Params[1], propName}))
+	fourthObjInSetDefinedByReplacement := ast.NewInFactWithFc(stmt.Fact.Params[3], ast.NewFcFn(ast.AtomObj(glob.KeywordSetDefinedByReplacement), []ast.Obj{stmt.Fact.Params[0], stmt.Fact.Params[1], propName}))
 	execState = exec.factStmt(fourthObjInSetDefinedByReplacement)
 	if execState.IsNotTrue() {
 		return execState, fmt.Errorf(execState.String())
 	}
 
-	defObjStmt := ast.NewDefLetStmt([]string{stmt.ObjNames[0]}, []ast.Obj{stmt.Fact.Params[0]}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, propName, []ast.Obj{ast.FcAtom(stmt.ObjNames[0]), stmt.Fact.Params[3]}, stmt.Line)}, stmt.Line)
+	defObjStmt := ast.NewDefLetStmt([]string{stmt.ObjNames[0]}, []ast.Obj{stmt.Fact.Params[0]}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, propName, []ast.Obj{ast.AtomObj(stmt.ObjNames[0]), stmt.Fact.Params[3]}, stmt.Line)}, stmt.Line)
 	execState = exec.defLetStmt(defObjStmt)
 	if execState.IsNotTrue() {
 		return execState, fmt.Errorf(execState.String())

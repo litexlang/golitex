@@ -18,24 +18,24 @@ import (
 	glob "golitex/glob"
 )
 
-func GetForallXOnlyOneYSatisfyGivenProp(domSet, rangeSet Obj, propName FcAtom) *UniFactStmt {
+func GetForallXOnlyOneYSatisfyGivenProp(domSet, rangeSet Obj, propName AtomObj) *UniFactStmt {
 	params := []string{"x", "y1", "y2"}
 	setParams := []Obj{domSet, rangeSet, rangeSet}
 	domFacts := []FactStmt{
-		NewSpecFactStmt(TruePure, propName, []Obj{FcAtom("x"), FcAtom("y1")}, glob.InnerGenLine),
-		NewSpecFactStmt(TruePure, propName, []Obj{FcAtom("x"), FcAtom("y2")}, glob.InnerGenLine),
+		NewSpecFactStmt(TruePure, propName, []Obj{AtomObj("x"), AtomObj("y1")}, glob.InnerGenLine),
+		NewSpecFactStmt(TruePure, propName, []Obj{AtomObj("x"), AtomObj("y2")}, glob.InnerGenLine),
 	}
 	thenFacts := []FactStmt{
-		NewSpecFactStmt(TruePure, FcAtom(glob.LastTwoObjectsAreEqual), []Obj{FcAtom("x"), FcAtom("y1"), FcAtom("y2")}, glob.InnerGenLine),
+		NewSpecFactStmt(TruePure, AtomObj(glob.LastTwoObjectsAreEqual), []Obj{AtomObj("x"), AtomObj("y1"), AtomObj("y2")}, glob.InnerGenLine),
 	}
 	return NewUniFact(params, setParams, domFacts, thenFacts, glob.InnerGenLine)
 }
 
-func ForallYInSetDefinedByReplacementThereIsXSTProp_X_YIsTrue(setDefinedByReplacement *FcFn) *UniFactStmt {
+func ForallYInSetDefinedByReplacementThereIsXSTProp_X_YIsTrue(setDefinedByReplacement *FnObj) *UniFactStmt {
 	params := []string{"x"}
 	setParams := []Obj{setDefinedByReplacement}
 
-	specFact := NewSpecFactStmt(TruePure, FcAtom(glob.KeywordExistPropPreImageByReplacement), []Obj{setDefinedByReplacement.Params[0], setDefinedByReplacement.Params[1], setDefinedByReplacement.Params[2], FcAtom("x")}, glob.InnerGenLine)
+	specFact := NewSpecFactStmt(TruePure, AtomObj(glob.KeywordExistPropPreImageByReplacement), []Obj{setDefinedByReplacement.Params[0], setDefinedByReplacement.Params[1], setDefinedByReplacement.Params[2], AtomObj("x")}, glob.InnerGenLine)
 
 	return NewUniFact(params, setParams, []FactStmt{}, []FactStmt{specFact}, glob.InnerGenLine)
 }

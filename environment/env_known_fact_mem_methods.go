@@ -252,7 +252,7 @@ func (e *Env) GetSpecFact_InLogicExpr_InUniFactMem() (*SpecFact_InLogicExpr_InUn
 	return &e.KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem, true
 }
 
-func (e *Env) IsFnDeclared(fc ast.FcAtom) (*FnInFnTMemItem, bool) {
+func (e *Env) IsFnDeclared(fc ast.AtomObj) (*FnInFnTMemItem, bool) {
 	// TODO 这里需要更严格检查一下是否是正常的函数名，但是目前没有
 	if _, ok := glob.BuiltinKeywordsSet[string(fc)]; ok {
 		return nil, true
@@ -286,7 +286,7 @@ func (e *Env) newUniFactWithIff(stmt *ast.UniFactWithIffStmt) error {
 	return nil
 }
 
-func (e *Env) StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(fn ast.Obj, fnTemplateFcFn *ast.FcFn, fnTStruct *ast.FnTStruct) error {
+func (e *Env) StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(fn ast.Obj, fnTemplateFcFn *ast.FnObj, fnTStruct *ast.FnTStruct) error {
 	if fnTemplateFcFn != nil {
 		fnTStruct, err := e.GetFnStructFromFnTName(fnTemplateFcFn)
 		if err != nil {
@@ -309,7 +309,7 @@ func (e *Env) StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(fn ast.Obj, 
 	}
 }
 
-func (e *Env) getInstantiatedFnTTOfFcFn(fcFn *ast.FcFn) (*ast.FnTStruct, bool, error) {
+func (e *Env) getInstantiatedFnTTOfFcFn(fcFn *ast.FnObj) (*ast.FnTStruct, bool, error) {
 	if ast.IsFnTemplate_FcFn(fcFn) {
 		fnTNoName, err := fcFn.FnTFc_ToFnTNoName()
 		if err != nil {
@@ -318,7 +318,7 @@ func (e *Env) getInstantiatedFnTTOfFcFn(fcFn *ast.FcFn) (*ast.FnTStruct, bool, e
 		return fnTNoName, true, nil
 	}
 
-	def := e.GetFnTemplateDef(fcFn.FnHead.(ast.FcAtom))
+	def := e.GetFnTemplateDef(fcFn.FnHead.(ast.AtomObj))
 	if def == nil {
 		return nil, false, nil
 	}

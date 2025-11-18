@@ -33,7 +33,7 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) error {
 		return err
 	}
 
-	if fnFn, ok := fact.Params[1].(*ast.FcFn); ok && ast.IsFnTemplate_FcFn(fnFn) {
+	if fnFn, ok := fact.Params[1].(*ast.FnObj); ok && ast.IsFnTemplate_FcFn(fnFn) {
 		// fnTNoName, err := fnFn.FnTFc_ToFnTNoName()
 		// if err != nil {
 		// 	return err
@@ -53,7 +53,7 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) error {
 		return nil
 	}
 
-	if setDefinedByReplacement, ok := fact.Params[1].(*ast.FcFn); ok && ast.IsFcAtomAndEqualToStr(setDefinedByReplacement.FnHead, glob.KeywordSetDefinedByReplacement) {
+	if setDefinedByReplacement, ok := fact.Params[1].(*ast.FnObj); ok && ast.IsFcAtomAndEqualToStr(setDefinedByReplacement.FnHead, glob.KeywordSetDefinedByReplacement) {
 		return e.in_setDefinedByReplacement_postProcess(setDefinedByReplacement)
 	}
 
@@ -61,7 +61,7 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) error {
 }
 
 func (e *Env) inFactPostProcess_InSetFnRetValue(fact *ast.SpecFactStmt, def *ast.HaveSetFnStmt) error {
-	inFactRightParamAsFcFnPt, ok := fact.Params[1].(*ast.FcFn)
+	inFactRightParamAsFcFnPt, ok := fact.Params[1].(*ast.FnObj)
 	if !ok {
 		return fmt.Errorf("in fact expect 2 parameters, get %d in %s", len(fact.Params), fact)
 	}
@@ -85,7 +85,7 @@ func (e *Env) inFactPostProcess_InSetFnRetValue(fact *ast.SpecFactStmt, def *ast
 	return nil
 }
 
-func (e *Env) in_setDefinedByReplacement_postProcess(setDefinedByReplacement *ast.FcFn) error {
+func (e *Env) in_setDefinedByReplacement_postProcess(setDefinedByReplacement *ast.FnObj) error {
 	uniFact := ast.ForallYInSetDefinedByReplacementThereIsXSTProp_X_YIsTrue(setDefinedByReplacement)
 	err := e.NewFact(uniFact)
 	if err != nil {
@@ -93,7 +93,7 @@ func (e *Env) in_setDefinedByReplacement_postProcess(setDefinedByReplacement *as
 	}
 
 	// forall x set_defined_by_replacement(A, B, P), x is in B
-	forallXInSetDefinedByReplacement_ItIsInB := ast.NewUniFact([]string{"x"}, []ast.Obj{setDefinedByReplacement}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Obj{ast.FcAtom("x"), setDefinedByReplacement.Params[1]}, glob.InnerGenLine)}, glob.InnerGenLine)
+	forallXInSetDefinedByReplacement_ItIsInB := ast.NewUniFact([]string{"x"}, []ast.Obj{setDefinedByReplacement}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeywordIn), []ast.Obj{ast.AtomObj("x"), setDefinedByReplacement.Params[1]}, glob.InnerGenLine)}, glob.InnerGenLine)
 	err = e.NewFact(forallXInSetDefinedByReplacement_ItIsInB)
 	if err != nil {
 		return err
@@ -102,7 +102,7 @@ func (e *Env) in_setDefinedByReplacement_postProcess(setDefinedByReplacement *as
 	return nil
 }
 
-func (e *Env) SetEqualToSetDefinedByReplacement_PostProcess(setAtom ast.FcAtom, setDefinedByReplacement *ast.FcFn) error {
+func (e *Env) SetEqualToSetDefinedByReplacement_PostProcess(setAtom ast.AtomObj, setDefinedByReplacement *ast.FnObj) error {
 	uniFact := ast.ForallYInSetDefinedByReplacementThereIsXSTProp_X_YIsTrue(setDefinedByReplacement)
 	uniFact.ParamSets[0] = setAtom
 	err := e.NewFact(uniFact)
@@ -110,7 +110,7 @@ func (e *Env) SetEqualToSetDefinedByReplacement_PostProcess(setAtom ast.FcAtom, 
 		return err
 	}
 
-	forallXInSetDefinedByReplacement_ItIsInB := ast.NewUniFact([]string{"x"}, []ast.Obj{setAtom}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Obj{ast.FcAtom("x"), setDefinedByReplacement.Params[1]}, glob.InnerGenLine)}, glob.InnerGenLine)
+	forallXInSetDefinedByReplacement_ItIsInB := ast.NewUniFact([]string{"x"}, []ast.Obj{setAtom}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeywordIn), []ast.Obj{ast.AtomObj("x"), setDefinedByReplacement.Params[1]}, glob.InnerGenLine)}, glob.InnerGenLine)
 	err = e.NewFact(forallXInSetDefinedByReplacement_ItIsInB)
 	if err != nil {
 		return err
@@ -120,21 +120,21 @@ func (e *Env) SetEqualToSetDefinedByReplacement_PostProcess(setAtom ast.FcAtom, 
 }
 
 func (e *Env) inFactPostProcess_InFnTemplate(fact *ast.SpecFactStmt) (bool, error) {
-	if _, ok := fact.Params[1].(*ast.FcFn); !ok {
+	if _, ok := fact.Params[1].(*ast.FnObj); !ok {
 		return false, nil
 	}
 
-	head, ok := fact.Params[1].(*ast.FcFn).IsFcFn_HasAtomHead_ReturnHead()
+	head, ok := fact.Params[1].(*ast.FnObj).IsFcFn_HasAtomHead_ReturnHead()
 	if !ok {
 		return false, nil
 	}
 
-	def := e.GetFnTemplateDef_KeyIsFcHead(fact.Params[1].(*ast.FcFn))
+	def := e.GetFnTemplateDef_KeyIsFcHead(fact.Params[1].(*ast.FnObj))
 	if def == nil {
 		return false, nil
 	}
 
-	fnTNoName, ok, err := e.getInstantiatedFnTTOfFcFn(fact.Params[1].(*ast.FcFn))
+	fnTNoName, ok, err := e.getInstantiatedFnTTOfFcFn(fact.Params[1].(*ast.FnObj))
 	if err != nil {
 		return false, err
 	}
@@ -144,7 +144,7 @@ func (e *Env) inFactPostProcess_InFnTemplate(fact *ast.SpecFactStmt) (bool, erro
 
 	templateParamUniMap := map[string]ast.Obj{}
 	for i, param := range def.TemplateDefHeader.Params {
-		templateParamUniMap[param] = fact.Params[1].(*ast.FcFn).Params[i]
+		templateParamUniMap[param] = fact.Params[1].(*ast.FnObj).Params[i]
 	}
 
 	derivedFact, err := fnTNoName.DeriveUniFact(string(head), fact.Params[0], templateParamUniMap)
@@ -157,7 +157,7 @@ func (e *Env) inFactPostProcess_InFnTemplate(fact *ast.SpecFactStmt) (bool, erro
 		return false, err
 	}
 
-	err = e.StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(fact.Params[0], fact.Params[1].(*ast.FcFn), fnTNoName)
+	err = e.StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(fact.Params[0], fact.Params[1].(*ast.FnObj), fnTNoName)
 	if err != nil {
 		return false, err
 	}

@@ -32,7 +32,7 @@ func NewDefExistPropStmt(def *DefExistPropStmtBody, existParams []string, existP
 	return &DefExistPropStmt{def, existParams, existParamSets, line}
 }
 
-func NewSpecFactStmt(typeEnum SpecFactEnum, propName FcAtom, params []Obj, line uint) *SpecFactStmt {
+func NewSpecFactStmt(typeEnum SpecFactEnum, propName AtomObj, params []Obj, line uint) *SpecFactStmt {
 	return &SpecFactStmt{typeEnum, propName, params, line}
 }
 
@@ -48,7 +48,7 @@ func NewKnowStmt(facts CanBeKnownStmtSlice, line uint) *KnowFactStmt {
 	return &KnowFactStmt{facts, line}
 }
 
-func NewDefHeader(name FcAtom, params []string, setParams []Obj) *DefHeader {
+func NewDefHeader(name AtomObj, params []string, setParams []Obj) *DefHeader {
 	return &DefHeader{name, params, setParams}
 }
 
@@ -140,7 +140,7 @@ func NewHaveSetFnStmt(declHeader *DefHeader, param string, parentSet Obj, proofs
 	return &HaveSetFnStmt{declHeader, param, parentSet, proofs, line}
 }
 
-func NewHaveSetDefinedByReplacementStmt(name string, domSet Obj, rangeSet Obj, propName FcAtom, line uint) *HaveSetDefinedByReplacementStmt {
+func NewHaveSetDefinedByReplacementStmt(name string, domSet Obj, rangeSet Obj, propName AtomObj, line uint) *HaveSetDefinedByReplacementStmt {
 	return &HaveSetDefinedByReplacementStmt{name, domSet, rangeSet, propName, line}
 }
 
@@ -212,7 +212,7 @@ func NewProveInRangeStmt(start int64, end int64, param string, intensionalSet Ob
 	return &ProveInRangeStmt{start, end, param, intensionalSet, thenFacts, proofs, line}
 }
 
-func NewProveIsTransitivePropStmt(prop FcAtom, params []string, proofs []Stmt, line uint) *ProveIsTransitivePropStmt {
+func NewProveIsTransitivePropStmt(prop AtomObj, params []string, proofs []Stmt, line uint) *ProveIsTransitivePropStmt {
 	return &ProveIsTransitivePropStmt{prop, params, proofs, line}
 }
 

@@ -30,9 +30,9 @@ const (
 func CmpFcType(left, right ast.Obj) (int, FcEnum, error) {
 	var knownEnum FcEnum
 	switch left.(type) {
-	case ast.FcAtom:
+	case ast.AtomObj:
 		knownEnum = FcAtomEnum
-	case *ast.FcFn:
+	case *ast.FnObj:
 		knownEnum = FcFnEnum
 	default:
 		return 0, FcAtomEnum, fmt.Errorf("unknown Fc type: %T", left)
@@ -40,9 +40,9 @@ func CmpFcType(left, right ast.Obj) (int, FcEnum, error) {
 
 	var givenEnum FcEnum
 	switch right.(type) {
-	case ast.FcAtom:
+	case ast.AtomObj:
 		givenEnum = FcAtomEnum
-	case *ast.FcFn:
+	case *ast.FnObj:
 		givenEnum = FcFnEnum
 	default:
 		return 0, FcAtomEnum, fmt.Errorf("unknown Fc type: %T", right)
@@ -59,19 +59,19 @@ func cmpFcLit(left, right ast.Obj) (int, error) {
 	}
 
 	if fcEnum == FcAtomEnum {
-		return cmpFcAtomLit(left.(ast.FcAtom), right.(ast.FcAtom))
+		return cmpFcAtomLit(left.(ast.AtomObj), right.(ast.AtomObj))
 	} else if fcEnum == FcFnEnum {
-		return cmpFcFnLit(left.(*ast.FcFn), right.(*ast.FcFn))
+		return cmpFcFnLit(left.(*ast.FnObj), right.(*ast.FnObj))
 	}
 
 	return -1, fmt.Errorf("")
 }
 
-func cmpFcAtomLit(left, right ast.FcAtom) (int, error) {
+func cmpFcAtomLit(left, right ast.AtomObj) (int, error) {
 	return strings.Compare(string(left), string(right)), nil // 直接对两个string相减得了
 }
 
-func cmpFcFnLit(left, right *ast.FcFn) (int, error) {
+func cmpFcFnLit(left, right *ast.FnObj) (int, error) {
 	if comp, err := cmpFcLit(left.FnHead, right.FnHead); comp != 0 || err != nil {
 		return comp, err
 	}

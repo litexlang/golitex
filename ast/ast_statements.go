@@ -30,7 +30,7 @@ type DefLetStmt struct {
 }
 
 type DefHeader struct {
-	Name      FcAtom
+	Name      AtomObj
 	Params    StrSlice
 	ParamSets ObjSlice
 }
@@ -88,7 +88,7 @@ type UniFactWithIffStmt struct {
 
 type SpecFactStmt struct {
 	TypeEnum SpecFactEnum
-	PropName FcAtom
+	PropName AtomObj
 	Params   ObjSlice
 
 	Line uint
@@ -246,7 +246,7 @@ type HaveSetDefinedByReplacementStmt struct {
 	Name     string
 	DomSet   Obj
 	RangeSet Obj
-	PropName FcAtom
+	PropName AtomObj
 
 	Line uint
 }
@@ -391,7 +391,7 @@ type ClaimIffStmt struct {
 }
 
 type ProveIsTransitivePropStmt struct {
-	Prop   FcAtom
+	Prop   AtomObj
 	Params StrSlice
 	Proofs StmtSlice
 

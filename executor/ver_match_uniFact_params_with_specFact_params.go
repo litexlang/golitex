@@ -87,7 +87,7 @@ type fcPair struct {
 // return map{freeVar: instVar}, unMatched fcPairs, matched?, err
 func (ver *Verifier) matchFcInKnownSpecFactAndGivenFc(knownFc ast.Obj, givenFc ast.Obj, freeVars map[string]struct{}, specFactName string) (map[string][]ast.Obj, []fcPair, error) {
 	switch asKnownFc := knownFc.(type) {
-	case ast.FcAtom:
+	case ast.AtomObj:
 		if _, ok := freeVars[string(asKnownFc)]; ok {
 			retMap := map[string][]ast.Obj{
 				string(asKnownFc): {givenFc},
@@ -103,11 +103,11 @@ func (ver *Verifier) matchFcInKnownSpecFactAndGivenFc(knownFc ast.Obj, givenFc a
 			}
 			return nil, []fcPair{}, nil
 		}
-	case *ast.FcFn:
+	case *ast.FnObj:
 		switch asGivenFc := givenFc.(type) {
-		case ast.FcAtom:
+		case ast.AtomObj:
 			return nil, []fcPair{{knownFc: knownFc, givenFc: givenFc}}, nil
-		case *ast.FcFn:
+		case *ast.FnObj:
 			retMap := map[string][]ast.Obj{}
 			retFcPairs := []fcPair{}
 
