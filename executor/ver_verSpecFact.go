@@ -41,6 +41,10 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt *as
 		}
 	}
 
+	if verRet := ver.UseBuiltinRulesForSpecialSpecFact(stmt, state); verRet.IsTrue() || verRet.IsErr() {
+		return verRet
+	}
+
 	return BoolErrToExecRet(false, nil)
 }
 

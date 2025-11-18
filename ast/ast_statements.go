@@ -17,7 +17,7 @@ package litex_ast
 type FactStmtSlice []FactStmt
 type StmtSlice []Stmt
 type SpecFactPtrSlice []*SpecFactStmt
-type StrSlice []string
+type StrSlice []string // 在定义的时候，用string而不是 atom 是有道理的，因为atom可能引入::，而string不会
 type ObjSlice []Obj
 type ReversibleFacts []Spec_OrFact
 
