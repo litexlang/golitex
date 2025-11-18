@@ -43,15 +43,15 @@ func (f *FnObj) ReplaceObj(oldObj Obj, newObj Obj) Obj {
 		return newObj
 	}
 
-	var newObjFnHead = f.FnHead.ReplaceObj(oldObj, newObj)
+	var newFnObjHead = f.FnHead.ReplaceObj(oldObj, newObj)
 
 	newObjParams := make([]Obj, len(f.Params))
 	for i, param := range f.Params {
 		newObjParams[i] = param.ReplaceObj(oldObj, newObj)
 	}
 
-	newObjFn := NewFnObj(newObjFnHead, newObjParams)
-	return newObjFn
+	newFnObj := NewFnObj(newFnObjHead, newObjParams)
+	return newFnObj
 }
 
 type AtomObj string
@@ -126,21 +126,21 @@ func (f AtomObj) IsBuiltinUnaryOpt() bool {
 }
 
 func IsAtomObjAndHasBuiltinPropName(obj Obj) bool {
-	objAtom, ok := obj.(AtomObj)
+	atomObj, ok := obj.(AtomObj)
 	if !ok {
 		return false
 	}
 
-	return glob.IsBuiltinInfixRelaPropSymbol(string(objAtom))
+	return glob.IsBuiltinInfixRelaPropSymbol(string(atomObj))
 }
 
 func IsAtomObjAndEqualToStr(obj Obj, name string) bool {
-	objAsAtom, ok := obj.(AtomObj)
+	atomObj, ok := obj.(AtomObj)
 	if !ok {
 		return false
 	}
 
-	return string(objAsAtom) == name
+	return string(atomObj) == name
 }
 
 func GetAtomsInObj(obj Obj) []AtomObj {

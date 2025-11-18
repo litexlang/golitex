@@ -32,35 +32,35 @@ func ObjStringForParseAndExpandPolynomial(obj ast.Obj) string {
 	return ""
 }
 
-func atomObjString(objAtom ast.AtomObj) string {
-	if len(string(objAtom)) != 0 && '0' <= string(objAtom)[0] && string(objAtom)[0] <= '9' {
-		return string(objAtom)
-	} else if len(string(objAtom)) > 1 && string(objAtom)[0] == '-' && string(objAtom)[1] >= '0' && string(objAtom)[1] <= '9' {
-		return fmt.Sprintf("(%s - %s)", "0", string(objAtom)[1:])
+func atomObjString(atomObj ast.AtomObj) string {
+	if len(string(atomObj)) != 0 && '0' <= string(atomObj)[0] && string(atomObj)[0] <= '9' {
+		return string(atomObj)
+	} else if len(string(atomObj)) > 1 && string(atomObj)[0] == '-' && string(atomObj)[1] >= '0' && string(atomObj)[1] <= '9' {
+		return fmt.Sprintf("(%s - %s)", "0", string(atomObj)[1:])
 	}
-	return fmt.Sprintf("{%s}", objAtom.String())
+	return fmt.Sprintf("{%s}", atomObj.String())
 }
 
-func fnObjString(objFn *ast.FnObj) string {
-	if ast.IsAtomObjAndEqualToStr(objFn.FnHead, glob.KeySymbolPlus) {
-		return fmt.Sprintf("(%s + %s)", ObjStringForParseAndExpandPolynomial(objFn.Params[0]), ObjStringForParseAndExpandPolynomial(objFn.Params[1]))
+func fnObjString(fnObj *ast.FnObj) string {
+	if ast.IsAtomObjAndEqualToStr(fnObj.FnHead, glob.KeySymbolPlus) {
+		return fmt.Sprintf("(%s + %s)", ObjStringForParseAndExpandPolynomial(fnObj.Params[0]), ObjStringForParseAndExpandPolynomial(fnObj.Params[1]))
 	}
-	if ast.IsAtomObjAndEqualToStr(objFn.FnHead, glob.KeySymbolStar) {
-		return fmt.Sprintf("(%s * %s)", ObjStringForParseAndExpandPolynomial(objFn.Params[0]), ObjStringForParseAndExpandPolynomial(objFn.Params[1]))
+	if ast.IsAtomObjAndEqualToStr(fnObj.FnHead, glob.KeySymbolStar) {
+		return fmt.Sprintf("(%s * %s)", ObjStringForParseAndExpandPolynomial(fnObj.Params[0]), ObjStringForParseAndExpandPolynomial(fnObj.Params[1]))
 	}
-	if ast.IsAtomObjAndEqualToStr(objFn.FnHead, glob.KeySymbolMinus) {
-		if len(objFn.Params) == 1 {
-			return fmt.Sprintf("(%s - %s)", "0", ObjStringForParseAndExpandPolynomial(objFn.Params[0]))
-		} else if len(objFn.Params) == 2 {
-			return fmt.Sprintf("(%s - %s)", ObjStringForParseAndExpandPolynomial(objFn.Params[0]), ObjStringForParseAndExpandPolynomial(objFn.Params[1]))
+	if ast.IsAtomObjAndEqualToStr(fnObj.FnHead, glob.KeySymbolMinus) {
+		if len(fnObj.Params) == 1 {
+			return fmt.Sprintf("(%s - %s)", "0", ObjStringForParseAndExpandPolynomial(fnObj.Params[0]))
+		} else if len(fnObj.Params) == 2 {
+			return fmt.Sprintf("(%s - %s)", ObjStringForParseAndExpandPolynomial(fnObj.Params[0]), ObjStringForParseAndExpandPolynomial(fnObj.Params[1]))
 		} else {
-			panic("fnObjString: objFn.ParamSegs has more than 2 elements")
+			panic("fnObjString: fnObj.ParamSegs has more than 2 elements")
 		}
 	}
 	// 如果是幂运算，则把它展开成对应的乘法，比如(x+1)^2 展开成 (x+1) * (x+1)
-	if ast.IsAtomObjAndEqualToStr(objFn.FnHead, glob.KeySymbolPower) {
-		base := ObjStringForParseAndExpandPolynomial(objFn.Params[0])
-		exp := ObjStringForParseAndExpandPolynomial(objFn.Params[1])
+	if ast.IsAtomObjAndEqualToStr(fnObj.FnHead, glob.KeySymbolPower) {
+		base := ObjStringForParseAndExpandPolynomial(fnObj.Params[0])
+		exp := ObjStringForParseAndExpandPolynomial(fnObj.Params[1])
 
 		// Try to parse exponent as integer
 		if expInt, err := strconv.Atoi(exp); err == nil {
@@ -78,7 +78,7 @@ func fnObjString(objFn *ast.FnObj) string {
 		}
 		// For non-integer or negative exponents, keep original form
 		// return "(" + base + "^" + exp + ")"
-		return fmt.Sprintf("{%s}", objFn.String())
+		return fmt.Sprintf("{%s}", fnObj.String())
 	}
-	return fmt.Sprintf("{%s}", objFn.String())
+	return fmt.Sprintf("{%s}", fnObj.String())
 }
