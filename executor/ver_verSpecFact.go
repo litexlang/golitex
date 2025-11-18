@@ -68,7 +68,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast
 			}
 			if verRet.IsTrue() {
 				msg := fmt.Sprintf("%s is true by %s is a transitive prop and %s is true", stmt.String(), string(stmt.PropName), relatedFcStmt.String())
-				return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(msg))
+				return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
 			}
 		}
 	}
@@ -86,7 +86,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *a
 		}
 		if verRet.IsTrue() {
 			msg := fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String())
-			return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(msg))
+			return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
 		}
 	}
 
@@ -95,7 +95,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *a
 		return verRet
 	}
 	if verRet.IsTrue() {
-		return NewExecTrue("")
+		return verRet
 	}
 
 	return NewExecUnknown("")
@@ -155,7 +155,7 @@ func (ver *Verifier) verSpecialSpecFact_ByBIR(stmt *ast.SpecFactStmt, state *Ver
 	}
 
 	if stmt.NameIs(glob.KeySymbolEqual) && stmt.TypeEnum == ast.FalsePure {
-		return ver.verNotTrueEqualFact_BuiltinRules(stmt)
+		return ver.verNotTrueEqualFact_BuiltinRules_WithState(stmt, state)
 	}
 
 	return NewExecUnknown("")
@@ -321,7 +321,7 @@ func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecFactStmt, state *VerState)
 	return ver.verSpecFact_InLogicExpr_InUniFactMem(stmt, nextState)
 }
 
-func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecFactStmt) ExecRet {
+func (ver *Verifier) verNotTrueEqualFact_BuiltinRules_WithState(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	if stmt.IsTrue() {
 		return NewExecUnknown("")
 	}
@@ -349,6 +349,9 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecFactStmt) Ex
 		return NewExecErr(err.Error())
 	}
 	if !areEqual {
+		if state != nil {
+			return ver.maybeAddSuccessMsg(state, stmt.String(), "builtin rules", NewExecTrue(""))
+		}
 		return NewExecTrue("")
 	}
 
