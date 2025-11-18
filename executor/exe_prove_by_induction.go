@@ -120,7 +120,7 @@ func proveByInduction_newStartFact(stmt *ast.ProveByInductionStmt) (ast.FactStmt
 }
 
 func proveByInduction_newUniFact_n_true_leads_n_plus_1_true(stmt *ast.ProveByInductionStmt) (ast.FactStmt, error) {
-	uniMap := map[string]ast.Obj{stmt.Param: ast.NewFcFn(ast.AtomObj(glob.KeySymbolPlus), []ast.Obj{ast.AtomObj(stmt.Param), ast.AtomObj("1")})}
+	uniMap := map[string]ast.Obj{stmt.Param: ast.NewFnObj(ast.AtomObj(glob.KeySymbolPlus), []ast.Obj{ast.AtomObj(stmt.Param), ast.AtomObj("1")})}
 
 	retUniFactDom := []ast.FactStmt{
 		ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeySymbolLargerEqual), []ast.Obj{ast.AtomObj(stmt.Param), stmt.Start}, stmt.Line),

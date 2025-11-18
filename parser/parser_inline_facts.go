@@ -185,7 +185,7 @@ func (tb *tokenBlock) inlineUniFact_Param_ParamSet_ParamInSetFacts() ([]string, 
 				continue
 			}
 
-			setParam, err := tb.RawFc()
+			setParam, err := tb.RawObj()
 			if err != nil {
 				return nil, nil, err
 			}
@@ -224,7 +224,7 @@ func (tb *tokenBlock) inlineUniFact_Param_ParamSet_ParamInSetFacts() ([]string, 
 
 	// nth parameter set should not include nth to last parameter inside
 	for i, setParam := range setParams {
-		atomsInSetParam := ast.GetAtomsInFc(setParam)
+		atomsInSetParam := ast.GetAtomsInObj(setParam)
 		atomsInSetParamAsStr := make([]string, len(atomsInSetParam))
 		for i, atom := range atomsInSetParam {
 			atomsInSetParamAsStr[i] = string(atom)
@@ -481,8 +481,8 @@ func (tb *tokenBlock) inline_spec_or_enum_intensional_Equals_fact_skip_terminato
 		return tb.parseSpecialPrefixFact()
 	}
 
-	// Case 2-4: Handle facts starting with a first-class citizen (fc)
-	return tb.parseFactStartWithFc()
+	// Case 2-4: Handle facts starting with a first-class citizen (obj)
+	return tb.parseFactStartWithObj()
 }
 
 // isCurTokenSpecFactPrefix checks if the fact starts with a special prefix
@@ -503,10 +503,10 @@ func (tb *tokenBlock) parseSpecialPrefixFact() (ast.FactStmt, error) {
 	return fact, nil
 }
 
-// parseFactStartWithFc parses facts that start with a first-class citizen
-func (tb *tokenBlock) parseFactStartWithFc() (ast.FactStmt, error) {
-	// Parse the first fc
-	fc, err := tb.RawFc()
+// parseFactStartWithObj parses facts that start with a first-class citizen
+func (tb *tokenBlock) parseFactStartWithObj() (ast.FactStmt, error) {
+	// Parse the first obj
+	obj, err := tb.RawObj()
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -520,12 +520,12 @@ func (tb *tokenBlock) parseFactStartWithFc() (ast.FactStmt, error) {
 	// Dispatch based on operator type
 	var fact ast.FactStmt
 	if operator == glob.FuncFactPrefix {
-		fact, err = tb.parseFunctionPropertyFact(fc)
+		fact, err = tb.parseFunctionPropertyFact(obj)
 		// } else if operator == glob.KeySymbolColonEqual {
 	} else if operator == glob.KeySymbolEqual && tb.header.is(glob.KeySymbolLeftCurly) {
-		fact, err = tb.inline_enum_intensional_fact_skip_terminator(fc)
+		fact, err = tb.inline_enum_intensional_fact_skip_terminator(obj)
 	} else {
-		fact, err = tb.parseInfixRelationalFact(fc, operator)
+		fact, err = tb.parseInfixRelationalFact(obj, operator)
 	}
 
 	if err != nil {
@@ -537,20 +537,20 @@ func (tb *tokenBlock) parseFactStartWithFc() (ast.FactStmt, error) {
 }
 
 // parseFunctionPropertyFact parses facts like "x $prop y" or "x $prop"
-func (tb *tokenBlock) parseFunctionPropertyFact(leftFc ast.Obj) (ast.FactStmt, error) {
-	propName, err := tb.rawFcAtom()
+func (tb *tokenBlock) parseFunctionPropertyFact(leftObj ast.Obj) (ast.FactStmt, error) {
+	propName, err := tb.rawAtomObj()
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
 
 	// Determine parameters: one or two
-	params := []ast.Obj{leftFc}
+	params := []ast.Obj{leftObj}
 	if !tb.header.ExceedEnd() {
-		rightFc, err := tb.RawFc()
+		rightObj, err := tb.RawObj()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
-		params = append(params, rightFc)
+		params = append(params, rightObj)
 	}
 
 	curFact := ast.NewSpecFactStmt(ast.TruePure, propName, params, tb.line)
@@ -558,23 +558,23 @@ func (tb *tokenBlock) parseFunctionPropertyFact(leftFc ast.Obj) (ast.FactStmt, e
 }
 
 // parseInfixRelationalFact parses facts like "x = y", "x > y", "x != y", etc.
-func (tb *tokenBlock) parseInfixRelationalFact(leftFc ast.Obj, operator string) (ast.FactStmt, error) {
+func (tb *tokenBlock) parseInfixRelationalFact(leftObj ast.Obj, operator string) (ast.FactStmt, error) {
 	if !glob.IsBuiltinInfixRelaPropSymbol(operator) {
 		return nil, fmt.Errorf("expect relation prop, got: %s", operator)
 	}
 
-	rightFc, err := tb.RawFc()
+	rightObj, err := tb.RawObj()
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
 
 	// Handle special case: double equals (==)
 	if operator == glob.KeySymbolEqual && tb.header.is(glob.KeySymbolEqual) {
-		return tb.relaEqualsFactStmt(leftFc, rightFc)
+		return tb.relaEqualsFactStmt(leftObj, rightObj)
 	}
 
 	// Create the fact
-	params := []ast.Obj{leftFc, rightFc}
+	params := []ast.Obj{leftObj, rightObj}
 	curFact := ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(operator), params, tb.line)
 
 	// Handle syntactic sugar: != is equivalent to "not ="
@@ -620,7 +620,7 @@ func (tb *tokenBlock) inline_enum_intensional_fact_skip_terminator(left ast.Obj)
 		return nil, tbErr(err, tb)
 	}
 
-	firstFc, err := tb.RawFc()
+	firstObj, err := tb.RawObj()
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -629,16 +629,16 @@ func (tb *tokenBlock) inline_enum_intensional_fact_skip_terminator(left ast.Obj)
 		if tb.header.is(glob.KeySymbolComma) {
 			tb.header.skip(glob.KeySymbolComma)
 		} else {
-			return ast.NewEnumStmt(left, []ast.Obj{firstFc}, tb.line), nil
+			return ast.NewEnumStmt(left, []ast.Obj{firstObj}, tb.line), nil
 		}
 
-		enumItems := []ast.Obj{firstFc}
+		enumItems := []ast.Obj{firstObj}
 		for !tb.header.is(glob.KeySymbolRightCurly) {
-			fc, err := tb.RawFc()
+			obj, err := tb.RawObj()
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}
-			enumItems = append(enumItems, fc)
+			enumItems = append(enumItems, obj)
 			if tb.header.is(glob.KeySymbolComma) {
 				tb.header.skip(glob.KeySymbolComma)
 			}
@@ -651,13 +651,13 @@ func (tb *tokenBlock) inline_enum_intensional_fact_skip_terminator(left ast.Obj)
 
 		return ast.NewEnumStmt(left, enumItems, tb.line), nil
 	} else {
-		firstFcAsAtom := firstFc.(ast.AtomObj)
+		firstObjAsAtom := firstObj.(ast.AtomObj)
 		// 必须是纯的，不能是复合的
-		if strings.Contains(string(firstFcAsAtom), glob.KeySymbolColonColon) {
-			return nil, fmt.Errorf("the first item of enum must be pure, but got %s", firstFcAsAtom)
+		if strings.Contains(string(firstObjAsAtom), glob.KeySymbolColonColon) {
+			return nil, fmt.Errorf("the first item of enum must be pure, but got %s", firstObjAsAtom)
 		}
 
-		parentSet, err := tb.RawFc()
+		parentSet, err := tb.RawObj()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -682,7 +682,7 @@ func (tb *tokenBlock) inline_enum_intensional_fact_skip_terminator(left ast.Obj)
 			return nil, tbErr(err, tb)
 		}
 
-		return ast.NewIntensionalSetStmt(left, string(firstFcAsAtom), parentSet, facts, tb.line), nil
+		return ast.NewIntensionalSetStmt(left, string(firstObjAsAtom), parentSet, facts, tb.line), nil
 	}
 }
 

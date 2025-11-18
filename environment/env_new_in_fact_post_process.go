@@ -53,7 +53,7 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) error {
 		return nil
 	}
 
-	if setDefinedByReplacement, ok := fact.Params[1].(*ast.FnObj); ok && ast.IsFcAtomAndEqualToStr(setDefinedByReplacement.FnHead, glob.KeywordSetDefinedByReplacement) {
+	if setDefinedByReplacement, ok := fact.Params[1].(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(setDefinedByReplacement.FnHead, glob.KeywordSetDefinedByReplacement) {
 		return e.in_setDefinedByReplacement_postProcess(setDefinedByReplacement)
 	}
 

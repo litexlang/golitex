@@ -43,7 +43,7 @@ func InstantiateFcFn(fc *FnObj, uniMap map[string]Obj) (Obj, error) {
 		newParamSegs[i] = newSeg
 	}
 
-	return NewFcFn(newHead, newParamSegs), nil
+	return NewFnObj(newHead, newParamSegs), nil
 }
 
 func (fc *FnObj) Instantiate(uniMap map[string]Obj) (Obj, error) {

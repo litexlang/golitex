@@ -327,7 +327,7 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules_WithState(stmt *ast.SpecFa
 	}
 
 	var leftValue, rightValue ast.Obj
-	if cmp.IsNumLitFc(stmt.Params[0]) {
+	if cmp.IsNumLitObj(stmt.Params[0]) {
 		leftValue = stmt.Params[0]
 	} else {
 		leftValue = ver.Env.GetSymbolSimplifiedValue(stmt.Params[0])
@@ -335,7 +335,7 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules_WithState(stmt *ast.SpecFa
 			return NewExecUnknown("")
 		}
 	}
-	if cmp.IsNumLitFc(stmt.Params[1]) {
+	if cmp.IsNumLitObj(stmt.Params[1]) {
 		rightValue = stmt.Params[1]
 	} else {
 		rightValue = ver.Env.GetSymbolSimplifiedValue(stmt.Params[1])

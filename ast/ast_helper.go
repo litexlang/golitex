@@ -82,13 +82,13 @@ func NewEqualFact(left, right Obj) *SpecFactStmt {
 	return NewSpecFactStmt(TruePure, AtomObj(glob.KeySymbolEqual), []Obj{left, right}, glob.InnerGenLine)
 }
 
-func IsFcFnWithHeadName(fc Obj, headName string) bool {
-	fcFn, ok := fc.(*FnObj)
+func IsFn_WithHeadName(obj Obj, headName string) bool {
+	objFn, ok := obj.(*FnObj)
 	if !ok {
 		return false
 	}
 
-	headAtom, ok := fcFn.FnHead.(AtomObj)
+	headAtom, ok := objFn.FnHead.(AtomObj)
 	if !ok {
 		return false
 	}
@@ -96,13 +96,13 @@ func IsFcFnWithHeadName(fc Obj, headName string) bool {
 	return string(headAtom) == headName
 }
 
-func IsFcFnWithHeadNameInSlice(fc Obj, headNames map[string]struct{}) bool {
-	fcFn, ok := fc.(*FnObj)
+func IsFn_WithHeadNameInSlice(obj Obj, headNames map[string]struct{}) bool {
+	objFn, ok := obj.(*FnObj)
 	if !ok {
 		return false
 	}
 
-	headAtom, ok := fcFn.FnHead.(AtomObj)
+	headAtom, ok := objFn.FnHead.(AtomObj)
 	if !ok {
 		return false
 	}
@@ -191,15 +191,15 @@ func (fcFn *FnObj) IsFcFn_HasAtomHead_ReturnHead() (AtomObj, bool) {
 	return head, true
 }
 
-func (stmt *FnTemplateDefStmt) Instantiate_GetFnTemplateNoName(fc *FnObj) (*FnTStruct, error) {
+func (stmt *FnTemplateDefStmt) Instantiate_GetFnTemplateNoName(objFn *FnObj) (*FnTStruct, error) {
 	uniMap := map[string]Obj{}
 	templateParams := stmt.TemplateDefHeader.Params
-	if len(templateParams) != len(fc.Params) {
-		return nil, fmt.Errorf("template params and fc params must have the same length")
+	if len(templateParams) != len(objFn.Params) {
+		return nil, fmt.Errorf("template params and obj params must have the same length")
 	}
 
 	for i, param := range templateParams {
-		uniMap[param] = fc.Params[i]
+		uniMap[param] = objFn.Params[i]
 	}
 
 	instantiatedParamSets, err := stmt.Fn.ParamSets.Instantiate(uniMap)
@@ -261,32 +261,32 @@ func (fcAsFcFn *FnObj) FnTFc_ToFnTNoName() (*FnTStruct, error) {
 }
 
 // 给定 f(a)(b,c)(e,d,f)，返回 {f, f(a), f(a)(b,c), f(a)(b,c)(e,d,f)}, {nil, {a}, {b,c}, {e,d,f}}
-func GetFnHeadChain_AndItSelf(fc Obj) ([]Obj, [][]Obj) {
-	switch asFc := fc.(type) {
+func GetFnHeadChain_AndItSelf(obj Obj) ([]Obj, [][]Obj) {
+	switch asObj := obj.(type) {
 	case *FnObj:
-		left, right := GetFnHeadChain_AndItSelf(asFc.FnHead)
-		// return append(GetFnHeadChain_AndItSelf(fc.(*FcFn).FnHead), fc)
-		return append(left, fc), append(right, append([]Obj{}, asFc.Params...))
+		left, right := GetFnHeadChain_AndItSelf(asObj.FnHead)
+		// return append(GetFnHeadChain_AndItSelf(obj.(*FnObj).FnHead), obj)
+		return append(left, obj), append(right, append([]Obj{}, asObj.Params...))
 	case AtomObj:
-		return []Obj{fc}, [][]Obj{nil}
+		return []Obj{obj}, [][]Obj{nil}
 	default:
-		panic("expected FcFn or FcAtom, but got " + fc.String())
+		panic("expected FnObj or AtomObj, but got " + obj.String())
 	}
 }
 
-func (fcAsFcFn *FnObj) IsFnT_FcFn_Ret_ParamSets_And_RetSet(fc *FnObj) (bool, []Obj, Obj) {
-	if !IsFnTemplate_FcFn(fcAsFcFn) {
+func (objAsObjFn *FnObj) IsFnT_FcFn_Ret_ParamSets_And_RetSet(objFn *FnObj) (bool, []Obj, Obj) {
+	if !IsFnTemplate_FcFn(objAsObjFn) {
 		return false, nil, nil
 	}
 
-	fcAsFcFnHeadAsFcFn, ok := fcAsFcFn.FnHead.(*FnObj)
+	objAsObjFnHeadAsObjFn, ok := objAsObjFn.FnHead.(*FnObj)
 	if !ok {
 		return false, nil, nil
 	}
 
-	paramSets := append([]Obj{}, fcAsFcFnHeadAsFcFn.Params...)
+	paramSets := append([]Obj{}, objAsObjFnHeadAsObjFn.Params...)
 
-	retSet := fcAsFcFn.Params[0]
+	retSet := objAsObjFn.Params[0]
 
 	return true, paramSets, retSet
 }
@@ -329,14 +329,14 @@ func UnknownFactMsg(fact FactStmt) string {
 	return fmt.Sprintf("%s\nis unknown\n", fact)
 }
 
-func ToInt(fc Obj) (int, bool) {
-	fcAsFcInt, ok := fc.(AtomObj)
+func ToInt(obj Obj) (int, bool) {
+	objAsInt, ok := obj.(AtomObj)
 	if !ok {
 		return 0, false
 	}
 
 	// string to int
-	num, err := strconv.Atoi(string(fcAsFcInt))
+	num, err := strconv.Atoi(string(objAsInt))
 	if err != nil {
 		return 0, false
 	}

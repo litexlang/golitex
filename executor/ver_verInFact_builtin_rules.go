@@ -26,7 +26,7 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 	}
 
 	// if asFcFn, ok := stmt.Params[0].(*ast.FcFn); ok {
-	// 	if ast.IsFcAtomAndEqualToStr(asFcFn.FnHead, glob.KeywordEval) {
+	// 	if ast.IsAtomObjAndEqualToStr(asFcFn.FnHead, glob.KeywordEval) {
 	// 		newParam := asFcFn.Params[0]
 	// 		newFact := ast.NewSpecFactStmt(stmt.TypeEnum, stmt.PropName, []ast.Fc{newParam, stmt.Params[1]}, stmt.Line)
 	// 		return ver.inFactBuiltinRules(newFact, state)
@@ -152,12 +152,12 @@ func (ver *Verifier) FnTemplateIsASet(stmt *ast.SpecFactStmt, state *VerState) E
 }
 
 func (ver *Verifier) returnValueOfBuiltinArithmeticFnInReal(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	ok := ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordReal)
+	ok := ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordReal)
 	if !ok {
 		return NewExecUnknown("")
 	}
 
-	ok = ast.IsFn_WithHeadNameInSlice(stmt.Params[0], []string{glob.KeySymbolPlus, glob.KeySymbolMinus, glob.KeySymbolStar, glob.KeySymbolSlash, glob.KeySymbolPower})
+	ok = ast.IsFn_WithHeadNameInSlice(stmt.Params[0], map[string]struct{}{glob.KeySymbolPlus: {}, glob.KeySymbolMinus: {}, glob.KeySymbolStar: {}, glob.KeySymbolSlash: {}, glob.KeySymbolPower: {}})
 
 	if ok {
 		msg := fmt.Sprintf("return value of builtin arithmetic function %s is in Real", stmt.Params[0])
@@ -167,7 +167,7 @@ func (ver *Verifier) returnValueOfBuiltinArithmeticFnInReal(stmt *ast.SpecFactSt
 }
 
 func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	ok := ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordSet)
+	ok := ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordSet)
 	if !ok {
 		return NewExecUnknown("")
 	}
@@ -268,12 +268,12 @@ func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state *VerState) E
 
 func (ver *Verifier) inObjFact(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	// right param is obj
-	ok := ast.IsFcAtomAndEqualToStr(stmt.Params[1], glob.KeywordObj)
+	ok := ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordObj)
 	if !ok {
 		return NewExecUnknown("")
 	}
 
-	atoms := ast.GetAtomsInFc(stmt.Params[0])
+	atoms := ast.GetAtomsInObj(stmt.Params[0])
 	// 这里有点问题，N,Q,C 这种没算进去，要重新写一下。这里不能直接用 declared, 因为一方面 isDeclared会包含 prop, 一方面 obj isDeclared，会导致罗素悖论
 	ok = ver.Env.AtomsAreObj(atoms)
 	if !ok {
@@ -312,7 +312,7 @@ func (ver *Verifier) nothingIsInEmptySet(stmt *ast.SpecFactStmt, state *VerState
 		return verRet
 	}
 
-	lenOverStmtName := ast.NewFcFn(ast.AtomObj(glob.KeywordLen), []ast.Obj{stmt.Params[1]})
+	lenOverStmtName := ast.NewFnObj(ast.AtomObj(glob.KeywordLen), []ast.Obj{stmt.Params[1]})
 	equalFact := ast.EqualFact(lenOverStmtName, ast.AtomObj("0"))
 	verRet = ver.VerFactStmt(equalFact, state)
 	return verRet
@@ -350,7 +350,7 @@ func (ver *Verifier) verInSetProduct(stmt *ast.SpecFactStmt, state *VerState) Ex
 	if !ok {
 		return NewExecUnknown("")
 	}
-	// ok = ast.IsFcAtomAndEqualToStr(fcFn.FnHead, glob.TupleFcFnHead)
+	// ok = ast.IsAtomObjAndEqualToStr(fcFn.FnHead, glob.TupleFcFnHead)
 	// if !ok {
 	// 	return NewExecUnknown("")
 	// }
@@ -454,7 +454,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *
 	}
 
 	// whether return value is in ret set of fnFcFn
-	fn := ast.NewFcFn(left, randomAtoms)
+	fn := ast.NewFnObj(left, randomAtoms)
 	verRet := ver.VerFactStmt(ast.NewInFactWithParamFc(fn, fnFcFn.Params[0]), state)
 	return verRet
 }

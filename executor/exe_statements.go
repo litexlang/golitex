@@ -523,7 +523,7 @@ func (exec *Executor) haveSetFnStmt(stmt *ast.HaveSetFnStmt) ExecRet {
 
 func (exec *Executor) haveSetDefinedByReplacementStmt(stmt *ast.HaveSetDefinedByReplacementStmt) ExecRet {
 
-	setDefinedByReplacement := ast.NewFcFn(ast.AtomObj(glob.KeywordSetDefinedByReplacement), []ast.Obj{stmt.DomSet, stmt.RangeSet, stmt.PropName})
+	setDefinedByReplacement := ast.NewFnObj(ast.AtomObj(glob.KeywordSetDefinedByReplacement), []ast.Obj{stmt.DomSet, stmt.RangeSet, stmt.PropName})
 
 	defObjStmt := ast.NewDefLetStmt([]string{stmt.Name}, []ast.Obj{ast.AtomObj(glob.KeywordSet)}, []ast.FactStmt{ast.NewEqualFact(ast.AtomObj(stmt.Name), setDefinedByReplacement)}, stmt.Line)
 
@@ -694,7 +694,7 @@ func fnHeaderToReturnValueOfFn(head *ast.DefHeader) ast.Obj {
 
 	fnName := ast.AtomObj(head.Name)
 
-	return ast.NewFcFn(fnName, params)
+	return ast.NewFnObj(fnName, params)
 }
 
 func (exec *Executor) haveFnLiftStmt(stmt *ast.HaveFnLiftStmt) ExecRet {
@@ -712,11 +712,11 @@ func (exec *Executor) haveFnLiftStmt(stmt *ast.HaveFnLiftStmt) ExecRet {
 
 	FnTemplateOfFunctions := []ast.Obj{}
 	for i := range len(optDef.AsFnTStruct.ParamSets) {
-		head := ast.NewFcFn(ast.AtomObj(glob.KeywordFn), stmt.DomainOfEachParamOfGivenFn)
-		FnTemplateOfFunctions = append(FnTemplateOfFunctions, ast.NewFcFn(head, []ast.Obj{optDef.AsFnTStruct.ParamSets[i]}))
+		head := ast.NewFnObj(ast.AtomObj(glob.KeywordFn), stmt.DomainOfEachParamOfGivenFn)
+		FnTemplateOfFunctions = append(FnTemplateOfFunctions, ast.NewFnObj(head, []ast.Obj{optDef.AsFnTStruct.ParamSets[i]}))
 	}
 
-	retSet := ast.NewFcFn(ast.NewFcFn(ast.AtomObj(glob.KeywordFn), stmt.DomainOfEachParamOfGivenFn), []ast.Obj{optDef.AsFnTStruct.RetSet})
+	retSet := ast.NewFnObj(ast.NewFnObj(ast.AtomObj(glob.KeywordFn), stmt.DomainOfEachParamOfGivenFn), []ast.Obj{optDef.AsFnTStruct.RetSet})
 
 	// randomly generate len different params
 	randomParams := glob.GenerateUniqueRandomStrings(len(FnTemplateOfFunctions))
@@ -754,14 +754,14 @@ func (exec *Executor) haveFnLift_knowFact(stmt *ast.HaveFnLiftStmt, fnNames []st
 	}
 
 	uniFactParamSets := stmt.DomainOfEachParamOfGivenFn
-	lhs := ast.NewFcFn(ast.NewFcFn(ast.AtomObj(stmt.FnName), fnNamesAsFc), uniFactParamsAsFc)
+	lhs := ast.NewFnObj(ast.NewFnObj(ast.AtomObj(stmt.FnName), fnNamesAsFc), uniFactParamsAsFc)
 
 	rhsParams := []ast.Obj{}
 	for i := range len(fnNamesAsFc) {
-		rhsParams = append(rhsParams, ast.NewFcFn(ast.AtomObj(fnNames[i]), uniFactParamsAsFc))
+		rhsParams = append(rhsParams, ast.NewFnObj(ast.AtomObj(fnNames[i]), uniFactParamsAsFc))
 	}
 
-	rhs := ast.NewFcFn(stmt.Opt, rhsParams)
+	rhs := ast.NewFnObj(stmt.Opt, rhsParams)
 
 	return ast.NewUniFact(uniFactParams, uniFactParamSets, []ast.FactStmt{}, []ast.FactStmt{ast.NewEqualFact(lhs, rhs)}, stmt.Line)
 }
@@ -787,7 +787,7 @@ func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) ExecRet {
 // 		}
 // 	}
 
-// 	fcDerivedFromFnName := ast.NewFcFn(ast.FcAtom(stmt.DefFnStmt.Name), stmt.DefFnStmt.FnTemplate.Params.ToFcSlice())
+// 	fcDerivedFromFnName := ast.NewFnObj(ast.FcAtom(stmt.DefFnStmt.Name), stmt.DefFnStmt.FnTemplate.Params.ToFcSlice())
 
 // 	// prove return value in newRetFc
 // 	execState = exec.factStmt(ast.NewInFactWithFc(stmt.HaveObjSatisfyFn, stmt.DefFnStmt.FnTemplate.RetSet))
@@ -797,7 +797,7 @@ func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) ExecRet {
 
 // 	newThenFacts := []ast.FactStmt{}
 // 	for _, thenFact := range stmt.DefFnStmt.FnTemplate.ThenFacts {
-// 		newThenFacts = append(newThenFacts, thenFact.ReplaceFc(fcDerivedFromFnName, stmt.HaveObjSatisfyFn))
+// 		newThenFacts = append(newThenFacts, thenFact.ReplaceObj(fcDerivedFromFnName, stmt.HaveObjSatisfyFn))
 // 	}
 
 // 	for _, thenFact := range newThenFacts {
@@ -956,7 +956,7 @@ func (exec *Executor) evalFcInLocalEnv(fcToEval ast.Obj) (ast.Obj, ExecRet) {
 	exec.NewEnv(exec.Env)
 	defer exec.deleteEnv()
 
-	value, execRet := exec.evalFcThenSimplify(fcToEval)
+	value, execRet := exec.evalObjThenSimplify(fcToEval)
 	if execRet.IsNotTrue() {
 		return nil, execRet
 	}
