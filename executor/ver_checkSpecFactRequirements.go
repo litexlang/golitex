@@ -118,24 +118,24 @@ func (ver *Verifier) objSatisfyFnRequirement(obj ast.Obj, state *VerState) ExecR
 	if _, ok := obj.(ast.AtomObj); ok {
 		return NewExecTrue("")
 	}
-	objAsObjFn, ok := obj.(*ast.FnObj)
+	objAsFnObj, ok := obj.(*ast.FnObj)
 	if !ok {
 		return NewExecErr(fmt.Sprintf("%s is not a function", obj))
 	}
 
 	// 单独处理特殊的内置prop
-	// if isArithmeticFn(objAsObjFn) {
-	// 	return ver.arithmeticFnRequirement(objAsObjFn, state)
+	// if isArithmeticFn(objAsFnObj) {
+	// 	return ver.arithmeticFnRequirement(objAsFnObj, state)
 	// } else
-	if ast.IsFn_WithHeadName(objAsObjFn, glob.KeywordLen) {
-		return ver.lenFnRequirement(objAsObjFn, state)
-	} else if ast.IsFnTemplate_FcFn(objAsObjFn) {
+	if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordLen) {
+		return ver.lenFnRequirement(objAsFnObj, state)
+	} else if ast.IsFnTemplate_FcFn(objAsFnObj) {
 		return NewExecTrue("")
 		// }
-		// else if ver.isObjFnWithHeadNameBuiltinAndCanTakeInAnyObj(objAsObjFn) {
-		// 	return ver.isObjFnWithHeadNameBuiltinAndCanTakeInAnyObj_CheckRequirement(objAsObjFn, state)
-	} else if ast.IsAtomObjAndEqualToStr(objAsObjFn.FnHead, glob.KeywordSetDefinedByReplacement) {
-		return ver.setDefinedByReplacementFnRequirement(objAsObjFn, state)
+		// else if ver.isFnObjWithHeadNameBuiltinAndCanTakeInAnyObj(objAsFnObj) {
+		// 	return ver.isFnObjWithHeadNameBuiltinAndCanTakeInAnyObj_CheckRequirement(objAsFnObj, state)
+	} else if ast.IsAtomObjAndEqualToStr(objAsFnObj.FnHead, glob.KeywordSetDefinedByReplacement) {
+		return ver.setDefinedByReplacementFnRequirement(objAsFnObj, state)
 		// }
 		// else if toCompute, ok := ast.IsFcFnWithCompHeadAndReturnFcToCompute(fcAsFcFn); ok {
 		// 	return ver.objSatisfyFnRequirement(toCompute, state)
@@ -146,23 +146,23 @@ func (ver *Verifier) objSatisfyFnRequirement(obj ast.Obj, state *VerState) ExecR
 
 		// 	return ver.objSatisfyFnRequirement(fcAsFcFn.Params[0], state)
 	} else {
-		// return ver.objFnSatisfy_FnTemplate_Requirement(objAsObjFn, state)
-		return ver.parasSatisfyFnReq(objAsObjFn, state)
+		// return ver.fnObjSatisfy_FnTemplate_Requirement(objAsFnObj, state)
+		return ver.parasSatisfyFnReq(objAsFnObj, state)
 	}
 }
 
 // TODO: 这里需要检查！
-func (ver *Verifier) setDefinedByReplacementFnRequirement(objFn *ast.FnObj, state *VerState) ExecRet {
-	if len(objFn.Params) != 3 {
-		return NewExecErr(fmt.Sprintf("parameters in %s must be 3, %s in %s is not valid", objFn.FnHead, objFn, objFn))
+func (ver *Verifier) setDefinedByReplacementFnRequirement(fnObj *ast.FnObj, state *VerState) ExecRet {
+	if len(fnObj.Params) != 3 {
+		return NewExecErr(fmt.Sprintf("parameters in %s must be 3, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
 	}
 
-	propName, ok := objFn.Params[2].(ast.AtomObj)
+	propName, ok := fnObj.Params[2].(ast.AtomObj)
 	if !ok {
-		return NewExecErr(fmt.Sprintf("parameters in %s must be 3, %s in %s is not valid", objFn.FnHead, objFn, objFn))
+		return NewExecErr(fmt.Sprintf("parameters in %s must be 3, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
 	}
 
-	forallXOnlyOneYSatisfyGivenProp := ast.GetForallXOnlyOneYSatisfyGivenProp(objFn.Params[0], objFn.Params[1], propName)
+	forallXOnlyOneYSatisfyGivenProp := ast.GetForallXOnlyOneYSatisfyGivenProp(fnObj.Params[0], fnObj.Params[1], propName)
 
 	verRet := ver.VerFactStmt(forallXOnlyOneYSatisfyGivenProp, state)
 	return verRet
@@ -194,17 +194,17 @@ func (ver *Verifier) setDefinedByReplacementFnRequirement(objFn *ast.FnObj, stat
 // 	return NewExecTrue("")
 // }
 
-func (ver *Verifier) lenFnRequirement(objFn *ast.FnObj, state *VerState) ExecRet {
-	if len(objFn.Params) != 1 {
-		return NewExecErr(fmt.Sprintf("parameters in %s must be 1, %s in %s is not valid", objFn.FnHead, objFn, objFn))
+func (ver *Verifier) lenFnRequirement(fnObj *ast.FnObj, state *VerState) ExecRet {
+	if len(fnObj.Params) != 1 {
+		return NewExecErr(fmt.Sprintf("parameters in %s must be 1, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
 	}
 
-	verRet := ver.VerFactStmt(ast.NewInFactWithFc(objFn.Params[0], ast.AtomObj(glob.KeywordFiniteSet)), state)
+	verRet := ver.VerFactStmt(ast.NewInFactWithFc(fnObj.Params[0], ast.AtomObj(glob.KeywordFiniteSet)), state)
 	if verRet.IsErr() {
 		return NewExecErr(verRet.String())
 	}
 	if verRet.IsUnknown() {
-		return NewExecErr(fmt.Sprintf("parameters in %s must be in set %s, %s in %s is not valid", objFn.FnHead, glob.KeywordFiniteSet, objFn.Params[0], objFn))
+		return NewExecErr(fmt.Sprintf("parameters in %s must be in set %s, %s in %s is not valid", fnObj.FnHead, glob.KeywordFiniteSet, fnObj.Params[0], fnObj))
 	}
 	return NewExecTrue("")
 }

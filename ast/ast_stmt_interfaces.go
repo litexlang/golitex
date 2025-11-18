@@ -193,7 +193,7 @@ type FactStmt interface {
 	ToLatexString() string
 	canBeKnown()
 	InlineString() string
-	ReplaceObj(oldObj Obj, newObj Obj) FactStmt
+	// ReplaceObj(oldObj Obj, newObj Obj) FactStmt
 	GetLine() uint
 	algoStmt()
 	Instantiate(map[string]Obj) (Stmt, error)
@@ -218,7 +218,7 @@ type Spec_OrFact interface {
 	ToLatexString() string
 	canBeKnown()
 	InlineString() string
-	ReplaceObj(oldObj Obj, newObj Obj) FactStmt
+	// ReplaceObj(oldObj Obj, newObj Obj) FactStmt
 	GetLine() uint
 	algoStmt()
 	Instantiate(map[string]Obj) (Stmt, error)
@@ -264,7 +264,7 @@ type UniFactInterface interface {
 	ToLatexString() string
 	canBeKnown()
 	InlineString() string
-	ReplaceObj(oldObj Obj, newObj Obj) FactStmt
+	// ReplaceObj(oldObj Obj, newObj Obj) FactStmt
 	GetLine() uint
 	algoStmt()
 	GetParams() StrSlice

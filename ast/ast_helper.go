@@ -83,12 +83,12 @@ func NewEqualFact(left, right Obj) *SpecFactStmt {
 }
 
 func IsFn_WithHeadName(obj Obj, headName string) bool {
-	objFn, ok := obj.(*FnObj)
+	fnObj, ok := obj.(*FnObj)
 	if !ok {
 		return false
 	}
 
-	headAtom, ok := objFn.FnHead.(AtomObj)
+	headAtom, ok := fnObj.FnHead.(AtomObj)
 	if !ok {
 		return false
 	}
@@ -97,12 +97,12 @@ func IsFn_WithHeadName(obj Obj, headName string) bool {
 }
 
 func IsFn_WithHeadNameInSlice(obj Obj, headNames map[string]struct{}) bool {
-	objFn, ok := obj.(*FnObj)
+	fnObj, ok := obj.(*FnObj)
 	if !ok {
 		return false
 	}
 
-	headAtom, ok := objFn.FnHead.(AtomObj)
+	headAtom, ok := fnObj.FnHead.(AtomObj)
 	if !ok {
 		return false
 	}
@@ -191,15 +191,15 @@ func (fcFn *FnObj) IsFcFn_HasAtomHead_ReturnHead() (AtomObj, bool) {
 	return head, true
 }
 
-func (stmt *FnTemplateDefStmt) Instantiate_GetFnTemplateNoName(objFn *FnObj) (*FnTStruct, error) {
+func (stmt *FnTemplateDefStmt) Instantiate_GetFnTemplateNoName(fnObj *FnObj) (*FnTStruct, error) {
 	uniMap := map[string]Obj{}
 	templateParams := stmt.TemplateDefHeader.Params
-	if len(templateParams) != len(objFn.Params) {
+	if len(templateParams) != len(fnObj.Params) {
 		return nil, fmt.Errorf("template params and obj params must have the same length")
 	}
 
 	for i, param := range templateParams {
-		uniMap[param] = objFn.Params[i]
+		uniMap[param] = fnObj.Params[i]
 	}
 
 	instantiatedParamSets, err := stmt.Fn.ParamSets.Instantiate(uniMap)
@@ -274,19 +274,19 @@ func GetFnHeadChain_AndItSelf(obj Obj) ([]Obj, [][]Obj) {
 	}
 }
 
-func (objAsObjFn *FnObj) IsFnT_FcFn_Ret_ParamSets_And_RetSet(objFn *FnObj) (bool, []Obj, Obj) {
-	if !IsFnTemplate_FcFn(objAsObjFn) {
+func (objAsFnObj *FnObj) IsFnT_FcFn_Ret_ParamSets_And_RetSet(fnObj *FnObj) (bool, []Obj, Obj) {
+	if !IsFnTemplate_FcFn(objAsFnObj) {
 		return false, nil, nil
 	}
 
-	objAsObjFnHeadAsObjFn, ok := objAsObjFn.FnHead.(*FnObj)
+	objAsFnObjHeadAsFnObj, ok := objAsFnObj.FnHead.(*FnObj)
 	if !ok {
 		return false, nil, nil
 	}
 
-	paramSets := append([]Obj{}, objAsObjFnHeadAsObjFn.Params...)
+	paramSets := append([]Obj{}, objAsFnObjHeadAsFnObj.Params...)
 
-	retSet := objAsObjFn.Params[0]
+	retSet := objAsFnObj.Params[0]
 
 	return true, paramSets, retSet
 }
@@ -330,13 +330,13 @@ func UnknownFactMsg(fact FactStmt) string {
 }
 
 func ToInt(obj Obj) (int, bool) {
-	objAsInt, ok := obj.(AtomObj)
+	atomObj, ok := obj.(AtomObj)
 	if !ok {
 		return 0, false
 	}
 
 	// string to int
-	num, err := strconv.Atoi(string(objAsInt))
+	num, err := strconv.Atoi(string(atomObj))
 	if err != nil {
 		return 0, false
 	}

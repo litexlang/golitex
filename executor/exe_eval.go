@@ -46,7 +46,7 @@ func (exec *Executor) evalObjThenSimplify(obj ast.Obj) (ast.Obj, ExecRet) {
 		}
 		return symbolValue, NewExecTrue("")
 	case *ast.FnObj:
-		return exec.evalObjFnThenSimplify(asObj)
+		return exec.evalFnObjThenSimplify(asObj)
 	default:
 		return nil, NewExecErr(fmt.Sprintf("unexpected type: %T", obj))
 	}
@@ -62,32 +62,32 @@ var basicArithOptMap = map[string]struct{}{
 }
 
 // 可能返回数值的时候需要检查一下会不会除以0这种情况
-func (exec *Executor) evalObjFnThenSimplify(objFn *ast.FnObj) (ast.Obj, ExecRet) {
-	if symbolValue := exec.Env.GetSymbolSimplifiedValue(objFn); symbolValue != nil {
+func (exec *Executor) evalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj, ExecRet) {
+	if symbolValue := exec.Env.GetSymbolSimplifiedValue(fnObj); symbolValue != nil {
 		return symbolValue, NewExecTrue("")
 	}
 
-	if ast.IsFn_WithHeadNameInSlice(objFn, basicArithOptMap) {
-		left, execRet := exec.evalObjThenSimplify(objFn.Params[0])
+	if ast.IsFn_WithHeadNameInSlice(fnObj, basicArithOptMap) {
+		left, execRet := exec.evalObjThenSimplify(fnObj.Params[0])
 		if execRet.IsNotTrue() {
 			return nil, execRet
 		}
-		right, execRet := exec.evalObjThenSimplify(objFn.Params[1])
+		right, execRet := exec.evalObjThenSimplify(fnObj.Params[1])
 		if execRet.IsNotTrue() {
 			return nil, execRet
 		}
 
-		numExprObj := ast.NewFnObj(objFn.FnHead, []ast.Obj{left, right})
-		execRet = exec.objFnParamsInFnDomain(numExprObj)
+		numExprObj := ast.NewFnObj(fnObj.FnHead, []ast.Obj{left, right})
+		execRet = exec.fnObjParamsInFnDomain(numExprObj)
 		if execRet.IsNotTrue() {
-			return nil, NewExecErr(fmt.Sprintf("%s = %s is invalid", objFn, numExprObj))
+			return nil, NewExecErr(fmt.Sprintf("%s = %s is invalid", fnObj, numExprObj))
 		}
 
 		return exec.simplifyNumExprObj(numExprObj)
 	}
 
-	if ok := exec.Env.IsFnWithDefinedAlgo(objFn); ok {
-		numExprObj, execRet := exec.useAlgoToEvalObjFnThenSimplify(objFn)
+	if ok := exec.Env.IsFnWithDefinedAlgo(fnObj); ok {
+		numExprObj, execRet := exec.useAlgoToEvalFnObjThenSimplify(fnObj)
 		if execRet.IsNotTrue() {
 			return nil, execRet
 		}
@@ -98,49 +98,49 @@ func (exec *Executor) evalObjFnThenSimplify(objFn *ast.FnObj) (ast.Obj, ExecRet)
 	return nil, NewExecUnknown("")
 }
 
-func (exec *Executor) useAlgoToEvalObjFnThenSimplify(objFn *ast.FnObj) (ast.Obj, ExecRet) {
-	algoDef := exec.Env.GetAlgoDef(objFn.FnHead.String())
+func (exec *Executor) useAlgoToEvalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj, ExecRet) {
+	algoDef := exec.Env.GetAlgoDef(fnObj.FnHead.String())
 	if algoDef == nil {
-		return nil, NewExecErr(fmt.Sprintf("algo %s is not found", objFn.FnHead.String()))
+		return nil, NewExecErr(fmt.Sprintf("algo %s is not found", fnObj.FnHead.String()))
 	}
 
-	if len(objFn.Params) != len(algoDef.Params) {
-		return nil, NewExecErr(fmt.Sprintf("algorithm %s requires %d parameters, get %d instead", algoDef.FuncName, len(algoDef.Params), len(objFn.Params)))
+	if len(fnObj.Params) != len(algoDef.Params) {
+		return nil, NewExecErr(fmt.Sprintf("algorithm %s requires %d parameters, get %d instead", algoDef.FuncName, len(algoDef.Params), len(fnObj.Params)))
 	}
 
 	// 传入的参数真的在fn的domain里
-	execRet := exec.objFnParamsInFnDomain(objFn)
+	execRet := exec.fnObjParamsInFnDomain(fnObj)
 	if execRet.IsNotTrue() {
-		return nil, NewExecErr(fmt.Sprintf("parameters of %s are not in domain of %s", objFn, objFn.FnHead))
+		return nil, NewExecErr(fmt.Sprintf("parameters of %s are not in domain of %s", fnObj, fnObj.FnHead))
 	}
 
 	for i, param := range algoDef.Params {
 		if exec.Env.IsAtomDeclared(ast.AtomObj(param), map[string]struct{}{}) {
 			continue
 		} else {
-			execState := exec.defLetStmt(ast.NewDefLetStmt([]string{param}, []ast.Obj{ast.AtomObj(glob.KeywordObj)}, []ast.FactStmt{ast.NewEqualFact(ast.AtomObj(param), objFn.Params[i])}, glob.InnerGenLine))
+			execState := exec.defLetStmt(ast.NewDefLetStmt([]string{param}, []ast.Obj{ast.AtomObj(glob.KeywordObj)}, []ast.FactStmt{ast.NewEqualFact(ast.AtomObj(param), fnObj.Params[i])}, glob.InnerGenLine))
 			if execState.IsNotTrue() {
 				return nil, NewExecErr(execState.String())
 			}
 		}
 	}
 
-	objFnParamsValues := []ast.Obj{}
-	for _, param := range objFn.Params {
+	fnObjParamsValues := []ast.Obj{}
+	for _, param := range fnObj.Params {
 		_, value := exec.Env.ReplaceSymbolWithValue(param)
 		// simplifiedValue := value
 		simplifiedValue, execRet := exec.simplifyNumExprObj(value)
 		if execRet.IsNotTrue() {
-			return nil, NewExecErr(fmt.Sprintf("value of %s of %s is unknown.", param, objFn))
+			return nil, NewExecErr(fmt.Sprintf("value of %s of %s is unknown.", param, fnObj))
 		}
-		objFnParamsValues = append(objFnParamsValues, simplifiedValue)
+		fnObjParamsValues = append(fnObjParamsValues, simplifiedValue)
 	}
 
-	objFnWithValueParams := ast.NewFnObj(objFn.FnHead, objFnParamsValues)
+	fnObjWithValueParams := ast.NewFnObj(fnObj.FnHead, fnObjParamsValues)
 
 	uniMap := map[string]ast.Obj{}
 	for i, param := range algoDef.Params {
-		uniMap[param] = objFnParamsValues[i]
+		uniMap[param] = fnObjParamsValues[i]
 	}
 
 	instAlgoDef, err := algoDef.Instantiate(uniMap)
@@ -148,7 +148,7 @@ func (exec *Executor) useAlgoToEvalObjFnThenSimplify(objFn *ast.FnObj) (ast.Obj,
 		return nil, NewExecErrWithErr(err)
 	}
 
-	value, execRet := exec.runAlgoStmtsWhenEval(instAlgoDef.(*ast.DefAlgoStmt).Stmts, objFnWithValueParams)
+	value, execRet := exec.runAlgoStmtsWhenEval(instAlgoDef.(*ast.DefAlgoStmt).Stmts, fnObjWithValueParams)
 	if execRet.IsNotTrue() {
 		return nil, execRet
 	}
@@ -156,11 +156,11 @@ func (exec *Executor) useAlgoToEvalObjFnThenSimplify(objFn *ast.FnObj) (ast.Obj,
 	return exec.simplifyNumExprObj(value)
 }
 
-func (exec *Executor) runAlgoStmtsWhenEval(algoStmts ast.AlgoStmtSlice, objFnWithValueParams *ast.FnObj) (ast.Obj, ExecRet) {
+func (exec *Executor) runAlgoStmtsWhenEval(algoStmts ast.AlgoStmtSlice, fnObjWithValueParams *ast.FnObj) (ast.Obj, ExecRet) {
 	for _, stmt := range algoStmts {
 		switch asStmt := stmt.(type) {
 		case *ast.AlgoReturnStmt:
-			execRet := exec.factStmt(ast.EqualFact(objFnWithValueParams, asStmt.Value))
+			execRet := exec.factStmt(ast.EqualFact(fnObjWithValueParams, asStmt.Value))
 			if execRet.IsErr() {
 				return nil, execRet
 			}
@@ -173,7 +173,7 @@ func (exec *Executor) runAlgoStmtsWhenEval(algoStmts ast.AlgoStmtSlice, objFnWit
 			if conditionIsTrue, execRet := exec.IsAlgoIfConditionTrue(asStmt); execRet.IsNotTrue() {
 				return nil, execRet
 			} else if conditionIsTrue {
-				return exec.algoIfStmtWhenEval(asStmt, objFnWithValueParams)
+				return exec.algoIfStmtWhenEval(asStmt, fnObjWithValueParams)
 			}
 		case *ast.ProveAlgoReturnStmt:
 			return nil, NewExecErr(fmt.Sprintf("There can not be return by statements in algo, get %s", asStmt.String()))
@@ -185,12 +185,12 @@ func (exec *Executor) runAlgoStmtsWhenEval(algoStmts ast.AlgoStmtSlice, objFnWit
 		}
 	}
 
-	return nil, NewExecErr(fmt.Sprintf("There is no return value of %s", objFnWithValueParams))
+	return nil, NewExecErr(fmt.Sprintf("There is no return value of %s", fnObjWithValueParams))
 }
 
-func (exec *Executor) objFnParamsInFnDomain(objFn *ast.FnObj) ExecRet {
+func (exec *Executor) fnObjParamsInFnDomain(fnObj *ast.FnObj) ExecRet {
 	ver := NewVerifier(exec.Env)
-	return ver.objSatisfyFnRequirement(objFn, Round0NoMsg)
+	return ver.objSatisfyFnRequirement(fnObj, Round0NoMsg)
 }
 
 func (exec *Executor) IsAlgoIfConditionTrue(stmt *ast.AlgoIfStmt) (bool, ExecRet) {
@@ -229,7 +229,7 @@ func (exec *Executor) IsAlgoIfConditionTrue(stmt *ast.AlgoIfStmt) (bool, ExecRet
 	return true, NewExecTrue("")
 }
 
-func (exec *Executor) algoIfStmtWhenEval(stmt *ast.AlgoIfStmt, objFnWithValueParams *ast.FnObj) (ast.Obj, ExecRet) {
+func (exec *Executor) algoIfStmtWhenEval(stmt *ast.AlgoIfStmt, fnObjWithValueParams *ast.FnObj) (ast.Obj, ExecRet) {
 	exec.NewEnv(exec.Env)
 	defer exec.deleteEnv()
 
@@ -240,6 +240,6 @@ func (exec *Executor) algoIfStmtWhenEval(stmt *ast.AlgoIfStmt, objFnWithValuePar
 		return nil, execRet
 	}
 
-	value, execRet := exec.runAlgoStmtsWhenEval(stmt.ThenStmts, objFnWithValueParams)
+	value, execRet := exec.runAlgoStmtsWhenEval(stmt.ThenStmts, fnObjWithValueParams)
 	return value, execRet
 }
