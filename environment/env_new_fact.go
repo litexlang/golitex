@@ -521,7 +521,7 @@ func (env *Env) newEnumFact(stmt *ast.EnumStmt) error {
 	lengthOfSet := strconv.Itoa(len(stmt.Items))
 	lengthOfSetAsFcAtom := ast.AtomObj(lengthOfSet)
 
-	lenFact := ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeySymbolEqual), []ast.Obj{ast.NewFnObj(ast.AtomObj(glob.KeywordLen), []ast.Obj{stmt.CurSet}), lengthOfSetAsFcAtom}, stmt.Line)
+	lenFact := ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeySymbolEqual), []ast.Obj{ast.NewFnObj(ast.AtomObj(glob.KeywordCount), []ast.Obj{stmt.CurSet}), lengthOfSetAsFcAtom}, stmt.Line)
 	err = env.NewFact(lenFact)
 	if err != nil {
 		return err
