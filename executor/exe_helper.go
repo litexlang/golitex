@@ -55,9 +55,9 @@ func (exec *Executor) verifyFactsAtCurEnv(proofs []ast.FactStmt, verState *VerSt
 			return NewExecUnknown(""), proof, nil
 		}
 
-		err := exec.Env.NewFact(proof)
-		if err != nil {
-			return NewExecErr(""), proof, err
+		ret := exec.Env.NewFact(proof)
+		if ret.IsErr() {
+			return NewExecErr(ret.String()), proof, fmt.Errorf(ret.String())
 		}
 	}
 	return NewExecTrue(""), nil, nil

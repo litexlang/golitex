@@ -39,7 +39,6 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 
 	// 检查 SpecFactStmt 是否满足了
 	execState, err := exec.openANewEnvAndCheck(stmt.Fact, false)
-
 	if err != nil {
 		return NewExecErr(err.Error())
 	}
@@ -103,9 +102,9 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 	// 把 obj 放入环境
 	for i, objName := range stmt.ObjNames {
 		stmtForDef := ast.NewDefLetStmt([]string{objName}, []ast.Obj{instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).ExistParamSets[i]}, []ast.FactStmt{}, stmt.Line)
-		err := exec.Env.DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmtForDef)
-		if err != nil {
-			return NewExecErr(err.Error())
+		ret := exec.Env.DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmtForDef)
+		if ret.IsErr() {
+			return NewExecErr(ret.String())
 		}
 		execState := NewExecTrue(stmtForDef.String())
 		if execState.IsNotTrue() {
@@ -122,25 +121,25 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 	// }
 
 	for i, existParamSet := range instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).ExistParamSets {
-		err := exec.Env.NewFact(ast.NewInFact(stmt.ObjNames[i], existParamSet))
-		if err != nil {
-			return NewExecErr(err.Error())
+		ret := exec.Env.NewFact(ast.NewInFact(stmt.ObjNames[i], existParamSet))
+		if ret.IsErr() {
+			return NewExecErr(ret.String())
 		}
 	}
 
 	// dom of def exist prop is true
 	for _, domFact := range instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).DefBody.DomFacts {
-		err := exec.Env.NewFact(domFact)
-		if err != nil {
-			return NewExecErr(err.Error())
+		ret := exec.Env.NewFact(domFact)
+		if ret.IsErr() {
+			return NewExecErr(ret.String())
 		}
 	}
 
 	// iff of def exist prop is true
 	for _, iffFact := range instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).DefBody.IffFacts {
-		err := exec.Env.NewFact(iffFact)
-		if err != nil {
-			return NewExecErr(err.Error())
+		ret := exec.Env.NewFact(iffFact)
+		if ret.IsErr() {
+			return NewExecErr(ret.String())
 		}
 	}
 
@@ -148,9 +147,9 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 	existStFactParams := ast.MakeExistFactParamsSlice(ExistParamsAtoms, stmt.Fact.Params)
 
 	newExistStFact := ast.NewSpecFactStmt(ast.TrueExist_St, ast.AtomObj(string(stmt.Fact.PropName)), existStFactParams, stmt.Line)
-	err = exec.Env.NewFact(newExistStFact)
-	if err != nil {
-		return NewExecErr(err.Error())
+	ret := exec.Env.NewFact(newExistStFact)
+	if ret.IsErr() {
+		return NewExecErr(ret.String())
 	}
 
 	result := NewExecTrue("")

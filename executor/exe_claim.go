@@ -61,9 +61,9 @@ func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.Spec_O
 	reversedFact := specFactStmt.ReverseIsTrue()
 
 	for _, curFact := range reversedFact {
-		err := exec.Env.NewFact(curFact)
-		if err != nil {
-			return NewExecErr(err.Error())
+		ret := exec.Env.NewFact(curFact)
+		if ret.IsErr() {
+			return NewExecErr(ret.String())
 		}
 	}
 
@@ -107,9 +107,9 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 
 	// know cond facts
 	for _, condFact := range newStmtPtr.DomFacts {
-		err := exec.Env.NewFact(condFact)
-		if err != nil {
-			return NewExecErr(err.Error())
+		ret := exec.Env.NewFact(condFact)
+		if ret.IsErr() {
+			return NewExecErr(ret.String())
 		}
 	}
 
@@ -124,9 +124,9 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 	}
 	reversedThenFacts := ast.ReverseSliceOfReversibleFacts(thenFactsAsReversibleFacts)
 	for _, reversedThenFact := range reversedThenFacts {
-		err := exec.Env.NewFact(reversedThenFact)
-		if err != nil {
-			return NewExecErr(err.Error())
+		ret := exec.Env.NewFact(reversedThenFact)
+		if ret.IsErr() {
+			return NewExecErr(ret.String())
 		}
 	}
 
@@ -170,9 +170,9 @@ func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) ExecRet {
 	}
 
 	// 检查 stmt fact 中的所有元素已经定义过了
-	err := exec.Env.NewFact(stmt.ToCheckFact)
-	if err != nil {
-		return NewExecErr(err.Error())
+	ret := exec.Env.NewFact(stmt.ToCheckFact)
+	if ret.IsErr() {
+		return NewExecErr(ret.String())
 	}
 	// exec.knowStmt(ast.NewKnowStmt([]ast.CanBeKnownStmt{stmt.ToCheckFact}))
 
@@ -245,9 +245,9 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) ExecRet {
 
 	// know dom facts
 	for _, domFact := range asUnivFact.DomFacts {
-		err := exec.Env.NewFact(domFact)
-		if err != nil {
-			return NewExecErr(err.Error())
+		ret := exec.Env.NewFact(domFact)
+		if ret.IsErr() {
+			return NewExecErr(ret.String())
 		}
 	}
 
@@ -315,9 +315,9 @@ func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) ExecRet {
 
 	// know forall
 	uniFact := ast.NewUniFact(stmt.ExistPropWithoutDom.DefBody.DefHeader.Params, stmt.ExistPropWithoutDom.DefBody.DefHeader.ParamSets, stmt.ExistPropWithoutDom.DefBody.IffFacts, []ast.FactStmt{stmt.ExistPropWithoutDom.DefBody.DefHeader.ToSpecFact()}, stmt.Line)
-	err := exec.Env.NewFact(uniFact)
-	if err != nil {
-		return NewExecErr(err.Error())
+	ret := exec.Env.NewFact(uniFact)
+	if ret.IsErr() {
+		return NewExecErr(ret.String())
 	}
 
 	return NewExecTrue("")
@@ -405,13 +405,13 @@ func (exec *Executor) claimIffStmt(stmt *ast.ClaimIffStmt) ExecRet {
 		return execState
 	}
 
-	err := exec.Env.NewFact(thenToIff)
-	if err != nil {
-		return NewExecErr(err.Error())
+	ret := exec.Env.NewFact(thenToIff)
+	if ret.IsErr() {
+		return NewExecErr(ret.String())
 	}
-	err = exec.Env.NewFact(iffToThen)
-	if err != nil {
-		return NewExecErr(err.Error())
+	ret = exec.Env.NewFact(iffToThen)
+	if ret.IsErr() {
+		return NewExecErr(ret.String())
 	}
 
 	return NewExecTrue("")

@@ -100,9 +100,9 @@ func (exec *Executor) proveIsCommutativePropStmtBody(proofs []ast.Stmt, fact *as
 	exec.NewEnv(exec.Env)
 	defer exec.deleteEnv()
 
-	err := exec.Env.NewFact(fact)
-	if err != nil {
-		return false, err
+	ret := exec.Env.NewFact(fact)
+	if ret.IsErr() {
+		return false, fmt.Errorf(ret.String())
 	}
 
 	for _, proof := range proofs {

@@ -171,9 +171,9 @@ func (e *Env) IsAtomDeclared(atom ast.AtomObj, extraAtomNames map[string]struct{
 	return ok
 }
 
-func (e *Env) ThereIsNoDuplicateObjNamesAndAllAtomsInParamSetsAreDefined(params []string, setParams []ast.Obj, checkDeclared bool) error {
+func (e *Env) ThereIsNoDuplicateObjNamesAndAllAtomsInParamSetsAreDefined(params []string, setParams []ast.Obj, checkDeclared bool) glob.GlobRet {
 	if len(params) != len(setParams) {
-		return fmt.Errorf("number of params and set params are not the same")
+		return glob.ErrRet(fmt.Errorf("number of params and set params are not the same"))
 	}
 
 	// 检查所有参数都声明了
@@ -181,23 +181,23 @@ func (e *Env) ThereIsNoDuplicateObjNamesAndAllAtomsInParamSetsAreDefined(params 
 	for i, param := range params {
 		_, ok := paramSet[param]
 		if ok {
-			return fmt.Errorf("parameter %s is declared multiple times", param)
+			return glob.ErrRet(fmt.Errorf("parameter %s is declared multiple times", param))
 		}
 		if checkDeclared {
 			ok = e.AreAtomsInFcAreDeclared(setParams[i], paramSet)
 			if !ok {
-				return fmt.Errorf(AtomsInFcNotDeclaredMsg(setParams[i]))
+				return glob.ErrRet(fmt.Errorf(AtomsInFcNotDeclaredMsg(setParams[i])))
 			}
 		}
 		paramSet[param] = struct{}{} // setParam 不能 包含它自己
 	}
 
-	return nil
+	return glob.TrueRet("")
 }
 
-func (e *Env) NonDuplicateParam_NoUndeclaredParamSet_ExtraAtomNames(params []string, setParams []ast.Obj, extraAtomNames map[string]struct{}, checkDeclared bool) error {
+func (e *Env) NonDuplicateParam_NoUndeclaredParamSet_ExtraAtomNames(params []string, setParams []ast.Obj, extraAtomNames map[string]struct{}, checkDeclared bool) glob.GlobRet {
 	if len(params) != len(setParams) {
-		return fmt.Errorf("number of params and set params are not the same")
+		return glob.ErrRet(fmt.Errorf("number of params and set params are not the same"))
 	}
 
 	// 检查所有参数都声明了
@@ -205,16 +205,16 @@ func (e *Env) NonDuplicateParam_NoUndeclaredParamSet_ExtraAtomNames(params []str
 	for i, param := range params {
 		_, ok := paramSet[param]
 		if ok {
-			return fmt.Errorf("parameter %s is declared multiple times", param)
+			return glob.ErrRet(fmt.Errorf("parameter %s is declared multiple times", param))
 		}
 		if checkDeclared {
 			ok = e.AreAtomsInFcAreDeclared(setParams[i], paramSet)
 			if !ok {
-				return fmt.Errorf(AtomsInFcNotDeclaredMsg(setParams[i]))
+				return glob.ErrRet(fmt.Errorf(AtomsInFcNotDeclaredMsg(setParams[i])))
 			}
 		}
 		paramSet[param] = struct{}{} // setParam 不能 包含它自己
 	}
 
-	return nil
+	return glob.TrueRet("")
 }

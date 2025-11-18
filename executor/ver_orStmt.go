@@ -46,9 +46,9 @@ func (ver *Verifier) verFactAtIndex_WhenOthersAreFalse(facts []*ast.SpecFactStmt
 		if j == i {
 			continue
 		}
-		err := ver.Env.NewFact(facts[j].ReverseTrue())
-		if err != nil {
-			return NewExecErr(err.Error())
+		ret := ver.Env.NewFact(facts[j].ReverseTrue())
+		if ret.IsErr() {
+			return NewExecErr(ret.String())
 		}
 	}
 
