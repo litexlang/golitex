@@ -722,7 +722,7 @@ func (stmt *MarkdownStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return stmt, nil
 }
 
-func (stmt *ProveInRangeStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+func (stmt *ProveInRangeSetStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newIntensionalSet, err := stmt.IntensionalSet.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
@@ -735,7 +735,31 @@ func (stmt *ProveInRangeStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewProveInRangeStmt(stmt.Start, stmt.End, stmt.Param, newIntensionalSet, newThenFacts, newProofs, stmt.Line), nil
+	return NewProveInRangeSetStmt(stmt.Start, stmt.End, stmt.Param, newIntensionalSet, newThenFacts, newProofs, stmt.Line), nil
+}
+
+func (stmt *ProveInRangeStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+	newStart, err := stmt.start.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newEnd, err := stmt.end.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newDomFacts, err := stmt.DomFactsOrNil.InstantiateFact(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newThenFacts, err := stmt.ThenFacts.InstantiateFact(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newProofs, err := stmt.ProofsOrNil.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewProveInRangeStmt(stmt.param, newStart, newEnd, newDomFacts, newThenFacts, newProofs, stmt.Line), nil
 }
 
 func (stmt *ClaimIffStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {

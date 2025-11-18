@@ -109,6 +109,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.clearStmt()
 	case glob.KeywordProveByInduction:
 		ret, err = tb.proveByInductionStmt()
+	case glob.KeywordProveInRangeSet:
+		ret, err = tb.proveInRangeSetStmt()
 	case glob.KeywordProveInRange:
 		ret, err = tb.proveInRangeStmt()
 	case glob.KeywordProveIsTransitiveProp:
@@ -2948,9 +2950,203 @@ func (tb *tokenBlock) atExistPropDefStmt() (*ast.DefExistPropStmt, error) {
 	return ast.NewDefExistPropStmt(ast.NewExistPropDef(header, []ast.FactStmt{}, iffFacts, thenFacts, tb.line), existParams, existParamSets, tb.line), nil
 }
 
-// parse prove_in_range(start, end, x S): then_fact prove:
+// Example:
+// prove_in_range_set(a, 1, 3):
+//
+//	a > 0
+//
+// prove_in_range(a, 1, 3):
+//
+//	dom:
+//	    ...
+//	=>:
+//	    ...
+//	prove:
+//	    ...
+//
+// prove_in_range(a, 1, 3):
+//
+//	dom:
+//	    ...
+//	=>:
+//	    ...
+//
+// prove_in_range_set(a, 1, 3):
+//
+//	...
+//	prove:
+//	    ...
 func (tb *tokenBlock) proveInRangeStmt() (ast.Stmt, error) {
 	err := tb.header.skip(glob.KeywordProveInRange)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	param, err := tb.header.next()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolComma)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	start, err := tb.RawObj()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolComma)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	end, err := tb.RawObj()
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolRightBrace)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	domFacts := []ast.FactStmt{}
+	thenFacts := []ast.FactStmt{}
+	proofs := []ast.Stmt{}
+
+	// Parse body sections: dom, =>, prove
+	if len(tb.body) == 0 {
+		// Empty body, all remain empty
+	} else if tb.body[0].header.is(glob.KeywordDom) {
+		// First section is dom: must be dom, =>, (optional) prove
+		if len(tb.body) < 2 || len(tb.body) > 3 {
+			return nil, tbErr(fmt.Errorf("when dom is first, body must have 2 or 3 sections (dom, =>, [prove])"), tb)
+		}
+
+		// Parse dom section
+		err = tb.body[0].header.skipKwAndColonCheckEOL(glob.KeywordDom)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		for _, stmt := range tb.body[0].body {
+			curStmt, err := stmt.factStmt(UniFactDepth1)
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			domFacts = append(domFacts, curStmt)
+		}
+
+		// Parse => section
+		if !tb.body[1].header.is(glob.KeySymbolRightArrow) {
+			return nil, tbErr(fmt.Errorf("second section must be => when dom is first"), tb)
+		}
+		err = tb.body[1].header.skipKwAndColonCheckEOL(glob.KeySymbolRightArrow)
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+		for _, stmt := range tb.body[1].body {
+			curStmt, err := stmt.factStmt(UniFactDepth1)
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			thenFacts = append(thenFacts, curStmt)
+		}
+
+		// Parse optional prove section
+		if len(tb.body) == 3 {
+			if !tb.body[2].header.is(glob.KeywordProve) {
+				return nil, tbErr(fmt.Errorf("third section must be prove when dom is first"), tb)
+			}
+			err = tb.body[2].header.skipKwAndColonCheckEOL(glob.KeywordProve)
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			for _, stmt := range tb.body[2].body {
+				curStmt, err := stmt.Stmt()
+				if err != nil {
+					return nil, tbErr(err, tb)
+				}
+				proofs = append(proofs, curStmt)
+			}
+		}
+		// If len(tb.body) == 2, prove remains nil
+	} else {
+		// First section is not dom
+		// Check if last section is prove
+		lastIdx := len(tb.body) - 1
+		hasProve := tb.body[lastIdx].header.is(glob.KeywordProve)
+
+		if hasProve {
+			// All sections before prove are then
+			for i := 0; i < lastIdx; i++ {
+				if !tb.body[i].header.is(glob.KeySymbolRightArrow) {
+					return nil, tbErr(fmt.Errorf("when dom is not first, all sections before prove must be =>"), tb)
+				}
+				err = tb.body[i].header.skipKwAndColonCheckEOL(glob.KeySymbolRightArrow)
+				if err != nil {
+					return nil, tbErr(err, tb)
+				}
+				for _, stmt := range tb.body[i].body {
+					curStmt, err := stmt.factStmt(UniFactDepth1)
+					if err != nil {
+						return nil, tbErr(err, tb)
+					}
+					thenFacts = append(thenFacts, curStmt)
+				}
+			}
+
+			// Parse prove section
+			err = tb.body[lastIdx].header.skipKwAndColonCheckEOL(glob.KeywordProve)
+			if err != nil {
+				return nil, tbErr(err, tb)
+			}
+			for _, stmt := range tb.body[lastIdx].body {
+				curStmt, err := stmt.Stmt()
+				if err != nil {
+					return nil, tbErr(err, tb)
+				}
+				proofs = append(proofs, curStmt)
+			}
+		} else {
+			// No prove section, all are then
+			for i := range len(tb.body) {
+				if !tb.body[i].header.is(glob.KeySymbolRightArrow) {
+					return nil, tbErr(fmt.Errorf("when dom is not first and no prove, all sections must be =>"), tb)
+				}
+				err = tb.body[i].header.skipKwAndColonCheckEOL(glob.KeySymbolRightArrow)
+				if err != nil {
+					return nil, tbErr(err, tb)
+				}
+				for _, stmt := range tb.body[i].body {
+					curStmt, err := stmt.factStmt(UniFactDepth1)
+					if err != nil {
+						return nil, tbErr(err, tb)
+					}
+					thenFacts = append(thenFacts, curStmt)
+				}
+			}
+			// prove remains nil, dom remains empty
+		}
+	}
+
+	return ast.NewProveInRangeStmt(param, start, end, domFacts, thenFacts, proofs, tb.line), nil
+}
+
+// parse prove_in_range_set(start, end, x S): then_fact prove:
+func (tb *tokenBlock) proveInRangeSetStmt() (ast.Stmt, error) {
+	err := tb.header.skip(glob.KeywordProveInRangeSet)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -3002,7 +3198,7 @@ func (tb *tokenBlock) proveInRangeStmt() (ast.Stmt, error) {
 
 	if tb.body[len(tb.body)-1].header.is(glob.KeywordProve) {
 		thenFacts := []ast.FactStmt{}
-		for i := range len(tb.body) {
+		for i := range len(tb.body) - 1 {
 			curStmt, err := tb.body[i].factStmt(UniFactDepth1)
 			if err != nil {
 				return nil, tbErr(err, tb)
@@ -3024,7 +3220,7 @@ func (tb *tokenBlock) proveInRangeStmt() (ast.Stmt, error) {
 			proofs = append(proofs, curStmt)
 		}
 
-		return ast.NewProveInRangeStmt(startAsInt, endAsInt, param, paramSet, thenFacts, proofs, tb.line), nil
+		return ast.NewProveInRangeSetStmt(startAsInt, endAsInt, param, paramSet, thenFacts, proofs, tb.line), nil
 	} else {
 		thenFacts := []ast.FactStmt{}
 		for i := range len(tb.body) {
@@ -3035,7 +3231,7 @@ func (tb *tokenBlock) proveInRangeStmt() (ast.Stmt, error) {
 			thenFacts = append(thenFacts, curStmt)
 		}
 
-		return ast.NewProveInRangeStmt(startAsInt, endAsInt, param, paramSet, thenFacts, nil, tb.line), nil
+		return ast.NewProveInRangeSetStmt(startAsInt, endAsInt, param, paramSet, thenFacts, nil, tb.line), nil
 	}
 }
 

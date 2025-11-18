@@ -708,4 +708,15 @@ fn coord(a obj, x set, index N_pos) proj(x, index):
 	a $in x
 	$is_cart(x)
 	index <= dim(x)
+
+know:
+	forall x set:
+		$is_cart(x)
+		forall a N_pos:
+			a <= dim(x)
+			=>:
+				proj(x, a) $in nonempty_set
+		=>:
+			x $in nonempty_set
+			$item_exists_in(x)
 `
