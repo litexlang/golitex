@@ -91,6 +91,11 @@ const (
 	KeywordProveCaseByCase = "prove_case_by_case"
 	KeywordExit            = "exit"
 	KeywordHelp            = "help"
+
+	KeywordCart   = "cart"
+	KeywordIsCart = "is_cart"
+	KeywordDim    = "dim"
+	KeywordProj   = "proj"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -162,6 +167,11 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordProveCaseByCase: {},
 	KeywordExit:            {},
 	KeywordHelp:            {},
+
+	KeywordCart:   {},
+	KeywordIsCart: {},
+	KeywordDim:    {},
+	KeywordProj:   {},
 }
 
 const (

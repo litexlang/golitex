@@ -1,9 +1,12 @@
-have set y = {1, 2, 3}
+let x cart(R, Q, Z)
+$is_cart(x)
+dim(x) = 3
+proj(x, 1) = R
+proj(x, 2) = Q
+proj(x, 3) = Z
 
-have x set
-
-know $is_subset_of(x, y)
-
-prove:
-    x $in finite_set
-    count(x) <= count(y)
+let y set
+know $is_cart(y), dim(y) = 3
+proj(y, 1) $in set
+proj(y, 2) $in set
+proj(y, 3) $in set
