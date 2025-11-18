@@ -425,11 +425,11 @@ func (stmt *HaveObjStStmt) String() string {
 	return builder.String()
 }
 
-func (f FcAtom) String() string {
+func (f AtomObj) String() string {
 	return string(f)
 }
 
-func (f *FcFn) String() string {
+func (f *FnObj) String() string {
 	if IsFnSet(f) {
 		return fnSetString(f)
 	}
@@ -519,7 +519,7 @@ func (stmt *KnowPropStmt) String() string {
 	return builder.String()
 }
 
-func fnSetString(f *FcFn) string {
+func fnSetString(f *FnObj) string {
 	var builder strings.Builder
 	builder.WriteString(f.FnHead.String())
 	builder.WriteString(" ")
@@ -759,7 +759,7 @@ func (stmt *HaveSetDefinedByReplacementStmt) String() string {
 	builder.WriteString(" ")
 	builder.WriteString(stmt.Name)
 	builder.WriteString(" ")
-	builder.WriteString(NewFcFn(FcAtom(glob.KeywordSetDefinedByReplacement), []Obj{stmt.DomSet, stmt.RangeSet, stmt.PropName}).String())
+	builder.WriteString(NewFcFn(AtomObj(glob.KeywordSetDefinedByReplacement), []Obj{stmt.DomSet, stmt.RangeSet, stmt.PropName}).String())
 	return builder.String()
 }
 
@@ -1054,7 +1054,7 @@ func (stmt *ProveInRangeStmt) String() string {
 	return builder.String()
 }
 
-func ProveIsCertainPropStmtString(kw string, prop FcAtom, params []string, proofs []Stmt) string {
+func ProveIsCertainPropStmtString(kw string, prop AtomObj, params []string, proofs []Stmt) string {
 	var builder strings.Builder
 	builder.WriteString(kw)
 	builder.WriteString("(")

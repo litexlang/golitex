@@ -27,7 +27,7 @@ func (env *Env) IsValidIdentifierAvailable(name string) error {
 		return err
 	}
 
-	ok := env.IsFcAtomDeclaredByUser(ast.FcAtom(name))
+	ok := env.IsFcAtomDeclaredByUser(ast.AtomObj(name))
 	if ok {
 		return duplicateDefError(name)
 	}
@@ -108,7 +108,7 @@ func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) error {
 	return nil
 }
 
-func (env *Env) AtomsInFnTemplateFnTemplateDeclared(name ast.FcAtom, stmt *ast.FnTemplateDefStmt) error {
+func (env *Env) AtomsInFnTemplateFnTemplateDeclared(name ast.AtomObj, stmt *ast.FnTemplateDefStmt) error {
 	// fn名不能和parameter名重叠
 	if slices.Contains(stmt.TemplateDefHeader.Params, string(name)) {
 		return fmt.Errorf("fn name %s cannot be the same as parameter name %s", name, name)

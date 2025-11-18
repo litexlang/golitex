@@ -121,24 +121,24 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 }
 
 func (ver *Verifier) FnTemplateIsASet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	if asAtom, ok := stmt.Params[1].(ast.FcAtom); ok {
+	if asAtom, ok := stmt.Params[1].(ast.AtomObj); ok {
 		if asAtom != glob.KeywordSet {
 			return NewExecUnknown("")
 		}
 	}
 
-	if asFcFn, ok := stmt.Params[0].(*ast.FcFn); ok {
+	if asFcFn, ok := stmt.Params[0].(*ast.FnObj); ok {
 		if ast.IsFnTemplate_FcFn(asFcFn) {
 			// 所有参数还都真是集合
-			for i := range asFcFn.FnHead.(*ast.FcFn).Params {
-				verRet := ver.VerFactStmt(ast.NewInFactWithParamFc(asFcFn.FnHead.(*ast.FcFn).Params[i], ast.FcAtom(glob.KeywordSet)), state)
+			for i := range asFcFn.FnHead.(*ast.FnObj).Params {
+				verRet := ver.VerFactStmt(ast.NewInFactWithParamFc(asFcFn.FnHead.(*ast.FnObj).Params[i], ast.AtomObj(glob.KeywordSet)), state)
 				if verRet.IsErr() || verRet.IsUnknown() {
 					return NewExecUnknown("")
 				}
 			}
 
 			for i := range asFcFn.Params {
-				if verRet := ver.VerFactStmt(ast.NewInFactWithParamFc(asFcFn.Params[i], ast.FcAtom(glob.KeywordSet)), state); verRet.IsErr() || verRet.IsUnknown() {
+				if verRet := ver.VerFactStmt(ast.NewInFactWithParamFc(asFcFn.Params[i], ast.AtomObj(glob.KeywordSet)), state); verRet.IsErr() || verRet.IsUnknown() {
 					return NewExecUnknown("")
 				}
 			}
@@ -172,7 +172,7 @@ func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state *VerState
 		return NewExecUnknown("")
 	}
 
-	asAtom, ok := stmt.Params[0].(ast.FcAtom)
+	asAtom, ok := stmt.Params[0].(ast.AtomObj)
 	if !ok {
 		return NewExecUnknown("")
 	}
@@ -190,7 +190,7 @@ func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state *VerState
 }
 
 func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	if asFcFn, ok := stmt.Params[1].(*ast.FcFn); ok {
+	if asFcFn, ok := stmt.Params[1].(*ast.FnObj); ok {
 		if ast.IsFnTemplate_FcFn(asFcFn) {
 			verRet := ver.ver_In_FnFcFn_FnTT(stmt.Params[0], asFcFn, state)
 			if verRet.IsErr() {
@@ -246,7 +246,7 @@ func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state *VerState) E
 	}
 
 	// 如果是被定义好了的fn_template，则直接返回true
-	asFcFn, ok := stmt.Params[1].(*ast.FcFn)
+	asFcFn, ok := stmt.Params[1].(*ast.FnObj)
 	if !ok {
 		return NewExecUnknown("")
 	}
@@ -255,7 +255,7 @@ func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state *VerState) E
 		return ver.processOkMsg(state, stmt.String(), "%s is a fn template and all fn templates are sets", stmt.Params[0])
 	}
 
-	if leftAsAtom, ok := stmt.Params[0].(ast.FcAtom); ok {
+	if leftAsAtom, ok := stmt.Params[0].(ast.AtomObj); ok {
 		// _, ok := ver.env.GetFnTemplateDef(leftAsAtom)
 		fnDef := ver.Env.GetLatestFnT_GivenNameIsIn(leftAsAtom.String())
 		if fnDef != nil {
@@ -307,19 +307,19 @@ func (ver *Verifier) falseInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerS
 
 // TODO 需要先证明一下它是finite set 去开始验证 len(n) = 0
 func (ver *Verifier) nothingIsInEmptySet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	verRet := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Obj{stmt.Params[1], ast.FcAtom(glob.KeywordFiniteSet)}, stmt.Line), state)
+	verRet := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeywordIn), []ast.Obj{stmt.Params[1], ast.AtomObj(glob.KeywordFiniteSet)}, stmt.Line), state)
 	if verRet.IsErr() || verRet.IsUnknown() {
 		return verRet
 	}
 
-	lenOverStmtName := ast.NewFcFn(ast.FcAtom(glob.KeywordLen), []ast.Obj{stmt.Params[1]})
-	equalFact := ast.EqualFact(lenOverStmtName, ast.FcAtom("0"))
+	lenOverStmtName := ast.NewFcFn(ast.AtomObj(glob.KeywordLen), []ast.Obj{stmt.Params[1]})
+	equalFact := ast.EqualFact(lenOverStmtName, ast.AtomObj("0"))
 	verRet = ver.VerFactStmt(equalFact, state)
 	return verRet
 }
 
 func (ver *Verifier) trueExistInSt(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	pureInFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Obj{stmt.Params[1], stmt.Params[2]}, stmt.Line)
+	pureInFact := ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeywordIn), []ast.Obj{stmt.Params[1], stmt.Params[2]}, stmt.Line)
 	verRet := ver.VerFactStmt(pureInFact, state)
 	return verRet
 }
@@ -338,7 +338,7 @@ func (ver *Verifier) objNotInSetWhenAllItemsInThatSetAreNotEqualToIt(stmt *ast.S
 		return NewExecUnknown("")
 	}
 
-	notAllItemsInThatSetAreNotEqualToIt := ast.NewUniFact([]string{"x"}, []ast.Obj{stmt.Params[1]}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Obj{ast.FcAtom("x"), stmt.Params[0]}, stmt.Line)}, stmt.Line)
+	notAllItemsInThatSetAreNotEqualToIt := ast.NewUniFact([]string{"x"}, []ast.Obj{stmt.Params[1]}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.AtomObj(glob.KeySymbolEqual), []ast.Obj{ast.AtomObj("x"), stmt.Params[0]}, stmt.Line)}, stmt.Line)
 
 	verRet := ver.VerFactStmt(notAllItemsInThatSetAreNotEqualToIt, state)
 	return verRet
@@ -346,7 +346,7 @@ func (ver *Verifier) objNotInSetWhenAllItemsInThatSetAreNotEqualToIt(stmt *ast.S
 
 func (ver *Verifier) verInSetProduct(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	// left must be (x, y, ...) right must be product(xSet, ySet, ...)
-	fcFn, ok := stmt.Params[0].(*ast.FcFn)
+	fcFn, ok := stmt.Params[0].(*ast.FnObj)
 	if !ok {
 		return NewExecUnknown("")
 	}
@@ -355,7 +355,7 @@ func (ver *Verifier) verInSetProduct(stmt *ast.SpecFactStmt, state *VerState) Ex
 	// 	return NewExecUnknown("")
 	// }
 
-	setProductFn, ok := stmt.Params[1].(*ast.FcFn)
+	setProductFn, ok := stmt.Params[1].(*ast.FnObj)
 	if !ok {
 		return NewExecUnknown("")
 	}
@@ -376,7 +376,7 @@ func (ver *Verifier) verInSetProduct(stmt *ast.SpecFactStmt, state *VerState) Ex
 	return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
 }
 
-func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FcFn, state *VerState) ExecRet {
+func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *VerState) ExecRet {
 	ver.newEnv(ver.Env)
 	defer ver.deleteEnv_DeleteMsg()
 
@@ -393,12 +393,12 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FcFn, state *V
 	}
 	randomAtoms := []ast.Obj{}
 	for i := 0; i < len(leftIsInWhichFnTT.AsFnTStruct.Params); i++ {
-		randomAtoms = append(randomAtoms, ast.FcAtom(randomNames[i]))
+		randomAtoms = append(randomAtoms, ast.AtomObj(randomNames[i]))
 	}
 
 	uniMap := map[string]ast.Obj{}
 	for i := 0; i < len(leftIsInWhichFnTT.AsFnTStruct.Params); i++ {
-		uniMap[leftIsInWhichFnTT.AsFnTStruct.Params[i]] = ast.FcAtom(randomNames[i])
+		uniMap[leftIsInWhichFnTT.AsFnTStruct.Params[i]] = ast.AtomObj(randomNames[i])
 	}
 
 	// check parameters of the left satisfies the fn template template requirement
@@ -407,7 +407,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FcFn, state *V
 		if err != nil {
 			return NewExecErr(err.Error())
 		}
-		err = ver.Env.NewFact(ast.NewInFactWithParamFc(ast.FcAtom(randomName), (fnFcFn.FnHead).(*ast.FcFn).Params[i]))
+		err = ver.Env.NewFact(ast.NewInFactWithParamFc(ast.AtomObj(randomName), (fnFcFn.FnHead).(*ast.FnObj).Params[i]))
 		if err != nil {
 			return NewExecErr(err.Error())
 		}
@@ -428,7 +428,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FcFn, state *V
 	}
 
 	for i := range instLeftUniFactAsUniFactStmt.Params {
-		fact := ast.NewInFactWithParamFc(ast.FcAtom(randomNames[i]), leftIsInWhichFnTT.AsFnTStruct.ParamSets[i])
+		fact := ast.NewInFactWithParamFc(ast.AtomObj(randomNames[i]), leftIsInWhichFnTT.AsFnTStruct.ParamSets[i])
 		verRet := ver.VerFactStmt(fact, state)
 		if verRet.IsErr() || verRet.IsUnknown() {
 			return verRet
@@ -460,13 +460,13 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FcFn, state *V
 }
 
 func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	fcFn, ok := stmt.Params[0].(*ast.FcFn)
+	fcFn, ok := stmt.Params[0].(*ast.FnObj)
 	if !ok {
 		return NewExecUnknown("")
 	}
 
 	if fcFn.HasHeadInSlice([]string{glob.KeySymbolPlus, glob.KeySymbolMinus, glob.KeySymbolStar, glob.KeySymbolSlash, glob.KeySymbolPower}) {
-		if stmt.Params[1] == ast.FcAtom(glob.KeywordReal) {
+		if stmt.Params[1] == ast.AtomObj(glob.KeywordReal) {
 			msg := fmt.Sprintf("return value of builtin arithmetic function %s is in Real", fcFn)
 			return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
 		}
@@ -474,7 +474,7 @@ func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactS
 	}
 
 	if fcFn.HasHeadInSlice([]string{glob.KeywordLen, glob.KeySymbolPercent}) {
-		if stmt.Params[1] == ast.FcAtom(glob.KeywordNatural) {
+		if stmt.Params[1] == ast.AtomObj(glob.KeywordNatural) {
 			msg := fmt.Sprintf("return value of builtin function %s is in Natural", fcFn)
 			return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
 		}
@@ -497,7 +497,7 @@ func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactS
 	return NewExecUnknown("")
 }
 
-func (ver *Verifier) getRetSetOfFcFnByUsingItsFnT(fcFn *ast.FcFn) (ast.Obj, error) {
+func (ver *Verifier) getRetSetOfFcFnByUsingItsFnT(fcFn *ast.FnObj) (ast.Obj, error) {
 	// f(a)(b,c)(e,d,f) 返回 {f, f(a), f(a)(b,c), f(a)(b,c)(e,d,f)}, {nil, {a}, {b,c}, {e,d,f}}
 	fnHeadChain_AndItSelf, _ := ast.GetFnHeadChain_AndItSelf(fcFn)
 
@@ -512,7 +512,7 @@ func (ver *Verifier) getRetSetOfFcFnByUsingItsFnT(fcFn *ast.FcFn) (ast.Obj, erro
 
 	// 验证 paramsChain 是否满足 fnTStruct，比如 b,c 是否满足 f(a) 的参数要求
 	for curParamsChainIndex < len(fnHeadChain_AndItSelf)-1 {
-		curRetSet, ok := curFnTStruct.RetSet.(*ast.FcFn)
+		curRetSet, ok := curFnTStruct.RetSet.(*ast.FnObj)
 		if !ok {
 			return nil, fmt.Errorf("curRetSet is not an FcFn")
 		}

@@ -57,8 +57,8 @@ func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *Ve
 		return verRet
 	}
 
-	if leftAsFn, ok := stmt.Params[0].(*ast.FcFn); ok {
-		if rightAsFn, ok := stmt.Params[1].(*ast.FcFn); ok {
+	if leftAsFn, ok := stmt.Params[0].(*ast.FnObj); ok {
+		if rightAsFn, ok := stmt.Params[1].(*ast.FnObj); ok {
 			verRet := ver.verTrueEqualFact_FcFnEqual_NoCheckRequirements(leftAsFn, rightAsFn, state)
 			if verRet.IsErr() || verRet.IsTrue() {
 				return verRet
@@ -224,8 +224,8 @@ func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Obj, ri
 }
 
 func (ver *Verifier) decomposeFcFnsAndCheckEquality(left ast.Obj, right ast.Obj, state *VerState, areEqualFcs func(left ast.Obj, right ast.Obj, state *VerState) ExecRet) ExecRet {
-	if leftAsFn, ok := left.(*ast.FcFn); ok {
-		if rightAsFn, ok := right.(*ast.FcFn); ok {
+	if leftAsFn, ok := left.(*ast.FnObj); ok {
+		if rightAsFn, ok := right.(*ast.FnObj); ok {
 			if len(leftAsFn.Params) != len(rightAsFn.Params) {
 				return NewExecUnknown("")
 			}

@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (e *Env) IsFcAtomDeclaredByUser(fcAtomName ast.FcAtom) bool {
+func (e *Env) IsFcAtomDeclaredByUser(fcAtomName ast.AtomObj) bool {
 	for env := e; env != nil; env = env.Parent {
 		ok := env.isFcAtomDeclaredAtCurEnv(fcAtomName)
 		if ok {
@@ -31,7 +31,7 @@ func (e *Env) IsFcAtomDeclaredByUser(fcAtomName ast.FcAtom) bool {
 }
 
 // 其实最好要分类：有可能是obj，有可能是prop，不能在验证obj的时候验证是prop
-func (e *Env) isFcAtomDeclaredAtCurEnv(fcAtomName ast.FcAtom) bool {
+func (e *Env) isFcAtomDeclaredAtCurEnv(fcAtomName ast.AtomObj) bool {
 	_, ok := e.PropDefMem[string(fcAtomName)]
 	if ok {
 		return true
@@ -53,7 +53,7 @@ func (e *Env) isFcAtomDeclaredAtCurEnv(fcAtomName ast.FcAtom) bool {
 	return ok
 }
 
-func (e *Env) isAtomObj(atom ast.FcAtom) bool {
+func (e *Env) isAtomObj(atom ast.AtomObj) bool {
 	_, ok := ast.IsNumLitFcAtom(atom)
 	if ok {
 		return true
@@ -67,7 +67,7 @@ func (e *Env) isAtomObj(atom ast.FcAtom) bool {
 	return e.isUserDefinedObj(atom)
 }
 
-func (e *Env) AtomsAreObj(atomSlice []ast.FcAtom) bool {
+func (e *Env) AtomsAreObj(atomSlice []ast.AtomObj) bool {
 	for _, atom := range atomSlice {
 		if !e.isAtomObj(atom) {
 			return false
@@ -136,7 +136,7 @@ func (e *Env) AreAtomsInFactAreDeclared(fact ast.FactStmt, extraAtomNames map[st
 	}
 }
 
-func (e *Env) AreAtomsDeclared(atoms []ast.FcAtom, extraAtomNames map[string]struct{}) bool {
+func (e *Env) AreAtomsDeclared(atoms []ast.AtomObj, extraAtomNames map[string]struct{}) bool {
 	for _, atom := range atoms {
 		if !e.IsAtomDeclared(atom, extraAtomNames) {
 			return false
@@ -145,7 +145,7 @@ func (e *Env) AreAtomsDeclared(atoms []ast.FcAtom, extraAtomNames map[string]str
 	return true
 }
 
-func (e *Env) IsAtomDeclared(atom ast.FcAtom, extraAtomNames map[string]struct{}) bool {
+func (e *Env) IsAtomDeclared(atom ast.AtomObj, extraAtomNames map[string]struct{}) bool {
 	// 如果是内置的符号，那就声明了
 	if glob.IsBuiltinKeywordKeySymbolCanBeFcAtomName(string(atom)) {
 		return true

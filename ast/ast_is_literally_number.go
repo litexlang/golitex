@@ -17,7 +17,7 @@ package litex_ast
 import "unicode"
 
 func IsFcLiterallyNPosNumber(fc Obj) bool {
-	atom, ok := fc.(FcAtom)
+	atom, ok := fc.(AtomObj)
 	if !ok {
 		return false
 	}
@@ -36,7 +36,7 @@ func IsFcLiterallyNPosNumber(fc Obj) bool {
 }
 
 func IsFcLiterallyNatNumber(fc Obj) bool {
-	atom, ok := fc.(FcAtom)
+	atom, ok := fc.(AtomObj)
 	if !ok {
 		return false
 	}
@@ -55,7 +55,7 @@ func IsFcLiterallyNatNumber(fc Obj) bool {
 }
 
 func IsFcLiterallyIntNumber(fc Obj) bool {
-	atom, ok := fc.(FcAtom)
+	atom, ok := fc.(AtomObj)
 	if !ok {
 		return false
 	}
@@ -82,7 +82,7 @@ func IsFcLiterallyIntNumber(fc Obj) bool {
 }
 
 func IsFcLiterallyRationalNumber(fc Obj) bool {
-	atom, ok := fc.(FcAtom)
+	atom, ok := fc.(AtomObj)
 	if !ok {
 		return false
 	}

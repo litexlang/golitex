@@ -695,13 +695,13 @@ func (tb *tokenBlock) relaFactStmt_orRelaEquals() (ast.FactStmt, error) {
 		params := []ast.Obj{fc, fc2}
 
 		if opt != glob.KeySymbolEqual {
-			ret = ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(opt), params, tb.line)
+			ret = ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(opt), params, tb.line)
 		} else {
 			// 循环地看下面一位是不是 = ，直到不是
 			if tb.header.is(glob.KeySymbolEqual) {
 				return tb.relaEqualsFactStmt(fc, fc2)
 			} else {
-				ret = ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(opt), params, tb.line)
+				ret = ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(opt), params, tb.line)
 			}
 		}
 	}
@@ -710,7 +710,7 @@ func (tb *tokenBlock) relaFactStmt_orRelaEquals() (ast.FactStmt, error) {
 	if ret.NameIs(glob.KeySymbolNotEqual) {
 		ret.TypeEnum = ast.FalsePure
 		// ret.PropName = *ast.NewFcAtom(glob.EmptyPkg, glob.KeySymbolEqual)
-		ret.PropName = ast.FcAtom(glob.KeySymbolEqual)
+		ret.PropName = ast.AtomObj(glob.KeySymbolEqual)
 	}
 
 	return ret, nil
@@ -733,7 +733,7 @@ func (tb *tokenBlock) defHeaderWithoutParsingColonAtEnd() (*ast.DefHeader, error
 		return nil, err
 	}
 
-	return ast.NewDefHeader(ast.FcAtom(name), params, setParams), nil
+	return ast.NewDefHeader(ast.AtomObj(name), params, setParams), nil
 }
 
 func (tb *tokenBlock) defExistPropStmt(head string) (*ast.DefExistPropStmt, error) {
@@ -1577,7 +1577,7 @@ func (tb *tokenBlock) defFnStmt(skipFn bool) (*ast.DefFnStmt, error) {
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
-	if asAtom, ok := retSet.(ast.FcAtom); ok {
+	if asAtom, ok := retSet.(ast.AtomObj); ok {
 		if string(asAtom) == glob.KeySymbolColon {
 			return nil, fmt.Errorf(": is not allowed in return set")
 		}
@@ -1886,7 +1886,7 @@ func (tb *tokenBlock) relaFact_intensionalSetFact_enumStmt_equals() (ast.FactStm
 
 		params := []ast.Obj{fc, fc2}
 
-		ret = ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(opt), params, tb.line)
+		ret = ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(opt), params, tb.line)
 	} else {
 		return nil, fmt.Errorf("expect relation prop")
 	}
@@ -1894,7 +1894,7 @@ func (tb *tokenBlock) relaFact_intensionalSetFact_enumStmt_equals() (ast.FactStm
 	// 这里加入语法糖：!= 等价于 not =，好处是我 = 有 commutative的性质，我不用额外处理 != 了
 	if ret.NameIs(glob.KeySymbolNotEqual) {
 		ret.TypeEnum = ast.FalsePure
-		ret.PropName = ast.FcAtom(glob.KeySymbolEqual)
+		ret.PropName = ast.AtomObj(glob.KeySymbolEqual)
 	}
 
 	return ret, nil
@@ -1945,10 +1945,10 @@ func (tb *tokenBlock) enumStmt_or_intensionalSetStmt_or_DomOf(fc ast.Obj) (ast.F
 
 		return ast.NewEnumStmt(fc, enumItems, tb.line), nil
 	} else {
-		if _, ok := leftmost.(ast.FcAtom); !ok {
+		if _, ok := leftmost.(ast.AtomObj); !ok {
 			return nil, fmt.Errorf("expect fc atom")
 		} else {
-			if leftmost.(ast.FcAtom).HasPkgName() {
+			if leftmost.(ast.AtomObj).HasPkgName() {
 				return nil, fmt.Errorf("expect fc atom without pkg name")
 			}
 		}
@@ -1978,7 +1978,7 @@ func (tb *tokenBlock) enumStmt_or_intensionalSetStmt_or_DomOf(fc ast.Obj) (ast.F
 			return nil, fmt.Errorf("")
 		}
 
-		return ast.NewIntensionalSetStmt(fc, string(leftmost.(ast.FcAtom)), parentSet, proofs, tb.line), nil
+		return ast.NewIntensionalSetStmt(fc, string(leftmost.(ast.AtomObj)), parentSet, proofs, tb.line), nil
 	}
 }
 
@@ -2120,7 +2120,7 @@ func (tb *tokenBlock) haveSetStmt() (ast.Stmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	fact, err := tb.enumStmt_or_intensionalSetStmt_or_DomOf(ast.FcAtom(haveSetName))
+	fact, err := tb.enumStmt_or_intensionalSetStmt_or_DomOf(ast.AtomObj(haveSetName))
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
@@ -2570,7 +2570,7 @@ func (tb *tokenBlock) proveByInductionStmt() (*ast.ProveByInductionStmt, error) 
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
-		return ast.NewProveByInductionStmt(fact, param, ast.FcAtom("1"), tb.line), nil
+		return ast.NewProveByInductionStmt(fact, param, ast.AtomObj("1"), tb.line), nil
 	} else {
 		err = tb.header.skip(glob.KeySymbolComma)
 		if err != nil {
@@ -3100,7 +3100,7 @@ func (tb *tokenBlock) proveIsTransitivePropStmt() (ast.Stmt, error) {
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
-	propAtom, ok := prop.(ast.FcAtom)
+	propAtom, ok := prop.(ast.AtomObj)
 	if !ok {
 		return nil, tbErr(fmt.Errorf("expect fc atom, but got %T", prop), tb)
 	}

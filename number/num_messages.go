@@ -23,16 +23,16 @@ import (
 )
 
 func FcStringForParseAndExpandPolynomial(fc ast.Obj) string {
-	if asAtom, ok := fc.(ast.FcAtom); ok {
+	if asAtom, ok := fc.(ast.AtomObj); ok {
 		return fcAtomString(asAtom)
 	}
-	if asFn, ok := fc.(*ast.FcFn); ok {
+	if asFn, ok := fc.(*ast.FnObj); ok {
 		return fcFnString(asFn)
 	}
 	return ""
 }
 
-func fcAtomString(fcAtom ast.FcAtom) string {
+func fcAtomString(fcAtom ast.AtomObj) string {
 	if len(string(fcAtom)) != 0 && '0' <= string(fcAtom)[0] && string(fcAtom)[0] <= '9' {
 		return string(fcAtom)
 	} else if len(string(fcAtom)) > 1 && string(fcAtom)[0] == '-' && string(fcAtom)[1] >= '0' && string(fcAtom)[1] <= '9' {
@@ -41,7 +41,7 @@ func fcAtomString(fcAtom ast.FcAtom) string {
 	return fmt.Sprintf("{%s}", fcAtom.String())
 }
 
-func fcFnString(fcFn *ast.FcFn) string {
+func fcFnString(fcFn *ast.FnObj) string {
 	if ast.IsFcAtomAndEqualToStr(fcFn.FnHead, glob.KeySymbolPlus) {
 		return fmt.Sprintf("(%s + %s)", FcStringForParseAndExpandPolynomial(fcFn.Params[0]), FcStringForParseAndExpandPolynomial(fcFn.Params[1]))
 	}

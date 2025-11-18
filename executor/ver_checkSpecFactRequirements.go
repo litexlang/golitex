@@ -47,16 +47,16 @@ func (ver *Verifier) checkSpecFactReq_InFact_UseBtRules(stmt *ast.SpecFactStmt) 
 		return NewExecErr(env.AtomsInFcNotDeclaredMsg(stmt.Params[0]))
 	}
 
-	if _, ok := stmt.Params[1].(*ast.FcFn); !ok {
+	if _, ok := stmt.Params[1].(*ast.FnObj); !ok {
 		return NewExecUnknown("")
 	}
 
-	head, ok := stmt.Params[1].(*ast.FcFn).IsFcFn_HasAtomHead_ReturnHead() // WARNING: 这里有问题，因为可能不是fn template，而是 fn(R)R 这种
+	head, ok := stmt.Params[1].(*ast.FnObj).IsFcFn_HasAtomHead_ReturnHead() // WARNING: 这里有问题，因为可能不是fn template，而是 fn(R)R 这种
 	// 需要处理 fn(R)R 这种；现在 fn_template 本质上也写成函数形式了
 	if ok {
 		def := ver.Env.GetFnTemplateDef(head)
 		if def != nil {
-			for _, param := range stmt.Params[1].(*ast.FcFn).Params {
+			for _, param := range stmt.Params[1].(*ast.FnObj).Params {
 				ok := ver.Env.AreAtomsInFcAreDeclared(param, map[string]struct{}{})
 				if !ok {
 					return NewExecErr(env.AtomsInFcNotDeclaredMsg(param))
@@ -115,10 +115,10 @@ func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state 
 }
 
 func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Obj, state *VerState) ExecRet {
-	if _, ok := fc.(ast.FcAtom); ok {
+	if _, ok := fc.(ast.AtomObj); ok {
 		return NewExecTrue("")
 	}
-	fcAsFcFn, ok := fc.(*ast.FcFn)
+	fcAsFcFn, ok := fc.(*ast.FnObj)
 	if !ok {
 		return NewExecErr(fmt.Sprintf("%s is not a function", fc))
 	}
@@ -152,12 +152,12 @@ func (ver *Verifier) fcSatisfyFnRequirement(fc ast.Obj, state *VerState) ExecRet
 }
 
 // TODO: 这里需要检查！
-func (ver *Verifier) setDefinedByReplacementFnRequirement(fc *ast.FcFn, state *VerState) ExecRet {
+func (ver *Verifier) setDefinedByReplacementFnRequirement(fc *ast.FnObj, state *VerState) ExecRet {
 	if len(fc.Params) != 3 {
 		return NewExecErr(fmt.Sprintf("parameters in %s must be 3, %s in %s is not valid", fc.FnHead, fc, fc))
 	}
 
-	propName, ok := fc.Params[2].(ast.FcAtom)
+	propName, ok := fc.Params[2].(ast.AtomObj)
 	if !ok {
 		return NewExecErr(fmt.Sprintf("parameters in %s must be 3, %s in %s is not valid", fc.FnHead, fc, fc))
 	}
@@ -194,12 +194,12 @@ func (ver *Verifier) setDefinedByReplacementFnRequirement(fc *ast.FcFn, state *V
 // 	return NewExecTrue("")
 // }
 
-func (ver *Verifier) lenFnRequirement(fc *ast.FcFn, state *VerState) ExecRet {
+func (ver *Verifier) lenFnRequirement(fc *ast.FnObj, state *VerState) ExecRet {
 	if len(fc.Params) != 1 {
 		return NewExecErr(fmt.Sprintf("parameters in %s must be 1, %s in %s is not valid", fc.FnHead, fc, fc))
 	}
 
-	verRet := ver.VerFactStmt(ast.NewInFactWithFc(fc.Params[0], ast.FcAtom(glob.KeywordFiniteSet)), state)
+	verRet := ver.VerFactStmt(ast.NewInFactWithFc(fc.Params[0], ast.AtomObj(glob.KeywordFiniteSet)), state)
 	if verRet.IsErr() {
 		return NewExecErr(verRet.String())
 	}

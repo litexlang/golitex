@@ -58,10 +58,10 @@ func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) ExecRet {
 	}
 
 	for i, param := range proveAlgoDef.Params {
-		if exec.Env.IsAtomDeclared(ast.FcAtom(param), map[string]struct{}{}) {
+		if exec.Env.IsAtomDeclared(ast.AtomObj(param), map[string]struct{}{}) {
 			continue
 		} else {
-			execState := exec.defLetStmt(ast.NewDefLetStmt([]string{param}, []ast.Obj{ast.FcAtom(glob.KeywordObj)}, []ast.FactStmt{ast.NewEqualFact(ast.FcAtom(param), stmt.Params[i])}, stmt.Line))
+			execState := exec.defLetStmt(ast.NewDefLetStmt([]string{param}, []ast.Obj{ast.AtomObj(glob.KeywordObj)}, []ast.FactStmt{ast.NewEqualFact(ast.AtomObj(param), stmt.Params[i])}, stmt.Line))
 			if execState.IsNotTrue() {
 				return execState
 			}
