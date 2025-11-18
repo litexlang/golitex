@@ -1,9 +1,11 @@
-have fn:
-    a(x R) R:
-        x > 0
-        =>:
-            a(x) > 2
-    case x <= 0:
-        
-    case x > 2:
-        a(x) = 0
+let a R: a > 2
+a >= 0
+
+let b R: b > 0
+b != 0
+
+let c R: c < 0
+c != 0
+
+let d R: d = 0
+d <= 0
