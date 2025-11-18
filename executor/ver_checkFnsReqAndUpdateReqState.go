@@ -69,25 +69,17 @@ func (ver *Verifier) objSatisfyFnRequirement(obj ast.Obj, state *VerState) ExecR
 	// 	return ver.arithmeticFnRequirement(objAsFnObj, state)
 	// } else
 	if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordCount) {
-		return ver.lenFnRequirement(objAsFnObj, state)
+		return ver.countFnRequirement(objAsFnObj, state)
 	} else if ast.IsFnTemplate_FcFn(objAsFnObj) {
 		return NewExecTrue("")
-		// }
-		// else if ver.isFnObjWithHeadNameBuiltinAndCanTakeInAnyObj(objAsFnObj) {
-		// 	return ver.isFnObjWithHeadNameBuiltinAndCanTakeInAnyObj_CheckRequirement(objAsFnObj, state)
 	} else if ast.IsAtomObjAndEqualToStr(objAsFnObj.FnHead, glob.KeywordSetDefinedByReplacement) {
 		return ver.setDefinedByReplacementFnRequirement(objAsFnObj, state)
-		// }
-		// else if toCompute, ok := ast.IsFcFnWithCompHeadAndReturnFcToCompute(fcAsFcFn); ok {
-		// 	return ver.objSatisfyFnRequirement(toCompute, state)
-		// } else if ast.IsAtomObjAndEqualToStr(fcAsFcFn.FnHead, glob.KeywordEval) {
-		// 	if len(fcAsFcFn.Params) != 1 {
-		// 		return NewExecErr(fmt.Sprintf("%s expect one parameter", glob.KeywordEval))
-		// 	}
-
-		// 	return ver.objSatisfyFnRequirement(fcAsFcFn.Params[0], state)
+	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordCart) {
+		return ver.cartFnRequirement(objAsFnObj, state)
 	} else {
-		// return ver.fnObjSatisfy_FnTemplate_Requirement(objAsFnObj, state)
+		if objAsFnObj.FnHead.String() == glob.KeywordProj {
+			return ver.parasSatisfyFnReq(objAsFnObj, state)
+		}
 		return ver.parasSatisfyFnReq(objAsFnObj, state)
 	}
 }
@@ -109,7 +101,7 @@ func (ver *Verifier) setDefinedByReplacementFnRequirement(fnObj *ast.FnObj, stat
 	return verRet
 }
 
-func (ver *Verifier) lenFnRequirement(fnObj *ast.FnObj, state *VerState) ExecRet {
+func (ver *Verifier) countFnRequirement(fnObj *ast.FnObj, state *VerState) ExecRet {
 	if len(fnObj.Params) != 1 {
 		return NewExecErr(fmt.Sprintf("parameters in %s must be 1, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
 	}
@@ -124,3 +116,16 @@ func (ver *Verifier) lenFnRequirement(fnObj *ast.FnObj, state *VerState) ExecRet
 	return NewExecTrue("")
 }
 
+func (ver *Verifier) cartFnRequirement(fnObj *ast.FnObj, state *VerState) ExecRet {
+	// 验证所有的参数都是集合
+	for _, param := range fnObj.Params {
+		verRet := ver.VerFactStmt(ast.NewInFactWithFc(param, ast.AtomObj(glob.KeywordSet)), state)
+		if verRet.IsErr() {
+			return NewExecErr(verRet.String())
+		}
+		if verRet.IsUnknown() {
+			return NewExecErr(fmt.Sprintf("parameters in %s must be sets, %s in %s is not valid", fnObj.FnHead, param, glob.KeywordSet))
+		}
+	}
+	return NewExecTrue("")
+}

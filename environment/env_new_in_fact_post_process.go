@@ -18,6 +18,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
+	"strconv"
 )
 
 func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) error {
@@ -55,6 +56,10 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) error {
 
 	if setDefinedByReplacement, ok := fact.Params[1].(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(setDefinedByReplacement.FnHead, glob.KeywordSetDefinedByReplacement) {
 		return e.in_setDefinedByReplacement_postProcess(setDefinedByReplacement)
+	}
+
+	if cart, ok := fact.Params[1].(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(cart.FnHead, glob.KeywordCart) {
+		return e.in_cart_postProcess(fact)
 	}
 
 	return nil
@@ -163,4 +168,47 @@ func (e *Env) inFactPostProcess_InFnTemplate(fact *ast.SpecFactStmt) (bool, erro
 	}
 
 	return true, nil
+}
+
+// 传入 x $in cart(x1, x2, ..., xn)
+func (e *Env) in_cart_postProcess(fact *ast.SpecFactStmt) error {
+	cart, ok := fact.Params[1].(*ast.FnObj)
+	if !ok {
+		return fmt.Errorf("expected cart to be FnObj, got %T", fact.Params[1])
+	}
+
+	// x $in set
+	inSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeywordIn), []ast.Obj{fact.Params[0], ast.AtomObj(glob.KeywordSet)}, glob.InnerGenLine)
+	err := e.NewFact(inSetFact)
+	if err != nil {
+		return err
+	}
+
+	// 让 $is_cart(x) 成立
+	isCartFact := ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeywordIsCart), []ast.Obj{fact.Params[0]}, glob.InnerGenLine)
+	err = e.NewFact(isCartFact)
+	if err != nil {
+		return err
+	}
+
+	// dim(x) = len(cart.Params)
+	dimFn := ast.NewFnObj(ast.AtomObj(glob.KeywordDim), []ast.Obj{fact.Params[0]})
+	dimValue := ast.AtomObj(strconv.Itoa(len(cart.Params)))
+	dimEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeySymbolEqual), []ast.Obj{dimFn, dimValue}, glob.InnerGenLine)
+	err = e.NewFact(dimEqualFact)
+	if err != nil {
+		return err
+	}
+
+	// proj(x, i+1) = cart.Params[i] for each i
+	for i, cartParam := range cart.Params {
+		projFn := ast.NewFnObj(ast.AtomObj(glob.KeywordProj), []ast.Obj{fact.Params[0], ast.AtomObj(strconv.Itoa(i + 1))})
+		projEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeySymbolEqual), []ast.Obj{projFn, cartParam}, glob.InnerGenLine)
+		err = e.NewFact(projEqualFact)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
