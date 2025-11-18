@@ -1218,13 +1218,9 @@ func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) ExecRet {
 
 	// Iterate through all values in range [start, end)
 	for i := int64(startInt); i < int64(endInt); i++ {
-		_, msg, err := exec.proveInRangeStmtWhenParamIsIndex(stmt, i)
-		if err != nil {
-			var result ExecRet = NewExecErr(err.Error())
-			if msg != "" {
-				result = result.AddMsg(msg)
-			}
-			return result
+		execRet := exec.proveInRangeStmtWhenParamIsIndex(stmt, i)
+		if execRet.IsNotTrue() {
+			return execRet
 		}
 	}
 
