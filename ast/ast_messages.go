@@ -1035,28 +1035,62 @@ func (stmt *ProveInRangeStmt) String() string {
 	builder.WriteString(stmt.end.String())
 	builder.WriteString(")")
 	builder.WriteString(":")
-	if len(stmt.DomFactsOrNil) > 0 {
+	
+	hasDom := len(stmt.DomFactsOrNil) > 0
+	hasProve := len(stmt.ProofsOrNil) > 0
+	
+	if hasDom {
+		// First section is dom: format is dom:, =>:, (optional) prove:
 		builder.WriteString("\n    dom:\n")
 		for _, fact := range stmt.DomFactsOrNil {
 			builder.WriteString("        ")
 			builder.WriteString(fact.String())
 			builder.WriteString("\n")
 		}
-	}
-	if len(stmt.ThenFacts) > 0 {
-		builder.WriteString("    =>:\n")
-		for _, fact := range stmt.ThenFacts {
-			builder.WriteString("        ")
-			builder.WriteString(fact.String())
-			builder.WriteString("\n")
+		if len(stmt.ThenFacts) > 0 {
+			builder.WriteString("    =>:\n")
+			for _, fact := range stmt.ThenFacts {
+				builder.WriteString("        ")
+				builder.WriteString(fact.String())
+				builder.WriteString("\n")
+			}
 		}
-	}
-	if len(stmt.ProofsOrNil) > 0 {
-		builder.WriteString("    prove:\n")
-		for _, proof := range stmt.ProofsOrNil {
-			builder.WriteString("        ")
-			builder.WriteString(proof.String())
-			builder.WriteString("\n")
+		if hasProve {
+			builder.WriteString("    prove:\n")
+			for _, proof := range stmt.ProofsOrNil {
+				builder.WriteString("        ")
+				builder.WriteString(proof.String())
+				builder.WriteString("\n")
+			}
+		}
+	} else {
+		// First section is not dom
+		if hasProve {
+			// Last section is prove: format is =>:, prove:
+			if len(stmt.ThenFacts) > 0 {
+				builder.WriteString("\n    =>:\n")
+				for _, fact := range stmt.ThenFacts {
+					builder.WriteString("        ")
+					builder.WriteString(fact.String())
+					builder.WriteString("\n")
+				}
+			}
+			builder.WriteString("    prove:\n")
+			for _, proof := range stmt.ProofsOrNil {
+				builder.WriteString("        ")
+				builder.WriteString(proof.String())
+				builder.WriteString("\n")
+			}
+		} else {
+			// No prove: format is direct fact statements (no =>:)
+			if len(stmt.ThenFacts) > 0 {
+				builder.WriteString("\n")
+				for _, fact := range stmt.ThenFacts {
+					builder.WriteString("    ")
+					builder.WriteString(fact.String())
+					builder.WriteString("\n")
+				}
+			}
 		}
 	}
 	return builder.String()

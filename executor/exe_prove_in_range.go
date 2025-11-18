@@ -178,3 +178,104 @@ func (exec *Executor) proveInRangeSetStmtWhenParamIsIndex(intensionalSetGivenSet
 
 	return true, "", nil
 }
+
+func (exec *Executor) proveInRangeStmtWhenParamIsIndex(stmt *ast.ProveInRangeStmt, i int64) (bool, string, error) {
+	indexAsFc := ast.AtomObj(fmt.Sprintf("%d", i))
+	param := stmt.Param()
+	uniMap := map[string]ast.Obj{param: indexAsFc}
+	exec.NewEnv(exec.Env)
+	defer exec.deleteEnv()
+
+	defObjStmt := ast.NewDefLetStmt([]string{param}, []ast.Obj{ast.AtomObj(glob.KeywordInteger)}, []ast.FactStmt{ast.NewEqualFact(ast.AtomObj(param), indexAsFc)}, stmt.GetLine())
+	execState := exec.defLetStmt(defObjStmt)
+	if execState.IsNotTrue() {
+		return false, "", fmt.Errorf(execState.String())
+	}
+
+	// Check dom facts
+	for _, domFact := range stmt.GetDomFactsOrNil() {
+		instDomFact, err := domFact.InstantiateFact(uniMap)
+		if err != nil {
+			return false, "", err
+		}
+		execState := exec.factStmt(instDomFact)
+		if execState.IsErr() {
+			return false, "", fmt.Errorf(execState.String())
+		}
+
+		if execState.IsUnknown() {
+			// 如果 不OK，那必须证明是 false，绝对不能是 unknown
+			specFact, ok := domFact.(*ast.SpecFactStmt)
+			if !ok {
+				return false, "", fmt.Errorf("dom fact in prove_in_range must be a SpecFactStmt to reverse: %s", domFact.String())
+			}
+			revInstDomFact := specFact.ReverseIsTrue()
+			for _, fact := range revInstDomFact {
+				instFact, err := fact.InstantiateFact(uniMap)
+				if err != nil {
+					return false, "", err
+				}
+				execState = exec.factStmt(instFact)
+				if execState.IsErr() {
+					return false, "", fmt.Errorf(execState.String())
+				}
+				if execState.IsUnknown() {
+					return false, "", fmt.Errorf("dom facts in prove_in_range must be proved to be true or false, can not be unknown: %s", instFact.String())
+				}
+			}
+
+			return false, "", nil
+		}
+
+		ret := exec.Env.NewFact(domFact)
+		if ret.IsErr() {
+			return false, "", fmt.Errorf(ret.String())
+		}
+	}
+
+	// exec proofs
+	for _, curStmt := range stmt.GetProofsOrNil() {
+		execState := exec.Stmt(curStmt)
+		if execState.IsNotTrue() {
+			return false, "", fmt.Errorf(execState.String())
+		}
+		if execState.IsUnknown() {
+			// 如果是 fact， 那把数字代入一下，会方便非常多，比如 x > 1 ，把 x = 2直接代入就能直接验证出来了
+			curStmtAsFact, ok := curStmt.(ast.FactStmt)
+			if ok {
+				instFact, err := curStmtAsFact.InstantiateFact(uniMap)
+				if err != nil {
+					return false, "", err
+				}
+
+				execState = exec.factStmt(instFact)
+				if execState.IsErr() {
+					return false, "", fmt.Errorf(execState.String())
+				}
+				if execState.IsUnknown() {
+					return false, "", fmt.Errorf("proof in prove_in_range must be proved to be true or false, can not be unknown: %s", instFact.String())
+				}
+			} else {
+				return false, "", fmt.Errorf("proof in prove_in_range must be proved to be true or false, can not be unknown: %s", curStmt.String())
+			}
+		}
+	}
+
+	// 满足 then
+	for _, thenFact := range stmt.GetThenFacts() {
+		instThenFact, err := thenFact.InstantiateFact(uniMap)
+		if err != nil {
+			return false, "", err
+		}
+
+		execState = exec.factStmt(instThenFact)
+		if execState.IsErr() {
+			return false, "", fmt.Errorf(execState.String())
+		}
+		if execState.IsUnknown() {
+			return false, "", fmt.Errorf("then fact in prove_in_range must be proved to be true or false, can not be unknown: %s", instThenFact.String())
+		}
+	}
+
+	return true, "", nil
+}

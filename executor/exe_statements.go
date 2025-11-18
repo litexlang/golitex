@@ -1190,5 +1190,50 @@ func (exec *Executor) checkCaseNoOverlapWithOthers(stmt *ast.HaveFnEqualCaseByCa
 }
 
 func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) ExecRet {
-	return NewExecTrue(fmt.Sprintf("%s\n", stmt.String()))
+	// Evaluate start and end to get integer values
+	startObj, execRet := exec.evalObjThenSimplify(stmt.Start())
+	if execRet.IsNotTrue() {
+		return NewExecErr(fmt.Sprintf("start value %s cannot be evaluated: %s", stmt.Start().String(), execRet.String()))
+	}
+
+	endObj, execRet := exec.evalObjThenSimplify(stmt.End())
+	if execRet.IsNotTrue() {
+		return NewExecErr(fmt.Sprintf("end value %s cannot be evaluated: %s", stmt.End().String(), execRet.String()))
+	}
+
+	// Convert to integers
+	startInt, ok := ast.ToInt(startObj)
+	if !ok {
+		return NewExecErr(fmt.Sprintf("start value %s is not an integer", startObj.String()))
+	}
+
+	endInt, ok := ast.ToInt(endObj)
+	if !ok {
+		return NewExecErr(fmt.Sprintf("end value %s is not an integer", endObj.String()))
+	}
+
+	if startInt >= endInt {
+		return NewExecErr(fmt.Sprintf("start value %d must be less than end value %d", startInt, endInt))
+	}
+
+	// Iterate through all values in range [start, end)
+	for i := int64(startInt); i < int64(endInt); i++ {
+		_, msg, err := exec.proveInRangeStmtWhenParamIsIndex(stmt, i)
+		if err != nil {
+			var result ExecRet = NewExecErr(err.Error())
+			if msg != "" {
+				result = result.AddMsg(msg)
+			}
+			return result
+		}
+	}
+
+	// Create and store the universal fact
+	uniFact := stmt.UniFact()
+	ret := exec.Env.NewFact(uniFact)
+	if ret.IsErr() {
+		return NewExecErr(ret.String())
+	}
+
+	return NewExecTrue("")
 }

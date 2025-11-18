@@ -358,3 +358,19 @@ func (stmt *HaveSetFnStmt) ToIntensionalSetStmt() *IntensionalSetStmt {
 func (stmt *ProveInRangeSetStmt) UniFact() *UniFactStmt {
 	return NewUniFact([]string{stmt.Param}, []Obj{stmt.IntensionalSet}, []FactStmt{}, stmt.ThenFacts, stmt.Line)
 }
+
+func (stmt *ProveInRangeStmt) UniFact() *UniFactStmt {
+	params := []string{stmt.param}
+	paramSets := []Obj{AtomObj(glob.KeywordInteger)}
+
+	// Build dom facts: start <= param < end, plus user-provided dom facts
+	domFacts := []FactStmt{
+		NewSpecFactStmt(TruePure, AtomObj(glob.KeySymbolLessEqual), []Obj{stmt.start, AtomObj(stmt.param)}, stmt.Line),
+		NewSpecFactStmt(TruePure, AtomObj(glob.KeySymbolLess), []Obj{AtomObj(stmt.param), stmt.end}, stmt.Line),
+	}
+	// Add user-provided dom facts
+	domFacts = append(domFacts, stmt.DomFactsOrNil...)
+
+	thenFacts := stmt.ThenFacts
+	return NewUniFact(params, paramSets, domFacts, thenFacts, stmt.Line)
+}
