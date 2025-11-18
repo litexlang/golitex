@@ -27,20 +27,20 @@ func MakeObjIntoNumLitExpr(obj Obj) (*glob.NumLitExpr, bool, error) {
 
 	// obj is fnObj
 
-	asObjFn, ok := obj.(*FnObj)
+	asFnObj, ok := obj.(*FnObj)
 	if !ok {
 		// is atom
 		return nil, false, nil
 	}
 
-	if IsObjBuiltinUnaryFn(*asObjFn) {
-		ptr, ok := asObjFn.FnHead.(AtomObj)
+	if IsObjBuiltinUnaryFn(*asFnObj) {
+		ptr, ok := asFnObj.FnHead.(AtomObj)
 		if !ok {
 			return nil, false, nil
 		}
 
 		if string(ptr) == glob.KeySymbolMinus {
-			left, ok, err := MakeObjIntoNumLitExpr(asObjFn.Params[0])
+			left, ok, err := MakeObjIntoNumLitExpr(asFnObj.Params[0])
 			if err != nil {
 				return nil, false, err
 			}
@@ -52,15 +52,15 @@ func MakeObjIntoNumLitExpr(obj Obj) (*glob.NumLitExpr, bool, error) {
 		}
 	}
 
-	if !IsObjBuiltinInfixOpt(*asObjFn) {
+	if !IsObjBuiltinInfixOpt(*asFnObj) {
 		return nil, false, nil
 	}
 
-	if len(asObjFn.Params) != 2 {
+	if len(asFnObj.Params) != 2 {
 		return nil, false, nil
 	}
 
-	left, ok, err := MakeObjIntoNumLitExpr(asObjFn.Params[0])
+	left, ok, err := MakeObjIntoNumLitExpr(asFnObj.Params[0])
 
 	if err != nil {
 		return nil, false, err
@@ -69,7 +69,7 @@ func MakeObjIntoNumLitExpr(obj Obj) (*glob.NumLitExpr, bool, error) {
 		return nil, false, nil
 	}
 
-	right, ok, err := MakeObjIntoNumLitExpr(asObjFn.Params[1])
+	right, ok, err := MakeObjIntoNumLitExpr(asFnObj.Params[1])
 	if err != nil {
 		return nil, false, err
 	}
@@ -77,7 +77,7 @@ func MakeObjIntoNumLitExpr(obj Obj) (*glob.NumLitExpr, bool, error) {
 		return nil, false, nil
 	}
 
-	ptr, ok := asObjFn.FnHead.(AtomObj)
+	ptr, ok := asFnObj.FnHead.(AtomObj)
 	if !ok {
 		return nil, false, nil
 	}

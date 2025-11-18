@@ -23,29 +23,29 @@ import (
 type ObjEnum uint8
 
 const (
-	ObjAtomEnum ObjEnum = 0
-	ObjFnEnum   ObjEnum = 1
+	AtomObjEnum ObjEnum = 0
+	FnObjEnum   ObjEnum = 1
 )
 
 func CmpObjType(left, right ast.Obj) (int, ObjEnum, error) {
 	var knownEnum ObjEnum
 	switch left.(type) {
 	case ast.AtomObj:
-		knownEnum = ObjAtomEnum
+		knownEnum = AtomObjEnum
 	case *ast.FnObj:
-		knownEnum = ObjFnEnum
+		knownEnum = FnObjEnum
 	default:
-		return 0, ObjAtomEnum, fmt.Errorf("unknown Obj type: %T", left)
+		return 0, AtomObjEnum, fmt.Errorf("unknown Obj type: %T", left)
 	}
 
 	var givenEnum ObjEnum
 	switch right.(type) {
 	case ast.AtomObj:
-		givenEnum = ObjAtomEnum
+		givenEnum = AtomObjEnum
 	case *ast.FnObj:
-		givenEnum = ObjFnEnum
+		givenEnum = FnObjEnum
 	default:
-		return 0, ObjAtomEnum, fmt.Errorf("unknown Obj type: %T", right)
+		return 0, AtomObjEnum, fmt.Errorf("unknown Obj type: %T", right)
 	}
 
 	return int(knownEnum - givenEnum), knownEnum, nil
@@ -58,20 +58,20 @@ func cmpObjLit(left, right ast.Obj) (int, error) {
 		return typeComp, err
 	}
 
-	if objEnum == ObjAtomEnum {
-		return cmpObjAtomLit(left.(ast.AtomObj), right.(ast.AtomObj))
-	} else if objEnum == ObjFnEnum {
-		return cmpObjFnLit(left.(*ast.FnObj), right.(*ast.FnObj))
+	if objEnum == AtomObjEnum {
+		return cmpAtomObjLit(left.(ast.AtomObj), right.(ast.AtomObj))
+	} else if objEnum == FnObjEnum {
+		return cmpFnObjLit(left.(*ast.FnObj), right.(*ast.FnObj))
 	}
 
 	return -1, fmt.Errorf("")
 }
 
-func cmpObjAtomLit(left, right ast.AtomObj) (int, error) {
+func cmpAtomObjLit(left, right ast.AtomObj) (int, error) {
 	return strings.Compare(string(left), string(right)), nil // 直接对两个string相减得了
 }
 
-func cmpObjFnLit(left, right *ast.FnObj) (int, error) {
+func cmpFnObjLit(left, right *ast.FnObj) (int, error) {
 	if comp, err := cmpObjLit(left.FnHead, right.FnHead); comp != 0 || err != nil {
 		return comp, err
 	}

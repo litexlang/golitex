@@ -25,14 +25,14 @@ func cmpObjLiterally(left, right ast.Obj) (bool, error) {
 		return false, err
 	}
 
-	if objEnum == ObjAtomEnum {
-		cmp, err := cmpObjAtomLit(left.(ast.AtomObj), right.(ast.AtomObj))
+	if objEnum == AtomObjEnum {
+		cmp, err := cmpAtomObjLit(left.(ast.AtomObj), right.(ast.AtomObj))
 		if err != nil {
 			return false, err
 		}
 		return cmp == 0, nil
-	} else if objEnum == ObjFnEnum {
-		ok, err := cmpObjFnRule(left.(*ast.FnObj), right.(*ast.FnObj))
+	} else if objEnum == FnObjEnum {
+		ok, err := cmpFnObjRule(left.(*ast.FnObj), right.(*ast.FnObj))
 		if err != nil {
 			return false, err
 		}
@@ -42,7 +42,7 @@ func cmpObjLiterally(left, right ast.Obj) (bool, error) {
 	return false, fmt.Errorf("")
 }
 
-func cmpObjFnRule(left, right *ast.FnObj) (bool, error) {
+func cmpFnObjRule(left, right *ast.FnObj) (bool, error) {
 	if comp, err := cmpObjLit(left.FnHead, right.FnHead); comp != 0 || err != nil {
 		return comp == 0, err
 	}
