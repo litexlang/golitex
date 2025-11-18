@@ -175,6 +175,12 @@ func (s *HaveFnStmt) GetLine() uint                      { return s.Line }
 func (s *MarkdownStmt) GetLine() uint                    { return s.Line }
 func (s *ProveInRangeSetStmt) GetLine() uint                { return s.Line }
 func (s *ProveInRangeStmt) GetLine() uint                   { return s.Line }
+func (s *ProveInRangeStmt) Param() string                   { return s.param }
+func (s *ProveInRangeStmt) Start() Obj                      { return s.start }
+func (s *ProveInRangeStmt) End() Obj                        { return s.end }
+func (s *ProveInRangeStmt) GetDomFactsOrNil() FactStmtSlice { return s.DomFactsOrNil }
+func (s *ProveInRangeStmt) GetThenFacts() FactStmtSlice     { return s.ThenFacts }
+func (s *ProveInRangeStmt) GetProofsOrNil() StmtSlice       { return s.ProofsOrNil }
 func (s *ClaimIffStmt) GetLine() uint                    { return s.Line }
 func (s *ProveIsTransitivePropStmt) GetLine() uint       { return s.Line }
 func (s *ProveIsCommutativePropStmt) GetLine() uint      { return s.Line }

@@ -2951,7 +2951,7 @@ func (tb *tokenBlock) atExistPropDefStmt() (*ast.DefExistPropStmt, error) {
 }
 
 // Example:
-// prove_in_range_set(a, 1, 3):
+// prove_in_range(a, 1, 3):
 //
 //	a > 0
 //
@@ -2971,7 +2971,7 @@ func (tb *tokenBlock) atExistPropDefStmt() (*ast.DefExistPropStmt, error) {
 //	=>:
 //	    ...
 //
-// prove_in_range_set(a, 1, 3):
+// prove_in_range(a, 1, 3):
 //
 //	...
 //	prove:
@@ -3120,17 +3120,25 @@ func (tb *tokenBlock) proveInRangeStmt() (ast.Stmt, error) {
 				proofs = append(proofs, curStmt)
 			}
 		} else {
-			// No prove section, all are then
+			// No prove section, all are direct fact statements (thenFacts)
 			for i := range len(tb.body) {
-				if !tb.body[i].header.is(glob.KeySymbolRightArrow) {
-					return nil, tbErr(fmt.Errorf("when dom is not first and no prove, all sections must be =>"), tb)
-				}
-				err = tb.body[i].header.skipKwAndColonCheckEOL(glob.KeySymbolRightArrow)
-				if err != nil {
-					return nil, tbErr(err, tb)
-				}
-				for _, stmt := range tb.body[i].body {
-					curStmt, err := stmt.factStmt(UniFactDepth1)
+				// Check if it's a => section or a direct fact statement
+				if tb.body[i].header.is(glob.KeySymbolRightArrow) {
+					// It's a => section
+					err = tb.body[i].header.skipKwAndColonCheckEOL(glob.KeySymbolRightArrow)
+					if err != nil {
+						return nil, tbErr(err, tb)
+					}
+					for _, stmt := range tb.body[i].body {
+						curStmt, err := stmt.factStmt(UniFactDepth1)
+						if err != nil {
+							return nil, tbErr(err, tb)
+						}
+						thenFacts = append(thenFacts, curStmt)
+					}
+				} else {
+					// It's a direct fact statement (no => needed)
+					curStmt, err := tb.body[i].factStmt(UniFactDepth1)
 					if err != nil {
 						return nil, tbErr(err, tb)
 					}
