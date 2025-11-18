@@ -20,11 +20,6 @@ import (
 	"strings"
 )
 
-func (ver *Verifier) successWithMsg(stmtStr, stmtVerifiedBy string, execRet ExecRet) ExecRet {
-	execRet.AddMsg(successVerString(stmtStr, stmtVerifiedBy))
-	return execRet
-}
-
 func successVerString(stmtStr, stmtVerifiedBy string) string {
 	var successVerString strings.Builder
 	if stmtStr != "" {
