@@ -686,5 +686,9 @@ know:
 
 prop is_finite_set(x set)
 know forall x set: $is_finite_set(x) <=> x $in finite_set
-know forall x set, y finite_set: x $is_subset_of y => x $in finite_set, count(x) <= count(y)
+know @subset_of_finite_set_is_finite_set(x set, y finite_set):
+	x $is_subset_of y
+	=>:
+		$is_finite_set(x)
+		count(x) <= count(y)
 `
