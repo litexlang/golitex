@@ -96,6 +96,7 @@ const (
 	KeywordIsCart = "is_cart"
 	KeywordDim    = "dim"
 	KeywordProj   = "proj"
+	KeywordCoord  = "coord"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -172,6 +173,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordIsCart: {},
 	KeywordDim:    {},
 	KeywordProj:   {},
+	KeywordCoord:  {},
 }
 
 const (
