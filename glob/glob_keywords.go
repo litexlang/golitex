@@ -71,7 +71,8 @@ const (
 
 	KeywordProveIsTransitiveProp = "prove_is_transitive_prop"
 
-	KeywordProveInRange = "prove_in_range"
+	KeywordProveInRangeSet = "prove_in_range_set"
+	KeywordProveInRange    = "prove_in_range"
 
 	KeywordAlgo   = "algo"
 	KeywordReturn = "return"
@@ -368,6 +369,7 @@ var KeywordHelpMap = map[string]string{
 	KeywordNonEmptySet:                    "",
 	KeywordWhen:                           "",
 	KeywordProveIsTransitiveProp:          "",
+	KeywordProveInRangeSet:                "",
 	KeywordProveInRange:                   "",
 	KeywordAlgo:                           "",
 	KeywordReturn:                         "",

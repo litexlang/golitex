@@ -1028,6 +1028,44 @@ func (stmt *ProveInRangeStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordProveInRange)
 	builder.WriteString("(")
+	builder.WriteString(stmt.param)
+	builder.WriteString(", ")
+	builder.WriteString(stmt.start.String())
+	builder.WriteString(", ")
+	builder.WriteString(stmt.end.String())
+	builder.WriteString(")")
+	builder.WriteString(":")
+	if len(stmt.DomFactsOrNil) > 0 {
+		builder.WriteString("\n    dom:\n")
+		for _, fact := range stmt.DomFactsOrNil {
+			builder.WriteString("        ")
+			builder.WriteString(fact.String())
+			builder.WriteString("\n")
+		}
+	}
+	if len(stmt.ThenFacts) > 0 {
+		builder.WriteString("    =>:\n")
+		for _, fact := range stmt.ThenFacts {
+			builder.WriteString("        ")
+			builder.WriteString(fact.String())
+			builder.WriteString("\n")
+		}
+	}
+	if len(stmt.ProofsOrNil) > 0 {
+		builder.WriteString("    prove:\n")
+		for _, proof := range stmt.ProofsOrNil {
+			builder.WriteString("        ")
+			builder.WriteString(proof.String())
+			builder.WriteString("\n")
+		}
+	}
+	return builder.String()
+}
+
+func (stmt *ProveInRangeSetStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordProveInRangeSet)
+	builder.WriteString("(")
 	builder.WriteString(fmt.Sprintf("%d", stmt.Start))
 	builder.WriteString(", ")
 	builder.WriteString(fmt.Sprintf("%d", stmt.End))

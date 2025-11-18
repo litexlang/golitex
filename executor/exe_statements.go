@@ -109,8 +109,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 		return execRet
 	case *ast.ClaimIffStmt:
 		execRet = exec.claimIffStmt(stmt)
-	case *ast.ProveInRangeStmt:
-		execRet = exec.proveInRangeStmt(stmt)
+	case *ast.ProveInRangeSetStmt:
+		execRet = exec.proveInRangeSetStmt(stmt)
 	case *ast.ProveIsTransitivePropStmt:
 		execRet = exec.proveIsTransitivePropStmt(stmt)
 	case *ast.ProveIsCommutativePropStmt:
@@ -131,6 +131,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 		execRet = exec.haveFnEqualCaseByCaseStmt(stmt)
 	case *ast.ProveCaseByCaseStmt:
 		execRet = exec.proveCaseByCaseStmt(stmt)
+	case *ast.ProveInRangeStmt:
+		execRet = exec.proveInRangeStmt(stmt)
 	default:
 		panic(fmt.Sprintf("unknown statement type: %T", stmt))
 	}
@@ -1185,4 +1187,8 @@ func (exec *Executor) checkCaseNoOverlapWithOthers(stmt *ast.HaveFnEqualCaseByCa
 	}
 
 	return NewExecTrue(""), nil
+}
+
+func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) ExecRet {
+	return NewExecTrue(fmt.Sprintf("%s\n", stmt.String()))
 }

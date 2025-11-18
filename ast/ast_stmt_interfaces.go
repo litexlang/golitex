@@ -67,7 +67,8 @@ func (s *HaveFnStmt) stmt()                              {}
 func (s *MarkdownStmt) stmt()                            {}
 func (s *ProveIsCommutativePropStmt) stmt()              {}
 func (s *ClaimIffStmt) stmt()                            {}
-func (s *ProveInRangeStmt) stmt()                        {}
+func (s *ProveInRangeSetStmt) stmt()                        {}
+func (s *ProveInRangeStmt) stmt()                           {}
 func (s *ProveIsTransitivePropStmt) stmt()               {}
 func (s *DefAlgoStmt) stmt()                             {}
 func (s *EvalStmt) stmt()                                {}
@@ -122,7 +123,8 @@ func (s *ProveIsCommutativePropStmt) algoStmt()          {}
 func (s *DefProveAlgoStmt) algoStmt()                    {}
 func (s *ByStmt) algoStmt()                              {}
 func (s *ClaimIffStmt) algoStmt()                        {}
-func (s *ProveInRangeStmt) algoStmt()                    {}
+func (s *ProveInRangeSetStmt) algoStmt()                    {}
+func (s *ProveInRangeStmt) algoStmt()                       {}
 func (s *ProveIsTransitivePropStmt) algoStmt()           {}
 func (s *DefAlgoStmt) algoStmt()                         {}
 func (s *EvalStmt) algoStmt()                            {}
@@ -171,7 +173,8 @@ func (s *HaveFnEqualStmt) GetLine() uint                 { return s.Line }
 func (s *HaveFnLiftStmt) GetLine() uint                  { return s.Line }
 func (s *HaveFnStmt) GetLine() uint                      { return s.Line }
 func (s *MarkdownStmt) GetLine() uint                    { return s.Line }
-func (s *ProveInRangeStmt) GetLine() uint                { return s.Line }
+func (s *ProveInRangeSetStmt) GetLine() uint                { return s.Line }
+func (s *ProveInRangeStmt) GetLine() uint                   { return s.Line }
 func (s *ClaimIffStmt) GetLine() uint                    { return s.Line }
 func (s *ProveIsTransitivePropStmt) GetLine() uint       { return s.Line }
 func (s *ProveIsCommutativePropStmt) GetLine() uint      { return s.Line }

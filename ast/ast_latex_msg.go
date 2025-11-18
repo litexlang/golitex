@@ -891,6 +891,10 @@ func (s *ClaimIffStmt) ToLatexString() string {
 	return s.String()
 }
 
+func (s *ProveInRangeSetStmt) ToLatexString() string {
+	return s.String()
+}
+
 func (s *ProveInRangeStmt) ToLatexString() string {
 	return s.String()
 }
