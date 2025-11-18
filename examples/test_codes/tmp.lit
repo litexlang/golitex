@@ -4,9 +4,3 @@ dim(x) = 3
 proj(x, 1) = R
 proj(x, 2) = Q
 proj(x, 3) = Z
-
-let y set
-know $is_cart(y), dim(y) = 3
-proj(y, 1) $in set
-proj(y, 2) $in set
-proj(y, 3) $in set

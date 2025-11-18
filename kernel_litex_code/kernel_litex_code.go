@@ -691,4 +691,15 @@ know @subset_of_finite_set_is_finite_set(x set, y finite_set):
 	=>:
 		$is_finite_set(x)
 		count(x) <= count(y)
+
+prop is_cart(x set)
+
+fn proj(x set, i N_pos) set:
+	dom:
+		$is_cart(x)
+		i <= dim(x)
+
+fn dim(x set) N_pos:
+	dom:
+		$is_cart(x)
 `
