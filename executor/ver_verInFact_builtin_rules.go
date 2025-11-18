@@ -527,5 +527,15 @@ func (ver *Verifier) getRetSetOfFcFnByUsingItsFnT(fcFn *ast.FnObj) (ast.Obj, err
 		curParamsChainIndex++
 	}
 
-	return curFnTStruct.RetSet, nil
+	uniMap := map[string]ast.Obj{}
+	for i := 0; i < len(curFnTStruct.Params); i++ {
+		uniMap[curFnTStruct.Params[i]] = fcFn.Params[i]
+	}
+	// inst return set
+	instRetSet, err := curFnTStruct.RetSet.Instantiate(uniMap)
+	if err != nil {
+		return nil, fmt.Errorf(err.Error())
+	}
+
+	return instRetSet, nil
 }

@@ -702,4 +702,9 @@ fn proj(x set, i N_pos) set:
 fn dim(x set) N_pos:
 	dom:
 		$is_cart(x)
+
+fn coord(a obj, x set, index N_pos) proj(x, index):
+	a $in x
+	$is_cart(x)
+	index <= dim(x)
 `
