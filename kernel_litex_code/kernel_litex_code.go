@@ -164,6 +164,7 @@ know:
 	$item_exists_in(C)
 	forall x N_pos:
 		x > 0
+	forall x set: $item_exists_in(x) => x $in nonempty_set
 
 know forall m N_pos => m - 1 $in N
 
