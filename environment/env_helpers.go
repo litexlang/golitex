@@ -65,29 +65,34 @@ func (e *Env) GenerateUndeclaredRandomName_AndNotInMap(m map[string]struct{}) st
 	}
 }
 
-func (e *Env) GetFnStructFromFnTName(fnTName *ast.FnObj) (*ast.FnTStruct, error) {
+func (e *Env) GetFnStructFromFnTName(fnTName *ast.FnObj) (*ast.FnTStruct, glob.GlobRet) {
 	if fcFnTypeToFnTStruct, ok := ast.FcFnT_To_FnTStruct(fnTName); ok {
-		return fcFnTypeToFnTStruct, nil
+		return fcFnTypeToFnTStruct, glob.TrueRet("")
 	} else {
 		fnTNameHeadAsAtom, ok := fnTName.FnHead.(ast.AtomObj)
 		if !ok {
-			return nil, fmt.Errorf("fnTNameHead is not an atom")
+			return nil, glob.ErrRet(fmt.Errorf("fnTNameHead is not an atom"))
 		}
 
 		return e.getFnTDef_InstFnTStructOfIt(fnTNameHeadAsAtom, fnTName.Params)
 	}
 }
 
-func (e *Env) getFnTDef_InstFnTStructOfIt(fnTDefName ast.AtomObj, templateParams []ast.Obj) (*ast.FnTStruct, error) {
+func (e *Env) getFnTDef_InstFnTStructOfIt(fnTDefName ast.AtomObj, templateParams []ast.Obj) (*ast.FnTStruct, glob.GlobRet) {
 	defOfT := e.GetFnTemplateDef(fnTDefName)
 	if defOfT == nil {
-		return nil, fmt.Errorf("fnTNameHead %s is not a fn template", fnTDefName)
+		return nil, glob.ErrRet(fmt.Errorf("fnTNameHead %s is not a fn template", fnTDefName))
 	}
 
 	uniMap, err := ast.MakeUniMap(defOfT.TemplateDefHeader.Params, templateParams)
 	if err != nil {
-		return nil, err
+		return nil, glob.ErrRet(err)
 	}
 
-	return defOfT.Fn.Instantiate(uniMap)
+	fnTStruct, err := defOfT.Fn.Instantiate(uniMap)
+	if err != nil {
+		return nil, glob.ErrRet(err)
+	}
+
+	return fnTStruct, glob.TrueRet("")
 }

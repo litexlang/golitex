@@ -403,13 +403,13 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *
 
 	// check parameters of the left satisfies the fn template template requirement
 	for i, randomName := range randomNames {
-		err := ver.Env.NewObj_NoDuplicate(randomName, nil)
-		if err != nil {
-			return NewExecErr(err.Error())
+		ret := ver.Env.NewObj_NoDuplicate(randomName, nil)
+		if ret.IsErr() {
+			return NewExecErr(ret.String())
 		}
-		err = ver.Env.NewFact(ast.NewInFactWithParamFc(ast.AtomObj(randomName), (fnFcFn.FnHead).(*ast.FnObj).Params[i]))
-		if err != nil {
-			return NewExecErr(err.Error())
+		ret = ver.Env.NewFact(ast.NewInFactWithParamFc(ast.AtomObj(randomName), (fnFcFn.FnHead).(*ast.FnObj).Params[i]))
+		if ret.IsErr() {
+			return NewExecErr(ret.String())
 		}
 	}
 
@@ -434,9 +434,9 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *
 			return verRet
 		}
 
-		err := ver.Env.NewFact(fact)
-		if err != nil {
-			return NewExecErr(err.Error())
+		ret := ver.Env.NewFact(fact)
+		if ret.IsErr() {
+			return NewExecErr(ret.String())
 		}
 	}
 
@@ -447,9 +447,9 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *
 			return verRet
 		}
 
-		err = ver.Env.NewFact(fact)
-		if err != nil {
-			return NewExecErr(err.Error())
+		ret := ver.Env.NewFact(fact)
+		if ret.IsErr() {
+			return NewExecErr(ret.String())
 		}
 	}
 
@@ -517,11 +517,11 @@ func (ver *Verifier) getRetSetOfFcFnByUsingItsFnT(fcFn *ast.FnObj) (ast.Obj, err
 			return nil, fmt.Errorf("curRetSet is not an FcFn")
 		}
 
-		var err error
-		// curFnTStruct, err = ver.GetFnStructFromFnTName_CheckFnTParamsReq(curRetSet, state)
-		curFnTStruct, err = ver.Env.GetFnStructFromFnTName(curRetSet)
-		if err != nil {
-			return nil, err
+		var ret glob.GlobRet
+		// curFnTStruct, ret = ver.GetFnStructFromFnTName_CheckFnTParamsReq(curRetSet, state)
+		curFnTStruct, ret = ver.Env.GetFnStructFromFnTName(curRetSet)
+		if ret.IsErr() {
+			return nil, fmt.Errorf(ret.String())
 		}
 
 		curParamsChainIndex++

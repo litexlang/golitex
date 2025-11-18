@@ -16,6 +16,7 @@ package litex_env
 
 import (
 	ast "golitex/ast"
+	glob "golitex/glob"
 )
 
 type computer struct {
@@ -26,7 +27,7 @@ func newComputer(env *Env) *computer {
 	return &computer{env: env}
 }
 
-func (env *Env) Compute(fc ast.Obj) (ast.Obj, error) {
+func (env *Env) Compute(fc ast.Obj) (ast.Obj, glob.GlobRet) {
 	newComputer := newComputer(env)
 	return newComputer.compute(fc)
 }
@@ -51,9 +52,9 @@ func (env *Env) Compute(fc ast.Obj) (ast.Obj, error) {
 // }
 
 // 算出的数值；是不是真的算出来了（因为可能没算出来，里面涉及到的符号没value什么的），出错
-func (comp *computer) compute(toCompute ast.Obj) (ast.Obj, error) {
+func (comp *computer) compute(toCompute ast.Obj) (ast.Obj, glob.GlobRet) {
 	_ = toCompute
-	return nil, nil
+	return nil, glob.TrueRet("")
 }
 
 func (env *Env) IsFnWithDefinedAlgo(fc ast.Obj) bool {

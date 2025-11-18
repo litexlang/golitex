@@ -49,9 +49,9 @@ func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) ExecRet {
 	}
 
 	uniFact := stmt.UniFact()
-	err := exec.Env.NewFact(uniFact)
-	if err != nil {
-		return NewExecErr(err.Error())
+	ret := exec.Env.NewFact(uniFact)
+	if ret.IsErr() {
+		return NewExecErr(ret.String())
 	}
 
 	return NewExecTrue("")
@@ -131,9 +131,9 @@ func (exec *Executor) proveInRangeStmtWhenParamIsIndex(intensionalSetGivenSetIsI
 			return false, "", nil
 		}
 
-		err = exec.Env.NewFact(domFact)
-		if err != nil {
-			return false, "", err
+		ret := exec.Env.NewFact(domFact)
+		if ret.IsErr() {
+			return false, "", fmt.Errorf(ret.String())
 		}
 	}
 
