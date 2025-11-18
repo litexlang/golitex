@@ -186,7 +186,7 @@ func (exec *Executor) checkInFactInSet_SetIsNonEmpty(pureInFact *ast.SpecFactStm
 	}
 	if ok.IsTrue() {
 		// 如果 len > 0 那就是可以
-		lenOverStmtName := ast.NewFnObj(ast.AtomObj(glob.KeywordLen), []ast.Obj{pureInFact.Params[0]})
+		lenOverStmtName := ast.NewFnObj(ast.AtomObj(glob.KeywordCount), []ast.Obj{pureInFact.Params[0]})
 		largerThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeySymbolGreater), []ast.Obj{lenOverStmtName, ast.AtomObj("0")}, pureInFact.Line)
 		ok, err := exec.openANewEnvAndCheck(largerThanZeroFact, false)
 		if err != nil {

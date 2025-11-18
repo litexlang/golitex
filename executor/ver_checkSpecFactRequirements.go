@@ -127,7 +127,7 @@ func (ver *Verifier) objSatisfyFnRequirement(obj ast.Obj, state *VerState) ExecR
 	// if isArithmeticFn(objAsFnObj) {
 	// 	return ver.arithmeticFnRequirement(objAsFnObj, state)
 	// } else
-	if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordLen) {
+	if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordCount) {
 		return ver.lenFnRequirement(objAsFnObj, state)
 	} else if ast.IsFnTemplate_FcFn(objAsFnObj) {
 		return NewExecTrue("")

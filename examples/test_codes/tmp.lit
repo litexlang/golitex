@@ -1,0 +1,9 @@
+have set y = {1, 2, 3}
+
+have x set
+
+know $is_subset_of(x, y)
+
+prove:
+    x $in finite_set
+    count(x) <= count(y)

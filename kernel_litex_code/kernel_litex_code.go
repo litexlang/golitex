@@ -598,12 +598,6 @@ prop is_subset_of(x, y set):
 		z $in x
 		=>:
 			z $in y
-	forall:
-		y $in finite_set
-		=>:
-			x $in finite_set
-			len(x) <= len(y)
-
 
 prop is_superset_of(A, B set):
 	forall x B: x $in A
@@ -689,4 +683,8 @@ know:
 	forall x, y, z R: x > y, z < 0 => x * z < y * z
 	forall x, y R: x > y => not x <= y, not x = y, not x < y
 	forall x, y R: x < y => not x >= y, not x = y, not x > y
+
+prop is_finite_set(x set)
+know forall x set: $is_finite_set(x) <=> x $in finite_set
+know forall x set, y finite_set: x $is_subset_of y => x $in finite_set, count(x) <= count(y)
 `

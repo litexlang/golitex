@@ -9,7 +9,7 @@ prove:
 
     prove:
         x $in finite_set
-        len(x) <= len(y)
+        count(x) <= count(y)
 
 prove:
     prop is_inter_item(A, B set, x obj):

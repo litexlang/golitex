@@ -45,7 +45,7 @@ const (
 	KeywordIn                     = "in"
 	// KeywordProveByMathInduction           = "prove_by_math_induction"
 	KeywordAs           = "as" // 用在 import xxx as ??? 了
-	KeywordLen          = "len"
+	KeywordCount        = "count"
 	KeywordFiniteSet    = "finite_set"
 	KeywordProveByEnum  = "prove_by_enum" // syntax connecting forall and finite_set
 	KeywordItemExistsIn = "item_exists_in"
@@ -123,7 +123,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	// KeywordProveByMathInduction:           {},
 	KeywordComplex:                        {},
 	KeywordAs:                             {},
-	KeywordLen:                            {},
+	KeywordCount:                          {},
 	KeywordFiniteSet:                      {},
 	KeywordProveByEnum:                    {},
 	KeywordItemExistsIn:                   {},
@@ -267,7 +267,7 @@ var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]s
 	KeywordExistPropPreImageByReplacement: {},
 	KeywordExistFnPreImageByReplacement:   {},
 	// TupleFcFnHead:                         {},
-	KeywordLen:         {},
+	KeywordCount:       {},
 	KeywordNPos:        {},
 	KeywordNonEmptySet: {},
 	KeywordEval:        {},
@@ -340,7 +340,7 @@ var KeywordHelpMap = map[string]string{
 	KeywordComplex:                        "",
 	KeywordIn:                             "",
 	KeywordAs:                             "",
-	KeywordLen:                            "",
+	KeywordCount:                          "",
 	KeywordFiniteSet:                      "",
 	KeywordProveByEnum:                    "",
 	KeywordItemExistsIn:                   "",
