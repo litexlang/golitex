@@ -52,7 +52,7 @@ func (l *DefFnStmt) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordFn)
 	builder.WriteString(" ")
-	builder.WriteString(NewDefHeader(FcAtom(l.Name), l.FnTemplate.Params, l.FnTemplate.ParamSets).StringWithoutColonAtEnd())
+	builder.WriteString(NewDefHeader(AtomObj(l.Name), l.FnTemplate.Params, l.FnTemplate.ParamSets).StringWithoutColonAtEnd())
 	builder.WriteString(" ")
 	builder.WriteString(l.FnTemplate.RetSet.String())
 	if len(l.FnTemplate.DomFacts) > 0 {

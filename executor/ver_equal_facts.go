@@ -98,13 +98,13 @@ func (ver *Verifier) fcEqualSpec(left ast.Obj, right ast.Obj, state *VerState) E
 	return NewExecUnknown("")
 }
 
-func (ver *Verifier) verTrueEqualFact_FcFnEqual_NoCheckRequirements(left, right *ast.FcFn, state *VerState) ExecRet {
+func (ver *Verifier) verTrueEqualFact_FcFnEqual_NoCheckRequirements(left, right *ast.FnObj, state *VerState) ExecRet {
 	if len(left.Params) != len(right.Params) {
 		return NewExecUnknown("")
 	}
 
 	// ok, err = ver.fcEqualSpec(left.FnHead, right.FnHead, state)
-	verRet := ver.verTrueEqualFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Obj{left.FnHead, right.FnHead}, glob.InnerGenLine), state, false)
+	verRet := ver.verTrueEqualFact(ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeySymbolEqual), []ast.Obj{left.FnHead, right.FnHead}, glob.InnerGenLine), state, false)
 	if verRet.IsErr() {
 		return verRet
 	}
@@ -115,7 +115,7 @@ func (ver *Verifier) verTrueEqualFact_FcFnEqual_NoCheckRequirements(left, right 
 	for i := range left.Params {
 		// ok, err := ver.fcEqualSpec(left.Params[i], right.Params[i], state)
 
-		verRet := ver.verTrueEqualFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Obj{left.Params[i], right.Params[i]}, glob.InnerGenLine), state, false)
+		verRet := ver.verTrueEqualFact(ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeySymbolEqual), []ast.Obj{left.Params[i], right.Params[i]}, glob.InnerGenLine), state, false)
 		if verRet.IsErr() {
 			return verRet
 		}

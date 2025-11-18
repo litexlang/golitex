@@ -429,10 +429,10 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) ExecRet {
 
 	paramsAsFc := []ast.Obj{}
 	for i := range stmt.Prop.DefHeader.Params {
-		paramsAsFc = append(paramsAsFc, ast.FcAtom(stmt.Prop.DefHeader.Params[i]))
+		paramsAsFc = append(paramsAsFc, ast.AtomObj(stmt.Prop.DefHeader.Params[i]))
 	}
 
-	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(stmt.Prop.DefHeader.Name), paramsAsFc, stmt.Line)}, stmt.Prop.ThenFacts, stmt.Line)
+	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(stmt.Prop.DefHeader.Name), paramsAsFc, stmt.Line)}, stmt.Prop.ThenFacts, stmt.Line)
 
 	err := exec.Env.NewFact(uniFact)
 	if err != nil {
@@ -469,12 +469,12 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) ExecRet {
 	// 在 objMem 里记录一下
 	exec.Env.ObjDefMem[stmt.Name] = nil
 
-	err = exec.Env.StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(ast.FcAtom(stmt.Name), nil, stmt.FnTemplate)
+	err = exec.Env.StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(ast.AtomObj(stmt.Name), nil, stmt.FnTemplate)
 	if err != nil {
 		return NewExecErr(err.Error())
 	}
 
-	derivedFact, err := stmt.FnTemplate.DeriveUniFact_WithGivenFn(ast.FcAtom(stmt.Name))
+	derivedFact, err := stmt.FnTemplate.DeriveUniFact_WithGivenFn(ast.AtomObj(stmt.Name))
 	if err != nil {
 		return NewExecErr(err.Error())
 	}
@@ -523,16 +523,16 @@ func (exec *Executor) haveSetFnStmt(stmt *ast.HaveSetFnStmt) ExecRet {
 
 func (exec *Executor) haveSetDefinedByReplacementStmt(stmt *ast.HaveSetDefinedByReplacementStmt) ExecRet {
 
-	setDefinedByReplacement := ast.NewFcFn(ast.FcAtom(glob.KeywordSetDefinedByReplacement), []ast.Obj{stmt.DomSet, stmt.RangeSet, stmt.PropName})
+	setDefinedByReplacement := ast.NewFcFn(ast.AtomObj(glob.KeywordSetDefinedByReplacement), []ast.Obj{stmt.DomSet, stmt.RangeSet, stmt.PropName})
 
-	defObjStmt := ast.NewDefLetStmt([]string{stmt.Name}, []ast.Obj{ast.FcAtom(glob.KeywordSet)}, []ast.FactStmt{ast.NewEqualFact(ast.FcAtom(stmt.Name), setDefinedByReplacement)}, stmt.Line)
+	defObjStmt := ast.NewDefLetStmt([]string{stmt.Name}, []ast.Obj{ast.AtomObj(glob.KeywordSet)}, []ast.FactStmt{ast.NewEqualFact(ast.AtomObj(stmt.Name), setDefinedByReplacement)}, stmt.Line)
 
 	execState := exec.defLetStmt(defObjStmt)
 	if execState.IsNotTrue() {
 		return execState
 	}
 
-	err := exec.Env.SetEqualToSetDefinedByReplacement_PostProcess(ast.FcAtom(stmt.Name), setDefinedByReplacement)
+	err := exec.Env.SetEqualToSetDefinedByReplacement_PostProcess(ast.AtomObj(stmt.Name), setDefinedByReplacement)
 	if err != nil {
 		return NewExecErr(err.Error())
 	}
@@ -612,7 +612,7 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ExecRet {
 	ver := NewVerifier(exec.Env)
 
 	for i := range len(stmt.ObjNames) {
-		verRet := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Obj{stmt.ObjEqualTos[i], stmt.ObjSets[i]}, stmt.Line), Round0Msg)
+		verRet := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeywordIn), []ast.Obj{stmt.ObjEqualTos[i], stmt.ObjSets[i]}, stmt.Line), Round0Msg)
 		if verRet.IsErr() {
 			return NewExecErr(verRet.String())
 		}
@@ -620,7 +620,7 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ExecRet {
 			return NewExecErr(fmt.Sprintf("%s is not in %s", stmt.ObjNames[i], stmt.ObjSets[i]))
 		}
 
-		stmtForDef := ast.NewDefLetStmt([]string{stmt.ObjNames[i]}, []ast.Obj{ast.FcAtom(glob.KeywordObj)}, []ast.FactStmt{}, stmt.Line)
+		stmtForDef := ast.NewDefLetStmt([]string{stmt.ObjNames[i]}, []ast.Obj{ast.AtomObj(glob.KeywordObj)}, []ast.FactStmt{}, stmt.Line)
 		err := exec.Env.DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmtForDef)
 		if err != nil {
 			return NewExecErr(err.Error())
@@ -635,7 +635,7 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ExecRet {
 			return NewExecErr(fmt.Sprintf("%s is not declared", stmt.ObjEqualTos[i]))
 		}
 		// new fact: obj = obj
-		err = exec.Env.NewFact(ast.NewEqualFact(ast.FcAtom(stmt.ObjNames[i]), stmt.ObjEqualTos[i]))
+		err = exec.Env.NewFact(ast.NewEqualFact(ast.AtomObj(stmt.ObjNames[i]), stmt.ObjEqualTos[i]))
 		if err != nil {
 			return NewExecErr(err.Error())
 		}
@@ -689,10 +689,10 @@ func (exec *Executor) checkFnEqualStmt(stmt *ast.HaveFnEqualStmt) (ExecRet, erro
 func fnHeaderToReturnValueOfFn(head *ast.DefHeader) ast.Obj {
 	params := make([]ast.Obj, len(head.Params))
 	for i := range len(head.Params) {
-		params[i] = ast.FcAtom(head.Params[i])
+		params[i] = ast.AtomObj(head.Params[i])
 	}
 
-	fnName := ast.FcAtom(head.Name)
+	fnName := ast.AtomObj(head.Name)
 
 	return ast.NewFcFn(fnName, params)
 }
@@ -712,11 +712,11 @@ func (exec *Executor) haveFnLiftStmt(stmt *ast.HaveFnLiftStmt) ExecRet {
 
 	FnTemplateOfFunctions := []ast.Obj{}
 	for i := range len(optDef.AsFnTStruct.ParamSets) {
-		head := ast.NewFcFn(ast.FcAtom(glob.KeywordFn), stmt.DomainOfEachParamOfGivenFn)
+		head := ast.NewFcFn(ast.AtomObj(glob.KeywordFn), stmt.DomainOfEachParamOfGivenFn)
 		FnTemplateOfFunctions = append(FnTemplateOfFunctions, ast.NewFcFn(head, []ast.Obj{optDef.AsFnTStruct.ParamSets[i]}))
 	}
 
-	retSet := ast.NewFcFn(ast.NewFcFn(ast.FcAtom(glob.KeywordFn), stmt.DomainOfEachParamOfGivenFn), []ast.Obj{optDef.AsFnTStruct.RetSet})
+	retSet := ast.NewFcFn(ast.NewFcFn(ast.AtomObj(glob.KeywordFn), stmt.DomainOfEachParamOfGivenFn), []ast.Obj{optDef.AsFnTStruct.RetSet})
 
 	// randomly generate len different params
 	randomParams := glob.GenerateUniqueRandomStrings(len(FnTemplateOfFunctions))
@@ -745,20 +745,20 @@ func (exec *Executor) haveFnLift_knowFact(stmt *ast.HaveFnLiftStmt, fnNames []st
 	uniFactParams := glob.GenerateUniqueRandomStrings_NotInGivenStrSlice(len(stmt.DomainOfEachParamOfGivenFn), fnNames)
 	uniFactParamsAsFc := []ast.Obj{}
 	for i := range len(uniFactParams) {
-		uniFactParamsAsFc = append(uniFactParamsAsFc, ast.FcAtom(uniFactParams[i]))
+		uniFactParamsAsFc = append(uniFactParamsAsFc, ast.AtomObj(uniFactParams[i]))
 	}
 
 	fnNamesAsFc := []ast.Obj{}
 	for i := range len(fnNames) {
-		fnNamesAsFc = append(fnNamesAsFc, ast.FcAtom(fnNames[i]))
+		fnNamesAsFc = append(fnNamesAsFc, ast.AtomObj(fnNames[i]))
 	}
 
 	uniFactParamSets := stmt.DomainOfEachParamOfGivenFn
-	lhs := ast.NewFcFn(ast.NewFcFn(ast.FcAtom(stmt.FnName), fnNamesAsFc), uniFactParamsAsFc)
+	lhs := ast.NewFcFn(ast.NewFcFn(ast.AtomObj(stmt.FnName), fnNamesAsFc), uniFactParamsAsFc)
 
 	rhsParams := []ast.Obj{}
 	for i := range len(fnNamesAsFc) {
-		rhsParams = append(rhsParams, ast.NewFcFn(ast.FcAtom(fnNames[i]), uniFactParamsAsFc))
+		rhsParams = append(rhsParams, ast.NewFcFn(ast.AtomObj(fnNames[i]), uniFactParamsAsFc))
 	}
 
 	rhs := ast.NewFcFn(stmt.Opt, rhsParams)
@@ -904,12 +904,12 @@ func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitiveP
 		return fmt.Errorf("dom facts are not allowed in %s", glob.KeywordProveIsTransitiveProp)
 	}
 
-	err := exec.Env.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(stmt.Prop), []ast.Obj{ast.FcAtom(stmt.Params[0]), ast.FcAtom(stmt.Params[1])}, stmt.Line))
+	err := exec.Env.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(stmt.Prop), []ast.Obj{ast.AtomObj(stmt.Params[0]), ast.AtomObj(stmt.Params[1])}, stmt.Line))
 	if err != nil {
 		return err
 	}
 
-	err = exec.Env.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(stmt.Prop), []ast.Obj{ast.FcAtom(stmt.Params[1]), ast.FcAtom(stmt.Params[2])}, stmt.Line))
+	err = exec.Env.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(stmt.Prop), []ast.Obj{ast.AtomObj(stmt.Params[1]), ast.AtomObj(stmt.Params[2])}, stmt.Line))
 	if err != nil {
 		return err
 	}
@@ -922,7 +922,7 @@ func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitiveP
 	}
 
 	// check
-	finalCheckStmt := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(stmt.Prop), []ast.Obj{ast.FcAtom(stmt.Params[0]), ast.FcAtom(stmt.Params[2])}, stmt.Line)
+	finalCheckStmt := ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(stmt.Prop), []ast.Obj{ast.AtomObj(stmt.Params[0]), ast.AtomObj(stmt.Params[2])}, stmt.Line)
 	state = exec.factStmt(finalCheckStmt)
 	if state.IsNotTrue() {
 		return fmt.Errorf("failed to prove %s is transitive: %s failed", stmt.Prop, finalCheckStmt)
@@ -961,7 +961,7 @@ func (exec *Executor) evalFcInLocalEnv(fcToEval ast.Obj) (ast.Obj, ExecRet) {
 		return nil, execRet
 	}
 
-	return value, NewExecTrue(fmt.Sprintf("By evaluation of algo %s\nWe get %s = %s\n", fcToEval.(*ast.FcFn).FnHead.String(), fcToEval.String(), value.String()))
+	return value, NewExecTrue(fmt.Sprintf("By evaluation of algo %s\nWe get %s = %s\n", fcToEval.(*ast.FnObj).FnHead.String(), fcToEval.String(), value.String()))
 }
 
 func (exec *Executor) defProveAlgoStmt(stmt *ast.DefProveAlgoStmt) ExecRet {

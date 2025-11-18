@@ -118,7 +118,7 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
 	// postprocess
 	if fact.IsExist_St_Fact() {
 		if fact.PropName == glob.KeywordItemExistsIn {
-			existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordItemExistsIn), []ast.Obj{fact.Params[2]}, fact.Line)
+			existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeywordItemExistsIn), []ast.Obj{fact.Params[2]}, fact.Line)
 			err := env.storeSpecFactInMem(existInFact)
 			return err
 		}
@@ -474,7 +474,7 @@ func (env *Env) ExecDefFnTemplate(stmt *ast.FnTemplateDefStmt) error {
 		return fmt.Errorf("fn template name %s is already declared", stmt.TemplateDefHeader.Name)
 	}
 
-	err := env.AtomsInFnTemplateFnTemplateDeclared(ast.FcAtom(stmt.TemplateDefHeader.Name), stmt)
+	err := env.AtomsInFnTemplateFnTemplateDeclared(ast.AtomObj(stmt.TemplateDefHeader.Name), stmt)
 	if err != nil {
 		return err
 	}
@@ -486,7 +486,7 @@ func (env *Env) ExecDefFnTemplate(stmt *ast.FnTemplateDefStmt) error {
 func (env *Env) newEnumFact(stmt *ast.EnumStmt) error {
 	forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts := ast.TransformEnumToUniFact(stmt.CurSet, stmt.Items)
 
-	err := env.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIn), []ast.Obj{stmt.CurSet, ast.FcAtom(glob.KeywordSet)}, stmt.Line))
+	err := env.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeywordIn), []ast.Obj{stmt.CurSet, ast.AtomObj(glob.KeywordSet)}, stmt.Line))
 	if err != nil {
 		return err
 	}
@@ -512,16 +512,16 @@ func (env *Env) newEnumFact(stmt *ast.EnumStmt) error {
 
 	// postprocess 1. s is $is_finite_set 2. len(s) = number of items in set
 	// finiteSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIsFiniteSet), []ast.Fc{stmt.EnumName})
-	finiteSetFact := ast.NewInFactWithFc(stmt.CurSet, ast.FcAtom(glob.KeywordFiniteSet))
+	finiteSetFact := ast.NewInFactWithFc(stmt.CurSet, ast.AtomObj(glob.KeywordFiniteSet))
 	err = env.NewFact(finiteSetFact)
 	if err != nil {
 		return err
 	}
 
 	lengthOfSet := strconv.Itoa(len(stmt.Items))
-	lengthOfSetAsFcAtom := ast.FcAtom(lengthOfSet)
+	lengthOfSetAsFcAtom := ast.AtomObj(lengthOfSet)
 
-	lenFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Obj{ast.NewFcFn(ast.FcAtom(glob.KeywordLen), []ast.Obj{stmt.CurSet}), lengthOfSetAsFcAtom}, stmt.Line)
+	lenFact := ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeySymbolEqual), []ast.Obj{ast.NewFcFn(ast.AtomObj(glob.KeywordLen), []ast.Obj{stmt.CurSet}), lengthOfSetAsFcAtom}, stmt.Line)
 	err = env.NewFact(lenFact)
 	if err != nil {
 		return err

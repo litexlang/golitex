@@ -65,12 +65,12 @@ func (tb *tokenBlock) fcAtomAndFcFn() (ast.Obj, error) {
 	}
 }
 
-func (tb *tokenBlock) rawFcAtom() (ast.FcAtom, error) {
+func (tb *tokenBlock) rawFcAtom() (ast.AtomObj, error) {
 	// values := []string{}
 
 	value, err := tb.header.next()
 	if err != nil {
-		return ast.FcAtom(""), err
+		return ast.AtomObj(""), err
 	}
 
 	// 只允许至多有一层::
@@ -80,9 +80,9 @@ func (tb *tokenBlock) rawFcAtom() (ast.FcAtom, error) {
 		if err != nil {
 			return "", tbErr(err, tb)
 		}
-		return ast.FcAtom(fmt.Sprintf("%s%s%s", value, glob.KeySymbolColonColon, rightValue)), nil
+		return ast.AtomObj(fmt.Sprintf("%s%s%s", value, glob.KeySymbolColonColon, rightValue)), nil
 	} else {
-		return ast.FcAtom(value), nil
+		return ast.AtomObj(value), nil
 	}
 
 	// for tb.header.is(glob.KeySymbolColonColon) {
@@ -162,7 +162,7 @@ func (tb *tokenBlock) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence) (ast.Ob
 			return nil, err
 		}
 
-		leftHead := ast.FcAtom(curToken)
+		leftHead := ast.AtomObj(curToken)
 		left = ast.NewFcFn(
 			leftHead,
 			[]ast.Obj{left, right},
@@ -186,7 +186,7 @@ func (tb *tokenBlock) unaryOptFc() (ast.Obj, error) {
 
 		// 如果后面跟的是逗号，那只返回 -
 		if tb.header.is(glob.KeySymbolComma) {
-			return ast.FcAtom(unaryOp), nil
+			return ast.AtomObj(unaryOp), nil
 		}
 
 		right, err := tb.unaryOptFc()
@@ -195,7 +195,7 @@ func (tb *tokenBlock) unaryOptFc() (ast.Obj, error) {
 		}
 
 		// 方法1： 返回 -1 * right，好处： -a 可以直接和 -5 对应，因为 -5 其实是 -1 * 5, -n是 -1 * n；缺点是，如果是 -1 * 5
-		return ast.NewFcFn(ast.FcAtom(glob.KeySymbolStar), []ast.Obj{ast.FcAtom("-1"), right}), nil
+		return ast.NewFcFn(ast.AtomObj(glob.KeySymbolStar), []ast.Obj{ast.AtomObj("-1"), right}), nil
 
 		// 方法2： 如果right是数字，那返回 - right，否则是 -1 * right
 		// if rightAtom, ok := right.(ast.FcAtom); ok && glob.IsNumLitStr(string(rightAtom)) {
@@ -207,16 +207,16 @@ func (tb *tokenBlock) unaryOptFc() (ast.Obj, error) {
 	}
 }
 
-func (tb *tokenBlock) numberStr() (ast.FcAtom, error) {
+func (tb *tokenBlock) numberStr() (ast.AtomObj, error) {
 	left, err := tb.header.next()
 	if err != nil {
-		return ast.FcAtom(""), err
+		return ast.AtomObj(""), err
 	}
 
 	// 检查left是否全是数字
 	for _, c := range left {
 		if c < '0' || c > '9' {
-			return ast.FcAtom(""), fmt.Errorf("invalid number: %s", left)
+			return ast.AtomObj(""), fmt.Errorf("invalid number: %s", left)
 		}
 	}
 
@@ -224,7 +224,7 @@ func (tb *tokenBlock) numberStr() (ast.FcAtom, error) {
 		// 检查下一个字符是否是数字
 		nextChar := tb.header.strAtCurIndexPlus(1)
 		if len(nextChar) == 0 {
-			return ast.FcAtom(left), nil
+			return ast.AtomObj(left), nil
 		}
 
 		allDigits := true
@@ -239,20 +239,20 @@ func (tb *tokenBlock) numberStr() (ast.FcAtom, error) {
 			tb.header.skip("")
 			right, err := tb.header.next()
 			if err != nil {
-				return ast.FcAtom(""), fmt.Errorf("invalid number: %s", right)
+				return ast.AtomObj(""), fmt.Errorf("invalid number: %s", right)
 			}
-			return ast.FcAtom(fmt.Sprintf("%s.%s", left, right)), nil
+			return ast.AtomObj(fmt.Sprintf("%s.%s", left, right)), nil
 		} else {
-			return ast.FcAtom(""), fmt.Errorf("invalid number: %s", left)
+			return ast.AtomObj(""), fmt.Errorf("invalid number: %s", left)
 		}
 		// return ast.FcAtom(left), nil
 	} else {
 		// 不能开头是0，除非你真的是0
 		if left[0] == '0' && len(left) > 1 {
-			return ast.FcAtom(""), fmt.Errorf("invalid number: %s", left)
+			return ast.AtomObj(""), fmt.Errorf("invalid number: %s", left)
 		}
 
-		return ast.FcAtom(left), nil
+		return ast.AtomObj(left), nil
 	}
 }
 
@@ -350,7 +350,7 @@ func (tb *tokenBlock) fnSet() (ast.Obj, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	ret := ast.NewFcFn(ast.NewFcFn(ast.FcAtom(glob.KeywordFn), fnSets), []ast.Obj{retSet})
+	ret := ast.NewFcFn(ast.NewFcFn(ast.AtomObj(glob.KeywordFn), fnSets), []ast.Obj{retSet})
 
 	return ret, nil
 }
@@ -380,5 +380,5 @@ func (tb *tokenBlock) backSlashExpr() (ast.Obj, error) {
 		return nil, err
 	}
 
-	return ast.FcAtom(fc), nil
+	return ast.AtomObj(fc), nil
 }

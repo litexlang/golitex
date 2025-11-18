@@ -575,7 +575,7 @@ func (tb *tokenBlock) parseInfixRelationalFact(leftFc ast.Obj, operator string) 
 
 	// Create the fact
 	params := []ast.Obj{leftFc, rightFc}
-	curFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(operator), params, tb.line)
+	curFact := ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(operator), params, tb.line)
 
 	// Handle syntactic sugar: != is equivalent to "not ="
 	curFact = tb.normalizeNotEqualFact(curFact)
@@ -588,7 +588,7 @@ func (tb *tokenBlock) parseInfixRelationalFact(leftFc ast.Obj, operator string) 
 func (tb *tokenBlock) normalizeNotEqualFact(fact *ast.SpecFactStmt) *ast.SpecFactStmt {
 	if fact != nil && fact.NameIs(glob.KeySymbolNotEqual) {
 		fact.TypeEnum = ast.FalsePure
-		fact.PropName = ast.FcAtom(glob.KeySymbolEqual)
+		fact.PropName = ast.AtomObj(glob.KeySymbolEqual)
 	}
 	return fact
 }
@@ -651,7 +651,7 @@ func (tb *tokenBlock) inline_enum_intensional_fact_skip_terminator(left ast.Obj)
 
 		return ast.NewEnumStmt(left, enumItems, tb.line), nil
 	} else {
-		firstFcAsAtom := firstFc.(ast.FcAtom)
+		firstFcAsAtom := firstFc.(ast.AtomObj)
 		// 必须是纯的，不能是复合的
 		if strings.Contains(string(firstFcAsAtom), glob.KeySymbolColonColon) {
 			return nil, fmt.Errorf("the first item of enum must be pure, but got %s", firstFcAsAtom)

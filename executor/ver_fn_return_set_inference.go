@@ -19,7 +19,7 @@ import (
 	ast "golitex/ast"
 )
 
-func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) ExecRet {
+func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FnObj, state *VerState) ExecRet {
 	// f(a)(b,c)(e,d,f) 返回 {f, f(a), f(a)(b,c), f(a)(b,c)(e,d,f)}, {nil, {a}, {b,c}, {e,d,f}}
 	fnHeadChain_AndItSelf, paramsChain := ast.GetFnHeadChain_AndItSelf(fcFn)
 
@@ -57,7 +57,7 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) ExecRet 
 			return verRet
 		}
 
-		curRetSet, ok := instCurFnTStruct.RetSet.(*ast.FcFn)
+		curRetSet, ok := instCurFnTStruct.RetSet.(*ast.FnObj)
 		if !ok {
 			return NewExecErr("curRetSet is not an FcFn")
 		}
@@ -91,11 +91,11 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) ExecRet 
 	return NewExecTrue("")
 }
 
-func (ver *Verifier) GetFnStructFromFnTName_CheckFnTParamsReq(fnTName *ast.FcFn, state *VerState) (*ast.FnTStruct, error) {
+func (ver *Verifier) GetFnStructFromFnTName_CheckFnTParamsReq(fnTName *ast.FnObj, state *VerState) (*ast.FnTStruct, error) {
 	if fcFnTypeToFnTStruct, ok := ast.FcFnT_To_FnTStruct(fnTName); ok {
 		return fcFnTypeToFnTStruct, nil
 	} else {
-		fnTNameHeadAsAtom, ok := fnTName.FnHead.(ast.FcAtom)
+		fnTNameHeadAsAtom, ok := fnTName.FnHead.(ast.AtomObj)
 		if !ok {
 			return nil, fmt.Errorf("fnTNameHead is not an atom")
 		}
@@ -104,7 +104,7 @@ func (ver *Verifier) GetFnStructFromFnTName_CheckFnTParamsReq(fnTName *ast.FcFn,
 	}
 }
 
-func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckParamsSatisfyFnTReq(fnTDefName ast.FcAtom, templateParams []ast.Obj, state *VerState) (*ast.FnTStruct, error) {
+func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckParamsSatisfyFnTReq(fnTDefName ast.AtomObj, templateParams []ast.Obj, state *VerState) (*ast.FnTStruct, error) {
 	defOfT := ver.Env.GetFnTemplateDef(fnTDefName)
 	if defOfT == nil {
 		return nil, fmt.Errorf("fnTNameHead %s is not a fn template", fnTDefName)

@@ -19,7 +19,7 @@ import (
 	env "golitex/environment"
 )
 
-func (ver *Verifier) ver_In_FnTT(left ast.Obj, right *ast.FcFn, state *VerState) ExecRet {
+func (ver *Verifier) ver_In_FnTT(left ast.Obj, right *ast.FnObj, state *VerState) ExecRet {
 	leftLatestFnT := ver.Env.GetLatestFnT_GivenNameIsIn(left.String())
 	if leftLatestFnT == nil {
 		return NewExecUnknown("")
@@ -51,7 +51,7 @@ func (ver *Verifier) ver_In_FnTT(left ast.Obj, right *ast.FcFn, state *VerState)
 }
 
 // right dom is subset of left dom
-func (ver *Verifier) leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftFnTStruct *env.FnInFnTMemItem, rightFnTDef *ast.FnTemplateDefStmt, left ast.Obj, rightFn *ast.FcFn, state *VerState) bool {
+func (ver *Verifier) leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftFnTStruct *env.FnInFnTMemItem, rightFnTDef *ast.FnTemplateDefStmt, left ast.Obj, rightFn *ast.FnObj, state *VerState) bool {
 	if len(rightFnTDef.TemplateDefHeader.Params) != len(rightFn.Params) {
 		return false
 	}
@@ -68,7 +68,7 @@ func (ver *Verifier) leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftFnTStruc
 
 	mapLeftParamsToRightParams := map[string]ast.Obj{}
 	for i, param := range leftFnTStruct.AsFnTStruct.Params {
-		mapLeftParamsToRightParams[param] = ast.FcAtom(instRightFnT.Params[i])
+		mapLeftParamsToRightParams[param] = ast.AtomObj(instRightFnT.Params[i])
 	}
 
 	leftDom, err := leftFnTStruct.AsFnTStruct.DomFacts.InstantiateFact(mapLeftParamsToRightParams)

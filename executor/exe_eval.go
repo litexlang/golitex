@@ -39,13 +39,13 @@ func (exec *Executor) evalFcThenSimplify(fc ast.Obj) (ast.Obj, ExecRet) {
 	}
 
 	switch asFc := fc.(type) {
-	case ast.FcAtom:
+	case ast.AtomObj:
 		symbolValue := exec.Env.GetSymbolSimplifiedValue(fc)
 		if symbolValue == nil {
 			return nil, NewExecErr(fmt.Sprintf("symbol %s has no value", fc.String()))
 		}
 		return symbolValue, NewExecTrue("")
-	case *ast.FcFn:
+	case *ast.FnObj:
 		return exec.evalFcFnThenSimplify(asFc)
 	default:
 		return nil, NewExecErr(fmt.Sprintf("unexpected type: %T", fc))
@@ -62,7 +62,7 @@ var basicArithOptMap = map[string]struct{}{
 }
 
 // 可能返回数值的时候需要检查一下会不会除以0这种情况
-func (exec *Executor) evalFcFnThenSimplify(fc *ast.FcFn) (ast.Obj, ExecRet) {
+func (exec *Executor) evalFcFnThenSimplify(fc *ast.FnObj) (ast.Obj, ExecRet) {
 	if symbolValue := exec.Env.GetSymbolSimplifiedValue(fc); symbolValue != nil {
 		return symbolValue, NewExecTrue("")
 	}
@@ -98,7 +98,7 @@ func (exec *Executor) evalFcFnThenSimplify(fc *ast.FcFn) (ast.Obj, ExecRet) {
 	return nil, NewExecUnknown("")
 }
 
-func (exec *Executor) useAlgoToEvalFcFnThenSimplify(fcFn *ast.FcFn) (ast.Obj, ExecRet) {
+func (exec *Executor) useAlgoToEvalFcFnThenSimplify(fcFn *ast.FnObj) (ast.Obj, ExecRet) {
 	algoDef := exec.Env.GetAlgoDef(fcFn.FnHead.String())
 	if algoDef == nil {
 		return nil, NewExecErr(fmt.Sprintf("algo %s is not found", fcFn.FnHead.String()))
@@ -115,10 +115,10 @@ func (exec *Executor) useAlgoToEvalFcFnThenSimplify(fcFn *ast.FcFn) (ast.Obj, Ex
 	}
 
 	for i, param := range algoDef.Params {
-		if exec.Env.IsAtomDeclared(ast.FcAtom(param), map[string]struct{}{}) {
+		if exec.Env.IsAtomDeclared(ast.AtomObj(param), map[string]struct{}{}) {
 			continue
 		} else {
-			execState := exec.defLetStmt(ast.NewDefLetStmt([]string{param}, []ast.Obj{ast.FcAtom(glob.KeywordObj)}, []ast.FactStmt{ast.NewEqualFact(ast.FcAtom(param), fcFn.Params[i])}, glob.InnerGenLine))
+			execState := exec.defLetStmt(ast.NewDefLetStmt([]string{param}, []ast.Obj{ast.AtomObj(glob.KeywordObj)}, []ast.FactStmt{ast.NewEqualFact(ast.AtomObj(param), fcFn.Params[i])}, glob.InnerGenLine))
 			if execState.IsNotTrue() {
 				return nil, NewExecErr(execState.String())
 			}
@@ -156,7 +156,7 @@ func (exec *Executor) useAlgoToEvalFcFnThenSimplify(fcFn *ast.FcFn) (ast.Obj, Ex
 	return exec.simplifyNumExprFc(value)
 }
 
-func (exec *Executor) runAlgoStmtsWhenEval(algoStmts ast.AlgoStmtSlice, fcFnWithValueParams *ast.FcFn) (ast.Obj, ExecRet) {
+func (exec *Executor) runAlgoStmtsWhenEval(algoStmts ast.AlgoStmtSlice, fcFnWithValueParams *ast.FnObj) (ast.Obj, ExecRet) {
 	for _, stmt := range algoStmts {
 		switch asStmt := stmt.(type) {
 		case *ast.AlgoReturnStmt:
@@ -188,7 +188,7 @@ func (exec *Executor) runAlgoStmtsWhenEval(algoStmts ast.AlgoStmtSlice, fcFnWith
 	return nil, NewExecErr(fmt.Sprintf("There is no return value of %s", fcFnWithValueParams))
 }
 
-func (exec *Executor) fcfnParamsInFnDomain(fcFn *ast.FcFn) ExecRet {
+func (exec *Executor) fcfnParamsInFnDomain(fcFn *ast.FnObj) ExecRet {
 	ver := NewVerifier(exec.Env)
 	return ver.fcSatisfyFnRequirement(fcFn, Round0NoMsg)
 }
@@ -229,7 +229,7 @@ func (exec *Executor) IsAlgoIfConditionTrue(stmt *ast.AlgoIfStmt) (bool, ExecRet
 	return true, NewExecTrue("")
 }
 
-func (exec *Executor) algoIfStmtWhenEval(stmt *ast.AlgoIfStmt, fcFnWithValueParams *ast.FcFn) (ast.Obj, ExecRet) {
+func (exec *Executor) algoIfStmtWhenEval(stmt *ast.AlgoIfStmt, fcFnWithValueParams *ast.FnObj) (ast.Obj, ExecRet) {
 	exec.NewEnv(exec.Env)
 	defer exec.deleteEnv()
 
