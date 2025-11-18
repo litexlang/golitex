@@ -767,44 +767,48 @@ func (exec *Executor) haveFnLift_knowFact(stmt *ast.HaveFnLiftStmt, fnNames []st
 }
 
 func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) ExecRet {
-	exec.NewEnv(exec.Env)
-	defer exec.deleteEnv()
-
-	defObjStmt := ast.NewDefLetStmt(stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets, stmt.DefFnStmt.FnTemplate.DomFacts, stmt.Line)
-	execState := exec.defLetStmt(defObjStmt)
-	if execState.IsNotTrue() {
-		return execState
-	}
-
-	for _, proof := range stmt.Proofs {
-		execState := exec.Stmt(proof)
-		if execState.IsNotTrue() {
-			return execState
-		}
-	}
-
-	fcDerivedFromFnName := ast.NewFcFn(ast.FcAtom(stmt.DefFnStmt.Name), stmt.DefFnStmt.FnTemplate.Params.ToFcSlice())
-
-	// prove return value in newRetFc
-	execState = exec.factStmt(ast.NewInFactWithFc(stmt.HaveObjSatisfyFn, stmt.DefFnStmt.FnTemplate.RetSet))
-	if execState.IsNotTrue() {
-		return execState
-	}
-
-	newThenFacts := []ast.FactStmt{}
-	for _, thenFact := range stmt.DefFnStmt.FnTemplate.ThenFacts {
-		newThenFacts = append(newThenFacts, thenFact.ReplaceFc(fcDerivedFromFnName, stmt.HaveObjSatisfyFn))
-	}
-
-	for _, thenFact := range newThenFacts {
-		execState := exec.factStmt(thenFact)
-		if execState.IsNotTrue() {
-			return execState
-		}
-	}
-
-	return NewExecTrue("")
+	panic("")
 }
+
+// func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) ExecRet {
+// 	exec.NewEnv(exec.Env)
+// 	defer exec.deleteEnv()
+
+// 	defObjStmt := ast.NewDefLetStmt(stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets, stmt.DefFnStmt.FnTemplate.DomFacts, stmt.Line)
+// 	execState := exec.defLetStmt(defObjStmt)
+// 	if execState.IsNotTrue() {
+// 		return execState
+// 	}
+
+// 	for _, proof := range stmt.Proofs {
+// 		execState := exec.Stmt(proof)
+// 		if execState.IsNotTrue() {
+// 			return execState
+// 		}
+// 	}
+
+// 	fcDerivedFromFnName := ast.NewFcFn(ast.FcAtom(stmt.DefFnStmt.Name), stmt.DefFnStmt.FnTemplate.Params.ToFcSlice())
+
+// 	// prove return value in newRetFc
+// 	execState = exec.factStmt(ast.NewInFactWithFc(stmt.HaveObjSatisfyFn, stmt.DefFnStmt.FnTemplate.RetSet))
+// 	if execState.IsNotTrue() {
+// 		return execState
+// 	}
+
+// 	newThenFacts := []ast.FactStmt{}
+// 	for _, thenFact := range stmt.DefFnStmt.FnTemplate.ThenFacts {
+// 		newThenFacts = append(newThenFacts, thenFact.ReplaceFc(fcDerivedFromFnName, stmt.HaveObjSatisfyFn))
+// 	}
+
+// 	for _, thenFact := range newThenFacts {
+// 		execState := exec.factStmt(thenFact)
+// 		if execState.IsNotTrue() {
+// 			return execState
+// 		}
+// 	}
+
+// 	return NewExecTrue("")
+// }
 
 func (exec *Executor) haveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) ExecRet {
 	panic("")
