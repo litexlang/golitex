@@ -34,7 +34,7 @@ Litex([website](https://litexlang.com)) is a simple open-source formal language,
 
 Euclid showed us over 2000 years ago how 5 axioms could derive such a wonderful geometric world. Though these 5 axioms are later found to be complete 2000 years later, what is truly valuable about that is it shows us how simple starting points often lead us into infinitely complex worlds. The same is true for mathematics in general.
 
-Another key finding is that, it is hard to find a solution to a math problem, but it is much easier to prove whether the solution is correct or not. No course teaches us how to verify whether a piece of reasoning is right or not. Think about it, verification is so intuitive and builtin to our genes that we know how to do it without learning!
+Another key finding is that, it is hard to find a solution to a math problem, but it is much easier to prove whether the solution is correct or not. Coming up with solutions requires creativity, but verifying them only require us to do one thing: figure about what previous facts lead to the current statement in which way. No course teaches us how to verify whether a piece of reasoning is right or not. Think about it, verification is so intuitive and builtin to our genes that we know how to do it without learning!
 
 So, the foundation of modern mathematics is naive set theory, and we even encountered the concept of sets in middle school. The way we verify reasoning is true or not is intuitive. These two findings are the pillar of Litex. The value of Litex is putting these so common-sense experience in a solid and straight way through code.
 
@@ -42,7 +42,11 @@ But it is precisely these simple and understandable rules that form the foundati
 
 Before we move on, think about how powerful the idea is: with just very few absolutely accurate inference rules, plus a few axioms, we can derive a rich and diverse mathematical world! That is what math is all about.
 
-By implementing those simple axioms and deduction rules in a software like Litex, we can write math in the form of code. The learning curve of Litex will not be higher than learning LaTeX. Sometimes people forget they are using a formal language when using Litex! So let's explore the fascinating math world with Litex, making full advantage of both human creativity and AI knowledge to explore the frontier of intellectual world!
+By implementing those simple axioms and deduction rules in a software like Litex, we can write math in the form of code. The learning curve of Litex will not be higher than learning LaTeX. Sometimes people forget they are using a formal language when using Litex! 
+
+How is a formal language related to the AI revolution? Well the answer is simple: thanks to the speed and scale at which AIs are generating words, nobody would be able to check whether AIs are thinking in the correct way. However, in many cases we do want to make sure they are correct when we want to use them for scientific exploration (what does scientific exploration mean here? It means noticing phenomenon, collecting data, use math formulas to explain those data, and derive new math formulas from formulas we know that explains nature), for reasoning (notice how frequent the word reasoning appears when it comes to AI agents for using tools, safe AI). Here is how formal languages come: reasoning expressed in code can be verified by the computer in a very strict and fast way.
+
+So let's explore the fascinating math world with Litex, making full advantage of both human creativity and AI knowledge to explore the frontier of intellectual world!
 
 ## Why Litex?
 
