@@ -472,6 +472,7 @@ type HelpStmt struct {
 	Line uint
 }
 
+// 这是必要的，因为要证明从n到m有且只有n, n+1, ..., m-1, m这些数，必须要用特殊的关键词
 type ProveInRangeStmt struct {
 	param         string
 	start         Obj
