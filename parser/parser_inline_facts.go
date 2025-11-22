@@ -53,32 +53,6 @@ func (tb *tokenBlock) inlineFacts_untilEndOfInline(ends []string) ([]ast.FactStm
 	return facts, nil
 }
 
-// func (tb *tokenBlock) inlineFacts_untilWord_SkipWord(word string) ([]*ast.SpecFactStmt, error) {
-// 	facts := []*ast.SpecFactStmt{}
-// 	for {
-// 		stmt, err := tb.specFactStmt()
-// 		if err != nil {
-// 			return nil, tbErr(err, tb)
-// 		}
-// 		facts = append(facts, stmt)
-
-// 		if tb.header.is(glob.KeySymbolComma) {
-// 			tb.header.skip(glob.KeySymbolComma)
-// 		} else if tb.header.is(word) {
-// 			break
-// 		} else {
-// 			return nil, fmt.Errorf("expect ',' or %s", word)
-// 		}
-// 	}
-
-// 	err := tb.header.skip(word)
-// 	if err != nil {
-// 		return nil, tbErr(err, tb)
-// 	}
-
-// 	return facts, nil
-// }
-
 // fact, isEnd, err
 func (tb *tokenBlock) inlineFactThenSkipStmtTerminatorUntilEndSignals(ends []string) (ast.FactStmt, error) {
 	curToken, err := tb.header.currentToken()

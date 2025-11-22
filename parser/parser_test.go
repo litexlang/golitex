@@ -89,23 +89,3 @@ func TestFcDot(t *testing.T) {
 		fmt.Println(obj)
 	}
 }
-
-// func TestColonColon(t *testing.T) {
-// 	sourceCode := []string{
-// 		"a::b",
-// 		"a::b::c::d",
-// 		"+",
-// 		"=",
-// 		"1",
-// 	}
-// 	glob.CurrentPkg = "pkg1"
-// 	for _, code := range sourceCode {
-// 		obj, err := ParseSourceCodeGetObj(code)
-// 		if err != nil {
-// 			t.Fatal(err)
-// 		}
-// 		fmt.Println(obj.String())
-// 		// fmt.Println(obj.(ast.AtomObj).PkgName)
-// 		fmt.Println(obj.(ast.AtomObj))
-// 	}
-// }
