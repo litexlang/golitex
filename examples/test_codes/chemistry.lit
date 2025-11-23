@@ -1,0 +1,22 @@
+have molecule nonempty_set
+have set atom = {H, O, C, S}
+
+let H2O molecule
+
+prop has_atom(m molecule, a atom)
+
+know has_atom(H2O, H)
+
+fn atom_number(m molecule, a atom) N
+
+know atom_number(H2O, H) = 2, atom_number(H2O, O) = 1
+
+# 这里可以手动写一下，所有的其他的原子它都没有，比如 know atom_number(H2O, S) = 0
+
+fn has_atoms(m molecule) set
+
+know forall m molecule, a atom: not a $in has_atoms(m, a) <=> atom_number(m, a) = 0
+
+know has_atoms(H2O) = {H, O}
+
+# 这时候再手动写一下 atom_number(H2O, H) = 2, atom_number(H2O, O) = 1 就很ok了，其他的atom必然是0
