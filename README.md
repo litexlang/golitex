@@ -36,7 +36,7 @@ Mathematics builds on simple foundations: a few axioms and inference rules creat
 
 Litex implements these simple rules in code, making math as readable as LaTeX while maintaining formal rigor. Its close-to-natural syntax means users often forget they're using a formal language.
 
-Why does this matter for AI? As AIs generate content at scale, we need verifiable reasoning—especially for scientific exploration and safe AI agents. Formal languages like Litex enable computers to verify reasoning strictly and quickly, bridging human creativity with AI capabilities.
+Why does this matter for AI? As AIs generate content at scale, we need verifiable reasoning—especially for scientific exploration and safe AI agents. Formal languages like Litex enable computers to verify reasoning strictly and quickly, bridging human creativity with AI capabilities, or allowing AIs to enhance reasoning capability by themselves, just like how AlphaZero enhances itself in Go.
 
 ## Why Litex?
 
