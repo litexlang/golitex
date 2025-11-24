@@ -1,6 +1,4 @@
-have m N_pos
-m > 0
-m ^ 0 = 1
-have n N_pos
-n > 0
-m ^ (n + 1) = (m ^ n) * m
+fn self_defined_inverse_image_set(X set, Y set, f fn(X)Y, U set) set:
+    U $is_subset_of Y
+    =>:
+        self_defined_inverse_image_set(X, Y, f, U) = {x X: f(x) $in U}
