@@ -1,9 +1,10 @@
-let x cart(R, Q, Z)
+have set x = cart(R, Q, Z)
 $is_cart(x)
 dim(x) = 3
 proj(x, 1) = R
 proj(x, 2) = Q
 proj(x, 3) = Z
+x $in set
 
 let a x
 coord(a, x, 1) $in R

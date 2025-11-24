@@ -2122,6 +2122,32 @@ func (tb *tokenBlock) haveSetStmt() (ast.Stmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
+	// Check if next token is "cart"
+	if tb.header.is(glob.KeywordCart) {
+		// Parse cart(...)
+		rightObj, err := tb.RawObj()
+		if err != nil {
+			return nil, tbErr(err, tb)
+		}
+
+		cartObj, ok := rightObj.(*ast.FnObj)
+		if !ok {
+			return nil, fmt.Errorf("expected cart to be FnObj")
+		}
+
+		if !ast.IsFn_WithHeadName(rightObj, glob.KeywordCart) {
+			return nil, fmt.Errorf("expected cart function call")
+		}
+
+		// Check end of line
+		if !tb.header.ExceedEnd() {
+			return nil, fmt.Errorf("expect end of line")
+		}
+
+		return ast.NewHaveCartSetStmt(haveSetName, *cartObj, tb.line), nil
+	}
+
+	// Otherwise, parse as enum or intensional set
 	fact, err := tb.enumStmt_or_intensionalSetStmt_or_DomOf(ast.AtomObj(haveSetName))
 	if err != nil {
 		return nil, tbErr(err, tb)

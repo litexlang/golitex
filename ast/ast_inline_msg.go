@@ -196,6 +196,7 @@ func (s *ProveByEnumStmt) InlineString() string                 { panic("") }
 func (s *HaveObjInNonEmptySetStmt) InlineString() string        { panic("") }
 func (s *HaveEnumSetStmt) InlineString() string                 { panic("") }
 func (s *HaveIntensionalSetStmt) InlineString() string          { panic("") }
+func (s *HaveCartSetStmt) InlineString() string                 { panic("") }
 func (s *HaveSetFnStmt) InlineString() string                   { panic("") }
 func (s *HaveSetDefinedByReplacementStmt) InlineString() string { panic("") }
 func (s *NamedUniFactStmt) InlineString() string                { panic("") }
