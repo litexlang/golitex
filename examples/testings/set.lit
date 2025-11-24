@@ -56,3 +56,26 @@ prove:
                 x $in inter(A, inter(B, D))
 
             $is_equal(inter(A, inter(B, D)), inter(inter(A, B), D))
+
+prove:
+    # Examples of not in N (natural numbers)
+    not -1 $in N
+    not 3.5 $in N
+    not (-1 * 1) $in N
+    not (2 + 3.5) $in N
+    not (-2) $in N
+    
+    # Examples of not in Z (integers)
+    not 3.5 $in Z
+    not 2.7 $in Z
+    not (1 + 0.5) $in Z
+    not (3 / 2) $in Z
+    
+    # Examples of not in N_pos (positive integers)
+    not -1 $in N_pos
+    not -2 $in N_pos
+    not 0 $in N_pos
+    not 3.5 $in N_pos
+    not (-1 * 1) $in N_pos
+    not (2 - 3) $in N_pos
+    not (1 - 1) $in N_pos
