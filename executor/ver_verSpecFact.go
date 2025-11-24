@@ -41,10 +41,6 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt *as
 		}
 	}
 
-	if verRet := ver.UseBuiltinRulesForSpecialSpecFact(stmt, state); verRet.IsTrue() || verRet.IsErr() {
-		return verRet
-	}
-
 	return BoolErrToExecRet(false, nil)
 }
 
@@ -116,7 +112,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFactMainLogic(stmt *ast.SpecFa
 }
 
 func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	if verRet := ver.verSpecialSpecFact_ByBIR(stmt, state); verRet.IsErr() || verRet.IsTrue() {
+	if verRet := ver.verSpecFactByBuiltinRules(stmt, state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
 
@@ -141,7 +137,7 @@ func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state *VerSta
 	return NewExecUnknown("")
 }
 
-func (ver *Verifier) verSpecialSpecFact_ByBIR(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	if stmt.NameIs(glob.KeywordIn) {
 		return ver.inFactBuiltinRules(stmt, state)
 	} else if stmt.NameIs(glob.KeywordItemExistsIn) && stmt.TypeEnum == ast.TrueExist_St {
@@ -156,6 +152,10 @@ func (ver *Verifier) verSpecialSpecFact_ByBIR(stmt *ast.SpecFactStmt, state *Ver
 
 	if stmt.NameIs(glob.KeySymbolEqual) && stmt.TypeEnum == ast.FalsePure {
 		return ver.verNotTrueEqualFact_BuiltinRules_WithState(stmt, state)
+	}
+
+	if stmt.NameIs(glob.KeywordIsCart) && stmt.TypeEnum == ast.TruePure {
+		return ver.verIsCartByBuiltinRules(stmt, state)
 	}
 
 	return NewExecUnknown("")
@@ -367,6 +367,16 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules_WithState(stmt *ast.SpecFa
 	// 	}
 	// }
 
+	return NewExecUnknown("")
+}
+
+func (ver *Verifier) verIsCartByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	// 如果参数数量是1，且参数的函数名是cart，那自动成立
+	if len(stmt.Params) == 1 {
+		if cartObj, ok := stmt.Params[0].(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(cartObj.FnHead, glob.KeywordCart) {
+			return ver.maybeAddSuccessMsg(state, stmt.String(), "builtin rules: cart(...) is automatically a cart set", NewExecTrue(""))
+		}
+	}
 	return NewExecUnknown("")
 }
 

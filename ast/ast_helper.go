@@ -379,3 +379,28 @@ func HeaderWithParamsAndParamSetsString(header *DefHeader) string {
 	builder.WriteString(")")
 	return builder.String()
 }
+
+func SimplifyDimCart(fc *FnObj) (Obj, bool) {
+	if IsAtomObjAndEqualToStr(fc.FnHead, glob.KeywordDim) {
+		if len(fc.Params) == 1 && IsFn_WithHeadName(fc.Params[0], glob.KeywordCart) {
+			cartObj := fc.Params[0].(*FnObj)
+			dimValue := len(cartObj.Params)
+			return AtomObj(fmt.Sprintf("%d", dimValue)), true
+		}
+	}
+	return nil, false
+}
+
+func SimplifyProjCart(fc *FnObj) (Obj, bool) {
+	if IsAtomObjAndEqualToStr(fc.FnHead, glob.KeywordProj) {
+		if len(fc.Params) == 2 && IsFn_WithHeadName(fc.Params[0], glob.KeywordCart) {
+			cartObj := fc.Params[0].(*FnObj)
+			index, ok := ToInt(fc.Params[1])
+			if ok && index >= 1 && index <= len(cartObj.Params) {
+				// proj 的索引是从 1 开始的，所以需要减 1
+				return cartObj.Params[index-1], true
+			}
+		}
+	}
+	return nil, false
+}
