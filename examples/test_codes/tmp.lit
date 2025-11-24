@@ -1,15 +1,5 @@
-have set x = cart(R, Q, Z)
-$is_cart(x)
-dim(x) = 3
-proj(x, 1) = R
-proj(x, 2) = Q
-proj(x, 3) = Z
-x $in set
-
-let a x
-coord(a, x, 1) $in R
-
-let b cart(R, Q, Z)
-coord(b, cart(R, Q, Z), 1) $in R
-
-$is_cart(cart(R, Q, Z))
+$is_cart(cart(R, Q))
+let x cart(R, Q)
+dim(cart(R, Q)) = 2
+proj(cart(R, Q), 1) = R
+coord(x, cart(R, Q), 1) $in R
