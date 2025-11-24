@@ -15,233 +15,109 @@
 package litex_pipeline
 
 import (
-	"bufio"
 	"fmt"
 	ast "golitex/ast"
-	env "golitex/environment"
 	exe "golitex/executor"
 	glob "golitex/glob"
 	parser "golitex/parser"
-	"io"
 	"os"
-	"strconv"
-	"strings"
-	"time"
+	"path/filepath"
 )
 
-func RunSourceCode(curEnv *env.Env, code string) (string, glob.SysSignal, *env.Env, error) {
-	topStmtSlice, err := parser.ParseSourceCode(code)
+func RunFile(path string) glob.GlobRet {
+	content, err := os.ReadFile(path)
 	if err != nil {
-		return "", glob.SysSignalParseError, nil, err
+		return glob.NewGlobErr(err.Error())
 	}
-
-	var executor *exe.Executor
-
-	if curEnv == nil {
-		executor, err = InitPipelineExecutor()
-		curEnv = executor.GetBuiltinEnv()
-	} else {
-		executor = exe.NewExecutor(curEnv)
-	}
-
-	if err != nil {
-		return "", glob.SysSignalRuntimeError, nil, err
-	}
-
-	msgOfTopStatements := []string{}
-
-	// maintain a dict of paths that have been imported
-	pkgMgr := NewPackageManager()
-	_ = pkgMgr
-
-	for _, topStmt := range topStmtSlice {
-		var execRet exe.ExecRet = exe.NewExecErr("")
-		var msg string
-		var err error
-
-		switch topStmt.(type) {
-		case *ast.ImportDirStmt:
-			msg, signal, err := pkgMgr.NewPkg(curEnv, topStmt.(*ast.ImportDirStmt).Path)
-			if err != nil || signal != glob.SysSignalTrue {
-				return msg, signal, nil, err
-			}
-		case *ast.ImportFileStmt:
-			msg, signal, err := RunImportFileStmt(executor.Env, topStmt.(*ast.ImportFileStmt))
-
-			msgOfTopStatements = append(msgOfTopStatements, executor.GetMsgAsStr0ToEnd())
-			msgOfTopStatements = append(msgOfTopStatements, msg)
-
-			if err != nil || signal != glob.SysSignalTrue {
-				msgOfTopStatements = append(msgOfTopStatements, fmt.Sprintf("import file error: %s", topStmt.String()))
-				return strings.TrimSpace(strings.Join(msgOfTopStatements, "\n")), glob.SysSignalRuntimeError, nil, err
-			}
-		default:
-			execRet, msg, err = executor.Stmt(topStmt)
-
-			msgOfTopStatements = append(msgOfTopStatements, executor.GetMsgAsStr0ToEnd())
-			msgOfTopStatements = append(msgOfTopStatements, msg)
-
-			if err != nil || execRet.IsErr() {
-				return strings.TrimSpace(strings.Join(msgOfTopStatements, "\n")), glob.SysSignalRuntimeError, nil, err
-			}
-			if execRet.IsUnknown() {
-				return strings.TrimSpace(strings.Join(msgOfTopStatements, "\n")), glob.SysSignalRuntimeError, nil, fmt.Errorf("execution failed, line %d", topStmt.GetLine())
-			}
-		}
-	}
-
-	UpmostWorkingEnv := executor.GetSecondUpMostEnv()
-
-	return strings.TrimSpace(strings.Join(msgOfTopStatements, "\n")), glob.SysSignalTrue, UpmostWorkingEnv, nil
+	return RunSourceCode(string(content))
 }
 
-func RunImportFileStmt(curEnv *env.Env, importFileStmt *ast.ImportFileStmt) (string, glob.SysSignal, error) {
-	content, err := os.ReadFile(importFileStmt.Path)
-	if err != nil {
-		return fmt.Sprintf("failed to read file %s: %s", importFileStmt.Path, err.Error()), glob.SysSignalSystemError, err
-	}
-	msg, signal, _, err := RunSourceCode(curEnv, string(content))
-	return msg, signal, err
-}
-
-func ExecuteCodeAndReturnMessageSliceGivenSettings(code string, executor *exe.Executor) ([]string, glob.SysSignal, error) {
-	topStmtSlice, err := parser.ParseSourceCode(code)
-	if err != nil {
-		return nil, glob.SysSignalParseError, err
-	}
-
-	msgOfTopStatements := []string{}
-
-	for _, topStmt := range topStmtSlice {
-		execState, _, err := executor.Stmt(topStmt)
-		if err != nil {
-			return nil, glob.SysSignalRuntimeError, err
-		}
-
-		msgOfTopStatements = append(msgOfTopStatements, executor.GetMsgAsStr0ToEnd())
-
-		if execState.IsUnknown() || execState.IsErr() {
-			return msgOfTopStatements, glob.SysSignalRuntimeError, fmt.Errorf("execution failed")
-		}
-	}
-
-	return msgOfTopStatements, glob.SysSignalTrue, nil
-}
-
-func printMessagesToWriter(writer io.Writer, msg []string) {
-	if len(msg) > 0 {
-		// fmt.Printf("\n")
-		// 如果有连续两行是空白的换行那不允许多个空行出现
-		isConsecutiveEmptyLine := true
-		var builder strings.Builder
-
-		for _, m := range msg {
-			// 让m的最后一位是换行符
-			m = strings.TrimRight(m, " \t\n")
-			if strings.TrimSpace(m) == "" {
-				if isConsecutiveEmptyLine {
-					continue
-				}
-				isConsecutiveEmptyLine = true
-			} else {
-				isConsecutiveEmptyLine = false
-				builder.WriteString(m)
-			}
-			builder.WriteString("\n")
-		}
-
-		result := builder.String()
-		if len(result) > 0 {
-			// Remove the trailing newline
-			fmt.Fprintln(writer, result[:len(result)-1])
-		}
-	}
-}
-
-const helpMessage = `help: show this help message
-exit: exit the REPL
-clear: refresh the whole environment
-`
-
-func RunREPLInTerminal(version string) {
+func RunSourceCode(code string) glob.GlobRet {
 	executor, err := InitPipelineExecutor()
 	if err != nil {
-		fmt.Println("Error initializing pipeline:", err)
-		return
+		return glob.NewGlobErr(err.Error())
+	}
+	return RunSourceCodeInExecutor(executor, code)
+}
+
+func RunSourceCodeInExecutor(curExec *exe.Executor, code string) glob.GlobRet {
+	stmtSlice, err := parser.ParseSourceCode(code)
+	if err != nil {
+		return glob.NewGlobErr(err.Error())
 	}
 
-	reader := bufio.NewReader(os.Stdin)
-	writer := os.Stdout
+	stmtMsgs := []string{}
 
-	year := time.Now().Year()
+	for _, topStmt := range stmtSlice {
+		ret := RunStmtAndImportStmtInExecutor(curExec, topStmt)
+		stmtMsgs = append(stmtMsgs, ret.GetMsgs()...)
 
-	fmt.Fprintf(writer, "Litex %s Copyright (C) 2024-%s litexlang.com Type 'help' for help\nNOT READY FOR PRODUCTION USE\n", version, strconv.Itoa(year))
-
-	for {
-		code, err := listenOneStatementFromTerminal(reader, writer)
-		if err != nil {
-			fmt.Fprintf(writer, "[Error] %s\n", err)
-			continue
+		if ret.IsNotTrue() {
+			if ret.IsErr() {
+				stmtMsgs = append(stmtMsgs, ret.GetREPLMsg())
+				return glob.NewGlobErrWithMsgs(stmtMsgs)
+			}
+			allMsgs := append(stmtMsgs, ret.GetREPLMsg())
+			return glob.NewGlobErrWithMsgs(allMsgs)
 		}
+	}
 
-		// Have to trim space because there is \n at the end of code
-		if strings.TrimSpace(code) == "exit" {
-			fmt.Fprintf(writer, glob.REPLGoodbyeMessage)
-			return
-		}
+	stmtMsgs = append(stmtMsgs, glob.REPLSuccessMessage)
+	return glob.NewGlobTrueWithMsgs(stmtMsgs)
+}
 
-		if strings.TrimSpace(code) == "help" {
-			fmt.Fprintf(writer, helpMessage)
-			continue
-		}
-
-		msg, signal, err := ExecuteCodeAndReturnMessageSliceGivenSettings(code, executor)
-		if err != nil || signal != glob.SysSignalTrue {
-			printMessagesToWriter(writer, msg)
-			fmt.Fprintf(writer, glob.REPLFailedMessage)
-			continue
-		}
-
-		printMessagesToWriter(writer, msg)
-		fmt.Fprintf(writer, glob.REPLSuccessMessage)
+func RunStmtAndImportStmtInExecutor(curExec *exe.Executor, stmt ast.Stmt) glob.GlobRet {
+	switch asStmt := stmt.(type) {
+	case *ast.ImportDirStmt:
+		return RunImportDirStmtInExec(curExec, asStmt)
+	case *ast.ImportFileStmt:
+		return RunImportFileStmtInExec(curExec, asStmt)
+	default:
+		return curExec.Stmt(asStmt).ToGlobRet()
 	}
 }
 
-func listenOneStatementFromTerminal(reader *bufio.Reader, writer io.Writer) (string, error) {
-	var input strings.Builder
-	fmt.Fprint(writer, ">>> ")
-	currentScopeDepth := 0
-
-	for {
-		currentLineStr, err := reader.ReadString('\n')
-		if err != nil {
-			return "", fmt.Errorf("error reading input: %s", err)
+// import path as name 的执行：1. 如果之前有过当前包或者引用包里(引用的包也是可见的，然后里面可以给一个path赋予了某个名字)，import path2 as name了，那name同时指向两个包了，那就不行 2. 如果之前没有过，那就可以，然后引入path，如果path已经被引用过了，那就给这个path一个新的名字name 3. path之前还没引用过，那这时候就运行path对应的包。运行方式：新开一个executor，然后运行path对应的包，得到env和pkgMgr, 把 env 和 pkgMgr merge到主executor中。
+func RunImportDirStmtInExec(curExec *exe.Executor, importDirStmt *ast.ImportDirStmt) glob.GlobRet {
+	// 如果已经存在asPkgName，则直接返回
+	if path, ok := curExec.PkgMgr.PkgNamePkgPathPairs[importDirStmt.AsPkgName]; ok {
+		if path != importDirStmt.Path {
+			return glob.NewGlobErr(fmt.Sprintf("package name %s already exists, and it refers to package %s, not %s", importDirStmt.AsPkgName, path, importDirStmt.Path))
 		}
-
-		currentLineStr = glob.RemoveWindowsCarriageReturn(currentLineStr)
-		trimmedLine := strings.TrimRight(currentLineStr, " \t\n")
-
-		if currentScopeDepth > 0 {
-			if trimmedLine == "" {
-				break
-			}
-
-			input.WriteString("    ")
-			input.WriteString(currentLineStr)
-
-			fmt.Fprint(writer, "... ") // 为下一行准备提示符
-
-		} else {
-			input.WriteString(currentLineStr)
-
-			// input 的非空白的最后一位 不是 :
-			if trimmedLine == "" || !strings.HasSuffix(trimmedLine, ":") {
-				break
-			} else {
-				currentScopeDepth = 1
-				fmt.Fprint(writer, "... ") // 为下一行准备提示符
-			}
-		}
+		return glob.NewGlobTrue(fmt.Sprintf("package %s already imported as %s", importDirStmt.Path, importDirStmt.AsPkgName))
 	}
-	return input.String(), nil
+
+	// 如果已经在curExec.PkgMgr.PkgEnvPairs中，则直接返回
+	if _, ok := curExec.PkgMgr.PkgPathEnvPairs[importDirStmt.Path]; ok {
+		curExec.PkgMgr.PkgNamePkgPathPairs[importDirStmt.AsPkgName] = importDirStmt.Path
+		return glob.NewGlobTrue(fmt.Sprintf("package %s already imported. Now it has another name: %s", importDirStmt.Path, importDirStmt.AsPkgName))
+	}
+
+	// Resolve package path: if not absolute, resolve from system root directory (~/litexlang)
+	resolvedPath := glob.ResolvePackagePath(importDirStmt.Path)
+	mainFileContent, err := os.ReadFile(filepath.Join(resolvedPath, glob.MainDotLit))
+	if err != nil {
+		return glob.NewGlobErr(err.Error())
+	}
+
+	builtinEnv := GetBuiltinEnv()
+	executorToRunDir := exe.NewExecutor(builtinEnv, exe.NewPackageManager())
+	ret := RunSourceCodeInExecutor(executorToRunDir, string(mainFileContent))
+	if ret.IsNotTrue() {
+		return ret
+	}
+
+	err = curExec.PkgMgr.MergeGivenExecPkgMgr(importDirStmt, executorToRunDir)
+	if err != nil {
+		return glob.NewGlobErr(err.Error())
+	}
+	return glob.NewGlobTrue(fmt.Sprintf("imported package %s as %s", importDirStmt.Path, importDirStmt.AsPkgName))
+}
+
+func RunImportFileStmtInExec(curExec *exe.Executor, importFileStmt *ast.ImportFileStmt) glob.GlobRet {
+	content, err := os.ReadFile(importFileStmt.Path)
+	if err != nil {
+		return glob.NewGlobErr(err.Error())
+	}
+	return RunSourceCodeInExecutor(curExec, string(content))
 }

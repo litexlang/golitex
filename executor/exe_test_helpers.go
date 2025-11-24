@@ -36,16 +36,16 @@ func setupAndParseStmtTest(path string) ([]ast.Stmt, error) {
 
 func execStmtTest(topStmt []ast.Stmt) []string {
 	env := env.NewEnv(nil)
-	executor := NewExecutor(env)
+	executor := NewExecutor(env, NewPackageManager())
 
 	messages := []string{}
 
 	notTrue := false
 
 	for _, topStmt := range topStmt {
-		execState, _, err := executor.Stmt(topStmt)
-		if err != nil {
-			messages = append(messages, (err.Error()))
+		execState := executor.Stmt(topStmt)
+		if execState.IsErr() {
+			messages = append(messages, execState.String())
 			notTrue = true
 		}
 
@@ -54,28 +54,28 @@ func execStmtTest(topStmt []ast.Stmt) []string {
 		}
 
 		// 如果连续两个 \n 则删除一个
+		msgs := execState.GetMsgs()
 		var newMsgs []string
-		for i := 0; i < len(executor.Env.Msgs); i++ {
-			curMsg := executor.Env.Msgs[i]
-			if i < len(executor.Env.Msgs)-1 && curMsg == "\n" && executor.Env.Msgs[i+1] == "\n" {
+		for i := 0; i < len(msgs); i++ {
+			curMsg := msgs[i]
+			if i < len(msgs)-1 && curMsg == "\n" && msgs[i+1] == "\n" {
 				newMsgs = append(newMsgs, curMsg)
 				i++
 			} else {
 				newMsgs = append(newMsgs, curMsg)
 			}
 		}
-		executor.Env.Msgs = newMsgs
 
 		if notTrue {
 			messages = append(messages, fmt.Sprintf("execution failed at:\n%s", topStmt))
 			break
 		} else {
-			messages = append(messages, strings.Join(executor.Env.Msgs, "\n"))
+			messages = append(messages, strings.Join(newMsgs, "\n"))
 		}
 	}
 
 	if notTrue {
-		messages = append(messages, glob.REPLFailedMessage)
+		messages = append(messages, glob.REPLErrorMessage)
 	} else {
 		messages = append(messages, glob.REPLSuccessMessage)
 	}

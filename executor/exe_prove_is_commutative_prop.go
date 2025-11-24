@@ -20,20 +20,20 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) proveIsCommutativePropStmt(stmt *ast.ProveIsCommutativePropStmt) (ExecRet, error) {
+func (exec *Executor) proveIsCommutativePropStmt(stmt *ast.ProveIsCommutativePropStmt) ExecRet {
 	ok, err := exec.proveIsCommutativePropStmtMainLogic(stmt)
 	if !ok || err != nil {
-		return NewExecErr(""), err
+		return NewExecErr(err.Error())
 	}
 
 	exec.NewCommutativeProp(stmt.SpecFact)
 
-	return NewExecTrue(""), nil
+	return NewExecTrue("")
 }
 
 func (exec *Executor) proveIsCommutativePropStmtMainLogic(stmt *ast.ProveIsCommutativePropStmt) (bool, error) {
 	exec.NewEnv(exec.Env)
-	defer exec.deleteEnvAndRetainMsg()
+	defer exec.deleteEnv()
 
 	if exec.Env.IsCommutativeProp(stmt.SpecFact) {
 		return true, nil
@@ -61,16 +61,16 @@ func (exec *Executor) proveIsCommutativePropStmtMainLogic(stmt *ast.ProveIsCommu
 
 	params := []string{}
 	for _, param := range stmt.SpecFact.Params {
-		asFcAtom, ok := param.(ast.FcAtom)
+		asFcAtom, ok := param.(ast.AtomObj)
 		if !ok {
 			return false, fmt.Errorf("param %s is not an atom", param)
 		}
 		params = append(params, string(asFcAtom))
 	}
 
-	err := exec.defLetStmt(ast.NewDefLetStmt(params, []ast.Fc{def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[1]}, []ast.FactStmt{}, stmt.Line))
-	if err != nil {
-		return false, err
+	execState := exec.defLetStmt(ast.NewDefLetStmt(params, []ast.Obj{def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[1]}, []ast.FactStmt{}, stmt.Line))
+	if execState.IsNotTrue() {
+		return false, fmt.Errorf(execState.String())
 	}
 
 	// if len(def.DomFacts) > 0 {
@@ -98,23 +98,23 @@ func (exec *Executor) proveIsCommutativePropStmtMainLogic(stmt *ast.ProveIsCommu
 
 func (exec *Executor) proveIsCommutativePropStmtBody(proofs []ast.Stmt, fact *ast.SpecFactStmt, rightToLeft *ast.SpecFactStmt) (bool, error) {
 	exec.NewEnv(exec.Env)
-	defer exec.deleteEnvAndRetainMsg()
+	defer exec.deleteEnv()
 
-	err := exec.Env.NewFact(fact)
-	if err != nil {
-		return false, err
+	ret := exec.Env.NewFact(fact)
+	if ret.IsErr() {
+		return false, fmt.Errorf(ret.String())
 	}
 
 	for _, proof := range proofs {
-		execState, _, err := exec.Stmt(proof)
-		if notOkExec(execState, err) {
-			return false, err
+		execState := exec.Stmt(proof)
+		if execState.IsNotTrue() {
+			return false, fmt.Errorf(execState.String())
 		}
 	}
 
-	state, err := exec.factStmt(rightToLeft)
-	if err != nil {
-		return false, err
+	state := exec.factStmt(rightToLeft)
+	if state.IsErr() {
+		return false, fmt.Errorf(state.String())
 	}
 	if state.IsUnknown() {
 		return false, fmt.Errorf("proof in %s must be proved to be true, but %s is not true", glob.KeywordProveIsCommutativeProp, rightToLeft)

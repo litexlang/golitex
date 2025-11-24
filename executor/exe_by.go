@@ -23,7 +23,7 @@ import (
 func (exec *Executor) byStmt(stmt *ast.ByStmt) ExecRet {
 	if len(stmt.ThenFactsOrNil) > 0 {
 		exec.NewEnv(exec.Env)
-		defer exec.deleteEnvAndGiveUpMsgs()
+		defer exec.deleteEnv()
 	}
 
 	execState := exec.callProveAlgo(stmt)
@@ -33,8 +33,8 @@ func (exec *Executor) byStmt(stmt *ast.ByStmt) ExecRet {
 
 	if len(stmt.ThenFactsOrNil) > 0 {
 		for _, fact := range stmt.ThenFactsOrNil {
-			execState, err := exec.factStmt(fact)
-			if err != nil {
+			execState := exec.factStmt(fact)
+			if execState.IsErr() {
 				return NewExecErr("")
 			}
 			if execState.IsNotTrue() {
@@ -58,27 +58,17 @@ func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) ExecRet {
 	}
 
 	for i, param := range proveAlgoDef.Params {
-		if exec.Env.IsAtomDeclared(ast.FcAtom(param), map[string]struct{}{}) {
+		if exec.Env.IsAtomDeclared(ast.AtomObj(param), map[string]struct{}{}) {
 			continue
 		} else {
-			err := exec.defLetStmt(ast.NewDefLetStmt([]string{param}, []ast.Fc{ast.FcAtom(glob.KeywordObj)}, []ast.FactStmt{ast.NewEqualFact(ast.FcAtom(param), stmt.Params[i])}, stmt.Line))
-			if err != nil {
-				return NewExecErr(err.Error())
+			execState := exec.defLetStmt(ast.NewDefLetStmt([]string{param}, []ast.Obj{ast.AtomObj(glob.KeywordObj)}, []ast.FactStmt{ast.NewEqualFact(ast.AtomObj(param), stmt.Params[i])}, stmt.Line))
+			if execState.IsNotTrue() {
+				return execState
 			}
 		}
 	}
 
-	// params of stmt must be numeric literals
-	// paramsValues := []ast.Fc{}
-	// for _, param := range stmt.Params {
-	// 	value, execRet := exec.verifyIsNumExprFcOrHasValueThenSimplify(param)
-	// 	if execRet.IsNotTrue() {
-	// 		return execRet
-	// 	}
-	// 	paramsValues = append(paramsValues, value)
-	// }
-
-	uniMap := map[string]ast.Fc{}
+	uniMap := map[string]ast.Obj{}
 	for i, param := range proveAlgoDef.Params {
 		uniMap[param] = stmt.Params[i]
 	}
@@ -109,7 +99,7 @@ func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) ExecRet {
 // 	return value, NewExecTrue("")
 // }
 
-func (exec *Executor) runAlgoStmtsWhenBy(algoStmts ast.AlgoStmtSlice, paramsValues []ast.Fc) ExecRet {
+func (exec *Executor) runAlgoStmtsWhenBy(algoStmts ast.AlgoStmtSlice, paramsValues []ast.Obj) ExecRet {
 	for _, stmt := range algoStmts {
 		switch asStmt := stmt.(type) {
 		case *ast.ProveAlgoReturnStmt:
@@ -123,8 +113,8 @@ func (exec *Executor) runAlgoStmtsWhenBy(algoStmts ast.AlgoStmtSlice, paramsValu
 		case *ast.AlgoReturnStmt:
 			return NewExecErr(fmt.Sprintf("There can not be return value statements in algo. Use return eval instead .Get %s", asStmt.String()))
 		default:
-			execRet, _, err := exec.Stmt(stmt.(ast.Stmt))
-			if err != nil || execRet.IsNotTrue() {
+			execRet := exec.Stmt(stmt.(ast.Stmt))
+			if execRet.IsNotTrue() {
 				return execRet
 			}
 		}
@@ -132,9 +122,9 @@ func (exec *Executor) runAlgoStmtsWhenBy(algoStmts ast.AlgoStmtSlice, paramsValu
 	return NewExecTrue("")
 }
 
-func (exec *Executor) algoIfStmtWhenBy(stmt *ast.AlgoIfStmt, paramsValues []ast.Fc) ExecRet {
-	exec.NewEnv(exec.Env)
-	defer exec.deleteEnvAndGiveUpMsgs()
+func (exec *Executor) algoIfStmtWhenBy(stmt *ast.AlgoIfStmt, paramsValues []ast.Obj) ExecRet {
+	// exec.NewEnv(exec.Env)
+	// defer exec.deleteEnv()
 
 	knowStmt := ast.NewKnowStmt(stmt.Conditions.ToCanBeKnownStmtSlice(), stmt.GetLine())
 	execRet := exec.knowStmt(knowStmt)

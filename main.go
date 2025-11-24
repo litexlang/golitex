@@ -19,8 +19,8 @@ import (
 	"fmt"
 	glob "golitex/glob"
 	pipeline "golitex/pipeline"
-	sys "golitex/sys"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -37,6 +37,10 @@ func main() {
 	latexFlag := flag.String("latex", "", "Compile the given file to latex")
 	elatexFlag := flag.String("elatex", "", "Compile the given file to latex")
 	fmtCodeFlag := flag.String("fmt", "", "Format the given code")
+	installFlag := flag.String("install", "", "Install the given package")
+	uninstallFlag := flag.String("uninstall", "", "Uninstall the given package")
+	listFlag := flag.Bool("list", false, "List all installed packages")
+	updateFlag := flag.String("update", "", "Update the given package")
 
 	flag.Parse()
 
@@ -57,88 +61,79 @@ func main() {
 	// Handle combined -latex and -e
 	if *elatexFlag != "" {
 		// 处理转义序列
-		msg, signal, err := sys.CompileCodeToLatex(glob.RemoveWindowsCarriageReturn(*elatexFlag))
-		if err != nil || signal != glob.SysSignalTrue {
+		ret, err := pipeline.CompileCodeToLatex(glob.RemoveWindowsCarriage(*elatexFlag))
+		if err != nil || ret.IsNotTrue() {
 			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)
 		}
-		fmt.Println(msg)
+		fmt.Println(ret.String())
 		return
 	}
 
 	// Handle execution flags
 	if *executeFlag != "" {
 		// Normal execution
-		msg, signal, err := sys.ExecuteCodeAndReturnMessage(glob.RemoveWindowsCarriageReturn(*executeFlag))
-		msg = strings.TrimSpace(msg)
+		ret := pipeline.RunSourceCode(glob.RemoveWindowsCarriage(*executeFlag))
+		msg := strings.TrimSpace(ret.String())
 		fmt.Println(msg)
-		if err != nil {
-			fmt.Printf("Error: %s\n", err)
-		} else {
-			msg := sys.RunMainMsg(signal)
-			fmt.Println(msg)
-		}
 		return
 	}
 
 	if *fileFlag != "" {
-		// Verify file exists
-		if _, err := os.Stat(*fileFlag); os.IsNotExist(err) {
-			fmt.Printf("Error: File '%s' does not exist\n", *fileFlag)
-			os.Exit(1)
-		}
-
-		// Process file
-		msg, signal, err := sys.RunFile(glob.RemoveWindowsCarriageReturn(*fileFlag))
-		fmt.Println(msg)
-		if err != nil {
-			fmt.Printf("Error: %s\n", err)
-		} else {
-			msg := sys.RunMainMsg(signal)
-			fmt.Println(msg)
-		}
+		MainFlagFile(*fileFlag)
 		return
 	}
 
 	if *repoFlag != "" {
-		// verify the repo exists
-		if _, err := os.Stat(*repoFlag); os.IsNotExist(err) {
-			fmt.Printf("Error: Repo '%s' does not exist\n", *repoFlag)
-			os.Exit(1)
-		}
-		// run the repo
-		msg, signal, err := sys.RunRepo(glob.RemoveWindowsCarriageReturn(*repoFlag))
-		fmt.Println(msg)
-		if err != nil {
-			fmt.Printf("Error: %s\n", err)
-			os.Exit(1)
-		} else {
-			msg := sys.RunMainMsg(signal)
-			fmt.Println(msg)
-		}
+		MainFlagFile(filepath.Join(*repoFlag, glob.MainDotLit))
 		return
 	}
 
 	if *latexFlag != "" {
-		msg, signal, err := sys.CompileFileToLatex(glob.RemoveWindowsCarriageReturn(*latexFlag))
-		if err != nil || signal != glob.SysSignalTrue {
+		ret, err := pipeline.CompileFileToLatex(glob.RemoveWindowsCarriage(*latexFlag))
+		if err != nil || ret.IsNotTrue() {
 			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)
 		}
-		fmt.Println(msg)
+		fmt.Println(ret.String())
 		return
 	}
 
 	if *fmtCodeFlag != "" {
-		msg, signal, err := pipeline.FormatCode(glob.RemoveWindowsCarriageReturn(*fmtCodeFlag))
-		if err != nil || signal != glob.SysSignalTrue {
+		ret, err := pipeline.FormatCode(glob.RemoveWindowsCarriage(*fmtCodeFlag))
+		if err != nil || ret.IsNotTrue() {
 			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)
 		}
-		fmt.Println(msg)
+		fmt.Println(ret.String())
+		return
+	}
+
+	if *installFlag != "" {
+		fmt.Printf("Installing package: %s\n", *installFlag)
+		return
+	}
+
+	if *uninstallFlag != "" {
+		fmt.Printf("Uninstalling package: %s\n", *uninstallFlag)
+		return
+	}
+
+	if *listFlag {
+		fmt.Println("Listing all installed packages")
+		return
+	}
+
+	if *updateFlag != "" {
+		fmt.Printf("Updating package: %s\n", *updateFlag)
 		return
 	}
 
 	// If no flags are provided, run REPL
-	sys.RunREPLInTerminal(VERSION)
+	pipeline.RunREPL(VERSION)
+}
+
+func MainFlagFile(fileFlag string) {
+	ret := pipeline.RunFile(glob.RemoveWindowsCarriage(fileFlag))
+	fmt.Println(ret.StringWithOptimizedNewline())
 }

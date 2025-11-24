@@ -16,7 +16,7 @@ package litex_env
 
 import ast "golitex/ast"
 
-func (e *Env) GetEnumFact(enumName string) ([]ast.Fc, bool) {
+func (e *Env) GetEnumFact(enumName string) ([]ast.Obj, bool) {
 	for env := e; env != nil; env = env.Parent {
 		enumFacts, ok := env.EnumFacts[enumName]
 		if ok {
@@ -48,8 +48,8 @@ func (e *Env) IsTransitiveProp(propName string) bool {
 	return false
 }
 
-func (e *Env) GetRelatedFcSliceOfTransitiveProp(propName string, fc ast.Fc) []ast.Fc {
-	ret := []ast.Fc{}
+func (e *Env) GetRelatedFcSliceOfTransitiveProp(propName string, fc ast.Obj) []ast.Obj {
+	ret := []ast.Obj{}
 	for env := e; env != nil; env = env.Parent {
 		relatedFcSlice, ok := env.TransitivePropMem[propName]
 		if ok {

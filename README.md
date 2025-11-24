@@ -4,9 +4,9 @@
 
 <div align="center">
 
-# Litex: From Formal Language to Verifiable Discovery in AI Era
+# Litex: A Simple Formal Language Learnable in 2 Hours
 
-## A Simple Formal Language Learnable in 2 Hours
+## For Verifiable Intellectual Discovery in AI Age
 
 **version v0.1.10-beta (not yet ready for production use)**  
 *Jiachen Shen and The Litex Team*
@@ -30,11 +30,15 @@ _– Leonardo da Vinci_
 
 **Warning: Litex is still in beta. The syntax and semantics are subject to change. There might be some bugs and inconsistencies. You should not use Litex in any production environments yet.**
 
-Litex([website](https://litexlang.com)) is a simple open-source formal language, learnable in 2 hours by anyone. It expresses mathematics in the form of code, ensuring that every step of the reasoning process is rigorously correct. The closeness of Litex to natural language, or more profoundly how people think, can be really helpful for AI and human alike in mathematical exploration and problem-solving. I hope you will forget that you are using a formal language to write mathematics using Litex!([Star the repo!](https://github.com/litexlang/golitex)). 
+Litex([website](https://litexlang.com)) is a simple open-source formal language, learnable in 2 hours. It expresses mathematics as code, ensuring rigorous correctness while staying close to natural language. ([Star the repo!](https://github.com/litexlang/golitex)). 
 
-Euclid showed us over 2000 years ago how 5 axioms could derive such a wonderful geometric world. Simple starting points often lead us into infinitely complex worlds. The same is true for mathematics. The foundation of modern mathematics is naive set theory, which doesn't have many axioms, and we even encountered the concept of sets in middle school. But it is precisely these simple and understandable rules that form the foundation of all mathematics. Before we move on, think about how powerful the idea is: with just very few absolutely accurate inference rules, plus a few axioms, we can derive a rich and diverse mathematical world! That is what math is all about.
+Mathematics builds on simple foundations: a few axioms and inference rules create infinitely rich worlds. Finding solutions requires creativity, but verifying correctness is intuitive—we check which facts lead to each statement.
 
-By implementing those simple axioms and deduction rules in a software like Litex, we can write math in the form of code. The learning curve of Litex will not be higher than learning LaTeX. Let's explore the fascinating math world with Litex! The times are calling us, we cannot afford to delay!
+Litex implements these simple rules in code, making math as readable as LaTeX while maintaining formal rigor. Its close-to-natural syntax means users often forget they're using a formal language.
+
+Why does this matter for AI? As AIs generate content at scale, we need verifiable reasoning—especially for scientific exploration and safe AI agents. Formal languages like Litex enable computers to verify reasoning strictly and quickly, bridging human creativity with AI capabilities, or allowing AIs to enhance reasoning capability by themselves, just like how AlphaZero enhances itself in Go. There are more and more AI researchers start to use formal language as a tool for their work, especially safe AI, AI scientific exploration etc, but they do not really understand their code because learning curve of traditional formal languages is too high. 
+
+Litex will not only solve AI researchers' problem, but also make formal languages accessible to ANYONE.
 
 ## Why Litex?
 
@@ -94,11 +98,13 @@ Since each Litex sentence corresponds directly to an expression in everyday math
 
 ## Our Mission
 
-_The value of an idea lies in the using of it._
+_Necessity is the mother of invention._
 
 _- Thomas Edison_
 
 Our mission is to make Litex the most intuitive and simple formal language for coding reasoning. We aim to solve the most challenging problems faced by the AI community, i.e. the challenge of efficient, scalable, and reliable coding reasoning. Let's build the future together!
+
+Physics boils down to a few fundamental laws, and chemistry to the logic behind the periodic table. Biology, too, is structured around core principles like evolution, heredity, and molecular mechanisms. Mathematics is no different — beneath all the complexity lie just a handful of basic rules of reasoning. Once you truly grasp those few principles, everything else follows naturally. The key is seeing the underlying structure, and then one insight unlocks many. Litex is such a language that helps you see the underlying structure of mathematics.
 
 For mathematical research, a well-designed formal language can clarify the dependency structure among complex theorems and lay the foundation for large-scale collaborative “Big Mathematics.” For AI, such a formal language enables reasoning models to form a self-reinforcing cycle of automatic problem generation → automatic solving → automatic verification. Combined with the reinforcement-learning-based post-training approach demonstrated by DeepSeek-R1, this may lead to a breakthrough moment comparable to AlphaGo.
 
@@ -164,4 +170,4 @@ _– Alan Turing_
 
 Hi, I’m Jiachen Shen, creator of Litex. It is so fortunate to receive tremendous help from friends and colleagues throughout this journey of designing, implementing, and growing Litex into a community. Without their support, Litex would not have had the chance to succeed.
 
-I am deeply grateful to Zhaoxuan Hong, Siqi Sun, Wei Lin, Peng Sun, Jie Fu, Zeyu Zheng, Huajian Xin, Zijie Qiu, Siqi Guo, Haoyang Shi, Chengyang Zhu, Chenxuan Huang, Yan Lu, Sheng Xu for their invaluable contributions. I am certain this list of special thanks will only grow longer in the future.
+I am deeply grateful to Siqi Sun, Wei Lin, Peng Sun, Jie Fu, Zeyu Zheng, Huajian Xin, Zijie Qiu, Siqi Guo, Haoyang Shi, Chengyang Zhu, Chenxuan Huang, Yan Lu, Sheng Xu, Zhaoxuan Hong for their invaluable contributions. I am certain this list of special thanks will only grow longer in the future.

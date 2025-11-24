@@ -16,8 +16,8 @@ package litex_ast
 
 import "unicode"
 
-func IsFcLiterallyNPosNumber(fc Fc) bool {
-	atom, ok := fc.(FcAtom)
+func IsFcLiterallyNPosNumber(fc Obj) bool {
+	atom, ok := fc.(AtomObj)
 	if !ok {
 		return false
 	}
@@ -35,8 +35,8 @@ func IsFcLiterallyNPosNumber(fc Fc) bool {
 	return s[0] != '0'
 }
 
-func IsFcLiterallyNatNumber(fc Fc) bool {
-	atom, ok := fc.(FcAtom)
+func IsFcLiterallyNatNumber(fc Obj) bool {
+	atom, ok := fc.(AtomObj)
 	if !ok {
 		return false
 	}
@@ -54,8 +54,8 @@ func IsFcLiterallyNatNumber(fc Fc) bool {
 	return true
 }
 
-func IsFcLiterallyIntNumber(fc Fc) bool {
-	atom, ok := fc.(FcAtom)
+func IsFcLiterallyIntNumber(fc Obj) bool {
+	atom, ok := fc.(AtomObj)
 	if !ok {
 		return false
 	}
@@ -81,8 +81,8 @@ func IsFcLiterallyIntNumber(fc Fc) bool {
 	return true
 }
 
-func IsFcLiterallyRationalNumber(fc Fc) bool {
-	atom, ok := fc.(FcAtom)
+func IsFcLiterallyRationalNumber(fc Obj) bool {
+	atom, ok := fc.(AtomObj)
 	if !ok {
 		return false
 	}

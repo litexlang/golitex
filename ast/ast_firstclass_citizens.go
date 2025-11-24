@@ -17,56 +17,55 @@ package litex_ast
 import (
 	"fmt"
 	glob "golitex/glob"
-	"slices"
 	"strings"
 )
 
-type Fc interface {
-	fc()
+type Obj interface {
+	obj()
 	String() string
-	Instantiate(map[string]Fc) (Fc, error)
+	Instantiate(map[string]Obj) (Obj, error)
 	ToLatexString() string
-	ReplaceFc(oldFc Fc, newFc Fc) Fc // 这是必要的，因为 have fn 的 proof 里可能出现 replace fc 的情况
+	ReplaceObj(oldObj Obj, newObj Obj) Obj // 这是必要的，因为 have fn 的 proof 里可能出现 replace obj 的情况
 }
 
-func (f FcAtom) fc() {}
-func (f *FcFn) fc()  {}
+func (f AtomObj) obj() {}
+func (f *FnObj) obj()  {}
 
-func (f FcAtom) ReplaceFc(oldFc Fc, newFc Fc) Fc {
-	if f.String() == oldFc.String() {
-		return newFc
+func (f AtomObj) ReplaceObj(oldObj Obj, newObj Obj) Obj {
+	if f.String() == oldObj.String() {
+		return newObj
 	}
 	return f
 }
 
-func (f *FcFn) ReplaceFc(oldFc Fc, newFc Fc) Fc {
-	if f.String() == oldFc.String() {
-		return newFc
+func (f *FnObj) ReplaceObj(oldObj Obj, newObj Obj) Obj {
+	if f.String() == oldObj.String() {
+		return newObj
 	}
 
-	var newFcFnHead = f.FnHead.ReplaceFc(oldFc, newFc)
+	var newFnObjHead = f.FnHead.ReplaceObj(oldObj, newObj)
 
-	newFcParams := make([]Fc, len(f.Params))
+	newObjParams := make([]Obj, len(f.Params))
 	for i, param := range f.Params {
-		newFcParams[i] = param.ReplaceFc(oldFc, newFc)
+		newObjParams[i] = param.ReplaceObj(oldObj, newObj)
 	}
 
-	newFcFn := NewFcFn(newFcFnHead, newFcParams)
-	return newFcFn
+	newFnObj := NewFnObj(newFnObjHead, newObjParams)
+	return newFnObj
 }
 
-type FcAtom string
+type AtomObj string
 
-type FcFn struct {
-	FnHead Fc
-	Params []Fc
+type FnObj struct {
+	FnHead Obj
+	Params []Obj
 }
 
-func NewFcFn(fnHead Fc, callPipe []Fc) *FcFn {
-	return &FcFn{fnHead, callPipe}
+func NewFnObj(fnHead Obj, callPipe []Obj) *FnObj {
+	return &FnObj{fnHead, callPipe}
 }
 
-func fcSliceString(params []Fc) string {
+func objSliceString(params []Obj) string {
 	output := make([]string, len(params))
 	for i, param := range params {
 		output[i] = param.String()
@@ -74,8 +73,8 @@ func fcSliceString(params []Fc) string {
 	return strings.Join(output, ", ")
 }
 
-func hasBuiltinOptAndToString(f *FcFn) (bool, string) {
-	ptr, ok := f.FnHead.(FcAtom)
+func hasBuiltinOptAndToString(f *FnObj) (bool, string) {
+	ptr, ok := f.FnHead.(AtomObj)
 	if !ok {
 		return false, ""
 	}
@@ -92,8 +91,8 @@ func hasBuiltinOptAndToString(f *FcFn) (bool, string) {
 	return false, ""
 }
 
-func IsNumLitFcAtom(f Fc) (string, bool) {
-	ptr, ok := f.(FcAtom)
+func IsNumLitAtomObj(f Obj) (string, bool) {
+	ptr, ok := f.(AtomObj)
 	if !ok || string(ptr) == "" {
 		return "", false
 	}
@@ -104,8 +103,8 @@ func IsNumLitFcAtom(f Fc) (string, bool) {
 	return "", false
 }
 
-func IsFcBuiltinInfixOpt(f FcFn) bool {
-	ptrHeadAsAtom, ok := f.FnHead.(FcAtom)
+func IsObjBuiltinInfixOpt(f FnObj) bool {
+	ptrHeadAsAtom, ok := f.FnHead.(AtomObj)
 	if !ok {
 		return false
 	}
@@ -113,68 +112,53 @@ func IsFcBuiltinInfixOpt(f FcFn) bool {
 	return glob.IsKeySymbolRelaFn(string(ptrHeadAsAtom)) && len(f.Params) == 2
 }
 
-func IsFcBuiltinUnaryFn(fc FcFn) bool {
-	fcAsFnHead, ok := fc.FnHead.(FcAtom)
+func IsObjBuiltinUnaryFn(obj FnObj) bool {
+	objAsFnHead, ok := obj.FnHead.(AtomObj)
 	if !ok {
 		return false
 	}
 
-	return fcAsFnHead.IsBuiltinUnaryOpt() && len(fc.Params) == 1
+	return objAsFnHead.IsBuiltinUnaryOpt() && len(obj.Params) == 1
 }
 
-func (f FcAtom) IsBuiltinUnaryOpt() bool {
+func (f AtomObj) IsBuiltinUnaryOpt() bool {
 	return (string(f)) == glob.KeySymbolMinus
 }
 
-func IsFcAtomAndHasBuiltinPropName(fc Fc) bool {
-	fcAtom, ok := fc.(FcAtom)
+func IsAtomObjAndHasBuiltinPropName(obj Obj) bool {
+	atomObj, ok := obj.(AtomObj)
 	if !ok {
 		return false
 	}
 
-	return glob.IsBuiltinInfixRelaPropSymbol(string(fcAtom))
+	return glob.IsBuiltinInfixRelaPropSymbol(string(atomObj))
 }
 
-func IsFcAtomAndEqualToStr(fc Fc, name string) bool {
-	fcAsFcAtom, ok := fc.(FcAtom)
+func IsAtomObjAndEqualToStr(obj Obj, name string) bool {
+	atomObj, ok := obj.(AtomObj)
 	if !ok {
 		return false
 	}
 
-	return string(fcAsFcAtom) == name
+	return string(atomObj) == name
 }
 
-func GetAtomsInFc(fc Fc) []FcAtom {
-	ret := []FcAtom{}
+func GetAtomsInObj(obj Obj) []AtomObj {
+	ret := []AtomObj{}
 
-	switch asFc := fc.(type) {
-	case FcAtom:
-		ret = append(ret, asFc)
-	case *FcFn:
-		for _, param := range asFc.Params {
-			atoms := GetAtomsInFc(param)
+	switch asObj := obj.(type) {
+	case AtomObj:
+		ret = append(ret, asObj)
+	case *FnObj:
+		for _, param := range asObj.Params {
+			atoms := GetAtomsInObj(param)
 			ret = append(ret, atoms...)
 		}
 	}
 	return ret
 }
 
-// Return the name of the function if it is in the slice, otherwise return empty string
-func IsFn_WithHeadNameInSlice(fc Fc, names []string) bool {
-	asFcFn, ok := fc.(*FcFn)
-	if !ok {
-		return false
-	}
-
-	asFcFnHeadAsAtom, ok := asFcFn.FnHead.(FcAtom)
-	if !ok {
-		return false
-	}
-
-	return slices.Contains(names, string(asFcFnHeadAsAtom))
-}
-
-func (atom FcAtom) HasPkgName() bool {
+func (atom AtomObj) HasPkgName() bool {
 	// 如果 atom 里有 :: 就是true
 	return strings.Contains(string(atom), glob.KeySymbolColonColon)
 }

@@ -170,10 +170,7 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch_new(stmt *ast.Spe
 		}
 
 		if verRet.IsTrue() {
-			if state.WithMsg {
-				ver.successWithMsg(stmt.String(), knownFactUnderLogicExpr.String())
-			}
-			return NewExecTrue("")
+			return ver.maybeAddSuccessMsg(state, stmt.String(), knownFactUnderLogicExpr.String(), NewExecTrue(""))
 		}
 	}
 
@@ -192,11 +189,11 @@ func (ver *Verifier) specFact_UniMem_atCurEnv(curEnv *env.Env, stmt *ast.SpecFac
 	}
 
 	// return ver.iterate_KnownSpecInUniFacts_applyMatch(stmt, searchedSpecFacts, state)
-	return BoolErrToExecRet(ver.iterate_KnownSpecInUniFacts_applyMatch_new(stmt, searchedSpecFacts, state).ToBoolErr())
+	return ver.iterate_KnownSpecInUniFacts_applyMatch_new(stmt, searchedSpecFacts, state)
 }
 
-func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]ast.Fc, state *VerState) (map[string]ast.Fc, ExecRet) {
-	newMap := map[string]ast.Fc{}
+func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]ast.Obj, state *VerState) (map[string]ast.Obj, ExecRet) {
+	newMap := map[string]ast.Obj{}
 	for key, value := range paramArrMap {
 		if len(value) == 1 {
 			newMap[key] = value[0]
@@ -253,7 +250,7 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 		for i, knownParam := range knownFact.SpecFact.Params {
 			verifiedBy.WriteString(fmt.Sprintf("%s = %s\n", knownParam, stmt.Params[i]))
 		}
-		ver.successWithMsg(stmt.String(), verifiedBy.String())
+		return ver.maybeAddSuccessMsg(state, stmt.String(), verifiedBy.String(), NewExecTrue(""))
 	}
 
 	return NewExecTrue("")
@@ -283,7 +280,8 @@ func (ver *Verifier) specFact_LogicMem(curEnv *env.Env, stmt *ast.SpecFactStmt, 
 				return NewExecErr(verRet.String())
 			}
 			if verRet.IsTrue() {
-				return NewExecTrue("")
+				msg := fmt.Sprintf("verified by known fact: %s", knownFact.String())
+				return ver.maybeAddSuccessMsg(state, stmt.String(), msg, verRet)
 			}
 		}
 
@@ -304,9 +302,11 @@ LoopOverFacts:
 		}
 
 		if state.WithMsg {
-			ver.specFactSpecMemTrueMsg(stmt, knownFact)
+			verifiedBy := knownFact.StringWithLine() + "\n"
+			execRet := NewExecTrue("")
+			execRet.AddMsg(successVerString(stmt.String(), verifiedBy))
+			return execRet
 		}
-
 		return NewExecTrue("")
 	}
 
@@ -362,7 +362,8 @@ func (ver *Verifier) useKnownOrFactToProveSpecFact(knownFact *env.KnownSpecFact_
 		}
 	}
 
-	return NewExecTrue("")
+	msg := fmt.Sprintf("verified by known fact: %s", knownFact.String())
+	return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
 }
 
 func (ver *Verifier) proveUniFactDomFacts(domFacts []ast.FactStmt, state *VerState) ExecRet {
@@ -412,11 +413,7 @@ func (ver *Verifier) verify_specFact_when_given_orStmt_is_true(stmt *ast.SpecFac
 		}
 	}
 
-	if state.WithMsg {
-		ver.successWithMsg(stmt.String(), orStmt.String())
-	}
-
-	return NewExecTrue("")
+	return ver.maybeAddSuccessMsg(state, stmt.String(), orStmt.String(), NewExecTrue(""))
 }
 
 func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch_new(stmt *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InUniFact, state *VerState) ExecRet {
@@ -481,10 +478,7 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch_new(stmt *ast.SpecFa
 		}
 
 		if verRet.IsTrue() {
-			if state.WithMsg {
-				ver.successWithMsg(stmt.String(), knownFact_paramProcessed.UniFact.StringWithLine())
-			}
-			return NewExecTrue("")
+			return ver.maybeAddSuccessMsg(state, stmt.String(), knownFact_paramProcessed.UniFact.StringWithLine(), NewExecTrue(""))
 		}
 	}
 

@@ -20,59 +20,59 @@ import (
 	"strings"
 )
 
-type FcEnum uint8
+type ObjEnum uint8
 
 const (
-	FcAtomEnum FcEnum = 0
-	FcFnEnum   FcEnum = 1
+	AtomObjEnum ObjEnum = 0
+	FnObjEnum   ObjEnum = 1
 )
 
-func CmpFcType(left, right ast.Fc) (int, FcEnum, error) {
-	var knownEnum FcEnum
+func CmpObjType(left, right ast.Obj) (int, ObjEnum, error) {
+	var knownEnum ObjEnum
 	switch left.(type) {
-	case ast.FcAtom:
-		knownEnum = FcAtomEnum
-	case *ast.FcFn:
-		knownEnum = FcFnEnum
+	case ast.AtomObj:
+		knownEnum = AtomObjEnum
+	case *ast.FnObj:
+		knownEnum = FnObjEnum
 	default:
-		return 0, FcAtomEnum, fmt.Errorf("unknown Fc type: %T", left)
+		return 0, AtomObjEnum, fmt.Errorf("unknown Obj type: %T", left)
 	}
 
-	var givenEnum FcEnum
+	var givenEnum ObjEnum
 	switch right.(type) {
-	case ast.FcAtom:
-		givenEnum = FcAtomEnum
-	case *ast.FcFn:
-		givenEnum = FcFnEnum
+	case ast.AtomObj:
+		givenEnum = AtomObjEnum
+	case *ast.FnObj:
+		givenEnum = FnObjEnum
 	default:
-		return 0, FcAtomEnum, fmt.Errorf("unknown Fc type: %T", right)
+		return 0, AtomObjEnum, fmt.Errorf("unknown Obj type: %T", right)
 	}
 
 	return int(knownEnum - givenEnum), knownEnum, nil
 }
 
 // 注：像1+1=2这种字面量的比较，我在这里不比。我是比完完全全一样的
-func cmpFcLit(left, right ast.Fc) (int, error) {
-	typeComp, fcEnum, err := CmpFcType(left, right)
+func cmpObjLit(left, right ast.Obj) (int, error) {
+	typeComp, objEnum, err := CmpObjType(left, right)
 	if typeComp != 0 || err != nil {
 		return typeComp, err
 	}
 
-	if fcEnum == FcAtomEnum {
-		return cmpFcAtomLit(left.(ast.FcAtom), right.(ast.FcAtom))
-	} else if fcEnum == FcFnEnum {
-		return cmpFcFnLit(left.(*ast.FcFn), right.(*ast.FcFn))
+	if objEnum == AtomObjEnum {
+		return cmpAtomObjLit(left.(ast.AtomObj), right.(ast.AtomObj))
+	} else if objEnum == FnObjEnum {
+		return cmpFnObjLit(left.(*ast.FnObj), right.(*ast.FnObj))
 	}
 
 	return -1, fmt.Errorf("")
 }
 
-func cmpFcAtomLit(left, right ast.FcAtom) (int, error) {
+func cmpAtomObjLit(left, right ast.AtomObj) (int, error) {
 	return strings.Compare(string(left), string(right)), nil // 直接对两个string相减得了
 }
 
-func cmpFcFnLit(left, right *ast.FcFn) (int, error) {
-	if comp, err := cmpFcLit(left.FnHead, right.FnHead); comp != 0 || err != nil {
+func cmpFnObjLit(left, right *ast.FnObj) (int, error) {
+	if comp, err := cmpObjLit(left.FnHead, right.FnHead); comp != 0 || err != nil {
 		return comp, err
 	}
 
@@ -81,7 +81,7 @@ func cmpFcFnLit(left, right *ast.FcFn) (int, error) {
 	}
 
 	for i := 0; i < len(left.Params); i++ {
-		if comp, err := cmpFcLit(left.Params[i], right.Params[i]); comp != 0 || err != nil {
+		if comp, err := cmpObjLit(left.Params[i], right.Params[i]); comp != 0 || err != nil {
 			return comp, err
 		}
 	}

@@ -65,12 +65,12 @@ func (tb *tokenBlock) algoReturnStmt() (*ast.AlgoReturnStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	fc, err := tb.RawFc()
+	obj, err := tb.RawObj()
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
 
-	return ast.NewAlgoReturnStmt(fc, tb.line), nil
+	return ast.NewAlgoReturnStmt(obj, tb.line), nil
 }
 
 func (tb *tokenBlock) proveAlgoReturnStmt() (*ast.ProveAlgoReturnStmt, error) {

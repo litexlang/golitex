@@ -16,10 +16,10 @@ package litex_ast
 
 import "fmt"
 
-func (stmt *FnTStruct) Instantiate(uniMap map[string]Fc) (*FnTStruct, error) {
+func (stmt *FnTStruct) Instantiate(uniMap map[string]Obj) (*FnTStruct, error) {
 	var err error
 
-	newParamSets := make(FcSlice, len(stmt.ParamSets))
+	newParamSets := make(ObjSlice, len(stmt.ParamSets))
 	for i := range stmt.ParamSets {
 		newParamSets[i], err = stmt.ParamSets[i].Instantiate(uniMap)
 		if err != nil {
@@ -51,12 +51,12 @@ func (stmt *FnTStruct) Instantiate(uniMap map[string]Fc) (*FnTStruct, error) {
 	return NewFnTStruct(stmt.Params, newParamSets, newRetSet, newDomFacts, newThenFacts, stmt.Line), nil
 }
 
-func (stmt *FnTStruct) Instantiate_FnTDefParams(templateParams []string, params []Fc) (*FnTStruct, error) {
+func (stmt *FnTStruct) Instantiate_FnTDefParams(templateParams []string, params []Obj) (*FnTStruct, error) {
 	if len(params) != len(templateParams) {
 		return nil, fmt.Errorf("params length mismatch")
 	}
 
-	uniMap := map[string]Fc{}
+	uniMap := map[string]Obj{}
 	for i := range len(templateParams) {
 		uniMap[templateParams[i]] = params[i]
 	}
@@ -64,7 +64,7 @@ func (stmt *FnTStruct) Instantiate_FnTDefParams(templateParams []string, params 
 	return stmt.Instantiate(uniMap)
 }
 
-func (stmt *FnTStruct) InstantiateFnStruct_FnName(fnTName string, fc Fc) (*FnTStruct, error) {
-	uniMap := map[string]Fc{fnTName: fc}
+func (stmt *FnTStruct) InstantiateFnStruct_FnName(fnTName string, fc Obj) (*FnTStruct, error) {
+	uniMap := map[string]Obj{fnTName: fc}
 	return stmt.Instantiate(uniMap)
 }

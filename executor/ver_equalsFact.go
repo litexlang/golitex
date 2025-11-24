@@ -32,9 +32,9 @@ func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState
 				return verRet
 			}
 			if verRet.IsTrue() {
-				err := ver.Env.NewFact(newFact)
-				if err != nil {
-					return NewExecErr(err.Error())
+				ret := ver.Env.NewFact(newFact)
+				if ret.IsErr() {
+					return NewExecErr(ret.String())
 				}
 				checked = true
 				break

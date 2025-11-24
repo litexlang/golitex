@@ -17,21 +17,8 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
-	glob "golitex/glob"
 	"strings"
 )
-
-func (ver *Verifier) specFactSpecMemTrueMsg(stmt *ast.SpecFactStmt, knownFact ast.SpecFactStmt) {
-	var verifiedBy strings.Builder
-
-	verifiedBy.WriteString(knownFact.StringWithLine())
-	verifiedBy.WriteString("\n")
-	ver.successWithMsg(stmt.String(), verifiedBy.String())
-}
-
-func (ver *Verifier) successWithMsg(stmtStr, stmtVerifiedBy string) {
-	ver.Env.Msgs = append(ver.Env.Msgs, successVerString(stmtStr, stmtVerifiedBy))
-}
 
 func successVerString(stmtStr, stmtVerifiedBy string) string {
 	var successVerString strings.Builder
@@ -46,17 +33,6 @@ func successVerString(stmtStr, stmtVerifiedBy string) string {
 	return successVerString.String()
 }
 
-func (ver *Verifier) newMsgAtParent(s string) error {
-	if ver.Env.Parent == nil {
-		return fmt.Errorf("no parent env")
-	} else {
-		if glob.RequireMsg() {
-			ver.Env.Parent.Msgs = append(ver.Env.Parent.Msgs, s)
-		}
-		return nil
-	}
-}
-
-func parametersDoNotSatisfyFnReq(param ast.Fc, fnName ast.Fc) error {
+func parametersDoNotSatisfyFnReq(param ast.Obj, fnName ast.Obj) error {
 	return fmt.Errorf("the arguments passed to the %s do not satisfy the domain of %s", param, fnName)
 }

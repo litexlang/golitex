@@ -12,33 +12,30 @@
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
-package litex_sys
+package litex_pipeline
 
 import (
-	"bytes"
 	"fmt"
-	"os/exec"
+	"os"
 	"testing"
+	"time"
 )
 
-func TestRunFileInTerminalFlagF(t *testing.T) {
-	path := "../examples/test_codes/tmp.lit"
-
-	cmd := exec.Command("go", "run", "../main.go", "-f", path)
-
-	// Capture both stdout and stderr
-	var stdout, stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-
-	// Run the command
-	err := cmd.Run()
+func Test_ToLatex(t *testing.T) {
+	startTime := time.Now()
+	fileName := "../examples/test_codes/tmp.lit"
+	ret, err := CompileFileToLatex(fileName)
 	if err != nil {
-		fmt.Println("Error running command:", err)
-		fmt.Println("Stderr:", stderr.String())
-		return
+		t.Errorf("failed to run file %s\n", fileName)
 	}
 
-	// Print the output
-	fmt.Println(stdout.String())
+	fmt.Println(ret.String())
+
+	// 把msg写入到文件
+	writeTo := "../past_examples/test_to_latex.tex"
+	os.WriteFile(writeTo, []byte(ret.String()), 0644)
+	fmt.Printf("write to %s\n", writeTo)
+
+	executionTime := time.Since(startTime)
+	fmt.Printf("execution time: %s\n", executionTime)
 }
