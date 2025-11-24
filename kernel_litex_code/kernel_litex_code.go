@@ -719,4 +719,25 @@ know:
 		=>:
 			x $in nonempty_set
 			$item_exists_in(x)
+
+# ∏_{a in I} A_a (Cartesian product)
+prop is_cart_prod(s set)
+fn index_set_of_cart_prod(s set) set:
+    $is_cart_prod(s)
+fn family_of_cart_prod(s set) fn(index_set_of_cart_prod(s)) set:
+    dom:
+        $is_cart_prod(s)
+    =>:
+        $is_cart_prod(s)
+fn cart_prod_proj(s set, a index_set_of_cart_prod(s)) set:
+    dom:
+        $is_cart_prod(s)
+    =>:
+        cart_prod_proj(s, a) = family_of_cart_prod(s)(a)
+
+fn cart_prod(index_set set, family fn (index_set) set) set
+know:
+    forall index_set set, family fn (index_set) set:
+        $is_cart_prod(cart_prod(index_set, family))
+        cart_prod_proj(cart_prod(index_set, family), a) = family(a)
 `
