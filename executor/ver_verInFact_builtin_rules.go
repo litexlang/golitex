@@ -309,6 +309,24 @@ func (ver *Verifier) falseInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerS
 		return verRet
 	}
 
+	// 如果在证明 not in Z
+	verRet = ver.litNumNotInIntegerByLiteralShape(stmt, state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsTrue() {
+		return verRet
+	}
+
+	// 如果证明 not in N_pos
+	verRet = ver.litNumNotInNPosByLiteralShape(stmt, state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsTrue() {
+		return verRet
+	}
+
 	return NewExecUnknown("")
 }
 
@@ -576,5 +594,61 @@ func (ver *Verifier) litNumNotInNaturalByLiteralShape(stmt *ast.SpecFactStmt, st
 
 	// 如果是数字表达式但字面上不是自然数形状（小数、负数或表达式），可以证明它不在自然数中
 	msg := fmt.Sprintf("%s is literally not a natural number (not in the shape of natural number)", stmt.Params[0])
+	return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
+}
+
+func (ver *Verifier) litNumNotInIntegerByLiteralShape(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	// 检查是否是 not x $in Z 的形式
+	if !ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordInteger) {
+		return NewExecUnknown("")
+	}
+
+	// 检查字面上是否是整数形状（必须是 AtomObj 且字面上看起来就是整数）
+	// 如果字面上就是整数形状（比如 "5" 或 "-3"），不能证明它不在整数中
+	if ast.IsFcLiterallyIntNumber(stmt.Params[0]) {
+		// 字面上是整数，不能证明它不在整数中
+		return NewExecUnknown("")
+	}
+
+	// 尝试检查是否是数字字面量表达式
+	_, ok, err := ast.MakeObjIntoNumLitExpr(stmt.Params[0])
+	if err != nil {
+		return NewExecErr(err.Error())
+	}
+	if !ok {
+		// 不是数字字面量，返回 unknown
+		return NewExecUnknown("")
+	}
+
+	// 如果是数字表达式但字面上不是整数形状（小数或表达式），可以证明它不在整数中
+	msg := fmt.Sprintf("%s is literally not an integer (not in the shape of integer)", stmt.Params[0])
+	return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
+}
+
+func (ver *Verifier) litNumNotInNPosByLiteralShape(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	// 检查是否是 not x $in N_pos 的形式
+	if !ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordNPos) {
+		return NewExecUnknown("")
+	}
+
+	// 检查字面上是否是正整数形状（必须是 AtomObj 且字面上看起来就是正整数）
+	// 如果字面上就是正整数形状（比如 "5"），不能证明它不在正整数中
+	if ast.IsFcLiterallyNPosNumber(stmt.Params[0]) {
+		// 字面上是正整数，不能证明它不在正整数中
+		return NewExecUnknown("")
+	}
+
+	// 尝试检查是否是数字字面量表达式
+	_, ok, err := ast.MakeObjIntoNumLitExpr(stmt.Params[0])
+	if err != nil {
+		return NewExecErr(err.Error())
+	}
+	if !ok {
+		// 不是数字字面量，返回 unknown
+		return NewExecUnknown("")
+	}
+
+	// 如果是数字表达式但字面上不是正整数形状（小数、负数、0或表达式），可以证明它不在正整数中
+	msg := fmt.Sprintf("%s is literally not a positive integer (not in the shape of positive integer)", stmt.Params[0])
 	return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
 }
