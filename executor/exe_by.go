@@ -68,16 +68,6 @@ func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) ExecRet {
 		}
 	}
 
-	// params of stmt must be numeric literals
-	// paramsValues := []ast.Fc{}
-	// for _, param := range stmt.Params {
-	// 	value, execRet := exec.verifyIsNumExprFcOrHasValueThenSimplify(param)
-	// 	if execRet.IsNotTrue() {
-	// 		return execRet
-	// 	}
-	// 	paramsValues = append(paramsValues, value)
-	// }
-
 	uniMap := map[string]ast.Obj{}
 	for i, param := range proveAlgoDef.Params {
 		uniMap[param] = stmt.Params[i]
@@ -133,8 +123,8 @@ func (exec *Executor) runAlgoStmtsWhenBy(algoStmts ast.AlgoStmtSlice, paramsValu
 }
 
 func (exec *Executor) algoIfStmtWhenBy(stmt *ast.AlgoIfStmt, paramsValues []ast.Obj) ExecRet {
-	exec.NewEnv(exec.Env)
-	defer exec.deleteEnv()
+	// exec.NewEnv(exec.Env)
+	// defer exec.deleteEnv()
 
 	knowStmt := ast.NewKnowStmt(stmt.Conditions.ToCanBeKnownStmtSlice(), stmt.GetLine())
 	execRet := exec.knowStmt(knowStmt)
