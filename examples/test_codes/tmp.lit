@@ -12,3 +12,4 @@ coord(a, x, 1) $in R
 let b cart(R, Q, Z)
 coord(b, cart(R, Q, Z), 1) $in R
 
+$is_cart(cart(R, Q, Z))
