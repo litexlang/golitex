@@ -323,3 +323,7 @@ func NewHelpStmt(keyword string, line uint) *HelpStmt {
 func NewHaveFnCaseByCaseStmt(defFnStmt *DefFnStmt, caseByCaseFacts SpecFactPtrSlice, proofs []StmtSlice, haveObjSatisfyFn []Obj, line uint) *HaveFnCaseByCaseStmt {
 	return &HaveFnCaseByCaseStmt{defFnStmt, caseByCaseFacts, proofs, haveObjSatisfyFn, line}
 }
+
+func NewHaveCartSetStmt(name string, cartObj FnObj, line uint) *HaveCartSetStmt {
+	return &HaveCartSetStmt{name, cartObj, line}
+}

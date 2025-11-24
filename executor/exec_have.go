@@ -280,3 +280,33 @@ func (exec *Executor) haveExistByReplacementStmt(stmt *ast.HaveObjStStmt) (ExecR
 
 	return NewExecTrue(""), nil
 }
+
+func (exec *Executor) haveCartSetStmt(stmt *ast.HaveCartSetStmt) ExecRet {
+	// Check that each parameter of cart is a set
+	for i, param := range stmt.CartObj.Params {
+		state := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeywordIn), []ast.Obj{param, ast.AtomObj(glob.KeywordSet)}, stmt.Line))
+		if state.IsErr() {
+			return NewExecErr(state.String())
+		}
+		if state.IsUnknown() {
+			return NewExecErr(fmt.Sprintf("cart parameter %d (%s) must be a set, i.e. `%s in %s` must be true, but it is unknown", i+1, param.String(), param.String(), ast.AtomObj(glob.KeywordSet).String()))
+		}
+	}
+
+	// Define the new set variable
+	defObjStmt := ast.NewDefLetStmt([]string{stmt.Name}, []ast.Obj{ast.AtomObj(glob.KeywordSet)}, []ast.FactStmt{}, stmt.Line)
+	execState := exec.defLetStmt(defObjStmt)
+	if execState.IsNotTrue() {
+		return execState
+	}
+
+	// Store the equal fact: x = cart(a, b, c, ...)
+	cartObj := &stmt.CartObj
+	equalFact := ast.NewEqualFact(ast.AtomObj(stmt.Name), cartObj)
+	ret := exec.Env.NewFact(equalFact)
+	if ret.IsErr() {
+		return NewExecErr(ret.String())
+	}
+
+	return NewExecTrue("").AddMsg(stmt.String())
+}
