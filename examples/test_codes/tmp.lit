@@ -1,5 +1,2 @@
-$is_cart(cart(R, Q))
-let x cart(R, Q)
-dim(cart(R, Q)) = 2
-proj(cart(R, Q), 1) = R
-coord(x, cart(R, Q), 1) $in R
+let 某实数 R
+let αβγ R

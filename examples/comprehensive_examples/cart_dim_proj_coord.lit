@@ -8,3 +8,9 @@ x $in set
 
 let a x
 coord(a, x, 1) $in R
+
+# litex现在可以计算出来非数字的值了，比如dim(cart(R, Q)) = 2
+$is_cart(cart(R, Q))
+let y cart(R, Q)
+dim(cart(R, Q)) = 2
+coord(y, cart(R, Q), 1) $in R

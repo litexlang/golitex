@@ -38,6 +38,10 @@ func newTokenizerWithScope(lines []string) *tokenizerWithScope {
 
 // nextToken 返回当前行的下一个 token
 func (t *tokenizerWithScope) nextToken(line string, start int) (string, int, error) {
+	if start >= len(line) {
+		return "", len(line), nil
+	}
+
 	// 跳过注释
 	if start+1 < len(line) && line[start:start+1] == glob.InlineCommentSig {
 		return "", len(line), nil
@@ -53,15 +57,41 @@ func (t *tokenizerWithScope) nextToken(line string, start int) (string, int, err
 		return "", start + 1, nil
 	}
 
-	// 提取 token
-	buffer := ""
-	for i := start; i < len(line); i++ {
-		if glob.GetKeySymbol(line, i) != "" || line[i] == ' ' {
+	// 提取 token - 使用 rune 来正确处理 Unicode 字符
+	// 将字符串转换为 rune 来处理多字节字符
+	runes := []rune(line)
+
+	// 计算 start 字节位置对应的 rune 位置
+	runeStart := 0
+	byteCount := 0
+	for i, r := range runes {
+		if byteCount >= start {
+			runeStart = i
 			break
 		}
-		buffer += string(line[i])
+		byteCount += len(string(r))
 	}
-	return buffer, start + len(buffer), nil
+
+	buffer := ""
+	for i := runeStart; i < len(runes); i++ {
+		r := runes[i]
+		// 计算当前位置的字节位置用于检查符号
+		currentBytePos := len(string(runes[:i]))
+
+		// 检查是否是符号
+		if glob.GetKeySymbol(line, currentBytePos) != "" {
+			break
+		}
+		// 检查是否是空格
+		if r == ' ' {
+			break
+		}
+		buffer += string(r)
+	}
+
+	// 计算返回的字节位置
+	byteEnd := len(string(runes[:runeStart+len([]rune(buffer))]))
+	return buffer, byteEnd, nil
 }
 
 // tokenizeLine 将一行 tokenize
