@@ -646,6 +646,18 @@ func (s *HaveIntensionalSetStmt) ToLatexString() string {
 	return builder.String()
 }
 
+func (s *HaveCartSetStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("\\begin{definition}[Set Exist By Axioms of Set Theory]")
+	builder.WriteString("We have a set: ")
+	builder.WriteString(s.Name)
+	builder.WriteString(" = ")
+	builder.WriteString(s.CartObj.ToLatexString())
+	builder.WriteString(".\n")
+	builder.WriteString("\\end{definition}")
+	return builder.String()
+}
+
 func (s *HaveSetFnStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("\\begin{definition}[Function Exist By Axioms of Set Theory]")

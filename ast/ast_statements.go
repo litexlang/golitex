@@ -483,3 +483,10 @@ type ProveInRangeStmt struct {
 
 	Line uint
 }
+
+type HaveCartSetStmt struct {
+	Name    string
+	CartObj FnObj
+
+	Line uint
+}

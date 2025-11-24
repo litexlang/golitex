@@ -62,10 +62,6 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 		return e.in_setDefinedByReplacement_postProcess(setDefinedByReplacement)
 	}
 
-	if cart, ok := fact.Params[1].(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(cart.FnHead, glob.KeywordCart) {
-		return e.in_cart_postProcess(fact)
-	}
-
 	return glob.TrueRet("")
 }
 
@@ -174,8 +170,8 @@ func (e *Env) inFactPostProcess_InFnTemplate(fact *ast.SpecFactStmt) (bool, glob
 	return true, glob.TrueRet("")
 }
 
-// 传入 x $in cart(x1, x2, ..., xn)
-func (e *Env) in_cart_postProcess(fact *ast.SpecFactStmt) glob.GlobRet {
+// 传入 x = cart(x1, x2, ..., xn)
+func (e *Env) equalFactPostProcess_cart(fact *ast.SpecFactStmt) glob.GlobRet {
 	cart, ok := fact.Params[1].(*ast.FnObj)
 	if !ok {
 		return glob.ErrRet(fmt.Errorf("expected cart to be FnObj, got %T", fact.Params[1]))

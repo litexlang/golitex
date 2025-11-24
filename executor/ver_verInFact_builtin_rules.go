@@ -25,14 +25,6 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 		return NewExecErr(fmt.Sprintf("invalid number of parameters for in fact: %d", len(stmt.Params)))
 	}
 
-	// if asFcFn, ok := stmt.Params[0].(*ast.FcFn); ok {
-	// 	if ast.IsAtomObjAndEqualToStr(asFcFn.FnHead, glob.KeywordEval) {
-	// 		newParam := asFcFn.Params[0]
-	// 		newFact := ast.NewSpecFactStmt(stmt.TypeEnum, stmt.PropName, []ast.Fc{newParam, stmt.Params[1]}, stmt.Line)
-	// 		return ver.inFactBuiltinRules(newFact, state)
-	// 	}
-	// }
-
 	if stmt.TypeEnum == ast.FalsePure {
 		return ver.falseInFactBuiltinRules(stmt, state)
 	}
@@ -233,6 +225,11 @@ func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state *VerState) E
 		ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordComplex) ||
 		ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordNPos)
 	if ok {
+		return ver.processOkMsg(state, stmt.String(), "%s is a builtin set", stmt.Params[0])
+	}
+
+	// 如果它是 cart(...)，直接返回true
+	if ast.IsFn_WithHeadName(stmt.Params[0], glob.KeywordCart) {
 		return ver.processOkMsg(state, stmt.String(), "%s is a builtin set", stmt.Params[0])
 	}
 

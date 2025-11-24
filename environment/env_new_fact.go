@@ -393,6 +393,14 @@ func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, glob.Glob
 		return false, ret
 	}
 
+	// postprocess for cart: if x = cart(x1, x2, ..., xn)
+	if cart, ok := fact.Params[1].(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(cart.FnHead, glob.KeywordCart) {
+		ret = env.equalFactPostProcess_cart(fact)
+		if ret.IsErr() {
+			return false, ret
+		}
+	}
+
 	return true, glob.TrueRet("")
 }
 
