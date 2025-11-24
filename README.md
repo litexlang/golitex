@@ -30,15 +30,11 @@ _– Leonardo da Vinci_
 
 **Warning: Litex is still in beta. The syntax and semantics are subject to change. There might be some bugs and inconsistencies. You should not use Litex in any production environments yet.**
 
-Litex([website](https://litexlang.com)) is a simple open-source formal language, learnable in 2 hours. It expresses mathematics as code, ensuring rigorous correctness while staying close to natural language. ([Star the repo!](https://github.com/litexlang/golitex)). 
+Litex ([website](https://litexlang.com)) is a simple open-source formal language, making mathematical thinking more approachable for *everyone*. It expresses mathematics as code, ensuring rigorous correctness while staying close to natural language. ([Star the repo!](https://github.com/litexlang/golitex)) With just one to two hours of learning the fundamentals, you can write 10-20 lines of code that solve interesting mathematical problems with verified correctness. 
 
-Mathematics builds on simple foundations: a few axioms and inference rules create infinitely rich worlds. Finding solutions requires creativity, but verifying correctness is intuitive—we check which facts lead to each statement.
+How does Litex work? It achieves its simplicity by imitating the way people reason and the way how math works. Mathematics builds on simple foundations: a few axioms and inference rules create infinitely rich worlds. Finding solutions requires creativity, but verifying correctness is intuitive—we check which facts lead to each statement.
 
-Litex implements these simple rules in code, making math as readable as LaTeX while maintaining formal rigor. Its close-to-natural syntax means users often forget they're using a formal language.
-
-Why does this matter for AI? As AIs generate content at scale, we need verifiable reasoning—especially for scientific exploration and safe AI agents. Formal languages like Litex enable computers to verify reasoning strictly and quickly, bridging human creativity with AI capabilities, or allowing AIs to enhance reasoning capability by themselves, just like how AlphaZero enhances itself in Go. There are more and more AI researchers start to use formal language as a tool for their work, especially safe AI, AI scientific exploration etc, but they do not really understand their code because learning curve of traditional formal languages is too high. 
-
-Litex will not only solve AI researchers' problem, but also make formal languages accessible to ANYONE.
+Litex implements these simple rules in code, making math as readable as LaTeX while maintaining formal rigor. Its close-to-natural syntax means users often forget they're using a formal language, lowering the barrier of formal reasoning by 10x compared with traditional formal languages.
 
 ## Why Litex?
 
@@ -46,7 +42,7 @@ _Our intent was to create a pleasant computing environment (Unix) for ourselves 
 
 _- Dennis Ritchie_
 
-Making Litex intuitive to both humans and AI is Litex's core mission. We want people feel happy using Litex. Just like how Python lowers the barrier of programming by 10x compared with C/C++, Litex lowers the barrier of formal reasoning by 10x compared with previous formal languages like Lean. Here is an example:
+Making Litex intuitive to both humans and AI is Litex's core mission. We want people feel happy using Litex. Here is an example:
 
 <table style="border-collapse: collapse; width: 100%; font-size: 12px">
   <tr>
@@ -90,11 +86,20 @@ Making Litex intuitive to both humans and AI is Litex's core mission. We want pe
   </tr>
 </table>
 
+Just like how Python lowers the barrier of programming by 10x compared with C/C++, Litex lowers the barrier of formal reasoning by 10x compared with previous formal languages like Lean. 
+
 While Lean 4 is a powerful and rigorous proof assistant ideal, it requires months of training and years of experience to master. Litex takes a different approach: prioritizing accessibility and ease of use, enabling even beginners to formalize naive tasks like multivariate equations in minutes.
 
 Since each Litex sentence corresponds directly to an expression in everyday mathematical language, and since it is supported by set theory (ZFC) and basic logic (not, forall, exist, or), Litex does not sacrifice any rigor. So please do not think about Litex using the mindset of traditional formal languages. Instead, imagine yourself as a college student or even a high school student who has a basic understanding of set theory — regardless of whether you like Litex or are skeptical of it.
 
-*In summary, Litex is a piece of software that imitates the way people think when they verify mathematics in everyday reasoning, using a small number of straightforward rules.* For example, if it sees “24 * 25 = 600,” it knows that a calculation needs to be performed. If it sees statements like “Every person will die” and “Socrates is a person,” it uses pattern matching and substitution: it substitutes Socrates into the statement “Every person will die” and checks whether Socrates satisfies the condition “is a person.” If so, it concludes that Socrates will also die. Along with other extremely common rules, Litex can verify complex mathematical statements with ease.
+*In summary, Litex is a piece of software that imitates the way people think when they verify mathematics in everyday reasoning, using a small number of straightforward rules.* 
+
+## Litex
+
+Why does this matter for AI? As AIs generate content at scale, we need verifiable reasoning—especially for scientific exploration and safe AI agents. Formal languages like Litex enable computers to verify reasoning strictly and quickly, bridging human creativity with AI capabilities, or allowing AIs to enhance reasoning capability by themselves, just like how AlphaZero enhances itself in Go. There are more and more AI researchers start to use formal language as a tool for their work, especially safe AI, AI scientific exploration etc, but they do not really understand their code because learning curve of traditional formal languages is too high. 
+
+Litex will not only solve AI researchers' problem, but also make formal languages accessible to ANYONE.
+
 
 ## Our Mission
 

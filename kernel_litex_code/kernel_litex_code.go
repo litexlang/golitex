@@ -744,6 +744,8 @@ fn cart_prod(index_set set, family fn (index_set) set) set
 
 know forall index_set set, family fn (index_set) set: $is_cart_prod(cart_prod(index_set, family))
 
+know forall index_set set, family fn (index_set) set: index_set_of_cart_prod(cart_prod(index_set, family)) = index_set
+
 know forall index_set set, family fn (index_set) set, a index_set: cart_prod_proj(cart_prod(index_set, family), a) = family(a)
 
 know:
