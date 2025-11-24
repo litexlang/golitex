@@ -299,6 +299,16 @@ func (ver *Verifier) falseInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerS
 		return verRet
 	}
 
+	// 如果你是数字，那么必须要真的长成自然数的形状，才是自然数，否则不行
+	// 也就是说，如果数字字面上看起来不像自然数（是小数、负数或表达式），可以证明它不在自然数中
+	verRet = ver.litNumNotInNaturalByLiteralShape(stmt, state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsTrue() {
+		return verRet
+	}
+
 	return NewExecUnknown("")
 }
 
@@ -539,4 +549,32 @@ func (ver *Verifier) getRetSetOfFcFnByUsingItsFnT(fcFn *ast.FnObj) (ast.Obj, err
 	}
 
 	return instRetSet, nil
+}
+
+func (ver *Verifier) litNumNotInNaturalByLiteralShape(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	// 检查是否是 not x $in N 的形式
+	if !ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordNatural) {
+		return NewExecUnknown("")
+	}
+
+	// 检查字面上是否是自然数形状（必须是 AtomObj 且字面上看起来就是自然数）
+	// 如果字面上就是自然数形状（比如 "5"），不能证明它不在自然数中
+	if ast.IsFcLiterallyNatNumber(stmt.Params[0]) {
+		// 字面上是自然数，不能证明它不在自然数中
+		return NewExecUnknown("")
+	}
+
+	// 尝试检查是否是数字字面量表达式
+	_, ok, err := ast.MakeObjIntoNumLitExpr(stmt.Params[0])
+	if err != nil {
+		return NewExecErr(err.Error())
+	}
+	if !ok {
+		// 不是数字字面量，返回 unknown
+		return NewExecUnknown("")
+	}
+
+	// 如果是数字表达式但字面上不是自然数形状（小数、负数或表达式），可以证明它不在自然数中
+	msg := fmt.Sprintf("%s is literally not a natural number (not in the shape of natural number)", stmt.Params[0])
+	return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
 }
