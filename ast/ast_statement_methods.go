@@ -51,12 +51,12 @@ func MergeOuterInnerUniFacts(outer *UniFactStmt, inner *UniFactStmt) *UniFactStm
 }
 
 func (defStmt *DefPropStmt) Make_PropToIff_IffToProp() (*UniFactStmt, *UniFactStmt, error) {
-	propSpecFactParams := []Fc{}
+	propSpecFactParams := []Obj{}
 	for _, param := range defStmt.DefHeader.Params {
-		propSpecFactParams = append(propSpecFactParams, FcAtom(param))
+		propSpecFactParams = append(propSpecFactParams, AtomObj(param))
 	}
 
-	propSpecFact := NewSpecFactStmt(TruePure, FcAtom(defStmt.DefHeader.Name), propSpecFactParams, defStmt.Line)
+	propSpecFact := NewSpecFactStmt(TruePure, AtomObj(defStmt.DefHeader.Name), propSpecFactParams, defStmt.Line)
 
 	// prop to iff
 	propToIffDomFacts := []FactStmt{propSpecFact}
@@ -75,12 +75,12 @@ func (defStmt *DefPropStmt) Make_PropToIff_IffToProp() (*UniFactStmt, *UniFactSt
 }
 
 func (defStmt *DefPropStmt) IffToPropUniFact() *UniFactStmt {
-	propSpecFactParams := []Fc{}
+	propSpecFactParams := []Obj{}
 	for _, param := range defStmt.DefHeader.Params {
-		propSpecFactParams = append(propSpecFactParams, FcAtom(param))
+		propSpecFactParams = append(propSpecFactParams, AtomObj(param))
 	}
 
-	propSpecFact := NewSpecFactStmt(TruePure, FcAtom(defStmt.DefHeader.Name), propSpecFactParams, defStmt.Line)
+	propSpecFact := NewSpecFactStmt(TruePure, AtomObj(defStmt.DefHeader.Name), propSpecFactParams, defStmt.Line)
 
 	IffToPropDomFacts := []FactStmt{}
 	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.DomFacts...)
@@ -92,24 +92,24 @@ func (defStmt *DefPropStmt) IffToPropUniFact() *UniFactStmt {
 }
 
 func (defStmt *DefPropStmt) ToSpecFact() *SpecFactStmt {
-	propSpecFactParams := []Fc{}
+	propSpecFactParams := []Obj{}
 	for _, param := range defStmt.DefHeader.Params {
 		// propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.EmptyPkg, param))
-		propSpecFactParams = append(propSpecFactParams, FcAtom(param))
+		propSpecFactParams = append(propSpecFactParams, AtomObj(param))
 	}
 
-	propSpecFact := NewSpecFactStmt(TruePure, FcAtom(defStmt.DefHeader.Name), propSpecFactParams, defStmt.Line)
+	propSpecFact := NewSpecFactStmt(TruePure, AtomObj(defStmt.DefHeader.Name), propSpecFactParams, defStmt.Line)
 
 	return propSpecFact
 }
 
 func (defStmt *DefExistPropStmt) ToSpecFact() *SpecFactStmt {
-	propSpecFactParams := []Fc{}
+	propSpecFactParams := []Obj{}
 	for _, param := range defStmt.DefBody.DefHeader.Params {
-		propSpecFactParams = append(propSpecFactParams, FcAtom(param))
+		propSpecFactParams = append(propSpecFactParams, AtomObj(param))
 	}
 
-	propSpecFact := NewSpecFactStmt(TruePure, FcAtom(defStmt.DefBody.DefHeader.Name), propSpecFactParams, defStmt.Line)
+	propSpecFact := NewSpecFactStmt(TruePure, AtomObj(defStmt.DefBody.DefHeader.Name), propSpecFactParams, defStmt.Line)
 
 	return propSpecFact
 }
@@ -119,7 +119,7 @@ func (stmt *SpecFactStmt) ReverseParameterOrder() (*SpecFactStmt, error) {
 		return nil, fmt.Errorf("reverseParameterOrder: expected 2 params, but got %d", len(stmt.Params))
 	}
 
-	newParams := []Fc{stmt.Params[1], stmt.Params[0]}
+	newParams := []Obj{stmt.Params[1], stmt.Params[0]}
 
 	return NewSpecFactStmt(stmt.TypeEnum, stmt.PropName, newParams, stmt.Line), nil
 }
@@ -144,30 +144,30 @@ func (stmt *SpecFactStmt) IsBuiltinProp_ExceptEqual() bool {
 // 	return string(stmt.PropName) == glob.KeywordProveByMathInduction
 // }
 
-func NewInFact(param string, paramSet Fc) *SpecFactStmt {
-	return NewSpecFactStmt(TruePure, FcAtom(glob.KeywordIn), []Fc{FcAtom(param), paramSet}, glob.InnerGenLine)
+func NewInFact(param string, paramSet Obj) *SpecFactStmt {
+	return NewSpecFactStmt(TruePure, AtomObj(glob.KeywordIn), []Obj{AtomObj(param), paramSet}, glob.InnerGenLine)
 }
 
-func NewInFactWithParamFc(param Fc, paramSet Fc) *SpecFactStmt {
-	return NewSpecFactStmt(TruePure, FcAtom(glob.KeywordIn), []Fc{param, paramSet}, glob.InnerGenLine)
+func NewInFactWithParamFc(param Obj, paramSet Obj) *SpecFactStmt {
+	return NewSpecFactStmt(TruePure, AtomObj(glob.KeywordIn), []Obj{param, paramSet}, glob.InnerGenLine)
 }
 
-func NewInFactWithFc(param Fc, paramSet Fc) *SpecFactStmt {
-	return NewSpecFactStmt(TruePure, FcAtom(glob.KeywordIn), []Fc{param, paramSet}, glob.InnerGenLine)
+func NewInFactWithFc(param Obj, paramSet Obj) *SpecFactStmt {
+	return NewSpecFactStmt(TruePure, AtomObj(glob.KeywordIn), []Obj{param, paramSet}, glob.InnerGenLine)
 }
 
-func IsFnSet(fc Fc) bool {
-	fcAsFcFn, ok := fc.(*FcFn)
+func IsFnSet(fc Obj) bool {
+	fcAsFcFn, ok := fc.(*FnObj)
 	if !ok {
 		return false
 	}
 
-	fcHeadAsFcFn, ok := fcAsFcFn.FnHead.(*FcFn)
+	fcHeadAsFcFn, ok := fcAsFcFn.FnHead.(*FnObj)
 	if !ok {
 		return false
 	}
 
-	return IsFcAtomAndEqualToStr(fcHeadAsFcFn.FnHead, glob.KeywordFn)
+	return IsAtomObjAndEqualToStr(fcHeadAsFcFn.FnHead, glob.KeywordFn)
 }
 
 func (stmt *SpecFactStmt) ReverseSpecFactParamsOrder() (*SpecFactStmt, error) {
@@ -175,7 +175,7 @@ func (stmt *SpecFactStmt) ReverseSpecFactParamsOrder() (*SpecFactStmt, error) {
 		return nil, fmt.Errorf("ReverseSpecFactParamsOrder: expected 2 params, but got %d", len(stmt.Params))
 	}
 
-	newParams := []Fc{stmt.Params[1], stmt.Params[0]}
+	newParams := []Obj{stmt.Params[1], stmt.Params[0]}
 	return NewSpecFactStmt(stmt.TypeEnum, stmt.PropName, newParams, stmt.Line), nil
 }
 
@@ -203,14 +203,14 @@ func (defHeader *DefHeader) NewInFacts() []*SpecFactStmt {
 	return facts
 }
 
-func Get_FnTemplate_InFcForm_ParamSetsAndRetSet(fc Fc) ([]Fc, Fc, bool) {
+func Get_FnTemplate_InFcForm_ParamSetsAndRetSet(fc Obj) ([]Obj, Obj, bool) {
 	// given fc must be a function
-	fcAsFcFn, ok := fc.(*FcFn)
+	fcAsFcFn, ok := fc.(*FnObj)
 	if !ok {
 		return nil, nil, false
 	}
 
-	fcAsFcFnHeadAsFcFn, ok := fcAsFcFn.FnHead.(*FcFn)
+	fcAsFcFnHeadAsFcFn, ok := fcAsFcFn.FnHead.(*FnObj)
 	if !ok {
 		return nil, nil, false
 	}
@@ -219,32 +219,32 @@ func Get_FnTemplate_InFcForm_ParamSetsAndRetSet(fc Fc) ([]Fc, Fc, bool) {
 		return nil, nil, false
 	}
 
-	if !IsFcAtomAndEqualToStr(fcAsFcFnHeadAsFcFn.FnHead, glob.KeywordFn) {
+	if !IsAtomObjAndEqualToStr(fcAsFcFnHeadAsFcFn.FnHead, glob.KeywordFn) {
 		return nil, nil, false
 	}
 
-	paramSets := []Fc{}
+	paramSets := []Obj{}
 	paramSets = append(paramSets, fcAsFcFnHeadAsFcFn.Params...)
 
 	return paramSets, fcAsFcFn.Params[0], true
 }
 
-func MakeExistFactParamsSlice(existParams []Fc, paramsInFact []Fc) []Fc {
+func MakeExistFactParamsSlice(existParams []Obj, paramsInFact []Obj) []Obj {
 	lengthOfExistParams := len(existParams)
 
-	factParams := []Fc{}
-	factParams = append(factParams, FcAtom(fmt.Sprintf("%d", lengthOfExistParams)))
+	factParams := []Obj{}
+	factParams = append(factParams, AtomObj(fmt.Sprintf("%d", lengthOfExistParams)))
 	factParams = append(factParams, existParams...)
 	factParams = append(factParams, paramsInFact...)
 
 	return factParams
 }
 
-func GetExistFactExistParamsAndFactParams(stmt *SpecFactStmt) ([]Fc, []Fc) {
-	lengthOfExistParams, _ := strconv.Atoi(string(stmt.Params[0].(FcAtom)))
+func GetExistFactExistParamsAndFactParams(stmt *SpecFactStmt) ([]Obj, []Obj) {
+	lengthOfExistParams, _ := strconv.Atoi(string(stmt.Params[0].(AtomObj)))
 
-	existParams := []Fc{}
-	factParams := []Fc{}
+	existParams := []Obj{}
+	factParams := []Obj{}
 	for i := 1; i < lengthOfExistParams+1; i++ {
 		existParams = append(existParams, stmt.Params[i])
 	}
@@ -256,7 +256,7 @@ func GetExistFactExistParamsAndFactParams(stmt *SpecFactStmt) ([]Fc, []Fc) {
 	return existParams, factParams
 }
 
-func (factStmtSlice FactStmtSlice) InstantiateFact(uniMap map[string]Fc) (FactStmtSlice, error) {
+func (factStmtSlice FactStmtSlice) InstantiateFact(uniMap map[string]Obj) (FactStmtSlice, error) {
 	instantiatedFacts := FactStmtSlice{}
 	for _, fact := range factStmtSlice {
 		instantiatedFact, err := fact.InstantiateFact(uniMap)
@@ -268,26 +268,26 @@ func (factStmtSlice FactStmtSlice) InstantiateFact(uniMap map[string]Fc) (FactSt
 	return instantiatedFacts, nil
 }
 
-func isFcWithFcFnHeadWithName(fc Fc, name string) bool {
-	fcAsFcFn, ok := fc.(*FcFn)
+func isFcWithFcFnHeadWithName(fc Obj, name string) bool {
+	fcAsFcFn, ok := fc.(*FnObj)
 	if !ok {
 		return false
 	}
 
-	fcAsFcFnHeadAsFcFn, ok := fcAsFcFn.FnHead.(*FcFn)
+	fcAsFcFnHeadAsFcFn, ok := fcAsFcFn.FnHead.(*FnObj)
 	if !ok {
 		return false
 	}
 
-	return IsFcAtomAndEqualToStr(fcAsFcFnHeadAsFcFn.FnHead, name)
+	return IsAtomObjAndEqualToStr(fcAsFcFnHeadAsFcFn.FnHead, name)
 }
 
-func IsFnTemplate_FcFn(fcFn *FcFn) bool {
+func IsFnTemplate_FcFn(fcFn *FnObj) bool {
 	return isFcWithFcFnHeadWithName(fcFn, glob.KeywordFn)
 }
 
-func IsFcAtomEqualToGivenString(fc Fc, name string) bool {
-	fcAtom, ok := fc.(FcAtom)
+func IsFcAtomEqualToGivenString(fc Obj, name string) bool {
+	fcAtom, ok := fc.(AtomObj)
 	if !ok {
 		return false
 	}
@@ -295,13 +295,13 @@ func IsFcAtomEqualToGivenString(fc Fc, name string) bool {
 	return string(fcAtom) == name
 }
 
-func TransformEnumToUniFact(setName Fc, enumFcs []Fc) (*UniFactStmt, []*SpecFactStmt, []*SpecFactStmt) {
-	freeObjName := FcAtom(glob.RandomString(4))
+func TransformEnumToUniFact(setName Obj, enumFcs []Obj) (*UniFactStmt, []*SpecFactStmt, []*SpecFactStmt) {
+	freeObjName := AtomObj(glob.RandomString(4))
 	equalFactsInOrFact := []*SpecFactStmt{}
 	itemsInSetFacts := []*SpecFactStmt{}
 	for _, fc := range enumFcs {
-		equalFactsInOrFact = append(equalFactsInOrFact, NewSpecFactStmt(TruePure, FcAtom(glob.KeySymbolEqual), []Fc{freeObjName, fc}, glob.InnerGenLine))
-		itemsInSetFacts = append(itemsInSetFacts, NewSpecFactStmt(TruePure, FcAtom(glob.KeywordIn), []Fc{fc, setName}, glob.InnerGenLine))
+		equalFactsInOrFact = append(equalFactsInOrFact, NewSpecFactStmt(TruePure, AtomObj(glob.KeySymbolEqual), []Obj{freeObjName, fc}, glob.InnerGenLine))
+		itemsInSetFacts = append(itemsInSetFacts, NewSpecFactStmt(TruePure, AtomObj(glob.KeywordIn), []Obj{fc, setName}, glob.InnerGenLine))
 	}
 
 	pairwiseNotEqualFacts := []*SpecFactStmt{}
@@ -310,12 +310,12 @@ func TransformEnumToUniFact(setName Fc, enumFcs []Fc) (*UniFactStmt, []*SpecFact
 			if i == j {
 				continue
 			}
-			pairwiseNotEqualFacts = append(pairwiseNotEqualFacts, NewSpecFactStmt(FalsePure, FcAtom(glob.KeySymbolEqual), []Fc{enumFcs[i], enumFcs[j]}, glob.InnerGenLine))
+			pairwiseNotEqualFacts = append(pairwiseNotEqualFacts, NewSpecFactStmt(FalsePure, AtomObj(glob.KeySymbolEqual), []Obj{enumFcs[i], enumFcs[j]}, glob.InnerGenLine))
 		}
 	}
 
 	orFact := NewOrStmt(equalFactsInOrFact, glob.InnerGenLine)
-	forallItemInSetEqualToOneOfGivenItems := NewUniFact([]string{string(freeObjName)}, []Fc{setName}, []FactStmt{}, []FactStmt{orFact}, glob.InnerGenLine)
+	forallItemInSetEqualToOneOfGivenItems := NewUniFact([]string{string(freeObjName)}, []Obj{setName}, []FactStmt{}, []FactStmt{orFact}, glob.InnerGenLine)
 
 	return forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts
 }
@@ -326,35 +326,51 @@ func (stmt *IntensionalSetStmt) ToEquivalentUniFacts() (*UniFactStmt, *UniFactSt
 		leftDomFacts = append(leftDomFacts, proof)
 	}
 
-	leftUniFact := NewUniFact([]string{stmt.Param}, []Fc{stmt.ParentSet}, leftDomFacts, []FactStmt{NewInFact(stmt.Param, stmt.CurSet)}, glob.InnerGenLine)
+	leftUniFact := NewUniFact([]string{stmt.Param}, []Obj{stmt.ParentSet}, leftDomFacts, []FactStmt{NewInFact(stmt.Param, stmt.CurSet)}, glob.InnerGenLine)
 
 	rightThenFacts := []FactStmt{NewInFact(stmt.Param, stmt.ParentSet)}
 	for _, proof := range stmt.Facts {
 		rightThenFacts = append(rightThenFacts, proof)
 	}
 
-	rightUniFact := NewUniFact([]string{stmt.Param}, []Fc{stmt.CurSet}, []FactStmt{}, rightThenFacts, glob.InnerGenLine)
+	rightUniFact := NewUniFact([]string{stmt.Param}, []Obj{stmt.CurSet}, []FactStmt{}, rightThenFacts, glob.InnerGenLine)
 
 	return leftUniFact, rightUniFact, nil
 }
 
 func (stmt *HaveSetFnStmt) ToDefFnStmt() *DefFnStmt {
-	return NewDefFnStmt(string(stmt.DefHeader.Name), NewFnTStruct(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, FcAtom(glob.KeywordSet), []FactStmt{}, []FactStmt{stmt.ToIntensionalSetStmt()}, stmt.Line), stmt.Line)
+	return NewDefFnStmt(string(stmt.DefHeader.Name), NewFnTStruct(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, AtomObj(glob.KeywordSet), []FactStmt{}, []FactStmt{stmt.ToIntensionalSetStmt()}, stmt.Line), stmt.Line)
 }
 
 func (stmt *HaveSetFnStmt) ToIntensionalSetStmt() *IntensionalSetStmt {
-	params := []Fc{}
+	params := []Obj{}
 	for _, param := range stmt.DefHeader.Params {
-		params = append(params, FcAtom(param))
+		params = append(params, AtomObj(param))
 	}
 
-	fnName := FcAtom(stmt.DefHeader.Name)
-	curSet := NewFcFn(fnName, params)
+	fnName := AtomObj(stmt.DefHeader.Name)
+	curSet := NewFnObj(fnName, params)
 	intensionalSetStmt := NewIntensionalSetStmt(curSet, stmt.Param, stmt.ParentSet, stmt.Proofs, stmt.Line)
 
 	return intensionalSetStmt
 }
 
+func (stmt *ProveInRangeSetStmt) UniFact() *UniFactStmt {
+	return NewUniFact([]string{stmt.Param}, []Obj{stmt.IntensionalSet}, []FactStmt{}, stmt.ThenFacts, stmt.Line)
+}
+
 func (stmt *ProveInRangeStmt) UniFact() *UniFactStmt {
-	return NewUniFact([]string{stmt.Param}, []Fc{stmt.IntensionalSet}, []FactStmt{}, stmt.ThenFacts, stmt.Line)
+	params := []string{stmt.param}
+	paramSets := []Obj{AtomObj(glob.KeywordInteger)}
+
+	// Build dom facts: start <= param < end, plus user-provided dom facts
+	domFacts := []FactStmt{
+		NewSpecFactStmt(TruePure, AtomObj(glob.KeySymbolLessEqual), []Obj{stmt.start, AtomObj(stmt.param)}, stmt.Line),
+		NewSpecFactStmt(TruePure, AtomObj(glob.KeySymbolLess), []Obj{AtomObj(stmt.param), stmt.end}, stmt.Line),
+	}
+	// Add user-provided dom facts
+	domFacts = append(domFacts, stmt.DomFactsOrNil...)
+
+	thenFacts := stmt.ThenFacts
+	return NewUniFact(params, paramSets, domFacts, thenFacts, stmt.Line)
 }

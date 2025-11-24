@@ -52,7 +52,7 @@ func (l *DefFnStmt) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordFn)
 	builder.WriteString(" ")
-	builder.WriteString(NewDefHeader(FcAtom(l.Name), l.FnTemplate.Params, l.FnTemplate.ParamSets).StringWithoutColonAtEnd())
+	builder.WriteString(NewDefHeader(AtomObj(l.Name), l.FnTemplate.Params, l.FnTemplate.ParamSets).StringWithoutColonAtEnd())
 	builder.WriteString(" ")
 	builder.WriteString(l.FnTemplate.RetSet.String())
 	if len(l.FnTemplate.DomFacts) > 0 {
@@ -133,6 +133,7 @@ func (s *HaveObjStStmt) InlineString() string {
 }
 
 func (s *ProveInEachCaseStmt) InlineString() string { return s.String() }
+func (s *ProveCaseByCaseStmt) InlineString() string { return s.String() }
 func (s *KnowPropStmt) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordKnow)
@@ -195,6 +196,7 @@ func (s *ProveByEnumStmt) InlineString() string                 { panic("") }
 func (s *HaveObjInNonEmptySetStmt) InlineString() string        { panic("") }
 func (s *HaveEnumSetStmt) InlineString() string                 { panic("") }
 func (s *HaveIntensionalSetStmt) InlineString() string          { panic("") }
+func (s *HaveCartSetStmt) InlineString() string                 { panic("") }
 func (s *HaveSetFnStmt) InlineString() string                   { panic("") }
 func (s *HaveSetDefinedByReplacementStmt) InlineString() string { panic("") }
 func (s *NamedUniFactStmt) InlineString() string                { panic("") }
@@ -316,11 +318,19 @@ func (s *HaveFnStmt) InlineString() string {
 	return "TODO"
 }
 
+func (s *HaveFnCaseByCaseStmt) InlineString() string {
+	return s.String()
+}
+
 func (s *MarkdownStmt) InlineString() string {
 	return s.Markdown
 }
 
 func (s *ClaimIffStmt) InlineString() string {
+	return "TODO"
+}
+
+func (s *ProveInRangeSetStmt) InlineString() string {
 	return "TODO"
 }
 
@@ -349,11 +359,7 @@ func (s *DefAlgoStmt) InlineString() string {
 }
 
 func (s *EvalStmt) InlineString() string {
-	strSlice := make([]string, len(s.FcsToEval))
-	for i, fc := range s.FcsToEval {
-		strSlice[i] = fc.String()
-	}
-	return fmt.Sprintf("%s %s", glob.KeywordEval, strings.Join(strSlice, ", "))
+	return fmt.Sprintf("%s(%s)", glob.KeywordEval, s.FcsToEval.String())
 }
 
 func (s *DefProveAlgoStmt) InlineString() string {
@@ -365,5 +371,17 @@ func (s *ByStmt) InlineString() string {
 }
 
 func (s *ProveAlgoReturnStmt) InlineString() string {
+	return s.String()
+}
+
+func (s *PrintStmt) InlineString() string {
+	return s.String()
+}
+
+func (s *HelpStmt) InlineString() string {
+	return s.String()
+}
+
+func (s *HaveFnEqualCaseByCaseStmt) InlineString() string {
 	return s.String()
 }

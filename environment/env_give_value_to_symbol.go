@@ -19,37 +19,37 @@ import (
 	cmp "golitex/cmp"
 )
 
-func (env *Env) ReplaceSymbolWithValue(fc ast.Fc) (bool, ast.Fc) {
-	if cmp.IsNumLitFc(fc) {
+func (env *Env) ReplaceSymbolWithValue(fc ast.Obj) (bool, ast.Obj) {
+	if cmp.IsNumLitObj(fc) {
 		return false, fc
 	}
 
 	switch asFc := fc.(type) {
-	case ast.FcAtom:
+	case ast.AtomObj:
 		return env.replaceFcAtomWithValue(asFc)
-	case *ast.FcFn:
+	case *ast.FnObj:
 		return env.replaceFcFnWithValue(asFc)
 	}
 	panic("")
 }
 
-func (env *Env) replaceFcFnWithValue(fc *ast.FcFn) (bool, ast.Fc) {
+func (env *Env) replaceFcFnWithValue(fc *ast.FnObj) (bool, ast.Obj) {
 	if symbolValue := env.GetSymbolSimplifiedValue(fc); symbolValue != nil {
 		return true, symbolValue
 	}
 
 	replaced := false
-	newParams := make([]ast.Fc, len(fc.Params))
+	newParams := make([]ast.Obj, len(fc.Params))
 	for i, param := range fc.Params {
 		var newReplaced bool
 		newReplaced, newParams[i] = env.ReplaceSymbolWithValue(param)
 
 		replaced = replaced || newReplaced
 	}
-	return replaced, ast.NewFcFn(fc.FnHead, newParams)
+	return replaced, ast.NewFnObj(fc.FnHead, newParams)
 }
 
-func (env *Env) replaceFcAtomWithValue(fc ast.FcAtom) (bool, ast.Fc) {
+func (env *Env) replaceFcAtomWithValue(fc ast.AtomObj) (bool, ast.Obj) {
 	symbolValue := env.GetSymbolSimplifiedValue(fc)
 	if symbolValue == nil {
 		return false, fc
@@ -59,7 +59,7 @@ func (env *Env) replaceFcAtomWithValue(fc ast.FcAtom) (bool, ast.Fc) {
 }
 
 func (env *Env) ReplaceFcInSpecFactWithValue(fact *ast.SpecFactStmt) (bool, *ast.SpecFactStmt) {
-	newParams := make([]ast.Fc, len(fact.Params))
+	newParams := make([]ast.Obj, len(fact.Params))
 	replaced := false
 	for i, param := range fact.Params {
 		var newReplaced bool

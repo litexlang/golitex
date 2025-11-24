@@ -17,21 +17,20 @@ package litex_parser
 import (
 	"fmt"
 	ast "golitex/ast"
-	glob "golitex/glob"
 	num "golitex/number"
 	"strings"
 	"testing"
 )
 
-func sourceCodeToFc(sourceCode ...string) ([]ast.Fc, error) {
+func sourceCodeToObj(sourceCode ...string) ([]ast.Obj, error) {
 	blocks, err := makeTokenBlocks(sourceCode)
 	if err != nil {
 		return nil, err
 	}
 
-	ret := []ast.Fc{}
+	ret := []ast.Obj{}
 	for _, block := range blocks {
-		cur, err := block.RawFc()
+		cur, err := block.RawObj()
 		if err != nil {
 			return nil, err
 		}
@@ -47,17 +46,17 @@ func TestOrder(t *testing.T) {
 		"x + x",
 		"2*x",
 	}
-	fcSlice := []ast.Fc{}
+	objSlice := []ast.Obj{}
 	for _, code := range sourceCode {
-		fc, err := sourceCodeToFc(code)
+		obj, err := sourceCodeToObj(code)
 		if err != nil {
 			t.Fatal(err)
 		}
-		fcSlice = append(fcSlice, fc...)
+		objSlice = append(objSlice, obj...)
 	}
 
-	for _, fc := range fcSlice {
-		bracketedStr := num.FcStringForParseAndExpandPolynomial(fc)
+	for _, obj := range objSlice {
+		bracketedStr := num.ObjStringForParseAndExpandPolynomial(obj)
 		fmt.Println(bracketedStr)
 		ploy := num.ParseAndExpandPolynomial(bracketedStr)
 		var parts []string
@@ -77,36 +76,16 @@ func TestFcDot(t *testing.T) {
 		"f(x.y).z (a.b)", // 这里不报错，其实是有问题的
 		"f(1.2).z",
 	}
-	fcSlice := []ast.Fc{}
+	objSlice := []ast.Obj{}
 	for _, code := range sourceCode {
-		fc, err := sourceCodeToFc(code)
+		obj, err := sourceCodeToObj(code)
 		if err != nil {
 			t.Fatal(err)
 		}
-		fcSlice = append(fcSlice, fc...)
+		objSlice = append(objSlice, obj...)
 	}
 
-	for _, fc := range fcSlice {
-		fmt.Println(fc)
-	}
-}
-
-func TestColonColon(t *testing.T) {
-	sourceCode := []string{
-		"a::b",
-		"a::b::c::d",
-		"+",
-		"=",
-		"1",
-	}
-	glob.CurrentPkg = "pkg1"
-	for _, code := range sourceCode {
-		fc, err := ParseSourceCodeGetFc(code)
-		if err != nil {
-			t.Fatal(err)
-		}
-		fmt.Println(fc.String())
-		// fmt.Println(fc.(ast.FcAtom).PkgName)
-		fmt.Println(fc.(ast.FcAtom))
+	for _, obj := range objSlice {
+		fmt.Println(obj)
 	}
 }

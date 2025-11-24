@@ -31,10 +31,8 @@ func (ver *Verifier) verOrStmt(stmt *ast.OrStmt, state *VerState) ExecRet {
 			return verRet
 		}
 		if verRet.IsTrue() {
-			if state.WithMsg {
-				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is true when all others facts in the or statement are false", stmt.Facts[i]))
-			}
-			return NewExecTrue("")
+			msg := fmt.Sprintf("%s is true when all others facts in the or statement are false", stmt.Facts[i])
+			return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
 		}
 	}
 	return NewExecUnknown("")
@@ -48,9 +46,9 @@ func (ver *Verifier) verFactAtIndex_WhenOthersAreFalse(facts []*ast.SpecFactStmt
 		if j == i {
 			continue
 		}
-		err := ver.Env.NewFact(facts[j].ReverseTrue())
-		if err != nil {
-			return NewExecErr(err.Error())
+		ret := ver.Env.NewFact(facts[j].ReverseTrue())
+		if ret.IsErr() {
+			return NewExecErr(ret.String())
 		}
 	}
 

@@ -17,22 +17,22 @@ package litex_ast
 type FactStmtSlice []FactStmt
 type StmtSlice []Stmt
 type SpecFactPtrSlice []*SpecFactStmt
-type StrSlice []string
-type FcSlice []Fc
+type StrSlice []string // 在定义的时候，用string而不是 atom 是有道理的，因为atom可能引入::，而string不会
+type ObjSlice []Obj
 type ReversibleFacts []Spec_OrFact
 
 type DefLetStmt struct {
 	Objs    StrSlice
-	ObjSets FcSlice
+	ObjSets ObjSlice
 	Facts   FactStmtSlice
 
 	Line uint
 }
 
 type DefHeader struct {
-	Name      FcAtom
+	Name      AtomObj
 	Params    StrSlice
-	ParamSets FcSlice
+	ParamSets ObjSlice
 }
 
 type DefPropStmt struct {
@@ -58,7 +58,7 @@ type DefExistPropStmtBody struct {
 type DefExistPropStmt struct {
 	DefBody        *DefExistPropStmtBody
 	ExistParams    StrSlice
-	ExistParamSets FcSlice
+	ExistParamSets ObjSlice
 
 	Line uint
 }
@@ -72,7 +72,7 @@ type DefFnStmt struct {
 
 type UniFactStmt struct {
 	Params    StrSlice
-	ParamSets FcSlice
+	ParamSets ObjSlice
 	DomFacts  FactStmtSlice
 	ThenFacts FactStmtSlice
 
@@ -88,8 +88,8 @@ type UniFactWithIffStmt struct {
 
 type SpecFactStmt struct {
 	TypeEnum SpecFactEnum
-	PropName FcAtom
-	Params   FcSlice
+	PropName AtomObj
+	Params   ObjSlice
 
 	Line uint
 }
@@ -108,9 +108,9 @@ type ClaimProveByContradictionStmt struct {
 }
 
 type ClaimPropStmt struct {
-	Prop    *DefPropStmt
-	Proofs  StmtSlice
-	IsProve bool
+	Prop   *DefPropStmt
+	Proofs StmtSlice
+	// IsProve bool
 
 	Line uint
 }
@@ -131,7 +131,7 @@ type KnowPropStmt struct {
 type ClaimExistPropStmt struct {
 	ExistPropWithoutDom *DefExistPropStmt
 	Proofs              StmtSlice
-	HaveObj             FcSlice
+	HaveObj             ObjSlice
 
 	Line uint
 }
@@ -145,6 +145,14 @@ type HaveObjStStmt struct {
 
 type ProveInEachCaseStmt struct {
 	OrFact    *OrStmt
+	ThenFacts FactStmtSlice
+	Proofs    []StmtSlice
+
+	Line uint
+}
+
+type ProveCaseByCaseStmt struct {
+	CaseFacts SpecFactPtrSlice
 	ThenFacts FactStmtSlice
 	Proofs    []StmtSlice
 
@@ -173,8 +181,8 @@ type ProveStmt struct {
 // s := {1,2,3} 是枚举语法糖，等价于 forall x s: x = 1 or x = 2 or x = 3; 1 $in s; 2 $in s; 3 $in s;
 // s := {} 表示 这是个空集
 type EnumStmt struct {
-	CurSet Fc
-	Items  FcSlice
+	CurSet Obj
+	Items  ObjSlice
 
 	Line uint
 }
@@ -186,9 +194,9 @@ type ImportFileStmt struct {
 }
 
 type IntensionalSetStmt struct {
-	CurSet    Fc
+	CurSet    Obj
 	Param     string
-	ParentSet Fc
+	ParentSet Obj
 	Facts     SpecFactPtrSlice
 
 	Line uint
@@ -204,7 +212,7 @@ type ProveByEnumStmt struct {
 
 type HaveObjInNonEmptySetStmt struct {
 	Objs    StrSlice
-	ObjSets FcSlice
+	ObjSets ObjSlice
 
 	Line uint
 }
@@ -226,7 +234,7 @@ type HaveIntensionalSetStmt struct {
 type HaveSetFnStmt struct {
 	DefHeader *DefHeader
 	Param     string
-	ParentSet Fc
+	ParentSet Obj
 	Proofs    SpecFactPtrSlice
 
 	Line uint
@@ -236,9 +244,9 @@ type HaveSetFnStmt struct {
 // 还需要对 enum 也有这样的 fn
 type HaveSetDefinedByReplacementStmt struct {
 	Name     string
-	DomSet   Fc
-	RangeSet Fc
-	PropName FcAtom
+	DomSet   Obj
+	RangeSet Obj
+	PropName AtomObj
 
 	Line uint
 }
@@ -250,7 +258,7 @@ type NamedUniFactStmt struct {
 }
 
 type EqualsFactStmt struct {
-	Params FcSlice
+	Params ObjSlice
 
 	Line uint
 }
@@ -277,8 +285,8 @@ type FnTemplateDefStmt struct {
 
 type FnTStruct struct {
 	Params    StrSlice
-	ParamSets FcSlice
-	RetSet    Fc
+	ParamSets ObjSlice
+	RetSet    Obj
 	DomFacts  FactStmtSlice
 	ThenFacts FactStmtSlice
 
@@ -298,15 +306,15 @@ type InlineFactsStmt struct {
 type ProveByInductionStmt struct {
 	Fact  *SpecFactStmt
 	Param string
-	Start Fc
+	Start Obj
 
 	Line uint
 }
 
 type HaveObjEqualStmt struct {
 	ObjNames    StrSlice
-	ObjEqualTos FcSlice
-	ObjSets     FcSlice
+	ObjEqualTos ObjSlice
+	ObjSets     ObjSlice
 
 	Line uint
 }
@@ -315,24 +323,44 @@ type HaveObjEqualStmt struct {
 // TODO 删去
 type HaveFnEqualStmt struct {
 	DefHeader *DefHeader
-	RetSet    Fc
-	EqualTo   Fc
+	RetSet    Obj
+	EqualTo   Obj
+
+	Line uint
+}
+
+type HaveFnEqualCaseByCaseStmt struct {
+	DefHeader         *DefHeader
+	RetSet            Obj
+	CaseByCaseFacts   SpecFactPtrSlice
+	CaseByCaseEqualTo ObjSlice
 
 	Line uint
 }
 
 type HaveFnLiftStmt struct {
 	FnName                     string
-	Opt                        Fc
-	DomainOfEachParamOfGivenFn FcSlice
+	Opt                        Obj
+	DomainOfEachParamOfGivenFn ObjSlice
 
 	Line uint
 }
 
+// 貌似没必要：直接证明 exist xx st 满足fn条件就行。这样的意义是，因为有时候我要证明一个东西，我是要用prove_by_induction这样的特殊的证明方式去证明的。这里包括 case by case, by enum, by induction 等等。所以与其开个新的have_fn_case_by_case，不如直接证明 exist xx st 满足fn条件这样更general的接口更合理
 type HaveFnStmt struct {
 	DefFnStmt        *DefFnStmt
 	Proofs           StmtSlice
-	HaveObjSatisfyFn Fc
+	HaveObjSatisfyFn Obj
+
+	Line uint
+}
+
+// 貌似没必要：直接证明 exist xx st 满足fn条件就行。这样的意义是，因为有时候我要证明一个东西，我是要用prove_by_induction这样的特殊的证明方式去证明的。这里包括 case by case, by enum, by induction 等等。所以与其开个新的have_fn_case_by_case，不如直接证明 exist xx st 满足fn条件这样更general的接口更合理
+type HaveFnCaseByCaseStmt struct {
+	DefFnStmt       *DefFnStmt
+	CaseByCaseFacts SpecFactPtrSlice
+	Proofs          []StmtSlice
+	EqualToObjs     []Obj
 
 	Line uint
 }
@@ -343,11 +371,11 @@ type MarkdownStmt struct {
 	Line uint
 }
 
-type ProveInRangeStmt struct {
+type ProveInRangeSetStmt struct {
 	Start          int64
 	End            int64
 	Param          string
-	IntensionalSet Fc
+	IntensionalSet Obj
 	ThenFacts      FactStmtSlice
 	Proofs         StmtSlice
 
@@ -363,7 +391,7 @@ type ClaimIffStmt struct {
 }
 
 type ProveIsTransitivePropStmt struct {
-	Prop   FcAtom
+	Prop   AtomObj
 	Params StrSlice
 	Proofs StmtSlice
 
@@ -390,7 +418,7 @@ type AlgoIfStmt struct {
 }
 
 type AlgoReturnStmt struct {
-	Value Fc
+	Value Obj
 
 	Line uint
 }
@@ -404,7 +432,7 @@ type DefAlgoStmt struct {
 }
 
 type EvalStmt struct {
-	FcsToEval []Fc
+	FcsToEval Obj
 
 	Line uint
 }
@@ -419,7 +447,7 @@ type DefProveAlgoStmt struct {
 
 type ByStmt struct {
 	ProveAlgoName  string
-	Params         FcSlice
+	Params         ObjSlice
 	ThenFactsOrNil FactStmtSlice
 
 	Line uint
@@ -427,6 +455,38 @@ type ByStmt struct {
 
 type ProveAlgoReturnStmt struct {
 	ByStmtOrNil *ByStmt
+
+	Line uint
+}
+
+type PrintStmt struct {
+	IsFString bool
+	Value     string
+
+	Line uint
+}
+
+type HelpStmt struct {
+	Keyword string
+
+	Line uint
+}
+
+// 这是必要的，因为要证明从n到m有且只有n, n+1, ..., m-1, m这些数，必须要用特殊的关键词
+type ProveInRangeStmt struct {
+	param         string
+	start         Obj
+	end           Obj
+	DomFactsOrNil FactStmtSlice
+	ThenFacts     FactStmtSlice
+	ProofsOrNil   StmtSlice
+
+	Line uint
+}
+
+type HaveCartSetStmt struct {
+	Name    string
+	CartObj FnObj
 
 	Line uint
 }

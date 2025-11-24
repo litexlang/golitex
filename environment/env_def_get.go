@@ -16,7 +16,7 @@ package litex_env
 
 import ast "golitex/ast"
 
-func (e *Env) GetFnTemplateDef(fcAtomName ast.FcAtom) *ast.FnTemplateDefStmt {
+func (e *Env) GetFnTemplateDef(fcAtomName ast.AtomObj) *ast.FnTemplateDefStmt {
 	for env := e; env != nil; env = env.Parent {
 		fnTemplateDef, ok := env.FnTemplateDefMem[string(fcAtomName)]
 		if ok {
@@ -27,8 +27,8 @@ func (e *Env) GetFnTemplateDef(fcAtomName ast.FcAtom) *ast.FnTemplateDefStmt {
 	return nil
 }
 
-func (e *Env) GetFnTemplateDef_KeyIsFcHead(fc *ast.FcFn) *ast.FnTemplateDefStmt {
-	fnHeadAsAtom, ok := fc.FnHead.(ast.FcAtom)
+func (e *Env) GetFnTemplateDef_KeyIsFcHead(fc *ast.FnObj) *ast.FnTemplateDefStmt {
+	fnHeadAsAtom, ok := fc.FnHead.(ast.AtomObj)
 	if !ok {
 		return nil
 	}
@@ -37,7 +37,7 @@ func (e *Env) GetFnTemplateDef_KeyIsFcHead(fc *ast.FcFn) *ast.FnTemplateDefStmt 
 	return fnTemplateDef
 }
 
-func (e *Env) GetExistPropDef(propName ast.FcAtom) *ast.DefExistPropStmt {
+func (e *Env) GetExistPropDef(propName ast.AtomObj) *ast.DefExistPropStmt {
 	for env := e; env != nil; env = env.Parent {
 		existProp, ok := env.ExistPropDefMem[string(propName)]
 		if ok {
@@ -47,7 +47,7 @@ func (e *Env) GetExistPropDef(propName ast.FcAtom) *ast.DefExistPropStmt {
 	return nil
 }
 
-func (e *Env) GetPropDef(propName ast.FcAtom) *ast.DefPropStmt {
+func (e *Env) GetPropDef(propName ast.AtomObj) *ast.DefPropStmt {
 	for env := e; env != nil; env = env.Parent {
 		prop, ok := env.PropDefMem[string(propName)]
 		if ok {
@@ -57,7 +57,7 @@ func (e *Env) GetPropDef(propName ast.FcAtom) *ast.DefPropStmt {
 	return nil
 }
 
-func (e *Env) GetHaveSetFnDef(fnName ast.FcAtom) *ast.HaveSetFnStmt {
+func (e *Env) GetHaveSetFnDef(fnName ast.AtomObj) *ast.HaveSetFnStmt {
 	for env := e; env != nil; env = env.Parent {
 		haveSetFn, ok := env.HaveSetFnDefMem[fnName.String()]
 		if ok {
@@ -67,7 +67,7 @@ func (e *Env) GetHaveSetFnDef(fnName ast.FcAtom) *ast.HaveSetFnStmt {
 	return nil
 }
 
-func (e *Env) isUserDefinedObj(atom ast.FcAtom) bool {
+func (e *Env) isUserDefinedObj(atom ast.AtomObj) bool {
 	for curEnv := e; curEnv != nil; curEnv = curEnv.Parent {
 		_, ok := curEnv.ObjDefMem[string(atom)]
 		if ok {
@@ -77,7 +77,7 @@ func (e *Env) isUserDefinedObj(atom ast.FcAtom) bool {
 	return false
 }
 
-func (e *Env) GetIntensionalSet(fc ast.Fc) *ast.IntensionalSetStmt {
+func (e *Env) GetIntensionalSet(fc ast.Obj) *ast.IntensionalSetStmt {
 	for env := e; env != nil; env = env.Parent {
 		intensionalSet, ok := env.IntensionalSetMem[fc.String()]
 		if ok {
@@ -87,7 +87,7 @@ func (e *Env) GetIntensionalSet(fc ast.Fc) *ast.IntensionalSetStmt {
 	return nil
 }
 
-func (e *Env) GetSymbolSimplifiedValue(fc ast.Fc) ast.Fc {
+func (e *Env) GetSymbolSimplifiedValue(fc ast.Obj) ast.Obj {
 	for env := e; env != nil; env = env.Parent {
 		symbolValue, ok := env.SymbolSimplifiedValueMem[fc.String()]
 		if ok {

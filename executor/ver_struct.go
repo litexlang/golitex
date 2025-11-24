@@ -18,7 +18,6 @@ package litex_executor
 import (
 	"fmt"
 	env "golitex/environment"
-	glob "golitex/glob"
 )
 
 type Verifier struct {
@@ -39,12 +38,9 @@ func (ver *Verifier) newEnv(parent *env.Env) {
 }
 
 func (ver *Verifier) deleteEnvAndRetainMsg() error {
+	// Note: Messages are now stored in ExecRet, not in env.Msgs
+	// This function is kept for compatibility but only deletes the env
 	if ver.Env.Parent != nil {
-		for _, msg := range ver.Env.Msgs {
-			if glob.RequireMsg() {
-				ver.Env.Parent.Msgs = append(ver.Env.Parent.Msgs, msg)
-			}
-		}
 		ver.Env = ver.Env.Parent
 		return nil
 	} else {

@@ -26,13 +26,24 @@ func (ver *Verifier) todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt *ast.Sp
 }
 
 func (ver *Verifier) processOkMsg(state *VerState, msg string, verifiedBy string, args ...any) ExecRet {
+	execRet := NewExecTrue(successVerString(msg, fmt.Sprintf(verifiedBy, args...)))
 	if state.WithMsg {
-		ver.successWithMsg(msg, fmt.Sprintf(verifiedBy, args...))
+		execRet.AddMsg(successVerString(msg, fmt.Sprintf(verifiedBy, args...)))
+		return execRet
 	}
-	return NewExecTrue(successVerString(msg, fmt.Sprintf(verifiedBy, args...)))
+	return execRet
 }
 
-func (ver *Verifier) paramsInSets(params []ast.Fc, sets []ast.Fc, state *VerState) ExecRet {
+// maybeAddSuccessMsg adds a success message to execRet if state.WithMsg is true
+func (ver *Verifier) maybeAddSuccessMsg(state *VerState, stmtStr, verifiedBy string, execRet ExecRet) ExecRet {
+	if state.WithMsg {
+		execRet.AddMsg(successVerString(stmtStr, verifiedBy))
+		return execRet
+	}
+	return execRet
+}
+
+func (ver *Verifier) paramsInSets(params []ast.Obj, sets []ast.Obj, state *VerState) ExecRet {
 	if len(params) != len(sets) {
 		return NewExecErr("params and sets length mismatch")
 	}

@@ -20,15 +20,15 @@ import (
 	glob "golitex/glob"
 )
 
-func (e *Env) GetSetFnRetValue(fc ast.Fc) *ast.HaveSetFnStmt {
-	asFn, ok := fc.(*ast.FcFn)
+func (e *Env) GetSetFnRetValue(fc ast.Obj) *ast.HaveSetFnStmt {
+	asFn, ok := fc.(*ast.FnObj)
 	if !ok {
 		return nil
 	}
 
 	// name
 	fnName := asFn.FnHead
-	fnNameAsAtom, ok := fnName.(ast.FcAtom)
+	fnNameAsAtom, ok := fnName.(ast.AtomObj)
 	if !ok {
 		return nil
 	}
@@ -42,7 +42,7 @@ func (e *Env) GenerateUndeclaredRandomName() string {
 	for {
 		randomStr = glob.RandomString(i)
 		// check if the string is undeclared
-		if !e.IsAtomDeclared(ast.FcAtom(randomStr), map[string]struct{}{}) {
+		if !e.IsAtomDeclared(ast.AtomObj(randomStr), map[string]struct{}{}) {
 			return randomStr
 		}
 		i++
@@ -55,7 +55,7 @@ func (e *Env) GenerateUndeclaredRandomName_AndNotInMap(m map[string]struct{}) st
 	for {
 		randomStr = glob.RandomString(i)
 		// check if the string is undeclared
-		if !e.IsAtomDeclared(ast.FcAtom(randomStr), map[string]struct{}{}) {
+		if !e.IsAtomDeclared(ast.AtomObj(randomStr), map[string]struct{}{}) {
 			_, ok := m[randomStr]
 			if !ok {
 				return randomStr
@@ -65,29 +65,34 @@ func (e *Env) GenerateUndeclaredRandomName_AndNotInMap(m map[string]struct{}) st
 	}
 }
 
-func (e *Env) GetFnStructFromFnTName(fnTName *ast.FcFn) (*ast.FnTStruct, error) {
+func (e *Env) GetFnStructFromFnTName(fnTName *ast.FnObj) (*ast.FnTStruct, glob.GlobRet) {
 	if fcFnTypeToFnTStruct, ok := ast.FcFnT_To_FnTStruct(fnTName); ok {
-		return fcFnTypeToFnTStruct, nil
+		return fcFnTypeToFnTStruct, glob.TrueRet("")
 	} else {
-		fnTNameHeadAsAtom, ok := fnTName.FnHead.(ast.FcAtom)
+		fnTNameHeadAsAtom, ok := fnTName.FnHead.(ast.AtomObj)
 		if !ok {
-			return nil, fmt.Errorf("fnTNameHead is not an atom")
+			return nil, glob.ErrRet(fmt.Errorf("fnTNameHead is not an atom"))
 		}
 
 		return e.getFnTDef_InstFnTStructOfIt(fnTNameHeadAsAtom, fnTName.Params)
 	}
 }
 
-func (e *Env) getFnTDef_InstFnTStructOfIt(fnTDefName ast.FcAtom, templateParams []ast.Fc) (*ast.FnTStruct, error) {
+func (e *Env) getFnTDef_InstFnTStructOfIt(fnTDefName ast.AtomObj, templateParams []ast.Obj) (*ast.FnTStruct, glob.GlobRet) {
 	defOfT := e.GetFnTemplateDef(fnTDefName)
 	if defOfT == nil {
-		return nil, fmt.Errorf("fnTNameHead %s is not a fn template", fnTDefName)
+		return nil, glob.ErrRet(fmt.Errorf("fnTNameHead %s is not a fn template", fnTDefName))
 	}
 
 	uniMap, err := ast.MakeUniMap(defOfT.TemplateDefHeader.Params, templateParams)
 	if err != nil {
-		return nil, err
+		return nil, glob.ErrRet(err)
 	}
 
-	return defOfT.Fn.Instantiate(uniMap)
+	fnTStruct, err := defOfT.Fn.Instantiate(uniMap)
+	if err != nil {
+		return nil, glob.ErrRet(err)
+	}
+
+	return fnTStruct, glob.TrueRet("")
 }

@@ -12,36 +12,18 @@
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
-package litex_env
+package litex_pipeline
 
 import (
-	ast "golitex/ast"
-	cmp "golitex/cmp"
-	litenv "golitex/environment"
+	"fmt"
+	"testing"
 )
 
-type AlgoExecutor struct {
-	ExecEnv *litenv.Env
-}
-
-func (algoExecutor *AlgoExecutor) Env() *litenv.Env {
-	return algoExecutor.ExecEnv
-}
-
-func NewAlgoExecutor(execEnv *litenv.Env) *AlgoExecutor {
-	return &AlgoExecutor{ExecEnv: execEnv}
-}
-
-func (algoExec *AlgoExecutor) CanBeComputed(fc ast.Fc) (ast.Fc, error) {
-	ok := cmp.IsNumLitFc(fc)
-	if ok {
-		return fc, nil
+func Test_File(t *testing.T) {
+	fileName := "../examples/test_codes/tmp.lit"
+	ret := RunFile(fileName)
+	if ret.IsNotTrue() {
+		t.Errorf("failed to run file %s\n", fileName)
 	}
-
-	return nil, nil
-}
-
-func (algoExec *AlgoExecutor) Compute(toCompute ast.Fc) (ast.Fc, error) {
-	_ = toCompute
-	return nil, nil
+	fmt.Println(ret.StringWithOptimizedNewline())
 }

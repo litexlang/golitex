@@ -404,6 +404,10 @@ func (s *ProveInEachCaseStmt) ToLatexString() string {
 	return builder.String()
 }
 
+func (s *ProveCaseByCaseStmt) ToLatexString() string {
+	return s.String()
+}
+
 func (s *KnowPropStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString(s.Prop.ToLatexString())
@@ -528,7 +532,7 @@ func (s *EnumStmt) ToLatexString() string {
 	return fmt.Sprintf("$%s$", strings.ReplaceAll(builder.String(), "$", ""))
 }
 
-func intentionalSetOrIntensionalSetToLatexString(param string, parentSet Fc, proofs SpecFactPtrSlice) string {
+func intentionalSetOrIntensionalSetToLatexString(param string, parentSet Obj, proofs SpecFactPtrSlice) string {
 	var builder strings.Builder
 	builder.WriteString(" = \\{")
 	builder.WriteString(param)
@@ -560,7 +564,7 @@ func (s *ClaimPropStmt) ToLatexString() string {
 
 	builder.WriteString("\n\n")
 
-	builder.WriteString(claimProveBodyToLatexString(s.Prop.ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue(), s.Proofs, s.IsProve))
+	builder.WriteString(claimProveBodyToLatexString(s.Prop.ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue(), s.Proofs, true))
 
 	return builder.String()
 }
@@ -637,6 +641,18 @@ func (s *HaveIntensionalSetStmt) ToLatexString() string {
 	builder.WriteString("\\begin{definition}[Set Exist By Axioms of Set Theory]")
 	builder.WriteString("We have a set: ")
 	builder.WriteString(s.Fact.ToLatexString())
+	builder.WriteString(".\n")
+	builder.WriteString("\\end{definition}")
+	return builder.String()
+}
+
+func (s *HaveCartSetStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("\\begin{definition}[Set Exist By Axioms of Set Theory]")
+	builder.WriteString("We have a set: ")
+	builder.WriteString(s.Name)
+	builder.WriteString(" = ")
+	builder.WriteString(s.CartObj.ToLatexString())
 	builder.WriteString(".\n")
 	builder.WriteString("\\end{definition}")
 	return builder.String()
@@ -871,6 +887,10 @@ func (s *HaveFnStmt) ToLatexString() string {
 	return s.String()
 }
 
+func (s *HaveFnCaseByCaseStmt) ToLatexString() string {
+	return s.String()
+}
+
 func (s *MarkdownStmt) ToLatexString() string {
 	return s.Markdown
 }
@@ -880,6 +900,10 @@ func (s *MarkdownStmt) ToLatexString() string {
 // }
 
 func (s *ClaimIffStmt) ToLatexString() string {
+	return s.String()
+}
+
+func (s *ProveInRangeSetStmt) ToLatexString() string {
 	return s.String()
 }
 
@@ -908,11 +932,7 @@ func (s *DefAlgoStmt) ToLatexString() string {
 }
 
 func (s *EvalStmt) ToLatexString() string {
-	strSlice := make([]string, len(s.FcsToEval))
-	for i, fc := range s.FcsToEval {
-		strSlice[i] = fc.ToLatexString()
-	}
-	return fmt.Sprintf("%s %s", glob.KeywordEval, strings.Join(strSlice, ", "))
+	return fmt.Sprintf("%s(%s)", glob.KeywordEval, s.FcsToEval.ToLatexString())
 }
 
 func (s *DefProveAlgoStmt) ToLatexString() string {
@@ -924,5 +944,17 @@ func (s *ByStmt) ToLatexString() string {
 }
 
 func (s *ProveAlgoReturnStmt) ToLatexString() string {
+	return s.String()
+}
+
+func (s *PrintStmt) ToLatexString() string {
+	return s.String()
+}
+
+func (s *HelpStmt) ToLatexString() string {
+	return s.String()
+}
+
+func (s *HaveFnEqualCaseByCaseStmt) ToLatexString() string {
 	return s.String()
 }

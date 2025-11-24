@@ -19,20 +19,20 @@ import (
 	ast "golitex/ast"
 )
 
-func cmpFcLiterally(left, right ast.Fc) (bool, error) {
-	typeComp, fcEnum, err := CmpFcType(left, right)
+func cmpObjLiterally(left, right ast.Obj) (bool, error) {
+	typeComp, objEnum, err := CmpObjType(left, right)
 	if typeComp != 0 || err != nil {
 		return false, err
 	}
 
-	if fcEnum == FcAtomEnum {
-		cmp, err := cmpFcAtomLit(left.(ast.FcAtom), right.(ast.FcAtom))
+	if objEnum == AtomObjEnum {
+		cmp, err := cmpAtomObjLit(left.(ast.AtomObj), right.(ast.AtomObj))
 		if err != nil {
 			return false, err
 		}
 		return cmp == 0, nil
-	} else if fcEnum == FcFnEnum {
-		ok, err := cmpFcFnRule(left.(*ast.FcFn), right.(*ast.FcFn))
+	} else if objEnum == FnObjEnum {
+		ok, err := cmpFnObjRule(left.(*ast.FnObj), right.(*ast.FnObj))
 		if err != nil {
 			return false, err
 		}
@@ -42,8 +42,8 @@ func cmpFcLiterally(left, right ast.Fc) (bool, error) {
 	return false, fmt.Errorf("")
 }
 
-func cmpFcFnRule(left, right *ast.FcFn) (bool, error) {
-	if comp, err := cmpFcLit(left.FnHead, right.FnHead); comp != 0 || err != nil {
+func cmpFnObjRule(left, right *ast.FnObj) (bool, error) {
+	if comp, err := cmpObjLit(left.FnHead, right.FnHead); comp != 0 || err != nil {
 		return comp == 0, err
 	}
 

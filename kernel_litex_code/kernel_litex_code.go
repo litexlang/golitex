@@ -164,6 +164,7 @@ know:
 	$item_exists_in(C)
 	forall x N_pos:
 		x > 0
+	forall x set: $item_exists_in(x) => x $in nonempty_set
 
 know forall m N_pos => m - 1 $in N
 
@@ -339,10 +340,11 @@ fn log(x, y R) R:
 		x != 1
 		y > 0
 
+# TODO: 这里的 y ^ z 可能不满足^的定义域的要求
 know:
-	forall x, y, z R: x > 0, y > 0, z > 0 => log(x, y^z) = z * log(x, y)
-	forall x, y, z R: x > 0, y > 0, z > 0 => log(x, y * z) = log(x, y) + log(x, z)
-	forall x R: x > 0 => log(x, x) = 1
+	forall x, y, z R: x > 0, x != 1, y > 0, z > 0 => log(x, y^z) = z * log(x, y)
+	forall x, y, z R: x > 0, x != 1, y > 0, z > 0 => log(x, y * z) = log(x, y) + log(x, z)
+	forall x R: x > 0, x != 1 => log(x, x) = 1
 
 let pi R # pi is the ratio of the circumference of a circle to its diameter
 
@@ -597,13 +599,150 @@ prop is_subset_of(x, y set):
 		z $in x
 		=>:
 			z $in y
-	forall:
-		y $in finite_set
-		=>:
-			x $in finite_set
-			len(x) <= len(y)
-
 
 prop is_superset_of(A, B set):
 	forall x B: x $in A
+
+fn intersect(x, y set) set:
+	forall z x:
+		z $in y
+		=>:
+			z $in intersect(x, y)
+	forall z y:
+		z $in x
+		=>:
+			z $in intersect(x, y)
+
+know @item_in_intersect(z obj, x, y set):
+	z $in intersect(x, y)
+	=>:
+		z $in x
+		z $in y
+
+fn union(x, y set) set:
+	forall z x:
+		z $in union(x, y)
+	forall z y:
+		z $in union(x, y)
+
+know @item_in_union(z obj, x, y set):
+	z $in union(x, y)
+	=>:
+		z $in x or z $in y
+
+fn complement(x, y set) set:
+	dom:
+		x $is_subset_of y
+	=>:
+		forall z y:
+			not z $in x
+			=>:
+				z $in complement(x, y)
+
+know @item_in_complement(z obj, x, y set):
+	x $is_subset_of y
+	z $in complement(x, y)
+	=>:
+		z $in y
+		not z $in x
+
+have set empty_set = {}
+
+prop sets_are_equal(x, y set):
+	forall a x => a $in y
+	forall a y => a $in x
+know:
+	forall x, y set: x = y <=> x $sets_are_equal y
+
+know forall a, x, b, y R: a != 0, a * x + b = y => x = (y - b) / a
+
+know:
+	forall x R, y Z: x != 0, y % 2 = 0 => x ^ y > 0
+	forall x R, y Z: y % 2 = 0, y != 0 => x ^ y >= 0
+
+know:
+	forall x, y, z R: x <= y => x + z <= y + z, x - z <= y - z, z + x <= z + y
+	forall x, y, z R: x <= y, z > 0 => x * z <= y * z, x / z <= y / z, z * x <= z * y
+	forall x, y, z R: x >= y => x + z >= y + z, x - z >= y - z, z + x >= z + y
+	forall x, y, z R: x >= y, z > 0 => x * z >= y * z, x / z >= y / z, z * x >= z * y
+	forall x, y, z R: x > y => x + z > y + z, x - z > y - z, z + x > z + y
+	forall x, y, z R: x > y, z > 0 => x * z > y * z, x / z > y / z, z * x > z * y
+	forall x, y, z R: x < y => x + z < y + z, x - z < y - z, z + x < z + y
+	forall x, y, z R: x < y, z > 0 => x * z < y * z, x / z < y / z, z * x < z * y
+
+know forall x, y R: y > 0, x >= 0 => x / y >= 0
+know:
+	forall x, y R: x >= y <=> x - y >= 0
+	forall x, y R: x > y <=> x - y > 0
+	forall x, y R: x <= y <=> x - y <= 0
+	forall x, y R: x < y <=> x - y < 0
+
+know:
+	forall x, y R: y >= 0 => x + y >= x, y + x >= x, x <= x + y, x <= y + x
+	forall x, y R: abs(x + y) <= abs(x) + abs(y)
+	forall x, y R: x > 0, y > 1 => x * y > x, y * x > x
+	forall x, y, z R: x > y, z < 0 => x * z < y * z
+	forall x, y R: x > y => not x <= y, not x = y, not x < y
+	forall x, y R: x < y => not x >= y, not x = y, not x > y
+
+prop is_finite_set(x set)
+know forall x set: $is_finite_set(x) <=> x $in finite_set
+know @subset_of_finite_set_is_finite_set(x set, y finite_set):
+	x $is_subset_of y
+	=>:
+		$is_finite_set(x)
+		count(x) <= count(y)
+
+prop is_cart(x set)
+
+fn proj(x set, i N_pos) set:
+	dom:
+		$is_cart(x)
+		i <= dim(x)
+
+fn dim(x set) N_pos:
+	dom:
+		$is_cart(x)
+
+fn coord(a obj, x set, index N_pos) proj(x, index):
+	a $in x
+	$is_cart(x)
+	index <= dim(x)
+
+know:
+	forall x set:
+		$is_cart(x)
+		forall a N_pos:
+			a <= dim(x)
+			=>:
+				proj(x, a) $in nonempty_set
+		=>:
+			x $in nonempty_set
+			$item_exists_in(x)
+
+# ∏_{a in I} A_a (Cartesian product)
+prop is_cart_prod(s set)
+fn index_set_of_cart_prod(s set) set:
+	dom:
+		$is_cart_prod(s)
+
+fn family_of_cart_prod(s set) fn(index_set_of_cart_prod(s)) set:
+    dom:
+        $is_cart_prod(s)
+    =>:
+        $is_cart_prod(s)
+		
+fn cart_prod_proj(s set, a index_set_of_cart_prod(s)) set:
+    dom:
+        $is_cart_prod(s)
+    =>:
+        cart_prod_proj(s, a) = family_of_cart_prod(s)(a)
+
+		
+fn cart_prod(index_set set, family fn (index_set) set) set
+
+know forall index_set set, family fn (index_set) set: $is_cart_prod(cart_prod(index_set, family))
+
+know forall index_set set, family fn (index_set) set, a index_set: cart_prod_proj(cart_prod(index_set, family), a) = family(a)
+
 `

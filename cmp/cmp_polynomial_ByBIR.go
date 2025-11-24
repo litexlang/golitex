@@ -38,17 +38,17 @@ func cmpArith_ByBIR(left string, right string) bool {
 	newLeftStr := fmt.Sprintf("(%s)*(%s)", leftNumerator, rightDenominator)
 	newRightStr := fmt.Sprintf("(%s)*(%s)", rightNumerator, leftDenominator)
 
-	leftFc, err := parser.ParseSourceCodeGetFc(newLeftStr)
+	leftObj, err := parser.ParseSourceCodeGetObj(newLeftStr)
 	if err != nil {
 		return false
 	}
-	rightFc, err := parser.ParseSourceCodeGetFc(newRightStr)
+	rightObj, err := parser.ParseSourceCodeGetObj(newRightStr)
 	if err != nil {
 		return false
 	}
 
-	leftStr := num.FcStringForParseAndExpandPolynomial(leftFc)
-	rightStr := num.FcStringForParseAndExpandPolynomial(rightFc)
+	leftStr := num.ObjStringForParseAndExpandPolynomial(leftObj)
+	rightStr := num.ObjStringForParseAndExpandPolynomial(rightObj)
 
 	leftPolyAsStr := num.ExpandPolynomial_ReturnStr(leftStr)
 	rightPolyAsStr := num.ExpandPolynomial_ReturnStr(rightStr)

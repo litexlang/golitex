@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (e *Env) IsFcAtomDeclaredByUser(fcAtomName ast.FcAtom) bool {
+func (e *Env) IsFcAtomDeclaredByUser(fcAtomName ast.AtomObj) bool {
 	for env := e; env != nil; env = env.Parent {
 		ok := env.isFcAtomDeclaredAtCurEnv(fcAtomName)
 		if ok {
@@ -31,7 +31,7 @@ func (e *Env) IsFcAtomDeclaredByUser(fcAtomName ast.FcAtom) bool {
 }
 
 // 其实最好要分类：有可能是obj，有可能是prop，不能在验证obj的时候验证是prop
-func (e *Env) isFcAtomDeclaredAtCurEnv(fcAtomName ast.FcAtom) bool {
+func (e *Env) isFcAtomDeclaredAtCurEnv(fcAtomName ast.AtomObj) bool {
 	_, ok := e.PropDefMem[string(fcAtomName)]
 	if ok {
 		return true
@@ -53,8 +53,8 @@ func (e *Env) isFcAtomDeclaredAtCurEnv(fcAtomName ast.FcAtom) bool {
 	return ok
 }
 
-func (e *Env) isAtomObj(atom ast.FcAtom) bool {
-	_, ok := ast.IsNumLitFcAtom(atom)
+func (e *Env) isAtomObj(atom ast.AtomObj) bool {
+	_, ok := ast.IsNumLitAtomObj(atom)
 	if ok {
 		return true
 	}
@@ -67,7 +67,7 @@ func (e *Env) isAtomObj(atom ast.FcAtom) bool {
 	return e.isUserDefinedObj(atom)
 }
 
-func (e *Env) AtomsAreObj(atomSlice []ast.FcAtom) bool {
+func (e *Env) AtomsAreObj(atomSlice []ast.AtomObj) bool {
 	for _, atom := range atomSlice {
 		if !e.isAtomObj(atom) {
 			return false
@@ -76,8 +76,8 @@ func (e *Env) AtomsAreObj(atomSlice []ast.FcAtom) bool {
 	return true
 }
 
-func (e *Env) AreAtomsInFcAreDeclared(fc ast.Fc, extraAtomNames map[string]struct{}) bool {
-	atoms := ast.GetAtomsInFc(fc)
+func (e *Env) AreAtomsInFcAreDeclared(fc ast.Obj, extraAtomNames map[string]struct{}) bool {
+	atoms := ast.GetAtomsInObj(fc)
 	return e.AreAtomsDeclared(atoms, extraAtomNames)
 }
 
@@ -136,7 +136,7 @@ func (e *Env) AreAtomsInFactAreDeclared(fact ast.FactStmt, extraAtomNames map[st
 	}
 }
 
-func (e *Env) AreAtomsDeclared(atoms []ast.FcAtom, extraAtomNames map[string]struct{}) bool {
+func (e *Env) AreAtomsDeclared(atoms []ast.AtomObj, extraAtomNames map[string]struct{}) bool {
 	for _, atom := range atoms {
 		if !e.IsAtomDeclared(atom, extraAtomNames) {
 			return false
@@ -145,14 +145,14 @@ func (e *Env) AreAtomsDeclared(atoms []ast.FcAtom, extraAtomNames map[string]str
 	return true
 }
 
-func (e *Env) IsAtomDeclared(atom ast.FcAtom, extraAtomNames map[string]struct{}) bool {
+func (e *Env) IsAtomDeclared(atom ast.AtomObj, extraAtomNames map[string]struct{}) bool {
 	// 如果是内置的符号，那就声明了
 	if glob.IsBuiltinKeywordKeySymbolCanBeFcAtomName(string(atom)) {
 		return true
 	}
 
 	// 如果是数字，那就声明了
-	if _, ok := ast.IsNumLitFcAtom(atom); ok {
+	if _, ok := ast.IsNumLitAtomObj(atom); ok {
 		return true
 	}
 
@@ -171,9 +171,9 @@ func (e *Env) IsAtomDeclared(atom ast.FcAtom, extraAtomNames map[string]struct{}
 	return ok
 }
 
-func (e *Env) NonDuplicateParam_NoUndeclaredParamSet(params []string, setParams []ast.Fc, checkDeclared bool) error {
+func (e *Env) ThereIsNoDuplicateObjNamesAndAllAtomsInParamSetsAreDefined(params []string, setParams []ast.Obj, checkDeclared bool) glob.GlobRet {
 	if len(params) != len(setParams) {
-		return fmt.Errorf("number of params and set params are not the same")
+		return glob.ErrRet(fmt.Errorf("number of params and set params are not the same"))
 	}
 
 	// 检查所有参数都声明了
@@ -181,23 +181,23 @@ func (e *Env) NonDuplicateParam_NoUndeclaredParamSet(params []string, setParams 
 	for i, param := range params {
 		_, ok := paramSet[param]
 		if ok {
-			return fmt.Errorf("parameter %s is declared multiple times", param)
+			return glob.ErrRet(fmt.Errorf("parameter %s is declared multiple times", param))
 		}
 		if checkDeclared {
 			ok = e.AreAtomsInFcAreDeclared(setParams[i], paramSet)
 			if !ok {
-				return fmt.Errorf(AtomsInFcNotDeclaredMsg(setParams[i]))
+				return glob.ErrRet(fmt.Errorf(AtomsInFcNotDeclaredMsg(setParams[i])))
 			}
 		}
 		paramSet[param] = struct{}{} // setParam 不能 包含它自己
 	}
 
-	return nil
+	return glob.TrueRet("")
 }
 
-func (e *Env) NonDuplicateParam_NoUndeclaredParamSet_ExtraAtomNames(params []string, setParams []ast.Fc, extraAtomNames map[string]struct{}, checkDeclared bool) error {
+func (e *Env) NonDuplicateParam_NoUndeclaredParamSet_ExtraAtomNames(params []string, setParams []ast.Obj, extraAtomNames map[string]struct{}, checkDeclared bool) glob.GlobRet {
 	if len(params) != len(setParams) {
-		return fmt.Errorf("number of params and set params are not the same")
+		return glob.ErrRet(fmt.Errorf("number of params and set params are not the same"))
 	}
 
 	// 检查所有参数都声明了
@@ -205,16 +205,16 @@ func (e *Env) NonDuplicateParam_NoUndeclaredParamSet_ExtraAtomNames(params []str
 	for i, param := range params {
 		_, ok := paramSet[param]
 		if ok {
-			return fmt.Errorf("parameter %s is declared multiple times", param)
+			return glob.ErrRet(fmt.Errorf("parameter %s is declared multiple times", param))
 		}
 		if checkDeclared {
 			ok = e.AreAtomsInFcAreDeclared(setParams[i], paramSet)
 			if !ok {
-				return fmt.Errorf(AtomsInFcNotDeclaredMsg(setParams[i]))
+				return glob.ErrRet(fmt.Errorf(AtomsInFcNotDeclaredMsg(setParams[i])))
 			}
 		}
 		paramSet[param] = struct{}{} // setParam 不能 包含它自己
 	}
 
-	return nil
+	return glob.TrueRet("")
 }

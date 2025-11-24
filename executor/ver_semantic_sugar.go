@@ -29,28 +29,27 @@ func (ver *Verifier) verByReplaceFcInSpecFactWithValue(stmt *ast.SpecFactStmt, s
 		}
 
 		if verRet.IsTrue() {
-			if state.WithMsg {
-				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
-			}
-
-			values := []ast.Fc{}
-			if cmp.IsNumLitFc(newStmt.Params[0]) {
+			values := []ast.Obj{}
+			if cmp.IsNumLitObj(newStmt.Params[0]) {
 				values = append(values, newStmt.Params[0])
 			} else {
 				values = append(values, nil)
 			}
 
-			if cmp.IsNumLitFc(newStmt.Params[1]) {
+			if cmp.IsNumLitObj(newStmt.Params[1]) {
 				values = append(values, newStmt.Params[1])
 			} else {
 				values = append(values, nil)
 			}
 
+			var execRet ExecRet
 			if values[0] == nil && values[1] == nil {
-				return NewExecTrue(fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
+				execRet = NewExecTrue(fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
 			} else {
-				return NewExecTrueWithValues(fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()), values)
+				execRet = NewExecTrueWithValues(fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()), values)
 			}
+			msg := fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String())
+			return ver.maybeAddSuccessMsg(state, stmt.String(), msg, execRet)
 		}
 	}
 
@@ -66,10 +65,8 @@ func (ver *Verifier) verByReplaceFcInSpecFactWithValueAndCompute(stmt *ast.SpecF
 			return verRet
 		}
 		if verRet.IsTrue() {
-			if state.WithMsg {
-				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values and computing", stmt.String(), newStmt.String()))
-			}
-			return NewExecTrue("")
+			msg := fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values and computing", stmt.String(), newStmt.String())
+			return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
 		}
 	}
 

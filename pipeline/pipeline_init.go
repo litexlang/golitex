@@ -18,20 +18,25 @@ import (
 	"fmt"
 	env "golitex/environment"
 	exe "golitex/executor"
-	glob "golitex/glob"
 	kernelLibLitexCode "golitex/kernel_litex_code"
 	parser "golitex/parser"
 )
 
-func InitPipelineExecutor() (*exe.Executor, error) {
-	glob.IsRunningPipelineInit = true
-	defer func() {
-		glob.IsRunningPipelineInit = false
-	}()
-
+func GetBuiltinEnv() *env.Env {
 	curEnv := env.NewEnv(nil)
 	curEnv.Init()
-	executor := exe.NewExecutor(curEnv)
+	executor := exe.NewExecutor(curEnv, exe.NewPackageManager())
+	err := useHardcodedCodeToInit(executor)
+	if err != nil {
+		panic(err)
+	}
+	return executor.Env
+}
+
+func InitPipelineExecutor() (*exe.Executor, error) {
+	curEnv := env.NewEnv(nil)
+	curEnv.Init()
+	executor := exe.NewExecutor(curEnv, exe.NewPackageManager())
 	err := useHardcodedCodeToInit(executor)
 	executor.NewEnv(curEnv)
 	if err != nil {
@@ -46,13 +51,14 @@ func useHardcodedCodeToInit(executor *exe.Executor) error {
 		return err
 	}
 	for _, statement := range statements {
-		execState, _, err := executor.Stmt(statement)
+		execState := executor.Stmt(statement)
 		if execState.IsUnknown() || execState.IsErr() {
 			return fmt.Errorf("failed to init pipeline: %s", err)
 		}
 	}
 
-	executor.ClearMsgs()
+	// Note: Messages are now stored in ExecRet, not in executor.Env.Msgs
+	// No need to clear messages anymore
 
 	return nil
 }

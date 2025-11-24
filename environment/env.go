@@ -19,7 +19,7 @@ import (
 	glob "golitex/glob"
 )
 
-type shared_ptr_to_slice_of_fc = *[]ast.Fc
+type shared_ptr_to_slice_of_fc = *[]ast.Obj
 
 type PropDefMem map[string]ast.DefPropStmt
 
@@ -48,7 +48,6 @@ type KnownFactsStruct struct {
 // 因为 in 类型的事实很多，考虑把fcString为key保留一个map，记录它在什么集合里。比如 a $in N 就保存成 key:a values:[]{N}
 type Env struct {
 	Parent *Env
-	Msgs   glob.Msgs
 
 	ObjDefMem        ObjDefMem
 	PropDefMem       PropDefMem
@@ -61,15 +60,15 @@ type Env struct {
 
 	EqualMem map[string]shared_ptr_to_slice_of_fc
 
-	EnumFacts map[string][]ast.Fc
+	EnumFacts map[string][]ast.Obj
 
 	HaveSetFnDefMem HaveSetFnDefMem
 
 	IntensionalSetMem map[string]ast.IntensionalSetStmt
 
-	SymbolSimplifiedValueMem map[string]ast.Fc
+	SymbolSimplifiedValueMem map[string]ast.Obj
 
-	TransitivePropMem  map[string]map[string][]ast.Fc
+	TransitivePropMem  map[string]map[string][]ast.Obj
 	CommutativePropMem map[string]*PropCommutativeCase
 
 	AlgoDefMem map[string]*ast.DefAlgoStmt
@@ -106,7 +105,6 @@ func (env *Env) GetSecondUpMostEnv() *Env {
 func NewEnv(parent *Env) *Env {
 	env := &Env{
 		Parent:                   parent,
-		Msgs:                     glob.Msgs{},
 		ObjDefMem:                make(ObjDefMem),
 		PropDefMem:               make(PropDefMem),
 		FnTemplateDefMem:         make(FnTemplateDefMem),
@@ -114,11 +112,11 @@ func NewEnv(parent *Env) *Env {
 		ExistPropDefMem:          make(ExistPropDefMem),
 		KnownFactsStruct:         makeKnownFactsStruct(),
 		EqualMem:                 make(map[string]shared_ptr_to_slice_of_fc),
-		EnumFacts:                make(map[string][]ast.Fc),
+		EnumFacts:                make(map[string][]ast.Obj),
 		HaveSetFnDefMem:          make(HaveSetFnDefMem),
 		IntensionalSetMem:        make(map[string]ast.IntensionalSetStmt),
-		SymbolSimplifiedValueMem: make(map[string]ast.Fc),
-		TransitivePropMem:        make(map[string]map[string][]ast.Fc),
+		SymbolSimplifiedValueMem: make(map[string]ast.Obj),
+		TransitivePropMem:        make(map[string]map[string][]ast.Obj),
 		CommutativePropMem:       make(map[string]*PropCommutativeCase),
 		AlgoDefMem:               make(map[string]*ast.DefAlgoStmt),
 		DefProveAlgoMem:          make(map[string]*ast.DefProveAlgoStmt),
@@ -135,15 +133,11 @@ func makeKnownFactsStruct() KnownFactsStruct {
 	}
 }
 
-func (e *Env) AddMsgToParent(msg string) {
-	e.Parent.Msgs = append(e.Parent.Msgs, msg)
-}
-
 func (e *Env) NotEqualIsCommutative() {
 	e.CommutativePropMem[glob.KeySymbolEqual] = NewCommutativePropMemItemStruct()
 	e.CommutativePropMem[glob.KeySymbolEqual].FalsePureIsCommutative = true
 }
 
 func (e *Env) NewTransitiveProp(name string) {
-	e.TransitivePropMem[name] = make(map[string][]ast.Fc)
+	e.TransitivePropMem[name] = make(map[string][]ast.Obj)
 }

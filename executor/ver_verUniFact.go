@@ -36,9 +36,9 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) ExecR
 
 	// know cond facts
 	for _, condFact := range newStmtPtr.DomFacts {
-		err := ver.Env.NewFact(condFact)
-		if err != nil {
-			return NewExecErr(err.Error())
+		ret := ver.Env.NewFact(condFact)
+		if ret.IsErr() {
+			return NewExecErr(ret.String())
 		}
 	}
 
@@ -53,27 +53,25 @@ func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerSta
 			return NewExecErr(verRet.String())
 		}
 		if verRet.IsUnknown() {
+			execRet := NewExecUnknown("")
 			if state.WithMsg {
-				ver.Env.Msgs = append(ver.Env.Msgs, fmt.Sprintf("%s is unknown", thenFact))
+				execRet.AddMsg(fmt.Sprintf("%s is unknown", thenFact))
 			}
-			return NewExecUnknown("")
+			return execRet
 		}
 
 		// if true, store it
-		err := ver.Env.NewFact(thenFact)
-		if err != nil {
-			return NewExecErr(err.Error())
+		ret := ver.Env.NewFact(thenFact)
+		if ret.IsErr() {
+			return NewExecErr(ret.String())
 		}
 	}
 
+	execRet := NewExecTrue("")
 	if state.WithMsg {
-		err := ver.newMsgAtParent(fmt.Sprintf("%s\nis true", stmt))
-		if err != nil {
-			return NewExecErr(err.Error())
-		}
+		execRet = execRet.AddMsg(fmt.Sprintf("%s\nis true", stmt))
 	}
-
-	return NewExecTrue("")
+	return execRet
 }
 
 func (ver *Verifier) PreprocessUniFactParams_DeclareParams(oldStmt *ast.UniFactStmt) (*ast.UniFactStmt, error) {
@@ -83,9 +81,10 @@ func (ver *Verifier) PreprocessUniFactParams_DeclareParams(oldStmt *ast.UniFactS
 	}
 
 	// declare
-	err = ver.NewDefObj_InsideAtomsDeclared(ast.NewDefLetStmt(newStmtPtr.Params, newStmtPtr.ParamSets, []ast.FactStmt{}, oldStmt.Line))
-	if err != nil {
-		return nil, err
+	stmtForDef := ast.NewDefLetStmt(newStmtPtr.Params, newStmtPtr.ParamSets, []ast.FactStmt{}, oldStmt.Line)
+	ret := ver.Env.DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmtForDef)
+	if ret.IsErr() {
+		return nil, fmt.Errorf(ret.String())
 	}
 
 	// 查看param set 是否已经声明
