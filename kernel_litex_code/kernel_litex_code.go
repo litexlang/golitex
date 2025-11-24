@@ -745,4 +745,5 @@ know forall index_set set, family fn (index_set) set: $is_cart_prod(cart_prod(in
 
 know forall index_set set, family fn (index_set) set, a index_set: cart_prod_proj(cart_prod(index_set, family), a) = family(a)
 
+know forall x, y R: x >= 0, x != 0 or y != 0 => x ^ (y + 1) = x ^ y * x
 `
