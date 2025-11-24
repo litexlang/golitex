@@ -1,25 +1,21 @@
-# definition of a group, and prove R and Z are groups
-# 定义一个群，并证明 R 和 Z 是群
+exist_prop x s1 st exist_preimage(s1, s2 set, f fn(x s1) s2, y s2):
+    f(x) = y
 
-prop is_group(s set, mul fn(s, s)s, inv fn(s)s, e s):
-    forall x s, y s, z s:
-        mul(mul(x, y), z) = mul(x, mul(y, z))
-    forall x s:
-        mul(x, inv(x)) = e
-        mul(inv(x), x) = e
-    forall x s:
-        mul(x, e) = x
-        mul(e, x) = x
+fn range_of_fn(s1 set, s2 set, f fn(x s1) s2) set:
+    forall y range_of_fn(s1, s2, f):
+        $exist_preimage(s1, s2, f, y)
+    forall y s2:
+        $exist_preimage(s1, s2, f, y)
+        =>:
+            y $in range_of_fn(s1, s2, f)
 
-forall x R:
-    inverse(x) + x = 0
-    x + inverse(x) = 0
+know:
+    forall s1 set, s2 set, f fn(x s1) s2, y s2:
+        $exist_preimage(s1, s2, f, y)
+        =>:
+            y $in range_of_fn(s1, s2, f)
 
-forall x Z:
-    x + inverse(x) = 0
-    inverse(x) = -x
-    -x $in Z
-    inverse(x) $in Z
-
-$is_group(R, +, inverse, 0)
-$is_group(Z, +, inverse, 0)
+have fn id_R(x R) R = x
+exist 10 st $exist_preimage(R, R, id_R, 10)
+$exist_preimage(R, R, id_R, 10)
+10 $in range_of_fn(R, R, id_R)

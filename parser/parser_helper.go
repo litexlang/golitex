@@ -17,15 +17,7 @@ package litex_parser
 import (
 	"fmt"
 	ast "golitex/ast"
-	glob "golitex/glob"
 )
-
-func addPkgNameToString(name string) string {
-	if glob.CurrentPkg == "" {
-		return name
-	}
-	return fmt.Sprintf("%s%s%s", glob.CurrentPkg, glob.KeySymbolColonColon, name)
-}
 
 func NoSelfReferenceInPropDef(propName string, facts []ast.FactStmt) error {
 	for _, fact := range facts {
@@ -80,8 +72,8 @@ func NoSelfReferenceInPropDef(propName string, facts []ast.FactStmt) error {
 	return nil
 }
 
-func IsNumExprFc_SimplifyIt(fc ast.Fc) ast.Fc {
-	numLitExpr, ok, err := ast.MakeFcIntoNumLitExpr(fc)
+func IsNumExprObj_SimplifyIt(obj ast.Obj) ast.Obj {
+	numLitExpr, ok, err := ast.MakeObjIntoNumLitExpr(obj)
 	if err != nil || !ok {
 		return nil
 	}
@@ -91,10 +83,10 @@ func IsNumExprFc_SimplifyIt(fc ast.Fc) ast.Fc {
 		return nil
 	}
 
-	newFc, err := ParseSourceCodeGetFc(evaluatedStr)
+	newObj, err := ParseSourceCodeGetObj(evaluatedStr)
 	if err != nil {
 		return nil
 	}
 
-	return newFc
+	return newObj
 }

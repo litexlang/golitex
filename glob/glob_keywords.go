@@ -45,7 +45,7 @@ const (
 	KeywordIn                     = "in"
 	// KeywordProveByMathInduction           = "prove_by_math_induction"
 	KeywordAs           = "as" // 用在 import xxx as ??? 了
-	KeywordLen          = "len"
+	KeywordCount        = "count"
 	KeywordFiniteSet    = "finite_set"
 	KeywordProveByEnum  = "prove_by_enum" // syntax connecting forall and finite_set
 	KeywordItemExistsIn = "item_exists_in"
@@ -71,7 +71,8 @@ const (
 
 	KeywordProveIsTransitiveProp = "prove_is_transitive_prop"
 
-	KeywordProveInRange = "prove_in_range"
+	KeywordProveInRangeSet = "prove_in_range_set"
+	KeywordProveInRange    = "prove_in_range"
 
 	KeywordAlgo   = "algo"
 	KeywordReturn = "return"
@@ -80,6 +81,23 @@ const (
 
 	KeywordProveAlgo = "prove_algo"
 	KeywordBy        = "by"
+
+	KeywordImplication = "implication"
+	KeywordValue       = "value"
+
+	KeywordPrint = "print"
+
+	KeywordCase = "case"
+
+	KeywordProveCaseByCase = "prove_case_by_case"
+	KeywordExit            = "exit"
+	KeywordHelp            = "help"
+
+	KeywordCart   = "cart"
+	KeywordIsCart = "is_cart"
+	KeywordDim    = "dim"
+	KeywordProj   = "proj"
+	KeywordCoord  = "coord"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -112,7 +130,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	// KeywordProveByMathInduction:           {},
 	KeywordComplex:                        {},
 	KeywordAs:                             {},
-	KeywordLen:                            {},
+	KeywordCount:                          {},
 	KeywordFiniteSet:                      {},
 	KeywordProveByEnum:                    {},
 	KeywordItemExistsIn:                   {},
@@ -141,6 +159,22 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 
 	KeywordProveAlgo: {},
 	KeywordBy:        {},
+
+	KeywordImplication: {},
+
+	KeywordPrint: {},
+
+	KeywordCase: {},
+
+	KeywordProveCaseByCase: {},
+	KeywordExit:            {},
+	KeywordHelp:            {},
+
+	KeywordCart:   {},
+	KeywordIsCart: {},
+	KeywordDim:    {},
+	KeywordProj:   {},
+	KeywordCoord:  {},
 }
 
 const (
@@ -246,7 +280,7 @@ var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]s
 	KeywordExistPropPreImageByReplacement: {},
 	KeywordExistFnPreImageByReplacement:   {},
 	// TupleFcFnHead:                         {},
-	KeywordLen:         {},
+	KeywordCount:       {},
 	KeywordNPos:        {},
 	KeywordNonEmptySet: {},
 	KeywordEval:        {},
@@ -289,4 +323,65 @@ var builtinPropObjNames = map[string]struct{}{
 	LeftIsEqual0RightIsPositive:  {},
 	LeftIsNegativeRightIsInteger: {},
 	LastTwoObjectsAreEqual:       {},
+}
+
+// KeywordHelpMap stores help messages for each keyword
+var KeywordHelpMap = map[string]string{
+	KeywordSet:                            "",
+	KeywordForall:                         "",
+	KeywordDom:                            "",
+	KeywordObj:                            "",
+	KeywordHave:                           "",
+	KeywordFn:                             "",
+	KeywordProp:                           "",
+	KeywordKnow:                           "",
+	KeywordExist:                          "",
+	KeywordSt:                             "",
+	KeywordExistProp:                      "",
+	KeywordClaim:                          "",
+	KeywordProve:                          "",
+	KeywordImport:                         "",
+	KeywordNot:                            "",
+	KeywordProveByContradiction:           "",
+	KeywordProveInEachCase:                "",
+	KeywordOr:                             "",
+	KeywordProveIsCommutativeProp:         "",
+	KeywordNatural:                        "",
+	KeywordInteger:                        "",
+	KeywordRational:                       "",
+	KeywordReal:                           "",
+	KeywordComplex:                        "",
+	KeywordIn:                             "",
+	KeywordAs:                             "",
+	KeywordCount:                          "",
+	KeywordFiniteSet:                      "",
+	KeywordProveByEnum:                    "",
+	KeywordItemExistsIn:                   "",
+	KeywordSetDefinedByReplacement:        "",
+	KeywordExistPropPreImageByReplacement: "",
+	KeywordExistFnPreImageByReplacement:   "",
+	KeywordFnTemplate:                     "",
+	KeywordNPos:                           "",
+	KeywordLet:                            "",
+	KeywordClear:                          "",
+	KeywordProveByInduction:               "",
+	KeywordLift:                           "",
+	KeywordNonEmptySet:                    "",
+	KeywordWhen:                           "",
+	KeywordProveIsTransitiveProp:          "",
+	KeywordProveInRangeSet:                "",
+	KeywordProveInRange:                   "",
+	KeywordAlgo:                           "",
+	KeywordReturn:                         "",
+	KeywordIf:                             "",
+	KeywordEval:                           "",
+	KeywordProveAlgo:                      "",
+	KeywordBy:                             "",
+	KeywordImplication:                    "",
+	KeywordValue:                          "",
+	KeywordPrint:                          "",
+	KeywordCase:                           "",
+	KeywordProveCaseByCase:                "",
+	KeywordExit:                           "exit current REPL session",
+	KeywordHelp:                           "show this help message",
 }

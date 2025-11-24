@@ -12,33 +12,24 @@
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
-package litex_executor
+package litex_parser
 
 import (
+	"fmt"
 	glob "golitex/glob"
 )
 
-func (e *Executor) deleteEnvAndRetainMsg() {
-	for _, msg := range e.Env.Msgs {
-		if glob.RequireMsg() {
-			e.Env.Parent.Msgs = append(e.Env.Parent.Msgs, msg)
-		}
+// expectAndSkipCommaOr checks the next token after an item:
+// - if it's a comma, it skips it and returns (done=false, nil)
+// - if it's the expected end token, it returns (done=true, nil)
+// - otherwise, returns an error
+func (tb *tokenBlock) expectAndSkipCommaOr(endToken string) (bool, error) {
+	if tb.header.is(glob.KeySymbolComma) {
+		tb.header.skip(glob.KeySymbolComma)
+		return false, nil
 	}
-	e.Env = e.Env.Parent
-}
-
-func (e *Executor) newMsg(msg string) {
-	e.Env.Msgs = append(e.Env.Msgs, msg)
-}
-
-func (e *Executor) appendNewMsgAtBegin(msg string) {
-	e.Env.Msgs = append([]string{msg}, e.Env.Msgs...)
-}
-
-func (e *Executor) ClearMsgs() {
-	e.Env.Msgs = []string{}
-}
-
-func (e *Executor) deleteEnvAndGiveUpMsgs() {
-	e.Env = e.Env.Parent
+	if !tb.header.is(endToken) {
+		return false, tbErr(fmt.Errorf("expected '%s' but got '%s'", endToken, tb.header.strAtCurIndexPlus(0)), tb)
+	}
+	return true, nil
 }

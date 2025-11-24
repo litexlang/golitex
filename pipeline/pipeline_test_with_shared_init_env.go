@@ -38,25 +38,24 @@ func (p *PipelineRunner) Clear() {
 	p.executor.ClearStmt()
 }
 
-func (p *PipelineRunner) Run(code string) (string, glob.SysSignal, error) {
+func (p *PipelineRunner) Run(code string) glob.GlobRet {
 	topStmtSlice, err := parser.ParseSourceCode(code)
 	if err != nil {
-		return "", glob.SysSignalParseError, err
+		return glob.NewGlobErr(err.Error())
 	}
 
 	msgOfTopStatements := []string{}
 
 	for _, topStmt := range topStmtSlice {
-		execState, msg, err := p.executor.Stmt(topStmt)
-		msgOfTopStatements = append(msgOfTopStatements, p.executor.GetMsgAsStr0ToEnd())
-		msgOfTopStatements = append(msgOfTopStatements, msg)
-		if err != nil {
-			return strings.Join(msgOfTopStatements, "\n"), glob.SysSignalRuntimeError, err
+		execState := p.executor.Stmt(topStmt)
+		msgOfTopStatements = append(msgOfTopStatements, execState.String())
+		if execState.IsErr() {
+			return glob.NewGlobErr(execState.String())
 		}
 		if execState.IsUnknown() {
-			return strings.Join(msgOfTopStatements, "\n"), glob.SysSignalRuntimeError, fmt.Errorf("execution failed, line %d", topStmt.GetLine())
+			return glob.NewGlobErr(fmt.Sprintf("execution failed, line %d", topStmt.GetLine()))
 		}
 	}
 
-	return strings.Join(msgOfTopStatements, "\n"), glob.SysSignalTrue, nil
+	return glob.NewGlobTrue(strings.Join(msgOfTopStatements, "\n"))
 }

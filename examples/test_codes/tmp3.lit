@@ -1,28 +1,50 @@
+# cart_prod 例子
 
-# 今天 Q&A 中有人提问：「union 的最 general 定义是什么样子的？」
-# 也就是说，当一个集合的元素都是集合时，如何定义把这些集合合并在一起的运算。下面是一种写法
+# 例子1: 使用有限索引集合的笛卡尔积
+fn family1(i range(1, 4)) set:
+    i = 1 => family1(i) = R
+    i = 2 => family1(i) = Q
+    i = 3 => family1(i) = Z
 
-prop all_items_in_set_are_sets(s set):
-    forall x s:
-        x $in s
+have set y1 = cart_prod(range(1, 4), family1)
+$is_cart_prod(y1)
+index_set_of_cart_prod(y1) = range(1, 4)
+cart_prod_proj(y1, 1) = R
+cart_prod_proj(y1, 2) = Q
+cart_prod_proj(y1, 3) = Z
 
-exist_prop s2 set st exist_set_in_set_of_sets_contains(s set, x obj):
-    s2 $in s
-    x $in s2
+# 例子2: 使用自然数作为索引集合
+fn family2(i N_pos) set:
+    i = 1 => family2(i) = R
+    i = 2 => family2(i) = Q
+    i >= 3 => family2(i) = Z
 
-fn union_of_sets_in_set(s set) set:
-    $all_items_in_set_are_sets(s)
+have set y2 = cart_prod(N_pos, family2)
+$is_cart_prod(y2)
+index_set_of_cart_prod(y2) = N_pos
+cart_prod_proj(y2, 1) = R
+cart_prod_proj(y2, 2) = Q
+cart_prod_proj(y2, 3) = Z
 
-know:
-    forall s set, x s:
-        x $is_subset_of union_of_sets_in_set(s)
-    forall s set, y union_of_sets_in_set(s):
-        $exist_set_in_set_of_sets_contains(s, y)
+# 例子3: 所有投影都是同一个集合
+fn family3(i range(1, 5)) set:
+    family3(i) = R
 
-prove:
-    have set a := {1, 2, 3}
-    have set b := {4, 5, 6}
-    know a != b
-    have set s := {a, b}
+have set y3 = cart_prod(range(1, 5), family3)
+$is_cart_prod(y3)
+cart_prod_proj(y3, 1) = R
+cart_prod_proj(y3, 2) = R
+cart_prod_proj(y3, 3) = R
+cart_prod_proj(y3, 4) = R
 
-    a $is_subset_of union_of_sets_in_set(s)
+# 例子4: 使用函数模板定义更复杂的 family
+fn_template indexed_set(s set, n N_pos):
+    fn (i range(1, n + 1)) set:
+        indexed_set(s, n)(i) = s
+
+have set y4 = cart_prod(range(1, 3), indexed_set(R, 3))
+$is_cart_prod(y4)
+cart_prod_proj(y4, 1) = R
+cart_prod_proj(y4, 2) = R
+cart_prod_proj(y4, 3) = R
+

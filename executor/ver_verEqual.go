@@ -57,8 +57,8 @@ func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *Ve
 		return verRet
 	}
 
-	if leftAsFn, ok := stmt.Params[0].(*ast.FcFn); ok {
-		if rightAsFn, ok := stmt.Params[1].(*ast.FcFn); ok {
+	if leftAsFn, ok := stmt.Params[0].(*ast.FnObj); ok {
+		if rightAsFn, ok := stmt.Params[1].(*ast.FnObj); ok {
 			verRet := ver.verTrueEqualFact_FcFnEqual_NoCheckRequirements(leftAsFn, rightAsFn, state)
 			if verRet.IsErr() || verRet.IsTrue() {
 				return verRet
@@ -75,7 +75,7 @@ func isValidEqualFact(stmt *ast.SpecFactStmt) bool {
 	return len(stmt.Params) == 2 && string(stmt.PropName) == glob.KeySymbolEqual
 }
 
-func (ver *Verifier) verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Fc, right ast.Fc, state *VerState) ExecRet {
+func (ver *Verifier) verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
 	if verRet := ver.verEqualBuiltin(left, right, state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
@@ -101,16 +101,30 @@ func (ver *Verifier) verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Fc, r
 	return NewExecUnknown("")
 }
 
-func (ver *Verifier) verEqualBuiltin(left ast.Fc, right ast.Fc, state *VerState) ExecRet {
+func evaluateNonNumberLiteralExpr(obj ast.Obj) ast.Obj {
+	if objAsFn, ok := obj.(*ast.FnObj); ok {
+		// 尝试简化 dim(cart(...))
+		if simplified, replaced := ast.SimplifyDimCart(objAsFn); replaced {
+			return simplified
+		}
+		// 尝试简化 proj(cart(...), n)
+		if simplified, replaced := ast.SimplifyProjCart(objAsFn); replaced {
+			return simplified
+		}
+	}
+	return obj
+}
+
+func (ver *Verifier) verEqualBuiltin(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
+	left = evaluateNonNumberLiteralExpr(left)
+	right = evaluateNonNumberLiteralExpr(right)
+
 	ok, msg, err := cmp.CmpBy_Literally_NumLit_PolynomialArith(left, right) // 完全一样
 	if err != nil {
 		return NewExecErr(err.Error())
 	}
 	if ok {
-		if state.WithMsg {
-			ver.successWithMsg(fmt.Sprintf("%s = %s", left, right), msg)
-		}
-		return NewExecTrue("")
+		return ver.maybeAddSuccessMsg(state, fmt.Sprintf("%s = %s", left, right), msg, NewExecTrue(""))
 	}
 
 	// 如果是 fn 那就层层盘剥
@@ -118,16 +132,13 @@ func (ver *Verifier) verEqualBuiltin(left ast.Fc, right ast.Fc, state *VerState)
 	if verRet := ver.decomposeFcFnsAndCheckEquality(left, right, nextState, ver.verEqualBuiltin); verRet.IsErr() {
 		return verRet
 	} else if verRet.IsTrue() {
-		if state.WithMsg {
-			ver.successWithMsg(fmt.Sprintf("%s = %s", left, right), "each item of %s and %s are equal correspondingly")
-		}
-		return verRet
+		return ver.maybeAddSuccessMsg(state, fmt.Sprintf("%s = %s", left, right), "each item of %s and %s are equal correspondingly", verRet)
 	}
 
 	return NewExecUnknown("")
 }
 
-func (ver *Verifier) verEqualSpecMem(left ast.Fc, right ast.Fc, state *VerState) ExecRet {
+func (ver *Verifier) verEqualSpecMem(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
 	// if ver.env.CurMatchProp == nil {
 	for curEnv := ver.Env; curEnv != nil; curEnv = curEnv.Parent {
 		verRet := ver.equalFact_SpecMem_atEnv(curEnv, left, right, state)
@@ -139,7 +150,7 @@ func (ver *Verifier) verEqualSpecMem(left ast.Fc, right ast.Fc, state *VerState)
 	return NewExecUnknown("")
 }
 
-func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right ast.Fc, state *VerState) ExecRet {
+func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Obj, right ast.Obj, state *VerState) ExecRet {
 	nextState := state.GetNoMsg()
 
 	verRet := ver.getEqualFcsAndCmpOneByOne(curEnv, left, right, nextState)
@@ -147,16 +158,13 @@ func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Fc, right
 		return verRet
 	}
 	if verRet.IsTrue() {
-		if state.WithMsg {
-			ver.successWithMsg(fmt.Sprintf("%s = %s", left, right), verRet.String())
-		}
-		return verRet
+		return ver.maybeAddSuccessMsg(state, fmt.Sprintf("%s = %s", left, right), verRet.String(), verRet)
 	}
 
 	return NewExecUnknown("")
 }
 
-func (ver *Verifier) verLogicMem_leftToRight_RightToLeft(left ast.Fc, right ast.Fc, state *VerState) ExecRet {
+func (ver *Verifier) verLogicMem_leftToRight_RightToLeft(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
 	equalFact := ast.NewEqualFact(left, right)
 	verRet := ver.verSpecFact_ByLogicMem(equalFact, state)
 	if verRet.IsErr() || verRet.IsTrue() {
@@ -174,7 +182,7 @@ func (ver *Verifier) verLogicMem_leftToRight_RightToLeft(left ast.Fc, right ast.
 	return NewExecUnknown("")
 }
 
-func (ver *Verifier) verEqualUniMem(left ast.Fc, right ast.Fc, state *VerState) ExecRet {
+func (ver *Verifier) verEqualUniMem(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
 	equalFact := ast.NewEqualFact(left, right)
 	verRet := ver.verSpecFact_UniMem(equalFact, state)
 	if verRet.IsErr() || verRet.IsTrue() {
@@ -192,8 +200,8 @@ func (ver *Verifier) verEqualUniMem(left ast.Fc, right ast.Fc, state *VerState) 
 	return NewExecUnknown("")
 }
 
-func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, right ast.Fc, state *VerState) ExecRet {
-	var equalToLeftFcs, equalToRightFcs *[]ast.Fc
+func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Obj, right ast.Obj, state *VerState) ExecRet {
+	var equalToLeftFcs, equalToRightFcs *[]ast.Obj
 	var gotLeftEqualFcs, gotRightEqualFcs bool
 
 	equalToLeftFcs, gotLeftEqualFcs = curEnv.GetEqualFcs(left)
@@ -232,9 +240,9 @@ func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Fc, rig
 	return NewExecUnknown("")
 }
 
-func (ver *Verifier) decomposeFcFnsAndCheckEquality(left ast.Fc, right ast.Fc, state *VerState, areEqualFcs func(left ast.Fc, right ast.Fc, state *VerState) ExecRet) ExecRet {
-	if leftAsFn, ok := left.(*ast.FcFn); ok {
-		if rightAsFn, ok := right.(*ast.FcFn); ok {
+func (ver *Verifier) decomposeFcFnsAndCheckEquality(left ast.Obj, right ast.Obj, state *VerState, areEqualFcs func(left ast.Obj, right ast.Obj, state *VerState) ExecRet) ExecRet {
+	if leftAsFn, ok := left.(*ast.FnObj); ok {
+		if rightAsFn, ok := right.(*ast.FnObj); ok {
 			if len(leftAsFn.Params) != len(rightAsFn.Params) {
 				return NewExecUnknown("")
 			}

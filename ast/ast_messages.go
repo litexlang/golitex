@@ -83,7 +83,7 @@ func pureSpecFactString(stmt *SpecFactStmt) string {
 		builder.WriteString(stmt.PropName.String())
 		builder.WriteByte('(')
 
-		builder.WriteString(fcSliceString(stmt.Params))
+		builder.WriteString(objSliceString(stmt.Params))
 		builder.WriteByte(')')
 	}
 	return builder.String()
@@ -114,7 +114,7 @@ func keySymbolRelaFactWithoutNotString(stmt *SpecFactStmt) string {
 	return builder.String()
 }
 
-func StrFcSetPairs(objs []string, objSets []Fc) string {
+func StrFcSetPairs(objs []string, objSets []Obj) string {
 	pairStrSlice := make([]string, len(objs))
 	for i := range len(objs) {
 		pairStrSlice[i] = fmt.Sprintf("%s %s", objs[i], objSets[i])
@@ -134,7 +134,7 @@ func exist_st_FactString(stmt *SpecFactStmt) string {
 
 	existParams, factParams := GetExistFactExistParamsAndFactParams(stmt)
 
-	builder.WriteString(fcSliceString(existParams))
+	builder.WriteString(objSliceString(existParams))
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeywordSt)
 	builder.WriteString(" ")
@@ -160,6 +160,7 @@ func (stmt *DefLetStmt) String() string {
 		builder.WriteString(strings.Join(factStrSlice, "\n"))
 	}
 
+	builder.WriteByte('\n')
 	return builder.String()
 }
 
@@ -424,16 +425,16 @@ func (stmt *HaveObjStStmt) String() string {
 	return builder.String()
 }
 
-func (f FcAtom) String() string {
+func (f AtomObj) String() string {
 	return string(f)
 }
 
-func (f *FcFn) String() string {
+func (f *FnObj) String() string {
 	if IsFnSet(f) {
 		return fnSetString(f)
 	}
 
-	if IsFcAtomAndEqualToStr(f.FnHead, glob.KeySymbolDot) {
+	if IsAtomObjAndEqualToStr(f.FnHead, glob.KeySymbolDot) {
 		return fmt.Sprintf("%s.%s", f.Params[0], f.Params[1])
 	}
 
@@ -489,6 +490,27 @@ func (stmt *ProveInEachCaseStmt) String() string {
 	return strings.TrimSuffix(builder.String(), "\n")
 }
 
+func (stmt *ProveCaseByCaseStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordProveCaseByCase)
+	builder.WriteString(":\n")
+	for _, thenFact := range stmt.ThenFacts {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(thenFact.String(), 1))
+		builder.WriteByte('\n')
+	}
+	for _, proof := range stmt.Proofs {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordCase, 1))
+		builder.WriteString(glob.KeySymbolColon)
+		builder.WriteByte('\n')
+		for _, fact := range proof {
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 2))
+			builder.WriteByte('\n')
+		}
+		builder.WriteByte('\n')
+	}
+	return strings.TrimSuffix(builder.String(), "\n")
+}
+
 func (stmt *KnowPropStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordKnow)
@@ -497,7 +519,7 @@ func (stmt *KnowPropStmt) String() string {
 	return builder.String()
 }
 
-func fnSetString(f *FcFn) string {
+func fnSetString(f *FnObj) string {
 	var builder strings.Builder
 	builder.WriteString(f.FnHead.String())
 	builder.WriteString(" ")
@@ -709,6 +731,20 @@ func (stmt *HaveIntensionalSetStmt) String() string {
 	return builder.String()
 }
 
+func (stmt *HaveCartSetStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordHave)
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeywordSet)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.Name)
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeySymbolEqual)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.CartObj.String())
+	return builder.String()
+}
+
 func (stmt *HaveSetFnStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordHave)
@@ -737,7 +773,7 @@ func (stmt *HaveSetDefinedByReplacementStmt) String() string {
 	builder.WriteString(" ")
 	builder.WriteString(stmt.Name)
 	builder.WriteString(" ")
-	builder.WriteString(NewFcFn(FcAtom(glob.KeywordSetDefinedByReplacement), []Fc{stmt.DomSet, stmt.RangeSet, stmt.PropName}).String())
+	builder.WriteString(NewFnObj(AtomObj(glob.KeywordSetDefinedByReplacement), []Obj{stmt.DomSet, stmt.RangeSet, stmt.PropName}).String())
 	return builder.String()
 }
 
@@ -895,7 +931,38 @@ func (stmt *HaveFnStmt) String() string {
 	return builder.String()
 }
 
-func (fc FcSlice) String() string {
+func (stmt *HaveFnCaseByCaseStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordHave)
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeywordFn)
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteString("\n")
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.DefFnStmt.String(), 1))
+	builder.WriteString("\n")
+	for i := range len(stmt.CaseByCaseFacts) {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordCase, 1))
+		builder.WriteString(" ")
+		builder.WriteString(stmt.CaseByCaseFacts[i].String())
+		builder.WriteString(glob.KeySymbolColon)
+		builder.WriteByte('\n')
+		if i < len(stmt.Proofs) {
+			for _, proofStmt := range stmt.Proofs[i] {
+				builder.WriteString(glob.SplitLinesAndAdd4NIndents(proofStmt.String(), 2))
+				builder.WriteByte('\n')
+			}
+		}
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordHave, 1))
+		builder.WriteString(" ")
+		if i < len(stmt.EqualToObjs) {
+			builder.WriteString(stmt.EqualToObjs[i].String())
+		}
+		builder.WriteByte('\n')
+	}
+	return strings.TrimSuffix(builder.String(), "\n")
+}
+
+func (fc ObjSlice) String() string {
 	output := make([]string, len(fc))
 	for i, param := range fc {
 		output[i] = param.String()
@@ -975,6 +1042,78 @@ func (stmt *ProveInRangeStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordProveInRange)
 	builder.WriteString("(")
+	builder.WriteString(stmt.param)
+	builder.WriteString(", ")
+	builder.WriteString(stmt.start.String())
+	builder.WriteString(", ")
+	builder.WriteString(stmt.end.String())
+	builder.WriteString(")")
+	builder.WriteString(":")
+	
+	hasDom := len(stmt.DomFactsOrNil) > 0
+	hasProve := len(stmt.ProofsOrNil) > 0
+	
+	if hasDom {
+		// First section is dom: format is dom:, =>:, (optional) prove:
+		builder.WriteString("\n    dom:\n")
+		for _, fact := range stmt.DomFactsOrNil {
+			builder.WriteString("        ")
+			builder.WriteString(fact.String())
+			builder.WriteString("\n")
+		}
+		if len(stmt.ThenFacts) > 0 {
+			builder.WriteString("    =>:\n")
+			for _, fact := range stmt.ThenFacts {
+				builder.WriteString("        ")
+				builder.WriteString(fact.String())
+				builder.WriteString("\n")
+			}
+		}
+		if hasProve {
+			builder.WriteString("    prove:\n")
+			for _, proof := range stmt.ProofsOrNil {
+				builder.WriteString("        ")
+				builder.WriteString(proof.String())
+				builder.WriteString("\n")
+			}
+		}
+	} else {
+		// First section is not dom
+		if hasProve {
+			// Last section is prove: format is =>:, prove:
+			if len(stmt.ThenFacts) > 0 {
+				builder.WriteString("\n    =>:\n")
+				for _, fact := range stmt.ThenFacts {
+					builder.WriteString("        ")
+					builder.WriteString(fact.String())
+					builder.WriteString("\n")
+				}
+			}
+			builder.WriteString("    prove:\n")
+			for _, proof := range stmt.ProofsOrNil {
+				builder.WriteString("        ")
+				builder.WriteString(proof.String())
+				builder.WriteString("\n")
+			}
+		} else {
+			// No prove: format is direct fact statements (no =>:)
+			if len(stmt.ThenFacts) > 0 {
+				builder.WriteString("\n")
+				for _, fact := range stmt.ThenFacts {
+					builder.WriteString("    ")
+					builder.WriteString(fact.String())
+					builder.WriteString("\n")
+				}
+			}
+		}
+	}
+	return builder.String()
+}
+
+func (stmt *ProveInRangeSetStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordProveInRangeSet)
+	builder.WriteString("(")
 	builder.WriteString(fmt.Sprintf("%d", stmt.Start))
 	builder.WriteString(", ")
 	builder.WriteString(fmt.Sprintf("%d", stmt.End))
@@ -1001,7 +1140,7 @@ func (stmt *ProveInRangeStmt) String() string {
 	return builder.String()
 }
 
-func ProveIsCertainPropStmtString(kw string, prop FcAtom, params []string, proofs []Stmt) string {
+func ProveIsCertainPropStmtString(kw string, prop AtomObj, params []string, proofs []Stmt) string {
 	var builder strings.Builder
 	builder.WriteString(kw)
 	builder.WriteString("(")
@@ -1127,11 +1266,7 @@ func AlgoStmtStrSliceJoinWithNewlineWithIndents(stmts []Stmt, indents uint32) st
 }
 
 func (stmt *EvalStmt) String() string {
-	strSlice := make([]string, len(stmt.FcsToEval))
-	for i, fc := range stmt.FcsToEval {
-		strSlice[i] = fc.String()
-	}
-	return fmt.Sprintf("%s %s", glob.KeywordEval, strings.Join(strSlice, ", "))
+	return fmt.Sprintf("%s(%s)", glob.KeywordEval, stmt.FcsToEval.String())
 }
 
 func (stmt *DefProveAlgoStmt) String() string {
@@ -1177,6 +1312,50 @@ func (stmt *ProveAlgoReturnStmt) String() string {
 		builder.WriteString(glob.KeywordBy)
 		builder.WriteString(" ")
 		builder.WriteString(stmt.ByStmtOrNil.String())
+	}
+	return builder.String()
+}
+
+func (stmt *PrintStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordPrint)
+	builder.WriteString(glob.KeySymbolLeftBrace)
+	if stmt.IsFString {
+		builder.WriteString("f")
+	}
+	builder.WriteString(stmt.Value)
+	builder.WriteString(glob.KeySymbolDoubleQuote)
+	builder.WriteString(glob.KeySymbolRightBrace)
+	return builder.String()
+}
+
+func (stmt *HelpStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordHelp)
+	builder.WriteString(glob.KeySymbolLeftBrace)
+	builder.WriteString(stmt.Keyword)
+	builder.WriteString(glob.KeySymbolRightBrace)
+	return builder.String()
+}
+
+func (stmt *HaveFnEqualCaseByCaseStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordHave)
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeywordFn)
+	builder.WriteString(stmt.DefHeader.StringWithoutColonAtEnd())
+	builder.WriteString(" ")
+	builder.WriteString(stmt.RetSet.String())
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeySymbolEqual)
+	builder.WriteByte('\n')
+	for i, fact := range stmt.CaseByCaseFacts {
+		builder.WriteString(glob.KeywordCase)
+		builder.WriteString(" ")
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 1))
+		builder.WriteString(glob.KeySymbolEqual)
+		builder.WriteString(stmt.CaseByCaseEqualTo[i].String())
+		builder.WriteByte('\n')
 	}
 	return builder.String()
 }

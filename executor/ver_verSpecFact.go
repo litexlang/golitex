@@ -57,16 +57,14 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast
 		}
 
 		for _, relatedFc := range relatedFcSlice {
-			relatedFcStmt := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(stmt.PropName), []ast.Fc{relatedFc, stmt.Params[1]}, stmt.Line)
+			relatedFcStmt := ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(stmt.PropName), []ast.Obj{relatedFc, stmt.Params[1]}, stmt.Line)
 			verRet := ver.verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(relatedFcStmt, state)
 			if verRet.IsErr() {
 				return verRet
 			}
 			if verRet.IsTrue() {
-				if state.WithMsg {
-					ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is true by %s is a transitive prop and %s is true", stmt.String(), string(stmt.PropName), relatedFcStmt.String()))
-				}
-				return NewExecTrue(fmt.Sprintf("%s is true by %s is a transitive prop and %s is true", stmt.String(), string(stmt.PropName), relatedFcStmt.String()))
+				msg := fmt.Sprintf("%s is true by %s is a transitive prop and %s is true", stmt.String(), string(stmt.PropName), relatedFcStmt.String())
+				return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
 			}
 		}
 	}
@@ -83,10 +81,8 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *a
 			return verRet
 		}
 		if verRet.IsTrue() {
-			if state.WithMsg {
-				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
-			}
-			return NewExecTrue(fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
+			msg := fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String())
+			return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
 		}
 	}
 
@@ -95,7 +91,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *a
 		return verRet
 	}
 	if verRet.IsTrue() {
-		return NewExecTrue("")
+		return verRet
 	}
 
 	return NewExecUnknown("")
@@ -116,7 +112,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFactMainLogic(stmt *ast.SpecFa
 }
 
 func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	if verRet := ver.verSpecialSpecFact_ByBIR(stmt, state); verRet.IsErr() || verRet.IsTrue() {
+	if verRet := ver.verSpecFactByBuiltinRules(stmt, state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
 
@@ -141,7 +137,7 @@ func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state *VerSta
 	return NewExecUnknown("")
 }
 
-func (ver *Verifier) verSpecialSpecFact_ByBIR(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	if stmt.NameIs(glob.KeywordIn) {
 		return ver.inFactBuiltinRules(stmt, state)
 	} else if stmt.NameIs(glob.KeywordItemExistsIn) && stmt.TypeEnum == ast.TrueExist_St {
@@ -155,7 +151,11 @@ func (ver *Verifier) verSpecialSpecFact_ByBIR(stmt *ast.SpecFactStmt, state *Ver
 	}
 
 	if stmt.NameIs(glob.KeySymbolEqual) && stmt.TypeEnum == ast.FalsePure {
-		return ver.verNotTrueEqualFact_BuiltinRules(stmt, state)
+		return ver.verNotTrueEqualFact_BuiltinRules_WithState(stmt, state)
+	}
+
+	if stmt.NameIs(glob.KeywordIsCart) && stmt.TypeEnum == ast.TruePure {
+		return ver.verIsCartByBuiltinRules(stmt, state)
 	}
 
 	return NewExecUnknown("")
@@ -195,7 +195,7 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 	defStmt := ver.Env.MakeUniFactParamsInThisDefPropDoNotConflictWithEnv(curDefStmt)
 
 	iffToProp := defStmt.IffToPropUniFact()
-	paramArrMap := map[string]ast.Fc{}
+	paramArrMap := map[string]ast.Obj{}
 	for i, param := range stmt.Params {
 		paramArrMap[defStmt.DefHeader.Params[i]] = param
 	}
@@ -226,11 +226,7 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 		}
 	}
 
-	if state.WithMsg {
-		ver.successWithMsg(stmt.String(), defStmt.String())
-	}
-
-	return NewExecTrue("")
+	return ver.maybeAddSuccessMsg(state, stmt.String(), defStmt.String(), NewExecTrue(""))
 }
 
 func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
@@ -242,7 +238,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 		return BoolErrToExecRet(false, fmt.Errorf("%s has no definition", stmt))
 	}
 
-	uniConMap := map[string]ast.Fc{}
+	uniConMap := map[string]ast.Obj{}
 	for i := range existParams {
 		uniConMap[propDef.ExistParams[i]] = existParams[i]
 	}
@@ -262,11 +258,12 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 			return verRet
 		}
 		if verRet.IsUnknown() {
+			execRet := NewExecUnknown("")
 			if state.WithMsg {
 				msg := fmt.Sprintf("given object %s is not in its param set %s\n", existParams[i], instParamSets[i])
-				ver.Env.Msgs = append(ver.Env.Msgs, msg)
+				execRet.AddMsg(msg)
 			}
-			return NewExecUnknown("")
+			return execRet
 		}
 	}
 
@@ -286,11 +283,12 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 			return verRet
 		}
 		if verRet.IsUnknown() {
+			execRet := NewExecUnknown("")
 			if state.WithMsg {
 				msg := fmt.Sprintf("dom fact %s is unknown\n", domFact)
-				ver.Env.Msgs = append(ver.Env.Msgs, msg)
+				execRet.AddMsg(msg)
 			}
-			return NewExecUnknown("")
+			return execRet
 		}
 	}
 
@@ -301,11 +299,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 		}
 	}
 
-	if state.WithMsg {
-		ver.successWithMsg(stmt.String(), "by definition")
-	}
-
-	return NewExecTrue("")
+	return ver.maybeAddSuccessMsg(state, stmt.String(), "by definition", NewExecTrue(""))
 }
 
 // func (ver *Verifier) verSpecFactLogicMem(stmt *ast.SpecFactStmt, state *VerState) VerRet {
@@ -327,13 +321,13 @@ func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecFactStmt, state *VerState)
 	return ver.verSpecFact_InLogicExpr_InUniFactMem(stmt, nextState)
 }
 
-func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) verNotTrueEqualFact_BuiltinRules_WithState(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	if stmt.IsTrue() {
 		return NewExecUnknown("")
 	}
 
-	var leftValue, rightValue ast.Fc
-	if cmp.IsNumLitFc(stmt.Params[0]) {
+	var leftValue, rightValue ast.Obj
+	if cmp.IsNumLitObj(stmt.Params[0]) {
 		leftValue = stmt.Params[0]
 	} else {
 		leftValue = ver.Env.GetSymbolSimplifiedValue(stmt.Params[0])
@@ -341,7 +335,7 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecFactStmt, st
 			return NewExecUnknown("")
 		}
 	}
-	if cmp.IsNumLitFc(stmt.Params[1]) {
+	if cmp.IsNumLitObj(stmt.Params[1]) {
 		rightValue = stmt.Params[1]
 	} else {
 		rightValue = ver.Env.GetSymbolSimplifiedValue(stmt.Params[1])
@@ -355,6 +349,9 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecFactStmt, st
 		return NewExecErr(err.Error())
 	}
 	if !areEqual {
+		if state != nil {
+			return ver.maybeAddSuccessMsg(state, stmt.String(), "builtin rules", NewExecTrue(""))
+		}
 		return NewExecTrue("")
 	}
 
@@ -373,6 +370,16 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules(stmt *ast.SpecFactStmt, st
 	return NewExecUnknown("")
 }
 
+func (ver *Verifier) verIsCartByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	// 如果参数数量是1，且参数的函数名是cart，那自动成立
+	if len(stmt.Params) == 1 {
+		if cartObj, ok := stmt.Params[0].(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(cartObj.FnHead, glob.KeywordCart) {
+			return ver.maybeAddSuccessMsg(state, stmt.String(), "builtin rules: cart(...) is automatically a cart set", NewExecTrue(""))
+		}
+	}
+	return NewExecUnknown("")
+}
+
 func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	nextState := state.GetAddRound()
 
@@ -388,7 +395,7 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *Ver
 	}
 
 	iffToProp := defStmt.IffToPropUniFact()
-	paramArrMap := map[string]ast.Fc{}
+	paramArrMap := map[string]ast.Obj{}
 	for i, param := range stmt.Params {
 		paramArrMap[defStmt.DefHeader.Params[i]] = param
 	}
@@ -425,11 +432,7 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *Ver
 			return verRet
 		}
 		if verRet.IsTrue() {
-			if state.WithMsg {
-				ver.successWithMsg(stmt.String(), defStmt.String())
-			}
-
-			return NewExecTrue("")
+			return ver.maybeAddSuccessMsg(state, stmt.String(), defStmt.String(), NewExecTrue(""))
 		}
 	}
 

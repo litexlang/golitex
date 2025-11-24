@@ -20,8 +20,6 @@ const MaxNameLen int = 255
 const FuncFactPrefix string = "$"
 const InlineCommentSig string = "#"
 
-// const TupleFcFnHead string = "()"
-
 const InnerGenLine uint = 0
 
 const LatexSig string = "##"
@@ -30,4 +28,4 @@ const LatexMultiLineSig string = "\"\""
 
 const LitexFileSuffix string = ".lit"
 
-const PkgEntranceFileName string = "main" + LitexFileSuffix
+const MainDotLit string = "main.lit"

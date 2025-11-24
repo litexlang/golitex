@@ -17,6 +17,7 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
+	glob "golitex/glob"
 	"strings"
 )
 
@@ -27,17 +28,21 @@ type ExecRet interface {
 	IsErr() bool
 	NewVerMsg(verState *VerState, msg string) ExecRet
 	String() string
+	GetMsgs() []string
 	ToBoolErr() (bool, error)
 	IsNotTrue() bool
 	IsNotUnknown() bool
 	IsNotErr() bool
 	Inherit(execRet ExecRet)
 	NewVerMsgAtBegin(verState *VerState, msg string) ExecRet
+	ToGlobRet() glob.GlobRet
+	AddMsg(msg string) ExecRet
+	AddMsgAtBegin(msg string) ExecRet
 }
 
 type ExecTrue struct {
 	Msg             []string
-	TrueEqualValues []ast.Fc
+	TrueEqualValues []ast.Obj
 }
 
 type ExecUnknown struct {
@@ -59,6 +64,7 @@ func (v *ExecTrue) NewVerMsg(verState *VerState, msg string) ExecRet {
 	return v
 }
 func (v *ExecTrue) String() string           { return strings.Join(v.Msg, "\n") }
+func (v *ExecTrue) GetMsgs() []string        { return v.Msg }
 func (v *ExecTrue) ToBoolErr() (bool, error) { return true, nil }
 func (v *ExecTrue) IsNotTrue() bool          { return false }
 func (v *ExecTrue) IsNotUnknown() bool       { return true }
@@ -74,6 +80,7 @@ func (v *ExecErr) NewVerMsg(verState *VerState, msg string) ExecRet {
 	return v
 }
 func (v *ExecErr) String() string           { return strings.Join(v.Msg, "\n") }
+func (v *ExecErr) GetMsgs() []string        { return v.Msg }
 func (v *ExecErr) ToBoolErr() (bool, error) { return false, fmt.Errorf(v.String()) }
 func (v *ExecErr) IsNotTrue() bool          { return true }
 func (v *ExecErr) IsNotUnknown() bool       { return true }
@@ -89,6 +96,7 @@ func (v *ExecUnknown) NewVerMsg(verState *VerState, msg string) ExecRet {
 	return v
 }
 func (v *ExecUnknown) String() string           { return strings.Join(v.Msg, "\n") }
+func (v *ExecUnknown) GetMsgs() []string        { return v.Msg }
 func (v *ExecUnknown) ToBoolErr() (bool, error) { return false, nil }
 func (v *ExecUnknown) IsNotTrue() bool          { return true }
 func (v *ExecUnknown) IsNotUnknown() bool       { return false }
@@ -107,12 +115,12 @@ func NewExecErrWithErr(err error) *ExecErr {
 
 func BoolErrToExecRet(ok bool, err error) ExecRet {
 	if err != nil {
-		return &ExecErr{Msg: []string{err.Error()}}
+		return NewExecErrWithMsgs([]string{err.Error()})
 	}
 	if ok {
-		return &ExecTrue{Msg: []string{}}
+		return NewExecTrueWithMsgs([]string{})
 	}
-	return &ExecUnknown{Msg: []string{}}
+	return NewExecUnknownWithMsgs([]string{})
 }
 
 func NewExecTrue(s string) ExecRet {
@@ -129,14 +137,26 @@ func NewExecUnknown(s string) ExecRet {
 	return &ExecUnknown{Msg: []string{}}
 }
 
-func NewExecTrueWithValues(s string, equalValue []ast.Fc) ExecRet {
+func NewExecTrueWithValues(s string, equalValue []ast.Obj) ExecRet {
 	if s != "" {
 		return &ExecTrue{Msg: []string{s}, TrueEqualValues: equalValue}
 	}
 	if len(equalValue) != 2 {
 		panic("equal value length must be 2")
 	}
-	return &ExecTrue{Msg: []string{}, TrueEqualValues: []ast.Fc{equalValue[0], equalValue[1]}}
+	return &ExecTrue{Msg: []string{}, TrueEqualValues: []ast.Obj{equalValue[0], equalValue[1]}}
+}
+
+func NewExecTrueWithMsgs(msgs []string) ExecRet {
+	return &ExecTrue{Msg: msgs}
+}
+
+func NewExecErrWithMsgs(msgs []string) ExecRet {
+	return &ExecErr{Msg: msgs}
+}
+
+func NewExecUnknownWithMsgs(msgs []string) ExecRet {
+	return &ExecUnknown{Msg: msgs}
 }
 
 func (v *ExecTrue) Inherit(execRet ExecRet) {
@@ -183,5 +203,50 @@ func (v *ExecUnknown) NewVerMsgAtEnd(verState *VerState, msg string) ExecRet {
 	if verState.IsWithMsg() {
 		v.Msg = append(v.Msg, msg)
 	}
+	return v
+}
+
+func (v *ExecTrue) ToGlobRet() glob.GlobRet {
+	msgs := v.GetMsgs()
+	return glob.NewGlobTrueWithMsgs(msgs)
+}
+
+func (v *ExecUnknown) ToGlobRet() glob.GlobRet {
+	msgs := v.GetMsgs()
+	return glob.NewGlobUnknownWithMsgs(msgs)
+}
+
+func (v *ExecErr) ToGlobRet() glob.GlobRet {
+	msgs := v.GetMsgs()
+	return glob.NewGlobErrWithMsgs(msgs)
+}
+
+func (v *ExecTrue) AddMsg(msg string) ExecRet {
+	v.Msg = append(v.Msg, msg)
+	return v
+}
+
+func (v *ExecUnknown) AddMsg(msg string) ExecRet {
+	v.Msg = append(v.Msg, msg)
+	return v
+}
+
+func (v *ExecErr) AddMsg(msg string) ExecRet {
+	v.Msg = append(v.Msg, msg)
+	return v
+}
+
+func (v *ExecTrue) AddMsgAtBegin(msg string) ExecRet {
+	v.Msg = append([]string{msg}, v.Msg...)
+	return v
+}
+
+func (v *ExecUnknown) AddMsgAtBegin(msg string) ExecRet {
+	v.Msg = append([]string{msg}, v.Msg...)
+	return v
+}
+
+func (v *ExecErr) AddMsgAtBegin(msg string) ExecRet {
+	v.Msg = append([]string{msg}, v.Msg...)
 	return v
 }

@@ -46,12 +46,12 @@ prove:
     have s2 finite_set
 
 
-# have objects from finite sets len > 0
+# have objects from finite sets size > 0
 prove:
     let s finite_set:
-        len(s) = 1
+        count(s) = 1
     1 > 0
-    len(s) > 0
+    count(s) > 0
     have a st $item_exists_in(s)
     a $in s
 

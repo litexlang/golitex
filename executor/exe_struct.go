@@ -19,18 +19,23 @@ import (
 )
 
 type Executor struct {
-	Env *env.Env
+	Env    *env.Env
+	PkgMgr *PackageManager
 }
 
-func NewExecutor(curEnv *env.Env) *Executor {
+func NewExecutor(curEnv *env.Env, pkgMgr *PackageManager) *Executor {
 	if curEnv == nil {
-		return &Executor{Env: env.NewEnv(nil)}
+		return &Executor{Env: env.NewEnv(nil), PkgMgr: pkgMgr}
 	} else {
-		return &Executor{Env: curEnv}
+		return &Executor{Env: curEnv, PkgMgr: pkgMgr}
 	}
 }
 
 func (e *Executor) NewEnv(parent *env.Env) *env.Env {
 	e.Env = env.NewEnv(parent)
 	return e.Env
+}
+
+func (e *Executor) deleteEnv() {
+	e.Env = e.Env.Parent
 }
