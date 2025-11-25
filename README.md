@@ -28,7 +28,7 @@ _– Leonardo da Vinci_
 
 [Litex](https://litexlang.com) (beta-version, not ready for production use) is a simple open-source formal language, making mathematical thinking more approachable for *everyone*. It expresses mathematics as code, ensuring rigorous correctness while staying close to natural language. ([Star the repo!](https://github.com/litexlang/golitex)) With just one to two hours of learning the fundamentals, you can write 10-20 lines of code that solve interesting mathematical problems with verified correctness. 
 
-How does Litex work? It achieves its simplicity by imitating the way people reason and the way how math works. Mathematics builds on simple foundations: a few axioms and inference rules create infinitely rich worlds. *Litex found a set of axioms and inference rules that are expressive enough to express most math concepts quite well, while being intuitive enough that most people can learn them quickly.* Its close-to-natural syntax means users often forget they're using a formal language, lowering the barrier of formal reasoning by 10x compared with traditional formal languages. Read [Tutorial](https://litexlang.com/doc/Tutorial/Introduction) for more details.
+How does Litex work? It achieves its simplicity by imitating how people reason and how mathematics works. Mathematics builds on simple foundations: a few axioms and inference rules create infinitely rich worlds. *Litex uses a set of axioms and inference rules that are sufficiently expressive to capture most mathematical concepts, while being intuitive enough that most people can learn them quickly. Litex adopts the LCF prover architecture, with a far larger kernel than other formal languages.* Its close-to-natural syntax means users often forget they're using a formal language, lowering the barrier of formal reasoning by 10x compared with traditional formal languages. Read [Tutorial](https://litexlang.com/doc/Tutorial/Introduction) for more details.
 
 ## Why Litex?
 
@@ -117,11 +117,12 @@ Resources for Litex users:
 
 1. Our official [website](https://litexlang.com) contains tutorials, cheat sheets, examples, documentation, collaboration opportunities, and more for Litex. All documents on our [website](https://litexlang.com) are open-sourced [here](https://github.com/litexlang/litex-official-documents)
 2. Learn Litex [online](https://litexlang.com/doc/Tutorial/Introduction). A short list of major Litex statements and their usage are shown in the [cheat sheet](https://litexlang.com/doc/Litex_Cheatsheet).
-3. You can run litex on your own computer， start from [here](https://litexlang.com/doc/Quick_Start)
-4. [Litex standard library](https://github.com/litexlang/litex-stdlib) is under active development. **Contribute to it and earn impact rewards!**
-5. Use [pylitex](https://github.com/litexlang/pylitex) to call Litex in Python
-6. Our Community is on [Zulip](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)!
-7. Email us [here](mailto:litexlang@outlook.com).
+3. Theory Behind Litex: [From a Mathematical Perspective](https://litexlang.com/doc/Tutorial/Litex_From_A_Mathematical_Perspective), [From a Programming Perspective](https://litexlang.com/doc/Tutorial/Litex_From_A_Programmer_Perspective)
+4. You can run litex on your own computer,start from [here](https://litexlang.com/doc/Quick_Start)
+5. [Litex standard library](https://github.com/litexlang/litex-stdlib) is under active development. **Contribute to it and earn impact rewards!**
+6. Use [pylitex](https://github.com/litexlang/pylitex) to call Litex in Python
+7. Our Community is on [Zulip](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)!
+8. Email us [here](mailto:litexlang@outlook.com).
 
 Resources for AI researchers who want to develop Litex-based AI systems, mostly developed by the Litex open-source community:
 
