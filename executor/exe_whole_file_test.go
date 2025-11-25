@@ -16,6 +16,12 @@ package litex_executor
 
 import (
 	"fmt"
+	ast "golitex/ast"
+	env "golitex/environment"
+	glob "golitex/glob"
+	parser "golitex/parser"
+	"os"
+	"strings"
 	"testing"
 	"time"
 )
@@ -23,9 +29,10 @@ import (
 func TestWholeFile(t *testing.T) {
 	start := time.Now()
 	codePath := "../examples/test_codes/tmp.lit"
+	code := readFile(codePath)
 	readFileTime := time.Since(start)
 	start = time.Now()
-	topStmtSlice, err := setupAndParseStmtTest(codePath)
+	topStmtSlice, err := parser.ParseSourceCode(code)
 	if err != nil {
 		t.Errorf(err.Error())
 		return
@@ -36,4 +43,81 @@ func TestWholeFile(t *testing.T) {
 	executionTime := time.Since(start)
 	printExecMsg(messages)
 	fmt.Printf("read file takes %s\nparsing takes %s\nexecution takes %s\n", readFileTime, parseTime, executionTime)
+}
+
+func readFile(filePath string) string {
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		panic(err)
+	}
+	return string(content)
+}
+
+func execStmtTest(topStmt []ast.Stmt) []string {
+	env := env.NewEnv(nil)
+	executor := NewExecutor(env, NewPackageManager())
+
+	messages := []string{}
+
+	notTrue := false
+
+	for _, topStmt := range topStmt {
+		execState := executor.Stmt(topStmt)
+		if execState.IsErr() {
+			messages = append(messages, execState.String())
+			notTrue = true
+		}
+
+		if execState.IsUnknown() {
+			notTrue = true
+		}
+
+		// 如果连续两个 \n 则删除一个
+		msgs := execState.GetMsgs()
+		var newMsgs []string
+		for i := 0; i < len(msgs); i++ {
+			curMsg := msgs[i]
+			if i < len(msgs)-1 && curMsg == "\n" && msgs[i+1] == "\n" {
+				newMsgs = append(newMsgs, curMsg)
+				i++
+			} else {
+				newMsgs = append(newMsgs, curMsg)
+			}
+		}
+
+		if notTrue {
+			messages = append(messages, fmt.Sprintf("execution failed at:\n%s", topStmt))
+			break
+		} else {
+			messages = append(messages, strings.Join(newMsgs, "\n"))
+		}
+	}
+
+	if notTrue {
+		messages = append(messages, glob.REPLErrorMessage)
+	} else {
+		messages = append(messages, glob.REPLSuccessMessage)
+	}
+
+	return messages
+}
+
+func printExecMsg(messageSlice []string) {
+	// 如果上一个msg是 \n ，或者上一行终止以 \n 结尾，则这一行是纯\n的话，则删除这一行
+	lastMsgIsNewline := false
+	for _, msg := range messageSlice {
+		if lastMsgIsNewline {
+			if strings.TrimSpace(msg) == "" {
+				continue
+			}
+		}
+
+		if strings.HasSuffix(msg, "\n\n") {
+			msg = strings.TrimSpace(msg)
+			msg = fmt.Sprintf("%s\n", msg)
+		}
+
+		lastMsgIsNewline = strings.HasSuffix(msg, "\n")
+		fmt.Println(msg)
+	}
 }

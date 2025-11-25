@@ -765,4 +765,16 @@ fn inverse_image_set(X set, Y set, f fn(X)Y, U set) set:
     U $is_subset_of Y
     =>:
         inverse_image_set(X, Y, f, U) = {x X: f(x) $in U}
+
+fn difference(x, y set) set
+know:
+	forall x, y set, z x:
+		not z $in y
+		<=>:
+			z $in difference(x, y)
+know @item_in_difference(x, y set, z obj):
+	z $in difference(x, y)
+	=>:
+		not z $in y
+		z $in x
 `
