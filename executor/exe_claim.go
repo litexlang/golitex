@@ -17,7 +17,6 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
-	env "golitex/environment"
 	"strings"
 )
 
@@ -201,9 +200,10 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) ExecRet {
 	}()
 
 	// 需要检查stmt.ToCheckFact里的东西都是在外部声明好了的
-	ok := exec.Env.AreAtomsInFactAreDeclared(stmt.ToCheckFact, map[string]struct{}{})
-	if !ok {
-		return NewExecErr(fmt.Errorf(env.AtomsInFactNotDeclaredMsg(stmt.ToCheckFact)).Error())
+	ret := exec.Env.AreAtomsInFactAreDeclared(stmt.ToCheckFact, map[string]struct{}{})
+	if ret.IsErr() {
+		ret.AddMsg("in claim statement")
+		return NewExecErr(ret.String())
 	}
 
 	switch stmt.ToCheckFact.(type) {
@@ -275,8 +275,10 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) ExecRet {
 func (exec *Executor) claimPropStmt(stmt *ast.ClaimPropStmt) ExecRet {
 	// prop all atoms declared
 	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.DomFacts, stmt.Prop.IffFacts, stmt.Line)
-	if !exec.Env.AreAtomsInFactAreDeclared(uniFact, map[string]struct{}{}) && !exec.Env.IsFcAtomDeclaredByUser(ast.AtomObj(stmt.Prop.DefHeader.Name)) {
-		return NewExecErr(fmt.Errorf("claim prop statement error: atoms in fact are not declared").Error())
+	ret := exec.Env.AreAtomsInFactAreDeclared(uniFact, map[string]struct{}{})
+	if ret.IsErr() && !exec.Env.IsFcAtomDeclaredByUser(ast.AtomObj(stmt.Prop.DefHeader.Name)) {
+		ret.AddMsg("in claim prop statement")
+		return NewExecErr(ret.String())
 	}
 
 	// check proofs
