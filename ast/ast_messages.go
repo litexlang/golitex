@@ -1295,23 +1295,30 @@ func (stmt *ByStmt) String() string {
 	builder.WriteString("(")
 	builder.WriteString(stmt.Params.String())
 	builder.WriteString(")")
-	builder.WriteString(glob.KeySymbolColon)
-	builder.WriteByte('\n')
-	for _, fact := range stmt.ThenFactsOrNil {
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 1))
-		builder.WriteByte('\n')
-	}
 	return builder.String()
 }
 
 func (stmt *ProveAlgoReturnStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordReturn)
-	if stmt.ByStmtOrNil != nil {
+	if len(stmt.Facts) == 0 {
+		return builder.String()
+	}
+	
+	// Check if it's a single inline fact (no colon case) or multiple facts (colon case)
+	if len(stmt.Facts) == 1 {
+		// Single inline fact
 		builder.WriteString(" ")
-		builder.WriteString(glob.KeywordBy)
-		builder.WriteString(" ")
-		builder.WriteString(stmt.ByStmtOrNil.String())
+		builder.WriteString(stmt.Facts[0].String())
+	} else {
+		// Multiple facts from body
+		builder.WriteString(glob.KeySymbolColon)
+		for i, fact := range stmt.Facts {
+			if i > 0 {
+				builder.WriteString("\n")
+			}
+			builder.WriteString(fact.String())
+		}
 	}
 	return builder.String()
 }

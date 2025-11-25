@@ -3596,35 +3596,8 @@ func (tb *tokenBlock) byStmt() (*ast.ByStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	if !tb.header.is(glob.KeySymbolColon) {
-		return ast.NewByStmt(proveAlgoName, proveAlgoParams, nil, tb.line), nil
-	}
-
-	err = tb.header.skip(glob.KeySymbolColon)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	thenFacts := []ast.FactStmt{}
-	if tb.header.ExceedEnd() {
-		for _, block := range tb.body {
-			curStmt, err := block.factStmt(UniFactDepth0)
-			if err != nil {
-				return nil, tbErr(err, tb)
-			}
-			thenFacts = append(thenFacts, curStmt)
-		}
-	} else {
-		// parse inline facts
-		for !tb.header.ExceedEnd() {
-			curStmt, err := tb.inlineFactThenSkipStmtTerminatorUntilEndSignals([]string{glob.KeySymbolColon})
-			if err != nil {
-				return nil, tbErr(err, tb)
-			}
-			thenFacts = append(thenFacts, curStmt)
-		}
-	}
-	return ast.NewByStmt(proveAlgoName, proveAlgoParams, thenFacts, tb.line), nil
+	// by statement no longer has then facts - facts are returned from prove_algo
+	return ast.NewByStmt(proveAlgoName, proveAlgoParams, tb.line), nil
 }
 
 func (tb *tokenBlock) proveByContradictionStmt() (ast.Stmt, error) {

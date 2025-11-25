@@ -304,12 +304,12 @@ func NewDefProveAlgoStmt(algoName string, params []string, thenFacts AlgoStmtSli
 	return &DefProveAlgoStmt{algoName, params, thenFacts, line}
 }
 
-func NewByStmt(proveAlgoName string, proveAlgoParams ObjSlice, thenFacts FactStmtSlice, line uint) *ByStmt {
-	return &ByStmt{proveAlgoName, proveAlgoParams, thenFacts, line}
+func NewByStmt(proveAlgoName string, proveAlgoParams ObjSlice, line uint) *ByStmt {
+	return &ByStmt{ProveAlgoName: proveAlgoName, Params: proveAlgoParams, Line: line}
 }
 
-func NewProveAlgoReturnStmt(by *ByStmt, line uint) *ProveAlgoReturnStmt {
-	return &ProveAlgoReturnStmt{by, line}
+func NewProveAlgoReturnStmt(facts FactStmtSlice, line uint) *ProveAlgoReturnStmt {
+	return &ProveAlgoReturnStmt{Facts: facts, Line: line}
 }
 
 func NewPrintStmt(isFString bool, value string, line uint) *PrintStmt {

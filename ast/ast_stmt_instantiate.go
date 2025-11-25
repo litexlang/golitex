@@ -909,22 +909,19 @@ func (stmt *ByStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	newThenFacts, err := stmt.ThenFactsOrNil.InstantiateFact(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	return NewByStmt(stmt.ProveAlgoName, newProveAlgoParams, newThenFacts, stmt.Line), nil
+	return NewByStmt(stmt.ProveAlgoName, newProveAlgoParams, stmt.Line), nil
 }
 
 func (stmt *ProveAlgoReturnStmt) InstantiateAlgo(uniMap map[string]Obj) (AlgoStmt, error) {
-	if stmt.ByStmtOrNil != nil {
-		instBy, err := stmt.ByStmtOrNil.Instantiate(uniMap)
+	instFacts := []FactStmt{}
+	for _, fact := range stmt.Facts {
+		instFact, err := fact.Instantiate(uniMap)
 		if err != nil {
 			return nil, err
 		}
-		return NewProveAlgoReturnStmt(instBy.(*ByStmt), stmt.GetLine()), nil
+		instFacts = append(instFacts, instFact.(FactStmt))
 	}
-	return stmt, nil
+	return NewProveAlgoReturnStmt(instFacts, stmt.GetLine()), nil
 }
 
 func (specFactPtrSlice SpecFactPtrSlice) InstantiateFact(uniMap map[string]Obj) (SpecFactPtrSlice, error) {

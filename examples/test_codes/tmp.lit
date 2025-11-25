@@ -1,1 +1,13 @@
-1 = 0
+prove_algo A(x):
+    if x = 1:
+        $p(x)
+        return $p(x)
+    if x != 1:
+        claim:
+            not $p(x)
+            prove_by_contradiction:
+                $p(x)
+                x = 1
+        return:
+            not $p(x)
+            1 + 1 = 2
