@@ -410,6 +410,8 @@ type ProveIsCommutativePropStmt struct {
 
 type AlgoStmtSlice []AlgoStmt
 
+type ProveAlgoStmtSlice []ProveAlgoStmt
+
 type AlgoIfStmt struct {
 	Conditions FactStmtSlice
 	ThenStmts  AlgoStmtSlice
@@ -440,7 +442,7 @@ type EvalStmt struct {
 type DefProveAlgoStmt struct {
 	ProveAlgoName string
 	Params        StrSlice
-	Stmts         AlgoStmtSlice
+	Stmts         ProveAlgoStmtSlice
 
 	Line uint
 }
@@ -452,8 +454,15 @@ type ByStmt struct {
 	Line uint
 }
 
+type ProveAlgoIfStmt struct {
+	Conditions FactStmtSlice
+	ThenStmts  ProveAlgoStmtSlice
+
+	Line uint
+}
+
 type ProveAlgoReturnStmt struct {
-	Facts FactStmtSlice
+	Facts []FactOrByStmt
 
 	Line uint
 }

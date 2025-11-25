@@ -124,7 +124,7 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 	}
 	reversedThenFacts := ast.ReverseSliceOfReversibleFacts(thenFactsAsReversibleFacts)
 	for _, reversedThenFact := range reversedThenFacts {
-		ret := exec.Env.NewFact(reversedThenFact)
+		ret := exec.Env.NewFact(reversedThenFact.(ast.FactStmt))
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}

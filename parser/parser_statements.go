@@ -159,9 +159,17 @@ func (tb *tokenBlock) factStmt(uniFactDepth uniFactEnum) (ast.FactStmt, error) {
 	switch cur {
 	case glob.KeywordForall:
 		if tb.GetEnd() == glob.KeySymbolColon {
-			return tb.uniFactInterface(uniFactDepth)
+			uniFact, err := tb.uniFactInterface(uniFactDepth)
+			if err != nil {
+				return nil, err
+			}
+			return uniFact.(ast.FactStmt), nil
 		} else {
-			return tb.inlineUniInterfaceSkipTerminator([]string{})
+			uniFact, err := tb.inlineUniInterfaceSkipTerminator([]string{})
+			if err != nil {
+				return nil, err
+			}
+			return uniFact.(ast.FactStmt), nil
 		}
 	case glob.KeywordOr:
 		return tb.orStmt()
@@ -169,9 +177,17 @@ func (tb *tokenBlock) factStmt(uniFactDepth uniFactEnum) (ast.FactStmt, error) {
 		return tb.equalsFactStmt()
 	case glob.KeywordWhen:
 		if tb.GetEnd() == glob.KeySymbolColon {
-			return tb.ifStmtMultiLines(uniFactDepth)
+			uniFact, err := tb.ifStmtMultiLines(uniFactDepth)
+			if err != nil {
+				return nil, err
+			}
+			return uniFact.(ast.FactStmt), nil
 		} else {
-			return tb.inlineWhenFactSkipTerminator([]string{})
+			uniFact, err := tb.inlineWhenFactSkipTerminator([]string{})
+			if err != nil {
+				return nil, err
+			}
+			return uniFact.(ast.FactStmt), nil
 		}
 	default:
 		return tb.fact()
@@ -3552,9 +3568,9 @@ func (tb *tokenBlock) defProveAlgoStmt() (*ast.DefProveAlgoStmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
-	stmts := []ast.AlgoStmt{}
+	stmts := []ast.ProveAlgoStmt{}
 	for _, block := range tb.body {
-		curStmt, err := block.algoStmt()
+		curStmt, err := block.proveAlgoStmt()
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
