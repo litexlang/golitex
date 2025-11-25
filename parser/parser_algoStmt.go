@@ -25,9 +25,17 @@ func (tb *tokenBlock) algoStmt() (ast.AlgoStmt, error) {
 	}
 
 	if tb.header.is(glob.KeywordReturn) {
-		if tb.header.strAtCurIndexPlus(1) == glob.KeywordBy || tb.header.strAtCurIndexPlus(1) == "" {
+		// Check if return is followed by colon (multi-line facts) or looks like a fact
+		nextToken := tb.header.strAtCurIndexPlus(1)
+		if nextToken == glob.KeySymbolColon || nextToken == glob.FuncFactPrefix || nextToken == glob.KeywordNot || nextToken == glob.KeywordExist || nextToken == "" {
 			return tb.proveAlgoReturnStmt()
 		} else {
+			// Check if it looks like a fact (has relational operators) vs an object
+			// For now, we'll try to parse as prove_algo return first, fallback to algo return
+			// This is a heuristic - if return is followed by =, !=, etc., it's likely a fact
+			if glob.IsBuiltinInfixRelaPropSymbol(nextToken) || tb.EndWith(glob.KeySymbolColon) {
+				return tb.proveAlgoReturnStmt()
+			}
 			return tb.algoReturnStmt()
 		}
 	}
@@ -79,14 +87,26 @@ func (tb *tokenBlock) proveAlgoReturnStmt() (*ast.ProveAlgoReturnStmt, error) {
 		return nil, err
 	}
 
-	if tb.header.ExceedEnd() {
-		return ast.NewProveAlgoReturnStmt(nil, tb.line), nil
-	}
+	// Check if there's a colon after return
+	hasColon := tb.EndWith(glob.KeySymbolColon)
 
-	by, err := tb.byStmt()
-	if err != nil {
-		return nil, err
+	if hasColon {
+		// return: with colon - parse facts from body
+		facts, err := tb.bodyFacts(UniFactDepth0)
+		if err != nil {
+			return nil, err
+		}
+		return ast.NewProveAlgoReturnStmt(facts, tb.line), nil
+	} else {
+		// return without colon - parse a single inline fact
+		if tb.header.ExceedEnd() {
+			return ast.NewProveAlgoReturnStmt(nil, tb.line), nil
+		}
+		
+		fact, err := tb.inlineFactThenSkipStmtTerminatorUntilEndSignals([]string{})
+		if err != nil {
+			return nil, err
+		}
+		return ast.NewProveAlgoReturnStmt([]ast.FactStmt{fact}, tb.line), nil
 	}
-
-	return ast.NewProveAlgoReturnStmt(by, tb.line), nil
 }
