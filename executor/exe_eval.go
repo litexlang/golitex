@@ -115,7 +115,8 @@ func (exec *Executor) useAlgoToEvalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj,
 	}
 
 	for i, param := range algoDef.Params {
-		if exec.Env.IsAtomDeclared(ast.AtomObj(param), map[string]struct{}{}) {
+		ret := exec.Env.IsAtomDeclared(ast.AtomObj(param), map[string]struct{}{})
+		if ret.IsTrue() {
 			continue
 		} else {
 			execState := exec.defLetStmt(ast.NewDefLetStmt([]string{param}, []ast.Obj{ast.AtomObj(glob.KeywordObj)}, []ast.FactStmt{ast.NewEqualFact(ast.AtomObj(param), fnObj.Params[i])}, glob.InnerGenLine))
