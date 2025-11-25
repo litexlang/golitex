@@ -27,7 +27,7 @@ import (
 func RunFile(path string) glob.GlobRet {
 	content, err := os.ReadFile(path)
 	if err != nil {
-		return glob.NewGlobErr(err.Error())
+		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLErrorMessage)
 	}
 	return RunSourceCode(string(content))
 }
@@ -35,9 +35,10 @@ func RunFile(path string) glob.GlobRet {
 func RunSourceCode(code string) glob.GlobRet {
 	executor, err := InitPipelineExecutor()
 	if err != nil {
-		return glob.NewGlobErr(err.Error())
+		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLErrorMessage)
 	}
-	return RunSourceCodeInExecutor(executor, code)
+	ret := RunSourceCodeInExecutor(executor, code)
+	return ret.AddMsg(ret.GetREPLMsg())
 }
 
 func RunSourceCodeInExecutor(curExec *exe.Executor, code string) glob.GlobRet {
@@ -46,24 +47,15 @@ func RunSourceCodeInExecutor(curExec *exe.Executor, code string) glob.GlobRet {
 		return glob.NewGlobErr(err.Error())
 	}
 
-	stmtMsgs := []string{}
-
 	for _, topStmt := range stmtSlice {
 		ret := RunStmtAndImportStmtInExecutor(curExec, topStmt)
-		stmtMsgs = append(stmtMsgs, ret.GetMsgs()...)
 
 		if ret.IsNotTrue() {
-			if ret.IsErr() {
-				stmtMsgs = append(stmtMsgs, ret.GetREPLMsg())
-				return glob.NewGlobErrWithMsgs(stmtMsgs)
-			}
-			allMsgs := append(stmtMsgs, ret.GetREPLMsg())
-			return glob.NewGlobErrWithMsgs(allMsgs)
+			return ret
 		}
 	}
 
-	stmtMsgs = append(stmtMsgs, glob.REPLSuccessMessage)
-	return glob.NewGlobTrueWithMsgs(stmtMsgs)
+	return glob.NewGlobTrue("")
 }
 
 func RunStmtAndImportStmtInExecutor(curExec *exe.Executor, stmt ast.Stmt) glob.GlobRet {
