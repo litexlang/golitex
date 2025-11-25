@@ -38,7 +38,8 @@ func (exec *Executor) byStmt(stmt *ast.ByStmt) ExecRet {
 }
 
 // 工作原理是吧ProveAlgoDef的params都变成传入的obj，然后instantiate，然后run
-// Returns ExecRet and the facts returned by prove_algo
+// Returns ExecRet and the FactStmt slice returned by prove_algo
+// If a ByStmt is encountered, it recursively extracts facts from it
 func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) (ExecRet, []ast.FactStmt) {
 	exec.NewEnv(exec.Env)
 	defer exec.deleteEnv()
@@ -73,7 +74,7 @@ func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) (ExecRet, []ast.FactStmt) 
 		return NewExecErrWithErr(err), nil
 	}
 
-	execRet, returnedFacts := exec.runAlgoStmtsWhenBy(instProveAlgoDef.(*ast.DefProveAlgoStmt).Stmts, stmt.Params)
+	execRet, returnedFacts := exec.runProveAlgoStmtsWhenBy(instProveAlgoDef.(*ast.DefProveAlgoStmt).Stmts, stmt.Params)
 	if execRet.IsNotTrue() {
 		return execRet, nil
 	}
@@ -81,16 +82,34 @@ func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) (ExecRet, []ast.FactStmt) 
 	return NewExecTrue(""), returnedFacts
 }
 
-func (exec *Executor) runAlgoStmtsWhenBy(algoStmts ast.AlgoStmtSlice, paramsValues []ast.Obj) (ExecRet, ast.FactStmtSlice) {
-	for _, stmt := range algoStmts {
+func (exec *Executor) runProveAlgoStmtsWhenBy(proveAlgoStmts ast.ProveAlgoStmtSlice, paramsValues []ast.Obj) (ExecRet, []ast.FactStmt) {
+	for _, stmt := range proveAlgoStmts {
 		switch asStmt := stmt.(type) {
 		case *ast.ProveAlgoReturnStmt:
-			execRet := exec.runProveAlgoReturnStmt(asStmt)
+			execRet, facts := exec.runProveAlgoReturnStmt(asStmt)
 			if execRet.IsNotTrue() {
 				return execRet, nil
 			}
 			// Return the facts from prove_algo
-			return NewExecTrue(""), asStmt.Facts
+			return NewExecTrue(""), facts
+		case *ast.ProveAlgoIfStmt:
+			if conditionIsTrue, execRet := exec.IsAlgoIfConditionTrue(&ast.AlgoIfStmt{Conditions: asStmt.Conditions, ThenStmts: nil, Line: asStmt.Line}); execRet.IsErr() {
+				return execRet, nil
+			} else if conditionIsTrue {
+				return exec.proveAlgoIfStmt(asStmt, paramsValues)
+			} else if execRet.IsUnknown() {
+				continue
+			}
+		default:
+			return NewExecErr(fmt.Sprintf("unexpected prove_algo statement type: %T", stmt)), nil
+		}
+	}
+	return NewExecTrue(""), nil
+}
+
+func (exec *Executor) runAlgoStmtsWhenBy(algoStmts ast.AlgoStmtSlice, paramsValues []ast.Obj) (ExecRet, []ast.FactStmt) {
+	for _, stmt := range algoStmts {
+		switch asStmt := stmt.(type) {
 		case *ast.AlgoIfStmt:
 			if conditionIsTrue, execRet := exec.IsAlgoIfConditionTrue(asStmt); execRet.IsErr() {
 				return execRet, nil
@@ -111,6 +130,19 @@ func (exec *Executor) runAlgoStmtsWhenBy(algoStmts ast.AlgoStmtSlice, paramsValu
 	return NewExecTrue(""), nil
 }
 
+func (exec *Executor) proveAlgoIfStmt(stmt *ast.ProveAlgoIfStmt, paramsValues []ast.Obj) (ExecRet, []ast.FactStmt) {
+	exec.NewEnv(exec.Env)
+	defer exec.deleteEnv()
+
+	knowStmt := ast.NewKnowStmt(stmt.Conditions.ToCanBeKnownStmtSlice(), stmt.GetLine())
+	execRet := exec.knowStmt(knowStmt)
+	if execRet.IsNotTrue() {
+		return execRet, nil
+	}
+
+	return exec.runProveAlgoStmtsWhenBy(stmt.ThenStmts, paramsValues)
+}
+
 func (exec *Executor) algoIfStmtWhenBy(stmt *ast.AlgoIfStmt, paramsValues []ast.Obj) (ExecRet, []ast.FactStmt) {
 	exec.NewEnv(exec.Env)
 	defer exec.deleteEnv()
@@ -124,18 +156,36 @@ func (exec *Executor) algoIfStmtWhenBy(stmt *ast.AlgoIfStmt, paramsValues []ast.
 	return exec.runAlgoStmtsWhenBy(stmt.ThenStmts, paramsValues)
 }
 
-func (exec *Executor) runProveAlgoReturnStmt(stmt *ast.ProveAlgoReturnStmt) ExecRet {
+func (exec *Executor) runProveAlgoReturnStmt(stmt *ast.ProveAlgoReturnStmt) (ExecRet, []ast.FactStmt) {
 	if len(stmt.Facts) == 0 {
-		return NewExecTrue("")
+		return NewExecTrue(""), nil
 	}
 
-	// Verify all returned facts are true
-	for _, fact := range stmt.Facts {
-		execState := exec.factStmt(fact)
-		if execState.IsNotTrue() {
-			return execState.AddMsg(fmt.Sprintf("return fact failed: %s", fact.String()))
+	resultFacts := []ast.FactStmt{}
+
+	// Process all returned FactOrByStmt
+	for _, factOrBy := range stmt.Facts {
+		switch item := factOrBy.(type) {
+		case ast.FactStmt:
+			// 如果是事实，验证是否为真
+			execState := exec.factStmt(item)
+			if execState.IsNotTrue() {
+				return execState.AddMsg(fmt.Sprintf("return fact failed: %s", item.String())), nil
+			}
+			// 验证通过后，加入结果列表
+			resultFacts = append(resultFacts, item)
+		case *ast.ByStmt:
+			// 如果是 ByStmt，递归调用 callProveAlgo 来提取事实
+			execState, facts := exec.callProveAlgo(item)
+			if execState.IsNotTrue() {
+				return execState.AddMsg(fmt.Sprintf("return by statement failed: %s", item.String())), nil
+			}
+			// 将递归获取的事实加入结果列表
+			resultFacts = append(resultFacts, facts...)
+		default:
+			return NewExecErr(fmt.Sprintf("return unexpected type: %T", factOrBy)), nil
 		}
 	}
 
-	return NewExecTrue("")
+	return NewExecTrue(""), resultFacts
 }

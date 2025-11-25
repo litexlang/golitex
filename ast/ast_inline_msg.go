@@ -346,6 +346,10 @@ func (s *ProveIsCommutativePropStmt) InlineString() string {
 	return "TODO"
 }
 
+func (s *ProveAlgoIfStmt) InlineString() string {
+	return "TODO"
+}
+
 func (s *AlgoIfStmt) InlineString() string {
 	return "TODO"
 }
