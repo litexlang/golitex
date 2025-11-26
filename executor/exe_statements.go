@@ -843,6 +843,27 @@ func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) ExecRet {
 }
 
 func (exec *Executor) haveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) ExecRet {
+	//
+	// Verify each paramSet is in set type
+	for i, paramSet := range stmt.DefFnStmt.FnTemplate.ParamSets {
+		execState := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeywordIn), []ast.Obj{paramSet, ast.AtomObj(glob.KeywordSet)}, stmt.Line))
+		if execState.IsErr() {
+			return NewExecErr(execState.String())
+		}
+		if execState.IsUnknown() {
+			return NewExecErr(fmt.Sprintf("parameter set %d (%s) must be a set, i.e. `%s in set` must be true, but it is unknown", i+1, paramSet.String(), paramSet.String()))
+		}
+	}
+
+	// Verify retSet is in set type
+	execState := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeywordIn), []ast.Obj{stmt.DefFnStmt.FnTemplate.RetSet, ast.AtomObj(glob.KeywordSet)}, stmt.Line))
+	if execState.IsErr() {
+		return NewExecErr(execState.String())
+	}
+	if execState.IsUnknown() {
+		return NewExecErr(fmt.Sprintf("return set (%s) must be a set, i.e. `%s in set` must be true, but it is unknown", stmt.DefFnStmt.FnTemplate.RetSet.String(), stmt.DefFnStmt.FnTemplate.RetSet.String()))
+	}
+
 	// Verify each case: execute proof and verify return value
 	for i := range len(stmt.CaseByCaseFacts) {
 		execState, err := exec.verifyHaveFnCaseByCase_OneCase(stmt, i)
