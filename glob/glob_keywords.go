@@ -87,6 +87,8 @@ const (
 
 	KeywordPrint = "print"
 
+	KeywordDoNothing = "do_nothing"
+
 	KeywordCase = "case"
 
 	KeywordProveCaseByCase = "prove_case_by_case"
@@ -141,6 +143,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordNPos:                           {},
 	KeywordLet:                            {},
 	KeywordClear:                          {},
+	KeywordDoNothing:                      {},
 	// KeywordExistSetByAxiomOfReplacement:   {},
 
 	KeywordProveIsTransitiveProp: {},

@@ -626,6 +626,10 @@ func (stmt *ClearStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return stmt, nil
 }
 
+func (stmt *DoNothingStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+	return stmt, nil
+}
+
 func (stmt *InlineFactsStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newFacts, err := stmt.Facts.InstantiateFact(uniMap)
 	if err != nil {

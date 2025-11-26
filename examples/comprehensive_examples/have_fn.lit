@@ -1,0 +1,2 @@
+have fn f(x R) R = x + 1
+f(2) = 3
