@@ -13,3 +13,15 @@ have fn:
     prove:
         do_nothing
     = 100
+
+have fn:
+    p(x R) R:
+        x > 0
+        =>:
+            p(x) > x
+    case 100 > x:
+        do_nothing
+    = 100
+    case not 100 > x:
+        x + 1 > x
+    = x + 1
