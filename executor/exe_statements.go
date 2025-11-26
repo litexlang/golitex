@@ -144,7 +144,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 	} else if execRet.IsUnknown() {
 		return execRet.AddMsg(fmt.Sprintf("Unknown: line %d\n", stmt.GetLine()))
 	} else {
-		return execRet.AddMsg(fmt.Sprintf("Execution Error: line %d\n%s", stmt.GetLine(), execRet.String()))
+		return execRet.AddMsg(fmt.Sprintf("Execution Error: line %d\n", stmt.GetLine()))
 	}
 }
 
@@ -154,11 +154,11 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) ExecRet {
 	verRet := curVerifier.VerFactStmt(stmt, state)
 
 	if verRet.IsErr() {
-		return verRet.AddMsg(fmt.Sprintf("%s\n", stmt.String()))
+		return verRet.AddMsg(stmt.String())
 	} else if verRet.IsTrue() {
 		ret := exec.Env.NewFact(stmt)
 		if ret.IsErr() {
-			return NewExecErr(ret.String()).AddMsg(fmt.Sprintf("%s\n", stmt.String()))
+			return NewExecErr(ret.String()).AddMsg(stmt.String())
 		}
 		if verRet.(*ExecTrue).TrueEqualValues != nil {
 			if verRet.(*ExecTrue).TrueEqualValues[0] != nil {
@@ -168,12 +168,12 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) ExecRet {
 				exec.Env.StoreTrueEqualValues(stmt.(*ast.SpecFactStmt).Params[0], verRet.(*ExecTrue).TrueEqualValues[1])
 			}
 		}
-		return verRet.AddMsg(fmt.Sprintf("%s\n", stmt.String()))
+		return verRet.AddMsg(stmt.String())
 	} else if verRet.IsUnknown() {
-		return verRet.AddMsg(fmt.Sprintf("%s\n", stmt.String()))
+		return verRet.AddMsg(stmt.String())
 	} else {
 		execRet := NewExecErr("unknown ver ret")
-		return execRet.AddMsg(fmt.Sprintf("%s\n", stmt.String()))
+		return execRet.AddMsg(stmt.String())
 	}
 }
 
