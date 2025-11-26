@@ -1,8 +1,15 @@
 have fn f(x R) R = x + 1
 f(2) = 3
 
-have fn f(x R) R =:
+have fn g(x R) R =:
     case x = 2: 3
     case x != 2: 4
 
-do_nothing
+have fn:
+    h(x R) R:
+        x > 0
+        =>:
+            h(x) > 1
+    prove:
+        do_nothing
+    = 100
