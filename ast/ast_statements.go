@@ -297,6 +297,10 @@ type ClearStmt struct {
 	Line uint
 }
 
+type DoNothingStmt struct {
+	Line uint
+}
+
 type InlineFactsStmt struct {
 	Facts FactStmtSlice
 
@@ -346,7 +350,17 @@ type HaveFnLiftStmt struct {
 	Line uint
 }
 
-// 貌似没必要：直接证明 exist xx st 满足fn条件就行。这样的意义是，因为有时候我要证明一个东西，我是要用prove_by_induction这样的特殊的证明方式去证明的。这里包括 case by case, by enum, by induction 等等。所以与其开个新的have_fn_case_by_case，不如直接证明 exist xx st 满足fn条件这样更general的接口更合理
+/*
+have fn:
+
+	f(x R) R:
+	    ...
+	    =>:
+	        ...
+	prove:
+	    ...
+	= ...
+*/
 type HaveFnStmt struct {
 	DefFnStmt        *DefFnStmt
 	Proofs           StmtSlice
@@ -355,7 +369,20 @@ type HaveFnStmt struct {
 	Line uint
 }
 
-// 貌似没必要：直接证明 exist xx st 满足fn条件就行。这样的意义是，因为有时候我要证明一个东西，我是要用prove_by_induction这样的特殊的证明方式去证明的。这里包括 case by case, by enum, by induction 等等。所以与其开个新的have_fn_case_by_case，不如直接证明 exist xx st 满足fn条件这样更general的接口更合理
+/*
+have fn:
+
+	g(x R) R:
+	    ...
+	    =>:
+	        ...
+	case ...:
+	    ...
+	= ...
+	case ...:
+	    ...
+	= ...
+*/
 type HaveFnCaseByCaseStmt struct {
 	DefFnStmt       *DefFnStmt
 	CaseByCaseFacts SpecFactPtrSlice

@@ -835,6 +835,10 @@ func (stmt *ClearStmt) String() string {
 	return glob.KeywordClear
 }
 
+func (stmt *DoNothingStmt) String() string {
+	return glob.KeywordDoNothing
+}
+
 func (stmt *InlineFactsStmt) String() string {
 	strSlice := make([]string, len(stmt.Facts))
 	for i := range len(stmt.Facts) {
@@ -1049,10 +1053,10 @@ func (stmt *ProveInRangeStmt) String() string {
 	builder.WriteString(stmt.end.String())
 	builder.WriteString(")")
 	builder.WriteString(":")
-	
+
 	hasDom := len(stmt.DomFactsOrNil) > 0
 	hasProve := len(stmt.ProofsOrNil) > 0
-	
+
 	if hasDom {
 		// First section is dom: format is dom:, =>:, (optional) prove:
 		builder.WriteString("\n    dom:\n")
@@ -1323,7 +1327,7 @@ func (stmt *ProveAlgoReturnStmt) String() string {
 	if len(stmt.Facts) == 0 {
 		return builder.String()
 	}
-	
+
 	// Check if it's a single inline fact (no colon case) or multiple facts (colon case)
 	if len(stmt.Facts) == 1 {
 		// Single inline fact
@@ -1369,19 +1373,23 @@ func (stmt *HaveFnEqualCaseByCaseStmt) String() string {
 	builder.WriteString(glob.KeywordHave)
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeywordFn)
+	builder.WriteString(" ")
 	builder.WriteString(stmt.DefHeader.StringWithoutColonAtEnd())
 	builder.WriteString(" ")
 	builder.WriteString(stmt.RetSet.String())
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeySymbolEqual)
+	builder.WriteString(glob.KeySymbolColon)
 	builder.WriteByte('\n')
 	for i, fact := range stmt.CaseByCaseFacts {
+		builder.WriteString("    ")
 		builder.WriteString(glob.KeywordCase)
 		builder.WriteString(" ")
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 1))
-		builder.WriteString(glob.KeySymbolEqual)
+		builder.WriteString(fact.String())
+		builder.WriteString(glob.KeySymbolColon)
+		builder.WriteString(" ")
 		builder.WriteString(stmt.CaseByCaseEqualTo[i].String())
 		builder.WriteByte('\n')
 	}
-	return builder.String()
+	return strings.TrimSpace(builder.String())
 }

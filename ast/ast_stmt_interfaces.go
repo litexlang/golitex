@@ -59,6 +59,7 @@ func (s *KnowExistPropStmt) stmt()                          {}
 func (s *LatexStmt) stmt()                                  {}
 func (s *FnTemplateDefStmt) stmt()                          {}
 func (s *ClearStmt) stmt()                                  {}
+func (s *DoNothingStmt) stmt()                              {}
 func (s *InlineFactsStmt) stmt()                            {}
 func (s *ProveByInductionStmt) stmt()                       {}
 func (s *HaveObjEqualStmt) stmt()                           {}
@@ -114,6 +115,7 @@ func (s *KnowExistPropStmt) algoStmt()                      {}
 func (s *LatexStmt) algoStmt()                              {}
 func (s *FnTemplateDefStmt) algoStmt()                      {}
 func (s *ClearStmt) algoStmt()                              {}
+func (s *DoNothingStmt) algoStmt()                          {}
 func (s *InlineFactsStmt) algoStmt()                        {}
 func (s *ProveByInductionStmt) algoStmt()                   {}
 func (s *HaveObjEqualStmt) algoStmt()                       {}
@@ -169,6 +171,7 @@ func (s *KnowExistPropStmt) GetLine() uint                  { return s.Line }
 func (s *LatexStmt) GetLine() uint                          { return s.Line }
 func (s *FnTemplateDefStmt) GetLine() uint                  { return s.Line }
 func (s *ClearStmt) GetLine() uint                          { return s.Line }
+func (s *DoNothingStmt) GetLine() uint                      { return s.Line }
 func (s *InlineFactsStmt) GetLine() uint                    { return s.Line }
 func (s *ProveByInductionStmt) GetLine() uint               { return s.Line }
 func (s *HaveObjEqualStmt) GetLine() uint                   { return s.Line }
