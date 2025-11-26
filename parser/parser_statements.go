@@ -131,6 +131,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.printStmt()
 	case glob.KeywordHelp:
 		ret, err = tb.helpStmt()
+	case glob.KeywordDoNothing:
+		ret, err = tb.doNothingStmt()
 	default:
 		ret, err = tb.factsStmt()
 	}
@@ -2524,6 +2526,19 @@ func (tb *tokenBlock) clearStmt() (ast.Stmt, error) {
 	return ast.NewClearStmt(tb.line), nil
 }
 
+func (tb *tokenBlock) doNothingStmt() (ast.Stmt, error) {
+	err := tb.header.skip(glob.KeywordDoNothing)
+	if err != nil {
+		return nil, tbErr(err, tb)
+	}
+
+	if !tb.header.ExceedEnd() {
+		return nil, fmt.Errorf("expect end of line")
+	}
+
+	return ast.NewDoNothingStmt(tb.line), nil
+}
+
 func (tb *tokenBlock) factsStmt() (ast.Stmt, error) {
 	if tb.GetEnd() != glob.KeySymbolColon { // 因为可能是 forall : 这样的
 		facts, err := tb.inlineFacts_checkUniDepth0([]string{})
@@ -2848,7 +2863,7 @@ func (tb *tokenBlock) haveFnStmt() (ast.Stmt, error) {
 			proof = append(proof, curStmt)
 		}
 
-		err = tb.body[2].header.skip(glob.KeywordHave)
+		err = tb.body[2].header.skip(glob.KeySymbolEqual)
 		if err != nil {
 			return nil, tbErr(err, tb)
 		}
@@ -2892,7 +2907,7 @@ func (tb *tokenBlock) haveFnStmt() (ast.Stmt, error) {
 				}
 				proofs = append(proofs, curProof)
 			} else {
-				err := tb.body[i].header.skip(glob.KeywordHave)
+				err := tb.body[i].header.skip(glob.KeySymbolEqual)
 				if err != nil {
 					return nil, tbErr(err, tb)
 				}

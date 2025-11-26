@@ -89,6 +89,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 		execRet = exec.DefFnTemplateStmt(stmt)
 	case *ast.ClearStmt:
 		execRet = exec.ClearStmt()
+	case *ast.DoNothingStmt:
+		execRet = exec.DoNothingStmt()
 	case *ast.InlineFactsStmt:
 		execRet = exec.inlineFactsStmt(stmt)
 	case *ast.ProveByInductionStmt:
@@ -601,6 +603,11 @@ func (exec *Executor) ClearStmt() ExecRet {
 	return NewExecTrue("")
 }
 
+func (exec *Executor) DoNothingStmt() ExecRet {
+	// do_nothing statement does nothing
+	return NewExecTrue("")
+}
+
 func (exec *Executor) inlineFactsStmt(stmt *ast.InlineFactsStmt) ExecRet {
 	for _, fact := range stmt.Facts {
 		execState := exec.factStmt(fact)
@@ -1040,7 +1047,7 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseS
 	)
 	execState = exec.defFnStmt(newFnDefStmt)
 	if execState.IsNotTrue() {
-		return NewExecErr(fmt.Sprintf("failed to declare fn: %s", newFnDefStmt.String())).AddMsg(fmt.Sprintf("%s\n", stmt.String()))
+		return execState.AddMsg(fmt.Sprintf("%s\n", stmt.String()))
 	}
 
 	return NewExecTrue(fmt.Sprintf("%s\n", stmt.String()))

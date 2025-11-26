@@ -172,6 +172,10 @@ func NewClearStmt(line uint) *ClearStmt {
 	return &ClearStmt{line}
 }
 
+func NewDoNothingStmt(line uint) *DoNothingStmt {
+	return &DoNothingStmt{line}
+}
+
 func NewInlineFactsStmt(facts []FactStmt, line uint) *InlineFactsStmt {
 	return &InlineFactsStmt{facts, line}
 }

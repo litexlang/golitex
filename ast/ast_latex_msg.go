@@ -819,6 +819,10 @@ func (s *ClearStmt) ToLatexString() string {
 	return glob.KeywordClear
 }
 
+func (s *DoNothingStmt) ToLatexString() string {
+	return glob.KeywordDoNothing
+}
+
 func (s *InlineFactsStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString(strings.Join(s.Facts.factStmtSliceToLatexStringSlice(), "\n\n"))

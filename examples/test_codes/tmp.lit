@@ -1,0 +1,8 @@
+have fn f(x R) R = x + 1
+f(2) = 3
+
+have fn f(x R) R =:
+    case x = 2: 3
+    case x != 2: 4
+
+do_nothing
