@@ -2824,10 +2824,6 @@ func (tb *tokenBlock) haveFnLiftStmt() (*ast.HaveFnLiftStmt, error) {
 func (tb *tokenBlock) haveFnStmt() (ast.Stmt, error) {
 	var err error
 
-	if len(tb.body) != 3 {
-		return nil, fmt.Errorf("expect 3 body blocks")
-	}
-
 	err = tb.header.skip(glob.KeywordHave)
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -2843,12 +2839,20 @@ func (tb *tokenBlock) haveFnStmt() (ast.Stmt, error) {
 		return nil, tbErr(err, tb)
 	}
 
+	if len(tb.body) < 1 {
+		return nil, fmt.Errorf("expect at least 1 body block")
+	}
+
 	defFnStmt, err := tb.body[0].defFnStmt(false)
 	if err != nil {
 		return nil, tbErr(err, tb)
 	}
 
-	if tb.body[1].header.is(glob.KeywordProve) {
+	// Check if it's prove or case-by-case
+	if len(tb.body) >= 2 && tb.body[1].header.is(glob.KeywordProve) {
+		if len(tb.body) != 3 {
+			return nil, fmt.Errorf("expect 3 body blocks for have fn with prove")
+		}
 		err = tb.body[1].header.skip(glob.KeywordProve)
 		if err != nil {
 			return nil, tbErr(err, tb)
@@ -2874,16 +2878,18 @@ func (tb *tokenBlock) haveFnStmt() (ast.Stmt, error) {
 		}
 
 		return ast.NewClaimHaveFnStmt(defFnStmt, proof, haveObjSatisfyFn, tb.line), nil
-	} else {
-		if len(tb.body)%2 != 0 {
-			return nil, fmt.Errorf("expect even number of body blocks")
+	} else if len(tb.body) >= 2 && tb.body[1].header.is(glob.KeywordCase) {
+		// Case-by-case structure: body[0] is defFnStmt, body[1..n] are case/equal pairs
+		if (len(tb.body)-1)%2 != 0 {
+			return nil, fmt.Errorf("expect even number of body blocks after defFnStmt for case-by-case (got %d)", len(tb.body)-1)
 		}
 
 		cases := []*ast.SpecFactStmt{}
 		proofs := []ast.StmtSlice{}
 		EqualTo := []ast.Obj{}
-		for i := range len(tb.body) {
-			if i%2 == 0 {
+		for i := 1; i < len(tb.body); i++ {
+			if (i-1)%2 == 0 {
+				// Case block
 				err := tb.body[i].header.skip(glob.KeywordCase)
 				if err != nil {
 					return nil, tbErr(err, tb)
@@ -2907,6 +2913,7 @@ func (tb *tokenBlock) haveFnStmt() (ast.Stmt, error) {
 				}
 				proofs = append(proofs, curProof)
 			} else {
+				// Equal block
 				err := tb.body[i].header.skip(glob.KeySymbolEqual)
 				if err != nil {
 					return nil, tbErr(err, tb)
@@ -2920,6 +2927,8 @@ func (tb *tokenBlock) haveFnStmt() (ast.Stmt, error) {
 		}
 
 		return ast.NewHaveFnCaseByCaseStmt(defFnStmt, cases, proofs, EqualTo, tb.line), nil
+	} else {
+		return nil, fmt.Errorf("expect 'prove:' or 'case' after defFnStmt in have fn statement")
 	}
 }
 
