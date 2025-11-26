@@ -22,6 +22,7 @@ import (
 	parser "golitex/parser"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func RunFile(path string) glob.GlobRet {
@@ -47,15 +48,17 @@ func RunSourceCodeInExecutor(curExec *exe.Executor, code string) glob.GlobRet {
 		return glob.NewGlobErr(err.Error())
 	}
 
+	msgs := []string{}
 	for _, topStmt := range stmtSlice {
 		ret := RunStmtAndImportStmtInExecutor(curExec, topStmt)
+		msgs = append(msgs, ret.String())
 
 		if ret.IsNotTrue() {
-			return ret
+			return glob.NewGlobErr(strings.Join(msgs, "\n"))
 		}
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewGlobTrue(strings.Join(msgs, "\n"))
 }
 
 func RunStmtAndImportStmtInExecutor(curExec *exe.Executor, stmt ast.Stmt) glob.GlobRet {
