@@ -1,0 +1,14 @@
+# f^{-1}(U)
+
+have X, Y, U set
+
+fn f(x X) Y
+
+have set s = {x X : f(x) $in U}
+
+# f(U)
+
+exist_prop x U st item_has_preimage(X, Y, U set, f fn(X)Y, y Y):
+    f(x) = y
+
+have set t = {y Y :$item_has_preimage(X, Y, U, f, y)}
