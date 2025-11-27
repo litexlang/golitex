@@ -1,15 +1,5 @@
-# Numeric equality: 1 + 1 and 2 are different symbols, but equal
-1 + 1 = 2
-
-# Variable equality: 20 * x and y + z are different symbols, but equal
-have x R
-have y R = 3 * x
-have z R = 17 * x
-20 * x = 3 * x + 17 * x = y + z
-
-# Function equality: f(a) and g(b) are different symbols, but equal
 have fn f(a R) R = a
-have fn g(a R) R = f(a)
+let g f(R) R: g = f
 have a R
 have b R = a
 f(a) = g(b)
