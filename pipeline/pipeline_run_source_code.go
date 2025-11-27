@@ -28,24 +28,24 @@ import (
 func RunFile(path string) glob.GlobRet {
 	content, err := os.ReadFile(path)
 	if err != nil {
-		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLErrorMessage)
+		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLMessage(glob.NewGlobErr(err.Error()), path))
 	}
-	return RunSourceCode(string(content))
+	return RunSourceCode(string(content), path)
 }
 
-func RunSourceCode(code string) glob.GlobRet {
+func RunSourceCode(code string, path string) glob.GlobRet {
 	executor, err := InitPipelineExecutor()
 	if err != nil {
-		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLErrorMessage)
+		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLMessage(glob.NewGlobErr(err.Error()), path))
 	}
-	ret := RunSourceCodeInExecutor(executor, code)
-	return ret.AddMsg(ret.GetREPLMsg())
+	ret := RunSourceCodeInExecutor(executor, code, path)
+	return ret
 }
 
-func RunSourceCodeInExecutor(curExec *exe.Executor, code string) glob.GlobRet {
+func RunSourceCodeInExecutor(curExec *exe.Executor, code string, path string) glob.GlobRet {
 	stmtSlice, err := parser.ParseSourceCode(code)
 	if err != nil {
-		return glob.NewGlobErr(err.Error())
+		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLMessage(glob.NewGlobErr(err.Error()), path))
 	}
 
 	msgs := []string{}
@@ -54,11 +54,11 @@ func RunSourceCodeInExecutor(curExec *exe.Executor, code string) glob.GlobRet {
 		msgs = append(msgs, ret.String())
 
 		if ret.IsNotTrue() {
-			return glob.NewGlobErr(strings.Join(msgs, "\n"))
+			return glob.NewGlobErr(strings.Join(msgs, "\n")).AddMsg(glob.REPLMessage(glob.NewGlobErr(strings.Join(msgs, "\n")), path))
 		}
 	}
 
-	return glob.NewGlobTrue(strings.Join(msgs, "\n"))
+	return glob.NewGlobTrue(strings.Join(msgs, "\n")).AddMsg(glob.REPLMessage(glob.NewGlobTrue(strings.Join(msgs, "\n")), path))
 }
 
 func RunStmtAndImportStmtInExecutor(curExec *exe.Executor, stmt ast.Stmt) glob.GlobRet {
@@ -97,7 +97,7 @@ func RunImportDirStmtInExec(curExec *exe.Executor, importDirStmt *ast.ImportDirS
 
 	builtinEnv := GetBuiltinEnv()
 	executorToRunDir := exe.NewExecutor(builtinEnv, exe.NewPackageManager())
-	ret := RunSourceCodeInExecutor(executorToRunDir, string(mainFileContent))
+	ret := RunSourceCodeInExecutor(executorToRunDir, string(mainFileContent), resolvedPath)
 	if ret.IsNotTrue() {
 		return ret
 	}
@@ -114,5 +114,5 @@ func RunImportFileStmtInExec(curExec *exe.Executor, importFileStmt *ast.ImportFi
 	if err != nil {
 		return glob.NewGlobErr(err.Error())
 	}
-	return RunSourceCodeInExecutor(curExec, string(content))
+	return RunSourceCodeInExecutor(curExec, string(content), importFileStmt.Path)
 }
