@@ -790,4 +790,6 @@ know:
 	forall x nonempty_set:
 		power_set(x) $in nonempty_set
 		$item_exists_in(power_set(x))
+
+know forall x set: empty_set $is_subset_of x
 `
