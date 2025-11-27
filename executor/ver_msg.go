@@ -20,19 +20,33 @@ import (
 	"strings"
 )
 
-func successVerString(stmtStr, stmtVerifiedBy string) string {
-	var successVerString strings.Builder
-	if stmtStr != "" {
-		successVerString.WriteString(stmtStr)
+func successVerString(stmt, stmtVerifiedBy ast.Stmt) string {
+	var builder strings.Builder
+	if stmt != nil {
+		builder.WriteString(stmt.String())
 	}
-	if stmtVerifiedBy != "" {
-		successVerString.WriteString(fmt.Sprintf("\nis true. proved by\n%s", stmtVerifiedBy))
+	if stmtVerifiedBy != nil {
+		builder.WriteString(fmt.Sprintf("\nis true. proved by fact on line %d:\n%s", stmtVerifiedBy.GetLine(), stmtVerifiedBy.String()))
 	} else {
-		successVerString.WriteString("\nis true.")
+		builder.WriteString("\nis true.")
 	}
-	return successVerString.String()
+	return builder.String()
 }
 
 func parametersDoNotSatisfyFnReq(param ast.Obj, fnName ast.Obj) error {
 	return fmt.Errorf("the arguments passed to the %s do not satisfy the domain of %s", param, fnName)
+}
+
+// successVerStringString is a helper function for backward compatibility with string-based calls
+func successVerStringString(stmtStr, stmtVerifiedByStr string) string {
+	var builder strings.Builder
+	if stmtStr != "" {
+		builder.WriteString(stmtStr)
+	}
+	if stmtVerifiedByStr != "" {
+		builder.WriteString(fmt.Sprintf("\nis true. proved by\n%s", stmtVerifiedByStr))
+	} else {
+		builder.WriteString("\nis true.")
+	}
+	return builder.String()
 }

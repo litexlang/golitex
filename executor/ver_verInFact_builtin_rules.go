@@ -153,7 +153,7 @@ func (ver *Verifier) returnValueOfBuiltinArithmeticFnInReal(stmt *ast.SpecFactSt
 
 	if ok {
 		msg := fmt.Sprintf("return value of builtin arithmetic function %s is in Real", stmt.Params[0])
-		return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
 	}
 	return NewExecUnknown("")
 }
@@ -175,7 +175,7 @@ func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state *VerState
 
 	if string(asAtom) == glob.KeywordNatural || string(asAtom) == glob.KeywordInteger || string(asAtom) == glob.KeywordReal || string(asAtom) == glob.KeywordComplex || string(asAtom) == glob.KeywordRational || string(asAtom) == glob.KeywordNPos {
 		msg := fmt.Sprintf("%s is a builtin set", asAtom)
-		return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
 	}
 
 	return NewExecUnknown("")
@@ -190,7 +190,7 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state *VerState) E
 			}
 			if verRet.IsTrue() {
 				msg := fmt.Sprintf("dom of template %s is in the domain of the template where function %s is in. Also, the return value of the function is in the return set of the template where function %s is in", stmt.Params[1], stmt.Params[0], stmt.Params[1])
-				return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
+				return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
 			}
 		} else {
 			// return false, nil
@@ -200,7 +200,7 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state *VerState) E
 			}
 			if verRet.IsTrue() {
 				msg := fmt.Sprintf("dom of template %s is in the domain of the template where function %s is in. Also, the return value of the function is in the return set of the template where function %s is in", stmt.Params[1], stmt.Params[0], stmt.Params[1])
-				return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
+				return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
 			}
 		}
 		return NewExecUnknown("")
@@ -239,7 +239,7 @@ func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state *VerState) E
 	}
 	if verRet.IsTrue() {
 		msg := "When parameter sets of a fn template are all sets, then the fn template is a set"
-		return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(msg))
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(msg))
 	}
 
 	// 如果是被定义好了的fn_template，则直接返回true
@@ -278,7 +278,7 @@ func (ver *Verifier) inObjFact(stmt *ast.SpecFactStmt, state *VerState) ExecRet 
 	}
 
 	msg := fmt.Sprintf("all atoms in %s are declared as obj or literal number", stmt.Params[0])
-	return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
 }
 
 func (ver *Verifier) falseInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
@@ -398,7 +398,7 @@ func (ver *Verifier) verInSetProduct(stmt *ast.SpecFactStmt, state *VerState) Ex
 	}
 
 	msg := fmt.Sprintf("each item in tuple %s is in corresponding set %s", stmt.Params[0], stmt.Params[1])
-	return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
 }
 
 func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *VerState) ExecRet {
@@ -493,7 +493,7 @@ func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactS
 	if fcFn.HasHeadInSlice([]string{glob.KeySymbolPlus, glob.KeySymbolMinus, glob.KeySymbolStar, glob.KeySymbolSlash, glob.KeySymbolPower}) {
 		if stmt.Params[1] == ast.AtomObj(glob.KeywordReal) {
 			msg := fmt.Sprintf("return value of builtin arithmetic function %s is in Real", fcFn)
-			return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
+			return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
 		}
 		return NewExecUnknown("")
 	}
@@ -501,7 +501,7 @@ func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactS
 	if fcFn.HasHeadInSlice([]string{glob.KeywordCount, glob.KeySymbolPercent}) {
 		if stmt.Params[1] == ast.AtomObj(glob.KeywordNatural) {
 			msg := fmt.Sprintf("return value of builtin function %s is in Natural", fcFn)
-			return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
+			return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
 		}
 		return NewExecUnknown("")
 	}
@@ -517,7 +517,7 @@ func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactS
 	}
 	if verRet.IsTrue() {
 		msg := fmt.Sprintf("return value of function %s is in its function template return set %s", fcFn, setFcFnIsIn_ByItsFnT)
-		return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
 	}
 	return NewExecUnknown("")
 }
@@ -594,7 +594,7 @@ func (ver *Verifier) litNumNotInNaturalByLiteralShape(stmt *ast.SpecFactStmt, st
 
 	// 如果是数字表达式但字面上不是自然数形状（小数、负数或表达式），可以证明它不在自然数中
 	msg := fmt.Sprintf("%s is literally not a natural number (not in the shape of natural number)", stmt.Params[0])
-	return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
 }
 
 func (ver *Verifier) litNumNotInIntegerByLiteralShape(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
@@ -622,7 +622,7 @@ func (ver *Verifier) litNumNotInIntegerByLiteralShape(stmt *ast.SpecFactStmt, st
 
 	// 如果是数字表达式但字面上不是整数形状（小数或表达式），可以证明它不在整数中
 	msg := fmt.Sprintf("%s is literally not an integer (not in the shape of integer)", stmt.Params[0])
-	return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
 }
 
 func (ver *Verifier) litNumNotInNPosByLiteralShape(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
@@ -650,5 +650,5 @@ func (ver *Verifier) litNumNotInNPosByLiteralShape(stmt *ast.SpecFactStmt, state
 
 	// 如果是数字表达式但字面上不是正整数形状（小数、负数、0或表达式），可以证明它不在正整数中
 	msg := fmt.Sprintf("%s is literally not a positive integer (not in the shape of positive integer)", stmt.Params[0])
-	return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
 }

@@ -49,7 +49,7 @@ func (ver *Verifier) verByReplaceFcInSpecFactWithValue(stmt *ast.SpecFactStmt, s
 				execRet = NewExecTrueWithValues(fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()), values)
 			}
 			msg := fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String())
-			return ver.maybeAddSuccessMsg(state, stmt.String(), msg, execRet)
+			return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, execRet)
 		}
 	}
 
@@ -66,7 +66,7 @@ func (ver *Verifier) verByReplaceFcInSpecFactWithValueAndCompute(stmt *ast.SpecF
 		}
 		if verRet.IsTrue() {
 			msg := fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values and computing", stmt.String(), newStmt.String())
-			return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
+			return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
 		}
 	}
 
