@@ -19,9 +19,9 @@ import (
 	"strings"
 )
 
-var REPLSuccessMessage = "---\nSuccess! :)\n"
-var REPLErrorMessage = "---\nError :(\n"
-var REPLUnknownMessage = "---\nUnknown :(\n"
+var REPLSuccessMessage = "Success! :)\n"
+var REPLErrorMessage = "Error :(\n"
+var REPLUnknownMessage = "Unknown :(\n"
 
 func SplitLinesAndAdd4NIndents(line string, n uint32) string {
 	if n == 0 {
@@ -67,4 +67,12 @@ type Msgs []string
 
 func (msgs Msgs) Merge(other Msgs) Msgs {
 	return append(msgs, other...)
+}
+
+func REPLMessage(ret GlobRet, path string) string {
+	var builder strings.Builder
+	builder.WriteString("---\n")
+	builder.WriteString(fmt.Sprintf("From: %s\n", path))
+	builder.WriteString(ret.GetREPLMsg())
+	return builder.String()
 }
