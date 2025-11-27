@@ -18,7 +18,6 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
-	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
@@ -32,8 +31,6 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 
 	var ret ast.Stmt
 	switch cur {
-	case glob.KeywordImport:
-		ret, err = tb.importStmt()
 	case glob.KeywordProp:
 		ret, err = tb.defPropStmt()
 	case glob.KeywordExistProp:
@@ -546,7 +543,7 @@ func (tb *tokenBlock) defObjStmt() (*ast.DefLetStmt, error) {
 	}
 }
 
-func (tb *tokenBlock) claimStmt() (ast.ClaimInterface, error) {
+func (tb *tokenBlock) claimStmt() (ast.Stmt, error) {
 	err := tb.header.skip(glob.KeywordClaim)
 	if err != nil {
 		return nil, tbErr(err, tb)
@@ -1458,38 +1455,6 @@ func (tb *tokenBlock) param_paramSet_paramInSetFacts(endWith string, allowExceed
 	}
 
 	return params, setParams, nil
-}
-
-func (tb *tokenBlock) importStmt() (ast.ImportStmtInterface, error) {
-	err := tb.header.skip(glob.KeywordImport)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	importPath := ""
-	importPath, err = tb.getStringInDoubleQuotes()
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	if tb.header.is(glob.KeywordAs) {
-		asPkgName := ""
-		tb.header.skip(glob.KeywordAs)
-		asPkgName, err = tb.header.next()
-		if err != nil {
-			return nil, tbErr(err, tb)
-		}
-		return ast.NewImportStmt(importPath, asPkgName, tb.line), nil
-	} else {
-		if strings.HasSuffix(importPath, glob.LitexFileSuffix) {
-			return ast.NewImportFileStmt(importPath, tb.line), nil
-		} else {
-			// 得到 path 的最后一位，默认是 repo 的 repo 名
-			lastPart := filepath.Base(importPath)
-			return ast.NewImportStmt(importPath, lastPart, tb.line), nil
-		}
-	}
-
 }
 
 func (tb *tokenBlock) getStringInDoubleQuotes() (string, error) {
@@ -2556,7 +2521,7 @@ func (tb *tokenBlock) factsStmt() (ast.Stmt, error) {
 	}
 }
 
-func (tb *tokenBlock) claimNamedUniFactInline() (ast.ClaimInterface, error) {
+func (tb *tokenBlock) claimNamedUniFactInline() (ast.Stmt, error) {
 	var err error
 	var namedUniFact *ast.NamedUniFactStmt
 

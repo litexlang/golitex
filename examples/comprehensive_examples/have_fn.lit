@@ -14,6 +14,9 @@ have fn:
         do_nothing
     = 100
 
+forall x R: x > 0 => h(x) > 1
+h(1) > 1
+
 have fn:
     p(x R) R:
         x > 0
@@ -25,3 +28,5 @@ have fn:
     case not 100 > x:
         x + 1 > x
     = x + 1
+
+forall x R: x > 0 => p(x) > x
