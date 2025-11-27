@@ -777,4 +777,17 @@ know @item_in_difference(x, y set, z obj):
 	=>:
 		not z $in y
 		z $in x
+
+fn power_set(x set) set
+know:
+	forall x set, y power_set(x):
+		y $in set
+		y $is_subset_of x
+	forall x set, y set:
+		y $is_subset_of x
+		=>:
+			y $in power_set(x)
+	forall x nonempty_set:
+		power_set(x) $in nonempty_set
+		$item_exists_in(power_set(x))
 `
