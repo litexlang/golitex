@@ -1,0 +1,2 @@
+forall y power_set(R):
+    y $is_subset_of R
