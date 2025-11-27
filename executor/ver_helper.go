@@ -26,22 +26,34 @@ func (ver *Verifier) todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt *ast.Sp
 }
 
 func (ver *Verifier) processOkMsg(state *VerState, msg string, verifiedBy string, args ...any) ExecRet {
-	execRet := NewExecTrue(successVerString(msg, fmt.Sprintf(verifiedBy, args...)))
+	// Note: processOkMsg uses string format, keep using string version for backward compatibility
+	verifiedByStr := fmt.Sprintf(verifiedBy, args...)
+	execRet := NewExecTrue(successVerStringString(msg, verifiedByStr))
 	if state.WithMsg {
-		execRet.AddMsg(successVerString(msg, fmt.Sprintf(verifiedBy, args...)))
+		execRet.AddMsg(successVerStringString(msg, verifiedByStr))
 		return execRet
 	}
 	return execRet
 }
 
 // maybeAddSuccessMsg adds a success message to execRet if state.WithMsg is true
-func (ver *Verifier) maybeAddSuccessMsg(state *VerState, stmtStr, verifiedBy string, execRet ExecRet) ExecRet {
+func (ver *Verifier) maybeAddSuccessMsg(state *VerState, stmt, stmtVerifiedBy ast.Stmt, execRet ExecRet) ExecRet {
 	if state.WithMsg {
-		execRet.AddMsg(successVerString(stmtStr, verifiedBy))
+		execRet.AddMsg(successVerString(stmt, stmtVerifiedBy))
 		return execRet
 	}
 	return execRet
 }
+
+// maybeAddSuccessMsgString is a backward compatibility function for string-based messages
+func (ver *Verifier) maybeAddSuccessMsgString(state *VerState, stmtStr, verifiedByStr string, execRet ExecRet) ExecRet {
+	if state.WithMsg {
+		execRet.AddMsg(successVerStringString(stmtStr, verifiedByStr))
+		return execRet
+	}
+	return execRet
+}
+
 
 func (ver *Verifier) paramsInSets(params []ast.Obj, sets []ast.Obj, state *VerState) ExecRet {
 	if len(params) != len(sets) {

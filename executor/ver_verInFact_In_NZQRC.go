@@ -51,7 +51,7 @@ func (ver *Verifier) verIn_N_Z_Q_R_C(stmt *ast.SpecFactStmt, state *VerState) Ex
 		if verifiedBy == "" {
 			verifiedBy = fmt.Sprintf("%s is in %s", stmt.Params[0], inSet)
 		}
-		return ver.maybeAddSuccessMsg(state, stmt.String(), verifiedBy, NewExecTrue(""))
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), verifiedBy, NewExecTrue(""))
 	}
 	return NewExecUnknown("")
 }

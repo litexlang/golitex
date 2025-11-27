@@ -64,7 +64,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast
 			}
 			if verRet.IsTrue() {
 				msg := fmt.Sprintf("%s is true by %s is a transitive prop and %s is true", stmt.String(), string(stmt.PropName), relatedFcStmt.String())
-				return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
+				return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
 			}
 		}
 	}
@@ -82,7 +82,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *a
 		}
 		if verRet.IsTrue() {
 			msg := fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String())
-			return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
+			return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
 		}
 	}
 
@@ -226,7 +226,7 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 		}
 	}
 
-	return ver.maybeAddSuccessMsg(state, stmt.String(), defStmt.String(), NewExecTrue(""))
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), defStmt.String(), NewExecTrue(""))
 }
 
 func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
@@ -299,7 +299,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 		}
 	}
 
-	return ver.maybeAddSuccessMsg(state, stmt.String(), "by definition", NewExecTrue(""))
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), "by definition", NewExecTrue(""))
 }
 
 // func (ver *Verifier) verSpecFactLogicMem(stmt *ast.SpecFactStmt, state *VerState) VerRet {
@@ -350,7 +350,7 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules_WithState(stmt *ast.SpecFa
 	}
 	if !areEqual {
 		if state != nil {
-			return ver.maybeAddSuccessMsg(state, stmt.String(), "builtin rules", NewExecTrue(""))
+			return ver.maybeAddSuccessMsgString(state, stmt.String(), "builtin rules", NewExecTrue(""))
 		}
 		return NewExecTrue("")
 	}
@@ -374,7 +374,7 @@ func (ver *Verifier) verIsCartByBuiltinRules(stmt *ast.SpecFactStmt, state *VerS
 	// 如果参数数量是1，且参数的函数名是cart，那自动成立
 	if len(stmt.Params) == 1 {
 		if cartObj, ok := stmt.Params[0].(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(cartObj.FnHead, glob.KeywordCart) {
-			return ver.maybeAddSuccessMsg(state, stmt.String(), "builtin rules: cart(...) is automatically a cart set", NewExecTrue(""))
+			return ver.maybeAddSuccessMsgString(state, stmt.String(), "builtin rules: cart(...) is automatically a cart set", NewExecTrue(""))
 		}
 	}
 	return NewExecUnknown("")
@@ -432,7 +432,7 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *Ver
 			return verRet
 		}
 		if verRet.IsTrue() {
-			return ver.maybeAddSuccessMsg(state, stmt.String(), defStmt.String(), NewExecTrue(""))
+			return ver.maybeAddSuccessMsgString(state, stmt.String(), defStmt.String(), NewExecTrue(""))
 		}
 	}
 
