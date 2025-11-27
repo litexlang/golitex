@@ -236,7 +236,7 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool
 	}
 
 	if len(stmt.IffFacts) == 0 {
-		return NewExecTrue("")
+		return NewExecTrue(stmt.String())
 	}
 
 	if generateIffUniFact {
@@ -256,7 +256,7 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool
 			return NewExecErr(ret.String())
 		}
 	}
-	execRet := NewExecTrue("")
+	execRet := NewExecTrue(stmt.String())
 	// Note: Messages about "is true by definition" are now handled in the verifier
 	return execRet
 }
@@ -279,7 +279,7 @@ func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) ExecRet {
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}
-	return NewExecTrue("")
+	return NewExecTrue(stmt.String())
 }
 
 // TODO: 我认为打印一下 claim 里面的各个语句的输出还是有道理的
@@ -352,7 +352,7 @@ func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEach
 		return execState, fmt.Errorf("prove in each case statement error: failed to verify then facts:\n%s", failedFact)
 	}
 
-	return NewExecTrue(""), nil
+	return NewExecTrue(stmt.String()), nil
 }
 
 func (exec *Executor) proveCaseByCaseStmt(stmt *ast.ProveCaseByCaseStmt) ExecRet {
@@ -406,7 +406,7 @@ func (exec *Executor) execProofBlockForCaseByCase(index int, stmt *ast.ProveCase
 		return execState, fmt.Errorf("prove case by case statement error: failed to verify then facts:\n%s", failedFact)
 	}
 
-	return NewExecTrue(""), nil
+	return NewExecTrue(stmt.String()), nil
 }
 
 // 只要 dom 成立，那prop成立，进而prop的iff成立
@@ -509,7 +509,7 @@ func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) ExecRet {
 		return NewExecErr(ret.String())
 	}
 
-	return NewExecTrue("")
+	return NewExecTrue(stmt.String())
 }
 
 func (exec *Executor) haveSetFnStmt(stmt *ast.HaveSetFnStmt) ExecRet {
@@ -524,7 +524,7 @@ func (exec *Executor) haveSetFnStmt(stmt *ast.HaveSetFnStmt) ExecRet {
 	// have set fn
 	exec.Env.HaveSetFnDefMem[string(stmt.DefHeader.Name)] = *stmt
 
-	return NewExecTrue("")
+	return NewExecTrue(stmt.String())
 }
 
 func (exec *Executor) haveSetDefinedByReplacementStmt(stmt *ast.HaveSetDefinedByReplacementStmt) ExecRet {
@@ -543,7 +543,7 @@ func (exec *Executor) haveSetDefinedByReplacementStmt(stmt *ast.HaveSetDefinedBy
 		return NewExecErr(ret.String())
 	}
 
-	return NewExecTrue("")
+	return NewExecTrue(stmt.String())
 }
 
 func (exec *Executor) namedUniFactStmt(stmt *ast.NamedUniFactStmt) ExecRet {
@@ -577,7 +577,7 @@ func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) ExecRet {
 		return NewExecErr(ret.String())
 	}
 
-	return NewExecTrue("").AddMsg(fmt.Sprintf("%s\nis true by definition", knownUniFact))
+	return NewExecTrue(stmt.String()).AddMsg(fmt.Sprintf("%s\nis true by definition", knownUniFact))
 }
 
 func (exec *Executor) DefFnTemplateStmt(stmt *ast.FnTemplateDefStmt) ExecRet {
@@ -590,7 +590,7 @@ func (exec *Executor) DefFnTemplateStmt(stmt *ast.FnTemplateDefStmt) ExecRet {
 		return NewExecErr(ret.String())
 	}
 
-	return NewExecTrue("")
+	return NewExecTrue(stmt.String())
 }
 
 func (exec *Executor) ClearStmt() ExecRet {
@@ -616,7 +616,7 @@ func (exec *Executor) inlineFactsStmt(stmt *ast.InlineFactsStmt) ExecRet {
 		}
 	}
 
-	return NewExecTrue("")
+	return NewExecTrue(stmt.String())
 }
 
 func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ExecRet {
@@ -631,7 +631,7 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ExecRet {
 			return NewExecErr(fmt.Sprintf("%s is not in %s", stmt.ObjNames[i], stmt.ObjSets[i]))
 		}
 
-		stmtForDef := ast.NewDefLetStmt([]string{stmt.ObjNames[i]}, []ast.Obj{ast.AtomObj(glob.KeywordObj)}, []ast.FactStmt{}, stmt.Line)
+		stmtForDef := ast.NewDefLetStmt([]string{stmt.ObjNames[i]}, []ast.Obj{stmt.ObjSets[i]}, []ast.FactStmt{ast.NewEqualFact(ast.AtomObj(stmt.ObjNames[i]), stmt.ObjEqualTos[i])}, stmt.Line)
 		ret := exec.Env.DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmtForDef)
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
@@ -646,14 +646,9 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ExecRet {
 			ret.AddMsg(fmt.Sprintf("in obj equal to %s", stmt.ObjEqualTos[i]))
 			return NewExecErr(ret.String())
 		}
-		// new fact: obj = obj
-		ret = exec.Env.NewFact(ast.NewEqualFact(ast.AtomObj(stmt.ObjNames[i]), stmt.ObjEqualTos[i]))
-		if ret.IsErr() {
-			return NewExecErr(ret.String())
-		}
 	}
 
-	return NewExecTrue("")
+	return NewExecTrue(stmt.String())
 }
 
 func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) ExecRet {
@@ -695,7 +690,7 @@ func (exec *Executor) checkFnEqualStmt(stmt *ast.HaveFnEqualStmt) (ExecRet, erro
 		return NewExecErr(""), fmt.Errorf("according to the definition of %s, the returned value %s must be in %s, but\n%s is unknown", stmt, stmt.EqualTo, stmt.RetSet, ast.NewInFactWithFc(stmt.EqualTo, stmt.RetSet))
 	}
 
-	return NewExecTrue(""), nil
+	return NewExecTrue(stmt.String()), nil
 }
 
 func fnHeaderToReturnValueOfFn(head *ast.DefHeader) ast.Obj {
@@ -851,7 +846,7 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (ExecRet, error) {
 	// The proof statements should have established the necessary conditions
 	// Additional verification of thenFacts would require object substitution which is not currently available
 
-	return NewExecTrue(""), nil
+	return NewExecTrue(stmt.String()), nil
 }
 
 func (exec *Executor) haveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) ExecRet {
@@ -939,7 +934,7 @@ func (exec *Executor) checkHaveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) 
 		thenFacts = append(thenFacts, uniFact)
 	}
 
-	return NewExecTrue(""), thenFacts, nil
+	return NewExecTrue(stmt.String()), thenFacts, nil
 }
 
 func (exec *Executor) verifyHaveFnCaseByCase_OneCase(stmt *ast.HaveFnCaseByCaseStmt, caseIndex int) (ExecRet, error) {
@@ -991,7 +986,7 @@ func (exec *Executor) verifyHaveFnCaseByCase_OneCase(stmt *ast.HaveFnCaseByCaseS
 	// and object substitution (ReplaceObj) is not currently available.
 	// The proof statements in each case should prove what's needed.
 
-	return NewExecTrue(""), nil
+	return NewExecTrue(stmt.String()), nil
 }
 
 func (exec *Executor) checkAtLeastOneCaseHolds_ForHaveFn(stmt *ast.HaveFnCaseByCaseStmt) (ExecRet, error) {
@@ -1021,7 +1016,7 @@ func (exec *Executor) checkAtLeastOneCaseHolds_ForHaveFn(stmt *ast.HaveFnCaseByC
 		return NewExecErr(""), fmt.Errorf("all cases must cover the entire domain, i.e., %s must be true, but it is unknown", orFact)
 	}
 
-	return NewExecTrue(""), nil
+	return NewExecTrue(stmt.String()), nil
 }
 
 func (exec *Executor) checkCasesNoOverlap_ForHaveFn(stmt *ast.HaveFnCaseByCaseStmt) (ExecRet, error) {
@@ -1033,7 +1028,7 @@ func (exec *Executor) checkCasesNoOverlap_ForHaveFn(stmt *ast.HaveFnCaseByCaseSt
 		}
 	}
 
-	return NewExecTrue(""), nil
+	return NewExecTrue(stmt.String()), nil
 }
 
 func (exec *Executor) checkCaseNoOverlapWithOthers_ForHaveFn(stmt *ast.HaveFnCaseByCaseStmt, caseIndex int) (ExecRet, error) {
@@ -1078,7 +1073,7 @@ func (exec *Executor) checkCaseNoOverlapWithOthers_ForHaveFn(stmt *ast.HaveFnCas
 		}
 	}
 
-	return NewExecTrue(""), nil
+	return NewExecTrue(stmt.String()), nil
 }
 
 func (exec *Executor) openANewEnvAndCheck(fact ast.FactStmt, requireMsg bool) (ExecRet, error) {
@@ -1122,7 +1117,7 @@ func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropS
 
 	exec.Env.TransitivePropMem[string(stmt.Prop)] = make(map[string][]ast.Obj)
 
-	return NewExecTrue("")
+	return NewExecTrue(stmt.String())
 }
 
 // TODO 这里的msg系统太冗杂了，需要优化
@@ -1200,7 +1195,7 @@ func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitiveP
 
 func (exec *Executor) defAlgoStmt(stmt *ast.DefAlgoStmt) ExecRet {
 	exec.Env.AlgoDefMem[stmt.FuncName] = stmt
-	return NewExecTrue("").AddMsg(stmt.String())
+	return NewExecTrue(stmt.String())
 }
 
 func (exec *Executor) evalStmt(stmt *ast.EvalStmt) ExecRet {
@@ -1233,7 +1228,7 @@ func (exec *Executor) evalFcInLocalEnv(fcToEval ast.Obj) (ast.Obj, ExecRet) {
 
 func (exec *Executor) defProveAlgoStmt(stmt *ast.DefProveAlgoStmt) ExecRet {
 	exec.Env.DefProveAlgoMem[stmt.ProveAlgoName] = stmt
-	return NewExecTrue("").AddMsg(stmt.String())
+	return NewExecTrue(stmt.String())
 }
 
 func (exec *Executor) printStmt(stmt *ast.PrintStmt) ExecRet {
@@ -1242,7 +1237,7 @@ func (exec *Executor) printStmt(stmt *ast.PrintStmt) ExecRet {
 	} else {
 		fmt.Println(stmt.Value)
 	}
-	return NewExecTrue("")
+	return NewExecTrue(stmt.String())
 }
 
 func (exec *Executor) helpStmt(stmt *ast.HelpStmt) ExecRet {
@@ -1329,7 +1324,7 @@ func (exec *Executor) checkHaveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseBy
 		return execState, err
 	}
 
-	return NewExecTrue(""), nil
+	return NewExecTrue(stmt.String()), nil
 }
 
 func (exec *Executor) checkCaseReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCaseStmt, caseIndex int) (ExecRet, error) {
@@ -1364,7 +1359,7 @@ func (exec *Executor) checkCaseReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCa
 		return NewExecErr(""), fmt.Errorf("case %d: according to the definition of %s, when %s is true, the returned value %s must be in %s, but\n%s is unknown", caseIndex, stmt, caseFact, equalTo, stmt.RetSet, ast.NewInFactWithFc(equalTo, stmt.RetSet))
 	}
 
-	return NewExecTrue(""), nil
+	return NewExecTrue(stmt.String()), nil
 }
 
 func (exec *Executor) checkAtLeastOneCaseHolds(stmt *ast.HaveFnEqualCaseByCaseStmt) (ExecRet, error) {
@@ -1394,7 +1389,7 @@ func (exec *Executor) checkAtLeastOneCaseHolds(stmt *ast.HaveFnEqualCaseByCaseSt
 		return NewExecErr(""), fmt.Errorf("all cases must cover the entire domain, i.e., %s must be true, but it is unknown", orFact)
 	}
 
-	return NewExecTrue(""), nil
+	return NewExecTrue(stmt.String()), nil
 }
 
 func (exec *Executor) checkCasesNoOverlap(stmt *ast.HaveFnEqualCaseByCaseStmt) (ExecRet, error) {
@@ -1406,7 +1401,7 @@ func (exec *Executor) checkCasesNoOverlap(stmt *ast.HaveFnEqualCaseByCaseStmt) (
 		}
 	}
 
-	return NewExecTrue(""), nil
+	return NewExecTrue(stmt.String()), nil
 }
 
 func (exec *Executor) checkCaseNoOverlapWithOthers(stmt *ast.HaveFnEqualCaseByCaseStmt, caseIndex int) (ExecRet, error) {
@@ -1451,7 +1446,7 @@ func (exec *Executor) checkCaseNoOverlapWithOthers(stmt *ast.HaveFnEqualCaseByCa
 		}
 	}
 
-	return NewExecTrue(""), nil
+	return NewExecTrue(stmt.String()), nil
 }
 
 func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) ExecRet {
@@ -1496,5 +1491,5 @@ func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) ExecRet {
 		return NewExecErr(ret.String())
 	}
 
-	return NewExecTrue("")
+	return NewExecTrue(stmt.String())
 }
