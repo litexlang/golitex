@@ -77,6 +77,8 @@ func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state *Ver
 }
 
 func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	_ = state
+
 	if stmt.PropName != glob.KeywordIn {
 		return NewExecUnknown("")
 	}
