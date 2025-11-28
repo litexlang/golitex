@@ -28,7 +28,7 @@ _– Leonardo da Vinci_
 
 [Litex](https://litexlang.com) (beta-version, not ready for production use) is a simple open-source computer language for mathematical proofs. It expresses mathematics as code while staying as close to natural language as possible, making it both rigorous and accessible. ([Star the repo!](https://github.com/litexlang/golitex)) With just one to two hours of learning the fundamentals, you can write 10-20 lines of code that solve interesting mathematical problems with verified correctness. 
 
-How does Litex work? It achieves its simplicity by imitating how people reason and how mathematics works. Mathematics builds on simple foundations: a few axioms and inference rules create infinitely rich worlds. *Litex uses a set of axioms and inference rules that are sufficiently expressive to capture most mathematical concepts, while being intuitive enough that most people can learn them quickly. Litex adopts the LCF prover architecture, with a far larger kernel than other formal languages.* Its close-to-natural syntax means users often forget they're using a formal language, lowering the barrier of formal reasoning by 10x compared with traditional formal languages. Read [Tutorial](https://litexlang.com/doc/Tutorial/Introduction) for more details.
+How does Litex work? It achieves its simplicity by imitating how people reason and how mathematics works. *Litex uses a set of axioms (i.e. ZFC axioms and basic logic) and inference rules that are sufficiently expressive to capture most mathematical concepts, while being intuitive enough that most people can learn them quickly.* Its close-to-natural syntax means users often forget they're using a formal language, lowering the barrier of formal reasoning by 10x compared with traditional formal languages. Read [Tutorial](https://litexlang.com/doc/Tutorial/Introduction), [Math Principles](https://litexlang.com/doc/Tutorial/Litex_From_A_Mathematical_Perspective), [How Litex Works](https://litexlang.com/doc/How_Litex_Works/Introduction) for more details.
 
 ## Why Litex?
 
@@ -123,6 +123,7 @@ Resources for Litex users:
 6. Use [pylitex](https://github.com/litexlang/pylitex) to call Litex in Python
 7. Our Community is on [Zulip](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)!
 8. Email us [here](mailto:litexlang@outlook.com).
+9. [Congratulations! Litex achieves top 10 on Hacker News on 2025-09-27!!](https://news.ycombinator.com/item?id=45369629)
 
 Resources for AI researchers who want to develop Litex-based AI systems, mostly developed by the Litex open-source community:
 
@@ -155,9 +156,19 @@ AI references:
 2. AlphaGeometry: An Olympiad-level AI system for geometry 
 3. Seed-Prover: Deep and Broad Reasoning for Automated Theorem Proving
 
-## Achievements
+## Litex For Different Purposes
 
-1. [Congratulations! Litex achieves top 10 on Hacker News on 2025-09-27!!](https://news.ycombinator.com/item?id=45369629)
+Litex For AI
+
+AI pioneer Geoffrey Hinton notes that in mathematics, models operate like in Go or chess—within closed systems with fixed rules, where they can generate their own training data. Formal languages (e.g., Litex) are key to self-improvement because computers can automatically and reliably verify whether mathematical reasoning is correct, enabling effective self-supervised learning.
+
+Litex For Math
+
+Litex enables automatic verification and large-scale mathematical collaboration. It clarifies dependency structures among complex theorems and transforms mathematical work into **mathematical engineering**—as intuitive as writing Python code, while maintaining full rigor through ZFC axioms.
+
+Litex For Everyone
+
+Litex is accessible to everyone—from children to experts. With just 1-2 hours of learning, anyone with basic set theory knowledge can write verified proofs. Litex's natural-language-like syntax makes it 10x easier to learn than traditional formal languages, democratizing rigorous mathematical thinking.
 
 ## Special Thanks
 
