@@ -592,6 +592,8 @@ know $there_exists_infinite_set()
 
 fn negate(x R) R:
 	negate(x) = -x
+	negate(x) + x = 0
+	x + negate(x) = 0
 
 know forall x set: not x $in x
 
@@ -777,4 +779,39 @@ know @item_in_difference(x, y set, z obj):
 	=>:
 		not z $in y
 		z $in x
+
+fn power_set(x set) set
+know:
+	forall x set, y power_set(x):
+		y $in set
+		y $is_subset_of x
+	forall x set, y set:
+		y $is_subset_of x
+		=>:
+			y $in power_set(x)
+	forall x nonempty_set:
+		power_set(x) $in nonempty_set
+		$item_exists_in(power_set(x))
+
+know forall x set: empty_set $is_subset_of x
+know forall s finite_set: count(s) > 0 => s $in nonempty_set, $item_exists_in(s)
+
+know:
+	forall a, b, c, d R: b > 0, d > 0 => a / b > c / d <=> a * d > b * c
+	forall a, b, c, d R: b > 0, d > 0 => a / b < c / d <=> a * d < b * c
+	forall a, b, c, d R: b > 0, d > 0 => a / b >= c / d <=> a * d >= b * c
+	forall a, b, c, d R: b > 0, d > 0 => a / b <= c / d <=> a * d <= b * c
+	forall a, b, c, d R: b != 0, d != 0 => a / b = c / d <=> a * d = b * c
+	forall a, b, c, d R: b < 0, d < 0 => a / b > c / d <=> a * d < b * c
+	forall a, b, c, d R: b < 0, d < 0 => a / b < c / d <=> a * d > b * c
+	forall a, b, c, d R: b < 0, d < 0 => a / b >= c / d <=> a * d <= b * c
+	forall a, b, c, d R: b < 0, d < 0 => a / b <= c / d <=> a * d >= b * c
+	forall a, b, c, d R: b > 0, d < 0 => a / b > c / d <=> a * d < b * c
+	forall a, b, c, d R: b > 0, d < 0 => a / b < c / d <=> a * d > b * c
+	forall a, b, c, d R: b > 0, d < 0 => a / b >= c / d <=> a * d <= b * c
+	forall a, b, c, d R: b > 0, d < 0 => a / b <= c / d <=> a * d >= b * c
+	forall a, b, c, d R: b < 0, d > 0 => a / b > c / d <=> a * d < b * c
+	forall a, b, c, d R: b < 0, d > 0 => a / b < c / d <=> a * d > b * c
+	forall a, b, c, d R: b < 0, d > 0 => a / b >= c / d <=> a * d <= b * c
+	forall a, b, c, d R: b < 0, d > 0 => a / b <= c / d <=> a * d >= b * c
 `

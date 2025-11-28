@@ -566,18 +566,6 @@ func (stmt *HaveSetFnStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return NewHaveSetFnStmt(newDefHeader, stmt.Param, stmt.ParentSet, stmt.Proofs, stmt.Line), nil
 }
 
-func (stmt *HaveSetDefinedByReplacementStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	newDomSet, err := stmt.DomSet.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	newRangeSet, err := stmt.RangeSet.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	return NewHaveSetDefinedByReplacementStmt(stmt.Name, newDomSet, newRangeSet, stmt.PropName, stmt.Line), nil
-}
-
 func (stmt *NamedUniFactStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newProp, err := stmt.DefPropStmt.Instantiate(uniMap)
 	if err != nil {
@@ -623,6 +611,10 @@ func (stmt *FnTemplateDefStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) 
 }
 
 func (stmt *ClearStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+	return stmt, nil
+}
+
+func (stmt *DoNothingStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return stmt, nil
 }
 
@@ -816,12 +808,20 @@ func InstantiateAlgoStmt(stmt AlgoStmt, uniMap map[string]Obj) (AlgoStmt, error)
 		return stmt.InstantiateAlgo(uniMap)
 	case *AlgoReturnStmt:
 		return stmt.InstantiateAlgo(uniMap)
-	case *ProveAlgoReturnStmt:
-		return stmt.InstantiateAlgo(uniMap)
 	case Stmt:
 		return stmt.Instantiate(uniMap)
 	}
 	return nil, fmt.Errorf("unknown algo statement type: %T", stmt)
+}
+
+func InstantiateProveAlgoStmt(stmt ProveAlgoStmt, uniMap map[string]Obj) (ProveAlgoStmt, error) {
+	switch stmt := stmt.(type) {
+	case *ProveAlgoIfStmt:
+		return stmt.InstantiateProveAlgo(uniMap)
+	case *ProveAlgoReturnStmt:
+		return stmt.InstantiateProveAlgo(uniMap)
+	}
+	return nil, fmt.Errorf("unknown prove algo statement type: %T", stmt)
 }
 
 func (s AlgoStmtSlice) Instantiate(uniMap map[string]Obj) (AlgoStmtSlice, error) {
@@ -904,27 +904,56 @@ func (stmt *DefProveAlgoStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return NewDefProveAlgoStmt(stmt.ProveAlgoName, stmt.Params, newStmts, stmt.Line), nil
 }
 
+func (s ProveAlgoStmtSlice) Instantiate(uniMap map[string]Obj) (ProveAlgoStmtSlice, error) {
+	newStmts := make([]ProveAlgoStmt, len(s))
+	for i, stmt := range s {
+		newStmt, err := InstantiateProveAlgoStmt(stmt, uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newStmts[i] = newStmt
+	}
+	return newStmts, nil
+}
+
+func (stmt *ProveAlgoIfStmt) InstantiateProveAlgo(uniMap map[string]Obj) (ProveAlgoStmt, error) {
+	newConditions, err := stmt.Conditions.InstantiateFact(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newThenStmts, err := stmt.ThenStmts.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewProveAlgoIfStmt(newConditions, newThenStmts, stmt.Line), nil
+}
+
 func (stmt *ByStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newProveAlgoParams, err := stmt.Params.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}
-	newThenFacts, err := stmt.ThenFactsOrNil.InstantiateFact(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	return NewByStmt(stmt.ProveAlgoName, newProveAlgoParams, newThenFacts, stmt.Line), nil
+	return NewByStmt(stmt.ProveAlgoName, newProveAlgoParams, stmt.Line), nil
 }
 
-func (stmt *ProveAlgoReturnStmt) InstantiateAlgo(uniMap map[string]Obj) (AlgoStmt, error) {
-	if stmt.ByStmtOrNil != nil {
-		instBy, err := stmt.ByStmtOrNil.Instantiate(uniMap)
+func (stmt *ProveAlgoReturnStmt) InstantiateProveAlgo(uniMap map[string]Obj) (ProveAlgoStmt, error) {
+	instFacts := []FactOrByStmt{}
+	for _, factOrBy := range stmt.Facts {
+		instFactOrBy, err := factOrBy.Instantiate(uniMap)
 		if err != nil {
 			return nil, err
 		}
-		return NewProveAlgoReturnStmt(instBy.(*ByStmt), stmt.GetLine()), nil
+		// instFactOrBy is a Stmt, need to convert to FactOrByStmt
+		switch item := instFactOrBy.(type) {
+		case FactStmt:
+			instFacts = append(instFacts, item)
+		case *ByStmt:
+			instFacts = append(instFacts, item)
+		default:
+			return nil, fmt.Errorf("unexpected type after instantiate: %T", instFactOrBy)
+		}
 	}
-	return stmt, nil
+	return NewProveAlgoReturnStmt(instFacts, stmt.GetLine()), nil
 }
 
 func (specFactPtrSlice SpecFactPtrSlice) InstantiateFact(uniMap map[string]Obj) (SpecFactPtrSlice, error) {

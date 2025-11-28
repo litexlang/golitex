@@ -819,6 +819,10 @@ func (s *ClearStmt) ToLatexString() string {
 	return glob.KeywordClear
 }
 
+func (s *DoNothingStmt) ToLatexString() string {
+	return glob.KeywordDoNothing
+}
+
 func (s *InlineFactsStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString(strings.Join(s.Facts.factStmtSliceToLatexStringSlice(), "\n\n"))
@@ -916,6 +920,10 @@ func (s *ProveIsTransitivePropStmt) ToLatexString() string {
 }
 
 func (s *ProveIsCommutativePropStmt) ToLatexString() string {
+	return s.String()
+}
+
+func (s *ProveAlgoIfStmt) ToLatexString() string {
 	return s.String()
 }
 

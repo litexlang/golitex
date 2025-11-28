@@ -19,7 +19,6 @@ import (
 	ast "golitex/ast"
 	env "golitex/environment"
 	glob "golitex/glob"
-	"strings"
 )
 
 func (ver *Verifier) verSpecFact_BySpecMem(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
@@ -170,7 +169,7 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch_new(stmt *ast.Spe
 		}
 
 		if verRet.IsTrue() {
-			return ver.maybeAddSuccessMsg(state, stmt.String(), knownFactUnderLogicExpr.String(), NewExecTrue(""))
+			return ver.maybeAddSuccessMsg(state, stmt, knownFactUnderLogicExpr.UniFact, NewExecTrue(""))
 		}
 	}
 
@@ -244,13 +243,7 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 	}
 
 	if state.WithMsg {
-		var verifiedBy strings.Builder
-		verifiedBy.WriteString(knownFact.String())
-		verifiedBy.WriteString("\n")
-		for i, knownParam := range knownFact.SpecFact.Params {
-			verifiedBy.WriteString(fmt.Sprintf("%s = %s\n", knownParam, stmt.Params[i]))
-		}
-		return ver.maybeAddSuccessMsg(state, stmt.String(), verifiedBy.String(), NewExecTrue(""))
+		return ver.maybeAddSuccessMsg(state, stmt, knownFact.LogicExpr, NewExecTrue(""))
 	}
 
 	return NewExecTrue("")
@@ -280,8 +273,7 @@ func (ver *Verifier) specFact_LogicMem(curEnv *env.Env, stmt *ast.SpecFactStmt, 
 				return NewExecErr(verRet.String())
 			}
 			if verRet.IsTrue() {
-				msg := fmt.Sprintf("verified by known fact: %s", knownFact.String())
-				return ver.maybeAddSuccessMsg(state, stmt.String(), msg, verRet)
+				return ver.maybeAddSuccessMsg(state, stmt, knownFact.LogicExpr, verRet)
 			}
 		}
 
@@ -302,9 +294,8 @@ LoopOverFacts:
 		}
 
 		if state.WithMsg {
-			verifiedBy := knownFact.StringWithLine() + "\n"
 			execRet := NewExecTrue("")
-			execRet.AddMsg(successVerString(stmt.String(), verifiedBy))
+			execRet.AddMsg(successVerString(stmt, &knownFact))
 			return execRet
 		}
 		return NewExecTrue("")
@@ -362,8 +353,7 @@ func (ver *Verifier) useKnownOrFactToProveSpecFact(knownFact *env.KnownSpecFact_
 		}
 	}
 
-	msg := fmt.Sprintf("verified by known fact: %s", knownFact.String())
-	return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
+	return ver.maybeAddSuccessMsg(state, stmt, knownFact.LogicExpr, NewExecTrue(""))
 }
 
 func (ver *Verifier) proveUniFactDomFacts(domFacts []ast.FactStmt, state *VerState) ExecRet {
@@ -413,7 +403,7 @@ func (ver *Verifier) verify_specFact_when_given_orStmt_is_true(stmt *ast.SpecFac
 		}
 	}
 
-	return ver.maybeAddSuccessMsg(state, stmt.String(), orStmt.String(), NewExecTrue(""))
+	return ver.maybeAddSuccessMsg(state, stmt, orStmt, NewExecTrue(""))
 }
 
 func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch_new(stmt *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InUniFact, state *VerState) ExecRet {
@@ -478,7 +468,7 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch_new(stmt *ast.SpecFa
 		}
 
 		if verRet.IsTrue() {
-			return ver.maybeAddSuccessMsg(state, stmt.String(), knownFact_paramProcessed.UniFact.StringWithLine(), NewExecTrue(""))
+			return ver.maybeAddSuccessMsg(state, stmt, knownFact_paramProcessed.UniFact, NewExecTrue(""))
 		}
 	}
 

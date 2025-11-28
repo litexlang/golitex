@@ -17,7 +17,6 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
-	env "golitex/environment"
 	glob "golitex/glob"
 )
 
@@ -27,9 +26,9 @@ func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state 
 	// REMARK
 	// TODO： 一层层搜索的时候，会重复检查是否存在，可以优化。比如我要检查 a * f(b) $in R 的时候，我要查 a, f(b) 是否满足条件，就要查 f(b) $in R 是否成立，这时候又查了一遍 f, b 是否存在
 	for _, param := range stmt.Params {
-		ok := ver.Env.AreAtomsInFcAreDeclared(param, map[string]struct{}{})
-		if !ok {
-			return state, NewExecErr(env.AtomsInFcNotDeclaredMsg(param))
+		ret := ver.Env.AreAtomsInFcAreDeclared(param, map[string]struct{}{})
+		if ret.IsErr() {
+			return state, NewExecErr(ret.String())
 		}
 	}
 
@@ -72,8 +71,6 @@ func (ver *Verifier) objSatisfyFnRequirement(obj ast.Obj, state *VerState) ExecR
 		return ver.countFnRequirement(objAsFnObj, state)
 	} else if ast.IsFnTemplate_FcFn(objAsFnObj) {
 		return NewExecTrue("")
-	} else if ast.IsAtomObjAndEqualToStr(objAsFnObj.FnHead, glob.KeywordSetDefinedByReplacement) {
-		return ver.setDefinedByReplacementFnRequirement(objAsFnObj, state)
 	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordCart) {
 		return ver.cartFnRequirement(objAsFnObj, state)
 	} else {

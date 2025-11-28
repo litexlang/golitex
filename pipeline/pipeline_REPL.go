@@ -23,7 +23,7 @@ func RunREPL(version string) {
 
 	year := time.Now().Year()
 
-	fmt.Fprintf(writer, "Litex %s Copyright (C) 2024-%s Official Website: litexlang.com Github: https://github.com/litexlang/golitex Type 'help' for help\nNOT READY FOR PRODUCTION USE\n", version, strconv.Itoa(year))
+	fmt.Fprintf(writer, "Litex %s (Beta)\nCopyright (C) 2024-%s\nOfficial Website: litexlang.com\nGithub: https://github.com/litexlang/golitex\nEmail: litexlang@outlook.com\nType 'help' for help\n\nNote: This is a beta version. We welcome your testing and feedback!\nHowever, please note that this version is NOT READY FOR PRODUCTION USE.\n\n", version, strconv.Itoa(year))
 
 	for {
 		code, err := listenOneStatementFromREPL(reader, writer)
@@ -39,13 +39,12 @@ func RunREPL(version string) {
 		}
 
 		// ret := ExecuteCodeAndReturnMessageSliceGivenSettings(code, executor)
-		ret := RunSourceCodeInExecutor(executor, code)
+		ret := RunSourceCodeInExecutor(executor, code, "REPL")
 		if ret.IsNotTrue() {
 			msgStr := ret.String()
 			if msgStr != "" {
 				fmt.Fprint(writer, msgStr)
 			}
-			fmt.Fprintf(writer, glob.REPLErrorMessage)
 			continue
 		}
 
@@ -53,7 +52,6 @@ func RunREPL(version string) {
 		if msgStr != "" {
 			fmt.Fprint(writer, msgStr)
 		}
-		fmt.Fprintf(writer, glob.REPLSuccessMessage)
 	}
 }
 

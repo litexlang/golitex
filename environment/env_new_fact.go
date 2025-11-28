@@ -46,8 +46,9 @@ func (env *Env) NewFact(stmt ast.FactStmt) glob.GlobRet {
 // NewFactWithDeclarationCheck checks if all atoms in the fact are declared, and if so, calls NewFact.
 // Returns an error if any atoms are undeclared or if NewFact fails.
 func (env *Env) NewFactWithDeclarationCheck(fact ast.FactStmt) glob.GlobRet {
-	if !env.AreAtomsInFactAreDeclared(fact, map[string]struct{}{}) {
-		return glob.ErrRet(fmt.Errorf(AtomsInFactNotDeclaredMsg(fact)))
+	ret := env.AreAtomsInFactAreDeclared(fact, map[string]struct{}{})
+	if ret.IsErr() {
+		return ret
 	}
 	return env.NewFact(fact)
 }
@@ -480,11 +481,12 @@ func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, [
 
 func (env *Env) ExecDefFnTemplate(stmt *ast.FnTemplateDefStmt) glob.GlobRet {
 	// 确保template name 没有被声明过
-	if env.IsAtomDeclared(stmt.TemplateDefHeader.Name, map[string]struct{}{}) {
+	ret := env.IsAtomDeclared(stmt.TemplateDefHeader.Name, map[string]struct{}{})
+	if ret.IsTrue() {
 		return glob.ErrRet(fmt.Errorf("fn template name %s is already declared", stmt.TemplateDefHeader.Name))
 	}
 
-	ret := env.AtomsInFnTemplateFnTemplateDeclared(ast.AtomObj(stmt.TemplateDefHeader.Name), stmt)
+	ret = env.AtomsInFnTemplateFnTemplateDeclared(ast.AtomObj(stmt.TemplateDefHeader.Name), stmt)
 	if ret.IsErr() {
 		return ret
 	}

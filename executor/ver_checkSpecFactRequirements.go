@@ -16,7 +16,6 @@ package litex_executor
 
 import (
 	ast "golitex/ast"
-	env "golitex/environment"
 	glob "golitex/glob"
 )
 
@@ -41,9 +40,9 @@ func (ver *Verifier) checkSpecFactReq(stmt *ast.SpecFactStmt, state *VerState) (
 // 只验证 1. params都声明了 2. 确实是fn template
 // WARNING: 这个函数有严重的问题
 func (ver *Verifier) checkSpecFactReq_InFact_UseBtRules(stmt *ast.SpecFactStmt) ExecRet {
-	ok := ver.Env.AreAtomsInFcAreDeclared(stmt.Params[0], map[string]struct{}{})
-	if !ok {
-		return NewExecErr(env.AtomsInFcNotDeclaredMsg(stmt.Params[0]))
+	ret := ver.Env.AreAtomsInFcAreDeclared(stmt.Params[0], map[string]struct{}{})
+	if ret.IsErr() {
+		return NewExecErr(ret.String())
 	}
 
 	if _, ok := stmt.Params[1].(*ast.FnObj); !ok {
@@ -56,23 +55,23 @@ func (ver *Verifier) checkSpecFactReq_InFact_UseBtRules(stmt *ast.SpecFactStmt) 
 		def := ver.Env.GetFnTemplateDef(head)
 		if def != nil {
 			for _, param := range stmt.Params[1].(*ast.FnObj).Params {
-				ok := ver.Env.AreAtomsInFcAreDeclared(param, map[string]struct{}{})
-				if !ok {
-					return NewExecErr(env.AtomsInFcNotDeclaredMsg(param))
+				ret := ver.Env.AreAtomsInFcAreDeclared(param, map[string]struct{}{})
+				if ret.IsErr() {
+					return NewExecErr(ret.String())
 				}
 			}
 			return NewExecTrue("")
 		} else {
-			ok = ver.Env.AreAtomsInFcAreDeclared(stmt.Params[1], map[string]struct{}{})
-			if !ok {
-				return NewExecErr(env.AtomsInFcNotDeclaredMsg(stmt.Params[1]))
+			ret := ver.Env.AreAtomsInFcAreDeclared(stmt.Params[1], map[string]struct{}{})
+			if ret.IsErr() {
+				return NewExecErr(ret.String())
 			}
 			return NewExecTrue("")
 		}
 	} else {
-		ok = ver.Env.AreAtomsInFcAreDeclared(stmt.Params[1], map[string]struct{}{})
-		if !ok {
-			return NewExecErr(env.AtomsInFcNotDeclaredMsg(stmt.Params[1]))
+		ret := ver.Env.AreAtomsInFcAreDeclared(stmt.Params[1], map[string]struct{}{})
+		if ret.IsErr() {
+			return NewExecErr(ret.String())
 		}
 
 		return NewExecTrue("")
