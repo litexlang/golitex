@@ -115,7 +115,8 @@ func (exec *Executor) useAlgoToEvalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj,
 	}
 
 	for i, param := range algoDef.Params {
-		if exec.Env.IsAtomDeclared(ast.AtomObj(param), map[string]struct{}{}) {
+		ret := exec.Env.IsAtomDeclared(ast.AtomObj(param), map[string]struct{}{})
+		if ret.IsTrue() {
 			continue
 		} else {
 			execState := exec.defLetStmt(ast.NewDefLetStmt([]string{param}, []ast.Obj{ast.AtomObj(glob.KeywordObj)}, []ast.FactStmt{ast.NewEqualFact(ast.AtomObj(param), fnObj.Params[i])}, glob.InnerGenLine))
@@ -175,8 +176,6 @@ func (exec *Executor) runAlgoStmtsWhenEval(algoStmts ast.AlgoStmtSlice, fnObjWit
 			} else if conditionIsTrue {
 				return exec.algoIfStmtWhenEval(asStmt, fnObjWithValueParams)
 			}
-		case *ast.ProveAlgoReturnStmt:
-			return nil, NewExecErr(fmt.Sprintf("There can not be return by statements in algo, get %s", asStmt.String()))
 		default:
 			execRet := exec.Stmt(stmt.(ast.Stmt))
 			if execRet.IsNotTrue() {

@@ -73,7 +73,7 @@ func main() {
 	// Handle execution flags
 	if *executeFlag != "" {
 		// Normal execution
-		ret := pipeline.RunSourceCode(glob.RemoveWindowsCarriage(*executeFlag))
+		ret := pipeline.RunSourceCode(glob.RemoveWindowsCarriage(*executeFlag), "-e")
 		msg := strings.TrimSpace(ret.String())
 		fmt.Println(msg)
 		return

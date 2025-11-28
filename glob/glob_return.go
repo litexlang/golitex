@@ -37,6 +37,7 @@ type GlobRet interface {
 	GetMsgs() []string
 	StringWithOptimizedNewline() string
 	GetREPLMsg() string
+	AddMsg(msg string) GlobRet
 }
 
 type GlobTrue struct {
@@ -207,4 +208,19 @@ func (v *GlobErr) StringWithOptimizedNewline() string {
 	// 将3个或更多连续的\n替换成\n\n
 	s = newlineRegex.ReplaceAllString(s, "\n\n")
 	return fmt.Sprintf("%s\n", s)
+}
+
+func (v *GlobTrue) AddMsg(msg string) GlobRet {
+	v.Msg = append(v.Msg, msg)
+	return v
+}
+
+func (v *GlobUnknown) AddMsg(msg string) GlobRet {
+	v.Msg = append(v.Msg, msg)
+	return v
+}
+
+func (v *GlobErr) AddMsg(msg string) GlobRet {
+	v.Msg = append(v.Msg, msg)
+	return v
 }

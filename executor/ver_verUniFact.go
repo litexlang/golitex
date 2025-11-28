@@ -17,7 +17,6 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
-	env "golitex/environment"
 )
 
 func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) ExecRet {
@@ -89,9 +88,9 @@ func (ver *Verifier) PreprocessUniFactParams_DeclareParams(oldStmt *ast.UniFactS
 
 	// 查看param set 是否已经声明
 	for _, paramSet := range newStmtPtr.ParamSets {
-		ok := ver.Env.AreAtomsInFcAreDeclared(paramSet, map[string]struct{}{})
-		if !ok {
-			return nil, fmt.Errorf(env.AtomsInFcNotDeclaredMsg(paramSet))
+		ret := ver.Env.AreAtomsInFcAreDeclared(paramSet, map[string]struct{}{})
+		if ret.IsErr() {
+			return nil, fmt.Errorf(ret.String())
 		}
 	}
 

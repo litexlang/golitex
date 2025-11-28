@@ -48,13 +48,13 @@ func (exec *Executor) proveIsCommutativePropStmtMainLogic(stmt *ast.ProveIsCommu
 		return false, fmt.Errorf("prop %s has %d params, but 2 params are expected", stmt.SpecFact.PropName, len(def.DefHeader.Params))
 	}
 
-	ok := exec.Env.AreAtomsInFcAreDeclared(def.DefHeader.ParamSets[0], map[string]struct{}{})
-	if !ok {
-		return false, fmt.Errorf("param %s is not declared", def.DefHeader.ParamSets[0])
+	ret := exec.Env.AreAtomsInFcAreDeclared(def.DefHeader.ParamSets[0], map[string]struct{}{})
+	if ret.IsErr() {
+		return false, fmt.Errorf(ret.String())
 	}
-	ok = exec.Env.AreAtomsInFcAreDeclared(def.DefHeader.ParamSets[1], map[string]struct{}{})
-	if !ok {
-		return false, fmt.Errorf("param %s is not declared", def.DefHeader.ParamSets[1])
+	ret = exec.Env.AreAtomsInFcAreDeclared(def.DefHeader.ParamSets[1], map[string]struct{}{})
+	if ret.IsErr() {
+		return false, fmt.Errorf(ret.String())
 	}
 
 	// 这里最好检查一下，是不是 Param set 依赖了 Param，如果依赖了，那其实是要报错了，不过暂时不管了
@@ -83,6 +83,7 @@ func (exec *Executor) proveIsCommutativePropStmtMainLogic(stmt *ast.ProveIsCommu
 		return false, err
 	}
 
+	var ok bool
 	ok, err = exec.proveIsCommutativePropStmtBody(stmt.Proofs, leftToRightFact, rightToLeftFact)
 	if !ok || err != nil {
 		return false, err

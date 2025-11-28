@@ -172,6 +172,10 @@ func NewClearStmt(line uint) *ClearStmt {
 	return &ClearStmt{line}
 }
 
+func NewDoNothingStmt(line uint) *DoNothingStmt {
+	return &DoNothingStmt{line}
+}
+
 func NewInlineFactsStmt(facts []FactStmt, line uint) *InlineFactsStmt {
 	return &InlineFactsStmt{facts, line}
 }
@@ -230,6 +234,10 @@ func NewAlgoDefStmt(funcName string, params []string, stmts AlgoStmtSlice, line 
 
 func NewAlgoIfStmt(condition []FactStmt, thenFacts AlgoStmtSlice, line uint) *AlgoIfStmt {
 	return &AlgoIfStmt{condition, thenFacts, line}
+}
+
+func NewProveAlgoIfStmt(condition []FactStmt, thenFacts ProveAlgoStmtSlice, line uint) *ProveAlgoIfStmt {
+	return &ProveAlgoIfStmt{condition, thenFacts, line}
 }
 
 func NewAlgoReturnStmt(value Obj, line uint) *AlgoReturnStmt {
@@ -300,16 +308,16 @@ func NewEvalStmt(value Obj, line uint) *EvalStmt {
 	return &EvalStmt{value, line}
 }
 
-func NewDefProveAlgoStmt(algoName string, params []string, thenFacts AlgoStmtSlice, line uint) *DefProveAlgoStmt {
+func NewDefProveAlgoStmt(algoName string, params []string, thenFacts ProveAlgoStmtSlice, line uint) *DefProveAlgoStmt {
 	return &DefProveAlgoStmt{algoName, params, thenFacts, line}
 }
 
-func NewByStmt(proveAlgoName string, proveAlgoParams ObjSlice, thenFacts FactStmtSlice, line uint) *ByStmt {
-	return &ByStmt{proveAlgoName, proveAlgoParams, thenFacts, line}
+func NewByStmt(proveAlgoName string, proveAlgoParams ObjSlice, line uint) *ByStmt {
+	return &ByStmt{ProveAlgoName: proveAlgoName, Params: proveAlgoParams, Line: line}
 }
 
-func NewProveAlgoReturnStmt(by *ByStmt, line uint) *ProveAlgoReturnStmt {
-	return &ProveAlgoReturnStmt{by, line}
+func NewProveAlgoReturnStmt(facts []FactOrByStmt, line uint) *ProveAlgoReturnStmt {
+	return &ProveAlgoReturnStmt{Facts: facts, Line: line}
 }
 
 func NewPrintStmt(isFString bool, value string, line uint) *PrintStmt {

@@ -66,7 +66,7 @@ func (ver *Verifier) lenIsZeroThenEnumIsEmpty(stmt *ast.EnumStmt, state *VerStat
 	}
 
 	msg := fmt.Sprintf("len(%s) = 0 is equivalent to %s", stmt.CurSet, stmt)
-	return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
 }
 
 func (ver *Verifier) forallObjNotInSetThenTheSetIsEmpty(stmt *ast.EnumStmt, state *VerState) ExecRet {
@@ -81,5 +81,5 @@ func (ver *Verifier) forallObjNotInSetThenTheSetIsEmpty(stmt *ast.EnumStmt, stat
 	}
 
 	msg := fmt.Sprintf("builtin rule:\n%s\nis equivalent to\n%s", allObjectsNotInSetThenSetIsEmpty, stmt)
-	return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
 }

@@ -70,13 +70,15 @@ func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state *Ver
 		return NewExecErr(err.Error())
 	}
 	if ok {
-		return ver.maybeAddSuccessMsg(state, stmt.String(), "builtin rules", NewExecTrue(""))
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), "builtin rules", NewExecTrue(""))
 	}
 
 	return NewExecUnknown("")
 }
 
 func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	_ = state
+
 	if stmt.PropName != glob.KeywordIn {
 		return NewExecUnknown("")
 	}
