@@ -2701,7 +2701,7 @@ func (tb *tokenBlock) haveFnEqualStmt() (ast.Stmt, error) {
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}
-			err = block.header.skip(glob.KeySymbolEqual)
+			err = block.header.skip(glob.KeySymbolColon)
 			if err != nil {
 				return nil, tbErr(err, tb)
 			}

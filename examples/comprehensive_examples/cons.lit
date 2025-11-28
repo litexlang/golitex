@@ -29,4 +29,4 @@ prove_algo table_nth(x, p):
 
 have px U
 by table_nth(2, px)
-nth(2, px) = l(r(px)) # this does not work
+nth(2, px) = l(r(px))

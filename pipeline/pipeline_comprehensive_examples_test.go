@@ -17,6 +17,7 @@ package litex_pipeline
 import (
 	"fmt"
 	glob "golitex/glob"
+	parser "golitex/parser"
 	"os"
 	"path/filepath"
 	"strings"
@@ -45,7 +46,10 @@ func RunFilesInRepoWithPipelineRunner(repo string) error {
 		return err
 	}
 
-	pipelineRunner := NewPipelineRunner()
+	executor, err := InitPipelineExecutor()
+	if err != nil {
+		return fmt.Errorf("failed to init pipeline executor: %s", err)
+	}
 
 	allFilesStartTime := time.Now()
 
@@ -68,20 +72,28 @@ func RunFilesInRepoWithPipelineRunner(repo string) error {
 		}
 
 		start := time.Now()
-		ret := pipelineRunner.Run(string(content))
-		if ret.IsNotTrue() {
-			err := ret.Error()
-			if err == nil {
-				err = fmt.Errorf("execution failed")
+
+		// Run the code directly
+		topStmtSlice, err := parser.ParseSourceCode(string(content))
+		if err != nil {
+			return fmt.Errorf("parse error in file %s: %s", file.Name(), err.Error())
+		}
+
+		for _, topStmt := range topStmtSlice {
+			execState := executor.Stmt(topStmt)
+			if execState.IsErr() {
+				return fmt.Errorf("\n\nexecution test failed in file %s, line %d:\n%s\n\n", file.Name(), topStmt.GetLine(), execState.String())
 			}
-			return fmt.Errorf("%s\n%s\nerror in file: %s", ret.String(), err.Error(), file.Name())
+			if execState.IsUnknown() {
+				return fmt.Errorf("\n\nexecution test failed in file %s, line %d: unknown:\n%s\n\n", file.Name(), topStmt.GetLine(), execState.String())
+			}
 		}
 
 		elapsed := time.Since(start)
 
 		fmt.Printf("%s\n", elapsed)
 
-		pipelineRunner.Clear()
+		executor.ClearStmt()
 	}
 
 	fmt.Printf("All Files Take %s\n", time.Since(allFilesStartTime))
