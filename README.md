@@ -26,27 +26,15 @@ _Simplicity is the ultimate sophistication._
 
 _– Leonardo da Vinci_
 
-[Congratulations! Litex achieves top 10 on Hacker News on 2025-09-27!!](https://news.ycombinator.com/item?id=45369629)
+[Litex](https://litexlang.com) (beta-version, not ready for production use) is a simple open-source formal language, making mathematical thinking more approachable for *everyone*. It expresses mathematics as code, ensuring rigorous correctness while staying close to natural language. ([Star the repo!](https://github.com/litexlang/golitex)) With just one to two hours of learning the fundamentals, you can write 10-20 lines of code that solve interesting mathematical problems with verified correctness. 
 
-**Warning: Litex is still in beta. The syntax and semantics are subject to change. There might be some bugs and inconsistencies. You should not use Litex in any production environments yet.**
-
-Litex([website](https://litexlang.com)) is a simple open-source formal language, learnable in 2 hours. It expresses mathematics as code, ensuring rigorous correctness while staying close to natural language. ([Star the repo!](https://github.com/litexlang/golitex)). 
-
-Mathematics builds on simple foundations: a few axioms and inference rules create infinitely rich worlds. Finding solutions requires creativity, but verifying correctness is intuitive—we check which facts lead to each statement.
-
-Litex implements these simple rules in code, making math as readable as LaTeX while maintaining formal rigor. Its close-to-natural syntax means users often forget they're using a formal language.
-
-Why does this matter for AI? As AIs generate content at scale, we need verifiable reasoning—especially for scientific exploration and safe AI agents. Formal languages like Litex enable computers to verify reasoning strictly and quickly, bridging human creativity with AI capabilities, or allowing AIs to enhance reasoning capability by themselves, just like how AlphaZero enhances itself in Go. There are more and more AI researchers start to use formal language as a tool for their work, especially safe AI, AI scientific exploration etc, but they do not really understand their code because learning curve of traditional formal languages is too high. 
-
-Litex will not only solve AI researchers' problem, but also make formal languages accessible to ANYONE.
+How does Litex work? It achieves its simplicity by imitating how people reason and how mathematics works. Mathematics builds on simple foundations: a few axioms and inference rules create infinitely rich worlds. *Litex uses a set of axioms and inference rules that are sufficiently expressive to capture most mathematical concepts, while being intuitive enough that most people can learn them quickly. Litex adopts the LCF prover architecture, with a far larger kernel than other formal languages.* Its close-to-natural syntax means users often forget they're using a formal language, lowering the barrier of formal reasoning by 10x compared with traditional formal languages. Read [Tutorial](https://litexlang.com/doc/Tutorial/Introduction) for more details.
 
 ## Why Litex?
 
 _Our intent was to create a pleasant computing environment (Unix) for ourselves and our hope was that others liked it._
 
 _- Dennis Ritchie_
-
-Making Litex intuitive to both humans and AI is Litex's core mission. We want people feel happy using Litex. Just like how Python lowers the barrier of programming by 10x compared with C/C++, Litex lowers the barrier of formal reasoning by 10x compared with previous formal languages like Lean. Here is an example:
 
 <table style="border-collapse: collapse; width: 100%; font-size: 12px">
   <tr>
@@ -92,9 +80,18 @@ Making Litex intuitive to both humans and AI is Litex's core mission. We want pe
 
 While Lean 4 is a powerful and rigorous proof assistant ideal, it requires months of training and years of experience to master. Litex takes a different approach: prioritizing accessibility and ease of use, enabling even beginners to formalize naive tasks like multivariate equations in minutes.
 
+Making Litex intuitive to both humans and AI is Litex's core mission. We want people feel happy using Litex. Just like how Python lowers the barrier of programming by 10x compared with C/C++, Litex lowers the barrier of formal reasoning by 10x compared with previous formal languages like Lean. 
+
 Since each Litex sentence corresponds directly to an expression in everyday mathematical language, and since it is supported by set theory (ZFC) and basic logic (not, forall, exist, or), Litex does not sacrifice any rigor. So please do not think about Litex using the mindset of traditional formal languages. Instead, imagine yourself as a college student or even a high school student who has a basic understanding of set theory — regardless of whether you like Litex or are skeptical of it.
 
-*In summary, Litex is a piece of software that imitates the way people think when they verify mathematics in everyday reasoning, using a small number of straightforward rules.* For example, if it sees “24 * 25 = 600,” it knows that a calculation needs to be performed. If it sees statements like “Every person will die” and “Socrates is a person,” it uses pattern matching and substitution: it substitutes Socrates into the statement “Every person will die” and checks whether Socrates satisfies the condition “is a person.” If so, it concludes that Socrates will also die. Along with other extremely common rules, Litex can verify complex mathematical statements with ease.
+*In summary, Litex is a piece of software that imitates the way people think when they verify mathematics in everyday reasoning, using a small number of straightforward rules.* 
+
+## Litex For Ai
+
+Why does this matter for AI? As AIs generate content at scale, we need verifiable reasoning—especially for scientific exploration and safe AI agents. Formal languages like Litex enable computers to verify reasoning strictly and quickly, bridging human creativity with AI capabilities, or allowing AIs to enhance reasoning capability by themselves, just like how AlphaZero enhances itself in Go. More and more AI researchers are starting to use formal languages as a tool for their work, especially in safe AI and AI scientific exploration, but they do not really understand their code because the learning curve of traditional formal languages is too high. 
+
+Litex will not only solve AI researchers' problem, but also make formal languages accessible to ANYONE.
+
 
 ## Our Mission
 
@@ -120,11 +117,12 @@ Resources for Litex users:
 
 1. Our official [website](https://litexlang.com) contains tutorials, cheat sheets, examples, documentation, collaboration opportunities, and more for Litex. All documents on our [website](https://litexlang.com) are open-sourced [here](https://github.com/litexlang/litex-official-documents)
 2. Learn Litex [online](https://litexlang.com/doc/Tutorial/Introduction). A short list of major Litex statements and their usage are shown in the [cheat sheet](https://litexlang.com/doc/Litex_Cheatsheet).
-3. You can run litex on your own computer， start from [here](https://litexlang.com/doc/Quick_Start)
-4. [Litex standard library](https://github.com/litexlang/litex-stdlib) is under active development. **Contribute to it and earn impact rewards!**
-5. Use [pylitex](https://github.com/litexlang/pylitex) to call Litex in Python
-6. Our Community is on [Zulip](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)!
-7. Email us [here](mailto:litexlang@outlook.com).
+3. Theory Behind Litex: [From a Mathematical Perspective](https://litexlang.com/doc/Tutorial/Litex_From_A_Mathematical_Perspective), [From a Programming Perspective](https://litexlang.com/doc/Tutorial/Litex_From_A_Programmer_Perspective)
+4. You can run litex on your own computer,start from [here](https://litexlang.com/doc/Quick_Start)
+5. [Litex standard library](https://github.com/litexlang/litex-stdlib) is under active development. **Contribute to it and earn impact rewards!**
+6. Use [pylitex](https://github.com/litexlang/pylitex) to call Litex in Python
+7. Our Community is on [Zulip](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)!
+8. Email us [here](mailto:litexlang@outlook.com).
 
 Resources for AI researchers who want to develop Litex-based AI systems, mostly developed by the Litex open-source community:
 
@@ -156,6 +154,10 @@ AI references:
 1. DeepSeek-R1: Boosting Reasoning Capability in LLMs via Reinforcement Learning
 2. AlphaGeometry: An Olympiad-level AI system for geometry 
 3. Seed-Prover: Deep and Broad Reasoning for Automated Theorem Proving
+
+## Achievements
+
+1. [Congratulations! Litex achieves top 10 on Hacker News on 2025-09-27!!](https://news.ycombinator.com/item?id=45369629)
 
 ## Special Thanks
 

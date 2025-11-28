@@ -156,6 +156,7 @@ know:
     forall n N_pos, a finite_seq(R, n) => finite_seq_product(n, a, 1) = a(1)
 
 know:
+	$item_exists_in(obj)
 	$item_exists_in(N)
 	$item_exists_in(N_pos)
 	$item_exists_in(Z)
@@ -743,6 +744,37 @@ fn cart_prod(index_set set, family fn (index_set) set) set
 
 know forall index_set set, family fn (index_set) set: $is_cart_prod(cart_prod(index_set, family))
 
+know forall index_set set, family fn (index_set) set: index_set_of_cart_prod(cart_prod(index_set, family)) = index_set
+
 know forall index_set set, family fn (index_set) set, a index_set: cart_prod_proj(cart_prod(index_set, family), a) = family(a)
 
+know:
+	forall x, y R:
+		x >= 0
+		or:
+			x != 0
+			y != 0
+		=>:
+			x ^ (y + 1) = (x ^ y) * x
+
+	forall x N_pos: x >= 0, x > 0, x != 0, x >= 1, not x < 1, not x < 0
+
+know forall x, y nonempty_set: $item_exists_in(fn(x) y)
+
+fn inverse_image_set(X set, Y set, f fn(X)Y, U set) set:
+    U $is_subset_of Y
+    =>:
+        inverse_image_set(X, Y, f, U) = {x X: f(x) $in U}
+
+fn difference(x, y set) set
+know:
+	forall x, y set, z x:
+		not z $in y
+		<=>:
+			z $in difference(x, y)
+know @item_in_difference(x, y set, z obj):
+	z $in difference(x, y)
+	=>:
+		not z $in y
+		z $in x
 `
