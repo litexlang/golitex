@@ -767,16 +767,6 @@ func (stmt *HaveSetFnStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *HaveSetDefinedByReplacementStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordHave)
-	builder.WriteString(" ")
-	builder.WriteString(stmt.Name)
-	builder.WriteString(" ")
-	builder.WriteString(NewFnObj(AtomObj(glob.KeywordSetDefinedByReplacement), []Obj{stmt.DomSet, stmt.RangeSet, stmt.PropName}).String())
-	return builder.String()
-}
-
 func (stmt *NamedUniFactStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeySymbolAt)
