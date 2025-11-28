@@ -1,0 +1,13 @@
+prop is_inverse_fn(X, Y set, f fn(X)Y, g fn(Y)X):
+    forall x X:
+        g(f(x)) = x
+    forall y Y:
+        f(g(y)) = y
+
+have fn f(x R) R = 2 * x
+have fn g(x R) R = x / 2
+
+forall x R: f(g(x)) = f(x / 2) = 2 * (x / 2) = x
+forall y R: g(f(y)) = g(2 * y) = (2 * y) / 2 = y
+
+$is_inverse_fn(R, R, f, g)
