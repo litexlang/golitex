@@ -1,53 +1,16 @@
-prop is_inverse_fn(X, Y set, f fn(X)Y, g fn(Y)X):
-    forall x X:
-        g(f(x)) = x
-    forall y Y:
-        f(g(y)) = y
 
-prove:
-    have fn f(x R) R = 2 * x
-    have fn g(x R) R = x / 2
+prop is_group(s set, mul fn(s, s)s, inv fn(s)s, e s):
+    forall x s, y s, z s:
+        mul(mul(x, y), z) = mul(x, mul(y, z))
+    forall x s:
+        mul(x, inv(x)) = e
+        mul(inv(x), x) = e
 
-    forall x R: f(g(x)) = f(x / 2) = 2 * (x / 2) = x
-    forall y R: g(f(y)) = g(2 * y) = (2 * y) / 2 = y
+# negate is defined by : negate(x) = -x
+forall x Z:
+    negate(x) = -x
+    -x $in Z
+    negate(x) $in Z
 
-    $is_inverse_fn(R, R, f, g)
-
-exist_prop g fn(Y)X st has_inverse_fn(X, Y set, f fn(X)Y):
-    $is_inverse_fn(X, Y, f, g)
-
-# 单射是有反函数的
-prop is_injective(X, Y set, f fn(X)Y):
-    forall x1 X, x2 X:
-        f(x1) = f(x2)
-        =>:
-            x1 = x2
-
-exist_prop x X st item_has_preimage(X, Y set, f fn(X)Y, y Y):
-    f(x) = y
-
-claim:
-    forall X, Y set, f fn(X)Y:
-        $is_injective(X, Y, f)
-        forall y Y:
-            $item_has_preimage(X, Y, f, y)
-        =>:
-            $has_inverse_fn(X, Y, f)
-    prove:
-        have fn:
-            g(y Y) X:
-                f(g(y)) = y
-            prove:
-                have x st $item_has_preimage(X, Y, f, y)
-                f(x) = y
-            = x
-        
-        forall y Y:
-            f(g(y)) = y # by definition of g
-
-        forall x X:
-            f(g(f(x))) = f(x)
-            g(f(x)) = x # $is_inverse_fn(X, Y, f)
-
-        $is_inverse_fn(X, Y, f, g)
-        exist g st $has_inverse_fn(X, Y, f)
+$is_group(R, +, negate, 0)
+$is_group(Z, +, negate, 0)

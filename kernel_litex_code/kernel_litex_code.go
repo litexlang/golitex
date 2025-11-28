@@ -592,6 +592,8 @@ know $there_exists_infinite_set()
 
 fn negate(x R) R:
 	negate(x) = -x
+	negate(x) + x = 0
+	x + negate(x) = 0
 
 know forall x set: not x $in x
 
