@@ -86,13 +86,6 @@ Since each Litex sentence corresponds directly to an expression in everyday math
 
 *In summary, Litex is a piece of software that imitates the way people think when they verify mathematics in everyday reasoning, using a small number of straightforward rules.* 
 
-## Litex For Ai
-
-Why does this matter for AI? As AIs generate content at scale, we need verifiable reasoning—especially for scientific exploration and safe AI agents. Formal languages like Litex enable computers to verify reasoning strictly and quickly, bridging human creativity with AI capabilities, or allowing AIs to enhance reasoning capability by themselves, just like how AlphaZero enhances itself in Go. More and more AI researchers are starting to use formal languages as a tool for their work, especially in safe AI and AI scientific exploration, but they do not really understand their code because the learning curve of traditional formal languages is too high. 
-
-Litex will not only solve AI researchers' problem, but also make formal languages accessible to ANYONE.
-
-
 ## Our Mission
 
 _Necessity is the mother of invention._
