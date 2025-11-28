@@ -1,3 +1,20 @@
+have U nonempty_set
+have nil U
+
+fn cons(a, b U) U
+fn car(u U) U
+
+know:
+    forall a, b U:
+        car(cons(a, b)) = a
+    car(nil) = nil
+
+have a, b, c, d, e, f U
+car(nil) = nil
+car(cons(a, nil)) = a
+car(cons(cons(a, nil), b)) = cons(a, nil)
+car(car(cons(cons(a, nil), b))) = a
+
 """
 have U nonempty_set
 have nil U
