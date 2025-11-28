@@ -566,18 +566,6 @@ func (stmt *HaveSetFnStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return NewHaveSetFnStmt(newDefHeader, stmt.Param, stmt.ParentSet, stmt.Proofs, stmt.Line), nil
 }
 
-func (stmt *HaveSetDefinedByReplacementStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	newDomSet, err := stmt.DomSet.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	newRangeSet, err := stmt.RangeSet.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	return NewHaveSetDefinedByReplacementStmt(stmt.Name, newDomSet, newRangeSet, stmt.PropName, stmt.Line), nil
-}
-
 func (stmt *NamedUniFactStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newProp, err := stmt.DefPropStmt.Instantiate(uniMap)
 	if err != nil {
