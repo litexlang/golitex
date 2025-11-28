@@ -76,8 +76,6 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 		execRet = exec.haveCartSetStmt(stmt)
 	case *ast.HaveSetFnStmt:
 		execRet = exec.haveSetFnStmt(stmt)
-	case *ast.HaveSetDefinedByReplacementStmt:
-		execRet = exec.haveSetDefinedByReplacementStmt(stmt)
 	case *ast.NamedUniFactStmt:
 		execRet = exec.namedUniFactStmt(stmt)
 	case *ast.KnowExistPropStmt:
@@ -523,25 +521,6 @@ func (exec *Executor) haveSetFnStmt(stmt *ast.HaveSetFnStmt) ExecRet {
 
 	// have set fn
 	exec.Env.HaveSetFnDefMem[string(stmt.DefHeader.Name)] = *stmt
-
-	return NewExecTrue(stmt.String())
-}
-
-func (exec *Executor) haveSetDefinedByReplacementStmt(stmt *ast.HaveSetDefinedByReplacementStmt) ExecRet {
-
-	setDefinedByReplacement := ast.NewFnObj(ast.AtomObj(glob.KeywordSetDefinedByReplacement), []ast.Obj{stmt.DomSet, stmt.RangeSet, stmt.PropName})
-
-	defObjStmt := ast.NewDefLetStmt([]string{stmt.Name}, []ast.Obj{ast.AtomObj(glob.KeywordSet)}, []ast.FactStmt{ast.NewEqualFact(ast.AtomObj(stmt.Name), setDefinedByReplacement)}, stmt.Line)
-
-	execState := exec.defLetStmt(defObjStmt)
-	if execState.IsNotTrue() {
-		return execState
-	}
-
-	ret := exec.Env.SetEqualToSetDefinedByReplacement_PostProcess(ast.AtomObj(stmt.Name), setDefinedByReplacement)
-	if ret.IsErr() {
-		return NewExecErr(ret.String())
-	}
 
 	return NewExecTrue(stmt.String())
 }
@@ -1076,10 +1055,7 @@ func (exec *Executor) checkCaseNoOverlapWithOthers_ForHaveFn(stmt *ast.HaveFnCas
 	return NewExecTrue(stmt.String()), nil
 }
 
-func (exec *Executor) openANewEnvAndCheck(fact ast.FactStmt, requireMsg bool) (ExecRet, error) {
-	exec.NewEnv(exec.Env)
-	defer exec.deleteEnv()
-
+func (exec *Executor) Verify(fact ast.FactStmt, requireMsg bool) ExecRet {
 	ver := NewVerifier(exec.Env)
 	var state *VerState
 	if requireMsg {
@@ -1088,15 +1064,7 @@ func (exec *Executor) openANewEnvAndCheck(fact ast.FactStmt, requireMsg bool) (E
 		state = Round0NoMsg
 	}
 
-	verRet := ver.VerFactStmt(fact, state)
-	if verRet.IsErr() {
-		return NewExecErr(verRet.String()), fmt.Errorf(verRet.String())
-	}
-	if verRet.IsUnknown() {
-		return NewExecUnknown(""), nil
-	}
-
-	return NewExecTrue(""), nil
+	return ver.VerFactStmt(fact, state)
 }
 
 func (exec *Executor) markdownStmt(stmt *ast.MarkdownStmt) ExecRet {

@@ -71,8 +71,6 @@ func (ver *Verifier) objSatisfyFnRequirement(obj ast.Obj, state *VerState) ExecR
 		return ver.countFnRequirement(objAsFnObj, state)
 	} else if ast.IsFnTemplate_FcFn(objAsFnObj) {
 		return NewExecTrue("")
-	} else if ast.IsAtomObjAndEqualToStr(objAsFnObj.FnHead, glob.KeywordSetDefinedByReplacement) {
-		return ver.setDefinedByReplacementFnRequirement(objAsFnObj, state)
 	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordCart) {
 		return ver.cartFnRequirement(objAsFnObj, state)
 	} else {

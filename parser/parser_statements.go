@@ -49,11 +49,7 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 			if tb.header.strAtCurIndexPlus(2) == glob.KeywordFn {
 				ret, err = tb.haveSetFnStmt()
 			} else {
-				if slices.Contains(tb.header.slice, glob.KeywordSetDefinedByReplacement) {
-					ret, err = tb.haveSetDefinedByReplacementStmt()
-				} else {
-					ret, err = tb.haveSetStmt()
-				}
+				ret, err = tb.haveSetStmt()
 			}
 		} else if tb.header.strAtCurIndexPlus(1) == glob.KeywordFn {
 			if tb.header.strAtCurIndexPlus(2) == glob.KeySymbolColon {
@@ -2167,68 +2163,6 @@ func (tb *tokenBlock) haveSetFnStmt() (ast.Stmt, error) {
 	}
 
 	return ast.NewHaveSetFnStmt(declHeader, param, parentSet, proofs, tb.line), nil
-}
-
-func (tb *tokenBlock) haveSetDefinedByReplacementStmt() (ast.Stmt, error) {
-	tb.header.skip(glob.KeywordHave)
-	tb.header.skip(glob.KeywordSet)
-
-	setName, err := tb.header.next()
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	err = tb.header.skip(glob.KeySymbolEqual)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	err = tb.header.skip(glob.KeywordSetDefinedByReplacement)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	err = tb.header.skip(glob.KeySymbolLeftBrace)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	domSet, err := tb.RawObj()
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	err = tb.header.skip(glob.KeySymbolComma)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	rangeSet, err := tb.RawObj()
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	err = tb.header.skip(glob.KeySymbolComma)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	propName, err := tb.rawAtomObj()
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	err = tb.header.skip(glob.KeySymbolRightBrace)
-	if err != nil {
-		return nil, tbErr(err, tb)
-	}
-
-	// exceed end
-	if !tb.header.ExceedEnd() {
-		return nil, fmt.Errorf("expect end of line")
-	}
-
-	return ast.NewHaveSetDefinedByReplacementStmt(setName, domSet, rangeSet, propName, tb.line), nil
 }
 
 func (tb *tokenBlock) namedUniFactStmt() (*ast.NamedUniFactStmt, error) {
