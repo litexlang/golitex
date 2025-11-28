@@ -26,7 +26,17 @@ func (ver *Verifier) verNumberLogicRelaOpt_BuiltinRules(stmt *ast.SpecFactStmt, 
 	}
 
 	verRet := ver.btNumberInfixCompareProp(stmt, state)
-	return verRet
+	if verRet.IsTrue() || verRet.IsErr() {
+		return verRet
+	}
+
+	// 如果left是 N_pos中元素，右侧是任何小于1的数字字面量，那就大于
+	verRet = ver.nPosElementGreaterThanLessThanOne(stmt, state)
+	if verRet.IsTrue() || verRet.IsErr() {
+		return verRet
+	}
+
+	return NewExecUnknown("")
 }
 
 func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
@@ -142,4 +152,62 @@ func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactSt
 	}
 
 	return NewExecUnknown("")
+}
+
+func (ver *Verifier) nPosElementGreaterThanLessThanOne(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	_ = "TODO"
+	_ = stmt
+	_ = state
+	return NewExecUnknown("")
+	// // 检查操作符是否是 ">"
+	// if string(stmt.PropName) != glob.KeySymbolGreater {
+	// 	return NewExecUnknown("")
+	// }
+
+	// if len(stmt.Params) != 2 {
+	// 	return NewExecUnknown("")
+	// }
+
+	// // 检查左边是否是 N_pos 中的元素
+	// leftInNPos := ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeywordIn), []ast.Obj{stmt.Params[0], ast.AtomObj(glob.KeywordNPos)}, stmt.Line)
+	// verRet := ver.VerFactStmt(leftInNPos, state.GetNoMsg())
+	// if verRet.IsErr() {
+	// 	return verRet
+	// }
+	// if !verRet.IsTrue() {
+	// 	// 左边不在 N_pos 中，返回 unknown
+	// 	return NewExecUnknown("")
+	// }
+
+	// // 检查右边是否是数字字面量表达式
+	// rightNumLitExpr, ok, err := ast.MakeObjIntoNumLitExpr(stmt.Params[1])
+	// if err != nil {
+	// 	return NewExecErr(err.Error())
+	// }
+	// if !ok {
+	// 	// 右边不是数字字面量，返回 unknown
+	// 	return NewExecUnknown("")
+	// }
+
+	// // 创建数字字面量 "1" 来比较
+	// oneNumLitExpr := &glob.NumLitExpr{
+	// 	IsPositive:  true,
+	// 	Left:        nil,
+	// 	OptOrNumber: "1",
+	// 	Right:       nil,
+	// }
+
+	// // 检查右边是否 < 1
+	// rightLessThanOne, err := glob.NumLitExprCompareOpt(rightNumLitExpr, oneNumLitExpr, "<")
+	// if err != nil {
+	// 	return NewExecErr(err.Error())
+	// }
+	// if !rightLessThanOne {
+	// 	// 右边不小于 1，返回 unknown
+	// 	return NewExecUnknown("")
+	// }
+
+	// // 左边是 N_pos 中的元素，右边 < 1，所以左边 > 右边
+	// msg := fmt.Sprintf("%s is in N_pos and %s < 1, so %s > %s", stmt.Params[0], stmt.Params[1], stmt.Params[0], stmt.Params[1])
+	// return ver.maybeAddSuccessMsg(state, stmt.String(), msg, NewExecTrue(""))
 }

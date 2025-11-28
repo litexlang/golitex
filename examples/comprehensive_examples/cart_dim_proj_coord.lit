@@ -1,16 +1,37 @@
-have set x = cart(R, Q, Z)
-$is_cart(x)
-dim(x) = 3
-proj(x, 1) = R
-proj(x, 2) = Q
-proj(x, 3) = Z
-x $in set
+prove:
+    have set x = cart(R, Q, Z)
+    $is_cart(x)
+    dim(x) = 3
+    proj(x, 1) = R
+    proj(x, 2) = Q
+    proj(x, 3) = Z
+    x $in set
 
-let a x
-coord(a, x, 1) $in R
+    let a x
+    coord(a, x, 1) $in R
 
-# litex现在可以计算出来非数字的值了，比如dim(cart(R, Q)) = 2
-$is_cart(cart(R, Q))
-let y cart(R, Q)
-dim(cart(R, Q)) = 2
-coord(y, cart(R, Q), 1) $in R
+    $is_cart(cart(R, Q))
+    let y cart(R, Q)
+    dim(cart(R, Q)) = 2
+    coord(y, cart(R, Q), 1) $in R
+
+prove:
+    have set X = {1, 2, 3}
+    have fn kv(x X) set =:
+        case x = 1: N
+        case x = 2: Q
+        case x = 3: Z
+
+    cart_prod(X, kv) $in set
+    index_set_of_cart_prod(cart_prod(X, kv)) = X
+    cart_prod_proj(cart_prod(X, kv), 1) = kv(1) = N
+
+
+    have fn kv2(x N) set =:
+        case x >= 2: N
+        case x < 2: Q
+
+    cart_prod(N, kv2) $in set
+    index_set_of_cart_prod(cart_prod(N, kv2)) = N
+    cart_prod_proj(cart_prod(N, kv2), 1) = kv2(1) = Q
+    cart_prod_proj(cart_prod(N, kv2), 2) = kv2(2) = N
