@@ -1,16 +1,16 @@
+have U nonempty_set
+have nil U
 
-prop is_group(s set, mul fn(s, s)s, inv fn(s)s, e s):
-    forall x s, y s, z s:
-        mul(mul(x, y), z) = mul(x, mul(y, z))
-    forall x s:
-        mul(x, inv(x)) = e
-        mul(inv(x), x) = e
+fn cons(a, b U) U
+fn car(u U) U
 
-# negate is defined by : negate(x) = -x
-forall x Z:
-    negate(x) = -x
-    -x $in Z
-    negate(x) $in Z
+know:
+    forall a, b U:
+        car(cons(a, b)) = a
+    car(nil) = nil
 
-$is_group(R, +, negate, 0)
-$is_group(Z, +, negate, 0)
+have a, b, c, d, e, f U
+car(nil) = nil
+car(cons(a, nil)) = a
+car(cons(cons(a, nil), b)) = cons(a, nil)
+car(car(cons(cons(a, nil), b))) = a
