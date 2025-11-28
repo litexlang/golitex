@@ -30,12 +30,3 @@ func GetForallXOnlyOneYSatisfyGivenProp(domSet, rangeSet Obj, propName AtomObj) 
 	}
 	return NewUniFact(params, setParams, domFacts, thenFacts, glob.InnerGenLine)
 }
-
-func ForallYInSetDefinedByReplacementThereIsXSTProp_X_YIsTrue(setDefinedByReplacement *FnObj) *UniFactStmt {
-	params := []string{"x"}
-	setParams := []Obj{setDefinedByReplacement}
-
-	specFact := NewSpecFactStmt(TruePure, AtomObj(glob.KeywordExistPropPreImageByReplacement), []Obj{setDefinedByReplacement.Params[0], setDefinedByReplacement.Params[1], setDefinedByReplacement.Params[2], AtomObj("x")}, glob.InnerGenLine)
-
-	return NewUniFact(params, setParams, []FactStmt{}, []FactStmt{specFact}, glob.InnerGenLine)
-}

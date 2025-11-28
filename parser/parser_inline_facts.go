@@ -62,9 +62,17 @@ func (tb *tokenBlock) inlineFactThenSkipStmtTerminatorUntilEndSignals(ends []str
 
 	switch curToken {
 	case glob.KeywordForall:
-		return tb.inlineUniInterfaceSkipTerminator(ends)
+		uniFact, err := tb.inlineUniInterfaceSkipTerminator(ends)
+		if err != nil {
+			return nil, err
+		}
+		return uniFact.(ast.FactStmt), nil
 	case glob.KeywordWhen:
-		return tb.inlineWhenFactSkipTerminator(ends)
+		uniFact, err := tb.inlineWhenFactSkipTerminator(ends)
+		if err != nil {
+			return nil, err
+		}
+		return uniFact.(ast.FactStmt), nil
 	default:
 		return tb.inline_spec_or_enum_intensional_Equals_fact_skip_terminator()
 	}

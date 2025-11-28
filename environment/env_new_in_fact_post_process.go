@@ -58,10 +58,6 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 		return glob.TrueRet("")
 	}
 
-	if setDefinedByReplacement, ok := fact.Params[1].(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(setDefinedByReplacement.FnHead, glob.KeywordSetDefinedByReplacement) {
-		return e.in_setDefinedByReplacement_postProcess(setDefinedByReplacement)
-	}
-
 	return glob.TrueRet("")
 }
 
@@ -83,40 +79,6 @@ func (e *Env) inFactPostProcess_InSetFnRetValue(fact *ast.SpecFactStmt, def *ast
 	}
 
 	ret := e.NewFact(instantiated)
-	if ret.IsErr() {
-		return ret
-	}
-
-	return glob.TrueRet("")
-}
-
-func (e *Env) in_setDefinedByReplacement_postProcess(setDefinedByReplacement *ast.FnObj) glob.GlobRet {
-	uniFact := ast.ForallYInSetDefinedByReplacementThereIsXSTProp_X_YIsTrue(setDefinedByReplacement)
-	ret := e.NewFact(uniFact)
-	if ret.IsErr() {
-		return ret
-	}
-
-	// forall x set_defined_by_replacement(A, B, P), x is in B
-	forallXInSetDefinedByReplacement_ItIsInB := ast.NewUniFact([]string{"x"}, []ast.Obj{setDefinedByReplacement}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeywordIn), []ast.Obj{ast.AtomObj("x"), setDefinedByReplacement.Params[1]}, glob.InnerGenLine)}, glob.InnerGenLine)
-	ret = e.NewFact(forallXInSetDefinedByReplacement_ItIsInB)
-	if ret.IsErr() {
-		return ret
-	}
-
-	return glob.TrueRet("")
-}
-
-func (e *Env) SetEqualToSetDefinedByReplacement_PostProcess(setAtom ast.AtomObj, setDefinedByReplacement *ast.FnObj) glob.GlobRet {
-	uniFact := ast.ForallYInSetDefinedByReplacementThereIsXSTProp_X_YIsTrue(setDefinedByReplacement)
-	uniFact.ParamSets[0] = setAtom
-	ret := e.NewFact(uniFact)
-	if ret.IsErr() {
-		return ret
-	}
-
-	forallXInSetDefinedByReplacement_ItIsInB := ast.NewUniFact([]string{"x"}, []ast.Obj{setAtom}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeywordIn), []ast.Obj{ast.AtomObj("x"), setDefinedByReplacement.Params[1]}, glob.InnerGenLine)}, glob.InnerGenLine)
-	ret = e.NewFact(forallXInSetDefinedByReplacement_ItIsInB)
 	if ret.IsErr() {
 		return ret
 	}

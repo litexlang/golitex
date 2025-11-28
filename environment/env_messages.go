@@ -43,9 +43,9 @@ func (knownSpecFact *SpecFact_InLogicExpr_InUniFact) String() string {
 }
 
 func AtomsInFactNotDeclaredMsg(fact ast.FactStmt) string {
-	return fmt.Sprintf("some atoms in the following fact are undeclared:\n%s", fact)
+	return fmt.Sprintf("undefined name in fact:\n%s", fact)
 }
 
 func AtomsInFcNotDeclaredMsg(fc ast.Obj) string {
-	return fmt.Sprintf("some atoms in %s are undeclared", fc)
+	return fmt.Sprintf("undefined name in fc: %s", fc)
 }

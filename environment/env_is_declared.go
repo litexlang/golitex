@@ -76,99 +76,106 @@ func (e *Env) AtomsAreObj(atomSlice []ast.AtomObj) bool {
 	return true
 }
 
-func (e *Env) AreAtomsInFcAreDeclared(fc ast.Obj, extraAtomNames map[string]struct{}) bool {
+func (e *Env) AreAtomsInFcAreDeclared(fc ast.Obj, extraAtomNames map[string]struct{}) glob.GlobRet {
 	atoms := ast.GetAtomsInObj(fc)
-	return e.AreAtomsDeclared(atoms, extraAtomNames)
+	ret := e.AreAtomsDeclared(atoms, extraAtomNames)
+	return ret
 }
 
 // TODO 来自上层的时候，有时候如果fact是uniFact，那传来的extraAtomNames里已经有uniParam了，这其实是浪费计算了
-func (e *Env) AreAtomsInFactAreDeclared(fact ast.FactStmt, extraAtomNames map[string]struct{}) bool {
+func (e *Env) AreAtomsInFactAreDeclared(fact ast.FactStmt, extraAtomNames map[string]struct{}) glob.GlobRet {
 	switch asStmt := fact.(type) {
 	case *ast.UniFactStmt:
 		for _, param := range asStmt.Params {
 			extraAtomNames[param] = struct{}{}
 		}
 		for _, dom := range asStmt.DomFacts {
-			ok := e.AreAtomsInFactAreDeclared(dom, extraAtomNames)
-			if !ok {
-				return false
+			ret := e.AreAtomsInFactAreDeclared(dom, extraAtomNames)
+			if ret.IsErr() {
+				return ret
 			}
 		}
 		for _, then := range asStmt.ThenFacts {
-			ok := e.AreAtomsInFactAreDeclared(then, extraAtomNames)
-			if !ok {
-				return false
+			ret := e.AreAtomsInFactAreDeclared(then, extraAtomNames)
+			if ret.IsErr() {
+				return ret
 			}
 		}
-		return true
+		return glob.TrueRet("")
 	case *ast.UniFactWithIffStmt:
 		for _, param := range asStmt.UniFact.Params {
 			extraAtomNames[param] = struct{}{}
 		}
 		for _, dom := range asStmt.UniFact.DomFacts {
-			ok := e.AreAtomsInFactAreDeclared(dom, extraAtomNames)
-			if !ok {
-				return false
+			ret := e.AreAtomsInFactAreDeclared(dom, extraAtomNames)
+			if ret.IsErr() {
+				return ret
 			}
 		}
 
 		for _, then := range asStmt.UniFact.ThenFacts {
-			ok := e.AreAtomsInFactAreDeclared(then, extraAtomNames)
-			if !ok {
-				return false
+			ret := e.AreAtomsInFactAreDeclared(then, extraAtomNames)
+			if ret.IsErr() {
+				return ret
 			}
 		}
 
 		for _, iff := range asStmt.IffFacts {
-			ok := e.AreAtomsInFactAreDeclared(iff, extraAtomNames)
-			if !ok {
-				return false
+			ret := e.AreAtomsInFactAreDeclared(iff, extraAtomNames)
+			if ret.IsErr() {
+				return ret
 			}
 		}
-		return true
+		return glob.TrueRet("")
 	case *ast.IntensionalSetStmt:
 		atoms := fact.GetAtoms()
 		extraAtomNames[asStmt.Param] = struct{}{}
-		return e.AreAtomsDeclared(atoms, extraAtomNames)
+		ret := e.AreAtomsDeclared(atoms, extraAtomNames)
+		return ret
 	default:
 		atoms := fact.GetAtoms()
-		return e.AreAtomsDeclared(atoms, extraAtomNames)
+		ret := e.AreAtomsDeclared(atoms, extraAtomNames)
+		if ret.IsErr() {
+			ret.AddMsg(fmt.Sprintf("in fact %s", fact))
+		}
+		return ret
 	}
 }
 
-func (e *Env) AreAtomsDeclared(atoms []ast.AtomObj, extraAtomNames map[string]struct{}) bool {
+func (e *Env) AreAtomsDeclared(atoms []ast.AtomObj, extraAtomNames map[string]struct{}) glob.GlobRet {
 	for _, atom := range atoms {
-		if !e.IsAtomDeclared(atom, extraAtomNames) {
-			return false
+		ret := e.IsAtomDeclared(atom, extraAtomNames)
+		if ret.IsErr() {
+			return ret
 		}
 	}
-	return true
+	return glob.TrueRet("")
 }
 
-func (e *Env) IsAtomDeclared(atom ast.AtomObj, extraAtomNames map[string]struct{}) bool {
+func (e *Env) IsAtomDeclared(atom ast.AtomObj, extraAtomNames map[string]struct{}) glob.GlobRet {
 	// 如果是内置的符号，那就声明了
 	if glob.IsBuiltinKeywordKeySymbolCanBeFcAtomName(string(atom)) {
-		return true
+		return glob.TrueRet("")
 	}
 
 	// 如果是数字，那就声明了
 	if _, ok := ast.IsNumLitAtomObj(atom); ok {
-		return true
+		return glob.TrueRet("")
 	}
 
 	ok := e.IsFcAtomDeclaredByUser(atom)
 	if ok {
-		return true
+		return glob.TrueRet("")
 	}
 
 	_, ok = extraAtomNames[string(atom)]
-	// if ok && atom.PkgName == glob.EmptyPkg {
-	// if ok {
-	// 	return true
-	// }
 
-	// return false
-	return ok
+	if ok {
+		return glob.TrueRet("")
+	}
+
+	// atom 未定义，返回错误并记录 atom 名称
+	return glob.ErrRet(fmt.Errorf("%s is not defined", atom))
 }
 
 func (e *Env) ThereIsNoDuplicateObjNamesAndAllAtomsInParamSetsAreDefined(params []string, setParams []ast.Obj, checkDeclared bool) glob.GlobRet {
@@ -184,9 +191,10 @@ func (e *Env) ThereIsNoDuplicateObjNamesAndAllAtomsInParamSetsAreDefined(params 
 			return glob.ErrRet(fmt.Errorf("parameter %s is declared multiple times", param))
 		}
 		if checkDeclared {
-			ok = e.AreAtomsInFcAreDeclared(setParams[i], paramSet)
-			if !ok {
-				return glob.ErrRet(fmt.Errorf(AtomsInFcNotDeclaredMsg(setParams[i])))
+			ret := e.AreAtomsInFcAreDeclared(setParams[i], paramSet)
+			if ret.IsErr() {
+				ret.AddMsg(fmt.Sprintf("in parameter set for param %s", param))
+				return ret
 			}
 		}
 		paramSet[param] = struct{}{} // setParam 不能 包含它自己
@@ -208,9 +216,10 @@ func (e *Env) NonDuplicateParam_NoUndeclaredParamSet_ExtraAtomNames(params []str
 			return glob.ErrRet(fmt.Errorf("parameter %s is declared multiple times", param))
 		}
 		if checkDeclared {
-			ok = e.AreAtomsInFcAreDeclared(setParams[i], paramSet)
-			if !ok {
-				return glob.ErrRet(fmt.Errorf(AtomsInFcNotDeclaredMsg(setParams[i])))
+			ret := e.AreAtomsInFcAreDeclared(setParams[i], paramSet)
+			if ret.IsErr() {
+				ret.AddMsg(fmt.Sprintf("in parameter set for param %s", param))
+				return ret
 			}
 		}
 		paramSet[param] = struct{}{} // setParam 不能 包含它自己

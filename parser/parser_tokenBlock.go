@@ -24,7 +24,7 @@ type tokenBlock struct {
 	header strSliceCursor
 	body   []tokenBlock
 
-	line uint
+	line uint // header 的行数
 }
 
 func newTokenBlock(header strSliceCursor, body []tokenBlock, line uint) *tokenBlock {

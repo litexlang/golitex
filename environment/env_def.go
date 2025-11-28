@@ -53,14 +53,18 @@ func (env *Env) NewDefProp_BuiltinProp(stmt *ast.DefPropStmt) glob.GlobRet {
 	extraAtomNames[string(stmt.DefHeader.Name)] = struct{}{}
 
 	for _, fact := range stmt.DomFacts {
-		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
-			return glob.ErrRet(fmt.Errorf("%s\nis true by prop %s definition, but there are undeclared atoms in the fact", fact, stmt.DefHeader.Name))
+		ret := env.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+		if ret.IsErr() {
+			ret.AddMsg(fmt.Sprintf("in dom fact of prop %s definition", stmt.DefHeader.Name))
+			return ret
 		}
 	}
 
 	for _, fact := range stmt.IffFacts {
-		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
-			return glob.ErrRet(fmt.Errorf("%s\nis true by prop %s definition, but there are undeclared atoms in the fact", fact, stmt.DefHeader.Name))
+		ret := env.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+		if ret.IsErr() {
+			ret.AddMsg(fmt.Sprintf("in iff fact of prop %s definition", stmt.DefHeader.Name))
+			return ret
 		}
 	}
 
@@ -92,14 +96,18 @@ func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) glob.GlobR
 	extraAtomNames[string(stmt.DefHeader.Name)] = struct{}{}
 
 	for _, fact := range stmt.DomFacts {
-		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
-			return glob.ErrRet(fmt.Errorf("%s\nis true by prop %s definition, but there are undeclared atoms in the fact", fact, stmt.DefHeader.Name))
+		ret := env.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+		if ret.IsErr() {
+			ret.AddMsg(fmt.Sprintf("in dom fact of prop %s definition", stmt.DefHeader.Name))
+			return ret
 		}
 	}
 
 	for _, fact := range stmt.IffFacts {
-		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
-			return glob.ErrRet(fmt.Errorf("%s\nis true by prop %s definition, but there are undeclared atoms in the fact", fact, stmt.DefHeader.Name))
+		ret := env.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+		if ret.IsErr() {
+			ret.AddMsg(fmt.Sprintf("in iff fact of prop %s definition", stmt.DefHeader.Name))
+			return ret
 		}
 	}
 
@@ -124,16 +132,19 @@ func (env *Env) AtomsInFnTemplateFnTemplateDeclared(name ast.AtomObj, stmt *ast.
 		extraAtomNames[param] = struct{}{}
 	}
 
-	ok := env.AreAtomsInFcAreDeclared(stmt.Fn.RetSet, extraAtomNames)
-	if !ok {
-		return glob.ErrRet(fmt.Errorf(AtomsInFcNotDeclaredMsg(stmt.Fn.RetSet)))
+	ret = env.AreAtomsInFcAreDeclared(stmt.Fn.RetSet, extraAtomNames)
+	if ret.IsErr() {
+		ret.AddMsg(fmt.Sprintf("in return set of fn template %s", name))
+		return ret
 	}
 
 	extraAtomNames[string(name)] = struct{}{}
 
 	for _, fact := range stmt.TemplateDomFacts {
-		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
-			return glob.ErrRet(fmt.Errorf("%s\nis true by fn %s definition, but there are undeclared atoms in the fact", fact, name))
+		ret := env.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+		if ret.IsErr() {
+			ret.AddMsg(fmt.Sprintf("in template dom fact of fn %s definition", name))
+			return ret
 		}
 	}
 
@@ -147,14 +158,18 @@ func (env *Env) AtomsInFnTemplateFnTemplateDeclared(name ast.AtomObj, stmt *ast.
 	}
 
 	for _, fact := range stmt.Fn.DomFacts {
-		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
-			return glob.ErrRet(fmt.Errorf("%s\nis true by fn %s definition, but there are undeclared atoms in the fact", fact, name))
+		ret := env.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+		if ret.IsErr() {
+			ret.AddMsg(fmt.Sprintf("in dom fact of fn %s definition", name))
+			return ret
 		}
 	}
 
 	for _, fact := range stmt.Fn.ThenFacts {
-		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
-			return glob.ErrRet(fmt.Errorf("%s\nis true by fn %s definition, but there are undeclared atoms in the fact", fact, name))
+		ret := env.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+		if ret.IsErr() {
+			ret.AddMsg(fmt.Sprintf("in then fact of fn %s definition", name))
+			return ret
 		}
 	}
 
@@ -183,14 +198,18 @@ func (env *Env) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) 
 	}
 
 	for _, fact := range stmt.DefBody.DomFacts {
-		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
-			return glob.ErrRet(fmt.Errorf("%s\nis true by exist_prop %s definition, but there are undeclared atoms in the fact", fact, stmt.DefBody.DefHeader.Name))
+		ret := env.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+		if ret.IsErr() {
+			ret.AddMsg(fmt.Sprintf("in dom fact of exist_prop %s definition", stmt.DefBody.DefHeader.Name))
+			return ret
 		}
 	}
 
 	for _, fact := range stmt.DefBody.IffFacts {
-		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
-			return glob.ErrRet(fmt.Errorf("%s\nis true by exist_prop %s definition, but there are undeclared atoms in the fact", fact, stmt.DefBody.DefHeader.Name))
+		ret := env.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+		if ret.IsErr() {
+			ret.AddMsg(fmt.Sprintf("in iff fact of exist_prop %s definition", stmt.DefBody.DefHeader.Name))
+			return ret
 		}
 	}
 
@@ -242,20 +261,24 @@ func (env *Env) DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmt *ast.De
 	}
 
 	for _, fact := range stmt.NewInFacts() {
-		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
-			return glob.ErrRet(fmt.Errorf(AtomsInFactNotDeclaredMsg(fact)))
+		ret := env.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+		if ret.IsErr() {
+			ret.AddMsg("in new in fact of def let statement")
+			return ret
 		}
-		ret := env.NewFact(fact)
+		ret = env.NewFact(fact)
 		if ret.IsErr() {
 			return ret
 		}
 	}
 
 	for _, fact := range stmt.Facts {
-		if !env.AreAtomsInFactAreDeclared(fact, extraAtomNames) {
-			return glob.ErrRet(fmt.Errorf(AtomsInFactNotDeclaredMsg(fact)))
+		ret := env.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+		if ret.IsErr() {
+			ret.AddMsg("in fact of def let statement")
+			return ret
 		}
-		ret := env.NewFact(fact)
+		ret = env.NewFact(fact)
 		if ret.IsErr() {
 			return ret
 		}
