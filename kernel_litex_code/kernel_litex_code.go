@@ -793,4 +793,23 @@ know:
 
 know forall x set: empty_set $is_subset_of x
 know forall s finite_set: count(s) > 0 => s $in nonempty_set, $item_exists_in(s)
+
+know:
+	forall a, b, c, d R: b > 0, d > 0 => a / b > c / d <=> a * d > b * c
+	forall a, b, c, d R: b > 0, d > 0 => a / b < c / d <=> a * d < b * c
+	forall a, b, c, d R: b > 0, d > 0 => a / b >= c / d <=> a * d >= b * c
+	forall a, b, c, d R: b > 0, d > 0 => a / b <= c / d <=> a * d <= b * c
+	forall a, b, c, d R: b != 0, d != 0 => a / b = c / d <=> a * d = b * c
+	forall a, b, c, d R: b < 0, d < 0 => a / b > c / d <=> a * d < b * c
+	forall a, b, c, d R: b < 0, d < 0 => a / b < c / d <=> a * d > b * c
+	forall a, b, c, d R: b < 0, d < 0 => a / b >= c / d <=> a * d <= b * c
+	forall a, b, c, d R: b < 0, d < 0 => a / b <= c / d <=> a * d >= b * c
+	forall a, b, c, d R: b > 0, d < 0 => a / b > c / d <=> a * d < b * c
+	forall a, b, c, d R: b > 0, d < 0 => a / b < c / d <=> a * d > b * c
+	forall a, b, c, d R: b > 0, d < 0 => a / b >= c / d <=> a * d <= b * c
+	forall a, b, c, d R: b > 0, d < 0 => a / b <= c / d <=> a * d >= b * c
+	forall a, b, c, d R: b < 0, d > 0 => a / b > c / d <=> a * d < b * c
+	forall a, b, c, d R: b < 0, d > 0 => a / b < c / d <=> a * d > b * c
+	forall a, b, c, d R: b < 0, d > 0 => a / b >= c / d <=> a * d <= b * c
+	forall a, b, c, d R: b < 0, d > 0 => a / b <= c / d <=> a * d >= b * c
 `

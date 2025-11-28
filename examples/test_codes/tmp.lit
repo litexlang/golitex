@@ -1,7 +1,1 @@
-let s finite_set:
-    count(s) = 1
-1 > 0
-count(s) > 0
-$item_exists_in(s)
-have a st $item_exists_in(s)
-a $in s
+2 /3 > 1/ 7
