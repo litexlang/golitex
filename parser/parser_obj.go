@@ -55,11 +55,11 @@ func (tb *tokenBlock) atomObjAndFnObj() (ast.Obj, error) {
 	} else {
 		objStr, err := tb.rawAtomObj()
 		if err != nil {
-			return nil, tbErr(err, tb)
+			return nil, parserErrAtTb(err, tb)
 		}
 		ret, err := tb.whenTheNextTokIsLeftBrace_MakeFnObj(objStr)
 		if err != nil {
-			return nil, tbErr(err, tb)
+			return nil, parserErrAtTb(err, tb)
 		}
 		return ret, nil
 	}
@@ -78,7 +78,7 @@ func (tb *tokenBlock) rawAtomObj() (ast.AtomObj, error) {
 		tb.header.skip(glob.KeySymbolColonColon)
 		rightValue, err := tb.header.next()
 		if err != nil {
-			return "", tbErr(err, tb)
+			return "", parserErrAtTb(err, tb)
 		}
 		return ast.AtomObj(fmt.Sprintf("%s%s%s", value, glob.KeySymbolColonColon, rightValue)), nil
 	} else {
@@ -264,7 +264,7 @@ func (tb *tokenBlock) bracedObjSlice() ([]ast.Obj, error) {
 		for {
 			obj, err := tb.RawObj()
 			if err != nil {
-				return nil, tbErr(err, tb)
+				return nil, parserErrAtTb(err, tb)
 			}
 			params = append(params, obj)
 
@@ -310,7 +310,7 @@ func (tb *tokenBlock) whenTheNextTokIsLeftBrace_MakeFnObj(head ast.Obj) (ast.Obj
 	for !tb.header.ExceedEnd() && (tb.header.is(glob.KeySymbolLeftBrace)) {
 		objParamsPtr, err := tb.bracedObjSlice()
 		if err != nil {
-			return nil, tbErr(err, tb)
+			return nil, parserErrAtTb(err, tb)
 		}
 		head = ast.NewFnObj(head, objParamsPtr)
 	}
@@ -327,7 +327,7 @@ func (tb *tokenBlock) fnSet() (ast.Obj, error) {
 	for !(tb.header.is(glob.KeySymbolRightBrace)) {
 		fnSet, err := tb.RawObj()
 		if err != nil {
-			return nil, tbErr(err, tb)
+			return nil, parserErrAtTb(err, tb)
 		}
 		fnSets = append(fnSets, fnSet)
 
@@ -342,12 +342,12 @@ func (tb *tokenBlock) fnSet() (ast.Obj, error) {
 
 	err := tb.header.skip(glob.KeySymbolRightBrace)
 	if err != nil {
-		return nil, tbErr(err, tb)
+		return nil, parserErrAtTb(err, tb)
 	}
 
 	retSet, err = tb.RawObj()
 	if err != nil {
-		return nil, tbErr(err, tb)
+		return nil, parserErrAtTb(err, tb)
 	}
 
 	ret := ast.NewFnObj(ast.NewFnObj(ast.AtomObj(glob.KeywordFn), fnSets), []ast.Obj{retSet})
