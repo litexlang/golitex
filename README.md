@@ -1,5 +1,5 @@
 <div align="center">
-<img src="https://publisher.litexlang.org/logo.PNG" alt="The Litex Logo" width="300">
+<img src="https://publisher.litexlang.org/logo.png" alt="The Litex Logo" width="300">
 </div>
 
 <div align="center">
@@ -170,7 +170,7 @@ _Sometimes it is the very people who no one imagines anything of who do the thin
 _– Alan Turing_
 
 <div align="center">
-  <img src="https://publisher.litexlang.org/Little_Little_O.PNG" alt="The Litex Logo" width="200">
+  <img src="https://publisher.litexlang.org/Little_Little_O.png" alt="The Litex Logo" width="200">
   <p><em>Litex Mascot: Little Little O, a curious baby bird full of wonder</em></p>
 </div>
 

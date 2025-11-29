@@ -25,7 +25,7 @@ import (
 // a
 // parse error at end of line, line 1:
 // a
-func tbErr(previousErr error, stmt *tokenBlock) error {
+func parserErrAtTb(previousErr error, stmt *tokenBlock) error {
 	if curTok, err := stmt.header.currentToken(); err == nil {
 		return fmt.Errorf("parse error at \"%s\", line %d:\n%s\n%w", curTok, stmt.line, &stmt.header, previousErr)
 	} else {
