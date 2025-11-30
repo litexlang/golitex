@@ -26,6 +26,8 @@ _Simplicity is the ultimate sophistication._
 
 _– Leonardo da Vinci_
 
+---
+
 [Litex](https://litexlang.com) (beta-version, not ready for production use) is a simple open-source computer language for mathematical proofs. It expresses mathematics as code while staying as close to natural language as possible, making it both rigorous and accessible. ([Star the repo!](https://github.com/litexlang/golitex)) With just one to two hours of learning the fundamentals, you can write 10-20 lines of code that solve interesting mathematical problems with verified correctness. 
 
 How does Litex work? It achieves its simplicity by imitating how people reason and how mathematics works. *Litex uses a set of axioms (i.e. ZFC axioms and basic logic) and inference rules that are sufficiently expressive to capture most mathematical concepts, while being intuitive enough that most people can learn them quickly.* Its close-to-natural syntax means users often forget they're using a formal language, lowering the barrier of formal reasoning by 10x compared with traditional formal languages. Read [Tutorial](https://litexlang.com/doc/Tutorial/Introduction), [Math Principles](https://litexlang.com/doc/Tutorial/Litex_From_A_Mathematical_Perspective), [How Litex Works](https://litexlang.com/doc/How_Litex_Works/Introduction) for more details.
@@ -35,6 +37,8 @@ How does Litex work? It achieves its simplicity by imitating how people reason a
 _Our intent was to create a pleasant computing environment (Unix) for ourselves and our hope was that others liked it._
 
 _- Dennis Ritchie_
+
+---
 
 <table style="border-collapse: collapse; width: 100%; font-size: 12px">
   <tr>
@@ -92,17 +96,27 @@ _Necessity is the mother of invention._
 
 _- Thomas Edison_
 
-Our mission is to make Litex the most intuitive and simple formal language for coding reasoning. We aim to solve the most challenging problems faced by the AI community, i.e. the challenge of efficient, scalable, and reliable coding reasoning. Let's build the future together!
+---
 
-Physics boils down to a few fundamental laws, and chemistry to the logic behind the periodic table. Biology, too, is structured around core principles like evolution, heredity, and molecular mechanisms. Mathematics is no different — beneath all the complexity lie just a handful of basic rules of reasoning. Once you truly grasp those few principles, everything else follows naturally. The key is seeing the underlying structure, and then one insight unlocks many. Litex is such a language that helps you see the underlying structure of mathematics.
+Litex For AI
 
-For mathematical research, a well-designed formal language can clarify the dependency structure among complex theorems and lay the foundation for large-scale collaborative “Big Mathematics.” For AI, such a formal language enables reasoning models to form a self-reinforcing cycle of automatic problem generation → automatic solving → automatic verification. Combined with the reinforcement-learning-based post-training approach demonstrated by DeepSeek-R1, this may lead to a breakthrough moment comparable to AlphaGo.
+AI pioneer Geoffrey Hinton notes that in mathematics, models operate like in Go or chess—within closed systems with fixed rules, where they can generate their own training data. Formal languages (e.g., Litex) are key to self-improvement because computers can automatically and reliably verify whether mathematical reasoning is correct, enabling effective self-supervised learning.
+
+Litex For Math
+
+Litex enables automatic verification and large-scale mathematical collaboration. It clarifies dependency structures among complex theorems and transforms mathematical work into **mathematical engineering**—as intuitive as writing Python code, while maintaining full rigor through ZFC axioms.
+
+Litex For Everyone
+
+Litex is accessible to everyone—from children to experts. With just 1-2 hours of learning, anyone with basic set theory knowledge can write verified proofs. Litex's natural-language-like syntax makes it 10x easier to learn than traditional formal languages, democratizing rigorous mathematical thinking.
 
 ## Resources And Community
 
 _The best way to predict future is to create it._
 
 _-- Alan Kay_
+
+---
 
 Litex is nothing without its community and technical ecosystem.
 
@@ -133,6 +147,8 @@ _If I have seen further [than others], it is by standing on the shoulders of gia
 
 _- Isaac Newton_
 
+---
+
 Although Litex is a very pragmatic language which contains and only contains the proof methods, axioms, keywords, etc. that people need in their daily mathematical work—things that are often so taken for granted that people usually don't even notice them —- it is equally important to note that Litex indeed has gained great conceptual inspiration from the masters.
 
 Mathematics references:
@@ -148,20 +164,6 @@ AI references:
 1. DeepSeek-R1: Boosting Reasoning Capability in LLMs via Reinforcement Learning
 2. AlphaGeometry: An Olympiad-level AI system for geometry 
 3. Seed-Prover: Deep and Broad Reasoning for Automated Theorem Proving
-
-## Litex For Different Purposes
-
-Litex For AI
-
-AI pioneer Geoffrey Hinton notes that in mathematics, models operate like in Go or chess—within closed systems with fixed rules, where they can generate their own training data. Formal languages (e.g., Litex) are key to self-improvement because computers can automatically and reliably verify whether mathematical reasoning is correct, enabling effective self-supervised learning.
-
-Litex For Math
-
-Litex enables automatic verification and large-scale mathematical collaboration. It clarifies dependency structures among complex theorems and transforms mathematical work into **mathematical engineering**—as intuitive as writing Python code, while maintaining full rigor through ZFC axioms.
-
-Litex For Everyone
-
-Litex is accessible to everyone—from children to experts. With just 1-2 hours of learning, anyone with basic set theory knowledge can write verified proofs. Litex's natural-language-like syntax makes it 10x easier to learn than traditional formal languages, democratizing rigorous mathematical thinking.
 
 ## Special Thanks
 
