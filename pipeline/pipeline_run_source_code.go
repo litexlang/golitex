@@ -28,7 +28,7 @@ import (
 func RunFile(path string) glob.GlobRet {
 	content, err := os.ReadFile(path)
 	if err != nil {
-		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLMessage(glob.NewGlobErr(err.Error()), path))
+		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLErrorMessageWithPath(path))
 	}
 	return RunSourceCode(string(content), path)
 }
@@ -36,7 +36,7 @@ func RunFile(path string) glob.GlobRet {
 func RunSourceCode(code string, path string) glob.GlobRet {
 	executor, err := InitPipelineExecutor()
 	if err != nil {
-		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLMessage(glob.NewGlobErr(err.Error()), path))
+		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLErrorMessageWithPath(path))
 	}
 	ret := RunSourceCodeInExecutor(executor, code, path)
 	return ret
@@ -45,7 +45,7 @@ func RunSourceCode(code string, path string) glob.GlobRet {
 func RunSourceCodeInExecutor(curExec *exe.Executor, code string, path string) glob.GlobRet {
 	stmtSlice, err := parser.ParseSourceCode(code)
 	if err != nil {
-		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLMessage(glob.NewGlobErr(err.Error()), path))
+		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLErrorMessageWithPath(path))
 	}
 
 	msgs := []string{}
@@ -54,11 +54,11 @@ func RunSourceCodeInExecutor(curExec *exe.Executor, code string, path string) gl
 		msgs = append(msgs, ret.String())
 
 		if ret.IsNotTrue() {
-			return glob.NewGlobErr(strings.Join(msgs, "\n")).AddMsg(glob.REPLMessage(glob.NewGlobErr(strings.Join(msgs, "\n")), path))
+			return glob.NewGlobErr(strings.Join(msgs, "\n")).AddMsg(glob.REPLErrorMessageWithPath(path))
 		}
 	}
 
-	return glob.NewGlobTrue(strings.Join(msgs, "\n")).AddMsg(glob.REPLMessage(glob.NewGlobTrue(strings.Join(msgs, "\n")), path))
+	return glob.NewGlobTrue(strings.Join(msgs, "\n")).AddMsg(glob.REPLMsgWithPath(glob.NewGlobTrue(strings.Join(msgs, "\n")), path))
 }
 
 func RunStmtAndImportStmtInExecutor(curExec *exe.Executor, stmt ast.Stmt) glob.GlobRet {
@@ -89,7 +89,10 @@ func RunImportDirStmtInExec(curExec *exe.Executor, importDirStmt *ast.ImportDirS
 	}
 
 	// Resolve package path: if not absolute, resolve from system root directory (~/litexlang)
-	resolvedPath := glob.ResolvePackagePath(importDirStmt.Path)
+	resolvedPath, err := glob.ResolvePackagePath(importDirStmt.Path)
+	if err != nil {
+		return glob.NewGlobErr(err.Error())
+	}
 	mainFileContent, err := os.ReadFile(filepath.Join(resolvedPath, glob.MainDotLit))
 	if err != nil {
 		return glob.NewGlobErr(err.Error())
