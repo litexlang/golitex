@@ -112,8 +112,39 @@ func RunImportDirStmtInExec(curExec *exe.Executor, importDirStmt *ast.ImportDirS
 	return glob.NewGlobTrue(fmt.Sprintf("imported package %s as %s", importDirStmt.Path, importDirStmt.AsPkgName))
 }
 
+// expandTilde expands ~ to the user's home directory.
+// Cross-platform support:
+//   - On Unix/Linux/macOS: expands ~ to $HOME
+//   - On Windows: expands ~ to %USERPROFILE% (via os.UserHomeDir())
+func expandTilde(path string) (string, error) {
+	// Handle ~/path format
+	if strings.HasPrefix(path, "~/") || strings.HasPrefix(path, "~\\") {
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			return "", fmt.Errorf("failed to get home directory: %w", err)
+		}
+		// Use filepath.Join to handle cross-platform path separators
+		restOfPath := path[2:]
+		return filepath.Join(homeDir, restOfPath), nil
+	}
+
+	// Handle just ~
+	if path == "~" {
+		return os.UserHomeDir()
+	}
+
+	// No expansion needed
+	return path, nil
+}
+
 func RunImportFileStmtInExec(curExec *exe.Executor, importFileStmt *ast.ImportFileStmt) glob.GlobRet {
-	content, err := os.ReadFile(importFileStmt.Path)
+	// Expand ~ to home directory if present
+	expandedPath, err := expandTilde(importFileStmt.Path)
+	if err != nil {
+		return glob.NewGlobErr(fmt.Sprintf("failed to expand path: %s", err.Error()))
+	}
+
+	content, err := os.ReadFile(expandedPath)
 	if err != nil {
 		return glob.NewGlobErr(err.Error())
 	}

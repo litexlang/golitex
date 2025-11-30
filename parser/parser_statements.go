@@ -3635,6 +3635,15 @@ func (tb *tokenBlock) importDirStmt() (ast.Stmt, error) {
 		return nil, parserErrAtTb(err, tb)
 	}
 
+	// Check if path ends with .lit - if so, it's an ImportFileStmt
+	if strings.HasSuffix(path, glob.LitexFileSuffix) {
+		if !tb.header.ExceedEnd() {
+			return nil, fmt.Errorf("expect end of line")
+		}
+		return ast.NewImportFileStmt(path, tb.line), nil
+	}
+
+	// Otherwise, it's an ImportDirStmt
 	// Check if there's an "as" keyword followed by a package name
 	var asPkgName string
 	if tb.header.is(glob.KeywordAs) {
