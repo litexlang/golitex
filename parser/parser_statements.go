@@ -126,6 +126,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.helpStmt()
 	case glob.KeywordDoNothing:
 		ret, err = tb.doNothingStmt()
+	case glob.KeywordImport:
+		ret, err = tb.importDirStmt()
 	default:
 		ret, err = tb.factsStmt()
 	}
@@ -3619,4 +3621,38 @@ func (tb *tokenBlock) helpStmt() (ast.Stmt, error) {
 	}
 
 	return ast.NewHelpStmt(keyword, tb.line), nil
+}
+
+func (tb *tokenBlock) importDirStmt() (ast.Stmt, error) {
+	err := tb.header.skip(glob.KeywordImport)
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
+	}
+
+	// Parse the path in double quotes
+	path, err := tb.getStringInDoubleQuotes()
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
+	}
+
+	// Check if there's an "as" keyword followed by a package name
+	var asPkgName string
+	if tb.header.is(glob.KeywordAs) {
+		tb.header.skip(glob.KeywordAs)
+		asPkgName, err = tb.header.next()
+		if err != nil {
+			return nil, parserErrAtTb(err, tb)
+		}
+	} else {
+		// If no "as" keyword, use the path as the package name
+		// Extract the last component of the path as the default package name
+		pathParts := strings.Split(path, "/")
+		asPkgName = pathParts[len(pathParts)-1]
+	}
+
+	if !tb.header.ExceedEnd() {
+		return nil, fmt.Errorf("expect end of line")
+	}
+
+	return ast.NewImportStmt(path, asPkgName, tb.line), nil
 }
