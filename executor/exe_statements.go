@@ -135,8 +135,12 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 		execRet = exec.proveCaseByCaseStmt(stmt)
 	case *ast.ProveInRangeStmt:
 		execRet = exec.proveInRangeStmt(stmt)
+	case *ast.ImportDirStmt:
+		execRet = NewExecErr("import statements are not allowed in local scope.")
+	case *ast.ImportFileStmt:
+		execRet = NewExecErr("import statements are not allowed in local scope.")
 	default:
-		panic(fmt.Sprintf("unknown statement type: %T", stmt))
+		execRet = NewExecErr(fmt.Sprintf("unknown statement type: %T", stmt))
 	}
 
 	if execRet.IsTrue() {
