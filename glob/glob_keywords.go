@@ -375,3 +375,7 @@ var KeywordHelpMap = map[string]string{
 }
 
 const PkgNameAtomSeparator = KeySymbolDot
+
+const IndexOpt = "[]"
+
+const TupleOpt = "()"

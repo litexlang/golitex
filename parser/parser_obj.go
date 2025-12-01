@@ -109,7 +109,7 @@ func (tb *tokenBlock) unaryOptObj() (ast.Obj, error) {
 	}
 
 	if unaryOp != glob.KeySymbolMinus {
-		return tb.fnSetObjAndParenthesizedExprAndAtomObjAndFnObj()
+		return tb.fnSetObjAndBracedExprAndAtomObjAndFnObj()
 	}
 
 	// Handle unary minus
@@ -128,19 +128,19 @@ func (tb *tokenBlock) unaryOptObj() (ast.Obj, error) {
 	return ast.NewFnObj(ast.Atom(glob.KeySymbolStar), []ast.Obj{ast.Atom("-1"), right}), nil
 }
 
-// fnSetObjAndParenthesizedExprAndAtomObjAndFnObj parses primary expressions: atoms, numbers, function sets, or parenthesized expressions.
+// fnSetObjAndBracedExprAndAtomObjAndFnObj parses primary expressions: atoms, numbers, function sets, or parenthesized expressions.
 // Higher precedence means more "primitive" - parentheses and atoms are at the bottom of the precedence hierarchy.
-func (tb *tokenBlock) fnSetObjAndParenthesizedExprAndAtomObjAndFnObj() (ast.Obj, error) {
+func (tb *tokenBlock) fnSetObjAndBracedExprAndAtomObjAndFnObj() (ast.Obj, error) {
 	if tb.header.is(glob.KeywordFn) {
 		return tb.fnSet()
 	}
 
 	if tb.header.is(glob.KeySymbolLeftBrace) {
-		expr, err := tb.parenthesizedObj()
+		expr, err := tb.bracedObj()
 		if err != nil {
 			return nil, err
 		}
-		return tb.fnObjWithRepeatedParentheses(expr)
+		return tb.fnObjWithRepeatedBraceAndBracket(expr)
 	}
 
 	if tb.header.curTokenBeginWithNumber() {
@@ -161,7 +161,7 @@ func (tb *tokenBlock) fnSetObjAndParenthesizedExprAndAtomObjAndFnObj() (ast.Obj,
 	}
 
 	// Check if atom is followed by function arguments
-	return tb.fnObjWithRepeatedParentheses(atom)
+	return tb.fnObjWithRepeatedBraceAndBracket(atom)
 }
 
 // ============================================================================
@@ -266,7 +266,34 @@ func (tb *tokenBlock) bracedObjSlice() ([]ast.Obj, error) {
 	return params, nil
 }
 
-func (tb *tokenBlock) parenthesizedObj() (ast.Obj, error) {
+func (tb *tokenBlock) bracketedObjSlice() ([]ast.Obj, error) {
+	params := []ast.Obj{}
+	tb.header.skip(glob.KeySymbolLeftBracket)
+
+	if !tb.header.is(glob.KeySymbolRightBracket) {
+		for {
+			obj, err := tb.Obj()
+			if err != nil {
+				return nil, parserErrAtTb(err, tb)
+			}
+			params = append(params, obj)
+
+			done, err := tb.expectAndSkipCommaOr(glob.KeySymbolRightBracket)
+			if err != nil {
+				return nil, err
+			}
+			if done {
+				break
+			}
+		}
+	}
+
+	tb.header.skip(glob.KeySymbolRightBracket)
+
+	return params, nil
+}
+
+func (tb *tokenBlock) bracedObj() (ast.Obj, error) {
 	if err := tb.header.skip(glob.KeySymbolLeftBrace); err != nil {
 		return nil, fmt.Errorf("expected '(': %s", err)
 	}
@@ -277,6 +304,42 @@ func (tb *tokenBlock) parenthesizedObj() (ast.Obj, error) {
 		return nil, err
 	}
 
+	// 如果是 , 那说明是 tuple
+	if tb.header.is(glob.KeySymbolComma) {
+		// Collect all expressions in the tuple
+		tupleObjs := []ast.Obj{firstExpr}
+
+		for {
+			// Skip comma
+			tb.header.skip(glob.KeySymbolComma)
+
+			// Parse next expression
+			obj, err := tb.Obj()
+			if err != nil {
+				return nil, parserErrAtTb(err, tb)
+			}
+			tupleObjs = append(tupleObjs, obj)
+
+			// Check if we're done (next token is ')')
+			if tb.header.is(glob.KeySymbolRightBrace) {
+				break
+			}
+
+			// If not ')', must be a comma
+			if !tb.header.is(glob.KeySymbolComma) {
+				return nil, parserErrAtTb(fmt.Errorf("expected ',' or ')' but got '%s'", tb.header.strAtCurIndexPlus(0)), tb)
+			}
+		}
+
+		// Skip closing ')'
+		if err := tb.header.skip(glob.KeySymbolRightBrace); err != nil {
+			return nil, fmt.Errorf("expected ')': %s", err)
+		}
+
+		// Return tuple as FnObj with TupleOpt as head
+		return ast.NewFnObj(ast.Atom(glob.TupleOpt), tupleObjs), nil
+	}
+
 	// If no comma, expect a single expression followed by ')'
 	if err := tb.header.skip(glob.KeySymbolRightBrace); err != nil {
 		return nil, fmt.Errorf("expected ')': %s", err)
@@ -285,17 +348,33 @@ func (tb *tokenBlock) parenthesizedObj() (ast.Obj, error) {
 	return firstExpr, nil
 }
 
-// fnObjWithRepeatedParentheses parses function calls with multiple consecutive parentheses pairs.
+// fnObjWithRepeatedBraceAndBracket parses function calls with multiple consecutive parentheses pairs
+// and bracket indexing operations.
 // For example, a()()()() will be parsed as (((a()())())()).
-// Each () pair is parsed as a separate argument list, and the function continues
-// until there are no more left braces.
-func (tb *tokenBlock) fnObjWithRepeatedParentheses(head ast.Obj) (ast.Obj, error) {
-	for !tb.header.ExceedEnd() && (tb.header.is(glob.KeySymbolLeftBrace)) {
-		objParamsPtr, err := tb.bracedObjSlice()
-		if err != nil {
-			return nil, parserErrAtTb(err, tb)
+// Each () pair is parsed as a separate argument list.
+// Each [] pair is parsed as an index operation (prefix opt) using IndexOpt.
+// The function continues until there are no more left braces or left brackets.
+func (tb *tokenBlock) fnObjWithRepeatedBraceAndBracket(head ast.Obj) (ast.Obj, error) {
+	for !tb.header.ExceedEnd() {
+		if tb.header.is(glob.KeySymbolLeftBrace) {
+			// Parse function call arguments: ()
+			objParamsPtr, err := tb.bracedObjSlice()
+			if err != nil {
+				return nil, parserErrAtTb(err, tb)
+			}
+			head = ast.NewFnObj(head, objParamsPtr)
+		} else if tb.header.is(glob.KeySymbolLeftBracket) {
+			// Parse index operation: []
+			objParamsPtr, err := tb.bracketedObjSlice()
+			if err != nil {
+				return nil, parserErrAtTb(err, tb)
+			}
+			// IndexOpt is a prefix operator, so it's applied as IndexOpt(head, ...params)
+			head = ast.NewFnObj(ast.Atom(glob.IndexOpt), append([]ast.Obj{head}, objParamsPtr...))
+		} else {
+			// No more braces or brackets
+			break
 		}
-		head = ast.NewFnObj(head, objParamsPtr)
 	}
 
 	return head, nil

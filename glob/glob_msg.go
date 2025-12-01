@@ -66,7 +66,6 @@ func NotImplementedMsg(s string, args ...any) string {
 func REPLMsgWithPath(ret GlobRet, path string) string {
 	var builder strings.Builder
 	builder.WriteString("---\n")
-	builder.WriteString(fmt.Sprintf("From: %s\n", path))
 	builder.WriteString(ret.GetREPLMsg())
 	return builder.String()
 }
