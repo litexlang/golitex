@@ -18,6 +18,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	env "golitex/environment"
+	glob "golitex/glob"
 )
 
 func (ver *Verifier) todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt *ast.SpecFactStmt) *env.Env {
@@ -53,7 +54,6 @@ func (ver *Verifier) maybeAddSuccessMsgString(state *VerState, stmtStr, verified
 	}
 	return execRet
 }
-
 
 func (ver *Verifier) paramsInSets(params []ast.Obj, sets []ast.Obj, state *VerState) ExecRet {
 	if len(params) != len(sets) {
@@ -93,4 +93,8 @@ func IsTrueOrErr(ok bool, err error) bool {
 
 func IsFalseOrErr(ok bool, err error) bool {
 	return !ok || err != nil
+}
+
+func ObjIsNotSet(obj ast.Obj) bool {
+	return obj.String() != glob.KeywordSet
 }
