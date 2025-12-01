@@ -68,7 +68,7 @@ func paramInParamSetInFactLatexStringSlice(paramNames []string, paramSets []Obj)
 	return strSlice
 }
 
-func propNameParamsLatexString(propName AtomObj, params []Obj) string {
+func propNameParamsLatexString(propName Atom, params []Obj) string {
 	var builder strings.Builder
 	builder.WriteString(propName.String())
 	builder.WriteString("(")

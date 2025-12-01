@@ -30,7 +30,7 @@ func (exec *Executor) proveInRangeSetStmt(stmt *ast.ProveInRangeSetStmt) ExecRet
 	startStr := strconv.FormatInt(stmt.Start, 10)
 	endStr := strconv.FormatInt(stmt.End, 10)
 
-	forallXInIntensionalSetTheyAreFromStartToEnd := ast.NewUniFact([]string{stmt.Param}, []ast.Obj{stmt.IntensionalSet}, []ast.FactStmt{}, []ast.FactStmt{ast.NewInFact(stmt.Param, ast.AtomObj(glob.KeywordInteger)), ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeySymbolLessEqual), []ast.Obj{ast.AtomObj(startStr), ast.AtomObj(stmt.Param)}, stmt.Line), ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeySymbolLess), []ast.Obj{ast.AtomObj(stmt.Param), ast.AtomObj(endStr)}, stmt.Line)}, stmt.Line)
+	forallXInIntensionalSetTheyAreFromStartToEnd := ast.NewUniFact([]string{stmt.Param}, []ast.Obj{stmt.IntensionalSet}, []ast.FactStmt{}, []ast.FactStmt{ast.NewInFact(stmt.Param, ast.Atom(glob.KeywordInteger)), ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{ast.Atom(startStr), ast.Atom(stmt.Param)}, stmt.Line), ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLess), []ast.Obj{ast.Atom(stmt.Param), ast.Atom(endStr)}, stmt.Line)}, stmt.Line)
 
 	state := exec.factStmt(forallXInIntensionalSetTheyAreFromStartToEnd)
 	if state.IsNotTrue() {
@@ -54,12 +54,12 @@ func (exec *Executor) proveInRangeSetStmt(stmt *ast.ProveInRangeSetStmt) ExecRet
 }
 
 func (exec *Executor) proveInRangeSetStmtWhenParamIsIndex(intensionalSetGivenSetIsIn *ast.IntensionalSetStmt, stmt *ast.ProveInRangeSetStmt, i int64) ExecRet {
-	indexAsFc := ast.AtomObj(fmt.Sprintf("%d", i))
+	indexAsFc := ast.Atom(fmt.Sprintf("%d", i))
 	uniMap := map[string]ast.Obj{stmt.Param: indexAsFc}
 	exec.NewEnv(exec.Env)
 	defer exec.deleteEnv()
 
-	defObjStmt := ast.NewDefLetStmt([]string{stmt.Param}, []ast.Obj{ast.AtomObj(glob.KeywordInteger)}, []ast.FactStmt{ast.NewEqualFact(ast.AtomObj(stmt.Param), indexAsFc)}, stmt.Line)
+	defObjStmt := ast.NewDefLetStmt([]string{stmt.Param}, []ast.Obj{ast.Atom(glob.KeywordInteger)}, []ast.FactStmt{ast.NewEqualFact(ast.Atom(stmt.Param), indexAsFc)}, stmt.Line)
 	execState := exec.defLetStmt(defObjStmt)
 	if execState.IsNotTrue() {
 		return execState
@@ -176,13 +176,13 @@ func (exec *Executor) proveInRangeSetStmtWhenParamIsIndex(intensionalSetGivenSet
 }
 
 func (exec *Executor) proveInRangeStmtWhenParamIsIndex(stmt *ast.ProveInRangeStmt, i int64) ExecRet {
-	indexAsFc := ast.AtomObj(fmt.Sprintf("%d", i))
+	indexAsFc := ast.Atom(fmt.Sprintf("%d", i))
 	param := stmt.Param()
 	uniMap := map[string]ast.Obj{param: indexAsFc}
 	exec.NewEnv(exec.Env)
 	defer exec.deleteEnv()
 
-	defObjStmt := ast.NewDefLetStmt([]string{param}, []ast.Obj{ast.AtomObj(glob.KeywordInteger)}, []ast.FactStmt{ast.NewEqualFact(ast.AtomObj(param), indexAsFc)}, stmt.GetLine())
+	defObjStmt := ast.NewDefLetStmt([]string{param}, []ast.Obj{ast.Atom(glob.KeywordInteger)}, []ast.FactStmt{ast.NewEqualFact(ast.Atom(param), indexAsFc)}, stmt.GetLine())
 	execState := exec.defLetStmt(defObjStmt)
 	if execState.IsNotTrue() {
 		return execState

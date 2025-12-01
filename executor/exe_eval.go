@@ -39,7 +39,7 @@ func (exec *Executor) evalObjThenSimplify(obj ast.Obj) (ast.Obj, ExecRet) {
 	}
 
 	switch asObj := obj.(type) {
-	case ast.AtomObj:
+	case ast.Atom:
 		symbolValue := exec.Env.GetSymbolSimplifiedValue(obj)
 		if symbolValue == nil {
 			return nil, NewExecErr(fmt.Sprintf("symbol %s has no value", obj.String()))
@@ -115,11 +115,11 @@ func (exec *Executor) useAlgoToEvalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj,
 	}
 
 	for i, param := range algoDef.Params {
-		ret := exec.Env.IsAtomDeclared(ast.AtomObj(param), map[string]struct{}{})
+		ret := exec.Env.IsAtomDeclared(ast.Atom(param), map[string]struct{}{})
 		if ret.IsTrue() {
 			continue
 		} else {
-			execState := exec.defLetStmt(ast.NewDefLetStmt([]string{param}, []ast.Obj{ast.AtomObj(glob.KeywordObj)}, []ast.FactStmt{ast.NewEqualFact(ast.AtomObj(param), fnObj.Params[i])}, glob.InnerGenLine))
+			execState := exec.defLetStmt(ast.NewDefLetStmt([]string{param}, []ast.Obj{ast.Atom(glob.KeywordObj)}, []ast.FactStmt{ast.NewEqualFact(ast.Atom(param), fnObj.Params[i])}, glob.InnerGenLine))
 			if execState.IsNotTrue() {
 				return nil, NewExecErr(execState.String())
 			}

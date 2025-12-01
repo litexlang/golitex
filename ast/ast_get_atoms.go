@@ -16,18 +16,18 @@ package litex_ast
 
 import "slices"
 
-func (stmt *SpecFactStmt) GetAtoms() []AtomObj {
-	atoms := []AtomObj{stmt.PropName}
+func (stmt *SpecFactStmt) GetAtoms() []Atom {
+	atoms := []Atom{stmt.PropName}
 	for _, param := range stmt.Params {
 		atoms = append(atoms, GetAtomsInObj(param)...)
 	}
 	return atoms
 }
 
-func (stmt *EnumStmt) GetAtoms() []AtomObj {
+func (stmt *EnumStmt) GetAtoms() []Atom {
 	atomsOfName := GetAtomsInObj(stmt.CurSet)
 
-	atoms := []AtomObj{}
+	atoms := []Atom{}
 	atoms = append(atoms, atomsOfName...)
 	for _, value := range stmt.Items {
 		atoms = append(atoms, GetAtomsInObj(value)...)
@@ -35,8 +35,8 @@ func (stmt *EnumStmt) GetAtoms() []AtomObj {
 	return atoms
 }
 
-func (stmt *UniFactStmt) GetAtoms() []AtomObj {
-	atoms := []AtomObj{}
+func (stmt *UniFactStmt) GetAtoms() []Atom {
+	atoms := []Atom{}
 	for _, param := range stmt.ParamSets {
 		atoms = append(atoms, GetAtomsInObj(param)...)
 	}
@@ -48,7 +48,7 @@ func (stmt *UniFactStmt) GetAtoms() []AtomObj {
 	}
 
 	// 如果这个atom是param，那把这项扔了
-	ret := []AtomObj{}
+	ret := []Atom{}
 	for _, atom := range atoms {
 		if slices.Contains(stmt.Params, string(atom)) {
 			continue
@@ -60,7 +60,7 @@ func (stmt *UniFactStmt) GetAtoms() []AtomObj {
 	return ret
 }
 
-func (stmt *UniFactWithIffStmt) GetAtoms() []AtomObj {
+func (stmt *UniFactWithIffStmt) GetAtoms() []Atom {
 	atoms := stmt.UniFact.GetAtoms()
 	for _, fact := range stmt.IffFacts {
 		atoms = append(atoms, fact.GetAtoms()...)
@@ -68,16 +68,16 @@ func (stmt *UniFactWithIffStmt) GetAtoms() []AtomObj {
 	return atoms
 }
 
-func (stmt *OrStmt) GetAtoms() []AtomObj {
-	atoms := []AtomObj{}
+func (stmt *OrStmt) GetAtoms() []Atom {
+	atoms := []Atom{}
 	for _, fact := range stmt.Facts {
 		atoms = append(atoms, fact.GetAtoms()...)
 	}
 	return atoms
 }
 
-func (stmt *IntensionalSetStmt) GetAtoms() []AtomObj {
-	atoms := []AtomObj{}
+func (stmt *IntensionalSetStmt) GetAtoms() []Atom {
+	atoms := []Atom{}
 	atoms = append(atoms, GetAtomsInObj(stmt.CurSet)...)
 	atoms = append(atoms, GetAtomsInObj(stmt.ParentSet)...)
 	for _, proof := range stmt.Facts {
@@ -86,8 +86,8 @@ func (stmt *IntensionalSetStmt) GetAtoms() []AtomObj {
 	return atoms
 }
 
-func (stmt *EqualsFactStmt) GetAtoms() []AtomObj {
-	atoms := []AtomObj{}
+func (stmt *EqualsFactStmt) GetAtoms() []Atom {
+	atoms := []Atom{}
 	for _, param := range stmt.Params {
 		atoms = append(atoms, GetAtomsInObj(param)...)
 	}

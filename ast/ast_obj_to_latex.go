@@ -20,7 +20,7 @@ import (
 	"strings"
 )
 
-func (f AtomObj) ToLatexString() string {
+func (f Atom) ToLatexString() string {
 	switch string(f) {
 	case glob.KeywordReal:
 		return "$\\mathbb{R}$"
@@ -53,7 +53,7 @@ func (f *FnObj) ToLatexString() string {
 }
 
 func isSpecialLatexSymbol_Process(f *FnObj) (bool, string) {
-	fHead, ok := f.FnHead.(AtomObj)
+	fHead, ok := f.FnHead.(Atom)
 	if !ok {
 		return false, ""
 	}

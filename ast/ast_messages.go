@@ -425,7 +425,7 @@ func (stmt *HaveObjStStmt) String() string {
 	return builder.String()
 }
 
-func (f AtomObj) String() string {
+func (f Atom) String() string {
 	return string(f)
 }
 
@@ -1134,7 +1134,7 @@ func (stmt *ProveInRangeSetStmt) String() string {
 	return builder.String()
 }
 
-func ProveIsCertainPropStmtString(kw string, prop AtomObj, params []string, proofs []Stmt) string {
+func ProveIsCertainPropStmtString(kw string, prop Atom, params []string, proofs []Stmt) string {
 	var builder strings.Builder
 	builder.WriteString(kw)
 	builder.WriteString("(")

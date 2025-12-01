@@ -16,7 +16,7 @@ package litex_env
 
 import ast "golitex/ast"
 
-func (e *Env) GetFnTemplateDef(fcAtomName ast.AtomObj) *ast.FnTemplateDefStmt {
+func (e *Env) GetFnTemplateDef(fcAtomName ast.Atom) *ast.FnTemplateDefStmt {
 	for env := e; env != nil; env = env.Parent {
 		fnTemplateDef, ok := env.FnTemplateDefMem[string(fcAtomName)]
 		if ok {
@@ -28,7 +28,7 @@ func (e *Env) GetFnTemplateDef(fcAtomName ast.AtomObj) *ast.FnTemplateDefStmt {
 }
 
 func (e *Env) GetFnTemplateDef_KeyIsFcHead(fc *ast.FnObj) *ast.FnTemplateDefStmt {
-	fnHeadAsAtom, ok := fc.FnHead.(ast.AtomObj)
+	fnHeadAsAtom, ok := fc.FnHead.(ast.Atom)
 	if !ok {
 		return nil
 	}
@@ -37,7 +37,7 @@ func (e *Env) GetFnTemplateDef_KeyIsFcHead(fc *ast.FnObj) *ast.FnTemplateDefStmt
 	return fnTemplateDef
 }
 
-func (e *Env) GetExistPropDef(propName ast.AtomObj) *ast.DefExistPropStmt {
+func (e *Env) GetExistPropDef(propName ast.Atom) *ast.DefExistPropStmt {
 	for env := e; env != nil; env = env.Parent {
 		existProp, ok := env.ExistPropDefMem[string(propName)]
 		if ok {
@@ -47,7 +47,7 @@ func (e *Env) GetExistPropDef(propName ast.AtomObj) *ast.DefExistPropStmt {
 	return nil
 }
 
-func (e *Env) GetPropDef(propName ast.AtomObj) *ast.DefPropStmt {
+func (e *Env) GetPropDef(propName ast.Atom) *ast.DefPropStmt {
 	for env := e; env != nil; env = env.Parent {
 		prop, ok := env.PropDefMem[string(propName)]
 		if ok {
@@ -57,7 +57,7 @@ func (e *Env) GetPropDef(propName ast.AtomObj) *ast.DefPropStmt {
 	return nil
 }
 
-func (e *Env) GetHaveSetFnDef(fnName ast.AtomObj) *ast.HaveSetFnStmt {
+func (e *Env) GetHaveSetFnDef(fnName ast.Atom) *ast.HaveSetFnStmt {
 	for env := e; env != nil; env = env.Parent {
 		haveSetFn, ok := env.HaveSetFnDefMem[fnName.String()]
 		if ok {
@@ -67,7 +67,7 @@ func (e *Env) GetHaveSetFnDef(fnName ast.AtomObj) *ast.HaveSetFnStmt {
 	return nil
 }
 
-func (e *Env) isUserDefinedObj(atom ast.AtomObj) bool {
+func (e *Env) isUserDefinedObj(atom ast.Atom) bool {
 	for curEnv := e; curEnv != nil; curEnv = curEnv.Parent {
 		_, ok := curEnv.ObjDefMem[string(atom)]
 		if ok {
