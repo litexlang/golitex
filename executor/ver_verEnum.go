@@ -21,7 +21,7 @@ import (
 )
 
 func (ver *Verifier) verEnumStmt(stmt *ast.EnumStmt, state *VerState) ExecRet {
-	if verRet := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeywordIn), []ast.Obj{stmt.CurSet, ast.AtomObj(glob.KeywordFiniteSet)}, stmt.Line), state); verRet.IsErr() {
+	if verRet := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.CurSet, ast.Atom(glob.KeywordFiniteSet)}, stmt.Line), state); verRet.IsErr() {
 		return verRet
 	} else if verRet.IsTrue() {
 		if verRet := ver.lenIsZeroThenEnumIsEmpty(stmt, state); verRet.IsTrue() {
@@ -58,8 +58,8 @@ func (ver *Verifier) verEnumStmt(stmt *ast.EnumStmt, state *VerState) ExecRet {
 }
 
 func (ver *Verifier) lenIsZeroThenEnumIsEmpty(stmt *ast.EnumStmt, state *VerState) ExecRet {
-	lenOverStmtName := ast.NewFnObj(ast.AtomObj(glob.KeywordCount), []ast.Obj{stmt.CurSet})
-	equalFact := ast.EqualFact(lenOverStmtName, ast.AtomObj("0"))
+	lenOverStmtName := ast.NewFnObj(ast.Atom(glob.KeywordCount), []ast.Obj{stmt.CurSet})
+	equalFact := ast.EqualFact(lenOverStmtName, ast.Atom("0"))
 	verRet := ver.VerFactStmt(equalFact, state)
 	if verRet.IsErr() || verRet.IsUnknown() {
 		return verRet
@@ -74,7 +74,7 @@ func (ver *Verifier) forallObjNotInSetThenTheSetIsEmpty(stmt *ast.EnumStmt, stat
 		return NewExecUnknown("")
 	}
 
-	allObjectsNotInSetThenSetIsEmpty := ast.NewUniFact([]string{"x"}, []ast.Obj{ast.AtomObj(glob.KeywordObj)}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.AtomObj(glob.KeywordIn), []ast.Obj{ast.AtomObj("x"), stmt.CurSet}, stmt.Line)}, stmt.Line)
+	allObjectsNotInSetThenSetIsEmpty := ast.NewUniFact([]string{"x"}, []ast.Obj{ast.Atom(glob.KeywordObj)}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeywordIn), []ast.Obj{ast.Atom("x"), stmt.CurSet}, stmt.Line)}, stmt.Line)
 	verRet := ver.VerFactStmt(allObjectsNotInSetThenSetIsEmpty, state)
 	if verRet.IsErr() || verRet.IsUnknown() {
 		return verRet

@@ -20,211 +20,195 @@ import (
 	glob "golitex/glob"
 )
 
+// ============================================================================
+// Main entry point for parsing objects
+// ============================================================================
+
+// Obj parses an object expression. It uses precedence-based parsing to handle
+// infix operators correctly (e.g., a + b * c should be parsed as a + (b * c)).
+// Obj()
+// → objInfixExpr() [按优先级解析中缀表达式]
+//
+//	  → unaryOptObj() [处理一元运算符]
+//		→ primaryExpr() [处理基本表达式]
+//		  → atomObj() [解析原子，支持 pkgname.atomname]
+//		  → numberStr() [解析数字]
+//		  → fnSet() [解析函数集合]
+//		  → bracedExpr_orTuple() [解析括号表达式]
 func (tb *tokenBlock) Obj() (ast.Obj, error) {
-	expr, err := tb.objInfixExpr(glob.PrecLowest)
-	if err != nil {
-		return nil, err
-	}
-
-	return expr, nil
+	return tb.objInfixExpr(glob.PrecLowest)
 }
 
-// “数学”优先级越高，越是底层。所以把括号表达式放在这里处理
-func (tb *tokenBlock) atomObjAndFnObj() (ast.Obj, error) {
-	var expr ast.Obj
-	var err error
+// ============================================================================
+// Precedence-based infix expression parsing
+// ============================================================================
 
-	if tb.header.is(glob.KeywordFn) {
-		return tb.fnSet()
-	} else if tb.header.is(glob.KeySymbolLeftBrace) {
-		expr, err = tb.bracedExpr_orTuple()
-		if err != nil {
-			return nil, err
-		}
-		return tb.whenTheNextTokIsLeftBrace_MakeFnObj(expr)
-	} else if tb.header.curTokenBeginWithNumber() {
-		expr, err = tb.numberStr()
-		if err != nil {
-			return nil, err
-		}
-		if tb.header.is(glob.KeySymbolLeftBrace) {
-			return nil, fmt.Errorf("unexpected left brace after number")
-		} else {
-			return expr, nil
-		}
-	} else {
-		objStr, err := tb.atomObjNotBeginWithNumber()
-		if err != nil {
-			return nil, parserErrAtTb(err, tb)
-		}
-		ret, err := tb.whenTheNextTokIsLeftBrace_MakeFnObj(objStr)
-		if err != nil {
-			return nil, parserErrAtTb(err, tb)
-		}
-		return ret, nil
-	}
-}
-
-func (tb *tokenBlock) atomObjNotBeginWithNumber() (ast.AtomObj, error) {
-	// values := []string{}
-
-	value, err := tb.header.next()
-	if err != nil {
-		return ast.AtomObj(""), err
-	}
-
-	// 只允许至多有一层.
-	if tb.header.is(glob.KeySymbolDot) {
-		tb.header.skip(glob.KeySymbolDot)
-		rightValue, err := tb.header.next()
-		if err != nil {
-			return "", parserErrAtTb(err, tb)
-		}
-		return ast.AtomObj(fmt.Sprintf("%s%s%s", value, glob.KeySymbolDot, rightValue)), nil
-	} else {
-		return ast.AtomObj(value), nil
-	}
-
-	// for tb.header.is(glob.KeySymbolColonColon) {
-	// 	tb.header.skip(glob.KeySymbolColonColon)
-	// 	values = append(values, value)
-	// 	value, err = tb.header.next()
-	// 	if err != nil {
-	// 		return ast.FcAtom(""), err
-	// 	}
-	// }
-
-	// if !glob.IsBuiltinKeywordOrBuiltinSymbolOrNumber(value) {
-	// 	values = append([]string{glob.CurrentPkg}, values...)
-	// }
-
-	// values = append(values, value)
-
-	// return ast.FcAtom(strings.Join(values, glob.KeySymbolColonColon)), nil
-}
-
+// objInfixExpr parses infix expressions using operator precedence.
+// Higher precedence operators are parsed first (e.g., * before +).
+// This ensures expressions like "a + b * c" are parsed as "a + (b * c)".
 func (tb *tokenBlock) objInfixExpr(currentPrec glob.BuiltinOptPrecedence) (ast.Obj, error) {
+	// Parse left operand (starting with unary operators or primary expressions)
 	left, err := tb.unaryOptObj()
 	if err != nil {
 		return nil, err
 	}
 
+	// Parse infix operators with higher precedence than currentPrec
 	for !tb.header.ExceedEnd() {
 		curToken, err := tb.header.currentToken()
 		if err != nil {
 			return nil, fmt.Errorf("unexpected end of input while parsing infix expression")
 		}
 
+		// Handle backslash operator (e.g., x \mul y)
 		if curToken == glob.KeySymbolBackSlash {
-			// tb.header.skip("") // 消耗curToken
-
-			// fn, err := tb.header.next() // 只允许 \ 后面跟 fcAtom 格式出现的 函数，而不是是 fcFn 格式出现的函数，否则 x \mul (y \mul z) 会被解析成 mul(mul(y,z))(x) 而不是 mul(x, mul(y, z))
-			// if err != nil {
-			// 	return nil, err
-			// }
-
-			// right, err := tb.fcInfixExpr(glob.PrecLowest)
-			// if err != nil {
-			// 	return nil, err
-			// }
-
-			// left = ast.NewFnObj(ast.FcAtom(fn), []ast.Fc{left, right})
-
 			fn, err := tb.backSlashExpr()
 			if err != nil {
 				return nil, err
 			}
-
 			right, err := tb.objInfixExpr(glob.PrecLowest)
 			if err != nil {
 				return nil, err
 			}
-
 			left = ast.NewFnObj(fn, []ast.Obj{left, right})
-
 			break
 		}
 
-		// 检查是否是运算符
+		// Check if current token is a binary operator
 		curPrec, isBinary := glob.BuiltinOptPrecedenceMap[curToken]
-
 		if !isBinary {
 			break
 		}
 
+		// Stop if current operator has lower or equal precedence
 		if curPrec <= currentPrec {
 			break
 		}
 
-		tb.header.skip("") // 消耗运算符
+		// Parse right operand with current operator's precedence
+		tb.header.skip("") // consume operator
 		right, err := tb.objInfixExpr(curPrec)
 		if err != nil {
 			return nil, err
 		}
 
-		leftHead := ast.AtomObj(curToken)
-		left = ast.NewFnObj(
-			leftHead,
-			[]ast.Obj{left, right},
-		)
+		// Build function object: operator(left, right)
+		leftHead := ast.Atom(curToken)
+		left = ast.NewFnObj(leftHead, []ast.Obj{left, right})
 	}
 
 	return left, nil
 }
 
-// TODO： 现在只有 - 是单目运算符，其他都是双目运算符。以后可能会添加其他单目运算符
+// unaryOptObj parses unary operators (currently only "-").
+// If no unary operator is present, it parses a primary expression.
 func (tb *tokenBlock) unaryOptObj() (ast.Obj, error) {
 	unaryOp, err := tb.header.currentToken()
 	if err != nil {
 		return nil, err
 	}
+
 	if unaryOp != glob.KeySymbolMinus {
-		// return tb.squareBracketExpr()
-		return tb.atomObjAndFnObj()
-	} else {
-		tb.header.skip(unaryOp)
+		return tb.fnSetObjAndParenthesizedExprAndAtomObjAndFnObj()
+	}
 
-		// 如果后面跟的是逗号，那只返回 -
-		if tb.header.is(glob.KeySymbolComma) {
-			return ast.AtomObj(unaryOp), nil
-		}
+	// Handle unary minus
+	tb.header.skip(unaryOp)
 
-		right, err := tb.unaryOptObj()
+	// Special case: if followed by comma, return "-" as an atom
+	if tb.header.is(glob.KeySymbolComma) {
+		return ast.Atom(unaryOp), nil
+	}
+
+	// Parse right operand and convert to -1 * right
+	right, err := tb.unaryOptObj()
+	if err != nil {
+		return nil, err
+	}
+	return ast.NewFnObj(ast.Atom(glob.KeySymbolStar), []ast.Obj{ast.Atom("-1"), right}), nil
+}
+
+// fnSetObjAndParenthesizedExprAndAtomObjAndFnObj parses primary expressions: atoms, numbers, function sets, or parenthesized expressions.
+// Higher precedence means more "primitive" - parentheses and atoms are at the bottom of the precedence hierarchy.
+func (tb *tokenBlock) fnSetObjAndParenthesizedExprAndAtomObjAndFnObj() (ast.Obj, error) {
+	if tb.header.is(glob.KeywordFn) {
+		return tb.fnSet()
+	}
+
+	if tb.header.is(glob.KeySymbolLeftBrace) {
+		expr, err := tb.parenthesizedObj()
 		if err != nil {
 			return nil, err
 		}
-
-		// 方法1： 返回 -1 * right，好处： -a 可以直接和 -5 对应，因为 -5 其实是 -1 * 5, -n是 -1 * n；缺点是，如果是 -1 * 5
-		return ast.NewFnObj(ast.AtomObj(glob.KeySymbolStar), []ast.Obj{ast.AtomObj("-1"), right}), nil
-
-		// 方法2： 如果right是数字，那返回 - right，否则是 -1 * right
-		// if rightAtom, ok := right.(ast.FcAtom); ok && glob.IsNumLitStr(string(rightAtom)) {
-		// 	return ast.FcAtom("-" + string(rightAtom)), nil
-		// } else {
-		// 	return ast.NewFnObj(ast.FcAtom(glob.KeySymbolStar), []ast.Fc{ast.FcAtom("-1"), right}), nil
-		// }
-
+		return tb.fnObjWithRepeatedParentheses(expr)
 	}
+
+	if tb.header.curTokenBeginWithNumber() {
+		expr, err := tb.numberAtom()
+		if err != nil {
+			return nil, err
+		}
+		if tb.header.is(glob.KeySymbolLeftBrace) {
+			return nil, fmt.Errorf("unexpected left brace after number")
+		}
+		return expr, nil
+	}
+
+	// Parse atom (identifier, possibly with package name)
+	atom, err := tb.notNumberAtom()
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
+	}
+
+	// Check if atom is followed by function arguments
+	return tb.fnObjWithRepeatedParentheses(atom)
 }
 
-func (tb *tokenBlock) numberStr() (ast.AtomObj, error) {
-	left, err := tb.header.next()
+// ============================================================================
+// Atom parsing
+// ============================================================================
+
+// notNumberAtom parses an atom (identifier). Supports package name notation: pkgname.atomname
+// For example, "a.b" means atom "b" in package "a".
+func (tb *tokenBlock) notNumberAtom() (ast.Atom, error) {
+	value, err := tb.header.next()
 	if err != nil {
-		return ast.AtomObj(""), err
+		return ast.Atom(""), err
 	}
 
-	// 检查left是否全是数字
+	// Check for package name separator (e.g., "a.b")
+	if tb.header.is(glob.PkgNameAtomSeparator) {
+		tb.header.skip(glob.PkgNameAtomSeparator)
+		rightValue, err := tb.header.next()
+		if err != nil {
+			return "", parserErrAtTb(err, tb)
+		}
+		return ast.Atom(fmt.Sprintf("%s%s%s", value, glob.PkgNameAtomSeparator, rightValue)), nil
+	}
+
+	return ast.Atom(value), nil
+}
+
+// numberAtom parses a numeric literal (integer or decimal).
+func (tb *tokenBlock) numberAtom() (ast.Atom, error) {
+	left, err := tb.header.next()
+	if err != nil {
+		return ast.Atom(""), err
+	}
+
+	// Validate all characters are digits
 	for _, c := range left {
 		if c < '0' || c > '9' {
-			return ast.AtomObj(""), fmt.Errorf("invalid number: %s", left)
+			return ast.Atom(""), fmt.Errorf("invalid number: %s", left)
 		}
 	}
 
+	// Check for decimal point
 	if tb.header.is(glob.KeySymbolDot) {
-		// 检查下一个字符是否是数字
+		// Peek ahead to check if next token is all digits (decimal part)
 		nextChar := tb.header.strAtCurIndexPlus(1)
 		if len(nextChar) == 0 {
-			return ast.AtomObj(left), nil
+			return ast.Atom(left), nil
 		}
 
 		allDigits := true
@@ -239,21 +223,20 @@ func (tb *tokenBlock) numberStr() (ast.AtomObj, error) {
 			tb.header.skip("")
 			right, err := tb.header.next()
 			if err != nil {
-				return ast.AtomObj(""), fmt.Errorf("invalid number: %s", right)
+				return ast.Atom(""), fmt.Errorf("invalid number: %s", right)
 			}
-			return ast.AtomObj(fmt.Sprintf("%s.%s", left, right)), nil
+			return ast.Atom(fmt.Sprintf("%s.%s", left, right)), nil
 		} else {
-			return ast.AtomObj(""), fmt.Errorf("invalid number: %s", left)
+			return ast.Atom(""), fmt.Errorf("invalid number: %s", left)
 		}
-		// return ast.FcAtom(left), nil
-	} else {
-		// 不能开头是0，除非你真的是0
-		if left[0] == '0' && len(left) > 1 {
-			return ast.AtomObj(""), fmt.Errorf("invalid number: %s", left)
-		}
-
-		return ast.AtomObj(left), nil
 	}
+
+	// Integer: cannot start with 0 unless it's exactly "0"
+	if left[0] == '0' && len(left) > 1 {
+		return ast.Atom(""), fmt.Errorf("invalid number: %s", left)
+	}
+
+	return ast.Atom(left), nil
 }
 
 func (tb *tokenBlock) bracedObjSlice() ([]ast.Obj, error) {
@@ -283,13 +266,9 @@ func (tb *tokenBlock) bracedObjSlice() ([]ast.Obj, error) {
 	return params, nil
 }
 
-func (tb *tokenBlock) bracedExpr_orTuple() (ast.Obj, error) {
+func (tb *tokenBlock) parenthesizedObj() (ast.Obj, error) {
 	if err := tb.header.skip(glob.KeySymbolLeftBrace); err != nil {
 		return nil, fmt.Errorf("expected '(': %s", err)
-	}
-
-	if tb.header.ExceedEnd() {
-		return nil, fmt.Errorf("unexpected end of input after '('")
 	}
 
 	// Peek after first expression to check for comma
@@ -306,7 +285,11 @@ func (tb *tokenBlock) bracedExpr_orTuple() (ast.Obj, error) {
 	return firstExpr, nil
 }
 
-func (tb *tokenBlock) whenTheNextTokIsLeftBrace_MakeFnObj(head ast.Obj) (ast.Obj, error) {
+// fnObjWithRepeatedParentheses parses function calls with multiple consecutive parentheses pairs.
+// For example, a()()()() will be parsed as (((a()())())()).
+// Each () pair is parsed as a separate argument list, and the function continues
+// until there are no more left braces.
+func (tb *tokenBlock) fnObjWithRepeatedParentheses(head ast.Obj) (ast.Obj, error) {
 	for !tb.header.ExceedEnd() && (tb.header.is(glob.KeySymbolLeftBrace)) {
 		objParamsPtr, err := tb.bracedObjSlice()
 		if err != nil {
@@ -350,7 +333,7 @@ func (tb *tokenBlock) fnSet() (ast.Obj, error) {
 		return nil, parserErrAtTb(err, tb)
 	}
 
-	ret := ast.NewFnObj(ast.NewFnObj(ast.AtomObj(glob.KeywordFn), fnSets), []ast.Obj{retSet})
+	ret := ast.NewFnObj(ast.NewFnObj(ast.Atom(glob.KeywordFn), fnSets), []ast.Obj{retSet})
 
 	return ret, nil
 }
@@ -380,5 +363,5 @@ func (tb *tokenBlock) backSlashExpr() (ast.Obj, error) {
 		return nil, err
 	}
 
-	return ast.AtomObj(obj), nil
+	return ast.Atom(obj), nil
 }

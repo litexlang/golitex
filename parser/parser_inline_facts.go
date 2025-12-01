@@ -519,7 +519,7 @@ func (tb *tokenBlock) parseFactStartWithObj() (ast.FactStmt, error) {
 
 // parseFunctionPropertyFact parses facts like "x $prop y" or "x $prop"
 func (tb *tokenBlock) parseFunctionPropertyFact(leftObj ast.Obj) (ast.FactStmt, error) {
-	propName, err := tb.atomObjNotBeginWithNumber()
+	propName, err := tb.notNumberAtom()
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
 	}
@@ -556,7 +556,7 @@ func (tb *tokenBlock) parseInfixRelationalFact(leftObj ast.Obj, operator string)
 
 	// Create the fact
 	params := []ast.Obj{leftObj, rightObj}
-	curFact := ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(operator), params, tb.line)
+	curFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(operator), params, tb.line)
 
 	// Handle syntactic sugar: != is equivalent to "not ="
 	curFact = tb.normalizeNotEqualFact(curFact)
@@ -569,7 +569,7 @@ func (tb *tokenBlock) parseInfixRelationalFact(leftObj ast.Obj, operator string)
 func (tb *tokenBlock) normalizeNotEqualFact(fact *ast.SpecFactStmt) *ast.SpecFactStmt {
 	if fact != nil && fact.NameIs(glob.KeySymbolNotEqual) {
 		fact.TypeEnum = ast.FalsePure
-		fact.PropName = ast.AtomObj(glob.KeySymbolEqual)
+		fact.PropName = ast.Atom(glob.KeySymbolEqual)
 	}
 	return fact
 }
@@ -632,7 +632,7 @@ func (tb *tokenBlock) inline_enum_intensional_fact_skip_terminator(left ast.Obj)
 
 		return ast.NewEnumStmt(left, enumItems, tb.line), nil
 	} else {
-		firstObjAsAtom := firstObj.(ast.AtomObj)
+		firstObjAsAtom := firstObj.(ast.Atom)
 		// 必须是纯的，不能是复合的
 		if glob.IsValidUseDefinedFcAtom(string(firstObjAsAtom)) != nil {
 			return nil, fmt.Errorf("the first item of enum must be an atom without package name, but got %s", firstObjAsAtom)

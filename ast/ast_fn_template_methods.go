@@ -19,7 +19,7 @@ import glob "golitex/glob"
 func (fnTemplate *FnTStruct) DeriveUniFact_WithGivenFn(fc Obj) (*UniFactStmt, error) {
 	paramAsFc := []Obj{}
 	for _, param := range fnTemplate.Params {
-		paramAsFc = append(paramAsFc, AtomObj(param))
+		paramAsFc = append(paramAsFc, Atom(param))
 	}
 
 	thenFacts := []FactStmt{NewInFactWithParamFc(NewFnObj(fc, paramAsFc), fnTemplate.RetSet)}
@@ -33,7 +33,7 @@ func (fnTemplate *FnTStruct) DeriveUniFact_WithGivenFn(fc Obj) (*UniFactStmt, er
 func (fnTemplate *FnTStruct) DeriveUniFact(defFnTemplateName string, fnFc Obj, templateParamUniMap map[string]Obj) (*UniFactStmt, error) {
 	paramAsFc := []Obj{}
 	for _, param := range fnTemplate.Params {
-		paramAsFc = append(paramAsFc, AtomObj(param))
+		paramAsFc = append(paramAsFc, Atom(param))
 	}
 
 	thenFacts := []FactStmt{NewInFactWithParamFc(NewFnObj(fnFc, paramAsFc), fnTemplate.RetSet)}

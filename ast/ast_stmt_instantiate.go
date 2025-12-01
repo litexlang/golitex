@@ -16,7 +16,7 @@ package litex_ast
 
 import "fmt"
 
-func InstantiateFcAtom(fc AtomObj, uniMap map[string]Obj) (Obj, error) {
+func InstantiateFcAtom(fc Atom, uniMap map[string]Obj) (Obj, error) {
 	instance, ok := uniMap[string(fc)]
 	if ok {
 		return instance, nil
@@ -24,7 +24,7 @@ func InstantiateFcAtom(fc AtomObj, uniMap map[string]Obj) (Obj, error) {
 	return fc, nil
 }
 
-func (fc AtomObj) Instantiate(uniMap map[string]Obj) (Obj, error) {
+func (fc Atom) Instantiate(uniMap map[string]Obj) (Obj, error) {
 	return InstantiateFcAtom(fc, uniMap)
 }
 

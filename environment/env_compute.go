@@ -62,7 +62,7 @@ func (env *Env) IsFnWithDefinedAlgo(fc ast.Obj) bool {
 	if !ok {
 		return false
 	}
-	fcAsFcFnHeadAsAtom, ok := fcAsFcFn.FnHead.(ast.AtomObj)
+	fcAsFcFnHeadAsAtom, ok := fcAsFcFn.FnHead.(ast.Atom)
 	if !ok {
 		return false
 	}

@@ -95,7 +95,7 @@ func (ver *Verifier) GetFnStructFromFnTName_CheckFnTParamsReq(fnTName *ast.FnObj
 	if fcFnTypeToFnTStruct, ok := ast.FcFnT_To_FnTStruct(fnTName); ok {
 		return fcFnTypeToFnTStruct, nil
 	} else {
-		fnTNameHeadAsAtom, ok := fnTName.FnHead.(ast.AtomObj)
+		fnTNameHeadAsAtom, ok := fnTName.FnHead.(ast.Atom)
 		if !ok {
 			return nil, fmt.Errorf("fnTNameHead is not an atom")
 		}
@@ -104,7 +104,7 @@ func (ver *Verifier) GetFnStructFromFnTName_CheckFnTParamsReq(fnTName *ast.FnObj
 	}
 }
 
-func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckParamsSatisfyFnTReq(fnTDefName ast.AtomObj, templateParams []ast.Obj, state *VerState) (*ast.FnTStruct, error) {
+func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckParamsSatisfyFnTReq(fnTDefName ast.Atom, templateParams []ast.Obj, state *VerState) (*ast.FnTStruct, error) {
 	defOfT := ver.Env.GetFnTemplateDef(fnTDefName)
 	if defOfT == nil {
 		return nil, fmt.Errorf("fnTNameHead %s is not a fn template", fnTDefName)

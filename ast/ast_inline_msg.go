@@ -52,7 +52,7 @@ func (l *DefFnStmt) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordFn)
 	builder.WriteString(" ")
-	builder.WriteString(NewDefHeader(AtomObj(l.Name), l.FnTemplate.Params, l.FnTemplate.ParamSets).StringWithoutColonAtEnd())
+	builder.WriteString(NewDefHeader(Atom(l.Name), l.FnTemplate.Params, l.FnTemplate.ParamSets).StringWithoutColonAtEnd())
 	builder.WriteString(" ")
 	builder.WriteString(l.FnTemplate.RetSet.String())
 	if len(l.FnTemplate.DomFacts) > 0 {
@@ -218,7 +218,7 @@ func (s *KnowExistPropStmt) InlineString() string { panic("") }
 func (s *LatexStmt) InlineString() string         { panic("") }
 func (s *FnTemplateDefStmt) InlineString() string { panic("") }
 func (s *ClearStmt) InlineString() string         { return s.String() }
-func (s *DoNothingStmt) InlineString() string        { return s.String() }
+func (s *DoNothingStmt) InlineString() string     { return s.String() }
 func (s *InlineFactsStmt) InlineString() string   { return inlineFactsString(s.Facts) }
 func (s *ProveByInductionStmt) InlineString() string {
 	var builder strings.Builder

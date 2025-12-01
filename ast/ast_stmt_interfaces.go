@@ -204,7 +204,7 @@ type FactStmt interface {
 	stmt()
 	String() string
 	InstantiateFact(map[string]Obj) (FactStmt, error)
-	GetAtoms() []AtomObj
+	GetAtoms() []Atom
 	ToLatexString() string
 	canBeKnown()
 	InlineString() string
@@ -230,7 +230,7 @@ type Spec_OrFact interface {
 	String() string
 	InstantiateFact(uniConMap map[string]Obj) (FactStmt, error)
 	ReverseIsTrue() []*SpecFactStmt
-	GetAtoms() []AtomObj
+	GetAtoms() []Atom
 	ToLatexString() string
 	canBeKnown()
 	InlineString() string
@@ -277,7 +277,7 @@ type UniFactInterface interface {
 	stmt()
 	String() string
 	InstantiateFact(map[string]Obj) (FactStmt, error)
-	GetAtoms() []AtomObj
+	GetAtoms() []Atom
 	uniFact()
 	ToLatexString() string
 	canBeKnown()

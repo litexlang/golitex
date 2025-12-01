@@ -57,7 +57,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast
 		}
 
 		for _, relatedFc := range relatedFcSlice {
-			relatedFcStmt := ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(stmt.PropName), []ast.Obj{relatedFc, stmt.Params[1]}, stmt.Line)
+			relatedFcStmt := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.PropName), []ast.Obj{relatedFc, stmt.Params[1]}, stmt.Line)
 			verRet := ver.verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(relatedFcStmt, state)
 			if verRet.IsErr() {
 				return verRet
