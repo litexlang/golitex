@@ -434,9 +434,9 @@ func (f *FnObj) String() string {
 		return fnSetString(f)
 	}
 
-	if IsAtomObjAndEqualToStr(f.FnHead, glob.KeySymbolDot) {
-		return fmt.Sprintf("%s.%s", f.Params[0], f.Params[1])
-	}
+	// if IsAtomObjAndEqualToStr(f.FnHead, glob.KeySymbolDot) {
+	// 	return fmt.Sprintf("%s.%s", f.Params[0], f.Params[1])
+	// }
 
 	if ok, str := hasBuiltinOptAndToString(f); ok {
 		// 如果最左和最右是两边是 ()，那remove掉括号

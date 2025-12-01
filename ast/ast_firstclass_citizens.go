@@ -157,8 +157,3 @@ func GetAtomsInObj(obj Obj) []AtomObj {
 	}
 	return ret
 }
-
-func (atom AtomObj) HasPkgName() bool {
-	// 如果 atom 里有 :: 就是true
-	return strings.Contains(string(atom), glob.KeySymbolColonColon)
-}

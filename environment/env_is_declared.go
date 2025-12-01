@@ -23,8 +23,8 @@ import (
 
 func (e *Env) IsFcAtomDeclaredByUser(fcAtomName ast.AtomObj) bool {
 	// 如果 atom 里有 ::，那另外检查
-	if strings.Contains(string(fcAtomName), glob.KeySymbolColonColon) {
-		PkgNameAndAtomName := strings.Split(string(fcAtomName), glob.KeySymbolColonColon)
+	if strings.Contains(string(fcAtomName), glob.PkgNameAtomSeparator) {
+		PkgNameAndAtomName := strings.Split(string(fcAtomName), glob.PkgNameAtomSeparator)
 		PkgName := PkgNameAndAtomName[0]
 		AtomName := PkgNameAndAtomName[1]
 		pkgPath, ok := e.PackageManager.PkgNamePkgPathPairs[PkgName]
