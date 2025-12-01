@@ -25,7 +25,7 @@ import (
 func GetBuiltinEnv() *env.Env {
 	curEnv := env.NewEnv(nil)
 	curEnv.Init()
-	executor := exe.NewExecutor(curEnv, exe.NewPackageManager())
+	executor := exe.NewExecutor(curEnv)
 	err := useHardcodedCodeToInit(executor)
 	if err != nil {
 		panic(err)
@@ -36,7 +36,7 @@ func GetBuiltinEnv() *env.Env {
 func InitPipelineExecutor() (*exe.Executor, error) {
 	curEnv := env.NewEnv(nil)
 	curEnv.Init()
-	executor := exe.NewExecutor(curEnv, exe.NewPackageManager())
+	executor := exe.NewExecutor(curEnv)
 	err := useHardcodedCodeToInit(executor)
 	executor.NewEnv(curEnv)
 	if err != nil {

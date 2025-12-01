@@ -55,7 +55,7 @@ func readFile(filePath string) string {
 
 func execStmtTest(topStmt []ast.Stmt) []string {
 	env := env.NewEnv(nil)
-	executor := NewExecutor(env, NewPackageManager())
+	executor := NewExecutor(env)
 
 	messages := []string{}
 

@@ -449,7 +449,7 @@ func (stmt *ProveInEachCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt, error
 	if err != nil {
 		return nil, err
 	}
-	newProofs := []StmtSlice{}
+	newProofs := StmtSliceSlice{}
 	for _, proof := range stmt.Proofs {
 		newProof, err := proof.Instantiate(uniMap)
 		if err != nil {
@@ -479,7 +479,7 @@ func (stmt *ProveCaseByCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt, error
 		newThenFacts = append(newThenFacts, newThenFact)
 	}
 
-	newProofs := []StmtSlice{}
+	newProofs := StmtSliceSlice{}
 	for _, proof := range stmt.Proofs {
 		newProof := StmtSlice{}
 		for _, stmt := range proof {
@@ -703,7 +703,7 @@ func (stmt *HaveFnCaseByCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt, erro
 	if err != nil {
 		return nil, err
 	}
-	newProofs := make([]StmtSlice, len(stmt.Proofs))
+	newProofs := make(StmtSliceSlice, len(stmt.Proofs))
 	for i, proof := range stmt.Proofs {
 		newProof, err := proof.Instantiate(uniMap)
 		if err != nil {
@@ -937,7 +937,7 @@ func (stmt *ByStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 }
 
 func (stmt *ProveAlgoReturnStmt) InstantiateProveAlgo(uniMap map[string]Obj) (ProveAlgoStmt, error) {
-	instFacts := []FactOrByStmt{}
+	instFacts := FactOrByStmtSlice{}
 	for _, factOrBy := range stmt.Facts {
 		instFactOrBy, err := factOrBy.Instantiate(uniMap)
 		if err != nil {

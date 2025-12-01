@@ -172,21 +172,22 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 }
 
 const (
-	KeySymbolColon        = ":"
-	KeySymbolLeftBrace    = "("
-	KeySymbolRightBrace   = ")"
-	KeySymbolComma        = ","
-	KeySymbolDollar       = "$"
-	KeySymbolEqual        = "="
-	KeySymbolSlash        = "/"
-	KeySymbolPlus         = "+"
-	KeySymbolMinus        = "-"
-	KeySymbolStar         = "*"
-	KeySymbolPower        = "^"
-	KeySymbolLess         = "<"
-	KeySymbolGreater      = ">"
-	KeySymbolDot          = "."
-	KeySymbolColonColon   = "::"
+	KeySymbolColon      = ":"
+	KeySymbolLeftBrace  = "("
+	KeySymbolRightBrace = ")"
+	KeySymbolComma      = ","
+	KeySymbolDollar     = "$"
+	KeySymbolEqual      = "="
+	KeySymbolSlash      = "/"
+	KeySymbolPlus       = "+"
+	KeySymbolMinus      = "-"
+	KeySymbolStar       = "*"
+	KeySymbolPower      = "^"
+	KeySymbolLess       = "<"
+	KeySymbolGreater    = ">"
+	KeySymbolDot        = "."
+	// PkgNameAtomSeparator is the separator between package name and atom name.
+	// For example, in "a.b", "a" is the package name and "b" is the atom name.
 	KeySymbolNotEqual     = "!=" // 在parse就立刻变成 not =，exec里没有对它的处理
 	KeySymbolDoubleQuote  = "\""
 	KeySymbolHash         = "#"
@@ -212,7 +213,6 @@ var SymbolSet map[string]struct{} = map[string]struct{}{
 	KeySymbolLargerEqual: {}, // ">="
 	KeySymbolLessEqual:   {}, // "<="
 	KeySymbolNotEqual:    {}, // "!="
-	KeySymbolColonColon:  {}, // "::"
 	// KeySymbolColonEqual:   {}, // ":="
 	KeySymbolPower:        {}, // "^"
 	KeySymbolColon:        {}, // ":"
@@ -373,3 +373,5 @@ var KeywordHelpMap = map[string]string{
 	KeywordExit:                   "exit current REPL session",
 	KeywordHelp:                   "show this help message",
 }
+
+const PkgNameAtomSeparator = KeySymbolDot

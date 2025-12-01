@@ -50,19 +50,19 @@ func (tb *tokenBlock) proveAlgoStmt() (ast.ProveAlgoStmt, error) {
 func (tb *tokenBlock) proveAlgoIfStmt() (*ast.ProveAlgoIfStmt, error) {
 	err := tb.header.skip(glob.KeywordIf)
 	if err != nil {
-		return nil, tbErr(err, tb)
+		return nil, parserErrAtTb(err, tb)
 	}
 
 	condition, err := tb.inlineFacts_checkUniDepth0([]string{glob.KeySymbolColon})
 	if err != nil {
-		return nil, tbErr(err, tb)
+		return nil, parserErrAtTb(err, tb)
 	}
 
 	thenFacts := []ast.ProveAlgoStmt{}
 	for _, bodyStmt := range tb.body {
 		stmt, err := bodyStmt.proveAlgoStmt()
 		if err != nil {
-			return nil, tbErr(err, tb)
+			return nil, parserErrAtTb(err, tb)
 		}
 		thenFacts = append(thenFacts, stmt)
 	}
@@ -73,19 +73,19 @@ func (tb *tokenBlock) proveAlgoIfStmt() (*ast.ProveAlgoIfStmt, error) {
 func (tb *tokenBlock) algoIfStmt() (*ast.AlgoIfStmt, error) {
 	err := tb.header.skip(glob.KeywordIf)
 	if err != nil {
-		return nil, tbErr(err, tb)
+		return nil, parserErrAtTb(err, tb)
 	}
 
 	condition, err := tb.inlineFacts_checkUniDepth0([]string{glob.KeySymbolColon})
 	if err != nil {
-		return nil, tbErr(err, tb)
+		return nil, parserErrAtTb(err, tb)
 	}
 
 	thenFacts := []ast.AlgoStmt{}
 	for _, bodyStmt := range tb.body {
 		stmt, err := bodyStmt.algoStmt()
 		if err != nil {
-			return nil, tbErr(err, tb)
+			return nil, parserErrAtTb(err, tb)
 		}
 		thenFacts = append(thenFacts, stmt)
 	}
@@ -96,12 +96,12 @@ func (tb *tokenBlock) algoIfStmt() (*ast.AlgoIfStmt, error) {
 func (tb *tokenBlock) algoReturnStmt() (*ast.AlgoReturnStmt, error) {
 	err := tb.header.skip(glob.KeywordReturn)
 	if err != nil {
-		return nil, tbErr(err, tb)
+		return nil, parserErrAtTb(err, tb)
 	}
 
 	obj, err := tb.RawObj()
 	if err != nil {
-		return nil, tbErr(err, tb)
+		return nil, parserErrAtTb(err, tb)
 	}
 
 	return ast.NewAlgoReturnStmt(obj, tb.line), nil
