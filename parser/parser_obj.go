@@ -73,14 +73,14 @@ func (tb *tokenBlock) rawAtomObjNotBeginWithNumber() (ast.AtomObj, error) {
 		return ast.AtomObj(""), err
 	}
 
-	// 只允许至多有一层::
-	if tb.header.is(glob.KeySymbolColonColon) {
-		tb.header.skip(glob.KeySymbolColonColon)
+	// 只允许至多有一层.
+	if tb.header.is(glob.KeySymbolDot) {
+		tb.header.skip(glob.KeySymbolDot)
 		rightValue, err := tb.header.next()
 		if err != nil {
 			return "", parserErrAtTb(err, tb)
 		}
-		return ast.AtomObj(fmt.Sprintf("%s%s%s", value, glob.KeySymbolColonColon, rightValue)), nil
+		return ast.AtomObj(fmt.Sprintf("%s%s%s", value, glob.KeySymbolDot, rightValue)), nil
 	} else {
 		return ast.AtomObj(value), nil
 	}

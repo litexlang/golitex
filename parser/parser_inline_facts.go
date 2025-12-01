@@ -19,7 +19,6 @@ import (
 	ast "golitex/ast"
 	glob "golitex/glob"
 	"slices"
-	"strings"
 )
 
 func (tb *tokenBlock) IsEnding(ends []string) bool {
@@ -635,8 +634,8 @@ func (tb *tokenBlock) inline_enum_intensional_fact_skip_terminator(left ast.Obj)
 	} else {
 		firstObjAsAtom := firstObj.(ast.AtomObj)
 		// 必须是纯的，不能是复合的
-		if strings.Contains(string(firstObjAsAtom), glob.KeySymbolColonColon) {
-			return nil, fmt.Errorf("the first item of enum must be pure, but got %s", firstObjAsAtom)
+		if glob.IsValidUseDefinedFcAtom(string(firstObjAsAtom)) != nil {
+			return nil, fmt.Errorf("the first item of enum must be an atom without package name, but got %s", firstObjAsAtom)
 		}
 
 		parentSet, err := tb.RawObj()

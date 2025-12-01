@@ -1931,7 +1931,7 @@ func (tb *tokenBlock) enumStmt_or_intensionalSetStmt_or_DomOf(obj ast.Obj) (ast.
 		if _, ok := leftmost.(ast.AtomObj); !ok {
 			return nil, fmt.Errorf("expect obj atom")
 		} else {
-			if leftmost.(ast.AtomObj).HasPkgName() {
+			if glob.IsValidUserDefinedNameWithoutPkgName(string(leftmost.(ast.AtomObj))) != nil {
 				return nil, fmt.Errorf("expect obj atom without pkg name")
 			}
 		}
