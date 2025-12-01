@@ -1,0 +1,6 @@
+have a R = 10
+have b R = 20 / 2
+have c R = (a + b) / 2
+have d R = (a + b + c) / 3
+
+a = b = c = d

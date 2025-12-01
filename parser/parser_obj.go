@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (tb *tokenBlock) RawObj() (ast.Obj, error) {
+func (tb *tokenBlock) Obj() (ast.Obj, error) {
 	expr, err := tb.objInfixExpr(glob.PrecLowest)
 	if err != nil {
 		return nil, err
@@ -53,7 +53,7 @@ func (tb *tokenBlock) atomObjAndFnObj() (ast.Obj, error) {
 			return expr, nil
 		}
 	} else {
-		objStr, err := tb.rawAtomObjNotBeginWithNumber()
+		objStr, err := tb.atomObjNotBeginWithNumber()
 		if err != nil {
 			return nil, parserErrAtTb(err, tb)
 		}
@@ -65,7 +65,7 @@ func (tb *tokenBlock) atomObjAndFnObj() (ast.Obj, error) {
 	}
 }
 
-func (tb *tokenBlock) rawAtomObjNotBeginWithNumber() (ast.AtomObj, error) {
+func (tb *tokenBlock) atomObjNotBeginWithNumber() (ast.AtomObj, error) {
 	// values := []string{}
 
 	value, err := tb.header.next()
@@ -262,7 +262,7 @@ func (tb *tokenBlock) bracedObjSlice() ([]ast.Obj, error) {
 
 	if !tb.header.is(glob.KeySymbolRightBrace) {
 		for {
-			obj, err := tb.RawObj()
+			obj, err := tb.Obj()
 			if err != nil {
 				return nil, parserErrAtTb(err, tb)
 			}
@@ -293,7 +293,7 @@ func (tb *tokenBlock) bracedExpr_orTuple() (ast.Obj, error) {
 	}
 
 	// Peek after first expression to check for comma
-	firstExpr, err := tb.RawObj()
+	firstExpr, err := tb.Obj()
 	if err != nil {
 		return nil, err
 	}
@@ -325,7 +325,7 @@ func (tb *tokenBlock) fnSet() (ast.Obj, error) {
 	fnSets := []ast.Obj{}
 	var retSet ast.Obj
 	for !(tb.header.is(glob.KeySymbolRightBrace)) {
-		fnSet, err := tb.RawObj()
+		fnSet, err := tb.Obj()
 		if err != nil {
 			return nil, parserErrAtTb(err, tb)
 		}
@@ -345,7 +345,7 @@ func (tb *tokenBlock) fnSet() (ast.Obj, error) {
 		return nil, parserErrAtTb(err, tb)
 	}
 
-	retSet, err = tb.RawObj()
+	retSet, err = tb.Obj()
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
 	}
@@ -361,7 +361,7 @@ func ParseSourceCodeGetObj(s string) (ast.Obj, error) {
 		return nil, err
 	}
 
-	obj, err := blocks[0].RawObj()
+	obj, err := blocks[0].Obj()
 	if err != nil {
 		return nil, err
 	}
