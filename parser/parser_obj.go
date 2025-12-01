@@ -266,31 +266,17 @@ func (tb *tokenBlock) bracedObjSlice() ([]ast.Obj, error) {
 	return params, nil
 }
 
-func (tb *tokenBlock) bracketedObjSlice() ([]ast.Obj, error) {
-	params := []ast.Obj{}
+func (tb *tokenBlock) bracketedObj() (ast.Obj, error) {
 	tb.header.skip(glob.KeySymbolLeftBracket)
 
-	if !tb.header.is(glob.KeySymbolRightBracket) {
-		for {
-			obj, err := tb.Obj()
-			if err != nil {
-				return nil, parserErrAtTb(err, tb)
-			}
-			params = append(params, obj)
-
-			done, err := tb.expectAndSkipCommaOr(glob.KeySymbolRightBracket)
-			if err != nil {
-				return nil, err
-			}
-			if done {
-				break
-			}
-		}
+	obj, err := tb.Obj()
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
 	}
 
 	tb.header.skip(glob.KeySymbolRightBracket)
 
-	return params, nil
+	return obj, nil
 }
 
 func (tb *tokenBlock) bracedObj() (ast.Obj, error) {
@@ -358,19 +344,19 @@ func (tb *tokenBlock) fnObjWithRepeatedBraceAndBracket(head ast.Obj) (ast.Obj, e
 	for !tb.header.ExceedEnd() {
 		if tb.header.is(glob.KeySymbolLeftBrace) {
 			// Parse function call arguments: ()
-			objParamsPtr, err := tb.bracedObjSlice()
+			objParams, err := tb.bracedObjSlice()
 			if err != nil {
 				return nil, parserErrAtTb(err, tb)
 			}
-			head = ast.NewFnObj(head, objParamsPtr)
+			head = ast.NewFnObj(head, objParams)
 		} else if tb.header.is(glob.KeySymbolLeftBracket) {
 			// Parse index operation: []
-			objParamsPtr, err := tb.bracketedObjSlice()
+			obj, err := tb.bracketedObj()
 			if err != nil {
 				return nil, parserErrAtTb(err, tb)
 			}
 			// IndexOpt is a prefix operator, so it's applied as IndexOpt(head, ...params)
-			head = ast.NewFnObj(ast.Atom(glob.IndexOpt), append([]ast.Obj{head}, objParamsPtr...))
+			head = ast.NewFnObj(ast.Atom(glob.IndexOpt), []ast.Obj{head, obj})
 		} else {
 			// No more braces or brackets
 			break
