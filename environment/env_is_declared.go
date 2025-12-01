@@ -18,9 +18,15 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
+	"strings"
 )
 
 func (e *Env) IsFcAtomDeclaredByUser(fcAtomName ast.AtomObj) bool {
+	// 如果 atom 里有 ::，那另外检查
+	if strings.Contains(string(fcAtomName), glob.KeySymbolColonColon) {
+		_ = strings.Split(string(fcAtomName), glob.KeySymbolColonColon)
+	}
+
 	for env := e; env != nil; env = env.Parent {
 		ok := env.isFcAtomDeclaredAtCurEnv(fcAtomName)
 		if ok {
