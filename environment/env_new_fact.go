@@ -102,7 +102,8 @@ func (env *Env) newFactNoPostProcess(stmt ast.FactStmt) glob.GlobRet {
 }
 
 func (env *Env) newLogicExprFact(fact *ast.OrStmt) glob.GlobRet {
-	return env.storeLogicFact(fact)
+	ret := env.KnownFactsStruct.SpecFactInLogicExprMem.newFact(fact)
+	return ret
 }
 
 func (env *Env) newSpecFact(fact *ast.SpecFactStmt) glob.GlobRet {
@@ -664,15 +665,6 @@ func (env *Env) storeSpecFactInMem(stmt *ast.SpecFactStmt) glob.GlobRet {
 	ret := env.KnownFactsStruct.SpecFactMem.newFact(stmt)
 	if ret.IsErr() {
 		return ret
-	}
-
-	return glob.TrueRet("")
-}
-
-func (env *Env) storeLogicFact(stmt *ast.OrStmt) glob.GlobRet {
-	ret := env.KnownFactsStruct.SpecFactInLogicExprMem.newFact(stmt)
-	if ret.IsErr() {
-		return glob.TrueRet("")
 	}
 
 	return glob.TrueRet("")

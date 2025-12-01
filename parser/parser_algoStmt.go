@@ -99,7 +99,7 @@ func (tb *tokenBlock) algoReturnStmt() (*ast.AlgoReturnStmt, error) {
 		return nil, parserErrAtTb(err, tb)
 	}
 
-	obj, err := tb.RawObj()
+	obj, err := tb.Obj()
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
 	}
