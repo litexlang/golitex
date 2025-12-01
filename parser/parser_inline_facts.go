@@ -166,7 +166,7 @@ func (tb *tokenBlock) inlineUniFact_Param_ParamSet_ParamInSetFacts() ([]string, 
 				continue
 			}
 
-			setParam, err := tb.RawObj()
+			setParam, err := tb.Obj()
 			if err != nil {
 				return nil, nil, err
 			}
@@ -487,7 +487,7 @@ func (tb *tokenBlock) parseSpecialPrefixFact() (ast.FactStmt, error) {
 // parseFactStartWithObj parses facts that start with a first-class citizen
 func (tb *tokenBlock) parseFactStartWithObj() (ast.FactStmt, error) {
 	// Parse the first obj
-	obj, err := tb.RawObj()
+	obj, err := tb.Obj()
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
 	}
@@ -519,7 +519,7 @@ func (tb *tokenBlock) parseFactStartWithObj() (ast.FactStmt, error) {
 
 // parseFunctionPropertyFact parses facts like "x $prop y" or "x $prop"
 func (tb *tokenBlock) parseFunctionPropertyFact(leftObj ast.Obj) (ast.FactStmt, error) {
-	propName, err := tb.rawAtomObjNotBeginWithNumber()
+	propName, err := tb.atomObjNotBeginWithNumber()
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
 	}
@@ -527,7 +527,7 @@ func (tb *tokenBlock) parseFunctionPropertyFact(leftObj ast.Obj) (ast.FactStmt, 
 	// Determine parameters: one or two
 	params := []ast.Obj{leftObj}
 	if !tb.header.ExceedEnd() {
-		rightObj, err := tb.RawObj()
+		rightObj, err := tb.Obj()
 		if err != nil {
 			return nil, parserErrAtTb(err, tb)
 		}
@@ -544,7 +544,7 @@ func (tb *tokenBlock) parseInfixRelationalFact(leftObj ast.Obj, operator string)
 		return nil, fmt.Errorf("expect relation prop, got: %s", operator)
 	}
 
-	rightObj, err := tb.RawObj()
+	rightObj, err := tb.Obj()
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
 	}
@@ -601,7 +601,7 @@ func (tb *tokenBlock) inline_enum_intensional_fact_skip_terminator(left ast.Obj)
 		return nil, parserErrAtTb(err, tb)
 	}
 
-	firstObj, err := tb.RawObj()
+	firstObj, err := tb.Obj()
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
 	}
@@ -615,7 +615,7 @@ func (tb *tokenBlock) inline_enum_intensional_fact_skip_terminator(left ast.Obj)
 
 		enumItems := []ast.Obj{firstObj}
 		for !tb.header.is(glob.KeySymbolRightCurly) {
-			obj, err := tb.RawObj()
+			obj, err := tb.Obj()
 			if err != nil {
 				return nil, parserErrAtTb(err, tb)
 			}
@@ -638,7 +638,7 @@ func (tb *tokenBlock) inline_enum_intensional_fact_skip_terminator(left ast.Obj)
 			return nil, fmt.Errorf("the first item of enum must be an atom without package name, but got %s", firstObjAsAtom)
 		}
 
-		parentSet, err := tb.RawObj()
+		parentSet, err := tb.Obj()
 		if err != nil {
 			return nil, parserErrAtTb(err, tb)
 		}
