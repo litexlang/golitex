@@ -69,7 +69,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 	uniMap := map[string]ast.Obj{}
 	ExistParamsAtoms := []ast.Obj{}
 	for i, param := range existPropDef.ExistParams {
-		paramAsAtom := ast.AtomObj(stmt.ObjNames[i])
+		paramAsAtom := ast.Atom(stmt.ObjNames[i])
 		uniMap[param] = paramAsAtom
 		ExistParamsAtoms = append(ExistParamsAtoms, paramAsAtom)
 	}
@@ -130,7 +130,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 	// 相关的 exist st 事实也成立
 	existStFactParams := ast.MakeExistFactParamsSlice(ExistParamsAtoms, stmt.Fact.Params)
 
-	newExistStFact := ast.NewSpecFactStmt(ast.TrueExist_St, ast.AtomObj(string(stmt.Fact.PropName)), existStFactParams, stmt.Line)
+	newExistStFact := ast.NewSpecFactStmt(ast.TrueExist_St, ast.Atom(string(stmt.Fact.PropName)), existStFactParams, stmt.Line)
 	ret := exec.Env.NewFact(newExistStFact)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
@@ -146,7 +146,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 
 func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStmt) ExecRet {
 	for i := range len(stmt.Objs) {
-		existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeywordItemExistsIn), []ast.Obj{stmt.ObjSets[i]}, stmt.Line)
+		existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordItemExistsIn), []ast.Obj{stmt.ObjSets[i]}, stmt.Line)
 		haveStmt := ast.NewHaveStmt([]string{stmt.Objs[i]}, existInFact, stmt.Line)
 		execState := exec.haveObjStStmt(haveStmt, false)
 		if execState.IsNotTrue() {
@@ -162,15 +162,15 @@ func (exec *Executor) checkInFactInSet_SetIsNonEmpty(pureInFact *ast.SpecFactStm
 		return true, nil
 	}
 
-	isFiniteSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeywordIn), []ast.Obj{pureInFact.Params[0], ast.AtomObj(glob.KeywordFiniteSet)}, pureInFact.Line)
+	isFiniteSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{pureInFact.Params[0], ast.Atom(glob.KeywordFiniteSet)}, pureInFact.Line)
 	execRet := exec.Verify(isFiniteSetFact, false)
 	if execRet.IsNotTrue() {
 		return false, fmt.Errorf(execRet.String())
 	}
 	if execRet.IsTrue() {
 		// 如果 len > 0 那就是可以
-		lenOverStmtName := ast.NewFnObj(ast.AtomObj(glob.KeywordCount), []ast.Obj{pureInFact.Params[0]})
-		largerThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeySymbolGreater), []ast.Obj{lenOverStmtName, ast.AtomObj("0")}, pureInFact.Line)
+		lenOverStmtName := ast.NewFnObj(ast.Atom(glob.KeywordCount), []ast.Obj{pureInFact.Params[0]})
+		largerThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{lenOverStmtName, ast.Atom("0")}, pureInFact.Line)
 		execRet := exec.Verify(largerThanZeroFact, false)
 		if execRet.IsNotTrue() {
 			return false, fmt.Errorf(execRet.String())
@@ -190,7 +190,7 @@ func (exec *Executor) haveEnumSetStmt(stmt *ast.HaveEnumSetStmt) ExecRet {
 	// 验证里面的各个元素不相等
 	for i := range len(enumFact.Items) {
 		for j := i + 1; j < len(enumFact.Items); j++ {
-			notEqualFact := ast.NewSpecFactStmt(ast.FalsePure, ast.AtomObj(glob.KeySymbolEqual), []ast.Obj{enumFact.Items[i], enumFact.Items[j]}, stmt.Line)
+			notEqualFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{enumFact.Items[i], enumFact.Items[j]}, stmt.Line)
 			execRet := exec.Verify(notEqualFact, false)
 			if execRet.IsNotTrue() {
 				return NewExecErr(execRet.String())
@@ -199,7 +199,7 @@ func (exec *Executor) haveEnumSetStmt(stmt *ast.HaveEnumSetStmt) ExecRet {
 	}
 
 	// 定义这个新的集合
-	defObjStmt := ast.NewDefLetStmt([]string{enumFact.CurSet.String()}, []ast.Obj{ast.AtomObj(glob.KeywordSet)}, []ast.FactStmt{enumFact}, stmt.Line)
+	defObjStmt := ast.NewDefLetStmt([]string{enumFact.CurSet.String()}, []ast.Obj{ast.Atom(glob.KeywordSet)}, []ast.FactStmt{enumFact}, stmt.Line)
 	execState := exec.defLetStmt(defObjStmt)
 	if execState.IsNotTrue() {
 		return execState
@@ -213,15 +213,15 @@ func (exec *Executor) haveIntensionalSetStmt(stmt *ast.HaveIntensionalSetStmt) E
 	intensionalSetFact := stmt.Fact
 
 	// very important: check whether the parent set is a set
-	state := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeywordIn), []ast.Obj{intensionalSetFact.ParentSet, ast.AtomObj(glob.KeywordSet)}, stmt.Line))
+	state := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{intensionalSetFact.ParentSet, ast.Atom(glob.KeywordSet)}, stmt.Line))
 	if state.IsErr() {
 		return NewExecErr(state.String())
 	}
 	if state.IsUnknown() {
-		return NewExecErr("parent set of intensional set must be a set, i.e. `" + intensionalSetFact.ParentSet.String() + " in " + ast.AtomObj(glob.KeywordSet).String() + "` is true, but `" + intensionalSetFact.ParentSet.String() + " in " + ast.AtomObj(glob.KeywordSet).String() + "` is not")
+		return NewExecErr("parent set of intensional set must be a set, i.e. `" + intensionalSetFact.ParentSet.String() + " in " + ast.Atom(glob.KeywordSet).String() + "` is true, but `" + intensionalSetFact.ParentSet.String() + " in " + ast.Atom(glob.KeywordSet).String() + "` is not")
 	}
 
-	defObjStmt := ast.NewDefLetStmt([]string{intensionalSetFact.CurSet.String()}, []ast.Obj{ast.AtomObj(glob.KeywordSet)}, []ast.FactStmt{intensionalSetFact}, stmt.Line)
+	defObjStmt := ast.NewDefLetStmt([]string{intensionalSetFact.CurSet.String()}, []ast.Obj{ast.Atom(glob.KeywordSet)}, []ast.FactStmt{intensionalSetFact}, stmt.Line)
 	execState := exec.defLetStmt(defObjStmt)
 	if execState.IsNotTrue() {
 		return execState
@@ -233,17 +233,17 @@ func (exec *Executor) haveIntensionalSetStmt(stmt *ast.HaveIntensionalSetStmt) E
 func (exec *Executor) haveCartSetStmt(stmt *ast.HaveCartSetStmt) ExecRet {
 	// Check that each parameter of cart is a set
 	for i, param := range stmt.CartObj.Params {
-		state := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeywordIn), []ast.Obj{param, ast.AtomObj(glob.KeywordSet)}, stmt.Line))
+		state := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{param, ast.Atom(glob.KeywordSet)}, stmt.Line))
 		if state.IsErr() {
 			return NewExecErr(state.String())
 		}
 		if state.IsUnknown() {
-			return NewExecErr(fmt.Sprintf("cart parameter %d (%s) must be a set, i.e. `%s in %s` must be true, but it is unknown", i+1, param.String(), param.String(), ast.AtomObj(glob.KeywordSet).String()))
+			return NewExecErr(fmt.Sprintf("cart parameter %d (%s) must be a set, i.e. `%s in %s` must be true, but it is unknown", i+1, param.String(), param.String(), ast.Atom(glob.KeywordSet).String()))
 		}
 	}
 
 	// Define the new set variable
-	defObjStmt := ast.NewDefLetStmt([]string{stmt.Name}, []ast.Obj{ast.AtomObj(glob.KeywordSet)}, []ast.FactStmt{}, stmt.Line)
+	defObjStmt := ast.NewDefLetStmt([]string{stmt.Name}, []ast.Obj{ast.Atom(glob.KeywordSet)}, []ast.FactStmt{}, stmt.Line)
 	execState := exec.defLetStmt(defObjStmt)
 	if execState.IsNotTrue() {
 		return execState
@@ -251,7 +251,7 @@ func (exec *Executor) haveCartSetStmt(stmt *ast.HaveCartSetStmt) ExecRet {
 
 	// Store the equal fact: x = cart(a, b, c, ...)
 	cartObj := &stmt.CartObj
-	equalFact := ast.NewEqualFact(ast.AtomObj(stmt.Name), cartObj)
+	equalFact := ast.NewEqualFact(ast.Atom(stmt.Name), cartObj)
 	ret := exec.Env.NewFact(equalFact)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())

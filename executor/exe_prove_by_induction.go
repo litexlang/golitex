@@ -110,7 +110,7 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) ExecR
 }
 
 func proveByInduction_Fact_Start_is_NPos(stmt *ast.ProveByInductionStmt) *ast.SpecFactStmt {
-	startIsNPos := ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeywordIn), []ast.Obj{stmt.Start, ast.AtomObj(glob.KeywordNPos)}, stmt.Line)
+	startIsNPos := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.Start, ast.Atom(glob.KeywordNPos)}, stmt.Line)
 	return startIsNPos
 }
 
@@ -120,10 +120,10 @@ func proveByInduction_newStartFact(stmt *ast.ProveByInductionStmt) (ast.FactStmt
 }
 
 func proveByInduction_newUniFact_n_true_leads_n_plus_1_true(stmt *ast.ProveByInductionStmt) (ast.FactStmt, error) {
-	uniMap := map[string]ast.Obj{stmt.Param: ast.NewFnObj(ast.AtomObj(glob.KeySymbolPlus), []ast.Obj{ast.AtomObj(stmt.Param), ast.AtomObj("1")})}
+	uniMap := map[string]ast.Obj{stmt.Param: ast.NewFnObj(ast.Atom(glob.KeySymbolPlus), []ast.Obj{ast.Atom(stmt.Param), ast.Atom("1")})}
 
 	retUniFactDom := []ast.FactStmt{
-		ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeySymbolLargerEqual), []ast.Obj{ast.AtomObj(stmt.Param), stmt.Start}, stmt.Line),
+		ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{ast.Atom(stmt.Param), stmt.Start}, stmt.Line),
 		stmt.Fact,
 	}
 
@@ -132,13 +132,13 @@ func proveByInduction_newUniFact_n_true_leads_n_plus_1_true(stmt *ast.ProveByInd
 		return nil, err
 	}
 
-	return ast.NewUniFact([]string{stmt.Param}, []ast.Obj{ast.AtomObj(glob.KeywordNPos)}, retUniFactDom, []ast.FactStmt{retUniFactThen}, stmt.Line), nil
+	return ast.NewUniFact([]string{stmt.Param}, []ast.Obj{ast.Atom(glob.KeywordNPos)}, retUniFactDom, []ast.FactStmt{retUniFactThen}, stmt.Line), nil
 }
 
 func proveByInduction_newUniFact_forall_param_geq_start_then_fact_is_true(stmt *ast.ProveByInductionStmt) ast.FactStmt {
-	if asAtom, ok := stmt.Start.(ast.AtomObj); ok && string(asAtom) == "1" {
-		return ast.NewUniFact([]string{stmt.Param}, []ast.Obj{ast.AtomObj(glob.KeywordNPos)}, []ast.FactStmt{}, []ast.FactStmt{stmt.Fact}, stmt.Line)
+	if asAtom, ok := stmt.Start.(ast.Atom); ok && string(asAtom) == "1" {
+		return ast.NewUniFact([]string{stmt.Param}, []ast.Obj{ast.Atom(glob.KeywordNPos)}, []ast.FactStmt{}, []ast.FactStmt{stmt.Fact}, stmt.Line)
 	}
 
-	return ast.NewUniFact([]string{stmt.Param}, []ast.Obj{ast.AtomObj(glob.KeywordNPos)}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeySymbolLargerEqual), []ast.Obj{ast.AtomObj(stmt.Param), stmt.Start}, stmt.Line)}, []ast.FactStmt{stmt.Fact}, stmt.Line)
+	return ast.NewUniFact([]string{stmt.Param}, []ast.Obj{ast.Atom(glob.KeywordNPos)}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{ast.Atom(stmt.Param), stmt.Start}, stmt.Line)}, []ast.FactStmt{stmt.Fact}, stmt.Line)
 }

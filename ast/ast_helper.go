@@ -23,7 +23,7 @@ import (
 )
 
 func EqualFact(left, right Obj) *SpecFactStmt {
-	return NewSpecFactStmt(TruePure, AtomObj(glob.KeySymbolEqual), []Obj{left, right}, glob.InnerGenLine)
+	return NewSpecFactStmt(TruePure, Atom(glob.KeySymbolEqual), []Obj{left, right}, glob.InnerGenLine)
 }
 
 func (stmt *UniFactStmt) ParamInParamSetFacts(uniConMap map[string]Obj) []*SpecFactStmt {
@@ -79,7 +79,7 @@ func ReverseSliceOfReversibleFacts(facts []Spec_OrFact) []Spec_OrFact {
 }
 
 func NewEqualFact(left, right Obj) *SpecFactStmt {
-	return NewSpecFactStmt(TruePure, AtomObj(glob.KeySymbolEqual), []Obj{left, right}, glob.InnerGenLine)
+	return NewSpecFactStmt(TruePure, Atom(glob.KeySymbolEqual), []Obj{left, right}, glob.InnerGenLine)
 }
 
 func IsFn_WithHeadName(obj Obj, headName string) bool {
@@ -88,7 +88,7 @@ func IsFn_WithHeadName(obj Obj, headName string) bool {
 		return false
 	}
 
-	headAtom, ok := fnObj.FnHead.(AtomObj)
+	headAtom, ok := fnObj.FnHead.(Atom)
 	if !ok {
 		return false
 	}
@@ -102,7 +102,7 @@ func IsFn_WithHeadNameInSlice(obj Obj, headNames map[string]struct{}) bool {
 		return false
 	}
 
-	headAtom, ok := fnObj.FnHead.(AtomObj)
+	headAtom, ok := fnObj.FnHead.(Atom)
 	if !ok {
 		return false
 	}
@@ -126,7 +126,7 @@ func (defHeader *DefHeader) GetInstantiatedParamInParamSetFact(uniMap map[string
 func (stmt *UniFactStmt) ParamInParamSet() []*SpecFactStmt {
 	paramSetFacts := make([]*SpecFactStmt, len(stmt.Params))
 	for i, param := range stmt.Params {
-		paramSetFacts[i] = NewInFactWithParamFc(AtomObj(param), stmt.ParamSets[i])
+		paramSetFacts[i] = NewInFactWithParamFc(Atom(param), stmt.ParamSets[i])
 	}
 	return paramSetFacts
 }
@@ -156,14 +156,14 @@ func (stmt *ClaimPropStmt) ToProp() *DefPropStmt {
 func (strSlice StrSlice) ToFcSlice() []Obj {
 	ret := make([]Obj, len(strSlice))
 	for i, str := range strSlice {
-		ret[i] = AtomObj(str)
+		ret[i] = Atom(str)
 	}
 	return ret
 }
 
 func (head DefHeader) ToSpecFact() *SpecFactStmt {
 	params := head.Params.ToFcSlice()
-	return NewSpecFactStmt(TruePure, AtomObj(head.Name), params, glob.InnerGenLine)
+	return NewSpecFactStmt(TruePure, Atom(head.Name), params, glob.InnerGenLine)
 }
 
 func (stmt *DefPropStmt) ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue() *UniFactStmt {
@@ -172,7 +172,7 @@ func (stmt *DefPropStmt) ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue() *
 
 func (stmt *DefExistPropStmt) ToProp() *SpecFactStmt {
 	params := stmt.DefBody.DefHeader.Params.ToFcSlice()
-	return NewSpecFactStmt(TruePure, AtomObj(stmt.DefBody.DefHeader.Name), params, glob.InnerGenLine)
+	return NewSpecFactStmt(TruePure, Atom(stmt.DefBody.DefHeader.Name), params, glob.InnerGenLine)
 }
 
 func (stmt *DefExistPropStmt) ToForallParamsSatisfyDomFacts_Then_ExistFactIsTrue() *UniFactStmt {
@@ -183,8 +183,8 @@ func (stmt *NamedUniFactStmt) ToUniFact() *UniFactStmt {
 	return NewUniFact(stmt.DefPropStmt.DefHeader.Params, stmt.DefPropStmt.DefHeader.ParamSets, stmt.DefPropStmt.IffFacts, stmt.DefPropStmt.ThenFacts, glob.InnerGenLine)
 }
 
-func (fcFn *FnObj) IsFcFn_HasAtomHead_ReturnHead() (AtomObj, bool) {
-	head, ok := fcFn.FnHead.(AtomObj)
+func (fcFn *FnObj) IsFcFn_HasAtomHead_ReturnHead() (Atom, bool) {
+	head, ok := fcFn.FnHead.(Atom)
 	if !ok {
 		return "", false
 	}
@@ -226,7 +226,7 @@ func (stmt *FnTemplateDefStmt) Instantiate_GetFnTemplateNoName(fnObj *FnObj) (*F
 }
 
 func (fcFn *FnObj) HasHeadInSlice(headNames []string) bool {
-	headAtom, ok := fcFn.FnHead.(AtomObj)
+	headAtom, ok := fcFn.FnHead.(Atom)
 	if !ok {
 		return false
 	}
@@ -267,7 +267,7 @@ func GetFnHeadChain_AndItSelf(obj Obj) ([]Obj, [][]Obj) {
 		left, right := GetFnHeadChain_AndItSelf(asObj.FnHead)
 		// return append(GetFnHeadChain_AndItSelf(obj.(*FnObj).FnHead), obj)
 		return append(left, obj), append(right, append([]Obj{}, asObj.Params...))
-	case AtomObj:
+	case Atom:
 		return []Obj{obj}, [][]Obj{nil}
 	default:
 		panic("expected FnObj or AtomObj, but got " + obj.String())
@@ -330,7 +330,7 @@ func UnknownFactMsg(fact FactStmt) string {
 }
 
 func ToInt(obj Obj) (int, bool) {
-	atomObj, ok := obj.(AtomObj)
+	atomObj, ok := obj.(Atom)
 	if !ok {
 		return 0, false
 	}
@@ -385,7 +385,7 @@ func SimplifyDimCart(fc *FnObj) (Obj, bool) {
 		if len(fc.Params) == 1 && IsFn_WithHeadName(fc.Params[0], glob.KeywordCart) {
 			cartObj := fc.Params[0].(*FnObj)
 			dimValue := len(cartObj.Params)
-			return AtomObj(fmt.Sprintf("%d", dimValue)), true
+			return Atom(fmt.Sprintf("%d", dimValue)), true
 		}
 	}
 	return nil, false

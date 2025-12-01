@@ -55,7 +55,7 @@ func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state 
 }
 
 func (ver *Verifier) objSatisfyFnRequirement(obj ast.Obj, state *VerState) ExecRet {
-	if _, ok := obj.(ast.AtomObj); ok {
+	if _, ok := obj.(ast.Atom); ok {
 		return NewExecTrue("")
 	}
 	objAsFnObj, ok := obj.(*ast.FnObj)
@@ -103,7 +103,7 @@ func (ver *Verifier) countFnRequirement(fnObj *ast.FnObj, state *VerState) ExecR
 		return NewExecErr(fmt.Sprintf("parameters in %s must be 1, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
 	}
 
-	verRet := ver.VerFactStmt(ast.NewInFactWithFc(fnObj.Params[0], ast.AtomObj(glob.KeywordFiniteSet)), state)
+	verRet := ver.VerFactStmt(ast.NewInFactWithFc(fnObj.Params[0], ast.Atom(glob.KeywordFiniteSet)), state)
 	if verRet.IsErr() {
 		return NewExecErr(verRet.String())
 	}
@@ -116,7 +116,7 @@ func (ver *Verifier) countFnRequirement(fnObj *ast.FnObj, state *VerState) ExecR
 func (ver *Verifier) cartFnRequirement(fnObj *ast.FnObj, state *VerState) ExecRet {
 	// 验证所有的参数都是集合
 	for _, param := range fnObj.Params {
-		verRet := ver.VerFactStmt(ast.NewInFactWithFc(param, ast.AtomObj(glob.KeywordSet)), state)
+		verRet := ver.VerFactStmt(ast.NewInFactWithFc(param, ast.Atom(glob.KeywordSet)), state)
 		if verRet.IsErr() {
 			return NewExecErr(verRet.String())
 		}
