@@ -29,7 +29,7 @@ func (tb *tokenBlock) expectAndSkipCommaOr(endToken string) (bool, error) {
 		return false, nil
 	}
 	if !tb.header.is(endToken) {
-		return false, tbErr(fmt.Errorf("expected '%s' but got '%s'", endToken, tb.header.strAtCurIndexPlus(0)), tb)
+		return false, parserErrAtTb(fmt.Errorf("expected '%s' but got '%s'", endToken, tb.header.strAtCurIndexPlus(0)), tb)
 	}
 	return true, nil
 }

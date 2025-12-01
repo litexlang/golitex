@@ -68,11 +68,11 @@ func NewUniFactWithIff(uniFact *UniFactStmt, iffFacts []FactStmt, line uint) *Un
 	return &UniFactWithIffStmt{uniFact, iffFacts, line}
 }
 
-func NewProveInEachCaseStmt(orFact *OrStmt, thenFacts []FactStmt, proofs []StmtSlice, line uint) *ProveInEachCaseStmt {
+func NewProveInEachCaseStmt(orFact *OrStmt, thenFacts []FactStmt, proofs StmtSliceSlice, line uint) *ProveInEachCaseStmt {
 	return &ProveInEachCaseStmt{orFact, thenFacts, proofs, line}
 }
 
-func NewProveCaseByCaseStmt(caseFacts []*SpecFactStmt, thenFacts []FactStmt, proofs []StmtSlice, line uint) *ProveCaseByCaseStmt {
+func NewProveCaseByCaseStmt(caseFacts []*SpecFactStmt, thenFacts []FactStmt, proofs StmtSliceSlice, line uint) *ProveCaseByCaseStmt {
 	return &ProveCaseByCaseStmt{caseFacts, thenFacts, proofs, line}
 }
 
@@ -228,7 +228,7 @@ func NewProveIsCommutativePropStmt(specFact *SpecFactStmt, proofs []Stmt, proofs
 	return &ProveIsCommutativePropStmt{specFact, proofs, proofsRightToLeft, line}
 }
 
-func NewAlgoDefStmt(funcName string, params []string, stmts AlgoStmtSlice, line uint) *DefAlgoStmt {
+func NewAlgoDefStmt(funcName string, params StrSlice, stmts AlgoStmtSlice, line uint) *DefAlgoStmt {
 	return &DefAlgoStmt{funcName, params, stmts, line}
 }
 
@@ -316,7 +316,7 @@ func NewByStmt(proveAlgoName string, proveAlgoParams ObjSlice, line uint) *ByStm
 	return &ByStmt{ProveAlgoName: proveAlgoName, Params: proveAlgoParams, Line: line}
 }
 
-func NewProveAlgoReturnStmt(facts []FactOrByStmt, line uint) *ProveAlgoReturnStmt {
+func NewProveAlgoReturnStmt(facts FactOrByStmtSlice, line uint) *ProveAlgoReturnStmt {
 	return &ProveAlgoReturnStmt{Facts: facts, Line: line}
 }
 
@@ -328,7 +328,7 @@ func NewHelpStmt(keyword string, line uint) *HelpStmt {
 	return &HelpStmt{keyword, line}
 }
 
-func NewHaveFnCaseByCaseStmt(defFnStmt *DefFnStmt, caseByCaseFacts SpecFactPtrSlice, proofs []StmtSlice, haveObjSatisfyFn []Obj, line uint) *HaveFnCaseByCaseStmt {
+func NewHaveFnCaseByCaseStmt(defFnStmt *DefFnStmt, caseByCaseFacts SpecFactPtrSlice, proofs StmtSliceSlice, haveObjSatisfyFn ObjSlice, line uint) *HaveFnCaseByCaseStmt {
 	return &HaveFnCaseByCaseStmt{defFnStmt, caseByCaseFacts, proofs, haveObjSatisfyFn, line}
 }
 
