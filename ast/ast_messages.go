@@ -429,9 +429,46 @@ func (f Atom) String() string {
 	return string(f)
 }
 
+func IsTupleObj(f *FnObj) bool {
+	return f.FnHead.String() == glob.TupleOpt
+}
+
+func TupleObjString(f *FnObj) string {
+	var builder strings.Builder
+	builder.WriteString("(")
+	paramStrSlice := make([]string, len(f.Params))
+	for i := range len(f.Params) {
+		paramStrSlice[i] = f.Params[i].String()
+	}
+	builder.WriteString(strings.Join(paramStrSlice, ", "))
+	builder.WriteString(")")
+	return builder.String()
+}
+
+func IndexOptObjString(f *FnObj) string {
+	var builder strings.Builder
+	builder.WriteString(f.Params[0].String())
+	builder.WriteString("[")
+	builder.WriteString(f.Params[1].String())
+	builder.WriteString("]")
+	return builder.String()
+}
+
+func IsIndexOptObj(f *FnObj) bool {
+	return f.FnHead.String() == glob.IndexOpt
+}
+
 func (f *FnObj) String() string {
 	if IsFnSet(f) {
 		return fnSetString(f)
+	}
+
+	if IsTupleObj(f) {
+		return TupleObjString(f)
+	}
+
+	if IsIndexOptObj(f) {
+		return IndexOptObjString(f)
 	}
 
 	// if IsAtomObjAndEqualToStr(f.FnHead, glob.KeySymbolDot) {

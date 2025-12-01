@@ -73,6 +73,13 @@ func (ver *Verifier) objSatisfyFnRequirement(obj ast.Obj, state *VerState) ExecR
 		return NewExecTrue("")
 	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordCart) {
 		return ver.cartFnRequirement(objAsFnObj, state)
+	} else if ast.IsTupleObj(objAsFnObj) {
+		for _, param := range objAsFnObj.Params {
+			if !ObjIsNotSet(param) {
+				return NewExecErr(fmt.Sprintf("parameters in %s must not be set", objAsFnObj.String()))
+			}
+		}
+		return NewExecTrue("")
 	} else {
 		if objAsFnObj.FnHead.String() == glob.KeywordProj {
 			return ver.parasSatisfyFnReq(objAsFnObj, state)
