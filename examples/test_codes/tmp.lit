@@ -1,5 +1,0 @@
-import "~/litex/core_packages/core_try/main.lit"
-core_try_try = 1
-
-import "~/litex/user_packages/user_try/main.lit"
-user_try_try = 1

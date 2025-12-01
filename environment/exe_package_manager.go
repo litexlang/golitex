@@ -12,25 +12,24 @@
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
-package litex_executor
+package litex_env
 
 import (
 	"fmt"
 	ast "golitex/ast"
-	env "golitex/environment"
 )
 
 type PackageManager struct {
-	PkgPathEnvPairs     map[string]*env.Env
+	PkgPathEnvPairs     map[string]*Env
 	PkgNamePkgPathPairs map[string]string
 }
 
 // 为了确保实现上的简单性，不允许用重复的asPkgName
-func (pkgMgr *PackageManager) MergeGivenExecPkgMgr(importDirStmt *ast.ImportDirStmt, curExec *Executor) error {
+func (pkgMgr *PackageManager) MergeGivenExecPkgMgr(importDirStmt *ast.ImportDirStmt, curEnv *Env) error {
 	if _, ok := pkgMgr.PkgPathEnvPairs[importDirStmt.Path]; ok {
 		return fmt.Errorf("package already exists: %s", importDirStmt.Path)
 	}
-	pkgMgr.PkgPathEnvPairs[importDirStmt.Path] = curExec.Env
+	pkgMgr.PkgPathEnvPairs[importDirStmt.Path] = curEnv
 
 	if _, ok := pkgMgr.PkgNamePkgPathPairs[importDirStmt.AsPkgName]; ok {
 		return fmt.Errorf("package name already exists: %s", importDirStmt.AsPkgName)
@@ -38,19 +37,19 @@ func (pkgMgr *PackageManager) MergeGivenExecPkgMgr(importDirStmt *ast.ImportDirS
 	pkgMgr.PkgNamePkgPathPairs[importDirStmt.AsPkgName] = importDirStmt.Path
 
 	// 把 curExec 的 pkgMgr 合并到现在的 pkgMgr 中
-	for pkgPath, pkgEnv := range curExec.PkgMgr.PkgPathEnvPairs {
+	for pkgPath, pkgEnv := range curEnv.PackageManager.PkgPathEnvPairs {
 		if _, ok := pkgMgr.PkgPathEnvPairs[pkgPath]; ok {
 			continue
 		}
 		pkgMgr.PkgPathEnvPairs[pkgPath] = pkgEnv
 	}
-	for pkgName, pkgPath := range curExec.PkgMgr.PkgNamePkgPathPairs {
+	for pkgName, pkgPath := range curEnv.PackageManager.PkgNamePkgPathPairs {
 		if path, ok := pkgMgr.PkgNamePkgPathPairs[pkgName]; ok {
 			if path != pkgPath {
 				return fmt.Errorf("package name %s refer to package %s, and package %s", pkgName, pkgPath, path)
 			}
 		}
-		curExec.PkgMgr.PkgNamePkgPathPairs[pkgName] = pkgPath
+		curEnv.PackageManager.PkgNamePkgPathPairs[pkgName] = pkgPath
 	}
 
 	return nil
@@ -58,7 +57,7 @@ func (pkgMgr *PackageManager) MergeGivenExecPkgMgr(importDirStmt *ast.ImportDirS
 
 func NewPackageManager() *PackageManager {
 	return &PackageManager{
-		PkgPathEnvPairs:     make(map[string]*env.Env),
+		PkgPathEnvPairs:     make(map[string]*Env),
 		PkgNamePkgPathPairs: make(map[string]string),
 	}
 }
