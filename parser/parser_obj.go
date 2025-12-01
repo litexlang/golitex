@@ -53,7 +53,7 @@ func (tb *tokenBlock) atomObjAndFnObj() (ast.Obj, error) {
 			return expr, nil
 		}
 	} else {
-		objStr, err := tb.rawAtomObj()
+		objStr, err := tb.rawAtomObjNotBeginWithNumber()
 		if err != nil {
 			return nil, parserErrAtTb(err, tb)
 		}
@@ -65,7 +65,7 @@ func (tb *tokenBlock) atomObjAndFnObj() (ast.Obj, error) {
 	}
 }
 
-func (tb *tokenBlock) rawAtomObj() (ast.AtomObj, error) {
+func (tb *tokenBlock) rawAtomObjNotBeginWithNumber() (ast.AtomObj, error) {
 	// values := []string{}
 
 	value, err := tb.header.next()

@@ -30,10 +30,10 @@ _– Leonardo da Vinci_
 
 [Litex](https://litexlang.com) (beta-version, not ready for production use) is a simple open-source computer language for mathematical proofs. It expresses mathematics as code while staying as close to natural language as possible, making it both rigorous and accessible. ([Star the repo!](https://github.com/litexlang/golitex)) With just one to two hours of learning the fundamentals, you can write code that solve interesting mathematical problems with verified correctness. 
 
-How does Litex work? It achieves its simplicity by imitating how people reason and how mathematics works. *Litex uses a set of axioms (i.e. ZFC axioms and basic logic) and inference rules that are sufficiently expressive to capture most mathematical concepts, while being intuitive enough that most people can learn them quickly.* Its close-to-natural syntax means users often forget they're using a formal language, lowering the barrier of formal reasoning by 10x compared with traditional formal languages, making it accessible even for 10-year-old beginners in mathematical proof and verification.
+How does Litex work? It achieves its simplicity by imitating how people reason and how mathematics works. *Litex uses a set of axioms (i.e. ZFC axioms and basic logic) and inference rules that are sufficiently expressive to capture most mathematical concepts.* Its close-to-natural-language syntax means users often forget they're using a formal language, lowering the barrier of formal reasoning by 10x compared with traditional formal languages. We want to make Litex accessible even for 10-year-old beginners in mathematical proof and verification!
 
 
-Read [Tutorial](https://litexlang.com/doc/Tutorial/Introduction), [Math Principles](https://litexlang.com/doc/Tutorial/Litex_From_A_Mathematical_Perspective), [How Litex Works](https://litexlang.com/doc/How_Litex_Works/Introduction) for more details. [Hugging Face Dataset](https://huggingface.co/litexlang) is on Hugging Face.
+[Official Documentation](https://litexlang.com) is our website. Read [Tutorial](https://litexlang.com/doc/Tutorial/Introduction), [How Litex Works](https://litexlang.com/doc/How_Litex_Works/Introduction) for more details. [Hugging Face Dataset](https://huggingface.co/litexlang) is on Hugging Face.
 
 ## Why Litex?
 

@@ -24,7 +24,22 @@ import (
 func (e *Env) IsFcAtomDeclaredByUser(fcAtomName ast.AtomObj) bool {
 	// 如果 atom 里有 ::，那另外检查
 	if strings.Contains(string(fcAtomName), glob.KeySymbolColonColon) {
-		_ = strings.Split(string(fcAtomName), glob.KeySymbolColonColon)
+		PkgNameAndAtomName := strings.Split(string(fcAtomName), glob.KeySymbolColonColon)
+		PkgName := PkgNameAndAtomName[0]
+		AtomName := PkgNameAndAtomName[1]
+		pkgPath, ok := e.PackageManager.PkgNamePkgPathPairs[PkgName]
+		if !ok {
+			return false
+		}
+		pkgPathEnv, ok := e.PackageManager.PkgPathEnvPairs[pkgPath]
+		if !ok {
+			return false
+		}
+		ok = pkgPathEnv.isFcAtomDeclaredAtCurEnv(ast.AtomObj(AtomName))
+		if ok {
+			return true
+		}
+		return ok
 	}
 
 	for env := e; env != nil; env = env.Parent {
