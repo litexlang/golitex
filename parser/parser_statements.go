@@ -682,7 +682,7 @@ func (tb *tokenBlock) relaFactStmt_orRelaEquals() (ast.FactStmt, error) {
 	}
 
 	if opt == glob.FuncFactPrefix {
-		propName, err := tb.rawAtomObj()
+		propName, err := tb.rawAtomObjNotBeginWithNumber()
 		if err != nil {
 			return nil, parserErrAtTb(err, tb)
 		}
@@ -836,7 +836,7 @@ func (tb *tokenBlock) pureFuncSpecFact() (*ast.SpecFactStmt, error) {
 		tb.header.skip(glob.FuncFactPrefix)
 	}
 
-	propName, err := tb.rawAtomObj()
+	propName, err := tb.rawAtomObjNotBeginWithNumber()
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
 	}
@@ -1825,7 +1825,7 @@ func (tb *tokenBlock) relaFact_intensionalSetFact_enumStmt_equals() (ast.FactStm
 	}
 
 	if opt == glob.FuncFactPrefix {
-		propName, err := tb.rawAtomObj()
+		propName, err := tb.rawAtomObjNotBeginWithNumber()
 		if err != nil {
 			return nil, parserErrAtTb(err, tb)
 		}

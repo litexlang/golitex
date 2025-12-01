@@ -520,7 +520,7 @@ func (tb *tokenBlock) parseFactStartWithObj() (ast.FactStmt, error) {
 
 // parseFunctionPropertyFact parses facts like "x $prop y" or "x $prop"
 func (tb *tokenBlock) parseFunctionPropertyFact(leftObj ast.Obj) (ast.FactStmt, error) {
-	propName, err := tb.rawAtomObj()
+	propName, err := tb.rawAtomObjNotBeginWithNumber()
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
 	}
