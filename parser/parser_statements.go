@@ -935,7 +935,7 @@ func (tb *tokenBlock) bodyBlockFacts(uniFactDepth uniFactEnum, parseBodyFactNum 
 			stmt := tb.body[i]
 			fact, err := stmt.SpecFactOrOrStmt()
 			if err != nil {
-				if tb.body[i].CurrentTokenIs(glob.KeywordForall) {
+				if tb.body[i].header.is(glob.KeywordForall) {
 					return nil, fmt.Errorf("expect specific fact: at most 2 layers of universal quantifier is allowed")
 				} else {
 					return nil, parserErrAtTb(err, tb)
