@@ -74,19 +74,20 @@ func IsValidUserDefinedNameWithoutPkgName(name string) error {
 
 func IsValidUseDefinedFcAtom(name string) error {
 	// 用：：切割，得到PkgName 和 Name
-	values := strings.Split(name, KeySymbolColonColon)
+	values := strings.Split(name, PkgNameAtomSeparator)
 
-	// values 必须满足 IsValidUserDefinedName
-	for _, value := range values {
-		if err := IsValidUserDefinedNameWithoutPkgName(value); err != nil {
-			return err
+	if len(values) == 1 {
+		return IsValidUserDefinedNameWithoutPkgName(name)
+	} else if len(values) == 2 {
+		// values 必须满足 IsValidUserDefinedName
+		for _, value := range values {
+			if err := IsValidUserDefinedNameWithoutPkgName(value); err != nil {
+				return err
+			}
 		}
+
+		return nil
+	} else {
+		return fmt.Errorf("identifier name cannot have more than one %s", PkgNameAtomSeparator)
 	}
-
-	// pkgName 必须声明过啦, 前n-1位join起来
-	// TODO: 需要检查 pkgName 确实是某个pkg
-	pkgName := strings.Join(values[:len(values)-1], KeySymbolColonColon)
-	_ = pkgName
-
-	return nil
 }

@@ -63,10 +63,14 @@ func NotImplementedMsg(s string, args ...any) string {
 	return fmt.Sprintf("Feature Not Implemented (Will be implemented in the future):\n%s\n\n", fmt.Sprintf(s, args...))
 }
 
-func REPLMessage(ret GlobRet, path string) string {
+func REPLMsgWithPath(ret GlobRet, path string) string {
 	var builder strings.Builder
 	builder.WriteString("---\n")
 	builder.WriteString(fmt.Sprintf("From: %s\n", path))
 	builder.WriteString(ret.GetREPLMsg())
 	return builder.String()
+}
+
+func REPLErrorMessageWithPath(path string) string {
+	return REPLMsgWithPath(NewGlobErr(""), path)
 }

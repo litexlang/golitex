@@ -74,6 +74,8 @@ type Env struct {
 	AlgoDefMem map[string]*ast.DefAlgoStmt
 
 	DefProveAlgoMem map[string]*ast.DefProveAlgoStmt
+
+	PackageManager *PackageManager
 }
 
 type PropCommutativeCase struct {
@@ -103,6 +105,12 @@ func (env *Env) GetSecondUpMostEnv() *Env {
 }
 
 func NewEnv(parent *Env) *Env {
+	var packageManager *PackageManager
+	if parent == nil {
+		packageManager = NewPackageManager()
+	} else {
+		packageManager = parent.PackageManager
+	}
 	env := &Env{
 		Parent:                   parent,
 		ObjDefMem:                make(ObjDefMem),
@@ -120,6 +128,7 @@ func NewEnv(parent *Env) *Env {
 		CommutativePropMem:       make(map[string]*PropCommutativeCase),
 		AlgoDefMem:               make(map[string]*ast.DefAlgoStmt),
 		DefProveAlgoMem:          make(map[string]*ast.DefProveAlgoStmt),
+		PackageManager:           packageManager,
 	}
 	return env
 }

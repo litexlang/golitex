@@ -16,10 +16,12 @@ package litex_ast
 
 type FactStmtSlice []FactStmt
 type StmtSlice []Stmt
+type StmtSliceSlice []StmtSlice
 type SpecFactPtrSlice []*SpecFactStmt
 type StrSlice []string // 在定义的时候，用string而不是 atom 是有道理的，因为atom可能引入::，而string不会
 type ObjSlice []Obj
 type ReversibleFacts []Spec_OrFact
+type FactOrByStmtSlice []FactOrByStmt
 
 type DefLetStmt struct {
 	Objs    StrSlice
@@ -146,7 +148,7 @@ type HaveObjStStmt struct {
 type ProveInEachCaseStmt struct {
 	OrFact    *OrStmt
 	ThenFacts FactStmtSlice
-	Proofs    []StmtSlice
+	Proofs    StmtSliceSlice
 
 	Line uint
 }
@@ -154,7 +156,7 @@ type ProveInEachCaseStmt struct {
 type ProveCaseByCaseStmt struct {
 	CaseFacts SpecFactPtrSlice
 	ThenFacts FactStmtSlice
-	Proofs    []StmtSlice
+	Proofs    StmtSliceSlice
 
 	Line uint
 }
@@ -386,8 +388,8 @@ have fn:
 type HaveFnCaseByCaseStmt struct {
 	DefFnStmt       *DefFnStmt
 	CaseByCaseFacts SpecFactPtrSlice
-	Proofs          []StmtSlice
-	EqualToObjs     []Obj
+	Proofs          StmtSliceSlice
+	EqualToObjs     ObjSlice
 
 	Line uint
 }
@@ -454,7 +456,7 @@ type AlgoReturnStmt struct {
 
 type DefAlgoStmt struct {
 	FuncName string
-	Params   []string
+	Params   StrSlice
 	Stmts    AlgoStmtSlice
 
 	Line uint
@@ -489,7 +491,7 @@ type ProveAlgoIfStmt struct {
 }
 
 type ProveAlgoReturnStmt struct {
-	Facts []FactOrByStmt
+	Facts FactOrByStmtSlice
 
 	Line uint
 }
