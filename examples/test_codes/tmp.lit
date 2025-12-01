@@ -1,7 +1,5 @@
 import "core_try" as ct
 
-know ct::core_try_try > 0
+know ct.core_try_try > 0
 
-ct::core_try_try > 0
-
-ct.core_try_try
+ct.core_try_try > 0
