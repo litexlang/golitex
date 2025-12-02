@@ -71,7 +71,8 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 		}
 	}
 
-	// 如果 a 在 CartSetMem 中，把 a 对应的 cart 作为 x 的 CartSetOrNil 存好
+	// 如果 c in b 而 b 在 CartSetMem 中，把 b 对应的 cart 作为 c 的 CartSetOrNil 存好
+	// fact.Params[0] 是 c, fact.Params[1] 是 b
 	cartSet := e.GetCartSetMem(fact.Params[1])
 	if cartSet != nil {
 		objStr := fact.Params[0].String()
