@@ -1506,8 +1506,8 @@ func (exec *Executor) checkHaveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetSt
 	if !ok {
 		return NewExecErr(fmt.Sprintf("expected equalTo to be a tuple, but got %T", stmt.EqualTo))
 	}
-	if !ast.IsTupleObj(equalToAsFn) {
-		return NewExecErr(fmt.Sprintf("expected equalTo to be a tuple (with head %s), but got %s", glob.TupleOpt, equalToAsFn.FnHead.String()))
+	if !ast.IsTupleFnObj(equalToAsFn) {
+		return NewExecErr(fmt.Sprintf("expected equalTo to be a tuple (with head %s), but got %s", glob.KeywordTuple, equalToAsFn.FnHead.String()))
 	}
 
 	// Check that tuple length matches cart parameters length

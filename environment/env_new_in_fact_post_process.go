@@ -191,7 +191,7 @@ func (e *Env) equalFactPostProcess_cart(fact *ast.SpecFactStmt) glob.GlobRet {
 // 传入 obj 和 tuple，obj = tuple，左边是被赋值的对象，右边是 tuple
 func (e *Env) equalFactPostProcess_tuple(obj ast.Obj, tupleObj ast.Obj) glob.GlobRet {
 	tuple, ok := tupleObj.(*ast.FnObj)
-	if !ok || !ast.IsTupleObj(tuple) {
+	if !ok || !ast.IsTupleFnObj(tuple) {
 		return glob.ErrRet(fmt.Errorf("expected tuple to be a tuple object, got %T", tupleObj))
 	}
 
