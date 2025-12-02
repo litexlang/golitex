@@ -639,6 +639,16 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ExecRet {
 
 func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) ExecRet {
 	var err error
+
+	// 返回值要是set
+	execState := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.RetSet, ast.Atom(glob.KeywordSet)}, stmt.Line))
+	if execState.IsNotTrue() {
+		return NewExecErr(execState.String())
+	}
+	if execState.IsUnknown() {
+		return NewExecErr(fmt.Sprintf("return set %s must be a set, i.e. `%s in set` must be true, but it is unknown", stmt.RetSet.String(), stmt.RetSet.String()))
+	}
+
 	execRet, err := exec.checkFnEqualStmt(stmt)
 	if notOkExec(execRet, err) {
 		return execRet.AddMsg(stmt.String())
@@ -782,7 +792,16 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (ExecRet, error) {
 		exec.deleteEnv()
 	}()
 
-	// 验证 fn template 里面的 paramSet 和 return set 都是 in set 的
+	// 返回值要是set
+	execState := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.DefFnStmt.FnTemplate.RetSet, ast.Atom(glob.KeywordSet)}, stmt.Line))
+	if execState.IsNotTrue() {
+		return NewExecErr(execState.String()), fmt.Errorf(execState.String())
+	}
+	if execState.IsUnknown() {
+		return NewExecErr(""), fmt.Errorf("return set %s must be a set, i.e. `%s in set` must be true, but it is unknown", stmt.DefFnStmt.FnTemplate.RetSet.String(), stmt.DefFnStmt.FnTemplate.RetSet.String())
+	}
+
+	// 验证 fn template 里面的 paramSet 都是 in set 的
 	// Verify each paramSet is in set type
 	for i, paramSet := range stmt.DefFnStmt.FnTemplate.ParamSets {
 		execState := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{paramSet, ast.Atom(glob.KeywordSet)}, stmt.Line))
@@ -795,7 +814,7 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (ExecRet, error) {
 	}
 
 	// Verify retSet is in set type
-	execState := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.DefFnStmt.FnTemplate.RetSet, ast.Atom(glob.KeywordSet)}, stmt.Line))
+	execState = exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.DefFnStmt.FnTemplate.RetSet, ast.Atom(glob.KeywordSet)}, stmt.Line))
 	if execState.IsErr() {
 		return NewExecErr(execState.String()), fmt.Errorf(execState.String())
 	}
@@ -1229,6 +1248,15 @@ func (exec *Executor) helpStmt(stmt *ast.HelpStmt) ExecRet {
 }
 
 func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseStmt) ExecRet {
+
+	// 返回值要是set
+	execState := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.RetSet, ast.Atom(glob.KeywordSet)}, stmt.Line))
+	if execState.IsNotTrue() {
+		return NewExecErr(execState.String())
+	}
+	if execState.IsUnknown() {
+		return NewExecErr(fmt.Sprintf("return set %s must be a set, i.e. `%s in set` must be true, but it is unknown", stmt.RetSet.String(), stmt.RetSet.String()))
+	}
 	// 验证每个case的返回值都符合fn的retSet
 	execState, err := exec.checkHaveFnEqualCaseByCaseStmt(stmt)
 	if notOkExec(execState, err) {
