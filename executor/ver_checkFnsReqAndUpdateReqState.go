@@ -82,12 +82,46 @@ func (ver *Verifier) objSatisfyFnRequirement(obj ast.Obj, state *VerState) ExecR
 		return NewExecTrue("")
 	} else if ast.IsIndexOptFnObj(objAsFnObj) {
 		return ver.indexOptFnRequirement(objAsFnObj, state)
+	} else if objAsFnObj.FnHead.String() == glob.KeywordProj {
+		return ver.parasSatisfyProjReq(objAsFnObj, state)
 	} else {
-		if objAsFnObj.FnHead.String() == glob.KeywordProj {
-			return ver.parasSatisfyFnReq(objAsFnObj, state)
-		}
 		return ver.parasSatisfyFnReq(objAsFnObj, state)
 	}
+}
+
+func (ver *Verifier) parasSatisfyProjReq(fnObj *ast.FnObj, state *VerState) ExecRet {
+	if len(fnObj.Params) != 2 {
+		return NewExecErr(fmt.Sprintf("parameters in %s must be 2, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
+	}
+
+	// x is cart
+	isCartFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsCart), []ast.Obj{fnObj.Params[0]}, glob.InnerGenLine)
+	verRet := ver.VerFactStmt(isCartFact, state)
+	if verRet.IsErr() {
+		return NewExecErr(verRet.String())
+	}
+	if verRet.IsUnknown() {
+		return NewExecErr(fmt.Sprintf("%s is not unknown", isCartFact))
+	}
+
+	// index >= 1
+	verRet = ver.VerFactStmt(ast.NewInFactWithFc(fnObj.Params[1], ast.Atom(glob.KeywordNPos)), state)
+	if verRet.IsErr() {
+		return NewExecErr(verRet.String())
+	}
+	if verRet.IsUnknown() {
+		return NewExecErr(fmt.Sprintf("index in %s must be N_pos, %s in %s is not valid", fnObj, fnObj.Params[1], fnObj))
+	}
+
+	// index <= set_dim(x)
+	verRet = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{fnObj.Params[1], ast.NewFnObj(ast.Atom(glob.KeywordSetDim), []ast.Obj{fnObj.Params[0]})}, glob.InnerGenLine), state)
+	if verRet.IsErr() {
+		return NewExecErr(verRet.String())
+	} else if verRet.IsUnknown() {
+		return NewExecErr(fmt.Sprintf("index in %s must be <= set_dim(%s), %s in %s is not valid", fnObj, fnObj.Params[0], fnObj.Params[1], fnObj))
+	}
+
+	return NewExecTrue("")
 }
 
 // // TODO: 这里需要检查！
