@@ -299,9 +299,9 @@ func (tb *tokenBlock) bracedObj() (ast.Obj, error) {
 			// Skip comma
 			tb.header.skip(glob.KeySymbolComma)
 
-			if tb.header.is(glob.KeySymbolRightBrace) {
-				break
-			}
+			// if tb.header.is(glob.KeySymbolRightBrace) {
+			// 	break
+			// }
 
 			// Parse next expression
 			obj, err := tb.Obj()
