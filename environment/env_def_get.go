@@ -120,3 +120,37 @@ func (e *Env) GetProveAlgoDef(proveAlgoName string) *ast.DefProveAlgoStmt {
 	}
 	return nil
 }
+
+// GetObjFromCartSetMemItem returns the ObjFromCartSetMemItem for the given object, or nil if not found
+func (e *Env) GetObjFromCartSetMemItem(obj ast.Obj) *ObjFromCartSetMemItem {
+	for env := e; env != nil; env = env.Parent {
+		item, ok := env.ObjFromCartSetMem[obj.String()]
+		if ok {
+			return &item
+		}
+	}
+	return nil
+}
+
+// GetObjTuple returns the tuple (EqualTo) for the given object, or nil if not found
+func (e *Env) GetObjTuple(obj ast.Obj) ast.Obj {
+	item := e.GetObjFromCartSetMemItem(obj)
+	if item == nil {
+		return nil
+	}
+	return item.EqualToOrNil
+}
+
+// GetObjCartSet returns the cart set for the given object, or nil if not found
+func (e *Env) GetObjCartSet(obj ast.Obj) *ast.FnObj {
+	item := e.GetObjFromCartSetMemItem(obj)
+	if item == nil {
+		return nil
+	}
+	return item.CartSetOrNil
+}
+
+// HasObjFromCartSetMem checks if the object exists in ObjFromCartSetMem
+func (e *Env) HasObjFromCartSetMem(obj ast.Obj) bool {
+	return e.GetObjFromCartSetMemItem(obj) != nil
+}

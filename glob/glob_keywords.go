@@ -94,6 +94,9 @@ const (
 	KeywordDim    = "dim"
 	KeywordProj   = "proj"
 	KeywordCoord  = "coord"
+
+	KeywordTuple    = "()"
+	KeywordIndexOpt = "[]"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -134,6 +137,8 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordNPos:         {},
 	KeywordLet:          {},
 	KeywordClear:        {},
+	KeywordTuple:        {},
+	KeywordIndexOpt:     {},
 	KeywordDoNothing:    {},
 	// KeywordExistSetByAxiomOfReplacement:   {},
 
@@ -375,7 +380,3 @@ var KeywordHelpMap = map[string]string{
 }
 
 const PkgNameAtomSeparator = KeySymbolDot
-
-const IndexOpt = "[]"
-
-const TupleOpt = "()"
