@@ -71,6 +71,23 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 		}
 	}
 
+	// 如果 a 在 CartSetMem 中，把 a 对应的 cart 作为 x 的 CartSetOrNil 存好
+	cartSet := e.GetCartSetMem(fact.Params[1])
+	if cartSet != nil {
+		objStr := fact.Params[0].String()
+		if item, exists := e.ObjFromCartSetMem[objStr]; exists {
+			// Update CartSetOrNil
+			item.CartSetOrNil = cartSet
+			e.ObjFromCartSetMem[objStr] = item
+		} else {
+			// Create new entry
+			e.ObjFromCartSetMem[objStr] = ObjFromCartSetMemItem{
+				CartSetOrNil: cartSet,
+				EqualToOrNil: nil,
+			}
+		}
+	}
+
 	return glob.TrueRet("")
 }
 
@@ -184,6 +201,9 @@ func (e *Env) equalFactPostProcess_cart(fact *ast.SpecFactStmt) glob.GlobRet {
 			return ret
 		}
 	}
+
+	// Store x in CartSetMem
+	e.CartSetMem[fact.Params[0].String()] = cart
 
 	return glob.TrueRet("")
 }
