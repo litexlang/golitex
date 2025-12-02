@@ -11,3 +11,10 @@ a[2] = 2
 a[1] $in R
 
 a $in cart(Z, Z) # a[1] $in Z, a[2] $in Z
+
+have set b = cart(Z, Z)
+b $in set
+
+let c b
+c[1] $in Z
+c[2] $in Z

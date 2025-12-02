@@ -95,6 +95,14 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 		return verRet
 	}
 
+	verRet = ver.verInIndexedElementFromCartSet(stmt, state)
+	if verRet.IsErr() {
+		return NewExecErr(verRet.String())
+	}
+	if verRet.IsTrue() {
+		return verRet
+	}
+
 	verRet = ver.verInCartSet_ByTuple(stmt, state)
 	if verRet.IsErr() {
 		return NewExecErr(verRet.String())
@@ -375,6 +383,66 @@ func (ver *Verifier) objNotInSetWhenAllItemsInThatSetAreNotEqualToIt(stmt *ast.S
 
 	verRet := ver.VerFactStmt(notAllItemsInThatSetAreNotEqualToIt, state)
 	return verRet
+}
+
+// verInIndexedElementFromCartSet verifies c[i] $in S when c is in a cart set
+// If c is in ObjFromCartSetMem with CartSetOrNil = cart(S1, S2, ..., Sn),
+// then c[i] should be in proj(cart(S1, S2, ..., Sn), i) = Si
+func (ver *Verifier) verInIndexedElementFromCartSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	// Check if left side is an index operation c[i]
+	indexOp, ok := stmt.Params[0].(*ast.FnObj)
+	if !ok {
+		return NewExecUnknown("")
+	}
+	if !ast.IsIndexOptFnObj(indexOp) || len(indexOp.Params) != 2 {
+		return NewExecUnknown("")
+	}
+
+	obj := indexOp.Params[0]
+	indexObj := indexOp.Params[1]
+
+	// Try to convert index to integer
+	index, ok := ast.ToInt(indexObj)
+	if !ok {
+		return NewExecUnknown("")
+	}
+
+	// Check if index is valid (1-based)
+	if index < 1 {
+		return NewExecUnknown("")
+	}
+
+	// Get obj from ObjFromCartSetMem
+	item := ver.Env.GetObjFromCartSetMemItem(obj)
+	if item == nil {
+		return NewExecUnknown("")
+	}
+
+	// Check if CartSetOrNil exists
+	if item.CartSetOrNil == nil {
+		return NewExecUnknown("")
+	}
+
+	cartSet := item.CartSetOrNil
+	if !ast.IsAtomObjAndEqualToStr(cartSet.FnHead, glob.KeywordCart) {
+		return NewExecUnknown("")
+	}
+
+	// Check if index is within bounds
+	if index > len(cartSet.Params) {
+		return NewExecUnknown("")
+	}
+
+	// Get the corresponding set from cart set: proj(cart(S1, S2, ..., Sn), i) = Si
+	expectedSet := cartSet.Params[index-1] // index is 1-based, so subtract 1
+
+	// Check if right side matches the expected set
+	if stmt.Params[1].String() != expectedSet.String() {
+		return NewExecUnknown("")
+	}
+
+	msg := fmt.Sprintf("%s[%d] is in %s because %s is in %s and proj(%s, %d) = %s", obj, index, expectedSet, obj, cartSet, cartSet, index, expectedSet)
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
 }
 
 // verInCartSet_ByTuple verifies a $in cart(...) by checking if the tuple's elements are in corresponding cart sets
