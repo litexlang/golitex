@@ -51,6 +51,7 @@ func (s *HaveObjInNonEmptySetStmt) stmt()                   {}
 func (s *HaveEnumSetStmt) stmt()                            {}
 func (s *HaveIntensionalSetStmt) stmt()                     {}
 func (s *HaveCartSetStmt) stmt()                            {}
+func (s *HaveObjFromCartSetStmt) stmt()                     {}
 func (s *HaveSetFnStmt) stmt()                              {}
 func (s *HaveSetDefinedByReplacementStmt) stmt()            {}
 func (s *NamedUniFactStmt) stmt()                           {}
@@ -107,6 +108,7 @@ func (s *HaveObjInNonEmptySetStmt) algoStmt()               {}
 func (s *HaveEnumSetStmt) algoStmt()                        {}
 func (s *HaveIntensionalSetStmt) algoStmt()                 {}
 func (s *HaveCartSetStmt) algoStmt()                        {}
+func (s *HaveObjFromCartSetStmt) algoStmt()                 {}
 func (s *HaveSetFnStmt) algoStmt()                          {}
 func (s *HaveSetDefinedByReplacementStmt) algoStmt()        {}
 func (s *NamedUniFactStmt) algoStmt()                       {}
@@ -163,6 +165,7 @@ func (s *HaveObjInNonEmptySetStmt) GetLine() uint           { return s.Line }
 func (s *HaveEnumSetStmt) GetLine() uint                    { return s.Line }
 func (s *HaveIntensionalSetStmt) GetLine() uint             { return s.Line }
 func (s *HaveCartSetStmt) GetLine() uint                    { return s.Line }
+func (s *HaveObjFromCartSetStmt) GetLine() uint              { return s.Line }
 func (s *HaveSetFnStmt) GetLine() uint                      { return s.Line }
 func (s *HaveSetDefinedByReplacementStmt) GetLine() uint    { return s.Line }
 func (s *NamedUniFactStmt) GetLine() uint                   { return s.Line }
