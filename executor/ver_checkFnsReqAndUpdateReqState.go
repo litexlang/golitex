@@ -147,16 +147,42 @@ func (ver *Verifier) indexOptFnRequirement(fnObj *ast.FnObj, state *VerState) Ex
 	obj := fnObj.Params[0]
 	indexObj := fnObj.Params[1]
 
-	// 尝试将索引转换为整数
-	index, ok := ast.ToInt(indexObj)
-	if !ok {
-		// 如果索引不是整数，无法检查范围，但可以继续
-		return NewExecTrue("")
+	// 检查是不是正整数N_pos
+
+	verRet := ver.VerFactStmt(ast.NewInFactWithFc(indexObj, ast.Atom(glob.KeywordNPos)), state)
+	if verRet.IsErr() {
+		return NewExecErr(verRet.String())
+	}
+	if verRet.IsUnknown() {
+		return NewExecErr(fmt.Sprintf("index in %s must be N_pos, %s in %s is not valid", fnObj, indexObj, fnObj))
 	}
 
-	// 检查索引是否有效（从 1 开始）
-	if index < 1 {
-		return NewExecErr(fmt.Sprintf("index in %s must be >= 1, got %d", fnObj, index))
+	// 如果 index 本来就是数字，那就换成数字；如果不是数字，那换成这个symbol
+	// 的值
+	var index int
+	var ok bool
+	// 首先尝试直接转换为整数
+	index, ok = ast.ToInt(indexObj)
+	if !ok {
+		// 如果不是数字，尝试从环境中获取值
+		// 方法1: 尝试获取符号的简化值
+		if symbolValue := ver.Env.GetSymbolSimplifiedValue(indexObj); symbolValue != nil {
+			index, ok = ast.ToInt(symbolValue)
+		}
+		// 方法2: 如果方法1失败，尝试从相等事实中获取
+		if !ok {
+			if equalFcs, gotEqualFcs := ver.Env.GetEqualFcs(indexObj); gotEqualFcs && equalFcs != nil {
+				for _, equalFc := range *equalFcs {
+					if index, ok = ast.ToInt(equalFc); ok {
+						break
+					}
+				}
+			}
+		}
+		// 如果仍然无法获取整数值，返回错误
+		if !ok {
+			return NewExecErr(fmt.Sprintf("cannot determine integer value of index %s in %s", indexObj, fnObj))
+		}
 	}
 
 	// 情况1: obj 本身就是一个 tuple，比如 (1,2)[1]
@@ -167,22 +193,20 @@ func (ver *Verifier) indexOptFnRequirement(fnObj *ast.FnObj, state *VerState) Ex
 		return NewExecTrue("")
 	}
 
-	// 情况2: 从环境中读取 ObjFromCartSetMem
-	item := ver.Env.GetObjFromCartSetMemItem(obj)
-	if item != nil {
-		// 检查 CartSet 的长度
-		if item.CartSetOrNil != nil {
-			if index > len(item.CartSetOrNil.Params) {
-				return NewExecErr(fmt.Sprintf("index %d in %s is out of range, cart set has %d elements", index, fnObj, len(item.CartSetOrNil.Params)))
-			}
-		}
-
-		// 检查 EqualTo tuple 的长度
-		if item.EqualToOrNil != nil {
-			if tupleAsFn, ok := item.EqualToOrNil.(*ast.FnObj); ok && ast.IsTupleFnObj(tupleAsFn) {
-				if index > len(tupleAsFn.Params) {
-					return NewExecErr(fmt.Sprintf("index %d in %s is out of range, tuple has %d elements", index, fnObj, len(tupleAsFn.Params)))
+	// 情况3: 检查 dim(obj) 的值
+	// 索引必须 >= 1 且 <= dim(obj)
+	dimFn := ast.NewFnObj(ast.Atom(glob.KeywordSetDim), []ast.Obj{obj})
+	equalFcs, ok := ver.Env.GetEqualFcs(dimFn)
+	if ok && equalFcs != nil {
+		// 查找 dim 的数值
+		for _, equalFc := range *equalFcs {
+			if dimValue, ok := ast.ToInt(equalFc); ok {
+				// 检查 index >= 1 且 index <= dim(obj)
+				if index > dimValue {
+					return NewExecErr(fmt.Sprintf("index %d in %s is out of range, dim(%s) = %d", index, fnObj, obj, dimValue))
 				}
+				// 如果找到了 dim 值并且 index 在范围内，返回成功
+				return NewExecTrue("")
 			}
 		}
 	}

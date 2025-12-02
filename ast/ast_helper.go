@@ -381,7 +381,7 @@ func HeaderWithParamsAndParamSetsString(header *DefHeader) string {
 }
 
 func SimplifyDimCart(fc *FnObj) (Obj, bool) {
-	if IsAtomObjAndEqualToStr(fc.FnHead, glob.KeywordDim) {
+	if IsAtomObjAndEqualToStr(fc.FnHead, glob.KeywordSetDim) {
 		if len(fc.Params) == 1 && IsFn_WithHeadName(fc.Params[0], glob.KeywordCart) {
 			cartObj := fc.Params[0].(*FnObj)
 			dimValue := len(cartObj.Params)
