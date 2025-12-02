@@ -101,7 +101,7 @@ func (ver *Verifier) verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Obj, 
 	return NewExecUnknown("")
 }
 
-func evaluateNonNumberLiteralExpr(obj ast.Obj) ast.Obj {
+func (ver *Verifier) evaluateNonNumberLiteralExpr(obj ast.Obj) ast.Obj {
 	if objAsFn, ok := obj.(*ast.FnObj); ok {
 		// 尝试简化 dim(cart(...))
 		if simplified, replaced := ast.SimplifyDimCart(objAsFn); replaced {
@@ -112,12 +112,13 @@ func evaluateNonNumberLiteralExpr(obj ast.Obj) ast.Obj {
 			return simplified
 		}
 	}
+
 	return obj
 }
 
 func (ver *Verifier) verEqualBuiltin(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
-	left = evaluateNonNumberLiteralExpr(left)
-	right = evaluateNonNumberLiteralExpr(right)
+	left = ver.evaluateNonNumberLiteralExpr(left)
+	right = ver.evaluateNonNumberLiteralExpr(right)
 
 	ok, msg, err := cmp.CmpBy_Literally_NumLit_PolynomialArith(left, right) // 完全一样
 	if err != nil {
