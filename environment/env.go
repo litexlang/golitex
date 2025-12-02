@@ -77,8 +77,6 @@ type Env struct {
 
 	ObjFromCartSetMem map[string]ObjFromCartSetMemItem
 
-	CartSetMem map[string]*ast.FnObj
-
 	PackageManager *PackageManager
 }
 
@@ -138,7 +136,6 @@ func NewEnv(parent *Env) *Env {
 		AlgoDefMem:               make(map[string]*ast.DefAlgoStmt),
 		DefProveAlgoMem:          make(map[string]*ast.DefProveAlgoStmt),
 		ObjFromCartSetMem:        make(map[string]ObjFromCartSetMemItem),
-		CartSetMem:               make(map[string]*ast.FnObj),
 		PackageManager:           packageManager,
 	}
 	return env

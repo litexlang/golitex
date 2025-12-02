@@ -460,21 +460,26 @@ func (ver *Verifier) verInSetProduct(stmt *ast.SpecFactStmt, state *VerState) Ex
 	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
 }
 
-// verInCartSet verifies a $in cart(...) by checking:
+// getCartSetFromObj gets the cart set from obj if obj = cart(...)
+// Returns the cart set if found, nil otherwise
+func (ver *Verifier) getCartSetFromObj(obj ast.Obj) *ast.FnObj {
+	equalFcs, ok := ver.Env.GetEqualFcs(obj)
+	if !ok || equalFcs == nil {
+		return nil
+	}
+	// Look for a cart set in the equal facts
+	for _, equalFc := range *equalFcs {
+		if cartAsFn, ok := equalFc.(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(cartAsFn.FnHead, glob.KeywordCart) {
+			return cartAsFn
+		}
+	}
+	return nil
+}
+
+// verInCartSet_DimAndElements verifies a $in cart(...) by checking:
 // 1. dim(a) = dim(cart(...))
 // 2. a[i] $in cart(...).Params[i-1] for each i
-func (ver *Verifier) verInCartSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	// Check if right side is cart(...)
-	cartSet, ok := stmt.Params[1].(*ast.FnObj)
-	if !ok {
-		return NewExecUnknown("")
-	}
-	if !ast.IsAtomObjAndEqualToStr(cartSet.FnHead, glob.KeywordCart) {
-		return NewExecUnknown("")
-	}
-
-	obj := stmt.Params[0]
-
+func (ver *Verifier) verInCartSet_DimAndElements(obj ast.Obj, cartSet *ast.FnObj, objCartSet *ast.FnObj, state *VerState) ExecRet {
 	// Step 1: Verify dim(a) = dim(cart(...))
 	// dim(cart(...)) = len(cartSet.Params)
 	cartDimValue := len(cartSet.Params)
@@ -492,11 +497,18 @@ func (ver *Verifier) verInCartSet(stmt *ast.SpecFactStmt, state *VerState) ExecR
 		index := i + 1 // index starts from 1
 		indexObj := ast.Atom(fmt.Sprintf("%d", index))
 
-		// Create indexed object: a[i]
-		indexedObj := ast.NewFnObj(ast.Atom(glob.KeywordIndexOpt), []ast.Obj{obj, indexObj})
+		// If obj = cart(...), use proj(obj, i) to get a[i]
+		var objElement ast.Obj
+		if objCartSet != nil {
+			// obj = cart(...), so a[i] = proj(cart(...), i) = cart(...).Params[i-1]
+			objElement = objCartSet.Params[i]
+		} else {
+			// Create indexed object: a[i]
+			objElement = ast.NewFnObj(ast.Atom(glob.KeywordIndexOpt), []ast.Obj{obj, indexObj})
+		}
 
 		// Verify a[i] $in cartSet.Params[i]
-		inFact := ast.NewInFactWithFc(indexedObj, cartSet.Params[i])
+		inFact := ast.NewInFactWithFc(objElement, cartSet.Params[i])
 		verRet := ver.VerFactStmt(inFact, state)
 		if verRet.IsErr() {
 			return verRet
@@ -507,7 +519,34 @@ func (ver *Verifier) verInCartSet(stmt *ast.SpecFactStmt, state *VerState) ExecR
 	}
 
 	msg := fmt.Sprintf("dim(%s) = %d and each element %s[i] is in corresponding cart set %s", obj, cartDimValue, obj, cartSet)
-	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
+	return NewExecTrue(msg)
+}
+
+// verInCartSet verifies a $in cart(...) by checking:
+// 1. dim(a) = dim(cart(...))
+// 2. a[i] $in cart(...).Params[i-1] for each i
+func (ver *Verifier) verInCartSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	// Check if right side is cart(...)
+	cartSet, ok := stmt.Params[1].(*ast.FnObj)
+	if !ok {
+		return NewExecUnknown("")
+	}
+	if !ast.IsAtomObjAndEqualToStr(cartSet.FnHead, glob.KeywordCart) {
+		return NewExecUnknown("")
+	}
+
+	obj := stmt.Params[0]
+
+	// Get cart from obj if obj = cart(...)
+	objCartSet := ver.getCartSetFromObj(obj)
+
+	// Verify dim and elements
+	ret := ver.verInCartSet_DimAndElements(obj, cartSet, objCartSet, state)
+	if ret.IsNotTrue() {
+		return ret
+	}
+
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), ret.String(), ret)
 }
 
 func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *VerState) ExecRet {
