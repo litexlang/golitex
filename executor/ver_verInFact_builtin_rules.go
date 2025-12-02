@@ -18,6 +18,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
+	"strconv"
 )
 
 func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
@@ -95,23 +96,15 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 		return verRet
 	}
 
-	verRet = ver.verInIndexedElementFromCartSet(stmt, state)
-	if verRet.IsErr() {
-		return NewExecErr(verRet.String())
-	}
-	if verRet.IsTrue() {
-		return verRet
-	}
-
-	verRet = ver.verInCartSet_ByTuple(stmt, state)
-	if verRet.IsErr() {
-		return NewExecErr(verRet.String())
-	}
-	if verRet.IsTrue() {
-		return verRet
-	}
-
 	verRet = ver.verInSetProduct(stmt, state)
+	if verRet.IsErr() {
+		return NewExecErr(verRet.String())
+	}
+	if verRet.IsTrue() {
+		return verRet
+	}
+
+	verRet = ver.verInCartSet(stmt, state)
 	if verRet.IsErr() {
 		return NewExecErr(verRet.String())
 	}
@@ -385,115 +378,55 @@ func (ver *Verifier) objNotInSetWhenAllItemsInThatSetAreNotEqualToIt(stmt *ast.S
 	return verRet
 }
 
-// verInIndexedElementFromCartSet verifies c[i] $in S when c is in a cart set
-// If c is in ObjFromCartSetMem with CartSetOrNil = cart(S1, S2, ..., Sn),
-// then c[i] should be in proj(cart(S1, S2, ..., Sn), i) = Si
-func (ver *Verifier) verInIndexedElementFromCartSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	// Check if left side is an index operation c[i]
-	indexOp, ok := stmt.Params[0].(*ast.FnObj)
-	if !ok {
-		return NewExecUnknown("")
-	}
-	if !ast.IsIndexOptFnObj(indexOp) || len(indexOp.Params) != 2 {
-		return NewExecUnknown("")
-	}
-
-	obj := indexOp.Params[0]
-	indexObj := indexOp.Params[1]
-
-	// Try to convert index to integer
-	index, ok := ast.ToInt(indexObj)
-	if !ok {
-		return NewExecUnknown("")
-	}
-
-	// Check if index is valid (1-based)
-	if index < 1 {
-		return NewExecUnknown("")
-	}
-
-	// Get obj from ObjFromCartSetMem
-	item := ver.Env.GetObjFromCartSetMemItem(obj)
-	if item == nil {
-		return NewExecUnknown("")
-	}
-
-	// Check if CartSetOrNil exists
-	if item.CartSetOrNil == nil {
-		return NewExecUnknown("")
-	}
-
-	cartSet := item.CartSetOrNil
-	if !ast.IsAtomObjAndEqualToStr(cartSet.FnHead, glob.KeywordCart) {
-		return NewExecUnknown("")
-	}
-
-	// Check if index is within bounds
-	if index > len(cartSet.Params) {
-		return NewExecUnknown("")
-	}
-
-	// Get the corresponding set from cart set: proj(cart(S1, S2, ..., Sn), i) = Si
-	expectedSet := cartSet.Params[index-1] // index is 1-based, so subtract 1
-
-	// Check if right side matches the expected set
-	if stmt.Params[1].String() != expectedSet.String() {
-		return NewExecUnknown("")
-	}
-
-	msg := fmt.Sprintf("%s[%d] is in %s because %s is in %s and proj(%s, %d) = %s", obj, index, expectedSet, obj, cartSet, cartSet, index, expectedSet)
-	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
-}
-
 // verInCartSet_ByTuple verifies a $in cart(...) by checking if the tuple's elements are in corresponding cart sets
-func (ver *Verifier) verInCartSet_ByTuple(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	// Check if right side is cart(...)
-	cartSet, ok := stmt.Params[1].(*ast.FnObj)
-	if !ok {
-		return NewExecUnknown("")
-	}
-	if !ast.IsAtomObjAndEqualToStr(cartSet.FnHead, glob.KeywordCart) {
-		return NewExecUnknown("")
-	}
+// func (ver *Verifier) verInCartSet_ByTuple(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+// 	// Check if right side is cart(...)
+// 	cartSet, ok := stmt.Params[1].(*ast.FnObj)
+// 	if !ok {
+// 		return NewExecUnknown("")
+// 	}
+// 	if !ast.IsAtomObjAndEqualToStr(cartSet.FnHead, glob.KeywordCart) {
+// 		return NewExecUnknown("")
+// 	}
 
-	// Get obj from ObjFromCartSetMem
-	obj := stmt.Params[0]
-	item := ver.Env.GetObjFromCartSetMemItem(obj)
-	if item == nil {
-		return NewExecUnknown("")
-	}
+// 	// Get obj from ObjFromCartSetMem
+// 	obj := stmt.Params[0]
+// 	item := ver.Env.GetObjFromCartSetMemItem(obj)
+// 	if item == nil {
+// 		return NewExecUnknown("")
+// 	}
 
-	// Get EqualTo tuple
-	tuple := item.EqualToOrNil
-	if tuple == nil {
-		return NewExecUnknown("")
-	}
+// 	// Get EqualTo tuple
+// 	tuple := item.EqualToOrNil
+// 	if tuple == nil {
+// 		return NewExecUnknown("")
+// 	}
 
-	tupleAsFn, ok := tuple.(*ast.FnObj)
-	if !ok || !ast.IsTupleFnObj(tupleAsFn) {
-		return NewExecUnknown("")
-	}
+// 	tupleAsFn, ok := tuple.(*ast.FnObj)
+// 	if !ok || !ast.IsTupleFnObj(tupleAsFn) {
+// 		return NewExecUnknown("")
+// 	}
 
-	// Check that tuple length matches cart set length
-	if len(tupleAsFn.Params) != len(cartSet.Params) {
-		return NewExecErr(fmt.Sprintf("tuple length (%d) does not match cart set length (%d) in %s", len(tupleAsFn.Params), len(cartSet.Params), stmt))
-	}
+// 	// Check that tuple length matches cart set length
+// 	if len(tupleAsFn.Params) != len(cartSet.Params) {
+// 		return NewExecErr(fmt.Sprintf("tuple length (%d) does not match cart set length (%d) in %s", len(tupleAsFn.Params), len(cartSet.Params), stmt))
+// 	}
 
-	// Check that each element of tuple is in the corresponding cart set
-	for i := range len(tupleAsFn.Params) {
-		inFact := ast.NewInFactWithFc(tupleAsFn.Params[i], cartSet.Params[i])
-		verRet := ver.VerFactStmt(inFact, state)
-		if verRet.IsErr() {
-			return verRet
-		}
-		if verRet.IsUnknown() {
-			return NewExecUnknown("")
-		}
-	}
+// 	// Check that each element of tuple is in the corresponding cart set
+// 	for i := range len(tupleAsFn.Params) {
+// 		inFact := ast.NewInFactWithFc(tupleAsFn.Params[i], cartSet.Params[i])
+// 		verRet := ver.VerFactStmt(inFact, state)
+// 		if verRet.IsErr() {
+// 			return verRet
+// 		}
+// 		if verRet.IsUnknown() {
+// 			return NewExecUnknown("")
+// 		}
+// 	}
 
-	msg := fmt.Sprintf("each element in tuple %s is in corresponding cart set %s", tuple, cartSet)
-	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
-}
+// 	msg := fmt.Sprintf("each element in tuple %s is in corresponding cart set %s", tuple, cartSet)
+// 	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
+// }
 
 func (ver *Verifier) verInSetProduct(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	// left must be (x, y, ...) right must be product(xSet, ySet, ...)
@@ -524,6 +457,56 @@ func (ver *Verifier) verInSetProduct(stmt *ast.SpecFactStmt, state *VerState) Ex
 	}
 
 	msg := fmt.Sprintf("each item in tuple %s is in corresponding set %s", stmt.Params[0], stmt.Params[1])
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
+}
+
+// verInCartSet verifies a $in cart(...) by checking:
+// 1. dim(a) = dim(cart(...))
+// 2. a[i] $in cart(...).Params[i-1] for each i
+func (ver *Verifier) verInCartSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	// Check if right side is cart(...)
+	cartSet, ok := stmt.Params[1].(*ast.FnObj)
+	if !ok {
+		return NewExecUnknown("")
+	}
+	if !ast.IsAtomObjAndEqualToStr(cartSet.FnHead, glob.KeywordCart) {
+		return NewExecUnknown("")
+	}
+
+	obj := stmt.Params[0]
+
+	// Step 1: Verify dim(a) = dim(cart(...))
+	// dim(cart(...)) = len(cartSet.Params)
+	cartDimValue := len(cartSet.Params)
+
+	ret := ver.VerFactStmt(ast.NewEqualFact(ast.NewFnObj(ast.Atom(glob.KeywordDim), []ast.Obj{obj}), ast.Atom(strconv.Itoa(cartDimValue))), state)
+	if ret.IsErr() {
+		return ret
+	}
+	if ret.IsUnknown() {
+		return NewExecUnknown("")
+	}
+
+	// Step 2: Verify a[i] $in cartSet.Params[i-1] for each i
+	for i := range len(cartSet.Params) {
+		index := i + 1 // index starts from 1
+		indexObj := ast.Atom(fmt.Sprintf("%d", index))
+
+		// Create indexed object: a[i]
+		indexedObj := ast.NewFnObj(ast.Atom(glob.KeywordIndexOpt), []ast.Obj{obj, indexObj})
+
+		// Verify a[i] $in cartSet.Params[i]
+		inFact := ast.NewInFactWithFc(indexedObj, cartSet.Params[i])
+		verRet := ver.VerFactStmt(inFact, state)
+		if verRet.IsErr() {
+			return verRet
+		}
+		if verRet.IsUnknown() {
+			return NewExecUnknown("")
+		}
+	}
+
+	msg := fmt.Sprintf("dim(%s) = %d and each element %s[i] is in corresponding cart set %s", obj, cartDimValue, obj, cartSet)
 	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
 }
 

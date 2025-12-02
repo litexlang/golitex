@@ -17,8 +17,8 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
-	litex_env "golitex/environment"
 	glob "golitex/glob"
+	"strconv"
 )
 
 func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
@@ -1561,6 +1561,8 @@ func (exec *Executor) checkHaveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetSt
 // postProcessHaveObjFromCartSetStmt adds:
 // 1. obj in cart(...) fact
 // 2. obj = equalTo fact
+// 3. obj[i] = equalTo[i] for each i
+// 4. dim(obj) = len(cartSet.Params)
 func (exec *Executor) postProcessHaveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetStmt) ExecRet {
 	objAtom := ast.Atom(stmt.ObjName)
 
@@ -1578,10 +1580,35 @@ func (exec *Executor) postProcessHaveObjFromCartSetStmt(stmt *ast.HaveObjFromCar
 		return NewExecErr(ret.String())
 	}
 
-	// Store in ObjFromCartSetMem
-	exec.Env.ObjFromCartSetMem[stmt.ObjName] = litex_env.ObjFromCartSetMemItem{
-		CartSetOrNil: stmt.CartSet,
-		EqualToOrNil: stmt.EqualTo,
+	// equalTo is already verified to be a tuple in checkHaveObjFromCartSetStmt
+	equalToAsFn, ok := stmt.EqualTo.(*ast.FnObj)
+	if !ok || !ast.IsTupleFnObj(equalToAsFn) {
+		return NewExecTrue("")
+	}
+
+	// Add obj[i] = equalTo[i] for each i (index starts from 1)
+	for i := range len(equalToAsFn.Params) {
+		index := i + 1 // index starts from 1
+		indexObj := ast.Atom(strconv.Itoa(index))
+
+		// Create indexed object: obj[index]
+		indexedObj := ast.NewFnObj(ast.Atom(glob.KeywordIndexOpt), []ast.Obj{objAtom, indexObj})
+
+		// Create equal fact: obj[index] = equalTo[i]
+		indexEqualFact := ast.NewEqualFact(indexedObj, equalToAsFn.Params[i])
+		ret = exec.Env.NewFact(indexEqualFact)
+		if ret.IsErr() {
+			return NewExecErr(ret.String())
+		}
+	}
+
+	// Add dim(obj) = len(cartSet.Params)
+	dimFn := ast.NewFnObj(ast.Atom(glob.KeywordDim), []ast.Obj{objAtom})
+	dimValue := ast.Atom(strconv.Itoa(len(stmt.CartSet.Params)))
+	dimEqualFact := ast.NewEqualFact(dimFn, dimValue)
+	ret = exec.Env.NewFact(dimEqualFact)
+	if ret.IsErr() {
+		return NewExecErr(ret.String())
 	}
 
 	return NewExecTrue("")

@@ -91,8 +91,10 @@ const (
 
 	KeywordCart   = "cart"
 	KeywordIsCart = "is_cart"
-	KeywordDim    = "dim"
+	KeywordSetDim = "set_dim"
 	KeywordProj   = "proj"
+
+	KeywordDim = "dim"
 
 	KeywordTuple    = "()"
 	KeywordIndexOpt = "[]"
@@ -170,8 +172,10 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 
 	KeywordCart:   {},
 	KeywordIsCart: {},
-	KeywordDim:    {},
+	KeywordSetDim: {},
 	KeywordProj:   {},
+
+	KeywordDim: {},
 }
 
 const (
