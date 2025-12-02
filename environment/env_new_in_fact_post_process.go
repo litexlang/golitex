@@ -58,19 +58,6 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 		return glob.TrueRet("")
 	}
 
-	if fnObj, ok := fact.Params[1].(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(fnObj.FnHead, glob.KeywordCart) {
-		if _, ok := e.ObjFromCartSetMem[fact.Params[0].String()]; !ok {
-			e.ObjFromCartSetMem[fact.Params[0].String()] = ObjFromCartSetMemItem{
-				CartSetOrNil: fnObj,
-				EqualToOrNil: nil,
-			}
-		} else {
-			item := e.ObjFromCartSetMem[fact.Params[0].String()]
-			item.CartSetOrNil = fnObj
-			e.ObjFromCartSetMem[fact.Params[0].String()] = item
-		}
-	}
-
 	// 如果 c in b 而 b 在 CartSetMem 中，把 b 对应的 cart 作为 c 的 CartSetOrNil 存好
 	// fact.Params[0] 是 c, fact.Params[1] 是 b
 	cartSet := e.GetCartSetMem(fact.Params[1])
@@ -86,6 +73,33 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 				CartSetOrNil: cartSet,
 				EqualToOrNil: nil,
 			}
+		}
+	}
+
+	// 如果 a in cart(R, R)，自动生成 a[1] $in R 和 a[2] $in R 这样的事实
+	if fnObj, ok := fact.Params[1].(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(fnObj.FnHead, glob.KeywordCart) {
+		obj := fact.Params[0]
+		cartSet := fnObj
+		// 为每个索引生成 a[i] $in cartSet.Params[i-1] 的事实（索引从1开始）
+		for i := range len(cartSet.Params) {
+			index := i + 1 // 索引从1开始
+			indexObj := ast.Atom(fmt.Sprintf("%d", index))
+			// 创建索引操作 a[i]
+			indexedObj := ast.NewFnObj(ast.Atom(glob.KeywordIndexOpt), []ast.Obj{obj, indexObj})
+			// 创建 a[i] $in cartSet.Params[i] 的事实
+			inFact := ast.NewInFactWithFc(indexedObj, cartSet.Params[i])
+			ret := e.NewFact(inFact)
+			if ret.IsErr() {
+				return ret
+			}
+		}
+		// 添加 dim(obj) = len(cartSet.Params) 的事实
+		dimFn := ast.NewFnObj(ast.Atom(glob.KeywordDim), []ast.Obj{obj})
+		dimValue := ast.Atom(strconv.Itoa(len(cartSet.Params)))
+		dimEqualFact := ast.NewEqualFact(dimFn, dimValue)
+		ret := e.NewFact(dimEqualFact)
+		if ret.IsErr() {
+			return ret
 		}
 	}
 
@@ -185,7 +199,7 @@ func (e *Env) equalFactPostProcess_cart(fact *ast.SpecFactStmt) glob.GlobRet {
 	}
 
 	// dim(x) = len(cart.Params)
-	dimFn := ast.NewFnObj(ast.Atom(glob.KeywordDim), []ast.Obj{fact.Params[0]})
+	dimFn := ast.NewFnObj(ast.Atom(glob.KeywordSetDim), []ast.Obj{fact.Params[0]})
 	dimValue := ast.Atom(strconv.Itoa(len(cart.Params)))
 	dimEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{dimFn, dimValue}, glob.InnerGenLine)
 	ret = e.NewFact(dimEqualFact)
