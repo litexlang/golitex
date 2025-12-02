@@ -153,6 +153,12 @@ func (e *Env) inFactPostProcess_InCart(obj ast.Obj, cartSet *ast.FnObj) glob.Glo
 	if ret.IsErr() {
 		return ret
 	}
+	// 添加 is_tuple(obj) 的事实
+	isTupleFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsTuple), []ast.Obj{obj}, glob.InnerGenLine)
+	ret = e.NewFact(isTupleFact)
+	if ret.IsErr() {
+		return ret
+	}
 	return glob.TrueRet("")
 }
 
