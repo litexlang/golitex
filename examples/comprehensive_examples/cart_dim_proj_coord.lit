@@ -1,7 +1,7 @@
 prove:
     have set x = cart(R, Q, Z)
     $is_cart(x)
-    dim(x) = 3
+    set_dim(x) = 3
     proj(x, 1) = R
     proj(x, 2) = Q
     proj(x, 3) = Z
@@ -11,7 +11,7 @@ prove:
 
     $is_cart(cart(R, Q))
     let y cart(R, Q)
-    dim(cart(R, Q)) = 2
+    set_dim(cart(R, Q)) = 2
 
     a[1] $in R
     a[2] $in Q
@@ -53,3 +53,9 @@ a[2] = 2
 a[1] $in R
 
 a $in cart(Z, Z) # a[1] $in Z, a[2] $in Z
+
+have set b = cart(R, R)
+let c b
+
+c[1] $in R
+c[2] $in R
