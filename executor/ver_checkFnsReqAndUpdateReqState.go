@@ -137,6 +137,8 @@ func (ver *Verifier) cartFnRequirement(fnObj *ast.FnObj, state *VerState) ExecRe
 }
 
 func (ver *Verifier) indexOptFnRequirement(fnObj *ast.FnObj, state *VerState) ExecRet {
+	_ = state
+
 	// [] 操作需要两个参数：obj 和 index
 	if len(fnObj.Params) != 2 {
 		return NewExecErr(fmt.Sprintf("[] operator requires 2 parameters, got %d in %s", len(fnObj.Params), fnObj))
