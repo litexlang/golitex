@@ -139,6 +139,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 		execRet = NewExecErr("import statements are not allowed in local scope.")
 	case *ast.ImportFileStmt:
 		execRet = NewExecErr("import statements are not allowed in local scope.")
+	case *ast.HaveObjFromCartSetStmt:
+		execRet = exec.haveObjFromCartSetStmt(stmt)
 	default:
 		execRet = NewExecErr(fmt.Sprintf("unknown statement type: %T", stmt))
 	}
@@ -1463,5 +1465,9 @@ func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) ExecRet {
 		return NewExecErr(ret.String())
 	}
 
+	return NewExecTrue(stmt.String())
+}
+
+func (exec *Executor) haveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetStmt) ExecRet {
 	return NewExecTrue(stmt.String())
 }

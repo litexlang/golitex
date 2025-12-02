@@ -658,6 +658,18 @@ func (s *HaveCartSetStmt) ToLatexString() string {
 	return builder.String()
 }
 
+func (s *HaveObjFromCartSetStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordHave)
+	builder.WriteString(" ")
+	builder.WriteString(s.ObjName)
+	builder.WriteString(" ")
+	builder.WriteString(s.CartSet.ToLatexString())
+	builder.WriteString(" = ")
+	builder.WriteString(s.EqualTo.ToLatexString())
+	return builder.String()
+}
+
 func (s *HaveSetFnStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("\\begin{definition}[Function Exist By Axioms of Set Theory]")
