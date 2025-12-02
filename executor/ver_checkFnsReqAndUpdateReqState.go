@@ -86,9 +86,27 @@ func (ver *Verifier) objSatisfyFnRequirement(obj ast.Obj, state *VerState) ExecR
 		return ver.parasSatisfyProjReq(objAsFnObj, state)
 	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordSetDim) {
 		return ver.setDimFnRequirement(objAsFnObj, state)
+	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordDim) {
+		return ver.dimFnRequirement(objAsFnObj, state)
 	} else {
 		return ver.parasSatisfyFnReq(objAsFnObj, state)
 	}
+}
+
+func (ver *Verifier) dimFnRequirement(fnObj *ast.FnObj, state *VerState) ExecRet {
+	if len(fnObj.Params) != 1 {
+		return NewExecErr(fmt.Sprintf("parameters in %s must be 1, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
+	}
+	// 检查是否是 tuple
+	isTupleFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsTuple), []ast.Obj{fnObj.Params[0]}, glob.InnerGenLine)
+	verRet := ver.VerFactStmt(isTupleFact, state)
+	if verRet.IsErr() {
+		return NewExecErr(verRet.String())
+	}
+	if verRet.IsUnknown() {
+		return NewExecErr(fmt.Sprintf("%s is not unknown", isTupleFact))
+	}
+	return NewExecTrue("")
 }
 
 func (ver *Verifier) setDimFnRequirement(fnObj *ast.FnObj, state *VerState) ExecRet {

@@ -96,6 +96,8 @@ const (
 
 	KeywordDim = "dim"
 
+	KeywordIsTuple = "is_tuple"
+
 	KeywordTuple    = "()"
 	KeywordIndexOpt = "[]"
 )
