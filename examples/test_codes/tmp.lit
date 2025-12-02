@@ -1,3 +1,0 @@
-have set b = cart(R, R)
-let c b
-dim(c) = 2
