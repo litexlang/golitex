@@ -103,7 +103,7 @@ func (ver *Verifier) verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Obj, 
 
 func (ver *Verifier) evaluateNonNumberLiteralExpr(obj ast.Obj) ast.Obj {
 	if objAsFn, ok := obj.(*ast.FnObj); ok {
-		// 尝试简化 dim(cart(...))
+		// 尝试简化 set_dim(cart(...))
 		if simplified, replaced := ast.SimplifyDimCart(objAsFn); replaced {
 			return simplified
 		}

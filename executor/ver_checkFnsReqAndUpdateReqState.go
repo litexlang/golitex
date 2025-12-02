@@ -84,9 +84,26 @@ func (ver *Verifier) objSatisfyFnRequirement(obj ast.Obj, state *VerState) ExecR
 		return ver.indexOptFnRequirement(objAsFnObj, state)
 	} else if objAsFnObj.FnHead.String() == glob.KeywordProj {
 		return ver.parasSatisfyProjReq(objAsFnObj, state)
+	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordSetDim) {
+		return ver.setDimFnRequirement(objAsFnObj, state)
 	} else {
 		return ver.parasSatisfyFnReq(objAsFnObj, state)
 	}
+}
+
+func (ver *Verifier) setDimFnRequirement(fnObj *ast.FnObj, state *VerState) ExecRet {
+	if len(fnObj.Params) != 1 {
+		return NewExecErr(fmt.Sprintf("parameters in %s must be 1, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
+	}
+
+	verRet := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsCart), []ast.Obj{fnObj.Params[0]}, glob.InnerGenLine), state)
+	if verRet.IsErr() {
+		return NewExecErr(verRet.String())
+	}
+	if verRet.IsUnknown() {
+		return NewExecErr(fmt.Sprintf("parameters in %s must be sets, %s in %s is not valid", fnObj.FnHead, fnObj.Params[0], fnObj))
+	}
+	return NewExecTrue("")
 }
 
 func (ver *Verifier) parasSatisfyProjReq(fnObj *ast.FnObj, state *VerState) ExecRet {
