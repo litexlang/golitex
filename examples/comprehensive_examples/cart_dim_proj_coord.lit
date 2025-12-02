@@ -96,12 +96,6 @@ prove:
     $is_tuple(e[2])
 
 prove:
-    # 测试 tuple 的各种形式
-    have t1 cart(R) = (1,)
-    dim(t1) = 1
-    $is_tuple(t1)
-    t1[1] = 1
-    
     have t2 cart(R, R) = (2, 3)
     dim(t2) = 2
     $is_tuple(t2)

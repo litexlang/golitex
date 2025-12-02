@@ -74,6 +74,10 @@ func (ver *Verifier) objSatisfyFnRequirement(obj ast.Obj, state *VerState) ExecR
 	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordCart) {
 		return ver.cartFnRequirement(objAsFnObj, state)
 	} else if ast.IsTupleFnObj(objAsFnObj) {
+		if len(objAsFnObj.Params) < 2 {
+			return NewExecErr(fmt.Sprintf("parameters in %s must be at least 2, %s in %s is not valid", objAsFnObj.FnHead, objAsFnObj, objAsFnObj))
+		}
+
 		for _, param := range objAsFnObj.Params {
 			if !ObjIsNotSet(param) {
 				return NewExecErr(fmt.Sprintf("parameters in %s must not be set", objAsFnObj.String()))
@@ -192,6 +196,10 @@ func (ver *Verifier) countFnRequirement(fnObj *ast.FnObj, state *VerState) ExecR
 }
 
 func (ver *Verifier) cartFnRequirement(fnObj *ast.FnObj, state *VerState) ExecRet {
+	if len(fnObj.Params) < 2 {
+		return NewExecErr(fmt.Sprintf("parameters in %s must be at least 2, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
+	}
+
 	// 验证所有的参数都是集合
 	for _, param := range fnObj.Params {
 		verRet := ver.VerFactStmt(ast.NewInFactWithFc(param, ast.Atom(glob.KeywordSet)), state)
