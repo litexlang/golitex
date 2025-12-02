@@ -523,14 +523,14 @@ type ProveInRangeStmt struct {
 
 type HaveCartSetStmt struct {
 	Name    string
-	CartObj FnObj
+	CartObj *FnObj
 
 	Line uint
 }
 
 type HaveObjFromCartSetStmt struct {
 	ObjName string
-	CartSet FnObj
+	CartSet *FnObj
 	EqualTo Obj
 
 	Line uint

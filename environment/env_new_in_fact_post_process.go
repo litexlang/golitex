@@ -58,6 +58,19 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 		return glob.TrueRet("")
 	}
 
+	if fnObj, ok := fact.Params[1].(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(fnObj.FnHead, glob.KeywordCart) {
+		if _, ok := e.ObjFromCartSetMem[fact.Params[0].String()]; !ok {
+			e.ObjFromCartSetMem[fact.Params[0].String()] = ObjFromCartSetMemItem{
+				CartSetOrNil: fnObj,
+				EqualToOrNil: nil,
+			}
+		} else {
+			item := e.ObjFromCartSetMem[fact.Params[0].String()]
+			item.CartSetOrNil = fnObj
+			e.ObjFromCartSetMem[fact.Params[0].String()] = item
+		}
+	}
+
 	return glob.TrueRet("")
 }
 
@@ -169,6 +182,30 @@ func (e *Env) equalFactPostProcess_cart(fact *ast.SpecFactStmt) glob.GlobRet {
 		ret = e.NewFact(projEqualFact)
 		if ret.IsErr() {
 			return ret
+		}
+	}
+
+	return glob.TrueRet("")
+}
+
+// 传入 obj 和 tuple，obj = tuple，左边是被赋值的对象，右边是 tuple
+func (e *Env) equalFactPostProcess_tuple(obj ast.Obj, tupleObj ast.Obj) glob.GlobRet {
+	tuple, ok := tupleObj.(*ast.FnObj)
+	if !ok || !ast.IsTupleObj(tuple) {
+		return glob.ErrRet(fmt.Errorf("expected tuple to be a tuple object, got %T", tupleObj))
+	}
+
+	// If obj is in ObjFromCartSetMem, update EqualTo; otherwise create new entry
+	objStr := obj.String()
+	if item, exists := e.ObjFromCartSetMem[objStr]; exists {
+		// Update EqualTo
+		item.EqualToOrNil = tuple
+		e.ObjFromCartSetMem[objStr] = item
+	} else {
+		// Create new entry with empty CartSet (will be set when obj in cart(...) is processed)
+		e.ObjFromCartSetMem[objStr] = ObjFromCartSetMemItem{
+			CartSetOrNil: nil, // Empty CartSet, will be updated later
+			EqualToOrNil: tuple,
 		}
 	}
 
