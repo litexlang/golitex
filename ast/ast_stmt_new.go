@@ -335,3 +335,7 @@ func NewHaveFnCaseByCaseStmt(defFnStmt *DefFnStmt, caseByCaseFacts SpecFactPtrSl
 func NewHaveCartSetStmt(name string, cartObj FnObj, line uint) *HaveCartSetStmt {
 	return &HaveCartSetStmt{name, cartObj, line}
 }
+
+func NewHaveObjFromCartSetStmt(objName string, cartSet FnObj, equalTo Obj, line uint) *HaveObjFromCartSetStmt {
+	return &HaveObjFromCartSetStmt{objName, cartSet, equalTo, line}
+}

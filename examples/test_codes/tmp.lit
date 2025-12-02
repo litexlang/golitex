@@ -1,14 +1,11 @@
-"""
 # a $in cart(R, R), a[1] $in R, a[2] $in R, a[1] = 1, a[2] = 2
 have a cart(R, R) = (1, 2)
 
+"
 a[1] = 1
 a[2] = 2
 
 a $in cart(Z, Z) # a[1] $in Z, a[2] $in Z
 
 (1, 2)[1] = 1
-"""
-
-know (1, 2)[1] = 1
-(1, 2) = (1, 2)
+"

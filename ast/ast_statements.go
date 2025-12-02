@@ -527,3 +527,11 @@ type HaveCartSetStmt struct {
 
 	Line uint
 }
+
+type HaveObjFromCartSetStmt struct {
+	ObjName string
+	CartSet FnObj
+	EqualTo Obj
+
+	Line uint
+}
