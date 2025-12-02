@@ -95,6 +95,14 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 		return verRet
 	}
 
+	verRet = ver.verInCartSet_ByTuple(stmt, state)
+	if verRet.IsErr() {
+		return NewExecErr(verRet.String())
+	}
+	if verRet.IsTrue() {
+		return verRet
+	}
+
 	verRet = ver.verInSetProduct(stmt, state)
 	if verRet.IsErr() {
 		return NewExecErr(verRet.String())
@@ -367,6 +375,56 @@ func (ver *Verifier) objNotInSetWhenAllItemsInThatSetAreNotEqualToIt(stmt *ast.S
 
 	verRet := ver.VerFactStmt(notAllItemsInThatSetAreNotEqualToIt, state)
 	return verRet
+}
+
+// verInCartSet_ByTuple verifies a $in cart(...) by checking if the tuple's elements are in corresponding cart sets
+func (ver *Verifier) verInCartSet_ByTuple(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	// Check if right side is cart(...)
+	cartSet, ok := stmt.Params[1].(*ast.FnObj)
+	if !ok {
+		return NewExecUnknown("")
+	}
+	if !ast.IsAtomObjAndEqualToStr(cartSet.FnHead, glob.KeywordCart) {
+		return NewExecUnknown("")
+	}
+
+	// Get obj from ObjFromCartSetMem
+	obj := stmt.Params[0]
+	item := ver.Env.GetObjFromCartSetMemItem(obj)
+	if item == nil {
+		return NewExecUnknown("")
+	}
+
+	// Get EqualTo tuple
+	tuple := item.EqualToOrNil
+	if tuple == nil {
+		return NewExecUnknown("")
+	}
+
+	tupleAsFn, ok := tuple.(*ast.FnObj)
+	if !ok || !ast.IsTupleFnObj(tupleAsFn) {
+		return NewExecUnknown("")
+	}
+
+	// Check that tuple length matches cart set length
+	if len(tupleAsFn.Params) != len(cartSet.Params) {
+		return NewExecErr(fmt.Sprintf("tuple length (%d) does not match cart set length (%d) in %s", len(tupleAsFn.Params), len(cartSet.Params), stmt))
+	}
+
+	// Check that each element of tuple is in the corresponding cart set
+	for i := range len(tupleAsFn.Params) {
+		inFact := ast.NewInFactWithFc(tupleAsFn.Params[i], cartSet.Params[i])
+		verRet := ver.VerFactStmt(inFact, state)
+		if verRet.IsErr() {
+			return verRet
+		}
+		if verRet.IsUnknown() {
+			return NewExecUnknown("")
+		}
+	}
+
+	msg := fmt.Sprintf("each element in tuple %s is in corresponding cart set %s", tuple, cartSet)
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
 }
 
 func (ver *Verifier) verInSetProduct(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
