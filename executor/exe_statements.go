@@ -17,6 +17,7 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
+	litex_env "golitex/environment"
 	glob "golitex/glob"
 )
 
@@ -1469,5 +1470,91 @@ func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) ExecRet {
 }
 
 func (exec *Executor) haveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetStmt) ExecRet {
-	return NewExecTrue(stmt.String())
+	// Check: verify cart parameters are sets and equalTo elements are in corresponding sets
+	checkRet := exec.checkHaveObjFromCartSetStmt(stmt)
+	if checkRet.IsNotTrue() {
+		return checkRet
+	}
+
+	// Post-process: add obj in cart and obj = equalTo facts
+	postRet := exec.postProcessHaveObjFromCartSetStmt(stmt)
+	if postRet.IsNotTrue() {
+		return postRet
+	}
+
+	return NewExecTrue("").AddMsg(stmt.String())
+}
+
+// checkHaveObjFromCartSetStmt checks that:
+// 1. Each parameter of cart is a set
+// 2. equalTo is a tuple with the same length as cart parameters
+// 3. Each element of equalTo is in the corresponding cart set
+func (exec *Executor) checkHaveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetStmt) ExecRet {
+	// Check that each parameter of cart is a set
+	for i, param := range stmt.CartSet.Params {
+		state := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{param, ast.Atom(glob.KeywordSet)}, stmt.Line))
+		if state.IsErr() {
+			return NewExecErr(state.String())
+		}
+		if state.IsUnknown() {
+			return NewExecErr(fmt.Sprintf("cart parameter %d (%s) must be a set, i.e. `%s in %s` must be true, but it is unknown", i+1, param.String(), param.String(), ast.Atom(glob.KeywordSet).String()))
+		}
+	}
+
+	// Check that equalTo is a tuple
+	equalToAsFn, ok := stmt.EqualTo.(*ast.FnObj)
+	if !ok {
+		return NewExecErr(fmt.Sprintf("expected equalTo to be a tuple, but got %T", stmt.EqualTo))
+	}
+	if !ast.IsTupleObj(equalToAsFn) {
+		return NewExecErr(fmt.Sprintf("expected equalTo to be a tuple (with head %s), but got %s", glob.TupleOpt, equalToAsFn.FnHead.String()))
+	}
+
+	// Check that tuple length matches cart parameters length
+	if len(equalToAsFn.Params) != len(stmt.CartSet.Params) {
+		return NewExecErr(fmt.Sprintf("tuple length (%d) does not match cart parameters length (%d)", len(equalToAsFn.Params), len(stmt.CartSet.Params)))
+	}
+
+	// Check that each element of equalTo is in the corresponding cart set
+	for i := range len(equalToAsFn.Params) {
+		inFact := ast.NewInFactWithFc(equalToAsFn.Params[i], stmt.CartSet.Params[i])
+		state := exec.factStmt(inFact)
+		if state.IsErr() {
+			return NewExecErr(state.String())
+		}
+		if state.IsUnknown() {
+			return NewExecErr(fmt.Sprintf("tuple element %d (%s) must be in cart set %d (%s), but it is unknown", i+1, equalToAsFn.Params[i].String(), i+1, stmt.CartSet.Params[i].String()))
+		}
+	}
+
+	return NewExecTrue("")
+}
+
+// postProcessHaveObjFromCartSetStmt adds:
+// 1. obj in cart(...) fact
+// 2. obj = equalTo fact
+func (exec *Executor) postProcessHaveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetStmt) ExecRet {
+	objAtom := ast.Atom(stmt.ObjName)
+
+	// Add obj in cart(...) fact
+	inCartFact := ast.NewInFactWithFc(objAtom, stmt.CartSet)
+	ret := exec.Env.NewFact(inCartFact)
+	if ret.IsErr() {
+		return NewExecErr(ret.String())
+	}
+
+	// Add obj = equalTo fact
+	equalFact := ast.NewEqualFact(objAtom, stmt.EqualTo)
+	ret = exec.Env.NewFact(equalFact)
+	if ret.IsErr() {
+		return NewExecErr(ret.String())
+	}
+
+	// Store in ObjFromCartSetMem
+	exec.Env.ObjFromCartSetMem[stmt.ObjName] = litex_env.ObjFromCartSetMemItem{
+		CartSetOrNil: stmt.CartSet,
+		EqualToOrNil: stmt.EqualTo,
+	}
+
+	return NewExecTrue("")
 }

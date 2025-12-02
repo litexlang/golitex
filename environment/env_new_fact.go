@@ -403,6 +403,14 @@ func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, glob.Glob
 		}
 	}
 
+	// 如果右边是 a = (1, 2, ..)，那么需要处理（左边是被赋值的对象，右边是 tuple）
+	if asFnObj, ok := fact.Params[1].(*ast.FnObj); ok && ast.IsTupleObj(asFnObj) {
+		ret = env.equalFactPostProcess_tuple(fact.Params[0], fact.Params[1])
+		if ret.IsErr() {
+			return false, ret
+		}
+	}
+
 	return true, glob.TrueRet("")
 }
 

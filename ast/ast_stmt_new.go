@@ -332,10 +332,10 @@ func NewHaveFnCaseByCaseStmt(defFnStmt *DefFnStmt, caseByCaseFacts SpecFactPtrSl
 	return &HaveFnCaseByCaseStmt{defFnStmt, caseByCaseFacts, proofs, haveObjSatisfyFn, line}
 }
 
-func NewHaveCartSetStmt(name string, cartObj FnObj, line uint) *HaveCartSetStmt {
+func NewHaveCartSetStmt(name string, cartObj *FnObj, line uint) *HaveCartSetStmt {
 	return &HaveCartSetStmt{name, cartObj, line}
 }
 
-func NewHaveObjFromCartSetStmt(objName string, cartSet FnObj, equalTo Obj, line uint) *HaveObjFromCartSetStmt {
+func NewHaveObjFromCartSetStmt(objName string, cartSet *FnObj, equalTo Obj, line uint) *HaveObjFromCartSetStmt {
 	return &HaveObjFromCartSetStmt{objName, cartSet, equalTo, line}
 }
