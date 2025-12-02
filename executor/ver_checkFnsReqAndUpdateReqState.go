@@ -73,13 +73,15 @@ func (ver *Verifier) objSatisfyFnRequirement(obj ast.Obj, state *VerState) ExecR
 		return NewExecTrue("")
 	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordCart) {
 		return ver.cartFnRequirement(objAsFnObj, state)
-	} else if ast.IsTupleObj(objAsFnObj) {
+	} else if ast.IsTupleFnObj(objAsFnObj) {
 		for _, param := range objAsFnObj.Params {
 			if !ObjIsNotSet(param) {
 				return NewExecErr(fmt.Sprintf("parameters in %s must not be set", objAsFnObj.String()))
 			}
 		}
 		return NewExecTrue("")
+	} else if ast.IsIndexOptFnObj(objAsFnObj) {
+		return ver.indexOptFnRequirement(objAsFnObj, state)
 	} else {
 		if objAsFnObj.FnHead.String() == glob.KeywordProj {
 			return ver.parasSatisfyFnReq(objAsFnObj, state)
@@ -131,5 +133,57 @@ func (ver *Verifier) cartFnRequirement(fnObj *ast.FnObj, state *VerState) ExecRe
 			return NewExecErr(fmt.Sprintf("parameters in %s must be sets, %s in %s is not valid", fnObj.FnHead, param, glob.KeywordSet))
 		}
 	}
+	return NewExecTrue("")
+}
+
+func (ver *Verifier) indexOptFnRequirement(fnObj *ast.FnObj, state *VerState) ExecRet {
+	// [] 操作需要两个参数：obj 和 index
+	if len(fnObj.Params) != 2 {
+		return NewExecErr(fmt.Sprintf("[] operator requires 2 parameters, got %d in %s", len(fnObj.Params), fnObj))
+	}
+
+	obj := fnObj.Params[0]
+	indexObj := fnObj.Params[1]
+
+	// 尝试将索引转换为整数
+	index, ok := ast.ToInt(indexObj)
+	if !ok {
+		// 如果索引不是整数，无法检查范围，但可以继续
+		return NewExecTrue("")
+	}
+
+	// 检查索引是否有效（从 1 开始）
+	if index < 1 {
+		return NewExecErr(fmt.Sprintf("index in %s must be >= 1, got %d", fnObj, index))
+	}
+
+	// 情况1: obj 本身就是一个 tuple，比如 (1,2)[1]
+	if objAsTuple, ok := obj.(*ast.FnObj); ok && ast.IsTupleFnObj(objAsTuple) {
+		if index > len(objAsTuple.Params) {
+			return NewExecErr(fmt.Sprintf("index %d in %s is out of range, tuple has %d elements", index, fnObj, len(objAsTuple.Params)))
+		}
+		return NewExecTrue("")
+	}
+
+	// 情况2: 从环境中读取 ObjFromCartSetMem
+	item := ver.Env.GetObjFromCartSetMemItem(obj)
+	if item != nil {
+		// 检查 CartSet 的长度
+		if item.CartSetOrNil != nil {
+			if index > len(item.CartSetOrNil.Params) {
+				return NewExecErr(fmt.Sprintf("index %d in %s is out of range, cart set has %d elements", index, fnObj, len(item.CartSetOrNil.Params)))
+			}
+		}
+
+		// 检查 EqualTo tuple 的长度
+		if item.EqualToOrNil != nil {
+			if tupleAsFn, ok := item.EqualToOrNil.(*ast.FnObj); ok && ast.IsTupleFnObj(tupleAsFn) {
+				if index > len(tupleAsFn.Params) {
+					return NewExecErr(fmt.Sprintf("index %d in %s is out of range, tuple has %d elements", index, fnObj, len(tupleAsFn.Params)))
+				}
+			}
+		}
+	}
+
 	return NewExecTrue("")
 }

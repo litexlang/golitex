@@ -429,8 +429,8 @@ func (f Atom) String() string {
 	return string(f)
 }
 
-func IsTupleObj(f *FnObj) bool {
-	return f.FnHead.String() == glob.TupleOpt
+func IsTupleFnObj(f *FnObj) bool {
+	return f.FnHead.String() == glob.KeywordTuple
 }
 
 func TupleObjString(f *FnObj) string {
@@ -454,8 +454,8 @@ func IndexOptObjString(f *FnObj) string {
 	return builder.String()
 }
 
-func IsIndexOptObj(f *FnObj) bool {
-	return f.FnHead.String() == glob.IndexOpt
+func IsIndexOptFnObj(f *FnObj) bool {
+	return f.FnHead.String() == glob.KeywordIndexOpt
 }
 
 func (f *FnObj) String() string {
@@ -463,11 +463,11 @@ func (f *FnObj) String() string {
 		return fnSetString(f)
 	}
 
-	if IsTupleObj(f) {
+	if IsTupleFnObj(f) {
 		return TupleObjString(f)
 	}
 
-	if IsIndexOptObj(f) {
+	if IsIndexOptFnObj(f) {
 		return IndexOptObjString(f)
 	}
 

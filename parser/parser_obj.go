@@ -323,7 +323,7 @@ func (tb *tokenBlock) bracedObj() (ast.Obj, error) {
 		}
 
 		// Return tuple as FnObj with TupleOpt as head
-		return ast.NewFnObj(ast.Atom(glob.TupleOpt), tupleObjs), nil
+		return ast.NewFnObj(ast.Atom(glob.KeywordTuple), tupleObjs), nil
 	}
 
 	// If no comma, expect a single expression followed by ')'
@@ -356,7 +356,7 @@ func (tb *tokenBlock) fnObjWithRepeatedBraceAndBracket(head ast.Obj) (ast.Obj, e
 				return nil, parserErrAtTb(err, tb)
 			}
 			// IndexOpt is a prefix operator, so it's applied as IndexOpt(head, ...params)
-			head = ast.NewFnObj(ast.Atom(glob.IndexOpt), []ast.Obj{head, obj})
+			head = ast.NewFnObj(ast.Atom(glob.KeywordIndexOpt), []ast.Obj{head, obj})
 		} else {
 			// No more braces or brackets
 			break
