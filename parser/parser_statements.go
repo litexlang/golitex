@@ -2128,7 +2128,7 @@ func (tb *tokenBlock) haveSetStmt() (ast.Stmt, error) {
 			return nil, fmt.Errorf("expect end of line")
 		}
 
-		return ast.NewHaveCartSetStmt(haveSetName, *cartObj, tb.line), nil
+		return ast.NewHaveCartSetStmt(haveSetName, cartObj, tb.line), nil
 	}
 
 	// Otherwise, parse as enum or intensional set
@@ -2597,7 +2597,7 @@ func (tb *tokenBlock) haveObjFromCartSetStmt() (*ast.HaveObjFromCartSetStmt, err
 		return nil, parserErrAtTb(fmt.Errorf("expect end of line"), tb)
 	}
 
-	return ast.NewHaveObjFromCartSetStmt(objName, *cartSet, equalTo, tb.line), nil
+	return ast.NewHaveObjFromCartSetStmt(objName, cartSet, equalTo, tb.line), nil
 }
 
 func (tb *tokenBlock) haveObjEqualStmt() (*ast.HaveObjEqualStmt, error) {

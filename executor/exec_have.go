@@ -250,8 +250,7 @@ func (exec *Executor) haveCartSetStmt(stmt *ast.HaveCartSetStmt) ExecRet {
 	}
 
 	// Store the equal fact: x = cart(a, b, c, ...)
-	cartObj := &stmt.CartObj
-	equalFact := ast.NewEqualFact(ast.Atom(stmt.Name), cartObj)
+	equalFact := ast.NewEqualFact(ast.Atom(stmt.Name), stmt.CartObj)
 	ret := exec.Env.NewFact(equalFact)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
