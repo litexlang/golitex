@@ -698,6 +698,8 @@ know @subset_of_finite_set_is_finite_set(x set, y finite_set):
 
 prop is_cart(x set)
 
+prop is_tuple(x obj)
+
 fn proj(x set, i N_pos) set:
 	dom:
 		$is_cart(x)
