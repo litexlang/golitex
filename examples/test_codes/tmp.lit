@@ -8,7 +8,6 @@ a = (1, 2)
 a[1] = 1
 a[2] = 2
 
-"
-a $in cart(Z, Z) # a[1] $in Z, a[2] $in Z
+a[1] $in R
 
-"
+a $in cart(Z, Z) # a[1] $in Z, a[2] $in Z
