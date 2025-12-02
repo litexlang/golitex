@@ -9,32 +9,28 @@ prove:
 
     let a x
 
-    $is_cart(cart(R, Q))
-    let y cart(R, Q)
-    set_dim(cart(R, Q)) = 2
-
     a[1] $in R
     a[2] $in Q
     a[3] $in Z
 
-# a $in cart(R, R), a[1] $in R, a[2] $in R, a[1] = 1, a[2] = 2
-have a cart(R, R) = (1, 2)
+    dim(a) = 3
+    $is_tuple(a)
 
-a = (1, 2)
+prove:
+    $is_cart(cart(R, Q))
+    set_dim(cart(R, Q)) = 2
+    let y cart(R, Q)
 
-(1, 2)[1] = 1
+prove:
+    have a cart(R, R) = (1, 2)
 
-a[1] = 1
-a[2] = 2
+    a = (1, 2)
 
-a[1] $in R
+    (1, 2)[1] = 1
 
-a $in cart(Z, Z) # a[1] $in Z, a[2] $in Z
+    a[1] = 1
+    a[2] = 2
 
-have set b = cart(R, R)
-let c b
+    a[1] $in R
 
-c[1] $in R
-c[2] $in R
-
-dim(c) = 2
+    a $in cart(Z, Z) # a[1] $in Z, a[2] $in Z

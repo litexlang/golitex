@@ -27,106 +27,88 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 	}
 
 	// Try different postprocessing strategies in order
-	if ret := e.inFactPostProcess_TrySetFnRetValue(fact); ret != nil {
-		return *ret
+	if ret := e.inFactPostProcess_TrySetFnRetValue(fact); ret.IsTrue() || ret.IsErr() {
+		return ret
 	}
 
-	if ret := e.inFactPostProcess_TryFnTemplate(fact); ret != nil {
-		return *ret
+	if ret := e.inFactPostProcess_TryFnTemplate(fact); ret.IsTrue() || ret.IsErr() {
+		return ret
 	}
 
-	if ret := e.inFactPostProcess_TryFnTemplateFcFn(fact); ret != nil {
-		return *ret
+	if ret := e.inFactPostProcess_TryFnTemplateFcFn(fact); ret.IsTrue() || ret.IsErr() {
+		return ret
 	}
 
-	if ret := e.inFactPostProcess_TryDirectCart(fact); ret != nil {
-		return *ret
-	}
-
-	if ret := e.inFactPostProcess_TryEqualCart(fact); ret != nil {
-		return *ret
+	if ret := e.inFactPostProcess_TryCart(fact); ret.IsTrue() || ret.IsErr() {
+		return ret
 	}
 
 	return glob.TrueRet("")
 }
 
 // inFactPostProcess_TrySetFnRetValue handles a $in setFn(...) case
-func (e *Env) inFactPostProcess_TrySetFnRetValue(fact *ast.SpecFactStmt) *glob.GlobRet {
+func (e *Env) inFactPostProcess_TrySetFnRetValue(fact *ast.SpecFactStmt) glob.GlobRet {
 	def := e.GetSetFnRetValue(fact.Params[1])
 	if def == nil {
-		return nil
+		return glob.NewGlobUnknown("")
 	}
-	ret := e.inFactPostProcess_InSetFnRetValue(fact, def)
-	return &ret
+	return e.inFactPostProcess_InSetFnRetValue(fact, def)
 }
 
 // inFactPostProcess_TryFnTemplate handles a $in fnTemplate(...) case
-func (e *Env) inFactPostProcess_TryFnTemplate(fact *ast.SpecFactStmt) *glob.GlobRet {
+func (e *Env) inFactPostProcess_TryFnTemplate(fact *ast.SpecFactStmt) glob.GlobRet {
 	isTemplate, ret := e.inFactPostProcess_InFnTemplate(fact)
 	if ret.IsErr() {
-		return &ret
+		return ret
 	}
 	if isTemplate {
-		return &ret
+		return ret
 	}
-	return nil
+	return glob.NewGlobUnknown("")
 }
 
 // inFactPostProcess_TryFnTemplateFcFn handles a $in fnTemplate_FcFn case
-func (e *Env) inFactPostProcess_TryFnTemplateFcFn(fact *ast.SpecFactStmt) *glob.GlobRet {
+func (e *Env) inFactPostProcess_TryFnTemplateFcFn(fact *ast.SpecFactStmt) glob.GlobRet {
 	fnFn, ok := fact.Params[1].(*ast.FnObj)
 	if !ok || !ast.IsFnTemplate_FcFn(fnFn) {
-		return nil
+		return glob.NewGlobUnknown("")
 	}
 
 	fnTStruct, ok := ast.FcFnT_To_FnTStruct(fnFn)
 	if !ok {
-		ret := glob.ErrRet(fmt.Errorf("%s is not fcFn type fn template", fnFn.String()))
-		return &ret
+		return glob.ErrRet(fmt.Errorf("%s is not fcFn type fn template", fnFn.String()))
 	}
 
 	ret := e.InsertFnInFnTT(fact.Params[0], fnTStruct)
 	if ret.IsErr() {
-		return &ret
+		return ret
 	}
 
-	trueRet := glob.TrueRet("")
-	return &trueRet
+	return glob.TrueRet("")
 }
 
-// inFactPostProcess_TryDirectCart handles a $in cart(...) case where right side is directly cart
-func (e *Env) inFactPostProcess_TryDirectCart(fact *ast.SpecFactStmt) *glob.GlobRet {
-	fnObj, ok := fact.Params[1].(*ast.FnObj)
-	if !ok || !ast.IsAtomObjAndEqualToStr(fnObj.FnHead, glob.KeywordCart) {
-		return nil
+// inFactPostProcess_TryCart handles a $in cart(...) case
+// It tries both direct cart and cart from equal facts
+func (e *Env) inFactPostProcess_TryCart(fact *ast.SpecFactStmt) glob.GlobRet {
+	// Try direct cart first
+	if fnObj, ok := fact.Params[1].(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(fnObj.FnHead, glob.KeywordCart) {
+		return e.inFactPostProcess_InCart(fact.Params[0], fnObj)
 	}
 
-	ret := e.inFactPostProcess_InCart(fact.Params[0], fnObj)
-	if ret.IsErr() {
-		return &ret
-	}
-	return nil
-}
-
-// inFactPostProcess_TryEqualCart handles a $in b case where b equals some cart(...)
-func (e *Env) inFactPostProcess_TryEqualCart(fact *ast.SpecFactStmt) *glob.GlobRet {
+	// Try cart from equal facts
 	equalFcs, ok := e.GetEqualFcs(fact.Params[1])
 	if !ok || equalFcs == nil {
-		return nil
+		return glob.NewGlobUnknown("")
 	}
 
 	// Look for a cart set in the equal facts
 	for _, equalFc := range *equalFcs {
 		if cartAsFn, ok := equalFc.(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(cartAsFn.FnHead, glob.KeywordCart) {
-			ret := e.inFactPostProcess_InCart(fact.Params[0], cartAsFn)
-			if ret.IsErr() {
-				return &ret
-			}
-			return nil
+			return e.inFactPostProcess_InCart(fact.Params[0], cartAsFn)
 		}
 	}
 
-	return nil
+	return glob.NewGlobUnknown("")
 }
 
 // inFactPostProcess_InCart handles postprocessing for a $in cart(...)
