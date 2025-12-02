@@ -89,16 +89,17 @@ const (
 	KeywordExit            = "exit"
 	KeywordHelp            = "help"
 
-	KeywordCart   = "cart"
-	KeywordIsCart = "is_cart"
-	KeywordSetDim = "set_dim"
-	KeywordProj   = "proj"
+	// cart(R,R), (1,2) 表示集合叉乘和集合的元素; set_dim, dim表示集合叉乘和集合的元素的维度； proj, [] 表示集合叉乘的投影和集合的元素的投影; is_cart, is_tuple 表示是集合叉乘和集合的元素的特征
+	KeywordCart  = "cart"
+	KeywordTuple = "()"
 
-	KeywordDim = "dim"
-
+	KeywordIsCart  = "is_cart"
 	KeywordIsTuple = "is_tuple"
 
-	KeywordTuple    = "()"
+	KeywordSetDim = "set_dim"
+	KeywordDim    = "dim"
+
+	KeywordProj     = "proj"
 	KeywordIndexOpt = "[]"
 )
 
