@@ -58,51 +58,56 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 		return glob.TrueRet("")
 	}
 
-	// 如果 c in b 而 b 在 CartSetMem 中，把 b 对应的 cart 作为 c 的 CartSetOrNil 存好
-	// fact.Params[0] 是 c, fact.Params[1] 是 b
-	cartSet := e.GetCartSetMem(fact.Params[1])
-	if cartSet != nil {
-		objStr := fact.Params[0].String()
-		if item, exists := e.ObjFromCartSetMem[objStr]; exists {
-			// Update CartSetOrNil
-			item.CartSetOrNil = cartSet
-			e.ObjFromCartSetMem[objStr] = item
-		} else {
-			// Create new entry
-			e.ObjFromCartSetMem[objStr] = ObjFromCartSetMemItem{
-				CartSetOrNil: cartSet,
-				EqualToOrNil: nil,
-			}
-		}
-	}
-
 	// 如果 a in cart(R, R)，自动生成 a[1] $in R 和 a[2] $in R 这样的事实
 	if fnObj, ok := fact.Params[1].(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(fnObj.FnHead, glob.KeywordCart) {
-		obj := fact.Params[0]
-		cartSet := fnObj
-		// 为每个索引生成 a[i] $in cartSet.Params[i-1] 的事实（索引从1开始）
-		for i := range len(cartSet.Params) {
-			index := i + 1 // 索引从1开始
-			indexObj := ast.Atom(fmt.Sprintf("%d", index))
-			// 创建索引操作 a[i]
-			indexedObj := ast.NewFnObj(ast.Atom(glob.KeywordIndexOpt), []ast.Obj{obj, indexObj})
-			// 创建 a[i] $in cartSet.Params[i] 的事实
-			inFact := ast.NewInFactWithFc(indexedObj, cartSet.Params[i])
-			ret := e.NewFact(inFact)
-			if ret.IsErr() {
-				return ret
-			}
-		}
-		// 添加 dim(obj) = len(cartSet.Params) 的事实
-		dimFn := ast.NewFnObj(ast.Atom(glob.KeywordDim), []ast.Obj{obj})
-		dimValue := ast.Atom(strconv.Itoa(len(cartSet.Params)))
-		dimEqualFact := ast.NewEqualFact(dimFn, dimValue)
-		ret := e.NewFact(dimEqualFact)
+		ret := e.inFactPostProcess_InCart(fact.Params[0], fnObj)
 		if ret.IsErr() {
 			return ret
 		}
 	}
 
+	// 如果 a $in b 并且 b 等于某个 cart(...)，也执行 cart 的 postprocess
+	equalFcs, ok := e.GetEqualFcs(fact.Params[1])
+	if ok && equalFcs != nil {
+		// 查找 b 是否等于某个 cart set
+		for _, equalFc := range *equalFcs {
+			if cartAsFn, ok := equalFc.(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(cartAsFn.FnHead, glob.KeywordCart) {
+				ret := e.inFactPostProcess_InCart(fact.Params[0], cartAsFn)
+				if ret.IsErr() {
+					return ret
+				}
+				break
+			}
+		}
+	}
+
+	return glob.TrueRet("")
+}
+
+// inFactPostProcess_InCart handles postprocessing for a $in cart(...)
+// It generates a[i] $in cartSet.Params[i] facts and dim(a) = len(cartSet.Params) fact
+func (e *Env) inFactPostProcess_InCart(obj ast.Obj, cartSet *ast.FnObj) glob.GlobRet {
+	// 为每个索引生成 a[i] $in cartSet.Params[i-1] 的事实（索引从1开始）
+	for i := range len(cartSet.Params) {
+		index := i + 1 // 索引从1开始
+		indexObj := ast.Atom(fmt.Sprintf("%d", index))
+		// 创建索引操作 a[i]
+		indexedObj := ast.NewFnObj(ast.Atom(glob.KeywordIndexOpt), []ast.Obj{obj, indexObj})
+		// 创建 a[i] $in cartSet.Params[i] 的事实
+		inFact := ast.NewInFactWithFc(indexedObj, cartSet.Params[i])
+		ret := e.NewFact(inFact)
+		if ret.IsErr() {
+			return ret
+		}
+	}
+	// 添加 dim(obj) = len(cartSet.Params) 的事实
+	dimFn := ast.NewFnObj(ast.Atom(glob.KeywordDim), []ast.Obj{obj})
+	dimValue := ast.Atom(strconv.Itoa(len(cartSet.Params)))
+	dimEqualFact := ast.NewEqualFact(dimFn, dimValue)
+	ret := e.NewFact(dimEqualFact)
+	if ret.IsErr() {
+		return ret
+	}
 	return glob.TrueRet("")
 }
 
@@ -216,9 +221,6 @@ func (e *Env) equalFactPostProcess_cart(fact *ast.SpecFactStmt) glob.GlobRet {
 			return ret
 		}
 	}
-
-	// Store x in CartSetMem
-	e.CartSetMem[fact.Params[0].String()] = cart
 
 	return glob.TrueRet("")
 }

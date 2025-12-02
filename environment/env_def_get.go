@@ -120,19 +120,3 @@ func (e *Env) GetProveAlgoDef(proveAlgoName string) *ast.DefProveAlgoStmt {
 	}
 	return nil
 }
-
-// GetCartSetMem returns the cart set for the given object, or nil if not found
-func (e *Env) GetCartSetMem(obj ast.Obj) *ast.FnObj {
-	for env := e; env != nil; env = env.Parent {
-		cartSet, ok := env.CartSetMem[obj.String()]
-		if ok {
-			return cartSet
-		}
-	}
-	return nil
-}
-
-// HasCartSetMem checks if the object exists in CartSetMem
-func (e *Env) HasCartSetMem(obj ast.Obj) bool {
-	return e.GetCartSetMem(obj) != nil
-}
