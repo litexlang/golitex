@@ -1,67 +1,25 @@
-have fn:
-    cadd(x, y cart(R, R)) cart(R, R):
-        cadd(x, y) = (x[1] + y[1], x[2] + y[2])
+prove:
+    exist_prop n N_pos st exist_n_larger_than_1():
+        n > 1
+    exist 2 st $exist_n_larger_than_1()
 
-    prove:
-        have c cart(R, R) = (x[1] + y[1], x[2] + y[2])
-    = c
+    have n st $exist_n_larger_than_1()
 
-have fn:
-    csub(x, y cart(R, R)) cart(R, R):
-        csub(x, y) = (x[1] - y[1], x[2] - y[2])
 
-    prove:
-        have c cart(R, R) = (x[1] - y[1], x[2] - y[2])
-    = c
-
-have fn:
-    creal(x cart(R, R)) R:
-        creal(x) = x[1]
-
-    prove:
-        have c R = x[1]
-    = c
-
-have fn:
-    cimag(x cart(R, R)) R:
-        cimag(x) = x[2]
-
-    prove:
-        have c R = x[2]
-    = c
-
-have fn:
-    cabs(x cart(R, R)) R:
-        cabs(x) = sqrt(x[1]^2 + x[2]^2)
-
-    prove:
-        have c R = sqrt(x[1]^2 + x[2]^2)
-    = c
-
-prop is_real(x cart(R, R)):
-    cimg(x) = 0
-
-prop is_imag(x cart(R, R)):
-    creal(x) = 0
-
-prop is_conjugate(x, y cart(R, R)):
-    cimag(x - y) = 0
-
-have fn:
-    cmul(x, y cart(R, R)) cart(R, R):
-        cmul(x, y) = (x[1] * y[1] - x[2] * y[2], x[1] * y[2] + x[2] * y[1])
-
-    prove:
-        have c cart(R, R) = (x[1] * y[1] - x[2] * y[2], x[1] * y[2] + x[2] * y[1])
-    = c
-
-have fn:
-    cdiv(x, y cart(R, R)) cart(R, R):
-        dom:
-            $not_both_zero(y[1], y[2])
+    have_cart_with_dim(s2, n, x):
         =>:
-            cdiv(x, y) = (x[1] * y[1] + x[2] * y[2], x[2] * y[1] - x[1] * y[2]) / (y[1]^2 + y[2]^2)
+            proj(s2, x) = R
 
-    prove:
-        have c cart(R, R) = (x[1] * y[1] + x[2] * y[2], (x[2] * y[1] - x[1] * y[2]) / (y[1]^2 + y[2]^2))
-    = c
+        prove:
+            do_nothing
+
+        = R
+
+
+    $is_cart(s2)
+    set_dim(s2) = n
+
+    forall x N_pos:
+        x <= n
+        =>:
+            proj(s2, x) = R

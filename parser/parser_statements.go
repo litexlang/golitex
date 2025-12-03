@@ -2286,10 +2286,11 @@ func (tb *tokenBlock) haveCartWithDimStmt() (ast.Stmt, error) {
 		}
 
 		proofs := []ast.Stmt{}
-		err = tb.body[1].header.skipKwAndColonCheckEOL(glob.KeySymbolRightArrow)
+		err = tb.body[1].header.skipKwAndColonCheckEOL(glob.KeywordProve)
 		if err != nil {
 			return nil, parserErrAtTb(err, tb)
 		}
+
 		for _, stmt := range tb.body[1].body {
 			curStmt, err := stmt.Stmt()
 			if err != nil {

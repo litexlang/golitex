@@ -110,7 +110,7 @@ func (ver *Verifier) dimFnRequirement(fnObj *ast.FnObj, state *VerState) ExecRet
 		return NewExecErr(verRet.String())
 	}
 	if verRet.IsUnknown() {
-		return NewExecErr(fmt.Sprintf("%s is not unknown", isTupleFact))
+		return NewExecErr(fmt.Sprintf("%s is unknown", isTupleFact))
 	}
 	return NewExecTrue("")
 }
@@ -142,7 +142,7 @@ func (ver *Verifier) parasSatisfyProjReq(fnObj *ast.FnObj, state *VerState) Exec
 		return NewExecErr(verRet.String())
 	}
 	if verRet.IsUnknown() {
-		return NewExecErr(fmt.Sprintf("%s is not unknown", isCartFact))
+		return NewExecErr(fmt.Sprintf("%s is unknown", isCartFact))
 	}
 
 	// index >= 1

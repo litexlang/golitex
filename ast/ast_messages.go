@@ -783,20 +783,35 @@ func (stmt *HaveCartSetStmt) String() string {
 
 func (stmt *HaveCartWithDimStmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordHave)
-	builder.WriteString(" ")
-	builder.WriteString(glob.KeywordSet)
-	builder.WriteString(" ")
+	builder.WriteString(glob.KeywordHaveCartWithDim)
+	builder.WriteString("(")
 	builder.WriteString(stmt.ObjName)
-	builder.WriteString(" ")
-	builder.WriteString(glob.KeySymbolEqual)
-	builder.WriteString(" cart_with_dim(")
+	builder.WriteString(", ")
 	builder.WriteString(stmt.CartDim.String())
+	builder.WriteString(", ")
+	builder.WriteString(stmt.Param)
 	builder.WriteString(")")
-	if stmt.Param != "" {
-		builder.WriteString(": ")
-		builder.WriteString(stmt.Param)
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+
+	// Write =>: block with facts
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeySymbolRightArrow+glob.KeySymbolColon, 1))
+	builder.WriteByte('\n')
+	for i := range len(stmt.Facts) {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Facts[i].String(), 2))
+		builder.WriteByte('\n')
 	}
+
+	// Write prove: block with proofs
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve+glob.KeySymbolColon, 1))
+	builder.WriteByte('\n')
+	for _, proof := range stmt.Proofs {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 2))
+		builder.WriteByte('\n')
+	}
+
+	// Write = equalTo
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeySymbolEqual+" "+stmt.EqualTo.String(), 1))
 	return builder.String()
 }
 
