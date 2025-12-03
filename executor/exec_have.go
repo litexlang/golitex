@@ -231,6 +231,11 @@ func (exec *Executor) haveIntensionalSetStmt(stmt *ast.HaveIntensionalSetStmt) E
 }
 
 func (exec *Executor) haveCartSetStmt(stmt *ast.HaveCartSetStmt) ExecRet {
+	// check that the cart has at least 2 parameters
+	if len(stmt.CartObj.Params) < 2 {
+		return NewExecErr(fmt.Sprintf("cart must have at least 2 parameters, %s in %s is not valid", stmt.CartObj.String(), stmt.CartObj.String()))
+	}
+
 	// Check that each parameter of cart is a set
 	for i, param := range stmt.CartObj.Params {
 		state := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{param, ast.Atom(glob.KeywordSet)}, stmt.Line))
