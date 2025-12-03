@@ -33,10 +33,6 @@ func successVerString(stmt, stmtVerifiedBy ast.Stmt) string {
 	return builder.String()
 }
 
-func parametersDoNotSatisfyFnReq(param ast.Obj, fnName ast.Obj) error {
-	return fmt.Errorf("the arguments passed to the %s do not satisfy the domain of %s", param, fnName)
-}
-
 // successVerStringString is a helper function for backward compatibility with string-based calls
 func successVerStringString(stmtStr, stmtVerifiedByStr string) string {
 	var builder strings.Builder
