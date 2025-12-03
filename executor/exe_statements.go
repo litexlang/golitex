@@ -1670,21 +1670,13 @@ func (exec *Executor) checkHaveCartWithDimStmt(stmt *ast.HaveCartWithDimStmt) Ex
 	exec.NewEnv(exec.Env)
 	defer exec.deleteEnv()
 
-	objAtom := ast.Atom(stmt.ObjName)
+	objToDefineAtom := ast.Atom(stmt.ObjName)
 
-	// 在局部环境中添加 is_cart(ObjName)
-	isCartFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsCart), []ast.Obj{objAtom}, stmt.Line)
-	ret := exec.Env.NewFact(isCartFact)
-	if ret.IsErr() {
-		return NewExecErr(fmt.Sprintf("failed to add is_cart fact: %s", ret.String()))
-	}
-
-	// 在局部环境中添加 set_dim(ObjName) = CartDim
-	setDimFn := ast.NewFnObj(ast.Atom(glob.KeywordSetDim), []ast.Obj{objAtom})
-	setDimEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{setDimFn, stmt.CartDim}, stmt.Line)
-	ret = exec.Env.NewFact(setDimEqualFact)
-	if ret.IsErr() {
-		return NewExecErr(fmt.Sprintf("failed to add set_dim fact: %s", ret.String()))
+	// 局部环境里定义 param 是 N_pos，大于等于1，小于等于n
+	defLetStmt := ast.NewDefLetStmt([]string{stmt.Param}, []ast.Obj{ast.Atom(glob.KeywordNPos)}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{ast.Atom(stmt.Param), stmt.CartDim}, stmt.Line)}, stmt.Line)
+	execState := exec.defLetStmt(defLetStmt)
+	if execState.IsNotTrue() {
+		return NewExecErr(execState.String())
 	}
 
 	// 1. 证明 dimObj 是 N_pos 且大于1
@@ -1711,27 +1703,6 @@ func (exec *Executor) checkHaveCartWithDimStmt(stmt *ast.HaveCartWithDimStmt) Ex
 		return NewExecErr(fmt.Sprintf("%s must be > 1, but it is unknown", stmt.CartDim.String()))
 	}
 
-	// 验证 Param 是 N_pos
-	paramAtom := ast.Atom(stmt.Param)
-	paramInNPosFact := ast.NewInFactWithFc(paramAtom, ast.Atom(glob.KeywordNPos))
-	verRet = ver.VerFactStmt(paramInNPosFact, state)
-	if verRet.IsErr() {
-		return NewExecErr(fmt.Sprintf("failed to verify %s is in N_pos: %s", stmt.Param, verRet.String()))
-	}
-	if verRet.IsUnknown() {
-		return NewExecErr(fmt.Sprintf("%s must be in N_pos, but it is unknown", stmt.Param))
-	}
-
-	// 验证 Param <= CartDim (索引参数不能超过维度)
-	paramLessEqualDimFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{paramAtom, stmt.CartDim}, stmt.Line)
-	verRet = ver.VerFactStmt(paramLessEqualDimFact, state)
-	if verRet.IsErr() {
-		return NewExecErr(fmt.Sprintf("failed to verify %s <= %s: %s", stmt.Param, stmt.CartDim.String(), verRet.String()))
-	}
-	if verRet.IsUnknown() {
-		return NewExecErr(fmt.Sprintf("%s must be <= %s, but it is unknown", stmt.Param, stmt.CartDim.String()))
-	}
-
 	// 执行 proofs
 	for _, proof := range stmt.Proofs {
 		execRet := exec.Stmt(proof)
@@ -1740,15 +1711,34 @@ func (exec *Executor) checkHaveCartWithDimStmt(stmt *ast.HaveCartWithDimStmt) Ex
 		}
 	}
 
-	// 验证 proj(ObjName, Param) = EqualTo
-	projFn := ast.NewFnObj(ast.Atom(glob.KeywordProj), []ast.Obj{objAtom, paramAtom})
-	projEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{projFn, stmt.EqualTo}, stmt.Line)
-	verRet = ver.VerFactStmt(projEqualFact, state)
-	if verRet.IsErr() {
-		return NewExecErr(fmt.Sprintf("failed to verify proj(%s, %s) = %s: %s", stmt.ObjName, stmt.Param, stmt.EqualTo.String(), verRet.String()))
+	// 定义 objToDefine
+	defLetStmt = ast.NewDefLetStmt([]string{stmt.ObjName}, []ast.Obj{ast.Atom(glob.KeywordSet)}, []ast.FactStmt{}, stmt.Line)
+	execState = exec.defLetStmt(defLetStmt)
+	if execState.IsNotTrue() {
+		return NewExecErr(execState.String())
 	}
-	if verRet.IsUnknown() {
-		return NewExecErr(fmt.Sprintf("proj(%s, %s) = %s must be true, but it is unknown", stmt.ObjName, stmt.Param, stmt.EqualTo.String()))
+
+	// 在局部环境中添加 is_cart(ObjName)
+	isCartFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsCart), []ast.Obj{objToDefineAtom}, stmt.Line)
+	ret := exec.Env.NewFact(isCartFact)
+	if ret.IsErr() {
+		return NewExecErr(fmt.Sprintf("failed to add is_cart fact: %s", ret.String()))
+	}
+
+	// 在局部环境中添加 set_dim(ObjName) = CartDim
+	setDimFn := ast.NewFnObj(ast.Atom(glob.KeywordSetDim), []ast.Obj{objToDefineAtom})
+	setDimEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{setDimFn, stmt.CartDim}, stmt.Line)
+	ret = exec.Env.NewFact(setDimEqualFact)
+	if ret.IsErr() {
+		return NewExecErr(fmt.Sprintf("failed to add set_dim fact: %s", ret.String()))
+	}
+
+	// 让  proj(ObjToDefine, Param) = EqualTo
+	projFn := ast.NewFnObj(ast.Atom(glob.KeywordProj), []ast.Obj{objToDefineAtom, ast.Atom(stmt.Param)})
+	projEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{projFn, stmt.EqualTo}, stmt.Line)
+	ret = exec.Env.NewFact(projEqualFact)
+	if ret.IsErr() {
+		return NewExecErr(fmt.Sprintf("failed to add proj fact: %s", ret.String()))
 	}
 
 	// 验证所有 Facts 中的条件（thenFact）
@@ -1770,29 +1760,34 @@ func (exec *Executor) checkHaveCartWithDimStmt(stmt *ast.HaveCartWithDimStmt) Ex
 // 2. set_dim(ObjName) = CartDim fact
 // 3. All Facts (then properties)
 func (exec *Executor) postProcessHaveCartWithDimStmt(stmt *ast.HaveCartWithDimStmt) ExecRet {
-	objAtom := ast.Atom(stmt.ObjName)
-
-	// 在主环境中添加 is_cart(ObjName)
-	isCartFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsCart), []ast.Obj{objAtom}, stmt.Line)
-	ret := exec.Env.NewFact(isCartFact)
-	if ret.IsErr() {
-		return NewExecErr(fmt.Sprintf("failed to store is_cart fact: %s", ret.String()))
+	defLetStmt := ast.NewDefLetStmt([]string{stmt.ObjName}, []ast.Obj{ast.Atom(glob.KeywordSet)}, []ast.FactStmt{}, stmt.Line)
+	execState := exec.defLetStmt(defLetStmt)
+	if execState.IsNotTrue() {
+		return NewExecErr(execState.String())
 	}
 
-	// 在主环境中添加 set_dim(ObjName) = CartDim
-	setDimFn := ast.NewFnObj(ast.Atom(glob.KeywordSetDim), []ast.Obj{objAtom})
+	objToDefineAtom := ast.Atom(stmt.ObjName)
+
+	// 在局部环境中添加 is_cart(ObjName)
+	isCartFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsCart), []ast.Obj{objToDefineAtom}, stmt.Line)
+	ret := exec.Env.NewFact(isCartFact)
+	if ret.IsErr() {
+		return NewExecErr(fmt.Sprintf("failed to add is_cart fact: %s", ret.String()))
+	}
+
+	// 在局部环境中添加 set_dim(ObjName) = CartDim
+	setDimFn := ast.NewFnObj(ast.Atom(glob.KeywordSetDim), []ast.Obj{objToDefineAtom})
 	setDimEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{setDimFn, stmt.CartDim}, stmt.Line)
 	ret = exec.Env.NewFact(setDimEqualFact)
 	if ret.IsErr() {
-		return NewExecErr(fmt.Sprintf("failed to store set_dim fact: %s", ret.String()))
+		return NewExecErr(fmt.Sprintf("failed to add set_dim fact: %s", ret.String()))
 	}
 
-	// 在主环境中添加所有 Facts 中的条件（then 的性质）
-	for _, fact := range stmt.Facts {
-		ret = exec.Env.NewFact(fact)
-		if ret.IsErr() {
-			return NewExecErr(fmt.Sprintf("failed to store fact %s: %s", fact.String(), ret.String()))
-		}
+	// 让then里都对
+	uniFact := ast.NewUniFact([]string{stmt.Param}, []ast.Obj{ast.Atom(glob.KeywordNPos)}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{ast.Atom(stmt.Param), stmt.CartDim}, stmt.Line)}, stmt.Facts, stmt.Line)
+	ret = exec.Env.NewFact(uniFact)
+	if ret.IsErr() {
+		return NewExecErr(fmt.Sprintf("failed to add uni fact: %s", ret.String()))
 	}
 
 	return NewExecTrue("")
