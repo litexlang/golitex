@@ -207,7 +207,7 @@ func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state *VerState
 	// 	return NewExecUnknown("")
 	// }
 
-	if string(asAtom) == glob.KeywordNatural || string(asAtom) == glob.KeywordInteger || string(asAtom) == glob.KeywordReal || string(asAtom) == glob.KeywordComplex || string(asAtom) == glob.KeywordRational || string(asAtom) == glob.KeywordNPos {
+	if string(asAtom) == glob.KeywordNatural || string(asAtom) == glob.KeywordInteger || string(asAtom) == glob.KeywordReal || string(asAtom) == glob.KeywordRational || string(asAtom) == glob.KeywordNPos {
 		msg := fmt.Sprintf("%s is a builtin set", asAtom)
 		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
 	}
@@ -256,7 +256,6 @@ func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state *VerState) E
 		ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordInteger) ||
 		ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordRational) ||
 		ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordReal) ||
-		ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordComplex) ||
 		ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordNPos)
 	if ok {
 		return ver.processOkMsg(state, stmt.String(), "%s is a builtin set", stmt.Params[0])

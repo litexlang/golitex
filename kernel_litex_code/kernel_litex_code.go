@@ -125,9 +125,9 @@ know forall x N: x != 0 => x > 0
 
 know forall x, y R: x > 0, y > 0 => x ^ y $in R, x ^ y > 0, x * y > 0
 
-know forall x Z => x $in Q, x $in R, x $in C
+know forall x Z => x $in Q, x $in R
 
-know forall x N_pos => x $in N, x >= 1, x > 0, x $in Q, x $in R, x $in C
+know forall x N_pos => x $in N, x >= 1, x > 0, x $in Q, x $in R
 know forall x Z: x >= 0 => x $in N_pos
 know forall x Z: x <= 0 => not x $in N_pos
 
@@ -162,7 +162,6 @@ know:
 	$item_exists_in(Z)
 	$item_exists_in(Q)
 	$item_exists_in(R)
-	$item_exists_in(C)
 	forall x N_pos:
 		x > 0
 	forall x set: $item_exists_in(x) => x $in nonempty_set
