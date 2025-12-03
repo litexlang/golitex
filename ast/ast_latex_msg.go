@@ -675,23 +675,6 @@ func (s *HaveCartWithDimStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (s *HaveCartWithDimCaseByCaseStmt) ToLatexString() string {
-	var builder strings.Builder
-	builder.WriteString("\\begin{definition}[Set Exist By Axioms of Set Theory]")
-	builder.WriteString("We have a set: ")
-	builder.WriteString(s.ObjName)
-	builder.WriteString(" = cart\\_with\\_dim(")
-	builder.WriteString(s.CartDim.ToLatexString())
-	builder.WriteString(")")
-	if s.Param != "" {
-		builder.WriteString(": ")
-		builder.WriteString(s.Param)
-	}
-	builder.WriteString(".\n")
-	builder.WriteString("\\end{definition}")
-	return builder.String()
-}
-
 func (s *HaveObjFromCartSetStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordHave)

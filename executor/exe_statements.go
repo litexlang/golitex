@@ -142,8 +142,6 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 		execRet = NewExecErr("import statements are not allowed in local scope.")
 	case *ast.HaveObjFromCartSetStmt:
 		execRet = exec.haveObjFromCartSetStmt(stmt)
-	case *ast.HaveCartWithDimCaseByCaseStmt:
-		execRet = exec.haveCartWithDimCaseByCaseStmt(stmt)
 	case *ast.HaveCartWithDimStmt:
 		execRet = exec.haveCartWithDimStmt(stmt)
 	default:
@@ -1636,10 +1634,6 @@ func (exec *Executor) postProcessHaveObjFromCartSetStmt(stmt *ast.HaveObjFromCar
 		return NewExecErr(ret.String())
 	}
 
-	return NewExecTrue("")
-}
-
-func (exec *Executor) haveCartWithDimCaseByCaseStmt(stmt *ast.HaveCartWithDimCaseByCaseStmt) ExecRet {
 	return NewExecTrue("")
 }
 

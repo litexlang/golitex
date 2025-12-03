@@ -610,50 +610,6 @@ func (stmt *HaveCartWithDimStmt) Instantiate(uniMap map[string]Obj) (Stmt, error
 	return NewHaveCartWithDimStmt(stmt.ObjName, newCartDim, stmt.Param, newFacts, newProofs, newEqualTo, stmt.Line), nil
 }
 
-func (stmt *HaveCartWithDimCaseByCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	newCartDim, err := stmt.CartDim.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	newFacts := make(FactStmtSlice, len(stmt.Facts))
-	for i, fact := range stmt.Facts {
-		newFact, err := fact.Instantiate(uniMap)
-		if err != nil {
-			return nil, err
-		}
-		newFacts[i] = newFact.(FactStmt)
-	}
-	newCaseFacts := make(SpecFactPtrSlice, len(stmt.CaseFacts))
-	for i, caseFact := range stmt.CaseFacts {
-		newCaseFact, err := caseFact.Instantiate(uniMap)
-		if err != nil {
-			return nil, err
-		}
-		newCaseFacts[i] = newCaseFact.(*SpecFactStmt)
-	}
-	newCaseProofs := make(StmtSliceSlice, len(stmt.CaseProofs))
-	for i, caseProof := range stmt.CaseProofs {
-		newCaseProof := make(StmtSlice, len(caseProof))
-		for j, proof := range caseProof {
-			newProof, err := proof.Instantiate(uniMap)
-			if err != nil {
-				return nil, err
-			}
-			newCaseProof[j] = newProof
-		}
-		newCaseProofs[i] = newCaseProof
-	}
-	newEqualToAtEachCase := make(ObjSlice, len(stmt.EqualToAtEachCase))
-	for i, obj := range stmt.EqualToAtEachCase {
-		newObj, err := obj.Instantiate(uniMap)
-		if err != nil {
-			return nil, err
-		}
-		newEqualToAtEachCase[i] = newObj
-	}
-	return NewHaveCartWithDimCaseByCaseStmt(stmt.ObjName, newCartDim, stmt.Param, newFacts, newCaseFacts, newCaseProofs, newEqualToAtEachCase, stmt.Line), nil
-}
-
 func (stmt *NamedUniFactStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newProp, err := stmt.DefPropStmt.Instantiate(uniMap)
 	if err != nil {

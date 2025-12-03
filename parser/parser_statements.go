@@ -2236,82 +2236,36 @@ func (tb *tokenBlock) haveCartWithDimStmt() (ast.Stmt, error) {
 	}
 
 	// 分类：如果下面body[1]是case开头的，那就说明是case-by-case结构；否则是普通结构
-	if tb.body[1].header.is(glob.KeywordCase) {
-		caseFacts := []*ast.SpecFactStmt{}
-		proofInEachCase := []ast.StmtSlice{}
-		EqualTos := []ast.Obj{}
-
-		for i := 1; i < len(tb.body); i++ {
-			if i%2 == 1 {
-				err = tb.body[i].header.skip(glob.KeywordCase)
-				if err != nil {
-					return nil, parserErrAtTb(err, tb)
-				}
-				curStmt, err := tb.body[i].specFactStmt()
-				if err != nil {
-					return nil, parserErrAtTb(err, tb)
-				}
-				caseFacts = append(caseFacts, curStmt)
-				err = tb.body[i].header.skip(glob.KeySymbolColon)
-				if err != nil {
-					return nil, parserErrAtTb(err, tb)
-				}
-				curProof := []ast.Stmt{}
-				for _, stmt := range tb.body[i].body {
-					curStmt, err := stmt.Stmt()
-					if err != nil {
-						return nil, parserErrAtTb(err, tb)
-					}
-					curProof = append(curProof, curStmt)
-				}
-				proofInEachCase = append(proofInEachCase, curProof)
-			} else {
-				err = tb.body[i].header.skip(glob.KeySymbolEqual)
-				if err != nil {
-					return nil, parserErrAtTb(err, tb)
-				}
-
-				equalTo, err := tb.body[i].Obj()
-				if err != nil {
-					return nil, parserErrAtTb(err, tb)
-				}
-				EqualTos = append(EqualTos, equalTo)
-			}
-		}
-
-		return ast.NewHaveCartWithDimCaseByCaseStmt(name, cartDim, param, facts, caseFacts, proofInEachCase, EqualTos, tb.line), nil
-	} else {
-		if len(tb.body) != 3 {
-			return nil, fmt.Errorf("expect 3 blocks of %s when not defining case-by-case, but got %d", glob.KeywordHaveCartWithDim, len(tb.body))
-		}
-
-		proofs := []ast.Stmt{}
-		err = tb.body[1].header.skipKwAndColonCheckEOL(glob.KeywordProve)
-		if err != nil {
-			return nil, parserErrAtTb(err, tb)
-		}
-
-		for _, stmt := range tb.body[1].body {
-			curStmt, err := stmt.Stmt()
-			if err != nil {
-				return nil, parserErrAtTb(err, tb)
-			}
-			proofs = append(proofs, curStmt)
-		}
-
-		// 最后一行是 =
-		err = tb.body[len(tb.body)-1].header.skip(glob.KeySymbolEqual)
-		if err != nil {
-			return nil, parserErrAtTb(err, tb)
-		}
-
-		equalTo, err := tb.body[2].Obj()
-		if err != nil {
-			return nil, parserErrAtTb(err, tb)
-		}
-
-		return ast.NewHaveCartWithDimStmt(name, cartDim, param, facts, proofs, equalTo, tb.line), nil
+	if len(tb.body) != 3 {
+		return nil, fmt.Errorf("expect 3 blocks of %s when not defining case-by-case, but got %d", glob.KeywordHaveCartWithDim, len(tb.body))
 	}
+
+	proofs := []ast.Stmt{}
+	err = tb.body[1].header.skipKwAndColonCheckEOL(glob.KeywordProve)
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
+	}
+
+	for _, stmt := range tb.body[1].body {
+		curStmt, err := stmt.Stmt()
+		if err != nil {
+			return nil, parserErrAtTb(err, tb)
+		}
+		proofs = append(proofs, curStmt)
+	}
+
+	// 最后一行是 =
+	err = tb.body[len(tb.body)-1].header.skip(glob.KeySymbolEqual)
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
+	}
+
+	equalTo, err := tb.body[2].Obj()
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
+	}
+
+	return ast.NewHaveCartWithDimStmt(name, cartDim, param, facts, proofs, equalTo, tb.line), nil
 
 }
 

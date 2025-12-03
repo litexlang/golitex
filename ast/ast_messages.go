@@ -815,25 +815,6 @@ func (stmt *HaveCartWithDimStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *HaveCartWithDimCaseByCaseStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordHave)
-	builder.WriteString(" ")
-	builder.WriteString(glob.KeywordSet)
-	builder.WriteString(" ")
-	builder.WriteString(stmt.ObjName)
-	builder.WriteString(" ")
-	builder.WriteString(glob.KeySymbolEqual)
-	builder.WriteString(" cart_with_dim(")
-	builder.WriteString(stmt.CartDim.String())
-	builder.WriteString(")")
-	if stmt.Param != "" {
-		builder.WriteString(": ")
-		builder.WriteString(stmt.Param)
-	}
-	return builder.String()
-}
-
 func (stmt *HaveObjFromCartSetStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordHave)
