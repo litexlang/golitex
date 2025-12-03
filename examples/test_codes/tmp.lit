@@ -1,4 +1,6 @@
-fn f(a Z) Z
-have a R
+fn f(a Z) Z:
+    dom:
+        a > 1
+have a Z
 
-1 = 2 - 1 = f(a)
+2 = f(a)

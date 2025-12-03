@@ -98,3 +98,27 @@ func IsFalseOrErr(ok bool, err error) bool {
 func ObjIsNotSet(obj ast.Obj) bool {
 	return obj.String() != glob.KeywordSet
 }
+
+// ordinalSuffix converts a number to its ordinal form (1st, 2nd, 3rd, 4th, etc.)
+func ordinalSuffix(n int) string {
+	if n < 0 {
+		return fmt.Sprintf("%dth", n)
+	}
+
+	// Special cases for 11, 12, 13 which all use "th"
+	if n%100 >= 11 && n%100 <= 13 {
+		return fmt.Sprintf("%dth", n)
+	}
+
+	// Regular cases based on last digit
+	switch n % 10 {
+	case 1:
+		return fmt.Sprintf("%dst", n)
+	case 2:
+		return fmt.Sprintf("%dnd", n)
+	case 3:
+		return fmt.Sprintf("%drd", n)
+	default:
+		return fmt.Sprintf("%dth", n)
+	}
+}

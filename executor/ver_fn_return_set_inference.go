@@ -145,7 +145,7 @@ func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreT
 	return NewExecTrue("")
 }
 
-func (ver *Verifier) checkParamsSatisfyFnTStruct(funcName *ast.FnObj, concreteParams ast.ObjSlice, fnTStruct *ast.FnTStruct, state *VerState) ExecRet {
+func (ver *Verifier) checkParamsSatisfyFnTStruct(fnObj *ast.FnObj, concreteParams ast.ObjSlice, fnTStruct *ast.FnTStruct, state *VerState) ExecRet {
 	if len(concreteParams) != len(fnTStruct.ParamSets) {
 		return NewExecErr("params and sets length mismatch")
 	}
@@ -154,10 +154,10 @@ func (ver *Verifier) checkParamsSatisfyFnTStruct(funcName *ast.FnObj, concretePa
 		fact := ast.NewInFactWithFc(concreteParams[i], fnTStruct.ParamSets[i])
 		verRet := ver.VerFactStmt(fact, state)
 		if verRet.IsErr() {
-			return NewExecErr(fmt.Sprintf("By definition of function %s, the %dth parameter of %s must satisfy \n%s\nbut failed to verify\n", funcName.FnHead, i+1, funcName.String(), fact.String()))
+			return paramsOfFnObjMustInDomainSetErrMsg(fnObj, i, fact)
 		}
 		if verRet.IsUnknown() {
-			return NewExecUnknown(fmt.Sprintf("By definition of function %s, the %dth parameter of %s must satisfy \n%s\nbut it is unknown\n", funcName.FnHead, i+1, funcName.String(), fact.String()))
+			return paramsOfFnObjMustInDomainSetErrMsg(fnObj, i, fact)
 		}
 	}
 
@@ -169,13 +169,13 @@ func (ver *Verifier) checkParamsSatisfyFnTStruct(funcName *ast.FnObj, concretePa
 	// 	return verRet
 	// }
 
-	for _, fact := range fnTStruct.DomFacts {
+	for i, fact := range fnTStruct.DomFacts {
 		verRet := ver.VerFactStmt(fact, state)
 		if verRet.IsErr() {
-			return NewExecErr(fmt.Sprintf("By definition of function %s\n%s must be true\nbut failed to verify\n", funcName.FnHead, fact.String()))
+			return domainFactOfFnObjMustBeTrueErrMsg(fnObj, i, fact)
 		}
 		if verRet.IsUnknown() {
-			return NewExecUnknown(fmt.Sprintf("By definition of function %s\n%s must be true\nbut it is unknown\n", funcName.FnHead, fact.String()))
+			return domainFactOfFnObjMustBeTrueErrMsg(fnObj, i, fact)
 		}
 	}
 
@@ -188,4 +188,12 @@ func (ver *Verifier) checkParamsSatisfyFnTStruct(funcName *ast.FnObj, concretePa
 	// }
 
 	return NewExecTrue("")
+}
+
+func paramsOfFnObjMustInDomainSetErrMsg(fnObj *ast.FnObj, i int, fact ast.FactStmt) ExecRet {
+	return NewExecErr(fmt.Sprintf("By definition of function %s, the %s parameter of %s must satisfy \n%s\nbut failed to verify\n", fnObj.FnHead, ordinalSuffix(i+1), fnObj.String(), fact.String()))
+}
+
+func domainFactOfFnObjMustBeTrueErrMsg(fnObj *ast.FnObj, i int, fact ast.FactStmt) ExecRet {
+	return NewExecErr(fmt.Sprintf("By definition of function %s, the %s domain fact must be true\n%s\nbut failed to verify\n", fnObj.FnHead, ordinalSuffix(i+1), fact.String()))
 }
