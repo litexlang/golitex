@@ -2281,9 +2281,17 @@ func (tb *tokenBlock) haveCartWithDimStmt() (ast.Stmt, error) {
 
 		return ast.NewHaveCartWithDimCaseByCaseStmt(name, cartDim, param, facts, caseFacts, proofInEachCase, EqualTos, tb.line), nil
 	} else {
+		if len(tb.body) != 3 {
+			return nil, fmt.Errorf("expect 3 blocks of %s when not defining case-by-case, but got %d", glob.KeywordHaveCartWithDim, len(tb.body))
+		}
+
 		proofs := []ast.Stmt{}
-		for i := 1; i < len(tb.body)-1; i++ {
-			curStmt, err := tb.body[i].Stmt()
+		err = tb.body[1].header.skipKwAndColonCheckEOL(glob.KeySymbolRightArrow)
+		if err != nil {
+			return nil, parserErrAtTb(err, tb)
+		}
+		for _, stmt := range tb.body[1].body {
+			curStmt, err := stmt.Stmt()
 			if err != nil {
 				return nil, parserErrAtTb(err, tb)
 			}
@@ -2296,7 +2304,7 @@ func (tb *tokenBlock) haveCartWithDimStmt() (ast.Stmt, error) {
 			return nil, parserErrAtTb(err, tb)
 		}
 
-		equalTo, err := tb.body[len(tb.body)-1].Obj()
+		equalTo, err := tb.body[2].Obj()
 		if err != nil {
 			return nil, parserErrAtTb(err, tb)
 		}
