@@ -819,4 +819,6 @@ prop not_both_zero(a, b R):
 know:
 	forall a R: a != 0 => a ^ 2 > 0, a ^ 2 != 0, a * a > 0
 	forall a, b R: a ^ 2 + b ^ 2 >= 0
+
+know forall x, y R: x > y or x <= y, x < y or x >= y, x = y or x != y
 `
