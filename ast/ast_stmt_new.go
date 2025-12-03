@@ -339,3 +339,11 @@ func NewHaveCartSetStmt(name string, cartObj *FnObj, line uint) *HaveCartSetStmt
 func NewHaveObjFromCartSetStmt(objName string, cartSet *FnObj, equalTo Obj, line uint) *HaveObjFromCartSetStmt {
 	return &HaveObjFromCartSetStmt{objName, cartSet, equalTo, line}
 }
+
+func NewHaveCartWithDimStmt(objName string, cartDim Obj, param string, facts FactStmtSlice, proofs StmtSlice, equalTo Obj, line uint) *HaveCartWithDimStmt {
+	return &HaveCartWithDimStmt{objName, cartDim, param, facts, proofs, equalTo, line}
+}
+
+func NewHaveCartWithDimCaseByCaseStmt(objName string, cartDim Obj, param string, facts FactStmtSlice, caseFacts SpecFactPtrSlice, caseProofs StmtSliceSlice, equalToAtEachCase ObjSlice, line uint) *HaveCartWithDimCaseByCaseStmt {
+	return &HaveCartWithDimCaseByCaseStmt{objName, cartDim, param, facts, caseFacts, caseProofs, equalToAtEachCase, line}
+}

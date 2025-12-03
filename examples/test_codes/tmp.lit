@@ -59,3 +59,27 @@ prove:
     cart(R, R) $in nonempty_set
     have x cart(R, R)
     x[1] $in R
+
+    have set t = cart(R, R)
+    have y t
+    y[1] $in R
+
+prove:
+    have_cart_with_dim(s, n, x):
+        =>:
+            forall: x < 10 => proj(s, x) = R
+            forall: x >= 10, x <= n => proj(s, x) = Q
+
+        case x < 10:
+            do_nothing
+        = R
+        case x >= 10:
+            do_nothing
+        = Q
+
+    have_cart_with_dim(s, n, x):
+        =>:
+            proj(s, x) = R
+        
+        do_nothing
+        = R

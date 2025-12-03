@@ -137,8 +137,12 @@ func (s *EvalStmt) algoStmt()                               {}
 func (s *PrintStmt) algoStmt()                              {}
 func (s *HelpStmt) algoStmt()                               {}
 func (s *HaveFnEqualCaseByCaseStmt) algoStmt()              {}
-func (s *HaveFnCaseByCaseStmt) algoStmt()                   {}
-func (s *DefLetStmt) GetLine() uint                         { return s.Line }
+func (s *HaveFnCaseByCaseStmt) algoStmt()                    {}
+func (s *HaveCartWithDimStmt) stmt()                         {}
+func (s *HaveCartWithDimCaseByCaseStmt) stmt()              {}
+func (s *HaveCartWithDimStmt) algoStmt()                     {}
+func (s *HaveCartWithDimCaseByCaseStmt) algoStmt()          {}
+func (s *DefLetStmt) GetLine() uint                          { return s.Line }
 func (s *DefPropStmt) GetLine() uint                        { return s.Line }
 func (s *DefFnStmt) GetLine() uint                          { return s.Line }
 func (s *UniFactStmt) GetLine() uint                        { return s.Line }
@@ -201,6 +205,8 @@ func (s *PrintStmt) GetLine() uint                          { return s.Line }
 func (s *HelpStmt) GetLine() uint                           { return s.Line }
 func (s *HaveFnEqualCaseByCaseStmt) GetLine() uint          { return s.Line }
 func (s *HaveFnCaseByCaseStmt) GetLine() uint               { return s.Line }
+func (s *HaveCartWithDimStmt) GetLine() uint                { return s.Line }
+func (s *HaveCartWithDimCaseByCaseStmt) GetLine() uint      { return s.Line }
 
 type FactStmt interface {
 	factStmt()

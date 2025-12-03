@@ -131,6 +131,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.doNothingStmt()
 	case glob.KeywordImport:
 		ret, err = tb.importDirStmt()
+	case glob.KeywordHaveCartWithDim:
+		ret, err = tb.haveCartWithDimStmt()
 	default:
 		ret, err = tb.factsStmt()
 	}
@@ -2168,6 +2170,140 @@ func (tb *tokenBlock) haveSetFnStmt() (ast.Stmt, error) {
 	}
 
 	return ast.NewHaveSetFnStmt(declHeader, param, parentSet, proofs, tb.line), nil
+}
+
+func (tb *tokenBlock) haveCartWithDimStmt() (ast.Stmt, error) {
+	err := tb.header.skip(glob.KeywordHaveCartWithDim)
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
+	}
+
+	name, err := tb.header.next()
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolComma)
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
+	}
+
+	cartDim, err := tb.Obj()
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolComma)
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
+	}
+
+	param, err := tb.header.next()
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolRightBrace)
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
+	}
+
+	// Parse body: forall statements and optional case-by-case structure
+	facts := []ast.FactStmt{}
+
+	// 第一个 block 形如 =>: ... 这样的
+	err = tb.body[0].header.skipKwAndColonCheckEOL(glob.KeySymbolRightArrow)
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
+	}
+
+	for _, stmt := range tb.body[0].body {
+		curStmt, err := stmt.factStmt(UniFactDepth0)
+		if err != nil {
+			return nil, parserErrAtTb(err, tb)
+		}
+		facts = append(facts, curStmt)
+	}
+
+	// 分类：如果下面body[1]是case开头的，那就说明是case-by-case结构；否则是普通结构
+	if tb.body[1].header.is(glob.KeywordCase) {
+		caseFacts := []*ast.SpecFactStmt{}
+		proofInEachCase := []ast.StmtSlice{}
+		EqualTos := []ast.Obj{}
+
+		for i := 1; i < len(tb.body); i++ {
+			if i%2 == 1 {
+				err = tb.body[i].header.skip(glob.KeywordCase)
+				if err != nil {
+					return nil, parserErrAtTb(err, tb)
+				}
+				curStmt, err := tb.body[i].specFactStmt()
+				if err != nil {
+					return nil, parserErrAtTb(err, tb)
+				}
+				caseFacts = append(caseFacts, curStmt)
+				err = tb.body[i].header.skip(glob.KeySymbolColon)
+				if err != nil {
+					return nil, parserErrAtTb(err, tb)
+				}
+				curProof := []ast.Stmt{}
+				for _, stmt := range tb.body[i].body {
+					curStmt, err := stmt.Stmt()
+					if err != nil {
+						return nil, parserErrAtTb(err, tb)
+					}
+					curProof = append(curProof, curStmt)
+				}
+				proofInEachCase = append(proofInEachCase, curProof)
+			} else {
+				err = tb.body[i].header.skip(glob.KeySymbolEqual)
+				if err != nil {
+					return nil, parserErrAtTb(err, tb)
+				}
+
+				equalTo, err := tb.body[i].Obj()
+				if err != nil {
+					return nil, parserErrAtTb(err, tb)
+				}
+				EqualTos = append(EqualTos, equalTo)
+			}
+		}
+
+		return ast.NewHaveCartWithDimCaseByCaseStmt(name, cartDim, param, facts, caseFacts, proofInEachCase, EqualTos, tb.line), nil
+	} else {
+		proofs := []ast.Stmt{}
+		for i := 1; i < len(tb.body)-1; i++ {
+			curStmt, err := tb.body[i].Stmt()
+			if err != nil {
+				return nil, parserErrAtTb(err, tb)
+			}
+			proofs = append(proofs, curStmt)
+		}
+
+		// 最后一行是 =
+		err = tb.body[len(tb.body)-1].header.skip(glob.KeySymbolEqual)
+		if err != nil {
+			return nil, parserErrAtTb(err, tb)
+		}
+
+		equalTo, err := tb.body[len(tb.body)-1].Obj()
+		if err != nil {
+			return nil, parserErrAtTb(err, tb)
+		}
+
+		return ast.NewHaveCartWithDimStmt(name, cartDim, param, facts, proofs, equalTo, tb.line), nil
+	}
+
 }
 
 func (tb *tokenBlock) namedUniFactStmt() (*ast.NamedUniFactStmt, error) {
