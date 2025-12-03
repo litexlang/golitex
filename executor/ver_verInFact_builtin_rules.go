@@ -118,7 +118,32 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 		return verRet
 	}
 
+	// cart(R, R) $in nonempty_set
+	verRet = ver.verCartInNonemptySet(stmt, state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsTrue() {
+		return verRet
+	}
+
 	return NewExecUnknown("")
+}
+
+func (ver *Verifier) verCartInNonemptySet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	if !ast.IsFn_WithHeadName(stmt.Params[0], glob.KeywordCart) {
+		return NewExecUnknown("")
+	}
+
+	// 所有的cart里的参数都是非空集合
+	for i := range stmt.Params[0].(*ast.FnObj).Params {
+		verRet := ver.VerFactStmt(ast.NewInFactWithParamFc(stmt.Params[0].(*ast.FnObj).Params[i], ast.Atom(glob.KeywordNonEmptySet)), state)
+		if verRet.IsErr() || verRet.IsUnknown() {
+			return NewExecUnknown("")
+		}
+	}
+
+	return NewExecTrue(fmt.Sprintf("all arguments of %s are in nonempty.", stmt.Params[0]))
 }
 
 func (ver *Verifier) FnTemplateIsASet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {

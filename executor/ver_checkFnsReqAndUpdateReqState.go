@@ -37,7 +37,7 @@ func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state 
 	// 2. Check if the parameters satisfy the requirement of the function requirements
 	stateNoMsg := state.GetNoMsg()
 	for _, param := range stmt.Params {
-		verRet := ver.objSatisfyFnRequirement(param, stateNoMsg)
+		verRet := ver.objIsAtomOrIsFnSatisfyItsReq(param, stateNoMsg)
 		if verRet.IsErr() {
 			return state, verRet
 		}
@@ -54,7 +54,7 @@ func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state 
 	return &newState, NewExecTrue("")
 }
 
-func (ver *Verifier) objSatisfyFnRequirement(obj ast.Obj, state *VerState) ExecRet {
+func (ver *Verifier) objIsAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *VerState) ExecRet {
 	if _, ok := obj.(ast.Atom); ok {
 		return NewExecTrue("")
 	}
@@ -63,10 +63,6 @@ func (ver *Verifier) objSatisfyFnRequirement(obj ast.Obj, state *VerState) ExecR
 		return NewExecErr(fmt.Sprintf("%s is not a function", obj))
 	}
 
-	// 单独处理特殊的内置prop
-	// if isArithmeticFn(objAsFnObj) {
-	// 	return ver.arithmeticFnRequirement(objAsFnObj, state)
-	// } else
 	if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordCount) {
 		return ver.countFnRequirement(objAsFnObj, state)
 	} else if ast.IsFnTemplate_FcFn(objAsFnObj) {
@@ -74,16 +70,7 @@ func (ver *Verifier) objSatisfyFnRequirement(obj ast.Obj, state *VerState) ExecR
 	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordCart) {
 		return ver.cartFnRequirement(objAsFnObj, state)
 	} else if ast.IsTupleFnObj(objAsFnObj) {
-		if len(objAsFnObj.Params) < 2 {
-			return NewExecErr(fmt.Sprintf("parameters in %s must be at least 2, %s in %s is not valid", objAsFnObj.FnHead, objAsFnObj, objAsFnObj))
-		}
-
-		for _, param := range objAsFnObj.Params {
-			if !ObjIsNotSet(param) {
-				return NewExecErr(fmt.Sprintf("parameters in %s must not be set", objAsFnObj.String()))
-			}
-		}
-		return NewExecTrue("")
+		return ver.tupleFnReq(objAsFnObj, state)
 	} else if ast.IsIndexOptFnObj(objAsFnObj) {
 		return ver.indexOptFnRequirement(objAsFnObj, state)
 	} else if objAsFnObj.FnHead.String() == glob.KeywordProj {
@@ -95,6 +82,21 @@ func (ver *Verifier) objSatisfyFnRequirement(obj ast.Obj, state *VerState) ExecR
 	} else {
 		return ver.parasSatisfyFnReq(objAsFnObj, state)
 	}
+}
+
+func (ver *Verifier) tupleFnReq(objAsFnObj *ast.FnObj, state *VerState) ExecRet {
+	if len(objAsFnObj.Params) < 2 {
+		return NewExecErr(fmt.Sprintf("parameters in %s must be at least 2, %s in %s is not valid", objAsFnObj.FnHead, objAsFnObj, objAsFnObj))
+	}
+
+	_ = state
+
+	for _, param := range objAsFnObj.Params {
+		if !ObjIsNotSet(param) {
+			return NewExecErr(fmt.Sprintf("parameters in %s must not be set", objAsFnObj.String()))
+		}
+	}
+	return NewExecTrue("")
 }
 
 func (ver *Verifier) dimFnRequirement(fnObj *ast.FnObj, state *VerState) ExecRet {

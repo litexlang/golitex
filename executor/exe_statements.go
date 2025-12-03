@@ -468,7 +468,7 @@ func (exec *Executor) proveStmt(stmt *ast.ProveStmt) ExecRet {
 	if execState.IsNotTrue() {
 		return execState
 	}
-	return execState
+	return execState.AddMsg(stmt.String())
 }
 
 func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) ExecRet {
