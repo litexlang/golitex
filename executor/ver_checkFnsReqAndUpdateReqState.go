@@ -42,7 +42,7 @@ func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state 
 			return state, verRet
 		}
 		if verRet.IsUnknown() {
-			return state, NewExecErr(verRet.AddMsg(fmt.Sprintf("argument(s) in %s do not satisfy the function domain\n", param)).String())
+			return state, NewExecErrWithMsgs(verRet.GetMsgs())
 		}
 	}
 

@@ -49,7 +49,7 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FnObj, state *VerState) ExecRet
 			return NewExecErr(err.Error())
 		}
 
-		verRet := ver.checkParamsSatisfyFnTStruct(paramsChain[curParamsChainIndex], instCurFnTStruct, state)
+		verRet := ver.checkParamsSatisfyFnTStruct(fcFn, paramsChain[curParamsChainIndex], instCurFnTStruct, state)
 		if verRet.IsErr() {
 			return verRet
 		}
@@ -80,7 +80,7 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FnObj, state *VerState) ExecRet
 		return NewExecErr(err.Error())
 	}
 
-	verRet := ver.checkParamsSatisfyFnTStruct(paramsChain[curParamsChainIndex], instCurFnTStruct, state)
+	verRet := ver.checkParamsSatisfyFnTStruct(fcFn, paramsChain[curParamsChainIndex], instCurFnTStruct, state)
 	if verRet.IsErr() {
 		return verRet
 	}
@@ -145,24 +145,47 @@ func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreT
 	return NewExecTrue("")
 }
 
-func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.ObjSlice, fnTStruct *ast.FnTStruct, state *VerState) ExecRet {
-	verRet := ver.paramsInSets(concreteParams, fnTStruct.ParamSets, state.GetNoMsg())
-	if verRet.IsErr() {
-		return verRet
-	}
-	if verRet.IsUnknown() {
-		verRet.AddMsg(verRet.String())
-		return verRet
+func (ver *Verifier) checkParamsSatisfyFnTStruct(funcName *ast.FnObj, concreteParams ast.ObjSlice, fnTStruct *ast.FnTStruct, state *VerState) ExecRet {
+	if len(concreteParams) != len(fnTStruct.ParamSets) {
+		return NewExecErr("params and sets length mismatch")
 	}
 
-	verRet = ver.factsAreTrue(fnTStruct.DomFacts, state.GetNoMsg())
-	if verRet.IsErr() {
-		return verRet
+	for i := range concreteParams {
+		fact := ast.NewInFactWithFc(concreteParams[i], fnTStruct.ParamSets[i])
+		verRet := ver.VerFactStmt(fact, state)
+		if verRet.IsErr() {
+			return NewExecErr(fmt.Sprintf("By definition of function %s, the %dth parameter of %s must satisfy \n%s\nbut failed to verify\n", funcName.FnHead, i+1, funcName.String(), fact.String()))
+		}
+		if verRet.IsUnknown() {
+			return NewExecUnknown(fmt.Sprintf("By definition of function %s, the %dth parameter of %s must satisfy \n%s\nbut it is unknown\n", funcName.FnHead, i+1, funcName.String(), fact.String()))
+		}
 	}
-	if verRet.IsUnknown() {
-		verRet.AddMsg(verRet.String())
-		return verRet
+
+	// // verRet := ver.paramsInSets(concreteParams, fnTStruct.ParamSets, state.GetNoMsg())
+	// if verRet.IsErr() {
+	// 	return verRet
+	// }
+	// if verRet.IsUnknown() {
+	// 	return verRet
+	// }
+
+	for _, fact := range fnTStruct.DomFacts {
+		verRet := ver.VerFactStmt(fact, state)
+		if verRet.IsErr() {
+			return NewExecErr(fmt.Sprintf("By definition of function %s\n%s must be true\nbut failed to verify\n", funcName.FnHead, fact.String()))
+		}
+		if verRet.IsUnknown() {
+			return NewExecUnknown(fmt.Sprintf("By definition of function %s\n%s must be true\nbut it is unknown\n", funcName.FnHead, fact.String()))
+		}
 	}
+
+	// verRet = ver.factsAreTrue(fnTStruct.DomFacts, state.GetNoMsg())
+	// if verRet.IsErr() {
+	// 	return verRet
+	// }
+	// if verRet.IsUnknown() {
+	// 	return verRet
+	// }
 
 	return NewExecTrue("")
 }
