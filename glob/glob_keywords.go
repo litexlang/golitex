@@ -41,7 +41,6 @@ const (
 	KeywordInteger                = "Z"                         // e.g. -1
 	KeywordRational               = "Q"                         // e.g. -1.1
 	KeywordReal                   = "R"                         // e.g. pi
-	KeywordComplex                = "C"                         // e.g. 1+i
 	KeywordIn                     = "in"
 	// KeywordProveByMathInduction           = "prove_by_math_induction"
 	KeywordAs           = "as" // 用在 import xxx as ??? 了
@@ -133,7 +132,6 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordReal:                   {},
 	KeywordIn:                     {},
 	// KeywordProveByMathInduction:           {},
-	KeywordComplex:      {},
 	KeywordAs:           {},
 	KeywordCount:        {},
 	KeywordFiniteSet:    {},
@@ -264,7 +262,6 @@ var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]s
 	KeywordInteger:       {},
 	KeywordRational:      {},
 	KeywordReal:          {},
-	KeywordComplex:       {},
 	KeywordAs:            {},
 	KeywordIn:            {},
 	KeySymbolEqual:       {},
@@ -308,7 +305,6 @@ var BuiltinObjKeywordSet map[string]struct{} = map[string]struct{}{
 	KeywordInteger:   {},
 	KeywordRational:  {},
 	KeywordReal:      {},
-	KeywordComplex:   {},
 	KeywordFiniteSet: {},
 	KeywordSet:       {},
 	KeywordNPos:      {},
@@ -355,7 +351,6 @@ var KeywordHelpMap = map[string]string{
 	KeywordInteger:                "",
 	KeywordRational:               "",
 	KeywordReal:                   "",
-	KeywordComplex:                "",
 	KeywordIn:                     "",
 	KeywordAs:                     "",
 	KeywordCount:                  "",

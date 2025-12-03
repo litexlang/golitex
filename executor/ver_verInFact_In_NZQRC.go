@@ -41,8 +41,6 @@ func (ver *Verifier) verIn_N_Z_Q_R_C(stmt *ast.SpecFactStmt, state *VerState) Ex
 		success, verifiedBy = ver.verInNPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
 	case glob.KeywordReal:
 		success, verifiedBy = ver.verInR_BySpecMem(stmt, nextState)
-	case glob.KeywordComplex:
-		success, verifiedBy = ver.verInC_BySpecMem(stmt, nextState)
 	default:
 		success = false
 	}
@@ -226,17 +224,4 @@ func (ver *Verifier) verInR_BySpecMem(stmt *ast.SpecFactStmt, state *VerState) (
 
 	newStmt := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.Params[0], ast.Atom(glob.KeywordRational)}, stmt.Line)
 	return ver.verInQ_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(newStmt, state)
-}
-
-func (ver *Verifier) verInC_BySpecMem(stmt *ast.SpecFactStmt, state *VerState) (bool, string) {
-	verRet := ver.verSpecFact_BySpecMem(stmt, state)
-	if verRet.IsErr() {
-		return false, ""
-	}
-	if verRet.IsTrue() {
-		return true, stmt.String()
-	}
-
-	newStmt := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.Params[0], ast.Atom(glob.KeywordReal)}, stmt.Line)
-	return ver.verInR_BySpecMem(newStmt, state)
 }

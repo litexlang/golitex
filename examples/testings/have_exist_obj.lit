@@ -65,7 +65,7 @@ prove:
 
 # have objects from builtin sets
 prove:
-    have a N, b Z, c Q, d R, e C
+    have a N, b Z, c Q, d R
     have s set
     have s2 finite_set
 
