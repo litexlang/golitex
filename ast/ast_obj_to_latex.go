@@ -30,8 +30,6 @@ func (f Atom) ToLatexString() string {
 		return "$\\mathbb{Z}$"
 	case glob.KeywordRational:
 		return "$\\mathbb{Q}$"
-	case glob.KeywordComplex:
-		return "$\\mathbb{C}$"
 	case glob.KeywordNPos:
 		return "$\\mathbb{N}^{+}$"
 	default:

@@ -31,12 +31,17 @@ func Test_ComprehensiveCodes(t *testing.T) {
 		"../examples/testings",
 	}
 
+	start := time.Now()
+
 	for _, path := range pathSlice {
 		err := RunFilesInRepoWithPipelineRunner(path)
 		if err != nil {
 			panic(fmt.Sprintf("Error running files: %s", err))
 		}
 	}
+
+	elapsed := time.Since(start)
+	fmt.Printf("All Files Take %s\n", elapsed)
 }
 
 func RunFilesInRepoWithPipelineRunner(repo string) error {
