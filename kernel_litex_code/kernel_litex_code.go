@@ -812,10 +812,12 @@ know:
 	forall a, b, c, d R: b < 0, d > 0 => a / b >= c / d <=> a * d <= b * c
 	forall a, b, c, d R: b < 0, d > 0 => a / b <= c / d <=> a * d >= b * c
 
-know forall a R, b R: a != 0 or b != 0 => a ^ 2 + b ^ 2 > 0, a ^ 2 + b ^ 2 != 0
+prop not_both_zero(a, b R):
+	a != 0 or b != 0
+	a ^ 2 + b ^ 2 != 0
+	a^2 + b^2 > 0
 
 know:
 	forall a R: a != 0 => a ^ 2 > 0, a ^ 2 != 0, a * a > 0
 	forall a, b R: a ^ 2 + b ^ 2 >= 0
-	forall a, b R: a != 0 or b != 0 <=> a ^ 2 + b ^ 2 != 0, a^2 + b^2 > 0
 `
