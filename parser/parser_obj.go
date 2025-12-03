@@ -316,14 +316,50 @@ func (tb *tokenBlock) bracedObj() (ast.Obj, error) {
 			}
 
 			// If not ')', must be a comma
+			// If we see a binary operator here, it means we parsed too much
+			// (e.g., in "(a, b / c)", we shouldn't parse "/" as part of the tuple element)
+			curToken, err := tb.header.currentToken()
+			if err != nil {
+				return nil, parserErrAtTb(fmt.Errorf("unexpected end of input in tuple"), tb)
+			}
+			_, isBinary := glob.BuiltinOptPrecedenceMap[curToken]
+			if isBinary {
+				return nil, parserErrAtTb(fmt.Errorf("unexpected binary operator '%s' in tuple (did you forget a comma or closing parenthesis?)", curToken), tb)
+			}
 			if !tb.header.is(glob.KeySymbolComma) {
-				return nil, parserErrAtTb(fmt.Errorf("expected ',' or ')' but got '%s'", tb.header.strAtCurIndexPlus(0)), tb)
+				return nil, parserErrAtTb(fmt.Errorf("expected ',' or ')' but got '%s'", curToken), tb)
 			}
 		}
 
 		// Skip closing ')'
 		if err := tb.header.skip(glob.KeySymbolRightBrace); err != nil {
 			return nil, fmt.Errorf("expected ')': %s", err)
+		}
+
+		// Special case: if tuple is followed by a binary operator, bind it to the last element
+		// e.g., "(a, b) / c" should be parsed as "(a, b / c)"
+		if !tb.header.ExceedEnd() {
+			curToken, err := tb.header.currentToken()
+			if err == nil {
+				curPrec, isBinary := glob.BuiltinOptPrecedenceMap[curToken]
+				if isBinary {
+					// The last element is the left operand, operator is curToken, need to parse right operand
+					lastIdx := len(tupleObjs) - 1
+					leftOperand := tupleObjs[lastIdx]
+
+					// Skip the operator
+					tb.header.skip("")
+
+					// Parse the right operand with the operator's precedence
+					rightOperand, err := tb.objInfixExpr(curPrec)
+					if err != nil {
+						return nil, parserErrAtTb(err, tb)
+					}
+
+					// Replace the last element with the combined expression: operator(left, right)
+					tupleObjs[lastIdx] = ast.NewFnObj(ast.Atom(curToken), []ast.Obj{leftOperand, rightOperand})
+				}
+			}
 		}
 
 		// Return tuple as FnObj with TupleOpt as head

@@ -1,3 +1,67 @@
-prop not_both_zero(a, b R):
-    a != 0 or b != 0
-forall a, b R: a != 0 or b != 0 => $not_both_zero(a, b)
+have fn:
+    cadd(x, y cart(R, R)) cart(R, R):
+        cadd(x, y) = (x[1] + y[1], x[2] + y[2])
+
+    prove:
+        have c cart(R, R) = (x[1] + y[1], x[2] + y[2])
+    = c
+
+have fn:
+    csub(x, y cart(R, R)) cart(R, R):
+        csub(x, y) = (x[1] - y[1], x[2] - y[2])
+
+    prove:
+        have c cart(R, R) = (x[1] - y[1], x[2] - y[2])
+    = c
+
+have fn:
+    creal(x cart(R, R)) R:
+        creal(x) = x[1]
+
+    prove:
+        have c R = x[1]
+    = c
+
+have fn:
+    cimag(x cart(R, R)) R:
+        cimag(x) = x[2]
+
+    prove:
+        have c R = x[2]
+    = c
+
+have fn:
+    cabs(x cart(R, R)) R:
+        cabs(x) = sqrt(x[1]^2 + x[2]^2)
+
+    prove:
+        have c R = sqrt(x[1]^2 + x[2]^2)
+    = c
+
+prop is_real(x cart(R, R)):
+    cimg(x) = 0
+
+prop is_imag(x cart(R, R)):
+    creal(x) = 0
+
+prop is_conjugate(x, y cart(R, R)):
+    cimag(x - y) = 0
+
+have fn:
+    cmul(x, y cart(R, R)) cart(R, R):
+        cmul(x, y) = (x[1] * y[1] - x[2] * y[2], x[1] * y[2] + x[2] * y[1])
+
+    prove:
+        have c cart(R, R) = (x[1] * y[1] - x[2] * y[2], x[1] * y[2] + x[2] * y[1])
+    = c
+
+have fn:
+    cdiv(x, y cart(R, R)) cart(R, R):
+        dom:
+            $not_both_zero(y[1], y[2])
+        =>:
+            cdiv(x, y) = (x[1] * y[1] + x[2] * y[2], x[2] * y[1] - x[1] * y[2]) / (y[1]^2 + y[2]^2)
+
+    prove:
+        have c cart(R, R) = (x[1] * y[1] + x[2] * y[2], (x[2] * y[1] - x[1] * y[2]) / (y[1]^2 + y[2]^2))
+    = c
