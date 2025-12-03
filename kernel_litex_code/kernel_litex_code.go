@@ -814,5 +814,8 @@ know:
 
 know forall a R, b R: a != 0 or b != 0 => a ^ 2 + b ^ 2 > 0, a ^ 2 + b ^ 2 != 0
 
-know forall a R: a != 0 => a ^ 2 > 0, a ^ 2 != 0, a * a > 0
+know:
+	forall a R: a != 0 => a ^ 2 > 0, a ^ 2 != 0, a * a > 0
+	forall a, b R: a ^ 2 + b ^ 2 >= 0
+	forall a, b R: a != 0 or b != 0 <=> a ^ 2 + b ^ 2 != 0, a^2 + b^2 > 0
 `

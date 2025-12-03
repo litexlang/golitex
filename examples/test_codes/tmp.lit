@@ -1,6 +1,3 @@
-fn f(a Z) Z:
-    dom:
-        a > 1
-have a Z
-
-2 = f(a)
+prop not_both_zero(a, b R):
+    a != 0 or b != 0
+forall a, b R: a != 0 or b != 0 => $not_both_zero(a, b)
