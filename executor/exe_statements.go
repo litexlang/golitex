@@ -847,13 +847,34 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (ExecRet, error) {
 		return execState, fmt.Errorf(execState.String())
 	}
 
+	// 声明一下函数，这样证明then的时候不会因为没声明这个函数而g了
+	localTemplate := ast.NewFnTStruct(stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets, stmt.DefFnStmt.FnTemplate.RetSet, stmt.DefFnStmt.FnTemplate.DomFacts, []ast.FactStmt{}, stmt.Line)
+	fnDefStmt := ast.NewDefFnStmt(stmt.DefFnStmt.Name, localTemplate, stmt.Line)
+	execState = exec.defFnStmt(fnDefStmt)
+	if execState.IsNotTrue() {
+		return execState, fmt.Errorf(execState.String())
+	}
+
 	// know 一下 函数等于 等号右边的东西
+	params := []ast.Obj{}
+	for i := range len(stmt.DefFnStmt.FnTemplate.Params) {
+		params = append(params, ast.Atom(stmt.DefFnStmt.FnTemplate.Params[i]))
+	}
+
+	fnObj := ast.NewFnObj(ast.Atom(stmt.DefFnStmt.Name), params)
+	fnObjIsEqualTo := ast.NewEqualFact(fnObj, stmt.HaveObjSatisfyFn)
+	err := exec.Env.NewFact(fnObjIsEqualTo)
+	if err.IsErr() {
+		return NewExecErr(err.String()), fmt.Errorf(err.String())
+	}
 
 	// 证明 fn then 里全是对的
-
-	// Verify that the thenFacts are satisfied
-	// The proof statements should have established the necessary conditions
-	// Additional verification of thenFacts would require object substitution which is not currently available
+	for _, thenFact := range stmt.DefFnStmt.FnTemplate.ThenFacts {
+		execState = exec.factStmt(thenFact)
+		if execState.IsNotTrue() {
+			return execState, fmt.Errorf(execState.String())
+		}
+	}
 
 	return NewExecTrue(stmt.String()), nil
 }
@@ -1690,15 +1711,25 @@ func (exec *Executor) checkHaveCartWithDimStmt(stmt *ast.HaveCartWithDimStmt) Ex
 		return NewExecErr(fmt.Sprintf("%s must be > 1, but it is unknown", stmt.CartDim.String()))
 	}
 
-	// 验证 dimObj <= objDim
-	objDimFn := ast.NewFnObj(ast.Atom(glob.KeywordDim), []ast.Obj{objAtom})
-	objDimEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{objDimFn, stmt.CartDim}, stmt.Line)
-	verRet = ver.VerFactStmt(objDimEqualFact, state)
+	// 验证 Param 是 N_pos
+	paramAtom := ast.Atom(stmt.Param)
+	paramInNPosFact := ast.NewInFactWithFc(paramAtom, ast.Atom(glob.KeywordNPos))
+	verRet = ver.VerFactStmt(paramInNPosFact, state)
 	if verRet.IsErr() {
-		return NewExecErr(fmt.Sprintf("failed to verify dim(%s) <= %s: %s", objAtom.String(), stmt.CartDim.String(), verRet.String()))
+		return NewExecErr(fmt.Sprintf("failed to verify %s is in N_pos: %s", stmt.Param, verRet.String()))
 	}
 	if verRet.IsUnknown() {
-		return NewExecErr(fmt.Sprintf("dim(%s) must be <= %s, but it is unknown", objAtom.String(), stmt.CartDim.String()))
+		return NewExecErr(fmt.Sprintf("%s must be in N_pos, but it is unknown", stmt.Param))
+	}
+
+	// 验证 Param <= CartDim (索引参数不能超过维度)
+	paramLessEqualDimFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{paramAtom, stmt.CartDim}, stmt.Line)
+	verRet = ver.VerFactStmt(paramLessEqualDimFact, state)
+	if verRet.IsErr() {
+		return NewExecErr(fmt.Sprintf("failed to verify %s <= %s: %s", stmt.Param, stmt.CartDim.String(), verRet.String()))
+	}
+	if verRet.IsUnknown() {
+		return NewExecErr(fmt.Sprintf("%s must be <= %s, but it is unknown", stmt.Param, stmt.CartDim.String()))
 	}
 
 	// 执行 proofs
@@ -1710,7 +1741,6 @@ func (exec *Executor) checkHaveCartWithDimStmt(stmt *ast.HaveCartWithDimStmt) Ex
 	}
 
 	// 验证 proj(ObjName, Param) = EqualTo
-	paramAtom := ast.Atom(stmt.Param)
 	projFn := ast.NewFnObj(ast.Atom(glob.KeywordProj), []ast.Obj{objAtom, paramAtom})
 	projEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{projFn, stmt.EqualTo}, stmt.Line)
 	verRet = ver.VerFactStmt(projEqualFact, state)
