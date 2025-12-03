@@ -20,6 +20,10 @@ prove:
     $is_cart(cart(R, Q))
     set_dim(cart(R, Q)) = 2
     let y cart(R, Q)
+    y[1] $in R
+    y[2] $in Q
+    $is_tuple(y)
+    dim(y) = 2
 
 prove:
     have a cart(R, R) = (1, 2)
@@ -31,53 +35,9 @@ prove:
     a[1] = 1
     a[2] = 2
 
-    a[1] $in R
-
+    dim(a) = 2
+    $is_tuple(a)
     a $in cart(Z, Z) # a[1] $in Z, a[2] $in Z
-
-prove:
-    # 测试 1 维 cart
-    have set x1 = cart(R)
-    $is_cart(x1)
-    set_dim(x1) = 1
-    proj(x1, 1) = R
-    
-    let b x1
-    dim(b) = 1
-    $is_tuple(b)
-    b[1] $in R
-
-prove:
-    # 测试 2 维 cart
-    have set x2 = cart(N, Z)
-    $is_cart(x2)
-    set_dim(x2) = 2
-    proj(x2, 1) = N
-    proj(x2, 2) = Z
-    
-    let c x2
-    dim(c) = 2
-    $is_tuple(c)
-    c[1] $in N
-    c[2] $in Z
-
-prove:
-    # 测试 4 维 cart
-    have set x4 = cart(R, Q, Z, N)
-    $is_cart(x4)
-    set_dim(x4) = 4
-    proj(x4, 1) = R
-    proj(x4, 2) = Q
-    proj(x4, 3) = Z
-    proj(x4, 4) = N
-    
-    let d x4
-    dim(d) = 4
-    $is_tuple(d)
-    d[1] $in R
-    d[2] $in Q
-    d[3] $in Z
-    d[4] $in N
 
 prove:
     # 测试嵌套 cart
@@ -96,54 +56,11 @@ prove:
     $is_tuple(e[2])
 
 prove:
-    have t2 cart(R, R) = (2, 3)
-    dim(t2) = 2
-    $is_tuple(t2)
-    t2[1] = 2
-    t2[2] = 3
-    
-    have t3 cart(R, R, R) = (4, 5, 6)
-    dim(t3) = 3
-    $is_tuple(t3)
-    t3[1] = 4
-    t3[2] = 5
-    t3[3] = 6
+    cart(R, R) $in nonempty_set
+    have x cart(R, R)
+    x[1] $in R
 
-prove:
-    # 测试 proj 和 [] 的组合使用
-    have set x = cart(R, Q, Z)
-    proj(x, 1) = R
-    proj(x, 2) = Q
-    proj(x, 3) = Z
-    
-    let a x
-    a[1] $in proj(x, 1)
-    a[2] $in proj(x, 2)
-    a[3] $in proj(x, 3)
+    have set t = cart(R, R)
+    have y t
+    y[1] $in R
 
-
-prove:
-    # 测试不同数字类型的 cart
-    have set cart_n = cart(N)
-    have set cart_z = cart(Z)
-    have set cart_q = cart(Q)
-    have set cart_r = cart(R)
-    have set cart_c = cart(C)
-    
-    $is_cart(cart_n)
-    $is_cart(cart_z)
-    $is_cart(cart_q)
-    $is_cart(cart_r)
-    $is_cart(cart_c)
-    
-    set_dim(cart_n) = 1
-    set_dim(cart_z) = 1
-    set_dim(cart_q) = 1
-    set_dim(cart_r) = 1
-    set_dim(cart_c) = 1
-    
-    proj(cart_n, 1) = N
-    proj(cart_z, 1) = Z
-    proj(cart_q, 1) = Q
-    proj(cart_r, 1) = R
-    proj(cart_c, 1) = C

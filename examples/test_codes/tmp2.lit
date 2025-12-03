@@ -20,3 +20,29 @@ prove:
     cart_prod_proj(cart_prod(N, kv2), 1) = kv2(1) = Q
     cart_prod_proj(cart_prod(N, kv2), 2) = kv2(2) = N
 """
+
+"""
+prove:
+    have n N_pos: n > 1
+
+    have_cart_with_dim(s, n, x):
+        =>:
+            forall: x < 10 => proj(s, x) = R
+            forall: x >= 10, x <= n => proj(s, x) = Q
+
+        case x < 10:
+            do_nothing
+        = R
+        case x >= 10:
+            do_nothing
+        = Q
+
+    have_cart_with_dim(s2, n, x):
+        =>:
+            proj(s2, x) = R
+        
+        do_nothing
+        = R
+
+    proj(s2, 1) = R
+"""
