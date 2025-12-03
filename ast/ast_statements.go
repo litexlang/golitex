@@ -535,3 +535,26 @@ type HaveObjFromCartSetStmt struct {
 
 	Line uint
 }
+
+type HaveCartWithDimCaseByCaseStmt struct {
+	ObjName           string
+	CartDim           Obj
+	Param             string
+	Facts             FactStmtSlice
+	CaseFacts         SpecFactPtrSlice
+	CaseProofs        StmtSliceSlice
+	EqualToAtEachCase ObjSlice
+
+	Line uint
+}
+
+type HaveCartWithDimStmt struct {
+	ObjName string
+	CartDim Obj
+	Param   string
+	Facts   FactStmtSlice
+	Proofs  StmtSlice
+	EqualTo Obj
+
+	Line uint
+}

@@ -1,0 +1,82 @@
+# cart_with_dim 语法设计方案
+
+# 方案 1: 使用 forall 明确声明索引变量和范围
+# 优点：清晰，变量作用域明确，符合现有 forall 语法
+# 缺点：需要显式写范围约束
+prove:
+    have set s = cart_with_dim(n):
+        forall x N_pos: 1 <= x, x <= n =>
+            case x < 10:
+                proj(s, x) = R
+            case x >= 10:
+                proj(s, x) = Q
+
+# 方案 2: 在 cart_with_dim 中直接绑定索引变量
+# 优点：变量绑定更紧密，语法更简洁
+# 缺点：需要修改 parser 来支持这种参数绑定
+prove:
+    have set s = cart_with_dim(n, x N_pos):
+        1 <= x, x <= n =>
+            case x < 10:
+                proj(s, x) = R
+            case x >= 10:
+                proj(s, x) = Q
+
+# 方案 3: 使用类似 prove_in_range 的语法
+# 优点：与现有 prove_in_range(1, n+1, x) 语法一致
+# 缺点：需要显式写范围
+prove:
+    have set s = cart_with_dim(n):
+        forall x N_pos in range(1, n+1):
+            case x < 10:
+                proj(s, x) = R
+            case x >= 10:
+                proj(s, x) = Q
+
+# 方案 4: 使用类似函数定义的语法，在头部声明变量
+# 优点：变量声明在头部，作用域清晰
+# 缺点：需要新的语法结构
+prove:
+    have set s = cart_with_dim(n):
+        forall x N_pos st 1 <= x, x <= n:
+            case x < 10:
+                proj(s, x) = R
+            case x >= 10:
+                proj(s, x) = Q
+
+# 方案 5: 使用类似 intensional set 的语法，case 作为返回值
+# 优点：更函数式，case 作为表达式
+# 缺点：需要支持 case 作为表达式
+prove:
+    have set s = cart_with_dim(n):
+        forall x N_pos: 1 <= x, x <= n =>
+            proj(s, x) = 
+                case x < 10: R
+                case x >= 10: Q
+
+# 方案 6: 使用类似 prove_in_range_set 的语法，但用于定义
+# 优点：与 prove_in_range_set(1, n+1, x s) 语法一致
+# 缺点：需要新的关键字或语法
+prove:
+    have set s = cart_with_dim(n):
+        define_in_range(1, n+1, x N_pos):
+            case x < 10:
+                proj(s, x) = R
+            case x >= 10:
+                proj(s, x) = Q
+
+# 方案 7: 使用类似 fn_template 的语法，在头部声明
+# 优点：与 fn_template 语法一致，变量绑定清晰
+# 缺点：可能过于复杂
+prove:
+    have set s = cart_with_dim(n):
+        forall x N_pos:
+            dom:
+                1 <= x
+                x <= n
+            =>:
+                case x < 10:
+                    proj(s, x) = R
+                case x >= 10:
+                    proj(s, x) = Q
+
