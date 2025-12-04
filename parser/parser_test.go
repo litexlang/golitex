@@ -30,7 +30,7 @@ func sourceCodeToObj(sourceCode ...string) ([]ast.Obj, error) {
 
 	ret := []ast.Obj{}
 	for _, block := range blocks {
-		cur, err := block.RawObj()
+		cur, err := block.Obj()
 		if err != nil {
 			return nil, err
 		}

@@ -49,7 +49,7 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FnObj, state *VerState) ExecRet
 			return NewExecErr(err.Error())
 		}
 
-		verRet := ver.checkParamsSatisfyFnTStruct(paramsChain[curParamsChainIndex], instCurFnTStruct, state)
+		verRet := ver.checkParamsSatisfyFnTStruct(fcFn, paramsChain[curParamsChainIndex], instCurFnTStruct, state)
 		if verRet.IsErr() {
 			return verRet
 		}
@@ -80,7 +80,7 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FnObj, state *VerState) ExecRet
 		return NewExecErr(err.Error())
 	}
 
-	verRet := ver.checkParamsSatisfyFnTStruct(paramsChain[curParamsChainIndex], instCurFnTStruct, state)
+	verRet := ver.checkParamsSatisfyFnTStruct(fcFn, paramsChain[curParamsChainIndex], instCurFnTStruct, state)
 	if verRet.IsErr() {
 		return verRet
 	}
@@ -95,7 +95,7 @@ func (ver *Verifier) GetFnStructFromFnTName_CheckFnTParamsReq(fnTName *ast.FnObj
 	if fcFnTypeToFnTStruct, ok := ast.FcFnT_To_FnTStruct(fnTName); ok {
 		return fcFnTypeToFnTStruct, nil
 	} else {
-		fnTNameHeadAsAtom, ok := fnTName.FnHead.(ast.AtomObj)
+		fnTNameHeadAsAtom, ok := fnTName.FnHead.(ast.Atom)
 		if !ok {
 			return nil, fmt.Errorf("fnTNameHead is not an atom")
 		}
@@ -104,7 +104,7 @@ func (ver *Verifier) GetFnStructFromFnTName_CheckFnTParamsReq(fnTName *ast.FnObj
 	}
 }
 
-func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckParamsSatisfyFnTReq(fnTDefName ast.AtomObj, templateParams []ast.Obj, state *VerState) (*ast.FnTStruct, error) {
+func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckParamsSatisfyFnTReq(fnTDefName ast.Atom, templateParams []ast.Obj, state *VerState) (*ast.FnTStruct, error) {
 	defOfT := ver.Env.GetFnTemplateDef(fnTDefName)
 	if defOfT == nil {
 		return nil, fmt.Errorf("fnTNameHead %s is not a fn template", fnTDefName)
@@ -145,24 +145,55 @@ func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreT
 	return NewExecTrue("")
 }
 
-func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.ObjSlice, fnTStruct *ast.FnTStruct, state *VerState) ExecRet {
-	verRet := ver.paramsInSets(concreteParams, fnTStruct.ParamSets, state.GetNoMsg())
-	if verRet.IsErr() {
-		return verRet
-	}
-	if verRet.IsUnknown() {
-		verRet.AddMsg(verRet.String())
-		return verRet
+func (ver *Verifier) checkParamsSatisfyFnTStruct(fnObj *ast.FnObj, concreteParams ast.ObjSlice, fnTStruct *ast.FnTStruct, state *VerState) ExecRet {
+	if len(concreteParams) != len(fnTStruct.ParamSets) {
+		return NewExecErr("params and sets length mismatch")
 	}
 
-	verRet = ver.factsAreTrue(fnTStruct.DomFacts, state.GetNoMsg())
-	if verRet.IsErr() {
-		return verRet
+	for i := range concreteParams {
+		fact := ast.NewInFactWithFc(concreteParams[i], fnTStruct.ParamSets[i])
+		verRet := ver.VerFactStmt(fact, state)
+		if verRet.IsErr() {
+			return paramsOfFnObjMustInDomainSetErrMsg(fnObj, i, fact)
+		}
+		if verRet.IsUnknown() {
+			return paramsOfFnObjMustInDomainSetErrMsg(fnObj, i, fact)
+		}
 	}
-	if verRet.IsUnknown() {
-		verRet.AddMsg(verRet.String())
-		return verRet
+
+	// // verRet := ver.paramsInSets(concreteParams, fnTStruct.ParamSets, state.GetNoMsg())
+	// if verRet.IsErr() {
+	// 	return verRet
+	// }
+	// if verRet.IsUnknown() {
+	// 	return verRet
+	// }
+
+	for i, fact := range fnTStruct.DomFacts {
+		verRet := ver.VerFactStmt(fact, state)
+		if verRet.IsErr() {
+			return domainFactOfFnObjMustBeTrueErrMsg(fnObj, i, fact)
+		}
+		if verRet.IsUnknown() {
+			return domainFactOfFnObjMustBeTrueErrMsg(fnObj, i, fact)
+		}
 	}
+
+	// verRet = ver.factsAreTrue(fnTStruct.DomFacts, state.GetNoMsg())
+	// if verRet.IsErr() {
+	// 	return verRet
+	// }
+	// if verRet.IsUnknown() {
+	// 	return verRet
+	// }
 
 	return NewExecTrue("")
+}
+
+func paramsOfFnObjMustInDomainSetErrMsg(fnObj *ast.FnObj, i int, fact ast.FactStmt) ExecRet {
+	return NewExecErr(fmt.Sprintf("By definition of function %s, the %s parameter of %s must satisfy \n%s\nbut failed to verify\n", fnObj.FnHead, ordinalSuffix(i+1), fnObj.String(), fact.String()))
+}
+
+func domainFactOfFnObjMustBeTrueErrMsg(fnObj *ast.FnObj, i int, fact ast.FactStmt) ExecRet {
+	return NewExecErr(fmt.Sprintf("By definition of function %s, the %s domain fact must be true\n%s\nbut failed to verify\n", fnObj.FnHead, ordinalSuffix(i+1), fact.String()))
 }

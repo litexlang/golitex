@@ -26,7 +26,7 @@ func cmpObjLiterally(left, right ast.Obj) (bool, error) {
 	}
 
 	if objEnum == AtomObjEnum {
-		cmp, err := cmpAtomObjLit(left.(ast.AtomObj), right.(ast.AtomObj))
+		cmp, err := cmpAtomObjLit(left.(ast.Atom), right.(ast.Atom))
 		if err != nil {
 			return false, err
 		}

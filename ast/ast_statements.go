@@ -32,7 +32,7 @@ type DefLetStmt struct {
 }
 
 type DefHeader struct {
-	Name      AtomObj
+	Name      Atom
 	Params    StrSlice
 	ParamSets ObjSlice
 }
@@ -90,7 +90,7 @@ type UniFactWithIffStmt struct {
 
 type SpecFactStmt struct {
 	TypeEnum SpecFactEnum
-	PropName AtomObj
+	PropName Atom
 	Params   ObjSlice
 
 	Line uint
@@ -248,7 +248,7 @@ type HaveSetDefinedByReplacementStmt struct {
 	Name     string
 	DomSet   Obj
 	RangeSet Obj
-	PropName AtomObj
+	PropName Atom
 
 	Line uint
 }
@@ -325,8 +325,7 @@ type HaveObjEqualStmt struct {
 	Line uint
 }
 
-// 不知道这个有什么用
-// TODO 删去
+// 这是have fn 语法糖。理论上可以用 exist_prop + have fn equal case by case + 给定义的函数定义它的函数集合，来彻底实现
 type HaveFnEqualStmt struct {
 	DefHeader *DefHeader
 	RetSet    Obj
@@ -335,6 +334,8 @@ type HaveFnEqualStmt struct {
 	Line uint
 }
 
+// 这是have fn case by case，然后case by case下fn的then都满足的语法糖。理论上可以用 exist_prop + have fn equal case by case + fn_template (可以写复杂的dom, then) + 在定义的外部写如果参数符合dom，那对应的equalTo符合fn_template的then，来彻底实现have fn case by case 的功能。
+// Have fn case by case 和 have fn equal 就是单纯的语法糖，不要想有什么额外的功能。不要想着怎么让 HaveFn, HaveFnCaseByCase 用HaveEqual 来替代。
 type HaveFnEqualCaseByCaseStmt struct {
 	DefHeader         *DefHeader
 	RetSet            Obj
@@ -420,7 +421,7 @@ type ClaimIffStmt struct {
 }
 
 type ProveIsTransitivePropStmt struct {
-	Prop   AtomObj
+	Prop   Atom
 	Params StrSlice
 	Proofs StmtSlice
 
@@ -523,7 +524,26 @@ type ProveInRangeStmt struct {
 
 type HaveCartSetStmt struct {
 	Name    string
-	CartObj FnObj
+	CartObj *FnObj
+
+	Line uint
+}
+
+type HaveObjFromCartSetStmt struct {
+	ObjName string
+	CartSet *FnObj
+	EqualTo Obj
+
+	Line uint
+}
+
+type HaveCartWithDimStmt struct {
+	ObjName string
+	CartDim Obj
+	Param   string
+	Facts   FactStmtSlice
+	Proofs  StmtSlice
+	EqualTo Obj
 
 	Line uint
 }

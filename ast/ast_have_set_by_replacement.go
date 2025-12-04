@@ -18,15 +18,15 @@ import (
 	glob "golitex/glob"
 )
 
-func GetForallXOnlyOneYSatisfyGivenProp(domSet, rangeSet Obj, propName AtomObj) *UniFactStmt {
+func GetForallXOnlyOneYSatisfyGivenProp(domSet, rangeSet Obj, propName Atom) *UniFactStmt {
 	params := []string{"x", "y1", "y2"}
 	setParams := []Obj{domSet, rangeSet, rangeSet}
 	domFacts := []FactStmt{
-		NewSpecFactStmt(TruePure, propName, []Obj{AtomObj("x"), AtomObj("y1")}, glob.InnerGenLine),
-		NewSpecFactStmt(TruePure, propName, []Obj{AtomObj("x"), AtomObj("y2")}, glob.InnerGenLine),
+		NewSpecFactStmt(TruePure, propName, []Obj{Atom("x"), Atom("y1")}, glob.InnerGenLine),
+		NewSpecFactStmt(TruePure, propName, []Obj{Atom("x"), Atom("y2")}, glob.InnerGenLine),
 	}
 	thenFacts := []FactStmt{
-		NewSpecFactStmt(TruePure, AtomObj(glob.LastTwoObjectsAreEqual), []Obj{AtomObj("x"), AtomObj("y1"), AtomObj("y2")}, glob.InnerGenLine),
+		NewSpecFactStmt(TruePure, Atom(glob.LastTwoObjectsAreEqual), []Obj{Atom("x"), Atom("y1"), Atom("y2")}, glob.InnerGenLine),
 	}
 	return NewUniFact(params, setParams, domFacts, thenFacts, glob.InnerGenLine)
 }

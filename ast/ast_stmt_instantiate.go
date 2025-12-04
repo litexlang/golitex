@@ -16,7 +16,7 @@ package litex_ast
 
 import "fmt"
 
-func InstantiateFcAtom(fc AtomObj, uniMap map[string]Obj) (Obj, error) {
+func InstantiateFcAtom(fc Atom, uniMap map[string]Obj) (Obj, error) {
 	instance, ok := uniMap[string(fc)]
 	if ok {
 		return instance, nil
@@ -24,7 +24,7 @@ func InstantiateFcAtom(fc AtomObj, uniMap map[string]Obj) (Obj, error) {
 	return fc, nil
 }
 
-func (fc AtomObj) Instantiate(uniMap map[string]Obj) (Obj, error) {
+func (fc Atom) Instantiate(uniMap map[string]Obj) (Obj, error) {
 	return InstantiateFcAtom(fc, uniMap)
 }
 
@@ -555,7 +555,23 @@ func (stmt *HaveCartSetStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	if !ok {
 		return nil, fmt.Errorf("expected cart object to be FnObj after instantiation")
 	}
-	return NewHaveCartSetStmt(stmt.Name, *cartObj, stmt.Line), nil
+	return NewHaveCartSetStmt(stmt.Name, cartObj, stmt.Line), nil
+}
+
+func (stmt *HaveObjFromCartSetStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+	newCartSet, err := stmt.CartSet.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	cartSet, ok := newCartSet.(*FnObj)
+	if !ok {
+		return nil, fmt.Errorf("expected cart set to be FnObj after instantiation")
+	}
+	newEqualTo, err := stmt.EqualTo.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewHaveObjFromCartSetStmt(stmt.ObjName, cartSet, newEqualTo, stmt.Line), nil
 }
 
 func (stmt *HaveSetFnStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
@@ -564,6 +580,34 @@ func (stmt *HaveSetFnStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 		return nil, err
 	}
 	return NewHaveSetFnStmt(newDefHeader, stmt.Param, stmt.ParentSet, stmt.Proofs, stmt.Line), nil
+}
+
+func (stmt *HaveCartWithDimStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+	newCartDim, err := stmt.CartDim.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newFacts := make(FactStmtSlice, len(stmt.Facts))
+	for i, fact := range stmt.Facts {
+		newFact, err := fact.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newFacts[i] = newFact.(FactStmt)
+	}
+	newProofs := make(StmtSlice, len(stmt.Proofs))
+	for i, proof := range stmt.Proofs {
+		newProof, err := proof.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newProofs[i] = newProof
+	}
+	newEqualTo, err := stmt.EqualTo.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewHaveCartWithDimStmt(stmt.ObjName, newCartDim, stmt.Param, newFacts, newProofs, newEqualTo, stmt.Line), nil
 }
 
 func (stmt *NamedUniFactStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {

@@ -57,7 +57,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast
 		}
 
 		for _, relatedFc := range relatedFcSlice {
-			relatedFcStmt := ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(stmt.PropName), []ast.Obj{relatedFc, stmt.Params[1]}, stmt.Line)
+			relatedFcStmt := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.PropName), []ast.Obj{relatedFc, stmt.Params[1]}, stmt.Line)
 			verRet := ver.verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(relatedFcStmt, state)
 			if verRet.IsErr() {
 				return verRet
@@ -178,7 +178,7 @@ func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecFactStmt, state *VerState) 
 }
 
 func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	nextState := state.GetAddRound()
+	// nextState := state.GetAddRound()
 
 	curDefStmt := ver.Env.GetPropDef(stmt.PropName)
 	// defStmt := curDefStmt
@@ -220,7 +220,8 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 	}
 	// prove all domFacts are true
 	for _, domFact := range instantiatedIffToProp.DomFacts {
-		verRet := ver.VerFactStmt(domFact, nextState)
+		// verRet := ver.VerFactStmt(domFact, nextState)
+		verRet := ver.VerFactStmt(domFact, state)
 		if verRet.IsErr() || verRet.IsUnknown() {
 			return verRet
 		}

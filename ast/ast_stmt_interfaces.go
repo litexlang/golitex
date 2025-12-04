@@ -51,6 +51,7 @@ func (s *HaveObjInNonEmptySetStmt) stmt()                   {}
 func (s *HaveEnumSetStmt) stmt()                            {}
 func (s *HaveIntensionalSetStmt) stmt()                     {}
 func (s *HaveCartSetStmt) stmt()                            {}
+func (s *HaveObjFromCartSetStmt) stmt()                     {}
 func (s *HaveSetFnStmt) stmt()                              {}
 func (s *HaveSetDefinedByReplacementStmt) stmt()            {}
 func (s *NamedUniFactStmt) stmt()                           {}
@@ -107,6 +108,7 @@ func (s *HaveObjInNonEmptySetStmt) algoStmt()               {}
 func (s *HaveEnumSetStmt) algoStmt()                        {}
 func (s *HaveIntensionalSetStmt) algoStmt()                 {}
 func (s *HaveCartSetStmt) algoStmt()                        {}
+func (s *HaveObjFromCartSetStmt) algoStmt()                 {}
 func (s *HaveSetFnStmt) algoStmt()                          {}
 func (s *HaveSetDefinedByReplacementStmt) algoStmt()        {}
 func (s *NamedUniFactStmt) algoStmt()                       {}
@@ -136,6 +138,8 @@ func (s *PrintStmt) algoStmt()                              {}
 func (s *HelpStmt) algoStmt()                               {}
 func (s *HaveFnEqualCaseByCaseStmt) algoStmt()              {}
 func (s *HaveFnCaseByCaseStmt) algoStmt()                   {}
+func (s *HaveCartWithDimStmt) stmt()                        {}
+func (s *HaveCartWithDimStmt) algoStmt()                    {}
 func (s *DefLetStmt) GetLine() uint                         { return s.Line }
 func (s *DefPropStmt) GetLine() uint                        { return s.Line }
 func (s *DefFnStmt) GetLine() uint                          { return s.Line }
@@ -163,6 +167,7 @@ func (s *HaveObjInNonEmptySetStmt) GetLine() uint           { return s.Line }
 func (s *HaveEnumSetStmt) GetLine() uint                    { return s.Line }
 func (s *HaveIntensionalSetStmt) GetLine() uint             { return s.Line }
 func (s *HaveCartSetStmt) GetLine() uint                    { return s.Line }
+func (s *HaveObjFromCartSetStmt) GetLine() uint             { return s.Line }
 func (s *HaveSetFnStmt) GetLine() uint                      { return s.Line }
 func (s *HaveSetDefinedByReplacementStmt) GetLine() uint    { return s.Line }
 func (s *NamedUniFactStmt) GetLine() uint                   { return s.Line }
@@ -198,13 +203,14 @@ func (s *PrintStmt) GetLine() uint                          { return s.Line }
 func (s *HelpStmt) GetLine() uint                           { return s.Line }
 func (s *HaveFnEqualCaseByCaseStmt) GetLine() uint          { return s.Line }
 func (s *HaveFnCaseByCaseStmt) GetLine() uint               { return s.Line }
+func (s *HaveCartWithDimStmt) GetLine() uint                { return s.Line }
 
 type FactStmt interface {
 	factStmt()
 	stmt()
 	String() string
 	InstantiateFact(map[string]Obj) (FactStmt, error)
-	GetAtoms() []AtomObj
+	GetAtoms() []Atom
 	ToLatexString() string
 	canBeKnown()
 	InlineString() string
@@ -230,7 +236,7 @@ type Spec_OrFact interface {
 	String() string
 	InstantiateFact(uniConMap map[string]Obj) (FactStmt, error)
 	ReverseIsTrue() []*SpecFactStmt
-	GetAtoms() []AtomObj
+	GetAtoms() []Atom
 	ToLatexString() string
 	canBeKnown()
 	InlineString() string
@@ -277,7 +283,7 @@ type UniFactInterface interface {
 	stmt()
 	String() string
 	InstantiateFact(map[string]Obj) (FactStmt, error)
-	GetAtoms() []AtomObj
+	GetAtoms() []Atom
 	uniFact()
 	ToLatexString() string
 	canBeKnown()

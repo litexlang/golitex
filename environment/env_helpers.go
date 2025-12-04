@@ -28,7 +28,7 @@ func (e *Env) GetSetFnRetValue(fc ast.Obj) *ast.HaveSetFnStmt {
 
 	// name
 	fnName := asFn.FnHead
-	fnNameAsAtom, ok := fnName.(ast.AtomObj)
+	fnNameAsAtom, ok := fnName.(ast.Atom)
 	if !ok {
 		return nil
 	}
@@ -42,7 +42,7 @@ func (e *Env) GenerateUndeclaredRandomName() string {
 	for {
 		randomStr = glob.RandomString(i)
 		// check if the string is undeclared
-		ret := e.IsAtomDeclared(ast.AtomObj(randomStr), map[string]struct{}{})
+		ret := e.IsAtomDeclared(ast.Atom(randomStr), map[string]struct{}{})
 		if ret.IsErr() {
 			return randomStr
 		}
@@ -56,7 +56,7 @@ func (e *Env) GenerateUndeclaredRandomName_AndNotInMap(m map[string]struct{}) st
 	for {
 		randomStr = glob.RandomString(i)
 		// check if the string is undeclared
-		ret := e.IsAtomDeclared(ast.AtomObj(randomStr), map[string]struct{}{})
+		ret := e.IsAtomDeclared(ast.Atom(randomStr), map[string]struct{}{})
 		if ret.IsErr() {
 			_, ok := m[randomStr]
 			if !ok {
@@ -71,7 +71,7 @@ func (e *Env) GetFnStructFromFnTName(fnTName *ast.FnObj) (*ast.FnTStruct, glob.G
 	if fcFnTypeToFnTStruct, ok := ast.FcFnT_To_FnTStruct(fnTName); ok {
 		return fcFnTypeToFnTStruct, glob.TrueRet("")
 	} else {
-		fnTNameHeadAsAtom, ok := fnTName.FnHead.(ast.AtomObj)
+		fnTNameHeadAsAtom, ok := fnTName.FnHead.(ast.Atom)
 		if !ok {
 			return nil, glob.ErrRet(fmt.Errorf("fnTNameHead is not an atom"))
 		}
@@ -80,7 +80,7 @@ func (e *Env) GetFnStructFromFnTName(fnTName *ast.FnObj) (*ast.FnTStruct, glob.G
 	}
 }
 
-func (e *Env) getFnTDef_InstFnTStructOfIt(fnTDefName ast.AtomObj, templateParams []ast.Obj) (*ast.FnTStruct, glob.GlobRet) {
+func (e *Env) getFnTDef_InstFnTStructOfIt(fnTDefName ast.Atom, templateParams []ast.Obj) (*ast.FnTStruct, glob.GlobRet) {
 	defOfT := e.GetFnTemplateDef(fnTDefName)
 	if defOfT == nil {
 		return nil, glob.ErrRet(fmt.Errorf("fnTNameHead %s is not a fn template", fnTDefName))

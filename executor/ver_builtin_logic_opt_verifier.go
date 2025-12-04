@@ -134,15 +134,6 @@ func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactSt
 			}
 		}
 
-		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordComplex) {
-			isSuccess = glob.IsComplexNumLitExpr(leftFc)
-			if isSuccess {
-				return NewExecTrue("")
-			} else {
-				return NewExecUnknown("")
-			}
-		}
-
 		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordNPos) {
 			isSuccess = glob.IsNPosNumLitExpr(leftFc)
 			if isSuccess {

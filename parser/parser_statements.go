@@ -61,6 +61,9 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 			}
 		} else if slices.Contains(tb.header.slice, glob.KeywordSt) {
 			ret, err = tb.haveObjStStmt()
+		} else if tb.header.strAtCurIndexPlus(1) == glob.KeywordCart {
+			// Check for "have objName cart(...) = ..." pattern
+			ret, err = tb.haveObjFromCartSetStmt()
 		} else if slices.Contains(tb.header.slice, glob.KeySymbolEqual) {
 			ret, err = tb.haveObjEqualStmt()
 		} else {
@@ -128,6 +131,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.doNothingStmt()
 	case glob.KeywordImport:
 		ret, err = tb.importDirStmt()
+	case glob.KeywordHaveCartWithDim:
+		ret, err = tb.haveCartWithDimStmt()
 	default:
 		ret, err = tb.factsStmt()
 	}
@@ -671,7 +676,7 @@ func (tb *tokenBlock) knowFactStmt() (*ast.KnowFactStmt, error) {
 func (tb *tokenBlock) relaFactStmt_orRelaEquals() (ast.FactStmt, error) {
 	var ret *ast.SpecFactStmt
 
-	obj, err := tb.RawObj()
+	obj, err := tb.Obj()
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
 	}
@@ -682,7 +687,7 @@ func (tb *tokenBlock) relaFactStmt_orRelaEquals() (ast.FactStmt, error) {
 	}
 
 	if opt == glob.FuncFactPrefix {
-		propName, err := tb.rawAtomObjNotBeginWithNumber()
+		propName, err := tb.notNumberAtom()
 		if err != nil {
 			return nil, parserErrAtTb(err, tb)
 		}
@@ -690,7 +695,7 @@ func (tb *tokenBlock) relaFactStmt_orRelaEquals() (ast.FactStmt, error) {
 		if tb.header.ExceedEnd() {
 			ret = ast.NewSpecFactStmt(ast.TruePure, propName, []ast.Obj{obj}, tb.line)
 		} else {
-			obj2, err := tb.RawObj()
+			obj2, err := tb.Obj()
 			if err != nil {
 				return nil, parserErrAtTb(err, tb)
 			}
@@ -702,7 +707,7 @@ func (tb *tokenBlock) relaFactStmt_orRelaEquals() (ast.FactStmt, error) {
 	} else if !glob.IsBuiltinInfixRelaPropSymbol(opt) {
 		return nil, fmt.Errorf("expect relation prop")
 	} else {
-		obj2, err := tb.RawObj()
+		obj2, err := tb.Obj()
 		if err != nil {
 			return nil, parserErrAtTb(err, tb)
 		}
@@ -710,13 +715,13 @@ func (tb *tokenBlock) relaFactStmt_orRelaEquals() (ast.FactStmt, error) {
 		params := []ast.Obj{obj, obj2}
 
 		if opt != glob.KeySymbolEqual {
-			ret = ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(opt), params, tb.line)
+			ret = ast.NewSpecFactStmt(ast.TruePure, ast.Atom(opt), params, tb.line)
 		} else {
 			// 循环地看下面一位是不是 = ，直到不是
 			if tb.header.is(glob.KeySymbolEqual) {
 				return tb.relaEqualsFactStmt(obj, obj2)
 			} else {
-				ret = ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(opt), params, tb.line)
+				ret = ast.NewSpecFactStmt(ast.TruePure, ast.Atom(opt), params, tb.line)
 			}
 		}
 	}
@@ -725,7 +730,7 @@ func (tb *tokenBlock) relaFactStmt_orRelaEquals() (ast.FactStmt, error) {
 	if ret.NameIs(glob.KeySymbolNotEqual) {
 		ret.TypeEnum = ast.FalsePure
 		// ret.PropName = *ast.NewFcAtom(glob.EmptyPkg, glob.KeySymbolEqual)
-		ret.PropName = ast.AtomObj(glob.KeySymbolEqual)
+		ret.PropName = ast.Atom(glob.KeySymbolEqual)
 	}
 
 	return ret, nil
@@ -748,7 +753,7 @@ func (tb *tokenBlock) defHeaderWithoutParsingColonAtEnd() (*ast.DefHeader, error
 		return nil, err
 	}
 
-	return ast.NewDefHeader(ast.AtomObj(name), params, setParams), nil
+	return ast.NewDefHeader(ast.Atom(name), params, setParams), nil
 }
 
 func (tb *tokenBlock) defExistPropStmt(head string) (*ast.DefExistPropStmt, error) {
@@ -801,7 +806,7 @@ func (tb *tokenBlock) existFactStmt(isTrue bool) (*ast.SpecFactStmt, error) {
 	existParams := []ast.Obj{}
 
 	for !tb.header.is(glob.KeywordSt) {
-		param, err := tb.RawObj()
+		param, err := tb.Obj()
 		if err != nil {
 			return nil, parserErrAtTb(err, tb)
 		}
@@ -836,7 +841,7 @@ func (tb *tokenBlock) pureFuncSpecFact() (*ast.SpecFactStmt, error) {
 		tb.header.skip(glob.FuncFactPrefix)
 	}
 
-	propName, err := tb.rawAtomObjNotBeginWithNumber()
+	propName, err := tb.notNumberAtom()
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
 	}
@@ -849,7 +854,7 @@ func (tb *tokenBlock) pureFuncSpecFact() (*ast.SpecFactStmt, error) {
 
 	if !tb.header.is(glob.KeySymbolRightBrace) {
 		for {
-			param, err := tb.RawObj()
+			param, err := tb.Obj()
 			if err != nil {
 				return nil, parserErrAtTb(err, tb)
 			}
@@ -935,7 +940,7 @@ func (tb *tokenBlock) bodyBlockFacts(uniFactDepth uniFactEnum, parseBodyFactNum 
 			stmt := tb.body[i]
 			fact, err := stmt.SpecFactOrOrStmt()
 			if err != nil {
-				if tb.body[i].CurrentTokenIs(glob.KeywordForall) {
+				if tb.body[i].header.is(glob.KeywordForall) {
 					return nil, fmt.Errorf("expect specific fact: at most 2 layers of universal quantifier is allowed")
 				} else {
 					return nil, parserErrAtTb(err, tb)
@@ -1394,7 +1399,7 @@ func (tb *tokenBlock) param_paramSet_paramInSetFacts(endWith string, allowExceed
 				continue
 			}
 
-			setParam, err := tb.RawObj()
+			setParam, err := tb.Obj()
 			if err != nil {
 				return nil, nil, err
 			}
@@ -1556,11 +1561,11 @@ func (tb *tokenBlock) defFnStmt(skipFn bool) (*ast.DefFnStmt, error) {
 		return nil, parserErrAtTb(err, tb)
 	}
 
-	retSet, err := tb.RawObj()
+	retSet, err := tb.Obj()
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
 	}
-	if asAtom, ok := retSet.(ast.AtomObj); ok {
+	if asAtom, ok := retSet.(ast.Atom); ok {
 		if string(asAtom) == glob.KeySymbolColon {
 			return nil, fmt.Errorf(": is not allowed in return set")
 		}
@@ -1672,7 +1677,7 @@ func (tb *tokenBlock) claimExistPropStmt() (*ast.ClaimExistPropStmt, error) {
 
 	haveObj := []ast.Obj{}
 	for !tb.body[2].header.ExceedEnd() {
-		curObj, err := tb.body[2].RawObj()
+		curObj, err := tb.body[2].Obj()
 		if err != nil {
 			return nil, parserErrAtTb(err, tb)
 		}
@@ -1759,7 +1764,7 @@ func (tb *tokenBlock) intentionalSetBody() (string, ast.Obj, []*ast.SpecFactStmt
 		return "", nil, nil, parserErrAtTb(err, tb)
 	}
 
-	parentSet, err := tb.RawObj()
+	parentSet, err := tb.Obj()
 	if err != nil {
 		return "", nil, nil, parserErrAtTb(err, tb)
 	}
@@ -1814,7 +1819,7 @@ func (tb *tokenBlock) fact() (ast.FactStmt, error) {
 func (tb *tokenBlock) relaFact_intensionalSetFact_enumStmt_equals() (ast.FactStmt, error) {
 	var ret *ast.SpecFactStmt
 
-	obj, err := tb.RawObj()
+	obj, err := tb.Obj()
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
 	}
@@ -1825,7 +1830,7 @@ func (tb *tokenBlock) relaFact_intensionalSetFact_enumStmt_equals() (ast.FactStm
 	}
 
 	if opt == glob.FuncFactPrefix {
-		propName, err := tb.rawAtomObjNotBeginWithNumber()
+		propName, err := tb.notNumberAtom()
 		if err != nil {
 			return nil, parserErrAtTb(err, tb)
 		}
@@ -1833,7 +1838,7 @@ func (tb *tokenBlock) relaFact_intensionalSetFact_enumStmt_equals() (ast.FactStm
 		if tb.header.ExceedEnd() {
 			ret = ast.NewSpecFactStmt(ast.TruePure, propName, []ast.Obj{obj}, tb.line)
 		} else {
-			obj2, err := tb.RawObj()
+			obj2, err := tb.Obj()
 			if err != nil {
 				return nil, parserErrAtTb(err, tb)
 			}
@@ -1845,7 +1850,7 @@ func (tb *tokenBlock) relaFact_intensionalSetFact_enumStmt_equals() (ast.FactStm
 	} else if opt == glob.KeySymbolEqual && tb.header.is(glob.KeySymbolLeftCurly) {
 		return tb.enumStmt_or_intensionalSetStmt_or_DomOf(obj)
 	} else if glob.IsBuiltinInfixRelaPropSymbol(opt) {
-		obj2, err := tb.RawObj()
+		obj2, err := tb.Obj()
 		if err != nil {
 			return nil, parserErrAtTb(err, tb)
 		}
@@ -1869,7 +1874,7 @@ func (tb *tokenBlock) relaFact_intensionalSetFact_enumStmt_equals() (ast.FactStm
 
 		params := []ast.Obj{obj, obj2}
 
-		ret = ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(opt), params, tb.line)
+		ret = ast.NewSpecFactStmt(ast.TruePure, ast.Atom(opt), params, tb.line)
 	} else {
 		return nil, fmt.Errorf("expect relation prop")
 	}
@@ -1877,7 +1882,7 @@ func (tb *tokenBlock) relaFact_intensionalSetFact_enumStmt_equals() (ast.FactStm
 	// 这里加入语法糖：!= 等价于 not =，好处是我 = 有 commutative的性质，我不用额外处理 != 了
 	if ret.NameIs(glob.KeySymbolNotEqual) {
 		ret.TypeEnum = ast.FalsePure
-		ret.PropName = ast.AtomObj(glob.KeySymbolEqual)
+		ret.PropName = ast.Atom(glob.KeySymbolEqual)
 	}
 
 	return ret, nil
@@ -1904,7 +1909,7 @@ func (tb *tokenBlock) enumStmt_or_intensionalSetStmt_or_DomOf(obj ast.Obj) (ast.
 		return ast.NewEnumStmt(obj, []ast.Obj{}, tb.line), nil
 	}
 
-	leftmost, err := tb.RawObj()
+	leftmost, err := tb.Obj()
 	if err != nil {
 		return nil, fmt.Errorf("")
 	}
@@ -1913,7 +1918,7 @@ func (tb *tokenBlock) enumStmt_or_intensionalSetStmt_or_DomOf(obj ast.Obj) (ast.
 		enumItems := []ast.Obj{leftmost}
 		tb.header.skipIfIs(glob.KeySymbolComma) // 不能是 err = tb.header.skip(glob.KeySymbolComma) 因为这样会跳过 right curly
 		for !tb.header.is(glob.KeySymbolRightCurly) {
-			curItem, err := tb.RawObj()
+			curItem, err := tb.Obj()
 			if err != nil {
 				return nil, fmt.Errorf("")
 			}
@@ -1928,15 +1933,15 @@ func (tb *tokenBlock) enumStmt_or_intensionalSetStmt_or_DomOf(obj ast.Obj) (ast.
 
 		return ast.NewEnumStmt(obj, enumItems, tb.line), nil
 	} else {
-		if _, ok := leftmost.(ast.AtomObj); !ok {
+		if _, ok := leftmost.(ast.Atom); !ok {
 			return nil, fmt.Errorf("expect obj atom")
 		} else {
-			if glob.IsValidUserDefinedNameWithoutPkgName(string(leftmost.(ast.AtomObj))) != nil {
+			if glob.IsValidUserDefinedNameWithoutPkgName(string(leftmost.(ast.Atom))) != nil {
 				return nil, fmt.Errorf("expect obj atom without pkg name")
 			}
 		}
 
-		parentSet, err := tb.RawObj()
+		parentSet, err := tb.Obj()
 		if err != nil {
 			return nil, parserErrAtTb(err, tb)
 		}
@@ -1961,7 +1966,7 @@ func (tb *tokenBlock) enumStmt_or_intensionalSetStmt_or_DomOf(obj ast.Obj) (ast.
 			return nil, fmt.Errorf("")
 		}
 
-		return ast.NewIntensionalSetStmt(obj, string(leftmost.(ast.AtomObj)), parentSet, proofs, tb.line), nil
+		return ast.NewIntensionalSetStmt(obj, string(leftmost.(ast.Atom)), parentSet, proofs, tb.line), nil
 	}
 }
 
@@ -2106,7 +2111,7 @@ func (tb *tokenBlock) haveSetStmt() (ast.Stmt, error) {
 	// Check if next token is "cart"
 	if tb.header.is(glob.KeywordCart) {
 		// Parse cart(...)
-		rightObj, err := tb.RawObj()
+		rightObj, err := tb.Obj()
 		if err != nil {
 			return nil, parserErrAtTb(err, tb)
 		}
@@ -2125,11 +2130,11 @@ func (tb *tokenBlock) haveSetStmt() (ast.Stmt, error) {
 			return nil, fmt.Errorf("expect end of line")
 		}
 
-		return ast.NewHaveCartSetStmt(haveSetName, *cartObj, tb.line), nil
+		return ast.NewHaveCartSetStmt(haveSetName, cartObj, tb.line), nil
 	}
 
 	// Otherwise, parse as enum or intensional set
-	fact, err := tb.enumStmt_or_intensionalSetStmt_or_DomOf(ast.AtomObj(haveSetName))
+	fact, err := tb.enumStmt_or_intensionalSetStmt_or_DomOf(ast.Atom(haveSetName))
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
 	}
@@ -2165,6 +2170,103 @@ func (tb *tokenBlock) haveSetFnStmt() (ast.Stmt, error) {
 	}
 
 	return ast.NewHaveSetFnStmt(declHeader, param, parentSet, proofs, tb.line), nil
+}
+
+func (tb *tokenBlock) haveCartWithDimStmt() (ast.Stmt, error) {
+	err := tb.header.skip(glob.KeywordHaveCartWithDim)
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
+	}
+
+	name, err := tb.header.next()
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolComma)
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
+	}
+
+	cartDim, err := tb.Obj()
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolComma)
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
+	}
+
+	param, err := tb.header.next()
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolRightBrace)
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
+	}
+
+	// Parse body: forall statements and optional case-by-case structure
+	facts := []ast.FactStmt{}
+
+	// 第一个 block 形如 =>: ... 这样的
+	err = tb.body[0].header.skipKwAndColonCheckEOL(glob.KeySymbolRightArrow)
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
+	}
+
+	for _, stmt := range tb.body[0].body {
+		curStmt, err := stmt.factStmt(UniFactDepth0)
+		if err != nil {
+			return nil, parserErrAtTb(err, tb)
+		}
+		facts = append(facts, curStmt)
+	}
+
+	// 分类：如果下面body[1]是case开头的，那就说明是case-by-case结构；否则是普通结构
+	if len(tb.body) != 3 {
+		return nil, fmt.Errorf("expect 3 blocks of %s when not defining case-by-case, but got %d", glob.KeywordHaveCartWithDim, len(tb.body))
+	}
+
+	proofs := []ast.Stmt{}
+	err = tb.body[1].header.skipKwAndColonCheckEOL(glob.KeywordProve)
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
+	}
+
+	for _, stmt := range tb.body[1].body {
+		curStmt, err := stmt.Stmt()
+		if err != nil {
+			return nil, parserErrAtTb(err, tb)
+		}
+		proofs = append(proofs, curStmt)
+	}
+
+	// 最后一行是 =
+	err = tb.body[len(tb.body)-1].header.skip(glob.KeySymbolEqual)
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
+	}
+
+	equalTo, err := tb.body[2].Obj()
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
+	}
+
+	return ast.NewHaveCartWithDimStmt(name, cartDim, param, facts, proofs, equalTo, tb.line), nil
+
 }
 
 func (tb *tokenBlock) namedUniFactStmt() (*ast.NamedUniFactStmt, error) {
@@ -2218,7 +2320,7 @@ func (tb *tokenBlock) equalsFactStmt() (*ast.EqualsFactStmt, error) {
 		if tb.header.ExceedEnd() {
 			params := make(ast.ObjSlice, 0, len(tb.body))
 			for _, param := range tb.body {
-				param, err := param.RawObj()
+				param, err := param.Obj()
 				if err != nil {
 					return nil, parserErrAtTb(err, tb)
 				}
@@ -2233,7 +2335,7 @@ func (tb *tokenBlock) equalsFactStmt() (*ast.EqualsFactStmt, error) {
 		} else {
 			params := []ast.Obj{}
 			for {
-				curObj, err := tb.RawObj()
+				curObj, err := tb.Obj()
 				if err != nil {
 					return nil, parserErrAtTb(err, tb)
 				}
@@ -2259,7 +2361,7 @@ func (tb *tokenBlock) equalsFactStmt() (*ast.EqualsFactStmt, error) {
 
 		params := []ast.Obj{}
 		for {
-			curObj, err := tb.RawObj()
+			curObj, err := tb.Obj()
 			if err != nil {
 				return nil, parserErrAtTb(err, tb)
 			}
@@ -2390,7 +2492,7 @@ func (tb *tokenBlock) fnInFnTemplateStmt() ([]string, []ast.Obj, ast.Obj, []ast.
 		return nil, nil, nil, nil, nil, parserErrAtTb(err, tb)
 	}
 
-	fnRetSet, err := tb.RawObj()
+	fnRetSet, err := tb.Obj()
 	if err != nil {
 		return nil, nil, nil, nil, nil, parserErrAtTb(err, tb)
 	}
@@ -2530,14 +2632,14 @@ func (tb *tokenBlock) proveByInductionStmt() (*ast.ProveByInductionStmt, error) 
 		if err != nil {
 			return nil, parserErrAtTb(err, tb)
 		}
-		return ast.NewProveByInductionStmt(fact, param, ast.AtomObj("1"), tb.line), nil
+		return ast.NewProveByInductionStmt(fact, param, ast.Atom("1"), tb.line), nil
 	} else {
 		err = tb.header.skip(glob.KeySymbolComma)
 		if err != nil {
 			return nil, parserErrAtTb(err, tb)
 		}
 
-		start, err := tb.RawObj()
+		start, err := tb.Obj()
 		if err != nil {
 			return nil, parserErrAtTb(err, tb)
 		}
@@ -2549,6 +2651,52 @@ func (tb *tokenBlock) proveByInductionStmt() (*ast.ProveByInductionStmt, error) 
 
 		return ast.NewProveByInductionStmt(fact, param, start, tb.line), nil
 	}
+}
+
+func (tb *tokenBlock) haveObjFromCartSetStmt() (*ast.HaveObjFromCartSetStmt, error) {
+	err := tb.header.skip(glob.KeywordHave)
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
+	}
+
+	// Parse object name
+	objName, err := tb.header.next()
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
+	}
+
+	// Parse cart(...)
+	cartSetObj, err := tb.Obj()
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
+	}
+
+	cartSet, ok := cartSetObj.(*ast.FnObj)
+	if !ok {
+		return nil, parserErrAtTb(fmt.Errorf("expected cart to be FnObj"), tb)
+	}
+
+	if !ast.IsFn_WithHeadName(cartSetObj, glob.KeywordCart) {
+		return nil, parserErrAtTb(fmt.Errorf("expected cart function call"), tb)
+	}
+
+	// Parse = ...
+	err = tb.header.skip(glob.KeySymbolEqual)
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
+	}
+
+	equalTo, err := tb.Obj()
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
+	}
+
+	// Check end of line
+	if !tb.header.ExceedEnd() {
+		return nil, parserErrAtTb(fmt.Errorf("expect end of line"), tb)
+	}
+
+	return ast.NewHaveObjFromCartSetStmt(objName, cartSet, equalTo, tb.line), nil
 }
 
 func (tb *tokenBlock) haveObjEqualStmt() (*ast.HaveObjEqualStmt, error) {
@@ -2565,7 +2713,7 @@ func (tb *tokenBlock) haveObjEqualStmt() (*ast.HaveObjEqualStmt, error) {
 	}
 
 	for !tb.header.ExceedEnd() {
-		objectEqualTo, err := tb.RawObj()
+		objectEqualTo, err := tb.Obj()
 		if err != nil {
 			return nil, parserErrAtTb(err, tb)
 		}
@@ -2599,7 +2747,7 @@ func (tb *tokenBlock) haveFnEqualStmt() (ast.Stmt, error) {
 		return nil, parserErrAtTb(err, tb)
 	}
 
-	retSet, err := tb.RawObj()
+	retSet, err := tb.Obj()
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
 	}
@@ -2610,7 +2758,7 @@ func (tb *tokenBlock) haveFnEqualStmt() (ast.Stmt, error) {
 	}
 
 	if !tb.header.is(glob.KeySymbolColon) {
-		equalTo, err := tb.RawObj()
+		equalTo, err := tb.Obj()
 		if err != nil {
 			return nil, parserErrAtTb(err, tb)
 		}
@@ -2637,7 +2785,7 @@ func (tb *tokenBlock) haveFnEqualStmt() (ast.Stmt, error) {
 			if err != nil {
 				return nil, parserErrAtTb(err, tb)
 			}
-			obj, err := block.RawObj()
+			obj, err := block.Obj()
 			if err != nil {
 				return nil, parserErrAtTb(err, tb)
 			}
@@ -2686,7 +2834,7 @@ func (tb *tokenBlock) haveFnLiftStmt() (*ast.HaveFnLiftStmt, error) {
 		return nil, parserErrAtTb(err, tb)
 	}
 
-	opt, err := tb.RawObj()
+	opt, err := tb.Obj()
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
 	}
@@ -2698,7 +2846,7 @@ func (tb *tokenBlock) haveFnLiftStmt() (*ast.HaveFnLiftStmt, error) {
 
 	domainOfEachParamOfGivenFn := []ast.Obj{}
 	for !tb.header.is(glob.KeySymbolRightBrace) {
-		curDomain, err := tb.RawObj()
+		curDomain, err := tb.Obj()
 		if err != nil {
 			return nil, parserErrAtTb(err, tb)
 		}
@@ -2773,7 +2921,7 @@ func (tb *tokenBlock) haveFnStmt() (ast.Stmt, error) {
 			return nil, parserErrAtTb(err, tb)
 		}
 
-		haveObjSatisfyFn, err := tb.body[2].RawObj()
+		haveObjSatisfyFn, err := tb.body[2].Obj()
 		if err != nil {
 			return nil, parserErrAtTb(err, tb)
 		}
@@ -2819,7 +2967,7 @@ func (tb *tokenBlock) haveFnStmt() (ast.Stmt, error) {
 				if err != nil {
 					return nil, parserErrAtTb(err, tb)
 				}
-				curHaveObj, err := tb.body[i].RawObj()
+				curHaveObj, err := tb.body[i].Obj()
 				if err != nil {
 					return nil, parserErrAtTb(err, tb)
 				}
@@ -2837,7 +2985,7 @@ func (tb *tokenBlock) relaEqualsFactStmt(obj, fc2 ast.Obj) (*ast.EqualsFactStmt,
 	equalsItem := []ast.Obj{obj, fc2}
 	for tb.header.is(glob.KeySymbolEqual) {
 		tb.header.skip(glob.KeySymbolEqual)
-		obj3, err := tb.RawObj()
+		obj3, err := tb.Obj()
 		if err != nil {
 			return nil, parserErrAtTb(err, tb)
 		}
@@ -2964,7 +3112,7 @@ func (tb *tokenBlock) proveInRangeStmt() (ast.Stmt, error) {
 		return nil, parserErrAtTb(err, tb)
 	}
 
-	start, err := tb.RawObj()
+	start, err := tb.Obj()
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
 	}
@@ -2974,7 +3122,7 @@ func (tb *tokenBlock) proveInRangeStmt() (ast.Stmt, error) {
 		return nil, parserErrAtTb(err, tb)
 	}
 
-	end, err := tb.RawObj()
+	end, err := tb.Obj()
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
 	}
@@ -3156,7 +3304,7 @@ func (tb *tokenBlock) proveInRangeSetStmt() (ast.Stmt, error) {
 		return nil, parserErrAtTb(err, tb)
 	}
 
-	paramSet, err := tb.RawObj()
+	paramSet, err := tb.Obj()
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
 	}
@@ -3267,11 +3415,11 @@ func (tb *tokenBlock) proveIsTransitivePropStmt() (ast.Stmt, error) {
 		return nil, parserErrAtTb(err, tb)
 	}
 
-	prop, err := tb.RawObj()
+	prop, err := tb.Obj()
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
 	}
-	propAtom, ok := prop.(ast.AtomObj)
+	propAtom, ok := prop.(ast.Atom)
 	if !ok {
 		return nil, parserErrAtTb(fmt.Errorf("expect obj atom, but got %T", prop), tb)
 	}
@@ -3442,7 +3590,7 @@ func (tb *tokenBlock) evalStmt() (ast.Stmt, error) {
 		return nil, parserErrAtTb(err, tb)
 	}
 
-	fcsToEval, err := tb.RawObj()
+	fcsToEval, err := tb.Obj()
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
 	}
@@ -3522,7 +3670,7 @@ func (tb *tokenBlock) byStmt() (*ast.ByStmt, error) {
 
 	proveAlgoParams := []ast.Obj{}
 	for !tb.header.is(glob.KeySymbolRightBrace) {
-		param, err := tb.RawObj()
+		param, err := tb.Obj()
 		if err != nil {
 			return nil, parserErrAtTb(err, tb)
 		}

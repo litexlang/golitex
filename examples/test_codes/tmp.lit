@@ -1,0 +1,36 @@
+prove:
+    exist_prop f fn(R)R st tmp():
+        forall x R: x > 0 => f(x) > 0
+        forall x R: x <= 0 => f(x) = 0
+
+    have fn g(x R) R =:
+        case x > 0: x
+        case x <= 0: 0
+
+    forall x R: x > 0 => g(x) = x, x > 0, g(x) > 0
+    forall x R: x <= 0 => g(x) = 0
+
+    exist g st $tmp()
+
+    have f st $tmp()
+    
+prove:
+    exist_prop f fn(R)R st tmp():
+        forall x R: f(x) > 0
+
+    have fn g(x R) R =:
+        case x > 0: x
+        case x <= 0: 100
+
+    prove forall x R: g(x) > 0:
+        prove_case_by_case:
+            g(x) > 0
+            case x > 0:
+                g(x) = x
+                x > 0
+            case x <= 0:
+                g(x) = 100
+                x <= 0
+
+    exist g st $tmp()
+

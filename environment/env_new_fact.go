@@ -102,7 +102,8 @@ func (env *Env) newFactNoPostProcess(stmt ast.FactStmt) glob.GlobRet {
 }
 
 func (env *Env) newLogicExprFact(fact *ast.OrStmt) glob.GlobRet {
-	return env.storeLogicFact(fact)
+	ret := env.KnownFactsStruct.SpecFactInLogicExprMem.newFact(fact)
+	return ret
 }
 
 func (env *Env) newSpecFact(fact *ast.SpecFactStmt) glob.GlobRet {
@@ -121,7 +122,7 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) glob.GlobRet {
 	// postprocess
 	if fact.IsExist_St_Fact() {
 		if fact.PropName == glob.KeywordItemExistsIn {
-			existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeywordItemExistsIn), []ast.Obj{fact.Params[2]}, fact.Line)
+			existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordItemExistsIn), []ast.Obj{fact.Params[2]}, fact.Line)
 			ret := env.storeSpecFactInMem(existInFact)
 			return ret
 		}
@@ -402,6 +403,14 @@ func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, glob.Glob
 		}
 	}
 
+	// 如果右边是 a = (1, 2, ..)，那么需要处理（左边是被赋值的对象，右边是 tuple）
+	if asFnObj, ok := fact.Params[1].(*ast.FnObj); ok && ast.IsTupleFnObj(asFnObj) {
+		ret = env.equalFactPostProcess_tuple(fact.Params[0], fact.Params[1])
+		if ret.IsErr() {
+			return false, ret
+		}
+	}
+
 	return true, glob.TrueRet("")
 }
 
@@ -486,7 +495,7 @@ func (env *Env) ExecDefFnTemplate(stmt *ast.FnTemplateDefStmt) glob.GlobRet {
 		return glob.ErrRet(fmt.Errorf("fn template name %s is already declared", stmt.TemplateDefHeader.Name))
 	}
 
-	ret = env.AtomsInFnTemplateFnTemplateDeclared(ast.AtomObj(stmt.TemplateDefHeader.Name), stmt)
+	ret = env.AtomsInFnTemplateFnTemplateDeclared(ast.Atom(stmt.TemplateDefHeader.Name), stmt)
 	if ret.IsErr() {
 		return ret
 	}
@@ -498,7 +507,7 @@ func (env *Env) ExecDefFnTemplate(stmt *ast.FnTemplateDefStmt) glob.GlobRet {
 func (env *Env) newEnumFact(stmt *ast.EnumStmt) glob.GlobRet {
 	forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts := ast.TransformEnumToUniFact(stmt.CurSet, stmt.Items)
 
-	ret := env.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeywordIn), []ast.Obj{stmt.CurSet, ast.AtomObj(glob.KeywordSet)}, stmt.Line))
+	ret := env.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.CurSet, ast.Atom(glob.KeywordSet)}, stmt.Line))
 	if ret.IsErr() {
 		return ret
 	}
@@ -524,16 +533,16 @@ func (env *Env) newEnumFact(stmt *ast.EnumStmt) glob.GlobRet {
 
 	// postprocess 1. s is $is_finite_set 2. len(s) = number of items in set
 	// finiteSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIsFiniteSet), []ast.Fc{stmt.EnumName})
-	finiteSetFact := ast.NewInFactWithFc(stmt.CurSet, ast.AtomObj(glob.KeywordFiniteSet))
+	finiteSetFact := ast.NewInFactWithFc(stmt.CurSet, ast.Atom(glob.KeywordFiniteSet))
 	ret = env.NewFact(finiteSetFact)
 	if ret.IsErr() {
 		return ret
 	}
 
 	lengthOfSet := strconv.Itoa(len(stmt.Items))
-	lengthOfSetAsFcAtom := ast.AtomObj(lengthOfSet)
+	lengthOfSetAsFcAtom := ast.Atom(lengthOfSet)
 
-	lenFact := ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeySymbolEqual), []ast.Obj{ast.NewFnObj(ast.AtomObj(glob.KeywordCount), []ast.Obj{stmt.CurSet}), lengthOfSetAsFcAtom}, stmt.Line)
+	lenFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{ast.NewFnObj(ast.Atom(glob.KeywordCount), []ast.Obj{stmt.CurSet}), lengthOfSetAsFcAtom}, stmt.Line)
 	ret = env.NewFact(lenFact)
 	if ret.IsErr() {
 		return ret
@@ -664,15 +673,6 @@ func (env *Env) storeSpecFactInMem(stmt *ast.SpecFactStmt) glob.GlobRet {
 	ret := env.KnownFactsStruct.SpecFactMem.newFact(stmt)
 	if ret.IsErr() {
 		return ret
-	}
-
-	return glob.TrueRet("")
-}
-
-func (env *Env) storeLogicFact(stmt *ast.OrStmt) glob.GlobRet {
-	ret := env.KnownFactsStruct.SpecFactInLogicExprMem.newFact(stmt)
-	if ret.IsErr() {
-		return glob.TrueRet("")
 	}
 
 	return glob.TrueRet("")

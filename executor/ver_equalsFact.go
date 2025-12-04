@@ -15,6 +15,7 @@
 package litex_executor
 
 import (
+	"fmt"
 	ast "golitex/ast"
 )
 
@@ -25,11 +26,14 @@ func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState
 
 	for i := 1; i < len(stmt.Params); i++ {
 		checked := false
+		unknownRet := NewExecUnknown("")
+
 		for j := i - 1; j >= 0; j-- {
 			newFact := ast.NewEqualFact(stmt.Params[j], stmt.Params[i])
 			verRet := ver.VerFactStmt(newFact, state)
 			if verRet.IsErr() {
-				return verRet
+				newFact := ast.NewEqualFact(stmt.Params[i-1], stmt.Params[i])
+				return verRet.AddMsg(fmt.Sprintf("%s\nis error", newFact.String()))
 			}
 			if verRet.IsTrue() {
 				ret := ver.Env.NewFact(newFact)
@@ -39,10 +43,15 @@ func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState
 				checked = true
 				break
 			}
+
+			if j == i-1 {
+				unknownRet = verRet
+			}
 		}
 
 		if !checked {
-			return NewExecUnknown("")
+			newFact := ast.NewEqualFact(stmt.Params[i-1], stmt.Params[i])
+			return unknownRet.AddMsg(fmt.Sprintf("%s\nis unknown", newFact.String()))
 		}
 	}
 	return NewExecTrue("")
