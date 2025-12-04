@@ -634,9 +634,9 @@ func (stmt *KnowExistPropStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) 
 	return NewKnowExistPropStmt(newExistProp.(*DefExistPropStmt), stmt.Line), nil
 }
 
-func (stmt *LatexStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	return stmt, nil
-}
+// func (stmt *LatexStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+// 	return stmt, nil
+// }
 
 func (stmt *FnTemplateDefStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newTemplateDefHeader, err := stmt.TemplateDefHeader.Instantiate(uniMap)
@@ -766,9 +766,9 @@ func (stmt *HaveFnCaseByCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt, erro
 	return NewHaveFnCaseByCaseStmt(newDefFnStmt.(*DefFnStmt), newCaseByCaseFacts, newProofs, newHaveObjSatisfyFn, stmt.Line), nil
 }
 
-func (stmt *MarkdownStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	return stmt, nil
-}
+// func (stmt *MarkdownStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+// 	return stmt, nil
+// }
 
 func (stmt *ProveInRangeSetStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newIntensionalSet, err := stmt.IntensionalSet.Instantiate(uniMap)

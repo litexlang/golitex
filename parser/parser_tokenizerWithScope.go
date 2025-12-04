@@ -129,28 +129,24 @@ func (t *tokenizerWithScope) skipCommentsAndEmptyLines() (bool, *tokenBlock, err
 	line := t.lines[t.currentLine]
 	trimmed := strings.TrimSpace(line)
 
-	// 跳过以 # 开头的行
+	// 跳过以 # 开头的单行注释（不创建 block，直接跳过）
 	if strings.HasPrefix(trimmed, "#") {
-		ret := t.inlineCommentTokenBlock(line)
 		t.currentLine++
-		return true, ret, nil
+		return true, nil, nil
 	}
 
-	// 跳过以 """ 开头的多行注释块
+	// 跳过以 """ 开头的多行注释块（不创建 block，直接跳过）
 	if strings.HasPrefix(trimmed, glob.MultiLinesCommentSig) {
+		commentStartLine := t.currentLine // 保存注释开始的行号
 		found := false
-		lines := []string{}
-
-		isLatexMultiLine := strings.HasPrefix(trimmed, glob.LatexMultiLineSig)
 
 		for t.currentLine < len(t.lines) {
 			t.currentLine++
 			if t.currentLine >= len(t.lines) {
-				return false, nil, fmt.Errorf("unclosed triple quote comment starting, line %d", lineNum(t.currentLine))
+				return false, nil, fmt.Errorf("unclosed triple quote comment starting, line %d", lineNum(commentStartLine))
 			}
 			nextLine := t.lines[t.currentLine]
 			nextTrimmed := strings.TrimSpace(nextLine)
-			lines = append(lines, nextLine)
 			if strings.HasPrefix(nextTrimmed, glob.MultiLinesCommentSig) {
 				found = true
 				t.currentLine++
@@ -158,20 +154,10 @@ func (t *tokenizerWithScope) skipCommentsAndEmptyLines() (bool, *tokenBlock, err
 			}
 		}
 		if !found {
-			return false, nil, fmt.Errorf("unclosed triple quote comment starting, line %d", lineNum(t.currentLine))
+			return false, nil, fmt.Errorf("unclosed triple quote comment starting, line %d", lineNum(commentStartLine))
 		}
 
-		comment := strings.Join(lines, "\n")
-
-		var ret *tokenBlock
-		// 如果以 """ 开头，那还是markdown的语法
-		if isLatexMultiLine {
-			ret = newTokenBlock(strSliceCursor{0, []string{glob.LatexMultiLineSig, comment}}, nil, uint(t.currentLine))
-		} else {
-			ret = newTokenBlock(strSliceCursor{0, []string{glob.MultiLinesCommentSig, comment}}, nil, uint(t.currentLine))
-		}
-
-		return true, ret, nil
+		return true, nil, nil
 	}
 
 	// 跳过空行
@@ -214,11 +200,12 @@ func (t *tokenizerWithScope) findFirstNonCommentLine(currentIndent int) (string,
 
 		// 跳过多行注释
 		if strings.HasPrefix(strings.TrimSpace(nextLine), glob.MultiLinesCommentSig) {
+			commentStartLine := t.currentLine // 保存注释开始的行号
 			found := false
 			for t.currentLine < len(t.lines) {
 				t.currentLine++
 				if t.currentLine >= len(t.lines) {
-					return "", 0, fmt.Errorf("unclosed triple quote comment starting, line %d", lineNum(t.currentLine))
+					return "", 0, fmt.Errorf("unclosed triple quote comment starting, line %d", lineNum(commentStartLine))
 				}
 				nextTrimmed := strings.TrimSpace(t.lines[t.currentLine])
 				if strings.HasPrefix(nextTrimmed, glob.MultiLinesCommentSig) {
@@ -228,7 +215,7 @@ func (t *tokenizerWithScope) findFirstNonCommentLine(currentIndent int) (string,
 				}
 			}
 			if !found {
-				return "", 0, fmt.Errorf("unclosed triple quote comment starting, line %d", lineNum(t.currentLine))
+				return "", 0, fmt.Errorf("unclosed triple quote comment starting, line %d", lineNum(commentStartLine))
 			}
 			continue
 		}

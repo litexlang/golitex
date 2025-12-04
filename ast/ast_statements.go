@@ -271,11 +271,11 @@ type KnowExistPropStmt struct {
 	Line uint
 }
 
-type LatexStmt struct {
-	Comment string
+// type LatexStmt struct {
+// 	Comment string
 
-	Line uint
-}
+// 	Line uint
+// }
 
 type FnTemplateDefStmt struct {
 	TemplateDefHeader *DefHeader
@@ -395,11 +395,11 @@ type HaveFnCaseByCaseStmt struct {
 	Line uint
 }
 
-type MarkdownStmt struct {
-	Markdown string
+// type MarkdownStmt struct {
+// 	Markdown string
 
-	Line uint
-}
+// 	Line uint
+// }
 
 type ProveInRangeSetStmt struct {
 	Start          int64
