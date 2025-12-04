@@ -186,6 +186,9 @@ have fn:
         have c cart(R, R) = (mod(project(a, e1)), mod(project(a, e2)))
     = c
 
+prove forall a, b, c, d R => (a, b) \add (c, d) = (a + c, b + d):
+    (a, b) \add (c, d) = ((a, b)[1] + (c, d)[1], (a, b)[2] + (c, d)[2]) = (a + c, b + d)
+
 # 向量基本定理：如果两个向量不平行，那么它们可以作为某个向量空间的基底
 exist_prop c1, c2 R st write_vec_by_bases(to_write cart(R, R), base1 cart(R, R), base2 cart(R, R)):
     to_write = sm(c1, base1) \add sm(c2, base2)
@@ -202,7 +205,11 @@ prove forall base1, base2 cart(R, R): base1[1] * base2[2] != base1[2] * base2[1]
         sm(c1, base1) = (c1 * base1[1], c1 * base1[2])
         sm(c2, base2) = (c2 * base2[1], c2 * base2[2])
 
-        sm(c1, base1) \add sm(c2, base2) = (c1 * base1[1], c1 * base1[2]) \add (c2 * base2[1], c2 * base2[2]) = (c1 * base1[1] + c2 * base2[1], c1 * base1[2] + c2 * base2[2]) = ((x[1] * base2[2] - x[2] * base2[1]) / (base1[1] * base2[2] - base1[2] * base2[1]) * base1[1] + (x[2] * base1[1] - x[1] * base1[2]) / (base1[1] * base2[2] - base1[2] * base2[1]) * base2[1], (x[1] * base2[2] - x[2] * base2[1]) / (base1[1] * base2[2] - base1[2] * base2[1]) * base1[2] + (x[2] * base1[1] - x[1] * base1[2]) / (base1[1] * base2[2] - base1[2] * base2[1]) * base2[2]) = (x[1], x[2])
+        sm(c1, base1) \add sm(c2, base2) \
+        = (c1 * base1[1], c1 * base1[2]) \add (c2 * base2[1], c2 * base2[2]) \
+        = (c1 * base1[1] + c2 * base2[1], c1 * base1[2] + c2 * base2[2]) \
+        = ((x[1] * base2[2] - x[2] * base2[1]) / (base1[1] * base2[2] - base1[2] * base2[1]) * base1[1] + (x[2] * base1[1] - x[1] * base1[2]) / (base1[1] * base2[2] - base1[2] * base2[1]) * base2[1], (x[1] * base2[2] - x[2] * base2[1]) / (base1[1] * base2[2] - base1[2] * base2[1]) * base1[2] + (x[2] * base1[1] - x[1] * base1[2]) / (base1[1] * base2[2] - base1[2] * base2[1]) * base2[2]) \
+        = (x[1], x[2])
         
         x[1] = (sm(c1, base1) \add sm(c2, base2))[1]
         x[2] = (sm(c1, base1) \add sm(c2, base2))[2]
@@ -220,4 +227,3 @@ prove:
     add(a, b) = (1 + 3, 2 + 4) = (4, 6)
     sm(2, b) = (2 * 3, 2 * 4) = (6, 8)
 
-know forall a, b, c, d cart(R, R) => (a, b) \add (c, d) = (a + c, b + d)
