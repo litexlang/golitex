@@ -572,7 +572,7 @@ func (ver *Verifier) verLargerEqualBySpecialMethods(stmt *ast.SpecFactStmt, stat
 	// 处理 >= 的情况: a >= b 等价于 (a > b) or (a = b)
 	greaterFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{left, right}, stmt.Line)
 
-	verRet := ver.VerFactStmt(greaterFact, state)
+	verRet := ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(greaterFact, state)
 	if verRet.IsErr() {
 		return verRet
 	}
@@ -581,7 +581,7 @@ func (ver *Verifier) verLargerEqualBySpecialMethods(stmt *ast.SpecFactStmt, stat
 	}
 
 	equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left, right}, stmt.Line)
-	verRet = ver.VerFactStmt(equalFact, state)
+	verRet = ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(equalFact, state)
 	if verRet.IsErr() {
 		return verRet
 	}
@@ -603,7 +603,7 @@ func (ver *Verifier) verLessEqualBySpecialMethods(stmt *ast.SpecFactStmt, state 
 	// 处理 <= 的情况: a <= b 等价于 (a < b) or (a = b)
 	lessFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLess), []ast.Obj{left, right}, stmt.Line)
 
-	verRet := ver.VerFactStmt(lessFact, state)
+	verRet := ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(lessFact, state)
 	if verRet.IsErr() {
 		return verRet
 	}
@@ -612,7 +612,7 @@ func (ver *Verifier) verLessEqualBySpecialMethods(stmt *ast.SpecFactStmt, state 
 	}
 
 	equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left, right}, stmt.Line)
-	verRet = ver.VerFactStmt(equalFact, state)
+	verRet = ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(equalFact, state)
 	if verRet.IsErr() {
 		return verRet
 	}

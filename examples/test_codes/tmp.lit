@@ -1,4 +1,3 @@
-let a R: a > 0
-let b R: b > 0
-
-sqrt(a + b) $in R
+1 \
+= 2 - 1 \
+= 1
