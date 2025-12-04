@@ -21,3 +21,9 @@ prove forall base1, base2 cart(R, R): base1[1] * base2[2] != base1[2] * base2[1]
         
         x[1] = (sm(c1, base1) \add sm(c2, base2))[1]
         x[2] = (sm(c1, base1) \add sm(c2, base2))[2]
+
+        (sm(c1, base1) \add sm(c2, base2)) $in cart(R, R)
+
+        $equal_tuple(x, sm(c1, base1) \add sm(c2, base2), 2)
+
+        exist c1, c2 st $write_vec_by_bases(x, base1, base2)

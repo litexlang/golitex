@@ -144,6 +144,10 @@ func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 		return ver.trueExistInSt(stmt, state)
 	}
 
+	if stmt.NameIs(glob.KeywordEqualTuple) {
+		return ver.verEqualTupleByBuiltinRules(stmt, state)
+	}
+
 	if verRet := ver.verNumberLogicRelaOpt_BuiltinRules(stmt, state); verRet.IsErr() {
 		return verRet
 	} else if verRet.IsTrue() {
@@ -438,4 +442,101 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *Ver
 	}
 
 	return NewExecUnknown("")
+}
+
+// $equal_tuple(left, right, dim)
+func (ver *Verifier) verEqualTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	if len(stmt.Params) != 3 {
+		return NewExecErr(fmt.Sprintf("equal_tuple should have 3 params, but got %d", len(stmt.Params)))
+	}
+
+	left := stmt.Params[0]
+	right := stmt.Params[1]
+	dim := stmt.Params[2]
+
+	// 1. 证明 left 是 is_tuple
+	isTupleLeftFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsTuple), []ast.Obj{left}, glob.InnerGenLine)
+	verRet := ver.VerFactStmt(isTupleLeftFact, state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsUnknown() {
+		return NewExecUnknown(fmt.Sprintf("cannot verify that %s is a tuple", left))
+	}
+
+	// 2. 证明 right 是 is_tuple
+	isTupleRightFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsTuple), []ast.Obj{right}, glob.InnerGenLine)
+	verRet = ver.VerFactStmt(isTupleRightFact, state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsUnknown() {
+		return NewExecUnknown(fmt.Sprintf("cannot verify that %s is a tuple", right))
+	}
+
+	// 3. 证明 dim(left) = dim
+	dimLeftFn := ast.NewFnObj(ast.Atom(glob.KeywordDim), []ast.Obj{left})
+	dimLeftEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{dimLeftFn, dim}, glob.InnerGenLine)
+	verRet = ver.VerFactStmt(dimLeftEqualFact, state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsUnknown() {
+		return NewExecUnknown(fmt.Sprintf("cannot verify that dim(%s) = %s", left, dim))
+	}
+
+	// 4. 证明 dim(right) = dim
+	dimRightFn := ast.NewFnObj(ast.Atom(glob.KeywordDim), []ast.Obj{right})
+	dimRightEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{dimRightFn, dim}, glob.InnerGenLine)
+	verRet = ver.VerFactStmt(dimRightEqualFact, state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsUnknown() {
+		return NewExecUnknown(fmt.Sprintf("cannot verify that dim(%s) = %s", right, dim))
+	}
+
+	// 5. 获取 dim 的数值，用于枚举
+	dimValue, ok := ast.ToInt(dim)
+	if !ok {
+		// 如果 dim 不是直接的数字，尝试从环境中获取值
+		if symbolValue := ver.Env.GetSymbolSimplifiedValue(dim); symbolValue != nil {
+			dimValue, ok = ast.ToInt(symbolValue)
+		}
+		// 如果方法1失败，尝试从相等事实中获取
+		if !ok {
+			if equalFcs, gotEqualFcs := ver.Env.GetEqualFcs(dim); gotEqualFcs && equalFcs != nil {
+				for _, equalFc := range *equalFcs {
+					if dimValue, ok = ast.ToInt(equalFc); ok {
+						break
+					}
+				}
+			}
+		}
+		if !ok {
+			return NewExecErr(fmt.Sprintf("cannot determine integer value of dim %s", dim))
+		}
+	}
+
+	// 6. 用枚举方法一位位证明 equal: left[i] = right[i] for i = 1 to dim
+	for i := 1; i <= dimValue; i++ {
+		indexObj := ast.Atom(fmt.Sprintf("%d", i))
+
+		// 创建索引操作: left[i] 和 right[i]
+		leftIndexed := ast.NewFnObj(ast.Atom(glob.KeywordIndexOpt), []ast.Obj{left, indexObj})
+		rightIndexed := ast.NewFnObj(ast.Atom(glob.KeywordIndexOpt), []ast.Obj{right, indexObj})
+
+		// 创建相等事实: left[i] = right[i]
+		indexEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{leftIndexed, rightIndexed}, glob.InnerGenLine)
+		verRet = ver.VerFactStmt(indexEqualFact, state)
+		if verRet.IsErr() {
+			return verRet
+		}
+		if verRet.IsUnknown() {
+			return NewExecUnknown(fmt.Sprintf("cannot verify that %s[%d] = %s[%d]", left, i, right, i))
+		}
+	}
+
+	msg := fmt.Sprintf("verified %s and %s are tuples with dim = %s, and each element %s[i] = %s[i] for i = 1 to %d", left, right, dim, left, right, dimValue)
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
 }
