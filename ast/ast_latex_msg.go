@@ -776,9 +776,9 @@ func (s *KnowExistPropStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (s *LatexStmt) ToLatexString() string {
-	return s.Comment
-}
+// func (s *LatexStmt) ToLatexString() string {
+// 	return s.Comment
+// }
 
 func (s *FnTemplateDefStmt) ToLatexString() string {
 	var builder strings.Builder
@@ -924,9 +924,9 @@ func (s *HaveFnCaseByCaseStmt) ToLatexString() string {
 	return s.String()
 }
 
-func (s *MarkdownStmt) ToLatexString() string {
-	return s.Markdown
-}
+// func (s *MarkdownStmt) ToLatexString() string {
+// 	return s.Markdown
+// }
 
 // func (s *ProveInRange2tmt) ToLatexString() string {
 // 	return "TODO"

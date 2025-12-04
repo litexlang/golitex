@@ -217,7 +217,8 @@ func (s *EqualsFactStmt) InlineString() string {
 }
 
 func (s *KnowExistPropStmt) InlineString() string { panic("") }
-func (s *LatexStmt) InlineString() string         { panic("") }
+
+// func (s *LatexStmt) InlineString() string         { panic("") }
 func (s *FnTemplateDefStmt) InlineString() string { panic("") }
 func (s *ClearStmt) InlineString() string         { return s.String() }
 func (s *DoNothingStmt) InlineString() string     { return s.String() }
@@ -325,9 +326,9 @@ func (s *HaveFnCaseByCaseStmt) InlineString() string {
 	return s.String()
 }
 
-func (s *MarkdownStmt) InlineString() string {
-	return s.Markdown
-}
+// func (s *MarkdownStmt) InlineString() string {
+// 	return s.Markdown
+// }
 
 func (s *ClaimIffStmt) InlineString() string {
 	return "TODO"

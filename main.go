@@ -129,20 +129,6 @@ func main() {
 		return
 	}
 
-	// Check for positional arguments (non-flag arguments)
-	args := flag.Args()
-	if len(args) > 0 {
-		path := args[0]
-		// If path ends with .lit, treat as file (-f)
-		if strings.HasSuffix(path, ".lit") {
-			MainFlagFile(glob.RemoveWindowsCarriage(path))
-			return
-		}
-		// Otherwise, treat as directory (-r)
-		MainFlagFile(filepath.Join(glob.RemoveWindowsCarriage(path), glob.MainDotLit))
-		return
-	}
-
 	// If no flags are provided, run REPL
 	pipeline.RunREPL(VERSION)
 }

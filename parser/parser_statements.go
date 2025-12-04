@@ -93,12 +93,6 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.proveByEnum()
 	case glob.KeySymbolAt:
 		ret, err = tb.namedUniFactStmt()
-	case glob.LatexSig,
-		glob.LatexMultiLineSig:
-		ret, err = tb.latexStmt()
-	case glob.InlineCommentSig,
-		glob.MultiLinesCommentSig:
-		ret, err = tb.markdownStmt()
 	case glob.KeywordFnTemplate:
 		ret, err = tb.fnTemplateStmt()
 	case glob.KeywordClear:
@@ -2396,13 +2390,13 @@ func (tb *tokenBlock) knowExistPropStmt() (*ast.KnowExistPropStmt, error) {
 	return ast.NewKnowExistPropStmt(existProp, tb.line), nil
 }
 
-func (tb *tokenBlock) latexStmt() (ast.Stmt, error) {
-	comment := tb.header.strAtCurIndexPlus(1)
-	tb.header.skip("")
-	tb.header.skip("")
+// func (tb *tokenBlock) latexStmt() (ast.Stmt, error) {
+// 	comment := tb.header.strAtCurIndexPlus(1)
+// 	tb.header.skip("")
+// 	tb.header.skip("")
 
-	return ast.NewLatexStmt(comment, tb.line), nil
-}
+// 	return ast.NewLatexStmt(comment, tb.line), nil
+// }
 
 func (tb *tokenBlock) fnTemplateStmt() (ast.Stmt, error) {
 	tb.header.skipNext()
@@ -2994,13 +2988,13 @@ func (tb *tokenBlock) relaEqualsFactStmt(obj, fc2 ast.Obj) (*ast.EqualsFactStmt,
 	return ast.NewEqualsFactStmt(equalsItem, tb.line), nil
 }
 
-func (tb *tokenBlock) markdownStmt() (ast.Stmt, error) {
-	comment := tb.header.strAtCurIndexPlus(1)
-	tb.header.skip("")
-	tb.header.skip("")
+// func (tb *tokenBlock) markdownStmt() (ast.Stmt, error) {
+// 	comment := tb.header.strAtCurIndexPlus(1)
+// 	tb.header.skip("")
+// 	tb.header.skip("")
 
-	return ast.NewMarkdownStmt(comment, tb.line), nil
-}
+// 	return ast.NewMarkdownStmt(comment, tb.line), nil
+// }
 
 func (tb *tokenBlock) atExistPropDefStmt() (*ast.DefExistPropStmt, error) {
 	err := tb.header.skip(glob.KeySymbolAt)
