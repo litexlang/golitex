@@ -175,7 +175,7 @@ func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) ExecRet {
 	}
 	// exec.knowStmt(ast.NewKnowStmt([]ast.CanBeKnownStmt{stmt.ToCheckFact}))
 
-	return NewExecTrue("")
+	return NewExecTrue(stmt.String())
 }
 
 func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) ExecRet {
