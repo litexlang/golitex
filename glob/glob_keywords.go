@@ -103,6 +103,7 @@ const (
 
 	KeywordHaveCartWithDim = "have_cart_with_dim"
 
+	// 用于一位一位的比较两个tuple。比如 equal_tuple(x, y, 2) 表示 x[1] = y[1] 且 x[2] = y[2]
 	KeywordEqualTuple = "equal_tuple"
 )
 
@@ -222,6 +223,7 @@ const (
 	KeySymbolEquivalent = "<=>"
 	KeySymbolBackSlash  = "\\"
 	// KeySymbolQuestionMark = "?"
+
 )
 
 // 最多双字符，或者单字符，否则parser的逻辑 GetKeySymbol 有问题
