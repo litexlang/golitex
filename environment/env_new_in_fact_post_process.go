@@ -265,18 +265,59 @@ func (e *Env) equalFactPostProcess_tuple(obj ast.Obj, tupleObj ast.Obj) glob.Glo
 		return glob.ErrRet(fmt.Errorf("expected tuple to be a tuple object, got %T", tupleObj))
 	}
 
-	// If obj is in ObjFromCartSetMem, update EqualTo; otherwise create new entry
-	objStr := obj.String()
-	if item, exists := e.ObjFromCartSetMem[objStr]; exists {
-		// Update EqualTo
-		item.EqualToOrNil = tuple
-		e.ObjFromCartSetMem[objStr] = item
-	} else {
-		// Create new entry with empty CartSet (will be set when obj in cart(...) is processed)
-		e.ObjFromCartSetMem[objStr] = ObjFromCartSetMemItem{
-			CartSetOrNil: nil, // Empty CartSet, will be updated later
-			EqualToOrNil: tuple,
+	// 让 obj 的每一位对应等于 tuple 的每一位
+	for i := range len(tuple.Params) {
+		index := i + 1 // 索引从1开始
+		indexObj := ast.Atom(strconv.Itoa(index))
+
+		// 创建索引操作: obj[index]
+		indexedObj := ast.NewFnObj(ast.Atom(glob.KeywordIndexOpt), []ast.Obj{obj, indexObj})
+
+		// 创建相等事实: obj[index] = tuple[i]
+		indexEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{indexedObj, tuple.Params[i]}, glob.InnerGenLine)
+		ret := e.NewFact(indexEqualFact)
+		if ret.IsErr() {
+			return ret
 		}
+	}
+
+	return glob.TrueRet("")
+}
+
+// 处理 tuple = tuple 的情况，让每一位相等
+func (e *Env) equalFactPostProcess_tupleTuple(leftTuple *ast.FnObj, rightTuple *ast.FnObj) glob.GlobRet {
+	// 如果两个 tuple 的长度不同，返回错误
+	if len(leftTuple.Params) != len(rightTuple.Params) {
+		return glob.ErrRet(fmt.Errorf("tuple length mismatch: left has %d elements, right has %d elements", len(leftTuple.Params), len(rightTuple.Params)))
+	}
+
+	// 让每一位相等
+	for i := range len(leftTuple.Params) {
+		equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{leftTuple.Params[i], rightTuple.Params[i]}, glob.InnerGenLine)
+		ret := e.NewFact(equalFact)
+		if ret.IsErr() {
+			return ret
+		}
+	}
+
+	return glob.TrueRet("")
+}
+
+// equalFactPostProcess_tupleEquality 处理 tuple 相等的情况
+// 包括: (.., …) = (.., ..), a = (.., ..), (.., ..) = a
+func (e *Env) equalFactPostProcess_tupleEquality(left ast.Obj, right ast.Obj) glob.GlobRet {
+	leftTuple, leftIsTuple := left.(*ast.FnObj)
+	rightTuple, rightIsTuple := right.(*ast.FnObj)
+
+	if leftIsTuple && rightIsTuple && ast.IsTupleFnObj(leftTuple) && ast.IsTupleFnObj(rightTuple) {
+		// 处理 tuple = tuple 的情况，让每一位相等
+		return e.equalFactPostProcess_tupleTuple(leftTuple, rightTuple)
+	} else if rightIsTuple && ast.IsTupleFnObj(rightTuple) {
+		// 如果右边是 tuple，左边是对象: a = (1, 2, ..)
+		return e.equalFactPostProcess_tuple(left, right)
+	} else if leftIsTuple && ast.IsTupleFnObj(leftTuple) {
+		// 如果左边是 tuple，右边是对象: (1, 2, ..) = a
+		return e.equalFactPostProcess_tuple(right, left)
 	}
 
 	return glob.TrueRet("")

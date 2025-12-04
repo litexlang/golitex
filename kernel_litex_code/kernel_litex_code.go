@@ -821,4 +821,6 @@ know:
 	forall a, b R: a ^ 2 + b ^ 2 >= 0
 
 know forall x, y R: x > y or x <= y, x < y or x >= y, x = y or x != y
+
+prop equal_tuple(x, y obj)
 `
