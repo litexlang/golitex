@@ -21,6 +21,14 @@ import (
 	glob "golitex/glob"
 )
 
+func (ver *Verifier) verNotTrueEqualSpecFact(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	if ret := ver.verSpecialPropBySpecialMethods(stmt, state); ret.IsTrue() || ret.IsErr() {
+		return ret
+	}
+
+	return ver.verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt, state)
+}
+
 func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	if stmt.NameIs(glob.KeySymbolEqual) && stmt.TypeEnum == ast.TruePure {
 		return ver.verTrueEqualFact(stmt, state, true)
@@ -539,4 +547,78 @@ func (ver *Verifier) verEqualTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *
 
 	msg := fmt.Sprintf("verified %s and %s are tuples with dim = %s, and each element %s[i] = %s[i] for i = 1 to %d", left, right, dim, left, right, dimValue)
 	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
+}
+
+func (ver *Verifier) verSpecialPropBySpecialMethods(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	if stmt.NameIs(glob.KeySymbolLargerEqual) {
+		return ver.verLargerEqualBySpecialMethods(stmt, state)
+	}
+
+	if stmt.NameIs(glob.KeySymbolLessEqual) {
+		return ver.verLessEqualBySpecialMethods(stmt, state)
+	}
+
+	return NewExecUnknown("")
+}
+
+func (ver *Verifier) verLargerEqualBySpecialMethods(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	if len(stmt.Params) != 2 {
+		return NewExecUnknown("")
+	}
+
+	left := stmt.Params[0]
+	right := stmt.Params[1]
+
+	// 处理 >= 的情况: a >= b 等价于 (a > b) or (a = b)
+	greaterFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{left, right}, stmt.Line)
+
+	verRet := ver.VerFactStmt(greaterFact, state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsTrue() {
+		return NewExecTrue(fmt.Sprintf("%s is proved by %s", stmt.String(), greaterFact.String()))
+	}
+
+	equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left, right}, stmt.Line)
+	verRet = ver.VerFactStmt(equalFact, state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsTrue() {
+		return NewExecTrue(fmt.Sprintf("%s is proved by %s", stmt.String(), equalFact.String()))
+	}
+
+	return NewExecUnknown("")
+}
+
+func (ver *Verifier) verLessEqualBySpecialMethods(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	if len(stmt.Params) != 2 {
+		return NewExecUnknown("")
+	}
+
+	left := stmt.Params[0]
+	right := stmt.Params[1]
+
+	// 处理 <= 的情况: a <= b 等价于 (a < b) or (a = b)
+	lessFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLess), []ast.Obj{left, right}, stmt.Line)
+
+	verRet := ver.VerFactStmt(lessFact, state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsTrue() {
+		return NewExecTrue(fmt.Sprintf("%s is proved by %s", stmt.String(), lessFact.String()))
+	}
+
+	equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left, right}, stmt.Line)
+	verRet = ver.VerFactStmt(equalFact, state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsTrue() {
+		return NewExecTrue(fmt.Sprintf("%s is proved by %s", stmt.String(), equalFact.String()))
+	}
+
+	return NewExecUnknown("")
 }

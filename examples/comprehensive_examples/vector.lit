@@ -173,8 +173,6 @@ prove forall a, b, c cart(R, R) => prod(a, add(b, c)) = prod(a, b) + prod(a, c):
     
     prod(a, add(b, c)) = a[1] * add(b, c)[1] + a[2] * add(b, c)[2] = a[1] * (b[1] + c[1]) + a[2] * (b[2] + c[2]) = a[1] * b[1] + a[1] * c[1] + a[2] * b[2] + a[2] * c[2] = (a[1] * b[1] + a[2] * b[2]) + (a[1] * c[1] + a[2] * c[2]) = prod(a, b) + prod(a, c)
 
-# TODO: 向量基本定理：如果两个向量不平行，那么它们可以作为某个向量空间的基底
-
 have fn:
     orth_decomp(a cart(R, R), e1 cart(R, R), e2 cart(R, R)) cart(R, R):
         dom:
@@ -187,6 +185,33 @@ have fn:
     prove:
         have c cart(R, R) = (mod(project(a, e1)), mod(project(a, e2)))
     = c
+
+# 向量基本定理：如果两个向量不平行，那么它们可以作为某个向量空间的基底
+exist_prop c1, c2 R st write_vec_by_bases(to_write cart(R, R), base1 cart(R, R), base2 cart(R, R)):
+    to_write = sm(c1, base1) \add sm(c2, base2)
+
+prop are_bases(base1 cart(R, R), base2 cart(R, R)):
+    forall x cart(R, R) => $write_vec_by_bases(x, base1, base2)
+
+prove forall base1, base2 cart(R, R): base1[1] * base2[2] != base1[2] * base2[1], mod(base1) != 0, mod(base2) != 0 => $are_bases(base1, base2):
+    prove forall x cart(R, R) => $write_vec_by_bases(x, base1, base2):
+        have c1 R = (x[1] * base2[2] - x[2] * base2[1]) / (base1[1] * base2[2] - base1[2] * base2[1])
+        have c2 R = (x[2] * base1[1] - x[1] * base1[2]) / (base1[1] * base2[2] - base1[2] * base2[1])
+        
+        # 计算 sm(c1, base1) 和 sm(c2, base2) 的坐标表达式
+        sm(c1, base1) = (c1 * base1[1], c1 * base1[2])
+        sm(c2, base2) = (c2 * base2[1], c2 * base2[2])
+
+        sm(c1, base1) \add sm(c2, base2) = (c1 * base1[1], c1 * base1[2]) \add (c2 * base2[1], c2 * base2[2]) = (c1 * base1[1] + c2 * base2[1], c1 * base1[2] + c2 * base2[2]) = ((x[1] * base2[2] - x[2] * base2[1]) / (base1[1] * base2[2] - base1[2] * base2[1]) * base1[1] + (x[2] * base1[1] - x[1] * base1[2]) / (base1[1] * base2[2] - base1[2] * base2[1]) * base2[1], (x[1] * base2[2] - x[2] * base2[1]) / (base1[1] * base2[2] - base1[2] * base2[1]) * base1[2] + (x[2] * base1[1] - x[1] * base1[2]) / (base1[1] * base2[2] - base1[2] * base2[1]) * base2[2]) = (x[1], x[2])
+        
+        x[1] = (sm(c1, base1) \add sm(c2, base2))[1]
+        x[2] = (sm(c1, base1) \add sm(c2, base2))[2]
+
+        (sm(c1, base1) \add sm(c2, base2)) $in cart(R, R)
+
+        $equal_tuple(x, sm(c1, base1) \add sm(c2, base2), 2)
+
+        exist c1, c2 st $write_vec_by_bases(x, base1, base2)
     
 prove:
     # 举例：a = (1, 2), b = (3, 4)
