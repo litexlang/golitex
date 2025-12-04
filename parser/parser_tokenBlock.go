@@ -59,15 +59,8 @@ func makeTokenBlocks(lines []string) ([]tokenBlock, error) {
 	return t.parseBlocks(0)
 }
 
-func (tb *tokenBlock) CurrentTokenIs(kw string) bool {
-	return tb.header.is(kw)
-}
-
 func (tb *tokenBlock) TokenAtHeaderIndexIs(index int, kw string) bool {
-	if len(tb.header.slice) <= index {
-		return false
-	}
-	return tb.header.IsTokenAtIndexGivenWord(index, kw)
+	return index < len(tb.header.slice) && tb.header.slice[index] == kw
 }
 
 func (tb *tokenBlock) GetEnd() string {

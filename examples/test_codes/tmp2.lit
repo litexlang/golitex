@@ -1,52 +1,48 @@
-prop is_inverse_fn(X, Y set, f fn(X)Y, g fn(Y)X):
-    forall x X:
-        g(f(x)) = x
-    forall y Y:
-        f(g(y)) = y
+"""
+prove:
+    have set X = {1, 2, 3}
+    have fn kv(x X) set =:
+        case x = 1: N
+        case x = 2: Q
+        case x = 3: Z
 
-have fn f(x R) R = 2 * x
-have fn g(x R) R = x / 2
+    cart_prod(X, kv) $in set
+    index_set_of_cart_prod(cart_prod(X, kv)) = X
+    cart_prod_proj(cart_prod(X, kv), 1) = kv(1) = N
 
-forall x R: f(g(x)) = f(x / 2) = 2 * (x / 2) = x
-forall y R: g(f(y)) = g(2 * y) = (2 * y) / 2 = y
 
-$is_inverse_fn(R, R, f, g)
+    have fn kv2(x N) set =:
+        case x >= 2: N
+        case x < 2: Q
 
-# 定义：f在X上取值不同（单射/injective）
-prop is_injective(X, Y set, f fn(X)Y):
-    forall x1 X, x2 X:
-        f(x1) = f(x2)
+    cart_prod(N, kv2) $in set
+    index_set_of_cart_prod(cart_prod(N, kv2)) = N
+    cart_prod_proj(cart_prod(N, kv2), 1) = kv2(1) = Q
+    cart_prod_proj(cart_prod(N, kv2), 2) = kv2(2) = N
+"""
+
+"""
+prove:
+    have n N_pos: n > 1
+
+    have_cart_with_dim(s, n, x):
         =>:
-            x1 = x2
+            forall: x < 10 => proj(s, x) = R
+            forall: x >= 10, x <= n => proj(s, x) = Q
 
-# 定义值域（使用 tmp2.lit 中的定义）
-exist_prop x s1 st exist_preimage(s1, s2 set, f fn(s1) s2, y s2):
-    f(x) = y
+        case x < 10:
+            do_nothing
+        = R
+        case x >= 10:
+            do_nothing
+        = Q
 
-fn range_of_fn(s1 set, s2 set, f fn(s1) s2) set:
-    forall y range_of_fn(s1, s2, f):
-        $exist_preimage(s1, s2, f, y)
-    forall y s2:
-        $exist_preimage(s1, s2, f, y)
+    have_cart_with_dim(s2, n, x):
         =>:
-            y $in range_of_fn(s1, s2, f)
+            proj(s2, x) = R
+        
+        do_nothing
+        = R
 
-forall s1 set, s2 set, f fn(s1) s2, y s2:
-    $exist_preimage(s1, s2, f, y)
-    =>:
-        y $in range_of_fn(s1, s2, f)
-
-# 形式化：如果f在X上取值不同，那么一定有反函数
-# 如果 f: X -> Y 是单射的，那么存在 g: range_of_fn(X, Y, f) -> X 使得 g 是 f 的反函数
-# 定义：单射函数存在反函数
-exist_prop g fn(range_of_fn(X, Y, f))X st injective_fn_has_inverse(X, Y set, f fn(X)Y):
-    $is_injective(X, Y, f)
-    <=>:
-        forall x X:
-            g(f(x)) = x
-        forall y range_of_fn(X, Y, f):
-            f(g(y)) = y
-
-# 定理：如果f在X上取值不同，那么一定有反函数
-prove forall X set, Y set, f fn(X)Y: $is_injective(X, Y, f) => forall y range_of_fn(X, Y, f): $exist_preimage(X, Y, f, y):
-    
+    proj(s2, 1) = R
+"""

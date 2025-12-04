@@ -28,10 +28,10 @@ type Obj interface {
 	ReplaceObj(oldObj Obj, newObj Obj) Obj // 这是必要的，因为 have fn 的 proof 里可能出现 replace obj 的情况
 }
 
-func (f AtomObj) obj() {}
-func (f *FnObj) obj()  {}
+func (f Atom) obj()   {}
+func (f *FnObj) obj() {}
 
-func (f AtomObj) ReplaceObj(oldObj Obj, newObj Obj) Obj {
+func (f Atom) ReplaceObj(oldObj Obj, newObj Obj) Obj {
 	if f.String() == oldObj.String() {
 		return newObj
 	}
@@ -54,7 +54,7 @@ func (f *FnObj) ReplaceObj(oldObj Obj, newObj Obj) Obj {
 	return newFnObj
 }
 
-type AtomObj string
+type Atom string
 
 type FnObj struct {
 	FnHead Obj
@@ -74,7 +74,7 @@ func objSliceString(params []Obj) string {
 }
 
 func hasBuiltinOptAndToString(f *FnObj) (bool, string) {
-	ptr, ok := f.FnHead.(AtomObj)
+	ptr, ok := f.FnHead.(Atom)
 	if !ok {
 		return false, ""
 	}
@@ -92,7 +92,7 @@ func hasBuiltinOptAndToString(f *FnObj) (bool, string) {
 }
 
 func IsNumLitAtomObj(f Obj) (string, bool) {
-	ptr, ok := f.(AtomObj)
+	ptr, ok := f.(Atom)
 	if !ok || string(ptr) == "" {
 		return "", false
 	}
@@ -104,7 +104,7 @@ func IsNumLitAtomObj(f Obj) (string, bool) {
 }
 
 func IsObjBuiltinInfixOpt(f FnObj) bool {
-	ptrHeadAsAtom, ok := f.FnHead.(AtomObj)
+	ptrHeadAsAtom, ok := f.FnHead.(Atom)
 	if !ok {
 		return false
 	}
@@ -113,7 +113,7 @@ func IsObjBuiltinInfixOpt(f FnObj) bool {
 }
 
 func IsObjBuiltinUnaryFn(obj FnObj) bool {
-	objAsFnHead, ok := obj.FnHead.(AtomObj)
+	objAsFnHead, ok := obj.FnHead.(Atom)
 	if !ok {
 		return false
 	}
@@ -121,12 +121,12 @@ func IsObjBuiltinUnaryFn(obj FnObj) bool {
 	return objAsFnHead.IsBuiltinUnaryOpt() && len(obj.Params) == 1
 }
 
-func (f AtomObj) IsBuiltinUnaryOpt() bool {
+func (f Atom) IsBuiltinUnaryOpt() bool {
 	return (string(f)) == glob.KeySymbolMinus
 }
 
 func IsAtomObjAndHasBuiltinPropName(obj Obj) bool {
-	atomObj, ok := obj.(AtomObj)
+	atomObj, ok := obj.(Atom)
 	if !ok {
 		return false
 	}
@@ -135,7 +135,7 @@ func IsAtomObjAndHasBuiltinPropName(obj Obj) bool {
 }
 
 func IsAtomObjAndEqualToStr(obj Obj, name string) bool {
-	atomObj, ok := obj.(AtomObj)
+	atomObj, ok := obj.(Atom)
 	if !ok {
 		return false
 	}
@@ -143,11 +143,11 @@ func IsAtomObjAndEqualToStr(obj Obj, name string) bool {
 	return string(atomObj) == name
 }
 
-func GetAtomsInObj(obj Obj) []AtomObj {
-	ret := []AtomObj{}
+func GetAtomsInObj(obj Obj) []Atom {
+	ret := []Atom{}
 
 	switch asObj := obj.(type) {
-	case AtomObj:
+	case Atom:
 		ret = append(ret, asObj)
 	case *FnObj:
 		for _, param := range asObj.Params {

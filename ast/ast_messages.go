@@ -160,7 +160,6 @@ func (stmt *DefLetStmt) String() string {
 		builder.WriteString(strings.Join(factStrSlice, "\n"))
 	}
 
-	builder.WriteByte('\n')
 	return builder.String()
 }
 
@@ -425,13 +424,50 @@ func (stmt *HaveObjStStmt) String() string {
 	return builder.String()
 }
 
-func (f AtomObj) String() string {
+func (f Atom) String() string {
 	return string(f)
+}
+
+func IsTupleFnObj(f *FnObj) bool {
+	return f.FnHead.String() == glob.KeywordTuple
+}
+
+func TupleObjString(f *FnObj) string {
+	var builder strings.Builder
+	builder.WriteString("(")
+	paramStrSlice := make([]string, len(f.Params))
+	for i := range len(f.Params) {
+		paramStrSlice[i] = f.Params[i].String()
+	}
+	builder.WriteString(strings.Join(paramStrSlice, ", "))
+	builder.WriteString(")")
+	return builder.String()
+}
+
+func IndexOptObjString(f *FnObj) string {
+	var builder strings.Builder
+	builder.WriteString(f.Params[0].String())
+	builder.WriteString("[")
+	builder.WriteString(f.Params[1].String())
+	builder.WriteString("]")
+	return builder.String()
+}
+
+func IsIndexOptFnObj(f *FnObj) bool {
+	return f.FnHead.String() == glob.KeywordIndexOpt
 }
 
 func (f *FnObj) String() string {
 	if IsFnSet(f) {
 		return fnSetString(f)
+	}
+
+	if IsTupleFnObj(f) {
+		return TupleObjString(f)
+	}
+
+	if IsIndexOptFnObj(f) {
+		return IndexOptObjString(f)
 	}
 
 	// if IsAtomObjAndEqualToStr(f.FnHead, glob.KeySymbolDot) {
@@ -742,6 +778,54 @@ func (stmt *HaveCartSetStmt) String() string {
 	builder.WriteString(glob.KeySymbolEqual)
 	builder.WriteString(" ")
 	builder.WriteString(stmt.CartObj.String())
+	return builder.String()
+}
+
+func (stmt *HaveCartWithDimStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordHaveCartWithDim)
+	builder.WriteString("(")
+	builder.WriteString(stmt.ObjName)
+	builder.WriteString(", ")
+	builder.WriteString(stmt.CartDim.String())
+	builder.WriteString(", ")
+	builder.WriteString(stmt.Param)
+	builder.WriteString(")")
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+
+	// Write =>: block with facts
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeySymbolRightArrow+glob.KeySymbolColon, 1))
+	builder.WriteByte('\n')
+	for i := range len(stmt.Facts) {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Facts[i].String(), 2))
+		builder.WriteByte('\n')
+	}
+
+	// Write prove: block with proofs
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve+glob.KeySymbolColon, 1))
+	builder.WriteByte('\n')
+	for _, proof := range stmt.Proofs {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 2))
+		builder.WriteByte('\n')
+	}
+
+	// Write = equalTo
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeySymbolEqual+" "+stmt.EqualTo.String(), 1))
+	return builder.String()
+}
+
+func (stmt *HaveObjFromCartSetStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordHave)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.ObjName)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.CartSet.String())
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeySymbolEqual)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.EqualTo.String())
 	return builder.String()
 }
 
@@ -1134,7 +1218,7 @@ func (stmt *ProveInRangeSetStmt) String() string {
 	return builder.String()
 }
 
-func ProveIsCertainPropStmtString(kw string, prop AtomObj, params []string, proofs []Stmt) string {
+func ProveIsCertainPropStmtString(kw string, prop Atom, params []string, proofs []Stmt) string {
 	var builder strings.Builder
 	builder.WriteString(kw)
 	builder.WriteString("(")

@@ -73,3 +73,23 @@ func (e *Env) GetAlgoDef(funcName string) *ast.DefAlgoStmt {
 	}
 	return nil
 }
+
+// GetObjTuple 检查 obj 是否是 tuple
+// 通过获取所有环境中与 obj 相等的对象列表，检查其中是否有 tuple
+// 如果找到 tuple，返回该 tuple；否则返回 nil
+func (e *Env) GetObjTuple(obj ast.Obj) ast.Obj {
+	// 遍历所有环境
+	for env := e; env != nil; env = env.Parent {
+		// 获取当前环境中与 obj 相等的所有对象
+		equalFcs, ok := env.GetEqualFcs(obj)
+		if ok && equalFcs != nil {
+			// 检查其中是否有 tuple
+			for _, equalFc := range *equalFcs {
+				if fnObj, ok := equalFc.(*ast.FnObj); ok && ast.IsTupleFnObj(fnObj) {
+					return fnObj
+				}
+			}
+		}
+	}
+	return nil
+}

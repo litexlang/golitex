@@ -23,7 +23,7 @@ import (
 )
 
 func ObjStringForParseAndExpandPolynomial(obj ast.Obj) string {
-	if asAtom, ok := obj.(ast.AtomObj); ok {
+	if asAtom, ok := obj.(ast.Atom); ok {
 		return atomObjString(asAtom)
 	}
 	if asFn, ok := obj.(*ast.FnObj); ok {
@@ -32,7 +32,7 @@ func ObjStringForParseAndExpandPolynomial(obj ast.Obj) string {
 	return ""
 }
 
-func atomObjString(atomObj ast.AtomObj) string {
+func atomObjString(atomObj ast.Atom) string {
 	if len(string(atomObj)) != 0 && '0' <= string(atomObj)[0] && string(atomObj)[0] <= '9' {
 		return string(atomObj)
 	} else if len(string(atomObj)) > 1 && string(atomObj)[0] == '-' && string(atomObj)[1] >= '0' && string(atomObj)[1] <= '9' {

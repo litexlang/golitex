@@ -18,6 +18,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	env "golitex/environment"
+	glob "golitex/glob"
 )
 
 func (ver *Verifier) todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt *ast.SpecFactStmt) *env.Env {
@@ -54,24 +55,23 @@ func (ver *Verifier) maybeAddSuccessMsgString(state *VerState, stmtStr, verified
 	return execRet
 }
 
+// func (ver *Verifier) paramsInSets(params []ast.Obj, sets []ast.Obj, state *VerState) ExecRet {
+// 	if len(params) != len(sets) {
+// 		return NewExecErr("params and sets length mismatch")
+// 	}
 
-func (ver *Verifier) paramsInSets(params []ast.Obj, sets []ast.Obj, state *VerState) ExecRet {
-	if len(params) != len(sets) {
-		return NewExecErr("params and sets length mismatch")
-	}
-
-	for i := range params {
-		fact := ast.NewInFactWithFc(params[i], sets[i])
-		verRet := ver.VerFactStmt(fact, state)
-		if verRet.IsErr() {
-			return verRet
-		}
-		if verRet.IsUnknown() {
-			return NewExecUnknown(ast.UnknownFactMsg(fact))
-		}
-	}
-	return NewExecTrue("")
-}
+// 	for i := range params {
+// 		fact := ast.NewInFactWithFc(params[i], sets[i])
+// 		verRet := ver.VerFactStmt(fact, state)
+// 		if verRet.IsErr() {
+// 			return verRet
+// 		}
+// 		if verRet.IsUnknown() {
+// 			return NewExecUnknown(ast.UnknownFactMsg(fact))
+// 		}
+// 	}
+// 	return NewExecTrue("")
+// }
 
 func (ver *Verifier) factsAreTrue(facts []ast.FactStmt, state *VerState) ExecRet {
 	for _, fact := range facts {
@@ -93,4 +93,32 @@ func IsTrueOrErr(ok bool, err error) bool {
 
 func IsFalseOrErr(ok bool, err error) bool {
 	return !ok || err != nil
+}
+
+func ObjIsNotSet(obj ast.Obj) bool {
+	return obj.String() != glob.KeywordSet
+}
+
+// ordinalSuffix converts a number to its ordinal form (1st, 2nd, 3rd, 4th, etc.)
+func ordinalSuffix(n int) string {
+	if n < 0 {
+		return fmt.Sprintf("%dth", n)
+	}
+
+	// Special cases for 11, 12, 13 which all use "th"
+	if n%100 >= 11 && n%100 <= 13 {
+		return fmt.Sprintf("%dth", n)
+	}
+
+	// Regular cases based on last digit
+	switch n % 10 {
+	case 1:
+		return fmt.Sprintf("%dst", n)
+	case 2:
+		return fmt.Sprintf("%dnd", n)
+	case 3:
+		return fmt.Sprintf("%drd", n)
+	default:
+		return fmt.Sprintf("%dth", n)
+	}
 }

@@ -32,7 +32,7 @@ func NewDefExistPropStmt(def *DefExistPropStmtBody, existParams []string, existP
 	return &DefExistPropStmt{def, existParams, existParamSets, line}
 }
 
-func NewSpecFactStmt(typeEnum SpecFactEnum, propName AtomObj, params []Obj, line uint) *SpecFactStmt {
+func NewSpecFactStmt(typeEnum SpecFactEnum, propName Atom, params []Obj, line uint) *SpecFactStmt {
 	return &SpecFactStmt{typeEnum, propName, params, line}
 }
 
@@ -48,7 +48,7 @@ func NewKnowStmt(facts CanBeKnownStmtSlice, line uint) *KnowFactStmt {
 	return &KnowFactStmt{facts, line}
 }
 
-func NewDefHeader(name AtomObj, params []string, setParams []Obj) *DefHeader {
+func NewDefHeader(name Atom, params []string, setParams []Obj) *DefHeader {
 	return &DefHeader{name, params, setParams}
 }
 
@@ -140,7 +140,7 @@ func NewHaveSetFnStmt(declHeader *DefHeader, param string, parentSet Obj, proofs
 	return &HaveSetFnStmt{declHeader, param, parentSet, proofs, line}
 }
 
-func NewHaveSetDefinedByReplacementStmt(name string, domSet Obj, rangeSet Obj, propName AtomObj, line uint) *HaveSetDefinedByReplacementStmt {
+func NewHaveSetDefinedByReplacementStmt(name string, domSet Obj, rangeSet Obj, propName Atom, line uint) *HaveSetDefinedByReplacementStmt {
 	return &HaveSetDefinedByReplacementStmt{name, domSet, rangeSet, propName, line}
 }
 
@@ -220,7 +220,7 @@ func NewProveInRangeStmt(param string, start Obj, end Obj, domFacts []FactStmt, 
 	return &ProveInRangeStmt{param: param, start: start, end: end, DomFactsOrNil: domFacts, ThenFacts: thenFacts, ProofsOrNil: proofs, Line: line}
 }
 
-func NewProveIsTransitivePropStmt(prop AtomObj, params []string, proofs []Stmt, line uint) *ProveIsTransitivePropStmt {
+func NewProveIsTransitivePropStmt(prop Atom, params []string, proofs []Stmt, line uint) *ProveIsTransitivePropStmt {
 	return &ProveIsTransitivePropStmt{prop, params, proofs, line}
 }
 
@@ -332,6 +332,14 @@ func NewHaveFnCaseByCaseStmt(defFnStmt *DefFnStmt, caseByCaseFacts SpecFactPtrSl
 	return &HaveFnCaseByCaseStmt{defFnStmt, caseByCaseFacts, proofs, haveObjSatisfyFn, line}
 }
 
-func NewHaveCartSetStmt(name string, cartObj FnObj, line uint) *HaveCartSetStmt {
+func NewHaveCartSetStmt(name string, cartObj *FnObj, line uint) *HaveCartSetStmt {
 	return &HaveCartSetStmt{name, cartObj, line}
+}
+
+func NewHaveObjFromCartSetStmt(objName string, cartSet *FnObj, equalTo Obj, line uint) *HaveObjFromCartSetStmt {
+	return &HaveObjFromCartSetStmt{objName, cartSet, equalTo, line}
+}
+
+func NewHaveCartWithDimStmt(objName string, cartDim Obj, param string, facts FactStmtSlice, proofs StmtSlice, equalTo Obj, line uint) *HaveCartWithDimStmt {
+	return &HaveCartWithDimStmt{objName, cartDim, param, facts, proofs, equalTo, line}
 }
