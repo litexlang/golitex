@@ -145,34 +145,6 @@ func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state *VerSta
 	return NewExecUnknown("")
 }
 
-func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	if stmt.NameIs(glob.KeywordIn) {
-		return ver.inFactBuiltinRules(stmt, state)
-	} else if stmt.NameIs(glob.KeywordItemExistsIn) && stmt.TypeEnum == ast.TrueExist_St {
-		return ver.trueExistInSt(stmt, state)
-	}
-
-	if stmt.NameIs(glob.KeywordEqualTuple) {
-		return ver.verEqualTupleByBuiltinRules(stmt, state)
-	}
-
-	if verRet := ver.verNumberLogicRelaOpt_BuiltinRules(stmt, state); verRet.IsErr() {
-		return verRet
-	} else if verRet.IsTrue() {
-		return verRet
-	}
-
-	if stmt.NameIs(glob.KeySymbolEqual) && stmt.TypeEnum == ast.FalsePure {
-		return ver.verNotTrueEqualFact_BuiltinRules_WithState(stmt, state)
-	}
-
-	if stmt.NameIs(glob.KeywordIsCart) && stmt.TypeEnum == ast.TruePure {
-		return ver.verIsCartByBuiltinRules(stmt, state)
-	}
-
-	return NewExecUnknown("")
-}
-
 func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	if stmt.IsPureFact() {
 		if !stmt.IsTrue() {
