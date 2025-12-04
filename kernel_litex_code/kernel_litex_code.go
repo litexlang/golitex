@@ -822,5 +822,20 @@ know:
 
 know forall x, y R: x > y or x <= y, x < y or x >= y, x = y or x != y
 
-prop equal_tuple(x, y obj)
+prop equal_tuple(x, y obj, dim N_pos):
+	$is_tuple(x)
+	$is_tuple(y)
+	dim(x) = dim
+	dim(y) = dim
+	<=>:
+		x = y
+
+know:
+	forall x, y obj:
+		$is_tuple(x)
+		$is_tuple(y)
+		dim(x) = dim(y)
+		forall i N_pos: i <= dim(x) => x[i] = y[i]
+		=>:
+			x = y
 `
