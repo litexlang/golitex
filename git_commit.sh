@@ -53,11 +53,11 @@ echo "Selected type: $type"
 echo ""
 
 # Step 2: Enter subject
-read -p "Enter commit subject (max 50 characters): " subject
+read -p "Enter commit subject (max 80 characters): " subject
 
 # Validate subject length
-if [ ${#subject} -gt 50 ]; then
-    echo "Warning: Subject exceeds 50 characters (${#subject} chars). Please keep it concise."
+if [ ${#subject} -gt 80 ]; then
+    echo "Warning: Subject exceeds 80 characters (${#subject} chars). Please keep it concise."
     read -p "Continue anyway? (y/n): " confirm
     if [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
         echo "Commit cancelled."
@@ -94,13 +94,6 @@ if [ -n "$body" ]; then
     commit_message="$type: $subject\n\n$body"
 else
     commit_message="$type: $subject"
-fi
-
-# Confirm
-read -p "Proceed with commit? (y/n): " confirm
-if [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
-    echo "Commit cancelled."
-    exit 1
 fi
 
 # Execute git commit
