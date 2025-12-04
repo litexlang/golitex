@@ -86,12 +86,12 @@ func processUniFactParamsDuplicateDeclared(env *env.Env, params []string) (map[s
 	for _, param := range params {
 		for {
 			newParam := param
-			ret := env.IsAtomDeclared(ast.AtomObj(newParam), map[string]struct{}{})
+			ret := env.IsAtomDeclared(ast.Atom(newParam), map[string]struct{}{})
 			if ret.IsTrue() {
 				newParam = env.GenerateUndeclaredRandomName()
-				ret = env.IsAtomDeclared(ast.AtomObj(newParam), map[string]struct{}{})
+				ret = env.IsAtomDeclared(ast.Atom(newParam), map[string]struct{}{})
 				if ret.IsErr() {
-					paramMap[param] = ast.AtomObj(newParam)
+					paramMap[param] = ast.Atom(newParam)
 					paramMapStrToStr[param] = newParam
 					break
 				}
@@ -110,14 +110,14 @@ func processUniFactParamsDuplicateDeclared_notInGivenMap(env *env.Env, params []
 		for {
 			newParam := param
 			_, inNotOnMap := notInMap[newParam]
-			ret := env.IsAtomDeclared(ast.AtomObj(newParam), map[string]struct{}{})
+			ret := env.IsAtomDeclared(ast.Atom(newParam), map[string]struct{}{})
 			if ret.IsTrue() || inNotOnMap {
 				newParam = env.GenerateUndeclaredRandomName()
 
 				_, inNotOnMap = notInMap[newParam]
-				ret = env.IsAtomDeclared(ast.AtomObj(newParam), map[string]struct{}{})
+				ret = env.IsAtomDeclared(ast.Atom(newParam), map[string]struct{}{})
 				if ret.IsErr() && !inNotOnMap {
-					paramMap[param] = ast.AtomObj(newParam)
+					paramMap[param] = ast.Atom(newParam)
 					paramMapStrToStr[param] = newParam
 					break
 				}

@@ -18,6 +18,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
+	"strconv"
 )
 
 func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
@@ -139,6 +140,10 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 		execRet = NewExecErr("import statements are not allowed in local scope.")
 	case *ast.ImportFileStmt:
 		execRet = NewExecErr("import statements are not allowed in local scope.")
+	case *ast.HaveObjFromCartSetStmt:
+		execRet = exec.haveObjFromCartSetStmt(stmt)
+	case *ast.HaveCartWithDimStmt:
+		execRet = exec.haveCartWithDimStmt(stmt)
 	default:
 		execRet = NewExecErr(fmt.Sprintf("unknown statement type: %T", stmt))
 	}
@@ -437,10 +442,10 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) ExecRet {
 
 	paramsAsFc := []ast.Obj{}
 	for i := range stmt.Prop.DefHeader.Params {
-		paramsAsFc = append(paramsAsFc, ast.AtomObj(stmt.Prop.DefHeader.Params[i]))
+		paramsAsFc = append(paramsAsFc, ast.Atom(stmt.Prop.DefHeader.Params[i]))
 	}
 
-	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(stmt.Prop.DefHeader.Name), paramsAsFc, stmt.Line)}, stmt.Prop.ThenFacts, stmt.Line)
+	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.Prop.DefHeader.Name), paramsAsFc, stmt.Line)}, stmt.Prop.ThenFacts, stmt.Line)
 
 	ret := exec.Env.NewFact(uniFact)
 	if ret.IsErr() {
@@ -465,7 +470,7 @@ func (exec *Executor) proveStmt(stmt *ast.ProveStmt) ExecRet {
 	if execState.IsNotTrue() {
 		return execState
 	}
-	return execState
+	return execState.AddMsg(stmt.String())
 }
 
 func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) ExecRet {
@@ -477,12 +482,12 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) ExecRet {
 	// 在 objMem 里记录一下
 	exec.Env.ObjDefMem[stmt.Name] = nil
 
-	ret = exec.Env.StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(ast.AtomObj(stmt.Name), nil, stmt.FnTemplate)
+	ret = exec.Env.StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(ast.Atom(stmt.Name), nil, stmt.FnTemplate)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}
 
-	derivedFact, err := stmt.FnTemplate.DeriveUniFact_WithGivenFn(ast.AtomObj(stmt.Name))
+	derivedFact, err := stmt.FnTemplate.DeriveUniFact_WithGivenFn(ast.Atom(stmt.Name))
 	if err != nil {
 		return NewExecErr(err.Error())
 	}
@@ -606,7 +611,7 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ExecRet {
 	ver := NewVerifier(exec.Env)
 
 	for i := range len(stmt.ObjNames) {
-		verRet := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeywordIn), []ast.Obj{stmt.ObjEqualTos[i], stmt.ObjSets[i]}, stmt.Line), Round0Msg)
+		verRet := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.ObjEqualTos[i], stmt.ObjSets[i]}, stmt.Line), Round0Msg)
 		if verRet.IsErr() {
 			return NewExecErr(verRet.String())
 		}
@@ -614,7 +619,7 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ExecRet {
 			return NewExecErr(fmt.Sprintf("%s is not in %s", stmt.ObjNames[i], stmt.ObjSets[i]))
 		}
 
-		stmtForDef := ast.NewDefLetStmt([]string{stmt.ObjNames[i]}, []ast.Obj{stmt.ObjSets[i]}, []ast.FactStmt{ast.NewEqualFact(ast.AtomObj(stmt.ObjNames[i]), stmt.ObjEqualTos[i])}, stmt.Line)
+		stmtForDef := ast.NewDefLetStmt([]string{stmt.ObjNames[i]}, []ast.Obj{stmt.ObjSets[i]}, []ast.FactStmt{ast.NewEqualFact(ast.Atom(stmt.ObjNames[i]), stmt.ObjEqualTos[i])}, stmt.Line)
 		ret := exec.Env.DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmtForDef)
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
@@ -636,6 +641,16 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ExecRet {
 
 func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) ExecRet {
 	var err error
+
+	// 返回值要是set
+	execState := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.RetSet, ast.Atom(glob.KeywordSet)}, stmt.Line))
+	if execState.IsNotTrue() {
+		return NewExecErr(execState.String())
+	}
+	if execState.IsUnknown() {
+		return NewExecErr(fmt.Sprintf("return set %s must be a set, i.e. `%s in set` must be true, but it is unknown", stmt.RetSet.String(), stmt.RetSet.String()))
+	}
+
 	execRet, err := exec.checkFnEqualStmt(stmt)
 	if notOkExec(execRet, err) {
 		return execRet.AddMsg(stmt.String())
@@ -679,10 +694,10 @@ func (exec *Executor) checkFnEqualStmt(stmt *ast.HaveFnEqualStmt) (ExecRet, erro
 func fnHeaderToReturnValueOfFn(head *ast.DefHeader) ast.Obj {
 	params := make([]ast.Obj, len(head.Params))
 	for i := range len(head.Params) {
-		params[i] = ast.AtomObj(head.Params[i])
+		params[i] = ast.Atom(head.Params[i])
 	}
 
-	fnName := ast.AtomObj(head.Name)
+	fnName := ast.Atom(head.Name)
 
 	return ast.NewFnObj(fnName, params)
 }
@@ -702,11 +717,11 @@ func (exec *Executor) haveFnLiftStmt(stmt *ast.HaveFnLiftStmt) ExecRet {
 
 	FnTemplateOfFunctions := []ast.Obj{}
 	for i := range len(optDef.AsFnTStruct.ParamSets) {
-		head := ast.NewFnObj(ast.AtomObj(glob.KeywordFn), stmt.DomainOfEachParamOfGivenFn)
+		head := ast.NewFnObj(ast.Atom(glob.KeywordFn), stmt.DomainOfEachParamOfGivenFn)
 		FnTemplateOfFunctions = append(FnTemplateOfFunctions, ast.NewFnObj(head, []ast.Obj{optDef.AsFnTStruct.ParamSets[i]}))
 	}
 
-	retSet := ast.NewFnObj(ast.NewFnObj(ast.AtomObj(glob.KeywordFn), stmt.DomainOfEachParamOfGivenFn), []ast.Obj{optDef.AsFnTStruct.RetSet})
+	retSet := ast.NewFnObj(ast.NewFnObj(ast.Atom(glob.KeywordFn), stmt.DomainOfEachParamOfGivenFn), []ast.Obj{optDef.AsFnTStruct.RetSet})
 
 	// randomly generate len different params
 	randomParams := glob.GenerateUniqueRandomStrings(len(FnTemplateOfFunctions))
@@ -735,20 +750,20 @@ func (exec *Executor) haveFnLift_knowFact(stmt *ast.HaveFnLiftStmt, fnNames []st
 	uniFactParams := glob.GenerateUniqueRandomStrings_NotInGivenStrSlice(len(stmt.DomainOfEachParamOfGivenFn), fnNames)
 	uniFactParamsAsFc := []ast.Obj{}
 	for i := range len(uniFactParams) {
-		uniFactParamsAsFc = append(uniFactParamsAsFc, ast.AtomObj(uniFactParams[i]))
+		uniFactParamsAsFc = append(uniFactParamsAsFc, ast.Atom(uniFactParams[i]))
 	}
 
 	fnNamesAsFc := []ast.Obj{}
 	for i := range len(fnNames) {
-		fnNamesAsFc = append(fnNamesAsFc, ast.AtomObj(fnNames[i]))
+		fnNamesAsFc = append(fnNamesAsFc, ast.Atom(fnNames[i]))
 	}
 
 	uniFactParamSets := stmt.DomainOfEachParamOfGivenFn
-	lhs := ast.NewFnObj(ast.NewFnObj(ast.AtomObj(stmt.FnName), fnNamesAsFc), uniFactParamsAsFc)
+	lhs := ast.NewFnObj(ast.NewFnObj(ast.Atom(stmt.FnName), fnNamesAsFc), uniFactParamsAsFc)
 
 	rhsParams := []ast.Obj{}
 	for i := range len(fnNamesAsFc) {
-		rhsParams = append(rhsParams, ast.NewFnObj(ast.AtomObj(fnNames[i]), uniFactParamsAsFc))
+		rhsParams = append(rhsParams, ast.NewFnObj(ast.Atom(fnNames[i]), uniFactParamsAsFc))
 	}
 
 	rhs := ast.NewFnObj(stmt.Opt, rhsParams)
@@ -779,10 +794,19 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (ExecRet, error) {
 		exec.deleteEnv()
 	}()
 
-	// 验证 fn template 里面的 paramSet 和 return set 都是 in set 的
+	// 返回值要是set
+	execState := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.DefFnStmt.FnTemplate.RetSet, ast.Atom(glob.KeywordSet)}, stmt.Line))
+	if execState.IsNotTrue() {
+		return NewExecErr(execState.String()), fmt.Errorf(execState.String())
+	}
+	if execState.IsUnknown() {
+		return NewExecErr(""), fmt.Errorf("return set %s must be a set, i.e. `%s in set` must be true, but it is unknown", stmt.DefFnStmt.FnTemplate.RetSet.String(), stmt.DefFnStmt.FnTemplate.RetSet.String())
+	}
+
+	// 验证 fn template 里面的 paramSet 都是 in set 的
 	// Verify each paramSet is in set type
 	for i, paramSet := range stmt.DefFnStmt.FnTemplate.ParamSets {
-		execState := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeywordIn), []ast.Obj{paramSet, ast.AtomObj(glob.KeywordSet)}, stmt.Line))
+		execState := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{paramSet, ast.Atom(glob.KeywordSet)}, stmt.Line))
 		if execState.IsErr() {
 			return NewExecErr(execState.String()), fmt.Errorf(execState.String())
 		}
@@ -792,7 +816,7 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (ExecRet, error) {
 	}
 
 	// Verify retSet is in set type
-	execState := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeywordIn), []ast.Obj{stmt.DefFnStmt.FnTemplate.RetSet, ast.AtomObj(glob.KeywordSet)}, stmt.Line))
+	execState = exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.DefFnStmt.FnTemplate.RetSet, ast.Atom(glob.KeywordSet)}, stmt.Line))
 	if execState.IsErr() {
 		return NewExecErr(execState.String()), fmt.Errorf(execState.String())
 	}
@@ -821,13 +845,34 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (ExecRet, error) {
 		return execState, fmt.Errorf(execState.String())
 	}
 
+	// 声明一下函数，这样证明then的时候不会因为没声明这个函数而g了
+	localTemplate := ast.NewFnTStruct(stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets, stmt.DefFnStmt.FnTemplate.RetSet, stmt.DefFnStmt.FnTemplate.DomFacts, []ast.FactStmt{}, stmt.Line)
+	fnDefStmt := ast.NewDefFnStmt(stmt.DefFnStmt.Name, localTemplate, stmt.Line)
+	execState = exec.defFnStmt(fnDefStmt)
+	if execState.IsNotTrue() {
+		return execState, fmt.Errorf(execState.String())
+	}
+
 	// know 一下 函数等于 等号右边的东西
+	params := []ast.Obj{}
+	for i := range len(stmt.DefFnStmt.FnTemplate.Params) {
+		params = append(params, ast.Atom(stmt.DefFnStmt.FnTemplate.Params[i]))
+	}
+
+	fnObj := ast.NewFnObj(ast.Atom(stmt.DefFnStmt.Name), params)
+	fnObjIsEqualTo := ast.NewEqualFact(fnObj, stmt.HaveObjSatisfyFn)
+	err := exec.Env.NewFact(fnObjIsEqualTo)
+	if err.IsErr() {
+		return NewExecErr(err.String()), fmt.Errorf(err.String())
+	}
 
 	// 证明 fn then 里全是对的
-
-	// Verify that the thenFacts are satisfied
-	// The proof statements should have established the necessary conditions
-	// Additional verification of thenFacts would require object substitution which is not currently available
+	for _, thenFact := range stmt.DefFnStmt.FnTemplate.ThenFacts {
+		execState = exec.factStmt(thenFact)
+		if execState.IsNotTrue() {
+			return execState, fmt.Errorf(execState.String())
+		}
+	}
 
 	return NewExecTrue(stmt.String()), nil
 }
@@ -857,7 +902,7 @@ func (exec *Executor) checkHaveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) 
 
 	// Verify each paramSet is in set type
 	for i, paramSet := range stmt.DefFnStmt.FnTemplate.ParamSets {
-		execState := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeywordIn), []ast.Obj{paramSet, ast.AtomObj(glob.KeywordSet)}, stmt.Line))
+		execState := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{paramSet, ast.Atom(glob.KeywordSet)}, stmt.Line))
 		if execState.IsErr() {
 			return NewExecErr(execState.String()), nil, fmt.Errorf(execState.String())
 		}
@@ -867,7 +912,7 @@ func (exec *Executor) checkHaveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) 
 	}
 
 	// Verify retSet is in set type
-	execState := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(glob.KeywordIn), []ast.Obj{stmt.DefFnStmt.FnTemplate.RetSet, ast.AtomObj(glob.KeywordSet)}, stmt.Line))
+	execState := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.DefFnStmt.FnTemplate.RetSet, ast.Atom(glob.KeywordSet)}, stmt.Line))
 	if execState.IsErr() {
 		return NewExecErr(execState.String()), nil, fmt.Errorf(execState.String())
 	}
@@ -901,9 +946,9 @@ func (exec *Executor) checkHaveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) 
 		// Create function call from function name and params
 		params := make([]ast.Obj, len(stmt.DefFnStmt.FnTemplate.Params))
 		for j := range len(stmt.DefFnStmt.FnTemplate.Params) {
-			params[j] = ast.AtomObj(stmt.DefFnStmt.FnTemplate.Params[j])
+			params[j] = ast.Atom(stmt.DefFnStmt.FnTemplate.Params[j])
 		}
-		fnName := ast.AtomObj(stmt.DefFnStmt.Name)
+		fnName := ast.Atom(stmt.DefFnStmt.Name)
 		fnCall := ast.NewFnObj(fnName, params)
 		equalFact := ast.NewEqualFact(fnCall, stmt.EqualToObjs[i])
 
@@ -1138,12 +1183,12 @@ func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitiveP
 		return fmt.Errorf("dom facts are not allowed in %s", glob.KeywordProveIsTransitiveProp)
 	}
 
-	ret = exec.Env.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(stmt.Prop), []ast.Obj{ast.AtomObj(stmt.Params[0]), ast.AtomObj(stmt.Params[1])}, stmt.Line))
+	ret = exec.Env.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.Prop), []ast.Obj{ast.Atom(stmt.Params[0]), ast.Atom(stmt.Params[1])}, stmt.Line))
 	if ret.IsErr() {
 		return fmt.Errorf(ret.String())
 	}
 
-	ret = exec.Env.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(stmt.Prop), []ast.Obj{ast.AtomObj(stmt.Params[1]), ast.AtomObj(stmt.Params[2])}, stmt.Line))
+	ret = exec.Env.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.Prop), []ast.Obj{ast.Atom(stmt.Params[1]), ast.Atom(stmt.Params[2])}, stmt.Line))
 	if ret.IsErr() {
 		return fmt.Errorf(ret.String())
 	}
@@ -1156,7 +1201,7 @@ func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitiveP
 	}
 
 	// check
-	finalCheckStmt := ast.NewSpecFactStmt(ast.TruePure, ast.AtomObj(stmt.Prop), []ast.Obj{ast.AtomObj(stmt.Params[0]), ast.AtomObj(stmt.Params[2])}, stmt.Line)
+	finalCheckStmt := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.Prop), []ast.Obj{ast.Atom(stmt.Params[0]), ast.Atom(stmt.Params[2])}, stmt.Line)
 	state = exec.factStmt(finalCheckStmt)
 	if state.IsNotTrue() {
 		return fmt.Errorf("failed to prove %s is transitive: %s failed", stmt.Prop, finalCheckStmt)
@@ -1226,6 +1271,15 @@ func (exec *Executor) helpStmt(stmt *ast.HelpStmt) ExecRet {
 }
 
 func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseStmt) ExecRet {
+
+	// 返回值要是set
+	execState := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.RetSet, ast.Atom(glob.KeywordSet)}, stmt.Line))
+	if execState.IsNotTrue() {
+		return NewExecErr(execState.String())
+	}
+	if execState.IsUnknown() {
+		return NewExecErr(fmt.Sprintf("return set %s must be a set, i.e. `%s in set` must be true, but it is unknown", stmt.RetSet.String(), stmt.RetSet.String()))
+	}
 	// 验证每个case的返回值都符合fn的retSet
 	execState, err := exec.checkHaveFnEqualCaseByCaseStmt(stmt)
 	if notOkExec(execState, err) {
@@ -1464,4 +1518,271 @@ func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) ExecRet {
 	}
 
 	return NewExecTrue(stmt.String())
+}
+
+func (exec *Executor) haveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetStmt) ExecRet {
+	// Check: verify cart parameters are sets and equalTo elements are in corresponding sets
+	checkRet := exec.checkHaveObjFromCartSetStmt(stmt)
+	if checkRet.IsNotTrue() {
+		return checkRet
+	}
+
+	// Post-process: add obj in cart and obj = equalTo facts
+	postRet := exec.postProcessHaveObjFromCartSetStmt(stmt)
+	if postRet.IsNotTrue() {
+		return postRet
+	}
+
+	return NewExecTrue("").AddMsg(stmt.String())
+}
+
+// checkHaveObjFromCartSetStmt checks that:
+// 1. Each parameter of cart is a set
+// 2. equalTo is a tuple with the same length as cart parameters
+// 3. Each element of equalTo is in the corresponding cart set
+func (exec *Executor) checkHaveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetStmt) ExecRet {
+	// Check that each parameter of cart is a set
+	for i, param := range stmt.CartSet.Params {
+		state := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{param, ast.Atom(glob.KeywordSet)}, stmt.Line))
+		if state.IsErr() {
+			return NewExecErr(state.String())
+		}
+		if state.IsUnknown() {
+			return NewExecErr(fmt.Sprintf("cart parameter %d (%s) must be a set, i.e. `%s in %s` must be true, but it is unknown", i+1, param.String(), param.String(), ast.Atom(glob.KeywordSet).String()))
+		}
+	}
+
+	// Check that equalTo is a tuple
+	equalToAsFn, ok := stmt.EqualTo.(*ast.FnObj)
+	if !ok {
+		return NewExecErr(fmt.Sprintf("expected equalTo to be a tuple, but got %T", stmt.EqualTo))
+	}
+	if !ast.IsTupleFnObj(equalToAsFn) {
+		return NewExecErr(fmt.Sprintf("expected equalTo to be a tuple (with head %s), but got %s", glob.KeywordTuple, equalToAsFn.FnHead.String()))
+	}
+
+	// Check that tuple length matches cart parameters length
+	if len(equalToAsFn.Params) != len(stmt.CartSet.Params) {
+		return NewExecErr(fmt.Sprintf("tuple length (%d) does not match cart parameters length (%d)", len(equalToAsFn.Params), len(stmt.CartSet.Params)))
+	}
+
+	// Check that each element of equalTo is in the corresponding cart set
+	for i := range len(equalToAsFn.Params) {
+		inFact := ast.NewInFactWithFc(equalToAsFn.Params[i], stmt.CartSet.Params[i])
+		state := exec.factStmt(inFact)
+		if state.IsErr() {
+			return NewExecErr(state.String())
+		}
+		if state.IsUnknown() {
+			return NewExecErr(fmt.Sprintf("tuple element %d (%s) must be in cart set %d (%s), but it is unknown", i+1, equalToAsFn.Params[i].String(), i+1, stmt.CartSet.Params[i].String()))
+		}
+	}
+
+	return NewExecTrue("")
+}
+
+// postProcessHaveObjFromCartSetStmt adds:
+// 1. obj in cart(...) fact
+// 2. obj = equalTo fact
+// 3. obj[i] = equalTo[i] for each i
+// 4. dim(obj) = len(cartSet.Params)
+func (exec *Executor) postProcessHaveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetStmt) ExecRet {
+	objAtom := ast.Atom(stmt.ObjName)
+
+	// Add obj in cart(...) fact
+	inCartFact := ast.NewInFactWithFc(objAtom, stmt.CartSet)
+	ret := exec.Env.NewFact(inCartFact)
+	if ret.IsErr() {
+		return NewExecErr(ret.String())
+	}
+
+	// Add obj = equalTo fact
+	equalFact := ast.NewEqualFact(objAtom, stmt.EqualTo)
+	ret = exec.Env.NewFact(equalFact)
+	if ret.IsErr() {
+		return NewExecErr(ret.String())
+	}
+
+	// equalTo is already verified to be a tuple in checkHaveObjFromCartSetStmt
+	equalToAsFn, ok := stmt.EqualTo.(*ast.FnObj)
+	if !ok || !ast.IsTupleFnObj(equalToAsFn) {
+		return NewExecTrue("")
+	}
+
+	// Add obj[i] = equalTo[i] for each i (index starts from 1)
+	for i := range len(equalToAsFn.Params) {
+		index := i + 1 // index starts from 1
+		indexObj := ast.Atom(strconv.Itoa(index))
+
+		// Create indexed object: obj[index]
+		indexedObj := ast.NewFnObj(ast.Atom(glob.KeywordIndexOpt), []ast.Obj{objAtom, indexObj})
+
+		// Create equal fact: obj[index] = equalTo[i]
+		indexEqualFact := ast.NewEqualFact(indexedObj, equalToAsFn.Params[i])
+		ret = exec.Env.NewFact(indexEqualFact)
+		if ret.IsErr() {
+			return NewExecErr(ret.String())
+		}
+	}
+
+	// Add dim(obj) = len(cartSet.Params)
+	dimFn := ast.NewFnObj(ast.Atom(glob.KeywordDim), []ast.Obj{objAtom})
+	dimValue := ast.Atom(strconv.Itoa(len(stmt.CartSet.Params)))
+	dimEqualFact := ast.NewEqualFact(dimFn, dimValue)
+	ret = exec.Env.NewFact(dimEqualFact)
+	if ret.IsErr() {
+		return NewExecErr(ret.String())
+	}
+
+	return NewExecTrue("")
+}
+
+func (exec *Executor) haveCartWithDimStmt(stmt *ast.HaveCartWithDimStmt) ExecRet {
+	// Check: verify all conditions in local environment
+	checkRet := exec.checkHaveCartWithDimStmt(stmt)
+	if checkRet.IsNotTrue() {
+		return checkRet
+	}
+
+	// Post-process: store facts in main environment
+	postRet := exec.postProcessHaveCartWithDimStmt(stmt)
+	if postRet.IsNotTrue() {
+		return postRet
+	}
+
+	return NewExecTrue("").AddMsg(stmt.String())
+}
+
+// checkHaveCartWithDimStmt checks that:
+// 1. CartDim is in N_pos and > 1 and <= objDim
+// 2. All proofs execute successfully
+// 3. proj(ObjName, Param) = EqualTo
+// 4. All Facts are true
+// All checks are performed in a local environment with is_cart(ObjName) and set_dim(ObjName) = CartDim
+func (exec *Executor) checkHaveCartWithDimStmt(stmt *ast.HaveCartWithDimStmt) ExecRet {
+	// 0. 新建一个局部环境，让它is_cart然后dim是 dimObj
+	exec.NewEnv(exec.Env)
+	defer exec.deleteEnv()
+
+	objToDefineAtom := ast.Atom(stmt.ObjName)
+
+	// 局部环境里定义 param 是 N_pos，大于等于1，小于等于n
+	defLetStmt := ast.NewDefLetStmt([]string{stmt.Param}, []ast.Obj{ast.Atom(glob.KeywordNPos)}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{ast.Atom(stmt.Param), stmt.CartDim}, stmt.Line)}, stmt.Line)
+	execState := exec.defLetStmt(defLetStmt)
+	if execState.IsNotTrue() {
+		return NewExecErr(execState.String())
+	}
+
+	// 1. 证明 dimObj 是 N_pos 且大于1
+	ver := NewVerifier(exec.Env)
+	state := Round0Msg
+
+	// 验证 CartDim 是 N_pos
+	dimInNPosFact := ast.NewInFactWithFc(stmt.CartDim, ast.Atom(glob.KeywordNPos))
+	verRet := ver.VerFactStmt(dimInNPosFact, state)
+	if verRet.IsErr() {
+		return NewExecErr(fmt.Sprintf("failed to verify %s is in N_pos: %s", stmt.CartDim.String(), verRet.String()))
+	}
+	if verRet.IsUnknown() {
+		return NewExecErr(fmt.Sprintf("%s must be in N_pos, but it is unknown", stmt.CartDim.String()))
+	}
+
+	// 验证 CartDim > 1
+	dimGreaterThanOneFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{stmt.CartDim, ast.Atom("1")}, stmt.Line)
+	verRet = ver.VerFactStmt(dimGreaterThanOneFact, state)
+	if verRet.IsErr() {
+		return NewExecErr(fmt.Sprintf("failed to verify %s > 1: %s", stmt.CartDim.String(), verRet.String()))
+	}
+	if verRet.IsUnknown() {
+		return NewExecErr(fmt.Sprintf("%s must be > 1, but it is unknown", stmt.CartDim.String()))
+	}
+
+	// 执行 proofs
+	for _, proof := range stmt.Proofs {
+		execRet := exec.Stmt(proof)
+		if execRet.IsNotTrue() {
+			return NewExecErr(fmt.Sprintf("proof execution failed: %s", execRet.String()))
+		}
+	}
+
+	// 定义 objToDefine
+	defLetStmt = ast.NewDefLetStmt([]string{stmt.ObjName}, []ast.Obj{ast.Atom(glob.KeywordSet)}, []ast.FactStmt{}, stmt.Line)
+	execState = exec.defLetStmt(defLetStmt)
+	if execState.IsNotTrue() {
+		return NewExecErr(execState.String())
+	}
+
+	// 在局部环境中添加 is_cart(ObjName)
+	isCartFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsCart), []ast.Obj{objToDefineAtom}, stmt.Line)
+	ret := exec.Env.NewFact(isCartFact)
+	if ret.IsErr() {
+		return NewExecErr(fmt.Sprintf("failed to add is_cart fact: %s", ret.String()))
+	}
+
+	// 在局部环境中添加 set_dim(ObjName) = CartDim
+	setDimFn := ast.NewFnObj(ast.Atom(glob.KeywordSetDim), []ast.Obj{objToDefineAtom})
+	setDimEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{setDimFn, stmt.CartDim}, stmt.Line)
+	ret = exec.Env.NewFact(setDimEqualFact)
+	if ret.IsErr() {
+		return NewExecErr(fmt.Sprintf("failed to add set_dim fact: %s", ret.String()))
+	}
+
+	// 让  proj(ObjToDefine, Param) = EqualTo
+	projFn := ast.NewFnObj(ast.Atom(glob.KeywordProj), []ast.Obj{objToDefineAtom, ast.Atom(stmt.Param)})
+	projEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{projFn, stmt.EqualTo}, stmt.Line)
+	ret = exec.Env.NewFact(projEqualFact)
+	if ret.IsErr() {
+		return NewExecErr(fmt.Sprintf("failed to add proj fact: %s", ret.String()))
+	}
+
+	// 验证所有 Facts 中的条件（thenFact）
+	for _, fact := range stmt.Facts {
+		verRet = ver.VerFactStmt(fact, state)
+		if verRet.IsErr() {
+			return NewExecErr(fmt.Sprintf("failed to verify fact %s: %s", fact.String(), verRet.String()))
+		}
+		if verRet.IsUnknown() {
+			return NewExecErr(fmt.Sprintf("fact %s must be true, but it is unknown", fact.String()))
+		}
+	}
+
+	return NewExecTrue("")
+}
+
+// postProcessHaveCartWithDimStmt stores:
+// 1. is_cart(ObjName) fact
+// 2. set_dim(ObjName) = CartDim fact
+// 3. All Facts (then properties)
+func (exec *Executor) postProcessHaveCartWithDimStmt(stmt *ast.HaveCartWithDimStmt) ExecRet {
+	defLetStmt := ast.NewDefLetStmt([]string{stmt.ObjName}, []ast.Obj{ast.Atom(glob.KeywordSet)}, []ast.FactStmt{}, stmt.Line)
+	execState := exec.defLetStmt(defLetStmt)
+	if execState.IsNotTrue() {
+		return NewExecErr(execState.String())
+	}
+
+	objToDefineAtom := ast.Atom(stmt.ObjName)
+
+	// 在局部环境中添加 is_cart(ObjName)
+	isCartFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsCart), []ast.Obj{objToDefineAtom}, stmt.Line)
+	ret := exec.Env.NewFact(isCartFact)
+	if ret.IsErr() {
+		return NewExecErr(fmt.Sprintf("failed to add is_cart fact: %s", ret.String()))
+	}
+
+	// 在局部环境中添加 set_dim(ObjName) = CartDim
+	setDimFn := ast.NewFnObj(ast.Atom(glob.KeywordSetDim), []ast.Obj{objToDefineAtom})
+	setDimEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{setDimFn, stmt.CartDim}, stmt.Line)
+	ret = exec.Env.NewFact(setDimEqualFact)
+	if ret.IsErr() {
+		return NewExecErr(fmt.Sprintf("failed to add set_dim fact: %s", ret.String()))
+	}
+
+	// 让then里都对
+	uniFact := ast.NewUniFact([]string{stmt.Param}, []ast.Obj{ast.Atom(glob.KeywordNPos)}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{ast.Atom(stmt.Param), stmt.CartDim}, stmt.Line)}, stmt.Facts, stmt.Line)
+	ret = exec.Env.NewFact(uniFact)
+	if ret.IsErr() {
+		return NewExecErr(fmt.Sprintf("failed to add uni fact: %s", ret.String()))
+	}
+
+	return NewExecTrue("")
 }

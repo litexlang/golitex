@@ -41,7 +41,6 @@ const (
 	KeywordInteger                = "Z"                         // e.g. -1
 	KeywordRational               = "Q"                         // e.g. -1.1
 	KeywordReal                   = "R"                         // e.g. pi
-	KeywordComplex                = "C"                         // e.g. 1+i
 	KeywordIn                     = "in"
 	// KeywordProveByMathInduction           = "prove_by_math_induction"
 	KeywordAs           = "as" // 用在 import xxx as ??? 了
@@ -89,11 +88,20 @@ const (
 	KeywordExit            = "exit"
 	KeywordHelp            = "help"
 
-	KeywordCart   = "cart"
-	KeywordIsCart = "is_cart"
+	// cart(R,R), (1,2) 表示集合叉乘和集合的元素; set_dim, dim表示集合叉乘和集合的元素的维度； proj, [] 表示集合叉乘的投影和集合的元素的投影; is_cart, is_tuple 表示是集合叉乘和集合的元素的特征
+	KeywordCart  = "cart"
+	KeywordTuple = "()"
+
+	KeywordIsCart  = "is_cart"
+	KeywordIsTuple = "is_tuple"
+
+	KeywordSetDim = "set_dim"
 	KeywordDim    = "dim"
-	KeywordProj   = "proj"
-	KeywordCoord  = "coord"
+
+	KeywordProj     = "proj"
+	KeywordIndexOpt = "[]"
+
+	KeywordHaveCartWithDim = "have_cart_with_dim"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -124,7 +132,6 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordReal:                   {},
 	KeywordIn:                     {},
 	// KeywordProveByMathInduction:           {},
-	KeywordComplex:      {},
 	KeywordAs:           {},
 	KeywordCount:        {},
 	KeywordFiniteSet:    {},
@@ -134,6 +141,8 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordNPos:         {},
 	KeywordLet:          {},
 	KeywordClear:        {},
+	KeywordTuple:        {},
+	KeywordIndexOpt:     {},
 	KeywordDoNothing:    {},
 	// KeywordExistSetByAxiomOfReplacement:   {},
 
@@ -166,9 +175,12 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 
 	KeywordCart:   {},
 	KeywordIsCart: {},
-	KeywordDim:    {},
+	KeywordSetDim: {},
 	KeywordProj:   {},
-	KeywordCoord:  {},
+
+	KeywordDim: {},
+
+	KeywordHaveCartWithDim: {},
 }
 
 const (
@@ -250,7 +262,6 @@ var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]s
 	KeywordInteger:       {},
 	KeywordRational:      {},
 	KeywordReal:          {},
-	KeywordComplex:       {},
 	KeywordAs:            {},
 	KeywordIn:            {},
 	KeySymbolEqual:       {},
@@ -294,7 +305,6 @@ var BuiltinObjKeywordSet map[string]struct{} = map[string]struct{}{
 	KeywordInteger:   {},
 	KeywordRational:  {},
 	KeywordReal:      {},
-	KeywordComplex:   {},
 	KeywordFiniteSet: {},
 	KeywordSet:       {},
 	KeywordNPos:      {},
@@ -341,7 +351,6 @@ var KeywordHelpMap = map[string]string{
 	KeywordInteger:                "",
 	KeywordRational:               "",
 	KeywordReal:                   "",
-	KeywordComplex:                "",
 	KeywordIn:                     "",
 	KeywordAs:                     "",
 	KeywordCount:                  "",

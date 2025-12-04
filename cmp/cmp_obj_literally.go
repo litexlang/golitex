@@ -30,7 +30,7 @@ const (
 func CmpObjType(left, right ast.Obj) (int, ObjEnum, error) {
 	var knownEnum ObjEnum
 	switch left.(type) {
-	case ast.AtomObj:
+	case ast.Atom:
 		knownEnum = AtomObjEnum
 	case *ast.FnObj:
 		knownEnum = FnObjEnum
@@ -40,7 +40,7 @@ func CmpObjType(left, right ast.Obj) (int, ObjEnum, error) {
 
 	var givenEnum ObjEnum
 	switch right.(type) {
-	case ast.AtomObj:
+	case ast.Atom:
 		givenEnum = AtomObjEnum
 	case *ast.FnObj:
 		givenEnum = FnObjEnum
@@ -59,7 +59,7 @@ func cmpObjLit(left, right ast.Obj) (int, error) {
 	}
 
 	if objEnum == AtomObjEnum {
-		return cmpAtomObjLit(left.(ast.AtomObj), right.(ast.AtomObj))
+		return cmpAtomObjLit(left.(ast.Atom), right.(ast.Atom))
 	} else if objEnum == FnObjEnum {
 		return cmpFnObjLit(left.(*ast.FnObj), right.(*ast.FnObj))
 	}
@@ -67,7 +67,7 @@ func cmpObjLit(left, right ast.Obj) (int, error) {
 	return -1, fmt.Errorf("")
 }
 
-func cmpAtomObjLit(left, right ast.AtomObj) (int, error) {
+func cmpAtomObjLit(left, right ast.Atom) (int, error) {
 	return strings.Compare(string(left), string(right)), nil // 直接对两个string相减得了
 }
 

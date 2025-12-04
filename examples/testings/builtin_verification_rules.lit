@@ -28,22 +28,18 @@ prove:
     x $in Z
     x $in Q
     x $in R
-    x $in C
 
     1 $in N
     1 $in Z
     1 $in Q
     1 $in R
-    1 $in C
 
     1.1 $in Q
     1.1 $in R
-    1.1 $in C
 
     let y Q
     y $in Q
     y $in R
-    y $in C
 
     x + x $in R
     x + x + x $in R
@@ -52,19 +48,13 @@ prove:
     t $in Z
     t $in Q
     t $in R
-    t $in C
 
     let z Q
     z $in Q
     z $in R
-    z $in C
 
     let w R
     w $in R
-    w $in C
-
-    let v C
-    v $in C
 
 # number related
 

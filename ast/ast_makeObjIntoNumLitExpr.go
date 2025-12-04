@@ -34,7 +34,7 @@ func MakeObjIntoNumLitExpr(obj Obj) (*glob.NumLitExpr, bool, error) {
 	}
 
 	if IsObjBuiltinUnaryFn(*asFnObj) {
-		ptr, ok := asFnObj.FnHead.(AtomObj)
+		ptr, ok := asFnObj.FnHead.(Atom)
 		if !ok {
 			return nil, false, nil
 		}
@@ -77,7 +77,7 @@ func MakeObjIntoNumLitExpr(obj Obj) (*glob.NumLitExpr, bool, error) {
 		return nil, false, nil
 	}
 
-	ptr, ok := asFnObj.FnHead.(AtomObj)
+	ptr, ok := asFnObj.FnHead.(Atom)
 	if !ok {
 		return nil, false, nil
 	}

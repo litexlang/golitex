@@ -40,16 +40,13 @@ type BuiltinOptPrecedence int
 
 const (
 	PrecLowest         BuiltinOptPrecedence = iota
-	PrecAssignment                          // =
-	PrecOr                                  // or
-	PrecAnd                                 // and
-	PrecEquality                            // == !=
-	PrecComparison                          // < > <= >=
-	PrecAddition                            // + -
-	PrecMultiplication                      // / *
-	PrecUnary                               // - !
-	PrecExponentiation                      // ^
-	PrecModulo                              // %
+	PrecAddition                            // + - (lowest precedence)
+	PrecMultiplication                      // * / % (same precedence level)
+	PrecExponentiation                      // ^ (highest precedence)
+	// Note: Modulo (%) has the same precedence as multiplication and division
+	// Note: Unary operators (-, !) are handled separately in unaryOptObj()
+	// Note: Logical and relational operators (=, <, >, or, and, etc.) are parsed
+	// in fact parsing, not in obj parsing, so they don't need precedence levels here.
 )
 
 var BuiltinOptPrecedenceMap = map[string]BuiltinOptPrecedence{
@@ -57,8 +54,8 @@ var BuiltinOptPrecedenceMap = map[string]BuiltinOptPrecedence{
 	KeySymbolMinus:   PrecAddition,
 	KeySymbolStar:    PrecMultiplication,
 	KeySymbolSlash:   PrecMultiplication,
+	KeySymbolPercent: PrecMultiplication, // % has same precedence as * and /
 	KeySymbolPower:   PrecExponentiation,
-	KeySymbolPercent: PrecModulo,
 }
 
 func IsKeyword(s string) bool {

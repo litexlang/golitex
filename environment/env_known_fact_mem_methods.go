@@ -252,7 +252,7 @@ func (e *Env) GetSpecFact_InLogicExpr_InUniFactMem() (*SpecFact_InLogicExpr_InUn
 	return &e.KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem, true
 }
 
-func (e *Env) IsFnDeclared(fc ast.AtomObj) (*FnInFnTMemItem, bool) {
+func (e *Env) IsFnDeclared(fc ast.Atom) (*FnInFnTMemItem, bool) {
 	// TODO 这里需要更严格检查一下是否是正常的函数名，但是目前没有
 	if _, ok := glob.BuiltinKeywordsSet[string(fc)]; ok {
 		return nil, true
@@ -318,7 +318,7 @@ func (e *Env) getInstantiatedFnTTOfFcFn(fcFn *ast.FnObj) (*ast.FnTStruct, bool, 
 		return fnTNoName, true, glob.TrueRet("")
 	}
 
-	def := e.GetFnTemplateDef(fcFn.FnHead.(ast.AtomObj))
+	def := e.GetFnTemplateDef(fcFn.FnHead.(ast.Atom))
 	if def == nil {
 		return nil, false, glob.TrueRet("")
 	}

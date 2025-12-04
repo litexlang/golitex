@@ -30,7 +30,7 @@ _– Leonardo da Vinci_
 
 [Litex](https://litexlang.com) is a simple open-source computer language for mathematical proofs. It aims to express mathematics as code while staying as close to natural language as possible, making it both rigorous and accessible. ([Star the repo!](https://github.com/litexlang/golitex)) With just one to two hours of learning the fundamentals, you can write code that solves interesting mathematical problems with verified correctness!
 
-How does Litex work? It achieves its simplicity by imitating how people reason and how mathematics works. *Litex uses a set of axioms (i.e. ZFC axioms and basic logic) and inference rules that are sufficiently expressive to capture most mathematical concepts.* Its close-to-natural-language syntax means users often forget they're using a formal language, lowering the barrier of formal reasoning by 10x compared with traditional formal languages. We want to make Litex easy-to-learn even for 10-year-old beginners in mathematical proof and verification.
+How does Litex work? It achieves its simplicity by imitating how people reason and how mathematics works. *Litex uses a set of axioms (i.e. ZFC axioms and basic logic) and inference rules that are sufficiently expressive to capture mathematical concepts. (axioms + inference rules = math world)* Its close-to-natural-language syntax means users often forget they're using a formal language, lowering the barrier of formal reasoning by 10x compared with traditional formal languages. We want to make Litex easy-to-learn even for 10-year-old beginners in mathematical proof and verification.
 
 [Official Documentation](https://litexlang.com) is our website. Read [Tutorial](https://litexlang.com/doc/Tutorial/Introduction), [How Litex Works](https://litexlang.com/doc/How_Litex_Works/Introduction) for more details. [Hugging Face Dataset](https://huggingface.co/litexlang) is on Hugging Face.
 
@@ -92,7 +92,7 @@ Since each Litex sentence corresponds directly to an expression in everyday math
 
 *In summary, Litex is a piece of software that imitates the way people think when they verify mathematics in everyday reasoning, using a small number of straightforward rules.* 
 
-## Our Mission
+## Litex For AI, For Math, For Everyone
 
 _Necessity is the mother of invention._
 
@@ -102,7 +102,32 @@ _- Thomas Edison_
 
 Litex For AI
 
-AI pioneer Geoffrey Hinton notes that in mathematics, models operate like in Go or chess—within closed systems with fixed rules, where they can generate their own training data. Formal languages (e.g., Litex) are key to self-improvement because computers can automatically and reliably verify whether mathematical reasoning is correct, enabling effective self-supervised learning.
+AI pioneer Geoffrey Hinton notes that in mathematics, models operate like in Go or chess—within closed systems with fixed rules, where they can generate their own training data. Formal languages (e.g., Litex) are key to self-improvement because computers can automatically and reliably verify whether mathematical reasoning is correct, enabling effective self-supervised learning. 
+
+This is crucial for the following areas:
+
+<table style="border-collapse: collapse; width: 100%; font-size: 12px">
+  <tr>
+    <th style="border: 2px solid black; padding: 4px; text-align: left; width: 50%;">Application Area</th>
+    <th style="border: 2px solid black; padding: 4px; text-align: left; width: 50%;">Examples</th>
+  </tr>
+  <tr>
+    <td style="border: 2px solid black; padding: 4px;">Model Reasoning</td>
+    <td style="border: 2px solid black; padding: 4px;">DeepSeek-R1</td>
+  </tr>
+  <tr>
+    <td style="border: 2px solid black; padding: 4px;">AI For Math</td>
+    <td style="border: 2px solid black; padding: 4px;">AlphaProof</td>
+  </tr>
+  <tr>
+    <td style="border: 2px solid black; padding: 4px;">Safe and Trustful AI</td>
+    <td style="border: 2px solid black; padding: 4px;">Formal verification of AI systems</td>
+  </tr>
+  <tr>
+    <td style="border: 2px solid black; padding: 4px;">AI Scientific Exploration</td>
+    <td style="border: 2px solid black; padding: 4px;">Automated theorem discovery</td>
+  </tr>
+</table>
 
 Litex For Math
 

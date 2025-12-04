@@ -21,7 +21,7 @@ import (
 	"strings"
 )
 
-func (e *Env) IsFcAtomDeclaredByUser(fcAtomName ast.AtomObj) bool {
+func (e *Env) IsFcAtomDeclaredByUser(fcAtomName ast.Atom) bool {
 	// 如果 atom 里有 ::，那另外检查
 	if strings.Contains(string(fcAtomName), glob.PkgNameAtomSeparator) {
 		PkgNameAndAtomName := strings.Split(string(fcAtomName), glob.PkgNameAtomSeparator)
@@ -35,7 +35,7 @@ func (e *Env) IsFcAtomDeclaredByUser(fcAtomName ast.AtomObj) bool {
 		if !ok {
 			return false
 		}
-		ok = pkgPathEnv.isFcAtomDeclaredAtCurEnv(ast.AtomObj(AtomName))
+		ok = pkgPathEnv.isFcAtomDeclaredAtCurEnv(ast.Atom(AtomName))
 		if ok {
 			return true
 		}
@@ -52,7 +52,7 @@ func (e *Env) IsFcAtomDeclaredByUser(fcAtomName ast.AtomObj) bool {
 }
 
 // 其实最好要分类：有可能是obj，有可能是prop，不能在验证obj的时候验证是prop
-func (e *Env) isFcAtomDeclaredAtCurEnv(fcAtomName ast.AtomObj) bool {
+func (e *Env) isFcAtomDeclaredAtCurEnv(fcAtomName ast.Atom) bool {
 	_, ok := e.PropDefMem[string(fcAtomName)]
 	if ok {
 		return true
@@ -74,7 +74,7 @@ func (e *Env) isFcAtomDeclaredAtCurEnv(fcAtomName ast.AtomObj) bool {
 	return ok
 }
 
-func (e *Env) isAtomObj(atom ast.AtomObj) bool {
+func (e *Env) isAtomObj(atom ast.Atom) bool {
 	_, ok := ast.IsNumLitAtomObj(atom)
 	if ok {
 		return true
@@ -88,7 +88,7 @@ func (e *Env) isAtomObj(atom ast.AtomObj) bool {
 	return e.isUserDefinedObj(atom)
 }
 
-func (e *Env) AtomsAreObj(atomSlice []ast.AtomObj) bool {
+func (e *Env) AtomsAreObj(atomSlice []ast.Atom) bool {
 	for _, atom := range atomSlice {
 		if !e.isAtomObj(atom) {
 			return false
@@ -163,7 +163,7 @@ func (e *Env) AreAtomsInFactAreDeclared(fact ast.FactStmt, extraAtomNames map[st
 	}
 }
 
-func (e *Env) AreAtomsDeclared(atoms []ast.AtomObj, extraAtomNames map[string]struct{}) glob.GlobRet {
+func (e *Env) AreAtomsDeclared(atoms []ast.Atom, extraAtomNames map[string]struct{}) glob.GlobRet {
 	for _, atom := range atoms {
 		ret := e.IsAtomDeclared(atom, extraAtomNames)
 		if ret.IsErr() {
@@ -173,7 +173,7 @@ func (e *Env) AreAtomsDeclared(atoms []ast.AtomObj, extraAtomNames map[string]st
 	return glob.TrueRet("")
 }
 
-func (e *Env) IsAtomDeclared(atom ast.AtomObj, extraAtomNames map[string]struct{}) glob.GlobRet {
+func (e *Env) IsAtomDeclared(atom ast.Atom, extraAtomNames map[string]struct{}) glob.GlobRet {
 	// 如果是内置的符号，那就声明了
 	if glob.IsBuiltinKeywordKeySymbolCanBeFcAtomName(string(atom)) {
 		return glob.TrueRet("")
