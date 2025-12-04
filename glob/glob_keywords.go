@@ -102,6 +102,8 @@ const (
 	KeywordIndexOpt = "[]"
 
 	KeywordHaveCartWithDim = "have_cart_with_dim"
+
+	KeywordEqualTuple = "equal_tuple"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -181,6 +183,8 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordDim: {},
 
 	KeywordHaveCartWithDim: {},
+
+	KeywordEqualTuple: {},
 }
 
 const (
