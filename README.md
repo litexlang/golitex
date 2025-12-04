@@ -28,7 +28,7 @@ _– Leonardo da Vinci_
 
 ---
 
-[Litex](https://litexlang.com) is a simple open-source computer language for mathematical proofs. It aims to express mathematics as code while staying as close to natural language as possible, making it both rigorous and accessible. ([Star the repo!](https://github.com/litexlang/golitex)) With just one to two hours of learning the fundamentals, you can write code that solves interesting mathematical problems with verified correctness!
+[Litex](https://litexlang.com) is a simple open-source computer language for mathematical proofs. It aims to express mathematics as code while staying as close to natural language as possible, making it both rigorous and accessible. ([Star the repo!](https://github.com/litexlang/golitex)) With just one to two hours of learning the fundamentals, you can write code that solves interesting mathematical problems with verified correctness! Litex automatically verifies your proofs and shows you step-by-step how each inference is executed, making the reasoning process transparent and educational.
 
 How does Litex work? It achieves its simplicity by imitating how people reason and how mathematics works. *Litex uses a set of axioms (i.e. ZFC axioms and basic logic) and inference rules that are sufficiently expressive to capture mathematical concepts. (axioms + inference rules = math world)* Its close-to-natural-language syntax means users often forget they're using a formal language, lowering the barrier of formal reasoning by 10x compared with traditional formal languages. We want to make Litex easy-to-learn even for 10-year-old beginners in mathematical proof and verification.
 
