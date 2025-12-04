@@ -104,12 +104,12 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 		execRet = exec.haveFnStmt(stmt)
 	case *ast.HaveFnCaseByCaseStmt:
 		execRet = exec.haveFnCaseByCaseStmt(stmt)
-	case *ast.MarkdownStmt:
-		execRet = exec.markdownStmt(stmt)
-		return execRet
-	case *ast.LatexStmt:
-		execRet = exec.latexStmt(stmt)
-		return execRet
+	// case *ast.MarkdownStmt:
+	// 	execRet = exec.markdownStmt(stmt)
+	// 	return execRet
+	// case *ast.LatexStmt:
+	// 	execRet = exec.latexStmt(stmt)
+	// 	return execRet
 	case *ast.ClaimIffStmt:
 		execRet = exec.claimIffStmt(stmt)
 	case *ast.ProveInRangeSetStmt:
@@ -1116,15 +1116,15 @@ func (exec *Executor) Verify(fact ast.FactStmt, requireMsg bool) ExecRet {
 	return ver.VerFactStmt(fact, state)
 }
 
-func (exec *Executor) markdownStmt(stmt *ast.MarkdownStmt) ExecRet {
-	_ = stmt
-	return NewExecTrue("")
-}
+// func (exec *Executor) markdownStmt(stmt *ast.MarkdownStmt) ExecRet {
+// 	_ = stmt
+// 	return NewExecTrue("")
+// }
 
-func (exec *Executor) latexStmt(stmt *ast.LatexStmt) ExecRet {
-	_ = stmt
-	return NewExecTrue("")
-}
+// func (exec *Executor) latexStmt(stmt *ast.LatexStmt) ExecRet {
+// 	_ = stmt
+// 	return NewExecTrue("")
+// }
 
 func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropStmt) ExecRet {
 	err := exec.proveIsTransitivePropStmtBody(stmt)

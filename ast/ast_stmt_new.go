@@ -156,9 +156,9 @@ func NewKnowExistPropStmt(existProp *DefExistPropStmt, line uint) *KnowExistProp
 	return &KnowExistPropStmt{existProp, line}
 }
 
-func NewLatexStmt(comment string, line uint) *LatexStmt {
-	return &LatexStmt{comment, line}
-}
+// func NewLatexStmt(comment string, line uint) *LatexStmt {
+// 	return &LatexStmt{comment, line}
+// }
 
 func NewFnTemplateStmt(defHeader *DefHeader, templateDomFacts []FactStmt, fnTStruct *FnTStruct, line uint) *FnTemplateDefStmt {
 	return &FnTemplateDefStmt{defHeader, templateDomFacts, fnTStruct, line}
@@ -200,9 +200,9 @@ func NewClaimHaveFnStmt(defFnStmt *DefFnStmt, proof []Stmt, haveObjSatisfyFn Obj
 	return &HaveFnStmt{defFnStmt, proof, haveObjSatisfyFn, line}
 }
 
-func NewMarkdownStmt(comment string, line uint) *MarkdownStmt {
-	return &MarkdownStmt{comment, line}
-}
+// func NewMarkdownStmt(comment string, line uint) *MarkdownStmt {
+// 	return &MarkdownStmt{comment, line}
+// }
 
 // func NewProveInRange2Stmt(start int64, end int64, param string, domFacts ReversibleFacts, thenFacts []FactStmt, proofs []Stmt, line uint) *ProveInRange2tmt {
 // 	return &ProveInRange2tmt{start, end, param, domFacts, thenFacts, proofs, line}

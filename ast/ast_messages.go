@@ -877,9 +877,9 @@ func (stmt *KnowExistPropStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *LatexStmt) String() string {
-	return stmt.Comment
-}
+// func (stmt *LatexStmt) String() string {
+// 	return stmt.Comment
+// }
 
 func (stmt *FnTemplateDefStmt) String() string {
 	var builder strings.Builder
@@ -1088,9 +1088,9 @@ func (fnTStruct *FnTStruct) String() string {
 	return builder.String()
 }
 
-func (stmt *MarkdownStmt) String() string {
-	return stmt.Markdown
-}
+// func (stmt *MarkdownStmt) String() string {
+// 	return stmt.Markdown
+// }
 
 func (stmt *ClaimIffStmt) String() string {
 	var builder strings.Builder
