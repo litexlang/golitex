@@ -17,10 +17,11 @@ package litex_env
 import (
 	ast "golitex/ast"
 	cmp "golitex/cmp"
+	"strconv"
 )
 
 func (env *Env) ReplaceSymbolWithValue(fc ast.Obj) (bool, ast.Obj) {
-	if cmp.IsNumLitObj(fc) {
+	if cmp.IsNumExprLitObj(fc) {
 		return false, fc
 	}
 
@@ -33,7 +34,42 @@ func (env *Env) ReplaceSymbolWithValue(fc ast.Obj) (bool, ast.Obj) {
 	panic("")
 }
 
+func (env *Env) IsIndexOfTupleFnObjAndGetValueAtIndex(fc *ast.FnObj) (bool, ast.Obj) {
+	if ast.IsIndexOptFnObj(fc) && ast.IsTupleObj(fc.Params[0]) {
+		value := getTupleValueAtIndex(fc.Params[0].(*ast.FnObj), fc.Params[1])
+		if value != nil {
+			_, valueOfValue := env.ReplaceSymbolWithValue(value)
+			return true, valueOfValue
+		}
+		return false, nil
+	}
+
+	return false, nil
+}
+
+func getTupleValueAtIndex(tuple *ast.FnObj, index ast.Obj) ast.Obj {
+	if asAtom, ok := index.(ast.Atom); ok {
+		// string(asAtom) 是整数
+		index, err := strconv.Atoi(string(asAtom))
+		if err != nil {
+			return nil
+		}
+
+		if index >= 1 && index <= len(tuple.Params) {
+			return tuple.Params[index-1]
+		}
+
+		return nil
+	}
+
+	return nil
+}
+
 func (env *Env) GetValueOfFnObj(fc *ast.FnObj) (bool, ast.Obj) {
+	if ok, value := env.IsIndexOfTupleFnObjAndGetValueAtIndex(fc); ok {
+		return true, value
+	}
+
 	if symbolValue := env.GetSymbolSimplifiedValue(fc); symbolValue != nil {
 		return true, symbolValue
 	}

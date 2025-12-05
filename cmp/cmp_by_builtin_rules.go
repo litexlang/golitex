@@ -53,7 +53,7 @@ func CmpBy_Literally_NumLit_PolynomialArith(left, right ast.Obj) (bool, string, 
 	return false, "", nil
 }
 
-func IsNumLitObj(obj ast.Obj) bool {
+func IsNumExprLitObj(obj ast.Obj) bool {
 	_, ok, err := ast.MakeObjIntoNumLitExpr(obj)
 	if err != nil {
 		return false

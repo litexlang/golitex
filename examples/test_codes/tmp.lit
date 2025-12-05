@@ -1,3 +1,4 @@
-let x subsets_of(cart(R, R)), y x:
-    x $is_subset_of cart(R, R)
-y $in cart(R, R)
+prop online(x cart(R, R), a, b, c R):
+    a * x[1] + b * x[2] = c
+
+$online((1, 1), 1, 1, 2)

@@ -428,6 +428,13 @@ func (f Atom) String() string {
 	return string(f)
 }
 
+func IsTupleObj(obj Obj) bool {
+	if asFnObj, ok := obj.(*FnObj); ok {
+		return IsTupleFnObj(asFnObj)
+	}
+	return false
+}
+
 func IsTupleFnObj(f *FnObj) bool {
 	return f.FnHead.String() == glob.KeywordTuple
 }

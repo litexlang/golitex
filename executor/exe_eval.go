@@ -34,7 +34,7 @@ func (exec *Executor) simplifyNumExprObj(obj ast.Obj) (ast.Obj, ExecRet) {
 func (exec *Executor) evalObjThenSimplify(obj ast.Obj) (ast.Obj, ExecRet) {
 	// fmt.Println(obj)
 
-	if cmp.IsNumLitObj(obj) {
+	if cmp.IsNumExprLitObj(obj) {
 		return exec.simplifyNumExprObj(obj)
 	}
 
