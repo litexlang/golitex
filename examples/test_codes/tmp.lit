@@ -1,1 +1,3 @@
-have set a = {set}
+have set a = {1, 2}
+count(a) = 2
+$is_finite_set(a)

@@ -66,12 +66,6 @@ func (tb *tokenBlock) inlineFactThenSkipStmtTerminatorUntilEndSignals(ends []str
 			return nil, err
 		}
 		return uniFact.(ast.FactStmt), nil
-	case glob.KeywordWhen:
-		uniFact, err := tb.inlineWhenFactSkipTerminator(ends)
-		if err != nil {
-			return nil, err
-		}
-		return uniFact.(ast.FactStmt), nil
 	default:
 		return tb.inline_spec_or_enum_intensional_Equals_fact_skip_terminator()
 	}
@@ -285,47 +279,6 @@ func (tb *tokenBlock) inlineUniInterfaceSkipTerminator(ends []string) (ast.UniFa
 		return nil, err
 	}
 	return ast.NewUniFactWithIff(ast.NewUniFact(params, setParams, domFact, thenFact, tb.line), iffFacts, tb.line), nil
-}
-
-func (tb *tokenBlock) inlineWhenFactSkipTerminator(ends []string) (ast.UniFactInterface, error) {
-	err := tb.header.skip(glob.KeywordWhen)
-	if err != nil {
-		return nil, parserErrAtTb(err, tb)
-	}
-
-	// 可以写 : 也可以不写
-	if tb.header.is(glob.KeySymbolColon) {
-		err = tb.header.skip(glob.KeySymbolColon)
-		if err != nil {
-			return nil, parserErrAtTb(err, tb)
-		}
-	}
-
-	domFact, err := tb.inlineDomFactInUniFactInterface(ends)
-	if err != nil {
-		return nil, err
-	}
-
-	tb.header.skip(glob.KeySymbolRightArrow)
-	thenFact, isEnd, err := tb.thenFactsInUniFactInterface(ends)
-	if err != nil {
-		return nil, err
-	}
-
-	if isEnd {
-		return ast.NewUniFact([]string{}, []ast.Obj{}, domFact, thenFact, tb.line), nil
-	}
-
-	err = tb.header.skip(glob.KeySymbolEquivalent)
-	if err != nil {
-		return nil, parserErrAtTb(err, tb)
-	}
-
-	iffFacts, err := tb.thenFacts_SkipEnd_Semicolon_or_EOL(ends)
-	if err != nil {
-		return nil, err
-	}
-	return ast.NewUniFactWithIff(ast.NewUniFact([]string{}, []ast.Obj{}, domFact, thenFact, tb.line), iffFacts, tb.line), nil
 }
 
 func (tb *tokenBlock) thenFactsInUniFactInterface(ends []string) ([]ast.FactStmt, bool, error) {

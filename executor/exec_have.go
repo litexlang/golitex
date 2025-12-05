@@ -228,7 +228,7 @@ func (exec *Executor) haveIntensionalSetStmt(stmt *ast.HaveIntensionalSetStmt) E
 		return NewExecErr(state.String())
 	}
 	if state.IsUnknown() {
-		return NewExecErr("parent set of intensional set must be a set, i.e. `" + intensionalSetFact.ParentSet.String() + " in " + ast.Atom(glob.KeywordSet).String() + "` is true, but `" + intensionalSetFact.ParentSet.String() + " in " + ast.Atom(glob.KeywordSet).String() + "` is not")
+		return NewExecErr("parent set of intensional set must be a set, i.e. `" + intensionalSetFact.ParentSet.String() + " in " + ast.Atom(glob.KeywordSet).String() + "` must be true, but it is unknown")
 	}
 
 	defObjStmt := ast.NewDefLetStmt([]string{intensionalSetFact.CurSet.String()}, []ast.Obj{ast.Atom(glob.KeywordSet)}, []ast.FactStmt{intensionalSetFact}, stmt.Line)

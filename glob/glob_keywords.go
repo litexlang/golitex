@@ -60,8 +60,6 @@ const (
 	KeywordLift        = "lift"
 	KeywordNonEmptySet = "nonempty_set"
 
-	KeywordWhen = "when"
-
 	KeywordProveIsTransitiveProp = "prove_is_transitive_prop"
 
 	KeywordProveInRangeSet = "prove_in_range_set"
@@ -154,8 +152,6 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 
 	KeywordLift:        {},
 	KeywordNonEmptySet: {},
-
-	KeywordWhen: {},
 
 	KeywordAlgo:   {},
 	KeywordReturn: {},
@@ -381,7 +377,6 @@ var KeywordHelpMap = map[string]string{
 	KeywordProveByInduction:       "",
 	KeywordLift:                   "",
 	KeywordNonEmptySet:            "",
-	KeywordWhen:                   "",
 	KeywordProveIsTransitiveProp:  "",
 	KeywordProveInRangeSet:        "",
 	KeywordProveInRange:           "",
