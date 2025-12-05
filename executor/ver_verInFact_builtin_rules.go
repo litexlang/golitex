@@ -127,6 +127,15 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 		return verRet
 	}
 
+	// x[1] $in some_set
+	verRet = ver.verIndexOfObjInSomeSet(stmt, state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsTrue() {
+		return verRet
+	}
+
 	return NewExecUnknown("")
 }
 
@@ -823,4 +832,51 @@ func (ver *Verifier) litNumNotInNPosByLiteralShape(stmt *ast.SpecFactStmt, state
 	// 如果是数字表达式但字面上不是正整数形状（小数、负数、0或表达式），可以证明它不在正整数中
 	msg := fmt.Sprintf("%s is literally not a positive integer (not in the shape of positive integer)", stmt.Params[0])
 	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
+}
+
+func (ver *Verifier) verIndexOfObjInSomeSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	left := stmt.Params[0]
+	someSet := stmt.Params[1]
+
+	var leftAsFn *ast.FnObj
+	var ok bool
+
+	if leftAsFn, ok = left.(*ast.FnObj); !ok {
+		return NewExecUnknown("")
+	}
+
+	if leftAsFn.FnHead.String() != glob.KeywordIndexOpt {
+		return NewExecUnknown("")
+	}
+
+	// 找到它所在的 cart
+	objCartSet := ver.getCartSetFromObj(left)
+	if objCartSet == nil {
+		return NewExecUnknown("")
+	}
+
+	if len(leftAsFn.Params) != 2 {
+		return NewExecUnknown("")
+	}
+
+	index := leftAsFn.Params[1]
+	indexAsInt, err := strconv.Atoi(string(index.(ast.Atom)))
+	if err != nil {
+		return NewExecUnknown("")
+	}
+	if indexAsInt < 1 || indexAsInt > len(objCartSet.Params) {
+		return NewExecUnknown("")
+	}
+
+	// 看看在index处是不是在someSet中, index 是 整数
+	indexObj := objCartSet.Params[indexAsInt-1]
+	verRet := ver.VerFactStmt(ast.NewInFactWithFc(indexObj, someSet), state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsTrue() {
+		return verRet
+	}
+
+	return NewExecUnknown("")
 }
