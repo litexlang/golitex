@@ -12,15 +12,15 @@ know:
 
 # Definition of Empty Set
 prop self_is_empty_set(x set):
-    forall a obj:
+    forall a set:
         not a $in x
 
 # There is a builtin-in empty set in Litex
 have set self_builtin_empty_set = {}
-forall x obj:
+forall x set:
     not x $in self_builtin_empty_set
 
-exist_prop x obj st self_obj_exist_in_set(s set):
+exist_prop x set st self_obj_exist_in_set(s set):
     x $in s
 
 # There is just one empty set
@@ -30,7 +30,7 @@ claim:
         =>:
            $self_obj_exist_in_set(s)
     prove_by_contradiction:
-        forall x obj:
+        forall x set:
             not x $in s
         $self_is_empty_set(s)
         

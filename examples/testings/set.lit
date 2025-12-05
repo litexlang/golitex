@@ -13,12 +13,12 @@ prove:
         count(x) <= count(y)
 
 prove:
-    prop is_inter_item(A, B set, x obj):
+    prop is_inter_item(A, B set, x set):
         x $in A
         x $in B
 
     fn inter(A, B set) set:
-        forall x obj:
+        forall x set:
             x $in inter(A, B)
             <=>:
                 $is_inter_item(A, B, x)
