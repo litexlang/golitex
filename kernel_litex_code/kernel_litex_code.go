@@ -15,7 +15,7 @@
 package kernel_lib_litex_code
 
 var PipelineInitCode = `
-prop last_two_objects_are_equal(x, y, y2 obj):
+prop last_two_objects_are_equal(x, y, y2 set):
 	y = y2
 
 exist_prop a in_set st exist_obj_not_in_left_set_but_in_right_set(not_in_set, in_set set):
@@ -156,7 +156,6 @@ know:
     forall n N_pos, a finite_seq(R, n) => finite_seq_product(n, a, 1) = a(1)
 
 know:
-	$item_exists_in(obj)
 	$item_exists_in(N)
 	$item_exists_in(N_pos)
 	$item_exists_in(Z)
@@ -614,7 +613,7 @@ fn intersect(x, y set) set:
 		=>:
 			z $in intersect(x, y)
 
-know @item_in_intersect(z obj, x, y set):
+know @item_in_intersect(z set, x, y set):
 	z $in intersect(x, y)
 	=>:
 		z $in x
@@ -626,7 +625,7 @@ fn union(x, y set) set:
 	forall z y:
 		z $in union(x, y)
 
-know @item_in_union(z obj, x, y set):
+know @item_in_union(z set, x, y set):
 	z $in union(x, y)
 	=>:
 		z $in x or z $in y
@@ -640,7 +639,7 @@ fn complement(x, y set) set:
 			=>:
 				z $in complement(x, y)
 
-know @item_in_complement(z obj, x, y set):
+know @item_in_complement(z set, x, y set):
 	x $is_subset_of y
 	z $in complement(x, y)
 	=>:
@@ -696,7 +695,7 @@ know @subset_of_finite_set_is_finite_set(x set, y finite_set):
 
 prop is_cart(x set)
 
-prop is_tuple(x obj)
+prop is_tuple(x set)
 
 fn proj(x set, i N_pos) set:
 	dom:
@@ -769,7 +768,7 @@ know:
 		not z $in y
 		<=>:
 			z $in difference(x, y)
-know @item_in_difference(x, y set, z obj):
+know @item_in_difference(x, y set, z set):
 	z $in difference(x, y)
 	=>:
 		not z $in y
@@ -821,7 +820,7 @@ know:
 
 know forall x, y R: x > y or x <= y, x < y or x >= y, x = y or x != y
 
-prop equal_tuple(x, y obj, dim N_pos):
+prop equal_tuple(x, y set, dim N_pos):
 	$is_tuple(x)
 	$is_tuple(y)
 	dim(x) = dim
@@ -830,7 +829,7 @@ prop equal_tuple(x, y obj, dim N_pos):
 		x = y
 
 know:
-	forall x, y obj:
+	forall x, y set:
 		$is_tuple(x)
 		$is_tuple(y)
 		dim(x) = dim(y)
