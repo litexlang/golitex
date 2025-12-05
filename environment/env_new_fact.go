@@ -427,13 +427,13 @@ func simplifyNumExprObj(obj ast.Obj) ast.Obj {
 
 func (env *Env) storeSymbolSimplifiedValue(left, right ast.Obj) glob.GlobRet {
 	_, newLeft := env.ReplaceSymbolWithValue(left)
-	if cmp.IsNumLitObj(newLeft) {
+	if cmp.IsNumExprLitObj(newLeft) {
 		simplifiedNewLeft := simplifyNumExprObj(newLeft)
 		env.StoreTrueEqualValues(right, simplifiedNewLeft)
 	}
 
 	_, newRight := env.ReplaceSymbolWithValue(right)
-	if cmp.IsNumLitObj(newRight) {
+	if cmp.IsNumExprLitObj(newRight) {
 		simplifiedNewRight := simplifyNumExprObj(newRight)
 		env.StoreTrueEqualValues(left, simplifiedNewRight)
 	}
