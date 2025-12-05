@@ -24,12 +24,13 @@ have fn:
         l $is_subset_of cart(R, R)
     = l
 
-# release line(1, 1, 1) = {x cart(R, R): 1 * x[1] + 1 * x[2] = 1}
-$line_as_intensional_set(line(1, 1, 1), 1, 1, 1)
-line(1, 1, 1) = {x cart(R, R): 1 * x[1] + 1 * x[2] = 1}
-forall x line(1, 1, 1):
-    x $in cart(R, R)
-    1 * x[1] + 1 * x[2] = 1
+# 举例：line(1, 1, 1) 是 line 的实例
+prove:
+    $line_as_intensional_set(line(1, 1, 1), 1, 1, 1)
+    line(1, 1, 1) = {x cart(R, R): 1 * x[1] + 1 * x[2] = 1}
+    forall x line(1, 1, 1):
+        x $in cart(R, R)
+        1 * x[1] + 1 * x[2] = 1
 
 prove forall a, b, c R: a != 0 => line(a, b, c) = line(1, b/a, c/a):
     $line_as_intensional_set(line(a, b, c), a, b, c)
@@ -51,3 +52,30 @@ prove forall a, b, c R: a != 0 => line(a, b, c) = line(1, b/a, c/a):
     line(1, b/a, c/a) $is_subset_of line(a, b, c)
 
     line(a, b, c) = line(1, b/a, c/a)
+
+# 平面上的子集确实是直线
+exist_prop a, b, c R st is_line(s subsets(cart(R, R))):
+    $line_as_intensional_set(s, a, b, c)
+
+# line(1, 1, 1) 是直线
+prove:
+    $line_as_intensional_set(line(1, 1, 1), 1, 1, 1)
+    exist 1, 1, 1 st $is_line(line(1, 1, 1))
+
+# 是斜率
+exist_prop c R st is_slope(k R, s subsets(cart(R, R))):
+    $line_as_intensional_set(s, 1, k, c)
+
+# 1 是 line(1, 1, 1) 的斜率
+prove:
+    $line_as_intensional_set(line(1, 1, 1), 1, 1, 1)
+    exist 1 st $is_slope(1, line(1, 1, 1))
+
+# 是截距
+prop is_intercept(i R, a, b, c R):
+    (0, i) $in line(a, b, c)
+
+# 1 是 line(1, 1, 1) 的截距
+prove:
+    $line_as_intensional_set(line(1, 1, 1), 1, 1, 1)
+    $is_intercept(1, 1, 1, 1)
