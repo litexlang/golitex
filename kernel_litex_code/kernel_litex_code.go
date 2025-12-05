@@ -847,4 +847,26 @@ know forall x, y set => x = y <=> x $is_subset_of y, y $is_subset_of x
 
 know forall x R: abs(x) >= 0
 know forall x R: x >= 0 => sqrt(x) = 0 <=> x = 0
+
+exist_prop x X st $has_preimage(X, Y set, f fn(X)Y, y Y):
+	f(x) = y
+
+prop is_injective_fn(X set, Y set, f fn(X)Y):
+	forall x1, x2 X:
+		x1 != x2
+		=>:
+			f(x1) != f(x2)
+
+prop is_surjective_fn(X set, Y set, f fn(X)Y):
+	forall y Y:
+		$has_preimage(X, Y, f, y)
+
+prop is_bijective_fn(X set, Y set, f fn(X)Y):
+	$is_injective_fn(X, Y, f)
+	$is_surjective_fn(X, Y, f)
+
+# 如何证明集合是有限集合
+exist f fn(X)Y st exist_one_to_one_fn_to_finite_set(X finite_set, Y set):
+	$is_bijective_fn(X, Y, f)
+			
 `
