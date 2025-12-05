@@ -567,7 +567,7 @@ func (ver *Verifier) verInCartSet(stmt *ast.SpecFactStmt, state *VerState) ExecR
 	// Verify dim and elements
 	ret := ver.verInCartSet_DimAndElements(obj, cartSet, objCartSet, state)
 	if ret.IsNotTrue() {
-		return ret
+		return NewExecUnknown("")
 	}
 
 	return ver.maybeAddSuccessMsgString(state, stmt.String(), ret.String(), ret)
