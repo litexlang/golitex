@@ -8,6 +8,7 @@ forall x cart(R, R): x[1] > 0 => x $in s2
 have set s3 = {x cart(R, R): x[1] + x[2] = 0}
 forall x cart(R, R): x[1] + x[2] = 0 => x $in s3
 
+# = {} 的释放不是自动的，只能取个名字。本质原因是因为 = {} 是一个fact，{} 不是一个obj
 prop line_as_intensional_set(s set, a, b, c R):
     s = {x cart(R, R): a * x[1] + b * x[2] = c}
 
@@ -22,5 +23,3 @@ have fn:
         l $is_subset_of cart(R, R)
     = l
 
-$line_as_intensional_set(line(1, 1, 1), 1, 1, 1)
-line(1, 1, 1) = {x cart(R, R): 1 * x[1] + 1 * x[2] = 1}
