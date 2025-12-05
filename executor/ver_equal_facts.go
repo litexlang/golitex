@@ -157,7 +157,7 @@ func (ver *Verifier) FcsEqualBy_Eval_ShareKnownEqualMem(left, right ast.Obj, sta
 				return NewExecTrue("")
 			} else {
 				_, newLeft := ver.Env.ReplaceSymbolWithValue(leftEqualFc)
-				if cmp.IsNumLitObj(newLeft) {
+				if cmp.IsNumExprLitObj(newLeft) {
 					_, newRight := ver.Env.ReplaceSymbolWithValue(rightEqualFc)
 					if ok, _, _ := cmp.CmpBy_Literally_NumLit_PolynomialArith(newLeft, newRight); ok {
 						return NewExecTrue("")
