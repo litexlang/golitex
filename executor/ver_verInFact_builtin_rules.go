@@ -32,13 +32,21 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 
 	var verRet ExecRet
 
-	verRet = ver.verInSet_btRules(stmt, state)
+	verRet = ver.inSetFact(stmt, state)
 	if verRet.IsErr() {
 		return verRet
 	}
 	if verRet.IsTrue() {
 		return verRet
 	}
+
+	// verRet = ver.verInSet_btRules(stmt, state)
+	// if verRet.IsErr() {
+	// 	return verRet
+	// }
+	// if verRet.IsTrue() {
+	// 	return verRet
+	// }
 
 	verRet = ver.btLitNumInNatOrIntOrRatOrRealOrComplex(stmt, state)
 	if verRet.IsErr() {
@@ -83,14 +91,6 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 	verRet = ver.inFnTemplateFact(stmt, state)
 	if verRet.IsErr() {
 		return NewExecErr(verRet.String())
-	}
-	if verRet.IsTrue() {
-		return verRet
-	}
-
-	verRet = ver.inSetFact(stmt, state)
-	if verRet.IsErr() {
-		return verRet
 	}
 	if verRet.IsTrue() {
 		return verRet
@@ -253,57 +253,57 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state *VerState) E
 	return NewExecUnknown("")
 }
 
-func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	var verRet ExecRet
-	ok := ast.IsFcAtomEqualToGivenString(stmt.Params[1], glob.KeywordSet)
-	if !ok {
-		return NewExecUnknown("")
-	}
+// func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+// 	var verRet ExecRet
+// 	ok := ast.IsFcAtomEqualToGivenString(stmt.Params[1], glob.KeywordSet)
+// 	if !ok {
+// 		return NewExecUnknown("")
+// 	}
 
-	// 如果它是N, Z, Q, R, C, 则直接返回true
-	ok = ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordNatural) ||
-		ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordInteger) ||
-		ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordRational) ||
-		ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordReal) ||
-		ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordNPos)
-	if ok {
-		return ver.processOkMsg(state, stmt.String(), "%s is a builtin set", stmt.Params[0])
-	}
+// 	// 如果它是N, Z, Q, R, C, 则直接返回true
+// 	ok = ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordNatural) ||
+// 		ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordInteger) ||
+// 		ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordRational) ||
+// 		ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordReal) ||
+// 		ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordNPos)
+// 	if ok {
+// 		return ver.processOkMsg(state, stmt.String(), "%s is a builtin set", stmt.Params[0])
+// 	}
 
-	// 如果它是 cart(...)，直接返回true
-	if ast.IsFn_WithHeadName(stmt.Params[0], glob.KeywordCart) {
-		return ver.processOkMsg(state, stmt.String(), "%s is a builtin set", stmt.Params[0])
-	}
+// 	// 如果它是 cart(...)，直接返回true
+// 	if ast.IsFn_WithHeadName(stmt.Params[0], glob.KeywordCart) {
+// 		return ver.processOkMsg(state, stmt.String(), "%s is a builtin set", stmt.Params[0])
+// 	}
 
-	verRet = ver.FnTemplateIsASet(stmt, state.GetNoMsg())
-	if verRet.IsErr() {
-		return verRet
-	}
-	if verRet.IsTrue() {
-		msg := "When parameter sets of a fn template are all sets, then the fn template is a set"
-		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(msg))
-	}
+// 	verRet = ver.FnTemplateIsASet(stmt, state.GetNoMsg())
+// 	if verRet.IsErr() {
+// 		return verRet
+// 	}
+// 	if verRet.IsTrue() {
+// 		msg := "When parameter sets of a fn template are all sets, then the fn template is a set"
+// 		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(msg))
+// 	}
 
-	// 如果是被定义好了的fn_template，则直接返回true
-	asFcFn, ok := stmt.Params[1].(*ast.FnObj)
-	if !ok {
-		return NewExecUnknown("")
-	}
-	ok = ast.IsFnTemplate_FcFn(asFcFn)
-	if ok {
-		return ver.processOkMsg(state, stmt.String(), "%s is a fn template and all fn templates are sets", stmt.Params[0])
-	}
+// 	// 如果是被定义好了的fn_template，则直接返回true
+// 	asFcFn, ok := stmt.Params[1].(*ast.FnObj)
+// 	if !ok {
+// 		return NewExecUnknown("")
+// 	}
+// 	ok = ast.IsFnTemplate_FcFn(asFcFn)
+// 	if ok {
+// 		return ver.processOkMsg(state, stmt.String(), "%s is a fn template and all fn templates are sets", stmt.Params[0])
+// 	}
 
-	if leftAsAtom, ok := stmt.Params[0].(ast.Atom); ok {
-		// _, ok := ver.env.GetFnTemplateDef(leftAsAtom)
-		fnDef := ver.Env.GetLatestFnT_GivenNameIsIn(leftAsAtom.String())
-		if fnDef != nil {
-			return ver.processOkMsg(state, stmt.String(), "%s is a fn template and all fn templates are sets", leftAsAtom)
-		}
-	}
+// 	if leftAsAtom, ok := stmt.Params[0].(ast.Atom); ok {
+// 		// _, ok := ver.env.GetFnTemplateDef(leftAsAtom)
+// 		fnDef := ver.Env.GetLatestFnT_GivenNameIsIn(leftAsAtom.String())
+// 		if fnDef != nil {
+// 			return ver.processOkMsg(state, stmt.String(), "%s is a fn template and all fn templates are sets", leftAsAtom)
+// 		}
+// 	}
 
-	return NewExecUnknown("")
-}
+// 	return NewExecUnknown("")
+// }
 
 func (ver *Verifier) inSetFact(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	// right param is obj
@@ -321,7 +321,7 @@ func (ver *Verifier) inSetFact(stmt *ast.SpecFactStmt, state *VerState) ExecRet 
 
 	_ = state
 
-	return NewExecTrue("")
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), "In ZFC set theory, everything except set itself is a set. In Litex, any object except set, nonempty_set, finite_set is a set.", NewExecTrue(""))
 }
 
 func (ver *Verifier) falseInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
