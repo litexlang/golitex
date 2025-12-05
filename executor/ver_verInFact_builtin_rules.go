@@ -307,7 +307,7 @@ func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state *VerState) E
 
 func (ver *Verifier) inObjFact(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	// right param is obj
-	ok := ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordObj)
+	ok := ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordSet)
 	if !ok {
 		return NewExecUnknown("")
 	}
