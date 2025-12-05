@@ -104,7 +104,7 @@ func (ver *Verifier) dimFnRequirement(fnObj *ast.FnObj, state *VerState) ExecRet
 		return NewExecErr(fmt.Sprintf("parameters in %s must be 1, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
 	}
 	// 检查是否是 tuple
-	isTupleFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsTuple), []ast.Obj{fnObj.Params[0]}, glob.InnerGenLine)
+	isTupleFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsTuple), []ast.Obj{fnObj.Params[0]}, glob.BuiltinLine)
 	verRet := ver.VerFactStmt(isTupleFact, state)
 	if verRet.IsErr() {
 		return NewExecErr(verRet.String())
@@ -120,7 +120,7 @@ func (ver *Verifier) setDimFnRequirement(fnObj *ast.FnObj, state *VerState) Exec
 		return NewExecErr(fmt.Sprintf("parameters in %s must be 1, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
 	}
 
-	verRet := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsCart), []ast.Obj{fnObj.Params[0]}, glob.InnerGenLine), state)
+	verRet := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsCart), []ast.Obj{fnObj.Params[0]}, glob.BuiltinLine), state)
 	if verRet.IsErr() {
 		return NewExecErr(verRet.String())
 	}
@@ -136,7 +136,7 @@ func (ver *Verifier) parasSatisfyProjReq(fnObj *ast.FnObj, state *VerState) Exec
 	}
 
 	// x is cart
-	isCartFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsCart), []ast.Obj{fnObj.Params[0]}, glob.InnerGenLine)
+	isCartFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsCart), []ast.Obj{fnObj.Params[0]}, glob.BuiltinLine)
 	verRet := ver.VerFactStmt(isCartFact, state)
 	if verRet.IsErr() {
 		return NewExecErr(verRet.String())
@@ -155,7 +155,7 @@ func (ver *Verifier) parasSatisfyProjReq(fnObj *ast.FnObj, state *VerState) Exec
 	}
 
 	// index <= set_dim(x)
-	verRet = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{fnObj.Params[1], ast.NewFnObj(ast.Atom(glob.KeywordSetDim), []ast.Obj{fnObj.Params[0]})}, glob.InnerGenLine), state)
+	verRet = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{fnObj.Params[1], ast.NewFnObj(ast.Atom(glob.KeywordSetDim), []ast.Obj{fnObj.Params[0]})}, glob.BuiltinLine), state)
 	if verRet.IsErr() {
 		return NewExecErr(verRet.String())
 	} else if verRet.IsUnknown() {

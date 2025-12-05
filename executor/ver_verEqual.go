@@ -102,6 +102,54 @@ func (ver *Verifier) verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Obj, 
 }
 
 func (ver *Verifier) verEqualBuiltin(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
+	if verRet := ver.verEqualByBuiltinEval(left, right, state); verRet.IsErr() || verRet.IsTrue() {
+		return verRet
+	}
+
+	if verRet := ver.verEqualRightIsTuple(left, right, state); verRet.IsErr() || verRet.IsTrue() {
+		return verRet
+	}
+
+	if verRet := ver.verEqualRightIsTuple(right, left, state); verRet.IsErr() || verRet.IsTrue() {
+		return verRet
+	}
+
+	return NewExecUnknown("")
+}
+
+func (ver *Verifier) verEqualRightIsTuple(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
+	if ast.IsTupleObj(right) {
+		rightTuple := right.(*ast.FnObj)
+		rightLen := len(rightTuple.Params)
+
+		// 查 left 的类型是不是 tuple
+		isTupleFact := ast.NewSpecFactStmt(ast.TruePure, glob.KeywordIsTuple, []ast.Obj{left}, glob.BuiltinLine)
+		ret := ver.VerFactStmt(isTupleFact, state)
+		if ret.IsNotTrue() {
+			return NewExecUnknown("")
+		}
+
+		// 查 left 的 dim 等于 rightLen 吗
+		equalFact := ast.NewEqualFact(ast.NewFnObj(ast.Atom(glob.KeywordDim), []ast.Obj{left}), ast.Atom(fmt.Sprintf("%d", rightLen)))
+		ret = ver.VerFactStmt(equalFact, state)
+		if ret.IsNotTrue() {
+			return NewExecUnknown("")
+		}
+
+		// 查 每一位都相等
+		for i := range rightLen {
+			leftAtIndex := ast.NewFnObj(ast.Atom(glob.KeywordIndexOpt), []ast.Obj{left, ast.Atom(fmt.Sprintf("%d", i+1))})
+			equalFact := ast.EqualFact(leftAtIndex, rightTuple.Params[i])
+			ret = ver.VerFactStmt(equalFact, state)
+			if ret.IsNotTrue() {
+				return NewExecUnknown("")
+			}
+		}
+	}
+	return NewExecUnknown("")
+}
+
+func (ver *Verifier) verEqualByBuiltinEval(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
 	left = ver.evaluateNonNumberLiteralExpr(left)
 	right = ver.evaluateNonNumberLiteralExpr(right)
 
@@ -112,14 +160,6 @@ func (ver *Verifier) verEqualBuiltin(left ast.Obj, right ast.Obj, state *VerStat
 	if ok {
 		return ver.maybeAddSuccessMsgString(state, fmt.Sprintf("%s = %s", left, right), msg, NewExecTrue(""))
 	}
-
-	// // 如果是 fn 那就层层盘剥
-	// nextState := state.GetNoMsg()
-	// if verRet := ver.decomposeFcFnsAndCheckEquality(left, right, nextState, ver.verEqualBuiltin); verRet.IsErr() {
-	// 	return verRet
-	// } else if verRet.IsTrue() {
-	// 	return ver.maybeAddSuccessMsgString(state, fmt.Sprintf("%s = %s", left, right), "each item of %s and %s are equal correspondingly", verRet)
-	// }
 
 	return NewExecUnknown("")
 }

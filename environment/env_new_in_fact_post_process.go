@@ -136,7 +136,7 @@ func (e *Env) inFactPostProcess_InCart(obj ast.Obj, cartSet *ast.FnObj) glob.Glo
 		return ret
 	}
 	// 添加 is_tuple(obj) 的事实
-	isTupleFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsTuple), []ast.Obj{obj}, glob.InnerGenLine)
+	isTupleFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsTuple), []ast.Obj{obj}, glob.BuiltinLine)
 	ret = e.NewFact(isTupleFact)
 	if ret.IsErr() {
 		return ret
@@ -223,14 +223,14 @@ func (e *Env) equalFactPostProcess_cart(fact *ast.SpecFactStmt) glob.GlobRet {
 	}
 
 	// x $in set
-	inSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{fact.Params[0], ast.Atom(glob.KeywordSet)}, glob.InnerGenLine)
+	inSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{fact.Params[0], ast.Atom(glob.KeywordSet)}, glob.BuiltinLine)
 	ret := e.NewFact(inSetFact)
 	if ret.IsErr() {
 		return ret
 	}
 
 	// 让 $is_cart(x) 成立
-	isCartFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsCart), []ast.Obj{fact.Params[0]}, glob.InnerGenLine)
+	isCartFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsCart), []ast.Obj{fact.Params[0]}, glob.BuiltinLine)
 	ret = e.NewFact(isCartFact)
 	if ret.IsErr() {
 		return ret
@@ -239,7 +239,7 @@ func (e *Env) equalFactPostProcess_cart(fact *ast.SpecFactStmt) glob.GlobRet {
 	// dim(x) = len(cart.Params)
 	dimFn := ast.NewFnObj(ast.Atom(glob.KeywordSetDim), []ast.Obj{fact.Params[0]})
 	dimValue := ast.Atom(strconv.Itoa(len(cart.Params)))
-	dimEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{dimFn, dimValue}, glob.InnerGenLine)
+	dimEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{dimFn, dimValue}, glob.BuiltinLine)
 	ret = e.NewFact(dimEqualFact)
 	if ret.IsErr() {
 		return ret
@@ -248,7 +248,7 @@ func (e *Env) equalFactPostProcess_cart(fact *ast.SpecFactStmt) glob.GlobRet {
 	// proj(x, i+1) = cart.Params[i] for each i
 	for i, cartParam := range cart.Params {
 		projFn := ast.NewFnObj(ast.Atom(glob.KeywordProj), []ast.Obj{fact.Params[0], ast.Atom(strconv.Itoa(i + 1))})
-		projEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{projFn, cartParam}, glob.InnerGenLine)
+		projEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{projFn, cartParam}, glob.BuiltinLine)
 		ret = e.NewFact(projEqualFact)
 		if ret.IsErr() {
 			return ret
@@ -274,7 +274,7 @@ func (e *Env) equalFactPostProcess_tuple(obj ast.Obj, tupleObj ast.Obj) glob.Glo
 		indexedObj := ast.NewFnObj(ast.Atom(glob.KeywordIndexOpt), []ast.Obj{obj, indexObj})
 
 		// 创建相等事实: obj[index] = tuple[i]
-		indexEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{indexedObj, tuple.Params[i]}, glob.InnerGenLine)
+		indexEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{indexedObj, tuple.Params[i]}, glob.BuiltinLine)
 		ret := e.NewFact(indexEqualFact)
 		if ret.IsErr() {
 			return ret
@@ -293,7 +293,7 @@ func (e *Env) equalFactPostProcess_tupleTuple(leftTuple *ast.FnObj, rightTuple *
 
 	// 让每一位相等
 	for i := range len(leftTuple.Params) {
-		equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{leftTuple.Params[i], rightTuple.Params[i]}, glob.InnerGenLine)
+		equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{leftTuple.Params[i], rightTuple.Params[i]}, glob.BuiltinLine)
 		ret := e.NewFact(equalFact)
 		if ret.IsErr() {
 			return ret

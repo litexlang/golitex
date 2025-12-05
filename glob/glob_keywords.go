@@ -76,7 +76,6 @@ const (
 	KeywordBy        = "by"
 
 	KeywordImplication = "implication"
-	KeywordValue       = "value"
 
 	KeywordPrint = "print"
 
@@ -261,7 +260,7 @@ var SymbolSet map[string]struct{} = map[string]struct{}{
 	// KeySymbolQuestionMark: {}, // "?"
 }
 
-var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]struct{}{
+var BuiltinObjOrPropNames map[string]struct{} = map[string]struct{}{
 	// KeywordObj:           {},
 	KeywordSet:           {},
 	KeywordNatural:       {},
@@ -292,10 +291,22 @@ var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]s
 	KeywordNPos:        {},
 	KeywordNonEmptySet: {},
 	KeywordEval:        {},
+
+	KeywordCart:  {},
+	KeywordTuple: {},
+
+	KeywordIsCart:  {},
+	KeywordIsTuple: {},
+
+	KeywordSetDim: {},
+	KeywordDim:    {},
+
+	KeywordProj:     {},
+	KeywordIndexOpt: {},
 }
 
-func IsBuiltinKeywordKeySymbolCanBeFcAtomName(name string) bool {
-	_, ok := BuiltinKeywordKeySymbolCanBeFcAtomNameSet[name]
+func IsBuiltinObjOrPropName(name string) bool {
+	_, ok := BuiltinObjOrPropNames[name]
 	return ok
 }
 
@@ -381,7 +392,6 @@ var KeywordHelpMap = map[string]string{
 	KeywordProveAlgo:              "",
 	KeywordBy:                     "",
 	KeywordImplication:            "",
-	KeywordValue:                  "",
 	KeywordPrint:                  "",
 	KeywordCase:                   "",
 	KeywordProveCaseByCase:        "",
