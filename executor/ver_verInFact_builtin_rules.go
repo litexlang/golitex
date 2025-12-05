@@ -88,7 +88,7 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 		return verRet
 	}
 
-	verRet = ver.inObjFact(stmt, state)
+	verRet = ver.inSetFact(stmt, state)
 	if verRet.IsErr() {
 		return verRet
 	}
@@ -305,22 +305,23 @@ func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state *VerState) E
 	return NewExecUnknown("")
 }
 
-func (ver *Verifier) inObjFact(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) inSetFact(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	// right param is obj
 	ok := ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordSet)
 	if !ok {
 		return NewExecUnknown("")
 	}
 
-	atoms := ast.GetAtomsInObj(stmt.Params[0])
-	// 这里有点问题，N,Q,C 这种没算进去，要重新写一下。这里不能直接用 declared, 因为一方面 isDeclared会包含 prop, 一方面 obj isDeclared，会导致罗素悖论
-	ok = ver.Env.AtomsAreObj(atoms)
-	if !ok {
+	// 只要symbol不是 set, nonempty_set, finite_set, 则返true
+	if ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordSet) ||
+		ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordNonEmptySet) ||
+		ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordFiniteSet) {
 		return NewExecUnknown("")
 	}
 
-	msg := fmt.Sprintf("all atoms in %s are declared as obj or literal number", stmt.Params[0])
-	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
+	_ = state
+
+	return NewExecTrue("")
 }
 
 func (ver *Verifier) falseInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
