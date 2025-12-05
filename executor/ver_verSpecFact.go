@@ -436,7 +436,7 @@ func (ver *Verifier) verEqualTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *
 	dim := stmt.Params[2]
 
 	// 1. 证明 left 是 is_tuple
-	isTupleLeftFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsTuple), []ast.Obj{left}, glob.InnerGenLine)
+	isTupleLeftFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsTuple), []ast.Obj{left}, glob.BuiltinLine)
 	verRet := ver.VerFactStmt(isTupleLeftFact, state)
 	if verRet.IsErr() {
 		return verRet
@@ -446,7 +446,7 @@ func (ver *Verifier) verEqualTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *
 	}
 
 	// 2. 证明 right 是 is_tuple
-	isTupleRightFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsTuple), []ast.Obj{right}, glob.InnerGenLine)
+	isTupleRightFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsTuple), []ast.Obj{right}, glob.BuiltinLine)
 	verRet = ver.VerFactStmt(isTupleRightFact, state)
 	if verRet.IsErr() {
 		return verRet
@@ -457,7 +457,7 @@ func (ver *Verifier) verEqualTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *
 
 	// 3. 证明 dim(left) = dim
 	dimLeftFn := ast.NewFnObj(ast.Atom(glob.KeywordDim), []ast.Obj{left})
-	dimLeftEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{dimLeftFn, dim}, glob.InnerGenLine)
+	dimLeftEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{dimLeftFn, dim}, glob.BuiltinLine)
 	verRet = ver.VerFactStmt(dimLeftEqualFact, state)
 	if verRet.IsErr() {
 		return verRet
@@ -468,7 +468,7 @@ func (ver *Verifier) verEqualTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *
 
 	// 4. 证明 dim(right) = dim
 	dimRightFn := ast.NewFnObj(ast.Atom(glob.KeywordDim), []ast.Obj{right})
-	dimRightEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{dimRightFn, dim}, glob.InnerGenLine)
+	dimRightEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{dimRightFn, dim}, glob.BuiltinLine)
 	verRet = ver.VerFactStmt(dimRightEqualFact, state)
 	if verRet.IsErr() {
 		return verRet
@@ -508,7 +508,7 @@ func (ver *Verifier) verEqualTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *
 		rightIndexed := ast.NewFnObj(ast.Atom(glob.KeywordIndexOpt), []ast.Obj{right, indexObj})
 
 		// 创建相等事实: left[i] = right[i]
-		indexEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{leftIndexed, rightIndexed}, glob.InnerGenLine)
+		indexEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{leftIndexed, rightIndexed}, glob.BuiltinLine)
 		verRet = ver.VerFactStmt(indexEqualFact, state)
 		if verRet.IsErr() {
 			return verRet
