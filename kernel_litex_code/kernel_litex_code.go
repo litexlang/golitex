@@ -844,4 +844,7 @@ know forall x, y set: x $is_subset_of y => x $in subsets(y)
 prop is_intensional_set(x set)
 
 know forall x, y set => x = y <=> x $is_subset_of y, y $is_subset_of x
+
+know forall x R: abs(x) >= 0
+know forall x R: x >= 0 => sqrt(x) = 0 <=> x = 0
 `

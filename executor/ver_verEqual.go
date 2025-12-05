@@ -101,51 +101,6 @@ func (ver *Verifier) verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Obj, 
 	return NewExecUnknown("")
 }
 
-func (ver *Verifier) evaluateNonNumberLiteralExpr(obj ast.Obj) ast.Obj {
-	if objAsFn, ok := obj.(*ast.FnObj); ok {
-		// 尝试简化 set_dim(cart(...))
-		if simplified, replaced := ast.SimplifyDimCart(objAsFn); replaced {
-			return simplified
-		}
-		// 尝试简化 proj(cart(...), n)
-		if simplified, replaced := ast.SimplifyProjCart(objAsFn); replaced {
-			return simplified
-		}
-		// 如果是 [] 函数，从环境里读取 equalTo tuple 的东西出来，或者直接从 tuple 中读取
-		if ast.IsIndexOptFnObj(objAsFn) && len(objAsFn.Params) == 2 {
-			obj := objAsFn.Params[0]
-			indexObj := objAsFn.Params[1]
-
-			// 尝试将 index 转换为整数
-			index, ok := ast.ToInt(indexObj)
-			if !ok {
-				return obj
-			}
-
-			// 情况1: obj 本身就是一个 tuple，比如 (1,2)[1]
-			if objAsTuple, ok := obj.(*ast.FnObj); ok && ast.IsTupleFnObj(objAsTuple) {
-				if index >= 1 && index <= len(objAsTuple.Params) {
-					// 索引从 1 开始，所以需要减 1
-					return objAsTuple.Params[index-1]
-				}
-			}
-
-			// 情况2: 从环境里读取 equalTo tuple 的东西出来
-			tuple := ver.Env.GetObjTuple(obj)
-			if tuple != nil {
-				if tupleAsFn, ok := tuple.(*ast.FnObj); ok && ast.IsTupleFnObj(tupleAsFn) {
-					if index >= 1 && index <= len(tupleAsFn.Params) {
-						// 索引从 1 开始，所以需要减 1
-						return tupleAsFn.Params[index-1]
-					}
-				}
-			}
-		}
-	}
-
-	return obj
-}
-
 func (ver *Verifier) verEqualBuiltin(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
 	left = ver.evaluateNonNumberLiteralExpr(left)
 	right = ver.evaluateNonNumberLiteralExpr(right)
@@ -158,13 +113,13 @@ func (ver *Verifier) verEqualBuiltin(left ast.Obj, right ast.Obj, state *VerStat
 		return ver.maybeAddSuccessMsgString(state, fmt.Sprintf("%s = %s", left, right), msg, NewExecTrue(""))
 	}
 
-	// 如果是 fn 那就层层盘剥
-	nextState := state.GetNoMsg()
-	if verRet := ver.decomposeFcFnsAndCheckEquality(left, right, nextState, ver.verEqualBuiltin); verRet.IsErr() {
-		return verRet
-	} else if verRet.IsTrue() {
-		return ver.maybeAddSuccessMsgString(state, fmt.Sprintf("%s = %s", left, right), "each item of %s and %s are equal correspondingly", verRet)
-	}
+	// // 如果是 fn 那就层层盘剥
+	// nextState := state.GetNoMsg()
+	// if verRet := ver.decomposeFcFnsAndCheckEquality(left, right, nextState, ver.verEqualBuiltin); verRet.IsErr() {
+	// 	return verRet
+	// } else if verRet.IsTrue() {
+	// 	return ver.maybeAddSuccessMsgString(state, fmt.Sprintf("%s = %s", left, right), "each item of %s and %s are equal correspondingly", verRet)
+	// }
 
 	return NewExecUnknown("")
 }
