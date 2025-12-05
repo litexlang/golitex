@@ -767,7 +767,7 @@ func (s *EqualsFactStmt) ToLatexString() string {
 
 func (s *KnowExistPropStmt) ToLatexString() string {
 	var builder strings.Builder
-	defExistProp := NewDefExistPropStmt(s.ExistProp.DefBody, s.ExistProp.ExistParams, s.ExistProp.ExistParamSets, glob.InnerGenLine)
+	defExistProp := NewDefExistPropStmt(s.ExistProp.DefBody, s.ExistProp.ExistParams, s.ExistProp.ExistParamSets, glob.BuiltinLine)
 	builder.WriteString(defExistProp.ToLatexString())
 
 	builder.WriteString("\n\n")
