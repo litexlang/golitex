@@ -171,20 +171,6 @@ func (tb *tokenBlock) factStmt(uniFactDepth uniFactEnum) (ast.FactStmt, error) {
 		return tb.orStmt()
 	case glob.KeySymbolEqual:
 		return tb.equalsFactStmt()
-	case glob.KeywordWhen:
-		if tb.GetEnd() == glob.KeySymbolColon {
-			uniFact, err := tb.ifStmtMultiLines(uniFactDepth)
-			if err != nil {
-				return nil, err
-			}
-			return uniFact.(ast.FactStmt), nil
-		} else {
-			uniFact, err := tb.inlineWhenFactSkipTerminator([]string{})
-			if err != nil {
-				return nil, err
-			}
-			return uniFact.(ast.FactStmt), nil
-		}
 	default:
 		return tb.fact()
 	}
@@ -342,64 +328,6 @@ func (tb *tokenBlock) uniFactInterface(uniFactDepth uniFactEnum) (ast.UniFactInt
 		}
 
 		return ret, nil
-	}
-
-}
-
-func (tb *tokenBlock) ifStmtMultiLines(uniFactDepth uniFactEnum) (ast.UniFactInterface, error) {
-	err := tb.header.skip(glob.KeywordWhen)
-	if err != nil {
-		return nil, parserErrAtTb(err, tb)
-	}
-
-	if tb.header.is(glob.KeySymbolColon) {
-		err = tb.header.skip(glob.KeySymbolColon)
-		if err != nil {
-			return nil, parserErrAtTb(err, tb)
-		}
-
-		domainFacts, thenFacts, iffFacts, err := tb.uniFactBodyFacts(uniFactDepth.addDepth(), glob.KeySymbolRightArrow)
-		if err != nil {
-			return nil, parserErrAtTb(err, tb)
-		}
-
-		if len(iffFacts) == 0 {
-			return ast.NewUniFact([]string{}, []ast.Obj{}, domainFacts, thenFacts, tb.line), nil
-		} else {
-			ret := ast.NewUniFactWithIff(ast.NewUniFact([]string{}, []ast.Obj{}, domainFacts, thenFacts, tb.line), iffFacts, tb.line)
-
-			if len(thenFacts) == 0 {
-				// return nil, fmt.Errorf("expect %s section to have at least one fact in %s", glob.KeywordThen, ret)
-				return nil, fmt.Errorf("expect %s section to have at least one fact in %s", glob.KeySymbolRightArrow, ret)
-			}
-
-			return ret, nil
-		}
-	} else {
-		domainFacts := []ast.FactStmt{}
-		for !tb.header.is(glob.KeySymbolColon) {
-			fact, err := tb.inlineFactThenSkipStmtTerminatorUntilEndSignals([]string{})
-			if err != nil {
-				return nil, parserErrAtTb(err, tb)
-			}
-			domainFacts = append(domainFacts, fact)
-		}
-
-		err = tb.header.skip(glob.KeySymbolColon)
-		if err != nil {
-			return nil, parserErrAtTb(err, tb)
-		}
-
-		thenFacts := []ast.FactStmt{}
-		for _, block := range tb.body {
-			fact, err := block.factStmt(uniFactDepth.addDepth())
-			if err != nil {
-				return nil, parserErrAtTb(err, tb)
-			}
-			thenFacts = append(thenFacts, fact)
-		}
-
-		return ast.NewUniFact([]string{}, []ast.Obj{}, domainFacts, thenFacts, tb.line), nil
 	}
 
 }
