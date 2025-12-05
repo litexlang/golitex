@@ -295,13 +295,13 @@ var BuiltinObjOrPropNames map[string]struct{} = map[string]struct{}{
 	KeywordCart:  {},
 	KeywordTuple: {},
 
-	KeywordIsCart:  {},
-	KeywordIsTuple: {},
+	// KeywordIsCart:  {},
+	// KeywordIsTuple: {},
 
 	KeywordSetDim: {},
-	KeywordDim:    {},
+	// KeywordDim:    {},
 
-	KeywordProj:     {},
+	// KeywordProj:     {},
 	KeywordIndexOpt: {},
 }
 
