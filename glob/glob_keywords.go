@@ -20,7 +20,7 @@ const (
 	KeywordForall = "forall"
 	KeywordDom    = "dom" // 这是一种语法糖。本质上只要在定义集合的时候写了对集合的要求，那dom就不必要的，因为dom本质上是 ”临时添加新的要求"
 	// KeywordThen                 = "then"
-	KeywordObj       = "obj"
+	// KeywordObj       = "obj"
 	KeywordHave      = "have"
 	KeywordFn        = "fn"
 	KeywordProp      = "prop"
@@ -112,7 +112,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordForall: {},
 	KeywordDom:    {},
 	// KeywordThen:                 {},
-	KeywordObj:                  {},
+	// KeywordObj:                  {},
 	KeywordHave:                 {},
 	KeywordFn:                   {},
 	KeywordProp:                 {},
@@ -262,7 +262,7 @@ var SymbolSet map[string]struct{} = map[string]struct{}{
 }
 
 var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]struct{}{
-	KeywordObj:           {},
+	// KeywordObj:           {},
 	KeywordSet:           {},
 	KeywordNatural:       {},
 	KeywordInteger:       {},
@@ -334,10 +334,10 @@ var builtinPropObjNames = map[string]struct{}{
 
 // KeywordHelpMap stores help messages for each keyword
 var KeywordHelpMap = map[string]string{
-	KeywordSet:                    "",
-	KeywordForall:                 "",
-	KeywordDom:                    "",
-	KeywordObj:                    "",
+	KeywordSet:    "",
+	KeywordForall: "",
+	KeywordDom:    "",
+	// KeywordObj:                    "",
 	KeywordHave:                   "",
 	KeywordFn:                     "",
 	KeywordProp:                   "",

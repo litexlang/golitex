@@ -119,7 +119,7 @@ func (exec *Executor) useAlgoToEvalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj,
 		if ret.IsTrue() {
 			continue
 		} else {
-			execState := exec.defLetStmt(ast.NewDefLetStmt([]string{param}, []ast.Obj{ast.Atom(glob.KeywordObj)}, []ast.FactStmt{ast.NewEqualFact(ast.Atom(param), fnObj.Params[i])}, glob.InnerGenLine))
+			execState := exec.defLetStmt(ast.NewDefLetStmt([]string{param}, []ast.Obj{ast.Atom(glob.KeywordSet)}, []ast.FactStmt{ast.NewEqualFact(ast.Atom(param), fnObj.Params[i])}, glob.InnerGenLine))
 			if execState.IsNotTrue() {
 				return nil, NewExecErr(execState.String())
 			}
