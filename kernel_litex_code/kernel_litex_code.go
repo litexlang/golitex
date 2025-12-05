@@ -838,4 +838,8 @@ know:
 		forall i N_pos: i <= dim(x) => x[i] = y[i]
 		=>:
 			x = y
+
+fn subsets_of(x set) set
+know forall x set, y subsets_of(x): y $is_subset_of x
+know forall x, y set: x $is_subset_of y => x $in subsets_of(y)
 `

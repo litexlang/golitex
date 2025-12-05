@@ -22,10 +22,6 @@ import (
 )
 
 func (ver *Verifier) verNotTrueEqualSpecFact(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	if ret := ver.verSpecialPropBySpecialMethods(stmt, state); ret.IsTrue() || ret.IsErr() {
-		return ret
-	}
-
 	return ver.verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt, state)
 }
 
@@ -311,6 +307,11 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules_WithState(stmt *ast.SpecFa
 		return NewExecUnknown("")
 	}
 
+	// 如果右侧是0，且左边是减号，那就证明左边这两个东西不等
+	// if ret := ver.whenRightIsZeroAndLeftFnIsMinus(stmt, state); ret.IsNotUnknown() {
+	// 	return ret
+	// }
+
 	var leftValue, rightValue ast.Obj
 	if cmp.IsNumLitObj(stmt.Params[0]) {
 		leftValue = stmt.Params[0]
@@ -521,18 +522,6 @@ func (ver *Verifier) verEqualTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *
 	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
 }
 
-func (ver *Verifier) verSpecialPropBySpecialMethods(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	if stmt.NameIs(glob.KeySymbolLargerEqual) {
-		return ver.verLargerEqualBySpecialMethods(stmt, state)
-	}
-
-	if stmt.NameIs(glob.KeySymbolLessEqual) {
-		return ver.verLessEqualBySpecialMethods(stmt, state)
-	}
-
-	return NewExecUnknown("")
-}
-
 func (ver *Verifier) verLargerEqualBySpecialMethods(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	if len(stmt.Params) != 2 {
 		return NewExecUnknown("")
@@ -564,33 +553,59 @@ func (ver *Verifier) verLargerEqualBySpecialMethods(stmt *ast.SpecFactStmt, stat
 	return NewExecUnknown("")
 }
 
-func (ver *Verifier) verLessEqualBySpecialMethods(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	if len(stmt.Params) != 2 {
-		return NewExecUnknown("")
-	}
+// func (ver *Verifier) verLessEqualBySpecialMethods(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+// 	if len(stmt.Params) != 2 {
+// 		return NewExecUnknown("")
+// 	}
 
-	left := stmt.Params[0]
-	right := stmt.Params[1]
+// 	left := stmt.Params[0]
+// 	right := stmt.Params[1]
 
-	// 处理 <= 的情况: a <= b 等价于 (a < b) or (a = b)
-	lessFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLess), []ast.Obj{left, right}, stmt.Line)
+// 	// 处理 <= 的情况: a <= b 等价于 (a < b) or (a = b)
+// 	lessFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLess), []ast.Obj{left, right}, stmt.Line)
 
-	verRet := ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(lessFact, state)
-	if verRet.IsErr() {
-		return verRet
-	}
-	if verRet.IsTrue() {
-		return NewExecTrue(fmt.Sprintf("%s is proved by %s", stmt.String(), lessFact.String()))
-	}
+// 	verRet := ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(lessFact, state)
+// 	if verRet.IsErr() {
+// 		return verRet
+// 	}
+// 	if verRet.IsTrue() {
+// 		return NewExecTrue(fmt.Sprintf("%s is proved by %s", stmt.String(), lessFact.String()))
+// 	}
 
-	equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left, right}, stmt.Line)
-	verRet = ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(equalFact, state)
-	if verRet.IsErr() {
-		return verRet
-	}
-	if verRet.IsTrue() {
-		return NewExecTrue(fmt.Sprintf("%s is proved by %s", stmt.String(), equalFact.String()))
-	}
+// 	equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left, right}, stmt.Line)
+// 	verRet = ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(equalFact, state)
+// 	if verRet.IsErr() {
+// 		return verRet
+// 	}
+// 	if verRet.IsTrue() {
+// 		return NewExecTrue(fmt.Sprintf("%s is proved by %s", stmt.String(), equalFact.String()))
+// 	}
 
-	return NewExecUnknown("")
-}
+// 	return NewExecUnknown("")
+// }
+
+// func (ver *Verifier) whenRightIsZeroAndLeftFnIsMinus(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+// 	if len(stmt.Params) != 2 {
+// 		return NewExecUnknown("")
+// 	}
+
+// 	right := stmt.Params[0]
+// 	left := stmt.Params[1]
+
+// 	if rightAsAtom, ok := right.(ast.Atom); ok {
+// 		if string(rightAsAtom) == "0" {
+// 			leftAsFn, ok := left.(*ast.FnObj)
+// 			if !ok {
+// 				return NewExecUnknown("")
+// 			}
+
+// 			if leftAsFn.FnHead.String() == glob.KeySymbolMinus {
+// 				notEqualFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{leftAsFn.Params[0], leftAsFn.Params[1]}, glob.InnerGenLine)
+// 				ret := ver.VerFactStmt(notEqualFact, state)
+// 				return ret
+// 			}
+// 		}
+// 	}
+
+// 	return NewExecUnknown("")
+// }
