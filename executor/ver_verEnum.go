@@ -74,7 +74,7 @@ func (ver *Verifier) forallObjNotInSetThenTheSetIsEmpty(stmt *ast.EnumStmt, stat
 		return NewExecUnknown("")
 	}
 
-	allObjectsNotInSetThenSetIsEmpty := ast.NewUniFact([]string{"x"}, []ast.Obj{ast.Atom(glob.KeywordObj)}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeywordIn), []ast.Obj{ast.Atom("x"), stmt.CurSet}, stmt.Line)}, stmt.Line)
+	allObjectsNotInSetThenSetIsEmpty := ast.NewUniFact([]string{"x"}, []ast.Obj{ast.Atom(glob.KeywordSet)}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeywordIn), []ast.Obj{ast.Atom("x"), stmt.CurSet}, stmt.Line)}, stmt.Line)
 	verRet := ver.VerFactStmt(allObjectsNotInSetThenSetIsEmpty, state)
 	if verRet.IsErr() || verRet.IsUnknown() {
 		return verRet

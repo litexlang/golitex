@@ -1,3 +1,4 @@
+"""
 prove:
     fn_template f(x, y R):
         dom:
@@ -105,3 +106,5 @@ prove:
     fn_add(f, f) $in fn(R,R)R
 
     fn_add(f, f)(1, 2) = f(1) + f(2)
+
+    """

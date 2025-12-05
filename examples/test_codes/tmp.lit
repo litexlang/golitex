@@ -14,9 +14,12 @@ prop line_as_intensional_set(s set, a, b, c R):
 
 have fn:
     line(a, b, c R) subsets(cart(R, R)):
-        line(a, b, c) = {x cart(R, R): a * x[1] + b * x[2] = c}
-        $line_as_intensional_set(line(a, b, c), a, b, c)
-        line(a, b, c) $in set
+        dom:
+            a != 0 or b != 0
+        =>:
+            line(a, b, c) = {x cart(R, R): a * x[1] + b * x[2] = c}
+            $line_as_intensional_set(line(a, b, c), a, b, c)
+            line(a, b, c) $in set
 
     prove:
         have set l = {x cart(R, R): a * x[1] + b * x[2] = c}
@@ -47,6 +50,9 @@ prove forall a, b, c R: a != 0 => line(a, b, c) = line(1, b/a, c/a):
         1 * x[1] + (b / a) * x[2] = c / a
         a * (1 * x[1] + (b / a) * x[2]) = a * x[1] + b * x[2] = a * (c / a) = c
         x $in line(a, b, c)
+
+    line(a, b, c) $in set
+    line(1, b/a, c/a) $in set
 
     line(a, b, c) $is_subset_of line(1, b/a, c/a)
     line(1, b/a, c/a) $is_subset_of line(a, b, c)
@@ -79,3 +85,24 @@ prop is_intercept(i R, a, b, c R):
 prove:
     $line_as_intensional_set(line(1, 1, 1), 1, 1, 1)
     $is_intercept(1, 1, 1, 1)
+
+# 两点式
+have fn:
+    line_two_points(x cart(R, R), y cart(R, R)) subsets(cart(R, R)):
+        dom:
+            x[2] - y[2] != 0 or y[1] - x[1] != 0
+        =>:
+            line_two_points(x, y) = line(x[2] - y[2], y[1] - x[1], x[2] * y[1] - x[1] * y[2])
+
+    prove:
+        have l subsets(cart(R, R)) = line(x[2] - y[2], y[1] - x[1], x[2] * y[1] - x[1] * y[2])
+
+    = l
+
+# (1, 0), (0, 1) 在直线 line(1, 1, 1) 上；他们用两点式做出来的直线就是 line(1, 1, 1)
+prove:
+    $line_as_intensional_set(line(1, 1, 1), 1, 1, 1)
+    (1, 0) $in line(1, 1, 1)
+    (0, 1) $in line(1, 1, 1)
+
+    line_two_points((1, 0), (0, 1)) = line((0-1), (0-1), (0 * 0 - 1 * 1)) = line(-1, -1, -1) = line(1, 1, 1)
