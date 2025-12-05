@@ -59,7 +59,7 @@ prove:
 # have objectName st item_exists_in(setName)
 # it has syntax sugar: have objectName setName
 prove:
-    let s set, a obj
+    let s set, a set
     know a $in s
     exist a st $item_exists_in(s)
     $item_exists_in(s)
