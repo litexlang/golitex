@@ -184,8 +184,18 @@ func (exec *Executor) checkInFactInSet_SetIsNonEmpty(pureInFact *ast.SpecFactStm
 }
 
 func (exec *Executor) haveEnumSetStmt(stmt *ast.HaveEnumSetStmt) ExecRet {
-
 	enumFact := stmt.Fact
+
+	// 里面全是set
+	for _, item := range enumFact.Items {
+		state := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{item, ast.Atom(glob.KeywordSet)}, stmt.Line))
+		if state.IsErr() {
+			return NewExecErr(state.String())
+		}
+		if state.IsUnknown() {
+			return NewExecErr("item of enum set must be a set, i.e. `" + item.String() + " in " + ast.Atom(glob.KeywordSet).String() + "` must be true, but it is unknown")
+		}
+	}
 
 	// 验证里面的各个元素不相等
 	for i := range len(enumFact.Items) {
