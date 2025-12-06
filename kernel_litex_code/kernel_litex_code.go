@@ -869,4 +869,9 @@ prop is_bijective_fn(X set, Y set, f fn(X)Y):
 exist_prop f fn(X)Y st exist_one_to_one_fn_to_finite_set(X finite_set, Y set):
 	$is_bijective_fn(X, Y, f)
 			
+know:
+	forall a, b, c R: a > 0, a * b > c => b > c / a
+	forall a, b R, c N_pos: a > 0, b > 0, a > b => a^c > b^c
+	forall a, b R: a != b <=> a - b != 0
+	forall a, b R: a > 0, b >= 0 => a + b > 0
 `

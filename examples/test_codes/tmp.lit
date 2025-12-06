@@ -1,3 +1,2 @@
-have set a = {1, 2}
-count(a) = 2
-$is_finite_set(a)
+let a, b R: a > 0, b > 0
+a >= 0
