@@ -682,10 +682,10 @@ func (exec *Executor) checkFnEqualStmt(stmt *ast.HaveFnEqualStmt) (ExecRet, erro
 
 	verRet := ver.VerFactStmt(ast.NewInFactWithFc(stmt.EqualTo, stmt.RetSet), Round0Msg)
 	if verRet.IsErr() {
-		return NewExecErr(""), fmt.Errorf(verRet.String())
+		return NewExecErr(verRet.String()), fmt.Errorf(verRet.String())
 	}
 	if verRet.IsUnknown() {
-		return NewExecErr(""), fmt.Errorf("according to the definition of %s, the returned value %s must be in %s, but\n%s is unknown", stmt, stmt.EqualTo, stmt.RetSet, ast.NewInFactWithFc(stmt.EqualTo, stmt.RetSet))
+		return NewExecErr(verRet.String()), fmt.Errorf("according to the definition of %s, the returned value %s must be in %s, but\n%s is unknown", stmt, stmt.EqualTo, stmt.RetSet, ast.NewInFactWithFc(stmt.EqualTo, stmt.RetSet))
 	}
 
 	return NewExecTrue(stmt.String()), nil
