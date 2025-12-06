@@ -22,7 +22,17 @@ import (
 )
 
 func (ver *Verifier) verNotTrueEqualSpecFact(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	return ver.verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt, state)
+	ret := ver.verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt, state)
+	if ret.IsTrue() || ret.IsErr() {
+		return ret
+	}
+
+	ret = ver.verSpecialFactInSpecialWays(stmt, state)
+	if ret.IsTrue() || ret.IsErr() {
+		return ret
+	}
+
+	return NewExecUnknown(stmt.String())
 }
 
 func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
