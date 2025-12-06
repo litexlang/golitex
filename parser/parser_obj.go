@@ -36,6 +36,10 @@ import (
 //		  → fnSet() [解析函数集合]
 //		  → bracedExpr_orTuple() [解析括号表达式]
 func (tb *tokenBlock) Obj() (ast.Obj, error) {
+	if tb.header.is(glob.KeySymbolLeftCurly) {
+		return tb.EnumSetObjOrIntensionalSetObj()
+	}
+
 	return tb.objInfixExpr(glob.PrecLowest)
 }
 
@@ -469,4 +473,99 @@ func (tb *tokenBlock) backSlashExpr() (ast.Obj, error) {
 	}
 
 	return ast.Atom(obj), nil
+}
+
+func (tb *tokenBlock) EnumSetObjOrIntensionalSetObj() (ast.Obj, error) {
+	err := tb.header.skip(glob.KeySymbolLeftCurly)
+	if err != nil {
+		return nil, err
+	}
+
+	if tb.header.is(glob.KeySymbolRightCurly) {
+		return makeEnumSetObj([]ast.Obj{}), nil
+	}
+
+	obj, err := tb.Obj()
+	if err != nil {
+		return nil, err
+	}
+
+	if !tb.header.is(glob.KeySymbolComma) && !tb.header.is(glob.KeySymbolRightCurly) {
+		return tb.intensionalSetObj(obj)
+	} else {
+		return tb.enumSetObj(obj)
+	}
+}
+
+func (tb *tokenBlock) intensionalSetObj(paramAsObj ast.Obj) (ast.Obj, error) {
+	param, ok := paramAsObj.(ast.Atom)
+	if !ok {
+		return nil, fmt.Errorf("expect parameter as atom")
+	}
+
+	parentSet, err := tb.Obj()
+	if err != nil {
+		return nil, err
+	}
+
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, err
+	}
+
+	facts := []ast.FactStmt{}
+	for !tb.header.is(glob.KeySymbolRightCurly) {
+		curFact, err := tb.inlineFactThenSkipStmtTerminatorUntilEndSignals([]string{glob.KeySymbolRightCurly})
+		if err != nil {
+			return nil, err
+		}
+		facts = append(facts, curFact)
+	}
+
+	// 跳过右花括号
+	err = tb.header.skip(glob.KeySymbolRightCurly)
+	if err != nil {
+		return nil, err
+	}
+
+	return makeIntensionalSetObj(string(param), parentSet, facts), nil
+}
+
+func (tb *tokenBlock) enumSetObj(firstParam ast.Obj) (ast.Obj, error) {
+	enumItems := []ast.Obj{firstParam}
+
+	// 跳过第一个逗号（如果存在）
+	tb.header.skipIfIs(glob.KeySymbolComma)
+
+	// 循环读取后续对象，直到遇到右花括号
+	for !tb.header.is(glob.KeySymbolRightCurly) {
+		curItem, err := tb.Obj()
+		if err != nil {
+			return nil, err
+		}
+		enumItems = append(enumItems, curItem)
+
+		// 跳过逗号（如果存在）
+		tb.header.skipIfIs(glob.KeySymbolComma)
+	}
+
+	// 跳过右花括号
+	err := tb.header.skip(glob.KeySymbolRightCurly)
+	if err != nil {
+		return nil, err
+	}
+
+	return makeEnumSetObj(enumItems), nil
+}
+
+func makeEnumSetObj(params []ast.Obj) ast.Obj {
+	return ast.NewFnObj(ast.Atom(glob.KeywordEnumSet), params)
+}
+
+func makeIntensionalSetObj(param string, parentSet ast.Obj, facts []ast.FactStmt) ast.Obj {
+	params := []ast.Obj{ast.Atom(param), parentSet}
+	for _, fact := range facts {
+		params = append(params, ast.Atom(fact.String()))
+	}
+	return ast.NewFnObj(ast.Atom(glob.KeywordIntensionalSet), params)
 }
