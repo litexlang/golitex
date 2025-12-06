@@ -1,2 +1,15 @@
-let a, b R: a > 0, b > 0
-a >= 0
+fn f(x R) R:
+    dom:
+        x >= 0
+    =>:
+        f(x) = x + 1
+
+fn g(x R) R
+
+know forall x R: x > 0 => g(x) > 0
+
+know forall x R: x > 0 => f(x) > 0
+
+f(1) > 0
+
+g(2) / g(f(1)) = g(2) / g(f(1))
