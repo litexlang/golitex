@@ -343,19 +343,6 @@ func ToInt(obj Obj) (int, bool) {
 	return num, true
 }
 
-// func (stmt *ProveInRange2tmt) UniFact() *UniFactStmt {
-// 	params := []string{stmt.Param}
-// 	paramSets := []Fc{FcAtom(glob.KeywordInteger)}
-// 	largerEqualThanLeft := NewSpecFactStmt(TruePure, FcAtom(glob.KeySymbolLargerEqual), []Fc{FcAtom(stmt.Param), FcAtom(fmt.Sprintf("%d", stmt.Start))}, stmt.Line)
-// 	smallerThanRight := NewSpecFactStmt(TruePure, FcAtom(glob.KeySymbolLess), []Fc{FcAtom(stmt.Param), FcAtom(fmt.Sprintf("%d", stmt.End))}, stmt.Line)
-// 	domFacts := []FactStmt{largerEqualThanLeft, smallerThanRight}
-// 	for _, fact := range stmt.DomFacts {
-// 		domFacts = append(domFacts, fact)
-// 	}
-// 	thenFacts := stmt.ThenFacts
-// 	return NewUniFact(params, paramSets, domFacts, thenFacts, stmt.Line)
-// }
-
 func ExtractParamsFromFact(fact FactStmt) []string {
 	switch asFact := fact.(type) {
 	case *UniFactStmt:

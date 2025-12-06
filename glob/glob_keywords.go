@@ -102,6 +102,9 @@ const (
 
 	// 用于一位一位的比较两个tuple。比如 equal_tuple(x, y, 2) 表示 x[1] = y[1] 且 x[2] = y[2]
 	KeywordEqualTuple = "equal_tuple"
+
+	KeywordEnumSet        = "{}"
+	KeywordIntensionalSet = "{:}"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -180,7 +183,9 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 
 	KeywordHaveCartWithDim: {},
 
-	KeywordEqualTuple: {},
+	KeywordEqualTuple:     {},
+	KeywordEnumSet:        {},
+	KeywordIntensionalSet: {},
 }
 
 const (
