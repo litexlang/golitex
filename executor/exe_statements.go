@@ -104,12 +104,6 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 		execRet = exec.haveFnStmt(stmt)
 	case *ast.HaveFnCaseByCaseStmt:
 		execRet = exec.haveFnCaseByCaseStmt(stmt)
-	// case *ast.MarkdownStmt:
-	// 	execRet = exec.markdownStmt(stmt)
-	// 	return execRet
-	// case *ast.LatexStmt:
-	// 	execRet = exec.latexStmt(stmt)
-	// 	return execRet
 	case *ast.ClaimIffStmt:
 		execRet = exec.claimIffStmt(stmt)
 	case *ast.ProveInRangeSetStmt:
