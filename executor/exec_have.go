@@ -184,10 +184,10 @@ func (exec *Executor) checkInFactInSet_SetIsNonEmpty(pureInFact *ast.SpecFactStm
 }
 
 func (exec *Executor) haveEnumSetStmt(stmt *ast.HaveEnumSetStmt) ExecRet {
-	enumFact := stmt.Fact
+	enumSetObj := stmt.EnumSetObj
 
 	// 里面全是set
-	for _, item := range enumFact.Items {
+	for _, item := range enumSetObj.Params {
 		state := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{item, ast.Atom(glob.KeywordSet)}, stmt.Line))
 		if state.IsErr() {
 			return NewExecErr(state.String())
@@ -198,9 +198,9 @@ func (exec *Executor) haveEnumSetStmt(stmt *ast.HaveEnumSetStmt) ExecRet {
 	}
 
 	// 验证里面的各个元素不相等
-	for i := range len(enumFact.Items) {
-		for j := i + 1; j < len(enumFact.Items); j++ {
-			notEqualFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{enumFact.Items[i], enumFact.Items[j]}, stmt.Line)
+	for i := range len(enumSetObj.Params) {
+		for j := i + 1; j < len(enumSetObj.Params); j++ {
+			notEqualFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{enumSetObj.Params[i], enumSetObj.Params[j]}, stmt.Line)
 			execRet := exec.Verify(notEqualFact, false)
 			if execRet.IsNotTrue() {
 				return NewExecErr(execRet.String())
@@ -209,7 +209,7 @@ func (exec *Executor) haveEnumSetStmt(stmt *ast.HaveEnumSetStmt) ExecRet {
 	}
 
 	// 定义这个新的集合
-	defObjStmt := ast.NewDefLetStmt([]string{enumFact.CurSet.String()}, []ast.Obj{ast.Atom(glob.KeywordSet)}, []ast.FactStmt{enumFact}, stmt.Line)
+	defObjStmt := ast.NewDefLetStmt([]string{stmt.Name}, []ast.Obj{ast.Atom(glob.KeywordSet)}, []ast.FactStmt{ast.NewEqualFact(ast.Atom(stmt.Name), enumSetObj)}, stmt.Line)
 	execState := exec.defLetStmt(defObjStmt)
 	if execState.IsNotTrue() {
 		return execState

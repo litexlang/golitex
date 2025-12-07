@@ -1828,7 +1828,7 @@ func (tb *tokenBlock) enumStmt_or_intensionalSetStmt_or_DomOf(obj ast.Obj) (ast.
 			return nil, fmt.Errorf("")
 		}
 
-		return ast.NewEnumStmt(obj, []ast.Obj{}, tb.line), nil
+		return ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{obj, ast.MakeEnumSetObj([]ast.Obj{})}, tb.line), nil
 	}
 
 	leftmost, err := tb.Obj()
@@ -1853,7 +1853,7 @@ func (tb *tokenBlock) enumStmt_or_intensionalSetStmt_or_DomOf(obj ast.Obj) (ast.
 			return nil, fmt.Errorf("")
 		}
 
-		return ast.NewEnumStmt(obj, enumItems, tb.line), nil
+		return ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{obj, ast.MakeEnumSetObj(enumItems)}, tb.line), nil
 	} else {
 		if _, ok := leftmost.(ast.Atom); !ok {
 			return nil, fmt.Errorf("expect obj atom")
@@ -2061,8 +2061,8 @@ func (tb *tokenBlock) haveSetStmt() (ast.Stmt, error) {
 		return nil, parserErrAtTb(err, tb)
 	}
 
-	if enumFact, ok := fact.(*ast.EnumStmt); ok {
-		return ast.NewHaveEnumSetStmt(enumFact, tb.line), nil
+	if enumFact, ok := fact.(*ast.SpecFactStmt); ok {
+		return ast.NewHaveEnumSetStmt(haveSetName, enumFact.Params[1].(*ast.FnObj), tb.line), nil
 	} else if intensionalSetFact, ok := fact.(*ast.IntensionalSetStmt); ok {
 		return ast.NewHaveIntensionalSetStmt(intensionalSetFact, tb.line), nil
 	} else {
