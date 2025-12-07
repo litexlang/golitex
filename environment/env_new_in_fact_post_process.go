@@ -43,6 +43,10 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 		return ret
 	}
 
+	if ret := e.inFactPostProcess_TryEnumSet(fact); ret.IsTrue() || ret.IsErr() {
+		return ret
+	}
+
 	return glob.TrueRet("")
 }
 
@@ -318,6 +322,19 @@ func (e *Env) equalFactPostProcess_tupleEquality(left ast.Obj, right ast.Obj) gl
 	} else if leftIsTuple && ast.IsTupleFnObj(leftTuple) {
 		// 如果左边是 tuple，右边是对象: (1, 2, ..) = a
 		return e.equalFactPostProcess_tuple(right, left)
+	}
+
+	return glob.TrueRet("")
+}
+
+func (e *Env) inFactPostProcess_TryEnumSet(fact *ast.SpecFactStmt) glob.GlobRet {
+	enumSet, ok := fact.Params[1].(*ast.FnObj)
+	if !ok {
+		return glob.ErrRet(fmt.Errorf("expected enum set to be FnObj, got %T", fact.Params[1]))
+	}
+
+	if !ast.IsEnumSetObj(enumSet) {
+		return glob.NewGlobUnknown("")
 	}
 
 	return glob.TrueRet("")
