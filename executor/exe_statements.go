@@ -514,18 +514,18 @@ func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) ExecRet {
 }
 
 func (exec *Executor) haveSetFnStmt(stmt *ast.HaveSetFnStmt) ExecRet {
-
+	panic("not implemented")
 	// declare related fn
-	fnDefStmt := stmt.ToDefFnStmt()
-	execState := exec.defFnStmt(fnDefStmt)
-	if execState.IsNotTrue() {
-		return execState
-	}
+	// fnDefStmt := stmt.ToDefFnStmt()
+	// execState := exec.defFnStmt(fnDefStmt)
+	// if execState.IsNotTrue() {
+	// 	return execState
+	// }
 
-	// have set fn
-	exec.Env.HaveSetFnDefMem[string(stmt.DefHeader.Name)] = *stmt
+	// // have set fn
+	// exec.Env.HaveSetFnDefMem[string(stmt.DefHeader.Name)] = *stmt
 
-	return NewExecTrue(stmt.String())
+	// return NewExecTrue(stmt.String())
 }
 
 func (exec *Executor) namedUniFactStmt(stmt *ast.NamedUniFactStmt) ExecRet {

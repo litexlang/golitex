@@ -54,16 +54,16 @@ func NoSelfReferenceInPropDef(propName string, facts []ast.FactStmt) error {
 			if err != nil {
 				return err
 			}
-		case *ast.IntensionalSetStmt:
-			facts := make([]ast.FactStmt, len(asFactStmt.Facts))
-			for i, fact := range asFactStmt.Facts {
-				facts[i] = fact
-			}
+		// case *ast.IntensionalSetStmt:
+		// 	facts := make([]ast.FactStmt, len(asFactStmt.Facts))
+		// 	for i, fact := range asFactStmt.Facts {
+		// 		facts[i] = fact
+		// 	}
 
-			err := NoSelfReferenceInPropDef(propName, facts)
-			if err != nil {
-				return err
-			}
+		// 	err := NoSelfReferenceInPropDef(propName, facts)
+		// 	if err != nil {
+		// 		return err
+		// 	}
 		default:
 			continue
 		}

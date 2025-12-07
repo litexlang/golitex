@@ -265,28 +265,28 @@ func (stmt *UniFactWithIffStmt) InstantiateFact(uniMap map[string]Obj) (FactStmt
 // 	return NewEnumStmt(enumName, newEnumValues, stmt.Line), nil
 // }
 
-func (stmt *IntensionalSetStmt) InstantiateFact(uniMap map[string]Obj) (FactStmt, error) {
-	newCurSet, err := stmt.CurSet.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
+// func (stmt *IntensionalSetStmt) InstantiateFact(uniMap map[string]Obj) (FactStmt, error) {
+// 	newCurSet, err := stmt.CurSet.Instantiate(uniMap)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	newParentSet, err := stmt.ParentSet.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
+// 	newParentSet, err := stmt.ParentSet.Instantiate(uniMap)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	newProofs := make([]*SpecFactStmt, len(stmt.Facts))
-	for i, proof := range stmt.Facts {
-		newProof, err := proof.InstantiateFact(uniMap)
-		if err != nil {
-			return nil, err
-		}
-		newProofs[i] = newProof.(*SpecFactStmt)
-	}
+// 	newProofs := make([]*SpecFactStmt, len(stmt.Facts))
+// 	for i, proof := range stmt.Facts {
+// 		newProof, err := proof.InstantiateFact(uniMap)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		newProofs[i] = newProof.(*SpecFactStmt)
+// 	}
 
-	return NewIntensionalSetStmt(newCurSet, stmt.Param, newParentSet, newProofs, stmt.Line), nil
-}
+// 	return NewIntensionalSetStmt(newCurSet, stmt.Param, newParentSet, newProofs, stmt.Line), nil
+// }
 
 func (stmt *EqualsFactStmt) InstantiateFact(uniMap map[string]Obj) (FactStmt, error) {
 	newParams := []Obj{}
@@ -941,9 +941,9 @@ func (stmt *OrStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 // 	return stmt.InstantiateFact(uniMap)
 // }
 
-func (stmt *IntensionalSetStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	return stmt.InstantiateFact(uniMap)
-}
+// func (stmt *IntensionalSetStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+// 	return stmt.InstantiateFact(uniMap)
+// }
 
 func (stmt *DefProveAlgoStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newStmts, err := stmt.Stmts.Instantiate(uniMap)

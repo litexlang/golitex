@@ -77,15 +77,15 @@ func (e *Env) isUserDefinedObj(atom ast.Atom) bool {
 	return false
 }
 
-func (e *Env) GetIntensionalSet(fc ast.Obj) *ast.IntensionalSetStmt {
-	for env := e; env != nil; env = env.Parent {
-		intensionalSet, ok := env.IntensionalSetMem[fc.String()]
-		if ok {
-			return &intensionalSet
-		}
-	}
-	return nil
-}
+// func (e *Env) GetIntensionalSet(fc ast.Obj) *ast.IntensionalSetStmt {
+// 	for env := e; env != nil; env = env.Parent {
+// 		intensionalSet, ok := env.IntensionalSetMem[fc.String()]
+// 		if ok {
+// 			return &intensionalSet
+// 		}
+// 	}
+// 	return nil
+// }
 
 func (e *Env) GetSymbolSimplifiedValue(fc ast.Obj) ast.Obj {
 	for env := e; env != nil; env = env.Parent {

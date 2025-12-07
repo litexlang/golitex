@@ -25,19 +25,19 @@ func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state 
 	// 1. Check if all atoms in the parameters are declared
 	// REMARK
 	// TODO： 一层层搜索的时候，会重复检查是否存在，可以优化。比如我要检查 a * f(b) $in R 的时候，我要查 a, f(b) 是否满足条件，就要查 f(b) $in R 是否成立，这时候又查了一遍 f, b 是否存在
-	for _, param := range stmt.Params {
-		ret := ver.Env.AreAtomsInFcAreDeclared(param, map[string]struct{}{})
-		if ret.IsErr() {
-			return state, NewExecErr(ret.String())
-		}
-	}
+	// for _, param := range stmt.Params {
+	// 	ret := ver.Env.AreAtomsInFcAreDeclared(param, map[string]struct{}{})
+	// 	if ret.IsErr() {
+	// 		return state, NewExecErr(ret.String())
+	// 	}
+	// }
 
 	// TODO: 这里有点问题。应该做的分类是：builtin的 stmt name，如in；以及非builtin的stmt name
 
 	// 2. Check if the parameters satisfy the requirement of the function requirements
 	stateNoMsg := state.GetNoMsg()
 	for _, param := range stmt.Params {
-		verRet := ver.objIsAtomOrIsFnSatisfyItsReq(param, stateNoMsg)
+		verRet := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(param, stateNoMsg)
 		if verRet.IsErr() {
 			return state, verRet
 		}
@@ -54,10 +54,15 @@ func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state 
 	return &newState, NewExecTrue("")
 }
 
-func (ver *Verifier) objIsAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *VerState) ExecRet {
-	if _, ok := obj.(ast.Atom); ok {
-		return NewExecTrue("")
+func (ver *Verifier) objIsDefinedAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *VerState) ExecRet {
+	if atom, ok := obj.(ast.Atom); ok {
+		if ver.Env.AreAtomsInFcAreDeclared(atom, map[string]struct{}{}).IsNotTrue() {
+			return NewExecErr(fmt.Sprintf("%s is not declared", atom))
+		} else {
+			return NewExecTrue("")
+		}
 	}
+
 	objAsFnObj, ok := obj.(*ast.FnObj)
 	if !ok {
 		return NewExecErr(fmt.Sprintf("%s is not a function", obj))
@@ -91,7 +96,7 @@ func (ver *Verifier) objIsAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *VerState) 
 // TODO: 非常缺乏检查。因为这里的验证非常麻烦，{}里包括了事实，而事实里有fn，所以需要检查fn行不行
 func (ver *Verifier) intensionalSetFnRequirement(objAsFnObj *ast.FnObj, state *VerState) ExecRet {
 	// parent is ok
-	ret := ver.objIsAtomOrIsFnSatisfyItsReq(objAsFnObj.Params[1], state)
+	ret := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(objAsFnObj.Params[1], state)
 	if ret.IsErr() {
 		return ret
 	}

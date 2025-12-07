@@ -148,11 +148,11 @@ func (e *Env) AreAtomsInFactAreDeclared(fact ast.FactStmt, extraAtomNames map[st
 			}
 		}
 		return glob.TrueRet("")
-	case *ast.IntensionalSetStmt:
-		atoms := fact.GetAtoms()
-		extraAtomNames[asStmt.Param] = struct{}{}
-		ret := e.AreAtomsDeclared(atoms, extraAtomNames)
-		return ret
+	// case *ast.IntensionalSetStmt:
+	// 	atoms := fact.GetAtoms()
+	// 	extraAtomNames[asStmt.Param] = struct{}{}
+	// 	ret := e.AreAtomsDeclared(atoms, extraAtomNames)
+	// 	return ret
 	default:
 		atoms := fact.GetAtoms()
 		ret := e.AreAtomsDeclared(atoms, extraAtomNames)

@@ -456,8 +456,6 @@ func (tb *tokenBlock) parseFactStartWithObj() (ast.FactStmt, error) {
 	if operator == glob.FuncFactPrefix {
 		fact, err = tb.parseFunctionPropertyFact(obj)
 		// } else if operator == glob.KeySymbolColonEqual {
-	} else if operator == glob.KeySymbolEqual && tb.header.is(glob.KeySymbolLeftCurly) {
-		fact, err = tb.inline_enum_intensional_fact_skip_terminator(obj)
 	} else {
 		fact, err = tb.parseInfixRelationalFact(obj, operator)
 	}
@@ -544,81 +542,82 @@ func (tb *tokenBlock) skipStmtComma() {
 
 // inline_enum_intensional_fact_skip_terminator parses enum intensional fact (x := {items} or x := {y | ...})
 // and skips statement terminator (comma)
-func (tb *tokenBlock) inline_enum_intensional_fact_skip_terminator(left ast.Obj) (ast.FactStmt, error) {
-	defer func() {
-		tb.skipStmtComma()
-	}()
+// func (tb *tokenBlock) inline_enum_intensional_fact_skip_terminator(left ast.Obj) (ast.FactStmt, error) {
+// 	defer func() {
+// 		tb.skipStmtComma()
+// 	}()
 
-	err := tb.header.skip(glob.KeySymbolLeftCurly)
-	if err != nil {
-		return nil, parserErrAtTb(err, tb)
-	}
+// 	err := tb.header.skip(glob.KeySymbolLeftCurly)
+// 	if err != nil {
+// 		return nil, parserErrAtTb(err, tb)
+// 	}
 
-	firstObj, err := tb.Obj()
-	if err != nil {
-		return nil, parserErrAtTb(err, tb)
-	}
+// 	firstObj, err := tb.Obj()
+// 	if err != nil {
+// 		return nil, parserErrAtTb(err, tb)
+// 	}
 
-	if tb.header.is(glob.KeySymbolComma) || tb.header.is(glob.KeySymbolRightCurly) {
-		if tb.header.is(glob.KeySymbolComma) {
-			tb.header.skip(glob.KeySymbolComma)
-		} else {
-			return ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left, ast.MakeEnumSetObj([]ast.Obj{firstObj})}, tb.line), nil
-		}
+// 	if tb.header.is(glob.KeySymbolComma) || tb.header.is(glob.KeySymbolRightCurly) {
+// 		if tb.header.is(glob.KeySymbolComma) {
+// 			tb.header.skip(glob.KeySymbolComma)
+// 		} else {
+// 			return ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left, ast.MakeEnumSetObj([]ast.Obj{firstObj})}, tb.line), nil
+// 		}
 
-		enumItems := []ast.Obj{firstObj}
-		for !tb.header.is(glob.KeySymbolRightCurly) {
-			obj, err := tb.Obj()
-			if err != nil {
-				return nil, parserErrAtTb(err, tb)
-			}
-			enumItems = append(enumItems, obj)
-			if tb.header.is(glob.KeySymbolComma) {
-				tb.header.skip(glob.KeySymbolComma)
-			}
-		}
+// 		enumItems := []ast.Obj{firstObj}
+// 		for !tb.header.is(glob.KeySymbolRightCurly) {
+// 			obj, err := tb.Obj()
+// 			if err != nil {
+// 				return nil, parserErrAtTb(err, tb)
+// 			}
+// 			enumItems = append(enumItems, obj)
+// 			if tb.header.is(glob.KeySymbolComma) {
+// 				tb.header.skip(glob.KeySymbolComma)
+// 			}
+// 		}
 
-		err = tb.header.skip(glob.KeySymbolRightCurly)
-		if err != nil {
-			return nil, parserErrAtTb(err, tb)
-		}
+// 		err = tb.header.skip(glob.KeySymbolRightCurly)
+// 		if err != nil {
+// 			return nil, parserErrAtTb(err, tb)
+// 		}
 
-		return ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left, ast.MakeEnumSetObj(enumItems)}, tb.line), nil
-	} else {
-		firstObjAsAtom := firstObj.(ast.Atom)
-		// 必须是纯的，不能是复合的
-		if glob.IsValidUseDefinedFcAtom(string(firstObjAsAtom)) != nil {
-			return nil, fmt.Errorf("the first item of enum must be an atom without package name, but got %s", firstObjAsAtom)
-		}
+// 		return ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left, ast.MakeEnumSetObj(enumItems)}, tb.line), nil
+// 	} else {
 
-		parentSet, err := tb.Obj()
-		if err != nil {
-			return nil, parserErrAtTb(err, tb)
-		}
+// firstObjAsAtom := firstObj.(ast.Atom)
+// // 必须是纯的，不能是复合的
+// if glob.IsValidUseDefinedFcAtom(string(firstObjAsAtom)) != nil {
+// 	return nil, fmt.Errorf("the first item of enum must be an atom without package name, but got %s", firstObjAsAtom)
+// }
 
-		err = tb.header.skip(glob.KeySymbolColon)
-		if err != nil {
-			return nil, parserErrAtTb(err, tb)
-		}
+// parentSet, err := tb.Obj()
+// if err != nil {
+// 	return nil, parserErrAtTb(err, tb)
+// }
 
-		facts := []*ast.SpecFactStmt{}
-		for !tb.header.is(glob.KeySymbolRightCurly) {
-			fact, err := tb.inlineSpecFactStmt_skip_terminator()
-			if err != nil {
-				return nil, parserErrAtTb(err, tb)
-			}
+// err = tb.header.skip(glob.KeySymbolColon)
+// if err != nil {
+// 	return nil, parserErrAtTb(err, tb)
+// }
 
-			facts = append(facts, fact)
-		}
+// facts := []*ast.SpecFactStmt{}
+// for !tb.header.is(glob.KeySymbolRightCurly) {
+// 	fact, err := tb.inlineSpecFactStmt_skip_terminator()
+// 	if err != nil {
+// 		return nil, parserErrAtTb(err, tb)
+// 	}
 
-		err = tb.header.skip(glob.KeySymbolRightCurly)
-		if err != nil {
-			return nil, parserErrAtTb(err, tb)
-		}
+// 	facts = append(facts, fact)
+// }
 
-		return ast.NewIntensionalSetStmt(left, string(firstObjAsAtom), parentSet, facts, tb.line), nil
-	}
-}
+// err = tb.header.skip(glob.KeySymbolRightCurly)
+// if err != nil {
+// 	return nil, parserErrAtTb(err, tb)
+// }
+
+// return ast.NewIntensionalSetStmt(left, string(firstObjAsAtom), parentSet, facts, tb.line), nil
+// 	}
+// }
 
 func (tb *tokenBlock) inlineFacts_checkUniDepth0(ends []string) ([]ast.FactStmt, error) {
 	facts, err := tb.inlineFacts_untilEndOfInline(ends)
