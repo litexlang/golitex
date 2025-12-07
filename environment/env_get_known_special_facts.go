@@ -118,3 +118,34 @@ func (e *Env) GetObjEnumSet(obj ast.Obj) ast.Obj {
 	}
 	return nil
 }
+
+// GetObjIntensionalSet 检查 obj 是否等于某个 intensional set
+// 通过获取所有环境中与 obj 相等的对象列表，检查其中是否有 intensional set
+// 或者从 IntensionalSetMem 中查找（如果 obj 等于某个已定义的 intensional set 的 CurSet）
+// 如果找到 intensional set 对象，返回该对象；如果找到 IntensionalSetStmt，返回其 CurSet；否则返回 nil
+func (e *Env) GetObjIntensionalSet(obj ast.Obj) ast.Obj {
+	// 如果 obj 本身就是一个 intensional set 对象，直接返回
+	if ast.IsIntensionalSetObj(obj) {
+		return obj
+	}
+
+	// 遍历所有环境
+	for env := e; env != nil; env = env.Parent {
+		// 获取当前环境中与 obj 相等的所有对象
+		equalFcs, ok := env.GetEqualFcs(obj)
+		if ok && equalFcs != nil {
+			// 检查其中是否有 intensional set 对象
+			for _, equalFc := range *equalFcs {
+				if ast.IsIntensionalSetObj(equalFc) {
+					return equalFc
+				}
+			}
+		}
+
+		// 从 IntensionalSetMem 中查找（如果 obj 等于某个已定义的 intensional set 的 CurSet）
+		if intensionalSetStmt := env.GetIntensionalSet(obj); intensionalSetStmt != nil {
+			return intensionalSetStmt.CurSet
+		}
+	}
+	return nil
+}

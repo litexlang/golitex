@@ -1,5 +1,14 @@
-have a set = {1, 2}
-have set b = {1, 2}
+prove:
+    have a {x R: x > 0}
+    a > 0
+    a $in R
 
-forall x b:
-    x = 1 or x = 2
+prove:
+    have a set = {x R: x > 0}
+    have set b = {x R: x > 0}
+
+    forall x b:
+        x > 0
+
+    forall x a:
+        x > 0

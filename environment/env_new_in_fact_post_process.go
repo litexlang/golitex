@@ -18,6 +18,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
+	parser "golitex/parser"
 	"strconv"
 )
 
@@ -44,6 +45,10 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 	}
 
 	if ret := e.inFactPostProcess_TryEnumSet(fact); ret.IsTrue() || ret.IsErr() {
+		return ret
+	}
+
+	if ret := e.inFactPostProcess_TryIntensionalSet(fact); ret.IsTrue() || ret.IsErr() {
 		return ret
 	}
 
@@ -356,4 +361,54 @@ func (e *Env) inFactPostProcess_TryEnumSet(fact *ast.SpecFactStmt) glob.GlobRet 
 	}
 
 	return e.inFactPostProcess_InEnumSet(fact.Params[0], enumSet)
+}
+
+func (e *Env) inFactPostProcess_TryIntensionalSet(fact *ast.SpecFactStmt) glob.GlobRet {
+	intensionalSetObj := e.GetObjIntensionalSet(fact.Params[1])
+	if intensionalSetObj == nil {
+		return glob.NewGlobUnknown("")
+	}
+
+	intensionalSet, ok := intensionalSetObj.(*ast.FnObj)
+	if !ok {
+		return glob.ErrRet(fmt.Errorf("expected intensional set to be FnObj, got %T", intensionalSetObj))
+	}
+
+	return e.inFactPostProcess_InIntensionalSet(fact.Params[0], intensionalSet)
+}
+
+func (e *Env) inFactPostProcess_InIntensionalSet(obj ast.Obj, intensionalSet *ast.FnObj) glob.GlobRet {
+	paramAsString, parentSet, facts, err := parser.GetParamParentSetFactsFromIntensionalSet(intensionalSet)
+	if err != nil {
+		return glob.ErrRet(err)
+	}
+
+	uniMap := map[string]ast.Obj{paramAsString: obj}
+
+	instFacts := []ast.FactStmt{}
+
+	for _, fact := range facts {
+		instFact, err := fact.InstantiateFact(uniMap)
+		if err != nil {
+			return glob.ErrRet(err)
+		}
+		instFacts = append(instFacts, instFact)
+	}
+
+	// in parent set
+	inParentSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{obj, parentSet}, glob.BuiltinLine)
+	ret := e.NewFact(inParentSetFact)
+	if ret.IsErr() {
+		return glob.ErrRet(err)
+	}
+
+	// intentional facts are true
+	for _, fact := range instFacts {
+		ret := e.NewFact(fact)
+		if ret.IsErr() {
+			return ret
+		}
+	}
+
+	return glob.TrueRet("")
 }
