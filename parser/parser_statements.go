@@ -2055,18 +2055,21 @@ func (tb *tokenBlock) haveSetStmt() (ast.Stmt, error) {
 		return ast.NewHaveCartSetStmt(haveSetName, cartObj, tb.line), nil
 	}
 
-	// Otherwise, parse as enum or intensional set
-	fact, err := tb.enumStmt_or_intensionalSetStmt_or_DomOf(ast.Atom(haveSetName))
+	obj, err := tb.Obj()
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
 	}
 
-	if enumFact, ok := fact.(*ast.SpecFactStmt); ok {
-		return ast.NewHaveEnumSetStmt(haveSetName, enumFact.Params[1].(*ast.FnObj), tb.line), nil
-	} else if intensionalSetFact, ok := fact.(*ast.IntensionalSetStmt); ok {
-		return ast.NewHaveIntensionalSetStmt(intensionalSetFact, tb.line), nil
+	if ast.IsEnumSetObj(obj) {
+		return ast.NewHaveEnumSetStmt(haveSetName, obj.(*ast.FnObj), tb.line), nil
+	} else if ast.IsIntensionalSetObj(obj) {
+		param, parentSet, facts, err := GetParamParentSetFactsFromIntensionalSet(obj.(*ast.FnObj))
+		if err != nil {
+			return nil, parserErrAtTb(err, tb)
+		}
+		return ast.NewHaveIntensionalSetStmt(param, parentSet, facts, tb.line), nil
 	} else {
-		return nil, fmt.Errorf("expect enum or intensional set")
+		return nil, fmt.Errorf("expect enum set or intensional set")
 	}
 }
 

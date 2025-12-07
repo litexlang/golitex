@@ -640,7 +640,11 @@ func (s *HaveIntensionalSetStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("\\begin{definition}[Set Exist By Axioms of Set Theory]")
 	builder.WriteString("We have a set: ")
-	builder.WriteString(s.Fact.ToLatexString())
+	builder.WriteString(s.Param)
+	builder.WriteString(" $\\in$ ")
+	builder.WriteString(s.ParentSet.ToLatexString())
+	builder.WriteString(" | ")
+	builder.WriteString(strings.Join(s.Facts.factStmtSliceToLatexStringSlice(), ", "))
 	builder.WriteString(".\n")
 	builder.WriteString("\\end{definition}")
 	return builder.String()
