@@ -88,6 +88,7 @@ func (ver *Verifier) objIsAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *VerState) 
 	}
 }
 
+// TODO: 非常缺乏检查。因为这里的验证非常麻烦，{}里包括了事实，而事实里有fn，所以需要检查fn行不行
 func (ver *Verifier) intensionalSetFnRequirement(objAsFnObj *ast.FnObj, state *VerState) ExecRet {
 	// parent is ok
 	ret := ver.objIsAtomOrIsFnSatisfyItsReq(objAsFnObj.Params[1], state)
