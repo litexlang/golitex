@@ -391,3 +391,7 @@ func SimplifyProjCart(fc *FnObj) (Obj, bool) {
 	}
 	return nil, false
 }
+
+func MakeEnumSetObj(params []Obj) *FnObj {
+	return NewFnObj(Atom(glob.KeywordEnumSet), params)
+}

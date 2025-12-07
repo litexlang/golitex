@@ -247,23 +247,23 @@ func (stmt *UniFactWithIffStmt) InstantiateFact(uniMap map[string]Obj) (FactStmt
 	return NewUniFactWithIff(newUniFact.(*UniFactStmt), instantiatedIffFacts, stmt.Line), nil
 }
 
-func (stmt *EnumStmt) InstantiateFact(uniMap map[string]Obj) (FactStmt, error) {
-	enumName, err := stmt.CurSet.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
+// func (stmt *EnumStmt) InstantiateFact(uniMap map[string]Obj) (FactStmt, error) {
+// 	enumName, err := stmt.CurSet.Instantiate(uniMap)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	newEnumValues := []Obj{}
-	for _, value := range stmt.Items {
-		newValue, err := value.Instantiate(uniMap)
-		if err != nil {
-			return nil, err
-		}
-		newEnumValues = append(newEnumValues, newValue)
-	}
+// 	newEnumValues := []Obj{}
+// 	for _, value := range stmt.Items {
+// 		newValue, err := value.Instantiate(uniMap)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		newEnumValues = append(newEnumValues, newValue)
+// 	}
 
-	return NewEnumStmt(enumName, newEnumValues, stmt.Line), nil
-}
+// 	return NewEnumStmt(enumName, newEnumValues, stmt.Line), nil
+// }
 
 func (stmt *IntensionalSetStmt) InstantiateFact(uniMap map[string]Obj) (FactStmt, error) {
 	newCurSet, err := stmt.CurSet.Instantiate(uniMap)
@@ -531,11 +531,11 @@ func (stmt *HaveObjInNonEmptySetStmt) Instantiate(uniMap map[string]Obj) (Stmt, 
 }
 
 func (stmt *HaveEnumSetStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	newFact, err := stmt.Fact.InstantiateFact(uniMap)
+	newEnumSetObj, err := stmt.EnumSetObj.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}
-	return NewHaveEnumSetStmt(newFact.(*EnumStmt), stmt.Line), nil
+	return NewHaveEnumSetStmt(stmt.Name, newEnumSetObj.(*FnObj), stmt.Line), nil
 }
 
 func (stmt *HaveIntensionalSetStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
@@ -932,9 +932,9 @@ func (stmt *OrStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return stmt.InstantiateFact(uniMap)
 }
 
-func (stmt *EnumStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	return stmt.InstantiateFact(uniMap)
-}
+// func (stmt *EnumStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+// 	return stmt.InstantiateFact(uniMap)
+// }
 
 func (stmt *IntensionalSetStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return stmt.InstantiateFact(uniMap)

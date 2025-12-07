@@ -186,10 +186,11 @@ func (s *UniFactWithIffStmt) InlineString() string {
 	return builder.String()
 }
 func (s *ClaimProveByContradictionStmt) InlineString() string { panic("") }
-func (s *EnumStmt) InlineString() string                      { panic("") }
-func (s *IntensionalSetStmt) InlineString() string            { panic("") }
-func (s *ClaimPropStmt) InlineString() string                 { panic("") }
-func (s *ClaimExistPropStmt) InlineString() string            { panic("") }
+
+// func (s *EnumStmt) InlineString() string                      { panic("") }
+func (s *IntensionalSetStmt) InlineString() string { panic("") }
+func (s *ClaimPropStmt) InlineString() string      { panic("") }
+func (s *ClaimExistPropStmt) InlineString() string { panic("") }
 
 // func (s *ProveByMathInductionStmt) InlineString() string        { panic("") }
 func (s *ProveByEnumStmt) InlineString() string                 { panic("") }

@@ -642,22 +642,22 @@ func (stmt *DefFnStmt) String() string {
 	return fnDefStmtStringGivenKw(glob.KeywordFn, stmt.FnTemplate, stmt.Name)
 }
 
-func (stmt *EnumStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(stmt.CurSet.String())
-	builder.WriteString(" ")
-	// builder.WriteString(glob.KeySymbolColonEqual)
-	builder.WriteString(glob.KeySymbolEqual)
-	builder.WriteString(" ")
-	builder.WriteString(glob.KeySymbolLeftCurly)
-	itemsStrSlice := make([]string, len(stmt.Items))
-	for i := range len(stmt.Items) {
-		itemsStrSlice[i] = stmt.Items[i].String()
-	}
-	builder.WriteString(strings.Join(itemsStrSlice, ", "))
-	builder.WriteString(glob.KeySymbolRightCurly)
-	return builder.String()
-}
+// func (stmt *EnumStmt) String() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(stmt.CurSet.String())
+// 	builder.WriteString(" ")
+// 	// builder.WriteString(glob.KeySymbolColonEqual)
+// 	builder.WriteString(glob.KeySymbolEqual)
+// 	builder.WriteString(" ")
+// 	builder.WriteString(glob.KeySymbolLeftCurly)
+// 	itemsStrSlice := make([]string, len(stmt.Items))
+// 	for i := range len(stmt.Items) {
+// 		itemsStrSlice[i] = stmt.Items[i].String()
+// 	}
+// 	builder.WriteString(strings.Join(itemsStrSlice, ", "))
+// 	builder.WriteString(glob.KeySymbolRightCurly)
+// 	return builder.String()
+// }
 
 func (stmt *ImportFileStmt) String() string {
 	var builder strings.Builder
@@ -785,7 +785,7 @@ func (stmt *HaveEnumSetStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordHave)
 	builder.WriteString(" ")
-	builder.WriteString(stmt.Fact.String())
+	builder.WriteString(stmt.EnumSetObj.String())
 	return builder.String()
 }
 

@@ -100,9 +100,9 @@ func NewDefFnStmt(name string, fnTemplate *FnTStruct, line uint) *DefFnStmt {
 	return &DefFnStmt{name, fnTemplate, line}
 }
 
-func NewEnumStmt(enumName Obj, enumValues []Obj, line uint) *EnumStmt {
-	return &EnumStmt{enumName, enumValues, line}
-}
+// func NewEnumStmt(enumName Obj, enumValues []Obj, line uint) *EnumStmt {
+// 	return &EnumStmt{enumName, enumValues, line}
+// }
 
 func NewImportFileStmt(path string, line uint) *ImportFileStmt {
 	return &ImportFileStmt{path, line}
@@ -128,8 +128,8 @@ func NewHaveObjInNonEmptySetStmt(objNames []string, objSets []Obj, line uint) *H
 	return &HaveObjInNonEmptySetStmt{objNames, objSets, line}
 }
 
-func NewHaveEnumSetStmt(fact *EnumStmt, line uint) *HaveEnumSetStmt {
-	return &HaveEnumSetStmt{fact, line}
+func NewHaveEnumSetStmt(name string, enumSetObj *FnObj, line uint) *HaveEnumSetStmt {
+	return &HaveEnumSetStmt{name, enumSetObj, line}
 }
 
 func NewHaveIntensionalSetStmt(fact *IntensionalSetStmt, line uint) *HaveIntensionalSetStmt {

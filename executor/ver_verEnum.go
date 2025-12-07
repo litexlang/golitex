@@ -14,72 +14,66 @@
 
 package litex_executor
 
-import (
-	"fmt"
-	ast "golitex/ast"
-	glob "golitex/glob"
-)
+// func (ver *Verifier) verEnumStmt(stmt *ast.EnumStmt, state *VerState) ExecRet {
+// 	if verRet := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.CurSet, ast.Atom(glob.KeywordFiniteSet)}, stmt.Line), state); verRet.IsErr() {
+// 		return verRet
+// 	} else if verRet.IsTrue() {
+// 		if verRet := ver.lenIsZeroThenEnumIsEmpty(stmt, state); verRet.IsTrue() {
+// 			return verRet
+// 		}
+// 	}
 
-func (ver *Verifier) verEnumStmt(stmt *ast.EnumStmt, state *VerState) ExecRet {
-	if verRet := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.CurSet, ast.Atom(glob.KeywordFiniteSet)}, stmt.Line), state); verRet.IsErr() {
-		return verRet
-	} else if verRet.IsTrue() {
-		if verRet := ver.lenIsZeroThenEnumIsEmpty(stmt, state); verRet.IsTrue() {
-			return verRet
-		}
-	}
+// 	if verRet := ver.forallObjNotInSetThenTheSetIsEmpty(stmt, state); verRet.IsTrue() {
+// 		return verRet
+// 	}
 
-	if verRet := ver.forallObjNotInSetThenTheSetIsEmpty(stmt, state); verRet.IsTrue() {
-		return verRet
-	}
+// 	forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts := ast.TransformEnumToUniFact(stmt.CurSet, stmt.Items)
 
-	forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts := ast.TransformEnumToUniFact(stmt.CurSet, stmt.Items)
+// 	verRet := ver.VerFactStmt(forallItemInSetEqualToOneOfGivenItems, state)
+// 	if verRet.IsErr() || verRet.IsUnknown() {
+// 		return verRet
+// 	}
 
-	verRet := ver.VerFactStmt(forallItemInSetEqualToOneOfGivenItems, state)
-	if verRet.IsErr() || verRet.IsUnknown() {
-		return verRet
-	}
+// 	for _, domFact := range pairwiseNotEqualFacts {
+// 		verRet := ver.VerFactStmt(domFact, state)
+// 		if verRet.IsErr() || verRet.IsUnknown() {
+// 			return verRet
+// 		}
+// 	}
 
-	for _, domFact := range pairwiseNotEqualFacts {
-		verRet := ver.VerFactStmt(domFact, state)
-		if verRet.IsErr() || verRet.IsUnknown() {
-			return verRet
-		}
-	}
+// 	for _, equalFact := range itemsInSetFacts {
+// 		verRet := ver.VerFactStmt(equalFact, state)
+// 		if verRet.IsErr() || verRet.IsUnknown() {
+// 			return verRet
+// 		}
+// 	}
 
-	for _, equalFact := range itemsInSetFacts {
-		verRet := ver.VerFactStmt(equalFact, state)
-		if verRet.IsErr() || verRet.IsUnknown() {
-			return verRet
-		}
-	}
+// 	return NewExecTrue("")
+// }
 
-	return NewExecTrue("")
-}
+// func (ver *Verifier) lenIsZeroThenEnumIsEmpty(stmt *ast.EnumStmt, state *VerState) ExecRet {
+// 	lenOverStmtName := ast.NewFnObj(ast.Atom(glob.KeywordCount), []ast.Obj{stmt.CurSet})
+// 	equalFact := ast.EqualFact(lenOverStmtName, ast.Atom("0"))
+// 	verRet := ver.VerFactStmt(equalFact, state)
+// 	if verRet.IsErr() || verRet.IsUnknown() {
+// 		return verRet
+// 	}
 
-func (ver *Verifier) lenIsZeroThenEnumIsEmpty(stmt *ast.EnumStmt, state *VerState) ExecRet {
-	lenOverStmtName := ast.NewFnObj(ast.Atom(glob.KeywordCount), []ast.Obj{stmt.CurSet})
-	equalFact := ast.EqualFact(lenOverStmtName, ast.Atom("0"))
-	verRet := ver.VerFactStmt(equalFact, state)
-	if verRet.IsErr() || verRet.IsUnknown() {
-		return verRet
-	}
+// 	msg := fmt.Sprintf("len(%s) = 0 is equivalent to %s", stmt.CurSet, stmt)
+// 	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
+// }
 
-	msg := fmt.Sprintf("len(%s) = 0 is equivalent to %s", stmt.CurSet, stmt)
-	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
-}
+// func (ver *Verifier) forallObjNotInSetThenTheSetIsEmpty(stmt *ast.EnumStmt, state *VerState) ExecRet {
+// 	if len(stmt.Items) != 0 {
+// 		return NewExecUnknown("")
+// 	}
 
-func (ver *Verifier) forallObjNotInSetThenTheSetIsEmpty(stmt *ast.EnumStmt, state *VerState) ExecRet {
-	if len(stmt.Items) != 0 {
-		return NewExecUnknown("")
-	}
+// 	allObjectsNotInSetThenSetIsEmpty := ast.NewUniFact([]string{"x"}, []ast.Obj{ast.Atom(glob.KeywordSet)}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeywordIn), []ast.Obj{ast.Atom("x"), stmt.CurSet}, stmt.Line)}, stmt.Line)
+// 	verRet := ver.VerFactStmt(allObjectsNotInSetThenSetIsEmpty, state)
+// 	if verRet.IsErr() || verRet.IsUnknown() {
+// 		return verRet
+// 	}
 
-	allObjectsNotInSetThenSetIsEmpty := ast.NewUniFact([]string{"x"}, []ast.Obj{ast.Atom(glob.KeywordSet)}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeywordIn), []ast.Obj{ast.Atom("x"), stmt.CurSet}, stmt.Line)}, stmt.Line)
-	verRet := ver.VerFactStmt(allObjectsNotInSetThenSetIsEmpty, state)
-	if verRet.IsErr() || verRet.IsUnknown() {
-		return verRet
-	}
-
-	msg := fmt.Sprintf("builtin rule:\n%s\nis equivalent to\n%s", allObjectsNotInSetThenSetIsEmpty, stmt)
-	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
-}
+// 	msg := fmt.Sprintf("builtin rule:\n%s\nis equivalent to\n%s", allObjectsNotInSetThenSetIsEmpty, stmt)
+// 	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
+// }
