@@ -482,6 +482,10 @@ func (tb *tokenBlock) EnumSetObjOrIntensionalSetObj() (ast.Obj, error) {
 	}
 
 	if tb.header.is(glob.KeySymbolRightCurly) {
+		err = tb.header.skip(glob.KeySymbolRightCurly)
+		if err != nil {
+			return nil, err
+		}
 		return makeEnumSetObj([]ast.Obj{}), nil
 	}
 
