@@ -523,6 +523,14 @@ func (tb *tokenBlock) intensionalSetObj(paramAsObj ast.Obj) (ast.Obj, error) {
 		if err != nil {
 			return nil, err
 		}
+		// 检查如果是 forall fact，它的参数里不应该等于 param
+		if uniFactParams := ast.ExtractParamsFromFact(curFact); uniFactParams != nil {
+			for _, uniFactParam := range uniFactParams {
+				if uniFactParam == string(param) {
+					return nil, fmt.Errorf("parameter %s in forall fact conflicts with intensional set parameter %s", uniFactParam, string(param))
+				}
+			}
+		}
 		facts = append(facts, curFact)
 	}
 

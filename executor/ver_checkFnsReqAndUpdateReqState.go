@@ -89,7 +89,17 @@ func (ver *Verifier) objIsAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *VerState) 
 }
 
 func (ver *Verifier) intensionalSetFnRequirement(objAsFnObj *ast.FnObj, state *VerState) ExecRet {
-	panic("not implemented")
+	// parent is ok
+	ret := ver.objIsAtomOrIsFnSatisfyItsReq(objAsFnObj.Params[1], state)
+	if ret.IsErr() {
+		return ret
+	}
+	if ret.IsUnknown() {
+		return NewExecErr(fmt.Sprintf("parent of %s must be a set, %s in %s is not valid", objAsFnObj, objAsFnObj.Params[1], objAsFnObj))
+	}
+
+	// check facts in intensional set satisfy fn requirement
+	return ver.verifyIntensionalSetFactsFnRequirement(objAsFnObj, state)
 }
 
 func (ver *Verifier) enumSetFnRequirement(objAsFnObj *ast.FnObj, state *VerState) ExecRet {
