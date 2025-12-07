@@ -64,7 +64,7 @@ type Env struct {
 
 	HaveSetFnDefMem HaveSetFnDefMem
 
-	IntensionalSetMem map[string]ast.IntensionalSetStmt
+	// IntensionalSetMem map[string]ast.IntensionalSetStmt
 
 	SymbolSimplifiedValueMem map[string]ast.Obj
 
@@ -117,17 +117,17 @@ func NewEnv(parent *Env) *Env {
 		packageManager = parent.PackageManager
 	}
 	env := &Env{
-		Parent:                   parent,
-		ObjDefMem:                make(ObjDefMem),
-		PropDefMem:               make(PropDefMem),
-		FnTemplateDefMem:         make(FnTemplateDefMem),
-		FnInFnTemplateFactsMem:   make(FnInFnTMem),
-		ExistPropDefMem:          make(ExistPropDefMem),
-		KnownFactsStruct:         makeKnownFactsStruct(),
-		EqualMem:                 make(map[string]shared_ptr_to_slice_of_fc),
-		EnumFacts:                make(map[string][]ast.Obj),
-		HaveSetFnDefMem:          make(HaveSetFnDefMem),
-		IntensionalSetMem:        make(map[string]ast.IntensionalSetStmt),
+		Parent:                 parent,
+		ObjDefMem:              make(ObjDefMem),
+		PropDefMem:             make(PropDefMem),
+		FnTemplateDefMem:       make(FnTemplateDefMem),
+		FnInFnTemplateFactsMem: make(FnInFnTMem),
+		ExistPropDefMem:        make(ExistPropDefMem),
+		KnownFactsStruct:       makeKnownFactsStruct(),
+		EqualMem:               make(map[string]shared_ptr_to_slice_of_fc),
+		EnumFacts:              make(map[string][]ast.Obj),
+		HaveSetFnDefMem:        make(HaveSetFnDefMem),
+		// IntensionalSetMem:        make(map[string]ast.IntensionalSetStmt),
 		SymbolSimplifiedValueMem: make(map[string]ast.Obj),
 		TransitivePropMem:        make(map[string]map[string][]ast.Obj),
 		CommutativePropMem:       make(map[string]*PropCommutativeCase),

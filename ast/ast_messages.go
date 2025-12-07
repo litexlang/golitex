@@ -737,27 +737,27 @@ func (stmt *ClaimExistPropStmt) String() string {
 // 	return builder.String()
 // }
 
-func (stmt *IntensionalSetStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(stmt.CurSet.String())
-	builder.WriteString(" ")
-	// builder.WriteString(glob.KeySymbolColonEqual)
-	builder.WriteString(glob.KeySymbolEqual)
-	builder.WriteString(" ")
-	builder.WriteString(glob.KeySymbolLeftCurly)
-	builder.WriteString(stmt.Param)
-	builder.WriteString(" ")
-	builder.WriteString(stmt.ParentSet.String())
-	builder.WriteString(" ")
-	builder.WriteString(glob.KeySymbolColon)
-	proofStrSlice := make([]string, len(stmt.Facts))
-	for i := range len(stmt.Facts) {
-		proofStrSlice[i] = stmt.Facts[i].InlineString()
-	}
-	builder.WriteString(strings.Join(proofStrSlice, ", "))
-	builder.WriteString(glob.KeySymbolRightCurly)
-	return builder.String()
-}
+// func (stmt *IntensionalSetStmt) String() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(stmt.CurSet.String())
+// 	builder.WriteString(" ")
+// 	// builder.WriteString(glob.KeySymbolColonEqual)
+// 	builder.WriteString(glob.KeySymbolEqual)
+// 	builder.WriteString(" ")
+// 	builder.WriteString(glob.KeySymbolLeftCurly)
+// 	builder.WriteString(stmt.Param)
+// 	builder.WriteString(" ")
+// 	builder.WriteString(stmt.ParentSet.String())
+// 	builder.WriteString(" ")
+// 	builder.WriteString(glob.KeySymbolColon)
+// 	proofStrSlice := make([]string, len(stmt.Facts))
+// 	for i := range len(stmt.Facts) {
+// 		proofStrSlice[i] = stmt.Facts[i].InlineString()
+// 	}
+// 	builder.WriteString(strings.Join(proofStrSlice, ", "))
+// 	builder.WriteString(glob.KeySymbolRightCurly)
+// 	return builder.String()
+// }
 
 func (stmt *ProveByEnumStmt) String() string {
 	var builder strings.Builder

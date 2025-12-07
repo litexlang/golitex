@@ -28,9 +28,9 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 	}
 
 	// Try different postprocessing strategies in order
-	if ret := e.inFactPostProcess_TrySetFnRetValue(fact); ret.IsTrue() || ret.IsErr() {
-		return ret
-	}
+	// if ret := e.inFactPostProcess_TrySetFnRetValue(fact); ret.IsTrue() || ret.IsErr() {
+	// 	return ret
+	// }
 
 	if ret := e.inFactPostProcess_TryFnTemplate(fact); ret.IsTrue() || ret.IsErr() {
 		return ret
@@ -56,13 +56,13 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 }
 
 // inFactPostProcess_TrySetFnRetValue handles a $in setFn(...) case
-func (e *Env) inFactPostProcess_TrySetFnRetValue(fact *ast.SpecFactStmt) glob.GlobRet {
-	def := e.GetSetFnRetValue(fact.Params[1])
-	if def == nil {
-		return glob.NewGlobUnknown("")
-	}
-	return e.inFactPostProcess_InSetFnRetValue(fact, def)
-}
+// func (e *Env) inFactPostProcess_TrySetFnRetValue(fact *ast.SpecFactStmt) glob.GlobRet {
+// 	def := e.GetSetFnRetValue(fact.Params[1])
+// 	if def == nil {
+// 		return glob.NewGlobUnknown("")
+// 	}
+// 	return e.inFactPostProcess_InSetFnRetValue(fact, def)
+// }
 
 // inFactPostProcess_TryFnTemplate handles a $in fnTemplate(...) case
 func (e *Env) inFactPostProcess_TryFnTemplate(fact *ast.SpecFactStmt) glob.GlobRet {
@@ -153,30 +153,30 @@ func (e *Env) inFactPostProcess_InCart(obj ast.Obj, cartSet *ast.FnObj) glob.Glo
 	return glob.TrueRet("")
 }
 
-func (e *Env) inFactPostProcess_InSetFnRetValue(fact *ast.SpecFactStmt, def *ast.HaveSetFnStmt) glob.GlobRet {
-	inFactRightParamAsFcFnPt, ok := fact.Params[1].(*ast.FnObj)
-	if !ok {
-		return glob.ErrRet(fmt.Errorf("in fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
-	}
+// func (e *Env) inFactPostProcess_InSetFnRetValue(fact *ast.SpecFactStmt, def *ast.HaveSetFnStmt) glob.GlobRet {
+// 	inFactRightParamAsFcFnPt, ok := fact.Params[1].(*ast.FnObj)
+// 	if !ok {
+// 		return glob.ErrRet(fmt.Errorf("in fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
+// 	}
 
-	uniMap := map[string]ast.Obj{}
-	for i, param := range def.DefHeader.Params {
-		uniMap[param] = inFactRightParamAsFcFnPt.Params[i]
-	}
+// 	uniMap := map[string]ast.Obj{}
+// 	for i, param := range def.DefHeader.Params {
+// 		uniMap[param] = inFactRightParamAsFcFnPt.Params[i]
+// 	}
 
-	defToIntensionalSetStmt := def.ToIntensionalSetStmt()
-	instantiated, err := defToIntensionalSetStmt.InstantiateFact(uniMap)
-	if err != nil {
-		return glob.ErrRet(err)
-	}
+// 	defToIntensionalSetStmt := def.ToIntensionalSetStmt()
+// 	instantiated, err := defToIntensionalSetStmt.InstantiateFact(uniMap)
+// 	if err != nil {
+// 		return glob.ErrRet(err)
+// 	}
 
-	ret := e.NewFact(instantiated)
-	if ret.IsErr() {
-		return ret
-	}
+// 	ret := e.NewFact(instantiated)
+// 	if ret.IsErr() {
+// 		return ret
+// 	}
 
-	return glob.TrueRet("")
-}
+// 	return glob.TrueRet("")
+// }
 
 func (e *Env) inFactPostProcess_InFnTemplate(fact *ast.SpecFactStmt) (bool, glob.GlobRet) {
 	if _, ok := fact.Params[1].(*ast.FnObj); !ok {

@@ -44,7 +44,7 @@ func (s *UniFactWithIffStmt) stmt()            {}
 func (s *ClaimProveByContradictionStmt) stmt() {}
 
 // func (s *EnumStmt) stmt()                        {}
-func (s *IntensionalSetStmt) stmt()              {}
+// func (s *IntensionalSetStmt) stmt()              {}
 func (s *ClaimPropStmt) stmt()                   {}
 func (s *ClaimExistPropStmt) stmt()              {}
 func (s *ProveByEnumStmt) stmt()                 {}
@@ -104,7 +104,7 @@ func (s *UniFactWithIffStmt) algoStmt()            {}
 func (s *ClaimProveByContradictionStmt) algoStmt() {}
 
 // func (s *EnumStmt) algoStmt()                        {}
-func (s *IntensionalSetStmt) algoStmt()              {}
+// func (s *IntensionalSetStmt) algoStmt()              {}
 func (s *ClaimPropStmt) algoStmt()                   {}
 func (s *ClaimExistPropStmt) algoStmt()              {}
 func (s *ProveByEnumStmt) algoStmt()                 {}
@@ -166,7 +166,7 @@ func (s *UniFactWithIffStmt) GetLine() uint            { return s.Line }
 func (s *ClaimProveByContradictionStmt) GetLine() uint { return s.Line }
 
 // func (s *EnumStmt) GetLine() uint                        { return s.Line }
-func (s *IntensionalSetStmt) GetLine() uint              { return s.Line }
+// func (s *IntensionalSetStmt) GetLine() uint              { return s.Line }
 func (s *ClaimPropStmt) GetLine() uint                   { return s.Line }
 func (s *ClaimExistPropStmt) GetLine() uint              { return s.Line }
 func (s *ProveByEnumStmt) GetLine() uint                 { return s.Line }
@@ -236,8 +236,8 @@ func (l *UniFactWithIffStmt) factStmt() {}
 func (s *OrStmt) factStmt()             {}
 
 // func (s *EnumStmt) factStmt()           {}
-func (s *IntensionalSetStmt) factStmt() {}
-func (s *EqualsFactStmt) factStmt()     {}
+// func (s *IntensionalSetStmt) factStmt() {}
+func (s *EqualsFactStmt) factStmt() {}
 
 type Spec_OrFact interface {
 	reversibleFact()
@@ -367,9 +367,9 @@ func (s *UniFactWithIffStmt) canBeKnown() {}
 func (s *OrStmt) canBeKnown()             {}
 
 // func (s *EnumStmt) canBeKnown()           {}
-func (s *IntensionalSetStmt) canBeKnown() {}
-func (s *EqualsFactStmt) canBeKnown()     {}
-func (s *KnowPropStmt) canBeKnown()       {}
+// func (s *IntensionalSetStmt) canBeKnown() {}
+func (s *EqualsFactStmt) canBeKnown() {}
+func (s *KnowPropStmt) canBeKnown()   {}
 
 type CanBeKnownStmtSlice []CanBeKnownStmt
 
@@ -420,6 +420,6 @@ func (l *UniFactWithIffStmt) proveAlgoReturnStmt() {}
 func (s *OrStmt) proveAlgoReturnStmt()             {}
 
 // func (s *EnumStmt) proveAlgoReturnStmt()           {}
-func (s *IntensionalSetStmt) proveAlgoReturnStmt() {}
-func (s *EqualsFactStmt) proveAlgoReturnStmt()     {}
-func (s *ByStmt) proveAlgoReturnStmt()             {}
+// func (s *IntensionalSetStmt) proveAlgoReturnStmt() {}
+func (s *EqualsFactStmt) proveAlgoReturnStmt() {}
+func (s *ByStmt) proveAlgoReturnStmt()         {}

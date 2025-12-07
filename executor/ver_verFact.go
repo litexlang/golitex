@@ -37,8 +37,8 @@ func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) ExecRet {
 		return ver.verUniFactWithIff(asStmt, state)
 	case *ast.EqualsFactStmt:
 		return ver.verEqualsFactStmt(asStmt, state)
-	case *ast.IntensionalSetStmt:
-		return ver.verIntensionalSetStmt(asStmt, state)
+	// case *ast.IntensionalSetStmt:
+	// 	return ver.verIntensionalSetStmt(asStmt, state)
 	// case *ast.EnumStmt:
 	// 	return ver.verEnumStmt(asStmt, state)
 	default:

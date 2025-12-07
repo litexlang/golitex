@@ -27,7 +27,7 @@ func (ver *Verifier) verifySpecFactFnRequirement(fact *ast.SpecFactStmt, state *
 
 	// 验证所有参数
 	for _, paramObj := range fact.Params {
-		verRet := ver.objIsAtomOrIsFnSatisfyItsReq(paramObj, stateNoMsg)
+		verRet := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(paramObj, stateNoMsg)
 		if verRet.IsErr() {
 			return NewExecErr(fmt.Sprintf("parameter %s in fact %s does not satisfy function requirement: %s", paramObj, fact, verRet.String()))
 		}
@@ -118,7 +118,7 @@ func (ver *Verifier) verifyAndDeclareParamsIteratively(params []string, paramSet
 		}
 
 		// 验证 paramSet 是否满足函数要求
-		verRet := ver.objIsAtomOrIsFnSatisfyItsReq(instantiatedParamSet, stateNoMsg)
+		verRet := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(instantiatedParamSet, stateNoMsg)
 		if verRet.IsErr() {
 			return nil, NewExecErr(fmt.Sprintf("param set %s for param %s does not satisfy function requirement: %s", instantiatedParamSet, param, verRet.String()))
 		}
