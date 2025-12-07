@@ -1769,8 +1769,8 @@ func (tb *tokenBlock) relaFact_intensionalSetFact_enumStmt_equals() (ast.FactStm
 
 			ret = ast.NewSpecFactStmt(ast.TruePure, propName, params, tb.line)
 		}
-	} else if opt == glob.KeySymbolEqual && tb.header.is(glob.KeySymbolLeftCurly) {
-		return tb.enumStmt_or_intensionalSetStmt_or_DomOf(obj)
+		// } else if opt == glob.KeySymbolEqual && tb.header.is(glob.KeySymbolLeftCurly) {
+		// 	return tb.enumStmt_or_intensionalSetStmt_or_DomOf(obj)
 	} else if glob.IsBuiltinInfixRelaPropSymbol(opt) {
 		obj2, err := tb.Obj()
 		if err != nil {
@@ -1810,87 +1810,87 @@ func (tb *tokenBlock) relaFact_intensionalSetFact_enumStmt_equals() (ast.FactStm
 	return ret, nil
 }
 
-func (tb *tokenBlock) enumStmt_or_intensionalSetStmt_or_DomOf(obj ast.Obj) (ast.FactStmt, error) {
-	// if tb.header.is(glob.KeySymbolLeftCurly) {
-	// 	return tb.enumFactualStmt(obj)
-	// } else {
-	// 	return tb.intensionalSetFactualStmt(obj)
-	// }
+// func (tb *tokenBlock) enumStmt_or_intensionalSetStmt_or_DomOf(obj ast.Obj) (ast.FactStmt, error) {
+// 	// if tb.header.is(glob.KeySymbolLeftCurly) {
+// 	// 	return tb.enumFactualStmt(obj)
+// 	// } else {
+// 	// 	return tb.intensionalSetFactualStmt(obj)
+// 	// }
 
-	err := tb.header.skip(glob.KeySymbolLeftCurly)
-	if err != nil {
-		return nil, fmt.Errorf("")
-	}
+// 	err := tb.header.skip(glob.KeySymbolLeftCurly)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("")
+// 	}
 
-	if tb.header.is(glob.KeySymbolRightCurly) {
-		err = tb.header.skip(glob.KeySymbolRightCurly)
-		if err != nil {
-			return nil, fmt.Errorf("")
-		}
+// 	if tb.header.is(glob.KeySymbolRightCurly) {
+// 		err = tb.header.skip(glob.KeySymbolRightCurly)
+// 		if err != nil {
+// 			return nil, fmt.Errorf("")
+// 		}
 
-		return ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{obj, ast.MakeEnumSetObj([]ast.Obj{})}, tb.line), nil
-	}
+// 		return ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{obj, ast.MakeEnumSetObj([]ast.Obj{})}, tb.line), nil
+// 	}
 
-	leftmost, err := tb.Obj()
-	if err != nil {
-		return nil, fmt.Errorf("")
-	}
+// 	leftmost, err := tb.Obj()
+// 	if err != nil {
+// 		return nil, fmt.Errorf("")
+// 	}
 
-	if tb.header.is(glob.KeySymbolComma) || tb.header.is(glob.KeySymbolRightCurly) {
-		enumItems := []ast.Obj{leftmost}
-		tb.header.skipIfIs(glob.KeySymbolComma) // 不能是 err = tb.header.skip(glob.KeySymbolComma) 因为这样会跳过 right curly
-		for !tb.header.is(glob.KeySymbolRightCurly) {
-			curItem, err := tb.Obj()
-			if err != nil {
-				return nil, fmt.Errorf("")
-			}
-			enumItems = append(enumItems, curItem)
-			tb.header.skipIfIs(glob.KeySymbolComma)
-		}
+// 	if tb.header.is(glob.KeySymbolComma) || tb.header.is(glob.KeySymbolRightCurly) {
+// 		enumItems := []ast.Obj{leftmost}
+// 		tb.header.skipIfIs(glob.KeySymbolComma) // 不能是 err = tb.header.skip(glob.KeySymbolComma) 因为这样会跳过 right curly
+// 		for !tb.header.is(glob.KeySymbolRightCurly) {
+// 			curItem, err := tb.Obj()
+// 			if err != nil {
+// 				return nil, fmt.Errorf("")
+// 			}
+// 			enumItems = append(enumItems, curItem)
+// 			tb.header.skipIfIs(glob.KeySymbolComma)
+// 		}
 
-		err = tb.header.skip(glob.KeySymbolRightCurly)
-		if err != nil {
-			return nil, fmt.Errorf("")
-		}
+// 		err = tb.header.skip(glob.KeySymbolRightCurly)
+// 		if err != nil {
+// 			return nil, fmt.Errorf("")
+// 		}
 
-		return ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{obj, ast.MakeEnumSetObj(enumItems)}, tb.line), nil
-	} else {
-		if _, ok := leftmost.(ast.Atom); !ok {
-			return nil, fmt.Errorf("expect obj atom")
-		} else {
-			if glob.IsValidUserDefinedNameWithoutPkgName(string(leftmost.(ast.Atom))) != nil {
-				return nil, fmt.Errorf("expect obj atom without pkg name")
-			}
-		}
+// 		return ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{obj, ast.MakeEnumSetObj(enumItems)}, tb.line), nil
+// 	} else {
+// 		if _, ok := leftmost.(ast.Atom); !ok {
+// 			return nil, fmt.Errorf("expect obj atom")
+// 		} else {
+// 			if glob.IsValidUserDefinedNameWithoutPkgName(string(leftmost.(ast.Atom))) != nil {
+// 				return nil, fmt.Errorf("expect obj atom without pkg name")
+// 			}
+// 		}
 
-		parentSet, err := tb.Obj()
-		if err != nil {
-			return nil, parserErrAtTb(err, tb)
-		}
+// 		parentSet, err := tb.Obj()
+// 		if err != nil {
+// 			return nil, parserErrAtTb(err, tb)
+// 		}
 
-		err = tb.header.skip(glob.KeySymbolColon)
-		if err != nil {
-			return nil, parserErrAtTb(err, tb)
-		}
+// 		err = tb.header.skip(glob.KeySymbolColon)
+// 		if err != nil {
+// 			return nil, parserErrAtTb(err, tb)
+// 		}
 
-		proofs := []*ast.SpecFactStmt{}
-		for !tb.header.is(glob.KeySymbolRightCurly) {
-			curStmt, err := tb.specFactStmt()
-			if err != nil {
-				return nil, parserErrAtTb(err, tb)
-			}
-			proofs = append(proofs, curStmt)
-			tb.header.skipIfIs(glob.KeySymbolComma)
-		}
+// 		proofs := []*ast.SpecFactStmt{}
+// 		for !tb.header.is(glob.KeySymbolRightCurly) {
+// 			curStmt, err := tb.specFactStmt()
+// 			if err != nil {
+// 				return nil, parserErrAtTb(err, tb)
+// 			}
+// 			proofs = append(proofs, curStmt)
+// 			tb.header.skipIfIs(glob.KeySymbolComma)
+// 		}
 
-		err = tb.header.skip(glob.KeySymbolRightCurly)
-		if err != nil {
-			return nil, fmt.Errorf("")
-		}
+// 		err = tb.header.skip(glob.KeySymbolRightCurly)
+// 		if err != nil {
+// 			return nil, fmt.Errorf("")
+// 		}
 
-		return ast.NewIntensionalSetStmt(obj, string(leftmost.(ast.Atom)), parentSet, proofs, tb.line), nil
-	}
-}
+// 		return ast.NewIntensionalSetStmt(obj, string(leftmost.(ast.Atom)), parentSet, proofs, tb.line), nil
+// 	}
+// }
 
 func (tb *tokenBlock) proveByEnum() (*ast.ProveByEnumStmt, error) {
 	err := tb.header.skip(glob.KeywordProveByEnum)

@@ -320,40 +320,40 @@ func TransformEnumToUniFact(setName Obj, enumFcs []Obj) (*UniFactStmt, []*SpecFa
 	return forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts
 }
 
-func (stmt *IntensionalSetStmt) ToEquivalentUniFacts() (*UniFactStmt, *UniFactStmt, error) {
-	leftDomFacts := []FactStmt{}
-	for _, proof := range stmt.Facts {
-		leftDomFacts = append(leftDomFacts, proof)
-	}
+// func (stmt *IntensionalSetStmt) ToEquivalentUniFacts() (*UniFactStmt, *UniFactStmt, error) {
+// 	leftDomFacts := []FactStmt{}
+// 	for _, proof := range stmt.Facts {
+// 		leftDomFacts = append(leftDomFacts, proof)
+// 	}
 
-	leftUniFact := NewUniFact([]string{stmt.Param}, []Obj{stmt.ParentSet}, leftDomFacts, []FactStmt{NewInFact(stmt.Param, stmt.CurSet)}, glob.BuiltinLine)
+// 	leftUniFact := NewUniFact([]string{stmt.Param}, []Obj{stmt.ParentSet}, leftDomFacts, []FactStmt{NewInFact(stmt.Param, stmt.CurSet)}, glob.BuiltinLine)
 
-	rightThenFacts := []FactStmt{NewInFact(stmt.Param, stmt.ParentSet)}
-	for _, proof := range stmt.Facts {
-		rightThenFacts = append(rightThenFacts, proof)
-	}
+// 	rightThenFacts := []FactStmt{NewInFact(stmt.Param, stmt.ParentSet)}
+// 	for _, proof := range stmt.Facts {
+// 		rightThenFacts = append(rightThenFacts, proof)
+// 	}
 
-	rightUniFact := NewUniFact([]string{stmt.Param}, []Obj{stmt.CurSet}, []FactStmt{}, rightThenFacts, glob.BuiltinLine)
+// 	rightUniFact := NewUniFact([]string{stmt.Param}, []Obj{stmt.CurSet}, []FactStmt{}, rightThenFacts, glob.BuiltinLine)
 
-	return leftUniFact, rightUniFact, nil
-}
+// 	return leftUniFact, rightUniFact, nil
+// }
 
-func (stmt *HaveSetFnStmt) ToDefFnStmt() *DefFnStmt {
-	return NewDefFnStmt(string(stmt.DefHeader.Name), NewFnTStruct(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, Atom(glob.KeywordSet), []FactStmt{}, []FactStmt{stmt.ToIntensionalSetStmt()}, stmt.Line), stmt.Line)
-}
+// func (stmt *HaveSetFnStmt) ToDefFnStmt() *DefFnStmt {
+// 	return NewDefFnStmt(string(stmt.DefHeader.Name), NewFnTStruct(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, Atom(glob.KeywordSet), []FactStmt{}, []FactStmt{stmt.ToIntensionalSetStmt()}, stmt.Line), stmt.Line)
+// }
 
-func (stmt *HaveSetFnStmt) ToIntensionalSetStmt() *IntensionalSetStmt {
-	params := []Obj{}
-	for _, param := range stmt.DefHeader.Params {
-		params = append(params, Atom(param))
-	}
+// func (stmt *HaveSetFnStmt) ToIntensionalSetStmt() *IntensionalSetStmt {
+// 	params := []Obj{}
+// 	for _, param := range stmt.DefHeader.Params {
+// 		params = append(params, Atom(param))
+// 	}
 
-	fnName := Atom(stmt.DefHeader.Name)
-	curSet := NewFnObj(fnName, params)
-	intensionalSetStmt := NewIntensionalSetStmt(curSet, stmt.Param, stmt.ParentSet, stmt.Proofs, stmt.Line)
+// 	fnName := Atom(stmt.DefHeader.Name)
+// 	curSet := NewFnObj(fnName, params)
+// 	intensionalSetStmt := NewIntensionalSetStmt(curSet, stmt.Param, stmt.ParentSet, stmt.Proofs, stmt.Line)
 
-	return intensionalSetStmt
-}
+// 	return intensionalSetStmt
+// }
 
 func (stmt *ProveInRangeSetStmt) UniFact() *UniFactStmt {
 	return NewUniFact([]string{stmt.Param}, []Obj{stmt.IntensionalSet}, []FactStmt{}, stmt.ThenFacts, stmt.Line)

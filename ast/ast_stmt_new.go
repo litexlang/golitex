@@ -116,9 +116,9 @@ func NewClaimExistPropStmt(existProp *DefExistPropStmt, proofs []Stmt, haveObj [
 	return &ClaimExistPropStmt{existProp, proofs, haveObj, line}
 }
 
-func NewIntensionalSetStmt(curSet Obj, param string, parentSet Obj, proofs []*SpecFactStmt, line uint) *IntensionalSetStmt {
-	return &IntensionalSetStmt{curSet, param, parentSet, proofs, line}
-}
+// func NewIntensionalSetStmt(curSet Obj, param string, parentSet Obj, proofs []*SpecFactStmt, line uint) *IntensionalSetStmt {
+// 	return &IntensionalSetStmt{curSet, param, parentSet, proofs, line}
+// }
 
 func NewProveByEnumStmt(fact *UniFactStmt, proofs []Stmt, line uint) *ProveByEnumStmt {
 	return &ProveByEnumStmt{fact, proofs, line}

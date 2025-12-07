@@ -548,14 +548,14 @@ func intentionalSetOrIntensionalSetToLatexString(param string, parentSet Obj, pr
 	return fmt.Sprintf("$%s$", strings.ReplaceAll(builder.String(), "$", ""))
 }
 
-func (s *IntensionalSetStmt) ToLatexString() string {
-	var builder strings.Builder
-	builder.WriteString(s.CurSet.ToLatexString())
+// func (s *IntensionalSetStmt) ToLatexString() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(s.CurSet.ToLatexString())
 
-	builder.WriteString(intentionalSetOrIntensionalSetToLatexString(s.Param, s.ParentSet, s.Facts))
+// 	builder.WriteString(intentionalSetOrIntensionalSetToLatexString(s.Param, s.ParentSet, s.Facts))
 
-	return builder.String()
-}
+// 	return builder.String()
+// }
 
 func (s *ClaimPropStmt) ToLatexString() string {
 	var builder strings.Builder

@@ -33,8 +33,8 @@ func (env *Env) NewFact(stmt ast.FactStmt) glob.GlobRet {
 		return env.newUniFactWithIff(f)
 	// case *ast.EnumStmt:
 	// 	return env.newEnumFact(f)
-	case *ast.IntensionalSetStmt:
-		return env.newIntensionalSetFact(f)
+	// case *ast.IntensionalSetStmt:
+	// 	return env.newIntensionalSetFact(f)
 	case *ast.EqualsFactStmt:
 		return env.newEqualsFact(f)
 	default:
@@ -87,8 +87,8 @@ func (env *Env) newFactNoPostProcess(stmt ast.FactStmt) glob.GlobRet {
 		return env.newLogicExprFact(f)
 	case *ast.UniFactStmt:
 		return env.newUniFact(f)
-	case *ast.IntensionalSetStmt:
-		return env.newIntensionalSetFact(f)
+	// case *ast.IntensionalSetStmt:
+	// 	return env.newIntensionalSetFact(f)
 	case *ast.UniFactWithIffStmt:
 		return env.newUniFactWithIff(f)
 	// case *ast.EnumStmt:
@@ -553,26 +553,26 @@ func (env *Env) ExecDefFnTemplate(stmt *ast.FnTemplateDefStmt) glob.GlobRet {
 // 	return glob.TrueRet("")
 // }
 
-func (env *Env) newIntensionalSetFact(stmt *ast.IntensionalSetStmt) glob.GlobRet {
-	leftUniFact, rightUniFact, err := stmt.ToEquivalentUniFacts()
-	if err != nil {
-		return glob.ErrRet(err)
-	}
+// func (env *Env) newIntensionalSetFact(stmt *ast.IntensionalSetStmt) glob.GlobRet {
+// 	leftUniFact, rightUniFact, err := stmt.ToEquivalentUniFacts()
+// 	if err != nil {
+// 		return glob.ErrRet(err)
+// 	}
 
-	ret := env.NewFact(leftUniFact)
-	if ret.IsErr() {
-		return ret
-	}
+// 	ret := env.NewFact(leftUniFact)
+// 	if ret.IsErr() {
+// 		return ret
+// 	}
 
-	ret = env.NewFact(rightUniFact)
-	if ret.IsErr() {
-		return ret
-	}
+// 	ret = env.NewFact(rightUniFact)
+// 	if ret.IsErr() {
+// 		return ret
+// 	}
 
-	env.IntensionalSetMem[stmt.CurSet.String()] = *stmt
+// 	env.IntensionalSetMem[stmt.CurSet.String()] = *stmt
 
-	return glob.TrueRet("")
-}
+// 	return glob.TrueRet("")
+// }
 
 func (env *Env) newUniFact_ThenFactIsSpecFact(stmt *ast.UniFactStmt, thenFact *ast.SpecFactStmt) glob.GlobRet {
 	return env.storeUniFact(thenFact, stmt)
@@ -605,26 +605,26 @@ func (env *Env) newUniFact_ThenFactIsOrStmt(stmt *ast.UniFactStmt, thenFact *ast
 // 	return glob.TrueRet("")
 // }
 
-func (env *Env) newUniFact_ThenFactIsIntensionalSetStmt(stmt *ast.UniFactStmt, thenFact *ast.IntensionalSetStmt) glob.GlobRet {
-	leftUniFact, rightUniFact, err := thenFact.ToEquivalentUniFacts()
-	if err != nil {
-		return glob.ErrRet(err)
-	}
+// func (env *Env) newUniFact_ThenFactIsIntensionalSetStmt(stmt *ast.UniFactStmt, thenFact *ast.IntensionalSetStmt) glob.GlobRet {
+// 	leftUniFact, rightUniFact, err := thenFact.ToEquivalentUniFacts()
+// 	if err != nil {
+// 		return glob.ErrRet(err)
+// 	}
 
-	mergedLeftUniFact := ast.MergeOuterInnerUniFacts(stmt, leftUniFact)
-	ret := env.newUniFact(mergedLeftUniFact)
-	if ret.IsErr() {
-		return ret
-	}
+// 	mergedLeftUniFact := ast.MergeOuterInnerUniFacts(stmt, leftUniFact)
+// 	ret := env.newUniFact(mergedLeftUniFact)
+// 	if ret.IsErr() {
+// 		return ret
+// 	}
 
-	mergedRightUniFact := ast.MergeOuterInnerUniFacts(stmt, rightUniFact)
-	ret = env.newUniFact(mergedRightUniFact)
-	if ret.IsErr() {
-		return ret
-	}
+// 	mergedRightUniFact := ast.MergeOuterInnerUniFacts(stmt, rightUniFact)
+// 	ret = env.newUniFact(mergedRightUniFact)
+// 	if ret.IsErr() {
+// 		return ret
+// 	}
 
-	return glob.TrueRet("")
-}
+// 	return glob.TrueRet("")
+// }
 
 func (env *Env) newUniFact_ThenFactIsIffStmt(stmt *ast.UniFactStmt, thenFact *ast.UniFactWithIffStmt) glob.GlobRet {
 	thenToIff := thenFact.NewUniFactWithThenToIff()

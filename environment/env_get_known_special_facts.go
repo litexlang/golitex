@@ -142,10 +142,6 @@ func (e *Env) GetObjIntensionalSet(obj ast.Obj) ast.Obj {
 			}
 		}
 
-		// 从 IntensionalSetMem 中查找（如果 obj 等于某个已定义的 intensional set 的 CurSet）
-		if intensionalSetStmt := env.GetIntensionalSet(obj); intensionalSetStmt != nil {
-			return intensionalSetStmt.CurSet
-		}
 	}
 	return nil
 }
