@@ -87,6 +87,75 @@ func (ver *Verifier) verifyEqualsFactFnRequirement(equalsFact *ast.EqualsFactStm
 	return NewExecTrue("")
 }
 
+// verifyAndDeclareParamsIteratively 逐步迭代验证和声明参数
+// 对于每个参数 i：
+// 1. 验证第i个set是OK的
+// 2. 声明第i个obj
+// 3. 继续迭代下一个
+func (ver *Verifier) verifyAndDeclareParamsIteratively(params []string, paramSets []ast.Obj, state *VerState) (map[string]ast.Obj, ExecRet) {
+	if len(params) != len(paramSets) {
+		return nil, NewExecErr(fmt.Sprintf("number of params (%d) and param sets (%d) must be equal", len(params), len(paramSets)))
+	}
+
+	paramMap := make(map[string]ast.Obj)
+	stateNoMsg := state.GetNoMsg()
+
+	// 逐步迭代每个参数
+	for i := range params {
+		param := params[i]
+		paramSet := paramSets[i]
+
+		// 1. 验证第i个set是OK的（需要先实例化paramSet，因为可能依赖前面已声明的参数）
+		var instantiatedParamSet ast.Obj
+		if len(paramMap) > 0 {
+			inst, err := paramSet.Instantiate(paramMap)
+			if err != nil {
+				return nil, NewExecErr(fmt.Sprintf("failed to instantiate param set %s for param %s: %s", paramSet, param, err))
+			}
+			instantiatedParamSet = inst
+		} else {
+			instantiatedParamSet = paramSet
+		}
+
+		// 验证 paramSet 是否满足函数要求
+		verRet := ver.objIsAtomOrIsFnSatisfyItsReq(instantiatedParamSet, stateNoMsg)
+		if verRet.IsErr() {
+			return nil, NewExecErr(fmt.Sprintf("param set %s for param %s does not satisfy function requirement: %s", instantiatedParamSet, param, verRet.String()))
+		}
+		if verRet.IsUnknown() {
+			return nil, NewExecErr(fmt.Sprintf("param set %s for param %s does not satisfy function requirement: %s", instantiatedParamSet, param, verRet.String()))
+		}
+
+		// 2. 检查 param 是否已在母环境声明过，如果是则生成随机名称
+		paramAtom := ast.Atom(param)
+		ret := ver.Env.IsAtomDeclared(paramAtom, map[string]struct{}{})
+		var actualParamName string
+		if ret.IsTrue() {
+			// param 已声明，生成随机名称
+			actualParamName = ver.Env.GenerateUndeclaredRandomName()
+			paramMap[param] = ast.Atom(actualParamName)
+		} else {
+			// param 未声明，直接使用
+			actualParamName = param
+			paramMap[param] = ast.Atom(param)
+		}
+
+		// 3. 声明第i个obj（使用实例化后的paramSet）
+		defObjStmt := ast.NewDefLetStmt(
+			[]string{actualParamName},
+			[]ast.Obj{instantiatedParamSet},
+			[]ast.FactStmt{},
+			glob.BuiltinLine,
+		)
+		ret = ver.Env.DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(defObjStmt)
+		if ret.IsErr() {
+			return nil, NewExecErr(fmt.Sprintf("failed to declare parameter %s: %s", actualParamName, ret.String()))
+		}
+	}
+
+	return paramMap, NewExecTrue("")
+}
+
 // verifyUniFactFnRequirement 验证 UniFactStmt 中所有对象都符合函数要求
 // 新开环境，如果 param 已经声明过了，那就换一个名字，然后实例化整个 fact
 func (ver *Verifier) verifyUniFactFnRequirement(uniFact *ast.UniFactStmt, state *VerState) ExecRet {
@@ -99,35 +168,38 @@ func (ver *Verifier) verifyUniFactFnRequirement(uniFact *ast.UniFactStmt, state 
 		ver.Env = parentEnv
 	}()
 
-	// 处理参数冲突：如果 param 已在母环境声明过，生成随机名称
-	paramMap, _ := processUniFactParamsDuplicateDeclared(parentEnv, uniFact.Params)
+	// 逐步迭代验证和声明参数
+	paramMap, verRet := ver.verifyAndDeclareParamsIteratively(uniFact.Params, uniFact.ParamSets, state)
+	if verRet.IsErr() {
+		return verRet
+	}
 
 	// 如果有参数需要重命名，实例化整个 fact
 	var instantiatedUniFact *ast.UniFactStmt
 	if len(paramMap) > 0 {
-		instFact, err := uniFact.InstantiateFact(paramMap)
-		if err != nil {
-			return NewExecErr(fmt.Sprintf("failed to instantiate uni fact %s: %s", uniFact, err))
+		// 检查是否有参数被重命名
+		hasRename := false
+		for origParam, newParamObj := range paramMap {
+			if string(newParamObj.(ast.Atom)) != origParam {
+				hasRename = true
+				break
+			}
 		}
-		var ok bool
-		instantiatedUniFact, ok = instFact.(*ast.UniFactStmt)
-		if !ok {
-			return NewExecErr(fmt.Sprintf("instantiated fact is not UniFactStmt: %T", instFact))
+		if hasRename {
+			instFact, err := uniFact.InstantiateFact(paramMap)
+			if err != nil {
+				return NewExecErr(fmt.Sprintf("failed to instantiate uni fact %s: %s", uniFact, err))
+			}
+			var ok bool
+			instantiatedUniFact, ok = instFact.(*ast.UniFactStmt)
+			if !ok {
+				return NewExecErr(fmt.Sprintf("instantiated fact is not UniFactStmt: %T", instFact))
+			}
+		} else {
+			instantiatedUniFact = uniFact
 		}
 	} else {
 		instantiatedUniFact = uniFact
-	}
-
-	// 声明参数
-	defObjStmt := ast.NewDefLetStmt(
-		instantiatedUniFact.Params,
-		instantiatedUniFact.ParamSets,
-		instantiatedUniFact.DomFacts,
-		instantiatedUniFact.Line,
-	)
-	ret := ver.Env.DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(defObjStmt)
-	if ret.IsErr() {
-		return NewExecErr(fmt.Sprintf("failed to declare parameters: %s", ret.String()))
 	}
 
 	// 验证 DomFacts 中的所有对象
