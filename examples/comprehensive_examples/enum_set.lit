@@ -1,0 +1,8 @@
+{1, 2} $in nonempty_set
+have a {1, 2}
+a = 1 or a = 2
+
+{3} $in nonempty_set
+
+
+not {} $in nonempty_set

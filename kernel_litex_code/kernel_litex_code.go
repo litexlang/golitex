@@ -874,4 +874,6 @@ know:
 	forall a, b R, c N_pos: a > 0, b > 0, a > b => a^c > b^c
 	forall a, b R: a != b <=> a - b != 0
 	forall a, b R: a > 0, b >= 0 => a + b > 0
+
+know not {} $in nonempty_set
 `
