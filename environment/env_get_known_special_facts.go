@@ -93,3 +93,28 @@ func (e *Env) GetObjTuple(obj ast.Obj) ast.Obj {
 	}
 	return nil
 }
+
+// GetObjEnumSet 检查 obj 是否等于某个 enumset
+// 通过获取所有环境中与 obj 相等的对象列表，检查其中是否有 enumset
+// 如果找到 enumset，返回该 enumset；否则返回 nil
+func (e *Env) GetObjEnumSet(obj ast.Obj) ast.Obj {
+	// 如果 obj 本身就是一个 enumset，直接返回
+	if ast.IsEnumSetObj(obj) {
+		return obj
+	}
+
+	// 遍历所有环境
+	for env := e; env != nil; env = env.Parent {
+		// 获取当前环境中与 obj 相等的所有对象
+		equalFcs, ok := env.GetEqualFcs(obj)
+		if ok && equalFcs != nil {
+			// 检查其中是否有 enumset
+			for _, equalFc := range *equalFcs {
+				if ast.IsEnumSetObj(equalFc) {
+					return equalFc
+				}
+			}
+		}
+	}
+	return nil
+}
