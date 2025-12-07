@@ -90,3 +90,50 @@ func IsNumExprObj_SimplifyIt(obj ast.Obj) ast.Obj {
 
 	return newObj
 }
+
+func ParseSourceCodeGetFact(sourceCode string) (ast.FactStmt, error) {
+	blocks, err := makeTokenBlocks([]string{sourceCode})
+	if err != nil {
+		return nil, err
+	}
+
+	return blocks[0].fact()
+}
+
+// ParseSingleLineFact parses a single line fact statement from a string
+// This function is similar to ParseSourceCodeGetObj but for facts
+// It parses inline facts that can appear in a single line (like "x $in S", "x = y", etc.)
+func ParseSingleLineFact(s string) (ast.FactStmt, error) {
+	blocks, err := makeTokenBlocks([]string{s})
+	if err != nil {
+		return nil, err
+	}
+
+	fact, err := blocks[0].inline_spec_or_enum_intensional_Equals_fact_skip_terminator()
+	if err != nil {
+		return nil, err
+	}
+
+	return fact, nil
+}
+
+func GetParamParentSetFactsFromIntensionalSet(intensionalSet *ast.FnObj) (string, ast.Obj, []ast.FactStmt, error) {
+	param, ok := intensionalSet.Params[0].(ast.Atom)
+	if !ok {
+		return "", nil, nil, fmt.Errorf("expected parameter as atom, got %T", intensionalSet.Params[0])
+	}
+	paramAsString := string(param)
+
+	parentSet := intensionalSet.Params[1]
+
+	facts := []ast.FactStmt{}
+	for i := 2; i < len(intensionalSet.Params); i++ {
+		fact, err := ParseSingleLineFact(intensionalSet.Params[i].String())
+		if err != nil {
+			return "", nil, nil, err
+		}
+		facts = append(facts, fact)
+	}
+
+	return paramAsString, parentSet, facts, nil
+}
