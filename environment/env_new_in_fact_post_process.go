@@ -327,20 +327,13 @@ func (e *Env) equalFactPostProcess_tupleEquality(left ast.Obj, right ast.Obj) gl
 	return glob.TrueRet("")
 }
 
-func (e *Env) inFactPostProcess_TryEnumSet(fact *ast.SpecFactStmt) glob.GlobRet {
-	if !ast.IsEnumSetObj(fact.Params[1]) {
-		return glob.NewGlobUnknown("")
-	}
-
-	enumSet, ok := fact.Params[1].(*ast.FnObj)
-	if !ok {
-		return glob.ErrRet(fmt.Errorf("expected enum set to be FnObj, got %T", fact.Params[1]))
-	}
-
+// inFactPostProcess_InEnumSet handles postprocessing for a $in enumset(...)
+// It generates an or fact indicating that the left param equals one of the enumset params
+func (e *Env) inFactPostProcess_InEnumSet(obj ast.Obj, enumSet *ast.FnObj) glob.GlobRet {
 	// 用所有的param做一个or出来，说明left等于其中的一个
 	orFact := ast.NewOrStmt([]*ast.SpecFactStmt{}, glob.BuiltinLine)
 	for _, param := range enumSet.Params {
-		orFact.Facts = append(orFact.Facts, ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{fact.Params[0], param}, glob.BuiltinLine))
+		orFact.Facts = append(orFact.Facts, ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{obj, param}, glob.BuiltinLine))
 	}
 	ret := e.NewFact(orFact)
 	if ret.IsErr() {
@@ -348,4 +341,19 @@ func (e *Env) inFactPostProcess_TryEnumSet(fact *ast.SpecFactStmt) glob.GlobRet 
 	}
 
 	return glob.TrueRet("")
+}
+
+func (e *Env) inFactPostProcess_TryEnumSet(fact *ast.SpecFactStmt) glob.GlobRet {
+	// Try to get enumset, either directly or from equal facts
+	enumSetObj := e.GetObjEnumSet(fact.Params[1])
+	if enumSetObj == nil {
+		return glob.NewGlobUnknown("")
+	}
+
+	enumSet, ok := enumSetObj.(*ast.FnObj)
+	if !ok {
+		return glob.ErrRet(fmt.Errorf("expected enum set to be FnObj, got %T", enumSetObj))
+	}
+
+	return e.inFactPostProcess_InEnumSet(fact.Params[0], enumSet)
 }
