@@ -328,13 +328,23 @@ func (e *Env) equalFactPostProcess_tupleEquality(left ast.Obj, right ast.Obj) gl
 }
 
 func (e *Env) inFactPostProcess_TryEnumSet(fact *ast.SpecFactStmt) glob.GlobRet {
+	if !ast.IsEnumSetObj(fact.Params[1]) {
+		return glob.NewGlobUnknown("")
+	}
+
 	enumSet, ok := fact.Params[1].(*ast.FnObj)
 	if !ok {
 		return glob.ErrRet(fmt.Errorf("expected enum set to be FnObj, got %T", fact.Params[1]))
 	}
 
-	if !ast.IsEnumSetObj(enumSet) {
-		return glob.NewGlobUnknown("")
+	// 用所有的param做一个or出来，说明left等于其中的一个
+	orFact := ast.NewOrStmt([]*ast.SpecFactStmt{}, glob.BuiltinLine)
+	for _, param := range enumSet.Params {
+		orFact.Facts = append(orFact.Facts, ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{fact.Params[0], param}, glob.BuiltinLine))
+	}
+	ret := e.NewFact(orFact)
+	if ret.IsErr() {
+		return ret
 	}
 
 	return glob.TrueRet("")
