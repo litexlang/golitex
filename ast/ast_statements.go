@@ -227,7 +227,9 @@ type HaveEnumSetStmt struct {
 }
 
 type HaveIntensionalSetStmt struct {
-	Fact *IntensionalSetStmt
+	Param     string
+	ParentSet Obj
+	Facts     FactStmtSlice
 
 	Line uint
 }

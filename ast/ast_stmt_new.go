@@ -132,8 +132,8 @@ func NewHaveEnumSetStmt(name string, enumSetObj *FnObj, line uint) *HaveEnumSetS
 	return &HaveEnumSetStmt{name, enumSetObj, line}
 }
 
-func NewHaveIntensionalSetStmt(fact *IntensionalSetStmt, line uint) *HaveIntensionalSetStmt {
-	return &HaveIntensionalSetStmt{fact, line}
+func NewHaveIntensionalSetStmt(param string, parentSet Obj, facts FactStmtSlice, line uint) *HaveIntensionalSetStmt {
+	return &HaveIntensionalSetStmt{param, parentSet, facts, line}
 }
 
 func NewHaveSetFnStmt(declHeader *DefHeader, param string, parentSet Obj, proofs []*SpecFactStmt, line uint) *HaveSetFnStmt {

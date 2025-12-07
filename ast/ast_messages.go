@@ -793,7 +793,15 @@ func (stmt *HaveIntensionalSetStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordHave)
 	builder.WriteString(" ")
-	builder.WriteString(stmt.Fact.String())
+	builder.WriteString(stmt.Param)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.ParentSet.String())
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+	for i := range len(stmt.Facts) {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Facts[i].String(), 2))
+	}
 	return builder.String()
 }
 

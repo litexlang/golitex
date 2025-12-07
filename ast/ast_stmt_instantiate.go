@@ -539,11 +539,16 @@ func (stmt *HaveEnumSetStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 }
 
 func (stmt *HaveIntensionalSetStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	newFact, err := stmt.Fact.InstantiateFact(uniMap)
+	newParentSet, err := stmt.ParentSet.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}
-	return NewHaveIntensionalSetStmt(newFact.(*IntensionalSetStmt), stmt.Line), nil
+	newFacts, err := stmt.Facts.InstantiateFact(uniMap)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewHaveIntensionalSetStmt(stmt.Param, newParentSet, newFacts, stmt.Line), nil
 }
 
 func (stmt *HaveCartSetStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {

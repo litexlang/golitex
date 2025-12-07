@@ -219,19 +219,16 @@ func (exec *Executor) haveEnumSetStmt(stmt *ast.HaveEnumSetStmt) ExecRet {
 }
 
 func (exec *Executor) haveIntensionalSetStmt(stmt *ast.HaveIntensionalSetStmt) ExecRet {
-
-	intensionalSetFact := stmt.Fact
-
 	// very important: check whether the parent set is a set
-	state := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{intensionalSetFact.ParentSet, ast.Atom(glob.KeywordSet)}, stmt.Line))
+	state := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.ParentSet, ast.Atom(glob.KeywordSet)}, stmt.Line))
 	if state.IsErr() {
 		return NewExecErr(state.String())
 	}
 	if state.IsUnknown() {
-		return NewExecErr("parent set of intensional set must be a set, i.e. `" + intensionalSetFact.ParentSet.String() + " in " + ast.Atom(glob.KeywordSet).String() + "` must be true, but it is unknown")
+		return NewExecErr("parent set of intensional set must be a set, i.e. `" + stmt.ParentSet.String() + " in " + ast.Atom(glob.KeywordSet).String() + "` must be true, but it is unknown")
 	}
 
-	defObjStmt := ast.NewDefLetStmt([]string{intensionalSetFact.CurSet.String()}, []ast.Obj{ast.Atom(glob.KeywordSet)}, []ast.FactStmt{intensionalSetFact}, stmt.Line)
+	defObjStmt := ast.NewDefLetStmt([]string{stmt.Param}, []ast.Obj{ast.Atom(glob.KeywordSet)}, stmt.Facts.Copy(), stmt.Line)
 	execState := exec.defLetStmt(defObjStmt)
 	if execState.IsNotTrue() {
 		return execState
