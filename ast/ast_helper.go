@@ -395,3 +395,11 @@ func SimplifyProjCart(fc *FnObj) (Obj, bool) {
 func MakeEnumSetObj(params []Obj) *FnObj {
 	return NewFnObj(Atom(glob.KeywordEnumSet), params)
 }
+
+func (factSlice FactStmtSlice) Copy() FactStmtSlice {
+	newFactSlice := make([]FactStmt, len(factSlice))
+	for i, fact := range factSlice {
+		newFactSlice[i] = fact
+	}
+	return newFactSlice
+}
