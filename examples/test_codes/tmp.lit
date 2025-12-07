@@ -1,3 +1,6 @@
+{x R: x > 0} = {x R: x > 0}
+
+"""
 prove:
     have a {x R: x > 0}
     a > 0
@@ -12,3 +15,4 @@ prove:
 
     forall x a:
         x > 0
+"""
