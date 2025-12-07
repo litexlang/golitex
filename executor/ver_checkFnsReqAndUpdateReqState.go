@@ -79,9 +79,45 @@ func (ver *Verifier) objIsAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *VerState) 
 		return ver.setDimFnRequirement(objAsFnObj, state)
 	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordDim) {
 		return ver.dimFnRequirement(objAsFnObj, state)
+	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordEnumSet) {
+		return ver.enumSetFnRequirement(objAsFnObj, state)
+	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordIntensionalSet) {
+		return ver.intensionalSetFnRequirement(objAsFnObj, state)
 	} else {
 		return ver.parasSatisfyFnReq(objAsFnObj, state)
 	}
+}
+
+func (ver *Verifier) intensionalSetFnRequirement(objAsFnObj *ast.FnObj, state *VerState) ExecRet {
+	panic("not implemented")
+}
+
+func (ver *Verifier) enumSetFnRequirement(objAsFnObj *ast.FnObj, state *VerState) ExecRet {
+	// 所有参数都是$in set
+	for _, param := range objAsFnObj.Params {
+		verRet := ver.VerFactStmt(ast.NewInFactWithFc(param, ast.Atom(glob.KeywordSet)), state)
+		if verRet.IsErr() {
+			return NewExecErr(verRet.String())
+		}
+		if verRet.IsUnknown() {
+			return NewExecErr(fmt.Sprintf("parameters in %s must be sets, %s in %s is not valid", objAsFnObj.FnHead, param, objAsFnObj))
+		}
+	}
+
+	// 所有参数互相不相等
+	for i := range len(objAsFnObj.Params) {
+		for j := i + 1; j < len(objAsFnObj.Params); j++ {
+			verRet := ver.VerFactStmt(ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{objAsFnObj.Params[i], objAsFnObj.Params[j]}, glob.BuiltinLine), state)
+			if verRet.IsErr() {
+				return NewExecErr(verRet.String())
+			}
+			if verRet.IsUnknown() {
+				return NewExecErr(fmt.Sprintf("parameters in set must be different from one another, inequality of %s and %s in %s is unknown", objAsFnObj.Params[i], objAsFnObj.Params[j], objAsFnObj))
+			}
+		}
+	}
+
+	return NewExecTrue("")
 }
 
 func (ver *Verifier) tupleFnReq(objAsFnObj *ast.FnObj, state *VerState) ExecRet {
