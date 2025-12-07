@@ -486,11 +486,11 @@ func (f *FnObj) String() string {
 	}
 
 	if IsIntensionalSetObj(f) {
-		paramsStrSlice := make([]string, len(f.Params))
-		for i := range len(f.Params) {
-			paramsStrSlice[i] = f.Params[i].String()
+		strSlice := []string{}
+		for i := 2; i < len(f.Params); i++ {
+			strSlice = append(strSlice, f.Params[i].String())
 		}
-		return fmt.Sprintf("%s%s %s%s%s%s", glob.KeySymbolLeftCurly, f.Params[0].String(), f.Params[1].String(), glob.KeySymbolColon, strings.Join(paramsStrSlice, ", "), glob.KeySymbolRightCurly)
+		return fmt.Sprintf("%s%s %s%s %s%s", glob.KeySymbolLeftCurly, f.Params[0].String(), f.Params[1].String(), glob.KeySymbolColon, strings.Join(strSlice, ", "), glob.KeySymbolRightCurly)
 	}
 
 	if ok, str := hasBuiltinOptAndToString(f); ok {
