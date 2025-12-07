@@ -24,16 +24,16 @@ func (stmt *SpecFactStmt) GetAtoms() []Atom {
 	return atoms
 }
 
-func (stmt *EnumStmt) GetAtoms() []Atom {
-	atomsOfName := GetAtomsInObj(stmt.CurSet)
+// func (stmt *EnumStmt) GetAtoms() []Atom {
+// 	atomsOfName := GetAtomsInObj(stmt.CurSet)
 
-	atoms := []Atom{}
-	atoms = append(atoms, atomsOfName...)
-	for _, value := range stmt.Items {
-		atoms = append(atoms, GetAtomsInObj(value)...)
-	}
-	return atoms
-}
+// 	atoms := []Atom{}
+// 	atoms = append(atoms, atomsOfName...)
+// 	for _, value := range stmt.Items {
+// 		atoms = append(atoms, GetAtomsInObj(value)...)
+// 	}
+// 	return atoms
+// }
 
 func (stmt *UniFactStmt) GetAtoms() []Atom {
 	atoms := []Atom{}

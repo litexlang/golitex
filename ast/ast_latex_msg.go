@@ -517,20 +517,20 @@ func (s *ClaimProveByContradictionStmt) ToLatexString() string {
 	return claimProveBodyToLatexString(s.ClaimProveStmt.ToCheckFact, s.ClaimProveStmt.Proofs, false)
 }
 
-func (s *EnumStmt) ToLatexString() string {
-	var builder strings.Builder
-	builder.WriteString(s.CurSet.ToLatexString())
-	builder.WriteString(" = \\{")
+// func (s *EnumStmt) ToLatexString() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(s.CurSet.ToLatexString())
+// 	builder.WriteString(" = \\{")
 
-	strSlice := make([]string, len(s.Items))
-	for i := range len(s.Items) {
-		strSlice[i] = s.Items[i].ToLatexString()
-	}
-	builder.WriteString(strings.Join(strSlice, ", "))
+// 	strSlice := make([]string, len(s.Items))
+// 	for i := range len(s.Items) {
+// 		strSlice[i] = s.Items[i].ToLatexString()
+// 	}
+// 	builder.WriteString(strings.Join(strSlice, ", "))
 
-	builder.WriteString("\\}")
-	return fmt.Sprintf("$%s$", strings.ReplaceAll(builder.String(), "$", ""))
-}
+// 	builder.WriteString("\\}")
+// 	return fmt.Sprintf("$%s$", strings.ReplaceAll(builder.String(), "$", ""))
+// }
 
 func intentionalSetOrIntensionalSetToLatexString(param string, parentSet Obj, proofs SpecFactPtrSlice) string {
 	var builder strings.Builder
@@ -628,7 +628,7 @@ func (s *HaveEnumSetStmt) ToLatexString() string {
 
 	builder.WriteString("We have a set: ")
 
-	builder.WriteString(s.Fact.ToLatexString())
+	builder.WriteString(s.EnumSetObj.ToLatexString())
 
 	builder.WriteString(".\n")
 

@@ -24,25 +24,26 @@ type Stmt interface {
 	Instantiate(map[string]Obj) (Stmt, error)
 }
 
-func (s *DefLetStmt) stmt()                      {}
-func (s *DefPropStmt) stmt()                     {}
-func (s *DefFnStmt) stmt()                       {}
-func (s *UniFactStmt) stmt()                     {}
-func (s *SpecFactStmt) stmt()                    {}
-func (s *ClaimProveStmt) stmt()                  {}
-func (s *KnowFactStmt) stmt()                    {}
-func (s *DefExistPropStmt) stmt()                {}
-func (s *HaveObjStStmt) stmt()                   {}
-func (s *ProveInEachCaseStmt) stmt()             {}
-func (s *ProveCaseByCaseStmt) stmt()             {}
-func (s *KnowPropStmt) stmt()                    {}
-func (s *OrStmt) stmt()                          {}
-func (s *ImportDirStmt) stmt()                   {}
-func (s *ImportFileStmt) stmt()                  {}
-func (s *ProveStmt) stmt()                       {}
-func (s *UniFactWithIffStmt) stmt()              {}
-func (s *ClaimProveByContradictionStmt) stmt()   {}
-func (s *EnumStmt) stmt()                        {}
+func (s *DefLetStmt) stmt()                    {}
+func (s *DefPropStmt) stmt()                   {}
+func (s *DefFnStmt) stmt()                     {}
+func (s *UniFactStmt) stmt()                   {}
+func (s *SpecFactStmt) stmt()                  {}
+func (s *ClaimProveStmt) stmt()                {}
+func (s *KnowFactStmt) stmt()                  {}
+func (s *DefExistPropStmt) stmt()              {}
+func (s *HaveObjStStmt) stmt()                 {}
+func (s *ProveInEachCaseStmt) stmt()           {}
+func (s *ProveCaseByCaseStmt) stmt()           {}
+func (s *KnowPropStmt) stmt()                  {}
+func (s *OrStmt) stmt()                        {}
+func (s *ImportDirStmt) stmt()                 {}
+func (s *ImportFileStmt) stmt()                {}
+func (s *ProveStmt) stmt()                     {}
+func (s *UniFactWithIffStmt) stmt()            {}
+func (s *ClaimProveByContradictionStmt) stmt() {}
+
+// func (s *EnumStmt) stmt()                        {}
 func (s *IntensionalSetStmt) stmt()              {}
 func (s *ClaimPropStmt) stmt()                   {}
 func (s *ClaimExistPropStmt) stmt()              {}
@@ -70,38 +71,39 @@ func (s *HaveFnLiftStmt) stmt()       {}
 func (s *HaveFnStmt) stmt()           {}
 
 // func (s *MarkdownStmt) stmt()                               {}
-func (s *ProveIsCommutativePropStmt) stmt()          {}
-func (s *ClaimIffStmt) stmt()                        {}
-func (s *ProveInRangeSetStmt) stmt()                 {}
-func (s *ProveInRangeStmt) stmt()                    {}
-func (s *ProveIsTransitivePropStmt) stmt()           {}
-func (s *DefAlgoStmt) stmt()                         {}
-func (s *EvalStmt) stmt()                            {}
-func (s *DefProveAlgoStmt) stmt()                    {}
-func (s *ByStmt) stmt()                              {}
-func (s *PrintStmt) stmt()                           {}
-func (s *HelpStmt) stmt()                            {}
-func (s *HaveFnEqualCaseByCaseStmt) stmt()           {}
-func (s *HaveFnCaseByCaseStmt) stmt()                {}
-func (s *DefLetStmt) algoStmt()                      {}
-func (s *DefPropStmt) algoStmt()                     {}
-func (s *DefFnStmt) algoStmt()                       {}
-func (s *UniFactStmt) algoStmt()                     {}
-func (s *SpecFactStmt) algoStmt()                    {}
-func (s *ClaimProveStmt) algoStmt()                  {}
-func (s *KnowFactStmt) algoStmt()                    {}
-func (s *DefExistPropStmt) algoStmt()                {}
-func (s *HaveObjStStmt) algoStmt()                   {}
-func (s *ProveInEachCaseStmt) algoStmt()             {}
-func (s *ProveCaseByCaseStmt) algoStmt()             {}
-func (s *KnowPropStmt) algoStmt()                    {}
-func (s *OrStmt) algoStmt()                          {}
-func (s *ImportDirStmt) algoStmt()                   {}
-func (s *ImportFileStmt) algoStmt()                  {}
-func (s *ProveStmt) algoStmt()                       {}
-func (s *UniFactWithIffStmt) algoStmt()              {}
-func (s *ClaimProveByContradictionStmt) algoStmt()   {}
-func (s *EnumStmt) algoStmt()                        {}
+func (s *ProveIsCommutativePropStmt) stmt()        {}
+func (s *ClaimIffStmt) stmt()                      {}
+func (s *ProveInRangeSetStmt) stmt()               {}
+func (s *ProveInRangeStmt) stmt()                  {}
+func (s *ProveIsTransitivePropStmt) stmt()         {}
+func (s *DefAlgoStmt) stmt()                       {}
+func (s *EvalStmt) stmt()                          {}
+func (s *DefProveAlgoStmt) stmt()                  {}
+func (s *ByStmt) stmt()                            {}
+func (s *PrintStmt) stmt()                         {}
+func (s *HelpStmt) stmt()                          {}
+func (s *HaveFnEqualCaseByCaseStmt) stmt()         {}
+func (s *HaveFnCaseByCaseStmt) stmt()              {}
+func (s *DefLetStmt) algoStmt()                    {}
+func (s *DefPropStmt) algoStmt()                   {}
+func (s *DefFnStmt) algoStmt()                     {}
+func (s *UniFactStmt) algoStmt()                   {}
+func (s *SpecFactStmt) algoStmt()                  {}
+func (s *ClaimProveStmt) algoStmt()                {}
+func (s *KnowFactStmt) algoStmt()                  {}
+func (s *DefExistPropStmt) algoStmt()              {}
+func (s *HaveObjStStmt) algoStmt()                 {}
+func (s *ProveInEachCaseStmt) algoStmt()           {}
+func (s *ProveCaseByCaseStmt) algoStmt()           {}
+func (s *KnowPropStmt) algoStmt()                  {}
+func (s *OrStmt) algoStmt()                        {}
+func (s *ImportDirStmt) algoStmt()                 {}
+func (s *ImportFileStmt) algoStmt()                {}
+func (s *ProveStmt) algoStmt()                     {}
+func (s *UniFactWithIffStmt) algoStmt()            {}
+func (s *ClaimProveByContradictionStmt) algoStmt() {}
+
+// func (s *EnumStmt) algoStmt()                        {}
 func (s *IntensionalSetStmt) algoStmt()              {}
 func (s *ClaimPropStmt) algoStmt()                   {}
 func (s *ClaimExistPropStmt) algoStmt()              {}
@@ -129,40 +131,41 @@ func (s *HaveFnLiftStmt) algoStmt()       {}
 func (s *HaveFnStmt) algoStmt()           {}
 
 // func (s *MarkdownStmt) algoStmt()                           {}
-func (s *ProveIsCommutativePropStmt) algoStmt()          {}
-func (s *DefProveAlgoStmt) algoStmt()                    {}
-func (s *ByStmt) algoStmt()                              {}
-func (s *ClaimIffStmt) algoStmt()                        {}
-func (s *ProveInRangeSetStmt) algoStmt()                 {}
-func (s *ProveInRangeStmt) algoStmt()                    {}
-func (s *ProveIsTransitivePropStmt) algoStmt()           {}
-func (s *DefAlgoStmt) algoStmt()                         {}
-func (s *EvalStmt) algoStmt()                            {}
-func (s *PrintStmt) algoStmt()                           {}
-func (s *HelpStmt) algoStmt()                            {}
-func (s *HaveFnEqualCaseByCaseStmt) algoStmt()           {}
-func (s *HaveFnCaseByCaseStmt) algoStmt()                {}
-func (s *HaveCartWithDimStmt) stmt()                     {}
-func (s *HaveCartWithDimStmt) algoStmt()                 {}
-func (s *DefLetStmt) GetLine() uint                      { return s.Line }
-func (s *DefPropStmt) GetLine() uint                     { return s.Line }
-func (s *DefFnStmt) GetLine() uint                       { return s.Line }
-func (s *UniFactStmt) GetLine() uint                     { return s.Line }
-func (s *SpecFactStmt) GetLine() uint                    { return s.Line }
-func (s *ClaimProveStmt) GetLine() uint                  { return s.Line }
-func (s *KnowFactStmt) GetLine() uint                    { return s.Line }
-func (s *DefExistPropStmt) GetLine() uint                { return s.Line }
-func (s *HaveObjStStmt) GetLine() uint                   { return s.Line }
-func (s *ProveInEachCaseStmt) GetLine() uint             { return s.Line }
-func (s *ProveCaseByCaseStmt) GetLine() uint             { return s.Line }
-func (s *KnowPropStmt) GetLine() uint                    { return s.Line }
-func (s *OrStmt) GetLine() uint                          { return s.Line }
-func (s *ImportDirStmt) GetLine() uint                   { return s.Line }
-func (s *ImportFileStmt) GetLine() uint                  { return s.Line }
-func (s *ProveStmt) GetLine() uint                       { return s.Line }
-func (s *UniFactWithIffStmt) GetLine() uint              { return s.Line }
-func (s *ClaimProveByContradictionStmt) GetLine() uint   { return s.Line }
-func (s *EnumStmt) GetLine() uint                        { return s.Line }
+func (s *ProveIsCommutativePropStmt) algoStmt()        {}
+func (s *DefProveAlgoStmt) algoStmt()                  {}
+func (s *ByStmt) algoStmt()                            {}
+func (s *ClaimIffStmt) algoStmt()                      {}
+func (s *ProveInRangeSetStmt) algoStmt()               {}
+func (s *ProveInRangeStmt) algoStmt()                  {}
+func (s *ProveIsTransitivePropStmt) algoStmt()         {}
+func (s *DefAlgoStmt) algoStmt()                       {}
+func (s *EvalStmt) algoStmt()                          {}
+func (s *PrintStmt) algoStmt()                         {}
+func (s *HelpStmt) algoStmt()                          {}
+func (s *HaveFnEqualCaseByCaseStmt) algoStmt()         {}
+func (s *HaveFnCaseByCaseStmt) algoStmt()              {}
+func (s *HaveCartWithDimStmt) stmt()                   {}
+func (s *HaveCartWithDimStmt) algoStmt()               {}
+func (s *DefLetStmt) GetLine() uint                    { return s.Line }
+func (s *DefPropStmt) GetLine() uint                   { return s.Line }
+func (s *DefFnStmt) GetLine() uint                     { return s.Line }
+func (s *UniFactStmt) GetLine() uint                   { return s.Line }
+func (s *SpecFactStmt) GetLine() uint                  { return s.Line }
+func (s *ClaimProveStmt) GetLine() uint                { return s.Line }
+func (s *KnowFactStmt) GetLine() uint                  { return s.Line }
+func (s *DefExistPropStmt) GetLine() uint              { return s.Line }
+func (s *HaveObjStStmt) GetLine() uint                 { return s.Line }
+func (s *ProveInEachCaseStmt) GetLine() uint           { return s.Line }
+func (s *ProveCaseByCaseStmt) GetLine() uint           { return s.Line }
+func (s *KnowPropStmt) GetLine() uint                  { return s.Line }
+func (s *OrStmt) GetLine() uint                        { return s.Line }
+func (s *ImportDirStmt) GetLine() uint                 { return s.Line }
+func (s *ImportFileStmt) GetLine() uint                { return s.Line }
+func (s *ProveStmt) GetLine() uint                     { return s.Line }
+func (s *UniFactWithIffStmt) GetLine() uint            { return s.Line }
+func (s *ClaimProveByContradictionStmt) GetLine() uint { return s.Line }
+
+// func (s *EnumStmt) GetLine() uint                        { return s.Line }
 func (s *IntensionalSetStmt) GetLine() uint              { return s.Line }
 func (s *ClaimPropStmt) GetLine() uint                   { return s.Line }
 func (s *ClaimExistPropStmt) GetLine() uint              { return s.Line }
@@ -231,7 +234,8 @@ func (p *SpecFactStmt) factStmt()       {}
 func (l *UniFactStmt) factStmt()        {}
 func (l *UniFactWithIffStmt) factStmt() {}
 func (s *OrStmt) factStmt()             {}
-func (s *EnumStmt) factStmt()           {}
+
+// func (s *EnumStmt) factStmt()           {}
 func (s *IntensionalSetStmt) factStmt() {}
 func (s *EqualsFactStmt) factStmt()     {}
 
@@ -361,7 +365,8 @@ func (s *SpecFactStmt) canBeKnown()       {}
 func (s *UniFactStmt) canBeKnown()        {}
 func (s *UniFactWithIffStmt) canBeKnown() {}
 func (s *OrStmt) canBeKnown()             {}
-func (s *EnumStmt) canBeKnown()           {}
+
+// func (s *EnumStmt) canBeKnown()           {}
 func (s *IntensionalSetStmt) canBeKnown() {}
 func (s *EqualsFactStmt) canBeKnown()     {}
 func (s *KnowPropStmt) canBeKnown()       {}
@@ -413,7 +418,8 @@ func (p *SpecFactStmt) proveAlgoReturnStmt()       {}
 func (l *UniFactStmt) proveAlgoReturnStmt()        {}
 func (l *UniFactWithIffStmt) proveAlgoReturnStmt() {}
 func (s *OrStmt) proveAlgoReturnStmt()             {}
-func (s *EnumStmt) proveAlgoReturnStmt()           {}
+
+// func (s *EnumStmt) proveAlgoReturnStmt()           {}
 func (s *IntensionalSetStmt) proveAlgoReturnStmt() {}
 func (s *EqualsFactStmt) proveAlgoReturnStmt()     {}
 func (s *ByStmt) proveAlgoReturnStmt()             {}

@@ -563,7 +563,7 @@ func (tb *tokenBlock) inline_enum_intensional_fact_skip_terminator(left ast.Obj)
 		if tb.header.is(glob.KeySymbolComma) {
 			tb.header.skip(glob.KeySymbolComma)
 		} else {
-			return ast.NewEnumStmt(left, []ast.Obj{firstObj}, tb.line), nil
+			return ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left, ast.MakeEnumSetObj([]ast.Obj{firstObj})}, tb.line), nil
 		}
 
 		enumItems := []ast.Obj{firstObj}
@@ -583,7 +583,7 @@ func (tb *tokenBlock) inline_enum_intensional_fact_skip_terminator(left ast.Obj)
 			return nil, parserErrAtTb(err, tb)
 		}
 
-		return ast.NewEnumStmt(left, enumItems, tb.line), nil
+		return ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left, ast.MakeEnumSetObj(enumItems)}, tb.line), nil
 	} else {
 		firstObjAsAtom := firstObj.(ast.Atom)
 		// 必须是纯的，不能是复合的
