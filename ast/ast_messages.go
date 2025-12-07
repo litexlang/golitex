@@ -477,14 +477,23 @@ func (f *FnObj) String() string {
 		return IndexOptObjString(f)
 	}
 
-	// if IsAtomObjAndEqualToStr(f.FnHead, glob.KeySymbolDot) {
-	// 	return fmt.Sprintf("%s.%s", f.Params[0], f.Params[1])
-	// }
+	if IsEnumSetObj(f) {
+		paramStrSlice := make([]string, len(f.Params))
+		for i := range len(f.Params) {
+			paramStrSlice[i] = f.Params[i].String()
+		}
+		return fmt.Sprintf("%s%s%s", glob.KeySymbolLeftCurly, strings.Join(paramStrSlice, ", "), glob.KeySymbolRightCurly)
+	}
+
+	if IsIntensionalSetObj(f) {
+		paramsStrSlice := make([]string, len(f.Params))
+		for i := range len(f.Params) {
+			paramsStrSlice[i] = f.Params[i].String()
+		}
+		return fmt.Sprintf("%s%s %s%s%s%s", glob.KeySymbolLeftCurly, f.Params[0].String(), f.Params[1].String(), glob.KeySymbolColon, strings.Join(paramsStrSlice, ", "), glob.KeySymbolRightCurly)
+	}
 
 	if ok, str := hasBuiltinOptAndToString(f); ok {
-		// 如果最左和最右是两边是 ()，那remove掉括号
-		// str = strings.TrimPrefix(str, "(")
-		// str = strings.TrimSuffix(str, ")")
 		return str
 	}
 
@@ -499,6 +508,20 @@ func (f *FnObj) String() string {
 	builder.WriteString(")")
 
 	return builder.String()
+}
+
+func IsIntensionalSetObj(obj Obj) bool {
+	if asIntensionalSetStmt, ok := obj.(*FnObj); ok {
+		return asIntensionalSetStmt.FnHead.String() == glob.KeywordIntensionalSet
+	}
+	return false
+}
+
+func IsEnumSetObj(obj Obj) bool {
+	if asEnumStmt, ok := obj.(*FnObj); ok {
+		return asEnumStmt.FnHead.String() == glob.KeywordEnumSet
+	}
+	return false
 }
 
 func (stmt *ProveInEachCaseStmt) String() string {
