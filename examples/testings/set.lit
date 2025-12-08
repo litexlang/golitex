@@ -5,7 +5,7 @@ prove:
 
     have x set
 
-    know $is_subset_of(x, y)
+    know $subset_of(x, y)
 
     prove:
         $subset_of_finite_set_is_finite_set(x, y)

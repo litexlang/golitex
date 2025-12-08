@@ -6,7 +6,7 @@ have fn:
     prove:
         have s set = {x cart(R, R): a * x[1] + b * x[2] = c}
         forall x s: x $in cart(R, R)
-        s $is_subset_of cart(R, R)
+        s $subset_of cart(R, R)
     = s
 
 # 平面的子集是一个直线
@@ -29,7 +29,7 @@ line(1, 1, 1) = {x cart(R, R): 1 * x[1] + 1 * x[2] = 1}
 # 一般式可以化成点斜式
 prove forall a, b, c R: a != 0 => line(a, b, c) = line(1, b/a, c/a):
     line(a, b, c) $in subsets(cart(R, R))
-    line(a, b, c) $is_subset_of cart(R, R)
+    line(a, b, c) $subset_of cart(R, R)
 
     forall x line(a, b, c):
         x $in cart(R, R)

@@ -156,7 +156,7 @@ prove:
     
     # TODO: Litex will provide the user a syntax sugar for defining a set by a property. Now we use the idea of "if and only if" to define a set by a property.
     let s set: # define s = {x in s2| property_of_s2_items(x) is true}
-        s $is_subset_of s2
+        s $subset_of s2
         forall x s:
             $property_of_s2_items(x)
         forall x s2:

@@ -128,7 +128,7 @@ know forall x, y R: x > 0, y > 0 => x ^ y $in R, x ^ y > 0, x * y > 0
 know forall x Z => x $in Q, x $in R
 
 know forall x N_pos => x $in N, x >= 1, x > 0, x $in Q, x $in R
-know forall x Z: x >= 0 => x $in N_pos
+know forall x Z: x > 0 => x $in N_pos
 know forall x Z: x <= 0 => not x $in N_pos
 
 fn_template seq(s set):
@@ -372,14 +372,7 @@ know forall a, b, c, d R: c != 0, a = d * (b / c) => a * c = d * b
 know forall x, y, z R: z != 0, x = y / z => x * z = y
 
 fn range(x Z, y Z) set:
-	dom:
-		x <= y 
-	=>:
-		forall i Z:
-			i >= x
-			i < y
-			=>:
-				i $in range(x, y)
+	range(x, y) = {i Z: x <= i, i < y}
 
 know:
 	forall x, y set:
@@ -598,7 +591,7 @@ fn negate(x R) R:
 
 know forall x set: not x $in x
 
-prop is_subset_of(x, y set):
+prop subset_of(x, y set):
 	forall z x:
 		=>:
 			z $in y
@@ -635,7 +628,7 @@ know @item_in_union(z set, x, y set):
 
 fn complement(x, y set) set:
 	dom:
-		x $is_subset_of y
+		x $subset_of y
 	=>:
 		forall z y:
 			not z $in x
@@ -643,7 +636,7 @@ fn complement(x, y set) set:
 				z $in complement(x, y)
 
 know @item_in_complement(z set, x, y set):
-	x $is_subset_of y
+	x $subset_of y
 	z $in complement(x, y)
 	=>:
 		z $in y
@@ -691,7 +684,7 @@ know:
 prop is_finite_set(x set)
 know forall x set: $is_finite_set(x) <=> x $in finite_set
 know @subset_of_finite_set_is_finite_set(x set, y finite_set):
-	x $is_subset_of y
+	x $subset_of y
 	=>:
 		$is_finite_set(x)
 		count(x) <= count(y)
@@ -761,7 +754,7 @@ know:
 know forall x, y nonempty_set: $item_exists_in(fn(x) y)
 
 fn inverse_image_set(X set, Y set, f fn(X)Y, U set) set:
-    U $is_subset_of Y
+    U $subset_of Y
     =>:
         inverse_image_set(X, Y, f, U) = {x X: f(x) $in U}
 
@@ -781,16 +774,16 @@ fn power_set(x set) set
 know:
 	forall x set, y power_set(x):
 		y $in set
-		y $is_subset_of x
+		y $subset_of x
 	forall x set, y set:
-		y $is_subset_of x
+		y $subset_of x
 		=>:
 			y $in power_set(x)
 	forall x nonempty_set:
 		power_set(x) $in nonempty_set
 		$item_exists_in(power_set(x))
 
-know forall x set: empty_set $is_subset_of x
+know forall x set: empty_set $subset_of x
 know forall s finite_set: count(s) > 0 => s $in nonempty_set, $item_exists_in(s)
 
 know:
@@ -841,12 +834,12 @@ know:
 			x = y
 
 fn subsets(x set) set
-know forall x set, y subsets(x): y $is_subset_of x, forall t y => t $in x
-know forall x, y set: x $is_subset_of y => x $in subsets(y)
+know forall x set, y subsets(x): y $subset_of x, forall t y => t $in x
+know forall x, y set: x $subset_of y => x $in subsets(y)
 
 prop is_intensional_set(x set)
 
-know forall x, y set => x = y <=> x $is_subset_of y, y $is_subset_of x
+know forall x, y set => x = y <=> x $subset_of y, y $subset_of x
 
 know forall x R: abs(x) >= 0
 know forall x R: x >= 0 => sqrt(x) = 0 <=> x = 0

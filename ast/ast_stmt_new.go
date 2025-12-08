@@ -212,12 +212,12 @@ func NewClaimIffStmt(uniFactWithIffStmt *UniFactWithIffStmt, proofs []Stmt, proo
 	return &ClaimIffStmt{uniFactWithIffStmt, proofs, proofs2, line}
 }
 
-func NewProveInRangeSetStmt(start int64, end int64, param string, intensionalSet Obj, thenFacts []FactStmt, proofs []Stmt, line uint) *ProveInRangeSetStmt {
-	return &ProveInRangeSetStmt{start, end, param, intensionalSet, thenFacts, proofs, line}
-}
+// func NewProveInRangeSetStmt(start int64, end int64, param string, intensionalSet Obj, thenFacts []FactStmt, proofs []Stmt, line uint) *ProveInRangeSetStmt {
+// 	return &ProveInRangeSetStmt{start, end, param, intensionalSet, thenFacts, proofs, line}
+// }
 
-func NewProveInRangeStmt(param string, start Obj, end Obj, domFacts []FactStmt, thenFacts []FactStmt, proofs []Stmt, line uint) *ProveInRangeStmt {
-	return &ProveInRangeStmt{param: param, start: start, end: end, DomFactsOrNil: domFacts, ThenFacts: thenFacts, ProofsOrNil: proofs, Line: line}
+func NewProveInRangeStmt(param string, start Obj, end Obj, domFacts []FactStmt, thenFacts []FactStmt, proofs []Stmt, line uint) *ProveInRangeStmt2 {
+	return &ProveInRangeStmt2{param: param, start: start, end: end, DomFactsOrNil: domFacts, ThenFacts: thenFacts, ProofsOrNil: proofs, Line: line}
 }
 
 func NewProveIsTransitivePropStmt(prop Atom, params []string, proofs []Stmt, line uint) *ProveIsTransitivePropStmt {

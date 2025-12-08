@@ -123,7 +123,8 @@ func (ver *Verifier) enumSetFnRequirement(objAsFnObj *ast.FnObj, state *VerState
 	// 所有参数互相不相等
 	for i := range len(objAsFnObj.Params) {
 		for j := i + 1; j < len(objAsFnObj.Params); j++ {
-			verRet := ver.VerFactStmt(ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{objAsFnObj.Params[i], objAsFnObj.Params[j]}, glob.BuiltinLine), state)
+			fact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{objAsFnObj.Params[i], objAsFnObj.Params[j]}, glob.BuiltinLine)
+			verRet := ver.VerFactStmt(fact, state)
 			if verRet.IsErr() {
 				return NewExecErr(verRet.String())
 			}
