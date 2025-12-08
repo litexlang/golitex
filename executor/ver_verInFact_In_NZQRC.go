@@ -67,7 +67,7 @@ func (ver *Verifier) verInNPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet
 		return true, stmt.String()
 	}
 
-	verRet = ver.returnValueOfUserDefinedFnInFnReturnSet(stmt, state)
+	verRet = ver.verInFactByLeftParamIsReturnValueOfUserDefinedFn(stmt, state)
 	if verRet.IsTrue() {
 		return true, stmt.String()
 	}
@@ -101,7 +101,7 @@ func (ver *Verifier) verInN_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(st
 		return true, stmt.String()
 	}
 
-	verRet = ver.returnValueOfUserDefinedFnInFnReturnSet(stmt, state)
+	verRet = ver.verInFactByLeftParamIsReturnValueOfUserDefinedFn(stmt, state)
 	if verRet.IsTrue() {
 		return true, stmt.String()
 	}
@@ -136,7 +136,7 @@ func (ver *Verifier) verInZ_BySpecMem__ReturnValueOfUserDefinedFnInFnReturnSet(s
 		return true, stmt.String()
 	}
 
-	verRet = ver.returnValueOfUserDefinedFnInFnReturnSet(stmt, state)
+	verRet = ver.verInFactByLeftParamIsReturnValueOfUserDefinedFn(stmt, state)
 	if verRet.IsTrue() {
 		return true, stmt.String()
 	}
@@ -172,7 +172,7 @@ func (ver *Verifier) verInQ_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(st
 		return true, stmt.String()
 	}
 
-	verRet = ver.returnValueOfUserDefinedFnInFnReturnSet(stmt, state)
+	verRet = ver.verInFactByLeftParamIsReturnValueOfUserDefinedFn(stmt, state)
 	if verRet.IsTrue() {
 		return true, stmt.String()
 	}
@@ -204,7 +204,7 @@ func (ver *Verifier) verInR_BySpecMem(stmt *ast.SpecFactStmt, state *VerState) (
 		return true, stmt.String()
 	}
 
-	verRet = ver.returnValueOfUserDefinedFnInFnReturnSet(stmt, state)
+	verRet = ver.verInFactByLeftParamIsReturnValueOfUserDefinedFn(stmt, state)
 	if verRet.IsTrue() {
 		return true, stmt.String()
 	}

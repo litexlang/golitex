@@ -33,7 +33,7 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 
 	var verRet ExecRet
 
-	verRet = ver.verByRightIsKeywordSet(stmt, state)
+	verRet = ver.verInFactByRightParamIsKeywordSet(stmt, state)
 	if verRet.IsErr() {
 		return verRet
 	}
@@ -41,7 +41,15 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 		return verRet
 	}
 
-	// verRet = ver.verInSet_btRules(stmt, state)
+	verRet = ver.verInFactByLeftParamIsNumberExpr(stmt, state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsTrue() {
+		return verRet
+	}
+
+	// verRet = ver.builtinSetsInSetSet(stmt, state)
 	// if verRet.IsErr() {
 	// 	return verRet
 	// }
@@ -49,7 +57,7 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 	// 	return verRet
 	// }
 
-	verRet = ver.btLitNumInNatOrIntOrRatOrRealOrComplex(stmt, state)
+	verRet = ver.verInFactByLeftParamIsReturnValueOfArithmeticFn(stmt, state)
 	if verRet.IsErr() {
 		return verRet
 	}
@@ -57,7 +65,7 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 		return verRet
 	}
 
-	verRet = ver.builtinSetsInSetSet(stmt, state)
+	verRet = ver.verInFactByLeftParamIsReturnValueOfUserDefinedFn(stmt, state)
 	if verRet.IsErr() {
 		return verRet
 	}
@@ -65,31 +73,15 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 		return verRet
 	}
 
-	verRet = ver.returnValueOfBuiltinArithmeticFnInReal(stmt, state)
-	if verRet.IsErr() {
-		return verRet
-	}
-	if verRet.IsTrue() {
-		return verRet
-	}
+	// verRet = ver.verIn_N_Z_Q_R_C(stmt, state)
+	// if verRet.IsErr() {
+	// 	return verRet
+	// }
+	// if verRet.IsTrue() {
+	// 	return verRet
+	// }
 
-	verRet = ver.returnValueOfUserDefinedFnInFnReturnSet(stmt, state)
-	if verRet.IsErr() {
-		return verRet
-	}
-	if verRet.IsTrue() {
-		return verRet
-	}
-
-	verRet = ver.verIn_N_Z_Q_R_C(stmt, state)
-	if verRet.IsErr() {
-		return verRet
-	}
-	if verRet.IsTrue() {
-		return verRet
-	}
-
-	verRet = ver.inFnTemplateFact(stmt, state)
+	verRet = ver.verInFactByRightParamIsFnTemplateFact(stmt, state)
 	if verRet.IsErr() {
 		return NewExecErr(verRet.String())
 	}
@@ -97,7 +89,7 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 		return verRet
 	}
 
-	verRet = ver.verInSetProduct(stmt, state)
+	verRet = ver.verInFactByRightParamIsSetProduct(stmt, state)
 	if verRet.IsErr() {
 		return NewExecErr(verRet.String())
 	}
@@ -105,7 +97,7 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 		return verRet
 	}
 
-	verRet = ver.verInCartSet(stmt, state)
+	verRet = ver.verInFactByRightParamIsCartSet(stmt, state)
 	if verRet.IsErr() {
 		return NewExecErr(verRet.String())
 	}
@@ -114,13 +106,13 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 	}
 
 	// fn(R)R $in set
-	verRet = ver.FnTemplateIsASet(stmt, state)
+	verRet = ver.verInFactByLeftIsFnTemplateAndRightIsKeywordSet(stmt, state)
 	if verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
 
 	// cart(R, R) $in nonempty_set
-	verRet = ver.verCartInNonemptySet(stmt, state)
+	verRet = ver.verInFactByLeftIsCartSetAndRightIsKeywordNonemptySet(stmt, state)
 	if verRet.IsErr() {
 		return verRet
 	}
@@ -129,7 +121,7 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 	}
 
 	// x[1] $in some_set
-	verRet = ver.verIndexOfObjInSomeSet(stmt, state)
+	verRet = ver.verInFactByLeftIsIndexOfObjInSomeSet(stmt, state)
 	if verRet.IsErr() {
 		return verRet
 	}
@@ -138,7 +130,7 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 	}
 
 	// x $in {x R: x > 0}
-	verRet = ver.verInIntensionalSet(stmt, state)
+	verRet = ver.verInFactByRightIsIntensionalSet(stmt, state)
 	if verRet.IsErr() {
 		return verRet
 	}
@@ -149,7 +141,7 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 	return NewEmptyExecUnknown()
 }
 
-func (ver *Verifier) verCartInNonemptySet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) verInFactByLeftIsCartSetAndRightIsKeywordNonemptySet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	if !ast.IsFn_WithHeadName(stmt.Params[0], glob.KeywordCart) {
 		return NewEmptyExecUnknown()
 	}
@@ -165,7 +157,7 @@ func (ver *Verifier) verCartInNonemptySet(stmt *ast.SpecFactStmt, state *VerStat
 	return NewExecTrue(fmt.Sprintf("all arguments of %s are in nonempty.", stmt.Params[0]))
 }
 
-func (ver *Verifier) FnTemplateIsASet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) verInFactByLeftIsFnTemplateAndRightIsKeywordSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	if asAtom, ok := stmt.Params[1].(ast.Atom); ok {
 		if asAtom != glob.KeywordSet {
 			return NewEmptyExecUnknown()
@@ -196,7 +188,7 @@ func (ver *Verifier) FnTemplateIsASet(stmt *ast.SpecFactStmt, state *VerState) E
 	return NewEmptyExecUnknown()
 }
 
-func (ver *Verifier) returnValueOfBuiltinArithmeticFnInReal(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) verInFactByLeftParamIsReturnValueOfArithmeticFn(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	ok := ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordReal)
 	if !ok {
 		return NewEmptyExecUnknown()
@@ -211,30 +203,30 @@ func (ver *Verifier) returnValueOfBuiltinArithmeticFnInReal(stmt *ast.SpecFactSt
 	return NewEmptyExecUnknown()
 }
 
-func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	ok := ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordSet)
-	if !ok {
-		return NewEmptyExecUnknown()
-	}
+// func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+// 	ok := ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordSet)
+// 	if !ok {
+// 		return NewEmptyExecUnknown()
+// 	}
 
-	asAtom, ok := stmt.Params[0].(ast.Atom)
-	if !ok {
-		return NewEmptyExecUnknown()
-	}
+// 	asAtom, ok := stmt.Params[0].(ast.Atom)
+// 	if !ok {
+// 		return NewEmptyExecUnknown()
+// 	}
 
-	// if asAtom.PkgName != glob.EmptyPkg {
-	// 	return NewExecEmptyUnknown()
-	// }
+// 	// if asAtom.PkgName != glob.EmptyPkg {
+// 	// 	return NewExecEmptyUnknown()
+// 	// }
 
-	if string(asAtom) == glob.KeywordNatural || string(asAtom) == glob.KeywordInteger || string(asAtom) == glob.KeywordReal || string(asAtom) == glob.KeywordRational || string(asAtom) == glob.KeywordNPos {
-		msg := fmt.Sprintf("%s is a builtin set", asAtom)
-		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
-	}
+// 	if string(asAtom) == glob.KeywordNatural || string(asAtom) == glob.KeywordInteger || string(asAtom) == glob.KeywordReal || string(asAtom) == glob.KeywordRational || string(asAtom) == glob.KeywordNPos {
+// 		msg := fmt.Sprintf("%s is a builtin set", asAtom)
+// 		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+// 	}
 
-	return NewEmptyExecUnknown()
-}
+// 	return NewEmptyExecUnknown()
+// }
 
-func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) verInFactByRightParamIsFnTemplateFact(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	if asFcFn, ok := stmt.Params[1].(*ast.FnObj); ok {
 		if ast.IsFnTemplate_FcFn(asFcFn) {
 			verRet := ver.ver_In_FnFcFn_FnTT(stmt.Params[0], asFcFn, state)
@@ -315,7 +307,7 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state *VerState) E
 // 	return NewExecEmptyUnknown()
 // }
 
-func (ver *Verifier) verByRightIsKeywordSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) verInFactByRightParamIsKeywordSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	// 第二个参数得是set
 	lenParams := len(stmt.Params)
 	if lenParams != 2 {
@@ -477,7 +469,7 @@ func (ver *Verifier) objNotInSetWhenAllItemsInThatSetAreNotEqualToIt(stmt *ast.S
 // 	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecEmptyTrue())
 // }
 
-func (ver *Verifier) verInSetProduct(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) verInFactByRightParamIsSetProduct(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	// left must be (x, y, ...) right must be product(xSet, ySet, ...)
 	fcFn, ok := stmt.Params[0].(*ast.FnObj)
 	if !ok {
@@ -571,10 +563,10 @@ func (ver *Verifier) verInCartSet_DimAndElements(obj ast.Obj, cartSet *ast.FnObj
 	return NewExecTrue(msg)
 }
 
-// verInCartSet verifies a $in cart(...) by checking:
+// verInFactByRightParamIsCartSet verifies a $in cart(...) by checking:
 // 1. dim(a) = dim(cart(...))
 // 2. a[i] $in cart(...).Params[i-1] for each i
-func (ver *Verifier) verInCartSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) verInFactByRightParamIsCartSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	// Check if right side is cart(...)
 	cartSet, ok := stmt.Params[1].(*ast.FnObj)
 	if !ok {
@@ -681,7 +673,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *
 	return verRet
 }
 
-func (ver *Verifier) returnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) verInFactByLeftParamIsReturnValueOfUserDefinedFn(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	fcFn, ok := stmt.Params[0].(*ast.FnObj)
 	if !ok {
 		return NewEmptyExecUnknown()
@@ -850,7 +842,7 @@ func (ver *Verifier) litNumNotInNPosByLiteralShape(stmt *ast.SpecFactStmt, state
 	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
 }
 
-func (ver *Verifier) verIndexOfObjInSomeSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) verInFactByLeftIsIndexOfObjInSomeSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	left := stmt.Params[0]
 	someSet := stmt.Params[1]
 
@@ -897,7 +889,7 @@ func (ver *Verifier) verIndexOfObjInSomeSet(stmt *ast.SpecFactStmt, state *VerSt
 	return NewEmptyExecUnknown()
 }
 
-func (ver *Verifier) verInIntensionalSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) verInFactByRightIsIntensionalSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	if !ast.IsIntensionalSetObj(stmt.Params[1]) {
 		return NewEmptyExecUnknown()
 	}
