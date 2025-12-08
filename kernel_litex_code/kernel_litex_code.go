@@ -374,6 +374,8 @@ know forall x, y, z R: z != 0, x = y / z => x * z = y
 fn range(x Z, y Z) set:
 	range(x, y) = {i Z: x <= i, i < y}
 
+"""
+# 这个事实虽然是对的，但是一旦加入，就会让整个系统慢20%（因为所有的等号都会经过它），所以不加为妙。用内置的equal_set来实现类似效果。equal_set会用下面的逻辑来证明两个集合相等。不过在每次证明 a = b 的时候，内核不会用equal_set来试一试对不对
 know:
 	forall x, y set:
 		=>:
@@ -383,6 +385,7 @@ know:
 				t $in y
 			forall t y:
 				t $in x
+"""
 ` + InequalityFacts
 
 var InequalityFacts = `
@@ -872,4 +875,6 @@ know:
 	forall a, b R: a > 0, b >= 0 => a + b > 0
 
 know not {} $in nonempty_set
+
+prop equal_set(x set, y set)
 `
