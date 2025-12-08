@@ -2,10 +2,9 @@
 
 exist 1 st $item_exists_in({x R: x > 0})
 
-prove:
-    have a {x R: x > 0}
-    a > 0
-    a $in R
+have a {x R: x > 0}
+a > 0
+a $in R
 
 """
 prove:

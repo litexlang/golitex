@@ -893,6 +893,10 @@ func (ver *Verifier) verIndexOfObjInSomeSet(stmt *ast.SpecFactStmt, state *VerSt
 }
 
 func (ver *Verifier) verInIntensionalSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	if !ast.IsIntensionalSetObj(stmt.Params[1]) {
+		return NewExecUnknown("")
+	}
+
 	param, parentSet, facts, err := parser.GetParamParentSetFactsFromIntensionalSet(stmt.Params[1].(*ast.FnObj))
 	if err != nil {
 		return NewExecErr(err.Error())
