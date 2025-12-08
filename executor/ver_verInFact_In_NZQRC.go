@@ -74,15 +74,10 @@ func (ver *Verifier) verInNPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet
 
 	// For N_pos, only +, *, ^ preserve N_pos when both operands are in N_pos
 	// Subtraction (-) does NOT preserve N_pos (e.g., 3 - 5 = -2 is not in N_pos)
-	// Use a set that excludes minus
-	plusStarPowerSet := map[string]struct{}{
-		glob.KeySymbolPlus:  {},
-		glob.KeySymbolStar:  {},
-		glob.KeySymbolPower: {},
-	}
-	if ast.IsFn_WithHeadNameInSlice(stmt.Params[0], plusStarPowerSet) {
-		fnObj, ok := stmt.Params[0].(*ast.FnObj)
-		if ok {
+	fnObj, ok := stmt.Params[0].(*ast.FnObj)
+	if ok {
+		fnHead := fnObj.FnHead.String()
+		if fnHead == glob.KeySymbolPlus || fnHead == glob.KeySymbolStar || fnHead == glob.KeySymbolPower {
 			ok, _ = ver.verInNPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{fnObj.Params[0], ast.Atom(glob.KeywordNPos)}, stmt.Line), state)
 			if ok {
 				ok, _ = ver.verInNPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{fnObj.Params[1], ast.Atom(glob.KeywordNPos)}, stmt.Line), state)
@@ -116,15 +111,10 @@ func (ver *Verifier) verInN_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(st
 
 	// For N (natural numbers including 0), only +, *, ^ preserve N when both operands are in N
 	// Subtraction (-) does NOT preserve N (e.g., 1 - 2 = -1 is not in N)
-	// Use a set that excludes minus
-	plusStarPowerSet := map[string]struct{}{
-		glob.KeySymbolPlus:  {},
-		glob.KeySymbolStar:  {},
-		glob.KeySymbolPower: {},
-	}
-	if ast.IsFn_WithHeadNameInSlice(stmt.Params[0], plusStarPowerSet) {
-		fnObj, ok := stmt.Params[0].(*ast.FnObj)
-		if ok {
+	fnObj, ok := stmt.Params[0].(*ast.FnObj)
+	if ok {
+		fnHead := fnObj.FnHead.String()
+		if fnHead == glob.KeySymbolPlus || fnHead == glob.KeySymbolStar || fnHead == glob.KeySymbolPower {
 			ok, _ = ver.verInN_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{fnObj.Params[0], ast.Atom(glob.KeywordNatural)}, stmt.Line), state)
 			if ok {
 				ok, _ = ver.verInN_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{fnObj.Params[1], ast.Atom(glob.KeywordNatural)}, stmt.Line), state)
