@@ -1,5 +1,61 @@
 # have statements
 
+prove:
+    exist_prop a R st exist_x_larger_than(x R) :
+        <=>:
+            a > x
+
+    # claim spec fact prove
+    claim:
+        $exist_x_larger_than(1)
+        prove:
+            exist 2 st $exist_x_larger_than(1)
+            
+    $exist_x_larger_than(1)
+            
+    have a st $exist_x_larger_than(1)
+    a $in R
+    a > 1
+
+    know forall x R,  y R:x > 0 => x + y > y, y + x > y
+
+    # claim forall prove
+    claim:
+        forall x R:
+            $exist_x_larger_than(x)
+        prove:
+            exist x + 1 st $exist_x_larger_than(x)
+
+    let x R:
+        1 >= x
+
+    know:
+        forall x R, y R:
+            not x < y
+            <=>:
+                x >= y
+
+    know:
+        forall x R, y R:
+            x > y
+            =>:
+                not y >= x
+
+    know @larger_equal_is_transitive(x R, y R, z R):
+        x >= y
+        y > z
+        =>:
+            x > z
+
+    # claim spec fact prove by contradiction
+    claim:
+        x < 2
+        prove_by_contradiction:
+            x >= 2
+            $larger_equal_is_transitive(x, 2, 1)
+            x > 1
+            not 1 >= x
+
 # have by exist_prop
 prove:
     exist_prop x N st exist_x_larger_than_1():
@@ -32,10 +88,12 @@ prove:
 # have sets by naive set theory
 prove:
     have s set = {1, 2, 3}
+
+    prove_by_enum(x {1, 2, 3}):
+        x $in {3, 2, 1}
+
+prove:
     have s2 set = {x N : x > 5}
-
-    s = {3, 2, 1}
-
     forall x s2:
         x > 5
 

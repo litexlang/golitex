@@ -22,6 +22,7 @@ import (
 	"strconv"
 )
 
+// TODO: 好像这里的条件也不一定是互斥的，所以如果ret.IsTrue()了，也不一定要返回 true，而是应该继续尝试其他条件
 func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 	if len(fact.Params) != 2 {
 		return glob.ErrRet(fmt.Errorf("in fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
@@ -332,6 +333,44 @@ func (e *Env) equalFactPostProcess_tupleEquality(left ast.Obj, right ast.Obj) gl
 	return glob.TrueRet("")
 }
 
+// equalFactPostProcess_enumSetEquality 处理 x = {1, 2, 3} 的情况
+// 如果右边是 enum set（直接或通过 equal facts），则创建一个 or fact，表示 x 等于 enum set 中的某一个元素
+func (e *Env) equalFactPostProcess_enumSetEquality(left ast.Obj, right ast.Obj) glob.GlobRet {
+	// 尝试获取 enum set（可能是直接的，也可能是通过 equal facts 得到的）
+	enumSetObj := e.GetObjEnumSet(right)
+	if enumSetObj == nil {
+		return glob.TrueRet("")
+	}
+
+	enumSet, ok := enumSetObj.(*ast.FnObj)
+	if !ok {
+		return glob.ErrRet(fmt.Errorf("expected enum set to be FnObj, got %T", enumSetObj))
+	}
+
+	// 创建一个 or fact，表示 left 等于 enum set 中的某一个元素
+	orFact := ast.NewOrStmt([]*ast.SpecFactStmt{}, glob.BuiltinLine)
+	for _, param := range enumSet.Params {
+		orFact.Facts = append(orFact.Facts, ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left, param}, glob.BuiltinLine))
+	}
+	ret := e.NewFact(orFact)
+	if ret.IsErr() {
+		return ret
+	}
+
+	// count(a) = len
+	countFn := ast.NewFnObj(ast.Atom(glob.KeywordCount), []ast.Obj{left})
+	countValue := ast.Atom(strconv.Itoa(len(enumSet.Params)))
+	countEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{countFn, countValue}, glob.BuiltinLine)
+	ret = e.NewFact(countEqualFact)
+	if ret.IsErr() {
+		return ret
+	}
+
+	// is finite set
+	isFiniteFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{left, ast.Atom(glob.KeywordFiniteSet)}, glob.BuiltinLine)
+	return e.NewFact(isFiniteFact)
+}
+
 // inFactPostProcess_InEnumSet handles postprocessing for a $in enumset(...)
 // It generates an or fact indicating that the left param equals one of the enumset params
 func (e *Env) inFactPostProcess_InEnumSet(obj ast.Obj, enumSet *ast.FnObj) glob.GlobRet {
@@ -369,12 +408,7 @@ func (e *Env) inFactPostProcess_TryIntensionalSet(fact *ast.SpecFactStmt) glob.G
 		return glob.NewGlobUnknown("")
 	}
 
-	intensionalSet, ok := intensionalSetObj.(*ast.FnObj)
-	if !ok {
-		return glob.ErrRet(fmt.Errorf("expected intensional set to be FnObj, got %T", intensionalSetObj))
-	}
-
-	return e.inFactPostProcess_InIntensionalSet(fact.Params[0], intensionalSet)
+	return e.inFactPostProcess_InIntensionalSet(fact.Params[0], intensionalSetObj)
 }
 
 func (e *Env) inFactPostProcess_InIntensionalSet(obj ast.Obj, intensionalSet *ast.FnObj) glob.GlobRet {
