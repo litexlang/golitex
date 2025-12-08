@@ -1,19 +1,11 @@
-{x R: x > 0} = {x R: x > 0}
-
-exist 1 st $item_exists_in({x R: x > 0})
-
-have a {x R: x > 0}
-a > 0
-a $in R
-
-"""
 prove:
-    have a set = {x R: x > 0}
-    have set b = {x R: x > 0}
+    {x R: x > 0} = {x R: x > 0}
 
-    forall x b:
-        x > 0
+    exist 1 st $item_exists_in({x R: x > 0})
+
+    have a set = {x R: x > 0}
 
     forall x a:
         x > 0
-"""
+
+    {y R: y > 0} = {x R: x > 0}

@@ -34,7 +34,7 @@ func (exec *Executor) byStmt(stmt *ast.ByStmt) ExecRet {
 		}
 	}
 
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }
 
 // 工作原理是吧ProveAlgoDef的params都变成传入的obj，然后instantiate，然后run
@@ -80,7 +80,7 @@ func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) (ExecRet, []ast.FactStmt) 
 		return execRet, nil
 	}
 
-	return NewExecTrue(""), returnedFacts
+	return NewEmptyExecTrue(), returnedFacts
 }
 
 func (exec *Executor) runProveAlgoStmtsWhenBy(proveAlgoStmts ast.ProveAlgoStmtSlice, paramsValues []ast.Obj) (ExecRet, []ast.FactStmt) {
@@ -92,7 +92,7 @@ func (exec *Executor) runProveAlgoStmtsWhenBy(proveAlgoStmts ast.ProveAlgoStmtSl
 				return execRet, nil
 			}
 			// Return the facts from prove_algo
-			return NewExecTrue(""), facts
+			return NewEmptyExecTrue(), facts
 		case *ast.ProveAlgoIfStmt:
 			if conditionIsTrue, execRet := exec.IsAlgoIfConditionTrue(&ast.AlgoIfStmt{Conditions: asStmt.Conditions, ThenStmts: nil, Line: asStmt.Line}); execRet.IsErr() {
 				return execRet, nil
@@ -105,7 +105,7 @@ func (exec *Executor) runProveAlgoStmtsWhenBy(proveAlgoStmts ast.ProveAlgoStmtSl
 			return NewExecErr(fmt.Sprintf("unexpected prove_algo statement type: %T", stmt)), nil
 		}
 	}
-	return NewExecTrue(""), nil
+	return NewEmptyExecTrue(), nil
 }
 
 func (exec *Executor) runAlgoStmtsWhenBy(algoStmts ast.AlgoStmtSlice, paramsValues []ast.Obj) (ExecRet, []ast.FactStmt) {
@@ -128,7 +128,7 @@ func (exec *Executor) runAlgoStmtsWhenBy(algoStmts ast.AlgoStmtSlice, paramsValu
 			}
 		}
 	}
-	return NewExecTrue(""), nil
+	return NewEmptyExecTrue(), nil
 }
 
 func (exec *Executor) proveAlgoIfStmt(stmt *ast.ProveAlgoIfStmt, paramsValues []ast.Obj) (ExecRet, []ast.FactStmt) {
@@ -159,7 +159,7 @@ func (exec *Executor) algoIfStmtWhenBy(stmt *ast.AlgoIfStmt, paramsValues []ast.
 
 func (exec *Executor) runProveAlgoReturnStmt(stmt *ast.ProveAlgoReturnStmt) (ExecRet, []ast.FactStmt) {
 	if len(stmt.Facts) == 0 {
-		return NewExecTrue(""), nil
+		return NewEmptyExecTrue(), nil
 	}
 
 	resultFacts := []ast.FactStmt{}
@@ -188,5 +188,5 @@ func (exec *Executor) runProveAlgoReturnStmt(stmt *ast.ProveAlgoReturnStmt) (Exe
 		}
 	}
 
-	return NewExecTrue(""), resultFacts
+	return NewEmptyExecTrue(), resultFacts
 }

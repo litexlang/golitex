@@ -51,7 +51,7 @@ func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state 
 
 	// state.ReqOk = true
 	newState := VerState{state.Round, state.WithMsg, true}
-	return &newState, NewExecTrue("")
+	return &newState, NewEmptyExecTrue()
 }
 
 func (ver *Verifier) objIsDefinedAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *VerState) ExecRet {
@@ -59,7 +59,7 @@ func (ver *Verifier) objIsDefinedAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *Ver
 		if ver.Env.AreAtomsInObjDefined(atom, map[string]struct{}{}).IsNotTrue() {
 			return NewExecErr(fmt.Sprintf("%s is not declared", atom))
 		} else {
-			return NewExecTrue("")
+			return NewEmptyExecTrue()
 		}
 	}
 
@@ -71,7 +71,7 @@ func (ver *Verifier) objIsDefinedAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *Ver
 	if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordCount) {
 		return ver.countFnRequirement(objAsFnObj, state)
 	} else if ast.IsFnTemplate_FcFn(objAsFnObj) {
-		return NewExecTrue("")
+		return NewEmptyExecTrue()
 	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordCart) {
 		return ver.cartFnRequirement(objAsFnObj, state)
 	} else if ast.IsTupleFnObj(objAsFnObj) {
@@ -133,7 +133,7 @@ func (ver *Verifier) enumSetFnRequirement(objAsFnObj *ast.FnObj, state *VerState
 		}
 	}
 
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }
 
 func (ver *Verifier) tupleFnReq(objAsFnObj *ast.FnObj, state *VerState) ExecRet {
@@ -148,7 +148,7 @@ func (ver *Verifier) tupleFnReq(objAsFnObj *ast.FnObj, state *VerState) ExecRet 
 			return NewExecErr(fmt.Sprintf("parameters in %s must not be set", objAsFnObj.String()))
 		}
 	}
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }
 
 func (ver *Verifier) dimFnRequirement(fnObj *ast.FnObj, state *VerState) ExecRet {
@@ -164,7 +164,7 @@ func (ver *Verifier) dimFnRequirement(fnObj *ast.FnObj, state *VerState) ExecRet
 	if verRet.IsUnknown() {
 		return NewExecErr(fmt.Sprintf("%s is unknown", isTupleFact))
 	}
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }
 
 func (ver *Verifier) setDimFnRequirement(fnObj *ast.FnObj, state *VerState) ExecRet {
@@ -179,7 +179,7 @@ func (ver *Verifier) setDimFnRequirement(fnObj *ast.FnObj, state *VerState) Exec
 	if verRet.IsUnknown() {
 		return NewExecErr(fmt.Sprintf("parameters in %s must be sets, %s in %s is not valid", fnObj.FnHead, fnObj.Params[0], fnObj))
 	}
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }
 
 func (ver *Verifier) parasSatisfyProjReq(fnObj *ast.FnObj, state *VerState) ExecRet {
@@ -214,7 +214,7 @@ func (ver *Verifier) parasSatisfyProjReq(fnObj *ast.FnObj, state *VerState) Exec
 		return NewExecErr(fmt.Sprintf("index in %s must be <= set_dim(%s), %s in %s is not valid", fnObj, fnObj.Params[0], fnObj.Params[1], fnObj))
 	}
 
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }
 
 // // TODO: 这里需要检查！
@@ -246,7 +246,7 @@ func (ver *Verifier) countFnRequirement(fnObj *ast.FnObj, state *VerState) ExecR
 	if verRet.IsUnknown() {
 		return NewExecErr(fmt.Sprintf("parameters in %s must be in set %s, %s in %s is not valid", fnObj.FnHead, glob.KeywordFiniteSet, fnObj.Params[0], fnObj))
 	}
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }
 
 func (ver *Verifier) cartFnRequirement(fnObj *ast.FnObj, state *VerState) ExecRet {
@@ -264,7 +264,7 @@ func (ver *Verifier) cartFnRequirement(fnObj *ast.FnObj, state *VerState) ExecRe
 			return NewExecErr(fmt.Sprintf("parameters in %s must be sets, %s in %s is not valid", fnObj.FnHead, param, glob.KeywordSet))
 		}
 	}
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }
 
 func (ver *Verifier) indexOptFnRequirement(fnObj *ast.FnObj, state *VerState) ExecRet {
@@ -321,7 +321,7 @@ func (ver *Verifier) indexOptFnRequirement(fnObj *ast.FnObj, state *VerState) Ex
 		if index > len(objAsTuple.Params) {
 			return NewExecErr(fmt.Sprintf("index %d in %s is out of range, tuple has %d elements", index, fnObj, len(objAsTuple.Params)))
 		}
-		return NewExecTrue("")
+		return NewEmptyExecTrue()
 	}
 
 	// 情况3: 检查 dim(obj) 的值
@@ -337,10 +337,10 @@ func (ver *Verifier) indexOptFnRequirement(fnObj *ast.FnObj, state *VerState) Ex
 					return NewExecErr(fmt.Sprintf("index %d in %s is out of range, dim(%s) = %d", index, fnObj, obj, dimValue))
 				}
 				// 如果找到了 dim 值并且 index 在范围内，返回成功
-				return NewExecTrue("")
+				return NewEmptyExecTrue()
 			}
 		}
 	}
 
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }

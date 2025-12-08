@@ -33,7 +33,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 			return NewExecErr(err.Error())
 		}
 		if ok {
-			execState = NewExecTrue("")
+			execState = NewEmptyExecTrue()
 		}
 	}
 
@@ -46,7 +46,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 		if execState.IsNotTrue() {
 			return execState
 		}
-		result := NewExecTrue("")
+		result := NewEmptyExecTrue()
 		if requireMsg {
 			result = result.AddMsg(fmt.Sprintf("%s\n", stmt))
 		}
@@ -59,7 +59,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 	// TODO 把 exist prop def 里的东西释放出来
 	existPropDef := exec.Env.GetExistPropDef(stmt.Fact.PropName)
 	if existPropDef == nil {
-		return NewExecUnknown("")
+		return NewEmptyExecUnknown()
 	}
 
 	if len(existPropDef.ExistParams) != len(stmt.ObjNames) {
@@ -136,7 +136,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 		return NewExecErr(ret.String())
 	}
 
-	result := NewExecTrue("")
+	result := NewEmptyExecTrue()
 	if requireMsg {
 		result = result.AddMsg(fmt.Sprintf("%s\n", stmt))
 	}
@@ -154,7 +154,7 @@ func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStm
 		}
 	}
 
-	return NewExecTrue("").AddMsg(fmt.Sprintf("%s\n", stmt))
+	return NewEmptyExecTrue().AddMsg(fmt.Sprintf("%s\n", stmt))
 }
 
 func (exec *Executor) checkInFactInSet_SetIsNonEmpty(pureInFact *ast.SpecFactStmt) (bool, error) {
@@ -268,5 +268,5 @@ func (exec *Executor) haveCartSetStmt(stmt *ast.HaveCartSetStmt) ExecRet {
 		return NewExecErr(ret.String())
 	}
 
-	return NewExecTrue("").AddMsg(stmt.String())
+	return NewEmptyExecTrue().AddMsg(stmt.String())
 }

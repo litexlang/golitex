@@ -50,7 +50,7 @@ func (exec *Executor) proveInRangeSetStmt(stmt *ast.ProveInRangeSetStmt) ExecRet
 	// 	return NewExecErr(ret.String())
 	// }
 
-	// return NewExecTrue("")
+	// return NewExecEmptyTrue()
 }
 
 // func (exec *Executor) proveInRangeSetStmtWhenParamIsIndex(intensionalSetGivenSetIsIn *ast.IntensionalSetStmt, stmt *ast.ProveInRangeSetStmt, i int64) ExecRet {
@@ -124,7 +124,7 @@ func (exec *Executor) proveInRangeSetStmt(stmt *ast.ProveInRangeSetStmt) ExecRet
 // 				}
 // 			}
 
-// 			return NewExecTrue("")
+// 			return NewExecEmptyTrue()
 // 		}
 
 // 		ret := exec.Env.NewFact(domFact)
@@ -172,7 +172,7 @@ func (exec *Executor) proveInRangeSetStmt(stmt *ast.ProveInRangeSetStmt) ExecRet
 // 		}
 // 	}
 
-// 	return NewExecTrue("")
+// 	return NewExecEmptyTrue()
 // }
 
 func (exec *Executor) proveInRangeStmtWhenParamIsIndex(stmt *ast.ProveInRangeStmt, i int64) ExecRet {
@@ -220,7 +220,7 @@ func (exec *Executor) proveInRangeStmtWhenParamIsIndex(stmt *ast.ProveInRangeStm
 				}
 			}
 
-			return NewExecTrue("")
+			return NewEmptyExecTrue()
 		}
 
 		ret := exec.Env.NewFact(domFact)
@@ -273,5 +273,5 @@ func (exec *Executor) proveInRangeStmtWhenParamIsIndex(stmt *ast.ProveInRangeStm
 		}
 	}
 
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }

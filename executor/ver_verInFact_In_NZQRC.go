@@ -24,7 +24,7 @@ import (
 func (ver *Verifier) verIn_N_Z_Q_R_C(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	inSet, ok := stmt.Params[1].(ast.Atom)
 	if !ok {
-		return NewExecUnknown("")
+		return NewEmptyExecUnknown()
 	}
 
 	nextState := state.GetFinalRound().GetNoMsg()
@@ -49,9 +49,9 @@ func (ver *Verifier) verIn_N_Z_Q_R_C(stmt *ast.SpecFactStmt, state *VerState) Ex
 		if verifiedBy == "" {
 			verifiedBy = fmt.Sprintf("%s is in %s", stmt.Params[0], inSet)
 		}
-		return ver.maybeAddSuccessMsgString(state, stmt.String(), verifiedBy, NewExecTrue(""))
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), verifiedBy, NewEmptyExecTrue())
 	}
-	return NewExecUnknown("")
+	return NewEmptyExecUnknown()
 }
 
 func (ver *Verifier) verInNPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactStmt, state *VerState) (bool, string) {

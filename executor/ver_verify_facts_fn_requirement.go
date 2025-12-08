@@ -36,7 +36,7 @@ func (ver *Verifier) verifySpecFactFnRequirement(fact *ast.SpecFactStmt, state *
 		}
 	}
 
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }
 
 // verifyOrFactFnRequirement 验证 OrStmt 中所有对象都符合函数要求
@@ -52,7 +52,7 @@ func (ver *Verifier) verifyOrFactFnRequirement(fact *ast.OrStmt, state *VerState
 		}
 	}
 
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }
 
 // verifyFactFnRequirement 验证任意类型的 fact 中所有对象都符合函数要求
@@ -84,7 +84,7 @@ func (ver *Verifier) verifyEqualsFactFnRequirement(equalsFact *ast.EqualsFactStm
 		}
 	}
 
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }
 
 // verifyAndDeclareParamsIteratively 逐步迭代验证和声明参数
@@ -153,7 +153,7 @@ func (ver *Verifier) verifyAndDeclareParamsIteratively(params []string, paramSet
 		}
 	}
 
-	return paramMap, NewExecTrue("")
+	return paramMap, NewEmptyExecTrue()
 }
 
 // verifyUniFactFnRequirement 验证 UniFactStmt 中所有对象都符合函数要求
@@ -224,7 +224,7 @@ func (ver *Verifier) verifyUniFactFnRequirement(uniFact *ast.UniFactStmt, state 
 		}
 	}
 
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }
 
 // verifyUniFactWithIffFnRequirement 验证 UniFactWithIffStmt 中所有对象都符合函数要求
@@ -249,7 +249,7 @@ func (ver *Verifier) verifyUniFactWithIffFnRequirement(uniFactWithIff *ast.UniFa
 		}
 	}
 
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }
 
 // verifyIntensionalSetFactsFnRequirement 验证 intensional set 中所有事实都符合函数要求
@@ -323,5 +323,5 @@ func (ver *Verifier) verifyIntensionalSetFactsFnRequirement(objAsFnObj *ast.FnOb
 		}
 	}
 
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }

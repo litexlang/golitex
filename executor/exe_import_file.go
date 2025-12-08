@@ -22,7 +22,7 @@ package litex_executor
 // 	fileName := filepath.Base(codePath)
 // 	fileExt := filepath.Ext(fileName)
 // 	if fileExt != glob.LitexFileSuffix {
-// 		return NewExecErr(""), fmt.Errorf("imported file should have .lit extension, get %s", stmt.Path)
+// 		return NewExecEmptyErr(), fmt.Errorf("imported file should have .lit extension, get %s", stmt.Path)
 // 	}
 
 // 	// fileNameWithoutExt := strings.TrimSuffix(fileName, fileExt)
@@ -39,7 +39,7 @@ package litex_executor
 // 	exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("start importing file \"%s\"\n", stmt.Path))
 
 // 	if !glob.AllowImport {
-// 		return NewExecErr(""), fmt.Errorf("imported file should not contain import statement, get %s", stmt)
+// 		return NewExecEmptyErr(), fmt.Errorf("imported file should not contain import statement, get %s", stmt)
 // 	}
 
 // 	glob.AllowImport = false
@@ -49,28 +49,28 @@ package litex_executor
 
 // 	code, err := os.ReadFile(codePath)
 // 	if err != nil {
-// 		return NewExecErr(""), err
+// 		return NewExecEmptyErr(), err
 // 	}
 
 // 	// read the file
 // 	execState, err := exec.runSourceCode(false, string(code), stmt)
 // 	if err != nil {
-// 		return NewExecErr(""), err
+// 		return NewExecEmptyErr(), err
 // 	}
 // 	if execState.IsUnknown() {
-// 		return NewExecErr(""), fmt.Errorf("failed to execute import statement:\n%s\nSome statements in the imported file are not executed successfully", stmt)
+// 		return NewExecEmptyErr(), fmt.Errorf("failed to execute import statement:\n%s\nSome statements in the imported file are not executed successfully", stmt)
 // 	}
 
 // 	exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("import file \"%s\" success\n", stmt.Path))
 
-// 	return NewExecTrue(""), nil
+// 	return NewExecEmptyTrue(), nil
 // }
 
 // func (exec *Executor) importMainFileStmt(stmt *ast.ImportFileStmt) (ExecRet, error) {
 // 	exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("start importing file globally \"%s\"\n", stmt.Path))
 
 // 	if !glob.AllowImport {
-// 		return NewExecErr(""), fmt.Errorf("import globally is not allowed in imported file, get %s", stmt)
+// 		return NewExecEmptyErr(), fmt.Errorf("import globally is not allowed in imported file, get %s", stmt)
 // 	}
 
 // 	glob.AllowImport = false
@@ -81,13 +81,13 @@ package litex_executor
 // 	codePath := filepath.Join(glob.CurrentTaskDirName, stmt.Path)
 // 	code, err := os.ReadFile(codePath)
 // 	if err != nil {
-// 		return NewExecErr(""), err
+// 		return NewExecEmptyErr(), err
 // 	}
 
 // 	//parse code
 // 	stmts, err := parser.ParseSourceCode(string(code))
 // 	if err != nil {
-// 		return NewExecErr(""), err
+// 		return NewExecEmptyErr(), err
 // 	}
 
 // 	for _, stmt := range stmts {
@@ -104,5 +104,5 @@ package litex_executor
 
 // 	exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("import file globally \"%s\" success\n", stmt.Path))
 
-// 	return NewExecTrue(""), nil
+// 	return NewExecEmptyTrue(), nil
 // }

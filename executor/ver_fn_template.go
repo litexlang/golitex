@@ -22,19 +22,19 @@ import (
 func (ver *Verifier) ver_In_FnTT(left ast.Obj, right *ast.FnObj, state *VerState) ExecRet {
 	leftLatestFnT := ver.Env.GetLatestFnT_GivenNameIsIn(left.String())
 	if leftLatestFnT == nil {
-		return NewExecUnknown("")
+		return NewEmptyExecUnknown()
 	}
 
 	// right dom <= left dom. on right dom left has all those then facts
 	rightDefT := ver.Env.GetFnTemplateDef_KeyIsFcHead(right)
 	if rightDefT == nil {
-		return NewExecUnknown("")
+		return NewEmptyExecUnknown()
 	}
 
 	ok := ver.leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftLatestFnT, rightDefT, left, right, state)
 
 	if !ok {
-		return NewExecUnknown("")
+		return NewEmptyExecUnknown()
 	}
 
 	templateParamUniMap := map[string]ast.Obj{}
@@ -44,10 +44,10 @@ func (ver *Verifier) ver_In_FnTT(left ast.Obj, right *ast.FnObj, state *VerState
 
 	ok = ver.f_satisfy_FnT_ThenFacts_On_FnT_Dom(left, string(rightDefT.TemplateDefHeader.Name), templateParamUniMap, rightDefT.Fn, state)
 	if !ok {
-		return NewExecUnknown("")
+		return NewEmptyExecUnknown()
 	}
 
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }
 
 // right dom is subset of left dom

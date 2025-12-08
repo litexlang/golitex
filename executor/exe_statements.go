@@ -22,7 +22,7 @@ import (
 )
 
 func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
-	var execRet ExecRet = NewExecErr("")
+	var execRet ExecRet = NewEmptyExecErr()
 
 	switch stmt := (stmt).(type) {
 	case ast.FactStmt:
@@ -291,7 +291,7 @@ func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) ExecRet {
 			return execState.AddMsg(fmt.Sprintf("%s\nfailed :( line %d\n", curStmt.String(), curStmt.GetLine()))
 		}
 	}
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }
 
 func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) ExecRet {
@@ -317,7 +317,7 @@ func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) ExecRet
 	}
 
 	isSuccess = true
-	result := NewExecTrue("")
+	result := NewEmptyExecTrue()
 	result = result.AddMsg("\n")
 	if isSuccess {
 		result = result.AddMsgAtBegin("is true\n")
@@ -582,12 +582,12 @@ func (exec *Executor) ClearStmt() ExecRet {
 	} // 最顶层的env不删，因为最顶层的包含了热启动的代码
 	exec.NewEnv(curEnv)
 	// Note: Clear message should be added to ExecRet in the caller if needed
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }
 
 func (exec *Executor) DoNothingStmt() ExecRet {
 	// do_nothing statement does nothing
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }
 
 func (exec *Executor) inlineFactsStmt(stmt *ast.InlineFactsStmt) ExecRet {
@@ -729,7 +729,7 @@ func (exec *Executor) haveFnLiftStmt(stmt *ast.HaveFnLiftStmt) ExecRet {
 		return NewExecErr(fmt.Sprintf("failed to declare fn: %s", fnDef.String()))
 	}
 
-	execRet := NewExecTrue("")
+	execRet := NewEmptyExecTrue()
 	execRet.AddMsg(fmt.Sprintf("Declare Function by lifting:\n%s\n", fnDef))
 	return execRet
 }
@@ -794,7 +794,7 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (ExecRet, error) {
 		return NewExecErr(execState.String()), fmt.Errorf(execState.String())
 	}
 	if execState.IsUnknown() {
-		return NewExecErr(""), fmt.Errorf("return set %s must be a set, i.e. `%s in set` must be true, but it is unknown", stmt.DefFnStmt.FnTemplate.RetSet.String(), stmt.DefFnStmt.FnTemplate.RetSet.String())
+		return NewEmptyExecErr(), fmt.Errorf("return set %s must be a set, i.e. `%s in set` must be true, but it is unknown", stmt.DefFnStmt.FnTemplate.RetSet.String(), stmt.DefFnStmt.FnTemplate.RetSet.String())
 	}
 
 	// 验证 fn template 里面的 paramSet 都是 in set 的
@@ -805,7 +805,7 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (ExecRet, error) {
 			return NewExecErr(execState.String()), fmt.Errorf(execState.String())
 		}
 		if execState.IsUnknown() {
-			return NewExecErr(""), fmt.Errorf("parameter set %d (%s) must be a set, i.e. `%s in set` must be true, but it is unknown", i+1, paramSet.String(), paramSet.String())
+			return NewEmptyExecErr(), fmt.Errorf("parameter set %d (%s) must be a set, i.e. `%s in set` must be true, but it is unknown", i+1, paramSet.String(), paramSet.String())
 		}
 	}
 
@@ -815,7 +815,7 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (ExecRet, error) {
 		return NewExecErr(execState.String()), fmt.Errorf(execState.String())
 	}
 	if execState.IsUnknown() {
-		return NewExecErr(""), fmt.Errorf("return set (%s) must be a set, i.e. `%s in set` must be true, but it is unknown", stmt.DefFnStmt.FnTemplate.RetSet.String(), stmt.DefFnStmt.FnTemplate.RetSet.String())
+		return NewEmptyExecErr(), fmt.Errorf("return set (%s) must be a set, i.e. `%s in set` must be true, but it is unknown", stmt.DefFnStmt.FnTemplate.RetSet.String(), stmt.DefFnStmt.FnTemplate.RetSet.String())
 	}
 
 	// Define parameters in the new environment
@@ -901,7 +901,7 @@ func (exec *Executor) checkHaveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) 
 			return NewExecErr(execState.String()), nil, fmt.Errorf(execState.String())
 		}
 		if execState.IsUnknown() {
-			return NewExecErr(""), nil, fmt.Errorf("parameter set %d (%s) must be a set, i.e. `%s in set` must be true, but it is unknown", i+1, paramSet.String(), paramSet.String())
+			return NewEmptyExecErr(), nil, fmt.Errorf("parameter set %d (%s) must be a set, i.e. `%s in set` must be true, but it is unknown", i+1, paramSet.String(), paramSet.String())
 		}
 	}
 
@@ -911,7 +911,7 @@ func (exec *Executor) checkHaveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) 
 		return NewExecErr(execState.String()), nil, fmt.Errorf(execState.String())
 	}
 	if execState.IsUnknown() {
-		return NewExecErr(""), nil, fmt.Errorf("return set (%s) must be a set, i.e. `%s in set` must be true, but it is unknown", stmt.DefFnStmt.FnTemplate.RetSet.String(), stmt.DefFnStmt.FnTemplate.RetSet.String())
+		return NewEmptyExecErr(), nil, fmt.Errorf("return set (%s) must be a set, i.e. `%s in set` must be true, but it is unknown", stmt.DefFnStmt.FnTemplate.RetSet.String(), stmt.DefFnStmt.FnTemplate.RetSet.String())
 	}
 
 	// Verify each case: execute proof and verify return value
@@ -997,10 +997,10 @@ func (exec *Executor) verifyHaveFnCaseByCase_OneCase(stmt *ast.HaveFnCaseByCaseS
 	ver := NewVerifier(exec.Env)
 	verRet := ver.VerFactStmt(ast.NewInFactWithFc(equalTo, stmt.DefFnStmt.FnTemplate.RetSet), Round0Msg)
 	if verRet.IsErr() {
-		return NewExecErr(""), fmt.Errorf("case %d: %s", caseIndex, verRet.String())
+		return NewEmptyExecErr(), fmt.Errorf("case %d: %s", caseIndex, verRet.String())
 	}
 	if verRet.IsUnknown() {
-		return NewExecErr(""), fmt.Errorf("case %d: according to the definition of %s, when %s is true, the returned value %s must be in %s, but\n%s is unknown", caseIndex, stmt, caseFact, equalTo, stmt.DefFnStmt.FnTemplate.RetSet, ast.NewInFactWithFc(equalTo, stmt.DefFnStmt.FnTemplate.RetSet))
+		return NewEmptyExecErr(), fmt.Errorf("case %d: according to the definition of %s, when %s is true, the returned value %s must be in %s, but\n%s is unknown", caseIndex, stmt, caseFact, equalTo, stmt.DefFnStmt.FnTemplate.RetSet, ast.NewInFactWithFc(equalTo, stmt.DefFnStmt.FnTemplate.RetSet))
 	}
 
 	// The proof statements should have established the necessary conditions
@@ -1032,10 +1032,10 @@ func (exec *Executor) checkAtLeastOneCaseHolds_ForHaveFn(stmt *ast.HaveFnCaseByC
 	ver := NewVerifier(exec.Env)
 	verRet := ver.VerFactStmt(orFact, Round0Msg)
 	if verRet.IsErr() {
-		return NewExecErr(""), fmt.Errorf("failed to verify that all cases cover the domain: %s", verRet.String())
+		return NewEmptyExecErr(), fmt.Errorf("failed to verify that all cases cover the domain: %s", verRet.String())
 	}
 	if verRet.IsUnknown() {
-		return NewExecErr(""), fmt.Errorf("all cases must cover the entire domain, i.e., %s must be true, but it is unknown", orFact)
+		return NewEmptyExecErr(), fmt.Errorf("all cases must cover the entire domain, i.e., %s must be true, but it is unknown", orFact)
 	}
 
 	return NewExecTrue(stmt.String()), nil
@@ -1088,10 +1088,10 @@ func (exec *Executor) checkCaseNoOverlapWithOthers_ForHaveFn(stmt *ast.HaveFnCas
 		// Verify not case j is true
 		verRet := ver.VerFactStmt(notOtherCaseFact, Round0Msg)
 		if verRet.IsErr() {
-			return NewExecErr(""), fmt.Errorf("case %d and case %d overlap: failed to verify that not %s: %s", caseIndex, j, otherCaseFact, verRet.String())
+			return NewEmptyExecErr(), fmt.Errorf("case %d and case %d overlap: failed to verify that not %s: %s", caseIndex, j, otherCaseFact, verRet.String())
 		}
 		if verRet.IsUnknown() {
-			return NewExecErr(""), fmt.Errorf("case %d and case %d may overlap: when %s is true, %s must be false, but it is unknown", caseIndex, j, caseFact, otherCaseFact)
+			return NewEmptyExecErr(), fmt.Errorf("case %d and case %d may overlap: when %s is true, %s must be false, but it is unknown", caseIndex, j, caseFact, otherCaseFact)
 		}
 	}
 
@@ -1112,12 +1112,12 @@ func (exec *Executor) Verify(fact ast.FactStmt, requireMsg bool) ExecRet {
 
 // func (exec *Executor) markdownStmt(stmt *ast.MarkdownStmt) ExecRet {
 // 	_ = stmt
-// 	return NewExecTrue("")
+// 	return NewExecEmptyTrue()
 // }
 
 // func (exec *Executor) latexStmt(stmt *ast.LatexStmt) ExecRet {
 // 	_ = stmt
-// 	return NewExecTrue("")
+// 	return NewExecEmptyTrue()
 // }
 
 func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropStmt) ExecRet {
@@ -1210,7 +1210,7 @@ func (exec *Executor) defAlgoStmt(stmt *ast.DefAlgoStmt) ExecRet {
 }
 
 func (exec *Executor) evalStmt(stmt *ast.EvalStmt) ExecRet {
-	trueEvalRet := NewExecTrue("")
+	trueEvalRet := NewEmptyExecTrue()
 
 	value, execRet := exec.evalFcInLocalEnv(stmt.FcsToEval)
 	if execRet.IsNotTrue() {
@@ -1253,7 +1253,7 @@ func (exec *Executor) printStmt(stmt *ast.PrintStmt) ExecRet {
 
 func (exec *Executor) helpStmt(stmt *ast.HelpStmt) ExecRet {
 	helpMsg, ok := glob.KeywordHelpMap[stmt.Keyword]
-	result := NewExecTrue("")
+	result := NewEmptyExecTrue()
 	if !ok {
 		return result.AddMsg(fmt.Sprintf("Unknown keyword: %s", stmt.Keyword))
 	}
@@ -1373,10 +1373,10 @@ func (exec *Executor) checkCaseReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCa
 	ver := NewVerifier(exec.Env)
 	verRet := ver.VerFactStmt(ast.NewInFactWithFc(equalTo, stmt.RetSet), Round0Msg)
 	if verRet.IsErr() {
-		return NewExecErr(""), fmt.Errorf("case %d: %s", caseIndex, verRet.String())
+		return NewEmptyExecErr(), fmt.Errorf("case %d: %s", caseIndex, verRet.String())
 	}
 	if verRet.IsUnknown() {
-		return NewExecErr(""), fmt.Errorf("case %d: according to the definition of %s, when %s is true, the returned value %s must be in %s, but\n%s is unknown", caseIndex, stmt, caseFact, equalTo, stmt.RetSet, ast.NewInFactWithFc(equalTo, stmt.RetSet))
+		return NewEmptyExecErr(), fmt.Errorf("case %d: according to the definition of %s, when %s is true, the returned value %s must be in %s, but\n%s is unknown", caseIndex, stmt, caseFact, equalTo, stmt.RetSet, ast.NewInFactWithFc(equalTo, stmt.RetSet))
 	}
 
 	return NewExecTrue(stmt.String()), nil
@@ -1403,10 +1403,10 @@ func (exec *Executor) checkAtLeastOneCaseHolds(stmt *ast.HaveFnEqualCaseByCaseSt
 	ver := NewVerifier(exec.Env)
 	verRet := ver.VerFactStmt(orFact, Round0Msg)
 	if verRet.IsErr() {
-		return NewExecErr(""), fmt.Errorf("failed to verify that all cases cover the domain: %s", verRet.String())
+		return NewEmptyExecErr(), fmt.Errorf("failed to verify that all cases cover the domain: %s", verRet.String())
 	}
 	if verRet.IsUnknown() {
-		return NewExecErr(""), fmt.Errorf("all cases must cover the entire domain, i.e., %s must be true, but it is unknown", orFact)
+		return NewEmptyExecErr(), fmt.Errorf("all cases must cover the entire domain, i.e., %s must be true, but it is unknown", orFact)
 	}
 
 	return NewExecTrue(stmt.String()), nil
@@ -1459,10 +1459,10 @@ func (exec *Executor) checkCaseNoOverlapWithOthers(stmt *ast.HaveFnEqualCaseByCa
 		// 验证 not case j 为 true
 		verRet := ver.VerFactStmt(notOtherCaseFact, Round0Msg)
 		if verRet.IsErr() {
-			return NewExecErr(""), fmt.Errorf("case %d and case %d overlap: failed to verify that not %s: %s", caseIndex, j, otherCaseFact, verRet.String())
+			return NewEmptyExecErr(), fmt.Errorf("case %d and case %d overlap: failed to verify that not %s: %s", caseIndex, j, otherCaseFact, verRet.String())
 		}
 		if verRet.IsUnknown() {
-			return NewExecErr(""), fmt.Errorf("case %d and case %d may overlap: when %s is true, %s must be false, but it is unknown", caseIndex, j, caseFact, otherCaseFact)
+			return NewEmptyExecErr(), fmt.Errorf("case %d and case %d may overlap: when %s is true, %s must be false, but it is unknown", caseIndex, j, caseFact, otherCaseFact)
 		}
 	}
 
@@ -1527,7 +1527,7 @@ func (exec *Executor) haveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetStmt) E
 		return postRet
 	}
 
-	return NewExecTrue("").AddMsg(stmt.String())
+	return NewEmptyExecTrue().AddMsg(stmt.String())
 }
 
 // checkHaveObjFromCartSetStmt checks that:
@@ -1572,7 +1572,7 @@ func (exec *Executor) checkHaveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetSt
 		}
 	}
 
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }
 
 // postProcessHaveObjFromCartSetStmt adds:
@@ -1600,7 +1600,7 @@ func (exec *Executor) postProcessHaveObjFromCartSetStmt(stmt *ast.HaveObjFromCar
 	// equalTo is already verified to be a tuple in checkHaveObjFromCartSetStmt
 	equalToAsFn, ok := stmt.EqualTo.(*ast.FnObj)
 	if !ok || !ast.IsTupleFnObj(equalToAsFn) {
-		return NewExecTrue("")
+		return NewEmptyExecTrue()
 	}
 
 	// Add obj[i] = equalTo[i] for each i (index starts from 1)
@@ -1628,7 +1628,7 @@ func (exec *Executor) postProcessHaveObjFromCartSetStmt(stmt *ast.HaveObjFromCar
 		return NewExecErr(ret.String())
 	}
 
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }
 
 func (exec *Executor) haveCartWithDimStmt(stmt *ast.HaveCartWithDimStmt) ExecRet {
@@ -1644,7 +1644,7 @@ func (exec *Executor) haveCartWithDimStmt(stmt *ast.HaveCartWithDimStmt) ExecRet
 		return postRet
 	}
 
-	return NewExecTrue("").AddMsg(stmt.String())
+	return NewEmptyExecTrue().AddMsg(stmt.String())
 }
 
 // checkHaveCartWithDimStmt checks that:
@@ -1740,7 +1740,7 @@ func (exec *Executor) checkHaveCartWithDimStmt(stmt *ast.HaveCartWithDimStmt) Ex
 		}
 	}
 
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }
 
 // postProcessHaveCartWithDimStmt stores:
@@ -1778,5 +1778,5 @@ func (exec *Executor) postProcessHaveCartWithDimStmt(stmt *ast.HaveCartWithDimSt
 		return NewExecErr(fmt.Sprintf("failed to add uni fact: %s", ret.String()))
 	}
 
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }
