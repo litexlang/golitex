@@ -26,6 +26,7 @@ have fn:
 
 # release line(1, 1, 1) = {x cart(R, R): 1 * x[1] + 1 * x[2] = 1}
 $line_as_intensional_set(line(1, 1, 1), 1, 1, 1)
+$equal_set(line(1, 1, 1), {x cart(R, R): 1 * x[1] + 1 * x[2] = 1})
 line(1, 1, 1) = {x cart(R, R): 1 * x[1] + 1 * x[2] = 1}
 forall a {x cart(R, R): 1 * x[1] + 1 * x[2] = 1}:
     a $in cart(R, R)
