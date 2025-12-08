@@ -1,1 +1,12 @@
-R $in R
+1 $in {1, 2, 3}
+
+"""
+prove_by_enum(a {1, 2, 3}):
+    a $in {3, 2, 1}
+
+prove_by_enum(a {3, 2, 1}):
+    a $in {1, 2, 3}
+
+forall a {1, 2, 3}, b {3, 2, 1}:
+    a $in b
+"""

@@ -500,7 +500,7 @@ func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) ExecRet {
 
 	execState, err := exec.proveByEnumMainLogic(stmt)
 	if notOkExec(execState, err) {
-		return execState
+		return NewExecErr(execState.String())
 	}
 
 	// know uniFact
