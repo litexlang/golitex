@@ -255,7 +255,7 @@ func (ver *Verifier) verifyUniFactWithIffFnRequirement(uniFactWithIff *ast.UniFa
 // verifyIntensionalSetFactsFnRequirement 验证 intensional set 中所有事实都符合函数要求
 // 1. 如果当前的param，即第一个参数，已经在母环境声明过了，那就随机生成一个环境里没有的名字，然后把所有的fact里的这个param inst成新的随机名
 // 2. 然后随机名（或者这个param）声名成这个母集，即obj.Params[1]的元素
-// 3. 然后验证所有事实里出现的obj都是符合fnreq的
+// 3. 然后验证所有事实里出现的obj都是符合fnReq的
 func (ver *Verifier) verifyIntensionalSetFactsFnRequirement(objAsFnObj *ast.FnObj, state *VerState) ExecRet {
 	// 从 intensional set 对象中提取 param, parentSet, facts
 	param, parentSet, facts, err := parser.GetParamParentSetFactsFromIntensionalSet(objAsFnObj)
@@ -312,7 +312,7 @@ func (ver *Verifier) verifyIntensionalSetFactsFnRequirement(objAsFnObj *ast.FnOb
 		return NewExecErr(fmt.Sprintf("failed to declare parameter %s in parent set: %s", actualParamName, ret.String()))
 	}
 
-	// 3. 验证所有事实里出现的 obj 都是符合 fnreq 的
+	// 3. 验证所有事实里出现的 obj 都是符合 fnReq 的
 	for _, fact := range facts {
 		verRet := ver.verifyFactFnRequirement(fact, state)
 		if verRet.IsErr() {

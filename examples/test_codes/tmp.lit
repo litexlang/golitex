@@ -1,64 +1,11 @@
-let s set
-know:
-    forall x s:
-        or:
-            x = 1
-            x = 2
-            x = 3
-            x = 4
-            x = 5
-            x = 6
-
-know:
-    1 $in s
-    2 $in s
-    3 $in s
-    4 $in s
-    5 $in s
-    6 $in s
-
 claim:
-    forall x s:
-        x $in {1,2,3,4,5,6}
+    forall s, s2 set:
+        s = {x Z: 1 <= x, x < 10, x % 2 = 0}
+        s2 = {2, 4, 6, 8}
+        =>:
+            s = s2
     prove:
-        prove_case_by_case:
-            =>:
-                x $in {1,2,3,4,5,6}
-            case x = 1:
-                do_nothing
-            case x = 2:
-                do_nothing
-            case x = 3:
-                do_nothing
-            case x = 4:
-                do_nothing
-            case x = 5:
-                do_nothing
-            case x = 6:
-                do_nothing
-
-prove_by_enum(x {1,2,3,4,5,6}):
-    x $in s
-
-s = {1,2,3,4,5,6}
-
-let s2 set
-know s2 = {1,2,3,4,5,6}
-s2 $in finite_set
-count(s2) = 6
-
-prove_by_enum(x s2):
-    or:
-        x = 1
-        x = 2
-        x = 3
-        x = 4
-        x = 5
-        x = 6
-    
-1 $in s2
-2 $in s2
-3 $in s2
-4 $in s2
-5 $in s2
-6 $in s2
+        prove_by_enum(x s2):
+            x $in s
+        prove_in_range_set(1, 10, x s):
+            x $in s2

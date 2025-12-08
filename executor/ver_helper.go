@@ -26,16 +26,16 @@ func (ver *Verifier) todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt *ast.Sp
 	return nil
 }
 
-func (ver *Verifier) processOkMsg(state *VerState, msg string, verifiedBy string, args ...any) ExecRet {
-	// Note: processOkMsg uses string format, keep using string version for backward compatibility
-	verifiedByStr := fmt.Sprintf(verifiedBy, args...)
-	execRet := NewExecTrue(successVerStringString(msg, verifiedByStr))
-	if state.WithMsg {
-		execRet.AddMsg(successVerStringString(msg, verifiedByStr))
-		return execRet
-	}
-	return execRet
-}
+// func (ver *Verifier) processOkMsg(state *VerState, msg string, verifiedBy string, args ...any) ExecRet {
+// 	// Note: processOkMsg uses string format, keep using string version for backward compatibility
+// 	verifiedByStr := fmt.Sprintf(verifiedBy, args...)
+// 	execRet := NewExecTrue(successVerStringString(msg, verifiedByStr))
+// 	if state.WithMsg {
+// 		execRet.AddMsg(successVerStringString(msg, verifiedByStr))
+// 		return execRet
+// 	}
+// 	return execRet
+// }
 
 // maybeAddSuccessMsg adds a success message to execRet if state.WithMsg is true
 func (ver *Verifier) maybeAddSuccessMsg(state *VerState, stmt, stmtVerifiedBy ast.Stmt, execRet ExecRet) ExecRet {
@@ -73,19 +73,19 @@ func (ver *Verifier) maybeAddSuccessMsgString(state *VerState, stmtStr, verified
 // 	return NewExecEmptyTrue()
 // }
 
-func (ver *Verifier) factsAreTrue(facts []ast.FactStmt, state *VerState) ExecRet {
-	for _, fact := range facts {
-		verRet := ver.VerFactStmt(fact, state)
-		if verRet.IsErr() {
-			return verRet
-		}
-		if verRet.IsUnknown() {
-			return NewExecUnknown(ast.UnknownFactMsg(fact))
-		}
-	}
+// func (ver *Verifier) factsAreTrue(facts []ast.FactStmt, state *VerState) ExecRet {
+// 	for _, fact := range facts {
+// 		verRet := ver.VerFactStmt(fact, state)
+// 		if verRet.IsErr() {
+// 			return verRet
+// 		}
+// 		if verRet.IsUnknown() {
+// 			return NewExecUnknown(ast.UnknownFactMsg(fact))
+// 		}
+// 	}
 
-	return NewEmptyExecTrue()
-}
+// 	return NewEmptyExecTrue()
+// }
 
 func IsTrueOrErr(ok bool, err error) bool {
 	return ok || err != nil

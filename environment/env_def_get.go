@@ -67,15 +67,15 @@ func (e *Env) GetHaveSetFnDef(fnName ast.Atom) *ast.HaveSetFnStmt {
 	return nil
 }
 
-func (e *Env) isUserDefinedObj(atom ast.Atom) bool {
-	for curEnv := e; curEnv != nil; curEnv = curEnv.Parent {
-		_, ok := curEnv.ObjDefMem[string(atom)]
-		if ok {
-			return true
-		}
-	}
-	return false
-}
+// func (e *Env) isUserDefinedObj(atom ast.Atom) bool {
+// 	for curEnv := e; curEnv != nil; curEnv = curEnv.Parent {
+// 		_, ok := curEnv.ObjDefMem[string(atom)]
+// 		if ok {
+// 			return true
+// 		}
+// 	}
+// 	return false
+// }
 
 // func (e *Env) GetIntensionalSet(fc ast.Obj) *ast.IntensionalSetStmt {
 // 	for env := e; env != nil; env = env.Parent {
