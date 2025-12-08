@@ -18,6 +18,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
+	parser "golitex/parser"
 	"strconv"
 )
 
@@ -129,6 +130,15 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 
 	// x[1] $in some_set
 	verRet = ver.verIndexOfObjInSomeSet(stmt, state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsTrue() {
+		return verRet
+	}
+
+	// x $in {x R: x > 0}
+	verRet = ver.verInIntensionalSet(stmt, state)
 	if verRet.IsErr() {
 		return verRet
 	}
@@ -877,6 +887,45 @@ func (ver *Verifier) verIndexOfObjInSomeSet(stmt *ast.SpecFactStmt, state *VerSt
 	}
 	if verRet.IsTrue() {
 		return verRet
+	}
+
+	return NewExecUnknown("")
+}
+
+func (ver *Verifier) verInIntensionalSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	param, parentSet, facts, err := parser.GetParamParentSetFactsFromIntensionalSet(stmt.Params[1].(*ast.FnObj))
+	if err != nil {
+		return NewExecErr(err.Error())
+	}
+
+	uniMap := map[string]ast.Obj{param: stmt.Params[0]}
+
+	instFacts, err := facts.InstantiateFact(uniMap)
+	if err != nil {
+		return NewExecErr(err.Error())
+	}
+
+	instParentSet, err := parentSet.Instantiate(uniMap)
+	if err != nil {
+		return NewExecErr(err.Error())
+	}
+
+	instParentSetFact := ast.NewInFactWithFc(stmt.Params[0], instParentSet)
+	verRet := ver.VerFactStmt(instParentSetFact, state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsTrue() {
+		return verRet
+	}
+	for _, fact := range instFacts {
+		verRet := ver.VerFactStmt(fact, state)
+		if verRet.IsErr() {
+			return verRet
+		}
+		if verRet.IsTrue() {
+			return verRet
+		}
 	}
 
 	return NewExecUnknown("")

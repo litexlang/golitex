@@ -226,7 +226,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 	propDef := ver.Env.GetExistPropDef(stmt.PropName)
 	if propDef == nil {
 		// TODO: 如果没声明，应该报错
-		return BoolErrToExecRet(false, fmt.Errorf("%s has no definition", stmt))
+		return BoolErrToExecRet(false, fmt.Errorf("%s has no definition", stmt.PropName))
 	}
 
 	uniConMap := map[string]ast.Obj{}

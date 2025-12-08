@@ -1,11 +1,13 @@
 {x R: x > 0} = {x R: x > 0}
 
-"""
+exist 1 st $item_exists_in({x R: x > 0})
+
 prove:
     have a {x R: x > 0}
     a > 0
     a $in R
 
+"""
 prove:
     have a set = {x R: x > 0}
     have set b = {x R: x > 0}

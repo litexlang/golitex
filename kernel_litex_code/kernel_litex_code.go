@@ -155,6 +155,9 @@ know:
     forall n N_pos, a finite_seq(R, n), k N: k < n => finite_seq_product(n, a, k+1) = finite_seq_product(n, a, k) * a(k+1)
     forall n N_pos, a finite_seq(R, n) => finite_seq_product(n, a, 1) = a(1)
 
+exist_prop a set st item_exists_in(y set):
+	a $in y
+	
 know:
 	$item_exists_in(N)
 	$item_exists_in(N_pos)
