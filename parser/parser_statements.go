@@ -1914,37 +1914,17 @@ func (tb *tokenBlock) proveByEnum() (*ast.ProveByEnumStmt, error) {
 		return nil, parserErrAtTb(err, tb)
 	}
 
-	if tb.body[len(tb.body)-1].header.is(glob.KeywordProve) {
-		domFacts, thenFacts, err := parseDomThenOfProveByEnum(tb.body[:len(tb.body)-1])
-		if err != nil {
-			return nil, parserErrAtTb(err, tb)
-		}
-
-		err = tb.body[len(tb.body)-1].header.skipKwAndColonCheckEOL(glob.KeywordProve)
-		if err != nil {
-			return nil, parserErrAtTb(err, tb)
-		}
-
-		proofs := []ast.Stmt{}
-		for _, stmt := range tb.body[len(tb.body)-1].body {
-			curStmt, err := stmt.Stmt()
-			if err != nil {
-				return nil, parserErrAtTb(err, tb)
-			}
-			proofs = append(proofs, curStmt)
-		}
-
-		uniFact := ast.NewUniFact(params, paramSets, domFacts, thenFacts, tb.line)
-		return ast.NewProveByEnumStmt(uniFact, proofs, tb.line), nil
-	} else {
-		domFacts, thenFacts, err := parseDomThenOfProveByEnum(tb.body)
-		if err != nil {
-			return nil, parserErrAtTb(err, tb)
-		}
-
-		uniFact := ast.NewUniFact(params, paramSets, domFacts, thenFacts, tb.line)
-		return ast.NewProveByEnumStmt(uniFact, []ast.Stmt{}, tb.line), nil
+	// Use the new parseDomThenProve function to handle all three cases:
+	// 1. dom:, =>:, prove: (all three sections)
+	// 2. =>:, prove: (no dom section)
+	// 3. =>: (only then section, no dom and no prove)
+	domFacts, thenFacts, proofs, err := parseDomThenProve(tb.body)
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
 	}
+
+	uniFact := ast.NewUniFact(params, paramSets, domFacts, thenFacts, tb.line)
+	return ast.NewProveByEnumStmt(uniFact, proofs, tb.line), nil
 }
 
 func (tb *tokenBlock) bodyOfKnowProp() ([]ast.FactStmt, []ast.FactStmt, error) {
@@ -3289,6 +3269,151 @@ func (tb *tokenBlock) skipInt() (int64, error) {
 		return 0, err
 	}
 	return strconv.ParseInt(intStr, 10, 64)
+}
+
+// parseDomThenProve parses a body structure that can have three types of sections:
+// 1. dom:, =>:, prove: (all three sections present)
+// 2. =>:, prove: (no dom section)
+// 3. (only then section, no dom and no prove)
+//
+// It returns (domFacts, thenFacts, proofs, error)
+// - domFacts: facts in the dom: section (can be empty)
+// - thenFacts: facts in the =>: section (can be empty)
+// - proofs: statements in the prove: section (can be empty)
+func parseDomThenProve(body []tokenBlock) ([]ast.FactStmt, []ast.FactStmt, []ast.Stmt, error) {
+	domFacts := []ast.FactStmt{}
+	thenFacts := []ast.FactStmt{}
+	proofs := []ast.Stmt{}
+
+	if len(body) == 0 {
+		// Empty body, all remain empty
+		return domFacts, thenFacts, proofs, nil
+	}
+
+	// Case 1: First section is dom: (must be dom, =>, [prove])
+	if body[0].header.is(glob.KeywordDom) {
+		if len(body) < 2 || len(body) > 3 {
+			return nil, nil, nil, fmt.Errorf("when dom is first, body must have 2 or 3 sections (dom, =>, [prove]), got %d sections", len(body))
+		}
+
+		// Parse dom section
+		err := body[0].header.skipKwAndColonCheckEOL(glob.KeywordDom)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		for _, stmt := range body[0].body {
+			curStmt, err := stmt.factStmt(UniFactDepth1)
+			if err != nil {
+				return nil, nil, nil, err
+			}
+			domFacts = append(domFacts, curStmt)
+		}
+
+		// Parse => section
+		if !body[1].header.is(glob.KeySymbolRightArrow) {
+			return nil, nil, nil, fmt.Errorf("second section must be => when dom is first")
+		}
+		err = body[1].header.skipKwAndColonCheckEOL(glob.KeySymbolRightArrow)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		for _, stmt := range body[1].body {
+			curStmt, err := stmt.factStmt(UniFactDepth1)
+			if err != nil {
+				return nil, nil, nil, err
+			}
+			thenFacts = append(thenFacts, curStmt)
+		}
+
+		// Parse optional prove section
+		if len(body) == 3 {
+			if !body[2].header.is(glob.KeywordProve) {
+				return nil, nil, nil, fmt.Errorf("third section must be prove when dom is first")
+			}
+			err = body[2].header.skipKwAndColonCheckEOL(glob.KeywordProve)
+			if err != nil {
+				return nil, nil, nil, err
+			}
+			for _, stmt := range body[2].body {
+				curStmt, err := stmt.Stmt()
+				if err != nil {
+					return nil, nil, nil, err
+				}
+				proofs = append(proofs, curStmt)
+			}
+		}
+		// If len(body) == 2, prove remains empty
+		return domFacts, thenFacts, proofs, nil
+	}
+
+	// Case 2 : First section is not dom
+	// Check if last section is prove
+	lastIdx := len(body) - 1
+	hasProve := body[lastIdx].header.is(glob.KeywordProve)
+
+	if hasProve {
+		// Case 2: =>:, prove: (no dom section)
+		// All sections before prove are =>
+		for i := 0; i < lastIdx; i++ {
+			if !body[i].header.is(glob.KeySymbolRightArrow) {
+				return nil, nil, nil, fmt.Errorf("when dom is not first, all sections before prove must be =>, but section %d is not", i)
+			}
+			err := body[i].header.skipKwAndColonCheckEOL(glob.KeySymbolRightArrow)
+			if err != nil {
+				return nil, nil, nil, err
+			}
+			for _, stmt := range body[i].body {
+				curStmt, err := stmt.factStmt(UniFactDepth1)
+				if err != nil {
+					return nil, nil, nil, err
+				}
+				thenFacts = append(thenFacts, curStmt)
+			}
+		}
+
+		// Parse prove section
+		err := body[lastIdx].header.skipKwAndColonCheckEOL(glob.KeywordProve)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		for _, stmt := range body[lastIdx].body {
+			curStmt, err := stmt.Stmt()
+			if err != nil {
+				return nil, nil, nil, err
+			}
+			proofs = append(proofs, curStmt)
+		}
+		return domFacts, thenFacts, proofs, nil
+	} else {
+		// Case 3: Only then section (no dom and no prove)
+		// Parse all body blocks directly as fact statements, no need to check for =>
+		for i := range len(body) {
+			// Check if it's a => section or a direct fact statement
+			if body[i].header.is(glob.KeySymbolRightArrow) {
+				// It's a => section, skip the => marker
+				err := body[i].header.skipKwAndColonCheckEOL(glob.KeySymbolRightArrow)
+				if err != nil {
+					return nil, nil, nil, err
+				}
+				for _, stmt := range body[i].body {
+					curStmt, err := stmt.factStmt(UniFactDepth1)
+					if err != nil {
+						return nil, nil, nil, err
+					}
+					thenFacts = append(thenFacts, curStmt)
+				}
+			} else {
+				// It's a direct fact statement (no => needed)
+				curStmt, err := body[i].factStmt(UniFactDepth1)
+				if err != nil {
+					return nil, nil, nil, err
+				}
+				thenFacts = append(thenFacts, curStmt)
+			}
+		}
+		// dom and prove remain empty
+		return domFacts, thenFacts, proofs, nil
+	}
 }
 
 func parseDomThenOfProveByEnum(tbSlice []tokenBlock) ([]ast.FactStmt, []ast.FactStmt, error) {
