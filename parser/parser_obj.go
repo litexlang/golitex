@@ -447,20 +447,6 @@ func (tb *tokenBlock) fnSet() (ast.Obj, error) {
 	return ret, nil
 }
 
-func ParseSourceCodeGetObj(s string) (ast.Obj, error) {
-	blocks, err := makeTokenBlocks([]string{s})
-	if err != nil {
-		return nil, err
-	}
-
-	obj, err := blocks[0].Obj()
-	if err != nil {
-		return nil, err
-	}
-
-	return obj, nil
-}
-
 func (tb *tokenBlock) backSlashExpr() (ast.Obj, error) {
 	err := tb.header.skip(glob.KeySymbolBackSlash)
 	if err != nil {
@@ -486,7 +472,7 @@ func (tb *tokenBlock) EnumSetObjOrIntensionalSetObj() (ast.Obj, error) {
 		if err != nil {
 			return nil, err
 		}
-		return makeEnumSetObj([]ast.Obj{}), nil
+		return ast.MakeEnumSetObj([]ast.Obj{}), nil
 	}
 
 	obj, err := tb.Obj()
@@ -540,7 +526,7 @@ func (tb *tokenBlock) intensionalSetObj(paramAsObj ast.Obj) (ast.Obj, error) {
 		return nil, err
 	}
 
-	return makeIntensionalSetObj(string(param), parentSet, facts), nil
+	return ast.MakeIntensionalSetObj(string(param), parentSet, facts), nil
 }
 
 func (tb *tokenBlock) enumSetObj(firstParam ast.Obj) (ast.Obj, error) {
@@ -567,17 +553,5 @@ func (tb *tokenBlock) enumSetObj(firstParam ast.Obj) (ast.Obj, error) {
 		return nil, err
 	}
 
-	return makeEnumSetObj(enumItems), nil
-}
-
-func makeEnumSetObj(params []ast.Obj) ast.Obj {
-	return ast.NewFnObj(ast.Atom(glob.KeywordEnumSet), params)
-}
-
-func makeIntensionalSetObj(param string, parentSet ast.Obj, facts []ast.FactStmt) ast.Obj {
-	params := []ast.Obj{ast.Atom(param), parentSet}
-	for _, fact := range facts {
-		params = append(params, ast.Atom(fact.String()))
-	}
-	return ast.NewFnObj(ast.Atom(glob.KeywordIntensionalSet), params)
+	return ast.MakeEnumSetObj(enumItems), nil
 }
