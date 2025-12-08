@@ -145,6 +145,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 }
 
 func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStmt) ExecRet {
+
 	for i := range len(stmt.Objs) {
 		existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordItemExistsIn), []ast.Obj{stmt.ObjSets[i]}, stmt.Line)
 		haveStmt := ast.NewHaveStmt([]string{stmt.Objs[i]}, existInFact, stmt.Line)

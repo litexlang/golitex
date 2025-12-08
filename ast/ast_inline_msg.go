@@ -335,11 +335,11 @@ func (s *ClaimIffStmt) InlineString() string {
 	return "TODO"
 }
 
-func (s *ProveInRangeSetStmt) InlineString() string {
-	return "TODO"
-}
+// func (s *ProveInRangeSetStmt) InlineString() string {
+// 	return "TODO"
+// }
 
-func (s *ProveInRangeStmt) InlineString() string {
+func (s *ProveInRangeStmt2) InlineString() string {
 	return "TODO"
 }
 

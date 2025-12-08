@@ -72,14 +72,17 @@ func (ver *Verifier) verInNPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet
 		return true, stmt.String()
 	}
 
-	if ast.IsFn_WithHeadNameInSlice(stmt.Params[0], glob.AddMinusStarSet) || ast.IsFn_WithHeadName(stmt.Params[0], glob.KeySymbolPower) {
-		fnObj, ok := stmt.Params[0].(*ast.FnObj)
-		if ok {
+	// For N_pos, only +, *, ^ preserve N_pos when both operands are in N_pos
+	// Subtraction (-) does NOT preserve N_pos (e.g., 3 - 5 = -2 is not in N_pos)
+	fnObj, ok := stmt.Params[0].(*ast.FnObj)
+	if ok {
+		fnHead := fnObj.FnHead.String()
+		if fnHead == glob.KeySymbolPlus || fnHead == glob.KeySymbolStar || fnHead == glob.KeySymbolPower {
 			ok, _ = ver.verInNPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{fnObj.Params[0], ast.Atom(glob.KeywordNPos)}, stmt.Line), state)
 			if ok {
 				ok, _ = ver.verInNPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{fnObj.Params[1], ast.Atom(glob.KeywordNPos)}, stmt.Line), state)
 				if ok {
-					return true, fmt.Sprintf("%s has function name in *+-^, and both params are in N_pos", fnObj)
+					return true, fmt.Sprintf("%s has function name in +*^, and both params are in N_pos", fnObj)
 				}
 			}
 		}
@@ -106,14 +109,17 @@ func (ver *Verifier) verInN_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(st
 		return true, stmt.String()
 	}
 
-	if ast.IsFn_WithHeadNameInSlice(stmt.Params[0], glob.AddMinusStarSet) || ast.IsFn_WithHeadName(stmt.Params[0], glob.KeySymbolPower) {
-		fnObj, ok := stmt.Params[0].(*ast.FnObj)
-		if ok {
+	// For N (natural numbers including 0), only +, *, ^ preserve N when both operands are in N
+	// Subtraction (-) does NOT preserve N (e.g., 1 - 2 = -1 is not in N)
+	fnObj, ok := stmt.Params[0].(*ast.FnObj)
+	if ok {
+		fnHead := fnObj.FnHead.String()
+		if fnHead == glob.KeySymbolPlus || fnHead == glob.KeySymbolStar || fnHead == glob.KeySymbolPower {
 			ok, _ = ver.verInN_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{fnObj.Params[0], ast.Atom(glob.KeywordNatural)}, stmt.Line), state)
 			if ok {
 				ok, _ = ver.verInN_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{fnObj.Params[1], ast.Atom(glob.KeywordNatural)}, stmt.Line), state)
 				if ok {
-					return true, fmt.Sprintf("%s has function name in *+-^, and both params are in N", fnObj)
+					return true, fmt.Sprintf("%s has function name in +*^, and both params are in N", fnObj)
 				}
 			}
 		}

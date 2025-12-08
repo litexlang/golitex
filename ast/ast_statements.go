@@ -423,16 +423,16 @@ type HaveFnCaseByCaseStmt struct {
 // 	Line uint
 // }
 
-type ProveInRangeSetStmt struct {
-	Start          int64
-	End            int64
-	Param          string
-	IntensionalSet Obj
-	ThenFacts      FactStmtSlice
-	Proofs         StmtSlice
+// type ProveInRangeSetStmt struct {
+// 	Start          int64
+// 	End            int64
+// 	Param          string
+// 	IntensionalSet Obj
+// 	ThenFacts      FactStmtSlice
+// 	Proofs         StmtSlice
 
-	Line uint
-}
+// 	Line uint
+// }
 
 type ClaimIffStmt struct {
 	UniFactWithIffStmt *UniFactWithIffStmt
@@ -533,7 +533,7 @@ type HelpStmt struct {
 }
 
 // 这是必要的，因为要证明从n到m有且只有n, n+1, ..., m-1, m这些数，必须要用特殊的关键词
-type ProveInRangeStmt struct {
+type ProveInRangeStmt2 struct {
 	param         string
 	start         Obj
 	end           Obj
@@ -566,6 +566,17 @@ type HaveCartWithDimStmt struct {
 	Facts   FactStmtSlice
 	Proofs  StmtSlice
 	EqualTo Obj
+
+	Line uint
+}
+
+type ProveInRangeStmt struct {
+	Params    string
+	Start     Obj
+	End       Obj
+	DomFacts  FactStmtSlice
+	ThenFacts FactStmtSlice
+	Proofs    StmtSlice
 
 	Line uint
 }

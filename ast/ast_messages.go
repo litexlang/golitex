@@ -1154,7 +1154,7 @@ func (stmt *ClaimIffStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *ProveInRangeStmt) String() string {
+func (stmt *ProveInRangeStmt2) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordProveInRange)
 	builder.WriteString("(")
@@ -1226,35 +1226,35 @@ func (stmt *ProveInRangeStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *ProveInRangeSetStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordProveInRangeSet)
-	builder.WriteString("(")
-	builder.WriteString(fmt.Sprintf("%d", stmt.Start))
-	builder.WriteString(", ")
-	builder.WriteString(fmt.Sprintf("%d", stmt.End))
-	builder.WriteString(", ")
-	builder.WriteString(stmt.Param)
-	builder.WriteString(" ")
-	builder.WriteString(stmt.IntensionalSet.String())
-	builder.WriteString(")")
-	builder.WriteString(glob.KeySymbolColon)
-	builder.WriteByte('\n')
-	for _, fact := range stmt.ThenFacts {
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 1))
-		builder.WriteByte('\n')
-	}
-	if len(stmt.Proofs) > 0 {
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve, 1))
-		builder.WriteString(glob.KeySymbolColon)
-		builder.WriteByte('\n')
-		for _, proof := range stmt.Proofs {
-			builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 2))
-			builder.WriteByte('\n')
-		}
-	}
-	return builder.String()
-}
+// func (stmt *ProveInRangeSetStmt) String() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(glob.KeywordProveInRangeSet)
+// 	builder.WriteString("(")
+// 	builder.WriteString(fmt.Sprintf("%d", stmt.Start))
+// 	builder.WriteString(", ")
+// 	builder.WriteString(fmt.Sprintf("%d", stmt.End))
+// 	builder.WriteString(", ")
+// 	builder.WriteString(stmt.Param)
+// 	builder.WriteString(" ")
+// 	builder.WriteString(stmt.IntensionalSet.String())
+// 	builder.WriteString(")")
+// 	builder.WriteString(glob.KeySymbolColon)
+// 	builder.WriteByte('\n')
+// 	for _, fact := range stmt.ThenFacts {
+// 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 1))
+// 		builder.WriteByte('\n')
+// 	}
+// 	if len(stmt.Proofs) > 0 {
+// 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve, 1))
+// 		builder.WriteString(glob.KeySymbolColon)
+// 		builder.WriteByte('\n')
+// 		for _, proof := range stmt.Proofs {
+// 			builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 2))
+// 			builder.WriteByte('\n')
+// 		}
+// 	}
+// 	return builder.String()
+// }
 
 func ProveIsCertainPropStmtString(kw string, prop Atom, params []string, proofs []Stmt) string {
 	var builder strings.Builder

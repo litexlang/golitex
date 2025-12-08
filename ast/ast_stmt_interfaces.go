@@ -72,10 +72,11 @@ func (s *HaveFnEqualStmt) stmt()      {}
 func (s *HaveFnStmt) stmt() {}
 
 // func (s *MarkdownStmt) stmt()                               {}
-func (s *ProveIsCommutativePropStmt) stmt()        {}
-func (s *ClaimIffStmt) stmt()                      {}
-func (s *ProveInRangeSetStmt) stmt()               {}
-func (s *ProveInRangeStmt) stmt()                  {}
+func (s *ProveIsCommutativePropStmt) stmt() {}
+func (s *ClaimIffStmt) stmt()               {}
+
+// func (s *ProveInRangeSetStmt) stmt()               {}
+func (s *ProveInRangeStmt2) stmt()                 {}
 func (s *ProveIsTransitivePropStmt) stmt()         {}
 func (s *DefAlgoStmt) stmt()                       {}
 func (s *EvalStmt) stmt()                          {}
@@ -133,12 +134,13 @@ func (s *HaveFnEqualStmt) algoStmt()      {}
 func (s *HaveFnStmt) algoStmt() {}
 
 // func (s *MarkdownStmt) algoStmt()                           {}
-func (s *ProveIsCommutativePropStmt) algoStmt()        {}
-func (s *DefProveAlgoStmt) algoStmt()                  {}
-func (s *ByStmt) algoStmt()                            {}
-func (s *ClaimIffStmt) algoStmt()                      {}
-func (s *ProveInRangeSetStmt) algoStmt()               {}
-func (s *ProveInRangeStmt) algoStmt()                  {}
+func (s *ProveIsCommutativePropStmt) algoStmt() {}
+func (s *DefProveAlgoStmt) algoStmt()           {}
+func (s *ByStmt) algoStmt()                     {}
+func (s *ClaimIffStmt) algoStmt()               {}
+
+// func (s *ProveInRangeSetStmt) algoStmt()               {}
+func (s *ProveInRangeStmt2) algoStmt()                 {}
 func (s *ProveIsTransitivePropStmt) algoStmt()         {}
 func (s *DefAlgoStmt) algoStmt()                       {}
 func (s *EvalStmt) algoStmt()                          {}
@@ -196,26 +198,26 @@ func (s *HaveFnEqualStmt) GetLine() uint      { return s.Line }
 func (s *HaveFnStmt) GetLine() uint { return s.Line }
 
 // func (s *MarkdownStmt) GetLine() uint                       { return s.Line }
-func (s *ProveInRangeSetStmt) GetLine() uint                { return s.Line }
-func (s *ProveInRangeStmt) GetLine() uint                   { return s.Line }
-func (s *ProveInRangeStmt) Param() string                   { return s.param }
-func (s *ProveInRangeStmt) Start() Obj                      { return s.start }
-func (s *ProveInRangeStmt) End() Obj                        { return s.end }
-func (s *ProveInRangeStmt) GetDomFactsOrNil() FactStmtSlice { return s.DomFactsOrNil }
-func (s *ProveInRangeStmt) GetThenFacts() FactStmtSlice     { return s.ThenFacts }
-func (s *ProveInRangeStmt) GetProofsOrNil() StmtSlice       { return s.ProofsOrNil }
-func (s *ClaimIffStmt) GetLine() uint                       { return s.Line }
-func (s *ProveIsTransitivePropStmt) GetLine() uint          { return s.Line }
-func (s *ProveIsCommutativePropStmt) GetLine() uint         { return s.Line }
-func (s *DefAlgoStmt) GetLine() uint                        { return s.Line }
-func (s *EvalStmt) GetLine() uint                           { return s.Line }
-func (s *DefProveAlgoStmt) GetLine() uint                   { return s.Line }
-func (s *ByStmt) GetLine() uint                             { return s.Line }
-func (s *PrintStmt) GetLine() uint                          { return s.Line }
-func (s *HelpStmt) GetLine() uint                           { return s.Line }
-func (s *HaveFnEqualCaseByCaseStmt) GetLine() uint          { return s.Line }
-func (s *HaveFnCaseByCaseStmt) GetLine() uint               { return s.Line }
-func (s *HaveCartWithDimStmt) GetLine() uint                { return s.Line }
+// func (s *ProveInRangeSetStmt) GetLine() uint                { return s.Line }
+func (s *ProveInRangeStmt2) GetLine() uint                   { return s.Line }
+func (s *ProveInRangeStmt2) Param() string                   { return s.param }
+func (s *ProveInRangeStmt2) Start() Obj                      { return s.start }
+func (s *ProveInRangeStmt2) End() Obj                        { return s.end }
+func (s *ProveInRangeStmt2) GetDomFactsOrNil() FactStmtSlice { return s.DomFactsOrNil }
+func (s *ProveInRangeStmt2) GetThenFacts() FactStmtSlice     { return s.ThenFacts }
+func (s *ProveInRangeStmt2) GetProofsOrNil() StmtSlice       { return s.ProofsOrNil }
+func (s *ClaimIffStmt) GetLine() uint                        { return s.Line }
+func (s *ProveIsTransitivePropStmt) GetLine() uint           { return s.Line }
+func (s *ProveIsCommutativePropStmt) GetLine() uint          { return s.Line }
+func (s *DefAlgoStmt) GetLine() uint                         { return s.Line }
+func (s *EvalStmt) GetLine() uint                            { return s.Line }
+func (s *DefProveAlgoStmt) GetLine() uint                    { return s.Line }
+func (s *ByStmt) GetLine() uint                              { return s.Line }
+func (s *PrintStmt) GetLine() uint                           { return s.Line }
+func (s *HelpStmt) GetLine() uint                            { return s.Line }
+func (s *HaveFnEqualCaseByCaseStmt) GetLine() uint           { return s.Line }
+func (s *HaveFnCaseByCaseStmt) GetLine() uint                { return s.Line }
+func (s *HaveCartWithDimStmt) GetLine() uint                 { return s.Line }
 
 type FactStmt interface {
 	factStmt()

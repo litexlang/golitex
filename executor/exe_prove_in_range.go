@@ -20,38 +20,38 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) proveInRangeSetStmt(stmt *ast.ProveInRangeSetStmt) ExecRet {
-	panic("not implemented")
-	// intensionalSetGivenSetIsIn := exec.Env.GetIntensionalSet(stmt.IntensionalSet)
-	// if intensionalSetGivenSetIsIn == nil {
-	// 	return NewExecErr(fmt.Sprintf("intensional set %s not found", stmt.IntensionalSet))
-	// }
+// func (exec *Executor) proveInRangeSetStmt(stmt *ast.ProveInRangeSetStmt) ExecRet {
+// panic("not implemented")
+// intensionalSetGivenSetIsIn := exec.Env.GetIntensionalSet(stmt.IntensionalSet)
+// if intensionalSetGivenSetIsIn == nil {
+// 	return NewExecErr(fmt.Sprintf("intensional set %s not found", stmt.IntensionalSet))
+// }
 
-	// startStr := strconv.FormatInt(stmt.Start, 10)
-	// endStr := strconv.FormatInt(stmt.End, 10)
+// startStr := strconv.FormatInt(stmt.Start, 10)
+// endStr := strconv.FormatInt(stmt.End, 10)
 
-	// forallXInIntensionalSetTheyAreFromStartToEnd := ast.NewUniFact([]string{stmt.Param}, []ast.Obj{stmt.IntensionalSet}, []ast.FactStmt{}, []ast.FactStmt{ast.NewInFact(stmt.Param, ast.Atom(glob.KeywordInteger)), ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{ast.Atom(startStr), ast.Atom(stmt.Param)}, stmt.Line), ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLess), []ast.Obj{ast.Atom(stmt.Param), ast.Atom(endStr)}, stmt.Line)}, stmt.Line)
+// forallXInIntensionalSetTheyAreFromStartToEnd := ast.NewUniFact([]string{stmt.Param}, []ast.Obj{stmt.IntensionalSet}, []ast.FactStmt{}, []ast.FactStmt{ast.NewInFact(stmt.Param, ast.Atom(glob.KeywordInteger)), ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{ast.Atom(startStr), ast.Atom(stmt.Param)}, stmt.Line), ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLess), []ast.Obj{ast.Atom(stmt.Param), ast.Atom(endStr)}, stmt.Line)}, stmt.Line)
 
-	// state := exec.factStmt(forallXInIntensionalSetTheyAreFromStartToEnd)
-	// if state.IsNotTrue() {
-	// 	return state
-	// }
+// state := exec.factStmt(forallXInIntensionalSetTheyAreFromStartToEnd)
+// if state.IsNotTrue() {
+// 	return state
+// }
 
-	// for i := stmt.Start; i < stmt.End; i++ {
-	// 	execRet := exec.proveInRangeSetStmtWhenParamIsIndex(intensionalSetGivenSetIsIn, stmt, i)
-	// 	if execRet.IsNotTrue() {
-	// 		return execRet
-	// 	}
-	// }
+// for i := stmt.Start; i < stmt.End; i++ {
+// 	execRet := exec.proveInRangeSetStmtWhenParamIsIndex(intensionalSetGivenSetIsIn, stmt, i)
+// 	if execRet.IsNotTrue() {
+// 		return execRet
+// 	}
+// }
 
-	// uniFact := stmt.UniFact()
-	// ret := exec.Env.NewFact(uniFact)
-	// if ret.IsErr() {
-	// 	return NewExecErr(ret.String())
-	// }
+// uniFact := stmt.UniFact()
+// ret := exec.Env.NewFact(uniFact)
+// if ret.IsErr() {
+// 	return NewExecErr(ret.String())
+// }
 
-	// return NewExecEmptyTrue()
-}
+// return NewExecEmptyTrue()
+// }
 
 // func (exec *Executor) proveInRangeSetStmtWhenParamIsIndex(intensionalSetGivenSetIsIn *ast.IntensionalSetStmt, stmt *ast.ProveInRangeSetStmt, i int64) ExecRet {
 // 	indexAsFc := ast.Atom(fmt.Sprintf("%d", i))
@@ -175,7 +175,7 @@ func (exec *Executor) proveInRangeSetStmt(stmt *ast.ProveInRangeSetStmt) ExecRet
 // 	return NewExecEmptyTrue()
 // }
 
-func (exec *Executor) proveInRangeStmtWhenParamIsIndex(stmt *ast.ProveInRangeStmt, i int64) ExecRet {
+func (exec *Executor) proveInRangeStmtWhenParamIsIndex(stmt *ast.ProveInRangeStmt2, i int64) ExecRet {
 	indexAsFc := ast.Atom(fmt.Sprintf("%d", i))
 	param := stmt.Param()
 	uniMap := map[string]ast.Obj{param: indexAsFc}
