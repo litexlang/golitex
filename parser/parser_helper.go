@@ -117,7 +117,7 @@ func ParseSingleLineFact(s string) (ast.FactStmt, error) {
 	return fact, nil
 }
 
-func GetParamParentSetFactsFromIntensionalSet(intensionalSet *ast.FnObj) (string, ast.Obj, []ast.FactStmt, error) {
+func GetParamParentSetFactsFromIntensionalSet(intensionalSet *ast.FnObj) (string, ast.Obj, ast.FactStmtSlice, error) {
 	param, ok := intensionalSet.Params[0].(ast.Atom)
 	if !ok {
 		return "", nil, nil, fmt.Errorf("expected parameter as atom, got %T", intensionalSet.Params[0])

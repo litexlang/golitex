@@ -286,7 +286,7 @@ var BuiltinObjOrPropNames map[string]struct{} = map[string]struct{}{
 	KeySymbolLeftBracket:  {},
 	KeySymbolRightBracket: {},
 	KeywordFiniteSet:      {},
-	KeywordItemExistsIn:   {},
+	// KeywordItemExistsIn:   {},
 	// TupleFcFnHead:                         {},
 	KeywordCount:       {},
 	KeywordNPos:        {},
