@@ -374,6 +374,7 @@ know forall x, y, z R: z != 0, x = y / z => x * z = y
 fn range(x Z, y Z) set:
 	range(x, y) = {i Z: x <= i, i < y}
 
+"""
 know:
 	forall x, y set:
 		=>:
@@ -383,6 +384,7 @@ know:
 				t $in y
 			forall t y:
 				t $in x
+"""
 ` + InequalityFacts
 
 var InequalityFacts = `
@@ -872,4 +874,6 @@ know:
 	forall a, b R: a > 0, b >= 0 => a + b > 0
 
 know not {} $in nonempty_set
+
+prop equal_set(x set, y set)
 `

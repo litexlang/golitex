@@ -134,7 +134,7 @@ prove:
     forall x a:
         x > 0
 
-    {y R: y > 0} = {x R: x > 0}
+    $equal_set({y R: y > 0}, {x R: x > 0})
 
 prove:
     have fn f(x R) R = x + 1
