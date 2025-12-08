@@ -97,7 +97,8 @@ func ParseSourceCodeGetFact(sourceCode string) (ast.FactStmt, error) {
 		return nil, err
 	}
 
-	return blocks[0].fact()
+	parser := &Parser{}
+	return parser.factStmt(&blocks[0], UniFactDepth0)
 }
 
 // ParseSingleLineFact parses a single line fact statement from a string
@@ -109,7 +110,9 @@ func ParseSingleLineFact(s string) (ast.FactStmt, error) {
 		return nil, err
 	}
 
-	fact, err := blocks[0].inline_spec_or_enum_intensional_Equals_fact_skip_terminator()
+	parser := &Parser{}
+
+	fact, err := parser.inline_spec_or_enum_intensional_Equals_fact_skip_terminator(&blocks[0])
 	if err != nil {
 		return nil, err
 	}

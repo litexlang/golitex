@@ -168,11 +168,6 @@ func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecFactStmt, state *VerState) 
 }
 
 func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	// Special handling for equal_set prop
-	if string(stmt.PropName) == "equal_set" {
-		return ver.verEqualSetProp(stmt, state)
-	}
-
 	// nextState := state.GetAddRound()
 
 	curDefStmt := ver.Env.GetPropDef(stmt.PropName)
@@ -223,72 +218,6 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 	}
 
 	return ver.maybeAddSuccessMsgString(state, stmt.String(), defStmt.String(), NewEmptyExecTrue())
-}
-
-// verEqualSetProp verifies equal_set(a, b) by checking:
-// - forall x a : x $in b
-// - forall x b : x $in a
-func (ver *Verifier) verEqualSetProp(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	if len(stmt.Params) != 2 {
-		return NewExecErr(fmt.Sprintf("equal_set expects 2 parameters, got %d", len(stmt.Params)))
-	}
-
-	a := stmt.Params[0]
-	b := stmt.Params[1]
-
-	// Generate a unique parameter name to avoid conflicts
-	xName := ver.Env.GenerateUndeclaredRandomName()
-	if xName == "" {
-		xName = "x" // fallback
-	}
-
-	// Create forall x a : x $in b
-	forall1 := ast.NewUniFact(
-		[]string{xName},
-		[]ast.Obj{a},
-		[]ast.FactStmt{},
-		[]ast.FactStmt{
-			ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{ast.Atom(xName), b}, stmt.Line),
-		},
-		stmt.Line,
-	)
-
-	// Create forall x b : x $in a
-	// Use a different parameter name to avoid conflicts
-	xName2 := ver.Env.GenerateUndeclaredRandomName_AndNotInMap(map[string]struct{}{xName: {}})
-	if xName2 == "" {
-		xName2 = "x2" // fallback
-	}
-
-	forall2 := ast.NewUniFact(
-		[]string{xName2},
-		[]ast.Obj{b},
-		[]ast.FactStmt{},
-		[]ast.FactStmt{
-			ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{ast.Atom(xName2), a}, stmt.Line),
-		},
-		stmt.Line,
-	)
-
-	// Verify both forall statements
-	verRet1 := ver.VerFactStmt(forall1, state)
-	if verRet1.IsErr() {
-		return verRet1
-	}
-	if verRet1.IsUnknown() {
-		return verRet1
-	}
-
-	verRet2 := ver.VerFactStmt(forall2, state)
-	if verRet2.IsErr() {
-		return verRet2
-	}
-	if verRet2.IsUnknown() {
-		return verRet2
-	}
-
-	// Both forall statements are true, so equal_set(a, b) is true
-	return ver.maybeAddSuccessMsgString(state, stmt.String(), fmt.Sprintf("equal_set: forall x %s : x $in %s, forall x %s : x $in %s", a, b, b, a), NewEmptyExecTrue())
 }
 
 func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
