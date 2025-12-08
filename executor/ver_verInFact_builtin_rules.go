@@ -138,6 +138,14 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 		return verRet
 	}
 
+	verRet = ver.verInFactByRightIsEnumSet(stmt, state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsTrue() {
+		return verRet
+	}
+
 	return NewEmptyExecUnknown()
 }
 
@@ -929,5 +937,33 @@ func (ver *Verifier) verInFactByRightIsIntensionalSet(stmt *ast.SpecFactStmt, st
 		}
 	}
 
+	return NewEmptyExecUnknown()
+}
+
+func (ver *Verifier) verInFactByRightIsEnumSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	enumObj := ver.Env.GetObjEnumSet(stmt.Params[1])
+	if enumObj == nil {
+		return NewEmptyExecUnknown()
+	}
+
+	enumSet, ok := enumObj.(*ast.FnObj)
+	if !ok {
+		return NewEmptyExecUnknown()
+	}
+
+	// 遍历 enum set 的所有元素，检查是否有任何一个等于 stmt.Params[0]
+	for _, enumItem := range enumSet.Params {
+		equalFact := ast.NewEqualFact(stmt.Params[0], enumItem)
+		verRet := ver.VerFactStmt(equalFact, state)
+		if verRet.IsErr() {
+			return verRet
+		}
+		if verRet.IsTrue() {
+			// 找到了相等的元素，返回 true
+			return NewExecTrue(fmt.Sprintf("%s is true proved by\n%s = %s and %s $in %s", stmt.String(), stmt.Params[0], enumItem, enumItem, stmt.Params[1]))
+		}
+	}
+
+	// 没有找到相等的元素，返回 unknown
 	return NewEmptyExecUnknown()
 }
