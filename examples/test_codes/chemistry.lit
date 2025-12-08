@@ -1,5 +1,5 @@
 have molecule nonempty_set
-have set atom = {H, O, C, S}
+have atom set = {H, O, C, S}
 
 let H2O molecule
 

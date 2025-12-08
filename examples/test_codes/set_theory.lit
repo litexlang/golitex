@@ -16,7 +16,7 @@ prop is_empty_set(x set):
         not a $in x
 
 # There is a builtin-in empty set in Litex
-have set builtin_empty_set := {}
+have builtin_empty_set set := {}
 forall x obj:
     not x $in builtin_empty_set
 
@@ -35,7 +35,7 @@ claim:
         $is_empty_set(s)
         
 # You can define a finite set of items like this:
-have set set_of_one_two_three := {1, 2, 3}
+have set_of_one_two_three set := {1, 2, 3}
 
 # Pairwise Union
 fn union(s1 set, s2 set) set
@@ -85,8 +85,8 @@ prop is_subset_of(s1 set, s2 set):
         x $in s2
 
 prove:
-    have set a := {1, 2, 4}
-    have set b := {1, 2, 3, 4, 5}
+    have a set := {1, 2, 4}
+    have b set := {1, 2, 3, 4, 5}
     prove_over_finite_set:
         forall x a:
             x $in b
@@ -110,7 +110,7 @@ claim:
 prove:
     let A set
     prop P(x A)
-	have set a := x A:
+	have a set := x A:
         $P(x)
     forall x A:
         $P(x)
@@ -143,14 +143,14 @@ know @union_of_N_greater_than_n_and_less_than_or_equal_to_n_is_N(n N, s1 set, s2
 		union(s1, s2) = N
 
 prove:
-    have set a := x N:
+    have a set := x N:
         x > 0
-    have set b := x N:
+    have b set := x N:
         x <= 0
     $union_of_N_greater_than_n_and_less_than_or_equal_to_n_is_N(0, a, b)
     union(a, b) = N
 
-have set fn difference(s1 set, s2 set) := x s1:
+have fn difference(s1 set, s2 set) set := x s1:
     not x $in s2
 
 # Union of a set and the empty set is the set itself
@@ -228,7 +228,7 @@ prove:
             =>:
                 $last_two_objects_are_equal(x, y1, y2)
 
-    have set s = set_defined_by_replacement(A, B, P)
+    have s set = set_defined_by_replacement(A, B, P)
     forall x set_defined_by_replacement(A, B, P):
         $obj_exist_as_preimage_of_prop(A, B, P, x)
 
@@ -245,9 +245,9 @@ prove:
 
 # {1,2,3,4} \ {2,4,6} = {1,3}
 prove:
-	have set s := {1,2,3,4}
-    have set t := {2,4,6}
-    have set u := {1,3}
+	have s set := {1,2,3,4}
+    have t set := {2,4,6}
+    have u set := {1,3}
     prove_over_finite_set:
         forall x t:
         	x != 1

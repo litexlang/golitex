@@ -4,7 +4,7 @@ have fn:
         line(a, b, c) = {x cart(R, R): a * x[1] + b * x[2] = c}
 
     prove:
-        have set s = {x cart(R, R): a * x[1] + b * x[2] = c}
+        have s set = {x cart(R, R): a * x[1] + b * x[2] = c}
         forall x s: x $in cart(R, R)
         s $is_subset_of cart(R, R)
     = s

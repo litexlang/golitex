@@ -31,8 +31,8 @@ prove:
 
 # have sets by naive set theory
 prove:
-    have set s = {1, 2, 3}
-    have set s2 = {x N : x > 5}
+    have s set = {1, 2, 3}
+    have s2 set = {x N : x > 5}
 
     s = {3, 2, 1}
 
@@ -66,3 +66,14 @@ prove:
     have b st $item_exists_in(s)
     b $in s
 
+prove:
+    {x R: x > 0} = {x R: x > 0}
+
+    exist 1 st $item_exists_in({x R: x > 0})
+
+    have a set = {x R: x > 0}
+
+    forall x a:
+        x > 0
+
+    {y R: y > 0} = {x R: x > 0}

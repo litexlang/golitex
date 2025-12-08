@@ -495,7 +495,6 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) ExecRet {
 }
 
 func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) ExecRet {
-
 	exec.NewEnv(exec.Env)
 	defer exec.deleteEnv()
 
