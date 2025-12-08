@@ -715,17 +715,17 @@ func (stmt *HaveFnEqualStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return NewHaveFnEqualStmt(newDefHeader, newRetSet, newEqualTo, stmt.Line), nil
 }
 
-func (stmt *HaveFnLiftStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	newOpt, err := stmt.Opt.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	newDomainOfEachParamOfGivenFn, err := stmt.DomainOfEachParamOfGivenFn.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	return NewHaveFnLiftStmt(stmt.FnName, newOpt, newDomainOfEachParamOfGivenFn, stmt.Line), nil
-}
+// func (stmt *HaveFnLiftStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+// 	newOpt, err := stmt.Opt.Instantiate(uniMap)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	newDomainOfEachParamOfGivenFn, err := stmt.DomainOfEachParamOfGivenFn.Instantiate(uniMap)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return NewHaveFnLiftStmt(stmt.FnName, newOpt, newDomainOfEachParamOfGivenFn, stmt.Line), nil
+// }
 
 func (stmt *HaveFnStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newDefFnStmt, err := stmt.DefFnStmt.Instantiate(uniMap)

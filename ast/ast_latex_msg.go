@@ -900,25 +900,25 @@ func (s *HaveFnEqualStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (s *HaveFnLiftStmt) ToLatexString() string {
-	var builder strings.Builder
-	builder.WriteString("\\begin{definition}[Function]\n")
-	builder.WriteString(s.FnName)
-	builder.WriteString(" ")
-	builder.WriteString(glob.KeySymbolEqual)
-	builder.WriteString(" ")
-	builder.WriteString(glob.KeywordLift)
-	builder.WriteString("(")
-	builder.WriteString(s.Opt.ToLatexString())
-	builder.WriteString(", ")
-	builder.WriteString(" ")
-	builder.WriteString(glob.KeySymbolLeftBrace)
-	builder.WriteString(strings.Join(s.DomainOfEachParamOfGivenFn.fcSliceToLatexStringSlice(), ", "))
-	builder.WriteString(glob.KeySymbolRightBrace)
-	builder.WriteString(".")
-	builder.WriteString("\n\\end{definition}")
-	return builder.String()
-}
+// func (s *HaveFnLiftStmt) ToLatexString() string {
+// 	var builder strings.Builder
+// 	builder.WriteString("\\begin{definition}[Function]\n")
+// 	builder.WriteString(s.FnName)
+// 	builder.WriteString(" ")
+// 	builder.WriteString(glob.KeySymbolEqual)
+// 	builder.WriteString(" ")
+// 	builder.WriteString(glob.KeywordLift)
+// 	builder.WriteString("(")
+// 	builder.WriteString(s.Opt.ToLatexString())
+// 	builder.WriteString(", ")
+// 	builder.WriteString(" ")
+// 	builder.WriteString(glob.KeySymbolLeftBrace)
+// 	builder.WriteString(strings.Join(s.DomainOfEachParamOfGivenFn.fcSliceToLatexStringSlice(), ", "))
+// 	builder.WriteString(glob.KeySymbolRightBrace)
+// 	builder.WriteString(".")
+// 	builder.WriteString("\n\\end{definition}")
+// 	return builder.String()
+// }
 
 func (s *HaveFnStmt) ToLatexString() string {
 	return s.String()

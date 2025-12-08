@@ -67,8 +67,9 @@ func (s *InlineFactsStmt) stmt()      {}
 func (s *ProveByInductionStmt) stmt() {}
 func (s *HaveObjEqualStmt) stmt()     {}
 func (s *HaveFnEqualStmt) stmt()      {}
-func (s *HaveFnLiftStmt) stmt()       {}
-func (s *HaveFnStmt) stmt()           {}
+
+// func (s *HaveFnLiftStmt) stmt()       {}
+func (s *HaveFnStmt) stmt() {}
 
 // func (s *MarkdownStmt) stmt()                               {}
 func (s *ProveIsCommutativePropStmt) stmt()        {}
@@ -127,8 +128,9 @@ func (s *InlineFactsStmt) algoStmt()      {}
 func (s *ProveByInductionStmt) algoStmt() {}
 func (s *HaveObjEqualStmt) algoStmt()     {}
 func (s *HaveFnEqualStmt) algoStmt()      {}
-func (s *HaveFnLiftStmt) algoStmt()       {}
-func (s *HaveFnStmt) algoStmt()           {}
+
+// func (s *HaveFnLiftStmt) algoStmt()       {}
+func (s *HaveFnStmt) algoStmt() {}
 
 // func (s *MarkdownStmt) algoStmt()                           {}
 func (s *ProveIsCommutativePropStmt) algoStmt()        {}
@@ -189,8 +191,9 @@ func (s *InlineFactsStmt) GetLine() uint      { return s.Line }
 func (s *ProveByInductionStmt) GetLine() uint { return s.Line }
 func (s *HaveObjEqualStmt) GetLine() uint     { return s.Line }
 func (s *HaveFnEqualStmt) GetLine() uint      { return s.Line }
-func (s *HaveFnLiftStmt) GetLine() uint       { return s.Line }
-func (s *HaveFnStmt) GetLine() uint           { return s.Line }
+
+// func (s *HaveFnLiftStmt) GetLine() uint       { return s.Line }
+func (s *HaveFnStmt) GetLine() uint { return s.Line }
 
 // func (s *MarkdownStmt) GetLine() uint                       { return s.Line }
 func (s *ProveInRangeSetStmt) GetLine() uint                { return s.Line }
