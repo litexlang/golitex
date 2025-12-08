@@ -16,16 +16,16 @@ package litex_env
 
 import ast "golitex/ast"
 
-func (e *Env) GetEnumFact(enumName string) ([]ast.Obj, bool) {
-	for env := e; env != nil; env = env.Parent {
-		enumFacts, ok := env.EnumFacts[enumName]
-		if ok {
-			return enumFacts, true
-		}
-	}
+// func (e *Env) GetEnumFact(enumName string) ([]ast.Obj, bool) {
+// 	for env := e; env != nil; env = env.Parent {
+// 		enumFacts, ok := env.EnumFacts[enumName]
+// 		if ok {
+// 			return enumFacts, true
+// 		}
+// 	}
 
-	return nil, false
-}
+// 	return nil, false
+// }
 
 func (e *Env) GetLatestFnT_GivenNameIsIn(fnName string) *FnInFnTMemItem {
 	for env := e; env != nil; env = env.Parent {

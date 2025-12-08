@@ -1,11 +1,4 @@
-prove:
-    {x R: x > 0} = {x R: x > 0}
+have s set = {1, 2, 3}
 
-    exist 1 st $item_exists_in({x R: x > 0})
-
-    have a set = {x R: x > 0}
-
-    forall x a:
-        x > 0
-
-    {y R: y > 0} = {x R: x > 0}
+prove_by_enum(x s):
+    x $in s

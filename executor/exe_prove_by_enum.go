@@ -23,11 +23,11 @@ import (
 func (exec *Executor) proveByEnumMainLogic(stmt *ast.ProveByEnumStmt) (ExecRet, error) {
 	enums := [][]ast.Obj{}
 	for _, paramSet := range stmt.Fact.ParamSets {
-		enumFacts, ok := exec.Env.GetEnumFact(paramSet.String())
-		if !ok {
-			return NewEmptyExecErr(), fmt.Errorf("prove over finite set statement error: enum not found")
+		enumSet := exec.Env.GetObjEnumSet(paramSet)
+		if enumSet == nil {
+			return NewEmptyExecErr(), fmt.Errorf("prove over finite set statement error: enum set not found")
 		}
-		enums = append(enums, enumFacts)
+		enums = append(enums, enumSet.(*ast.FnObj).Params)
 	}
 
 	cartesianProductOfFcs := glob.CartesianProduct(enums)

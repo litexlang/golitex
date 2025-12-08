@@ -1,11 +1,11 @@
-have set s = {x R: x > 0}
+have s set = {x R: x > 0}
 forall x R: x > 0 => x $in s
 s $is_subset_of R
 
-have set s2 = {x cart(R, R): x[1] > 0}
+have s2 set = {x cart(R, R): x[1] > 0}
 forall x cart(R, R): x[1] > 0 => x $in s2
 
-have set s3 = {x cart(R, R): x[1] + x[2] = 0}
+have s3 set = {x cart(R, R): x[1] + x[2] = 0}
 forall x cart(R, R): x[1] + x[2] = 0 => x $in s3
 
 # = {} 的释放不是自动的，只能取个名字。本质原因是因为 = {} 是一个fact，{} 不是一个obj
@@ -19,7 +19,7 @@ have fn:
         line(a, b, c) $in set
 
     prove:
-        have set l = {x cart(R, R): a * x[1] + b * x[2] = c}
+        have l set = {x cart(R, R): a * x[1] + b * x[2] = c}
         forall x l: x $in cart(R, R)
         l $is_subset_of cart(R, R)
     = l

@@ -77,3 +77,74 @@ prove:
         x > 0
 
     {y R: y > 0} = {x R: x > 0}
+
+prove:
+    have fn f(x R) R = x + 1
+    f(2) = 3
+
+    have fn g(x R) R =:
+        case x = 2: 3
+        case x != 2: 4
+
+    have fn:
+        h(x R) R:
+            x > 0
+            =>:
+                h(x) > 1
+        prove:
+            do_nothing
+        = 100
+
+    forall x R: x > 0 => h(x) > 1
+    h(1) > 1
+
+    have fn:
+        p(x R) R:
+            x > 0
+            =>:
+                p(x) > x
+        case 100 > x:
+            do_nothing
+        = 100
+        case not 100 > x:
+            x + 1 > x
+        = x + 1
+
+    forall x R: x > 0 => p(x) > x
+
+prove:
+    exist_prop f fn(R)R st tmp():
+        forall x R: x > 0 => f(x) > 0
+        forall x R: x <= 0 => f(x) = 0
+
+    have fn g(x R) R =:
+        case x > 0: x
+        case x <= 0: 0
+
+    forall x R: x > 0 => g(x) = x, x > 0, g(x) > 0
+    forall x R: x <= 0 => g(x) = 0
+
+    exist g st $tmp()
+
+    have f st $tmp()
+    
+prove:
+    exist_prop f fn(R)R st tmp():
+        forall x R: f(x) > 0
+
+    have fn g(x R) R =:
+        case x > 0: x
+        case x <= 0: 100
+
+    prove forall x R: g(x) > 0:
+        prove_case_by_case:
+            g(x) > 0
+            case x > 0:
+                g(x) = x
+                x > 0
+            case x <= 0:
+                g(x) = 100
+                x <= 0
+
+    exist g st $tmp()
+
