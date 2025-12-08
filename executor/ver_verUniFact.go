@@ -88,7 +88,7 @@ func (ver *Verifier) PreprocessUniFactParams_DeclareParams(oldStmt *ast.UniFactS
 
 	// 查看param set 是否已经声明
 	for _, paramSet := range newStmtPtr.ParamSets {
-		ret := ver.Env.AreAtomsInFcAreDeclared(paramSet, map[string]struct{}{})
+		ret := ver.Env.AreAtomsInObjDefined(paramSet, map[string]struct{}{})
 		if ret.IsErr() {
 			return nil, fmt.Errorf(ret.String())
 		}
