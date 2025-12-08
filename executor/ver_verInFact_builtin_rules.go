@@ -73,13 +73,13 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 		return verRet
 	}
 
-	// verRet = ver.verIn_N_Z_Q_R_C(stmt, state)
-	// if verRet.IsErr() {
-	// 	return verRet
-	// }
-	// if verRet.IsTrue() {
-	// 	return verRet
-	// }
+	verRet = ver.verInFactByRightParamIsNOrZOrQOrROrC(stmt, state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsTrue() {
+		return verRet
+	}
 
 	verRet = ver.verInFactByRightParamIsFnTemplateFact(stmt, state)
 	if verRet.IsErr() {
@@ -146,6 +146,14 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 		return verRet
 	}
 
+	// verRet = ver.verInFactByLeftIsEnumSetRightIsKeywordFiniteSet(stmt, state)
+	// if verRet.IsErr() {
+	// 	return verRet
+	// }
+	// if verRet.IsTrue() {
+	// 	return verRet
+	// }
+
 	return NewEmptyExecUnknown()
 }
 
@@ -198,16 +206,16 @@ func (ver *Verifier) verInFactByLeftIsFnTemplateAndRightIsKeywordSet(stmt *ast.S
 
 func (ver *Verifier) verInFactByLeftParamIsReturnValueOfArithmeticFn(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	ok := ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordReal)
-	if !ok {
+	if ok {
+		ok = ast.IsFn_WithHeadNameInSlice(stmt.Params[0], map[string]struct{}{glob.KeySymbolPlus: {}, glob.KeySymbolMinus: {}, glob.KeySymbolStar: {}, glob.KeySymbolSlash: {}, glob.KeySymbolPower: {}})
+
+		if ok {
+			msg := fmt.Sprintf("return value of builtin arithmetic function %s is in Real", stmt.Params[0])
+			return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+		}
 		return NewEmptyExecUnknown()
 	}
 
-	ok = ast.IsFn_WithHeadNameInSlice(stmt.Params[0], map[string]struct{}{glob.KeySymbolPlus: {}, glob.KeySymbolMinus: {}, glob.KeySymbolStar: {}, glob.KeySymbolSlash: {}, glob.KeySymbolPower: {}})
-
-	if ok {
-		msg := fmt.Sprintf("return value of builtin arithmetic function %s is in Real", stmt.Params[0])
-		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
-	}
 	return NewEmptyExecUnknown()
 }
 
@@ -898,11 +906,12 @@ func (ver *Verifier) verInFactByLeftIsIndexOfObjInSomeSet(stmt *ast.SpecFactStmt
 }
 
 func (ver *Verifier) verInFactByRightIsIntensionalSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	if !ast.IsIntensionalSetObj(stmt.Params[1]) {
+	intensionalSet := ver.Env.GetObjIntensionalSet(stmt.Params[1])
+	if intensionalSet == nil {
 		return NewEmptyExecUnknown()
 	}
 
-	param, parentSet, facts, err := parser.GetParamParentSetFactsFromIntensionalSet(stmt.Params[1].(*ast.FnObj))
+	param, parentSet, facts, err := parser.GetParamParentSetFactsFromIntensionalSet(intensionalSet)
 	if err != nil {
 		return NewExecErr(err.Error())
 	}
@@ -967,3 +976,18 @@ func (ver *Verifier) verInFactByRightIsEnumSet(stmt *ast.SpecFactStmt, state *Ve
 	// 没有找到相等的元素，返回 unknown
 	return NewEmptyExecUnknown()
 }
+
+// func (ver *Verifier) verInFactByLeftIsEnumSetRightIsKeywordFiniteSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+// 	if !ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordFiniteSet) {
+// 		return NewEmptyExecUnknown()
+// 	}
+
+// 	enumObj := ver.Env.GetObjEnumSet(stmt.Params[0])
+// 	if enumObj == nil {
+// 		return NewEmptyExecUnknown()
+// 	}
+
+// 	_ = state
+
+// 	return NewExecTrue("Any enumeration set is in finite set")
+// }

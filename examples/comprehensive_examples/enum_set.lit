@@ -16,3 +16,14 @@ prove:
 
     forall x a:
         x = 1 or x = 2
+
+prove:
+    1 $in {1, 2, 3}
+
+    prove_by_enum(a {1, 2, 3}):
+        a $in {3, 2, 1}
+
+    prove_by_enum(a {3, 2, 1}):
+        a $in {1, 2, 3}
+
+    {1, 2, 3} = {3, 2, 1}
