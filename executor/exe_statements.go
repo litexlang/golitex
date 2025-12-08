@@ -623,7 +623,7 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ExecRet {
 			return execState
 		}
 		// 检查 等号右边的东西是否存在
-		ret = exec.Env.AreAtomsInFcAreDeclared(stmt.ObjEqualTos[i], map[string]struct{}{})
+		ret = exec.Env.AreAtomsInObjDefined(stmt.ObjEqualTos[i], map[string]struct{}{})
 		if ret.IsErr() {
 			ret.AddMsg(fmt.Sprintf("in obj equal to %s", stmt.ObjEqualTos[i]))
 			return NewExecErr(ret.String())
@@ -1164,11 +1164,11 @@ func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitiveP
 		return fmt.Errorf(execState.String())
 	}
 
-	ret := exec.Env.AreAtomsInFcAreDeclared(def.DefHeader.ParamSets[0], map[string]struct{}{})
+	ret := exec.Env.AreAtomsInObjDefined(def.DefHeader.ParamSets[0], map[string]struct{}{})
 	if ret.IsErr() {
 		return fmt.Errorf(ret.String())
 	}
-	ret = exec.Env.AreAtomsInFcAreDeclared(def.DefHeader.ParamSets[1], map[string]struct{}{})
+	ret = exec.Env.AreAtomsInObjDefined(def.DefHeader.ParamSets[1], map[string]struct{}{})
 	if ret.IsErr() {
 		return fmt.Errorf(ret.String())
 	}
