@@ -775,23 +775,23 @@ func (stmt *HaveFnCaseByCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt, erro
 // 	return stmt, nil
 // }
 
-func (stmt *ProveInRangeSetStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	newIntensionalSet, err := stmt.IntensionalSet.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	newThenFacts, err := stmt.ThenFacts.InstantiateFact(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	newProofs, err := stmt.Proofs.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	return NewProveInRangeSetStmt(stmt.Start, stmt.End, stmt.Param, newIntensionalSet, newThenFacts, newProofs, stmt.Line), nil
-}
+// func (stmt *ProveInRangeSetStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+// 	newIntensionalSet, err := stmt.IntensionalSet.Instantiate(uniMap)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	newThenFacts, err := stmt.ThenFacts.InstantiateFact(uniMap)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	newProofs, err := stmt.Proofs.Instantiate(uniMap)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return NewProveInRangeSetStmt(stmt.Start, stmt.End, stmt.Param, newIntensionalSet, newThenFacts, newProofs, stmt.Line), nil
+// }
 
-func (stmt *ProveInRangeStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+func (stmt *ProveInRangeStmt2) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newStart, err := stmt.start.Instantiate(uniMap)
 	if err != nil {
 		return nil, err

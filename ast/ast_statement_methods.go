@@ -355,11 +355,11 @@ func TransformEnumToUniFact(setName Obj, enumFcs []Obj) (*UniFactStmt, []*SpecFa
 // 	return intensionalSetStmt
 // }
 
-func (stmt *ProveInRangeSetStmt) UniFact() *UniFactStmt {
-	return NewUniFact([]string{stmt.Param}, []Obj{stmt.IntensionalSet}, []FactStmt{}, stmt.ThenFacts, stmt.Line)
-}
+// func (stmt *ProveInRangeSetStmt) UniFact() *UniFactStmt {
+// 	return NewUniFact([]string{stmt.Param}, []Obj{stmt.IntensionalSet}, []FactStmt{}, stmt.ThenFacts, stmt.Line)
+// }
 
-func (stmt *ProveInRangeStmt) UniFact() *UniFactStmt {
+func (stmt *ProveInRangeStmt2) UniFact() *UniFactStmt {
 	params := []string{stmt.param}
 	paramSets := []Obj{Atom(glob.KeywordInteger)}
 

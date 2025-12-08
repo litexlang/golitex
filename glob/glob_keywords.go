@@ -105,6 +105,10 @@ const (
 
 	KeywordEnumSet        = "{}"
 	KeywordIntensionalSet = "{:}"
+
+	KeywordSubsetOf = "subset_of"
+
+	KeywordProveFor = "prove_for"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -186,6 +190,10 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordEqualTuple:     {},
 	KeywordEnumSet:        {},
 	KeywordIntensionalSet: {},
+
+	KeywordSubsetOf: {},
+
+	KeywordProveFor: {},
 }
 
 const (

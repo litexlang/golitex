@@ -106,8 +106,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 		execRet = exec.haveFnCaseByCaseStmt(stmt)
 	case *ast.ClaimIffStmt:
 		execRet = exec.claimIffStmt(stmt)
-	case *ast.ProveInRangeSetStmt:
-		execRet = exec.proveInRangeSetStmt(stmt)
+	// case *ast.ProveInRangeSetStmt:
+	// 	execRet = exec.proveInRangeSetStmt(stmt)
 	case *ast.ProveIsTransitivePropStmt:
 		execRet = exec.proveIsTransitivePropStmt(stmt)
 	case *ast.ProveIsCommutativePropStmt:
@@ -128,7 +128,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 		execRet = exec.haveFnEqualCaseByCaseStmt(stmt)
 	case *ast.ProveCaseByCaseStmt:
 		execRet = exec.proveCaseByCaseStmt(stmt)
-	case *ast.ProveInRangeStmt:
+	case *ast.ProveInRangeStmt2:
 		execRet = exec.proveInRangeStmt(stmt)
 	case *ast.ImportDirStmt:
 		execRet = NewExecErr("import statements are not allowed in local scope.")
@@ -602,6 +602,13 @@ func (exec *Executor) inlineFactsStmt(stmt *ast.InlineFactsStmt) ExecRet {
 
 func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ExecRet {
 	ver := NewVerifier(exec.Env)
+
+	// 证明右侧的 equal to 符合 fn 的条件
+	for _, obj := range stmt.ObjEqualTos {
+		if ver.objIsDefinedAtomOrIsFnSatisfyItsReq(obj, Round0NoMsg).IsNotTrue() {
+			return NewExecErr(fmt.Sprintf("%s is not defined or does not satisfy function requirement", obj.String()))
+		}
+	}
 
 	for i := range len(stmt.ObjNames) {
 		verRet := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.ObjEqualTos[i], stmt.ObjSets[i]}, stmt.Line), Round0Msg)
@@ -1468,7 +1475,7 @@ func (exec *Executor) checkCaseNoOverlapWithOthers(stmt *ast.HaveFnEqualCaseByCa
 	return NewExecTrue(stmt.String()), nil
 }
 
-func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt) ExecRet {
+func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt2) ExecRet {
 	// Evaluate start and end to get integer values
 	startObj, execRet := exec.evalObjThenSimplify(stmt.Start())
 	if execRet.IsNotTrue() {

@@ -99,8 +99,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.clearStmt()
 	case glob.KeywordProveByInduction:
 		ret, err = tb.proveByInductionStmt()
-	case glob.KeywordProveInRangeSet:
-		ret, err = tb.proveInRangeSetStmt()
+	// case glob.KeywordProveInRangeSet:
+	// 	ret, err = tb.proveInRangeSetStmt()
 	case glob.KeywordProveInRange:
 		ret, err = tb.proveInRangeStmt()
 	case glob.KeywordProveIsTransitiveProp:
@@ -3173,95 +3173,95 @@ func (tb *tokenBlock) proveInRangeStmt() (ast.Stmt, error) {
 }
 
 // parse prove_in_range_set(start, end, x S): then_fact prove:
-func (tb *tokenBlock) proveInRangeSetStmt() (ast.Stmt, error) {
-	err := tb.header.skip(glob.KeywordProveInRangeSet)
-	if err != nil {
-		return nil, parserErrAtTb(err, tb)
-	}
+// func (tb *tokenBlock) proveInRangeSetStmt() (ast.Stmt, error) {
+// 	err := tb.header.skip(glob.KeywordProveInRangeSet)
+// 	if err != nil {
+// 		return nil, parserErrAtTb(err, tb)
+// 	}
 
-	err = tb.header.skip(glob.KeySymbolLeftBrace)
-	if err != nil {
-		return nil, parserErrAtTb(err, tb)
-	}
+// 	err = tb.header.skip(glob.KeySymbolLeftBrace)
+// 	if err != nil {
+// 		return nil, parserErrAtTb(err, tb)
+// 	}
 
-	startAsInt, err := tb.skipInt()
-	if err != nil {
-		return nil, parserErrAtTb(err, tb)
-	}
+// 	startAsInt, err := tb.skipInt()
+// 	if err != nil {
+// 		return nil, parserErrAtTb(err, tb)
+// 	}
 
-	err = tb.header.skip(glob.KeySymbolComma)
-	if err != nil {
-		return nil, parserErrAtTb(err, tb)
-	}
+// 	err = tb.header.skip(glob.KeySymbolComma)
+// 	if err != nil {
+// 		return nil, parserErrAtTb(err, tb)
+// 	}
 
-	endAsInt, err := tb.skipInt()
-	if err != nil {
-		return nil, parserErrAtTb(err, tb)
-	}
+// 	endAsInt, err := tb.skipInt()
+// 	if err != nil {
+// 		return nil, parserErrAtTb(err, tb)
+// 	}
 
-	err = tb.header.skip(glob.KeySymbolComma)
-	if err != nil {
-		return nil, parserErrAtTb(err, tb)
-	}
+// 	err = tb.header.skip(glob.KeySymbolComma)
+// 	if err != nil {
+// 		return nil, parserErrAtTb(err, tb)
+// 	}
 
-	param, err := tb.header.next()
-	if err != nil {
-		return nil, parserErrAtTb(err, tb)
-	}
+// 	param, err := tb.header.next()
+// 	if err != nil {
+// 		return nil, parserErrAtTb(err, tb)
+// 	}
 
-	paramSet, err := tb.Obj()
-	if err != nil {
-		return nil, parserErrAtTb(err, tb)
-	}
+// 	paramSet, err := tb.Obj()
+// 	if err != nil {
+// 		return nil, parserErrAtTb(err, tb)
+// 	}
 
-	err = tb.header.skip(glob.KeySymbolRightBrace)
-	if err != nil {
-		return nil, parserErrAtTb(err, tb)
-	}
+// 	err = tb.header.skip(glob.KeySymbolRightBrace)
+// 	if err != nil {
+// 		return nil, parserErrAtTb(err, tb)
+// 	}
 
-	err = tb.header.skip(glob.KeySymbolColon)
-	if err != nil {
-		return nil, parserErrAtTb(err, tb)
-	}
+// 	err = tb.header.skip(glob.KeySymbolColon)
+// 	if err != nil {
+// 		return nil, parserErrAtTb(err, tb)
+// 	}
 
-	if tb.body[len(tb.body)-1].header.is(glob.KeywordProve) {
-		thenFacts := []ast.FactStmt{}
-		for i := range len(tb.body) - 1 {
-			curStmt, err := tb.body[i].factStmt(UniFactDepth1)
-			if err != nil {
-				return nil, parserErrAtTb(err, tb)
-			}
-			thenFacts = append(thenFacts, curStmt)
-		}
+// 	if tb.body[len(tb.body)-1].header.is(glob.KeywordProve) {
+// 		thenFacts := []ast.FactStmt{}
+// 		for i := range len(tb.body) - 1 {
+// 			curStmt, err := tb.body[i].factStmt(UniFactDepth1)
+// 			if err != nil {
+// 				return nil, parserErrAtTb(err, tb)
+// 			}
+// 			thenFacts = append(thenFacts, curStmt)
+// 		}
 
-		proofs := []ast.Stmt{}
-		err = tb.body[len(tb.body)-1].header.skipKwAndColonCheckEOL(glob.KeywordProve)
-		if err != nil {
-			return nil, parserErrAtTb(err, tb)
-		}
+// 		proofs := []ast.Stmt{}
+// 		err = tb.body[len(tb.body)-1].header.skipKwAndColonCheckEOL(glob.KeywordProve)
+// 		if err != nil {
+// 			return nil, parserErrAtTb(err, tb)
+// 		}
 
-		for _, stmt := range tb.body[len(tb.body)-1].body {
-			curStmt, err := stmt.Stmt()
-			if err != nil {
-				return nil, parserErrAtTb(err, tb)
-			}
-			proofs = append(proofs, curStmt)
-		}
+// 		for _, stmt := range tb.body[len(tb.body)-1].body {
+// 			curStmt, err := stmt.Stmt()
+// 			if err != nil {
+// 				return nil, parserErrAtTb(err, tb)
+// 			}
+// 			proofs = append(proofs, curStmt)
+// 		}
 
-		return ast.NewProveInRangeSetStmt(startAsInt, endAsInt, param, paramSet, thenFacts, proofs, tb.line), nil
-	} else {
-		thenFacts := []ast.FactStmt{}
-		for i := range len(tb.body) {
-			curStmt, err := tb.body[i].factStmt(UniFactDepth0)
-			if err != nil {
-				return nil, parserErrAtTb(err, tb)
-			}
-			thenFacts = append(thenFacts, curStmt)
-		}
+// 		return ast.NewProveInRangeSetStmt(startAsInt, endAsInt, param, paramSet, thenFacts, proofs, tb.line), nil
+// 	} else {
+// 		thenFacts := []ast.FactStmt{}
+// 		for i := range len(tb.body) {
+// 			curStmt, err := tb.body[i].factStmt(UniFactDepth0)
+// 			if err != nil {
+// 				return nil, parserErrAtTb(err, tb)
+// 			}
+// 			thenFacts = append(thenFacts, curStmt)
+// 		}
 
-		return ast.NewProveInRangeSetStmt(startAsInt, endAsInt, param, paramSet, thenFacts, nil, tb.line), nil
-	}
-}
+// 		return ast.NewProveInRangeSetStmt(startAsInt, endAsInt, param, paramSet, thenFacts, nil, tb.line), nil
+// 	}
+// }
 
 func (tb *tokenBlock) skipInt() (int64, error) {
 	intStr, err := tb.header.next()
