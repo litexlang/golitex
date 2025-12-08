@@ -179,6 +179,15 @@ func storeCommutativeTransitiveFact(mem map[string]*[]ast.Obj, fact *ast.SpecFac
 }
 
 func (env *Env) newPureFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
+	// Special handling for equal_set prop: if equal_set(a, b) is true, then a = b
+	if fact.TypeEnum == ast.TruePure && string(fact.PropName) == "equal_set" && len(fact.Params) == 2 {
+		equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{fact.Params[0], fact.Params[1]}, fact.Line)
+		ret := env.NewFact(equalFact)
+		if ret.IsErr() {
+			return ret
+		}
+	}
+
 	// 如果是 transitive prop，那么需要更新 transitive prop mem
 	if fact.TypeEnum == ast.TruePure && env.IsTransitiveProp(string(fact.PropName)) {
 		if env.TransitivePropMem[string(fact.PropName)] == nil {
