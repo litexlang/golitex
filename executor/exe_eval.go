@@ -24,10 +24,10 @@ import (
 func (exec *Executor) simplifyNumExprObj(obj ast.Obj) (ast.Obj, ExecRet) {
 	simplifiedNumExprObj := cmp.IsNumExprObjThenSimplify(obj)
 	if simplifiedNumExprObj == nil {
-		return nil, NewExecErr("")
+		return nil, NewEmptyExecErr()
 	}
 
-	return simplifiedNumExprObj, NewExecTrue("")
+	return simplifiedNumExprObj, NewEmptyExecTrue()
 }
 
 // 这里 bool 表示，是否启动过 用algo 计算；如果仅仅是用 algo 来计算，那是不会返回true的
@@ -44,7 +44,7 @@ func (exec *Executor) evalObjThenSimplify(obj ast.Obj) (ast.Obj, ExecRet) {
 		if symbolValue == nil {
 			return nil, NewExecErr(fmt.Sprintf("symbol %s has no value", obj.String()))
 		}
-		return symbolValue, NewExecTrue("")
+		return symbolValue, NewEmptyExecTrue()
 	case *ast.FnObj:
 		return exec.evalFnObjThenSimplify(asObj)
 	default:
@@ -64,7 +64,7 @@ var basicArithOptMap = map[string]struct{}{
 // 可能返回数值的时候需要检查一下会不会除以0这种情况
 func (exec *Executor) evalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj, ExecRet) {
 	if symbolValue := exec.Env.GetSymbolSimplifiedValue(fnObj); symbolValue != nil {
-		return symbolValue, NewExecTrue("")
+		return symbolValue, NewEmptyExecTrue()
 	}
 
 	if ast.IsFn_WithHeadNameInSlice(fnObj, basicArithOptMap) {
@@ -92,10 +92,10 @@ func (exec *Executor) evalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj, ExecRet)
 			return nil, execRet
 		}
 
-		return numExprObj, NewExecTrue("")
+		return numExprObj, NewEmptyExecTrue()
 	}
 
-	return nil, NewExecUnknown("")
+	return nil, NewEmptyExecUnknown()
 }
 
 func (exec *Executor) useAlgoToEvalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj, ExecRet) {
@@ -222,10 +222,10 @@ func (exec *Executor) IsAlgoIfConditionTrue(stmt *ast.AlgoIfStmt) (bool, ExecRet
 			}
 		}
 
-		return false, NewExecTrue("")
+		return false, NewEmptyExecTrue()
 	}
 
-	return true, NewExecTrue("")
+	return true, NewEmptyExecTrue()
 }
 
 func (exec *Executor) algoIfStmtWhenEval(stmt *ast.AlgoIfStmt, fnObjWithValueParams *ast.FnObj) (ast.Obj, ExecRet) {

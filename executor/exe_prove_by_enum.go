@@ -25,7 +25,7 @@ func (exec *Executor) proveByEnumMainLogic(stmt *ast.ProveByEnumStmt) (ExecRet, 
 	for _, paramSet := range stmt.Fact.ParamSets {
 		enumFacts, ok := exec.Env.GetEnumFact(paramSet.String())
 		if !ok {
-			return NewExecErr(""), fmt.Errorf("prove over finite set statement error: enum not found")
+			return NewEmptyExecErr(), fmt.Errorf("prove over finite set statement error: enum not found")
 		}
 		enums = append(enums, enumFacts)
 	}
@@ -38,13 +38,13 @@ func (exec *Executor) proveByEnumMainLogic(stmt *ast.ProveByEnumStmt) (ExecRet, 
 		for i := range len(cartesianProductOfFcs) {
 			ok, err := exec.verProveOverFiniteSet_ProveAtProveSectionI(stmt, cartesianProductOfFcs[i])
 			if err != nil {
-				return NewExecErr(""), err
+				return NewEmptyExecErr(), err
 			}
 			if !ok {
-				return NewExecErr(""), fmt.Errorf("failed to prove at prove section %d", i)
+				return NewEmptyExecErr(), fmt.Errorf("failed to prove at prove section %d", i)
 			}
 		}
-		return NewExecTrue(""), nil
+		return NewEmptyExecTrue(), nil
 	}
 }
 
@@ -124,22 +124,22 @@ func (exec *Executor) verProveOverFiniteSet_NoProveSection(stmt *ast.ProveByEnum
 		for _, domFact := range stmt.Fact.DomFacts {
 			instantiatedDomFact, err := domFact.InstantiateFact(uniMap)
 			if err != nil {
-				return NewExecErr(""), err
+				return NewEmptyExecErr(), err
 			}
 
 			state := exec.factStmt(instantiatedDomFact)
 			if state.IsErr() {
-				return NewExecErr(""), err
+				return NewEmptyExecErr(), err
 			}
 			if state.IsUnknown() {
 				domFactAs := instantiatedDomFact.(ast.Spec_OrFact)
 				for _, fact := range domFactAs.ReverseIsTrue() {
 					state := exec.factStmt(fact)
 					if state.IsErr() {
-						return NewExecErr(""), err
+						return NewEmptyExecErr(), err
 					}
 					if state.IsUnknown() {
-						return NewExecErr(""), fmt.Errorf("domain fact in universal fact in prove over finite set statement must be true or not true, it can not be unknown:\n%s", instantiatedDomFact)
+						return NewEmptyExecErr(), fmt.Errorf("domain fact in universal fact in prove over finite set statement must be true or not true, it can not be unknown:\n%s", instantiatedDomFact)
 					}
 				}
 
@@ -156,7 +156,7 @@ func (exec *Executor) verProveOverFiniteSet_NoProveSection(stmt *ast.ProveByEnum
 		for _, thenFact := range stmt.Fact.ThenFacts {
 			instantiatedThenFact, err := thenFact.InstantiateFact(uniMap)
 			if err != nil {
-				return NewExecErr(""), err
+				return NewEmptyExecErr(), err
 			}
 			instantiatedThenFacts = append(instantiatedThenFacts, instantiatedThenFact)
 		}
@@ -165,13 +165,13 @@ func (exec *Executor) verProveOverFiniteSet_NoProveSection(stmt *ast.ProveByEnum
 		for _, fact := range instantiatedThenFacts {
 			state := exec.factStmt(fact)
 			if state.IsErr() {
-				return NewExecErr(""), fmt.Errorf(state.String())
+				return NewEmptyExecErr(), fmt.Errorf(state.String())
 			}
 			if state.IsUnknown() {
-				return NewExecErr(""), fmt.Errorf("failed to prove instantiated then facts: %s", fact)
+				return NewEmptyExecErr(), fmt.Errorf("failed to prove instantiated then facts: %s", fact)
 			}
 		}
 	}
 
-	return NewExecTrue(""), nil
+	return NewEmptyExecTrue(), nil
 }

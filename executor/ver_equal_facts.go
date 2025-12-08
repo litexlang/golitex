@@ -60,7 +60,7 @@ func (ver *Verifier) fcEqualSpec(left ast.Obj, right ast.Obj, state *VerState) E
 
 		if gotLeftEqualFcs && gotRightEqualFcs {
 			if equalToLeftFcs == equalToRightFcs {
-				return ver.maybeAddSuccessMsgString(state, fmt.Sprintf("known %s = %s", left, right), "", NewExecTrue(""))
+				return ver.maybeAddSuccessMsgString(state, fmt.Sprintf("known %s = %s", left, right), "", NewEmptyExecTrue())
 			}
 		}
 
@@ -95,12 +95,12 @@ func (ver *Verifier) fcEqualSpec(left ast.Obj, right ast.Obj, state *VerState) E
 		}
 	}
 
-	return NewExecUnknown("")
+	return NewEmptyExecUnknown()
 }
 
 func (ver *Verifier) verTrueEqualFact_FcFnEqual_NoCheckRequirements(left, right *ast.FnObj, state *VerState) ExecRet {
 	if len(left.Params) != len(right.Params) {
-		return NewExecUnknown("")
+		return NewEmptyExecUnknown()
 	}
 
 	// ok, err = ver.fcEqualSpec(left.FnHead, right.FnHead, state)
@@ -109,7 +109,7 @@ func (ver *Verifier) verTrueEqualFact_FcFnEqual_NoCheckRequirements(left, right 
 		return verRet
 	}
 	if verRet.IsUnknown() {
-		return NewExecUnknown("")
+		return NewEmptyExecUnknown()
 	}
 
 	for i := range left.Params {
@@ -125,7 +125,7 @@ func (ver *Verifier) verTrueEqualFact_FcFnEqual_NoCheckRequirements(left, right 
 	}
 
 	// return newTrueVerRet("")
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }
 
 func (ver *Verifier) FcsEqualBy_Eval_ShareKnownEqualMem(left, right ast.Obj, state *VerState) ExecRet {
@@ -135,7 +135,7 @@ func (ver *Verifier) FcsEqualBy_Eval_ShareKnownEqualMem(left, right ast.Obj, sta
 			rightEqualFcs, ok := curEnv.EqualMem[right.String()]
 			if ok {
 				if leftEqualFcs == rightEqualFcs {
-					return NewExecTrue("")
+					return NewEmptyExecTrue()
 				}
 			}
 		}
@@ -143,29 +143,29 @@ func (ver *Verifier) FcsEqualBy_Eval_ShareKnownEqualMem(left, right ast.Obj, sta
 
 	leftEqualFcs, ok := ver.Env.GetEqualFcs(left)
 	if !ok {
-		return NewExecUnknown("")
+		return NewEmptyExecUnknown()
 	}
 
 	rightEqualFcs, ok := ver.Env.GetEqualFcs(right)
 	if !ok {
-		return NewExecUnknown("")
+		return NewEmptyExecUnknown()
 	}
 
 	for _, leftEqualFc := range *leftEqualFcs {
 		for _, rightEqualFc := range *rightEqualFcs {
 			if leftEqualFc.String() == rightEqualFc.String() {
-				return NewExecTrue("")
+				return NewEmptyExecTrue()
 			} else {
 				_, newLeft := ver.Env.ReplaceSymbolWithValue(leftEqualFc)
 				if cmp.IsNumExprLitObj(newLeft) {
 					_, newRight := ver.Env.ReplaceSymbolWithValue(rightEqualFc)
 					if ok, _, _ := cmp.CmpBy_Literally_NumLit_PolynomialArith(newLeft, newRight); ok {
-						return NewExecTrue("")
+						return NewEmptyExecTrue()
 					}
 				}
 			}
 		}
 	}
 
-	return NewExecUnknown("")
+	return NewEmptyExecUnknown()
 }
