@@ -9,7 +9,7 @@ prove:
 
 prove:
     have a set = {1, 2}
-    have set b = {1, 2}
+    have b set = {1, 2}
 
     forall x b:
         x = 1 or x = 2

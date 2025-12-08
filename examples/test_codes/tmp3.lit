@@ -6,7 +6,7 @@ fn family1(i range(1, 4)) set:
     i = 2 => family1(i) = Q
     i = 3 => family1(i) = Z
 
-have set y1 = cart_prod(range(1, 4), family1)
+have y1 set = cart_prod(range(1, 4), family1)
 $is_cart_prod(y1)
 index_set_of_cart_prod(y1) = range(1, 4)
 cart_prod_proj(y1, 1) = R
@@ -19,7 +19,7 @@ fn family2(i N_pos) set:
     i = 2 => family2(i) = Q
     i >= 3 => family2(i) = Z
 
-have set y2 = cart_prod(N_pos, family2)
+have y2 set = cart_prod(N_pos, family2)
 $is_cart_prod(y2)
 index_set_of_cart_prod(y2) = N_pos
 cart_prod_proj(y2, 1) = R
@@ -30,7 +30,7 @@ cart_prod_proj(y2, 3) = Z
 fn family3(i range(1, 5)) set:
     family3(i) = R
 
-have set y3 = cart_prod(range(1, 5), family3)
+have y3 set = cart_prod(range(1, 5), family3)
 $is_cart_prod(y3)
 cart_prod_proj(y3, 1) = R
 cart_prod_proj(y3, 2) = R
@@ -42,7 +42,7 @@ fn_template indexed_set(s set, n N_pos):
     fn (i range(1, n + 1)) set:
         indexed_set(s, n)(i) = s
 
-have set y4 = cart_prod(range(1, 3), indexed_set(R, 3))
+have y4 set = cart_prod(range(1, 3), indexed_set(R, 3))
 $is_cart_prod(y4)
 cart_prod_proj(y4, 1) = R
 cart_prod_proj(y4, 2) = R

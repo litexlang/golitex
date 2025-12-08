@@ -110,6 +110,10 @@ func (ver *Verifier) verEqualBuiltin(left ast.Obj, right ast.Obj, state *VerStat
 		return verRet
 	}
 
+	// if verRet := ver.verEqualByEitherLeftOrRightIsIntensionalSet(left, right, state); verRet.IsErr() || verRet.IsTrue() {
+	// 	return verRet
+	// }
+
 	return NewEmptyExecUnknown()
 }
 
@@ -299,3 +303,42 @@ func (ver *Verifier) decomposeFcFnsAndCheckEquality(left ast.Obj, right ast.Obj,
 	}
 	return NewEmptyExecUnknown()
 }
+
+// func (ver *Verifier) verEqualByEitherLeftOrRightIsIntensionalSet(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
+// 	if verRet := ver.verEqualByRightIsIntensionalSet(left, right, state); verRet.IsErr() || verRet.IsTrue() {
+// 		return verRet
+// 	}
+
+// 	if verRet := ver.verEqualByRightIsIntensionalSet(right, left, state); verRet.IsErr() || verRet.IsTrue() {
+// 		return verRet
+// 	}
+
+// 	return NewEmptyExecUnknown()
+// }
+
+// func (ver *Verifier) verEqualByRightIsIntensionalSet(left, right ast.Obj, state *VerState) ExecRet {
+// 	if !ast.IsIntensionalSetObj(right) {
+// 		return NewEmptyExecUnknown()
+// 	}
+
+// }
+
+// func (ver *Verifier) verLeftSetAndRightSetAreEqualByAllItemsInLeftAreInRightAndViceVersa(left, right ast.Obj, state *VerState) ExecRet {
+// 	if ver.ObjIsSet(left).IsNotTrue() || ver.ObjIsSet(right).IsNotTrue() {
+// 		return NewEmptyExecUnknown()
+// 	}
+
+// 	leftItemsInRightFact := ast.NewUniFact([]string{"x"}, []ast.Obj{left}, []ast.FactStmt{}, []ast.FactStmt{ast.NewInFact("x", right)}, glob.BuiltinLine)
+// 	ret := ver.VerFactStmt(leftItemsInRightFact, state)
+// 	if ret.IsNotTrue() {
+// 		return ret
+// 	}
+
+// 	rightItemsInLeftFact := ast.NewUniFact([]string{"x"}, []ast.Obj{right}, []ast.FactStmt{}, []ast.FactStmt{ast.NewInFact("x", left)}, glob.BuiltinLine)
+// 	ret = ver.VerFactStmt(rightItemsInLeftFact, state)
+// 	if ret.IsNotTrue() {
+// 		return ret
+// 	}
+
+// 	return NewExecTrue(fmt.Sprintf("By Definition of intensional set"))
+// }

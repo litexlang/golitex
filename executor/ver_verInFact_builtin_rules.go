@@ -316,22 +316,24 @@ func (ver *Verifier) inFnTemplateFact(stmt *ast.SpecFactStmt, state *VerState) E
 // }
 
 func (ver *Verifier) inSetFact(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	// right param is obj
-	ok := ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordSet)
-	if !ok {
-		return NewEmptyExecUnknown()
-	}
-
 	// 只要symbol不是 set, nonempty_set, finite_set, 则返true
-	if ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordSet) ||
-		ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordNonEmptySet) ||
-		ast.IsFcAtomEqualToGivenString(stmt.Params[0], glob.KeywordFiniteSet) {
+	if ver.ObjIsSet(stmt.Params[0]).IsNotTrue() {
 		return NewEmptyExecUnknown()
 	}
 
 	_ = state
 
 	return ver.maybeAddSuccessMsgString(state, stmt.String(), "In ZFC set theory, everything except set itself is a set. In Litex, any object except set, nonempty_set, finite_set is a set.", NewEmptyExecTrue())
+}
+
+func (ver *Verifier) ObjIsSet(obj ast.Obj) ExecRet {
+	if ast.IsFcAtomEqualToGivenString(obj, glob.KeywordSet) ||
+		ast.IsFcAtomEqualToGivenString(obj, glob.KeywordNonEmptySet) ||
+		ast.IsFcAtomEqualToGivenString(obj, glob.KeywordFiniteSet) {
+		return NewEmptyExecUnknown()
+	}
+
+	return NewEmptyExecTrue()
 }
 
 func (ver *Verifier) falseInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {

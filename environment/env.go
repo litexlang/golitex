@@ -60,7 +60,7 @@ type Env struct {
 
 	EqualMem map[string]shared_ptr_to_slice_of_fc
 
-	EnumFacts map[string][]ast.Obj
+	// EnumFacts map[string][]ast.Obj
 
 	HaveSetFnDefMem HaveSetFnDefMem
 
@@ -125,8 +125,8 @@ func NewEnv(parent *Env) *Env {
 		ExistPropDefMem:        make(ExistPropDefMem),
 		KnownFactsStruct:       makeKnownFactsStruct(),
 		EqualMem:               make(map[string]shared_ptr_to_slice_of_fc),
-		EnumFacts:              make(map[string][]ast.Obj),
-		HaveSetFnDefMem:        make(HaveSetFnDefMem),
+		// EnumFacts:              make(map[string][]ast.Obj),
+		HaveSetFnDefMem: make(HaveSetFnDefMem),
 		// IntensionalSetMem:        make(map[string]ast.IntensionalSetStmt),
 		SymbolSimplifiedValueMem: make(map[string]ast.Obj),
 		TransitivePropMem:        make(map[string]map[string][]ast.Obj),
