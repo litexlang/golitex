@@ -137,3 +137,17 @@ func GetParamParentSetFactsFromIntensionalSet(intensionalSet *ast.FnObj) (string
 
 	return paramAsString, parentSet, facts, nil
 }
+
+func ParseSourceCodeGetObj(s string) (ast.Obj, error) {
+	blocks, err := makeTokenBlocks([]string{s})
+	if err != nil {
+		return nil, err
+	}
+
+	obj, err := blocks[0].Obj()
+	if err != nil {
+		return nil, err
+	}
+
+	return obj, nil
+}

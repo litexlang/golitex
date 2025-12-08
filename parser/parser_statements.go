@@ -19,7 +19,6 @@ import (
 	ast "golitex/ast"
 	glob "golitex/glob"
 	"slices"
-	"strconv"
 	"strings"
 )
 
@@ -3263,13 +3262,13 @@ func (tb *tokenBlock) proveInRangeStmt() (ast.Stmt, error) {
 // 	}
 // }
 
-func (tb *tokenBlock) skipInt() (int64, error) {
-	intStr, err := tb.header.next()
-	if err != nil {
-		return 0, err
-	}
-	return strconv.ParseInt(intStr, 10, 64)
-}
+// func (tb *tokenBlock) skipInt() (int64, error) {
+// 	intStr, err := tb.header.next()
+// 	if err != nil {
+// 		return 0, err
+// 	}
+// 	return strconv.ParseInt(intStr, 10, 64)
+// }
 
 // parseDomThenProve parses a body structure that can have three types of sections:
 // 1. dom:, =>:, prove: (all three sections present)
