@@ -98,8 +98,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 		execRet = exec.haveObjEqualStmt(stmt)
 	case *ast.HaveFnEqualStmt:
 		execRet = exec.haveFnEqualStmt(stmt)
-	case *ast.HaveFnLiftStmt:
-		execRet = exec.haveFnLiftStmt(stmt)
+	// case *ast.HaveFnLiftStmt:
+	// 	execRet = exec.haveFnLiftStmt(stmt)
 	case *ast.HaveFnStmt:
 		execRet = exec.haveFnStmt(stmt)
 	case *ast.HaveFnCaseByCaseStmt:
@@ -695,74 +695,74 @@ func fnHeaderToReturnValueOfFn(head *ast.DefHeader) ast.Obj {
 	return ast.NewFnObj(fnName, params)
 }
 
-func (exec *Executor) haveFnLiftStmt(stmt *ast.HaveFnLiftStmt) ExecRet {
-	// fn a(f fn(DOMAIN_of_x, DOMAIN_of_y, ...)OPT_PRAM0_DOM, g fn(DOMAIN_of_x, DOMAIN_of_y, ...)OPT_PRAM1_DOM, ...) fn(DOMAIN_of_x, DOMAIN_of_y, ...) opt_ret:
-	// 	forall x DOMAIN_of_x, y DOMAIN_of_y, ...:
-	// 		a(f, g, ...)(x, y, z, ...) = opt(f(x,y,z...) , g(x,y,z,...), ...)
+// func (exec *Executor) haveFnLiftStmt(stmt *ast.HaveFnLiftStmt) ExecRet {
+// 	// fn a(f fn(DOMAIN_of_x, DOMAIN_of_y, ...)OPT_PRAM0_DOM, g fn(DOMAIN_of_x, DOMAIN_of_y, ...)OPT_PRAM1_DOM, ...) fn(DOMAIN_of_x, DOMAIN_of_y, ...) opt_ret:
+// 	// 	forall x DOMAIN_of_x, y DOMAIN_of_y, ...:
+// 	// 		a(f, g, ...)(x, y, z, ...) = opt(f(x,y,z...) , g(x,y,z,...), ...)
 
-	// have a = lift(opt, DOMAIN_of_x, DOMAIN_of_y, ...)
+// 	// have a = lift(opt, DOMAIN_of_x, DOMAIN_of_y, ...)
 
-	// get definition of opt
-	optDef := exec.Env.GetLatestFnT_GivenNameIsIn(stmt.Opt.String())
-	if optDef == nil {
-		return NewExecErr(fmt.Sprintf("%s is not defined", stmt.Opt.String()))
-	}
+// 	// get definition of opt
+// 	optDef := exec.Env.GetLatestFnT_GivenNameIsIn(stmt.Opt.String())
+// 	if optDef == nil {
+// 		return NewExecErr(fmt.Sprintf("%s is not defined", stmt.Opt.String()))
+// 	}
 
-	FnTemplateOfFunctions := []ast.Obj{}
-	for i := range len(optDef.AsFnTStruct.ParamSets) {
-		head := ast.NewFnObj(ast.Atom(glob.KeywordFn), stmt.DomainOfEachParamOfGivenFn)
-		FnTemplateOfFunctions = append(FnTemplateOfFunctions, ast.NewFnObj(head, []ast.Obj{optDef.AsFnTStruct.ParamSets[i]}))
-	}
+// 	FnTemplateOfFunctions := []ast.Obj{}
+// 	for i := range len(optDef.AsFnTStruct.ParamSets) {
+// 		head := ast.NewFnObj(ast.Atom(glob.KeywordFn), stmt.DomainOfEachParamOfGivenFn)
+// 		FnTemplateOfFunctions = append(FnTemplateOfFunctions, ast.NewFnObj(head, []ast.Obj{optDef.AsFnTStruct.ParamSets[i]}))
+// 	}
 
-	retSet := ast.NewFnObj(ast.NewFnObj(ast.Atom(glob.KeywordFn), stmt.DomainOfEachParamOfGivenFn), []ast.Obj{optDef.AsFnTStruct.RetSet})
+// 	retSet := ast.NewFnObj(ast.NewFnObj(ast.Atom(glob.KeywordFn), stmt.DomainOfEachParamOfGivenFn), []ast.Obj{optDef.AsFnTStruct.RetSet})
 
-	// randomly generate len different params
-	randomParams := glob.GenerateUniqueRandomStrings(len(FnTemplateOfFunctions))
+// 	// randomly generate len different params
+// 	randomParams := glob.GenerateUniqueRandomStrings(len(FnTemplateOfFunctions))
 
-	knownUniFact := exec.haveFnLift_knowFact(stmt, randomParams)
+// 	knownUniFact := exec.haveFnLift_knowFact(stmt, randomParams)
 
-	fnDef := ast.NewDefFnStmt(stmt.FnName, ast.NewFnTStruct(randomParams, FnTemplateOfFunctions, retSet, []ast.FactStmt{}, []ast.FactStmt{knownUniFact}, stmt.Line), stmt.Line)
+// 	fnDef := ast.NewDefFnStmt(stmt.FnName, ast.NewFnTStruct(randomParams, FnTemplateOfFunctions, retSet, []ast.FactStmt{}, []ast.FactStmt{knownUniFact}, stmt.Line), stmt.Line)
 
-	execState := exec.defFnStmt(fnDef)
-	if execState.IsNotTrue() {
-		return NewExecErr(fmt.Sprintf("failed to declare fn: %s", fnDef.String()))
-	}
+// 	execState := exec.defFnStmt(fnDef)
+// 	if execState.IsNotTrue() {
+// 		return NewExecErr(fmt.Sprintf("failed to declare fn: %s", fnDef.String()))
+// 	}
 
-	execRet := NewEmptyExecTrue()
-	execRet.AddMsg(fmt.Sprintf("Declare Function by lifting:\n%s\n", fnDef))
-	return execRet
-}
+// 	execRet := NewEmptyExecTrue()
+// 	execRet.AddMsg(fmt.Sprintf("Declare Function by lifting:\n%s\n", fnDef))
+// 	return execRet
+// }
 
-func (exec *Executor) haveFnLift_knowFact(stmt *ast.HaveFnLiftStmt, fnNames []string) *ast.UniFactStmt {
-	// fn a(f fn(DOMAIN_of_x, DOMAIN_of_y, ...)OPT_PRAM0_DOM, g fn(DOMAIN_of_x, DOMAIN_of_y, ...)OPT_PRAM1_DOM, ...) fn(DOMAIN_of_x, DOMAIN_of_y, ...) opt_ret:
-	// 	forall x DOMAIN_of_x, y DOMAIN_of_y, ...:
-	// 		a(f, g, ...)(x, y, z, ...) = opt(f(x,y,z...) , g(x,y,z,...), ...)
+// func (exec *Executor) haveFnLift_knowFact(stmt *ast.HaveFnLiftStmt, fnNames []string) *ast.UniFactStmt {
+// 	// fn a(f fn(DOMAIN_of_x, DOMAIN_of_y, ...)OPT_PRAM0_DOM, g fn(DOMAIN_of_x, DOMAIN_of_y, ...)OPT_PRAM1_DOM, ...) fn(DOMAIN_of_x, DOMAIN_of_y, ...) opt_ret:
+// 	// 	forall x DOMAIN_of_x, y DOMAIN_of_y, ...:
+// 	// 		a(f, g, ...)(x, y, z, ...) = opt(f(x,y,z...) , g(x,y,z,...), ...)
 
-	// have a = lift(opt, DOMAIN_of_x, DOMAIN_of_y, ...)
+// 	// have a = lift(opt, DOMAIN_of_x, DOMAIN_of_y, ...)
 
-	uniFactParams := glob.GenerateUniqueRandomStrings_NotInGivenStrSlice(len(stmt.DomainOfEachParamOfGivenFn), fnNames)
-	uniFactParamsAsFc := []ast.Obj{}
-	for i := range len(uniFactParams) {
-		uniFactParamsAsFc = append(uniFactParamsAsFc, ast.Atom(uniFactParams[i]))
-	}
+// 	uniFactParams := glob.GenerateUniqueRandomStrings_NotInGivenStrSlice(len(stmt.DomainOfEachParamOfGivenFn), fnNames)
+// 	uniFactParamsAsFc := []ast.Obj{}
+// 	for i := range len(uniFactParams) {
+// 		uniFactParamsAsFc = append(uniFactParamsAsFc, ast.Atom(uniFactParams[i]))
+// 	}
 
-	fnNamesAsFc := []ast.Obj{}
-	for i := range len(fnNames) {
-		fnNamesAsFc = append(fnNamesAsFc, ast.Atom(fnNames[i]))
-	}
+// 	fnNamesAsFc := []ast.Obj{}
+// 	for i := range len(fnNames) {
+// 		fnNamesAsFc = append(fnNamesAsFc, ast.Atom(fnNames[i]))
+// 	}
 
-	uniFactParamSets := stmt.DomainOfEachParamOfGivenFn
-	lhs := ast.NewFnObj(ast.NewFnObj(ast.Atom(stmt.FnName), fnNamesAsFc), uniFactParamsAsFc)
+// 	uniFactParamSets := stmt.DomainOfEachParamOfGivenFn
+// 	lhs := ast.NewFnObj(ast.NewFnObj(ast.Atom(stmt.FnName), fnNamesAsFc), uniFactParamsAsFc)
 
-	rhsParams := []ast.Obj{}
-	for i := range len(fnNamesAsFc) {
-		rhsParams = append(rhsParams, ast.NewFnObj(ast.Atom(fnNames[i]), uniFactParamsAsFc))
-	}
+// 	rhsParams := []ast.Obj{}
+// 	for i := range len(fnNamesAsFc) {
+// 		rhsParams = append(rhsParams, ast.NewFnObj(ast.Atom(fnNames[i]), uniFactParamsAsFc))
+// 	}
 
-	rhs := ast.NewFnObj(stmt.Opt, rhsParams)
+// 	rhs := ast.NewFnObj(stmt.Opt, rhsParams)
 
-	return ast.NewUniFact(uniFactParams, uniFactParamSets, []ast.FactStmt{}, []ast.FactStmt{ast.NewEqualFact(lhs, rhs)}, stmt.Line)
-}
+// 	return ast.NewUniFact(uniFactParams, uniFactParamSets, []ast.FactStmt{}, []ast.FactStmt{ast.NewEqualFact(lhs, rhs)}, stmt.Line)
+// }
 
 func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) ExecRet {
 	// Verify first

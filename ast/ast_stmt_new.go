@@ -192,9 +192,9 @@ func NewHaveFnEqualStmt(defHeader *DefHeader, retSet Obj, equalTo Obj, line uint
 	return &HaveFnEqualStmt{defHeader, retSet, equalTo, line}
 }
 
-func NewHaveFnLiftStmt(fnName string, opt Obj, domainOfEachParamOfGivenFn []Obj, line uint) *HaveFnLiftStmt {
-	return &HaveFnLiftStmt{fnName, opt, domainOfEachParamOfGivenFn, line}
-}
+// func NewHaveFnLiftStmt(fnName string, opt Obj, domainOfEachParamOfGivenFn []Obj, line uint) *HaveFnLiftStmt {
+// 	return &HaveFnLiftStmt{fnName, opt, domainOfEachParamOfGivenFn, line}
+// }
 
 func NewClaimHaveFnStmt(defFnStmt *DefFnStmt, proof []Stmt, haveObjSatisfyFn Obj, line uint) *HaveFnStmt {
 	return &HaveFnStmt{defFnStmt, proof, haveObjSatisfyFn, line}

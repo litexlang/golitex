@@ -367,13 +367,13 @@ type HaveFnEqualCaseByCaseStmt struct {
 	Line uint
 }
 
-type HaveFnLiftStmt struct {
-	FnName                     string
-	Opt                        Obj
-	DomainOfEachParamOfGivenFn ObjSlice
+// type HaveFnLiftStmt struct {
+// 	FnName                     string
+// 	Opt                        Obj
+// 	DomainOfEachParamOfGivenFn ObjSlice
 
-	Line uint
-}
+// 	Line uint
+// }
 
 /*
 have fn:

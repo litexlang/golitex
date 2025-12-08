@@ -54,8 +54,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		} else if tb.header.strAtCurIndexPlus(1) == glob.KeywordFn {
 			if tb.header.strAtCurIndexPlus(2) == glob.KeySymbolColon {
 				ret, err = tb.haveFnStmt()
-			} else if tb.header.strAtCurIndexPlus(4) == glob.KeywordLift {
-				ret, err = tb.haveFnLiftStmt()
+				// } else if tb.header.strAtCurIndexPlus(4) == glob.KeywordLift {
+				// 	ret, err = tb.haveFnLiftStmt()
 			} else {
 				ret, err = tb.haveFnEqualStmt()
 			}
@@ -2708,72 +2708,72 @@ func (tb *tokenBlock) haveFnEqualStmt() (ast.Stmt, error) {
 	}
 }
 
-func (tb *tokenBlock) haveFnLiftStmt() (*ast.HaveFnLiftStmt, error) {
-	err := tb.header.skip(glob.KeywordHave)
-	if err != nil {
-		return nil, parserErrAtTb(err, tb)
-	}
+// func (tb *tokenBlock) haveFnLiftStmt() (*ast.HaveFnLiftStmt, error) {
+// 	err := tb.header.skip(glob.KeywordHave)
+// 	if err != nil {
+// 		return nil, parserErrAtTb(err, tb)
+// 	}
 
-	err = tb.header.skip(glob.KeywordFn)
-	if err != nil {
-		return nil, parserErrAtTb(err, tb)
-	}
+// 	err = tb.header.skip(glob.KeywordFn)
+// 	if err != nil {
+// 		return nil, parserErrAtTb(err, tb)
+// 	}
 
-	fnName, err := tb.header.next()
-	if err != nil {
-		return nil, parserErrAtTb(err, tb)
-	}
+// 	fnName, err := tb.header.next()
+// 	if err != nil {
+// 		return nil, parserErrAtTb(err, tb)
+// 	}
 
-	err = tb.header.skip(glob.KeySymbolEqual)
-	if err != nil {
-		return nil, parserErrAtTb(err, tb)
-	}
+// 	err = tb.header.skip(glob.KeySymbolEqual)
+// 	if err != nil {
+// 		return nil, parserErrAtTb(err, tb)
+// 	}
 
-	err = tb.header.skip(glob.KeywordLift)
-	if err != nil {
-		return nil, parserErrAtTb(err, tb)
-	}
+// 	err = tb.header.skip(glob.KeywordLift)
+// 	if err != nil {
+// 		return nil, parserErrAtTb(err, tb)
+// 	}
 
-	err = tb.header.skip(glob.KeySymbolLeftBrace)
-	if err != nil {
-		return nil, parserErrAtTb(err, tb)
-	}
+// 	err = tb.header.skip(glob.KeySymbolLeftBrace)
+// 	if err != nil {
+// 		return nil, parserErrAtTb(err, tb)
+// 	}
 
-	opt, err := tb.Obj()
-	if err != nil {
-		return nil, parserErrAtTb(err, tb)
-	}
+// 	opt, err := tb.Obj()
+// 	if err != nil {
+// 		return nil, parserErrAtTb(err, tb)
+// 	}
 
-	err = tb.header.skip(glob.KeySymbolComma)
-	if err != nil {
-		return nil, parserErrAtTb(err, tb)
-	}
+// 	err = tb.header.skip(glob.KeySymbolComma)
+// 	if err != nil {
+// 		return nil, parserErrAtTb(err, tb)
+// 	}
 
-	domainOfEachParamOfGivenFn := []ast.Obj{}
-	for !tb.header.is(glob.KeySymbolRightBrace) {
-		curDomain, err := tb.Obj()
-		if err != nil {
-			return nil, parserErrAtTb(err, tb)
-		}
+// 	domainOfEachParamOfGivenFn := []ast.Obj{}
+// 	for !tb.header.is(glob.KeySymbolRightBrace) {
+// 		curDomain, err := tb.Obj()
+// 		if err != nil {
+// 			return nil, parserErrAtTb(err, tb)
+// 		}
 
-		domainOfEachParamOfGivenFn = append(domainOfEachParamOfGivenFn, curDomain)
+// 		domainOfEachParamOfGivenFn = append(domainOfEachParamOfGivenFn, curDomain)
 
-		done, err := tb.expectAndSkipCommaOr(glob.KeySymbolRightBrace)
-		if err != nil {
-			return nil, err
-		}
-		if done {
-			break
-		}
-	}
+// 		done, err := tb.expectAndSkipCommaOr(glob.KeySymbolRightBrace)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		if done {
+// 			break
+// 		}
+// 	}
 
-	err = tb.header.skip(glob.KeySymbolRightBrace)
-	if err != nil {
-		return nil, parserErrAtTb(err, tb)
-	}
+// 	err = tb.header.skip(glob.KeySymbolRightBrace)
+// 	if err != nil {
+// 		return nil, parserErrAtTb(err, tb)
+// 	}
 
-	return ast.NewHaveFnLiftStmt(fnName, opt, domainOfEachParamOfGivenFn, tb.line), nil
-}
+// 	return ast.NewHaveFnLiftStmt(fnName, opt, domainOfEachParamOfGivenFn, tb.line), nil
+// }
 
 func (tb *tokenBlock) haveFnStmt() (ast.Stmt, error) {
 	var err error
@@ -3416,43 +3416,43 @@ func parseDomThenProve(body []tokenBlock) ([]ast.FactStmt, []ast.FactStmt, []ast
 	}
 }
 
-func parseDomThenOfProveByEnum(tbSlice []tokenBlock) ([]ast.FactStmt, []ast.FactStmt, error) {
-	domFacts := []ast.FactStmt{}
-	thenFacts := []ast.FactStmt{}
+// func parseDomThenOfProveByEnum(tbSlice []tokenBlock) ([]ast.FactStmt, []ast.FactStmt, error) {
+// 	domFacts := []ast.FactStmt{}
+// 	thenFacts := []ast.FactStmt{}
 
-	if tbSlice[len(tbSlice)-1].header.is(glob.KeySymbolRightArrow) {
-		for i := range len(tbSlice) - 1 {
-			curStmt, err := tbSlice[i].factStmt(UniFactDepth1)
-			if err != nil {
-				return nil, nil, parserErrAtTb(err, &tbSlice[i])
-			}
-			domFacts = append(domFacts, curStmt)
-		}
+// 	if tbSlice[len(tbSlice)-1].header.is(glob.KeySymbolRightArrow) {
+// 		for i := range len(tbSlice) - 1 {
+// 			curStmt, err := tbSlice[i].factStmt(UniFactDepth1)
+// 			if err != nil {
+// 				return nil, nil, parserErrAtTb(err, &tbSlice[i])
+// 			}
+// 			domFacts = append(domFacts, curStmt)
+// 		}
 
-		err := tbSlice[len(tbSlice)-1].header.skipKwAndColonCheckEOL(glob.KeySymbolRightArrow)
-		if err != nil {
-			return nil, nil, parserErrAtTb(err, &tbSlice[len(tbSlice)-1])
-		}
+// 		err := tbSlice[len(tbSlice)-1].header.skipKwAndColonCheckEOL(glob.KeySymbolRightArrow)
+// 		if err != nil {
+// 			return nil, nil, parserErrAtTb(err, &tbSlice[len(tbSlice)-1])
+// 		}
 
-		for i := range len(tbSlice[len(tbSlice)-1].body) {
-			curStmt, err := tbSlice[len(tbSlice)-1].body[i].factStmt(UniFactDepth1)
-			if err != nil {
-				return nil, nil, parserErrAtTb(err, &tbSlice[len(tbSlice)-1])
-			}
-			thenFacts = append(thenFacts, curStmt)
-		}
-	} else {
-		for i := range len(tbSlice) {
-			curStmt, err := tbSlice[i].factStmt(UniFactDepth1)
-			if err != nil {
-				return nil, nil, parserErrAtTb(err, &tbSlice[i])
-			}
-			thenFacts = append(thenFacts, curStmt)
-		}
-	}
+// 		for i := range len(tbSlice[len(tbSlice)-1].body) {
+// 			curStmt, err := tbSlice[len(tbSlice)-1].body[i].factStmt(UniFactDepth1)
+// 			if err != nil {
+// 				return nil, nil, parserErrAtTb(err, &tbSlice[len(tbSlice)-1])
+// 			}
+// 			thenFacts = append(thenFacts, curStmt)
+// 		}
+// 	} else {
+// 		for i := range len(tbSlice) {
+// 			curStmt, err := tbSlice[i].factStmt(UniFactDepth1)
+// 			if err != nil {
+// 				return nil, nil, parserErrAtTb(err, &tbSlice[i])
+// 			}
+// 			thenFacts = append(thenFacts, curStmt)
+// 		}
+// 	}
 
-	return domFacts, thenFacts, nil
-}
+// 	return domFacts, thenFacts, nil
+// }
 
 func (tb *tokenBlock) proveIsTransitivePropStmt() (ast.Stmt, error) {
 	err := tb.header.skip(glob.KeywordProveIsTransitiveProp)

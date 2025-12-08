@@ -31,7 +31,7 @@ import (
 //
 //	  → unaryOptObj() [处理一元运算符]
 //		→ primaryExpr() [处理基本表达式]
-//		  → atomObj() [解析原子，支持 pkgname.atomname]
+//		  → atomObj() [解析原子，支持 pkgName.atomName]
 //		  → numberStr() [解析数字]
 //		  → fnSet() [解析函数集合]
 //		  → bracedExpr_orTuple() [解析括号表达式]
@@ -172,7 +172,7 @@ func (tb *tokenBlock) fnSetObjAndBracedExprAndAtomObjAndFnObj() (ast.Obj, error)
 // Atom parsing
 // ============================================================================
 
-// notNumberAtom parses an atom (identifier). Supports package name notation: pkgname.atomname
+// notNumberAtom parses an atom (identifier). Supports package name notation: pkgName.atomName
 // For example, "a.b" means atom "b" in package "a".
 func (tb *tokenBlock) notNumberAtom() (ast.Atom, error) {
 	value, err := tb.header.next()

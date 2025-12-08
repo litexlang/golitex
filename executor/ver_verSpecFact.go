@@ -532,36 +532,36 @@ func (ver *Verifier) verEqualTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *
 	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
 }
 
-func (ver *Verifier) verLargerEqualBySpecialMethods(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	if len(stmt.Params) != 2 {
-		return NewEmptyExecUnknown()
-	}
+// func (ver *Verifier) verLargerEqualBySpecialMethods(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+// 	if len(stmt.Params) != 2 {
+// 		return NewEmptyExecUnknown()
+// 	}
 
-	left := stmt.Params[0]
-	right := stmt.Params[1]
+// 	left := stmt.Params[0]
+// 	right := stmt.Params[1]
 
-	// 处理 >= 的情况: a >= b 等价于 (a > b) or (a = b)
-	greaterFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{left, right}, stmt.Line)
+// 	// 处理 >= 的情况: a >= b 等价于 (a > b) or (a = b)
+// 	greaterFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{left, right}, stmt.Line)
 
-	verRet := ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(greaterFact, state)
-	if verRet.IsErr() {
-		return verRet
-	}
-	if verRet.IsTrue() {
-		return NewExecTrue(fmt.Sprintf("%s is proved by %s", stmt.String(), greaterFact.String()))
-	}
+// 	verRet := ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(greaterFact, state)
+// 	if verRet.IsErr() {
+// 		return verRet
+// 	}
+// 	if verRet.IsTrue() {
+// 		return NewExecTrue(fmt.Sprintf("%s is proved by %s", stmt.String(), greaterFact.String()))
+// 	}
 
-	equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left, right}, stmt.Line)
-	verRet = ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(equalFact, state)
-	if verRet.IsErr() {
-		return verRet
-	}
-	if verRet.IsTrue() {
-		return NewExecTrue(fmt.Sprintf("%s is proved by %s", stmt.String(), equalFact.String()))
-	}
+// 	equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left, right}, stmt.Line)
+// 	verRet = ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(equalFact, state)
+// 	if verRet.IsErr() {
+// 		return verRet
+// 	}
+// 	if verRet.IsTrue() {
+// 		return NewExecTrue(fmt.Sprintf("%s is proved by %s", stmt.String(), equalFact.String()))
+// 	}
 
-	return NewEmptyExecUnknown()
-}
+// 	return NewEmptyExecUnknown()
+// }
 
 // func (ver *Verifier) verLessEqualBySpecialMethods(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 // 	if len(stmt.Params) != 2 {
