@@ -1,4 +1,1 @@
-have s set = {1, 2, 3}
-
-prove_by_enum(x s):
-    x $in s
+R $in R
