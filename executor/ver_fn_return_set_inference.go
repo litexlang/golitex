@@ -88,7 +88,7 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FnObj, state *VerState) ExecRet
 		return verRet
 	}
 
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }
 
 func (ver *Verifier) GetFnStructFromFnTName_CheckFnTParamsReq(fnTName *ast.FnObj, state *VerState) (*ast.FnTStruct, error) {
@@ -142,7 +142,7 @@ func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreT
 		}
 	}
 
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }
 
 func (ver *Verifier) checkParamsSatisfyFnTStruct(fnObj *ast.FnObj, concreteParams ast.ObjSlice, fnTStruct *ast.FnTStruct, state *VerState) ExecRet {
@@ -187,7 +187,7 @@ func (ver *Verifier) checkParamsSatisfyFnTStruct(fnObj *ast.FnObj, concreteParam
 	// 	return verRet
 	// }
 
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }
 
 func paramsOfFnObjMustInDomainSetErrMsg(fnObj *ast.FnObj, i int, fact ast.FactStmt) ExecRet {

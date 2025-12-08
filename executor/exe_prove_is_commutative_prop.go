@@ -28,7 +28,7 @@ func (exec *Executor) proveIsCommutativePropStmt(stmt *ast.ProveIsCommutativePro
 
 	exec.NewCommutativeProp(stmt.SpecFact)
 
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }
 
 func (exec *Executor) proveIsCommutativePropStmtMainLogic(stmt *ast.ProveIsCommutativePropStmt) (bool, error) {

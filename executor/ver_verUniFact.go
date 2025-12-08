@@ -21,7 +21,7 @@ import (
 
 func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) ExecRet {
 	if state.isFinalRound() {
-		return NewExecUnknown("")
+		return NewEmptyExecUnknown()
 	}
 
 	// 在局部环境声明新变量
@@ -52,7 +52,7 @@ func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerSta
 			return NewExecErr(verRet.String())
 		}
 		if verRet.IsUnknown() {
-			execRet := NewExecUnknown("")
+			execRet := NewEmptyExecUnknown()
 			if state.WithMsg {
 				execRet.AddMsg(fmt.Sprintf("%s is unknown", thenFact))
 			}
@@ -66,7 +66,7 @@ func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerSta
 		}
 	}
 
-	execRet := NewExecTrue("")
+	execRet := NewEmptyExecTrue()
 	if state.WithMsg {
 		execRet = execRet.AddMsg(fmt.Sprintf("%s\nis true", stmt))
 	}

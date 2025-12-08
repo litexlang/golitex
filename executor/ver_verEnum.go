@@ -48,7 +48,7 @@ package litex_executor
 // 		}
 // 	}
 
-// 	return NewExecTrue("")
+// 	return NewExecEmptyTrue()
 // }
 
 // func (ver *Verifier) lenIsZeroThenEnumIsEmpty(stmt *ast.EnumStmt, state *VerState) ExecRet {
@@ -60,12 +60,12 @@ package litex_executor
 // 	}
 
 // 	msg := fmt.Sprintf("len(%s) = 0 is equivalent to %s", stmt.CurSet, stmt)
-// 	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
+// 	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecEmptyTrue())
 // }
 
 // func (ver *Verifier) forallObjNotInSetThenTheSetIsEmpty(stmt *ast.EnumStmt, state *VerState) ExecRet {
 // 	if len(stmt.Items) != 0 {
-// 		return NewExecUnknown("")
+// 		return NewExecEmptyUnknown()
 // 	}
 
 // 	allObjectsNotInSetThenSetIsEmpty := ast.NewUniFact([]string{"x"}, []ast.Obj{ast.Atom(glob.KeywordSet)}, []ast.FactStmt{}, []ast.FactStmt{ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeywordIn), []ast.Obj{ast.Atom("x"), stmt.CurSet}, stmt.Line)}, stmt.Line)
@@ -75,5 +75,5 @@ package litex_executor
 // 	}
 
 // 	msg := fmt.Sprintf("builtin rule:\n%s\nis equivalent to\n%s", allObjectsNotInSetThenSetIsEmpty, stmt)
-// 	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
+// 	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecEmptyTrue())
 // }

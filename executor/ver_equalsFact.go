@@ -28,7 +28,7 @@ func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState
 
 	for i := 1; i < len(stmt.Params); i++ {
 		checked := false
-		unknownRet := NewExecUnknown("")
+		unknownRet := NewEmptyExecUnknown()
 
 		for j := i - 1; j >= 0; j-- {
 			newFact := ast.NewEqualFact(stmt.Params[j], stmt.Params[i])

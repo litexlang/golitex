@@ -78,7 +78,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast
 			}
 			if verRet.IsTrue() {
 				msg := fmt.Sprintf("%s is true by %s is a transitive prop and %s is true", stmt.String(), string(stmt.PropName), relatedFcStmt.String())
-				return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
+				return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
 			}
 		}
 	}
@@ -96,7 +96,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *a
 		}
 		if verRet.IsTrue() {
 			msg := fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String())
-			return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
+			return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
 		}
 	}
 
@@ -108,7 +108,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *a
 		return verRet
 	}
 
-	return NewExecUnknown("")
+	return NewEmptyExecUnknown()
 }
 
 // TODO: 其实 specFact 是等号的时候，还是会访问到这个函数。
@@ -148,7 +148,7 @@ func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state *VerSta
 		}
 	}
 
-	return NewExecUnknown("")
+	return NewEmptyExecUnknown()
 }
 
 func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
@@ -164,7 +164,7 @@ func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecFactStmt, state *VerState) 
 		return ver.verExistSpecFact_ByDefinition(stmt, state)
 	}
 
-	return NewExecUnknown("")
+	return NewEmptyExecUnknown()
 }
 
 func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
@@ -174,12 +174,12 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 	// defStmt := curDefStmt
 	if curDefStmt == nil {
 		// 这里可能是因为这个propName是exist prop，所以没有定义
-		return NewExecUnknown("")
+		return NewEmptyExecUnknown()
 	}
 
 	if len(curDefStmt.IffFacts) == 0 {
 		// REMARK: 如果IFFFacts不存在，那我们认为是 没有iff能验证prop，而不是prop自动成立
-		return NewExecUnknown("")
+		return NewEmptyExecUnknown()
 	}
 
 	defStmt := ver.Env.MakeUniFactParamsInThisDefPropDoNotConflictWithEnv(curDefStmt)
@@ -217,7 +217,7 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 		}
 	}
 
-	return ver.maybeAddSuccessMsgString(state, stmt.String(), defStmt.String(), NewExecTrue(""))
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), defStmt.String(), NewEmptyExecTrue())
 }
 
 func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
@@ -249,7 +249,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 			return verRet
 		}
 		if verRet.IsUnknown() {
-			execRet := NewExecUnknown("")
+			execRet := NewEmptyExecUnknown()
 			if state.WithMsg {
 				msg := fmt.Sprintf("given object %s is not in its param set %s\n", existParams[i], instParamSets[i])
 				execRet.AddMsg(msg)
@@ -274,7 +274,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 			return verRet
 		}
 		if verRet.IsUnknown() {
-			execRet := NewExecUnknown("")
+			execRet := NewEmptyExecUnknown()
 			if state.WithMsg {
 				msg := fmt.Sprintf("dom fact %s is unknown\n", domFact)
 				execRet.AddMsg(msg)
@@ -290,7 +290,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 		}
 	}
 
-	return ver.maybeAddSuccessMsgString(state, stmt.String(), "by definition", NewExecTrue(""))
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), "by definition", NewEmptyExecTrue())
 }
 
 // func (ver *Verifier) verSpecFactLogicMem(stmt *ast.SpecFactStmt, state *VerState) VerRet {
@@ -314,7 +314,7 @@ func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecFactStmt, state *VerState)
 
 func (ver *Verifier) verNotTrueEqualFact_BuiltinRules_WithState(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	if stmt.IsTrue() {
-		return NewExecUnknown("")
+		return NewEmptyExecUnknown()
 	}
 
 	// 如果右侧是0，且左边是减号，那就证明左边这两个东西不等
@@ -328,7 +328,7 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules_WithState(stmt *ast.SpecFa
 	} else {
 		leftValue = ver.Env.GetSymbolSimplifiedValue(stmt.Params[0])
 		if leftValue == nil {
-			return NewExecUnknown("")
+			return NewEmptyExecUnknown()
 		}
 	}
 	if cmp.IsNumExprLitObj(stmt.Params[1]) {
@@ -336,7 +336,7 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules_WithState(stmt *ast.SpecFa
 	} else {
 		rightValue = ver.Env.GetSymbolSimplifiedValue(stmt.Params[1])
 		if rightValue == nil {
-			return NewExecUnknown("")
+			return NewEmptyExecUnknown()
 		}
 	}
 
@@ -346,9 +346,9 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules_WithState(stmt *ast.SpecFa
 	}
 	if !areEqual {
 		if state != nil {
-			return ver.maybeAddSuccessMsgString(state, stmt.String(), "builtin rules", NewExecTrue(""))
+			return ver.maybeAddSuccessMsgString(state, stmt.String(), "builtin rules", NewEmptyExecTrue())
 		}
-		return NewExecTrue("")
+		return NewEmptyExecTrue()
 	}
 
 	// // 如果左右两边能是能被处理的数字
@@ -359,21 +359,21 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules_WithState(stmt *ast.SpecFa
 	// if areBothNumLit {
 	// 	if !areEqual { // 这里是在证明两边不相等
 	// 		ver.processOkMsg(state, stmt.String(), "builtin rules")
-	// 		return NewExecTrue("")
+	// 		return NewExecEmptyTrue()
 	// 	}
 	// }
 
-	return NewExecUnknown("")
+	return NewEmptyExecUnknown()
 }
 
 func (ver *Verifier) verIsCartByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	// 如果参数数量是1，且参数的函数名是cart，那自动成立
 	if len(stmt.Params) == 1 {
 		if cartObj, ok := stmt.Params[0].(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(cartObj.FnHead, glob.KeywordCart) {
-			return ver.maybeAddSuccessMsgString(state, stmt.String(), "builtin rules: cart(...) is automatically a cart set", NewExecTrue(""))
+			return ver.maybeAddSuccessMsgString(state, stmt.String(), "builtin rules: cart(...) is automatically a cart set", NewEmptyExecTrue())
 		}
 	}
-	return NewExecUnknown("")
+	return NewEmptyExecUnknown()
 }
 
 func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
@@ -382,12 +382,12 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *Ver
 	defStmt := ver.Env.GetPropDef(stmt.PropName)
 	if defStmt == nil {
 		// 这里可能是因为这个propName是exist prop，所以没有定义
-		return NewExecUnknown("")
+		return NewEmptyExecUnknown()
 	}
 
 	if len(defStmt.IffFacts) == 0 {
 		// REMARK: 如果IFFFacts不存在，那我们认为是 没有iff能验证prop，而不是prop自动成立
-		return NewExecUnknown("")
+		return NewEmptyExecUnknown()
 	}
 
 	iffToProp := defStmt.IffToPropUniFact()
@@ -428,11 +428,11 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *Ver
 			return verRet
 		}
 		if verRet.IsTrue() {
-			return ver.maybeAddSuccessMsgString(state, stmt.String(), defStmt.String(), NewExecTrue(""))
+			return ver.maybeAddSuccessMsgString(state, stmt.String(), defStmt.String(), NewEmptyExecTrue())
 		}
 	}
 
-	return NewExecUnknown("")
+	return NewEmptyExecUnknown()
 }
 
 // $equal_tuple(left, right, dim)
@@ -529,12 +529,12 @@ func (ver *Verifier) verEqualTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *
 	}
 
 	msg := fmt.Sprintf("verified %s and %s are tuples with dim = %s, and each element %s[i] = %s[i] for i = 1 to %d", left, right, dim, left, right, dimValue)
-	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
 }
 
 func (ver *Verifier) verLargerEqualBySpecialMethods(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	if len(stmt.Params) != 2 {
-		return NewExecUnknown("")
+		return NewEmptyExecUnknown()
 	}
 
 	left := stmt.Params[0]
@@ -560,12 +560,12 @@ func (ver *Verifier) verLargerEqualBySpecialMethods(stmt *ast.SpecFactStmt, stat
 		return NewExecTrue(fmt.Sprintf("%s is proved by %s", stmt.String(), equalFact.String()))
 	}
 
-	return NewExecUnknown("")
+	return NewEmptyExecUnknown()
 }
 
 // func (ver *Verifier) verLessEqualBySpecialMethods(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 // 	if len(stmt.Params) != 2 {
-// 		return NewExecUnknown("")
+// 		return NewExecEmptyUnknown()
 // 	}
 
 // 	left := stmt.Params[0]
@@ -591,12 +591,12 @@ func (ver *Verifier) verLargerEqualBySpecialMethods(stmt *ast.SpecFactStmt, stat
 // 		return NewExecTrue(fmt.Sprintf("%s is proved by %s", stmt.String(), equalFact.String()))
 // 	}
 
-// 	return NewExecUnknown("")
+// 	return NewExecEmptyUnknown()
 // }
 
 // func (ver *Verifier) whenRightIsZeroAndLeftFnIsMinus(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 // 	if len(stmt.Params) != 2 {
-// 		return NewExecUnknown("")
+// 		return NewExecEmptyUnknown()
 // 	}
 
 // 	right := stmt.Params[0]
@@ -606,7 +606,7 @@ func (ver *Verifier) verLargerEqualBySpecialMethods(stmt *ast.SpecFactStmt, stat
 // 		if string(rightAsAtom) == "0" {
 // 			leftAsFn, ok := left.(*ast.FnObj)
 // 			if !ok {
-// 				return NewExecUnknown("")
+// 				return NewExecEmptyUnknown()
 // 			}
 
 // 			if leftAsFn.FnHead.String() == glob.KeySymbolMinus {
@@ -617,5 +617,5 @@ func (ver *Verifier) verLargerEqualBySpecialMethods(stmt *ast.SpecFactStmt, stat
 // 		}
 // 	}
 
-// 	return NewExecUnknown("")
+// 	return NewExecEmptyUnknown()
 // }

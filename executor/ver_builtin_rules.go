@@ -53,12 +53,12 @@ func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 		return verRet
 	}
 
-	return NewExecUnknown("")
+	return NewEmptyExecUnknown()
 }
 
 func (ver *Verifier) verNumberLogicRelaOpt_BuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	if !stmt.IsTrue() {
-		return NewExecUnknown("")
+		return NewEmptyExecUnknown()
 	}
 
 	verRet := ver.btNumberInfixCompareProp(stmt, state)
@@ -66,12 +66,12 @@ func (ver *Verifier) verNumberLogicRelaOpt_BuiltinRules(stmt *ast.SpecFactStmt, 
 		return verRet
 	}
 
-	return NewExecUnknown("")
+	return NewEmptyExecUnknown()
 }
 
 func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	if !glob.IsBuiltinNumberInfixRelaProp(string(stmt.PropName)) {
-		return NewExecUnknown("")
+		return NewEmptyExecUnknown()
 	}
 
 	if len(stmt.Params) != 2 {
@@ -83,7 +83,7 @@ func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state *Ver
 		return NewExecErr(err.Error())
 	}
 	if !ok {
-		return NewExecUnknown("")
+		return NewEmptyExecUnknown()
 	}
 
 	rightNumLitExpr, ok, err := ast.MakeObjIntoNumLitExpr(stmt.Params[1])
@@ -91,7 +91,7 @@ func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state *Ver
 		return NewExecErr(err.Error())
 	}
 	if !ok {
-		return NewExecUnknown("")
+		return NewEmptyExecUnknown()
 	}
 
 	ok, err = glob.NumLitExprCompareOpt(leftNumLitExpr, rightNumLitExpr, string(stmt.PropName))
@@ -100,17 +100,17 @@ func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state *Ver
 		return NewExecErr(err.Error())
 	}
 	if ok {
-		return ver.maybeAddSuccessMsgString(state, stmt.String(), "builtin rules", NewExecTrue(""))
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), "builtin rules", NewEmptyExecTrue())
 	}
 
-	return NewExecUnknown("")
+	return NewEmptyExecUnknown()
 }
 
 func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	_ = state
 
 	if stmt.PropName != glob.KeywordIn {
-		return NewExecUnknown("")
+		return NewEmptyExecUnknown()
 	}
 
 	// Note: Messages should be handled by the caller, not in defer functions
@@ -131,50 +131,50 @@ func (ver *Verifier) btLitNumInNatOrIntOrRatOrRealOrComplex(stmt *ast.SpecFactSt
 		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordReal) {
 			isSuccess = glob.IsRealNumLitExpr(leftFc)
 			if isSuccess {
-				return NewExecTrue("")
+				return NewEmptyExecTrue()
 			} else {
-				return NewExecUnknown("")
+				return NewEmptyExecUnknown()
 			}
 		}
 
 		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordNatural) {
 			isSuccess = glob.IsNatNumLitExpr(leftFc)
 			if isSuccess {
-				return NewExecTrue("")
+				return NewEmptyExecTrue()
 			} else {
-				return NewExecUnknown("")
+				return NewEmptyExecUnknown()
 			}
 		}
 
 		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordInteger) {
 			isSuccess = glob.IsIntegerNumLitExpr(leftFc)
 			if isSuccess {
-				return NewExecTrue("")
+				return NewEmptyExecTrue()
 			} else {
-				return NewExecUnknown("")
+				return NewEmptyExecUnknown()
 			}
 		}
 
 		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordRational) {
 			isSuccess = glob.IsRationalNumLitExpr(leftFc)
 			if isSuccess {
-				return NewExecTrue("")
+				return NewEmptyExecTrue()
 			} else {
-				return NewExecUnknown("")
+				return NewEmptyExecUnknown()
 			}
 		}
 
 		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordNPos) {
 			isSuccess = glob.IsNPosNumLitExpr(leftFc)
 			if isSuccess {
-				return NewExecTrue("")
+				return NewEmptyExecTrue()
 			} else {
-				return NewExecUnknown("")
+				return NewEmptyExecUnknown()
 			}
 		}
 	}
 
-	return NewExecUnknown("")
+	return NewEmptyExecUnknown()
 }
 
 func (ver *Verifier) verItemExistsInByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
@@ -185,26 +185,26 @@ func (ver *Verifier) verItemExistsInByBuiltinRules(stmt *ast.SpecFactStmt, state
 	if ast.IsEnumSetObj(stmt.Params[0]) {
 		asEnumSet, ok := stmt.Params[0].(*ast.FnObj)
 		if !ok {
-			return NewExecUnknown("")
+			return NewEmptyExecUnknown()
 		}
 
 		if len(asEnumSet.Params) != 0 {
-			return NewExecTrue("")
+			return NewEmptyExecTrue()
 		}
 	}
 
 	_ = state
 
-	return NewExecUnknown("")
+	return NewEmptyExecUnknown()
 }
 
 func (ver *Verifier) IsInNonEmptyByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	if !stmt.NameIs(glob.KeywordIn) {
-		return NewExecUnknown("")
+		return NewEmptyExecUnknown()
 	}
 
 	if stmt.TypeEnum != ast.TruePure {
-		return NewExecUnknown("")
+		return NewEmptyExecUnknown()
 	}
 
 	if len(stmt.Params) != 2 {
@@ -212,21 +212,21 @@ func (ver *Verifier) IsInNonEmptyByBuiltinRules(stmt *ast.SpecFactStmt, state *V
 	}
 
 	if stmt.Params[1].String() != glob.KeywordNonEmptySet {
-		return NewExecUnknown("")
+		return NewEmptyExecUnknown()
 	}
 
 	if ast.IsEnumSetObj(stmt.Params[0]) {
 		asEnumSet, ok := stmt.Params[0].(*ast.FnObj)
 		if !ok {
-			return NewExecUnknown("")
+			return NewEmptyExecUnknown()
 		}
 
 		if len(asEnumSet.Params) != 0 {
-			return NewExecTrue("")
+			return NewEmptyExecTrue()
 		}
 	}
 
 	_ = state
 
-	return NewExecUnknown("")
+	return NewEmptyExecUnknown()
 }

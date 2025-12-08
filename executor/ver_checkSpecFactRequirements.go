@@ -45,7 +45,7 @@ func (ver *Verifier) checkSpecFactReq(stmt *ast.SpecFactStmt, state *VerState) (
 // 	}
 
 // 	if _, ok := stmt.Params[1].(*ast.FnObj); !ok {
-// 		return NewExecUnknown("")
+// 		return NewExecEmptyUnknown()
 // 	}
 
 // 	head, ok := stmt.Params[1].(*ast.FnObj).IsFcFn_HasAtomHead_ReturnHead() // WARNING: 这里有问题，因为可能不是fn template，而是 fn(R)R 这种
@@ -59,13 +59,13 @@ func (ver *Verifier) checkSpecFactReq(stmt *ast.SpecFactStmt, state *VerState) (
 // 					return NewExecErr(ret.String())
 // 				}
 // 			}
-// 			return NewExecTrue("")
+// 			return NewExecEmptyTrue()
 // 		} else {
 // 			ret := ver.Env.AreAtomsInFcAreDeclared(stmt.Params[1], map[string]struct{}{})
 // 			if ret.IsErr() {
 // 				return NewExecErr(ret.String())
 // 			}
-// 			return NewExecTrue("")
+// 			return NewExecEmptyTrue()
 // 		}
 // 	} else {
 // 		ret := ver.Env.AreAtomsInFcAreDeclared(stmt.Params[1], map[string]struct{}{})
@@ -73,6 +73,6 @@ func (ver *Verifier) checkSpecFactReq(stmt *ast.SpecFactStmt, state *VerState) (
 // 			return NewExecErr(ret.String())
 // 		}
 
-// 		return NewExecTrue("")
+// 		return NewExecEmptyTrue()
 // 	}
 // }

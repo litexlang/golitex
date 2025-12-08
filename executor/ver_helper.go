@@ -70,7 +70,7 @@ func (ver *Verifier) maybeAddSuccessMsgString(state *VerState, stmtStr, verified
 // 			return NewExecUnknown(ast.UnknownFactMsg(fact))
 // 		}
 // 	}
-// 	return NewExecTrue("")
+// 	return NewExecEmptyTrue()
 // }
 
 func (ver *Verifier) factsAreTrue(facts []ast.FactStmt, state *VerState) ExecRet {
@@ -84,7 +84,7 @@ func (ver *Verifier) factsAreTrue(facts []ast.FactStmt, state *VerState) ExecRet
 		}
 	}
 
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }
 
 func IsTrueOrErr(ok bool, err error) bool {
