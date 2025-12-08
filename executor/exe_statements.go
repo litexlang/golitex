@@ -603,11 +603,14 @@ func (exec *Executor) inlineFactsStmt(stmt *ast.InlineFactsStmt) ExecRet {
 func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ExecRet {
 	ver := NewVerifier(exec.Env)
 
-	for i := range len(stmt.ObjNames) {
-		if ver.objIsDefinedAtomOrIsFnSatisfyItsReq(stmt.ObjEqualTos[i], Round0Msg).IsNotTrue() {
-			return NewExecErr(fmt.Sprintf("%s is not defined or does not satisfy function requirement", stmt.ObjEqualTos[i].String()))
+	// 证明右侧的 equal to 符合 fn 的条件
+	for _, obj := range stmt.ObjEqualTos {
+		if ver.objIsDefinedAtomOrIsFnSatisfyItsReq(obj, Round0NoMsg).IsNotTrue() {
+			return NewExecErr(fmt.Sprintf("%s is not defined or does not satisfy function requirement", obj.String()))
 		}
+	}
 
+	for i := range len(stmt.ObjNames) {
 		verRet := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.ObjEqualTos[i], stmt.ObjSets[i]}, stmt.Line), Round0Msg)
 		if verRet.IsErr() {
 			return NewExecErr(verRet.String())
