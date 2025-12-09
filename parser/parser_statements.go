@@ -3390,7 +3390,7 @@ func (p *TbParser) atExistPropDefStmt(tb *tokenBlock) (*ast.DefExistPropStmt, er
 	return ast.NewDefExistPropStmt(defBody, existParams, existParamSets, tb.line), nil
 }
 
-func (p *TbParser) parseDomThenProve(body []tokenBlock) ([]ast.FactStmt, []ast.FactStmt, []ast.Stmt, error) {
+func (p *TbParser) parseDomThenProve(body []*tokenBlock) ([]ast.FactStmt, []ast.FactStmt, []ast.Stmt, error) {
 	domFacts := []ast.FactStmt{}
 	thenFacts := []ast.FactStmt{}
 	proofs := []ast.Stmt{}
