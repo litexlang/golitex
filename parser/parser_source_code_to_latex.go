@@ -30,8 +30,9 @@ func ParseSourceCode_WhenCompileToLatex2(code string) ([]ast.Stmt, error) {
 	}
 
 	ret := []ast.Stmt{}
+	p := &tbParser{}
 	for _, block := range blocks {
-		cur, err := block.Stmt()
+		cur, err := p.Stmt(&block)
 		if err != nil {
 			return nil, err
 		}

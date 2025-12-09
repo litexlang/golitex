@@ -123,7 +123,7 @@ t.hideturtle()
 screen.update()
 
 
-def save_image(filename="LiTeXNewLogo.png"):
+def save_image(filename="LiTeXNewLogo.PNG"):
     canvas = screen.getcanvas()
     x = canvas.winfo_rootx()
     y = canvas.winfo_rooty()
