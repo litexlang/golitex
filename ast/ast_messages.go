@@ -1401,7 +1401,7 @@ func AlgoStmtStrSliceJoinWithNewlineWithIndents(stmts []Stmt, indents uint32) st
 }
 
 func (stmt *EvalStmt) String() string {
-	return fmt.Sprintf("%s(%s)", glob.KeywordEval, stmt.FcsToEval.String())
+	return fmt.Sprintf("%s(%s)", glob.KeywordEval, stmt.ObjToEval.String())
 }
 
 func (stmt *DefProveAlgoStmt) String() string {

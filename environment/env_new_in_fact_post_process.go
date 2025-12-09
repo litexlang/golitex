@@ -37,7 +37,7 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 		return ret
 	}
 
-	if ret := e.inFactPostProcess_TryFnTemplateFcFn(fact); ret.IsTrue() || ret.IsErr() {
+	if ret := e.inFactPostProcess_TryFnTemplateFnObj(fact); ret.IsTrue() || ret.IsErr() {
 		return ret
 	}
 
@@ -77,8 +77,7 @@ func (e *Env) inFactPostProcess_TryFnTemplate(fact *ast.SpecFactStmt) glob.GlobR
 	return glob.NewGlobUnknown("")
 }
 
-// inFactPostProcess_TryFnTemplateFcFn handles a $in fnTemplate_FcFn case
-func (e *Env) inFactPostProcess_TryFnTemplateFcFn(fact *ast.SpecFactStmt) glob.GlobRet {
+func (e *Env) inFactPostProcess_TryFnTemplateFnObj(fact *ast.SpecFactStmt) glob.GlobRet {
 	fnFn, ok := fact.Params[1].(*ast.FnObj)
 	if !ok || !ast.IsFnTemplate_ObjFn(fnFn) {
 		return glob.NewGlobUnknown("")
@@ -86,7 +85,7 @@ func (e *Env) inFactPostProcess_TryFnTemplateFcFn(fact *ast.SpecFactStmt) glob.G
 
 	fnTStruct, ok := ast.ObjFnT_To_FnTStruct(fnFn)
 	if !ok {
-		return glob.ErrRet(fmt.Errorf("%s is not fcFn type fn template", fnFn.String()))
+		return glob.ErrRet(fmt.Errorf("%s is not obj type fn template", fnFn.String()))
 	}
 
 	ret := e.InsertFnInFnTT(fact.Params[0], fnTStruct)
@@ -154,31 +153,6 @@ func (e *Env) inFactPostProcess_InCart(obj ast.Obj, cartSet *ast.FnObj) glob.Glo
 	return glob.TrueRet("")
 }
 
-// func (e *Env) inFactPostProcess_InSetFnRetValue(fact *ast.SpecFactStmt, def *ast.HaveSetFnStmt) glob.GlobRet {
-// 	inFactRightParamAsFcFnPt, ok := fact.Params[1].(*ast.FnObj)
-// 	if !ok {
-// 		return glob.ErrRet(fmt.Errorf("in fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
-// 	}
-
-// 	uniMap := map[string]ast.Obj{}
-// 	for i, param := range def.DefHeader.Params {
-// 		uniMap[param] = inFactRightParamAsFcFnPt.Params[i]
-// 	}
-
-// 	defToIntensionalSetStmt := def.ToIntensionalSetStmt()
-// 	instantiated, err := defToIntensionalSetStmt.InstantiateFact(uniMap)
-// 	if err != nil {
-// 		return glob.ErrRet(err)
-// 	}
-
-// 	ret := e.NewFact(instantiated)
-// 	if ret.IsErr() {
-// 		return ret
-// 	}
-
-// 	return glob.TrueRet("")
-// }
-
 func (e *Env) inFactPostProcess_InFnTemplate(fact *ast.SpecFactStmt) (bool, glob.GlobRet) {
 	if _, ok := fact.Params[1].(*ast.FnObj); !ok {
 		return false, glob.TrueRet("")
@@ -189,12 +163,12 @@ func (e *Env) inFactPostProcess_InFnTemplate(fact *ast.SpecFactStmt) (bool, glob
 		return false, glob.TrueRet("")
 	}
 
-	def := e.GetFnTemplateDef_KeyIsFcHead(fact.Params[1].(*ast.FnObj))
+	def := e.GetFnTemplateDef_KeyIsObjHead(fact.Params[1].(*ast.FnObj))
 	if def == nil {
 		return false, glob.TrueRet("")
 	}
 
-	fnTNoName, ok, ret := e.getInstantiatedFnTTOfFcFn(fact.Params[1].(*ast.FnObj))
+	fnTNoName, ok, ret := e.getInstantiatedFnTTOfFnObj(fact.Params[1].(*ast.FnObj))
 	if ret.IsErr() {
 		return false, ret
 	}
