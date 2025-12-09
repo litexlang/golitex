@@ -80,11 +80,11 @@ func (e *Env) inFactPostProcess_TryFnTemplate(fact *ast.SpecFactStmt) glob.GlobR
 // inFactPostProcess_TryFnTemplateFcFn handles a $in fnTemplate_FcFn case
 func (e *Env) inFactPostProcess_TryFnTemplateFcFn(fact *ast.SpecFactStmt) glob.GlobRet {
 	fnFn, ok := fact.Params[1].(*ast.FnObj)
-	if !ok || !ast.IsFnTemplate_FcFn(fnFn) {
+	if !ok || !ast.IsFnTemplate_ObjFn(fnFn) {
 		return glob.NewGlobUnknown("")
 	}
 
-	fnTStruct, ok := ast.FcFnT_To_FnTStruct(fnFn)
+	fnTStruct, ok := ast.ObjFnT_To_FnTStruct(fnFn)
 	if !ok {
 		return glob.ErrRet(fmt.Errorf("%s is not fcFn type fn template", fnFn.String()))
 	}
@@ -131,7 +131,7 @@ func (e *Env) inFactPostProcess_InCart(obj ast.Obj, cartSet *ast.FnObj) glob.Glo
 		// 创建索引操作 a[i]
 		indexedObj := ast.NewFnObj(ast.Atom(glob.KeywordIndexOpt), []ast.Obj{obj, indexObj})
 		// 创建 a[i] $in cartSet.Params[i] 的事实
-		inFact := ast.NewInFactWithFc(indexedObj, cartSet.Params[i])
+		inFact := ast.NewInFactWithObj(indexedObj, cartSet.Params[i])
 		ret := e.NewFact(inFact)
 		if ret.IsErr() {
 			return ret
@@ -184,7 +184,7 @@ func (e *Env) inFactPostProcess_InFnTemplate(fact *ast.SpecFactStmt) (bool, glob
 		return false, glob.TrueRet("")
 	}
 
-	head, ok := fact.Params[1].(*ast.FnObj).IsFcFn_HasAtomHead_ReturnHead()
+	head, ok := fact.Params[1].(*ast.FnObj).IsObjFn_HasAtomHead_ReturnHead()
 	if !ok {
 		return false, glob.TrueRet("")
 	}

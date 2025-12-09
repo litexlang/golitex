@@ -244,7 +244,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 		return BoolErrToExecRet(false, err)
 	}
 	for i := range instParamSets {
-		verRet := ver.VerFactStmt(ast.NewInFactWithFc(existParams[i], instParamSets[i]), state)
+		verRet := ver.VerFactStmt(ast.NewInFactWithObj(existParams[i], instParamSets[i]), state)
 		if verRet.IsErr() {
 			return verRet
 		}

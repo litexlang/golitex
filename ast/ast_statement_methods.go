@@ -148,26 +148,26 @@ func NewInFact(param string, paramSet Obj) *SpecFactStmt {
 	return NewSpecFactStmt(TruePure, Atom(glob.KeywordIn), []Obj{Atom(param), paramSet}, glob.BuiltinLine)
 }
 
-func NewInFactWithParamFc(param Obj, paramSet Obj) *SpecFactStmt {
+func NewInFactWithParamObj(param Obj, paramSet Obj) *SpecFactStmt {
 	return NewSpecFactStmt(TruePure, Atom(glob.KeywordIn), []Obj{param, paramSet}, glob.BuiltinLine)
 }
 
-func NewInFactWithFc(param Obj, paramSet Obj) *SpecFactStmt {
+func NewInFactWithObj(param Obj, paramSet Obj) *SpecFactStmt {
 	return NewSpecFactStmt(TruePure, Atom(glob.KeywordIn), []Obj{param, paramSet}, glob.BuiltinLine)
 }
 
-func IsFnSet(fc Obj) bool {
-	fcAsFcFn, ok := fc.(*FnObj)
+func IsFnSet(obj Obj) bool {
+	objAsFnObj, ok := obj.(*FnObj)
 	if !ok {
 		return false
 	}
 
-	fcHeadAsFcFn, ok := fcAsFcFn.FnHead.(*FnObj)
+	objHeadAsFnObj, ok := objAsFnObj.FnHead.(*FnObj)
 	if !ok {
 		return false
 	}
 
-	return IsAtomObjAndEqualToStr(fcHeadAsFcFn.FnHead, glob.KeywordFn)
+	return IsAtomObjAndEqualToStr(objHeadAsFnObj.FnHead, glob.KeywordFn)
 }
 
 func (stmt *SpecFactStmt) ReverseSpecFactParamsOrder() (*SpecFactStmt, error) {
@@ -203,30 +203,30 @@ func (defHeader *DefHeader) NewInFacts() []*SpecFactStmt {
 	return facts
 }
 
-func Get_FnTemplate_InFcForm_ParamSetsAndRetSet(fc Obj) ([]Obj, Obj, bool) {
-	// given fc must be a function
-	fcAsFcFn, ok := fc.(*FnObj)
+func Get_FnTemplate_InObjForm_ParamSetsAndRetSet(obj Obj) ([]Obj, Obj, bool) {
+	// given obj must be a function
+	objAsFnObj, ok := obj.(*FnObj)
 	if !ok {
 		return nil, nil, false
 	}
 
-	fcAsFcFnHeadAsFcFn, ok := fcAsFcFn.FnHead.(*FnObj)
+	objAsFnObjHeadAsFnObj, ok := objAsFnObj.FnHead.(*FnObj)
 	if !ok {
 		return nil, nil, false
 	}
 
-	if len(fcAsFcFn.Params) != 1 {
+	if len(objAsFnObj.Params) != 1 {
 		return nil, nil, false
 	}
 
-	if !IsAtomObjAndEqualToStr(fcAsFcFnHeadAsFcFn.FnHead, glob.KeywordFn) {
+	if !IsAtomObjAndEqualToStr(objAsFnObjHeadAsFnObj.FnHead, glob.KeywordFn) {
 		return nil, nil, false
 	}
 
 	paramSets := []Obj{}
-	paramSets = append(paramSets, fcAsFcFnHeadAsFcFn.Params...)
+	paramSets = append(paramSets, objAsFnObjHeadAsFnObj.Params...)
 
-	return paramSets, fcAsFcFn.Params[0], true
+	return paramSets, objAsFnObj.Params[0], true
 }
 
 func MakeExistFactParamsSlice(existParams []Obj, paramsInFact []Obj) []Obj {
@@ -268,40 +268,40 @@ func (factStmtSlice FactStmtSlice) InstantiateFact(uniMap map[string]Obj) (FactS
 	return instantiatedFacts, nil
 }
 
-func isFcWithFcFnHeadWithName(fc Obj, name string) bool {
-	fcAsFcFn, ok := fc.(*FnObj)
+func isObjWithObjFnHeadWithName(obj Obj, name string) bool {
+	objAsFnObj, ok := obj.(*FnObj)
 	if !ok {
 		return false
 	}
 
-	fcAsFcFnHeadAsFcFn, ok := fcAsFcFn.FnHead.(*FnObj)
+	objAsFnObjHeadAsFnObj, ok := objAsFnObj.FnHead.(*FnObj)
 	if !ok {
 		return false
 	}
 
-	return IsAtomObjAndEqualToStr(fcAsFcFnHeadAsFcFn.FnHead, name)
+	return IsAtomObjAndEqualToStr(objAsFnObjHeadAsFnObj.FnHead, name)
 }
 
-func IsFnTemplate_FcFn(fcFn *FnObj) bool {
-	return isFcWithFcFnHeadWithName(fcFn, glob.KeywordFn)
+func IsFnTemplate_ObjFn(objFn *FnObj) bool {
+	return isObjWithObjFnHeadWithName(objFn, glob.KeywordFn)
 }
 
-func IsFcAtomEqualToGivenString(fc Obj, name string) bool {
-	fcAtom, ok := fc.(Atom)
+func IsObjAtomEqualToGivenString(obj Obj, name string) bool {
+	objAtom, ok := obj.(Atom)
 	if !ok {
 		return false
 	}
 
-	return string(fcAtom) == name
+	return string(objAtom) == name
 }
 
 func TransformEnumToUniFact(setName Obj, enumFcs []Obj) (*UniFactStmt, []*SpecFactStmt, []*SpecFactStmt) {
 	freeObjName := Atom(glob.RandomString(4))
 	equalFactsInOrFact := []*SpecFactStmt{}
 	itemsInSetFacts := []*SpecFactStmt{}
-	for _, fc := range enumFcs {
-		equalFactsInOrFact = append(equalFactsInOrFact, NewSpecFactStmt(TruePure, Atom(glob.KeySymbolEqual), []Obj{freeObjName, fc}, glob.BuiltinLine))
-		itemsInSetFacts = append(itemsInSetFacts, NewSpecFactStmt(TruePure, Atom(glob.KeywordIn), []Obj{fc, setName}, glob.BuiltinLine))
+	for _, obj := range enumFcs {
+		equalFactsInOrFact = append(equalFactsInOrFact, NewSpecFactStmt(TruePure, Atom(glob.KeySymbolEqual), []Obj{freeObjName, obj}, glob.BuiltinLine))
+		itemsInSetFacts = append(itemsInSetFacts, NewSpecFactStmt(TruePure, Atom(glob.KeywordIn), []Obj{obj, setName}, glob.BuiltinLine))
 	}
 
 	pairwiseNotEqualFacts := []*SpecFactStmt{}
