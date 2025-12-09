@@ -16,26 +16,26 @@ package litex_ast
 
 import "fmt"
 
-func InstantiateFcAtom(fc Atom, uniMap map[string]Obj) (Obj, error) {
-	instance, ok := uniMap[string(fc)]
+func InstantiateObjAtom(obj Atom, uniMap map[string]Obj) (Obj, error) {
+	instance, ok := uniMap[string(obj)]
 	if ok {
 		return instance, nil
 	}
-	return fc, nil
+	return obj, nil
 }
 
-func (fc Atom) Instantiate(uniMap map[string]Obj) (Obj, error) {
-	return InstantiateFcAtom(fc, uniMap)
+func (obj Atom) Instantiate(uniMap map[string]Obj) (Obj, error) {
+	return InstantiateObjAtom(obj, uniMap)
 }
 
-func InstantiateFcFn(fc *FnObj, uniMap map[string]Obj) (Obj, error) {
-	newHead, err := fc.FnHead.Instantiate(uniMap)
+func InstantiateObjFn(obj *FnObj, uniMap map[string]Obj) (Obj, error) {
+	newHead, err := obj.FnHead.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}
 
-	newParamSegs := make([]Obj, len(fc.Params))
-	for i, seg := range fc.Params {
+	newParamSegs := make([]Obj, len(obj.Params))
+	for i, seg := range obj.Params {
 		newSeg, err := seg.Instantiate(uniMap)
 		if err != nil {
 			return nil, err
@@ -46,8 +46,8 @@ func InstantiateFcFn(fc *FnObj, uniMap map[string]Obj) (Obj, error) {
 	return NewFnObj(newHead, newParamSegs), nil
 }
 
-func (fc *FnObj) Instantiate(uniMap map[string]Obj) (Obj, error) {
-	return InstantiateFcFn(fc, uniMap)
+func (obj *FnObj) Instantiate(uniMap map[string]Obj) (Obj, error) {
+	return InstantiateObjFn(obj, uniMap)
 }
 
 func InstantiateSpecFact(stmt *SpecFactStmt, uniMap map[string]Obj) (*SpecFactStmt, error) {

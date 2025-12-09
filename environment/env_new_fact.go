@@ -474,9 +474,9 @@ func (env *Env) storeSymbolSimplifiedValue(left, right ast.Obj) glob.GlobRet {
 	return glob.TrueRet("")
 }
 
-func (env *Env) GetEqualFcs(fc ast.Obj) (*[]ast.Obj, bool) {
-	fcAsStr := fc.String()
-	facts, ok := env.EqualMem[fcAsStr]
+func (env *Env) GetEqualObjs(obj ast.Obj) (*[]ast.Obj, bool) {
+	objAsStr := obj.String()
+	facts, ok := env.EqualMem[objAsStr]
 	return facts, ok
 }
 

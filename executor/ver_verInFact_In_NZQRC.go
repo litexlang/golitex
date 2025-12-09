@@ -55,7 +55,7 @@ func (ver *Verifier) verInFactByRightParamIsNOrZOrQOrR(stmt *ast.SpecFactStmt, s
 }
 
 func (ver *Verifier) verInNPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactStmt, state *VerState) (bool, string) {
-	if ast.IsFcLiterallyNPosNumber(stmt.Params[0]) {
+	if ast.IsObjLiterallyNPosNumber(stmt.Params[0]) {
 		return true, stmt.String()
 	}
 
@@ -92,7 +92,7 @@ func (ver *Verifier) verInNPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet
 }
 
 func (ver *Verifier) verInN_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactStmt, state *VerState) (bool, string) {
-	if ast.IsFcLiterallyNatNumber(stmt.Params[0]) {
+	if ast.IsObjLiterallyNatNumber(stmt.Params[0]) {
 		return true, stmt.String()
 	}
 
@@ -130,7 +130,7 @@ func (ver *Verifier) verInN_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(st
 }
 
 func (ver *Verifier) verInZ_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactStmt, state *VerState) (bool, string) {
-	if ast.IsFcLiterallyIntNumber(stmt.Params[0]) {
+	if ast.IsObjLiterallyIntNumber(stmt.Params[0]) {
 		return true, stmt.String()
 	}
 
@@ -165,7 +165,7 @@ func (ver *Verifier) verInZ_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(st
 }
 
 func (ver *Verifier) verInQ_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactStmt, state *VerState) (bool, string) {
-	if ast.IsFcLiterallyRationalNumber(stmt.Params[0]) {
+	if ast.IsObjLiterallyRationalNumber(stmt.Params[0]) {
 		return true, stmt.String()
 	}
 

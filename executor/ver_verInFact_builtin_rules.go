@@ -520,13 +520,13 @@ func (ver *Verifier) verInFactByRightParamIsSetProduct(stmt *ast.SpecFactStmt, s
 // getCartSetFromObj gets the cart set from obj if obj = cart(...)
 // Returns the cart set if found, nil otherwise
 func (ver *Verifier) getCartSetFromObj(obj ast.Obj) *ast.FnObj {
-	equalFcs, ok := ver.Env.GetEqualFcs(obj)
-	if !ok || equalFcs == nil {
+	equalObjs, ok := ver.Env.GetEqualObjs(obj)
+	if !ok || equalObjs == nil {
 		return nil
 	}
 	// Look for a cart set in the equal facts
-	for _, equalFc := range *equalFcs {
-		if cartAsFn, ok := equalFc.(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(cartAsFn.FnHead, glob.KeywordCart) {
+	for _, equalObj := range *equalObjs {
+		if cartAsFn, ok := equalObj.(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(cartAsFn.FnHead, glob.KeywordCart) {
 			return cartAsFn
 		}
 	}
@@ -782,7 +782,7 @@ func (ver *Verifier) litNumNotInNaturalByLiteralShape(stmt *ast.SpecFactStmt, st
 
 	// 检查字面上是否是自然数形状（必须是 AtomObj 且字面上看起来就是自然数）
 	// 如果字面上就是自然数形状（比如 "5"），不能证明它不在自然数中
-	if ast.IsFcLiterallyNatNumber(stmt.Params[0]) {
+	if ast.IsObjLiterallyNatNumber(stmt.Params[0]) {
 		// 字面上是自然数，不能证明它不在自然数中
 		return NewEmptyExecUnknown()
 	}
@@ -810,7 +810,7 @@ func (ver *Verifier) litNumNotInIntegerByLiteralShape(stmt *ast.SpecFactStmt, st
 
 	// 检查字面上是否是整数形状（必须是 AtomObj 且字面上看起来就是整数）
 	// 如果字面上就是整数形状（比如 "5" 或 "-3"），不能证明它不在整数中
-	if ast.IsFcLiterallyIntNumber(stmt.Params[0]) {
+	if ast.IsObjLiterallyIntNumber(stmt.Params[0]) {
 		// 字面上是整数，不能证明它不在整数中
 		return NewEmptyExecUnknown()
 	}
@@ -838,7 +838,7 @@ func (ver *Verifier) litNumNotInNPosByLiteralShape(stmt *ast.SpecFactStmt, state
 
 	// 检查字面上是否是正整数形状（必须是 AtomObj 且字面上看起来就是正整数）
 	// 如果字面上就是正整数形状（比如 "5"），不能证明它不在正整数中
-	if ast.IsFcLiterallyNPosNumber(stmt.Params[0]) {
+	if ast.IsObjLiterallyNPosNumber(stmt.Params[0]) {
 		// 字面上是正整数，不能证明它不在正整数中
 		return NewEmptyExecUnknown()
 	}

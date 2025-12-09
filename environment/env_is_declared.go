@@ -75,12 +75,12 @@ func (e *Env) isAtomDefinedAtCurEnv(fcAtomName ast.Atom) bool {
 	return ok
 }
 
-func (e *Env) AreAtomsInObjDefined(fc ast.Obj, extraAtomNames map[string]struct{}) glob.GlobRet {
-	if !ast.IsIntensionalSetObj(fc) {
-		atoms := ast.GetAtomsInObj(fc)
+func (e *Env) AreAtomsInObjDefined(obj ast.Obj, extraAtomNames map[string]struct{}) glob.GlobRet {
+	if !ast.IsIntensionalSetObj(obj) {
+		atoms := ast.GetAtomsInObj(obj)
 		return e.AreAtomsDeclared(atoms, extraAtomNames)
 	} else {
-		return e.AreAtomsInIntensionalSetAreDeclared(fc.(*ast.FnObj), extraAtomNames)
+		return e.AreAtomsInIntensionalSetAreDeclared(obj.(*ast.FnObj), extraAtomNames)
 	}
 }
 

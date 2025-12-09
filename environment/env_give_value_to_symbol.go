@@ -20,23 +20,23 @@ import (
 	"strconv"
 )
 
-func (env *Env) ReplaceSymbolWithValue(fc ast.Obj) (bool, ast.Obj) {
-	if cmp.IsNumExprLitObj(fc) {
-		return false, fc
+func (env *Env) ReplaceSymbolWithValue(obj ast.Obj) (bool, ast.Obj) {
+	if cmp.IsNumExprLitObj(obj) {
+		return false, obj
 	}
 
-	switch asFc := fc.(type) {
+	switch asObj := obj.(type) {
 	case ast.Atom:
-		return env.GetValueOfAtomObj(asFc)
+		return env.GetValueOfAtomObj(asObj)
 	case *ast.FnObj:
-		return env.GetValueOfFnObj(asFc)
+		return env.GetValueOfFnObj(asObj)
 	}
 	panic("")
 }
 
-func (env *Env) IsIndexOfTupleFnObjAndGetValueAtIndex(fc *ast.FnObj) (bool, ast.Obj) {
-	if ast.IsIndexOptFnObj(fc) && ast.IsTupleObj(fc.Params[0]) {
-		value := getTupleValueAtIndex(fc.Params[0].(*ast.FnObj), fc.Params[1])
+func (env *Env) IsIndexOfTupleFnObjAndGetValueAtIndex(obj *ast.FnObj) (bool, ast.Obj) {
+	if ast.IsIndexOptFnObj(obj) && ast.IsTupleObj(obj.Params[0]) {
+		value := getTupleValueAtIndex(obj.Params[0].(*ast.FnObj), obj.Params[1])
 		if value != nil {
 			_, valueOfValue := env.ReplaceSymbolWithValue(value)
 			return true, valueOfValue
@@ -65,36 +65,36 @@ func getTupleValueAtIndex(tuple *ast.FnObj, index ast.Obj) ast.Obj {
 	return nil
 }
 
-func (env *Env) GetValueOfFnObj(fc *ast.FnObj) (bool, ast.Obj) {
-	if ok, value := env.IsIndexOfTupleFnObjAndGetValueAtIndex(fc); ok {
+func (env *Env) GetValueOfFnObj(obj *ast.FnObj) (bool, ast.Obj) {
+	if ok, value := env.IsIndexOfTupleFnObjAndGetValueAtIndex(obj); ok {
 		return true, value
 	}
 
-	if symbolValue := env.GetSymbolSimplifiedValue(fc); symbolValue != nil {
+	if symbolValue := env.GetSymbolSimplifiedValue(obj); symbolValue != nil {
 		return true, symbolValue
 	}
 
 	replaced := false
-	newParams := make([]ast.Obj, len(fc.Params))
-	for i, param := range fc.Params {
+	newParams := make([]ast.Obj, len(obj.Params))
+	for i, param := range obj.Params {
 		var newReplaced bool
 		newReplaced, newParams[i] = env.ReplaceSymbolWithValue(param)
 
 		replaced = replaced || newReplaced
 	}
-	return replaced, ast.NewFnObj(fc.FnHead, newParams)
+	return replaced, ast.NewFnObj(obj.FnHead, newParams)
 }
 
-func (env *Env) GetValueOfAtomObj(fc ast.Atom) (bool, ast.Obj) {
-	symbolValue := env.GetSymbolSimplifiedValue(fc)
+func (env *Env) GetValueOfAtomObj(obj ast.Atom) (bool, ast.Obj) {
+	symbolValue := env.GetSymbolSimplifiedValue(obj)
 	if symbolValue == nil {
-		return false, fc
+		return false, obj
 	}
 
 	return true, symbolValue
 }
 
-func (env *Env) ReplaceFcInSpecFactWithValue(fact *ast.SpecFactStmt) (bool, *ast.SpecFactStmt) {
+func (env *Env) ReplaceObjInSpecFactWithValue(fact *ast.SpecFactStmt) (bool, *ast.SpecFactStmt) {
 	newParams := make([]ast.Obj, len(fact.Params))
 	replaced := false
 	for i, param := range fact.Params {
