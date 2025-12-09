@@ -30,8 +30,9 @@ func sourceCodeToObj(sourceCode ...string) ([]ast.Obj, error) {
 
 	parser := &Parser{}
 	ret := []ast.Obj{}
+	p := NewTbParser()
 	for _, block := range blocks {
-		cur, err := parser.Obj(&block)
+		cur, err := p.Obj(&block)
 		if err != nil {
 			return nil, err
 		}

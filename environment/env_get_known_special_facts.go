@@ -48,13 +48,13 @@ func (e *Env) IsTransitiveProp(propName string) bool {
 	return false
 }
 
-func (e *Env) GetRelatedFcSliceOfTransitiveProp(propName string, fc ast.Obj) []ast.Obj {
+func (e *Env) GetRelatedObjSliceOfTransitiveProp(propName string, obj ast.Obj) []ast.Obj {
 	ret := []ast.Obj{}
 	for env := e; env != nil; env = env.Parent {
-		relatedFcSlice, ok := env.TransitivePropMem[propName]
+		relatedObjSlice, ok := env.TransitivePropMem[propName]
 		if ok {
-			if relatedFcSlice, ok := relatedFcSlice[fc.String()]; ok {
-				ret = append(ret, relatedFcSlice...)
+			if relatedObjSlice, ok := relatedObjSlice[obj.String()]; ok {
+				ret = append(ret, relatedObjSlice...)
 			}
 		}
 	}
@@ -81,11 +81,11 @@ func (e *Env) GetObjTuple(obj ast.Obj) ast.Obj {
 	// 遍历所有环境
 	for env := e; env != nil; env = env.Parent {
 		// 获取当前环境中与 obj 相等的所有对象
-		equalFcs, ok := env.GetEqualFcs(obj)
-		if ok && equalFcs != nil {
+		equalObjs, ok := env.GetEqualObjs(obj)
+		if ok && equalObjs != nil {
 			// 检查其中是否有 tuple
-			for _, equalFc := range *equalFcs {
-				if fnObj, ok := equalFc.(*ast.FnObj); ok && ast.IsTupleFnObj(fnObj) {
+			for _, equalObj := range *equalObjs {
+				if fnObj, ok := equalObj.(*ast.FnObj); ok && ast.IsTupleFnObj(fnObj) {
 					return fnObj
 				}
 			}
@@ -106,12 +106,12 @@ func (e *Env) GetObjEnumSet(obj ast.Obj) ast.Obj {
 	// 遍历所有环境
 	for env := e; env != nil; env = env.Parent {
 		// 获取当前环境中与 obj 相等的所有对象
-		equalFcs, ok := env.GetEqualFcs(obj)
-		if ok && equalFcs != nil {
+		equalObjs, ok := env.GetEqualObjs(obj)
+		if ok && equalObjs != nil {
 			// 检查其中是否有 enumset
-			for _, equalFc := range *equalFcs {
-				if ast.IsEnumSetObj(equalFc) {
-					return equalFc
+			for _, equalObj := range *equalObjs {
+				if ast.IsEnumSetObj(equalObj) {
+					return equalObj
 				}
 			}
 		}
@@ -132,12 +132,12 @@ func (e *Env) GetObjIntensionalSet(obj ast.Obj) *ast.FnObj {
 	// 遍历所有环境
 	for env := e; env != nil; env = env.Parent {
 		// 获取当前环境中与 obj 相等的所有对象
-		equalFcs, ok := env.GetEqualFcs(obj)
-		if ok && equalFcs != nil {
+		equalObjs, ok := env.GetEqualObjs(obj)
+		if ok && equalObjs != nil {
 			// 检查其中是否有 intensional set 对象
-			for _, equalFc := range *equalFcs {
-				if ast.IsIntensionalSetObj(equalFc) {
-					return equalFc.(*ast.FnObj)
+			for _, equalObj := range *equalObjs {
+				if ast.IsIntensionalSetObj(equalObj) {
+					return equalObj.(*ast.FnObj)
 				}
 			}
 		}

@@ -46,6 +46,6 @@ func AtomsInFactNotDeclaredMsg(fact ast.FactStmt) string {
 	return fmt.Sprintf("undefined name in fact:\n%s", fact)
 }
 
-func AtomsInFcNotDeclaredMsg(fc ast.Obj) string {
-	return fmt.Sprintf("undefined name in fc: %s", fc)
+func AtomsInObjNotDeclaredMsg(obj ast.Obj) string {
+	return fmt.Sprintf("undefined name in obj: %s", obj)
 }

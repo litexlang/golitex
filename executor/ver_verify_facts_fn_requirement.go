@@ -304,7 +304,7 @@ func (ver *Verifier) verifyIntensionalSetFactsFnRequirement(objAsFnObj *ast.FnOb
 	defObjStmt := ast.NewDefLetStmt(
 		[]string{actualParamName},
 		[]ast.Obj{parentSet},
-		[]ast.FactStmt{ast.NewInFactWithFc(paramObj, parentSet)},
+		[]ast.FactStmt{ast.NewInFactWithObj(paramObj, parentSet)},
 		glob.BuiltinLine,
 	)
 	ret = ver.Env.DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(defObjStmt)
