@@ -21,7 +21,7 @@ import (
 )
 
 // 这是必要的，因为 2 $in N 是这个检查的
-func (ver *Verifier) verInFactByRightParamIsNOrZOrQOrROrC(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) verInFactByRightParamIsNOrZOrQOrR(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	inSet, ok := stmt.Params[1].(ast.Atom)
 	if !ok {
 		return NewEmptyExecUnknown()
@@ -34,7 +34,7 @@ func (ver *Verifier) verInFactByRightParamIsNOrZOrQOrROrC(stmt *ast.SpecFactStmt
 	case glob.KeywordNatural:
 		success, verifiedBy = ver.verInN_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
 	case glob.KeywordInteger:
-		success, verifiedBy = ver.verInZ_BySpecMem__ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
+		success, verifiedBy = ver.verInZ_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
 	case glob.KeywordRational:
 		success, verifiedBy = ver.verInQ_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
 	case glob.KeywordNPos:
@@ -129,7 +129,7 @@ func (ver *Verifier) verInN_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(st
 	return ver.verInNPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(newStmt, state)
 }
 
-func (ver *Verifier) verInZ_BySpecMem__ReturnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactStmt, state *VerState) (bool, string) {
+func (ver *Verifier) verInZ_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactStmt, state *VerState) (bool, string) {
 	if ast.IsFcLiterallyIntNumber(stmt.Params[0]) {
 		return true, stmt.String()
 	}
@@ -150,9 +150,9 @@ func (ver *Verifier) verInZ_BySpecMem__ReturnValueOfUserDefinedFnInFnReturnSet(s
 	if ast.IsFn_WithHeadNameInSlice(stmt.Params[0], glob.AddMinusStarSet) {
 		fnObj, ok := stmt.Params[0].(*ast.FnObj)
 		if ok {
-			ok, _ = ver.verInZ_BySpecMem__ReturnValueOfUserDefinedFnInFnReturnSet(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{fnObj.Params[0], ast.Atom(glob.KeywordInteger)}, stmt.Line), state)
+			ok, _ = ver.verInZ_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{fnObj.Params[0], ast.Atom(glob.KeywordInteger)}, stmt.Line), state)
 			if ok {
-				ok, _ = ver.verInZ_BySpecMem__ReturnValueOfUserDefinedFnInFnReturnSet(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{fnObj.Params[1], ast.Atom(glob.KeywordInteger)}, stmt.Line), state)
+				ok, _ = ver.verInZ_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{fnObj.Params[1], ast.Atom(glob.KeywordInteger)}, stmt.Line), state)
 				if ok {
 					return true, fmt.Sprintf("%s has function name in *+-, and both params are in Z", fnObj)
 				}
@@ -197,7 +197,7 @@ func (ver *Verifier) verInQ_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(st
 	}
 
 	newStmt := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.Params[0], ast.Atom(glob.KeywordInteger)}, stmt.Line)
-	return ver.verInZ_BySpecMem__ReturnValueOfUserDefinedFnInFnReturnSet(newStmt, state)
+	return ver.verInZ_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(newStmt, state)
 }
 
 func (ver *Verifier) verInR_BySpecMem(stmt *ast.SpecFactStmt, state *VerState) (bool, string) {
