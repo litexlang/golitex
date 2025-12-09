@@ -73,7 +73,7 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 		return verRet
 	}
 
-	verRet = ver.verInFactByRightParamIsNOrZOrQOrROrC(stmt, state)
+	verRet = ver.verInFactByRightParamIsNOrZOrQOrR(stmt, state)
 	if verRet.IsErr() {
 		return verRet
 	}
