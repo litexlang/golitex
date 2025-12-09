@@ -22,10 +22,10 @@ import (
 	"strings"
 )
 
-func (e *Env) IsAtomDefinedByUser(fcAtomName ast.Atom) bool {
+func (e *Env) IsAtomDefinedByUser(AtomObjName ast.Atom) bool {
 	// 如果 atom 里有 ::，那另外检查
-	if strings.Contains(string(fcAtomName), glob.PkgNameAtomSeparator) {
-		PkgNameAndAtomName := strings.Split(string(fcAtomName), glob.PkgNameAtomSeparator)
+	if strings.Contains(string(AtomObjName), glob.PkgNameAtomSeparator) {
+		PkgNameAndAtomName := strings.Split(string(AtomObjName), glob.PkgNameAtomSeparator)
 		PkgName := PkgNameAndAtomName[0]
 		AtomName := PkgNameAndAtomName[1]
 		pkgPath, ok := e.PackageManager.PkgNamePkgPathPairs[PkgName]
@@ -44,7 +44,7 @@ func (e *Env) IsAtomDefinedByUser(fcAtomName ast.Atom) bool {
 	}
 
 	for env := e; env != nil; env = env.Parent {
-		ok := env.isAtomDefinedAtCurEnv(fcAtomName)
+		ok := env.isAtomDefinedAtCurEnv(AtomObjName)
 		if ok {
 			return true
 		}
@@ -53,24 +53,23 @@ func (e *Env) IsAtomDefinedByUser(fcAtomName ast.Atom) bool {
 }
 
 // 其实最好要分类：有可能是obj，有可能是prop，不能在验证obj的时候验证是prop
-func (e *Env) isAtomDefinedAtCurEnv(fcAtomName ast.Atom) bool {
-	_, ok := e.PropDefMem[string(fcAtomName)]
+func (e *Env) isAtomDefinedAtCurEnv(AtomObjName ast.Atom) bool {
+	_, ok := e.PropDefMem[string(AtomObjName)]
 	if ok {
 		return true
 	}
 
-	_, ok = e.ExistPropDefMem[string(fcAtomName)]
+	_, ok = e.ExistPropDefMem[string(AtomObjName)]
 	if ok {
 		return true
 	}
 
-	_, ok = e.ObjDefMem[string(fcAtomName)]
+	_, ok = e.ObjDefMem[string(AtomObjName)]
 	if ok {
 		return true
 	}
 
-	// _, ok = e.FnTemplateDefMem[string(fcAtomName)]
-	_, ok = e.FnTemplateDefMem[string(fcAtomName)]
+	_, ok = e.FnTemplateDefMem[string(AtomObjName)]
 
 	return ok
 }

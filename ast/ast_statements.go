@@ -486,7 +486,7 @@ type DefAlgoStmt struct {
 }
 
 type EvalStmt struct {
-	FcsToEval Obj
+	ObjToEval Obj
 
 	Line uint
 }

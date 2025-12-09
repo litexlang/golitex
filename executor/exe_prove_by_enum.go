@@ -30,13 +30,13 @@ func (exec *Executor) proveByEnumMainLogic(stmt *ast.ProveByEnumStmt) (ExecRet, 
 		enums = append(enums, enumSet.(*ast.FnObj).Params)
 	}
 
-	cartesianProductOfFcs := glob.CartesianProduct(enums)
+	cartesianProductOfObjs := glob.CartesianProduct(enums)
 
 	if len(stmt.Proof) == 0 {
-		return exec.verProveOverFiniteSet_NoProveSection(stmt, cartesianProductOfFcs)
+		return exec.verProveOverFiniteSet_NoProveSection(stmt, cartesianProductOfObjs)
 	} else {
-		for i := range len(cartesianProductOfFcs) {
-			ok, err := exec.verProveOverFiniteSet_ProveAtProveSectionI(stmt, cartesianProductOfFcs[i])
+		for i := range len(cartesianProductOfObjs) {
+			ok, err := exec.verProveOverFiniteSet_ProveAtProveSectionI(stmt, cartesianProductOfObjs[i])
 			if err != nil {
 				return NewEmptyExecErr(), err
 			}
@@ -52,7 +52,7 @@ func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.Prove
 	exec.NewEnv(exec.Env)
 	defer exec.deleteEnv()
 
-	defObjStmt := ast.NewDefLetStmt(stmt.Fact.Params, stmt.Fact.ParamSets, getParamEqualFcSlice(stmt.Fact.Params, cartesianProductAtI), stmt.Line)
+	defObjStmt := ast.NewDefLetStmt(stmt.Fact.Params, stmt.Fact.ParamSets, getParamEqualObjSlice(stmt.Fact.Params, cartesianProductAtI), stmt.Line)
 	execState := exec.defLetStmt(defObjStmt)
 	if execState.IsNotTrue() {
 		return false, fmt.Errorf(execState.String())
@@ -105,7 +105,7 @@ func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.Prove
 	return true, nil
 }
 
-func getParamEqualFcSlice(params []string, equalTo []ast.Obj) []ast.FactStmt {
+func getParamEqualObjSlice(params []string, equalTo []ast.Obj) []ast.FactStmt {
 	result := []ast.FactStmt{}
 	for i, param := range params {
 		result = append(result, ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{ast.Atom(param), equalTo[i]}, glob.BuiltinLine))
@@ -113,11 +113,11 @@ func getParamEqualFcSlice(params []string, equalTo []ast.Obj) []ast.FactStmt {
 	return result
 }
 
-func (exec *Executor) verProveOverFiniteSet_NoProveSection(stmt *ast.ProveByEnumStmt, cartesianProductOfFcs [][]ast.Obj) (ExecRet, error) {
-	for _, fcSlice := range cartesianProductOfFcs {
+func (exec *Executor) verProveOverFiniteSet_NoProveSection(stmt *ast.ProveByEnumStmt, cartesianProductOfObjs [][]ast.Obj) (ExecRet, error) {
+	for _, ObjSlice := range cartesianProductOfObjs {
 		uniMap := map[string]ast.Obj{}
 		for i, param := range stmt.Fact.Params {
-			uniMap[param] = fcSlice[i]
+			uniMap[param] = ObjSlice[i]
 		}
 
 		hasFalseDomFact := false

@@ -252,18 +252,18 @@ func (e *Env) GetSpecFact_InLogicExpr_InUniFactMem() (*SpecFact_InLogicExpr_InUn
 	return &e.KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem, true
 }
 
-func (e *Env) IsFnDeclared(fc ast.Atom) (*FnInFnTMemItem, bool) {
+func (e *Env) IsFnDeclared(obj ast.Atom) (*FnInFnTMemItem, bool) {
 	// TODO 这里需要更严格检查一下是否是正常的函数名，但是目前没有
-	if _, ok := glob.BuiltinKeywordsSet[string(fc)]; ok {
+	if _, ok := glob.BuiltinKeywordsSet[string(obj)]; ok {
 		return nil, true
 	}
 
 	// TODO 这里需要更严格检查一下是否是正常的函数名
-	if glob.IsKeySymbol(string(fc)) {
+	if glob.IsKeySymbol(string(obj)) {
 		return nil, true
 	}
 
-	fnDef := e.GetLatestFnT_GivenNameIsIn(string(fc))
+	fnDef := e.GetLatestFnT_GivenNameIsIn(string(obj))
 	if fnDef == nil {
 		return nil, false
 	}
@@ -286,9 +286,9 @@ func (e *Env) newUniFactWithIff(stmt *ast.UniFactWithIffStmt) glob.GlobRet {
 	return glob.TrueRet("")
 }
 
-func (e *Env) StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(fn ast.Obj, fnTemplateFcFn *ast.FnObj, fnTStruct *ast.FnTStruct) glob.GlobRet {
-	if fnTemplateFcFn != nil {
-		fnTStruct, ret := e.GetFnStructFromFnTName(fnTemplateFcFn)
+func (e *Env) StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(fn ast.Obj, fnTemplateFnObj *ast.FnObj, fnTStruct *ast.FnTStruct) glob.GlobRet {
+	if fnTemplateFnObj != nil {
+		fnTStruct, ret := e.GetFnStructFromFnTName(fnTemplateFnObj)
 		if ret.IsErr() {
 			return ret
 		}
@@ -309,21 +309,21 @@ func (e *Env) StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(fn ast.Obj, 
 	}
 }
 
-func (e *Env) getInstantiatedFnTTOfFcFn(fcFn *ast.FnObj) (*ast.FnTStruct, bool, glob.GlobRet) {
-	if ast.IsFnTemplate_ObjFn(fcFn) {
-		fnTNoName, err := fcFn.FnTObj_ToFnTNoName()
+func (e *Env) getInstantiatedFnTTOfFnObj(fnObj *ast.FnObj) (*ast.FnTStruct, bool, glob.GlobRet) {
+	if ast.IsFnTemplate_ObjFn(fnObj) {
+		fnTNoName, err := fnObj.FnTObj_ToFnTNoName()
 		if err != nil {
 			return nil, false, glob.ErrRet(err)
 		}
 		return fnTNoName, true, glob.TrueRet("")
 	}
 
-	def := e.GetFnTemplateDef(fcFn.FnHead.(ast.Atom))
+	def := e.GetFnTemplateDef(fnObj.FnHead.(ast.Atom))
 	if def == nil {
 		return nil, false, glob.TrueRet("")
 	}
 
-	fnTNoName, err := def.Instantiate_GetFnTemplateNoName(fcFn)
+	fnTNoName, err := def.Instantiate_GetFnTemplateNoName(fnObj)
 	if err != nil {
 		return nil, false, glob.ErrRet(err)
 	}

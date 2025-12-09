@@ -1215,11 +1215,11 @@ func (exec *Executor) defAlgoStmt(stmt *ast.DefAlgoStmt) ExecRet {
 func (exec *Executor) evalStmt(stmt *ast.EvalStmt) ExecRet {
 	trueEvalRet := NewEmptyExecTrue()
 
-	value, execRet := exec.evalFcInLocalEnv(stmt.FcsToEval)
+	value, execRet := exec.evalFcInLocalEnv(stmt.ObjToEval)
 	if execRet.IsNotTrue() {
 		return execRet
 	}
-	ret := exec.Env.NewFact(ast.NewEqualFact(stmt.FcsToEval, value))
+	ret := exec.Env.NewFact(ast.NewEqualFact(stmt.ObjToEval, value))
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}

@@ -914,7 +914,7 @@ func (stmt *DefAlgoStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 }
 
 func (stmt *EvalStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	obj, err := stmt.FcsToEval.Instantiate(uniMap)
+	obj, err := stmt.ObjToEval.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}
