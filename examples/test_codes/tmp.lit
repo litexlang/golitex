@@ -1,3 +1,2 @@
-fn f(x Z) Z
-
-f(1) = f(1)
+prop p(x Z, y Z)
+let p R
