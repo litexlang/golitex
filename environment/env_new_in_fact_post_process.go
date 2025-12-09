@@ -106,14 +106,14 @@ func (e *Env) inFactPostProcess_TryCart(fact *ast.SpecFactStmt) glob.GlobRet {
 	}
 
 	// Try cart from equal facts
-	equalFcs, ok := e.GetEqualFcs(fact.Params[1])
-	if !ok || equalFcs == nil {
+	equalObjs, ok := e.GetEqualObjs(fact.Params[1])
+	if !ok || equalObjs == nil {
 		return glob.NewGlobUnknown("")
 	}
 
 	// Look for a cart set in the equal facts
-	for _, equalFc := range *equalFcs {
-		if cartAsFn, ok := equalFc.(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(cartAsFn.FnHead, glob.KeywordCart) {
+	for _, equalObj := range *equalObjs {
+		if cartAsFn, ok := equalObj.(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(cartAsFn.FnHead, glob.KeywordCart) {
 			return e.inFactPostProcess_InCart(fact.Params[0], cartAsFn)
 		}
 	}

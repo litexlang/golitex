@@ -303,9 +303,9 @@ func (ver *Verifier) indexOptFnRequirement(fnObj *ast.FnObj, state *VerState) Ex
 		}
 		// 方法2: 如果方法1失败，尝试从相等事实中获取
 		if !ok {
-			if equalFcs, gotEqualFcs := ver.Env.GetEqualFcs(indexObj); gotEqualFcs && equalFcs != nil {
-				for _, equalFc := range *equalFcs {
-					if index, ok = ast.ToInt(equalFc); ok {
+			if equalObjs, gotEqualObjs := ver.Env.GetEqualObjs(indexObj); gotEqualObjs && equalObjs != nil {
+				for _, equalObj := range *equalObjs {
+					if index, ok = ast.ToInt(equalObj); ok {
 						break
 					}
 				}
@@ -328,11 +328,11 @@ func (ver *Verifier) indexOptFnRequirement(fnObj *ast.FnObj, state *VerState) Ex
 	// 情况3: 检查 dim(obj) 的值
 	// 索引必须 >= 1 且 <= dim(obj)
 	dimFn := ast.NewFnObj(ast.Atom(glob.KeywordSetDim), []ast.Obj{obj})
-	equalFcs, ok := ver.Env.GetEqualFcs(dimFn)
-	if ok && equalFcs != nil {
+	equalObjs, ok := ver.Env.GetEqualObjs(dimFn)
+	if ok && equalObjs != nil {
 		// 查找 dim 的数值
-		for _, equalFc := range *equalFcs {
-			if dimValue, ok := ast.ToInt(equalFc); ok {
+		for _, equalObj := range *equalObjs {
+			if dimValue, ok := ast.ToInt(equalObj); ok {
 				// 检查 index >= 1 且 index <= dim(obj)
 				if index > dimValue {
 					return NewExecErr(fmt.Sprintf("index %d in %s is out of range, dim(%s) = %d", index, fnObj, obj, dimValue))
