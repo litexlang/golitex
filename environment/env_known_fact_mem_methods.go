@@ -310,8 +310,8 @@ func (e *Env) StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(fn ast.Obj, 
 }
 
 func (e *Env) getInstantiatedFnTTOfFcFn(fcFn *ast.FnObj) (*ast.FnTStruct, bool, glob.GlobRet) {
-	if ast.IsFnTemplate_FcFn(fcFn) {
-		fnTNoName, err := fcFn.FnTFc_ToFnTNoName()
+	if ast.IsFnTemplate_ObjFn(fcFn) {
+		fnTNoName, err := fcFn.FnTObj_ToFnTNoName()
 		if err != nil {
 			return nil, false, glob.ErrRet(err)
 		}

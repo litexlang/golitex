@@ -92,7 +92,7 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FnObj, state *VerState) ExecRet
 }
 
 func (ver *Verifier) GetFnStructFromFnTName_CheckFnTParamsReq(fnTName *ast.FnObj, state *VerState) (*ast.FnTStruct, error) {
-	if fcFnTypeToFnTStruct, ok := ast.FcFnT_To_FnTStruct(fnTName); ok {
+	if fcFnTypeToFnTStruct, ok := ast.ObjFnT_To_FnTStruct(fnTName); ok {
 		return fcFnTypeToFnTStruct, nil
 	} else {
 		fnTNameHeadAsAtom, ok := fnTName.FnHead.(ast.Atom)
@@ -151,7 +151,7 @@ func (ver *Verifier) checkParamsSatisfyFnTStruct(fnObj *ast.FnObj, concreteParam
 	}
 
 	for i := range concreteParams {
-		fact := ast.NewInFactWithFc(concreteParams[i], fnTStruct.ParamSets[i])
+		fact := ast.NewInFactWithObj(concreteParams[i], fnTStruct.ParamSets[i])
 		verRet := ver.VerFactStmt(fact, state)
 		if verRet.IsErr() {
 			return paramsOfFnObjMustInDomainSetErrMsg(fnObj, i, fact)
