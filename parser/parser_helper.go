@@ -97,7 +97,7 @@ func ParseSourceCodeGetFact(sourceCode string) (ast.FactStmt, error) {
 		return nil, err
 	}
 
-	p := &tbParser{}
+	p := NewTbParser()
 
 	return p.factStmt(&blocks[0], UniFactDepth0)
 }
@@ -111,7 +111,7 @@ func ParseSingleLineFact(s string) (ast.FactStmt, error) {
 		return nil, err
 	}
 
-	p := &tbParser{}
+	p := NewTbParser()
 
 	fact, err := p.inlineFactThenSkipStmtTerminatorUntilEndSignals(&blocks[0], []string{})
 	if err != nil {
@@ -148,7 +148,7 @@ func ParseSourceCodeGetObj(s string) (ast.Obj, error) {
 		return nil, err
 	}
 
-	p := &tbParser{}
+	p := NewTbParser()
 
 	obj, err := p.Obj(&blocks[0])
 	if err != nil {
