@@ -41,13 +41,13 @@ func (ver *Verifier) cmpObj_Builtin_Then_Decompose_Spec(left ast.Obj, right ast.
 
 	// if ok, err := ver.decomposeFcFnsAndCheckEquality_WithoutState(left, right, cmp.Cmp_ByBIR); err != nil {
 	// if ok, msg, err := ver.decomposeFcFnsAndCheckEquality(left, right, state, ver.FcsEqualBy_Eval_ShareKnownEqualMem); err != nil {
-	return ver.decomposeFcFnsAndCheckEquality(left, right, state, ver.fcEqualSpec)
+	return ver.decomposeObjFnsAndCheckEquality(left, right, state, ver.objEqualSpec)
 
 }
 
 // Iterate over all equal facts. On each equal fact, use commutative, associative, cmp rule to compare.
-func (ver *Verifier) fcEqualSpec(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
-		if verRet := ver.cmpObj_Builtin_Then_Decompose_Spec(left, right, state); verRet.IsErr() || verRet.IsTrue() {
+func (ver *Verifier) objEqualSpec(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
+	if verRet := ver.cmpObj_Builtin_Then_Decompose_Spec(left, right, state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
 
@@ -98,7 +98,7 @@ func (ver *Verifier) fcEqualSpec(left ast.Obj, right ast.Obj, state *VerState) E
 	return NewEmptyExecUnknown()
 }
 
-func (ver *Verifier) verTrueEqualFact_FcFnEqual_NoCheckRequirements(left, right *ast.FnObj, state *VerState) ExecRet {
+func (ver *Verifier) verTrueEqualFact_ObjFnEqual_NoCheckRequirements(left, right *ast.FnObj, state *VerState) ExecRet {
 	if len(left.Params) != len(right.Params) {
 		return NewEmptyExecUnknown()
 	}

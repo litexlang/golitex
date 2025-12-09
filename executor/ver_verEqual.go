@@ -53,13 +53,13 @@ func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *Ve
 		}
 	}
 
-	if verRet := ver.verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(stmt.Params[0], stmt.Params[1], state); verRet.IsErr() || verRet.IsTrue() {
+	if verRet := ver.verObjEqual_ByBtRules_SpecMem_LogicMem_UniMem(stmt.Params[0], stmt.Params[1], state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
 
 	if leftAsFn, ok := stmt.Params[0].(*ast.FnObj); ok {
 		if rightAsFn, ok := stmt.Params[1].(*ast.FnObj); ok {
-			verRet := ver.verTrueEqualFact_FcFnEqual_NoCheckRequirements(leftAsFn, rightAsFn, state)
+			verRet := ver.verTrueEqualFact_ObjFnEqual_NoCheckRequirements(leftAsFn, rightAsFn, state)
 			if verRet.IsErr() || verRet.IsTrue() {
 				return verRet
 			}
@@ -75,7 +75,7 @@ func isValidEqualFact(stmt *ast.SpecFactStmt) bool {
 	return len(stmt.Params) == 2 && string(stmt.PropName) == glob.KeySymbolEqual
 }
 
-func (ver *Verifier) verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
+func (ver *Verifier) verObjEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
 	if verRet := ver.verEqualBuiltin(left, right, state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
@@ -278,7 +278,7 @@ func (ver *Verifier) getEqualObjsAndCmpOneByOne(curEnv *env.Env, left ast.Obj, r
 	return NewEmptyExecUnknown()
 }
 
-func (ver *Verifier) decomposeFcFnsAndCheckEquality(left ast.Obj, right ast.Obj, state *VerState, areEqualFcs func(left ast.Obj, right ast.Obj, state *VerState) ExecRet) ExecRet {
+func (ver *Verifier) decomposeObjFnsAndCheckEquality(left ast.Obj, right ast.Obj, state *VerState, areEqualObjs func(left ast.Obj, right ast.Obj, state *VerState) ExecRet) ExecRet {
 	if leftAsFn, ok := left.(*ast.FnObj); ok {
 		if rightAsFn, ok := right.(*ast.FnObj); ok {
 			if len(leftAsFn.Params) != len(rightAsFn.Params) {
@@ -286,13 +286,13 @@ func (ver *Verifier) decomposeFcFnsAndCheckEquality(left ast.Obj, right ast.Obj,
 			}
 
 			// compare head
-			verRet := areEqualFcs(leftAsFn.FnHead, rightAsFn.FnHead, state)
+			verRet := areEqualObjs(leftAsFn.FnHead, rightAsFn.FnHead, state)
 			if verRet.IsErr() || verRet.IsUnknown() {
 				return verRet
 			}
 			// compare params
 			for i := range leftAsFn.Params {
-				verRet := areEqualFcs(leftAsFn.Params[i], rightAsFn.Params[i], state)
+				verRet := areEqualObjs(leftAsFn.Params[i], rightAsFn.Params[i], state)
 				if verRet.IsErr() || verRet.IsUnknown() {
 					return verRet
 				}
