@@ -14,13 +14,6 @@
 
 package litex_ast
 
-import (
-	"fmt"
-	num "golitex/number"
-	"strings"
-	"testing"
-)
-
 func sourceCodeToObj(sourceCode ...string) ([]Obj, error) {
 	blocks, err := makeTokenBlocks(sourceCode)
 	if err != nil {
@@ -38,31 +31,4 @@ func sourceCodeToObj(sourceCode ...string) ([]Obj, error) {
 	}
 
 	return ret, nil
-}
-
-func TestOrder(t *testing.T) {
-	sourceCode := []string{
-		"1+2*(4+ t(x)(x)) + 9 + 4*F(t) + (x-y)*(a+b) + 1/2*x",
-		"x + x",
-		"2*x",
-	}
-	objSlice := []Obj{}
-	for _, code := range sourceCode {
-		obj, err := sourceCodeToObj(code)
-		if err != nil {
-			t.Fatal(err)
-		}
-		objSlice = append(objSlice, obj...)
-	}
-
-	for _, obj := range objSlice {
-		bracketedStr := num.ObjStringForParseAndExpandPolynomial(obj)
-		fmt.Println(bracketedStr)
-		ploy := num.ParseAndExpandPolynomial(bracketedStr)
-		var parts []string
-		for _, t := range ploy {
-			parts = append(parts, t.String())
-		}
-		fmt.Println("Expanded:", strings.Join(parts, " + "))
-	}
 }

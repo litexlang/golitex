@@ -876,4 +876,10 @@ know:
 know not {} $in nonempty_set
 
 prop equal_set(x set, y set)
+
+fn enum(x, y Z) set:
+	dom:
+		x <= y
+	=>:
+		enum(x, y) = {t Z: x <= t, t <= y}
 `
