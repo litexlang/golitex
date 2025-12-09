@@ -19,7 +19,7 @@ import (
 	glob "golitex/glob"
 )
 
-type shared_ptr_to_slice_of_fc = *[]ast.Obj
+type shared_ptr_to_slice_of_obj = *[]ast.Obj
 
 type PropDefMem map[string]ast.DefPropStmt
 
@@ -45,7 +45,7 @@ type KnownFactsStruct struct {
 	SpecFact_InLogicExpr_InUniFactMem SpecFact_InLogicExpr_InUniFactMem
 }
 
-// 因为 in 类型的事实很多，考虑把fcString为key保留一个map，记录它在什么集合里。比如 a $in N 就保存成 key:a values:[]{N}
+// 因为 in 类型的事实很多，考虑把objString为key保留一个map，记录它在什么集合里。比如 a $in N 就保存成 key:a values:[]{N}
 type Env struct {
 	Parent *Env
 
@@ -58,7 +58,7 @@ type Env struct {
 
 	FnInFnTemplateFactsMem FnInFnTMem
 
-	EqualMem map[string]shared_ptr_to_slice_of_fc
+	EqualMem map[string]shared_ptr_to_slice_of_obj
 
 	// EnumFacts map[string][]ast.Obj
 
@@ -124,7 +124,7 @@ func NewEnv(parent *Env) *Env {
 		FnInFnTemplateFactsMem: make(FnInFnTMem),
 		ExistPropDefMem:        make(ExistPropDefMem),
 		KnownFactsStruct:       makeKnownFactsStruct(),
-		EqualMem:               make(map[string]shared_ptr_to_slice_of_fc),
+		EqualMem:               make(map[string]shared_ptr_to_slice_of_obj),
 		// EnumFacts:              make(map[string][]ast.Obj),
 		HaveSetFnDefMem: make(HaveSetFnDefMem),
 		// IntensionalSetMem:        make(map[string]ast.IntensionalSetStmt),

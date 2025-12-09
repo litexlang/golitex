@@ -24,7 +24,7 @@ import (
 
 // how equality is verified is different from other facts because 1. it is stored differently 2. its transitive and commutative property is automatically used by the verifier
 func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, checkRequirements bool) ExecRet {
-	if verRet := ver.verByReplaceFcInSpecFactWithValue(stmt, state); verRet.IsTrue() || verRet.IsErr() {
+	if verRet := ver.verByReplaceObjInSpecFactWithValue(stmt, state); verRet.IsTrue() || verRet.IsErr() {
 		return verRet
 	}
 
@@ -32,7 +32,7 @@ func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, c
 		return verRet
 	}
 
-	if verRet := ver.verByReplaceFcInSpecFactWithValueAndCompute(stmt, state); verRet.IsTrue() || verRet.IsErr() {
+	if verRet := ver.verByReplaceObjInSpecFactWithValueAndCompute(stmt, state); verRet.IsTrue() || verRet.IsErr() {
 		return verRet
 	}
 
@@ -191,7 +191,7 @@ func (ver *Verifier) verEqualSpecMem(left ast.Obj, right ast.Obj, state *VerStat
 func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Obj, right ast.Obj, state *VerState) ExecRet {
 	nextState := state.GetNoMsg()
 
-	verRet := ver.getEqualFcsAndCmpOneByOne(curEnv, left, right, nextState)
+	verRet := ver.getEqualObjsAndCmpOneByOne(curEnv, left, right, nextState)
 	if verRet.IsErr() {
 		return verRet
 	}
@@ -238,39 +238,39 @@ func (ver *Verifier) verEqualUniMem(left ast.Obj, right ast.Obj, state *VerState
 	return NewEmptyExecUnknown()
 }
 
-func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Obj, right ast.Obj, state *VerState) ExecRet {
-	var equalToLeftFcs, equalToRightFcs *[]ast.Obj
-	var gotLeftEqualFcs, gotRightEqualFcs bool
+func (ver *Verifier) getEqualObjsAndCmpOneByOne(curEnv *env.Env, left ast.Obj, right ast.Obj, state *VerState) ExecRet {
+	var equalToLeftObjs, equalToRightObjs *[]ast.Obj
+	var gotLeftEqualObjs, gotRightEqualObjs bool
 
-	equalToLeftFcs, gotLeftEqualFcs = curEnv.GetEqualFcs(left)
-	equalToRightFcs, gotRightEqualFcs = curEnv.GetEqualFcs(right)
+	equalToLeftObjs, gotLeftEqualObjs = curEnv.GetEqualObjs(left)
+	equalToRightObjs, gotRightEqualObjs = curEnv.GetEqualObjs(right)
 
-	if gotLeftEqualFcs && gotRightEqualFcs {
-		if equalToLeftFcs == equalToRightFcs {
+	if gotLeftEqualObjs && gotRightEqualObjs {
+		if equalToLeftObjs == equalToRightObjs {
 			return NewExecTrue(fmt.Sprintf("%s = %s, by either their equality is known, or it is ensured by transitivity of equality.", left, right))
 		}
 	}
 
-	if verRet := ver.cmpFc_Builtin_Then_Decompose_Spec(left, right, state); verRet.IsErr() || verRet.IsTrue() {
+	if verRet := ver.cmpObj_Builtin_Then_Decompose_Spec(left, right, state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
 
-	if gotLeftEqualFcs {
-		for _, equalToLeftFc := range *equalToLeftFcs {
-			if verRet := ver.cmpFc_Builtin_Then_Decompose_Spec(equalToLeftFc, right, state); verRet.IsErr() {
+	if gotLeftEqualObjs {
+		for _, equalToLeftObj := range *equalToLeftObjs {
+			if verRet := ver.cmpObj_Builtin_Then_Decompose_Spec(equalToLeftObj, right, state); verRet.IsErr() {
 				return verRet
 			} else if verRet.IsTrue() {
-				return NewExecTrue(fmt.Sprintf("It is true that:\n%s = %s and %s = %s", equalToLeftFc, right, equalToLeftFc, left))
+				return NewExecTrue(fmt.Sprintf("It is true that:\n%s = %s and %s = %s", equalToLeftObj, right, equalToLeftObj, left))
 			}
 		}
 	}
 
-	if gotRightEqualFcs {
-		for _, equalToRightFc := range *equalToRightFcs {
-			if verRet := ver.cmpFc_Builtin_Then_Decompose_Spec(equalToRightFc, left, state); verRet.IsErr() {
+	if gotRightEqualObjs {
+		for _, equalToRightObj := range *equalToRightObjs {
+			if verRet := ver.cmpObj_Builtin_Then_Decompose_Spec(equalToRightObj, left, state); verRet.IsErr() {
 				return verRet
 			} else if verRet.IsTrue() {
-				return NewExecTrue(fmt.Sprintf("It is true that\n%s = %s and %s = %s", left, equalToRightFc, equalToRightFc, right))
+				return NewExecTrue(fmt.Sprintf("It is true that\n%s = %s and %s = %s", left, equalToRightObj, equalToRightObj, right))
 			}
 		}
 	}

@@ -65,19 +65,19 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast
 	}
 
 	if stmt.TypeEnum == ast.TruePure && ver.Env.IsTransitiveProp(string(stmt.PropName)) {
-		relatedFcSlice := ver.Env.GetRelatedFcSliceOfTransitiveProp(string(stmt.PropName), stmt.Params[0])
-		if len(relatedFcSlice) == 0 {
+		relatedObjSlice := ver.Env.GetRelatedObjSliceOfTransitiveProp(string(stmt.PropName), stmt.Params[0])
+		if len(relatedObjSlice) == 0 {
 			return BoolErrToExecRet(false, nil)
 		}
 
-		for _, relatedFc := range relatedFcSlice {
-			relatedFcStmt := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.PropName), []ast.Obj{relatedFc, stmt.Params[1]}, stmt.Line)
-			verRet := ver.verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(relatedFcStmt, state)
+		for _, relatedObj := range relatedObjSlice {
+			relatedObjStmt := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.PropName), []ast.Obj{relatedObj, stmt.Params[1]}, stmt.Line)
+			verRet := ver.verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(relatedObjStmt, state)
 			if verRet.IsErr() {
 				return verRet
 			}
 			if verRet.IsTrue() {
-				msg := fmt.Sprintf("%s is true by %s is a transitive prop and %s is true", stmt.String(), string(stmt.PropName), relatedFcStmt.String())
+				msg := fmt.Sprintf("%s is true by %s is a transitive prop and %s is true", stmt.String(), string(stmt.PropName), relatedObjStmt.String())
 				return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
 			}
 		}
@@ -88,7 +88,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast
 
 func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	// replace the params with the values
-	replaced, newStmt := ver.Env.ReplaceFcInSpecFactWithValue(stmt)
+	replaced, newStmt := ver.Env.ReplaceObjInSpecFactWithValue(stmt)
 	if replaced {
 		verRet := ver.verSpecFactThatIsNotTrueEqualFactMainLogic(newStmt, state)
 		if verRet.IsErr() {
@@ -244,7 +244,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 		return BoolErrToExecRet(false, err)
 	}
 	for i := range instParamSets {
-		verRet := ver.VerFactStmt(ast.NewInFactWithFc(existParams[i], instParamSets[i]), state)
+		verRet := ver.VerFactStmt(ast.NewInFactWithObj(existParams[i], instParamSets[i]), state)
 		if verRet.IsErr() {
 			return verRet
 		}
@@ -496,9 +496,9 @@ func (ver *Verifier) verEqualTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *
 		}
 		// 如果方法1失败，尝试从相等事实中获取
 		if !ok {
-			if equalFcs, gotEqualFcs := ver.Env.GetEqualFcs(dim); gotEqualFcs && equalFcs != nil {
-				for _, equalFc := range *equalFcs {
-					if dimValue, ok = ast.ToInt(equalFc); ok {
+			if equalObjs, gotEqualObjs := ver.Env.GetEqualObjs(dim); gotEqualObjs && equalObjs != nil {
+				for _, equalObj := range *equalObjs {
+					if dimValue, ok = ast.ToInt(equalObj); ok {
 						break
 					}
 				}

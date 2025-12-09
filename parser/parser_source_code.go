@@ -34,9 +34,9 @@ func ParseSourceCode(code string) ([]ast.Stmt, error) {
 	}
 
 	ret := []ast.Stmt{}
-	parser := &Parser{}
+	p := NewTbParser()
 	for _, block := range blocks {
-		cur, err := parser.Stmt(&block)
+		cur, err := p.Stmt(&block)
 		if err != nil {
 			return nil, err
 		}

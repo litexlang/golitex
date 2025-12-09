@@ -38,7 +38,7 @@ type Parser struct{}
 //		  → numberStr() [解析数字]
 //		  → fnSet() [解析函数集合]
 //		  → bracedExpr_orTuple() [解析括号表达式]
-func (p *Parser) Obj(tb *tokenBlock) (ast.Obj, error) {
+func (tb *tokenBlock) Obj() (ast.Obj, error) {
 	if tb.header.is(glob.KeySymbolLeftCurly) {
 		return p.EnumSetObjOrIntensionalSetObj(tb)
 	}
@@ -53,7 +53,7 @@ func (p *Parser) Obj(tb *tokenBlock) (ast.Obj, error) {
 // objInfixExpr parses infix expressions using operator precedence.
 // Higher precedence operators are parsed first (e.g., * before +).
 // This ensures expressions like "a + b * c" are parsed as "a + (b * c)".
-func (p *Parser) objInfixExpr(tb *tokenBlock, currentPrec glob.BuiltinOptPrecedence) (ast.Obj, error) {
+func (tb *tokenBlock) objInfixExpr(currentPrec glob.BuiltinOptPrecedence) (ast.Obj, error) {
 	// Parse left operand (starting with unary operators or primary expressions)
 	left, err := p.unaryOptObj(tb)
 	if err != nil {
@@ -109,7 +109,7 @@ func (p *Parser) objInfixExpr(tb *tokenBlock, currentPrec glob.BuiltinOptPrecede
 
 // unaryOptObj parses unary operators (currently only "-").
 // If no unary operator is present, it parses a primary expression.
-func (p *Parser) unaryOptObj(tb *tokenBlock) (ast.Obj, error) {
+func (tb *tokenBlock) unaryOptObj() (ast.Obj, error) {
 	unaryOp, err := tb.header.currentToken()
 	if err != nil {
 		return nil, err
@@ -137,7 +137,7 @@ func (p *Parser) unaryOptObj(tb *tokenBlock) (ast.Obj, error) {
 
 // fnSetObjAndBracedExprAndAtomObjAndFnObj parses primary expressions: atoms, numbers, function sets, or parenthesized expressions.
 // Higher precedence means more "primitive" - parentheses and atoms are at the bottom of the precedence hierarchy.
-func (p *Parser) fnSetObjAndBracedExprAndAtomObjAndFnObj(tb *tokenBlock) (ast.Obj, error) {
+func (tb *tokenBlock) fnSetObjAndBracedExprAndAtomObjAndFnObj() (ast.Obj, error) {
 	if tb.header.is(glob.KeywordFn) {
 		return p.fnSet(tb)
 	}
@@ -177,7 +177,7 @@ func (p *Parser) fnSetObjAndBracedExprAndAtomObjAndFnObj(tb *tokenBlock) (ast.Ob
 
 // notNumberAtom parses an atom (identifier). Supports package name notation: pkgName.atomName
 // For example, "a.b" means atom "b" in package "a".
-func (p *Parser) notNumberAtom(tb *tokenBlock) (ast.Atom, error) {
+func (tb *tokenBlock) notNumberAtom() (ast.Atom, error) {
 	value, err := tb.header.next()
 	if err != nil {
 		return ast.Atom(""), err
@@ -197,7 +197,7 @@ func (p *Parser) notNumberAtom(tb *tokenBlock) (ast.Atom, error) {
 }
 
 // numberAtom parses a numeric literal (integer or decimal).
-func (p *Parser) numberAtom(tb *tokenBlock) (ast.Atom, error) {
+func (tb *tokenBlock) numberAtom() (ast.Atom, error) {
 	left, err := tb.header.next()
 	if err != nil {
 		return ast.Atom(""), err
@@ -246,7 +246,7 @@ func (p *Parser) numberAtom(tb *tokenBlock) (ast.Atom, error) {
 	return ast.Atom(left), nil
 }
 
-func (p *Parser) bracedObjSlice(tb *tokenBlock) ([]ast.Obj, error) {
+func (tb *tokenBlock) bracedObjSlice() ([]ast.Obj, error) {
 	params := []ast.Obj{}
 	tb.header.skip(glob.KeySymbolLeftBrace)
 
@@ -273,7 +273,7 @@ func (p *Parser) bracedObjSlice(tb *tokenBlock) ([]ast.Obj, error) {
 	return params, nil
 }
 
-func (p *Parser) bracketedObj(tb *tokenBlock) (ast.Obj, error) {
+func (tb *tokenBlock) bracketedObj() (ast.Obj, error) {
 	tb.header.skip(glob.KeySymbolLeftBracket)
 
 	obj, err := p.Obj(tb)
@@ -286,7 +286,7 @@ func (p *Parser) bracketedObj(tb *tokenBlock) (ast.Obj, error) {
 	return obj, nil
 }
 
-func (p *Parser) bracedObj(tb *tokenBlock) (ast.Obj, error) {
+func (tb *tokenBlock) bracedObj() (ast.Obj, error) {
 	if err := tb.header.skip(glob.KeySymbolLeftBrace); err != nil {
 		return nil, fmt.Errorf("expected '(': %s", err)
 	}
@@ -387,7 +387,7 @@ func (p *Parser) bracedObj(tb *tokenBlock) (ast.Obj, error) {
 // Each () pair is parsed as a separate argument list.
 // Each [] pair is parsed as an index operation (prefix opt) using IndexOpt.
 // The function continues until there are no more left braces or left brackets.
-func (p *Parser) fnObjWithRepeatedBraceAndBracket(tb *tokenBlock, head ast.Obj) (ast.Obj, error) {
+func (tb *tokenBlock) fnObjWithRepeatedBraceAndBracket(head ast.Obj) (ast.Obj, error) {
 	for !tb.header.ExceedEnd() {
 		if tb.header.is(glob.KeySymbolLeftBrace) {
 			// Parse function call arguments: ()
@@ -413,7 +413,7 @@ func (p *Parser) fnObjWithRepeatedBraceAndBracket(tb *tokenBlock, head ast.Obj) 
 	return head, nil
 }
 
-func (p *Parser) fnSet(tb *tokenBlock) (ast.Obj, error) {
+func (tb *tokenBlock) fnSet() (ast.Obj, error) {
 	tb.header.skip(glob.KeywordFn)
 	tb.header.skip(glob.KeySymbolLeftBrace)
 
@@ -456,8 +456,7 @@ func ParseSourceCodeGetObj(s string) (ast.Obj, error) {
 		return nil, err
 	}
 
-	parser := &Parser{}
-	obj, err := parser.Obj(&blocks[0])
+	obj, err := blocks[0].Obj()
 	if err != nil {
 		return nil, err
 	}
@@ -465,7 +464,7 @@ func ParseSourceCodeGetObj(s string) (ast.Obj, error) {
 	return obj, nil
 }
 
-func (p *Parser) backSlashExpr(tb *tokenBlock) (ast.Obj, error) {
+func (tb *tokenBlock) backSlashExpr() (ast.Obj, error) {
 	err := tb.header.skip(glob.KeySymbolBackSlash)
 	if err != nil {
 		return nil, err
@@ -479,7 +478,7 @@ func (p *Parser) backSlashExpr(tb *tokenBlock) (ast.Obj, error) {
 	return ast.Atom(obj), nil
 }
 
-func (p *Parser) EnumSetObjOrIntensionalSetObj(tb *tokenBlock) (ast.Obj, error) {
+func (tb *tokenBlock) EnumSetObjOrIntensionalSetObj() (ast.Obj, error) {
 	err := tb.header.skip(glob.KeySymbolLeftCurly)
 	if err != nil {
 		return nil, err
@@ -490,7 +489,7 @@ func (p *Parser) EnumSetObjOrIntensionalSetObj(tb *tokenBlock) (ast.Obj, error) 
 		if err != nil {
 			return nil, err
 		}
-		return makeEnumSetObj([]ast.Obj{}), nil
+		return ast.MakeEnumSetObj([]ast.Obj{}), nil
 	}
 
 	obj, err := p.Obj(tb)
@@ -505,13 +504,13 @@ func (p *Parser) EnumSetObjOrIntensionalSetObj(tb *tokenBlock) (ast.Obj, error) 
 	}
 }
 
-func (p *Parser) intensionalSetObj(tb *tokenBlock, paramAsObj ast.Obj) (ast.Obj, error) {
+func (tb *tokenBlock) intensionalSetObj(paramAsObj ast.Obj) (ast.Obj, error) {
 	param, ok := paramAsObj.(ast.Atom)
 	if !ok {
 		return nil, fmt.Errorf("expect parameter as atom")
 	}
 
-	parentSet, err := p.Obj(tb)
+	parentSet, err := tb.Obj()
 	if err != nil {
 		return nil, err
 	}
@@ -544,10 +543,10 @@ func (p *Parser) intensionalSetObj(tb *tokenBlock, paramAsObj ast.Obj) (ast.Obj,
 		return nil, err
 	}
 
-	return makeIntensionalSetObj(string(param), parentSet, facts), nil
+	return ast.MakeIntensionalSetObj(string(param), parentSet, facts), nil
 }
 
-func (p *Parser) enumSetObj(tb *tokenBlock, firstParam ast.Obj) (ast.Obj, error) {
+func (tb *tokenBlock) enumSetObj(firstParam ast.Obj) (ast.Obj, error) {
 	enumItems := []ast.Obj{firstParam}
 
 	// 跳过第一个逗号（如果存在）
@@ -571,17 +570,5 @@ func (p *Parser) enumSetObj(tb *tokenBlock, firstParam ast.Obj) (ast.Obj, error)
 		return nil, err
 	}
 
-	return makeEnumSetObj(enumItems), nil
-}
-
-func makeEnumSetObj(params []ast.Obj) ast.Obj {
-	return ast.NewFnObj(ast.Atom(glob.KeywordEnumSet), params)
-}
-
-func makeIntensionalSetObj(param string, parentSet ast.Obj, facts []ast.FactStmt) ast.Obj {
-	params := []ast.Obj{ast.Atom(param), parentSet}
-	for _, fact := range facts {
-		params = append(params, ast.Atom(fact.String()))
-	}
-	return ast.NewFnObj(ast.Atom(glob.KeywordIntensionalSet), params)
+	return ast.MakeEnumSetObj(enumItems), nil
 }
