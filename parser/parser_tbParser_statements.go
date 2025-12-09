@@ -23,7 +23,7 @@ import (
 	"slices"
 )
 
-func (p *tbParser) Stmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) Stmt(tb *tokenBlock) (ast.Stmt, error) {
 	cur, err := tb.header.currentToken()
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -140,7 +140,7 @@ func (p *tbParser) Stmt(tb *tokenBlock) (ast.Stmt, error) {
 	return ret, nil
 }
 
-func (p *tbParser) defPropStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) defPropStmt(tb *tokenBlock) (ast.Stmt, error) {
 	body, err := p.defPropStmtWithoutSelfReferCheck(tb)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -154,7 +154,7 @@ func (p *tbParser) defPropStmt(tb *tokenBlock) (ast.Stmt, error) {
 	return body, nil
 }
 
-func (p *tbParser) defPropStmtWithoutSelfReferCheck(tb *tokenBlock) (*ast.DefPropStmt, error) {
+func (p *TbParser) defPropStmtWithoutSelfReferCheck(tb *tokenBlock) (*ast.DefPropStmt, error) {
 	err := tb.header.skip(glob.KeywordProp)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -224,7 +224,7 @@ func (p *tbParser) defPropStmtWithoutSelfReferCheck(tb *tokenBlock) (*ast.DefPro
 	}
 }
 
-func (p *tbParser) defExistPropStmt(tb *tokenBlock, keyword string) (ast.Stmt, error) {
+func (p *TbParser) defExistPropStmt(tb *tokenBlock, keyword string) (ast.Stmt, error) {
 	body, err := p.defExistPropStmtBodyWithoutSelfReferCheck(tb, keyword)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -238,7 +238,7 @@ func (p *tbParser) defExistPropStmt(tb *tokenBlock, keyword string) (ast.Stmt, e
 	return body, nil
 }
 
-func (p *tbParser) defExistPropStmtBodyWithoutSelfReferCheck(tb *tokenBlock, head string) (*ast.DefExistPropStmt, error) {
+func (p *TbParser) defExistPropStmtBodyWithoutSelfReferCheck(tb *tokenBlock, head string) (*ast.DefExistPropStmt, error) {
 	var err error
 
 	err = tb.header.skip(head)
@@ -264,7 +264,7 @@ func (p *tbParser) defExistPropStmtBodyWithoutSelfReferCheck(tb *tokenBlock, hea
 	return ast.NewDefExistPropStmt(def, existParams, existParamSets, tb.line), nil
 }
 
-func (p *tbParser) defFnStmt(tb *tokenBlock, skipFn bool) (ast.Stmt, error) {
+func (p *TbParser) defFnStmt(tb *tokenBlock, skipFn bool) (ast.Stmt, error) {
 	if skipFn {
 		err := tb.header.skip(glob.KeywordFn)
 		if err != nil {
@@ -332,7 +332,7 @@ func (p *tbParser) defFnStmt(tb *tokenBlock, skipFn bool) (ast.Stmt, error) {
 	return ast.NewDefFnStmt(string(decl.Name), ast.NewFnTStruct(decl.Params, decl.ParamSets, retSet, domFacts, thenFacts, tb.line), tb.line), nil
 }
 
-func (p *tbParser) defObjStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) defObjStmt(tb *tokenBlock) (ast.Stmt, error) {
 	err := tb.header.skip("")
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -370,7 +370,7 @@ func (p *tbParser) defObjStmt(tb *tokenBlock) (ast.Stmt, error) {
 	}
 }
 
-func (p *tbParser) haveSetFnStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) haveSetFnStmt(tb *tokenBlock) (ast.Stmt, error) {
 	tb.header.skip(glob.KeywordHave)
 	tb.header.skip(glob.KeywordSet)
 	tb.header.skip(glob.KeywordFn)
@@ -394,7 +394,7 @@ func (p *tbParser) haveSetFnStmt(tb *tokenBlock) (ast.Stmt, error) {
 	return ast.NewHaveSetFnStmt(declHeader, param, parentSet, proofs, tb.line), nil
 }
 
-func (p *tbParser) haveSetStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) haveSetStmt(tb *tokenBlock) (ast.Stmt, error) {
 	err := tb.header.skip(glob.KeywordHave)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -459,7 +459,7 @@ func (p *tbParser) haveSetStmt(tb *tokenBlock) (ast.Stmt, error) {
 	}
 }
 
-func (p *tbParser) haveFnStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) haveFnStmt(tb *tokenBlock) (ast.Stmt, error) {
 	var err error
 
 	err = tb.header.skip(glob.KeywordHave)
@@ -570,7 +570,7 @@ func (p *tbParser) haveFnStmt(tb *tokenBlock) (ast.Stmt, error) {
 	}
 }
 
-func (p *tbParser) haveFnEqualStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) haveFnEqualStmt(tb *tokenBlock) (ast.Stmt, error) {
 	err := tb.header.skip(glob.KeywordHave)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -642,7 +642,7 @@ func (p *tbParser) haveFnEqualStmt(tb *tokenBlock) (ast.Stmt, error) {
 	}
 }
 
-func (p *tbParser) haveObjStStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) haveObjStStmt(tb *tokenBlock) (ast.Stmt, error) {
 	err := tb.header.skip(glob.KeywordHave)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -681,7 +681,7 @@ func (p *tbParser) haveObjStStmt(tb *tokenBlock) (ast.Stmt, error) {
 	return ast.NewHaveStmt(objNames, fact, tb.line), nil
 }
 
-func (p *tbParser) bodyBlockFacts(tb *tokenBlock, uniFactDepth uniFactEnum, parseBodyFactNum int) ([]ast.FactStmt, error) {
+func (p *TbParser) bodyBlockFacts(tb *tokenBlock, uniFactDepth uniFactEnum, parseBodyFactNum int) ([]ast.FactStmt, error) {
 	facts := []ast.FactStmt{}
 
 	if uniFactDepth.allowMoreDepth() {
@@ -711,7 +711,7 @@ func (p *tbParser) bodyBlockFacts(tb *tokenBlock, uniFactDepth uniFactEnum, pars
 	return facts, nil
 }
 
-func (p *tbParser) defExistPropStmtBody(tb *tokenBlock) (*ast.DefExistPropStmtBody, error) {
+func (p *TbParser) defExistPropStmtBody(tb *tokenBlock) (*ast.DefExistPropStmtBody, error) {
 	declHeader, err := p.defHeaderWithoutParsingColonAtEnd(tb)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -762,7 +762,7 @@ func (p *tbParser) defExistPropStmtBody(tb *tokenBlock) (*ast.DefExistPropStmtBo
 	}
 }
 
-func (p *tbParser) haveObjFromCartSetStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) haveObjFromCartSetStmt(tb *tokenBlock) (ast.Stmt, error) {
 	err := tb.header.skip(glob.KeywordHave)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -808,7 +808,7 @@ func (p *tbParser) haveObjFromCartSetStmt(tb *tokenBlock) (ast.Stmt, error) {
 	return ast.NewHaveObjFromCartSetStmt(objName, cartSet, equalTo, tb.line), nil
 }
 
-func (p *tbParser) haveObjEqualStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) haveObjEqualStmt(tb *tokenBlock) (ast.Stmt, error) {
 	err := tb.header.skip(glob.KeywordHave)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -840,7 +840,7 @@ func (p *tbParser) haveObjEqualStmt(tb *tokenBlock) (ast.Stmt, error) {
 	return ast.NewHaveObjEqualStmt(objectNames, objectEqualTos, setSlice, tb.line), nil
 }
 
-func (p *tbParser) haveObjInNonEmptySetStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) haveObjInNonEmptySetStmt(tb *tokenBlock) (ast.Stmt, error) {
 	err := tb.header.skip(glob.KeywordHave)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -858,7 +858,7 @@ func (p *tbParser) haveObjInNonEmptySetStmt(tb *tokenBlock) (ast.Stmt, error) {
 	return ast.NewHaveObjInNonEmptySetStmt(objNames, objSets, tb.line), nil
 }
 
-func (p *tbParser) claimStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) claimStmt(tb *tokenBlock) (ast.Stmt, error) {
 	err := tb.header.skip(glob.KeywordClaim)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -953,7 +953,7 @@ func (p *tbParser) claimStmt(tb *tokenBlock) (ast.Stmt, error) {
 	}
 }
 
-func (p *tbParser) proveStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) proveStmt(tb *tokenBlock) (ast.Stmt, error) {
 	err := tb.header.skip(glob.KeywordProve)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -999,7 +999,7 @@ func (p *tbParser) proveStmt(tb *tokenBlock) (ast.Stmt, error) {
 	}
 }
 
-func (p *tbParser) knowExistPropStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) knowExistPropStmt(tb *tokenBlock) (ast.Stmt, error) {
 	err := tb.header.skip(glob.KeywordKnow)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -1013,7 +1013,7 @@ func (p *tbParser) knowExistPropStmt(tb *tokenBlock) (ast.Stmt, error) {
 	return ast.NewKnowExistPropStmt(existProp, tb.line), nil
 }
 
-func (p *tbParser) knowPropStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) knowPropStmt(tb *tokenBlock) (ast.Stmt, error) {
 	err := tb.header.skip(glob.KeywordKnow)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -1032,7 +1032,7 @@ func (p *tbParser) knowPropStmt(tb *tokenBlock) (ast.Stmt, error) {
 	return ast.NewKnowPropStmt(namedUniFact.DefPropStmt, tb.line), nil
 }
 
-func (p *tbParser) knowFactStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) knowFactStmt(tb *tokenBlock) (ast.Stmt, error) {
 	tb.header.skip(glob.KeywordKnow)
 
 	if !tb.header.is(glob.KeySymbolColon) {
@@ -1063,7 +1063,7 @@ func (p *tbParser) knowFactStmt(tb *tokenBlock) (ast.Stmt, error) {
 	return ast.NewKnowStmt(facts.ToCanBeKnownStmtSlice(), tb.line), nil
 }
 
-func (p *tbParser) proveInEachCaseStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) proveInEachCaseStmt(tb *tokenBlock) (ast.Stmt, error) {
 	err := tb.header.skip(glob.KeywordProveInEachCase)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -1174,7 +1174,7 @@ func (p *tbParser) proveInEachCaseStmt(tb *tokenBlock) (ast.Stmt, error) {
 	}
 }
 
-func (p *tbParser) proveCaseByCaseStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) proveCaseByCaseStmt(tb *tokenBlock) (ast.Stmt, error) {
 	err := tb.header.skipKwAndColonCheckEOL(glob.KeywordProveCaseByCase)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -1262,7 +1262,7 @@ func (p *tbParser) proveCaseByCaseStmt(tb *tokenBlock) (ast.Stmt, error) {
 	return ast.NewProveCaseByCaseStmt(caseFacts, thenFacts, proofs, tb.line), nil
 }
 
-func (p *tbParser) proveByEnum(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) proveByEnum(tb *tokenBlock) (ast.Stmt, error) {
 	err := tb.header.skip(glob.KeywordProveByEnum)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -1297,7 +1297,7 @@ func (p *tbParser) proveByEnum(tb *tokenBlock) (ast.Stmt, error) {
 	return ast.NewProveByEnumStmt(uniFact, proofs, tb.line), nil
 }
 
-func (p *tbParser) namedUniFactStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) namedUniFactStmt(tb *tokenBlock) (ast.Stmt, error) {
 	var err error
 	err = tb.header.skip(glob.KeySymbolAt)
 	if err != nil {
@@ -1335,7 +1335,7 @@ func (p *tbParser) namedUniFactStmt(tb *tokenBlock) (ast.Stmt, error) {
 	}
 }
 
-func (p *tbParser) fnTemplateStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) fnTemplateStmt(tb *tokenBlock) (ast.Stmt, error) {
 	tb.header.skipNext()
 	defHeader, err := p.defHeaderWithoutParsingColonAtEnd(tb)
 	if err != nil {
@@ -1404,7 +1404,7 @@ func (p *tbParser) fnTemplateStmt(tb *tokenBlock) (ast.Stmt, error) {
 	}
 }
 
-func (p *tbParser) fnInFnTemplateStmt(tb *tokenBlock) ([]string, []ast.Obj, ast.Obj, []ast.FactStmt, []ast.FactStmt, error) {
+func (p *TbParser) fnInFnTemplateStmt(tb *tokenBlock) ([]string, []ast.Obj, ast.Obj, []ast.FactStmt, []ast.FactStmt, error) {
 	var err error
 
 	err = tb.header.skip(glob.KeywordFn)
@@ -1446,7 +1446,7 @@ func (p *tbParser) fnInFnTemplateStmt(tb *tokenBlock) ([]string, []ast.Obj, ast.
 	return fnParams, fnParamSets, fnRetSet, domFacts, thenFacts, nil
 }
 
-func (p *tbParser) clearStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) clearStmt(tb *tokenBlock) (ast.Stmt, error) {
 	err := tb.header.skip(glob.KeywordClear)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -1459,7 +1459,7 @@ func (p *tbParser) clearStmt(tb *tokenBlock) (ast.Stmt, error) {
 	return ast.NewClearStmt(tb.line), nil
 }
 
-func (p *tbParser) proveInRangeStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) proveInRangeStmt(tb *tokenBlock) (ast.Stmt, error) {
 	err := tb.header.skip(glob.KeywordProveInRange)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -1635,7 +1635,7 @@ func (p *tbParser) proveInRangeStmt(tb *tokenBlock) (ast.Stmt, error) {
 	return ast.NewProveInRangeStmt(param, start, end, domFacts, thenFacts, proofs, tb.line), nil
 }
 
-func (p *tbParser) proveIsTransitivePropStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) proveIsTransitivePropStmt(tb *tokenBlock) (ast.Stmt, error) {
 	err := tb.header.skip(glob.KeywordProveIsTransitiveProp)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -1696,7 +1696,7 @@ func (p *tbParser) proveIsTransitivePropStmt(tb *tokenBlock) (ast.Stmt, error) {
 	return ast.NewProveIsTransitivePropStmt(propAtom, params, proofs, tb.line), nil
 }
 
-func (p *tbParser) proveCommutativePropStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) proveCommutativePropStmt(tb *tokenBlock) (ast.Stmt, error) {
 	err := tb.header.skip(glob.KeywordProveIsCommutativeProp)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -1761,7 +1761,7 @@ func (p *tbParser) proveCommutativePropStmt(tb *tokenBlock) (ast.Stmt, error) {
 	return ast.NewProveIsCommutativePropStmt(specFact, proofs, proofsRightToLeft, tb.line), nil
 }
 
-func (p *tbParser) algoDefStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) algoDefStmt(tb *tokenBlock) (ast.Stmt, error) {
 	err := tb.header.skip(glob.KeywordAlgo)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -1808,7 +1808,7 @@ func (p *tbParser) algoDefStmt(tb *tokenBlock) (ast.Stmt, error) {
 	return ast.NewAlgoDefStmt(funcName, params, stmts, tb.line), nil
 }
 
-func (p *tbParser) evalStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) evalStmt(tb *tokenBlock) (ast.Stmt, error) {
 	err := tb.header.skip(glob.KeywordEval)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -1832,7 +1832,7 @@ func (p *tbParser) evalStmt(tb *tokenBlock) (ast.Stmt, error) {
 	return ast.NewEvalStmt(fcsToEval, tb.line), nil
 }
 
-func (p *tbParser) defProveAlgoStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) defProveAlgoStmt(tb *tokenBlock) (ast.Stmt, error) {
 	err := tb.header.skip(glob.KeywordProveAlgo)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -1881,7 +1881,7 @@ func (p *tbParser) defProveAlgoStmt(tb *tokenBlock) (ast.Stmt, error) {
 	return ast.NewDefProveAlgoStmt(funcName, params, stmts, tb.line), nil
 }
 
-func (p *tbParser) byStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) byStmt(tb *tokenBlock) (ast.Stmt, error) {
 	err := tb.header.skip(glob.KeywordBy)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -1918,7 +1918,7 @@ func (p *tbParser) byStmt(tb *tokenBlock) (ast.Stmt, error) {
 	return ast.NewByStmt(proveAlgoName, proveAlgoParams, tb.line), nil
 }
 
-func (p *tbParser) proveByContradictionStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) proveByContradictionStmt(tb *tokenBlock) (ast.Stmt, error) {
 	err := tb.header.skip(glob.KeywordProveByContradiction)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -1945,7 +1945,7 @@ func (p *tbParser) proveByContradictionStmt(tb *tokenBlock) (ast.Stmt, error) {
 	return ast.NewClaimProveByContradictionStmt(ast.NewClaimProveStmt(toCheck, proofs, tb.line), tb.line), nil
 }
 
-func (p *tbParser) printStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) printStmt(tb *tokenBlock) (ast.Stmt, error) {
 	err := tb.header.skip(glob.KeywordPrint)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -1975,7 +1975,7 @@ func (p *tbParser) printStmt(tb *tokenBlock) (ast.Stmt, error) {
 	return ast.NewPrintStmt(isFString, value, tb.line), nil
 }
 
-func (p *tbParser) helpStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) helpStmt(tb *tokenBlock) (ast.Stmt, error) {
 	err := tb.header.skip(glob.KeywordHelp)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -1999,7 +1999,7 @@ func (p *tbParser) helpStmt(tb *tokenBlock) (ast.Stmt, error) {
 	return ast.NewHelpStmt(keyword, tb.line), nil
 }
 
-func (p *tbParser) doNothingStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) doNothingStmt(tb *tokenBlock) (ast.Stmt, error) {
 	err := tb.header.skip(glob.KeywordDoNothing)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -2012,7 +2012,7 @@ func (p *tbParser) doNothingStmt(tb *tokenBlock) (ast.Stmt, error) {
 	return ast.NewDoNothingStmt(tb.line), nil
 }
 
-func (p *tbParser) importDirStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) importDirStmt(tb *tokenBlock) (ast.Stmt, error) {
 	err := tb.header.skip(glob.KeywordImport)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -2055,7 +2055,7 @@ func (p *tbParser) importDirStmt(tb *tokenBlock) (ast.Stmt, error) {
 	return ast.NewImportStmt(path, asPkgName, tb.line), nil
 }
 
-func (p *tbParser) haveCartWithDimStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) haveCartWithDimStmt(tb *tokenBlock) (ast.Stmt, error) {
 	err := tb.header.skip(glob.KeywordHaveCartWithDim)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -2151,7 +2151,7 @@ func (p *tbParser) haveCartWithDimStmt(tb *tokenBlock) (ast.Stmt, error) {
 	return ast.NewHaveCartWithDimStmt(name, cartDim, param, facts, proofs, equalTo, tb.line), nil
 }
 
-func (p *tbParser) factsStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) factsStmt(tb *tokenBlock) (ast.Stmt, error) {
 	if tb.GetEnd() != glob.KeySymbolColon { // 因为可能是 forall : 这样的
 		facts, err := p.inlineFacts_checkUniDepth0(tb, []string{})
 		if err != nil {
@@ -2168,7 +2168,7 @@ func (p *tbParser) factsStmt(tb *tokenBlock) (ast.Stmt, error) {
 	}
 }
 
-func (p *tbParser) proveByInductionStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) proveByInductionStmt(tb *tokenBlock) (ast.Stmt, error) {
 	err := tb.header.skip(glob.KeywordProveByInduction)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -2224,7 +2224,7 @@ func (p *tbParser) proveByInductionStmt(tb *tokenBlock) (ast.Stmt, error) {
 // Fact statement parsing methods (first 10 methods from parser_statements.go)
 // ============================================================================
 
-func (p *tbParser) factStmt(tb *tokenBlock, uniFactDepth uniFactEnum) (ast.FactStmt, error) {
+func (p *TbParser) factStmt(tb *tokenBlock, uniFactDepth uniFactEnum) (ast.FactStmt, error) {
 	if !tb.EndWith(glob.KeySymbolColon) {
 		return p.inlineFactThenSkipStmtTerminatorUntilEndSignals(tb, []string{})
 	}
@@ -2258,7 +2258,7 @@ func (p *tbParser) factStmt(tb *tokenBlock, uniFactDepth uniFactEnum) (ast.FactS
 	}
 }
 
-func (p *tbParser) orStmt(tb *tokenBlock) (*ast.OrStmt, error) {
+func (p *TbParser) orStmt(tb *tokenBlock) (*ast.OrStmt, error) {
 	if tb.GetEnd() != glob.KeySymbolColon {
 		return p.inlineOrFact(tb)
 	}
@@ -2285,7 +2285,7 @@ func (p *tbParser) orStmt(tb *tokenBlock) (*ast.OrStmt, error) {
 	return ast.NewOrStmt(orFacts, tb.line), nil
 }
 
-func (p *tbParser) SpecFactOrOrStmt(tb *tokenBlock) (ast.FactStmt, error) {
+func (p *TbParser) SpecFactOrOrStmt(tb *tokenBlock) (ast.FactStmt, error) {
 	if tb.header.is(glob.KeywordOr) {
 		return p.orStmt(tb)
 	} else if tb.header.is(glob.KeySymbolEqual) {
@@ -2295,7 +2295,7 @@ func (p *tbParser) SpecFactOrOrStmt(tb *tokenBlock) (ast.FactStmt, error) {
 	}
 }
 
-func (p *tbParser) specFactStmt_ExceedEnd(tb *tokenBlock) (*ast.SpecFactStmt, error) {
+func (p *TbParser) specFactStmt_ExceedEnd(tb *tokenBlock) (*ast.SpecFactStmt, error) {
 	ret, err := p.specFactStmt(tb)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -2308,7 +2308,7 @@ func (p *tbParser) specFactStmt_ExceedEnd(tb *tokenBlock) (*ast.SpecFactStmt, er
 	return ret, nil
 }
 
-func (p *tbParser) specFactStmt(tb *tokenBlock) (*ast.SpecFactStmt, error) {
+func (p *TbParser) specFactStmt(tb *tokenBlock) (*ast.SpecFactStmt, error) {
 	stmt, err := p.specFactStmt_OrOneLineEqualsFact(tb)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -2322,7 +2322,7 @@ func (p *tbParser) specFactStmt(tb *tokenBlock) (*ast.SpecFactStmt, error) {
 	}
 }
 
-func (p *tbParser) specFactStmt_OrOneLineEqualsFact(tb *tokenBlock) (ast.FactStmt, error) {
+func (p *TbParser) specFactStmt_OrOneLineEqualsFact(tb *tokenBlock) (ast.FactStmt, error) {
 	isTrue := true
 	if tb.header.is(glob.KeywordNot) {
 		tb.header.skip("")
@@ -2346,7 +2346,7 @@ func (p *tbParser) specFactStmt_OrOneLineEqualsFact(tb *tokenBlock) (ast.FactStm
 	}
 }
 
-func (p *tbParser) specFactWithoutExist_WithoutNot(tb *tokenBlock) (*ast.SpecFactStmt, error) {
+func (p *TbParser) specFactWithoutExist_WithoutNot(tb *tokenBlock) (*ast.SpecFactStmt, error) {
 	stmt, err := p.specFactWithoutExist_WithoutNot_Or_EqualsFact(tb)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -2360,7 +2360,7 @@ func (p *tbParser) specFactWithoutExist_WithoutNot(tb *tokenBlock) (*ast.SpecFac
 	}
 }
 
-func (p *tbParser) specFactWithoutExist_WithoutNot_Or_EqualsFact(tb *tokenBlock) (ast.FactStmt, error) {
+func (p *TbParser) specFactWithoutExist_WithoutNot_Or_EqualsFact(tb *tokenBlock) (ast.FactStmt, error) {
 	if tb.header.is(glob.FuncFactPrefix) {
 		ret, err := p.pureFuncSpecFact(tb)
 		if err != nil {
@@ -2376,7 +2376,7 @@ func (p *tbParser) specFactWithoutExist_WithoutNot_Or_EqualsFact(tb *tokenBlock)
 	}
 }
 
-func (p *tbParser) uniFactInterface(tb *tokenBlock, uniFactDepth uniFactEnum) (ast.UniFactInterface, error) {
+func (p *TbParser) uniFactInterface(tb *tokenBlock, uniFactDepth uniFactEnum) (ast.UniFactInterface, error) {
 	err := tb.header.skip(glob.KeywordForall)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -2411,7 +2411,7 @@ func (p *tbParser) uniFactInterface(tb *tokenBlock, uniFactDepth uniFactEnum) (a
 	}
 }
 
-func (p *tbParser) bodyFacts(tb *tokenBlock, uniFactDepth uniFactEnum) ([]ast.FactStmt, error) {
+func (p *TbParser) bodyFacts(tb *tokenBlock, uniFactDepth uniFactEnum) ([]ast.FactStmt, error) {
 	facts := []ast.FactStmt{}
 	for _, f := range tb.body {
 		fact, err := p.factStmt(&f, uniFactDepth)
@@ -2425,7 +2425,7 @@ func (p *tbParser) bodyFacts(tb *tokenBlock, uniFactDepth uniFactEnum) ([]ast.Fa
 }
 
 // Placeholder methods - to be implemented later
-func (p *tbParser) equalsFactStmt(tb *tokenBlock) (*ast.EqualsFactStmt, error) {
+func (p *TbParser) equalsFactStmt(tb *tokenBlock) (*ast.EqualsFactStmt, error) {
 	tb.header.skip(glob.KeySymbolEqual)
 
 	if tb.header.is(glob.KeySymbolColon) {
@@ -2499,7 +2499,7 @@ func (p *tbParser) equalsFactStmt(tb *tokenBlock) (*ast.EqualsFactStmt, error) {
 	}
 }
 
-func (p *tbParser) fact(tb *tokenBlock) (ast.FactStmt, error) {
+func (p *TbParser) fact(tb *tokenBlock) (ast.FactStmt, error) {
 	if tb.header.is(glob.KeywordNot) {
 		return p.specFactStmt(tb)
 	}
@@ -2523,7 +2523,7 @@ func (p *tbParser) fact(tb *tokenBlock) (ast.FactStmt, error) {
 	}
 }
 
-func (p *tbParser) existFactStmt(tb *tokenBlock, isTrue bool) (*ast.SpecFactStmt, error) {
+func (p *TbParser) existFactStmt(tb *tokenBlock, isTrue bool) (*ast.SpecFactStmt, error) {
 	err := tb.header.skip(glob.KeywordExist)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -2562,7 +2562,7 @@ func (p *tbParser) existFactStmt(tb *tokenBlock, isTrue bool) (*ast.SpecFactStmt
 	}
 }
 
-func (p *tbParser) pureFuncSpecFact(tb *tokenBlock) (*ast.SpecFactStmt, error) {
+func (p *TbParser) pureFuncSpecFact(tb *tokenBlock) (*ast.SpecFactStmt, error) {
 	if tb.header.is(glob.FuncFactPrefix) {
 		tb.header.skip(glob.FuncFactPrefix)
 	}
@@ -2610,7 +2610,7 @@ func (p *tbParser) pureFuncSpecFact(tb *tokenBlock) (*ast.SpecFactStmt, error) {
 	return ret, nil
 }
 
-func (p *tbParser) relaFactStmt_orRelaEquals(tb *tokenBlock) (ast.FactStmt, error) {
+func (p *TbParser) relaFactStmt_orRelaEquals(tb *tokenBlock) (ast.FactStmt, error) {
 	var ret *ast.SpecFactStmt
 
 	obj, err := p.Obj(tb)
@@ -2673,7 +2673,7 @@ func (p *tbParser) relaFactStmt_orRelaEquals(tb *tokenBlock) (ast.FactStmt, erro
 	return ret, nil
 }
 
-func (p *tbParser) param_paramSet_paramInSetFacts(tb *tokenBlock, endWith string, allowExceedEnd bool) ([]string, []ast.Obj, error) {
+func (p *TbParser) param_paramSet_paramInSetFacts(tb *tokenBlock, endWith string, allowExceedEnd bool) ([]string, []ast.Obj, error) {
 	params := []string{}
 	setParams := []ast.Obj{}
 	paramWithoutSetCount := 0
@@ -2755,7 +2755,7 @@ func (p *tbParser) param_paramSet_paramInSetFacts(tb *tokenBlock, endWith string
 	return params, setParams, nil
 }
 
-func (p *tbParser) defHeaderWithoutParsingColonAtEnd(tb *tokenBlock) (*ast.DefHeader, error) {
+func (p *TbParser) defHeaderWithoutParsingColonAtEnd(tb *tokenBlock) (*ast.DefHeader, error) {
 	name, err := tb.header.next()
 	if err != nil {
 		return nil, err
@@ -2775,7 +2775,7 @@ func (p *tbParser) defHeaderWithoutParsingColonAtEnd(tb *tokenBlock) (*ast.DefHe
 	return ast.NewDefHeader(ast.Atom(name), params, setParams), nil
 }
 
-func (p *tbParser) uniFactBodyFacts(tb *tokenBlock, uniFactDepth uniFactEnum, defaultSectionName string) ([]ast.FactStmt, []ast.FactStmt, []ast.FactStmt, error) {
+func (p *TbParser) uniFactBodyFacts(tb *tokenBlock, uniFactDepth uniFactEnum, defaultSectionName string) ([]ast.FactStmt, []ast.FactStmt, []ast.FactStmt, error) {
 	domFacts := []ast.FactStmt{}
 	thenFacts := []ast.FactStmt{}
 	iffFacts := []ast.FactStmt{}
@@ -2936,7 +2936,7 @@ func (p *tbParser) uniFactBodyFacts(tb *tokenBlock, uniFactDepth uniFactEnum, de
 	return domFacts, thenFacts, iffFacts, nil
 }
 
-func (p *tbParser) parseFactBodyWithHeaderNameAndUniFactDepth(tb *tokenBlock, headerName string, uniFactDepth uniFactEnum) ([]ast.FactStmt, error) {
+func (p *TbParser) parseFactBodyWithHeaderNameAndUniFactDepth(tb *tokenBlock, headerName string, uniFactDepth uniFactEnum) ([]ast.FactStmt, error) {
 	err := tb.header.skipKwAndColonCheckEOL(headerName)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -2953,7 +2953,7 @@ func (p *tbParser) parseFactBodyWithHeaderNameAndUniFactDepth(tb *tokenBlock, he
 	return facts, nil
 }
 
-func (p *tbParser) getStringInDoubleQuotes(tb *tokenBlock) (string, error) {
+func (p *TbParser) getStringInDoubleQuotes(tb *tokenBlock) (string, error) {
 	if !tb.header.is(glob.KeySymbolDoubleQuote) {
 		return "", fmt.Errorf("expected double quote but got '%s'", tb.header.strAtCurIndexPlus(0))
 	}
@@ -2976,7 +2976,7 @@ func (p *tbParser) getStringInDoubleQuotes(tb *tokenBlock) (string, error) {
 }
 
 // Placeholder methods for functions that will be implemented later
-func (p *tbParser) dom_and_section(tb *tokenBlock, kw string, kw_should_not_exist_in_body string) ([]ast.FactStmt, []ast.FactStmt, error) {
+func (p *TbParser) dom_and_section(tb *tokenBlock, kw string, kw_should_not_exist_in_body string) ([]ast.FactStmt, []ast.FactStmt, error) {
 	if len(tb.body) == 0 {
 		return nil, nil, fmt.Errorf("expect dom or section")
 	}
@@ -3032,7 +3032,7 @@ func (p *tbParser) dom_and_section(tb *tokenBlock, kw string, kw_should_not_exis
 	}
 }
 
-func (p *tbParser) claimNamedUniFactInline(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) claimNamedUniFactInline(tb *tokenBlock) (ast.Stmt, error) {
 	var namedUniFact *ast.NamedUniFactStmt
 
 	if tb.header.is(glob.KeySymbolAt) {
@@ -3074,7 +3074,7 @@ func (p *tbParser) claimNamedUniFactInline(tb *tokenBlock) (ast.Stmt, error) {
 	return ast.NewClaimPropStmt(namedUniFact.DefPropStmt, proof, tb.line), nil
 }
 
-func (p *tbParser) claimExistPropStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) claimExistPropStmt(tb *tokenBlock) (ast.Stmt, error) {
 	if len(tb.body) != 3 {
 		return nil, fmt.Errorf("expect 3 body blocks")
 	}
@@ -3114,7 +3114,7 @@ func (p *tbParser) claimExistPropStmt(tb *tokenBlock) (ast.Stmt, error) {
 	return ast.NewClaimExistPropStmt(existProp, proofs, haveObj, tb.line), nil
 }
 
-func (p *tbParser) claimPropStmt(tb *tokenBlock) (ast.Stmt, error) {
+func (p *TbParser) claimPropStmt(tb *tokenBlock) (ast.Stmt, error) {
 	namedUniFactStmt, err := p.namedUniFactStmt(&tb.body[0])
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -3154,7 +3154,7 @@ func (p *tbParser) claimPropStmt(tb *tokenBlock) (ast.Stmt, error) {
 	return ast.NewClaimPropStmt(ast.NewDefPropStmt(namedUniFact.DefPropStmt.DefHeader, namedUniFact.DefPropStmt.DomFacts, namedUniFact.DefPropStmt.IffFacts, namedUniFact.DefPropStmt.ThenFacts, tb.line), proofs, tb.line), nil
 }
 
-func (p *tbParser) relaEqualsFactStmt(tb *tokenBlock, obj, fc2 ast.Obj) (*ast.EqualsFactStmt, error) {
+func (p *TbParser) relaEqualsFactStmt(tb *tokenBlock, obj, fc2 ast.Obj) (*ast.EqualsFactStmt, error) {
 	params := []ast.Obj{obj, fc2}
 	for tb.header.is(glob.KeySymbolEqual) {
 		tb.header.skip(glob.KeySymbolEqual)
@@ -3168,7 +3168,7 @@ func (p *tbParser) relaEqualsFactStmt(tb *tokenBlock, obj, fc2 ast.Obj) (*ast.Eq
 	return ast.NewEqualsFactStmt(params, tb.line), nil
 }
 
-func (p *tbParser) relaFact_intensionalSetFact_enumStmt_equals(tb *tokenBlock) (ast.FactStmt, error) {
+func (p *TbParser) relaFact_intensionalSetFact_enumStmt_equals(tb *tokenBlock) (ast.FactStmt, error) {
 	var ret *ast.SpecFactStmt
 
 	obj, err := p.Obj(tb)
@@ -3241,7 +3241,7 @@ func (p *tbParser) relaFact_intensionalSetFact_enumStmt_equals(tb *tokenBlock) (
 	return ret, nil
 }
 
-func (p *tbParser) intentionalSetBody(tb *tokenBlock) (string, ast.Obj, []*ast.SpecFactStmt, error) {
+func (p *TbParser) intentionalSetBody(tb *tokenBlock) (string, ast.Obj, []*ast.SpecFactStmt, error) {
 	err := tb.header.skip(glob.KeySymbolLeftCurly)
 	if err != nil {
 		return "", nil, nil, parserErrAtTb(err, tb)
@@ -3280,7 +3280,7 @@ func (p *tbParser) intentionalSetBody(tb *tokenBlock) (string, ast.Obj, []*ast.S
 	return param, parentSet, proofs, nil
 }
 
-func (p *tbParser) bodyOfKnowProp(tb *tokenBlock) ([]ast.FactStmt, []ast.FactStmt, error) {
+func (p *TbParser) bodyOfKnowProp(tb *tokenBlock) ([]ast.FactStmt, []ast.FactStmt, error) {
 	var err error
 	iffFacts := []ast.FactStmt{}
 	thenFacts := []ast.FactStmt{}
@@ -3323,7 +3323,7 @@ func (p *tbParser) bodyOfKnowProp(tb *tokenBlock) ([]ast.FactStmt, []ast.FactStm
 	}
 }
 
-func (p *tbParser) atExistPropDefStmt(tb *tokenBlock) (*ast.DefExistPropStmt, error) {
+func (p *TbParser) atExistPropDefStmt(tb *tokenBlock) (*ast.DefExistPropStmt, error) {
 	err := tb.header.skip(glob.KeySymbolAt)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -3387,7 +3387,7 @@ func (p *tbParser) atExistPropDefStmt(tb *tokenBlock) (*ast.DefExistPropStmt, er
 	return ast.NewDefExistPropStmt(defBody, existParams, existParamSets, tb.line), nil
 }
 
-func (p *tbParser) parseDomThenProve(body []tokenBlock) ([]ast.FactStmt, []ast.FactStmt, []ast.Stmt, error) {
+func (p *TbParser) parseDomThenProve(body []tokenBlock) ([]ast.FactStmt, []ast.FactStmt, []ast.Stmt, error) {
 	domFacts := []ast.FactStmt{}
 	thenFacts := []ast.FactStmt{}
 	proofs := []ast.Stmt{}

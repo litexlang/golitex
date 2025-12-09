@@ -14,5 +14,9 @@
 
 package litex_parser
 
-type tbParser struct {
+type TbParser struct {
+}
+
+func NewTbParser() *TbParser {
+	return &TbParser{}
 }

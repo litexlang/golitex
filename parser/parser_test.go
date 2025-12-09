@@ -29,7 +29,7 @@ func sourceCodeToObj(sourceCode ...string) ([]ast.Obj, error) {
 	}
 
 	ret := []ast.Obj{}
-	p := &tbParser{}
+	p := NewTbParser()
 	for _, block := range blocks {
 		cur, err := p.Obj(&block)
 		if err != nil {
