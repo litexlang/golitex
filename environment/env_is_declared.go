@@ -18,7 +18,6 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
-	parser "golitex/parser"
 	"strings"
 )
 
@@ -88,7 +87,7 @@ func (e *Env) AreAtomsInObjDefined(obj ast.Obj, extraAtomNames map[string]struct
 func (e *Env) AreAtomsInIntensionalSetAreDeclared(intensionalSet *ast.FnObj, extraAtomNames map[string]struct{}) glob.GlobRet {
 	// Check atoms in facts (excluding the param)
 	// Facts are stored as strings in Params[2:], so we need to parse them first
-	paramAsString, parentSet, facts, err := parser.GetParamParentSetFactsFromIntensionalSet(intensionalSet)
+	paramAsString, parentSet, facts, err := ast.GetParamParentSetFactsFromIntensionalSetObj(intensionalSet)
 	if err != nil {
 		return glob.ErrRet(fmt.Errorf("failed to parse facts from intensional set: %s", err))
 	}

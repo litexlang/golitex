@@ -19,7 +19,6 @@ import (
 	ast "golitex/ast"
 	cmp "golitex/cmp"
 	glob "golitex/glob"
-	parser "golitex/parser"
 )
 
 func (env *Env) NewFact(stmt ast.FactStmt) glob.GlobRet {
@@ -750,7 +749,7 @@ func (env *Env) equalFactPostProcess_intensionalSetEquality(left, right ast.Obj)
 	}
 
 	// 从 intensional set 中提取 param, parentSet, facts
-	paramAsString, parentSet, facts, err := parser.GetParamParentSetFactsFromIntensionalSet(intensionalSet)
+	paramAsString, parentSet, facts, err := ast.GetParamParentSetFactsFromIntensionalSetObj(intensionalSet)
 	if err != nil {
 		return glob.ErrRet(fmt.Errorf("failed to extract intensional set information: %s", err))
 	}
