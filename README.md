@@ -1,5 +1,5 @@
 <div align="center">
-<img src="https://publisher.litexlang.org/logo.png" alt="The Litex Logo" width="300">
+<img src="https://publisher.litexlang.org/logo.PNG" alt="The Litex Logo" width="300">
 </div>
 
 <div align="center">
@@ -94,11 +94,13 @@ Since each Litex sentence corresponds directly to an expression in everyday math
 
 ## Litex For AI, For Math, For Everyone
 
-_Necessity is the mother of invention._
+_It’s best to do one thing really, really well._
 
-_- Thomas Edison_
+_- Google, ten things we know to be true_
 
 ---
+
+Litex is a focused and deeply crafted language. We have invested significant effort in refining and enhancing it. Like other focused and profound products, users naturally find ways to integrate Litex into their own work—this is both inspiring and exciting. Here are some examples of how Litex is used:
 
 Litex For AI
 
@@ -199,7 +201,7 @@ _Sometimes it is the very people who no one imagines anything of who do the thin
 _– Alan Turing_
 
 <div align="center">
-  <img src="https://publisher.litexlang.org/Little_Little_O.png" alt="The Litex Logo" width="200">
+  <img src="https://publisher.litexlang.org/Little_Little_O.PNG" alt="The Litex Logo" width="200">
   <p><em>Litex Mascot: Little Little O, a curious baby bird full of wonder</em></p>
 </div>
 

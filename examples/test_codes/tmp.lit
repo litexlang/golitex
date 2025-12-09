@@ -1,58 +1,45 @@
-have s set = {x R: x > 0}
-forall x R: x > 0 => x $in s
-s $subset_of R
+All Files Take 5.688627417s
+- absolute.lit 535.625µs
+- builtin_verification_rules.lit 90.36325ms
+- claim_forall_prove_by_contradiction.lit 323.6265ms
+- claim_prop.lit 558.625µs
+- claim_prop_prove_by_contradiction.lit 1.125µs
+- clear.lit 76.25µs
+- fn_commutative_associative.lit 43.898125ms
+- fn_obj_fn.lit 8.818958ms
+- fn_template.lit 4.75µs
+- inline_facts.lit 343.667µs
+- intensional_set.lit 166.875µs
+- lift.lit 4.833µs
+- or_enum.lit 292.108958ms
+- return_value_set_inference.lit 2.062ms
+- seq.lit 666ns
+- set.lit 734.241583ms
+- set_product.lit 1.542µs
+- sum_of_arithmetic_progression.lit 3.792µs
+- uniFactWithIff.lit 268.209µs
+All Files Take 1.500658875s
+All Files Take 7.201521208s
 
-have s2 set = {x cart(R, R): x[1] > 0}
-forall x cart(R, R): x[1] > 0 => x $in s2
-
-have s3 set = {x cart(R, R): x[1] + x[2] = 0}
-forall x cart(R, R): x[1] + x[2] = 0 => x $in s3
-
-# = {} 的释放不是自动的，只能取个名字。本质原因是因为 = {} 是一个fact，{} 不是一个obj
-prop line_as_intensional_set(s set, a, b, c R):
-    s = {x cart(R, R): a * x[1] + b * x[2] = c}
-
-have fn:
-    line(a, b, c R) subsets(cart(R, R)):
-        line(a, b, c) = {x cart(R, R): a * x[1] + b * x[2] = c}
-        $line_as_intensional_set(line(a, b, c), a, b, c)
-        line(a, b, c) $in set
-
-    prove:
-        have l set = {x cart(R, R): a * x[1] + b * x[2] = c}
-        forall x l: x $in cart(R, R)
-        l $subset_of cart(R, R)
-    = l
-
-# release line(1, 1, 1) = {x cart(R, R): 1 * x[1] + 1 * x[2] = 1}
-$line_as_intensional_set(line(1, 1, 1), 1, 1, 1)
-$equal_set(line(1, 1, 1), {x cart(R, R): 1 * x[1] + 1 * x[2] = 1})
-line(1, 1, 1) = {x cart(R, R): 1 * x[1] + 1 * x[2] = 1}
-forall a {x cart(R, R): 1 * x[1] + 1 * x[2] = 1}:
-    a $in cart(R, R)
-    1 * a[1] + 1 * a[2] = 1
-
-forall x line(1, 1, 1):
-    x $in cart(R, R)
-    1 * x[1] + 1 * x[2] = 1
-
-prove forall a, b, c R: a != 0 => line(a, b, c) = line(1, b/a, c/a):
-    $line_as_intensional_set(line(a, b, c), a, b, c)
-    $line_as_intensional_set(line(1, b/a, c/a), 1, b/a, c/a)
-
-    forall x line(a, b, c):
-        x $in cart(R, R)
-        a * x[1] + b * x[2] = c
-        (a * x[1] + b * x[2]) / a = c / a = x[1] + (b / a) * x[2]
-        x $in line(1, b/a, c/a)
-
-    forall x line(1, b/a, c/a):
-        x $in cart(R, R)
-        1 * x[1] + (b / a) * x[2] = c / a
-        a * (1 * x[1] + (b / a) * x[2]) = a * x[1] + b * x[2] = a * (c / a) = c
-        x $in line(a, b, c)
-
-    line(a, b, c) $subset_of line(1, b/a, c/a)
-    line(1, b/a, c/a) $subset_of line(a, b, c)
-
-    line(a, b, c) = line(1, b/a, c/a)
+All Files Take 7.458090291s
+- absolute.lit 658.958µs
+- builtin_verification_rules.lit 117.046875ms
+- claim_forall_prove_by_contradiction.lit 446.753958ms
+- claim_prop.lit 1.039708ms
+- claim_prop_prove_by_contradiction.lit 3.166µs
+- clear.lit 198.833µs
+- fn_commutative_associative.lit 92.177375ms
+- fn_obj_fn.lit 13.541083ms
+- fn_template.lit 8.5µs
+- inline_facts.lit 784.167µs
+- intensional_set.lit 86.959µs
+- lift.lit 2.875µs
+- or_enum.lit 386.501542ms
+- return_value_set_inference.lit 3.137375ms
+- seq.lit 917ns
+- set.lit 953.914333ms
+- set_product.lit 2.208µs
+- sum_of_arithmetic_progression.lit 3.75µs
+- uniFactWithIff.lit 274.083µs
+All Files Take 2.0219765s
+All Files Take 9.498024459s

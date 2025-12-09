@@ -509,7 +509,7 @@ func (p *tbParser) intensionalSetObj(tb *tokenBlock, paramAsObj ast.Obj) (ast.Ob
 
 	facts := []ast.FactStmt{}
 	for !tb.header.is(glob.KeySymbolRightCurly) {
-		curFact, err := tb.inlineFactThenSkipStmtTerminatorUntilEndSignals([]string{glob.KeySymbolRightCurly})
+		curFact, err := p.inlineFactThenSkipStmtTerminatorUntilEndSignals(tb, []string{glob.KeySymbolRightCurly})
 		if err != nil {
 			return nil, err
 		}
