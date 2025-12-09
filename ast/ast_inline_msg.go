@@ -208,11 +208,11 @@ func (s *EqualsFactStmt) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeySymbolEqual)
 	builder.WriteString(glob.KeySymbolLeftBrace)
-	fcSlice := make([]string, len(s.Params))
+	objSlice := make([]string, len(s.Params))
 	for i, param := range s.Params {
-		fcSlice[i] = param.String()
+		objSlice[i] = param.String()
 	}
-	builder.WriteString(strings.Join(fcSlice, ", "))
+	builder.WriteString(strings.Join(objSlice, ", "))
 	builder.WriteString(glob.KeySymbolRightBrace)
 	return builder.String()
 }
@@ -368,7 +368,7 @@ func (s *DefAlgoStmt) InlineString() string {
 }
 
 func (s *EvalStmt) InlineString() string {
-	return fmt.Sprintf("%s(%s)", glob.KeywordEval, s.FcsToEval.String())
+	return fmt.Sprintf("%s(%s)", glob.KeywordEval, s.ObjToEval.String())
 }
 
 func (s *DefProveAlgoStmt) InlineString() string {

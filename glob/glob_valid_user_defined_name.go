@@ -72,7 +72,7 @@ func IsValidUserDefinedNameWithoutPkgName(name string) error {
 	return nil
 }
 
-func IsValidUseDefinedFcAtom(name string) error {
+func IsValidUseDefinedAtomObj(name string) error {
 	// 用：：切割，得到PkgName 和 Name
 	values := strings.Split(name, PkgNameAtomSeparator)
 

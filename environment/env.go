@@ -32,7 +32,6 @@ type ObjDefMem map[string]ast.FnTemplate_Or_DefObjStmtInterface // 因为很多�
 type FnInFnTMem map[string][]FnInFnTMemItem
 
 type FnInFnTMemItem struct {
-	// AsFcFn      *ast.FcFn // 可能是 fn(R)R 这种，或者 TName(params) 这样，或者是nil（比如 defFnStmt 声明出来的）
 	AsFnTStruct *ast.FnTStruct
 }
 

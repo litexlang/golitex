@@ -973,7 +973,7 @@ func (s *DefAlgoStmt) ToLatexString() string {
 }
 
 func (s *EvalStmt) ToLatexString() string {
-	return fmt.Sprintf("%s(%s)", glob.KeywordEval, s.FcsToEval.ToLatexString())
+	return fmt.Sprintf("%s(%s)", glob.KeywordEval, s.ObjToEval.ToLatexString())
 }
 
 func (s *DefProveAlgoStmt) ToLatexString() string {

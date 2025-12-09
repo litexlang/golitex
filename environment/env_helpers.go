@@ -20,8 +20,8 @@ import (
 	glob "golitex/glob"
 )
 
-func (e *Env) GetSetFnRetValue(fc ast.Obj) *ast.HaveSetFnStmt {
-	asFn, ok := fc.(*ast.FnObj)
+func (e *Env) GetSetFnRetValue(obj ast.Obj) *ast.HaveSetFnStmt {
+	asFn, ok := obj.(*ast.FnObj)
 	if !ok {
 		return nil
 	}
