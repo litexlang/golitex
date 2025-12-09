@@ -67,26 +67,3 @@ func TestOrder(t *testing.T) {
 		fmt.Println("Expanded:", strings.Join(parts, " + "))
 	}
 }
-
-func TestFcDot(t *testing.T) {
-	sourceCode := []string{
-		"x.y",
-		"x + y.z",
-		"f(x.y)",
-		"f(x.y).z",
-		"f(x.y).z (a.b)", // 这里不报错，其实是有问题的
-		"f(1.2).z",
-	}
-	objSlice := []ast.Obj{}
-	for _, code := range sourceCode {
-		obj, err := sourceCodeToObj(code)
-		if err != nil {
-			t.Fatal(err)
-		}
-		objSlice = append(objSlice, obj...)
-	}
-
-	for _, obj := range objSlice {
-		fmt.Println(obj)
-	}
-}

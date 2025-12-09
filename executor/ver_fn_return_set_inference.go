@@ -19,9 +19,9 @@ import (
 	ast "golitex/ast"
 )
 
-func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FnObj, state *VerState) ExecRet {
+func (ver *Verifier) parasSatisfyFnReq(fnObj *ast.FnObj, state *VerState) ExecRet {
 	// f(a)(b,c)(e,d,f) 返回 {f, f(a), f(a)(b,c), f(a)(b,c)(e,d,f)}, {nil, {a}, {b,c}, {e,d,f}}
-	fnHeadChain_AndItSelf, paramsChain := ast.GetFnHeadChain_AndItSelf(fcFn)
+	fnHeadChain_AndItSelf, paramsChain := ast.GetFnHeadChain_AndItSelf(fnObj)
 
 	// 从后往前找，直到找到有个 fnHead 被已知在一个 fnInFnTInterface 中
 	// 比如 f(a)(b,c)(e,d,f) 我不知道 f(a)(b,c) 是哪个 fn_template 里的，但我发现 f(a) $in T 是知道的。那之后就是按T的返回值去套入b,c，然后再把e,d,f套入T的返回值的返回值
@@ -49,7 +49,7 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FnObj, state *VerState) ExecRet
 			return NewExecErr(err.Error())
 		}
 
-		verRet := ver.checkParamsSatisfyFnTStruct(fcFn, paramsChain[curParamsChainIndex], instCurFnTStruct, state)
+		verRet := ver.checkParamsSatisfyFnTStruct(fnObj, paramsChain[curParamsChainIndex], instCurFnTStruct, state)
 		if verRet.IsErr() {
 			return verRet
 		}
@@ -59,7 +59,7 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FnObj, state *VerState) ExecRet
 
 		curRetSet, ok := instCurFnTStruct.RetSet.(*ast.FnObj)
 		if !ok {
-			return NewExecErr("curRetSet is not an FcFn")
+			return NewExecErr("curRetSet is not an FnObj")
 		}
 
 		curFnTStruct, err = ver.GetFnStructFromFnTName_CheckFnTParamsReq(curRetSet, state)
@@ -80,7 +80,7 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FnObj, state *VerState) ExecRet
 		return NewExecErr(err.Error())
 	}
 
-	verRet := ver.checkParamsSatisfyFnTStruct(fcFn, paramsChain[curParamsChainIndex], instCurFnTStruct, state)
+	verRet := ver.checkParamsSatisfyFnTStruct(fnObj, paramsChain[curParamsChainIndex], instCurFnTStruct, state)
 	if verRet.IsErr() {
 		return verRet
 	}
@@ -92,8 +92,8 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FnObj, state *VerState) ExecRet
 }
 
 func (ver *Verifier) GetFnStructFromFnTName_CheckFnTParamsReq(fnTName *ast.FnObj, state *VerState) (*ast.FnTStruct, error) {
-	if fcFnTypeToFnTStruct, ok := ast.ObjFnT_To_FnTStruct(fnTName); ok {
-		return fcFnTypeToFnTStruct, nil
+	if FnObjTypeToFnTStruct, ok := ast.ObjFnT_To_FnTStruct(fnTName); ok {
+		return FnObjTypeToFnTStruct, nil
 	} else {
 		fnTNameHeadAsAtom, ok := fnTName.FnHead.(ast.Atom)
 		if !ok {
