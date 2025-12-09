@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (p *tbParser) algoStmt(tb *tokenBlock) (ast.AlgoStmt, error) {
+func (p *TbParser) algoStmt(tb *tokenBlock) (ast.AlgoStmt, error) {
 	if tb.header.is(glob.KeywordIf) {
 		return p.algoIfStmt(tb)
 	}
@@ -33,7 +33,7 @@ func (p *tbParser) algoStmt(tb *tokenBlock) (ast.AlgoStmt, error) {
 	// panic("not implemented")
 }
 
-func (p *tbParser) proveAlgoStmt(tb *tokenBlock) (ast.ProveAlgoStmt, error) {
+func (p *TbParser) proveAlgoStmt(tb *tokenBlock) (ast.ProveAlgoStmt, error) {
 	if tb.header.is(glob.KeywordIf) {
 		return p.proveAlgoIfStmt(tb)
 	}
@@ -47,7 +47,7 @@ func (p *tbParser) proveAlgoStmt(tb *tokenBlock) (ast.ProveAlgoStmt, error) {
 	return nil, fmt.Errorf("unexpected statement in prove_algo, only 'if' and 'return' are allowed")
 }
 
-func (p *tbParser) proveAlgoIfStmt(tb *tokenBlock) (*ast.ProveAlgoIfStmt, error) {
+func (p *TbParser) proveAlgoIfStmt(tb *tokenBlock) (*ast.ProveAlgoIfStmt, error) {
 	err := tb.header.skip(glob.KeywordIf)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -70,7 +70,7 @@ func (p *tbParser) proveAlgoIfStmt(tb *tokenBlock) (*ast.ProveAlgoIfStmt, error)
 	return ast.NewProveAlgoIfStmt(condition, thenFacts, tb.line), nil
 }
 
-func (p *tbParser) algoIfStmt(tb *tokenBlock) (*ast.AlgoIfStmt, error) {
+func (p *TbParser) algoIfStmt(tb *tokenBlock) (*ast.AlgoIfStmt, error) {
 	err := tb.header.skip(glob.KeywordIf)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -93,7 +93,7 @@ func (p *tbParser) algoIfStmt(tb *tokenBlock) (*ast.AlgoIfStmt, error) {
 	return ast.NewAlgoIfStmt(condition, thenFacts, tb.line), nil
 }
 
-func (p *tbParser) algoReturnStmt(tb *tokenBlock) (*ast.AlgoReturnStmt, error) {
+func (p *TbParser) algoReturnStmt(tb *tokenBlock) (*ast.AlgoReturnStmt, error) {
 	err := tb.header.skip(glob.KeywordReturn)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -107,7 +107,7 @@ func (p *tbParser) algoReturnStmt(tb *tokenBlock) (*ast.AlgoReturnStmt, error) {
 	return ast.NewAlgoReturnStmt(obj, tb.line), nil
 }
 
-func (p *tbParser) proveAlgoReturnStmt(tb *tokenBlock) (*ast.ProveAlgoReturnStmt, error) {
+func (p *TbParser) proveAlgoReturnStmt(tb *tokenBlock) (*ast.ProveAlgoReturnStmt, error) {
 	err := tb.header.skip(glob.KeywordReturn)
 	if err != nil {
 		return nil, err
