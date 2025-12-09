@@ -493,6 +493,10 @@ func (tb *tokenBlock) intensionalSetObj(paramAsObj ast.Obj) (ast.Obj, error) {
 		return nil, fmt.Errorf("expect parameter as atom")
 	}
 
+	if err := glob.IsValidUserDefinedNameWithoutPkgName(string(param)); err != nil {
+		return nil, err
+	}
+
 	parentSet, err := tb.Obj()
 	if err != nil {
 		return nil, err
