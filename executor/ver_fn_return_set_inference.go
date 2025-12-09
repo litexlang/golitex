@@ -191,9 +191,9 @@ func (ver *Verifier) checkParamsSatisfyFnTStruct(fnObj *ast.FnObj, concreteParam
 }
 
 func paramsOfFnObjMustInDomainSetErrMsg(fnObj *ast.FnObj, i int, fact ast.FactStmt) ExecRet {
-	return NewExecErr(fmt.Sprintf("By definition of function %s, the %s parameter of %s must satisfy \n%s\nbut failed to verify\n", fnObj.FnHead, ordinalSuffix(i+1), fnObj.String(), fact.String()))
+	return NewExecErr(fmt.Sprintf("Function %s requires its %s argument to satisfy the domain constraint:\n%s\nbut verification failed\n", fnObj.FnHead, ordinalSuffix(i+1), fact.String()))
 }
 
 func domainFactOfFnObjMustBeTrueErrMsg(fnObj *ast.FnObj, i int, fact ast.FactStmt) ExecRet {
-	return NewExecErr(fmt.Sprintf("By definition of function %s, the %s domain fact must be true\n%s\nbut failed to verify\n", fnObj.FnHead, ordinalSuffix(i+1), fact.String()))
+	return NewExecErr(fmt.Sprintf("Function %s requires its %s domain constraint to hold:\n%s\nbut verification failed\n", fnObj.FnHead, ordinalSuffix(i+1), fact.String()))
 }
