@@ -16,8 +16,8 @@ package litex_comparator
 
 import (
 	"fmt"
+	ast "golitex/ast"
 	num "golitex/number"
-	parser "golitex/parser"
 )
 
 // REMARK REMARK
@@ -38,11 +38,11 @@ func cmpArith_ByBIR(left string, right string) bool {
 	newLeftStr := fmt.Sprintf("(%s)*(%s)", leftNumerator, rightDenominator)
 	newRightStr := fmt.Sprintf("(%s)*(%s)", rightNumerator, leftDenominator)
 
-	leftObj, err := parser.ParseSourceCodeGetObj(newLeftStr)
+	leftObj, err := ast.ParseSourceCodeGetObj(newLeftStr)
 	if err != nil {
 		return false
 	}
-	rightObj, err := parser.ParseSourceCodeGetObj(newRightStr)
+	rightObj, err := ast.ParseSourceCodeGetObj(newRightStr)
 	if err != nil {
 		return false
 	}

@@ -18,7 +18,6 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
-	parser "golitex/parser"
 	"strconv"
 )
 
@@ -386,7 +385,7 @@ func (e *Env) inFactPostProcess_TryIntensionalSet(fact *ast.SpecFactStmt) glob.G
 }
 
 func (e *Env) inFactPostProcess_InIntensionalSet(obj ast.Obj, intensionalSet *ast.FnObj) glob.GlobRet {
-	paramAsString, parentSet, facts, err := parser.GetParamParentSetFactsFromIntensionalSet(intensionalSet)
+	paramAsString, parentSet, facts, err := ast.GetParamParentSetFactsFromIntensionalSetObj(intensionalSet)
 	if err != nil {
 		return glob.ErrRet(err)
 	}

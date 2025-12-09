@@ -12,23 +12,22 @@
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
-package litex_parser
+package litex_ast
 
 import (
 	"fmt"
-	ast "golitex/ast"
 	num "golitex/number"
 	"strings"
 	"testing"
 )
 
-func sourceCodeToObj(sourceCode ...string) ([]ast.Obj, error) {
+func sourceCodeToObj(sourceCode ...string) ([]Obj, error) {
 	blocks, err := makeTokenBlocks(sourceCode)
 	if err != nil {
 		return nil, err
 	}
 
-	ret := []ast.Obj{}
+	ret := []Obj{}
 	p := NewTbParser()
 	for _, block := range blocks {
 		cur, err := p.Obj(&block)
@@ -47,7 +46,7 @@ func TestOrder(t *testing.T) {
 		"x + x",
 		"2*x",
 	}
-	objSlice := []ast.Obj{}
+	objSlice := []Obj{}
 	for _, code := range sourceCode {
 		obj, err := sourceCodeToObj(code)
 		if err != nil {

@@ -12,20 +12,19 @@
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
-package litex_parser
+package litex_ast
 
 import (
-	ast "golitex/ast"
 	glob "golitex/glob"
 	"strings"
 )
 
 // * TODO: 在parse时，把pkgName改成当前项目里定义的 pkgName，而不是继续沿用原来的
-func ParseSourceCode(code string) ([]ast.Stmt, error) {
+func ParseSourceCode(code string) ([]Stmt, error) {
 	// code, err := preprocessSourceCode(code)
 	preprocessedCodeLines, err := preprocessSourceCode(code)
 	if err != nil {
-		return []ast.Stmt{}, err
+		return []Stmt{}, err
 	}
 
 	blocks, err := makeTokenBlocks(preprocessedCodeLines)
@@ -33,7 +32,7 @@ func ParseSourceCode(code string) ([]ast.Stmt, error) {
 		return nil, err
 	}
 
-	ret := []ast.Stmt{}
+	ret := []Stmt{}
 	p := NewTbParser()
 	for _, block := range blocks {
 		cur, err := p.Stmt(&block)

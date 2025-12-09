@@ -18,7 +18,6 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
-	parser "golitex/parser"
 )
 
 // verifySpecFactFnRequirement 验证 SpecFactStmt 中所有对象都符合函数要求
@@ -258,7 +257,7 @@ func (ver *Verifier) verifyUniFactWithIffFnRequirement(uniFactWithIff *ast.UniFa
 // 3. 然后验证所有事实里出现的obj都是符合fnReq的
 func (ver *Verifier) verifyIntensionalSetFactsFnRequirement(objAsFnObj *ast.FnObj, state *VerState) ExecRet {
 	// 从 intensional set 对象中提取 param, parentSet, facts
-	param, parentSet, facts, err := parser.GetParamParentSetFactsFromIntensionalSet(objAsFnObj)
+	param, parentSet, facts, err := ast.GetParamParentSetFactsFromIntensionalSetObj(objAsFnObj)
 	if err != nil {
 		return NewExecErr(fmt.Sprintf("failed to extract intensional set information: %s", err))
 	}

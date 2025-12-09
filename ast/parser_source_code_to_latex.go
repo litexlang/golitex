@@ -12,16 +12,12 @@
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
-package litex_parser
+package litex_ast
 
-import (
-	ast "golitex/ast"
-)
-
-func ParseSourceCode_WhenCompileToLatex2(code string) ([]ast.Stmt, error) {
+func ParseSourceCode_WhenCompileToLatex2(code string) ([]Stmt, error) {
 	preprocessedCodeLines, err := preprocessSourceCode(code)
 	if err != nil {
-		return []ast.Stmt{}, err
+		return []Stmt{}, err
 	}
 
 	blocks, err := makeTokenBlocks(preprocessedCodeLines)
@@ -29,7 +25,7 @@ func ParseSourceCode_WhenCompileToLatex2(code string) ([]ast.Stmt, error) {
 		return nil, err
 	}
 
-	ret := []ast.Stmt{}
+	ret := []Stmt{}
 	p := NewTbParser()
 	for _, block := range blocks {
 		cur, err := p.Stmt(&block)
@@ -42,11 +38,11 @@ func ParseSourceCode_WhenCompileToLatex2(code string) ([]ast.Stmt, error) {
 	return ret, nil
 }
 
-// func ParseSourceCode_WhenCompileToLatex(code string) ([]ast.Stmt, error) {
+// func ParseSourceCode_WhenCompileToLatex(code string) ([]Stmt, error) {
 // 	// code, err := preprocessSourceCode(code)
 // 	preprocessedCodeLines, err := preprocessSourceCodeWhenCompileToLatex(code)
 // 	if err != nil {
-// 		return []ast.Stmt{}, err
+// 		return []Stmt{}, err
 // 	}
 
 // 	blocks, err := makeTokenBlocks_WhenCompileToLatex(preprocessedCodeLines)
@@ -54,7 +50,7 @@ func ParseSourceCode_WhenCompileToLatex2(code string) ([]ast.Stmt, error) {
 // 		return nil, err
 // 	}
 
-// 	ret := []ast.Stmt{}
+// 	ret := []Stmt{}
 // 	for _, block := range blocks {
 // 		cur, err := block.Stmt()
 // 		if err != nil {

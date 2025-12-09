@@ -12,11 +12,26 @@
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
-package litex_parser
+package litex_ast
 
-type TbParser struct {
+type uniFactEnum uint8
+
+const (
+	UniFactDepth0 uniFactEnum = iota
+	UniFactDepth1
+	UniFactDepth2
+)
+
+func (enum uniFactEnum) allowMoreDepth() bool {
+	return enum == UniFactDepth0 || enum == UniFactDepth1
 }
 
-func NewTbParser() *TbParser {
-	return &TbParser{}
+func (enum uniFactEnum) addDepth() uniFactEnum {
+	switch enum {
+	case UniFactDepth0:
+		return UniFactDepth1
+	case UniFactDepth1:
+		return UniFactDepth2
+	}
+	return enum
 }
