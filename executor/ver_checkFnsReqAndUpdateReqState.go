@@ -20,18 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state *VerState) (*VerState, ExecRet) {
-
-	// 1. Check if all atoms in the parameters are declared
-	// REMARK
-	// TODO： 一层层搜索的时候，会重复检查是否存在，可以优化。比如我要检查 a * f(b) $in R 的时候，我要查 a, f(b) 是否满足条件，就要查 f(b) $in R 是否成立，这时候又查了一遍 f, b 是否存在
-	// for _, param := range stmt.Params {
-	// 	ret := ver.Env.AreAtomsInFcAreDeclared(param, map[string]struct{}{})
-	// 	if ret.IsErr() {
-	// 		return state, NewExecErr(ret.String())
-	// 	}
-	// }
-
+func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	// TODO: 这里有点问题。应该做的分类是：builtin的 stmt name，如in；以及非builtin的stmt name
 
 	// 2. Check if the parameters satisfy the requirement of the function requirements
@@ -39,10 +28,10 @@ func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state 
 	for _, param := range stmt.Params {
 		verRet := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(param, stateNoMsg)
 		if verRet.IsErr() {
-			return state, verRet
+			return verRet
 		}
 		if verRet.IsUnknown() {
-			return state, NewExecErrWithMsgs(verRet.GetMsgs())
+			return NewExecErrWithMsgs(verRet.GetMsgs())
 		}
 	}
 
@@ -50,8 +39,8 @@ func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state 
 	// 但是最好在这里警告一下用户，如果不满足prop的要求的话，可能出问题
 
 	// state.ReqOk = true
-	newState := VerState{state.Round, state.WithMsg, true}
-	return &newState, NewEmptyExecTrue()
+	// newState := VerState{state.Round, state.WithMsg, true}
+	return NewEmptyExecTrue()
 }
 
 func (ver *Verifier) objIsDefinedAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *VerState) ExecRet {
