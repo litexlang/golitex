@@ -18,7 +18,6 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
-	parser "golitex/parser"
 	"strconv"
 )
 
@@ -911,7 +910,7 @@ func (ver *Verifier) verInFactByRightIsIntensionalSet(stmt *ast.SpecFactStmt, st
 		return NewEmptyExecUnknown()
 	}
 
-	param, parentSet, facts, err := parser.GetParamParentSetFactsFromIntensionalSet(intensionalSet)
+	param, parentSet, facts, err := ast.GetParamParentSetFactsFromIntensionalSetObj(intensionalSet)
 	if err != nil {
 		return NewExecErr(err.Error())
 	}

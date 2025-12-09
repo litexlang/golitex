@@ -19,7 +19,6 @@ import (
 	ast "golitex/ast"
 	exe "golitex/executor"
 	glob "golitex/glob"
-	parser "golitex/parser"
 	"os"
 	"path/filepath"
 	"strings"
@@ -44,7 +43,7 @@ func RunSourceCode(code string, path string) glob.GlobRet {
 }
 
 func RunSourceCodeInExecutor(curExec *exe.Executor, code string, path string) glob.GlobRet {
-	stmtSlice, err := parser.ParseSourceCode(code)
+	stmtSlice, err := ast.ParseSourceCode(code)
 	if err != nil {
 		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLErrorMessageWithPath(path))
 	}
