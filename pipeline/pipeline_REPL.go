@@ -3,6 +3,7 @@ package litex_pipeline
 import (
 	"bufio"
 	"fmt"
+	exe "golitex/executor"
 	glob "golitex/glob"
 	"io"
 	"os"
@@ -12,11 +13,12 @@ import (
 )
 
 func RunREPL(version string) {
-	executor, err := InitPipelineExecutor()
+	env, err := GetEnvWithBuiltinParentEnv()
 	if err != nil {
-		fmt.Println("Error initializing pipeline:", err)
+		fmt.Println("Error initializing pipeline env:", err)
 		return
 	}
+	executor := exe.NewExecutor(env)
 
 	reader := bufio.NewReader(os.Stdin)
 	writer := os.Stdout

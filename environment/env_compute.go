@@ -27,9 +27,9 @@ func newComputer(env *Env) *computer {
 	return &computer{env: env}
 }
 
-func (env *Env) Compute(fc ast.Obj) (ast.Obj, glob.GlobRet) {
+func (env *Env) Compute(obj ast.Obj) (ast.Obj, glob.GlobRet) {
 	newComputer := newComputer(env)
-	return newComputer.compute(fc)
+	return newComputer.compute(obj)
 }
 
 // func (env *Env) CanBeComputed(fc ast.Fc) (ast.Fc, error) {
@@ -57,14 +57,14 @@ func (comp *computer) compute(toCompute ast.Obj) (ast.Obj, glob.GlobRet) {
 	return nil, glob.TrueRet("")
 }
 
-func (env *Env) IsFnWithDefinedAlgo(fc ast.Obj) bool {
-	fcAsFcFn, ok := fc.(*ast.FnObj)
+func (env *Env) IsFnWithDefinedAlgo(obj ast.Obj) bool {
+	objAsFnObj, ok := obj.(*ast.FnObj)
 	if !ok {
 		return false
 	}
-	fcAsFcFnHeadAsAtom, ok := fcAsFcFn.FnHead.(ast.Atom)
+	objAsFnObjHeadAsAtom, ok := objAsFnObj.FnHead.(ast.Atom)
 	if !ok {
 		return false
 	}
-	return env.GetAlgoDef(fcAsFcFnHeadAsAtom.String()) != nil
+	return env.GetAlgoDef(objAsFnObjHeadAsAtom.String()) != nil
 }

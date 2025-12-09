@@ -195,6 +195,10 @@ func (env *Env) newPureFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 		}
 	}
 
+	if fact.PropName == glob.KeywordEqualSet {
+		return env.equalSetFactPostProcess(fact)
+	}
+
 	propDef := env.GetPropDef(fact.PropName)
 
 	if propDef != nil {
@@ -220,6 +224,23 @@ func (env *Env) newPureFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 	}
 
 	return glob.ErrRet(fmt.Errorf("unknown prop %s", fact.PropName))
+}
+
+// equalSetFactPostProcess handles postprocessing for equal_set(a, b) facts
+// It creates an equality fact a = b
+func (env *Env) equalSetFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
+	if len(fact.Params) != 2 {
+		return glob.ErrRet(fmt.Errorf("equal_set fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
+	}
+
+	// Create a = b fact
+	equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{fact.Params[0], fact.Params[1]}, fact.Line)
+	ret := env.NewFact(equalFact)
+	if ret.IsErr() {
+		return ret
+	}
+
+	return glob.TrueRet("")
 }
 
 func (env *Env) newTruePureFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) glob.GlobRet {
@@ -453,9 +474,9 @@ func (env *Env) storeSymbolSimplifiedValue(left, right ast.Obj) glob.GlobRet {
 	return glob.TrueRet("")
 }
 
-func (env *Env) GetEqualFcs(fc ast.Obj) (*[]ast.Obj, bool) {
-	fcAsStr := fc.String()
-	facts, ok := env.EqualMem[fcAsStr]
+func (env *Env) GetEqualObjs(obj ast.Obj) (*[]ast.Obj, bool) {
+	objAsStr := obj.String()
+	facts, ok := env.EqualMem[objAsStr]
 	return facts, ok
 }
 

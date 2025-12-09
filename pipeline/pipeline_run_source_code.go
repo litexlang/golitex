@@ -34,10 +34,11 @@ func RunFile(path string) glob.GlobRet {
 }
 
 func RunSourceCode(code string, path string) glob.GlobRet {
-	executor, err := InitPipelineExecutor()
+	env, err := GetEnvWithBuiltinParentEnv()
 	if err != nil {
 		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLErrorMessageWithPath(path))
 	}
+	executor := exe.NewExecutor(env)
 	ret := RunSourceCodeInExecutor(executor, code, path)
 	return ret
 }
@@ -98,7 +99,10 @@ func RunImportDirStmtInExec(curExec *exe.Executor, importDirStmt *ast.ImportDirS
 		return glob.NewGlobErr(err.Error())
 	}
 
-	builtinEnv := GetBuiltinEnv()
+	builtinEnv, err := GetEnvWithBuiltinParentEnv()
+	if err != nil {
+		return glob.NewGlobErr(err.Error())
+	}
 	executorToRunDir := exe.NewExecutor(builtinEnv)
 	ret := RunSourceCodeInExecutor(executorToRunDir, string(mainFileContent), resolvedPath)
 	if ret.IsNotTrue() {

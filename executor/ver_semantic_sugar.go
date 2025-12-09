@@ -20,8 +20,8 @@ import (
 	cmp "golitex/cmp"
 )
 
-func (ver *Verifier) verByReplaceFcInSpecFactWithValue(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	replaced, newStmt := ver.Env.ReplaceFcInSpecFactWithValue(stmt)
+func (ver *Verifier) verByReplaceObjInSpecFactWithValue(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	replaced, newStmt := ver.Env.ReplaceObjInSpecFactWithValue(stmt)
 	if replaced {
 		verRet := ver.verTrueEqualFactMainLogic(newStmt, state, true)
 		if verRet.IsErr() {
@@ -56,8 +56,8 @@ func (ver *Verifier) verByReplaceFcInSpecFactWithValue(stmt *ast.SpecFactStmt, s
 	return NewExecUnknown(fmt.Sprintf("%s is not equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
 }
 
-func (ver *Verifier) verByReplaceFcInSpecFactWithValueAndCompute(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	replaced, newStmt := ver.Env.ReplaceFcInSpecFactWithValue(stmt)
+func (ver *Verifier) verByReplaceObjInSpecFactWithValueAndCompute(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	replaced, newStmt := ver.Env.ReplaceObjInSpecFactWithValue(stmt)
 
 	if replaced {
 		verRet := ver.verTrueEqualFactMainLogic(newStmt, state, true)
