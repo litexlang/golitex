@@ -1819,7 +1819,7 @@ func (p *TbParser) evalStmt(tb *tokenBlock) (ast.Stmt, error) {
 		return nil, parserErrAtTb(err, tb)
 	}
 
-	fcsToEval, err := p.Obj(tb)
+	objsToEval, err := p.Obj(tb)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
 	}
@@ -1829,7 +1829,7 @@ func (p *TbParser) evalStmt(tb *tokenBlock) (ast.Stmt, error) {
 		return nil, parserErrAtTb(err, tb)
 	}
 
-	return ast.NewEvalStmt(fcsToEval, tb.line), nil
+	return ast.NewEvalStmt(objsToEval, tb.line), nil
 }
 
 func (p *TbParser) defProveAlgoStmt(tb *tokenBlock) (ast.Stmt, error) {
@@ -2666,7 +2666,6 @@ func (p *TbParser) relaFactStmt_orRelaEquals(tb *tokenBlock) (ast.FactStmt, erro
 	// 这里加入语法糖：!= 等价于 not =，好处是我 = 有 commutative的性质，我不用额外处理 != 了
 	if ret.NameIs(glob.KeySymbolNotEqual) {
 		ret.TypeEnum = ast.FalsePure
-		// ret.PropName = *ast.NewFcAtom(glob.EmptyPkg, glob.KeySymbolEqual)
 		ret.PropName = ast.Atom(glob.KeySymbolEqual)
 	}
 
@@ -3154,8 +3153,8 @@ func (p *TbParser) claimPropStmt(tb *tokenBlock) (ast.Stmt, error) {
 	return ast.NewClaimPropStmt(ast.NewDefPropStmt(namedUniFact.DefPropStmt.DefHeader, namedUniFact.DefPropStmt.DomFacts, namedUniFact.DefPropStmt.IffFacts, namedUniFact.DefPropStmt.ThenFacts, tb.line), proofs, tb.line), nil
 }
 
-func (p *TbParser) relaEqualsFactStmt(tb *tokenBlock, obj, fc2 ast.Obj) (*ast.EqualsFactStmt, error) {
-	params := []ast.Obj{obj, fc2}
+func (p *TbParser) relaEqualsFactStmt(tb *tokenBlock, obj, obj2 ast.Obj) (*ast.EqualsFactStmt, error) {
+	params := []ast.Obj{obj, obj2}
 	for tb.header.is(glob.KeySymbolEqual) {
 		tb.header.skip(glob.KeySymbolEqual)
 		nextObj, err := p.Obj(tb)

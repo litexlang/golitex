@@ -55,38 +55,6 @@ func (ver *Verifier) maybeAddSuccessMsgString(state *VerState, stmtStr, verified
 	return execRet
 }
 
-// func (ver *Verifier) paramsInSets(params []ast.Obj, sets []ast.Obj, state *VerState) ExecRet {
-// 	if len(params) != len(sets) {
-// 		return NewExecErr("params and sets length mismatch")
-// 	}
-
-// 	for i := range params {
-// 		fact := ast.NewInFactWithFc(params[i], sets[i])
-// 		verRet := ver.VerFactStmt(fact, state)
-// 		if verRet.IsErr() {
-// 			return verRet
-// 		}
-// 		if verRet.IsUnknown() {
-// 			return NewExecUnknown(ast.UnknownFactMsg(fact))
-// 		}
-// 	}
-// 	return NewExecEmptyTrue()
-// }
-
-// func (ver *Verifier) factsAreTrue(facts []ast.FactStmt, state *VerState) ExecRet {
-// 	for _, fact := range facts {
-// 		verRet := ver.VerFactStmt(fact, state)
-// 		if verRet.IsErr() {
-// 			return verRet
-// 		}
-// 		if verRet.IsUnknown() {
-// 			return NewExecUnknown(ast.UnknownFactMsg(fact))
-// 		}
-// 	}
-
-// 	return NewEmptyExecTrue()
-// }
-
 func IsTrueOrErr(ok bool, err error) bool {
 	return ok || err != nil
 }

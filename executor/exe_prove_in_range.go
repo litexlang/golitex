@@ -21,13 +21,13 @@ import (
 )
 
 func (exec *Executor) proveInRangeStmtWhenParamIsIndex(stmt *ast.ProveInRangeStmt2, i int64) ExecRet {
-	indexAsFc := ast.Atom(fmt.Sprintf("%d", i))
+	indexAsObj := ast.Atom(fmt.Sprintf("%d", i))
 	param := stmt.Param()
-	uniMap := map[string]ast.Obj{param: indexAsFc}
+	uniMap := map[string]ast.Obj{param: indexAsObj}
 	exec.NewEnv(exec.Env)
 	defer exec.deleteEnv()
 
-	defObjStmt := ast.NewDefLetStmt([]string{param}, []ast.Obj{ast.Atom(glob.KeywordInteger)}, []ast.FactStmt{ast.NewEqualFact(ast.Atom(param), indexAsFc)}, stmt.GetLine())
+	defObjStmt := ast.NewDefLetStmt([]string{param}, []ast.Obj{ast.Atom(glob.KeywordInteger)}, []ast.FactStmt{ast.NewEqualFact(ast.Atom(param), indexAsObj)}, stmt.GetLine())
 	execState := exec.defLetStmt(defObjStmt)
 	if execState.IsNotTrue() {
 		return execState
