@@ -312,7 +312,7 @@ func (ver *Verifier) matchTwoSpecFacts(stmt *ast.SpecFactStmt, knownFact *ast.Sp
 	// 如果不区分 equal 和 其他事实的话，可能会出死循环
 	if stmt.PropName == glob.KeySymbolEqual && stmt.IsTrue() {
 		for i, knownParam := range knownFact.Params {
-			verRet := ver.cmpFc_Builtin_Then_Decompose_Spec(knownParam, stmt.Params[i], state)
+			verRet := ver.cmpObj_Builtin_Then_Decompose_Spec(knownParam, stmt.Params[i], state)
 			if verRet.IsErr() || verRet.IsUnknown() {
 				return verRet
 			}

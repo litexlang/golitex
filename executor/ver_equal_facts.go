@@ -25,7 +25,7 @@ import (
 // WARNING
 // REMARK
 // TODO: cmpFc_Builtin_Then_Decompose_Spec, fcEqualSpec 大循环本质上是有问题的，会有循环论证的风险：know p(p(1,2), 0) = 1, 则现在问 p(1,2) =1 吗？我会比较 p(1,2) = p(p(1,2), 0)，那这时候就出问题了：我因为一位位地比，所以又回到了比较 1 = p(1,2)
-func (ver *Verifier) cmpFc_Builtin_Then_Decompose_Spec(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
+func (ver *Verifier) cmpObj_Builtin_Then_Decompose_Spec(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
 	ok, msg, err := cmp.CmpBy_Literally_NumLit_PolynomialArith(left, right) // 完全一样
 	if err != nil {
 		return NewExecErr(err.Error())
@@ -47,49 +47,49 @@ func (ver *Verifier) cmpFc_Builtin_Then_Decompose_Spec(left ast.Obj, right ast.O
 
 // Iterate over all equal facts. On each equal fact, use commutative, associative, cmp rule to compare.
 func (ver *Verifier) fcEqualSpec(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
-	if verRet := ver.cmpFc_Builtin_Then_Decompose_Spec(left, right, state); verRet.IsErr() || verRet.IsTrue() {
+		if verRet := ver.cmpObj_Builtin_Then_Decompose_Spec(left, right, state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
 
 	for curEnv := ver.Env; curEnv != nil; curEnv = curEnv.Parent {
-		var equalToLeftFcs, equalToRightFcs *[]ast.Obj
-		var gotLeftEqualFcs, gotRightEqualFcs bool
+		var equalToLeftObjs, equalToRightObjs *[]ast.Obj
+		var gotLeftEqualObjs, gotRightEqualObjs bool
 
-		equalToLeftFcs, gotLeftEqualFcs = curEnv.GetEqualFcs(left)
-		equalToRightFcs, gotRightEqualFcs = curEnv.GetEqualFcs(right)
+		equalToLeftObjs, gotLeftEqualObjs = curEnv.GetEqualObjs(left)
+		equalToRightObjs, gotRightEqualObjs = curEnv.GetEqualObjs(right)
 
-		if gotLeftEqualFcs && gotRightEqualFcs {
-			if equalToLeftFcs == equalToRightFcs {
+		if gotLeftEqualObjs && gotRightEqualObjs {
+			if equalToLeftObjs == equalToRightObjs {
 				return ver.maybeAddSuccessMsgString(state, fmt.Sprintf("known %s = %s", left, right), "", NewEmptyExecTrue())
 			}
 		}
 
-		if gotLeftEqualFcs {
+		if gotLeftEqualObjs {
 			rightAsStr := right.String()
-			for _, equalToLeftFc := range *equalToLeftFcs {
-				if equalToLeftFc.String() == rightAsStr { // 最一开头已经比较过，这里不需要再比较了
+			for _, equalToLeftObj := range *equalToLeftObjs {
+				if equalToLeftObj.String() == rightAsStr { // 最一开头已经比较过，这里不需要再比较了
 					continue
 				}
 
-				if verRet := ver.cmpFc_Builtin_Then_Decompose_Spec(equalToLeftFc, right, state); verRet.IsErr() {
+				if verRet := ver.cmpObj_Builtin_Then_Decompose_Spec(equalToLeftObj, right, state); verRet.IsErr() {
 					return verRet
 				} else if verRet.IsTrue() {
-					return ver.maybeAddSuccessMsgString(state, fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToLeftFc, right, equalToLeftFc, left), "", verRet)
+					return ver.maybeAddSuccessMsgString(state, fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToLeftObj, right, equalToLeftObj, left), "", verRet)
 				}
 			}
 		}
 
-		if gotRightEqualFcs {
+		if gotRightEqualObjs {
 			leftAsStr := left.String()
-			for _, equalToRightFc := range *equalToRightFcs {
-				if equalToRightFc.String() == leftAsStr { // 最一开头已经比较过，这里不需要再比较了
+			for _, equalToRightObj := range *equalToRightObjs {
+				if equalToRightObj.String() == leftAsStr { // 最一开头已经比较过，这里不需要再比较了
 					continue
 				}
 
-				if verRet := ver.cmpFc_Builtin_Then_Decompose_Spec(equalToRightFc, left, state); verRet.IsErr() {
+				if verRet := ver.cmpObj_Builtin_Then_Decompose_Spec(equalToRightObj, left, state); verRet.IsErr() {
 					return verRet
 				} else if verRet.IsTrue() {
-					return ver.maybeAddSuccessMsgString(state, fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToRightFc, left, equalToRightFc, right), "", verRet)
+					return ver.maybeAddSuccessMsgString(state, fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToRightObj, left, equalToRightObj, right), "", verRet)
 				}
 			}
 		}
@@ -130,35 +130,35 @@ func (ver *Verifier) verTrueEqualFact_FcFnEqual_NoCheckRequirements(left, right 
 
 func (ver *Verifier) FcsEqualBy_Eval_ShareKnownEqualMem(left, right ast.Obj, state *VerState) ExecRet {
 	for curEnv := ver.Env; curEnv != nil; curEnv = curEnv.Parent {
-		leftEqualFcs, ok := curEnv.EqualMem[left.String()]
+		leftEqualObjs, ok := curEnv.EqualMem[left.String()]
 		if ok {
-			rightEqualFcs, ok := curEnv.EqualMem[right.String()]
+			rightEqualObjs, ok := curEnv.EqualMem[right.String()]
 			if ok {
-				if leftEqualFcs == rightEqualFcs {
+				if leftEqualObjs == rightEqualObjs {
 					return NewEmptyExecTrue()
 				}
 			}
 		}
 	}
 
-	leftEqualFcs, ok := ver.Env.GetEqualFcs(left)
+	leftEqualObjs, ok := ver.Env.GetEqualObjs(left)
 	if !ok {
 		return NewEmptyExecUnknown()
 	}
 
-	rightEqualFcs, ok := ver.Env.GetEqualFcs(right)
+	rightEqualObjs, ok := ver.Env.GetEqualObjs(right)
 	if !ok {
 		return NewEmptyExecUnknown()
 	}
 
-	for _, leftEqualFc := range *leftEqualFcs {
-		for _, rightEqualFc := range *rightEqualFcs {
-			if leftEqualFc.String() == rightEqualFc.String() {
+	for _, leftEqualObj := range *leftEqualObjs {
+		for _, rightEqualObj := range *rightEqualObjs {
+			if leftEqualObj.String() == rightEqualObj.String() {
 				return NewEmptyExecTrue()
 			} else {
-				_, newLeft := ver.Env.ReplaceSymbolWithValue(leftEqualFc)
+				_, newLeft := ver.Env.ReplaceSymbolWithValue(leftEqualObj)
 				if cmp.IsNumExprLitObj(newLeft) {
-					_, newRight := ver.Env.ReplaceSymbolWithValue(rightEqualFc)
+					_, newRight := ver.Env.ReplaceSymbolWithValue(rightEqualObj)
 					if ok, _, _ := cmp.CmpBy_Literally_NumLit_PolynomialArith(newLeft, newRight); ok {
 						return NewEmptyExecTrue()
 					}
