@@ -97,7 +97,9 @@ func ParseSourceCodeGetFact(sourceCode string) (ast.FactStmt, error) {
 		return nil, err
 	}
 
-	return blocks[0].fact()
+	p := &tbParser{}
+
+	return p.factStmt(&blocks[0], UniFactDepth0)
 }
 
 // ParseSingleLineFact parses a single line fact statement from a string
@@ -109,7 +111,9 @@ func ParseSingleLineFact(s string) (ast.FactStmt, error) {
 		return nil, err
 	}
 
-	fact, err := blocks[0].inline_spec_or_enum_intensional_Equals_fact_skip_terminator()
+	p := &tbParser{}
+
+	fact, err := p.inlineFactThenSkipStmtTerminatorUntilEndSignals(&blocks[0], []string{})
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +148,9 @@ func ParseSourceCodeGetObj(s string) (ast.Obj, error) {
 		return nil, err
 	}
 
-	obj, err := blocks[0].Obj()
+	p := &tbParser{}
+
+	obj, err := p.Obj(&blocks[0])
 	if err != nil {
 		return nil, err
 	}
