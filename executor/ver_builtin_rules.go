@@ -1,0 +1,285 @@
+// Copyright 2024 Jiachen Shen.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Original Author: Jiachen Shen <malloc_realloc_free@outlook.com>
+// Litex email: <litexlang@outlook.com>
+// Litex website: https://litexlang.com
+// Litex github repository: https://github.com/litexlang/golitex
+// Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
+
+package litex_executor
+
+import (
+	"fmt"
+	ast "golitex/ast"
+	glob "golitex/glob"
+)
+
+func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	if stmt.NameIs(glob.KeywordIn) {
+		return ver.inFactBuiltinRules(stmt, state)
+	} else if stmt.NameIs(glob.KeywordItemExistsIn) && stmt.TypeEnum == ast.TrueExist_St {
+		return ver.trueExistInSt(stmt, state)
+	}
+
+	if stmt.NameIs(glob.KeywordEqualSet) && stmt.TypeEnum == ast.TruePure {
+		return ver.verEqualSetByBuiltinRules(stmt, state)
+	}
+
+	if stmt.NameIs(glob.KeywordEqualTuple) {
+		return ver.verEqualTupleByBuiltinRules(stmt, state)
+	}
+
+	if verRet := ver.verNumberLogicRelaOpt_BuiltinRules(stmt, state); verRet.IsErr() {
+		return verRet
+	} else if verRet.IsTrue() {
+		return verRet
+	}
+
+	if stmt.NameIs(glob.KeySymbolEqual) && stmt.TypeEnum == ast.FalsePure {
+		return ver.verNotTrueEqualFact_BuiltinRules_WithState(stmt, state)
+	}
+
+	if stmt.NameIs(glob.KeywordIsCart) && stmt.TypeEnum == ast.TruePure {
+		return ver.verIsCartByBuiltinRules(stmt, state)
+	}
+
+	if stmt.NameIs(glob.KeywordItemExistsIn) && stmt.TypeEnum == ast.TruePure {
+		return ver.verItemExistsInByBuiltinRules(stmt, state)
+	}
+
+	if verRet := ver.IsInNonEmptyByBuiltinRules(stmt, state); verRet.IsTrue() || verRet.IsErr() {
+		return verRet
+	}
+
+	return NewEmptyExecUnknown()
+}
+
+func (ver *Verifier) verNumberLogicRelaOpt_BuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	if !stmt.IsTrue() {
+		return NewEmptyExecUnknown()
+	}
+
+	verRet := ver.btNumberInfixCompareProp(stmt, state)
+	if verRet.IsTrue() || verRet.IsErr() {
+		return verRet
+	}
+
+	return NewEmptyExecUnknown()
+}
+
+func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	if !glob.IsBuiltinNumberInfixRelaProp(string(stmt.PropName)) {
+		return NewEmptyExecUnknown()
+	}
+
+	if len(stmt.Params) != 2 {
+		return NewExecErr(fmt.Sprintf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params)))
+	}
+
+	leftNumLitExpr, ok, err := ast.MakeObjIntoNumLitExpr(stmt.Params[0])
+	if err != nil {
+		return NewExecErr(err.Error())
+	}
+	if !ok {
+		return NewEmptyExecUnknown()
+	}
+
+	rightNumLitExpr, ok, err := ast.MakeObjIntoNumLitExpr(stmt.Params[1])
+	if err != nil {
+		return NewExecErr(err.Error())
+	}
+	if !ok {
+		return NewEmptyExecUnknown()
+	}
+
+	ok, err = glob.NumLitExprCompareOpt(leftNumLitExpr, rightNumLitExpr, string(stmt.PropName))
+
+	if err != nil {
+		return NewExecErr(err.Error())
+	}
+	if ok {
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), "builtin rules", NewEmptyExecTrue())
+	}
+
+	return NewEmptyExecUnknown()
+}
+
+func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	_ = state
+
+	if stmt.PropName != glob.KeywordIn {
+		return NewEmptyExecUnknown()
+	}
+
+	// Note: Messages should be handled by the caller, not in defer functions
+	isSuccess := false
+	defer func() {
+		_ = isSuccess
+	}()
+
+	if len(stmt.Params) != 2 {
+		return NewExecErr(fmt.Sprintf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params)))
+	}
+
+	leftFc, ok, err := ast.MakeObjIntoNumLitExpr(stmt.Params[0])
+	if err != nil {
+		return NewExecErr(err.Error())
+	}
+	if ok {
+		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordReal) {
+			isSuccess = glob.IsRealNumLitExpr(leftFc)
+			if isSuccess {
+				return NewEmptyExecTrue()
+			} else {
+				return NewEmptyExecUnknown()
+			}
+		}
+
+		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordNatural) {
+			isSuccess = glob.IsNatNumLitExpr(leftFc)
+			if isSuccess {
+				return NewEmptyExecTrue()
+			} else {
+				return NewEmptyExecUnknown()
+			}
+		}
+
+		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordInteger) {
+			isSuccess = glob.IsIntegerNumLitExpr(leftFc)
+			if isSuccess {
+				return NewEmptyExecTrue()
+			} else {
+				return NewEmptyExecUnknown()
+			}
+		}
+
+		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordRational) {
+			isSuccess = glob.IsRationalNumLitExpr(leftFc)
+			if isSuccess {
+				return NewEmptyExecTrue()
+			} else {
+				return NewEmptyExecUnknown()
+			}
+		}
+
+		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordNPos) {
+			isSuccess = glob.IsNPosNumLitExpr(leftFc)
+			if isSuccess {
+				return NewEmptyExecTrue()
+			} else {
+				return NewEmptyExecUnknown()
+			}
+		}
+	}
+
+	return NewEmptyExecUnknown()
+}
+
+func (ver *Verifier) verItemExistsInByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	if len(stmt.Params) != 1 {
+		return NewExecErr(fmt.Sprintf("builtin logic opt rule should have 1 param, but got %d", len(stmt.Params)))
+	}
+
+	if ast.IsEnumSetObj(stmt.Params[0]) {
+		asEnumSet, ok := stmt.Params[0].(*ast.FnObj)
+		if !ok {
+			return NewEmptyExecUnknown()
+		}
+
+		if len(asEnumSet.Params) != 0 {
+			return NewEmptyExecTrue()
+		}
+	}
+
+	_ = state
+
+	return NewEmptyExecUnknown()
+}
+
+func (ver *Verifier) IsInNonEmptyByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	if !stmt.NameIs(glob.KeywordIn) {
+		return NewEmptyExecUnknown()
+	}
+
+	if stmt.TypeEnum != ast.TruePure {
+		return NewEmptyExecUnknown()
+	}
+
+	if len(stmt.Params) != 2 {
+		return NewExecErr(fmt.Sprintf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params)))
+	}
+
+	if stmt.Params[1].String() != glob.KeywordNonEmptySet {
+		return NewEmptyExecUnknown()
+	}
+
+	if ast.IsEnumSetObj(stmt.Params[0]) {
+		asEnumSet, ok := stmt.Params[0].(*ast.FnObj)
+		if !ok {
+			return NewEmptyExecUnknown()
+		}
+
+		if len(asEnumSet.Params) != 0 {
+			return NewEmptyExecTrue()
+		}
+	}
+
+	_ = state
+
+	return NewEmptyExecUnknown()
+}
+
+// verEqualSetByBuiltinRules verifies equal_set(a, b) by checking:
+// - forall t a : t $in b
+// - forall t b : t $in a
+func (ver *Verifier) verEqualSetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	if len(stmt.Params) != 2 {
+		return NewExecErr(fmt.Sprintf("equal_set expects 2 parameters, got %d", len(stmt.Params)))
+	}
+
+	a := stmt.Params[0]
+	b := stmt.Params[1]
+
+	// Create forall t1 a : t1 $in b
+	forall1 := ast.NewUniFact(
+		[]string{"t"},
+		[]ast.Obj{a},
+		[]ast.FactStmt{},
+		[]ast.FactStmt{
+			ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{ast.Atom("t"), b}, stmt.Line),
+		},
+		stmt.Line,
+	)
+
+	// Create forall t2 b : t2 $in a
+	forall2 := ast.NewUniFact(
+		[]string{"t"},
+		[]ast.Obj{b},
+		[]ast.FactStmt{},
+		[]ast.FactStmt{
+			ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{ast.Atom("t"), a}, stmt.Line),
+		},
+		stmt.Line,
+	)
+
+	// Verify both forall statements
+	verRet1 := ver.VerFactStmt(forall1, state)
+	if verRet1.IsNotTrue() {
+		return verRet1
+	}
+
+	verRet2 := ver.VerFactStmt(forall2, state)
+	if verRet2.IsNotTrue() {
+		return verRet2
+	}
+
+	// Both forall statements are true, so equal_set(a, b) is true
+	msg := fmt.Sprintf("equal_set(%s, %s) is true because forall t %s : t $in %s and forall t %s : t $in %s", a, b, a, b, b, a)
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+}

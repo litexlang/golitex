@@ -31,12 +31,16 @@ import (
 //
 //	  → unaryOptObj() [处理一元运算符]
 //		→ primaryExpr() [处理基本表达式]
-//		  → atomObj() [解析原子，支持 pkgname.atomname]
+//		  → atomObj() [解析原子，支持 pkgName.atomName]
 //		  → numberStr() [解析数字]
 //		  → fnSet() [解析函数集合]
 //		  → bracedExpr_orTuple() [解析括号表达式]
-func (tb *tokenBlock) Obj() (ast.Obj, error) {
-	return tb.objInfixExpr(glob.PrecLowest)
+func (p *TbParser) Obj(tb *tokenBlock) (ast.Obj, error) {
+	if tb.header.is(glob.KeySymbolLeftCurly) {
+		return p.EnumSetObjOrIntensionalSetObj(tb)
+	}
+
+	return p.objInfixExpr(tb, glob.PrecLowest)
 }
 
 // ============================================================================
@@ -46,9 +50,9 @@ func (tb *tokenBlock) Obj() (ast.Obj, error) {
 // objInfixExpr parses infix expressions using operator precedence.
 // Higher precedence operators are parsed first (e.g., * before +).
 // This ensures expressions like "a + b * c" are parsed as "a + (b * c)".
-func (tb *tokenBlock) objInfixExpr(currentPrec glob.BuiltinOptPrecedence) (ast.Obj, error) {
+func (p *TbParser) objInfixExpr(tb *tokenBlock, currentPrec glob.BuiltinOptPrecedence) (ast.Obj, error) {
 	// Parse left operand (starting with unary operators or primary expressions)
-	left, err := tb.unaryOptObj()
+	left, err := p.unaryOptObj(tb)
 	if err != nil {
 		return nil, err
 	}
@@ -62,11 +66,11 @@ func (tb *tokenBlock) objInfixExpr(currentPrec glob.BuiltinOptPrecedence) (ast.O
 
 		// Handle backslash operator (e.g., x \mul y)
 		if curToken == glob.KeySymbolBackSlash {
-			fn, err := tb.backSlashExpr()
+			fn, err := p.backSlashExpr(tb)
 			if err != nil {
 				return nil, err
 			}
-			right, err := tb.objInfixExpr(glob.PrecLowest)
+			right, err := p.objInfixExpr(tb, glob.PrecLowest)
 			if err != nil {
 				return nil, err
 			}
@@ -87,7 +91,7 @@ func (tb *tokenBlock) objInfixExpr(currentPrec glob.BuiltinOptPrecedence) (ast.O
 
 		// Parse right operand with current operator's precedence
 		tb.header.skip("") // consume operator
-		right, err := tb.objInfixExpr(curPrec)
+		right, err := p.objInfixExpr(tb, curPrec)
 		if err != nil {
 			return nil, err
 		}
@@ -102,14 +106,14 @@ func (tb *tokenBlock) objInfixExpr(currentPrec glob.BuiltinOptPrecedence) (ast.O
 
 // unaryOptObj parses unary operators (currently only "-").
 // If no unary operator is present, it parses a primary expression.
-func (tb *tokenBlock) unaryOptObj() (ast.Obj, error) {
+func (p *TbParser) unaryOptObj(tb *tokenBlock) (ast.Obj, error) {
 	unaryOp, err := tb.header.currentToken()
 	if err != nil {
 		return nil, err
 	}
 
 	if unaryOp != glob.KeySymbolMinus {
-		return tb.fnSetObjAndBracedExprAndAtomObjAndFnObj()
+		return p.fnSetObjAndBracedExprAndAtomObjAndFnObj(tb)
 	}
 
 	// Handle unary minus
@@ -121,7 +125,7 @@ func (tb *tokenBlock) unaryOptObj() (ast.Obj, error) {
 	}
 
 	// Parse right operand and convert to -1 * right
-	right, err := tb.unaryOptObj()
+	right, err := p.unaryOptObj(tb)
 	if err != nil {
 		return nil, err
 	}
@@ -130,21 +134,21 @@ func (tb *tokenBlock) unaryOptObj() (ast.Obj, error) {
 
 // fnSetObjAndBracedExprAndAtomObjAndFnObj parses primary expressions: atoms, numbers, function sets, or parenthesized expressions.
 // Higher precedence means more "primitive" - parentheses and atoms are at the bottom of the precedence hierarchy.
-func (tb *tokenBlock) fnSetObjAndBracedExprAndAtomObjAndFnObj() (ast.Obj, error) {
+func (p *TbParser) fnSetObjAndBracedExprAndAtomObjAndFnObj(tb *tokenBlock) (ast.Obj, error) {
 	if tb.header.is(glob.KeywordFn) {
-		return tb.fnSet()
+		return p.fnSet(tb)
 	}
 
 	if tb.header.is(glob.KeySymbolLeftBrace) {
-		expr, err := tb.bracedObj()
+		expr, err := p.bracedObj(tb)
 		if err != nil {
 			return nil, err
 		}
-		return tb.fnObjWithRepeatedBraceAndBracket(expr)
+		return p.fnObjWithRepeatedBraceAndBracket(tb, expr)
 	}
 
 	if tb.header.curTokenBeginWithNumber() {
-		expr, err := tb.numberAtom()
+		expr, err := p.numberAtom(tb)
 		if err != nil {
 			return nil, err
 		}
@@ -155,22 +159,22 @@ func (tb *tokenBlock) fnSetObjAndBracedExprAndAtomObjAndFnObj() (ast.Obj, error)
 	}
 
 	// Parse atom (identifier, possibly with package name)
-	atom, err := tb.notNumberAtom()
+	atom, err := p.notNumberAtom(tb)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
 	}
 
 	// Check if atom is followed by function arguments
-	return tb.fnObjWithRepeatedBraceAndBracket(atom)
+	return p.fnObjWithRepeatedBraceAndBracket(tb, atom)
 }
 
 // ============================================================================
 // Atom parsing
 // ============================================================================
 
-// notNumberAtom parses an atom (identifier). Supports package name notation: pkgname.atomname
+// notNumberAtom parses an atom (identifier). Supports package name notation: pkgName.atomName
 // For example, "a.b" means atom "b" in package "a".
-func (tb *tokenBlock) notNumberAtom() (ast.Atom, error) {
+func (p *TbParser) notNumberAtom(tb *tokenBlock) (ast.Atom, error) {
 	value, err := tb.header.next()
 	if err != nil {
 		return ast.Atom(""), err
@@ -190,7 +194,7 @@ func (tb *tokenBlock) notNumberAtom() (ast.Atom, error) {
 }
 
 // numberAtom parses a numeric literal (integer or decimal).
-func (tb *tokenBlock) numberAtom() (ast.Atom, error) {
+func (p *TbParser) numberAtom(tb *tokenBlock) (ast.Atom, error) {
 	left, err := tb.header.next()
 	if err != nil {
 		return ast.Atom(""), err
@@ -239,13 +243,13 @@ func (tb *tokenBlock) numberAtom() (ast.Atom, error) {
 	return ast.Atom(left), nil
 }
 
-func (tb *tokenBlock) bracedObjSlice() ([]ast.Obj, error) {
+func (p *TbParser) bracedObjSlice(tb *tokenBlock) ([]ast.Obj, error) {
 	params := []ast.Obj{}
 	tb.header.skip(glob.KeySymbolLeftBrace)
 
 	if !tb.header.is(glob.KeySymbolRightBrace) {
 		for {
-			obj, err := tb.Obj()
+			obj, err := p.Obj(tb)
 			if err != nil {
 				return nil, parserErrAtTb(err, tb)
 			}
@@ -266,10 +270,10 @@ func (tb *tokenBlock) bracedObjSlice() ([]ast.Obj, error) {
 	return params, nil
 }
 
-func (tb *tokenBlock) bracketedObj() (ast.Obj, error) {
+func (p *TbParser) bracketedObj(tb *tokenBlock) (ast.Obj, error) {
 	tb.header.skip(glob.KeySymbolLeftBracket)
 
-	obj, err := tb.Obj()
+	obj, err := p.Obj(tb)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
 	}
@@ -279,13 +283,13 @@ func (tb *tokenBlock) bracketedObj() (ast.Obj, error) {
 	return obj, nil
 }
 
-func (tb *tokenBlock) bracedObj() (ast.Obj, error) {
+func (p *TbParser) bracedObj(tb *tokenBlock) (ast.Obj, error) {
 	if err := tb.header.skip(glob.KeySymbolLeftBrace); err != nil {
 		return nil, fmt.Errorf("expected '(': %s", err)
 	}
 
 	// Peek after first expression to check for comma
-	firstExpr, err := tb.Obj()
+	firstExpr, err := p.Obj(tb)
 	if err != nil {
 		return nil, err
 	}
@@ -304,7 +308,7 @@ func (tb *tokenBlock) bracedObj() (ast.Obj, error) {
 			// }
 
 			// Parse next expression
-			obj, err := tb.Obj()
+			obj, err := p.Obj(tb)
 			if err != nil {
 				return nil, parserErrAtTb(err, tb)
 			}
@@ -351,7 +355,7 @@ func (tb *tokenBlock) bracedObj() (ast.Obj, error) {
 					tb.header.skip("")
 
 					// Parse the right operand with the operator's precedence
-					rightOperand, err := tb.objInfixExpr(curPrec)
+					rightOperand, err := p.objInfixExpr(tb, curPrec)
 					if err != nil {
 						return nil, parserErrAtTb(err, tb)
 					}
@@ -380,18 +384,18 @@ func (tb *tokenBlock) bracedObj() (ast.Obj, error) {
 // Each () pair is parsed as a separate argument list.
 // Each [] pair is parsed as an index operation (prefix opt) using IndexOpt.
 // The function continues until there are no more left braces or left brackets.
-func (tb *tokenBlock) fnObjWithRepeatedBraceAndBracket(head ast.Obj) (ast.Obj, error) {
+func (p *TbParser) fnObjWithRepeatedBraceAndBracket(tb *tokenBlock, head ast.Obj) (ast.Obj, error) {
 	for !tb.header.ExceedEnd() {
 		if tb.header.is(glob.KeySymbolLeftBrace) {
 			// Parse function call arguments: ()
-			objParams, err := tb.bracedObjSlice()
+			objParams, err := p.bracedObjSlice(tb)
 			if err != nil {
 				return nil, parserErrAtTb(err, tb)
 			}
 			head = ast.NewFnObj(head, objParams)
 		} else if tb.header.is(glob.KeySymbolLeftBracket) {
 			// Parse index operation: []
-			obj, err := tb.bracketedObj()
+			obj, err := p.bracketedObj(tb)
 			if err != nil {
 				return nil, parserErrAtTb(err, tb)
 			}
@@ -406,14 +410,14 @@ func (tb *tokenBlock) fnObjWithRepeatedBraceAndBracket(head ast.Obj) (ast.Obj, e
 	return head, nil
 }
 
-func (tb *tokenBlock) fnSet() (ast.Obj, error) {
+func (p *TbParser) fnSet(tb *tokenBlock) (ast.Obj, error) {
 	tb.header.skip(glob.KeywordFn)
 	tb.header.skip(glob.KeySymbolLeftBrace)
 
 	fnSets := []ast.Obj{}
 	var retSet ast.Obj
 	for !(tb.header.is(glob.KeySymbolRightBrace)) {
-		fnSet, err := tb.Obj()
+		fnSet, err := p.Obj(tb)
 		if err != nil {
 			return nil, parserErrAtTb(err, tb)
 		}
@@ -433,7 +437,7 @@ func (tb *tokenBlock) fnSet() (ast.Obj, error) {
 		return nil, parserErrAtTb(err, tb)
 	}
 
-	retSet, err = tb.Obj()
+	retSet, err = p.Obj(tb)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
 	}
@@ -443,21 +447,7 @@ func (tb *tokenBlock) fnSet() (ast.Obj, error) {
 	return ret, nil
 }
 
-func ParseSourceCodeGetObj(s string) (ast.Obj, error) {
-	blocks, err := makeTokenBlocks([]string{s})
-	if err != nil {
-		return nil, err
-	}
-
-	obj, err := blocks[0].Obj()
-	if err != nil {
-		return nil, err
-	}
-
-	return obj, nil
-}
-
-func (tb *tokenBlock) backSlashExpr() (ast.Obj, error) {
+func (p *TbParser) backSlashExpr(tb *tokenBlock) (ast.Obj, error) {
 	err := tb.header.skip(glob.KeySymbolBackSlash)
 	if err != nil {
 		return nil, err
@@ -469,4 +459,103 @@ func (tb *tokenBlock) backSlashExpr() (ast.Obj, error) {
 	}
 
 	return ast.Atom(obj), nil
+}
+
+func (p *TbParser) EnumSetObjOrIntensionalSetObj(tb *tokenBlock) (ast.Obj, error) {
+	err := tb.header.skip(glob.KeySymbolLeftCurly)
+	if err != nil {
+		return nil, err
+	}
+
+	if tb.header.is(glob.KeySymbolRightCurly) {
+		err = tb.header.skip(glob.KeySymbolRightCurly)
+		if err != nil {
+			return nil, err
+		}
+		return ast.MakeEnumSetObj([]ast.Obj{}), nil
+	}
+
+	obj, err := p.Obj(tb)
+	if err != nil {
+		return nil, err
+	}
+
+	if !tb.header.is(glob.KeySymbolComma) && !tb.header.is(glob.KeySymbolRightCurly) {
+		return p.intensionalSetObj(tb, obj)
+	} else {
+		return p.enumSetObj(tb, obj)
+	}
+}
+
+func (p *TbParser) intensionalSetObj(tb *tokenBlock, paramAsObj ast.Obj) (ast.Obj, error) {
+	param, ok := paramAsObj.(ast.Atom)
+	if !ok {
+		return nil, fmt.Errorf("expect parameter as atom")
+	}
+
+	if err := glob.IsValidUserDefinedNameWithoutPkgName(string(param)); err != nil {
+		return nil, err
+	}
+
+	parentSet, err := p.Obj(tb)
+	if err != nil {
+		return nil, err
+	}
+
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, err
+	}
+
+	facts := []ast.FactStmt{}
+	for !tb.header.is(glob.KeySymbolRightCurly) {
+		curFact, err := p.inlineFactThenSkipStmtTerminatorUntilEndSignals(tb, []string{glob.KeySymbolRightCurly})
+		if err != nil {
+			return nil, err
+		}
+		// 检查如果是 forall fact，它的参数里不应该等于 param
+		if uniFactParams := ast.ExtractParamsFromFact(curFact); uniFactParams != nil {
+			for _, uniFactParam := range uniFactParams {
+				if uniFactParam == string(param) {
+					return nil, fmt.Errorf("parameter %s in forall fact conflicts with intensional set parameter %s", uniFactParam, string(param))
+				}
+			}
+		}
+		facts = append(facts, curFact)
+	}
+
+	// 跳过右花括号
+	err = tb.header.skip(glob.KeySymbolRightCurly)
+	if err != nil {
+		return nil, err
+	}
+
+	return ast.MakeIntensionalSetObj(string(param), parentSet, facts), nil
+}
+
+func (p *TbParser) enumSetObj(tb *tokenBlock, firstParam ast.Obj) (ast.Obj, error) {
+	enumItems := []ast.Obj{firstParam}
+
+	// 跳过第一个逗号（如果存在）
+	tb.header.skipIfIs(glob.KeySymbolComma)
+
+	// 循环读取后续对象，直到遇到右花括号
+	for !tb.header.is(glob.KeySymbolRightCurly) {
+		curItem, err := p.Obj(tb)
+		if err != nil {
+			return nil, err
+		}
+		enumItems = append(enumItems, curItem)
+
+		// 跳过逗号（如果存在）
+		tb.header.skipIfIs(glob.KeySymbolComma)
+	}
+
+	// 跳过右花括号
+	err := tb.header.skip(glob.KeySymbolRightCurly)
+	if err != nil {
+		return nil, err
+	}
+
+	return ast.MakeEnumSetObj(enumItems), nil
 }

@@ -49,7 +49,7 @@ func (e *Env) Init() {
 
 	e.InsertFnInFnTT(kernel_lib.PowerAtom, kernel_lib.PowerTemplateR)
 
-	e.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordItemExistsIn), []ast.Obj{ast.Atom(glob.KeywordSet)}, glob.InnerGenLine))
+	e.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordItemExistsIn), []ast.Obj{ast.Atom(glob.KeywordSet)}, glob.BuiltinLine))
 
 	e.NewTransitiveProp(">")
 	e.NewTransitiveProp(">=")

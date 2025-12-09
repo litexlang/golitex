@@ -10,7 +10,7 @@ echo ""
 
 # Step 1: Select commit type
 echo "Please select a commit type:"
-echo "1) feat    - 新功能（feature）"
+echo "1) feat    - 更新功能（新建，删除，改变）"
 echo "2) fix     - 修补bug"
 echo "3) docs    - 文档（documentation）"
 echo "4) style   - 格式（不影响代码运行的变动）"

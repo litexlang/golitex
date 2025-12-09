@@ -36,7 +36,7 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) ExecR
 	}
 	if verRet.IsUnknown() {
 		msg = fmt.Sprintf("%s\nis unknown", startIsNPos.String())
-		var result ExecRet = NewExecUnknown("")
+		var result ExecRet = NewEmptyExecUnknown()
 		result = result.AddMsg(fmt.Sprintf("%s\nfailed\n", stmt.String()))
 		if msg != "" {
 			result = result.AddMsg(msg)
@@ -61,7 +61,7 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) ExecR
 	}
 	if verRet.IsUnknown() {
 		msg = fmt.Sprintf("%s\nis unknown", startFact.String())
-		var result ExecRet = NewExecUnknown("")
+		var result ExecRet = NewEmptyExecUnknown()
 		result = result.AddMsg(fmt.Sprintf("%s\nfailed\n", stmt.String()))
 		if msg != "" {
 			result = result.AddMsg(msg)
@@ -86,7 +86,7 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) ExecR
 	}
 	if verRet.IsUnknown() {
 		msg = fmt.Sprintf("%s\nis unknown", uniFact_n_true_leads_n_plus_1_true.String())
-		var result ExecRet = NewExecUnknown("")
+		var result ExecRet = NewEmptyExecUnknown()
 		result = result.AddMsg(fmt.Sprintf("%s\nfailed\n", stmt.String()))
 		if msg != "" {
 			result = result.AddMsg(msg)
@@ -104,7 +104,7 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) ExecR
 		return result
 	}
 
-	var result ExecRet = NewExecTrue("")
+	var result ExecRet = NewEmptyExecTrue()
 	result = result.AddMsg(fmt.Sprintf("%s\nsuccess\n", stmt.String()))
 	return result
 }

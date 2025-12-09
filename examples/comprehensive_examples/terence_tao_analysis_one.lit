@@ -122,10 +122,7 @@ know forall x N => 1 * x = x
 
 # Axiom 3.1 If A is a set, then A is an object. In particular, given two sets A and B, it is meaningful to ask whether A in B.
 # "in" and "set" are built-in keywords. They behave in Litex just like how they behave in daily math (naive set theory).
-# "obj" is a built-in keyword in Litex for declaring objects. Also, anything declared object (things that are not declared as prop or exist_prop) is an object (writes xxx $in obj). obj itself is not obj.
-# The word "object" every now and then in Analysis I without any definition. It sort to reveals that explanations of basic elements in math are still missing in this book (or maybe in math world in general). The keyword "obj" in Litex is really something aligns with the word "object" means in math with Litex creators's understanding.
-
-know forall s set => s $in obj
+# In ZFC set theory, everything is a set, except for the keyword set itself. In Litex, every symbol except for the keyword `set`, `nonempty_set`, `finite_set` is a set.
 
 # Definition 3.1.4: Set A is equal to set B, written A = B, if and only if every element of A is an element of B and every element of B is an element of A.
 know:
@@ -140,11 +137,11 @@ know:
 # Axiom 3.2: There exists a set which contains no elements
 know @exist empty_set set st exist_empty_set():
     =>:
-        forall x obj:
+        forall x set:
             not $in(x, empty_set)
 
 # Axiom 3.3: a is an object, then there exists a set A such that A contains and only contains a. If a and b are objects, then there exists a set A such that A contains and only contains a and b.
-know @exist s set st exist_set_contains_and_only_contains_obj(a obj):
+know @exist s set st exist_set_contains_and_only_contains_obj(a set):
     =>:
         forall x s:
             x = a
@@ -159,7 +156,7 @@ prove:
     
     # TODO: Litex will provide the user a syntax sugar for defining a set by a property. Now we use the idea of "if and only if" to define a set by a property.
     let s set: # define s = {x in s2| property_of_s2_items(x) is true}
-        s $is_subset_of s2
+        s $subset_of s2
         forall x s:
             $property_of_s2_items(x)
         forall x s2:
@@ -176,7 +173,7 @@ prove:
 # Axiom 3.8 is wrong because it leads to Russell's paradox.
 
 # Axiom 3.9 (Regularity) If A is a non-empty set, then there is at least one element of A that is either not a set, or is disjoint from A
-prop is_disjoint_from(A obj, B set):
+prop is_disjoint_from(A set, B set):
     A $in set
     forall x A:
         not $in(x, B)

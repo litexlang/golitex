@@ -17,11 +17,78 @@ package litex_comparator
 import (
 	ast "golitex/ast"
 	glob "golitex/glob"
-	parser "golitex/parser"
 )
 
+// isArithmeticExpr 检查 obj 是否是四则运算表达式（+、-、*、/）
+// 递归检查：数字字面量、一元负号、二元四则运算
+func isArithmeticExpr(obj ast.Obj) bool {
+	// 检查是否是数字字面量原子
+	if _, ok := ast.IsNumLitAtomObj(obj); ok {
+		return true
+	}
+
+	// 检查是否是 FnObj
+	fnObj, ok := obj.(*ast.FnObj)
+	if !ok {
+		return false
+	}
+
+	// 检查 FnHead 是否是 Atom
+	fnHead, ok := fnObj.FnHead.(ast.Atom)
+	if !ok {
+		return false
+	}
+
+	op := string(fnHead)
+
+	// 检查一元负号：-x
+	if op == glob.KeySymbolMinus && len(fnObj.Params) == 1 {
+		return isArithmeticExpr(fnObj.Params[0])
+	}
+
+	// 检查二元四则运算：+、-、*、/
+	isArithmeticOp := op == glob.KeySymbolPlus || op == glob.KeySymbolMinus ||
+		op == glob.KeySymbolStar || op == glob.KeySymbolSlash
+
+	if !isArithmeticOp {
+		return false
+	}
+
+	// 二元运算必须有两个参数
+	if len(fnObj.Params) != 2 {
+		return false
+	}
+
+	// 递归检查两个参数是否也是算术表达式
+	return isArithmeticExpr(fnObj.Params[0]) && isArithmeticExpr(fnObj.Params[1])
+}
+
 func IsNumExprObjThenSimplify(obj ast.Obj) ast.Obj {
-	return parser.IsNumExprObj_SimplifyIt(obj)
+	// 如果不满足四则运算表达式的结构，返回 nil
+	if !isArithmeticExpr(obj) {
+		return nil
+	}
+
+	// 使用 ast.MakeObjIntoNumLitExpr 来转换为 NumLitExpr 并计算
+	numLitExpr, ok, err := ast.MakeObjIntoNumLitExpr(obj)
+	if err != nil || !ok {
+		return nil
+	}
+
+	evaluatedStr, evaluated, err := numLitExpr.EvalNumLitExpr()
+	if err != nil || !evaluated {
+		return nil
+	}
+
+	// 由于不能使用 parser，返回原对象（或者可以返回一个简单的数字原子）
+	// 但这里需要将 evaluatedStr 转换为 ast.Obj
+	// 如果 evaluatedStr 是纯数字，可以创建一个 Atom
+	// 否则返回原对象表示无法简化
+	if glob.IsNumLitStr(evaluatedStr) {
+		return ast.Atom(evaluatedStr)
+	}
+
+	return nil
 }
 
 func CmpBy_Literally_NumLit_PolynomialArith(left, right ast.Obj) (bool, string, error) {
@@ -31,7 +98,7 @@ func CmpBy_Literally_NumLit_PolynomialArith(left, right ast.Obj) (bool, string, 
 		return false, "", err
 	}
 	if ok {
-		return true, "the same", nil
+		return true, "they are literally the same", nil
 	}
 
 	areNumLit, areEqual, err := NumLitEqual_ByEval(left, right)
@@ -39,7 +106,7 @@ func CmpBy_Literally_NumLit_PolynomialArith(left, right ast.Obj) (bool, string, 
 		return false, "", err
 	}
 	if areNumLit && areEqual {
-		return true, "builtin calculation", nil
+		return true, "calculation", nil
 	}
 
 	leftStr := left.String()
@@ -53,7 +120,7 @@ func CmpBy_Literally_NumLit_PolynomialArith(left, right ast.Obj) (bool, string, 
 	return false, "", nil
 }
 
-func IsNumLitObj(obj ast.Obj) bool {
+func IsNumExprLitObj(obj ast.Obj) bool {
 	_, ok, err := ast.MakeObjIntoNumLitExpr(obj)
 	if err != nil {
 		return false

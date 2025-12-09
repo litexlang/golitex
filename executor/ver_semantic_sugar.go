@@ -20,8 +20,8 @@ import (
 	cmp "golitex/cmp"
 )
 
-func (ver *Verifier) verByReplaceFcInSpecFactWithValue(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	replaced, newStmt := ver.Env.ReplaceFcInSpecFactWithValue(stmt)
+func (ver *Verifier) verByReplaceObjInSpecFactWithValue(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	replaced, newStmt := ver.Env.ReplaceObjInSpecFactWithValue(stmt)
 	if replaced {
 		verRet := ver.verTrueEqualFactMainLogic(newStmt, state, true)
 		if verRet.IsErr() {
@@ -30,13 +30,13 @@ func (ver *Verifier) verByReplaceFcInSpecFactWithValue(stmt *ast.SpecFactStmt, s
 
 		if verRet.IsTrue() {
 			values := []ast.Obj{}
-			if cmp.IsNumLitObj(newStmt.Params[0]) {
+			if cmp.IsNumExprLitObj(newStmt.Params[0]) {
 				values = append(values, newStmt.Params[0])
 			} else {
 				values = append(values, nil)
 			}
 
-			if cmp.IsNumLitObj(newStmt.Params[1]) {
+			if cmp.IsNumExprLitObj(newStmt.Params[1]) {
 				values = append(values, newStmt.Params[1])
 			} else {
 				values = append(values, nil)
@@ -56,8 +56,8 @@ func (ver *Verifier) verByReplaceFcInSpecFactWithValue(stmt *ast.SpecFactStmt, s
 	return NewExecUnknown(fmt.Sprintf("%s is not equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
 }
 
-func (ver *Verifier) verByReplaceFcInSpecFactWithValueAndCompute(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	replaced, newStmt := ver.Env.ReplaceFcInSpecFactWithValue(stmt)
+func (ver *Verifier) verByReplaceObjInSpecFactWithValueAndCompute(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	replaced, newStmt := ver.Env.ReplaceObjInSpecFactWithValue(stmt)
 
 	if replaced {
 		verRet := ver.verTrueEqualFactMainLogic(newStmt, state, true)
@@ -66,9 +66,9 @@ func (ver *Verifier) verByReplaceFcInSpecFactWithValueAndCompute(stmt *ast.SpecF
 		}
 		if verRet.IsTrue() {
 			msg := fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values and computing", stmt.String(), newStmt.String())
-			return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecTrue(""))
+			return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
 		}
 	}
 
-	return NewExecUnknown("")
+	return NewEmptyExecUnknown()
 }
