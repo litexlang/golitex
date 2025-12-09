@@ -44,9 +44,10 @@ func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *Ve
 
 	if checkRequirements && !state.ReqOk {
 		// REMARK: 这里 state 更新了： ReqOk 更新到了 true
-		if state, verRet = ver.checkFnsReqAndUpdateReqState(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
+		if verRet = ver.checkFnsReqAndUpdateReqState(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
 			return NewExecErr(verRet.String())
 		}
+		state.ReqOk = true
 
 		if !isValidEqualFact(stmt) {
 			return NewExecErr(fmt.Sprintf("invalid equal fact: %s", stmt))
