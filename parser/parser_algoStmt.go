@@ -58,7 +58,6 @@ func (p *TbParser) proveAlgoIfStmt(tb *tokenBlock) (*ast.ProveAlgoIfStmt, error)
 		return nil, parserErrAtTb(err, tb)
 	}
 
-	parser := &Parser{}
 	thenFacts := []ast.ProveAlgoStmt{}
 	for _, bodyStmt := range tb.body {
 		stmt, err := p.proveAlgoStmt(&bodyStmt)
@@ -82,7 +81,6 @@ func (p *TbParser) algoIfStmt(tb *tokenBlock) (*ast.AlgoIfStmt, error) {
 		return nil, parserErrAtTb(err, tb)
 	}
 
-	parser := &Parser{}
 	thenFacts := []ast.AlgoStmt{}
 	for _, bodyStmt := range tb.body {
 		stmt, err := p.algoStmt(&bodyStmt)
