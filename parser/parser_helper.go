@@ -54,16 +54,16 @@ func NoSelfReferenceInPropDef(propName string, facts []ast.FactStmt) error {
 			if err != nil {
 				return err
 			}
-		case *ast.IntensionalSetStmt:
-			facts := make([]ast.FactStmt, len(asFactStmt.Facts))
-			for i, fact := range asFactStmt.Facts {
-				facts[i] = fact
-			}
+		// case *ast.IntensionalSetStmt:
+		// 	facts := make([]ast.FactStmt, len(asFactStmt.Facts))
+		// 	for i, fact := range asFactStmt.Facts {
+		// 		facts[i] = fact
+		// 	}
 
-			err := NoSelfReferenceInPropDef(propName, facts)
-			if err != nil {
-				return err
-			}
+		// 	err := NoSelfReferenceInPropDef(propName, facts)
+		// 	if err != nil {
+		// 		return err
+		// 	}
 		default:
 			continue
 		}
@@ -89,4 +89,71 @@ func IsNumExprObj_SimplifyIt(obj ast.Obj) ast.Obj {
 	}
 
 	return newObj
+}
+
+func ParseSourceCodeGetFact(sourceCode string) (ast.FactStmt, error) {
+	blocks, err := makeTokenBlocks([]string{sourceCode})
+	if err != nil {
+		return nil, err
+	}
+
+	p := NewTbParser()
+
+	return p.factStmt(&blocks[0], UniFactDepth0)
+}
+
+// ParseSingleLineFact parses a single line fact statement from a string
+// This function is similar to ParseSourceCodeGetObj but for facts
+// It parses inline facts that can appear in a single line (like "x $in S", "x = y", etc.)
+func ParseSingleLineFact(s string) (ast.FactStmt, error) {
+	blocks, err := makeTokenBlocks([]string{s})
+	if err != nil {
+		return nil, err
+	}
+
+	p := NewTbParser()
+
+	fact, err := p.inlineFactThenSkipStmtTerminatorUntilEndSignals(&blocks[0], []string{})
+	if err != nil {
+		return nil, err
+	}
+
+	return fact, nil
+}
+
+func GetParamParentSetFactsFromIntensionalSet(intensionalSet *ast.FnObj) (string, ast.Obj, ast.FactStmtSlice, error) {
+	param, ok := intensionalSet.Params[0].(ast.Atom)
+	if !ok {
+		return "", nil, nil, fmt.Errorf("expected parameter as atom, got %T", intensionalSet.Params[0])
+	}
+	paramAsString := string(param)
+
+	parentSet := intensionalSet.Params[1]
+
+	facts := []ast.FactStmt{}
+	for i := 2; i < len(intensionalSet.Params); i++ {
+		fact, err := ParseSingleLineFact(intensionalSet.Params[i].String())
+		if err != nil {
+			return "", nil, nil, err
+		}
+		facts = append(facts, fact)
+	}
+
+	return paramAsString, parentSet, facts, nil
+}
+
+func ParseSourceCodeGetObj(s string) (ast.Obj, error) {
+	blocks, err := makeTokenBlocks([]string{s})
+	if err != nil {
+		return nil, err
+	}
+
+	p := NewTbParser()
+
+	obj, err := p.Obj(&blocks[0])
+	if err != nil {
+		return nil, err
+	}
+
+	return obj, nil
 }

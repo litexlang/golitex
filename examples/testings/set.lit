@@ -1,11 +1,11 @@
 prove:
     # Counting is hard to implement in Litex because even in set theory books, they are "known by default". I as language implementer have to implement basic properties of counting by myself.
 
-    have set y = {1, 2, 3}
+    have y set = {1, 2, 3}
 
     have x set
 
-    know $is_subset_of(x, y)
+    know $subset_of(x, y)
 
     prove:
         $subset_of_finite_set_is_finite_set(x, y)
@@ -13,12 +13,12 @@ prove:
         count(x) <= count(y)
 
 prove:
-    prop is_inter_item(A, B set, x obj):
+    prop is_inter_item(A, B set, x set):
         x $in A
         x $in B
 
     fn inter(A, B set) set:
-        forall x obj:
+        forall x set:
             x $in inter(A, B)
             <=>:
                 $is_inter_item(A, B, x)

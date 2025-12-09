@@ -15,7 +15,7 @@
 package kernel_lib_litex_code
 
 var PipelineInitCode = `
-prop last_two_objects_are_equal(x, y, y2 obj):
+prop last_two_objects_are_equal(x, y, y2 set):
 	y = y2
 
 exist_prop a in_set st exist_obj_not_in_left_set_but_in_right_set(not_in_set, in_set set):
@@ -128,7 +128,7 @@ know forall x, y R: x > 0, y > 0 => x ^ y $in R, x ^ y > 0, x * y > 0
 know forall x Z => x $in Q, x $in R
 
 know forall x N_pos => x $in N, x >= 1, x > 0, x $in Q, x $in R
-know forall x Z: x >= 0 => x $in N_pos
+know forall x Z: x > 0 => x $in N_pos
 know forall x Z: x <= 0 => not x $in N_pos
 
 fn_template seq(s set):
@@ -155,8 +155,10 @@ know:
     forall n N_pos, a finite_seq(R, n), k N: k < n => finite_seq_product(n, a, k+1) = finite_seq_product(n, a, k) * a(k+1)
     forall n N_pos, a finite_seq(R, n) => finite_seq_product(n, a, 1) = a(1)
 
+exist_prop a set st item_exists_in(y set):
+	a $in y
+	
 know:
-	$item_exists_in(obj)
 	$item_exists_in(N)
 	$item_exists_in(N_pos)
 	$item_exists_in(Z)
@@ -370,15 +372,9 @@ know forall a, b, c, d R: c != 0, a = d * (b / c) => a * c = d * b
 know forall x, y, z R: z != 0, x = y / z => x * z = y
 
 fn range(x Z, y Z) set:
-	dom:
-		x <= y 
-	=>:
-		forall i Z:
-			i >= x
-			i < y
-			=>:
-				i $in range(x, y)
+	range(x, y) = {i Z: x <= i, i < y}
 
+"""
 know:
 	forall x, y set:
 		=>:
@@ -388,6 +384,7 @@ know:
 				t $in y
 			forall t y:
 				t $in x
+"""
 ` + InequalityFacts
 
 var InequalityFacts = `
@@ -596,9 +593,8 @@ fn negate(x R) R:
 
 know forall x set: not x $in x
 
-prop is_subset_of(x, y set):
+prop subset_of(x, y set):
 	forall z x:
-		z $in x
 		=>:
 			z $in y
 
@@ -615,7 +611,7 @@ fn intersect(x, y set) set:
 		=>:
 			z $in intersect(x, y)
 
-know @item_in_intersect(z obj, x, y set):
+know @item_in_intersect(z set, x, y set):
 	z $in intersect(x, y)
 	=>:
 		z $in x
@@ -627,22 +623,22 @@ fn union(x, y set) set:
 	forall z y:
 		z $in union(x, y)
 
-know @item_in_union(z obj, x, y set):
+know @item_in_union(z set, x, y set):
 	z $in union(x, y)
 	=>:
 		z $in x or z $in y
 
 fn complement(x, y set) set:
 	dom:
-		x $is_subset_of y
+		x $subset_of y
 	=>:
 		forall z y:
 			not z $in x
 			=>:
 				z $in complement(x, y)
 
-know @item_in_complement(z obj, x, y set):
-	x $is_subset_of y
+know @item_in_complement(z set, x, y set):
+	x $subset_of y
 	z $in complement(x, y)
 	=>:
 		z $in y
@@ -690,14 +686,14 @@ know:
 prop is_finite_set(x set)
 know forall x set: $is_finite_set(x) <=> x $in finite_set
 know @subset_of_finite_set_is_finite_set(x set, y finite_set):
-	x $is_subset_of y
+	x $subset_of y
 	=>:
 		$is_finite_set(x)
 		count(x) <= count(y)
 
 prop is_cart(x set)
 
-prop is_tuple(x obj)
+prop is_tuple(x set)
 
 fn proj(x set, i N_pos) set:
 	dom:
@@ -760,7 +756,7 @@ know:
 know forall x, y nonempty_set: $item_exists_in(fn(x) y)
 
 fn inverse_image_set(X set, Y set, f fn(X)Y, U set) set:
-    U $is_subset_of Y
+    U $subset_of Y
     =>:
         inverse_image_set(X, Y, f, U) = {x X: f(x) $in U}
 
@@ -770,7 +766,7 @@ know:
 		not z $in y
 		<=>:
 			z $in difference(x, y)
-know @item_in_difference(x, y set, z obj):
+know @item_in_difference(x, y set, z set):
 	z $in difference(x, y)
 	=>:
 		not z $in y
@@ -780,16 +776,16 @@ fn power_set(x set) set
 know:
 	forall x set, y power_set(x):
 		y $in set
-		y $is_subset_of x
+		y $subset_of x
 	forall x set, y set:
-		y $is_subset_of x
+		y $subset_of x
 		=>:
 			y $in power_set(x)
 	forall x nonempty_set:
 		power_set(x) $in nonempty_set
 		$item_exists_in(power_set(x))
 
-know forall x set: empty_set $is_subset_of x
+know forall x set: empty_set $subset_of x
 know forall s finite_set: count(s) > 0 => s $in nonempty_set, $item_exists_in(s)
 
 know:
@@ -821,4 +817,63 @@ know:
 	forall a, b R: a ^ 2 + b ^ 2 >= 0
 
 know forall x, y R: x > y or x <= y, x < y or x >= y, x = y or x != y
+
+prop equal_tuple(x, y set, dim N_pos):
+	$is_tuple(x)
+	$is_tuple(y)
+	dim(x) = dim
+	dim(y) = dim
+	<=>:
+		x = y
+
+know:
+	forall x, y set:
+		$is_tuple(x)
+		$is_tuple(y)
+		dim(x) = dim(y)
+		forall i N_pos: i <= dim(x) => x[i] = y[i]
+		=>:
+			x = y
+
+fn subsets(x set) set
+know forall x set, y subsets(x): y $subset_of x, forall t y => t $in x
+know forall x, y set: x $subset_of y => x $in subsets(y)
+
+prop is_intensional_set(x set)
+
+know forall x, y set => x = y <=> x $subset_of y, y $subset_of x
+
+know forall x R: abs(x) >= 0
+know forall x R: x >= 0 => sqrt(x) = 0 <=> x = 0
+
+exist_prop x X st has_preimage(X, Y set, f fn(X)Y, y Y):
+	f(x) = y
+
+prop is_injective_fn(X set, Y set, f fn(X)Y):
+	forall x1, x2 X:
+		x1 != x2
+		=>:
+			f(x1) != f(x2)
+
+prop is_surjective_fn(X set, Y set, f fn(X)Y):
+	forall y Y:
+		$has_preimage(X, Y, f, y)
+
+prop is_bijective_fn(X set, Y set, f fn(X)Y):
+	$is_injective_fn(X, Y, f)
+	$is_surjective_fn(X, Y, f)
+
+# 如何证明集合是有限集合
+exist_prop f fn(X)Y st exist_one_to_one_fn_to_finite_set(X finite_set, Y set):
+	$is_bijective_fn(X, Y, f)
+			
+know:
+	forall a, b, c R: a > 0, a * b > c => b > c / a
+	forall a, b R, c N_pos: a > 0, b > 0, a > b => a^c > b^c
+	forall a, b R: a != b <=> a - b != 0
+	forall a, b R: a > 0, b >= 0 => a + b > 0
+
+know not {} $in nonempty_set
+
+prop equal_set(x set, y set)
 `

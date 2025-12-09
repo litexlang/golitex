@@ -14,23 +14,21 @@
 
 package litex_executor
 
-import ast "golitex/ast"
+// func (ver *Verifier) verIntensionalSetStmt(stmt *ast.IntensionalSetStmt, state *VerState) ExecRet {
+// 	leftUniFact, rightUniFact, err := stmt.ToEquivalentUniFacts()
+// 	if err != nil {
+// 		return NewExecErr(err.Error())
+// 	}
 
-func (ver *Verifier) verIntensionalSetStmt(stmt *ast.IntensionalSetStmt, state *VerState) ExecRet {
-	leftUniFact, rightUniFact, err := stmt.ToEquivalentUniFacts()
-	if err != nil {
-		return NewExecErr(err.Error())
-	}
+// 	verRet := ver.verUniFact(leftUniFact, state)
+// 	if verRet.IsErr() || verRet.IsUnknown() {
+// 		return verRet
+// 	}
 
-	verRet := ver.verUniFact(leftUniFact, state)
-	if verRet.IsErr() || verRet.IsUnknown() {
-		return verRet
-	}
+// 	verRet = ver.verUniFact(rightUniFact, state)
+// 	if verRet.IsErr() || verRet.IsUnknown() {
+// 		return verRet
+// 	}
 
-	verRet = ver.verUniFact(rightUniFact, state)
-	if verRet.IsErr() || verRet.IsUnknown() {
-		return verRet
-	}
-
-	return verRet
-}
+// 	return verRet
+// }

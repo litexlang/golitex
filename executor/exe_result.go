@@ -103,10 +103,7 @@ func (v *ExecUnknown) IsNotUnknown() bool       { return false }
 func (v *ExecUnknown) IsNotErr() bool           { return true }
 
 func NewExecErr(s string) *ExecErr {
-	if s != "" {
-		return &ExecErr{Msg: []string{s}}
-	}
-	return &ExecErr{Msg: []string{}}
+	return &ExecErr{Msg: []string{s}}
 }
 
 func NewExecErrWithErr(err error) *ExecErr {
@@ -124,17 +121,23 @@ func BoolErrToExecRet(ok bool, err error) ExecRet {
 }
 
 func NewExecTrue(s string) ExecRet {
-	if s != "" {
-		return &ExecTrue{Msg: []string{s}}
-	}
-	return &ExecTrue{Msg: []string{}, TrueEqualValues: nil}
+	return &ExecTrue{Msg: []string{s}, TrueEqualValues: nil}
+}
+
+func NewEmptyExecUnknown() ExecRet {
+	return &ExecUnknown{Msg: []string{}}
+}
+
+func NewEmptyExecErr() ExecRet {
+	return &ExecErr{Msg: []string{}}
+}
+
+func NewEmptyExecTrue() ExecRet {
+	return &ExecTrue{Msg: []string{}}
 }
 
 func NewExecUnknown(s string) ExecRet {
-	if s != "" {
-		return &ExecUnknown{Msg: []string{s}}
-	}
-	return &ExecUnknown{Msg: []string{}}
+	return &ExecUnknown{Msg: []string{s}}
 }
 
 func NewExecTrueWithValues(s string, equalValue []ast.Obj) ExecRet {

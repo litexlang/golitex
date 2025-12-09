@@ -33,13 +33,13 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContra
 		if execState.IsNotTrue() {
 			return execState
 		}
-		result = NewExecTrue("")
+		result = NewEmptyExecTrue()
 	case *ast.UniFactStmt:
 		execState := exec.uniFactProveByContradiction(asStmt, stmt)
 		if execState.IsNotTrue() {
 			return execState
 		}
-		result = NewExecTrue("")
+		result = NewEmptyExecTrue()
 		isSuccess = true
 	default:
 		return NewExecErr(fmt.Errorf("prove by contradiction only support reversible fact or uni fact").Error())
@@ -91,7 +91,7 @@ func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.Spec_O
 		}
 	}
 
-	result := NewExecTrue("")
+	result := NewEmptyExecTrue()
 	result = result.AddMsg(fmt.Sprintf("the reversed last statement of current claim statement is:\n%s\nwe prove it(them)\n", reversedLastFactStrStr))
 	result = result.AddMsg(fmt.Sprintf("last statement of current claim statement:\n%s\nis true and false. Prove by contradiction is successful!", lastStmtAsFact))
 	return result
@@ -156,7 +156,7 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 		}
 	}
 
-	result := NewExecTrue("")
+	result := NewEmptyExecTrue()
 	result = result.AddMsg(fmt.Sprintf("the reversed last statement of current claim statement is(are):\n\n%s\n\nwe prove it(them)\n", reversedLastFactStrStr))
 	result = result.AddMsg(fmt.Sprintf("last statement of current claim statement:\n%s\nis true and false. Prove by contradiction is successful!", lastFact))
 	return result
@@ -175,7 +175,7 @@ func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) ExecRet {
 	}
 	// exec.knowStmt(ast.NewKnowStmt([]ast.CanBeKnownStmt{stmt.ToCheckFact}))
 
-	return NewExecTrue("")
+	return NewExecTrue(stmt.String())
 }
 
 func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) ExecRet {
@@ -212,7 +212,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) ExecRet {
 		if isSuccess.IsNotTrue() {
 			return isSuccess
 		}
-		return NewExecTrue("")
+		return NewEmptyExecTrue()
 	default:
 		execState := exec.execStmtsAtCurEnv(stmt.Proofs)
 		if execState.IsNotTrue() {
@@ -223,7 +223,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) ExecRet {
 		if execState.IsNotTrue() {
 			return execState
 		}
-		return NewExecTrue("")
+		return NewEmptyExecTrue()
 	}
 
 }
@@ -267,7 +267,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) ExecRet {
 		return NewExecErr(fmt.Errorf("claim statement error: failed to verify fact:\n%s", failedFact).Error())
 	}
 
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 
 }
 
@@ -276,7 +276,7 @@ func (exec *Executor) claimPropStmt(stmt *ast.ClaimPropStmt) ExecRet {
 	// prop all atoms declared
 	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.DomFacts, stmt.Prop.IffFacts, stmt.Line)
 	ret := exec.Env.AreAtomsInFactAreDeclared(uniFact, map[string]struct{}{})
-	if ret.IsErr() && !exec.Env.IsFcAtomDeclaredByUser(ast.Atom(stmt.Prop.DefHeader.Name)) {
+	if ret.IsErr() && !exec.Env.IsAtomDefinedByUser(ast.Atom(stmt.Prop.DefHeader.Name)) {
 		ret.AddMsg("in claim prop statement")
 		return NewExecErr(ret.String())
 	}
@@ -322,7 +322,7 @@ func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) ExecRet {
 		return NewExecErr(ret.String())
 	}
 
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }
 
 func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt) ExecRet {
@@ -374,7 +374,7 @@ func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt
 		}
 	}
 
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }
 
 func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimPropStmt) ExecRet {
@@ -390,7 +390,7 @@ func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimPropStmt) ExecRet 
 		return execRet
 	}
 
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }
 
 func (exec *Executor) claimIffStmt(stmt *ast.ClaimIffStmt) ExecRet {
@@ -416,5 +416,5 @@ func (exec *Executor) claimIffStmt(stmt *ast.ClaimIffStmt) ExecRet {
 		return NewExecErr(ret.String())
 	}
 
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }

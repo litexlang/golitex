@@ -16,16 +16,16 @@ package litex_env
 
 import ast "golitex/ast"
 
-func (e *Env) GetEnumFact(enumName string) ([]ast.Obj, bool) {
-	for env := e; env != nil; env = env.Parent {
-		enumFacts, ok := env.EnumFacts[enumName]
-		if ok {
-			return enumFacts, true
-		}
-	}
+// func (e *Env) GetEnumFact(enumName string) ([]ast.Obj, bool) {
+// 	for env := e; env != nil; env = env.Parent {
+// 		enumFacts, ok := env.EnumFacts[enumName]
+// 		if ok {
+// 			return enumFacts, true
+// 		}
+// 	}
 
-	return nil, false
-}
+// 	return nil, false
+// }
 
 func (e *Env) GetLatestFnT_GivenNameIsIn(fnName string) *FnInFnTMemItem {
 	for env := e; env != nil; env = env.Parent {
@@ -48,13 +48,13 @@ func (e *Env) IsTransitiveProp(propName string) bool {
 	return false
 }
 
-func (e *Env) GetRelatedFcSliceOfTransitiveProp(propName string, fc ast.Obj) []ast.Obj {
+func (e *Env) GetRelatedObjSliceOfTransitiveProp(propName string, obj ast.Obj) []ast.Obj {
 	ret := []ast.Obj{}
 	for env := e; env != nil; env = env.Parent {
-		relatedFcSlice, ok := env.TransitivePropMem[propName]
+		relatedObjSlice, ok := env.TransitivePropMem[propName]
 		if ok {
-			if relatedFcSlice, ok := relatedFcSlice[fc.String()]; ok {
-				ret = append(ret, relatedFcSlice...)
+			if relatedObjSlice, ok := relatedObjSlice[obj.String()]; ok {
+				ret = append(ret, relatedObjSlice...)
 			}
 		}
 	}
@@ -81,15 +81,67 @@ func (e *Env) GetObjTuple(obj ast.Obj) ast.Obj {
 	// 遍历所有环境
 	for env := e; env != nil; env = env.Parent {
 		// 获取当前环境中与 obj 相等的所有对象
-		equalFcs, ok := env.GetEqualFcs(obj)
-		if ok && equalFcs != nil {
+		equalObjs, ok := env.GetEqualObjs(obj)
+		if ok && equalObjs != nil {
 			// 检查其中是否有 tuple
-			for _, equalFc := range *equalFcs {
-				if fnObj, ok := equalFc.(*ast.FnObj); ok && ast.IsTupleFnObj(fnObj) {
+			for _, equalObj := range *equalObjs {
+				if fnObj, ok := equalObj.(*ast.FnObj); ok && ast.IsTupleFnObj(fnObj) {
 					return fnObj
 				}
 			}
 		}
+	}
+	return nil
+}
+
+// GetObjEnumSet 检查 obj 是否等于某个 enumset
+// 通过获取所有环境中与 obj 相等的对象列表，检查其中是否有 enumset
+// 如果找到 enumset，返回该 enumset；否则返回 nil
+func (e *Env) GetObjEnumSet(obj ast.Obj) ast.Obj {
+	// 如果 obj 本身就是一个 enumset，直接返回
+	if ast.IsEnumSetObj(obj) {
+		return obj
+	}
+
+	// 遍历所有环境
+	for env := e; env != nil; env = env.Parent {
+		// 获取当前环境中与 obj 相等的所有对象
+		equalObjs, ok := env.GetEqualObjs(obj)
+		if ok && equalObjs != nil {
+			// 检查其中是否有 enumset
+			for _, equalObj := range *equalObjs {
+				if ast.IsEnumSetObj(equalObj) {
+					return equalObj
+				}
+			}
+		}
+	}
+	return nil
+}
+
+// GetObjIntensionalSet 检查 obj 是否等于某个 intensional set
+// 通过获取所有环境中与 obj 相等的对象列表，检查其中是否有 intensional set
+// 或者从 IntensionalSetMem 中查找（如果 obj 等于某个已定义的 intensional set 的 CurSet）
+// 如果找到 intensional set 对象，返回该对象；如果找到 IntensionalSetStmt，返回其 CurSet；否则返回 nil
+func (e *Env) GetObjIntensionalSet(obj ast.Obj) *ast.FnObj {
+	// 如果 obj 本身就是一个 intensional set 对象，直接返回
+	if ast.IsIntensionalSetObj(obj) {
+		return obj.(*ast.FnObj)
+	}
+
+	// 遍历所有环境
+	for env := e; env != nil; env = env.Parent {
+		// 获取当前环境中与 obj 相等的所有对象
+		equalObjs, ok := env.GetEqualObjs(obj)
+		if ok && equalObjs != nil {
+			// 检查其中是否有 intensional set 对象
+			for _, equalObj := range *equalObjs {
+				if ast.IsIntensionalSetObj(equalObj) {
+					return equalObj.(*ast.FnObj)
+				}
+			}
+		}
+
 	}
 	return nil
 }

@@ -24,7 +24,7 @@ import (
 
 // how equality is verified is different from other facts because 1. it is stored differently 2. its transitive and commutative property is automatically used by the verifier
 func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, checkRequirements bool) ExecRet {
-	if verRet := ver.verByReplaceFcInSpecFactWithValue(stmt, state); verRet.IsTrue() || verRet.IsErr() {
+	if verRet := ver.verByReplaceObjInSpecFactWithValue(stmt, state); verRet.IsTrue() || verRet.IsErr() {
 		return verRet
 	}
 
@@ -32,11 +32,11 @@ func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, c
 		return verRet
 	}
 
-	if verRet := ver.verByReplaceFcInSpecFactWithValueAndCompute(stmt, state); verRet.IsTrue() || verRet.IsErr() {
+	if verRet := ver.verByReplaceObjInSpecFactWithValueAndCompute(stmt, state); verRet.IsTrue() || verRet.IsErr() {
 		return verRet
 	}
 
-	return NewExecUnknown("")
+	return NewEmptyExecUnknown()
 }
 
 func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *VerState, checkRequirements bool) ExecRet {
@@ -65,10 +65,10 @@ func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *Ve
 			}
 		}
 	} else {
-		return NewExecUnknown("")
+		return NewEmptyExecUnknown()
 	}
 
-	return NewExecUnknown("")
+	return NewEmptyExecUnknown()
 }
 
 func isValidEqualFact(stmt *ast.SpecFactStmt) bool {
@@ -98,55 +98,70 @@ func (ver *Verifier) verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Obj, 
 		}
 	}
 
-	return NewExecUnknown("")
-}
-
-func (ver *Verifier) evaluateNonNumberLiteralExpr(obj ast.Obj) ast.Obj {
-	if objAsFn, ok := obj.(*ast.FnObj); ok {
-		// 尝试简化 set_dim(cart(...))
-		if simplified, replaced := ast.SimplifyDimCart(objAsFn); replaced {
-			return simplified
-		}
-		// 尝试简化 proj(cart(...), n)
-		if simplified, replaced := ast.SimplifyProjCart(objAsFn); replaced {
-			return simplified
-		}
-		// 如果是 [] 函数，从环境里读取 equalTo tuple 的东西出来，或者直接从 tuple 中读取
-		if ast.IsIndexOptFnObj(objAsFn) && len(objAsFn.Params) == 2 {
-			obj := objAsFn.Params[0]
-			indexObj := objAsFn.Params[1]
-
-			// 尝试将 index 转换为整数
-			index, ok := ast.ToInt(indexObj)
-			if !ok {
-				return obj
-			}
-
-			// 情况1: obj 本身就是一个 tuple，比如 (1,2)[1]
-			if objAsTuple, ok := obj.(*ast.FnObj); ok && ast.IsTupleFnObj(objAsTuple) {
-				if index >= 1 && index <= len(objAsTuple.Params) {
-					// 索引从 1 开始，所以需要减 1
-					return objAsTuple.Params[index-1]
-				}
-			}
-
-			// 情况2: 从环境里读取 equalTo tuple 的东西出来
-			tuple := ver.Env.GetObjTuple(obj)
-			if tuple != nil {
-				if tupleAsFn, ok := tuple.(*ast.FnObj); ok && ast.IsTupleFnObj(tupleAsFn) {
-					if index >= 1 && index <= len(tupleAsFn.Params) {
-						// 索引从 1 开始，所以需要减 1
-						return tupleAsFn.Params[index-1]
-					}
-				}
-			}
-		}
-	}
-
-	return obj
+	return NewEmptyExecUnknown()
 }
 
 func (ver *Verifier) verEqualBuiltin(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
+	if verRet := ver.verEqualByBuiltinEval(left, right, state); verRet.IsErr() || verRet.IsTrue() {
+		return verRet
+	}
+
+	if verRet := ver.verEqualByEitherLeftOrRightIsTuple(left, right, state); verRet.IsErr() || verRet.IsTrue() {
+		return verRet
+	}
+
+	// if verRet := ver.verEqualByEitherLeftOrRightIsIntensionalSet(left, right, state); verRet.IsErr() || verRet.IsTrue() {
+	// 	return verRet
+	// }
+
+	return NewEmptyExecUnknown()
+}
+
+func (ver *Verifier) verEqualByEitherLeftOrRightIsTuple(left, right ast.Obj, state *VerState) ExecRet {
+	if verRet := ver.verEqualRightIsTuple(left, right, state); verRet.IsErr() || verRet.IsTrue() {
+		return verRet
+	}
+
+	if verRet := ver.verEqualRightIsTuple(right, left, state); verRet.IsErr() || verRet.IsTrue() {
+		return verRet
+	}
+
+	return NewEmptyExecUnknown()
+}
+
+func (ver *Verifier) verEqualRightIsTuple(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
+	if ast.IsTupleObj(right) {
+		rightTuple := right.(*ast.FnObj)
+		rightLen := len(rightTuple.Params)
+
+		// 查 left 的类型是不是 tuple
+		isTupleFact := ast.NewSpecFactStmt(ast.TruePure, glob.KeywordIsTuple, []ast.Obj{left}, glob.BuiltinLine)
+		ret := ver.VerFactStmt(isTupleFact, state)
+		if ret.IsNotTrue() {
+			return NewEmptyExecUnknown()
+		}
+
+		// 查 left 的 dim 等于 rightLen 吗
+		equalFact := ast.NewEqualFact(ast.NewFnObj(ast.Atom(glob.KeywordDim), []ast.Obj{left}), ast.Atom(fmt.Sprintf("%d", rightLen)))
+		ret = ver.VerFactStmt(equalFact, state)
+		if ret.IsNotTrue() {
+			return NewEmptyExecUnknown()
+		}
+
+		// 查 每一位都相等
+		for i := range rightLen {
+			leftAtIndex := ast.NewFnObj(ast.Atom(glob.KeywordIndexOpt), []ast.Obj{left, ast.Atom(fmt.Sprintf("%d", i+1))})
+			equalFact := ast.EqualFact(leftAtIndex, rightTuple.Params[i])
+			ret = ver.VerFactStmt(equalFact, state)
+			if ret.IsNotTrue() {
+				return NewEmptyExecUnknown()
+			}
+		}
+	}
+	return NewEmptyExecUnknown()
+}
+
+func (ver *Verifier) verEqualByBuiltinEval(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
 	left = ver.evaluateNonNumberLiteralExpr(left)
 	right = ver.evaluateNonNumberLiteralExpr(right)
 
@@ -155,18 +170,10 @@ func (ver *Verifier) verEqualBuiltin(left ast.Obj, right ast.Obj, state *VerStat
 		return NewExecErr(err.Error())
 	}
 	if ok {
-		return ver.maybeAddSuccessMsgString(state, fmt.Sprintf("%s = %s", left, right), msg, NewExecTrue(""))
+		return ver.maybeAddSuccessMsgString(state, fmt.Sprintf("%s = %s", left, right), msg, NewEmptyExecTrue())
 	}
 
-	// 如果是 fn 那就层层盘剥
-	nextState := state.GetNoMsg()
-	if verRet := ver.decomposeFcFnsAndCheckEquality(left, right, nextState, ver.verEqualBuiltin); verRet.IsErr() {
-		return verRet
-	} else if verRet.IsTrue() {
-		return ver.maybeAddSuccessMsgString(state, fmt.Sprintf("%s = %s", left, right), "each item of %s and %s are equal correspondingly", verRet)
-	}
-
-	return NewExecUnknown("")
+	return NewEmptyExecUnknown()
 }
 
 func (ver *Verifier) verEqualSpecMem(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
@@ -174,17 +181,17 @@ func (ver *Verifier) verEqualSpecMem(left ast.Obj, right ast.Obj, state *VerStat
 	for curEnv := ver.Env; curEnv != nil; curEnv = curEnv.Parent {
 		verRet := ver.equalFact_SpecMem_atEnv(curEnv, left, right, state)
 		if verRet.IsErr() || verRet.IsTrue() {
-			return NewExecTrue("")
+			return NewEmptyExecTrue()
 		}
 	}
 
-	return NewExecUnknown("")
+	return NewEmptyExecUnknown()
 }
 
 func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Obj, right ast.Obj, state *VerState) ExecRet {
 	nextState := state.GetNoMsg()
 
-	verRet := ver.getEqualFcsAndCmpOneByOne(curEnv, left, right, nextState)
+	verRet := ver.getEqualObjsAndCmpOneByOne(curEnv, left, right, nextState)
 	if verRet.IsErr() {
 		return verRet
 	}
@@ -192,7 +199,7 @@ func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Obj, righ
 		return ver.maybeAddSuccessMsgString(state, fmt.Sprintf("%s = %s", left, right), verRet.String(), verRet)
 	}
 
-	return NewExecUnknown("")
+	return NewEmptyExecUnknown()
 }
 
 func (ver *Verifier) verLogicMem_leftToRight_RightToLeft(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
@@ -210,7 +217,7 @@ func (ver *Verifier) verLogicMem_leftToRight_RightToLeft(left ast.Obj, right ast
 	if verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
-	return NewExecUnknown("")
+	return NewEmptyExecUnknown()
 }
 
 func (ver *Verifier) verEqualUniMem(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
@@ -228,54 +235,54 @@ func (ver *Verifier) verEqualUniMem(left ast.Obj, right ast.Obj, state *VerState
 	if verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
-	return NewExecUnknown("")
+	return NewEmptyExecUnknown()
 }
 
-func (ver *Verifier) getEqualFcsAndCmpOneByOne(curEnv *env.Env, left ast.Obj, right ast.Obj, state *VerState) ExecRet {
-	var equalToLeftFcs, equalToRightFcs *[]ast.Obj
-	var gotLeftEqualFcs, gotRightEqualFcs bool
+func (ver *Verifier) getEqualObjsAndCmpOneByOne(curEnv *env.Env, left ast.Obj, right ast.Obj, state *VerState) ExecRet {
+	var equalToLeftObjs, equalToRightObjs *[]ast.Obj
+	var gotLeftEqualObjs, gotRightEqualObjs bool
 
-	equalToLeftFcs, gotLeftEqualFcs = curEnv.GetEqualFcs(left)
-	equalToRightFcs, gotRightEqualFcs = curEnv.GetEqualFcs(right)
+	equalToLeftObjs, gotLeftEqualObjs = curEnv.GetEqualObjs(left)
+	equalToRightObjs, gotRightEqualObjs = curEnv.GetEqualObjs(right)
 
-	if gotLeftEqualFcs && gotRightEqualFcs {
-		if equalToLeftFcs == equalToRightFcs {
+	if gotLeftEqualObjs && gotRightEqualObjs {
+		if equalToLeftObjs == equalToRightObjs {
 			return NewExecTrue(fmt.Sprintf("%s = %s, by either their equality is known, or it is ensured by transitivity of equality.", left, right))
 		}
 	}
 
-	if verRet := ver.cmpFc_Builtin_Then_Decompose_Spec(left, right, state); verRet.IsErr() || verRet.IsTrue() {
+	if verRet := ver.cmpObj_Builtin_Then_Decompose_Spec(left, right, state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
 
-	if gotLeftEqualFcs {
-		for _, equalToLeftFc := range *equalToLeftFcs {
-			if verRet := ver.cmpFc_Builtin_Then_Decompose_Spec(equalToLeftFc, right, state); verRet.IsErr() {
+	if gotLeftEqualObjs {
+		for _, equalToLeftObj := range *equalToLeftObjs {
+			if verRet := ver.cmpObj_Builtin_Then_Decompose_Spec(equalToLeftObj, right, state); verRet.IsErr() {
 				return verRet
 			} else if verRet.IsTrue() {
-				return NewExecTrue(fmt.Sprintf("It is true that:\n%s = %s and %s = %s", equalToLeftFc, right, equalToLeftFc, left))
+				return NewExecTrue(fmt.Sprintf("It is true that:\n%s = %s and %s = %s", equalToLeftObj, right, equalToLeftObj, left))
 			}
 		}
 	}
 
-	if gotRightEqualFcs {
-		for _, equalToRightFc := range *equalToRightFcs {
-			if verRet := ver.cmpFc_Builtin_Then_Decompose_Spec(equalToRightFc, left, state); verRet.IsErr() {
+	if gotRightEqualObjs {
+		for _, equalToRightObj := range *equalToRightObjs {
+			if verRet := ver.cmpObj_Builtin_Then_Decompose_Spec(equalToRightObj, left, state); verRet.IsErr() {
 				return verRet
 			} else if verRet.IsTrue() {
-				return NewExecTrue(fmt.Sprintf("It is true that\n%s = %s and %s = %s", left, equalToRightFc, equalToRightFc, right))
+				return NewExecTrue(fmt.Sprintf("It is true that\n%s = %s and %s = %s", left, equalToRightObj, equalToRightObj, right))
 			}
 		}
 	}
 
-	return NewExecUnknown("")
+	return NewEmptyExecUnknown()
 }
 
 func (ver *Verifier) decomposeFcFnsAndCheckEquality(left ast.Obj, right ast.Obj, state *VerState, areEqualFcs func(left ast.Obj, right ast.Obj, state *VerState) ExecRet) ExecRet {
 	if leftAsFn, ok := left.(*ast.FnObj); ok {
 		if rightAsFn, ok := right.(*ast.FnObj); ok {
 			if len(leftAsFn.Params) != len(rightAsFn.Params) {
-				return NewExecUnknown("")
+				return NewEmptyExecUnknown()
 			}
 
 			// compare head
@@ -294,5 +301,44 @@ func (ver *Verifier) decomposeFcFnsAndCheckEquality(left ast.Obj, right ast.Obj,
 			return NewExecTrue(fmt.Sprintf("headers and parameters of %s and %s are equal correspondingly", left, right))
 		}
 	}
-	return NewExecUnknown("")
+	return NewEmptyExecUnknown()
 }
+
+// func (ver *Verifier) verEqualByEitherLeftOrRightIsIntensionalSet(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
+// 	if verRet := ver.verEqualByRightIsIntensionalSet(left, right, state); verRet.IsErr() || verRet.IsTrue() {
+// 		return verRet
+// 	}
+
+// 	if verRet := ver.verEqualByRightIsIntensionalSet(right, left, state); verRet.IsErr() || verRet.IsTrue() {
+// 		return verRet
+// 	}
+
+// 	return NewEmptyExecUnknown()
+// }
+
+// func (ver *Verifier) verEqualByRightIsIntensionalSet(left, right ast.Obj, state *VerState) ExecRet {
+// 	if !ast.IsIntensionalSetObj(right) {
+// 		return NewEmptyExecUnknown()
+// 	}
+
+// }
+
+// func (ver *Verifier) verLeftSetAndRightSetAreEqualByAllItemsInLeftAreInRightAndViceVersa(left, right ast.Obj, state *VerState) ExecRet {
+// 	if ver.ObjIsSet(left).IsNotTrue() || ver.ObjIsSet(right).IsNotTrue() {
+// 		return NewEmptyExecUnknown()
+// 	}
+
+// 	leftItemsInRightFact := ast.NewUniFact([]string{"x"}, []ast.Obj{left}, []ast.FactStmt{}, []ast.FactStmt{ast.NewInFact("x", right)}, glob.BuiltinLine)
+// 	ret := ver.VerFactStmt(leftItemsInRightFact, state)
+// 	if ret.IsNotTrue() {
+// 		return ret
+// 	}
+
+// 	rightItemsInLeftFact := ast.NewUniFact([]string{"x"}, []ast.Obj{right}, []ast.FactStmt{}, []ast.FactStmt{ast.NewInFact("x", left)}, glob.BuiltinLine)
+// 	ret = ver.VerFactStmt(rightItemsInLeftFact, state)
+// 	if ret.IsNotTrue() {
+// 		return ret
+// 	}
+
+// 	return NewExecTrue(fmt.Sprintf("By Definition of intensional set"))
+// }

@@ -146,10 +146,10 @@ func (env *Env) newUniFact(stmt *ast.UniFactStmt) glob.GlobRet {
 			ret = env.newUniFact_ThenFactIsSpecFact(stmt, asFact)
 		case *ast.OrStmt:
 			ret = env.newUniFact_ThenFactIsOrStmt(stmt, asFact)
-		case *ast.EnumStmt:
-			ret = env.newUniFact_ThenFactIsEnumStmt(stmt, asFact)
-		case *ast.IntensionalSetStmt:
-			ret = env.newUniFact_ThenFactIsIntensionalSetStmt(stmt, asFact)
+		// case *ast.EnumStmt:
+		// 	ret = env.newUniFact_ThenFactIsEnumStmt(stmt, asFact)
+		// case *ast.IntensionalSetStmt:
+		// 	ret = env.newUniFact_ThenFactIsIntensionalSetStmt(stmt, asFact)
 		case *ast.UniFactWithIffStmt:
 			ret = env.newUniFact_ThenFactIsIffStmt(stmt, asFact)
 		case *ast.UniFactStmt:
@@ -310,8 +310,8 @@ func (e *Env) StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(fn ast.Obj, 
 }
 
 func (e *Env) getInstantiatedFnTTOfFcFn(fcFn *ast.FnObj) (*ast.FnTStruct, bool, glob.GlobRet) {
-	if ast.IsFnTemplate_FcFn(fcFn) {
-		fnTNoName, err := fcFn.FnTFc_ToFnTNoName()
+	if ast.IsFnTemplate_ObjFn(fcFn) {
+		fnTNoName, err := fcFn.FnTObj_ToFnTNoName()
 		if err != nil {
 			return nil, false, glob.ErrRet(err)
 		}

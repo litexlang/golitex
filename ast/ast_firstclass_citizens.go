@@ -154,6 +154,11 @@ func GetAtomsInObj(obj Obj) []Atom {
 			atoms := GetAtomsInObj(param)
 			ret = append(ret, atoms...)
 		}
+
+		// 这里用了性质：intensional set obj的第一位是atom，会出现在这里的ret的第一位；param并不是atom，所以不会出现在ret里
+		if IsIntensionalSetObj(asObj) {
+			ret = ret[1:]
+		}
 	}
 	return ret
 }

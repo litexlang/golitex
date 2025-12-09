@@ -18,10 +18,11 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
+	parser "golitex/parser"
 	"strings"
 )
 
-func (e *Env) IsFcAtomDeclaredByUser(fcAtomName ast.Atom) bool {
+func (e *Env) IsAtomDefinedByUser(fcAtomName ast.Atom) bool {
 	// 如果 atom 里有 ::，那另外检查
 	if strings.Contains(string(fcAtomName), glob.PkgNameAtomSeparator) {
 		PkgNameAndAtomName := strings.Split(string(fcAtomName), glob.PkgNameAtomSeparator)
@@ -35,7 +36,7 @@ func (e *Env) IsFcAtomDeclaredByUser(fcAtomName ast.Atom) bool {
 		if !ok {
 			return false
 		}
-		ok = pkgPathEnv.isFcAtomDeclaredAtCurEnv(ast.Atom(AtomName))
+		ok = pkgPathEnv.isAtomDefinedAtCurEnv(ast.Atom(AtomName))
 		if ok {
 			return true
 		}
@@ -43,7 +44,7 @@ func (e *Env) IsFcAtomDeclaredByUser(fcAtomName ast.Atom) bool {
 	}
 
 	for env := e; env != nil; env = env.Parent {
-		ok := env.isFcAtomDeclaredAtCurEnv(fcAtomName)
+		ok := env.isAtomDefinedAtCurEnv(fcAtomName)
 		if ok {
 			return true
 		}
@@ -52,7 +53,7 @@ func (e *Env) IsFcAtomDeclaredByUser(fcAtomName ast.Atom) bool {
 }
 
 // 其实最好要分类：有可能是obj，有可能是prop，不能在验证obj的时候验证是prop
-func (e *Env) isFcAtomDeclaredAtCurEnv(fcAtomName ast.Atom) bool {
+func (e *Env) isAtomDefinedAtCurEnv(fcAtomName ast.Atom) bool {
 	_, ok := e.PropDefMem[string(fcAtomName)]
 	if ok {
 		return true
@@ -74,33 +75,46 @@ func (e *Env) isFcAtomDeclaredAtCurEnv(fcAtomName ast.Atom) bool {
 	return ok
 }
 
-func (e *Env) isAtomObj(atom ast.Atom) bool {
-	_, ok := ast.IsNumLitAtomObj(atom)
-	if ok {
-		return true
+func (e *Env) AreAtomsInObjDefined(obj ast.Obj, extraAtomNames map[string]struct{}) glob.GlobRet {
+	if !ast.IsIntensionalSetObj(obj) {
+		atoms := ast.GetAtomsInObj(obj)
+		return e.AreAtomsDeclared(atoms, extraAtomNames)
+	} else {
+		return e.AreAtomsInIntensionalSetAreDeclared(obj.(*ast.FnObj), extraAtomNames)
 	}
-
-	_, ok = glob.BuiltinObjKeywordSet[string(atom)]
-	if ok {
-		return true
-	}
-
-	return e.isUserDefinedObj(atom)
 }
 
-func (e *Env) AtomsAreObj(atomSlice []ast.Atom) bool {
-	for _, atom := range atomSlice {
-		if !e.isAtomObj(atom) {
-			return false
+// AreAtomsInIntensionalSetAreDeclared checks if all atoms in an intensional set are declared,
+// excluding the intensional set's own parameter (which is a free variable not in the environment).
+func (e *Env) AreAtomsInIntensionalSetAreDeclared(intensionalSet *ast.FnObj, extraAtomNames map[string]struct{}) glob.GlobRet {
+	// Check atoms in facts (excluding the param)
+	// Facts are stored as strings in Params[2:], so we need to parse them first
+	paramAsString, parentSet, facts, err := parser.GetParamParentSetFactsFromIntensionalSet(intensionalSet)
+	if err != nil {
+		return glob.ErrRet(fmt.Errorf("failed to parse facts from intensional set: %s", err))
+	}
+
+	// Create a copy of extraAtomNames and add the intensional set's param to it
+	// This param is a free variable, so we exclude it from the declaration check
+	paramExcludedNames := glob.CopyMap(extraAtomNames)
+	paramExcludedNames[paramAsString] = struct{}{}
+
+	// Check atoms in parentSet (excluding the param)
+	ret := e.AreAtomsInObjDefined(parentSet, paramExcludedNames)
+	if ret.IsErr() {
+		ret.AddMsg(fmt.Sprintf("in parent set of intensional set with param %s", paramAsString))
+		return ret
+	}
+
+	for i, fact := range facts {
+		ret := e.AreAtomsInFactAreDeclared(fact, paramExcludedNames)
+		if ret.IsErr() {
+			ret.AddMsg(fmt.Sprintf("in fact %d of intensional set with param %s", i, paramAsString))
+			return ret
 		}
 	}
-	return true
-}
 
-func (e *Env) AreAtomsInFcAreDeclared(fc ast.Obj, extraAtomNames map[string]struct{}) glob.GlobRet {
-	atoms := ast.GetAtomsInObj(fc)
-	ret := e.AreAtomsDeclared(atoms, extraAtomNames)
-	return ret
+	return glob.TrueRet("")
 }
 
 // TODO 来自上层的时候，有时候如果fact是uniFact，那传来的extraAtomNames里已经有uniParam了，这其实是浪费计算了
@@ -148,18 +162,24 @@ func (e *Env) AreAtomsInFactAreDeclared(fact ast.FactStmt, extraAtomNames map[st
 			}
 		}
 		return glob.TrueRet("")
-	case *ast.IntensionalSetStmt:
-		atoms := fact.GetAtoms()
-		extraAtomNames[asStmt.Param] = struct{}{}
-		ret := e.AreAtomsDeclared(atoms, extraAtomNames)
-		return ret
-	default:
-		atoms := fact.GetAtoms()
-		ret := e.AreAtomsDeclared(atoms, extraAtomNames)
-		if ret.IsErr() {
-			ret.AddMsg(fmt.Sprintf("in fact %s", fact))
+	case *ast.SpecFactStmt:
+		for _, param := range asStmt.Params {
+			ret := e.AreAtomsInObjDefined(param, extraAtomNames)
+			if ret.IsErr() {
+				return ret
+			}
 		}
-		return ret
+		return glob.TrueRet("")
+	case *ast.OrStmt:
+		for _, fact := range asStmt.Facts {
+			ret := e.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+			if ret.IsErr() {
+				return ret
+			}
+		}
+		return glob.TrueRet("")
+	default:
+		return glob.ErrRet(fmt.Errorf("unexpected fact statement type: %T", asStmt))
 	}
 }
 
@@ -175,7 +195,7 @@ func (e *Env) AreAtomsDeclared(atoms []ast.Atom, extraAtomNames map[string]struc
 
 func (e *Env) IsAtomDeclared(atom ast.Atom, extraAtomNames map[string]struct{}) glob.GlobRet {
 	// 如果是内置的符号，那就声明了
-	if glob.IsBuiltinKeywordKeySymbolCanBeFcAtomName(string(atom)) {
+	if glob.IsBuiltinObjOrPropName(string(atom)) {
 		return glob.TrueRet("")
 	}
 
@@ -184,7 +204,7 @@ func (e *Env) IsAtomDeclared(atom ast.Atom, extraAtomNames map[string]struct{}) 
 		return glob.TrueRet("")
 	}
 
-	ok := e.IsFcAtomDeclaredByUser(atom)
+	ok := e.IsAtomDefinedByUser(atom)
 	if ok {
 		return glob.TrueRet("")
 	}
@@ -212,13 +232,13 @@ func (e *Env) ThereIsNoDuplicateObjNamesAndAllAtomsInParamSetsAreDefined(params 
 			return glob.ErrRet(fmt.Errorf("parameter %s is declared multiple times", param))
 		}
 		if checkDeclared {
-			ret := e.AreAtomsInFcAreDeclared(setParams[i], paramSet)
+			ret := e.AreAtomsInObjDefined(setParams[i], paramSet)
 			if ret.IsErr() {
 				ret.AddMsg(fmt.Sprintf("in parameter set for param %s", param))
 				return ret
 			}
 		}
-		paramSet[param] = struct{}{} // setParam 不能 包含它自己
+		paramSet[param] = struct{}{} // setParam 不能 包p含它自己
 	}
 
 	return glob.TrueRet("")
@@ -237,7 +257,7 @@ func (e *Env) NonDuplicateParam_NoUndeclaredParamSet_ExtraAtomNames(params []str
 			return glob.ErrRet(fmt.Errorf("parameter %s is declared multiple times", param))
 		}
 		if checkDeclared {
-			ret := e.AreAtomsInFcAreDeclared(setParams[i], paramSet)
+			ret := e.AreAtomsInObjDefined(setParams[i], paramSet)
 			if ret.IsErr() {
 				ret.AddMsg(fmt.Sprintf("in parameter set for param %s", param))
 				return ret

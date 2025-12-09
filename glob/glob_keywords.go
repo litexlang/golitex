@@ -20,7 +20,7 @@ const (
 	KeywordForall = "forall"
 	KeywordDom    = "dom" // 这是一种语法糖。本质上只要在定义集合的时候写了对集合的要求，那dom就不必要的，因为dom本质上是 ”临时添加新的要求"
 	// KeywordThen                 = "then"
-	KeywordObj       = "obj"
+	// KeywordObj       = "obj"
 	KeywordHave      = "have"
 	KeywordFn        = "fn"
 	KeywordProp      = "prop"
@@ -60,8 +60,6 @@ const (
 	KeywordLift        = "lift"
 	KeywordNonEmptySet = "nonempty_set"
 
-	KeywordWhen = "when"
-
 	KeywordProveIsTransitiveProp = "prove_is_transitive_prop"
 
 	KeywordProveInRangeSet = "prove_in_range_set"
@@ -76,7 +74,6 @@ const (
 	KeywordBy        = "by"
 
 	KeywordImplication = "implication"
-	KeywordValue       = "value"
 
 	KeywordPrint = "print"
 
@@ -102,6 +99,18 @@ const (
 	KeywordIndexOpt = "[]"
 
 	KeywordHaveCartWithDim = "have_cart_with_dim"
+
+	// 用于一位一位的比较两个tuple。比如 equal_tuple(x, y, 2) 表示 x[1] = y[1] 且 x[2] = y[2]
+	KeywordEqualTuple = "equal_tuple"
+
+	KeywordEnumSet        = "{}"
+	KeywordIntensionalSet = "{:}"
+
+	KeywordSubsetOf = "subset_of"
+
+	KeywordProveFor = "prove_for"
+
+	KeywordEqualSet = "equal_set"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -109,7 +118,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordForall: {},
 	KeywordDom:    {},
 	// KeywordThen:                 {},
-	KeywordObj:                  {},
+	// KeywordObj:                  {},
 	KeywordHave:                 {},
 	KeywordFn:                   {},
 	KeywordProp:                 {},
@@ -153,8 +162,6 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordLift:        {},
 	KeywordNonEmptySet: {},
 
-	KeywordWhen: {},
-
 	KeywordAlgo:   {},
 	KeywordReturn: {},
 	KeywordIf:     {},
@@ -181,6 +188,16 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordDim: {},
 
 	KeywordHaveCartWithDim: {},
+
+	KeywordEqualTuple:     {},
+	KeywordEnumSet:        {},
+	KeywordIntensionalSet: {},
+
+	KeywordSubsetOf: {},
+
+	KeywordProveFor: {},
+
+	KeywordEqualSet: {},
 }
 
 const (
@@ -218,6 +235,7 @@ const (
 	KeySymbolEquivalent = "<=>"
 	KeySymbolBackSlash  = "\\"
 	// KeySymbolQuestionMark = "?"
+
 )
 
 // 最多双字符，或者单字符，否则parser的逻辑 GetKeySymbol 有问题
@@ -255,8 +273,8 @@ var SymbolSet map[string]struct{} = map[string]struct{}{
 	// KeySymbolQuestionMark: {}, // "?"
 }
 
-var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]struct{}{
-	KeywordObj:           {},
+var BuiltinObjOrPropNames map[string]struct{} = map[string]struct{}{
+	// KeywordObj:           {},
 	KeywordSet:           {},
 	KeywordNatural:       {},
 	KeywordInteger:       {},
@@ -280,16 +298,28 @@ var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]s
 	KeySymbolLeftBracket:  {},
 	KeySymbolRightBracket: {},
 	KeywordFiniteSet:      {},
-	KeywordItemExistsIn:   {},
+	// KeywordItemExistsIn:   {},
 	// TupleFcFnHead:                         {},
 	KeywordCount:       {},
 	KeywordNPos:        {},
 	KeywordNonEmptySet: {},
 	KeywordEval:        {},
+
+	KeywordCart:  {},
+	KeywordTuple: {},
+
+	// KeywordIsCart:  {},
+	// KeywordIsTuple: {},
+
+	KeywordSetDim: {},
+	// KeywordDim:    {},
+
+	// KeywordProj:     {},
+	KeywordIndexOpt: {},
 }
 
-func IsBuiltinKeywordKeySymbolCanBeFcAtomName(name string) bool {
-	_, ok := BuiltinKeywordKeySymbolCanBeFcAtomNameSet[name]
+func IsBuiltinObjOrPropName(name string) bool {
+	_, ok := BuiltinObjOrPropNames[name]
 	return ok
 }
 
@@ -328,10 +358,10 @@ var builtinPropObjNames = map[string]struct{}{
 
 // KeywordHelpMap stores help messages for each keyword
 var KeywordHelpMap = map[string]string{
-	KeywordSet:                    "",
-	KeywordForall:                 "",
-	KeywordDom:                    "",
-	KeywordObj:                    "",
+	KeywordSet:    "",
+	KeywordForall: "",
+	KeywordDom:    "",
+	// KeywordObj:                    "",
 	KeywordHave:                   "",
 	KeywordFn:                     "",
 	KeywordProp:                   "",
@@ -364,7 +394,6 @@ var KeywordHelpMap = map[string]string{
 	KeywordProveByInduction:       "",
 	KeywordLift:                   "",
 	KeywordNonEmptySet:            "",
-	KeywordWhen:                   "",
 	KeywordProveIsTransitiveProp:  "",
 	KeywordProveInRangeSet:        "",
 	KeywordProveInRange:           "",
@@ -375,7 +404,6 @@ var KeywordHelpMap = map[string]string{
 	KeywordProveAlgo:              "",
 	KeywordBy:                     "",
 	KeywordImplication:            "",
-	KeywordValue:                  "",
 	KeywordPrint:                  "",
 	KeywordCase:                   "",
 	KeywordProveCaseByCase:        "",
