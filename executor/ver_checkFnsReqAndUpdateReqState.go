@@ -70,7 +70,7 @@ func (ver *Verifier) objIsDefinedAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *Ver
 
 	if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordCount) {
 		return ver.countFnRequirement(objAsFnObj, state)
-	} else if ast.IsFnTemplate_FcFn(objAsFnObj) {
+	} else if ast.IsFnTemplate_ObjFn(objAsFnObj) {
 		return NewEmptyExecTrue()
 	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordCart) {
 		return ver.cartFnRequirement(objAsFnObj, state)
@@ -111,7 +111,7 @@ func (ver *Verifier) intensionalSetFnRequirement(objAsFnObj *ast.FnObj, state *V
 func (ver *Verifier) enumSetFnRequirement(objAsFnObj *ast.FnObj, state *VerState) ExecRet {
 	// 所有参数都是$in set
 	for _, param := range objAsFnObj.Params {
-		verRet := ver.VerFactStmt(ast.NewInFactWithFc(param, ast.Atom(glob.KeywordSet)), state)
+		verRet := ver.VerFactStmt(ast.NewInFactWithObj(param, ast.Atom(glob.KeywordSet)), state)
 		if verRet.IsErr() {
 			return NewExecErr(verRet.String())
 		}
@@ -199,7 +199,7 @@ func (ver *Verifier) parasSatisfyProjReq(fnObj *ast.FnObj, state *VerState) Exec
 	}
 
 	// index >= 1
-	verRet = ver.VerFactStmt(ast.NewInFactWithFc(fnObj.Params[1], ast.Atom(glob.KeywordNPos)), state)
+	verRet = ver.VerFactStmt(ast.NewInFactWithObj(fnObj.Params[1], ast.Atom(glob.KeywordNPos)), state)
 	if verRet.IsErr() {
 		return NewExecErr(verRet.String())
 	}
@@ -240,7 +240,7 @@ func (ver *Verifier) countFnRequirement(fnObj *ast.FnObj, state *VerState) ExecR
 		return NewExecErr(fmt.Sprintf("parameters in %s must be 1, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
 	}
 
-	verRet := ver.VerFactStmt(ast.NewInFactWithFc(fnObj.Params[0], ast.Atom(glob.KeywordFiniteSet)), state)
+	verRet := ver.VerFactStmt(ast.NewInFactWithObj(fnObj.Params[0], ast.Atom(glob.KeywordFiniteSet)), state)
 	if verRet.IsErr() {
 		return NewExecErr(verRet.String())
 	}
@@ -257,7 +257,7 @@ func (ver *Verifier) cartFnRequirement(fnObj *ast.FnObj, state *VerState) ExecRe
 
 	// 验证所有的参数都是集合
 	for _, param := range fnObj.Params {
-		verRet := ver.VerFactStmt(ast.NewInFactWithFc(param, ast.Atom(glob.KeywordSet)), state)
+		verRet := ver.VerFactStmt(ast.NewInFactWithObj(param, ast.Atom(glob.KeywordSet)), state)
 		if verRet.IsErr() {
 			return NewExecErr(verRet.String())
 		}
@@ -281,7 +281,7 @@ func (ver *Verifier) indexOptFnRequirement(fnObj *ast.FnObj, state *VerState) Ex
 
 	// 检查是不是正整数N_pos
 
-	verRet := ver.VerFactStmt(ast.NewInFactWithFc(indexObj, ast.Atom(glob.KeywordNPos)), state)
+	verRet := ver.VerFactStmt(ast.NewInFactWithObj(indexObj, ast.Atom(glob.KeywordNPos)), state)
 	if verRet.IsErr() {
 		return NewExecErr(verRet.String())
 	}

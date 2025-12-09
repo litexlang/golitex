@@ -24,7 +24,7 @@ func (s *DefLetStmt) ToLatexString() string {
 	var builder strings.Builder
 
 	builder.WriteString("\\begin{definition}[Object(s)]\n")
-	builder.WriteString(strFcSetPairsLatexString(s.Objs, s.ObjSets))
+	builder.WriteString(strObjSetPairsLatexString(s.Objs, s.ObjSets))
 	builder.WriteString(".")
 
 	if len(s.Facts) > 0 {
@@ -62,7 +62,7 @@ func (l *DefFnStmt) ToLatexString() string {
 	builder.WriteString("\\begin{definition}[Function]\n")
 	builder.WriteString(l.Name)
 	builder.WriteString(" is defined for ")
-	builder.WriteString(strFcSetPairsLatexString(l.FnTemplate.Params, l.FnTemplate.ParamSets))
+	builder.WriteString(strObjSetPairsLatexString(l.FnTemplate.Params, l.FnTemplate.ParamSets))
 	builder.WriteString(".")
 
 	if len(l.FnTemplate.DomFacts) > 0 {
@@ -104,7 +104,7 @@ func (l *DefFnStmt) ToLatexString() string {
 func (l *UniFactStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("$\\forall$ ")
-	builder.WriteString(strFcSetPairsLatexString(l.Params, l.ParamSets))
+	builder.WriteString(strObjSetPairsLatexString(l.Params, l.ParamSets))
 
 	if len(l.DomFacts) > 0 {
 		builder.WriteString(", ")
@@ -237,7 +237,7 @@ func prop_fn_bodyToLatexString(defHeader *DefHeader, domFacts FactStmtSlice, iff
 
 	builder.WriteString(defHeader.NameWithParamsLatexString())
 	builder.WriteString(" is defined for ")
-	builder.WriteString(strFcSetPairsLatexString(defHeader.Params, defHeader.ParamSets))
+	builder.WriteString(strObjSetPairsLatexString(defHeader.Params, defHeader.ParamSets))
 	builder.WriteString(".")
 
 	// 处理条件部分（When）
@@ -269,7 +269,7 @@ func prop_fn_bodyToLatexString(defHeader *DefHeader, domFacts FactStmtSlice, iff
 	builder.WriteString(defHeader.NameWithParamsLatexString())
 	if isExistProp {
 		builder.WriteString(" is true if and only if there exist ")
-		builder.WriteString(strFcSetPairsLatexString(defHeader.Params, defHeader.ParamSets))
+		builder.WriteString(strObjSetPairsLatexString(defHeader.Params, defHeader.ParamSets))
 		builder.WriteString(" s.t.")
 	} else {
 		builder.WriteString(" is true if and only if")
@@ -373,7 +373,7 @@ func (s *HaveObjStStmt) ToLatexString() string {
 	builder.WriteString("\\begin{definition}[Object(s) Exists By Verified Existential Fact]\n")
 
 	builder.WriteString(" we have ")
-	builder.WriteString(fcParamsLatexString(s.Fact.Params))
+	builder.WriteString(objParamsLatexString(s.Fact.Params))
 	builder.WriteString(fmt.Sprintf(" which makes existential fact %s true", propNameParamsLatexString(s.Fact.PropName, s.Fact.Params)))
 
 	builder.WriteString("\n\\end{definition}")
@@ -764,7 +764,7 @@ func VerifiedFactsSectionToLatexString(verifiedFacts []FactStmt) string {
 func (s *EqualsFactStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("The following objects are equal: ")
-	builder.WriteString(strings.Join(s.Params.fcSliceToLatexStringSlice(), ", "))
+	builder.WriteString(strings.Join(s.Params.objSliceToLatexStringSlice(), ", "))
 	builder.WriteString(".")
 	return builder.String()
 }
@@ -913,7 +913,7 @@ func (s *HaveFnEqualStmt) ToLatexString() string {
 // 	builder.WriteString(", ")
 // 	builder.WriteString(" ")
 // 	builder.WriteString(glob.KeySymbolLeftBrace)
-// 	builder.WriteString(strings.Join(s.DomainOfEachParamOfGivenFn.fcSliceToLatexStringSlice(), ", "))
+// 	builder.WriteString(strings.Join(s.DomainOfEachParamOfGivenFn.objSliceToLatexStringSlice(), ", "))
 // 	builder.WriteString(glob.KeySymbolRightBrace)
 // 	builder.WriteString(".")
 // 	builder.WriteString("\n\\end{definition}")

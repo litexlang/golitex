@@ -300,16 +300,16 @@ func (stmt *EqualsFactStmt) InstantiateFact(uniMap map[string]Obj) (FactStmt, er
 	return NewEqualsFactStmt(newParams, stmt.Line), nil
 }
 
-func (fcSlice ObjSlice) Instantiate(uniMap map[string]Obj) (ObjSlice, error) {
-	newFcSlice := make([]Obj, len(fcSlice))
-	for i, fc := range fcSlice {
-		newFc, err := fc.Instantiate(uniMap)
+func (objSlice ObjSlice) Instantiate(uniMap map[string]Obj) (ObjSlice, error) {
+	newObjSlice := make([]Obj, len(objSlice))
+	for i, obj := range objSlice {
+		newObj, err := obj.Instantiate(uniMap)
 		if err != nil {
 			return nil, err
 		}
-		newFcSlice[i] = newFc
+		newObjSlice[i] = newObj
 	}
-	return newFcSlice, nil
+	return newObjSlice, nil
 }
 
 func (s SpecFactPtrSlice) Instantiate(uniMap map[string]Obj) (SpecFactPtrSlice, error) {
@@ -914,11 +914,11 @@ func (stmt *DefAlgoStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 }
 
 func (stmt *EvalStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	fc, err := stmt.FcsToEval.Instantiate(uniMap)
+	obj, err := stmt.FcsToEval.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}
-	return NewEvalStmt(fc, stmt.Line), nil
+	return NewEvalStmt(obj, stmt.Line), nil
 }
 
 func (stmt *SpecFactStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {

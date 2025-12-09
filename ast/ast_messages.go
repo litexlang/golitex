@@ -114,7 +114,7 @@ func keySymbolRelaFactWithoutNotString(stmt *SpecFactStmt) string {
 	return builder.String()
 }
 
-func StrFcSetPairs(objs []string, objSets []Obj) string {
+func StrObjSetPairs(objs []string, objSets []Obj) string {
 	pairStrSlice := make([]string, len(objs))
 	for i := range len(objs) {
 		pairStrSlice[i] = fmt.Sprintf("%s %s", objs[i], objSets[i])
@@ -148,7 +148,7 @@ func (stmt *DefLetStmt) String() string {
 
 	builder.WriteString(glob.KeywordLet)
 	builder.WriteString(" ")
-	builder.WriteString(StrFcSetPairs(stmt.Objs, stmt.ObjSets))
+	builder.WriteString(StrObjSetPairs(stmt.Objs, stmt.ObjSets))
 
 	if len(stmt.Facts) > 0 {
 		builder.WriteString(glob.KeySymbolColon)
@@ -168,7 +168,7 @@ func (stmt *HaveObjInNonEmptySetStmt) String() string {
 
 	builder.WriteString(glob.KeywordHave)
 	builder.WriteString(" ")
-	builder.WriteString(StrFcSetPairs(stmt.Objs, stmt.ObjSets))
+	builder.WriteString(StrObjSetPairs(stmt.Objs, stmt.ObjSets))
 
 	return builder.String()
 }
@@ -219,7 +219,7 @@ func fnDefStmtStringGivenKw(kw string, f *FnTStruct, name string) string {
 	builder.WriteString(" ")
 	builder.WriteString(name)
 	builder.WriteString("(")
-	builder.WriteString(StrFcSetPairs(f.Params, f.ParamSets))
+	builder.WriteString(StrObjSetPairs(f.Params, f.ParamSets))
 	builder.WriteString(")")
 	builder.WriteString(" ")
 	builder.WriteString(f.RetSet.String())
@@ -292,7 +292,7 @@ func (s *DefExistPropStmt) ToString(head string) string {
 	builder.WriteString(head)
 	builder.WriteByte(' ')
 	if len(s.ExistParams) > 0 {
-		builder.WriteString(StrFcSetPairs(s.ExistParams, s.ExistParamSets))
+		builder.WriteString(StrObjSetPairs(s.ExistParams, s.ExistParamSets))
 	}
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeywordSt)
@@ -346,7 +346,7 @@ func (l *UniFactStmt) String() string {
 	builder.WriteString(glob.KeywordForall)
 	builder.WriteString(" ")
 
-	builder.WriteString(StrFcSetPairs(l.Params, l.ParamSets))
+	builder.WriteString(StrObjSetPairs(l.Params, l.ParamSets))
 
 	builder.WriteString(":\n")
 	if len(l.DomFacts) > 0 {
@@ -398,7 +398,7 @@ func (head DefHeader) StringWithoutColonAtEnd() string {
 	builder.WriteString(string(head.Name))
 	builder.WriteString("(")
 
-	builder.WriteString(StrFcSetPairs(head.Params, head.ParamSets))
+	builder.WriteString(StrObjSetPairs(head.Params, head.ParamSets))
 
 	builder.WriteString(")")
 	return builder.String()
@@ -1078,9 +1078,9 @@ func (stmt *HaveFnCaseByCaseStmt) String() string {
 	return strings.TrimSuffix(builder.String(), "\n")
 }
 
-func (fc ObjSlice) String() string {
-	output := make([]string, len(fc))
-	for i, param := range fc {
+func (objSlice ObjSlice) String() string {
+	output := make([]string, len(objSlice))
+	for i, param := range objSlice {
 		output[i] = param.String()
 	}
 	return strings.Join(output, ", ")

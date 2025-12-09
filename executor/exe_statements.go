@@ -677,12 +677,12 @@ func (exec *Executor) checkFnEqualStmt(stmt *ast.HaveFnEqualStmt) (ExecRet, erro
 
 	ver := NewVerifier(exec.Env)
 
-	verRet := ver.VerFactStmt(ast.NewInFactWithFc(stmt.EqualTo, stmt.RetSet), Round0Msg)
+	verRet := ver.VerFactStmt(ast.NewInFactWithObj(stmt.EqualTo, stmt.RetSet), Round0Msg)
 	if verRet.IsErr() {
 		return NewExecErr(verRet.String()), fmt.Errorf(verRet.String())
 	}
 	if verRet.IsUnknown() {
-		return NewExecErr(verRet.String()), fmt.Errorf("according to the definition of %s, the returned value %s must be in %s, but\n%s is unknown", stmt, stmt.EqualTo, stmt.RetSet, ast.NewInFactWithFc(stmt.EqualTo, stmt.RetSet))
+		return NewExecErr(verRet.String()), fmt.Errorf("according to the definition of %s, the returned value %s must be in %s, but\n%s is unknown", stmt, stmt.EqualTo, stmt.RetSet, ast.NewInFactWithObj(stmt.EqualTo, stmt.RetSet))
 	}
 
 	return NewExecTrue(stmt.String()), nil
@@ -837,7 +837,7 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (ExecRet, error) {
 	}
 
 	// Verify that HaveObjSatisfyFn is in the return set
-	execState = exec.factStmt(ast.NewInFactWithFc(stmt.HaveObjSatisfyFn, stmt.DefFnStmt.FnTemplate.RetSet))
+	execState = exec.factStmt(ast.NewInFactWithObj(stmt.HaveObjSatisfyFn, stmt.DefFnStmt.FnTemplate.RetSet))
 	if execState.IsNotTrue() {
 		return execState, fmt.Errorf(execState.String())
 	}
@@ -998,12 +998,12 @@ func (exec *Executor) verifyHaveFnCaseByCase_OneCase(stmt *ast.HaveFnCaseByCaseS
 	// Verify return value is in retSet
 	equalTo := stmt.EqualToObjs[caseIndex]
 	ver := NewVerifier(exec.Env)
-	verRet := ver.VerFactStmt(ast.NewInFactWithFc(equalTo, stmt.DefFnStmt.FnTemplate.RetSet), Round0Msg)
+	verRet := ver.VerFactStmt(ast.NewInFactWithObj(equalTo, stmt.DefFnStmt.FnTemplate.RetSet), Round0Msg)
 	if verRet.IsErr() {
 		return NewEmptyExecErr(), fmt.Errorf("case %d: %s", caseIndex, verRet.String())
 	}
 	if verRet.IsUnknown() {
-		return NewEmptyExecErr(), fmt.Errorf("case %d: according to the definition of %s, when %s is true, the returned value %s must be in %s, but\n%s is unknown", caseIndex, stmt, caseFact, equalTo, stmt.DefFnStmt.FnTemplate.RetSet, ast.NewInFactWithFc(equalTo, stmt.DefFnStmt.FnTemplate.RetSet))
+		return NewEmptyExecErr(), fmt.Errorf("case %d: according to the definition of %s, when %s is true, the returned value %s must be in %s, but\n%s is unknown", caseIndex, stmt, caseFact, equalTo, stmt.DefFnStmt.FnTemplate.RetSet, ast.NewInFactWithObj(equalTo, stmt.DefFnStmt.FnTemplate.RetSet))
 	}
 
 	// The proof statements should have established the necessary conditions
@@ -1374,12 +1374,12 @@ func (exec *Executor) checkCaseReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCa
 	// 在case成立的条件下，验证返回值在retSet中
 	equalTo := stmt.CaseByCaseEqualTo[caseIndex]
 	ver := NewVerifier(exec.Env)
-	verRet := ver.VerFactStmt(ast.NewInFactWithFc(equalTo, stmt.RetSet), Round0Msg)
+	verRet := ver.VerFactStmt(ast.NewInFactWithObj(equalTo, stmt.RetSet), Round0Msg)
 	if verRet.IsErr() {
 		return NewEmptyExecErr(), fmt.Errorf("case %d: %s", caseIndex, verRet.String())
 	}
 	if verRet.IsUnknown() {
-		return NewEmptyExecErr(), fmt.Errorf("case %d: according to the definition of %s, when %s is true, the returned value %s must be in %s, but\n%s is unknown", caseIndex, stmt, caseFact, equalTo, stmt.RetSet, ast.NewInFactWithFc(equalTo, stmt.RetSet))
+		return NewEmptyExecErr(), fmt.Errorf("case %d: according to the definition of %s, when %s is true, the returned value %s must be in %s, but\n%s is unknown", caseIndex, stmt, caseFact, equalTo, stmt.RetSet, ast.NewInFactWithObj(equalTo, stmt.RetSet))
 	}
 
 	return NewExecTrue(stmt.String()), nil
@@ -1565,7 +1565,7 @@ func (exec *Executor) checkHaveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetSt
 
 	// Check that each element of equalTo is in the corresponding cart set
 	for i := range len(equalToAsFn.Params) {
-		inFact := ast.NewInFactWithFc(equalToAsFn.Params[i], stmt.CartSet.Params[i])
+		inFact := ast.NewInFactWithObj(equalToAsFn.Params[i], stmt.CartSet.Params[i])
 		state := exec.factStmt(inFact)
 		if state.IsErr() {
 			return NewExecErr(state.String())
@@ -1587,7 +1587,7 @@ func (exec *Executor) postProcessHaveObjFromCartSetStmt(stmt *ast.HaveObjFromCar
 	objAtom := ast.Atom(stmt.ObjName)
 
 	// Add obj in cart(...) fact
-	inCartFact := ast.NewInFactWithFc(objAtom, stmt.CartSet)
+	inCartFact := ast.NewInFactWithObj(objAtom, stmt.CartSet)
 	ret := exec.Env.NewFact(inCartFact)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
@@ -1675,7 +1675,7 @@ func (exec *Executor) checkHaveCartWithDimStmt(stmt *ast.HaveCartWithDimStmt) Ex
 	state := Round0Msg
 
 	// 验证 CartDim 是 N_pos
-	dimInNPosFact := ast.NewInFactWithFc(stmt.CartDim, ast.Atom(glob.KeywordNPos))
+	dimInNPosFact := ast.NewInFactWithObj(stmt.CartDim, ast.Atom(glob.KeywordNPos))
 	verRet := ver.VerFactStmt(dimInNPosFact, state)
 	if verRet.IsErr() {
 		return NewExecErr(fmt.Sprintf("failed to verify %s is in N_pos: %s", stmt.CartDim.String(), verRet.String()))
