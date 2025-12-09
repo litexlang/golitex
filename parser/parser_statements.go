@@ -55,8 +55,7 @@ func (p *TbParser) Stmt(tb *tokenBlock) (ast.Stmt, error) {
 			if tb.header.strAtCurIndexPlus(2) == glob.KeySymbolColon {
 				ret, err = p.haveFnStmt(tb)
 				// } else if tb.header.strAtCurIndexPlus(4) == glob.KeywordLift {
-				// 	
- 	ret, err = p.haveFnLiftStmt(tb)
+				// 	ret, err = tb.haveFnLiftStmt()
 			} else {
 				ret, err = p.haveFnEqualStmt(tb)
 			}
@@ -151,6 +150,8 @@ func (p *TbParser) defPropStmt(tb *tokenBlock) (ast.Stmt, error) {
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
 	}
+
+	return body, nil
 }
 
 func (p *TbParser) defPropStmtWithoutSelfReferCheck(tb *tokenBlock) (*ast.DefPropStmt, error) {
@@ -218,6 +219,7 @@ func (p *TbParser) defPropStmtWithoutSelfReferCheck(tb *tokenBlock) (*ast.DefPro
 		if err != nil {
 			return nil, parserErrAtTb(err, tb)
 		}
+
 		return ast.NewDefPropStmt(declHeader, domFacts, iffFacts, []ast.FactStmt{}, tb.line), nil
 	}
 }
@@ -676,20 +678,13 @@ func (p *TbParser) haveObjStStmt(tb *tokenBlock) (ast.Stmt, error) {
 		return nil, parserErrAtTb(err, tb)
 	}
 
-	factParams := ast.MakeExistFactParamsSlice(existParams, pureSpecFact.Params)
-
-	if isTrue {
-		return ast.NewSpecFactStmt(ast.TrueExist_St, pureSpecFact.PropName, factParams, tb.line), nil
-	} else {
-		return ast.NewSpecFactStmt(ast.FalseExist_St, pureSpecFact.PropName, factParams, tb.line), nil
-	}
+	return ast.NewHaveStmt(objNames, fact, tb.line), nil
 }
 
 func (p *TbParser) bodyBlockFacts(tb *tokenBlock, uniFactDepth uniFactEnum, parseBodyFactNum int) ([]ast.FactStmt, error) {
 	facts := []ast.FactStmt{}
 
 	if uniFactDepth.allowMoreDepth() {
-		
 		for i := range parseBodyFactNum {
 			stmt := tb.body[i]
 			fact, err := p.factStmt(&stmt, uniFactDepth) // no longer allow further uniFact
@@ -762,6 +757,7 @@ func (p *TbParser) defExistPropStmtBody(tb *tokenBlock) (*ast.DefExistPropStmtBo
 		if err != nil {
 			return nil, parserErrAtTb(err, tb)
 		}
+
 		return ast.NewExistPropDef(declHeader, domFacts, iffFactsAsFactStatements, []ast.FactStmt{}, tb.line), nil
 	}
 }
@@ -1093,7 +1089,7 @@ func (p *TbParser) proveInEachCaseStmt(tb *tokenBlock) (ast.Stmt, error) {
 		if err != nil {
 			return nil, parserErrAtTb(err, tb)
 		}
-		
+
 		for _, stmt := range tb.body[1].body {
 			curStmt, err := p.factStmt(&stmt, UniFactDepth0)
 			if err != nil {
@@ -1110,7 +1106,7 @@ func (p *TbParser) proveInEachCaseStmt(tb *tokenBlock) (ast.Stmt, error) {
 			if err != nil {
 				return nil, parserErrAtTb(err, tb)
 			}
-			
+
 			for _, stmt := range tb.body[i].body {
 				curStmt, err := p.Stmt(&stmt)
 				if err != nil {
@@ -1159,7 +1155,7 @@ func (p *TbParser) proveInEachCaseStmt(tb *tokenBlock) (ast.Stmt, error) {
 			if err != nil {
 				return nil, parserErrAtTb(err, tb)
 			}
-			
+
 			for _, stmt := range tb.body[i].body {
 				curStmt, err := p.Stmt(&stmt)
 				if err != nil {
@@ -1215,7 +1211,6 @@ func (p *TbParser) proveCaseByCaseStmt(tb *tokenBlock) (ast.Stmt, error) {
 
 			// Parse proof statements in the case block body
 			proof := ast.StmtSlice{}
-			
 			for _, stmt := range block.body {
 				curStmt, err := p.Stmt(&stmt)
 				if err != nil {
@@ -1242,7 +1237,7 @@ func (p *TbParser) proveCaseByCaseStmt(tb *tokenBlock) (ast.Stmt, error) {
 					if err != nil {
 						return nil, parserErrAtTb(err, tb)
 					}
-     
+					thenFacts = append(thenFacts, curStmt)
 				}
 			} else {
 				// Parse inline fact
@@ -1250,6 +1245,7 @@ func (p *TbParser) proveCaseByCaseStmt(tb *tokenBlock) (ast.Stmt, error) {
 				if err != nil {
 					return nil, parserErrAtTb(err, tb)
 				}
+				thenFacts = append(thenFacts, curStmt)
 			}
 		}
 	}
@@ -3147,7 +3143,7 @@ func (p *TbParser) claimPropStmt(tb *tokenBlock) (ast.Stmt, error) {
 		if err != nil {
 			return nil, parserErrAtTb(err, tb)
 		}
-  
+		proofs = append(proofs, curStmt)
 	}
 
 	if len(proofs) == 0 {
@@ -3362,7 +3358,7 @@ func (p *TbParser) atExistPropDefStmt(tb *tokenBlock) (*ast.DefExistPropStmt, er
 			if err != nil {
 				return nil, parserErrAtTb(err, tb)
 			}
-   
+			iffFacts = append(iffFacts, curStmt)
 		}
 
 		err = tb.body[len(tb.body)-1].header.skipKwAndColonCheckEOL(glob.KeySymbolRightArrow)
@@ -3383,14 +3379,15 @@ func (p *TbParser) atExistPropDefStmt(tb *tokenBlock) (*ast.DefExistPropStmt, er
 			if err != nil {
 				return nil, parserErrAtTb(err, tb)
 			}
-   
+			thenFacts = append(thenFacts, curStmt)
+		}
 	}
 
 	defBody := ast.NewExistPropDef(header, []ast.FactStmt{}, iffFacts, thenFacts, tb.line)
 	return ast.NewDefExistPropStmt(defBody, existParams, existParamSets, tb.line), nil
 }
 
-func (p *TbParser) parseDomThenProve(body []*tokenBlock) ([]ast.FactStmt, []ast.FactStmt, []ast.Stmt, error) {
+func (p *TbParser) parseDomThenProve(body []tokenBlock) ([]ast.FactStmt, []ast.FactStmt, []ast.Stmt, error) {
 	domFacts := []ast.FactStmt{}
 	thenFacts := []ast.FactStmt{}
 	proofs := []ast.Stmt{}
@@ -3416,7 +3413,7 @@ func (p *TbParser) parseDomThenProve(body []*tokenBlock) ([]ast.FactStmt, []ast.
 			if err != nil {
 				return nil, nil, nil, err
 			}
-   
+			domFacts = append(domFacts, curStmt)
 		}
 
 		// Parse => section
@@ -3432,7 +3429,7 @@ func (p *TbParser) parseDomThenProve(body []*tokenBlock) ([]ast.FactStmt, []ast.
 			if err != nil {
 				return nil, nil, nil, err
 			}
-   
+			thenFacts = append(thenFacts, curStmt)
 		}
 
 		// Parse optional prove section
@@ -3449,7 +3446,7 @@ func (p *TbParser) parseDomThenProve(body []*tokenBlock) ([]ast.FactStmt, []ast.
 				if err != nil {
 					return nil, nil, nil, err
 				}
-    
+				proofs = append(proofs, curStmt)
 			}
 		}
 		// If len(body) == 2, prove remains empty
@@ -3477,7 +3474,7 @@ func (p *TbParser) parseDomThenProve(body []*tokenBlock) ([]ast.FactStmt, []ast.
 				if err != nil {
 					return nil, nil, nil, err
 				}
-    
+				thenFacts = append(thenFacts, curStmt)
 			}
 		}
 
@@ -3491,7 +3488,7 @@ func (p *TbParser) parseDomThenProve(body []*tokenBlock) ([]ast.FactStmt, []ast.
 			if err != nil {
 				return nil, nil, nil, err
 			}
-   
+			proofs = append(proofs, curStmt)
 		}
 		return domFacts, thenFacts, proofs, nil
 	} else {
@@ -3510,7 +3507,8 @@ func (p *TbParser) parseDomThenProve(body []*tokenBlock) ([]ast.FactStmt, []ast.
 					if err != nil {
 						return nil, nil, nil, err
 					}
-     
+					thenFacts = append(thenFacts, curStmt)
+				}
 			} else {
 				// It's a direct fact statement (no => needed)
 				curStmt, err := p.factStmt(&body[i], UniFactDepth1)
