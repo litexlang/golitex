@@ -29,8 +29,9 @@ func sourceCodeToObj(sourceCode ...string) ([]ast.Obj, error) {
 	}
 
 	ret := []ast.Obj{}
+	p := NewTbParser()
 	for _, block := range blocks {
-		cur, err := block.Obj()
+		cur, err := p.Obj(&block)
 		if err != nil {
 			return nil, err
 		}

@@ -64,7 +64,7 @@ func (stmt *FnTStruct) Instantiate_FnTDefParams(templateParams []string, params 
 	return stmt.Instantiate(uniMap)
 }
 
-func (stmt *FnTStruct) InstantiateFnStruct_FnName(fnTName string, fc Obj) (*FnTStruct, error) {
-	uniMap := map[string]Obj{fnTName: fc}
+func (stmt *FnTStruct) InstantiateFnStruct_FnName(fnTName string, obj Obj) (*FnTStruct, error) {
+	uniMap := map[string]Obj{fnTName: obj}
 	return stmt.Instantiate(uniMap)
 }

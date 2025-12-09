@@ -17,17 +17,30 @@ know:
     5 $in s
     6 $in s
 
-prove:
+claim:
     forall x s:
-        or:
-            x = 1
-            x = 2
-            x = 3
-            x = 4
-            x = 5
-            x = 6
+        x $in {1,2,3,4,5,6}
+    prove:
+        prove_case_by_case:
+            =>:
+                x $in {1,2,3,4,5,6}
+            case x = 1:
+                do_nothing
+            case x = 2:
+                do_nothing
+            case x = 3:
+                do_nothing
+            case x = 4:
+                do_nothing
+            case x = 5:
+                do_nothing
+            case x = 6:
+                do_nothing
 
-s = {1,2,3,4,5,6}
+prove_by_enum(x {1,2,3,4,5,6}):
+    x $in s
+
+$equal_set(s, {1,2,3,4,5,6})
 
 let s2 set
 know s2 = {1,2,3,4,5,6}

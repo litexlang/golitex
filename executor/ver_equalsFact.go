@@ -24,9 +24,11 @@ func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState
 		return NewExecErr("equals fact must have at least 2 params")
 	}
 
+	trueMsgs := []string{}
+
 	for i := 1; i < len(stmt.Params); i++ {
 		checked := false
-		unknownRet := NewExecUnknown("")
+		unknownRet := NewEmptyExecUnknown()
 
 		for j := i - 1; j >= 0; j-- {
 			newFact := ast.NewEqualFact(stmt.Params[j], stmt.Params[i])
@@ -41,6 +43,7 @@ func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState
 					return NewExecErr(ret.String())
 				}
 				checked = true
+				trueMsgs = append(trueMsgs, verRet.String())
 				break
 			}
 
@@ -54,5 +57,5 @@ func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState
 			return unknownRet.AddMsg(fmt.Sprintf("%s\nis unknown", newFact.String()))
 		}
 	}
-	return NewExecTrue("")
+	return NewExecTrueWithMsgs(trueMsgs)
 }

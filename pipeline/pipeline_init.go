@@ -22,43 +22,30 @@ import (
 	parser "golitex/parser"
 )
 
-func GetBuiltinEnv() *env.Env {
+func GetEnvWithBuiltinParentEnv() (*env.Env, error) {
 	curEnv := env.NewEnv(nil)
 	curEnv.Init()
-	executor := exe.NewExecutor(curEnv)
-	err := useHardcodedCodeToInit(executor)
+	err := useHardcodedCodeToInit(curEnv)
 	if err != nil {
 		panic(err)
 	}
-	return executor.Env
+	curEnv = env.NewEnv(curEnv)
+	return curEnv, nil
 }
 
-func InitPipelineExecutor() (*exe.Executor, error) {
-	curEnv := env.NewEnv(nil)
-	curEnv.Init()
-	executor := exe.NewExecutor(curEnv)
-	err := useHardcodedCodeToInit(executor)
-	executor.NewEnv(curEnv)
-	if err != nil {
-		panic(err)
-	}
-	return executor, nil
-}
-
-func useHardcodedCodeToInit(executor *exe.Executor) error {
+func useHardcodedCodeToInit(env *env.Env) error {
 	statements, err := parser.ParseSourceCode(kernelLibLitexCode.PipelineInitCode)
 	if err != nil {
 		return err
 	}
+
+	executor := exe.NewExecutor(env)
 	for _, statement := range statements {
 		execState := executor.Stmt(statement)
 		if execState.IsUnknown() || execState.IsErr() {
-			return fmt.Errorf("failed to init pipeline: %s", err)
+			return fmt.Errorf("failed to init pipeline: %s\n%s", err, execState.String())
 		}
 	}
-
-	// Note: Messages are now stored in ExecRet, not in executor.Env.Msgs
-	// No need to clear messages anymore
 
 	return nil
 }

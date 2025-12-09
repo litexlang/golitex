@@ -50,9 +50,9 @@ func (exec *Executor) verifyFactsAtCurEnv(proofs []ast.FactStmt, verState *VerSt
 	for _, proof := range proofs {
 		verRet := ver.VerFactStmt(proof, verState)
 		if verRet.IsErr() {
-			return NewExecErr(""), proof, fmt.Errorf(verRet.String())
+			return NewEmptyExecErr(), proof, fmt.Errorf(verRet.String())
 		} else if verRet.IsUnknown() {
-			return NewExecUnknown(""), proof, nil
+			return NewEmptyExecUnknown(), proof, nil
 		}
 
 		ret := exec.Env.NewFact(proof)
@@ -60,7 +60,7 @@ func (exec *Executor) verifyFactsAtCurEnv(proofs []ast.FactStmt, verState *VerSt
 			return NewExecErr(ret.String()), proof, fmt.Errorf(ret.String())
 		}
 	}
-	return NewExecTrue(""), nil, nil
+	return NewEmptyExecTrue(), nil, nil
 }
 
 func (exec *Executor) GetBuiltinEnv() *env.Env {

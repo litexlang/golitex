@@ -16,6 +16,7 @@ package litex_pipeline
 
 import (
 	"fmt"
+	exe "golitex/executor"
 	glob "golitex/glob"
 	parser "golitex/parser"
 	"os"
@@ -51,11 +52,11 @@ func RunFilesInRepoWithPipelineRunner(repo string) error {
 		return err
 	}
 
-	executor, err := InitPipelineExecutor()
+	env, err := GetEnvWithBuiltinParentEnv()
 	if err != nil {
-		return fmt.Errorf("failed to init pipeline executor: %s", err)
+		return fmt.Errorf("failed to init pipeline env: %s", err)
 	}
-
+	executor := exe.NewExecutor(env)
 	allFilesStartTime := time.Now()
 
 	for _, file := range files {

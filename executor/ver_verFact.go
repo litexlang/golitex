@@ -27,7 +27,7 @@ func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) ExecRet {
 		if asStmt.NameIs(glob.KeySymbolEqual) && asStmt.TypeEnum == ast.TruePure {
 			return ver.verTrueEqualFact(asStmt, state, true)
 		} else {
-			return ver.verSpecFactThatIsNotTrueEqualFact_UseCommutativity(asStmt, state)
+			return ver.verNotTrueEqualSpecFact(asStmt, state)
 		}
 	case *ast.OrStmt:
 		return ver.verOrStmt(asStmt, state)
@@ -37,10 +37,10 @@ func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) ExecRet {
 		return ver.verUniFactWithIff(asStmt, state)
 	case *ast.EqualsFactStmt:
 		return ver.verEqualsFactStmt(asStmt, state)
-	case *ast.IntensionalSetStmt:
-		return ver.verIntensionalSetStmt(asStmt, state)
-	case *ast.EnumStmt:
-		return ver.verEnumStmt(asStmt, state)
+	// case *ast.IntensionalSetStmt:
+	// 	return ver.verIntensionalSetStmt(asStmt, state)
+	// case *ast.EnumStmt:
+	// 	return ver.verEnumStmt(asStmt, state)
 	default:
 		return NewExecErr(fmt.Sprintf("unexpected fact statement: %s", asStmt))
 	}

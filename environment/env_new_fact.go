@@ -19,7 +19,7 @@ import (
 	ast "golitex/ast"
 	cmp "golitex/cmp"
 	glob "golitex/glob"
-	"strconv"
+	parser "golitex/parser"
 )
 
 func (env *Env) NewFact(stmt ast.FactStmt) glob.GlobRet {
@@ -32,10 +32,10 @@ func (env *Env) NewFact(stmt ast.FactStmt) glob.GlobRet {
 		return env.newUniFact(f)
 	case *ast.UniFactWithIffStmt:
 		return env.newUniFactWithIff(f)
-	case *ast.EnumStmt:
-		return env.newEnumFact(f)
-	case *ast.IntensionalSetStmt:
-		return env.newIntensionalSetFact(f)
+	// case *ast.EnumStmt:
+	// 	return env.newEnumFact(f)
+	// case *ast.IntensionalSetStmt:
+	// 	return env.newIntensionalSetFact(f)
 	case *ast.EqualsFactStmt:
 		return env.newEqualsFact(f)
 	default:
@@ -88,12 +88,12 @@ func (env *Env) newFactNoPostProcess(stmt ast.FactStmt) glob.GlobRet {
 		return env.newLogicExprFact(f)
 	case *ast.UniFactStmt:
 		return env.newUniFact(f)
-	case *ast.IntensionalSetStmt:
-		return env.newIntensionalSetFact(f)
+	// case *ast.IntensionalSetStmt:
+	// 	return env.newIntensionalSetFact(f)
 	case *ast.UniFactWithIffStmt:
 		return env.newUniFactWithIff(f)
-	case *ast.EnumStmt:
-		return env.newEnumFact(f)
+	// case *ast.EnumStmt:
+	// 	return env.newEnumFact(f)
 	case *ast.EqualsFactStmt:
 		return env.newEqualsFactNoPostProcess(f)
 	default:
@@ -187,12 +187,16 @@ func (env *Env) newPureFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 		env.TransitivePropMem[string(fact.PropName)][fact.Params[0].String()] = append(env.TransitivePropMem[string(fact.PropName)][fact.Params[0].String()], fact.Params[1])
 	}
 
-	if glob.IsBuiltinKeywordKeySymbolCanBeFcAtomName(string(fact.PropName)) {
+	if glob.IsBuiltinObjOrPropName(string(fact.PropName)) {
 		if fact.PropName == glob.KeywordIn {
 			return env.inFactPostProcess(fact)
 		} else {
 			return glob.TrueRet("")
 		}
+	}
+
+	if fact.PropName == glob.KeywordEqualSet {
+		return env.equalSetFactPostProcess(fact)
 	}
 
 	propDef := env.GetPropDef(fact.PropName)
@@ -220,6 +224,23 @@ func (env *Env) newPureFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 	}
 
 	return glob.ErrRet(fmt.Errorf("unknown prop %s", fact.PropName))
+}
+
+// equalSetFactPostProcess handles postprocessing for equal_set(a, b) facts
+// It creates an equality fact a = b
+func (env *Env) equalSetFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
+	if len(fact.Params) != 2 {
+		return glob.ErrRet(fmt.Errorf("equal_set fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
+	}
+
+	// Create a = b fact
+	equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{fact.Params[0], fact.Params[1]}, fact.Line)
+	ret := env.NewFact(equalFact)
+	if ret.IsErr() {
+		return ret
+	}
+
+	return glob.TrueRet("")
 }
 
 func (env *Env) newTruePureFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) glob.GlobRet {
@@ -403,12 +424,22 @@ func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, glob.Glob
 		}
 	}
 
-	// 如果右边是 a = (1, 2, ..)，那么需要处理（左边是被赋值的对象，右边是 tuple）
-	if asFnObj, ok := fact.Params[1].(*ast.FnObj); ok && ast.IsTupleFnObj(asFnObj) {
-		ret = env.equalFactPostProcess_tuple(fact.Params[0], fact.Params[1])
-		if ret.IsErr() {
-			return false, ret
-		}
+	// 处理 tuple 相等的情况
+	ret = env.equalFactPostProcess_tupleEquality(fact.Params[0], fact.Params[1])
+	if ret.IsErr() {
+		return false, ret
+	}
+
+	// 处理 x = {1, 2, 3} 的情况
+	ret = env.equalFactPostProcess_enumSetEquality(fact.Params[0], fact.Params[1])
+	if ret.IsErr() {
+		return false, ret
+	}
+
+	// 处理 x = {x Z: x > 5} 的情况
+	ret = env.equalFactPostProcess_intensionalSetEquality(fact.Params[0], fact.Params[1])
+	if ret.IsErr() {
+		return false, ret
 	}
 
 	return true, glob.TrueRet("")
@@ -429,13 +460,13 @@ func simplifyNumExprObj(obj ast.Obj) ast.Obj {
 
 func (env *Env) storeSymbolSimplifiedValue(left, right ast.Obj) glob.GlobRet {
 	_, newLeft := env.ReplaceSymbolWithValue(left)
-	if cmp.IsNumLitObj(newLeft) {
+	if cmp.IsNumExprLitObj(newLeft) {
 		simplifiedNewLeft := simplifyNumExprObj(newLeft)
 		env.StoreTrueEqualValues(right, simplifiedNewLeft)
 	}
 
 	_, newRight := env.ReplaceSymbolWithValue(right)
-	if cmp.IsNumLitObj(newRight) {
+	if cmp.IsNumExprLitObj(newRight) {
 		simplifiedNewRight := simplifyNumExprObj(newRight)
 		env.StoreTrueEqualValues(left, simplifiedNewRight)
 	}
@@ -443,9 +474,9 @@ func (env *Env) storeSymbolSimplifiedValue(left, right ast.Obj) glob.GlobRet {
 	return glob.TrueRet("")
 }
 
-func (env *Env) GetEqualFcs(fc ast.Obj) (*[]ast.Obj, bool) {
-	fcAsStr := fc.String()
-	facts, ok := env.EqualMem[fcAsStr]
+func (env *Env) GetEqualObjs(obj ast.Obj) (*[]ast.Obj, bool) {
+	objAsStr := obj.String()
+	facts, ok := env.EqualMem[objAsStr]
 	return facts, ok
 }
 
@@ -504,78 +535,78 @@ func (env *Env) ExecDefFnTemplate(stmt *ast.FnTemplateDefStmt) glob.GlobRet {
 	return glob.TrueRet("")
 }
 
-func (env *Env) newEnumFact(stmt *ast.EnumStmt) glob.GlobRet {
-	forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts := ast.TransformEnumToUniFact(stmt.CurSet, stmt.Items)
+// func (env *Env) newEnumFact(stmt *ast.EnumStmt) glob.GlobRet {
+// 	forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts := ast.TransformEnumToUniFact(stmt.CurSet, stmt.Items)
 
-	ret := env.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.CurSet, ast.Atom(glob.KeywordSet)}, stmt.Line))
-	if ret.IsErr() {
-		return ret
-	}
+// 	ret := env.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.CurSet, ast.Atom(glob.KeywordSet)}, stmt.Line))
+// 	if ret.IsErr() {
+// 		return ret
+// 	}
 
-	ret = env.NewFact(forallItemInSetEqualToOneOfGivenItems)
-	if ret.IsErr() {
-		return ret
-	}
+// 	ret = env.NewFact(forallItemInSetEqualToOneOfGivenItems)
+// 	if ret.IsErr() {
+// 		return ret
+// 	}
 
-	for _, pairwiseNotEqualFact := range pairwiseNotEqualFacts {
-		ret := env.NewFact(pairwiseNotEqualFact)
-		if ret.IsErr() {
-			return ret
-		}
-	}
+// 	for _, pairwiseNotEqualFact := range pairwiseNotEqualFacts {
+// 		ret := env.NewFact(pairwiseNotEqualFact)
+// 		if ret.IsErr() {
+// 			return ret
+// 		}
+// 	}
 
-	for _, equalFact := range itemsInSetFacts {
-		ret := env.NewFact(equalFact)
-		if ret.IsErr() {
-			return ret
-		}
-	}
+// 	for _, equalFact := range itemsInSetFacts {
+// 		ret := env.NewFact(equalFact)
+// 		if ret.IsErr() {
+// 			return ret
+// 		}
+// 	}
 
-	// postprocess 1. s is $is_finite_set 2. len(s) = number of items in set
-	// finiteSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIsFiniteSet), []ast.Fc{stmt.EnumName})
-	finiteSetFact := ast.NewInFactWithFc(stmt.CurSet, ast.Atom(glob.KeywordFiniteSet))
-	ret = env.NewFact(finiteSetFact)
-	if ret.IsErr() {
-		return ret
-	}
+// 	// postprocess 1. s is $is_finite_set 2. len(s) = number of items in set
+// 	// finiteSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeywordIsFiniteSet), []ast.Fc{stmt.EnumName})
+// 	finiteSetFact := ast.NewInFactWithFc(stmt.CurSet, ast.Atom(glob.KeywordFiniteSet))
+// 	ret = env.NewFact(finiteSetFact)
+// 	if ret.IsErr() {
+// 		return ret
+// 	}
 
-	lengthOfSet := strconv.Itoa(len(stmt.Items))
-	lengthOfSetAsFcAtom := ast.Atom(lengthOfSet)
+// 	lengthOfSet := strconv.Itoa(len(stmt.Items))
+// 	lengthOfSetAsFcAtom := ast.Atom(lengthOfSet)
 
-	lenFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{ast.NewFnObj(ast.Atom(glob.KeywordCount), []ast.Obj{stmt.CurSet}), lengthOfSetAsFcAtom}, stmt.Line)
-	ret = env.NewFact(lenFact)
-	if ret.IsErr() {
-		return ret
-	}
+// 	lenFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{ast.NewFnObj(ast.Atom(glob.KeywordCount), []ast.Obj{stmt.CurSet}), lengthOfSetAsFcAtom}, stmt.Line)
+// 	ret = env.NewFact(lenFact)
+// 	if ret.IsErr() {
+// 		return ret
+// 	}
 
-	ret = env.storeFactInEnumMem(stmt)
-	if ret.IsErr() {
-		return ret
-	}
+// 	ret = env.storeFactInEnumMem(stmt)
+// 	if ret.IsErr() {
+// 		return ret
+// 	}
 
-	return glob.TrueRet("")
-}
+// 	return glob.TrueRet("")
+// }
 
-func (env *Env) newIntensionalSetFact(stmt *ast.IntensionalSetStmt) glob.GlobRet {
-	leftUniFact, rightUniFact, err := stmt.ToEquivalentUniFacts()
-	if err != nil {
-		return glob.ErrRet(err)
-	}
+// func (env *Env) newIntensionalSetFact(stmt *ast.IntensionalSetStmt) glob.GlobRet {
+// 	leftUniFact, rightUniFact, err := stmt.ToEquivalentUniFacts()
+// 	if err != nil {
+// 		return glob.ErrRet(err)
+// 	}
 
-	ret := env.NewFact(leftUniFact)
-	if ret.IsErr() {
-		return ret
-	}
+// 	ret := env.NewFact(leftUniFact)
+// 	if ret.IsErr() {
+// 		return ret
+// 	}
 
-	ret = env.NewFact(rightUniFact)
-	if ret.IsErr() {
-		return ret
-	}
+// 	ret = env.NewFact(rightUniFact)
+// 	if ret.IsErr() {
+// 		return ret
+// 	}
 
-	env.IntensionalSetMem[stmt.CurSet.String()] = *stmt
+// 	env.IntensionalSetMem[stmt.CurSet.String()] = *stmt
 
-	return glob.TrueRet("")
-}
+// 	return glob.TrueRet("")
+// }
 
 func (env *Env) newUniFact_ThenFactIsSpecFact(stmt *ast.UniFactStmt, thenFact *ast.SpecFactStmt) glob.GlobRet {
 	return env.storeUniFact(thenFact, stmt)
@@ -585,49 +616,49 @@ func (env *Env) newUniFact_ThenFactIsOrStmt(stmt *ast.UniFactStmt, thenFact *ast
 	return env.KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem.NewFact(stmt, thenFact)
 }
 
-func (env *Env) newUniFact_ThenFactIsEnumStmt(stmt *ast.UniFactStmt, thenFact *ast.EnumStmt) glob.GlobRet {
-	forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts := ast.TransformEnumToUniFact(thenFact.CurSet, thenFact.Items)
-	mergedUniFact := ast.MergeOuterInnerUniFacts(stmt, forallItemInSetEqualToOneOfGivenItems)
-	ret := env.newUniFact(mergedUniFact)
-	if ret.IsErr() {
-		return ret
-	}
-	for _, fact := range pairwiseNotEqualFacts {
-		ret := env.storeUniFact(fact, stmt)
-		if ret.IsErr() {
-			return ret
-		}
-	}
-	for _, fact := range itemsInSetFacts {
-		ret := env.storeUniFact(fact, stmt)
-		if ret.IsErr() {
-			return ret
-		}
-	}
+// func (env *Env) newUniFact_ThenFactIsEnumStmt(stmt *ast.UniFactStmt, thenFact *ast.EnumStmt) glob.GlobRet {
+// 	forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts := ast.TransformEnumToUniFact(thenFact.CurSet, thenFact.Items)
+// 	mergedUniFact := ast.MergeOuterInnerUniFacts(stmt, forallItemInSetEqualToOneOfGivenItems)
+// 	ret := env.newUniFact(mergedUniFact)
+// 	if ret.IsErr() {
+// 		return ret
+// 	}
+// 	for _, fact := range pairwiseNotEqualFacts {
+// 		ret := env.storeUniFact(fact, stmt)
+// 		if ret.IsErr() {
+// 			return ret
+// 		}
+// 	}
+// 	for _, fact := range itemsInSetFacts {
+// 		ret := env.storeUniFact(fact, stmt)
+// 		if ret.IsErr() {
+// 			return ret
+// 		}
+// 	}
 
-	return glob.TrueRet("")
-}
+// 	return glob.TrueRet("")
+// }
 
-func (env *Env) newUniFact_ThenFactIsIntensionalSetStmt(stmt *ast.UniFactStmt, thenFact *ast.IntensionalSetStmt) glob.GlobRet {
-	leftUniFact, rightUniFact, err := thenFact.ToEquivalentUniFacts()
-	if err != nil {
-		return glob.ErrRet(err)
-	}
+// func (env *Env) newUniFact_ThenFactIsIntensionalSetStmt(stmt *ast.UniFactStmt, thenFact *ast.IntensionalSetStmt) glob.GlobRet {
+// 	leftUniFact, rightUniFact, err := thenFact.ToEquivalentUniFacts()
+// 	if err != nil {
+// 		return glob.ErrRet(err)
+// 	}
 
-	mergedLeftUniFact := ast.MergeOuterInnerUniFacts(stmt, leftUniFact)
-	ret := env.newUniFact(mergedLeftUniFact)
-	if ret.IsErr() {
-		return ret
-	}
+// 	mergedLeftUniFact := ast.MergeOuterInnerUniFacts(stmt, leftUniFact)
+// 	ret := env.newUniFact(mergedLeftUniFact)
+// 	if ret.IsErr() {
+// 		return ret
+// 	}
 
-	mergedRightUniFact := ast.MergeOuterInnerUniFacts(stmt, rightUniFact)
-	ret = env.newUniFact(mergedRightUniFact)
-	if ret.IsErr() {
-		return ret
-	}
+// 	mergedRightUniFact := ast.MergeOuterInnerUniFacts(stmt, rightUniFact)
+// 	ret = env.newUniFact(mergedRightUniFact)
+// 	if ret.IsErr() {
+// 		return ret
+// 	}
 
-	return glob.TrueRet("")
-}
+// 	return glob.TrueRet("")
+// }
 
 func (env *Env) newUniFact_ThenFactIsIffStmt(stmt *ast.UniFactStmt, thenFact *ast.UniFactWithIffStmt) glob.GlobRet {
 	thenToIff := thenFact.NewUniFactWithThenToIff()
@@ -664,10 +695,10 @@ func (env *Env) newUniFact_ThenFactIsEqualsFactStmt(stmt *ast.UniFactStmt, thenF
 	return glob.TrueRet("")
 }
 
-func (env *Env) storeFactInEnumMem(stmt *ast.EnumStmt) glob.GlobRet {
-	env.EnumFacts[stmt.CurSet.String()] = stmt.Items
-	return glob.TrueRet("")
-}
+// func (env *Env) storeFactInEnumMem(stmt *ast.EnumStmt) glob.GlobRet {
+// 	env.EnumFacts[stmt.CurSet.String()] = stmt.Items
+// 	return glob.TrueRet("")
+// }
 
 func (env *Env) storeSpecFactInMem(stmt *ast.SpecFactStmt) glob.GlobRet {
 	ret := env.KnownFactsStruct.SpecFactMem.newFact(stmt)
@@ -706,5 +737,45 @@ func (env *Env) newEqualsFactNoPostProcess(stmt *ast.EqualsFactStmt) glob.GlobRe
 			return ret
 		}
 	}
+	return glob.TrueRet("")
+}
+
+// equalFactPostProcess_intensionalSetEquality 处理 x = {param parentSet: facts} 的情况
+// 如果右边是 intensional set（直接或通过 equal facts），则断言 left 满足 intensional set 的所有条件
+func (env *Env) equalFactPostProcess_intensionalSetEquality(left, right ast.Obj) glob.GlobRet {
+	// 尝试获取 intensional set（可能是直接的，也可能是通过 equal facts 得到的）
+	intensionalSet := env.GetObjIntensionalSet(right)
+	if intensionalSet == nil {
+		return glob.TrueRet("")
+	}
+
+	// 从 intensional set 中提取 param, parentSet, facts
+	paramAsString, parentSet, facts, err := parser.GetParamParentSetFactsFromIntensionalSet(intensionalSet)
+	if err != nil {
+		return glob.ErrRet(fmt.Errorf("failed to extract intensional set information: %s", err))
+	}
+
+	// 创建替换映射：将 param 替换为 left
+	uniMap := map[string]ast.Obj{paramAsString: left}
+
+	// 1. 断言 left 是 parentSet 的子集
+	subsetOfFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordSubsetOf), []ast.Obj{left, parentSet}, glob.BuiltinLine)
+	ret := env.NewFact(subsetOfFact)
+	if ret.IsErr() {
+		return ret
+	}
+
+	// 2. 实例化所有 facts，将 param 替换为 left，然后断言它们
+	for _, fact := range facts {
+		instFact, err := fact.InstantiateFact(uniMap)
+		if err != nil {
+			return glob.ErrRet(fmt.Errorf("failed to instantiate fact %s: %s", fact, err))
+		}
+		ret := env.NewFact(instFact)
+		if ret.IsErr() {
+			return ret
+		}
+	}
+
 	return glob.TrueRet("")
 }

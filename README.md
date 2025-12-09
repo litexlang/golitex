@@ -1,5 +1,5 @@
 <div align="center">
-<img src="https://publisher.litexlang.org/logo.png" alt="The Litex Logo" width="300">
+<img src="https://publisher.litexlang.org/logo.PNG" alt="The Litex Logo" width="300">
 </div>
 
 <div align="center">
@@ -28,7 +28,7 @@ _– Leonardo da Vinci_
 
 ---
 
-[Litex](https://litexlang.com) is a simple open-source computer language for mathematical proofs. It aims to express mathematics as code while staying as close to natural language as possible, making it both rigorous and accessible. ([Star the repo!](https://github.com/litexlang/golitex)) With just one to two hours of learning the fundamentals, you can write code that solves interesting mathematical problems with verified correctness!
+[Litex](https://litexlang.com) is a simple open-source computer language for mathematical proofs. It aims to express mathematics as code while staying as close to natural language as possible, making it both rigorous and accessible. ([Star the repo!](https://github.com/litexlang/golitex)) With just one to two hours of learning the fundamentals, you can write code that solves interesting mathematical problems with verified correctness! Litex automatically verifies your proofs and shows you step-by-step how each inference is executed, making the reasoning process transparent and educational.
 
 How does Litex work? It achieves its simplicity by imitating how people reason and how mathematics works. *Litex uses a set of axioms (i.e. ZFC axioms and basic logic) and inference rules that are sufficiently expressive to capture mathematical concepts. (axioms + inference rules = math world)* Its close-to-natural-language syntax means users often forget they're using a formal language, lowering the barrier of formal reasoning by 10x compared with traditional formal languages. We want to make Litex easy-to-learn even for 10-year-old beginners in mathematical proof and verification.
 
@@ -94,11 +94,13 @@ Since each Litex sentence corresponds directly to an expression in everyday math
 
 ## Litex For AI, For Math, For Everyone
 
-_Necessity is the mother of invention._
+_It’s best to do one thing really, really well._
 
-_- Thomas Edison_
+_- Google, ten things we know to be true_
 
 ---
+
+Litex is a focused and deeply crafted language. We have invested significant effort in refining and enhancing it. Like other focused and profound products, users naturally find ways to integrate Litex into their own work—this is both inspiring and exciting. Here are some examples of how Litex is used:
 
 Litex For AI
 
@@ -199,7 +201,7 @@ _Sometimes it is the very people who no one imagines anything of who do the thin
 _– Alan Turing_
 
 <div align="center">
-  <img src="https://publisher.litexlang.org/Little_Little_O.png" alt="The Litex Logo" width="200">
+  <img src="https://publisher.litexlang.org/Little_Little_O.PNG" alt="The Litex Logo" width="200">
   <p><em>Litex Mascot: Little Little O, a curious baby bird full of wonder</em></p>
 </div>
 

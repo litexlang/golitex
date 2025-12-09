@@ -27,7 +27,7 @@ func (env *Env) IsValidIdentifierAvailable(name string) glob.GlobRet {
 		return glob.ErrRet(err)
 	}
 
-	ok := env.IsFcAtomDeclaredByUser(ast.Atom(name))
+	ok := env.IsAtomDefinedByUser(ast.Atom(name))
 	if ok {
 		return glob.ErrRet(duplicateDefError(name))
 	}
@@ -132,7 +132,7 @@ func (env *Env) AtomsInFnTemplateFnTemplateDeclared(name ast.Atom, stmt *ast.FnT
 		extraAtomNames[param] = struct{}{}
 	}
 
-	ret = env.AreAtomsInFcAreDeclared(stmt.Fn.RetSet, extraAtomNames)
+	ret = env.AreAtomsInObjDefined(stmt.Fn.RetSet, extraAtomNames)
 	if ret.IsErr() {
 		ret.AddMsg(fmt.Sprintf("in return set of fn template %s", name))
 		return ret

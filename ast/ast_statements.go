@@ -182,12 +182,12 @@ type ProveStmt struct {
 
 // s := {1,2,3} 是枚举语法糖，等价于 forall x s: x = 1 or x = 2 or x = 3; 1 $in s; 2 $in s; 3 $in s;
 // s := {} 表示 这是个空集
-type EnumStmt struct {
-	CurSet Obj
-	Items  ObjSlice
+// type EnumStmt struct {
+// 	CurSet Obj
+// 	Items  ObjSlice
 
-	Line uint
-}
+// 	Line uint
+// }
 
 type ImportFileStmt struct {
 	Path string
@@ -205,6 +205,25 @@ type IntensionalSetStmt struct {
 }
 
 // 某种程度上这个关键词是不必要的，因为如果我发现涉及到的uniFact里面的所有的 paramSet 都是有 enum 的，那我就默认迭代去证明这个forall。但是我还是引入这个关键词以突出我现在用的是iterative的情况
+// prove_by_enum(x s, y s2, z s3...):
+//
+//		dom:
+//			...
+//		=>:
+//			...
+//	    prove:
+//		    ...
+
+// prove_by_enum(x s, y s2, z s3...):
+//
+//	=>:
+//		...
+//	prove:
+//		...
+
+// prove_by_enum(x s, y s2, z s3...):
+//
+//	....
 type ProveByEnumStmt struct {
 	Fact  *UniFactStmt
 	Proof StmtSlice
@@ -220,13 +239,16 @@ type HaveObjInNonEmptySetStmt struct {
 }
 
 type HaveEnumSetStmt struct {
-	Fact *EnumStmt
+	Name       string
+	EnumSetObj *FnObj
 
 	Line uint
 }
 
 type HaveIntensionalSetStmt struct {
-	Fact *IntensionalSetStmt
+	Param     string
+	ParentSet Obj
+	Facts     FactStmtSlice
 
 	Line uint
 }
@@ -271,11 +293,11 @@ type KnowExistPropStmt struct {
 	Line uint
 }
 
-type LatexStmt struct {
-	Comment string
+// type LatexStmt struct {
+// 	Comment string
 
-	Line uint
-}
+// 	Line uint
+// }
 
 type FnTemplateDefStmt struct {
 	TemplateDefHeader *DefHeader
@@ -345,13 +367,13 @@ type HaveFnEqualCaseByCaseStmt struct {
 	Line uint
 }
 
-type HaveFnLiftStmt struct {
-	FnName                     string
-	Opt                        Obj
-	DomainOfEachParamOfGivenFn ObjSlice
+// type HaveFnLiftStmt struct {
+// 	FnName                     string
+// 	Opt                        Obj
+// 	DomainOfEachParamOfGivenFn ObjSlice
 
-	Line uint
-}
+// 	Line uint
+// }
 
 /*
 have fn:
@@ -395,22 +417,22 @@ type HaveFnCaseByCaseStmt struct {
 	Line uint
 }
 
-type MarkdownStmt struct {
-	Markdown string
+// type MarkdownStmt struct {
+// 	Markdown string
 
-	Line uint
-}
+// 	Line uint
+// }
 
-type ProveInRangeSetStmt struct {
-	Start          int64
-	End            int64
-	Param          string
-	IntensionalSet Obj
-	ThenFacts      FactStmtSlice
-	Proofs         StmtSlice
+// type ProveInRangeSetStmt struct {
+// 	Start          int64
+// 	End            int64
+// 	Param          string
+// 	IntensionalSet Obj
+// 	ThenFacts      FactStmtSlice
+// 	Proofs         StmtSlice
 
-	Line uint
-}
+// 	Line uint
+// }
 
 type ClaimIffStmt struct {
 	UniFactWithIffStmt *UniFactWithIffStmt
@@ -511,7 +533,7 @@ type HelpStmt struct {
 }
 
 // 这是必要的，因为要证明从n到m有且只有n, n+1, ..., m-1, m这些数，必须要用特殊的关键词
-type ProveInRangeStmt struct {
+type ProveInRangeStmt2 struct {
 	param         string
 	start         Obj
 	end           Obj
@@ -544,6 +566,17 @@ type HaveCartWithDimStmt struct {
 	Facts   FactStmtSlice
 	Proofs  StmtSlice
 	EqualTo Obj
+
+	Line uint
+}
+
+type ProveInRangeStmt struct {
+	Params    string
+	Start     Obj
+	End       Obj
+	DomFacts  FactStmtSlice
+	ThenFacts FactStmtSlice
+	Proofs    StmtSlice
 
 	Line uint
 }

@@ -32,7 +32,7 @@ func (ver *Verifier) verSpecFact_BySpecMem(stmt *ast.SpecFactStmt, state *VerSta
 		}
 	}
 
-	return NewExecUnknown("")
+	return NewEmptyExecUnknown()
 }
 
 func (ver *Verifier) verSpecFact_ByLogicMem(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
@@ -48,7 +48,7 @@ func (ver *Verifier) verSpecFact_ByLogicMem(stmt *ast.SpecFactStmt, state *VerSt
 		}
 	}
 
-	return NewExecUnknown("")
+	return NewEmptyExecUnknown()
 }
 
 func (ver *Verifier) verSpecFact_InSpecFact_UniMem(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
@@ -61,7 +61,7 @@ func (ver *Verifier) verSpecFact_InSpecFact_UniMem(stmt *ast.SpecFactStmt, state
 			return verRet
 		}
 	}
-	return NewExecUnknown("")
+	return NewEmptyExecUnknown()
 }
 
 func (ver *Verifier) verSpecFact_InLogicExpr_InUniFactMem(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
@@ -75,14 +75,14 @@ func (ver *Verifier) verSpecFact_InLogicExpr_InUniFactMem(stmt *ast.SpecFactStmt
 		}
 	}
 
-	return NewExecUnknown("")
+	return NewEmptyExecUnknown()
 }
 
 func (ver *Verifier) specFact_inLogicExpr_inUniFactMem_atEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	searchedSpecFactsInLogicExpr, got := curEnv.KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem.GetSameEnumPkgPropFacts(stmt)
 
 	if !got {
-		return NewExecUnknown("")
+		return NewEmptyExecUnknown()
 	}
 
 	nextState := state.GetAddRound().GetNoMsg()
@@ -169,11 +169,11 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch_new(stmt *ast.Spe
 		}
 
 		if verRet.IsTrue() {
-			return ver.maybeAddSuccessMsg(state, stmt, knownFactUnderLogicExpr.UniFact, NewExecTrue(""))
+			return ver.maybeAddSuccessMsg(state, stmt, knownFactUnderLogicExpr.UniFact, NewEmptyExecTrue())
 		}
 	}
 
-	return NewExecUnknown("")
+	return NewEmptyExecUnknown()
 }
 
 func (ver *Verifier) specFact_UniMem_atCurEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state *VerState) ExecRet {
@@ -184,7 +184,7 @@ func (ver *Verifier) specFact_UniMem_atCurEnv(curEnv *env.Env, stmt *ast.SpecFac
 	searchedSpecFacts, got := curEnv.KnownFactsStruct.SpecFactInUniFactMem.GetSameEnumPkgPropFacts(stmt)
 
 	if !got {
-		return NewExecUnknown("")
+		return NewEmptyExecUnknown()
 	}
 
 	// return ver.iterate_KnownSpecInUniFacts_applyMatch(stmt, searchedSpecFacts, state)
@@ -209,12 +209,12 @@ func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]
 		newMap[key] = value[0]
 	}
 
-	return newMap, NewExecTrue("")
+	return newMap, NewEmptyExecTrue()
 }
 
 func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_InLogicExpr, stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	if len(knownFact.SpecFact.Params) != len(stmt.Params) {
-		return NewExecUnknown("")
+		return NewEmptyExecUnknown()
 	}
 
 	for i, knownParam := range knownFact.SpecFact.Params {
@@ -243,17 +243,17 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 	}
 
 	if state.WithMsg {
-		return ver.maybeAddSuccessMsg(state, stmt, knownFact.LogicExpr, NewExecTrue(""))
+		return ver.maybeAddSuccessMsg(state, stmt, knownFact.LogicExpr, NewEmptyExecTrue())
 	}
 
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }
 
 func (ver *Verifier) specFact_SpecMem_atEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	knownFacts, got := curEnv.KnownFactsStruct.SpecFactMem.GetSameEnumPkgPropFacts(stmt)
 
 	if !got {
-		return NewExecUnknown("")
+		return NewEmptyExecUnknown()
 	}
 
 	return ver.iterateKnownSpecFacts_applyFcEqualSpec(stmt, knownFacts, state)
@@ -263,7 +263,7 @@ func (ver *Verifier) specFact_LogicMem(curEnv *env.Env, stmt *ast.SpecFactStmt, 
 	knownFacts, got := curEnv.KnownFactsStruct.SpecFactInLogicExprMem.GetSameEnumPkgPropFacts(stmt)
 
 	if !got {
-		return NewExecUnknown("")
+		return NewEmptyExecUnknown()
 	}
 
 	if got {
@@ -279,7 +279,7 @@ func (ver *Verifier) specFact_LogicMem(curEnv *env.Env, stmt *ast.SpecFactStmt, 
 
 	}
 
-	return NewExecUnknown("")
+	return NewEmptyExecUnknown()
 }
 
 func (ver *Verifier) iterateKnownSpecFacts_applyFcEqualSpec(stmt *ast.SpecFactStmt, knownFacts []ast.SpecFactStmt, state *VerState) ExecRet {
@@ -294,25 +294,25 @@ LoopOverFacts:
 		}
 
 		if state.WithMsg {
-			execRet := NewExecTrue("")
+			execRet := NewEmptyExecTrue()
 			execRet.AddMsg(successVerString(stmt, &knownFact))
 			return execRet
 		}
-		return NewExecTrue("")
+		return NewEmptyExecTrue()
 	}
 
-	return NewExecUnknown("")
+	return NewEmptyExecUnknown()
 }
 
 func (ver *Verifier) matchTwoSpecFacts(stmt *ast.SpecFactStmt, knownFact *ast.SpecFactStmt, state *VerState) ExecRet {
 	if len(knownFact.Params) != len(stmt.Params) || knownFact.TypeEnum != stmt.TypeEnum {
-		return NewExecUnknown("")
+		return NewEmptyExecUnknown()
 	}
 
 	// 如果不区分 equal 和 其他事实的话，可能会出死循环
 	if stmt.PropName == glob.KeySymbolEqual && stmt.IsTrue() {
 		for i, knownParam := range knownFact.Params {
-			verRet := ver.cmpFc_Builtin_Then_Decompose_Spec(knownParam, stmt.Params[i], state)
+			verRet := ver.cmpObj_Builtin_Then_Decompose_Spec(knownParam, stmt.Params[i], state)
 			if verRet.IsErr() || verRet.IsUnknown() {
 				return verRet
 			}
@@ -328,7 +328,7 @@ func (ver *Verifier) matchTwoSpecFacts(stmt *ast.SpecFactStmt, knownFact *ast.Sp
 		}
 	}
 
-	return NewExecTrue("")
+	return NewEmptyExecTrue()
 }
 
 func (ver *Verifier) useKnownOrFactToProveSpecFact(knownFact *env.KnownSpecFact_InLogicExpr, stmt *ast.SpecFactStmt, state *VerState) ExecRet {
@@ -353,7 +353,7 @@ func (ver *Verifier) useKnownOrFactToProveSpecFact(knownFact *env.KnownSpecFact_
 		}
 	}
 
-	return ver.maybeAddSuccessMsg(state, stmt, knownFact.LogicExpr, NewExecTrue(""))
+	return ver.maybeAddSuccessMsg(state, stmt, knownFact.LogicExpr, NewEmptyExecTrue())
 }
 
 func (ver *Verifier) proveUniFactDomFacts(domFacts []ast.FactStmt, state *VerState) ExecRet {
@@ -372,19 +372,19 @@ func (ver *Verifier) proveUniFactDomFacts(domFacts []ast.FactStmt, state *VerSta
 				}
 			}
 		}
-		return NewExecTrue("")
+		return NewEmptyExecTrue()
 	} else {
 		for _, fact := range domFacts {
 			asSpecFact, ok := fact.(*ast.SpecFactStmt)
 			if !ok {
-				return NewExecUnknown("")
+				return NewEmptyExecUnknown()
 			}
 			verRet := BoolErrToExecRet(ver.VerFactStmt(asSpecFact, state.GetFinalRound()).ToBoolErr())
 			if verRet.IsErr() || verRet.IsUnknown() {
 				return verRet
 			}
 		}
-		return NewExecTrue("")
+		return NewEmptyExecTrue()
 	}
 }
 
@@ -403,7 +403,7 @@ func (ver *Verifier) verify_specFact_when_given_orStmt_is_true(stmt *ast.SpecFac
 		}
 	}
 
-	return ver.maybeAddSuccessMsg(state, stmt, orStmt, NewExecTrue(""))
+	return ver.maybeAddSuccessMsg(state, stmt, orStmt, NewEmptyExecTrue())
 }
 
 func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch_new(stmt *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InUniFact, state *VerState) ExecRet {
@@ -468,9 +468,9 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch_new(stmt *ast.SpecFa
 		}
 
 		if verRet.IsTrue() {
-			return ver.maybeAddSuccessMsg(state, stmt, knownFact_paramProcessed.UniFact, NewExecTrue(""))
+			return ver.maybeAddSuccessMsg(state, stmt, knownFact_paramProcessed.UniFact, NewEmptyExecTrue())
 		}
 	}
 
-	return NewExecUnknown("")
+	return NewEmptyExecUnknown()
 }
