@@ -486,11 +486,7 @@ func (f *FnObj) String() string {
 	}
 
 	if IsIntensionalSetObj(f) {
-		strSlice := []string{}
-		for i := 2; i < len(f.Params); i++ {
-			strSlice = append(strSlice, f.Params[i].String())
-		}
-		return fmt.Sprintf("%s%s %s%s %s%s", glob.KeySymbolLeftCurly, f.Params[0].String(), f.Params[1].String(), glob.KeySymbolColon, strings.Join(strSlice, ", "), glob.KeySymbolRightCurly)
+		return intensionalSetObjString(f)
 	}
 
 	if ok, str := hasBuiltinOptAndToString(f); ok {
@@ -1482,4 +1478,82 @@ func (stmt *HaveFnEqualCaseByCaseStmt) String() string {
 		builder.WriteByte('\n')
 	}
 	return strings.TrimSpace(builder.String())
+}
+
+func intensionalSetObjString(f *FnObj) string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeySymbolLeftCurly)
+	builder.WriteString(f.Params[0].String())
+	builder.WriteByte(' ')
+	builder.WriteString(f.Params[1].String())
+	builder.WriteString(glob.KeySymbolColon)
+
+	facts := []string{}
+	i := 2
+	for i < len(f.Params) {
+		// Check if current param is a double underscore marker (start of a new spec fact)
+		paramStr := f.Params[i].String()
+		var typeEnum SpecFactEnum
+		var isMarker bool
+
+		switch paramStr {
+		case glob.KeywordDoubleUnderscoreTruePure:
+			typeEnum = TruePure
+			isMarker = true
+		case glob.DoubleUnderscoreNotPure:
+			typeEnum = FalsePure
+			isMarker = true
+		case glob.DoubleUnderscoreExist:
+			typeEnum = TrueExist_St
+			isMarker = true
+		case glob.KeywordDoubleUnderscoreNotExist:
+			typeEnum = FalseExist_St
+			isMarker = true
+		}
+
+		if !isMarker {
+			i++
+			continue
+		}
+
+		// Found a marker, start parsing a new spec fact
+		i++ // Skip the marker
+		if i >= len(f.Params) {
+			break
+		}
+
+		// Next param is the PropName
+		propNameAtom, ok := f.Params[i].(Atom)
+		if !ok {
+			return fmt.Sprintf("%s%s %s%s (parse error: propName is not Atom)", glob.KeySymbolLeftCurly, f.Params[0].String(), f.Params[1].String(), glob.KeySymbolColon)
+		}
+		i++
+
+		// Collect params until we hit another marker or end
+		params := []Obj{}
+		for i < len(f.Params) {
+			nextParamStr := f.Params[i].String()
+			if nextParamStr == glob.KeywordDoubleUnderscoreTruePure ||
+				nextParamStr == glob.DoubleUnderscoreNotPure ||
+				nextParamStr == glob.DoubleUnderscoreExist ||
+				nextParamStr == glob.KeywordDoubleUnderscoreNotExist {
+				break // Found next marker, stop collecting params
+			}
+			params = append(params, f.Params[i])
+			i++
+		}
+
+		// Create SpecFactStmt and get its string representation
+		specFact := NewSpecFactStmt(typeEnum, propNameAtom, params, glob.BuiltinLine)
+		facts = append(facts, specFact.String())
+	}
+
+	// Join facts with comma and space
+	if len(facts) > 0 {
+		builder.WriteByte(' ')
+		builder.WriteString(strings.Join(facts, ", "))
+	}
+
+	builder.WriteString(glob.KeySymbolRightCurly)
+	return builder.String()
 }
