@@ -430,11 +430,8 @@ func changeSpecFactIntoObjs(fact *SpecFactStmt) ([]Obj, error) {
 	}
 	ret = append(ret, Atom(strconv.Itoa(len(fact.Params))))
 	ret = append(ret, fact.PropName)
+
 	for _, param := range fact.Params {
-		// Check if param contains an intensional set (not supported in spec fact params)
-		if IsIntensionalSetObj(param) {
-			return nil, fmt.Errorf("intensional set is not supported in spec fact in intensional set for the time being")
-		}
 		ret = append(ret, param)
 	}
 
