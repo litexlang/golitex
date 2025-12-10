@@ -402,17 +402,21 @@ func MakeEnumSetObj(params []Obj) Obj {
 	return NewFnObj(Atom(glob.KeywordEnumSet), params)
 }
 
-func MakeIntensionalSetObj(param string, parentSet Obj, facts SpecFactPtrSlice) Obj {
+func MakeIntensionalSetObj(param string, parentSet Obj, facts SpecFactPtrSlice) (Obj, error) {
 	params := []Obj{Atom(param), parentSet}
 
 	for _, fact := range facts {
-		params = append(params, changeSpecFactIntoAtoms(fact)...)
+		atoms, err := changeSpecFactIntoAtoms(fact)
+		if err != nil {
+			return nil, err
+		}
+		params = append(params, atoms...)
 	}
 
-	return NewFnObj(Atom(glob.KeywordIntensionalSet), params)
+	return NewFnObj(Atom(glob.KeywordIntensionalSet), params), nil
 }
 
-func changeSpecFactIntoAtoms(fact *SpecFactStmt) []Obj {
+func changeSpecFactIntoAtoms(fact *SpecFactStmt) ([]Obj, error) {
 	ret := []Obj{}
 	switch fact.TypeEnum {
 	case FalsePure:
@@ -424,8 +428,16 @@ func changeSpecFactIntoAtoms(fact *SpecFactStmt) []Obj {
 	case TruePure:
 		ret = append(ret, Atom(glob.DoubleUnderscoreSigTruePure))
 	}
+	ret = append(ret, fact.PropName)
 	for _, param := range fact.Params {
 		ret = append(ret, param)
 	}
-	return ret
+
+	for _, param := range fact.Params {
+		if IsIntensionalSetObj(param) {
+			return nil, fmt.Errorf("intensional set is not supported in spec fact in intensional set for the time being")
+		}
+	}
+
+	return ret, nil
 }

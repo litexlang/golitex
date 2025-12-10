@@ -17,6 +17,7 @@ package litex_ast
 import (
 	"fmt"
 	glob "golitex/glob"
+	"strings"
 )
 
 // ============================================================================
@@ -490,11 +491,12 @@ func (p *TbParser) EnumSetObjOrIntensionalSetObj(tb *tokenBlock) (Obj, error) {
 func (p *TbParser) intensionalSetObj(tb *tokenBlock, paramAsObj Obj) (Obj, error) {
 	param, ok := paramAsObj.(Atom)
 	if !ok {
-		return nil, fmt.Errorf(fmt.Sprintf("expect parameter as %s", glob.KeywordSelf))
+		return nil, fmt.Errorf("expect parameter as self")
 	}
 
-	if param != glob.KeywordSelf {
-		return nil, fmt.Errorf(fmt.Sprintf("expect parameter as %s", glob.KeywordSelf))
+	// 这个atom不能有 pkg
+	if strings.Contains(string(param), glob.PkgNameAtomSeparator) {
+		return nil, fmt.Errorf("parameter cannot have package name")
 	}
 
 	parentSet, err := p.Obj(tb)
@@ -526,7 +528,7 @@ func (p *TbParser) intensionalSetObj(tb *tokenBlock, paramAsObj Obj) (Obj, error
 		return nil, err
 	}
 
-	return MakeIntensionalSetObj(string(param), parentSet, facts), nil
+	return MakeIntensionalSetObj(string(param), parentSet, facts)
 }
 
 func (p *TbParser) enumSetObj(tb *tokenBlock, firstParam Obj) (Obj, error) {
