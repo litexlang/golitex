@@ -26,7 +26,7 @@ func (ver *Verifier) ver_In_FnTT(left ast.Obj, right *ast.FnObj, state *VerState
 	}
 
 	// right dom <= left dom. on right dom left has all those then facts
-	rightDefT := ver.Env.GetFnTemplateDef_KeyIsFcHead(right)
+	rightDefT := ver.Env.GetFnTemplateDef_KeyIsObjHead(right)
 	if rightDefT == nil {
 		return NewEmptyExecUnknown()
 	}

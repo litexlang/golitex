@@ -155,10 +155,45 @@ func GetAtomsInObj(obj Obj) []Atom {
 			ret = append(ret, atoms...)
 		}
 
-		// 这里用了性质：intensional set obj的第一位是atom，会出现在这里的ret的第一位；param并不是atom，所以不会出现在ret里
-		if IsIntensionalSetObj(asObj) {
-			ret = ret[1:]
+		// 这里用了性质：set builder obj的第一位是atom，会出现在这里的ret的第一位；param并不是atom，所以不会出现在ret里
+		// 对于内涵集对象，需要特殊处理：移除绑定变量（第一个参数）
+		if IsSetBuilder(asObj) {
+			atomsFromSetBuilder := GetAtomsInSetBuilder(asObj)
+			ret = append(ret, atomsFromSetBuilder...)
 		}
 	}
+	return ret
+}
+
+func GetAtomsInSetBuilder(f *FnObj) []Atom {
+	// Convert FnObj to SetBuilderStruct for easier processing
+	setBuilder, err := f.ToSetBuilderStruct()
+	if err != nil {
+		// Fallback: extract atoms from all params except the bound parameter
+		ret := []Atom{}
+		if len(f.Params) > 1 {
+			atoms := GetAtomsInObj(f.Params[1])
+			ret = append(ret, atoms...)
+		}
+		// Try to extract from remaining params
+		for i := 2; i < len(f.Params); i++ {
+			atoms := GetAtomsInObj(f.Params[i])
+			ret = append(ret, atoms...)
+		}
+		return ret
+	}
+
+	ret := []Atom{}
+
+	// Extract atoms from parentSet (skip the bound parameter)
+	atoms := GetAtomsInObj(setBuilder.ParentSet)
+	ret = append(ret, atoms...)
+
+	// Extract atoms from facts
+	for _, fact := range setBuilder.Facts {
+		atoms := fact.GetAtoms()
+		ret = append(ret, atoms...)
+	}
+
 	return ret
 }

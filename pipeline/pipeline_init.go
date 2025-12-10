@@ -16,10 +16,10 @@ package litex_pipeline
 
 import (
 	"fmt"
+	ast "golitex/ast"
 	env "golitex/environment"
 	exe "golitex/executor"
 	kernelLibLitexCode "golitex/kernel_litex_code"
-	parser "golitex/parser"
 )
 
 func GetEnvWithBuiltinParentEnv() (*env.Env, error) {
@@ -34,7 +34,7 @@ func GetEnvWithBuiltinParentEnv() (*env.Env, error) {
 }
 
 func useHardcodedCodeToInit(env *env.Env) error {
-	statements, err := parser.ParseSourceCode(kernelLibLitexCode.PipelineInitCode)
+	statements, err := ast.ParseSourceCode(kernelLibLitexCode.PipelineInitCode)
 	if err != nil {
 		return err
 	}

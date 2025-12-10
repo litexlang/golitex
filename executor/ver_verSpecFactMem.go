@@ -200,7 +200,7 @@ func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]
 		}
 
 		for i := 1; i < len(value); i++ {
-			verRet := ver.fcEqualSpec(value[0], value[i], state)
+			verRet := ver.objEqualSpec(value[0], value[i], state)
 			if verRet.IsErr() || verRet.IsUnknown() {
 				return nil, verRet
 			}
@@ -223,7 +223,7 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 			return verRet
 		}
 		if verRet.IsUnknown() {
-			verRet := ver.fcEqualSpec(knownParam, stmt.Params[i], state)
+			verRet := ver.objEqualSpec(knownParam, stmt.Params[i], state)
 			if verRet.IsErr() || verRet.IsUnknown() {
 				return verRet
 			}
@@ -256,7 +256,7 @@ func (ver *Verifier) specFact_SpecMem_atEnv(curEnv *env.Env, stmt *ast.SpecFactS
 		return NewEmptyExecUnknown()
 	}
 
-	return ver.iterateKnownSpecFacts_applyFcEqualSpec(stmt, knownFacts, state)
+	return ver.iterateKnownSpecFacts_applyObjEqualSpec(stmt, knownFacts, state)
 }
 
 func (ver *Verifier) specFact_LogicMem(curEnv *env.Env, stmt *ast.SpecFactStmt, state *VerState) ExecRet {
@@ -282,7 +282,7 @@ func (ver *Verifier) specFact_LogicMem(curEnv *env.Env, stmt *ast.SpecFactStmt, 
 	return NewEmptyExecUnknown()
 }
 
-func (ver *Verifier) iterateKnownSpecFacts_applyFcEqualSpec(stmt *ast.SpecFactStmt, knownFacts []ast.SpecFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) iterateKnownSpecFacts_applyObjEqualSpec(stmt *ast.SpecFactStmt, knownFacts []ast.SpecFactStmt, state *VerState) ExecRet {
 LoopOverFacts:
 	for _, knownFact := range knownFacts {
 		verRet := ver.matchTwoSpecFacts(stmt, &knownFact, state)
@@ -321,7 +321,7 @@ func (ver *Verifier) matchTwoSpecFacts(stmt *ast.SpecFactStmt, knownFact *ast.Sp
 	} else {
 		newState := state.GetNoMsg()
 		for i, knownParam := range knownFact.Params {
-			verRet := ver.fcEqualSpec(knownParam, stmt.Params[i], newState)
+			verRet := ver.objEqualSpec(knownParam, stmt.Params[i], newState)
 			if verRet.IsErr() || verRet.IsUnknown() {
 				return verRet
 			}

@@ -394,20 +394,68 @@ func SimplifyProjCart(obj *FnObj) (Obj, bool) {
 
 func (factSlice FactStmtSlice) Copy() FactStmtSlice {
 	newFactSlice := make([]FactStmt, len(factSlice))
-	for i, fact := range factSlice {
-		newFactSlice[i] = fact
-	}
+	copy(newFactSlice, factSlice)
 	return newFactSlice
 }
 
-func MakeEnumSetObj(params []Obj) Obj {
-	return NewFnObj(Atom(glob.KeywordEnumSet), params)
+func MakeListSetObj(params []Obj) Obj {
+	return NewFnObj(Atom(glob.KeywordListSet), params)
 }
 
-func MakeIntensionalSetObj(param string, parentSet Obj, facts []FactStmt) Obj {
+func MakeSetBuilderObj(param string, parentSet Obj, facts SpecFactPtrSlice) (*FnObj, error) {
 	params := []Obj{Atom(param), parentSet}
+
 	for _, fact := range facts {
-		params = append(params, Atom(fact.String()))
+		atoms, err := changeSpecFactIntoObjs(fact)
+		if err != nil {
+			return nil, err
+		}
+		params = append(params, atoms...)
 	}
-	return NewFnObj(Atom(glob.KeywordIntensionalSet), params)
+
+	return NewFnObj(Atom(glob.KeywordSetBuilder), params), nil
+}
+
+func changeSpecFactIntoObjs(fact *SpecFactStmt) ([]Obj, error) {
+	ret := []Obj{}
+	switch fact.TypeEnum {
+	case FalsePure:
+		ret = append(ret, Atom(strconv.Itoa(int(FalsePure))))
+	case FalseExist_St:
+		ret = append(ret, Atom(strconv.Itoa(int(FalseExist_St))))
+	case TrueExist_St:
+		ret = append(ret, Atom(strconv.Itoa(int(TrueExist_St))))
+	case TruePure:
+		ret = append(ret, Atom(strconv.Itoa(int(TruePure))))
+	}
+	ret = append(ret, Atom(strconv.Itoa(len(fact.Params))))
+	ret = append(ret, fact.PropName)
+
+	for _, param := range fact.Params {
+		ret = append(ret, param)
+	}
+
+	return ret, nil
+}
+
+func IsTupleObj(obj Obj) bool {
+	if asFnObj, ok := obj.(*FnObj); ok {
+		return IsTupleFnObj(asFnObj)
+	}
+	return false
+}
+
+func IsTupleFnObj(f *FnObj) bool {
+	return f.FnHead.String() == glob.KeywordTuple
+}
+
+func IsIndexOptFnObj(f *FnObj) bool {
+	return f.FnHead.String() == glob.KeywordIndexOpt
+}
+
+func IsListSetObj(obj Obj) bool {
+	if asEnumStmt, ok := obj.(*FnObj); ok {
+		return asEnumStmt.FnHead.String() == glob.KeywordListSet
+	}
+	return false
 }

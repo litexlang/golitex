@@ -187,32 +187,26 @@ func (s *UniFactWithIffStmt) InlineString() string {
 }
 func (s *ClaimProveByContradictionStmt) InlineString() string { panic("") }
 
-// func (s *EnumStmt) InlineString() string                      { panic("") }
-// func (s *IntensionalSetStmt) InlineString() string { panic("") }
 func (s *ClaimPropStmt) InlineString() string      { panic("") }
 func (s *ClaimExistPropStmt) InlineString() string { panic("") }
 
-// func (s *ProveByMathInductionStmt) InlineString() string        { panic("") }
-func (s *ProveByEnumStmt) InlineString() string                 { panic("") }
-func (s *HaveObjInNonEmptySetStmt) InlineString() string        { panic("") }
-func (s *HaveEnumSetStmt) InlineString() string                 { panic("") }
-func (s *HaveIntensionalSetStmt) InlineString() string          { panic("") }
-func (s *HaveCartSetStmt) InlineString() string                 { panic("") }
-func (s *HaveObjFromCartSetStmt) InlineString() string          { panic("") }
-func (s *HaveSetFnStmt) InlineString() string                   { panic("") }
-func (s *HaveSetDefinedByReplacementStmt) InlineString() string { panic("") }
-func (s *HaveCartWithDimStmt) InlineString() string             { panic("") }
-func (s *NamedUniFactStmt) InlineString() string                { panic("") }
+func (s *ProveByEnumStmt) InlineString() string          { panic("") }
+func (s *HaveObjInNonEmptySetStmt) InlineString() string { panic("") }
+func (s *HaveCartSetStmt) InlineString() string          { panic("") }
+func (s *HaveObjFromCartSetStmt) InlineString() string   { panic("") }
+
+func (s *HaveCartWithDimStmt) InlineString() string { panic("") }
+func (s *NamedUniFactStmt) InlineString() string    { panic("") }
 
 func (s *EqualsFactStmt) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeySymbolEqual)
 	builder.WriteString(glob.KeySymbolLeftBrace)
-	fcSlice := make([]string, len(s.Params))
+	objSlice := make([]string, len(s.Params))
 	for i, param := range s.Params {
-		fcSlice[i] = param.String()
+		objSlice[i] = param.String()
 	}
-	builder.WriteString(strings.Join(fcSlice, ", "))
+	builder.WriteString(strings.Join(objSlice, ", "))
 	builder.WriteString(glob.KeySymbolRightBrace)
 	return builder.String()
 }
@@ -368,7 +362,7 @@ func (s *DefAlgoStmt) InlineString() string {
 }
 
 func (s *EvalStmt) InlineString() string {
-	return fmt.Sprintf("%s(%s)", glob.KeywordEval, s.FcsToEval.String())
+	return fmt.Sprintf("%s(%s)", glob.KeywordEval, s.ObjToEval.String())
 }
 
 func (s *DefProveAlgoStmt) InlineString() string {

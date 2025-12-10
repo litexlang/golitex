@@ -18,14 +18,13 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
-	parser "golitex/parser"
 	"strings"
 )
 
-func (e *Env) IsAtomDefinedByUser(fcAtomName ast.Atom) bool {
+func (e *Env) IsAtomDefinedByUser(AtomObjName ast.Atom) bool {
 	// 如果 atom 里有 ::，那另外检查
-	if strings.Contains(string(fcAtomName), glob.PkgNameAtomSeparator) {
-		PkgNameAndAtomName := strings.Split(string(fcAtomName), glob.PkgNameAtomSeparator)
+	if strings.Contains(string(AtomObjName), glob.PkgNameAtomSeparator) {
+		PkgNameAndAtomName := strings.Split(string(AtomObjName), glob.PkgNameAtomSeparator)
 		PkgName := PkgNameAndAtomName[0]
 		AtomName := PkgNameAndAtomName[1]
 		pkgPath, ok := e.PackageManager.PkgNamePkgPathPairs[PkgName]
@@ -44,7 +43,7 @@ func (e *Env) IsAtomDefinedByUser(fcAtomName ast.Atom) bool {
 	}
 
 	for env := e; env != nil; env = env.Parent {
-		ok := env.isAtomDefinedAtCurEnv(fcAtomName)
+		ok := env.isAtomDefinedAtCurEnv(AtomObjName)
 		if ok {
 			return true
 		}
@@ -53,63 +52,61 @@ func (e *Env) IsAtomDefinedByUser(fcAtomName ast.Atom) bool {
 }
 
 // 其实最好要分类：有可能是obj，有可能是prop，不能在验证obj的时候验证是prop
-func (e *Env) isAtomDefinedAtCurEnv(fcAtomName ast.Atom) bool {
-	_, ok := e.PropDefMem[string(fcAtomName)]
+func (e *Env) isAtomDefinedAtCurEnv(AtomObjName ast.Atom) bool {
+	_, ok := e.PropDefMem[string(AtomObjName)]
 	if ok {
 		return true
 	}
 
-	_, ok = e.ExistPropDefMem[string(fcAtomName)]
+	_, ok = e.ExistPropDefMem[string(AtomObjName)]
 	if ok {
 		return true
 	}
 
-	_, ok = e.ObjDefMem[string(fcAtomName)]
+	_, ok = e.ObjDefMem[string(AtomObjName)]
 	if ok {
 		return true
 	}
 
-	// _, ok = e.FnTemplateDefMem[string(fcAtomName)]
-	_, ok = e.FnTemplateDefMem[string(fcAtomName)]
+	_, ok = e.FnTemplateDefMem[string(AtomObjName)]
 
 	return ok
 }
 
 func (e *Env) AreAtomsInObjDefined(obj ast.Obj, extraAtomNames map[string]struct{}) glob.GlobRet {
-	if !ast.IsIntensionalSetObj(obj) {
+	if !ast.IsSetBuilder(obj) {
 		atoms := ast.GetAtomsInObj(obj)
 		return e.AreAtomsDeclared(atoms, extraAtomNames)
 	} else {
-		return e.AreAtomsInIntensionalSetAreDeclared(obj.(*ast.FnObj), extraAtomNames)
+		return e.AreAtomsInSetBuilderAreDeclared(obj.(*ast.FnObj), extraAtomNames)
 	}
 }
 
-// AreAtomsInIntensionalSetAreDeclared checks if all atoms in an intensional set are declared,
-// excluding the intensional set's own parameter (which is a free variable not in the environment).
-func (e *Env) AreAtomsInIntensionalSetAreDeclared(intensionalSet *ast.FnObj, extraAtomNames map[string]struct{}) glob.GlobRet {
-	// Check atoms in facts (excluding the param)
-	// Facts are stored as strings in Params[2:], so we need to parse them first
-	paramAsString, parentSet, facts, err := parser.GetParamParentSetFactsFromIntensionalSet(intensionalSet)
+// AreAtomsInSetBuilderAreDeclared checks if all atoms in an set builder are declared,
+// excluding the set builder's own parameter (which is a free variable not in the environment).
+func (e *Env) AreAtomsInSetBuilderAreDeclared(obj *ast.FnObj, extraAtomNames map[string]struct{}) glob.GlobRet {
+	setBuilderStruct, err := obj.ToSetBuilderStruct()
 	if err != nil {
-		return glob.ErrRet(fmt.Errorf("failed to parse facts from intensional set: %s", err))
+		return glob.ErrRet(fmt.Errorf("failed to parse set builder: %s", err))
 	}
 
-	// Create a copy of extraAtomNames and add the intensional set's param to it
+	// Create a copy of extraAtomNames and add the set builder's param to it
 	// This param is a free variable, so we exclude it from the declaration check
 	paramExcludedNames := glob.CopyMap(extraAtomNames)
-	paramExcludedNames[paramAsString] = struct{}{}
+	paramExcludedNames[setBuilderStruct.Param] = struct{}{}
 
 	// Check atoms in parentSet (excluding the param)
-	ret := e.AreAtomsInObjDefined(parentSet, paramExcludedNames)
+	ret := e.AreAtomsInObjDefined(setBuilderStruct.ParentSet, paramExcludedNames)
 	if ret.IsErr() {
-		ret.AddMsg(fmt.Sprintf("in parent set of intensional set with param %s", paramAsString))
+		ret.AddMsg(fmt.Sprintf("in parent set of set builder with param %s", setBuilderStruct.Param))
 		return ret
 	}
 
-	for i, fact := range facts {
+	// Check atoms in facts (excluding the param)
+	for i, fact := range setBuilderStruct.Facts {
 		ret := e.AreAtomsInFactAreDeclared(fact, paramExcludedNames)
 		if ret.IsErr() {
-			ret.AddMsg(fmt.Sprintf("in fact %d of intensional set with param %s", i, paramAsString))
+			ret.AddMsg(fmt.Sprintf("in fact %d of set builder with param %s", i, setBuilderStruct.Param))
 			return ret
 		}
 	}

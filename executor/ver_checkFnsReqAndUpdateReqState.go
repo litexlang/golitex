@@ -20,18 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state *VerState) (*VerState, ExecRet) {
-
-	// 1. Check if all atoms in the parameters are declared
-	// REMARK
-	// TODO： 一层层搜索的时候，会重复检查是否存在，可以优化。比如我要检查 a * f(b) $in R 的时候，我要查 a, f(b) 是否满足条件，就要查 f(b) $in R 是否成立，这时候又查了一遍 f, b 是否存在
-	// for _, param := range stmt.Params {
-	// 	ret := ver.Env.AreAtomsInFcAreDeclared(param, map[string]struct{}{})
-	// 	if ret.IsErr() {
-	// 		return state, NewExecErr(ret.String())
-	// 	}
-	// }
-
+func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	// TODO: 这里有点问题。应该做的分类是：builtin的 stmt name，如in；以及非builtin的stmt name
 
 	// 2. Check if the parameters satisfy the requirement of the function requirements
@@ -39,10 +28,10 @@ func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state 
 	for _, param := range stmt.Params {
 		verRet := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(param, stateNoMsg)
 		if verRet.IsErr() {
-			return state, verRet
+			return verRet
 		}
 		if verRet.IsUnknown() {
-			return state, NewExecErrWithMsgs(verRet.GetMsgs())
+			return NewExecErrWithMsgs(verRet.GetMsgs())
 		}
 	}
 
@@ -50,8 +39,8 @@ func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state 
 	// 但是最好在这里警告一下用户，如果不满足prop的要求的话，可能出问题
 
 	// state.ReqOk = true
-	newState := VerState{state.Round, state.WithMsg, true}
-	return &newState, NewEmptyExecTrue()
+	// newState := VerState{state.Round, state.WithMsg, true}
+	return NewEmptyExecTrue()
 }
 
 func (ver *Verifier) objIsDefinedAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *VerState) ExecRet {
@@ -84,32 +73,78 @@ func (ver *Verifier) objIsDefinedAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *Ver
 		return ver.setDimFnRequirement(objAsFnObj, state)
 	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordDim) {
 		return ver.dimFnRequirement(objAsFnObj, state)
-	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordEnumSet) {
-		return ver.enumSetFnRequirement(objAsFnObj, state)
-	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordIntensionalSet) {
-		return ver.intensionalSetFnRequirement(objAsFnObj, state)
+	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordListSet) {
+		return ver.listSetFnRequirement(objAsFnObj, state)
+	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordSetBuilder) {
+		return ver.SetBuilderFnRequirement(objAsFnObj, state)
 	} else {
 		return ver.parasSatisfyFnReq(objAsFnObj, state)
 	}
 }
 
 // TODO: 非常缺乏检查。因为这里的验证非常麻烦，{}里包括了事实，而事实里有fn，所以需要检查fn行不行
-func (ver *Verifier) intensionalSetFnRequirement(objAsFnObj *ast.FnObj, state *VerState) ExecRet {
+func (ver *Verifier) SetBuilderFnRequirement(objAsFnObj *ast.FnObj, state *VerState) ExecRet {
+	ver.newEnv(ver.Env)
+	defer ver.deleteEnvAndRetainMsg()
+
+	// Parse set builder struct to check facts
+	setBuilderStruct, err := objAsFnObj.ToSetBuilderStruct()
+	if err != nil {
+		return NewExecErr(fmt.Sprintf("failed to parse set builder: %s", err))
+	}
+
 	// parent is ok
-	ret := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(objAsFnObj.Params[1], state)
+	ret := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(setBuilderStruct.ParentSet, state)
 	if ret.IsErr() {
 		return ret
 	}
 	if ret.IsUnknown() {
-		return NewExecErr(fmt.Sprintf("parent of %s must be a set, %s in %s is not valid", objAsFnObj, objAsFnObj.Params[1], objAsFnObj))
+		return NewExecErr(fmt.Sprintf("parent of %s must be a set, %s in %s is not valid", objAsFnObj, setBuilderStruct.ParentSet, objAsFnObj))
 	}
 
-	// check facts in intensional set satisfy fn requirement
-	return ver.verifyIntensionalSetFactsFnRequirement(objAsFnObj, state)
+	// 如果param在母环境里已经声明过了，那就把整个obj里的所有的param全部改成新的
+	globRet := ver.Env.IsAtomDeclared(ast.Atom(setBuilderStruct.Param), map[string]struct{}{})
+	if globRet.IsTrue() {
+		// 把这个param替换成从来没见过的东西
+		setBuilderStruct = ver.replaceParamWithUndeclaredRandomName(setBuilderStruct)
+	}
+
+	// 声明一下param
+	ver.Env.DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(ast.NewDefLetStmt(
+		[]string{setBuilderStruct.Param},
+		[]ast.Obj{setBuilderStruct.ParentSet},
+		[]ast.FactStmt{},
+		glob.BuiltinLine,
+	))
+
+	// Check all parameters in facts satisfy fn requirement
+	for _, fact := range setBuilderStruct.Facts {
+		// Check propName
+		verRet := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(fact.PropName, state)
+		if verRet.IsErr() {
+			return verRet
+		}
+		if verRet.IsUnknown() {
+			return NewExecErr(fmt.Sprintf("prop name %s in set builder must be an atom or function", fact.PropName))
+		}
+
+		// Check all params in the fact
+		for _, param := range fact.Params {
+			verRet := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(param, state)
+			if verRet.IsErr() {
+				return verRet
+			}
+			if verRet.IsUnknown() {
+				return NewExecErr(fmt.Sprintf("parameter %s in set builder fact must be an atom or function", param))
+			}
+		}
+	}
+
+	return NewEmptyExecTrue()
 }
 
-func (ver *Verifier) enumSetFnRequirement(objAsFnObj *ast.FnObj, state *VerState) ExecRet {
-	// 所有参数都是$in set
+func (ver *Verifier) listSetFnRequirement(objAsFnObj *ast.FnObj, state *VerState) ExecRet {
+	// 所有参数都是$in list set
 	for _, param := range objAsFnObj.Params {
 		verRet := ver.VerFactStmt(ast.NewInFactWithObj(param, ast.Atom(glob.KeywordSet)), state)
 		if verRet.IsErr() {
@@ -344,4 +379,34 @@ func (ver *Verifier) indexOptFnRequirement(fnObj *ast.FnObj, state *VerState) Ex
 	}
 
 	return NewEmptyExecTrue()
+}
+
+func (ver *Verifier) replaceParamWithUndeclaredRandomName(setBuilderStruct *ast.SetBuilderStruct) *ast.SetBuilderStruct {
+	oldParam := ast.Atom(setBuilderStruct.Param)
+
+	// Generate a new random undeclared name
+	newParamName := ver.Env.GenerateUndeclaredRandomName()
+	newParam := ast.Atom(newParamName)
+
+	// Replace param in all facts
+	newFacts := make(ast.SpecFactPtrSlice, len(setBuilderStruct.Facts))
+	for i, fact := range setBuilderStruct.Facts {
+		// Replace param in propName
+		newPropName := fact.PropName.ReplaceObj(oldParam, newParam).(ast.Atom)
+
+		// Replace param in fact params
+		newFactParams := make([]ast.Obj, len(fact.Params))
+		for j, param := range fact.Params {
+			newFactParams[j] = param.ReplaceObj(oldParam, newParam)
+		}
+
+		// Create new fact with replaced param
+		newFacts[i] = ast.NewSpecFactStmt(fact.TypeEnum, newPropName, newFactParams, fact.Line)
+	}
+
+	return &ast.SetBuilderStruct{
+		Param:     newParamName,
+		ParentSet: setBuilderStruct.ParentSet, // parent set 不变
+		Facts:     newFacts,
+	}
 }

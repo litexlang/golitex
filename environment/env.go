@@ -32,11 +32,8 @@ type ObjDefMem map[string]ast.FnTemplate_Or_DefObjStmtInterface // 因为很多�
 type FnInFnTMem map[string][]FnInFnTMemItem
 
 type FnInFnTMemItem struct {
-	// AsFcFn      *ast.FcFn // 可能是 fn(R)R 这种，或者 TName(params) 这样，或者是nil（比如 defFnStmt 声明出来的）
 	AsFnTStruct *ast.FnTStruct
 }
-
-type HaveSetFnDefMem map[string]ast.HaveSetFnStmt
 
 type KnownFactsStruct struct {
 	SpecFactMem                       SpecFactMem
@@ -58,14 +55,7 @@ type Env struct {
 
 	FnInFnTemplateFactsMem FnInFnTMem
 
-	EqualMem map[string]shared_ptr_to_slice_of_obj
-
-	// EnumFacts map[string][]ast.Obj
-
-	HaveSetFnDefMem HaveSetFnDefMem
-
-	// IntensionalSetMem map[string]ast.IntensionalSetStmt
-
+	EqualMem                 map[string]shared_ptr_to_slice_of_obj
 	SymbolSimplifiedValueMem map[string]ast.Obj
 
 	TransitivePropMem  map[string]map[string][]ast.Obj
@@ -117,17 +107,14 @@ func NewEnv(parent *Env) *Env {
 		packageManager = parent.PackageManager
 	}
 	env := &Env{
-		Parent:                 parent,
-		ObjDefMem:              make(ObjDefMem),
-		PropDefMem:             make(PropDefMem),
-		FnTemplateDefMem:       make(FnTemplateDefMem),
-		FnInFnTemplateFactsMem: make(FnInFnTMem),
-		ExistPropDefMem:        make(ExistPropDefMem),
-		KnownFactsStruct:       makeKnownFactsStruct(),
-		EqualMem:               make(map[string]shared_ptr_to_slice_of_obj),
-		// EnumFacts:              make(map[string][]ast.Obj),
-		HaveSetFnDefMem: make(HaveSetFnDefMem),
-		// IntensionalSetMem:        make(map[string]ast.IntensionalSetStmt),
+		Parent:                   parent,
+		ObjDefMem:                make(ObjDefMem),
+		PropDefMem:               make(PropDefMem),
+		FnTemplateDefMem:         make(FnTemplateDefMem),
+		FnInFnTemplateFactsMem:   make(FnInFnTMem),
+		ExistPropDefMem:          make(ExistPropDefMem),
+		KnownFactsStruct:         makeKnownFactsStruct(),
+		EqualMem:                 make(map[string]shared_ptr_to_slice_of_obj),
 		SymbolSimplifiedValueMem: make(map[string]ast.Obj),
 		TransitivePropMem:        make(map[string]map[string][]ast.Obj),
 		CommutativePropMem:       make(map[string]*PropCommutativeCase),

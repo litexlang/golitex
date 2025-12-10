@@ -94,12 +94,12 @@ func (e *Env) GetObjTuple(obj ast.Obj) ast.Obj {
 	return nil
 }
 
-// GetObjEnumSet 检查 obj 是否等于某个 enumset
-// 通过获取所有环境中与 obj 相等的对象列表，检查其中是否有 enumset
-// 如果找到 enumset，返回该 enumset；否则返回 nil
-func (e *Env) GetObjEnumSet(obj ast.Obj) ast.Obj {
-	// 如果 obj 本身就是一个 enumset，直接返回
-	if ast.IsEnumSetObj(obj) {
+// GetListSetEqualToObj 检查 obj 是否等于某个 list set
+// 通过获取所有环境中与 obj 相等的对象列表，检查其中是否有 list set
+// 如果找到 list set，返回该 list set；否则返回 nil
+func (e *Env) GetListSetEqualToObj(obj ast.Obj) ast.Obj {
+	// 如果 obj 本身就是一个 list set，直接返回
+	if ast.IsListSetObj(obj) {
 		return obj
 	}
 
@@ -108,9 +108,9 @@ func (e *Env) GetObjEnumSet(obj ast.Obj) ast.Obj {
 		// 获取当前环境中与 obj 相等的所有对象
 		equalObjs, ok := env.GetEqualObjs(obj)
 		if ok && equalObjs != nil {
-			// 检查其中是否有 enumset
+			// 检查其中是否有 list set
 			for _, equalObj := range *equalObjs {
-				if ast.IsEnumSetObj(equalObj) {
+				if ast.IsListSetObj(equalObj) {
 					return equalObj
 				}
 			}
@@ -119,13 +119,13 @@ func (e *Env) GetObjEnumSet(obj ast.Obj) ast.Obj {
 	return nil
 }
 
-// GetObjIntensionalSet 检查 obj 是否等于某个 intensional set
+// GetSetBuilderEqualToObj 检查 obj 是否等于某个 intensional set
 // 通过获取所有环境中与 obj 相等的对象列表，检查其中是否有 intensional set
 // 或者从 IntensionalSetMem 中查找（如果 obj 等于某个已定义的 intensional set 的 CurSet）
 // 如果找到 intensional set 对象，返回该对象；如果找到 IntensionalSetStmt，返回其 CurSet；否则返回 nil
-func (e *Env) GetObjIntensionalSet(obj ast.Obj) *ast.FnObj {
+func (e *Env) GetSetBuilderEqualToObj(obj ast.Obj) *ast.FnObj {
 	// 如果 obj 本身就是一个 intensional set 对象，直接返回
-	if ast.IsIntensionalSetObj(obj) {
+	if ast.IsSetBuilder(obj) {
 		return obj.(*ast.FnObj)
 	}
 
@@ -136,7 +136,7 @@ func (e *Env) GetObjIntensionalSet(obj ast.Obj) *ast.FnObj {
 		if ok && equalObjs != nil {
 			// 检查其中是否有 intensional set 对象
 			for _, equalObj := range *equalObjs {
-				if ast.IsIntensionalSetObj(equalObj) {
+				if ast.IsSetBuilder(equalObj) {
 					return equalObj.(*ast.FnObj)
 				}
 			}

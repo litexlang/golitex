@@ -19,7 +19,6 @@ import (
 	ast "golitex/ast"
 	env "golitex/environment"
 	glob "golitex/glob"
-	parser "golitex/parser"
 	"os"
 	"strings"
 	"testing"
@@ -32,7 +31,7 @@ func TestWholeFile(t *testing.T) {
 	code := readFile(codePath)
 	readFileTime := time.Since(start)
 	start = time.Now()
-	topStmtSlice, err := parser.ParseSourceCode(code)
+	topStmtSlice, err := ast.ParseSourceCode(code)
 	if err != nil {
 		t.Errorf(err.Error())
 		return

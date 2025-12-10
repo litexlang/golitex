@@ -14,7 +14,9 @@
 
 package litex_ast
 
-import "fmt"
+import (
+	"fmt"
+)
 
 func InstantiateObjAtom(obj Atom, uniMap map[string]Obj) (Obj, error) {
 	instance, ok := uniMap[string(obj)]
@@ -29,6 +31,10 @@ func (obj Atom) Instantiate(uniMap map[string]Obj) (Obj, error) {
 }
 
 func InstantiateObjFn(obj *FnObj, uniMap map[string]Obj) (Obj, error) {
+	if IsSetBuilder(obj) {
+		return InstantiateSetBuilderObjWithoutChangingParam(obj, uniMap)
+	}
+
 	newHead, err := obj.FnHead.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
@@ -246,47 +252,6 @@ func (stmt *UniFactWithIffStmt) InstantiateFact(uniMap map[string]Obj) (FactStmt
 
 	return NewUniFactWithIff(newUniFact.(*UniFactStmt), instantiatedIffFacts, stmt.Line), nil
 }
-
-// func (stmt *EnumStmt) InstantiateFact(uniMap map[string]Obj) (FactStmt, error) {
-// 	enumName, err := stmt.CurSet.Instantiate(uniMap)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	newEnumValues := []Obj{}
-// 	for _, value := range stmt.Items {
-// 		newValue, err := value.Instantiate(uniMap)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		newEnumValues = append(newEnumValues, newValue)
-// 	}
-
-// 	return NewEnumStmt(enumName, newEnumValues, stmt.Line), nil
-// }
-
-// func (stmt *IntensionalSetStmt) InstantiateFact(uniMap map[string]Obj) (FactStmt, error) {
-// 	newCurSet, err := stmt.CurSet.Instantiate(uniMap)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	newParentSet, err := stmt.ParentSet.Instantiate(uniMap)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	newProofs := make([]*SpecFactStmt, len(stmt.Facts))
-// 	for i, proof := range stmt.Facts {
-// 		newProof, err := proof.InstantiateFact(uniMap)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		newProofs[i] = newProof.(*SpecFactStmt)
-// 	}
-
-// 	return NewIntensionalSetStmt(newCurSet, stmt.Param, newParentSet, newProofs, stmt.Line), nil
-// }
 
 func (stmt *EqualsFactStmt) InstantiateFact(uniMap map[string]Obj) (FactStmt, error) {
 	newParams := []Obj{}
@@ -530,27 +495,6 @@ func (stmt *HaveObjInNonEmptySetStmt) Instantiate(uniMap map[string]Obj) (Stmt, 
 	return NewHaveObjInNonEmptySetStmt(stmt.Objs, newObjSets, stmt.Line), nil
 }
 
-func (stmt *HaveEnumSetStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	newEnumSetObj, err := stmt.EnumSetObj.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	return NewHaveEnumSetStmt(stmt.Name, newEnumSetObj.(*FnObj), stmt.Line), nil
-}
-
-func (stmt *HaveIntensionalSetStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	newParentSet, err := stmt.ParentSet.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	newFacts, err := stmt.Facts.InstantiateFact(uniMap)
-	if err != nil {
-		return nil, err
-	}
-
-	return NewHaveIntensionalSetStmt(stmt.Param, newParentSet, newFacts, stmt.Line), nil
-}
-
 func (stmt *HaveCartSetStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newCartObj, err := stmt.CartObj.Instantiate(uniMap)
 	if err != nil {
@@ -577,14 +521,6 @@ func (stmt *HaveObjFromCartSetStmt) Instantiate(uniMap map[string]Obj) (Stmt, er
 		return nil, err
 	}
 	return NewHaveObjFromCartSetStmt(stmt.ObjName, cartSet, newEqualTo, stmt.Line), nil
-}
-
-func (stmt *HaveSetFnStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	newDefHeader, err := stmt.DefHeader.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	return NewHaveSetFnStmt(newDefHeader, stmt.Param, stmt.ParentSet, stmt.Proofs, stmt.Line), nil
 }
 
 func (stmt *HaveCartWithDimStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
@@ -771,26 +707,6 @@ func (stmt *HaveFnCaseByCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt, erro
 	return NewHaveFnCaseByCaseStmt(newDefFnStmt.(*DefFnStmt), newCaseByCaseFacts, newProofs, newHaveObjSatisfyFn, stmt.Line), nil
 }
 
-// func (stmt *MarkdownStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-// 	return stmt, nil
-// }
-
-// func (stmt *ProveInRangeSetStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-// 	newIntensionalSet, err := stmt.IntensionalSet.Instantiate(uniMap)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	newThenFacts, err := stmt.ThenFacts.InstantiateFact(uniMap)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	newProofs, err := stmt.Proofs.Instantiate(uniMap)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return NewProveInRangeSetStmt(stmt.Start, stmt.End, stmt.Param, newIntensionalSet, newThenFacts, newProofs, stmt.Line), nil
-// }
-
 func (stmt *ProveInRangeStmt2) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newStart, err := stmt.start.Instantiate(uniMap)
 	if err != nil {
@@ -914,7 +830,7 @@ func (stmt *DefAlgoStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 }
 
 func (stmt *EvalStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	obj, err := stmt.FcsToEval.Instantiate(uniMap)
+	obj, err := stmt.ObjToEval.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}
@@ -936,14 +852,6 @@ func (stmt *UniFactWithIffStmt) Instantiate(uniMap map[string]Obj) (Stmt, error)
 func (stmt *OrStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return stmt.InstantiateFact(uniMap)
 }
-
-// func (stmt *EnumStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-// 	return stmt.InstantiateFact(uniMap)
-// }
-
-// func (stmt *IntensionalSetStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-// 	return stmt.InstantiateFact(uniMap)
-// }
 
 func (stmt *DefProveAlgoStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newStmts, err := stmt.Stmts.Instantiate(uniMap)
@@ -1044,4 +952,33 @@ func (stmt *HaveFnEqualCaseByCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt,
 		return nil, err
 	}
 	return &HaveFnEqualCaseByCaseStmt{newDefHeader, newRetSet, newCaseByCaseFacts, newCaseByCaseEqualTo, stmt.Line}, nil
+}
+
+func InstantiateSetBuilderObjWithoutChangingParam(obj *FnObj, uniMap map[string]Obj) (Obj, error) {
+	setBuilderStruct, err := obj.ToSetBuilderStruct()
+	if err != nil {
+		return nil, err
+	}
+
+	// Instantiate parent set
+	instParentSet, err := setBuilderStruct.ParentSet.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+
+	// Instantiate facts
+	instFacts := make(SpecFactPtrSlice, len(setBuilderStruct.Facts))
+	for i, fact := range setBuilderStruct.Facts {
+		instFact, err := fact.InstantiateFact(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		specFact, ok := instFact.(*SpecFactStmt)
+		if !ok {
+			return nil, fmt.Errorf("expected SpecFactStmt, got %T", instFact)
+		}
+		instFacts[i] = specFact
+	}
+
+	return MakeSetBuilderObj(setBuilderStruct.Param, instParentSet, instFacts)
 }

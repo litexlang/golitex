@@ -16,9 +16,9 @@ package litex_pipeline
 
 import (
 	"fmt"
+	ast "golitex/ast"
 	exe "golitex/executor"
 	glob "golitex/glob"
-	parser "golitex/parser"
 	"os"
 	"path/filepath"
 	"strings"
@@ -80,7 +80,7 @@ func RunFilesInRepoWithPipelineRunner(repo string) error {
 		start := time.Now()
 
 		// Run the code directly
-		topStmtSlice, err := parser.ParseSourceCode(string(content))
+		topStmtSlice, err := ast.ParseSourceCode(string(content))
 		if err != nil {
 			return fmt.Errorf("parse error in file %s: %s", file.Name(), err.Error())
 		}

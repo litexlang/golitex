@@ -103,14 +103,19 @@ const (
 	// 用于一位一位的比较两个tuple。比如 equal_tuple(x, y, 2) 表示 x[1] = y[1] 且 x[2] = y[2]
 	KeywordEqualTuple = "equal_tuple"
 
-	KeywordEnumSet        = "{}"
-	KeywordIntensionalSet = "{:}"
+	KeywordListSet    = "{}"
+	KeywordSetBuilder = "{:}"
 
 	KeywordSubsetOf = "subset_of"
 
 	KeywordProveFor = "prove_for"
 
 	KeywordEqualSet = "equal_set"
+
+	// DoubleUnderscoreExist           = "__exist"
+	// KeywordDoubleUnderscoreTruePure = "__true"
+	// KeywordDoubleUnderscoreNotExist = "__not_exist"
+	// DoubleUnderscoreNotPure         = "__not"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -189,9 +194,9 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 
 	KeywordHaveCartWithDim: {},
 
-	KeywordEqualTuple:     {},
-	KeywordEnumSet:        {},
-	KeywordIntensionalSet: {},
+	KeywordEqualTuple: {},
+	KeywordListSet:    {},
+	KeywordSetBuilder: {},
 
 	KeywordSubsetOf: {},
 
@@ -299,7 +304,6 @@ var BuiltinObjOrPropNames map[string]struct{} = map[string]struct{}{
 	KeySymbolRightBracket: {},
 	KeywordFiniteSet:      {},
 	// KeywordItemExistsIn:   {},
-	// TupleFcFnHead:                         {},
 	KeywordCount:       {},
 	KeywordNPos:        {},
 	KeywordNonEmptySet: {},
