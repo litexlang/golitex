@@ -156,9 +156,54 @@ func GetAtomsInObj(obj Obj) []Atom {
 		}
 
 		// 这里用了性质：intensional set obj的第一位是atom，会出现在这里的ret的第一位；param并不是atom，所以不会出现在ret里
+		// 对于内涵集对象，需要特殊处理：移除绑定变量（第一个参数）
 		if IsIntensionalSetObj(asObj) {
-			ret = ret[1:]
+			atomsFromIntensionalSet := GetAtomsInIntensionalSetObj(asObj)
+			// Remove the bound parameter (first atom) from ret and add atoms from intensional set
+			if len(ret) > 0 {
+				ret = ret[1:] // Remove the bound parameter atom
+			}
+			ret = append(ret, atomsFromIntensionalSet...)
 		}
 	}
+	return ret
+}
+
+func GetAtomsInIntensionalSetObj(f *FnObj) []Atom {
+	ret := []Atom{}
+
+	// Skip Params[0] (bound parameter) and extract atoms from parentSet (Params[1])
+	if len(f.Params) > 1 {
+		atoms := GetAtomsInObj(f.Params[1])
+		ret = append(ret, atoms...)
+	}
+
+	// Extract atoms from facts (Params[2:])
+	// Facts are encoded as: marker, propName, param1, param2, ..., next_marker, ...
+	i := 2
+	for i < len(f.Params) {
+		paramStr := f.Params[i].String()
+		// Check if it's a double underscore marker
+		if glob.IsIntensionalSetObjSeparator(paramStr) {
+			i++ // Skip marker
+			if i >= len(f.Params) {
+				break
+			}
+			i++ // Skip propName
+			// Collect params until next marker
+			for i < len(f.Params) {
+				nextParamStr := f.Params[i].String()
+				if glob.IsIntensionalSetObjSeparator(nextParamStr) {
+					break
+				}
+				atoms := GetAtomsInObj(f.Params[i])
+				ret = append(ret, atoms...)
+				i++
+			}
+		} else {
+			i++
+		}
+	}
+
 	return ret
 }
