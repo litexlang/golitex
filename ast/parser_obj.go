@@ -486,14 +486,15 @@ func (p *TbParser) EnumSetObjOrIntensionalSetObj(tb *tokenBlock) (Obj, error) {
 	}
 }
 
+// {x R: specific fact, ..., specific fact}
 func (p *TbParser) intensionalSetObj(tb *tokenBlock, paramAsObj Obj) (Obj, error) {
 	param, ok := paramAsObj.(Atom)
 	if !ok {
-		return nil, fmt.Errorf("expect parameter as atom")
+		return nil, fmt.Errorf(fmt.Sprintf("expect parameter as %s", glob.KeywordSelf))
 	}
 
-	if err := glob.IsValidUserDefinedNameWithoutPkgName(string(param)); err != nil {
-		return nil, err
+	if param != glob.KeywordSelf {
+		return nil, fmt.Errorf(fmt.Sprintf("expect parameter as %s", glob.KeywordSelf))
 	}
 
 	parentSet, err := p.Obj(tb)
@@ -506,21 +507,17 @@ func (p *TbParser) intensionalSetObj(tb *tokenBlock, paramAsObj Obj) (Obj, error
 		return nil, err
 	}
 
-	facts := []FactStmt{}
+	facts := SpecFactPtrSlice{}
 	for !tb.header.is(glob.KeySymbolRightCurly) {
-		curFact, err := p.inlineFactThenSkipStmtTerminatorUntilEndSignals(tb, []string{glob.KeySymbolRightCurly})
+		specFact, err := p.specFactStmt(tb)
 		if err != nil {
 			return nil, err
 		}
-		// 检查如果是 forall fact，它的参数里不应该等于 param
-		if uniFactParams := ExtractParamsFromFact(curFact); uniFactParams != nil {
-			for _, uniFactParam := range uniFactParams {
-				if uniFactParam == string(param) {
-					return nil, fmt.Errorf("parameter %s in forall fact conflicts with intensional set parameter %s", uniFactParam, string(param))
-				}
-			}
+		facts = append(facts, specFact)
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+			continue
 		}
-		facts = append(facts, curFact)
 	}
 
 	// 跳过右花括号
