@@ -25,6 +25,11 @@ func IsValidUserDefinedNameWithoutPkgName(name string) error {
 		return fmt.Errorf("identifier name cannot be empty")
 	}
 
+	// 不能以__开头,因为__是litex的内部变量名
+	if strings.HasPrefix(name, "__") {
+		return fmt.Errorf("identifier name cannot start with __")
+	}
+
 	// Check maximum length constraint
 	if len(name) > MaxNameLen {
 		return fmt.Errorf("identifier name exceeds maximum length of %d characters", MaxNameLen)

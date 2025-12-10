@@ -111,6 +111,8 @@ const (
 	KeywordProveFor = "prove_for"
 
 	KeywordEqualSet = "equal_set"
+
+	KeywordSelf = "self"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -198,6 +200,8 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordProveFor: {},
 
 	KeywordEqualSet: {},
+
+	KeywordSelf: {},
 }
 
 const (

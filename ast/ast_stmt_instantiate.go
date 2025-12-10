@@ -14,7 +14,9 @@
 
 package litex_ast
 
-import "fmt"
+import (
+	"fmt"
+)
 
 func InstantiateObjAtom(obj Atom, uniMap map[string]Obj) (Obj, error) {
 	instance, ok := uniMap[string(obj)]
@@ -1043,26 +1045,5 @@ func (stmt *HaveFnEqualCaseByCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt,
 }
 
 func InstantiateIntensionalSetObj(obj *FnObj, uniMap map[string]Obj) (Obj, error) {
-	if len(obj.Params) < 2 {
-		return nil, fmt.Errorf("intensional set expects at least param and parent set, got %d params", len(obj.Params))
-	}
-
-	param, parentSet, facts, err := GetParamParentSetFactsFromIntensionalSetObj(obj)
-	if err != nil {
-		return nil, err
-	}
-
-	newParentSet, err := parentSet.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-
-	newFacts, err := facts.InstantiateFact(uniMap)
-	if err != nil {
-		return nil, err
-	}
-
-	newIntensionalSetObj := MakeIntensionalSetObj(string(param), newParentSet, newFacts)
-
-	return newIntensionalSetObj, nil
+	panic("not implemented")
 }
