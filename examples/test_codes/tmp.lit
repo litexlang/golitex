@@ -6,9 +6,9 @@ know:
         $p(x)
         =>:
             1 $in {self2 R: $q(x), self2 > 0}
-            {self2 R: $q(self2), self2 > x} $in nonempty_set
+            {self R: $q(self), self > x} $in nonempty_set
 
     $p(1)
 
-1 $in {self2 R: $q(1), self2 > 0}
+# 1 $in {self2 R: $q(1), self2 > 0}
 {self2 R: $q(self2), self2 > 1} $in nonempty_set

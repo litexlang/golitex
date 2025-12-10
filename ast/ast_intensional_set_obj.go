@@ -121,9 +121,33 @@ func (fnObj *FnObj) ToSetBuilderStruct() (*SetBuilderStruct, error) {
 		facts = append(facts, specFact)
 	}
 
+	return NewSetBuilderStruct(param, parentSet, facts), nil
+}
+
+func (setBuilderStruct *SetBuilderStruct) ReplaceParamWithNewParam(newParam string) (*SetBuilderStruct, error) {
+	uniMap := map[string]Obj{setBuilderStruct.Param: Atom(newParam)}
+
+	newParentSet, err := setBuilderStruct.ParentSet.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+
+	newFacts := make(SpecFactPtrSlice, len(setBuilderStruct.Facts))
+	for i, fact := range setBuilderStruct.Facts {
+		newFact, err := fact.InstantiateFact(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newFacts[i] = newFact.(*SpecFactStmt)
+	}
+
+	return NewSetBuilderStruct(newParam, newParentSet, newFacts), nil
+}
+
+func NewSetBuilderStruct(param string, parentSet Obj, facts SpecFactPtrSlice) *SetBuilderStruct {
 	return &SetBuilderStruct{
 		Param:     param,
 		ParentSet: parentSet,
 		Facts:     facts,
-	}, nil
+	}
 }
