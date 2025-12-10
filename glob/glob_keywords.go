@@ -112,10 +112,10 @@ const (
 
 	KeywordEqualSet = "equal_set"
 
-	DoubleUnderscoreExist           = "__exist"
-	KeywordDoubleUnderscoreTruePure = "__true"
-	KeywordDoubleUnderscoreNotExist = "__not_exist"
-	DoubleUnderscoreNotPure         = "__not"
+	// DoubleUnderscoreExist           = "__exist"
+	// KeywordDoubleUnderscoreTruePure = "__true"
+	// KeywordDoubleUnderscoreNotExist = "__not_exist"
+	// DoubleUnderscoreNotPure         = "__not"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{

@@ -16,6 +16,8 @@ package litex_ast
 
 import (
 	"fmt"
+	"strconv"
+
 	glob "golitex/glob"
 )
 
@@ -49,57 +51,62 @@ func FnObjToIntensionalSetObjStruct(fnObj *FnObj) (*IntensionalSetObjStruct, err
 	parentSet := fnObj.Params[1]
 
 	// Parse facts from Params[2:]
+	// Format: [typeEnumInt] [paramCountInt] [propName] [params...] [next fact typeEnumInt] ...
 	facts := SpecFactPtrSlice{}
 	i := 2
 	for i < len(fnObj.Params) {
-		paramStr := fnObj.Params[i].String()
-		var typeEnum SpecFactEnum
-		var isMarker bool
-
-		// Check if it's a double underscore marker
-		switch paramStr {
-		case glob.KeywordDoubleUnderscoreTruePure:
-			typeEnum = TruePure
-			isMarker = true
-		case glob.DoubleUnderscoreNotPure:
-			typeEnum = FalsePure
-			isMarker = true
-		case glob.DoubleUnderscoreExist:
-			typeEnum = TrueExist_St
-			isMarker = true
-		case glob.KeywordDoubleUnderscoreNotExist:
-			typeEnum = FalseExist_St
-			isMarker = true
-		}
-
-		if !isMarker {
-			i++
-			continue
-		}
-
-		// Found a marker, start parsing a new spec fact
-		i++ // Skip the marker
-		if i >= len(fnObj.Params) {
-			break
-		}
-
-		// Next param is the PropName
-		propNameAtom, ok := fnObj.Params[i].(Atom)
+		// Read type enum (as integer string)
+		typeEnumAtom, ok := fnObj.Params[i].(Atom)
 		if !ok {
-			return nil, fmt.Errorf("expected propName as atom, got %T", fnObj.Params[i])
+			return nil, fmt.Errorf("expected type enum as atom at index %d, got %T", i, fnObj.Params[i])
+		}
+		typeEnumStr := string(typeEnumAtom)
+		typeEnumInt, err := strconv.Atoi(typeEnumStr)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse type enum at index %d: %s", i, err)
+		}
+		typeEnum := SpecFactEnum(typeEnumInt)
+		if typeEnum > FalseExist_St {
+			return nil, fmt.Errorf("invalid type enum value: %d", typeEnumInt)
 		}
 		i++
 
-		// Collect params until we hit another marker or end
-		params := []Obj{}
-		for i < len(fnObj.Params) {
-			nextParamStr := fnObj.Params[i].String()
-			if glob.IsIntensionalSetObjSeparator(nextParamStr) {
-				break // Found next marker, stop collecting params
-			}
-			params = append(params, fnObj.Params[i])
-			i++
+		if i >= len(fnObj.Params) {
+			return nil, fmt.Errorf("unexpected end of params after type enum at index %d", i-1)
 		}
+
+		// Read param count (as integer string)
+		paramCountAtom, ok := fnObj.Params[i].(Atom)
+		if !ok {
+			return nil, fmt.Errorf("expected param count as atom at index %d, got %T", i, fnObj.Params[i])
+		}
+		paramCountStr := string(paramCountAtom)
+		paramCount, err := strconv.Atoi(paramCountStr)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse param count at index %d: %s", i, err)
+		}
+		i++
+
+		if i >= len(fnObj.Params) {
+			return nil, fmt.Errorf("unexpected end of params after param count at index %d", i-1)
+		}
+
+		// Read propName
+		propNameAtom, ok := fnObj.Params[i].(Atom)
+		if !ok {
+			return nil, fmt.Errorf("expected propName as atom at index %d, got %T", i, fnObj.Params[i])
+		}
+		i++
+
+		// Read params
+		if i+paramCount > len(fnObj.Params) {
+			return nil, fmt.Errorf("not enough params: expected %d params, but only %d remaining", paramCount, len(fnObj.Params)-i)
+		}
+		params := make([]Obj, paramCount)
+		for j := 0; j < paramCount; j++ {
+			params[j] = fnObj.Params[i+j]
+		}
+		i += paramCount
 
 		// Create SpecFactStmt
 		specFact := NewSpecFactStmt(typeEnum, propNameAtom, params, glob.BuiltinLine)

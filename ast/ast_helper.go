@@ -420,17 +420,19 @@ func changeSpecFactIntoObjs(fact *SpecFactStmt) ([]Obj, error) {
 	ret := []Obj{}
 	switch fact.TypeEnum {
 	case FalsePure:
-		ret = append(ret, Atom(glob.DoubleUnderscoreNotPure))
+		ret = append(ret, Atom(strconv.Itoa(int(FalsePure))))
 	case FalseExist_St:
-		ret = append(ret, Atom(glob.KeywordDoubleUnderscoreNotExist))
+		ret = append(ret, Atom(strconv.Itoa(int(FalseExist_St))))
 	case TrueExist_St:
-		ret = append(ret, Atom(glob.DoubleUnderscoreExist))
+		ret = append(ret, Atom(strconv.Itoa(int(TrueExist_St))))
 	case TruePure:
-		ret = append(ret, Atom(glob.KeywordDoubleUnderscoreTruePure))
+		ret = append(ret, Atom(strconv.Itoa(int(TruePure))))
 	}
+	ret = append(ret, Atom(strconv.Itoa(len(fact.Params))))
 	ret = append(ret, fact.PropName)
 	for _, param := range fact.Params {
-		if IsIntensionalSetObjSeparator(param) {
+		// Check if param contains an intensional set (not supported in spec fact params)
+		if IsIntensionalSetObj(param) {
 			return nil, fmt.Errorf("intensional set is not supported in spec fact in intensional set for the time being")
 		}
 		ret = append(ret, param)

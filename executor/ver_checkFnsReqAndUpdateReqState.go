@@ -93,17 +93,31 @@ func (ver *Verifier) intensionalSetFnRequirement(objAsFnObj *ast.FnObj, state *V
 		return NewExecErr(fmt.Sprintf("parent of %s must be a set, %s in %s is not valid", objAsFnObj, objAsFnObj.Params[1], objAsFnObj))
 	}
 
-	// check facts in intensional set satisfy fn requirement
-	for i := 2; i < len(objAsFnObj.Params); i++ {
-		if ast.IsIntensionalSetObjSeparator(objAsFnObj.Params[i]) {
-			continue
-		} else {
-			verRet := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(objAsFnObj.Params[i], state)
+	// Parse intensional set struct to check facts
+	intensionalSetObjStruct, err := ast.FnObjToIntensionalSetObjStruct(objAsFnObj)
+	if err != nil {
+		return NewExecErr(fmt.Sprintf("failed to parse intensional set: %s", err))
+	}
+
+	// Check all parameters in facts satisfy fn requirement
+	for _, fact := range intensionalSetObjStruct.Facts {
+		// Check propName
+		verRet := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(fact.PropName, state)
+		if verRet.IsErr() {
+			return verRet
+		}
+		if verRet.IsUnknown() {
+			return NewExecErr(fmt.Sprintf("prop name %s in intensional set must be an atom or function", fact.PropName))
+		}
+
+		// Check all params in the fact
+		for _, param := range fact.Params {
+			verRet := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(param, state)
 			if verRet.IsErr() {
 				return verRet
 			}
 			if verRet.IsUnknown() {
-				return NewExecErr(fmt.Sprintf("parameters in %s must be atoms or functions, %s in %s is not valid", objAsFnObj.FnHead, objAsFnObj.Params[i], objAsFnObj))
+				return NewExecErr(fmt.Sprintf("parameter %s in intensional set fact must be an atom or function", param))
 			}
 		}
 	}
