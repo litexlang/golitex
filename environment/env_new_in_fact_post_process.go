@@ -307,9 +307,9 @@ func (e *Env) equalFactPostProcess_tupleEquality(left ast.Obj, right ast.Obj) gl
 }
 
 // equalFactPostProcess_listSetEquality 处理 x = {1, 2, 3} 的情况
-// 如果右边是 enum set（直接或通过 equal facts），则创建一个 or fact，表示 x 等于 enum set 中的某一个元素
+// 如果右边是 list set（直接或通过 equal facts），则创建一个 or fact，表示 x 等于 list set 中的某一个元素
 func (e *Env) equalFactPostProcess_listSetEquality(left ast.Obj, right ast.Obj) glob.GlobRet {
-	// 尝试获取 enum set（可能是直接的，也可能是通过 equal facts 得到的）
+	// 尝试获取 list set（可能是直接的，也可能是通过 equal facts 得到的）
 	listSetObj := e.GetListSetEqualToObj(right)
 	if listSetObj == nil {
 		return glob.TrueRet("")
@@ -317,10 +317,10 @@ func (e *Env) equalFactPostProcess_listSetEquality(left ast.Obj, right ast.Obj) 
 
 	listSetFnObj, ok := listSetObj.(*ast.FnObj)
 	if !ok {
-		return glob.ErrRet(fmt.Errorf("expected enum set to be FnObj, got %T", listSetObj))
+		return glob.ErrRet(fmt.Errorf("expected list set to be FnObj, got %T", listSetObj))
 	}
 
-	// 创建一个 or fact，表示 left 等于 enum set 中的某一个元素
+	// 创建一个 or fact，表示 left 等于 list set 中的某一个元素
 	orFact := ast.NewOrStmt([]*ast.SpecFactStmt{}, glob.BuiltinLine)
 	for _, param := range listSetFnObj.Params {
 		orFact.Facts = append(orFact.Facts, ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left, param}, glob.BuiltinLine))
@@ -369,7 +369,7 @@ func (e *Env) inFactPostProcess_TryListSet(fact *ast.SpecFactStmt) glob.GlobRet 
 
 	listSetFnObj, ok := listSetObj.(*ast.FnObj)
 	if !ok {
-		return glob.ErrRet(fmt.Errorf("expected enum set to be FnObj, got %T", listSetObj))
+		return glob.ErrRet(fmt.Errorf("expected list set to be FnObj, got %T", listSetObj))
 	}
 
 	return e.inFactPostProcess_InListSet(fact.Params[0], listSetFnObj)

@@ -94,11 +94,11 @@ func (e *Env) GetObjTuple(obj ast.Obj) ast.Obj {
 	return nil
 }
 
-// GetListSetEqualToObj 检查 obj 是否等于某个 enumset
-// 通过获取所有环境中与 obj 相等的对象列表，检查其中是否有 enumset
-// 如果找到 enumset，返回该 enumset；否则返回 nil
+// GetListSetEqualToObj 检查 obj 是否等于某个 list set
+// 通过获取所有环境中与 obj 相等的对象列表，检查其中是否有 list set
+// 如果找到 list set，返回该 list set；否则返回 nil
 func (e *Env) GetListSetEqualToObj(obj ast.Obj) ast.Obj {
-	// 如果 obj 本身就是一个 enumset，直接返回
+	// 如果 obj 本身就是一个 list set，直接返回
 	if ast.IsListSetObj(obj) {
 		return obj
 	}
@@ -108,7 +108,7 @@ func (e *Env) GetListSetEqualToObj(obj ast.Obj) ast.Obj {
 		// 获取当前环境中与 obj 相等的所有对象
 		equalObjs, ok := env.GetEqualObjs(obj)
 		if ok && equalObjs != nil {
-			// 检查其中是否有 enumset
+			// 检查其中是否有 list set
 			for _, equalObj := range *equalObjs {
 				if ast.IsListSetObj(equalObj) {
 					return equalObj
