@@ -20,22 +20,6 @@ import (
 	glob "golitex/glob"
 )
 
-func (e *Env) GetSetFnRetValue(obj ast.Obj) *ast.HaveSetFnStmt {
-	asFn, ok := obj.(*ast.FnObj)
-	if !ok {
-		return nil
-	}
-
-	// name
-	fnName := asFn.FnHead
-	fnNameAsAtom, ok := fnName.(ast.Atom)
-	if !ok {
-		return nil
-	}
-	haveSetFn := e.GetHaveSetFnDef(fnNameAsAtom)
-	return haveSetFn
-}
-
 func (e *Env) GenerateUndeclaredRandomName() string {
 	i := 4
 	var randomStr string

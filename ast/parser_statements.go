@@ -45,11 +45,7 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 		}
 	case glob.KeywordHave:
 		if tb.header.strAtCurIndexPlus(1) == glob.KeywordSet {
-			if tb.header.strAtCurIndexPlus(2) == glob.KeywordFn {
-				ret, err = p.haveSetFnStmt(tb)
-			} else {
-				ret, err = p.haveSetStmt(tb)
-			}
+			ret, err = p.haveSetStmt(tb)
 		} else if tb.header.strAtCurIndexPlus(1) == glob.KeywordFn {
 			if tb.header.strAtCurIndexPlus(2) == glob.KeySymbolColon {
 				ret, err = p.haveFnStmt(tb)
@@ -367,30 +363,6 @@ func (p *TbParser) defObjStmt(tb *tokenBlock) (Stmt, error) {
 
 		return NewDefLetStmt(objNames, objSets, facts, tb.line), nil
 	}
-}
-
-func (p *TbParser) haveSetFnStmt(tb *tokenBlock) (Stmt, error) {
-	tb.header.skip(glob.KeywordHave)
-	tb.header.skip(glob.KeywordSet)
-	tb.header.skip(glob.KeywordFn)
-
-	declHeader, err := p.defHeaderWithoutParsingColonAtEnd(tb)
-	if err != nil {
-		return nil, parserErrAtTb(err, tb)
-	}
-
-	// err = tb.header.skip(glob.KeySymbolColonEqual)
-	err = tb.header.skip(glob.KeySymbolEqual)
-	if err != nil {
-		return nil, parserErrAtTb(err, tb)
-	}
-
-	param, parentSet, proofs, err := p.intentionalSetBody(tb)
-	if err != nil {
-		return nil, parserErrAtTb(err, tb)
-	}
-
-	return NewHaveSetFnStmt(declHeader, param, parentSet, proofs, tb.line), nil
 }
 
 func (p *TbParser) haveSetStmt(tb *tokenBlock) (Stmt, error) {
