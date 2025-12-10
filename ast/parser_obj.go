@@ -530,13 +530,13 @@ func (p *TbParser) setBuilderObj(tb *tokenBlock, paramAsObj Obj) (Obj, error) {
 
 	// Check for conflicts with existing FreeParams
 	if _, exists := p.FreeParams[paramStr]; exists {
-		return nil, parserErrAtTb(fmt.Errorf("parameter %s in intensional set conflicts with a free parameter in the outer scope", paramStr), tb)
+		return nil, parserErrAtTb(fmt.Errorf("parameter %s in set builder conflicts with a free parameter in the outer scope", paramStr), tb)
 	}
 
-	// Add intensional set param to FreeParams
+	// Add set builder param to FreeParams
 	p.FreeParams[paramStr] = struct{}{}
 
-	// Defer: remove the param we added when leaving this intensional set scope
+	// Defer: remove the param we added when leaving this set builder scope
 	defer func() {
 		delete(p.FreeParams, paramStr)
 	}()

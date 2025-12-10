@@ -488,7 +488,7 @@ func (p *TbParser) haveSetStmt(tb *tokenBlock) (Stmt, error) {
 	} else if IsSetBuilder(obj) {
 		panic("have set builder is not supported")
 	} else {
-		return nil, fmt.Errorf("expect enum set or intensional set")
+		return nil, fmt.Errorf("expect list set or set builder")
 	}
 }
 

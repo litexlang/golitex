@@ -839,8 +839,6 @@ fn subsets(x set) set
 know forall x set, y subsets(x): y $subset_of x, forall t y => t $in x
 know forall x, y set: x $subset_of y => x $in subsets(y)
 
-prop is_intensional_set(x set)
-
 know forall x, y set => x = y <=> x $subset_of y, y $subset_of x
 
 know forall x R: abs(x) >= 0
