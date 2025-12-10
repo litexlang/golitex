@@ -140,9 +140,9 @@ func NewHaveSetFnStmt(declHeader *DefHeader, param string, parentSet Obj, proofs
 	return &HaveSetFnStmt{declHeader, param, parentSet, proofs, line}
 }
 
-func NewHaveSetDefinedByReplacementStmt(name string, domSet Obj, rangeSet Obj, propName Atom, line uint) *HaveSetDefinedByReplacementStmt {
-	return &HaveSetDefinedByReplacementStmt{name, domSet, rangeSet, propName, line}
-}
+// func NewHaveSetDefinedByReplacementStmt(name string, domSet Obj, rangeSet Obj, propName Atom, line uint) *HaveSetDefinedByReplacementStmt {
+// 	return &HaveSetDefinedByReplacementStmt{name, domSet, rangeSet, propName, line}
+// }
 
 func NewNamedUniFactStmt(defPropStmt *DefPropStmt, line uint) *NamedUniFactStmt {
 	return &NamedUniFactStmt{defPropStmt, line}
