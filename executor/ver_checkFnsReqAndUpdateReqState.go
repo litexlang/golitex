@@ -84,20 +84,38 @@ func (ver *Verifier) objIsDefinedAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *Ver
 
 // TODO: 非常缺乏检查。因为这里的验证非常麻烦，{}里包括了事实，而事实里有fn，所以需要检查fn行不行
 func (ver *Verifier) intensionalSetFnRequirement(objAsFnObj *ast.FnObj, state *VerState) ExecRet {
-	// parent is ok
-	ret := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(objAsFnObj.Params[1], state)
-	if ret.IsErr() {
-		return ret
-	}
-	if ret.IsUnknown() {
-		return NewExecErr(fmt.Sprintf("parent of %s must be a set, %s in %s is not valid", objAsFnObj, objAsFnObj.Params[1], objAsFnObj))
-	}
+	ver.newEnv(ver.Env)
+	defer ver.deleteEnvAndRetainMsg()
 
 	// Parse intensional set struct to check facts
 	intensionalSetObjStruct, err := objAsFnObj.ToIntensionalSetObjStruct()
 	if err != nil {
 		return NewExecErr(fmt.Sprintf("failed to parse intensional set: %s", err))
 	}
+
+	// parent is ok
+	ret := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(intensionalSetObjStruct.ParentSet, state)
+	if ret.IsErr() {
+		return ret
+	}
+	if ret.IsUnknown() {
+		return NewExecErr(fmt.Sprintf("parent of %s must be a set, %s in %s is not valid", objAsFnObj, intensionalSetObjStruct.ParentSet, objAsFnObj))
+	}
+
+	// 如果param在母环境里已经声明过了，那就把整个obj里的所有的param全部改成新的
+	globRet := ver.Env.IsAtomDeclared(ast.Atom(intensionalSetObjStruct.Param), map[string]struct{}{})
+	if globRet.IsTrue() {
+		// 把这个param替换成从来没见过的东西
+		intensionalSetObjStruct = ver.replaceParamWithUndeclaredRandomName(intensionalSetObjStruct)
+	}
+
+	// 声明一下param
+	ver.Env.DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(ast.NewDefLetStmt(
+		[]string{intensionalSetObjStruct.Param},
+		[]ast.Obj{intensionalSetObjStruct.ParentSet},
+		[]ast.FactStmt{},
+		glob.BuiltinLine,
+	))
 
 	// Check all parameters in facts satisfy fn requirement
 	for _, fact := range intensionalSetObjStruct.Facts {
@@ -361,4 +379,34 @@ func (ver *Verifier) indexOptFnRequirement(fnObj *ast.FnObj, state *VerState) Ex
 	}
 
 	return NewEmptyExecTrue()
+}
+
+func (ver *Verifier) replaceParamWithUndeclaredRandomName(intensionalSetObjStruct *ast.IntensionalSetObjStruct) *ast.IntensionalSetObjStruct {
+	oldParam := ast.Atom(intensionalSetObjStruct.Param)
+
+	// Generate a new random undeclared name
+	newParamName := ver.Env.GenerateUndeclaredRandomName()
+	newParam := ast.Atom(newParamName)
+
+	// Replace param in all facts
+	newFacts := make(ast.SpecFactPtrSlice, len(intensionalSetObjStruct.Facts))
+	for i, fact := range intensionalSetObjStruct.Facts {
+		// Replace param in propName
+		newPropName := fact.PropName.ReplaceObj(oldParam, newParam).(ast.Atom)
+
+		// Replace param in fact params
+		newFactParams := make([]ast.Obj, len(fact.Params))
+		for j, param := range fact.Params {
+			newFactParams[j] = param.ReplaceObj(oldParam, newParam)
+		}
+
+		// Create new fact with replaced param
+		newFacts[i] = ast.NewSpecFactStmt(fact.TypeEnum, newPropName, newFactParams, fact.Line)
+	}
+
+	return &ast.IntensionalSetObjStruct{
+		Param:     newParamName,
+		ParentSet: intensionalSetObjStruct.ParentSet, // parent set 不变
+		Facts:     newFacts,
+	}
 }
