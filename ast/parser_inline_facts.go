@@ -230,6 +230,27 @@ func (p *TbParser) inlineUniInterfaceSkipTerminator(tb *tokenBlock, ends []strin
 			return nil, parserErrAtTb(err, tb)
 		}
 
+		// Check for conflicts with existing FreeParams
+		for _, param := range params {
+			if _, exists := p.FreeParams[param]; exists {
+				return nil, parserErrAtTb(fmt.Errorf("parameter %s conflicts with a free parameter in the outer scope", param), tb)
+			}
+		}
+
+		// Add uniFact params to FreeParams
+		for _, param := range params {
+			p.FreeParams[param] = struct{}{}
+		}
+	}
+
+	// Defer: remove the params we added when leaving this uniFact scope
+	defer func() {
+		for _, param := range params {
+			delete(p.FreeParams, param)
+		}
+	}()
+
+	if !tb.header.is(glob.KeySymbolRightArrow) {
 		if tb.header.is(glob.KeySymbolColon) {
 			tb.header.skip(glob.KeySymbolColon)
 			domFact, err = p.inlineDomFactInUniFactInterface_WithoutSkippingEnd(tb, ends)

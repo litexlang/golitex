@@ -526,6 +526,21 @@ func (p *TbParser) intensionalSetObj(tb *tokenBlock, paramAsObj Obj) (Obj, error
 		return nil, fmt.Errorf("parameter cannot have package name")
 	}
 
+	paramStr := string(param)
+
+	// Check for conflicts with existing FreeParams
+	if _, exists := p.FreeParams[paramStr]; exists {
+		return nil, parserErrAtTb(fmt.Errorf("parameter %s in intensional set conflicts with a free parameter in the outer scope", paramStr), tb)
+	}
+
+	// Add intensional set param to FreeParams
+	p.FreeParams[paramStr] = struct{}{}
+
+	// Defer: remove the param we added when leaving this intensional set scope
+	defer func() {
+		delete(p.FreeParams, paramStr)
+	}()
+
 	parentSet, err := p.Obj(tb)
 	if err != nil {
 		return nil, err
@@ -555,5 +570,5 @@ func (p *TbParser) intensionalSetObj(tb *tokenBlock, paramAsObj Obj) (Obj, error
 		return nil, err
 	}
 
-	return MakeIntensionalSetObj(string(param), parentSet, facts)
+	return MakeIntensionalSetObj(paramStr, parentSet, facts)
 }
