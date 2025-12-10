@@ -406,7 +406,7 @@ func MakeIntensionalSetObj(param string, parentSet Obj, facts SpecFactPtrSlice) 
 	params := []Obj{Atom(param), parentSet}
 
 	for _, fact := range facts {
-		atoms, err := changeSpecFactIntoAtoms(fact)
+		atoms, err := changeSpecFactIntoObjs(fact)
 		if err != nil {
 			return nil, err
 		}
@@ -416,7 +416,7 @@ func MakeIntensionalSetObj(param string, parentSet Obj, facts SpecFactPtrSlice) 
 	return NewFnObj(Atom(glob.KeywordIntensionalSet), params), nil
 }
 
-func changeSpecFactIntoAtoms(fact *SpecFactStmt) ([]Obj, error) {
+func changeSpecFactIntoObjs(fact *SpecFactStmt) ([]Obj, error) {
 	ret := []Obj{}
 	switch fact.TypeEnum {
 	case FalsePure:
@@ -430,13 +430,10 @@ func changeSpecFactIntoAtoms(fact *SpecFactStmt) ([]Obj, error) {
 	}
 	ret = append(ret, fact.PropName)
 	for _, param := range fact.Params {
-		ret = append(ret, param)
-	}
-
-	for _, param := range fact.Params {
-		if IsIntensionalSetObj(param) {
+		if IsIntensionalSetObjSeparator(param) {
 			return nil, fmt.Errorf("intensional set is not supported in spec fact in intensional set for the time being")
 		}
+		ret = append(ret, param)
 	}
 
 	return ret, nil
@@ -463,13 +460,6 @@ func IsTupleFnObj(f *FnObj) bool {
 
 func IsIndexOptFnObj(f *FnObj) bool {
 	return f.FnHead.String() == glob.KeywordIndexOpt
-}
-
-func IsIntensionalSetObj(obj Obj) bool {
-	if asIntensionalSetStmt, ok := obj.(*FnObj); ok {
-		return asIntensionalSetStmt.FnHead.String() == glob.KeywordIntensionalSet
-	}
-	return false
 }
 
 func IsEnumSetObj(obj Obj) bool {

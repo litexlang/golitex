@@ -749,23 +749,23 @@ func (env *Env) equalFactPostProcess_intensionalSetEquality(left, right ast.Obj)
 	}
 
 	// 从 intensional set 中提取 param, parentSet, facts
-	paramAsString, parentSet, facts, err := ast.GetParamParentSetFactsFromIntensionalSetObj(intensionalSet)
+	intensionalSetObjStruct, err := ast.FnObjToIntensionalSetObjStruct(intensionalSet)
 	if err != nil {
 		return glob.ErrRet(fmt.Errorf("failed to extract intensional set information: %s", err))
 	}
 
 	// 创建替换映射：将 param 替换为 left
-	uniMap := map[string]ast.Obj{paramAsString: left}
+	uniMap := map[string]ast.Obj{intensionalSetObjStruct.Param: left}
 
 	// 1. 断言 left 是 parentSet 的子集
-	subsetOfFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordSubsetOf), []ast.Obj{left, parentSet}, glob.BuiltinLine)
+	subsetOfFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordSubsetOf), []ast.Obj{left, intensionalSetObjStruct.ParentSet}, glob.BuiltinLine)
 	ret := env.NewFact(subsetOfFact)
 	if ret.IsErr() {
 		return ret
 	}
 
 	// 2. 实例化所有 facts，将 param 替换为 left，然后断言它们
-	for _, fact := range facts {
+	for _, fact := range intensionalSetObjStruct.Facts {
 		instFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return glob.ErrRet(fmt.Errorf("failed to instantiate fact %s: %s", fact, err))

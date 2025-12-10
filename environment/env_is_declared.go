@@ -85,29 +85,29 @@ func (e *Env) AreAtomsInObjDefined(obj ast.Obj, extraAtomNames map[string]struct
 // AreAtomsInIntensionalSetAreDeclared checks if all atoms in an intensional set are declared,
 // excluding the intensional set's own parameter (which is a free variable not in the environment).
 func (e *Env) AreAtomsInIntensionalSetAreDeclared(intensionalSet *ast.FnObj, extraAtomNames map[string]struct{}) glob.GlobRet {
-	// Check atoms in facts (excluding the param)
-	// Facts are stored as strings in Params[2:], so we need to parse them first
-	paramAsString, parentSet, facts, err := ast.GetParamParentSetFactsFromIntensionalSetObj(intensionalSet)
+	// Convert FnObj to IntensionalSetObjStruct for easier processing
+	intensionalSetObjStruct, err := ast.FnObjToIntensionalSetObjStruct(intensionalSet)
 	if err != nil {
-		return glob.ErrRet(fmt.Errorf("failed to parse facts from intensional set: %s", err))
+		return glob.ErrRet(fmt.Errorf("failed to parse intensional set: %s", err))
 	}
 
 	// Create a copy of extraAtomNames and add the intensional set's param to it
 	// This param is a free variable, so we exclude it from the declaration check
 	paramExcludedNames := glob.CopyMap(extraAtomNames)
-	paramExcludedNames[paramAsString] = struct{}{}
+	paramExcludedNames[intensionalSetObjStruct.Param] = struct{}{}
 
 	// Check atoms in parentSet (excluding the param)
-	ret := e.AreAtomsInObjDefined(parentSet, paramExcludedNames)
+	ret := e.AreAtomsInObjDefined(intensionalSetObjStruct.ParentSet, paramExcludedNames)
 	if ret.IsErr() {
-		ret.AddMsg(fmt.Sprintf("in parent set of intensional set with param %s", paramAsString))
+		ret.AddMsg(fmt.Sprintf("in parent set of intensional set with param %s", intensionalSetObjStruct.Param))
 		return ret
 	}
 
-	for i, fact := range facts {
+	// Check atoms in facts (excluding the param)
+	for i, fact := range intensionalSetObjStruct.Facts {
 		ret := e.AreAtomsInFactAreDeclared(fact, paramExcludedNames)
 		if ret.IsErr() {
-			ret.AddMsg(fmt.Sprintf("in fact %d of intensional set with param %s", i, paramAsString))
+			ret.AddMsg(fmt.Sprintf("in fact %d of intensional set with param %s", i, intensionalSetObjStruct.Param))
 			return ret
 		}
 	}
