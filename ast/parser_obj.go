@@ -487,6 +487,33 @@ func (p *TbParser) EnumSetObjOrIntensionalSetObj(tb *tokenBlock) (Obj, error) {
 	}
 }
 
+func (p *TbParser) enumSetObj(tb *tokenBlock, firstParam Obj) (Obj, error) {
+	enumItems := []Obj{firstParam}
+
+	// 跳过第一个逗号（如果存在）
+	tb.header.skipIfIs(glob.KeySymbolComma)
+
+	// 循环读取后续对象，直到遇到右花括号
+	for !tb.header.is(glob.KeySymbolRightCurly) {
+		curItem, err := p.Obj(tb)
+		if err != nil {
+			return nil, err
+		}
+		enumItems = append(enumItems, curItem)
+
+		// 跳过逗号（如果存在）
+		tb.header.skipIfIs(glob.KeySymbolComma)
+	}
+
+	// 跳过右花括号
+	err := tb.header.skip(glob.KeySymbolRightCurly)
+	if err != nil {
+		return nil, err
+	}
+
+	return MakeEnumSetObj(enumItems), nil
+}
+
 // {x R: specific fact, ..., specific fact}
 func (p *TbParser) intensionalSetObj(tb *tokenBlock, paramAsObj Obj) (Obj, error) {
 	param, ok := paramAsObj.(Atom)
@@ -529,31 +556,4 @@ func (p *TbParser) intensionalSetObj(tb *tokenBlock, paramAsObj Obj) (Obj, error
 	}
 
 	return MakeIntensionalSetObj(string(param), parentSet, facts)
-}
-
-func (p *TbParser) enumSetObj(tb *tokenBlock, firstParam Obj) (Obj, error) {
-	enumItems := []Obj{firstParam}
-
-	// 跳过第一个逗号（如果存在）
-	tb.header.skipIfIs(glob.KeySymbolComma)
-
-	// 循环读取后续对象，直到遇到右花括号
-	for !tb.header.is(glob.KeySymbolRightCurly) {
-		curItem, err := p.Obj(tb)
-		if err != nil {
-			return nil, err
-		}
-		enumItems = append(enumItems, curItem)
-
-		// 跳过逗号（如果存在）
-		tb.header.skipIfIs(glob.KeySymbolComma)
-	}
-
-	// 跳过右花括号
-	err := tb.header.skip(glob.KeySymbolRightCurly)
-	if err != nil {
-		return nil, err
-	}
-
-	return MakeEnumSetObj(enumItems), nil
 }
