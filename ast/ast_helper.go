@@ -441,14 +441,6 @@ func changeSpecFactIntoObjs(fact *SpecFactStmt) ([]Obj, error) {
 	return ret, nil
 }
 
-func IsIntensionalSetObjSeparator(obj Obj) bool {
-	atomObj, ok := obj.(Atom)
-	if !ok {
-		return false
-	}
-	return glob.IsIntensionalSetObjSeparator(string(atomObj))
-}
-
 func IsTupleObj(obj Obj) bool {
 	if asFnObj, ok := obj.(*FnObj); ok {
 		return IsTupleFnObj(asFnObj)
