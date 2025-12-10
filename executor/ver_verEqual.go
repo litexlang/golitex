@@ -111,6 +111,10 @@ func (ver *Verifier) verEqualBuiltin(left ast.Obj, right ast.Obj, state *VerStat
 		return verRet
 	}
 
+	if verRet := ver.verEqualByLeftAndRightAreSetBuilders(left, right, state); verRet.IsErr() || verRet.IsTrue() {
+		return verRet
+	}
+
 	return NewEmptyExecUnknown()
 }
 
@@ -299,4 +303,38 @@ func (ver *Verifier) decomposeObjFnsAndCheckEquality(left ast.Obj, right ast.Obj
 		}
 	}
 	return NewEmptyExecUnknown()
+}
+
+func (ver *Verifier) verEqualByLeftAndRightAreSetBuilders(left, right ast.Obj, state *VerState) ExecRet {
+	leftSetBuilder := ver.Env.GetSetBuilderEqualToObj(left)
+	if leftSetBuilder == nil {
+		return NewEmptyExecUnknown()
+	}
+
+	rightSetBuilder := ver.Env.GetSetBuilderEqualToObj(right)
+	if rightSetBuilder == nil {
+		return NewEmptyExecUnknown()
+	}
+
+	// 生成一个随机的param，把两个set builder的param都替换成这个随机param
+	randomParam := ver.Env.GenerateUndeclaredRandomName()
+
+	leftUniMap := map[string]ast.Obj{leftSetBuilder.Params[0].String(): ast.Atom(randomParam)}
+	instLeftSetBuilder, err := leftSetBuilder.Instantiate(leftUniMap)
+	if err != nil {
+		return NewExecErr(err.Error())
+	}
+
+	rightUniMap := map[string]ast.Obj{rightSetBuilder.Params[0].String(): ast.Atom(randomParam)}
+	instRightSetBuilder, err := right.Instantiate(rightUniMap)
+	if err != nil {
+		return NewExecErr(err.Error())
+	}
+
+	// 它们作为string相等
+	if instLeftSetBuilder.String() != instRightSetBuilder.String() {
+		return NewEmptyExecUnknown()
+	}
+
+	return NewExecTrue(fmt.Sprintf("%s = %s, by definition of set builder", left, right))
 }

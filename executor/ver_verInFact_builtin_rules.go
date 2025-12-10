@@ -948,16 +948,16 @@ func (ver *Verifier) verInFactByRightIsListSet(stmt *ast.SpecFactStmt, state *Ve
 		return NewEmptyExecUnknown()
 	}
 
-	// 遍历 enum set 的所有元素，检查是否有任何一个等于 stmt.Params[0]
-	for _, enumItem := range listSetFnObj.Params {
-		equalFact := ast.NewEqualFact(stmt.Params[0], enumItem)
+	// 遍历 list set 的所有元素，检查是否有任何一个等于 stmt.Params[0]
+	for _, item := range listSetFnObj.Params {
+		equalFact := ast.NewEqualFact(stmt.Params[0], item)
 		verRet := ver.VerFactStmt(equalFact, state)
 		if verRet.IsErr() {
 			return verRet
 		}
 		if verRet.IsTrue() {
 			// 找到了相等的元素，返回 true
-			return NewExecTrue(fmt.Sprintf("%s is true proved by\n%s = %s and %s $in %s", stmt.String(), stmt.Params[0], enumItem, enumItem, stmt.Params[1]))
+			return NewExecTrue(fmt.Sprintf("%s is true proved by\n%s = %s and %s $in %s", stmt.String(), stmt.Params[0], item, item, stmt.Params[1]))
 		}
 	}
 
