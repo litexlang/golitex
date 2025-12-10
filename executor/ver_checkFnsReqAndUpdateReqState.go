@@ -88,7 +88,7 @@ func (ver *Verifier) intensionalSetFnRequirement(objAsFnObj *ast.FnObj, state *V
 	defer ver.deleteEnvAndRetainMsg()
 
 	// Parse intensional set struct to check facts
-	intensionalSetObjStruct, err := objAsFnObj.ToIntensionalSetObjStruct()
+	intensionalSetObjStruct, err := objAsFnObj.ToSetBuilderStruct()
 	if err != nil {
 		return NewExecErr(fmt.Sprintf("failed to parse intensional set: %s", err))
 	}
@@ -381,7 +381,7 @@ func (ver *Verifier) indexOptFnRequirement(fnObj *ast.FnObj, state *VerState) Ex
 	return NewEmptyExecTrue()
 }
 
-func (ver *Verifier) replaceParamWithUndeclaredRandomName(intensionalSetObjStruct *ast.IntensionalSetObjStruct) *ast.IntensionalSetObjStruct {
+func (ver *Verifier) replaceParamWithUndeclaredRandomName(intensionalSetObjStruct *ast.SetBuilderStruct) *ast.SetBuilderStruct {
 	oldParam := ast.Atom(intensionalSetObjStruct.Param)
 
 	// Generate a new random undeclared name
@@ -404,7 +404,7 @@ func (ver *Verifier) replaceParamWithUndeclaredRandomName(intensionalSetObjStruc
 		newFacts[i] = ast.NewSpecFactStmt(fact.TypeEnum, newPropName, newFactParams, fact.Line)
 	}
 
-	return &ast.IntensionalSetObjStruct{
+	return &ast.SetBuilderStruct{
 		Param:     newParamName,
 		ParentSet: intensionalSetObjStruct.ParentSet, // parent set 不变
 		Facts:     newFacts,

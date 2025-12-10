@@ -376,7 +376,7 @@ func (e *Env) inFactPostProcess_TryEnumSet(fact *ast.SpecFactStmt) glob.GlobRet 
 }
 
 func (e *Env) inFactPostProcess_TryIntensionalSet(fact *ast.SpecFactStmt) glob.GlobRet {
-	intensionalSetObj := e.GetObjIntensionalSet(fact.Params[1])
+	intensionalSetObj := e.GetSetBuilderEqualToObj(fact.Params[1])
 	if intensionalSetObj == nil {
 		return glob.NewGlobUnknown("")
 	}
@@ -385,7 +385,7 @@ func (e *Env) inFactPostProcess_TryIntensionalSet(fact *ast.SpecFactStmt) glob.G
 }
 
 func (e *Env) inFactPostProcess_InIntensionalSet(obj ast.Obj, intensionalSet *ast.FnObj) glob.GlobRet {
-	intensionalSetObjStruct, err := intensionalSet.ToIntensionalSetObjStruct()
+	intensionalSetObjStruct, err := intensionalSet.ToSetBuilderStruct()
 	if err != nil {
 		return glob.ErrRet(err)
 	}

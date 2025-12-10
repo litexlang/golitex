@@ -129,7 +129,7 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 	}
 
 	// x $in {x R: x > 0}
-	verRet = ver.verInFactByRightIsIntensionalSet(stmt, state)
+	verRet = ver.verInFactByRightIsSetBuilder(stmt, state)
 	if verRet.IsErr() {
 		return verRet
 	}
@@ -904,22 +904,22 @@ func (ver *Verifier) verInFactByLeftIsIndexOfObjInSomeSet(stmt *ast.SpecFactStmt
 	return NewEmptyExecUnknown()
 }
 
-func (ver *Verifier) verInFactByRightIsIntensionalSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	intensionalSet := ver.Env.GetObjIntensionalSet(stmt.Params[1])
-	if intensionalSet == nil {
+func (ver *Verifier) verInFactByRightIsSetBuilder(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	setBuilder := ver.Env.GetSetBuilderEqualToObj(stmt.Params[1])
+	if setBuilder == nil {
 		return NewEmptyExecUnknown()
 	}
 
-	intensionalSetObjStruct, err := intensionalSet.ToIntensionalSetObjStruct()
+	setBuilderStruct, err := setBuilder.ToSetBuilderStruct()
 	if err != nil {
 		return NewExecErr(err.Error())
 	}
 
-	uniMap := map[string]ast.Obj{intensionalSetObjStruct.Param: stmt.Params[0]}
+	uniMap := map[string]ast.Obj{setBuilderStruct.Param: stmt.Params[0]}
 
 	// Instantiate all facts
 	instFacts := []ast.FactStmt{}
-	for _, fact := range intensionalSetObjStruct.Facts {
+	for _, fact := range setBuilderStruct.Facts {
 		instFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return NewExecErr(err.Error())
@@ -927,30 +927,22 @@ func (ver *Verifier) verInFactByRightIsIntensionalSet(stmt *ast.SpecFactStmt, st
 		instFacts = append(instFacts, instFact)
 	}
 
-	instParentSet, err := intensionalSetObjStruct.ParentSet.Instantiate(uniMap)
-	if err != nil {
-		return NewExecErr(err.Error())
+	// First, verify that the element is in the parent set
+	instParentSetFact := ast.NewInFactWithObj(stmt.Params[0], setBuilderStruct.ParentSet)
+	parentSetRet := ver.VerFactStmt(instParentSetFact, state)
+	if parentSetRet.IsNotTrue() {
+		return parentSetRet
 	}
 
-	instParentSetFact := ast.NewInFactWithObj(stmt.Params[0], instParentSet)
-	verRet := ver.VerFactStmt(instParentSetFact, state)
-	if verRet.IsErr() {
-		return verRet
-	}
-	if verRet.IsTrue() {
-		return verRet
-	}
+	// Then, verify all facts are true
 	for _, fact := range instFacts {
 		verRet := ver.VerFactStmt(fact, state)
-		if verRet.IsErr() {
-			return verRet
-		}
-		if verRet.IsTrue() {
-			return verRet
+		if verRet.IsNotTrue() {
+			return NewEmptyExecUnknown()
 		}
 	}
 
-	return NewEmptyExecUnknown()
+	return NewExecTrue(fmt.Sprintf("%s is true", stmt.String()))
 }
 
 func (ver *Verifier) verInFactByRightIsEnumSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
