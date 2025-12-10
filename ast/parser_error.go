@@ -18,33 +18,27 @@ import (
 	"fmt"
 )
 
-// TODO 最好能把函数名传过来，因为常常出现的消息的格式是
-// parse error at end of line, line 1:
-// a
-// parse error at end of line, line 1:
-// a
-// parse error at end of line, line 1:
-// a
-func parserErrAtTb(previousErr error, stmt *tokenBlock) *errAtLine {
-	if _, ok := previousErr.(*errAtLine); ok {
-		return previousErr.(*errAtLine)
+// 工作原理是：如果error回传的时候，某一步已经把现在的故障出现在第几行写好了，那么就返回这个error，否则就新开一个error，并把现在的故障出现在第几行写好
+func parserErrAtTb(previousErr error, stmt *tokenBlock) *ParseErrAtLine {
+	if _, ok := previousErr.(*ParseErrAtLine); ok {
+		return previousErr.(*ParseErrAtLine)
 	}
 
 	return newErrAtLine(stmt.line, previousErr)
 }
 
-type errAtLine struct {
+type ParseErrAtLine struct {
 	line uint
 	err  error
 }
 
-func newErrAtLine(line uint, err error) *errAtLine {
-	return &errAtLine{
+func newErrAtLine(line uint, err error) *ParseErrAtLine {
+	return &ParseErrAtLine{
 		line: line,
 		err:  err,
 	}
 }
 
-func (e *errAtLine) Error() string {
+func (e *ParseErrAtLine) Error() string {
 	return fmt.Sprintf("parse error at line %d:\n%s", e.line, e.err.Error())
 }
