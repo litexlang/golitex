@@ -74,5 +74,8 @@ func RemoveWindowsCarriage(code string) string {
 // }
 
 func IsIntensionalSetObjSeparator(s string) bool {
-	return s == KeywordDoubleUnderscoreNotExist || s == KeywordDoubleUnderscoreTruePure || s == DoubleUnderscoreNotPure || s == DoubleUnderscoreExist
+	// Old format used double underscore markers (__true, __not, etc.)
+	// New format uses integer encoding, so this function always returns false
+	// Kept for backward compatibility but no longer used
+	return false
 }
