@@ -447,5 +447,34 @@ func IsIntensionalSetObjSeparator(obj Obj) bool {
 	if !ok {
 		return false
 	}
-	return string(atomObj) == glob.KeywordDoubleUnderscoreNotExist || string(atomObj) == glob.KeywordDoubleUnderscoreTruePure || string(atomObj) == glob.DoubleUnderscoreNotPure || string(atomObj) == glob.DoubleUnderscoreExist
+	return glob.IsIntensionalSetObjSeparator(string(atomObj))
+}
+
+func IsTupleObj(obj Obj) bool {
+	if asFnObj, ok := obj.(*FnObj); ok {
+		return IsTupleFnObj(asFnObj)
+	}
+	return false
+}
+
+func IsTupleFnObj(f *FnObj) bool {
+	return f.FnHead.String() == glob.KeywordTuple
+}
+
+func IsIndexOptFnObj(f *FnObj) bool {
+	return f.FnHead.String() == glob.KeywordIndexOpt
+}
+
+func IsIntensionalSetObj(obj Obj) bool {
+	if asIntensionalSetStmt, ok := obj.(*FnObj); ok {
+		return asIntensionalSetStmt.FnHead.String() == glob.KeywordIntensionalSet
+	}
+	return false
+}
+
+func IsEnumSetObj(obj Obj) bool {
+	if asEnumStmt, ok := obj.(*FnObj); ok {
+		return asEnumStmt.FnHead.String() == glob.KeywordEnumSet
+	}
+	return false
 }

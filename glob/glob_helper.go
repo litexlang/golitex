@@ -72,3 +72,7 @@ func RemoveWindowsCarriage(code string) string {
 // 	}
 // 	return code
 // }
+
+func IsIntensionalSetObjSeparator(s string) bool {
+	return s == KeywordDoubleUnderscoreNotExist || s == KeywordDoubleUnderscoreTruePure || s == DoubleUnderscoreNotPure || s == DoubleUnderscoreExist
+}
