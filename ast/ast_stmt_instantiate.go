@@ -1045,5 +1045,52 @@ func (stmt *HaveFnEqualCaseByCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt,
 }
 
 func InstantiateIntensionalSetObj(obj *FnObj, uniMap map[string]Obj) (Obj, error) {
-	panic("not implemented")
+	// Convert FnObj to IntensionalSetObj
+	intensionalSet, err := FnObjToIntensionalSetObjStruct(obj)
+	if err != nil {
+		return nil, err
+	}
+
+	// Avoid capturing the bound parameter during instantiation.
+	// If uniMap contains the param, create a new map without it to prevent substitution.
+	innerUniMap := uniMap
+	if _, ok := uniMap[intensionalSet.Param]; ok {
+		innerUniMap = make(map[string]Obj, len(uniMap)-1)
+		for k, v := range uniMap {
+			if k == intensionalSet.Param {
+				continue
+			}
+			innerUniMap[k] = v
+		}
+	}
+
+	// Instantiate parent set
+	instParentSet, err := intensionalSet.ParentSet.Instantiate(innerUniMap)
+	if err != nil {
+		return nil, err
+	}
+
+	// Instantiate facts
+	instFacts := make(SpecFactPtrSlice, len(intensionalSet.Facts))
+	for i, fact := range intensionalSet.Facts {
+		instFact, err := fact.InstantiateFact(innerUniMap)
+		if err != nil {
+			return nil, err
+		}
+		specFact, ok := instFact.(*SpecFactStmt)
+		if !ok {
+			return nil, fmt.Errorf("expected SpecFactStmt, got %T", instFact)
+		}
+		instFacts[i] = specFact
+	}
+
+	// Create new IntensionalSetObj with instantiated components
+	instIntensionalSet := &IntensionalSetObjStruct{
+		Param:     intensionalSet.Param, // Keep the bound parameter unchanged
+		ParentSet: instParentSet,
+		Facts:     instFacts,
+	}
+
+	// Convert back to FnObj
+	return IntensionalSetObjStructToFnObj(instIntensionalSet)
 }

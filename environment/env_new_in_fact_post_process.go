@@ -385,16 +385,16 @@ func (e *Env) inFactPostProcess_TryIntensionalSet(fact *ast.SpecFactStmt) glob.G
 }
 
 func (e *Env) inFactPostProcess_InIntensionalSet(obj ast.Obj, intensionalSet *ast.FnObj) glob.GlobRet {
-	paramAsString, parentSet, facts, err := ast.GetParamParentSetFactsFromIntensionalSetObj(intensionalSet)
+	intensionalSetObjStruct, err := ast.FnObjToIntensionalSetObjStruct(intensionalSet)
 	if err != nil {
 		return glob.ErrRet(err)
 	}
 
-	uniMap := map[string]ast.Obj{paramAsString: obj}
+	uniMap := map[string]ast.Obj{intensionalSetObjStruct.Param: obj}
 
 	instFacts := []ast.FactStmt{}
 
-	for _, fact := range facts {
+	for _, fact := range intensionalSetObjStruct.Facts {
 		instFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return glob.ErrRet(err)
@@ -403,7 +403,7 @@ func (e *Env) inFactPostProcess_InIntensionalSet(obj ast.Obj, intensionalSet *as
 	}
 
 	// in parent set
-	inParentSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{obj, parentSet}, glob.BuiltinLine)
+	inParentSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{obj, intensionalSetObjStruct.ParentSet}, glob.BuiltinLine)
 	ret := e.NewFact(inParentSetFact)
 	if ret.IsErr() {
 		return glob.ErrRet(err)

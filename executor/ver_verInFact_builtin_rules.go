@@ -910,19 +910,24 @@ func (ver *Verifier) verInFactByRightIsIntensionalSet(stmt *ast.SpecFactStmt, st
 		return NewEmptyExecUnknown()
 	}
 
-	param, parentSet, facts, err := ast.GetParamParentSetFactsFromIntensionalSetObj(intensionalSet)
+	intensionalSetObjStruct, err := ast.FnObjToIntensionalSetObjStruct(intensionalSet)
 	if err != nil {
 		return NewExecErr(err.Error())
 	}
 
-	uniMap := map[string]ast.Obj{param: stmt.Params[0]}
+	uniMap := map[string]ast.Obj{intensionalSetObjStruct.Param: stmt.Params[0]}
 
-	instFacts, err := facts.InstantiateFact(uniMap)
-	if err != nil {
-		return NewExecErr(err.Error())
+	// Instantiate all facts
+	instFacts := []ast.FactStmt{}
+	for _, fact := range intensionalSetObjStruct.Facts {
+		instFact, err := fact.InstantiateFact(uniMap)
+		if err != nil {
+			return NewExecErr(err.Error())
+		}
+		instFacts = append(instFacts, instFact)
 	}
 
-	instParentSet, err := parentSet.Instantiate(uniMap)
+	instParentSet, err := intensionalSetObjStruct.ParentSet.Instantiate(uniMap)
 	if err != nil {
 		return NewExecErr(err.Error())
 	}

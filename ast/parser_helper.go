@@ -136,23 +136,18 @@ func ParseSourceCodeGetObj(s string) (Obj, error) {
 	return obj, nil
 }
 
-func GetParamParentSetFactsFromIntensionalSetObj(intensionalSet *FnObj) (string, Obj, FactStmtSlice, error) {
-	param, ok := intensionalSet.Params[0].(Atom)
-	if !ok {
-		return "", nil, nil, fmt.Errorf("expected parameter as atom, got %T", intensionalSet.Params[0])
-	}
-	paramAsString := string(param)
+// GetParamParentSetFactsFromIntensionalSetObj extracts param, parentSet, and facts from an intensional set FnObj
+// func GetParamParentSetFactsFromIntensionalSetObj(intensionalSet *FnObj) (string, Obj, FactStmtSlice, error) {
+// 	intensionalSetObj, err := FnObjToIntensionalSetObjStruct(intensionalSet)
+// 	if err != nil {
+// 		return "", nil, nil, err
+// 	}
 
-	parentSet := intensionalSet.Params[1]
+// 	// Convert SpecFactPtrSlice to FactStmtSlice
+// 	facts := make(FactStmtSlice, len(intensionalSetObj.Facts))
+// 	for i, fact := range intensionalSetObj.Facts {
+// 		facts[i] = fact
+// 	}
 
-	facts := []FactStmt{}
-	for i := 2; i < len(intensionalSet.Params); i++ {
-		fact, err := ParseSingleLineFact(intensionalSet.Params[i].String())
-		if err != nil {
-			return "", nil, nil, err
-		}
-		facts = append(facts, fact)
-	}
-
-	return paramAsString, parentSet, facts, nil
-}
+// 	return intensionalSetObj.Param, intensionalSetObj.ParentSet, facts, nil
+// }

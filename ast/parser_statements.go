@@ -420,11 +420,16 @@ func (p *TbParser) haveSetStmt(tb *tokenBlock) (Stmt, error) {
 	if IsEnumSetObj(obj) {
 		return NewHaveEnumSetStmt(haveSetName, obj.(*FnObj), tb.line), nil
 	} else if IsIntensionalSetObj(obj) {
-		param, parentSet, facts, err := GetParamParentSetFactsFromIntensionalSetObj(obj.(*FnObj))
+		intensionalSetObjStruct, err := FnObjToIntensionalSetObjStruct(obj.(*FnObj))
 		if err != nil {
 			return nil, parserErrAtTb(err, tb)
 		}
-		return NewHaveIntensionalSetStmt(param, parentSet, facts, tb.line), nil
+		// Convert SpecFactPtrSlice to FactStmtSlice
+		facts := make(FactStmtSlice, len(intensionalSetObjStruct.Facts))
+		for i, fact := range intensionalSetObjStruct.Facts {
+			facts[i] = fact
+		}
+		return NewHaveIntensionalSetStmt(intensionalSetObjStruct.Param, intensionalSetObjStruct.ParentSet, facts, tb.line), nil
 	} else {
 		return nil, fmt.Errorf("expect enum set or intensional set")
 	}
@@ -3211,44 +3216,44 @@ func (p *TbParser) relaFact_intensionalSetFact_enumStmt_equals(tb *tokenBlock) (
 	return ret, nil
 }
 
-func (p *TbParser) intentionalSetBody(tb *tokenBlock) (string, Obj, []*SpecFactStmt, error) {
-	err := tb.header.skip(glob.KeySymbolLeftCurly)
-	if err != nil {
-		return "", nil, nil, parserErrAtTb(err, tb)
-	}
+// func (p *TbParser) intentionalSetBody(tb *tokenBlock) (string, Obj, []*SpecFactStmt, error) {
+// 	err := tb.header.skip(glob.KeySymbolLeftCurly)
+// 	if err != nil {
+// 		return "", nil, nil, parserErrAtTb(err, tb)
+// 	}
 
-	param, err := tb.header.next()
-	if err != nil {
-		return "", nil, nil, parserErrAtTb(err, tb)
-	}
+// 	param, err := tb.header.next()
+// 	if err != nil {
+// 		return "", nil, nil, parserErrAtTb(err, tb)
+// 	}
 
-	parentSet, err := p.Obj(tb)
-	if err != nil {
-		return "", nil, nil, parserErrAtTb(err, tb)
-	}
+// 	parentSet, err := p.Obj(tb)
+// 	if err != nil {
+// 		return "", nil, nil, parserErrAtTb(err, tb)
+// 	}
 
-	err = tb.header.skip(glob.KeySymbolColon)
-	if err != nil {
-		return "", nil, nil, parserErrAtTb(err, tb)
-	}
+// 	err = tb.header.skip(glob.KeySymbolColon)
+// 	if err != nil {
+// 		return "", nil, nil, parserErrAtTb(err, tb)
+// 	}
 
-	proofs := []*SpecFactStmt{}
-	for !tb.header.is(glob.KeySymbolRightCurly) {
-		curStmt, err := p.specFactStmt(tb)
-		if err != nil {
-			return "", nil, nil, parserErrAtTb(err, tb)
-		}
-		proofs = append(proofs, curStmt)
-		tb.header.skipIfIs(glob.KeySymbolComma)
-	}
+// 	proofs := []*SpecFactStmt{}
+// 	for !tb.header.is(glob.KeySymbolRightCurly) {
+// 		curStmt, err := p.specFactStmt(tb)
+// 		if err != nil {
+// 			return "", nil, nil, parserErrAtTb(err, tb)
+// 		}
+// 		proofs = append(proofs, curStmt)
+// 		tb.header.skipIfIs(glob.KeySymbolComma)
+// 	}
 
-	err = tb.header.skip(glob.KeySymbolRightCurly)
-	if err != nil {
-		return "", nil, nil, parserErrAtTb(err, tb)
-	}
+// 	err = tb.header.skip(glob.KeySymbolRightCurly)
+// 	if err != nil {
+// 		return "", nil, nil, parserErrAtTb(err, tb)
+// 	}
 
-	return param, parentSet, proofs, nil
-}
+// 	return param, parentSet, proofs, nil
+// }
 
 func (p *TbParser) bodyOfKnowProp(tb *tokenBlock) ([]FactStmt, []FactStmt, error) {
 	var err error
