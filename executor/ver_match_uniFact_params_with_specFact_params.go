@@ -84,7 +84,8 @@ type fcPair struct {
 	givenFc ast.Obj
 }
 
-// return map{freeVar: instVar}, unMatched fcPairs, matched?, err
+// 非常重要的函数
+// 返回：freeParam和给定obj的map，没有对应上的所有fc对构成的列表
 func (ver *Verifier) matchFcInSpecFactInKnownForallFactAndGivenFc_ReturnFreeParamFcMapAndUnmatchedFcPairs(knownFc ast.Obj, givenFc ast.Obj, freeVars map[string]struct{}, specFactName string) (map[string][]ast.Obj, []fcPair, error) {
 	switch asKnownFc := knownFc.(type) {
 	case ast.Atom:
@@ -158,6 +159,7 @@ func (ver *Verifier) matchFcsInKnownSpecFactAndGivenFc_ReturnFreeParamFcMapAndUn
 	return mergedMap, mergedPairs, nil
 }
 
+// 非常重要：返回uniFact下面的某个specFact里的所有的param推出来的 free param 和 给定obj的对应关系，以及所有的没有匹配上的fc的pair们组成的slice
 func (ver *Verifier) matchFcsInKnownSpecFactAndGivenFc_ReturnSliceOfFreeParamFcMapAndSliceOfUnmatchedFcPairs(knownFcs []ast.Obj, givenFcs []ast.Obj, freeVars map[string]struct{}, specFactName string) ([]map[string][]ast.Obj, [][]fcPair, error) {
 	if len(knownFcs) != len(givenFcs) {
 		return nil, [][]fcPair{}, fmt.Errorf("required parameters number of fact %s is %d, get %d", specFactName, len(knownFcs), len(givenFcs))
@@ -207,28 +209,43 @@ func (ver *Verifier) mergeSingleMatchedMapAndUnMatchedFcPairs(matchedMap map[str
 func (ver *Verifier) matchFcsByTheyAreAllSetBuilders(knownFc *ast.FnObj, givenFc *ast.FnObj, freeVars map[string]struct{}, specFactName string) (map[string][]ast.Obj, []fcPair, error) {
 	// Normalize both set builders by instantiating their bound param with the same fresh atom,
 	// then verify their definitions align (same parent set and facts). All involved facts must be the same.
-	randomParam := ver.Env.GenerateUndeclaredRandomName()
+	var knownStruct, givenStruct *ast.SetBuilderStruct
 
-	knownMap := map[string]ast.Obj{knownFc.Params[0].String(): ast.Atom(randomParam)}
-	instKnown, err := knownFc.Instantiate(knownMap)
-	if err != nil {
-		return nil, []fcPair{}, err
-	}
+	// set builder 里的参数不一样，不一定代表不同的set builder
+	if knownFc.Params[0].String() != givenFc.Params[1].String() {
+		randomParam := ver.Env.GenerateUndeclaredRandomName()
 
-	givenMap := map[string]ast.Obj{givenFc.Params[0].String(): ast.Atom(randomParam)}
-	instGiven, err := givenFc.Instantiate(givenMap)
-	if err != nil {
-		return nil, []fcPair{}, err
-	}
+		knownMap := map[string]ast.Obj{knownFc.Params[0].String(): ast.Atom(randomParam)}
+		instKnown, err := knownFc.Instantiate(knownMap)
+		if err != nil {
+			return nil, []fcPair{}, err
+		}
 
-	// Parse set builder structs after normalization
-	knownStruct, err := instKnown.(*ast.FnObj).ToSetBuilderStruct()
-	if err != nil {
-		return nil, []fcPair{}, err
-	}
-	givenStruct, err := instGiven.(*ast.FnObj).ToSetBuilderStruct()
-	if err != nil {
-		return nil, []fcPair{}, err
+		givenMap := map[string]ast.Obj{givenFc.Params[0].String(): ast.Atom(randomParam)}
+		instGiven, err := givenFc.Instantiate(givenMap)
+		if err != nil {
+			return nil, []fcPair{}, err
+		}
+
+		// Parse set builder structs after normalization
+		knownStruct, err = instKnown.(*ast.FnObj).ToSetBuilderStruct()
+		if err != nil {
+			return nil, []fcPair{}, err
+		}
+		givenStruct, err = instGiven.(*ast.FnObj).ToSetBuilderStruct()
+		if err != nil {
+			return nil, []fcPair{}, err
+		}
+	} else {
+		var err error
+		knownStruct, err = knownFc.ToSetBuilderStruct()
+		if err != nil {
+			return nil, []fcPair{}, err
+		}
+		givenStruct, err = givenFc.ToSetBuilderStruct()
+		if err != nil {
+			return nil, []fcPair{}, err
+		}
 	}
 
 	// 对应 两个 set builder obj 里的 fact。二者涉及到的specFact但凡有一个名字没对上，那我们就认为这两个obj完全不一样
