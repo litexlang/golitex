@@ -73,8 +73,8 @@ func (ver *Verifier) objIsDefinedAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *Ver
 		return ver.setDimFnRequirement(objAsFnObj, state)
 	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordDim) {
 		return ver.dimFnRequirement(objAsFnObj, state)
-	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordEnumSet) {
-		return ver.enumSetFnRequirement(objAsFnObj, state)
+	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordListSet) {
+		return ver.listSetFnRequirement(objAsFnObj, state)
 	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordSetBuilder) {
 		return ver.SetBuilderFnRequirement(objAsFnObj, state)
 	} else {
@@ -143,7 +143,7 @@ func (ver *Verifier) SetBuilderFnRequirement(objAsFnObj *ast.FnObj, state *VerSt
 	return NewEmptyExecTrue()
 }
 
-func (ver *Verifier) enumSetFnRequirement(objAsFnObj *ast.FnObj, state *VerState) ExecRet {
+func (ver *Verifier) listSetFnRequirement(objAsFnObj *ast.FnObj, state *VerState) ExecRet {
 	// 所有参数都是$in list set
 	for _, param := range objAsFnObj.Params {
 		verRet := ver.VerFactStmt(ast.NewInFactWithObj(param, ast.Atom(glob.KeywordSet)), state)
