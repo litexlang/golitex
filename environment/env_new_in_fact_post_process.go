@@ -385,7 +385,7 @@ func (e *Env) inFactPostProcess_TryIntensionalSet(fact *ast.SpecFactStmt) glob.G
 }
 
 func (e *Env) inFactPostProcess_InIntensionalSet(obj ast.Obj, intensionalSet *ast.FnObj) glob.GlobRet {
-	intensionalSetObjStruct, err := ast.FnObjToIntensionalSetObjStruct(intensionalSet)
+	intensionalSetObjStruct, err := intensionalSet.ToIntensionalSetObjStruct()
 	if err != nil {
 		return glob.ErrRet(err)
 	}

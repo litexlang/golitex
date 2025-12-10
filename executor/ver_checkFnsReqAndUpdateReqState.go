@@ -94,7 +94,7 @@ func (ver *Verifier) intensionalSetFnRequirement(objAsFnObj *ast.FnObj, state *V
 	}
 
 	// Parse intensional set struct to check facts
-	intensionalSetObjStruct, err := ast.FnObjToIntensionalSetObjStruct(objAsFnObj)
+	intensionalSetObjStruct, err := objAsFnObj.ToIntensionalSetObjStruct()
 	if err != nil {
 		return NewExecErr(fmt.Sprintf("failed to parse intensional set: %s", err))
 	}

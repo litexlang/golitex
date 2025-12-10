@@ -1350,7 +1350,7 @@ func (stmt *HaveFnEqualCaseByCaseStmt) String() string {
 
 func intensionalSetObjString(f *FnObj) string {
 	// Convert FnObj to IntensionalSetObj for easier processing
-	intensionalSet, err := FnObjToIntensionalSetObjStruct(f)
+	intensionalSet, err := f.ToIntensionalSetObjStruct()
 	if err != nil {
 		// Fallback to basic representation if conversion fails
 		return fmt.Sprintf("%s%s %s%s (parse error: %s)", glob.KeySymbolLeftCurly, f.Params[0].String(), f.Params[1].String(), glob.KeySymbolColon, err.Error())
