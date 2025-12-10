@@ -16,8 +16,8 @@ package litex_pipeline
 
 import (
 	"fmt"
+	ast "golitex/ast"
 	glob "golitex/glob"
-	parser "golitex/parser"
 	"os"
 	"strings"
 )
@@ -28,7 +28,7 @@ func FormatCode(path string) (glob.GlobRet, error) {
 		return glob.NewGlobErr(fmt.Sprintf("failed to read file %s: %s", path, err.Error())), err
 	}
 
-	topStmtSlice, err := parser.ParseSourceCode(string(content))
+	topStmtSlice, err := ast.ParseSourceCode(string(content))
 	if err != nil {
 		return glob.NewGlobErr(err.Error()), err
 	}

@@ -38,7 +38,7 @@ func TestIsValidName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := IsValidUseDefinedFcAtom(tt.name); (got == nil) != tt.want {
+			if got := IsValidUseDefinedAtomObj(tt.name); (got == nil) != tt.want {
 				panic("test failed")
 			}
 		})

@@ -94,7 +94,6 @@ func (defStmt *DefPropStmt) IffToPropUniFact() *UniFactStmt {
 func (defStmt *DefPropStmt) ToSpecFact() *SpecFactStmt {
 	propSpecFactParams := []Obj{}
 	for _, param := range defStmt.DefHeader.Params {
-		// propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.EmptyPkg, param))
 		propSpecFactParams = append(propSpecFactParams, Atom(param))
 	}
 
@@ -295,22 +294,22 @@ func IsObjAtomEqualToGivenString(obj Obj, name string) bool {
 	return string(objAtom) == name
 }
 
-func TransformEnumToUniFact(setName Obj, enumFcs []Obj) (*UniFactStmt, []*SpecFactStmt, []*SpecFactStmt) {
+func TransformEnumToUniFact(setName Obj, enumObjs []Obj) (*UniFactStmt, []*SpecFactStmt, []*SpecFactStmt) {
 	freeObjName := Atom(glob.RandomString(4))
 	equalFactsInOrFact := []*SpecFactStmt{}
 	itemsInSetFacts := []*SpecFactStmt{}
-	for _, obj := range enumFcs {
+	for _, obj := range enumObjs {
 		equalFactsInOrFact = append(equalFactsInOrFact, NewSpecFactStmt(TruePure, Atom(glob.KeySymbolEqual), []Obj{freeObjName, obj}, glob.BuiltinLine))
 		itemsInSetFacts = append(itemsInSetFacts, NewSpecFactStmt(TruePure, Atom(glob.KeywordIn), []Obj{obj, setName}, glob.BuiltinLine))
 	}
 
 	pairwiseNotEqualFacts := []*SpecFactStmt{}
-	for i := range len(enumFcs) {
-		for j := range len(enumFcs) {
+	for i := range len(enumObjs) {
+		for j := range len(enumObjs) {
 			if i == j {
 				continue
 			}
-			pairwiseNotEqualFacts = append(pairwiseNotEqualFacts, NewSpecFactStmt(FalsePure, Atom(glob.KeySymbolEqual), []Obj{enumFcs[i], enumFcs[j]}, glob.BuiltinLine))
+			pairwiseNotEqualFacts = append(pairwiseNotEqualFacts, NewSpecFactStmt(FalsePure, Atom(glob.KeySymbolEqual), []Obj{enumObjs[i], enumObjs[j]}, glob.BuiltinLine))
 		}
 	}
 

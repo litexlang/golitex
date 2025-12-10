@@ -44,22 +44,23 @@ func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *Ve
 
 	if checkRequirements && !state.ReqOk {
 		// REMARK: 这里 state 更新了： ReqOk 更新到了 true
-		if state, verRet = ver.checkFnsReqAndUpdateReqState(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
+		if verRet = ver.checkFnsReqAndUpdateReqState(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
 			return NewExecErr(verRet.String())
 		}
+		state.ReqOk = true
 
 		if !isValidEqualFact(stmt) {
 			return NewExecErr(fmt.Sprintf("invalid equal fact: %s", stmt))
 		}
 	}
 
-	if verRet := ver.verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(stmt.Params[0], stmt.Params[1], state); verRet.IsErr() || verRet.IsTrue() {
+	if verRet := ver.verObjEqual_ByBtRules_SpecMem_LogicMem_UniMem(stmt.Params[0], stmt.Params[1], state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
 
 	if leftAsFn, ok := stmt.Params[0].(*ast.FnObj); ok {
 		if rightAsFn, ok := stmt.Params[1].(*ast.FnObj); ok {
-			verRet := ver.verTrueEqualFact_FcFnEqual_NoCheckRequirements(leftAsFn, rightAsFn, state)
+			verRet := ver.verTrueEqualFact_ObjFnEqual_NoCheckRequirements(leftAsFn, rightAsFn, state)
 			if verRet.IsErr() || verRet.IsTrue() {
 				return verRet
 			}
@@ -75,7 +76,7 @@ func isValidEqualFact(stmt *ast.SpecFactStmt) bool {
 	return len(stmt.Params) == 2 && string(stmt.PropName) == glob.KeySymbolEqual
 }
 
-func (ver *Verifier) verFcEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
+func (ver *Verifier) verObjEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
 	if verRet := ver.verEqualBuiltin(left, right, state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
@@ -110,9 +111,9 @@ func (ver *Verifier) verEqualBuiltin(left ast.Obj, right ast.Obj, state *VerStat
 		return verRet
 	}
 
-	// if verRet := ver.verEqualByEitherLeftOrRightIsIntensionalSet(left, right, state); verRet.IsErr() || verRet.IsTrue() {
-	// 	return verRet
-	// }
+	if verRet := ver.verEqualByLeftAndRightAreSetBuilders(left, right, state); verRet.IsErr() || verRet.IsTrue() {
+		return verRet
+	}
 
 	return NewEmptyExecUnknown()
 }
@@ -278,7 +279,7 @@ func (ver *Verifier) getEqualObjsAndCmpOneByOne(curEnv *env.Env, left ast.Obj, r
 	return NewEmptyExecUnknown()
 }
 
-func (ver *Verifier) decomposeFcFnsAndCheckEquality(left ast.Obj, right ast.Obj, state *VerState, areEqualFcs func(left ast.Obj, right ast.Obj, state *VerState) ExecRet) ExecRet {
+func (ver *Verifier) decomposeObjFnsAndCheckEquality(left ast.Obj, right ast.Obj, state *VerState, areEqualObjs func(left ast.Obj, right ast.Obj, state *VerState) ExecRet) ExecRet {
 	if leftAsFn, ok := left.(*ast.FnObj); ok {
 		if rightAsFn, ok := right.(*ast.FnObj); ok {
 			if len(leftAsFn.Params) != len(rightAsFn.Params) {
@@ -286,13 +287,13 @@ func (ver *Verifier) decomposeFcFnsAndCheckEquality(left ast.Obj, right ast.Obj,
 			}
 
 			// compare head
-			verRet := areEqualFcs(leftAsFn.FnHead, rightAsFn.FnHead, state)
+			verRet := areEqualObjs(leftAsFn.FnHead, rightAsFn.FnHead, state)
 			if verRet.IsErr() || verRet.IsUnknown() {
 				return verRet
 			}
 			// compare params
 			for i := range leftAsFn.Params {
-				verRet := areEqualFcs(leftAsFn.Params[i], rightAsFn.Params[i], state)
+				verRet := areEqualObjs(leftAsFn.Params[i], rightAsFn.Params[i], state)
 				if verRet.IsErr() || verRet.IsUnknown() {
 					return verRet
 				}
@@ -304,41 +305,36 @@ func (ver *Verifier) decomposeFcFnsAndCheckEquality(left ast.Obj, right ast.Obj,
 	return NewEmptyExecUnknown()
 }
 
-// func (ver *Verifier) verEqualByEitherLeftOrRightIsIntensionalSet(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
-// 	if verRet := ver.verEqualByRightIsIntensionalSet(left, right, state); verRet.IsErr() || verRet.IsTrue() {
-// 		return verRet
-// 	}
+func (ver *Verifier) verEqualByLeftAndRightAreSetBuilders(left, right ast.Obj, state *VerState) ExecRet {
+	leftSetBuilder := ver.Env.GetSetBuilderEqualToObj(left)
+	if leftSetBuilder == nil {
+		return NewEmptyExecUnknown()
+	}
 
-// 	if verRet := ver.verEqualByRightIsIntensionalSet(right, left, state); verRet.IsErr() || verRet.IsTrue() {
-// 		return verRet
-// 	}
+	rightSetBuilder := ver.Env.GetSetBuilderEqualToObj(right)
+	if rightSetBuilder == nil {
+		return NewEmptyExecUnknown()
+	}
 
-// 	return NewEmptyExecUnknown()
-// }
+	// 生成一个随机的param，把两个set builder的param都替换成这个随机param
+	randomParam := ver.Env.GenerateUndeclaredRandomName()
 
-// func (ver *Verifier) verEqualByRightIsIntensionalSet(left, right ast.Obj, state *VerState) ExecRet {
-// 	if !ast.IsIntensionalSetObj(right) {
-// 		return NewEmptyExecUnknown()
-// 	}
+	leftUniMap := map[string]ast.Obj{leftSetBuilder.Params[0].String(): ast.Atom(randomParam)}
+	instLeftSetBuilder, err := leftSetBuilder.Instantiate(leftUniMap)
+	if err != nil {
+		return NewExecErr(err.Error())
+	}
 
-// }
+	rightUniMap := map[string]ast.Obj{rightSetBuilder.Params[0].String(): ast.Atom(randomParam)}
+	instRightSetBuilder, err := right.Instantiate(rightUniMap)
+	if err != nil {
+		return NewExecErr(err.Error())
+	}
 
-// func (ver *Verifier) verLeftSetAndRightSetAreEqualByAllItemsInLeftAreInRightAndViceVersa(left, right ast.Obj, state *VerState) ExecRet {
-// 	if ver.ObjIsSet(left).IsNotTrue() || ver.ObjIsSet(right).IsNotTrue() {
-// 		return NewEmptyExecUnknown()
-// 	}
+	// 它们作为string相等
+	if instLeftSetBuilder.String() != instRightSetBuilder.String() {
+		return NewEmptyExecUnknown()
+	}
 
-// 	leftItemsInRightFact := ast.NewUniFact([]string{"x"}, []ast.Obj{left}, []ast.FactStmt{}, []ast.FactStmt{ast.NewInFact("x", right)}, glob.BuiltinLine)
-// 	ret := ver.VerFactStmt(leftItemsInRightFact, state)
-// 	if ret.IsNotTrue() {
-// 		return ret
-// 	}
-
-// 	rightItemsInLeftFact := ast.NewUniFact([]string{"x"}, []ast.Obj{right}, []ast.FactStmt{}, []ast.FactStmt{ast.NewInFact("x", left)}, glob.BuiltinLine)
-// 	ret = ver.VerFactStmt(rightItemsInLeftFact, state)
-// 	if ret.IsNotTrue() {
-// 		return ret
-// 	}
-
-// 	return NewExecTrue(fmt.Sprintf("By Definition of intensional set"))
-// }
+	return NewExecTrue(fmt.Sprintf("%s = %s, by definition of set builder", left, right))
+}

@@ -18,7 +18,6 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
-	parser "golitex/parser"
 	"strconv"
 )
 
@@ -37,7 +36,7 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 		return ret
 	}
 
-	if ret := e.inFactPostProcess_TryFnTemplateFcFn(fact); ret.IsTrue() || ret.IsErr() {
+	if ret := e.inFactPostProcess_TryFnTemplateFnObj(fact); ret.IsTrue() || ret.IsErr() {
 		return ret
 	}
 
@@ -45,11 +44,11 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 		return ret
 	}
 
-	if ret := e.inFactPostProcess_TryEnumSet(fact); ret.IsTrue() || ret.IsErr() {
+	if ret := e.inFactPostProcess_TryListSet(fact); ret.IsTrue() || ret.IsErr() {
 		return ret
 	}
 
-	if ret := e.inFactPostProcess_TryIntensionalSet(fact); ret.IsTrue() || ret.IsErr() {
+	if ret := e.inFactPostProcess_TrySetBuilder(fact); ret.IsTrue() || ret.IsErr() {
 		return ret
 	}
 
@@ -77,8 +76,7 @@ func (e *Env) inFactPostProcess_TryFnTemplate(fact *ast.SpecFactStmt) glob.GlobR
 	return glob.NewGlobUnknown("")
 }
 
-// inFactPostProcess_TryFnTemplateFcFn handles a $in fnTemplate_FcFn case
-func (e *Env) inFactPostProcess_TryFnTemplateFcFn(fact *ast.SpecFactStmt) glob.GlobRet {
+func (e *Env) inFactPostProcess_TryFnTemplateFnObj(fact *ast.SpecFactStmt) glob.GlobRet {
 	fnFn, ok := fact.Params[1].(*ast.FnObj)
 	if !ok || !ast.IsFnTemplate_ObjFn(fnFn) {
 		return glob.NewGlobUnknown("")
@@ -86,7 +84,7 @@ func (e *Env) inFactPostProcess_TryFnTemplateFcFn(fact *ast.SpecFactStmt) glob.G
 
 	fnTStruct, ok := ast.ObjFnT_To_FnTStruct(fnFn)
 	if !ok {
-		return glob.ErrRet(fmt.Errorf("%s is not fcFn type fn template", fnFn.String()))
+		return glob.ErrRet(fmt.Errorf("%s is not obj type fn template", fnFn.String()))
 	}
 
 	ret := e.InsertFnInFnTT(fact.Params[0], fnTStruct)
@@ -154,31 +152,6 @@ func (e *Env) inFactPostProcess_InCart(obj ast.Obj, cartSet *ast.FnObj) glob.Glo
 	return glob.TrueRet("")
 }
 
-// func (e *Env) inFactPostProcess_InSetFnRetValue(fact *ast.SpecFactStmt, def *ast.HaveSetFnStmt) glob.GlobRet {
-// 	inFactRightParamAsFcFnPt, ok := fact.Params[1].(*ast.FnObj)
-// 	if !ok {
-// 		return glob.ErrRet(fmt.Errorf("in fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
-// 	}
-
-// 	uniMap := map[string]ast.Obj{}
-// 	for i, param := range def.DefHeader.Params {
-// 		uniMap[param] = inFactRightParamAsFcFnPt.Params[i]
-// 	}
-
-// 	defToIntensionalSetStmt := def.ToIntensionalSetStmt()
-// 	instantiated, err := defToIntensionalSetStmt.InstantiateFact(uniMap)
-// 	if err != nil {
-// 		return glob.ErrRet(err)
-// 	}
-
-// 	ret := e.NewFact(instantiated)
-// 	if ret.IsErr() {
-// 		return ret
-// 	}
-
-// 	return glob.TrueRet("")
-// }
-
 func (e *Env) inFactPostProcess_InFnTemplate(fact *ast.SpecFactStmt) (bool, glob.GlobRet) {
 	if _, ok := fact.Params[1].(*ast.FnObj); !ok {
 		return false, glob.TrueRet("")
@@ -189,12 +162,12 @@ func (e *Env) inFactPostProcess_InFnTemplate(fact *ast.SpecFactStmt) (bool, glob
 		return false, glob.TrueRet("")
 	}
 
-	def := e.GetFnTemplateDef_KeyIsFcHead(fact.Params[1].(*ast.FnObj))
+	def := e.GetFnTemplateDef_KeyIsObjHead(fact.Params[1].(*ast.FnObj))
 	if def == nil {
 		return false, glob.TrueRet("")
 	}
 
-	fnTNoName, ok, ret := e.getInstantiatedFnTTOfFcFn(fact.Params[1].(*ast.FnObj))
+	fnTNoName, ok, ret := e.getInstantiatedFnTTOfFnObj(fact.Params[1].(*ast.FnObj))
 	if ret.IsErr() {
 		return false, ret
 	}
@@ -333,23 +306,23 @@ func (e *Env) equalFactPostProcess_tupleEquality(left ast.Obj, right ast.Obj) gl
 	return glob.TrueRet("")
 }
 
-// equalFactPostProcess_enumSetEquality 处理 x = {1, 2, 3} 的情况
-// 如果右边是 enum set（直接或通过 equal facts），则创建一个 or fact，表示 x 等于 enum set 中的某一个元素
-func (e *Env) equalFactPostProcess_enumSetEquality(left ast.Obj, right ast.Obj) glob.GlobRet {
-	// 尝试获取 enum set（可能是直接的，也可能是通过 equal facts 得到的）
-	enumSetObj := e.GetObjEnumSet(right)
-	if enumSetObj == nil {
+// equalFactPostProcess_listSetEquality 处理 x = {1, 2, 3} 的情况
+// 如果右边是 list set（直接或通过 equal facts），则创建一个 or fact，表示 x 等于 list set 中的某一个元素
+func (e *Env) equalFactPostProcess_listSetEquality(left ast.Obj, right ast.Obj) glob.GlobRet {
+	// 尝试获取 list set（可能是直接的，也可能是通过 equal facts 得到的）
+	listSetObj := e.GetListSetEqualToObj(right)
+	if listSetObj == nil {
 		return glob.TrueRet("")
 	}
 
-	enumSet, ok := enumSetObj.(*ast.FnObj)
+	listSetFnObj, ok := listSetObj.(*ast.FnObj)
 	if !ok {
-		return glob.ErrRet(fmt.Errorf("expected enum set to be FnObj, got %T", enumSetObj))
+		return glob.ErrRet(fmt.Errorf("expected list set to be FnObj, got %T", listSetObj))
 	}
 
-	// 创建一个 or fact，表示 left 等于 enum set 中的某一个元素
+	// 创建一个 or fact，表示 left 等于 list set 中的某一个元素
 	orFact := ast.NewOrStmt([]*ast.SpecFactStmt{}, glob.BuiltinLine)
-	for _, param := range enumSet.Params {
+	for _, param := range listSetFnObj.Params {
 		orFact.Facts = append(orFact.Facts, ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left, param}, glob.BuiltinLine))
 	}
 	ret := e.NewFact(orFact)
@@ -359,7 +332,7 @@ func (e *Env) equalFactPostProcess_enumSetEquality(left ast.Obj, right ast.Obj) 
 
 	// count(a) = len
 	countFn := ast.NewFnObj(ast.Atom(glob.KeywordCount), []ast.Obj{left})
-	countValue := ast.Atom(strconv.Itoa(len(enumSet.Params)))
+	countValue := ast.Atom(strconv.Itoa(len(listSetFnObj.Params)))
 	countEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{countFn, countValue}, glob.BuiltinLine)
 	ret = e.NewFact(countEqualFact)
 	if ret.IsErr() {
@@ -371,12 +344,12 @@ func (e *Env) equalFactPostProcess_enumSetEquality(left ast.Obj, right ast.Obj) 
 	return e.NewFact(isFiniteFact)
 }
 
-// inFactPostProcess_InEnumSet handles postprocessing for a $in enumset(...)
-// It generates an or fact indicating that the left param equals one of the enumset params
-func (e *Env) inFactPostProcess_InEnumSet(obj ast.Obj, enumSet *ast.FnObj) glob.GlobRet {
+// inFactPostProcess_InListSet handles postprocessing for a $in listSet(...)
+// It generates an or fact indicating that the left param equals one of the listSetFnObj params
+func (e *Env) inFactPostProcess_InListSet(obj ast.Obj, listSetFnObj *ast.FnObj) glob.GlobRet {
 	// 用所有的param做一个or出来，说明left等于其中的一个
 	orFact := ast.NewOrStmt([]*ast.SpecFactStmt{}, glob.BuiltinLine)
-	for _, param := range enumSet.Params {
+	for _, param := range listSetFnObj.Params {
 		orFact.Facts = append(orFact.Facts, ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{obj, param}, glob.BuiltinLine))
 	}
 	ret := e.NewFact(orFact)
@@ -387,41 +360,41 @@ func (e *Env) inFactPostProcess_InEnumSet(obj ast.Obj, enumSet *ast.FnObj) glob.
 	return glob.TrueRet("")
 }
 
-func (e *Env) inFactPostProcess_TryEnumSet(fact *ast.SpecFactStmt) glob.GlobRet {
-	// Try to get enumset, either directly or from equal facts
-	enumSetObj := e.GetObjEnumSet(fact.Params[1])
-	if enumSetObj == nil {
+func (e *Env) inFactPostProcess_TryListSet(fact *ast.SpecFactStmt) glob.GlobRet {
+	// Try to get listSet, either directly or from equal facts
+	listSetObj := e.GetListSetEqualToObj(fact.Params[1])
+	if listSetObj == nil {
 		return glob.NewGlobUnknown("")
 	}
 
-	enumSet, ok := enumSetObj.(*ast.FnObj)
+	listSetFnObj, ok := listSetObj.(*ast.FnObj)
 	if !ok {
-		return glob.ErrRet(fmt.Errorf("expected enum set to be FnObj, got %T", enumSetObj))
+		return glob.ErrRet(fmt.Errorf("expected list set to be FnObj, got %T", listSetObj))
 	}
 
-	return e.inFactPostProcess_InEnumSet(fact.Params[0], enumSet)
+	return e.inFactPostProcess_InListSet(fact.Params[0], listSetFnObj)
 }
 
-func (e *Env) inFactPostProcess_TryIntensionalSet(fact *ast.SpecFactStmt) glob.GlobRet {
-	intensionalSetObj := e.GetObjIntensionalSet(fact.Params[1])
-	if intensionalSetObj == nil {
+func (e *Env) inFactPostProcess_TrySetBuilder(fact *ast.SpecFactStmt) glob.GlobRet {
+	setBuilderObj := e.GetSetBuilderEqualToObj(fact.Params[1])
+	if setBuilderObj == nil {
 		return glob.NewGlobUnknown("")
 	}
 
-	return e.inFactPostProcess_InIntensionalSet(fact.Params[0], intensionalSetObj)
+	return e.inFactPostProcess_InSetBuilder(fact.Params[0], setBuilderObj)
 }
 
-func (e *Env) inFactPostProcess_InIntensionalSet(obj ast.Obj, intensionalSet *ast.FnObj) glob.GlobRet {
-	paramAsString, parentSet, facts, err := parser.GetParamParentSetFactsFromIntensionalSet(intensionalSet)
+func (e *Env) inFactPostProcess_InSetBuilder(obj ast.Obj, setBuilderObj *ast.FnObj) glob.GlobRet {
+	setBuilderStruct, err := setBuilderObj.ToSetBuilderStruct()
 	if err != nil {
 		return glob.ErrRet(err)
 	}
 
-	uniMap := map[string]ast.Obj{paramAsString: obj}
+	uniMap := map[string]ast.Obj{setBuilderStruct.Param: obj}
 
 	instFacts := []ast.FactStmt{}
 
-	for _, fact := range facts {
+	for _, fact := range setBuilderStruct.Facts {
 		instFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return glob.ErrRet(err)
@@ -430,7 +403,7 @@ func (e *Env) inFactPostProcess_InIntensionalSet(obj ast.Obj, intensionalSet *as
 	}
 
 	// in parent set
-	inParentSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{obj, parentSet}, glob.BuiltinLine)
+	inParentSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{obj, setBuilderStruct.ParentSet}, glob.BuiltinLine)
 	ret := e.NewFact(inParentSetFact)
 	if ret.IsErr() {
 		return glob.ErrRet(err)

@@ -18,7 +18,6 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
-	parser "golitex/parser"
 	"strconv"
 )
 
@@ -130,7 +129,7 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 	}
 
 	// x $in {x R: x > 0}
-	verRet = ver.verInFactByRightIsIntensionalSet(stmt, state)
+	verRet = ver.verInFactByRightIsSetBuilder(stmt, state)
 	if verRet.IsErr() {
 		return verRet
 	}
@@ -138,21 +137,13 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 		return verRet
 	}
 
-	verRet = ver.verInFactByRightIsEnumSet(stmt, state)
+	verRet = ver.verInFactByRightIsListSet(stmt, state)
 	if verRet.IsErr() {
 		return verRet
 	}
 	if verRet.IsTrue() {
 		return verRet
 	}
-
-	// verRet = ver.verInFactByLeftIsEnumSetRightIsKeywordFiniteSet(stmt, state)
-	// if verRet.IsErr() {
-	// 	return verRet
-	// }
-	// if verRet.IsTrue() {
-	// 	return verRet
-	// }
 
 	return NewEmptyExecUnknown()
 }
@@ -905,89 +896,71 @@ func (ver *Verifier) verInFactByLeftIsIndexOfObjInSomeSet(stmt *ast.SpecFactStmt
 	return NewEmptyExecUnknown()
 }
 
-func (ver *Verifier) verInFactByRightIsIntensionalSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	intensionalSet := ver.Env.GetObjIntensionalSet(stmt.Params[1])
-	if intensionalSet == nil {
+func (ver *Verifier) verInFactByRightIsSetBuilder(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	setBuilder := ver.Env.GetSetBuilderEqualToObj(stmt.Params[1])
+	if setBuilder == nil {
 		return NewEmptyExecUnknown()
 	}
 
-	param, parentSet, facts, err := parser.GetParamParentSetFactsFromIntensionalSet(intensionalSet)
+	setBuilderStruct, err := setBuilder.ToSetBuilderStruct()
 	if err != nil {
 		return NewExecErr(err.Error())
 	}
 
-	uniMap := map[string]ast.Obj{param: stmt.Params[0]}
+	uniMap := map[string]ast.Obj{setBuilderStruct.Param: stmt.Params[0]}
 
-	instFacts, err := facts.InstantiateFact(uniMap)
-	if err != nil {
-		return NewExecErr(err.Error())
+	// Instantiate all facts
+	instFacts := []ast.FactStmt{}
+	for _, fact := range setBuilderStruct.Facts {
+		instFact, err := fact.InstantiateFact(uniMap)
+		if err != nil {
+			return NewExecErr(err.Error())
+		}
+		instFacts = append(instFacts, instFact)
 	}
 
-	instParentSet, err := parentSet.Instantiate(uniMap)
-	if err != nil {
-		return NewExecErr(err.Error())
+	// First, verify that the element is in the parent set
+	instParentSetFact := ast.NewInFactWithObj(stmt.Params[0], setBuilderStruct.ParentSet)
+	parentSetRet := ver.VerFactStmt(instParentSetFact, state)
+	if parentSetRet.IsNotTrue() {
+		return parentSetRet
 	}
 
-	instParentSetFact := ast.NewInFactWithObj(stmt.Params[0], instParentSet)
-	verRet := ver.VerFactStmt(instParentSetFact, state)
-	if verRet.IsErr() {
-		return verRet
-	}
-	if verRet.IsTrue() {
-		return verRet
-	}
+	// Then, verify all facts are true
 	for _, fact := range instFacts {
 		verRet := ver.VerFactStmt(fact, state)
-		if verRet.IsErr() {
-			return verRet
-		}
-		if verRet.IsTrue() {
-			return verRet
+		if verRet.IsNotTrue() {
+			return NewEmptyExecUnknown()
 		}
 	}
 
-	return NewEmptyExecUnknown()
+	return NewExecTrue(fmt.Sprintf("%s is true proved by definition of set builder", stmt.String()))
 }
 
-func (ver *Verifier) verInFactByRightIsEnumSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	enumObj := ver.Env.GetObjEnumSet(stmt.Params[1])
-	if enumObj == nil {
+func (ver *Verifier) verInFactByRightIsListSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	listSetObj := ver.Env.GetListSetEqualToObj(stmt.Params[1])
+	if listSetObj == nil {
 		return NewEmptyExecUnknown()
 	}
 
-	enumSet, ok := enumObj.(*ast.FnObj)
+	listSetFnObj, ok := listSetObj.(*ast.FnObj)
 	if !ok {
 		return NewEmptyExecUnknown()
 	}
 
-	// 遍历 enum set 的所有元素，检查是否有任何一个等于 stmt.Params[0]
-	for _, enumItem := range enumSet.Params {
-		equalFact := ast.NewEqualFact(stmt.Params[0], enumItem)
+	// 遍历 list set 的所有元素，检查是否有任何一个等于 stmt.Params[0]
+	for _, item := range listSetFnObj.Params {
+		equalFact := ast.NewEqualFact(stmt.Params[0], item)
 		verRet := ver.VerFactStmt(equalFact, state)
 		if verRet.IsErr() {
 			return verRet
 		}
 		if verRet.IsTrue() {
 			// 找到了相等的元素，返回 true
-			return NewExecTrue(fmt.Sprintf("%s is true proved by\n%s = %s and %s $in %s", stmt.String(), stmt.Params[0], enumItem, enumItem, stmt.Params[1]))
+			return NewExecTrue(fmt.Sprintf("%s is true proved by\n%s = %s and %s $in %s", stmt.String(), stmt.Params[0], item, item, stmt.Params[1]))
 		}
 	}
 
 	// 没有找到相等的元素，返回 unknown
 	return NewEmptyExecUnknown()
 }
-
-// func (ver *Verifier) verInFactByLeftIsEnumSetRightIsKeywordFiniteSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-// 	if !ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordFiniteSet) {
-// 		return NewEmptyExecUnknown()
-// 	}
-
-// 	enumObj := ver.Env.GetObjEnumSet(stmt.Params[0])
-// 	if enumObj == nil {
-// 		return NewEmptyExecUnknown()
-// 	}
-
-// 	_ = state
-
-// 	return NewExecTrue("Any enumeration set is in finite set")
-// }

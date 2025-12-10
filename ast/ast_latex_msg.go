@@ -517,46 +517,6 @@ func (s *ClaimProveByContradictionStmt) ToLatexString() string {
 	return claimProveBodyToLatexString(s.ClaimProveStmt.ToCheckFact, s.ClaimProveStmt.Proofs, false)
 }
 
-// func (s *EnumStmt) ToLatexString() string {
-// 	var builder strings.Builder
-// 	builder.WriteString(s.CurSet.ToLatexString())
-// 	builder.WriteString(" = \\{")
-
-// 	strSlice := make([]string, len(s.Items))
-// 	for i := range len(s.Items) {
-// 		strSlice[i] = s.Items[i].ToLatexString()
-// 	}
-// 	builder.WriteString(strings.Join(strSlice, ", "))
-
-// 	builder.WriteString("\\}")
-// 	return fmt.Sprintf("$%s$", strings.ReplaceAll(builder.String(), "$", ""))
-// }
-
-func intentionalSetOrIntensionalSetToLatexString(param string, parentSet Obj, proofs SpecFactPtrSlice) string {
-	var builder strings.Builder
-	builder.WriteString(" = \\{")
-	builder.WriteString(param)
-	builder.WriteString(" $\\in$ ")
-	builder.WriteString(parentSet.ToLatexString())
-	builder.WriteString(" | ")
-	proofStrSlice := make([]string, len(proofs))
-	for i := range len(proofs) {
-		proofStrSlice[i] = proofs[i].ToLatexString()
-	}
-	builder.WriteString(strings.Join(proofStrSlice, ", "))
-	builder.WriteString("\\}")
-	return fmt.Sprintf("$%s$", strings.ReplaceAll(builder.String(), "$", ""))
-}
-
-// func (s *IntensionalSetStmt) ToLatexString() string {
-// 	var builder strings.Builder
-// 	builder.WriteString(s.CurSet.ToLatexString())
-
-// 	builder.WriteString(intentionalSetOrIntensionalSetToLatexString(s.Param, s.ParentSet, s.Facts))
-
-// 	return builder.String()
-// }
-
 func (s *ClaimPropStmt) ToLatexString() string {
 	var builder strings.Builder
 
@@ -622,34 +582,6 @@ func (s *HaveObjInNonEmptySetStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (s *HaveEnumSetStmt) ToLatexString() string {
-	var builder strings.Builder
-	builder.WriteString("\\begin{definition}[Set Exist By Axioms of Set Theory]")
-
-	builder.WriteString("We have a set: ")
-
-	builder.WriteString(s.EnumSetObj.ToLatexString())
-
-	builder.WriteString(".\n")
-
-	builder.WriteString("\\end{definition}")
-	return builder.String()
-}
-
-func (s *HaveIntensionalSetStmt) ToLatexString() string {
-	var builder strings.Builder
-	builder.WriteString("\\begin{definition}[Set Exist By Axioms of Set Theory]")
-	builder.WriteString("We have a set: ")
-	builder.WriteString(s.Param)
-	builder.WriteString(" $\\in$ ")
-	builder.WriteString(s.ParentSet.ToLatexString())
-	builder.WriteString(" | ")
-	builder.WriteString(strings.Join(s.Facts.factStmtSliceToLatexStringSlice(), ", "))
-	builder.WriteString(".\n")
-	builder.WriteString("\\end{definition}")
-	return builder.String()
-}
-
 func (s *HaveCartSetStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("\\begin{definition}[Set Exist By Axioms of Set Theory]")
@@ -691,43 +623,27 @@ func (s *HaveObjFromCartSetStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (s *HaveSetFnStmt) ToLatexString() string {
-	var builder strings.Builder
-	builder.WriteString("\\begin{definition}[Function Exist By Axioms of Set Theory]")
-	builder.WriteString(fmt.Sprintf("We have a function %s returning a set, whose domain is: ", s.DefHeader.NameWithParamsLatexString()))
-	builder.WriteString(strings.Join(paramInParamSetInFactLatexStringSlice(s.DefHeader.Params, s.DefHeader.ParamSets), ", "))
-	builder.WriteString(". ")
-	builder.WriteString(s.DefHeader.NameWithParamsLatexString())
+// func (s *HaveSetDefinedByReplacementStmt) ToLatexString() string {
+// 	var builder strings.Builder
+// 	builder.WriteString("\\begin{definition}[Set Exist By Axioms of Set Theory]")
 
-	builder.WriteString(intentionalSetOrIntensionalSetToLatexString(s.Param, s.ParentSet, s.Proofs))
+// 	builder.WriteString("By axiom of replacement, we have a set: ")
+// 	{
+// 		var setBuilder strings.Builder
+// 		setBuilder.WriteString(s.Name)
+// 		setBuilder.WriteString(" = \\{")
+// 		setBuilder.WriteString("y $\\in$ ")
+// 		setBuilder.WriteString(s.DomSet.ToLatexString())
+// 		setBuilder.WriteString(" | \\textnormal{there exists} x \\textnormal{s.t.} ")
+// 		setBuilder.WriteString(s.PropName.String())
+// 		setBuilder.WriteString("(x, y) \\textnormal{is true}.")
+// 		setBuilder.WriteString("\\}")
+// 		builder.WriteString(fmt.Sprintf("$%s$", strings.ReplaceAll(setBuilder.String(), "$", "")))
+// 	}
 
-	builder.WriteString(".")
-
-	builder.WriteString("\n\\end{definition}")
-	return builder.String()
-}
-
-func (s *HaveSetDefinedByReplacementStmt) ToLatexString() string {
-	var builder strings.Builder
-	builder.WriteString("\\begin{definition}[Set Exist By Axioms of Set Theory]")
-
-	builder.WriteString("By axiom of replacement, we have a set: ")
-	{
-		var setBuilder strings.Builder
-		setBuilder.WriteString(s.Name)
-		setBuilder.WriteString(" = \\{")
-		setBuilder.WriteString("y $\\in$ ")
-		setBuilder.WriteString(s.DomSet.ToLatexString())
-		setBuilder.WriteString(" | \\textnormal{there exists} x \\textnormal{s.t.} ")
-		setBuilder.WriteString(s.PropName.String())
-		setBuilder.WriteString("(x, y) \\textnormal{is true}.")
-		setBuilder.WriteString("\\}")
-		builder.WriteString(fmt.Sprintf("$%s$", strings.ReplaceAll(setBuilder.String(), "$", "")))
-	}
-
-	builder.WriteString("\n\\end{definition}")
-	return builder.String()
-}
+// 	builder.WriteString("\n\\end{definition}")
+// 	return builder.String()
+// }
 
 func (s *NamedUniFactStmt) ToLatexString() string {
 	var builder strings.Builder
@@ -973,7 +889,7 @@ func (s *DefAlgoStmt) ToLatexString() string {
 }
 
 func (s *EvalStmt) ToLatexString() string {
-	return fmt.Sprintf("%s(%s)", glob.KeywordEval, s.FcsToEval.ToLatexString())
+	return fmt.Sprintf("%s(%s)", glob.KeywordEval, s.ObjToEval.ToLatexString())
 }
 
 func (s *DefProveAlgoStmt) ToLatexString() string {

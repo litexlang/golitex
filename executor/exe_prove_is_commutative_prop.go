@@ -61,11 +61,11 @@ func (exec *Executor) proveIsCommutativePropStmtMainLogic(stmt *ast.ProveIsCommu
 
 	params := []string{}
 	for _, param := range stmt.SpecFact.Params {
-		asFcAtom, ok := param.(ast.Atom)
+		asAtomObj, ok := param.(ast.Atom)
 		if !ok {
 			return false, fmt.Errorf("param %s is not an atom", param)
 		}
-		params = append(params, string(asFcAtom))
+		params = append(params, string(asAtomObj))
 	}
 
 	execState := exec.defLetStmt(ast.NewDefLetStmt(params, []ast.Obj{def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[1]}, []ast.FactStmt{}, stmt.Line))

@@ -12,15 +12,14 @@
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
-package litex_parser
+package litex_ast
 
 import (
 	"fmt"
-	ast "golitex/ast"
 	glob "golitex/glob"
 )
 
-func (p *TbParser) algoStmt(tb *tokenBlock) (ast.AlgoStmt, error) {
+func (p *TbParser) algoStmt(tb *tokenBlock) (AlgoStmt, error) {
 	if tb.header.is(glob.KeywordIf) {
 		return p.algoIfStmt(tb)
 	}
@@ -33,7 +32,7 @@ func (p *TbParser) algoStmt(tb *tokenBlock) (ast.AlgoStmt, error) {
 	// panic("not implemented")
 }
 
-func (p *TbParser) proveAlgoStmt(tb *tokenBlock) (ast.ProveAlgoStmt, error) {
+func (p *TbParser) proveAlgoStmt(tb *tokenBlock) (ProveAlgoStmt, error) {
 	if tb.header.is(glob.KeywordIf) {
 		return p.proveAlgoIfStmt(tb)
 	}
@@ -47,7 +46,7 @@ func (p *TbParser) proveAlgoStmt(tb *tokenBlock) (ast.ProveAlgoStmt, error) {
 	return nil, fmt.Errorf("unexpected statement in prove_algo, only 'if' and 'return' are allowed")
 }
 
-func (p *TbParser) proveAlgoIfStmt(tb *tokenBlock) (*ast.ProveAlgoIfStmt, error) {
+func (p *TbParser) proveAlgoIfStmt(tb *tokenBlock) (*ProveAlgoIfStmt, error) {
 	err := tb.header.skip(glob.KeywordIf)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -58,7 +57,7 @@ func (p *TbParser) proveAlgoIfStmt(tb *tokenBlock) (*ast.ProveAlgoIfStmt, error)
 		return nil, parserErrAtTb(err, tb)
 	}
 
-	thenFacts := []ast.ProveAlgoStmt{}
+	thenFacts := []ProveAlgoStmt{}
 	for _, bodyStmt := range tb.body {
 		stmt, err := p.proveAlgoStmt(&bodyStmt)
 		if err != nil {
@@ -67,10 +66,10 @@ func (p *TbParser) proveAlgoIfStmt(tb *tokenBlock) (*ast.ProveAlgoIfStmt, error)
 		thenFacts = append(thenFacts, stmt)
 	}
 
-	return ast.NewProveAlgoIfStmt(condition, thenFacts, tb.line), nil
+	return NewProveAlgoIfStmt(condition, thenFacts, tb.line), nil
 }
 
-func (p *TbParser) algoIfStmt(tb *tokenBlock) (*ast.AlgoIfStmt, error) {
+func (p *TbParser) algoIfStmt(tb *tokenBlock) (*AlgoIfStmt, error) {
 	err := tb.header.skip(glob.KeywordIf)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -81,7 +80,7 @@ func (p *TbParser) algoIfStmt(tb *tokenBlock) (*ast.AlgoIfStmt, error) {
 		return nil, parserErrAtTb(err, tb)
 	}
 
-	thenFacts := []ast.AlgoStmt{}
+	thenFacts := []AlgoStmt{}
 	for _, bodyStmt := range tb.body {
 		stmt, err := p.algoStmt(&bodyStmt)
 		if err != nil {
@@ -90,10 +89,10 @@ func (p *TbParser) algoIfStmt(tb *tokenBlock) (*ast.AlgoIfStmt, error) {
 		thenFacts = append(thenFacts, stmt)
 	}
 
-	return ast.NewAlgoIfStmt(condition, thenFacts, tb.line), nil
+	return NewAlgoIfStmt(condition, thenFacts, tb.line), nil
 }
 
-func (p *TbParser) algoReturnStmt(tb *tokenBlock) (*ast.AlgoReturnStmt, error) {
+func (p *TbParser) algoReturnStmt(tb *tokenBlock) (*AlgoReturnStmt, error) {
 	err := tb.header.skip(glob.KeywordReturn)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
@@ -104,10 +103,10 @@ func (p *TbParser) algoReturnStmt(tb *tokenBlock) (*ast.AlgoReturnStmt, error) {
 		return nil, parserErrAtTb(err, tb)
 	}
 
-	return ast.NewAlgoReturnStmt(obj, tb.line), nil
+	return NewAlgoReturnStmt(obj, tb.line), nil
 }
 
-func (p *TbParser) proveAlgoReturnStmt(tb *tokenBlock) (*ast.ProveAlgoReturnStmt, error) {
+func (p *TbParser) proveAlgoReturnStmt(tb *tokenBlock) (*ProveAlgoReturnStmt, error) {
 	err := tb.header.skip(glob.KeywordReturn)
 	if err != nil {
 		return nil, err
@@ -115,7 +114,7 @@ func (p *TbParser) proveAlgoReturnStmt(tb *tokenBlock) (*ast.ProveAlgoReturnStmt
 
 	// 首先检查是否到达末尾 - 如果到达，说明没有相关的 fact or by
 	if tb.header.ExceedEnd() {
-		return ast.NewProveAlgoReturnStmt([]ast.FactOrByStmt{}, tb.line), nil
+		return NewProveAlgoReturnStmt([]FactOrByStmt{}, tb.line), nil
 	}
 
 	// 没到最后，检查是否是 colon
@@ -132,7 +131,7 @@ func (p *TbParser) proveAlgoReturnStmt(tb *tokenBlock) (*ast.ProveAlgoReturnStmt
 		}
 
 		// return: with colon - parse body which may contain facts or by statements
-		factOrBySlice := []ast.FactOrByStmt{}
+		factOrBySlice := []FactOrByStmt{}
 		for _, bodyBlock := range tb.body {
 			// Check if it's a by statement
 			if bodyBlock.header.is(glob.KeywordBy) {
@@ -140,7 +139,7 @@ func (p *TbParser) proveAlgoReturnStmt(tb *tokenBlock) (*ast.ProveAlgoReturnStmt
 				if err != nil {
 					return nil, err
 				}
-				factOrBySlice = append(factOrBySlice, byStmt.(ast.FactOrByStmt))
+				factOrBySlice = append(factOrBySlice, byStmt.(FactOrByStmt))
 			} else {
 				// Otherwise parse as fact
 				fact, err := p.factStmt(&bodyBlock, UniFactDepth0)
@@ -150,7 +149,7 @@ func (p *TbParser) proveAlgoReturnStmt(tb *tokenBlock) (*ast.ProveAlgoReturnStmt
 				factOrBySlice = append(factOrBySlice, fact)
 			}
 		}
-		return ast.NewProveAlgoReturnStmt(factOrBySlice, tb.line), nil
+		return NewProveAlgoReturnStmt(factOrBySlice, tb.line), nil
 	}
 
 	// 不是 colon，说明是单行的结果
@@ -160,7 +159,7 @@ func (p *TbParser) proveAlgoReturnStmt(tb *tokenBlock) (*ast.ProveAlgoReturnStmt
 		if err != nil {
 			return nil, err
 		}
-		return ast.NewProveAlgoReturnStmt([]ast.FactOrByStmt{byStmt.(ast.FactOrByStmt)}, tb.line), nil
+		return NewProveAlgoReturnStmt([]FactOrByStmt{byStmt.(FactOrByStmt)}, tb.line), nil
 	}
 
 	// Otherwise parse as fact
@@ -168,5 +167,5 @@ func (p *TbParser) proveAlgoReturnStmt(tb *tokenBlock) (*ast.ProveAlgoReturnStmt
 	if err != nil {
 		return nil, err
 	}
-	return ast.NewProveAlgoReturnStmt([]ast.FactOrByStmt{fact}, tb.line), nil
+	return NewProveAlgoReturnStmt([]FactOrByStmt{fact}, tb.line), nil
 }

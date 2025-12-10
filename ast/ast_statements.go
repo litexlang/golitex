@@ -195,15 +195,6 @@ type ImportFileStmt struct {
 	Line uint
 }
 
-type IntensionalSetStmt struct {
-	CurSet    Obj
-	Param     string
-	ParentSet Obj
-	Facts     SpecFactPtrSlice
-
-	Line uint
-}
-
 // 某种程度上这个关键词是不必要的，因为如果我发现涉及到的uniFact里面的所有的 paramSet 都是有 enum 的，那我就默认迭代去证明这个forall。但是我还是引入这个关键词以突出我现在用的是iterative的情况
 // prove_by_enum(x s, y s2, z s3...):
 //
@@ -234,43 +225,6 @@ type ProveByEnumStmt struct {
 type HaveObjInNonEmptySetStmt struct {
 	Objs    StrSlice
 	ObjSets ObjSlice
-
-	Line uint
-}
-
-type HaveEnumSetStmt struct {
-	Name       string
-	EnumSetObj *FnObj
-
-	Line uint
-}
-
-type HaveIntensionalSetStmt struct {
-	Param     string
-	ParentSet Obj
-	Facts     FactStmtSlice
-
-	Line uint
-}
-
-// TODO: 我不知道这是做什么的
-// 定义返回值是集合的函数；这个的好处是，fn的定义不能保证函数的存在性；而have可以保证函数的存在性
-type HaveSetFnStmt struct {
-	DefHeader *DefHeader
-	Param     string
-	ParentSet Obj
-	Proofs    SpecFactPtrSlice
-
-	Line uint
-}
-
-// TODO: 这里需要变成factStmt, haveSetInterface，而不是只被用在声明的时候
-// 还需要对 enum 也有这样的 fn
-type HaveSetDefinedByReplacementStmt struct {
-	Name     string
-	DomSet   Obj
-	RangeSet Obj
-	PropName Atom
 
 	Line uint
 }
@@ -417,23 +371,6 @@ type HaveFnCaseByCaseStmt struct {
 	Line uint
 }
 
-// type MarkdownStmt struct {
-// 	Markdown string
-
-// 	Line uint
-// }
-
-// type ProveInRangeSetStmt struct {
-// 	Start          int64
-// 	End            int64
-// 	Param          string
-// 	IntensionalSet Obj
-// 	ThenFacts      FactStmtSlice
-// 	Proofs         StmtSlice
-
-// 	Line uint
-// }
-
 type ClaimIffStmt struct {
 	UniFactWithIffStmt *UniFactWithIffStmt
 	ProofThenToIff     StmtSlice
@@ -486,7 +423,7 @@ type DefAlgoStmt struct {
 }
 
 type EvalStmt struct {
-	FcsToEval Obj
+	ObjToEval Obj
 
 	Line uint
 }

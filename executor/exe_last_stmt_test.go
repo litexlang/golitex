@@ -20,7 +20,7 @@ import (
 	"testing"
 	"time"
 
-	parser "golitex/parser"
+	ast "golitex/ast"
 )
 
 func TestLastStmt(t *testing.T) {
@@ -29,7 +29,7 @@ func TestLastStmt(t *testing.T) {
 	code := extractFromLastProveLine(allCode)
 	readFileTime := time.Since(start)
 	start = time.Now()
-	topStmtSlice, err := parser.ParseSourceCode(code)
+	topStmtSlice, err := ast.ParseSourceCode(code)
 	if err != nil {
 		panic(err)
 	}

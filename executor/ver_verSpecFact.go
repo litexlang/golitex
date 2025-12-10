@@ -118,9 +118,11 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFactMainLogic(stmt *ast.SpecFa
 	var verRet ExecRet
 
 	if !state.ReqOk {
-		if verRet, state = ver.checkSpecFactReq(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
+		if verRet = ver.checkFnsReqAndUpdateReqState(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
 			return verRet
 		}
+
+		state.ReqOk = true
 	}
 	return ver.verSpecFactStepByStep(stmt, state)
 }
