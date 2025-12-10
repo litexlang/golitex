@@ -45,19 +45,20 @@ func (s *ClaimProveByContradictionStmt) stmt() {}
 
 // func (s *EnumStmt) stmt()                        {}
 // func (s *IntensionalSetStmt) stmt()              {}
-func (s *ClaimPropStmt) stmt()                   {}
-func (s *ClaimExistPropStmt) stmt()              {}
-func (s *ProveByEnumStmt) stmt()                 {}
-func (s *HaveObjInNonEmptySetStmt) stmt()        {}
-func (s *HaveEnumSetStmt) stmt()                 {}
-func (s *HaveIntensionalSetStmt) stmt()          {}
-func (s *HaveCartSetStmt) stmt()                 {}
-func (s *HaveObjFromCartSetStmt) stmt()          {}
-func (s *HaveSetFnStmt) stmt()                   {}
-func (s *HaveSetDefinedByReplacementStmt) stmt() {}
-func (s *NamedUniFactStmt) stmt()                {}
-func (s *EqualsFactStmt) stmt()                  {}
-func (s *KnowExistPropStmt) stmt()               {}
+func (s *ClaimPropStmt) stmt()            {}
+func (s *ClaimExistPropStmt) stmt()       {}
+func (s *ProveByEnumStmt) stmt()          {}
+func (s *HaveObjInNonEmptySetStmt) stmt() {}
+func (s *HaveEnumSetStmt) stmt()          {}
+func (s *HaveIntensionalSetStmt) stmt()   {}
+func (s *HaveCartSetStmt) stmt()          {}
+func (s *HaveObjFromCartSetStmt) stmt()   {}
+func (s *HaveSetFnStmt) stmt()            {}
+
+// func (s *HaveSetDefinedByReplacementStmt) stmt() {}
+func (s *NamedUniFactStmt) stmt()  {}
+func (s *EqualsFactStmt) stmt()    {}
+func (s *KnowExistPropStmt) stmt() {}
 
 // func (s *LatexStmt) stmt()                                  {}
 func (s *FnTemplateDefStmt) stmt()    {}
@@ -107,19 +108,20 @@ func (s *ClaimProveByContradictionStmt) algoStmt() {}
 
 // func (s *EnumStmt) algoStmt()                        {}
 // func (s *IntensionalSetStmt) algoStmt()              {}
-func (s *ClaimPropStmt) algoStmt()                   {}
-func (s *ClaimExistPropStmt) algoStmt()              {}
-func (s *ProveByEnumStmt) algoStmt()                 {}
-func (s *HaveObjInNonEmptySetStmt) algoStmt()        {}
-func (s *HaveEnumSetStmt) algoStmt()                 {}
-func (s *HaveIntensionalSetStmt) algoStmt()          {}
-func (s *HaveCartSetStmt) algoStmt()                 {}
-func (s *HaveObjFromCartSetStmt) algoStmt()          {}
-func (s *HaveSetFnStmt) algoStmt()                   {}
-func (s *HaveSetDefinedByReplacementStmt) algoStmt() {}
-func (s *NamedUniFactStmt) algoStmt()                {}
-func (s *EqualsFactStmt) algoStmt()                  {}
-func (s *KnowExistPropStmt) algoStmt()               {}
+func (s *ClaimPropStmt) algoStmt()            {}
+func (s *ClaimExistPropStmt) algoStmt()       {}
+func (s *ProveByEnumStmt) algoStmt()          {}
+func (s *HaveObjInNonEmptySetStmt) algoStmt() {}
+func (s *HaveEnumSetStmt) algoStmt()          {}
+func (s *HaveIntensionalSetStmt) algoStmt()   {}
+func (s *HaveCartSetStmt) algoStmt()          {}
+func (s *HaveObjFromCartSetStmt) algoStmt()   {}
+func (s *HaveSetFnStmt) algoStmt()            {}
+
+// func (s *HaveSetDefinedByReplacementStmt) algoStmt() {}
+func (s *NamedUniFactStmt) algoStmt()  {}
+func (s *EqualsFactStmt) algoStmt()    {}
+func (s *KnowExistPropStmt) algoStmt() {}
 
 // func (s *LatexStmt) algoStmt()                              {}
 func (s *FnTemplateDefStmt) algoStmt()    {}
@@ -171,19 +173,20 @@ func (s *ClaimProveByContradictionStmt) GetLine() uint { return s.Line }
 
 // func (s *EnumStmt) GetLine() uint                        { return s.Line }
 // func (s *IntensionalSetStmt) GetLine() uint              { return s.Line }
-func (s *ClaimPropStmt) GetLine() uint                   { return s.Line }
-func (s *ClaimExistPropStmt) GetLine() uint              { return s.Line }
-func (s *ProveByEnumStmt) GetLine() uint                 { return s.Line }
-func (s *HaveObjInNonEmptySetStmt) GetLine() uint        { return s.Line }
-func (s *HaveEnumSetStmt) GetLine() uint                 { return s.Line }
-func (s *HaveIntensionalSetStmt) GetLine() uint          { return s.Line }
-func (s *HaveCartSetStmt) GetLine() uint                 { return s.Line }
-func (s *HaveObjFromCartSetStmt) GetLine() uint          { return s.Line }
-func (s *HaveSetFnStmt) GetLine() uint                   { return s.Line }
-func (s *HaveSetDefinedByReplacementStmt) GetLine() uint { return s.Line }
-func (s *NamedUniFactStmt) GetLine() uint                { return s.Line }
-func (s *EqualsFactStmt) GetLine() uint                  { return s.Line }
-func (s *KnowExistPropStmt) GetLine() uint               { return s.Line }
+func (s *ClaimPropStmt) GetLine() uint            { return s.Line }
+func (s *ClaimExistPropStmt) GetLine() uint       { return s.Line }
+func (s *ProveByEnumStmt) GetLine() uint          { return s.Line }
+func (s *HaveObjInNonEmptySetStmt) GetLine() uint { return s.Line }
+func (s *HaveEnumSetStmt) GetLine() uint          { return s.Line }
+func (s *HaveIntensionalSetStmt) GetLine() uint   { return s.Line }
+func (s *HaveCartSetStmt) GetLine() uint          { return s.Line }
+func (s *HaveObjFromCartSetStmt) GetLine() uint   { return s.Line }
+func (s *HaveSetFnStmt) GetLine() uint            { return s.Line }
+
+// func (s *HaveSetDefinedByReplacementStmt) GetLine() uint { return s.Line }
+func (s *NamedUniFactStmt) GetLine() uint  { return s.Line }
+func (s *EqualsFactStmt) GetLine() uint    { return s.Line }
+func (s *KnowExistPropStmt) GetLine() uint { return s.Line }
 
 // func (s *LatexStmt) GetLine() uint                          { return s.Line }
 func (s *FnTemplateDefStmt) GetLine() uint    { return s.Line }

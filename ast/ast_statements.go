@@ -266,14 +266,14 @@ type HaveSetFnStmt struct {
 
 // TODO: 这里需要变成factStmt, haveSetInterface，而不是只被用在声明的时候
 // 还需要对 enum 也有这样的 fn
-type HaveSetDefinedByReplacementStmt struct {
-	Name     string
-	DomSet   Obj
-	RangeSet Obj
-	PropName Atom
+// type HaveSetDefinedByReplacementStmt struct {
+// 	Name     string
+// 	DomSet   Obj
+// 	RangeSet Obj
+// 	PropName Atom
 
-	Line uint
-}
+// 	Line uint
+// }
 
 type NamedUniFactStmt struct {
 	DefPropStmt *DefPropStmt

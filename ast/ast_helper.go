@@ -394,9 +394,7 @@ func SimplifyProjCart(obj *FnObj) (Obj, bool) {
 
 func (factSlice FactStmtSlice) Copy() FactStmtSlice {
 	newFactSlice := make([]FactStmt, len(factSlice))
-	for i, fact := range factSlice {
-		newFactSlice[i] = fact
-	}
+	copy(newFactSlice, factSlice)
 	return newFactSlice
 }
 

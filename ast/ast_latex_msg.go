@@ -707,27 +707,27 @@ func (s *HaveSetFnStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (s *HaveSetDefinedByReplacementStmt) ToLatexString() string {
-	var builder strings.Builder
-	builder.WriteString("\\begin{definition}[Set Exist By Axioms of Set Theory]")
+// func (s *HaveSetDefinedByReplacementStmt) ToLatexString() string {
+// 	var builder strings.Builder
+// 	builder.WriteString("\\begin{definition}[Set Exist By Axioms of Set Theory]")
 
-	builder.WriteString("By axiom of replacement, we have a set: ")
-	{
-		var setBuilder strings.Builder
-		setBuilder.WriteString(s.Name)
-		setBuilder.WriteString(" = \\{")
-		setBuilder.WriteString("y $\\in$ ")
-		setBuilder.WriteString(s.DomSet.ToLatexString())
-		setBuilder.WriteString(" | \\textnormal{there exists} x \\textnormal{s.t.} ")
-		setBuilder.WriteString(s.PropName.String())
-		setBuilder.WriteString("(x, y) \\textnormal{is true}.")
-		setBuilder.WriteString("\\}")
-		builder.WriteString(fmt.Sprintf("$%s$", strings.ReplaceAll(setBuilder.String(), "$", "")))
-	}
+// 	builder.WriteString("By axiom of replacement, we have a set: ")
+// 	{
+// 		var setBuilder strings.Builder
+// 		setBuilder.WriteString(s.Name)
+// 		setBuilder.WriteString(" = \\{")
+// 		setBuilder.WriteString("y $\\in$ ")
+// 		setBuilder.WriteString(s.DomSet.ToLatexString())
+// 		setBuilder.WriteString(" | \\textnormal{there exists} x \\textnormal{s.t.} ")
+// 		setBuilder.WriteString(s.PropName.String())
+// 		setBuilder.WriteString("(x, y) \\textnormal{is true}.")
+// 		setBuilder.WriteString("\\}")
+// 		builder.WriteString(fmt.Sprintf("$%s$", strings.ReplaceAll(setBuilder.String(), "$", "")))
+// 	}
 
-	builder.WriteString("\n\\end{definition}")
-	return builder.String()
-}
+// 	builder.WriteString("\n\\end{definition}")
+// 	return builder.String()
+// }
 
 func (s *NamedUniFactStmt) ToLatexString() string {
 	var builder strings.Builder
