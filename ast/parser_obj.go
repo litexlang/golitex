@@ -37,7 +37,7 @@ import (
 //		  → bracedExpr_orTuple() [解析括号表达式]
 func (p *TbParser) Obj(tb *tokenBlock) (Obj, error) {
 	if tb.header.is(glob.KeySymbolLeftCurly) {
-		return p.EnumSetObjOrIntensionalSetObj(tb)
+		return p.EnumSetObjOrSetBuilderObj(tb)
 	}
 
 	return p.objInfixExpr(tb, glob.PrecLowest)
@@ -461,7 +461,7 @@ func (p *TbParser) backSlashExpr(tb *tokenBlock) (Obj, error) {
 	return Atom(obj), nil
 }
 
-func (p *TbParser) EnumSetObjOrIntensionalSetObj(tb *tokenBlock) (Obj, error) {
+func (p *TbParser) EnumSetObjOrSetBuilderObj(tb *tokenBlock) (Obj, error) {
 	err := tb.header.skip(glob.KeySymbolLeftCurly)
 	if err != nil {
 		return nil, err
@@ -481,7 +481,7 @@ func (p *TbParser) EnumSetObjOrIntensionalSetObj(tb *tokenBlock) (Obj, error) {
 	}
 
 	if !tb.header.is(glob.KeySymbolComma) && !tb.header.is(glob.KeySymbolRightCurly) {
-		return p.intensionalSetObj(tb, obj)
+		return p.setBuilderObj(tb, obj)
 	} else {
 		return p.enumSetObj(tb, obj)
 	}
@@ -515,7 +515,7 @@ func (p *TbParser) enumSetObj(tb *tokenBlock, firstParam Obj) (Obj, error) {
 }
 
 // {x R: specific fact, ..., specific fact}
-func (p *TbParser) intensionalSetObj(tb *tokenBlock, paramAsObj Obj) (Obj, error) {
+func (p *TbParser) setBuilderObj(tb *tokenBlock, paramAsObj Obj) (Obj, error) {
 	param, ok := paramAsObj.(Atom)
 	if !ok {
 		return nil, fmt.Errorf("expect parameter as self")
@@ -570,5 +570,5 @@ func (p *TbParser) intensionalSetObj(tb *tokenBlock, paramAsObj Obj) (Obj, error
 		return nil, err
 	}
 
-	return MakeIntensionalSetObj(paramStr, parentSet, facts)
+	return MakeSetBuilderObj(paramStr, parentSet, facts)
 }

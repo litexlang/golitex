@@ -471,7 +471,7 @@ func (f *FnObj) String() string {
 	}
 
 	if IsSetBuilder(f) {
-		return intensionalSetObjString(f)
+		return SetBuilderObjString(f)
 	}
 
 	if ok, str := hasBuiltinOptAndToString(f); ok {
@@ -701,22 +701,6 @@ func (stmt *HaveEnumSetStmt) String() string {
 	builder.WriteString(glob.KeywordHave)
 	builder.WriteString(" ")
 	builder.WriteString(stmt.EnumSetObj.String())
-	return builder.String()
-}
-
-func (stmt *HaveIntensionalSetStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordHave)
-	builder.WriteString(" ")
-	builder.WriteString(stmt.Param)
-	builder.WriteString(" ")
-	builder.WriteString(stmt.ParentSet.String())
-	builder.WriteString(" ")
-	builder.WriteString(glob.KeySymbolColon)
-	builder.WriteByte('\n')
-	for i := range len(stmt.Facts) {
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Facts[i].String(), 2))
-	}
 	return builder.String()
 }
 
@@ -1348,9 +1332,9 @@ func (stmt *HaveFnEqualCaseByCaseStmt) String() string {
 	return strings.TrimSpace(builder.String())
 }
 
-func intensionalSetObjString(f *FnObj) string {
-	// Convert FnObj to IntensionalSetObj for easier processing
-	intensionalSet, err := f.ToSetBuilderStruct()
+func SetBuilderObjString(f *FnObj) string {
+	// Convert FnObj to SetBuilderStruct for easier processing
+	setBuilder, err := f.ToSetBuilderStruct()
 	if err != nil {
 		// Fallback to basic representation if conversion fails
 		return fmt.Sprintf("%s%s %s%s (parse error: %s)", glob.KeySymbolLeftCurly, f.Params[0].String(), f.Params[1].String(), glob.KeySymbolColon, err.Error())
@@ -1358,15 +1342,15 @@ func intensionalSetObjString(f *FnObj) string {
 
 	var builder strings.Builder
 	builder.WriteString(glob.KeySymbolLeftCurly)
-	builder.WriteString(intensionalSet.Param)
+	builder.WriteString(setBuilder.Param)
 	builder.WriteByte(' ')
-	builder.WriteString(intensionalSet.ParentSet.String())
+	builder.WriteString(setBuilder.ParentSet.String())
 	builder.WriteString(glob.KeySymbolColon)
 
 	// Convert facts to strings
-	if len(intensionalSet.Facts) > 0 {
-		factStrings := make([]string, len(intensionalSet.Facts))
-		for i, fact := range intensionalSet.Facts {
+	if len(setBuilder.Facts) > 0 {
+		factStrings := make([]string, len(setBuilder.Facts))
+		for i, fact := range setBuilder.Facts {
 			factStrings[i] = fact.String()
 		}
 		builder.WriteByte(' ')

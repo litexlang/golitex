@@ -75,50 +75,50 @@ func (ver *Verifier) objIsDefinedAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *Ver
 		return ver.dimFnRequirement(objAsFnObj, state)
 	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordEnumSet) {
 		return ver.enumSetFnRequirement(objAsFnObj, state)
-	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordIntensionalSet) {
-		return ver.intensionalSetFnRequirement(objAsFnObj, state)
+	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordSetBuilder) {
+		return ver.SetBuilderFnRequirement(objAsFnObj, state)
 	} else {
 		return ver.parasSatisfyFnReq(objAsFnObj, state)
 	}
 }
 
 // TODO: 非常缺乏检查。因为这里的验证非常麻烦，{}里包括了事实，而事实里有fn，所以需要检查fn行不行
-func (ver *Verifier) intensionalSetFnRequirement(objAsFnObj *ast.FnObj, state *VerState) ExecRet {
+func (ver *Verifier) SetBuilderFnRequirement(objAsFnObj *ast.FnObj, state *VerState) ExecRet {
 	ver.newEnv(ver.Env)
 	defer ver.deleteEnvAndRetainMsg()
 
 	// Parse intensional set struct to check facts
-	intensionalSetObjStruct, err := objAsFnObj.ToSetBuilderStruct()
+	setBuilderStruct, err := objAsFnObj.ToSetBuilderStruct()
 	if err != nil {
 		return NewExecErr(fmt.Sprintf("failed to parse intensional set: %s", err))
 	}
 
 	// parent is ok
-	ret := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(intensionalSetObjStruct.ParentSet, state)
+	ret := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(setBuilderStruct.ParentSet, state)
 	if ret.IsErr() {
 		return ret
 	}
 	if ret.IsUnknown() {
-		return NewExecErr(fmt.Sprintf("parent of %s must be a set, %s in %s is not valid", objAsFnObj, intensionalSetObjStruct.ParentSet, objAsFnObj))
+		return NewExecErr(fmt.Sprintf("parent of %s must be a set, %s in %s is not valid", objAsFnObj, setBuilderStruct.ParentSet, objAsFnObj))
 	}
 
 	// 如果param在母环境里已经声明过了，那就把整个obj里的所有的param全部改成新的
-	globRet := ver.Env.IsAtomDeclared(ast.Atom(intensionalSetObjStruct.Param), map[string]struct{}{})
+	globRet := ver.Env.IsAtomDeclared(ast.Atom(setBuilderStruct.Param), map[string]struct{}{})
 	if globRet.IsTrue() {
 		// 把这个param替换成从来没见过的东西
-		intensionalSetObjStruct = ver.replaceParamWithUndeclaredRandomName(intensionalSetObjStruct)
+		setBuilderStruct = ver.replaceParamWithUndeclaredRandomName(setBuilderStruct)
 	}
 
 	// 声明一下param
 	ver.Env.DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(ast.NewDefLetStmt(
-		[]string{intensionalSetObjStruct.Param},
-		[]ast.Obj{intensionalSetObjStruct.ParentSet},
+		[]string{setBuilderStruct.Param},
+		[]ast.Obj{setBuilderStruct.ParentSet},
 		[]ast.FactStmt{},
 		glob.BuiltinLine,
 	))
 
 	// Check all parameters in facts satisfy fn requirement
-	for _, fact := range intensionalSetObjStruct.Facts {
+	for _, fact := range setBuilderStruct.Facts {
 		// Check propName
 		verRet := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(fact.PropName, state)
 		if verRet.IsErr() {
@@ -381,16 +381,16 @@ func (ver *Verifier) indexOptFnRequirement(fnObj *ast.FnObj, state *VerState) Ex
 	return NewEmptyExecTrue()
 }
 
-func (ver *Verifier) replaceParamWithUndeclaredRandomName(intensionalSetObjStruct *ast.SetBuilderStruct) *ast.SetBuilderStruct {
-	oldParam := ast.Atom(intensionalSetObjStruct.Param)
+func (ver *Verifier) replaceParamWithUndeclaredRandomName(setBuilderStruct *ast.SetBuilderStruct) *ast.SetBuilderStruct {
+	oldParam := ast.Atom(setBuilderStruct.Param)
 
 	// Generate a new random undeclared name
 	newParamName := ver.Env.GenerateUndeclaredRandomName()
 	newParam := ast.Atom(newParamName)
 
 	// Replace param in all facts
-	newFacts := make(ast.SpecFactPtrSlice, len(intensionalSetObjStruct.Facts))
-	for i, fact := range intensionalSetObjStruct.Facts {
+	newFacts := make(ast.SpecFactPtrSlice, len(setBuilderStruct.Facts))
+	for i, fact := range setBuilderStruct.Facts {
 		// Replace param in propName
 		newPropName := fact.PropName.ReplaceObj(oldParam, newParam).(ast.Atom)
 
@@ -406,7 +406,7 @@ func (ver *Verifier) replaceParamWithUndeclaredRandomName(intensionalSetObjStruc
 
 	return &ast.SetBuilderStruct{
 		Param:     newParamName,
-		ParentSet: intensionalSetObjStruct.ParentSet, // parent set 不变
+		ParentSet: setBuilderStruct.ParentSet, // parent set 不变
 		Facts:     newFacts,
 	}
 }

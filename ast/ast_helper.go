@@ -402,7 +402,7 @@ func MakeEnumSetObj(params []Obj) Obj {
 	return NewFnObj(Atom(glob.KeywordEnumSet), params)
 }
 
-func MakeIntensionalSetObj(param string, parentSet Obj, facts SpecFactPtrSlice) (*FnObj, error) {
+func MakeSetBuilderObj(param string, parentSet Obj, facts SpecFactPtrSlice) (*FnObj, error) {
 	params := []Obj{Atom(param), parentSet}
 
 	for _, fact := range facts {
@@ -413,7 +413,7 @@ func MakeIntensionalSetObj(param string, parentSet Obj, facts SpecFactPtrSlice) 
 		params = append(params, atoms...)
 	}
 
-	return NewFnObj(Atom(glob.KeywordIntensionalSet), params), nil
+	return NewFnObj(Atom(glob.KeywordSetBuilder), params), nil
 }
 
 func changeSpecFactIntoObjs(fact *SpecFactStmt) ([]Obj, error) {

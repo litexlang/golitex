@@ -43,23 +43,18 @@ func (s *ProveStmt) stmt()                     {}
 func (s *UniFactWithIffStmt) stmt()            {}
 func (s *ClaimProveByContradictionStmt) stmt() {}
 
-// func (s *EnumStmt) stmt()                        {}
-// func (s *IntensionalSetStmt) stmt()              {}
 func (s *ClaimPropStmt) stmt()            {}
 func (s *ClaimExistPropStmt) stmt()       {}
 func (s *ProveByEnumStmt) stmt()          {}
 func (s *HaveObjInNonEmptySetStmt) stmt() {}
 func (s *HaveEnumSetStmt) stmt()          {}
-func (s *HaveIntensionalSetStmt) stmt()   {}
 func (s *HaveCartSetStmt) stmt()          {}
 func (s *HaveObjFromCartSetStmt) stmt()   {}
 
-// func (s *HaveSetDefinedByReplacementStmt) stmt() {}
 func (s *NamedUniFactStmt) stmt()  {}
 func (s *EqualsFactStmt) stmt()    {}
 func (s *KnowExistPropStmt) stmt() {}
 
-// func (s *LatexStmt) stmt()                                  {}
 func (s *FnTemplateDefStmt) stmt()    {}
 func (s *ClearStmt) stmt()            {}
 func (s *DoNothingStmt) stmt()        {}
@@ -68,14 +63,11 @@ func (s *ProveByInductionStmt) stmt() {}
 func (s *HaveObjEqualStmt) stmt()     {}
 func (s *HaveFnEqualStmt) stmt()      {}
 
-// func (s *HaveFnLiftStmt) stmt()       {}
 func (s *HaveFnStmt) stmt() {}
 
-// func (s *MarkdownStmt) stmt()                               {}
 func (s *ProveIsCommutativePropStmt) stmt() {}
 func (s *ClaimIffStmt) stmt()               {}
 
-// func (s *ProveInRangeSetStmt) stmt()               {}
 func (s *ProveInRangeStmt2) stmt()                 {}
 func (s *ProveIsTransitivePropStmt) stmt()         {}
 func (s *DefAlgoStmt) stmt()                       {}
@@ -105,23 +97,18 @@ func (s *ProveStmt) algoStmt()                     {}
 func (s *UniFactWithIffStmt) algoStmt()            {}
 func (s *ClaimProveByContradictionStmt) algoStmt() {}
 
-// func (s *EnumStmt) algoStmt()                        {}
-// func (s *IntensionalSetStmt) algoStmt()              {}
 func (s *ClaimPropStmt) algoStmt()            {}
 func (s *ClaimExistPropStmt) algoStmt()       {}
 func (s *ProveByEnumStmt) algoStmt()          {}
 func (s *HaveObjInNonEmptySetStmt) algoStmt() {}
 func (s *HaveEnumSetStmt) algoStmt()          {}
-func (s *HaveIntensionalSetStmt) algoStmt()   {}
 func (s *HaveCartSetStmt) algoStmt()          {}
 func (s *HaveObjFromCartSetStmt) algoStmt()   {}
 
-// func (s *HaveSetDefinedByReplacementStmt) algoStmt() {}
 func (s *NamedUniFactStmt) algoStmt()  {}
 func (s *EqualsFactStmt) algoStmt()    {}
 func (s *KnowExistPropStmt) algoStmt() {}
 
-// func (s *LatexStmt) algoStmt()                              {}
 func (s *FnTemplateDefStmt) algoStmt()    {}
 func (s *ClearStmt) algoStmt()            {}
 func (s *DoNothingStmt) algoStmt()        {}
@@ -130,16 +117,13 @@ func (s *ProveByInductionStmt) algoStmt() {}
 func (s *HaveObjEqualStmt) algoStmt()     {}
 func (s *HaveFnEqualStmt) algoStmt()      {}
 
-// func (s *HaveFnLiftStmt) algoStmt()       {}
 func (s *HaveFnStmt) algoStmt() {}
 
-// func (s *MarkdownStmt) algoStmt()                           {}
 func (s *ProveIsCommutativePropStmt) algoStmt() {}
 func (s *DefProveAlgoStmt) algoStmt()           {}
 func (s *ByStmt) algoStmt()                     {}
 func (s *ClaimIffStmt) algoStmt()               {}
 
-// func (s *ProveInRangeSetStmt) algoStmt()               {}
 func (s *ProveInRangeStmt2) algoStmt()                 {}
 func (s *ProveIsTransitivePropStmt) algoStmt()         {}
 func (s *DefAlgoStmt) algoStmt()                       {}
@@ -169,23 +153,18 @@ func (s *ProveStmt) GetLine() uint                     { return s.Line }
 func (s *UniFactWithIffStmt) GetLine() uint            { return s.Line }
 func (s *ClaimProveByContradictionStmt) GetLine() uint { return s.Line }
 
-// func (s *EnumStmt) GetLine() uint                        { return s.Line }
-// func (s *IntensionalSetStmt) GetLine() uint              { return s.Line }
 func (s *ClaimPropStmt) GetLine() uint            { return s.Line }
 func (s *ClaimExistPropStmt) GetLine() uint       { return s.Line }
 func (s *ProveByEnumStmt) GetLine() uint          { return s.Line }
 func (s *HaveObjInNonEmptySetStmt) GetLine() uint { return s.Line }
 func (s *HaveEnumSetStmt) GetLine() uint          { return s.Line }
-func (s *HaveIntensionalSetStmt) GetLine() uint   { return s.Line }
 func (s *HaveCartSetStmt) GetLine() uint          { return s.Line }
 func (s *HaveObjFromCartSetStmt) GetLine() uint   { return s.Line }
 
-// func (s *HaveSetDefinedByReplacementStmt) GetLine() uint { return s.Line }
 func (s *NamedUniFactStmt) GetLine() uint  { return s.Line }
 func (s *EqualsFactStmt) GetLine() uint    { return s.Line }
 func (s *KnowExistPropStmt) GetLine() uint { return s.Line }
 
-// func (s *LatexStmt) GetLine() uint                          { return s.Line }
 func (s *FnTemplateDefStmt) GetLine() uint    { return s.Line }
 func (s *ClearStmt) GetLine() uint            { return s.Line }
 func (s *DoNothingStmt) GetLine() uint        { return s.Line }
@@ -194,11 +173,8 @@ func (s *ProveByInductionStmt) GetLine() uint { return s.Line }
 func (s *HaveObjEqualStmt) GetLine() uint     { return s.Line }
 func (s *HaveFnEqualStmt) GetLine() uint      { return s.Line }
 
-// func (s *HaveFnLiftStmt) GetLine() uint       { return s.Line }
 func (s *HaveFnStmt) GetLine() uint { return s.Line }
 
-// func (s *MarkdownStmt) GetLine() uint                       { return s.Line }
-// func (s *ProveInRangeSetStmt) GetLine() uint                { return s.Line }
 func (s *ProveInRangeStmt2) GetLine() uint                   { return s.Line }
 func (s *ProveInRangeStmt2) Param() string                   { return s.param }
 func (s *ProveInRangeStmt2) Start() Obj                      { return s.start }
@@ -240,8 +216,6 @@ func (l *UniFactStmt) factStmt()        {}
 func (l *UniFactWithIffStmt) factStmt() {}
 func (s *OrStmt) factStmt()             {}
 
-// func (s *EnumStmt) factStmt()           {}
-// func (s *IntensionalSetStmt) factStmt() {}
 func (s *EqualsFactStmt) factStmt() {}
 
 type Spec_OrFact interface {
@@ -371,8 +345,6 @@ func (s *UniFactStmt) canBeKnown()        {}
 func (s *UniFactWithIffStmt) canBeKnown() {}
 func (s *OrStmt) canBeKnown()             {}
 
-// func (s *EnumStmt) canBeKnown()           {}
-// func (s *IntensionalSetStmt) canBeKnown() {}
 func (s *EqualsFactStmt) canBeKnown() {}
 func (s *KnowPropStmt) canBeKnown()   {}
 
@@ -424,7 +396,5 @@ func (l *UniFactStmt) proveAlgoReturnStmt()        {}
 func (l *UniFactWithIffStmt) proveAlgoReturnStmt() {}
 func (s *OrStmt) proveAlgoReturnStmt()             {}
 
-// func (s *EnumStmt) proveAlgoReturnStmt()           {}
-// func (s *IntensionalSetStmt) proveAlgoReturnStmt() {}
 func (s *EqualsFactStmt) proveAlgoReturnStmt() {}
 func (s *ByStmt) proveAlgoReturnStmt()         {}
