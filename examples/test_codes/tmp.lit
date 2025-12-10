@@ -1,1 +1,1 @@
-{self R: self > 0, self $in {self Z: self > 0}} = {self R: self > 0, self $in {self Z: self > 0}}
+{self R: self > 0} = {self R: self > 0}
