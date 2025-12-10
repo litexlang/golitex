@@ -1349,74 +1349,28 @@ func (stmt *HaveFnEqualCaseByCaseStmt) String() string {
 }
 
 func intensionalSetObjString(f *FnObj) string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeySymbolLeftCurly)
-	builder.WriteString(f.Params[0].String())
-	builder.WriteByte(' ')
-	builder.WriteString(f.Params[1].String())
-	builder.WriteString(glob.KeySymbolColon)
-
-	facts := []string{}
-	i := 2
-	for i < len(f.Params) {
-		// Check if current param is a double underscore marker (start of a new spec fact)
-		paramStr := f.Params[i].String()
-		var typeEnum SpecFactEnum
-		var isMarker bool
-
-		switch paramStr {
-		case glob.KeywordDoubleUnderscoreTruePure:
-			typeEnum = TruePure
-			isMarker = true
-		case glob.DoubleUnderscoreNotPure:
-			typeEnum = FalsePure
-			isMarker = true
-		case glob.DoubleUnderscoreExist:
-			typeEnum = TrueExist_St
-			isMarker = true
-		case glob.KeywordDoubleUnderscoreNotExist:
-			typeEnum = FalseExist_St
-			isMarker = true
-		}
-
-		if !isMarker {
-			i++
-			continue
-		}
-
-		// Found a marker, start parsing a new spec fact
-		i++ // Skip the marker
-		if i >= len(f.Params) {
-			break
-		}
-
-		// Next param is the PropName
-		propNameAtom, ok := f.Params[i].(Atom)
-		if !ok {
-			return fmt.Sprintf("%s%s %s%s (parse error: propName is not Atom)", glob.KeySymbolLeftCurly, f.Params[0].String(), f.Params[1].String(), glob.KeySymbolColon)
-		}
-		i++
-
-		// Collect params until we hit another marker or end
-		params := []Obj{}
-		for i < len(f.Params) {
-			nextParamStr := f.Params[i].String()
-			if glob.IsIntensionalSetObjSeparator(nextParamStr) {
-				break // Found next marker, stop collecting params
-			}
-			params = append(params, f.Params[i])
-			i++
-		}
-
-		// Create SpecFactStmt and get its string representation
-		specFact := NewSpecFactStmt(typeEnum, propNameAtom, params, glob.BuiltinLine)
-		facts = append(facts, specFact.String())
+	// Convert FnObj to IntensionalSetObj for easier processing
+	intensionalSet, err := FnObjToIntensionalSetObjStruct(f)
+	if err != nil {
+		// Fallback to basic representation if conversion fails
+		return fmt.Sprintf("%s%s %s%s (parse error: %s)", glob.KeySymbolLeftCurly, f.Params[0].String(), f.Params[1].String(), glob.KeySymbolColon, err.Error())
 	}
 
-	// Join facts with comma and space
-	if len(facts) > 0 {
+	var builder strings.Builder
+	builder.WriteString(glob.KeySymbolLeftCurly)
+	builder.WriteString(intensionalSet.Param)
+	builder.WriteByte(' ')
+	builder.WriteString(intensionalSet.ParentSet.String())
+	builder.WriteString(glob.KeySymbolColon)
+
+	// Convert facts to strings
+	if len(intensionalSet.Facts) > 0 {
+		factStrings := make([]string, len(intensionalSet.Facts))
+		for i, fact := range intensionalSet.Facts {
+			factStrings[i] = fact.String()
+		}
 		builder.WriteByte(' ')
-		builder.WriteString(strings.Join(facts, ", "))
+		builder.WriteString(strings.Join(factStrings, ", "))
 	}
 
 	builder.WriteString(glob.KeySymbolRightCurly)

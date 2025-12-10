@@ -159,10 +159,6 @@ func GetAtomsInObj(obj Obj) []Atom {
 		// 对于内涵集对象，需要特殊处理：移除绑定变量（第一个参数）
 		if IsIntensionalSetObj(asObj) {
 			atomsFromIntensionalSet := GetAtomsInIntensionalSetObj(asObj)
-			// Remove the bound parameter (first atom) from ret and add atoms from intensional set
-			if len(ret) > 0 {
-				ret = ret[1:] // Remove the bound parameter atom
-			}
 			ret = append(ret, atomsFromIntensionalSet...)
 		}
 	}
@@ -170,39 +166,33 @@ func GetAtomsInObj(obj Obj) []Atom {
 }
 
 func GetAtomsInIntensionalSetObj(f *FnObj) []Atom {
-	ret := []Atom{}
-
-	// Skip Params[0] (bound parameter) and extract atoms from parentSet (Params[1])
-	if len(f.Params) > 1 {
-		atoms := GetAtomsInObj(f.Params[1])
-		ret = append(ret, atoms...)
+	// Convert FnObj to IntensionalSetObjStruct for easier processing
+	intensionalSet, err := FnObjToIntensionalSetObjStruct(f)
+	if err != nil {
+		// Fallback: extract atoms from all params except the bound parameter
+		ret := []Atom{}
+		if len(f.Params) > 1 {
+			atoms := GetAtomsInObj(f.Params[1])
+			ret = append(ret, atoms...)
+		}
+		// Try to extract from remaining params
+		for i := 2; i < len(f.Params); i++ {
+			atoms := GetAtomsInObj(f.Params[i])
+			ret = append(ret, atoms...)
+		}
+		return ret
 	}
 
-	// Extract atoms from facts (Params[2:])
-	// Facts are encoded as: marker, propName, param1, param2, ..., next_marker, ...
-	i := 2
-	for i < len(f.Params) {
-		paramStr := f.Params[i].String()
-		// Check if it's a double underscore marker
-		if glob.IsIntensionalSetObjSeparator(paramStr) {
-			i++ // Skip marker
-			if i >= len(f.Params) {
-				break
-			}
-			i++ // Skip propName
-			// Collect params until next marker
-			for i < len(f.Params) {
-				nextParamStr := f.Params[i].String()
-				if glob.IsIntensionalSetObjSeparator(nextParamStr) {
-					break
-				}
-				atoms := GetAtomsInObj(f.Params[i])
-				ret = append(ret, atoms...)
-				i++
-			}
-		} else {
-			i++
-		}
+	ret := []Atom{}
+
+	// Extract atoms from parentSet (skip the bound parameter)
+	atoms := GetAtomsInObj(intensionalSet.ParentSet)
+	ret = append(ret, atoms...)
+
+	// Extract atoms from facts
+	for _, fact := range intensionalSet.Facts {
+		atoms := fact.GetAtoms()
+		ret = append(ret, atoms...)
 	}
 
 	return ret

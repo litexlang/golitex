@@ -532,21 +532,21 @@ func (s *ClaimProveByContradictionStmt) ToLatexString() string {
 // 	return fmt.Sprintf("$%s$", strings.ReplaceAll(builder.String(), "$", ""))
 // }
 
-func intentionalSetOrIntensionalSetToLatexString(param string, parentSet Obj, proofs SpecFactPtrSlice) string {
-	var builder strings.Builder
-	builder.WriteString(" = \\{")
-	builder.WriteString(param)
-	builder.WriteString(" $\\in$ ")
-	builder.WriteString(parentSet.ToLatexString())
-	builder.WriteString(" | ")
-	proofStrSlice := make([]string, len(proofs))
-	for i := range len(proofs) {
-		proofStrSlice[i] = proofs[i].ToLatexString()
-	}
-	builder.WriteString(strings.Join(proofStrSlice, ", "))
-	builder.WriteString("\\}")
-	return fmt.Sprintf("$%s$", strings.ReplaceAll(builder.String(), "$", ""))
-}
+// func intentionalSetOrIntensionalSetToLatexString(param string, parentSet Obj, proofs SpecFactPtrSlice) string {
+// 	var builder strings.Builder
+// 	builder.WriteString(" = \\{")
+// 	builder.WriteString(param)
+// 	builder.WriteString(" $\\in$ ")
+// 	builder.WriteString(parentSet.ToLatexString())
+// 	builder.WriteString(" | ")
+// 	proofStrSlice := make([]string, len(proofs))
+// 	for i := range len(proofs) {
+// 		proofStrSlice[i] = proofs[i].ToLatexString()
+// 	}
+// 	builder.WriteString(strings.Join(proofStrSlice, ", "))
+// 	builder.WriteString("\\}")
+// 	return fmt.Sprintf("$%s$", strings.ReplaceAll(builder.String(), "$", ""))
+// }
 
 // func (s *IntensionalSetStmt) ToLatexString() string {
 // 	var builder strings.Builder
