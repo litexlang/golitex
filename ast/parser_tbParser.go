@@ -15,8 +15,11 @@
 package litex_ast
 
 type TbParser struct {
+	FreeParams map[string]struct{}
 }
 
 func NewTbParser() *TbParser {
-	return &TbParser{}
+	return &TbParser{
+		FreeParams: make(map[string]struct{}),
+	}
 }
