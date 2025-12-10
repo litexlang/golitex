@@ -32,7 +32,7 @@ func (obj Atom) Instantiate(uniMap map[string]Obj) (Obj, error) {
 
 func InstantiateObjFn(obj *FnObj, uniMap map[string]Obj) (Obj, error) {
 	if IsSetBuilder(obj) {
-		return InstantiateSetBuilderObj(obj, uniMap)
+		return InstantiateSetBuilderObjWithoutChangingParam(obj, uniMap)
 	}
 
 	newHead, err := obj.FnHead.Instantiate(uniMap)
@@ -954,27 +954,14 @@ func (stmt *HaveFnEqualCaseByCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt,
 	return &HaveFnEqualCaseByCaseStmt{newDefHeader, newRetSet, newCaseByCaseFacts, newCaseByCaseEqualTo, stmt.Line}, nil
 }
 
-func InstantiateSetBuilderObj(obj *FnObj, uniMap map[string]Obj) (Obj, error) {
+func InstantiateSetBuilderObjWithoutChangingParam(obj *FnObj, uniMap map[string]Obj) (Obj, error) {
 	setBuilderStruct, err := obj.ToSetBuilderStruct()
 	if err != nil {
 		return nil, err
 	}
 
-	// Avoid capturing the bound parameter during instantiation.
-	// If uniMap contains the param, create a new map without it to prevent substitution.
-	innerUniMap := uniMap
-	if _, ok := uniMap[setBuilderStruct.Param]; ok {
-		innerUniMap = make(map[string]Obj, len(uniMap)-1)
-		for k, v := range uniMap {
-			if k == setBuilderStruct.Param {
-				continue
-			}
-			innerUniMap[k] = v
-		}
-	}
-
 	// Instantiate parent set
-	instParentSet, err := setBuilderStruct.ParentSet.Instantiate(innerUniMap)
+	instParentSet, err := setBuilderStruct.ParentSet.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}
@@ -982,7 +969,7 @@ func InstantiateSetBuilderObj(obj *FnObj, uniMap map[string]Obj) (Obj, error) {
 	// Instantiate facts
 	instFacts := make(SpecFactPtrSlice, len(setBuilderStruct.Facts))
 	for i, fact := range setBuilderStruct.Facts {
-		instFact, err := fact.InstantiateFact(innerUniMap)
+		instFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, err
 		}
