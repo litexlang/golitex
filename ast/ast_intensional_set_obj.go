@@ -21,6 +21,14 @@ import (
 	glob "golitex/glob"
 )
 
+// intensional set 是如何写成 FnObj 的：
+// 1. 第一个参数是 param
+// 2. 第二个参数是 parent set
+// 3. 第三个参数是 facts
+// 4. facts 的格式是：[typeEnumInt] [paramCountInt] [propName] [params...] [next fact typeEnumInt] ...
+// 5. typeEnumInt 是 fact 的类型，0 表示 FalsePure, 1 表示 FalseExist_St, 2 表示 TrueExist_St, 3 表示 TruePure
+// 6. paramCountInt 是 fact 的参数个数
+// 7. propName 是 fact 的属性名
 type IntensionalSetObjStruct struct {
 	Param     string
 	ParentSet Obj
@@ -34,8 +42,8 @@ func IsIntensionalSetObj(obj Obj) bool {
 	return false
 }
 
-// FnObjToIntensionalSetObjStruct converts a FnObj representing an intensional set to IntensionalSetObj
-func FnObjToIntensionalSetObjStruct(fnObj *FnObj) (*IntensionalSetObjStruct, error) {
+// ToIntensionalSetObjStruct converts a FnObj representing an intensional set to IntensionalSetObj
+func (fnObj *FnObj) ToIntensionalSetObjStruct() (*IntensionalSetObjStruct, error) {
 	if len(fnObj.Params) < 2 {
 		return nil, fmt.Errorf("intensional set expects at least param and parent set, got %d params", len(fnObj.Params))
 	}
@@ -120,15 +128,7 @@ func FnObjToIntensionalSetObjStruct(fnObj *FnObj) (*IntensionalSetObjStruct, err
 	}, nil
 }
 
-// IntensionalSetObjStructToFnObj converts an IntensionalSetObj to a FnObj
-func IntensionalSetObjStructToFnObj(intensionalSet *IntensionalSetObjStruct) (*FnObj, error) {
-	obj, err := MakeIntensionalSetObj(intensionalSet.Param, intensionalSet.ParentSet, intensionalSet.Facts)
-	if err != nil {
-		return nil, err
-	}
-	fnObj, ok := obj.(*FnObj)
-	if !ok {
-		return nil, fmt.Errorf("MakeIntensionalSetObj returned %T, expected *FnObj", obj)
-	}
-	return fnObj, nil
+// ToFnObj converts an IntensionalSetObj to a FnObj
+func (intensionalSet *IntensionalSetObjStruct) ToFnObj() (*FnObj, error) {
+	return MakeIntensionalSetObj(intensionalSet.Param, intensionalSet.ParentSet, intensionalSet.Facts)
 }
