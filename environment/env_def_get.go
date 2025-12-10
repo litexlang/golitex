@@ -57,16 +57,6 @@ func (e *Env) GetPropDef(propName ast.Atom) *ast.DefPropStmt {
 	return nil
 }
 
-func (e *Env) GetHaveSetFnDef(fnName ast.Atom) *ast.HaveSetFnStmt {
-	for env := e; env != nil; env = env.Parent {
-		haveSetFn, ok := env.HaveSetFnDefMem[fnName.String()]
-		if ok {
-			return &haveSetFn
-		}
-	}
-	return nil
-}
-
 func (e *Env) GetSymbolSimplifiedValue(obj ast.Obj) ast.Obj {
 	for env := e; env != nil; env = env.Parent {
 		symbolValue, ok := env.SymbolSimplifiedValueMem[obj.String()]

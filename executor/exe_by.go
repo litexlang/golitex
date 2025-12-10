@@ -94,7 +94,7 @@ func (exec *Executor) runProveAlgoStmtsWhenBy(proveAlgoStmts ast.ProveAlgoStmtSl
 			// Return the facts from prove_algo
 			return NewEmptyExecTrue(), facts
 		case *ast.ProveAlgoIfStmt:
-			if conditionIsTrue, execRet := exec.IsAlgoIfConditionTrue(&ast.AlgoIfStmt{Conditions: asStmt.Conditions, ThenStmts: nil, Line: asStmt.Line}); execRet.IsErr() {
+			if conditionIsTrue, execRet := exec.IsAlgoIfConditionTrue(ast.NewAlgoIfStmt(asStmt.Conditions, nil, asStmt.Line)); execRet.IsErr() {
 				return execRet, nil
 			} else if conditionIsTrue {
 				return exec.proveAlgoIfStmt(asStmt, paramsValues)

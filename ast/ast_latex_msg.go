@@ -691,22 +691,6 @@ func (s *HaveObjFromCartSetStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (s *HaveSetFnStmt) ToLatexString() string {
-	var builder strings.Builder
-	builder.WriteString("\\begin{definition}[Function Exist By Axioms of Set Theory]")
-	builder.WriteString(fmt.Sprintf("We have a function %s returning a set, whose domain is: ", s.DefHeader.NameWithParamsLatexString()))
-	builder.WriteString(strings.Join(paramInParamSetInFactLatexStringSlice(s.DefHeader.Params, s.DefHeader.ParamSets), ", "))
-	builder.WriteString(". ")
-	builder.WriteString(s.DefHeader.NameWithParamsLatexString())
-
-	builder.WriteString(intentionalSetOrIntensionalSetToLatexString(s.Param, s.ParentSet, s.Proofs))
-
-	builder.WriteString(".")
-
-	builder.WriteString("\n\\end{definition}")
-	return builder.String()
-}
-
 // func (s *HaveSetDefinedByReplacementStmt) ToLatexString() string {
 // 	var builder strings.Builder
 // 	builder.WriteString("\\begin{definition}[Set Exist By Axioms of Set Theory]")

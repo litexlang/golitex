@@ -35,8 +35,6 @@ type FnInFnTMemItem struct {
 	AsFnTStruct *ast.FnTStruct
 }
 
-type HaveSetFnDefMem map[string]ast.HaveSetFnStmt
-
 type KnownFactsStruct struct {
 	SpecFactMem                       SpecFactMem
 	SpecFactInLogicExprMem            SpecFactInLogicExprMem
@@ -60,8 +58,6 @@ type Env struct {
 	EqualMem map[string]shared_ptr_to_slice_of_obj
 
 	// EnumFacts map[string][]ast.Obj
-
-	HaveSetFnDefMem HaveSetFnDefMem
 
 	// IntensionalSetMem map[string]ast.IntensionalSetStmt
 
@@ -125,7 +121,6 @@ func NewEnv(parent *Env) *Env {
 		KnownFactsStruct:       makeKnownFactsStruct(),
 		EqualMem:               make(map[string]shared_ptr_to_slice_of_obj),
 		// EnumFacts:              make(map[string][]ast.Obj),
-		HaveSetFnDefMem: make(HaveSetFnDefMem),
 		// IntensionalSetMem:        make(map[string]ast.IntensionalSetStmt),
 		SymbolSimplifiedValueMem: make(map[string]ast.Obj),
 		TransitivePropMem:        make(map[string]map[string][]ast.Obj),

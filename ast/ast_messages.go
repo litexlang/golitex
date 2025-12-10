@@ -867,28 +867,6 @@ func (stmt *HaveObjFromCartSetStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *HaveSetFnStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordHave)
-	builder.WriteString(" ")
-	builder.WriteString(stmt.DefHeader.StringWithoutColonAtEnd())
-	builder.WriteString(" ")
-	// builder.WriteString(glob.KeySymbolColonEqual)
-	builder.WriteString(glob.KeySymbolEqual)
-	builder.WriteString(" ")
-	builder.WriteString(stmt.Param)
-	builder.WriteString(" ")
-	builder.WriteString(stmt.ParentSet.String())
-	builder.WriteString(glob.KeySymbolColon)
-	builder.WriteByte('\n')
-	proofStrSlice := make([]string, len(stmt.Proofs))
-	for i, proof := range stmt.Proofs {
-		proofStrSlice[i] = glob.SplitLinesAndAdd4NIndents(proof.String(), 1)
-	}
-	builder.WriteString(strings.Join(proofStrSlice, "\n"))
-	return builder.String()
-}
-
 func (stmt *NamedUniFactStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeySymbolAt)

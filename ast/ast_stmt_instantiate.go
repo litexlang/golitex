@@ -583,14 +583,6 @@ func (stmt *HaveObjFromCartSetStmt) Instantiate(uniMap map[string]Obj) (Stmt, er
 	return NewHaveObjFromCartSetStmt(stmt.ObjName, cartSet, newEqualTo, stmt.Line), nil
 }
 
-func (stmt *HaveSetFnStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	newDefHeader, err := stmt.DefHeader.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	return NewHaveSetFnStmt(newDefHeader, stmt.Param, stmt.ParentSet, stmt.Proofs, stmt.Line), nil
-}
-
 func (stmt *HaveCartWithDimStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newCartDim, err := stmt.CartDim.Instantiate(uniMap)
 	if err != nil {
