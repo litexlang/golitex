@@ -87,10 +87,10 @@ func (ver *Verifier) SetBuilderFnRequirement(objAsFnObj *ast.FnObj, state *VerSt
 	ver.newEnv(ver.Env)
 	defer ver.deleteEnvAndRetainMsg()
 
-	// Parse intensional set struct to check facts
+	// Parse set builder struct to check facts
 	setBuilderStruct, err := objAsFnObj.ToSetBuilderStruct()
 	if err != nil {
-		return NewExecErr(fmt.Sprintf("failed to parse intensional set: %s", err))
+		return NewExecErr(fmt.Sprintf("failed to parse set builder: %s", err))
 	}
 
 	// parent is ok
@@ -125,7 +125,7 @@ func (ver *Verifier) SetBuilderFnRequirement(objAsFnObj *ast.FnObj, state *VerSt
 			return verRet
 		}
 		if verRet.IsUnknown() {
-			return NewExecErr(fmt.Sprintf("prop name %s in intensional set must be an atom or function", fact.PropName))
+			return NewExecErr(fmt.Sprintf("prop name %s in set builder must be an atom or function", fact.PropName))
 		}
 
 		// Check all params in the fact
@@ -135,7 +135,7 @@ func (ver *Verifier) SetBuilderFnRequirement(objAsFnObj *ast.FnObj, state *VerSt
 				return verRet
 			}
 			if verRet.IsUnknown() {
-				return NewExecErr(fmt.Sprintf("parameter %s in intensional set fact must be an atom or function", param))
+				return NewExecErr(fmt.Sprintf("parameter %s in set builder fact must be an atom or function", param))
 			}
 		}
 	}
@@ -144,7 +144,7 @@ func (ver *Verifier) SetBuilderFnRequirement(objAsFnObj *ast.FnObj, state *VerSt
 }
 
 func (ver *Verifier) enumSetFnRequirement(objAsFnObj *ast.FnObj, state *VerState) ExecRet {
-	// 所有参数都是$in set
+	// 所有参数都是$in list set
 	for _, param := range objAsFnObj.Params {
 		verRet := ver.VerFactStmt(ast.NewInFactWithObj(param, ast.Atom(glob.KeywordSet)), state)
 		if verRet.IsErr() {

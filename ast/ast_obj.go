@@ -155,7 +155,7 @@ func GetAtomsInObj(obj Obj) []Atom {
 			ret = append(ret, atoms...)
 		}
 
-		// 这里用了性质：intensional set obj的第一位是atom，会出现在这里的ret的第一位；param并不是atom，所以不会出现在ret里
+		// 这里用了性质：set builder obj的第一位是atom，会出现在这里的ret的第一位；param并不是atom，所以不会出现在ret里
 		// 对于内涵集对象，需要特殊处理：移除绑定变量（第一个参数）
 		if IsSetBuilder(asObj) {
 			atomsFromSetBuilder := GetAtomsInSetBuilder(asObj)

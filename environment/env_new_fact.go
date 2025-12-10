@@ -615,18 +615,18 @@ func (env *Env) newEqualsFactNoPostProcess(stmt *ast.EqualsFactStmt) glob.GlobRe
 }
 
 // equalFactPostProcess_SetBuilderEquality 处理 x = {param parentSet: facts} 的情况
-// 如果右边是 intensional set（直接或通过 equal facts），则断言 left 满足 intensional set 的所有条件
+// 如果右边是 set builder（直接或通过 equal facts），则断言 left 满足 set builder 的所有条件
 func (env *Env) equalFactPostProcess_SetBuilderEquality(left, right ast.Obj) glob.GlobRet {
-	// 尝试获取 intensional set（可能是直接的，也可能是通过 equal facts 得到的）
+	// 尝试获取 set builder（可能是直接的，也可能是通过 equal facts 得到的）
 	setBuilderObj := env.GetSetBuilderEqualToObj(right)
 	if setBuilderObj == nil {
 		return glob.TrueRet("")
 	}
 
-	// 从 intensional set 中提取 param, parentSet, facts
+	// 从 set builder 中提取 param, parentSet, facts
 	setBuilderStruct, err := setBuilderObj.ToSetBuilderStruct()
 	if err != nil {
-		return glob.ErrRet(fmt.Errorf("failed to extract intensional set information: %s", err))
+		return glob.ErrRet(fmt.Errorf("failed to extract set builder information: %s", err))
 	}
 
 	// 创建替换映射：将 param 替换为 left

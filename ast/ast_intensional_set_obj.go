@@ -21,7 +21,7 @@ import (
 	glob "golitex/glob"
 )
 
-// intensional set 是如何写成 FnObj 的：
+// set builder 是如何写成 FnObj 的：
 // 1. 第一个参数是 param
 // 2. 第二个参数是 parent set
 // 3. 第三个参数是 facts
