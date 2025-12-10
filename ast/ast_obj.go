@@ -167,7 +167,7 @@ func GetAtomsInObj(obj Obj) []Atom {
 
 func GetAtomsInIntensionalSetObj(f *FnObj) []Atom {
 	// Convert FnObj to IntensionalSetObjStruct for easier processing
-	intensionalSet, err := FnObjToIntensionalSetObjStruct(f)
+	intensionalSet, err := f.ToIntensionalSetObjStruct()
 	if err != nil {
 		// Fallback: extract atoms from all params except the bound parameter
 		ret := []Atom{}

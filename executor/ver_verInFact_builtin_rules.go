@@ -910,7 +910,7 @@ func (ver *Verifier) verInFactByRightIsIntensionalSet(stmt *ast.SpecFactStmt, st
 		return NewEmptyExecUnknown()
 	}
 
-	intensionalSetObjStruct, err := ast.FnObjToIntensionalSetObjStruct(intensionalSet)
+	intensionalSetObjStruct, err := intensionalSet.ToIntensionalSetObjStruct()
 	if err != nil {
 		return NewExecErr(err.Error())
 	}

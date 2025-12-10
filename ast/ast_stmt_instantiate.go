@@ -1046,7 +1046,7 @@ func (stmt *HaveFnEqualCaseByCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt,
 
 func InstantiateIntensionalSetObj(obj *FnObj, uniMap map[string]Obj) (Obj, error) {
 	// Convert FnObj to IntensionalSetObj
-	intensionalSet, err := FnObjToIntensionalSetObjStruct(obj)
+	intensionalSet, err := obj.ToIntensionalSetObjStruct()
 	if err != nil {
 		return nil, err
 	}
@@ -1092,5 +1092,5 @@ func InstantiateIntensionalSetObj(obj *FnObj, uniMap map[string]Obj) (Obj, error
 	}
 
 	// Convert back to FnObj
-	return IntensionalSetObjStructToFnObj(instIntensionalSet)
+	return instIntensionalSet.ToFnObj()
 }

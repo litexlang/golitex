@@ -749,7 +749,7 @@ func (env *Env) equalFactPostProcess_intensionalSetEquality(left, right ast.Obj)
 	}
 
 	// 从 intensional set 中提取 param, parentSet, facts
-	intensionalSetObjStruct, err := ast.FnObjToIntensionalSetObjStruct(intensionalSet)
+	intensionalSetObjStruct, err := intensionalSet.ToIntensionalSetObjStruct()
 	if err != nil {
 		return glob.ErrRet(fmt.Errorf("failed to extract intensional set information: %s", err))
 	}
