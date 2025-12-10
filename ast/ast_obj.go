@@ -157,7 +157,7 @@ func GetAtomsInObj(obj Obj) []Atom {
 
 		// 这里用了性质：intensional set obj的第一位是atom，会出现在这里的ret的第一位；param并不是atom，所以不会出现在ret里
 		// 对于内涵集对象，需要特殊处理：移除绑定变量（第一个参数）
-		if IsIntensionalSetObj(asObj) {
+		if IsSetBuilder(asObj) {
 			atomsFromIntensionalSet := GetAtomsInIntensionalSetObj(asObj)
 			ret = append(ret, atomsFromIntensionalSet...)
 		}
@@ -167,7 +167,7 @@ func GetAtomsInObj(obj Obj) []Atom {
 
 func GetAtomsInIntensionalSetObj(f *FnObj) []Atom {
 	// Convert FnObj to IntensionalSetObjStruct for easier processing
-	intensionalSet, err := f.ToIntensionalSetObjStruct()
+	intensionalSet, err := f.ToSetBuilderStruct()
 	if err != nil {
 		// Fallback: extract atoms from all params except the bound parameter
 		ret := []Atom{}

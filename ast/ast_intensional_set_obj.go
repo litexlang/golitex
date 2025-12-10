@@ -29,21 +29,21 @@ import (
 // 5. typeEnumInt 是 fact 的类型，0 表示 FalsePure, 1 表示 FalseExist_St, 2 表示 TrueExist_St, 3 表示 TruePure
 // 6. paramCountInt 是 fact 的参数个数
 // 7. propName 是 fact 的属性名
-type IntensionalSetObjStruct struct {
+type SetBuilderStruct struct {
 	Param     string
 	ParentSet Obj
 	Facts     SpecFactPtrSlice
 }
 
-func IsIntensionalSetObj(obj Obj) bool {
+func IsSetBuilder(obj Obj) bool {
 	if asIntensionalSetStmt, ok := obj.(*FnObj); ok {
 		return asIntensionalSetStmt.FnHead.String() == glob.KeywordIntensionalSet
 	}
 	return false
 }
 
-// ToIntensionalSetObjStruct converts a FnObj representing an intensional set to IntensionalSetObj
-func (fnObj *FnObj) ToIntensionalSetObjStruct() (*IntensionalSetObjStruct, error) {
+// ToSetBuilderStruct converts a FnObj representing an intensional set to IntensionalSetObj
+func (fnObj *FnObj) ToSetBuilderStruct() (*SetBuilderStruct, error) {
 	if len(fnObj.Params) < 2 {
 		return nil, fmt.Errorf("intensional set expects at least param and parent set, got %d params", len(fnObj.Params))
 	}
@@ -121,7 +121,7 @@ func (fnObj *FnObj) ToIntensionalSetObjStruct() (*IntensionalSetObjStruct, error
 		facts = append(facts, specFact)
 	}
 
-	return &IntensionalSetObjStruct{
+	return &SetBuilderStruct{
 		Param:     param,
 		ParentSet: parentSet,
 		Facts:     facts,
@@ -129,6 +129,6 @@ func (fnObj *FnObj) ToIntensionalSetObjStruct() (*IntensionalSetObjStruct, error
 }
 
 // ToFnObj converts an IntensionalSetObj to a FnObj
-func (intensionalSet *IntensionalSetObjStruct) ToFnObj() (*FnObj, error) {
-	return MakeIntensionalSetObj(intensionalSet.Param, intensionalSet.ParentSet, intensionalSet.Facts)
+func (setBuilder *SetBuilderStruct) ToFnObj() (*FnObj, error) {
+	return MakeIntensionalSetObj(setBuilder.Param, setBuilder.ParentSet, setBuilder.Facts)
 }
