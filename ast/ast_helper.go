@@ -420,11 +420,11 @@ func changeSpecFactIntoAtoms(fact *SpecFactStmt) ([]Obj, error) {
 	ret := []Obj{}
 	switch fact.TypeEnum {
 	case FalsePure:
-		ret = append(ret, Atom(glob.DoubleUnderscoreSigNotPure))
+		ret = append(ret, Atom(glob.DoubleUnderscoreNotPure))
 	case FalseExist_St:
-		ret = append(ret, Atom(glob.KeywordDoubleUnderscoreSigNotExist))
+		ret = append(ret, Atom(glob.KeywordDoubleUnderscoreNotExist))
 	case TrueExist_St:
-		ret = append(ret, Atom(glob.DoubleUnderscoreSigExist))
+		ret = append(ret, Atom(glob.DoubleUnderscoreExist))
 	case TruePure:
 		ret = append(ret, Atom(glob.KeywordDoubleUnderscoreTruePure))
 	}
@@ -440,4 +440,12 @@ func changeSpecFactIntoAtoms(fact *SpecFactStmt) ([]Obj, error) {
 	}
 
 	return ret, nil
+}
+
+func IsIntensionalSetObjSeparator(obj Obj) bool {
+	atomObj, ok := obj.(Atom)
+	if !ok {
+		return false
+	}
+	return string(atomObj) == glob.KeywordDoubleUnderscoreNotExist || string(atomObj) == glob.KeywordDoubleUnderscoreTruePure || string(atomObj) == glob.DoubleUnderscoreNotPure || string(atomObj) == glob.DoubleUnderscoreExist
 }
