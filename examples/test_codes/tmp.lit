@@ -1,2 +1,13 @@
-1 $in {x R: x $in {y R: y > 0}}
--1 $in {x R: x $in {y R: y > 0}}
+prop p(x R)
+prop q(x R)
+
+know:
+    forall x R: 
+        $p(x)
+        =>:
+            x $in {self2 R: $q(self2), self2 > 0}
+            {self2 R: $q(self2), self2 > x} $in nonempty_set
+
+    $p(1)
+
+{self2 R: $q(self2), self2 > 1} $in nonempty_set

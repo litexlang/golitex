@@ -644,8 +644,6 @@ know @item_in_complement(z set, x, y set):
 		z $in y
 		not z $in x
 
-have set empty_set = {}
-
 prop sets_are_equal(x, y set):
 	forall a x => a $in y
 	forall a y => a $in x
@@ -785,7 +783,6 @@ know:
 		power_set(x) $in nonempty_set
 		$item_exists_in(power_set(x))
 
-know forall x set: empty_set $subset_of x
 know forall s finite_set: count(s) > 0 => s $in nonempty_set, $item_exists_in(s)
 
 know:
@@ -871,7 +868,10 @@ know:
 	forall a, b R: a != b <=> a - b != 0
 	forall a, b R: a > 0, b >= 0 => a + b > 0
 
-know not {} $in nonempty_set
+know:
+	not {} $in nonempty_set
+	forall x set: {} $subset_of x
+	forall x set: not x $in {}
 
 prop equal_set(x set, y set)
 
