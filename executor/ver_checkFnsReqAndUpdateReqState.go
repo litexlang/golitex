@@ -94,7 +94,21 @@ func (ver *Verifier) intensionalSetFnRequirement(objAsFnObj *ast.FnObj, state *V
 	}
 
 	// check facts in intensional set satisfy fn requirement
-	return ver.verifyIntensionalSetFactsFnRequirement(objAsFnObj, state)
+	for i := 2; i < len(objAsFnObj.Params); i++ {
+		if ast.IsIntensionalSetObjSeparator(objAsFnObj.Params[i]) {
+			continue
+		} else {
+			verRet := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(objAsFnObj.Params[i], state)
+			if verRet.IsErr() {
+				return verRet
+			}
+			if verRet.IsUnknown() {
+				return NewExecErr(fmt.Sprintf("parameters in %s must be atoms or functions, %s in %s is not valid", objAsFnObj.FnHead, objAsFnObj.Params[i], objAsFnObj))
+			}
+		}
+	}
+
+	return NewEmptyExecTrue()
 }
 
 func (ver *Verifier) enumSetFnRequirement(objAsFnObj *ast.FnObj, state *VerState) ExecRet {
