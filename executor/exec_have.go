@@ -219,25 +219,6 @@ func (exec *Executor) haveEnumSetStmt(stmt *ast.HaveEnumSetStmt) ExecRet {
 	return NewExecTrue(stmt.String())
 }
 
-func (exec *Executor) haveIntensionalSetStmt(stmt *ast.HaveIntensionalSetStmt) ExecRet {
-	// very important: check whether the parent set is a set
-	state := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.ParentSet, ast.Atom(glob.KeywordSet)}, stmt.Line))
-	if state.IsErr() {
-		return NewExecErr(state.String())
-	}
-	if state.IsUnknown() {
-		return NewExecErr("parent set of intensional set must be a set, i.e. `" + stmt.ParentSet.String() + " in " + ast.Atom(glob.KeywordSet).String() + "` must be true, but it is unknown")
-	}
-
-	defObjStmt := ast.NewDefLetStmt([]string{stmt.Param}, []ast.Obj{ast.Atom(glob.KeywordSet)}, stmt.Facts.Copy(), stmt.Line)
-	execState := exec.defLetStmt(defObjStmt)
-	if execState.IsNotTrue() {
-		return execState
-	}
-
-	return NewExecTrue(stmt.String())
-}
-
 func (exec *Executor) haveCartSetStmt(stmt *ast.HaveCartSetStmt) ExecRet {
 	// check that the cart has at least 2 parameters
 	if len(stmt.CartObj.Params) < 2 {

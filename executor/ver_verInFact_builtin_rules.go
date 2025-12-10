@@ -942,7 +942,7 @@ func (ver *Verifier) verInFactByRightIsSetBuilder(stmt *ast.SpecFactStmt, state 
 		}
 	}
 
-	return NewExecTrue(fmt.Sprintf("%s is true", stmt.String()))
+	return NewExecTrue(fmt.Sprintf("%s is true proved by definition of set builder", stmt.String()))
 }
 
 func (ver *Verifier) verInFactByRightIsEnumSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {

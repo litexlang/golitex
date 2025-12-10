@@ -65,17 +65,3 @@ func RemoveWindowsCarriage(code string) string {
 	// }
 	// return code
 }
-
-// func AddWindowsCarriageReturn(code string) string {
-// 	if runtime.GOOS == "windows" {
-// 		return strings.ReplaceAll(code, "\n", "\r\n")
-// 	}
-// 	return code
-// }
-
-func IsIntensionalSetObjSeparator(s string) bool {
-	// Old format used double underscore markers (__true, __not, etc.)
-	// New format uses integer encoding, so this function always returns false
-	// Kept for backward compatibility but no longer used
-	return false
-}

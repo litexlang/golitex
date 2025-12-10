@@ -48,7 +48,7 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 		return ret
 	}
 
-	if ret := e.inFactPostProcess_TryIntensionalSet(fact); ret.IsTrue() || ret.IsErr() {
+	if ret := e.inFactPostProcess_TrySetBuilder(fact); ret.IsTrue() || ret.IsErr() {
 		return ret
 	}
 
@@ -375,26 +375,26 @@ func (e *Env) inFactPostProcess_TryEnumSet(fact *ast.SpecFactStmt) glob.GlobRet 
 	return e.inFactPostProcess_InEnumSet(fact.Params[0], enumSet)
 }
 
-func (e *Env) inFactPostProcess_TryIntensionalSet(fact *ast.SpecFactStmt) glob.GlobRet {
-	intensionalSetObj := e.GetSetBuilderEqualToObj(fact.Params[1])
-	if intensionalSetObj == nil {
+func (e *Env) inFactPostProcess_TrySetBuilder(fact *ast.SpecFactStmt) glob.GlobRet {
+	setBuilderObj := e.GetSetBuilderEqualToObj(fact.Params[1])
+	if setBuilderObj == nil {
 		return glob.NewGlobUnknown("")
 	}
 
-	return e.inFactPostProcess_InIntensionalSet(fact.Params[0], intensionalSetObj)
+	return e.inFactPostProcess_InSetBuilder(fact.Params[0], setBuilderObj)
 }
 
-func (e *Env) inFactPostProcess_InIntensionalSet(obj ast.Obj, intensionalSet *ast.FnObj) glob.GlobRet {
-	intensionalSetObjStruct, err := intensionalSet.ToSetBuilderStruct()
+func (e *Env) inFactPostProcess_InSetBuilder(obj ast.Obj, setBuilderObj *ast.FnObj) glob.GlobRet {
+	setBuilderStruct, err := setBuilderObj.ToSetBuilderStruct()
 	if err != nil {
 		return glob.ErrRet(err)
 	}
 
-	uniMap := map[string]ast.Obj{intensionalSetObjStruct.Param: obj}
+	uniMap := map[string]ast.Obj{setBuilderStruct.Param: obj}
 
 	instFacts := []ast.FactStmt{}
 
-	for _, fact := range intensionalSetObjStruct.Facts {
+	for _, fact := range setBuilderStruct.Facts {
 		instFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return glob.ErrRet(err)
@@ -403,7 +403,7 @@ func (e *Env) inFactPostProcess_InIntensionalSet(obj ast.Obj, intensionalSet *as
 	}
 
 	// in parent set
-	inParentSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{obj, intensionalSetObjStruct.ParentSet}, glob.BuiltinLine)
+	inParentSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{obj, setBuilderStruct.ParentSet}, glob.BuiltinLine)
 	ret := e.NewFact(inParentSetFact)
 	if ret.IsErr() {
 		return glob.ErrRet(err)

@@ -517,46 +517,6 @@ func (s *ClaimProveByContradictionStmt) ToLatexString() string {
 	return claimProveBodyToLatexString(s.ClaimProveStmt.ToCheckFact, s.ClaimProveStmt.Proofs, false)
 }
 
-// func (s *EnumStmt) ToLatexString() string {
-// 	var builder strings.Builder
-// 	builder.WriteString(s.CurSet.ToLatexString())
-// 	builder.WriteString(" = \\{")
-
-// 	strSlice := make([]string, len(s.Items))
-// 	for i := range len(s.Items) {
-// 		strSlice[i] = s.Items[i].ToLatexString()
-// 	}
-// 	builder.WriteString(strings.Join(strSlice, ", "))
-
-// 	builder.WriteString("\\}")
-// 	return fmt.Sprintf("$%s$", strings.ReplaceAll(builder.String(), "$", ""))
-// }
-
-// func intentionalSetOrIntensionalSetToLatexString(param string, parentSet Obj, proofs SpecFactPtrSlice) string {
-// 	var builder strings.Builder
-// 	builder.WriteString(" = \\{")
-// 	builder.WriteString(param)
-// 	builder.WriteString(" $\\in$ ")
-// 	builder.WriteString(parentSet.ToLatexString())
-// 	builder.WriteString(" | ")
-// 	proofStrSlice := make([]string, len(proofs))
-// 	for i := range len(proofs) {
-// 		proofStrSlice[i] = proofs[i].ToLatexString()
-// 	}
-// 	builder.WriteString(strings.Join(proofStrSlice, ", "))
-// 	builder.WriteString("\\}")
-// 	return fmt.Sprintf("$%s$", strings.ReplaceAll(builder.String(), "$", ""))
-// }
-
-// func (s *IntensionalSetStmt) ToLatexString() string {
-// 	var builder strings.Builder
-// 	builder.WriteString(s.CurSet.ToLatexString())
-
-// 	builder.WriteString(intentionalSetOrIntensionalSetToLatexString(s.Param, s.ParentSet, s.Facts))
-
-// 	return builder.String()
-// }
-
 func (s *ClaimPropStmt) ToLatexString() string {
 	var builder strings.Builder
 
@@ -632,20 +592,6 @@ func (s *HaveEnumSetStmt) ToLatexString() string {
 
 	builder.WriteString(".\n")
 
-	builder.WriteString("\\end{definition}")
-	return builder.String()
-}
-
-func (s *HaveIntensionalSetStmt) ToLatexString() string {
-	var builder strings.Builder
-	builder.WriteString("\\begin{definition}[Set Exist By Axioms of Set Theory]")
-	builder.WriteString("We have a set: ")
-	builder.WriteString(s.Param)
-	builder.WriteString(" $\\in$ ")
-	builder.WriteString(s.ParentSet.ToLatexString())
-	builder.WriteString(" | ")
-	builder.WriteString(strings.Join(s.Facts.factStmtSliceToLatexStringSlice(), ", "))
-	builder.WriteString(".\n")
 	builder.WriteString("\\end{definition}")
 	return builder.String()
 }

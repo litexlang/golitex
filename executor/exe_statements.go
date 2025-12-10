@@ -71,8 +71,6 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 		execRet = exec.haveObjInNonEmptySetStmt(stmt)
 	case *ast.HaveEnumSetStmt:
 		execRet = exec.haveEnumSetStmt(stmt)
-	case *ast.HaveIntensionalSetStmt:
-		execRet = exec.haveIntensionalSetStmt(stmt)
 	case *ast.HaveCartSetStmt:
 		execRet = exec.haveCartSetStmt(stmt)
 	case *ast.NamedUniFactStmt:

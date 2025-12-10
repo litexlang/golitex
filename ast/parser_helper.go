@@ -53,16 +53,6 @@ func NoSelfReferenceInPropDef(propName string, facts []FactStmt) error {
 			if err != nil {
 				return err
 			}
-		// case *IntensionalSetStmt:
-		// 	facts := make([]FactStmt, len(asFactStmt.Facts))
-		// 	for i, fact := range asFactStmt.Facts {
-		// 		facts[i] = fact
-		// 	}
-
-		// 	err := NoSelfReferenceInPropDef(propName, facts)
-		// 	if err != nil {
-		// 		return err
-		// 	}
 		default:
 			continue
 		}
@@ -135,19 +125,3 @@ func ParseSourceCodeGetObj(s string) (Obj, error) {
 
 	return obj, nil
 }
-
-// GetParamParentSetFactsFromIntensionalSetObj extracts param, parentSet, and facts from an intensional set FnObj
-// func GetParamParentSetFactsFromIntensionalSetObj(intensionalSet *FnObj) (string, Obj, FactStmtSlice, error) {
-// 	intensionalSetObj, err := FnObjToIntensionalSetObjStruct(intensionalSet)
-// 	if err != nil {
-// 		return "", nil, nil, err
-// 	}
-
-// 	// Convert SpecFactPtrSlice to FactStmtSlice
-// 	facts := make(FactStmtSlice, len(intensionalSetObj.Facts))
-// 	for i, fact := range intensionalSetObj.Facts {
-// 		facts[i] = fact
-// 	}
-
-// 	return intensionalSetObj.Param, intensionalSetObj.ParentSet, facts, nil
-// }
