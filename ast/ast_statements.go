@@ -253,17 +253,6 @@ type HaveIntensionalSetStmt struct {
 	Line uint
 }
 
-// TODO: 我不知道这是做什么的
-// 定义返回值是集合的函数；这个的好处是，fn的定义不能保证函数的存在性；而have可以保证函数的存在性
-type HaveSetFnStmt struct {
-	DefHeader *DefHeader
-	Param     string
-	ParentSet Obj
-	Proofs    SpecFactPtrSlice
-
-	Line uint
-}
-
 // TODO: 这里需要变成factStmt, haveSetInterface，而不是只被用在声明的时候
 // 还需要对 enum 也有这样的 fn
 // type HaveSetDefinedByReplacementStmt struct {

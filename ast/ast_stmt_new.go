@@ -136,10 +136,6 @@ func NewHaveIntensionalSetStmt(param string, parentSet Obj, facts FactStmtSlice,
 	return &HaveIntensionalSetStmt{param, parentSet, facts, line}
 }
 
-func NewHaveSetFnStmt(declHeader *DefHeader, param string, parentSet Obj, proofs []*SpecFactStmt, line uint) *HaveSetFnStmt {
-	return &HaveSetFnStmt{declHeader, param, parentSet, proofs, line}
-}
-
 // func NewHaveSetDefinedByReplacementStmt(name string, domSet Obj, rangeSet Obj, propName Atom, line uint) *HaveSetDefinedByReplacementStmt {
 // 	return &HaveSetDefinedByReplacementStmt{name, domSet, rangeSet, propName, line}
 // }
