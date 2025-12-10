@@ -420,13 +420,13 @@ func changeSpecFactIntoAtoms(fact *SpecFactStmt) ([]Obj, error) {
 	ret := []Obj{}
 	switch fact.TypeEnum {
 	case FalsePure:
-		ret = append(ret, Atom(glob.DoubleUnderscoreSigTruePure))
+		ret = append(ret, Atom(glob.DoubleUnderscoreSigNotPure))
 	case FalseExist_St:
-		ret = append(ret, Atom(glob.DoubleUnderscoreSigNotExist))
+		ret = append(ret, Atom(glob.KeywordDoubleUnderscoreSigNotExist))
 	case TrueExist_St:
 		ret = append(ret, Atom(glob.DoubleUnderscoreSigExist))
 	case TruePure:
-		ret = append(ret, Atom(glob.DoubleUnderscoreSigTruePure))
+		ret = append(ret, Atom(glob.KeywordDoubleUnderscoreTruePure))
 	}
 	ret = append(ret, fact.PropName)
 	for _, param := range fact.Params {
