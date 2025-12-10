@@ -495,14 +495,6 @@ func (stmt *HaveObjInNonEmptySetStmt) Instantiate(uniMap map[string]Obj) (Stmt, 
 	return NewHaveObjInNonEmptySetStmt(stmt.Objs, newObjSets, stmt.Line), nil
 }
 
-func (stmt *HaveEnumSetStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	newEnumSetObj, err := stmt.EnumSetObj.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	return NewHaveEnumSetStmt(stmt.Name, newEnumSetObj.(*FnObj), stmt.Line), nil
-}
-
 func (stmt *HaveCartSetStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newCartObj, err := stmt.CartObj.Instantiate(uniMap)
 	if err != nil {

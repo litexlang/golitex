@@ -44,7 +44,7 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 		return ret
 	}
 
-	if ret := e.inFactPostProcess_TryEnumSet(fact); ret.IsTrue() || ret.IsErr() {
+	if ret := e.inFactPostProcess_TryListSet(fact); ret.IsTrue() || ret.IsErr() {
 		return ret
 	}
 
@@ -306,23 +306,23 @@ func (e *Env) equalFactPostProcess_tupleEquality(left ast.Obj, right ast.Obj) gl
 	return glob.TrueRet("")
 }
 
-// equalFactPostProcess_enumSetEquality 处理 x = {1, 2, 3} 的情况
+// equalFactPostProcess_listSetEquality 处理 x = {1, 2, 3} 的情况
 // 如果右边是 enum set（直接或通过 equal facts），则创建一个 or fact，表示 x 等于 enum set 中的某一个元素
-func (e *Env) equalFactPostProcess_enumSetEquality(left ast.Obj, right ast.Obj) glob.GlobRet {
+func (e *Env) equalFactPostProcess_listSetEquality(left ast.Obj, right ast.Obj) glob.GlobRet {
 	// 尝试获取 enum set（可能是直接的，也可能是通过 equal facts 得到的）
-	enumSetObj := e.GetObjEnumSet(right)
-	if enumSetObj == nil {
+	listSetObj := e.GetListSetEqualToObj(right)
+	if listSetObj == nil {
 		return glob.TrueRet("")
 	}
 
-	enumSet, ok := enumSetObj.(*ast.FnObj)
+	listSetFnObj, ok := listSetObj.(*ast.FnObj)
 	if !ok {
-		return glob.ErrRet(fmt.Errorf("expected enum set to be FnObj, got %T", enumSetObj))
+		return glob.ErrRet(fmt.Errorf("expected enum set to be FnObj, got %T", listSetObj))
 	}
 
 	// 创建一个 or fact，表示 left 等于 enum set 中的某一个元素
 	orFact := ast.NewOrStmt([]*ast.SpecFactStmt{}, glob.BuiltinLine)
-	for _, param := range enumSet.Params {
+	for _, param := range listSetFnObj.Params {
 		orFact.Facts = append(orFact.Facts, ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left, param}, glob.BuiltinLine))
 	}
 	ret := e.NewFact(orFact)
@@ -332,7 +332,7 @@ func (e *Env) equalFactPostProcess_enumSetEquality(left ast.Obj, right ast.Obj) 
 
 	// count(a) = len
 	countFn := ast.NewFnObj(ast.Atom(glob.KeywordCount), []ast.Obj{left})
-	countValue := ast.Atom(strconv.Itoa(len(enumSet.Params)))
+	countValue := ast.Atom(strconv.Itoa(len(listSetFnObj.Params)))
 	countEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{countFn, countValue}, glob.BuiltinLine)
 	ret = e.NewFact(countEqualFact)
 	if ret.IsErr() {
@@ -344,12 +344,12 @@ func (e *Env) equalFactPostProcess_enumSetEquality(left ast.Obj, right ast.Obj) 
 	return e.NewFact(isFiniteFact)
 }
 
-// inFactPostProcess_InEnumSet handles postprocessing for a $in enumset(...)
-// It generates an or fact indicating that the left param equals one of the enumset params
-func (e *Env) inFactPostProcess_InEnumSet(obj ast.Obj, enumSet *ast.FnObj) glob.GlobRet {
+// inFactPostProcess_InListSet handles postprocessing for a $in listSet(...)
+// It generates an or fact indicating that the left param equals one of the listSetFnObj params
+func (e *Env) inFactPostProcess_InListSet(obj ast.Obj, listSetFnObj *ast.FnObj) glob.GlobRet {
 	// 用所有的param做一个or出来，说明left等于其中的一个
 	orFact := ast.NewOrStmt([]*ast.SpecFactStmt{}, glob.BuiltinLine)
-	for _, param := range enumSet.Params {
+	for _, param := range listSetFnObj.Params {
 		orFact.Facts = append(orFact.Facts, ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{obj, param}, glob.BuiltinLine))
 	}
 	ret := e.NewFact(orFact)
@@ -360,19 +360,19 @@ func (e *Env) inFactPostProcess_InEnumSet(obj ast.Obj, enumSet *ast.FnObj) glob.
 	return glob.TrueRet("")
 }
 
-func (e *Env) inFactPostProcess_TryEnumSet(fact *ast.SpecFactStmt) glob.GlobRet {
-	// Try to get enumset, either directly or from equal facts
-	enumSetObj := e.GetObjEnumSet(fact.Params[1])
-	if enumSetObj == nil {
+func (e *Env) inFactPostProcess_TryListSet(fact *ast.SpecFactStmt) glob.GlobRet {
+	// Try to get listSet, either directly or from equal facts
+	listSetObj := e.GetListSetEqualToObj(fact.Params[1])
+	if listSetObj == nil {
 		return glob.NewGlobUnknown("")
 	}
 
-	enumSet, ok := enumSetObj.(*ast.FnObj)
+	listSetFnObj, ok := listSetObj.(*ast.FnObj)
 	if !ok {
-		return glob.ErrRet(fmt.Errorf("expected enum set to be FnObj, got %T", enumSetObj))
+		return glob.ErrRet(fmt.Errorf("expected enum set to be FnObj, got %T", listSetObj))
 	}
 
-	return e.inFactPostProcess_InEnumSet(fact.Params[0], enumSet)
+	return e.inFactPostProcess_InListSet(fact.Params[0], listSetFnObj)
 }
 
 func (e *Env) inFactPostProcess_TrySetBuilder(fact *ast.SpecFactStmt) glob.GlobRet {

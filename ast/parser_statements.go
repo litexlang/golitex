@@ -44,9 +44,7 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 			ret, err = p.defObjStmt(tb)
 		}
 	case glob.KeywordHave:
-		if tb.header.strAtCurIndexPlus(1) == glob.KeywordSet {
-			ret, err = p.haveSetStmt(tb)
-		} else if tb.header.strAtCurIndexPlus(1) == glob.KeywordFn {
+		if tb.header.strAtCurIndexPlus(1) == glob.KeywordFn {
 			if tb.header.strAtCurIndexPlus(2) == glob.KeySymbolColon {
 				ret, err = p.haveFnStmt(tb)
 				// } else if tb.header.strAtCurIndexPlus(4) == glob.KeywordLift {
@@ -428,67 +426,6 @@ func (p *TbParser) defObjStmt(tb *tokenBlock) (Stmt, error) {
 		}
 
 		return NewDefLetStmt(objNames, objSets, facts, tb.line), nil
-	}
-}
-
-func (p *TbParser) haveSetStmt(tb *tokenBlock) (Stmt, error) {
-	err := tb.header.skip(glob.KeywordHave)
-	if err != nil {
-		return nil, parserErrAtTb(err, tb)
-	}
-
-	err = tb.header.skip(glob.KeywordSet)
-	if err != nil {
-		return nil, parserErrAtTb(err, tb)
-	}
-
-	haveSetName, err := tb.header.next()
-	if err != nil {
-		return nil, parserErrAtTb(err, tb)
-	}
-
-	// err = tb.header.skip(glob.KeySymbolColonEqual)
-	err = tb.header.skip(glob.KeySymbolEqual)
-	if err != nil {
-		return nil, parserErrAtTb(err, tb)
-	}
-
-	// Check if next token is "cart"
-	if tb.header.is(glob.KeywordCart) {
-		// Parse cart(...)
-		rightObj, err := p.Obj(tb)
-		if err != nil {
-			return nil, parserErrAtTb(err, tb)
-		}
-
-		cartObj, ok := rightObj.(*FnObj)
-		if !ok {
-			return nil, fmt.Errorf("expected cart to be FnObj")
-		}
-
-		if !IsFn_WithHeadName(rightObj, glob.KeywordCart) {
-			return nil, fmt.Errorf("expected cart function call")
-		}
-
-		// Check end of line
-		if !tb.header.ExceedEnd() {
-			return nil, fmt.Errorf("expect end of line")
-		}
-
-		return NewHaveCartSetStmt(haveSetName, cartObj, tb.line), nil
-	}
-
-	obj, err := p.Obj(tb)
-	if err != nil {
-		return nil, parserErrAtTb(err, tb)
-	}
-
-	if IsEnumSetObj(obj) {
-		return NewHaveEnumSetStmt(haveSetName, obj.(*FnObj), tb.line), nil
-	} else if IsSetBuilder(obj) {
-		panic("have set builder is not supported")
-	} else {
-		return nil, fmt.Errorf("expect list set or set builder")
 	}
 }
 

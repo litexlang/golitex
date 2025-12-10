@@ -582,20 +582,6 @@ func (s *HaveObjInNonEmptySetStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (s *HaveEnumSetStmt) ToLatexString() string {
-	var builder strings.Builder
-	builder.WriteString("\\begin{definition}[Set Exist By Axioms of Set Theory]")
-
-	builder.WriteString("We have a set: ")
-
-	builder.WriteString(s.EnumSetObj.ToLatexString())
-
-	builder.WriteString(".\n")
-
-	builder.WriteString("\\end{definition}")
-	return builder.String()
-}
-
 func (s *HaveCartSetStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("\\begin{definition}[Set Exist By Axioms of Set Theory]")
