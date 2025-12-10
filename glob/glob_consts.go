@@ -29,3 +29,8 @@ const LatexMultiLineSig string = "\"\""
 const LitexFileSuffix string = ".lit"
 
 const MainDotLit string = "main.lit"
+
+const DoubleUnderscoreSigExist string = "__exist"
+const DoubleUnderscoreSigTruePure string = "__true"
+const DoubleUnderscoreSigNotExist string = "__not_exist"
+const DoubleUnderscoreSigNotPure string = "__not"

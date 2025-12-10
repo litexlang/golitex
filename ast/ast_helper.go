@@ -402,10 +402,30 @@ func MakeEnumSetObj(params []Obj) Obj {
 	return NewFnObj(Atom(glob.KeywordEnumSet), params)
 }
 
-func MakeIntensionalSetObj(param string, parentSet Obj, facts []FactStmt) Obj {
+func MakeIntensionalSetObj(param string, parentSet Obj, facts SpecFactPtrSlice) Obj {
 	params := []Obj{Atom(param), parentSet}
+
 	for _, fact := range facts {
-		params = append(params, Atom(fact.String()))
+		params = append(params, changeSpecFactIntoAtoms(fact)...)
 	}
+
 	return NewFnObj(Atom(glob.KeywordIntensionalSet), params)
+}
+
+func changeSpecFactIntoAtoms(fact *SpecFactStmt) []Obj {
+	ret := []Obj{}
+	switch fact.TypeEnum {
+	case FalsePure:
+		ret = append(ret, Atom(glob.DoubleUnderscoreSigTruePure))
+	case FalseExist_St:
+		ret = append(ret, Atom(glob.DoubleUnderscoreSigNotExist))
+	case TrueExist_St:
+		ret = append(ret, Atom(glob.DoubleUnderscoreSigExist))
+	case TruePure:
+		ret = append(ret, Atom(glob.DoubleUnderscoreSigTruePure))
+	}
+	for _, param := range fact.Params {
+		ret = append(ret, param)
+	}
+	return ret
 }

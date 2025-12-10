@@ -1,2 +1,1 @@
-prop p(x Z, y Z)
-let p R
+{self R: self > 0, self $in {self Z: self > 0}} = {self R: self > 0, self $in {self Z: self > 0}}
