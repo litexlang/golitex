@@ -25,10 +25,26 @@ import (
 // a
 // parse error at end of line, line 1:
 // a
-func parserErrAtTb(previousErr error, stmt *tokenBlock) error {
-	if curTok, err := stmt.header.currentToken(); err == nil {
-		return fmt.Errorf("parse error at \"%s\", line %d:\n%s\n%w", curTok, stmt.line, &stmt.header, previousErr)
-	} else {
-		return fmt.Errorf("parse error at end of line, line %d:\n%s\n%w", stmt.line, &stmt.header, previousErr)
+func parserErrAtTb(previousErr error, stmt *tokenBlock) *errAtLine {
+	if _, ok := previousErr.(*errAtLine); ok {
+		return previousErr.(*errAtLine)
 	}
+
+	return newErrAtLine(stmt.line, previousErr)
+}
+
+type errAtLine struct {
+	line uint
+	err  error
+}
+
+func newErrAtLine(line uint, err error) *errAtLine {
+	return &errAtLine{
+		line: line,
+		err:  err,
+	}
+}
+
+func (e *errAtLine) Error() string {
+	return fmt.Sprintf("parse error at line %d:\n%s", e.line, e.err.Error())
 }
