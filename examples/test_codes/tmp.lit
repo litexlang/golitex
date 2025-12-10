@@ -1,2 +1,3 @@
-{self R: self > 0} = {self R: self > 0}
-
+forall x R:
+    forall x Z:
+        x > x
