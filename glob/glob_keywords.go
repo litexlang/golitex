@@ -111,6 +111,11 @@ const (
 	KeywordProveFor = "prove_for"
 
 	KeywordEqualSet = "equal_set"
+
+	DoubleUnderscoreSigExist           = "__exist"
+	KeywordDoubleUnderscoreTruePure    = "__true"
+	KeywordDoubleUnderscoreSigNotExist = "__not_exist"
+	DoubleUnderscoreSigNotPure         = "__not"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
