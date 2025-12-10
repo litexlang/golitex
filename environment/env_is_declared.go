@@ -74,7 +74,7 @@ func (e *Env) isAtomDefinedAtCurEnv(AtomObjName ast.Atom) bool {
 }
 
 func (e *Env) AreAtomsInObjDefined(obj ast.Obj, extraAtomNames map[string]struct{}) glob.GlobRet {
-	if !ast.IsIntensionalSetObj(obj) {
+	if !ast.IsSetBuilder(obj) {
 		atoms := ast.GetAtomsInObj(obj)
 		return e.AreAtomsDeclared(atoms, extraAtomNames)
 	} else {
@@ -86,7 +86,7 @@ func (e *Env) AreAtomsInObjDefined(obj ast.Obj, extraAtomNames map[string]struct
 // excluding the intensional set's own parameter (which is a free variable not in the environment).
 func (e *Env) AreAtomsInIntensionalSetAreDeclared(intensionalSet *ast.FnObj, extraAtomNames map[string]struct{}) glob.GlobRet {
 	// Convert FnObj to IntensionalSetObjStruct for easier processing
-	intensionalSetObjStruct, err := intensionalSet.ToIntensionalSetObjStruct()
+	intensionalSetObjStruct, err := intensionalSet.ToSetBuilderStruct()
 	if err != nil {
 		return glob.ErrRet(fmt.Errorf("failed to parse intensional set: %s", err))
 	}

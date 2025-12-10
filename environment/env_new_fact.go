@@ -743,13 +743,13 @@ func (env *Env) newEqualsFactNoPostProcess(stmt *ast.EqualsFactStmt) glob.GlobRe
 // 如果右边是 intensional set（直接或通过 equal facts），则断言 left 满足 intensional set 的所有条件
 func (env *Env) equalFactPostProcess_intensionalSetEquality(left, right ast.Obj) glob.GlobRet {
 	// 尝试获取 intensional set（可能是直接的，也可能是通过 equal facts 得到的）
-	intensionalSet := env.GetObjIntensionalSet(right)
+	intensionalSet := env.GetSetBuilderEqualToObj(right)
 	if intensionalSet == nil {
 		return glob.TrueRet("")
 	}
 
 	// 从 intensional set 中提取 param, parentSet, facts
-	intensionalSetObjStruct, err := intensionalSet.ToIntensionalSetObjStruct()
+	intensionalSetObjStruct, err := intensionalSet.ToSetBuilderStruct()
 	if err != nil {
 		return glob.ErrRet(fmt.Errorf("failed to extract intensional set information: %s", err))
 	}

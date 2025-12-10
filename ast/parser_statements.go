@@ -485,8 +485,8 @@ func (p *TbParser) haveSetStmt(tb *tokenBlock) (Stmt, error) {
 
 	if IsEnumSetObj(obj) {
 		return NewHaveEnumSetStmt(haveSetName, obj.(*FnObj), tb.line), nil
-	} else if IsIntensionalSetObj(obj) {
-		intensionalSetObjStruct, err := obj.(*FnObj).ToIntensionalSetObjStruct()
+	} else if IsSetBuilder(obj) {
+		intensionalSetObjStruct, err := obj.(*FnObj).ToSetBuilderStruct()
 		if err != nil {
 			return nil, parserErrAtTb(err, tb)
 		}

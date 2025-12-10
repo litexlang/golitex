@@ -31,7 +31,7 @@ func (obj Atom) Instantiate(uniMap map[string]Obj) (Obj, error) {
 }
 
 func InstantiateObjFn(obj *FnObj, uniMap map[string]Obj) (Obj, error) {
-	if IsIntensionalSetObj(obj) {
+	if IsSetBuilder(obj) {
 		return InstantiateIntensionalSetObj(obj, uniMap)
 	}
 
@@ -1046,7 +1046,7 @@ func (stmt *HaveFnEqualCaseByCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt,
 
 func InstantiateIntensionalSetObj(obj *FnObj, uniMap map[string]Obj) (Obj, error) {
 	// Convert FnObj to IntensionalSetObj
-	intensionalSet, err := obj.ToIntensionalSetObjStruct()
+	intensionalSet, err := obj.ToSetBuilderStruct()
 	if err != nil {
 		return nil, err
 	}
@@ -1085,7 +1085,7 @@ func InstantiateIntensionalSetObj(obj *FnObj, uniMap map[string]Obj) (Obj, error
 	}
 
 	// Create new IntensionalSetObj with instantiated components
-	instIntensionalSet := &IntensionalSetObjStruct{
+	instIntensionalSet := &SetBuilderStruct{
 		Param:     intensionalSet.Param, // Keep the bound parameter unchanged
 		ParentSet: instParentSet,
 		Facts:     instFacts,
