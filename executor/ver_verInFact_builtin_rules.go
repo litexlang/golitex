@@ -137,21 +137,13 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 		return verRet
 	}
 
-	verRet = ver.verInFactByRightIsEnumSet(stmt, state)
+	verRet = ver.verInFactByRightIsListSet(stmt, state)
 	if verRet.IsErr() {
 		return verRet
 	}
 	if verRet.IsTrue() {
 		return verRet
 	}
-
-	// verRet = ver.verInFactByLeftIsEnumSetRightIsKeywordFiniteSet(stmt, state)
-	// if verRet.IsErr() {
-	// 	return verRet
-	// }
-	// if verRet.IsTrue() {
-	// 	return verRet
-	// }
 
 	return NewEmptyExecUnknown()
 }
@@ -945,19 +937,19 @@ func (ver *Verifier) verInFactByRightIsSetBuilder(stmt *ast.SpecFactStmt, state 
 	return NewExecTrue(fmt.Sprintf("%s is true proved by definition of set builder", stmt.String()))
 }
 
-func (ver *Verifier) verInFactByRightIsEnumSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	enumObj := ver.Env.GetObjEnumSet(stmt.Params[1])
-	if enumObj == nil {
+func (ver *Verifier) verInFactByRightIsListSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	listSetObj := ver.Env.GetListSetEqualToObj(stmt.Params[1])
+	if listSetObj == nil {
 		return NewEmptyExecUnknown()
 	}
 
-	enumSet, ok := enumObj.(*ast.FnObj)
+	listSetFnObj, ok := listSetObj.(*ast.FnObj)
 	if !ok {
 		return NewEmptyExecUnknown()
 	}
 
 	// 遍历 enum set 的所有元素，检查是否有任何一个等于 stmt.Params[0]
-	for _, enumItem := range enumSet.Params {
+	for _, enumItem := range listSetFnObj.Params {
 		equalFact := ast.NewEqualFact(stmt.Params[0], enumItem)
 		verRet := ver.VerFactStmt(equalFact, state)
 		if verRet.IsErr() {
@@ -972,18 +964,3 @@ func (ver *Verifier) verInFactByRightIsEnumSet(stmt *ast.SpecFactStmt, state *Ve
 	// 没有找到相等的元素，返回 unknown
 	return NewEmptyExecUnknown()
 }
-
-// func (ver *Verifier) verInFactByLeftIsEnumSetRightIsKeywordFiniteSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-// 	if !ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordFiniteSet) {
-// 		return NewEmptyExecUnknown()
-// 	}
-
-// 	enumObj := ver.Env.GetObjEnumSet(stmt.Params[0])
-// 	if enumObj == nil {
-// 		return NewEmptyExecUnknown()
-// 	}
-
-// 	_ = state
-
-// 	return NewExecTrue("Any enumeration set is in finite set")
-// }

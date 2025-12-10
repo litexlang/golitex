@@ -37,7 +37,7 @@ import (
 //		  → bracedExpr_orTuple() [解析括号表达式]
 func (p *TbParser) Obj(tb *tokenBlock) (Obj, error) {
 	if tb.header.is(glob.KeySymbolLeftCurly) {
-		return p.EnumSetObjOrSetBuilderObj(tb)
+		return p.ListSetObjOrSetBuilderObj(tb)
 	}
 
 	return p.objInfixExpr(tb, glob.PrecLowest)
@@ -461,7 +461,7 @@ func (p *TbParser) backSlashExpr(tb *tokenBlock) (Obj, error) {
 	return Atom(obj), nil
 }
 
-func (p *TbParser) EnumSetObjOrSetBuilderObj(tb *tokenBlock) (Obj, error) {
+func (p *TbParser) ListSetObjOrSetBuilderObj(tb *tokenBlock) (Obj, error) {
 	err := tb.header.skip(glob.KeySymbolLeftCurly)
 	if err != nil {
 		return nil, err
@@ -472,7 +472,7 @@ func (p *TbParser) EnumSetObjOrSetBuilderObj(tb *tokenBlock) (Obj, error) {
 		if err != nil {
 			return nil, err
 		}
-		return MakeEnumSetObj([]Obj{}), nil
+		return MakeListSetObj([]Obj{}), nil
 	}
 
 	obj, err := p.Obj(tb)
@@ -483,11 +483,11 @@ func (p *TbParser) EnumSetObjOrSetBuilderObj(tb *tokenBlock) (Obj, error) {
 	if !tb.header.is(glob.KeySymbolComma) && !tb.header.is(glob.KeySymbolRightCurly) {
 		return p.setBuilderObj(tb, obj)
 	} else {
-		return p.enumSetObj(tb, obj)
+		return p.listSetObj(tb, obj)
 	}
 }
 
-func (p *TbParser) enumSetObj(tb *tokenBlock, firstParam Obj) (Obj, error) {
+func (p *TbParser) listSetObj(tb *tokenBlock, firstParam Obj) (Obj, error) {
 	enumItems := []Obj{firstParam}
 
 	// 跳过第一个逗号（如果存在）
@@ -511,7 +511,7 @@ func (p *TbParser) enumSetObj(tb *tokenBlock, firstParam Obj) (Obj, error) {
 		return nil, err
 	}
 
-	return MakeEnumSetObj(enumItems), nil
+	return MakeListSetObj(enumItems), nil
 }
 
 // {x R: specific fact, ..., specific fact}

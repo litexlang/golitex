@@ -398,8 +398,8 @@ func (factSlice FactStmtSlice) Copy() FactStmtSlice {
 	return newFactSlice
 }
 
-func MakeEnumSetObj(params []Obj) Obj {
-	return NewFnObj(Atom(glob.KeywordEnumSet), params)
+func MakeListSetObj(params []Obj) Obj {
+	return NewFnObj(Atom(glob.KeywordListSet), params)
 }
 
 func MakeSetBuilderObj(param string, parentSet Obj, facts SpecFactPtrSlice) (*FnObj, error) {
@@ -453,9 +453,9 @@ func IsIndexOptFnObj(f *FnObj) bool {
 	return f.FnHead.String() == glob.KeywordIndexOpt
 }
 
-func IsEnumSetObj(obj Obj) bool {
+func IsListSetObj(obj Obj) bool {
 	if asEnumStmt, ok := obj.(*FnObj); ok {
-		return asEnumStmt.FnHead.String() == glob.KeywordEnumSet
+		return asEnumStmt.FnHead.String() == glob.KeywordListSet
 	}
 	return false
 }

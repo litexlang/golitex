@@ -422,7 +422,7 @@ func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, glob.Glob
 	}
 
 	// 处理 x = {1, 2, 3} 的情况
-	ret = env.equalFactPostProcess_enumSetEquality(fact.Params[0], fact.Params[1])
+	ret = env.equalFactPostProcess_listSetEquality(fact.Params[0], fact.Params[1])
 	if ret.IsErr() {
 		return false, ret
 	}

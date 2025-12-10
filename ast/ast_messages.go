@@ -462,7 +462,7 @@ func (f *FnObj) String() string {
 		return IndexOptObjString(f)
 	}
 
-	if IsEnumSetObj(f) {
+	if IsListSetObj(f) {
 		paramStrSlice := make([]string, len(f.Params))
 		for i := range len(f.Params) {
 			paramStrSlice[i] = f.Params[i].String()
@@ -693,14 +693,6 @@ func (stmt *ProveByEnumStmt) String() string {
 		}
 		builder.WriteString(strings.Join(proofStrSlice, "\n"))
 	}
-	return builder.String()
-}
-
-func (stmt *HaveEnumSetStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordHave)
-	builder.WriteString(" ")
-	builder.WriteString(stmt.EnumSetObj.String())
 	return builder.String()
 }
 

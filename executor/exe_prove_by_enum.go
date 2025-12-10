@@ -23,7 +23,7 @@ import (
 func (exec *Executor) proveByEnumMainLogic(stmt *ast.ProveByEnumStmt) (ExecRet, error) {
 	enums := [][]ast.Obj{}
 	for _, paramSet := range stmt.Fact.ParamSets {
-		enumSet := exec.Env.GetObjEnumSet(paramSet)
+		enumSet := exec.Env.GetListSetEqualToObj(paramSet)
 		if enumSet == nil {
 			return NewEmptyExecErr(), fmt.Errorf("prove over finite set statement error: enum set not found")
 		}

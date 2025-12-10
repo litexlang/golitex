@@ -124,10 +124,6 @@ func NewHaveObjInNonEmptySetStmt(objNames []string, objSets []Obj, line uint) *H
 	return &HaveObjInNonEmptySetStmt{objNames, objSets, line}
 }
 
-func NewHaveEnumSetStmt(name string, enumSetObj *FnObj, line uint) *HaveEnumSetStmt {
-	return &HaveEnumSetStmt{name, enumSetObj, line}
-}
-
 func NewNamedUniFactStmt(defPropStmt *DefPropStmt, line uint) *NamedUniFactStmt {
 	return &NamedUniFactStmt{defPropStmt, line}
 }

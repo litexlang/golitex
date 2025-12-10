@@ -186,7 +186,7 @@ func (ver *Verifier) verItemExistsInByBuiltinRules(stmt *ast.SpecFactStmt, state
 		return NewExecErr(fmt.Sprintf("builtin logic opt rule should have 1 param, but got %d", len(stmt.Params)))
 	}
 
-	if ast.IsEnumSetObj(stmt.Params[0]) {
+	if ast.IsListSetObj(stmt.Params[0]) {
 		asEnumSet, ok := stmt.Params[0].(*ast.FnObj)
 		if !ok {
 			return NewEmptyExecUnknown()
@@ -219,7 +219,7 @@ func (ver *Verifier) IsInNonEmptyByBuiltinRules(stmt *ast.SpecFactStmt, state *V
 		return NewEmptyExecUnknown()
 	}
 
-	if ast.IsEnumSetObj(stmt.Params[0]) {
+	if ast.IsListSetObj(stmt.Params[0]) {
 		asEnumSet, ok := stmt.Params[0].(*ast.FnObj)
 		if !ok {
 			return NewEmptyExecUnknown()
