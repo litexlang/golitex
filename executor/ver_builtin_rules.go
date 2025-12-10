@@ -127,13 +127,13 @@ func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt *ast.SpecFactStmt, st
 		return NewExecErr(fmt.Sprintf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params)))
 	}
 
-	leftFc, ok, err := ast.MakeObjIntoNumLitExpr(stmt.Params[0])
+	leftObj, ok, err := ast.MakeObjIntoNumLitExpr(stmt.Params[0])
 	if err != nil {
 		return NewExecErr(err.Error())
 	}
 	if ok {
 		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordReal) {
-			isSuccess = glob.IsRealNumLitExpr(leftFc)
+			isSuccess = glob.IsRealNumLitExpr(leftObj)
 			if isSuccess {
 				return NewEmptyExecTrue()
 			} else {
@@ -142,7 +142,7 @@ func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt *ast.SpecFactStmt, st
 		}
 
 		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordNatural) {
-			isSuccess = glob.IsNatNumLitExpr(leftFc)
+			isSuccess = glob.IsNatNumLitExpr(leftObj)
 			if isSuccess {
 				return NewEmptyExecTrue()
 			} else {
@@ -151,7 +151,7 @@ func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt *ast.SpecFactStmt, st
 		}
 
 		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordInteger) {
-			isSuccess = glob.IsIntegerNumLitExpr(leftFc)
+			isSuccess = glob.IsIntegerNumLitExpr(leftObj)
 			if isSuccess {
 				return NewEmptyExecTrue()
 			} else {
@@ -160,7 +160,7 @@ func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt *ast.SpecFactStmt, st
 		}
 
 		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordRational) {
-			isSuccess = glob.IsRationalNumLitExpr(leftFc)
+			isSuccess = glob.IsRationalNumLitExpr(leftObj)
 			if isSuccess {
 				return NewEmptyExecTrue()
 			} else {
@@ -169,7 +169,7 @@ func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt *ast.SpecFactStmt, st
 		}
 
 		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordNPos) {
-			isSuccess = glob.IsNPosNumLitExpr(leftFc)
+			isSuccess = glob.IsNPosNumLitExpr(leftObj)
 			if isSuccess {
 				return NewEmptyExecTrue()
 			} else {
@@ -186,7 +186,7 @@ func (ver *Verifier) verItemExistsInByBuiltinRules(stmt *ast.SpecFactStmt, state
 		return NewExecErr(fmt.Sprintf("builtin logic opt rule should have 1 param, but got %d", len(stmt.Params)))
 	}
 
-	if ast.IsEnumSetObj(stmt.Params[0]) {
+	if ast.IsListSetObj(stmt.Params[0]) {
 		asEnumSet, ok := stmt.Params[0].(*ast.FnObj)
 		if !ok {
 			return NewEmptyExecUnknown()
@@ -219,7 +219,7 @@ func (ver *Verifier) IsInNonEmptyByBuiltinRules(stmt *ast.SpecFactStmt, state *V
 		return NewEmptyExecUnknown()
 	}
 
-	if ast.IsEnumSetObj(stmt.Params[0]) {
+	if ast.IsListSetObj(stmt.Params[0]) {
 		asEnumSet, ok := stmt.Params[0].(*ast.FnObj)
 		if !ok {
 			return NewEmptyExecUnknown()

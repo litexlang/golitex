@@ -22,7 +22,7 @@ import (
 )
 
 func (env *Env) IsValidIdentifierAvailable(name string) glob.GlobRet {
-	err := glob.IsValidUseDefinedFcAtom(name)
+	err := glob.IsValidUseDefinedAtomObj(name)
 	if err != nil {
 		return glob.ErrRet(err)
 	}

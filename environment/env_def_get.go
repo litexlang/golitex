@@ -16,9 +16,9 @@ package litex_env
 
 import ast "golitex/ast"
 
-func (e *Env) GetFnTemplateDef(fcAtomName ast.Atom) *ast.FnTemplateDefStmt {
+func (e *Env) GetFnTemplateDef(objAtomName ast.Atom) *ast.FnTemplateDefStmt {
 	for env := e; env != nil; env = env.Parent {
-		fnTemplateDef, ok := env.FnTemplateDefMem[string(fcAtomName)]
+		fnTemplateDef, ok := env.FnTemplateDefMem[string(objAtomName)]
 		if ok {
 			return &fnTemplateDef
 		}
@@ -27,8 +27,8 @@ func (e *Env) GetFnTemplateDef(fcAtomName ast.Atom) *ast.FnTemplateDefStmt {
 	return nil
 }
 
-func (e *Env) GetFnTemplateDef_KeyIsFcHead(fc *ast.FnObj) *ast.FnTemplateDefStmt {
-	fnHeadAsAtom, ok := fc.FnHead.(ast.Atom)
+func (e *Env) GetFnTemplateDef_KeyIsObjHead(obj *ast.FnObj) *ast.FnTemplateDefStmt {
+	fnHeadAsAtom, ok := obj.FnHead.(ast.Atom)
 	if !ok {
 		return nil
 	}
@@ -57,39 +57,9 @@ func (e *Env) GetPropDef(propName ast.Atom) *ast.DefPropStmt {
 	return nil
 }
 
-func (e *Env) GetHaveSetFnDef(fnName ast.Atom) *ast.HaveSetFnStmt {
+func (e *Env) GetSymbolSimplifiedValue(obj ast.Obj) ast.Obj {
 	for env := e; env != nil; env = env.Parent {
-		haveSetFn, ok := env.HaveSetFnDefMem[fnName.String()]
-		if ok {
-			return &haveSetFn
-		}
-	}
-	return nil
-}
-
-// func (e *Env) isUserDefinedObj(atom ast.Atom) bool {
-// 	for curEnv := e; curEnv != nil; curEnv = curEnv.Parent {
-// 		_, ok := curEnv.ObjDefMem[string(atom)]
-// 		if ok {
-// 			return true
-// 		}
-// 	}
-// 	return false
-// }
-
-// func (e *Env) GetIntensionalSet(fc ast.Obj) *ast.IntensionalSetStmt {
-// 	for env := e; env != nil; env = env.Parent {
-// 		intensionalSet, ok := env.IntensionalSetMem[fc.String()]
-// 		if ok {
-// 			return &intensionalSet
-// 		}
-// 	}
-// 	return nil
-// }
-
-func (e *Env) GetSymbolSimplifiedValue(fc ast.Obj) ast.Obj {
-	for env := e; env != nil; env = env.Parent {
-		symbolValue, ok := env.SymbolSimplifiedValueMem[fc.String()]
+		symbolValue, ok := env.SymbolSimplifiedValueMem[obj.String()]
 		if ok {
 			return symbolValue
 		}

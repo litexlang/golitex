@@ -12,17 +12,16 @@
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
-package litex_parser
+package litex_ast
 
 import (
 	"fmt"
-	ast "golitex/ast"
 )
 
-func checkFactsUniDepth0(facts []ast.FactStmt) error {
+func checkFactsUniDepth0(facts []FactStmt) error {
 	for _, fact := range facts {
 		switch asFact := fact.(type) {
-		case *ast.UniFactStmt:
+		case *UniFactStmt:
 			err := checkUniFactDepth0(asFact)
 			if err != nil {
 				return err
@@ -33,10 +32,10 @@ func checkFactsUniDepth0(facts []ast.FactStmt) error {
 	return nil
 }
 
-func checkFactsUniDepth1(facts []ast.FactStmt) error {
+func checkFactsUniDepth1(facts []FactStmt) error {
 	for _, fact := range facts {
 		switch asFact := fact.(type) {
-		case *ast.UniFactStmt:
+		case *UniFactStmt:
 			ok := checkUniFactDepth1(asFact)
 			if !ok {
 				return fmt.Errorf("too many levels of universal fact in universal fact:\n%s\nthere must be at most two levels of universal fact", asFact.String())
@@ -47,10 +46,10 @@ func checkFactsUniDepth1(facts []ast.FactStmt) error {
 	return nil
 }
 
-func checkUniFactDepth0(uniFact *ast.UniFactStmt) error {
+func checkUniFactDepth0(uniFact *UniFactStmt) error {
 	for _, fact := range uniFact.DomFacts {
 		switch asFact := fact.(type) {
-		case *ast.UniFactStmt:
+		case *UniFactStmt:
 			if !checkUniFactDepth1(asFact) {
 				return fmt.Errorf("too many levels of universal fact in universal fact:\n%s\nthere must be at most two levels of universal fact", uniFact.String())
 			}
@@ -59,7 +58,7 @@ func checkUniFactDepth0(uniFact *ast.UniFactStmt) error {
 
 	for _, fact := range uniFact.ThenFacts {
 		switch asFact := fact.(type) {
-		case *ast.UniFactStmt:
+		case *UniFactStmt:
 			if !checkUniFactDepth1(asFact) {
 				return fmt.Errorf("too many levels of universal fact in universal fact:\n%s\nthere must be at most two levels of universal fact", uniFact.String())
 			}
@@ -69,17 +68,17 @@ func checkUniFactDepth0(uniFact *ast.UniFactStmt) error {
 	return nil
 }
 
-func checkUniFactDepth1(uniFact *ast.UniFactStmt) bool {
+func checkUniFactDepth1(uniFact *UniFactStmt) bool {
 	for _, fact := range uniFact.DomFacts {
 		switch fact.(type) {
-		case *ast.UniFactStmt:
+		case *UniFactStmt:
 			return false
 		}
 	}
 
 	for _, fact := range uniFact.ThenFacts {
 		switch fact.(type) {
-		case *ast.UniFactStmt:
+		case *UniFactStmt:
 			return false
 		}
 	}

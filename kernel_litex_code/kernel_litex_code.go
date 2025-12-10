@@ -372,7 +372,7 @@ know forall a, b, c, d R: c != 0, a = d * (b / c) => a * c = d * b
 know forall x, y, z R: z != 0, x = y / z => x * z = y
 
 fn range(x Z, y Z) set:
-	range(x, y) = {i Z: x <= i, i < y}
+	range(x, y) = {self Z: x <= self, self < y}
 
 """
 know:
@@ -644,8 +644,6 @@ know @item_in_complement(z set, x, y set):
 		z $in y
 		not z $in x
 
-have set empty_set = {}
-
 prop sets_are_equal(x, y set):
 	forall a x => a $in y
 	forall a y => a $in x
@@ -758,7 +756,7 @@ know forall x, y nonempty_set: $item_exists_in(fn(x) y)
 fn inverse_image_set(X set, Y set, f fn(X)Y, U set) set:
     U $subset_of Y
     =>:
-        inverse_image_set(X, Y, f, U) = {x X: f(x) $in U}
+        inverse_image_set(X, Y, f, U) = {self X: f(self) $in U}
 
 fn difference(x, y set) set
 know:
@@ -785,7 +783,6 @@ know:
 		power_set(x) $in nonempty_set
 		$item_exists_in(power_set(x))
 
-know forall x set: empty_set $subset_of x
 know forall s finite_set: count(s) > 0 => s $in nonempty_set, $item_exists_in(s)
 
 know:
@@ -839,8 +836,6 @@ fn subsets(x set) set
 know forall x set, y subsets(x): y $subset_of x, forall t y => t $in x
 know forall x, y set: x $subset_of y => x $in subsets(y)
 
-prop is_intensional_set(x set)
-
 know forall x, y set => x = y <=> x $subset_of y, y $subset_of x
 
 know forall x R: abs(x) >= 0
@@ -873,7 +868,16 @@ know:
 	forall a, b R: a != b <=> a - b != 0
 	forall a, b R: a > 0, b >= 0 => a + b > 0
 
-know not {} $in nonempty_set
+know:
+	not {} $in nonempty_set
+	forall x set: {} $subset_of x
+	forall x set: not x $in {}
 
 prop equal_set(x set, y set)
+
+fn enum(x, y Z) set:
+	dom:
+		x <= y
+	=>:
+		enum(x, y) = {self Z: x <= self, self <= y}
 `
