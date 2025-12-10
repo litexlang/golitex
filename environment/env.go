@@ -129,15 +129,6 @@ func NewEnv(parent *Env) *Env {
 		DefProveAlgoMem:          make(map[string]*ast.DefProveAlgoStmt),
 		PackageManager:           packageManager,
 	}
-
-	if parent == nil {
-		env.ObjDefMem[glob.DoubleUnderscoreSigExist] = ast.NewDefLetStmt([]string{glob.DoubleUnderscoreSigExist}, []ast.Obj{ast.Atom(glob.DoubleUnderscoreSigExist)}, []ast.FactStmt{}, glob.BuiltinLine)
-		env.ObjDefMem[glob.DoubleUnderscoreSigNotExist] = ast.NewDefLetStmt([]string{glob.DoubleUnderscoreSigNotExist}, []ast.Obj{ast.Atom(glob.DoubleUnderscoreSigNotExist)}, []ast.FactStmt{}, glob.BuiltinLine)
-		env.ObjDefMem[glob.DoubleUnderscoreSigTruePure] = ast.NewDefLetStmt([]string{glob.DoubleUnderscoreSigTruePure}, []ast.Obj{ast.Atom(glob.DoubleUnderscoreSigTruePure)}, []ast.FactStmt{}, glob.BuiltinLine)
-		env.ObjDefMem[glob.DoubleUnderscoreSigNotPure] = ast.NewDefLetStmt([]string{glob.DoubleUnderscoreSigNotPure}, []ast.Obj{ast.Atom(glob.DoubleUnderscoreSigNotPure)}, []ast.FactStmt{}, glob.BuiltinLine)
-		env.ObjDefMem[glob.DoubleUnderscoreSigExist] = ast.NewDefLetStmt([]string{glob.DoubleUnderscoreSigExist}, []ast.Obj{ast.Atom(glob.DoubleUnderscoreSigExist)}, []ast.FactStmt{}, glob.BuiltinLine)
-	}
-
 	return env
 }
 
