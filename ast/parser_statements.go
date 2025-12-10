@@ -486,16 +486,7 @@ func (p *TbParser) haveSetStmt(tb *tokenBlock) (Stmt, error) {
 	if IsEnumSetObj(obj) {
 		return NewHaveEnumSetStmt(haveSetName, obj.(*FnObj), tb.line), nil
 	} else if IsSetBuilder(obj) {
-		intensionalSetObjStruct, err := obj.(*FnObj).ToSetBuilderStruct()
-		if err != nil {
-			return nil, parserErrAtTb(err, tb)
-		}
-		// Convert SpecFactPtrSlice to FactStmtSlice
-		facts := make(FactStmtSlice, len(intensionalSetObjStruct.Facts))
-		for i, fact := range intensionalSetObjStruct.Facts {
-			facts[i] = fact
-		}
-		return NewHaveIntensionalSetStmt(intensionalSetObjStruct.Param, intensionalSetObjStruct.ParentSet, facts, tb.line), nil
+		panic("have set builder is not supported")
 	} else {
 		return nil, fmt.Errorf("expect enum set or intensional set")
 	}
@@ -2615,7 +2606,7 @@ func (p *TbParser) fact(tb *tokenBlock) (FactStmt, error) {
 		}
 		return ret, nil
 	} else {
-		ret, err := p.relaFact_intensionalSetFact_enumStmt_equals(tb)
+		ret, err := p.relationalSpecFactOrEqualsFact(tb)
 		if err != nil {
 			return nil, parserErrAtTb(err, tb)
 		}
@@ -3267,7 +3258,7 @@ func (p *TbParser) relaEqualsFactStmt(tb *tokenBlock, obj, obj2 Obj) (*EqualsFac
 	return NewEqualsFactStmt(params, tb.line), nil
 }
 
-func (p *TbParser) relaFact_intensionalSetFact_enumStmt_equals(tb *tokenBlock) (FactStmt, error) {
+func (p *TbParser) relationalSpecFactOrEqualsFact(tb *tokenBlock) (FactStmt, error) {
 	var ret *SpecFactStmt
 
 	obj, err := p.Obj(tb)
@@ -3298,8 +3289,6 @@ func (p *TbParser) relaFact_intensionalSetFact_enumStmt_equals(tb *tokenBlock) (
 
 			ret = NewSpecFactStmt(TruePure, propName, params, tb.line)
 		}
-		// } else if opt == glob.KeySymbolEqual && tb.header.is(glob.KeySymbolLeftCurly) {
-		// 	return tb.enumStmt_or_intensionalSetStmt_or_DomOf(obj)
 	} else if glob.IsBuiltinInfixRelaPropSymbol(opt) {
 		obj2, err := p.Obj(tb)
 		if err != nil {

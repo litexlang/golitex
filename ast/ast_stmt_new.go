@@ -116,10 +116,6 @@ func NewClaimExistPropStmt(existProp *DefExistPropStmt, proofs []Stmt, haveObj [
 	return &ClaimExistPropStmt{existProp, proofs, haveObj, line}
 }
 
-// func NewIntensionalSetStmt(curSet Obj, param string, parentSet Obj, proofs []*SpecFactStmt, line uint) *IntensionalSetStmt {
-// 	return &IntensionalSetStmt{curSet, param, parentSet, proofs, line}
-// }
-
 func NewProveByEnumStmt(fact *UniFactStmt, proofs []Stmt, line uint) *ProveByEnumStmt {
 	return &ProveByEnumStmt{fact, proofs, line}
 }
@@ -132,14 +128,6 @@ func NewHaveEnumSetStmt(name string, enumSetObj *FnObj, line uint) *HaveEnumSetS
 	return &HaveEnumSetStmt{name, enumSetObj, line}
 }
 
-func NewHaveIntensionalSetStmt(param string, parentSet Obj, facts FactStmtSlice, line uint) *HaveIntensionalSetStmt {
-	return &HaveIntensionalSetStmt{param, parentSet, facts, line}
-}
-
-// func NewHaveSetDefinedByReplacementStmt(name string, domSet Obj, rangeSet Obj, propName Atom, line uint) *HaveSetDefinedByReplacementStmt {
-// 	return &HaveSetDefinedByReplacementStmt{name, domSet, rangeSet, propName, line}
-// }
-
 func NewNamedUniFactStmt(defPropStmt *DefPropStmt, line uint) *NamedUniFactStmt {
 	return &NamedUniFactStmt{defPropStmt, line}
 }
@@ -151,10 +139,6 @@ func NewEqualsFactStmt(params ObjSlice, line uint) *EqualsFactStmt {
 func NewKnowExistPropStmt(existProp *DefExistPropStmt, line uint) *KnowExistPropStmt {
 	return &KnowExistPropStmt{existProp, line}
 }
-
-// func NewLatexStmt(comment string, line uint) *LatexStmt {
-// 	return &LatexStmt{comment, line}
-// }
 
 func NewFnTemplateStmt(defHeader *DefHeader, templateDomFacts []FactStmt, fnTStruct *FnTStruct, line uint) *FnTemplateDefStmt {
 	return &FnTemplateDefStmt{defHeader, templateDomFacts, fnTStruct, line}
@@ -200,17 +184,9 @@ func NewClaimHaveFnStmt(defFnStmt *DefFnStmt, proof []Stmt, haveObjSatisfyFn Obj
 // 	return &MarkdownStmt{comment, line}
 // }
 
-// func NewProveInRange2Stmt(start int64, end int64, param string, domFacts ReversibleFacts, thenFacts []FactStmt, proofs []Stmt, line uint) *ProveInRange2tmt {
-// 	return &ProveInRange2tmt{start, end, param, domFacts, thenFacts, proofs, line}
-// }
-
 func NewClaimIffStmt(uniFactWithIffStmt *UniFactWithIffStmt, proofs []Stmt, proofs2 []Stmt, line uint) *ClaimIffStmt {
 	return &ClaimIffStmt{uniFactWithIffStmt, proofs, proofs2, line}
 }
-
-// func NewProveInRangeSetStmt(start int64, end int64, param string, intensionalSet Obj, thenFacts []FactStmt, proofs []Stmt, line uint) *ProveInRangeSetStmt {
-// 	return &ProveInRangeSetStmt{start, end, param, intensionalSet, thenFacts, proofs, line}
-// }
 
 func NewProveInRangeStmt(param string, start Obj, end Obj, domFacts []FactStmt, thenFacts []FactStmt, proofs []Stmt, line uint) *ProveInRangeStmt2 {
 	return &ProveInRangeStmt2{param: param, start: start, end: end, DomFactsOrNil: domFacts, ThenFacts: thenFacts, ProofsOrNil: proofs, Line: line}

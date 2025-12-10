@@ -36,16 +36,16 @@ type SetBuilderStruct struct {
 }
 
 func IsSetBuilder(obj Obj) bool {
-	if asIntensionalSetStmt, ok := obj.(*FnObj); ok {
-		return asIntensionalSetStmt.FnHead.String() == glob.KeywordIntensionalSet
+	if asSetBuilderObj, ok := obj.(*FnObj); ok {
+		return asSetBuilderObj.FnHead.String() == glob.KeywordSetBuilder
 	}
 	return false
 }
 
-// ToSetBuilderStruct converts a FnObj representing an intensional set to IntensionalSetObj
+// ToSetBuilderStruct converts a FnObj representing an set builder to SetBuilderStruct
 func (fnObj *FnObj) ToSetBuilderStruct() (*SetBuilderStruct, error) {
 	if len(fnObj.Params) < 2 {
-		return nil, fmt.Errorf("intensional set expects at least param and parent set, got %d params", len(fnObj.Params))
+		return nil, fmt.Errorf("set builder expects at least param and parent set, got %d params", len(fnObj.Params))
 	}
 
 	// Extract param (first parameter)
@@ -126,9 +126,4 @@ func (fnObj *FnObj) ToSetBuilderStruct() (*SetBuilderStruct, error) {
 		ParentSet: parentSet,
 		Facts:     facts,
 	}, nil
-}
-
-// ToFnObj converts an IntensionalSetObj to a FnObj
-func (setBuilder *SetBuilderStruct) ToFnObj() (*FnObj, error) {
-	return MakeIntensionalSetObj(setBuilder.Param, setBuilder.ParentSet, setBuilder.Facts)
 }
