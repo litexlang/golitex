@@ -93,6 +93,15 @@ func (ver *Verifier) SetBuilderFnRequirement(objAsFnObj *ast.FnObj, state *VerSt
 		return NewExecErr(fmt.Sprintf("failed to parse set builder: %s", err))
 	}
 
+	// parent is a set
+	verRet := ver.VerFactStmt(ast.NewInFactWithObj(setBuilderStruct.ParentSet, ast.Atom(glob.KeywordSet)), state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsUnknown() {
+		return NewExecErr(fmt.Sprintf("parent of %s must be a set, %s in %s is not valid", objAsFnObj, setBuilderStruct.ParentSet, objAsFnObj))
+	}
+
 	// parent is ok
 	ret := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(setBuilderStruct.ParentSet, state)
 	if ret.IsErr() {
