@@ -44,16 +44,20 @@ type DefinedNameAtEachParseEnv struct {
 
 func NewDefinedNameAtEachParseEnv() DefinedNameAtEachParseEnv {
 	return DefinedNameAtEachParseEnv{
-		Names: []map[string]struct{}{},
+		Names: []map[string]struct{}{make(map[string]struct{})},
 	}
 }
 
-func (p *TbParser) IsNameDefinedInCurrentPkg(name string) bool {
+func (p *TbParser) IsNameDefinedInCurrentParseEnv(name string) bool {
 	_, ok := p.AllDefinedNames[name]
 	return ok
 }
 
-func (p *TbParser) NewDefinedName(name string) error {
+func (p *TbParser) NewParseEnv() {
+	p.DefinedNamesAtEachParseEnv.Names = append(p.DefinedNamesAtEachParseEnv.Names, make(map[string]struct{}))
+}
+
+func (p *TbParser) NewDefinedNameInCurrentParseEnv(name string) error {
 	if _, ok := p.AllDefinedNames[name]; ok {
 		return fmt.Errorf("name %s is already defined", name)
 	}
@@ -63,6 +67,9 @@ func (p *TbParser) NewDefinedName(name string) error {
 }
 
 func (p *TbParser) DeleteCurrentParseEnv() {
+	if len(p.DefinedNamesAtEachParseEnv.Names) <= 1 {
+		return // Don't delete the last ParseEnv to prevent empty slice
+	}
 	for name := range p.DefinedNamesAtEachParseEnv.Names[len(p.DefinedNamesAtEachParseEnv.Names)-1] {
 		delete(p.AllDefinedNames, name)
 	}
