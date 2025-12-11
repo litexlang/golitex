@@ -1,3 +1,4 @@
+"""
 import yyy "xxx"
 import zzz as zzz
 
@@ -8,3 +9,7 @@ import "xxx.lit"
 import sys as s
 
 import "your_dir" as a
+
+"""
+
+1 = 1

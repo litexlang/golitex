@@ -18,6 +18,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
+	"maps"
 	"strings"
 )
 
@@ -92,7 +93,7 @@ func (e *Env) AreAtomsInSetBuilderAreDeclared(obj *ast.FnObj, extraAtomNames map
 
 	// Create a copy of extraAtomNames and add the set builder's param to it
 	// This param is a free variable, so we exclude it from the declaration check
-	paramExcludedNames := glob.CopyMap(extraAtomNames)
+	paramExcludedNames := maps.Clone(extraAtomNames)
 	paramExcludedNames[setBuilderStruct.Param] = struct{}{}
 
 	// Check atoms in parentSet (excluding the param)
@@ -247,7 +248,7 @@ func (e *Env) NonDuplicateParam_NoUndeclaredParamSet_ExtraAtomNames(params []str
 	}
 
 	// 检查所有参数都声明了
-	paramSet := glob.CopyMap(extraAtomNames)
+	paramSet := maps.Clone(extraAtomNames)
 	for i, param := range params {
 		_, ok := paramSet[param]
 		if ok {
