@@ -21,6 +21,7 @@ import (
 	"time"
 
 	ast "golitex/ast"
+	pkgMgr "golitex/package_manager"
 )
 
 func TestLastStmt(t *testing.T) {
@@ -29,7 +30,8 @@ func TestLastStmt(t *testing.T) {
 	code := extractFromLastProveLine(allCode)
 	readFileTime := time.Since(start)
 	start = time.Now()
-	topStmtSlice, err := ast.ParseSourceCode(code)
+	pkgPathNameMgr := pkgMgr.NewPathNameMgr()
+	topStmtSlice, err := ast.ParseSourceCode(code, pkgPathNameMgr)
 	if err != nil {
 		panic(err)
 	}

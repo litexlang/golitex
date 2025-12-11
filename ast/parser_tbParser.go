@@ -14,12 +14,16 @@
 
 package litex_ast
 
+import pkgMgr "golitex/package_manager"
+
 type TbParser struct {
-	FreeParams map[string]struct{}
+	FreeParams     map[string]struct{}
+	PkgPathNameMgr *pkgMgr.PathNameMgr
 }
 
-func NewTbParser() *TbParser {
+func NewTbParser(pkgPathNameMgr *pkgMgr.PathNameMgr) *TbParser {
 	return &TbParser{
-		FreeParams: make(map[string]struct{}),
+		FreeParams:     make(map[string]struct{}),
+		PkgPathNameMgr: pkgPathNameMgr,
 	}
 }

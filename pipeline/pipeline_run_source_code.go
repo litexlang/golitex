@@ -43,7 +43,7 @@ func RunSourceCode(code string, path string) glob.GlobRet {
 }
 
 func RunSourceCodeInExecutor(curExec *exe.Executor, code string, path string) glob.GlobRet {
-	stmtSlice, err := ast.ParseSourceCode(code)
+	stmtSlice, err := ast.ParseSourceCode(code, curExec.Env.PackageManager.PkgPathNameMgr)
 	if err != nil {
 		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLErrorMessageWithPath(path))
 	}
