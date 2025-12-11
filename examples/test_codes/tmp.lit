@@ -1,2 +1,10 @@
 import yyy "xxx"
 import zzz as zzz
+
+import sys
+
+import "xxx.lit"
+
+import sys as s
+
+import "your_dir" as a
