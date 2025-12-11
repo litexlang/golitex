@@ -960,6 +960,10 @@ func InstantiateSetBuilderObjWithoutChangingParam(obj *FnObj, uniMap map[string]
 		return nil, err
 	}
 
+	if _, ok := uniMap[setBuilderStruct.Param]; ok {
+		return nil, fmt.Errorf("parameter %s in set builder %s conflicts with a free parameter in the outer scope", setBuilderStruct.Param, obj.String())
+	}
+
 	// Instantiate parent set
 	instParentSet, err := setBuilderStruct.ParentSet.Instantiate(uniMap)
 	if err != nil {
