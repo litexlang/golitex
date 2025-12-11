@@ -19,6 +19,7 @@ import (
 	ast "golitex/ast"
 	env "golitex/environment"
 	glob "golitex/glob"
+	"maps"
 )
 
 // 在用uniFact来验证specFact时，这个已知的uniFact 可能形如 forall a x: $p(a,x)。然后我代入的x刚好是a。于是整个forall被instantiate成 forall a a: $p(a,a)。然后我要验证这个 forall a a: $p(a,a) 我发现a已经在外面定义go了，于是把它替换成了乱码ABCD, 然后变成验证 forall ABCD ABCD: $p(ABCD,ABCD)。总之就错了。避免这个的办法是，让knownUniFact先把param先随机化啦，然后再代入
@@ -151,11 +152,10 @@ func (ver *Verifier) preprocessUniFactParamsWithoutThenFacts(knownUniFact *ast.U
 	for _, domFact := range knownUniFact.DomFacts {
 		switch asStmt := domFact.(type) {
 		case *ast.UniFactStmt:
-			copiedParamMap, copiedMapStrToStr := glob.CopyMap(paramMap), glob.CopyMap(paramMapStrToStr)
+			copiedParamMap, copiedMapStrToStr := maps.Clone(paramMap), maps.Clone(paramMapStrToStr)
 
 			curParamMap, curParamMapStrToStr := processUniFactParamsDuplicateDeclared_notInGivenMap(ver.Env, asStmt.Params, copiedMapStrToStr)
 
-			// merge curParamMap and paramMap
 			copiedParamMap = glob.MergeMap(curParamMap, copiedParamMap)
 			copiedMapStrToStr = glob.MergeMap(curParamMapStrToStr, copiedMapStrToStr)
 
@@ -165,7 +165,7 @@ func (ver *Verifier) preprocessUniFactParamsWithoutThenFacts(knownUniFact *ast.U
 			}
 			domFacts_paramRandomized = append(domFacts_paramRandomized, newDomFact)
 		case *ast.UniFactWithIffStmt:
-			copiedParamMap, copiedMapStrToStr := glob.CopyMap(paramMap), glob.CopyMap(paramMapStrToStr)
+			copiedParamMap, copiedMapStrToStr := maps.Clone(paramMap), maps.Clone(paramMapStrToStr)
 
 			curParamMap, curParamMapStrToStr := processUniFactParamsDuplicateDeclared_notInGivenMap(ver.Env, asStmt.UniFact.Params, copiedMapStrToStr)
 

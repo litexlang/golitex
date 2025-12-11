@@ -19,7 +19,7 @@ import (
 )
 
 // 工作原理是：如果error回传的时候，某一步已经把现在的故障出现在第几行写好了，那么就返回这个error，否则就新开一个error，并把现在的故障出现在第几行写好
-func parserErrAtTb(previousErr error, stmt *tokenBlock) *ParseErrAtLine {
+func ErrInLine(previousErr error, stmt *tokenBlock) *ParseErrAtLine {
 	if _, ok := previousErr.(*ParseErrAtLine); ok {
 		return previousErr.(*ParseErrAtLine)
 	}
