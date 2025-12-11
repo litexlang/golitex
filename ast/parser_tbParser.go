@@ -19,7 +19,7 @@ import (
 	pkgMgr "golitex/package_manager"
 )
 
-// TODO: 这里要让 parse obj 的时候，能读入 pkgName 这样parse的时候，自动把这个名字写成 defaultPkgName.name 的形式，就会很好，很方便我跨包引用，顺便能检查是否重复定义了
+// TODO: 这里要让 parse obj 的时候，能读入 pkgName 这样parse的时候，自动把这个名字写成 defaultPkgName.name 的形式，就会很好 =，很方便我跨包引用，顺便能检查是否重复定义了
 type TbParser struct {
 	FreeParams                 map[string]struct{}
 	PkgPathNameMgr             *pkgMgr.PathNameMgr
