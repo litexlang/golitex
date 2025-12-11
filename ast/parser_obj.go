@@ -188,9 +188,15 @@ func (p *TbParser) notNumberAtom(tb *tokenBlock) (Atom, error) {
 			return "", parserErrAtTb(err, tb)
 		}
 		return Atom(fmt.Sprintf("%s%s%s", value, glob.PkgNameAtomSeparator, rightValue)), nil
+	} else if p.CurPkgName != glob.DefaultPkgName {
+		if p.IsNameDefinedInCurrentPkg(value) {
+			return Atom(fmt.Sprintf("%s%s%s", p.CurPkgName, glob.PkgNameAtomSeparator, value)), nil
+		} else {
+			return Atom(value), nil
+		}
+	} else {
+		return Atom(value), nil
 	}
-
-	return Atom(value), nil
 }
 
 // numberAtom parses a numeric literal (integer or decimal).

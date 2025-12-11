@@ -30,7 +30,7 @@ func FormatCode(path string) (glob.GlobRet, error) {
 	}
 
 	pkgPathNameMgr := pkgMgr.NewPathNameMgr()
-	topStmtSlice, err := ast.ParseSourceCode(string(content), pkgPathNameMgr)
+	topStmtSlice, err := ast.ParseSourceCode(string(content), "", pkgPathNameMgr)
 	if err != nil {
 		return glob.NewGlobErr(err.Error()), err
 	}

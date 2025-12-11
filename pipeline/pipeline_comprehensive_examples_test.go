@@ -83,7 +83,7 @@ func RunFilesInRepoWithPipelineRunner(repo string) error {
 		pkgPathNameMgr := pkgMgr.NewPathNameMgr()
 
 		// Run the code directly
-		topStmtSlice, err := ast.ParseSourceCode(string(content), pkgPathNameMgr)
+		topStmtSlice, err := ast.ParseSourceCode(string(content), "", pkgPathNameMgr)
 		if err != nil {
 			return fmt.Errorf("parse error in file %s: %s", file.Name(), err.Error())
 		}
