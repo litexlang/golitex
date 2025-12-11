@@ -29,3 +29,5 @@ const LatexMultiLineSig string = "\"\""
 const LitexFileSuffix string = ".lit"
 
 const MainDotLit string = "main.lit"
+
+const DefaultPkgName string = ""

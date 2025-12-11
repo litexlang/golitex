@@ -36,7 +36,7 @@ func GetEnvWithBuiltinParentEnv() (*env.Env, error) {
 
 func useHardcodedCodeToInit(env *env.Env) error {
 	pkgPathNameMgr := pkgMgr.NewPathNameMgr()
-	statements, err := ast.ParseSourceCode(kernelLibLitexCode.PipelineInitCode, pkgPathNameMgr)
+	statements, err := ast.ParseSourceCode(kernelLibLitexCode.PipelineInitCode, "", pkgPathNameMgr)
 	if err != nil {
 		return err
 	}
