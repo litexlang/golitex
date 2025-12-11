@@ -43,7 +43,6 @@ const (
 	KeywordReal                   = "R"                         // e.g. pi
 	KeywordIn                     = "in"
 	// KeywordProveByMathInduction           = "prove_by_math_induction"
-	KeywordAs           = "as" // 用在 import xxx as ??? 了
 	KeywordCount        = "count"
 	KeywordFiniteSet    = "finite_set"
 	KeywordProveByEnum  = "prove_by_enum" // syntax connecting forall and finite_set
@@ -116,6 +115,8 @@ const (
 	// KeywordDoubleUnderscoreTruePure = "__true"
 	// KeywordDoubleUnderscoreNotExist = "__not_exist"
 	// DoubleUnderscoreNotPure         = "__not"
+
+	KeywordAs = "as"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -146,7 +147,6 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordReal:                   {},
 	KeywordIn:                     {},
 	// KeywordProveByMathInduction:           {},
-	KeywordAs:           {},
 	KeywordCount:        {},
 	KeywordFiniteSet:    {},
 	KeywordProveByEnum:  {},
@@ -203,6 +203,8 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordProveFor: {},
 
 	KeywordEqualSet: {},
+
+	KeywordAs: {},
 }
 
 const (
@@ -285,7 +287,6 @@ var BuiltinObjOrPropNames map[string]struct{} = map[string]struct{}{
 	KeywordInteger:       {},
 	KeywordRational:      {},
 	KeywordReal:          {},
-	KeywordAs:            {},
 	KeywordIn:            {},
 	KeySymbolEqual:       {},
 	KeySymbolSlash:       {},
@@ -386,7 +387,6 @@ var KeywordHelpMap = map[string]string{
 	KeywordRational:               "",
 	KeywordReal:                   "",
 	KeywordIn:                     "",
-	KeywordAs:                     "",
 	KeywordCount:                  "",
 	KeywordFiniteSet:              "",
 	KeywordProveByEnum:            "",

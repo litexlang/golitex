@@ -115,7 +115,7 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 	case glob.KeywordDoNothing:
 		ret, err = p.doNothingStmt(tb)
 	case glob.KeywordImport:
-		ret, err = p.importDirStmt(tb)
+		ret, err = p.importStmt(tb)
 	case glob.KeywordHaveCartWithDim:
 		ret, err = p.haveCartWithDimStmt(tb)
 	default:
@@ -2021,44 +2021,41 @@ func (p *TbParser) doNothingStmt(tb *tokenBlock) (Stmt, error) {
 	return NewDoNothingStmt(tb.line), nil
 }
 
-func (p *TbParser) importDirStmt(tb *tokenBlock) (Stmt, error) {
+func (p *TbParser) importStmt(tb *tokenBlock) (Stmt, error) {
 	err := tb.header.skip(glob.KeywordImport)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
 	}
 
-	// Parse the path in double quotes
-	path, err := p.getStringInDoubleQuotes(tb)
-	if err != nil {
-		return nil, parserErrAtTb(err, tb)
-	}
-
-	// Check if path ends with .lit - if so, it's an ImportFileStmt
-	if strings.HasSuffix(path, glob.LitexFileSuffix) {
-		if !tb.header.ExceedEnd() {
-			return nil, fmt.Errorf("expect end of line")
+	if tb.header.is(glob.KeySymbolDoubleQuote) {
+		// Parse the path in double quotes
+		path, err := p.getStringInDoubleQuotes(tb)
+		if err != nil {
+			return nil, parserErrAtTb(err, tb)
 		}
-		return NewImportFileStmt(path, tb.line), nil
+
+		// Check if path ends with .lit - if so, it's an ImportFileStmt
+		if strings.HasSuffix(path, glob.LitexFileSuffix) {
+			if !tb.header.ExceedEnd() {
+				return nil, fmt.Errorf("expect end of line")
+			}
+			return NewImportFileStmt(path, tb.line), nil
+		} else {
+			return nil, fmt.Errorf("expect import file statement, but got %s", path)
+		}
 	}
 
 	// Otherwise, it's an ImportDirStmt
 	// Check if there's an "as" keyword followed by a package name
 	var asPkgName string
-	if tb.header.is(glob.KeywordAs) {
-		tb.header.skip(glob.KeywordAs)
-		asPkgName, err = tb.header.next()
-		if err != nil {
-			return nil, parserErrAtTb(err, tb)
-		}
-	} else {
-		// If no "as" keyword, use the path as the package name
-		// Extract the last component of the path as the default package name
-		pathParts := strings.Split(path, "/")
-		asPkgName = pathParts[len(pathParts)-1]
+	asPkgName, err = tb.header.next()
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
 	}
 
-	if !tb.header.ExceedEnd() {
-		return nil, fmt.Errorf("expect end of line")
+	path, err := p.getStringInDoubleQuotes(tb)
+	if err != nil {
+		return nil, parserErrAtTb(err, tb)
 	}
 
 	return NewImportStmt(path, asPkgName, tb.line), nil
