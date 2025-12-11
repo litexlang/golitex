@@ -556,6 +556,11 @@ func (p *TbParser) setBuilderObj(tb *tokenBlock, paramAsObj Obj) (Obj, error) {
 		return nil, err
 	}
 
+	// parentSet 不能是 set
+	if parentSet.String() == glob.KeywordSet || parentSet.String() == glob.KeywordFiniteSet || parentSet.String() == glob.KeywordNonEmptySet {
+		return nil, fmt.Errorf("parent set in set builder cannot be %s", parentSet.String())
+	}
+
 	err = tb.header.skip(glob.KeySymbolColon)
 	if err != nil {
 		return nil, err
