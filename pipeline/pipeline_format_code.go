@@ -18,6 +18,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
+	pkgMgr "golitex/package_manager"
 	"os"
 	"strings"
 )
@@ -28,7 +29,8 @@ func FormatCode(path string) (glob.GlobRet, error) {
 		return glob.NewGlobErr(fmt.Sprintf("failed to read file %s: %s", path, err.Error())), err
 	}
 
-	topStmtSlice, err := ast.ParseSourceCode(string(content))
+	pkgPathNameMgr := pkgMgr.NewPathNameMgr()
+	topStmtSlice, err := ast.ParseSourceCode(string(content), pkgPathNameMgr)
 	if err != nil {
 		return glob.NewGlobErr(err.Error()), err
 	}

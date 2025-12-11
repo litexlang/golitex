@@ -16,6 +16,7 @@ package litex_ast
 
 import (
 	"fmt"
+	pkgMgr "golitex/package_manager"
 	"os"
 	"path/filepath"
 	"testing"
@@ -32,6 +33,8 @@ func TestParseFile(t *testing.T) {
 		// 添加更多测试文件...
 	}
 
+	pkgPathNameMgr := pkgMgr.NewPathNameMgr()
+
 	for _, filePath := range testFiles {
 		t.Run(filepath.Base(filePath), func(t *testing.T) {
 			// 读取文件内容
@@ -41,7 +44,7 @@ func TestParseFile(t *testing.T) {
 			}
 
 			// 解析源代码
-			stmts, err := ParseSourceCode(string(content))
+			stmts, err := ParseSourceCode(string(content), pkgPathNameMgr)
 			if err != nil {
 				t.Fatalf("Failed to parse file %s: %v", filePath, err)
 			}
@@ -56,46 +59,6 @@ func TestParseFile(t *testing.T) {
 	}
 }
 
-// TestParseFileVerbose 详细显示每个语句的内容
-func TestParseFileVerbose(t *testing.T) {
-	// 在这里添加你想测试的文件路径
-	testFiles := []string{
-		"../examples/test_codes/tmp.lit",
-	}
-
-	for _, filePath := range testFiles {
-		t.Run(filepath.Base(filePath), func(t *testing.T) {
-			// 读取文件内容
-			content, err := os.ReadFile(filePath)
-			if err != nil {
-				t.Fatalf("Failed to read file %s: %v", filePath, err)
-			}
-
-			t.Logf("\n========== File: %s ==========", filePath)
-			t.Logf("Content:\n%s", string(content))
-			t.Logf("\n========== Parsing ==========")
-
-			// 解析源代码
-			stmts, err := ParseSourceCode(string(content))
-			if err != nil {
-				t.Fatalf("Failed to parse file %s: %v", filePath, err)
-			}
-
-			// 详细打印解析结果
-			t.Logf("✓ Successfully parsed")
-			t.Logf("Total statements: %d\n", len(stmts))
-
-			for i, stmt := range stmts {
-				t.Logf("========== Statement %d ==========", i)
-				t.Logf("Type: %T", stmt)
-				t.Logf("String: %s", stmt.String())
-				t.Logf("Line: %d", stmt.GetLine())
-				t.Logf("")
-			}
-		})
-	}
-}
-
 // TestParseDirectory 测试解析整个目录下的所有 .lit 文件
 func TestParseDirectory(t *testing.T) {
 	// 在这里添加你想测试的目录路径
@@ -104,6 +67,8 @@ func TestParseDirectory(t *testing.T) {
 		// "../examples/comprehensive_examples/",
 		// 添加更多测试目录...
 	}
+
+	pkgPathNameMgr := pkgMgr.NewPathNameMgr()
 
 	for _, dir := range testDirs {
 		t.Run(filepath.Base(dir), func(t *testing.T) {
@@ -131,7 +96,7 @@ func TestParseDirectory(t *testing.T) {
 				}
 
 				// 解析源代码
-				_, err = ParseSourceCode(string(content))
+				_, err = ParseSourceCode(string(content), pkgPathNameMgr)
 				if err != nil {
 					t.Logf("✗ %s: Parse error: %v", filepath.Base(filePath), err)
 					failCount++
@@ -168,7 +133,8 @@ func TestParseQuickCheck(t *testing.T) {
 	fmt.Printf("Content:\n%s\n", string(content))
 	fmt.Printf("==========================================\n\n")
 
-	stmts, err := ParseSourceCode(string(content))
+	pkgPathNameMgr := pkgMgr.NewPathNameMgr()
+	stmts, err := ParseSourceCode(string(content), pkgPathNameMgr)
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
 	}

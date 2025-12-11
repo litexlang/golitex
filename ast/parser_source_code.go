@@ -16,11 +16,12 @@ package litex_ast
 
 import (
 	glob "golitex/glob"
+	pkgMgr "golitex/package_manager"
 	"strings"
 )
 
 // * TODO: 在parse时，把pkgName改成当前项目里定义的 pkgName，而不是继续沿用原来的
-func ParseSourceCode(code string) ([]Stmt, error) {
+func ParseSourceCode(code string, pkgPathNameMgr *pkgMgr.PathNameMgr) ([]Stmt, error) {
 	// code, err := preprocessSourceCode(code)
 	preprocessedCodeLines, err := preprocessSourceCode(code)
 	if err != nil {
@@ -33,7 +34,7 @@ func ParseSourceCode(code string) ([]Stmt, error) {
 	}
 
 	ret := []Stmt{}
-	p := NewTbParser()
+	p := NewTbParser(pkgPathNameMgr)
 	for _, block := range blocks {
 		cur, err := p.Stmt(&block)
 		if err != nil {

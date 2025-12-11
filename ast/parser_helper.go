@@ -16,6 +16,7 @@ package litex_ast
 
 import (
 	"fmt"
+	pkgMgr "golitex/package_manager"
 )
 
 func NoSelfReferenceInPropDef(propName string, facts []FactStmt) error {
@@ -86,7 +87,8 @@ func ParseSourceCodeGetFact(sourceCode string) (FactStmt, error) {
 		return nil, err
 	}
 
-	p := NewTbParser()
+	pkgPathNameMgr := pkgMgr.NewPathNameMgr()
+	p := NewTbParser(pkgPathNameMgr)
 
 	return p.factStmt(&blocks[0], UniFactDepth0)
 }
@@ -100,7 +102,8 @@ func ParseSingleLineFact(s string) (FactStmt, error) {
 		return nil, err
 	}
 
-	p := NewTbParser()
+	pkgPathNameMgr := pkgMgr.NewPathNameMgr()
+	p := NewTbParser(pkgPathNameMgr)
 
 	fact, err := p.inlineFactThenSkipStmtTerminatorUntilEndSignals(&blocks[0], []string{})
 	if err != nil {
@@ -116,7 +119,8 @@ func ParseSourceCodeGetObj(s string) (Obj, error) {
 		return nil, err
 	}
 
-	p := NewTbParser()
+	pkgPathNameMgr := pkgMgr.NewPathNameMgr()
+	p := NewTbParser(pkgPathNameMgr)
 
 	obj, err := p.Obj(&blocks[0])
 	if err != nil {

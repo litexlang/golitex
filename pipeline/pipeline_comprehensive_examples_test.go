@@ -19,6 +19,7 @@ import (
 	ast "golitex/ast"
 	exe "golitex/executor"
 	glob "golitex/glob"
+	pkgMgr "golitex/package_manager"
 	"os"
 	"path/filepath"
 	"strings"
@@ -79,8 +80,10 @@ func RunFilesInRepoWithPipelineRunner(repo string) error {
 
 		start := time.Now()
 
+		pkgPathNameMgr := pkgMgr.NewPathNameMgr()
+
 		// Run the code directly
-		topStmtSlice, err := ast.ParseSourceCode(string(content))
+		topStmtSlice, err := ast.ParseSourceCode(string(content), pkgPathNameMgr)
 		if err != nil {
 			return fmt.Errorf("parse error in file %s: %s", file.Name(), err.Error())
 		}

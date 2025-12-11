@@ -19,6 +19,7 @@ import (
 	ast "golitex/ast"
 	env "golitex/environment"
 	glob "golitex/glob"
+	pkgMgr "golitex/package_manager"
 	"os"
 	"strings"
 	"testing"
@@ -31,7 +32,8 @@ func TestWholeFile(t *testing.T) {
 	code := readFile(codePath)
 	readFileTime := time.Since(start)
 	start = time.Now()
-	topStmtSlice, err := ast.ParseSourceCode(code)
+	pkgPathNameMgr := pkgMgr.NewPathNameMgr()
+	topStmtSlice, err := ast.ParseSourceCode(code, pkgPathNameMgr)
 	if err != nil {
 		t.Errorf(err.Error())
 		return
