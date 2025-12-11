@@ -12,4 +12,4 @@ import "your_dir" as a
 
 """
 
-have fn f(y {x R: x > 0}, x R) {z R: z > -1} = x
+have fn f(y {x R: x > 0}) {y R: y > -1} = x
