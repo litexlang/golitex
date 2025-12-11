@@ -17,27 +17,17 @@ package litex_package_manager
 import "fmt"
 
 type PathNameMgr struct {
-	NamePathMap    map[string]string
-	PathNameSetMap map[string]map[string]struct{}
+	NamePathMap        map[string]string
+	PathNameSetMap     map[string]map[string]struct{}
+	PathDefaultNameMap map[string]string // 默认第一次看到某个path的时候，我们认为它的名字就是这个名字，后续如果出现其他名字，则认为这个path有多个名字，但是默认名字还是第一次知道它的时候它的名字
 }
 
 func NewPathNameMgr() *PathNameMgr {
 	return &PathNameMgr{
-		NamePathMap:    make(map[string]string),
-		PathNameSetMap: make(map[string]map[string]struct{}),
+		NamePathMap:        make(map[string]string),
+		PathNameSetMap:     make(map[string]map[string]struct{}),
+		PathDefaultNameMap: make(map[string]string),
 	}
-}
-
-// HasName 检查包名是否已存在
-func (mgr *PathNameMgr) HasName(name string) bool {
-	_, ok := mgr.NamePathMap[name]
-	return ok
-}
-
-// GetPathByName 根据包名获取路径
-func (mgr *PathNameMgr) GetPathByName(name string) (string, bool) {
-	path, ok := mgr.NamePathMap[name]
-	return path, ok
 }
 
 // AddNamePath 添加包名到路径的映射，同时更新路径到包名集合的映射
@@ -50,6 +40,7 @@ func (mgr *PathNameMgr) AddNamePath(name, path string) error {
 	// 同步更新 PathNameSetMap
 	if _, ok := mgr.PathNameSetMap[path]; !ok {
 		mgr.PathNameSetMap[path] = make(map[string]struct{})
+		mgr.PathDefaultNameMap[path] = name
 	}
 	// 检查是否已经存在，避免重复添加
 	if _, ok := mgr.PathNameSetMap[path][name]; !ok {
