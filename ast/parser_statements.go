@@ -2041,23 +2041,42 @@ func (p *TbParser) importStmt(tb *tokenBlock) (Stmt, error) {
 			}
 			return NewImportFileStmt(path, tb.line), nil
 		} else {
-			return nil, fmt.Errorf("expect import file statement, but got %s", path)
+			err := tb.header.skip(glob.KeywordAs)
+			if err != nil {
+				return nil, parserErrAtTb(err, tb)
+			}
+
+			asPkgName, err := tb.header.next()
+			if err != nil {
+				return nil, parserErrAtTb(err, tb)
+			}
+
+			return NewImportStmt(path, asPkgName, tb.line), nil
 		}
 	}
 
-	// Otherwise, it's an ImportDirStmt
-	// Check if there's an "as" keyword followed by a package name
-	var asPkgName string
-	asPkgName, err = tb.header.next()
+	pkgName, err := tb.header.next()
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
 	}
+	asPkgName := pkgName
 
-	path, err := p.getStringInDoubleQuotes(tb)
+	if tb.header.is(glob.KeywordAs) {
+		err = tb.header.skip(glob.KeywordAs)
+		if err != nil {
+			return nil, parserErrAtTb(err, tb)
+		}
+
+		asPkgName, err = tb.header.next()
+		if err != nil {
+			return nil, parserErrAtTb(err, tb)
+		}
+	}
+
+	path, err := glob.GlobalInstalledPkgPath(pkgName)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
 	}
-
 	return NewImportStmt(path, asPkgName, tb.line), nil
 }
 

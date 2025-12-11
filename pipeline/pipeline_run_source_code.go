@@ -91,11 +91,7 @@ func RunImportDirStmtInExec(curExec *exe.Executor, importDirStmt *ast.ImportDirS
 	}
 
 	// Resolve package path: if not absolute, resolve from system root directory (~/litexlang)
-	resolvedPath, err := glob.ResolvePackagePath(importDirStmt.Path)
-	if err != nil {
-		return glob.NewGlobErr(err.Error())
-	}
-	mainFileContent, err := os.ReadFile(filepath.Join(resolvedPath, glob.MainDotLit))
+	mainFileContent, err := os.ReadFile(filepath.Join(importDirStmt.Path, glob.MainDotLit))
 	if err != nil {
 		return glob.NewGlobErr(err.Error())
 	}
@@ -105,7 +101,7 @@ func RunImportDirStmtInExec(curExec *exe.Executor, importDirStmt *ast.ImportDirS
 		return glob.NewGlobErr(err.Error())
 	}
 	executorToRunDir := exe.NewExecutor(builtinEnv)
-	ret := RunSourceCodeInExecutor(executorToRunDir, string(mainFileContent), resolvedPath)
+	ret := RunSourceCodeInExecutor(executorToRunDir, string(mainFileContent), importDirStmt.Path)
 	if ret.IsNotTrue() {
 		return ret
 	}
