@@ -14,7 +14,9 @@
 
 package litex_ast
 
-import glob "golitex/glob"
+import (
+	"maps"
+)
 
 func (fnTemplate *FnTStruct) DeriveUniFact_WithGivenFn(obj Obj) (*UniFactStmt, error) {
 	paramAsObj := []Obj{}
@@ -41,7 +43,7 @@ func (fnTemplate *FnTStruct) DeriveUniFact(defFnTemplateName string, fnObj Obj, 
 
 	notInstantiated := NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, thenFacts, fnTemplate.Line)
 
-	uniMap := glob.CopyMap(templateParamUniMap)
+	uniMap := maps.Clone(templateParamUniMap)
 	uniMap[defFnTemplateName] = fnObj
 
 	instantiated, err := notInstantiated.InstantiateFact(uniMap)

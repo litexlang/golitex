@@ -18,25 +18,11 @@ import (
 	"strings"
 )
 
-func CopyMap[T any](src map[string]T) map[string]T {
-	dst := make(map[string]T)
-	for k, v := range src {
-		dst[k] = v
-	}
-	return dst
-}
-
 func MergeMap[T any](from map[string]T, to map[string]T) map[string]T {
 	for k, v := range from {
 		to[k] = v
 	}
 	return to
-}
-
-func CopySlice[T any](src []T) []T {
-	dst := make([]T, len(src))
-	copy(dst, src)
-	return dst
 }
 
 func numberToLetters(num int) string {
