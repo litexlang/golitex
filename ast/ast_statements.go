@@ -167,6 +167,16 @@ type OrStmt struct {
 	Line uint
 }
 
+// """
+// import sys # 相当于 import sys as sys
+
+// import "xxx.lit"
+
+// import sys as s
+
+// import "your_dir" as a
+
+// """
 type ImportDirStmt struct {
 	Path      string
 	AsPkgName string
@@ -320,14 +330,6 @@ type HaveFnEqualCaseByCaseStmt struct {
 
 	Line uint
 }
-
-// type HaveFnLiftStmt struct {
-// 	FnName                     string
-// 	Opt                        Obj
-// 	DomainOfEachParamOfGivenFn ObjSlice
-
-// 	Line uint
-// }
 
 /*
 have fn:

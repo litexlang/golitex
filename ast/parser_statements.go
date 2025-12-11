@@ -144,6 +144,11 @@ func (p *TbParser) defPropStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
+	err = p.NewDefinedNameInCurrentParseEnv(string(body.DefHeader.Name))
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
 	return body, nil
 }
 
