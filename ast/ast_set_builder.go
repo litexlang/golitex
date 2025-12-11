@@ -17,6 +17,7 @@ package litex_ast
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	glob "golitex/glob"
 )
@@ -150,4 +151,30 @@ func NewSetBuilderStruct(param string, parentSet Obj, facts SpecFactPtrSlice) *S
 		ParentSet: parentSet,
 		Facts:     facts,
 	}
+}
+
+func (setBuilderStruct *SetBuilderStruct) ToFnObj() (*FnObj, error) {
+	return MakeSetBuilderObj(setBuilderStruct.Param, setBuilderStruct.ParentSet, setBuilderStruct.Facts)
+}
+
+func (setBuilderStruct *SetBuilderStruct) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeySymbolLeftCurly)
+	builder.WriteString(setBuilderStruct.Param)
+	builder.WriteByte(' ')
+	builder.WriteString(setBuilderStruct.ParentSet.String())
+	builder.WriteString(glob.KeySymbolColon)
+
+	// Convert facts to strings
+	if len(setBuilderStruct.Facts) > 0 {
+		factStrings := make([]string, len(setBuilderStruct.Facts))
+		for i, fact := range setBuilderStruct.Facts {
+			factStrings[i] = fact.String()
+		}
+		builder.WriteByte(' ')
+		builder.WriteString(strings.Join(factStrings, ", "))
+	}
+
+	builder.WriteString(glob.KeySymbolRightCurly)
+	return builder.String()
 }

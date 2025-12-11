@@ -319,22 +319,27 @@ func (ver *Verifier) verEqualByLeftAndRightAreSetBuilders(left, right ast.Obj, s
 	// 生成一个随机的param，把两个set builder的param都替换成这个随机param
 	randomParam := ver.Env.GenerateUndeclaredRandomName()
 
-	leftUniMap := map[string]ast.Obj{leftSetBuilder.Params[0].String(): ast.Atom(randomParam)}
-	instLeftSetBuilder, err := leftSetBuilder.Instantiate(leftUniMap)
+	leftSetBuilderStruct, err := leftSetBuilder.ToSetBuilderStruct()
+	if err != nil {
+		return NewExecErr(err.Error())
+	}
+	leftSetBuilderStruct, err = leftSetBuilderStruct.ReplaceParamWithNewParam(randomParam)
 	if err != nil {
 		return NewExecErr(err.Error())
 	}
 
-	rightUniMap := map[string]ast.Obj{rightSetBuilder.Params[0].String(): ast.Atom(randomParam)}
-	instRightSetBuilder, err := right.Instantiate(rightUniMap)
+	rightSetBuilderStruct, err := rightSetBuilder.ToSetBuilderStruct()
+	if err != nil {
+		return NewExecErr(err.Error())
+	}
+	rightSetBuilderStruct, err = rightSetBuilderStruct.ReplaceParamWithNewParam(randomParam)
 	if err != nil {
 		return NewExecErr(err.Error())
 	}
 
-	// 它们作为string相等
-	if instLeftSetBuilder.String() != instRightSetBuilder.String() {
-		return NewEmptyExecUnknown()
+	if leftSetBuilderStruct.String() == rightSetBuilderStruct.String() {
+		return NewExecTrue(fmt.Sprintf("%s = %s, by definition of set builder", left, right))
 	}
 
-	return NewExecTrue(fmt.Sprintf("%s = %s, by definition of set builder", left, right))
+	return NewEmptyExecUnknown()
 }
