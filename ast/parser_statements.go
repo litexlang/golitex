@@ -158,15 +158,11 @@ func (p *TbParser) defPropStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStm
 		return nil, ErrInLine(err, tb)
 	}
 
-	// Check for conflicts with existing FreeParams
-	for _, param := range declHeader.Params {
-		if _, exists := p.FreeParams[param]; exists {
-			return nil, ErrInLine(fmt.Errorf("parameter %s in prop definition conflicts with a free parameter in the outer scope", param), tb)
-		}
-	}
-
 	// Add prop params to FreeParams
 	for _, param := range declHeader.Params {
+		if _, ok := p.FreeParams[param]; ok {
+			return nil, ErrInLine(fmt.Errorf("parameter %s in prop definition conflicts with a free parameter in the outer scope", param), tb)
+		}
 		p.FreeParams[param] = struct{}{}
 	}
 
@@ -263,17 +259,19 @@ func (p *TbParser) defExistPropStmtBodyWithoutSelfReferCheck(tb *tokenBlock, hea
 		return nil, ErrInLine(err, tb)
 	}
 
-	// Check for conflicts with existing FreeParams
+	// Add exist prop params to FreeParams
 	for _, param := range existParams {
 		if _, exists := p.FreeParams[param]; exists {
 			return nil, ErrInLine(fmt.Errorf("parameter %s in exist prop definition conflicts with a free parameter in the outer scope", param), tb)
 		}
-	}
-
-	// Add exist prop params to FreeParams
-	for _, param := range existParams {
 		p.FreeParams[param] = struct{}{}
 	}
+
+	defer func() {
+		for _, param := range existParams {
+			delete(p.FreeParams, param)
+		}
+	}()
 
 	if len(existParams) == 0 {
 		return nil, fmt.Errorf("expect at least one parameter in exist prop definition")
@@ -317,15 +315,12 @@ func (p *TbParser) defFnStmt(tb *tokenBlock, skipFn bool) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	// Check for conflicts with existing FreeParams
+	// Add fn params to FreeParams
 	for _, param := range decl.Params {
 		if _, exists := p.FreeParams[param]; exists {
 			return nil, ErrInLine(fmt.Errorf("parameter %s in fn definition conflicts with a free parameter in the outer scope", param), tb)
 		}
-	}
 
-	// Add fn params to FreeParams
-	for _, param := range decl.Params {
 		p.FreeParams[param] = struct{}{}
 	}
 
@@ -556,6 +551,19 @@ func (p *TbParser) haveFnEqualStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
+	for _, param := range defHeader.Params {
+		if _, ok := p.FreeParams[param]; ok {
+			return nil, fmt.Errorf("parameter %s is already defined", param)
+		}
+		p.FreeParams[param] = struct{}{}
+	}
+
+	defer func() {
+		for _, param := range defHeader.Params {
+			delete(p.FreeParams, param)
+		}
+	}()
+
 	retSet, err := p.Obj(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
@@ -686,6 +694,19 @@ func (p *TbParser) defExistPropStmtBody(tb *tokenBlock) (*DefExistPropStmtBody, 
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
+
+	for _, param := range declHeader.Params {
+		if _, ok := p.FreeParams[param]; ok {
+			return nil, fmt.Errorf("parameter %s in prop definition conflicts with a free parameter in the outer scope", param)
+		}
+		p.FreeParams[param] = struct{}{}
+	}
+
+	defer func() {
+		for _, param := range declHeader.Params {
+			delete(p.FreeParams, param)
+		}
+	}()
 
 	if tb.header.ExceedEnd() {
 		return NewExistPropDef(declHeader, []FactStmt{}, []FactStmt{}, []FactStmt{}, tb.line), nil
@@ -1249,6 +1270,18 @@ func (p *TbParser) proveByEnum(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
+	for _, param := range params {
+		if _, ok := p.FreeParams[param]; ok {
+			return nil, ErrInLine(fmt.Errorf("parameter %s in proveByEnum conflicts with a free parameter in the outer scope", param), tb)
+		}
+		p.FreeParams[param] = struct{}{}
+	}
+	defer func() {
+		for _, param := range params {
+			delete(p.FreeParams, param)
+		}
+	}()
+
 	err = tb.header.skip(glob.KeySymbolColon)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
@@ -1279,15 +1312,11 @@ func (p *TbParser) namedUniFactStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	// Check for conflicts with existing FreeParams
+	// Add named uniFact params to FreeParams
 	for _, param := range declHeader.Params {
 		if _, exists := p.FreeParams[param]; exists {
 			return nil, ErrInLine(fmt.Errorf("parameter %s in named uniFact definition conflicts with a free parameter in the outer scope", param), tb)
 		}
-	}
-
-	// Add named uniFact params to FreeParams
-	for _, param := range declHeader.Params {
 		p.FreeParams[param] = struct{}{}
 	}
 
@@ -1332,15 +1361,11 @@ func (p *TbParser) fnTemplateStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	// Check for conflicts with existing FreeParams
+	// Add fn template params to FreeParams
 	for _, param := range defHeader.Params {
 		if _, exists := p.FreeParams[param]; exists {
 			return nil, ErrInLine(fmt.Errorf("parameter %s in fn template definition conflicts with a free parameter in the outer scope", param), tb)
 		}
-	}
-
-	// Add fn template params to FreeParams
-	for _, param := range defHeader.Params {
 		p.FreeParams[param] = struct{}{}
 	}
 
@@ -1430,6 +1455,18 @@ func (p *TbParser) fnInFnTemplateStmt(tb *tokenBlock) ([]string, []Obj, Obj, []F
 	if err != nil {
 		return nil, nil, nil, nil, nil, ErrInLine(err, tb)
 	}
+
+	for _, param := range fnParams {
+		if _, ok := p.FreeParams[param]; ok {
+			return nil, nil, nil, nil, nil, ErrInLine(fmt.Errorf("parameter %s in fn template conflicts with a free parameter in the outer scope", param), tb)
+		}
+		p.FreeParams[param] = struct{}{}
+	}
+	defer func() {
+		for _, param := range fnParams {
+			delete(p.FreeParams, param)
+		}
+	}()
 
 	fnRetSet, err := p.Obj(tb)
 	if err != nil {
@@ -2412,15 +2449,11 @@ func (p *TbParser) uniFactInterface(tb *tokenBlock, uniFactDepth uniFactEnum) (U
 		return nil, ErrInLine(err, tb)
 	}
 
-	// Check for conflicts with existing FreeParams
+	// Add uniFact params to FreeParams
 	for _, param := range params {
 		if _, exists := p.FreeParams[param]; exists {
 			return nil, ErrInLine(fmt.Errorf("parameter %s conflicts with a free parameter in the outer scope", param), tb)
 		}
-	}
-
-	// Add uniFact params to FreeParams
-	for _, param := range params {
 		p.FreeParams[param] = struct{}{}
 	}
 
@@ -3381,33 +3414,32 @@ func (p *TbParser) atExistPropDefStmt(tb *tokenBlock) (*DefExistPropStmt, error)
 		return nil, ErrInLine(err, tb)
 	}
 
-	// Check for conflicts with existing FreeParams (for existParams)
+	// Add exist prop params to FreeParams
 	for _, param := range existParams {
 		if _, exists := p.FreeParams[param]; exists {
 			return nil, ErrInLine(fmt.Errorf("parameter %s in exist prop definition conflicts with a free parameter in the outer scope", param), tb)
 		}
-	}
-
-	// Add exist prop params to FreeParams
-	for _, param := range existParams {
 		p.FreeParams[param] = struct{}{}
 	}
+
+	defer func() {
+		for _, param := range existParams {
+			delete(p.FreeParams, param)
+		}
+	}()
 
 	header, err := p.defHeaderWithoutParsingColonAtEnd(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
 
-	// Check for conflicts with existing FreeParams (for defHeader params)
+	// Also add params from defHeader (the main prop definition)
 	for _, param := range header.Params {
 		if _, exists := p.FreeParams[param]; exists {
 			return nil, ErrInLine(fmt.Errorf("parameter %s in exist prop definition conflicts with a free parameter in the outer scope", param), tb)
 		}
-	}
-
-	// Also add params from defHeader (the main prop definition)
-	for _, param := range header.Params {
 		p.FreeParams[param] = struct{}{}
+
 	}
 
 	// Defer: remove the params we added when leaving this exist prop scope
