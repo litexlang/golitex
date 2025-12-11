@@ -490,6 +490,7 @@ type HaveCartSetStmt struct {
 	Line uint
 }
 
+// TODO 应该没什么用
 type HaveObjFromCartSetStmt struct {
 	ObjName string
 	CartSet *FnObj
