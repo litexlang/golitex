@@ -65,7 +65,7 @@ type Env struct {
 
 	DefProveAlgoMem map[string]*ast.DefProveAlgoStmt
 
-	PackageManager *PackageManager
+	PackageManager *EnvPkgMgr
 }
 
 type ObjFromCartSetMemItem struct {
@@ -100,7 +100,7 @@ func (env *Env) GetSecondUpMostEnv() *Env {
 }
 
 func NewEnv(parent *Env) *Env {
-	var packageManager *PackageManager
+	var packageManager *EnvPkgMgr
 	if parent == nil {
 		packageManager = NewPackageManager()
 	} else {

@@ -27,7 +27,7 @@ func (e *Env) IsAtomDefinedByUser(AtomObjName ast.Atom) bool {
 		PkgNameAndAtomName := strings.Split(string(AtomObjName), glob.PkgNameAtomSeparator)
 		PkgName := PkgNameAndAtomName[0]
 		AtomName := PkgNameAndAtomName[1]
-		pkgPath, ok := e.PackageManager.PkgNamePkgPathPairs[PkgName]
+		pkgPath, ok := e.PackageManager.PkgPathNameMgr.GetPathByName(PkgName)
 		if !ok {
 			return false
 		}

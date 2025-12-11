@@ -17,47 +17,45 @@ package litex_env
 import (
 	"fmt"
 	ast "golitex/ast"
+	pkgMgr "golitex/package_manager"
 )
 
-type PackageManager struct {
-	PkgPathEnvPairs     map[string]*Env
-	PkgNamePkgPathPairs map[string]string
+type EnvPkgMgr struct {
+	PkgPathEnvPairs map[string]*Env
+	PkgPathNameMgr  *pkgMgr.PathNameMgr
 }
 
 // 为了确保实现上的简单性，不允许用重复的asPkgName
-func (pkgMgr *PackageManager) MergeGivenExecPkgMgr(importDirStmt *ast.ImportDirStmt, curEnv *Env) error {
-	if _, ok := pkgMgr.PkgPathEnvPairs[importDirStmt.Path]; ok {
+func (mgr *EnvPkgMgr) MergeGivenExecPkgMgr(importDirStmt *ast.ImportDirStmt, curEnv *Env) error {
+	if _, ok := mgr.PkgPathEnvPairs[importDirStmt.Path]; ok {
 		return fmt.Errorf("package already exists: %s", importDirStmt.Path)
 	}
-	pkgMgr.PkgPathEnvPairs[importDirStmt.Path] = curEnv
+	mgr.PkgPathEnvPairs[importDirStmt.Path] = curEnv
 
-	if _, ok := pkgMgr.PkgNamePkgPathPairs[importDirStmt.AsPkgName]; ok {
-		return fmt.Errorf("package name already exists: %s", importDirStmt.AsPkgName)
+	// 使用 PathNameMgr 的方法添加包名和路径的映射
+	if err := mgr.PkgPathNameMgr.AddNamePath(importDirStmt.AsPkgName, importDirStmt.Path); err != nil {
+		return err
 	}
-	pkgMgr.PkgNamePkgPathPairs[importDirStmt.AsPkgName] = importDirStmt.Path
 
 	// 把 curExec 的 pkgMgr 合并到现在的 pkgMgr 中
 	for pkgPath, pkgEnv := range curEnv.PackageManager.PkgPathEnvPairs {
-		if _, ok := pkgMgr.PkgPathEnvPairs[pkgPath]; ok {
+		if _, ok := mgr.PkgPathEnvPairs[pkgPath]; ok {
 			continue
 		}
-		pkgMgr.PkgPathEnvPairs[pkgPath] = pkgEnv
+		mgr.PkgPathEnvPairs[pkgPath] = pkgEnv
 	}
-	for pkgName, pkgPath := range curEnv.PackageManager.PkgNamePkgPathPairs {
-		if path, ok := pkgMgr.PkgNamePkgPathPairs[pkgName]; ok {
-			if path != pkgPath {
-				return fmt.Errorf("package name %s refer to package %s, and package %s", pkgName, pkgPath, path)
-			}
-		}
-		curEnv.PackageManager.PkgNamePkgPathPairs[pkgName] = pkgPath
+
+	// 使用 PathNameMgr 的 Merge 方法合并包名映射
+	if err := mgr.PkgPathNameMgr.Merge(curEnv.PackageManager.PkgPathNameMgr); err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func NewPackageManager() *PackageManager {
-	return &PackageManager{
-		PkgPathEnvPairs:     make(map[string]*Env),
-		PkgNamePkgPathPairs: make(map[string]string),
+func NewPackageManager() *EnvPkgMgr {
+	return &EnvPkgMgr{
+		PkgPathEnvPairs: make(map[string]*Env),
+		PkgPathNameMgr:  pkgMgr.NewPathNameMgr(),
 	}
 }
