@@ -187,10 +187,14 @@ func (p *TbParser) notNumberAtom(tb *tokenBlock) (Atom, error) {
 		if err != nil {
 			return "", ErrInLine(err, tb)
 		}
-		return Atom(fmt.Sprintf("%s%s%s", value, glob.PkgNameAtomSeparator, rightValue)), nil
-	} else if p.CurPkgName != glob.DefaultPkgName {
+
+		pkgPath := p.PkgPathNameMgr.NamePathMap[value]
+		pkgName := p.PkgPathNameMgr.PathDefaultNameMap[pkgPath]
+		return Atom(fmt.Sprintf("%s%s%s", pkgName, glob.PkgNameAtomSeparator, rightValue)), nil
+	} else if p.CurPkgPath != glob.DefaultPkgName {
 		if p.IsNameDefinedInCurrentParseEnv(value) {
-			return Atom(fmt.Sprintf("%s%s%s", p.CurPkgName, glob.PkgNameAtomSeparator, value)), nil
+			pkgName := p.PkgPathNameMgr.PathDefaultNameMap[p.CurPkgPath]
+			return Atom(fmt.Sprintf("%s%s%s", pkgName, glob.PkgNameAtomSeparator, value)), nil
 		} else {
 			return Atom(value), nil
 		}
