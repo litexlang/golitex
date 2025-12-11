@@ -2073,7 +2073,7 @@ func (p *TbParser) importStmt(tb *tokenBlock) (Stmt, error) {
 		}
 	}
 
-	path, err := glob.GlobalInstalledPkgPath(pkgName)
+	path, err := glob.ResolveSystemPackagePath(pkgName)
 	if err != nil {
 		return nil, parserErrAtTb(err, tb)
 	}
