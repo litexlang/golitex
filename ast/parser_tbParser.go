@@ -14,7 +14,10 @@
 
 package litex_ast
 
-import pkgMgr "golitex/package_manager"
+import (
+	"fmt"
+	pkgMgr "golitex/package_manager"
+)
 
 // TODO: 这里要让 parse obj 的时候，能读入 pkgName 这样parse的时候，自动把这个名字写成 defaultPkgName.name 的形式，就会很好，很方便我跨包引用，顺便能检查是否重复定义了
 type TbParser struct {
@@ -22,14 +25,16 @@ type TbParser struct {
 	PkgPathNameMgr             *pkgMgr.PathNameMgr
 	CurPkgName                 string
 	DefinedNamesAtEachParseEnv DefinedNameAtEachParseEnv
+	AllDefinedNames            map[string]struct{}
 }
 
-func NewTbParser(pkgPathNameMgr *pkgMgr.PathNameMgr) *TbParser {
+func NewTbParser(curPkgName string, pkgPathNameMgr *pkgMgr.PathNameMgr) *TbParser {
 	return &TbParser{
 		FreeParams:                 make(map[string]struct{}),
 		PkgPathNameMgr:             pkgPathNameMgr,
-		CurPkgName:                 "",
+		CurPkgName:                 curPkgName,
 		DefinedNamesAtEachParseEnv: NewDefinedNameAtEachParseEnv(),
+		AllDefinedNames:            make(map[string]struct{}),
 	}
 }
 
@@ -44,14 +49,22 @@ func NewDefinedNameAtEachParseEnv() DefinedNameAtEachParseEnv {
 }
 
 func (p *TbParser) IsNameDefinedInCurrentPkg(name string) bool {
-	for _, names := range p.DefinedNamesAtEachParseEnv.Names {
-		if _, ok := names[name]; ok {
-			return true
-		}
+	_, ok := p.AllDefinedNames[name]
+	return ok
+}
+
+func (p *TbParser) NewDefinedName(name string) error {
+	if _, ok := p.AllDefinedNames[name]; ok {
+		return fmt.Errorf("name %s is already defined", name)
 	}
-	return false
+	p.AllDefinedNames[name] = struct{}{}
+	p.DefinedNamesAtEachParseEnv.Names[len(p.DefinedNamesAtEachParseEnv.Names)-1][name] = struct{}{}
+	return nil
 }
 
 func (p *TbParser) DeleteCurrentParseEnv() {
+	for name := range p.DefinedNamesAtEachParseEnv.Names[len(p.DefinedNamesAtEachParseEnv.Names)-1] {
+		delete(p.AllDefinedNames, name)
+	}
 	p.DefinedNamesAtEachParseEnv.Names = p.DefinedNamesAtEachParseEnv.Names[:len(p.DefinedNamesAtEachParseEnv.Names)-1]
 }
