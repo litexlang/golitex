@@ -248,11 +248,6 @@ func (p *TbParser) defExistPropStmt(tb *tokenBlock, keyword string) (Stmt, error
 		return nil, ErrInLine(err, tb)
 	}
 
-	err = p.NewDefinedNameInCurrentParseEnv(string(body.DefBody.DefHeader.Name))
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
 	return body, nil
 }
 
