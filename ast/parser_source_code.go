@@ -52,29 +52,3 @@ func preprocessSourceCode(code string) ([]string, error) {
 	lines := strings.Split(processedCode, "\n")
 	return lines, nil
 }
-
-// func preprocessComments(lines []string) []string {
-// 	ret := []string{}
-// 	for i := 0; i < len(lines); i++ {
-// 		// 如果是 """ 开头的行，说明是注释块，直接跳过好多行，直到"""再次出现的那一行
-// 		if strings.HasPrefix(strings.TrimSpace(lines[i]), glob.MultiLinesCommentSig) {
-// 			i++ // 跳过开始阶段的 """
-// 			for i < len(lines) && !strings.HasPrefix(strings.TrimSpace(lines[i]), glob.MultiLinesCommentSig) {
-// 				i++
-// 			}
-// 			continue // 这时候跳到for的i++环节，i++把“”“跳过了
-// 		}
-
-// 		// 移除行内注释
-// 		if idx := strings.Index(lines[i], glob.CommentSig); idx >= 0 {
-// 			lines[i] = lines[i][:idx]
-// 		}
-// 		// 移除行末的空白字符
-// 		lines[i] = strings.TrimRight(lines[i], " \t\r\n")
-// 		if lines[i] == "" {
-// 			continue // 跳过纯注释行
-// 		}
-// 		ret = append(ret, lines[i])
-// 	}
-// 	return ret
-// }
