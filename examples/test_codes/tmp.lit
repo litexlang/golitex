@@ -1,15 +1,2 @@
-"""
-import yyy "xxx"
-import zzz as zzz
-
-import sys
-
-import "xxx.lit"
-
-import sys as s
-
-import "your_dir" as a
-
-"""
-
-have fn f(y {x R: x > 0}) {y R: y > -1} = x
+prop p(x R)
+prop p(x R)
