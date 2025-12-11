@@ -629,9 +629,6 @@ func (env *Env) equalFactPostProcess_SetBuilderEquality(left, right ast.Obj) glo
 		return glob.ErrRet(fmt.Errorf("failed to extract set builder information: %s", err))
 	}
 
-	// 创建替换映射：将 param 替换为 left
-	uniMap := map[string]ast.Obj{setBuilderStruct.Param: left}
-
 	// 1. 断言 left 是 parentSet 的子集
 	subsetOfFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordSubsetOf), []ast.Obj{left, setBuilderStruct.ParentSet}, glob.BuiltinLine)
 	ret := env.NewFact(subsetOfFact)
@@ -639,17 +636,36 @@ func (env *Env) equalFactPostProcess_SetBuilderEquality(left, right ast.Obj) glo
 		return ret
 	}
 
-	// 2. 实例化所有 facts，将 param 替换为 left，然后断言它们
-	for _, fact := range setBuilderStruct.Facts {
-		instFact, err := fact.InstantiateFact(uniMap)
-		if err != nil {
-			return glob.ErrRet(fmt.Errorf("failed to instantiate fact %s: %s", fact, err))
-		}
-		ret := env.NewFact(instFact)
-		if ret.IsErr() {
-			return ret
-		}
+	// 2. 创建 forall 语句：forall param in left: facts
+	// 这表示对于所有在 left 中的元素（用 param 表示），它们都满足 facts
+	// 将 SpecFactPtrSlice 转换为 FactStmtSlice
+	thenFacts := make([]ast.FactStmt, len(setBuilderStruct.Facts))
+	for i, fact := range setBuilderStruct.Facts {
+		thenFacts[i] = fact
+	}
+	uniFact := ast.NewUniFact(
+		[]string{setBuilderStruct.Param}, // params
+		[]ast.Obj{left},                  // paramSets: param 在 left 中
+		[]ast.FactStmt{},                 // domFacts: 空域条件
+		thenFacts,                        // thenFacts: 所有 facts
+		glob.BuiltinLine,
+	)
+	ret = env.NewFact(uniFact)
+	if ret.IsErr() {
+		return ret
 	}
 
+	// 反过来，所有的 在 parent set 的，如果满足 facts，则它们在 left 中
+	uniFact = ast.NewUniFact(
+		[]string{setBuilderStruct.Param},      // params
+		[]ast.Obj{setBuilderStruct.ParentSet}, // paramSets: param 在 parent set 中
+		thenFacts,                             // thenFacts: 所有 facts
+		[]ast.FactStmt{ast.NewInFact(setBuilderStruct.Param, left)}, // domFacts: 空域条件
+		glob.BuiltinLine,
+	)
+	ret = env.NewFact(uniFact)
+	if ret.IsErr() {
+		return ret
+	}
 	return glob.TrueRet("")
 }
