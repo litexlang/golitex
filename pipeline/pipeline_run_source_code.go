@@ -75,7 +75,7 @@ func RunStmtAndImportStmtInExecutor(curExec *exe.Executor, stmt ast.Stmt) glob.G
 // import path as name 的执行：1. 如果之前有过当前包或者引用包里(引用的包也是可见的，然后里面可以给一个path赋予了某个名字)，import path2 as name了，那name同时指向两个包了，那就不行 2. 如果之前没有过，那就可以，然后引入path，如果path已经被引用过了，那就给这个path一个新的名字name 3. path之前还没引用过，那这时候就运行path对应的包。运行方式：新开一个executor，然后运行path对应的包，得到env和pkgMgr, 把 env 和 pkgMgr merge到主executor中。
 func RunImportDirStmtInExec(curExec *exe.Executor, importDirStmt *ast.ImportDirStmt) glob.GlobRet {
 	// 如果已经存在asPkgName，则直接返回
-	if path, ok := curExec.Env.PackageManager.PkgNamePkgPathPairs[importDirStmt.AsPkgName]; ok {
+	if path, ok := curExec.Env.PackageManager.PkgPathNameMgr.GetPathByName(importDirStmt.AsPkgName); ok {
 		if path != importDirStmt.Path {
 			return glob.NewGlobErr(fmt.Sprintf("package name %s already exists, and it refers to package %s, not %s", importDirStmt.AsPkgName, path, importDirStmt.Path))
 		}
@@ -84,7 +84,9 @@ func RunImportDirStmtInExec(curExec *exe.Executor, importDirStmt *ast.ImportDirS
 
 	// 如果已经在curExec.PkgMgr.PkgEnvPairs中，则直接返回
 	if _, ok := curExec.Env.PackageManager.PkgPathEnvPairs[importDirStmt.Path]; ok {
-		curExec.Env.PackageManager.PkgNamePkgPathPairs[importDirStmt.AsPkgName] = importDirStmt.Path
+		if err := curExec.Env.PackageManager.PkgPathNameMgr.AddNamePath(importDirStmt.AsPkgName, importDirStmt.Path); err != nil {
+			return glob.NewGlobErr(err.Error())
+		}
 		return glob.NewGlobTrue(fmt.Sprintf("package %s already imported. Now it has another name: %s", importDirStmt.Path, importDirStmt.AsPkgName))
 	}
 
