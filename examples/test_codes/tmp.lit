@@ -1,2 +1,12 @@
-prop p(x R)
-prop p(x R)
+have s set = {a R: 1 = 0}
+
+# 自动生成下面的事实
+forall a s:
+    a $in R
+    1 = 0
+
+# 证明s是空集
+prove_by_contradiction s = {}:
+    s $in nonempty_set
+    have x s # s是空集，可以从里面取一个元素x出来，x满足集合的性质： x $in R, 1 = 0
+    1 = 0

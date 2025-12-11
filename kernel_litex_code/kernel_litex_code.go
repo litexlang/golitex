@@ -872,6 +872,7 @@ know:
 	not {} $in nonempty_set
 	forall x set: {} $subset_of x
 	forall x set: not x $in {}
+	forall x set: x != {} => x $in nonempty_set
 
 prop equal_set(x set, y set)
 
