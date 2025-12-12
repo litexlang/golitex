@@ -155,7 +155,7 @@ func (ver *Verifier) verInFactByLeftIsCartSetAndRightIsKeywordNonemptySet(stmt *
 
 	// 所有的cart里的参数都是非空集合
 	for i := range stmt.Params[0].(*ast.FnObj).Params {
-		verRet := ver.VerFactStmt(ast.NewIsANonEmptySetFact(stmt.Params[0].(*ast.FnObj).Params[i]), state)
+		verRet := ver.VerFactStmt(ast.NewIsANonEmptySetFact(stmt.Params[0].(*ast.FnObj).Params[i], stmt.Line), state)
 		if verRet.IsErr() || verRet.IsUnknown() {
 			return NewEmptyExecUnknown()
 		}
