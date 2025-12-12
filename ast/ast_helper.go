@@ -29,7 +29,7 @@ func EqualFact(left, right Obj) *SpecFactStmt {
 func (stmt *UniFactStmt) ParamInParamSetFacts(uniConMap map[string]Obj) []*SpecFactStmt {
 	paramSetFacts := make([]*SpecFactStmt, len(stmt.Params))
 	for i, param := range stmt.Params {
-		paramSetFacts[i] = NewInFactWithParamObj(uniConMap[param], stmt.ParamSets[i])
+		paramSetFacts[i] = NewInFactWithParamObj(uniConMap[param], stmt.ParamSets[i], stmt.Line)
 	}
 	return paramSetFacts
 }
@@ -118,7 +118,7 @@ func (defHeader *DefHeader) GetInstantiatedParamInParamSetFact(uniMap map[string
 		if err != nil {
 			return nil, err
 		}
-		paramSetFacts[i] = NewInFactWithParamObj(uniMap[param], instantiatedSet)
+		paramSetFacts[i] = NewInFactWithParamObj(uniMap[param], instantiatedSet, glob.BuiltinLine)
 	}
 	return paramSetFacts, nil
 }
@@ -126,7 +126,7 @@ func (defHeader *DefHeader) GetInstantiatedParamInParamSetFact(uniMap map[string
 func (stmt *UniFactStmt) ParamInParamSet() []*SpecFactStmt {
 	paramSetFacts := make([]*SpecFactStmt, len(stmt.Params))
 	for i, param := range stmt.Params {
-		paramSetFacts[i] = NewInFactWithParamObj(Atom(param), stmt.ParamSets[i])
+		paramSetFacts[i] = NewInFactWithParamObj(Atom(param), stmt.ParamSets[i], stmt.Line)
 	}
 	return paramSetFacts
 }

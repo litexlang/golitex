@@ -140,20 +140,29 @@ func (stmt *SpecFactStmt) IsBuiltinProp_ExceptEqual() bool {
 }
 
 func NewInFact(param string, paramSet Obj) *SpecFactStmt {
-	// switch string(paramSet.String()) {
-	// case glob.KeywordSet:
-	// 	return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsASet), []Obj{Atom(param)}, glob.BuiltinLine)
-	// case glob.KeywordFiniteSet:
-	// 	return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsFiniteSet), []Obj{Atom(param)}, glob.BuiltinLine)
-	// case glob.KeywordNonEmptySet:
-	// 	return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsNonEmptySet), []Obj{Atom(param)}, glob.BuiltinLine)
-	// default:
-	return NewSpecFactStmt(TruePure, Atom(glob.KeywordIn), []Obj{Atom(param), paramSet}, glob.BuiltinLine)
-	// }
+	switch string(paramSet.String()) {
+	case glob.KeywordSet:
+		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsASet), []Obj{Atom(param)}, glob.BuiltinLine)
+	case glob.KeywordFiniteSet:
+		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsAFiniteSet), []Obj{Atom(param)}, glob.BuiltinLine)
+	case glob.KeywordNonEmptySet:
+		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsANonEmptySet), []Obj{Atom(param)}, glob.BuiltinLine)
+	default:
+		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIn), []Obj{Atom(param), paramSet}, glob.BuiltinLine)
+	}
 }
 
-func NewInFactWithParamObj(param Obj, paramSet Obj) *SpecFactStmt {
-	return NewSpecFactStmt(TruePure, Atom(glob.KeywordIn), []Obj{param, paramSet}, glob.BuiltinLine)
+func NewInFactWithParamObj(param Obj, paramSet Obj, line uint) *SpecFactStmt {
+	switch string(paramSet.String()) {
+	case glob.KeywordSet:
+		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsASet), []Obj{param}, line)
+	case glob.KeywordFiniteSet:
+		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsAFiniteSet), []Obj{param}, line)
+	case glob.KeywordNonEmptySet:
+		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsANonEmptySet), []Obj{param}, line)
+	default:
+		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIn), []Obj{param, paramSet}, line)
+	}
 }
 
 func NewInFactWithObj(param Obj, paramSet Obj) *SpecFactStmt {
