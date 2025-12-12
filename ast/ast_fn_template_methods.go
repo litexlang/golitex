@@ -24,7 +24,7 @@ func (fnTemplate *FnTStruct) DeriveUniFact_WithGivenFn(obj Obj) (*UniFactStmt, e
 		paramAsObj = append(paramAsObj, Atom(param))
 	}
 
-	thenFacts := []FactStmt{NewInFactWithParamObj(NewFnObj(obj, paramAsObj), fnTemplate.RetSet)}
+	thenFacts := []FactStmt{NewInFactWithParamObj(NewFnObj(obj, paramAsObj), fnTemplate.RetSet, fnTemplate.Line)}
 	thenFacts = append(thenFacts, fnTemplate.ThenFacts...)
 
 	notInstantiated := NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, thenFacts, fnTemplate.Line)
@@ -38,7 +38,7 @@ func (fnTemplate *FnTStruct) DeriveUniFact(defFnTemplateName string, fnObj Obj, 
 		paramAsObj = append(paramAsObj, Atom(param))
 	}
 
-	thenFacts := []FactStmt{NewInFactWithParamObj(NewFnObj(fnObj, paramAsObj), fnTemplate.RetSet)}
+	thenFacts := []FactStmt{NewInFactWithParamObj(NewFnObj(fnObj, paramAsObj), fnTemplate.RetSet, fnTemplate.Line)}
 	thenFacts = append(thenFacts, fnTemplate.ThenFacts...)
 
 	notInstantiated := NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, thenFacts, fnTemplate.Line)
