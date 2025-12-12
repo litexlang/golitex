@@ -27,31 +27,21 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 		return execState
 	}
 
-	// if stmt.Fact.PropName == glob.KeywordItemExistsIn && execState.IsUnknown() {
-	// 	ok, err := exec.checkInFactInSet_SetIsNonEmpty(stmt.Fact)
-	// 	if err != nil {
-	// 		return NewExecErr(err.Error())
-	// 	}
-	// 	if ok {
-	// 		execState = NewEmptyExecTrue()
-	// 	}
-	// }
-
 	if execState.IsNotTrue() {
 		return execState
 	}
 
-	// if stmt.Fact.PropName == glob.KeywordItemExistsIn && execState.IsTrue() {
-	// 	execState := exec.defLetStmt(ast.NewDefLetStmt([]string{stmt.ObjNames[0]}, []ast.Obj{stmt.Fact.Params[0]}, []ast.FactStmt{}, stmt.Line))
-	// 	if execState.IsNotTrue() {
-	// 		return execState
-	// 	}
-	// 	result := NewEmptyExecTrue()
-	// 	if requireMsg {
-	// 		result = result.AddMsg(fmt.Sprintf("%s\n", stmt))
-	// 	}
-	// 	return result
-	// }
+	if stmt.Fact.PropName == glob.KeywordIsANonEmptySet {
+		execState := exec.defLetStmt(ast.NewDefLetStmt([]string{stmt.ObjNames[0]}, []ast.Obj{stmt.Fact.Params[0]}, []ast.FactStmt{}, stmt.Line))
+		if execState.IsNotTrue() {
+			return execState
+		}
+		result := NewEmptyExecTrue()
+		if requireMsg {
+			result = result.AddMsg(fmt.Sprintf("%s\n", stmt))
+		}
+		return result
+	}
 
 	// TODO： have 可能会引入3种不同的东西：set,obj,fn都可能；每种情况，处理起来不一样：比如如果你是fn和set，那可能就要把你放到 setMem 和 fnMem 里了
 	// 这个 warning 不合时宜了，因为fn的定义其实和obj一样了，就是额外多个满足特定的template
@@ -169,31 +159,31 @@ func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStm
 	return NewEmptyExecTrue().AddMsg(fmt.Sprintf("%s\n", stmt))
 }
 
-func (exec *Executor) checkInFactInSet_SetIsNonEmpty(pureInFact *ast.SpecFactStmt) (bool, error) {
-	if _, ok := glob.BuiltinObjKeywordSet[pureInFact.Params[0].String()]; ok {
-		return true, nil
-	}
+// func (exec *Executor) checkInFactInSet_SetIsNonEmpty(pureInFact *ast.SpecFactStmt) (bool, error) {
+// 	if _, ok := glob.BuiltinObjKeywordSet[pureInFact.Params[0].String()]; ok {
+// 		return true, nil
+// 	}
 
-	isFiniteSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{pureInFact.Params[0], ast.Atom(glob.KeywordFiniteSet)}, pureInFact.Line)
-	execRet := exec.Verify(isFiniteSetFact, false)
-	if execRet.IsNotTrue() {
-		return false, fmt.Errorf(execRet.String())
-	}
-	if execRet.IsTrue() {
-		// 如果 len > 0 那就是可以
-		lenOverStmtName := ast.NewFnObj(ast.Atom(glob.KeywordCount), []ast.Obj{pureInFact.Params[0]})
-		largerThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{lenOverStmtName, ast.Atom("0")}, pureInFact.Line)
-		execRet := exec.Verify(largerThanZeroFact, false)
-		if execRet.IsNotTrue() {
-			return false, fmt.Errorf(execRet.String())
-		}
-		if execRet.IsTrue() {
-			return true, nil
-		}
-	}
+// 	isFiniteSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{pureInFact.Params[0], ast.Atom(glob.KeywordFiniteSet)}, pureInFact.Line)
+// 	execRet := exec.Verify(isFiniteSetFact, false)
+// 	if execRet.IsNotTrue() {
+// 		return false, fmt.Errorf(execRet.String())
+// 	}
+// 	if execRet.IsTrue() {
+// 		// 如果 len > 0 那就是可以
+// 		lenOverStmtName := ast.NewFnObj(ast.Atom(glob.KeywordCount), []ast.Obj{pureInFact.Params[0]})
+// 		largerThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{lenOverStmtName, ast.Atom("0")}, pureInFact.Line)
+// 		execRet := exec.Verify(largerThanZeroFact, false)
+// 		if execRet.IsNotTrue() {
+// 			return false, fmt.Errorf(execRet.String())
+// 		}
+// 		if execRet.IsTrue() {
+// 			return true, nil
+// 		}
+// 	}
 
-	return false, nil
-}
+// 	return false, nil
+// }
 
 func (exec *Executor) haveCartSetStmt(stmt *ast.HaveCartSetStmt) ExecRet {
 	// check that the cart has at least 2 parameters

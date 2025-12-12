@@ -296,5 +296,12 @@ func (ver *Verifier) verIsANonEmptySetByBuiltinRules(stmt *ast.SpecFactStmt, sta
 		}
 	}
 
+	if _, ok := stmt.Params[0].(ast.Atom); ok {
+		paramAsStr := stmt.Params[0].String()
+		if glob.IsNPosOrNOrZOrQOrR(paramAsStr) {
+			return NewExecTrue("A number is a nonempty set.")
+		}
+	}
+
 	return NewEmptyExecUnknown()
 }
