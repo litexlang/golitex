@@ -359,7 +359,16 @@ know forall a, b, c, d R: c != 0, a = d * (b / c) => a * c = d * b
 know forall x, y, z R: z != 0, x = y / z => x * z = y
 
 fn range(x Z, y Z) set:
-	range(x, y) = {self Z: x <= self, self < y}
+	dom:
+		x <= y
+	=>:
+		range(x, y) = {self Z: self >= x, self < y}
+
+fn closed_range(x Z, y Z) set:
+	dom:
+		x <= y
+	=>:
+		closed_range(x, y) = {self Z: self >= x, self <= y}
 
 """
 know:

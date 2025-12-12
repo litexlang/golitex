@@ -500,3 +500,5 @@ func ObjIsRangeOrClosedRangeWith2Params(obj Obj) bool {
 	}
 	return false
 }
+
+//

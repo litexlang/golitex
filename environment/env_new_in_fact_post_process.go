@@ -47,6 +47,10 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 		return ret
 	}
 
+	if ret := e.inFactPostProcess_TryRangeOrClosedRange(fact); ret.IsTrue() || ret.IsErr() {
+		return ret
+	}
+
 	if fact.Params[1].String() == glob.KeywordNPos {
 		return e.inFactPostProcess_TryNPos(fact)
 	}
@@ -411,6 +415,63 @@ func (e *Env) inFactPostProcess_InSetBuilder(obj ast.Obj, setBuilderObj *ast.FnO
 	// intentional facts are true
 	for _, fact := range instFacts {
 		ret := e.NewFact(fact)
+		if ret.IsErr() {
+			return ret
+		}
+	}
+
+	return glob.TrueRet("")
+}
+
+func (e *Env) inFactPostProcess_TryRangeOrClosedRange(fact *ast.SpecFactStmt) glob.GlobRet {
+	// Check if the second parameter is a range or closed_range function call
+	if !ast.ObjIsRangeOrClosedRangeWith2Params(fact.Params[1]) {
+		return glob.NewGlobUnknown("")
+	}
+
+	obj := fact.Params[0]
+	rangeOrClosedRange := fact.Params[1].(*ast.FnObj)
+	left := rangeOrClosedRange.Params[0]
+	right := rangeOrClosedRange.Params[1]
+	isRange := rangeOrClosedRange.FnHead.String() == glob.KeywordRange
+
+	// in Z
+	inZFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordInteger))
+	ret := e.storeSpecFactInMem(inZFact)
+	if ret.IsErr() {
+		return ret
+	}
+
+	// Generate x >= left
+	greaterEqualLeftFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{obj, left}, fact.Line)
+	ret = e.storeSpecFactInMem(greaterEqualLeftFact)
+	if ret.IsErr() {
+		return ret
+	}
+	ret = e.builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(greaterEqualLeftFact)
+	if ret.IsErr() {
+		return ret
+	}
+
+	if isRange {
+		// range: generate x < right
+		lessRightFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLess), []ast.Obj{obj, right}, fact.Line)
+		ret = e.storeSpecFactInMem(lessRightFact)
+		if ret.IsErr() {
+			return ret
+		}
+		ret = e.builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsZero(lessRightFact)
+		if ret.IsErr() {
+			return ret
+		}
+	} else {
+		// closed_range: generate x <= right
+		lessEqualRightFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{obj, right}, fact.Line)
+		ret = e.storeSpecFactInMem(lessEqualRightFact)
+		if ret.IsErr() {
+			return ret
+		}
+		ret = e.builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndRightParamIsNotZero(lessEqualRightFact)
 		if ret.IsErr() {
 			return ret
 		}
