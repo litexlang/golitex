@@ -104,11 +104,10 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 		return verRet
 	}
 
-	// fn(R)R $in set
-	verRet = ver.verInFactByLeftIsFnTemplateAndRightIsKeywordSet(stmt, state)
-	if verRet.IsErr() || verRet.IsTrue() {
-		return verRet
-	}
+	// verRet = ver.verInFactByLeftIsFnTemplateAndRightIsKeywordSet(stmt, state)
+	// if verRet.IsErr() || verRet.IsTrue() {
+	// 	return verRet
+	// }
 
 	// cart(R, R) $in nonempty_set
 	verRet = ver.verInFactByLeftIsCartSetAndRightIsKeywordNonemptySet(stmt, state)
@@ -164,36 +163,36 @@ func (ver *Verifier) verInFactByLeftIsCartSetAndRightIsKeywordNonemptySet(stmt *
 	return NewExecTrue(fmt.Sprintf("all arguments of %s are in nonempty.", stmt.Params[0]))
 }
 
-func (ver *Verifier) verInFactByLeftIsFnTemplateAndRightIsKeywordSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	if asAtom, ok := stmt.Params[1].(ast.Atom); ok {
-		if glob.IsKeywordSet(string(asAtom)) {
-			return NewEmptyExecUnknown()
-		}
-	}
+// func (ver *Verifier) verInFactByLeftIsFnTemplateAndRightIsKeywordSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+// 	if asAtom, ok := stmt.Params[1].(ast.Atom); ok {
+// 		if glob.IsKeywordSet(string(asAtom)) {
+// 			return NewEmptyExecUnknown()
+// 		}
+// 	}
 
-	if asFcFn, ok := stmt.Params[0].(*ast.FnObj); ok {
-		if ast.IsFnTemplate_ObjFn(asFcFn) {
-			// 所有参数还都真是集合
-			for i := range asFcFn.FnHead.(*ast.FnObj).Params {
-				verRet := ver.VerFactStmt(ast.NewIsASetFact(asFcFn.FnHead.(*ast.FnObj).Params[i], stmt.Line), state)
-				if verRet.IsErr() || verRet.IsUnknown() {
-					return NewEmptyExecUnknown()
-				}
-			}
+// 	if asFcFn, ok := stmt.Params[0].(*ast.FnObj); ok {
+// 		if ast.IsFnTemplate_ObjFn(asFcFn) {
+// 			// 所有参数还都真是集合
+// 			for i := range asFcFn.FnHead.(*ast.FnObj).Params {
+// 				verRet := ver.VerFactStmt(ast.NewIsASetFact(asFcFn.FnHead.(*ast.FnObj).Params[i], stmt.Line), state)
+// 				if verRet.IsErr() || verRet.IsUnknown() {
+// 					return NewEmptyExecUnknown()
+// 				}
+// 			}
 
-			for i := range asFcFn.Params {
-				if verRet := ver.VerFactStmt(ast.NewIsASetFact(asFcFn.Params[i], stmt.Line), state); verRet.IsErr() || verRet.IsUnknown() {
-					return NewEmptyExecUnknown()
-				}
-			}
-			return NewEmptyExecTrue()
-		}
-	}
+// 			for i := range asFcFn.Params {
+// 				if verRet := ver.VerFactStmt(ast.NewIsASetFact(asFcFn.Params[i], stmt.Line), state); verRet.IsErr() || verRet.IsUnknown() {
+// 					return NewEmptyExecUnknown()
+// 				}
+// 			}
+// 			return NewEmptyExecTrue()
+// 		}
+// 	}
 
-	// TODO 如果fnTemplate 里面的涉及到的 paramSet 也都是集合，那就返回true
+// 	// TODO 如果fnTemplate 里面的涉及到的 paramSet 也都是集合，那就返回true
 
-	return NewEmptyExecUnknown()
-}
+// 	return NewEmptyExecUnknown()
+// }
 
 func (ver *Verifier) verInFactByLeftParamIsReturnValueOfArithmeticFn(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	ok := ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordReal)
