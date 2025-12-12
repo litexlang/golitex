@@ -139,12 +139,17 @@ func (stmt *SpecFactStmt) IsBuiltinProp_ExceptEqual() bool {
 	return glob.IsBuiltinInfixRelaPropSymbol(string(stmt.PropName)) && !stmt.NameIs(glob.KeySymbolEqual)
 }
 
-// func (stmt *SpecFactStmt) IsMathInductionFact() bool {
-// 	return string(stmt.PropName) == glob.KeywordProveByMathInduction
-// }
-
 func NewInFact(param string, paramSet Obj) *SpecFactStmt {
+	// switch string(paramSet.String()) {
+	// case glob.KeywordSet:
+	// 	return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsASet), []Obj{Atom(param)}, glob.BuiltinLine)
+	// case glob.KeywordFiniteSet:
+	// 	return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsFiniteSet), []Obj{Atom(param)}, glob.BuiltinLine)
+	// case glob.KeywordNonEmptySet:
+	// 	return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsNonEmptySet), []Obj{Atom(param)}, glob.BuiltinLine)
+	// default:
 	return NewSpecFactStmt(TruePure, Atom(glob.KeywordIn), []Obj{Atom(param), paramSet}, glob.BuiltinLine)
+	// }
 }
 
 func NewInFactWithParamObj(param Obj, paramSet Obj) *SpecFactStmt {
