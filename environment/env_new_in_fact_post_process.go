@@ -449,6 +449,10 @@ func (e *Env) inFactPostProcess_TryNPos(fact *ast.SpecFactStmt) glob.GlobRet {
 	if ret.IsErr() {
 		return ret
 	}
+	ret = e.builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(greaterThanZeroFact)
+	if ret.IsErr() {
+		return ret
+	}
 
 	// x >= 1
 	greaterEqualOneFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{obj, ast.Atom("1")}, glob.BuiltinLine)
