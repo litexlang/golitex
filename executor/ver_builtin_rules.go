@@ -261,6 +261,7 @@ func (ver *Verifier) verEqualSetByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
 }
 
+// TODO: 理论上任何obj都是set了现在，因为现在set不再是obj了
 func (ver *Verifier) verIsASetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	if len(stmt.Params) != 1 {
 		return NewExecErr(fmt.Sprintf("is_a_set expects 1 parameter, got %d", len(stmt.Params)))

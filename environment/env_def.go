@@ -41,7 +41,7 @@ func (env *Env) NewDefProp_BuiltinProp(stmt *ast.DefPropStmt) glob.GlobRet {
 		return glob.ErrRet(fmt.Errorf("prop name %s cannot be the same as parameter name %s", stmt.DefHeader.Name, stmt.DefHeader.Name))
 	}
 
-	ret := env.ThereIsNoDuplicateObjNamesAndAllAtomsInParamSetsAreDefined(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, true)
+	ret := env.NoDuplicateParamNamesAndParamSetsDefined(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, true)
 	if ret.IsErr() {
 		return ret
 	}
@@ -84,7 +84,7 @@ func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) glob.GlobR
 		return ret
 	}
 
-	ret = env.ThereIsNoDuplicateObjNamesAndAllAtomsInParamSetsAreDefined(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, true)
+	ret = env.NoDuplicateParamNamesAndParamSetsDefined(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, true)
 	if ret.IsErr() {
 		return ret
 	}
@@ -122,7 +122,7 @@ func (env *Env) AtomsInFnTemplateFnTemplateDeclared(name ast.Atom, stmt *ast.FnT
 		return glob.ErrRet(fmt.Errorf("fn name %s cannot be the same as parameter name %s", name, name))
 	}
 
-	ret := env.ThereIsNoDuplicateObjNamesAndAllAtomsInParamSetsAreDefined(stmt.TemplateDefHeader.Params, stmt.TemplateDefHeader.ParamSets, false)
+	ret := env.NoDuplicateParamNamesAndParamSetsDefined(stmt.TemplateDefHeader.Params, stmt.TemplateDefHeader.ParamSets, false)
 	if ret.IsErr() {
 		return ret
 	}
@@ -182,7 +182,7 @@ func (env *Env) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) 
 		return glob.ErrRet(fmt.Errorf("prop name %s cannot be the same as parameter name %s", stmt.DefBody.DefHeader.Name, stmt.DefBody.DefHeader.Name))
 	}
 
-	ret := env.ThereIsNoDuplicateObjNamesAndAllAtomsInParamSetsAreDefined(append(stmt.DefBody.DefHeader.Params, stmt.ExistParams...), append(stmt.DefBody.DefHeader.ParamSets, stmt.ExistParamSets...), true)
+	ret := env.NoDuplicateParamNamesAndParamSetsDefined(append(stmt.DefBody.DefHeader.Params, stmt.ExistParams...), append(stmt.DefBody.DefHeader.ParamSets, stmt.ExistParamSets...), true)
 	if ret.IsErr() {
 		return ret
 	}
@@ -238,7 +238,7 @@ func (e *Env) NewObj_NoDuplicate(name string, stmt ast.FnTemplate_Or_DefObjStmtI
 // and checks that all atoms inside the facts are declared.
 // If the obj is a function, it will be inserted into the function definition memory.
 func (env *Env) DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmt *ast.DefLetStmt) glob.GlobRet {
-	ret := env.ThereIsNoDuplicateObjNamesAndAllAtomsInParamSetsAreDefined(stmt.Objs, stmt.ObjSets, true)
+	ret := env.NoDuplicateParamNamesAndParamSetsDefined(stmt.Objs, stmt.ObjSets, true)
 	if ret.IsErr() {
 		return ret
 	}
