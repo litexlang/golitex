@@ -189,10 +189,15 @@ func (ver *Verifier) tupleFnReq(objAsFnObj *ast.FnObj, state *VerState) ExecRet 
 	_ = state
 
 	for _, param := range objAsFnObj.Params {
-		if !ast.ObjIsKeywordSet(param) {
-			return NewExecErr(fmt.Sprintf("parameters in %s must not be set", objAsFnObj.String()))
+		execRet := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(param, state)
+		if execRet.IsErr() {
+			return NewExecErr(execRet.String())
+		}
+		if execRet.IsUnknown() {
+			return NewExecErr(fmt.Sprintf("parameter %s in %s must be an atom or function", param, objAsFnObj.FnHead))
 		}
 	}
+
 	return NewEmptyExecTrue()
 }
 

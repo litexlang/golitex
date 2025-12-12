@@ -42,7 +42,6 @@ const (
 	KeywordInteger  = "Z"
 	KeywordRational = "Q"
 	KeywordReal     = "R"
-	KeywordFn       = "fn"
 
 	KeywordCart   = "cart"
 	KeywordIsCart = "is_cart"
@@ -69,15 +68,18 @@ const (
 	KeywordProveInRange         = "prove_in_range"
 	KeywordProveCaseByCase      = "prove_case_by_case"
 
+	KeywordFn         = "fn"
 	KeywordFnTemplate = "fn_template"
 
 	KeywordClaim = "claim"
 	KeywordProve = "prove"
-	KeywordDom   = "dom"
-	KeywordCase  = "case"
-	KeywordSt    = "st"
 
-	KeywordProveIsCommutativeProp = "prove_is_commutative_prop" // 这个 keyword是真的在工作的
+	KeywordDom  = "dom"
+	KeywordCase = "case"
+	KeywordSt   = "st"
+	KeywordAs   = "as"
+
+	KeywordProveIsCommutativeProp = "prove_is_commutative_prop"
 	KeywordProveIsTransitiveProp  = "prove_is_transitive_prop"
 
 	KeywordImport = "import"
@@ -85,7 +87,6 @@ const (
 	KeywordPrint  = "print"
 	KeywordExit   = "exit"
 	KeywordHelp   = "help"
-	KeywordAs     = "as"
 
 	KeywordProveAlgo = "prove_algo"
 	KeywordAlgo      = "algo"
