@@ -242,3 +242,12 @@ func (exec *Executor) algoIfStmtWhenEval(stmt *ast.AlgoIfStmt, fnObjWithValuePar
 	value, execRet := exec.runAlgoStmtsWhenEval(stmt.ThenStmts, fnObjWithValueParams)
 	return value, execRet
 }
+
+func (exec *Executor) GetSimplifiedValue(obj ast.Obj) (ast.Obj, ExecRet) {
+	_, value := exec.Env.ReplaceSymbolWithValue(obj)
+	simplifiedValue, execRet := exec.simplifyNumExprObj(value)
+	if execRet.IsNotTrue() {
+		return nil, execRet
+	}
+	return simplifiedValue, execRet
+}

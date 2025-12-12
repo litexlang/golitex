@@ -1,3 +1,5 @@
-have x cart(R, R) = (1, 2)
-have y cart(R, R) = (1, 2)
-x = y
+prove_for i $in range(1, 10):
+    i > 0
+
+prove_for i $in closed_range(1, 10):
+    i > 0   

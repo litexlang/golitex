@@ -703,6 +703,30 @@ func (stmt *ProveInRangeStmt2) Instantiate(uniMap map[string]Obj) (Stmt, error) 
 	return NewProveInRangeStmt(stmt.param, newStart, newEnd, newDomFacts, newThenFacts, newProofs, stmt.Line), nil
 }
 
+func (stmt *ProveForStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+	newLeft, err := stmt.Left.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newRight, err := stmt.Right.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newDomFacts, err := stmt.DomFacts.InstantiateFact(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newThenFacts, err := stmt.ThenFacts.InstantiateFact(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newProofs, err := stmt.Proofs.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewProveForStmt(stmt.Param, newLeft, newRight, stmt.IsProveIRange, newDomFacts, newThenFacts, newProofs, stmt.Line), nil
+}
+
 func (stmt *ClaimIffStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newUniFactWithIffStmt, err := stmt.UniFactWithIffStmt.InstantiateFact(uniMap)
 	if err != nil {
@@ -899,10 +923,6 @@ func (specFactPtrSlice SpecFactPtrSlice) InstantiateFact(uniMap map[string]Obj) 
 
 // TODO: 在eval时，这里的token可能因为没有实例化而有问题
 func (stmt *PrintStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	return stmt, nil
-}
-
-func (stmt *HelpStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return stmt, nil
 }
 

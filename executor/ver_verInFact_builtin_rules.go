@@ -777,7 +777,7 @@ func (ver *Verifier) litNumNotInIntegerByLiteralShape(stmt *ast.SpecFactStmt, st
 
 	// 检查字面上是否是整数形状（必须是 AtomObj 且字面上看起来就是整数）
 	// 如果字面上就是整数形状（比如 "5" 或 "-3"），不能证明它不在整数中
-	if ast.IsObjLiterallyIntNumber(stmt.Params[0]) {
+	if _, ok := ast.IsObjLiterallyIntNumber(stmt.Params[0]); ok {
 		// 字面上是整数，不能证明它不在整数中
 		return NewEmptyExecUnknown()
 	}

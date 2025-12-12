@@ -94,6 +94,8 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 		ret, err = p.proveByInductionStmt(tb)
 	case glob.KeywordProveInRange:
 		ret, err = p.proveInRangeStmt(tb)
+	case glob.KeywordProveFor:
+		ret, err = p.proveForStmt(tb)
 	case glob.KeywordProveIsTransitiveProp:
 		ret, err = p.proveIsTransitivePropStmt(tb)
 	case glob.KeywordProveIsCommutativeProp:
@@ -110,8 +112,6 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 		ret, err = p.proveByContradictionStmt(tb)
 	case glob.KeywordPrint:
 		ret, err = p.printStmt(tb)
-	case glob.KeywordHelp:
-		ret, err = p.helpStmt(tb)
 	case glob.KeywordDoNothing:
 		ret, err = p.doNothingStmt(tb)
 	case glob.KeywordImport:
@@ -1718,6 +1718,68 @@ func (p *TbParser) proveInRangeStmt(tb *tokenBlock) (Stmt, error) {
 	return NewProveInRangeStmt(param, start, end, domFacts, thenFacts, proofs, tb.line), nil
 }
 
+func (p *TbParser) proveForStmt(tb *tokenBlock) (Stmt, error) {
+	err := tb.header.skip(glob.KeywordProveFor)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	// Parse parameter name
+	param, err := tb.header.next()
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	// Skip $in (FuncFactPrefix + KeywordIn)
+	if !tb.header.is(glob.FuncFactPrefix) {
+		return nil, ErrInLine(fmt.Errorf("expect $in after parameter"), tb)
+	}
+	err = tb.header.skip(glob.FuncFactPrefix)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	if !tb.header.is(glob.KeywordIn) {
+		return nil, ErrInLine(fmt.Errorf("expect 'in' after '$'"), tb)
+	}
+	err = tb.header.skip(glob.KeywordIn)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	// Parse RangeOrClosedRange object (e.g., range(1, 10) or closed_range(1, 10))
+	rangeOrClosedRange, err := p.Obj(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	if !ObjIsRangeOrClosedRangeWith2Params(rangeOrClosedRange) {
+		return nil, ErrInLine(fmt.Errorf("expect range or closed range, but got %s", rangeOrClosedRange.String()), tb)
+	}
+
+	fnObj := rangeOrClosedRange.(*FnObj)
+	left := fnObj.Params[0]
+	right := fnObj.Params[1]
+	isProveIRange := fnObj.FnHead.String() == glob.KeywordRange
+
+	// Skip colon
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	// Use parseDomThenProve to handle all three cases:
+	// 1. dom:, =>:, prove: (all three sections)
+	// 2. =>:, prove: (no dom section)
+	// 3. =>: (only then section, no dom and no prove)
+	domFacts, thenFacts, proofs, err := p.parseDomThenProve(tb.body)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	return NewProveForStmt(param, left, right, isProveIRange, domFacts, thenFacts, proofs, tb.line), nil
+}
+
 func (p *TbParser) proveIsTransitivePropStmt(tb *tokenBlock) (Stmt, error) {
 	err := tb.header.skip(glob.KeywordProveIsTransitiveProp)
 	if err != nil {
@@ -2056,30 +2118,6 @@ func (p *TbParser) printStmt(tb *tokenBlock) (Stmt, error) {
 	}
 
 	return NewPrintStmt(isFString, value, tb.line), nil
-}
-
-func (p *TbParser) helpStmt(tb *tokenBlock) (Stmt, error) {
-	err := tb.header.skip(glob.KeywordHelp)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	err = tb.header.skip(glob.KeySymbolLeftBrace)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	keyword, err := tb.header.next()
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	err = tb.header.skip(glob.KeySymbolRightBrace)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	return NewHelpStmt(keyword, tb.line), nil
 }
 
 func (p *TbParser) doNothingStmt(tb *tokenBlock) (Stmt, error) {

@@ -188,6 +188,10 @@ func NewProveInRangeStmt(param string, start Obj, end Obj, domFacts []FactStmt, 
 	return &ProveInRangeStmt2{param: param, start: start, end: end, DomFactsOrNil: domFacts, ThenFacts: thenFacts, ProofsOrNil: proofs, Line: line}
 }
 
+func NewProveForStmt(param string, left Obj, right Obj, isProveIRange bool, domFacts []FactStmt, thenFacts []FactStmt, proofs []Stmt, line uint) *ProveForStmt {
+	return &ProveForStmt{Param: param, Left: left, Right: right, IsProveIRange: isProveIRange, DomFacts: domFacts, ThenFacts: thenFacts, Proofs: proofs, Line: line}
+}
+
 func NewProveIsTransitivePropStmt(prop Atom, params []string, proofs []Stmt, line uint) *ProveIsTransitivePropStmt {
 	return &ProveIsTransitivePropStmt{prop, params, proofs, line}
 }
@@ -290,10 +294,6 @@ func NewProveAlgoReturnStmt(facts FactOrByStmtSlice, line uint) *ProveAlgoReturn
 
 func NewPrintStmt(isFString bool, value string, line uint) *PrintStmt {
 	return &PrintStmt{isFString, value, line}
-}
-
-func NewHelpStmt(keyword string, line uint) *HelpStmt {
-	return &HelpStmt{keyword, line}
 }
 
 func NewHaveFnCaseByCaseStmt(defFnStmt *DefFnStmt, caseByCaseFacts SpecFactPtrSlice, proofs StmtSliceSlice, haveObjSatisfyFn ObjSlice, line uint) *HaveFnCaseByCaseStmt {
