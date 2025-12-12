@@ -807,6 +807,13 @@ func (exec *Executor) proveForStmt(stmt *ast.ProveForStmt) ExecRet {
 		}
 	}
 
+	// Create and store the universal fact
+	uniFact := stmt.UniFact()
+	ret := exec.Env.NewFact(uniFact)
+	if ret.IsErr() {
+		return NewExecErr(ret.String())
+	}
+
 	return NewExecTrue(stmt.String())
 }
 
