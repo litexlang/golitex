@@ -365,7 +365,7 @@ func (ver *Verifier) falseInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerS
 
 // TODO 需要先证明一下它是finite set 去开始验证 len(n) = 0
 func (ver *Verifier) nothingIsInEmptySet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	verRet := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.Params[1], ast.Atom(glob.KeywordFiniteSet)}, stmt.Line), state)
+	verRet := ver.VerFactStmt(ast.NewIsAFiniteSetFact(stmt.Params[1], stmt.Line), state)
 	if verRet.IsErr() || verRet.IsUnknown() {
 		return verRet
 	}
