@@ -43,10 +43,10 @@ const (
 	KeywordReal                   = "R"                         // e.g. pi
 	KeywordIn                     = "in"
 	// KeywordProveByMathInduction           = "prove_by_math_induction"
-	KeywordCount        = "count"
-	KeywordFiniteSet    = "finite_set"
-	KeywordProveByEnum  = "prove_by_enum" // syntax connecting forall and finite_set
-	KeywordItemExistsIn = "item_exists_in"
+	KeywordCount       = "count"
+	KeywordFiniteSet   = "finite_set"
+	KeywordProveByEnum = "prove_by_enum" // syntax connecting forall and finite_set
+	// KeywordItemExistsIn = "item_exists_in"
 
 	KeywordFnTemplate = "fn_template"
 
@@ -151,17 +151,17 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordReal:                   {},
 	KeywordIn:                     {},
 	// KeywordProveByMathInduction:           {},
-	KeywordCount:        {},
-	KeywordFiniteSet:    {},
-	KeywordProveByEnum:  {},
-	KeywordItemExistsIn: {},
-	KeywordFnTemplate:   {},
-	KeywordNPos:         {},
-	KeywordLet:          {},
-	KeywordClear:        {},
-	KeywordTuple:        {},
-	KeywordIndexOpt:     {},
-	KeywordDoNothing:    {},
+	KeywordCount:       {},
+	KeywordFiniteSet:   {},
+	KeywordProveByEnum: {},
+	// KeywordItemExistsIn: {},
+	KeywordFnTemplate: {},
+	KeywordNPos:       {},
+	KeywordLet:        {},
+	KeywordClear:      {},
+	KeywordTuple:      {},
+	KeywordIndexOpt:   {},
+	KeywordDoNothing:  {},
 	// KeywordExistSetByAxiomOfReplacement:   {},
 
 	KeywordProveIsTransitiveProp: {},
@@ -402,29 +402,31 @@ var KeywordHelpMap = map[string]string{
 	KeywordCount:                  "",
 	KeywordFiniteSet:              "",
 	KeywordProveByEnum:            "",
-	KeywordItemExistsIn:           "",
-	KeywordFnTemplate:             "",
-	KeywordNPos:                   "",
-	KeywordLet:                    "",
-	KeywordClear:                  "",
-	KeywordProveByInduction:       "",
-	KeywordLift:                   "",
-	KeywordNonEmptySet:            "",
-	KeywordProveIsTransitiveProp:  "",
-	KeywordProveInRangeSet:        "",
-	KeywordProveInRange:           "",
-	KeywordAlgo:                   "",
-	KeywordReturn:                 "",
-	KeywordIf:                     "",
-	KeywordEval:                   "",
-	KeywordProveAlgo:              "",
-	KeywordBy:                     "",
-	KeywordImplication:            "",
-	KeywordPrint:                  "",
-	KeywordCase:                   "",
-	KeywordProveCaseByCase:        "",
-	KeywordExit:                   "exit current REPL session",
-	KeywordHelp:                   "show this help message",
+
+	// KeywordItemExistsIn:           "",
+
+	KeywordFnTemplate:            "",
+	KeywordNPos:                  "",
+	KeywordLet:                   "",
+	KeywordClear:                 "",
+	KeywordProveByInduction:      "",
+	KeywordLift:                  "",
+	KeywordNonEmptySet:           "",
+	KeywordProveIsTransitiveProp: "",
+	KeywordProveInRangeSet:       "",
+	KeywordProveInRange:          "",
+	KeywordAlgo:                  "",
+	KeywordReturn:                "",
+	KeywordIf:                    "",
+	KeywordEval:                  "",
+	KeywordProveAlgo:             "",
+	KeywordBy:                    "",
+	KeywordImplication:           "",
+	KeywordPrint:                 "",
+	KeywordCase:                  "",
+	KeywordProveCaseByCase:       "",
+	KeywordExit:                  "exit current REPL session",
+	KeywordHelp:                  "show this help message",
 }
 
 const PkgNameAtomSeparator = KeySymbolDot

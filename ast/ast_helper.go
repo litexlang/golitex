@@ -463,3 +463,15 @@ func IsListSetObj(obj Obj) bool {
 func NegateObj(right Obj) Obj {
 	return NewFnObj(Atom(glob.KeySymbolStar), []Obj{Atom("-1"), right})
 }
+
+func NewIsANonEmptySetFact(param Obj) *SpecFactStmt {
+	return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsANonEmptySet), []Obj{param}, glob.BuiltinLine)
+}
+
+func NewIsAFiniteSetFact(param Obj) *SpecFactStmt {
+	return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsAFiniteSet), []Obj{param}, glob.BuiltinLine)
+}
+
+func NewIsASetFact(param Obj) *SpecFactStmt {
+	return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsASet), []Obj{param}, glob.BuiltinLine)
+}

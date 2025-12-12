@@ -172,7 +172,7 @@ know:
 	$item_exists_in(R)
 	forall x N_pos:
 		x > 0
-	forall x set: $item_exists_in(x) => x $in nonempty_set
+	forall x set: $item_exists_in(x) => $is_a_nonempty_set(x)
 
 know forall m N_pos => m - 1 $in N
 

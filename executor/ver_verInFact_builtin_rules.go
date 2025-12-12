@@ -155,7 +155,7 @@ func (ver *Verifier) verInFactByLeftIsCartSetAndRightIsKeywordNonemptySet(stmt *
 
 	// 所有的cart里的参数都是非空集合
 	for i := range stmt.Params[0].(*ast.FnObj).Params {
-		verRet := ver.VerFactStmt(ast.NewInFactWithParamObj(stmt.Params[0].(*ast.FnObj).Params[i], ast.Atom(glob.KeywordNonEmptySet)), state)
+		verRet := ver.VerFactStmt(ast.NewIsANonEmptySetFact(stmt.Params[0].(*ast.FnObj).Params[i]), state)
 		if verRet.IsErr() || verRet.IsUnknown() {
 			return NewEmptyExecUnknown()
 		}
@@ -376,11 +376,11 @@ func (ver *Verifier) nothingIsInEmptySet(stmt *ast.SpecFactStmt, state *VerState
 	return verRet
 }
 
-func (ver *Verifier) trueExistInSt(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	pureInFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.Params[1], stmt.Params[2]}, stmt.Line)
-	verRet := ver.VerFactStmt(pureInFact, state)
-	return verRet
-}
+// func (ver *Verifier) trueExistInSt(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+// 	pureInFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.Params[1], stmt.Params[2]}, stmt.Line)
+// 	verRet := ver.VerFactStmt(pureInFact, state)
+// 	return verRet
+// }
 
 // func (ver *Verifier) fcIsFiniteSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 // 	// TODO: not sure whether I should add this nextState
