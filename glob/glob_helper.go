@@ -48,3 +48,19 @@ func GenerateNamesLikeExcelColumnNames(n int) []string {
 func RemoveWindowsCarriage(code string) string {
 	return strings.ReplaceAll(code, "\r", "")
 }
+
+func IsKeywordSetOrNonEmptySetOrFiniteSet(s string) bool {
+	return s == KeywordSet || s == KeywordNonEmptySet || s == KeywordFiniteSet
+}
+
+func IsKeywordSet(s string) bool {
+	return s == KeywordSet
+}
+
+func IsKeywordNonEmptySet(s string) bool {
+	return s == KeywordNonEmptySet
+}
+
+func IsKeywordFiniteSet(s string) bool {
+	return s == KeywordFiniteSet
+}
