@@ -23,6 +23,12 @@ exist_prop a in_set st exist_obj_not_in_left_set_but_in_right_set(not_in_set, in
 
 know forall x2, y2 R: x2 != 0, y2 != 0 => x2 * y2 != 0
 
+exist_prop x Z, y N_pos st Q_in_frac(q Q):
+	x / y = q
+	x = y * q
+	x = q * y
+	y > 0
+
 exist_prop x Z, y N_pos st rational_number_representation_in_fraction(q Q):
 	<=>:
 		x / y = q
@@ -881,4 +887,8 @@ fn enum(x, y Z) set:
 		x <= y
 	=>:
 		enum(x, y) = {self Z: x <= self, self <= y}
+
+know:
+	forall x R: x > 0 => 1 / x > 0
+	forall x R, y R: x > 0, y > 0 => x > y <=> 1 / x < 1 / y
 `

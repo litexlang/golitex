@@ -315,15 +315,10 @@ func (ver *Verifier) verEqualByLeftAndRightAreSetBuilders(left, right ast.Obj, s
 	if rightSetBuilder == nil {
 		return NewEmptyExecUnknown()
 	}
-
 	// 生成一个随机的param，把两个set builder的param都替换成这个随机param
 	randomParam := ver.Env.GenerateUndeclaredRandomName()
 
 	leftSetBuilderStruct, err := leftSetBuilder.ToSetBuilderStruct()
-	if err != nil {
-		return NewExecErr(err.Error())
-	}
-	leftSetBuilderStruct, err = leftSetBuilderStruct.ReplaceParamWithNewParam(randomParam)
 	if err != nil {
 		return NewExecErr(err.Error())
 	}
@@ -332,6 +327,16 @@ func (ver *Verifier) verEqualByLeftAndRightAreSetBuilders(left, right ast.Obj, s
 	if err != nil {
 		return NewExecErr(err.Error())
 	}
+
+	if !leftSetBuilderStruct.HasTheSameParentSetAndSpecFactNameAs(rightSetBuilderStruct) {
+		return NewEmptyExecUnknown()
+	}
+
+	leftSetBuilderStruct, err = leftSetBuilderStruct.ReplaceParamWithNewParam(randomParam)
+	if err != nil {
+		return NewExecErr(err.Error())
+	}
+
 	rightSetBuilderStruct, err = rightSetBuilderStruct.ReplaceParamWithNewParam(randomParam)
 	if err != nil {
 		return NewExecErr(err.Error())

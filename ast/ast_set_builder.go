@@ -178,3 +178,22 @@ func (setBuilderStruct *SetBuilderStruct) String() string {
 	builder.WriteString(glob.KeySymbolRightCurly)
 	return builder.String()
 }
+
+func (setBuilder *SetBuilderStruct) HasTheSameParentSetAndSpecFactNameAs(other *SetBuilderStruct) bool {
+	if setBuilder.ParentSet.String() != other.ParentSet.String() {
+		return false
+	}
+
+	len1 := len(setBuilder.Facts)
+	len2 := len(other.Facts)
+	if len1 != len2 {
+		return false
+	}
+
+	for i, fact := range setBuilder.Facts {
+		if string(fact.PropName) != string(other.Facts[i].PropName) {
+			return false
+		}
+	}
+	return true
+}
