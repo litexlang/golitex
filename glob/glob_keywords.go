@@ -16,11 +16,12 @@ package litex_global
 
 // ! 每次新增keyword的时候，要记住把它往isKeyword里加
 const (
-	KeywordSet    = "set"
-	KeywordForall = "forall"
-	KeywordDom    = "dom" // 这是一种语法糖。本质上只要在定义集合的时候写了对集合的要求，那dom就不必要的，因为dom本质上是 ”临时添加新的要求"
-	// KeywordThen                 = "then"
-	// KeywordObj       = "obj"
+	KeywordSet         = "set"
+	KeywordNonEmptySet = "nonempty_set"
+	KeywordFiniteSet   = "finite_set"
+
+	KeywordForall    = "forall"
+	KeywordDom       = "dom"
 	KeywordHave      = "have"
 	KeywordFn        = "fn"
 	KeywordProp      = "prop"
@@ -43,8 +44,8 @@ const (
 	KeywordReal                   = "R"                         // e.g. pi
 	KeywordIn                     = "in"
 	// KeywordProveByMathInduction           = "prove_by_math_induction"
-	KeywordCount       = "count"
-	KeywordFiniteSet   = "finite_set"
+	KeywordCount = "count"
+
 	KeywordProveByEnum = "prove_by_enum" // syntax connecting forall and finite_set
 	// KeywordItemExistsIn = "item_exists_in"
 
@@ -55,8 +56,6 @@ const (
 	KeywordClear = "clear"
 
 	KeywordProveByInduction = "prove_by_induction"
-
-	KeywordNonEmptySet = "nonempty_set"
 
 	KeywordProveIsTransitiveProp = "prove_is_transitive_prop"
 
@@ -309,12 +308,11 @@ var BuiltinObjOrPropNames map[string]struct{} = map[string]struct{}{
 	KeySymbolPercent:      {}, // prove: 2 % 2 = 0 的时候打印有问题，不知道为什么
 	KeySymbolLeftBracket:  {},
 	KeySymbolRightBracket: {},
-	KeywordFiniteSet:      {},
+	// KeywordFiniteSet:      {},
 	// KeywordItemExistsIn:   {},
-	KeywordCount:       {},
-	KeywordNPos:        {},
-	KeywordNonEmptySet: {},
-	KeywordEval:        {},
+	KeywordCount: {},
+	KeywordNPos:  {},
+	KeywordEval:  {},
 
 	KeywordCart:  {},
 	KeywordTuple: {},
