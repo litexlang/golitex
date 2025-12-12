@@ -333,10 +333,6 @@ func (s *ClaimIffStmt) InlineString() string {
 // 	return "TODO"
 // }
 
-func (s *ProveInRangeStmt2) InlineString() string {
-	return "TODO"
-}
-
 func (s *ProveForStmt) InlineString() string {
 	return "TODO"
 }

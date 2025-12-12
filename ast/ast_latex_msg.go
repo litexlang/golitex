@@ -865,10 +865,6 @@ func (s *ProveForStmt) ToLatexString() string {
 	return "TODO"
 }
 
-func (s *ProveInRangeStmt2) ToLatexString() string {
-	return s.String()
-}
-
 func (s *ProveIsTransitivePropStmt) ToLatexString() string {
 	return s.String()
 }

@@ -372,22 +372,6 @@ func TransformEnumToUniFact(setName Obj, enumObjs []Obj) (*UniFactStmt, []*SpecF
 // 	return NewUniFact([]string{stmt.Param}, []Obj{stmt.IntensionalSet}, []FactStmt{}, stmt.ThenFacts, stmt.Line)
 // }
 
-func (stmt *ProveInRangeStmt2) UniFact() *UniFactStmt {
-	params := []string{stmt.param}
-	paramSets := []Obj{Atom(glob.KeywordInteger)}
-
-	// Build dom facts: start <= param < end, plus user-provided dom facts
-	domFacts := []FactStmt{
-		NewSpecFactStmt(TruePure, Atom(glob.KeySymbolLessEqual), []Obj{stmt.start, Atom(stmt.param)}, stmt.Line),
-		NewSpecFactStmt(TruePure, Atom(glob.KeySymbolLess), []Obj{Atom(stmt.param), stmt.end}, stmt.Line),
-	}
-	// Add user-provided dom facts
-	domFacts = append(domFacts, stmt.DomFactsOrNil...)
-
-	thenFacts := stmt.ThenFacts
-	return NewUniFact(params, paramSets, domFacts, thenFacts, stmt.Line)
-}
-
 func (stmt *ProveForStmt) UniFact() *UniFactStmt {
 	params := []string{stmt.Param}
 	paramSets := []Obj{Atom(glob.KeywordInteger)}

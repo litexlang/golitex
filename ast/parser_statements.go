@@ -92,8 +92,6 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 		ret, err = p.clearStmt(tb)
 	case glob.KeywordProveByInduction:
 		ret, err = p.proveByInductionStmt(tb)
-	case glob.KeywordProveInRange:
-		ret, err = p.proveInRangeStmt(tb)
 	case glob.KeywordProveFor:
 		ret, err = p.proveForStmt(tb)
 	case glob.KeywordProveIsTransitiveProp:
@@ -1542,182 +1540,6 @@ func (p *TbParser) clearStmt(tb *tokenBlock) (Stmt, error) {
 	return NewClearStmt(tb.line), nil
 }
 
-func (p *TbParser) proveInRangeStmt(tb *tokenBlock) (Stmt, error) {
-	err := tb.header.skip(glob.KeywordProveInRange)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	err = tb.header.skip(glob.KeySymbolLeftBrace)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	param, err := tb.header.next()
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	err = tb.header.skip(glob.KeySymbolComma)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	start, err := p.Obj(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	err = tb.header.skip(glob.KeySymbolComma)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	end, err := p.Obj(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	err = tb.header.skip(glob.KeySymbolRightBrace)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	err = tb.header.skip(glob.KeySymbolColon)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	domFacts := []FactStmt{}
-	thenFacts := []FactStmt{}
-	proofs := []Stmt{}
-
-	// Parse body sections: dom, =>, prove
-	if len(tb.body) == 0 {
-		// Empty body, all remain empty
-	} else if tb.body[0].header.is(glob.KeywordDom) {
-		// First section is dom: must be dom, =>, (optional) prove
-		if len(tb.body) < 2 || len(tb.body) > 3 {
-			return nil, ErrInLine(fmt.Errorf("when dom is first, body must have 2 or 3 sections (dom, =>, [prove])"), tb)
-		}
-
-		// Parse dom section
-		err = tb.body[0].header.skipKwAndColonCheckEOL(glob.KeywordDom)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-		for _, stmt := range tb.body[0].body {
-			curStmt, err := p.factStmt(&stmt, UniFactDepth1)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			domFacts = append(domFacts, curStmt)
-		}
-
-		// Parse => section
-		if !tb.body[1].header.is(glob.KeySymbolRightArrow) {
-			return nil, ErrInLine(fmt.Errorf("second section must be => when dom is first"), tb)
-		}
-		err = tb.body[1].header.skipKwAndColonCheckEOL(glob.KeySymbolRightArrow)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-		for _, stmt := range tb.body[1].body {
-			curStmt, err := p.factStmt(&stmt, UniFactDepth1)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			thenFacts = append(thenFacts, curStmt)
-		}
-
-		// Parse optional prove section
-		if len(tb.body) == 3 {
-			if !tb.body[2].header.is(glob.KeywordProve) {
-				return nil, ErrInLine(fmt.Errorf("third section must be prove when dom is first"), tb)
-			}
-			err = tb.body[2].header.skipKwAndColonCheckEOL(glob.KeywordProve)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			for _, stmt := range tb.body[2].body {
-				curStmt, err := p.Stmt(&stmt)
-				if err != nil {
-					return nil, ErrInLine(err, tb)
-				}
-				proofs = append(proofs, curStmt)
-			}
-		}
-		// If len(tb.body) == 2, prove remains nil
-	} else {
-		// First section is not dom
-		// Check if last section is prove
-		lastIdx := len(tb.body) - 1
-		hasProve := tb.body[lastIdx].header.is(glob.KeywordProve)
-
-		if hasProve {
-			// All sections before prove are then
-			for i := 0; i < lastIdx; i++ {
-				if !tb.body[i].header.is(glob.KeySymbolRightArrow) {
-					return nil, ErrInLine(fmt.Errorf("when dom is not first, all sections before prove must be =>"), tb)
-				}
-				err = tb.body[i].header.skipKwAndColonCheckEOL(glob.KeySymbolRightArrow)
-				if err != nil {
-					return nil, ErrInLine(err, tb)
-				}
-				for _, stmt := range tb.body[i].body {
-					curStmt, err := p.factStmt(&stmt, UniFactDepth1)
-					if err != nil {
-						return nil, ErrInLine(err, tb)
-					}
-					thenFacts = append(thenFacts, curStmt)
-				}
-			}
-
-			// Parse prove section
-			err = tb.body[lastIdx].header.skipKwAndColonCheckEOL(glob.KeywordProve)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			for _, stmt := range tb.body[lastIdx].body {
-				curStmt, err := p.Stmt(&stmt)
-				if err != nil {
-					return nil, ErrInLine(err, tb)
-				}
-				proofs = append(proofs, curStmt)
-			}
-		} else {
-			// No prove section, all are direct fact statements (thenFacts)
-			for i := range len(tb.body) {
-				// Check if it's a => section or a direct fact statement
-				if tb.body[i].header.is(glob.KeySymbolRightArrow) {
-					// It's a => section
-					err = tb.body[i].header.skipKwAndColonCheckEOL(glob.KeySymbolRightArrow)
-					if err != nil {
-						return nil, ErrInLine(err, tb)
-					}
-					for _, stmt := range tb.body[i].body {
-						curStmt, err := p.factStmt(&stmt, UniFactDepth1)
-						if err != nil {
-							return nil, ErrInLine(err, tb)
-						}
-						thenFacts = append(thenFacts, curStmt)
-					}
-				} else {
-					// It's a direct fact statement (no => needed)
-					curStmt, err := p.factStmt(&tb.body[i], UniFactDepth1)
-					if err != nil {
-						return nil, ErrInLine(err, tb)
-					}
-					thenFacts = append(thenFacts, curStmt)
-				}
-			}
-			// prove remains nil, dom remains empty
-		}
-	}
-
-	return NewProveInRangeStmt(param, start, end, domFacts, thenFacts, proofs, tb.line), nil
-}
-
 func (p *TbParser) proveForStmt(tb *tokenBlock) (Stmt, error) {
 	err := tb.header.skip(glob.KeywordProveFor)
 	if err != nil {
@@ -1731,12 +1553,11 @@ func (p *TbParser) proveForStmt(tb *tokenBlock) (Stmt, error) {
 	}
 
 	// Skip $in (FuncFactPrefix + KeywordIn)
-	if !tb.header.is(glob.FuncFactPrefix) {
-		return nil, ErrInLine(fmt.Errorf("expect $in after parameter"), tb)
-	}
-	err = tb.header.skip(glob.FuncFactPrefix)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
+	if tb.header.is(glob.FuncFactPrefix) {
+		err = tb.header.skip(glob.FuncFactPrefix)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
 	}
 
 	if !tb.header.is(glob.KeywordIn) {

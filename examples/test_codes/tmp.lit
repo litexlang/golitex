@@ -17,5 +17,5 @@ forall i range(1, 10):
     i < 10
     $p(i)
 
-prove_for i $in closed_range(1, 10):
+prove_for i in closed_range(1, 10):
     i > 0   
