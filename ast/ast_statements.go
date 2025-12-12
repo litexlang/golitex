@@ -465,11 +465,11 @@ type PrintStmt struct {
 	Line uint
 }
 
-type HelpStmt struct {
-	Keyword string
+// type HelpStmt struct {
+// 	Keyword string
 
-	Line uint
-}
+// 	Line uint
+// }
 
 // 这是必要的，因为要证明从n到m有且只有n, n+1, ..., m-1, m这些数，必须要用特殊的关键词
 type ProveInRangeStmt2 struct {
@@ -510,13 +510,14 @@ type HaveCartWithDimStmt struct {
 	Line uint
 }
 
-type ProveInRangeStmt struct {
-	Params    string
-	Start     Obj
-	End       Obj
-	DomFacts  FactStmtSlice
-	ThenFacts FactStmtSlice
-	Proofs    StmtSlice
+type ProveForStmt struct {
+	Param         string
+	Left          Obj
+	Right         Obj
+	IsProveIRange bool
+	DomFacts      FactStmtSlice
+	ThenFacts     FactStmtSlice
+	Proofs        StmtSlice
 
 	Line uint
 }

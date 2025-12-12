@@ -860,6 +860,11 @@ func (s *ClaimIffStmt) ToLatexString() string {
 // 	return s.String()
 // }
 
+func (s *ProveForStmt) ToLatexString() string {
+	// TODO: implement LaTeX conversion for prove_for
+	return "TODO"
+}
+
 func (s *ProveInRangeStmt2) ToLatexString() string {
 	return s.String()
 }
@@ -905,10 +910,6 @@ func (s *ProveAlgoReturnStmt) ToLatexString() string {
 }
 
 func (s *PrintStmt) ToLatexString() string {
-	return s.String()
-}
-
-func (s *HelpStmt) ToLatexString() string {
 	return s.String()
 }
 

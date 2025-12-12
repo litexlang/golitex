@@ -337,6 +337,10 @@ func (s *ProveInRangeStmt2) InlineString() string {
 	return "TODO"
 }
 
+func (s *ProveForStmt) InlineString() string {
+	return "TODO"
+}
+
 func (s *ProveIsTransitivePropStmt) InlineString() string {
 	return "TODO"
 }
@@ -378,10 +382,6 @@ func (s *ProveAlgoReturnStmt) InlineString() string {
 }
 
 func (s *PrintStmt) InlineString() string {
-	return s.String()
-}
-
-func (s *HelpStmt) InlineString() string {
 	return s.String()
 }
 

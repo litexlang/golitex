@@ -40,6 +40,7 @@ func (s *OrStmt) stmt()                        {}
 func (s *ImportDirStmt) stmt()                 {}
 func (s *ImportFileStmt) stmt()                {}
 func (s *ProveStmt) stmt()                     {}
+func (s *ProveForStmt) stmt()                  {}
 func (s *UniFactWithIffStmt) stmt()            {}
 func (s *ClaimProveByContradictionStmt) stmt() {}
 
@@ -74,7 +75,6 @@ func (s *EvalStmt) stmt()                          {}
 func (s *DefProveAlgoStmt) stmt()                  {}
 func (s *ByStmt) stmt()                            {}
 func (s *PrintStmt) stmt()                         {}
-func (s *HelpStmt) stmt()                          {}
 func (s *HaveFnEqualCaseByCaseStmt) stmt()         {}
 func (s *HaveFnCaseByCaseStmt) stmt()              {}
 func (s *DefLetStmt) algoStmt()                    {}
@@ -123,11 +123,11 @@ func (s *ByStmt) algoStmt()                     {}
 func (s *ClaimIffStmt) algoStmt()               {}
 
 func (s *ProveInRangeStmt2) algoStmt()                 {}
+func (s *ProveForStmt) algoStmt()                      {}
 func (s *ProveIsTransitivePropStmt) algoStmt()         {}
 func (s *DefAlgoStmt) algoStmt()                       {}
 func (s *EvalStmt) algoStmt()                          {}
 func (s *PrintStmt) algoStmt()                         {}
-func (s *HelpStmt) algoStmt()                          {}
 func (s *HaveFnEqualCaseByCaseStmt) algoStmt()         {}
 func (s *HaveFnCaseByCaseStmt) algoStmt()              {}
 func (s *HaveCartWithDimStmt) stmt()                   {}
@@ -187,7 +187,7 @@ func (s *EvalStmt) GetLine() uint                            { return s.Line }
 func (s *DefProveAlgoStmt) GetLine() uint                    { return s.Line }
 func (s *ByStmt) GetLine() uint                              { return s.Line }
 func (s *PrintStmt) GetLine() uint                           { return s.Line }
-func (s *HelpStmt) GetLine() uint                            { return s.Line }
+func (s *ProveForStmt) GetLine() uint                        { return s.Line }
 func (s *HaveFnEqualCaseByCaseStmt) GetLine() uint           { return s.Line }
 func (s *HaveFnCaseByCaseStmt) GetLine() uint                { return s.Line }
 func (s *HaveCartWithDimStmt) GetLine() uint                 { return s.Line }

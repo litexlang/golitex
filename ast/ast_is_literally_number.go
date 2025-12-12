@@ -14,7 +14,10 @@
 
 package litex_ast
 
-import "unicode"
+import (
+	"strconv"
+	"unicode"
+)
 
 func IsObjLiterallyNPosNumber(obj Obj) bool {
 	atom, ok := obj.(Atom)
@@ -54,31 +57,37 @@ func IsObjLiterallyNatNumber(obj Obj) bool {
 	return true
 }
 
-func IsObjLiterallyIntNumber(obj Obj) bool {
+func IsObjLiterallyIntNumber(obj Obj) (int, bool) {
 	atom, ok := obj.(Atom)
 	if !ok {
-		return false
+		return 0, false
 	}
 
 	s := string(atom)
 	if len(s) == 0 {
-		return false
+		return 0, false
 	}
 
 	if s[0] == '-' {
 		s = s[1:]
 		if len(s) == 0 {
-			return false
+			return 0, false
 		}
 	}
 
 	for _, c := range s {
 		if !(c >= '0' && c <= '9') {
-			return false
+			return 0, false
 		}
 	}
 
-	return true
+	// Parse the string to int
+	val, err := strconv.Atoi(string(atom))
+	if err != nil {
+		return 0, false
+	}
+
+	return val, true
 }
 
 func IsObjLiterallyRationalNumber(obj Obj) bool {
