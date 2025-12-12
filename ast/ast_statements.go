@@ -472,16 +472,6 @@ type PrintStmt struct {
 // }
 
 // 这是必要的，因为要证明从n到m有且只有n, n+1, ..., m-1, m这些数，必须要用特殊的关键词
-type ProveInRangeStmt2 struct {
-	param         string
-	start         Obj
-	end           Obj
-	DomFactsOrNil FactStmtSlice
-	ThenFacts     FactStmtSlice
-	ProofsOrNil   StmtSlice
-
-	Line uint
-}
 
 type HaveCartSetStmt struct {
 	Name    string
@@ -509,6 +499,12 @@ type HaveCartWithDimStmt struct {
 
 	Line uint
 }
+
+// prove_for i $in range(1, 10):
+//     =>:
+//         $p(i)
+//     prove:
+//         know $p(i)
 
 type ProveForStmt struct {
 	Param         string

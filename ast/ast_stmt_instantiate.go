@@ -679,30 +679,6 @@ func (stmt *HaveFnCaseByCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt, erro
 	return NewHaveFnCaseByCaseStmt(newDefFnStmt.(*DefFnStmt), newCaseByCaseFacts, newProofs, newHaveObjSatisfyFn, stmt.Line), nil
 }
 
-func (stmt *ProveInRangeStmt2) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	newStart, err := stmt.start.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	newEnd, err := stmt.end.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	newDomFacts, err := stmt.DomFactsOrNil.InstantiateFact(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	newThenFacts, err := stmt.ThenFacts.InstantiateFact(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	newProofs, err := stmt.ProofsOrNil.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	return NewProveInRangeStmt(stmt.param, newStart, newEnd, newDomFacts, newThenFacts, newProofs, stmt.Line), nil
-}
-
 func (stmt *ProveForStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newLeft, err := stmt.Left.Instantiate(uniMap)
 	if err != nil {
