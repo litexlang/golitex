@@ -66,9 +66,8 @@ const (
 	KeywordProveInEachCase      = "prove_in_each_case"
 	KeywordProveByEnum          = "prove_by_enum"
 	KeywordProveByInduction     = "prove_by_induction"
-	KeywordProveInRangeSet      = "prove_in_range_set"
-	KeywordProveInRange         = "prove_in_range"
 	KeywordProveCaseByCase      = "prove_case_by_case"
+	KeywordProveFor             = "prove_for"
 
 	KeywordFn         = "fn"
 	KeywordFnTemplate = "fn_template"
@@ -99,8 +98,6 @@ const (
 
 	KeywordEqualSet = "equal_set"
 	KeywordSubsetOf = "subset_of"
-
-	KeywordProveFor = "prove_for"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -382,8 +379,6 @@ var KeywordHelpMap = map[string]string{
 	KeywordProveByInduction:      "",
 	KeywordNonEmptySet:           "",
 	KeywordProveIsTransitiveProp: "",
-	KeywordProveInRangeSet:       "",
-	KeywordProveInRange:          "",
 	KeywordAlgo:                  "",
 	KeywordReturn:                "",
 	KeywordIf:                    "",
