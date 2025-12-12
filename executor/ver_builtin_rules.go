@@ -23,9 +23,11 @@ import (
 func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	if stmt.NameIs(glob.KeywordIn) {
 		return ver.inFactBuiltinRules(stmt, state)
-	} else if stmt.NameIs(glob.KeywordItemExistsIn) && stmt.TypeEnum == ast.TrueExist_St {
-		return ver.trueExistInSt(stmt, state)
 	}
+
+	// if stmt.NameIs(glob.KeywordItemExistsIn) && stmt.TypeEnum == ast.TrueExist_St {
+	// 	return ver.trueExistInSt(stmt, state)
+	// }
 
 	if stmt.NameIs(glob.KeywordIsASet) && stmt.TypeEnum == ast.TruePure {
 		return ver.verIsASetByBuiltinRules(stmt, state)
@@ -38,6 +40,10 @@ func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 	if stmt.NameIs(glob.KeywordIsANonEmptySet) && stmt.TypeEnum == ast.TruePure {
 		return ver.verIsANonEmptySetByBuiltinRules(stmt, state)
 	}
+
+	// if stmt.NameIs(glob.KeywordItemExistsIn) && stmt.TypeEnum == ast.TruePure {
+	// 	return ver.verItemExistsInByBuiltinRules(stmt, state)
+	// }
 
 	if stmt.NameIs(glob.KeywordEqualSet) && stmt.TypeEnum == ast.TruePure {
 		return ver.verEqualSetByBuiltinRules(stmt, state)
@@ -59,14 +65,6 @@ func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 
 	if stmt.NameIs(glob.KeywordIsCart) && stmt.TypeEnum == ast.TruePure {
 		return ver.verIsCartByBuiltinRules(stmt, state)
-	}
-
-	if stmt.NameIs(glob.KeywordItemExistsIn) && stmt.TypeEnum == ast.TruePure {
-		return ver.verItemExistsInByBuiltinRules(stmt, state)
-	}
-
-	if verRet := ver.IsInNonEmptyByBuiltinRules(stmt, state); verRet.IsTrue() || verRet.IsErr() {
-		return verRet
 	}
 
 	return NewEmptyExecUnknown()
@@ -193,59 +191,26 @@ func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt *ast.SpecFactStmt, st
 	return NewEmptyExecUnknown()
 }
 
-func (ver *Verifier) verItemExistsInByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	if len(stmt.Params) != 1 {
-		return NewExecErr(fmt.Sprintf("builtin logic opt rule should have 1 param, but got %d", len(stmt.Params)))
-	}
+// func (ver *Verifier) verItemExistsInByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+// 	if len(stmt.Params) != 1 {
+// 		return NewExecErr(fmt.Sprintf("builtin logic opt rule should have 1 param, but got %d", len(stmt.Params)))
+// 	}
 
-	if ast.IsListSetObj(stmt.Params[0]) {
-		asEnumSet, ok := stmt.Params[0].(*ast.FnObj)
-		if !ok {
-			return NewEmptyExecUnknown()
-		}
+// 	if ast.IsListSetObj(stmt.Params[0]) {
+// 		asEnumSet, ok := stmt.Params[0].(*ast.FnObj)
+// 		if !ok {
+// 			return NewEmptyExecUnknown()
+// 		}
 
-		if len(asEnumSet.Params) != 0 {
-			return NewEmptyExecTrue()
-		}
-	}
+// 		if len(asEnumSet.Params) != 0 {
+// 			return NewEmptyExecTrue()
+// 		}
+// 	}
 
-	_ = state
+// 	_ = state
 
-	return NewEmptyExecUnknown()
-}
-
-func (ver *Verifier) IsInNonEmptyByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	if !stmt.NameIs(glob.KeywordIn) {
-		return NewEmptyExecUnknown()
-	}
-
-	if stmt.TypeEnum != ast.TruePure {
-		return NewEmptyExecUnknown()
-	}
-
-	if len(stmt.Params) != 2 {
-		return NewExecErr(fmt.Sprintf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params)))
-	}
-
-	if stmt.Params[1].String() != glob.KeywordNonEmptySet {
-		return NewEmptyExecUnknown()
-	}
-
-	if ast.IsListSetObj(stmt.Params[0]) {
-		asEnumSet, ok := stmt.Params[0].(*ast.FnObj)
-		if !ok {
-			return NewEmptyExecUnknown()
-		}
-
-		if len(asEnumSet.Params) != 0 {
-			return NewEmptyExecTrue()
-		}
-	}
-
-	_ = state
-
-	return NewEmptyExecUnknown()
-}
+// 	return NewEmptyExecUnknown()
+// }
 
 // verEqualSetByBuiltinRules verifies equal_set(a, b) by checking:
 // - forall t a : t $in b

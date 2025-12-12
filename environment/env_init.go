@@ -15,8 +15,6 @@
 package litex_env
 
 import (
-	ast "golitex/ast"
-	glob "golitex/glob"
 	kernel_lib "golitex/kernel_lib"
 )
 
@@ -49,7 +47,7 @@ func (e *Env) Init() {
 
 	e.InsertFnInFnTT(kernel_lib.PowerAtom, kernel_lib.PowerTemplateR)
 
-	e.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordItemExistsIn), []ast.Obj{ast.Atom(glob.KeywordSet)}, glob.BuiltinLine))
+	// e.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordItemExistsIn), []ast.Obj{ast.Atom(glob.KeywordSet)}, glob.BuiltinLine))
 
 	e.NewTransitiveProp(">")
 	e.NewTransitiveProp(">=")

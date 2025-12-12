@@ -27,31 +27,31 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 		return execState
 	}
 
-	if stmt.Fact.PropName == glob.KeywordItemExistsIn && execState.IsUnknown() {
-		ok, err := exec.checkInFactInSet_SetIsNonEmpty(stmt.Fact)
-		if err != nil {
-			return NewExecErr(err.Error())
-		}
-		if ok {
-			execState = NewEmptyExecTrue()
-		}
-	}
+	// if stmt.Fact.PropName == glob.KeywordItemExistsIn && execState.IsUnknown() {
+	// 	ok, err := exec.checkInFactInSet_SetIsNonEmpty(stmt.Fact)
+	// 	if err != nil {
+	// 		return NewExecErr(err.Error())
+	// 	}
+	// 	if ok {
+	// 		execState = NewEmptyExecTrue()
+	// 	}
+	// }
 
 	if execState.IsNotTrue() {
-		return execState.AddMsg(fmt.Sprintf("%s is unknown", stmt.Fact.String()))
+		return execState
 	}
 
-	if stmt.Fact.PropName == glob.KeywordItemExistsIn && execState.IsTrue() {
-		execState := exec.defLetStmt(ast.NewDefLetStmt([]string{stmt.ObjNames[0]}, []ast.Obj{stmt.Fact.Params[0]}, []ast.FactStmt{}, stmt.Line))
-		if execState.IsNotTrue() {
-			return execState
-		}
-		result := NewEmptyExecTrue()
-		if requireMsg {
-			result = result.AddMsg(fmt.Sprintf("%s\n", stmt))
-		}
-		return result
-	}
+	// if stmt.Fact.PropName == glob.KeywordItemExistsIn && execState.IsTrue() {
+	// 	execState := exec.defLetStmt(ast.NewDefLetStmt([]string{stmt.ObjNames[0]}, []ast.Obj{stmt.Fact.Params[0]}, []ast.FactStmt{}, stmt.Line))
+	// 	if execState.IsNotTrue() {
+	// 		return execState
+	// 	}
+	// 	result := NewEmptyExecTrue()
+	// 	if requireMsg {
+	// 		result = result.AddMsg(fmt.Sprintf("%s\n", stmt))
+	// 	}
+	// 	return result
+	// }
 
 	// TODO： have 可能会引入3种不同的东西：set,obj,fn都可能；每种情况，处理起来不一样：比如如果你是fn和set，那可能就要把你放到 setMem 和 fnMem 里了
 	// 这个 warning 不合时宜了，因为fn的定义其实和obj一样了，就是额外多个满足特定的template
@@ -145,9 +145,20 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 }
 
 func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStmt) ExecRet {
-
 	for i := range len(stmt.Objs) {
-		existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordItemExistsIn), []ast.Obj{stmt.ObjSets[i]}, stmt.Line)
+		if glob.IsSetOrFiniteSetOrNonEmptySet(stmt.ObjSets[i].String()) {
+			stmtForDef := ast.NewDefLetStmt([]string{stmt.Objs[i]}, []ast.Obj{stmt.ObjSets[i]}, []ast.FactStmt{}, stmt.Line)
+			ret := exec.Env.DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmtForDef)
+			if ret.IsErr() {
+				return NewExecErr(ret.String())
+			}
+			execState := NewExecTrue(stmtForDef.String())
+			if execState.IsNotTrue() {
+				return execState
+			}
+		}
+
+		existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsANonEmptySet), []ast.Obj{stmt.ObjSets[i]}, stmt.Line)
 		haveStmt := ast.NewHaveStmt([]string{stmt.Objs[i]}, existInFact, stmt.Line)
 		execState := exec.haveObjStStmt(haveStmt, false)
 		if execState.IsNotTrue() {
