@@ -52,6 +52,10 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 		return ret
 	}
 
+	if fact.Params[1].String() == glob.KeywordNPos {
+		return e.inFactPostProcess_TryNPos(fact)
+	}
+
 	return glob.TrueRet("")
 }
 
@@ -415,6 +419,47 @@ func (e *Env) inFactPostProcess_InSetBuilder(obj ast.Obj, setBuilderObj *ast.FnO
 		if ret.IsErr() {
 			return ret
 		}
+	}
+
+	return glob.TrueRet("")
+}
+
+func (e *Env) inFactPostProcess_TryNPos(fact *ast.SpecFactStmt) glob.GlobRet {
+	obj := fact.Params[0]
+
+	// x $in N
+	inNFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordNatural))
+	ret := e.NewFact(inNFact)
+	if ret.IsErr() {
+		return ret
+	}
+
+	// x $in Q
+	inQFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordRational))
+	ret = e.NewFact(inQFact)
+	if ret.IsErr() {
+		return ret
+	}
+
+	// x $in R
+	inRFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordReal))
+	ret = e.NewFact(inRFact)
+	if ret.IsErr() {
+		return ret
+	}
+
+	// x > 0
+	greaterThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{obj, ast.Atom("0")}, glob.BuiltinLine)
+	ret = e.NewFact(greaterThanZeroFact)
+	if ret.IsErr() {
+		return ret
+	}
+
+	// x >= 1
+	greaterEqualOneFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{obj, ast.Atom("1")}, glob.BuiltinLine)
+	ret = e.NewFact(greaterEqualOneFact)
+	if ret.IsErr() {
+		return ret
 	}
 
 	return glob.TrueRet("")
