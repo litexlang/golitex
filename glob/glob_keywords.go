@@ -56,7 +56,6 @@ const (
 
 	KeywordProveByInduction = "prove_by_induction"
 
-	KeywordLift        = "lift"
 	KeywordNonEmptySet = "nonempty_set"
 
 	KeywordProveIsTransitiveProp = "prove_is_transitive_prop"
@@ -168,7 +167,6 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 
 	KeywordProveByInduction: {},
 
-	KeywordLift:        {},
 	KeywordNonEmptySet: {},
 
 	KeywordAlgo:   {},
@@ -340,6 +338,11 @@ func IsBuiltinObjOrPropName(name string) bool {
 	return ok
 }
 
+func IsBuiltinAtom(name string) bool {
+	_, ok := BuiltinAtomNames[name]
+	return ok
+}
+
 func IsBuiltinKeywordOrBuiltinSymbolOrNumber(name string) bool {
 	if IsKeyword(name) || IsKeySymbol(name) || (name[0] >= '0' && name[0] <= '9') {
 		return true
@@ -410,7 +413,6 @@ var KeywordHelpMap = map[string]string{
 	KeywordLet:                   "",
 	KeywordClear:                 "",
 	KeywordProveByInduction:      "",
-	KeywordLift:                  "",
 	KeywordNonEmptySet:           "",
 	KeywordProveIsTransitiveProp: "",
 	KeywordProveInRangeSet:       "",
@@ -437,4 +439,25 @@ func IsSetOrFiniteSetOrNonEmptySet(name string) bool {
 
 func IsNPosOrNOrZOrQOrR(name string) bool {
 	return name == KeywordNPos || name == KeywordNatural || name == KeywordInteger || name == KeywordRational || name == KeywordReal
+}
+
+var BuiltinAtomNames map[string]struct{} = map[string]struct{}{
+	KeywordNatural:    {},
+	KeywordInteger:    {},
+	KeywordRational:   {},
+	KeywordReal:       {},
+	KeywordCount:      {},
+	KeywordNPos:       {},
+	KeywordCart:       {},
+	KeywordTuple:      {},
+	KeywordSetDim:     {},
+	KeywordDim:        {},
+	KeywordProj:       {},
+	KeywordIndexOpt:   {},
+	KeywordListSet:    {},
+	KeywordSetBuilder: {},
+	KeySymbolPlus:     {},
+	KeySymbolMinus:    {},
+	KeySymbolStar:     {},
+	KeySymbolPower:    {},
 }

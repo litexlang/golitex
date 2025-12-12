@@ -193,7 +193,7 @@ func (e *Env) AreAtomsDeclared(atoms []ast.Atom, extraAtomNames map[string]struc
 
 func (e *Env) IsAtomDeclared(atom ast.Atom, extraAtomNames map[string]struct{}) glob.GlobRet {
 	// 如果是内置的符号，那就声明了
-	if glob.IsBuiltinObjOrPropName(string(atom)) {
+	if glob.IsBuiltinAtom(string(atom)) {
 		return glob.TrueRet("")
 	}
 
@@ -217,28 +217,26 @@ func (e *Env) IsAtomDeclared(atom ast.Atom, extraAtomNames map[string]struct{}) 
 	return glob.ErrRet(fmt.Errorf("%s is not defined", atom))
 }
 
-func (e *Env) ThereIsNoDuplicateObjNamesAndAllAtomsInParamSetsAreDefined(params []string, setParams []ast.Obj, checkDeclared bool) glob.GlobRet {
+func (e *Env) NoDuplicateParamNamesAndParamSetsDefined(params []string, setParams []ast.Obj, checkDeclared bool) glob.GlobRet {
 	if len(params) != len(setParams) {
 		return glob.ErrRet(fmt.Errorf("number of params and set params are not the same"))
 	}
 
-	// 检查所有参数都声明了
 	paramSet := map[string]struct{}{}
-	for i, param := range params {
-		_, ok := paramSet[param]
-		if ok {
-			return glob.ErrRet(fmt.Errorf("parameter %s is declared multiple times", param))
-		}
+
+	for i, paramSetObj := range setParams {
 		if checkDeclared {
-			ret := e.AreAtomsInObjDefined(setParams[i], paramSet)
-			if ret.IsErr() {
-				ret.AddMsg(fmt.Sprintf("in parameter set for param %s", param))
-				return ret
+			if ast.ObjIsKeywordSet(paramSetObj) {
+				continue
+			} else {
+				if e.AreAtomsInObjDefined(paramSetObj, paramSet).IsNotTrue() {
+					return glob.ErrRet(fmt.Errorf("param set %s is not defined", paramSetObj.String()))
+				}
 			}
 		}
-		paramSet[param] = struct{}{} // setParam 不能 包p含它自己
-	}
 
+		paramSet[params[i]] = struct{}{}
+	}
 	return glob.TrueRet("")
 }
 
