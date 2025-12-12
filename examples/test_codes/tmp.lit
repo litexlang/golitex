@@ -14,5 +14,3 @@ forall a, b R:
 
 forall ab {x cart(R, R): x[1] > 0, x[2] > 0}:
     ab[1] + ab[2] > 0
-
-have fn 
