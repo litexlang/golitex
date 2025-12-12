@@ -116,8 +116,6 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 		ret, err = p.doNothingStmt(tb)
 	case glob.KeywordImport:
 		ret, err = p.importStmt(tb)
-	case glob.KeywordHaveCartWithDim:
-		ret, err = p.haveCartWithDimStmt(tb)
 	default:
 		ret, err = p.factsStmt(tb)
 	}
@@ -2154,102 +2152,6 @@ func (p *TbParser) importStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 	return NewImportStmt(path, asPkgName, tb.line), nil
-}
-
-func (p *TbParser) haveCartWithDimStmt(tb *tokenBlock) (Stmt, error) {
-	err := tb.header.skip(glob.KeywordHaveCartWithDim)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	err = tb.header.skip(glob.KeySymbolLeftBrace)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	name, err := tb.header.next()
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	err = tb.header.skip(glob.KeySymbolComma)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	cartDim, err := p.Obj(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	err = tb.header.skip(glob.KeySymbolComma)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	param, err := tb.header.next()
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	err = tb.header.skip(glob.KeySymbolRightBrace)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	err = tb.header.skip(glob.KeySymbolColon)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	// Parse body: forall statements and optional case-by-case structure
-	facts := []FactStmt{}
-
-	// 第一个 block 形如 =>: ... 这样的
-	err = tb.body[0].header.skipKwAndColonCheckEOL(glob.KeySymbolRightArrow)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	for _, stmt := range tb.body[0].body {
-		curStmt, err := p.factStmt(&stmt, UniFactDepth0)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-		facts = append(facts, curStmt)
-	}
-
-	// 分类：如果下面body[1]是case开头的，那就说明是case-by-case结构；否则是普通结构
-	if len(tb.body) != 3 {
-		return nil, fmt.Errorf("expect 3 blocks of %s when not defining case-by-case, but got %d", glob.KeywordHaveCartWithDim, len(tb.body))
-	}
-
-	proofs := []Stmt{}
-	err = tb.body[1].header.skipKwAndColonCheckEOL(glob.KeywordProve)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	for _, stmt := range tb.body[1].body {
-		curStmt, err := p.Stmt(&stmt)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-		proofs = append(proofs, curStmt)
-	}
-
-	// 最后一行是 =
-	err = tb.body[len(tb.body)-1].header.skip(glob.KeySymbolEqual)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	equalTo, err := p.Obj(&tb.body[2])
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	return NewHaveCartWithDimStmt(name, cartDim, param, facts, proofs, equalTo, tb.line), nil
 }
 
 func (p *TbParser) factsStmt(tb *tokenBlock) (Stmt, error) {

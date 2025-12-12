@@ -129,8 +129,6 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 		execRet = NewExecErr("import statements are not allowed in local scope.")
 	case *ast.HaveObjFromCartSetStmt:
 		execRet = exec.haveObjFromCartSetStmt(stmt)
-	case *ast.HaveCartWithDimStmt:
-		execRet = exec.haveCartWithDimStmt(stmt)
 	default:
 		execRet = NewExecErr(fmt.Sprintf("unknown statement type: %T", stmt))
 	}
