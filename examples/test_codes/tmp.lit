@@ -1,1 +1,2 @@
-have x st $item_exists_in(x)
+have a R
+a $in R

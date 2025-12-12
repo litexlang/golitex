@@ -434,3 +434,7 @@ const PkgNameAtomSeparator = KeySymbolDot
 func IsSetOrFiniteSetOrNonEmptySet(name string) bool {
 	return name == KeywordSet || name == KeywordFiniteSet || name == KeywordNonEmptySet
 }
+
+func IsNPosOrNOrZOrQOrR(name string) bool {
+	return name == KeywordNPos || name == KeywordNatural || name == KeywordInteger || name == KeywordRational || name == KeywordReal
+}
