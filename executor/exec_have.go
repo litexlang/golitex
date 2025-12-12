@@ -31,18 +31,6 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 		return execState
 	}
 
-	if stmt.Fact.PropName == glob.KeywordIsANonEmptySet {
-		execState := exec.defLetStmt(ast.NewDefLetStmt([]string{stmt.ObjNames[0]}, []ast.Obj{stmt.Fact.Params[0]}, []ast.FactStmt{}, stmt.Line))
-		if execState.IsNotTrue() {
-			return execState
-		}
-		result := NewEmptyExecTrue()
-		if requireMsg {
-			result = result.AddMsg(fmt.Sprintf("%s\n", stmt))
-		}
-		return result
-	}
-
 	// TODO： have 可能会引入3种不同的东西：set,obj,fn都可能；每种情况，处理起来不一样：比如如果你是fn和set，那可能就要把你放到 setMem 和 fnMem 里了
 	// 这个 warning 不合时宜了，因为fn的定义其实和obj一样了，就是额外多个满足特定的template
 
@@ -136,24 +124,22 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 
 func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStmt) ExecRet {
 	for i := range len(stmt.Objs) {
-		if glob.IsSetOrFiniteSetOrNonEmptySet(stmt.ObjSets[i].String()) {
-			stmtForDef := ast.NewDefLetStmt([]string{stmt.Objs[i]}, []ast.Obj{stmt.ObjSets[i]}, []ast.FactStmt{}, stmt.Line)
-			ret := exec.Env.DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmtForDef)
-			if ret.IsErr() {
-				return NewExecErr(ret.String())
-			}
-			execState := NewExecTrue(stmtForDef.String())
+		if !glob.IsSetOrFiniteSetOrNonEmptySet(stmt.ObjSets[i].String()) {
+			existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsANonEmptySet), []ast.Obj{stmt.ObjSets[i]}, stmt.Line)
+			execState := exec.factStmt(existInFact)
 			if execState.IsNotTrue() {
-				return execState
+				return NewExecErr(fmt.Sprintf("%s\n", stmt.String())).AddMsg(execState.String())
 			}
-			continue
 		}
 
-		existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsANonEmptySet), []ast.Obj{stmt.ObjSets[i]}, stmt.Line)
-		haveStmt := ast.NewHaveStmt([]string{stmt.Objs[i]}, existInFact, stmt.Line)
-		execState := exec.haveObjStStmt(haveStmt, false)
+		stmtForDef := ast.NewDefLetStmt([]string{stmt.Objs[i]}, []ast.Obj{stmt.ObjSets[i]}, []ast.FactStmt{}, stmt.Line)
+		ret := exec.Env.DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmtForDef)
+		if ret.IsErr() {
+			return NewExecErr(ret.String())
+		}
+		execState := NewExecTrue(stmtForDef.String())
 		if execState.IsNotTrue() {
-			return execState
+			return NewExecErr(fmt.Sprintf("%s\n", stmt.String())).AddMsg(execState.String())
 		}
 	}
 

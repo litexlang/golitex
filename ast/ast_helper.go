@@ -475,3 +475,10 @@ func NewIsAFiniteSetFact(param Obj) *SpecFactStmt {
 func NewIsASetFact(param Obj) *SpecFactStmt {
 	return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsASet), []Obj{param}, glob.BuiltinLine)
 }
+
+func ObjIsKeywordSet(obj Obj) bool {
+	if asAtom, ok := obj.(Atom); ok {
+		return string(asAtom) == glob.KeywordSet
+	}
+	return false
+}
