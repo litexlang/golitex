@@ -27,8 +27,8 @@ func (env *Env) IsValidIdentifierAvailable(name string) glob.GlobRet {
 		return glob.ErrRet(err)
 	}
 
-	ok := env.IsAtomDefinedByUser(ast.Atom(name))
-	if ok {
+	ret := env.IsAtomDefinedByUser(ast.Atom(name))
+	if ret.IsTrue() {
 		return glob.ErrRet(duplicateDefError(name))
 	}
 
