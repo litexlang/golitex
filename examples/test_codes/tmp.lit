@@ -1,3 +1,1 @@
-$is_a_set(1)
-$is_a_finite_set({})
-$is_a_nonempty_set({1})
+have x st $item_exists_in(x)

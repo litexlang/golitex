@@ -112,11 +112,11 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) glob.GlobRet {
 
 	// postprocess
 	if fact.IsExist_St_Fact() {
-		if fact.PropName == glob.KeywordItemExistsIn {
-			existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordItemExistsIn), []ast.Obj{fact.Params[2]}, fact.Line)
-			ret := env.storeSpecFactInMem(existInFact)
-			return ret
-		}
+		// if fact.PropName == glob.KeywordItemExistsIn {
+		// 	existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordItemExistsIn), []ast.Obj{fact.Params[2]}, fact.Line)
+		// 	ret := env.storeSpecFactInMem(existInFact)
+		// 	return ret
+		// }
 		return env.newExist_St_FactPostProcess(fact)
 	}
 
