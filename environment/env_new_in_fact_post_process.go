@@ -27,11 +27,6 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 		return glob.ErrRet(fmt.Errorf("in fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
 	}
 
-	// Try different postprocessing strategies in order
-	// if ret := e.inFactPostProcess_TrySetFnRetValue(fact); ret.IsTrue() || ret.IsErr() {
-	// 	return ret
-	// }
-
 	if ret := e.inFactPostProcess_TryFnTemplate(fact); ret.IsTrue() || ret.IsErr() {
 		return ret
 	}
@@ -429,35 +424,35 @@ func (e *Env) inFactPostProcess_TryNPos(fact *ast.SpecFactStmt) glob.GlobRet {
 
 	// x $in N
 	inNFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordNatural))
-	ret := e.NewFact(inNFact)
+	ret := e.storeSpecFactInMem(inNFact)
 	if ret.IsErr() {
 		return ret
 	}
 
 	// x $in Q
 	inQFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordRational))
-	ret = e.NewFact(inQFact)
+	ret = e.storeSpecFactInMem(inQFact)
 	if ret.IsErr() {
 		return ret
 	}
 
 	// x $in R
 	inRFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordReal))
-	ret = e.NewFact(inRFact)
+	ret = e.storeSpecFactInMem(inRFact)
 	if ret.IsErr() {
 		return ret
 	}
 
 	// x > 0
 	greaterThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{obj, ast.Atom("0")}, glob.BuiltinLine)
-	ret = e.NewFact(greaterThanZeroFact)
+	ret = e.storeSpecFactInMem(greaterThanZeroFact)
 	if ret.IsErr() {
 		return ret
 	}
 
 	// x >= 1
 	greaterEqualOneFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{obj, ast.Atom("1")}, glob.BuiltinLine)
-	ret = e.NewFact(greaterEqualOneFact)
+	ret = e.storeSpecFactInMem(greaterEqualOneFact)
 	if ret.IsErr() {
 		return ret
 	}
