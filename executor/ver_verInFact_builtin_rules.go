@@ -175,14 +175,14 @@ func (ver *Verifier) verInFactByLeftIsFnTemplateAndRightIsKeywordSet(stmt *ast.S
 		if ast.IsFnTemplate_ObjFn(asFcFn) {
 			// 所有参数还都真是集合
 			for i := range asFcFn.FnHead.(*ast.FnObj).Params {
-				verRet := ver.VerFactStmt(ast.NewInFactWithParamObj(asFcFn.FnHead.(*ast.FnObj).Params[i], ast.Atom(glob.KeywordSet)), state)
+				verRet := ver.VerFactStmt(ast.NewInFactWithParamObj(asFcFn.FnHead.(*ast.FnObj).Params[i], ast.Atom(glob.KeywordSet), stmt.Line), state)
 				if verRet.IsErr() || verRet.IsUnknown() {
 					return NewEmptyExecUnknown()
 				}
 			}
 
 			for i := range asFcFn.Params {
-				if verRet := ver.VerFactStmt(ast.NewInFactWithParamObj(asFcFn.Params[i], ast.Atom(glob.KeywordSet)), state); verRet.IsErr() || verRet.IsUnknown() {
+				if verRet := ver.VerFactStmt(ast.NewInFactWithParamObj(asFcFn.Params[i], ast.Atom(glob.KeywordSet), stmt.Line), state); verRet.IsErr() || verRet.IsUnknown() {
 					return NewEmptyExecUnknown()
 				}
 			}
@@ -473,7 +473,7 @@ func (ver *Verifier) verInFactByRightParamIsSetProduct(stmt *ast.SpecFactStmt, s
 	}
 
 	for i := range len(fcFn.Params) {
-		inFact := ast.NewInFactWithParamObj(fcFn.Params[i], setProductFn.Params[i])
+		inFact := ast.NewInFactWithParamObj(fcFn.Params[i], setProductFn.Params[i], stmt.Line)
 		verRet := ver.VerFactStmt(inFact, state)
 		if verRet.IsErr() || verRet.IsUnknown() {
 			return verRet
@@ -604,7 +604,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
-		ret = ver.Env.NewFact(ast.NewInFactWithParamObj(ast.Atom(randomName), (fnFcFn.FnHead).(*ast.FnObj).Params[i]))
+		ret = ver.Env.NewFact(ast.NewInFactWithParamObj(ast.Atom(randomName), (fnFcFn.FnHead).(*ast.FnObj).Params[i], glob.BuiltinLine))
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
@@ -625,7 +625,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *
 	}
 
 	for i := range instLeftUniFactAsUniFactStmt.Params {
-		fact := ast.NewInFactWithParamObj(ast.Atom(randomNames[i]), leftIsInWhichFnTT.AsFnTStruct.ParamSets[i])
+		fact := ast.NewInFactWithParamObj(ast.Atom(randomNames[i]), leftIsInWhichFnTT.AsFnTStruct.ParamSets[i], glob.BuiltinLine)
 		verRet := ver.VerFactStmt(fact, state)
 		if verRet.IsErr() || verRet.IsUnknown() {
 			return verRet
@@ -652,7 +652,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *
 
 	// whether return value is in ret set of fnFcFn
 	fn := ast.NewFnObj(left, randomAtoms)
-	verRet := ver.VerFactStmt(ast.NewInFactWithParamObj(fn, fnFcFn.Params[0]), state)
+	verRet := ver.VerFactStmt(ast.NewInFactWithParamObj(fn, fnFcFn.Params[0], glob.BuiltinLine), state)
 	return verRet
 }
 

@@ -1,2 +1,8 @@
 have a R
-a $in R
+have b set
+have c nonempty_set
+have d finite_set
+
+$is_a_set(b)
+$is_a_nonempty_set(c)
+$is_a_finite_set(d)
