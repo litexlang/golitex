@@ -1,1 +1,18 @@
-a = a
+forall a R:
+    a > 0
+    =>:
+        a > -1
+
+forall a {x R: x > 0}:
+    a > -1
+
+forall a, b R:
+    a > 0
+    b > 0
+    =>:
+        a + b > 0
+
+forall ab {x cart(R, R): x[1] > 0, x[2] > 0}:
+    ab[1] + ab[2] > 0
+
+have fn 
