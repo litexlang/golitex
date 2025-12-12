@@ -22,7 +22,7 @@ import (
 	"strings"
 )
 
-func (e *Env) IsAtomDefinedByUser(AtomObjName ast.Atom) bool {
+func (e *Env) IsAtomDefinedByUser(AtomObjName ast.Atom) glob.GlobRet {
 	// 如果 atom 里有 ::，那另外检查
 	if strings.Contains(string(AtomObjName), glob.PkgNameAtomSeparator) {
 		PkgNameAndAtomName := strings.Split(string(AtomObjName), glob.PkgNameAtomSeparator)
@@ -30,48 +30,51 @@ func (e *Env) IsAtomDefinedByUser(AtomObjName ast.Atom) bool {
 		AtomName := PkgNameAndAtomName[1]
 		pkgPath, ok := e.PackageManager.PkgPathNameMgr.NamePathMap[PkgName]
 		if !ok {
-			return false
+			return glob.ErrRet(fmt.Errorf("package %s is not found", PkgName))
 		}
 		pkgPathEnv, ok := e.PackageManager.PkgPathEnvPairs[pkgPath]
 		if !ok {
-			return false
+			return glob.ErrRet(fmt.Errorf("package environment for %s is not found", PkgName))
 		}
-		ok = pkgPathEnv.isAtomDefinedAtCurEnv(ast.Atom(AtomName))
-		if ok {
-			return true
+		ret := pkgPathEnv.isAtomDefinedAtCurEnv(ast.Atom(AtomName))
+		if ret.IsTrue() {
+			return glob.TrueRet("")
 		}
-		return ok
+		return ret
 	}
 
 	for env := e; env != nil; env = env.Parent {
-		ok := env.isAtomDefinedAtCurEnv(AtomObjName)
-		if ok {
-			return true
+		ret := env.isAtomDefinedAtCurEnv(AtomObjName)
+		if ret.IsTrue() {
+			return glob.TrueRet("")
 		}
 	}
-	return false
+	return glob.ErrRet(fmt.Errorf("undefined: %s", AtomObjName))
 }
 
 // 其实最好要分类：有可能是obj，有可能是prop，不能在验证obj的时候验证是prop
-func (e *Env) isAtomDefinedAtCurEnv(AtomObjName ast.Atom) bool {
+func (e *Env) isAtomDefinedAtCurEnv(AtomObjName ast.Atom) glob.GlobRet {
 	_, ok := e.PropDefMem[string(AtomObjName)]
 	if ok {
-		return true
+		return glob.TrueRet("")
 	}
 
 	_, ok = e.ExistPropDefMem[string(AtomObjName)]
 	if ok {
-		return true
+		return glob.TrueRet("")
 	}
 
 	_, ok = e.ObjDefMem[string(AtomObjName)]
 	if ok {
-		return true
+		return glob.TrueRet("")
 	}
 
 	_, ok = e.FnTemplateDefMem[string(AtomObjName)]
+	if ok {
+		return glob.TrueRet("")
+	}
 
-	return ok
+	return glob.ErrRet(fmt.Errorf("undefined: %s", AtomObjName))
 }
 
 func (e *Env) AreAtomsInObjDefined(obj ast.Obj, extraAtomNames map[string]struct{}) glob.GlobRet {
@@ -202,19 +205,18 @@ func (e *Env) IsAtomDeclared(atom ast.Atom, extraAtomNames map[string]struct{}) 
 		return glob.TrueRet("")
 	}
 
-	ok := e.IsAtomDefinedByUser(atom)
-	if ok {
+	ret := e.IsAtomDefinedByUser(atom)
+	if ret.IsTrue() {
 		return glob.TrueRet("")
 	}
 
-	_, ok = extraAtomNames[string(atom)]
-
+	_, ok := extraAtomNames[string(atom)]
 	if ok {
 		return glob.TrueRet("")
 	}
 
 	// atom 未定义，返回错误并记录 atom 名称
-	return glob.ErrRet(fmt.Errorf("%s is not defined", atom))
+	return glob.ErrRet(fmt.Errorf("undefined: %s", atom))
 }
 
 func (e *Env) NoDuplicateParamNamesAndParamSetsDefined(params []string, setParams []ast.Obj, checkDeclared bool) glob.GlobRet {
@@ -231,7 +233,7 @@ func (e *Env) NoDuplicateParamNamesAndParamSetsDefined(params []string, setParam
 				continue
 			} else {
 				if e.AreAtomsInObjDefined(paramSetObj, paramSet).IsNotTrue() {
-					return glob.ErrRet(fmt.Errorf("param set %s is not defined", paramSetObj.String()))
+					return glob.ErrRet(fmt.Errorf("undefined: %s", paramSetObj.String()))
 				}
 			}
 		}
