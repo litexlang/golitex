@@ -215,7 +215,10 @@ func (e *Env) IsAtomDeclared(atom ast.Atom, extraAtomNames map[string]struct{}) 
 		return glob.TrueRet("")
 	}
 
-	// atom 未定义，返回错误并记录 atom 名称
+	if glob.IsKeywordSetOrNonEmptySetOrFiniteSet(string(atom)) {
+		return glob.NewGlobErr(fmt.Sprintf("%s keyword is not an object.", string(atom)))
+	}
+
 	return glob.ErrRet(fmt.Errorf("undefined: %s", atom))
 }
 
