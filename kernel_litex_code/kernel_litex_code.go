@@ -161,18 +161,6 @@ know:
     forall n N_pos, a finite_seq(R, n), k N: k < n => finite_seq_product(n, a, k+1) = finite_seq_product(n, a, k) * a(k+1)
     forall n N_pos, a finite_seq(R, n) => finite_seq_product(n, a, 1) = a(1)
 
-exist_prop a set st item_exists_in(y set):
-	a $in y
-	
-know:
-	$item_exists_in(N)
-	$item_exists_in(N_pos)
-	$item_exists_in(Z)
-	$item_exists_in(Q)
-	$item_exists_in(R)
-	forall x N_pos:
-		x > 0
-	forall x set: $item_exists_in(x) => $is_a_nonempty_set(x)
 
 know forall m N_pos => m - 1 $in N
 
@@ -283,13 +271,6 @@ know @cancel_general(a, b, c, d R):
         $div_cancel_general_cond(a, b, c, d)
     =>:
         a = b
-
-# TODO: 之后把这个移除kernel_lib而是做成像set一样内置的东西
-know:
-	$item_exists_in(nonempty_set)
-	forall x nonempty_set:
-		x $in set
-		$item_exists_in(x)
 
 know @product_is_0_then_at_least_one_factor_is_0(a, b R):
 	a * b = 0
@@ -570,8 +551,6 @@ know:
 	forall x, y R => x <= y <=> not x > y
 	forall x, y R => x >= y <=> not x < y
 
-know $item_exists_in(finite_set)
-
 fn pow(x R, y R) R:
 	dom:
 		x >= 0
@@ -588,7 +567,7 @@ know forall x, y, z Z: z != 0 => (x + y) % z = (x % z + y % z) % z, (x * y) % z 
 
 exist_prop s set st there_exists_infinite_set() :
     <=>:
-        not s $in finite_set
+        not $is_a_finite_set(s)
 
 know $there_exists_infinite_set()
 
@@ -687,12 +666,10 @@ know:
 	forall x, y R: x > y => not x <= y, not x = y, not x < y
 	forall x, y R: x < y => not x >= y, not x = y, not x > y
 
-prop is_finite_set(x set)
-know forall x set: $is_finite_set(x) <=> x $in finite_set
 know @subset_of_finite_set_is_finite_set(x set, y finite_set):
 	x $subset_of y
 	=>:
-		$is_finite_set(x)
+		$is_a_finite_set(x)
 		count(x) <= count(y)
 
 prop is_cart(x set)
@@ -707,17 +684,6 @@ fn proj(x set, i N_pos) set:
 fn dim(x set) N_pos:
 	dom:
 		$is_cart(x)
-
-know:
-	forall x set:
-		$is_cart(x)
-		forall a N_pos:
-			a <= dim(x)
-			=>:
-				proj(x, a) $in nonempty_set
-		=>:
-			x $in nonempty_set
-			$item_exists_in(x)
 
 # ∏_{a in I} A_a (Cartesian product)
 prop is_cart_prod(s set)
@@ -757,8 +723,6 @@ know:
 
 	forall x N_pos: x >= 0, x > 0, x != 0, x >= 1, not x < 1, not x < 0
 
-know forall x, y nonempty_set: $item_exists_in(fn(x) y)
-
 fn inverse_image_set(X set, Y set, f fn(X)Y, U set) set:
     U $subset_of Y
     =>:
@@ -779,17 +743,11 @@ know @item_in_difference(x, y set, z set):
 fn power_set(x set) set
 know:
 	forall x set, y power_set(x):
-		y $in set
 		y $subset_of x
 	forall x set, y set:
 		y $subset_of x
 		=>:
 			y $in power_set(x)
-	forall x nonempty_set:
-		power_set(x) $in nonempty_set
-		$item_exists_in(power_set(x))
-
-know forall s finite_set: count(s) > 0 => s $in nonempty_set, $item_exists_in(s)
 
 know:
 	forall a, b, c, d R: b > 0, d > 0 => a / b > c / d <=> a * d > b * c
@@ -875,10 +833,10 @@ know:
 	forall a, b R: a > 0, b >= 0 => a + b > 0
 
 know:
-	not {} $in nonempty_set
+	not $is_a_nonempty_set({})
 	forall x set: {} $subset_of x
 	forall x set: not x $in {}
-	forall x set: x != {} => x $in nonempty_set
+	forall x set: x != {} <=> $is_a_nonempty_set(x)
 
 prop equal_set(x set, y set)
 

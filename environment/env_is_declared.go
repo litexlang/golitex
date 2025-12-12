@@ -226,7 +226,8 @@ func (e *Env) NoDuplicateParamNamesAndParamSetsDefined(params []string, setParam
 
 	for i, paramSetObj := range setParams {
 		if checkDeclared {
-			if ast.ObjIsKeywordSet(paramSetObj) {
+			if ast.ObjIsKeywordSetOrNonEmptySetOrFiniteSet(paramSetObj) {
+				paramSet[params[i]] = struct{}{}
 				continue
 			} else {
 				if e.AreAtomsInObjDefined(paramSetObj, paramSet).IsNotTrue() {
