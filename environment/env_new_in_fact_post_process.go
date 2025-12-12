@@ -58,15 +58,6 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 	return glob.TrueRet("")
 }
 
-// inFactPostProcess_TrySetFnRetValue handles a $in setFn(...) case
-// func (e *Env) inFactPostProcess_TrySetFnRetValue(fact *ast.SpecFactStmt) glob.GlobRet {
-// 	def := e.GetSetFnRetValue(fact.Params[1])
-// 	if def == nil {
-// 		return glob.NewGlobUnknown("")
-// 	}
-// 	return e.inFactPostProcess_InSetFnRetValue(fact, def)
-// }
-
 // inFactPostProcess_TryFnTemplate handles a $in fnTemplate(...) case
 func (e *Env) inFactPostProcess_TryFnTemplate(fact *ast.SpecFactStmt) glob.GlobRet {
 	isTemplate, ret := e.inFactPostProcess_InFnTemplate(fact)
@@ -207,13 +198,6 @@ func (e *Env) equalFactPostProcess_cart(fact *ast.SpecFactStmt) glob.GlobRet {
 	if !ok {
 		return glob.ErrRet(fmt.Errorf("expected cart to be FnObj, got %T", fact.Params[1]))
 	}
-
-	// // x $in set
-	// inSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{fact.Params[0], ast.Atom(glob.KeywordSet)}, glob.BuiltinLine)
-	// ret := e.NewFact(inSetFact)
-	// if ret.IsErr() {
-	// 	return ret
-	// }
 
 	// 让 $is_cart(x) 成立
 	isCartFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsCart), []ast.Obj{fact.Params[0]}, glob.BuiltinLine)
