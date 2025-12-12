@@ -18,7 +18,6 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	env "golitex/environment"
-	glob "golitex/glob"
 )
 
 func (ver *Verifier) todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt *ast.SpecFactStmt) *env.Env {
@@ -63,9 +62,9 @@ func IsFalseOrErr(ok bool, err error) bool {
 	return !ok || err != nil
 }
 
-func ObjIsNotSet(obj ast.Obj) bool {
-	return obj.String() != glob.KeywordSet
-}
+// func ObjIsNotSet(obj ast.Obj) bool {
+// 	return !ast.ObjIsKeywordSet(obj)
+// }
 
 // ordinalSuffix converts a number to its ordinal form (1st, 2nd, 3rd, 4th, etc.)
 func ordinalSuffix(n int) string {

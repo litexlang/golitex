@@ -701,7 +701,7 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (ExecRet, error) {
 	}()
 
 	// 返回值要是set
-	execState := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.DefFnStmt.FnTemplate.RetSet, ast.Atom(glob.KeywordSet)}, stmt.Line))
+	execState := exec.factStmt(ast.NewIsASetFact(stmt.DefFnStmt.FnTemplate.RetSet, stmt.Line))
 	if execState.IsNotTrue() {
 		return NewExecErr(execState.String()), fmt.Errorf(execState.String())
 	}
@@ -712,7 +712,7 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (ExecRet, error) {
 	// 验证 fn template 里面的 paramSet 都是 in set 的
 	// Verify each paramSet is in set type
 	for i, paramSet := range stmt.DefFnStmt.FnTemplate.ParamSets {
-		execState := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{paramSet, ast.Atom(glob.KeywordSet)}, stmt.Line))
+		execState := exec.factStmt(ast.NewIsASetFact(paramSet, stmt.Line))
 		if execState.IsErr() {
 			return NewExecErr(execState.String()), fmt.Errorf(execState.String())
 		}
@@ -722,7 +722,7 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (ExecRet, error) {
 	}
 
 	// Verify retSet is in set type
-	execState = exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.DefFnStmt.FnTemplate.RetSet, ast.Atom(glob.KeywordSet)}, stmt.Line))
+	execState = exec.factStmt(ast.NewIsASetFact(stmt.DefFnStmt.FnTemplate.RetSet, stmt.Line))
 	if execState.IsErr() {
 		return NewExecErr(execState.String()), fmt.Errorf(execState.String())
 	}
@@ -808,7 +808,7 @@ func (exec *Executor) checkHaveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) 
 
 	// Verify each paramSet is in set type
 	for i, paramSet := range stmt.DefFnStmt.FnTemplate.ParamSets {
-		execState := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{paramSet, ast.Atom(glob.KeywordSet)}, stmt.Line))
+		execState := exec.factStmt(ast.NewIsASetFact(paramSet, stmt.Line))
 		if execState.IsErr() {
 			return NewExecErr(execState.String()), nil, fmt.Errorf(execState.String())
 		}
@@ -818,12 +818,12 @@ func (exec *Executor) checkHaveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) 
 	}
 
 	// Verify retSet is in set type
-	execState := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.DefFnStmt.FnTemplate.RetSet, ast.Atom(glob.KeywordSet)}, stmt.Line))
+	execState := exec.factStmt(ast.NewIsASetFact(stmt.DefFnStmt.FnTemplate.RetSet, stmt.Line))
 	if execState.IsErr() {
 		return NewExecErr(execState.String()), nil, fmt.Errorf(execState.String())
 	}
 	if execState.IsUnknown() {
-		return NewEmptyExecErr(), nil, fmt.Errorf("return set (%s) must be a set, i.e. `%s in set` must be true, but it is unknown", stmt.DefFnStmt.FnTemplate.RetSet.String(), stmt.DefFnStmt.FnTemplate.RetSet.String())
+		return NewEmptyExecErr(), nil, fmt.Errorf("return set (%s) must be a set, i.e. `%s in set` must be true, but it is unknown", stmt.DefFnStmt.FnTemplate.RetSet.String(), ast.NewIsASetFact(stmt.DefFnStmt.FnTemplate.RetSet, stmt.Line))
 	}
 
 	// Verify each case: execute proof and verify return value
@@ -1179,7 +1179,7 @@ func (exec *Executor) helpStmt(stmt *ast.HelpStmt) ExecRet {
 func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseStmt) ExecRet {
 
 	// 返回值要是set
-	execState := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.RetSet, ast.Atom(glob.KeywordSet)}, stmt.Line))
+	execState := exec.factStmt(ast.NewIsASetFact(stmt.RetSet, stmt.Line))
 	if execState.IsNotTrue() {
 		return NewExecErr(execState.String())
 	}
@@ -1449,12 +1449,12 @@ func (exec *Executor) haveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetStmt) E
 func (exec *Executor) checkHaveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetStmt) ExecRet {
 	// Check that each parameter of cart is a set
 	for i, param := range stmt.CartSet.Params {
-		state := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{param, ast.Atom(glob.KeywordSet)}, stmt.Line))
+		state := exec.factStmt(ast.NewIsASetFact(param, stmt.Line))
 		if state.IsErr() {
 			return NewExecErr(state.String())
 		}
 		if state.IsUnknown() {
-			return NewExecErr(fmt.Sprintf("cart parameter %d (%s) must be a set, i.e. `%s in %s` must be true, but it is unknown", i+1, param.String(), param.String(), ast.Atom(glob.KeywordSet).String()))
+			return NewExecErr(fmt.Sprintf("cart parameter %d (%s) must be a set, i.e. `is_a_set(%s)` must be true, but it is unknown", i+1, param.String(), param.String()))
 		}
 	}
 
