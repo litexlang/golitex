@@ -180,7 +180,7 @@ func (exec *Executor) haveCartSetStmt(stmt *ast.HaveCartSetStmt) ExecRet {
 
 	// Check that each parameter of cart is a set
 	for i, param := range stmt.CartObj.Params {
-		state := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{param, ast.Atom(glob.KeywordSet)}, stmt.Line))
+		state := exec.factStmt(ast.NewIsASetFact(param, stmt.Line))
 		if state.IsErr() {
 			return NewExecErr(state.String())
 		}
