@@ -115,8 +115,6 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 		execRet = exec.byStmt(stmt)
 	case *ast.PrintStmt:
 		execRet = exec.printStmt(stmt)
-	case *ast.HelpStmt:
-		execRet = exec.helpStmt(stmt)
 	case *ast.HaveFnEqualCaseByCaseStmt:
 		execRet = exec.haveFnEqualCaseByCaseStmt(stmt)
 	case *ast.ProveCaseByCaseStmt:
@@ -129,6 +127,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 		execRet = NewExecErr("import statements are not allowed in local scope.")
 	case *ast.HaveObjFromCartSetStmt:
 		execRet = exec.haveObjFromCartSetStmt(stmt)
+	case *ast.ProveForStmt:
+		execRet = exec.proveForStmt(stmt)
 	default:
 		execRet = NewExecErr(fmt.Sprintf("unknown statement type: %T", stmt))
 	}
@@ -728,19 +728,6 @@ func (exec *Executor) printStmt(stmt *ast.PrintStmt) ExecRet {
 	return NewExecTrue(stmt.String())
 }
 
-func (exec *Executor) helpStmt(stmt *ast.HelpStmt) ExecRet {
-	helpMsg, ok := glob.KeywordHelpMap[stmt.Keyword]
-	result := NewEmptyExecTrue()
-	if !ok {
-		return result.AddMsg(fmt.Sprintf("Unknown keyword: %s", stmt.Keyword))
-	}
-	if helpMsg == "" {
-		return result.AddMsg(fmt.Sprintf("Help for '%s': (description not yet available)", stmt.Keyword))
-	} else {
-		return result.AddMsg(fmt.Sprintf("Help for '%s': %s", stmt.Keyword, helpMsg))
-	}
-}
-
 func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt2) ExecRet {
 	// Evaluate start and end to get integer values
 	startObj, execRet := exec.evalObjThenSimplify(stmt.Start())
@@ -784,4 +771,122 @@ func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt2) ExecRet {
 	}
 
 	return NewExecTrue(stmt.String())
+}
+
+func (exec *Executor) proveForStmt(stmt *ast.ProveForStmt) ExecRet {
+	left, execRet := exec.GetSimplifiedValue(stmt.Left)
+	if execRet.IsNotTrue() {
+		return execRet
+	}
+
+	right, execRet := exec.GetSimplifiedValue(stmt.Right)
+	if execRet.IsNotTrue() {
+		return execRet
+	}
+
+	leftAsInt, ok1 := ast.IsObjLiterallyIntNumber(left)
+	rightAsInt, ok2 := ast.IsObjLiterallyIntNumber(right)
+	if !ok1 || !ok2 {
+		return NewExecErr(fmt.Sprintf("left value %s and right value %s must be integers", left.String(), right.String()))
+	}
+
+	if leftAsInt > rightAsInt {
+		return NewExecErr(fmt.Sprintf("left value %d must be less than or equal to right value %d", leftAsInt, rightAsInt))
+	}
+
+	rightMost := rightAsInt
+	if !stmt.IsProveIRange {
+		rightMost = rightAsInt + 1
+	}
+
+	// Iterate through all values in range [left, rightMost)
+	for i := leftAsInt; i < rightMost; i++ {
+		execRet := exec.proveForStmtWhenParamIsIndex(stmt, i)
+		if execRet.IsNotTrue() {
+			return execRet
+		}
+	}
+
+	return NewExecTrue(stmt.String())
+}
+
+func (exec *Executor) proveForStmtWhenParamIsIndex(stmt *ast.ProveForStmt, i int) ExecRet {
+	indexAsObj := ast.Atom(fmt.Sprintf("%d", i))
+	param := stmt.Param
+	uniMap := map[string]ast.Obj{param: indexAsObj}
+	exec.NewEnv(exec.Env)
+	defer exec.deleteEnv()
+
+	defObjStmt := ast.NewDefLetStmt([]string{param}, []ast.Obj{ast.Atom(glob.KeywordInteger)}, []ast.FactStmt{ast.NewEqualFact(ast.Atom(param), indexAsObj)}, stmt.Line)
+	execState := exec.defLetStmt(defObjStmt)
+	if execState.IsNotTrue() {
+		return execState
+	}
+
+	// Check dom facts
+	for _, domFact := range stmt.DomFacts {
+		instDomFact, err := domFact.InstantiateFact(uniMap)
+		if err != nil {
+			return NewExecErr(err.Error())
+		}
+		execState := exec.factStmt(instDomFact)
+		if execState.IsErr() {
+			return execState
+		}
+
+		if execState.IsUnknown() {
+			// 如果 不OK，那必须证明是 false，绝对不能是 unknown
+			specFact, ok := domFact.(*ast.SpecFactStmt)
+			if !ok {
+				return NewExecErr(fmt.Sprintf("dom fact in prove_for must be a SpecFactStmt to reverse: %s", domFact.String()))
+			}
+			revInstDomFact := specFact.ReverseIsTrue()
+			for _, fact := range revInstDomFact {
+				instFact, err := fact.InstantiateFact(uniMap)
+				if err != nil {
+					return NewExecErr(err.Error())
+				}
+				execState = exec.factStmt(instFact)
+				if execState.IsErr() {
+					return execState
+				}
+				if execState.IsUnknown() {
+					return NewExecErr(fmt.Sprintf("dom facts in prove_for must be proved to be true or false, can not be unknown: %s", instFact.String()))
+				}
+			}
+
+			return NewEmptyExecTrue()
+		}
+
+		ret := exec.Env.NewFact(domFact)
+		if ret.IsErr() {
+			return NewExecErr(ret.String())
+		}
+	}
+
+	// exec proofs
+	for _, curStmt := range stmt.Proofs {
+		execState := exec.Stmt(curStmt)
+		if execState.IsNotTrue() {
+			return execState
+		}
+	}
+
+	// 满足 then
+	for _, thenFact := range stmt.ThenFacts {
+		instThenFact, err := thenFact.InstantiateFact(uniMap)
+		if err != nil {
+			return NewExecErr(err.Error())
+		}
+
+		execState = exec.factStmt(instThenFact)
+		if execState.IsErr() {
+			return execState
+		}
+		if execState.IsUnknown() {
+			return NewExecErr(fmt.Sprintf("then fact in prove_for must be proved to be true or false, can not be unknown: %s", instThenFact.String()))
+		}
+	}
+
+	return NewEmptyExecTrue()
 }

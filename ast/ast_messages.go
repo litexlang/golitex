@@ -963,6 +963,85 @@ func (stmt *ClaimIffStmt) String() string {
 	return builder.String()
 }
 
+func (stmt *ProveForStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordProveFor)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.Param)
+	builder.WriteString(" ")
+	builder.WriteString(glob.FuncFactPrefix)
+	builder.WriteString(glob.KeywordIn)
+	builder.WriteString(" ")
+	if stmt.IsProveIRange {
+		builder.WriteString(glob.KeywordRange)
+	} else {
+		builder.WriteString(glob.KeywordClosedRange)
+	}
+	builder.WriteString("(")
+	builder.WriteString(stmt.Left.String())
+	builder.WriteString(", ")
+	builder.WriteString(stmt.Right.String())
+	builder.WriteString(")")
+	builder.WriteString(":")
+
+	hasDom := len(stmt.DomFacts) > 0
+	hasProve := len(stmt.Proofs) > 0
+
+	if hasDom {
+		// First section is dom: format is dom:, =>:, (optional) prove:
+		builder.WriteString("\n    dom:\n")
+		for _, fact := range stmt.DomFacts {
+			builder.WriteString("        ")
+			builder.WriteString(fact.String())
+			builder.WriteString("\n")
+		}
+		if len(stmt.ThenFacts) > 0 {
+			builder.WriteString("    =>:\n")
+			for _, fact := range stmt.ThenFacts {
+				builder.WriteString("        ")
+				builder.WriteString(fact.String())
+				builder.WriteString("\n")
+			}
+		}
+		if hasProve {
+			builder.WriteString("    prove:\n")
+			for _, proof := range stmt.Proofs {
+				builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 2))
+				builder.WriteString("\n")
+			}
+		}
+	} else {
+		// First section is not dom
+		if hasProve {
+			// Case 2: =>:, prove: (no dom section)
+			if len(stmt.ThenFacts) > 0 {
+				builder.WriteString("\n    =>:\n")
+				for _, fact := range stmt.ThenFacts {
+					builder.WriteString("        ")
+					builder.WriteString(fact.String())
+					builder.WriteString("\n")
+				}
+			}
+			builder.WriteString("    prove:\n")
+			for _, proof := range stmt.Proofs {
+				builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 2))
+				builder.WriteString("\n")
+			}
+		} else {
+			// Case 3: No prove: format is direct fact statements (no =>:)
+			if len(stmt.ThenFacts) > 0 {
+				builder.WriteString("\n")
+				for _, fact := range stmt.ThenFacts {
+					builder.WriteString("    ")
+					builder.WriteString(fact.String())
+					builder.WriteString("\n")
+				}
+			}
+		}
+	}
+	return builder.String()
+}
+
 func (stmt *ProveInRangeStmt2) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordProveInRange)
@@ -1246,15 +1325,6 @@ func (stmt *PrintStmt) String() string {
 	}
 	builder.WriteString(stmt.Value)
 	builder.WriteString(glob.KeySymbolDoubleQuote)
-	builder.WriteString(glob.KeySymbolRightBrace)
-	return builder.String()
-}
-
-func (stmt *HelpStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordHelp)
-	builder.WriteString(glob.KeySymbolLeftBrace)
-	builder.WriteString(stmt.Keyword)
 	builder.WriteString(glob.KeySymbolRightBrace)
 	return builder.String()
 }

@@ -489,3 +489,14 @@ func ObjIsKeywordSet(obj Obj) bool {
 	}
 	return false
 }
+
+func ObjIsRangeOrClosedRangeWith2Params(obj Obj) bool {
+	if asAtom, ok := obj.(*FnObj); ok {
+		if len(asAtom.Params) != 2 {
+			return false
+		}
+
+		return asAtom.FnHead.String() == glob.KeywordRange || asAtom.FnHead.String() == glob.KeywordClosedRange
+	}
+	return false
+}

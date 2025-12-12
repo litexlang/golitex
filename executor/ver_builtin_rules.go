@@ -49,10 +49,6 @@ func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 		return ver.verEqualSetByBuiltinRules(stmt, state)
 	}
 
-	if stmt.NameIs(glob.KeywordEqualTuple) {
-		return ver.verEqualTupleByBuiltinRules(stmt, state)
-	}
-
 	if verRet := ver.verNumberLogicRelaOpt_BuiltinRules(stmt, state); verRet.IsErr() {
 		return verRet
 	} else if verRet.IsTrue() {

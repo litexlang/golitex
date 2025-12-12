@@ -53,9 +53,11 @@ const (
 	KeywordIsTuple  = "is_tuple"
 	KeywordIndexOpt = "[]"
 
-	KeywordListSet    = "{}"
-	KeywordSetBuilder = "{:}"
-	KeywordCount      = "count"
+	KeywordListSet     = "{}"
+	KeywordSetBuilder  = "{:}"
+	KeywordCount       = "count"
+	KeywordRange       = "range"
+	KeywordClosedRange = "closed_range"
 
 	KeywordKnow      = "know"
 	KeywordDoNothing = "do_nothing"
@@ -95,9 +97,8 @@ const (
 	KeywordBy        = "by"
 	KeywordEval      = "eval"
 
-	KeywordEqualTuple = "equal_tuple"
-	KeywordEqualSet   = "equal_set"
-	KeywordSubsetOf   = "subset_of"
+	KeywordEqualSet = "equal_set"
+	KeywordSubsetOf = "subset_of"
 
 	KeywordProveFor = "prove_for"
 )
@@ -172,7 +173,6 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 
 	KeywordDim: {},
 
-	KeywordEqualTuple: {},
 	KeywordListSet:    {},
 	KeywordSetBuilder: {},
 
@@ -187,6 +187,8 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordIsASet:         {},
 	KeywordIsAFiniteSet:   {},
 	KeywordIsANonEmptySet: {},
+
+	KeywordRange: {},
 }
 
 const (
