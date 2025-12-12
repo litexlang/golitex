@@ -288,7 +288,7 @@ var SymbolSet map[string]struct{} = map[string]struct{}{
 
 var BuiltinObjOrPropNames map[string]struct{} = map[string]struct{}{
 	// KeywordObj:           {},
-	KeywordSet:           {},
+	// KeywordSet:           {},
 	KeywordNatural:       {},
 	KeywordInteger:       {},
 	KeywordRational:      {},
@@ -348,16 +348,6 @@ func IsBuiltinKeywordOrBuiltinSymbolOrNumber(name string) bool {
 		return true
 	}
 	return false
-}
-
-var BuiltinObjKeywordSet map[string]struct{} = map[string]struct{}{
-	KeywordNatural:   {},
-	KeywordInteger:   {},
-	KeywordRational:  {},
-	KeywordReal:      {},
-	KeywordFiniteSet: {},
-	KeywordSet:       {},
-	KeywordNPos:      {},
 }
 
 var AddMinusStarSet map[string]struct{} = map[string]struct{}{
@@ -432,10 +422,6 @@ var KeywordHelpMap = map[string]string{
 }
 
 const PkgNameAtomSeparator = KeySymbolDot
-
-func IsSetOrFiniteSetOrNonEmptySet(name string) bool {
-	return name == KeywordSet || name == KeywordFiniteSet || name == KeywordNonEmptySet
-}
 
 func IsNPosOrNOrZOrQOrR(name string) bool {
 	return name == KeywordNPos || name == KeywordNatural || name == KeywordInteger || name == KeywordRational || name == KeywordReal

@@ -204,16 +204,16 @@ func (e *Env) equalFactPostProcess_cart(fact *ast.SpecFactStmt) glob.GlobRet {
 		return glob.ErrRet(fmt.Errorf("expected cart to be FnObj, got %T", fact.Params[1]))
 	}
 
-	// x $in set
-	inSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{fact.Params[0], ast.Atom(glob.KeywordSet)}, glob.BuiltinLine)
-	ret := e.NewFact(inSetFact)
-	if ret.IsErr() {
-		return ret
-	}
+	// // x $in set
+	// inSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{fact.Params[0], ast.Atom(glob.KeywordSet)}, glob.BuiltinLine)
+	// ret := e.NewFact(inSetFact)
+	// if ret.IsErr() {
+	// 	return ret
+	// }
 
 	// 让 $is_cart(x) 成立
 	isCartFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsCart), []ast.Obj{fact.Params[0]}, glob.BuiltinLine)
-	ret = e.NewFact(isCartFact)
+	ret := e.NewFact(isCartFact)
 	if ret.IsErr() {
 		return ret
 	}

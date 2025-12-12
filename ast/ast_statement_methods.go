@@ -142,11 +142,11 @@ func (stmt *SpecFactStmt) IsBuiltinProp_ExceptEqual() bool {
 func NewInFact(param string, paramSet Obj) *SpecFactStmt {
 	switch string(paramSet.String()) {
 	case glob.KeywordSet:
-		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsASet), []Obj{Atom(param)}, glob.BuiltinLine)
+		return NewIsASetFact(Atom(param), glob.BuiltinLine)
 	case glob.KeywordFiniteSet:
-		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsAFiniteSet), []Obj{Atom(param)}, glob.BuiltinLine)
+		return NewIsAFiniteSetFact(Atom(param), glob.BuiltinLine)
 	case glob.KeywordNonEmptySet:
-		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsANonEmptySet), []Obj{Atom(param)}, glob.BuiltinLine)
+		return NewIsANonEmptySetFact(Atom(param), glob.BuiltinLine)
 	default:
 		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIn), []Obj{Atom(param), paramSet}, glob.BuiltinLine)
 	}

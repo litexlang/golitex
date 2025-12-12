@@ -267,7 +267,7 @@ func (ver *Verifier) verIsASetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerS
 		return NewExecErr(fmt.Sprintf("is_a_set expects 1 parameter, got %d", len(stmt.Params)))
 	}
 
-	if glob.IsSetOrFiniteSetOrNonEmptySet(stmt.Params[0].String()) {
+	if glob.IsKeywordSetOrNonEmptySetOrFiniteSet(stmt.Params[0].String()) {
 		return NewEmptyExecUnknown()
 	}
 

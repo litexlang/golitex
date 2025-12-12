@@ -618,7 +618,7 @@ func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) ExecRet {
 	var err error
 
 	// 返回值要是set
-	execState := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.RetSet, ast.Atom(glob.KeywordSet)}, stmt.Line))
+	execState := exec.factStmt(ast.NewIsASetFact(stmt.RetSet, stmt.Line))
 	if execState.IsNotTrue() {
 		return NewExecErr(execState.String())
 	}
