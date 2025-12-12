@@ -44,88 +44,61 @@ const (
 	KeywordReal     = "R"
 	KeywordFn       = "fn"
 
-	KeywordDom = "dom"
-
-	KeywordKnow   = "know"
-	KeywordSt     = "st"
-	KeywordClaim  = "claim"
-	KeywordProve  = "prove"
-	KeywordImport = "import"
-	// KeywordIff                  = "iff"
-	KeywordProveByContradiction   = "prove_by_contradiction"
-	KeywordProveInEachCase        = "prove_in_each_case"        // 必要：和or一起使用
-	KeywordProveIsCommutativeProp = "prove_is_commutative_prop" // 这个 keyword是真的在工作的
-
-	// KeywordProveByMathInduction           = "prove_by_math_induction"
-	KeywordCount = "count"
-
-	KeywordProveByEnum = "prove_by_enum" // syntax connecting forall and finite_set
-	// KeywordItemExistsIn = "item_exists_in"
-
-	KeywordFnTemplate = "fn_template"
-
-	KeywordClear = "clear"
-
-	KeywordProveByInduction = "prove_by_induction"
-
-	KeywordProveIsTransitiveProp = "prove_is_transitive_prop"
-
-	KeywordProveInRangeSet = "prove_in_range_set"
-	KeywordProveInRange    = "prove_in_range"
-
-	KeywordAlgo   = "algo"
-	KeywordReturn = "return"
-	KeywordIf     = "if"
-	KeywordEval   = "eval"
-
-	KeywordProveAlgo = "prove_algo"
-	KeywordBy        = "by"
-
-	KeywordImplication = "implication"
-
-	KeywordPrint = "print"
-
-	KeywordDoNothing = "do_nothing"
-
-	KeywordCase = "case"
-
-	KeywordProveCaseByCase = "prove_case_by_case"
-	KeywordExit            = "exit"
-	KeywordHelp            = "help"
-
-	// cart(R,R), (1,2) 表示集合叉乘和集合的元素; set_dim, dim表示集合叉乘和集合的元素的维度； proj, [] 表示集合叉乘的投影和集合的元素的投影; is_cart, is_tuple 表示是集合叉乘和集合的元素的特征
-	KeywordCart  = "cart"
-	KeywordTuple = "()"
-
-	KeywordIsCart  = "is_cart"
-	KeywordIsTuple = "is_tuple"
-
+	KeywordCart   = "cart"
+	KeywordIsCart = "is_cart"
 	KeywordSetDim = "set_dim"
-	KeywordDim    = "dim"
+	KeywordProj   = "proj"
 
-	KeywordProj     = "proj"
+	KeywordTuple    = "()"
+	KeywordDim      = "dim"
+	KeywordIsTuple  = "is_tuple"
 	KeywordIndexOpt = "[]"
-
-	KeywordHaveCartWithDim = "have_cart_with_dim"
-
-	// 用于一位一位的比较两个tuple。比如 equal_tuple(x, y, 2) 表示 x[1] = y[1] 且 x[2] = y[2]
-	KeywordEqualTuple = "equal_tuple"
 
 	KeywordListSet    = "{}"
 	KeywordSetBuilder = "{:}"
+	KeywordCount      = "count"
 
-	KeywordSubsetOf = "subset_of"
+	KeywordKnow      = "know"
+	KeywordDoNothing = "do_nothing"
+
+	KeywordProveByContradiction = "prove_by_contradiction"
+	KeywordProveInEachCase      = "prove_in_each_case"
+	KeywordProveByEnum          = "prove_by_enum"
+	KeywordProveByInduction     = "prove_by_induction"
+	KeywordProveInRangeSet      = "prove_in_range_set"
+	KeywordProveInRange         = "prove_in_range"
+	KeywordProveCaseByCase      = "prove_case_by_case"
+
+	KeywordFnTemplate = "fn_template"
+
+	KeywordClaim = "claim"
+	KeywordProve = "prove"
+	KeywordDom   = "dom"
+	KeywordCase  = "case"
+	KeywordSt    = "st"
+
+	KeywordProveIsCommutativeProp = "prove_is_commutative_prop" // 这个 keyword是真的在工作的
+	KeywordProveIsTransitiveProp  = "prove_is_transitive_prop"
+
+	KeywordImport = "import"
+	KeywordClear  = "clear"
+	KeywordPrint  = "print"
+	KeywordExit   = "exit"
+	KeywordHelp   = "help"
+	KeywordAs     = "as"
+
+	KeywordProveAlgo = "prove_algo"
+	KeywordAlgo      = "algo"
+	KeywordReturn    = "return"
+	KeywordIf        = "if"
+	KeywordBy        = "by"
+	KeywordEval      = "eval"
+
+	KeywordEqualTuple = "equal_tuple"
+	KeywordEqualSet   = "equal_set"
+	KeywordSubsetOf   = "subset_of"
 
 	KeywordProveFor = "prove_for"
-
-	KeywordEqualSet = "equal_set"
-
-	// DoubleUnderscoreExist           = "__exist"
-	// KeywordDoubleUnderscoreTruePure = "__true"
-	// KeywordDoubleUnderscoreNotExist = "__not_exist"
-	// DoubleUnderscoreNotPure         = "__not"
-
-	KeywordAs = "as"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -183,8 +156,6 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordProveAlgo: {},
 	KeywordBy:        {},
 
-	KeywordImplication: {},
-
 	KeywordPrint: {},
 
 	KeywordCase: {},
@@ -199,8 +170,6 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordProj:   {},
 
 	KeywordDim: {},
-
-	KeywordHaveCartWithDim: {},
 
 	KeywordEqualTuple: {},
 	KeywordListSet:    {},
@@ -418,7 +387,6 @@ var KeywordHelpMap = map[string]string{
 	KeywordEval:                  "",
 	KeywordProveAlgo:             "",
 	KeywordBy:                    "",
-	KeywordImplication:           "",
 	KeywordPrint:                 "",
 	KeywordCase:                  "",
 	KeywordProveCaseByCase:       "",
