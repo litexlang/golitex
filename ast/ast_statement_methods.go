@@ -387,3 +387,25 @@ func (stmt *ProveInRangeStmt2) UniFact() *UniFactStmt {
 	thenFacts := stmt.ThenFacts
 	return NewUniFact(params, paramSets, domFacts, thenFacts, stmt.Line)
 }
+
+func (stmt *ProveForStmt) UniFact() *UniFactStmt {
+	params := []string{stmt.Param}
+	paramSets := []Obj{Atom(glob.KeywordInteger)}
+
+	// Build dom facts based on range type
+	domFacts := []FactStmt{
+		NewSpecFactStmt(TruePure, Atom(glob.KeySymbolLessEqual), []Obj{stmt.Left, Atom(stmt.Param)}, stmt.Line),
+	}
+	if stmt.IsProveIRange {
+		// range: left <= param < right
+		domFacts = append(domFacts, NewSpecFactStmt(TruePure, Atom(glob.KeySymbolLess), []Obj{Atom(stmt.Param), stmt.Right}, stmt.Line))
+	} else {
+		// closed_range: left <= param <= right
+		domFacts = append(domFacts, NewSpecFactStmt(TruePure, Atom(glob.KeySymbolLessEqual), []Obj{Atom(stmt.Param), stmt.Right}, stmt.Line))
+	}
+	// Add user-provided dom facts
+	domFacts = append(domFacts, stmt.DomFacts...)
+
+	thenFacts := stmt.ThenFacts
+	return NewUniFact(params, paramSets, domFacts, thenFacts, stmt.Line)
+}
