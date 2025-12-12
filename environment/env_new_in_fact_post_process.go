@@ -339,7 +339,7 @@ func (e *Env) equalFactPostProcess_listSetEquality(left ast.Obj, right ast.Obj) 
 	}
 
 	// is finite set
-	isFiniteFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{left, ast.Atom(glob.KeywordFiniteSet)}, glob.BuiltinLine)
+	isFiniteFact := ast.NewIsAFiniteSetFact(left, glob.BuiltinLine)
 	return e.NewFact(isFiniteFact)
 }
 
