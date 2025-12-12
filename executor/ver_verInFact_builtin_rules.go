@@ -166,7 +166,7 @@ func (ver *Verifier) verInFactByLeftIsCartSetAndRightIsKeywordNonemptySet(stmt *
 
 func (ver *Verifier) verInFactByLeftIsFnTemplateAndRightIsKeywordSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	if asAtom, ok := stmt.Params[1].(ast.Atom); ok {
-		if asAtom != glob.KeywordSet {
+		if glob.IsKeywordSet(string(asAtom)) {
 			return NewEmptyExecUnknown()
 		}
 	}
@@ -175,14 +175,14 @@ func (ver *Verifier) verInFactByLeftIsFnTemplateAndRightIsKeywordSet(stmt *ast.S
 		if ast.IsFnTemplate_ObjFn(asFcFn) {
 			// 所有参数还都真是集合
 			for i := range asFcFn.FnHead.(*ast.FnObj).Params {
-				verRet := ver.VerFactStmt(ast.NewInFactWithParamObj(asFcFn.FnHead.(*ast.FnObj).Params[i], ast.Atom(glob.KeywordSet), stmt.Line), state)
+				verRet := ver.VerFactStmt(ast.NewIsASetFact(asFcFn.FnHead.(*ast.FnObj).Params[i], stmt.Line), state)
 				if verRet.IsErr() || verRet.IsUnknown() {
 					return NewEmptyExecUnknown()
 				}
 			}
 
 			for i := range asFcFn.Params {
-				if verRet := ver.VerFactStmt(ast.NewInFactWithParamObj(asFcFn.Params[i], ast.Atom(glob.KeywordSet), stmt.Line), state); verRet.IsErr() || verRet.IsUnknown() {
+				if verRet := ver.VerFactStmt(ast.NewIsASetFact(asFcFn.Params[i], stmt.Line), state); verRet.IsErr() || verRet.IsUnknown() {
 					return NewEmptyExecUnknown()
 				}
 			}
