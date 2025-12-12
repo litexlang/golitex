@@ -476,9 +476,16 @@ func NewIsASetFact(param Obj) *SpecFactStmt {
 	return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsASet), []Obj{param}, glob.BuiltinLine)
 }
 
+func ObjIsKeywordSetOrNonEmptySetOrFiniteSet(obj Obj) bool {
+	if asAtom, ok := obj.(Atom); ok {
+		return glob.IsKeywordSetOrNonEmptySetOrFiniteSet(string(asAtom))
+	}
+	return false
+}
+
 func ObjIsKeywordSet(obj Obj) bool {
 	if asAtom, ok := obj.(Atom); ok {
-		return string(asAtom) == glob.KeywordSet
+		return glob.IsKeywordSet(string(asAtom))
 	}
 	return false
 }
