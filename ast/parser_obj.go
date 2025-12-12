@@ -129,7 +129,7 @@ func (p *TbParser) unaryOptObj(tb *tokenBlock) (Obj, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewFnObj(Atom(glob.KeySymbolStar), []Obj{Atom("-1"), right}), nil
+	return NegateObj(right), nil
 }
 
 // fnSetObjAndBracedExprAndAtomObjAndFnObj parses primary expressions: atoms, numbers, function sets, or parenthesized expressions.
@@ -555,11 +555,6 @@ func (p *TbParser) setBuilderObj(tb *tokenBlock, paramAsObj Obj) (Obj, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	// // parentSet 不能是 set
-	// if parentSet.String() == glob.KeywordSet || parentSet.String() == glob.KeywordFiniteSet || parentSet.String() == glob.KeywordNonEmptySet {
-	// 	return nil, fmt.Errorf("parent set in set builder cannot be %s", parentSet.String())
-	// }
 
 	err = tb.header.skip(glob.KeySymbolColon)
 	if err != nil {

@@ -459,3 +459,7 @@ func IsListSetObj(obj Obj) bool {
 	}
 	return false
 }
+
+func NegateObj(right Obj) Obj {
+	return NewFnObj(Atom(glob.KeySymbolStar), []Obj{Atom("-1"), right})
+}
