@@ -117,6 +117,10 @@ const (
 	// DoubleUnderscoreNotPure         = "__not"
 
 	KeywordAs = "as"
+
+	KeywordIsASet         = "is_a_set"
+	KeywordIsAFiniteSet   = "is_a_finite_set"
+	KeywordIsANonEmptySet = "is_a_nonempty_set"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -205,6 +209,10 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordEqualSet: {},
 
 	KeywordAs: {},
+
+	KeywordIsASet:         {},
+	KeywordIsAFiniteSet:   {},
+	KeywordIsANonEmptySet: {},
 }
 
 const (
@@ -321,6 +329,10 @@ var BuiltinObjOrPropNames map[string]struct{} = map[string]struct{}{
 
 	// KeywordProj:     {},
 	KeywordIndexOpt: {},
+
+	KeywordIsASet:         {},
+	KeywordIsAFiniteSet:   {},
+	KeywordIsANonEmptySet: {},
 }
 
 func IsBuiltinObjOrPropName(name string) bool {
@@ -416,3 +428,7 @@ var KeywordHelpMap = map[string]string{
 }
 
 const PkgNameAtomSeparator = KeySymbolDot
+
+func IsSetOrFiniteSetOrNonEmptySet(name string) bool {
+	return name == KeywordSet || name == KeywordFiniteSet || name == KeywordNonEmptySet
+}

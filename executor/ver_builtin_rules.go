@@ -27,6 +27,18 @@ func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 		return ver.trueExistInSt(stmt, state)
 	}
 
+	if stmt.NameIs(glob.KeywordIsASet) && stmt.TypeEnum == ast.TruePure {
+		return ver.verIsASetByBuiltinRules(stmt, state)
+	}
+
+	if stmt.NameIs(glob.KeywordIsAFiniteSet) && stmt.TypeEnum == ast.TruePure {
+		return ver.verIsAFiniteSetByBuiltinRules(stmt, state)
+	}
+
+	if stmt.NameIs(glob.KeywordIsANonEmptySet) && stmt.TypeEnum == ast.TruePure {
+		return ver.verIsANonEmptySetByBuiltinRules(stmt, state)
+	}
+
 	if stmt.NameIs(glob.KeywordEqualSet) && stmt.TypeEnum == ast.TruePure {
 		return ver.verEqualSetByBuiltinRules(stmt, state)
 	}
@@ -282,4 +294,42 @@ func (ver *Verifier) verEqualSetByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 	// Both forall statements are true, so equal_set(a, b) is true
 	msg := fmt.Sprintf("equal_set(%s, %s) is true because forall t %s : t $in %s and forall t %s : t $in %s", a, b, a, b, b, a)
 	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+}
+
+func (ver *Verifier) verIsASetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	if len(stmt.Params) != 1 {
+		return NewExecErr(fmt.Sprintf("is_a_set expects 1 parameter, got %d", len(stmt.Params)))
+	}
+
+	if glob.IsSetOrFiniteSetOrNonEmptySet(stmt.Params[0].String()) {
+		return NewEmptyExecUnknown()
+	}
+
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), "In ZFC set theory, everything except set itself is a set. In Litex, any object except set, nonempty_set, finite_set is a set.", NewEmptyExecTrue())
+}
+
+func (ver *Verifier) verIsAFiniteSetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	if len(stmt.Params) != 1 {
+		return NewExecErr(fmt.Sprintf("is_a_finite_set expects 1 parameter, got %d", len(stmt.Params)))
+	}
+
+	if ast.IsListSetObj(stmt.Params[0]) {
+		return NewExecTrue("A list set is a finite set.")
+	}
+
+	return NewEmptyExecUnknown()
+}
+
+func (ver *Verifier) verIsANonEmptySetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	if len(stmt.Params) != 1 {
+		return NewExecErr(fmt.Sprintf("is_a_nonempty_set expects 1 parameter, got %d", len(stmt.Params)))
+	}
+
+	if ast.IsListSetObj(stmt.Params[0]) {
+		if len(stmt.Params[0].(*ast.FnObj).Params) > 0 {
+			return NewExecTrue("A list set with at least one element is a nonempty set.")
+		}
+	}
+
+	return NewEmptyExecUnknown()
 }
