@@ -16,33 +16,46 @@ package litex_global
 
 // ! 每次新增keyword的时候，要记住把它往isKeyword里加
 const (
+	KeywordIn = "in"
+
 	KeywordSet         = "set"
 	KeywordNonEmptySet = "nonempty_set"
 	KeywordFiniteSet   = "finite_set"
 
-	KeywordForall    = "forall"
-	KeywordDom       = "dom"
-	KeywordHave      = "have"
-	KeywordFn        = "fn"
+	KeywordIsASet         = "is_a_set"
+	KeywordIsAFiniteSet   = "is_a_finite_set"
+	KeywordIsANonEmptySet = "is_a_nonempty_set"
+
+	KeywordNot    = "not"
+	KeywordOr     = "or"
+	KeywordForall = "forall"
+	KeywordExist  = "exist"
+
 	KeywordProp      = "prop"
-	KeywordKnow      = "know"
-	KeywordExist     = "exist"
-	KeywordSt        = "st"
 	KeywordExistProp = "exist_prop"
-	KeywordClaim     = "claim"
-	KeywordProve     = "prove"
-	KeywordImport    = "import"
-	KeywordNot       = "not"
+
+	KeywordHave = "have"
+	KeywordLet  = "let"
+
+	KeywordNPos     = "N_pos"
+	KeywordNatural  = "N"
+	KeywordInteger  = "Z"
+	KeywordRational = "Q"
+	KeywordReal     = "R"
+	KeywordFn       = "fn"
+
+	KeywordDom = "dom"
+
+	KeywordKnow   = "know"
+	KeywordSt     = "st"
+	KeywordClaim  = "claim"
+	KeywordProve  = "prove"
+	KeywordImport = "import"
 	// KeywordIff                  = "iff"
 	KeywordProveByContradiction   = "prove_by_contradiction"
-	KeywordProveInEachCase        = "prove_in_each_case" // 必要：和or一起使用
-	KeywordOr                     = "or"
+	KeywordProveInEachCase        = "prove_in_each_case"        // 必要：和or一起使用
 	KeywordProveIsCommutativeProp = "prove_is_commutative_prop" // 这个 keyword是真的在工作的
-	KeywordNatural                = "N"                         // e.g. 0
-	KeywordInteger                = "Z"                         // e.g. -1
-	KeywordRational               = "Q"                         // e.g. -1.1
-	KeywordReal                   = "R"                         // e.g. pi
-	KeywordIn                     = "in"
+
 	// KeywordProveByMathInduction           = "prove_by_math_induction"
 	KeywordCount = "count"
 
@@ -51,8 +64,6 @@ const (
 
 	KeywordFnTemplate = "fn_template"
 
-	KeywordNPos  = "N_pos"
-	KeywordLet   = "let"
 	KeywordClear = "clear"
 
 	KeywordProveByInduction = "prove_by_induction"
@@ -115,10 +126,6 @@ const (
 	// DoubleUnderscoreNotPure         = "__not"
 
 	KeywordAs = "as"
-
-	KeywordIsASet         = "is_a_set"
-	KeywordIsAFiniteSet   = "is_a_finite_set"
-	KeywordIsANonEmptySet = "is_a_nonempty_set"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -444,4 +451,5 @@ var BuiltinAtomNames map[string]struct{} = map[string]struct{}{
 	KeySymbolMinus:    {},
 	KeySymbolStar:     {},
 	KeySymbolPower:    {},
+	KeywordFn:         {},
 }

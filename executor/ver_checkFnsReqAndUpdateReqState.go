@@ -284,12 +284,12 @@ func (ver *Verifier) countFnRequirement(fnObj *ast.FnObj, state *VerState) ExecR
 		return NewExecErr(fmt.Sprintf("parameters in %s must be 1, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
 	}
 
-	verRet := ver.VerFactStmt(ast.NewInFactWithObj(fnObj.Params[0], ast.Atom(glob.KeywordFiniteSet)), state)
+	verRet := ver.VerFactStmt(ast.NewIsAFiniteSetFact(fnObj.Params[0], glob.BuiltinLine), state)
 	if verRet.IsErr() {
 		return NewExecErr(verRet.String())
 	}
 	if verRet.IsUnknown() {
-		return NewExecErr(fmt.Sprintf("parameters in %s must be in set %s, %s in %s is not valid", fnObj.FnHead, glob.KeywordFiniteSet, fnObj.Params[0], fnObj))
+		return NewExecErr(fmt.Sprintf("parameters in %s must be a finite set, %s in %s is not valid", fnObj.FnHead, fnObj.Params[0], fnObj))
 	}
 	return NewEmptyExecTrue()
 }
