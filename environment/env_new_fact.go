@@ -665,19 +665,3 @@ func (env *Env) equalFactPostProcess_SetBuilderEquality(left, right ast.Obj) glo
 	}
 	return glob.TrueRet("")
 }
-
-func (env *Env) BuiltinPropExceptEqualPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
-	if fact.PropName == glob.KeywordIn {
-		return env.inFactPostProcess(fact)
-	}
-
-	if fact.PropName == glob.KeySymbolGreater && fact.Params[1].String() == "0" {
-		return env.builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(fact)
-	}
-
-	return glob.NewGlobUnknown("")
-}
-
-func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(fact *ast.SpecFactStmt) glob.GlobRet {
-	return glob.NewGlobUnknown("")
-}
