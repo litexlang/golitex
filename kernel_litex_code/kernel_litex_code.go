@@ -699,19 +699,6 @@ prop is_cart_prod(s set)
 fn index_set_of_cart_prod(s set) set:
 	dom:
 		$is_cart_prod(s)
-
-fn family_of_cart_prod(s set) fn(index_set_of_cart_prod(s)) set:
-    dom:
-        $is_cart_prod(s)
-    =>:
-        $is_cart_prod(s)
-		
-fn cart_prod_proj(s set, a index_set_of_cart_prod(s)) set:
-    dom:
-        $is_cart_prod(s)
-    =>:
-        cart_prod_proj(s, a) = family_of_cart_prod(s)(a)
-
 		
 fn cart_prod(index_set set, family fn (index_set) set) set
 
