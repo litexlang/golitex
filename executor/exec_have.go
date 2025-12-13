@@ -209,7 +209,7 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ExecRet {
 			return execState
 		}
 		// 检查 等号右边的东西是否存在
-		ret = exec.Env.AreAtomsInObjDefined(stmt.ObjEqualTos[i], map[string]struct{}{})
+		ret = exec.Env.AtomsInObjDefinedOrBuiltin(stmt.ObjEqualTos[i], map[string]struct{}{})
 		if ret.IsErr() {
 			ret.AddMsg(fmt.Sprintf("in obj equal to %s", stmt.ObjEqualTos[i]))
 			return NewExecErr(ret.String())
