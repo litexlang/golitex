@@ -183,7 +183,42 @@ func (env *Env) AtomsInEqualsFactDefined(stmt *ast.EqualsFactStmt, extraParams m
 	return glob.TrueRet("")
 }
 
+func (env *Env) AtomsInSetBuilderDefined(obj ast.Obj, extraParams map[string]struct{}) glob.GlobRet {
+	setBuilderObj := obj.(*ast.FnObj)
+	setBuilder, err := setBuilderObj.ToSetBuilderStruct()
+	if err != nil {
+		return glob.ErrRet(fmt.Errorf("failed to parse setBuilder: %s", err.Error()))
+	}
+
+	// Merge setBuilder param into extraParams (it's a bound variable)
+	combinedParams := make(map[string]struct{})
+	for k, v := range extraParams {
+		combinedParams[k] = v
+	}
+	combinedParams[setBuilder.Param] = struct{}{}
+
+	// Check parentSet
+	if ret := env.AtomsInObjDefinedOrBuiltin(setBuilder.ParentSet, combinedParams); ret.IsNotTrue() {
+		return ret
+	}
+
+	// Check facts in setBuilder
+	for _, fact := range setBuilder.Facts {
+		if ret := env.AtomObjsInFactProperlyDefined(fact, combinedParams); ret.IsNotTrue() {
+			return ret
+		}
+	}
+
+	return glob.TrueRet("")
+}
+
 func (env *Env) AtomsInObjDefinedOrBuiltin(obj ast.Obj, extraParams map[string]struct{}) glob.GlobRet {
+	// Special handling for setBuilder
+	if ast.IsSetBuilder(obj) {
+		return env.AtomsInSetBuilderDefined(obj, extraParams)
+	}
+
+	// Regular object handling
 	atoms := ast.GetAtomObjsInObj(obj)
 	for _, atom := range atoms {
 		if ret := env.IsAtomObjDefinedOrBuiltin(atom, extraParams); ret.IsNotTrue() {
@@ -194,6 +229,10 @@ func (env *Env) AtomsInObjDefinedOrBuiltin(obj ast.Obj, extraParams map[string]s
 }
 
 func (env *Env) AtomsInObjDefinedOrBuiltinOrSetNonemptySetFiniteSet(obj ast.Obj, extraParams map[string]struct{}) glob.GlobRet {
+	if ast.IsSetBuilder(obj) {
+		return env.AtomsInSetBuilderDefined(obj, extraParams)
+	}
+
 	atoms := ast.GetAtomObjsInObj(obj)
 	for _, atom := range atoms {
 		if ret := env.IsAtomDefinedByOrBuiltinOrSetNonemptySetFiniteSet(atom, extraParams); ret.IsNotTrue() {
