@@ -419,3 +419,18 @@ var BuiltinAtomNames map[string]struct{} = map[string]struct{}{
 	KeySymbolPower:    {},
 	KeywordFn:         {},
 }
+
+var BuiltinPropNames map[string]struct{} = map[string]struct{}{
+	KeywordIsASet:         {},
+	KeywordIsAFiniteSet:   {},
+	KeywordIsANonEmptySet: {},
+	KeywordIsCart:         {},
+	KeywordIsTuple:        {},
+	KeywordEqualSet:       {},
+	KeywordSubsetOf:       {},
+}
+
+func IsBuiltinPropName(name string) bool {
+	_, ok := BuiltinPropNames[name]
+	return ok
+}

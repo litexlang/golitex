@@ -203,8 +203,7 @@ func (p *SpecFactStmt) factStmt()       {}
 func (l *UniFactStmt) factStmt()        {}
 func (l *UniFactWithIffStmt) factStmt() {}
 func (s *OrStmt) factStmt()             {}
-
-func (s *EqualsFactStmt) factStmt() {}
+func (s *EqualsFactStmt) factStmt()     {}
 
 type Spec_OrFact interface {
 	reversibleFact()
