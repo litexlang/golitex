@@ -22,6 +22,11 @@ import (
 )
 
 func (env *Env) NewFact(stmt ast.FactStmt) glob.GlobRet {
+	// 检查是否符合要求：比如涉及到的符号是否都定义了
+	if ret := env.SatisfyNewFactReq(stmt); ret.IsNotTrue() {
+		return ret
+	}
+
 	switch f := stmt.(type) {
 	case *ast.SpecFactStmt:
 		return env.newSpecFact(f)
@@ -210,7 +215,7 @@ func (env *Env) newPureFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 		}
 	}
 
-	return glob.ErrRet(fmt.Errorf("unknown prop %s", fact.PropName))
+	return glob.ErrRet(fmt.Errorf("undefined prop: %s", fact.PropName))
 }
 
 // equalSetFactPostProcess handles postprocessing for equal_set(a, b) facts
