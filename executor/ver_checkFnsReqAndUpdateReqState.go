@@ -112,7 +112,7 @@ func (ver *Verifier) SetBuilderFnRequirement(objAsFnObj *ast.FnObj, state *VerSt
 	}
 
 	// 如果param在母环境里已经声明过了，那就把整个obj里的所有的param全部改成新的
-	globRet := ver.Env.IsAtomDeclared(ast.Atom(setBuilderStruct.Param), map[string]struct{}{})
+	globRet := ver.Env.IsNameDefinedOrBuiltin(string(setBuilderStruct.Param), map[string]struct{}{})
 	if globRet.IsTrue() {
 		// 把这个param替换成从来没见过的东西
 		setBuilderStruct = ver.replaceParamWithUndeclaredRandomName(setBuilderStruct)

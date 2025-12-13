@@ -276,7 +276,7 @@ func (exec *Executor) claimPropStmt(stmt *ast.ClaimPropStmt) ExecRet {
 	// prop all atoms declared
 	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.DomFacts, stmt.Prop.IffFacts, stmt.Line)
 	ret := exec.Env.AreAtomsInFactAreDeclared(uniFact, map[string]struct{}{})
-	if ret.IsErr() && !exec.Env.IsAtomDefinedByUser(ast.Atom(stmt.Prop.DefHeader.Name)).IsTrue() {
+	if ret.IsErr() && !exec.Env.IsAtomObjDefinedByUser(ast.Atom(stmt.Prop.DefHeader.Name)).IsTrue() {
 		ret.AddMsg("in claim prop statement")
 		return NewExecErr(ret.String())
 	}

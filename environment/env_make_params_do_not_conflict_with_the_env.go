@@ -51,7 +51,7 @@ func (env *Env) makeUniFactParamsInThisFactDoNotConflictWithEnv(fact ast.FactStm
 func (env *Env) makeUniFactParamsInThisUniFactDoNotConflictWithEnv_getNewParamsAndParamSets(params []string, paramSets []ast.Obj) ([]string, []ast.Obj, map[string]ast.Obj) {
 	conflictingParams := map[string]struct{}{}
 	for _, param := range params {
-		ret := env.IsAtomDeclared(ast.Atom(param), map[string]struct{}{})
+		ret := env.IsNameDefinedOrBuiltin(param, map[string]struct{}{})
 		if ret.IsTrue() {
 			conflictingParams[param] = struct{}{}
 		}

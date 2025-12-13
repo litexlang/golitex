@@ -513,7 +513,7 @@ func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, [
 
 func (env *Env) ExecDefFnTemplate(stmt *ast.FnTemplateDefStmt) glob.GlobRet {
 	// 确保template name 没有被声明过
-	ret := env.IsAtomDeclared(stmt.TemplateDefHeader.Name, map[string]struct{}{})
+	ret := env.IsNameDefinedOrBuiltin(string(stmt.TemplateDefHeader.Name), map[string]struct{}{})
 	if ret.IsTrue() {
 		return glob.ErrRet(fmt.Errorf("fn template name %s is already declared", stmt.TemplateDefHeader.Name))
 	}
