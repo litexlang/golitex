@@ -125,7 +125,7 @@ know @finite_set_subset_is_finite_set(s1 finite_set, s2 set):
 	forall x s2:
 		x $in s1
 	=>:
-		s2 $in finite_set
+		$is_a_finite_set(s2)
 
 know forall x N: x != 0 => x > 0
 

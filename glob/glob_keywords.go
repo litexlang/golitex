@@ -421,6 +421,7 @@ var BuiltinAtomNames map[string]struct{} = map[string]struct{}{
 }
 
 var BuiltinPropNames map[string]struct{} = map[string]struct{}{
+	KeywordIn:             {},
 	KeywordIsASet:         {},
 	KeywordIsAFiniteSet:   {},
 	KeywordIsANonEmptySet: {},
@@ -428,6 +429,12 @@ var BuiltinPropNames map[string]struct{} = map[string]struct{}{
 	KeywordIsTuple:        {},
 	KeywordEqualSet:       {},
 	KeywordSubsetOf:       {},
+	KeySymbolEqual:        {},
+	KeySymbolNotEqual:     {},
+	KeySymbolLargerEqual:  {},
+	KeySymbolLessEqual:    {},
+	KeySymbolGreater:      {},
+	KeySymbolLess:         {},
 }
 
 func IsBuiltinPropName(name string) bool {

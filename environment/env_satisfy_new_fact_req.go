@@ -30,11 +30,8 @@ func (env *Env) AtomsInSpecFactDefined(stmt *ast.SpecFactStmt, extraParams map[s
 	}
 
 	for _, param := range stmt.Params {
-		atoms := ast.GetAtomObjsInObj(param)
-		for _, atom := range atoms {
-			if ret := env.IsAtomObjDefinedOrBuiltin(atom, extraParams); ret.IsNotTrue() {
-				return ret
-			}
+		if ret := env.AtomsInObjDefinedOrBuiltin(param, extraParams); ret.IsNotTrue() {
+			return ret
 		}
 	}
 
@@ -60,7 +57,12 @@ func (env *Env) IsPropDefinedOrBuiltinProp(stmt *ast.SpecFactStmt) glob.GlobRet 
 			return glob.TrueRet("")
 		}
 
-		return glob.ErrRet(fmt.Errorf("undefined prop: %s", stmt.PropName))
+		existPropDef := env.GetExistPropDef(stmt.PropName)
+		if existPropDef != nil {
+			return glob.TrueRet("")
+		}
+
+		return glob.ErrRet(fmt.Errorf("undefined prop or exist_prop: %s", stmt.PropName))
 	}
 }
 
@@ -173,7 +175,7 @@ func (env *Env) AtomsInOrDefined(stmt *ast.OrStmt, extraParams map[string]struct
 
 func (env *Env) AtomsInEqualsFactDefined(stmt *ast.EqualsFactStmt, extraParams map[string]struct{}) glob.GlobRet {
 	for _, obj := range stmt.Params {
-		if ret := env.AtomInObjDefinedOrBuiltin(obj, extraParams); ret.IsNotTrue() {
+		if ret := env.AtomsInObjDefinedOrBuiltin(obj, extraParams); ret.IsNotTrue() {
 			return ret
 		}
 	}
@@ -181,10 +183,20 @@ func (env *Env) AtomsInEqualsFactDefined(stmt *ast.EqualsFactStmt, extraParams m
 	return glob.TrueRet("")
 }
 
-func (env *Env) AtomInObjDefinedOrBuiltin(obj ast.Obj, extraParams map[string]struct{}) glob.GlobRet {
+func (env *Env) AtomsInObjDefinedOrBuiltin(obj ast.Obj, extraParams map[string]struct{}) glob.GlobRet {
 	atoms := ast.GetAtomObjsInObj(obj)
 	for _, atom := range atoms {
 		if ret := env.IsAtomObjDefinedOrBuiltin(atom, extraParams); ret.IsNotTrue() {
+			return ret
+		}
+	}
+	return glob.TrueRet("")
+}
+
+func (env *Env) AtomsInObjDefinedOrBuiltinOrSetNonemptySetFiniteSet(obj ast.Obj, extraParams map[string]struct{}) glob.GlobRet {
+	atoms := ast.GetAtomObjsInObj(obj)
+	for _, atom := range atoms {
+		if ret := env.IsAtomDefinedByOrBuiltinOrSetNonemptySetFiniteSet(atom, extraParams); ret.IsNotTrue() {
 			return ret
 		}
 	}
