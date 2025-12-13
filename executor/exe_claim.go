@@ -200,7 +200,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) ExecRet {
 	}()
 
 	// 需要检查stmt.ToCheckFact里的东西都是在外部声明好了的
-	ret := exec.Env.AreAtomsInFactAreDeclared(stmt.ToCheckFact, map[string]struct{}{})
+	ret := exec.Env.AtomObjsInFactProperlyDefined(stmt.ToCheckFact, map[string]struct{}{})
 	if ret.IsErr() {
 		ret.AddMsg("in claim statement")
 		return NewExecErr(ret.String())
@@ -275,7 +275,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) ExecRet {
 func (exec *Executor) claimPropStmt(stmt *ast.ClaimPropStmt) ExecRet {
 	// prop all atoms declared
 	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.DomFacts, stmt.Prop.IffFacts, stmt.Line)
-	ret := exec.Env.AreAtomsInFactAreDeclared(uniFact, map[string]struct{}{})
+	ret := exec.Env.AtomObjsInFactProperlyDefined(uniFact, map[string]struct{}{})
 	if ret.IsErr() && !exec.Env.IsAtomObjDefinedByUser(ast.Atom(stmt.Prop.DefHeader.Name)).IsTrue() {
 		ret.AddMsg("in claim prop statement")
 		return NewExecErr(ret.String())

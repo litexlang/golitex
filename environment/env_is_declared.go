@@ -21,14 +21,14 @@ import (
 	"maps"
 )
 
-func (e *Env) AreAtomsInObjDefined(obj ast.Obj, extraAtomNames map[string]struct{}) glob.GlobRet {
-	if !ast.IsSetBuilder(obj) {
-		atoms := ast.GetAtomObjsInObj(obj)
-		return e.AreAtomsDeclared(atoms, extraAtomNames)
-	} else {
-		return e.AreAtomsInSetBuilderAreDeclared(obj.(*ast.FnObj), extraAtomNames)
-	}
-}
+// func (e *Env) AreAtomsInObjDefined(obj ast.Obj, extraAtomNames map[string]struct{}) glob.GlobRet {
+// 	if !ast.IsSetBuilder(obj) {
+// 		atoms := ast.GetAtomObjsInObj(obj)
+// 		return e.AreAtomsDeclared(atoms, extraAtomNames)
+// 	} else {
+// 		return e.AreAtomsInSetBuilderAreDeclared(obj.(*ast.FnObj), extraAtomNames)
+// 	}
+// }
 
 // AreAtomsInSetBuilderAreDeclared checks if all atoms in an set builder are declared,
 // excluding the set builder's own parameter (which is a free variable not in the environment).
@@ -44,7 +44,7 @@ func (e *Env) AreAtomsInSetBuilderAreDeclared(obj *ast.FnObj, extraAtomNames map
 	paramExcludedNames[setBuilderStruct.Param] = struct{}{}
 
 	// Check atoms in parentSet (excluding the param)
-	ret := e.AreAtomsInObjDefined(setBuilderStruct.ParentSet, paramExcludedNames)
+	ret := e.AtomsInObjDefinedOrBuiltin(setBuilderStruct.ParentSet, paramExcludedNames)
 	if ret.IsErr() {
 		ret.AddMsg(fmt.Sprintf("in parent set of set builder with param %s", setBuilderStruct.Param))
 		return ret
@@ -52,7 +52,7 @@ func (e *Env) AreAtomsInSetBuilderAreDeclared(obj *ast.FnObj, extraAtomNames map
 
 	// Check atoms in facts (excluding the param)
 	for i, fact := range setBuilderStruct.Facts {
-		ret := e.AreAtomsInFactAreDeclared(fact, paramExcludedNames)
+		ret := e.AtomObjsInFactProperlyDefined(fact, paramExcludedNames)
 		if ret.IsErr() {
 			ret.AddMsg(fmt.Sprintf("in fact %d of set builder with param %s", i, setBuilderStruct.Param))
 			return ret
@@ -62,81 +62,81 @@ func (e *Env) AreAtomsInSetBuilderAreDeclared(obj *ast.FnObj, extraAtomNames map
 	return glob.TrueRet("")
 }
 
-// TODO 来自上层的时候，有时候如果fact是uniFact，那传来的extraAtomNames里已经有uniParam了，这其实是浪费计算了
-func (e *Env) AreAtomsInFactAreDeclared(fact ast.FactStmt, extraAtomNames map[string]struct{}) glob.GlobRet {
-	switch asStmt := fact.(type) {
-	case *ast.UniFactStmt:
-		for _, param := range asStmt.Params {
-			extraAtomNames[param] = struct{}{}
-		}
-		for _, dom := range asStmt.DomFacts {
-			ret := e.AreAtomsInFactAreDeclared(dom, extraAtomNames)
-			if ret.IsErr() {
-				return ret
-			}
-		}
-		for _, then := range asStmt.ThenFacts {
-			ret := e.AreAtomsInFactAreDeclared(then, extraAtomNames)
-			if ret.IsErr() {
-				return ret
-			}
-		}
-		return glob.TrueRet("")
-	case *ast.UniFactWithIffStmt:
-		for _, param := range asStmt.UniFact.Params {
-			extraAtomNames[param] = struct{}{}
-		}
-		for _, dom := range asStmt.UniFact.DomFacts {
-			ret := e.AreAtomsInFactAreDeclared(dom, extraAtomNames)
-			if ret.IsErr() {
-				return ret
-			}
-		}
+// // TODO 来自上层的时候，有时候如果fact是uniFact，那传来的extraAtomNames里已经有uniParam了，这其实是浪费计算了
+// func (e *Env) AreAtomsInFactAreDeclared(fact ast.FactStmt, extraAtomNames map[string]struct{}) glob.GlobRet {
+// 	switch asStmt := fact.(type) {
+// 	case *ast.UniFactStmt:
+// 		for _, param := range asStmt.Params {
+// 			extraAtomNames[param] = struct{}{}
+// 		}
+// 		for _, dom := range asStmt.DomFacts {
+// 			ret := e.AreAtomsInFactAreDeclared(dom, extraAtomNames)
+// 			if ret.IsErr() {
+// 				return ret
+// 			}
+// 		}
+// 		for _, then := range asStmt.ThenFacts {
+// 			ret := e.AreAtomsInFactAreDeclared(then, extraAtomNames)
+// 			if ret.IsErr() {
+// 				return ret
+// 			}
+// 		}
+// 		return glob.TrueRet("")
+// 	case *ast.UniFactWithIffStmt:
+// 		for _, param := range asStmt.UniFact.Params {
+// 			extraAtomNames[param] = struct{}{}
+// 		}
+// 		for _, dom := range asStmt.UniFact.DomFacts {
+// 			ret := e.AreAtomsInFactAreDeclared(dom, extraAtomNames)
+// 			if ret.IsErr() {
+// 				return ret
+// 			}
+// 		}
 
-		for _, then := range asStmt.UniFact.ThenFacts {
-			ret := e.AreAtomsInFactAreDeclared(then, extraAtomNames)
-			if ret.IsErr() {
-				return ret
-			}
-		}
+// 		for _, then := range asStmt.UniFact.ThenFacts {
+// 			ret := e.AreAtomsInFactAreDeclared(then, extraAtomNames)
+// 			if ret.IsErr() {
+// 				return ret
+// 			}
+// 		}
 
-		for _, iff := range asStmt.IffFacts {
-			ret := e.AreAtomsInFactAreDeclared(iff, extraAtomNames)
-			if ret.IsErr() {
-				return ret
-			}
-		}
-		return glob.TrueRet("")
-	case *ast.SpecFactStmt:
-		for _, param := range asStmt.Params {
-			ret := e.AreAtomsInObjDefined(param, extraAtomNames)
-			if ret.IsErr() {
-				return ret
-			}
-		}
-		return glob.TrueRet("")
-	case *ast.OrStmt:
-		for _, fact := range asStmt.Facts {
-			ret := e.AreAtomsInFactAreDeclared(fact, extraAtomNames)
-			if ret.IsErr() {
-				return ret
-			}
-		}
-		return glob.TrueRet("")
-	default:
-		return glob.ErrRet(fmt.Errorf("unexpected fact statement type: %T", asStmt))
-	}
-}
+// 		for _, iff := range asStmt.IffFacts {
+// 			ret := e.AreAtomsInFactAreDeclared(iff, extraAtomNames)
+// 			if ret.IsErr() {
+// 				return ret
+// 			}
+// 		}
+// 		return glob.TrueRet("")
+// 	case *ast.SpecFactStmt:
+// 		for _, param := range asStmt.Params {
+// 			ret := e.AtomsInObjDefinedOrBuiltin(param, extraAtomNames)
+// 			if ret.IsErr() {
+// 				return ret
+// 			}
+// 		}
+// 		return glob.TrueRet("")
+// 	case *ast.OrStmt:
+// 		for _, fact := range asStmt.Facts {
+// 			ret := e.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+// 			if ret.IsErr() {
+// 				return ret
+// 			}
+// 		}
+// 		return glob.TrueRet("")
+// 	default:
+// 		return glob.ErrRet(fmt.Errorf("unexpected fact statement type: %T", asStmt))
+// 	}
+// }
 
-func (e *Env) AreAtomsDeclared(atoms []ast.Atom, extraAtomNames map[string]struct{}) glob.GlobRet {
-	for _, atom := range atoms {
-		ret := e.IsNameDefinedOrBuiltin(string(atom), extraAtomNames)
-		if ret.IsErr() {
-			return ret
-		}
-	}
-	return glob.TrueRet("")
-}
+// func (e *Env) AreAtomsDeclared(atoms []ast.Atom, extraAtomNames map[string]struct{}) glob.GlobRet {
+// 	for _, atom := range atoms {
+// 		ret := e.IsNameDefinedOrBuiltin(string(atom), extraAtomNames)
+// 		if ret.IsErr() {
+// 			return ret
+// 		}
+// 	}
+// 	return glob.TrueRet("")
+// }
 
 // func (e *Env) IsNameDefinedOrBuiltin(atom ast.Atom, extraAtomNames map[string]struct{}) glob.GlobRet {
 // 	// 如果是内置的符号，那就声明了

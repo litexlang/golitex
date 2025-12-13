@@ -53,7 +53,7 @@ func (env *Env) NewDefProp_BuiltinProp(stmt *ast.DefPropStmt) glob.GlobRet {
 	extraAtomNames[string(stmt.DefHeader.Name)] = struct{}{}
 
 	for _, fact := range stmt.DomFacts {
-		ret := env.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+		ret := env.AtomObjsInFactProperlyDefined(fact, extraAtomNames)
 		if ret.IsErr() {
 			ret.AddMsg(fmt.Sprintf("in dom fact of prop %s definition", stmt.DefHeader.Name))
 			return ret
@@ -61,7 +61,7 @@ func (env *Env) NewDefProp_BuiltinProp(stmt *ast.DefPropStmt) glob.GlobRet {
 	}
 
 	for _, fact := range stmt.IffFacts {
-		ret := env.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+		ret := env.AtomObjsInFactProperlyDefined(fact, extraAtomNames)
 		if ret.IsErr() {
 			ret.AddMsg(fmt.Sprintf("in iff fact of prop %s definition", stmt.DefHeader.Name))
 			return ret
@@ -96,7 +96,7 @@ func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) glob.GlobR
 	extraAtomNames[string(stmt.DefHeader.Name)] = struct{}{}
 
 	for _, fact := range stmt.DomFacts {
-		ret := env.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+		ret := env.AtomObjsInFactProperlyDefined(fact, extraAtomNames)
 		if ret.IsErr() {
 			ret.AddMsg(fmt.Sprintf("in dom fact of prop %s definition", stmt.DefHeader.Name))
 			return ret
@@ -104,7 +104,7 @@ func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) glob.GlobR
 	}
 
 	for _, fact := range stmt.IffFacts {
-		ret := env.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+		ret := env.AtomObjsInFactProperlyDefined(fact, extraAtomNames)
 		if ret.IsErr() {
 			ret.AddMsg(fmt.Sprintf("in iff fact of prop %s definition", stmt.DefHeader.Name))
 			return ret
@@ -132,7 +132,7 @@ func (env *Env) AtomsInFnTemplateFnTemplateDeclared(name ast.Atom, stmt *ast.FnT
 		extraAtomNames[param] = struct{}{}
 	}
 
-	ret := env.AreAtomsInObjDefined(stmt.Fn.RetSet, extraAtomNames)
+	ret := env.AtomsInObjDefinedOrBuiltin(stmt.Fn.RetSet, extraAtomNames)
 	if ret.IsErr() {
 		ret.AddMsg(fmt.Sprintf("in return set of fn template %s", name))
 		return ret
@@ -141,7 +141,7 @@ func (env *Env) AtomsInFnTemplateFnTemplateDeclared(name ast.Atom, stmt *ast.FnT
 	extraAtomNames[string(name)] = struct{}{}
 
 	for _, fact := range stmt.TemplateDomFacts {
-		ret := env.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+		ret := env.AtomObjsInFactProperlyDefined(fact, extraAtomNames)
 		if ret.IsErr() {
 			ret.AddMsg(fmt.Sprintf("in template dom fact of fn %s definition", name))
 			return ret
@@ -158,7 +158,7 @@ func (env *Env) AtomsInFnTemplateFnTemplateDeclared(name ast.Atom, stmt *ast.FnT
 	}
 
 	for _, fact := range stmt.Fn.DomFacts {
-		ret := env.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+		ret := env.AtomObjsInFactProperlyDefined(fact, extraAtomNames)
 		if ret.IsErr() {
 			ret.AddMsg(fmt.Sprintf("in dom fact of fn %s definition", name))
 			return ret
@@ -166,7 +166,7 @@ func (env *Env) AtomsInFnTemplateFnTemplateDeclared(name ast.Atom, stmt *ast.FnT
 	}
 
 	for _, fact := range stmt.Fn.ThenFacts {
-		ret := env.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+		ret := env.AtomObjsInFactProperlyDefined(fact, extraAtomNames)
 		if ret.IsErr() {
 			ret.AddMsg(fmt.Sprintf("in then fact of fn %s definition", name))
 			return ret
@@ -198,7 +198,7 @@ func (env *Env) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) 
 	}
 
 	for _, fact := range stmt.DefBody.DomFacts {
-		ret := env.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+		ret := env.AtomObjsInFactProperlyDefined(fact, extraAtomNames)
 		if ret.IsErr() {
 			ret.AddMsg(fmt.Sprintf("in dom fact of exist_prop %s definition", stmt.DefBody.DefHeader.Name))
 			return ret
@@ -206,7 +206,7 @@ func (env *Env) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) 
 	}
 
 	for _, fact := range stmt.DefBody.IffFacts {
-		ret := env.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+		ret := env.AtomObjsInFactProperlyDefined(fact, extraAtomNames)
 		if ret.IsErr() {
 			ret.AddMsg(fmt.Sprintf("in iff fact of exist_prop %s definition", stmt.DefBody.DefHeader.Name))
 			return ret
@@ -261,7 +261,7 @@ func (env *Env) DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmt *ast.De
 	}
 
 	for _, fact := range stmt.NewInFacts() {
-		ret := env.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+		ret := env.AtomObjsInFactProperlyDefined(fact, extraAtomNames)
 		if ret.IsErr() {
 			ret.AddMsg("in new in fact of def let statement")
 			return ret
@@ -273,7 +273,7 @@ func (env *Env) DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmt *ast.De
 	}
 
 	for _, fact := range stmt.Facts {
-		ret := env.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+		ret := env.AtomObjsInFactProperlyDefined(fact, extraAtomNames)
 		if ret.IsErr() {
 			ret.AddMsg("in fact of def let statement")
 			return ret
