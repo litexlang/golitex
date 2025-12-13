@@ -4,6 +4,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
+	"strings"
 )
 
 func (env *Env) AtomObjsInFactProperlyDefined(stmt ast.FactStmt, extraParams map[string]struct{}) glob.GlobRet {
@@ -90,7 +91,7 @@ func (env *Env) IsAtomObjDefinedOrBuiltin(atom ast.Atom, extraParams map[string]
 	}
 
 	// Check if it's defined by user
-	ret := env.IsAtomDefinedByUser(atom)
+	ret := env.IsAtomObjDefinedByUser(atom)
 	if ret.IsTrue() {
 		return glob.TrueRet("")
 	}
@@ -240,4 +241,83 @@ func (env *Env) AtomsInObjDefinedOrBuiltinOrSetNonemptySetFiniteSet(obj ast.Obj,
 		}
 	}
 	return glob.TrueRet("")
+}
+
+func (e *Env) IsAtomObjDefinedByUser(AtomObjName ast.Atom) glob.GlobRet {
+	if strings.Contains(string(AtomObjName), glob.PkgNameAtomSeparator) {
+		PkgNameAndAtomName := strings.Split(string(AtomObjName), glob.PkgNameAtomSeparator)
+		PkgName := PkgNameAndAtomName[0]
+		AtomName := PkgNameAndAtomName[1]
+		pkgPath, ok := e.PackageManager.PkgPathNameMgr.NamePathMap[PkgName]
+		if !ok {
+			return glob.ErrRet(fmt.Errorf("package %s is not found", PkgName))
+		}
+		pkgPathEnv, ok := e.PackageManager.PkgPathEnvPairs[pkgPath]
+		if !ok {
+			return glob.ErrRet(fmt.Errorf("package environment for %s is not found", PkgName))
+		}
+		ret := pkgPathEnv.isAtomDefinedAtCurEnv(ast.Atom(AtomName))
+		if ret.IsTrue() {
+			return glob.TrueRet("")
+		}
+		return ret
+	}
+
+	for env := e; env != nil; env = env.Parent {
+		ret := env.isAtomDefinedAtCurEnv(AtomObjName)
+		if ret.IsTrue() {
+			return glob.TrueRet("")
+		}
+	}
+	return glob.ErrRet(fmt.Errorf("undefined: %s", AtomObjName))
+}
+
+// 其实最好要分类：有可能是obj，有可能是prop，不能在验证obj的时候验证是prop
+func (e *Env) isAtomDefinedAtCurEnv(AtomObjName ast.Atom) glob.GlobRet {
+	_, ok := e.ObjDefMem[string(AtomObjName)]
+	if ok {
+		return glob.TrueRet("")
+	}
+
+	_, ok = e.FnTemplateDefMem[string(AtomObjName)]
+	if ok {
+		return glob.TrueRet("")
+	}
+
+	return glob.ErrRet(fmt.Errorf("undefined: %s", AtomObjName))
+}
+
+func (e *Env) IsNameDefinedOrBuiltin(name string, extraParams map[string]struct{}) glob.GlobRet {
+	if _, ok := extraParams[name]; ok {
+		return glob.TrueRet("")
+	}
+
+	if glob.IsBuiltinAtom(name) {
+		return glob.TrueRet("")
+	}
+
+	if e.IsPkgName(name) {
+		return glob.TrueRet("")
+	}
+
+	if _, ok := ast.IsNumLitAtomObj(ast.Atom(name)); ok {
+		return glob.TrueRet("")
+	}
+
+	ret := e.IsAtomObjDefinedByUser(ast.Atom(name))
+	if ret.IsTrue() {
+		return glob.TrueRet("")
+	}
+
+	existPropDef := e.GetExistPropDef(ast.Atom(name))
+	if existPropDef != nil {
+		return glob.TrueRet("")
+	}
+
+	propDef := e.GetPropDef(ast.Atom(name))
+	if propDef != nil {
+		return glob.TrueRet("")
+	}
+
+	return glob.ErrRet(fmt.Errorf("undefined: %s", name))
 }

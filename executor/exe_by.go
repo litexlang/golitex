@@ -54,7 +54,7 @@ func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) (ExecRet, []ast.FactStmt) 
 	}
 
 	for i, param := range proveAlgoDef.Params {
-		ret := exec.Env.IsAtomDeclared(ast.Atom(param), map[string]struct{}{})
+		ret := exec.Env.IsNameDefinedOrBuiltin(param, map[string]struct{}{})
 		if ret.IsTrue() {
 			continue
 		} else {
