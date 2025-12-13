@@ -45,7 +45,7 @@ func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state 
 
 func (ver *Verifier) objIsDefinedAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *VerState) ExecRet {
 	if atom, ok := obj.(ast.Atom); ok {
-		if ret := ver.Env.AreAtomsInObjDefined(atom, map[string]struct{}{}); ret.IsNotTrue() {
+		if ret := ver.Env.AtomsInObjDefinedOrBuiltin(atom, map[string]struct{}{}); ret.IsNotTrue() {
 			return NewExecErr(ret.String())
 		} else {
 			return NewEmptyExecTrue()

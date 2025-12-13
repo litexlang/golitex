@@ -46,7 +46,7 @@ func (env *Env) NewFact(stmt ast.FactStmt) glob.GlobRet {
 // NewFactWithDeclarationCheck checks if all atoms in the fact are declared, and if so, calls NewFact.
 // Returns an error if any atoms are undeclared or if NewFact fails.
 func (env *Env) NewFactWithDeclarationCheck(fact ast.FactStmt) glob.GlobRet {
-	ret := env.AreAtomsInFactAreDeclared(fact, map[string]struct{}{})
+	ret := env.AtomObjsInFactProperlyDefined(fact, map[string]struct{}{})
 	if ret.IsErr() {
 		return ret
 	}
