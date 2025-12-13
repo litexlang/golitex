@@ -24,7 +24,7 @@ import (
 func (env *Env) NewFact(stmt ast.FactStmt) glob.GlobRet {
 	// 检查是否符合要求：比如涉及到的符号是否都定义了
 	if ret := env.AtomObjsInFactProperlyDefined(stmt, map[string]struct{}{}); ret.IsNotTrue() {
-		return ret
+		return glob.NewGlobErr(stmt.String()).AddMsg(ret.String())
 	}
 
 	switch f := stmt.(type) {
