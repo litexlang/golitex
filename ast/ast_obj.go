@@ -143,7 +143,7 @@ func IsAtomObjAndEqualToStr(obj Obj, name string) bool {
 	return string(atomObj) == name
 }
 
-func GetAtomsInObj(obj Obj) []Atom {
+func GetAtomObjsInObj(obj Obj) []Atom {
 	ret := []Atom{}
 
 	switch asObj := obj.(type) {
@@ -155,7 +155,7 @@ func GetAtomsInObj(obj Obj) []Atom {
 			ret = append(ret, atomsFromSetBuilder...)
 		} else {
 			for _, param := range asObj.Params {
-				atoms := GetAtomsInObj(param)
+				atoms := GetAtomObjsInObj(param)
 				ret = append(ret, atoms...)
 			}
 		}
@@ -175,7 +175,7 @@ func GetAtomsInObjIncludingParamInSetBuilder(obj Obj) []Atom {
 			ret = append(ret, atomsFromSetBuilder...)
 		} else {
 			for _, param := range asObj.Params {
-				atoms := GetAtomsInObj(param)
+				atoms := GetAtomObjsInObj(param)
 				ret = append(ret, atoms...)
 			}
 		}
@@ -193,7 +193,7 @@ func GetAtomsInSetBuilder(f *FnObj) []Atom {
 	ret := []Atom{}
 
 	// Extract atoms from parentSet (skip the bound parameter)
-	atoms := GetAtomsInObj(setBuilder.ParentSet)
+	atoms := GetAtomObjsInObj(setBuilder.ParentSet)
 	ret = append(ret, atoms...)
 
 	// Extract atoms from facts
@@ -224,7 +224,7 @@ func GetAtomsInSetBuilderIncludingParamInSetBuilder(f *FnObj) []Atom {
 	ret := []Atom{Atom(setBuilder.Param)}
 
 	// Extract atoms from parentSet (skip the bound parameter)
-	atoms := GetAtomsInObj(setBuilder.ParentSet)
+	atoms := GetAtomObjsInObj(setBuilder.ParentSet)
 	ret = append(ret, atoms...)
 
 	// Extract atoms from facts

@@ -79,7 +79,7 @@ func (e *Env) isAtomDefinedAtCurEnv(AtomObjName ast.Atom) glob.GlobRet {
 
 func (e *Env) AreAtomsInObjDefined(obj ast.Obj, extraAtomNames map[string]struct{}) glob.GlobRet {
 	if !ast.IsSetBuilder(obj) {
-		atoms := ast.GetAtomsInObj(obj)
+		atoms := ast.GetAtomObjsInObj(obj)
 		return e.AreAtomsDeclared(atoms, extraAtomNames)
 	} else {
 		return e.AreAtomsInSetBuilderAreDeclared(obj.(*ast.FnObj), extraAtomNames)

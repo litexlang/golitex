@@ -19,7 +19,7 @@ import "slices"
 func (stmt *SpecFactStmt) GetAtoms() []Atom {
 	atoms := []Atom{stmt.PropName}
 	for _, param := range stmt.Params {
-		atoms = append(atoms, GetAtomsInObj(param)...)
+		atoms = append(atoms, GetAtomObjsInObj(param)...)
 	}
 	return atoms
 }
@@ -38,7 +38,7 @@ func (stmt *SpecFactStmt) GetAtoms() []Atom {
 func (stmt *UniFactStmt) GetAtoms() []Atom {
 	atoms := []Atom{}
 	for _, param := range stmt.ParamSets {
-		atoms = append(atoms, GetAtomsInObj(param)...)
+		atoms = append(atoms, GetAtomObjsInObj(param)...)
 	}
 	for _, fact := range stmt.DomFacts {
 		atoms = append(atoms, fact.GetAtoms()...)
@@ -89,7 +89,7 @@ func (stmt *OrStmt) GetAtoms() []Atom {
 func (stmt *EqualsFactStmt) GetAtoms() []Atom {
 	atoms := []Atom{}
 	for _, param := range stmt.Params {
-		atoms = append(atoms, GetAtomsInObj(param)...)
+		atoms = append(atoms, GetAtomObjsInObj(param)...)
 	}
 	return atoms
 }
