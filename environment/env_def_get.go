@@ -90,3 +90,8 @@ func (e *Env) GetProveAlgoDef(proveAlgoName string) *ast.DefProveAlgoStmt {
 	}
 	return nil
 }
+
+func (e *Env) IsPkgName(pkgName string) bool {
+	_, ok := e.PackageManager.PkgPathNameMgr.NamePathMap[pkgName]
+	return ok
+}
