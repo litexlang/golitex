@@ -198,7 +198,7 @@ func (p *TbParser) inlineUniFact_Param_ParamSet_ParamInSetFacts(tb *tokenBlock) 
 
 	// nth parameter set should not include nth to last parameter inside
 	for i, setParam := range setParams {
-		atomsInSetParam := GetAtomsInObj(setParam)
+		atomsInSetParam := GetAtomObjsInObj(setParam)
 		atomsInSetParamAsStr := make([]string, len(atomsInSetParam))
 		for i, atom := range atomsInSetParam {
 			atomsInSetParamAsStr[i] = string(atom)
