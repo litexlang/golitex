@@ -71,5 +71,5 @@ func REPLMsgWithPath(ret GlobRet, path string) string {
 }
 
 func REPLErrorMessageWithPath(path string) string {
-	return REPLMsgWithPath(NewGlobErr(""), path)
+	return REPLMsgWithPath(NewEmptyGlobErr(), path)
 }

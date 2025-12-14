@@ -137,7 +137,7 @@ func ErrRet(err error) GlobRet {
 	if err != nil {
 		return NewGlobErr(err.Error())
 	}
-	return NewGlobErr("")
+	return NewEmptyGlobErr()
 }
 
 func (v *GlobTrue) Inherit(globRet GlobRet) {
@@ -223,4 +223,16 @@ func (v *GlobUnknown) AddMsg(msg string) GlobRet {
 func (v *GlobErr) AddMsg(msg string) GlobRet {
 	v.Msg = append(v.Msg, msg)
 	return v
+}
+
+func NewEmptyGlobTrue() GlobRet {
+	return NewGlobTrue("")
+}
+
+func NewEmptyGlobUnknown() GlobRet {
+	return NewGlobUnknown("")
+}
+
+func NewEmptyGlobErr() GlobRet {
+	return NewGlobErr("")
 }
