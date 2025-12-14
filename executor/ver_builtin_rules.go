@@ -279,6 +279,8 @@ func (ver *Verifier) verIsAFiniteSetByBuiltinRules(stmt *ast.SpecFactStmt, state
 		return NewExecTrue("A list set is a finite set.")
 	}
 
+	_ = state
+
 	return NewEmptyExecUnknown()
 }
 

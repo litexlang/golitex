@@ -67,13 +67,13 @@ func (e *Env) inFactPostProcess_TryFnTemplate(fact *ast.SpecFactStmt) glob.GlobR
 	if isTemplate {
 		return ret
 	}
-	return glob.NewGlobUnknown("")
+	return glob.NewEmptyGlobUnknown()
 }
 
 func (e *Env) inFactPostProcess_TryFnTemplateFnObj(fact *ast.SpecFactStmt) glob.GlobRet {
 	fnFn, ok := fact.Params[1].(*ast.FnObj)
 	if !ok || !ast.IsFnTemplate_ObjFn(fnFn) {
-		return glob.NewGlobUnknown("")
+		return glob.NewEmptyGlobUnknown()
 	}
 
 	fnTStruct, ok := ast.ObjFnT_To_FnTStruct(fnFn)
@@ -100,7 +100,7 @@ func (e *Env) inFactPostProcess_TryCart(fact *ast.SpecFactStmt) glob.GlobRet {
 	// Try cart from equal facts
 	equalObjs, ok := e.GetEqualObjs(fact.Params[1])
 	if !ok || equalObjs == nil {
-		return glob.NewGlobUnknown("")
+		return glob.NewEmptyGlobUnknown()
 	}
 
 	// Look for a cart set in the equal facts
@@ -110,7 +110,7 @@ func (e *Env) inFactPostProcess_TryCart(fact *ast.SpecFactStmt) glob.GlobRet {
 		}
 	}
 
-	return glob.NewGlobUnknown("")
+	return glob.NewEmptyGlobUnknown()
 }
 
 // inFactPostProcess_InCart handles postprocessing for a $in cart(...)
@@ -351,7 +351,7 @@ func (e *Env) inFactPostProcess_TryListSet(fact *ast.SpecFactStmt) glob.GlobRet 
 	// Try to get listSet, either directly or from equal facts
 	listSetObj := e.GetListSetEqualToObj(fact.Params[1])
 	if listSetObj == nil {
-		return glob.NewGlobUnknown("")
+		return glob.NewEmptyGlobUnknown()
 	}
 
 	listSetFnObj, ok := listSetObj.(*ast.FnObj)
@@ -365,7 +365,7 @@ func (e *Env) inFactPostProcess_TryListSet(fact *ast.SpecFactStmt) glob.GlobRet 
 func (e *Env) inFactPostProcess_TrySetBuilder(fact *ast.SpecFactStmt) glob.GlobRet {
 	setBuilderObj := e.GetSetBuilderEqualToObj(fact.Params[1])
 	if setBuilderObj == nil {
-		return glob.NewGlobUnknown("")
+		return glob.NewEmptyGlobUnknown()
 	}
 
 	return e.inFactPostProcess_InSetBuilder(fact.Params[0], setBuilderObj)
@@ -410,7 +410,7 @@ func (e *Env) inFactPostProcess_InSetBuilder(obj ast.Obj, setBuilderObj *ast.FnO
 func (e *Env) inFactPostProcess_TryRangeOrClosedRange(fact *ast.SpecFactStmt) glob.GlobRet {
 	// Check if the second parameter is a range or closed_range function call
 	if !ast.ObjIsRangeOrClosedRangeWith2Params(fact.Params[1]) {
-		return glob.NewGlobUnknown("")
+		return glob.NewEmptyGlobUnknown()
 	}
 
 	obj := fact.Params[0]
