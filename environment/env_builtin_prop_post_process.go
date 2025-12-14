@@ -57,7 +57,7 @@ func (env *Env) BuiltinPropExceptEqualPostProcess(fact *ast.SpecFactStmt) glob.G
 		}
 	}
 
-	return glob.NewGlobUnknown("")
+	return glob.NewEmptyGlobUnknown()
 }
 
 func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(fact *ast.SpecFactStmt) glob.GlobRet {
@@ -123,7 +123,7 @@ func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParam
 		return ret
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsLargerEqualAndRightParamIsZero(fact *ast.SpecFactStmt) glob.GlobRet {
@@ -153,7 +153,7 @@ func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsLargerEqualAndRightP
 		return ret
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsZero(fact *ast.SpecFactStmt) glob.GlobRet {
@@ -211,7 +211,7 @@ func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsZ
 		return ret
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 
 }
 
@@ -239,7 +239,7 @@ func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndRightPar
 		return ret
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsNotZero(fact *ast.SpecFactStmt) glob.GlobRet {
@@ -309,7 +309,7 @@ func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParam
 		return ret
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsLargerEqualAndRightParamIsNotZero(fact *ast.SpecFactStmt) glob.GlobRet {
@@ -351,7 +351,7 @@ func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsLargerEqualAndRightP
 		return ret
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsNotZero(fact *ast.SpecFactStmt) glob.GlobRet {
@@ -421,7 +421,7 @@ func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsN
 		return ret
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndRightParamIsNotZero(fact *ast.SpecFactStmt) glob.GlobRet {
@@ -463,5 +463,5 @@ func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndRightPar
 		return ret
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
