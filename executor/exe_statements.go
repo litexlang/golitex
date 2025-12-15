@@ -29,12 +29,12 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 	case *ast.KnowFactStmt:
 		execRet = exec.knowStmt(stmt)
 		if execRet.IsTrue() {
-			execRet = execRet.AddMsg("Warning: `know` saves the facts you write without verification. Users may inadvertently introduce incorrect facts. Use it with great caution.\n")
+			execRet = execRet.AddMsg("Warning: `know` saves the facts you write without verification. You may introduce incorrect facts by mistake. Use it with great caution!\n")
 		}
 	case *ast.KnowPropStmt:
 		execRet = exec.knowPropStmt(stmt)
 		if execRet.IsTrue() {
-			execRet = execRet.AddMsg("Warning: `know @` saves the facts you write without verification. Users may inadvertently introduce incorrect facts. Use it with great caution.\n")
+			execRet = execRet.AddMsg("Warning: `know @` saves the facts you write without verification. You may introduce incorrect facts by mistake. Use it with great caution!\n")
 		}
 	case *ast.ClaimProveStmt:
 		execRet = exec.execClaimStmtProve(stmt)
@@ -43,7 +43,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 	case *ast.DefLetStmt:
 		execRet = exec.defLetStmt(stmt)
 		if execRet.IsTrue() {
-			execRet = execRet.AddMsg("Warning: `let` may introduce non-existent objects. If you want to ensure the object exists, please use `have` instead.\n")
+			execRet = execRet.AddMsg("Warning: `let` may introduce non-existent objects. If you want to ensure the object exists, please use `have` instead!\n")
 		}
 	case *ast.HaveObjStStmt:
 		execRet = exec.haveObjStStmt(stmt, true)
@@ -52,7 +52,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 	case *ast.DefFnStmt:
 		execRet = exec.defFnStmt(stmt)
 		if execRet.IsTrue() {
-			execRet = execRet.AddMsg("Warning: `fn` may introduce non-existent functions. If you want to ensure the function exists, please use `have fn` instead.\n")
+			execRet = execRet.AddMsg("Warning: `fn` may introduce non-existent functions. If you want to ensure the function exists, please use `have fn` instead!\n")
 		}
 	case *ast.ProveInEachCaseStmt:
 		execRet = exec.proveInEachCaseStmt(stmt)
@@ -75,7 +75,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 	case *ast.KnowExistPropStmt:
 		execRet = exec.knowExistPropStmt(stmt)
 		if execRet.IsTrue() {
-			execRet = execRet.AddMsg("Warning: `know exist` saves the facts you write without verification. Users may inadvertently introduce incorrect facts. Use it with great caution.\n")
+			execRet = execRet.AddMsg("Warning: `know exist` saves the facts you write without verification. You may introduce incorrect facts by mistake. Use it with great caution!\n")
 		}
 	case *ast.FnTemplateDefStmt:
 		execRet = exec.DefFnTemplateStmt(stmt)
@@ -171,12 +171,18 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) ExecRet {
 
 // TODO: 再know时就检查，仅仅依赖写在dom里的事实，是否真的能让涉及到的函数和prop能真的满足条件。如果不满足条件，那就warning
 func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) ExecRet {
+	allDerivedFacts := []string{}
+
 	for _, fact := range stmt.Facts {
 		switch fact := fact.(type) {
 		case ast.FactStmt:
 			ret := exec.Env.NewFactWithDeclarationCheck(fact)
 			if ret.IsErr() {
 				return NewExecErr(ret.String()).AddMsg(stmt.String())
+			}
+			// Collect derived facts from post-processing
+			if ret.IsTrue() && len(ret.GetMsgs()) > 0 {
+				allDerivedFacts = append(allDerivedFacts, ret.GetMsgs()...)
 			}
 
 		case *ast.KnowPropStmt:
@@ -189,7 +195,12 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) ExecRet {
 		}
 	}
 
-	return NewExecTrue(stmt.String())
+	// Build the result with all derived facts
+	resultMsgs := []string{stmt.String()}
+	if len(allDerivedFacts) > 0 {
+		resultMsgs = append(resultMsgs, allDerivedFacts...)
+	}
+	return NewExecTrueWithMsgs(resultMsgs)
 }
 
 func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool) ExecRet {
