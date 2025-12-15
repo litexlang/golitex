@@ -317,7 +317,7 @@ func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) ExecRet {
 	}
 
 	// know forall
-	uniFact := ast.NewUniFact(stmt.ExistPropWithoutDom.DefBody.DefHeader.Params, stmt.ExistPropWithoutDom.DefBody.DefHeader.ParamSets, stmt.ExistPropWithoutDom.DefBody.IffFacts, []ast.FactStmt{stmt.ExistPropWithoutDom.DefBody.DefHeader.ToSpecFact()}, stmt.Line)
+	uniFact := ast.NewUniFact(stmt.ExistPropWithoutDom.DefBody.DefHeader.Params, stmt.ExistPropWithoutDom.DefBody.DefHeader.ParamSets, stmt.ExistPropWithoutDom.DefBody.IffFactsOrNil, []ast.FactStmt{stmt.ExistPropWithoutDom.DefBody.DefHeader.ToSpecFact()}, stmt.Line)
 	ret := exec.Env.NewFact(uniFact)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
@@ -333,7 +333,7 @@ func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt
 	}()
 
 	// declare parameters in exist prop
-	defObjStmt := ast.NewDefLetStmt(stmt.ExistPropWithoutDom.DefBody.DefHeader.Params, stmt.ExistPropWithoutDom.DefBody.DefHeader.ParamSets, stmt.ExistPropWithoutDom.DefBody.IffFacts, stmt.Line)
+	defObjStmt := ast.NewDefLetStmt(stmt.ExistPropWithoutDom.DefBody.DefHeader.Params, stmt.ExistPropWithoutDom.DefBody.DefHeader.ParamSets, stmt.ExistPropWithoutDom.DefBody.IffFactsOrNil, stmt.Line)
 
 	execState := exec.defLetStmt(defObjStmt)
 	if execState.IsNotTrue() {
@@ -361,7 +361,7 @@ func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt
 		uniMap[stmt.ExistPropWithoutDom.ExistParams[i]] = haveObj
 	}
 
-	for _, fact := range stmt.ExistPropWithoutDom.DefBody.ThenFacts {
+	for _, fact := range stmt.ExistPropWithoutDom.DefBody.ImplicationFactsOrNil {
 		instFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return NewExecErr(err.Error())

@@ -167,7 +167,7 @@ func (stmt *DefExistPropStmtBody) Instantiate(uniMap map[string]Obj) (*DefExistP
 	}
 
 	newDomFacts := []FactStmt{}
-	for _, fact := range stmt.DomFacts {
+	for _, fact := range stmt.DomFactsOrNil {
 		newFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, err
@@ -176,7 +176,7 @@ func (stmt *DefExistPropStmtBody) Instantiate(uniMap map[string]Obj) (*DefExistP
 	}
 
 	newIffFacts := []FactStmt{}
-	for _, fact := range stmt.IffFacts {
+	for _, fact := range stmt.IffFactsOrNil {
 		newFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, err
@@ -185,7 +185,7 @@ func (stmt *DefExistPropStmtBody) Instantiate(uniMap map[string]Obj) (*DefExistP
 	}
 
 	newThenFacts := []FactStmt{}
-	for _, fact := range stmt.ThenFacts {
+	for _, fact := range stmt.ImplicationFactsOrNil {
 		newFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, err

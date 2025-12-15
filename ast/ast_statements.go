@@ -48,10 +48,10 @@ type DefPropStmt struct {
 
 // 虽然它和 defProp 一样，但不排除之后要让iffFacts只能是可逆的事实
 type DefExistPropStmtBody struct {
-	DefHeader *DefHeader
-	DomFacts  FactStmtSlice
-	IffFacts  FactStmtSlice
-	ThenFacts FactStmtSlice
+	DefHeader             *DefHeader
+	DomFactsOrNil         FactStmtSlice
+	IffFactsOrNil         FactStmtSlice
+	ImplicationFactsOrNil FactStmtSlice
 
 	Line uint
 }

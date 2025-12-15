@@ -241,7 +241,7 @@ func (p *TbParser) defExistPropStmt(tb *tokenBlock, keyword string) (Stmt, error
 		return nil, ErrInLine(err, tb)
 	}
 
-	err = NoSelfReferenceInPropDef(string(body.DefBody.DefHeader.Name), append(append(body.DefBody.DomFacts, body.DefBody.IffFacts...), body.DefBody.ThenFacts...))
+	err = NoSelfReferenceInPropDef(string(body.DefBody.DefHeader.Name), append(append(body.DefBody.DomFactsOrNil, body.DefBody.IffFactsOrNil...), body.DefBody.ImplicationFactsOrNil...))
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
