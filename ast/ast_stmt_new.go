@@ -124,9 +124,9 @@ func NewHaveObjInNonEmptySetStmt(objNames []string, objSets []Obj, line uint) *H
 	return &HaveObjInNonEmptySetStmt{objNames, objSets, line}
 }
 
-func NewNamedUniFactStmt(defPropStmt *DefPropStmt, line uint) *NamedUniFactStmt {
-	return &NamedUniFactStmt{defPropStmt, line}
-}
+// func NewNamedUniFactStmt(defPropStmt *DefPropStmt, line uint) *NamedUniFactStmt {
+// 	return &NamedUniFactStmt{defPropStmt, line}
+// }
 
 func NewEqualsFactStmt(params ObjSlice, line uint) *EqualsFactStmt {
 	return &EqualsFactStmt{params, line}

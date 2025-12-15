@@ -196,7 +196,8 @@ func (s *HaveCartSetStmt) InlineString() string          { panic("") }
 func (s *HaveObjFromCartSetStmt) InlineString() string   { panic("") }
 
 func (s *HaveCartWithDimStmt) InlineString() string { panic("") }
-func (s *NamedUniFactStmt) InlineString() string    { panic("") }
+
+// func (s *NamedUniFactStmt) InlineString() string    { panic("") }
 
 func (s *EqualsFactStmt) InlineString() string {
 	var builder strings.Builder

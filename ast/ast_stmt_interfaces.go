@@ -41,8 +41,8 @@ func (s *ImportDirStmt) stmt()                 {}
 func (s *ImportFileStmt) stmt()                {}
 func (s *ProveStmt) stmt()                     {}
 func (s *ProveForStmt) stmt()                  {}
-func (s *ProveImplicationStmt) stmt()         {}
-func (s *ImplicationStmt) stmt()              {}
+func (s *ProveImplicationStmt) stmt()          {}
+func (s *ImplicationStmt) stmt()               {}
 func (s *UniFactWithIffStmt) stmt()            {}
 func (s *ClaimProveByContradictionStmt) stmt() {}
 
@@ -53,7 +53,7 @@ func (s *HaveObjInNonEmptySetStmt) stmt() {}
 func (s *HaveCartSetStmt) stmt()          {}
 func (s *HaveObjFromCartSetStmt) stmt()   {}
 
-func (s *NamedUniFactStmt) stmt()  {}
+// func (s *NamedUniFactStmt) stmt()  {}
 func (s *EqualsFactStmt) stmt()    {}
 func (s *KnowExistPropStmt) stmt() {}
 
@@ -104,7 +104,7 @@ func (s *HaveObjInNonEmptySetStmt) algoStmt() {}
 func (s *HaveCartSetStmt) algoStmt()          {}
 func (s *HaveObjFromCartSetStmt) algoStmt()   {}
 
-func (s *NamedUniFactStmt) algoStmt()  {}
+// func (s *NamedUniFactStmt) algoStmt()  {}
 func (s *EqualsFactStmt) algoStmt()    {}
 func (s *KnowExistPropStmt) algoStmt() {}
 
@@ -160,7 +160,7 @@ func (s *HaveObjInNonEmptySetStmt) GetLine() uint { return s.Line }
 func (s *HaveCartSetStmt) GetLine() uint          { return s.Line }
 func (s *HaveObjFromCartSetStmt) GetLine() uint   { return s.Line }
 
-func (s *NamedUniFactStmt) GetLine() uint  { return s.Line }
+// func (s *NamedUniFactStmt) GetLine() uint  { return s.Line }
 func (s *EqualsFactStmt) GetLine() uint    { return s.Line }
 func (s *KnowExistPropStmt) GetLine() uint { return s.Line }
 
@@ -183,7 +183,7 @@ func (s *DefProveAlgoStmt) GetLine() uint           { return s.Line }
 func (s *ByStmt) GetLine() uint                     { return s.Line }
 func (s *PrintStmt) GetLine() uint                  { return s.Line }
 func (s *ProveForStmt) GetLine() uint               { return s.Line }
-func (s *ProveImplicationStmt) GetLine() uint        { return s.Line }
+func (s *ProveImplicationStmt) GetLine() uint       { return s.Line }
 func (s *ImplicationStmt) GetLine() uint            { return s.Line }
 func (s *HaveFnEqualCaseByCaseStmt) GetLine() uint  { return s.Line }
 func (s *HaveFnCaseByCaseStmt) GetLine() uint       { return s.Line }
