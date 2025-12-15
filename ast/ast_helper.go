@@ -179,9 +179,9 @@ func (stmt *DefExistPropStmt) ToForallParamsSatisfyDomFacts_Then_ExistFactIsTrue
 	return NewUniFact(stmt.ExistParams, stmt.ExistParamSets, stmt.DefBody.DomFacts, []FactStmt{stmt.ToProp()}, glob.BuiltinLine)
 }
 
-func (stmt *NamedUniFactStmt) ToUniFact() *UniFactStmt {
-	return NewUniFact(stmt.DefPropStmt.DefHeader.Params, stmt.DefPropStmt.DefHeader.ParamSets, stmt.DefPropStmt.IffFactsOrNil, stmt.DefPropStmt.ImplicationFactsOrNil, glob.BuiltinLine)
-}
+// func (stmt *NamedUniFactStmt) ToUniFact() *UniFactStmt {
+// 	return NewUniFact(stmt.DefPropStmt.DefHeader.Params, stmt.DefPropStmt.DefHeader.ParamSets, stmt.DefPropStmt.IffFactsOrNil, stmt.DefPropStmt.ImplicationFactsOrNil, glob.BuiltinLine)
+// }
 
 func (objFn *FnObj) IsObjFn_HasAtomHead_ReturnHead() (Atom, bool) {
 	head, ok := objFn.FnHead.(Atom)
@@ -511,4 +511,8 @@ func IsTrueEqualFact(fact *SpecFactStmt) bool {
 	}
 
 	return true
+}
+
+func (stmt *ImplicationStmt) ToProp() *DefPropStmt {
+	return NewDefPropStmt(stmt.DefHeader, stmt.DomFacts, nil, stmt.ImplicationFacts, stmt.Line)
 }

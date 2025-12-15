@@ -645,15 +645,15 @@ func (s *HaveObjFromCartSetStmt) ToLatexString() string {
 // 	return builder.String()
 // }
 
-func (s *NamedUniFactStmt) ToLatexString() string {
-	var builder strings.Builder
-	builder.WriteString(s.DefPropStmt.ToLatexString())
-	builder.WriteString("\n\n")
+// func (s *NamedUniFactStmt) ToLatexString() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(s.DefPropStmt.ToLatexString())
+// 	builder.WriteString("\n\n")
 
-	builder.WriteString(VerifiedFactsSectionToLatexString(s.DefPropStmt.IffFactsOrNil))
+// 	builder.WriteString(VerifiedFactsSectionToLatexString(s.DefPropStmt.IffFactsOrNil))
 
-	return builder.String()
-}
+// 	return builder.String()
+// }
 
 func VerifiedFactsSectionToLatexString(verifiedFacts []FactStmt) string {
 	var builder strings.Builder

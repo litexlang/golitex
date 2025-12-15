@@ -719,13 +719,13 @@ func (stmt *HaveObjFromCartSetStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *NamedUniFactStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeySymbolAt)
-	builder.WriteString(" ")
-	builder.WriteString(stmt.DefPropStmt.String())
-	return builder.String()
-}
+// func (stmt *NamedUniFactStmt) String() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(glob.KeySymbolAt)
+// 	builder.WriteString(" ")
+// 	builder.WriteString(stmt.DefPropStmt.String())
+// 	return builder.String()
+// }
 
 func (stmt *EqualsFactStmt) String() string {
 	var builder strings.Builder

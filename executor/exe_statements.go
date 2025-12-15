@@ -72,8 +72,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 		execRet = exec.haveObjInNonEmptySetStmt(stmt)
 	case *ast.HaveCartSetStmt:
 		execRet = exec.haveCartSetStmt(stmt)
-	case *ast.NamedUniFactStmt:
-		execRet = exec.namedUniFactStmt(stmt)
+	// case *ast.NamedUniFactStmt:
+	// 	execRet = exec.namedUniFactStmt(stmt)
 	case *ast.KnowExistPropStmt:
 		execRet = exec.knowExistPropStmt(stmt)
 		if execRet.IsTrue() {
@@ -514,20 +514,20 @@ func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) ExecRet {
 	return NewExecTrue(stmt.String())
 }
 
-func (exec *Executor) namedUniFactStmt(stmt *ast.NamedUniFactStmt) ExecRet {
-	uniFact := ast.NewUniFact(stmt.DefPropStmt.DefHeader.Params, stmt.DefPropStmt.DefHeader.ParamSets, stmt.DefPropStmt.IffFactsOrNil, stmt.DefPropStmt.ImplicationFactsOrNil, stmt.Line)
-	execState := exec.factStmt(uniFact)
-	if execState.IsNotTrue() {
-		return execState
-	}
+// func (exec *Executor) namedUniFactStmt(stmt *ast.NamedUniFactStmt) ExecRet {
+// 	uniFact := ast.NewUniFact(stmt.DefPropStmt.DefHeader.Params, stmt.DefPropStmt.DefHeader.ParamSets, stmt.DefPropStmt.IffFactsOrNil, stmt.DefPropStmt.ImplicationFactsOrNil, stmt.Line)
+// 	execState := exec.factStmt(uniFact)
+// 	if execState.IsNotTrue() {
+// 		return execState
+// 	}
 
-	execRet := exec.knowPropStmt(ast.NewKnowPropStmt(stmt.DefPropStmt, stmt.Line))
-	if execRet.IsNotTrue() {
-		return execRet
-	}
+// 	execRet := exec.knowPropStmt(ast.NewKnowPropStmt(stmt.DefPropStmt, stmt.Line))
+// 	if execRet.IsNotTrue() {
+// 		return execRet
+// 	}
 
-	return execRet
-}
+// 	return execRet
+// }
 
 // 只要 dom 成立，那prop成立，进而prop的iff成立
 func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) ExecRet {
