@@ -132,7 +132,7 @@ func (defPropStmt *DefPropStmt) Instantiate(uniMap map[string]Obj) (Stmt, error)
 	}
 
 	newDomFacts := []FactStmt{}
-	for _, fact := range defPropStmt.DomFacts {
+	for _, fact := range defPropStmt.DomFactsOrNil {
 		newFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, err
@@ -141,7 +141,7 @@ func (defPropStmt *DefPropStmt) Instantiate(uniMap map[string]Obj) (Stmt, error)
 	}
 
 	newIffFacts := []FactStmt{}
-	for _, fact := range defPropStmt.IffFacts {
+	for _, fact := range defPropStmt.IffFactsOrNil {
 		newFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, err
@@ -150,7 +150,7 @@ func (defPropStmt *DefPropStmt) Instantiate(uniMap map[string]Obj) (Stmt, error)
 	}
 
 	newThenFacts := []FactStmt{}
-	for _, fact := range defPropStmt.ImplicationFacts {
+	for _, fact := range defPropStmt.ImplicationFactsOrNil {
 		newFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, err
@@ -701,6 +701,18 @@ func (stmt *ProveForStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 		return nil, err
 	}
 	return NewProveForStmt(stmt.Param, newLeft, newRight, stmt.IsProveIRange, newDomFacts, newThenFacts, newProofs, stmt.Line), nil
+}
+
+func (stmt *ProveImplicationStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+	newImplicationFacts, err := stmt.ImplicationFact.InstantiateFact(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newProofs, err := stmt.Proof.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewProveImplicationStmt(stmt.ImplicationName, stmt.Params, newImplicationFacts, newProofs, stmt.Line), nil
 }
 
 func (stmt *ClaimIffStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {

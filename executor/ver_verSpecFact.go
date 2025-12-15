@@ -21,7 +21,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verNotTrueEqualSpecFact(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) verNormalSpecFact(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	ret := ver.verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt, state)
 	if ret.IsTrue() || ret.IsErr() {
 		return ret
@@ -179,7 +179,7 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 		return NewEmptyExecUnknown()
 	}
 
-	if len(curDefStmt.IffFacts) == 0 {
+	if len(curDefStmt.IffFactsOrNil) == 0 {
 		// REMARK: 如果IFFFacts不存在，那我们认为是 没有iff能验证prop，而不是prop自动成立
 		return NewEmptyExecUnknown()
 	}
@@ -387,7 +387,7 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *Ver
 		return NewEmptyExecUnknown()
 	}
 
-	if len(defStmt.IffFacts) == 0 {
+	if len(defStmt.IffFactsOrNil) == 0 {
 		// REMARK: 如果IFFFacts不存在，那我们认为是 没有iff能验证prop，而不是prop自动成立
 		return NewEmptyExecUnknown()
 	}

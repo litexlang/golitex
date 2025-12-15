@@ -307,3 +307,7 @@ func NewHaveObjFromCartSetStmt(objName string, cartSet *FnObj, equalTo Obj, line
 func NewHaveCartWithDimStmt(objName string, cartDim Obj, param string, facts FactStmtSlice, proofs StmtSlice, equalTo Obj, line uint) *HaveCartWithDimStmt {
 	return &HaveCartWithDimStmt{objName, cartDim, param, facts, proofs, equalTo, line}
 }
+
+func NewProveImplicationStmt(implicationName string, params StrSlice, implicationFact FactStmtSlice, proof StmtSlice, line uint) *ProveImplicationStmt {
+	return &ProveImplicationStmt{implicationName, params, implicationFact, proof, line}
+}

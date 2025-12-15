@@ -38,10 +38,10 @@ type DefHeader struct {
 }
 
 type DefPropStmt struct {
-	DefHeader        *DefHeader
-	DomFacts         FactStmtSlice
-	IffFacts         FactStmtSlice
-	ImplicationFacts FactStmtSlice
+	DefHeader             *DefHeader
+	DomFactsOrNil         FactStmtSlice
+	IffFactsOrNil         FactStmtSlice
+	ImplicationFactsOrNil FactStmtSlice
 
 	Line uint
 }

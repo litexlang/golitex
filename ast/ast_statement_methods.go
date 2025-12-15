@@ -60,14 +60,14 @@ func (defStmt *DefPropStmt) Make_PropToIff_IffToProp() (*UniFactStmt, *UniFactSt
 
 	// prop to iff
 	propToIffDomFacts := []FactStmt{propSpecFact}
-	propToIffDomFacts = append(propToIffDomFacts, defStmt.DomFacts...)
+	propToIffDomFacts = append(propToIffDomFacts, defStmt.DomFactsOrNil...)
 
-	propToIff := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.ParamSets, propToIffDomFacts, defStmt.IffFacts, defStmt.Line)
+	propToIff := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.ParamSets, propToIffDomFacts, defStmt.IffFactsOrNil, defStmt.Line)
 
 	// iff to prop
 	IffToPropDomFacts := []FactStmt{}
-	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.DomFacts...)
-	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.IffFacts...)
+	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.DomFactsOrNil...)
+	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.IffFactsOrNil...)
 
 	IffToProp := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.ParamSets, IffToPropDomFacts, []FactStmt{propSpecFact}, defStmt.Line)
 
@@ -83,8 +83,8 @@ func (defStmt *DefPropStmt) IffToPropUniFact() *UniFactStmt {
 	propSpecFact := NewSpecFactStmt(TruePure, Atom(defStmt.DefHeader.Name), propSpecFactParams, defStmt.Line)
 
 	IffToPropDomFacts := []FactStmt{}
-	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.DomFacts...)
-	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.IffFacts...)
+	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.DomFactsOrNil...)
+	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.IffFactsOrNil...)
 
 	IffToProp := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.ParamSets, IffToPropDomFacts, []FactStmt{propSpecFact}, defStmt.Line)
 

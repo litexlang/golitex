@@ -214,21 +214,21 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool
 		paramMap[param] = struct{}{}
 	}
 
-	for _, fact := range stmt.DomFacts {
+	for _, fact := range stmt.DomFactsOrNil {
 		for _, param := range ast.ExtractParamsFromFact(fact) {
 			if _, ok := paramMap[param]; ok {
 				return NewExecErr(fmt.Sprintf("param %s in %s\n is already declared in def header %s and should not be redeclared", param, fact.String(), ast.HeaderWithParamsAndParamSetsString(stmt.DefHeader)))
 			}
 		}
 	}
-	for _, fact := range stmt.IffFacts {
+	for _, fact := range stmt.IffFactsOrNil {
 		for _, param := range ast.ExtractParamsFromFact(fact) {
 			if _, ok := paramMap[param]; ok {
 				return NewExecErr(fmt.Sprintf("param %s in %s\nshould not be redeclared in def header %s", param, fact.String(), ast.HeaderWithParamsAndParamSetsString(stmt.DefHeader)))
 			}
 		}
 	}
-	for _, fact := range stmt.ImplicationFacts {
+	for _, fact := range stmt.ImplicationFactsOrNil {
 		for _, param := range ast.ExtractParamsFromFact(fact) {
 			if _, ok := paramMap[param]; ok {
 				return NewExecErr(fmt.Sprintf("param %s in %s\nshould not be redeclared in def header %s", param, fact.String(), ast.HeaderWithParamsAndParamSetsString(stmt.DefHeader)))
@@ -236,7 +236,7 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool
 		}
 	}
 
-	if len(stmt.IffFacts) == 0 {
+	if len(stmt.IffFactsOrNil) == 0 {
 		return NewExecTrue(stmt.String())
 	}
 
@@ -423,7 +423,7 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) ExecRet {
 		return execRet
 	}
 
-	if len(stmt.Prop.IffFacts) == 0 {
+	if len(stmt.Prop.IffFactsOrNil) == 0 {
 		_, iffToProp, err := stmt.Prop.Make_PropToIff_IffToProp()
 		if err != nil {
 			return NewExecErr(err.Error())
@@ -439,14 +439,14 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) ExecRet {
 		paramsAsObj = append(paramsAsObj, ast.Atom(stmt.Prop.DefHeader.Params[i]))
 	}
 
-	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.Prop.DefHeader.Name), paramsAsObj, stmt.Line)}, stmt.Prop.ImplicationFacts, stmt.Line)
+	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.Prop.DefHeader.Name), paramsAsObj, stmt.Line)}, stmt.Prop.ImplicationFactsOrNil, stmt.Line)
 
 	ret := exec.Env.NewFact(uniFact)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}
 
-	uniFact2 := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFacts, stmt.Prop.ImplicationFacts, stmt.Line)
+	uniFact2 := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFactsOrNil, stmt.Prop.ImplicationFactsOrNil, stmt.Line)
 	ret = exec.Env.NewFact(uniFact2)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
@@ -513,7 +513,7 @@ func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) ExecRet {
 }
 
 func (exec *Executor) namedUniFactStmt(stmt *ast.NamedUniFactStmt) ExecRet {
-	uniFact := ast.NewUniFact(stmt.DefPropStmt.DefHeader.Params, stmt.DefPropStmt.DefHeader.ParamSets, stmt.DefPropStmt.IffFacts, stmt.DefPropStmt.ImplicationFacts, stmt.Line)
+	uniFact := ast.NewUniFact(stmt.DefPropStmt.DefHeader.Params, stmt.DefPropStmt.DefHeader.ParamSets, stmt.DefPropStmt.IffFactsOrNil, stmt.DefPropStmt.ImplicationFactsOrNil, stmt.Line)
 	execState := exec.factStmt(uniFact)
 	if execState.IsNotTrue() {
 		return execState
@@ -645,7 +645,7 @@ func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitiveP
 	}
 
 	// 这里最好检查一下，是不是 Param set 依赖了 Param，如果依赖了，那其实是要报错了，不过暂时不管了
-	execState := exec.defLetStmt(ast.NewDefLetStmt(stmt.Params, []ast.Obj{def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[0]}, def.DomFacts, stmt.Line))
+	execState := exec.defLetStmt(ast.NewDefLetStmt(stmt.Params, []ast.Obj{def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[0]}, def.DomFactsOrNil, stmt.Line))
 	if execState.IsNotTrue() {
 		return fmt.Errorf(execState.String())
 	}
@@ -659,7 +659,7 @@ func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitiveP
 		return fmt.Errorf(ret.String())
 	}
 
-	if len(def.DomFacts) > 0 {
+	if len(def.DomFactsOrNil) > 0 {
 		return fmt.Errorf("dom facts are not allowed in %s", glob.KeywordProveIsTransitiveProp)
 	}
 
