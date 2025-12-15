@@ -191,12 +191,6 @@ func (env *Env) newPureFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 		return ret
 	}
 
-	if fact.PropName == glob.KeywordEqualSet {
-		ret := env.equalSetFactPostProcess(fact)
-		// Inherit derived facts from equal set post-processing
-		return ret
-	}
-
 	propDef := env.GetPropDef(fact.PropName)
 
 	if propDef != nil {
@@ -254,6 +248,23 @@ func (env *Env) equalSetFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 		return glob.NewGlobTrueWithMsgs(derivedFacts)
 	}
 	return glob.NewGlobTrue("")
+}
+
+// equalTupleFactPostProcess handles postprocessing for equal_tuple(a, b, dim) facts
+// It automatically derives a[i] = b[i] for i from 1 to dim
+func (env *Env) equalTupleFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
+	if len(fact.Params) != 3 {
+		return glob.ErrRet(fmt.Errorf("equal_tuple fact expect 3 parameters, get %d in %s", len(fact.Params), fact))
+	}
+
+	equalFact := ast.NewEqualFact(fact.Params[0], fact.Params[1])
+
+	ret := env.NewFact(equalFact)
+	if ret.IsErr() {
+		return ret
+	}
+
+	return ret
 }
 
 func (env *Env) newTruePureFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) glob.GlobRet {
@@ -358,11 +369,24 @@ func (env *Env) newFalseExistFact_EmitEquivalentUniFact(fact *ast.SpecFactStmt) 
 
 // have(exist ... st ...) => exist
 func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
-	_, factParams := ast.GetExistFactExistParamsAndFactParams(fact)
+	existParams, factParams := ast.GetExistFactExistParamsAndFactParams(fact)
 
 	existFact := ast.NewSpecFactStmt(ast.TruePure, fact.PropName, factParams, fact.Line)
 
 	// err := env.KnownFacts.SpecFactMem.NewFactInSpecFactMem(existFact, env.CurMatchEnv)
+	if fact.PropName == glob.KeywordItemExistsIn {
+		ret := env.storeSpecFactInMem(existFact)
+		if ret.IsErr() {
+			return ret
+		}
+		inFact := ast.NewInFactWithObj(existParams[0], factParams[0])
+		ret = env.NewFact(inFact)
+		if ret.IsErr() {
+			return ret
+		}
+		return glob.NewGlobTrue("")
+	}
+
 	ret := env.storeSpecFactInMem(existFact)
 	if ret.IsErr() {
 		return ret
@@ -473,10 +497,10 @@ func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) glob.GlobRet {
 	}
 
 	// 处理 x = {x Z: x > 5} 的情况
-	ret = env.equalFactPostProcess_SetBuilderEquality(fact.Params[0], fact.Params[1])
-	if ret.IsErr() {
-		return ret
-	}
+	// ret = env.equalFactPostProcess_SetBuilderEquality(fact.Params[0], fact.Params[1])
+	// if ret.IsErr() {
+	// 	return ret
+	// }
 
 	return glob.NewGlobTrue("")
 }
@@ -661,56 +685,56 @@ func (env *Env) newEqualsFactNoPostProcess(stmt *ast.EqualsFactStmt) glob.GlobRe
 
 // equalFactPostProcess_SetBuilderEquality 处理 x = {param parentSet: facts} 的情况
 // 如果右边是 set builder（直接或通过 equal facts），则断言 left 满足 set builder 的所有条件
-func (env *Env) equalFactPostProcess_SetBuilderEquality(left, right ast.Obj) glob.GlobRet {
-	// 尝试获取 set builder（可能是直接的，也可能是通过 equal facts 得到的）
-	setBuilderObj := env.GetSetBuilderEqualToObj(right)
-	if setBuilderObj == nil {
-		return glob.NewGlobTrue("")
-	}
+// func (env *Env) equalFactPostProcess_SetBuilderEquality(left, right ast.Obj) glob.GlobRet {
+// 	// 尝试获取 set builder（可能是直接的，也可能是通过 equal facts 得到的）
+// 	setBuilderObj := env.GetSetBuilderEqualToObj(right)
+// 	if setBuilderObj == nil {
+// 		return glob.NewGlobTrue("")
+// 	}
 
-	// 从 set builder 中提取 param, parentSet, facts
-	setBuilderStruct, err := setBuilderObj.ToSetBuilderStruct()
-	if err != nil {
-		return glob.ErrRet(fmt.Errorf("failed to extract set builder information: %s", err))
-	}
+// 	// 从 set builder 中提取 param, parentSet, facts
+// 	setBuilderStruct, err := setBuilderObj.ToSetBuilderStruct()
+// 	if err != nil {
+// 		return glob.ErrRet(fmt.Errorf("failed to extract set builder information: %s", err))
+// 	}
 
-	// 1. 断言 left 是 parentSet 的子集
-	subsetOfFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordSubsetOf), []ast.Obj{left, setBuilderStruct.ParentSet}, glob.BuiltinLine)
-	ret := env.NewFact(subsetOfFact)
-	if ret.IsErr() {
-		return ret
-	}
+// 	// 1. 断言 left 是 parentSet 的子集
+// 	subsetOfFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordSubsetOf), []ast.Obj{left, setBuilderStruct.ParentSet}, glob.BuiltinLine)
+// 	ret := env.NewFact(subsetOfFact)
+// 	if ret.IsErr() {
+// 		return ret
+// 	}
 
-	// 2. 创建 forall 语句：forall param in left: facts
-	// 这表示对于所有在 left 中的元素（用 param 表示），它们都满足 facts
-	// 将 SpecFactPtrSlice 转换为 FactStmtSlice
-	thenFacts := make([]ast.FactStmt, len(setBuilderStruct.Facts))
-	for i, fact := range setBuilderStruct.Facts {
-		thenFacts[i] = fact
-	}
-	uniFact := ast.NewUniFact(
-		[]string{setBuilderStruct.Param}, // params
-		[]ast.Obj{left},                  // paramSets: param 在 left 中
-		[]ast.FactStmt{},                 // domFacts: 空域条件
-		thenFacts,                        // thenFacts: 所有 facts
-		glob.BuiltinLine,
-	)
-	ret = env.NewFact(uniFact)
-	if ret.IsErr() {
-		return ret
-	}
+// 	// 2. 创建 forall 语句：forall param in left: facts
+// 	// 这表示对于所有在 left 中的元素（用 param 表示），它们都满足 facts
+// 	// 将 SpecFactPtrSlice 转换为 FactStmtSlice
+// 	thenFacts := make([]ast.FactStmt, len(setBuilderStruct.Facts))
+// 	for i, fact := range setBuilderStruct.Facts {
+// 		thenFacts[i] = fact
+// 	}
+// 	uniFact := ast.NewUniFact(
+// 		[]string{setBuilderStruct.Param}, // params
+// 		[]ast.Obj{left},                  // paramSets: param 在 left 中
+// 		[]ast.FactStmt{},                 // domFacts: 空域条件
+// 		thenFacts,                        // thenFacts: 所有 facts
+// 		glob.BuiltinLine,
+// 	)
+// 	ret = env.NewFact(uniFact)
+// 	if ret.IsErr() {
+// 		return ret
+// 	}
 
-	// 反过来，所有的 在 parent set 的，如果满足 facts，则它们在 left 中
-	uniFact = ast.NewUniFact(
-		[]string{setBuilderStruct.Param},      // params
-		[]ast.Obj{setBuilderStruct.ParentSet}, // paramSets: param 在 parent set 中
-		thenFacts,                             // thenFacts: 所有 facts
-		[]ast.FactStmt{ast.NewInFact(setBuilderStruct.Param, left)}, // domFacts: 空域条件
-		glob.BuiltinLine,
-	)
-	ret = env.NewFact(uniFact)
-	if ret.IsErr() {
-		return ret
-	}
-	return glob.NewGlobTrue("")
-}
+// 	// 反过来，所有的 在 parent set 的，如果满足 facts，则它们在 left 中
+// 	uniFact = ast.NewUniFact(
+// 		[]string{setBuilderStruct.Param},      // params
+// 		[]ast.Obj{setBuilderStruct.ParentSet}, // paramSets: param 在 parent set 中
+// 		thenFacts,                             // thenFacts: 所有 facts
+// 		[]ast.FactStmt{ast.NewInFact(setBuilderStruct.Param, left)}, // domFacts: 空域条件
+// 		glob.BuiltinLine,
+// 	)
+// 	ret = env.NewFact(uniFact)
+// 	if ret.IsErr() {
+// 		return ret
+// 	}
+// 	return glob.NewGlobTrue("")
+// }

@@ -67,6 +67,18 @@ func (env *Env) BuiltinPropExceptEqualPostProcess(fact *ast.SpecFactStmt) glob.G
 		}
 	}
 
+	if fact.PropName == glob.KeywordEqualSet && fact.TypeEnum == ast.TruePure {
+		ret := env.equalSetFactPostProcess(fact)
+		// Inherit derived facts from equal set post-processing
+		return ret
+	}
+
+	if fact.PropName == glob.KeywordEqualTuple && fact.TypeEnum == ast.TruePure {
+		ret := env.equalTupleFactPostProcess(fact)
+		// Inherit derived facts from equal tuple post-processing
+		return ret
+	}
+
 	return glob.NewEmptyGlobUnknown()
 }
 

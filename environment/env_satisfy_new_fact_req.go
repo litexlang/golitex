@@ -121,11 +121,9 @@ func (env *Env) AtomObjsInUniFactDefined(stmt *ast.UniFactStmt, extraParams map[
 
 	// Check param sets
 	for i, paramSet := range stmt.ParamSets {
-		atoms := ast.GetAtomObjsInObj(paramSet)
-		for _, atom := range atoms {
-			if ret := env.IsAtomDefinedByOrBuiltinOrSetNonemptySetFiniteSet(atom, combinedParams); ret.IsNotTrue() {
-				return ret
-			}
+		ret := env.AtomsInObjDefinedOrBuiltinOrSetNonemptySetFiniteSet(paramSet, combinedParams)
+		if ret.IsNotTrue() {
+			return ret
 		}
 
 		if _, ok := combinedParams[stmt.Params[i]]; ok {
