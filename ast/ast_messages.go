@@ -616,7 +616,7 @@ func (stmt *ImportFileStmt) String() string {
 
 func (stmt *DefPropStmt) ToNamedUniFactString() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeySymbolAt)
+	builder.WriteString(glob.KeywordImplication)
 	builder.WriteString(stmt.DefHeader.String())
 	builder.WriteString(glob.KeySymbolColon)
 	builder.WriteByte('\n')

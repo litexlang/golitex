@@ -30,15 +30,15 @@ func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 	// }
 
 	if stmt.NameIs(glob.KeywordIsASet) && stmt.TypeEnum == ast.TruePure {
-		return ver.verIsASetByBuiltinRules(stmt, state)
+		return ver.verIsASetByBuiltinRules(stmt)
 	}
 
 	if stmt.NameIs(glob.KeywordIsAFiniteSet) && stmt.TypeEnum == ast.TruePure {
-		return ver.verIsAFiniteSetByBuiltinRules(stmt, state)
+		return ver.verIsAFiniteSetByBuiltinRules(stmt)
 	}
 
 	if stmt.NameIs(glob.KeywordIsANonEmptySet) && stmt.TypeEnum == ast.TruePure {
-		return ver.verIsANonEmptySetByBuiltinRules(stmt, state)
+		return ver.verIsANonEmptySetByBuiltinRules(stmt)
 	}
 
 	// if stmt.NameIs(glob.KeywordItemExistsIn) && stmt.TypeEnum == ast.TruePure {
@@ -258,7 +258,7 @@ func (ver *Verifier) verEqualSetByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 }
 
 // TODO: 理论上任何obj都是set了现在，因为现在set不再是obj了
-func (ver *Verifier) verIsASetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) verIsASetByBuiltinRules(stmt *ast.SpecFactStmt) ExecRet {
 	if len(stmt.Params) != 1 {
 		return NewExecErr(fmt.Sprintf("is_a_set expects 1 parameter, got %d", len(stmt.Params)))
 	}
@@ -267,10 +267,10 @@ func (ver *Verifier) verIsASetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerS
 		return NewEmptyExecUnknown()
 	}
 
-	return ver.maybeAddSuccessMsgString(state, stmt.String(), "In ZFC set theory, everything except set itself is a set. In Litex, any object except set, nonempty_set, finite_set is a set.", NewEmptyExecTrue())
+	return ver.maybeAddSuccessMsgString(nil, stmt.String(), "In ZFC set theory, everything except set itself is a set. In Litex, any object except set, nonempty_set, finite_set is a set.", NewEmptyExecTrue())
 }
 
-func (ver *Verifier) verIsAFiniteSetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) verIsAFiniteSetByBuiltinRules(stmt *ast.SpecFactStmt) ExecRet {
 	if len(stmt.Params) != 1 {
 		return NewExecErr(fmt.Sprintf("is_a_finite_set expects 1 parameter, got %d", len(stmt.Params)))
 	}
@@ -279,12 +279,10 @@ func (ver *Verifier) verIsAFiniteSetByBuiltinRules(stmt *ast.SpecFactStmt, state
 		return NewExecTrue("A list set is a finite set.")
 	}
 
-	_ = state
-
 	return NewEmptyExecUnknown()
 }
 
-func (ver *Verifier) verIsANonEmptySetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) verIsANonEmptySetByBuiltinRules(stmt *ast.SpecFactStmt) ExecRet {
 	if len(stmt.Params) != 1 {
 		return NewExecErr(fmt.Sprintf("is_a_nonempty_set expects 1 parameter, got %d", len(stmt.Params)))
 	}

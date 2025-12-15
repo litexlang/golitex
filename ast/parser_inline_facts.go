@@ -346,20 +346,20 @@ func (p *TbParser) thenFacts_SkipEnd_Semicolon_or_EOL(tb *tokenBlock, ends []str
 	}
 }
 
-func (p *TbParser) inlineDomFactInUniFactInterface(tb *tokenBlock, ends []string) ([]FactStmt, error) {
-	facts := []FactStmt{}
-	for {
-		specFact, err := p.inlineFactThenSkipStmtTerminatorUntilEndSignals(tb, ends)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-		facts = append(facts, specFact)
-		if tb.header.is(glob.KeySymbolRightArrow) {
-			tb.header.skip(glob.KeySymbolRightArrow)
-			return facts, nil
-		}
-	}
-}
+// func (p *TbParser) inlineDomFactInUniFactInterface(tb *tokenBlock, ends []string) ([]FactStmt, error) {
+// 	facts := []FactStmt{}
+// 	for {
+// 		specFact, err := p.inlineFactThenSkipStmtTerminatorUntilEndSignals(tb, ends)
+// 		if err != nil {
+// 			return nil, ErrInLine(err, tb)
+// 		}
+// 		facts = append(facts, specFact)
+// 		if tb.header.is(glob.KeySymbolRightArrow) {
+// 			tb.header.skip(glob.KeySymbolRightArrow)
+// 			return facts, nil
+// 		}
+// 	}
+// }
 
 func (p *TbParser) inlineDomFactInUniFactInterface_WithoutSkippingEnd(tb *tokenBlock, ends []string) ([]FactStmt, error) {
 	facts := []FactStmt{}

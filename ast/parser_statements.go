@@ -68,7 +68,7 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 		ret, err = p.proveStmt(tb)
 	case glob.KeywordKnow:
 		{
-			if tb.TokenAtHeaderIndexIs(1, glob.KeySymbolAt) {
+			if tb.TokenAtHeaderIndexIs(1, glob.KeywordImplication) {
 				if tb.TokenAtHeaderIndexIs(2, glob.KeywordExist) {
 					ret, err = p.knowExistPropStmt(tb)
 				} else {
@@ -84,8 +84,6 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 		ret, err = p.proveCaseByCaseStmt(tb)
 	case glob.KeywordProveByEnum:
 		ret, err = p.proveByEnum(tb)
-	// case glob.KeySymbolAt:
-	// 	ret, err = p.namedUniFactStmt(tb)
 	case glob.KeywordFnTemplate:
 		ret, err = p.fnTemplateStmt(tb)
 	case glob.KeywordClear:
@@ -922,7 +920,7 @@ func (p *TbParser) claimStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	if tb.body[0].header.is(glob.KeySymbolAt) {
+	if tb.body[0].header.is(glob.KeywordImplication) {
 		if tb.body[0].header.strAtCurIndexPlus(1) == glob.KeywordExist {
 			return p.claimExistPropStmt(tb)
 		} else {
@@ -3067,7 +3065,7 @@ func (p *TbParser) dom_and_section(tb *tokenBlock, kw string, kw_should_not_exis
 // func (p *TbParser) claimNamedUniFactInline(tb *tokenBlock) (Stmt, error) {
 // 	var implicationStmt *ImplicationStmt
 
-// 	if tb.header.is(glob.Impli) {
+// 	if tb.header.is(glob.KeySymbolRightArrow) {
 // 		// 有点小问题，最好必须要规定是named inline
 // 		namedUniFactResult, err := p.namedUniFactStmt(tb)
 // 		if err != nil {
@@ -3349,7 +3347,7 @@ func (p *TbParser) bodyOfKnowProp(tb *tokenBlock) ([]FactStmt, []FactStmt, error
 }
 
 func (p *TbParser) atExistPropDefStmt(tb *tokenBlock) (*DefExistPropStmt, error) {
-	err := tb.header.skip(glob.KeySymbolAt)
+	err := tb.header.skip(glob.KeywordImplication)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
