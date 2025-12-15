@@ -311,3 +311,7 @@ func NewHaveCartWithDimStmt(objName string, cartDim Obj, param string, facts Fac
 func NewProveImplicationStmt(implicationName string, params StrSlice, implicationFact FactStmtSlice, proof StmtSlice, line uint) *ProveImplicationStmt {
 	return &ProveImplicationStmt{implicationName, params, implicationFact, proof, line}
 }
+
+func NewImplicationStmt(defHeader *DefHeader, domFacts FactStmtSlice, implicationFacts FactStmtSlice, line uint) *ImplicationStmt {
+	return &ImplicationStmt{defHeader, domFacts, implicationFacts, line}
+}

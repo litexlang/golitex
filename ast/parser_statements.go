@@ -116,6 +116,8 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 		ret, err = p.importStmt(tb)
 	case glob.KeywordProveImplication:
 		ret, err = p.proveImplicationStmt(tb)
+	case glob.KeywordImplication:
+		ret, err = p.implicationStmt(tb)
 	default:
 		ret, err = p.factsStmt(tb)
 	}
@@ -184,11 +186,11 @@ func (p *TbParser) defPropStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStm
 			if err != nil {
 				return nil, ErrInLine(err, tb)
 			}
-			unitFacts, err := p.inlineFacts_checkUniDepth1(tb, []string{})
+			iffFacts, err := p.inlineFacts_checkUniDepth1(tb, []string{})
 			if err != nil {
 				return nil, ErrInLine(err, tb)
 			}
-			return NewDefPropStmt(declHeader, nil, unitFacts, nil, tb.line), nil
+			return NewDefPropStmt(declHeader, nil, iffFacts, nil, tb.line), nil
 		} else {
 			return nil, fmt.Errorf("expect ':' or end of block")
 		}
@@ -2125,6 +2127,101 @@ func (p *TbParser) proveImplicationStmt(tb *tokenBlock) (Stmt, error) {
 	}
 
 	return NewProveImplicationStmt(implicationName, params, implicationFacts, proofs, tb.line), nil
+}
+
+func (p *TbParser) implicationStmt(tb *tokenBlock) (Stmt, error) {
+	body, err := p.implicationStmtWithoutSelfReferCheck(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	err = NoSelfReferenceInPropDef(string(body.DefHeader.Name), append(body.DomFacts, body.ImplicationFacts...))
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	err = p.NewDefinedNameInCurrentParseEnv(string(body.DefHeader.Name))
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	return body, nil
+}
+
+func (p *TbParser) implicationStmtWithoutSelfReferCheck(tb *tokenBlock) (*ImplicationStmt, error) {
+	err := tb.header.skip(glob.KeywordImplication)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	declHeader, err := p.defHeaderWithoutParsingColonAtEnd_MustFollowWithFreeParamCheck(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	// Add implication params to FreeParams
+	for _, param := range declHeader.Params {
+		if _, ok := p.FreeParams[param]; ok {
+			return nil, ErrInLine(fmt.Errorf("parameter %s in implication definition conflicts with a free parameter in the outer scope", param), tb)
+		}
+		p.FreeParams[param] = struct{}{}
+	}
+
+	// Defer: remove the params we added when leaving this implication scope
+	defer func() {
+		for _, param := range declHeader.Params {
+			delete(p.FreeParams, param)
+		}
+	}()
+
+	if !tb.header.is(glob.KeySymbolColon) {
+		if tb.header.ExceedEnd() {
+			return NewImplicationStmt(declHeader, nil, nil, tb.line), nil
+		} else {
+			return nil, fmt.Errorf("expect ':' or end of block")
+		}
+	}
+
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	if tb.header.ExceedEnd() {
+		// Parse dom and implication sections (no iff)
+		// Third parameter is empty string because => can appear at the end (when there's no dom section)
+		domFacts, implicationFacts, err := p.dom_and_section(tb, glob.KeySymbolRightArrow, "")
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		// Check that dom and implication facts don't reference the same prop name
+		for _, fact := range domFacts {
+			if factAsSpecFact, ok := fact.(*SpecFactStmt); ok {
+				if string(factAsSpecFact.PropName) == string(declHeader.Name) {
+					return nil, fmt.Errorf("dom fact cannot be the same as the implication being defined")
+				}
+			}
+		}
+
+		for _, fact := range implicationFacts {
+			if factAsSpecFact, ok := fact.(*SpecFactStmt); ok {
+				if string(factAsSpecFact.PropName) == string(declHeader.Name) {
+					return nil, fmt.Errorf("implication fact cannot be the same as the implication being defined")
+				}
+			}
+		}
+
+		return NewImplicationStmt(declHeader, domFacts, implicationFacts, tb.line), nil
+	} else {
+		// Inline format: parse dom and implication facts
+		domFacts, implicationFacts, err := p.bodyOfInlineDomAndThen(tb, glob.KeySymbolRightArrow, []string{})
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		return NewImplicationStmt(declHeader, domFacts, implicationFacts, tb.line), nil
+	}
 }
 
 func (p *TbParser) factsStmt(tb *tokenBlock) (Stmt, error) {

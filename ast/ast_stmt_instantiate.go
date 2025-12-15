@@ -715,6 +715,33 @@ func (stmt *ProveImplicationStmt) Instantiate(uniMap map[string]Obj) (Stmt, erro
 	return NewProveImplicationStmt(stmt.ImplicationName, stmt.Params, newImplicationFacts, newProofs, stmt.Line), nil
 }
 
+func (stmt *ImplicationStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+	newDefHeader, err := stmt.DefHeader.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+
+	newDomFacts := []FactStmt{}
+	for _, fact := range stmt.DomFacts {
+		newFact, err := fact.InstantiateFact(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newDomFacts = append(newDomFacts, newFact)
+	}
+
+	newImplicationFacts := []FactStmt{}
+	for _, fact := range stmt.ImplicationFacts {
+		newFact, err := fact.InstantiateFact(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newImplicationFacts = append(newImplicationFacts, newFact)
+	}
+
+	return NewImplicationStmt(newDefHeader, newDomFacts, newImplicationFacts, stmt.Line), nil
+}
+
 func (stmt *ClaimIffStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newUniFactWithIffStmt, err := stmt.UniFactWithIffStmt.InstantiateFact(uniMap)
 	if err != nil {

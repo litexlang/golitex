@@ -870,6 +870,11 @@ func (s *ProveImplicationStmt) ToLatexString() string {
 	return s.String()
 }
 
+func (s *ImplicationStmt) ToLatexString() string {
+	// TODO: implement LaTeX conversion for implication
+	return s.String()
+}
+
 func (s *ProveIsTransitivePropStmt) ToLatexString() string {
 	return s.String()
 }
