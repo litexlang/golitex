@@ -1,4 +1,5 @@
-prove:
-    have a cart(R, R) = (1, 2)
-    have b cart(R, R) = (1, 2)
-    $equal_tuple(a, b, 2)
+not (1 + 0.5) $in Z
+not (3 / 2) $in Z
+not (-1 * 1) $in N_pos
+not (2 - 3) $in N_pos
+not (1 - 1) $in N_pos

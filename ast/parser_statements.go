@@ -1470,6 +1470,11 @@ func (p *TbParser) clearStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, fmt.Errorf("expect end of line")
 	}
 
+	// 把当前的 parser 里的名字都删了
+	p.FreeParams = make(map[string]struct{})
+	p.DefinedNamesAtEachParseEnv = NewDefinedNameAtEachParseEnv()
+	p.AllDefinedNamesExceptPkgNames = make(map[string]struct{})
+
 	return NewClearStmt(tb.line), nil
 }
 

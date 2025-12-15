@@ -21,20 +21,20 @@ import (
 
 // TODO: 这里要让 parse obj 的时候，能读入 pkgName 这样parse的时候，自动把这个名字写成 defaultPkgName.name 的形式，就会很好 =，很方便我跨包引用，顺便能检查是否重复定义了
 type TbParser struct {
-	FreeParams                 map[string]struct{}
-	PkgPathNameMgr             *pkgMgr.PathNameMgr
-	CurPkgPath                 string
-	DefinedNamesAtEachParseEnv DefinedNameAtEachParseEnv
-	AllDefinedNames            map[string]struct{}
+	FreeParams                    map[string]struct{}
+	PkgPathNameMgr                *pkgMgr.PathNameMgr
+	CurPkgPath                    string
+	DefinedNamesAtEachParseEnv    DefinedNameAtEachParseEnv
+	AllDefinedNamesExceptPkgNames map[string]struct{}
 }
 
 func NewTbParser(curPkgName string, pkgPathNameMgr *pkgMgr.PathNameMgr) *TbParser {
 	return &TbParser{
-		FreeParams:                 make(map[string]struct{}),
-		PkgPathNameMgr:             pkgPathNameMgr,
-		CurPkgPath:                 curPkgName,
-		DefinedNamesAtEachParseEnv: NewDefinedNameAtEachParseEnv(),
-		AllDefinedNames:            make(map[string]struct{}),
+		FreeParams:                    make(map[string]struct{}),
+		PkgPathNameMgr:                pkgPathNameMgr,
+		CurPkgPath:                    curPkgName,
+		DefinedNamesAtEachParseEnv:    NewDefinedNameAtEachParseEnv(),
+		AllDefinedNamesExceptPkgNames: make(map[string]struct{}),
 	}
 }
 
@@ -49,8 +49,14 @@ func NewDefinedNameAtEachParseEnv() DefinedNameAtEachParseEnv {
 }
 
 func (p *TbParser) IsNameDefinedInCurrentParseEnv(name string) bool {
-	_, ok := p.AllDefinedNames[name]
-	return ok
+	_, ok := p.AllDefinedNamesExceptPkgNames[name]
+	if ok {
+		return true
+	}
+	if _, ok := p.PkgPathNameMgr.NamePathMap[name]; ok {
+		return true
+	}
+	return false
 }
 
 func (p *TbParser) NewParseEnv() {
@@ -58,10 +64,10 @@ func (p *TbParser) NewParseEnv() {
 }
 
 func (p *TbParser) NewDefinedNameInCurrentParseEnv(name string) error {
-	if _, ok := p.AllDefinedNames[name]; ok {
+	if _, ok := p.AllDefinedNamesExceptPkgNames[name]; ok {
 		return fmt.Errorf("name %s is already defined", name)
 	}
-	p.AllDefinedNames[name] = struct{}{}
+	p.AllDefinedNamesExceptPkgNames[name] = struct{}{}
 	p.DefinedNamesAtEachParseEnv.Names[len(p.DefinedNamesAtEachParseEnv.Names)-1][name] = struct{}{}
 	return nil
 }
@@ -71,7 +77,7 @@ func (p *TbParser) DeleteCurrentParseEnv() {
 		return // Don't delete the last ParseEnv to prevent empty slice
 	}
 	for name := range p.DefinedNamesAtEachParseEnv.Names[len(p.DefinedNamesAtEachParseEnv.Names)-1] {
-		delete(p.AllDefinedNames, name)
+		delete(p.AllDefinedNamesExceptPkgNames, name)
 	}
 	p.DefinedNamesAtEachParseEnv.Names = p.DefinedNamesAtEachParseEnv.Names[:len(p.DefinedNamesAtEachParseEnv.Names)-1]
 }
