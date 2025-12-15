@@ -20,17 +20,17 @@ import (
 
 func (env *Env) MakeUniFactParamsInThisDefPropDoNotConflictWithEnv(defPropStmt *ast.DefPropStmt) *ast.DefPropStmt {
 	newDomFacts := []ast.FactStmt{}
-	for _, domFact := range defPropStmt.DomFacts {
+	for _, domFact := range defPropStmt.DomFactsOrNil {
 		newDomFacts = append(newDomFacts, env.makeUniFactParamsInThisFactDoNotConflictWithEnv(domFact))
 	}
 
 	newIffFacts := []ast.FactStmt{}
-	for _, iffFact := range defPropStmt.IffFacts {
+	for _, iffFact := range defPropStmt.IffFactsOrNil {
 		newIffFacts = append(newIffFacts, env.makeUniFactParamsInThisFactDoNotConflictWithEnv(iffFact))
 	}
 
 	newThenFacts := []ast.FactStmt{}
-	for _, thenFact := range defPropStmt.ImplicationFacts {
+	for _, thenFact := range defPropStmt.ImplicationFactsOrNil {
 		newThenFacts = append(newThenFacts, env.makeUniFactParamsInThisFactDoNotConflictWithEnv(thenFact))
 	}
 
