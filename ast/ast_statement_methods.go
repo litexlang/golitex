@@ -166,7 +166,16 @@ func NewInFactWithParamObj(param Obj, paramSet Obj, line uint) *SpecFactStmt {
 }
 
 func NewInFactWithObj(param Obj, paramSet Obj) *SpecFactStmt {
-	return NewSpecFactStmt(TruePure, Atom(glob.KeywordIn), []Obj{param, paramSet}, glob.BuiltinLine)
+	switch string(paramSet.String()) {
+	case glob.KeywordSet:
+		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsASet), []Obj{param}, glob.BuiltinLine)
+	case glob.KeywordFiniteSet:
+		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsAFiniteSet), []Obj{param}, glob.BuiltinLine)
+	case glob.KeywordNonEmptySet:
+		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsANonEmptySet), []Obj{param}, glob.BuiltinLine)
+	default:
+		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIn), []Obj{param, paramSet}, glob.BuiltinLine)
+	}
 }
 
 func IsFnSet(obj Obj) bool {
