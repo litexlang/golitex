@@ -521,7 +521,7 @@ func (ver *Verifier) verEqualTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *
 
 		// 创建相等事实: left[i] = right[i]
 		indexEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{leftIndexed, rightIndexed}, glob.BuiltinLine)
-		verRet = ver.VerFactStmt(indexEqualFact, state)
+		verRet := ver.VerFactStmt(indexEqualFact, state)
 		if verRet.IsErr() {
 			return verRet
 		}

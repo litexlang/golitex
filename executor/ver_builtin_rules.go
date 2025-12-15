@@ -26,7 +26,7 @@ func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 	}
 
 	if stmt.NameIs(glob.KeywordItemExistsIn) && stmt.TypeEnum == ast.TrueExist_St {
-		return ver.verExistPropItemExistsInByBuiltinRules(stmt, state)
+		return ver.verTrueExistItemExistsInByBuiltinRules(stmt, state)
 	}
 
 	if stmt.NameIs(glob.KeywordItemExistsIn) && stmt.TypeEnum == ast.TruePure {
@@ -51,6 +51,14 @@ func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 
 	if stmt.NameIs(glob.KeywordEqualSet) && stmt.TypeEnum == ast.TruePure {
 		return ver.verEqualSetByBuiltinRules(stmt, state)
+	}
+
+	if stmt.NameIs(glob.KeywordEqualTuple) && stmt.TypeEnum == ast.TruePure {
+		return ver.verEqualTupleByBuiltinRules(stmt, state)
+	}
+
+	if stmt.NameIs(glob.KeywordIsTuple) && stmt.TypeEnum == ast.TruePure {
+		return ver.verIsTupleByBuiltinRules(stmt, state)
 	}
 
 	if verRet := ver.verNumberLogicRelaOpt_BuiltinRules(stmt, state); verRet.IsErr() {
@@ -365,8 +373,8 @@ func (ver *Verifier) verIsANonEmptySetByAllItemsInCartAreNonempty(cart ast.Obj, 
 	return ver.maybeAddSuccessMsgString(state, "", fmt.Sprintf("cart %s is a nonempty set because all its items are nonempty sets.", cart), NewEmptyExecTrue())
 }
 
-func (ver *Verifier) verExistPropItemExistsInByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	if len(stmt.Params) != 2 {
+func (ver *Verifier) verTrueExistItemExistsInByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	if len(stmt.Params) != 3 {
 		return NewExecErr(fmt.Sprintf("item_exists_in expects 2 parameters, got %d", len(stmt.Params)))
 	}
 
@@ -408,4 +416,27 @@ func (ver *Verifier) verTruePurePropItemExistsInByBuiltinRules(stmt *ast.SpecFac
 	}
 
 	return ver.maybeAddSuccessMsgString(state, stmt.String(), "item_exists_in is true because the set is a finite set and the count is greater than 0.", NewEmptyExecTrue())
+}
+
+func (ver *Verifier) verIsTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	if len(stmt.Params) != 1 {
+		return NewExecErr(fmt.Sprintf("is_tuple expects 1 parameter, got %d", len(stmt.Params)))
+	}
+
+	fnObj, ok := stmt.Params[0].(*ast.FnObj)
+	if !ok {
+		return NewEmptyExecUnknown()
+	}
+
+	if ast.IsTupleFnObj(fnObj) {
+		return NewEmptyExecTrue()
+	}
+
+	equalTo := ver.Env.GetObjTuple(stmt.Params[0])
+	if equalTo == nil {
+		return NewEmptyExecUnknown()
+	}
+
+	return NewEmptyExecTrue()
+
 }

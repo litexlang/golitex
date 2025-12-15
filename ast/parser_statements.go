@@ -478,13 +478,10 @@ func (p *TbParser) haveFnStmt(tb *tokenBlock) (Stmt, error) {
 			return nil, ErrInLine(err, tb)
 		}
 
-		proof := []Stmt{}
-		for _, block := range tb.body[1].body {
-			curStmt, err := p.Stmt(&block)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			proof = append(proof, curStmt)
+		// Use parseTbBodyAndGetStmts to create a new parse env for proof, so have statements in proof don't leak to outer scope
+		proof, err := p.parseTbBodyAndGetStmts(tb.body[1].body)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
 		}
 
 		err = tb.body[2].header.skip(glob.KeySymbolEqual)
@@ -523,13 +520,10 @@ func (p *TbParser) haveFnStmt(tb *tokenBlock) (Stmt, error) {
 				if err != nil {
 					return nil, ErrInLine(err, tb)
 				}
-				curProof := StmtSlice{}
-				for _, block := range tb.body[i].body {
-					curStmt, err := p.Stmt(&block)
-					if err != nil {
-						return nil, ErrInLine(err, tb)
-					}
-					curProof = append(curProof, curStmt)
+				// Use parseTbBodyAndGetStmts to create a new parse env for proof, so have statements in proof don't leak to outer scope
+				curProof, err := p.parseTbBodyAndGetStmts(tb.body[i].body)
+				if err != nil {
+					return nil, ErrInLine(err, tb)
 				}
 				proofs = append(proofs, curProof)
 			} else {
