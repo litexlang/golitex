@@ -911,10 +911,6 @@ func (p *TbParser) claimStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	// if !tb.header.is(glob.KeySymbolColon) {
-	// 	return p.claimNamedUniFactInline(tb)
-	// }
-
 	err = tb.header.skip(glob.KeySymbolColon)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
@@ -2802,7 +2798,7 @@ func (p *TbParser) defHeaderWithoutParsingColonAtEnd_MustFollowWithFreeParamChec
 		return nil, err
 	}
 
-	return NewDefHeader(Atom(name), params, setParams), nil
+	return NewDefHeader(name, params, setParams), nil
 }
 
 func (p *TbParser) uniFactBodyFacts(tb *tokenBlock, uniFactDepth uniFactEnum, defaultSectionName string) ([]FactStmt, []FactStmt, []FactStmt, error) {
