@@ -30,7 +30,7 @@ func (env *Env) MakeUniFactParamsInThisDefPropDoNotConflictWithEnv(defPropStmt *
 	}
 
 	newThenFacts := []ast.FactStmt{}
-	for _, thenFact := range defPropStmt.ThenFacts {
+	for _, thenFact := range defPropStmt.ImplicationFacts {
 		newThenFacts = append(newThenFacts, env.makeUniFactParamsInThisFactDoNotConflictWithEnv(thenFact))
 	}
 

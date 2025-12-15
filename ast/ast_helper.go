@@ -167,7 +167,7 @@ func (head DefHeader) ToSpecFact() *SpecFactStmt {
 }
 
 func (stmt *DefPropStmt) ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue() *UniFactStmt {
-	return NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, []FactStmt{stmt.DefHeader.ToSpecFact()}, stmt.ThenFacts, glob.BuiltinLine)
+	return NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, []FactStmt{stmt.DefHeader.ToSpecFact()}, stmt.ImplicationFacts, glob.BuiltinLine)
 }
 
 func (stmt *DefExistPropStmt) ToProp() *SpecFactStmt {
@@ -180,7 +180,7 @@ func (stmt *DefExistPropStmt) ToForallParamsSatisfyDomFacts_Then_ExistFactIsTrue
 }
 
 func (stmt *NamedUniFactStmt) ToUniFact() *UniFactStmt {
-	return NewUniFact(stmt.DefPropStmt.DefHeader.Params, stmt.DefPropStmt.DefHeader.ParamSets, stmt.DefPropStmt.IffFacts, stmt.DefPropStmt.ThenFacts, glob.BuiltinLine)
+	return NewUniFact(stmt.DefPropStmt.DefHeader.Params, stmt.DefPropStmt.DefHeader.ParamSets, stmt.DefPropStmt.IffFacts, stmt.DefPropStmt.ImplicationFacts, glob.BuiltinLine)
 }
 
 func (objFn *FnObj) IsObjFn_HasAtomHead_ReturnHead() (Atom, bool) {

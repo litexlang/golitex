@@ -150,7 +150,7 @@ func (defPropStmt *DefPropStmt) Instantiate(uniMap map[string]Obj) (Stmt, error)
 	}
 
 	newThenFacts := []FactStmt{}
-	for _, fact := range defPropStmt.ThenFacts {
+	for _, fact := range defPropStmt.ImplicationFacts {
 		newFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, err

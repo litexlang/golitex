@@ -378,7 +378,7 @@ func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt
 }
 
 func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimPropStmt) ExecRet {
-	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFacts, stmt.Prop.ThenFacts, stmt.Line)
+	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFacts, stmt.Prop.ImplicationFacts, stmt.Line)
 
 	exec.NewEnv(exec.Env)
 	defer func() {

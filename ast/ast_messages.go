@@ -632,7 +632,7 @@ func (stmt *DefPropStmt) ToNamedUniFactString() string {
 	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeySymbolRightArrow, 1))
 	builder.WriteString(glob.KeySymbolColon)
 	builder.WriteByte('\n')
-	for _, thenFact := range stmt.ThenFacts {
+	for _, thenFact := range stmt.ImplicationFacts {
 		thenFactStrSlice = append(thenFactStrSlice, glob.SplitLinesAndAdd4NIndents(thenFact.String(), 2))
 	}
 	builder.WriteString(strings.Join(thenFactStrSlice, "\n"))

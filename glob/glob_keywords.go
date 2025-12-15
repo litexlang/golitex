@@ -34,6 +34,9 @@ const (
 	KeywordProp      = "prop"
 	KeywordExistProp = "exist_prop"
 
+	KeywordImplication      = "implication"
+	KeywordProveImplication = "prove_implication"
+
 	KeywordHave = "have"
 	KeywordLet  = "let"
 
@@ -101,11 +104,11 @@ const (
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
-	KeywordSet:    {},
-	KeywordForall: {},
-	KeywordDom:    {},
-	// KeywordThen:                 {},
-	// KeywordObj:                  {},
+	KeywordSet:                  {},
+	KeywordForall:               {},
+	KeywordDom:                  {},
+	KeywordImplication:          {},
+	KeywordProveImplication:     {},
 	KeywordHave:                 {},
 	KeywordFn:                   {},
 	KeywordProp:                 {},
