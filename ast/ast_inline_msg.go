@@ -188,8 +188,8 @@ func (s *UniFactWithIffStmt) InlineString() string {
 }
 func (s *ClaimProveByContradictionStmt) InlineString() string { panic("") }
 
-func (s *ClaimPropStmt) InlineString() string      { panic("") }
-func (s *ClaimExistPropStmt) InlineString() string { panic("") }
+func (s *ClaimImplicationStmt) InlineString() string { panic("") }
+func (s *ClaimExistPropStmt) InlineString() string   { panic("") }
 
 func (s *ProveByEnumStmt) InlineString() string          { panic("") }
 func (s *HaveObjInNonEmptySetStmt) InlineString() string { panic("") }

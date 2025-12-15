@@ -109,10 +109,9 @@ type ClaimProveByContradictionStmt struct {
 	Line uint
 }
 
-type ClaimPropStmt struct {
-	Prop   *DefPropStmt
-	Proofs StmtSlice
-	// IsProve bool
+type ClaimImplicationStmt struct {
+	Implication *ImplicationStmt
+	Proofs      StmtSlice
 
 	Line uint
 }
