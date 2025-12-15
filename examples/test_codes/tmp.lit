@@ -1,7 +1,4 @@
-let s finite_set:
-    count(s) = 1
-1 > 0
-count(s) > 0
-$item_exists_in(s)
-have a st $item_exists_in(s)
-a $in s
+prove:
+    have a cart(R, R) = (1, 2)
+    have b cart(R, R) = (1, 2)
+    $equal_tuple(a, b, 2)

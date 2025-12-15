@@ -100,8 +100,9 @@ const (
 	KeywordBy        = "by"
 	KeywordEval      = "eval"
 
-	KeywordEqualSet = "equal_set"
-	KeywordSubsetOf = "subset_of"
+	KeywordEqualSet   = "equal_set"
+	KeywordSubsetOf   = "subset_of"
+	KeywordEqualTuple = "equal_tuple"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -182,6 +183,8 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordProveFor: {},
 
 	KeywordEqualSet: {},
+
+	KeywordEqualTuple: {},
 
 	KeywordAs: {},
 
@@ -440,6 +443,7 @@ var BuiltinPropNames map[string]struct{} = map[string]struct{}{
 	KeySymbolLessEqual:    {},
 	KeySymbolGreater:      {},
 	KeySymbolLess:         {},
+	KeywordEqualTuple:     {},
 }
 
 var BuiltinExistPropNames map[string]struct{} = map[string]struct{}{

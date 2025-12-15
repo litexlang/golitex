@@ -686,8 +686,8 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseS
 		// 由于 caseFact 是 SpecFactStmt，我们需要创建一个 UniFact 来表示这个条件
 		// 但是更简单的方式是：创建一个 UniFact，其中 DomFacts 包含 caseFact，ThenFacts 包含 equalFact
 		uniFact := ast.NewUniFact(
-			stmt.DefHeader.Params,
-			stmt.DefHeader.ParamSets,
+			[]string{},
+			[]ast.Obj{},
 			[]ast.FactStmt{caseFact},
 			[]ast.FactStmt{equalFact},
 			stmt.Line,
