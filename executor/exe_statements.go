@@ -40,6 +40,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 		execRet = exec.execClaimStmtProve(stmt)
 	case *ast.DefPropStmt:
 		execRet = exec.defPropStmt(stmt, true)
+	case *ast.ImplicationStmt:
+		execRet = exec.implicationStmt(stmt)
 	case *ast.DefLetStmt:
 		execRet = exec.defLetStmt(stmt)
 		if execRet.IsTrue() {
@@ -214,27 +216,27 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool
 		paramMap[param] = struct{}{}
 	}
 
-	for _, fact := range stmt.DomFactsOrNil {
-		for _, param := range ast.ExtractParamsFromFact(fact) {
-			if _, ok := paramMap[param]; ok {
-				return NewExecErr(fmt.Sprintf("param %s in %s\n is already declared in def header %s and should not be redeclared", param, fact.String(), ast.HeaderWithParamsAndParamSetsString(stmt.DefHeader)))
-			}
-		}
-	}
-	for _, fact := range stmt.IffFactsOrNil {
-		for _, param := range ast.ExtractParamsFromFact(fact) {
-			if _, ok := paramMap[param]; ok {
-				return NewExecErr(fmt.Sprintf("param %s in %s\nshould not be redeclared in def header %s", param, fact.String(), ast.HeaderWithParamsAndParamSetsString(stmt.DefHeader)))
-			}
-		}
-	}
-	for _, fact := range stmt.ImplicationFactsOrNil {
-		for _, param := range ast.ExtractParamsFromFact(fact) {
-			if _, ok := paramMap[param]; ok {
-				return NewExecErr(fmt.Sprintf("param %s in %s\nshould not be redeclared in def header %s", param, fact.String(), ast.HeaderWithParamsAndParamSetsString(stmt.DefHeader)))
-			}
-		}
-	}
+	// for _, fact := range stmt.DomFactsOrNil {
+	// 	for _, param := range ast.ExtractParamsFromFact(fact) {
+	// 		if _, ok := paramMap[param]; ok {
+	// 			return NewExecErr(fmt.Sprintf("param %s in %s\n is already declared in def header %s and should not be redeclared", param, fact.String(), ast.HeaderWithParamsAndParamSetsString(stmt.DefHeader)))
+	// 		}
+	// 	}
+	// }
+	// for _, fact := range stmt.IffFactsOrNil {
+	// 	for _, param := range ast.ExtractParamsFromFact(fact) {
+	// 		if _, ok := paramMap[param]; ok {
+	// 			return NewExecErr(fmt.Sprintf("param %s in %s\nshould not be redeclared in def header %s", param, fact.String(), ast.HeaderWithParamsAndParamSetsString(stmt.DefHeader)))
+	// 		}
+	// 	}
+	// }
+	// for _, fact := range stmt.ImplicationFactsOrNil {
+	// 	for _, param := range ast.ExtractParamsFromFact(fact) {
+	// 		if _, ok := paramMap[param]; ok {
+	// 			return NewExecErr(fmt.Sprintf("param %s in %s\nshould not be redeclared in def header %s", param, fact.String(), ast.HeaderWithParamsAndParamSetsString(stmt.DefHeader)))
+	// 		}
+	// 	}
+	// }
 
 	if len(stmt.IffFactsOrNil) == 0 {
 		return NewExecTrue(stmt.String())
@@ -267,7 +269,7 @@ func (exec *Executor) defLetStmt(stmt *ast.DefLetStmt) ExecRet {
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}
-	return NewExecTrue(stmt.String())
+	return NewExecTrue(stmt.String()).AddMsgs(ret.GetMsgs())
 }
 
 func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) ExecRet {
@@ -860,4 +862,15 @@ func (exec *Executor) proveForStmtWhenParamIsIndex(stmt *ast.ProveForStmt, i int
 	}
 
 	return NewEmptyExecTrue()
+}
+
+func (exec *Executor) implicationStmt(stmt *ast.ImplicationStmt) ExecRet {
+	// Convert ImplicationStmt to DefPropStmt (with dom and implication facts, but no iff facts)
+	defPropStmt := ast.NewDefPropStmt(stmt.DefHeader, stmt.DomFacts, nil, stmt.ImplicationFacts, stmt.Line)
+	ret := exec.Env.NewDefProp_InsideAtomsDeclared(defPropStmt)
+	if ret.IsErr() {
+		return NewExecErr(ret.String())
+	}
+
+	return NewExecTrue(stmt.String())
 }

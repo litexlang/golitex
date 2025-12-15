@@ -122,11 +122,6 @@ func (env *Env) AtomsInFnTemplateFnTemplateDeclared(name ast.Atom, stmt *ast.FnT
 		return glob.ErrRet(fmt.Errorf("fn name %s cannot be the same as parameter name %s", name, name))
 	}
 
-	// ret := env.NoDuplicateParamNamesAndParamSetsDefined(stmt.TemplateDefHeader.Params, stmt.TemplateDefHeader.ParamSets, false)
-	// if ret.IsErr() {
-	// 	return ret
-	// }
-
 	extraAtomNames := map[string]struct{}{}
 	for _, param := range stmt.TemplateDefHeader.Params {
 		extraAtomNames[param] = struct{}{}
@@ -272,6 +267,7 @@ func (env *Env) DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmt *ast.De
 		}
 	}
 
+	implicationFacts := []string{}
 	for _, fact := range stmt.Facts {
 		ret := env.AtomObjsInFactProperlyDefined(fact, extraAtomNames)
 		if ret.IsErr() {
@@ -282,7 +278,10 @@ func (env *Env) DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmt *ast.De
 		if ret.IsErr() {
 			return ret
 		}
+		if ret.IsTrue() {
+			implicationFacts = append(implicationFacts, ret.String())
+		}
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewGlobTrueWithMsgs(implicationFacts)
 }
