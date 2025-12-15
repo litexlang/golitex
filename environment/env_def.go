@@ -192,7 +192,7 @@ func (env *Env) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) 
 		extraAtomNames[param] = struct{}{}
 	}
 
-	for _, fact := range stmt.DefBody.DomFacts {
+	for _, fact := range stmt.DefBody.DomFactsOrNil {
 		ret := env.AtomObjsInFactProperlyDefined(fact, extraAtomNames)
 		if ret.IsErr() {
 			ret.AddMsg(fmt.Sprintf("in dom fact of exist_prop %s definition", stmt.DefBody.DefHeader.Name))
@@ -200,7 +200,7 @@ func (env *Env) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) 
 		}
 	}
 
-	for _, fact := range stmt.DefBody.IffFacts {
+	for _, fact := range stmt.DefBody.IffFactsOrNil {
 		ret := env.AtomObjsInFactProperlyDefined(fact, extraAtomNames)
 		if ret.IsErr() {
 			ret.AddMsg(fmt.Sprintf("in iff fact of exist_prop %s definition", stmt.DefBody.DefHeader.Name))

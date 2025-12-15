@@ -176,7 +176,7 @@ func (stmt *DefExistPropStmt) ToProp() *SpecFactStmt {
 }
 
 func (stmt *DefExistPropStmt) ToForallParamsSatisfyDomFacts_Then_ExistFactIsTrue() *UniFactStmt {
-	return NewUniFact(stmt.ExistParams, stmt.ExistParamSets, stmt.DefBody.DomFacts, []FactStmt{stmt.ToProp()}, glob.BuiltinLine)
+	return NewUniFact(stmt.ExistParams, stmt.ExistParamSets, stmt.DefBody.DomFactsOrNil, []FactStmt{stmt.ToProp()}, glob.BuiltinLine)
 }
 
 // func (stmt *NamedUniFactStmt) ToUniFact() *UniFactStmt {

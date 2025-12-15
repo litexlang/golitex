@@ -362,7 +362,7 @@ func (s *DefExistPropStmt) ToLatexString() string {
 	var builder strings.Builder
 
 	builder.WriteString("\\begin{definition}[Existential Proposition]\n")
-	builder.WriteString(prop_fn_bodyToLatexString(s.DefBody.DefHeader, s.DefBody.DomFacts, s.DefBody.IffFacts, true))
+	builder.WriteString(prop_fn_bodyToLatexString(s.DefBody.DefHeader, s.DefBody.DomFactsOrNil, s.DefBody.IffFactsOrNil, true))
 	builder.WriteString("\n\\end{definition}")
 	return builder.String()
 }

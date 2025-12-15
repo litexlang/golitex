@@ -299,28 +299,28 @@ func (s *DefExistPropStmt) ToString(head string) string {
 	builder.WriteString(" ")
 	builder.WriteString(s.DefBody.DefHeader.String())
 
-	if len(s.DefBody.DomFacts) == 0 && len(s.DefBody.IffFacts) == 0 {
+	if len(s.DefBody.DomFactsOrNil) == 0 && len(s.DefBody.IffFactsOrNil) == 0 {
 		return strings.TrimSuffix(builder.String(), glob.KeySymbolColon)
 	}
 
 	builder.WriteByte('\n')
-	for _, domFact := range s.DefBody.DomFacts {
+	for _, domFact := range s.DefBody.DomFactsOrNil {
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(domFact.String(), 1))
 		builder.WriteString("\n")
 	}
 
-	if len(s.DefBody.IffFacts) > 0 {
+	if len(s.DefBody.IffFactsOrNil) > 0 {
 		indentNum := 1
 
-		if len(s.DefBody.DomFacts) > 0 || len(s.DefBody.ThenFacts) > 0 {
+		if len(s.DefBody.DomFactsOrNil) > 0 || len(s.DefBody.ImplicationFactsOrNil) > 0 {
 			builder.WriteString(glob.SplitLinesAndAdd4NIndents("<=>:", 1))
 			builder.WriteString("\n")
 			indentNum = 2
 		}
 
-		iffFactStrSlice := make([]string, len(s.DefBody.IffFacts))
-		for i := range len(s.DefBody.IffFacts) {
-			iffFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(s.DefBody.IffFacts[i].String(), uint32(indentNum))
+		iffFactStrSlice := make([]string, len(s.DefBody.IffFactsOrNil))
+		for i := range len(s.DefBody.IffFactsOrNil) {
+			iffFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(s.DefBody.IffFactsOrNil[i].String(), uint32(indentNum))
 		}
 		builder.WriteString(strings.Join(iffFactStrSlice, "\n"))
 	}
