@@ -52,7 +52,7 @@ func (l *DefFnStmt) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordFn)
 	builder.WriteString(" ")
-	builder.WriteString(NewDefHeader(Atom(l.Name), l.FnTemplate.Params, l.FnTemplate.ParamSets).StringWithoutColonAtEnd())
+	builder.WriteString(NewDefHeader(l.Name, l.FnTemplate.Params, l.FnTemplate.ParamSets).StringWithoutColonAtEnd())
 	builder.WriteString(" ")
 	builder.WriteString(l.FnTemplate.RetSet.String())
 	if len(l.FnTemplate.DomFacts) > 0 {
@@ -278,7 +278,7 @@ func inlineCanBeKnownFactsString(facts CanBeKnownStmtSlice) string {
 
 func (header *DefHeader) InlineString() string {
 	var builder strings.Builder
-	builder.WriteString(header.Name.String())
+	builder.WriteString(header.Name)
 	builder.WriteString("(")
 	builder.WriteString(StrObjSetPairs(header.Params, header.ParamSets))
 	builder.WriteString(")")
