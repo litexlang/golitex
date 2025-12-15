@@ -239,11 +239,11 @@ type HaveObjInNonEmptySetStmt struct {
 	Line uint
 }
 
-type NamedUniFactStmt struct {
-	DefPropStmt *DefPropStmt
+// type NamedUniFactStmt struct {
+// 	DefPropStmt *DefPropStmt
 
-	Line uint
-}
+// 	Line uint
+// }
 
 type EqualsFactStmt struct {
 	Params ObjSlice

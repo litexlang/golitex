@@ -523,13 +523,13 @@ func (stmt *HaveObjFromCartSetStmt) Instantiate(uniMap map[string]Obj) (Stmt, er
 	return NewHaveObjFromCartSetStmt(stmt.ObjName, cartSet, newEqualTo, stmt.Line), nil
 }
 
-func (stmt *NamedUniFactStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	newProp, err := stmt.DefPropStmt.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	return NewNamedUniFactStmt(newProp.(*DefPropStmt), stmt.Line), nil
-}
+// func (stmt *NamedUniFactStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+// 	newProp, err := stmt.DefPropStmt.Instantiate(uniMap)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return NewNamedUniFactStmt(newProp.(*DefPropStmt), stmt.Line), nil
+// }
 
 func (stmt *EqualsFactStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newParams, err := stmt.Params.Instantiate(uniMap)
