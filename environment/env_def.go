@@ -52,7 +52,7 @@ func (env *Env) NewDefProp_BuiltinProp(stmt *ast.DefPropStmt) glob.GlobRet {
 	}
 	extraAtomNames[string(stmt.DefHeader.Name)] = struct{}{}
 
-	for _, fact := range stmt.DomFacts {
+	for _, fact := range stmt.DomFactsOrNil {
 		ret := env.AtomObjsInFactProperlyDefined(fact, extraAtomNames)
 		if ret.IsErr() {
 			ret.AddMsg(fmt.Sprintf("in dom fact of prop %s definition", stmt.DefHeader.Name))
@@ -60,7 +60,7 @@ func (env *Env) NewDefProp_BuiltinProp(stmt *ast.DefPropStmt) glob.GlobRet {
 		}
 	}
 
-	for _, fact := range stmt.IffFacts {
+	for _, fact := range stmt.IffFactsOrNil {
 		ret := env.AtomObjsInFactProperlyDefined(fact, extraAtomNames)
 		if ret.IsErr() {
 			ret.AddMsg(fmt.Sprintf("in iff fact of prop %s definition", stmt.DefHeader.Name))
@@ -95,7 +95,7 @@ func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) glob.GlobR
 	}
 	extraAtomNames[string(stmt.DefHeader.Name)] = struct{}{}
 
-	for _, fact := range stmt.DomFacts {
+	for _, fact := range stmt.DomFactsOrNil {
 		ret := env.AtomObjsInFactProperlyDefined(fact, extraAtomNames)
 		if ret.IsErr() {
 			ret.AddMsg(fmt.Sprintf("in dom fact of prop %s definition", stmt.DefHeader.Name))
@@ -103,7 +103,7 @@ func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) glob.GlobR
 		}
 	}
 
-	for _, fact := range stmt.IffFacts {
+	for _, fact := range stmt.IffFactsOrNil {
 		ret := env.AtomObjsInFactProperlyDefined(fact, extraAtomNames)
 		if ret.IsErr() {
 			ret.AddMsg(fmt.Sprintf("in iff fact of prop %s definition", stmt.DefHeader.Name))

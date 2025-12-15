@@ -114,6 +114,8 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 		ret, err = p.doNothingStmt(tb)
 	case glob.KeywordImport:
 		ret, err = p.importStmt(tb)
+	case glob.KeywordProveImplication:
+		ret, err = p.proveImplicationStmt(tb)
 	default:
 		ret, err = p.factsStmt(tb)
 	}
@@ -135,7 +137,7 @@ func (p *TbParser) defPropStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	err = NoSelfReferenceInPropDef(string(body.DefHeader.Name), append(append(body.DomFacts, body.IffFacts...), body.ImplicationFacts...))
+	err = NoSelfReferenceInPropDef(string(body.DefHeader.Name), append(append(body.DomFactsOrNil, body.IffFactsOrNil...), body.ImplicationFactsOrNil...))
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -176,7 +178,7 @@ func (p *TbParser) defPropStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStm
 
 	if !tb.header.is(glob.KeySymbolColon) {
 		if tb.header.ExceedEnd() {
-			return NewDefPropStmt(declHeader, nil, nil, []FactStmt{}, tb.line), nil
+			return NewDefPropStmt(declHeader, nil, nil, nil, tb.line), nil
 		} else if tb.header.is(glob.KeySymbolEquivalent) {
 			err = tb.header.skip(glob.KeySymbolEquivalent)
 			if err != nil {
@@ -186,7 +188,7 @@ func (p *TbParser) defPropStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStm
 			if err != nil {
 				return nil, ErrInLine(err, tb)
 			}
-			return NewDefPropStmt(declHeader, []FactStmt{}, unitFacts, []FactStmt{}, tb.line), nil
+			return NewDefPropStmt(declHeader, nil, unitFacts, nil, tb.line), nil
 		} else {
 			return nil, fmt.Errorf("expect ':' or end of block")
 		}
@@ -222,14 +224,14 @@ func (p *TbParser) defPropStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStm
 			}
 		}
 
-		return NewDefPropStmt(declHeader, domFacts, iffFacts, []FactStmt{}, tb.line), nil
+		return NewDefPropStmt(declHeader, domFacts, iffFacts, nil, tb.line), nil
 	} else {
 		domFacts, iffFacts, err := p.bodyOfInlineDomAndThen(tb, glob.KeySymbolEquivalent, []string{})
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
 
-		return NewDefPropStmt(declHeader, domFacts, iffFacts, []FactStmt{}, tb.line), nil
+		return NewDefPropStmt(declHeader, domFacts, iffFacts, nil, tb.line), nil
 	}
 }
 
@@ -2013,6 +2015,118 @@ func (p *TbParser) importStmt(tb *tokenBlock) (Stmt, error) {
 	return NewImportStmt(path, asPkgName, tb.line), nil
 }
 
+func (p *TbParser) proveImplicationStmt(tb *tokenBlock) (Stmt, error) {
+	err := tb.header.skip(glob.KeywordProveImplication)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	// Parse implication name (e.g., "p")
+	implicationName, err := tb.header.next()
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	// Parse parameters (e.g., "(x)")
+	var params StrSlice
+	if tb.header.is(glob.KeySymbolLeftBrace) {
+		err = tb.header.skip(glob.KeySymbolLeftBrace)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		// Parse parameters without param sets (just parameter names)
+		for !tb.header.is(glob.KeySymbolRightBrace) {
+			param, err := tb.header.next()
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			params = append(params, param)
+
+			if tb.header.is(glob.KeySymbolComma) {
+				err = tb.header.skip(glob.KeySymbolComma)
+				if err != nil {
+					return nil, ErrInLine(err, tb)
+				}
+			}
+		}
+
+		err = tb.header.skip(glob.KeySymbolRightBrace)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+	}
+
+	// Skip colon
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	// Parse body - two cases:
+	// Case 1: First line is =>:, then has prove: section
+	// Case 2: No =>:, all are implications (no prove section)
+	if len(tb.body) == 0 {
+		return nil, ErrInLine(fmt.Errorf("expect body after prove_implication"), tb)
+	}
+
+	var implicationFacts FactStmtSlice
+	var proofs StmtSlice
+
+	// Check if first block is =>
+	if tb.body[0].header.is(glob.KeySymbolRightArrow) {
+		// Case 1: =>:, prove: format
+		if len(tb.body) < 2 {
+			return nil, ErrInLine(fmt.Errorf("expect 'prove:' section after '=>:'"), tb)
+		}
+
+		// Parse => section
+		err = tb.body[0].header.skipKwAndColonCheckEOL(glob.KeySymbolRightArrow)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		for _, stmt := range tb.body[0].body {
+			curStmt, err := p.factStmt(&stmt, UniFactDepth0)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			implicationFacts = append(implicationFacts, curStmt)
+		}
+
+		// Parse prove section
+		if !tb.body[1].header.is(glob.KeywordProve) {
+			return nil, ErrInLine(fmt.Errorf("expect 'prove:' section after '=>:'"), tb)
+		}
+
+		err = tb.body[1].header.skipKwAndColonCheckEOL(glob.KeywordProve)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		proofs, err = p.parseTbBodyAndGetStmts(tb.body[1].body)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		if len(tb.body) > 2 {
+			return nil, ErrInLine(fmt.Errorf("unexpected extra sections after 'prove:'"), tb)
+		}
+	} else {
+		// Case 2: All are implications, no prove section
+		// Parse all body blocks as fact statements
+		for i := range len(tb.body) {
+			curStmt, err := p.factStmt(&tb.body[i], UniFactDepth0)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			implicationFacts = append(implicationFacts, curStmt)
+		}
+	}
+
+	return NewProveImplicationStmt(implicationName, params, implicationFacts, proofs, tb.line), nil
+}
+
 func (p *TbParser) factsStmt(tb *tokenBlock) (Stmt, error) {
 	if tb.GetEnd() != glob.KeySymbolColon { // 因为可能是 forall : 这样的
 		facts, err := p.inlineFacts_checkUniDepth0(tb, []string{})
@@ -3028,7 +3142,7 @@ func (p *TbParser) claimPropStmt(tb *tokenBlock) (Stmt, error) {
 	}
 
 	// return NewClaimPropStmt(NewDefPropStmt(declHeader, []FactStmt{}, iffFacts, thenFacts), proofs, isProve), nil
-	return NewClaimPropStmt(NewDefPropStmt(namedUniFact.DefPropStmt.DefHeader, namedUniFact.DefPropStmt.DomFacts, namedUniFact.DefPropStmt.IffFacts, namedUniFact.DefPropStmt.ImplicationFacts, tb.line), proofs, tb.line), nil
+	return NewClaimPropStmt(NewDefPropStmt(namedUniFact.DefPropStmt.DefHeader, namedUniFact.DefPropStmt.DomFactsOrNil, namedUniFact.DefPropStmt.IffFactsOrNil, namedUniFact.DefPropStmt.ImplicationFactsOrNil, tb.line), proofs, tb.line), nil
 }
 
 func (p *TbParser) relaEqualsFactStmt(tb *tokenBlock, obj, obj2 Obj) (*EqualsFactStmt, error) {

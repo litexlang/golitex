@@ -52,7 +52,7 @@ func (c *DefPropStmt) ToLatexString() string {
 	var builder strings.Builder
 
 	builder.WriteString("\\begin{definition}[Proposition]\n")
-	builder.WriteString(prop_fn_bodyToLatexString(c.DefHeader, c.DomFacts, c.IffFacts, false))
+	builder.WriteString(prop_fn_bodyToLatexString(c.DefHeader, c.DomFactsOrNil, c.IffFactsOrNil, false))
 	builder.WriteString("\n\\end{definition}")
 	return builder.String()
 }
@@ -650,7 +650,7 @@ func (s *NamedUniFactStmt) ToLatexString() string {
 	builder.WriteString(s.DefPropStmt.ToLatexString())
 	builder.WriteString("\n\n")
 
-	builder.WriteString(VerifiedFactsSectionToLatexString(s.DefPropStmt.IffFacts))
+	builder.WriteString(VerifiedFactsSectionToLatexString(s.DefPropStmt.IffFactsOrNil))
 
 	return builder.String()
 }
@@ -863,6 +863,11 @@ func (s *ClaimIffStmt) ToLatexString() string {
 func (s *ProveForStmt) ToLatexString() string {
 	// TODO: implement LaTeX conversion for prove_for
 	return "TODO"
+}
+
+func (s *ProveImplicationStmt) ToLatexString() string {
+	// TODO: implement LaTeX conversion for prove_implication
+	return s.String()
 }
 
 func (s *ProveIsTransitivePropStmt) ToLatexString() string {

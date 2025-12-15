@@ -150,7 +150,7 @@ func (stmt *EqualsFactStmt) ToEqualFacts_PairwiseCombination() []*SpecFactStmt {
 }
 
 func (stmt *ClaimPropStmt) ToProp() *DefPropStmt {
-	return NewDefPropStmt(stmt.Prop.DefHeader, stmt.Prop.DomFacts, stmt.Prop.IffFacts, []FactStmt{}, stmt.GetLine())
+	return NewDefPropStmt(stmt.Prop.DefHeader, stmt.Prop.DomFactsOrNil, stmt.Prop.IffFactsOrNil, []FactStmt{}, stmt.GetLine())
 }
 
 func (strSlice StrSlice) ToObjSlice() []Obj {
@@ -167,7 +167,7 @@ func (head DefHeader) ToSpecFact() *SpecFactStmt {
 }
 
 func (stmt *DefPropStmt) ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue() *UniFactStmt {
-	return NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, []FactStmt{stmt.DefHeader.ToSpecFact()}, stmt.ImplicationFacts, glob.BuiltinLine)
+	return NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, []FactStmt{stmt.DefHeader.ToSpecFact()}, stmt.ImplicationFactsOrNil, glob.BuiltinLine)
 }
 
 func (stmt *DefExistPropStmt) ToProp() *SpecFactStmt {
@@ -180,7 +180,7 @@ func (stmt *DefExistPropStmt) ToForallParamsSatisfyDomFacts_Then_ExistFactIsTrue
 }
 
 func (stmt *NamedUniFactStmt) ToUniFact() *UniFactStmt {
-	return NewUniFact(stmt.DefPropStmt.DefHeader.Params, stmt.DefPropStmt.DefHeader.ParamSets, stmt.DefPropStmt.IffFacts, stmt.DefPropStmt.ImplicationFacts, glob.BuiltinLine)
+	return NewUniFact(stmt.DefPropStmt.DefHeader.Params, stmt.DefPropStmt.DefHeader.ParamSets, stmt.DefPropStmt.IffFactsOrNil, stmt.DefPropStmt.ImplicationFactsOrNil, glob.BuiltinLine)
 }
 
 func (objFn *FnObj) IsObjFn_HasAtomHead_ReturnHead() (Atom, bool) {

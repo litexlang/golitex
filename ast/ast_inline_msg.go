@@ -34,17 +34,17 @@ func (c *DefPropStmt) InlineString() string {
 	builder.WriteString(glob.KeywordProp)
 	builder.WriteString(" ")
 	builder.WriteString(string(c.DefHeader.Name))
-	if len(c.DomFacts) > 0 {
+	if len(c.DomFactsOrNil) > 0 {
 		builder.WriteString(glob.KeySymbolColon)
-		builder.WriteString(inlineFactsString(c.DomFacts))
+		builder.WriteString(inlineFactsString(c.DomFactsOrNil))
 	}
-	if len(c.IffFacts) > 0 {
+	if len(c.IffFactsOrNil) > 0 {
 		builder.WriteString(glob.KeySymbolEquivalent)
-		builder.WriteString(inlineFactsString(c.IffFacts))
+		builder.WriteString(inlineFactsString(c.IffFactsOrNil))
 	}
-	if len(c.ImplicationFacts) > 0 {
+	if len(c.ImplicationFactsOrNil) > 0 {
 		builder.WriteString(glob.KeySymbolRightArrow)
-		builder.WriteString(inlineFactsString(c.ImplicationFacts))
+		builder.WriteString(inlineFactsString(c.ImplicationFactsOrNil))
 	}
 	return builder.String()
 }
@@ -334,6 +334,10 @@ func (s *ClaimIffStmt) InlineString() string {
 // }
 
 func (s *ProveForStmt) InlineString() string {
+	return "TODO"
+}
+
+func (s *ProveImplicationStmt) InlineString() string {
 	return "TODO"
 }
 
