@@ -47,6 +47,10 @@ func (ver *Verifier) maybeAddSuccessMsg(state *VerState, stmt, stmtVerifiedBy as
 
 // maybeAddSuccessMsgString is a backward compatibility function for string-based messages
 func (ver *Verifier) maybeAddSuccessMsgString(state *VerState, stmtStr, verifiedByStr string, execRet ExecRet) ExecRet {
+	if state == nil {
+		panic("")
+	}
+
 	if state.WithMsg {
 		execRet.AddMsg(successVerStringString(stmtStr, verifiedByStr))
 		return execRet

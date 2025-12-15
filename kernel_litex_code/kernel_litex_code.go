@@ -121,7 +121,7 @@ know:
 know forall x R: x > 0 or x < 0 => x != 0
 
 # 必须要有，否则不能说明有限集合的子集还是有限集合
-know implication finite_set_subset_is_finite_set(s1 finite_set, s2 set):
+know imply finite_set_subset_is_finite_set(s1 finite_set, s2 set):
 	forall x s2:
 		x $in s1
 	=>:
@@ -187,7 +187,7 @@ know forall a R => 1^a = 1
 know forall a, b, c R: a < b - c => a + c < b
 know forall a, b R: b > 0 => a - b < a
 
-know implication subtraction_preserves_inequality_with_positive_term(a R, b R, c R):
+know imply subtraction_preserves_inequality_with_positive_term(a R, b R, c R):
     a < b - c
     c > 0
     =>:
@@ -244,7 +244,7 @@ prop div_cancel_cond(a, b, c R):
     a / c = b / c
     c != 0
 
-know implication cancel(a, b, c R):
+know imply cancel(a, b, c R):
     or:
         a + c = b + c
         a - c = b - c
@@ -262,7 +262,7 @@ prop div_cancel_general_cond(a, b, c, d R):
     c != 0
 
 
-know implication cancel_general(a, b, c, d R):
+know imply cancel_general(a, b, c, d R):
     c = d
     or:
         a + c = b + d
@@ -272,7 +272,7 @@ know implication cancel_general(a, b, c, d R):
     =>:
         a = b
 
-know implication product_is_0_then_at_least_one_factor_is_0(a, b R):
+know imply product_is_0_then_at_least_one_factor_is_0(a, b R):
 	a * b = 0
 	=>:
 		or:
@@ -392,131 +392,131 @@ know:
 	forall x, y R: x = y => x - y = 0
 	forall x, y R: x != y => x - y != 0
 
-know implication larger_is_transitive(x, y, z R):
+know imply larger_is_transitive(x, y, z R):
 	x > y
 	y > z
 	=>:
 		x > z
 
-know implication less_equal_add_cancel(x, y, z R):
+know imply less_equal_add_cancel(x, y, z R):
 	x + z <= y + z
 	=>:
 		x <= y
 
-know implication less_equal_minus_cancel(x, y, z R):
+know imply less_equal_minus_cancel(x, y, z R):
 	x - z <= y - z
 	=>:
 		x <= y
 
-know implication less_add_cancel(x, y, z R):
+know imply less_add_cancel(x, y, z R):
 	x + z < y + z
 	=>:
 		x < y
 
-know implication less_minus_cancel(x, y, z R):
+know imply less_minus_cancel(x, y, z R):
 	x - z < y - z
 	=>:
 		x < y
 
-know implication greater_add_cancel(x, y, z R):
+know imply greater_add_cancel(x, y, z R):
 	x + z > y + z
 	=>:
 		x > y
 
-know implication greater_minus_cancel(x, y, z R):
+know imply greater_minus_cancel(x, y, z R):
 	x - z > y - z
 	=>:
 		x > y
 
-know implication greater_equal_add_cancel(x, y, z R):
+know imply greater_equal_add_cancel(x, y, z R):
 	x + z >= y + z
 	=>:
 		x >= y
 
-know implication greater_equal_minus_cancel(x, y, z R):
+know imply greater_equal_minus_cancel(x, y, z R):
 	x - z >= y - z
 	=>:
 		x >= y
 
-know implication greater_equal_mul_pos_cancel(x, y, z R):
+know imply greater_equal_mul_pos_cancel(x, y, z R):
 	z > 0
 	x * z >= y * z
 	=>:
 		x >= y
 
-know implication greater_equal_div_pos_cancel(x, y, z R):
+know imply greater_equal_div_pos_cancel(x, y, z R):
 	z > 0
 	x / z >= y / z
 	=>:
 		x >= y
 
-know implication greater_div_pos_cancel(x, y, z R):
+know imply greater_div_pos_cancel(x, y, z R):
 	z > 0
 	x / z > y / z
 	=>:
 		x > y
 
-know implication less_div_pos_cancel(x, y, z R):
+know imply less_div_pos_cancel(x, y, z R):
 	z > 0
 	x / z < y / z
 	=>:
 		x < y
 
-know implication less_equal_div_pos_cancel(x, y, z R):
+know imply less_equal_div_pos_cancel(x, y, z R):
 	z > 0
 	x / z <= y / z
 	=>:
 		x <= y
 
-know implication less_div_neg_cancel(x, y, z R):
+know imply less_div_neg_cancel(x, y, z R):
 	z < 0
 	x / z < y / z
 	=>:
 		x > y
 
-know implication less_equal_div_neg_cancel(x, y, z R):
+know imply less_equal_div_neg_cancel(x, y, z R):
 	z < 0
 	x / z <= y / z
 	=>:
 		x >= y
 
-know implication greater_equal_mul_neg_cancel(x, y, z R):
+know imply greater_equal_mul_neg_cancel(x, y, z R):
 	z < 0
 	x / z >= y / z
 	=>:
 		x <= y
 
-know implication greater_equal_div_neg_cancel(x, y, z R):
+know imply greater_equal_div_neg_cancel(x, y, z R):
 	z < 0
 	x / z > y / z
 	=>:
 		x < y
 
-know implication less_equal_mul_neg_cancel(x, y, z R):
+know imply less_equal_mul_neg_cancel(x, y, z R):
 	z < 0
 	x * z <= y * z
 	=>:
 		x >= y
 
-know implication larger_equal_mul_neg_cancel(x, y, z R):
+know imply larger_equal_mul_neg_cancel(x, y, z R):
 	z < 0
 	x * z >= y * z
 	=>:
 		x <= y
 
-know implication less_mul_neg_cancel(x, y, z R):
+know imply less_mul_neg_cancel(x, y, z R):
 	z < 0
 	x * z < y * z
 	=>:
 		x > y
 
-know implication greater_mul_neg_cancel(x, y, z R):
+know imply greater_mul_neg_cancel(x, y, z R):
 	z < 0
 	x * z > y * z
 	=>:
 		x < y
 
-know implication greater_than_pow_cancel(x, y, z R):
+know imply greater_than_pow_cancel(x, y, z R):
 	z > 0
 	x > 0
 	y > 0
@@ -524,7 +524,7 @@ know implication greater_than_pow_cancel(x, y, z R):
 	=>:
 		x > y
 
-know implication greater_equal_pow_cancel(x, y, z R):
+know imply greater_equal_pow_cancel(x, y, z R):
 	z > 0
 	x > 0
 	y > 0
@@ -532,7 +532,7 @@ know implication greater_equal_pow_cancel(x, y, z R):
 	=>:
 		x >= y
 
-know implication less_pow_cancel(x, y, z R):
+know imply less_pow_cancel(x, y, z R):
 	z > 0
 	x > 0
 	y > 0
@@ -540,7 +540,7 @@ know implication less_pow_cancel(x, y, z R):
 	=>:
 		x < y
 
-know implication less_equal_pow_cancel(x, y, z R):
+know imply less_equal_pow_cancel(x, y, z R):
 	z > 0
 	x > 0
 	y > 0
@@ -605,7 +605,7 @@ fn intersect(x, y set) set:
 		=>:
 			z $in intersect(x, y)
 
-know implication item_in_intersect(z set, x, y set):
+know imply item_in_intersect(z set, x, y set):
 	z $in intersect(x, y)
 	=>:
 		z $in x
@@ -617,7 +617,7 @@ fn union(x, y set) set:
 	forall z y:
 		z $in union(x, y)
 
-know implication item_in_union(z set, x, y set):
+know imply item_in_union(z set, x, y set):
 	z $in union(x, y)
 	=>:
 		z $in x or z $in y
@@ -631,7 +631,7 @@ fn complement(x, y set) set:
 			=>:
 				z $in complement(x, y)
 
-know implication item_in_complement(z set, x, y set):
+know imply item_in_complement(z set, x, y set):
 	x $subset_of y
 	z $in complement(x, y)
 	=>:
@@ -675,7 +675,7 @@ know:
 	forall x, y R: x > y => not x <= y, not x = y, not x < y
 	forall x, y R: x < y => not x >= y, not x = y, not x > y
 
-know implication subset_of_finite_set_is_finite_set(x set, y finite_set):
+know imply subset_of_finite_set_is_finite_set(x set, y finite_set):
 	x $subset_of y
 	=>:
 		$is_a_finite_set(x)
@@ -730,7 +730,7 @@ know:
 		not z $in y
 		<=>:
 			z $in difference(x, y)
-know implication item_in_difference(x, y set, z set):
+know imply item_in_difference(x, y set, z set):
 	z $in difference(x, y)
 	=>:
 		not z $in y

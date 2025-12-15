@@ -84,7 +84,7 @@ prove:
 
 # 3.2 There exist at least three points that do not lie on the same line.
 
-know @exist c point st exist_one_point_not_on_the_same_line_with_two_points(a point, b point):
+know imply exist c point st exist_one_point_not_on_the_same_line_with_two_points(a point, b point):
     a != b
     =>:
     
@@ -98,7 +98,7 @@ prove:
 
 # Tip: It's a good and essential habit to name everything properly. I recommend you to use long names which contains all the information in the name. Do not worry about typing, because most IDEs will prompt or complete the rest of the name when you type the first few characters.
 
-# Tip: know @, know @exist is a syntax sugar for making that prop(exist_prop) as an axiom.
+# Tip: know imply , know imply exist is a syntax sugar for making that prop(exist_prop) as an axiom.
 
 # 4. For every three points A, B, C not situated on the same line there exists a plane α that contains all of them. For every plane there exists a point which lies on it. We write ABC = α. We employ also the expressions: "A, B, C lie in α"; "A, B, C are points of α", etc.
 
@@ -124,7 +124,7 @@ fn plain_of(a point, b point, c point) plane:
 
 # 6. If two points A, B of a line a lie in a plane α, then every point of a lies in α. In this case we say: "The line a lies in the plane α", etc.
 
-know @two_points_on_line_then_line_on_plane(a point, b point, l line, p plane):
+know imply two_points_on_line_then_line_on_plane(a point, b point, l line, p plane):
         a != b
         $point_on_line(a, l)
         $point_on_line(b, l)
@@ -145,7 +145,7 @@ prove:
 
 # 7. If two planes α, β have a point A in common, then they have at least a second point B in common.
 
-know @exist b point st two_planes_have_one_common_point_then_they_have_another_common_point(a point, p plane, q plane):
+know imply exist b point st two_planes_have_one_common_point_then_they_have_another_common_point(a point, p plane, q plane):
     $point_on_plane(a, p)
     $point_on_plane(a, q)
     =>:
@@ -202,7 +202,7 @@ prop between(left point, right point, middle point):
 
 know forall left point, right point, middle point: left != right, $between(left, right, middle) => $between(right, left, middle)
 
-know @exist l line st exist_line_through_three_points(a point, b point, c point):
+know imply exist l line st exist_line_through_three_points(a point, b point, c point):
     a != b
     $between(a, b, c)
     =>:
@@ -246,7 +246,7 @@ prove:
 
 # 3. Of any three points situated on a line, there is no more than one which lies between the other two.
 
-know @no_more_than_one_point_between_three_points_on_line(a point, b point, c point):
+know imply no_more_than_one_point_between_three_points_on_line(a point, b point, c point):
     a != b
     a != c
     b != c
@@ -298,7 +298,7 @@ prop line_intersect_line(a point, b point, l line):
         a != b
         l != finite_line_of(a, b)
 
-know @line_intersect_finite_line_then_line_intersect_line(a point, b point, c point, l line):
+know imply line_intersect_finite_line_then_line_intersect_line(a point, b point, c point, l line):
         a != b
         a != c
         b != c
@@ -374,13 +374,13 @@ know:
                 $point_left_to_point_on_one_line(a, b, l)
                 $point_left_point_on_one_line(a, b, l)
 
-know @exist a point st exist_point_left_to_point_with_finite_line_equal_to_given_finite_line(b point, l finite_line):
+know imply exist a point st exist_point_left_to_point_with_finite_line_equal_to_given_finite_line(b point, l finite_line):
     =>:
         a != b
         $point_left_to_point_on_one_line(a, b, l)
         $finite_line_equal(finite_line_of(a, b), l)
 
-know @exist a point st exist_point_right_to_point_with_finite_line_equal_to_given_finite_line(b point, l finite_line):
+know imply exist a point st exist_point_right_to_point_with_finite_line_equal_to_given_finite_line(b point, l finite_line):
     =>:
         a != b
         $point_left_to_point_on_one_line(b, a, l)
@@ -409,7 +409,7 @@ prove:
 
 # 2. If a segment AB is congruent to the segment A′B′ and also to the segment A″B″, then the segment A′B′ is congruent to the segment A″B″; that is, if AB ≅ A′B′ and AB ≅ A″B″, then A′B′ ≅ A″B″.
 
-know @finite_line_equal_transitive(l1 finite_line, l2 finite_line, l3 finite_line):
+know imply finite_line_equal_transitive(l1 finite_line, l2 finite_line, l3 finite_line):
     $finite_line_equal(l1, l2)
     $finite_line_equal(l2, l3)
     =>:
@@ -445,7 +445,7 @@ know:
             $on_one_line(c, a, b)
             $on_one_line(c, b, a)
 
-know @addition_keeps_equal_of_finite_lines(a point, b point, c point, a2 point, b2 point, c2 point):
+know imply addition_keeps_equal_of_finite_lines(a point, b point, c point, a2 point, b2 point, c2 point):
     $on_one_line(a, b, c)
     $on_one_line(a2, b2, c2)
     $finite_line_equal(finite_line_of(a, b), finite_line_of(a2, b2))
@@ -509,7 +509,7 @@ prop half_plane_to_ray(a point, r ray, p half_plane):
         $half_plane_left_to_ray(a, r, p)
         $half_plane_right_to_ray(a, r, p)
 
-know @exist r2 ray st exist_a_ray_with_the_same_angel_with_given_ray_and_half_plane(a point, r1 ray, p half_plane, ang angle):
+know imply exist r2 ray st exist_a_ray_with_the_same_angel_with_given_ray_and_half_plane(a point, r1 ray, p half_plane, ang angle):
     $point_on_ray(a, r1)
     $half_plane_to_ray(a, r1, p)
     =>:    
@@ -519,7 +519,7 @@ know @exist r2 ray st exist_a_ray_with_the_same_angel_with_given_ray_and_half_pl
 
 # 5. If the angle ∠ (h, k) is congruent to the angle ∠ (h′, k′) and to the angle ∠ (h″, k″), then the angle ∠ (h′, k′) is congruent to the angle ∠ (h″, k″); that is to say, if ∠ (h, k) ≅ ∠ (h′, k′) and ∠ (h, k) ≅ ∠ (h″, k″), then ∠ (h′, k′) ≅ ∠ (h″, k″).
 
-know @angle_equal_transitive(ang1 angle, ang2 angle, ang3 angle):
+know imply angle_equal_transitive(ang1 angle, ang2 angle, ang3 angle):
     $angle_equal(ang1, ang2)
     $angle_equal(ang2, ang3)
     =>:
@@ -571,7 +571,7 @@ know:
             $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(c, a, b))
             $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(c, b, a))
 
-know @triangle_equal_by_two_sides_and_included_angle_equal(a point, b point, c point, a2 point, b2 point, c2 point):
+know imply triangle_equal_by_two_sides_and_included_angle_equal(a point, b point, c point, a2 point, b2 point, c2 point):
     a != b
     a != c
     b != c
@@ -615,7 +615,7 @@ prop parallel(l1 line, l2 line):
     forall x point:
         $point_on_line1_then_not_on_line2(x, l2, l1)
 
-know @exist l2 line st exist_one_and_only_one_line_through_point_not_intersect_line(a point, l line):
+know imply exist l2 line st exist_one_and_only_one_line_through_point_not_intersect_line(a point, l line):
     not $point_on_line(a, l)
     =>:
         $point_on_line(a, l2)
@@ -670,7 +670,7 @@ know:
         =>:
             $point_right_to_point_on_one_line(a, c, line_of(a, b))
     
-know @exist n R, c point st exist_finite_line_of_direction_and_length(a point, b point, l finite_line):
+know imply exist n R, c point st exist_finite_line_of_direction_and_length(a point, b point, l finite_line):
     =>:
         n > 0
         $point_on_line(c, line_of(a, b))
