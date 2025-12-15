@@ -32,7 +32,7 @@ type DefLetStmt struct {
 }
 
 type DefHeader struct {
-	Name      Atom
+	Name      string
 	Params    StrSlice
 	ParamSets ObjSlice
 }

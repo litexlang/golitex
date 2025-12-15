@@ -388,6 +388,5 @@ func (p *SpecFactStmt) proveAlgoReturnStmt()       {}
 func (l *UniFactStmt) proveAlgoReturnStmt()        {}
 func (l *UniFactWithIffStmt) proveAlgoReturnStmt() {}
 func (s *OrStmt) proveAlgoReturnStmt()             {}
-
-func (s *EqualsFactStmt) proveAlgoReturnStmt() {}
-func (s *ByStmt) proveAlgoReturnStmt()         {}
+func (s *EqualsFactStmt) proveAlgoReturnStmt()     {}
+func (s *ByStmt) proveAlgoReturnStmt()             {}

@@ -3,4 +3,10 @@ implication p(x R):
 
 let a R: $p(a)
 
-a > 0
+prop t(x R)
+
+know implication q(x R):
+    $t(x)
+
+forall x R: $q(x) => $t(x)
+

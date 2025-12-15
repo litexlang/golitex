@@ -48,7 +48,7 @@ func NewKnowStmt(facts CanBeKnownStmtSlice, line uint) *KnowFactStmt {
 	return &KnowFactStmt{facts, line}
 }
 
-func NewDefHeader(name Atom, params []string, setParams []Obj) *DefHeader {
+func NewDefHeader(name string, params []string, setParams []Obj) *DefHeader {
 	return &DefHeader{name, params, setParams}
 }
 
