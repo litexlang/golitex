@@ -639,12 +639,12 @@ func (stmt *DefPropStmt) ToNamedUniFactString() string {
 	return builder.String()
 }
 
-func (stmt *ClaimPropStmt) String() string {
+func (stmt *ClaimImplicationStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordClaim)
 	builder.WriteString(glob.KeySymbolColon)
 	builder.WriteString("\n")
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Prop.ToNamedUniFactString(), 1))
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Implication.ToProp().ToNamedUniFactString(), 1))
 	builder.WriteByte('\n')
 	proofStrSlice := make([]string, len(stmt.Proofs))
 	for i, proof := range stmt.Proofs {

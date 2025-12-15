@@ -517,14 +517,14 @@ func (s *ClaimProveByContradictionStmt) ToLatexString() string {
 	return claimProveBodyToLatexString(s.ClaimProveStmt.ToCheckFact, s.ClaimProveStmt.Proofs, false)
 }
 
-func (s *ClaimPropStmt) ToLatexString() string {
+func (s *ClaimImplicationStmt) ToLatexString() string {
 	var builder strings.Builder
 
 	builder.WriteString(s.ToProp().ToLatexString())
 
 	builder.WriteString("\n\n")
 
-	builder.WriteString(claimProveBodyToLatexString(s.Prop.ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue(), s.Proofs, true))
+	builder.WriteString(claimProveBodyToLatexString(s.Implication.ToProp().ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue(), s.Proofs, true))
 
 	return builder.String()
 }

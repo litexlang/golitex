@@ -3176,7 +3176,7 @@ func (p *TbParser) claimPropStmt(tb *tokenBlock) (Stmt, error) {
 	}
 
 	// return NewClaimPropStmt(NewDefPropStmt(declHeader, []FactStmt{}, iffFacts, thenFacts), proofs, isProve), nil
-	return NewClaimPropStmt(implicationStmt.ToProp(), proofs, tb.line), nil
+	return NewClaimPropStmt(implicationStmt, proofs, tb.line), nil
 }
 
 func (p *TbParser) relaEqualsFactStmt(tb *tokenBlock, obj, obj2 Obj) (*EqualsFactStmt, error) {

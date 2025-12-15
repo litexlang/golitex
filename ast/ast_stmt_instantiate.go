@@ -341,8 +341,8 @@ func (stmt *ClaimProveByContradictionStmt) Instantiate(uniMap map[string]Obj) (S
 	return NewClaimProveByContradictionStmt(newClaimProveStmt.(*ClaimProveStmt), stmt.Line), nil
 }
 
-func (stmt *ClaimPropStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	newProp, err := stmt.Prop.Instantiate(uniMap)
+func (stmt *ClaimImplicationStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+	newImplication, err := stmt.Implication.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}
@@ -350,7 +350,7 @@ func (stmt *ClaimPropStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewClaimPropStmt(newProp.(*DefPropStmt), newProofs, stmt.Line), nil
+	return NewClaimPropStmt(newImplication.(*ImplicationStmt), newProofs, stmt.Line), nil
 }
 
 func (stmt CanBeKnownStmtSlice) Instantiate(uniMap map[string]Obj) (CanBeKnownStmtSlice, error) {

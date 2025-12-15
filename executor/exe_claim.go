@@ -272,11 +272,12 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) ExecRet {
 }
 
 // 也许我应该语义改成，先声明prop，然后再证明prop，而不是现在这个样子
-func (exec *Executor) claimPropStmt(stmt *ast.ClaimPropStmt) ExecRet {
+func (exec *Executor) claimPropStmt(stmt *ast.ClaimImplicationStmt) ExecRet {
 	// prop all atoms declared
-	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.DomFactsOrNil, stmt.Prop.IffFactsOrNil, stmt.Line)
+	prop := stmt.Implication.ToProp()
+	uniFact := ast.NewUniFact(prop.DefHeader.Params, prop.DefHeader.ParamSets, prop.DomFactsOrNil, prop.IffFactsOrNil, stmt.Line)
 	ret := exec.Env.AtomObjsInFactProperlyDefined(uniFact, map[string]struct{}{})
-	if ret.IsErr() && !exec.Env.IsAtomObjDefinedByUser(ast.Atom(stmt.Prop.DefHeader.Name)).IsTrue() {
+	if ret.IsErr() && !exec.Env.IsAtomObjDefinedByUser(ast.Atom(prop.DefHeader.Name)).IsTrue() {
 		ret.AddMsg("in claim prop statement")
 		return NewExecErr(ret.String())
 	}
@@ -295,7 +296,7 @@ func (exec *Executor) claimPropStmt(stmt *ast.ClaimPropStmt) ExecRet {
 	// }
 
 	// know exec
-	execRet := exec.knowPropStmt(ast.NewKnowPropStmt(stmt.Prop, stmt.Line))
+	execRet := exec.knowPropStmt(ast.NewKnowPropStmt(prop, stmt.Line))
 	if execRet.IsNotTrue() {
 		return execRet
 	}
@@ -377,8 +378,9 @@ func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt
 	return NewEmptyExecTrue()
 }
 
-func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimPropStmt) ExecRet {
-	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFactsOrNil, stmt.Prop.ImplicationFactsOrNil, stmt.Line)
+func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimImplicationStmt) ExecRet {
+	prop := stmt.Implication.ToProp()
+	uniFact := ast.NewUniFact(prop.DefHeader.Params, prop.DefHeader.ParamSets, prop.IffFactsOrNil, prop.ImplicationFactsOrNil, stmt.Line)
 
 	exec.NewEnv(exec.Env)
 	defer func() {

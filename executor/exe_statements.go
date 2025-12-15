@@ -58,7 +58,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 		}
 	case *ast.ProveInEachCaseStmt:
 		execRet = exec.proveInEachCaseStmt(stmt)
-	case *ast.ClaimPropStmt:
+	case *ast.ClaimImplicationStmt:
 		execRet = exec.claimPropStmt(stmt)
 	case *ast.ClaimExistPropStmt:
 		execRet = exec.claimExistPropStmt(stmt)

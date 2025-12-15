@@ -46,7 +46,7 @@ func (s *ImplicationStmt) stmt()               {}
 func (s *UniFactWithIffStmt) stmt()            {}
 func (s *ClaimProveByContradictionStmt) stmt() {}
 
-func (s *ClaimPropStmt) stmt()            {}
+func (s *ClaimImplicationStmt) stmt()     {}
 func (s *ClaimExistPropStmt) stmt()       {}
 func (s *ProveByEnumStmt) stmt()          {}
 func (s *HaveObjInNonEmptySetStmt) stmt() {}
@@ -97,7 +97,7 @@ func (s *ProveStmt) algoStmt()                     {}
 func (s *UniFactWithIffStmt) algoStmt()            {}
 func (s *ClaimProveByContradictionStmt) algoStmt() {}
 
-func (s *ClaimPropStmt) algoStmt()            {}
+func (s *ClaimImplicationStmt) algoStmt()     {}
 func (s *ClaimExistPropStmt) algoStmt()       {}
 func (s *ProveByEnumStmt) algoStmt()          {}
 func (s *HaveObjInNonEmptySetStmt) algoStmt() {}
@@ -153,7 +153,7 @@ func (s *ProveStmt) GetLine() uint                     { return s.Line }
 func (s *UniFactWithIffStmt) GetLine() uint            { return s.Line }
 func (s *ClaimProveByContradictionStmt) GetLine() uint { return s.Line }
 
-func (s *ClaimPropStmt) GetLine() uint            { return s.Line }
+func (s *ClaimImplicationStmt) GetLine() uint     { return s.Line }
 func (s *ClaimExistPropStmt) GetLine() uint       { return s.Line }
 func (s *ProveByEnumStmt) GetLine() uint          { return s.Line }
 func (s *HaveObjInNonEmptySetStmt) GetLine() uint { return s.Line }
@@ -295,7 +295,7 @@ type ClaimInterface interface {
 
 func (stmt *ClaimProveStmt) claimStmt()                {}
 func (stmt *ClaimProveByContradictionStmt) claimStmt() {}
-func (stmt *ClaimPropStmt) claimStmt()                 {}
+func (stmt *ClaimImplicationStmt) claimStmt()          {}
 func (stmt *ClaimExistPropStmt) claimStmt()            {}
 func (stmt *ClaimIffStmt) claimStmt()                  {}
 
