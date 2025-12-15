@@ -107,14 +107,14 @@ func (s *DefExistPropStmt) InlineString() string {
 	builder.WriteString(" ")
 	builder.WriteString(s.DefBody.DefHeader.InlineString())
 
-	if len(s.DefBody.DomFacts) > 0 {
+	if len(s.DefBody.DomFactsOrNil) > 0 {
 		builder.WriteString(glob.KeySymbolColon)
-		builder.WriteString(inlineFactsString(s.DefBody.DomFacts))
+		builder.WriteString(inlineFactsString(s.DefBody.DomFactsOrNil))
 	}
 
-	if len(s.DefBody.IffFacts) > 0 {
+	if len(s.DefBody.IffFactsOrNil) > 0 {
 		builder.WriteString(glob.KeySymbolEquivalent)
-		builder.WriteString(inlineFactsString(s.DefBody.IffFacts))
+		builder.WriteString(inlineFactsString(s.DefBody.IffFactsOrNil))
 	}
 
 	return builder.String()

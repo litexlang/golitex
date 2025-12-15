@@ -213,7 +213,7 @@ func (env *Env) newPureFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 		if fact.TypeEnum == ast.TruePure {
 			return glob.NewGlobTrue("")
 		} else {
-			for _, thenFact := range existPropDef.DefBody.IffFacts {
+			for _, thenFact := range existPropDef.DefBody.IffFactsOrNil {
 				_, ok := thenFact.(*ast.SpecFactStmt)
 				if !ok {
 					return glob.NewGlobTrue("")
@@ -403,7 +403,7 @@ func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, glob
 	}
 
 	domFacts := []ast.FactStmt{}
-	for _, domFact := range existPropDef.DefBody.DomFacts {
+	for _, domFact := range existPropDef.DefBody.DomFactsOrNil {
 		instantiated, err := domFact.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, glob.ErrRet(err)
@@ -412,7 +412,7 @@ func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, glob
 	}
 
 	specThenFacts := []*ast.SpecFactStmt{}
-	for _, thenFact := range existPropDef.DefBody.IffFacts {
+	for _, thenFact := range existPropDef.DefBody.IffFactsOrNil {
 		asSpecFactStmt, ok := thenFact.(*ast.SpecFactStmt)
 		if !ok {
 			return nil, glob.ErrRet(fmt.Errorf("exist fact %s has no definition", fact))
@@ -535,7 +535,7 @@ func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, [
 
 	instantiatedIffFacts := []ast.FactStmt{}
 	// instantiate iff facts
-	for _, iffFact := range existPropDef.DefBody.IffFacts {
+	for _, iffFact := range existPropDef.DefBody.IffFactsOrNil {
 		instantiated, err := iffFact.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, nil, glob.ErrRet(err)
@@ -544,7 +544,7 @@ func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, [
 	}
 
 	instantiatedThenFacts := []ast.FactStmt{}
-	for _, thenFact := range existPropDef.DefBody.ThenFacts {
+	for _, thenFact := range existPropDef.DefBody.ImplicationFactsOrNil {
 		instantiated, err := thenFact.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, nil, glob.ErrRet(err)

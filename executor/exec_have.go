@@ -91,7 +91,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 	}
 
 	// dom of def exist prop is true
-	for _, domFact := range instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).DefBody.DomFacts {
+	for _, domFact := range instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).DefBody.DomFactsOrNil {
 		ret := exec.Env.NewFact(domFact)
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
@@ -99,7 +99,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 	}
 
 	// iff of def exist prop is true
-	for _, iffFact := range instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).DefBody.IffFacts {
+	for _, iffFact := range instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).DefBody.IffFactsOrNil {
 		ret := exec.Env.NewFact(iffFact)
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
