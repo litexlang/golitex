@@ -19,6 +19,7 @@ import (
 	ast "golitex/ast"
 	glob "golitex/glob"
 	"strconv"
+	"strings"
 )
 
 func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
@@ -352,6 +353,24 @@ func (ver *Verifier) falseInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerS
 
 	// 如果证明 not in N_pos
 	verRet = ver.litNumNotInNPosByLiteralShape(stmt, state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsTrue() {
+		return verRet
+	}
+
+	// 类似 3.5 这种数不在 Z, N, N_pos 里
+	verRet = ver.litNumNotInIntegerByLiteralShape(stmt, state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsTrue() {
+		return verRet
+	}
+
+	// 负数不在N, N_pos里
+	verRet = ver.litNumNotInNaturalByLiteralShape(stmt, state)
 	if verRet.IsErr() {
 		return verRet
 	}
@@ -746,15 +765,14 @@ func (ver *Verifier) litNumNotInNaturalByLiteralShape(stmt *ast.SpecFactStmt, st
 		return NewEmptyExecUnknown()
 	}
 
-	// 检查字面上是否是自然数形状（必须是 AtomObj 且字面上看起来就是自然数）
-	// 如果字面上就是自然数形状（比如 "5"），不能证明它不在自然数中
-	if ast.IsObjLiterallyNatNumber(stmt.Params[0]) {
-		// 字面上是自然数，不能证明它不在自然数中
-		return NewEmptyExecUnknown()
+	// 先检查字面上是否是有小数点的数字（有理数）
+	if ast.IsObjLiterallyRationalNumber(stmt.Params[0]) {
+		msg := fmt.Sprintf("%s has a decimal point, so it is not in N", stmt.Params[0])
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
 	}
 
-	// 尝试检查是否是数字字面量表达式
-	_, ok, err := ast.MakeObjIntoNumLitExpr(stmt.Params[0])
+	// 尝试将对象转换为数字字面量表达式并评估
+	numLitExpr, ok, err := ast.MakeObjIntoNumLitExpr(stmt.Params[0])
 	if err != nil {
 		return NewExecErr(err.Error())
 	}
@@ -763,7 +781,29 @@ func (ver *Verifier) litNumNotInNaturalByLiteralShape(stmt *ast.SpecFactStmt, st
 		return NewEmptyExecUnknown()
 	}
 
-	// 如果是数字表达式但字面上不是自然数形状（小数、负数或表达式），可以证明它不在自然数中
+	// 评估表达式得到结果
+	evalResult, ok, err := numLitExpr.EvalNumLitExpr()
+	if err != nil {
+		return NewExecErr(err.Error())
+	}
+	if !ok {
+		return NewEmptyExecUnknown()
+	}
+
+	// 检查评估结果是否包含小数点（即是否为有理数）
+	if strings.Contains(evalResult, ".") {
+		msg := fmt.Sprintf("%s evaluates to %s, which has a decimal point, so it is not in N", stmt.Params[0], evalResult)
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+	}
+
+	// 如果评估后是整数，检查字面上是否是自然数形状
+	// 如果字面上就是自然数形状（比如 "5"），不能证明它不在自然数中
+	if ast.IsObjLiterallyNatNumber(stmt.Params[0]) {
+		// 字面上是自然数，不能证明它不在自然数中
+		return NewEmptyExecUnknown()
+	}
+
+	// 如果是数字表达式但字面上不是自然数形状（负数或表达式），可以证明它不在自然数中
 	msg := fmt.Sprintf("%s is literally not a natural number (not in the shape of natural number)", stmt.Params[0])
 	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
 }
@@ -774,26 +814,37 @@ func (ver *Verifier) litNumNotInIntegerByLiteralShape(stmt *ast.SpecFactStmt, st
 		return NewEmptyExecUnknown()
 	}
 
-	// 检查字面上是否是整数形状（必须是 AtomObj 且字面上看起来就是整数）
-	// 如果字面上就是整数形状（比如 "5" 或 "-3"），不能证明它不在整数中
-	if _, ok := ast.IsObjLiterallyIntNumber(stmt.Params[0]); ok {
-		// 字面上是整数，不能证明它不在整数中
-		return NewEmptyExecUnknown()
+	// 先检查字面上是否是有小数点的数字（有理数）
+	if ast.IsObjLiterallyRationalNumber(stmt.Params[0]) {
+		msg := fmt.Sprintf("%s has a decimal point, so it is not in Z", stmt.Params[0])
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
 	}
 
-	// 尝试检查是否是数字字面量表达式
-	_, ok, err := ast.MakeObjIntoNumLitExpr(stmt.Params[0])
+	// 尝试将对象转换为数字字面量表达式并评估
+	numLitExpr, ok, err := ast.MakeObjIntoNumLitExpr(stmt.Params[0])
 	if err != nil {
 		return NewExecErr(err.Error())
 	}
 	if !ok {
-		// 不是数字字面量，返回 unknown
 		return NewEmptyExecUnknown()
 	}
 
-	// 如果是数字表达式但字面上不是整数形状（小数或表达式），可以证明它不在整数中
-	msg := fmt.Sprintf("%s is literally not an integer (not in the shape of integer)", stmt.Params[0])
-	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+	// 评估表达式得到结果
+	evalResult, ok, err := numLitExpr.EvalNumLitExpr()
+	if err != nil {
+		return NewExecErr(err.Error())
+	}
+	if !ok {
+		return NewEmptyExecUnknown()
+	}
+
+	// 检查评估结果是否包含小数点（即是否为有理数）
+	if strings.Contains(evalResult, ".") {
+		msg := fmt.Sprintf("%s evaluates to %s, which has a decimal point, so it is not in Z", stmt.Params[0], evalResult)
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+	}
+
+	return NewEmptyExecUnknown()
 }
 
 func (ver *Verifier) litNumNotInNPosByLiteralShape(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
@@ -802,15 +853,14 @@ func (ver *Verifier) litNumNotInNPosByLiteralShape(stmt *ast.SpecFactStmt, state
 		return NewEmptyExecUnknown()
 	}
 
-	// 检查字面上是否是正整数形状（必须是 AtomObj 且字面上看起来就是正整数）
-	// 如果字面上就是正整数形状（比如 "5"），不能证明它不在正整数中
-	if ast.IsObjLiterallyNPosNumber(stmt.Params[0]) {
-		// 字面上是正整数，不能证明它不在正整数中
-		return NewEmptyExecUnknown()
+	// 先检查字面上是否是有小数点的数字（有理数）
+	if ast.IsObjLiterallyRationalNumber(stmt.Params[0]) {
+		msg := fmt.Sprintf("%s has a decimal point, so it is not in N_pos", stmt.Params[0])
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
 	}
 
-	// 尝试检查是否是数字字面量表达式
-	_, ok, err := ast.MakeObjIntoNumLitExpr(stmt.Params[0])
+	// 尝试将对象转换为数字字面量表达式并评估
+	numLitExpr, ok, err := ast.MakeObjIntoNumLitExpr(stmt.Params[0])
 	if err != nil {
 		return NewExecErr(err.Error())
 	}
@@ -819,7 +869,29 @@ func (ver *Verifier) litNumNotInNPosByLiteralShape(stmt *ast.SpecFactStmt, state
 		return NewEmptyExecUnknown()
 	}
 
-	// 如果是数字表达式但字面上不是正整数形状（小数、负数、0或表达式），可以证明它不在正整数中
+	// 评估表达式得到结果
+	evalResult, ok, err := numLitExpr.EvalNumLitExpr()
+	if err != nil {
+		return NewExecErr(err.Error())
+	}
+	if !ok {
+		return NewEmptyExecUnknown()
+	}
+
+	// 检查评估结果是否包含小数点（即是否为有理数）
+	if strings.Contains(evalResult, ".") {
+		msg := fmt.Sprintf("%s evaluates to %s, which has a decimal point, so it is not in N_pos", stmt.Params[0], evalResult)
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+	}
+
+	// 如果评估后是整数，检查字面上是否是正整数形状
+	// 如果字面上就是正整数形状（比如 "5"），不能证明它不在正整数中
+	if ast.IsObjLiterallyNPosNumber(stmt.Params[0]) {
+		// 字面上是正整数，不能证明它不在正整数中
+		return NewEmptyExecUnknown()
+	}
+
+	// 如果是数字表达式但字面上不是正整数形状（负数、0或表达式），可以证明它不在正整数中
 	msg := fmt.Sprintf("%s is literally not a positive integer (not in the shape of positive integer)", stmt.Params[0])
 	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
 }
