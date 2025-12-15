@@ -1,4 +1,6 @@
-prop p(x R):
+implication p(x R):
     x > 0
 
-$p()
+let a R: $p(a)
+
+a > 0

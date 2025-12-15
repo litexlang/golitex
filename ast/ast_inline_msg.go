@@ -341,6 +341,10 @@ func (s *ProveImplicationStmt) InlineString() string {
 	return "TODO"
 }
 
+func (s *ImplicationStmt) InlineString() string {
+	return "TODO"
+}
+
 func (s *ProveIsTransitivePropStmt) InlineString() string {
 	return "TODO"
 }
