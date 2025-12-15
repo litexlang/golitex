@@ -17,7 +17,7 @@ exist_prop a, b, c R st is_line(l subsets(cart(R, R))):
 know:
     forall a, b, c R:
         line(a, b, c) $in subsets(cart(R, R))
-        line(a, b, c) $in set
+        line(a, b, c) $is_a_set
         forall x line(a, b, c) => x $in cart(R, R)
 
 forall x line(1, 1, 1):

@@ -25,9 +25,13 @@ func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 		return ver.inFactBuiltinRules(stmt, state)
 	}
 
-	// if stmt.NameIs(glob.KeywordItemExistsIn) && stmt.TypeEnum == ast.TrueExist_St {
-	// 	return ver.trueExistInSt(stmt, state)
-	// }
+	if stmt.NameIs(glob.KeywordItemExistsIn) && stmt.TypeEnum == ast.TrueExist_St {
+		return ver.verExistPropItemExistsInByBuiltinRules(stmt, state)
+	}
+
+	if stmt.NameIs(glob.KeywordItemExistsIn) && stmt.TypeEnum == ast.TruePure {
+		return ver.verTruePurePropItemExistsInByBuiltinRules(stmt, state)
+	}
 
 	if stmt.NameIs(glob.KeywordIsASet) && stmt.TypeEnum == ast.TruePure {
 		return ver.verIsASetByBuiltinRules(stmt, state)
@@ -279,6 +283,11 @@ func (ver *Verifier) verIsAFiniteSetByBuiltinRules(stmt *ast.SpecFactStmt, state
 		return ver.maybeAddSuccessMsgString(state, stmt.String(), "A list set is a finite set.", NewEmptyExecTrue())
 	}
 
+	// 如果是 cart，那cart的每一位是有限集，所以cart也是有限集
+	if ret := ver.verIsAFiniteSetByAllItemsInCartAreNonempty(stmt.Params[0], state); ret.IsTrue() || ret.IsErr() {
+		return ret
+	}
+
 	return NewEmptyExecUnknown()
 }
 
@@ -300,5 +309,103 @@ func (ver *Verifier) verIsANonEmptySetByBuiltinRules(stmt *ast.SpecFactStmt, sta
 		}
 	}
 
+	// 如果是 cart，那cart的每一位是非空集合，所以cart也是非空集合
+	if ret := ver.verIsANonEmptySetByAllItemsInCartAreNonempty(stmt.Params[0], state); ret.IsTrue() || ret.IsErr() {
+		return ret
+	}
+
 	return NewEmptyExecUnknown()
+}
+
+func (ver *Verifier) verIsAFiniteSetByAllItemsInCartAreNonempty(cart ast.Obj, state *VerState) ExecRet {
+	// 先判断是不是 cart
+	cartFn, ok := cart.(*ast.FnObj)
+	if !ok {
+		return NewEmptyExecUnknown()
+	}
+
+	if !ast.IsFn_WithHeadName(cart, glob.KeywordCart) {
+		return NewEmptyExecUnknown()
+	}
+
+	// 然后一位一位地检查每一项是否是有限集
+	for i := range cartFn.Params {
+		isFiniteFact := ast.NewIsAFiniteSetFact(cartFn.Params[i], glob.BuiltinLine)
+		verRet := ver.VerFactStmt(isFiniteFact, state)
+		if verRet.IsErr() || verRet.IsUnknown() {
+			return NewEmptyExecUnknown()
+		}
+	}
+
+	// 如果所有项都是有限集，那么 cart 也是有限集
+	return ver.maybeAddSuccessMsgString(state, "", fmt.Sprintf("cart %s is a finite set because all its items are finite sets.", cart), NewEmptyExecTrue())
+}
+
+func (ver *Verifier) verIsANonEmptySetByAllItemsInCartAreNonempty(cart ast.Obj, state *VerState) ExecRet {
+	// 先判断是不是 cart
+	cartFn, ok := cart.(*ast.FnObj)
+	if !ok {
+		return NewEmptyExecUnknown()
+	}
+
+	if !ast.IsFn_WithHeadName(cart, glob.KeywordCart) {
+		return NewEmptyExecUnknown()
+	}
+
+	// 然后一位一位地检查每一项是否是非空集合
+	for i := range cartFn.Params {
+		isNonEmptyFact := ast.NewIsANonEmptySetFact(cartFn.Params[i], glob.BuiltinLine)
+		verRet := ver.VerFactStmt(isNonEmptyFact, state)
+		if verRet.IsErr() || verRet.IsUnknown() {
+			return NewEmptyExecUnknown()
+		}
+	}
+
+	// 如果所有项都是非空集合，那么 cart 也是非空集合
+	return ver.maybeAddSuccessMsgString(state, "", fmt.Sprintf("cart %s is a nonempty set because all its items are nonempty sets.", cart), NewEmptyExecTrue())
+}
+
+func (ver *Verifier) verExistPropItemExistsInByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	if len(stmt.Params) != 2 {
+		return NewExecErr(fmt.Sprintf("item_exists_in expects 2 parameters, got %d", len(stmt.Params)))
+	}
+
+	existParams, factParams := ast.GetExistParamsAndFactParamsFromExistFactStmt(stmt)
+
+	if len(existParams) != 1 {
+		return NewExecErr(fmt.Sprintf("item_exists_in expects 1 exist parameter, got %d", len(existParams)))
+	}
+
+	if len(factParams) != 1 {
+		return NewExecErr(fmt.Sprintf("item_exists_in expects 1 fact parameter, got %d", len(factParams)))
+	}
+
+	inFact := ast.NewInFactWithObj(existParams[0], factParams[0])
+	verRet := ver.VerFactStmt(inFact, state)
+	if verRet.IsNotTrue() {
+		return verRet
+	}
+
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), "item_exists_in is true because the exist parameter is in the fact parameter.", NewEmptyExecTrue())
+}
+
+func (ver *Verifier) verTruePurePropItemExistsInByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	if len(stmt.Params) != 1 {
+		return NewExecErr(fmt.Sprintf("item_exists_in expects 1 parameter, got %d", len(stmt.Params)))
+	}
+
+	// 是 finite set 然后 count > 0
+	isFiniteSet := ast.NewIsAFiniteSetFact(stmt.Params[0], glob.BuiltinLine)
+	verRet := ver.VerFactStmt(isFiniteSet, state)
+	if verRet.IsNotTrue() {
+		return verRet
+	}
+
+	isCountGreaterThanZero := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{ast.NewFnObj(ast.Atom(glob.KeywordCount), []ast.Obj{stmt.Params[0]}), ast.Atom("0")}, glob.BuiltinLine)
+	verRet = ver.VerFactStmt(isCountGreaterThanZero, state)
+	if verRet.IsNotTrue() {
+		return NewEmptyExecUnknown()
+	}
+
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), "item_exists_in is true because the set is a finite set and the count is greater than 0.", NewEmptyExecTrue())
 }

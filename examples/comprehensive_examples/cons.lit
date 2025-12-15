@@ -21,7 +21,7 @@ have nil U
 fn l(p U) U => l(nil) = nil
 fn r(p U) U => r(nil) = nil
 fn cons(x U, y U) U => l(cons(x,y))=x, r(cons(x,y))=y, cons(x, y) != nil
-know @cons_is_unique(x0,y0,x1,y1 obj): cons(x0, y0) = cons(x1, y1) => x0 = x1, y0 = y1
+know imply cons_is_unique(x0,y0,x1,y1 obj): cons(x0, y0) = cons(x1, y1) => x0 = x1, y0 = y1
 
 # important properties
 # every element in U is either nil or a cons of something

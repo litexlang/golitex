@@ -185,7 +185,7 @@ func (env *Env) newPureFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 		env.TransitivePropMem[string(fact.PropName)][fact.Params[0].String()] = append(env.TransitivePropMem[string(fact.PropName)][fact.Params[0].String()], fact.Params[1])
 	}
 
-	if glob.IsBuiltinObjOrPropName(string(fact.PropName)) {
+	if glob.IsBuiltinPropName(string(fact.PropName)) || glob.IsBuiltinExistPropName(string(fact.PropName)) {
 		ret := env.BuiltinPropExceptEqualPostProcess(fact)
 		// Inherit derived facts from builtin prop post-processing
 		return ret

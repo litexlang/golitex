@@ -251,6 +251,22 @@ func Get_FnTemplate_InObjForm_ParamSetsAndRetSet(obj Obj) ([]Obj, Obj, bool) {
 	return paramSets, objAsFnObj.Params[0], true
 }
 
+func GetExistParamsAndFactParamsFromExistFactStmt(stmt *SpecFactStmt) ([]Obj, []Obj) {
+	lengthOfExistParams, _ := strconv.Atoi(string(stmt.Params[0].(Atom)))
+
+	existParams := []Obj{}
+	factParams := []Obj{}
+	for i := 1; i < lengthOfExistParams+1; i++ {
+		existParams = append(existParams, stmt.Params[i])
+	}
+
+	for i := lengthOfExistParams + 1; i < len(stmt.Params); i++ {
+		factParams = append(factParams, stmt.Params[i])
+	}
+
+	return existParams, factParams
+}
+
 func MakeExistFactParamsSlice(existParams []Obj, paramsInFact []Obj) []Obj {
 	lengthOfExistParams := len(existParams)
 

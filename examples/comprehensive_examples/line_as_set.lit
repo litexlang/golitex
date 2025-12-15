@@ -16,7 +16,7 @@ have fn:
     line(a, b, c R) subsets(cart(R, R)):
         line(a, b, c) = {x cart(R, R): a * x[1] + b * x[2] = c}
         $line_as_intensional_set(line(a, b, c), a, b, c)
-        line(a, b, c) $in set
+        line(a, b, c) $is_a_set
 
     prove:
         have l set = {x cart(R, R): a * x[1] + b * x[2] = c}
