@@ -1,0 +1,8 @@
+implication p(x R):
+    x > 0
+
+prove_implication p(x):
+    =>:
+        x > -1
+    prove:
+        ...

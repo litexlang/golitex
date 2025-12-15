@@ -294,7 +294,7 @@ func (env *Env) newTruePureFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) glob
 		}
 	}
 
-	for _, thenFact := range propDef.ThenFacts {
+	for _, thenFact := range propDef.ImplicationFacts {
 		instantiated, err := thenFact.InstantiateFact(uniMap)
 		if err != nil {
 			return glob.ErrRet(err)

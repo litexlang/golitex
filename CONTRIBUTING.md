@@ -40,7 +40,9 @@ Our commit messages follow the [Conventional Commits](https://www.conventionalco
 ```
 
 **Type** (required): One of the following:
-- `feat`: 更新功能（新建，删除，改变）
+- `feat`: 新功能（新建，删除，改变）
+- `update`: 强化功能
+- `delete`: 删除功能
 - `fix`: 修补bug
 - `docs`: 文档（documentation）
 - `style`: 格式（不影响代码运行的变动）

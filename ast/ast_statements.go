@@ -38,10 +38,10 @@ type DefHeader struct {
 }
 
 type DefPropStmt struct {
-	DefHeader *DefHeader
-	DomFacts  FactStmtSlice
-	IffFacts  FactStmtSlice
-	ThenFacts FactStmtSlice
+	DefHeader        *DefHeader
+	DomFacts         FactStmtSlice
+	IffFacts         FactStmtSlice
+	ImplicationFacts FactStmtSlice
 
 	Line uint
 }
@@ -514,6 +514,23 @@ type ProveForStmt struct {
 	DomFacts      FactStmtSlice
 	ThenFacts     FactStmtSlice
 	Proofs        StmtSlice
+
+	Line uint
+}
+
+type ImplicationStmt struct {
+	DefHeader        *DefHeader
+	DomFacts         FactStmtSlice
+	ImplicationFacts FactStmtSlice
+
+	Line uint
+}
+
+type ProveImplicationStmt struct {
+	ImplicationName string
+	Params          StrSlice
+	ImplicationFact FactStmtSlice
+	Proof           StmtSlice
 
 	Line uint
 }
