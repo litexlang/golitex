@@ -34,8 +34,8 @@ const (
 	KeywordProp      = "prop"
 	KeywordExistProp = "exist_prop"
 
-	KeywordImplication      = "implication"
-	KeywordProveImplication = "prove_implication"
+	KeywordImplication      = "imply"
+	KeywordProveImplication = "prove_imply"
 
 	KeywordHave = "have"
 	KeywordLet  = "let"
