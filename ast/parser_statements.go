@@ -466,10 +466,7 @@ func (p *TbParser) haveFnStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	err = p.NewDefinedNameInCurrentParseEnv(string(defFnStmt.(*DefFnStmt).Name))
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+	// Note: defFnStmt already adds the function name to the environment, so we don't need to add it again here
 
 	// Check if it's prove or case-by-case
 	if len(tb.body) >= 2 && tb.body[1].header.is(glob.KeywordProve) {

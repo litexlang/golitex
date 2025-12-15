@@ -54,7 +54,7 @@ set_fn solutions_of_congruence_modulo(a Z, b Z, m Z) x Z:
 
 forall a Z, b Z, m Z:
     $int_set_has_lower_bound_and_upper_bound_is_finite(solutions_of_congruence_modulo(a, b, m), 0, m)
-    solutions_of_congruence_modulo(a, b, m) $in finite_set
+    solutions_of_congruence_modulo(a, b, m) $is_a_finite_set
 
 prop solutions_of_congruence_is_finite(a Z, b Z, m Z):
     or:
@@ -71,7 +71,7 @@ set_fn distinct_solutions_of_congruence(a Z, b Z, m Z) x Z:
 
 forall a Z, b Z, m Z:
     $int_set_has_lower_bound_and_upper_bound_is_finite(distinct_solutions_of_congruence(a, b, m), 0, m)
-    distinct_solutions_of_congruence(a, b, m) $in finite_set
+    distinct_solutions_of_congruence(a, b, m) $is_a_finite_set
 
 know:
     forall a Z, b Z, m Z:

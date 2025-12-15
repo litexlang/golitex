@@ -12,10 +12,10 @@ fn product_of_int_finite_set(s finite_set)Z:
         forall x s:
             product_of_int_finite_set(s + 1) = product_of_int_finite_set(s) * x
 
-know @int_set_has_lower_bound_and_upper_bound_is_finite(s set, lower_bound Z, upper_bound Z):
+know imply int_set_has_lower_bound_and_upper_bound_is_finite(s set, lower_bound Z, upper_bound Z):
     forall x s:
         x $in Z
         lower_bound <= x
         x <= upper_bound
     =>:
-        s $in finite_set
+        s $is_a_finite_set

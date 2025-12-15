@@ -34,7 +34,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 	case *ast.KnowPropStmt:
 		execRet = exec.knowPropStmt(stmt)
 		if execRet.IsTrue() {
-			execRet = execRet.AddMsg("Warning: `know @` saves the facts you write without verification. You may introduce incorrect facts by mistake. Use it with great caution!\n")
+			execRet = execRet.AddMsg("Warning: `know imply ` saves the facts you write without verification. You may introduce incorrect facts by mistake. Use it with great caution!\n")
 		}
 	case *ast.ClaimProveStmt:
 		execRet = exec.execClaimStmtProve(stmt)

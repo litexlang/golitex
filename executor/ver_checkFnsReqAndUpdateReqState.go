@@ -129,12 +129,9 @@ func (ver *Verifier) SetBuilderFnRequirement(objAsFnObj *ast.FnObj, state *VerSt
 	// Check all parameters in facts satisfy fn requirement
 	for _, fact := range setBuilderStruct.Facts {
 		// Check propName
-		verRet := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(fact.PropName, state)
-		if verRet.IsErr() {
-			return verRet
-		}
-		if verRet.IsUnknown() {
-			return NewExecErr(fmt.Sprintf("prop name %s in set builder must be an atom or function", fact.PropName))
+		verRet := ver.Env.IsPropDefinedOrBuiltinProp(fact)
+		if verRet.IsNotTrue() {
+			return NewExecErr(verRet.String())
 		}
 
 		// Check all params in the fact

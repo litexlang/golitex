@@ -9,7 +9,7 @@ prove:
 
     prove:
         $subset_of_finite_set_is_finite_set(x, y)
-        x $in finite_set
+        x $is_a_finite_set
         count(x) <= count(y)
 
 prove:

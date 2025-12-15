@@ -42,6 +42,10 @@ func (env *Env) AtomsInSpecFactDefined(stmt *ast.SpecFactStmt, extraParams map[s
 func (env *Env) IsPropDefinedOrBuiltinProp(stmt *ast.SpecFactStmt) glob.GlobRet {
 	// Check if it's an exist_prop defined by user
 	if stmt.TypeEnum == ast.TrueExist_St || stmt.TypeEnum == ast.FalseExist_St {
+		if glob.IsBuiltinExistPropName(string(stmt.PropName)) {
+			return glob.NewGlobTrue("")
+		}
+
 		existPropDef := env.GetExistPropDef(stmt.PropName)
 		if existPropDef != nil {
 			return glob.NewGlobTrue("")
@@ -49,6 +53,10 @@ func (env *Env) IsPropDefinedOrBuiltinProp(stmt *ast.SpecFactStmt) glob.GlobRet 
 		return glob.ErrRet(fmt.Errorf("undefined exist_prop: %s", stmt.PropName))
 	} else {
 		if glob.IsBuiltinPropName(string(stmt.PropName)) {
+			return glob.NewGlobTrue("")
+		}
+
+		if glob.IsBuiltinExistPropName(string(stmt.PropName)) {
 			return glob.NewGlobTrue("")
 		}
 
@@ -191,17 +199,17 @@ func (env *Env) AtomsInSetBuilderDefined(obj ast.Obj, extraParams map[string]str
 		return glob.ErrRet(fmt.Errorf("failed to parse setBuilder: %s", err.Error()))
 	}
 
+	// Check parentSet
+	if ret := env.AtomsInObjDefinedOrBuiltin(setBuilder.ParentSet, extraParams); ret.IsNotTrue() {
+		return ret
+	}
+
 	// Merge setBuilder param into extraParams (it's a bound variable)
 	combinedParams := make(map[string]struct{})
 	for k, v := range extraParams {
 		combinedParams[k] = v
 	}
 	combinedParams[setBuilder.Param] = struct{}{}
-
-	// Check parentSet
-	if ret := env.AtomsInObjDefinedOrBuiltin(setBuilder.ParentSet, combinedParams); ret.IsNotTrue() {
-		return ret
-	}
 
 	// Check facts in setBuilder
 	for _, fact := range setBuilder.Facts {
