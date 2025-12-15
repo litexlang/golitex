@@ -33,14 +33,14 @@ func (e *Env) InsertFnInFnTT(fc ast.Obj, fnTNoName *ast.FnTStruct) glob.GlobRet 
 				AsFnTStruct: fnTFcIsIn,
 			},
 		}
-		return glob.TrueRet("")
+		return glob.NewGlobTrue("")
 	} else {
 		fnDefs = append(fnDefs, FnInFnTMemItem{
 			// AsFcFn:      asFcFn,
 			AsFnTStruct: fnTFcIsIn,
 		})
 		memory[fc.String()] = fnDefs
-		return glob.TrueRet("")
+		return glob.NewGlobTrue("")
 	}
 }
 

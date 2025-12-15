@@ -59,7 +59,7 @@ func (env *Env) newSpecFactNoPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 	if ret.IsErr() {
 		return ret
 	} else if isEqualFact {
-		return glob.TrueRet("")
+		return glob.NewGlobTrue("")
 	}
 	// }
 
@@ -75,7 +75,7 @@ func (env *Env) newSpecFactNoPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 		return ret
 	}
 
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 // 为了防止 p 的定义中推导出q，q的定义中推导出p，导致循环定义，所以需要这个函数
@@ -107,7 +107,7 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) glob.GlobRet {
 	if ret.IsErr() {
 		return ret
 	} else if isEqualFact {
-		return glob.TrueRet("")
+		return glob.NewGlobTrue("")
 	}
 
 	ret = env.storeSpecFactInMem(fact)
@@ -116,16 +116,24 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) glob.GlobRet {
 	}
 
 	// postprocess
+	var postProcessRet glob.GlobRet
 	if fact.IsExist_St_Fact() {
 		// if fact.PropName == glob.KeywordItemExistsIn {
 		// 	existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordItemExistsIn), []ast.Obj{fact.Params[2]}, fact.Line)
 		// 	ret := env.storeSpecFactInMem(existInFact)
 		// 	return ret
 		// }
-		return env.newExist_St_FactPostProcess(fact)
+		postProcessRet = env.newExist_St_FactPostProcess(fact)
+	} else {
+		postProcessRet = env.newPureFactPostProcess(fact)
 	}
 
-	return env.newPureFactPostProcess(fact)
+	if postProcessRet.IsErr() {
+		return postProcessRet
+	}
+
+	// Return derived facts from post-processing
+	return postProcessRet
 }
 
 func storeCommutativeTransitiveFact(mem map[string]*[]ast.Obj, fact *ast.SpecFactStmt) glob.GlobRet {
@@ -141,37 +149,37 @@ func storeCommutativeTransitiveFact(mem map[string]*[]ast.Obj, fact *ast.SpecFac
 
 	if leftGot && rightGot {
 		if storedEqualLeftFcs == storedEqualRightFcs {
-			return glob.TrueRet("")
+			return glob.NewGlobTrue("")
 		} else {
 			newEqualFcs := []ast.Obj{}
 			newEqualFcs = append(newEqualFcs, *storedEqualLeftFcs...)
 			newEqualFcs = append(newEqualFcs, *storedEqualRightFcs...)
 			*storedEqualLeftFcs = newEqualFcs
 			*storedEqualRightFcs = newEqualFcs
-			return glob.TrueRet("")
+			return glob.NewGlobTrue("")
 		}
 	}
 
 	if leftGot && !rightGot {
 		*storedEqualLeftFcs = append(*storedEqualLeftFcs, fact.Params[1])
 		mem[rightAsStr] = storedEqualLeftFcs
-		return glob.TrueRet("")
+		return glob.NewGlobTrue("")
 	}
 
 	if !leftGot && rightGot {
 		*storedEqualRightFcs = append(*storedEqualRightFcs, fact.Params[0])
 		mem[leftAsStr] = storedEqualRightFcs
-		return glob.TrueRet("")
+		return glob.NewGlobTrue("")
 	}
 
 	if !leftGot && !rightGot {
 		newEqualFcs := []ast.Obj{fact.Params[0], fact.Params[1]}
 		mem[leftAsStr] = &newEqualFcs
 		mem[rightAsStr] = &newEqualFcs
-		return glob.TrueRet("")
+		return glob.NewGlobTrue("")
 	}
 
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 func (env *Env) newPureFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
@@ -184,34 +192,42 @@ func (env *Env) newPureFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 	}
 
 	if glob.IsBuiltinObjOrPropName(string(fact.PropName)) {
-		return env.BuiltinPropExceptEqualPostProcess(fact)
+		ret := env.BuiltinPropExceptEqualPostProcess(fact)
+		// Inherit derived facts from builtin prop post-processing
+		return ret
 	}
 
 	if fact.PropName == glob.KeywordEqualSet {
-		return env.equalSetFactPostProcess(fact)
+		ret := env.equalSetFactPostProcess(fact)
+		// Inherit derived facts from equal set post-processing
+		return ret
 	}
 
 	propDef := env.GetPropDef(fact.PropName)
 
 	if propDef != nil {
 		if fact.TypeEnum == ast.TruePure {
-			return env.newTruePureFact_EmitFactsKnownByDef(fact)
+			ret := env.newTruePureFact_EmitFactsKnownByDef(fact)
+			// Inherit derived facts from prop definition
+			return ret
 		}
-		return glob.TrueRet("")
+		return glob.NewGlobTrue("")
 	}
 
 	existPropDef := env.GetExistPropDef(fact.PropName)
 	if existPropDef != nil {
 		if fact.TypeEnum == ast.TruePure {
-			return glob.TrueRet("")
+			return glob.NewGlobTrue("")
 		} else {
 			for _, thenFact := range existPropDef.DefBody.IffFacts {
 				_, ok := thenFact.(*ast.SpecFactStmt)
 				if !ok {
-					return glob.TrueRet("")
+					return glob.NewGlobTrue("")
 				}
 			}
-			return env.newFalseExistFact_EmitEquivalentUniFact(fact)
+			ret := env.newFalseExistFact_EmitEquivalentUniFact(fact)
+			// Inherit derived facts from exist prop processing
+			return ret
 		}
 	}
 
@@ -225,22 +241,35 @@ func (env *Env) equalSetFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 		return glob.ErrRet(fmt.Errorf("equal_set fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
 	}
 
+	derivedFacts := []string{}
+
 	// Create a = b fact
 	equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{fact.Params[0], fact.Params[1]}, fact.Line)
 	ret := env.NewFact(equalFact)
 	if ret.IsErr() {
 		return ret
 	}
+	derivedFacts = append(derivedFacts, equalFact.String())
 
-	return glob.TrueRet("")
+	// Collect any derived facts from the equality fact
+	if ret.IsTrue() && len(ret.GetMsgs()) > 0 {
+		derivedFacts = append(derivedFacts, ret.GetMsgs()...)
+	}
+
+	if len(derivedFacts) > 0 {
+		return glob.NewGlobTrueWithMsgs(derivedFacts)
+	}
+	return glob.NewGlobTrue("")
 }
 
 func (env *Env) newTruePureFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) glob.GlobRet {
 	propDef := env.GetPropDef(fact.PropName)
 	if propDef == nil {
 		// TODO 这里需要考虑prop的定义是否在当前包中。当然这里有点复杂，因为如果是内置的prop，那么可能需要到builtin包中去找
-		return glob.TrueRet("")
+		return glob.NewGlobTrue("")
 	}
+
+	derivedFacts := []string{}
 
 	uniMap := map[string]ast.Obj{}
 	for i, propParam := range propDef.DefHeader.Params {
@@ -260,6 +289,15 @@ func (env *Env) newTruePureFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) glob
 		if ret.IsErr() {
 			return ret
 		}
+
+		// Collect the instantiated fact itself as a derived fact
+		if ret.IsTrue() {
+			if specFact, ok := instantiated.(*ast.SpecFactStmt); ok {
+				derivedFacts = append(derivedFacts, specFact.String())
+			} else {
+				derivedFacts = append(derivedFacts, instantiated.String())
+			}
+		}
 	}
 
 	for _, thenFact := range propDef.ThenFacts {
@@ -275,16 +313,28 @@ func (env *Env) newTruePureFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) glob
 		if ret.IsErr() {
 			return ret
 		}
+
+		// Collect the instantiated fact itself as a derived fact
+		if ret.IsTrue() {
+			if specFact, ok := instantiated.(*ast.SpecFactStmt); ok {
+				derivedFacts = append(derivedFacts, specFact.String())
+			} else {
+				derivedFacts = append(derivedFacts, instantiated.String())
+			}
+		}
 	}
 
-	return glob.TrueRet("")
+	if len(derivedFacts) > 0 {
+		return glob.NewGlobTrueWithMsgs(derivedFacts)
+	}
+	return glob.NewGlobTrue("")
 }
 
 func (env *Env) newExist_St_FactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 	if fact.TypeEnum == ast.TrueExist_St {
 		return env.newTrueExist_St_FactPostProcess(fact)
 	} else {
-		return glob.TrueRet("")
+		return glob.NewGlobTrue("")
 	}
 }
 
@@ -301,7 +351,7 @@ func (env *Env) newFalseExistFact_EmitEquivalentUniFact(fact *ast.SpecFactStmt) 
 		return glob.ErrRet(fmt.Errorf("exist fact %s has no definition", fact))
 	}
 
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 // have(exist ... st ...) => exist
@@ -336,7 +386,7 @@ func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) glob.Glo
 		}
 	}
 
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, glob.GlobRet) {
@@ -381,16 +431,16 @@ func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, glob
 		thenFacts = append(thenFacts, specThenFact)
 	}
 
-	return ast.NewUniFact(existPropDef.ExistParams, existPropDef.ExistParamSets, domFacts, thenFacts, existPropDef.Line), glob.TrueRet("")
+	return ast.NewUniFact(existPropDef.ExistParams, existPropDef.ExistParamSets, domFacts, thenFacts, existPropDef.Line), glob.NewGlobTrue("")
 }
 
 func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, glob.GlobRet) {
 	if !fact.IsTrue() {
-		return false, glob.TrueRet("")
+		return false, glob.NewEmptyGlobErr()
 	}
 
 	if fact.PropName != glob.KeySymbolEqual {
-		return false, glob.TrueRet("")
+		return false, glob.NewEmptyGlobErr()
 	}
 
 	if len(fact.Params) != 2 {
@@ -434,7 +484,7 @@ func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, glob.Glob
 		return false, ret
 	}
 
-	return true, glob.TrueRet("")
+	return true, glob.NewGlobTrue("")
 }
 
 func (env *Env) StoreTrueEqualValues(key, value ast.Obj) {
@@ -463,7 +513,7 @@ func (env *Env) storeSymbolSimplifiedValue(left, right ast.Obj) glob.GlobRet {
 		env.StoreTrueEqualValues(left, simplifiedNewRight)
 	}
 
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 func (env *Env) GetEqualObjs(obj ast.Obj) (*[]ast.Obj, bool) {
@@ -508,7 +558,7 @@ func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, [
 		instantiatedThenFacts = append(instantiatedThenFacts, instantiated)
 	}
 
-	return instantiatedIffFacts, instantiatedThenFacts, glob.TrueRet("")
+	return instantiatedIffFacts, instantiatedThenFacts, glob.NewGlobTrue("")
 }
 
 func (env *Env) ExecDefFnTemplate(stmt *ast.FnTemplateDefStmt) glob.GlobRet {
@@ -524,7 +574,7 @@ func (env *Env) ExecDefFnTemplate(stmt *ast.FnTemplateDefStmt) glob.GlobRet {
 	}
 
 	env.FnTemplateDefMem[string(stmt.TemplateDefHeader.Name)] = *stmt
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 func (env *Env) newUniFact_ThenFactIsSpecFact(stmt *ast.UniFactStmt, thenFact *ast.SpecFactStmt) glob.GlobRet {
@@ -551,7 +601,7 @@ func (env *Env) newUniFact_ThenFactIsIffStmt(stmt *ast.UniFactStmt, thenFact *as
 		return ret
 	}
 
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 func (env *Env) newUniFact_ThenFactIsUniFactStmt(stmt *ast.UniFactStmt, thenFact *ast.UniFactStmt) glob.GlobRet {
@@ -567,12 +617,12 @@ func (env *Env) newUniFact_ThenFactIsEqualsFactStmt(stmt *ast.UniFactStmt, thenF
 			return ret
 		}
 	}
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 // func (env *Env) storeFactInEnumMem(stmt *ast.EnumStmt) glob.GlobRet {
 // 	env.EnumFacts[stmt.CurSet.String()] = stmt.Items
-// 	return glob.TrueRet("")
+// 	return glob.NewGlobTrue("")
 // }
 
 func (env *Env) storeSpecFactInMem(stmt *ast.SpecFactStmt) glob.GlobRet {
@@ -581,7 +631,7 @@ func (env *Env) storeSpecFactInMem(stmt *ast.SpecFactStmt) glob.GlobRet {
 		return ret
 	}
 
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 func (env *Env) storeUniFact(specFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt) glob.GlobRet {
@@ -590,7 +640,7 @@ func (env *Env) storeUniFact(specFact *ast.SpecFactStmt, uniFact *ast.UniFactStm
 		return ret
 	}
 
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 func (env *Env) newEqualsFact(stmt *ast.EqualsFactStmt) glob.GlobRet {
@@ -601,7 +651,7 @@ func (env *Env) newEqualsFact(stmt *ast.EqualsFactStmt) glob.GlobRet {
 			return ret
 		}
 	}
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 func (env *Env) newEqualsFactNoPostProcess(stmt *ast.EqualsFactStmt) glob.GlobRet {
@@ -612,7 +662,7 @@ func (env *Env) newEqualsFactNoPostProcess(stmt *ast.EqualsFactStmt) glob.GlobRe
 			return ret
 		}
 	}
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 // equalFactPostProcess_SetBuilderEquality 处理 x = {param parentSet: facts} 的情况
@@ -621,7 +671,7 @@ func (env *Env) equalFactPostProcess_SetBuilderEquality(left, right ast.Obj) glo
 	// 尝试获取 set builder（可能是直接的，也可能是通过 equal facts 得到的）
 	setBuilderObj := env.GetSetBuilderEqualToObj(right)
 	if setBuilderObj == nil {
-		return glob.TrueRet("")
+		return glob.NewGlobTrue("")
 	}
 
 	// 从 set builder 中提取 param, parentSet, facts
@@ -668,5 +718,5 @@ func (env *Env) equalFactPostProcess_SetBuilderEquality(left, right ast.Obj) glo
 	if ret.IsErr() {
 		return ret
 	}
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }

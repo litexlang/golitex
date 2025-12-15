@@ -32,7 +32,7 @@ func (env *Env) IsValidIdentifierAvailable(name string) glob.GlobRet {
 		return glob.ErrRet(duplicateDefError(name))
 	}
 
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 func (env *Env) NewDefProp_BuiltinProp(stmt *ast.DefPropStmt) glob.GlobRet {
@@ -70,7 +70,7 @@ func (env *Env) NewDefProp_BuiltinProp(stmt *ast.DefPropStmt) glob.GlobRet {
 
 	key := string(stmt.DefHeader.Name)
 	env.PropDefMem[key] = *stmt
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) glob.GlobRet {
@@ -113,7 +113,7 @@ func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) glob.GlobR
 
 	key := string(stmt.DefHeader.Name)
 	env.PropDefMem[key] = *stmt
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 func (env *Env) AtomsInFnTemplateFnTemplateDeclared(name ast.Atom, stmt *ast.FnTemplateDefStmt) glob.GlobRet {
@@ -173,7 +173,7 @@ func (env *Env) AtomsInFnTemplateFnTemplateDeclared(name ast.Atom, stmt *ast.FnT
 		}
 	}
 
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 func (env *Env) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) glob.GlobRet {
@@ -220,7 +220,7 @@ func (env *Env) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) 
 
 	key := string(stmt.DefBody.DefHeader.Name)
 	env.ExistPropDefMem[key] = *stmt
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 func (e *Env) NewObj_NoDuplicate(name string, stmt ast.FnTemplate_Or_DefObjStmtInterface) glob.GlobRet {
@@ -231,7 +231,7 @@ func (e *Env) NewObj_NoDuplicate(name string, stmt ast.FnTemplate_Or_DefObjStmtI
 
 	e.ObjDefMem[name] = stmt
 
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 // DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined defines new objects in the environment
@@ -284,5 +284,5 @@ func (env *Env) DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmt *ast.De
 		}
 	}
 
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
