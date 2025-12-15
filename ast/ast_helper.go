@@ -149,8 +149,8 @@ func (stmt *EqualsFactStmt) ToEqualFacts_PairwiseCombination() []*SpecFactStmt {
 	return ret
 }
 
-func (stmt *ClaimPropStmt) ToProp() *DefPropStmt {
-	return NewDefPropStmt(stmt.Prop.DefHeader, stmt.Prop.DomFactsOrNil, stmt.Prop.IffFactsOrNil, []FactStmt{}, stmt.GetLine())
+func (stmt *ClaimImplicationStmt) ToProp() *DefPropStmt {
+	return stmt.Implication.ToProp()
 }
 
 func (strSlice StrSlice) ToObjSlice() []Obj {

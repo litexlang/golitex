@@ -108,8 +108,8 @@ func NewImportFileStmt(path string, line uint) *ImportFileStmt {
 	return &ImportFileStmt{path, line}
 }
 
-func NewClaimPropStmt(prop *DefPropStmt, proofs []Stmt, line uint) *ClaimPropStmt {
-	return &ClaimPropStmt{prop, proofs, line}
+func NewClaimPropStmt(implication *ImplicationStmt, proofs []Stmt, line uint) *ClaimImplicationStmt {
+	return &ClaimImplicationStmt{implication, proofs, line}
 }
 
 func NewClaimExistPropStmt(existProp *DefExistPropStmt, proofs []Stmt, haveObj []Obj, line uint) *ClaimExistPropStmt {
