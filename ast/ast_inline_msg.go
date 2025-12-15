@@ -42,9 +42,9 @@ func (c *DefPropStmt) InlineString() string {
 		builder.WriteString(glob.KeySymbolEquivalent)
 		builder.WriteString(inlineFactsString(c.IffFacts))
 	}
-	if len(c.ThenFacts) > 0 {
+	if len(c.ImplicationFacts) > 0 {
 		builder.WriteString(glob.KeySymbolRightArrow)
-		builder.WriteString(inlineFactsString(c.ThenFacts))
+		builder.WriteString(inlineFactsString(c.ImplicationFacts))
 	}
 	return builder.String()
 }
