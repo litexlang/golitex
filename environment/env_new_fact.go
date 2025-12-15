@@ -55,11 +55,8 @@ func (env *Env) NewFactWithDeclarationCheck(fact ast.FactStmt) glob.GlobRet {
 
 func (env *Env) newSpecFactNoPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 	// if env.CurMatchProp == nil {
-	isEqualFact, ret := env.isTrueEqualFact_StoreIt(fact)
-	if ret.IsErr() {
-		return ret
-	} else if isEqualFact {
-		return glob.NewGlobTrue("")
+	if isEqualFact := ast.IsTrueEqualFact(fact); isEqualFact {
+		return env.isTrueEqualFact_StoreIt(fact)
 	}
 	// }
 
@@ -70,7 +67,7 @@ func (env *Env) newSpecFactNoPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 	// }
 
 	// err := env.KnownFacts.SpecFactMem.NewFactInSpecFactMem(fact, env.CurMatchEnv)
-	ret = env.storeSpecFactInMem(fact)
+	ret := env.storeSpecFactInMem(fact)
 	if ret.IsErr() {
 		return ret
 	}
@@ -103,14 +100,11 @@ func (env *Env) newLogicExprFact(fact *ast.OrStmt) glob.GlobRet {
 }
 
 func (env *Env) newSpecFact(fact *ast.SpecFactStmt) glob.GlobRet {
-	isEqualFact, ret := env.isTrueEqualFact_StoreIt(fact)
-	if ret.IsErr() {
-		return ret
-	} else if isEqualFact {
-		return glob.NewGlobTrue("")
+	if isEqualFact := ast.IsTrueEqualFact(fact); isEqualFact {
+		return env.isTrueEqualFact_StoreIt(fact)
 	}
 
-	ret = env.storeSpecFactInMem(fact)
+	ret := env.storeSpecFactInMem(fact)
 	if ret.IsErr() {
 		return ret
 	}
@@ -434,57 +428,49 @@ func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, glob
 	return ast.NewUniFact(existPropDef.ExistParams, existPropDef.ExistParamSets, domFacts, thenFacts, existPropDef.Line), glob.NewGlobTrue("")
 }
 
-func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, glob.GlobRet) {
-	if !fact.IsTrue() {
-		return false, glob.NewEmptyGlobErr()
-	}
-
-	if fact.PropName != glob.KeySymbolEqual {
-		return false, glob.NewEmptyGlobErr()
-	}
-
+func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) glob.GlobRet {
 	if len(fact.Params) != 2 {
-		return true, glob.ErrRet(fmt.Errorf("'=' fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
+		return glob.ErrRet(fmt.Errorf("'=' fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
 	}
 
 	ret := storeCommutativeTransitiveFact(env.EqualMem, fact)
 	if ret.IsErr() {
-		return false, ret
+		return ret
 	}
 
 	// 如果 a = b 中，某一项是 数值型，那就算出来这个数值，卷后把它保留在equalMem中
 	ret = env.storeSymbolSimplifiedValue(fact.Params[0], fact.Params[1])
 	if ret.IsErr() {
-		return false, ret
+		return ret
 	}
 
 	// postprocess for cart: if x = cart(x1, x2, ..., xn)
 	if cart, ok := fact.Params[1].(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(cart.FnHead, glob.KeywordCart) {
 		ret = env.equalFactPostProcess_cart(fact)
 		if ret.IsErr() {
-			return false, ret
+			return ret
 		}
 	}
 
 	// 处理 tuple 相等的情况
 	ret = env.equalFactPostProcess_tupleEquality(fact.Params[0], fact.Params[1])
 	if ret.IsErr() {
-		return false, ret
+		return ret
 	}
 
 	// 处理 x = {1, 2, 3} 的情况
 	ret = env.equalFactPostProcess_listSetEquality(fact.Params[0], fact.Params[1])
 	if ret.IsErr() {
-		return false, ret
+		return ret
 	}
 
 	// 处理 x = {x Z: x > 5} 的情况
 	ret = env.equalFactPostProcess_SetBuilderEquality(fact.Params[0], fact.Params[1])
 	if ret.IsErr() {
-		return false, ret
+		return ret
 	}
 
-	return true, glob.NewGlobTrue("")
+	return glob.NewGlobTrue("")
 }
 
 func (env *Env) StoreTrueEqualValues(key, value ast.Obj) {

@@ -501,4 +501,14 @@ func ObjIsRangeOrClosedRangeWith2Params(obj Obj) bool {
 	return false
 }
 
-//
+func IsTrueEqualFact(fact *SpecFactStmt) bool {
+	if fact.TypeEnum != TruePure {
+		return false
+	}
+
+	if fact.PropName != glob.KeySymbolEqual {
+		return false
+	}
+
+	return true
+}
