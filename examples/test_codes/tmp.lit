@@ -1,12 +1,7 @@
-implication p(x R):
-    x > 0
-
-let a R: $p(a)
-
-prop t(x R)
-
-know implication q(x R):
-    $t(x)
-
-forall x R: $q(x) => $t(x)
-
+let s finite_set:
+    count(s) = 1
+1 > 0
+count(s) > 0
+$item_exists_in(s)
+have a st $item_exists_in(s)
+a $in s

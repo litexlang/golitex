@@ -34,7 +34,7 @@ exist_prop index N st exist_index_where_item_is_zero(s seq(R)):
     s(index) = 0
 
 claim:
-    @pairwise_sum_of_IMO_2024_A5_Condition_is_zero_when_one_sum_is_zero(a seq(R), s seq(R)):
+imply pairwise_sum_of_IMO_2024_A5_Condition_is_zero_when_one_sum_is_zero(a seq(R), s seq(R)):
         $IMO_2024_A5_Condition(a)
         $is_pairwise_sum(s, a)
         $exist_index_where_item_is_zero(s)
@@ -44,7 +44,7 @@ claim:
         know $is_alternating_seq_and_has_bound(a, 1)
 
 claim:
-    @pairwise_difference_of_IMO_2024_A5_Condition_is_zero_when_one_difference_is_zero(a seq(R), d seq(R)):
+imply pairwise_difference_of_IMO_2024_A5_Condition_is_zero_when_one_difference_is_zero(a seq(R), d seq(R)):
         $IMO_2024_A5_Condition(a)
         $is_pairwise_difference(d, a)
         $exist_index_where_item_is_zero(d)
@@ -54,7 +54,7 @@ claim:
         know $is_identical_seq(a)
 
 claim:
-    @exist_a_zero_in_difference_or_sum_of_IMO_2024_A5_Condition(a seq(R), s seq(R), d seq(R)):
+imply exist_a_zero_in_difference_or_sum_of_IMO_2024_A5_Condition(a seq(R), s seq(R), d seq(R)):
         $IMO_2024_A5_Condition(a)
         $is_pairwise_sum(s, a)
         $is_pairwise_difference(d, a)
@@ -64,7 +64,7 @@ claim:
         know or($exist_index_where_item_is_zero(s), $exist_index_where_item_is_zero(d))
 
 claim:
-    @IMO_2024_Problem(a seq(R)):
+imply IMO_2024_Problem(a seq(R)):
         $IMO_2024_A5_Condition(a)
         =>:
             $IMO_2024_A5_Result(a)

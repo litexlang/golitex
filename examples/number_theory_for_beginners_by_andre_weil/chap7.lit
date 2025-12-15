@@ -69,15 +69,15 @@ prop is_isomorphism_of_groups(s set, op fn(s, s)s, e s, inv fn(s)s, s2 set, op2 
 forall s set, op fn(s, s)s, e s, inv fn(s)s, x s:
     or:
         $is_isomorphism_of_groups(subgroup_generated_by_item(s, op, e, inv, x), op, e, inv, Z, +, 0, -, index_of_y_in_subgroup_generated_by_item)
-        subgroup_generated_by_item(s, op, e, inv, x) $in finite_set
+        subgroup_generated_by_item(s, op, e, inv, x) $is_a_finite_set
 
 forall s set, op fn(s, s)s, e s, inv fn(s)s, x s:
-    subgroup_generated_by_item(s, op, e, inv, x) $in finite_set
+    subgroup_generated_by_item(s, op, e, inv, x) $is_a_finite_set
     =>:
         $is_isomorphism_of_groups(subgroup_generated_by_item(s, op, e, inv, x), op, e, inv, cc(len(subgroup_generated_by_item(s, op, e, inv, x))), cc_add(len(subgroup_generated_by_item(s, op, e, inv, x))), cc_e(len(subgroup_generated_by_item(s, op, e, inv, x))), cc_inv(len(subgroup_generated_by_item(s, op, e, inv, x))), index_of_y_in_subgroup_generated_by_item)
 
 exist_prop x s st is_cyclic_group(s set, op fn(s, s)s, e s, inv fn(s)s):
     $is_group(s, op, e, inv)
-    s $in finite_set
+    s $is_a_finite_set
     s = subgroup_generated_by_item(s, op, e, inv, x)
 

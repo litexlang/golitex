@@ -6,7 +6,7 @@ exist_prop index N st exist_index_where_item_is_zero(s seq(R)) <=> s(index) = 0
 prop IMO_2024_A5_Condition(a seq(R)) <=>forall n N => a(n+2) + a(n) * a(n) = a(n) + a(n+1) * a(n+1), abs(a(n+1) - a(n)) <= 1; $Seq::periodic(a)
 prop IMO_2024_A5_Result(a seq(R)) <=> or($is_identical_seq(a), $is_alternating_seq_and_has_bound(a, 1))
 
-claim @IMO_2024_Problem(a seq(R)): $IMO_2024_A5_Condition(a) => $IMO_2024_A5_Result(a); prove:
+claim imply IMO_2024_Problem(a seq(R)): $IMO_2024_A5_Condition(a) => $IMO_2024_A5_Result(a); prove:
     let s, d seq(R): forall n N => s(n) = a(n+1) + a(n); forall n N => d(n) = a(n+1) - a(n)
 
     claim forall n N => s(n+1) = s(n) * (1 + d(n)), d(n+1) = d(n) * (s(n) - 1), abs(d(n)) <= 1; prove:

@@ -1,9 +1,9 @@
 prove:
     fn exclude(s1, s2 set) set
 
-    know @exclude_property(s1, s2 set):
-        s1 $in set
-        s2 $in set
+    know imply exclude_property(s1, s2 set):
+        s1 $is_a_set
+        s2 $is_a_set
         =>:
             exclude(s1, s2) := x s1:
                 not x $in s2

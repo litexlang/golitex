@@ -21,7 +21,7 @@ prop is_0_K_polynomial(K field, f K_polynomial(K)):
     forall x K:
         f(x) = 0
 
-know @exist Q K_polynomial(K) st there_is_a_unique_K_polynomial_with_A_minus_BQ_is_0_or_order_smaller_than_degree_of_B(K field, A K_polynomial(K), B K_polynomial(K)):
+know imply exist Q K_polynomial(K) st there_is_a_unique_K_polynomial_with_A_minus_BQ_is_0_or_order_smaller_than_degree_of_B(K field, A K_polynomial(K), B K_polynomial(K)):
     not $is_0_K_polynomial(K, B)
     =>:
         or:
