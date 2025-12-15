@@ -127,11 +127,6 @@ func NewGlobUnknownWithMsgs(msgs []string) GlobRet {
 	return &GlobUnknown{Msg: msgs}
 }
 
-// TrueRet returns a GlobTrue with the given message. If message is empty, returns empty message.
-func TrueRet(msg string) GlobRet {
-	return NewGlobTrue(msg)
-}
-
 // ErrRet returns a GlobErr with the given error message. If err is nil, returns empty error message.
 func ErrRet(err error) GlobRet {
 	if err != nil {
@@ -226,13 +221,13 @@ func (v *GlobErr) AddMsg(msg string) GlobRet {
 }
 
 func NewEmptyGlobTrue() GlobRet {
-	return NewGlobTrue("")
+	return NewGlobTrueWithMsgs([]string{})
 }
 
 func NewEmptyGlobUnknown() GlobRet {
-	return NewGlobUnknown("")
+	return NewGlobUnknownWithMsgs([]string{})
 }
 
 func NewEmptyGlobErr() GlobRet {
-	return NewGlobErr("")
+	return NewGlobErrWithMsgs([]string{})
 }

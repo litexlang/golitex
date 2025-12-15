@@ -53,7 +53,7 @@ func (e *Env) GenerateUndeclaredRandomName_AndNotInMap(m map[string]struct{}) st
 
 func (e *Env) GetFnStructFromFnTName(fnTName *ast.FnObj) (*ast.FnTStruct, glob.GlobRet) {
 	if objFnTypeToFnTStruct, ok := ast.ObjFnT_To_FnTStruct(fnTName); ok {
-		return objFnTypeToFnTStruct, glob.TrueRet("")
+		return objFnTypeToFnTStruct, glob.NewGlobTrue("")
 	} else {
 		fnTNameHeadAsAtom, ok := fnTName.FnHead.(ast.Atom)
 		if !ok {
@@ -80,5 +80,11 @@ func (e *Env) getFnTDef_InstFnTStructOfIt(fnTDefName ast.Atom, templateParams []
 		return nil, glob.ErrRet(err)
 	}
 
-	return fnTStruct, glob.TrueRet("")
+	return fnTStruct, glob.NewGlobTrue("")
+}
+
+func (e *Env) AutoDerivedFactsMsg(originalFact string, derivedFacts []string) glob.GlobRet {
+	msgs := []string{originalFact, "-- Automatically derived facts --"}
+	msgs = append(msgs, derivedFacts...)
+	return glob.NewGlobTrueWithMsgs(msgs)
 }

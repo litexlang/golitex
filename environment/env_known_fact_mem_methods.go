@@ -24,13 +24,13 @@ import (
 func (s SpecFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string][]ast.SpecFactStmt, glob.GlobRet) {
 	switch stmt.TypeEnum {
 	case ast.TruePure:
-		return s.PureFacts, glob.TrueRet("")
+		return s.PureFacts, glob.NewGlobTrue("")
 	case ast.FalsePure:
-		return s.NotPureFacts, glob.TrueRet("")
+		return s.NotPureFacts, glob.NewGlobTrue("")
 	case ast.TrueExist_St:
-		return s.Exist_St_Facts, glob.TrueRet("")
+		return s.Exist_St_Facts, glob.NewGlobTrue("")
 	case ast.FalseExist_St:
-		return s.NotExist_St_Facts, glob.TrueRet("")
+		return s.NotExist_St_Facts, glob.NewGlobTrue("")
 	default:
 		return nil, glob.ErrRet(errors.New("invalid spec fact type"))
 	}
@@ -61,19 +61,19 @@ func (s SpecFactMem) newFact(stmt *ast.SpecFactStmt) glob.GlobRet {
 		sameEnumFacts[string(stmt.PropName)] = []ast.SpecFactStmt{}
 	}
 	sameEnumFacts[string(stmt.PropName)] = append(sameEnumFacts[string(stmt.PropName)], *stmt)
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 func (s SpecFactInLogicExprMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string][]KnownSpecFact_InLogicExpr, glob.GlobRet) {
 	switch stmt.TypeEnum {
 	case ast.TruePure:
-		return s.PureFacts, glob.TrueRet("")
+		return s.PureFacts, glob.NewGlobTrue("")
 	case ast.FalsePure:
-		return s.NotPureFacts, glob.TrueRet("")
+		return s.NotPureFacts, glob.NewGlobTrue("")
 	case ast.TrueExist_St:
-		return s.Exist_St_Facts, glob.TrueRet("")
+		return s.Exist_St_Facts, glob.NewGlobTrue("")
 	case ast.FalseExist_St:
-		return s.NotExist_St_Facts, glob.TrueRet("")
+		return s.NotExist_St_Facts, glob.NewGlobTrue("")
 	default:
 		return nil, glob.ErrRet(errors.New("invalid spec fact type"))
 	}
@@ -106,19 +106,19 @@ func (s SpecFactInLogicExprMem) newFact(logicExpr *ast.OrStmt) glob.GlobRet {
 		sameEnumFacts[string(fact.PropName)] = append(sameEnumFacts[string(fact.PropName)], *NewKnownSpecFact_InLogicExpr(fact, i, logicExpr))
 	}
 
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 func (s SpecFactInUniFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string][]KnownSpecFact_InUniFact, glob.GlobRet) {
 	switch stmt.TypeEnum {
 	case ast.TruePure:
-		return s.PureFacts, glob.TrueRet("")
+		return s.PureFacts, glob.NewGlobTrue("")
 	case ast.FalsePure:
-		return s.NotPureFacts, glob.TrueRet("")
+		return s.NotPureFacts, glob.NewGlobTrue("")
 	case ast.TrueExist_St:
-		return s.Exist_St_Facts, glob.TrueRet("")
+		return s.Exist_St_Facts, glob.NewGlobTrue("")
 	case ast.FalseExist_St:
-		return s.NotExist_St_Facts, glob.TrueRet("")
+		return s.NotExist_St_Facts, glob.NewGlobTrue("")
 	default:
 		return nil, glob.ErrRet(errors.New("invalid spec fact type"))
 	}
@@ -164,7 +164,7 @@ func (env *Env) newUniFact(stmt *ast.UniFactStmt) glob.GlobRet {
 			return ret
 		}
 	}
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 
 }
 
@@ -179,19 +179,19 @@ func (s SpecFactInUniFactMem) newFact(stmtAsSpecFact *ast.SpecFactStmt, uniFact 
 	}
 	sameEnumFacts[string(stmtAsSpecFact.PropName)] = append(sameEnumFacts[string(stmtAsSpecFact.PropName)], KnownSpecFact_InUniFact{stmtAsSpecFact, uniFact})
 
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 func (s SpecFact_InLogicExpr_InUniFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string][]SpecFact_InLogicExpr_InUniFact, glob.GlobRet) {
 	switch stmt.TypeEnum {
 	case ast.TruePure:
-		return s.PureFacts, glob.TrueRet("")
+		return s.PureFacts, glob.NewGlobTrue("")
 	case ast.FalsePure:
-		return s.NotPureFacts, glob.TrueRet("")
+		return s.NotPureFacts, glob.NewGlobTrue("")
 	case ast.TrueExist_St:
-		return s.Exist_St_Facts, glob.TrueRet("")
+		return s.Exist_St_Facts, glob.NewGlobTrue("")
 	case ast.FalseExist_St:
-		return s.NotExist_St_Facts, glob.TrueRet("")
+		return s.NotExist_St_Facts, glob.NewGlobTrue("")
 	default:
 		return nil, glob.ErrRet(errors.New("invalid spec fact type"))
 	}
@@ -224,7 +224,7 @@ func (s SpecFact_InLogicExpr_InUniFactMem) NewFact(uniStmt *ast.UniFactStmt, log
 		sameEnumFacts[string(fact.PropName)] = append(sameEnumFacts[string(fact.PropName)], *NewSpecFact_InLogicExpr_InUniFact(fact, uniStmt, i, logicExpr))
 	}
 
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 func newSpecFact_InLogicExpr_InUniFactMem() *SpecFact_InLogicExpr_InUniFactMem {
@@ -283,7 +283,7 @@ func (e *Env) newUniFactWithIff(stmt *ast.UniFactWithIffStmt) glob.GlobRet {
 		return ret
 	}
 
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 func (e *Env) StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(fn ast.Obj, fnTemplateFnObj *ast.FnObj, fnTStruct *ast.FnTStruct) glob.GlobRet {
@@ -298,14 +298,14 @@ func (e *Env) StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(fn ast.Obj, 
 			return ret
 		}
 
-		return glob.TrueRet("")
+		return glob.NewGlobTrue("")
 	} else {
 		ret := e.InsertFnInFnTT(fn, fnTStruct)
 		if ret.IsErr() {
 			return ret
 		}
 
-		return glob.TrueRet("")
+		return glob.NewGlobTrue("")
 	}
 }
 
@@ -315,12 +315,12 @@ func (e *Env) getInstantiatedFnTTOfFnObj(fnObj *ast.FnObj) (*ast.FnTStruct, bool
 		if err != nil {
 			return nil, false, glob.ErrRet(err)
 		}
-		return fnTNoName, true, glob.TrueRet("")
+		return fnTNoName, true, glob.NewGlobTrue("")
 	}
 
 	def := e.GetFnTemplateDef(fnObj.FnHead.(ast.Atom))
 	if def == nil {
-		return nil, false, glob.TrueRet("")
+		return nil, false, glob.NewGlobTrue("")
 	}
 
 	fnTNoName, err := def.Instantiate_GetFnTemplateNoName(fnObj)
@@ -328,5 +328,5 @@ func (e *Env) getInstantiatedFnTTOfFnObj(fnObj *ast.FnObj) (*ast.FnTStruct, bool
 		return nil, false, glob.ErrRet(err)
 	}
 
-	return fnTNoName, true, glob.TrueRet("")
+	return fnTNoName, true, glob.NewGlobTrue("")
 }

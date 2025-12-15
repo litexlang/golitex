@@ -19,6 +19,16 @@ import (
 	glob "golitex/glob"
 )
 
+// storeSpecFactInMemAndCollect collects the fact string for derived facts tracking
+func (env *Env) storeSpecFactInMemAndCollect(fact *ast.SpecFactStmt, derivedFacts *[]string) glob.GlobRet {
+	ret := env.storeSpecFactInMem(fact)
+	if ret.IsErr() {
+		return ret
+	}
+	*derivedFacts = append(*derivedFacts, fact.String())
+	return glob.NewGlobTrue("")
+}
+
 // BuiltinPropExceptEqualPostProcess handles postprocessing for builtin properties except equality
 func (env *Env) BuiltinPropExceptEqualPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 	if fact.PropName == glob.KeywordIn {
@@ -61,12 +71,15 @@ func (env *Env) BuiltinPropExceptEqualPostProcess(fact *ast.SpecFactStmt) glob.G
 }
 
 func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(fact *ast.SpecFactStmt) glob.GlobRet {
+	derivedFacts := []string{}
+
 	// x != 0 store spec Mem
 	notEqualZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolNotEqual), []ast.Obj{fact.Params[0], ast.Atom("0")}, fact.Line)
 	ret := env.storeSpecFactInMem(notEqualZeroFact)
 	if ret.IsErr() {
 		return ret
 	}
+	derivedFacts = append(derivedFacts, notEqualZeroFact.String())
 
 	// x >= 0
 	greaterEqualZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{fact.Params[0], ast.Atom("0")}, fact.Line)
@@ -74,6 +87,7 @@ func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParam
 	if ret.IsErr() {
 		return ret
 	}
+	derivedFacts = append(derivedFacts, greaterEqualZeroFact.String())
 
 	// not x <= 0
 	lessEqualZeroFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{fact.Params[0], ast.Atom("0")}, fact.Line)
@@ -81,6 +95,7 @@ func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParam
 	if ret.IsErr() {
 		return ret
 	}
+	derivedFacts = append(derivedFacts, lessEqualZeroFact.String())
 
 	// -x: -1 * x
 	minusX := ast.NegateObj(fact.Params[0])
@@ -91,6 +106,7 @@ func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParam
 	if ret.IsErr() {
 		return ret
 	}
+	derivedFacts = append(derivedFacts, greaterThanMinusXFact.String())
 
 	// -x < 0
 	minusXLessThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLess), []ast.Obj{minusX, ast.Atom("0")}, fact.Line)
@@ -98,6 +114,7 @@ func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParam
 	if ret.IsErr() {
 		return ret
 	}
+	derivedFacts = append(derivedFacts, minusXLessThanZeroFact.String())
 
 	// 1/x > 0
 	oneDivX := ast.NewFnObj(ast.Atom(glob.KeySymbolSlash), []ast.Obj{ast.Atom("1"), fact.Params[0]})
@@ -106,6 +123,7 @@ func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParam
 	if ret.IsErr() {
 		return ret
 	}
+	derivedFacts = append(derivedFacts, oneDivXGreaterThanZeroFact.String())
 
 	// x^2 > 0
 	xSquared := ast.NewFnObj(ast.Atom(glob.KeySymbolPower), []ast.Obj{fact.Params[0], ast.Atom("2")})
@@ -114,6 +132,7 @@ func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParam
 	if ret.IsErr() {
 		return ret
 	}
+	derivedFacts = append(derivedFacts, xSquaredGreaterThanZeroFact.String())
 
 	// sqrt(x) > 0
 	sqrtX := ast.NewFnObj(ast.Atom("sqrt"), []ast.Obj{fact.Params[0]})
@@ -122,15 +141,21 @@ func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParam
 	if ret.IsErr() {
 		return ret
 	}
+	derivedFacts = append(derivedFacts, sqrtXGreaterThanZeroFact.String())
 
+	if len(derivedFacts) > 0 {
+		return env.AutoDerivedFactsMsg(fact.String(), derivedFacts)
+	}
 	return glob.NewEmptyGlobTrue()
 }
 
 func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsLargerEqualAndRightParamIsZero(fact *ast.SpecFactStmt) glob.GlobRet {
+	derivedFacts := []string{}
+
 	// abs(x) = x
 	absX := ast.NewFnObj(ast.Atom("abs"), []ast.Obj{fact.Params[0]})
 	absXEqualXFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{absX, fact.Params[0]}, fact.Line)
-	ret := env.storeSpecFactInMem(absXEqualXFact)
+	ret := env.storeSpecFactInMemAndCollect(absXEqualXFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
@@ -140,7 +165,7 @@ func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsLargerEqualAndRightP
 
 	// x >= -x
 	greaterEqualMinusXFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{fact.Params[0], minusX}, fact.Line)
-	ret = env.storeSpecFactInMem(greaterEqualMinusXFact)
+	ret = env.storeSpecFactInMemAndCollect(greaterEqualMinusXFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
@@ -148,32 +173,34 @@ func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsLargerEqualAndRightP
 	// sqrt(x) >= 0
 	sqrtX := ast.NewFnObj(ast.Atom("sqrt"), []ast.Obj{fact.Params[0]})
 	sqrtXGreaterEqualZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{sqrtX, ast.Atom("0")}, fact.Line)
-	ret = env.storeSpecFactInMem(sqrtXGreaterEqualZeroFact)
+	ret = env.storeSpecFactInMemAndCollect(sqrtXGreaterEqualZeroFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
 
-	return glob.NewEmptyGlobTrue()
+	return env.AutoDerivedFactsMsg(fact.String(), derivedFacts)
 }
 
 func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsZero(fact *ast.SpecFactStmt) glob.GlobRet {
+	derivedFacts := []string{}
+
 	// x != 0 store spec Mem
 	notEqualZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolNotEqual), []ast.Obj{fact.Params[0], ast.Atom("0")}, fact.Line)
-	ret := env.storeSpecFactInMem(notEqualZeroFact)
+	ret := env.storeSpecFactInMemAndCollect(notEqualZeroFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
 
 	// x <= 0
 	lessEqualZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{fact.Params[0], ast.Atom("0")}, fact.Line)
-	ret = env.storeSpecFactInMem(lessEqualZeroFact)
+	ret = env.storeSpecFactInMemAndCollect(lessEqualZeroFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
 
 	// not x >= 0
 	greaterEqualZeroFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{fact.Params[0], ast.Atom("0")}, fact.Line)
-	ret = env.storeSpecFactInMem(greaterEqualZeroFact)
+	ret = env.storeSpecFactInMemAndCollect(greaterEqualZeroFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
@@ -183,14 +210,14 @@ func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsZ
 
 	// x < -x
 	lessThanMinusXFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLess), []ast.Obj{fact.Params[0], minusX}, fact.Line)
-	ret = env.storeSpecFactInMem(lessThanMinusXFact)
+	ret = env.storeSpecFactInMemAndCollect(lessThanMinusXFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
 
 	// -x > 0
 	minusXGreaterThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{minusX, ast.Atom("0")}, fact.Line)
-	ret = env.storeSpecFactInMem(minusXGreaterThanZeroFact)
+	ret = env.storeSpecFactInMemAndCollect(minusXGreaterThanZeroFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
@@ -198,7 +225,7 @@ func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsZ
 	// 1/x < 0
 	oneDivX := ast.NewFnObj(ast.Atom(glob.KeySymbolSlash), []ast.Obj{ast.Atom("1"), fact.Params[0]})
 	oneDivXLessThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLess), []ast.Obj{oneDivX, ast.Atom("0")}, fact.Line)
-	ret = env.storeSpecFactInMem(oneDivXLessThanZeroFact)
+	ret = env.storeSpecFactInMemAndCollect(oneDivXLessThanZeroFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
@@ -206,75 +233,78 @@ func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsZ
 	// x^2 > 0
 	xSquared := ast.NewFnObj(ast.Atom(glob.KeySymbolPower), []ast.Obj{fact.Params[0], ast.Atom("2")})
 	xSquaredGreaterThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{xSquared, ast.Atom("0")}, fact.Line)
-	ret = env.storeSpecFactInMem(xSquaredGreaterThanZeroFact)
+	ret = env.storeSpecFactInMemAndCollect(xSquaredGreaterThanZeroFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
 
-	return glob.NewEmptyGlobTrue()
-
+	return env.AutoDerivedFactsMsg(fact.String(), derivedFacts)
 }
 
 func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndRightParamIsZero(fact *ast.SpecFactStmt) glob.GlobRet {
+	derivedFacts := []string{}
+
 	// abs(x) = -x
 	absX := ast.NewFnObj(ast.Atom("abs"), []ast.Obj{fact.Params[0]})
 	minusX := ast.NegateObj(fact.Params[0])
 	absXEqualMinusXFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{absX, minusX}, fact.Line)
-	ret := env.storeSpecFactInMem(absXEqualMinusXFact)
+	ret := env.storeSpecFactInMemAndCollect(absXEqualMinusXFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
 
 	// x <= -x
 	lessEqualMinusXFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{fact.Params[0], minusX}, fact.Line)
-	ret = env.storeSpecFactInMem(lessEqualMinusXFact)
+	ret = env.storeSpecFactInMemAndCollect(lessEqualMinusXFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
 
 	// -x >= 0
 	minusXGreaterEqualZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{minusX, ast.Atom("0")}, fact.Line)
-	ret = env.storeSpecFactInMem(minusXGreaterEqualZeroFact)
+	ret = env.storeSpecFactInMemAndCollect(minusXGreaterEqualZeroFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
 
-	return glob.NewEmptyGlobTrue()
+	return env.AutoDerivedFactsMsg(fact.String(), derivedFacts)
 }
 
 func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsNotZero(fact *ast.SpecFactStmt) glob.GlobRet {
+	derivedFacts := []string{}
+
 	// x > c (c != 0)
 	// x != c
 	notEqualCFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolNotEqual), []ast.Obj{fact.Params[0], fact.Params[1]}, fact.Line)
-	ret := env.storeSpecFactInMem(notEqualCFact)
+	ret := env.storeSpecFactInMemAndCollect(notEqualCFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
 
 	// x >= c
 	greaterEqualCFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{fact.Params[0], fact.Params[1]}, fact.Line)
-	ret = env.storeSpecFactInMem(greaterEqualCFact)
+	ret = env.storeSpecFactInMemAndCollect(greaterEqualCFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
 
 	// not x <= c
 	lessEqualCFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{fact.Params[0], fact.Params[1]}, fact.Line)
-	ret = env.storeSpecFactInMem(lessEqualCFact)
+	ret = env.storeSpecFactInMemAndCollect(lessEqualCFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
 
 	// c < x (等价表述)
 	cLessThanXFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLess), []ast.Obj{fact.Params[1], fact.Params[0]}, fact.Line)
-	ret = env.storeSpecFactInMem(cLessThanXFact)
+	ret = env.storeSpecFactInMemAndCollect(cLessThanXFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
 
 	// not c >= x
 	cGreaterEqualXFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{fact.Params[1], fact.Params[0]}, fact.Line)
-	ret = env.storeSpecFactInMem(cGreaterEqualXFact)
+	ret = env.storeSpecFactInMemAndCollect(cGreaterEqualXFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
@@ -282,14 +312,14 @@ func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParam
 	// x - c > 0
 	xMinusC := ast.NewFnObj(ast.Atom(glob.KeySymbolMinus), []ast.Obj{fact.Params[0], fact.Params[1]})
 	xMinusCGreaterThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{xMinusC, ast.Atom("0")}, fact.Line)
-	ret = env.storeSpecFactInMem(xMinusCGreaterThanZeroFact)
+	ret = env.storeSpecFactInMemAndCollect(xMinusCGreaterThanZeroFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
 
 	// x - c >= 0
 	xMinusCGreaterEqualZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{xMinusC, ast.Atom("0")}, fact.Line)
-	ret = env.storeSpecFactInMem(xMinusCGreaterEqualZeroFact)
+	ret = env.storeSpecFactInMemAndCollect(xMinusCGreaterEqualZeroFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
@@ -297,40 +327,42 @@ func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParam
 	// c - x < 0
 	cMinusX := ast.NewFnObj(ast.Atom(glob.KeySymbolMinus), []ast.Obj{fact.Params[1], fact.Params[0]})
 	cMinusXLessThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLess), []ast.Obj{cMinusX, ast.Atom("0")}, fact.Line)
-	ret = env.storeSpecFactInMem(cMinusXLessThanZeroFact)
+	ret = env.storeSpecFactInMemAndCollect(cMinusXLessThanZeroFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
 
 	// c - x <= 0
 	cMinusXLessEqualZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{cMinusX, ast.Atom("0")}, fact.Line)
-	ret = env.storeSpecFactInMem(cMinusXLessEqualZeroFact)
+	ret = env.storeSpecFactInMemAndCollect(cMinusXLessEqualZeroFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
 
-	return glob.NewEmptyGlobTrue()
+	return env.AutoDerivedFactsMsg(fact.String(), derivedFacts)
 }
 
 func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsLargerEqualAndRightParamIsNotZero(fact *ast.SpecFactStmt) glob.GlobRet {
+	derivedFacts := []string{}
+
 	// x >= c (c != 0)
 	// not x < c
 	lessCFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolLess), []ast.Obj{fact.Params[0], fact.Params[1]}, fact.Line)
-	ret := env.storeSpecFactInMem(lessCFact)
+	ret := env.storeSpecFactInMemAndCollect(lessCFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
 
 	// c <= x (等价表述)
 	cLessEqualXFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{fact.Params[1], fact.Params[0]}, fact.Line)
-	ret = env.storeSpecFactInMem(cLessEqualXFact)
+	ret = env.storeSpecFactInMemAndCollect(cLessEqualXFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
 
 	// not c > x
 	cGreaterXFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{fact.Params[1], fact.Params[0]}, fact.Line)
-	ret = env.storeSpecFactInMem(cGreaterXFact)
+	ret = env.storeSpecFactInMemAndCollect(cGreaterXFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
@@ -338,7 +370,7 @@ func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsLargerEqualAndRightP
 	// x - c >= 0
 	xMinusC := ast.NewFnObj(ast.Atom(glob.KeySymbolMinus), []ast.Obj{fact.Params[0], fact.Params[1]})
 	xMinusCGreaterEqualZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{xMinusC, ast.Atom("0")}, fact.Line)
-	ret = env.storeSpecFactInMem(xMinusCGreaterEqualZeroFact)
+	ret = env.storeSpecFactInMemAndCollect(xMinusCGreaterEqualZeroFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
@@ -346,47 +378,49 @@ func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsLargerEqualAndRightP
 	// c - x <= 0
 	cMinusX := ast.NewFnObj(ast.Atom(glob.KeySymbolMinus), []ast.Obj{fact.Params[1], fact.Params[0]})
 	cMinusXLessEqualZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{cMinusX, ast.Atom("0")}, fact.Line)
-	ret = env.storeSpecFactInMem(cMinusXLessEqualZeroFact)
+	ret = env.storeSpecFactInMemAndCollect(cMinusXLessEqualZeroFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
 
-	return glob.NewEmptyGlobTrue()
+	return env.AutoDerivedFactsMsg(fact.String(), derivedFacts)
 }
 
 func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsNotZero(fact *ast.SpecFactStmt) glob.GlobRet {
+	derivedFacts := []string{}
+
 	// x < c (c != 0)
 	// x != c
 	notEqualCFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolNotEqual), []ast.Obj{fact.Params[0], fact.Params[1]}, fact.Line)
-	ret := env.storeSpecFactInMem(notEqualCFact)
+	ret := env.storeSpecFactInMemAndCollect(notEqualCFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
 
 	// x <= c
 	lessEqualCFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{fact.Params[0], fact.Params[1]}, fact.Line)
-	ret = env.storeSpecFactInMem(lessEqualCFact)
+	ret = env.storeSpecFactInMemAndCollect(lessEqualCFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
 
 	// not x >= c
 	greaterEqualCFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{fact.Params[0], fact.Params[1]}, fact.Line)
-	ret = env.storeSpecFactInMem(greaterEqualCFact)
+	ret = env.storeSpecFactInMemAndCollect(greaterEqualCFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
 
 	// c > x (等价表述)
 	cGreaterThanXFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{fact.Params[1], fact.Params[0]}, fact.Line)
-	ret = env.storeSpecFactInMem(cGreaterThanXFact)
+	ret = env.storeSpecFactInMemAndCollect(cGreaterThanXFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
 
 	// not c <= x
 	cLessEqualXFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{fact.Params[1], fact.Params[0]}, fact.Line)
-	ret = env.storeSpecFactInMem(cLessEqualXFact)
+	ret = env.storeSpecFactInMemAndCollect(cLessEqualXFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
@@ -394,14 +428,14 @@ func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsN
 	// x - c < 0
 	xMinusC := ast.NewFnObj(ast.Atom(glob.KeySymbolMinus), []ast.Obj{fact.Params[0], fact.Params[1]})
 	xMinusCLessThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLess), []ast.Obj{xMinusC, ast.Atom("0")}, fact.Line)
-	ret = env.storeSpecFactInMem(xMinusCLessThanZeroFact)
+	ret = env.storeSpecFactInMemAndCollect(xMinusCLessThanZeroFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
 
 	// x - c <= 0
 	xMinusCLessEqualZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{xMinusC, ast.Atom("0")}, fact.Line)
-	ret = env.storeSpecFactInMem(xMinusCLessEqualZeroFact)
+	ret = env.storeSpecFactInMemAndCollect(xMinusCLessEqualZeroFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
@@ -409,40 +443,42 @@ func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsN
 	// c - x > 0
 	cMinusX := ast.NewFnObj(ast.Atom(glob.KeySymbolMinus), []ast.Obj{fact.Params[1], fact.Params[0]})
 	cMinusXGreaterThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{cMinusX, ast.Atom("0")}, fact.Line)
-	ret = env.storeSpecFactInMem(cMinusXGreaterThanZeroFact)
+	ret = env.storeSpecFactInMemAndCollect(cMinusXGreaterThanZeroFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
 
 	// c - x >= 0
 	cMinusXGreaterEqualZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{cMinusX, ast.Atom("0")}, fact.Line)
-	ret = env.storeSpecFactInMem(cMinusXGreaterEqualZeroFact)
+	ret = env.storeSpecFactInMemAndCollect(cMinusXGreaterEqualZeroFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
 
-	return glob.NewEmptyGlobTrue()
+	return env.AutoDerivedFactsMsg(fact.String(), derivedFacts)
 }
 
 func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndRightParamIsNotZero(fact *ast.SpecFactStmt) glob.GlobRet {
+	derivedFacts := []string{}
+
 	// x <= c (c != 0)
 	// not x > c
 	greaterCFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{fact.Params[0], fact.Params[1]}, fact.Line)
-	ret := env.storeSpecFactInMem(greaterCFact)
+	ret := env.storeSpecFactInMemAndCollect(greaterCFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
 
 	// c >= x (等价表述)
 	cGreaterEqualXFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{fact.Params[1], fact.Params[0]}, fact.Line)
-	ret = env.storeSpecFactInMem(cGreaterEqualXFact)
+	ret = env.storeSpecFactInMemAndCollect(cGreaterEqualXFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
 
 	// not c < x
 	cLessXFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolLess), []ast.Obj{fact.Params[1], fact.Params[0]}, fact.Line)
-	ret = env.storeSpecFactInMem(cLessXFact)
+	ret = env.storeSpecFactInMemAndCollect(cLessXFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
@@ -450,7 +486,7 @@ func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndRightPar
 	// x - c <= 0
 	xMinusC := ast.NewFnObj(ast.Atom(glob.KeySymbolMinus), []ast.Obj{fact.Params[0], fact.Params[1]})
 	xMinusCLessEqualZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{xMinusC, ast.Atom("0")}, fact.Line)
-	ret = env.storeSpecFactInMem(xMinusCLessEqualZeroFact)
+	ret = env.storeSpecFactInMemAndCollect(xMinusCLessEqualZeroFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
@@ -458,10 +494,10 @@ func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndRightPar
 	// c - x >= 0
 	cMinusX := ast.NewFnObj(ast.Atom(glob.KeySymbolMinus), []ast.Obj{fact.Params[1], fact.Params[0]})
 	cMinusXGreaterEqualZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{cMinusX, ast.Atom("0")}, fact.Line)
-	ret = env.storeSpecFactInMem(cMinusXGreaterEqualZeroFact)
+	ret = env.storeSpecFactInMemAndCollect(cMinusXGreaterEqualZeroFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
 
-	return glob.NewEmptyGlobTrue()
+	return env.AutoDerivedFactsMsg(fact.String(), derivedFacts)
 }

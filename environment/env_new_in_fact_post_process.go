@@ -55,7 +55,7 @@ func (e *Env) inFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 		return e.inFactPostProcess_TryNPos(fact)
 	}
 
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 // inFactPostProcess_TryFnTemplate handles a $in fnTemplate(...) case
@@ -86,7 +86,7 @@ func (e *Env) inFactPostProcess_TryFnTemplateFnObj(fact *ast.SpecFactStmt) glob.
 		return ret
 	}
 
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 // inFactPostProcess_TryCart handles a $in cart(...) case
@@ -143,22 +143,22 @@ func (e *Env) inFactPostProcess_InCart(obj ast.Obj, cartSet *ast.FnObj) glob.Glo
 	if ret.IsErr() {
 		return ret
 	}
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 func (e *Env) inFactPostProcess_InFnTemplate(fact *ast.SpecFactStmt) (bool, glob.GlobRet) {
 	if _, ok := fact.Params[1].(*ast.FnObj); !ok {
-		return false, glob.TrueRet("")
+		return false, glob.NewGlobTrue("")
 	}
 
 	head, ok := fact.Params[1].(*ast.FnObj).IsObjFn_HasAtomHead_ReturnHead()
 	if !ok {
-		return false, glob.TrueRet("")
+		return false, glob.NewGlobTrue("")
 	}
 
 	def := e.GetFnTemplateDef_KeyIsObjHead(fact.Params[1].(*ast.FnObj))
 	if def == nil {
-		return false, glob.TrueRet("")
+		return false, glob.NewGlobTrue("")
 	}
 
 	fnTNoName, ok, ret := e.getInstantiatedFnTTOfFnObj(fact.Params[1].(*ast.FnObj))
@@ -166,7 +166,7 @@ func (e *Env) inFactPostProcess_InFnTemplate(fact *ast.SpecFactStmt) (bool, glob
 		return false, ret
 	}
 	if !ok {
-		return false, glob.TrueRet("")
+		return false, glob.NewGlobTrue("")
 	}
 
 	templateParamUniMap := map[string]ast.Obj{}
@@ -189,7 +189,7 @@ func (e *Env) inFactPostProcess_InFnTemplate(fact *ast.SpecFactStmt) (bool, glob
 		return false, ret
 	}
 
-	return true, glob.TrueRet("")
+	return true, glob.NewGlobTrue("")
 }
 
 // 传入 x = cart(x1, x2, ..., xn)
@@ -225,7 +225,7 @@ func (e *Env) equalFactPostProcess_cart(fact *ast.SpecFactStmt) glob.GlobRet {
 		}
 	}
 
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 // 传入 obj 和 tuple，obj = tuple，左边是被赋值的对象，右边是 tuple
@@ -251,7 +251,7 @@ func (e *Env) equalFactPostProcess_tuple(obj ast.Obj, tupleObj ast.Obj) glob.Glo
 		}
 	}
 
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 // 处理 tuple = tuple 的情况，让每一位相等
@@ -270,7 +270,7 @@ func (e *Env) equalFactPostProcess_tupleTuple(leftTuple *ast.FnObj, rightTuple *
 		}
 	}
 
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 // equalFactPostProcess_tupleEquality 处理 tuple 相等的情况
@@ -290,7 +290,7 @@ func (e *Env) equalFactPostProcess_tupleEquality(left ast.Obj, right ast.Obj) gl
 		return e.equalFactPostProcess_tuple(right, left)
 	}
 
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 // equalFactPostProcess_listSetEquality 处理 x = {1, 2, 3} 的情况
@@ -299,7 +299,7 @@ func (e *Env) equalFactPostProcess_listSetEquality(left ast.Obj, right ast.Obj) 
 	// 尝试获取 list set（可能是直接的，也可能是通过 equal facts 得到的）
 	listSetObj := e.GetListSetEqualToObj(right)
 	if listSetObj == nil {
-		return glob.TrueRet("")
+		return glob.NewGlobTrue("")
 	}
 
 	listSetFnObj, ok := listSetObj.(*ast.FnObj)
@@ -344,7 +344,7 @@ func (e *Env) inFactPostProcess_InListSet(obj ast.Obj, listSetFnObj *ast.FnObj) 
 		return ret
 	}
 
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 func (e *Env) inFactPostProcess_TryListSet(fact *ast.SpecFactStmt) glob.GlobRet {
@@ -404,7 +404,7 @@ func (e *Env) inFactPostProcess_InSetBuilder(obj ast.Obj, setBuilderObj *ast.FnO
 		}
 	}
 
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 func (e *Env) inFactPostProcess_TryRangeOrClosedRange(fact *ast.SpecFactStmt) glob.GlobRet {
@@ -412,6 +412,8 @@ func (e *Env) inFactPostProcess_TryRangeOrClosedRange(fact *ast.SpecFactStmt) gl
 	if !ast.ObjIsRangeOrClosedRangeWith2Params(fact.Params[1]) {
 		return glob.NewEmptyGlobUnknown()
 	}
+
+	derivedFacts := []string{}
 
 	obj := fact.Params[0]
 	rangeOrClosedRange := fact.Params[1].(*ast.FnObj)
@@ -425,6 +427,7 @@ func (e *Env) inFactPostProcess_TryRangeOrClosedRange(fact *ast.SpecFactStmt) gl
 	if ret.IsErr() {
 		return ret
 	}
+	derivedFacts = append(derivedFacts, inZFact.String())
 
 	// Generate x >= left
 	greaterEqualLeftFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{obj, left}, fact.Line)
@@ -432,9 +435,13 @@ func (e *Env) inFactPostProcess_TryRangeOrClosedRange(fact *ast.SpecFactStmt) gl
 	if ret.IsErr() {
 		return ret
 	}
+	derivedFacts = append(derivedFacts, greaterEqualLeftFact.String())
 	ret = e.builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(greaterEqualLeftFact)
 	if ret.IsErr() {
 		return ret
+	}
+	if ret.IsTrue() && len(ret.GetMsgs()) > 0 {
+		derivedFacts = append(derivedFacts, ret.GetMsgs()...)
 	}
 
 	if isRange {
@@ -444,9 +451,13 @@ func (e *Env) inFactPostProcess_TryRangeOrClosedRange(fact *ast.SpecFactStmt) gl
 		if ret.IsErr() {
 			return ret
 		}
+		derivedFacts = append(derivedFacts, lessRightFact.String())
 		ret = e.builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsZero(lessRightFact)
 		if ret.IsErr() {
 			return ret
+		}
+		if ret.IsTrue() && len(ret.GetMsgs()) > 0 {
+			derivedFacts = append(derivedFacts, ret.GetMsgs()...)
 		}
 	} else {
 		// closed_range: generate x <= right
@@ -455,16 +466,25 @@ func (e *Env) inFactPostProcess_TryRangeOrClosedRange(fact *ast.SpecFactStmt) gl
 		if ret.IsErr() {
 			return ret
 		}
+		derivedFacts = append(derivedFacts, lessEqualRightFact.String())
 		ret = e.builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndRightParamIsNotZero(lessEqualRightFact)
 		if ret.IsErr() {
 			return ret
 		}
+		if ret.IsTrue() && len(ret.GetMsgs()) > 0 {
+			derivedFacts = append(derivedFacts, ret.GetMsgs()...)
+		}
 	}
 
-	return glob.TrueRet("")
+	if len(derivedFacts) > 0 {
+		return glob.NewGlobTrueWithMsgs(derivedFacts)
+	}
+	return glob.NewGlobTrue("")
 }
 
 func (e *Env) inFactPostProcess_TryNPos(fact *ast.SpecFactStmt) glob.GlobRet {
+	derivedFacts := []string{}
+
 	obj := fact.Params[0]
 
 	// x $in N
@@ -473,6 +493,7 @@ func (e *Env) inFactPostProcess_TryNPos(fact *ast.SpecFactStmt) glob.GlobRet {
 	if ret.IsErr() {
 		return ret
 	}
+	derivedFacts = append(derivedFacts, inNFact.String())
 
 	// x $in Q
 	inQFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordRational))
@@ -480,6 +501,7 @@ func (e *Env) inFactPostProcess_TryNPos(fact *ast.SpecFactStmt) glob.GlobRet {
 	if ret.IsErr() {
 		return ret
 	}
+	derivedFacts = append(derivedFacts, inQFact.String())
 
 	// x $in R
 	inRFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordReal))
@@ -487,6 +509,7 @@ func (e *Env) inFactPostProcess_TryNPos(fact *ast.SpecFactStmt) glob.GlobRet {
 	if ret.IsErr() {
 		return ret
 	}
+	derivedFacts = append(derivedFacts, inRFact.String())
 
 	// x > 0
 	greaterThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{obj, ast.Atom("0")}, glob.BuiltinLine)
@@ -494,9 +517,13 @@ func (e *Env) inFactPostProcess_TryNPos(fact *ast.SpecFactStmt) glob.GlobRet {
 	if ret.IsErr() {
 		return ret
 	}
+	derivedFacts = append(derivedFacts, greaterThanZeroFact.String())
 	ret = e.builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(greaterThanZeroFact)
 	if ret.IsErr() {
 		return ret
+	}
+	if ret.IsTrue() && len(ret.GetMsgs()) > 0 {
+		derivedFacts = append(derivedFacts, ret.GetMsgs()...)
 	}
 
 	// x >= 1
@@ -505,6 +532,10 @@ func (e *Env) inFactPostProcess_TryNPos(fact *ast.SpecFactStmt) glob.GlobRet {
 	if ret.IsErr() {
 		return ret
 	}
+	derivedFacts = append(derivedFacts, greaterEqualOneFact.String())
 
-	return glob.TrueRet("")
+	if len(derivedFacts) > 0 {
+		return glob.NewGlobTrueWithMsgs(derivedFacts)
+	}
+	return glob.NewGlobTrue("")
 }
