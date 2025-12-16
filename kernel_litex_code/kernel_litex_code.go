@@ -845,4 +845,16 @@ fn enum(x, y Z) set:
 know:
 	forall x R: x > 0 => 1 / x > 0
 	forall x R, y R: x > 0, y > 0 => x > y <=> 1 / x < 1 / y
+
+know: 
+	not $is_a_nonempty_set(R)
+	not $is_a_nonempty_set(N)
+	not $is_a_nonempty_set(N_pos)
+	not $is_a_nonempty_set(Z)
+	not $is_a_nonempty_set(Q)
+	not $is_a_finite_set(R)
+	not $is_a_finite_set(N)
+	not $is_a_finite_set(N_pos)
+	not $is_a_finite_set(Z)
+	not $is_a_finite_set(Q)
 `

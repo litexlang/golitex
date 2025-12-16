@@ -1,5 +1,3 @@
-not (1 + 0.5) $in Z
-not (3 / 2) $in Z
-not (-1 * 1) $in N_pos
-not (2 - 3) $in N_pos
-not (1 - 1) $in N_pos
+not 1.5 $in Z
+not 3 / 2 $in Z
+(1+2) * 3 $in Z
