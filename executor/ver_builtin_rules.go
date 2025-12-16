@@ -145,7 +145,45 @@ func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt *ast.SpecFactStmt, st
 		return NewExecErr(fmt.Sprintf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params)))
 	}
 
-	leftObj, ok, err := ast.MakeObjIntoNumLitExpr(stmt.Params[0])
+	// 先评估表达式
+	toEval := ver.evaluateNonNumberLiteralExpr(stmt.Params[0])
+
+	// 对于 N 和 N_pos，检查是否有运算符、小数点或负号
+	if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordNatural) || ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordNPos) {
+		// 检查是否是纯数字（Atom），如果不是（有运算符），则不在 N/N_pos 中
+		_, isAtom := toEval.(ast.Atom)
+		if !isAtom {
+			// 有运算符，不是纯数字，不在 N/N_pos 中
+			return NewEmptyExecUnknown()
+		}
+
+		// 检查是否有小数点
+		if ast.IsObjLiterallyRationalNumber(toEval) {
+			// 有小数点，不在 N/N_pos 中
+			return NewEmptyExecUnknown()
+		}
+
+		// 检查是否有负号（一元负号运算符）
+		if fnObj, ok := stmt.Params[0].(*ast.FnObj); ok {
+			if ast.IsObjBuiltinUnaryFn(*fnObj) {
+				if headAtom, ok := fnObj.FnHead.(ast.Atom); ok && string(headAtom) == glob.KeySymbolMinus {
+					// 有负号，不在 N/N_pos 中
+					return NewEmptyExecUnknown()
+				}
+			}
+		}
+		// 也检查 toEval 是否有负号（如果评估后仍然是负号）
+		if fnObj, ok := toEval.(*ast.FnObj); ok {
+			if ast.IsObjBuiltinUnaryFn(*fnObj) {
+				if headAtom, ok := fnObj.FnHead.(ast.Atom); ok && string(headAtom) == glob.KeySymbolMinus {
+					// 有负号，不在 N/N_pos 中
+					return NewEmptyExecUnknown()
+				}
+			}
+		}
+	}
+
+	leftObj, ok, err := ast.MakeObjIntoNumLitExpr(toEval)
 	if err != nil {
 		return NewExecErr(err.Error())
 	}
