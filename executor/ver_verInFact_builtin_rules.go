@@ -785,6 +785,27 @@ func (ver *Verifier) litNumNotInNaturalByLiteralShape(stmt *ast.SpecFactStmt, st
 		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
 	}
 
+	// 检查是否有负号（一元负号运算符）
+	if fnObj, ok := stmt.Params[0].(*ast.FnObj); ok {
+		if ast.IsObjBuiltinUnaryFn(*fnObj) {
+			if headAtom, ok := fnObj.FnHead.(ast.Atom); ok && string(headAtom) == glob.KeySymbolMinus {
+				// 有负号，不在 N 中
+				msg := fmt.Sprintf("%s has a minus sign, so it is not in N", stmt.Params[0])
+				return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+			}
+		}
+	}
+	// 也检查 toEval 是否有负号（如果评估后仍然是负号）
+	if fnObj, ok := toEval.(*ast.FnObj); ok {
+		if ast.IsObjBuiltinUnaryFn(*fnObj) {
+			if headAtom, ok := fnObj.FnHead.(ast.Atom); ok && string(headAtom) == glob.KeySymbolMinus {
+				// 有负号，不在 N 中
+				msg := fmt.Sprintf("%s has a minus sign, so it is not in N", toEval)
+				return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+			}
+		}
+	}
+
 	// 如果是纯数字且没有小数点，检查是否是自然数形状
 	// 如果字面上就是自然数形状（比如 "5"），不能证明它不在自然数中
 	if ast.IsObjLiterallyNatNumber(toEval) {
@@ -850,6 +871,27 @@ func (ver *Verifier) litNumNotInNPosByLiteralShape(stmt *ast.SpecFactStmt, state
 	if ast.IsObjLiterallyRationalNumber(toEval) {
 		msg := fmt.Sprintf("%s has a decimal point, so it is not in N_pos", toEval)
 		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+	}
+
+	// 检查是否有负号（一元负号运算符）
+	if fnObj, ok := stmt.Params[0].(*ast.FnObj); ok {
+		if ast.IsObjBuiltinUnaryFn(*fnObj) {
+			if headAtom, ok := fnObj.FnHead.(ast.Atom); ok && string(headAtom) == glob.KeySymbolMinus {
+				// 有负号，不在 N_pos 中
+				msg := fmt.Sprintf("%s has a minus sign, so it is not in N_pos", stmt.Params[0])
+				return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+			}
+		}
+	}
+	// 也检查 toEval 是否有负号（如果评估后仍然是负号）
+	if fnObj, ok := toEval.(*ast.FnObj); ok {
+		if ast.IsObjBuiltinUnaryFn(*fnObj) {
+			if headAtom, ok := fnObj.FnHead.(ast.Atom); ok && string(headAtom) == glob.KeySymbolMinus {
+				// 有负号，不在 N_pos 中
+				msg := fmt.Sprintf("%s has a minus sign, so it is not in N_pos", toEval)
+				return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+			}
+		}
 	}
 
 	// 如果是纯数字且没有小数点，检查是否是正整数形状
