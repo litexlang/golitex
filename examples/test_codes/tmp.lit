@@ -1,4 +1,4 @@
-have a, b set
-know a $subset_of b
-forall x a:
-    x $in b
+forall x, y set:
+    x $subset_of y
+    =>:
+        x $in power_set(y)
