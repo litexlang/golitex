@@ -78,6 +78,12 @@ func (env *Env) BuiltinPropExceptEqualPostProcess(fact *ast.SpecFactStmt) glob.G
 		return ret
 	}
 
+	if fact.PropName == glob.KeywordSubsetOf && fact.TypeEnum == ast.TruePure {
+		ret := env.subsetOfFactPostProcess(fact)
+		// Inherit derived facts from subset_of post-processing
+		return ret
+	}
+
 	return glob.NewEmptyGlobUnknown()
 }
 
@@ -509,6 +515,24 @@ func (env *Env) builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndRightPar
 	if ret.IsErr() {
 		return ret
 	}
+
+	return env.AutoDerivedFactsMsg(fact.String(), derivedFacts)
+}
+
+func (env *Env) subsetOfFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
+	derivedFacts := []string{}
+	// 生成出来一个 random variable t
+	obj := env.GenerateUndeclaredRandomName()
+
+	forallFact := ast.NewUniFact([]string{obj}, []ast.Obj{fact.Params[0]}, []ast.FactStmt{}, []ast.FactStmt{ast.NewInFact(obj, fact.Params[1])}, fact.Line)
+
+	ret := env.newUniFact(forallFact)
+
+	if ret.IsErr() {
+		return ret
+	}
+
+	derivedFacts = append(derivedFacts, forallFact.String())
 
 	return env.AutoDerivedFactsMsg(fact.String(), derivedFacts)
 }
