@@ -882,4 +882,7 @@ know:
         $exist_preimage(s1, s2, y, f)
         =>:
             y $in image_set(s1, s2, f)
+
+	forall s1, s2 set, f fn(s1)s2:
+		image_set(s1, s2, f) $subset_of s2
 `
