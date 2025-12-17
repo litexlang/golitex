@@ -205,11 +205,11 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ExecRet {
 	ver := NewVerifier(exec.Env)
 
 	for i := range len(stmt.ObjNames) {
-		if ret := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(stmt.ObjEqualTos[i], Round0NoMsg); ret.IsNotTrue() {
+		if ret := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(stmt.ObjEqualTos[i], Round0NoMsg()); ret.IsNotTrue() {
 			return ret
 		}
 
-		verRet := ver.VerFactStmt(ast.NewInFactWithObj(stmt.ObjEqualTos[i], stmt.ObjSets[i]), Round0Msg)
+		verRet := ver.VerFactStmt(ast.NewInFactWithObj(stmt.ObjEqualTos[i], stmt.ObjSets[i]), Round0Msg())
 		if verRet.IsErr() {
 			return NewExecErr(verRet.String())
 		}
@@ -302,7 +302,7 @@ func (exec *Executor) checkFnEqualStmt(stmt *ast.HaveFnEqualStmt) (ExecRet, erro
 
 	ver := NewVerifier(exec.Env)
 
-	verRet := ver.VerFactStmt(ast.NewInFactWithObj(stmt.EqualTo, stmt.RetSet), Round0Msg)
+	verRet := ver.VerFactStmt(ast.NewInFactWithObj(stmt.EqualTo, stmt.RetSet), Round0Msg())
 	if verRet.IsErr() {
 		return NewExecErr(verRet.String()), fmt.Errorf(verRet.String())
 	}
@@ -554,7 +554,7 @@ func (exec *Executor) verifyHaveFnCaseByCase_OneCase(stmt *ast.HaveFnCaseByCaseS
 	// Verify return value is in retSet
 	equalTo := stmt.EqualToObjs[caseIndex]
 	ver := NewVerifier(exec.Env)
-	verRet := ver.VerFactStmt(ast.NewInFactWithObj(equalTo, stmt.DefFnStmt.FnTemplate.RetSet), Round0Msg)
+	verRet := ver.VerFactStmt(ast.NewInFactWithObj(equalTo, stmt.DefFnStmt.FnTemplate.RetSet), Round0Msg())
 	if verRet.IsErr() {
 		return NewEmptyExecErr(), fmt.Errorf("case %d: %s", caseIndex, verRet.String())
 	}
@@ -589,7 +589,7 @@ func (exec *Executor) checkAtLeastOneCaseHolds_ForHaveFn(stmt *ast.HaveFnCaseByC
 
 	// Verify or fact is true (all cases cover the domain)
 	ver := NewVerifier(exec.Env)
-	verRet := ver.VerFactStmt(orFact, Round0Msg)
+	verRet := ver.VerFactStmt(orFact, Round0Msg())
 	if verRet.IsErr() {
 		return NewEmptyExecErr(), fmt.Errorf("failed to verify that all cases cover the domain: %s", verRet.String())
 	}
@@ -645,7 +645,7 @@ func (exec *Executor) checkCaseNoOverlapWithOthers_ForHaveFn(stmt *ast.HaveFnCas
 		notOtherCaseFact := otherCaseFact.ReverseTrue()
 
 		// Verify not case j is true
-		verRet := ver.VerFactStmt(notOtherCaseFact, Round0Msg)
+		verRet := ver.VerFactStmt(notOtherCaseFact, Round0Msg())
 		if verRet.IsErr() {
 			return NewEmptyExecErr(), fmt.Errorf("case %d and case %d overlap: failed to verify that not %s: %s", caseIndex, j, otherCaseFact, verRet.String())
 		}
@@ -764,7 +764,7 @@ func (exec *Executor) checkCaseReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCa
 	// 在case成立的条件下，验证返回值在retSet中
 	equalTo := stmt.CaseByCaseEqualTo[caseIndex]
 	ver := NewVerifier(exec.Env)
-	verRet := ver.VerFactStmt(ast.NewInFactWithObj(equalTo, stmt.RetSet), Round0Msg)
+	verRet := ver.VerFactStmt(ast.NewInFactWithObj(equalTo, stmt.RetSet), Round0Msg())
 	if verRet.IsErr() {
 		return NewEmptyExecErr(), fmt.Errorf("case %d: %s", caseIndex, verRet.String())
 	}
@@ -794,7 +794,7 @@ func (exec *Executor) checkAtLeastOneCaseHolds(stmt *ast.HaveFnEqualCaseByCaseSt
 
 	// 验证 or fact 为 true（即所有 case 覆盖了整个 domain）
 	ver := NewVerifier(exec.Env)
-	verRet := ver.VerFactStmt(orFact, Round0Msg)
+	verRet := ver.VerFactStmt(orFact, Round0Msg())
 	if verRet.IsErr() {
 		return NewEmptyExecErr(), fmt.Errorf("failed to verify that all cases cover the domain: %s", verRet.String())
 	}
@@ -850,7 +850,7 @@ func (exec *Executor) checkCaseNoOverlapWithOthers(stmt *ast.HaveFnEqualCaseByCa
 		notOtherCaseFact := otherCaseFact.ReverseTrue()
 
 		// 验证 not case j 为 true
-		verRet := ver.VerFactStmt(notOtherCaseFact, Round0Msg)
+		verRet := ver.VerFactStmt(notOtherCaseFact, Round0Msg())
 		if verRet.IsErr() {
 			return NewEmptyExecErr(), fmt.Errorf("case %d and case %d overlap: failed to verify that not %s: %s", caseIndex, j, otherCaseFact, verRet.String())
 		}

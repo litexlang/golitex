@@ -144,7 +144,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 
 func (exec *Executor) factStmt(stmt ast.FactStmt) ExecRet {
 	curVerifier := NewVerifier(exec.Env)
-	state := Round0Msg
+	state := NewVerState(0, true, false)
 	verRet := curVerifier.VerFactStmt(stmt, state)
 
 	if verRet.IsErr() {
@@ -348,7 +348,7 @@ func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEach
 
 	// verify thenFacts are true
 	// execState, failedFact, err := verifier.ExecFactsAtCurEnv_retFailedFact(stmt.ThenFacts, exec.env, verifier.Round0NoMsg)
-	execState, failedFact, err := exec.verifyFactsAtCurEnv(stmt.ThenFacts, Round0NoMsg)
+	execState, failedFact, err := exec.verifyFactsAtCurEnv(stmt.ThenFacts, Round0NoMsg())
 	if err != nil {
 		return execState, fmt.Errorf("prove in each case statement error: failed to verify then facts:\n%s\n%s", failedFact, err)
 	} else if execState.IsUnknown() {
@@ -402,7 +402,7 @@ func (exec *Executor) execProofBlockForCaseByCase(index int, stmt *ast.ProveCase
 	}
 
 	// verify thenFacts are true
-	execState, failedFact, err := exec.verifyFactsAtCurEnv(stmt.ThenFacts, Round0NoMsg)
+	execState, failedFact, err := exec.verifyFactsAtCurEnv(stmt.ThenFacts, Round0NoMsg())
 	if err != nil {
 		return execState, fmt.Errorf("prove case by case statement error: failed to verify then facts:\n%s\n%s", failedFact, err)
 	} else if execState.IsUnknown() {
@@ -575,9 +575,9 @@ func (exec *Executor) Verify(fact ast.FactStmt, requireMsg bool) ExecRet {
 	ver := NewVerifier(exec.Env)
 	var state *VerState
 	if requireMsg {
-		state = Round0Msg
+		state = Round0Msg()
 	} else {
-		state = Round0NoMsg
+		state = Round0NoMsg()
 	}
 
 	return ver.VerFactStmt(fact, state)
@@ -695,7 +695,7 @@ func (exec *Executor) evalStmt(stmt *ast.EvalStmt) ExecRet {
 	}
 	trueEvalRet.Inherit(execRet)
 
-	return trueEvalRet.NewVerMsgAtBegin(Round0Msg, stmt.String())
+	return trueEvalRet.NewVerMsgAtBegin(Round0Msg(), stmt.String())
 }
 
 func (exec *Executor) evalObjInLocalEnv(objToEval ast.Obj) (ast.Obj, ExecRet) {
