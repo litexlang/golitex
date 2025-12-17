@@ -858,4 +858,28 @@ know:
 	not $is_a_finite_set(N_pos)
 	not $is_a_finite_set(Z)
 	not $is_a_finite_set(Q)
+
+exist_prop y x st axiom_of_regularity(x nonempty_set):
+    forall z y: not z $in x
+    forall z x: not z $in y
+
+know forall x nonempty_set: $axiom_of_regularity(x)
+
+fn union_of_items(x set) set
+know forall x set, y union_of_items(x): y $subset_of x
+know forall x, y set: y $subset_of x => y $in union_of_items(x)
+
+exist_prop x s1 st exist_preimage(s1, s2 set, y s2, f fn(s1)s2):
+    f(x) = y
+
+fn image_set(s1, s2 set, f fn(s1)s2) set
+
+know:
+    forall s1, s2 set, f fn(s1)s2, y image_set(s1, s2, f):
+        $exist_preimage(s1, s2, y, f)
+
+    forall s1, s2 set, f fn(s1)s2, y s2:
+        $exist_preimage(s1, s2, y, f)
+        =>:
+            y $in image_set(s1, s2, f)
 `
