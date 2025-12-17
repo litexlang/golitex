@@ -143,6 +143,8 @@ prove forall a, b cart(R, R) => add(a, b) = add(b, a):
 
 # 加法结合律
 prove forall a, b, c cart(R, R) => add(add(a, b), c) = add(a, add(b, c)):
+    add(a, b) $in cart(R, R)
+    add(b, c) $in cart(R, R)
     add(add(a, b), c) = (add(a, b)[1] + c[1], add(a, b)[2] + c[2])
     add(a, b)[1] = (a[1] + b[1], a[2] + b[2])[1] = a[1] + b[1]
     add(a, b)[2] = (a[1] + b[1], a[2] + b[2])[2] = a[2] + b[2]
@@ -248,6 +250,12 @@ prove:
 claim:
     forall a, b, c, d, e, f R:
         d / a = e / b = f / c
+        a != 0
+        b != 0
+        c != 0
+        d != 0
+        e != 0
+        f != 0
         =>:
             {x cart(R, R): a * x[1] + b * x[2] = c} = {x cart(R, R): d * x[1] + e * x[2] = f}
             
