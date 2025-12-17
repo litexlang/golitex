@@ -1,6 +1,0 @@
-have a R = 17
-prop p(x {z Z: z < 100})
-prop q(x {y Q: y > 0})
-know $q(17)
-know forall x Z: x $in {y Z: y < 20, $q(y)} => $p(x)
-a $in {x N: x % 17 = 0, $p(x)}
