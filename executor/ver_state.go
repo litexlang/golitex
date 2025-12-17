@@ -70,25 +70,66 @@ func (s *VerState) String() string {
 	}
 }
 
-var (
-	Round0Msg             = &VerState{Round: 0, WithMsg: true, ReqOk: false}
-	Round0NoMsg           = &VerState{Round: 0, WithMsg: false, ReqOk: false}
-	Round1Msg             = &VerState{Round: 1, WithMsg: true, ReqOk: false}
-	Round1NoMsg           = &VerState{Round: 1, WithMsg: false, ReqOk: false}
-	FinalRoundMsg         = &VerState{Round: 2, WithMsg: true, ReqOk: false}
-	FinalRoundNoMsg       = &VerState{Round: 2, WithMsg: false, ReqOk: false}
-	FinalRoundMsg_ReqOk   = &VerState{Round: 2, WithMsg: true, ReqOk: true}
-	FinalRoundNoMsg_ReqOk = &VerState{Round: 2, WithMsg: false, ReqOk: true}
-	Round0Msg_ReqOk       = &VerState{Round: 0, WithMsg: true, ReqOk: true}
-	Round0NoMsg_ReqOk     = &VerState{Round: 0, WithMsg: false, ReqOk: true}
-	Round1Msg_ReqOk       = &VerState{Round: 1, WithMsg: true, ReqOk: true}
-	Round1NoMsg_ReqOk     = &VerState{Round: 1, WithMsg: false, ReqOk: true}
-)
+func Round0Msg() *VerState {
+	return &VerState{Round: 0, WithMsg: true, ReqOk: false}
+}
+
+func Round0NoMsg() *VerState {
+	return &VerState{Round: 0, WithMsg: false, ReqOk: false}
+}
+
+func Round1Msg() *VerState {
+	return &VerState{Round: 1, WithMsg: true, ReqOk: false}
+}
+
+func Round1NoMsg() *VerState {
+	return &VerState{Round: 1, WithMsg: false, ReqOk: false}
+}
+
+func FinalRoundMsg() *VerState {
+	return &VerState{Round: 2, WithMsg: true, ReqOk: false}
+}
+
+func FinalRoundNoMsg() *VerState {
+	return &VerState{Round: 2, WithMsg: false, ReqOk: false}
+}
+
+func FinalRoundMsg_ReqOk() *VerState {
+	return &VerState{Round: 2, WithMsg: true, ReqOk: true}
+}
+
+func FinalRoundNoMsg_ReqOk() *VerState {
+	return &VerState{Round: 2, WithMsg: false, ReqOk: true}
+}
+
+func Round0Msg_ReqOk() *VerState {
+	return &VerState{Round: 0, WithMsg: true, ReqOk: true}
+}
+
+func Round0NoMsg_ReqOk() *VerState {
+	return &VerState{Round: 0, WithMsg: false, ReqOk: true}
+}
+
+func Round1Msg_ReqOk() *VerState {
+	return &VerState{Round: 1, WithMsg: true, ReqOk: true}
+}
+
+func Round1NoMsg_ReqOk() *VerState {
+	return &VerState{Round: 1, WithMsg: false, ReqOk: true}
+}
 
 func (s *VerState) Copy() *VerState {
 	return &VerState{
 		Round:   s.Round,
 		WithMsg: s.WithMsg,
 		ReqOk:   s.ReqOk,
+	}
+}
+
+func NewVerState(round uint8, withMsg bool, reqOk bool) *VerState {
+	return &VerState{
+		Round:   round,
+		WithMsg: withMsg,
+		ReqOk:   reqOk,
 	}
 }
