@@ -868,8 +868,9 @@ know forall x nonempty_set: $axiom_of_regularity(x)
 
 # TODO: builtin instead of fn
 fn cup(x set) set
-know imply cup_contains_all_items(x set, y x, z y):
-    z $in cup(x)
+know imply cup_contains_all_items(x set, y x):
+	forall z y:
+		z $in cup(x)
 exist_prop y x st cup_witness_item(x set, z cup(x)):
 	z $in y
 
@@ -892,8 +893,8 @@ know:
 		image_set(s1, s2, f) $subset_of s2
 
 # TODO: builtin instead of fn
-fn choice(x set) cup(x)
+fn choice(x set) fn(x) cup(x)
 know imply axiom_of_choice(x set):
 	forall y x:
-		choice(y) $in y
+		choice(x)(y) $in y
 `

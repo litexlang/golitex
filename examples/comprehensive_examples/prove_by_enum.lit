@@ -1,0 +1,5 @@
+prove_by_enum(x {1, 2, 3}):
+    x < 10
+
+forall x {1, 2, 3}:
+    x < 10
