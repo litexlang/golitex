@@ -859,16 +859,21 @@ know:
 	not $is_a_finite_set(Z)
 	not $is_a_finite_set(Q)
 
+# TODO: builtin instead of exist_prop
 exist_prop y x st axiom_of_regularity(x nonempty_set):
     forall z y: not z $in x
     forall z x: not z $in y
 
 know forall x nonempty_set: $axiom_of_regularity(x)
 
-fn union_of_items(x set) set
-know forall x set, y union_of_items(x): y $subset_of x
-know forall x, y set: y $subset_of x => y $in union_of_items(x)
+# TODO: builtin instead of fn
+fn cup(x set) set
+know imply cup_contains_all_items(x set, y x, z y):
+    z $in cup(x)
+exist_prop y x st cup_witness_item(x set, z cup(x)):
+	z $in y
 
+# TODO: builtin instead of exist_prop
 exist_prop x s1 st exist_preimage(s1, s2 set, y s2, f fn(s1)s2):
     f(x) = y
 
@@ -885,4 +890,10 @@ know:
 
 	forall s1, s2 set, f fn(s1)s2:
 		image_set(s1, s2, f) $subset_of s2
+
+# TODO: builtin instead of fn
+fn choice(x set) cup(x)
+know imply axiom_of_choice(x set):
+	forall y x:
+		choice(y) $in y
 `
