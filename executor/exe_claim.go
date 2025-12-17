@@ -185,12 +185,12 @@ func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByCo
 	}
 
 	// 检查 stmt fact 中的所有元素已经定义过了
-	execRet := exec.knowStmt(ast.NewKnowStmt([]ast.CanBeKnownStmt{stmt.ClaimProveStmt.ToCheckFact.(ast.CanBeKnownStmt)}, stmt.ClaimProveStmt.Line))
-	if execRet.IsNotTrue() {
-		return execRet
+	ret := exec.Env.NewFact(stmt.ClaimProveStmt.ToCheckFact)
+	if ret.IsErr() {
+		return NewExecErr(ret.String())
 	}
 
-	return execRet
+	return NewExecTrue(fmt.Sprintf("%s\n", stmt.String()))
 }
 
 func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) ExecRet {
