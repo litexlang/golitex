@@ -1,4 +1,6 @@
-forall x, y set:
-    x $subset_of y
-    =>:
-        x $in power_set(y)
+prove_by_contradiction {1} != {2}:
+    1 $in {1}
+    1 $in {2}
+    prove_by_enum(x {2}):
+        x = 2
+    1 = 2

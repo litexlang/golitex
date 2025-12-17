@@ -3437,6 +3437,10 @@ func (p *TbParser) atExistPropDefStmt(tb *tokenBlock) (*DefExistPropStmt, error)
 	return NewDefExistPropStmt(defBody, existParams, existParamSets, tb.line), nil
 }
 
+// 三种情况
+// 1. dom:, =>:, prove: (all three sections)
+// 2. =>:, prove: (no dom section)
+// 3. =>: (only then section, no dom and no prove)
 func (p *TbParser) parseDomThenProve(body []tokenBlock) ([]FactStmt, []FactStmt, []Stmt, error) {
 	domFacts := []FactStmt{}
 	thenFacts := []FactStmt{}
