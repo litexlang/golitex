@@ -182,7 +182,6 @@ func (env *Env) newPureFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 
 	if glob.IsBuiltinPropName(string(fact.PropName)) || glob.IsBuiltinExistPropName(string(fact.PropName)) {
 		ret := env.BuiltinPropExceptEqualPostProcess(fact)
-		// Inherit derived facts from builtin prop post-processing
 		return ret
 	}
 
