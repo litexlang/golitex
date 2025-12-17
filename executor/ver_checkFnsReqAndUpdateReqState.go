@@ -150,16 +150,16 @@ func (ver *Verifier) SetBuilderFnRequirement(objAsFnObj *ast.FnObj, state *VerSt
 }
 
 func (ver *Verifier) listSetFnRequirement(objAsFnObj *ast.FnObj, state *VerState) ExecRet {
-	// 所有参数都是$in list set
-	for _, param := range objAsFnObj.Params {
-		verRet := ver.VerFactStmt(ast.NewIsASetFact(param, glob.BuiltinLine), state)
-		if verRet.IsErr() {
-			return NewExecErr(verRet.String())
-		}
-		if verRet.IsUnknown() {
-			return NewExecErr(fmt.Sprintf("parameters in %s must be sets, %s in %s is not valid", objAsFnObj.FnHead, param, objAsFnObj))
-		}
-	}
+	// // 所有参数都是$in list set
+	// for _, param := range objAsFnObj.Params {
+	// 	verRet := ver.VerFactStmt(ast.NewIsASetFact(param, glob.BuiltinLine), state)
+	// 	if verRet.IsErr() {
+	// 		return NewExecErr(verRet.String())
+	// 	}
+	// 	if verRet.IsUnknown() {
+	// 		return NewExecErr(fmt.Sprintf("parameters in %s must be sets, %s in %s is not valid", objAsFnObj.FnHead, param, objAsFnObj))
+	// 	}
+	// }
 
 	// 所有参数互相不相等
 	for i := range len(objAsFnObj.Params) {

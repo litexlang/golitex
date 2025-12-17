@@ -15,8 +15,10 @@
 package litex_env
 
 import (
+	"fmt"
 	ast "golitex/ast"
 	cmp "golitex/cmp"
+	glob "golitex/glob"
 	"strconv"
 )
 
@@ -68,6 +70,17 @@ func getTupleValueAtIndex(tuple *ast.FnObj, index ast.Obj) ast.Obj {
 func (env *Env) GetValueOfFnObj(obj *ast.FnObj) (bool, ast.Obj) {
 	if ok, value := env.IsIndexOfTupleFnObjAndGetValueAtIndex(obj); ok {
 		return true, value
+	}
+
+	// 如果是 count(listSet)，计算 list set 的元素个数
+	if ast.IsAtomObjAndEqualToStr(obj.FnHead, glob.KeywordCount) && len(obj.Params) == 1 {
+		// 先对参数进行值替换
+		_, replacedParam := env.ReplaceSymbolWithValue(obj.Params[0])
+		if ast.IsListSetObj(replacedParam) {
+			listSet := replacedParam.(*ast.FnObj)
+			count := len(listSet.Params)
+			return true, ast.Atom(fmt.Sprintf("%d", count))
+		}
 	}
 
 	if symbolValue := env.GetSymbolSimplifiedValue(obj); symbolValue != nil {

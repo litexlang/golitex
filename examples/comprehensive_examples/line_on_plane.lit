@@ -243,3 +243,26 @@ prove:
     have b cart(R, R) = (3, 4)
     add(a, b) = (1 + 3, 2 + 4) = (4, 6)
     sm(2, b) = (2 * 3, 2 * 4) = (6, 8)
+
+
+claim:
+    forall a, b, c, d, e, f R:
+        d / a = e / b = f / c
+        =>:
+            {x cart(R, R): a * x[1] + b * x[2] = c} = {x cart(R, R): d * x[1] + e * x[2] = f}
+            
+    prove:
+        forall x {y cart(R, R): a * y[1] + b * y[2] = c}:
+            (a * x[1] + b * x[2]) * (d / a) = c * (d / a)
+            (a * x[1]) * (d / a) + (b * x[2]) * (d / a) = c * (d / a) = (a * x[1]) * (d / a) + (b * x[2]) * (e / b) = c * (f / c) = d * x[1] + e * x[2] = f
+            x $in {y cart(R, R): d * y[1] + e * y[2] = f}
+
+        a / d = b / e = c / f
+
+        forall x {y cart(R, R): d * y[1] + e * y[2] = f}:
+            d * x[1] + e * x[2] = f
+            (d * x[1] + e * x[2]) * (a / d) = f * (a / d) = (d * x[1]) * (a / d) + (e * x[2]) * (a / d) = f * (a / d) = (d * x[1]) * (a / d) + (e * x[2]) * (b / e) = f * (c / f) = a * x[1] + b * x[2] = c
+            x $in {y cart(R, R): a * y[1] + b * y[2] = c}
+
+        # 两个集合互相是对方的子集
+        $equal_set({x cart(R, R): a * x[1] + b * x[2] = c}, {x cart(R, R): d * x[1] + e * x[2] = f})

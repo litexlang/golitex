@@ -1,11 +1,11 @@
-have s set = {x R: x > 0}
+have set s = {x R: x > 0}
 forall x R: x > 0 => x $in s
-s $subset_of R
+s $is_subset_of R
 
-have s2 set = {x cart(R, R): x[1] > 0}
+have set s2 = {x cart(R, R): x[1] > 0}
 forall x cart(R, R): x[1] > 0 => x $in s2
 
-have s3 set = {x cart(R, R): x[1] + x[2] = 0}
+have set s3 = {x cart(R, R): x[1] + x[2] = 0}
 forall x cart(R, R): x[1] + x[2] = 0 => x $in s3
 
 # = {} 的释放不是自动的，只能取个名字。本质原因是因为 = {} 是一个fact，{} 不是一个obj
@@ -14,27 +14,26 @@ prop line_as_intensional_set(s set, a, b, c R):
 
 have fn:
     line(a, b, c R) subsets(cart(R, R)):
-        line(a, b, c) = {x cart(R, R): a * x[1] + b * x[2] = c}
-        $line_as_intensional_set(line(a, b, c), a, b, c)
-        line(a, b, c) $is_a_set
+        dom:
+            a != 0 or b != 0
+        =>:
+            line(a, b, c) = {x cart(R, R): a * x[1] + b * x[2] = c}
+            $line_as_intensional_set(line(a, b, c), a, b, c)
+            line(a, b, c) $in set
 
     prove:
-        have l set = {x cart(R, R): a * x[1] + b * x[2] = c}
+        have set l = {x cart(R, R): a * x[1] + b * x[2] = c}
         forall x l: x $in cart(R, R)
-        l $subset_of cart(R, R)
+        l $is_subset_of cart(R, R)
     = l
 
-# release line(1, 1, 1) = {x cart(R, R): 1 * x[1] + 1 * x[2] = 1}
-$line_as_intensional_set(line(1, 1, 1), 1, 1, 1)
-$equal_set(line(1, 1, 1), {x cart(R, R): 1 * x[1] + 1 * x[2] = 1})
-line(1, 1, 1) = {x cart(R, R): 1 * x[1] + 1 * x[2] = 1}
-forall a {x cart(R, R): 1 * x[1] + 1 * x[2] = 1}:
-    a $in cart(R, R)
-    1 * a[1] + 1 * a[2] = 1
-
-forall x line(1, 1, 1):
-    x $in cart(R, R)
-    1 * x[1] + 1 * x[2] = 1
+# 举例：line(1, 1, 1) 是 line 的实例
+prove:
+    $line_as_intensional_set(line(1, 1, 1), 1, 1, 1)
+    line(1, 1, 1) = {x cart(R, R): 1 * x[1] + 1 * x[2] = 1}
+    forall x line(1, 1, 1):
+        x $in cart(R, R)
+        1 * x[1] + 1 * x[2] = 1
 
 prove forall a, b, c R: a != 0 => line(a, b, c) = line(1, b/a, c/a):
     $line_as_intensional_set(line(a, b, c), a, b, c)
@@ -52,7 +51,106 @@ prove forall a, b, c R: a != 0 => line(a, b, c) = line(1, b/a, c/a):
         a * (1 * x[1] + (b / a) * x[2]) = a * x[1] + b * x[2] = a * (c / a) = c
         x $in line(a, b, c)
 
-    line(a, b, c) $subset_of line(1, b/a, c/a)
-    line(1, b/a, c/a) $subset_of line(a, b, c)
+    line(a, b, c) $in set
+    line(1, b/a, c/a) $in set
+
+    line(a, b, c) $is_subset_of line(1, b/a, c/a)
+    line(1, b/a, c/a) $is_subset_of line(a, b, c)
 
     line(a, b, c) = line(1, b/a, c/a)
+
+# 平面上的子集确实是直线
+exist_prop a, b, c R st is_line(s subsets(cart(R, R))):
+    $line_as_intensional_set(s, a, b, c)
+
+# line(1, 1, 1) 是直线
+prove:
+    $line_as_intensional_set(line(1, 1, 1), 1, 1, 1)
+    exist 1, 1, 1 st $is_line(line(1, 1, 1))
+
+# 是斜率
+exist_prop c R st is_slope(k R, s subsets(cart(R, R))):
+    $line_as_intensional_set(s, 1, k, c)
+
+# 1 是 line(1, 1, 1) 的斜率
+prove:
+    $line_as_intensional_set(line(1, 1, 1), 1, 1, 1)
+    exist 1 st $is_slope(1, line(1, 1, 1))
+
+# 是截距
+prop is_intercept(i R, a, b, c R):
+    (0, i) $in line(a, b, c)
+
+# 1 是 line(1, 1, 1) 的截距
+prove:
+    $line_as_intensional_set(line(1, 1, 1), 1, 1, 1)
+    $is_intercept(1, 1, 1, 1)
+
+# 两点式
+have fn:
+    line_two_points(x cart(R, R), y cart(R, R)) subsets(cart(R, R)):
+        dom:
+            x[2] - y[2] != 0 or y[1] - x[1] != 0
+        =>:
+            line_two_points(x, y) = line(x[2] - y[2], y[1] - x[1], x[2] * y[1] - x[1] * y[2])
+
+    prove:
+        have l subsets(cart(R, R)) = line(x[2] - y[2], y[1] - x[1], x[2] * y[1] - x[1] * y[2])
+
+    = l
+
+# (1, 0), (0, 1) 在直线 line(1, 1, 1) 上；他们用两点式做出来的直线就是 line(1, 1, 1)
+prove:
+    $line_as_intensional_set(line(1, 1, 1), 1, 1, 1)
+    (1, 0) $in line(1, 1, 1)
+    (0, 1) $in line(1, 1, 1)
+
+    line_two_points((1, 0), (0, 1)) = line((0-1), (0-1), (0 * 0 - 1 * 1)) = line(-1, -1, -1) = line(1, 1, 1)
+
+# 点法式：给定法向量(a, b) 和点 (x0, y0)，则直线为 {x cart(R, R): a * (x[1] - x0) + b * (x[2] - y0) = 0}
+have fn:
+    line_normal_vector(x cart(R, R), y cart(R, R)) subsets(cart(R, R)):
+        x[1] != 0 or x[2] != 0
+        =>:
+            line_normal_vector(x, y) = line(x[1], x[2], x[1] * y[1] + x[2] * y[2])
+
+    prove:
+        have l subsets(cart(R, R)) = line(x[1], x[2], x[1] * y[1] + x[2] * y[2])
+
+    = l
+
+# 两个直线垂直
+prop is_vertical(s1 subsets(cart(R, R)), s2 subsets(cart(R, R)), a, b, c, d, e, f R):
+    s1 = line(a, b, c)
+    s2 = line(d, e, f)
+    <=>:
+        a * d + b * e = 0
+
+# 点到直线的距离公式：点 pt 到直线 a * x + b * y = c 的距离
+have fn:
+    distance_point_to_line(pt cart(R, R), a, b, c R) R:
+        dom:
+            a^2 + b^2 > 0
+        =>:
+            distance_point_to_line(pt, a, b, c) = abs(a * pt[1] + b * pt[2] - c) / sqrt(a^2 + b^2)
+
+    prove:
+        a^2 + b^2 > 0
+        have d R = sqrt(a^2 + b^2)
+        sqrt(a^2 + b^2) > 0
+        have numerator R = abs(a * pt[1] + b * pt[2] - c)
+        have result R = numerator / d
+    = result
+
+# 示例：点 (0, 0) 到直线 line(1, 1, 1) 的距离
+prove:
+    prove_by_contradiction sqrt(2) != 0:
+        sqrt(2) = 0
+        2 = 0
+    distance_point_to_line((0, 0), 1, 1, 1) = abs(1 * 0 + 1 * 0 - 1) / sqrt(1^2 + 1^2)
+    distance_point_to_line((0, 0), 1, 1, 1) = abs(-1) / sqrt(2)
+    abs(-1) = 1
+    distance_point_to_line((0, 0), 1, 1, 1) = 1 / sqrt(2)
+
+
+    

@@ -35,7 +35,7 @@ func (env *Env) BuiltinPropExceptEqualPostProcess(fact *ast.SpecFactStmt) glob.G
 		return env.inFactPostProcess(fact)
 	}
 
-	if fact.PropName == glob.KeySymbolGreater {
+	if fact.PropName == glob.KeySymbolGreater && fact.TypeEnum == ast.TruePure {
 		if fact.Params[1].String() == "0" {
 			return env.builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(fact)
 		} else {
@@ -43,7 +43,7 @@ func (env *Env) BuiltinPropExceptEqualPostProcess(fact *ast.SpecFactStmt) glob.G
 		}
 	}
 
-	if fact.PropName == glob.KeySymbolLargerEqual {
+	if fact.PropName == glob.KeySymbolLargerEqual && fact.TypeEnum == ast.TruePure {
 		if fact.Params[1].String() == "0" {
 			return env.builtinPropExceptEqualPostProcess_WhenPropIsLargerEqualAndRightParamIsZero(fact)
 		} else {
@@ -51,7 +51,7 @@ func (env *Env) BuiltinPropExceptEqualPostProcess(fact *ast.SpecFactStmt) glob.G
 		}
 	}
 
-	if fact.PropName == glob.KeySymbolLess {
+	if fact.PropName == glob.KeySymbolLess && fact.TypeEnum == ast.TruePure {
 		if fact.Params[1].String() == "0" {
 			return env.builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsZero(fact)
 		} else {
