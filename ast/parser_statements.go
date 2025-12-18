@@ -3295,48 +3295,48 @@ func (p *TbParser) relationalSpecFactOrEqualsFact(tb *tokenBlock) (FactStmt, err
 // 	return param, parentSet, proofs, nil
 // }
 
-func (p *TbParser) bodyOfKnowProp(tb *tokenBlock) ([]FactStmt, []FactStmt, error) {
-	var err error
-	iffFacts := []FactStmt{}
-	thenFacts := []FactStmt{}
+// func (p *TbParser) bodyOfKnowProp(tb *tokenBlock) ([]FactStmt, []FactStmt, error) {
+// 	var err error
+// 	iffFacts := []FactStmt{}
+// 	thenFacts := []FactStmt{}
 
-	// if tb.body[len(tb.body)-1].header.is(glob.KeywordThen) {
-	if tb.body[len(tb.body)-1].header.is(glob.KeySymbolRightArrow) {
-		for i := range len(tb.body) - 1 {
-			iffFact, err := p.factStmt(&tb.body[i], UniFactDepth1)
-			if err != nil {
-				return nil, nil, ErrInLine(err, tb)
-			}
-			iffFacts = append(iffFacts, iffFact)
-		}
+// 	// if tb.body[len(tb.body)-1].header.is(glob.KeywordThen) {
+// 	if tb.body[len(tb.body)-1].header.is(glob.KeySymbolRightArrow) {
+// 		for i := range len(tb.body) - 1 {
+// 			iffFact, err := p.factStmt(&tb.body[i], UniFactDepth1)
+// 			if err != nil {
+// 				return nil, nil, ErrInLine(err, tb)
+// 			}
+// 			iffFacts = append(iffFacts, iffFact)
+// 		}
 
-		// err = tb.body[len(tb.body)-1].header.skipKwAndColon_ExceedEnd(glob.KeywordThen)
-		err = tb.body[len(tb.body)-1].header.skipKwAndColonCheckEOL(glob.KeySymbolRightArrow)
-		if err != nil {
-			return nil, nil, ErrInLine(err, tb)
-		}
+// 		// err = tb.body[len(tb.body)-1].header.skipKwAndColon_ExceedEnd(glob.KeywordThen)
+// 		err = tb.body[len(tb.body)-1].header.skipKwAndColonCheckEOL(glob.KeySymbolRightArrow)
+// 		if err != nil {
+// 			return nil, nil, ErrInLine(err, tb)
+// 		}
 
-		for _, stmt := range tb.body[len(tb.body)-1].body {
-			curStmt, err := p.factStmt(&stmt, UniFactDepth1)
-			if err != nil {
-				return nil, nil, ErrInLine(err, tb)
-			}
-			thenFacts = append(thenFacts, curStmt)
-		}
+// 		for _, stmt := range tb.body[len(tb.body)-1].body {
+// 			curStmt, err := p.factStmt(&stmt, UniFactDepth1)
+// 			if err != nil {
+// 				return nil, nil, ErrInLine(err, tb)
+// 			}
+// 			thenFacts = append(thenFacts, curStmt)
+// 		}
 
-		return iffFacts, thenFacts, nil
-	} else {
-		for i := range len(tb.body) {
-			thenFact, err := p.factStmt(&tb.body[i], UniFactDepth1)
-			if err != nil {
-				return nil, nil, ErrInLine(err, tb)
-			}
-			thenFacts = append(thenFacts, thenFact)
-		}
+// 		return iffFacts, thenFacts, nil
+// 	} else {
+// 		for i := range len(tb.body) {
+// 			thenFact, err := p.factStmt(&tb.body[i], UniFactDepth1)
+// 			if err != nil {
+// 				return nil, nil, ErrInLine(err, tb)
+// 			}
+// 			thenFacts = append(thenFacts, thenFact)
+// 		}
 
-		return iffFacts, thenFacts, nil
-	}
-}
+// 		return iffFacts, thenFacts, nil
+// 	}
+// }
 
 func (p *TbParser) atExistPropDefStmt(tb *tokenBlock) (*DefExistPropStmt, error) {
 	err := tb.header.skip(glob.KeywordImplication)

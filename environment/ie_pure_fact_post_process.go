@@ -65,34 +65,6 @@ func (ie *InferenceEngine) newPureFactPostProcess(fact *ast.SpecFactStmt) glob.G
 	return glob.ErrRet(fmt.Errorf("undefined prop: %s", fact.PropName))
 }
 
-// equalSetFactPostProcess handles postprocessing for equal_set(a, b) facts
-// It creates an equality fact a = b
-func (ie *InferenceEngine) equalSetFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
-	if len(fact.Params) != 2 {
-		return glob.ErrRet(fmt.Errorf("equal_set fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
-	}
-
-	derivedFacts := []string{}
-
-	// Create a = b fact
-	equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{fact.Params[0], fact.Params[1]}, fact.Line)
-	ret := ie.Env.NewFact(equalFact)
-	if ret.IsErr() {
-		return ret
-	}
-	derivedFacts = append(derivedFacts, equalFact.String())
-
-	// Collect any derived facts from the equality fact
-	if ret.IsTrue() && len(ret.GetMsgs()) > 0 {
-		derivedFacts = append(derivedFacts, ret.GetMsgs()...)
-	}
-
-	if len(derivedFacts) > 0 {
-		return glob.NewGlobTrueWithMsgs(derivedFacts)
-	}
-	return glob.NewGlobTrue("")
-}
-
 // equalTupleFactPostProcess handles postprocessing for equal_tuple(a, b, dim) facts
 // It automatically derives a[i] = b[i] for i from 1 to dim
 func (ie *InferenceEngine) equalTupleFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
