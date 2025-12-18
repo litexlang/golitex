@@ -31,7 +31,7 @@ func (env *Env) NewFact(stmt ast.FactStmt) glob.GlobRet {
 	case *ast.SpecFactStmt:
 		return env.newSpecFact(f)
 	case *ast.OrStmt:
-		return env.newOrFactNoInfer(f)
+		return env.newOrFact(f)
 	case *ast.UniFactStmt:
 		return env.newUniFact(f)
 	case *ast.UniFactWithIffStmt:
@@ -53,10 +53,10 @@ func (env *Env) NewFact(stmt ast.FactStmt) glob.GlobRet {
 // 	return env.NewFact(fact)
 // }
 
-func (env *Env) newSpecFactNoPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
+func (env *Env) newSpecFactNoInfer(fact *ast.SpecFactStmt) glob.GlobRet {
 	// if env.CurMatchProp == nil {
 	if isEqualFact := ast.IsTrueEqualFact(fact); isEqualFact {
-		return env.newTrueEqual(fact)
+		return env.newTrueEqualNoInfer(fact)
 	}
 	// }
 
@@ -74,21 +74,21 @@ func (env *Env) newSpecFactNoPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 func (env *Env) newFactNoPostProcess(stmt ast.FactStmt) glob.GlobRet {
 	switch f := stmt.(type) {
 	case *ast.SpecFactStmt:
-		return env.newSpecFactNoPostProcess(f)
+		return env.newSpecFactNoInfer(f)
 	case *ast.OrStmt:
-		return env.newOrFactNoInfer(f)
+		return env.newOrFact(f)
 	case *ast.UniFactStmt:
 		return env.newUniFact(f)
 	case *ast.UniFactWithIffStmt:
 		return env.newUniFactWithIff(f)
 	case *ast.EqualsFactStmt:
-		return env.newEqualsFactNoPostProcess(f)
+		return env.newEqualsFactNoInfer(f)
 	default:
 		return glob.ErrRet(fmt.Errorf("unknown fact type: %T", stmt))
 	}
 }
 
-func (env *Env) newOrFactNoInfer(fact *ast.OrStmt) glob.GlobRet {
+func (env *Env) newOrFact(fact *ast.OrStmt) glob.GlobRet {
 	ret := env.KnownFactsStruct.SpecFactInLogicExprMem.newFact(fact)
 	return ret
 }
@@ -97,6 +97,15 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) glob.GlobRet {
 	if isEqualFact := ast.IsTrueEqualFact(fact); isEqualFact {
 		return env.newTrueEqual(fact)
 	}
+
+	defer func() {
+		if fact.TypeEnum == ast.TruePure && env.IsTransitiveProp(string(fact.PropName)) {
+			if env.TransitivePropMem[string(fact.PropName)] == nil {
+				env.TransitivePropMem[string(fact.PropName)] = make(map[string][]ast.Obj)
+			}
+			env.TransitivePropMem[string(fact.PropName)][fact.Params[0].String()] = append(env.TransitivePropMem[string(fact.PropName)][fact.Params[0].String()], fact.Params[1])
+		}
+	}()
 
 	ret := env.storeSpecFactInMem(fact)
 	if ret.IsErr() {
@@ -110,17 +119,11 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) glob.GlobRet {
 	case ast.FalseExist_St:
 		return ie.newFalseExist(fact)
 	default:
-		if fact.TypeEnum == ast.TruePure && ie.Env.IsTransitiveProp(string(fact.PropName)) {
-			if ie.Env.TransitivePropMem[string(fact.PropName)] == nil {
-				ie.Env.TransitivePropMem[string(fact.PropName)] = make(map[string][]ast.Obj)
-			}
-			ie.Env.TransitivePropMem[string(fact.PropName)][fact.Params[0].String()] = append(ie.Env.TransitivePropMem[string(fact.PropName)][fact.Params[0].String()], fact.Params[1])
-		}
 		return ie.newPureFact(fact)
 	}
 }
 
-func (env *Env) newTrueEqual(fact *ast.SpecFactStmt) glob.GlobRet {
+func (env *Env) newTrueEqualNoInfer(fact *ast.SpecFactStmt) glob.GlobRet {
 	if len(fact.Params) != 2 {
 		return glob.ErrRet(fmt.Errorf("'=' fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
 	}
@@ -136,10 +139,18 @@ func (env *Env) newTrueEqual(fact *ast.SpecFactStmt) glob.GlobRet {
 		return ret
 	}
 
+	return glob.NewGlobTrue("")
+}
+
+func (env *Env) newTrueEqual(fact *ast.SpecFactStmt) glob.GlobRet {
+	ret := env.newTrueEqualNoInfer(fact)
+	if ret.IsNotTrue() {
+		return ret
+	}
+
 	// postprocess for cart: if x = cart(x1, x2, ..., xn)
 	ie := NewInferenceEngine(env)
 	ret = ie.newTrueEqual(fact)
-
 	return ret
 }
 
@@ -151,21 +162,16 @@ func (env *Env) StoreTrueEqualValues(key, value ast.Obj) {
 	env.SymbolSimplifiedValueMem[key.String()] = value
 }
 
-func simplifyNumExprObj(obj ast.Obj) ast.Obj {
-	simplifiedNumExprObj := cmp.IsNumExprObjThenSimplify(obj)
-	return simplifiedNumExprObj
-}
-
 func (env *Env) storeSymbolSimplifiedValue(left, right ast.Obj) glob.GlobRet {
 	_, newLeft := env.ReplaceSymbolWithValue(left)
 	if cmp.IsNumExprLitObj(newLeft) {
-		simplifiedNewLeft := simplifyNumExprObj(newLeft)
+		simplifiedNewLeft := cmp.IsNumExprObjThenSimplify(newLeft)
 		env.StoreTrueEqualValues(right, simplifiedNewLeft)
 	}
 
 	_, newRight := env.ReplaceSymbolWithValue(right)
 	if cmp.IsNumExprLitObj(newRight) {
-		simplifiedNewRight := simplifyNumExprObj(newRight)
+		simplifiedNewRight := cmp.IsNumExprObjThenSimplify(newRight)
 		env.StoreTrueEqualValues(left, simplifiedNewRight)
 	}
 
@@ -234,7 +240,7 @@ func (env *Env) ExecDefFnTemplate(stmt *ast.FnTemplateDefStmt) glob.GlobRet {
 }
 
 func (env *Env) newUniFact_ThenFactIsSpecFact(stmt *ast.UniFactStmt, thenFact *ast.SpecFactStmt) glob.GlobRet {
-	return env.storeUniFact(thenFact, stmt)
+	return env.storeUniFactInMem(thenFact, stmt)
 }
 
 func (env *Env) newUniFact_ThenFactIsOrStmt(stmt *ast.UniFactStmt, thenFact *ast.OrStmt) glob.GlobRet {
@@ -282,21 +288,11 @@ func (env *Env) newUniFact_ThenFactIsEqualsFactStmt(stmt *ast.UniFactStmt, thenF
 // }
 
 func (env *Env) storeSpecFactInMem(stmt *ast.SpecFactStmt) glob.GlobRet {
-	ret := env.KnownFactsStruct.SpecFactMem.newFact(stmt)
-	if ret.IsErr() {
-		return ret
-	}
-
-	return glob.NewGlobTrue("")
+	return env.KnownFactsStruct.SpecFactMem.newFact(stmt)
 }
 
-func (env *Env) storeUniFact(specFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt) glob.GlobRet {
-	ret := env.KnownFactsStruct.SpecFactInUniFactMem.newFact(specFact, uniFact)
-	if ret.IsErr() {
-		return ret
-	}
-
-	return glob.NewGlobTrue("")
+func (env *Env) storeUniFactInMem(specFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt) glob.GlobRet {
+	return env.KnownFactsStruct.SpecFactInUniFactMem.newFact(specFact, uniFact)
 }
 
 func (env *Env) newEqualsFact(stmt *ast.EqualsFactStmt) glob.GlobRet {
@@ -310,10 +306,10 @@ func (env *Env) newEqualsFact(stmt *ast.EqualsFactStmt) glob.GlobRet {
 	return glob.NewGlobTrue("")
 }
 
-func (env *Env) newEqualsFactNoPostProcess(stmt *ast.EqualsFactStmt) glob.GlobRet {
+func (env *Env) newEqualsFactNoInfer(stmt *ast.EqualsFactStmt) glob.GlobRet {
 	equalFacts := stmt.ToEqualFacts()
 	for _, equalFact := range equalFacts {
-		ret := env.newSpecFactNoPostProcess(equalFact)
+		ret := env.newSpecFactNoInfer(equalFact)
 		if ret.IsErr() {
 			return ret
 		}
