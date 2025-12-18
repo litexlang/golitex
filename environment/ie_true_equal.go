@@ -14,13 +14,13 @@ func (ie *InferenceEngine) newTrueEqual(fact *ast.SpecFactStmt) glob.GlobRet {
 	}
 
 	// 处理 tuple 相等的情况
-	ret = ie.equalFactByTupleEquality(fact.Params[0], fact.Params[1])
+	ret = ie.trueEqualFactByTuple(fact.Params[0], fact.Params[1])
 	if ret.IsErr() {
 		return ret
 	}
 
 	// 处理 x = {1, 2, 3} 的情况
-	ret = ie.equalFactByListSetEquality(fact.Params[0], fact.Params[1])
+	ret = ie.trueEqualFactByListSet(fact.Params[0], fact.Params[1])
 	if ret.IsErr() {
 		return ret
 	}
@@ -95,12 +95,12 @@ func (ie *InferenceEngine) trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondi
 	return glob.NewGlobTrue("")
 }
 
-// equalFactByTupleEquality handles postprocessing for tuple equality
+// trueEqualFactByTuple handles postprocessing for tuple equality
 // It handles three cases:
 //   - (.., …) = (.., ..): tuple = tuple
 //   - a = (.., ..): obj = tuple
 //   - (.., ..) = a: tuple = obj
-func (ie *InferenceEngine) equalFactByTupleEquality(left ast.Obj, right ast.Obj) glob.GlobRet {
+func (ie *InferenceEngine) trueEqualFactByTuple(left ast.Obj, right ast.Obj) glob.GlobRet {
 	leftTuple, leftIsTuple := left.(*ast.FnObj)
 	rightTuple, rightIsTuple := right.(*ast.FnObj)
 
@@ -138,12 +138,12 @@ func (ie *InferenceEngine) trueEqualByLeftAndRightAreBothTuple(leftTuple *ast.Fn
 
 // equalFactPostProcess_tupleTuple handles postprocessing for tuple = tuple
 // It generates equal facts for each corresponding element
-// equalFactByListSetEquality handles postprocessing for x = {1, 2, 3}
+// trueEqualFactByListSet handles postprocessing for x = {1, 2, 3}
 // If the right side is a list set (directly or through equal facts), it creates:
 //   - An or fact indicating that x equals one of the list set elements
 //   - count(x) = len(listSet) fact
 //   - is_finite_set(x) fact
-func (ie *InferenceEngine) equalFactByListSetEquality(left ast.Obj, right ast.Obj) glob.GlobRet {
+func (ie *InferenceEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) glob.GlobRet {
 	// 尝试获取 list set（可能是直接的，也可能是通过 equal facts 得到的）
 	listSetObj := ie.Env.GetListSetEqualToObj(right)
 	if listSetObj == nil {
