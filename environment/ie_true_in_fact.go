@@ -21,14 +21,6 @@ import (
 	"strconv"
 )
 
-type InferenceEngine struct {
-	Env *Env
-}
-
-func NewInferenceEngine(env *Env) *InferenceEngine {
-	return &InferenceEngine{Env: env}
-}
-
 // TODO: 好像这里的条件也不一定是互斥的，所以如果ret.IsTrue()了，也不一定要返回 true，而是应该继续尝试其他条件
 func (ie *InferenceEngine) trueInFact(fact *ast.SpecFactStmt) glob.GlobRet {
 	if len(fact.Params) != 2 {
@@ -305,7 +297,7 @@ func (ie *InferenceEngine) trueInFactByRangeOrClosedRange(fact *ast.SpecFactStmt
 		return ret
 	}
 	derivedFacts = append(derivedFacts, greaterEqualLeftFact.String())
-	ret = ie.Env.builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(greaterEqualLeftFact)
+	ret = ie.builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(greaterEqualLeftFact)
 	if ret.IsErr() {
 		return ret
 	}
@@ -321,7 +313,7 @@ func (ie *InferenceEngine) trueInFactByRangeOrClosedRange(fact *ast.SpecFactStmt
 			return ret
 		}
 		derivedFacts = append(derivedFacts, lessRightFact.String())
-		ret = ie.Env.builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsZero(lessRightFact)
+		ret = ie.builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsZero(lessRightFact)
 		if ret.IsErr() {
 			return ret
 		}
@@ -336,7 +328,7 @@ func (ie *InferenceEngine) trueInFactByRangeOrClosedRange(fact *ast.SpecFactStmt
 			return ret
 		}
 		derivedFacts = append(derivedFacts, lessEqualRightFact.String())
-		ret = ie.Env.builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndRightParamIsNotZero(lessEqualRightFact)
+		ret = ie.builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndRightParamIsNotZero(lessEqualRightFact)
 		if ret.IsErr() {
 			return ret
 		}
@@ -387,7 +379,7 @@ func (ie *InferenceEngine) trueInFactByNPos(fact *ast.SpecFactStmt) glob.GlobRet
 		return ret
 	}
 	derivedFacts = append(derivedFacts, greaterThanZeroFact.String())
-	ret = ie.Env.builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(greaterThanZeroFact)
+	ret = ie.builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(greaterThanZeroFact)
 	if ret.IsErr() {
 		return ret
 	}
