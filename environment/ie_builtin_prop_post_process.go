@@ -35,6 +35,10 @@ func (ie *InferenceEngine) BuiltinPropExceptEqualPostProcess(fact *ast.SpecFactS
 		return ie.trueInFact(fact)
 	}
 
+	if ast.PropNameIsStringAndIsFalse(fact, glob.KeySymbolEqual) {
+		return ie.falseEqualFact(fact)
+	}
+
 	if fact.PropName == glob.KeySymbolGreater && fact.TypeEnum == ast.TruePure {
 		if fact.Params[1].String() == "0" {
 			return ie.builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(fact)
@@ -533,6 +537,19 @@ func (ie *InferenceEngine) subsetOfFactPostProcess(fact *ast.SpecFactStmt) glob.
 	}
 
 	derivedFacts = append(derivedFacts, forallFact.String())
+
+	return ie.Env.AutoDerivedFactsMsg(fact.String(), derivedFacts)
+}
+
+func (ie *InferenceEngine) falseEqualFact(fact *ast.SpecFactStmt) glob.GlobRet {
+	derivedFacts := []string{}
+
+	// x - y != 0
+	notEqualFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolNotEqual), []ast.Obj{ast.NewFnObj(ast.Atom(glob.KeySymbolMinus), []ast.Obj{fact.Params[0], fact.Params[1]}), ast.Atom("0")}, fact.Line)
+	ret := ie.Env.storeSpecFactInMemAndCollect(notEqualFact, &derivedFacts)
+	if ret.IsErr() {
+		return ret
+	}
 
 	return ie.Env.AutoDerivedFactsMsg(fact.String(), derivedFacts)
 }
