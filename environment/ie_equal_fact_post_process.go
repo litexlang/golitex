@@ -171,4 +171,3 @@ func (ie *InferenceEngine) equalFactPostProcess_listSetEquality(left ast.Obj, ri
 	isFiniteFact := ast.NewIsAFiniteSetFact(left, glob.BuiltinLine)
 	return ie.Env.NewFact(isFiniteFact)
 }
-
