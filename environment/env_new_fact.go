@@ -31,7 +31,7 @@ func (env *Env) NewFact(stmt ast.FactStmt) glob.GlobRet {
 	case *ast.SpecFactStmt:
 		return env.newSpecFact(f)
 	case *ast.OrStmt:
-		return env.newLogicExprFact(f)
+		return env.newOrFactNoInfer(f)
 	case *ast.UniFactStmt:
 		return env.newUniFact(f)
 	case *ast.UniFactWithIffStmt:
@@ -45,18 +45,18 @@ func (env *Env) NewFact(stmt ast.FactStmt) glob.GlobRet {
 
 // NewFactWithDeclarationCheck checks if all atoms in the fact are declared, and if so, calls NewFact.
 // Returns an error if any atoms are undeclared or if NewFact fails.
-func (env *Env) NewFactWithDeclarationCheck(fact ast.FactStmt) glob.GlobRet {
-	ret := env.AtomObjsInFactProperlyDefined(fact, map[string]struct{}{})
-	if ret.IsErr() {
-		return ret
-	}
-	return env.NewFact(fact)
-}
+// func (env *Env) NewFactWithDeclarationCheck(fact ast.FactStmt) glob.GlobRet {
+// 	ret := env.AtomObjsInFactProperlyDefined(fact, map[string]struct{}{})
+// 	if ret.IsErr() {
+// 		return ret
+// 	}
+// 	return env.NewFact(fact)
+// }
 
 func (env *Env) newSpecFactNoPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 	// if env.CurMatchProp == nil {
 	if isEqualFact := ast.IsTrueEqualFact(fact); isEqualFact {
-		return env.isTrueEqualFact_StoreIt(fact)
+		return env.newTrueEqual(fact)
 	}
 	// }
 
@@ -76,7 +76,7 @@ func (env *Env) newFactNoPostProcess(stmt ast.FactStmt) glob.GlobRet {
 	case *ast.SpecFactStmt:
 		return env.newSpecFactNoPostProcess(f)
 	case *ast.OrStmt:
-		return env.newLogicExprFact(f)
+		return env.newOrFactNoInfer(f)
 	case *ast.UniFactStmt:
 		return env.newUniFact(f)
 	case *ast.UniFactWithIffStmt:
@@ -88,14 +88,14 @@ func (env *Env) newFactNoPostProcess(stmt ast.FactStmt) glob.GlobRet {
 	}
 }
 
-func (env *Env) newLogicExprFact(fact *ast.OrStmt) glob.GlobRet {
+func (env *Env) newOrFactNoInfer(fact *ast.OrStmt) glob.GlobRet {
 	ret := env.KnownFactsStruct.SpecFactInLogicExprMem.newFact(fact)
 	return ret
 }
 
 func (env *Env) newSpecFact(fact *ast.SpecFactStmt) glob.GlobRet {
 	if isEqualFact := ast.IsTrueEqualFact(fact); isEqualFact {
-		return env.isTrueEqualFact_StoreIt(fact)
+		return env.newTrueEqual(fact)
 	}
 
 	ret := env.storeSpecFactInMem(fact)
@@ -103,140 +103,29 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) glob.GlobRet {
 		return ret
 	}
 
-	// postprocess
 	ie := NewInferenceEngine(env)
-	var postProcessRet glob.GlobRet
-	if fact.IsExist_St_Fact() {
-		postProcessRet = ie.newExist_St_FactPostProcess(fact)
-	} else {
-		postProcessRet = ie.newPureFactPostProcess(fact)
-	}
-
-	if postProcessRet.IsErr() {
-		return postProcessRet
-	}
-
-	// Return derived facts from post-processing
-	return postProcessRet
-}
-
-func (env *Env) newTruePureFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) glob.GlobRet {
-	// 通过 prop 定义中的 iff 和 implication 规则，推导出后续结论
-	// 因为 prop 的定义包含了 iff（当且仅当）和 implication（蕴含）关系，
-	// 所以当该 prop 为真时，可以推导出定义中指定的后续事实
-	propDef := env.GetPropDef(fact.PropName)
-	if propDef == nil {
-		// TODO 这里需要考虑prop的定义是否在当前包中。当然这里有点复杂，因为如果是内置的prop，那么可能需要到builtin包中去找
-		return glob.NewGlobTrue("")
-	}
-
-	iffFacts := []string{}
-	implicationFacts := []string{}
-
-	uniMap := map[string]ast.Obj{}
-	for i, propParam := range propDef.DefHeader.Params {
-		uniMap[propParam] = fact.Params[i]
-	}
-
-	// 通过 iff（当且仅当）规则推导出的事实
-	for _, thenFact := range propDef.IffFactsOrNil {
-		instantiated, err := thenFact.InstantiateFact(uniMap)
-		if err != nil {
-			return glob.ErrRet(err)
-		}
-
-		ret := env.newFactNoPostProcess(instantiated)
-
-		// Note: Messages are now added to ExecRet in the caller, not to env.Msgs
-
-		if ret.IsErr() {
-			return ret
-		}
-
-		// Collect the instantiated fact itself as a derived fact
-		if ret.IsTrue() {
-			if specFact, ok := instantiated.(*ast.SpecFactStmt); ok {
-				iffFacts = append(iffFacts, specFact.String())
-			} else {
-				iffFacts = append(iffFacts, instantiated.String())
+	switch fact.TypeEnum {
+	case ast.TrueExist_St:
+		return ie.newTrueExist(fact)
+	case ast.FalseExist_St:
+		return ie.newFalseExist(fact)
+	default:
+		if fact.TypeEnum == ast.TruePure && ie.Env.IsTransitiveProp(string(fact.PropName)) {
+			if ie.Env.TransitivePropMem[string(fact.PropName)] == nil {
+				ie.Env.TransitivePropMem[string(fact.PropName)] = make(map[string][]ast.Obj)
 			}
+			ie.Env.TransitivePropMem[string(fact.PropName)][fact.Params[0].String()] = append(ie.Env.TransitivePropMem[string(fact.PropName)][fact.Params[0].String()], fact.Params[1])
 		}
+		return ie.newPureFact(fact)
 	}
-
-	// 通过 implication（蕴含）规则推导出的事实
-	for _, thenFact := range propDef.ImplicationFactsOrNil {
-		instantiated, err := thenFact.InstantiateFact(uniMap)
-		if err != nil {
-			return glob.ErrRet(err)
-		}
-
-		ret := env.newFactNoPostProcess(instantiated)
-
-		// Note: Messages are now added to ExecRet in the caller, not to env.Msgs
-
-		if ret.IsErr() {
-			return ret
-		}
-
-		// Collect the instantiated fact itself as a derived fact
-		if ret.IsTrue() {
-			implicationFacts = append(implicationFacts, instantiated.String())
-		}
-	}
-
-	// 构建返回消息，明确标注哪些来自 iff，哪些来自 implication
-	derivedFacts := []string{}
-	if len(iffFacts) > 0 || len(implicationFacts) > 0 {
-		derivedFacts = append(derivedFacts, fmt.Sprintf("derive facts from %s:", fact.String()))
-		derivedFacts = append(derivedFacts, iffFacts...)
-		derivedFacts = append(derivedFacts, implicationFacts...)
-		derivedFacts = append(derivedFacts, "")
-	}
-
-	return glob.NewGlobTrueWithMsgs(derivedFacts)
 }
 
-func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, glob.GlobRet) {
-	existPropDef := env.GetExistPropDef(fact.PropName)
-	if existPropDef == nil {
-		return nil, glob.ErrRet(fmt.Errorf("exist fact %s has no definition", fact))
-	}
-
-	uniMap := map[string]ast.Obj{}
-	for i, propParam := range existPropDef.DefBody.DefHeader.Params {
-		uniMap[propParam] = fact.Params[i]
-	}
-
-	// IffFactsOrNil 中的 facts 是 OR 关系，先实例化它们
-	orFactOrs := []*ast.SpecFactStmt{}
-	for _, thenFact := range existPropDef.DefBody.IffFactsOrNil {
-		asSpecFactStmt, ok := thenFact.(*ast.SpecFactStmt)
-		if !ok {
-			return nil, glob.ErrRet(fmt.Errorf("exist fact %s has no definition", fact))
-		}
-
-		instantiated, err := asSpecFactStmt.InstantiateFact(uniMap)
-		if err != nil {
-			return nil, glob.ErrRet(err)
-		}
-
-		reversedFact := instantiated.(*ast.SpecFactStmt).ReverseIsTrue()
-
-		orFactOrs = append(orFactOrs, reversedFact[0])
-	}
-
-	// 创建 OrStmt 表示 OR 关系，然后整体取反
-	orStmt := ast.NewOrStmt(orFactOrs, existPropDef.Line)
-
-	return ast.NewUniFact(existPropDef.ExistParams, existPropDef.ExistParamSets, []ast.FactStmt{}, []ast.FactStmt{orStmt}, fact.Line), glob.NewGlobTrue("")
-}
-
-func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) glob.GlobRet {
+func (env *Env) newTrueEqual(fact *ast.SpecFactStmt) glob.GlobRet {
 	if len(fact.Params) != 2 {
 		return glob.ErrRet(fmt.Errorf("'=' fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
 	}
 
-	ret := storeCommutativeTransitiveFact(env.EqualMem, fact)
+	ret := env.storeTrueEqualInEqualMemNoInfer(fact)
 	if ret.IsErr() {
 		return ret
 	}
@@ -249,32 +138,9 @@ func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) glob.GlobRet {
 
 	// postprocess for cart: if x = cart(x1, x2, ..., xn)
 	ie := NewInferenceEngine(env)
-	if cart, ok := fact.Params[1].(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(cart.FnHead, glob.KeywordCart) {
-		ret = ie.equalFactPostProcess_cart(fact)
-		if ret.IsErr() {
-			return ret
-		}
-	}
+	ret = ie.newTrueEqual(fact)
 
-	// 处理 tuple 相等的情况
-	ret = ie.equalFactPostProcess_tupleEquality(fact.Params[0], fact.Params[1])
-	if ret.IsErr() {
-		return ret
-	}
-
-	// 处理 x = {1, 2, 3} 的情况
-	ret = ie.equalFactPostProcess_listSetEquality(fact.Params[0], fact.Params[1])
-	if ret.IsErr() {
-		return ret
-	}
-
-	// 处理 x = {x Z: x > 5} 的情况
-	// ret = env.equalFactPostProcess_SetBuilderEquality(fact.Params[0], fact.Params[1])
-	// if ret.IsErr() {
-	// 	return ret
-	// }
-
-	return glob.NewGlobTrue("")
+	return ret
 }
 
 func (env *Env) StoreTrueEqualValues(key, value ast.Obj) {

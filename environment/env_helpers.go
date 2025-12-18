@@ -98,7 +98,9 @@ func (env *Env) storeSpecFactInMemAndCollect(fact *ast.SpecFactStmt, derivedFact
 	return glob.NewGlobTrue("")
 }
 
-func storeCommutativeTransitiveFact(mem map[string]*[]ast.Obj, fact *ast.SpecFactStmt) glob.GlobRet {
+func (env *Env) storeTrueEqualInEqualMemNoInfer(fact *ast.SpecFactStmt) glob.GlobRet {
+	mem := env.EqualMem
+
 	if len(fact.Params) != 2 {
 		return glob.ErrRet(fmt.Errorf("commutative transitive fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
 	}
@@ -142,4 +144,39 @@ func storeCommutativeTransitiveFact(mem map[string]*[]ast.Obj, fact *ast.SpecFac
 	}
 
 	return glob.NewGlobTrue("")
+}
+
+func (env *Env) notExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, glob.GlobRet) {
+	existPropDef := env.GetExistPropDef(fact.PropName)
+	if existPropDef == nil {
+		return nil, glob.ErrRet(fmt.Errorf("exist fact %s has no definition", fact))
+	}
+
+	uniMap := map[string]ast.Obj{}
+	for i, propParam := range existPropDef.DefBody.DefHeader.Params {
+		uniMap[propParam] = fact.Params[i]
+	}
+
+	// IffFactsOrNil 中的 facts 是 OR 关系，先实例化它们
+	orFactOrs := []*ast.SpecFactStmt{}
+	for _, thenFact := range existPropDef.DefBody.IffFactsOrNil {
+		asSpecFactStmt, ok := thenFact.(*ast.SpecFactStmt)
+		if !ok {
+			return nil, glob.ErrRet(fmt.Errorf("exist fact %s has no definition", fact))
+		}
+
+		instantiated, err := asSpecFactStmt.InstantiateFact(uniMap)
+		if err != nil {
+			return nil, glob.ErrRet(err)
+		}
+
+		reversedFact := instantiated.(*ast.SpecFactStmt).ReverseIsTrue()
+
+		orFactOrs = append(orFactOrs, reversedFact[0])
+	}
+
+	// 创建 OrStmt 表示 OR 关系，然后整体取反
+	orStmt := ast.NewOrStmt(orFactOrs, existPropDef.Line)
+
+	return ast.NewUniFact(existPropDef.ExistParams, existPropDef.ExistParamSets, []ast.FactStmt{}, []ast.FactStmt{orStmt}, fact.Line), glob.NewGlobTrue("")
 }

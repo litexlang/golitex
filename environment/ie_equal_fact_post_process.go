@@ -21,46 +21,6 @@ import (
 	"strconv"
 )
 
-// equalFactPostProcess_cart handles postprocessing for x = cart(x1, x2, ..., xn)
-// It generates:
-//   - is_cart(x) fact
-//   - dim(x) = len(cart.Params) fact
-//   - proj(x, i+1) = cart.Params[i] facts for each i
-func (ie *InferenceEngine) equalFactPostProcess_cart(fact *ast.SpecFactStmt) glob.GlobRet {
-	cart, ok := fact.Params[1].(*ast.FnObj)
-	if !ok {
-		return glob.ErrRet(fmt.Errorf("expected cart to be FnObj, got %T", fact.Params[1]))
-	}
-
-	// 让 $is_cart(x) 成立
-	isCartFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsCart), []ast.Obj{fact.Params[0]}, glob.BuiltinLine)
-	ret := ie.Env.NewFact(isCartFact)
-	if ret.IsErr() {
-		return ret
-	}
-
-	// dim(x) = len(cart.Params)
-	dimFn := ast.NewFnObj(ast.Atom(glob.KeywordSetDim), []ast.Obj{fact.Params[0]})
-	dimValue := ast.Atom(strconv.Itoa(len(cart.Params)))
-	dimEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{dimFn, dimValue}, glob.BuiltinLine)
-	ret = ie.Env.NewFact(dimEqualFact)
-	if ret.IsErr() {
-		return ret
-	}
-
-	// proj(x, i+1) = cart.Params[i] for each i
-	for i, cartParam := range cart.Params {
-		projFn := ast.NewFnObj(ast.Atom(glob.KeywordProj), []ast.Obj{fact.Params[0], ast.Atom(strconv.Itoa(i + 1))})
-		projEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{projFn, cartParam}, glob.BuiltinLine)
-		ret = ie.Env.NewFact(projEqualFact)
-		if ret.IsErr() {
-			return ret
-		}
-	}
-
-	return glob.NewGlobTrue("")
-}
-
 // equalFactPostProcess_tuple handles postprocessing for obj = tuple
 // It generates obj[index] = tuple[i] facts for each index
 func (ie *InferenceEngine) equalFactPostProcess_tuple(obj ast.Obj, tupleObj ast.Obj) glob.GlobRet {
@@ -108,12 +68,12 @@ func (ie *InferenceEngine) equalFactPostProcess_tupleTuple(leftTuple *ast.FnObj,
 	return glob.NewGlobTrue("")
 }
 
-// equalFactPostProcess_tupleEquality handles postprocessing for tuple equality
+// equalFactByTupleEquality handles postprocessing for tuple equality
 // It handles three cases:
 //   - (.., …) = (.., ..): tuple = tuple
 //   - a = (.., ..): obj = tuple
 //   - (.., ..) = a: tuple = obj
-func (ie *InferenceEngine) equalFactPostProcess_tupleEquality(left ast.Obj, right ast.Obj) glob.GlobRet {
+func (ie *InferenceEngine) equalFactByTupleEquality(left ast.Obj, right ast.Obj) glob.GlobRet {
 	leftTuple, leftIsTuple := left.(*ast.FnObj)
 	rightTuple, rightIsTuple := right.(*ast.FnObj)
 
@@ -131,12 +91,12 @@ func (ie *InferenceEngine) equalFactPostProcess_tupleEquality(left ast.Obj, righ
 	return glob.NewGlobTrue("")
 }
 
-// equalFactPostProcess_listSetEquality handles postprocessing for x = {1, 2, 3}
+// equalFactByListSetEquality handles postprocessing for x = {1, 2, 3}
 // If the right side is a list set (directly or through equal facts), it creates:
 //   - An or fact indicating that x equals one of the list set elements
 //   - count(x) = len(listSet) fact
 //   - is_finite_set(x) fact
-func (ie *InferenceEngine) equalFactPostProcess_listSetEquality(left ast.Obj, right ast.Obj) glob.GlobRet {
+func (ie *InferenceEngine) equalFactByListSetEquality(left ast.Obj, right ast.Obj) glob.GlobRet {
 	// 尝试获取 list set（可能是直接的，也可能是通过 equal facts 得到的）
 	listSetObj := ie.Env.GetListSetEqualToObj(right)
 	if listSetObj == nil {

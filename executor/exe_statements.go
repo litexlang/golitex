@@ -178,7 +178,7 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) ExecRet {
 	for _, fact := range stmt.Facts {
 		switch fact := fact.(type) {
 		case ast.FactStmt:
-			ret := exec.Env.NewFactWithDeclarationCheck(fact)
+			ret := exec.Env.NewFact(fact)
 			if ret.IsErr() {
 				return NewExecErr(ret.String()).AddMsg(stmt.String())
 			}
