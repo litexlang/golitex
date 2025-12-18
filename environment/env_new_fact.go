@@ -60,12 +60,6 @@ func (env *Env) newSpecFactNoPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 	}
 	// }
 
-	// if isMathInductionProp, err := env.isMathInductionPropName_StoreIt(fact); err != nil {
-	// 	return err
-	// } else if isMathInductionProp {
-	// 	return nil
-	// }
-
 	// err := env.KnownFacts.SpecFactMem.NewFactInSpecFactMem(fact, env.CurMatchEnv)
 	ret := env.storeSpecFactInMem(fact)
 	if ret.IsErr() {
@@ -123,142 +117,6 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) glob.GlobRet {
 
 	// Return derived facts from post-processing
 	return postProcessRet
-}
-
-func storeCommutativeTransitiveFact(mem map[string]*[]ast.Obj, fact *ast.SpecFactStmt) glob.GlobRet {
-	if len(fact.Params) != 2 {
-		return glob.ErrRet(fmt.Errorf("commutative transitive fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
-	}
-
-	leftAsStr := fact.Params[0].String()
-	rightAsStr := fact.Params[1].String()
-
-	storedEqualLeftFcs, leftGot := mem[leftAsStr]
-	storedEqualRightFcs, rightGot := mem[rightAsStr]
-
-	if leftGot && rightGot {
-		if storedEqualLeftFcs == storedEqualRightFcs {
-			return glob.NewGlobTrue("")
-		} else {
-			newEqualFcs := []ast.Obj{}
-			newEqualFcs = append(newEqualFcs, *storedEqualLeftFcs...)
-			newEqualFcs = append(newEqualFcs, *storedEqualRightFcs...)
-			*storedEqualLeftFcs = newEqualFcs
-			*storedEqualRightFcs = newEqualFcs
-			return glob.NewGlobTrue("")
-		}
-	}
-
-	if leftGot && !rightGot {
-		*storedEqualLeftFcs = append(*storedEqualLeftFcs, fact.Params[1])
-		mem[rightAsStr] = storedEqualLeftFcs
-		return glob.NewGlobTrue("")
-	}
-
-	if !leftGot && rightGot {
-		*storedEqualRightFcs = append(*storedEqualRightFcs, fact.Params[0])
-		mem[leftAsStr] = storedEqualRightFcs
-		return glob.NewGlobTrue("")
-	}
-
-	if !leftGot && !rightGot {
-		newEqualFcs := []ast.Obj{fact.Params[0], fact.Params[1]}
-		mem[leftAsStr] = &newEqualFcs
-		mem[rightAsStr] = &newEqualFcs
-		return glob.NewGlobTrue("")
-	}
-
-	return glob.NewGlobTrue("")
-}
-
-func (env *Env) newPureFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
-	// 如果是 transitive prop，那么需要更新 transitive prop mem
-	if fact.TypeEnum == ast.TruePure && env.IsTransitiveProp(string(fact.PropName)) {
-		if env.TransitivePropMem[string(fact.PropName)] == nil {
-			env.TransitivePropMem[string(fact.PropName)] = make(map[string][]ast.Obj)
-		}
-		env.TransitivePropMem[string(fact.PropName)][fact.Params[0].String()] = append(env.TransitivePropMem[string(fact.PropName)][fact.Params[0].String()], fact.Params[1])
-	}
-
-	if glob.IsBuiltinPropName(string(fact.PropName)) || glob.IsBuiltinExistPropName(string(fact.PropName)) {
-		ret := env.BuiltinPropExceptEqualPostProcess(fact)
-		return ret
-	}
-
-	propDef := env.GetPropDef(fact.PropName)
-
-	if propDef != nil {
-		if fact.TypeEnum == ast.TruePure {
-			ret := env.newTruePureFact_EmitFactsKnownByDef(fact)
-			// Inherit derived facts from prop definition
-			return ret
-		}
-		return glob.NewGlobTrue("")
-	}
-
-	existPropDef := env.GetExistPropDef(fact.PropName)
-	if existPropDef != nil {
-		if fact.TypeEnum == ast.TruePure {
-			return glob.NewGlobTrue("")
-		} else {
-			for _, thenFact := range existPropDef.DefBody.IffFactsOrNil {
-				_, ok := thenFact.(*ast.SpecFactStmt)
-				if !ok {
-					return glob.NewGlobTrue("")
-				}
-			}
-			ret := env.newFalseExistFact_EmitEquivalentUniFact(fact)
-			// Inherit derived facts from exist prop processing
-			return ret
-		}
-	}
-
-	return glob.ErrRet(fmt.Errorf("undefined prop: %s", fact.PropName))
-}
-
-// equalSetFactPostProcess handles postprocessing for equal_set(a, b) facts
-// It creates an equality fact a = b
-func (env *Env) equalSetFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
-	if len(fact.Params) != 2 {
-		return glob.ErrRet(fmt.Errorf("equal_set fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
-	}
-
-	derivedFacts := []string{}
-
-	// Create a = b fact
-	equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{fact.Params[0], fact.Params[1]}, fact.Line)
-	ret := env.NewFact(equalFact)
-	if ret.IsErr() {
-		return ret
-	}
-	derivedFacts = append(derivedFacts, equalFact.String())
-
-	// Collect any derived facts from the equality fact
-	if ret.IsTrue() && len(ret.GetMsgs()) > 0 {
-		derivedFacts = append(derivedFacts, ret.GetMsgs()...)
-	}
-
-	if len(derivedFacts) > 0 {
-		return glob.NewGlobTrueWithMsgs(derivedFacts)
-	}
-	return glob.NewGlobTrue("")
-}
-
-// equalTupleFactPostProcess handles postprocessing for equal_tuple(a, b, dim) facts
-// It automatically derives a[i] = b[i] for i from 1 to dim
-func (env *Env) equalTupleFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
-	if len(fact.Params) != 3 {
-		return glob.ErrRet(fmt.Errorf("equal_tuple fact expect 3 parameters, get %d in %s", len(fact.Params), fact))
-	}
-
-	equalFact := ast.NewEqualFact(fact.Params[0], fact.Params[1])
-
-	ret := env.NewFact(equalFact)
-	if ret.IsErr() {
-		return ret
-	}
-
-	return ret
 }
 
 func (env *Env) newTruePureFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) glob.GlobRet {
@@ -338,10 +196,13 @@ func (env *Env) newTruePureFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) glob
 }
 
 func (env *Env) newExist_St_FactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
-	if fact.TypeEnum == ast.TrueExist_St {
+	switch fact.TypeEnum {
+	case ast.TrueExist_St:
 		return env.newTrueExist_St_FactPostProcess(fact)
-	} else {
-		return glob.NewGlobTrue("")
+	case ast.FalseExist_St:
+		return env.newFalseExist_St_FactPostProcess(fact)
+	default:
+		return glob.NewEmptyGlobErr()
 	}
 }
 
@@ -420,38 +281,37 @@ func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, glob
 		uniMap[propParam] = fact.Params[i]
 	}
 
-	domFacts := []ast.FactStmt{}
-	for _, domFact := range existPropDef.DefBody.DomFactsOrNil {
-		instantiated, err := domFact.InstantiateFact(uniMap)
-		if err != nil {
-			return nil, glob.ErrRet(err)
-		}
-		domFacts = append(domFacts, instantiated)
-	}
+	// domFacts := []ast.FactStmt{}
+	// for _, domFact := range existPropDef.DefBody.DomFactsOrNil {
+	// 	instantiated, err := domFact.InstantiateFact(uniMap)
+	// 	if err != nil {
+	// 		return nil, glob.ErrRet(err)
+	// 	}
+	// 	domFacts = append(domFacts, instantiated)
+	// }
 
-	specThenFacts := []*ast.SpecFactStmt{}
+	// IffFactsOrNil 中的 facts 是 OR 关系，先实例化它们
+	orFactOrs := []*ast.SpecFactStmt{}
 	for _, thenFact := range existPropDef.DefBody.IffFactsOrNil {
 		asSpecFactStmt, ok := thenFact.(*ast.SpecFactStmt)
 		if !ok {
 			return nil, glob.ErrRet(fmt.Errorf("exist fact %s has no definition", fact))
 		}
 
-		reversedFacts := asSpecFactStmt.ReverseIsTrue()
-		for _, reversedFact := range reversedFacts {
-			instantiated, err := reversedFact.InstantiateFact(uniMap)
-			if err != nil {
-				return nil, glob.ErrRet(err)
-			}
-			specThenFacts = append(specThenFacts, instantiated.(*ast.SpecFactStmt))
+		instantiated, err := asSpecFactStmt.InstantiateFact(uniMap)
+		if err != nil {
+			return nil, glob.ErrRet(err)
 		}
+
+		reversedFact := instantiated.(*ast.SpecFactStmt).ReverseIsTrue()
+
+		orFactOrs = append(orFactOrs, reversedFact[0])
 	}
 
-	thenFacts := []ast.FactStmt{}
-	for _, specThenFact := range specThenFacts {
-		thenFacts = append(thenFacts, specThenFact)
-	}
+	// 创建 OrStmt 表示 OR 关系，然后整体取反
+	orStmt := ast.NewOrStmt(orFactOrs, existPropDef.Line)
 
-	return ast.NewUniFact(existPropDef.ExistParams, existPropDef.ExistParamSets, domFacts, thenFacts, existPropDef.Line), glob.NewGlobTrue("")
+	return ast.NewUniFact(existPropDef.ExistParams, existPropDef.ExistParamSets, []ast.FactStmt{}, []ast.FactStmt{orStmt}, fact.Line), glob.NewGlobTrue("")
 }
 
 func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) glob.GlobRet {
