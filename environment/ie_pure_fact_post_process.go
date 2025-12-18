@@ -20,15 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ie *InferenceEngine) newPureFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
-	// 如果是 transitive prop，那么需要更新 transitive prop mem
-	if fact.TypeEnum == ast.TruePure && ie.Env.IsTransitiveProp(string(fact.PropName)) {
-		if ie.Env.TransitivePropMem[string(fact.PropName)] == nil {
-			ie.Env.TransitivePropMem[string(fact.PropName)] = make(map[string][]ast.Obj)
-		}
-		ie.Env.TransitivePropMem[string(fact.PropName)][fact.Params[0].String()] = append(ie.Env.TransitivePropMem[string(fact.PropName)][fact.Params[0].String()], fact.Params[1])
-	}
-
+func (ie *InferenceEngine) newPureFact(fact *ast.SpecFactStmt) glob.GlobRet {
 	if glob.IsBuiltinPropName(string(fact.PropName)) || glob.IsBuiltinExistPropName(string(fact.PropName)) {
 		ret := ie.BuiltinPropExceptEqualPostProcess(fact)
 		return ret
@@ -38,7 +30,7 @@ func (ie *InferenceEngine) newPureFactPostProcess(fact *ast.SpecFactStmt) glob.G
 
 	if propDef != nil {
 		if fact.TypeEnum == ast.TruePure {
-			ret := ie.Env.newTruePureFact_EmitFactsKnownByDef(fact)
+			ret := ie.newUserDefinedTruePureFactByDef(fact)
 			// Inherit derived facts from prop definition
 			return ret
 		}
@@ -82,25 +74,25 @@ func (ie *InferenceEngine) equalTupleFactPostProcess(fact *ast.SpecFactStmt) glo
 	return ret
 }
 
-func (ie *InferenceEngine) newFalseExist_St_FactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
+func (ie *InferenceEngine) newFalseExist(fact *ast.SpecFactStmt) glob.GlobRet {
 	return glob.NewEmptyGlobTrue()
 }
 
 // newExist_St_FactPostProcess dispatches to the appropriate Exist_St fact postprocess handler
-func (ie *InferenceEngine) newExist_St_FactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
-	switch fact.TypeEnum {
-	case ast.TrueExist_St:
-		return ie.newTrueExist_St_FactPostProcess(fact)
-	case ast.FalseExist_St:
-		return ie.newFalseExist_St_FactPostProcess(fact)
-	default:
-		return glob.NewEmptyGlobErr()
-	}
-}
+// func (ie *InferenceEngine) newExist_St_FactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
+// 	switch fact.TypeEnum {
+// 	case ast.TrueExist_St:
+// 		return ie.newTrueExist_St_FactPostProcess(fact)
+// 	case ast.FalseExist_St:
+// 		return ie.newFalseExist_St_FactPostProcess(fact)
+// 	default:
+// 		return glob.NewEmptyGlobErr()
+// 	}
+// }
 
-// newTrueExist_St_FactPostProcess handles postprocessing for TrueExist_St facts
+// newTrueExist handles postprocessing for TrueExist_St facts
 // have(exist ... st ...) => exist
-func (ie *InferenceEngine) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
+func (ie *InferenceEngine) newTrueExist(fact *ast.SpecFactStmt) glob.GlobRet {
 	existParams, factParams := ast.GetExistFactExistParamsAndFactParams(fact)
 
 	existFact := ast.NewSpecFactStmt(ast.TruePure, fact.PropName, factParams, fact.Line)
@@ -150,7 +142,7 @@ func (ie *InferenceEngine) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStm
 // newFalseExistFact_EmitEquivalentUniFact handles postprocessing for FalseExist facts
 // not exist => forall not
 func (ie *InferenceEngine) newFalseExistFact_EmitEquivalentUniFact(fact *ast.SpecFactStmt) glob.GlobRet {
-	uniFact, ret := ie.Env.NotExistToForall(fact)
+	uniFact, ret := ie.Env.notExistToForall(fact)
 	if ret.IsErr() {
 		return ret
 	}
@@ -163,4 +155,3 @@ func (ie *InferenceEngine) newFalseExistFact_EmitEquivalentUniFact(fact *ast.Spe
 
 	return glob.NewGlobTrue("")
 }
-
