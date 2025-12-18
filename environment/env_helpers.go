@@ -97,3 +97,49 @@ func (env *Env) storeSpecFactInMemAndCollect(fact *ast.SpecFactStmt, derivedFact
 	*derivedFacts = append(*derivedFacts, fact.String())
 	return glob.NewGlobTrue("")
 }
+
+func storeCommutativeTransitiveFact(mem map[string]*[]ast.Obj, fact *ast.SpecFactStmt) glob.GlobRet {
+	if len(fact.Params) != 2 {
+		return glob.ErrRet(fmt.Errorf("commutative transitive fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
+	}
+
+	leftAsStr := fact.Params[0].String()
+	rightAsStr := fact.Params[1].String()
+
+	storedEqualLeftFcs, leftGot := mem[leftAsStr]
+	storedEqualRightFcs, rightGot := mem[rightAsStr]
+
+	if leftGot && rightGot {
+		if storedEqualLeftFcs == storedEqualRightFcs {
+			return glob.NewGlobTrue("")
+		} else {
+			newEqualFcs := []ast.Obj{}
+			newEqualFcs = append(newEqualFcs, *storedEqualLeftFcs...)
+			newEqualFcs = append(newEqualFcs, *storedEqualRightFcs...)
+			*storedEqualLeftFcs = newEqualFcs
+			*storedEqualRightFcs = newEqualFcs
+			return glob.NewGlobTrue("")
+		}
+	}
+
+	if leftGot && !rightGot {
+		*storedEqualLeftFcs = append(*storedEqualLeftFcs, fact.Params[1])
+		mem[rightAsStr] = storedEqualLeftFcs
+		return glob.NewGlobTrue("")
+	}
+
+	if !leftGot && rightGot {
+		*storedEqualRightFcs = append(*storedEqualRightFcs, fact.Params[0])
+		mem[leftAsStr] = storedEqualRightFcs
+		return glob.NewGlobTrue("")
+	}
+
+	if !leftGot && !rightGot {
+		newEqualFcs := []ast.Obj{fact.Params[0], fact.Params[1]}
+		mem[leftAsStr] = &newEqualFcs
+		mem[rightAsStr] = &newEqualFcs
+		return glob.NewGlobTrue("")
+	}
+
+	return glob.NewGlobTrue("")
+}
