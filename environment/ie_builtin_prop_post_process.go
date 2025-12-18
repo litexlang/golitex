@@ -172,7 +172,7 @@ func (ie *InferenceEngine) builtinPropExceptEqualPostProcess_WhenPropIsLargerEqu
 	// abs(x) = x
 	absX := ast.NewFnObj(ast.Atom("abs"), []ast.Obj{fact.Params[0]})
 	absXEqualXFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{absX, fact.Params[0]}, fact.Line)
-	ret := ie.Env.storeSpecFactInMemAndCollect(absXEqualXFact, &derivedFacts)
+	ret := ie.storeSpecFactInMemAndCollect(absXEqualXFact, &derivedFacts)
 	if ret.IsErr() {
 		return ret
 	}
