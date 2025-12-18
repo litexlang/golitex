@@ -897,4 +897,13 @@ fn choice(x set) fn(x) cup(x)
 know imply axiom_of_choice(x set):
 	forall y x:
 		choice(x)(y) $in y
+
+# Axiom of infinity
+exist_prop x set st axiom_of_infinity():
+	{} $in x
+	forall y x:
+		union(y, {y}) $in x
+
+know:
+	forall x, y R: x < y => $is_a_nonempty_set(range(x, y)), $is_a_nonempty_set(closed_range(x, y))
 `

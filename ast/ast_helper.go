@@ -516,3 +516,19 @@ func IsTrueEqualFact(fact *SpecFactStmt) bool {
 func (stmt *ImplicationStmt) ToProp() *DefPropStmt {
 	return NewDefPropStmt(stmt.DefHeader, stmt.DomFacts, nil, stmt.ImplicationFacts, stmt.Line)
 }
+
+func PropNameIsStringAndIsTrue(specFact *SpecFactStmt, propName string) bool {
+	if specFact.TypeEnum != TruePure {
+		return false
+	}
+
+	return string(specFact.PropName) == propName
+}
+
+func PropNameIsStringAndIsFalse(specFact *SpecFactStmt, propName string) bool {
+	if specFact.TypeEnum != FalsePure {
+		return false
+	}
+
+	return string(specFact.PropName) == propName
+}

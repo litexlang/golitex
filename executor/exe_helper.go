@@ -17,6 +17,7 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
+	env "golitex/environment"
 )
 
 func notOkExec(state ExecRet, err error) bool {
