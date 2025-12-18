@@ -1,3 +1,4 @@
+"""
 prop q(x R, y R)
 prop t(x R, y R)
 
@@ -12,3 +13,4 @@ know not $p(1)
 
 forall x R:
     not $q(x, 1) or not $t(x, 1)
+"""
