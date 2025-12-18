@@ -159,3 +159,81 @@ func (env *Env) equalTupleFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 func (env *Env) newFalseExist_St_FactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 	return glob.NewEmptyGlobTrue()
 }
+
+// newExist_St_FactPostProcess dispatches to the appropriate Exist_St fact postprocess handler
+func (env *Env) newExist_St_FactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
+	switch fact.TypeEnum {
+	case ast.TrueExist_St:
+		return env.newTrueExist_St_FactPostProcess(fact)
+	case ast.FalseExist_St:
+		return env.newFalseExist_St_FactPostProcess(fact)
+	default:
+		return glob.NewEmptyGlobErr()
+	}
+}
+
+// newTrueExist_St_FactPostProcess handles postprocessing for TrueExist_St facts
+// have(exist ... st ...) => exist
+func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
+	existParams, factParams := ast.GetExistFactExistParamsAndFactParams(fact)
+
+	existFact := ast.NewSpecFactStmt(ast.TruePure, fact.PropName, factParams, fact.Line)
+
+	// err := env.KnownFacts.SpecFactMem.NewFactInSpecFactMem(existFact, env.CurMatchEnv)
+	if fact.PropName == glob.KeywordItemExistsIn {
+		ret := env.storeSpecFactInMem(existFact)
+		if ret.IsErr() {
+			return ret
+		}
+		inFact := ast.NewInFactWithObj(existParams[0], factParams[0])
+		ret = env.NewFact(inFact)
+		if ret.IsErr() {
+			return ret
+		}
+		return glob.NewGlobTrue("")
+	}
+
+	ret := env.storeSpecFactInMem(existFact)
+	if ret.IsErr() {
+		return ret
+	}
+
+	// iff facts
+	iffFacts, thenFacts, ret := env.iffFactsInExistStFact(fact)
+	if ret.IsErr() {
+		return ret
+	}
+
+	for _, iffFact := range iffFacts {
+		ret := env.NewFact(iffFact)
+		if ret.IsErr() {
+			return ret
+		}
+	}
+
+	for _, thenFact := range thenFacts {
+		ret := env.NewFact(thenFact)
+		if ret.IsErr() {
+			return ret
+		}
+	}
+
+	return glob.NewGlobTrue("")
+}
+
+// newFalseExistFact_EmitEquivalentUniFact handles postprocessing for FalseExist facts
+// not exist => forall not
+func (env *Env) newFalseExistFact_EmitEquivalentUniFact(fact *ast.SpecFactStmt) glob.GlobRet {
+	uniFact, ret := env.NotExistToForall(fact)
+	if ret.IsErr() {
+		return ret
+	}
+
+	ret = env.newFactNoPostProcess(uniFact)
+
+	if ret.IsErr() {
+		return glob.ErrRet(fmt.Errorf("exist fact %s has no definition", fact))
+	}
+
+	return glob.NewGlobTrue("")
+}
