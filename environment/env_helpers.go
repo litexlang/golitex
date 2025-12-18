@@ -88,3 +88,12 @@ func (e *Env) AutoDerivedFactsMsg(originalFact string, derivedFacts []string) gl
 	msgs = append(msgs, derivedFacts...)
 	return glob.NewGlobTrueWithMsgs(msgs)
 }
+
+func (env *Env) storeSpecFactInMemAndCollect(fact *ast.SpecFactStmt, derivedFacts *[]string) glob.GlobRet {
+	ret := env.storeSpecFactInMem(fact)
+	if ret.IsErr() {
+		return ret
+	}
+	*derivedFacts = append(*derivedFacts, fact.String())
+	return glob.NewGlobTrue("")
+}
