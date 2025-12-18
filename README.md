@@ -49,14 +49,15 @@ _- Dennis Ritchie_
   </tr>
   <tr>
     <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
-      <code>let x R, y R:</code><br>
-      <code>&nbsp;&nbsp;2 * x + 3 * y = 10</code><br>
-      <code>&nbsp;&nbsp;4 * x + 5 * y = 14</code><br><br>
-      <code>2 * (2 * x + 3 * y) = 2 * 10 = 4 * x + 6 * y</code><br>
-      <code>y = (4 * x + 6 * y) - (4 * x + 5 * y) = 2 * 10 - 14 = 6</code><br>
-      <code>2 * x + 3 * 6 = 10</code><br>
-      <code>2 * x + 18 - 18 = 10 - 18 = -8</code><br>
-      <code>x = (2 * x) / 2 = -8 / 2 = -4</code><br>
+    <code>forall x R, y R:</code><br>
+    <code>&nbsp;&nbsp;2 * x + 3 * y = 10</code><br>
+    <code>&nbsp;&nbsp;4 * x + 5 * y = 14</code><br>
+    <code>&nbsp;&nbsp;=>:</code><br>
+    <code>&nbsp;&nbsp;&nbsp;&nbsp;2 * (2 * x + 3 * y) = 2 * 10 = 4 * x + 6 * y</code><br>
+    <code>&nbsp;&nbsp;&nbsp;&nbsp;y = (4 * x + 6 * y) - (4 * x + 5 * y) = 20 - 14 = 6</code><br>
+    <code>&nbsp;&nbsp;&nbsp;&nbsp;2 * x + 3 * 6 = 10</code><br>
+    <code>&nbsp;&nbsp;&nbsp;&nbsp;2 * x + 18 - 18 = 10 - 18 = -8</code><br>
+    <code>&nbsp;&nbsp;&nbsp;&nbsp;x = (2 * x) / 2 = -8 / 2 = -4</code><br>
     </td>
     <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
       <code>import Mathlib.Tactic</code><br><br>

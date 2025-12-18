@@ -32,7 +32,8 @@ func (env *Env) storeSpecFactInMemAndCollect(fact *ast.SpecFactStmt, derivedFact
 // BuiltinPropExceptEqualPostProcess handles postprocessing for builtin properties except equality
 func (env *Env) BuiltinPropExceptEqualPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 	if fact.PropName == glob.KeywordIn {
-		return env.inFactPostProcess(fact)
+		ie := &InferenceEngine{Env: env}
+		return ie.trueInFact(fact)
 	}
 
 	if fact.PropName == glob.KeySymbolGreater && fact.TypeEnum == ast.TruePure {
