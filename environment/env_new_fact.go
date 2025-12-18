@@ -104,11 +104,12 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) glob.GlobRet {
 	}
 
 	// postprocess
+	ie := NewInferenceEngine(env)
 	var postProcessRet glob.GlobRet
 	if fact.IsExist_St_Fact() {
-		postProcessRet = env.newExist_St_FactPostProcess(fact)
+		postProcessRet = ie.newExist_St_FactPostProcess(fact)
 	} else {
-		postProcessRet = env.newPureFactPostProcess(fact)
+		postProcessRet = ie.newPureFactPostProcess(fact)
 	}
 
 	if postProcessRet.IsErr() {
@@ -247,21 +248,22 @@ func (env *Env) isTrueEqualFact_StoreIt(fact *ast.SpecFactStmt) glob.GlobRet {
 	}
 
 	// postprocess for cart: if x = cart(x1, x2, ..., xn)
+	ie := NewInferenceEngine(env)
 	if cart, ok := fact.Params[1].(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(cart.FnHead, glob.KeywordCart) {
-		ret = env.equalFactPostProcess_cart(fact)
+		ret = ie.equalFactPostProcess_cart(fact)
 		if ret.IsErr() {
 			return ret
 		}
 	}
 
 	// 处理 tuple 相等的情况
-	ret = env.equalFactPostProcess_tupleEquality(fact.Params[0], fact.Params[1])
+	ret = ie.equalFactPostProcess_tupleEquality(fact.Params[0], fact.Params[1])
 	if ret.IsErr() {
 		return ret
 	}
 
 	// 处理 x = {1, 2, 3} 的情况
-	ret = env.equalFactPostProcess_listSetEquality(fact.Params[0], fact.Params[1])
+	ret = ie.equalFactPostProcess_listSetEquality(fact.Params[0], fact.Params[1])
 	if ret.IsErr() {
 		return ret
 	}
