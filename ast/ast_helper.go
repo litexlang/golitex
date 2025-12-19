@@ -29,7 +29,7 @@ func EqualFact(left, right Obj) *SpecFactStmt {
 func (stmt *UniFactStmt) ParamInParamSetFacts(uniConMap map[string]Obj) []*SpecFactStmt {
 	paramSetFacts := make([]*SpecFactStmt, len(stmt.Params))
 	for i, param := range stmt.Params {
-		paramSetFacts[i] = NewInFactWithParamObj(uniConMap[param], stmt.ParamSets[i])
+		paramSetFacts[i] = NewInFactWithParamObj(uniConMap[param], stmt.ParamSets[i], stmt.Line)
 	}
 	return paramSetFacts
 }
@@ -118,7 +118,7 @@ func (defHeader *DefHeader) GetInstantiatedParamInParamSetFact(uniMap map[string
 		if err != nil {
 			return nil, err
 		}
-		paramSetFacts[i] = NewInFactWithParamObj(uniMap[param], instantiatedSet)
+		paramSetFacts[i] = NewInFactWithParamObj(uniMap[param], instantiatedSet, glob.BuiltinLine)
 	}
 	return paramSetFacts, nil
 }
@@ -126,7 +126,7 @@ func (defHeader *DefHeader) GetInstantiatedParamInParamSetFact(uniMap map[string
 func (stmt *UniFactStmt) ParamInParamSet() []*SpecFactStmt {
 	paramSetFacts := make([]*SpecFactStmt, len(stmt.Params))
 	for i, param := range stmt.Params {
-		paramSetFacts[i] = NewInFactWithParamObj(Atom(param), stmt.ParamSets[i])
+		paramSetFacts[i] = NewInFactWithParamObj(Atom(param), stmt.ParamSets[i], stmt.Line)
 	}
 	return paramSetFacts
 }
@@ -149,8 +149,8 @@ func (stmt *EqualsFactStmt) ToEqualFacts_PairwiseCombination() []*SpecFactStmt {
 	return ret
 }
 
-func (stmt *ClaimPropStmt) ToProp() *DefPropStmt {
-	return NewDefPropStmt(stmt.Prop.DefHeader, stmt.Prop.DomFacts, stmt.Prop.IffFacts, []FactStmt{}, stmt.GetLine())
+func (stmt *ClaimImplicationStmt) ToProp() *DefPropStmt {
+	return stmt.Implication.ToProp()
 }
 
 func (strSlice StrSlice) ToObjSlice() []Obj {
@@ -167,7 +167,7 @@ func (head DefHeader) ToSpecFact() *SpecFactStmt {
 }
 
 func (stmt *DefPropStmt) ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue() *UniFactStmt {
-	return NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, []FactStmt{stmt.DefHeader.ToSpecFact()}, stmt.ThenFacts, glob.BuiltinLine)
+	return NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, []FactStmt{stmt.DefHeader.ToSpecFact()}, stmt.ImplicationFactsOrNil, glob.BuiltinLine)
 }
 
 func (stmt *DefExistPropStmt) ToProp() *SpecFactStmt {
@@ -176,12 +176,12 @@ func (stmt *DefExistPropStmt) ToProp() *SpecFactStmt {
 }
 
 func (stmt *DefExistPropStmt) ToForallParamsSatisfyDomFacts_Then_ExistFactIsTrue() *UniFactStmt {
-	return NewUniFact(stmt.ExistParams, stmt.ExistParamSets, stmt.DefBody.DomFacts, []FactStmt{stmt.ToProp()}, glob.BuiltinLine)
+	return NewUniFact(stmt.ExistParams, stmt.ExistParamSets, stmt.DefBody.DomFactsOrNil, []FactStmt{stmt.ToProp()}, glob.BuiltinLine)
 }
 
-func (stmt *NamedUniFactStmt) ToUniFact() *UniFactStmt {
-	return NewUniFact(stmt.DefPropStmt.DefHeader.Params, stmt.DefPropStmt.DefHeader.ParamSets, stmt.DefPropStmt.IffFacts, stmt.DefPropStmt.ThenFacts, glob.BuiltinLine)
-}
+// func (stmt *NamedUniFactStmt) ToUniFact() *UniFactStmt {
+// 	return NewUniFact(stmt.DefPropStmt.DefHeader.Params, stmt.DefPropStmt.DefHeader.ParamSets, stmt.DefPropStmt.IffFactsOrNil, stmt.DefPropStmt.ImplicationFactsOrNil, glob.BuiltinLine)
+// }
 
 func (objFn *FnObj) IsObjFn_HasAtomHead_ReturnHead() (Atom, bool) {
 	head, ok := objFn.FnHead.(Atom)
@@ -458,4 +458,91 @@ func IsListSetObj(obj Obj) bool {
 		return asEnumStmt.FnHead.String() == glob.KeywordListSet
 	}
 	return false
+}
+
+func NegateObj(right Obj) Obj {
+	return NewFnObj(Atom(glob.KeySymbolStar), []Obj{Atom("-1"), right})
+}
+
+func NewIsANonEmptySetFact(param Obj, line uint) *SpecFactStmt {
+	return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsANonEmptySet), []Obj{param}, line)
+}
+
+func NewIsAFiniteSetFact(param Obj, line uint) *SpecFactStmt {
+	return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsAFiniteSet), []Obj{param}, line)
+}
+
+func NewIsASetFact(param Obj, line uint) *SpecFactStmt {
+	return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsASet), []Obj{param}, line)
+}
+
+func ObjIsKeywordSetOrNonEmptySetOrFiniteSet(obj Obj) bool {
+	if asAtom, ok := obj.(Atom); ok {
+		return glob.IsKeywordSetOrNonEmptySetOrFiniteSet(string(asAtom))
+	}
+	return false
+}
+
+func ObjIsKeywordSet(obj Obj) bool {
+	if asAtom, ok := obj.(Atom); ok {
+		return glob.IsKeywordSet(string(asAtom))
+	}
+	return false
+}
+
+func ObjIsRangeOrClosedRangeWith2Params(obj Obj) bool {
+	if asAtom, ok := obj.(*FnObj); ok {
+		if len(asAtom.Params) != 2 {
+			return false
+		}
+
+		return asAtom.FnHead.String() == glob.KeywordRange || asAtom.FnHead.String() == glob.KeywordClosedRange
+	}
+	return false
+}
+
+func IsTrueEqualFact(fact *SpecFactStmt) bool {
+	if fact.TypeEnum != TruePure {
+		return false
+	}
+
+	if fact.PropName != glob.KeySymbolEqual {
+		return false
+	}
+
+	return true
+}
+
+func (stmt *ImplicationStmt) ToProp() *DefPropStmt {
+	return NewDefPropStmt(stmt.DefHeader, stmt.DomFacts, nil, stmt.ImplicationFacts, stmt.Line)
+}
+
+func PropNameIsStringAndIsTrue(specFact *SpecFactStmt, propName string) bool {
+	if specFact.TypeEnum != TruePure {
+		return false
+	}
+
+	return string(specFact.PropName) == propName
+}
+
+func PropNameIsStringAndIsFalse(specFact *SpecFactStmt, propName string) bool {
+	if specFact.TypeEnum != FalsePure {
+		return false
+	}
+
+	return string(specFact.PropName) == propName
+}
+
+func GetParamSetsAndRetSetFromFnSet(fnSet *FnObj) ([]Obj, Obj, error) {
+	retSet := fnSet.Params[0]
+
+	paramSets := []Obj{}
+	fnHeadAsFnObj, ok := fnSet.FnHead.(*FnObj)
+	if !ok {
+		return nil, nil, fmt.Errorf("expected FnObj, but got %T", fnSet.FnHead)
+	}
+
+	paramSets = append(paramSets, fnHeadAsFnObj.Params...)
+
+	return paramSets, retSet, nil
 }

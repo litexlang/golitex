@@ -20,7 +20,7 @@ prop is_prime(p Z):
             x = p
 
 # Theorem 4.1
-know @a_prime_divides_a_product_of_two_integers_if_it_divides_one_of_the_factors(p Z, a Z, b Z):
+know imply a_prime_divides_a_product_of_two_integers_if_it_divides_one_of_the_factors(p Z, a Z, b Z):
     p $is_prime
     p $is_divisible_by a * b
     =>:
@@ -29,7 +29,7 @@ know @a_prime_divides_a_product_of_two_integers_if_it_divides_one_of_the_factors
             p $is_divisible_by b
 
 
-know @exist primes finite_set st exist_primes_whose_equal_to_integer(a Z):
+know imply exist primes finite_set st exist_primes_whose_equal_to_integer(a Z):
     a > 1
     =>:
         forall x primes:
@@ -38,7 +38,7 @@ know @exist primes finite_set st exist_primes_whose_equal_to_integer(a Z):
         a = product_of_int_finite_set(primes)
 
 # Theorem 4.3
-know @exist p Z st exist_prime_greater_than_any_integer(x Z):
+know imply exist p Z st exist_prime_greater_than_any_integer(x Z):
     =>:
         p > x
         p $is_prime

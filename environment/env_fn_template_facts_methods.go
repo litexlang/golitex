@@ -24,13 +24,6 @@ func (e *Env) InsertFnInFnTT(fc ast.Obj, fnTNoName *ast.FnTStruct) glob.GlobRet 
 	var fnTFcIsIn = fnTNoName
 	var ok bool
 
-	// if asFcFn != nil {
-	// 	fnTFcIsIn, ok = ast.FcFnTypeTToFnStruct(asFcFn)
-	// 	if !ok {
-	// 		return fmt.Errorf("%s is not fcFnT", asFcFn)
-	// 	}
-	// }
-
 	memory := e.FnInFnTemplateFactsMem
 	fnDefs, ok := memory[fc.String()]
 	if !ok {
@@ -40,14 +33,14 @@ func (e *Env) InsertFnInFnTT(fc ast.Obj, fnTNoName *ast.FnTStruct) glob.GlobRet 
 				AsFnTStruct: fnTFcIsIn,
 			},
 		}
-		return glob.TrueRet("")
+		return glob.NewGlobTrue("")
 	} else {
 		fnDefs = append(fnDefs, FnInFnTMemItem{
 			// AsFcFn:      asFcFn,
 			AsFnTStruct: fnTFcIsIn,
 		})
 		memory[fc.String()] = fnDefs
-		return glob.TrueRet("")
+		return glob.NewGlobTrue("")
 	}
 }
 

@@ -23,16 +23,46 @@ import (
 func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	if stmt.NameIs(glob.KeywordIn) {
 		return ver.inFactBuiltinRules(stmt, state)
-	} else if stmt.NameIs(glob.KeywordItemExistsIn) && stmt.TypeEnum == ast.TrueExist_St {
-		return ver.trueExistInSt(stmt, state)
 	}
+
+	if stmt.NameIs(glob.KeywordIsNonEmptyWithItem) {
+		return ver.verIsNonEmptyWithItemByBuiltinRules(stmt, state)
+	}
+
+	if stmt.NameIs(glob.KeywordItemExistsIn) && stmt.TypeEnum == ast.TrueExist_St {
+		return ver.verTrueExistItemExistsInByBuiltinRules(stmt, state)
+	}
+
+	if stmt.NameIs(glob.KeywordItemExistsIn) && stmt.TypeEnum == ast.TruePure {
+		return ver.verTruePurePropItemExistsInByBuiltinRules(stmt, state)
+	}
+
+	if stmt.NameIs(glob.KeywordIsASet) && stmt.TypeEnum == ast.TruePure {
+		return ver.verIsASetByBuiltinRules(stmt, state)
+	}
+
+	if stmt.NameIs(glob.KeywordIsAFiniteSet) && stmt.TypeEnum == ast.TruePure {
+		return ver.verIsAFiniteSetByBuiltinRules(stmt, state)
+	}
+
+	if stmt.NameIs(glob.KeywordIsANonEmptySet) && stmt.TypeEnum == ast.TruePure {
+		return ver.verIsANonEmptySetByBuiltinRules(stmt, state)
+	}
+
+	// if stmt.NameIs(glob.KeywordItemExistsIn) && stmt.TypeEnum == ast.TruePure {
+	// 	return ver.verItemExistsInByBuiltinRules(stmt, state)
+	// }
 
 	if stmt.NameIs(glob.KeywordEqualSet) && stmt.TypeEnum == ast.TruePure {
 		return ver.verEqualSetByBuiltinRules(stmt, state)
 	}
 
-	if stmt.NameIs(glob.KeywordEqualTuple) {
+	if stmt.NameIs(glob.KeywordEqualTuple) && stmt.TypeEnum == ast.TruePure {
 		return ver.verEqualTupleByBuiltinRules(stmt, state)
+	}
+
+	if stmt.NameIs(glob.KeywordIsTuple) && stmt.TypeEnum == ast.TruePure {
+		return ver.verIsTupleByBuiltinRules(stmt, state)
 	}
 
 	if verRet := ver.verNumberLogicRelaOpt_BuiltinRules(stmt, state); verRet.IsErr() {
@@ -47,14 +77,6 @@ func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 
 	if stmt.NameIs(glob.KeywordIsCart) && stmt.TypeEnum == ast.TruePure {
 		return ver.verIsCartByBuiltinRules(stmt, state)
-	}
-
-	if stmt.NameIs(glob.KeywordItemExistsIn) && stmt.TypeEnum == ast.TruePure {
-		return ver.verItemExistsInByBuiltinRules(stmt, state)
-	}
-
-	if verRet := ver.IsInNonEmptyByBuiltinRules(stmt, state); verRet.IsTrue() || verRet.IsErr() {
-		return verRet
 	}
 
 	return NewEmptyExecUnknown()
@@ -127,7 +149,45 @@ func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt *ast.SpecFactStmt, st
 		return NewExecErr(fmt.Sprintf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params)))
 	}
 
-	leftObj, ok, err := ast.MakeObjIntoNumLitExpr(stmt.Params[0])
+	// 先评估表达式
+	toEval := ver.evaluateNonNumberLiteralExpr(stmt.Params[0])
+
+	// 对于 N 和 N_pos，检查是否有运算符、小数点或负号
+	if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordNatural) || ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordNPos) {
+		// 检查是否是纯数字（Atom），如果不是（有运算符），则不在 N/N_pos 中
+		_, isAtom := toEval.(ast.Atom)
+		if !isAtom {
+			// 有运算符，不是纯数字，不在 N/N_pos 中
+			return NewEmptyExecUnknown()
+		}
+
+		// 检查是否有小数点
+		if ast.IsObjLiterallyRationalNumber(toEval) {
+			// 有小数点，不在 N/N_pos 中
+			return NewEmptyExecUnknown()
+		}
+
+		// 检查是否有负号（一元负号运算符）
+		if fnObj, ok := stmt.Params[0].(*ast.FnObj); ok {
+			if ast.IsObjBuiltinUnaryFn(*fnObj) {
+				if headAtom, ok := fnObj.FnHead.(ast.Atom); ok && string(headAtom) == glob.KeySymbolMinus {
+					// 有负号，不在 N/N_pos 中
+					return NewEmptyExecUnknown()
+				}
+			}
+		}
+		// 也检查 toEval 是否有负号（如果评估后仍然是负号）
+		if fnObj, ok := toEval.(*ast.FnObj); ok {
+			if ast.IsObjBuiltinUnaryFn(*fnObj) {
+				if headAtom, ok := fnObj.FnHead.(ast.Atom); ok && string(headAtom) == glob.KeySymbolMinus {
+					// 有负号，不在 N/N_pos 中
+					return NewEmptyExecUnknown()
+				}
+			}
+		}
+	}
+
+	leftObj, ok, err := ast.MakeObjIntoNumLitExpr(toEval)
 	if err != nil {
 		return NewExecErr(err.Error())
 	}
@@ -181,59 +241,26 @@ func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt *ast.SpecFactStmt, st
 	return NewEmptyExecUnknown()
 }
 
-func (ver *Verifier) verItemExistsInByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	if len(stmt.Params) != 1 {
-		return NewExecErr(fmt.Sprintf("builtin logic opt rule should have 1 param, but got %d", len(stmt.Params)))
-	}
+// func (ver *Verifier) verItemExistsInByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+// 	if len(stmt.Params) != 1 {
+// 		return NewExecErr(fmt.Sprintf("builtin logic opt rule should have 1 param, but got %d", len(stmt.Params)))
+// 	}
 
-	if ast.IsListSetObj(stmt.Params[0]) {
-		asEnumSet, ok := stmt.Params[0].(*ast.FnObj)
-		if !ok {
-			return NewEmptyExecUnknown()
-		}
+// 	if ast.IsListSetObj(stmt.Params[0]) {
+// 		asEnumSet, ok := stmt.Params[0].(*ast.FnObj)
+// 		if !ok {
+// 			return NewEmptyExecUnknown()
+// 		}
 
-		if len(asEnumSet.Params) != 0 {
-			return NewEmptyExecTrue()
-		}
-	}
+// 		if len(asEnumSet.Params) != 0 {
+// 			return NewEmptyExecTrue()
+// 		}
+// 	}
 
-	_ = state
+// 	_ = state
 
-	return NewEmptyExecUnknown()
-}
-
-func (ver *Verifier) IsInNonEmptyByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	if !stmt.NameIs(glob.KeywordIn) {
-		return NewEmptyExecUnknown()
-	}
-
-	if stmt.TypeEnum != ast.TruePure {
-		return NewEmptyExecUnknown()
-	}
-
-	if len(stmt.Params) != 2 {
-		return NewExecErr(fmt.Sprintf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params)))
-	}
-
-	if stmt.Params[1].String() != glob.KeywordNonEmptySet {
-		return NewEmptyExecUnknown()
-	}
-
-	if ast.IsListSetObj(stmt.Params[0]) {
-		asEnumSet, ok := stmt.Params[0].(*ast.FnObj)
-		if !ok {
-			return NewEmptyExecUnknown()
-		}
-
-		if len(asEnumSet.Params) != 0 {
-			return NewEmptyExecTrue()
-		}
-	}
-
-	_ = state
-
-	return NewEmptyExecUnknown()
-}
+// 	return NewEmptyExecUnknown()
+// }
 
 // verEqualSetByBuiltinRules verifies equal_set(a, b) by checking:
 // - forall t a : t $in b
@@ -282,4 +309,253 @@ func (ver *Verifier) verEqualSetByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 	// Both forall statements are true, so equal_set(a, b) is true
 	msg := fmt.Sprintf("equal_set(%s, %s) is true because forall t %s : t $in %s and forall t %s : t $in %s", a, b, a, b, b, a)
 	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+}
+
+// TODO: 理论上任何obj都是set了现在，因为现在set不再是obj了
+func (ver *Verifier) verIsASetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	if len(stmt.Params) != 1 {
+		return NewExecErr(fmt.Sprintf("is_a_set expects 1 parameter, got %d", len(stmt.Params)))
+	}
+
+	if glob.IsKeywordSetOrNonEmptySetOrFiniteSet(stmt.Params[0].String()) {
+		return NewEmptyExecUnknown()
+	}
+
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), "In ZFC set theory, everything except set itself is a set. In Litex, any object except set, nonempty_set, finite_set is a set.", NewEmptyExecTrue())
+}
+
+func (ver *Verifier) verIsAFiniteSetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	if len(stmt.Params) != 1 {
+		return NewExecErr(fmt.Sprintf("is_a_finite_set expects 1 parameter, got %d", len(stmt.Params)))
+	}
+
+	if ast.IsListSetObj(stmt.Params[0]) {
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), "A list set is a finite set.", NewEmptyExecTrue())
+	}
+
+	// 如果是 cart，那cart的每一位是有限集，所以cart也是有限集
+	if ret := ver.verIsAFiniteSetByAllItemsInCartAreNonempty(stmt.Params[0], state); ret.IsTrue() || ret.IsErr() {
+		return ret
+	}
+
+	return NewEmptyExecUnknown()
+}
+
+func (ver *Verifier) verIsANonEmptySetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	if len(stmt.Params) != 1 {
+		return NewExecErr(fmt.Sprintf("is_a_nonempty_set expects 1 parameter, got %d", len(stmt.Params)))
+	}
+
+	if ast.IsListSetObj(stmt.Params[0]) {
+		if len(stmt.Params[0].(*ast.FnObj).Params) > 0 {
+			return ver.maybeAddSuccessMsgString(state, stmt.String(), "A list set with at least one element is a nonempty set.", NewEmptyExecTrue())
+		}
+	}
+
+	if _, ok := stmt.Params[0].(ast.Atom); ok {
+		paramAsStr := stmt.Params[0].String()
+		if glob.IsNPosOrNOrZOrQOrR(paramAsStr) {
+			return ver.maybeAddSuccessMsgString(state, stmt.String(), "A number is a nonempty set.", NewEmptyExecTrue())
+		}
+	}
+
+	// 如果是 cart，那cart的每一位是非空集合，所以cart也是非空集合
+	if ret := ver.verIsANonEmptySetByAllItemsInCartAreNonempty(stmt.Params[0], state); ret.IsTrue() || ret.IsErr() {
+		return ret
+	}
+
+	// 如果是形如 fn(X, Y ...) RetSet 这样的函数，那就如果X, Y ... 都是非空集合，RetSet也是非空集合，那就OK了
+	if ret := ver.verIsANonEmptySetByIsFnSetAndAllParamSetsAndRetSetAreNonempty(stmt.Params[0], state); ret.IsTrue() || ret.IsErr() {
+		return ret
+	}
+
+	if ret := ver.verIsANonEmptySetByIsPowerSetAndAllParamSetsAndRetSetAreNonempty(stmt.Params[0], state); ret.IsTrue() || ret.IsErr() {
+		return ret
+	}
+
+	return NewEmptyExecUnknown()
+}
+
+func (ver *Verifier) verIsAFiniteSetByAllItemsInCartAreNonempty(cart ast.Obj, state *VerState) ExecRet {
+	// 先判断是不是 cart
+	cartFn, ok := cart.(*ast.FnObj)
+	if !ok {
+		return NewEmptyExecUnknown()
+	}
+
+	if !ast.IsFn_WithHeadName(cart, glob.KeywordCart) {
+		return NewEmptyExecUnknown()
+	}
+
+	// 然后一位一位地检查每一项是否是有限集
+	for i := range cartFn.Params {
+		isFiniteFact := ast.NewIsAFiniteSetFact(cartFn.Params[i], glob.BuiltinLine)
+		verRet := ver.VerFactStmt(isFiniteFact, state)
+		if verRet.IsErr() || verRet.IsUnknown() {
+			return NewEmptyExecUnknown()
+		}
+	}
+
+	// 如果所有项都是有限集，那么 cart 也是有限集
+	return ver.maybeAddSuccessMsgString(state, "", fmt.Sprintf("cart %s is a finite set because all its items are finite sets.", cart), NewEmptyExecTrue())
+}
+
+func (ver *Verifier) verIsANonEmptySetByAllItemsInCartAreNonempty(cart ast.Obj, state *VerState) ExecRet {
+	// 先判断是不是 cart
+	cartFn, ok := cart.(*ast.FnObj)
+	if !ok {
+		return NewEmptyExecUnknown()
+	}
+
+	if !ast.IsFn_WithHeadName(cart, glob.KeywordCart) {
+		return NewEmptyExecUnknown()
+	}
+
+	// 然后一位一位地检查每一项是否是非空集合
+	for i := range cartFn.Params {
+		isNonEmptyFact := ast.NewIsANonEmptySetFact(cartFn.Params[i], glob.BuiltinLine)
+		verRet := ver.VerFactStmt(isNonEmptyFact, state)
+		if verRet.IsErr() || verRet.IsUnknown() {
+			return NewEmptyExecUnknown()
+		}
+	}
+
+	// 如果所有项都是非空集合，那么 cart 也是非空集合
+	return ver.maybeAddSuccessMsgString(state, "", fmt.Sprintf("cart %s is a nonempty set because all its items are nonempty sets.", cart), NewEmptyExecTrue())
+}
+
+func (ver *Verifier) verTrueExistItemExistsInByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	if len(stmt.Params) != 3 {
+		return NewExecErr(fmt.Sprintf("item_exists_in expects 2 parameters, got %d", len(stmt.Params)))
+	}
+
+	existParams, factParams := ast.GetExistParamsAndFactParamsFromExistFactStmt(stmt)
+
+	if len(existParams) != 1 {
+		return NewExecErr(fmt.Sprintf("item_exists_in expects 1 exist parameter, got %d", len(existParams)))
+	}
+
+	if len(factParams) != 1 {
+		return NewExecErr(fmt.Sprintf("item_exists_in expects 1 fact parameter, got %d", len(factParams)))
+	}
+
+	inFact := ast.NewInFactWithObj(existParams[0], factParams[0])
+	verRet := ver.VerFactStmt(inFact, state)
+	if verRet.IsNotTrue() {
+		return verRet
+	}
+
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), "item_exists_in is true because the exist parameter is in the fact parameter.", NewEmptyExecTrue())
+}
+
+func (ver *Verifier) verTruePurePropItemExistsInByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	if len(stmt.Params) != 1 {
+		return NewExecErr(fmt.Sprintf("item_exists_in expects 1 parameter, got %d", len(stmt.Params)))
+	}
+
+	// 是 finite set 然后 count > 0
+	isFiniteSet := ast.NewIsAFiniteSetFact(stmt.Params[0], glob.BuiltinLine)
+	verRet := ver.VerFactStmt(isFiniteSet, state)
+	if verRet.IsNotTrue() {
+		return verRet
+	}
+
+	isCountGreaterThanZero := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{ast.NewFnObj(ast.Atom(glob.KeywordCount), []ast.Obj{stmt.Params[0]}), ast.Atom("0")}, glob.BuiltinLine)
+	verRet = ver.VerFactStmt(isCountGreaterThanZero, state)
+	if verRet.IsNotTrue() {
+		return NewEmptyExecUnknown()
+	}
+
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), "item_exists_in is true because the set is a finite set and the count is greater than 0.", NewEmptyExecTrue())
+}
+
+func (ver *Verifier) verIsTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	if len(stmt.Params) != 1 {
+		return NewExecErr(fmt.Sprintf("is_tuple expects 1 parameter, got %d", len(stmt.Params)))
+	}
+
+	fnObj, ok := stmt.Params[0].(*ast.FnObj)
+	if !ok {
+		return NewEmptyExecUnknown()
+	}
+
+	if ast.IsTupleFnObj(fnObj) {
+		return NewEmptyExecTrue()
+	}
+
+	equalTo := ver.Env.GetObjTuple(stmt.Params[0])
+	if equalTo == nil {
+		return NewEmptyExecUnknown()
+	}
+
+	return NewEmptyExecTrue()
+
+}
+
+func (ver *Verifier) verIsANonEmptySetByIsFnSetAndAllParamSetsAndRetSetAreNonempty(fnSet ast.Obj, state *VerState) ExecRet {
+	fnObj, ok := fnSet.(*ast.FnObj)
+	if !ok {
+		return NewEmptyExecUnknown()
+	}
+
+	if !ast.IsFnSet(fnObj) {
+		return NewEmptyExecUnknown()
+	}
+
+	paramSets, retSet, err := ast.GetParamSetsAndRetSetFromFnSet(fnObj)
+	if err != nil {
+		return NewEmptyExecUnknown()
+	}
+
+	for _, paramSet := range paramSets {
+		isNonEmptyFact := ast.NewIsANonEmptySetFact(paramSet, glob.BuiltinLine)
+		verRet := ver.VerFactStmt(isNonEmptyFact, state)
+		if verRet.IsErr() || verRet.IsUnknown() {
+			return NewEmptyExecUnknown()
+		}
+	}
+
+	isNonEmptyFact := ast.NewIsANonEmptySetFact(retSet, glob.BuiltinLine)
+	verRet := ver.VerFactStmt(isNonEmptyFact, state)
+	if verRet.IsErr() || verRet.IsUnknown() {
+		return NewEmptyExecUnknown()
+	}
+
+	return ver.maybeAddSuccessMsgString(state, "", fmt.Sprintf("fn set %s is a nonempty set because all its param sets and ret set are nonempty sets.", fnSet), NewEmptyExecTrue())
+}
+
+func (ver *Verifier) verIsNonEmptyWithItemByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	if len(stmt.Params) != 2 {
+		return NewExecErr(fmt.Sprintf("is_nonempty_with_item expects 1 parameter, got %d", len(stmt.Params)))
+	}
+
+	inFact := ast.NewInFactWithObj(stmt.Params[1], stmt.Params[0])
+	verRet := ver.VerFactStmt(inFact, state)
+	if verRet.IsNotTrue() {
+		return verRet
+	}
+
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), "is_nonempty_with_item is true because the item is in the set.", NewEmptyExecTrue())
+
+}
+
+func (ver *Verifier) verIsANonEmptySetByIsPowerSetAndAllParamSetsAndRetSetAreNonempty(powerSet ast.Obj, state *VerState) ExecRet {
+	powerSetObj, ok := powerSet.(*ast.FnObj)
+	if !ok {
+		return NewEmptyExecUnknown()
+	}
+
+	if !ast.IsFn_WithHeadName(powerSetObj, glob.KeywordPowerSet) {
+		return NewEmptyExecUnknown()
+	}
+
+	paramInPowerSet := powerSetObj.Params[0]
+	isNonEmptyFact := ast.NewIsANonEmptySetFact(paramInPowerSet, glob.BuiltinLine)
+	verRet := ver.VerFactStmt(isNonEmptyFact, state)
+	if verRet.IsErr() || verRet.IsUnknown() {
+		return NewEmptyExecUnknown()
+	}
+
+	return ver.maybeAddSuccessMsgString(state, "", fmt.Sprintf("power set %s is a nonempty set because its param is a nonempty set.", powerSet), NewEmptyExecTrue())
+
 }

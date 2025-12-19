@@ -10,15 +10,15 @@ echo ""
 
 # Step 1: Select commit type
 echo "Please select a commit type:"
-echo "1) feat    - 更新功能（新建，删除，改变）"
-echo "2) fix     - 修补bug"
-echo "3) docs    - 文档（documentation）"
-echo "4) style   - 格式（不影响代码运行的变动）"
-echo "5) refactor - 重构（即不是新增功能，也不是修改bug的代码变动）"
-echo "6) test    - 增加测试"
-echo "7) chore   - 构建过程或辅助工具的变动"
-echo ""
-read -p "Enter your choice (1-7): " choice
+echo "1) developing new feature - 正在开发新功能"
+echo "2) updating feature - 强化功能"
+echo "3) deleting feature - 删除功能"
+echo "4) fixing bug - 修补bug"
+echo "5) documenting - 文档"
+echo "6) refactoring - 重构"
+echo "7) testing - 增加测试"
+echo "8) chore - 构建过程或辅助工具的变动"
+read -p "Enter your choice (1-8): " choice
 
 case $choice in
     1)

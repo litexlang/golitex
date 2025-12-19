@@ -116,7 +116,7 @@ know:
                 $have_no_common_item(left_coset(s, op, e, inv, x, s2), left_coset(s, op, e, inv, y, s2))
 
 # Theorem 8.2
-know @subgroup_of_finite_group_has_order_dividing_order_of_group(s set, op fn(s, s)s, e s, inv fn(s)s, s2 set):
+know imply subgroup_of_finite_group_has_order_dividing_order_of_group(s set, op fn(s, s)s, e s, inv fn(s)s, s2 set):
     $is_subgroup(s, op, e, inv, s2)
     $is_finite_group(s, op, e, inv)
     =>:
@@ -131,13 +131,13 @@ fn order_of_item(s set, op fn(s, s)s, e s, inv fn(s)s, x s) N:
             n >= order_of_item(s, op, e, inv, x)
 
 # Corollary 8.5
-know @x_is_element_of_group_of_order_m_then_x_order_divides_m(s set, op fn(s, s)s, e s, inv fn(s)s, x s):
+know imply x_is_element_of_group_of_order_m_then_x_order_divides_m(s set, op fn(s, s)s, e s, inv fn(s)s, x s):
     $is_finite_group(s, op, e, inv)
     =>:
         len(s) % order_of_item(s, op, e, inv, x) = 0
 
 # Theorem 8.3
-know @m_is_integer_larger_than_1_x_is_prime_to_m_then_x_order_divides_phi_m(m N, x N):
+know imply m_is_integer_larger_than_1_x_is_prime_to_m_then_x_order_divides_phi_m(m N, x N):
     m > 1
     gcd(x, m) = 1
     =>:

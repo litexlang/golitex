@@ -48,7 +48,7 @@ func NewKnowStmt(facts CanBeKnownStmtSlice, line uint) *KnowFactStmt {
 	return &KnowFactStmt{facts, line}
 }
 
-func NewDefHeader(name Atom, params []string, setParams []Obj) *DefHeader {
+func NewDefHeader(name string, params []string, setParams []Obj) *DefHeader {
 	return &DefHeader{name, params, setParams}
 }
 
@@ -108,8 +108,8 @@ func NewImportFileStmt(path string, line uint) *ImportFileStmt {
 	return &ImportFileStmt{path, line}
 }
 
-func NewClaimPropStmt(prop *DefPropStmt, proofs []Stmt, line uint) *ClaimPropStmt {
-	return &ClaimPropStmt{prop, proofs, line}
+func NewClaimPropStmt(implication *ImplicationStmt, proofs []Stmt, line uint) *ClaimImplicationStmt {
+	return &ClaimImplicationStmt{implication, proofs, line}
 }
 
 func NewClaimExistPropStmt(existProp *DefExistPropStmt, proofs []Stmt, haveObj []Obj, line uint) *ClaimExistPropStmt {
@@ -124,9 +124,9 @@ func NewHaveObjInNonEmptySetStmt(objNames []string, objSets []Obj, line uint) *H
 	return &HaveObjInNonEmptySetStmt{objNames, objSets, line}
 }
 
-func NewNamedUniFactStmt(defPropStmt *DefPropStmt, line uint) *NamedUniFactStmt {
-	return &NamedUniFactStmt{defPropStmt, line}
-}
+// func NewNamedUniFactStmt(defPropStmt *DefPropStmt, line uint) *NamedUniFactStmt {
+// 	return &NamedUniFactStmt{defPropStmt, line}
+// }
 
 func NewEqualsFactStmt(params ObjSlice, line uint) *EqualsFactStmt {
 	return &EqualsFactStmt{params, line}
@@ -184,8 +184,8 @@ func NewClaimIffStmt(uniFactWithIffStmt *UniFactWithIffStmt, proofs []Stmt, proo
 	return &ClaimIffStmt{uniFactWithIffStmt, proofs, proofs2, line}
 }
 
-func NewProveInRangeStmt(param string, start Obj, end Obj, domFacts []FactStmt, thenFacts []FactStmt, proofs []Stmt, line uint) *ProveInRangeStmt2 {
-	return &ProveInRangeStmt2{param: param, start: start, end: end, DomFactsOrNil: domFacts, ThenFacts: thenFacts, ProofsOrNil: proofs, Line: line}
+func NewProveForStmt(param string, left Obj, right Obj, isProveIRange bool, domFacts []FactStmt, thenFacts []FactStmt, proofs []Stmt, line uint) *ProveForStmt {
+	return &ProveForStmt{Param: param, Left: left, Right: right, IsProveIRange: isProveIRange, DomFacts: domFacts, ThenFacts: thenFacts, Proofs: proofs, Line: line}
 }
 
 func NewProveIsTransitivePropStmt(prop Atom, params []string, proofs []Stmt, line uint) *ProveIsTransitivePropStmt {
@@ -292,10 +292,6 @@ func NewPrintStmt(isFString bool, value string, line uint) *PrintStmt {
 	return &PrintStmt{isFString, value, line}
 }
 
-func NewHelpStmt(keyword string, line uint) *HelpStmt {
-	return &HelpStmt{keyword, line}
-}
-
 func NewHaveFnCaseByCaseStmt(defFnStmt *DefFnStmt, caseByCaseFacts SpecFactPtrSlice, proofs StmtSliceSlice, haveObjSatisfyFn ObjSlice, line uint) *HaveFnCaseByCaseStmt {
 	return &HaveFnCaseByCaseStmt{defFnStmt, caseByCaseFacts, proofs, haveObjSatisfyFn, line}
 }
@@ -310,4 +306,12 @@ func NewHaveObjFromCartSetStmt(objName string, cartSet *FnObj, equalTo Obj, line
 
 func NewHaveCartWithDimStmt(objName string, cartDim Obj, param string, facts FactStmtSlice, proofs StmtSlice, equalTo Obj, line uint) *HaveCartWithDimStmt {
 	return &HaveCartWithDimStmt{objName, cartDim, param, facts, proofs, equalTo, line}
+}
+
+func NewProveImplicationStmt(implicationName string, params StrSlice, implicationFact FactStmtSlice, proof StmtSlice, line uint) *ProveImplicationStmt {
+	return &ProveImplicationStmt{implicationName, params, implicationFact, proof, line}
+}
+
+func NewImplicationStmt(defHeader *DefHeader, domFacts FactStmtSlice, implicationFacts FactStmtSlice, line uint) *ImplicationStmt {
+	return &ImplicationStmt{defHeader, domFacts, implicationFacts, line}
 }

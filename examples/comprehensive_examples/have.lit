@@ -41,7 +41,7 @@ prove:
             =>:
                 not y >= x
 
-    know @larger_equal_is_transitive(x R, y R, z R):
+    know imply larger_equal_is_transitive(x R, y R, z R):
         x >= y
         y > z
         =>:

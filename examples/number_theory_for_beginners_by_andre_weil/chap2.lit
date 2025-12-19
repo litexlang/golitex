@@ -5,7 +5,7 @@ Chapter 2
 # Lemma 2.1
 
 # TODO: THIS CLAIM CAN BE PROVED
-know @exist q Z st exist_largest_multiple_of(d Z, a Z):
+know imply exist q Z st exist_largest_multiple_of(d Z, a Z):
     =>:
         a >= d * q
         d*(q+1) > a
@@ -13,7 +13,7 @@ know @exist q Z st exist_largest_multiple_of(d Z, a Z):
 # Theorem 2.1
 
 # TODO: THIS CLAIM CAN BE PROVED
-know @exist m N st nonempty_set_of_integers_closed_under_addition_has_elements_divisible_by_a_common_divisor(s set):
+know imply exist m N st nonempty_set_of_integers_closed_under_addition_has_elements_divisible_by_a_common_divisor(s set):
     $non_empty(s)
     forall x s:
         x $in Z

@@ -1,5 +1,5 @@
 # amc12a_2015_p10
-know @factors_divide_product(a, b, c Z):
+know imply factors_divide_product(a, b, c Z):
 	c != 0
 	a * b = c
 	=>:
@@ -7,7 +7,7 @@ know @factors_divide_product(a, b, c Z):
 		c % b = 0
 
 # amc12a_2008_p8
-know @odd_pow_eq_unique_root(a R, b N_pos, c R, solution R):
+know imply odd_pow_eq_unique_root(a R, b N_pos, c R, solution R):
     c > 0
 	a ^ b = c
     solution^b = c
@@ -17,7 +17,7 @@ know @odd_pow_eq_unique_root(a R, b N_pos, c R, solution R):
 
 # amc12a_2008_p8
 # Untested
-know @solve_quadratic_eqn(a R, b R, c R, x R):
+know imply solve_quadratic_eqn(a R, b R, c R, x R):
     b^2 - 4 * a * c >= 0
     a * x^2 + b * x + c = 0
     =>:
@@ -27,7 +27,7 @@ know @solve_quadratic_eqn(a R, b R, c R, x R):
 
 # amc12a_2008_p8
 # Untested
-know @are_two_different_quadratic_eqn_solutions(a R, b R, c R, x R, y R):
+know imply are_two_different_quadratic_eqn_solutions(a R, b R, c R, x R, y R):
     b ^ 2 - 4 * a * c > 0 
     x != y
     a * x^2 + b * x + c = 0

@@ -48,11 +48,11 @@ func (exec *Executor) proveIsCommutativePropStmtMainLogic(stmt *ast.ProveIsCommu
 		return false, fmt.Errorf("prop %s has %d params, but 2 params are expected", stmt.SpecFact.PropName, len(def.DefHeader.Params))
 	}
 
-	ret := exec.Env.AreAtomsInObjDefined(def.DefHeader.ParamSets[0], map[string]struct{}{})
+	ret := exec.Env.AtomsInObjDefinedOrBuiltinOrSetNonemptySetFiniteSet(def.DefHeader.ParamSets[0], map[string]struct{}{})
 	if ret.IsErr() {
 		return false, fmt.Errorf(ret.String())
 	}
-	ret = exec.Env.AreAtomsInObjDefined(def.DefHeader.ParamSets[1], map[string]struct{}{})
+	ret = exec.Env.AtomsInObjDefinedOrBuiltinOrSetNonemptySetFiniteSet(def.DefHeader.ParamSets[1], map[string]struct{}{})
 	if ret.IsErr() {
 		return false, fmt.Errorf(ret.String())
 	}
@@ -101,7 +101,7 @@ func (exec *Executor) proveIsCommutativePropStmtBody(proofs []ast.Stmt, fact *as
 	exec.NewEnv(exec.Env)
 	defer exec.deleteEnv()
 
-	ret := exec.Env.NewFact(fact)
+	ret := exec.Env.NewFactWithAtomsDefined(fact)
 	if ret.IsErr() {
 		return false, fmt.Errorf(ret.String())
 	}

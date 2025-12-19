@@ -129,7 +129,7 @@ func (p *TbParser) unaryOptObj(tb *tokenBlock) (Obj, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewFnObj(Atom(glob.KeySymbolStar), []Obj{Atom("-1"), right}), nil
+	return NegateObj(right), nil
 }
 
 // fnSetObjAndBracedExprAndAtomObjAndFnObj parses primary expressions: atoms, numbers, function sets, or parenthesized expressions.
@@ -161,7 +161,7 @@ func (p *TbParser) fnSetObjAndBracedExprAndAtomObjAndFnObj(tb *tokenBlock) (Obj,
 	// Parse atom (identifier, possibly with package name)
 	atom, err := p.notNumberAtom(tb)
 	if err != nil {
-		return nil, parserErrAtTb(err, tb)
+		return nil, ErrInLine(err, tb)
 	}
 
 	// Check if atom is followed by function arguments
@@ -185,12 +185,22 @@ func (p *TbParser) notNumberAtom(tb *tokenBlock) (Atom, error) {
 		tb.header.skip(glob.PkgNameAtomSeparator)
 		rightValue, err := tb.header.next()
 		if err != nil {
-			return "", parserErrAtTb(err, tb)
+			return "", ErrInLine(err, tb)
 		}
-		return Atom(fmt.Sprintf("%s%s%s", value, glob.PkgNameAtomSeparator, rightValue)), nil
-	}
 
-	return Atom(value), nil
+		pkgPath := p.PkgPathNameMgr.NamePathMap[value]
+		pkgName := p.PkgPathNameMgr.PathDefaultNameMap[pkgPath]
+		return Atom(fmt.Sprintf("%s%s%s", pkgName, glob.PkgNameAtomSeparator, rightValue)), nil
+	} else if p.CurPkgPath != glob.DefaultPkgName {
+		if p.IsNameDefinedInCurrentParseEnv(value) {
+			pkgName := p.PkgPathNameMgr.PathDefaultNameMap[p.CurPkgPath]
+			return Atom(fmt.Sprintf("%s%s%s", pkgName, glob.PkgNameAtomSeparator, value)), nil
+		} else {
+			return Atom(value), nil
+		}
+	} else {
+		return Atom(value), nil
+	}
 }
 
 // numberAtom parses a numeric literal (integer or decimal).
@@ -251,7 +261,7 @@ func (p *TbParser) bracedObjSlice(tb *tokenBlock) ([]Obj, error) {
 		for {
 			obj, err := p.Obj(tb)
 			if err != nil {
-				return nil, parserErrAtTb(err, tb)
+				return nil, ErrInLine(err, tb)
 			}
 			params = append(params, obj)
 
@@ -275,7 +285,7 @@ func (p *TbParser) bracketedObj(tb *tokenBlock) (Obj, error) {
 
 	obj, err := p.Obj(tb)
 	if err != nil {
-		return nil, parserErrAtTb(err, tb)
+		return nil, ErrInLine(err, tb)
 	}
 
 	tb.header.skip(glob.KeySymbolRightBracket)
@@ -310,7 +320,7 @@ func (p *TbParser) bracedObj(tb *tokenBlock) (Obj, error) {
 			// Parse next expression
 			obj, err := p.Obj(tb)
 			if err != nil {
-				return nil, parserErrAtTb(err, tb)
+				return nil, ErrInLine(err, tb)
 			}
 			tupleObjs = append(tupleObjs, obj)
 
@@ -324,14 +334,14 @@ func (p *TbParser) bracedObj(tb *tokenBlock) (Obj, error) {
 			// (e.g., in "(a, b / c)", we shouldn't parse "/" as part of the tuple element)
 			curToken, err := tb.header.currentToken()
 			if err != nil {
-				return nil, parserErrAtTb(fmt.Errorf("unexpected end of input in tuple"), tb)
+				return nil, ErrInLine(fmt.Errorf("unexpected end of input in tuple"), tb)
 			}
 			_, isBinary := glob.BuiltinOptPrecedenceMap[curToken]
 			if isBinary {
-				return nil, parserErrAtTb(fmt.Errorf("unexpected binary operator '%s' in tuple (did you forget a comma or closing parenthesis?)", curToken), tb)
+				return nil, ErrInLine(fmt.Errorf("unexpected binary operator '%s' in tuple (did you forget a comma or closing parenthesis?)", curToken), tb)
 			}
 			if !tb.header.is(glob.KeySymbolComma) {
-				return nil, parserErrAtTb(fmt.Errorf("expected ',' or ')' but got '%s'", curToken), tb)
+				return nil, ErrInLine(fmt.Errorf("expected ',' or ')' but got '%s'", curToken), tb)
 			}
 		}
 
@@ -357,7 +367,7 @@ func (p *TbParser) bracedObj(tb *tokenBlock) (Obj, error) {
 					// Parse the right operand with the operator's precedence
 					rightOperand, err := p.objInfixExpr(tb, curPrec)
 					if err != nil {
-						return nil, parserErrAtTb(err, tb)
+						return nil, ErrInLine(err, tb)
 					}
 
 					// Replace the last element with the combined expression: operator(left, right)
@@ -390,14 +400,14 @@ func (p *TbParser) fnObjWithRepeatedBraceAndBracket(tb *tokenBlock, head Obj) (O
 			// Parse function call arguments: ()
 			objParams, err := p.bracedObjSlice(tb)
 			if err != nil {
-				return nil, parserErrAtTb(err, tb)
+				return nil, ErrInLine(err, tb)
 			}
 			head = NewFnObj(head, objParams)
 		} else if tb.header.is(glob.KeySymbolLeftBracket) {
 			// Parse index operation: []
 			obj, err := p.bracketedObj(tb)
 			if err != nil {
-				return nil, parserErrAtTb(err, tb)
+				return nil, ErrInLine(err, tb)
 			}
 			// IndexOpt is a prefix operator, so it's applied as IndexOpt(head, ...params)
 			head = NewFnObj(Atom(glob.KeywordIndexOpt), []Obj{head, obj})
@@ -419,7 +429,7 @@ func (p *TbParser) fnSet(tb *tokenBlock) (Obj, error) {
 	for !(tb.header.is(glob.KeySymbolRightBrace)) {
 		fnSet, err := p.Obj(tb)
 		if err != nil {
-			return nil, parserErrAtTb(err, tb)
+			return nil, ErrInLine(err, tb)
 		}
 		fnSets = append(fnSets, fnSet)
 
@@ -434,12 +444,12 @@ func (p *TbParser) fnSet(tb *tokenBlock) (Obj, error) {
 
 	err := tb.header.skip(glob.KeySymbolRightBrace)
 	if err != nil {
-		return nil, parserErrAtTb(err, tb)
+		return nil, ErrInLine(err, tb)
 	}
 
 	retSet, err = p.Obj(tb)
 	if err != nil {
-		return nil, parserErrAtTb(err, tb)
+		return nil, ErrInLine(err, tb)
 	}
 
 	ret := NewFnObj(NewFnObj(Atom(glob.KeywordFn), fnSets), []Obj{retSet})
@@ -530,7 +540,7 @@ func (p *TbParser) setBuilderObj(tb *tokenBlock, paramAsObj Obj) (Obj, error) {
 
 	// Check for conflicts with existing FreeParams
 	if _, exists := p.FreeParams[paramStr]; exists {
-		return nil, parserErrAtTb(fmt.Errorf("parameter %s in set builder conflicts with a free parameter in the outer scope", paramStr), tb)
+		return nil, ErrInLine(fmt.Errorf("parameter %s in set builder conflicts with a free parameter in the outer scope", paramStr), tb)
 	}
 
 	// Add set builder param to FreeParams

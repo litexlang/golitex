@@ -21,7 +21,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verNotTrueEqualSpecFact(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) verNormalSpecFact(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	ret := ver.verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt, state)
 	if ret.IsTrue() || ret.IsErr() {
 		return ret
@@ -179,7 +179,7 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 		return NewEmptyExecUnknown()
 	}
 
-	if len(curDefStmt.IffFacts) == 0 {
+	if len(curDefStmt.IffFactsOrNil) == 0 {
 		// REMARK: 如果IFFFacts不存在，那我们认为是 没有iff能验证prop，而不是prop自动成立
 		return NewEmptyExecUnknown()
 	}
@@ -260,12 +260,12 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 		}
 	}
 
-	domFacts, err := propDef.DefBody.DomFacts.InstantiateFact(uniConMap)
+	domFacts, err := propDef.DefBody.DomFactsOrNil.InstantiateFact(uniConMap)
 	if err != nil {
 		return BoolErrToExecRet(false, err)
 	}
 
-	iffFacts, err := propDef.DefBody.IffFacts.InstantiateFact(uniConMap)
+	iffFacts, err := propDef.DefBody.IffFactsOrNil.InstantiateFact(uniConMap)
 	if err != nil {
 		return BoolErrToExecRet(false, err)
 	}
@@ -387,7 +387,7 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *Ver
 		return NewEmptyExecUnknown()
 	}
 
-	if len(defStmt.IffFacts) == 0 {
+	if len(defStmt.IffFactsOrNil) == 0 {
 		// REMARK: 如果IFFFacts不存在，那我们认为是 没有iff能验证prop，而不是prop自动成立
 		return NewEmptyExecUnknown()
 	}
@@ -521,7 +521,7 @@ func (ver *Verifier) verEqualTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *
 
 		// 创建相等事实: left[i] = right[i]
 		indexEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{leftIndexed, rightIndexed}, glob.BuiltinLine)
-		verRet = ver.VerFactStmt(indexEqualFact, state)
+		verRet := ver.VerFactStmt(indexEqualFact, state)
 		if verRet.IsErr() {
 			return verRet
 		}

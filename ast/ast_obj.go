@@ -143,23 +143,21 @@ func IsAtomObjAndEqualToStr(obj Obj, name string) bool {
 	return string(atomObj) == name
 }
 
-func GetAtomsInObj(obj Obj) []Atom {
+func GetAtomsInObjIncludingParamInSetBuilder(obj Obj) []Atom {
 	ret := []Atom{}
 
 	switch asObj := obj.(type) {
 	case Atom:
 		ret = append(ret, asObj)
 	case *FnObj:
-		for _, param := range asObj.Params {
-			atoms := GetAtomsInObj(param)
-			ret = append(ret, atoms...)
-		}
-
-		// 这里用了性质：set builder obj的第一位是atom，会出现在这里的ret的第一位；param并不是atom，所以不会出现在ret里
-		// 对于内涵集对象，需要特殊处理：移除绑定变量（第一个参数）
 		if IsSetBuilder(asObj) {
-			atomsFromSetBuilder := GetAtomsInSetBuilder(asObj)
+			atomsFromSetBuilder := GetAtomsInSetBuilderIncludingParamInSetBuilder(asObj)
 			ret = append(ret, atomsFromSetBuilder...)
+		} else {
+			for _, param := range asObj.Params {
+				atoms := GetAtomObjsInObj(param)
+				ret = append(ret, atoms...)
+			}
 		}
 	}
 	return ret
@@ -169,24 +167,44 @@ func GetAtomsInSetBuilder(f *FnObj) []Atom {
 	// Convert FnObj to SetBuilderStruct for easier processing
 	setBuilder, err := f.ToSetBuilderStruct()
 	if err != nil {
-		// Fallback: extract atoms from all params except the bound parameter
-		ret := []Atom{}
-		if len(f.Params) > 1 {
-			atoms := GetAtomsInObj(f.Params[1])
-			ret = append(ret, atoms...)
-		}
-		// Try to extract from remaining params
-		for i := 2; i < len(f.Params); i++ {
-			atoms := GetAtomsInObj(f.Params[i])
-			ret = append(ret, atoms...)
-		}
-		return ret
+		panic(err)
 	}
 
 	ret := []Atom{}
 
 	// Extract atoms from parentSet (skip the bound parameter)
-	atoms := GetAtomsInObj(setBuilder.ParentSet)
+	atoms := GetAtomObjsInObj(setBuilder.ParentSet)
+	ret = append(ret, atoms...)
+
+	// Extract atoms from facts
+	for _, fact := range setBuilder.Facts {
+		atoms := fact.GetAtoms()
+		ret = append(ret, atoms...)
+	}
+
+	// remove the bound parameter itself from the collected atoms
+	filtered := make([]Atom, 0, len(ret))
+	for _, param := range ret {
+		if string(param) == setBuilder.Param {
+			continue
+		}
+		filtered = append(filtered, param)
+	}
+
+	return filtered
+}
+
+func GetAtomsInSetBuilderIncludingParamInSetBuilder(f *FnObj) []Atom {
+	// Convert FnObj to SetBuilderStruct for easier processing
+	setBuilder, err := f.ToSetBuilderStruct()
+	if err != nil {
+		panic(err)
+	}
+
+	ret := []Atom{Atom(setBuilder.Param)}
+
+	// Extract atoms from parentSet (skip the bound parameter)
+	atoms := GetAtomObjsInObj(setBuilder.ParentSet)
 	ret = append(ret, atoms...)
 
 	// Extract atoms from facts

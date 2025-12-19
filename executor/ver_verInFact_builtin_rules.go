@@ -17,6 +17,7 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
+	cmp "golitex/cmp"
 	glob "golitex/glob"
 	"strconv"
 )
@@ -32,13 +33,13 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 
 	var verRet ExecRet
 
-	verRet = ver.verInFactByRightParamIsKeywordSet(stmt, state)
-	if verRet.IsErr() {
-		return verRet
-	}
-	if verRet.IsTrue() {
-		return verRet
-	}
+	// verRet = ver.verInFactByRightParamIsKeywordSet(stmt, state)
+	// if verRet.IsErr() {
+	// 	return verRet
+	// }
+	// if verRet.IsTrue() {
+	// 	return verRet
+	// }
 
 	verRet = ver.verInFactByLeftParamIsNumberExpr(stmt, state)
 	if verRet.IsErr() {
@@ -104,11 +105,10 @@ func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState)
 		return verRet
 	}
 
-	// fn(R)R $in set
-	verRet = ver.verInFactByLeftIsFnTemplateAndRightIsKeywordSet(stmt, state)
-	if verRet.IsErr() || verRet.IsTrue() {
-		return verRet
-	}
+	// verRet = ver.verInFactByLeftIsFnTemplateAndRightIsKeywordSet(stmt, state)
+	// if verRet.IsErr() || verRet.IsTrue() {
+	// 	return verRet
+	// }
 
 	// cart(R, R) $in nonempty_set
 	verRet = ver.verInFactByLeftIsCartSetAndRightIsKeywordNonemptySet(stmt, state)
@@ -155,7 +155,7 @@ func (ver *Verifier) verInFactByLeftIsCartSetAndRightIsKeywordNonemptySet(stmt *
 
 	// 所有的cart里的参数都是非空集合
 	for i := range stmt.Params[0].(*ast.FnObj).Params {
-		verRet := ver.VerFactStmt(ast.NewInFactWithParamObj(stmt.Params[0].(*ast.FnObj).Params[i], ast.Atom(glob.KeywordNonEmptySet)), state)
+		verRet := ver.VerFactStmt(ast.NewIsANonEmptySetFact(stmt.Params[0].(*ast.FnObj).Params[i], stmt.Line), state)
 		if verRet.IsErr() || verRet.IsUnknown() {
 			return NewEmptyExecUnknown()
 		}
@@ -164,36 +164,36 @@ func (ver *Verifier) verInFactByLeftIsCartSetAndRightIsKeywordNonemptySet(stmt *
 	return NewExecTrue(fmt.Sprintf("all arguments of %s are in nonempty.", stmt.Params[0]))
 }
 
-func (ver *Verifier) verInFactByLeftIsFnTemplateAndRightIsKeywordSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	if asAtom, ok := stmt.Params[1].(ast.Atom); ok {
-		if asAtom != glob.KeywordSet {
-			return NewEmptyExecUnknown()
-		}
-	}
+// func (ver *Verifier) verInFactByLeftIsFnTemplateAndRightIsKeywordSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+// 	if asAtom, ok := stmt.Params[1].(ast.Atom); ok {
+// 		if glob.IsKeywordSet(string(asAtom)) {
+// 			return NewEmptyExecUnknown()
+// 		}
+// 	}
 
-	if asFcFn, ok := stmt.Params[0].(*ast.FnObj); ok {
-		if ast.IsFnTemplate_ObjFn(asFcFn) {
-			// 所有参数还都真是集合
-			for i := range asFcFn.FnHead.(*ast.FnObj).Params {
-				verRet := ver.VerFactStmt(ast.NewInFactWithParamObj(asFcFn.FnHead.(*ast.FnObj).Params[i], ast.Atom(glob.KeywordSet)), state)
-				if verRet.IsErr() || verRet.IsUnknown() {
-					return NewEmptyExecUnknown()
-				}
-			}
+// 	if asFcFn, ok := stmt.Params[0].(*ast.FnObj); ok {
+// 		if ast.IsFnTemplate_ObjFn(asFcFn) {
+// 			// 所有参数还都真是集合
+// 			for i := range asFcFn.FnHead.(*ast.FnObj).Params {
+// 				verRet := ver.VerFactStmt(ast.NewIsASetFact(asFcFn.FnHead.(*ast.FnObj).Params[i], stmt.Line), state)
+// 				if verRet.IsErr() || verRet.IsUnknown() {
+// 					return NewEmptyExecUnknown()
+// 				}
+// 			}
 
-			for i := range asFcFn.Params {
-				if verRet := ver.VerFactStmt(ast.NewInFactWithParamObj(asFcFn.Params[i], ast.Atom(glob.KeywordSet)), state); verRet.IsErr() || verRet.IsUnknown() {
-					return NewEmptyExecUnknown()
-				}
-			}
-			return NewEmptyExecTrue()
-		}
-	}
+// 			for i := range asFcFn.Params {
+// 				if verRet := ver.VerFactStmt(ast.NewIsASetFact(asFcFn.Params[i], stmt.Line), state); verRet.IsErr() || verRet.IsUnknown() {
+// 					return NewEmptyExecUnknown()
+// 				}
+// 			}
+// 			return NewEmptyExecTrue()
+// 		}
+// 	}
 
-	// TODO 如果fnTemplate 里面的涉及到的 paramSet 也都是集合，那就返回true
+// 	// TODO 如果fnTemplate 里面的涉及到的 paramSet 也都是集合，那就返回true
 
-	return NewEmptyExecUnknown()
-}
+// 	return NewEmptyExecUnknown()
+// }
 
 func (ver *Verifier) verInFactByLeftParamIsReturnValueOfArithmeticFn(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	ok := ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordReal)
@@ -314,30 +314,6 @@ func (ver *Verifier) verInFactByRightParamIsFnTemplateFact(stmt *ast.SpecFactStm
 // 	return NewExecEmptyUnknown()
 // }
 
-func (ver *Verifier) verInFactByRightParamIsKeywordSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	// 第二个参数得是set
-	lenParams := len(stmt.Params)
-	if lenParams != 2 {
-		return NewEmptyExecUnknown()
-	}
-
-	if stmt.Params[1].String() != glob.KeywordSet {
-		return NewEmptyExecUnknown()
-	}
-
-	// 只要symbol不是 set, nonempty_set, finite_set, 则返true
-	obj := stmt.Params[0]
-	if ast.IsObjAtomEqualToGivenString(obj, glob.KeywordSet) ||
-		ast.IsObjAtomEqualToGivenString(obj, glob.KeywordNonEmptySet) ||
-		ast.IsObjAtomEqualToGivenString(obj, glob.KeywordFiniteSet) {
-		return NewEmptyExecUnknown()
-	}
-
-	_ = state
-
-	return ver.maybeAddSuccessMsgString(state, stmt.String(), "In ZFC set theory, everything except set itself is a set. In Litex, any object except set, nonempty_set, finite_set is a set.", NewEmptyExecTrue())
-}
-
 func (ver *Verifier) falseInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	// 任何东西不在空集里
 	verRet := ver.nothingIsInEmptySet(stmt, state)
@@ -384,12 +360,30 @@ func (ver *Verifier) falseInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerS
 		return verRet
 	}
 
+	// 类似 3.5 这种数不在 Z, N, N_pos 里
+	verRet = ver.litNumNotInIntegerByLiteralShape(stmt, state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsTrue() {
+		return verRet
+	}
+
+	// 负数不在N, N_pos里
+	verRet = ver.litNumNotInNaturalByLiteralShape(stmt, state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsTrue() {
+		return verRet
+	}
+
 	return NewEmptyExecUnknown()
 }
 
 // TODO 需要先证明一下它是finite set 去开始验证 len(n) = 0
 func (ver *Verifier) nothingIsInEmptySet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	verRet := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.Params[1], ast.Atom(glob.KeywordFiniteSet)}, stmt.Line), state)
+	verRet := ver.VerFactStmt(ast.NewIsAFiniteSetFact(stmt.Params[1], stmt.Line), state)
 	if verRet.IsErr() || verRet.IsUnknown() {
 		return verRet
 	}
@@ -400,11 +394,11 @@ func (ver *Verifier) nothingIsInEmptySet(stmt *ast.SpecFactStmt, state *VerState
 	return verRet
 }
 
-func (ver *Verifier) trueExistInSt(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	pureInFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.Params[1], stmt.Params[2]}, stmt.Line)
-	verRet := ver.VerFactStmt(pureInFact, state)
-	return verRet
-}
+// func (ver *Verifier) trueExistInSt(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+// 	pureInFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.Params[1], stmt.Params[2]}, stmt.Line)
+// 	verRet := ver.VerFactStmt(pureInFact, state)
+// 	return verRet
+// }
 
 // func (ver *Verifier) fcIsFiniteSet(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 // 	// TODO: not sure whether I should add this nextState
@@ -497,7 +491,7 @@ func (ver *Verifier) verInFactByRightParamIsSetProduct(stmt *ast.SpecFactStmt, s
 	}
 
 	for i := range len(fcFn.Params) {
-		inFact := ast.NewInFactWithParamObj(fcFn.Params[i], setProductFn.Params[i])
+		inFact := ast.NewInFactWithParamObj(fcFn.Params[i], setProductFn.Params[i], stmt.Line)
 		verRet := ver.VerFactStmt(inFact, state)
 		if verRet.IsErr() || verRet.IsUnknown() {
 			return verRet
@@ -628,7 +622,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
-		ret = ver.Env.NewFact(ast.NewInFactWithParamObj(ast.Atom(randomName), (fnFcFn.FnHead).(*ast.FnObj).Params[i]))
+		ret = ver.Env.NewFactWithAtomsDefined(ast.NewInFactWithParamObj(ast.Atom(randomName), (fnFcFn.FnHead).(*ast.FnObj).Params[i], glob.BuiltinLine))
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
@@ -649,13 +643,13 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *
 	}
 
 	for i := range instLeftUniFactAsUniFactStmt.Params {
-		fact := ast.NewInFactWithParamObj(ast.Atom(randomNames[i]), leftIsInWhichFnTT.AsFnTStruct.ParamSets[i])
+		fact := ast.NewInFactWithParamObj(ast.Atom(randomNames[i]), leftIsInWhichFnTT.AsFnTStruct.ParamSets[i], glob.BuiltinLine)
 		verRet := ver.VerFactStmt(fact, state)
 		if verRet.IsErr() || verRet.IsUnknown() {
 			return verRet
 		}
 
-		ret := ver.Env.NewFact(fact)
+		ret := ver.Env.NewFactWithAtomsDefined(fact)
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
@@ -668,7 +662,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *
 			return verRet
 		}
 
-		ret := ver.Env.NewFact(fact)
+		ret := ver.Env.NewFactWithAtomsDefined(fact)
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
@@ -676,7 +670,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *
 
 	// whether return value is in ret set of fnFcFn
 	fn := ast.NewFnObj(left, randomAtoms)
-	verRet := ver.VerFactStmt(ast.NewInFactWithParamObj(fn, fnFcFn.Params[0]), state)
+	verRet := ver.VerFactStmt(ast.NewInFactWithParamObj(fn, fnFcFn.Params[0], glob.BuiltinLine), state)
 	return verRet
 }
 
@@ -771,25 +765,56 @@ func (ver *Verifier) litNumNotInNaturalByLiteralShape(stmt *ast.SpecFactStmt, st
 		return NewEmptyExecUnknown()
 	}
 
-	// 检查字面上是否是自然数形状（必须是 AtomObj 且字面上看起来就是自然数）
+	toEval := ver.evaluateNonNumberLiteralExpr(stmt.Params[0])
+
+	if !cmp.IsNumExprLitObj(toEval) {
+		return NewEmptyExecUnknown()
+	}
+
+	// 检查 toEval 是否是纯数字（Atom），如果不是（有运算符），则不在 N 中
+	_, isAtom := toEval.(ast.Atom)
+	if !isAtom {
+		// 有运算符，不是纯数字，不在 N 中
+		msg := fmt.Sprintf("%s is not a pure number (has operators), so it is not in N", toEval)
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+	}
+
+	// 检查是否有小数点
+	if ast.IsObjLiterallyRationalNumber(toEval) {
+		msg := fmt.Sprintf("%s has a decimal point, so it is not in N", toEval)
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+	}
+
+	// 检查是否有负号（一元负号运算符）
+	if fnObj, ok := stmt.Params[0].(*ast.FnObj); ok {
+		if ast.IsObjBuiltinUnaryFn(*fnObj) {
+			if headAtom, ok := fnObj.FnHead.(ast.Atom); ok && string(headAtom) == glob.KeySymbolMinus {
+				// 有负号，不在 N 中
+				msg := fmt.Sprintf("%s has a minus sign, so it is not in N", stmt.Params[0])
+				return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+			}
+		}
+	}
+	// 也检查 toEval 是否有负号（如果评估后仍然是负号）
+	if fnObj, ok := toEval.(*ast.FnObj); ok {
+		if ast.IsObjBuiltinUnaryFn(*fnObj) {
+			if headAtom, ok := fnObj.FnHead.(ast.Atom); ok && string(headAtom) == glob.KeySymbolMinus {
+				// 有负号，不在 N 中
+				msg := fmt.Sprintf("%s has a minus sign, so it is not in N", toEval)
+				return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+			}
+		}
+	}
+
+	// 如果是纯数字且没有小数点，检查是否是自然数形状
 	// 如果字面上就是自然数形状（比如 "5"），不能证明它不在自然数中
-	if ast.IsObjLiterallyNatNumber(stmt.Params[0]) {
+	if ast.IsObjLiterallyNatNumber(toEval) {
 		// 字面上是自然数，不能证明它不在自然数中
 		return NewEmptyExecUnknown()
 	}
 
-	// 尝试检查是否是数字字面量表达式
-	_, ok, err := ast.MakeObjIntoNumLitExpr(stmt.Params[0])
-	if err != nil {
-		return NewExecErr(err.Error())
-	}
-	if !ok {
-		// 不是数字字面量，返回 unknown
-		return NewEmptyExecUnknown()
-	}
-
-	// 如果是数字表达式但字面上不是自然数形状（小数、负数或表达式），可以证明它不在自然数中
-	msg := fmt.Sprintf("%s is literally not a natural number (not in the shape of natural number)", stmt.Params[0])
+	// 如果是纯数字但不是自然数形状（负数），可以证明它不在自然数中
+	msg := fmt.Sprintf("%s is literally not a natural number (not in the shape of natural number)", toEval)
 	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
 }
 
@@ -799,26 +824,27 @@ func (ver *Verifier) litNumNotInIntegerByLiteralShape(stmt *ast.SpecFactStmt, st
 		return NewEmptyExecUnknown()
 	}
 
-	// 检查字面上是否是整数形状（必须是 AtomObj 且字面上看起来就是整数）
-	// 如果字面上就是整数形状（比如 "5" 或 "-3"），不能证明它不在整数中
-	if ast.IsObjLiterallyIntNumber(stmt.Params[0]) {
-		// 字面上是整数，不能证明它不在整数中
+	toEval := ver.evaluateNonNumberLiteralExpr(stmt.Params[0])
+
+	if !cmp.IsNumExprLitObj(toEval) {
 		return NewEmptyExecUnknown()
 	}
 
-	// 尝试检查是否是数字字面量表达式
-	_, ok, err := ast.MakeObjIntoNumLitExpr(stmt.Params[0])
-	if err != nil {
-		return NewExecErr(err.Error())
-	}
-	if !ok {
-		// 不是数字字面量，返回 unknown
-		return NewEmptyExecUnknown()
+	// 检查 toEval 是否是纯数字（Atom），如果不是（有运算符），则不在 Z 中
+	_, isAtom := toEval.(ast.Atom)
+	if !isAtom {
+		// 有运算符，不是纯数字，不在 Z 中
+		msg := fmt.Sprintf("%s is not a pure number (has operators), so it is not in Z", toEval)
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
 	}
 
-	// 如果是数字表达式但字面上不是整数形状（小数或表达式），可以证明它不在整数中
-	msg := fmt.Sprintf("%s is literally not an integer (not in the shape of integer)", stmt.Params[0])
-	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+	// 检查是否有小数点
+	if ast.IsObjLiterallyRationalNumber(toEval) {
+		msg := fmt.Sprintf("%s has a decimal point, so it is not in Z", toEval)
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+	}
+
+	return NewEmptyExecUnknown()
 }
 
 func (ver *Verifier) litNumNotInNPosByLiteralShape(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
@@ -827,25 +853,56 @@ func (ver *Verifier) litNumNotInNPosByLiteralShape(stmt *ast.SpecFactStmt, state
 		return NewEmptyExecUnknown()
 	}
 
-	// 检查字面上是否是正整数形状（必须是 AtomObj 且字面上看起来就是正整数）
+	toEval := ver.evaluateNonNumberLiteralExpr(stmt.Params[0])
+
+	if !cmp.IsNumExprLitObj(toEval) {
+		return NewEmptyExecUnknown()
+	}
+
+	// 检查 toEval 是否是纯数字（Atom），如果不是（有运算符），则不在 N_pos 中
+	_, isAtom := toEval.(ast.Atom)
+	if !isAtom {
+		// 有运算符，不是纯数字，不在 N_pos 中
+		msg := fmt.Sprintf("%s is not a pure number (has operators), so it is not in N_pos", toEval)
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+	}
+
+	// 检查是否有小数点
+	if ast.IsObjLiterallyRationalNumber(toEval) {
+		msg := fmt.Sprintf("%s has a decimal point, so it is not in N_pos", toEval)
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+	}
+
+	// 检查是否有负号（一元负号运算符）
+	if fnObj, ok := stmt.Params[0].(*ast.FnObj); ok {
+		if ast.IsObjBuiltinUnaryFn(*fnObj) {
+			if headAtom, ok := fnObj.FnHead.(ast.Atom); ok && string(headAtom) == glob.KeySymbolMinus {
+				// 有负号，不在 N_pos 中
+				msg := fmt.Sprintf("%s has a minus sign, so it is not in N_pos", stmt.Params[0])
+				return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+			}
+		}
+	}
+	// 也检查 toEval 是否有负号（如果评估后仍然是负号）
+	if fnObj, ok := toEval.(*ast.FnObj); ok {
+		if ast.IsObjBuiltinUnaryFn(*fnObj) {
+			if headAtom, ok := fnObj.FnHead.(ast.Atom); ok && string(headAtom) == glob.KeySymbolMinus {
+				// 有负号，不在 N_pos 中
+				msg := fmt.Sprintf("%s has a minus sign, so it is not in N_pos", toEval)
+				return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+			}
+		}
+	}
+
+	// 如果是纯数字且没有小数点，检查是否是正整数形状
 	// 如果字面上就是正整数形状（比如 "5"），不能证明它不在正整数中
-	if ast.IsObjLiterallyNPosNumber(stmt.Params[0]) {
+	if ast.IsObjLiterallyNPosNumber(toEval) {
 		// 字面上是正整数，不能证明它不在正整数中
 		return NewEmptyExecUnknown()
 	}
 
-	// 尝试检查是否是数字字面量表达式
-	_, ok, err := ast.MakeObjIntoNumLitExpr(stmt.Params[0])
-	if err != nil {
-		return NewExecErr(err.Error())
-	}
-	if !ok {
-		// 不是数字字面量，返回 unknown
-		return NewEmptyExecUnknown()
-	}
-
-	// 如果是数字表达式但字面上不是正整数形状（小数、负数、0或表达式），可以证明它不在正整数中
-	msg := fmt.Sprintf("%s is literally not a positive integer (not in the shape of positive integer)", stmt.Params[0])
+	// 如果是纯数字但不是正整数形状（负数、0），可以证明它不在正整数中
+	msg := fmt.Sprintf("%s is literally not a positive integer (not in the shape of positive integer)", toEval)
 	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
 }
 

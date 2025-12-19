@@ -18,25 +18,11 @@ import (
 	"strings"
 )
 
-func CopyMap[T any](src map[string]T) map[string]T {
-	dst := make(map[string]T)
-	for k, v := range src {
-		dst[k] = v
-	}
-	return dst
-}
-
 func MergeMap[T any](from map[string]T, to map[string]T) map[string]T {
 	for k, v := range from {
 		to[k] = v
 	}
 	return to
-}
-
-func CopySlice[T any](src []T) []T {
-	dst := make([]T, len(src))
-	copy(dst, src)
-	return dst
 }
 
 func numberToLetters(num int) string {
@@ -61,4 +47,20 @@ func GenerateNamesLikeExcelColumnNames(n int) []string {
 // 这样可以让 Windows 格式的代码在 Unix/Linux 系统上也能正常处理
 func RemoveWindowsCarriage(code string) string {
 	return strings.ReplaceAll(code, "\r", "")
+}
+
+func IsKeywordSetOrNonEmptySetOrFiniteSet(s string) bool {
+	return s == KeywordSet || s == KeywordNonEmptySet || s == KeywordFiniteSet
+}
+
+func IsKeywordSet(s string) bool {
+	return s == KeywordSet
+}
+
+func IsKeywordNonEmptySet(s string) bool {
+	return s == KeywordNonEmptySet
+}
+
+func IsKeywordFiniteSet(s string) bool {
+	return s == KeywordFiniteSet
 }

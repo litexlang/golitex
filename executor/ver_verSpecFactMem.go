@@ -177,7 +177,7 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch_new(stmt *ast.Spe
 }
 
 func (ver *Verifier) specFact_UniMem_atCurEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	if state == Round0NoMsg || state == Round0Msg {
+	if state.Round == 0 && !state.ReqOk {
 		return NewExecErr(fmt.Sprintf("specFact_UniMem_atCurEnv: state is %s", state))
 	}
 

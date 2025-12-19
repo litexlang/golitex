@@ -19,6 +19,7 @@ import (
 	ast "golitex/ast"
 	env "golitex/environment"
 	glob "golitex/glob"
+	"maps"
 )
 
 // 在用uniFact来验证specFact时，这个已知的uniFact 可能形如 forall a x: $p(a,x)。然后我代入的x刚好是a。于是整个forall被instantiate成 forall a a: $p(a,a)。然后我要验证这个 forall a a: $p(a,a) 我发现a已经在外面定义go了，于是把它替换成了乱码ABCD, 然后变成验证 forall ABCD ABCD: $p(ABCD,ABCD)。总之就错了。避免这个的办法是，让knownUniFact先把param先随机化啦，然后再代入
@@ -86,10 +87,10 @@ func processUniFactParamsDuplicateDeclared(env *env.Env, params []string) (map[s
 	for _, param := range params {
 		for {
 			newParam := param
-			ret := env.IsAtomDeclared(ast.Atom(newParam), map[string]struct{}{})
+			ret := env.IsNameDefinedOrBuiltin(newParam, map[string]struct{}{})
 			if ret.IsTrue() {
 				newParam = env.GenerateUndeclaredRandomName()
-				ret = env.IsAtomDeclared(ast.Atom(newParam), map[string]struct{}{})
+				ret = env.IsNameDefinedOrBuiltin(newParam, map[string]struct{}{})
 				if ret.IsErr() {
 					paramMap[param] = ast.Atom(newParam)
 					paramMapStrToStr[param] = newParam
@@ -110,12 +111,12 @@ func processUniFactParamsDuplicateDeclared_notInGivenMap(env *env.Env, params []
 		for {
 			newParam := param
 			_, inNotOnMap := notInMap[newParam]
-			ret := env.IsAtomDeclared(ast.Atom(newParam), map[string]struct{}{})
+			ret := env.IsNameDefinedOrBuiltin(newParam, map[string]struct{}{})
 			if ret.IsTrue() || inNotOnMap {
 				newParam = env.GenerateUndeclaredRandomName()
 
 				_, inNotOnMap = notInMap[newParam]
-				ret = env.IsAtomDeclared(ast.Atom(newParam), map[string]struct{}{})
+				ret = env.IsNameDefinedOrBuiltin(newParam, map[string]struct{}{})
 				if ret.IsErr() && !inNotOnMap {
 					paramMap[param] = ast.Atom(newParam)
 					paramMapStrToStr[param] = newParam
@@ -151,11 +152,10 @@ func (ver *Verifier) preprocessUniFactParamsWithoutThenFacts(knownUniFact *ast.U
 	for _, domFact := range knownUniFact.DomFacts {
 		switch asStmt := domFact.(type) {
 		case *ast.UniFactStmt:
-			copiedParamMap, copiedMapStrToStr := glob.CopyMap(paramMap), glob.CopyMap(paramMapStrToStr)
+			copiedParamMap, copiedMapStrToStr := maps.Clone(paramMap), maps.Clone(paramMapStrToStr)
 
 			curParamMap, curParamMapStrToStr := processUniFactParamsDuplicateDeclared_notInGivenMap(ver.Env, asStmt.Params, copiedMapStrToStr)
 
-			// merge curParamMap and paramMap
 			copiedParamMap = glob.MergeMap(curParamMap, copiedParamMap)
 			copiedMapStrToStr = glob.MergeMap(curParamMapStrToStr, copiedMapStrToStr)
 
@@ -165,7 +165,7 @@ func (ver *Verifier) preprocessUniFactParamsWithoutThenFacts(knownUniFact *ast.U
 			}
 			domFacts_paramRandomized = append(domFacts_paramRandomized, newDomFact)
 		case *ast.UniFactWithIffStmt:
-			copiedParamMap, copiedMapStrToStr := glob.CopyMap(paramMap), glob.CopyMap(paramMapStrToStr)
+			copiedParamMap, copiedMapStrToStr := maps.Clone(paramMap), maps.Clone(paramMapStrToStr)
 
 			curParamMap, curParamMapStrToStr := processUniFactParamsDuplicateDeclared_notInGivenMap(ver.Env, asStmt.UniFact.Params, copiedMapStrToStr)
 
@@ -255,7 +255,7 @@ func instantiateUniFactWithoutThenFacts(u *uniFactWithoutThenFacts, paramMap map
 func (u *uniFactWithoutThenFacts) ParamInParamSetFacts(paramMap map[string]ast.Obj) []*ast.SpecFactStmt {
 	paramSetFacts := make([]*ast.SpecFactStmt, len(u.Params))
 	for i, param := range u.Params {
-		paramSetFacts[i] = ast.NewInFactWithParamObj(paramMap[param], u.ParamSets[i])
+		paramSetFacts[i] = ast.NewInFactWithParamObj(paramMap[param], u.ParamSets[i], glob.BuiltinLine)
 	}
 	return paramSetFacts
 }

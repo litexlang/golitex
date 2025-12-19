@@ -1,0 +1,16 @@
+prove_for i $in range(1, 10):
+    dom:
+        i % 2 = 0
+    =>:
+        i = 2 or i = 4 or i = 6 or i = 8
+    prove:
+        do_nothing
+
+prove_for i $in closed_range(1, 3):
+    =>:
+        i = 1 or i = 2 or i = 3
+    prove:
+        do_nothing
+
+prove_for i $in range(1, 3):
+    i = 1 or i = 2

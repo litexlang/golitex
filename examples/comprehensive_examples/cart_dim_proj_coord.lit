@@ -5,7 +5,7 @@ prove:
     proj(x, 1) = R
     proj(x, 2) = Q
     proj(x, 3) = Z
-    x $in set
+    $is_a_set(x)
 
     let a x
 
@@ -56,37 +56,10 @@ prove:
     $is_tuple(e[2])
 
 prove:
-    cart(R, R) $in nonempty_set
+    $is_a_nonempty_set(cart(R, R))
     have x cart(R, R)
     x[1] $in R
 
     have t set = cart(R, R)
     have y t
     y[1] $in R
-
-
-prove:
-    exist_prop n N_pos st exist_n_larger_than_1():
-        n > 1
-    exist 2 st $exist_n_larger_than_1()
-
-    have n st $exist_n_larger_than_1()
-
-
-    have_cart_with_dim(s2, n, x):
-        =>:
-            proj(s2, x) = R
-
-        prove:
-            do_nothing
-
-        = R
-
-
-    $is_cart(s2)
-    set_dim(s2) = n
-
-    forall x N_pos:
-        x <= n
-        =>:
-            proj(s2, x) = R

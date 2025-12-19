@@ -18,7 +18,7 @@ prop IMO_2024_A5_Result(a seq(R)):
     or: $is_identical_seq(a), $is_alternating_seq_and_has_bound(a, 1)
 
 claim:
-    @IMO_2024_Problem(a seq(R)):
+imply IMO_2024_Problem(a seq(R)):
         $IMO_2024_A5_Condition(a)
         =>:
             $IMO_2024_A5_Result(a)    

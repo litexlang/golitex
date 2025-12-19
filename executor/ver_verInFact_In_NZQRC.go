@@ -130,7 +130,7 @@ func (ver *Verifier) verInN_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(st
 }
 
 func (ver *Verifier) verInZ_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactStmt, state *VerState) (bool, string) {
-	if ast.IsObjLiterallyIntNumber(stmt.Params[0]) {
+	if _, ok := ast.IsObjLiterallyIntNumber(stmt.Params[0]); ok {
 		return true, stmt.String()
 	}
 

@@ -28,7 +28,7 @@ func (exec *Executor) byStmt(stmt *ast.ByStmt) ExecRet {
 
 	// 保存返回的事实
 	for _, fact := range returnedFacts {
-		ret := exec.Env.NewFact(fact)
+		ret := exec.Env.NewFactWithAtomsDefined(fact)
 		if ret.IsNotTrue() {
 			return NewExecErr(fmt.Sprintf("by statement failed: returned fact %s store error.", fact.String()))
 		}
@@ -54,7 +54,7 @@ func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) (ExecRet, []ast.FactStmt) 
 	}
 
 	for i, param := range proveAlgoDef.Params {
-		ret := exec.Env.IsAtomDeclared(ast.Atom(param), map[string]struct{}{})
+		ret := exec.Env.IsNameDefinedOrBuiltin(param, map[string]struct{}{})
 		if ret.IsTrue() {
 			continue
 		} else {

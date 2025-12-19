@@ -28,7 +28,7 @@ fn degree_of_Fp_polynomial(p Z, f Fp_polynomial(p)) N:
     =>:
         len(Fp_polynomial_parameters(p, f)) - 1 = degree_of_Fp_polynomial(p, f)
 
-know @exist Q Fp_polynomial(p) st there_is_a_unique_Fp_polynomial_with_A_minus_BQ_is_0_or_order_smaller_than_degree_of_B(p Z, A Fp_polynomial(p), B Fp_polynomial(p)):
+know imply exist Q Fp_polynomial(p) st there_is_a_unique_Fp_polynomial_with_A_minus_BQ_is_0_or_order_smaller_than_degree_of_B(p Z, A Fp_polynomial(p), B Fp_polynomial(p)):
     p $is_prime
     B $is_not_0
     =>:

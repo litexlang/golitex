@@ -40,17 +40,20 @@ func (s *OrStmt) stmt()                        {}
 func (s *ImportDirStmt) stmt()                 {}
 func (s *ImportFileStmt) stmt()                {}
 func (s *ProveStmt) stmt()                     {}
+func (s *ProveForStmt) stmt()                  {}
+func (s *ProveImplicationStmt) stmt()          {}
+func (s *ImplicationStmt) stmt()               {}
 func (s *UniFactWithIffStmt) stmt()            {}
 func (s *ClaimProveByContradictionStmt) stmt() {}
 
-func (s *ClaimPropStmt) stmt()            {}
+func (s *ClaimImplicationStmt) stmt()     {}
 func (s *ClaimExistPropStmt) stmt()       {}
 func (s *ProveByEnumStmt) stmt()          {}
 func (s *HaveObjInNonEmptySetStmt) stmt() {}
 func (s *HaveCartSetStmt) stmt()          {}
 func (s *HaveObjFromCartSetStmt) stmt()   {}
 
-func (s *NamedUniFactStmt) stmt()  {}
+// func (s *NamedUniFactStmt) stmt()  {}
 func (s *EqualsFactStmt) stmt()    {}
 func (s *KnowExistPropStmt) stmt() {}
 
@@ -67,14 +70,12 @@ func (s *HaveFnStmt) stmt() {}
 func (s *ProveIsCommutativePropStmt) stmt() {}
 func (s *ClaimIffStmt) stmt()               {}
 
-func (s *ProveInRangeStmt2) stmt()                 {}
 func (s *ProveIsTransitivePropStmt) stmt()         {}
 func (s *DefAlgoStmt) stmt()                       {}
 func (s *EvalStmt) stmt()                          {}
 func (s *DefProveAlgoStmt) stmt()                  {}
 func (s *ByStmt) stmt()                            {}
 func (s *PrintStmt) stmt()                         {}
-func (s *HelpStmt) stmt()                          {}
 func (s *HaveFnEqualCaseByCaseStmt) stmt()         {}
 func (s *HaveFnCaseByCaseStmt) stmt()              {}
 func (s *DefLetStmt) algoStmt()                    {}
@@ -96,14 +97,14 @@ func (s *ProveStmt) algoStmt()                     {}
 func (s *UniFactWithIffStmt) algoStmt()            {}
 func (s *ClaimProveByContradictionStmt) algoStmt() {}
 
-func (s *ClaimPropStmt) algoStmt()            {}
+func (s *ClaimImplicationStmt) algoStmt()     {}
 func (s *ClaimExistPropStmt) algoStmt()       {}
 func (s *ProveByEnumStmt) algoStmt()          {}
 func (s *HaveObjInNonEmptySetStmt) algoStmt() {}
 func (s *HaveCartSetStmt) algoStmt()          {}
 func (s *HaveObjFromCartSetStmt) algoStmt()   {}
 
-func (s *NamedUniFactStmt) algoStmt()  {}
+// func (s *NamedUniFactStmt) algoStmt()  {}
 func (s *EqualsFactStmt) algoStmt()    {}
 func (s *KnowExistPropStmt) algoStmt() {}
 
@@ -122,12 +123,13 @@ func (s *DefProveAlgoStmt) algoStmt()           {}
 func (s *ByStmt) algoStmt()                     {}
 func (s *ClaimIffStmt) algoStmt()               {}
 
-func (s *ProveInRangeStmt2) algoStmt()                 {}
+func (s *ProveForStmt) algoStmt()                      {}
+func (s *ProveImplicationStmt) algoStmt()              {}
+func (s *ImplicationStmt) algoStmt()                   {}
 func (s *ProveIsTransitivePropStmt) algoStmt()         {}
 func (s *DefAlgoStmt) algoStmt()                       {}
 func (s *EvalStmt) algoStmt()                          {}
 func (s *PrintStmt) algoStmt()                         {}
-func (s *HelpStmt) algoStmt()                          {}
 func (s *HaveFnEqualCaseByCaseStmt) algoStmt()         {}
 func (s *HaveFnCaseByCaseStmt) algoStmt()              {}
 func (s *HaveCartWithDimStmt) stmt()                   {}
@@ -151,14 +153,14 @@ func (s *ProveStmt) GetLine() uint                     { return s.Line }
 func (s *UniFactWithIffStmt) GetLine() uint            { return s.Line }
 func (s *ClaimProveByContradictionStmt) GetLine() uint { return s.Line }
 
-func (s *ClaimPropStmt) GetLine() uint            { return s.Line }
+func (s *ClaimImplicationStmt) GetLine() uint     { return s.Line }
 func (s *ClaimExistPropStmt) GetLine() uint       { return s.Line }
 func (s *ProveByEnumStmt) GetLine() uint          { return s.Line }
 func (s *HaveObjInNonEmptySetStmt) GetLine() uint { return s.Line }
 func (s *HaveCartSetStmt) GetLine() uint          { return s.Line }
 func (s *HaveObjFromCartSetStmt) GetLine() uint   { return s.Line }
 
-func (s *NamedUniFactStmt) GetLine() uint  { return s.Line }
+// func (s *NamedUniFactStmt) GetLine() uint  { return s.Line }
 func (s *EqualsFactStmt) GetLine() uint    { return s.Line }
 func (s *KnowExistPropStmt) GetLine() uint { return s.Line }
 
@@ -172,25 +174,20 @@ func (s *HaveFnEqualStmt) GetLine() uint      { return s.Line }
 
 func (s *HaveFnStmt) GetLine() uint { return s.Line }
 
-func (s *ProveInRangeStmt2) GetLine() uint                   { return s.Line }
-func (s *ProveInRangeStmt2) Param() string                   { return s.param }
-func (s *ProveInRangeStmt2) Start() Obj                      { return s.start }
-func (s *ProveInRangeStmt2) End() Obj                        { return s.end }
-func (s *ProveInRangeStmt2) GetDomFactsOrNil() FactStmtSlice { return s.DomFactsOrNil }
-func (s *ProveInRangeStmt2) GetThenFacts() FactStmtSlice     { return s.ThenFacts }
-func (s *ProveInRangeStmt2) GetProofsOrNil() StmtSlice       { return s.ProofsOrNil }
-func (s *ClaimIffStmt) GetLine() uint                        { return s.Line }
-func (s *ProveIsTransitivePropStmt) GetLine() uint           { return s.Line }
-func (s *ProveIsCommutativePropStmt) GetLine() uint          { return s.Line }
-func (s *DefAlgoStmt) GetLine() uint                         { return s.Line }
-func (s *EvalStmt) GetLine() uint                            { return s.Line }
-func (s *DefProveAlgoStmt) GetLine() uint                    { return s.Line }
-func (s *ByStmt) GetLine() uint                              { return s.Line }
-func (s *PrintStmt) GetLine() uint                           { return s.Line }
-func (s *HelpStmt) GetLine() uint                            { return s.Line }
-func (s *HaveFnEqualCaseByCaseStmt) GetLine() uint           { return s.Line }
-func (s *HaveFnCaseByCaseStmt) GetLine() uint                { return s.Line }
-func (s *HaveCartWithDimStmt) GetLine() uint                 { return s.Line }
+func (s *ClaimIffStmt) GetLine() uint               { return s.Line }
+func (s *ProveIsTransitivePropStmt) GetLine() uint  { return s.Line }
+func (s *ProveIsCommutativePropStmt) GetLine() uint { return s.Line }
+func (s *DefAlgoStmt) GetLine() uint                { return s.Line }
+func (s *EvalStmt) GetLine() uint                   { return s.Line }
+func (s *DefProveAlgoStmt) GetLine() uint           { return s.Line }
+func (s *ByStmt) GetLine() uint                     { return s.Line }
+func (s *PrintStmt) GetLine() uint                  { return s.Line }
+func (s *ProveForStmt) GetLine() uint               { return s.Line }
+func (s *ProveImplicationStmt) GetLine() uint       { return s.Line }
+func (s *ImplicationStmt) GetLine() uint            { return s.Line }
+func (s *HaveFnEqualCaseByCaseStmt) GetLine() uint  { return s.Line }
+func (s *HaveFnCaseByCaseStmt) GetLine() uint       { return s.Line }
+func (s *HaveCartWithDimStmt) GetLine() uint        { return s.Line }
 
 type FactStmt interface {
 	factStmt()
@@ -212,8 +209,7 @@ func (p *SpecFactStmt) factStmt()       {}
 func (l *UniFactStmt) factStmt()        {}
 func (l *UniFactWithIffStmt) factStmt() {}
 func (s *OrStmt) factStmt()             {}
-
-func (s *EqualsFactStmt) factStmt() {}
+func (s *EqualsFactStmt) factStmt()     {}
 
 type Spec_OrFact interface {
 	reversibleFact()
@@ -299,7 +295,7 @@ type ClaimInterface interface {
 
 func (stmt *ClaimProveStmt) claimStmt()                {}
 func (stmt *ClaimProveByContradictionStmt) claimStmt() {}
-func (stmt *ClaimPropStmt) claimStmt()                 {}
+func (stmt *ClaimImplicationStmt) claimStmt()          {}
 func (stmt *ClaimExistPropStmt) claimStmt()            {}
 func (stmt *ClaimIffStmt) claimStmt()                  {}
 
@@ -392,6 +388,5 @@ func (p *SpecFactStmt) proveAlgoReturnStmt()       {}
 func (l *UniFactStmt) proveAlgoReturnStmt()        {}
 func (l *UniFactWithIffStmt) proveAlgoReturnStmt() {}
 func (s *OrStmt) proveAlgoReturnStmt()             {}
-
-func (s *EqualsFactStmt) proveAlgoReturnStmt() {}
-func (s *ByStmt) proveAlgoReturnStmt()         {}
+func (s *EqualsFactStmt) proveAlgoReturnStmt()     {}
+func (s *ByStmt) proveAlgoReturnStmt()             {}
