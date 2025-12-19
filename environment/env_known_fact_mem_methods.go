@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	ast "golitex/ast"
+	cmp "golitex/cmp"
 	glob "golitex/glob"
 )
 
@@ -138,32 +139,6 @@ func (s SpecFactInUniFactMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([
 	return sameEnumPkgPropFacts, true
 }
 
-func (env *Env) newUniFact(stmt *ast.UniFactStmt) glob.GlobRet {
-	for _, thenStmt := range stmt.ThenFacts {
-		var ret glob.GlobRet
-		switch asFact := thenStmt.(type) {
-		case *ast.SpecFactStmt:
-			ret = env.newUniFact_ThenFactIsSpecFact(stmt, asFact)
-		case *ast.OrStmt:
-			ret = env.newUniFact_ThenFactIsOrStmt(stmt, asFact)
-		case *ast.UniFactWithIffStmt:
-			ret = env.newUniFact_ThenFactIsIffStmt(stmt, asFact)
-		case *ast.UniFactStmt:
-			ret = env.newUniFact_ThenFactIsUniFactStmt(stmt, asFact)
-		case *ast.EqualsFactStmt:
-			ret = env.newUniFact_ThenFactIsEqualsFactStmt(stmt, asFact)
-		default:
-			return glob.ErrRet(fmt.Errorf("invalid then fact type: %s", thenStmt))
-		}
-
-		if ret.IsErr() {
-			return ret
-		}
-	}
-	return glob.NewGlobTrue("")
-
-}
-
 func (s SpecFactInUniFactMem) newFact(stmtAsSpecFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt) glob.GlobRet {
 	sameEnumFacts, ret := s.getSameEnumFacts(stmtAsSpecFact)
 	if ret.IsErr() {
@@ -266,22 +241,6 @@ func (e *Env) IsFnDeclared(obj ast.Atom) (*FnInFnTMemItem, bool) {
 	return fnDef, true
 }
 
-func (e *Env) newUniFactWithIff(stmt *ast.UniFactWithIffStmt) glob.GlobRet {
-	thenToIff := stmt.NewUniFactWithThenToIff()
-	ret := e.newUniFact(thenToIff)
-	if ret.IsErr() {
-		return ret
-	}
-
-	iffToThen := stmt.NewUniFactWithIffToThen()
-	ret = e.newUniFact(iffToThen)
-	if ret.IsErr() {
-		return ret
-	}
-
-	return glob.NewGlobTrue("")
-}
-
 func (e *Env) StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(fn ast.Obj, fnTemplateFnObj *ast.FnObj, fnTStruct *ast.FnTStruct) glob.GlobRet {
 	if fnTemplateFnObj != nil {
 		fnTStruct, ret := e.GetFnStructFromFnTName(fnTemplateFnObj)
@@ -325,4 +284,101 @@ func (e *Env) getInstantiatedFnTTOfFnObj(fnObj *ast.FnObj) (*ast.FnTStruct, bool
 	}
 
 	return fnTNoName, true, glob.NewGlobTrue("")
+}
+
+func (env *Env) StoreTrueEqualValues(key, value ast.Obj) {
+	// 如果已经知道它的值了，那不能存了；否则比如我在外部环境里知道了a = 3，内部环境在反证法证明 a != 1，那我 a = 1就把a = 3覆盖掉了，a = 3这个取值貌似就不work了。某种程度上就是弄了个const
+	if v := env.GetSymbolSimplifiedValue(key); v != nil {
+		return
+	}
+	env.SymbolSimplifiedValueMem[key.String()] = value
+}
+
+func (env *Env) storeSymbolSimplifiedValue(left, right ast.Obj) glob.GlobRet {
+	_, newLeft := env.ReplaceSymbolWithValue(left)
+	if cmp.IsNumExprLitObj(newLeft) {
+		simplifiedNewLeft := cmp.IsNumExprObjThenSimplify(newLeft)
+		env.StoreTrueEqualValues(right, simplifiedNewLeft)
+	}
+
+	_, newRight := env.ReplaceSymbolWithValue(right)
+	if cmp.IsNumExprLitObj(newRight) {
+		simplifiedNewRight := cmp.IsNumExprObjThenSimplify(newRight)
+		env.StoreTrueEqualValues(left, simplifiedNewRight)
+	}
+
+	return glob.NewGlobTrue("")
+}
+
+func (env *Env) GetEqualObjs(obj ast.Obj) (*[]ast.Obj, bool) {
+	objAsStr := obj.String()
+	facts, ok := env.EqualMem[objAsStr]
+	return facts, ok
+}
+
+func (env *Env) NewFnTemplateInEnvMem(stmt *ast.FnTemplateDefStmt) glob.GlobRet {
+	// 确保template name 没有被声明过
+	ret := env.IsNameDefinedOrBuiltin(string(stmt.TemplateDefHeader.Name), map[string]struct{}{})
+	if ret.IsTrue() {
+		return glob.ErrRet(fmt.Errorf("fn template name %s is already declared", stmt.TemplateDefHeader.Name))
+	}
+
+	ret = env.AtomsInFnTemplateFnTemplateDeclared(ast.Atom(stmt.TemplateDefHeader.Name), stmt)
+	if ret.IsErr() {
+		return ret
+	}
+
+	env.FnTemplateDefMem[string(stmt.TemplateDefHeader.Name)] = *stmt
+	return glob.NewGlobTrue("")
+}
+
+func (env *Env) newUniFact_ThenFactIsSpecFact(stmt *ast.UniFactStmt, thenFact *ast.SpecFactStmt) glob.GlobRet {
+	return env.storeUniFactInMem(thenFact, stmt)
+}
+
+func (env *Env) newUniFact_ThenFactIsOrStmt(stmt *ast.UniFactStmt, thenFact *ast.OrStmt) glob.GlobRet {
+	return env.KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem.NewFact(stmt, thenFact)
+}
+
+func (env *Env) newUniFact_ThenFactIsIffStmt(stmt *ast.UniFactStmt, thenFact *ast.UniFactWithIffStmt) glob.GlobRet {
+	thenToIff := thenFact.NewUniFactWithThenToIff()
+	iffToThen := thenFact.NewUniFactWithIffToThen()
+
+	mergedThenToIff := ast.MergeOuterInnerUniFacts(stmt, thenToIff)
+	ret := env.newUniFact(mergedThenToIff)
+	if ret.IsErr() {
+		return ret
+	}
+
+	mergedIffToThen := ast.MergeOuterInnerUniFacts(stmt, iffToThen)
+	ret = env.newUniFact(mergedIffToThen)
+	if ret.IsErr() {
+		return ret
+	}
+
+	return glob.NewGlobTrue("")
+}
+
+func (env *Env) newUniFact_ThenFactIsUniFactStmt(stmt *ast.UniFactStmt, thenFact *ast.UniFactStmt) glob.GlobRet {
+	mergedUniFact := ast.MergeOuterInnerUniFacts(stmt, thenFact)
+	return env.newUniFact(mergedUniFact)
+}
+
+func (env *Env) newUniFact_ThenFactIsEqualsFactStmt(stmt *ast.UniFactStmt, thenFact *ast.EqualsFactStmt) glob.GlobRet {
+	equalFacts := thenFact.ToEqualFacts_PairwiseCombination()
+	for _, equalFact := range equalFacts {
+		ret := env.newUniFact_ThenFactIsSpecFact(stmt, equalFact)
+		if ret.IsErr() {
+			return ret
+		}
+	}
+	return glob.NewGlobTrue("")
+}
+
+func (env *Env) storeSpecFactInMem(stmt *ast.SpecFactStmt) glob.GlobRet {
+	return env.KnownFactsStruct.SpecFactMem.newFact(stmt)
+}
+
+func (env *Env) storeUniFactInMem(specFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt) glob.GlobRet {
+	return env.KnownFactsStruct.SpecFactInUniFactMem.newFact(specFact, uniFact)
 }
