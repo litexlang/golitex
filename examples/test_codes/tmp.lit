@@ -1,1 +1,1 @@
-$is_nonempty_with_item({x R: x > 0}, 1)
+have set x = {1, 2, 3}

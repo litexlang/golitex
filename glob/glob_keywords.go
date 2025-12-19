@@ -104,6 +104,8 @@ const (
 	KeywordSubsetOf           = "subset_of"
 	KeywordEqualTuple         = "equal_tuple"
 	KeywordIsNonEmptyWithItem = "is_nonempty_with_item"
+
+	KeywordPowerSet = "power_set"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
