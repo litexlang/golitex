@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (env *Env) NewFact(stmt ast.FactStmt) glob.GlobRet {
+func (env *Env) NewFactWithAtomsDefined(stmt ast.FactStmt) glob.GlobRet {
 	// 检查是否符合要求：比如涉及到的符号是否都定义了
 	if ret := env.AtomObjsInFactProperlyDefined(stmt, map[string]struct{}{}); ret.IsNotTrue() {
 		return glob.NewGlobErr(stmt.String()).AddMsg(ret.String())
@@ -133,7 +133,7 @@ func (env *Env) newTrueEqual(fact *ast.SpecFactStmt) glob.GlobRet {
 func (env *Env) newEqualsFact(stmt *ast.EqualsFactStmt) glob.GlobRet {
 	equalFacts := stmt.ToEqualFacts()
 	for _, equalFact := range equalFacts {
-		ret := env.NewFact(equalFact)
+		ret := env.NewFactWithAtomsDefined(equalFact)
 		if ret.IsErr() {
 			return ret
 		}

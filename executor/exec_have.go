@@ -45,7 +45,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 			if ret.IsErr() {
 				return NewExecErr(ret.String())
 			}
-			ret = exec.Env.NewFact(inFact)
+			ret = exec.Env.NewFactWithAtomsDefined(inFact)
 			if ret.IsErr() {
 				return NewExecErr(ret.String())
 			}
@@ -102,7 +102,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 	// }
 
 	for i, existParamSet := range instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).ExistParamSets {
-		ret := exec.Env.NewFact(ast.NewInFact(stmt.ObjNames[i], existParamSet))
+		ret := exec.Env.NewFactWithAtomsDefined(ast.NewInFact(stmt.ObjNames[i], existParamSet))
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
@@ -110,7 +110,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 
 	// dom of def exist prop is true
 	for _, domFact := range instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).DefBody.DomFactsOrNil {
-		ret := exec.Env.NewFact(domFact)
+		ret := exec.Env.NewFactWithAtomsDefined(domFact)
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
@@ -118,7 +118,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 
 	// iff of def exist prop is true
 	for _, iffFact := range instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).DefBody.IffFactsOrNil {
-		ret := exec.Env.NewFact(iffFact)
+		ret := exec.Env.NewFactWithAtomsDefined(iffFact)
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
@@ -128,7 +128,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 	existStFactParams := ast.MakeExistFactParamsSlice(ExistParamsAtoms, stmt.Fact.Params)
 
 	newExistStFact := ast.NewSpecFactStmt(ast.TrueExist_St, ast.Atom(string(stmt.Fact.PropName)), existStFactParams, stmt.Line)
-	ret := exec.Env.NewFact(newExistStFact)
+	ret := exec.Env.NewFactWithAtomsDefined(newExistStFact)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}
@@ -193,7 +193,7 @@ func (exec *Executor) haveCartSetStmt(stmt *ast.HaveCartSetStmt) ExecRet {
 
 	// Store the equal fact: x = cart(a, b, c, ...)
 	equalFact := ast.NewEqualFact(ast.Atom(stmt.Name), stmt.CartObj)
-	ret := exec.Env.NewFact(equalFact)
+	ret := exec.Env.NewFactWithAtomsDefined(equalFact)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}
@@ -414,7 +414,7 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (ExecRet, error) {
 
 	fnObj := ast.NewFnObj(ast.Atom(stmt.DefFnStmt.Name), params)
 	fnObjIsEqualTo := ast.NewEqualFact(fnObj, stmt.HaveObjSatisfyFn)
-	err := exec.Env.NewFact(fnObjIsEqualTo)
+	err := exec.Env.NewFactWithAtomsDefined(fnObjIsEqualTo)
 	if err.IsErr() {
 		return NewExecErr(err.String()), fmt.Errorf(err.String())
 	}
@@ -538,7 +538,7 @@ func (exec *Executor) verifyHaveFnCaseByCase_OneCase(stmt *ast.HaveFnCaseByCaseS
 
 	// Add case condition as fact
 	caseFact := stmt.CaseByCaseFacts[caseIndex]
-	ret := exec.Env.NewFact(caseFact)
+	ret := exec.Env.NewFactWithAtomsDefined(caseFact)
 	if ret.IsErr() {
 		return NewExecErr(ret.String()), fmt.Errorf("case %d: failed to add case fact: %s", caseIndex, ret.String())
 	}
@@ -628,7 +628,7 @@ func (exec *Executor) checkCaseNoOverlapWithOthers_ForHaveFn(stmt *ast.HaveFnCas
 
 	// Assume current case condition holds
 	caseFact := stmt.CaseByCaseFacts[caseIndex]
-	ret := exec.Env.NewFact(caseFact)
+	ret := exec.Env.NewFactWithAtomsDefined(caseFact)
 	if ret.IsErr() {
 		return NewExecErr(ret.String()), fmt.Errorf("case %d: failed to add case fact: %s", caseIndex, ret.String())
 	}
@@ -756,7 +756,7 @@ func (exec *Executor) checkCaseReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCa
 
 	// 假设case的条件成立
 	caseFact := stmt.CaseByCaseFacts[caseIndex]
-	ret := exec.Env.NewFact(caseFact)
+	ret := exec.Env.NewFactWithAtomsDefined(caseFact)
 	if ret.IsErr() {
 		return NewExecErr(ret.String()), fmt.Errorf("case %d: failed to add case fact: %s", caseIndex, ret.String())
 	}
@@ -833,7 +833,7 @@ func (exec *Executor) checkCaseNoOverlapWithOthers(stmt *ast.HaveFnEqualCaseByCa
 
 	// 假设当前 case 的条件成立
 	caseFact := stmt.CaseByCaseFacts[caseIndex]
-	ret := exec.Env.NewFact(caseFact)
+	ret := exec.Env.NewFactWithAtomsDefined(caseFact)
 	if ret.IsErr() {
 		return NewExecErr(ret.String()), fmt.Errorf("case %d: failed to add case fact: %s", caseIndex, ret.String())
 	}
@@ -933,14 +933,14 @@ func (exec *Executor) postProcessHaveObjFromCartSetStmt(stmt *ast.HaveObjFromCar
 
 	// Add obj in cart(...) fact
 	inCartFact := ast.NewInFactWithObj(objAtom, stmt.CartSet)
-	ret := exec.Env.NewFact(inCartFact)
+	ret := exec.Env.NewFactWithAtomsDefined(inCartFact)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}
 
 	// Add obj = equalTo fact
 	equalFact := ast.NewEqualFact(objAtom, stmt.EqualTo)
-	ret = exec.Env.NewFact(equalFact)
+	ret = exec.Env.NewFactWithAtomsDefined(equalFact)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}
@@ -961,7 +961,7 @@ func (exec *Executor) postProcessHaveObjFromCartSetStmt(stmt *ast.HaveObjFromCar
 
 		// Create equal fact: obj[index] = equalTo[i]
 		indexEqualFact := ast.NewEqualFact(indexedObj, equalToAsFn.Params[i])
-		ret = exec.Env.NewFact(indexEqualFact)
+		ret = exec.Env.NewFactWithAtomsDefined(indexEqualFact)
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
@@ -971,7 +971,7 @@ func (exec *Executor) postProcessHaveObjFromCartSetStmt(stmt *ast.HaveObjFromCar
 	dimFn := ast.NewFnObj(ast.Atom(glob.KeywordDim), []ast.Obj{objAtom})
 	dimValue := ast.Atom(strconv.Itoa(len(stmt.CartSet.Params)))
 	dimEqualFact := ast.NewEqualFact(dimFn, dimValue)
-	ret = exec.Env.NewFact(dimEqualFact)
+	ret = exec.Env.NewFactWithAtomsDefined(dimEqualFact)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}
