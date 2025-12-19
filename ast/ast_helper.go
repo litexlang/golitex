@@ -532,3 +532,17 @@ func PropNameIsStringAndIsFalse(specFact *SpecFactStmt, propName string) bool {
 
 	return string(specFact.PropName) == propName
 }
+
+func GetParamSetsAndRetSetFromFnSet(fnSet *FnObj) ([]Obj, Obj, error) {
+	retSet := fnSet.Params[0]
+
+	paramSets := []Obj{}
+	fnHeadAsFnObj, ok := fnSet.FnHead.(*FnObj)
+	if !ok {
+		return nil, nil, fmt.Errorf("expected FnObj, but got %T", fnSet.FnHead)
+	}
+
+	paramSets = append(paramSets, fnHeadAsFnObj.Params...)
+
+	return paramSets, retSet, nil
+}
